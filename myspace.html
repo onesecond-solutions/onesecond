@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>원세컨드 | MY SPACE 통합</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+:root {
+  --brown-dark:#3d2b1f;
+  --brown-mid:#6b4226;
+  --brown-light:#a0724a;
+  --cream:#fdf8f3;
+  --panel:#f3ece4;
+  --panel-soft:#f8f3ee;
+  --line:#e0d0c0;
+  --line-soft:#efe5dc;
+  --accent:#c8753a;
+  --text-dark:#1a1008;
+  --text-mid:#5a3e2b;
+  --text-light:#9a7a62;
+  --sidebar-w:230px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark)}
+button,input{font-family:inherit}
+
+.topbar{
+  height:52px;background:var(--brown-dark);display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08)
+}
+.topbar-logo{font-size:16px;font-weight:900;color:#fff;letter-spacing:-.4px}
+.topbar-logo span{color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.topbar-live,.topbar-user{font-size:12px;color:rgba(255,255,255,.7)}
+.topbar-logout{height:30px;padding:0 12px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:800;cursor:pointer}
+.topbar-logout:hover{background:rgba(255,255,255,.14)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4caf50;display:inline-block;margin-right:5px}
+
+.layout{display:flex}
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;background:#6f4428;padding:12px 0;display:flex;flex-direction:column;min-height:780px
+}
+.nav-item{
+  padding:11px 18px;font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;display:flex;align-items:center;gap:8px;
+  transition:.15s;border-left:3px solid transparent
+}
+.nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav-item.active{background:rgba(200,117,58,.22);color:#fff;border-left-color:var(--accent)}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.greeting-bar{
+  padding:10px 20px;background:#fff;border-bottom:1px solid #ead9cc;display:flex;align-items:center;justify-content:space-between;gap:14px
+}
+.greeting-text{font-size:13px}
+.greeting-text strong{color:var(--accent)}
+
+.quick-wrap{position:relative}
+.quick-btn{
+  padding:7px 16px;background:var(--brown-dark);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap
+}
+.quick-btn:hover{background:var(--brown-mid)}
+.quick-dropdown{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;border:1px solid var(--line);
+  box-shadow:0 8px 24px rgba(61,43,31,.18);min-width:280px;z-index:100;overflow:hidden
+}
+.quick-dropdown.open{display:block}
+.quick-dropdown-header{background:var(--brown-dark);padding:10px 16px;font-size:12px;font-weight:700;color:rgba(255,255,255,.84)}
+.quick-link{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;cursor:pointer;border-bottom:1px solid #f5ede4}
+.quick-link:last-child{border-bottom:none}
+.quick-link:hover{background:var(--cream)}
+.quick-link-arrow{margin-left:auto;color:var(--text-light);font-size:11px}
+
+.step1{padding:10px 20px 8px;background:#fff;border-bottom:1px solid #ead9cc}
+.main-btns{display:flex;gap:8px;flex-wrap:wrap}
+.main-btn{
+  min-width:160px;padding:8px 16px;border-radius:8px;border:1px solid #d4b8a0;background:var(--cream);font-size:13px;font-weight:800;
+  color:var(--text-mid);cursor:pointer
+}
+.main-btn.active{background:var(--brown-dark);color:#fff;border-color:var(--brown-dark)}
+.main-btn:hover{background:#f0e0d0}
+
+.frame-body{padding:14px 20px 16px;display:flex;gap:16px;align-items:flex-start;overflow-x:hidden}
+.content-shell{flex:1;min-width:0}
+.content-slot-header{background:#fff;border:1px solid var(--line);border-radius:14px 14px 0 0;padding:18px 20px 14px;border-bottom:none}
+.content-slot-title{font-size:20px;font-weight:800}
+.content-slot{background:#fff;border:1px solid var(--line);border-radius:0 0 14px 14px;padding:22px;min-height:420px}
+.next-btn{
+  display:flex;align-items:center;justify-content:center;width:100%;margin-top:14px;padding:12px;background:var(--brown-dark);color:rgba(255,255,255,.88);
+  border:none;border-radius:8px;font-size:12px;font-weight:500;letter-spacing:.3px;font-style:italic;position:relative;z-index:1
+}
+
+.right-banner-wrap{width:200px;flex-shrink:0}
+.right-panel{width:100%;position:sticky;top:0;display:flex;flex-direction:column;gap:14px}
+.panel-card{background:#fff;border-radius:12px;border:1px solid var(--line);padding:14px}
+.panel-title{font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:8px}
+.panel-item{padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-mid);border:1px solid #ead9cc;background:var(--cream);margin-bottom:4px}
+.panel-item:last-child{margin-bottom:0}
+
+.myspace-wrap{width:100%}
+.mys-card{background:var(--panel);border:1px solid #d8c6b5;border-radius:16px;padding:18px 18px 12px;margin-bottom:18px}
+.mys-card-title{font-size:20px;font-weight:900;color:#2c1c12;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mys-card-desc{font-size:13px;color:#7d6452;line-height:1.75;margin-bottom:14px}
+.mys-guide{background:var(--panel-soft);border:1px solid #d9c8ba;border-radius:12px;padding:12px 14px}
+.mys-guide ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.mys-guide li{font-size:12px;color:#6e5645;display:flex;gap:7px;line-height:1.6}
+
+.mys-list-shell{background:#fff;border:1px solid #e1d4c8;border-radius:16px;padding:14px 14px 16px}
+.mys-list-top{display:flex;justify-content:flex-end;margin-bottom:12px}
+.mys-search{width:260px;max-width:100%;height:36px;border:1px solid #e0d5ca;border-radius:8px;padding:0 12px;background:#f5f2ef;font-size:12px;color:#5f4d40}
+.mys-list{border-top:1px solid var(--line-soft)}
+.mys-item{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 10px;border-bottom:1px solid var(--line-soft)}
+.mys-item-left{min-width:0;flex:1}
+.mys-item-title{font-size:15px;font-weight:800;color:#2a1b12;margin-bottom:4px}
+.mys-item-preview{font-size:12px;color:#8c7666;line-height:1.65;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mys-item-date{font-size:11px;color:#b09a89}
+.mys-item-more{border:none;background:transparent;color:#7d6452;font-size:18px;line-height:1;padding:4px 6px;cursor:pointer}
+.mys-list-note{text-align:center;font-size:11px;color:#8b725e;margin:16px 0 10px;font-weight:700}
+.mys-write-btn{display:block;width:380px;max-width:100%;margin:0 auto;height:40px;border:none;border-radius:8px;background:#744b2f;color:#fff;font-size:14px;font-weight:800;cursor:pointer}
+.mys-write-btn:hover{background:#5f3d27}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(26,16,8,.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.overlay.active{display:flex}
+.quick-modal{background:#fff;border-radius:16px;width:100%;max-width:640px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden}
+.quick-modal-header{background:var(--brown-dark);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.quick-modal-title{font-size:15px;font-weight:700;color:#fff}
+.quick-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer}
+.quick-modal-body{padding:20px 24px;font-size:14px;color:var(--text-dark);line-height:1.9;min-height:80px;max-height:70vh;overflow-y:auto}
+.quick-html{display:flex;flex-direction:column;gap:14px}
+.quick-section{background:#fcf8f4;border:1px solid #eadccf;border-radius:12px;padding:14px 16px}
+.quick-section h4{font-size:14px;font-weight:900;color:#4a2f20;margin-bottom:8px}
+.quick-section p{font-size:13px;line-height:1.8;color:#5e4635;margin-bottom:8px}
+.quick-section ul{padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.quick-section li{font-size:13px;line-height:1.75;color:#5e4635}
+.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.quick-card{background:#fff;border:1px solid #eadccf;border-radius:10px;padding:12px}
+.quick-card strong{display:block;font-size:13px;color:#4a2f20;margin-bottom:4px}
+.quick-card span{font-size:12px;line-height:1.65;color:#6d5442}
+.quick-link-list{display:flex;flex-direction:column;gap:8px}
+.quick-link-box{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border-radius:10px;background:#fff;border:1px solid #eadccf}
+.quick-link-box a{color:#6b4226;font-size:12px;font-weight:800;text-decoration:none;word-break:break-all}
+.quick-link-box a:hover{text-decoration:underline}
+@media (max-width:768px){.quick-grid{grid-template-columns:1fr}}
+.quick-modal-footer{padding:12px 20px;border-top:1px solid #f0e4d8;display:flex;justify-content:flex-end}
+.modal-close-btn{padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--brown-dark);color:#fff}
+
+.site-footer{background:linear-gradient(90deg,#4b2e1e 0%, #5a3723 50%, #4b2e1e 100%);border-top:1px solid rgba(255,255,255,.06);padding:14px 24px}
+.footer-inner{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;color:#fff;font-size:12px;font-weight:700;text-align:center}
+.footer-brand span{color:var(--accent)}
+.footer-copy{color:rgba(255,255,255,.82);font-weight:500}
+.footer-kakao{display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:#FEE500;color:#1f1a16;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;border:1px solid rgba(0,0,0,.08)}
+
+@media (max-width:1200px){
+  .frame-body{flex-direction:column}
+  .right-banner-wrap{width:100%}
+  .right-panel{position:static}
+}
+@media (max-width:768px){
+  .greeting-bar{align-items:flex-start;flex-wrap:wrap}
+  .step1,.greeting-bar,.frame-body{padding-left:14px;padding-right:14px}
+  .content-slot-header{padding:16px 14px 12px}
+  .content-slot{padding:14px}
+  .main-btn{min-width:auto}
+  .mys-search{width:100%}
+  .site-footer{padding:12px 14px}
+  .footer-inner{gap:12px}
+}
+
+.write-wrap{width:100%}
+    .write-hero{
+      background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 20px 16px;margin-bottom:18px
+    }
+    .write-title{font-size:20px;font-weight:900;color:#2c1c12;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .write-sub{font-size:13px;line-height:1.75;color:var(--text-mid);margin-bottom:14px}
+    .write-trigger{
+      background:linear-gradient(90deg,#fff8f3 0%, #f6eee6 100%);border:1px solid #dccabb;border-radius:12px;padding:12px 14px;
+      font-size:14px;font-weight:900;color:#5b3e2c
+    }
+    .write-trigger span{color:var(--accent)}
+
+    .guide-toggle{
+      margin-top:14px;display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #dbc9bb;border-radius:999px;
+      padding:8px 14px;font-size:12px;font-weight:800;color:#6b4226;cursor:pointer
+    }
+    .guide-toggle:hover{background:#faf5ef}
+    .guide-box{
+      margin-top:12px;background:var(--panel-soft);border:1px solid #d9c8ba;border-radius:14px;padding:14px 16px;display:none
+    }
+    .guide-box.open{display:block}
+    .guide-box h3{font-size:13px;font-weight:900;color:#5b3e2c;margin-bottom:10px}
+    .guide-box ul{padding-left:18px;display:flex;flex-direction:column;gap:8px}
+    .guide-box li{font-size:13px;line-height:1.65;color:#5f4d40}
+
+    .form-shell{background:#fff;border:1px solid #e1d4c8;border-radius:18px;padding:18px 18px 20px}
+    .form-grid{display:flex;flex-direction:column;gap:14px}
+    .field-block{background:#fcfaf8;border:1px solid #eadfd5;border-radius:14px;padding:16px}
+    .field-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .field-title{font-size:15px;font-weight:900;color:#2a1b12}
+    .field-desc{font-size:12px;line-height:1.65;color:var(--text-light);margin-top:5px}
+    .required{font-size:11px;font-weight:800;color:#ab6a3c;white-space:nowrap}
+
+    .text-input,.text-area{
+      width:100%;border:1px solid #ddd0c5;background:#fff;border-radius:10px;padding:13px 14px;font-size:14px;color:var(--text-dark);
+      outline:none;transition:border-color .15s, box-shadow .15s
+    }
+    .text-input::placeholder,.text-area::placeholder{color:#b2a090}
+    .text-input:focus,.text-area:focus{border-color:#caa585;box-shadow:0 0 0 3px rgba(200,117,58,.08)}
+    .text-area{min-height:148px;resize:vertical;line-height:1.7}
+    .highlight-area{min-height:92px}
+
+    .save-note{
+      margin-top:16px;background:var(--panel-soft);border:1px solid #e5d7cb;border-radius:12px;padding:14px 16px;font-size:12px;line-height:1.7;color:#7b6352
+    }
+    .action-row{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:18px;padding-top:14px;border-top:1px solid #eadfd5;position:relative;z-index:4}
+    .action-copy{font-size:12px;font-weight:800;color:#7d6452}
+    .submit-btn{
+      -webkit-appearance:none;appearance:none;
+      width:380px;max-width:100%;height:40px;border:1px solid #744b2f !important;border-radius:8px;
+      background:#744b2f !important;background-color:#744b2f !important;color:#ffffff !important;
+      font-size:14px;font-weight:800;cursor:pointer;padding:0 24px;
+      display:flex;align-items:center;justify-content:center;
+      opacity:1 !important;visibility:visible !important;
+      box-shadow:0 4px 10px rgba(116,75,47,.14);
+      position:relative;z-index:5;
+      text-shadow:none;
+      margin:0 auto;
+    }
+    .submit-btn:hover,.submit-btn:focus,.submit-btn:active{background:#5f3d27 !important;background-color:#5f3d27 !important;color:#ffffff !important;border-color:#5f3d27 !important;outline:none}
+
+.write-back-row{display:flex;justify-content:flex-end;margin-bottom:12px}
+.write-back-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid #dbc9bb;border-radius:999px;
+  padding:8px 14px;font-size:12px;font-weight:800;color:#6b4226;cursor:pointer
+}
+.write-back-btn:hover{background:#faf5ef}
+
+
+.attach-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.attach-chip{height:30px;padding:0 10px;border:1px solid #d8c6b3;background:#fff8f2;border-radius:8px;font-size:12px;font-weight:800;color:#7c5d44;cursor:pointer}
+.attach-chip:hover{background:#f4e8dc}
+.attach-section{margin-top:10px;padding:12px;border:1px dashed #dbc9bb;border-radius:10px;background:#fff}
+.attach-label{font-size:12px;font-weight:800;color:#6b4226;margin-bottom:8px}
+.form-status{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:12px;font-weight:700;display:none}
+.form-status.show{display:block}
+.form-status.ok{background:#eef8f1;color:#23613b;border:1px solid #cde7d6}
+.form-status.err{background:#fff2f1;color:#9b3d33;border:1px solid #f0c7c3}
+.submit-btn[disabled]{opacity:.72;cursor:not-allowed}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-logo">원세컨드 <span>1s</span></div>
+    <div class="topbar-right">
+      <div class="topbar-live"><span class="live-dot"></span>실시간</div>
+      <div class="topbar-user" id="topbar-user">임태성 실장</div>
+      <div class="topbar-user" id="topbar-email">-</div>
+      <button class="topbar-logout" type="button" onclick="logoutUser()">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="nav-item" data-nav="home">🏠 홈</div>
+      <div class="nav-item" data-nav="board">📋 게시판</div>
+      <div class="nav-item active" data-nav="myspace">⭐ MY SPACE</div>
+      <div class="nav-item" data-nav="quick">⚡ Quick 메뉴</div>
+      <div class="nav-item" data-nav="search">🔍 검색</div>
+    </aside>
+
+    <main class="main">
+      <div class="greeting-bar">
+        <div class="greeting-text">안녕하세요, <strong id="greeting-name">-</strong> 님! 오늘도 화이팅입니다~ 🔥</div>
+        <div class="quick-wrap">
+          <button class="quick-btn" onclick="toggleQuick(event)">⚡ Quick 메뉴 ▾</button>
+          <div class="quick-dropdown" id="quick-dropdown">
+            <div class="quick-dropdown-header">⚡ Quick 메뉴 바로가기</div>
+            <div class="quick-link" onclick="openOverlay('가입설계 / 선심사 동의 녹취 스크립트','📝')"><span>📝</span>가입설계 / 선심사 동의 녹취 스크립트<span class="quick-link-arrow">→</span></div>
+            <div class="quick-link" onclick="openOverlay('회사별 BMI 심사기준','📊')"><span>📊</span>회사별 BMI 심사기준<span class="quick-link-arrow">→</span></div>
+            <div class="quick-link" onclick="openOverlay('보험연령표','📅')"><span>📅</span>보험연령표<span class="quick-link-arrow">→</span></div>
+            <div class="quick-link" onclick="openOverlay('보험회사 결제정보','💳')"><span>💳</span>보험회사 결제정보<span class="quick-link-arrow">→</span></div>
+            <div class="quick-link" onclick="openOverlay('미러링 전 녹취 스크립트','🎙️')"><span>🎙️</span>미러링 전 녹취 스크립트<span class="quick-link-arrow">→</span></div>
+            <div class="quick-link" onclick="openOverlay('원전산 설계 바로가기','🔗')"><span>🔗</span>원전산 설계 바로가기<span class="quick-link-arrow">→</span></div>
+            <div class="quick-link" onclick="openOverlay('보험회사 (모니터링) 연락처','📞')"><span>📞</span>보험회사 (모니터링) 연락처<span class="quick-link-arrow">→</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step1">
+        <div class="main-btns myspace-tabs">
+          <button class="main-btn active" data-tab="scripts" onclick="switchMySpaceTab(this,'scripts')">📝 나의 스크립트</button>
+          <button class="main-btn" data-tab="library" onclick="switchMySpaceTab(this,'library')">📁 나의 자료</button>
+        </div>
+      </div>
+
+      <div class="frame-body">
+        <div class="content-shell">
+          <div class="content-slot-header">
+            <div class="content-slot-title">MY SPACE</div>
+          </div>
+          <div class="content-slot">
+            <div id="view-myspace"></div>
+            <div id="view-write" style="display:none;">
+<div class="write-wrap">
+<div class="write-back-row"><button class="write-back-btn" type="button" onclick="closeWriteView()">← MY SPACE로 돌아가기</button></div><section class="write-hero">
+                <div class="write-title">✍️ 나의 스크립트 작성하기</div>
+                <div class="write-sub">통화 중 바로 꺼내 읽을 수 있는 나만의 실전 멘트를 저장하는 공간입니다.</div>
+                <div class="write-trigger">막혔던 순간, 그대로 적으세요. <span>다음 통화에서 바로 사용할 수 있습니다.</span></div>
+
+                <button class="guide-toggle" type="button" onclick="toggleGuide()" aria-expanded="false" aria-controls="guide-box" id="guide-toggle-btn">
+                  💡 작성 가이드 보기
+                </button>
+                <div class="guide-box" id="guide-box">
+                  <h3>작성 전에 이것만 생각하면 훨씬 빨라집니다</h3>
+                  <ul>
+                    <li>이 스크립트는 어떤 상황에서 꺼낼 문장인지 먼저 정하세요.</li>
+                    <li>고객에게 가장 먼저 들려줄 핵심 한 줄이 무엇인지 잡아두세요.</li>
+                    <li>길게 설명하기보다 바로 읽을 수 있게 짧고 선명하게 적는 것이 좋습니다.</li>
+                    <li>실제로 통화 중 내가 다시 꺼내 볼 만한 문장인지 기준으로 남기세요.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <section class="form-shell">
+                <div class="form-grid">
+                  <div class="field-block">
+                    <div class="field-top">
+                      <div>
+                        <div class="field-title">1. 제목</div>
+                        <div class="field-desc">어떤 상황의 스크립트인지 바로 알아볼 수 있게 적어주세요.<br>예: 첫인사, 바빠요 반론, 실손 필요성, 배우자 상의 대응</div>
+                      </div>
+                      <div class="required">필수입력</div>
+                    </div>
+                    <input id="script-title" class="text-input" type="text" placeholder="예: 첫인사 / 바빠요 대응 / 실손 필요성 / 배우자 상의 반론" />
+                  </div>
+
+                  <div class="field-block">
+                    <div class="field-top">
+                      <div>
+                        <div class="field-title">2. 스크립트</div>
+                        <div class="field-desc">실제 통화 중에 맞게 이어서 읽을 본문을 적어주세요.<br>너무 길게 쓰기보다, 바로 꺼내 쓰는 실전용 문장 위주가 좋습니다.</div>
+                      </div>
+                      <div class="required">필수입력</div>
+                    </div>
+                    <textarea id="script-body" class="text-area" placeholder="통화 중 실제로 읽을 문장을 그대로 적어주세요&#10;예: 고객님, 30초만 시간 괜찮으실까요? 중요한 안내 하나만 드리겠습니다"></textarea>
+                  </div>
+
+                  <div class="field-block">
+                    <div class="field-top">
+                      <div>
+                        <div class="field-title">3. 핵심 멘트</div>
+                        <div class="field-desc">통화 중 가장 먼저 눈에 들어와야 하는 한 줄 멘트를 적어주세요.<br>짧고 강하게, 바로 읽을 수 있게 쓰는 것이 좋습니다.</div>
+                      </div>
+                      <div class="required">필수입력</div>
+                    </div>
+                    <textarea id="script-highlight" class="text-area highlight-area" placeholder="예: 고객님, 지금 이건 꼭 한번 점검해보셔야 합니다"></textarea>
+                  </div>
+                </div>
+
+                <div class="save-note">
+                  저장된 스크립트는 기본적으로 나만 사용하는 개인 스크립트로 보관됩니다.<br>
+                  오늘 막혔던 순간, 다음 통화에서 바로 꺼내 쓰기 위한 문장만 남겨두세요.
+                </div>
+
+                <div class="action-row">
+                  <div class="action-copy">스크립트 저장 후 MY SPACE에서 바로 확인하고 관리할 수 있습니다.</div>
+                  <button class="submit-btn" id="save-script-btn" type="button" onclick="saveAndReturnToMySpace()">스크립트 저장하기</button>
+                  <div id="script-form-status" class="form-status"></div>
+                </div>
+
+              </section></div>
+            </div>
+            <div id="view-library-add" style="display:none;">
+<div class="write-wrap library-add-wrap">
+<div class="write-back-row"><button class="write-back-btn" type="button" onclick="closeLibraryAddView()">← 나의 자료로 돌아가기</button></div><section class="write-hero library-hero">
+                <div class="write-title">📁 나의 자료 추가하기</div>
+                <div class="write-sub">파일, 링크, 메모, 이미지까지 한 번에 담을 수 있는 자료 저장 공간입니다.</div>
+                <div class="write-trigger">하나의 자료 안에 <span>여러 형식의 콘텐츠를 함께 저장</span>할 수 있습니다.</div>
+
+                <button class="guide-toggle" type="button" onclick="toggleLibraryGuide()" aria-expanded="false" aria-controls="library-guide-box" id="library-guide-toggle-btn">
+                  💡 자료 추가 가이드 보기
+                </button>
+                <div class="guide-box" id="library-guide-box">
+                  <h3>자료는 이렇게 저장하면 가장 실전적입니다</h3>
+                  <ul>
+                    <li>자료 제목은 고객에게 보여줄 상황 기준으로 짧게 적어주세요.</li>
+                    <li>설명에는 이 자료를 언제 꺼내 보여주는지 한 줄로 남겨두세요.</li>
+                    <li>파일, 링크, 메모, 이미지 중 필요한 것만 골라 붙이면 됩니다.</li>
+                    <li>하나의 자료 안에 여러 형식을 함께 넣어두면 다음 통화에서 훨씬 빠릅니다.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <section class="form-shell library-form-shell">
+                <div class="form-grid compact-form-grid">
+                  <div class="field-block compact-block">
+                    <div class="field-top">
+                      <div>
+                        <div class="field-title">1. 자료 제목</div>
+                        <div class="field-desc">어떤 자료인지 바로 알아볼 수 있게 적어주세요.<br>예: 실손 비교표 / 암보험 설명 이미지 / 청약 전 안내 링크</div>
+                      </div>
+                      <div class="required">필수입력</div>
+                    </div>
+                    <input id="library-title" class="text-input" type="text" placeholder="예: 실손 비교표 / 보장 분석 안내 링크 / 보험료 예시 이미지" />
+                  </div>
+
+                  <div class="field-block compact-block">
+                    <div class="field-top">
+                      <div>
+                        <div class="field-title">2. 자료 설명</div>
+                        <div class="field-desc">이 자료를 언제 쓰는지, 무엇을 보여주기 위한 자료인지 짧게 남겨주세요.</div>
+                      </div>
+                      <div class="required">필수입력</div>
+                    </div>
+                    <textarea id="library-description" class="text-area compact-area" placeholder="예: 실손 필요성을 설명할 때 바로 보여주는 비교 자료입니다."></textarea>
+                  </div>
+
+                  <div class="field-block compact-block attach-block">
+                    <div class="field-top">
+                      <div>
+                        <div class="field-title">3. 자료 구성 추가</div>
+                        <div class="field-desc">필요한 형식만 선택해서 이 자료 안에 함께 저장하세요.</div>
+                      </div>
+                      <div class="required">선택입력</div>
+                    </div>
+
+                    <div class="attach-actions">
+                      <button class="attach-chip" type="button" onclick="toggleAttachSection('file')">+ 파일 추가</button>
+                      <button class="attach-chip" type="button" onclick="toggleAttachSection('link')">+ 링크 추가</button>
+                      <button class="attach-chip" type="button" onclick="toggleAttachSection('memo')">+ 메모 추가</button>
+                      <button class="attach-chip" type="button" onclick="toggleAttachSection('image')">+ 이미지 추가</button>
+                    </div>
+
+                    <div class="attach-sections">
+                      <div class="attach-section" id="attach-file" style="display:none;">
+                        <div class="attach-label">파일 첨부</div>
+                        <input id="library-file" class="text-input" type="text" placeholder="파일 경로 또는 업로드 자리 (예: PDF / DOC / XLS / ZIP 등)" />
+                      </div>
+                      <div class="attach-section" id="attach-link" style="display:none;">
+                        <div class="attach-label">외부 링크</div>
+                        <input id="library-link" class="text-input" type="text" placeholder="https:// 형태의 링크를 입력하세요" />
+                      </div>
+                      <div class="attach-section" id="attach-memo" style="display:none;">
+                        <div class="attach-label">추가 메모</div>
+                        <textarea id="library-memo" class="text-area compact-area" placeholder="자료를 쓸 때 기억할 포인트나 설명 메모를 남겨주세요."></textarea>
+                      </div>
+                      <div class="attach-section" id="attach-image" style="display:none;">
+                        <div class="attach-label">이미지 자료</div>
+                        <input id="library-image" class="text-input" type="text" placeholder="이미지 경로 또는 업로드 자리 (예: JPG / PNG / WEBP)" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="save-note library-save-note">
+                  저장된 자료는 기본적으로 나만 사용하는 개인 자료로 보관됩니다.<br>
+                  파일, 링크, 메모, 이미지 중 필요한 것만 묶어서 다음 통화에 바로 꺼낼 수 있게 만들어두세요.
+                </div>
+
+                <div class="action-row library-action-row">
+                  <div class="action-copy">자료 저장 후 나의 자료 리스트에서 바로 확인하고 관리할 수 있습니다.</div>
+                  <button class="submit-btn library-submit-btn" id="save-library-btn" type="button" onclick="saveAndReturnToLibrary()">나의 자료 저장하기</button>
+                  <div id="library-form-status" class="form-status"></div>
+                </div>
+              </section></div>
+            </div>
+          </div>
+          <div class="next-btn">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
+        </div>
+
+        <div class="right-banner-wrap">
+          <div class="right-panel">
+            <div class="panel-card">
+              <div class="panel-title">📌 배너 영역 01</div>
+              <div class="panel-item">배너 / 공지 / 추천 링크</div>
+              <div class="panel-item">팀 공지 배치 가능</div>
+              <div class="panel-item">프로모션 문구 배치 가능</div>
+            </div>
+            <div class="panel-card">
+              <div class="panel-title">📌 배너 영역 02</div>
+              <div class="panel-item">자주 쓰는 바로가기</div>
+              <div class="panel-item">오늘의 공지</div>
+              <div class="panel-item">추천 메뉴</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">원세컨드 <span>1s</span></div>
+      <div class="footer-copy">© 2026 onesecond. All rights reserved.</div>
+      <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">💬 카카오 오픈채팅 문의</a>
+    </div>
+  </footer>
+
+  <div class="overlay" id="quick-overlay" onclick="closeOverlay(event)">
+    <div class="quick-modal">
+      <div class="quick-modal-header">
+        <div class="quick-modal-title" id="overlay-title">제목</div>
+        <button class="quick-close" onclick="closeQuick()">✕</button>
+      </div>
+      <div class="quick-modal-body" id="overlay-body">준비 중입니다.</div>
+      <div class="quick-modal-footer">
+        <button class="modal-close-btn" onclick="closeQuick()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+const ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
+let currentUser = { id:null, email:'', name:'' };
+let currentToken = '';
+
+function showFormStatus(targetId, message, kind='ok'){
+  const el=document.getElementById(targetId);
+  if(!el) return;
+  el.textContent=message;
+  el.className=`form-status show ${kind}`;
+}
+function clearFormStatus(targetId){
+  const el=document.getElementById(targetId);
+  if(!el) return;
+  el.textContent='';
+  el.className='form-status';
+}
+function escapeHtml(str=''){
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function formatDateText(value){
+  if(!value) return '';
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime())) return '';
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}.${m}.${day}`;
+}
+function buildScriptItem(row){
+  const preview = row.highlight_text || row.script_text || '';
+  return `<div class="mys-item"><div class="mys-item-left"><div class="mys-item-title">${escapeHtml(row.title || '제목 없음')}</div><div class="mys-item-preview">${escapeHtml(preview)}</div><div class="mys-item-date">${escapeHtml(formatDateText(row.created_at))}</div></div><button class="mys-item-more" title="저장 완료">…</button></div>`;
+}
+function buildLibraryItem(row){
+  const preview = row.description || row.memo_text || row.link_url || row.file_url || row.image_url || '';
+  return `<div class="mys-item"><div class="mys-item-left"><div class="mys-item-title">${escapeHtml(row.title || '자료 제목 없음')}</div><div class="mys-item-preview">${escapeHtml(preview)}</div><div class="mys-item-date">${escapeHtml(formatDateText(row.created_at))}</div></div><button class="mys-item-more" title="저장 완료">…</button></div>`;
+}
+async function fetchRows(table){
+  if(!currentUser.id || !currentToken) return [];
+  const url = `${SUPABASE_URL}/rest/v1/${table}?owner_id=eq.${encodeURIComponent(currentUser.id)}&select=*&order=created_at.desc`;
+  try {
+    const res = await fetch(url,{ headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${currentToken}` } });
+    if(!res.ok) return [];
+    return await res.json();
+  } catch(e){
+    console.error(e);
+    return [];
+  }
+}
+async function loadUserInfo(){
+  const token=sessionStorage.getItem('os_token');
+  const authUser=JSON.parse(sessionStorage.getItem('os_user')||'{}');
+  if(!token || !authUser.id){
+    window.location.href='login.html';
+    return false;
+  }
+  currentToken = token;
+  currentUser.id = authUser.id;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${authUser.id}&select=name,role,email`,{ headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${token}` } });
+    const data = await res.json();
+    if(data && data[0]){
+      const u=data[0];
+      currentUser.email = u.email || authUser.email || '';
+      currentUser.name = u.name || '';
+      const roleLabel = ROLE_LABEL[u.role] || '';
+      const displayName = `${u.name || ''}${roleLabel ? ' ' + roleLabel : ''}`.trim() || '사용자';
+      const topbar=document.getElementById('topbar-user');
+      const topbarEmail=document.getElementById('topbar-email');
+      const greeting=document.getElementById('greeting-name');
+      if(topbar) topbar.textContent = displayName;
+      if(topbarEmail) topbarEmail.textContent = u.email || authUser.email || '';
+      if(greeting) greeting.textContent = displayName;
+    } else {
+      currentUser.email = authUser.email || '';
+      const fallback = authUser.email || '사용자';
+      const topbar=document.getElementById('topbar-user');
+      const topbarEmail=document.getElementById('topbar-email');
+      const greeting=document.getElementById('greeting-name');
+      if(topbar) topbar.textContent = currentUser.name || '임태성 실장';
+      if(topbarEmail) topbarEmail.textContent = fallback;
+      if(greeting) greeting.textContent = currentUser.name || fallback;
+    }
+    return true;
+  } catch(e){
+    console.error(e);
+    return false;
+  }
+}
+
+const overlayContent = {
+  '가입설계 / 선심사 동의 녹취 스크립트': `
+    <div class="quick-html">
+      <div class="quick-section">
+        <h4>기본 안내 스크립트</h4>
+        <p>안녕하세요 고객님. 저는 <strong>AZ금융서비스 임태성 실장</strong>입니다. 오늘은 가입설계 또는 선심사 진행 전 꼭 필요한 동의 안내를 짧고 정확하게 도와드리려고 연락드렸습니다.</p>
+        <p>잠시만 시간 괜찮으시면, 개인정보 활용 및 설계 진행 동의 부분만 먼저 간단히 확인드리겠습니다.</p>
+      </div>
+      <div class="quick-section">
+        <h4>핵심 확인 멘트</h4>
+        <ul>
+          <li>지금 안내드리는 내용은 보험 설계 및 심사 가능 여부 확인을 위한 절차입니다.</li>
+          <li>고객님께서 말씀 주시는 내용은 가입 가능 여부 확인과 설계 진행 목적에 한해서만 사용됩니다.</li>
+          <li>동의해주시면 바로 다음 단계로 간단하게 진행 도와드리겠습니다.</li>
+        </ul>
+      </div>
+      <div class="quick-section">
+        <h4>마무리 멘트</h4>
+        <p>네 고객님, 동의 확인 감사합니다. 그럼 지금부터 필요한 내용만 빠르게 확인드리고 고객님께 맞는 방향으로 안내드리겠습니다.</p>
+      </div>
+    </div>`,
+  '회사별 BMI 심사기준': `
+    <div class="quick-html">
+      <div class="quick-section">
+        <h4>BMI 빠른 계산식</h4>
+        <p><strong>BMI = 체중(kg) ÷ 키(m)²</strong></p>
+        <p>예: 키 170cm, 체중 70kg → 70 ÷ 1.7² = 24.22</p>
+      </div>
+      <div class="quick-section">
+        <h4>현장 확인 포인트</h4>
+        <ul>
+          <li>보험사별 인수 기준은 동일하지 않으므로 최종 판단 전 반드시 회사별 기준표와 함께 확인합니다.</li>
+          <li>BMI 수치만 보지 말고 최근 체중 변화, 질병 이력, 약 복용 여부까지 함께 체크합니다.</li>
+          <li>경계 수치에서는 선심사 먼저 넣고 결과를 확인한 뒤 본심사로 연결하는 것이 안전합니다.</li>
+        </ul>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card"><strong>18.5 미만</strong><span>저체중 구간. 일부 담보는 추가 확인 필요</span></div>
+        <div class="quick-card"><strong>18.5 ~ 22.9</strong><span>일반적으로 안정권으로 보는 기본 구간</span></div>
+        <div class="quick-card"><strong>23 ~ 24.9</strong><span>과체중 초기 구간. 회사별 차이 확인 필요</span></div>
+        <div class="quick-card"><strong>25 이상</strong><span>심사 민감 구간. 병력/복용약 함께 확인</span></div>
+      </div>
+    </div>`,
+  '보험연령표': `
+    <div class="quick-html">
+      <div class="quick-section">
+        <h4>보험나이 계산 기준</h4>
+        <p><strong>보험나이 = 현재연도 - 출생연도</strong></p>
+        <p>원세컨드 실전 기준에서는 상담 속도를 위해 먼저 위 기준으로 빠르게 판단하고, 최종 청약 단계에서 회사 기준을 다시 확인합니다.</p>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card"><strong>1990년생</strong><span>2026년 기준 보험나이 36세</span></div>
+        <div class="quick-card"><strong>1985년생</strong><span>2026년 기준 보험나이 41세</span></div>
+        <div class="quick-card"><strong>1980년생</strong><span>2026년 기준 보험나이 46세</span></div>
+        <div class="quick-card"><strong>1975년생</strong><span>2026년 기준 보험나이 51세</span></div>
+      </div>
+      <div class="quick-section">
+        <h4>현장 팁</h4>
+        <ul>
+          <li>보험료 비교 전에 먼저 보험나이부터 확인하면 상담 흐름이 빨라집니다.</li>
+          <li>생일 전후에 따라 실제 회사 계산 기준과 차이가 날 수 있으니 청약 직전 재확인이 필요합니다.</li>
+        </ul>
+      </div>
+    </div>`,
+  '보험회사 결제정보': `
+    <div class="quick-html">
+      <div class="quick-section">
+        <h4>결제정보 확인 체크리스트</h4>
+        <ul>
+          <li>초회보험료 결제수단: 계좌이체 / 카드 / 가상계좌</li>
+          <li>자동이체일 지정 가능 여부</li>
+          <li>카드 가능 회사와 불가 회사 구분</li>
+          <li>실효 방지를 위한 결제일 재안내</li>
+        </ul>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card"><strong>계좌이체</strong><span>예금주명, 은행명, 계좌번호 재확인 필수</span></div>
+        <div class="quick-card"><strong>신용카드</strong><span>카드 가능 회사 여부와 명의 일치 확인</span></div>
+        <div class="quick-card"><strong>자동이체일</strong><span>급여일 직후로 맞추면 유지율 관리에 유리</span></div>
+        <div class="quick-card"><strong>초회 실패 대응</strong><span>당일 재결제 가능 여부와 고객 재안내</span></div>
+      </div>
+      <div class="quick-section">
+        <h4>현장 멘트</h4>
+        <p>고객님, 유지가 가장 중요해서요. 결제일은 고객님이 가장 편한 날짜로 맞춰드리는 게 좋습니다. 급여일 직후나 자금 흐름이 가장 안정적인 날짜로 잡아드릴게요.</p>
+      </div>
+    </div>`,
+  '미러링 전 녹취 스크립트': `
+    <div class="quick-html">
+      <div class="quick-section">
+        <h4>도입 멘트</h4>
+        <p>고객님, 지금부터 안내드리는 내용은 고객님께 정확하게 전달드리기 위한 기본 확인 과정입니다. 편하게 들으시고 맞는 부분만 확인해주시면 됩니다.</p>
+      </div>
+      <div class="quick-section">
+        <h4>녹취 전 흐름 유지 포인트</h4>
+        <ul>
+          <li>설명보다 분위기 안정이 먼저입니다.</li>
+          <li>고객이 긴장하지 않도록 “어렵지 않습니다”, “짧게만 확인드리겠습니다” 같은 완충 멘트를 먼저 넣습니다.</li>
+          <li>녹취 전 고객의 말투와 속도에 맞춰 톤을 맞추면 이탈률이 줄어듭니다.</li>
+        </ul>
+      </div>
+      <div class="quick-section">
+        <h4>전환 멘트</h4>
+        <p>그럼 고객님, 지금부터는 형식적인 확인 멘트만 짧게 진행하겠습니다. 편하게 네, 아니오로만 답해주셔도 됩니다.</p>
+      </div>
+    </div>`,
+  '원전산 설계 바로가기': `
+    <div class="quick-html">
+      <div class="quick-section">
+        <h4>원전산 바로가기 링크 영역</h4>
+        <div class="quick-link-list">
+          <div class="quick-link-box"><span>생명보험 원전산</span><a href="#">링크 등록 예정</a></div>
+          <div class="quick-link-box"><span>손해보험 원전산</span><a href="#">링크 등록 예정</a></div>
+          <div class="quick-link-box"><span>비교설계 시스템</span><a href="#">링크 등록 예정</a></div>
+          <div class="quick-link-box"><span>서류 업로드 페이지</span><a href="#">링크 등록 예정</a></div>
+        </div>
+      </div>
+      <div class="quick-section">
+        <h4>사용 방법</h4>
+        <p>자주 사용하는 원전산 주소를 회사별로 등록해두면 MY SPACE나 Quick 메뉴에서 즉시 이동할 수 있습니다. 현재는 자리만 먼저 잡아둔 상태이며, 실제 운영 링크로 교체하면 됩니다.</p>
+      </div>
+    </div>`,
+  '보험회사 (모니터링) 연락처': `
+    <div class="quick-html">
+      <div class="quick-section">
+        <h4>모니터링 연락처 관리 원칙</h4>
+        <ul>
+          <li>회사명 / 부서명 / 대표번호 / 직통번호 / 운영시간 순서로 정리합니다.</li>
+          <li>연락처는 담당자 변경이 잦으므로 월 1회 이상 최신화합니다.</li>
+          <li>클레임 가능성이 있는 통화는 반드시 상담 메모와 함께 남겨야 합니다.</li>
+        </ul>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card"><strong>기본 대표번호</strong><span>회사 공식 콜센터 번호 우선 저장</span></div>
+        <div class="quick-card"><strong>모니터링 부서</strong><span>민원/녹취 이슈 대응용 별도 관리</span></div>
+        <div class="quick-card"><strong>운영시간</strong><span>평일/점심시간/마감시간 구분 기록</span></div>
+        <div class="quick-card"><strong>비고</strong><span>자주 묻는 요청사항과 연결 팁 메모</span></div>
+      </div>
+      <div class="quick-section">
+        <h4>현재 상태</h4>
+        <p>이 영역은 회사별 실제 모니터링 연락처 데이터를 넣어 완성하는 구조입니다. 지금은 레이아웃과 입력 기준까지 반영된 상태입니다.</p>
+      </div>
+    </div>`
+};
+
+const mySpaceViews = {
+  scripts: `
+    <div class="myspace-wrap">
+      <section class="mys-card">
+        <div class="mys-card-title">📝 나의 스크립트</div>
+        <div class="mys-card-desc">오늘 막혔던 순간의 멘트를 저장해두고, 다음 통화에서 바로 다시 꺼내 쓰는 공간입니다.</div>
+        <div class="mys-guide">
+          <ul>
+            <li><span>📌</span><span>고민했던 순간의 멘트는 남겨두세요</span></li>
+            <li><span>📌</span><span>한 줄 핵심 멘트가 먼저 보이게 정리해두세요</span></li>
+            <li><span>📌</span><span>다음 통화에서 바로 꺼내 읽을 수 있게 짧고 선명하게 저장하세요</span></li>
+          </ul>
+        </div>
+      </section>
+      <section class="mys-list-shell">
+        <div class="mys-list-top"><input class="mys-search" type="text" placeholder="🔍  검색" aria-label="나의 스크립트 검색" oninput="filterMySpaceList(this.value, 'scripts')"></div>
+        <div class="mys-list" id="scripts-list"></div>
+        <div class="mys-list-note">새 멘트를 직접 저장하고, MY SPACE에서 바로 관리할 수 있습니다.</div>
+        <button class="mys-write-btn" type="button" onclick="openWriteView()">스크립트 작성하기</button>
+      </section>
+    </div>`,
+  library: `
+    <div class="myspace-wrap">
+      <section class="mys-card">
+        <div class="mys-card-title">📁 나의 자료</div>
+        <div class="mys-card-desc">통화 중 설명하는 순간, 바로 꺼내 보여줄 자료를 모아두는 공간입니다.</div>
+        <div class="mys-guide">
+          <ul>
+            <li><span>📌</span><span>설명이 길어질 때 대신 보여줄 자료를 저장하세요</span></li>
+            <li><span>📌</span><span>한 번 쓴 자료는 다음 통화에서도 바로 다시 쓸 수 있습니다</span></li>
+            <li><span>📌</span><span>지금 당장 써먹을 자료만 남겨두는 것이 중요합니다</span></li>
+          </ul>
+        </div>
+      </section>
+      <section class="mys-list-shell">
+        <div class="mys-list-top"><input class="mys-search" type="text" placeholder="🔍  검색" aria-label="나의 자료 검색" oninput="filterMySpaceList(this.value, 'library')"></div>
+        <div class="mys-list" id="library-list"></div>
+        <div class="mys-list-note">새 자료를 추가하고, MY SPACE에서 바로 관리할 수 있습니다.</div>
+        <button class="mys-write-btn" type="button" onclick="openLibraryAddView()">나의 자료 추가하기</button>
+      </section>
+    </div>`
+};
+
+let currentMySpaceTab = 'scripts';
+let scriptRows = [];
+let libraryRows = [];
+
+function renderScriptList(rows){
+  const el=document.getElementById('scripts-list');
+  if(!el) return;
+  if(!rows.length){
+    el.innerHTML = `<div class="mys-item"><div class="mys-item-left"><div class="mys-item-title">저장된 스크립트가 없습니다</div><div class="mys-item-preview">첫 번째 스크립트를 저장하면 이곳에 바로 표시됩니다.</div><div class="mys-item-date"></div></div></div>`;
+    return;
+  }
+  el.innerHTML = rows.map(buildScriptItem).join('');
+}
+function renderLibraryList(rows){
+  const el=document.getElementById('library-list');
+  if(!el) return;
+  if(!rows.length){
+    el.innerHTML = `<div class="mys-item"><div class="mys-item-left"><div class="mys-item-title">저장된 자료가 없습니다</div><div class="mys-item-preview">첫 번째 자료를 저장하면 이곳에 바로 표시됩니다.</div><div class="mys-item-date"></div></div></div>`;
+    return;
+  }
+  el.innerHTML = rows.map(buildLibraryItem).join('');
+}
+function filterMySpaceList(keyword, type){
+  const q=(keyword||'').trim().toLowerCase();
+  if(type==='scripts'){
+    const rows=!q ? scriptRows : scriptRows.filter(row => [row.title,row.highlight_text,row.script_text].filter(Boolean).join(' ').toLowerCase().includes(q));
+    renderScriptList(rows);
+  } else {
+    const rows=!q ? libraryRows : libraryRows.filter(row => [row.title,row.description,row.memo_text,row.link_url,row.file_url,row.image_url].filter(Boolean).join(' ').toLowerCase().includes(q));
+    renderLibraryList(rows);
+  }
+}
+async function loadScriptRows(){
+  scriptRows = await fetchRows('scripts');
+  renderScriptList(scriptRows);
+}
+async function loadLibraryRows(){
+  libraryRows = await fetchRows('library');
+  renderLibraryList(libraryRows);
+}
+
+function openLibraryAddView(){
+  currentMySpaceTab='library';
+  const myspace=document.getElementById('view-myspace');
+  const write=document.getElementById('view-write');
+  const libraryAdd=document.getElementById('view-library-add');
+  const title=document.querySelector('.content-slot-title');
+  if(myspace) myspace.style.display='none';
+  if(write) write.style.display='none';
+  if(libraryAdd) libraryAdd.style.display='block';
+  if(title) title.textContent='나의 자료 추가하기';
+  setWriteModeVisual(true);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function closeLibraryAddView(){
+  const myspace=document.getElementById('view-myspace');
+  const libraryAdd=document.getElementById('view-library-add');
+  const title=document.querySelector('.content-slot-title');
+  if(libraryAdd) libraryAdd.style.display='none';
+  if(myspace) myspace.style.display='block';
+  if(title) title.textContent='MY SPACE';
+  setWriteModeVisual(false);
+}
+async function saveAndReturnToLibrary(){
+  clearFormStatus('library-form-status');
+  const btn=document.getElementById('save-library-btn');
+  const title=(document.getElementById('library-title')?.value||'').trim();
+  const description=(document.getElementById('library-description')?.value||'').trim();
+  const fileUrl=(document.getElementById('library-file')?.value||'').trim();
+  const linkUrl=(document.getElementById('library-link')?.value||'').trim();
+  const memoText=(document.getElementById('library-memo')?.value||'').trim();
+  const imageUrl=(document.getElementById('library-image')?.value||'').trim();
+  if(!title || !description){
+    showFormStatus('library-form-status','자료 제목과 자료 설명은 필수입니다.','err');
+    return;
+  }
+  if(!currentUser.id || !currentToken){
+    showFormStatus('library-form-status','로그인 정보가 없습니다. 다시 로그인해 주세요.','err');
+    return;
+  }
+  btn.disabled=true; btn.textContent='저장 중...';
+  const payload={ owner_id: currentUser.id, owner_email: currentUser.email || '', title, description, file_url:fileUrl || null, link_url:linkUrl || null, memo_text:memoText || null, image_url:imageUrl || null, scope:'personal' };
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/library`,{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${currentToken}`,'Prefer':'return=representation' },
+      body:JSON.stringify(payload)
+    });
+    if(res.ok){
+      showFormStatus('library-form-status','자료가 저장되었습니다. 목록을 새로 불러옵니다.','ok');
+      document.getElementById('library-title').value='';
+      document.getElementById('library-description').value='';
+      ['library-file','library-link','library-memo','library-image'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+      ['attach-file','attach-link','attach-memo','attach-image'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+      document.querySelectorAll('.myspace-tabs .main-btn').forEach(btnEl=>btnEl.classList.remove('active'));
+      const libraryBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="library"]');
+      if(libraryBtn) libraryBtn.classList.add('active');
+      currentMySpaceTab='library';
+      renderMySpaceView('library');
+      await loadLibraryRows();
+      setTimeout(()=>{ closeLibraryAddView(); clearFormStatus('library-form-status'); }, 500);
+    } else if(res.status === 401){
+      handleAuthExpired();
+      return;
+    } else {
+      const err=await res.json().catch(()=>({}));
+      console.error(err);
+      showFormStatus('library-form-status', err.message || '자료 저장 중 오류가 발생했습니다. library 테이블 구조를 확인해 주세요.','err');
+    }
+  }catch(e){
+    console.error(e);
+    showFormStatus('library-form-status','네트워크 오류가 발생했습니다.','err');
+  }finally{
+    btn.disabled=false; btn.textContent='나의 자료 저장하기';
+  }
+}
+function toggleLibraryGuide(){
+  const box=document.getElementById('library-guide-box');
+  const btn=document.getElementById('library-guide-toggle-btn');
+  if(!box || !btn) return;
+  const isOpen=box.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  btn.innerHTML = isOpen ? '💡 자료 추가 가이드 닫기' : '💡 자료 추가 가이드 보기';
+}
+function toggleAttachSection(type){
+  const el=document.getElementById(`attach-${type}`);
+  if(!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function openWriteView(){
+  currentMySpaceTab='scripts';
+  const myspace=document.getElementById('view-myspace');
+  const write=document.getElementById('view-write');
+  const title=document.querySelector('.content-slot-title');
+  if(myspace) myspace.style.display='none';
+  if(write) write.style.display='block';
+  if(title) title.textContent='스크립트 작성하기';
+  setWriteModeVisual(true);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function closeWriteView(){
+  const myspace=document.getElementById('view-myspace');
+  const write=document.getElementById('view-write');
+  const libraryAdd=document.getElementById('view-library-add');
+  const title=document.querySelector('.content-slot-title');
+  if(write) write.style.display='none';
+  if(libraryAdd) libraryAdd.style.display='none';
+  if(myspace) myspace.style.display='block';
+  if(title) title.textContent='MY SPACE';
+  setWriteModeVisual(false);
+}
+function toggleGuide(){
+  const box=document.getElementById('guide-box');
+  const btn=document.getElementById('guide-toggle-btn');
+  if(!box || !btn) return;
+  const isOpen=box.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  btn.innerHTML = isOpen ? '💡 작성 가이드 닫기' : '💡 작성 가이드 보기';
+}
+
+
+const nextBtnEl = document.querySelector('.next-btn');
+const rightBannerEl = document.querySelector('.right-banner-wrap');
+function setWriteModeVisual(isWrite){
+  if(nextBtnEl) nextBtnEl.style.display = isWrite ? 'none' : 'flex';
+  if(rightBannerEl) rightBannerEl.style.display = isWrite ? 'none' : 'block';
+}
+
+async function saveAndReturnToMySpace(){
+  clearFormStatus('script-form-status');
+  const btn=document.getElementById('save-script-btn');
+  const title=(document.getElementById('script-title')?.value||'').trim();
+  const scriptText=(document.getElementById('script-body')?.value||'').trim();
+  const highlightText=(document.getElementById('script-highlight')?.value||'').trim();
+  if(!title || !scriptText || !highlightText){
+    showFormStatus('script-form-status','제목, 스크립트, 핵심 멘트를 모두 입력해 주세요.','err');
+    return;
+  }
+  if(!currentUser.id || !currentToken){
+    showFormStatus('script-form-status','로그인 정보가 없습니다. 다시 로그인해 주세요.','err');
+    return;
+  }
+  btn.disabled=true; btn.textContent='저장 중...';
+  const payload={ owner_id: currentUser.id, owner_email: currentUser.email || '', title, script_text: scriptText, highlight_text: highlightText, scope:'personal' };
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/scripts`,{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${currentToken}`,'Prefer':'return=representation' },
+      body:JSON.stringify(payload)
+    });
+    if(res.ok){
+      showFormStatus('script-form-status','스크립트가 저장되었습니다. 목록을 새로 불러옵니다.','ok');
+      document.getElementById('script-title').value='';
+      document.getElementById('script-body').value='';
+      document.getElementById('script-highlight').value='';
+      document.querySelectorAll('.myspace-tabs .main-btn').forEach(btnEl=>btnEl.classList.remove('active'));
+      const scriptBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="scripts"]');
+      if(scriptBtn) scriptBtn.classList.add('active');
+      currentMySpaceTab='scripts';
+      renderMySpaceView('scripts');
+      await loadScriptRows();
+      setTimeout(()=>{ closeWriteView(); clearFormStatus('script-form-status'); }, 500);
+    } else if(res.status === 401){
+      handleAuthExpired();
+      return;
+    } else {
+      const err=await res.json().catch(()=>({}));
+      console.error(err);
+      showFormStatus('script-form-status', err.message || '스크립트 저장 중 오류가 발생했습니다. scripts 테이블 구조를 확인해 주세요.','err');
+    }
+  }catch(e){
+    console.error(e);
+    showFormStatus('script-form-status','네트워크 오류가 발생했습니다.','err');
+  }finally{
+    btn.disabled=false; btn.textContent='스크립트 저장하기';
+  }
+}
+
+function renderMySpaceView(view){
+  currentMySpaceTab=view;
+  const slot=document.getElementById('view-myspace');
+  slot.innerHTML=mySpaceViews[view]||mySpaceViews.scripts;
+  if(view==='scripts') loadScriptRows();
+  if(view==='library') loadLibraryRows();
+}
+function switchMySpaceTab(button,view){
+  document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
+  button.classList.add('active');
+  closeWriteView();
+  renderMySpaceView(view);
+}
+function toggleQuick(event){
+  event.stopPropagation();
+  document.getElementById('quick-dropdown').classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  const dropdown=document.getElementById('quick-dropdown');
+  const wrap=document.querySelector('.quick-wrap');
+  if(dropdown && wrap && !wrap.contains(e.target)) dropdown.classList.remove('open');
+});
+function openOverlay(title,icon){
+  document.getElementById('quick-dropdown').classList.remove('open');
+  document.getElementById('overlay-title').textContent=`${icon} ${title}`;
+  document.getElementById('overlay-body').innerHTML=overlayContent[title]||'<div class="quick-html"><div class="quick-section"><p>준비 중입니다.</p></div></div>';
+  document.getElementById('quick-overlay').classList.add('active');
+}
+function closeQuick(){document.getElementById('quick-overlay').classList.remove('active');}
+function closeOverlay(event){if(event.target.id==='quick-overlay') closeQuick();}
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',function(){
+    document.querySelectorAll('.nav-item').forEach(nav=>nav.classList.remove('active'));
+    this.classList.add('active');
+    const nav = this.getAttribute('data-nav');
+    if (nav === 'home') {
+      window.location.href = 'home.html';
+    } else if (nav === 'myspace') {
+      window.location.href = 'myspace.html';
+    } else if (nav === 'quick') {
+      window.location.href = 'quick-menu.html';
+    } else if (nav === 'board') {
+      alert('게시판은 곧 오픈됩니다. 조금만 기다려 주세요 😊');
+    } else if (nav === 'search') {
+      alert('검색 기능은 곧 오픈됩니다. 조금만 기다려 주세요 😊');
+    }
+  });
+});
+
+function handleAuthExpired(){
+  alert('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+  logoutUser();
+}
+
+function logoutUser(){
+  try {
+    sessionStorage.removeItem('os_token');
+    sessionStorage.removeItem('os_user');
+    localStorage.removeItem('os_token');
+    localStorage.removeItem('os_user');
+  } catch(e){
+    console.error(e);
+  }
+  window.location.href='login.html';
+}
+
+async function initMySpace(){
+  const ok = await loadUserInfo();
+  if(ok===false) return;
+  renderMySpaceView('scripts');
+  setWriteModeVisual(false);
+  const params=new URLSearchParams(window.location.search);
+  const tab=params.get('tab');
+  const mode=params.get('mode');
+  if(tab==='library'){
+    document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
+    const libraryBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="library"]');
+    if(libraryBtn) libraryBtn.classList.add('active');
+    renderMySpaceView('library');
+  }
+  if(mode==='write') openWriteView();
+  if(mode==='library-add') openLibraryAddView();
+}
+initMySpace();
+</script>
+</body>
+</html>
