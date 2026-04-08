@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원세컨드 | 통화 중 멈추는 순간, 원세컨드가 이어갑니다</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --brown-dark: #3d2b1f;
+    --brown-mid: #6b4226;
+    --brown-light: #a0724a;
+    --brown-pale: #f5ede4;
+    --cream: #fdf8f3;
+    --accent: #c8753a;
+    --accent-light: #e08a4a;
+    --text-dark: #1a1008;
+    --text-mid: #5a3e2b;
+    --text-light: #9a7a62;
+    --white: #ffffff;
+    --max-w: 1140px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    overflow-x: hidden;
+  }
+
+  /* ───────── 헤더 ───────── */
+  header {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    padding: 0 40px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(253,248,243,0.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(168,114,74,0.12);
+  }
+
+  .logo-text {
+    font-size: 20px; font-weight: 900;
+    color: var(--brown-dark); letter-spacing: -0.5px;
+  }
+  .logo-text span { color: var(--accent); }
+
+  .header-right { display:flex; align-items:center; gap:16px; }
+  .header-link {
+    font-size: 14px; color: var(--text-light);
+    text-decoration: none; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .header-link:hover { color: var(--brown-dark); }
+
+  .header-btn {
+    padding: 9px 22px;
+    background: var(--brown-dark); color: var(--white);
+    border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer; transition: background 0.2s; letter-spacing: -0.2px;
+  }
+  .header-btn:hover { background: var(--brown-mid); }
+
+  /* ───────── 히어로 ───────── */
+  .hero {
+    min-height: 100vh;
+    padding: 64px 40px 0;
+    max-width: var(--max-w);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 60px;
+  }
+
+  .hero-left { padding-top: 40px; }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px;
+    background: var(--brown-pale);
+    border: 1px solid rgba(168,114,74,0.28);
+    border-radius: 99px;
+    font-size: 12px; color: var(--brown-mid); font-weight: 600;
+    margin-bottom: 28px; letter-spacing: 0.2px;
+  }
+  .hero-badge::before { content:'🎯'; font-size:13px; }
+
+  .hero-title {
+    font-size: clamp(30px, 3.2vw, 46px);
+    font-weight: 900; color: var(--brown-dark);
+    line-height: 1.25; margin-bottom: 18px;
+    letter-spacing: -1.5px;
+  }
+  .hero-title em { color: var(--accent); font-style: normal; }
+
+  .hero-sub {
+    font-size: 16px; color: var(--text-mid);
+    line-height: 1.8; margin-bottom: 36px;
+    font-weight: 400; max-width: 420px;
+  }
+
+  .hero-cta-group { display:flex; flex-direction:column; gap:12px; max-width: 340px; }
+
+  .cta-btn-main {
+    display: block; width: 100%;
+    padding: 17px 24px;
+    background: var(--accent); color: var(--white);
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer; letter-spacing: -0.3px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(200,117,58,0.35);
+    text-align: center;
+  }
+  .cta-btn-main:hover { background: #b5642e; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(200,117,58,0.45); }
+
+  .cta-note { font-size: 12px; color: var(--text-light); text-align:center; }
+
+  .hero-stats {
+    display: flex; gap: 28px; margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(168,114,74,0.15);
+  }
+  .stat-item { }
+  .stat-num { font-size: 24px; font-weight: 900; color: var(--brown-dark); letter-spacing: -0.5px; }
+  .stat-num span { color: var(--accent); }
+  .stat-label { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+  /* ───────── TM 현장 목업 ───────── */
+  .hero-right {
+    display: flex; align-items: center; justify-content: center;
+    padding-top: 80px; padding-bottom: 40px;
+  }
+
+  .monitor-setup {
+    position: relative; width: 100%;
+    display: flex; gap: 12px; align-items: flex-end;
+  }
+
+  /* 모니터 공통 */
+  .monitor {
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(30,15,5,0.25);
+    flex-shrink: 0;
+  }
+  .monitor-screen {
+    padding: 14px;
+    min-height: 200px;
+  }
+  .monitor-stand {
+    height: 20px;
+    background: linear-gradient(180deg, #c8b8a8, #a89888);
+    border-radius: 0 0 4px 4px;
+    margin: 0 20%;
+  }
+  .monitor-base {
+    height: 8px;
+    background: #c0a898;
+    border-radius: 0 0 8px 8px;
+    margin: 0 10%;
+  }
+
+  /* 왼쪽 모니터 - 고객 통화 화면 */
+  .monitor-call {
+    width: 44%;
+    background: #1a1a2e;
+  }
+  .monitor-call .monitor-screen {
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 100%);
+  }
+
+  .call-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .call-dot { width:8px; height:8px; border-radius:50%; }
+  .call-dot.red { background:#ff5f56; }
+  .call-dot.yellow { background:#ffbd2e; }
+  .call-dot.green { background:#27c93f; }
+  .call-dots { display:flex; gap:5px; }
+
+  .call-time-bar {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.08); border-radius: 6px;
+    padding: 4px 10px; font-size: 11px; color: rgba(255,255,255,0.6);
+  }
+  .call-blink {
+    width: 6px; height: 6px; border-radius: 50%; background: #27c93f;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .call-main {
+    text-align: center; padding: 12px 0 16px;
+  }
+  .call-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, #4a90d9, #357abd);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px; font-size: 20px;
+    box-shadow: 0 0 0 3px rgba(74,144,217,0.25);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 3px rgba(74,144,217,0.25)} 50%{box-shadow:0 0 0 8px rgba(74,144,217,0.1)} }
+
+  .call-name { font-size: 14px; font-weight: 700; color: white; margin-bottom: 2px; }
+  .call-status { font-size: 11px; color: #27c93f; font-weight: 600; }
+
+  .call-waveform {
+    display: flex; align-items: center; justify-content: center;
+    gap: 3px; height: 28px; margin: 10px 0;
+  }
+  .wave-bar {
+    width: 3px; border-radius: 3px; background: rgba(74,144,217,0.7);
+    animation: wave 1s ease-in-out infinite;
+  }
+  .wave-bar:nth-child(1){height:8px;animation-delay:0s}
+  .wave-bar:nth-child(2){height:16px;animation-delay:0.1s}
+  .wave-bar:nth-child(3){height:24px;animation-delay:0.2s}
+  .wave-bar:nth-child(4){height:18px;animation-delay:0.3s}
+  .wave-bar:nth-child(5){height:28px;animation-delay:0.4s}
+  .wave-bar:nth-child(6){height:20px;animation-delay:0.5s}
+  .wave-bar:nth-child(7){height:14px;animation-delay:0.6s}
+  .wave-bar:nth-child(8){height:22px;animation-delay:0.7s}
+  .wave-bar:nth-child(9){height:10px;animation-delay:0.8s}
+  @keyframes wave { 0%,100%{transform:scaleY(0.5);opacity:0.5} 50%{transform:scaleY(1);opacity:1} }
+
+  .call-script-hint {
+    background: rgba(200,117,58,0.15); border: 1px solid rgba(200,117,58,0.3);
+    border-radius: 8px; padding: 8px 10px; margin-top: 10px;
+    font-size: 11px; color: #e8906a; line-height: 1.5; text-align: left;
+  }
+  .call-script-hint strong { display:block; color: #ffaa7a; margin-bottom:2px; font-size:10px; }
+
+  /* 오른쪽 모니터 - 원세컨드 화면 */
+  .monitor-app {
+    width: 56%;
+    background: #fdf8f3;
+  }
+  .monitor-app .monitor-screen {
+    background: #fdf8f3;
+    padding: 12px;
+  }
+
+  .app-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; padding-bottom: 8px;
+    border-bottom: 1px solid rgba(168,114,74,0.15);
+  }
+  .app-logo { font-size: 12px; font-weight: 900; color: var(--brown-dark); letter-spacing:-0.3px; }
+  .app-logo span { color: var(--accent); }
+  .app-status {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; color: #27c93f; font-weight: 600;
+  }
+  .app-status-dot { width:5px; height:5px; border-radius:50%; background:#27c93f; animation:blink 1.2s infinite; }
+
+  .app-stage-label {
+    font-size: 9px; font-weight: 700; color: var(--text-light);
+    letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase;
+  }
+
+  .app-script-card {
+    background: white; border: 1.5px solid var(--accent);
+    border-radius: 8px; padding: 8px 10px; margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(200,117,58,0.12);
+  }
+  .script-card-tag {
+    font-size: 9px; font-weight: 700; color: var(--accent);
+    background: rgba(200,117,58,0.1); border-radius: 4px;
+    padding: 2px 6px; display: inline-block; margin-bottom: 4px;
+  }
+  .script-card-text {
+    font-size: 11px; color: var(--text-dark); line-height: 1.6; font-weight: 500;
+  }
+
+  .app-btn-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px;
+  }
+  .app-btn {
+    background: var(--brown-pale); border: 1px solid rgba(168,114,74,0.2);
+    border-radius: 6px; padding: 6px 8px;
+    font-size: 10px; color: var(--text-mid); font-weight: 600;
+    text-align: center; cursor: pointer;
+  }
+  .app-btn.active {
+    background: var(--brown-dark); color: white; border-color: var(--brown-dark);
+  }
+  .app-btn.accent {
+    background: var(--accent); color: white; border-color: var(--accent);
+  }
+
+  .app-ai-badge {
+    display: flex; align-items: center; gap: 5px;
+    background: linear-gradient(90deg, rgba(200,117,58,0.1), rgba(200,117,58,0.05));
+    border: 1px solid rgba(200,117,58,0.2); border-radius: 6px;
+    padding: 6px 8px; margin-top: 6px;
+    font-size: 10px; color: var(--accent); font-weight: 600;
+  }
+
+  /* 데스크 환경 표현 */
+  .desk-label {
+    position: absolute; bottom: -32px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px; color: var(--text-light);
+    white-space: nowrap; letter-spacing: 0.3px;
+  }
+
+  /* ───────── 기능 섹션 ───────── */
+  .features {
+    background: var(--brown-dark);
+    padding: 100px 40px;
+  }
+  .section-inner { max-width: var(--max-w); margin: 0 auto; }
+
+  .section-eyebrow {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;
+    text-align: center;
+  }
+  .section-title {
+    font-size: clamp(24px, 2.8vw, 36px);
+    font-weight: 900; text-align: center; margin-bottom: 10px;
+    letter-spacing: -0.8px; color: white;
+  }
+  .section-sub {
+    font-size: 15px; color: rgba(255,255,255,0.5);
+    text-align: center; margin-bottom: 60px;
+  }
+
+  .feature-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+
+  .feature-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 28px 24px;
+    transition: all 0.25s;
+  }
+  .feature-card:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(200,117,58,0.3);
+    transform: translateY(-4px);
+  }
+
+  .feature-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: var(--accent); display: flex; align-items: center;
+    justify-content: center; font-size: 22px; margin-bottom: 18px;
+  }
+  .feature-title { font-size: 17px; font-weight: 700; color: white; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .feature-desc { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.8; }
+
+  /* ───────── 요금제 ───────── */
+  .pricing {
+    padding: 100px 40px;
+    background: var(--cream);
+  }
+  .pricing .section-title { color: var(--brown-dark); }
+  .pricing .section-sub { color: var(--text-light); }
+
+  .price-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;
+    max-width: 1080px; margin: 0 auto;
+  }
+  .price-card.b2b {
+    border: 2px solid #c8753a;
+    background: linear-gradient(145deg, #3d2b1f, #6b4226);
+  }
+  .price-card.b2b .price-badge { background: rgba(200,117,58,.25); color: #f5c89a; }
+  .price-card.b2b .price-amount { color: #fff; font-size:28px; }
+  .price-card.b2b .price-trial { color: #f5c89a; }
+  .price-card.b2b .price-role-note { background: rgba(255,255,255,.08); color: rgba(255,255,255,.75); }
+  .price-card.b2b .price-features li { color: rgba(255,255,255,.85); border-bottom-color: rgba(255,255,255,.1); }
+  .price-card.b2b .price-features li::before { color: #f5c89a; }
+  .price-cta.b2b-cta {
+    width: 100%; padding: 14px;
+    background: #fff; color: #3d2b1f; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer; letter-spacing: -0.3px; transition: all 0.2s;
+    text-decoration: none; display: block; text-align: center;
+  }
+  .price-cta.b2b-cta:hover { background: #f5ede4; transform: translateY(-1px); }
+
+  .price-card {
+    background: var(--white); border: 1.5px solid rgba(168,114,74,0.2);
+    border-radius: 20px; padding: 32px 28px;
+    box-shadow: 0 4px 20px rgba(61,43,31,0.06);
+    transition: all 0.25s;
+  }
+  .price-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(61,43,31,0.12); }
+  .price-card.featured {
+    border: 2px solid var(--brown-dark);
+    box-shadow: 0 8px 32px rgba(61,43,31,0.14);
+  }
+
+  .price-badge {
+    display: inline-block; padding: 4px 14px;
+    background: var(--brown-pale); color: var(--brown-mid);
+    border-radius: 99px; font-size: 11px; font-weight: 700; margin-bottom: 20px;
+  }
+  .price-badge.hot { background: var(--accent); color: white; }
+
+  .price-amount {
+    font-size: 38px; font-weight: 900; color: var(--brown-dark);
+    letter-spacing: -1.5px; margin-bottom: 4px;
+  }
+  .price-amount span { font-size: 16px; font-weight: 400; color: var(--text-light); }
+  .price-trial { font-size: 13px; color: var(--accent); font-weight: 700; margin-bottom: 16px; }
+
+  .price-role-note {
+    font-size: 12px; color: var(--text-light);
+    background: var(--brown-pale); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 20px; line-height: 1.7;
+  }
+
+  .price-features { list-style: none; margin-bottom: 24px; }
+  .price-features li {
+    font-size: 13px; color: var(--text-mid);
+    padding: 8px 0; border-bottom: 1px solid var(--brown-pale);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .price-features li::before { content:"✓"; color:var(--accent); font-weight:700; flex-shrink:0; }
+  .price-features li.disabled { color: var(--text-light); text-decoration: line-through; }
+  .price-features li.disabled::before { content:"✕"; color:#ccc; }
+
+  .price-cta {
+    width: 100%; padding: 14px;
+    background: var(--accent); color: white; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer; letter-spacing: -0.3px; transition: all 0.2s;
+  }
+  .price-cta:hover { background: #b5642e; transform: translateY(-1px); }
+
+  /* ───────── 푸터 ───────── */
+  footer {
+    padding: 36px 40px;
+    background: var(--brown-dark);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-brand { font-size: 15px; font-weight: 900; color: white; letter-spacing: -0.3px; }
+  .footer-brand span { color: var(--accent); }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.35); }
+  .footer-kakao {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; background: #FEE500; color: #3C1E1E;
+    border-radius: 8px; font-size: 13px; font-weight: 700;
+    text-decoration: none; transition: opacity 0.2s;
+  }
+  .footer-kakao:hover { opacity: 0.88; }
+
+  /* ───────── 반응형 ───────── */
+  @media (max-width: 960px) {
+    .hero { grid-template-columns: 1fr; padding-top: 100px; gap: 40px; }
+    .hero-right { padding-top: 0; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .price-grid { grid-template-columns: 1fr; max-width: 440px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 0 20px; }
+    .hero { padding: 80px 20px 40px; }
+    .features, .pricing { padding: 60px 20px; }
+    footer { padding: 28px 20px; }
+    .monitor-setup { gap: 6px; }
+    .hero-stats { gap: 20px; }
+  }
+
+  /* ───────── 애니메이션 ───────── */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .hero-left > * { animation: fadeUp 0.6s ease both; }
+  .hero-left > *:nth-child(1){animation-delay:0.1s}
+  .hero-left > *:nth-child(2){animation-delay:0.2s}
+  .hero-left > *:nth-child(3){animation-delay:0.3s}
+  .hero-left > *:nth-child(4){animation-delay:0.4s}
+  .hero-left > *:nth-child(5){animation-delay:0.5s}
+  .hero-right { animation: fadeUp 0.8s 0.3s ease both; }
+
+  /* ───────── 오버레이 모달 ───────── */
+  .overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(26,16,8,0.76);
+    z-index:200; align-items:center; justify-content:center;
+    padding:20px; backdrop-filter:blur(4px);
+  }
+  .overlay.active { display:flex; animation:overlayIn 0.22s ease; }
+  @keyframes overlayIn { from{opacity:0}to{opacity:1} }
+
+  .modal {
+    display:flex; width:100%; max-width:900px; max-height:92vh;
+    border-radius:24px; overflow:hidden;
+    box-shadow:0 32px 80px rgba(0,0,0,0.38);
+    animation:modalIn 0.32s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn {
+    from{opacity:0;transform:translateY(28px) scale(0.96)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+
+  /* 왼쪽 브랜딩 */
+  .modal-left {
+    width:40%; background:linear-gradient(160deg,#3d2b1f 0%,#6b4226 60%,#8a5a34 100%);
+    padding:44px 36px; display:flex; flex-direction:column;
+    justify-content:space-between; flex-shrink:0; position:relative; overflow:hidden;
+  }
+  .modal-left::before {
+    content:''; position:absolute; width:280px; height:280px; border-radius:50%;
+    background:rgba(200,117,58,0.1); top:-80px; right:-80px;
+  }
+  .modal-left::after {
+    content:''; position:absolute; width:160px; height:160px; border-radius:50%;
+    background:rgba(255,255,255,0.04); bottom:-40px; left:-40px;
+  }
+
+  .ml-logo { display:flex; align-items:center; gap:10px; margin-bottom:36px; }
+  .ml-logo-icon {
+    width:42px; height:42px; background:rgba(255,255,255,0.12);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+  }
+  .ml-logo-icon svg { width:24px; height:24px; }
+  .ml-logo-name { font-size:17px; font-weight:900; color:white; letter-spacing:-0.5px; }
+  .ml-logo-name span { color:#e8906a; }
+
+  .ml-badge {
+    display:inline-block; background:rgba(200,117,58,0.22); color:#e8a06a;
+    font-size:11px; font-weight:700; letter-spacing:0.6px;
+    padding:5px 12px; border-radius:20px; margin-bottom:18px;
+    border:1px solid rgba(200,117,58,0.32);
+  }
+  .ml-title { font-size:24px; font-weight:900; color:white; line-height:1.35; letter-spacing:-0.8px; margin-bottom:12px; }
+  .ml-title em { color:#e8906a; font-style:normal; }
+  .ml-desc { font-size:13px; color:rgba(255,255,255,0.55); line-height:1.8; margin-bottom:32px; }
+
+  .ml-features { display:flex; flex-direction:column; gap:12px; }
+  .ml-feature { display:flex; align-items:flex-start; gap:10px; }
+  .ml-fi {
+    width:28px; height:28px; border-radius:7px;
+    background:rgba(255,255,255,0.1);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; flex-shrink:0; margin-top:1px;
+  }
+  .ml-ft { font-size:12px; color:rgba(255,255,255,0.75); line-height:1.5; }
+  .ml-ft strong { color:white; display:block; font-size:12px; }
+
+  .ml-bottom {
+    margin-top:32px; padding-top:20px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    font-size:11px; color:rgba(255,255,255,0.35);
+  }
+
+  /* 오른쪽 폼 */
+  .modal-right { flex:1; background:white; overflow-y:auto; position:relative; }
+  .modal-right-inner { padding:40px 36px 36px; }
+
+  .mr-title { font-size:20px; font-weight:800; color:var(--brown-dark); letter-spacing:-0.5px; margin-bottom:4px; }
+  .mr-sub { font-size:13px; color:var(--text-light); margin-bottom:28px; }
+
+  .close-btn {
+    position:absolute; top:18px; right:18px;
+    width:32px; height:32px; background:#f5ede4;
+    border:none; border-radius:50%; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.2s; z-index:10;
+  }
+  .close-btn:hover { background:#ead9cc; }
+  .close-btn svg { width:13px; height:13px; stroke:var(--brown-dark); }
+
+  .m-group { margin-bottom:15px; }
+  .m-label {
+    display:flex; align-items:center; gap:4px;
+    font-size:13px; font-weight:600; color:var(--brown-dark);
+    margin-bottom:6px; letter-spacing:-0.2px;
+  }
+  .m-req { color:var(--accent); font-size:14px; }
+  .m-opt { font-size:11px; color:var(--text-light); font-weight:400; margin-left:3px; }
+
+  .m-input, .m-select {
+    width:100%; padding:11px 13px;
+    border:1.5px solid #e0d4cc; border-radius:10px;
+    font-size:14px; font-family:'Noto Sans KR',sans-serif;
+    color:var(--text-dark); background:white; outline:none;
+    transition:border-color 0.2s, box-shadow 0.2s; -webkit-appearance:none;
+  }
+  .m-input::placeholder { color:#c0b0a8; }
+  .m-input:focus, .m-select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(200,117,58,0.1); }
+  .m-input.err { border-color:#c0392b; }
+  .m-select {
+    cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239a7a62' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 13px center; padding-right:34px;
+  }
+
+  .role-hint {
+    display:none; margin-top:7px; padding:8px 11px;
+    background:#fef8f4; border:1px solid #f0ddd0; border-radius:8px;
+    font-size:12px; color:var(--text-light); line-height:1.6;
+  }
+  .role-hint.on { display:block; }
+
+  .m-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .m-divider { height:1px; background:#ede4dc; margin:14px 0; }
+  .m-err { font-size:12px; color:#c0392b; margin-top:4px; display:none; }
+  .m-err.on { display:block; }
+
+  .consent-row { display:flex; align-items:flex-start; gap:9px; margin-bottom:14px; }
+  .consent-row input[type="checkbox"] {
+    width:17px; height:17px; min-width:17px; margin-top:2px;
+    cursor:pointer; accent-color:var(--accent);
+  }
+  .consent-txt { font-size:13px; color:var(--text-light); line-height:1.6; }
+  .consent-link { color:var(--accent); text-decoration:underline; cursor:pointer; font-weight:500; }
+
+  .submit-btn {
+    width:100%; padding:14px; background:var(--accent); color:white;
+    border:none; border-radius:12px; font-size:15px; font-weight:700;
+    font-family:'Noto Sans KR',sans-serif; cursor:pointer; letter-spacing:-0.3px; transition:all 0.2s;
+  }
+  .submit-btn:hover { background:#b5642e; transform:translateY(-1px); }
+  .submit-btn:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+
+  .spinner {
+    display:none; width:18px; height:18px;
+    border:2px solid rgba(255,255,255,0.4); border-top-color:white;
+    border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  .success-screen { display:none; text-align:center; padding:60px 36px; }
+  .success-icon {
+    width:64px; height:64px;
+    background:linear-gradient(135deg,var(--accent),#e08a4a);
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    margin:0 auto 20px; animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn { from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1} }
+  .success-icon svg { width:30px; height:30px; stroke:white; }
+  .success-ttl { font-size:22px; font-weight:800; color:var(--brown-dark); margin-bottom:10px; letter-spacing:-0.5px; }
+  .success-desc { font-size:14px; color:var(--text-light); line-height:1.9; }
+
+  /* 모바일 모달 */
+  @media (max-width:700px) {
+    .overlay { align-items:flex-end; padding:0; }
+    .modal { flex-direction:column; border-radius:20px 20px 0 0; max-height:95vh; max-width:100%; }
+    .modal-left { display:none; }
+    .modal-right-inner { padding:24px 20px 32px; }
+    .m-row-2 { grid-template-columns:1fr; }
+  }
+
+  /* ───────── 약관 모달 ───────── */
+  .privacy-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(26,16,8,0.82); z-index:300;
+    align-items:center; justify-content:center;
+    padding:16px; backdrop-filter:blur(4px);
+  }
+  .privacy-overlay.active { display:flex; animation:overlayIn 0.2s ease; }
+
+  .privacy-modal {
+    background:white; border-radius:20px; width:100%; max-width:460px; max-height:88vh;
+    display:flex; flex-direction:column;
+    box-shadow:0 24px 60px rgba(0,0,0,0.38);
+    animation:modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1); overflow:hidden;
+  }
+  .privacy-header {
+    background:linear-gradient(90deg,#6C4A33 0%,#7A5238 45%,#5B3E2C 100%);
+    padding:20px 22px 18px; flex-shrink:0; position:relative; border-radius:20px 20px 0 0;
+  }
+  .privacy-header-label { font-size:12px; font-weight:600; color:rgba(255,255,255,0.65); margin-bottom:4px; }
+  .privacy-header-title { font-size:17px; font-weight:800; color:#fff; line-height:1.4; }
+  .privacy-close {
+    position:absolute; top:16px; right:16px; width:30px; height:30px;
+    background:rgba(255,255,255,0.12); border:none; border-radius:50%;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;
+  }
+  .privacy-close:hover { background:rgba(255,255,255,0.22); }
+  .privacy-close svg { width:13px; height:13px; stroke:white; }
+  .privacy-body { overflow-y:auto; padding:20px 20px 24px; flex:1; }
+  .privacy-footer-bar {
+    padding:14px 20px; border-top:1px solid #ede4dc;
+    flex-shrink:0; background:white; border-radius:0 0 20px 20px;
+  }
+  .privacy-confirm-btn {
+    width:100%; padding:13px; background:var(--accent); color:white;
+    border:none; border-radius:10px; font-size:15px; font-weight:700;
+    font-family:'Noto Sans KR',sans-serif; cursor:pointer; letter-spacing:-0.3px; transition:background 0.2s;
+  }
+  .privacy-confirm-btn:hover { background:#b5642e; }
+  @media (max-width:480px) {
+    .privacy-overlay { align-items:flex-end; padding:0; }
+    .privacy-modal { border-radius:16px 16px 0 0; max-height:92vh; }
+    .privacy-header { border-radius:16px 16px 0 0; }
+    .privacy-footer-bar { border-radius:0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ───────── 헤더 ───────── -->
+<header>
+  <div class="logo-text">원세컨드 <span>1s</span></div>
+  <div class="header-right">
+    <button class="header-btn" onclick="openModal()">30일 무료체험</button>
+  </div>
+</header>
+
+<!-- ───────── 히어로 ───────── -->
+<section style="background:linear-gradient(160deg, var(--cream) 60%, #ede0d4 100%); padding-bottom:80px;">
+  <div class="hero">
+
+    <!-- 왼쪽: 텍스트 -->
+    <div class="hero-left">
+      <div class="hero-badge">현직 설계사가 직접 만든 TM 상담 도구</div>
+      <h1 class="hero-title">통화 중 멈추는 순간,<br><em>원세컨드</em>가<br>이어갑니다</h1>
+      <p class="hero-sub">15년 TM 현장 경험에서 나온 도구.<br>막히는 순간, 화면에 보이는 그대로 읽으세요.</p>
+      <div class="hero-cta-group">
+        <button class="cta-btn-main" onclick="openModal()">30일 무료체험 시작하기 →</button>
+        <p class="cta-note">신용카드 불필요 · 30일 후 월 9,900원</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">1<span>초</span></div>
+          <div class="stat-label">스크립트 실행 속도</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">53<span>개+</span></div>
+          <div class="stat-label">즉시 사용 스크립트</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">15<span>년</span></div>
+          <div class="stat-label">현장 경험 기반</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: TM 현장 듀얼 모니터 목업 -->
+    <div class="hero-right">
+      <div style="position:relative; width:100%;">
+        <div class="monitor-setup">
+
+          <!-- 왼쪽 모니터: 고객 통화 -->
+          <div style="width:44%; flex-shrink:0;">
+            <div class="monitor monitor-call">
+              <div class="monitor-screen">
+                <div class="call-header">
+                  <div class="call-dots">
+                    <div class="call-dot red"></div>
+                    <div class="call-dot yellow"></div>
+                    <div class="call-dot green"></div>
+                  </div>
+                  <div class="call-time-bar">
+                    <div class="call-blink"></div>
+                    <span>02:34</span>
+                  </div>
+                </div>
+                <div class="call-main">
+                  <div class="call-avatar">👤</div>
+                  <div class="call-name">고객 연결됨</div>
+                  <div class="call-status">● 통화 중</div>
+                  <div class="call-waveform">
+                    <div class="wave-bar"></div><div class="wave-bar"></div>
+                    <div class="wave-bar"></div><div class="wave-bar"></div>
+                    <div class="wave-bar"></div><div class="wave-bar"></div>
+                    <div class="wave-bar"></div><div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                  </div>
+                </div>
+                <div class="call-script-hint">
+                  <strong>💬 고객 반응</strong>
+                  "지금 좀 바빠서요, 나중에 다시 연락 주세요…"
+                </div>
+              </div>
+            </div>
+            <div class="monitor-stand"></div>
+            <div class="monitor-base"></div>
+          </div>
+
+          <!-- 오른쪽 모니터: 원세컨드 앱 -->
+          <div style="width:56%; flex-shrink:0;">
+            <div class="monitor monitor-app">
+              <div class="monitor-screen">
+                <div class="app-header">
+                  <div class="app-logo">원세컨드 <span>1s</span></div>
+                  <div class="app-status"><div class="app-status-dot"></div>실시간</div>
+                </div>
+
+                <div class="app-stage-label">⚡ 반론 대응</div>
+
+                <div class="app-script-card">
+                  <div class="script-card-tag">바쁘실 때</div>
+                  <div class="script-card-text">
+                    "네, 고객님. 딱 1분만 시간 내주시면<br>
+                    제가 핵심만 말씀드릴게요. 혹시 지금<br>
+                    문자로 받아보시는 건 어떠세요?"
+                  </div>
+                </div>
+
+                <div class="app-btn-grid">
+                  <div class="app-btn active">⚡ 반론 대응</div>
+                  <div class="app-btn">✅ 클로징</div>
+                  <div class="app-btn">📞 도입 인사</div>
+                  <div class="app-btn accent">🔵 2차 클로징</div>
+                </div>
+
+                <div class="app-ai-badge">
+                  ✨ AI 반론 대응 멘트 생성 중...
+                </div>
+              </div>
+            </div>
+            <div class="monitor-stand"></div>
+            <div class="monitor-base"></div>
+          </div>
+
+        </div>
+
+        <!-- 데스크 라벨 -->
+        <div style="text-align:center; margin-top:28px; font-size:12px; color:var(--text-light); letter-spacing:0.3px;">
+          💻 TM 상담 현장 · 듀얼 모니터 환경
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ───────── 기능 섹션 ───────── -->
+<section class="features">
+  <div class="section-inner">
+    <div class="section-eyebrow">FEATURES</div>
+    <h2 class="section-title">원세컨드가 하는 일</h2>
+    <p class="section-sub">통화 중 필요한 모든 것, 한 화면에</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📞</div>
+        <div class="feature-title">즉시 실행 스크립트</div>
+        <div class="feature-desc">도입 인사부터 클로징까지, 상담 흐름에 맞는 멘트를 1초 안에 꺼내세요. 생각하지 말고, 선택하세요.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title">인수 · 상품 게시판</div>
+        <div class="feature-desc">고혈압, 당뇨, 용종… 현장 Q&A가 쌓이는 지식 허브. 카카오톡 단톡방에서 위로 밀려 사라지는 정보를 잡아드립니다.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">AI 반론 대응</div>
+        <div class="feature-desc">"비싸요", "생각해볼게요", "지금 바빠요" — AI가 상황에 맞는 대응 멘트를 즉시 만들어드립니다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 요금제 ───────── -->
+<section class="pricing">
+  <div class="section-inner">
+    <div class="section-eyebrow" style="color:var(--accent);">PRICING</div>
+    <h2 class="section-title">요금제</h2>
+    <p class="section-sub">30일 무료체험 후 결정하세요</p>
+    <div class="price-grid">
+
+      <div class="price-card">
+        <div class="price-badge">무료 플랜</div>
+        <div class="price-amount">0<span>원 / 월</span></div>
+        <div class="price-trial">가입 즉시 영구 무료</div>
+        <div class="price-role-note">매니저(실장) · 지점장(센터장)은<br>무료 플랜에서도 글쓰기 가능</div>
+        <ul class="price-features">
+          <li>스크립트 전체 열람</li>
+          <li>게시판 전체 열람</li>
+          <li>모바일 최적화</li>
+          <li class="disabled">스크립트 작성 (설계사 제한)</li>
+          <li class="disabled">게시판 질문 작성 (설계사 제한)</li>
+        </ul>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-badge hot">유료 플랜 · 추천</div>
+        <div class="price-amount">9,900<span>원 / 월</span></div>
+        <div class="price-trial">첫 30일 완전 무료 체험</div>
+        <div class="price-role-note">설계사·팀장도 글쓰기까지<br>모든 기능을 사용할 수 있어요</div>
+        <ul class="price-features">
+          <li>스크립트 전체 열람 + 작성</li>
+          <li>게시판 질문 · 답변 작성</li>
+          <li>AI 반론 대응 멘트 생성</li>
+          <li>모바일 최적화</li>
+          <li>언제든 해지 가능</li>
+        </ul>
+        <button class="price-cta" onclick="openModal()">30일 무료로 시작하기</button>
+      </div>
+
+      <div class="price-card b2b">
+        <div class="price-badge">B2B 제휴</div>
+        <div class="price-amount">맞춤 협의</div>
+        <div class="price-trial">보험사 · GA · 교육기관 전용</div>
+        <div class="price-role-note">규모와 목적에 맞는<br>전용 플랜으로 협의드립니다</div>
+        <ul class="price-features">
+          <li>조직 전용 게시판 운영</li>
+          <li>데이터 자산화 지원</li>
+          <li>파일럿 1~3개월 무료 제공</li>
+          <li>맞춤 기능 협의 가능</li>
+          <li>전담 운영 지원</li>
+        </ul>
+        <a class="price-cta b2b-cta" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 제휴 문의하기</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 푸터 ───────── -->
+<footer>
+  <div>
+    <div class="footer-brand">원세컨드 <span>1s</span></div>
+    <div class="footer-copy" style="margin-top:4px;">© 2026 OneSecond. All rights reserved.</div>
+  </div>
+  <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank">
+    💬 카카오 오픈채팅 문의
+  </a>
+</footer>
+
+<!-- ───────── 가입 오버레이 ───────── -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+
+    <!-- 왼쪽 브랜딩 -->
+    <div class="modal-left">
+      <div>
+        <div class="ml-logo">
+          <div class="ml-logo-icon">
+            <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="28" cy="28" r="22" stroke="white" stroke-width="2.5"/>
+              <line x1="28" y1="12" x2="28" y2="16" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="28" y1="40" x2="28" y2="44" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="12" y1="28" x2="16" y2="28" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="40" y1="28" x2="44" y2="28" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="28" y1="28" x2="28" y2="18" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="28" y1="28" x2="36" y2="28" stroke="#c8753a" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="28" cy="28" r="2.5" fill="white"/>
+            </svg>
+          </div>
+          <div class="ml-logo-name">원세컨드 <span>1s</span></div>
+        </div>
+        <div class="ml-badge">30일 완전 무료 · 카드 불필요</div>
+        <div class="ml-title">통화 중 멈추는<br>순간, <em>원세컨드</em>가<br>이어갑니다</div>
+        <div class="ml-desc">현장 15년 경력 설계사가 직접 만든<br>TM 상담 1초 실행 도구</div>
+        <div class="ml-features">
+          <div class="ml-feature">
+            <div class="ml-fi">📞</div>
+            <div class="ml-ft"><strong>즉시 실행 스크립트</strong>도입부터 클로징까지 1초 안에</div>
+          </div>
+          <div class="ml-feature">
+            <div class="ml-fi">📋</div>
+            <div class="ml-ft"><strong>인수·상품 게시판</strong>카카오 단톡방을 대체하는 지식 허브</div>
+          </div>
+          <div class="ml-feature">
+            <div class="ml-fi">⚡</div>
+            <div class="ml-ft"><strong>AI 반론 대응</strong>"비싸요"에 즉시 대응 멘트 생성</div>
+          </div>
+        </div>
+      </div>
+      <div class="ml-bottom">체험 기간 종료 후 자동 결제되지 않습니다</div>
+    </div>
+
+    <!-- 오른쪽 폼 -->
+    <div class="modal-right">
+      <button class="close-btn" onclick="closeModal()">
+        <svg viewBox="0 0 14 14" fill="none" stroke-width="2" stroke-linecap="round">
+          <line x1="1" y1="1" x2="13" y2="13"/>
+          <line x1="13" y1="1" x2="1" y2="13"/>
+        </svg>
+      </button>
+
+      <div class="modal-right-inner" id="modal-body">
+        <div class="mr-title">30일 무료체험 시작하기</div>
+        <div class="mr-sub">가입 후 24시간 이내 안내 문자를 드립니다</div>
+
+        <form id="reg-form" novalidate>
+
+          <div class="m-row-2">
+            <div class="m-group">
+              <div class="m-label">이름 <span class="m-req">*</span></div>
+              <input class="m-input" type="text" id="f-name" placeholder="홍길동" maxlength="20">
+              <div class="m-err" id="e-name">이름을 입력해 주세요.</div>
+            </div>
+            <div class="m-group">
+              <div class="m-label">역할 <span class="m-req">*</span></div>
+              <select class="m-select" id="f-role" onchange="onRoleChange()">
+                <option value="">선택해 주세요</option>
+                <option value="member">팀장 / 설계사</option>
+                <option value="manager">매니저 / 실장</option>
+                <option value="branch_manager">지점장 / 센터장</option>
+              </select>
+              <div class="m-err" id="e-role">역할을 선택해 주세요.</div>
+            </div>
+          </div>
+
+          <div class="role-hint" id="rh-member">📱 설계사·팀장은 <strong>첫 30일 무료</strong> 후 월 9,900원으로 전환됩니다.</div>
+          <div class="role-hint" id="rh-manager">✅ 매니저·실장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.</div>
+          <div class="role-hint" id="rh-branch">✅ 지점장·센터장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.</div>
+
+          <div class="m-row-2">
+            <div class="m-group">
+              <div class="m-label">핸드폰 번호 <span class="m-req">*</span></div>
+              <input class="m-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this)">
+              <div class="m-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
+            </div>
+            <div class="m-group">
+              <div class="m-label">이메일 <span class="m-req">*</span></div>
+              <input class="m-input" type="email" id="f-email" placeholder="example@email.com">
+              <div class="m-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
+            </div>
+          </div>
+
+          <div class="m-divider"></div>
+
+          <div class="m-group">
+            <div class="m-label">회사명 <span class="m-req">*</span> <span class="m-opt">팀·지점 게시판 사용 시 필수</span></div>
+            <input class="m-input" type="text" id="f-company" placeholder="에즈금융서비스" maxlength="50">
+            <div class="m-err" id="e-company">회사명을 입력해 주세요.</div>
+          </div>
+
+          <div class="m-row-2">
+            <div class="m-group">
+              <div class="m-label">지점 / 센터명 <span class="m-req">*</span></div>
+              <input class="m-input" type="text" id="f-branch" placeholder="더원지점" maxlength="50">
+              <div class="m-err" id="e-branch">지점·센터명을 입력해 주세요.</div>
+            </div>
+            <div class="m-group">
+              <div class="m-label">팀명 <span class="m-opt">(선택)</span></div>
+              <input class="m-input" type="text" id="f-team" placeholder="4팀" maxlength="30">
+            </div>
+          </div>
+
+          <div class="consent-row">
+            <input type="checkbox" id="f-consent">
+            <label class="consent-txt" for="f-consent">
+              개인정보 수집 및 허브 공개에 동의합니다.
+              <span class="consent-link" onclick="showPrivacy()">[약관보기]</span>
+            </label>
+          </div>
+          <div class="m-err" id="e-consent">동의가 필요합니다.</div>
+
+          <button type="button" class="submit-btn" id="sub-btn" onclick="doSubmit()">
+            <span id="btn-txt">30일 무료체험 시작하기</span>
+            <div class="spinner" id="spinner"></div>
+          </button>
+        </form>
+      </div>
+
+      <div class="success-screen" id="success-screen">
+        <div class="success-icon">
+          <svg viewBox="0 0 28 28" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4,14 11,21 24,7"/>
+          </svg>
+        </div>
+        <div class="success-ttl">가입 신청 완료!</div>
+        <div class="success-desc">
+          가입 정보를 확인 후<br>
+          <strong>24시간 이내</strong>에 안내 문자를 드립니다.<br><br>
+          30일 무료체험 기간 동안<br>원세컨드를 마음껏 사용해 보세요 😊
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 약관 모달 ───────── -->
+<div class="privacy-overlay" id="privacy-overlay">
+  <div class="privacy-modal">
+    <div class="privacy-header">
+      <div class="privacy-header-label">원세컨드 (OneSecond) · 개인정보 안내</div>
+      <div class="privacy-header-title">개인정보 수집·이용 및<br>허브 공개 동의서</div>
+      <button class="privacy-close" onclick="closePrivacy()">
+        <svg viewBox="0 0 14 14" fill="none" stroke-width="2" stroke-linecap="round">
+          <line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/>
+        </svg>
+      </button>
+    </div>
+    <div class="privacy-body">
+      <div style="font-family:'Noto Sans KR',sans-serif;line-height:1.7;letter-spacing:-0.2px;color:#1F1A16;">
+        <div style="background:linear-gradient(180deg,#F8F4EF 0%,#F2EAE1 100%);border:1px solid rgba(120,85,60,0.18);border-radius:14px;padding:14px 16px;margin-bottom:14px;">
+          <div style="font-size:13px;color:#5C3D2E;line-height:1.8;">원세컨드(이하 "서비스")는 보험 설계사를 위한 업무 지원 플랫폼입니다.<br><span style="font-weight:700;">회원가입 시 아래 내용에 동의하신 것으로 간주됩니다.</span></div>
+        </div>
+        <div style="background:#FFF8F1;border:1px solid #E9D7C6;border-radius:14px;padding:14px 16px;margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:800;color:#6B4F3A;margin-bottom:6px;">⚠️ 꼭 확인해 주세요</div>
+          <div style="font-size:13px;color:#5F5248;line-height:1.8;">원세컨드는 업무 지식 공유를 위한 플랫폼이며,<br><span style="font-weight:700;color:#C0392B;">고객 개인정보 입력 및 공유는 허용되지 않습니다.</span></div>
+        </div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제1조. 수집하는 개인정보 항목</div><div style="font-size:13px;color:#4F433A;margin-bottom:10px;">서비스 가입 및 운영을 위해 아래 정보를 수집합니다.</div><div style="display:flex;flex-direction:column;gap:8px;"><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;"><div style="font-size:12px;font-weight:700;color:#7A5238;margin-bottom:4px;">필수 항목</div><div style="font-size:13px;color:#2B211B;">이름, 이메일, 전화번호, 역할 (팀장 / 실장 / 지점장·센터장)</div></div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;"><div style="font-size:12px;font-weight:700;color:#7A5238;margin-bottom:4px;">선택 항목</div><div style="font-size:13px;color:#2B211B;">소속 회사명, 지점/센터명, 팀명</div></div></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제2조. 개인정보 수집·이용 목적</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· 원세컨드 서비스 회원 가입 및 본인 확인</div><div>· 스크립트, 게시판 등 서비스 기능 제공</div><div>· 조직별 권한 관리 (설계사·팀장 / 실장 / 지점장·센터장 구분)</div><div>· 서비스 관련 공지 및 안내 발송</div></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제3조. 허브 공개란 무엇인가요?</div><div style="font-size:13px;color:#4F433A;margin-bottom:10px;line-height:1.8;">허브 게시판은 원세컨드 플랫폼 내 모든 사용자가 함께 활용하는 <span style="font-weight:700;">공유 지식 공간</span>입니다.</div><div style="display:flex;flex-direction:column;gap:8px;"><div style="background:#F6FBF6;border:1px solid #CFE5CF;border-radius:12px;padding:14px 16px;"><div style="font-size:13px;font-weight:800;color:#2F6B3E;margin-bottom:8px;">✅ 허브에 공개되는 정보</div><div style="font-size:13px;color:#2B211B;line-height:2.0;"><div>· 회원이 직접 작성한 업무 관련 게시글</div><div>· 인수 Q&amp;A, 상품 질문·답변 등 업무 지식 정보</div></div></div><div style="background:#FFF7F4;border:1px solid #E8C9BE;border-radius:12px;padding:14px 16px;"><div style="font-size:13px;font-weight:800;color:#A14B33;margin-bottom:8px;">🚫 허브에 공개되지 않는 정보</div><div style="font-size:13px;color:#2B211B;line-height:2.0;"><div>· 고객의 개인정보 (이름, 연락처, 주민번호 등 일체)</div><div>· 보험 계약 내용 및 청약 정보</div><div>· 회원 본인의 연락처, 이메일 등 개인 식별 정보</div></div></div><div style="background:#FFF8E8;border:1px solid #E8D39F;border-radius:12px;padding:14px 16px;"><div style="font-size:13px;font-weight:800;color:#8A6622;margin-bottom:8px;">⚠️ 작성 시 주의사항</div><div style="font-size:13px;color:#2B211B;line-height:1.8;">게시글 작성 시 고객 개인정보가 포함되지 않도록 주의해 주세요.</div></div></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제4조. 개인정보 보유 및 이용 기간</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· 회원 탈퇴 시: 즉시 개인정보 삭제</div><div>· 허브 게시글: 탈퇴 시 작성자명 익명 처리 후 보관</div><div>· 관련 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관 후 삭제</div></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제5조. 개인정보 제3자 제공</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:1.8;">원세컨드는 회원의 개인정보를 외부 제3자에게 제공하지 않습니다.<br>단, 법령에 의거한 수사기관의 요청이 있는 경우는 예외로 합니다.</div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제6조. 회원의 권리</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· 개인정보 열람, 수정, 삭제 요청 가능</div><div>· 허브 공개 철회: 작성한 게시글의 공개 범위 변경 가능</div><div>· 동의 철회(탈퇴) 시 즉시 처리</div></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제7조. 문의처</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· <span style="font-weight:700;">서비스명:</span> 원세컨드 (OneSecond)</div><div>· <span style="font-weight:700;">이메일:</span> bylts0428@gmail.com</div><div>· <span style="font-weight:700;">시행일:</span> 2026년 4월 4일</div></div></div>
+        <div style="background:linear-gradient(90deg,#6C4A33 0%,#7A5238 45%,#5B3E2C 100%);border-radius:12px;padding:14px 18px;"><div style="font-size:13px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.7;">본 동의서는 회원가입 시 동의 체크와 함께 효력이 발생합니다.</div></div>
+      </div>
+    </div>
+    <div class="privacy-footer-bar">
+      <button class="privacy-confirm-btn" onclick="confirmPrivacy()">확인했습니다</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 모달
+  function openModal() {
+    document.getElementById('overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  // 역할
+  function onRoleChange() {
+    const role = document.getElementById('f-role').value;
+    document.querySelectorAll('.role-hint').forEach(el => el.classList.remove('on'));
+    if (role === 'member') document.getElementById('rh-member').classList.add('on');
+    if (role === 'manager') document.getElementById('rh-manager').classList.add('on');
+    if (role === 'branch_manager') document.getElementById('rh-branch').classList.add('on');
+  }
+
+  // 전화번호
+  function fmtPhone(input) {
+    let v = input.value.replace(/\D/g,'');
+    if (v.length <= 3) input.value = v;
+    else if (v.length <= 7) input.value = v.slice(0,3)+'-'+v.slice(3);
+    else input.value = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+  }
+
+  // 유효성 검사
+  function validate() {
+    let ok = true;
+    [
+      {id:'f-name',eid:'e-name',msg:'이름을 입력해 주세요.'},
+      {id:'f-phone',eid:'e-phone',msg:'핸드폰 번호를 입력해 주세요.'},
+      {id:'f-company',eid:'e-company',msg:'회사명을 입력해 주세요.'},
+      {id:'f-branch',eid:'e-branch',msg:'지점·센터명을 입력해 주세요.'},
+    ].forEach(f => {
+      const el = document.getElementById(f.id);
+      const er = document.getElementById(f.eid);
+      if (!el.value.trim()) { el.classList.add('err'); er.classList.add('on'); ok=false; }
+      else { el.classList.remove('err'); er.classList.remove('on'); }
+    });
+    const role = document.getElementById('f-role');
+    if (!role.value) { document.getElementById('e-role').classList.add('on'); ok=false; }
+    else document.getElementById('e-role').classList.remove('on');
+    const email = document.getElementById('f-email');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+      email.classList.add('err'); document.getElementById('e-email').classList.add('on'); ok=false;
+    } else { email.classList.remove('err'); document.getElementById('e-email').classList.remove('on'); }
+    if (!document.getElementById('f-consent').checked) {
+      document.getElementById('e-consent').classList.add('on'); ok=false;
+    } else document.getElementById('e-consent').classList.remove('on');
+    return ok;
+  }
+
+  function doSubmit() {
+    if (!validate()) return;
+    const btn = document.getElementById('sub-btn');
+    const txt = document.getElementById('btn-txt');
+    const spin = document.getElementById('spinner');
+    btn.disabled=true; txt.style.display='none'; spin.style.display='block';
+    setTimeout(() => {
+      document.getElementById('modal-body').style.display='none';
+      document.getElementById('success-screen').style.display='block';
+    }, 1800);
+  }
+
+  // 약관
+  function showPrivacy() { document.getElementById('privacy-overlay').classList.add('active'); }
+  function closePrivacy() { document.getElementById('privacy-overlay').classList.remove('active'); }
+  function confirmPrivacy() {
+    document.getElementById('f-consent').checked = true;
+    document.getElementById('e-consent').classList.remove('on');
+    closePrivacy();
+  }
+</script>
+</body>
+</html>
