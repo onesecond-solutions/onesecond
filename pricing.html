@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원세컨드 | 요금제</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+:root {
+  --brown-dark:#3d2b1f; --brown-mid:#6b4226; --brown-light:#a0724a;
+  --brown-pale:#f5ede4; --cream:#fdf8f3; --accent:#c8753a;
+  --text-dark:#1a1008; --text-mid:#5a3e2b; --text-light:#9a7a62;
+  --white:#ffffff; --sidebar-w:230px; --line:#e8d8cc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* 상단바 */
+.topbar{height:52px;flex-shrink:0;background:var(--brown-dark);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08);}
+.topbar-logo{font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.4px;cursor:pointer;}
+.topbar-logo span{color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.user-dropdown-wrap{position:relative;}
+.topbar-user{font-size:12px;color:rgba(255,255,255,.85);padding:4px 8px;border-radius:6px;cursor:pointer;transition:background .15s;}
+.topbar-user:hover{background:rgba(255,255,255,.1);}
+.user-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:10px;min-width:150px;box-shadow:0 8px 24px rgba(61,43,31,.22);border:1px solid #e0d0c0;overflow:hidden;z-index:200;}
+.user-dropdown.open{display:block;}
+.user-dropdown-item{padding:11px 16px;font-size:13px;color:#3d2b1f;cursor:pointer;font-weight:600;transition:background .15s;}
+.user-dropdown-item:hover{background:#f5ede4;}
+.user-dropdown-item+.user-dropdown-item{border-top:1px solid #f0e6dc;}
+
+/* 레이아웃 */
+.layout{flex:1;display:flex;overflow:hidden;}
+
+/* 사이드바 */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:#6F4428;display:flex;flex-direction:column;padding:12px 0;overflow-y:auto;}
+.nav-item{padding:11px 18px;font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
+.nav-item.active{background:rgba(200,117,58,.15);color:var(--accent);border-left-color:var(--accent);}
+.sidebar-bottom{margin-top:auto;padding:12px 12px 4px;}
+.upgrade-btn{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:linear-gradient(135deg,#c8753a,#a05a28);border:none;color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;}
+.upgrade-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.pro-badge{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:rgba(200,117,58,.12);border:1px solid rgba(200,117,58,.3);color:var(--accent);font-size:13px;font-weight:700;}
+
+/* 메인 */
+.main{flex:1;overflow-y:auto;padding:32px 40px;}
+
+/* 요금제 헤더 */
+.pricing-header{text-align:center;margin-bottom:40px;}
+.pricing-eyebrow{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.pricing-title{font-size:28px;font-weight:900;color:var(--brown-dark);letter-spacing:-0.5px;margin-bottom:8px;}
+.pricing-sub{font-size:14px;color:var(--text-light);}
+
+/* 현재 플랜 배너 */
+.current-plan-banner{background:linear-gradient(90deg,#3d2b1f,#6b4226);border-radius:12px;padding:14px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.current-plan-label{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:2px;}
+.current-plan-value{font-size:14px;font-weight:800;color:#fff;}
+.current-plan-badge{padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;}
+.current-plan-badge.free{background:rgba(255,255,255,.15);color:#fff;}
+.current-plan-badge.pro{background:var(--accent);color:#fff;}
+
+/* 요금제 카드 그리드 */
+.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;max-width:960px;margin:0 auto;}
+.price-card{background:#fff;border:1.5px solid rgba(168,114,74,.2);border-radius:18px;padding:28px 24px;box-shadow:0 4px 20px rgba(61,43,31,.06);transition:all .25s;display:flex;flex-direction:column;}
+.price-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(61,43,31,.12);}
+.price-card.featured{border:2px solid var(--brown-dark);box-shadow:0 8px 28px rgba(61,43,31,.14);}
+.price-card.b2b{border:2px solid var(--accent);background:linear-gradient(145deg,#3d2b1f,#6b4226);}
+.price-badge{display:inline-block;padding:4px 12px;background:var(--brown-pale);color:var(--brown-mid);border-radius:99px;font-size:11px;font-weight:700;margin-bottom:16px;}
+.price-badge.hot{background:var(--accent);color:#fff;}
+.price-badge.b2b-badge{background:rgba(200,117,58,.25);color:#f5c89a;}
+.price-amount{font-size:32px;font-weight:900;color:var(--brown-dark);letter-spacing:-1px;margin-bottom:4px;}
+.price-amount span{font-size:14px;font-weight:400;color:var(--text-light);}
+.price-amount.b2b-amount{color:#fff;font-size:24px;}
+.price-trial{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;}
+.price-trial.b2b-trial{color:#f5c89a;}
+.price-role-note{font-size:12px;color:var(--text-light);background:var(--brown-pale);border-radius:8px;padding:9px 11px;margin-bottom:16px;line-height:1.7;}
+.price-role-note.b2b-note{background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);}
+.price-features{list-style:none;margin-bottom:20px;flex:1;}
+.price-features li{font-size:13px;color:var(--text-mid);padding:7px 0;border-bottom:1px solid var(--brown-pale);display:flex;align-items:center;gap:7px;}
+.price-features li::before{content:"✓";color:var(--accent);font-weight:700;flex-shrink:0;}
+.price-features li.disabled{color:var(--text-light);text-decoration:line-through;}
+.price-features li.disabled::before{content:"✕";color:#ccc;}
+.price-features.b2b-features li{color:rgba(255,255,255,.85);border-bottom-color:rgba(255,255,255,.1);}
+.price-features.b2b-features li::before{color:#f5c89a;}
+.price-cta{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;margin-top:auto;}
+.price-cta:hover{background:#b5642e;transform:translateY(-1px);}
+.price-cta.current{background:#e0d0c0;color:var(--text-light);cursor:default;}
+.price-cta.current:hover{transform:none;background:#e0d0c0;}
+.price-cta.b2b-cta{background:#fff;color:#3d2b1f;text-decoration:none;display:block;text-align:center;}
+.price-cta.b2b-cta:hover{background:#f5ede4;}
+
+/* 안내 */
+.pricing-note{max-width:960px;margin:24px auto 0;text-align:center;font-size:12px;color:var(--text-light);line-height:1.8;}
+
+/* 푸터 */
+.site-footer{width:100%;background:var(--brown-dark);color:rgba(255,255,255,.92);padding:12px 18px;flex-shrink:0;}
+.footer-inner{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;}
+.footer-brand{font-size:13px;font-weight:900;color:#fff;}
+.footer-brand span{color:var(--accent);}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.6);}
+.footer-kakao{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:8px;background:#FEE500;color:#2B1E14;text-decoration:none;font-size:12px;font-weight:900;}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{padding:20px 16px;}
+  .price-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo" onclick="window.location.href='home.html'">원세컨드 <span>1s</span></div>
+  <div class="topbar-right">
+    <a href="https://open.kakao.com/o/svu80Moi" target="_blank"
+      style="height:26px;padding:0 12px;border-radius:6px;background:rgba(255,100,100,0.18);border:1px solid rgba(255,100,100,0.35);color:#ffaaaa;font-size:11px;font-weight:700;display:flex;align-items:center;text-decoration:none;white-space:nowrap;">⚠️ 전산장애신고</a>
+    <div class="user-dropdown-wrap">
+      <div class="topbar-user" id="topbar-user" onclick="toggleUserDropdown(event)">-</div>
+      <div class="user-dropdown" id="user-dropdown">
+        <div class="user-dropdown-item" onclick="doLogout()">🚪 로그아웃</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-item" onclick="window.location.href='home.html'">🏠 홈</div>
+    <div class="nav-item" onclick="window.location.href='board.html'">📋 게시판</div>
+    <div class="nav-item" onclick="window.location.href='myspace.html'">⭐ MY SPACE</div>
+    <div class="nav-item" onclick="alert('보험뉴스는 곧 오픈됩니다! 조금만 기다려 주세요 😊')">📰 보험뉴스</div>
+    <div class="nav-item" onclick="window.location.href='quick-menu.html'">⚡ Quick 메뉴</div>
+    <div class="sidebar-bottom">
+      <div id="sidebar-upgrade-wrap"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="pricing-header">
+      <div class="pricing-eyebrow">PRICING</div>
+      <div class="pricing-title">함께 성장하는 요금제</div>
+      <div class="pricing-sub">지금 바로 시작하고, 필요할 때 업그레이드하세요</div>
+    </div>
+
+    <!-- 현재 플랜 배너 -->
+    <div class="current-plan-banner" id="current-plan-banner" style="display:none;">
+      <div>
+        <div class="current-plan-label">현재 이용 중인 플랜</div>
+        <div class="current-plan-value" id="current-plan-value">-</div>
+      </div>
+      <div class="current-plan-badge" id="current-plan-badge">-</div>
+    </div>
+
+    <div class="price-grid">
+
+      <!-- 무료 플랜 -->
+      <div class="price-card">
+        <div class="price-badge">무료 플랜</div>
+        <div class="price-amount">0<span>원 / 월</span></div>
+        <div class="price-trial">가입 즉시 영구 무료</div>
+        <div class="price-role-note">매니저(실장) · 지점장(센터장)은<br>무료 플랜에서도 글쓰기 가능</div>
+        <ul class="price-features">
+          <li>스크립트 전체 열람</li>
+          <li>게시판 전체 열람</li>
+          <li>모바일 최적화</li>
+          <li class="disabled">스크립트 작성 (설계사 제한)</li>
+          <li class="disabled">게시판 질문 작성 (설계사 제한)</li>
+        </ul>
+        <button class="price-cta" id="free-cta" onclick="window.location.href='home.html'">홈으로 돌아가기</button>
+      </div>
+
+      <!-- 유료 플랜 -->
+      <div class="price-card featured">
+        <div class="price-badge hot">유료 플랜 · 추천</div>
+        <div class="price-amount">9,900<span>원 / 월</span></div>
+        <div class="price-trial">첫 30일 완전 무료 체험</div>
+        <div class="price-role-note">설계사·팀장도 글쓰기까지<br>모든 기능을 사용할 수 있어요</div>
+        <ul class="price-features">
+          <li>스크립트 전체 열람 + 작성</li>
+          <li>게시판 질문 · 답변 작성</li>
+          <li>신규 스크립트 · 기능 우선 업데이트</li>
+          <li>AI 반론 대응 멘트 생성</li>
+          <li>언제든 해지 가능</li>
+        </ul>
+        <button class="price-cta" id="pro-cta" onclick="handleProCta()">30일 무료로 시작하기</button>
+      </div>
+
+      <!-- B2B 제휴 -->
+      <div class="price-card b2b">
+        <div class="price-badge b2b-badge">B2B 제휴</div>
+        <div class="price-amount b2b-amount">맞춤 협의</div>
+        <div class="price-trial b2b-trial">보험사 · GA · 교육기관 전용</div>
+        <div class="price-role-note b2b-note">규모와 목적에 맞는<br>전용 플랜으로 협의드립니다</div>
+        <ul class="price-features b2b-features">
+          <li>조직 전용 게시판 운영</li>
+          <li>데이터 자산화 지원</li>
+          <li>파일럿 1~3개월 무료 제공</li>
+          <li>맞춤 기능 협의 가능</li>
+          <li>전담 운영 지원</li>
+        </ul>
+        <a class="price-cta b2b-cta" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 제휴 문의하기</a>
+      </div>
+
+    </div>
+
+    <div class="pricing-note">
+      · 유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다<br>
+      · 매니저(실장) · 지점장은 무료 플랜에서도 영구 무료로 모든 기능을 이용할 수 있습니다<br>
+      · B2B 제휴 문의는 카카오 오픈채팅으로 연락 주시면 빠르게 안내드립니다
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">원세컨드 <span>1s</span></div>
+    <div class="footer-copy">© 2026 onesecond. All rights reserved.</div>
+    <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 카카오 오픈채팅 문의</a>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+const ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
+
+const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
+if (!_initToken || !_initAuth.id) { window.location.href = 'login.html'; }
+window._userToken = _initToken;
+window._userId = _initAuth.id;
+window._userPlan = 'free';
+
+async function loadUserInfo() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}&select=name,role,email,plan`, {
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${window._userToken}`}
+    });
+    const data = await res.json();
+    if (data && data[0]) {
+      const u = data[0];
+      window._userPlan = u.plan || 'free';
+      window._userRole = u.role;
+      const roleLabel = ROLE_LABEL[u.role] || '';
+      document.getElementById('topbar-user').innerHTML = `${u.name} ${roleLabel} <span style="color:rgba(255,255,255,.55);font-size:11px;">(${u.email})</span> ▾`;
+
+      // 현재 플랜 배너
+      const banner = document.getElementById('current-plan-banner');
+      const planValue = document.getElementById('current-plan-value');
+      const planBadge = document.getElementById('current-plan-badge');
+      banner.style.display = 'flex';
+
+      const isPro = u.plan === 'pro';
+      const isFreeRole = ['manager','branch_manager'].includes(u.role);
+
+      if (isFreeRole) {
+        planValue.textContent = '매니저/지점장 영구 무료';
+        planBadge.textContent = '영구 무료';
+        planBadge.className = 'current-plan-badge pro';
+      } else if (isPro) {
+        planValue.textContent = '유료 플랜 이용 중';
+        planBadge.textContent = 'PRO';
+        planBadge.className = 'current-plan-badge pro';
+      } else {
+        planValue.textContent = '무료 플랜 이용 중';
+        planBadge.textContent = 'FREE';
+        planBadge.className = 'current-plan-badge free';
+      }
+
+      // CTA 버튼 상태
+      const proCta = document.getElementById('pro-cta');
+      if (isPro || isFreeRole) {
+        proCta.textContent = '✅ 이용 중';
+        proCta.className = 'price-cta current';
+      }
+
+      // 사이드바 업그레이드 버튼
+      renderSidebarUpgrade(u.plan, u.role);
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderSidebarUpgrade(plan, role) {
+  const wrap = document.getElementById('sidebar-upgrade-wrap');
+  if (!wrap) return;
+  const isFreeRole = ['manager','branch_manager'].includes(role);
+  if (isFreeRole || plan === 'pro') {
+    wrap.innerHTML = `<div class="pro-badge">✅ PRO 이용 중</div>`;
+  } else {
+    wrap.innerHTML = `<button class="upgrade-btn" onclick="document.querySelector('.price-card.featured').scrollIntoView({behavior:'smooth'})">⚡ PRO로 업그레이드</button>`;
+  }
+}
+
+function handleProCta() {
+  alert('유료 플랜 결제 기능은 곧 오픈됩니다!\n지금은 카카오 오픈채팅으로 문의해 주세요 😊');
+}
+
+function toggleUserDropdown(event) {
+  if (event) event.stopPropagation();
+  document.getElementById('user-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const wrap = document.querySelector('.user-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('user-dropdown').classList.remove('open');
+});
+
+function doLogout() {
+  localStorage.removeItem('os_token'); localStorage.removeItem('os_refresh_token'); localStorage.removeItem('os_user');
+  sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user');
+  window.location.href = 'index.html';
+}
+
+loadUserInfo();
+</script>
+</body>
+</html>
