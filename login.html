@@ -306,19 +306,32 @@ async function doLogin() {
       document.getElementById('login-form-area').style.display = 'none';
       document.getElementById('success-screen').style.display = 'block';
 
-      // 홈으로 이동 (추후 home.html로 변경)
       setTimeout(() => {
         window.location.href = 'home.html';
       }, 1200);
     } else {
-      document.getElementById('err-box').classList.add('on');
+      // 에러 메시지 한국어 처리
+      const errMsg = data.error_description || data.msg || data.error || '';
+      const errBox = document.getElementById('err-box');
+      if (errMsg.includes('Email not confirmed')) {
+        errBox.textContent = '이메일 인증이 완료되지 않았습니다. 가입 시 받으신 인증 메일을 확인해 주세요.';
+      } else if (errMsg.includes('Invalid login credentials') || errMsg.includes('invalid_grant')) {
+        errBox.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.';
+      } else if (errMsg.includes('Too many requests')) {
+        errBox.textContent = '잠시 후 다시 시도해 주세요. (요청이 너무 많습니다)';
+      } else {
+        errBox.textContent = '로그인 중 오류가 발생했습니다. 다시 시도해 주세요.';
+      }
+      errBox.classList.add('on');
       btn.disabled = false;
       txt.style.display = 'block';
       spin.style.display = 'none';
     }
   } catch(e) {
     console.error(e);
-    document.getElementById('err-box').classList.add('on');
+    const errBox = document.getElementById('err-box');
+    errBox.textContent = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.';
+    errBox.classList.add('on');
     btn.disabled = false;
     txt.style.display = 'block';
     spin.style.display = 'none';
