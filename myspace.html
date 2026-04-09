@@ -532,39 +532,223 @@ const overlayContent = {
 <div style="width:100%; font-family:Pretendard, Malgun Gothic, sans-serif; line-height:1.65; letter-spacing:-0.2px; color:#1F2937;"><div style="border-radius:22px; padding:20px; background:linear-gradient(90deg,#F4ECE3 0%, #EADBCD 100%); border:1px solid rgba(120,85,60,0.18);"><div style="font-size:20px; font-weight:900; color:#2A1B12;">보험사 결제/이체 가능 요약</div><div style="margin-top:10px; font-size:13px; color:rgba(42,27,18,0.75);">기준일: <b>2026.01.22</b> · OneSecond 운영표</div><div style="margin-top:14px; padding:14px; border-radius:16px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.12); font-size:13px;"><b style="color:#8A4B1B;">공통 주의</b><br/>초회는 기본적으로 <b>계약자 본인 명의</b> 기준. 필요 시 <b>가상계좌</b> 활용.<br/>(은행/카드사 및 보험사별 예외가 있으니, 실제 진행 전 확인 권장)</div></div><div style="margin-top:18px; font-size:16px; font-weight:900; color:#2A1B12;">손해보험</div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">메리츠화재</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 계약자 명의 카드 가능</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 직계(배우자/부모/자녀) 및 제3자 가능 (조건: 제3자 동의서/모바일-계약자만)<br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능 (계약자 명의 or 직계 가족 명의 등록 가능 / 직계 등록 시 제3자 동의 필수)<br/><b style="color:#6F4428;">승인일</b>: 5, 11, 15, 21, 25</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">DB손해보험</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 <span style="color:#2563EB;">(개인사업자: 이율연계 / 사업자명 계좌 불가)</span><br/>카드: 계약자 명의 카드 가능 <span style="color:#2563EB;">(초회만 가능, 2회차부터 계좌등록 필수)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 11, 15, 21<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인), 제3자 가능 (조건: 제3자 동의서/모바일-계약자만)<br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능 <span style="color:#2563EB;">(고객이 콜센터로 직접 등록 후 담당배서)</span><br/><b style="color:#6F4428;">승인일</b>: <b>TM</b> 11, 15, 21</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">KB손해보험</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: <b>불가</b><span style="color:#6B7280;">(수납시에는 카드결제 요청 가능)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 직계 및 제3자 가능<span style="color:#2563EB;">(서면: 예금주 신분증 / 모바일: 계약자만)</span><br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능 <span style="color:#2563EB;">(배서접수로 자동이체 해지 후 결제카드 등록)</span><br/><b style="color:#6F4428;">승인일</b>: <b>TM</b> 14, 24</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">흥국화재</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 계약자 명의 카드 가능</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 직계(배우자/부모/자녀/형제자매) 가능<br/><span style="color:#2563EB;">(서면: 가족관계증명서/등본/신분증 · 모바일: 계약자만)</span><br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능 <span style="color:#2563EB;">(콜센터 가능/대리점 접수 불가)</span><br/><span style="color:#2563EB;">※ 제3자(직계가족) 카드 등록 초회는 가상계좌로 진행 가능</span><br/><b style="color:#6F4428;">승인일</b>: 13</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">한화손해보험</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사(가능): 국민, 하나(외환), 비씨, 삼성(체크가능), 엘지, 롯데, 현대, 신한, 하나, 갤러리아, KT월드패스, NH농협, 산은, 63카드</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 11, 15, 21, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 직계 및 제3자 가능<span style="color:#2563EB;">(서면: 동의서 서명 필수 / 모바일: 계약자만)</span><br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능<span style="color:#2563EB;">(신규드그건: 대리점 접수/콜센터불가 · 기존드그건: 대리점/콜센터 가능)</span><br/><b style="color:#6F4428;">승인일</b>: 11, 21</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">삼성화재</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 계약자 명의 카드 가능<span style="color:#6B7280;">(직계가족 카드 진행 시 녹취 필요)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 13, 15, 23<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 직계 및 제3자 가능<span style="color:#2563EB;">(서면: 예금주 신분증 / 모바일: 계약자만)</span><br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능 <span style="color:#2563EB;">(대리점/콜센터 가능)</span><br/><b style="color:#6F4428;">승인일</b>: <b>TM</b> 계약일</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">롯데손해보험</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사(가능): 롯데, 삼성, 비씨, 신한, 국민, 현대, 하나, 농협, 씨티, 엘지</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 가족 및 제3자 가능(관계명확히)<span style="color:#2563EB;">(서면: 신청서/예금주 신분증/모바일: 계약자만)</span><br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능 <span style="color:#2563EB;">(TM: 대리점 접수/콜센터불가)</span><br/><b style="color:#6F4428;">승인일</b>: 11, 21</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">현대해상</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 모두 가능</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 직계 및 제3자 가능<span style="color:#2563EB;">(서면: 예금주 신분증 / 모바일: 계약자만)</span><br/><b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능 <span style="color:#2563EB;">(대리점 수기승인/배서접수)</span><br/><b style="color:#6F4428;">승인일</b>: 5, 10, 15, 20, 25</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">농협손해보험</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사(가능): 농협, BC, 국민, 하나, 삼성, 신한<span style="color:#6B7280;">(해외 겸용카드 불가)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계</b>: 은행=계약자(본인) (모바일-계약자만) / 카드=계약자 명의만(사업진행 전 시계약 시 등록 가능)<br/><b style="color:#6F4428;">카드(등록)</b>: 신규등록(농협/국민/BC/하나/삼성/신한), 변경가능(현대/롯데-신규등록불가)<br/><span style="color:#2563EB;">대리점 접수(콜센터불가) / 수기 가능(대리점 접수 시 원본서류)</span><br/><b style="color:#6F4428;">승인일</b>: 10, 20</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">예별손보</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 모두 가능</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) · 직계(배우자/부모/자녀/형제자매)<span style="color:#2563EB;">(모바일-계약자만)</span><br/><b style="color:#6F4428;">카드</b>: 불가(내서 접수 가능) / <b style="color:#6F4428;">카드등록</b>: 모든 카드 등록 가능<span style="color:#2563EB;">(대리점 수기승인/배서접수)</span><br/><b style="color:#6F4428;">승인일</b>: 5, 10, 15, 20, 25</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">하나손보</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 모두 가능<span style="color:#6B7280;">(계약자 명의 카드에 한해 가능)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 15, 21, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인) 및 피보험자 / 직계(배우자/부모/자녀)<span style="color:#2563EB;">(서면-신청서로 가능)</span><br/><b style="color:#6F4428;">카드</b>: 불가 / <b style="color:#6F4428;">카드(등록)</b>: 모든 카드 등록 가능<span style="color:#2563EB;">(대리점 접수-콜센터불가)</span><br/><b style="color:#6F4428;">승인</b>: 매월자동승인 불가</div></div><div style="margin-top:22px; font-size:16px; font-weight:900; color:#2A1B12;">생명보험</div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">흥국생명</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사: 삼성, 현대, 신한, 농협, 롯데 <span style="color:#2563EB;">(카드주 녹취 필수)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 초회와 동일 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인), 피보험자 / 직계(직계 및 법인가족 이내)<br/><b style="color:#6F4428;">카드</b>: 삼성, 현대, 신한, 농협, 롯데 <span style="color:#2563EB;">(카드주 녹취 필수)</span><br/><b style="color:#6F4428;">승인일</b>: 15일 <span style="color:#6B7280;">(재청구일 25일)</span></div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">IBK연금</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 불가</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모든 은행 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계(은행)</b>: 계약자(본인), 직계(배우자/부모/조부모/형제자매/자녀)<span style="color:#2563EB;">(가족관계 증명서 필요)</span><br/><b style="color:#6F4428;">카드/승인</b>: 불가</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">라이나생명</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사: BC, KB, 하나, 삼성, 신한, 현대, 롯데, 씨티, 농협<span style="color:#2563EB;">(종신보험 외 상품 가능)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 10, 15, 25, 말일<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자(본인), 직계(부모/자녀/형제자매), 배우자<span style="color:#2563EB;">(모바일-계약자만)</span><br/><b style="color:#6F4428;">카드사</b>: BC, KB, 하나, 삼성, 신한, 현대, 롯데, 씨티, 농협<span style="color:#2563EB;">(종신보험 외 상품 가능)</span><br/><b style="color:#6F4428;">승인일</b>: 15일</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">ABL생명</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 불가</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자(본인), 직계(배우자/자녀)<br/><b style="color:#6F4428;">카드/승인</b>: 불가</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">iM라이프</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 불가</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자 본인만 가능<br/><b style="color:#6F4428;">카드/승인</b>: 불가</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">한화생명</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 불가</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자(본인), 직계(배우자/부모/조부모/형제자매/자녀)<br/><span style="color:#2563EB;">※ 제3자 동의서/예금주신분증사본/등본 or 가족관계증명서 (모바일-계약자만)</span><br/><b style="color:#6F4428;">카드/승인</b>: 불가</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">KDB생명</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 불가</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자(본인), 피보험자(직계/피준속)<span style="color:#2563EB;">(신청서 필수)</span><br/><b style="color:#6F4428;">카드/승인</b>: 불가</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">삼성생명</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 불가</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 초회와 동일 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자(본인), 직계존비속 <span style="color:#2563EB;">(사실혼 관계 불가)</span><br/><b style="color:#6F4428;">카드</b>: 삼성카드 (종신보험 불가 / 순수보장성 상품만 가능)<span style="color:#2563EB;">(콜센터 통해 등록 가능-삼성카드만)</span><br/><b style="color:#6F4428;">승인</b>: 고객의 삼성카드 이체일</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">동양생명</div><div style="margin-top:10px; font-size:13px; color:#B91C1C;"> ※ 상품별 확인 요망</div><div style="margin-top:8px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사: 신한, 삼성, 롯데, 현대, 비씨, 국민, 우리<span style="color:#6B7280;">(메인미래 BC, 동양생명 제휴 카드만 가능)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 10, 15, 20, 25, 말일<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자, 피보험자, 수익자 / 카드: 계약자만 가능<br/><b style="color:#6F4428;">카드사</b>: 신한, 삼성, 롯데, 현대, 비씨, 국민, 우리<span style="color:#6B7280;">(메인미래 BC, 동양생명 제휴 카드만 가능)</span><br/><b style="color:#6F4428;">승인일</b>: 5, 10, 15, 20, 25</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">KB라이프</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드: 불가</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 10, 15, 20, 25, 말일<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자, 직계존비속<span style="color:#2563EB;">(형제자매 및 배우자부모: 지정서/가족관계확인서류 첨부)</span><br/><b style="color:#6F4428;">카드/승인</b>: 불가</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">신한라이프</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사: 신한, BC, 국민, 외환, 삼성, 현대, 롯데, 수협, 하나, 농협, 제주, 광주, 전북, 씨티, 우리BC<span style="color:#2563EB;">(종신보험 제외)</span></div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 초회와 동일 / <b>이체일</b>: 5, 10, 15, 20, 25<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자, 피보험자 / 카드: 계약자, 직계가족 및 제3자 가능<br/><b style="color:#6F4428;">승인일</b>: 10, 20</div></div><div style="margin-top:12px; border-radius:20px; padding:18px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.15); box-shadow:0 4px 10px rgba(0,0,0,0.04);"><div style="font-size:17px; font-weight:900; color:#2A1B12;">농협생명</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">초회</b> · 은행: 모두 가능 / 카드사: BC, 현대, 롯데, NH</div><div style="margin-top:10px; font-size:13px;"><b style="color:#6F4428;">계속분</b> · 은행: 모두 가능 / <b>이체일</b>: 5, 10, 15, 20, 25, 말일<br/><b style="color:#6F4428;">납입 가능 관계</b>: 계약자, 피보험자 / 카드: 계약자 명의만 가능<br/><b style="color:#6F4428;">카드사</b>: BC, 현대, 롯데, NH<br/><b style="color:#6F4428;">승인일</b>: 10, 20, 30일</div></div><div style="margin-top:20px; padding:16px; border-radius:18px; background:#FFFBF5; border:1px dashed rgba(138,75,27,0.4); font-size:13px;"><b style="color:#8A4B1B;">현장 1초 멘트</b><br/>“초회는 계약자 본인 기준으로 먼저 잡고, 계속분(자동이체/카드)은 회사별 가능한 관계·승인일이 달라서 확인 후 진행하겠습니다.”</div></div>",
 `,
   '미러링 전 녹취 스크립트': `
-<div style="width:100%; font-family:Pretendard, Malgun Gothic, Apple SD Gothic Neo, sans-serif; line-height:1.6; letter-spacing:-0.2px; color:#1F1A16;">
-  <div style="background:linear-gradient(90deg,#6B4630 0%, #5B3E2C 55%, #4B3527 100%); border:1px solid rgba(120,85,60,0.22); border-radius:18px; padding:16px 18px; box-shadow:0 10px 26px rgba(40,25,15,0.14);">
-    <div style="font-size:18px; font-weight:900; color:#FFFFFF;">미러링 청약 전 동의 녹취 스크립트</div>
-    <div style="margin-top:6px; font-size:13px; color:rgba(255,255,255,0.82);">※ 본 스크립트는 <b style="color:#FFC83D;">피보험자에게</b> 진행합니다.</div>
+<div style="width:100%;font-family:'Noto Sans KR',Pretendard,sans-serif;line-height:1.6;letter-spacing:-0.2px;color:#1F1A16;">
+
+  <!-- 상단 배너 -->
+  <div style="background:linear-gradient(90deg,#6B4630 0%,#5B3E2C 55%,#4B3527 100%);border-radius:16px;padding:16px 18px;margin-bottom:12px;">
+    <div style="font-size:17px;font-weight:900;color:#fff;">미러링 청약 전 동의 녹취 스크립트</div>
+    <div style="margin-top:5px;font-size:13px;color:rgba(255,255,255,.82);">※ 본 스크립트는 <b style="color:#FFC83D;">피보험자에게</b> 진행합니다.</div>
   </div>
 
-  <div style="margin-top:12px; background:linear-gradient(180deg,#F8F4EF 0%, #F2ECE4 100%); border:1px solid rgba(120,85,60,0.14); border-radius:14px; padding:12px 14px; display:flex; gap:10px; align-items:flex-start;">
-    <div style="width:26px; height:26px; border-radius:10px; background:rgba(255,200,61,0.18); border:1px solid rgba(120,85,60,0.14); display:flex; align-items:center; justify-content:center; font-weight:900; color:#7A4B1E; flex:0 0 auto;">!</div>
-    <div style="flex:1; font-size:13px; color:#3A2A20;">
-      <div style="font-weight:900; margin-bottom:4px; color:#2B1E14;">사용 안내</div>
-      <div>본 스크립트는 보수적으로 구성한 예시이며, 실제 적용은 회사/보험사 기준과 고객 상황에 따라 조정이 필요합니다. <b>최종 사용 및 녹취 진행 책임은 사용자에게 있습니다.</b></div>
+  <!-- 사용 안내 -->
+  <div style="background:#F8F4EF;border:1px solid rgba(120,85,60,.14);border-radius:12px;padding:12px 14px;font-size:13px;color:#3A2A20;display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">
+    <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,200,61,.2);display:flex;align-items:center;justify-content:center;font-weight:900;color:#7A4B1E;flex-shrink:0;">!</div>
+    <div><b>사용 안내</b><br>본 스크립트는 예시이며 실제 적용은 회사/보험사 기준에 따라 조정이 필요합니다. <b>최종 사용 및 녹취 책임은 사용자에게 있습니다.</b></div>
+  </div>
+
+  <!-- 공통 멘트 -->
+  <div style="background:#fff;border:1px solid rgba(120,85,60,.14);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+    <div style="background:rgba(91,62,44,.08);border-bottom:1px solid rgba(120,85,60,.12);padding:10px 14px;font-weight:900;font-size:13px;color:#2B1E14;display:flex;justify-content:space-between;">
+      <span>미러링 전 동의 녹취</span><span style="font-size:12px;color:#6A5245;">(핵심만)</span>
+    </div>
+    <div style="padding:14px;font-size:14px;color:#2B1E14;">
+      고객님 안녕하세요. <b>○○○</b>입니다.<br>
+      <b>[미러링 청약]</b> 진행을 위해 <b>미러링(화면 공유)</b>전 동의 녹취 먼저 읽어 드리겠습니다.<br><br>
+      <div style="background:rgba(120,85,60,.06);border:1px solid rgba(120,85,60,.12);border-radius:10px;padding:10px 12px;font-size:13px;">
+        아래 보험사를 선택하면 해당 녹취 스크립트를 바로 확인할 수 있습니다.
+      </div>
     </div>
   </div>
 
-  <div style="margin-top:12px; background:#FFFFFF; border:1px solid rgba(120,85,60,0.14); border-radius:16px; overflow:hidden;">
-    <div style="background:rgba(91,62,44,0.08); border-bottom:1px solid rgba(120,85,60,0.12); padding:10px 12px; font-weight:900; font-size:13px; color:#2B1E14; display:flex; align-items:center; justify-content:space-between;">
-      <div>미러링 전 동의 녹취</div>
-      <div style="font-weight:900; font-size:12px; color:#6A5245;">(핵심만)</div>
+  <!-- 보험사 선택 버튼 -->
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+    <button onclick="toggleMirrorScript('meritz')" style="width:100%;padding:14px;background:#3d2b1f;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:'Noto Sans KR',sans-serif;cursor:pointer;letter-spacing:-0.3px;transition:background .2s;" onmouseover="this.style.background='#5a3e2b'" onmouseout="this.style.background='#3d2b1f'">
+      메리츠화재
+    </button>
+    <button onclick="toggleMirrorScript('heungkuk')" style="width:100%;padding:14px;background:#3d2b1f;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:'Noto Sans KR',sans-serif;cursor:pointer;letter-spacing:-0.3px;transition:background .2s;" onmouseover="this.style.background='#5a3e2b'" onmouseout="this.style.background='#3d2b1f'">
+      흥국생명
+    </button>
+  </div>
+
+  <!-- 메리츠화재 녹취 스크립트 -->
+  <div id="mirror-meritz" style="display:none;">
+    <div style="background:linear-gradient(90deg,#6B4630,#5B3E2C);border-radius:12px;padding:12px 16px;margin-bottom:10px;">
+      <div style="font-size:15px;font-weight:900;color:#fff;">★ 메리츠화재 미러링 진행순서 ★</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;">미러링 녹취스크립트 공통 상담콜 (발송전)</div>
     </div>
-    <div style="padding:14px 14px 12px 14px; background:#FFF;">
-      <div style="font-size:14px; color:#2B1E14; line-height:1.8;">고객님 안녕하세요. <b>○○○</b>입니다.<br><b>[미러링 청약]</b> 진행을 위해 <b>미러링(화면 공유)</b> 전 동의 녹취 먼저 읽어드리겠습니다.</div>
-      <div style="margin-top:10px; padding:10px 12px; border-radius:12px; background:rgba(120,85,60,0.06); border:1px solid rgba(120,85,60,0.10); font-size:13px; color:#3A2A20;">
-        아래 회사 버튼을 선택하면 해당 회사 기준 스크립트가 바로 표시됩니다.
+    <div style="display:flex;flex-direction:column;gap:8px;">
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">1. 본인소개</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.8;">
+          안녕하세요 메리츠화재 <b>○○○○</b> 소속 <b>○○○</b>입니다.<br>
+          담당설계사의 판매자격등 주요정보는 보내드리는 계약서류에 기재된 고유번호로 e-클린보험서비스에서 조회하실 수 있습니다.
+        </div>
       </div>
 
-      <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
-        <button type="button" id="mirroring-btn-meritz" onclick="renderMirroringCompanyScript('meritz')" style="height:38px; padding:0 16px; border-radius:999px; border:1px solid #d7b89d; background:#fff8f2; color:#6b4226; font-size:13px; font-weight:800; cursor:pointer;">메리츠화재</button>
-        <button type="button" id="mirroring-btn-heungkuk" onclick="renderMirroringCompanyScript('heungkuk')" style="height:38px; padding:0 16px; border-radius:999px; border:1px solid #d7b89d; background:#fff8f2; color:#6b4226; font-size:13px; font-weight:800; cursor:pointer;">흥국생명</button>
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">2. 상품설명</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.8;">
+          - 상품명: 고객님께서 가입하신 상품은 <b>○○○</b> 이며 (상품명·무배당·2401·1종등 누락없이)<br>
+          - 납입기간: <b>○○</b>년납 <b>○○</b>만기로<br>
+          - 보험료: 월보험료는 <b>○○○</b>원입니다<br>
+          - 담보설명: 가입담보는 상해사망의 암, 뇌혈관, 허혈진단비 등이고 (실제 가입하는 담보로 읽어주세요) 암담보는 90일 면책, 1년이내 50% 보장입니다
+        </div>
       </div>
 
-      <div id="mirroring-script-panel" style="margin-top:14px;"></div>
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">3. DB취득경로</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.8;">
+          고객님의 정보는 <b>[소속회사] [지점명]</b>으로부터 제공받았음을 안내드립니다.
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">4. 사전동의</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          - 본 동의는 가입설계동의이며, 거부가능하나 정확한 상담은 불가합니다.<br>
+          - 고유식별번호, 질병상해정보 및 이름, 연락처, 상거래정보 등 일반개인신용정보를 보험설계, 인수결정, 보험계약복확인 등을 위해 1년간 수집/이용/보유 하는데 동의하십니까? <b style="color:#c8753a;">(예 확인)</b><br><br>
+          - 동의 목적 및 기존 계약과의 중요사항 비교 등을 위해 신용정보집중기관 등에서 말씀드린 개인신용정보를 3개월간 조회에 동의하십니까? <b style="color:#c8753a;">(예 확인)</b><br><br>
+          - 인수심사 등을 위해 재보험사, 공공기관 등에 말씀드린 개인신용정보를 3개월간 제공에 동의하십니까? <b style="color:#c8753a;">(예 확인)</b><br><br>
+          - 위 내용과 동일하게 고유식별정보 및 질병상해정보 처리에 각각 동의하십니까? <b style="color:#c8753a;">(예 확인)</b><br><br>
+          - 동의내용은 홈페이지 및 문자/팩스로 확인 가능하며, 언제든 동의 철회 가능합니다. 가입설계 및 본인인증을 위한 개인정보 처리에 동의하십니까? <b style="color:#c8753a;">(예 확인)</b>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">5. 기타2 승환비교안내</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          타사보험 각각의 해약환급금, 예정이자율 중 공시이율, 면책사유 및 면책사항에 대해 말씀해 주시겠습니까? <b style="color:#c8753a;">(대답: 모른다)</b><br><br>
+          <div style="background:#f5ede4;border-radius:8px;padding:10px 12px;font-size:12px;color:#5a3e2b;">
+            [모른다고 답변시] 타사보험 정보에 대해 자료제공이 어려운 경우, 비교안내가 어려워 고객님께 불리해 질 수 있습니다. 향후라도 비교설명이 필요하시면 연락주시기 바라며, 이해되셨다면 본 신규 계약을 진행 하시겠습니까? <b style="color:#c8753a;">(대답: 네)</b>
+          </div><br>
+          06년 6월 이전에 가입하거나, 신용정보원에서 제공되지 않은 타사보험 중 현재 유지 중이거나, 6개월 이내 소멸된 계약이 있으십니까? <b style="color:#c8753a;">(대답: 아니요)</b>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">6 → 7 → 8. 전자서명 진행</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          <b>6.</b> 전자서명(LMS) 클릭<br>
+          <b>7.</b> 인증번호 고객님께 받아서 입력 후<br>
+          <b>8.</b> 고객님이 인증번호 밑에 TM전자서명 시작하기 클릭<br><br>
+          <div style="background:#f5ede4;border-radius:8px;padding:10px 12px;font-size:12px;color:#5a3e2b;">
+            ☆ 미러링 진행시 별표는 팀장님이 읽어주세요☆<br>
+            ☆ 미러링발송후 5분이내 인증이력이 있으면 하루종일 사용가능. 그 외는 동일 설번에서 다시발송해주세요
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
+
+  <!-- 흥국생명 녹취 스크립트 -->
+  <div id="mirror-heungkuk" style="display:none;">
+    <div style="background:linear-gradient(90deg,#6B4630,#5B3E2C);border-radius:12px;padding:12px 16px;margin-bottom:10px;">
+      <div style="font-size:15px;font-weight:900;color:#fff;">흥국생명 VTM 사전녹취스크립트</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;">2025.11.27 기준</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">모집자 소속 / 성명 / 통화목적</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          안녕하세요. <b>[소속회사] [대리점명]</b> 상담원 <b>○○○</b>입니다.<br>
+          고객님께 <b>(상품명) ○○○</b> 설명 드리려고 합니다.<br>
+          잠시 통화 괜찮으신지요? <b style="color:#c8753a;">(네~ 라고 답변시 상담)</b>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">정보취득경로 (개인정보보호취득경로 18.09.01)</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          고객님께서는 <b>[소속회사]</b>에서 상담 목적으로 정보 동의해주셨습니다.<br>
+          개인정보 처리 정지나 동의를 철회하실 수 있으며, 개인정보 이용·제공 내역은 대표 홈페이지 개인정보 처리방침 및 조회 페이지에서 확인 가능합니다.
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">두낫콜</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.8;">
+          <b style="color:#c0392b;">원치 않으시면 통화 거절도 가능하십니다.</b>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">상품설명 ※ 주계약 및 특약별로 가입한 내용에 따라 보장안내</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          가입하시는 상품명 <b>○○○</b>은 암, 2대진단, 수술비, 입원비, 간병인사용일당 등으로 구성되어있는 상품이며 (설계에 따라 상이),<br>
+          주계약은 가입금액 <b>○○</b>만원으로 사망보장 또는 재해장해 보장 입니다 (주계약은 상품에 따라 상이)<br>
+          납입기간은 <b>○○</b>년 보장기간은 <b>○○</b>세 까지입니다.<br><br>
+          <div style="background:#f5ede4;border-radius:8px;padding:10px 12px;font-size:12px;color:#5a3e2b;">
+            [갱신형특약있는경우 갱신형 안내]<br>
+            가입하시는 보장으로는 뇌혈관 ○○만원, 허혈성진단비 ○○만원, 질병수술비 ○○만원<br>
+            [가입담보 안내 - 모든 가입담보 + 가입금액 필수 녹취]<br>
+            월보험료는 00,000원이며 고객님과 함께 보며 진행하는 보이는 TM안 미러링으로 청약 진행 됩니다.
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">신용정보 및 계약관리자 안내</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          ■ 상담원 소속안내 / 고객확인 / 통화목적등 선안내 (TM상품 이제 보면서 설명 들으세요, 18.12.01 시행)<br>
+          [보험기입 권유전(도중) 상품요약자료 제공 안내 ♣]: 만 65세이상 계약자에게만 안내, 갱신형 계약자에게안내<br>
+          보험상품 이해를 위해 상품요약자료를 보내드리고 상담을 진행하겠습니다. LMS(문자), 이메일, 우편으로 가능한데 어떤 방식으로 발송해드릴까요?<br><br>
+          ■ 지금까지 설명 드린 내용은 상품설명서를 참조하여 주시고, 보장내용에 대한 세부적인 내용은 약관에서 정한 기준에 따라 보장됩니다.
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">청약 녹음</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.8;">
+          지금부터 <b>○○년 ○○월 ○○일 ○○시 (상품명) ○○</b> 가입을 위한 청약녹음하겠습니다. 동의하세요? <b style="color:#c8753a;">(네, 대답필수)</b>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">청약서 고지사항 — 계약전 알릴의무</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          <div style="background:#fff3f0;border:1px solid #f0c0b0;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#c0392b;font-weight:700;">
+            ★ 고지 방해, 위반 금지 ★<br>
+            계약자나 피보험자가 중요한 사항을 알리는 것을 방해하거나 부실고지를 권유, 유도하는 것을 금지합니다.
+          </div>
+          피보험자의 건강상태, 직업, 운전 등의 질문 사항은 보험계약을 인수하는데 필요한 사항으로 사실대로 알리지 않거나 다르게 알리면 보험 가입이 거절될 수 있습니다.<br>
+          특히 중요한 사항에 해당하는 경우 보험금 지급이 거절되거나 계약이 해지될 수 있습니다.<br><br>
+          <div style="background:#f5ede4;border-radius:8px;padding:10px 12px;font-size:12px;color:#5a3e2b;">
+            ■ 건강고지 필수! 피보험자가 미성년자일경우 계약자에게 확인<br>
+            ■ 질문은 '예'인 경우는 청약서(T-Life) 반드시 기재 → 미기재시 고지의무 누락으로 재제조치 될 수 있음.
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">카드 납입</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          <div style="background:#fff3cd;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;font-weight:700;color:#856404;">[ 1회납 / 2회납 카드납입시 ]</div>
+          <b style="color:#c0392b;">★ 반드시 고객육성으로 정보확인 필수</b> 카드주, 생년월일, 카드명, 카드번호, 유효기간 확인<br><br>
+          흥국생명에서 카드주 <b>○○○</b>, 생년월일(년,월,일), △△카드 카드번호 <b>○○-○○-○○-○○</b>, 유효기간( )로<br>
+          월 보험료 <b>○○○</b>원 승인되는것에 동의하세요? <b style="color:#c8753a;">(네, 대답필수)</b><br>
+          2회부터 매월 15일이 승인일입니다. <b>○○</b>카드로 승인되는 것에 동의하시죠? <b style="color:#c8753a;">(네, 대답 필수)</b><br>
+          승낙이 이루어진 경우 1회 보험료를 받은 때부터 효력이 발생합니다.
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(120,85,60,.15);border-radius:12px;overflow:hidden;">
+        <div style="background:rgba(91,62,44,.08);padding:9px 14px;font-weight:900;font-size:13px;color:#2B1E14;">계좌 납입</div>
+        <div style="padding:12px 14px;font-size:13px;color:#2B1E14;line-height:1.9;">
+          <div style="background:#fff3cd;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;font-weight:700;color:#856404;">[ 1회납 / 2회납 자동이체시 ]</div>
+          <b style="color:#c0392b;">★ 반드시 고객육성으로 확인 정보 필수</b> 예금주명, 생년월일, 은행, 계좌번호 확인<br><br>
+          흥국생명에서 예금주 <b>○○○</b> 생년월일(년,월,일) △△은행 계좌번호 <b>○○○-○○○○-○○○</b>에서<br>
+          월 보험료 <b>○○,○○○</b>원 출금되는 것에 동의하세요? <b style="color:#c8753a;">(네, 대답필수)</b><br>
+          2회 이후부터는 △△은행 계좌로 매월 (5,10,15,20,25일) 출금 되는 것에 동의하세요? <b style="color:#c8753a;">(네, 대답필수)</b><br>
+          승낙이 이루어진 경우 1회 보험료를 받은 때부터 효력이 발생합니다.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 `,
   '원전산 설계 바로가기': `
@@ -754,86 +938,29 @@ document.addEventListener('click',function(e){
   const wrap=document.querySelector('.quick-wrap');
   if(dropdown && wrap && !wrap.contains(e.target)) dropdown.classList.remove('open');
 });
-
-const MIRRORING_COMPANY_SCRIPTS = {
-  meritz: `
-    <div style="border:1px solid #e3d3c5; border-radius:16px; overflow:hidden; background:#fffdfb; box-shadow:0 6px 18px rgba(61,43,31,.05);">
-      <div style="padding:12px 14px; background:linear-gradient(90deg,#efe3d6 0%, #e6d3bf 100%); border-bottom:1px solid #ead9cc; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div>
-          <div style="font-size:15px; font-weight:900; color:#2b1e14;">메리츠화재</div>
-          <div style="margin-top:3px; font-size:12px; color:#7b6352;">미러링 청약 전 동의 녹취 스크립트</div>
-        </div>
-        <div style="padding:5px 10px; border-radius:999px; background:#fff7ef; border:1px solid #d9b89b; font-size:11px; font-weight:800; color:#8a5522;">선택됨</div>
-      </div>
-      <div style="padding:14px;">
-        <div style="padding:12px 14px; border-radius:14px; background:#f8f4ef; border:1px solid #ead9cc; font-size:14px; line-height:1.85; color:#2b1e14;">
-          고객님 지금부터 <b>메리츠화재 미러링 청약</b> 진행을 위해 화면 공유 전 동의 녹취를 진행하겠습니다.<br>
-          본 녹취는 청약 진행을 위한 필수 절차이며, 고객님께서는 지금부터 안내드리는 내용을 확인하신 후 동의 여부를 말씀해주시면 됩니다.
-        </div>
-        <div style="margin-top:12px; border:1px solid #ead9cc; border-radius:14px; overflow:hidden;">
-          <div style="padding:10px 12px; background:#fff8f2; border-bottom:1px solid #f0e4d8; font-size:13px; font-weight:900; color:#6b4226;">메리츠화재 녹취 본문</div>
-          <div style="padding:14px 14px 12px; font-size:14px; line-height:1.9; color:#2b1e14;">
-            고객님, 본 화면은 메리츠화재 보험가입을 위한 <b>전자청약 화면</b>입니다.<br>
-            지금부터 고객님과 함께 화면을 보며 청약 내용을 확인드릴 예정이며, 설명드리는 내용에 대해 고객님께서 직접 확인하시고 진행하시는 절차입니다.<br><br>
-            화면 공유를 통해 고객님의 청약 내용을 함께 확인하고 안내드리는 것에 동의하십니까?<br>
-            또한 청약 진행 과정에서 계약내용, 고지사항, 개인정보 입력내용을 함께 확인하는 절차에 동의하십니까?<br><br>
-            고객님께서 동의하시면 지금부터 화면을 함께 보며 진행하겠습니다.
-          </div>
-        </div>
-        <div style="margin-top:12px; padding:10px 12px; border-radius:12px; background:#fff3dc; color:#7a4400; font-size:12px; font-weight:800;">⚡ 메리츠화재 진행 시에는 고객의 동의 응답을 분명하게 받은 후 다음 단계로 넘어가세요.</div>
-      </div>
-    </div>
-  `,
-  heungkuk: `
-    <div style="border:1px solid #e3d3c5; border-radius:16px; overflow:hidden; background:#fffdfb; box-shadow:0 6px 18px rgba(61,43,31,.05);">
-      <div style="padding:12px 14px; background:linear-gradient(90deg,#efe3d6 0%, #e6d3bf 100%); border-bottom:1px solid #ead9cc; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div>
-          <div style="font-size:15px; font-weight:900; color:#2b1e14;">흥국생명</div>
-          <div style="margin-top:3px; font-size:12px; color:#7b6352;">미러링 청약 전 동의 녹취 스크립트</div>
-        </div>
-        <div style="padding:5px 10px; border-radius:999px; background:#fff7ef; border:1px solid #d9b89b; font-size:11px; font-weight:800; color:#8a5522;">선택됨</div>
-      </div>
-      <div style="padding:14px;">
-        <div style="padding:12px 14px; border-radius:14px; background:#f8f4ef; border:1px solid #ead9cc; font-size:14px; line-height:1.85; color:#2b1e14;">
-          고객님 지금부터 <b>흥국생명 미러링 청약</b> 진행을 위해 화면 공유 전 동의 녹취를 진행하겠습니다.<br>
-          본 절차는 고객님이 실제 청약 화면을 함께 확인하면서 진행하는 과정이며, 안내드리는 내용 확인 후 동의해주시면 됩니다.
-        </div>
-        <div style="margin-top:12px; border:1px solid #ead9cc; border-radius:14px; overflow:hidden;">
-          <div style="padding:10px 12px; background:#fff8f2; border-bottom:1px solid #f0e4d8; font-size:13px; font-weight:900; color:#6b4226;">흥국생명 녹취 본문</div>
-          <div style="padding:14px 14px 12px; font-size:14px; line-height:1.9; color:#2b1e14;">
-            고객님, 본 화면은 흥국생명 보험가입을 위한 <b>전자청약 화면</b>입니다.<br>
-            지금부터 화면 공유를 통해 계약내용, 청약서 입력내용, 고지사항 등을 고객님과 함께 확인하면서 진행드릴 예정입니다.<br><br>
-            화면을 함께 보며 청약 절차를 진행하는 것에 동의하십니까?<br>
-            또한 청약 진행 과정에서 안내드리는 계약내용과 입력사항을 함께 확인하는 것에 동의하십니까?<br><br>
-            고객님 동의 확인 후 계속 진행하겠습니다.
-          </div>
-        </div>
-        <div style="margin-top:12px; padding:10px 12px; border-radius:12px; background:#fff3dc; color:#7a4400; font-size:12px; font-weight:800;">⚡ 흥국생명 진행 시에도 고객의 명확한 동의 멘트를 받은 뒤 다음 화면으로 이동하세요.</div>
-      </div>
-    </div>
-  `
-};
-
-function renderMirroringCompanyScript(company){
-  const panel = document.getElementById('mirroring-script-panel');
-  if(!panel) return;
-  panel.innerHTML = MIRRORING_COMPANY_SCRIPTS[company] || '';
-  const meritzBtn = document.getElementById('mirroring-btn-meritz');
-  const heungkukBtn = document.getElementById('mirroring-btn-heungkuk');
-  const activeStyle = 'height:38px; padding:0 16px; border-radius:999px; border:1px solid #6b4226; background:#6b4226; color:#fff; font-size:13px; font-weight:800; cursor:pointer;';
-  const normalStyle = 'height:38px; padding:0 16px; border-radius:999px; border:1px solid #d7b89d; background:#fff8f2; color:#6b4226; font-size:13px; font-weight:800; cursor:pointer;';
-  if(meritzBtn) meritzBtn.style.cssText = company === 'meritz' ? activeStyle : normalStyle;
-  if(heungkukBtn) heungkukBtn.style.cssText = company === 'heungkuk' ? activeStyle : normalStyle;
-}
-
 function openOverlay(title,icon){
   document.getElementById('quick-dropdown').classList.remove('open');
   document.getElementById('overlay-title').textContent=`${icon} ${title}`;
   document.getElementById('overlay-body').innerHTML=overlayContent[title]||'준비 중입니다.';
   document.getElementById('quick-overlay').classList.add('active');
-  if(title==='미러링 전 녹취 스크립트') setTimeout(function(){ renderMirroringCompanyScript('meritz'); }, 0);
 }
 function closeQuick(){document.getElementById('quick-overlay').classList.remove('active');}
+
+function toggleMirrorScript(company) {
+  const meritz = document.getElementById('mirror-meritz');
+  const heungkuk = document.getElementById('mirror-heungkuk');
+  if (!meritz || !heungkuk) return;
+  if (company === 'meritz') {
+    const isOpen = meritz.style.display !== 'none';
+    meritz.style.display = isOpen ? 'none' : 'block';
+    heungkuk.style.display = 'none';
+  } else {
+    const isOpen = heungkuk.style.display !== 'none';
+    heungkuk.style.display = isOpen ? 'none' : 'block';
+    meritz.style.display = 'none';
+  }
+}
+
 function closeOverlay(event){if(event.target.id==='quick-overlay') closeQuick();}
 
 document.querySelectorAll('.nav-item').forEach(function(item){
