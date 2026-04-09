@@ -42,6 +42,14 @@ header.scrolled{
 }
 .logo { font-size:18px; font-weight:900; color:var(--brown-dark); letter-spacing:-0.5px; }
 .logo span { color:var(--accent); }
+.header-right { display:flex; align-items:center; gap:16px; }
+.header-login {
+  font-size:13px; font-weight:600; color:var(--text-mid);
+  background:none; border:none; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+  text-decoration:none; transition:color 0.2s;
+}
+.header-login:hover { color:var(--brown-dark); }
 .header-btn {
   padding:8px 20px;
   background:var(--brown-dark); color:var(--white);
@@ -465,6 +473,7 @@ header.scrolled{
 .price-btn.ghost:hover { background:var(--brown-pale); }
 
 
+/* ── B2B 카드 ── */
 .price-card.b2b {
   border:2px solid var(--accent);
   background:linear-gradient(145deg,#3d2b1f,#6b4226);
@@ -473,7 +482,7 @@ header.scrolled{
 .price-card.b2b .price-badge { background:rgba(200,117,58,0.25); color:#f5c89a; }
 .price-card.b2b .price-num { color:#fff; font-size:26px; }
 .price-card.b2b .price-trial { color:#f5c89a; }
-.price-card.b2b .price-note { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.85); }
+.price-card.b2b .price-note { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.85); line-height:1.8; }
 .price-card.b2b .price-list li { color:rgba(255,255,255,0.85); border-bottom-color:rgba(255,255,255,0.1); }
 .price-card.b2b .price-list li::before { color:#f5c89a; }
 .price-btn.b2b-btn {
@@ -649,7 +658,10 @@ footer {
 <!-- 헤더 -->
 <header>
   <div class="logo">원세컨드 <span>1s</span></div>
-  <button class="header-btn" onclick="openModal()">30일 무료체험</button>
+  <div class="header-right">
+    <a class="header-login" href="login.html">로그인</a>
+    <button class="header-btn" onclick="openModal()">30일 무료체험</button>
+  </div>
 </header>
 
 <!-- 히어로 -->
@@ -762,7 +774,8 @@ footer {
         <ul class="price-list">
           <li>스크립트 전체 열람 + 작성</li>
           <li>게시판 질문 · 답변 작성</li>
-                    <li>모바일 최적화</li>
+          <li>모바일 최적화</li>
+          <li>신규 스크립트 · 기능 우선 업데이트</li>
           <li>언제든 해지 가능</li>
         </ul>
         <button class="price-btn" onclick="openModal()">30일 무료로 시작하기</button>
@@ -772,10 +785,7 @@ footer {
         <div class="price-badge">B2B 제휴</div>
         <div class="price-num">맞춤 협의</div>
         <div class="price-trial">보험사 · GA · 교육기관 전용</div>
-        <div class="price-note" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);line-height:1.8;">
-          우리 조직 전용으로 구축하세요.<br>
-          기능·운영·데이터 모두 <span style="background:rgba(200,117,58,0.5);color:#fff;font-weight:800;padding:1px 6px;border-radius:4px;">맞춤 협의</span> 가능합니다
-        </div>
+        <div class="price-note">우리 조직 전용으로 구축하세요.<br>기능·운영·데이터 모두 <span style="background:rgba(200,117,58,0.5);color:#fff;font-weight:800;padding:1px 6px;border-radius:4px;">맞춤 협의</span> 가능합니다</div>
         <ul class="price-list">
           <li>조직 전용 게시판 운영</li>
           <li>데이터 자산화 지원</li>
@@ -824,8 +834,8 @@ footer {
         <div class="ml-desc">현장 17년 경력 설계사가 직접 만든<br>TM 상담 1초 실행 도구</div>
         <div class="ml-features">
           <div class="ml-feature"><div class="ml-fi">📞</div><div class="ml-ft"><strong>즉시 실행 스크립트</strong>도입부터 클로징까지 1초 안에</div></div>
-          <div class="ml-feature"><div class="ml-fi">📋</div><div class="ml-ft"><strong>인수·상품 게시판</strong>카카오 단톡방을 대체하는 지식 허브</div></div>
-          <div class="ml-feature"><div class="ml-fi">⚡</div><div class="ml-ft"><strong>AI 반론 대응</strong>"비싸요"에 즉시 대응 멘트 생성</div></div>
+          <div class="ml-feature"><div class="ml-fi">📋</div><div class="ml-ft"><strong>허브게시판 운영</strong>현장 정보가 사라지지 않는 지식 공간</div></div>
+          <div class="ml-feature"><div class="ml-fi">📰</div><div class="ml-ft"><strong>보험뉴스 운영</strong>현장에 필요한 보험 뉴스만 모아서</div></div>
         </div>
       </div>
       <div class="ml-bottom">체험 기간 종료 후 자동 결제되지 않습니다</div>
@@ -871,16 +881,36 @@ footer {
               <div class="m-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
             </div>
           </div>
+          <div class="m-row-2">
+            <div class="m-group">
+              <div class="m-label">비밀번호 <span class="m-req">*</span></div>
+              <div style="position:relative;">
+                <input class="m-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" style="padding-right:52px;">
+                <button type="button" onclick="toggleRegPw('f-pw','reg-pw-toggle')" id="reg-pw-toggle"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-light);font-family:'Noto Sans KR',sans-serif;">보기</button>
+              </div>
+              <div class="m-err" id="e-pw">영문+숫자 8자 이상 입력해 주세요.</div>
+            </div>
+            <div class="m-group">
+              <div class="m-label">비밀번호 확인 <span class="m-req">*</span></div>
+              <div style="position:relative;">
+                <input class="m-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" style="padding-right:52px;">
+                <button type="button" onclick="toggleRegPw('f-pw2','reg-pw2-toggle')" id="reg-pw2-toggle"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-light);font-family:'Noto Sans KR',sans-serif;">보기</button>
+              </div>
+              <div class="m-err" id="e-pw2">비밀번호가 일치하지 않습니다.</div>
+            </div>
+          </div>
           <div class="m-divider"></div>
           <div class="m-group">
             <div class="m-label">회사명 <span class="m-opt">(선택)</span></div>
-            <input class="m-input" type="text" id="f-company" placeholder="소속 회사명" maxlength="50">
+            <input class="m-input" type="text" id="f-company" placeholder="에즈금융서비스" maxlength="50">
             <div class="m-err" id="e-company">회사명을 입력해 주세요.</div>
           </div>
           <div class="m-row-2">
             <div class="m-group">
               <div class="m-label">지점 / 센터명 <span class="m-opt">(선택)</span></div>
-              <input class="m-input" type="text" id="f-branch" placeholder="소속 지점명" maxlength="50">
+              <input class="m-input" type="text" id="f-branch" placeholder="더원지점" maxlength="50">
               <div class="m-err" id="e-branch">지점·센터명을 입력해 주세요.</div>
             </div>
             <div class="m-group">
@@ -933,7 +963,7 @@ footer {
         <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제4조. 개인정보 보유 및 이용 기간</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· 회원 탈퇴 시: 즉시 개인정보 삭제</div><div>· 허브 게시글: 탈퇴 시 작성자명 익명 처리 후 보관</div><div>· 관련 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관 후 삭제</div></div></div>
         <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제5조. 개인정보 제3자 제공</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:1.8;">원세컨드는 회원의 개인정보를 외부 제3자에게 제공하지 않습니다.<br>단, 법령에 의거한 수사기관의 요청이 있는 경우는 예외로 합니다.</div></div>
         <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제6조. 회원의 권리</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· 개인정보 열람, 수정, 삭제 요청 가능</div><div>· 허브 공개 철회: 작성한 게시글의 공개 범위 변경 가능</div><div>· 동의 철회(탈퇴) 시 즉시 처리</div></div></div>
-        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제7조. 문의처</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· <span style="font-weight:700;">서비스명:</span> 원세컨드 (onesecond)</div><div>· <span style="font-weight:700;">이메일:</span> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ccaeb5a0b8bffcf8fef48caba1ada5a0e2afa3a1">[email&#160;protected]</a></div><div>· <span style="font-weight:700;">시행일:</span> 2026년 4월 4일</div></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제7조. 문의처</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· <span style="font-weight:700;">서비스명:</span> 원세컨드 (onesecond)</div><div>· <span style="font-weight:700;">이메일:</span> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="24465d4850571410161c644349454d480a474b49">[email&#160;protected]</a></div><div>· <span style="font-weight:700;">시행일:</span> 2026년 4월 4일</div></div></div>
         <div style="background:linear-gradient(90deg,#6C4A33 0%,#7A5238 45%,#5B3E2C 100%);border-radius:12px;padding:14px 18px;"><div style="font-size:13px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.7;">본 동의서는 회원가입 시 동의 체크와 함께 효력이 발생합니다.</div></div>
       </div>
     </div>
@@ -960,6 +990,16 @@ function fmtPhone(input){
   else if(v.length<=7)input.value=v.slice(0,3)+'-'+v.slice(3);
   else input.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
 }
+const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+
+function toggleRegPw(inputId, btnId) {
+  const input = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '숨기기'; }
+  else { input.type = 'password'; btn.textContent = '보기'; }
+}
+
 function validate(){
   let ok=true;
   [{id:'f-name',eid:'e-name'},{id:'f-phone',eid:'e-phone'}].forEach(f=>{
@@ -973,29 +1013,62 @@ function validate(){
   const email=document.getElementById('f-email');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){email.classList.add('err');document.getElementById('e-email').classList.add('on');ok=false;}
   else{email.classList.remove('err');document.getElementById('e-email').classList.remove('on');}
+  // 비밀번호 검증
+  const pw=document.getElementById('f-pw');
+  const pw2=document.getElementById('f-pw2');
+  if(!pw.value || pw.value.length < 8 || !/[a-zA-Z]/.test(pw.value) || !/[0-9]/.test(pw.value)){
+    pw.classList.add('err');document.getElementById('e-pw').classList.add('on');ok=false;
+  } else{pw.classList.remove('err');document.getElementById('e-pw').classList.remove('on');}
+  if(pw2.value !== pw.value){
+    pw2.classList.add('err');document.getElementById('e-pw2').classList.add('on');ok=false;
+  } else{pw2.classList.remove('err');document.getElementById('e-pw2').classList.remove('on');}
   if(!document.getElementById('f-consent').checked){document.getElementById('e-consent').classList.add('on');ok=false;}
   else document.getElementById('e-consent').classList.remove('on');
   return ok;
 }
-const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
 
 async function doSubmit(){
   if(!validate())return;
   const btn=document.getElementById('sub-btn'),txt=document.getElementById('btn-txt'),spin=document.getElementById('spinner');
   btn.disabled=true;txt.style.display='none';spin.style.display='block';
 
-  const data = {
-    name:    document.getElementById('f-name').value.trim(),
-    phone:   document.getElementById('f-phone').value.trim(),
-    email:   document.getElementById('f-email').value.trim(),
-    company: document.getElementById('f-company').value.trim(),
-    role:    document.getElementById('f-role').value,
-    team:    (document.getElementById('f-team') ? document.getElementById('f-team').value.trim() : ''),
-  };
+  const email = document.getElementById('f-email').value.trim();
+  const pw    = document.getElementById('f-pw').value;
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+    // 1단계: Supabase Auth 회원가입
+    const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ email, password: pw })
+    });
+    const authData = await authRes.json();
+
+    if (!authRes.ok || !authData.user) {
+      const msg = authData.msg || authData.error_description || '';
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        alert('이미 가입된 이메일입니다. 로그인 페이지를 이용해 주세요.');
+      } else {
+        alert('가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      }
+      btn.disabled=false;txt.style.display='block';spin.style.display='none';
+      return;
+    }
+
+    const userId = authData.user.id;
+
+    // 2단계: users 테이블에 추가 정보 저장
+    const profileData = {
+      id:      userId,
+      name:    document.getElementById('f-name').value.trim(),
+      phone:   document.getElementById('f-phone').value.trim(),
+      email:   email,
+      company: document.getElementById('f-company').value.trim(),
+      role:    document.getElementById('f-role').value,
+      team:    (document.getElementById('f-team') ? document.getElementById('f-team').value.trim() : ''),
+    };
+
+    await fetch(`${SUPABASE_URL}/rest/v1/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1003,17 +1076,13 @@ async function doSubmit(){
         'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(profileData)
     });
-    if(res.ok){
-      document.getElementById('modal-body').style.display='none';
-      document.getElementById('success-screen').style.display='block';
-    } else {
-      const err=await res.json();
-      console.error('Supabase 오류:',err);
-      alert('저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
-      btn.disabled=false;txt.style.display='block';spin.style.display='none';
-    }
+
+    // 성공 화면
+    document.getElementById('modal-body').style.display='none';
+    document.getElementById('success-screen').style.display='block';
+
   } catch(e){
     console.error('네트워크 오류:',e);
     alert('네트워크 오류가 발생했습니다. 다시 시도해 주세요.');
@@ -1028,7 +1097,6 @@ function confirmPrivacy(){
   closePrivacy();
 }
 
-<script>
 (function(){
   const header = document.querySelector('header');
   const heroCard = document.getElementById('heroImageCard');
