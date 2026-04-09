@@ -936,8 +936,8 @@ footer {
         <div class="success-icon">
           <svg viewBox="0 0 28 28" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,14 11,21 24,7"/></svg>
         </div>
-        <div class="success-ttl">가입 신청 완료!</div>
-        <div class="success-desc">가입 정보를 확인 후<br><strong>24시간 이내</strong>에 안내 문자를 드립니다.<br><br>30일 무료체험 기간 동안<br>원세컨드를 마음껏 사용해 보세요 😊</div>
+        <div class="success-ttl">이메일 인증을 완료해 주세요!</div>
+        <div class="success-desc" id="success-email-desc">입력하신 이메일로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br><strong>30일 무료체험</strong>을 바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:#b09a89;">스팸함도 꼭 확인해 주세요</span></div>
       </div>
     </div>
   </div>
@@ -1079,7 +1079,9 @@ async function doSubmit(){
       body: JSON.stringify(profileData)
     });
 
-    // 성공 화면
+    // 성공 화면 - 이메일 인증 안내
+    const descEl = document.getElementById('success-email-desc');
+    if (descEl) descEl.innerHTML = \`<strong>${email}</strong> 으로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br><strong>30일 무료체험</strong>을 바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:#b09a89;">스팸함도 꼭 확인해 주세요</span>\`;
     document.getElementById('modal-body').style.display='none';
     document.getElementById('success-screen').style.display='block';
 
