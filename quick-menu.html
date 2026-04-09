@@ -1206,9 +1206,17 @@ function renderSidebarUpgrade(plan, role) {
   if (!wrap) return;
   const isFreeRole = ['manager','branch_manager'].includes(role);
   if (isFreeRole || plan === 'pro') {
-    wrap.innerHTML = '<div class="pro-badge-side">✅ PRO 이용 중</div>';
+    wrap.className = 'pro-badge-side';
+    wrap.setAttribute('href', 'pricing.html');
+    wrap.style.textDecoration = 'none';
+    wrap.style.cursor = 'pointer';
+    wrap.textContent = '✅ PRO 이용 중';
   } else {
-    wrap.innerHTML = '<button class="upgrade-btn" onclick="window.location.href=\'pricing.html\'">⚡ PRO로 업그레이드</button>';
+    wrap.className = 'upgrade-btn';
+    wrap.setAttribute('href', 'pricing.html');
+    wrap.style.textDecoration = 'none';
+    wrap.style.cursor = 'pointer';
+    wrap.textContent = '⚡ PRO로 업그레이드';
   }
 }
 function doLogout() {
