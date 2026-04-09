@@ -37,7 +37,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .layout{flex:1;display:flex;overflow:hidden;}
 
 /* 사이드바 */
-.sidebar{width:var(--sidebar-w);flex-shrink:0;background:#6F4428;display:flex;flex-direction:column;padding:12px 0;overflow-y:auto;}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:#6F4428;display:flex;flex-direction:column;padding:12px 0;overflow-y:auto;min-height:calc(100vh - 52px);}
 .nav-item{padding:11px 18px;font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;border-left:3px solid transparent;}
 .nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
 .nav-item.active{background:rgba(200,117,58,.15);color:var(--accent);border-left-color:var(--accent);}
@@ -1292,7 +1292,7 @@ function renderSidebarUpgrade(plan, role) {
   if (!wrap) return;
   const isFreeRole = ['manager','branch_manager'].includes(role);
   if (isFreeRole || plan === 'pro') {
-    wrap.innerHTML = '<div class="pro-badge-side">✅ PRO 이용 중</div>';
+    wrap.innerHTML = '<a href="pricing.html" class="pro-badge-side" style="text-decoration:none;">✅ PRO 이용 중</a>';
   } else {
     wrap.innerHTML = '<button class="upgrade-btn" onclick="window.location.href=\'pricing.html\'">⚡ PRO로 업그레이드</button>';
   }
