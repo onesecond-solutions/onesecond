@@ -665,7 +665,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:var(--cream); color:var
     <div class="nav-item" data-nav="news" onclick="goNav('news')">📰 보험뉴스</div>
     <div class="nav-item active" data-nav="quick">⚡ Quick 메뉴</div>
     <div class="sidebar-bottom" style="margin-top:auto;padding:12px 12px 4px;">
-      <a id="sidebar-upgrade-wrap" href="pricing.html" class="pro-badge-side" style="text-decoration:none;cursor:pointer;">✅ PRO 이용 중</a>
+      <div id="sidebar-upgrade-wrap"></div>
     </div>
   </div>
   <div class="main">
@@ -1206,17 +1206,9 @@ function renderSidebarUpgrade(plan, role) {
   if (!wrap) return;
   const isFreeRole = ['manager','branch_manager'].includes(role);
   if (isFreeRole || plan === 'pro') {
-    wrap.className = 'pro-badge-side';
-    wrap.setAttribute('href', 'pricing.html');
-    wrap.style.textDecoration = 'none';
-    wrap.style.cursor = 'pointer';
-    wrap.textContent = '✅ PRO 이용 중';
+    wrap.innerHTML = '<div class="pro-badge-side">✅ PRO 이용 중</div>';
   } else {
-    wrap.className = 'upgrade-btn';
-    wrap.setAttribute('href', 'pricing.html');
-    wrap.style.textDecoration = 'none';
-    wrap.style.cursor = 'pointer';
-    wrap.textContent = '⚡ PRO로 업그레이드';
+    wrap.innerHTML = '<button class="upgrade-btn" onclick="window.location.href='pricing.html'">⚡ PRO로 업그레이드</button>';
   }
 }
 function doLogout() {
