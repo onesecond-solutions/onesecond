@@ -90,6 +90,10 @@ body {
 .nav-item:hover { background:rgba(255,255,255,.08); color:#ffffff; }
 .nav-item.active { background:rgba(61,43,31,.24); color:#ffffff; font-weight:700; }
 .nav-item + .nav-item { margin-top:8px; }
+.sidebar-bottom{margin-top:auto;padding:12px 12px 4px;}
+.upgrade-btn{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:linear-gradient(135deg,#c8753a,#a05a28);border:none;color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;text-decoration:none;}
+.upgrade-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.pro-badge-side{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:rgba(200,117,58,.12);border:1px solid rgba(200,117,58,.3);color:var(--accent);font-size:13px;font-weight:700;}
 
 .main { flex:1; display:flex; flex-direction:column; min-width:0; }
 .greeting-bar {
@@ -498,6 +502,9 @@ body {
     <div class="nav-item" data-nav="myspace">⭐ MY SPACE</div>
     <div class="nav-item" data-nav="news" onclick="goNav('news')">📰 보험뉴스</div>
     <div class="nav-item" data-nav="quick">⚡ Quick 메뉴</div>
+    <div class="sidebar-bottom">
+      <div id="sidebar-upgrade-wrap"></div>
+    </div>
   </div>
 
   <div class="main">
@@ -1131,6 +1138,9 @@ async function loadUserInfo() {
       window._userId = authUser.id;
       window._userToken = token;
       window._userEmail = u.email;
+      window._userRole = u.role;
+      // 사이드바 배지 렌더
+      renderSidebarUpgrade(u.plan || 'free', u.role);
       // 배너 로드
       loadRecommendedScripts();
       loadRecentScripts();
@@ -1138,6 +1148,18 @@ async function loadUserInfo() {
   } catch(e) { console.error(e); }
 }
 loadUserInfo();
+
+// ── 사이드바 배지 렌더 ──
+function renderSidebarUpgrade(plan, role) {
+  const wrap = document.getElementById('sidebar-upgrade-wrap');
+  if (!wrap) return;
+  const isFreeRole = ['manager','branch_manager'].includes(role);
+  if (isFreeRole || plan === 'pro') {
+    wrap.innerHTML = '<div class="pro-badge-side">✅ PRO 이용 중</div>';
+  } else {
+    wrap.innerHTML = '<button class="upgrade-btn" onclick="window.location.href=\'pricing.html\'">⚡ PRO로 업그레이드</button>';
+  }
+}
 
 // ── 개인정보 수정 모달 ──
 function toggleUserDropdown(event) {
