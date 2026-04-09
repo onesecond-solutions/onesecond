@@ -61,7 +61,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:var(--cream); color:var
   border-left:3px solid transparent;
 }
 .nav-item:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.8); }
-.nav-item.active { background:rgba(200,117,58,0.15); color:var(--accent); border-left-color:var(--accent); }
+.nav-item.active { background:rgba(200,117,58,0.15); color:#fff; border-left-color:var(--accent); }
 
 /* ── 메인 영역 ── */
 .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
@@ -665,9 +665,9 @@ body { font-family:'Noto Sans KR',sans-serif; background:var(--cream); color:var
     <div class="nav-item" data-nav="news" onclick="goNav('news')">📰 보험뉴스</div>
     <div class="nav-item active" data-nav="quick">⚡ Quick 메뉴</div>
     <div class="sidebar-bottom" style="margin-top:auto;padding:12px 12px 4px;">
-      <div id="sidebar-upgrade-wrap"></div>
+      <a id="sidebar-upgrade-wrap" href="pricing.html" class="pro-badge-side" style="text-decoration:none;cursor:pointer;">✅ PRO 이용 중</a>
     </div>
-  </div> -->
+  </div>
   <div class="main">
 
     <!-- 고정: 인사말 + Quick 버튼 -->
@@ -1268,6 +1268,17 @@ async function sendPasswordReset(){
     else alert('발송 중 오류가 발생했습니다.');
   }catch(e){alert('네트워크 오류가 발생했습니다.');}
 }
+
+document.addEventListener('DOMContentLoaded', function(){
+  const wrap = document.getElementById('sidebar-upgrade-wrap');
+  if (wrap) {
+    wrap.setAttribute('href','pricing.html');
+    wrap.classList.add('pro-badge-side');
+    wrap.style.textDecoration='none';
+    wrap.style.cursor='pointer';
+  }
+});
+
 </script>
 <!-- 내 정보 수정 모달 -->
 <div id="edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,16,8,.72);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
