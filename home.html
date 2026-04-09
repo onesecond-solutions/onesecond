@@ -100,13 +100,14 @@ body {
 
 .main { flex:1; display:flex; flex-direction:column; min-width:0; }
 .greeting-bar {
-  background:#f9f8f6;
-  border-bottom:1px solid var(--line);
-  padding:8px 12px;
+  flex-shrink:0;
+  padding:10px 20px;
+  background:#fff;
+  border-bottom:1px solid #ead9cc;
   display:flex; align-items:center; justify-content:space-between;
 }
-.greeting-text { font-size:12px; color:#2c211a; }
-.greeting-text strong { color:#d07f45; }
+.greeting-text { font-size:13px; color:var(--text-dark); }
+.greeting-text strong { color:var(--accent); }
 .quick-wrap { position:relative; }
 .quick-btn {
   height:30px; padding:0 14px; border:none; border-radius:8px;
