@@ -152,6 +152,11 @@ button,input{font-family:inherit}
   .right-banner-wrap{width:100%}
   .right-panel{position:static}
 }
+.sidebar-bottom{margin-top:auto;padding:12px 12px 4px;}
+.upgrade-btn{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:linear-gradient(135deg,#c8753a,#a05a28);border:none;color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;text-decoration:none;}
+.upgrade-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.pro-badge-side{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:rgba(200,117,58,.12);border:1px solid rgba(200,117,58,.3);color:var(--accent);font-size:13px;font-weight:700;}
+
 @media (max-width:768px){
   .greeting-bar{align-items:flex-start;flex-wrap:wrap}
   .step1,.greeting-bar,.frame-body{padding-left:14px;padding-right:14px}
@@ -261,6 +266,9 @@ button,input{font-family:inherit}
       <div class="nav-item active" data-nav="myspace">⭐ MY SPACE</div>
     <div class="nav-item" data-nav="news" onclick="goNav('news')">📰 보험뉴스</div>
       <div class="nav-item" data-nav="quick">⚡ Quick 메뉴</div>
+      <div class="sidebar-bottom" style="margin-top:auto;padding:12px 12px 4px;">
+        <a id="sidebar-upgrade-wrap" href="pricing.html" class="pro-badge-side" style="text-decoration:none;cursor:pointer;">✅ PRO 이용 중</a>
+      </div>
 
     </aside>
 
