@@ -267,14 +267,14 @@ button,input{font-family:inherit}
     <div class="nav-item" data-nav="news" onclick="goNav('news')">📰 보험뉴스</div>
       <div class="nav-item" data-nav="quick">⚡ Quick 메뉴</div>
       <div class="sidebar-bottom" style="margin-top:auto;padding:12px 12px 4px;">
-        <a id="sidebar-upgrade-wrap" href="pricing.html" class="pro-badge-side" style="text-decoration:none;cursor:pointer;">✅ PRO 이용 중</a>
+        <div id="sidebar-upgrade-wrap"></div>
       </div>
 
     </aside>
 
     <main class="main">
       <div class="greeting-bar">
-        <div class="greeting-text">안녕하세요, <strong>임태성 팀장</strong> 님! 오늘도 화이팅입니다~ 🔥</div>
+        <div class="greeting-text">안녕하세요, <strong id="greeting-name">-</strong> 님! 오늘도 화이팅입니다~ 🔥</div>
         <div class="quick-wrap">
           <button class="quick-btn" onclick="toggleQuick(event)">⚡ Quick 메뉴 ▾</button>
           <div class="quick-dropdown" id="quick-dropdown">
@@ -1403,6 +1403,8 @@ async function loadUserInfo() {
       const roleLabel = ROLE_LABEL[u.role] || '';
       const displayName = `${u.name} ${roleLabel}`;
       document.getElementById('topbar-user').innerHTML = `${displayName} <span class="email">(${u.email})</span> ▾`;
+      const greetingEl = document.getElementById('greeting-name');
+      if (greetingEl) greetingEl.textContent = displayName;
       document.getElementById('edit-name').value = u.name || '';
       document.getElementById('edit-phone').value = u.phone || '';
       document.getElementById('edit-email').value = u.email || '';
@@ -1426,17 +1428,9 @@ function renderSidebarUpgrade(plan, role) {
   if (!wrap) return;
   const isFreeRole = ['manager','branch_manager'].includes(role);
   if (isFreeRole || plan === 'pro') {
-    wrap.className = 'pro-badge-side';
-    wrap.setAttribute('href', 'pricing.html');
-    wrap.style.textDecoration = 'none';
-    wrap.style.cursor = 'pointer';
-    wrap.textContent = '✅ PRO 이용 중';
+    wrap.innerHTML = '<div class="pro-badge-side">✅ PRO 이용 중</div>';
   } else {
-    wrap.className = 'upgrade-btn';
-    wrap.setAttribute('href', 'pricing.html');
-    wrap.style.textDecoration = 'none';
-    wrap.style.cursor = 'pointer';
-    wrap.textContent = '⚡ PRO로 업그레이드';
+    wrap.innerHTML = '<button class="upgrade-btn" onclick="window.location.href=\'pricing.html\'">⚡ PRO로 업그레이드</button>';
   }
 }
 
