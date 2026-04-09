@@ -498,9 +498,6 @@ body {
     <div class="nav-item" data-nav="myspace">⭐ MY SPACE</div>
     <div class="nav-item" data-nav="news" onclick="goNav('news')">📰 보험뉴스</div>
     <div class="nav-item" data-nav="quick">⚡ Quick 메뉴</div>
-    <div class="sidebar-bottom" style="margin-top:auto;padding:12px 12px 4px;">
-      <div id="sidebar-upgrade-wrap"></div>
-    </div>
   </div>
 
   <div class="main">
@@ -1111,7 +1108,7 @@ async function loadUserInfo() {
   const authUser = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
   if (!token || !authUser.id) { window.location.href = 'login.html'; return; }
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${authUser.id}&select=name,role,phone,email,company,branch,team,plan`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${authUser.id}&select=name,role,phone,email,company,branch,team`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
@@ -1134,7 +1131,6 @@ async function loadUserInfo() {
       window._userId = authUser.id;
       window._userToken = token;
       window._userEmail = u.email;
-      renderSidebarUpgrade(u.plan || 'free', u.role);
       // 배너 로드
       loadRecommendedScripts();
       loadRecentScripts();
@@ -1223,18 +1219,6 @@ async function sendPasswordReset() {
 }
 
 // ── 로그아웃 ──
-
-function renderSidebarUpgrade(plan, role) {
-  const wrap = document.getElementById('sidebar-upgrade-wrap');
-  if (!wrap) return;
-  const isFreeRole = ['manager','branch_manager'].includes(role);
-  if (isFreeRole || plan === 'pro') {
-    wrap.innerHTML = '<div class="pro-badge-side">✅ PRO 이용 중</div>';
-  } else {
-    wrap.innerHTML = '<button class="upgrade-btn" onclick="window.location.href='pricing.html'">⚡ PRO로 업그레이드</button>';
-  }
-}
-
 function doLogout() {
   localStorage.removeItem('os_token');
   localStorage.removeItem('os_refresh_token');
