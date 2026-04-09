@@ -619,6 +619,19 @@ body { font-family:'Noto Sans KR',sans-serif; background:var(--cream); color:var
 .upgrade-btn{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:linear-gradient(135deg,#c8753a,#a05a28);border:none;color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;text-decoration:none;}
 .upgrade-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
 .pro-badge-side{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:rgba(200,117,58,.12);border:1px solid rgba(200,117,58,.3);color:var(--accent);font-size:13px;font-weight:700;}
+
+@media (max-width: 640px) {
+  .quick-modal-body [onclick*="toggleMirrorScript"],
+  #content-slot [onclick*="toggleMirrorScript"] {
+    font-size:14px !important;
+    padding:13px 10px !important;
+  }
+  .quick-modal-body div[style*="grid-template-columns:repeat(2,minmax(0,1fr))"],
+  #content-slot div[style*="grid-template-columns:repeat(2,minmax(0,1fr))"] {
+    grid-template-columns:1fr !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -805,7 +818,7 @@ const overlayContent = {
   </div>
 
   <!-- 보험사 선택 버튼 -->
-  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px;">
     <button onclick="toggleMirrorScript('meritz')" style="width:100%;padding:14px;background:#3d2b1f;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:'Noto Sans KR',sans-serif;cursor:pointer;letter-spacing:-0.3px;transition:background .2s;" onmouseover="this.style.background='#5a3e2b'" onmouseout="this.style.background='#3d2b1f'">
       메리츠화재
     </button>
@@ -1016,6 +1029,12 @@ function openOverlay(title, icon) {
   document.getElementById('overlay-title').innerHTML = `${icon} ${title}`;
   document.getElementById('overlay-body').innerHTML = overlayContent[title] || '준비 중입니다.';
   document.getElementById('quick-overlay').classList.add('active');
+  setTimeout(() => {
+    const meritz = document.getElementById('mirror-meritz');
+    const heungkuk = document.getElementById('mirror-heungkuk');
+    if (meritz) meritz.style.display = 'none';
+    if (heungkuk) heungkuk.style.display = 'none';
+  }, 0);
 }
 
 function closeQuick() {
