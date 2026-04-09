@@ -1394,7 +1394,7 @@ async function loadUserInfo() {
   if (!token || !userId) return;
   window._userToken = token;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=name,role,phone,email,company,branch,team`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=name,role,phone,email,company,branch,team,plan`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
@@ -1413,12 +1413,32 @@ async function loadUserInfo() {
       window._userToken = token;
       window._userEmail = u.email;
       window._userRole = u.role;
+      renderSidebarUpgrade(u.plan || 'free', u.role);
       loadRecommendedScripts();
       loadRecentScripts();
     }
   } catch(e) { console.error(e); }
 }
 loadUserInfo();
+
+function renderSidebarUpgrade(plan, role) {
+  const wrap = document.getElementById('sidebar-upgrade-wrap');
+  if (!wrap) return;
+  const isFreeRole = ['manager','branch_manager'].includes(role);
+  if (isFreeRole || plan === 'pro') {
+    wrap.className = 'pro-badge-side';
+    wrap.setAttribute('href', 'pricing.html');
+    wrap.style.textDecoration = 'none';
+    wrap.style.cursor = 'pointer';
+    wrap.textContent = '✅ PRO 이용 중';
+  } else {
+    wrap.className = 'upgrade-btn';
+    wrap.setAttribute('href', 'pricing.html');
+    wrap.style.textDecoration = 'none';
+    wrap.style.cursor = 'pointer';
+    wrap.textContent = '⚡ PRO로 업그레이드';
+  }
+}
 
 function toggleUserDropdown(event) {
   if (event) event.stopPropagation();
