@@ -652,6 +652,16 @@ footer {
   .privacy-footer-bar{border-radius:0;}
 }
 </style>
+<script>
+/* 이미 로그인된 사용자 자동 이동 */
+(function(){
+  const token = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if(token){
+    window.location.href = "app.html";
+  }
+})();
+</script>
+
 </head>
 <body>
 
