@@ -12,6 +12,8 @@
 :root{
   --brown-main:#4a2f1f;
   --brown-dark:#3b2416;
+  --brown-light:#a0724a;
+  --brown-pale:#f5ede4;
   --bg-main:#f6f3ee;
   --panel:#ffffff;
   --line:#e6dfd7;
@@ -79,6 +81,7 @@ html,body{
   display:grid;
   grid-template-columns:220px 1fr 220px;
   overflow:hidden;
+  min-height:0;
 }
 
 /* ── B ── */
@@ -336,6 +339,268 @@ html,body{
   table-layout:auto;
 }
 
+
+
+/* ── Home D영역 ── */
+.home-wrap{padding:4px 0;}
+
+/* 상단 바로실행 카드 */
+.home-quick-title{
+  font-size:13px;font-weight:800;color:var(--brown-main);
+  letter-spacing:0.3px;
+  margin-bottom:12px;display:flex;align-items:center;gap:6px;
+  padding-bottom:8px;border-bottom:1px solid var(--line);
+}
+.home-quick-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  margin-bottom:20px;
+}
+.home-quick-card{
+  background:white;border:1.5px solid var(--line);
+  border-radius:14px;padding:16px 14px;
+  cursor:pointer;transition:all 0.18s;
+  display:flex;flex-direction:column;gap:6px;
+}
+.home-quick-card:hover{
+  border-color:var(--brown-main);
+  box-shadow:0 4px 14px rgba(61,43,31,0.12);
+  transform:translateY(-2px);
+}
+.home-quick-card-icon{font-size:20px;}
+.home-quick-card-label{
+  font-size:12px;font-weight:700;color:var(--brown-main);
+}
+.home-quick-card-desc{
+  font-size:11px;color:#aaa;line-height:1.5;
+}
+.home-quick-card-btn{
+  margin-top:4px;padding:6px 0;
+  background:var(--brown-main);color:white;
+  border:none;border-radius:8px;font-size:11px;
+  font-weight:700;cursor:pointer;font-family:inherit;
+  transition:background 0.15s;
+}
+.home-quick-card-btn:hover{background:var(--brown-dark);}
+
+/* 중단 2열 그리드 */
+.home-mid-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+  margin-bottom:14px;
+}
+.home-panel{
+  background:white;border:1px solid var(--line);
+  border-radius:16px;overflow:hidden;
+}
+.home-panel-header{
+  padding:11px 16px;
+  background:#e8d5c2;
+  border-bottom:1.5px solid #d4b8a0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.home-panel-title{
+  font-size:13px;font-weight:800;color:#3b2416;
+  display:flex;align-items:center;gap:6px;
+}
+.home-panel-more{
+  font-size:11px;color:#7a5230;
+  text-decoration:none;cursor:pointer;font-weight:700;
+  transition:color 0.15s;
+}
+.home-panel-more:hover{color:#3b2416;}
+.home-panel-body{padding:6px 0;}
+.home-panel-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-bottom:1px solid var(--line);
+  cursor:pointer;transition:background 0.12s;
+  font-size:13px;color:var(--text);
+}
+.home-panel-item:last-child{border-bottom:none;}
+.home-panel-item:hover{background:#fdf8f3;}
+.home-panel-item-arrow{color:#ccc;font-size:12px;}
+.home-panel-item-badge{
+  font-size:10px;font-weight:700;padding:2px 7px;
+  border-radius:20px;background:#faeeda;color:#854f0b;
+  margin-left:6px;white-space:nowrap;
+}
+.home-panel-empty{
+  padding:20px 16px;text-align:center;
+  font-size:12px;color:#bbb;
+}
+
+/* 뉴스 아이템 */
+.home-news-item{
+  padding:10px 16px;border-bottom:1px solid var(--line);
+  cursor:pointer;transition:background 0.12s;
+}
+.home-news-item:last-child{border-bottom:none;}
+.home-news-item:hover{background:#fdf8f3;}
+.home-news-title{
+  font-size:12px;font-weight:600;color:var(--text);
+  line-height:1.5;margin-bottom:3px;
+}
+.home-news-meta{
+  font-size:10px;color:#bbb;
+  display:flex;gap:8px;
+}
+
+/* 게시글 아이템 */
+.home-board-badge{
+  font-size:10px;font-weight:700;padding:2px 7px;
+  border-radius:20px;margin-right:6px;white-space:nowrap;
+}
+.badge-notice{background:#fde8e8;color:#c0392b;}
+.badge-product{background:#e8f4fd;color:#1a5c7a;}
+.badge-underwriting{background:#e8fde8;color:#1a5c35;}
+
+
+/* ── 게시판 D영역 ── */
+.board-tab-bar{flex-shrink:0;background:#fff;border-bottom:1px solid var(--line);padding:0 16px;display:flex;align-items:center;gap:4px;}
+.board-tab{padding:10px 16px;font-size:13px;font-weight:600;color:var(--text-light);cursor:pointer;border-radius:8px 8px 0 0;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;margin-top:8px;}
+.board-tab:hover{color:var(--text);background:#f5ede4;}
+.board-tab.active{background:var(--brown-dark);color:#fff;border-bottom-color:var(--brown-dark);font-weight:800;}
+.board-tab .badge{display:inline-block;margin-left:5px;padding:1px 6px;border-radius:99px;font-size:10px;font-weight:700;background:#f0e6dc;color:#c8753a;}
+.board-tab.active .badge{background:rgba(255,255,255,.2);color:#fff;}
+.insurer-badge{display:inline-block;margin-left:5px;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(200,117,58,.12);color:#c8753a;border:1px solid rgba(200,117,58,.25);}
+.board-body-inner{flex:1;overflow-y:auto;padding:16px 20px;}
+.board-filter-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+.category-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.cat-pill{padding:5px 13px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--text-light);cursor:pointer;transition:all .15s;}
+.cat-pill:hover{border-color:#c8753a;color:#c8753a;}
+.cat-pill.active{background:var(--brown-dark);color:#fff;border-color:var(--brown-dark);}
+.write-btn{height:34px;padding:0 14px;background:#c8753a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.write-btn:hover{background:#b5642e;}
+.post-list{display:flex;flex-direction:column;}
+.post-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.post-item:hover{border-color:#c8a880;box-shadow:0 2px 10px rgba(61,43,31,.08);transform:translateY(-1px);}
+.post-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.post-category-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:var(--brown-pale);color:var(--brown-main);margin-right:6px;}
+.post-category-tag.notice{background:#fff3e0;color:#e65100;}
+.post-category-tag.product{background:#e8f5e9;color:#2e7d32;}
+.post-category-tag.underwriting{background:#e3f2fd;color:#1565c0;}
+.post-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.5;flex:1;}
+.post-hub-badge{flex-shrink:0;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(200,117,58,.1);color:#c8753a;border:1px solid rgba(200,117,58,.2);}
+.post-preview{font-size:12px;color:var(--text-light);line-height:1.6;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.post-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-light);}
+.post-author{font-weight:600;color:var(--brown-main);}
+.post-stats{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.post-stat{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text-light);}
+.hub-approve-btn{padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid #c8753a;background:#fff;color:#c8753a;cursor:pointer;transition:all .15s;font-family:inherit;}
+.hub-approve-btn:hover{background:#c8753a;color:#fff;}
+.hub-approve-btn.approved{background:#c8753a;color:#fff;}
+.empty-state{text-align:center;padding:50px 20px;}
+.empty-icon{font-size:36px;margin-bottom:12px;}
+.empty-title{font-size:15px;font-weight:800;color:var(--brown-main);margin-bottom:6px;}
+.empty-desc{font-size:12px;color:var(--text-light);line-height:1.7;}
+
+/* 글쓰기 오버레이 */
+.write-overlay{display:none;position:fixed;inset:0;background:rgba(26,16,8,.72);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.write-overlay.active{display:flex;}
+.write-modal{background:#fff;border-radius:18px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;margin:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);}
+.write-modal-header{background:var(--brown-dark);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;position:sticky;top:0;z-index:1;}
+.write-modal-title{font-size:14px;font-weight:800;color:#fff;}
+.write-modal-close{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;font-size:14px;font-family:inherit;}
+.write-modal-body{padding:18px 20px 22px;}
+.write-field{margin-bottom:14px;}
+.write-label{font-size:12px;font-weight:700;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:4px;}
+.write-req{color:#c8753a;}
+.write-input,.write-select{width:100%;height:38px;padding:0 11px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;background:#fff;}
+.write-input:focus,.write-select:focus{border-color:#c8753a;}
+.write-textarea{width:100%;min-height:120px;padding:10px 11px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.7;transition:border-color .2s;}
+.write-textarea:focus{border-color:#c8753a;}
+.write-anon-row{display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--brown-pale);border-radius:8px;margin-bottom:14px;}
+.write-anon-row input{accent-color:#c8753a;}
+.write-anon-label{font-size:12px;color:var(--text-mid);font-weight:600;}
+.write-submit{width:100%;height:40px;background:#c8753a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s;}
+.write-submit:hover{background:#b5642e;}
+
+/* 게시글 상세 오버레이 */
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(26,16,8,.72);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.detail-overlay.active{display:flex;}
+.detail-modal{background:#fff;border-radius:18px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;margin:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);}
+.detail-header{background:var(--brown-dark);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:18px 18px 0 0;position:sticky;top:0;z-index:1;}
+.detail-header-title{font-size:13px;font-weight:800;color:#fff;}
+.detail-close{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;font-size:14px;font-family:inherit;}
+.detail-body{padding:18px 20px;}
+.detail-category{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;background:var(--brown-pale);color:var(--brown-main);margin-bottom:10px;}
+.detail-title{font-size:17px;font-weight:900;color:var(--text);margin-bottom:10px;line-height:1.4;}
+.detail-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-light);padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:14px;}
+.detail-content{font-size:14px;color:var(--text);line-height:1.9;white-space:pre-wrap;margin-bottom:16px;}
+.detail-actions{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:14px;}
+.like-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--text-mid);cursor:pointer;transition:all .15s;font-family:inherit;}
+.like-btn:hover{border-color:#c8753a;color:#c8753a;}
+.like-btn.liked{background:#c8753a;color:#fff;border-color:#c8753a;}
+.hub-approve-large{padding:7px 14px;border-radius:8px;border:1.5px solid #c8753a;background:#fff;font-size:12px;font-weight:700;color:#c8753a;cursor:pointer;transition:all .15s;font-family:inherit;margin-left:auto;}
+.hub-approve-large:hover{background:#c8753a;color:#fff;}
+.hub-approve-large.approved{background:#c8753a;color:#fff;}
+.comments-section{margin-top:4px;}
+.comments-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px;}
+.comment-item{padding:10px 12px;background:var(--brown-pale);border-radius:10px;margin-bottom:6px;}
+.comment-author{font-size:12px;font-weight:700;color:var(--brown-main);margin-bottom:3px;}
+.comment-content{font-size:13px;color:var(--text);line-height:1.6;}
+.comment-date{font-size:11px;color:var(--text-light);margin-top:3px;}
+.comment-input-row{display:flex;gap:8px;margin-top:10px;}
+.comment-input{flex:1;height:38px;padding:0 11px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:inherit;outline:none;}
+.comment-input:focus{border-color:#c8753a;}
+.comment-submit{height:38px;padding:0 12px;background:var(--brown-dark);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;}
+
+/* ── E: 푸터 ── */
+.site-footer{
+  flex-shrink:0;
+  width:100%;
+  background:var(--brown-dark);
+  color:rgba(255,255,255,.92);
+  padding:12px 24px;
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+.footer-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+  max-width:100%;
+}
+.footer-left{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.footer-brand{
+  font-size:14px;font-weight:900;
+  color:#fff;letter-spacing:-0.3px;white-space:nowrap;
+}
+.footer-brand span{color:#c8916b;}
+.footer-copy{
+  font-size:11px;
+  color:rgba(255,255,255,.5);
+  white-space:nowrap;
+}
+.footer-links{
+  display:flex;gap:14px;align-items:center;
+}
+.footer-link{
+  font-size:11px;color:rgba(255,255,255,.55);
+  text-decoration:none;white-space:nowrap;
+  transition:color 0.15s;
+}
+.footer-link:hover{color:rgba(255,255,255,.9);}
+.footer-kakao{
+  display:inline-flex;align-items:center;gap:6px;
+  height:32px;padding:0 14px;border-radius:8px;
+  background:#FEE500;color:#2B1E14;
+  text-decoration:none;font-size:12px;font-weight:900;
+  white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,.14);
+  transition:filter 0.15s;
+}
+.footer-kakao:hover{filter:brightness(.95);}
+
+/* 모바일 푸터 */
+@media(max-width:767px){
+  .site-footer{display:none;}
+}
+
 /* ── 반응형 ── */
 /* 태블릿: C영역 숨김 */
 @media(max-width:960px){
@@ -432,11 +697,151 @@ html,body{
     <div class="d">
 
       <div class="d-section active" id="d-home">
-        <div class="card">
-          <h2>🏠 홈</h2>
-          <p>홈 콘텐츠가 들어갈 영역입니다.</p>
+  <div class="home-wrap">
+
+    <!-- 상단: 바로 실행 카드 4개 -->
+    <div class="home-quick-title">🔥 바로 실행 — 자주 쓰는 스크립트</div>
+    <div class="home-quick-grid">
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">📞</div>
+        <div class="home-quick-card-label">도입 인사</div>
+        <div class="home-quick-card-desc">통화 시작 첫 멘트</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">⚡</div>
+        <div class="home-quick-card-label">반론 대응</div>
+        <div class="home-quick-card-desc">"바빠요" "생각해볼게요"</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">✅</div>
+        <div class="home-quick-card-label">클로징</div>
+        <div class="home-quick-card-desc">계약 마무리 멘트</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">🔥</div>
+        <div class="home-quick-card-label">필요성 강조</div>
+        <div class="home-quick-card-desc">보험 필요성 어필</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+    </div>
+
+    <!-- 중단: 2열 그리드 -->
+    <div class="home-mid-grid">
+
+      <!-- 나의 스크립트 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">📌 나의 스크립트</div>
+          <span class="home-panel-more" onclick="switchMenu('myspace')">MY SPACE →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-panel-item">
+            <span>시간 회피형 멘트<span class="home-panel-item-badge">즐겨찾기</span></span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>좋은 보험은 이렇게 구성됩니다</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>보험 점검형 오프닝</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-empty">+ MY SPACE에서 스크립트를 추가하세요</div>
         </div>
       </div>
+
+      <!-- 오늘의 보험뉴스 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">📰 오늘의 보험뉴스</div>
+          <span class="home-panel-more" onclick="switchMenu('news')">더보기 →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-news-item">
+            <div class="home-news-title">금융위, 실손보험 구조개편안 발표…4세대 전환 가속화</div>
+            <div class="home-news-meta"><span>보험업계</span><span>2026.04.10</span></div>
+          </div>
+          <div class="home-news-item">
+            <div class="home-news-title">TM 채널 규제 강화, 녹취 기준 일부 변경 예고</div>
+            <div class="home-news-meta"><span>규제·정책</span><span>2026.04.09</span></div>
+          </div>
+          <div class="home-news-item">
+            <div class="home-news-title">메리츠화재, 간편심사 상품 라인업 확대 발표</div>
+            <div class="home-news-meta"><span>상품</span><span>2026.04.08</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 최신 게시글 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">📋 최신 게시글</div>
+          <span class="home-panel-more" onclick="switchMenu('board')">게시판 →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-panel-item">
+            <span>
+              <span class="home-board-badge badge-notice">공지</span>
+              4월 인수기준 변경사항 안내
+            </span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>
+              <span class="home-board-badge badge-underwriting">인수Q&A</span>
+              고혈압 3년 경과 후 가입 가능 여부
+            </span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>
+              <span class="home-board-badge badge-product">상품Q&A</span>
+              흥국생명 간편형 실비 인수 기준 질문
+            </span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 팀장 추천 스크립트 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">👍 Leader Pick</div>
+          <span class="home-panel-more" onclick="switchMenu('scripts')">스크립트 →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-panel-item">
+            <span>보험 조회 안내형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>시간 회피형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>통화 차단형 대응</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>보험 점검형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>보장 분석 안내형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- 끝: 중단 2열 -->
+
+  </div>
+</div>
 
       <div class="d-section" id="d-scripts">
         <div class="card">
@@ -445,12 +850,90 @@ html,body{
         </div>
       </div>
 
-      <div class="d-section" id="d-board">
-        <div class="card">
-          <h2>📋 게시판</h2>
-          <p>게시판 목록이 들어갈 영역입니다.</p>
-        </div>
+<div class="d-section" id="d-board">
+
+  <!-- 게시판 탭 -->
+  <div class="board-tab-bar" style="margin:-24px -24px 0;padding:0 16px;">
+    <div class="board-tab active" data-board="hub" onclick="switchBoard('hub')">🌐 허브게시판</div>
+    <div class="board-tab" data-board="team" onclick="switchBoard('team')">👥 팀게시판</div>
+    <div class="board-tab" data-board="branch" onclick="switchBoard('branch')">🏢 지점게시판</div>
+    <div class="board-tab" data-board="insurer" onclick="switchBoard('insurer')">🏦 보험사게시판 <span class="insurer-badge">BETA</span></div>
+  </div>
+
+  <!-- 게시판 본문 -->
+  <div class="board-body-inner" style="margin:0 -24px;padding:16px 20px;">
+
+    <!-- 게시판 안내 배너 -->
+    <div id="hub-notice" style="background:linear-gradient(90deg,#3b2416,#4a2f1f);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <div><div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:2px;">🌐 허브게시판</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);">팀·지점·보험사 게시판에서 승인된 양질의 정보가 모이는 공간입니다.</div></div>
+    </div>
+    <div id="team-notice" style="display:none;background:var(--brown-pale);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:800;color:var(--brown-dark);margin-bottom:2px;">👥 팀게시판</div>
+      <div style="font-size:12px;color:var(--brown-main);">우리 팀 공지와 현장 질문·답변을 나누는 공간입니다.</div>
+    </div>
+    <div id="branch-notice" style="display:none;background:var(--brown-pale);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:800;color:var(--brown-dark);margin-bottom:2px;">🏢 지점게시판</div>
+      <div style="font-size:12px;color:var(--brown-main);">지점 공지와 현장 정보를 공유하는 공간입니다.</div>
+    </div>
+    <div id="insurer-notice" style="display:none;background:var(--brown-pale);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:800;color:var(--brown-dark);margin-bottom:2px;">🏦 보험사게시판</div>
+      <div style="font-size:12px;color:var(--brown-main);">보험사 담당자와 설계사가 직접 소통하는 공간입니다.</div>
+    </div>
+
+    <!-- 필터 바 -->
+    <div class="board-filter-bar">
+      <div class="category-pills" id="category-pills"></div>
+      <button class="write-btn" id="write-btn" onclick="openWriteModal()">✏️ 글쓰기</button>
+    </div>
+
+    <!-- 게시글 목록 -->
+    <div class="post-list" id="post-list">
+      <div style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;">불러오는 중...</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 글쓰기 오버레이 -->
+<div class="write-overlay" id="write-overlay" onclick="if(event.target===this)closeWriteModal()">
+  <div class="write-modal">
+    <div class="write-modal-header">
+      <div class="write-modal-title" id="write-modal-title">✏️ 글쓰기</div>
+      <button class="write-modal-close" onclick="closeWriteModal()">✕</button>
+    </div>
+    <div class="write-modal-body">
+      <div class="write-field">
+        <div class="write-label">카테고리 <span class="write-req">*</span></div>
+        <select class="write-select" id="write-category"></select>
       </div>
+      <div class="write-field">
+        <div class="write-label">제목 <span class="write-req">*</span></div>
+        <input class="write-input" type="text" id="write-title" placeholder="제목을 입력해 주세요" maxlength="100">
+      </div>
+      <div class="write-field">
+        <div class="write-label">내용 <span class="write-req">*</span></div>
+        <textarea class="write-textarea" id="write-content" placeholder="내용을 입력해 주세요"></textarea>
+      </div>
+      <div class="write-anon-row" id="anon-row" style="display:none;">
+        <input type="checkbox" id="write-anon" accent-color="#c8753a">
+        <label class="write-anon-label" for="write-anon">익명으로 작성</label>
+      </div>
+      <button class="write-submit" onclick="submitPost()">게시글 등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 게시글 상세 오버레이 -->
+<div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetailModal()">
+  <div class="detail-modal">
+    <div class="detail-header">
+      <div class="detail-header-title">게시글 상세</div>
+      <button class="detail-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
 
       <div class="d-section" id="d-myspace">
         <div class="card">
@@ -569,6 +1052,24 @@ html,body{
   </div>
 </div>
 
+<!-- E: 푸터 -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <div class="footer-brand">원세컨드 <span>1s</span></div>
+      <div class="footer-copy">© 2026 OneSecond. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="index.html" class="footer-link">서비스 소개</a>
+        <a href="pricing.html" class="footer-link">요금제</a>
+        <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener" class="footer-link">문의</a>
+      </div>
+    </div>
+    <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">
+      💬 카카오 오픈채팅 문의
+    </a>
+  </div>
+</footer>
+
 <!-- 하단 탭바 (모바일) -->
 <div class="tab-bar">
   <div class="tab-item active" data-menu="home">
@@ -666,6 +1167,10 @@ function switchMenu(menuKey) {
 
   // localStorage 저장
   localStorage.setItem('selected_menu', menuKey);
+  // 게시판 진입 시 자동 로드
+  if (menuKey === 'board') {
+    setTimeout(() => { if(typeof switchBoard==='function') switchBoard('hub'); }, 50);
+  }
 }
 
 // ── B 메뉴 클릭 이벤트 ──
@@ -960,6 +1465,288 @@ async function sendPasswordReset(){
   }catch(e){alert('네트워크 오류가 발생했습니다.');}
 }
 
+
+// ── 게시판 ──
+const BOARD_LABEL = { hub:'허브게시판', team:'팀게시판', branch:'지점게시판', insurer:'보험사게시판' };
+const BOARD_CATEGORIES = {
+  hub: ['전체','공지','상품Q&A','인수Q&A'],
+  team: ['전체','공지','상품Q&A','인수Q&A'],
+  branch: ['전체','공지','상품Q&A','인수Q&A'],
+  insurer: ['전체','공지','상품Q&A','인수Q&A']
+};
+const CAT_CLASS = { '공지':'notice', '상품Q&A':'product', '인수Q&A':'underwriting' };
+let _currentBoard = 'hub';
+let _currentCategory = 'all';
+let _allPosts = [];
+let _currentPostId = null;
+
+function switchBoard(board) {
+  _currentBoard = board;
+  _currentCategory = 'all';
+  // 탭 active
+  document.querySelectorAll('.board-tab').forEach(t => t.classList.toggle('active', t.dataset.board === board));
+  // 안내 배너
+  ['hub','team','branch','insurer'].forEach(b => {
+    const el = document.getElementById(b+'-notice');
+    if (el) el.style.display = b === board ? '' : 'none';
+  });
+  renderCategoryPills(board);
+  loadPosts();
+}
+
+function renderCategoryPills(board) {
+  const cats = BOARD_CATEGORIES[board] || ['전체'];
+  const container = document.getElementById('category-pills');
+  if (!container) return;
+  container.innerHTML = cats.map(c =>
+    `<div class="cat-pill ${(_currentCategory==='all'&&c==='전체')||_currentCategory===c?'active':''}"
+      onclick="selectCategory('${c==='전체'?'all':c}')">${c}</div>`
+  ).join('');
+}
+
+function selectCategory(cat) {
+  _currentCategory = cat;
+  renderCategoryPills(_currentBoard);
+  renderPostList();
+}
+
+async function loadPosts() {
+  const list = document.getElementById('post-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;">불러오는 중...</div>';
+  try {
+    let url;
+    const SB_URL = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '';
+    if (_currentBoard === 'hub') {
+      url = `${SB_URL}/rest/v1/posts?is_hub_visible=eq.true&order=created_at.desc`;
+    } else if (_currentBoard === 'team') {
+      const org = window._userOrg;
+      if (!org || !org.team) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">소속 팀 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 팀명을 등록해 주세요.</div></div>';
+        return;
+      }
+      url = `${SB_URL}/rest/v1/posts?board_type=eq.team&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch+'_'+org.team)}&order=created_at.desc`;
+    } else if (_currentBoard === 'branch') {
+      const org = window._userOrg;
+      if (!org || !org.branch) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">소속 지점 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 지점명을 등록해 주세요.</div></div>';
+        return;
+      }
+      url = `${SB_URL}/rest/v1/posts?board_type=eq.branch&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch)}&order=created_at.desc`;
+    } else {
+      url = `${SB_URL}/rest/v1/posts?board_type=eq.insurer&order=created_at.desc`;
+    }
+    const res = await fetchWithAuth(url);
+    const data = await res.json();
+    _allPosts = data || [];
+    renderPostList();
+  } catch(e) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">불러오기 실패</div><div class="empty-desc">새로고침 해주세요.</div></div>';
+  }
+}
+
+function renderPostList() {
+  const list = document.getElementById('post-list');
+  if (!list) return;
+  let posts = _allPosts;
+  if (_currentCategory !== 'all') posts = posts.filter(p => p.category === _currentCategory);
+  if (!posts || posts.length === 0) {
+    const em = {
+      hub:{icon:'🌐',title:'아직 허브게시판에 게시글이 없습니다',desc:'팀·지점 게시판의 좋은 글이 승인 후 이곳에 모입니다.'},
+      team:{icon:'👥',title:'아직 팀게시판에 게시글이 없습니다',desc:'첫 글을 작성해보세요!'},
+      branch:{icon:'🏢',title:'아직 지점게시판에 게시글이 없습니다',desc:'첫 글을 작성해보세요!'},
+      insurer:{icon:'🏦',title:'아직 보험사게시판에 게시글이 없습니다',desc:'보험사 담당자 또는 설계사가 첫 글을 남겨보세요.'}
+    }[_currentBoard];
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${em.icon}</div><div class="empty-title">${em.title}</div><div class="empty-desc">${em.desc}</div></div>`;
+    return;
+  }
+  const isAdmin = ['manager','branch_manager'].includes(window._userRole);
+  list.innerHTML = posts.map(p => {
+    const date = p.created_at ? p.created_at.slice(0,10).replace(/-/g,'.') : '';
+    const catClass = CAT_CLASS[p.category] || '';
+    const authorDisplay = p.is_anonymous ? '익명' : (p.display_name || p.author_name || '알 수 없음');
+    const hubBadge = p.is_hub_visible ? '<span class="post-hub-badge">허브 공개</span>' : '';
+    const approveBtn = isAdmin && _currentBoard !== 'hub'
+      ? `<button class="hub-approve-btn ${p.is_hub_visible?'approved':''}" onclick="event.stopPropagation();toggleHubApprove(${p.id},${p.is_hub_visible})">${p.is_hub_visible?'✅ 허브 공개중':'🌐 허브 승인'}</button>` : '';
+    return `<div class="post-item" onclick="openDetailModal(${p.id})">
+      <div class="post-item-top">
+        <div style="flex:1;"><span class="post-category-tag ${catClass}">${p.category||''}</span><span class="post-title">${p.title||''}</span></div>
+        ${hubBadge}
+      </div>
+      <div class="post-preview">${p.content||''}</div>
+      <div class="post-meta">
+        <span class="post-author">${authorDisplay}</span>
+        <span>${date}</span>
+        <div class="post-stats">
+          <span class="post-stat">👁 ${p.view_count||0}</span>
+          <span class="post-stat">❤️ ${p.like_count||0}</span>
+          <span class="post-stat">💬 ${p.comment_count||0}</span>
+          ${approveBtn}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleHubApprove(postId, current) {
+  try {
+    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({is_hub_visible:!current, hub_approved_at:!current?new Date().toISOString():null})
+    });
+    await loadPosts();
+  } catch(e) { alert('처리 중 오류가 발생했습니다.'); }
+}
+
+async function openDetailModal(postId) {
+  const post = _allPosts.find(p => p.id === postId);
+  if (!post) return;
+  _currentPostId = postId;
+  fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
+    method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
+    body: JSON.stringify({view_count:(post.view_count||0)+1})
+  }).catch(()=>{});
+  const authorDisplay = post.is_anonymous ? '익명' : (post.display_name||post.author_name||'알 수 없음');
+  const date = post.created_at ? post.created_at.slice(0,10).replace(/-/g,'.') : '';
+  const isAdmin = ['manager','branch_manager'].includes(window._userRole);
+  const catClass = CAT_CLASS[post.category] || '';
+  const approveBtn = isAdmin && _currentBoard !== 'hub'
+    ? `<button class="hub-approve-large ${post.is_hub_visible?'approved':''}" onclick="toggleHubApprove(${post.id},${post.is_hub_visible})">${post.is_hub_visible?'✅ 허브 공개중':'🌐 허브 승인하기'}</button>` : '';
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-category ${catClass}">${post.category||''}</div>
+    <div class="detail-title">${post.title||''}</div>
+    <div class="detail-meta">
+      <span style="font-weight:600;color:var(--brown-main);">${authorDisplay}</span>
+      <span>${date}</span><span>👁 ${post.view_count||0}</span>
+    </div>
+    <div class="detail-content">${post.content||''}</div>
+    <div class="detail-actions">
+      <button class="like-btn" id="like-btn" onclick="toggleLike(${post.id})">❤️ 좋아요 <span id="like-count">${post.like_count||0}</span></button>
+      ${approveBtn}
+    </div>
+    <div class="comments-section">
+      <div class="comments-title">💬 댓글 <span id="comment-count-label">${post.comment_count||0}</span>개</div>
+      <div id="comments-list"></div>
+      <div class="comment-input-row">
+        <input class="comment-input" type="text" id="comment-input" placeholder="댓글을 입력해 주세요">
+        <button class="comment-submit" onclick="submitComment(${post.id})">등록</button>
+      </div>
+    </div>`;
+  document.getElementById('detail-overlay').classList.add('active');
+  loadComments(postId);
+  checkLikeStatus(postId);
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-overlay').classList.remove('active');
+  _currentPostId = null;
+  loadPosts();
+}
+
+async function checkLikeStatus(postId) {
+  try {
+    const res = await fetchWithAuth(`${SUPABASE_URL}/rest/v1/post_likes?post_id=eq.${postId}&user_id=eq.${window._userId}`);
+    const data = await res.json();
+    if (data && data.length > 0) document.getElementById('like-btn')?.classList.add('liked');
+  } catch(e) {}
+}
+
+async function toggleLike(postId) {
+  const btn = document.getElementById('like-btn');
+  const countEl = document.getElementById('like-count');
+  const post = _allPosts.find(p => p.id === postId);
+  if (!post) return;
+  const isLiked = btn?.classList.contains('liked');
+  try {
+    if (isLiked) {
+      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/post_likes?post_id=eq.${postId}&user_id=eq.${window._userId}`, {method:'DELETE',headers:{}});
+      const nc = Math.max(0,(post.like_count||0)-1);
+      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({like_count:nc})});
+      post.like_count=nc; btn?.classList.remove('liked'); if(countEl) countEl.textContent=nc;
+    } else {
+      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/post_likes`, {method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({post_id:postId,user_id:window._userId})});
+      const nc=(post.like_count||0)+1;
+      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({like_count:nc})});
+      post.like_count=nc; btn?.classList.add('liked'); if(countEl) countEl.textContent=nc;
+    }
+  } catch(e) { alert('처리 중 오류가 발생했습니다.'); }
+}
+
+async function loadComments(postId) {
+  const list = document.getElementById('comments-list');
+  if (!list) return;
+  try {
+    const res = await fetchWithAuth(`${SUPABASE_URL}/rest/v1/comments?post_id=eq.${postId}&order=created_at.asc`);
+    const data = await res.json();
+    if (!data || data.length === 0) { list.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:8px 0;">아직 댓글이 없습니다.</div>'; return; }
+    list.innerHTML = data.map(c => {
+      const date = c.created_at ? c.created_at.slice(0,10).replace(/-/g,'.') : '';
+      return `<div class="comment-item"><div class="comment-author">${c.author_name||'알 수 없음'}</div><div class="comment-content">${c.content||''}</div><div class="comment-date">${date}</div></div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+async function submitComment(postId) {
+  const input = document.getElementById('comment-input');
+  const content = input?.value.trim();
+  if (!content) { alert('댓글을 입력해 주세요.'); return; }
+  const post = _allPosts.find(p => p.id === postId);
+  try {
+    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/comments`, {method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({post_id:postId,author_id:window._userId,author_name:window._userName||'알 수 없음',content})});
+    const nc=(post?.comment_count||0)+1;
+    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({comment_count:nc})});
+    if(post) post.comment_count=nc;
+    const cl=document.getElementById('comment-count-label'); if(cl) cl.textContent=nc;
+    input.value=''; loadComments(postId);
+  } catch(e) { alert('댓글 등록 중 오류가 발생했습니다.'); }
+}
+
+function openWriteModal() {
+  const categories = (BOARD_CATEGORIES[_currentBoard]||['상품Q&A']).filter(c=>c!=='전체');
+  const select = document.getElementById('write-category');
+  if (select) select.innerHTML = categories.map(c=>`<option value="${c}">${c}</option>`).join('');
+  const title = document.getElementById('write-title'); if(title) title.value='';
+  const content = document.getElementById('write-content'); if(content) content.value='';
+  const anonRow = document.getElementById('anon-row');
+  const anonCheck = document.getElementById('write-anon');
+  if(_currentBoard==='insurer'&&window._userRole==='member'){if(anonRow)anonRow.style.display='flex';if(anonCheck)anonCheck.checked=true;}
+  else{if(anonRow)anonRow.style.display='none';if(anonCheck)anonCheck.checked=false;}
+  const mt=document.getElementById('write-modal-title');if(mt)mt.textContent=`✏️ ${BOARD_LABEL[_currentBoard]} 글쓰기`;
+  document.getElementById('write-overlay').classList.add('active');
+}
+
+function closeWriteModal() {
+  document.getElementById('write-overlay').classList.remove('active');
+}
+
+async function submitPost() {
+  const title=document.getElementById('write-title')?.value.trim();
+  const content=document.getElementById('write-content')?.value.trim();
+  const category=document.getElementById('write-category')?.value;
+  const isAnon=document.getElementById('write-anon')?.checked;
+  if(!title){alert('제목을 입력해 주세요.');return;}
+  if(!content){alert('내용을 입력해 주세요.');return;}
+  const org=window._userOrg||{};
+  let orgId='';
+  if(_currentBoard==='team') orgId=`${org.company||''}_${org.branch||''}_${org.team||''}`;
+  if(_currentBoard==='branch') orgId=`${org.company||''}_${org.branch||''}`;
+  let displayName=window._userName||'알 수 없음';
+  if(isAnon) displayName='익명';
+  else if(_currentBoard==='insurer'&&['manager','branch_manager'].includes(window._userRole)) displayName=org.company||window._userName||'보험회사';
+  const btn=document.querySelector('.write-submit');
+  if(btn){btn.disabled=true;btn.textContent='등록 중...';}
+  try {
+    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts`, {method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({board_type:_currentBoard,category,title,content,author_id:window._userId,author_name:window._userName||'알 수 없음',organization_id:orgId,is_hub_visible:false,is_anonymous:isAnon,display_name:displayName,view_count:0,like_count:0,comment_count:0})});
+    closeWriteModal();await loadPosts();
+  } catch(e){alert('글 등록 중 오류가 발생했습니다.');}
+  finally{if(btn){btn.disabled=false;btn.textContent='게시글 등록';}}
+}
+
+// 게시판 메뉴 진입 시 자동 로드
+document.addEventListener('boardMenuActivated', function() {
+  switchBoard('hub');
+});
+
 // ── 로그아웃 ──
 function doLogout() {
   localStorage.removeItem('os_token');
@@ -988,6 +1775,7 @@ document.getElementById('openQuick').onclick = openQuick;
 
 </script>
 
+<!-- 게시판 모달은 d-board 섹션 내부에 포함 -->
 <!-- 내 정보 수정 모달 -->
 <div id="edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,16,8,.72);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
   <div style="background:#fff;border-radius:18px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;margin:16px;max-height:90vh;overflow-y:auto;">
