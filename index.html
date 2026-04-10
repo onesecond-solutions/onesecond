@@ -963,7 +963,7 @@ footer {
         <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제4조. 개인정보 보유 및 이용 기간</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· 회원 탈퇴 시: 즉시 개인정보 삭제</div><div>· 허브 게시글: 탈퇴 시 작성자명 익명 처리 후 보관</div><div>· 관련 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관 후 삭제</div></div></div>
         <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제5조. 개인정보 제3자 제공</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:1.8;">원세컨드는 회원의 개인정보를 외부 제3자에게 제공하지 않습니다.<br>단, 법령에 의거한 수사기관의 요청이 있는 경우는 예외로 합니다.</div></div>
         <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제6조. 회원의 권리</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· 개인정보 열람, 수정, 삭제 요청 가능</div><div>· 허브 공개 철회: 작성한 게시글의 공개 범위 변경 가능</div><div>· 동의 철회(탈퇴) 시 즉시 처리</div></div></div>
-        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제7조. 문의처</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· <span style="font-weight:700;">서비스명:</span> 원세컨드 (onesecond)</div><div>· <span style="font-weight:700;">이메일:</span> bylts0428@gmail.com</div><div>· <span style="font-weight:700;">시행일:</span> 2026년 4월 4일</div></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:14px;font-weight:800;color:#5C3D2E;border-left:4px solid #7A5238;padding-left:10px;margin-bottom:10px;">제7조. 문의처</div><div style="background:#FFF;border:1px solid #E8DDD2;border-radius:12px;padding:14px 16px;font-size:13px;color:#2B211B;line-height:2.0;"><div>· <span style="font-weight:700;">서비스명:</span> 원세컨드 (onesecond)</div><div>· <span style="font-weight:700;">이메일:</span> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2e4c57425a5d1e1a1c166e49434f4742004d4143">[email&#160;protected]</a></div><div>· <span style="font-weight:700;">시행일:</span> 2026년 4월 4일</div></div></div>
         <div style="background:linear-gradient(90deg,#6C4A33 0%,#7A5238 45%,#5B3E2C 100%);border-radius:12px;padding:14px 18px;"><div style="font-size:13px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.7;">본 동의서는 회원가입 시 동의 체크와 함께 효력이 발생합니다.</div></div>
       </div>
     </div>
@@ -973,6 +973,7 @@ footer {
   </div>
 </div>
 
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
 function openModal(){document.getElementById('overlay').classList.add('active');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('overlay').classList.remove('active');document.body.style.overflow='';}
@@ -1185,11 +1186,4 @@ function confirmPrivacy(){
 
     const featureObserver = new IntersectionObserver((entries, obs) => {
       entries.forEach((entry) => {
-        if(entry.isIntersecting){
-          featureCards.forEach((card, idx) => {
-            setTimeout(() => {
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            }, idx * 110);
-          });
-        
+        if(entry.isInterse
