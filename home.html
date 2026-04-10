@@ -12,6 +12,8 @@
 :root{
   --brown-main:#4a2f1f;
   --brown-dark:#3b2416;
+  --brown-light:#a0724a;
+  --brown-pale:#f5ede4;
   --bg-main:#f6f3ee;
   --panel:#ffffff;
   --line:#e6dfd7;
@@ -344,9 +346,10 @@ html,body{
 
 /* 상단 바로실행 카드 */
 .home-quick-title{
-  font-size:12px;font-weight:700;color:var(--brown-main);
-  letter-spacing:0.5px;text-transform:uppercase;
-  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:800;color:var(--brown-main);
+  letter-spacing:0.3px;
+  margin-bottom:12px;display:flex;align-items:center;gap:6px;
+  padding-bottom:8px;border-bottom:1px solid var(--line);
 }
 .home-quick-grid{
   display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
@@ -389,20 +392,21 @@ html,body{
   border-radius:16px;overflow:hidden;
 }
 .home-panel-header{
-  padding:12px 16px;
-  background:linear-gradient(90deg,var(--brown-dark),var(--brown-main));
+  padding:11px 16px;
+  background:var(--brown-pale, #f5ede4);
+  border-bottom:1.5px solid var(--line);
   display:flex;align-items:center;justify-content:space-between;
 }
 .home-panel-title{
-  font-size:13px;font-weight:700;color:white;
+  font-size:13px;font-weight:800;color:var(--brown-main);
   display:flex;align-items:center;gap:6px;
 }
 .home-panel-more{
-  font-size:11px;color:rgba(255,255,255,0.7);
-  text-decoration:none;cursor:pointer;
+  font-size:11px;color:var(--brown-light,#a0724a);
+  text-decoration:none;cursor:pointer;font-weight:600;
   transition:color 0.15s;
 }
-.home-panel-more:hover{color:white;}
+.home-panel-more:hover{color:var(--brown-main);}
 .home-panel-body{padding:6px 0;}
 .home-panel-item{
   display:flex;align-items:center;justify-content:space-between;
