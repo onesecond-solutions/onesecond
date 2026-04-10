@@ -1232,10 +1232,11 @@ async function submitPost() {
 
 // ── 네비게이션 ──
 function goNav(nav) {
-  if (nav === 'home') window.location.href = 'home.html';
+  if (nav === 'home') window.location.href = 'app.html';
   else if (nav === 'myspace') window.location.href = 'myspace.html';
   else if (nav === 'quick') window.location.href = 'quick-menu.html';
   else if (nav === 'news') { alert('보험뉴스는 곧 오픈됩니다! 조금만 기다려 주세요 😊'); }
+  else if (nav === 'board') { /* 현재 페이지 */ }
 }
 
 // ── 드롭다운 ──
