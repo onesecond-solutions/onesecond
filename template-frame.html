@@ -1,1 +1,316 @@
-<!-- Template frame placeholder for future layout system -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원세컨드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --brown-main:#4a2f1f;
+  --brown-dark:#3b2416;
+  --brown-light:#a0724a;
+  --brown-pale:#f5ede4;
+  --bg-main:#f6f3ee;
+  --panel:#ffffff;
+  --line:#e6dfd7;
+  --right-bg:#efe5da;
+  --text:#2f2a26;
+}
+html,body{height:100%;font-family:Pretendard,"Malgun Gothic",sans-serif;background:var(--bg-main);overflow:hidden;}
+a{text-decoration:none;color:inherit}
+.app{height:100vh;display:flex;flex-direction:column;}
+
+/* A 상단 */
+.a1{
+  height:80px;background:linear-gradient(90deg,var(--brown-dark),var(--brown-main));color:white;
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;
+}
+.brand{font-size:24px;font-weight:700;color:#c8916b;letter-spacing:-0.5px;}
+.a1-right{display:flex;gap:10px;align-items:center;}
+@keyframes liveBlink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.8)} }
+.pill{
+  padding:6px 14px;border-radius:20px;background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.2);font-size:13px;cursor:default;
+}
+.alert-link{
+  height:28px;padding:0 12px;border-radius:6px;background:rgba(255,100,100,0.18);
+  border:1px solid rgba(255,100,100,0.35);color:#ffaaaa;font-size:12px;font-weight:700;
+  display:flex;align-items:center;white-space:nowrap;transition:background .15s;
+}
+.alert-link:hover{background:rgba(255,100,100,0.3)}
+.user-chip{cursor:pointer;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* A 보조 상단 */
+.a2{
+  height:70px;background:white;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;
+}
+.a2-greeting{font-size:15px;color:var(--text)}
+.quick-btn{
+  padding:10px 16px;border-radius:10px;background:#f1e4d7;border:1px solid var(--line);
+  cursor:pointer;font-weight:700;font-family:inherit;font-size:14px;
+}
+.quick-btn:hover{background:#e8d5c4;}
+
+/* 메인 프레임 */
+.main{
+  flex:1;display:grid;grid-template-columns:220px 1fr 220px;overflow:hidden;min-height:0;
+}
+
+/* B 좌측 */
+.b{
+  background:linear-gradient(180deg,var(--brown-dark),var(--brown-main));color:white;
+  padding:24px 16px;display:flex;flex-direction:column;justify-content:space-between;overflow-y:auto;
+}
+.menu{display:flex;flex-direction:column;gap:8px;}
+.menu-item{
+  padding:12px 14px;border-radius:12px;cursor:pointer;font-size:15px;
+  transition:background 0.15s;user-select:none;
+}
+.menu-item:hover{background:rgba(255,255,255,0.1);}
+.menu-item.active{background:rgba(255,255,255,0.18);font-weight:700;}
+.pro{
+  background:rgba(255,255,255,0.12);padding:14px;border-radius:12px;text-align:center;
+  font-size:14px;font-weight:600;
+}
+
+/* D 가운데 */
+.d{
+  overflow-y:auto;padding:24px;position:relative;
+}
+.loading{
+  background:white;border:1px solid var(--line);border-radius:20px;padding:24px;color:#777;
+}
+
+/* C 우측 */
+.c{
+  background:var(--right-bg);padding:20px 16px;border-left:1px solid var(--line);overflow-y:auto;
+}
+.c-section{display:none;flex-direction:column;gap:14px;}
+.c-section.active{display:flex;}
+.c-box{
+  background:white;border:1px solid var(--line);border-radius:14px;padding:16px;
+}
+.c-box-label{
+  font-size:11px;font-weight:700;color:#b08060;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;
+}
+.c-box-title{font-size:14px;font-weight:700;color:var(--brown-dark);margin-bottom:4px;}
+.c-box-desc{font-size:12px;color:#999;line-height:1.6;}
+
+/* 푸터 */
+.site-footer{
+  flex-shrink:0;width:100%;background:var(--brown-dark);color:rgba(255,255,255,.92);
+  padding:12px 24px;border-top:1px solid rgba(255,255,255,0.08);
+}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;max-width:100%;}
+.footer-left{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.footer-brand{font-size:14px;font-weight:900;color:#fff;letter-spacing:-0.3px;white-space:nowrap;}
+.footer-brand span{color:#c8916b;}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;}
+.footer-links{display:flex;gap:14px;align-items:center;}
+.footer-link{font-size:11px;color:rgba(255,255,255,.55);text-decoration:none;white-space:nowrap;transition:color 0.15s;}
+.footer-link:hover{color:rgba(255,255,255,.9);}
+.footer-kakao{
+  display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:8px;
+  background:#FEE500;color:#2B1E14;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,.14);transition:filter 0.15s;
+}
+.footer-kakao:hover{filter:brightness(.95);}
+
+/* 모바일 */
+@media(max-width:960px){
+  .main{grid-template-columns:200px 1fr;}
+  .c{display:none;}
+}
+@media(max-width:767px){
+  html,body{overflow:auto;}
+  .app{height:auto;min-height:100vh;}
+  .main{grid-template-columns:1fr;padding-bottom:64px;}
+  .b{display:none;}
+  .d{overflow-y:visible;}
+  .site-footer{display:none;}
+  .tab-bar{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:64px;background:var(--brown-dark);
+    z-index:50;border-top:1px solid rgba(255,255,255,0.1);
+  }
+  .tab-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:rgba(255,255,255,0.55);font-size:10px;gap:3px;cursor:pointer;transition:color 0.15s;
+  }
+  .tab-item.active{color:white;}
+  .tab-item .tab-icon{font-size:20px;}
+}
+@media(min-width:768px){
+  .tab-bar{display:none;}
+}
+
+/* 오버레이 */
+.overlay{
+  position:fixed;inset:0;background:rgba(26,16,8,0.70);display:none;align-items:center;justify-content:center;
+  z-index:200;backdrop-filter:blur(4px);padding:16px;
+}
+.overlay.show{display:flex;}
+.quick-modal-wrap{
+  background:#fff;border-radius:16px;width:100%;max-width:640px;max-height:88vh;display:flex;
+  flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,0.32);overflow:hidden;
+}
+.qm-header{
+  background:var(--brown-dark);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.qm-header-title{font-size:15px;font-weight:700;color:#fff;}
+.qm-close{
+  width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;
+  cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+}
+.qm-btns{
+  padding:16px 20px 12px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;border-bottom:1px solid #f0e4d8;
+}
+.qm-btn{
+  width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:#faf7f3;
+  font-size:15px;font-weight:700;cursor:pointer;text-align:left;color:var(--text);transition:all 0.15s;
+}
+.qm-btn:hover{background:#f1e4d7;border-color:#c8a080;}
+.qm-btn.active{background:var(--brown-dark);color:#fff;border-color:var(--brown-dark);}
+.qm-content{flex:1;overflow-y:auto;padding:20px;min-height:0;display:none;}
+.qm-content-inner{font-size:14px;color:var(--text);line-height:1.9;}
+.qm-helper{padding:12px 20px 10px;flex-shrink:0;border-top:1px solid #f0e4d8;}
+.qm-helper-text{font-size:13px;color:#999;line-height:1.6;margin-bottom:10px;}
+.qm-helper-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.qm-helper-btn{
+  padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;
+  cursor:pointer;color:var(--text);transition:background 0.15s;
+}
+.qm-helper-btn:hover{background:#f1e4d7;}
+.qm-helper-btn.accent{background:var(--brown-dark);color:#fff;border-color:var(--brown-dark);}
+.qm-footer{padding:10px 20px 14px;display:flex;justify-content:flex-end;flex-shrink:0;}
+.qm-footer-btn{
+  padding:10px 22px;border-radius:10px;background:var(--brown-dark);color:#fff;border:none;font-size:14px;
+  font-weight:700;cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- A 상단 -->
+  <div class="a1">
+    <div class="brand">원세컨드</div>
+    <div class="a1-right">
+      <div class="pill" style="display:flex;align-items:center;gap:6px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#4caf50;display:inline-block;animation:liveBlink 1.5s infinite;flex-shrink:0;"></span>
+        실시간
+      </div>
+      <a class="alert-link" href="https://open.kakao.com/o/svu80Moi" target="_blank">⚠️ 전산장애신고</a>
+      <div class="pill user-chip">임태성 실장님 ▾</div>
+    </div>
+  </div>
+
+  <div class="a2">
+    <div class="a2-greeting">안녕하세요, 임태성 실장님. 오늘도 화이팅입니다 🔥</div>
+    <button class="quick-btn" id="openQuick">⚡ 빠른 실행</button>
+  </div>
+
+  <div class="main">
+    <!-- B 좌측 -->
+    <div class="b">
+      <div class="menu">
+        <div class="menu-item active" data-menu="home">홈</div>
+        <div class="menu-item" data-menu="scripts">스크립트</div>
+        <div class="menu-item" data-menu="board">게시판</div>
+        <div class="menu-item" data-menu="myspace">MY SPACE</div>
+        <div class="menu-item" data-menu="news">보험뉴스</div>
+        <div class="menu-item" data-menu="quick">Quick 메뉴</div>
+      </div>
+      <div class="pro">PRO 이용중</div>
+    </div>
+
+    <!-- D 가운데 -->
+    <div class="d">
+      <div id="dynamic-content" class="loading">로딩중...</div>
+    </div>
+
+    <!-- C 우측 -->
+    <div class="c">
+      <div class="c-section active" id="c-home">
+        <div class="c-box"><div class="c-box-label">오늘의 공지</div><div class="c-box-title">공지사항</div><div class="c-box-desc">오늘의 공지 내용이 여기에 표시됩니다.</div></div>
+        <div class="c-box"><div class="c-box-label">추천 배너</div><div class="c-box-title">오늘의 추천</div><div class="c-box-desc">추천 스크립트 및 배너가 여기에 표시됩니다.</div></div>
+      </div>
+      <div class="c-section" id="c-scripts">
+        <div class="c-box"><div class="c-box-label">실전 스크립트 추천</div><div class="c-box-title">추천 스크립트</div><div class="c-box-desc">오늘의 실전 스크립트 추천이 표시됩니다.</div></div>
+        <div class="c-box"><div class="c-box-label">Leader Pick</div><div class="c-box-title">팀장 추천</div><div class="c-box-desc">팀장이 선택한 추천 스크립트입니다.</div></div>
+      </div>
+      <div class="c-section" id="c-board">
+        <div class="c-box"><div class="c-box-label">최신 질문</div><div class="c-box-title">최근 올라온 질문</div><div class="c-box-desc">최신 게시글 질문이 여기에 표시됩니다.</div></div>
+        <div class="c-box"><div class="c-box-label">답변 유도 배너</div><div class="c-box-title">답변이 필요해요</div><div class="c-box-desc">답변을 기다리는 질문들이 표시됩니다.</div></div>
+      </div>
+      <div class="c-section" id="c-myspace">
+        <div class="c-box"><div class="c-box-label">내 스크립트 작성</div><div class="c-box-title">나만의 스크립트</div><div class="c-box-desc">내 스크립트를 작성하고 관리하세요.</div></div>
+        <div class="c-box"><div class="c-box-label">자료 정리 배너</div><div class="c-box-title">나의 자료함</div><div class="c-box-desc">저장한 자료를 정리하고 확인하세요.</div></div>
+      </div>
+      <div class="c-section" id="c-news">
+        <div class="c-box"><div class="c-box-label">오늘의 뉴스</div><div class="c-box-title">보험 뉴스</div><div class="c-box-desc">오늘의 주요 보험 뉴스입니다.</div></div>
+        <div class="c-box"><div class="c-box-label">해석 포인트</div><div class="c-box-title">뉴스 해석</div><div class="c-box-desc">뉴스의 핵심 해석 포인트를 확인하세요.</div></div>
+      </div>
+      <div class="c-section" id="c-quick">
+        <div class="c-box"><div class="c-box-label">빠른 실행</div><div class="c-box-title">Quick 메뉴</div><div class="c-box-desc">자주 쓰는 기능을 빠르게 실행합니다.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="footer-brand">원세컨드 <span>1s</span></div>
+        <div class="footer-copy">© 2026 OneSecond. All rights reserved.</div>
+        <div class="footer-links">
+          <a href="index.html" class="footer-link">서비스 소개</a>
+          <a href="pricing.html" class="footer-link">요금제</a>
+          <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener" class="footer-link">문의</a>
+        </div>
+      </div>
+      <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">💬 카카오 오픈채팅 문의</a>
+    </div>
+  </footer>
+</div>
+
+<div class="tab-bar">
+  <div class="tab-item active" data-menu="home"><span class="tab-icon">🏠</span>홈</div>
+  <div class="tab-item" data-menu="scripts"><span class="tab-icon">📞</span>스크립트</div>
+  <div class="tab-item" data-menu="board"><span class="tab-icon">📋</span>게시판</div>
+  <div class="tab-item" data-menu="myspace"><span class="tab-icon">👤</span>MY</div>
+  <div class="tab-item" data-menu="news"><span class="tab-icon">📰</span>뉴스</div>
+  <div class="tab-item" data-menu="quick"><span class="tab-icon">⚡</span>Quick</div>
+</div>
+
+<div class="overlay" id="quickOverlay">
+  <div class="quick-modal-wrap">
+    <div class="qm-header">
+      <div class="qm-header-title">⚡ 빠른 실행</div>
+      <button class="qm-close" onclick="document.getElementById('quickOverlay').classList.remove('show')">✕</button>
+    </div>
+    <div class="qm-btns">
+      <button class="qm-btn" data-quick="consent">📝 선심사 동의 녹취 스크립트</button>
+      <button class="qm-btn" data-quick="mirror">🎙️ 미러링 전 녹취 스크립트</button>
+      <button class="qm-btn" data-quick="bmi">📊 BMI 기준</button>
+      <button class="qm-btn" data-quick="age">📅 보험 나이</button>
+    </div>
+    <div class="qm-content" id="qm-content">
+      <div class="qm-content-inner" id="qm-content-inner"></div>
+    </div>
+    <div class="qm-helper">
+      <div class="qm-helper-text">찾으시는 메뉴가 없나요?<br>좌측 Quick 메뉴에서 찾아주세요.</div>
+      <div class="qm-helper-btns">
+        <button class="qm-helper-btn accent" onclick="switchMenu('quick')">Quick 메뉴 바로가기</button>
+        <a href="https://open.kakao.com/o/svu80Moi" target="_blank" class="qm-helper-btn">전산장애신고</a>
+      </div>
+    </div>
+    <div class="qm-footer">
+      <button class="qm-footer-btn" onclick="document.getElementById('quickOverlay').classList.remove('show')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
