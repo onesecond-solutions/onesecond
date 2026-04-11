@@ -7,31 +7,35 @@
   --line:#ddc8b4;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
-.sc-tab-bar {
-  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
-  padding:12px 16px; border-bottom:1px solid var(--line); background:#faf8f5;
-}
+.sc-tab-bar { display:flex; gap:0; flex-wrap:wrap; padding:0 16px; border-bottom:1px solid #ddc8b4; background:#faf8f5; flex-shrink:0; }
 .sc-tab {
-  padding:11px 16px; border-radius:10px;
-  border:1px solid #d4b8a0; background:#fdf8f3;
-  font-size:0.8947em; font-weight:600; color:#5a3e2b;
+  padding:10px 16px; border-radius:0;
+  border:none; border-bottom:3px solid transparent;
+  background:transparent;
+  font-size:0.8947em; font-weight:600; color:#9a7a62;
   font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s;
 }
+.sc-tab:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); }
+.sc-tab.active { color:#3b2416; border-bottom-color:#c8753a; font-weight:700; }
 .sc-tab:hover { background:#f3e4d6; }
-.sc-tab.active { background:var(--brown-dark); color:#fff; border-color:var(--brown-dark); }
+
 .sc-sub-bar {
-  display:none; align-items:center; gap:8px; flex-wrap:wrap;
-  padding:10px 16px; border-bottom:1px solid var(--line); background:#f3ebe3;
+  display:none; align-items:center; gap:0; flex-wrap:wrap;
+  padding:0 16px; border-bottom:1px solid #ddc8b4; background:#faf8f5;
 }
 .sc-sub-bar.visible { display:flex; }
+.sc-sub-bar.visible { display:flex; }
 .sc-sub {
-  padding:7px 14px; border-radius:10px;
-  border:1px solid #e8d8c8; background:#faf5f0;
-  font-size:0.8947em; font-weight:500; color:#7a5a42;
+  padding:10px 16px; border-radius:0;
+  border:none; border-bottom:2px solid transparent;
+  background:transparent;
+  font-size:0.8947em; font-weight:600; color:#9a7a62;
   font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s;
 }
+.sc-sub:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); }
+.sc-sub.active { color:#3b2416; border-bottom-color:#c8753a; font-weight:700; }
 .sc-sub:hover { background:#f3e4d6; }
-.sc-sub.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
 .sc-content { padding:12px 14px; background:#f3eee8; }
 .sc-chip {
   display:inline-block; padding:4px 10px; border-radius:999px;
