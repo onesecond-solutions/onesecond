@@ -8,4 +8,5 @@
   const saved = parseFloat(localStorage.getItem('os_font_scale'));
   const scale = VALID.includes(saved) ? saved : 1;
   document.documentElement.style.setProperty('--page-scale', scale);
+  document.documentElement.style.setProperty('--d-scale', scale);
 })();

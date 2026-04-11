@@ -1403,6 +1403,7 @@ async function sendPasswordReset(){
 // ── 글자 크기 컨트롤러 ──
 function setFontScale(scale) {
   document.documentElement.style.setProperty('--d-scale', scale);
+  document.documentElement.style.setProperty('--page-scale', scale);
   localStorage.setItem('os_font_scale', scale);
   document.querySelectorAll('.font-ctrl-btn').forEach(btn => {
     btn.classList.toggle('active', parseFloat(btn.dataset.scale) === scale);
