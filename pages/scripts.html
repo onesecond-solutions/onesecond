@@ -108,7 +108,7 @@ async function fetchScripts(stages) {
   const key = stages.join(',');
   if (_cache[key]) return _cache[key];
   const filter = stages.map(s => 'stage.eq.' + s).join(',');
-  const url = SUPABASE_URL + '/rest/v1/scripts?or=(' + filter + ')&is_active=eq.true&order=stage,title';
+  const url = SUPABASE_URL + '/rest/v1/scripts?or=(' + filter + ')&stage=not.is.null&order=stage,title';
   try {
     const res = await fetch(url, {
       headers: {
