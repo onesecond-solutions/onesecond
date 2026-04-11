@@ -5,7 +5,7 @@
  */
 (function () {
   const VALID = [0.88, 1, 1.25];
-  const SIZE_MAP = { 0.88: '14px', 1: '16px', 1.25: '20px' };
+  const SIZE_MAP = { 0.88: '16px', 1: '18px', 1.25: '20px' };
   const saved = parseFloat(localStorage.getItem('os_font_scale'));
   const scale = VALID.includes(saved) ? saved : 1;
   const px = SIZE_MAP[scale] || '16px';
