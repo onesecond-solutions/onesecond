@@ -1,14 +1,6 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>스크립트 | 원세컨드</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 :root {
   --brown-dark: #3d2b1f;
   --brown-mid: #6b4226;
@@ -26,13 +18,8 @@
   --line:#ddc8b4;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
-html,body { width:100%; min-height:100%; }
-body {
-  font-family:'Noto Sans KR',sans-serif;
-  background:#efe9e2;
-  color:var(--text-dark);
-  overflow:auto;
-}
+
+
 
 
 
@@ -226,17 +213,9 @@ body {
 .acc-title { font-size:0.72em; font-weight:900; color:#2d2016; }
 .acc-sub { font-size:0.61em; color:#a18369; margin-top:2px; }
 .acc-arrow { font-size:0.61em; color:#9b7f68; }
-.accordion-body {
-  display:block;
-  background:#fff;
-  padding:14px 14px 12px;
-}
+.accordion-
 .accordion-body.closed { display:none; }
-.section-html {
-  font-size:0.78em;
-  color:#2a2018;
-  line-height:1.9;
-}
+.section-
 .section-html div, .section-html p { max-width:100%; }
 .section-html img { max-width:100%; height:auto; }
 .section-html [style*="font-size:0.84em"][style*="font-weight:700"] {
@@ -295,9 +274,7 @@ body {
   width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.12); border:none;
   color:#fff; font-size:0.78em; cursor:pointer;
 }
-.quick-modal-body {
-  padding:20px 24px; max-height:70vh; overflow:auto; background:#fff;
-}
+.quick-modal-
 .quick-modal-footer {
   padding:12px 20px; border-top:1px solid #f0e4d8; display:flex; justify-content:flex-end;
 }
@@ -328,8 +305,8 @@ body {
 /* ── page-scale-root ── */
 .page-scale-root { font-size: calc(1em * var(--page-scale)); }
 </style>
-</head>
-<body class="page-scale-root">
+
+<div class="page-scale-root">
 <div class="main">
 
     <div class="step1"><div class="button-row" id="main-row"></div></div>
@@ -370,6 +347,7 @@ body {
     <div class="quick-modal-body" id="overlay-body">준비 중입니다.</div>
     <div class="quick-modal-footer"><button class="modal-close-btn" onclick="closeQuick()">닫기</button></div>
   </div>
+</div>
 </div>
 
 <script>
@@ -697,5 +675,3 @@ async function logScriptUsage(main, sub, cat) {
   } catch(e) { /* 로그 실패는 무시 */ }
 }
 </script>
-</body>
-</html>
