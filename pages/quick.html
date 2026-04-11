@@ -5,6 +5,10 @@
   --accent:#c8753a;
   --line:#e6dfd7;
   --text:#2f2a26;
+  --q-scale: 1;
+}
+.quick-scale-root {
+  font-size: calc(1em * var(--q-scale));
 }
 .main-btns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .main-btn {
@@ -50,6 +54,7 @@
 }
 </style>
 
+<div class="quick-scale-root">
 <div class="main-btns">
   <button class="main-btn active" onclick="selectQuickMain(this,'가입설계 / 선심사 동의 녹취 스크립트')">가입설계 / 선심사 동의 녹취 스크립트</button>
   <button class="main-btn" onclick="selectQuickMain(this,'회사별 BMI 심사기준')">회사별 BMI 심사기준</button>
@@ -382,6 +387,14 @@ function toggleMirrorScript(company) {
         }
       }).catch(() => {});
     }
+  }
+})();
+
+// ── 글자 크기 스케일 app.html localStorage 연동 ──
+(function() {
+  const saved = parseFloat(localStorage.getItem('os_font_scale'));
+  if (saved && [0.85, 1, 1.18].includes(saved)) {
+    document.documentElement.style.setProperty('--q-scale', saved);
   }
 })();
 </script>
