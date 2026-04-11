@@ -104,11 +104,11 @@ const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
 const _cache = {};
 let _scripts = [], _currentIdx = 0;
 
-async function fetchScripts(stages) {
+async function _fetchScripts(stages) {
   const key = stages.join(',');
   if (_cache[key]) return _cache[key];
-  const filter = stages.map(s => 'stage.eq.' + s).join(',');
-  const url = SUPABASE_URL + '/rest/v1/scripts?or=(' + filter + ')&stage=not.is.null&order=stage,title';
+  const stageList = stages.join(',');
+  const url = SUPABASE_URL + '/rest/v1/scripts?stage=in.(' + stageList + ')&order=stage,title&select=id,title,stage,top_category,highlight_text,script_text';
   try {
     const res = await fetch(url, {
       headers: {
@@ -116,7 +116,10 @@ async function fetchScripts(stages) {
         'Authorization': 'Bearer ' + (window._userToken || SUPABASE_KEY)
       }
     });
-    if (!res.ok) throw new Error(res.status);
+    if (!res.ok) {
+      document.getElementById('sc-summary').textContent = 'HTTP ' + res.status;
+      return [];
+    }
     const data = await res.json();
     _cache[key] = data;
     return data;
@@ -126,7 +129,7 @@ async function fetchScripts(stages) {
   }
 }
 
-async function selectTab(btn) {
+window.selectTab = async function(btn) {
   document.querySelectorAll('.sc-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const stages = btn.dataset.stages.split(',');
@@ -135,25 +138,25 @@ async function selectTab(btn) {
   document.getElementById('sc-right').innerHTML = '<div class="sc-loading">불러오는 중...</div>';
   document.getElementById('sc-chip').textContent = '';
   document.getElementById('sc-summary').textContent = '스크립트를 선택하세요.';
-  const scripts = await fetchScripts(stages);
+  const scripts = await _fetchScripts(stages);
   _scripts = scripts;
   if (!scripts.length) {
     document.getElementById('sc-right').innerHTML = '<div class="sc-empty">스크립트가 없습니다.</div>';
     return;
   }
   const bar = document.getElementById('sc-sub-bar');
-  bar.innerHTML = scripts.map((s, i) =>
-    '<button class="sc-sub' + (i===0?' active':'') + '" onclick="selectScript(' + i + ')">' + s.title + '</button>'
-  ).join('');
+  bar.innerHTML = scripts.map(function(s, i) {
+    return '<button class="sc-sub' + (i===0?' active':'') + '" onclick="window.selectScript(' + i + ')">' + s.title + '</button>';
+  }).join('');
   bar.classList.add('visible');
-  selectScript(0);
-}
+  window.selectScript(0);
+};
 
-function selectScript(idx) {
+window.selectScript = function(idx) {
   _currentIdx = idx;
   const s = _scripts[idx];
   if (!s) return;
-  document.querySelectorAll('.sc-sub').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.querySelectorAll('.sc-sub').forEach(function(b, i) { b.classList.toggle('active', i === idx); });
   document.getElementById('sc-chip').textContent = s.title;
   document.getElementById('sc-badge').textContent = s.top_category || s.title;
   document.getElementById('sc-summary').textContent = s.highlight_text || '상담 중 바로 활용하세요.';
@@ -161,7 +164,7 @@ function selectScript(idx) {
   if (s.script_text) {
     right.innerHTML =
       '<div class="sc-accordion">' +
-        '<div class="sc-acc-header" onclick="toggleAcc(this)">' +
+        '<div class="sc-acc-header" onclick="window.toggleAcc(this)">' +
           '<div>' +
             '<div class="sc-acc-title">' + s.title + '</div>' +
             '<div class="sc-acc-sub">' + (s.top_category || '') + '</div>' +
@@ -173,18 +176,18 @@ function selectScript(idx) {
   } else {
     right.innerHTML = '<div class="sc-empty">스크립트 내용이 없습니다.</div>';
   }
-}
+};
 
-function toggleAcc(header) {
+window.toggleAcc = function(header) {
   const body = header.nextElementSibling;
   body.classList.toggle('closed');
   header.querySelector('.sc-acc-arrow').textContent = body.classList.contains('closed') ? '▼' : '▲';
-}
+};
 
 (function init() {
   setTimeout(function() {
     var firstTab = document.querySelector('.sc-tab');
-    if (firstTab) selectTab(firstTab);
+    if (firstTab) window.selectTab(firstTab);
   }, 100);
 })();
 </script>
