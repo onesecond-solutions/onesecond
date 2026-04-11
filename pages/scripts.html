@@ -70,9 +70,41 @@
 .sc-empty { padding:30px; text-align:center; color:var(--text-light); font-size:0.75em; }
 @media (max-width:900px) { .sc-grid { grid-template-columns:1fr; } }
 .page-scale-root { font-size:calc(1em * var(--page-scale, 1)); }
+
+/* ── 페이지 헤더 ── */
+.sc-page-header {
+  height:120px;
+  background:linear-gradient(135deg, var(--brown-dark) 0%, #6b4226 100%);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px;
+  flex-shrink:0;
+}
+.sc-page-header-left {}
+.sc-page-title {
+  font-family:Pretendard,'Noto Sans KR',sans-serif;
+  font-size:1.5em; font-weight:800;
+  color:#fff; letter-spacing:-0.5px;
+  margin-bottom:6px;
+}
+.sc-page-desc {
+  font-family:Pretendard,'Noto Sans KR',sans-serif;
+  font-size:0.75em; font-weight:400;
+  color:rgba(255,255,255,0.65);
+  letter-spacing:-0.2px;
+}
+.sc-page-icon {
+  font-size:2.8em; opacity:0.15;
+}
 </style>
 
 <div class="page-scale-root">
+<div class="sc-page-header">
+  <div class="sc-page-header-left">
+    <div class="sc-page-title">📞 스크립트</div>
+    <div class="sc-page-desc">TM 상담 흐름에 맞는 멘트를 1초 안에 꺼내세요</div>
+  </div>
+  <div class="sc-page-icon">📋</div>
+</div>
 <div class="sc-tab-bar">
   <button class="sc-tab active" data-stages="opening,opening_rejection" onclick="window.selectTab(this)">📞 도입인사</button>
   <button class="sc-tab" data-stages="need_emphasis,need_emphasis_2" onclick="window.selectTab(this)">🔥 필요성강조</button>
