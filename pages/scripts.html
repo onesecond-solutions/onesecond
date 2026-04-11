@@ -94,38 +94,7 @@ body {
 .nav-item + .nav-item { margin-top:8px; }
 
 .main { flex:1; display:flex; flex-direction:column; min-width:0; }
-.greeting-bar {
-  background:#f9f8f6;
-  border-bottom:1px solid var(--line);
-  padding:8px 12px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.greeting-text { font-size:0.68em; color:#2c211a; }
-.greeting-text strong { color:#d07f45; }
-.quick-wrap { position:relative; }
-.quick-btn {
-  height:30px; padding:0 14px; border:none; border-radius:8px;
-  background:var(--brown-dark); color:#fff; font-size:0.68em; font-weight:800;
-  font-family:'Noto Sans KR',sans-serif; cursor:pointer;
-}
-.quick-dropdown {
-  display:none; position:absolute; top:38px; right:0; min-width:280px;
-  background:#fff; border-radius:12px; border:1px solid #e0d0c0;
-  box-shadow:0 8px 32px rgba(61,43,31,.18); overflow:hidden; z-index:100;
-}
-.quick-dropdown.open { display:block; }
-.quick-dropdown-header {
-  background:var(--brown-dark); color:rgba(255,255,255,.86);
-  padding:10px 14px; font-size:0.68em; font-weight:800;
-}
-.quick-link {
-  display:flex; align-items:center; gap:10px;
-  padding:11px 14px; font-size:0.72em; cursor:pointer;
-  border-bottom:1px solid #f2e8df;
-}
-.quick-link:last-child { border-bottom:none; }
-.quick-link:hover { background:#faf6f2; }
-.quick-link-arrow { margin-left:auto; color:#8c6d54; font-size:0.61em; }
+
 
 .step1, .step2, .step3 {
   border-bottom:1px solid var(--line);
@@ -481,22 +450,6 @@ body {
 </div>
 
 <div class="main">
-    <div class="greeting-bar">
-      <div class="greeting-text">안녕하세요, <strong id="greeting-name">-</strong> 님! 오늘도 화이팅입니다~ 🔥</div>
-      <div class="quick-wrap">
-        <button class="quick-btn" onclick="toggleQuick(event)">⚡ Quick 메뉴 ▾</button>
-        <div class="quick-dropdown" id="quick-dropdown">
-          <div class="quick-dropdown-header">⚡ Quick 메뉴 바로가기</div>
-          <div class="quick-link" onclick="openOverlay('가입설계 / 선심사 동의 녹취 스크립트','📝')"><span>📝</span>가입설계 / 선심사 동의 녹취 스크립트<span class="quick-link-arrow">→</span></div>
-          <div class="quick-link" onclick="openOverlay('회사별 BMI 심사기준','📊')"><span>📊</span>회사별 BMI 심사기준<span class="quick-link-arrow">→</span></div>
-          <div class="quick-link" onclick="openOverlay('보험연령표','📅')"><span>📅</span>보험연령표<span class="quick-link-arrow">→</span></div>
-          <div class="quick-link" onclick="openOverlay('보험회사 결제정보','💳')"><span>💳</span>보험회사 결제정보<span class="quick-link-arrow">→</span></div>
-          <div class="quick-link" onclick="openOverlay('미러링 전 녹취 스크립트','🎙️')"><span>🎙️</span>미러링 전 녹취 스크립트<span class="quick-link-arrow">→</span></div>
-          <div class="quick-link" onclick="openOverlay('원전산 설계 바로가기','🔗')"><span>🔗</span>원전산 설계 바로가기<span class="quick-link-arrow">→</span></div>
-          <div class="quick-link" onclick="openOverlay('보험회사 (모니터링) 연락처','📞')"><span>📞</span>보험회사 (모니터링) 연락처<span class="quick-link-arrow">→</span></div>
-        </div>
-      </div>
-    </div>
 
     <div class="step1"><div class="button-row" id="main-row"></div></div>
     <div class="step2 hidden" id="step2"><div class="button-row" id="sub-row"></div></div>
