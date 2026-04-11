@@ -782,12 +782,7 @@ html,body{
       </div>
 
       <!-- MY SPACE -->
-      <div class="c-section" id="c-myspace">
-        <div class="c-box">
-          <div class="c-box-label">내 스크립트 작성</div>
-          <div class="c-box-title">나만의 스크립트</div>
-          <div class="c-box-desc">내 스크립트를 작성하고 관리하세요.</div>
-        </div>
+      <div class="c-section" id="c-myspace"></div>
         <div class="c-box">
           <div class="c-box-label">자료 정리 배너</div>
           <div class="c-box-title">나의 자료함</div>
@@ -1240,10 +1235,7 @@ function switchCPanel(menuKey) {
 // ── E 영역: pages/ fetch 로드 ──
 let _currentMenu = '';
 async function switchMenu(menuKey) {
-  if (_currentMenu === menuKey) {
-    // scripts 메뉴: window.selectTab 없으면 재실행 허용
-    if (menuKey !== 'scripts' || typeof window.selectTab === 'function') return;
-  }
+  if (_currentMenu === menuKey) return;
   _currentMenu = menuKey;
 
   // B 메뉴 active
