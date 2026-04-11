@@ -339,5 +339,36 @@
 
 </div>
 
-<script src="js/scripts-data.js"></script>
-<script src="js/scripts-page.js"></script>
+<script>
+(function() {
+  // 이미 로드됐으면 재실행만
+  if (typeof window.initScriptsPage === 'function') {
+    window.initScriptsPage();
+    return;
+  }
+  if (typeof MENU_CONFIG !== 'undefined' && typeof renderAll === 'function') {
+    renderAll();
+    return;
+  }
+  // 외부 JS 로드 (scripts-page.js가 로드 완료되면 자체적으로 renderAll 실행)
+  function _load(src, cb) {
+    // 이미 로드된 경우 체크
+    if (document.querySelector('script[src="' + src + '"]')) {
+      if (cb) cb();
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = src;
+    if (cb) s.onload = cb;
+    s.onerror = function() {
+      var box = document.getElementById('summary-box');
+      if (box) box.textContent = '로드 실패: ' + src;
+    };
+    document.head.appendChild(s);
+  }
+  _load('js/scripts-data.js', function() {
+    _load('js/scripts-page.js', null);
+    // scripts-page.js의 _autoInit이 알아서 renderAll 호출
+  });
+})();
+</script>
