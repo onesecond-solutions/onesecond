@@ -307,6 +307,7 @@
 </style>
 
 <div class="page-scale-root">
+<div class="page-scale-root">
 <div class="main">
 
     <div class="step1"><div class="button-row" id="main-row"></div></div>
@@ -385,7 +386,9 @@ const overlayContent = {
 `
 
 };
+</script>
 
+<script>
 function toggleQuick(event) {
   event.stopPropagation();
   document.getElementById('quick-dropdown').classList.toggle('open');
@@ -676,3 +679,4 @@ async function logScriptUsage(main, sub, cat) {
   } catch(e) { /* 로그 실패는 무시 */ }
 }
 </script>
+</div>
