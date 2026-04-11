@@ -410,7 +410,28 @@ async function logScriptUsage(main, sub, cat) {
 
 // ── app.html에서 호출하는 초기화 함수 ──
 window.initScriptsPage = function() {
+  // DOM 확인 후 실행
+  if (!document.getElementById('main-row') || !document.getElementById('step2')) {
+    setTimeout(window.initScriptsPage, 50);
+    return;
+  }
   renderAll();
   const _scriptParam = new URLSearchParams(window.location.search).get('script');
   if (_scriptParam) selectScriptByName(decodeURIComponent(_scriptParam));
 };
+
+// scripts-page.js 로드 완료 시 자동 초기화
+(function _autoInit() {
+  if (typeof MENU_CONFIG === 'undefined') {
+    // MENU_CONFIG 아직 없으면 대기 (비정상 케이스)
+    setTimeout(_autoInit, 50);
+    return;
+  }
+  if (!document.getElementById('main-row')) {
+    setTimeout(_autoInit, 50);
+    return;
+  }
+  renderAll();
+  var _p = new URLSearchParams(window.location.search).get('script');
+  if (_p) selectScriptByName(decodeURIComponent(_p));
+})();
