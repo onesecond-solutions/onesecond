@@ -4,7 +4,7 @@
  * 각 pages/*.html 파일에 즉시 적용합니다.
  */
 (function () {
-  const VALID = [0.85, 1, 1.18];
+  const VALID = [0.88, 1, 1.25];
   const saved = parseFloat(localStorage.getItem('os_font_scale'));
   const scale = VALID.includes(saved) ? saved : 1;
   document.documentElement.style.setProperty('--page-scale', scale);

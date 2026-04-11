@@ -23,6 +23,7 @@
 
 html,body{
   height:100%;
+  font-size:16px;
   font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif;
   background:var(--bg-main);
   overflow:hidden;
@@ -70,7 +71,7 @@ html,body{
   cursor:pointer;
   font-weight:700;
   font-family:inherit;
-  font-size:14px;
+  font-size:15px;
 }
 .quick-btn:hover{background:#e8d5c4;}
 
@@ -143,7 +144,7 @@ html,body{
   padding:14px;
   border-radius:12px;
   text-align:center;
-  font-size:14px;
+  font-size:15px;
   font-weight:600;
 }
 
@@ -471,15 +472,15 @@ html,body{
 }
 .home-quick-card-icon{font-size:20px;}
 .home-quick-card-label{
-  font-size:12px;font-weight:700;color:var(--brown-main);
+  font-size:16px;font-weight:700;color:var(--brown-main);
 }
 .home-quick-card-desc{
-  font-size:11px;color:#aaa;line-height:1.5;
+  font-size:14px;color:#aaa;line-height:1.5;
 }
 .home-quick-card-btn{
   margin-top:4px;padding:6px 0;
   background:var(--brown-main);color:white;
-  border:none;border-radius:8px;font-size:11px;
+  border:none;border-radius:8px;font-size:13px;
   font-weight:700;cursor:pointer;font-family:inherit;
   transition:background 0.15s;
 }
@@ -501,11 +502,11 @@ html,body{
   display:flex;align-items:center;justify-content:space-between;
 }
 .home-panel-title{
-  font-size:13px;font-weight:800;color:#3b2416;
+  font-size:16px;font-weight:800;color:#3b2416;
   display:flex;align-items:center;gap:6px;
 }
 .home-panel-more{
-  font-size:11px;color:#7a5230;
+  font-size:13px;color:#7a5230;
   text-decoration:none;cursor:pointer;font-weight:700;
   transition:color 0.15s;
 }
@@ -515,7 +516,7 @@ html,body{
   display:flex;align-items:center;justify-content:space-between;
   padding:10px 16px;border-bottom:1px solid var(--line);
   cursor:pointer;transition:background 0.12s;
-  font-size:13px;color:var(--text);
+  font-size:16px;color:var(--text);
 }
 .home-panel-item:last-child{border-bottom:none;}
 .home-panel-item:hover{background:#fdf8f3;}
@@ -527,7 +528,7 @@ html,body{
 }
 .home-panel-empty{
   padding:20px 16px;text-align:center;
-  font-size:12px;color:#bbb;
+  font-size:14px;color:#bbb;
 }
 
 /* 뉴스 아이템 */
@@ -538,11 +539,11 @@ html,body{
 .home-news-item:last-child{border-bottom:none;}
 .home-news-item:hover{background:#fdf8f3;}
 .home-news-title{
-  font-size:12px;font-weight:600;color:var(--text);
+  font-size:16px;font-weight:600;color:var(--text);
   line-height:1.5;margin-bottom:3px;
 }
 .home-news-meta{
-  font-size:10px;color:#bbb;
+  font-size:13px;color:#bbb;
   display:flex;gap:8px;
 }
 
@@ -643,7 +644,7 @@ html,body{
     align-items:center;
     justify-content:center;
     color:rgba(255,255,255,0.55);
-    font-size:12px;
+    font-size:13px;
     gap:3px;
     cursor:pointer;
     transition:color 0.15s;
@@ -687,9 +688,9 @@ html,body{
       <div class="font-ctrl-wrap">
         <span class="font-ctrl-label">가</span>
         <div class="font-ctrl-btns">
-          <button class="font-ctrl-btn" onclick="setFontScale(0.85)" data-scale="0.85" title="작게">소</button>
+          <button class="font-ctrl-btn" onclick="setFontScale(0.88)" data-scale="0.88" title="작게">소</button>
           <button class="font-ctrl-btn active" onclick="setFontScale(1)" data-scale="1" title="기본">중</button>
-          <button class="font-ctrl-btn" onclick="setFontScale(1.18)" data-scale="1.18" title="크게">대</button>
+          <button class="font-ctrl-btn" onclick="setFontScale(1.25)" data-scale="1.25" title="크게">대</button>
         </div>
       </div>
     <div class="quick-dropdown-wrap">
@@ -1411,7 +1412,7 @@ function setFontScale(scale) {
 }
 (function(){
   const saved = parseFloat(localStorage.getItem('os_font_scale'));
-  if (saved && [0.85, 1, 1.18].includes(saved)) {
+  if (saved && [0.88, 1, 1.25].includes(saved)) {
     setFontScale(saved);
   }
 })();
