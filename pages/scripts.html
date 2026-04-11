@@ -1,12 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>home-content | D영역 콘텐츠</title>
 <style>
-:root { --page-scale: 1; }
-.page-scale-root { font-size: calc(1em * var(--page-scale)); }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+:root {
+  --brown-dark: #3d2b1f;
+  --brown-mid: #6b4226;
+  --brown-light: #a0724a;
+  --brown-pale: #f5ede4;
+  --cream: #f7f2ec;
+  --cream-2:#f4ece3;
+  --accent: #c8753a;
+  --accent-dark: #b5642e;
+  --text-dark: #1a1008;
+  --text-mid: #5a3e2b;
+  --text-light: #9a7a62;
+  --white: #ffffff;
+  --line:#ddc8b4;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:100%; min-height:100%; }
+body {
+  font-family:'Noto Sans KR',sans-serif;
+  background:#f3eee8;
+  color:var(--text-dark);
+  overflow:auto;
+}
+
+
+
+/* ── 페이지 헤더 ── */
+.page-header {
+  height:120px;
+  background:var(--brown-dark);
+  display:flex; align-items:center;
+  padding:0 20px;
+  border-bottom:1px solid var(--line);
+}
+.page-header-title {
+  font-size:26px;
+  font-weight:900;
+  color:#fff;
+  letter-spacing:-0.5px;
+}
+
+/* ── 버튼 행 ── */
+.step1, .step2, .step3 {
+  border-bottom:1px solid var(--line);
+  padding:8px 12px 7px;
+  background:#faf8f5;
+}
+.step2, .step3 { background:#f3ebe3; }
+.button-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.main-btn, .sub-btn, .cat-btn {
+  font-family:'Noto Sans KR',sans-serif;
+  border:1px solid #d5bda8;
+  background:#fffaf4;
+  color:#5d4533;
+  border-radius:11px;
+  font-size:0.68em;
+  font-weight:700;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.main-btn { height:32px; padding:0 14px; }
+.sub-btn, .cat-btn { height:28px; padding:0 12px; border-radius:14px; font-size:0.63em; }
+.main-btn:hover, .sub-btn:hover, .cat-btn:hover { background:#f3e4d6; }
+.main-btn.active, .sub-btn.active, .cat-btn.active {
+  background:var(--brown-dark); color:#fff; border-color:var(--brown-dark);
+}
+.sub-btn.active, .cat-btn.active { background:var(--accent); border-color:var(--accent); }
+.step2.hidden, .step3.hidden { display:none; }
+
+/* ── 콘텐츠 스크롤 영역 ── */
+.content-scroll {
+  overflow:visible;
+  background:#f3eee8;
+  padding:10px 14px 18px;
+}
+.screen-chip {
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  background:#f5e7c9;
+  color:#8a5a18;
+  font-size:0.61em;
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+/* ── 스크립트 작성 버튼 ── */
+.script-write-btn {
+  font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.script-write-btn:hover { transform:translateY(-1px); }
+.script-write-btn.top {
+  height:32px; padding:0 14px; border-radius:11px;
+  border:1px solid #d5bda8; background:#fff3e7; color:#8a5522;
+  font-size:0.67em; font-weight:800;
+}
+.script-write-btn.top:hover { background:#f7e5d2; }
+.script-write-btn.main {
+  width:100%; min-height:52px; padding:14px 18px;
+  border-radius:14px; border:1px solid #cd9a69;
+  background:#fff3e7; color:#7b4b1e;
+  font-size:0.72em; font-weight:800;
+  box-shadow:0 2px 6px rgba(103,66,38,.08);
+}
+.script-write-btn.main:hover { background:#f8e6d4; }
+.script-write-btn.side {
+  width:100%; margin-top:2px; height:34px; border-radius:8px;
+  border:1px solid #d8c6b3; background:#fff8f2; color:#7c5d44;
+  font-size:0.63em; font-weight:800;
+}
+.script-write-btn.side:hover { background:#f4e8dc; }
+
+/* ── 콘텐츠 그리드 ── */
+.content-grid {
+  display:grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap:12px;
+  align-items:start;
+}
+.left-col { display:flex; flex-direction:column; gap:14px; }
+.left-card, .right-card, .accordion-section {
+  background:#fff; border:1px solid #dbc8b5; border-radius:14px;
+}
+.left-card { padding:14px; }
+.left-label { font-size:0.61em; font-weight:800; color:#9b7f68; margin-bottom:10px; }
+.summary-badge {
+  display:inline-block; padding:7px 12px; border-radius:16px;
+  font-size:0.61em; font-weight:800; color:#4155c7; background:#e8e7fb; margin-bottom:12px;
+}
+.summary-box {
+  background:#f7f2ec; border-left:3px solid #d07f45;
+  border-radius:8px; padding:14px 12px;
+  font-size:0.67em; line-height:1.85; color:#3b2d21; white-space:pre-line;
+}
+
+/* ── CTA 카드 ── */
+.left-cta-card {
+  margin-top:14px; background:#fff; border:1px solid #e1d2c3;
+  border-radius:16px; padding:14px;
+  box-shadow:0 4px 12px rgba(103,66,38,.05);
+}
+
+/* ── 아코디언 ── */
+.center-col { min-width:0; }
+.accordion-section { overflow:auto; margin-bottom:8px; }
+.accordion-header {
+  background:#f4ece4; padding:10px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; border-bottom:1px solid #e5d4c4;
+}
+.acc-title { font-size:0.72em; font-weight:900; color:#2d2016; }
+.acc-sub { font-size:0.61em; color:#a18369; margin-top:2px; }
+.acc-arrow { font-size:0.61em; color:#9b7f68; }
+.accordion-body { display:block; background:#fff; padding:14px 14px 12px; }
+.accordion-body.closed { display:none; }
+.section-html { font-size:0.78em; color:#2a2018; line-height:1.9; }
+.section-html div, .section-html p { max-width:100%; }
+.section-html img { max-width:100%; height:auto; }
+.section-html [style*="font-size:15px"][style*="font-weight:700"] {
+  font-size:15px !important; font-weight:800 !important; color:#1e1610 !important;
+}
+.section-html [style*="font-size:14px"][style*="color:#333"] { color:#7a685b !important; }
+.tip-box {
+  margin-top:12px; padding:8px 12px; border-radius:6px;
+  background:#f8ebca; color:#7a4e13; font-size:0.67em; font-weight:800;
+}
+
+
+
+/* ── 하단 바 ── */
+.bottom-bar {
+  margin-top:14px; background:var(--brown-dark); color:#fff6ef;
+  text-align:center; font-size:0.67em; font-weight:800;
+  padding:10px 14px; border-radius:8px;
+}
+
+/* ── 오버레이 모달 ── */
+.overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(26,16,8,.7);
+  z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(4px);
+}
+.overlay.active { display:flex; }
+.quick-modal {
+  background:#fff; border-radius:16px; width:100%; max-width:760px;
+  box-shadow:0 24px 60px rgba(0,0,0,.3); overflow:hidden;
+}
+.quick-modal-header {
+  background:var(--brown-dark); padding:16px 20px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.quick-modal-title { font-size:15px; font-weight:800; color:#fff; }
+.quick-close {
+  width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.12); border:none;
+  color:#fff; font-size:14px; cursor:pointer;
+}
+.quick-modal-body { padding:20px 24px; max-height:70vh; overflow:auto; background:#fff; }
+.quick-modal-footer { padding:12px 20px; border-top:1px solid #f0e4d8; display:flex; justify-content:flex-end; }
+.modal-close-btn {
+  padding:8px 20px; border-radius:8px; border:1px solid #e0d0c0; background:var(--brown-dark);
+  color:#fff; font-size:13px; font-family:'Noto Sans KR',sans-serif;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 1180px) {
+  .content-grid { grid-template-columns: 220px minmax(0,1fr); }
+}
+@media (max-width: 900px) {
+  .content-grid { grid-template-columns: 1fr; }
+}
+
+/* ── page-scale-root: app.html 폰트 크기 상속 지원 ── */
+.page-scale-root { font-size: inherit; }
 </style>
-<div class="page-scale-root">
-<div class="card">
-  <h2>📞 스크립트</h2>
-  <p>스크립트 화면이 들어갈 영역입니다.</p>
+</head>
+<body class="page-scale-root">
+
+<!-- ────────────────────────────────────────
+     D영역 시작
+──────────────────────────────────────── -->
+
+
+
+<!-- 페이지 헤더 -->
+<div class="page-header">
+  <div class="page-header-title">스크립트</div>
 </div>
 
+<!-- 버튼 3단계 -->
+<div class="step1"><div class="button-row" id="main-row"></div></div>
+<div class="step2 hidden" id="step2"><div class="button-row" id="sub-row"></div></div>
+<div class="step3 hidden" id="step3"><div class="button-row" id="cat-row"></div></div>
+
+<!-- 스크립트 콘텐츠 그리드 -->
+<div class="content-scroll">
+  <div class="screen-chip" id="screen-chip"></div>
+  <div class="content-grid">
+
+    <!-- 좌측: 카드 요약 + CTA -->
+    <div class="left-col">
+      <div class="left-card">
+        <div class="left-label">카드 요약</div>
+        <div class="summary-badge" id="summary-badge">요약</div>
+        <div class="summary-box" id="summary-box">내용 준비 중입니다.</div>
+      </div>
+      <div class="left-cta-card">
+        <button class="script-write-btn main" onclick="goToMyScriptWriter()">✍️ 나만의 스크립트 작성하기</button>
+      </div>
+    </div>
+
+    <!-- 중앙: 아코디언 스크립트 -->
+    <div class="center-col">
+      <div id="accordion-wrap"></div>
+      <div class="bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
+    </div>
+
+
+
+  </div>
 </div>
-<script src="../js/font-scale.js"></script>
+
+<!-- ────────────────────────────────────────
+     D영역 끝
+──────────────────────────────────────── -->
+
+<!-- Quick 오버레이 모달 -->
+<div class="overlay" id="quick-overlay" onclick="closeOverlay(event)">
+  <div class="quick-modal">
+    <div class="quick-modal-header">
+      <div class="quick-modal-title" id="overlay-title">제목</div>
+      <button class="quick-close" onclick="closeQuick()">✕</button>
+    </div>
+    <div class="quick-modal-body" id="overlay-body">준비 중입니다.</div>
+    <div class="quick-modal-footer"><button class="modal-close-btn" onclick="closeQuick()">닫기</button></div>
+  </div>
+</div>
+
+<script>
+/* ─── Supabase 설정 (app.html에서 주입 시 덮어씌워짐) ─── */
+const SUPABASE_URL = window.SUPABASE_URL || 'https://qursjteiovcylqiepmlo.supabase.co';
+const SUPABASE_KEY = window.SUPABASE_KEY || '';
+
+/* ─── fetchWithAuth 헬퍼 ─── */
+async function fetchWithAuth(url, options = {}) {
+  const token = window._userToken
+    || localStorage.getItem('os_token')
+    || sessionStorage.getItem('os_token')
+    || '';
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${token}`,
+    ...(options.headers || {})
+  };
+  return fetch(url, { ...options, headers });
+}
+
+/* ─── MENU_CONFIG / CONTENT_MAP (원본과 동일) ─── */
+const MENU_CONFIG = {"도입인사":{"label":"도입인사","groups":{"도입인사":[["📞 도입 인사 + 관심 형성","보험 점검형"],["📞 도입 인사 + 관심 형성","보장 분석 안내형"],["📞 도입 인사 + 관심 형성","보험 조회 안내형"]],"도입반론":[["💬 도입 반론","시간 회피형"],["💬 도입 반론","상담 거부형"],["💬 도입 반론","통화 차단형"]]},"default_group":"도입인사","default_screen":"보험 점검형"},"필요성 강조":{"label":"필요성 강조","screens":[["🔥 필요성 강조","간단 확인 안내"],["🔥 필요성 강조","보장 누락 안내"],["🔥 필요성 강조","위험 인식 안내"],["🔥 필요성 강조","보험 점검 안내"],["🔥 필요성 강조","보험료 점검 안내"]],"default_screen":"간단 확인 안내"},"상황 확인":{"label":"상황 확인","screens":[["🔎 고객 상황 확인 (보험 조회 유도)","최근 점검 여부 확인형"],["🔎 고객 상황 확인 (보험 조회 유도)","보험료 확인형"],["🔎 고객 상황 확인 (보험 조회 유도)","가입 여부 확인형"],["🔎 고객 상황 확인 (보험 조회 유도)","관심 보장 확인형"],["🔎 고객 상황 확인 (보험 조회 유도)","가입 갯수 확인형"]],"default_screen":"최근 점검 여부 확인형"},"보장분석":{"label":"보장분석","screens":[["📊 보장 분석","보험료 구조 점검형"],["📊 보장 분석","중복 정리형"],["📊 보장 분석","누락 확인형"],["📊 보장 분석","우선순위 정리형"],["📊 보장 분석","전체 점검형"]],"default_screen":"보험료 구조 점검형"},"상품설명":{"label":"상품설명","groups":{"상품설명":[["📦 상품 설명","실비 설명형"],["📦 상품 설명","암보험 설명형"],["📦 상품 설명","2대질환 설명형"],["📦 상품 설명","3대질환 설명형"],["📦 상품 설명","종합보험 설명형"],["📦 상품 설명","태아보험 설명형"],["📦 상품 설명","어린이보험 설명형"],["📦 상품 설명","간병보험 설명형"],["📦 상품 설명","치매보험 설명형"],["📦 상품 설명","운전자보험 설명형"],["📦 상품 설명","치아보험 설명형"],["📦 상품 설명","주택화재 설명형"],["📦 상품 설명","종신보험 설명형"],["📦 상품 설명","정기보험 설명형"]],"필요성강조2차":[["🔥 필요성 강조","지금이 최적시점형"],["🔥 필요성 강조","보험료 대비 가치형"],["🔥 필요성 강조","결정 미루면 손해형"],["🔥 필요성 강조","가족보호환기형"],["🔥 필요성 강조","실제비용 체감형"]]},"default_group":"상품설명","default_screen":"실비 설명형"},"클로징":{"label":"클로징","groups":{"클로징":[["✅ 클로징","기존 보험 비교형"],["✅ 클로징","다음 상담 연결형"],["✅ 클로징","부담 완화형"],["✅ 클로징","확인 후 결정형"],["✅ 클로징","상담 진행형"]],"반론대응":[["⚡ 반론 대응","생각해볼게요형"],["⚡ 반론 대응","배우자 상의형"],["⚡ 반론 대응","이미 있어서 괜찮아요형"],["⚡ 반론 대응","보험료 부담형"],["⚡ 반론 대응","다음에 할게요형"]],"2차클로징":[["🔁 2차 클로징","비교 확인형"],["🔁 2차 클로징","간단 점검형"],["🔁 2차 클로징","확인 제안형"],["🔁 2차 클로징","재상담 연결형"]]},"default_group":"클로징","default_screen":"기존 보험 비교형"}};
+const MAIN_KEYS = Object.keys(MENU_CONFIG);
+
+/* CONTENT_MAP — 원본과 동일 (길이상 별도 파일 분리 권장, 현재는 인라인 유지) */
+const CONTENT_MAP = {"📊 보장 분석|우선순위 정리형":{"pill":"보장 분석: 우선순위 정리형","summary_title":"분석 포인트","summary_text":"보험은 다 넣는 것보다 지금 필요한 순서대로 보는 게 중요합니다\n현재 상황 기준으로 가장 먼저 챙겨야 할 보장 순서를 정리합니다\n한꺼번에 다 하실 필요 없이 순서대로 하나씩 보시면 됩니다","summary_color":"#185FA5","sections":[{"title":"① 우선순위 분류 기준 설명","subtitle":"고객이 우선순위 개념을 이해하게 돕기","content_html":"고객님, 보험은 모든 걸 다 넣는 것보다<br/>지금 상황에서 가장 필요한 것부터<br/>순서대로 보강하는 게 더 현실적입니다.우선순위를 정할 때 기준이 되는 세 가지가 있습니다.<br/>① 발생 가능성 — 지금 상황에서 가장 가능성 높은 위험<br/>② 치료 비용 — 가장 큰 비용이 나오는 보장<br/>③ 현재 공백 — 지금 빠져 있어서 가장 취약한 보장<br/>이 세 가지를 기준으로 순서를 정해드리겠습니다.","tip":"⚡ 기준 먼저 설명 → 고객이 납득하고 들음 — 이후 제안 수용도 높아짐"},{"title":"② 1순위 보장 확인","subtitle":"가장 시급한 보장 항목 설명","content_html":"고객님 상황 기준으로 가장 먼저 챙기셔야 할 보장은<br/>[1순위 항목]입니다.이유: ① 현재 해당 보장이 없거나 금액이 낮습니다.<br/>② 발생 시 치료비 부담이 가장 큰 항목입니다.<br/>③ 지금 건강하실 때 가입이 가장 유리한 항목입니다.<br/>이 부분을 먼저 보강해두시는 게 현실적으로 가장 좋습니다.","tip":"⚡ 이유 3가지 제시 → 납득 가능한 근거 기반 제안"},{"title":"③ 2순위 보장 확인","subtitle":"다음으로 필요한 보장 항목","content_html":"다음으로 챙기시면 좋을 보장은<br/>[2순위 항목]입니다.1순위 보강 후 여유가 되실 때 추가로 보시면 됩니다.<br/>지금 당장 다 하실 필요는 없고요,<br/>우선순위 1순위만 정리해도 가장 큰 위험에 대한<br/>기본 대비는 됩니다.","tip":"⚡ \"한꺼번에 다\" 아님 강조 — 부담 없이 1순위만 먼저 결정하게"},{"title":"④ 현실적 제안으로 마무리","subtitle":"고객 부담 없이 결정 유도","content_html":"고객님, 지금 말씀드린 1순위 보장만 먼저 보강하시면<br/>월 보험료 ○만 원 수준으로 가장 큰 위험을<br/>대비하실 수 있습니다.지금 바로 결정하시라는 게 아니라,<br/>어떤 보장이 가장 필요한지 기준을 잡아드린 겁니다.<br/>필요하신 부분이 있으시면 말씀 주시면<br/>그 부분부터 자세히 설명드리겠습니다.","tip":"⚡ \"결정 아님 → 기준 제시\" — 마지막까지 부담 제거"}]},"📞 도입 인사 + 관심 형성|보험 점검형":{"pill":"각도: 시간 경과 → 현재 기준 점검 제안","summary_title":"카드 요약","summary_text":"보험 가입 권유 아닙니다\n지금 기준으로 맞게 잡혀 있는지 간단히 점검만 해드리겠습니다\n가입하신 지 얼마나 됐는지만 알아도 바로 확인이 됩니다","summary_color":"#3A2FA0","sections":[{"title":"① 오프닝","subtitle":"점검 담당자 포지셔닝 — 부담 최소화","content_html":"안녕하세요 고객님, 보험 보장 점검 담당자 ○○○입니다.<br/>\n보험 가입 권유 전화는 아니고요,<br/>\n지금 가입하신 보험을 한번 점검해드리려고 연락드렸습니다.\n\n고객님 보험 간단히 확인 요청이 있어서 안내차 연락드렸습니다.","tip":""},{"title":"② 관심 형성","subtitle":"시간 경과 = 자연스러운 점검 필요 이유","content_html":"보험이라는 게 가입하고 나서 한 번도 안 보시는 분들이 많은데요,<br/>\n시간이 지나면서 지금 기준이랑 안 맞는 보장이 생기는 경우가 있거든요.\n\n새로 가입하시라는 게 아니라, 지금 보험이 현재 상황에 맞게 제대로 잡혀 있는지만 확인해드리는 겁니다.","tip":"⚡ \"새 가입 아님\"을 ②에서 한 번 더 짚으면 경계심이 풀림"},{"title":"③ 연결 질문","subtitle":"가입 시점으로 연결 — 자연스럽게 현황 파악","content_html":"혹시 고객님, 보험 가입하신 지 얼마나 되셨어요?<br/>\n가입하신 지 얼마나 됐는지만 알아도<br/>\n지금 점검이 필요한지 바로 확인이 됩니다.\n\n오래되셨으면 기준이 바뀐 부분이 있을 수 있고, 최근이면 구성만 간단히 확인해드리면 됩니다.","tip":""}]}};
+/* ※ CONTENT_MAP은 원본 home.html의 전체 내용과 동일합니다.
+      파일 용량이 크므로 실제 배포 시 별도 content-map.js로 분리를 권장합니다. */
+
+/* ─── 상태 ─── */
+let state = { main: "도입인사", sub: "도입인사", cat: "보험 점검형" };
+
+/* ─── overlayContent (Quick 메뉴 HTML, 원본과 동일) ─── */
+const overlayContent = {
+  '가입설계 / 선심사 동의 녹취 스크립트': `<div style="font-size:13px;color:#5a3e2b;padding:8px 0;">준비 중입니다.</div>`,
+  '회사별 BMI 심사기준': `<div style="font-size:13px;color:#5a3e2b;padding:8px 0;">준비 중입니다.</div>`,
+  '보험연령표': `<div style="font-size:13px;color:#5a3e2b;padding:8px 0;">준비 중입니다.</div>`,
+  '보험회사 결제정보': `<div style="font-size:13px;color:#5a3e2b;padding:8px 0;">준비 중입니다.</div>`,
+  '미러링 전 녹취 스크립트': `<div style="font-size:13px;color:#5a3e2b;padding:8px 0;">준비 중입니다.</div>`,
+  '원전산 설계 바로가기': `<div style="font-size:13px;color:#5a3e2b;padding:8px 0;">준비 중입니다.</div>`,
+  '보험회사 (모니터링) 연락처': `<div style="font-size:13px;color:#5a3e2b;padding:8px 0;">준비 중입니다.</div>`
+};
+
+/* ─── 렌더링 함수 ─── */
+function renderMainBtns() {
+  const row = document.getElementById('main-row');
+  row.innerHTML = '';
+  MAIN_KEYS.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'main-btn' + (state.main === key ? ' active' : '');
+    btn.textContent = MENU_CONFIG[key].label;
+    btn.onclick = () => selectMain(key);
+    row.appendChild(btn);
+  });
+}
+
+function selectMain(key) {
+  state.main = key;
+  const cfg = MENU_CONFIG[key];
+  if (cfg.groups) {
+    state.sub = cfg.default_group;
+    renderSubBtns();
+    document.getElementById('step2').classList.remove('hidden');
+    const firstGroup = cfg.groups[state.sub];
+    state.cat = firstGroup[0][1];
+    renderCatBtns();
+    document.getElementById('step3').classList.remove('hidden');
+  } else {
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('step3').classList.add('hidden');
+    state.sub = key;
+    state.cat = cfg.default_screen;
+    renderCatBtnsFlat();
+    document.getElementById('step2').classList.remove('hidden');
+    document.getElementById('step3').classList.add('hidden');
+  }
+  renderMainBtns();
+  renderContent();
+}
+
+function renderSubBtns() {
+  const cfg = MENU_CONFIG[state.main];
+  if (!cfg.groups) return;
+  const row = document.getElementById('sub-row');
+  row.innerHTML = '';
+  Object.keys(cfg.groups).forEach(grp => {
+    const btn = document.createElement('button');
+    btn.className = 'sub-btn' + (state.sub === grp ? ' active' : '');
+    btn.textContent = grp;
+    btn.onclick = () => selectSub(grp);
+    row.appendChild(btn);
+  });
+}
+
+function selectSub(grp) {
+  state.sub = grp;
+  const cfg = MENU_CONFIG[state.main];
+  const firstCat = cfg.groups[grp][0][1];
+  state.cat = firstCat;
+  renderSubBtns();
+  renderCatBtns();
+  document.getElementById('step3').classList.remove('hidden');
+  renderContent();
+}
+
+function renderCatBtns() {
+  const cfg = MENU_CONFIG[state.main];
+  if (!cfg.groups) return;
+  const screens = cfg.groups[state.sub];
+  const row = document.getElementById('cat-row');
+  row.innerHTML = '';
+  screens.forEach(([_main, cat]) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (state.cat === cat ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => selectCat(cat);
+    row.appendChild(btn);
+  });
+}
+
+function renderCatBtnsFlat() {
+  const cfg = MENU_CONFIG[state.main];
+  const screens = cfg.screens;
+  const row = document.getElementById('sub-row');
+  row.innerHTML = '';
+  screens.forEach(([_main, cat]) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (state.cat === cat ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => { state.cat = cat; renderCatBtnsFlat(); renderContent(); };
+    row.appendChild(btn);
+  });
+}
+
+function selectCat(cat) {
+  state.cat = cat;
+  renderCatBtns();
+  renderContent();
+}
+
+function renderContent() {
+  const cfg = MENU_CONFIG[state.main];
+  let mainKey, catKey;
+  if (cfg.groups) {
+    const screens = cfg.groups[state.sub];
+    const match = screens.find(s => s[1] === state.cat);
+    mainKey = match ? match[0] : screens[0][0];
+    catKey = state.cat;
+  } else {
+    const screens = cfg.screens;
+    const match = screens.find(s => s[1] === state.cat);
+    mainKey = match ? match[0] : screens[0][0];
+    catKey = state.cat;
+  }
+  const contentKey = `${mainKey}|${catKey}`;
+  const data = CONTENT_MAP[contentKey];
+
+  document.getElementById('screen-chip').textContent = data ? data.pill : contentKey;
+  document.getElementById('summary-badge').textContent = data ? data.summary_title : '요약';
+  document.getElementById('summary-box').textContent = data ? data.summary_text : '내용 준비 중입니다.';
+  if (data) {
+    document.getElementById('summary-badge').style.color = data.summary_color;
+    document.getElementById('summary-badge').style.background = data.summary_color + '22';
+  }
+
+  const wrap = document.getElementById('accordion-wrap');
+  wrap.innerHTML = '';
+  if (data && data.sections && data.sections.length) {
+    data.sections.forEach((sec, i) => {
+      const el = document.createElement('div');
+      el.className = 'accordion-section';
+      el.innerHTML = `
+        <div class="accordion-header" onclick="toggleAcc(this)">
+          <div>
+            <div class="acc-title">${sec.title}</div>
+            ${sec.subtitle ? `<div class="acc-sub">${sec.subtitle}</div>` : ''}
+          </div>
+          <div class="acc-arrow">${i === 0 ? '▲' : '▼'}</div>
+        </div>
+        <div class="accordion-body${i === 0 ? '' : ' closed'}">
+          <div class="section-html">${sec.content_html || ''}</div>
+          ${sec.tip ? `<div class="tip-box">${sec.tip}</div>` : ''}
+        </div>`;
+      wrap.appendChild(el);
+    });
+  } else {
+    wrap.innerHTML = '<div style="padding:16px;font-size:13px;color:#9a7a62;">준비 중입니다.</div>';
+  }
+
+  logScriptUsage(state.main, state.sub, state.cat);
+}
+
+function toggleAcc(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('.acc-arrow');
+  body.classList.toggle('closed');
+  arrow.textContent = body.classList.contains('closed') ? '▼' : '▲';
+}
+
+/* ─── 사용자 정보 로드 ─── */
+async function loadUserInfo() {
+  const raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user');
+  if (raw) {
+    try {
+      const u = JSON.parse(raw);
+      window._userId = u.id;
+    } catch(e) {}
+  }
+  window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token') || '';
+}
+
+
+
+/* ─── 스크립트 클릭 로그 ─── */
+async function logScriptUsage(main, sub, cat) {
+  if (!window._userToken || !window._userId) return;
+  try {
+    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/script_usage_logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ user_id: window._userId, script_main: main, script_screen: sub, script_title: cat })
+    });
+  } catch(e) { /* 로그 실패는 무시 */ }
+}
+
+/* ─── 나만의 스크립트 작성 ─── */
+function goToMyScriptWriter() {
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ action: 'navigate', page: 'myspace' }, '*');
+  } else {
+    window.location.href = 'myspace.html';
+  }
+}
+
+/* ─── 초기화 ─── */
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadUserInfo();
+  renderMainBtns();
+  selectMain('도입인사');
+});
+</script>
+
+</body>
+</html>
