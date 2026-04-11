@@ -5,10 +5,10 @@
   --accent:#c8753a;
   --line:#e6dfd7;
   --text:#2f2a26;
-  --q-scale: 1;
+  --page-scale: 1;
 }
 .quick-scale-root {
-  font-size: calc(1em * var(--q-scale));
+  font-size: calc(1em * var(--page-scale));
 }
 .main-btns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
 .main-btn {
@@ -390,11 +390,5 @@ function toggleMirrorScript(company) {
   }
 })();
 
-// ── 글자 크기 스케일 app.html localStorage 연동 ──
-(function() {
-  const saved = parseFloat(localStorage.getItem('os_font_scale'));
-  if (saved && [0.85, 1, 1.18].includes(saved)) {
-    document.documentElement.style.setProperty('--q-scale', saved);
-  }
-})();
 </script>
+<script src="../js/font-scale.js"></script>
