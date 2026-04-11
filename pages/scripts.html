@@ -1,374 +1,190 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
-
 :root {
-  --brown-dark: #3d2b1f;
-  --brown-mid: #6b4226;
-  --brown-light: #a0724a;
-  --brown-pale: #f5ede4;
-  --cream: #f7f2ec;
-  --cream-2:#f4ece3;
-  --accent: #c8753a;
-  --accent-dark: #b5642e;
-  --text-dark: #1a1008;
-  --text-mid: #5a3e2b;
-  --text-light: #9a7a62;
-  --white: #ffffff;
-  --sidebar-w: 230px;
+  --brown-dark:#3d2b1f; --brown-mid:#6b4226; --brown-light:#a0724a;
+  --brown-pale:#f5ede4; --cream:#f7f2ec; --accent:#c8753a;
+  --text-dark:#1a1008; --text-mid:#5a3e2b; --text-light:#9a7a62;
   --line:#ddc8b4;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
-.step1, .step2, .step3 {
-  border-bottom:1px solid var(--line);
-  padding:8px 12px 7px;
-  background:#faf8f5;
+.sc-tab-bar {
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  padding:8px 14px 7px; border-bottom:1px solid var(--line); background:#faf8f5;
 }
-.step2, .step3 {
-  background:#f3ebe3;
+.sc-tab {
+  height:32px; padding:0 14px; border:1px solid #d5bda8; border-radius:11px;
+  background:#fffaf4; color:#5d4533; font-family:'Noto Sans KR',sans-serif;
+  font-size:0.68em; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s;
 }
-.button-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.main-btn, .sub-btn, .cat-btn {
-  font-family:'Noto Sans KR',sans-serif;
-  border:1px solid #d5bda8;
-  background:#fffaf4;
-  color:#5d4533;
-  border-radius:11px;
-  font-size:0.68em;
-  font-weight:700;
-  white-space:nowrap;
-  cursor:pointer;
-  transition:all .15s ease;
+.sc-tab:hover { background:#f3e4d6; }
+.sc-tab.active { background:var(--brown-dark); color:#fff; border-color:var(--brown-dark); }
+.sc-sub-bar {
+  display:none; align-items:center; gap:6px; flex-wrap:wrap;
+  padding:6px 14px; border-bottom:1px solid var(--line); background:#f3ebe3;
 }
-.main-btn { height:32px; padding:0 14px; }
-.sub-btn, .cat-btn { height:28px; padding:0 12px; border-radius:14px; font-size:0.63em; }
-.main-btn:hover, .sub-btn:hover, .cat-btn:hover { background:#f3e4d6; }
-.main-btn.active, .sub-btn.active, .cat-btn.active {
-  background:var(--brown-dark);
-  color:#fff;
-  border-color:var(--brown-dark);
+.sc-sub-bar.visible { display:flex; }
+.sc-sub {
+  height:28px; padding:0 12px; border-radius:14px;
+  border:1px solid #d5bda8; background:#fffaf4; color:#5d4533;
+  font-family:'Noto Sans KR',sans-serif; font-size:0.63em; font-weight:700;
+  cursor:pointer; white-space:nowrap; transition:all .15s;
 }
-.sub-btn.active, .cat-btn.active {
-  background:var(--accent);
-  border-color:var(--accent);
+.sc-sub:hover { background:#f3e4d6; }
+.sc-sub.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.sc-content { padding:12px 14px; background:#f3eee8; }
+.sc-chip {
+  display:inline-block; padding:4px 10px; border-radius:999px;
+  background:#f5e7c9; color:#8a5a18; font-size:0.61em; font-weight:800; margin-bottom:10px;
 }
-.step2.hidden, .step3.hidden { display:none; }
-
-.content-scroll {
-  overflow:visible;
-  background:#f3eee8;
-  padding:10px 14px 18px;
+.sc-grid { display:grid; grid-template-columns:300px minmax(0,1fr); gap:12px; }
+.sc-left { display:flex; flex-direction:column; gap:12px; }
+.sc-summary-card { background:#fff; border:1px solid #dbc8b5; border-radius:14px; padding:14px; }
+.sc-summary-label { font-size:0.61em; font-weight:800; color:#9b7f68; margin-bottom:8px; }
+.sc-summary-badge {
+  display:inline-block; padding:6px 12px; border-radius:16px;
+  font-size:0.61em; font-weight:800; background:#e8e7fb; color:#4155c7; margin-bottom:10px;
 }
-.screen-chip {
-  display:inline-block;
-  padding:4px 10px;
-  border-radius:999px;
-  background:#f5e7c9;
-  color:#8a5a18;
-  font-size:0.61em;
-  font-weight:800;
-  margin-bottom:10px;
+.sc-summary-box {
+  background:#f7f2ec; border-left:3px solid #d07f45; border-radius:8px;
+  padding:12px; font-size:0.68em; line-height:1.85; color:#3b2d21; white-space:pre-line;
 }
-.content-top-actions {
-  display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px;
-}
-.small-action {
-  height:28px; padding:0 12px; border-radius:7px;
-  border:1px solid #d8c6b3; background:#fff8f2;
-  font-size:0.63em; font-weight:700; color:#7c5d44;
-}
-
-.script-write-btn {
-  font-family:'Noto Sans KR',sans-serif;
-  cursor:pointer;
-  transition:all .15s ease;
-}
-.script-write-btn:hover { transform:translateY(-1px); }
-.script-write-btn.top {
-  height:32px;
-  padding:0 14px;
-  border-radius:11px;
-  border:1px solid #d5bda8;
-  background:#fff3e7;
-  color:#8a5522;
-  font-size:0.68em;
-  font-weight:800;
-}
-.script-write-btn.top:hover {
-  background:#f7e5d2;
-}
-.left-cta-card {
-  margin-top:14px;
-  background:#fff;
-  border:1px solid #e1d2c3;
-  border-radius:16px;
-  padding:14px;
-  box-shadow:0 4px 12px rgba(103,66,38,.05);
-}
-.15s ease;
-}
-.script-write-btn:hover { transform:translateY(-1px); }
-.script-write-btn.main:hover {
-  background:#f8e6d4;
-}
-.script-write-btn.side {
-  width:100%;
-  margin-top:2px;
-  height:34px;
-  border-radius:8px;
-  border:1px solid #d8c6b3;
-  background:#fff8f2;
-  color:#7c5d44;
-  font-size:0.63em;
-  font-weight:800;
-}
-.script-write-btn.side:hover {
-  background:#f4e8dc;
-}
-
-.content-grid {
-  display:grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap:12px;
-  align-items:start;
-}
-.left-col {
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-}
-.left-card, .accordion-section {
-  background:#fff;
-  border:1px solid #dbc8b5;
-  border-radius:14px;
-}
-.left-card {
-  padding:14px;
-}
-.left-label {
-  font-size:0.61em; font-weight:800; color:#9b7f68; margin-bottom:10px;
-}
-.summary-badge {
-  display:inline-block;
-  padding:7px 12px;
-  border-radius:16px;
-  font-size:0.61em;
-  font-weight:800;
-  color:#4155c7;
-  background:#e8e7fb;
-  margin-bottom:12px;
-}
-.summary-box {
-  background:#f7f2ec;
-  border-left:3px solid #d07f45;
-  border-radius:8px;
-  padding:14px 12px;
-  font-size:0.68em;
-  line-height:1.85;
-  color:#3b2d21;
-  white-space:pre-line;
-}
-
-.center-col { min-width:0; }
-.accordion-section {
-  overflow:auto;
-  margin-bottom:8px;
-}
-.accordion-header {
-  background:#f4ece4;
-  padding:10px 14px;
+.sc-accordion { background:#fff; border:1px solid #dbc8b5; border-radius:14px; overflow:hidden; margin-bottom:8px; }
+.sc-acc-header {
+  background:#f4ece4; padding:10px 14px;
   display:flex; align-items:center; justify-content:space-between;
-  cursor:pointer;
-  border-bottom:1px solid #e5d4c4;
+  cursor:pointer; border-bottom:1px solid #e5d4c4;
 }
-.acc-title { font-size:0.72em; font-weight:900; color:#2d2016; }
-.acc-sub { font-size:0.61em; color:#a18369; margin-top:2px; }
-.acc-arrow { font-size:0.61em; color:#9b7f68; }
-.accordion-body {
-  display:block;
-  background:#fff;
-  padding:14px 14px 12px;
+.sc-acc-title { font-size:0.72em; font-weight:900; color:#2d2016; }
+.sc-acc-sub { font-size:0.61em; color:#a18369; margin-top:2px; }
+.sc-acc-arrow { font-size:0.61em; color:#9b7f68; flex-shrink:0; }
+.sc-acc-body { padding:14px; background:#fff; }
+.sc-acc-body.closed { display:none; }
+.sc-html { font-size:0.78em; color:#2a2018; line-height:1.9; }
+.sc-html div, .sc-html p { max-width:100%; }
+.sc-bottom-bar {
+  margin-top:12px; background:var(--brown-dark); color:#fff6ef;
+  text-align:center; font-size:0.68em; font-weight:800; padding:10px 14px; border-radius:8px;
 }
-.accordion-body.closed { display:none; }
-.section-html {
-  font-size:0.78em;
-  color:#2a2018;
-  line-height:1.9;
-}
-.section-html div, .section-html p { max-width:100%; }
-.section-html img { max-width:100%; height:auto; }
-.section-html [style*="font-size:0.84em"][style*="font-weight:700"] {
-  font-size:0.84em !important;
-  font-weight:800 !important;
-  color:#1e1610 !important;
-}
-.section-html [style*="font-size:0.78em"][style*="color:#333"] {
-  color:#7a685b !important;
-}
-.tip-box {
-  margin-top:12px;
-  padding:8px 12px;
-  border-radius:6px;
-  background:#f8ebca;
-  color:#7a4e13;
-  font-size:0.68em;
-  font-weight:800;
-}
-.bottom-bar {
-  margin-top:14px;
-  background:var(--brown-dark);
-  color:#fff6ef;
-  text-align:center;
-  font-size:0.68em;
-  font-weight:800;
-  padding:10px 14px;
-  border-radius:8px;
-}
-
-
-
-
-
-
-
-
-
-
-.overlay {
-  display:none; position:fixed; inset:0;
-  background:rgba(26,16,8,.7);
-  z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(4px);
-}
-.overlay.active { display:flex; }
-.quick-modal {
-  background:#fff; border-radius:16px; width:100%; max-width:760px;
-  box-shadow:0 24px 60px rgba(0,0,0,.3); overflow:hidden;
-}
-.quick-modal-header {
-  background:var(--brown-dark); padding:16px 20px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.quick-modal-title { font-size:0.84em; font-weight:800; color:#fff; }
-.quick-close {
-  width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.12); border:none;
-  color:#fff; font-size:0.78em; cursor:pointer;
-}
-.quick-modal-header {
-  background:var(--brown-dark); padding:16px 20px;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.quick-modal-footer {
-  padding:12px 20px; border-top:1px solid #f0e4d8; display:flex; justify-content:flex-end;
-}
-.modal-close-btn {
-  padding:8px 20px; border-radius:8px; border:1px solid #e0d0c0; background:var(--brown-dark);
-  color:#fff; font-size:0.72em; font-family:'Noto Sans KR',sans-serif;
-}
-
-@media (max-width: 1180px) {
-  .content-grid {
-    grid-template-columns: 220px minmax(0,1fr);
-  }
-    }
-@media (max-width: 900px) {
-  
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-    
-  
-  
-}
-
-
-/* ── 페이지 헤더 ── */
-
-
-/* ── page-scale-root ── */
-.page-scale-root { font-size: calc(1em * var(--page-scale)); }
+.sc-loading { padding:40px; text-align:center; color:var(--text-light); font-size:0.8em; }
+.sc-empty { padding:30px; text-align:center; color:var(--text-light); font-size:0.75em; }
+@media (max-width:900px) { .sc-grid { grid-template-columns:1fr; } }
+.page-scale-root { font-size:calc(1em * var(--page-scale, 1)); }
 </style>
 
 <div class="page-scale-root">
-
-<div class="scripts-wrap">
-    <div class="step1"><div class="button-row" id="main-row">
-    <button class="main-btn active" data-main="도입인사" onclick="selectMain('도입인사')">📞 도입인사</button>
-    <button class="main-btn" data-main="필요성 강조" onclick="selectMain('필요성 강조')">🔥 필요성 강조</button>
-    <button class="main-btn" data-main="상황 확인" onclick="selectMain('상황 확인')">🔎 상황 확인</button>
-    <button class="main-btn" data-main="보장분석" onclick="selectMain('보장분석')">📊 보장분석</button>
-    <button class="main-btn" data-main="상품설명" onclick="selectMain('상품설명')">📦 상품설명</button>
-    <button class="main-btn" data-main="클로징" onclick="selectMain('클로징')">✅ 클로징</button>
-    <button class="script-write-btn top" onclick="goToMyScriptWriter()">✍️ 나만의 스크립트</button>
-  </div></div>
-    <div class="step2 hidden" id="step2"><div class="button-row" id="sub-row"></div></div>
-    <div class="step3 hidden" id="step3"><div class="button-row" id="cat-row"></div></div>
-
-    <div class="content-scroll">
-      <div class="screen-chip" id="screen-chip"></div>
-      <div class="content-top-actions" style="display:none;"></div>
-
-      <div class="content-grid">
-        <div class="left-col">
-          <div class="left-card">
-            <div class="left-label">카드 요약</div>
-            <div class="summary-badge" id="summary-badge">요약</div>
-            <div class="summary-box" id="summary-box">내용 준비 중입니다.</div>
-          </div>
-          <div class="left-cta-card">
-            <button class="script-write-btn main" onclick="goToMyScriptWriter()">✍️ 나만의 스크립트 작성하기</button>
-          </div>
-        </div>
-
-        <div class="center-col">
-          <div id="accordion-wrap"></div>
-          <div class="bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
-        </div>
+<div class="sc-tab-bar">
+  <button class="sc-tab active" data-stages="opening,opening_rejection" onclick="selectTab(this)">📞 도입인사</button>
+  <button class="sc-tab" data-stages="need_emphasis,need_emphasis_2" onclick="selectTab(this)">🔥 필요성강조</button>
+  <button class="sc-tab" data-stages="situation_check" onclick="selectTab(this)">🔎 상황확인</button>
+  <button class="sc-tab" data-stages="analysis" onclick="selectTab(this)">📊 보장분석</button>
+  <button class="sc-tab" data-stages="product" onclick="selectTab(this)">📦 상품설명</button>
+  <button class="sc-tab" data-stages="closing,closing_second" onclick="selectTab(this)">✅ 클로징</button>
+  <button class="sc-tab" data-stages="objection" onclick="selectTab(this)">⚡ 반론대응</button>
+</div>
+<div class="sc-sub-bar" id="sc-sub-bar"></div>
+<div class="sc-content">
+  <div class="sc-chip" id="sc-chip"></div>
+  <div class="sc-grid">
+    <div class="sc-left">
+      <div class="sc-summary-card">
+        <div class="sc-summary-label">카드 요약</div>
+        <div class="sc-summary-badge" id="sc-badge">요약</div>
+        <div class="sc-summary-box" id="sc-summary">스크립트를 선택하세요.</div>
       </div>
     </div>
-</div>
-
-<div class="overlay" id="quick-overlay" onclick="closeOverlay(event)">
-  <div class="quick-modal">
-    <div class="quick-modal-header">
-      <div class="quick-modal-title" id="overlay-title">제목</div>
-      <button class="quick-close" onclick="closeQuick()">✕</button>
-    </div>
-    <div class="quick-modal-body" id="overlay-body">준비 중입니다.</div>
-    <div class="quick-modal-footer"><button class="modal-close-btn" onclick="closeQuick()">닫기</button></div>
+    <div id="sc-right"><div class="sc-loading">로딩 중...</div></div>
   </div>
+  <div class="sc-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
 </div>
-
 </div>
 
 <script>
-(function() {
-  // 이미 로드됐으면 재실행만
-  if (typeof window.initScriptsPage === 'function') {
-    window.initScriptsPage();
+const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+const _cache = {};
+let _scripts = [], _currentIdx = 0;
+
+async function fetchScripts(stages) {
+  const key = stages.join(',');
+  if (_cache[key]) return _cache[key];
+  const filter = stages.map(s => 'stage.eq.' + s).join(',');
+  const url = SUPABASE_URL + '/rest/v1/scripts?or=(' + filter + ')&is_active=eq.true&order=stage,title';
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + (window._userToken || SUPABASE_KEY)
+      }
+    });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    _cache[key] = data;
+    return data;
+  } catch(e) {
+    document.getElementById('sc-summary').textContent = '로드 실패: ' + e.message;
+    return [];
+  }
+}
+
+async function selectTab(btn) {
+  document.querySelectorAll('.sc-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const stages = btn.dataset.stages.split(',');
+  document.getElementById('sc-sub-bar').innerHTML = '';
+  document.getElementById('sc-sub-bar').classList.remove('visible');
+  document.getElementById('sc-right').innerHTML = '<div class="sc-loading">불러오는 중...</div>';
+  document.getElementById('sc-chip').textContent = '';
+  document.getElementById('sc-summary').textContent = '스크립트를 선택하세요.';
+  const scripts = await fetchScripts(stages);
+  _scripts = scripts;
+  if (!scripts.length) {
+    document.getElementById('sc-right').innerHTML = '<div class="sc-empty">스크립트가 없습니다.</div>';
     return;
   }
-  if (typeof MENU_CONFIG !== 'undefined' && typeof renderAll === 'function') {
-    renderAll();
-    return;
+  const bar = document.getElementById('sc-sub-bar');
+  bar.innerHTML = scripts.map((s, i) =>
+    '<button class="sc-sub' + (i===0?' active':'') + '" onclick="selectScript(' + i + ')">' + s.title + '</button>'
+  ).join('');
+  bar.classList.add('visible');
+  selectScript(0);
+}
+
+function selectScript(idx) {
+  _currentIdx = idx;
+  const s = _scripts[idx];
+  if (!s) return;
+  document.querySelectorAll('.sc-sub').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.getElementById('sc-chip').textContent = s.title;
+  document.getElementById('sc-badge').textContent = s.top_category || s.title;
+  document.getElementById('sc-summary').textContent = s.highlight_text || '상담 중 바로 활용하세요.';
+  const right = document.getElementById('sc-right');
+  if (s.script_text) {
+    right.innerHTML =
+      '<div class="sc-accordion">' +
+        '<div class="sc-acc-header" onclick="toggleAcc(this)">' +
+          '<div>' +
+            '<div class="sc-acc-title">' + s.title + '</div>' +
+            '<div class="sc-acc-sub">' + (s.top_category || '') + '</div>' +
+          '</div>' +
+          '<div class="sc-acc-arrow">▲</div>' +
+        '</div>' +
+        '<div class="sc-acc-body"><div class="sc-html">' + s.script_text + '</div></div>' +
+      '</div>';
+  } else {
+    right.innerHTML = '<div class="sc-empty">스크립트 내용이 없습니다.</div>';
   }
-  // 외부 JS 로드 (scripts-page.js가 로드 완료되면 자체적으로 renderAll 실행)
-  function _load(src, cb) {
-    // 이미 로드된 경우 체크
-    if (document.querySelector('script[src="' + src + '"]')) {
-      if (cb) cb();
-      return;
-    }
-    var s = document.createElement('script');
-    s.src = src;
-    if (cb) s.onload = cb;
-    s.onerror = function() {
-      var box = document.getElementById('summary-box');
-      if (box) box.textContent = '로드 실패: ' + src;
-    };
-    document.head.appendChild(s);
-  }
-  _load('js/scripts-data.js', function() {
-    _load('js/scripts-page.js', null);
-    // scripts-page.js의 _autoInit이 알아서 renderAll 호출
-  });
+}
+
+function toggleAcc(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('closed');
+  header.querySelector('.sc-acc-arrow').textContent = body.classList.contains('closed') ? '▼' : '▲';
+}
+
+(function init() {
+  setTimeout(function() {
+    var firstTab = document.querySelector('.sc-tab');
+    if (firstTab) selectTab(firstTab);
+  }, 100);
 })();
 </script>
