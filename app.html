@@ -1402,7 +1402,13 @@ async function sendPasswordReset(){
 }
 
 // ── 글자 크기 컨트롤러 ──
+const _fontSizeMap = { 0.88: '14px', 1: '16px', 1.25: '20px' };
+
 function setFontScale(scale) {
+  // D 영역 font-size 직접 px 지정 → em 상속 기반으로 하위 전체 확대/축소
+  const area = document.getElementById('content-area');
+  if (area) area.style.fontSize = _fontSizeMap[scale] || '16px';
+  // CSS 변수도 병행 유지 (pages/*.html 자체 로드 시 대비)
   document.documentElement.style.setProperty('--d-scale', scale);
   document.documentElement.style.setProperty('--page-scale', scale);
   localStorage.setItem('os_font_scale', scale);
@@ -1414,6 +1420,10 @@ function setFontScale(scale) {
   const saved = parseFloat(localStorage.getItem('os_font_scale'));
   if (saved && [0.88, 1, 1.25].includes(saved)) {
     setFontScale(saved);
+  } else {
+    // 기본값 중(16px) 적용
+    const area = document.getElementById('content-area');
+    if (area) area.style.fontSize = '16px';
   }
 })();
 
