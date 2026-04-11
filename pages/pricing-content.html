@@ -1,0 +1,253 @@
+<style>
+.pricing-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+  font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
+.pricing-eyebrow {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #c8753a;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.pricing-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 900;
+  color: #3b2416;
+  letter-spacing: -0.8px;
+  margin-bottom: 8px;
+}
+.pricing-sub {
+  text-align: center;
+  font-size: 14px;
+  color: #9a7a62;
+  margin-bottom: 32px;
+}
+.current-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #3b2416, #4a2f1f);
+  border-radius: 14px;
+  padding: 16px 24px;
+  margin-bottom: 28px;
+}
+.current-banner-left .label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.current-banner-left .plan-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+}
+.current-banner-badge {
+  padding: 7px 18px;
+  background: #c8753a;
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.price-card {
+  background: white;
+  border: 1.5px solid #e6dfd7;
+  border-radius: 18px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+}
+.price-card.featured {
+  border: 2px solid #3b2416;
+  box-shadow: 0 4px 20px rgba(61,43,31,0.12);
+}
+.price-card.b2b {
+  background: linear-gradient(160deg, #3b2416, #4a2f1f);
+  border: none;
+}
+.card-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  align-self: flex-start;
+}
+.badge-free { background: #f5ede4; color: #6b4226; }
+.badge-pro { background: #c8753a; color: white; }
+.badge-b2b { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); }
+.card-price {
+  font-size: 36px;
+  font-weight: 900;
+  color: #3b2416;
+  letter-spacing: -1.5px;
+  margin-bottom: 2px;
+}
+.card-price span { font-size: 15px; font-weight: 400; color: #9a7a62; }
+.b2b .card-price { color: white; font-size: 26px; letter-spacing: -0.5px; }
+.card-trial { font-size: 13px; color: #c8753a; font-weight: 700; margin-bottom: 14px; }
+.b2b .card-trial { color: rgba(255,255,255,0.7); }
+.card-note {
+  font-size: 12px;
+  color: #9a7a62;
+  background: #f5ede4;
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+.b2b .card-note {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.75);
+}
+.card-features {
+  list-style: none;
+  margin-bottom: 24px;
+  flex: 1;
+}
+.card-features li {
+  font-size: 13px;
+  color: #5a3e2b;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5ede4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-features li:last-child { border-bottom: none; }
+.card-features li::before { content: "✓"; color: #c8753a; font-weight: 700; flex-shrink: 0; }
+.card-features li.no { color: #c0b0a8; text-decoration: line-through; }
+.card-features li.no::before { content: "✕"; color: #ddd; }
+.b2b .card-features li { color: rgba(255,255,255,0.8); border-bottom-color: rgba(255,255,255,0.1); }
+.b2b .card-features li::before { color: #e8906a; }
+.card-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-align: center;
+  display: block;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+.btn-accent { background: #c8753a; color: white; }
+.btn-accent:hover { background: #b5642e; }
+.btn-muted { background: #f5ede4; color: #6b4226; cursor: default; }
+.btn-white { background: white; color: #3b2416; }
+.btn-white:hover { background: #f5ede4; }
+.pricing-notes {
+  margin-top: 28px;
+  text-align: center;
+}
+.pricing-notes p {
+  font-size: 12px;
+  color: #b0907a;
+  line-height: 2.2;
+}
+.pricing-notes p::before { content: "· "; }
+</style>
+
+<div class="pricing-wrap">
+  <div class="pricing-eyebrow">PRICING</div>
+  <div class="pricing-title">함께 성장하는 요금제</div>
+  <div class="pricing-sub">지금 바로 시작하고, 필요할 때 업그레이드하세요</div>
+
+  <div class="current-banner">
+    <div class="current-banner-left">
+      <div class="label">현재 이용 중인 플랜</div>
+      <div class="plan-name" id="pr-plan-name">확인 중...</div>
+    </div>
+    <div class="current-banner-badge" id="pr-plan-badge">-</div>
+  </div>
+
+  <div class="pricing-grid">
+
+    <div class="price-card">
+      <div class="card-badge badge-free">무료 플랜</div>
+      <div class="card-price">0<span>원 / 월</span></div>
+      <div class="card-trial">가입 즉시 영구 무료</div>
+      <div class="card-note">매니저(실장) · 지점장(센터장)은<br>무료 플랜에서도 글쓰기 가능</div>
+      <ul class="card-features">
+        <li>스크립트 전체 열람</li>
+        <li>게시판 전체 열람</li>
+        <li>모바일 최적화</li>
+        <li class="no">스크립트 작성 (설계사 제한)</li>
+        <li class="no">게시판 질문 작성 (설계사 제한)</li>
+      </ul>
+      <button class="card-btn btn-accent" onclick="switchMenu('home')">홈으로 돌아가기</button>
+    </div>
+
+    <div class="price-card featured">
+      <div class="card-badge badge-pro">유료 플랜 · 추천</div>
+      <div class="card-price">9,900<span>원 / 월</span></div>
+      <div class="card-trial">첫 30일 완전 무료 체험</div>
+      <div class="card-note">설계사·팀장도 글쓰기까지<br>모든 기능을 사용할 수 있어요</div>
+      <ul class="card-features">
+        <li>스크립트 전체 열람 + 작성</li>
+        <li>게시판 질문 · 답변 작성</li>
+        <li>신규 스크립트 · 기능 우선 업데이트</li>
+        <li>AI 반론 대응 멘트 생성</li>
+        <li>언제든 해지 가능</li>
+      </ul>
+      <button class="card-btn btn-muted" id="pr-pro-btn">✅ 이용 중</button>
+    </div>
+
+    <div class="price-card b2b">
+      <div class="card-badge badge-b2b">B2B 제휴</div>
+      <div class="card-price">맞춤 협의</div>
+      <div class="card-trial">보험사 · GA · 교육기관 전용</div>
+      <div class="card-note">규모와 목적에 맞는<br>전용 플랜으로 협의드립니다</div>
+      <ul class="card-features">
+        <li>조직 전용 게시판 운영</li>
+        <li>데이터 자산화 지원</li>
+        <li>파일럿 1~3개월 무료 제공</li>
+        <li>맞춤 기능 협의 가능</li>
+        <li>전담 운영 지원</li>
+      </ul>
+      <a class="card-btn btn-white" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 제휴 문의하기</a>
+    </div>
+
+  </div>
+
+  <div class="pricing-notes">
+    <p>유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다</p>
+    <p>매니저(실장) · 지점장(센터장)은 무료 플랜에서도 영구 무료로 모든 기능을 이용할 수 있습니다</p>
+    <p>B2B 제휴 문의는 카카오 오픈채팅으로 연락 주시면 빠르게 안내드립니다</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  const role = window._userRole || '';
+  const planName = document.getElementById('pr-plan-name');
+  const planBadge = document.getElementById('pr-plan-badge');
+
+  if (role === 'manager' || role === 'branch_manager') {
+    planName.textContent = '매니저 / 지점장 영구 무료';
+    planBadge.textContent = '영구 무료';
+    planBadge.style.background = '#5a8a5a';
+  } else {
+    planName.textContent = '유료 플랜 (PRO)';
+    planBadge.textContent = 'PRO';
+  }
+})();
+</script>
