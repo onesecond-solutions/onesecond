@@ -1,1 +1,146 @@
+  <div class="home-wrap">
+
+    <!-- 상단: 바로 실행 카드 4개 -->
+    <div class="home-quick-title">🔥 바로 실행 — 자주 쓰는 스크립트</div>
+    <div class="home-quick-grid">
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">📞</div>
+        <div class="home-quick-card-label">도입 인사</div>
+        <div class="home-quick-card-desc">통화 시작 첫 멘트</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">⚡</div>
+        <div class="home-quick-card-label">반론 대응</div>
+        <div class="home-quick-card-desc">"바빠요" "생각해볼게요"</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">✅</div>
+        <div class="home-quick-card-label">클로징</div>
+        <div class="home-quick-card-desc">계약 마무리 멘트</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+      <div class="home-quick-card">
+        <div class="home-quick-card-icon">🔥</div>
+        <div class="home-quick-card-label">필요성 강조</div>
+        <div class="home-quick-card-desc">보험 필요성 어필</div>
+        <button class="home-quick-card-btn" onclick="switchMenu('scripts')">바로 실행 →</button>
+      </div>
+    </div>
+
+    <!-- 중단: 2열 그리드 -->
+    <div class="home-mid-grid">
+
+      <!-- 나의 스크립트 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">📌 나의 스크립트</div>
+          <span class="home-panel-more" onclick="switchMenu('myspace')">MY SPACE →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-panel-item">
+            <span>시간 회피형 멘트<span class="home-panel-item-badge">즐겨찾기</span></span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>좋은 보험은 이렇게 구성됩니다</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>보험 점검형 오프닝</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-empty">+ MY SPACE에서 스크립트를 추가하세요</div>
+        </div>
+      </div>
+
+      <!-- 오늘의 보험뉴스 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">📰 오늘의 보험뉴스</div>
+          <span class="home-panel-more" onclick="switchMenu('news')">더보기 →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-news-item">
+            <div class="home-news-title">금융위, 실손보험 구조개편안 발표…4세대 전환 가속화</div>
+            <div class="home-news-meta"><span>보험업계</span><span>2026.04.10</span></div>
+          </div>
+          <div class="home-news-item">
+            <div class="home-news-title">TM 채널 규제 강화, 녹취 기준 일부 변경 예고</div>
+            <div class="home-news-meta"><span>규제·정책</span><span>2026.04.09</span></div>
+          </div>
+          <div class="home-news-item">
+            <div class="home-news-title">메리츠화재, 간편심사 상품 라인업 확대 발표</div>
+            <div class="home-news-meta"><span>상품</span><span>2026.04.08</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 최신 게시글 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">📋 최신 게시글</div>
+          <span class="home-panel-more" onclick="switchMenu('board')">게시판 →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-panel-item">
+            <span>
+              <span class="home-board-badge badge-notice">공지</span>
+              4월 인수기준 변경사항 안내
+            </span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>
+              <span class="home-board-badge badge-underwriting">인수Q&A</span>
+              고혈압 3년 경과 후 가입 가능 여부
+            </span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>
+              <span class="home-board-badge badge-product">상품Q&A</span>
+              흥국생명 간편형 실비 인수 기준 질문
+            </span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 팀장 추천 스크립트 -->
+      <div class="home-panel">
+        <div class="home-panel-header">
+          <div class="home-panel-title">👍 Leader Pick</div>
+          <span class="home-panel-more" onclick="switchMenu('scripts')">스크립트 →</span>
+        </div>
+        <div class="home-panel-body">
+          <div class="home-panel-item">
+            <span>보험 조회 안내형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>시간 회피형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>통화 차단형 대응</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>보험 점검형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+          <div class="home-panel-item">
+            <span>보장 분석 안내형</span>
+            <span class="home-panel-item-arrow">›</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- 끝: 중단 2열 -->
+
+  </div>
+</div>
 
