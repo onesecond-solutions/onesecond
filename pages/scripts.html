@@ -591,13 +591,14 @@ function selectScriptByName(scriptName) {
   }
 }
 
-renderAll();
-
-// URL ?script= 파라미터 처리
-const _scriptParam = new URLSearchParams(window.location.search).get('script');
-if (_scriptParam) {
-  selectScriptByName(decodeURIComponent(_scriptParam));
-}
+// DOM 준비 후 실행 (app.html innerHTML 로드 타이밍 대응)
+setTimeout(function() {
+  renderAll();
+  const _scriptParam = new URLSearchParams(window.location.search).get('script');
+  if (_scriptParam) {
+    selectScriptByName(decodeURIComponent(_scriptParam));
+  }
+}, 0);
 
 // ── 사용자 정보 로드 ──
 const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
