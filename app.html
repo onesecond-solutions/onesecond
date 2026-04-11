@@ -1265,12 +1265,19 @@ async function switchMenu(menuKey) {
     const html = await res.text();
     area.innerHTML = html;
     // 로드된 콘텐츠 내 script 실행
-    area.querySelectorAll('script').forEach(oldScript => {
-      const newScript = document.createElement('script');
-      newScript.textContent = oldScript.textContent;
-      document.body.appendChild(newScript);
-      document.body.removeChild(newScript);
-    });
+    if (menuKey === 'scripts') {
+      // scripts는 외부 js 파일로 분리 → initScriptsPage() 직접 호출
+      if (typeof window.initScriptsPage === 'function') {
+        window.initScriptsPage();
+      }
+    } else {
+      area.querySelectorAll('script').forEach(oldScript => {
+        const newScript = document.createElement('script');
+        newScript.textContent = oldScript.textContent;
+        document.body.appendChild(newScript);
+        document.body.removeChild(newScript);
+      });
+    }
   } catch(e) {
     area.innerHTML = `<div class="card"><h2>준비 중</h2><p>${menuKey} 페이지를 불러오지 못했습니다.</p></div>`;
   }
