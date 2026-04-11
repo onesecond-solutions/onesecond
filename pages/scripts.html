@@ -582,21 +582,12 @@ function selectScriptByName(scriptName) {
   }
 }
 
-// DOM 준비 후 실행 - MENU_CONFIG 로드 확인 후 재시도
-function _tryInit(attempt) {
-  if (typeof MENU_CONFIG === 'undefined' || typeof CONTENT_MAP === 'undefined') {
-    if (attempt < 20) setTimeout(function() { _tryInit(attempt + 1); }, 50);
-    return;
-  }
-  if (!document.getElementById('main-row')) {
-    if (attempt < 20) setTimeout(function() { _tryInit(attempt + 1); }, 50);
-    return;
-  }
+// 즉시 실행 (app.html innerHTML 로드 후 script 재실행 시 DOM 이미 존재)
+(function() {
   renderAll();
   const _scriptParam = new URLSearchParams(window.location.search).get('script');
   if (_scriptParam) selectScriptByName(decodeURIComponent(_scriptParam));
-}
-setTimeout(function() { _tryInit(0); }, 100);
+})();
 
 // ── 사용자 정보 로드 ──
 const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
