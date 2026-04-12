@@ -367,8 +367,7 @@ html,body{
   min-height:0;
 }
 .qm-content-inner{
-  font-size:15px;
-  font-size:14px;color:var(--text);line-height:1.9;
+  font-size:15px;color:var(--text);line-height:1.9;
 }
 .qm-content-inner * {
   max-width:100%;
@@ -1173,7 +1172,7 @@ async function loadUserInfo() {
   if (!token || !window._userId) return;
   window._userToken = token;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}&select=name,role,phone,email,company,branch,team`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?auth_user_id=eq.${window._userId}&select=name,role,phone,email,company,branch,team`, {
       headers: {'apikey':SUPABASE_KEY,'Authorization':`Bearer ${token}`}
     });
     const data = await res.json();
@@ -1184,7 +1183,7 @@ async function loadUserInfo() {
       const userEl = document.getElementById('topbar-user');
       if (userEl) userEl.textContent = `${displayName}(${u.email}) ▾`;
       const greetEl = document.getElementById('a2-greeting');
-      if (greetEl) greetEl.innerHTML = `안녕하세요, <strong style="color:#c8753a;">${displayName}</strong>님! 오늘도 화이팅입니다 🔥`;
+      if (greetEl) greetEl.innerHTML = `안녕하세요, <strong style="color:#a0724a;">${displayName}</strong>님! 오늘도 화이팅입니다 🔥`;
       window._userEmail = u.email;
       window._userRole = u.role;
       window._userName = u.name;
@@ -1376,8 +1375,12 @@ async function openQuickOverlay(key) {
 }
 
 function closeQuick() {
-  document.getElementById('quickOverlay').classList.remove('show');
+  try {
+    const el = document.getElementById('quickOverlay');
+    if (el) { el.classList.remove('show'); el.style.display = ''; }
+  } catch(e) { console.error('closeQuick error:', e); }
 }
+window.closeQuick = closeQuick;
 function handleQuickOverlayClick(e) {
   if (e.target === document.getElementById('quickOverlay')) closeQuick();
 }
@@ -1411,7 +1414,7 @@ async function saveProfile(){
   const btn=document.getElementById('edit-save-btn');
   btn.disabled=true;btn.textContent='저장 중...';
   try{
-    const res=await fetchWithAuth(`${SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}`,{
+    const res=await fetchWithAuth(`${SUPABASE_URL}/rest/v1/users?auth_user_id=eq.${window._userId}`,{
       method:'PATCH',
       headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
       body:JSON.stringify({name,phone:document.getElementById('edit-phone').value.trim(),company:document.getElementById('edit-company').value.trim(),branch:document.getElementById('edit-branch').value.trim(),team:document.getElementById('edit-team').value.trim()})
