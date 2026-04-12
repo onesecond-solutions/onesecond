@@ -529,7 +529,7 @@ const mySpaceViews = {
 
 
 
-function openLibraryAddView(){
+window.openLibraryAddView = function(){
   const myspace=document.getElementById('view-myspace');
   const write=document.getElementById('view-write');
   const libraryAdd=document.getElementById('view-library-add');
@@ -541,7 +541,7 @@ function openLibraryAddView(){
   setWriteModeVisual(true);
   window.scrollTo({top:0, behavior:'smooth'});
 }
-function closeLibraryAddView(){
+window.closeLibraryAddView = function(){
   const myspace=document.getElementById('view-myspace');
   const libraryAdd=document.getElementById('view-library-add');
   const title=document.querySelector('.content-slot-title');
@@ -550,14 +550,14 @@ function closeLibraryAddView(){
   if(title) title.textContent='MY SPACE';
   setWriteModeVisual(false);
 }
-function saveAndReturnToLibrary(){
+window.saveAndReturnToLibrary = function(){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   const libraryBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="library"]');
   if(libraryBtn) libraryBtn.classList.add('active');
   renderMySpaceView('library');
   closeLibraryAddView();
 }
-function toggleLibraryGuide(){
+window.toggleLibraryGuide = function(){
   const box=document.getElementById('library-guide-box');
   const btn=document.getElementById('library-guide-toggle-btn');
   if(!box || !btn) return;
@@ -565,13 +565,13 @@ function toggleLibraryGuide(){
   btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   btn.innerHTML = isOpen ? '💡 자료 추가 가이드 닫기' : '💡 자료 추가 가이드 보기';
 }
-function toggleAttachSection(type){
+window.toggleAttachSection = function(type){
   const el=document.getElementById(`attach-${type}`);
   if(!el) return;
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-function openWriteView(){
+window.openWriteView = function(){
   const myspace=document.getElementById('view-myspace');
   const write=document.getElementById('view-write');
   const title=document.querySelector('.content-slot-title');
@@ -581,7 +581,7 @@ function openWriteView(){
   setWriteModeVisual(true);
   window.scrollTo({top:0, behavior:'smooth'});
 }
-function closeWriteView(){
+window.closeWriteView = function(){
   const myspace=document.getElementById('view-myspace');
   const write=document.getElementById('view-write');
   const libraryAdd=document.getElementById('view-library-add');
@@ -592,7 +592,7 @@ function closeWriteView(){
   if(title) title.textContent='MY SPACE';
   setWriteModeVisual(false);
 }
-function toggleGuide(){
+window.toggleGuide = function(){
   const box=document.getElementById('guide-box');
   const btn=document.getElementById('guide-toggle-btn');
   if(!box || !btn) return;
@@ -603,12 +603,12 @@ function toggleGuide(){
 
 
 const nextBtnEl = document.querySelector('.next-btn');
-function setWriteModeVisual(isWrite){
+window.setWriteModeVisual = function(isWrite){
   if(nextBtnEl) nextBtnEl.style.display = isWrite ? 'none' : 'flex';
   
 }
 
-function saveAndReturnToMySpace(){
+window.saveAndReturnToMySpace = function(){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   const scriptBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="scripts"]');
   if(scriptBtn) scriptBtn.classList.add('active');
@@ -616,19 +616,19 @@ function saveAndReturnToMySpace(){
   closeWriteView();
 }
 
-function renderMySpaceView(view){
+window.renderMySpaceView = function(view){
   const slot=document.getElementById('view-myspace');
   slot.innerHTML=mySpaceViews[view]||mySpaceViews.scripts;
   if(view==='scripts') loadScriptsList();
   if(view==='library') loadLibraryList();
 }
-function switchMySpaceTab(button,view){
+window.switchMySpaceTab = function(button,view){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   button.classList.add('active');
   closeWriteView();
   renderMySpaceView(view);
 }
-function toggleQuick(event){
+window.toggleQuick = function(event){
   event.stopPropagation();
   document.getElementById('quick-dropdown').classList.toggle('open');
 }
@@ -637,14 +637,14 @@ document.addEventListener('click',function(e){
   const wrap=document.querySelector('.quick-wrap');
   if(dropdown && wrap && !wrap.contains(e.target)) dropdown.classList.remove('open');
 });
-function openOverlay(title,icon){
+window.openOverlay = function(title,icon){
   document.getElementById('quick-dropdown').classList.remove('open');
   document.getElementById('overlay-title').textContent=`${icon} ${title}`;
   document.getElementById('overlay-body').innerHTML=overlayContent[title]||'준비 중입니다.';
   document.getElementById('quick-overlay').classList.add('active');
 }
-function closeQuick(){document.getElementById('quick-overlay').classList.remove('active');}
-function closeOverlay(event){if(event.target.id==='quick-overlay') closeQuick();}
+window.closeQuick = function(){document.getElementById('quick-overlay').classList.remove('active');}
+window.closeOverlay = function(event){if(event.target.id==='quick-overlay') closeQuick();}
 
 document.querySelectorAll('.nav-item').forEach(function(item){
   item.addEventListener('click', function(){
@@ -669,19 +669,15 @@ document.querySelectorAll('.nav-item').forEach(function(item){
 
 renderMySpaceView('scripts'); setWriteModeVisual(false);
 </script><script>
-const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
-const ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
-
-// ── 토큰 즉시 세팅 (로딩 속도 개선) ──
-const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
-if (!_initToken || !_initAuth.id) { window.location.href = 'index.html'; }
-if (!window._userToken) window._userToken = _initToken;
-if (!window._userId) window._userId = _initAuth.id;
+// ── myspace 초기화 (app.html 변수 재사용) ──
+if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
+if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+if (!window.ROLE_LABEL) window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
+if (!window._userToken) window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id; }
 
 // ── 스크립트 저장 ──
-async function saveScriptToSupabase() {
+window.saveScriptToSupabase = async function() {
   const title = (document.getElementById('script-title')?.value || '').trim();
   const scriptText = (document.getElementById('script-text')?.value || '').trim();
   const highlight = (document.getElementById('script-highlight')?.value || '').trim();
@@ -723,7 +719,7 @@ async function saveScriptToSupabase() {
 }
 
 // ── 자료 저장 ──
-async function saveLibraryToSupabase() {
+window.saveLibraryToSupabase = async function() {
   const title = (document.getElementById('lib-title')?.value || '').trim();
   const description = (document.getElementById('lib-desc')?.value || '').trim();
   if (!title) { alert('자료 제목을 입력해 주세요.'); return; }
@@ -780,7 +776,7 @@ async function saveLibraryToSupabase() {
 let _allScripts = [];
 let _allLibrary = [];
 
-async function loadScriptsList() {
+window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   try {
@@ -799,7 +795,7 @@ async function loadScriptsList() {
   } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패. 새로고침 해주세요.</div>'; }
 }
 
-function renderScriptsList(items) {
+window.renderScriptsList = function(items) {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   if (!items || items.length === 0) {
@@ -824,13 +820,13 @@ function renderScriptsList(items) {
   }).join('');
 }
 
-function filterScriptList(keyword) {
+window.filterScriptList = function(keyword) {
   if (!keyword) { renderScriptsList(_allScripts); return; }
   const filtered = _allScripts.filter(s => (s.title||'').includes(keyword) || (s.script_text||'').includes(keyword));
   renderScriptsList(filtered);
 }
 
-async function deleteScript(id, btn) {
+window.deleteScript = async function(id, btn) {
   if (!confirm('이 스크립트를 삭제하시겠습니까?')) return;
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/scripts?id=eq.${id}`, {
@@ -842,7 +838,7 @@ async function deleteScript(id, btn) {
 }
 
 // ── 나의 자료 목록 로드 ──
-async function loadLibraryList() {
+window.loadLibraryList = async function() {
   const list = document.getElementById('library-list');
   if (!list) return;
   try {
@@ -861,7 +857,7 @@ async function loadLibraryList() {
   } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패. 새로고침 해주세요.</div>'; } }
 }
 
-function renderLibraryList(items) {
+window.renderLibraryList = function(items) {
   const list = document.getElementById('library-list');
   if (!list) return;
   if (!items || items.length === 0) {
@@ -887,13 +883,13 @@ function renderLibraryList(items) {
   }).join('');
 }
 
-function filterLibraryList(keyword) {
+window.filterLibraryList = function(keyword) {
   if (!keyword) { renderLibraryList(_allLibrary); return; }
   const filtered = _allLibrary.filter(s => (s.title||'').includes(keyword) || (s.description||'').includes(keyword));
   renderLibraryList(filtered);
 }
 
-async function deleteLibrary(id, btn) {
+window.deleteLibrary = async function(id, btn) {
   if (!confirm('이 자료를 삭제하시겠습니까?')) return;
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/library?id=eq.${id}`, {
@@ -905,7 +901,7 @@ async function deleteLibrary(id, btn) {
 }
 
 // ── 파일 선택 핸들러 ──
-function handleFileSelect(input, previewId, nameId) {
+window.handleFileSelect = function(input, previewId, nameId) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > 10 * 1024 * 1024) {
@@ -918,7 +914,7 @@ function handleFileSelect(input, previewId, nameId) {
   document.getElementById(previewId).style.display = 'block';
 }
 
-function handleImageSelect(input) {
+window.handleImageSelect = function(input) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) {
@@ -937,7 +933,7 @@ function handleImageSelect(input) {
 }
 
 // ── Storage 파일 업로드 ──
-async function uploadFileToStorage(file, folder) {
+window.uploadFileToStorage = async function(file, folder) {
   const ext = file.name.split('.').pop();
   const fileName = `${folder}/${window._userId}_${Date.now()}.${ext}`;
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/library_files/${fileName}`, {
@@ -954,7 +950,7 @@ async function uploadFileToStorage(file, folder) {
   return `${SUPABASE_URL}/storage/v1/object/public/library_files/${fileName}`;
 }
 
-async function loadUserInfo() {
+window.loadUserInfo = async function() {
   const token = window._userToken;
   const userId = window._userId;
   if (!token || !userId) return;
@@ -978,7 +974,7 @@ async function loadUserInfo() {
     }
   } catch(e) { console.error(e); }
 }
-function toggleUserDropdown(event) {
+window.toggleUserDropdown = function(event) {
   if (event) event.stopPropagation();
   document.getElementById('user-dropdown').classList.toggle('open');
 }
@@ -987,13 +983,13 @@ document.addEventListener('click', function(e) {
   if (wrap && !wrap.contains(e.target)) document.getElementById('user-dropdown').classList.remove('open');
 });
 
-function openEditProfile() { document.getElementById('edit-overlay').classList.add('active'); document.body.style.overflow='hidden'; }
-function closeEditProfile() { document.getElementById('edit-overlay').classList.remove('active'); document.body.style.overflow=''; }
+window.openEditProfile = function() { document.getElementById('edit-overlay').classList.add('active'); document.body.style.overflow='hidden'; }
+window.closeEditProfile = function() { document.getElementById('edit-overlay').classList.remove('active'); document.body.style.overflow=''; }
 window.addEventListener('load', function() {
   document.getElementById('edit-overlay').addEventListener('click', function(e) { if(e.target===this) closeEditProfile(); });
 });
 
-async function saveProfile() {
+window.saveProfile = async function() {
   const name=document.getElementById('edit-name').value.trim();
   const phone=document.getElementById('edit-phone').value.trim();
   const company=document.getElementById('edit-company').value.trim();
@@ -1014,7 +1010,7 @@ async function saveProfile() {
   finally{btn.disabled=false;btn.textContent='저장하기';}
 }
 
-async function sendPasswordReset() {
+window.sendPasswordReset = async function() {
   const email=document.getElementById('edit-email').value;
   if(!email){alert('이메일 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');return;}
   try {
@@ -1024,6 +1020,6 @@ async function sendPasswordReset() {
   } catch(e){alert('네트워크 오류가 발생했습니다.');}
 }
 
-function doLogout() { sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user'); window.location.href='index.html'; }
+window.doLogout = function() { sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user'); window.location.href='index.html'; }
 
 </script>
