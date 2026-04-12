@@ -6,7 +6,7 @@
   --white:#ffffff; --line:#e8d8cc;
   --page-scale: 1;
 }
-.page-scale-root { font-size: calc(1em * var(--page-scale)); }
+.page-scale-root { /* font-scale은 app.html content-area에서 제어 */ }
 
 /* ── 페이지 헤더 ── */
 .board-page-header {
@@ -14,6 +14,7 @@
   background:linear-gradient(135deg, #3d2b1f 0%, #6b4226 100%);
   display:flex; align-items:center; justify-content:space-between;
   padding:0 24px; flex-shrink:0;
+  margin-bottom:8px;
 }
 .board-page-title {
   font-family:Pretendard,'Noto Sans KR',sans-serif;
@@ -83,7 +84,7 @@
 
 /* 빈 화면 */
 .empty-state { text-align:center; padding:60px 20px; }
-.empty-icon { font-size:40px; margin-bottom:14px; }
+.empty-icon { font-size:2.105em; margin-bottom:14px; }
 .empty-title { font-size:0.8421em; font-weight:800; color:var(--text-mid); margin-bottom:8px; }
 .empty-desc { font-size:0.7895em; color:var(--text-light); line-height:1.7; }
 
@@ -168,27 +169,27 @@
   <!-- 허브게시판 안내 -->
   <div id="hub-notice" style="background:linear-gradient(90deg,#3d2b1f,#6b4226);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
     <div>
-      <div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:3px;">🌐 허브게시판</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.7);">팀·지점·보험사 게시판에서 승인된 양질의 정보가 모이는 공간입니다. 작성자는 익명으로 표시됩니다.</div>
+      <div style="font-size:0.684em;font-weight:800;color:#fff;margin-bottom:3px;">🌐 허브게시판</div>
+      <div style="font-size:0.632em;color:rgba(255,255,255,.7);">팀·지점·보험사 게시판에서 승인된 양질의 정보가 모이는 공간입니다. 작성자는 익명으로 표시됩니다.</div>
     </div>
   </div>
 
   <!-- 팀게시판 안내 -->
   <div id="team-notice" style="display:none;background:#f5ede4;border:1px solid #e0c9b4;border-radius:12px;padding:12px 16px;margin-bottom:16px;">
-    <div style="font-size:13px;font-weight:800;color:#3d2b1f;margin-bottom:3px;">👥 팀게시판</div>
-    <div style="font-size:12px;color:#6b4226;">우리 팀 공지와 현장 질문·답변을 나누는 공간입니다. 작성자는 실명으로 표시됩니다.</div>
+    <div style="font-size:0.684em;font-weight:800;color:#3d2b1f;margin-bottom:3px;">👥 팀게시판</div>
+    <div style="font-size:0.632em;color:#6b4226;">우리 팀 공지와 현장 질문·답변을 나누는 공간입니다. 작성자는 실명으로 표시됩니다.</div>
   </div>
 
   <!-- 지점게시판 안내 -->
   <div id="branch-notice" style="display:none;background:#f5ede4;border:1px solid #e0c9b4;border-radius:12px;padding:12px 16px;margin-bottom:16px;">
-    <div style="font-size:13px;font-weight:800;color:#3d2b1f;margin-bottom:3px;">🏢 지점게시판</div>
-    <div style="font-size:12px;color:#6b4226;">지점 공지와 현장 정보를 공유하는 공간입니다. 작성자는 실명으로 표시됩니다.</div>
+    <div style="font-size:0.684em;font-weight:800;color:#3d2b1f;margin-bottom:3px;">🏢 지점게시판</div>
+    <div style="font-size:0.632em;color:#6b4226;">지점 공지와 현장 정보를 공유하는 공간입니다. 작성자는 실명으로 표시됩니다.</div>
   </div>
 
   <!-- 보험사게시판 안내 -->
   <div id="insurer-notice" style="display:none;background:#f5ede4;border:1px solid #e0c9b4;border-radius:12px;padding:12px 16px;margin-bottom:16px;">
-    <div style="font-size:13px;font-weight:800;color:#3d2b1f;margin-bottom:3px;">🏦 보험사게시판</div>
-    <div style="font-size:12px;color:#6b4226;">보험사 담당자와 설계사가 직접 소통하는 공간입니다. 보험사 담당자는 실명, 설계사 질문은 익명으로 표시됩니다.</div>
+    <div style="font-size:0.684em;font-weight:800;color:#3d2b1f;margin-bottom:3px;">🏦 보험사게시판</div>
+    <div style="font-size:0.632em;color:#6b4226;">보험사 담당자와 설계사가 직접 소통하는 공간입니다. 보험사 담당자는 실명, 설계사 질문은 익명으로 표시됩니다.</div>
   </div>
 
   <!-- 필터 바 -->
@@ -199,7 +200,7 @@
 
   <!-- 게시글 목록 -->
   <div class="post-list" id="post-list">
-    <div style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;">불러오는 중...</div>
+    <div style="text-align:center;padding:40px;color:var(--text-light);font-size:0.684em;">불러오는 중...</div>
   </div>
 
 </div>
@@ -338,7 +339,7 @@ function selectCategory(cat) {
 // ── 게시글 로드 ──
 async function loadPosts() {
   const list = document.getElementById('post-list');
-  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;">불러오는 중...</div>';
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-size:0.684em;">불러오는 중...</div>';
   try {
     let url;
     if (window._currentBoard === 'hub') {
@@ -528,7 +529,7 @@ async function loadComments(postId) {
     const res = await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/comments?post_id=eq.${postId}&order=created_at.asc`);
     const data = await res.json();
     if (!data || data.length === 0) {
-      list.innerHTML = '<div style="font-size:12px;color:var(--text-light);padding:8px 0;">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</div>';
+      list.innerHTML = '<div style="font-size:0.632em;color:var(--text-light);padding:8px 0;">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</div>';
       return;
     }
     list.innerHTML = data.map(c => {
