@@ -554,8 +554,8 @@ window.saveAndReturnToLibrary = function(){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   const libraryBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="library"]');
   if(libraryBtn) libraryBtn.classList.add('active');
-  window.renderMySpaceView('library');
-  window.closeLibraryAddView();
+  renderMySpaceView('library');
+  closeLibraryAddView();
 }
 window.toggleLibraryGuide = function(){
   const box=document.getElementById('library-guide-box');
@@ -612,8 +612,8 @@ window.saveAndReturnToMySpace = function(){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   const scriptBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="scripts"]');
   if(scriptBtn) scriptBtn.classList.add('active');
-  window.renderMySpaceView('scripts');
-  window.closeWriteView();
+  renderMySpaceView('scripts');
+  closeWriteView();
 }
 
 window.renderMySpaceView = function(view){
@@ -625,8 +625,8 @@ window.renderMySpaceView = function(view){
 window.switchMySpaceTab = function(button,view){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   button.classList.add('active');
-  window.closeWriteView();
-  window.renderMySpaceView(view);
+  closeWriteView();
+  renderMySpaceView(view);
 }
 window.toggleQuick = function(event){
   event.stopPropagation();
@@ -667,6 +667,11 @@ document.querySelectorAll('.nav-item').forEach(function(item){
   });
 });
 
+window.initMySpace = function() {
+  window.renderMySpaceView('scripts');
+  window.setWriteModeVisual(false);
+};
+setTimeout(function(){ if(typeof window.renderMySpaceView==="function"){ window.renderMySpaceView("scripts"); window.setWriteModeVisual(false); } }, 50);
 </script><script>
 // ── myspace 초기화 (app.html 변수 재사용) ──
 if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
@@ -674,12 +679,6 @@ if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1
 if (!window.ROLE_LABEL) window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
 if (!window._userToken) window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id; }
-
-// ── 초기화 ──
-window.initMySpace = function() {
-  window.renderMySpaceView('scripts');
-  window.setWriteModeVisual(false);
-};
 
 // ── 스크립트 저장 ──
 window.saveScriptToSupabase = async function() {
@@ -692,11 +691,11 @@ window.saveScriptToSupabase = async function() {
   const btn = document.getElementById('save-script-btn');
   if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/scripts`, {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/scripts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
+        'apikey': window.SUPABASE_KEY,
         'Authorization': `Bearer ${window._userToken}`,
         'Prefer': 'return=minimal'
       },
@@ -744,11 +743,11 @@ window.saveLibraryToSupabase = async function() {
     if (imgInput && imgInput.files[0]) {
       try { imageUrl = await uploadFileToStorage(imgInput.files[0], 'images'); } catch(e) { alert('이미지 업로드 실패: ' + e.message); return; }
     }
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/library`, {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/library`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
+        'apikey': window.SUPABASE_KEY,
         'Authorization': `Bearer ${window._userToken}`,
         'Prefer': 'return=minimal'
       },
@@ -785,8 +784,8 @@ window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/scripts?owner_id=eq.${window._userId}&order=created_at.desc`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/scripts?owner_id=eq.${window._userId}&order=created_at.desc`, {
+      headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
     });
     if (!res.ok) {
       const err = await res.json();
@@ -834,9 +833,9 @@ window.filterScriptList = function(keyword) {
 window.deleteScript = async function(id, btn) {
   if (!confirm('이 스크립트를 삭제하시겠습니까?')) return;
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/scripts?id=eq.${id}`, {
+    await fetch(`${window.SUPABASE_URL}/rest/v1/scripts?id=eq.${id}`, {
       method: 'DELETE',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
+      headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
     });
     await window.loadScriptsList();
   } catch(e) { alert('삭제 중 오류가 발생했습니다.'); }
@@ -847,8 +846,8 @@ window.loadLibraryList = async function() {
   const list = document.getElementById('library-list');
   if (!list) return;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/library?owner_id=eq.${window._userId}&order=created_at.desc`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/library?owner_id=eq.${window._userId}&order=created_at.desc`, {
+      headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
     });
     if (!res.ok) {
       const err = await res.json();
@@ -897,9 +896,9 @@ window.filterLibraryList = function(keyword) {
 window.deleteLibrary = async function(id, btn) {
   if (!confirm('이 자료를 삭제하시겠습니까?')) return;
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/library?id=eq.${id}`, {
+    await fetch(`${window.SUPABASE_URL}/rest/v1/library?id=eq.${id}`, {
       method: 'DELETE',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
+      headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
     });
     await window.loadLibraryList();
   } catch(e) { alert('삭제 중 오류가 발생했습니다.'); }
@@ -941,10 +940,10 @@ window.handleImageSelect = function(input) {
 window.uploadFileToStorage = async function(file, folder) {
   const ext = file.name.split('.').pop();
   const fileName = `${folder}/${window._userId}_${Date.now()}.${ext}`;
-  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/library_files/${fileName}`, {
+  const res = await fetch(`${window.SUPABASE_URL}/storage/v1/object/library_files/${fileName}`, {
     method: 'POST',
     headers: {
-      'apikey': SUPABASE_KEY,
+      'apikey': window.SUPABASE_KEY,
       'Authorization': `Bearer ${window._userToken}`,
       'Content-Type': file.type || 'application/octet-stream',
       'x-upsert': 'true'
@@ -960,8 +959,8 @@ window.loadUserInfo = async function() {
   const userId = window._userId;
   if (!token || !userId) return;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?auth_user_id=eq.${userId}&select=name,role,phone,email,company,branch,team`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/users?auth_user_id=eq.${userId}&select=name,role,phone,email,company,branch,team`, {
+      headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
     if (data && data[0]) {
@@ -1004,7 +1003,7 @@ window.saveProfile = async function() {
   const btn=document.getElementById('edit-save-btn');
   btn.disabled=true; btn.textContent='저장 중...';
   try {
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/users?auth_user_id=eq.${window._userId}`,{
+    const res=await fetch(`${window.SUPABASE_URL}/rest/v1/users?auth_user_id=eq.${window._userId}`,{
       method:'PATCH',
       headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${window._userToken}`,'Prefer':'return=minimal'},
       body:JSON.stringify({name,phone,company,branch,team})
@@ -1019,7 +1018,7 @@ window.sendPasswordReset = async function() {
   const email=document.getElementById('edit-email').value;
   if(!email){alert('이메일 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');return;}
   try {
-    const res=await fetch(`${SUPABASE_URL}/auth/v1/recover`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},body:JSON.stringify({email})});
+    const res=await fetch(`${window.SUPABASE_URL}/auth/v1/recover`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},body:JSON.stringify({email})});
     if(res.ok) alert(`${email} 으로 비밀번호 재설정 링크를 발송했습니다.\n메일함을 확인해 주세요.`);
     else alert('발송 중 오류가 발생했습니다.');
   } catch(e){alert('네트워크 오류가 발생했습니다.');}
