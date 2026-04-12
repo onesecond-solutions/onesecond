@@ -1,12 +1,38 @@
 <style>
-:root { --page-scale: 1; }
-.page-scale-root { font-size: calc(1em * var(--page-scale)); }
+.news-page-header {
+  height: 120px;
+  background: linear-gradient(135deg, #3d2b1f 0%, #6b4226 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+.news-page-title {
+  font-family: Pretendard, 'Noto Sans KR', sans-serif;
+  font-size: 1.5em;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.news-page-desc {
+  font-family: Pretendard, 'Noto Sans KR', sans-serif;
+  font-size: 0.842em;
+  font-weight: 400;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: -0.2px;
+}
+.news-page-icon { font-size: 2.8em; opacity: 0.15; }
+.card { padding: 16px 20px; }
 </style>
-<div class="page-scale-root">
+<div class="news-page-header">
+  <div>
+    <div class="news-page-title">📰 보험뉴스</div>
+    <div class="news-page-desc">보험 업계 최신 뉴스를 확인하세요</div>
+  </div>
+  <div class="news-page-icon">📰</div>
+</div>
 <div class="card">
-  <h2>📰 보험뉴스</h2>
   <p>보험 뉴스 목록이 들어갈 영역입니다.</p>
 </div>
-
-</div>
-<script src="../js/font-scale.js"></script>

@@ -1,8 +1,40 @@
 <style>
-:root { --page-scale: 1; }
-.page-scale-root { font-size: calc(1em * var(--page-scale)); }
 </style>
-  <div class="home-wrap page-scale-root">
+  <style>
+.home-page-header {
+  height: 120px;
+  background: linear-gradient(135deg, #3d2b1f 0%, #6b4226 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+.home-page-title {
+  font-family: Pretendard, 'Noto Sans KR', sans-serif;
+  font-size: 1.5em;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.home-page-desc {
+  font-family: Pretendard, 'Noto Sans KR', sans-serif;
+  font-size: 0.842em;
+  font-weight: 400;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: -0.2px;
+}
+.home-page-icon { font-size: 2.8em; opacity: 0.15; }
+</style>
+<div class="home-page-header">
+  <div>
+    <div class="home-page-title">🏠 홈</div>
+    <div class="home-page-desc">바로 실행 스크립트 · 나의 스크립트 · 게시판</div>
+  </div>
+  <div class="home-page-icon">🏠</div>
+</div>
+<div class="home-wrap">
 
     <!-- 상단: 바로 실행 카드 4개 -->
     <div class="home-quick-title">🔥 바로 실행 — 자주 쓰는 스크립트</div>
@@ -147,4 +179,3 @@
 
   </div>
 </div>
-<script src="../js/font-scale.js"></script>
