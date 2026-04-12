@@ -328,6 +328,8 @@ html,body{
   border:none;color:#fff;cursor:pointer;font-size:14px;
   display:flex;align-items:center;justify-content:center;
   font-family:inherit;transition:background 0.15s;
+  position:relative;z-index:10;
+  flex-shrink:0;
 }
 .qm-close:hover{background:rgba(255,255,255,0.22);}
 
@@ -409,6 +411,10 @@ html,body{
   padding:10px 20px 14px;
   display:flex;justify-content:flex-end;
   flex-shrink:0;
+  position:relative;
+  z-index:10;
+  border-top:1px solid #f0e4d8;
+  background:#fff;
 }
 .qm-footer-btn{
   padding:10px 22px;border-radius:10px;
