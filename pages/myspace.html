@@ -554,8 +554,8 @@ window.saveAndReturnToLibrary = function(){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   const libraryBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="library"]');
   if(libraryBtn) libraryBtn.classList.add('active');
-  renderMySpaceView('library');
-  closeLibraryAddView();
+  window.renderMySpaceView('library');
+  window.closeLibraryAddView();
 }
 window.toggleLibraryGuide = function(){
   const box=document.getElementById('library-guide-box');
@@ -612,8 +612,8 @@ window.saveAndReturnToMySpace = function(){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   const scriptBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="scripts"]');
   if(scriptBtn) scriptBtn.classList.add('active');
-  renderMySpaceView('scripts');
-  closeWriteView();
+  window.renderMySpaceView('scripts');
+  window.closeWriteView();
 }
 
 window.renderMySpaceView = function(view){
@@ -625,8 +625,8 @@ window.renderMySpaceView = function(view){
 window.switchMySpaceTab = function(button,view){
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
   button.classList.add('active');
-  closeWriteView();
-  renderMySpaceView(view);
+  window.closeWriteView();
+  window.renderMySpaceView(view);
 }
 window.toggleQuick = function(event){
   event.stopPropagation();
@@ -667,11 +667,6 @@ document.querySelectorAll('.nav-item').forEach(function(item){
   });
 });
 
-window.initMySpace = function() {
-  window.renderMySpaceView('scripts');
-  window.setWriteModeVisual(false);
-};
-window.initMySpace();
 </script><script>
 // ── myspace 초기화 (app.html 변수 재사용) ──
 if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
@@ -679,6 +674,12 @@ if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1
 if (!window.ROLE_LABEL) window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
 if (!window._userToken) window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id; }
+
+// ── 초기화 ──
+window.initMySpace = function() {
+  window.renderMySpaceView('scripts');
+  window.setWriteModeVisual(false);
+};
 
 // ── 스크립트 저장 ──
 window.saveScriptToSupabase = async function() {
