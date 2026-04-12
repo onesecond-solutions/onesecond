@@ -1294,6 +1294,25 @@ async function switchMenu(menuKey) {
         }
       }, 20);
     }
+    if (menuKey === 'quick') {
+      // _quickReady 플래그 폴링 — quick.html 초기화(content-slot 렌더) 완료 대기
+      window._quickReady = false;
+      let qWaited = 0;
+      const waitQuick = setInterval(function() {
+        qWaited += 20;
+        if (window._quickReady) {
+          clearInterval(waitQuick);
+        } else if (qWaited >= 2000) {
+          // 타임아웃 fallback: 직접 렌더 시도
+          clearInterval(waitQuick);
+          const slot = document.getElementById('content-slot');
+          if (slot && window.overlayContent) {
+            const key = '가입설계 / 선심사 동의 녹취 스크립트';
+            slot.innerHTML = window.overlayContent[key] || '';
+          }
+        }
+      }, 20);
+    }
   } catch(e) {
     area.innerHTML = `<div class="card"><h2>준비 중</h2><p>${menuKey} 페이지를 불러오지 못했습니다.</p></div>`;
   }
