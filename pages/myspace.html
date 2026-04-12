@@ -671,7 +671,6 @@ window.initMySpace = function() {
   window.renderMySpaceView('scripts');
   window.setWriteModeVisual(false);
 };
-setTimeout(function(){ if(typeof window.renderMySpaceView==="function"){ window.renderMySpaceView("scripts"); window.setWriteModeVisual(false); } }, 50);
 </script><script>
 // ── myspace 초기화 (app.html 변수 재사용) ──
 if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
@@ -1008,7 +1007,7 @@ window.saveProfile = async function() {
       headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${window._userToken}`,'Prefer':'return=minimal'},
       body:JSON.stringify({name,phone,company,branch,team})
     });
-    if(res.ok){closeEditProfile();await loadUserInfo();}
+    if(res.ok){window.closeEditProfile();await window.loadUserInfo();}
     else alert('저장 중 오류가 발생했습니다.');
   } catch(e){alert('네트워크 오류가 발생했습니다.');}
   finally{btn.disabled=false;btn.textContent='저장하기';}
@@ -1018,7 +1017,7 @@ window.sendPasswordReset = async function() {
   const email=document.getElementById('edit-email').value;
   if(!email){alert('이메일 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');return;}
   try {
-    const res=await fetch(`${window.SUPABASE_URL}/auth/v1/recover`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},body:JSON.stringify({email})});
+    const res=await fetch(`${window.SUPABASE_URL}/auth/v1/recover`,{method:'POST',headers:{'Content-Type':'application/json','apikey':window.SUPABASE_KEY},body:JSON.stringify({email})});
     if(res.ok) alert(`${email} 으로 비밀번호 재설정 링크를 발송했습니다.\n메일함을 확인해 주세요.`);
     else alert('발송 중 오류가 발생했습니다.');
   } catch(e){alert('네트워크 오류가 발생했습니다.');}
