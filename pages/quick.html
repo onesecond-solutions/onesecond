@@ -463,8 +463,21 @@ window.toggleMirrorScript = function(company) {
 }
 
 (function() {
-  const slot = document.getElementById('content-slot');
-  if (slot) slot.innerHTML = window.overlayContent['가입설계 / 선심사 동의 녹취 스크립트'] || '';
+  // content-slot DOM + overlayContent 모두 준비된 후 실행
+  function initQuickContent() {
+    var slot = document.getElementById('content-slot');
+    if (!slot || !window.overlayContent) {
+      setTimeout(initQuickContent, 50);
+      return;
+    }
+    var key = '가입설계 / 선심사 동의 녹취 스크립트';
+    slot.innerHTML = window.overlayContent[key] ||
+      '<div style="padding:40px;text-align:center;color:#aaa;">준비 중입니다.</div>';
+    var titleEl = document.getElementById('content-title');
+    if (titleEl) titleEl.textContent = key;
+    window._quickReady = true;
+  }
+  setTimeout(initQuickContent, 100);
 
   const supaUrl = 'https://qursjteiovcylqiepmlo.supabase.co';
   const supaKey = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
