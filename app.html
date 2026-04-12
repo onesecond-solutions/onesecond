@@ -1270,17 +1270,34 @@ async function switchMenu(menuKey) {
   const area = document.getElementById('content-area');
   area.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:14px;">로딩 중...</div>';
   try {
-    const res = await fetch(`pages/${menuKey}.html`);
+    const res = await fetch(`pages/${menuKey}.html?v=${Date.now()}`, {cache: 'no-store'});
     if (!res.ok) throw new Error('not found');
     const html = await res.text();
-    area.innerHTML = html;
-    // 로드된 콘텐츠 내 script 실행
-    area.querySelectorAll('script').forEach(oldScript => {
-      const newScript = document.createElement('script');
-      newScript.textContent = oldScript.textContent;
-      document.body.appendChild(newScript);
-      document.body.removeChild(newScript);
-    });
+    // script 태그 분리 후 non-script HTML만 먼저 삽입
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const scripts = Array.from(doc.querySelectorAll('script'));
+    scripts.forEach(s => s.remove());
+    area.innerHTML = doc.body.innerHTML;
+
+    // script를 Blob URL 방식으로 순차 실행
+    for (const oldScript of scripts) {
+      await new Promise((resolve) => {
+        const newScript = document.createElement('script');
+        if (oldScript.src) {
+          newScript.src = oldScript.src;
+          newScript.onload = resolve;
+          newScript.onerror = resolve;
+        } else {
+          const blob = new Blob([oldScript.textContent], {type: 'application/javascript'});
+          newScript.src = URL.createObjectURL(blob);
+          newScript.onload = () => { URL.revokeObjectURL(newScript.src); resolve(); };
+          newScript.onerror = resolve;
+        }
+        document.body.appendChild(newScript);
+      });
+    }
+
     // 페이지 초기화 함수 호출
     if (menuKey === 'myspace' && typeof window.renderMySpaceView === 'function') {
       window.renderMySpaceView('scripts');
