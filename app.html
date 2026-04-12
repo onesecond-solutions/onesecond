@@ -1264,13 +1264,23 @@ async function switchMenu(menuKey) {
     const res = await fetch(`pages/${menuKey}.html`);
     if (!res.ok) throw new Error('not found');
     const html = await res.text();
-    area.innerHTML = html;
-    // 로드된 콘텐츠 내 script 실행
-    area.querySelectorAll('script').forEach(oldScript => {
+    // DOMParser로 파싱 후 script 분리 실행
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    // script 제외한 HTML만 먼저 삽입
+    const scripts = Array.from(doc.querySelectorAll('script'));
+    scripts.forEach(s => s.remove());
+    area.innerHTML = doc.body.innerHTML;
+    // script를 DOM에 append하여 실행 (브라우저가 직접 실행)
+    scripts.forEach(oldScript => {
       const newScript = document.createElement('script');
-      newScript.textContent = oldScript.textContent;
+      if (oldScript.src) {
+        newScript.src = oldScript.src;
+      } else {
+        newScript.textContent = oldScript.textContent;
+      }
+      newScript.type = oldScript.type || 'text/javascript';
       document.body.appendChild(newScript);
-      document.body.removeChild(newScript);
     });
     // 페이지 초기화 함수 호출
     if (menuKey === 'myspace') {
