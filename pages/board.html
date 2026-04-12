@@ -245,8 +245,8 @@
 </div>
 
 <script>
-const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
+if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
 
 // ── 토큰/유저 정보는 app.html의 window._userId, window._userRole, window._userOrg, window._userToken 사용 ──
 
@@ -256,8 +256,8 @@ async function refreshToken() {
   const rt = localStorage.getItem('os_refresh_token');
   if (!rt) return null;
   try {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},
+    const res = await fetch(`${window.SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:'POST', headers:{'Content-Type':'application/json','apikey':window.SUPABASE_KEY},
       body: JSON.stringify({refresh_token: rt})
     });
     if (!res.ok) return null;
@@ -273,7 +273,7 @@ async function refreshToken() {
 }
 async function fetchWithAuth(url, options={}) {
   options.headers = options.headers || {};
-  options.headers['apikey'] = SUPABASE_KEY;
+  options.headers['apikey'] = window.SUPABASE_KEY;
   options.headers['Authorization'] = `Bearer ${window._userToken}`;
   let res = await fetch(url, options);
   if (res.status === 401) {
@@ -292,23 +292,23 @@ function handleTokenExpired() {
 }
 
 // ── 게시판 탭 상태 ──
-let _currentBoard = 'hub';
-let _currentCategory = 'all';
-let _allPosts = [];
-let _currentPostId = null;
+if (!window._currentBoard) window._currentBoard = 'hub';
+if (!window._currentCategory) window._currentCategory = 'all';
+if (!window._allPosts) window._allPosts = [];
+if (!window._currentPostId) window._currentPostId = null;
 
-const BOARD_CATEGORIES = {
+if (!window.BOARD_CATEGORIES) window.BOARD_CATEGORIES = {
   hub:     ['전체', '공지사항', '상품Q&A', '인수Q&A'],
   team:    ['전체', '공지사항', '상품Q&A', '인수Q&A'],
   branch:  ['전체', '공지사항', '상품Q&A', '인수Q&A'],
   insurer: ['전체', '공지사항', '상품Q&A', '인수Q&A', '보험사 공지']
 };
-const BOARD_LABEL = { hub:'허브게시판', team:'팀게시판', branch:'지점게시판', insurer:'보험사게시판' };
-const CAT_CLASS = { '공지사항':'notice', '상품Q&A':'product', '인수Q&A':'underwriting', '보험사 공지':'notice' };
+if (!window.BOARD_LABEL) window.BOARD_LABEL = { hub:'허브게시판', team:'팀게시판', branch:'지점게시판', insurer:'보험사게시판' };
+if (!window.CAT_CLASS) window.CAT_CLASS = { '공지사항':'notice', '상품Q&A':'product', '인수Q&A':'underwriting', '보험사 공지':'notice' };
 
 function switchBoard(board) {
-  _currentBoard = board;
-  _currentCategory = 'all';
+  window._currentBoard = board;
+  window._currentCategory = 'all';
   document.querySelectorAll('.board-tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`[data-board="${board}"]`).classList.add('active');
   ['hub','team','branch','insurer'].forEach(b => {
@@ -321,17 +321,17 @@ function switchBoard(board) {
 }
 
 function renderCategoryPills(board) {
-  const cats = BOARD_CATEGORIES[board] || ['전체'];
+  const cats = window.BOARD_CATEGORIES[board] || ['전체'];
   const container = document.getElementById('category-pills');
   container.innerHTML = cats.map(c =>
-    `<div class="cat-pill ${c==='전체'&&_currentCategory==='all'||c===_currentCategory?'active':''}"
+    `<div class="cat-pill ${c==='전체'&&window._currentCategory==='all'||c===window._currentCategory?'active':''}"
       onclick="selectCategory('${c==='전체'?'all':c}')">${c}</div>`
   ).join('');
 }
 
 function selectCategory(cat) {
-  _currentCategory = cat;
-  renderCategoryPills(_currentBoard);
+  window._currentCategory = cat;
+  renderCategoryPills(window._currentBoard);
   renderPostList();
 }
 
@@ -341,28 +341,28 @@ async function loadPosts() {
   list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;">불러오는 중...</div>';
   try {
     let url;
-    if (_currentBoard === 'hub') {
-      url = `${SUPABASE_URL}/rest/v1/posts?is_hub_visible=eq.true&order=created_at.desc`;
-    } else if (_currentBoard === 'team') {
+    if (window._currentBoard === 'hub') {
+      url = `${window.SUPABASE_URL}/rest/v1/posts?is_hub_visible=eq.true&order=created_at.desc`;
+    } else if (window._currentBoard === 'team') {
       const org = window._userOrg;
       if (!org || !org.team) {
         list.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">소속 팀 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 팀명을 등록해 주세요.</div></div>';
         return;
       }
-      url = `${SUPABASE_URL}/rest/v1/posts?board_type=eq.team&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch+'_'+org.team)}&order=created_at.desc`;
-    } else if (_currentBoard === 'branch') {
+      url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.team&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch+'_'+org.team)}&order=created_at.desc`;
+    } else if (window._currentBoard === 'branch') {
       const org = window._userOrg;
       if (!org || !org.branch) {
         list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">소속 지점 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 지점명을 등록해 주세요.</div></div>';
         return;
       }
-      url = `${SUPABASE_URL}/rest/v1/posts?board_type=eq.branch&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch)}&order=created_at.desc`;
+      url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.branch&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch)}&order=created_at.desc`;
     } else {
-      url = `${SUPABASE_URL}/rest/v1/posts?board_type=eq.insurer&order=created_at.desc`;
+      url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.insurer&order=created_at.desc`;
     }
     const res = await fetchWithAuth(url);
     const data = await res.json();
-    _allPosts = data || [];
+    window._allPosts = data || [];
     renderPostList();
   } catch(e) {
     list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">불러오기 실패</div><div class="empty-desc">새로고침 해주세요.</div></div>';
@@ -371,9 +371,9 @@ async function loadPosts() {
 
 function renderPostList() {
   const list = document.getElementById('post-list');
-  let posts = _allPosts;
-  if (_currentCategory !== 'all') {
-    posts = posts.filter(p => p.category === _currentCategory);
+  let posts = window._allPosts;
+  if (window._currentCategory !== 'all') {
+    posts = posts.filter(p => p.category === window._currentCategory);
   }
   if (!posts || posts.length === 0) {
     const emptyMsg = {
@@ -382,17 +382,17 @@ function renderPostList() {
       branch:  { icon:'🏢', title:'아직 지점게시판에 게시글이 없습니다', desc:'첫 글을 작성해보세요!' },
       insurer: { icon:'🏦', title:'아직 보험사게시판에 게시글이 없습니다', desc:'보험사 담당자 또는 설계사가 첫 글을 남겨보세요.' }
     };
-    const em = emptyMsg[_currentBoard];
+    const em = emptyMsg[window._currentBoard];
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">${em.icon}</div><div class="empty-title">${em.title}</div><div class="empty-desc">${em.desc}</div></div>`;
     return;
   }
   const isAdmin = ['manager','branch_manager'].includes(window._userRole);
   list.innerHTML = posts.map(p => {
     const date = p.created_at ? p.created_at.slice(0,10).replace(/-/g,'.') : '';
-    const catClass = CAT_CLASS[p.category] || '';
+    const catClass = window.CAT_CLASS[p.category] || '';
     const authorDisplay = p.is_anonymous ? '익명' : (p.display_name || p.author_name || '알 수 없음');
     const hubBadge = p.is_hub_visible ? '<span class="post-hub-badge">허브 공개</span>' : '';
-    const approveBtn = isAdmin && _currentBoard !== 'hub'
+    const approveBtn = isAdmin && window._currentBoard !== 'hub'
       ? `<button class="hub-approve-btn ${p.is_hub_visible?'approved':''}"
            onclick="event.stopPropagation();toggleHubApprove(${p.id}, ${p.is_hub_visible})">
            ${p.is_hub_visible ? '✅ 허브 공개중' : '🌐 허브 승인'}
@@ -423,7 +423,7 @@ function renderPostList() {
 // ── 허브 승인 토글 ──
 async function toggleHubApprove(postId, current) {
   try {
-    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
+    await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
       method:'PATCH',
       headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
       body: JSON.stringify({ is_hub_visible: !current, hub_approved_at: !current ? new Date().toISOString() : null })
@@ -434,10 +434,10 @@ async function toggleHubApprove(postId, current) {
 
 // ── 게시글 상세 ──
 async function openDetailModal(postId) {
-  const post = _allPosts.find(p => p.id === postId);
+  const post = window._allPosts.find(p => p.id === postId);
   if (!post) return;
-  _currentPostId = postId;
-  fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
+  window._currentPostId = postId;
+  fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
     method:'PATCH',
     headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
     body: JSON.stringify({view_count: (post.view_count||0) + 1})
@@ -445,8 +445,8 @@ async function openDetailModal(postId) {
   const authorDisplay = post.is_anonymous ? '익명' : (post.display_name || post.author_name || '알 수 없음');
   const date = post.created_at ? post.created_at.slice(0,10).replace(/-/g,'.') : '';
   const isAdmin = ['manager','branch_manager'].includes(window._userRole);
-  const catClass = CAT_CLASS[post.category] || '';
-  const approveBtn = isAdmin && _currentBoard !== 'hub'
+  const catClass = window.CAT_CLASS[post.category] || '';
+  const approveBtn = isAdmin && window._currentBoard !== 'hub'
     ? `<button class="hub-approve-large ${post.is_hub_visible?'approved':''}"
          onclick="toggleHubApprove(${post.id}, ${post.is_hub_visible})">
          ${post.is_hub_visible ? '✅ 허브 공개중' : '🌐 허브 승인하기'}
@@ -482,14 +482,14 @@ async function openDetailModal(postId) {
 
 function closeDetailModal() {
   document.getElementById('detail-overlay').classList.remove('active');
-  _currentPostId = null;
+  window._currentPostId = null;
   loadPosts();
 }
 
 // ── 좋아요 ──
 async function checkLikeStatus(postId) {
   try {
-    const res = await fetchWithAuth(`${SUPABASE_URL}/rest/v1/post_likes?post_id=eq.${postId}&user_id=eq.${window._userId}`);
+    const res = await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/post_likes?post_id=eq.${postId}&user_id=eq.${window._userId}`);
     const data = await res.json();
     if (data && data.length > 0) document.getElementById('like-btn')?.classList.add('liked');
   } catch(e) {}
@@ -498,21 +498,21 @@ async function checkLikeStatus(postId) {
 async function toggleLike(postId) {
   const btn = document.getElementById('like-btn');
   const countEl = document.getElementById('like-count');
-  const post = _allPosts.find(p => p.id === postId);
+  const post = window._allPosts.find(p => p.id === postId);
   if (!post) return;
   const isLiked = btn?.classList.contains('liked');
   try {
     if (isLiked) {
-      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/post_likes?post_id=eq.${postId}&user_id=eq.${window._userId}`, { method:'DELETE', headers:{} });
+      await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/post_likes?post_id=eq.${postId}&user_id=eq.${window._userId}`, { method:'DELETE', headers:{} });
       const newCount = Math.max(0, (post.like_count||0) - 1);
-      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, { method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({like_count: newCount}) });
+      await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, { method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({like_count: newCount}) });
       post.like_count = newCount;
       btn?.classList.remove('liked');
       if (countEl) countEl.textContent = newCount;
     } else {
-      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/post_likes`, { method:'POST', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({post_id: postId, user_id: window._userId}) });
+      await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/post_likes`, { method:'POST', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({post_id: postId, user_id: window._userId}) });
       const newCount = (post.like_count||0) + 1;
-      await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, { method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({like_count: newCount}) });
+      await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, { method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body: JSON.stringify({like_count: newCount}) });
       post.like_count = newCount;
       btn?.classList.add('liked');
       if (countEl) countEl.textContent = newCount;
@@ -525,7 +525,7 @@ async function loadComments(postId) {
   const list = document.getElementById('comments-list');
   if (!list) return;
   try {
-    const res = await fetchWithAuth(`${SUPABASE_URL}/rest/v1/comments?post_id=eq.${postId}&order=created_at.asc`);
+    const res = await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/comments?post_id=eq.${postId}&order=created_at.asc`);
     const data = await res.json();
     if (!data || data.length === 0) {
       list.innerHTML = '<div style="font-size:12px;color:var(--text-light);padding:8px 0;">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</div>';
@@ -546,15 +546,15 @@ async function submitComment(postId) {
   const input = document.getElementById('comment-input');
   const content = input?.value.trim();
   if (!content) { alert('댓글을 입력해 주세요.'); return; }
-  const post = _allPosts.find(p => p.id === postId);
+  const post = window._allPosts.find(p => p.id === postId);
   try {
-    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/comments`, {
+    await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/comments`, {
       method:'POST',
       headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
       body: JSON.stringify({post_id: postId, author_id: window._userId, author_name: window._userName||'알 수 없음', content})
     });
     const newCount = (post?.comment_count||0) + 1;
-    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
+    await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/posts?id=eq.${postId}`, {
       method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
       body: JSON.stringify({comment_count: newCount})
     });
@@ -568,21 +568,21 @@ async function submitComment(postId) {
 
 // ── 글쓰기 ──
 function openWriteModal() {
-  const categories = (BOARD_CATEGORIES[_currentBoard] || ['상품Q&A']).filter(c => c !== '전체');
+  const categories = (window.BOARD_CATEGORIES[window._currentBoard] || ['상품Q&A']).filter(c => c !== '전체');
   const select = document.getElementById('write-category');
   select.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
   document.getElementById('write-title').value = '';
   document.getElementById('write-content').value = '';
   const anonRow = document.getElementById('anon-row');
   const anonCheck = document.getElementById('write-anon');
-  if (_currentBoard === 'insurer' && window._userRole === 'member') {
+  if (window._currentBoard === 'insurer' && window._userRole === 'member') {
     anonRow.style.display = 'flex';
     anonCheck.checked = true;
   } else {
     anonRow.style.display = 'none';
     anonCheck.checked = false;
   }
-  document.getElementById('write-modal-title').textContent = `✏️ ${BOARD_LABEL[_currentBoard]} 글쓰기`;
+  document.getElementById('write-modal-title').textContent = `✏️ ${window.BOARD_LABEL[window._currentBoard]} 글쓰기`;
   document.getElementById('write-overlay').classList.add('active');
 }
 
@@ -599,21 +599,21 @@ async function submitPost() {
   if (!content) { alert('내용을 입력해 주세요.'); return; }
   const org = window._userOrg || {};
   let orgId = '';
-  if (_currentBoard === 'team') orgId = `${org.company||''}_${org.branch||''}_${org.team||''}`;
-  if (_currentBoard === 'branch') orgId = `${org.company||''}_${org.branch||''}`;
+  if (window._currentBoard === 'team') orgId = `${org.company||''}_${org.branch||''}_${org.team||''}`;
+  if (window._currentBoard === 'branch') orgId = `${org.company||''}_${org.branch||''}`;
   let displayName = window._userName || '알 수 없음';
   if (isAnon) displayName = '익명';
-  else if (_currentBoard === 'insurer' && ['manager','branch_manager'].includes(window._userRole)) {
+  else if (window._currentBoard === 'insurer' && ['manager','branch_manager'].includes(window._userRole)) {
     displayName = org.company || window._userName || '보험회사';
   }
   const btn = document.querySelector('.write-submit');
   btn.disabled = true; btn.textContent = '등록 중...';
   try {
-    await fetchWithAuth(`${SUPABASE_URL}/rest/v1/posts`, {
+    await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/posts`, {
       method:'POST',
       headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
       body: JSON.stringify({
-        board_type: _currentBoard, category, title, content,
+        board_type: window._currentBoard, category, title, content,
         author_id: window._userId, author_name: window._userName || '알 수 없음',
         organization_id: orgId, is_hub_visible: false, is_anonymous: isAnon,
         display_name: displayName, view_count: 0, like_count: 0, comment_count: 0
