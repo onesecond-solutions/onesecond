@@ -667,7 +667,11 @@ document.querySelectorAll('.nav-item').forEach(function(item){
   });
 });
 
-renderMySpaceView('scripts'); setWriteModeVisual(false);
+window.initMySpace = function() {
+  window.renderMySpaceView('scripts');
+  window.setWriteModeVisual(false);
+};
+window.initMySpace();
 </script><script>
 // ── myspace 초기화 (app.html 변수 재사용) ──
 if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
