@@ -602,10 +602,9 @@ window.toggleGuide = function(){
 }
 
 
-window.nextBtnEl = document.querySelector('.next-btn');
 window.setWriteModeVisual = function(isWrite){
-  if(window.nextBtnEl) window.nextBtnEl.style.display = isWrite ? 'none' : 'flex';
-  
+  const el = document.querySelector('.next-btn');
+  if(el) el.style.display = isWrite ? 'none' : 'flex';
 }
 
 window.saveAndReturnToMySpace = function(){
@@ -1024,5 +1023,8 @@ window.sendPasswordReset = async function() {
 }
 
 window.doLogout = function() { sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user'); window.location.href='index.html'; }
+
+// ── 모든 함수 정의 완료 플래그 ──
+window._myspaceReady = true;
 
 </script>
