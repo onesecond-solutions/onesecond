@@ -346,18 +346,18 @@ async function loadPosts() {
       url = `${window.SUPABASE_URL}/rest/v1/posts?is_hub_visible=eq.true&order=created_at.desc`;
     } else if (window._currentBoard === 'team') {
       const org = window._userOrg;
-      if (!org || !org.team) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">소속 팀 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 팀명을 등록해 주세요.</div></div>';
+      if (!org || (!org.team && !org.branch)) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">소속 팀 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 회사명·지점명·팀명을 등록해 주세요.</div></div>';
         return;
       }
-      url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.team&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch+'_'+org.team)}&order=created_at.desc`;
+      url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.team&organization_id=eq.${encodeURIComponent((org.company||'')+'_'+(org.branch||'')+'_'+(org.team||''))}&order=created_at.desc`;
     } else if (window._currentBoard === 'branch') {
       const org = window._userOrg;
       if (!org || !org.branch) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">소속 지점 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 지점명을 등록해 주세요.</div></div>';
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">소속 지점 정보가 없습니다</div><div class="empty-desc">내 정보 수정에서 회사명·지점명을 등록해 주세요.</div></div>';
         return;
       }
-      url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.branch&organization_id=eq.${encodeURIComponent(org.company+'_'+org.branch)}&order=created_at.desc`;
+      url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.branch&organization_id=eq.${encodeURIComponent((org.company||'')+'_'+(org.branch||''))}&order=created_at.desc`;
     } else {
       url = `${window.SUPABASE_URL}/rest/v1/posts?board_type=eq.insurer&order=created_at.desc`;
     }
@@ -628,9 +628,23 @@ async function submitPost() {
 
 // ── 초기 로드 ──
 (function init() {
-  // app.html에서 _userToken이 세팅된 후 실행되도록 약간 지연
-  setTimeout(() => {
+  setTimeout(async () => {
+    // _userOrg 세팅 — 팀/지점 게시판 필터링에 필요
+    if (!window._userOrg && window._userId) {
+      try {
+        const res = await fetchWithAuth(
+          `${window.SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}&select=name,role,company,branch,team`
+        );
+        const data = await res.json();
+        if (data && data[0]) {
+          const u = data[0];
+          window._userOrg = { company: u.company||'', branch: u.branch||'', team: u.team||'' };
+          window._userRole = window._userRole || u.role;
+          window._userName = window._userName || u.name;
+        }
+      } catch(e) { console.error('userOrg load error:', e); }
+    }
     switchBoard('hub');
-  }, 100);
+  }, 150);
 })();
 </script>
