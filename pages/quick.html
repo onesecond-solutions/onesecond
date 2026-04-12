@@ -422,7 +422,7 @@ window.overlayContent = {
 `
 };
 
-function selectQuickMain(btn, title) {
+window.selectQuickMain = function(btn, title) {
   document.querySelectorAll('.main-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const titleEl = document.getElementById('content-title');
@@ -435,7 +435,7 @@ function selectQuickMain(btn, title) {
   });
 }
 
-function toggleMirrorScript(company) {
+window.toggleMirrorScript = function(company) {
   const meritz = document.getElementById('mirror-meritz');
   const heungkuk = document.getElementById('mirror-heungkuk');
   if (!meritz || !heungkuk) return;
