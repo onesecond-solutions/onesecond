@@ -782,7 +782,18 @@ html,body{
       </div>
 
       <!-- MY SPACE -->
-      <div class="c-section" id="c-myspace"></div>
+      <div class="c-section" id="c-myspace">
+        <div class="c-box">
+          <div class="c-box-label">나의 스크립트</div>
+          <div class="c-box-title">직접 저장한 멘트</div>
+          <div class="c-box-desc">막혔던 순간의 멘트를 저장하고 다음 통화에서 바로 꺼내 쓰세요.</div>
+        </div>
+        <div class="c-box">
+          <div class="c-box-label">나의 자료</div>
+          <div class="c-box-title">통화 중 꺼낼 자료</div>
+          <div class="c-box-desc">파일, 링크, 메모, 이미지를 한곳에 모아 바로 활용하세요.</div>
+        </div>
+      </div>
 
       <!-- 보험뉴스 -->
       <div class="c-section" id="c-news">
@@ -1260,12 +1271,11 @@ async function switchMenu(menuKey) {
       document.body.appendChild(newScript);
       document.body.removeChild(newScript);
     });
-    // 페이지별 초기화 함수 호출
-    setTimeout(() => {
-      if (menuKey === 'myspace' && typeof window.initMySpace === 'function') {
-        window.initMySpace();
-      }
-    }, 0);
+    // 페이지 초기화 함수 호출
+    if (menuKey === 'myspace' && typeof window.renderMySpaceView === 'function') {
+      window.renderMySpaceView('scripts');
+      window.setWriteModeVisual(false);
+    }
   } catch(e) {
     area.innerHTML = `<div class="card"><h2>준비 중</h2><p>${menuKey} 페이지를 불러오지 못했습니다.</p></div>`;
   }
