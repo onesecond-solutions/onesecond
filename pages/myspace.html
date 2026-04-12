@@ -44,7 +44,7 @@ button, input { font-family: inherit; }
 
 .main-btn:hover { background:#f0e0d0; }
 
-.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; max-width:680px; margin:0 auto; }
+.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; }
 
 .content-slot-header { background:#fff; border:1px solid var(--line); border-radius:14px 14px 0 0; padding:18px 20px 14px; border-bottom:none; }
 .content-slot-title { font-size:0.8947em; font-weight:800; }
@@ -64,7 +64,7 @@ button, input { font-family: inherit; }
 .myspace-wrap { width:100%; }
 .mys-card { background:var(--panel); border:1px solid #d8c6b5; border-radius:16px; padding:18px 18px 12px; margin-bottom:18px; }
 .mys-card-title { font-size:0.8947em; font-weight:900; color:#2c1c12; display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.mys-card-desc { font-size:15px; color:#7d6452; line-height:1.75; margin-bottom:14px; }
+.mys-card-desc { font-size:0.7895em; color:#7d6452; line-height:1.75; margin-bottom:14px; }
 .mys-guide { background:var(--panel-soft); border:1px solid #d9c8ba; border-radius:12px; padding:12px 14px; }
 .mys-guide ul { list-style:none; display:flex; flex-direction:column; gap:8px; }
 .mys-guide li { font-size:0.7895em; color:#6e5645; display:flex; gap:7px; line-height:1.6; }
@@ -326,8 +326,8 @@ button, input { font-family: inherit; }
               </section></div>
             </div>
           </div>
+          <div class="next-btn">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
         </div>
-      <div class="next-btn" style="margin-top:32px;">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
 <script>
 window.overlayContent = window.overlayContent || {
   '가입설계 / 선심사 동의 녹취 스크립트': `
@@ -395,7 +395,7 @@ button, input { font-family: inherit; }
 
 .main-btn:hover { background:#f0e0d0; }
 
-.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; max-width:680px; margin:0 auto; }
+.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; }
 
 .content-slot-header { background:#fff; border:1px solid var(--line); border-radius:14px 14px 0 0; padding:18px 20px 14px; border-bottom:none; }
 .content-slot-title { font-size:0.8947em; font-weight:800; }
@@ -415,7 +415,7 @@ button, input { font-family: inherit; }
 .myspace-wrap { width:100%; }
 .mys-card { background:var(--panel); border:1px solid #d8c6b5; border-radius:16px; padding:18px 18px 12px; margin-bottom:18px; }
 .mys-card-title { font-size:0.8947em; font-weight:900; color:#2c1c12; display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.mys-card-desc { font-size:15px; color:#7d6452; line-height:1.75; margin-bottom:14px; }
+.mys-card-desc { font-size:0.7895em; color:#7d6452; line-height:1.75; margin-bottom:14px; }
 .mys-guide { background:var(--panel-soft); border:1px solid #d9c8ba; border-radius:12px; padding:12px 14px; }
 .mys-guide ul { list-style:none; display:flex; flex-direction:column; gap:8px; }
 .mys-guide li { font-size:0.7895em; color:#6e5645; display:flex; gap:7px; line-height:1.6; }
@@ -619,10 +619,6 @@ window.saveAndReturnToMySpace = function(){
 window.renderMySpaceView = function(view){
   const slot=document.getElementById('view-myspace');
   slot.innerHTML=window.mySpaceViews[view]||window.mySpaceViews.scripts;
-  // 탭 버튼 active 동기화 (초기 진입 시에도 적용)
-  document.querySelectorAll('.myspace-tabs .main-btn').forEach(function(btn){
-    btn.classList.toggle('active', btn.dataset.tab === view);
-  });
   if(view==='scripts') window.loadScriptsList();
   if(view==='library') window.loadLibraryList();
 }
@@ -968,7 +964,7 @@ window.loadUserInfo = async function() {
     const data = await res.json();
     if (data && data[0]) {
       const u = data[0];
-      const roleLabel = (window.ROLE_LABEL || {})[u.role] || '';
+      const roleLabel = ROLE_LABEL[u.role] || '';
       const displayName = `${u.name} ${roleLabel}`;
       document.getElementById('topbar-user').innerHTML = `${displayName} <span class="email">(${u.email})</span> ▾`;
       document.getElementById('edit-name').value = u.name || '';
