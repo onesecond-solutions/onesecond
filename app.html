@@ -1240,7 +1240,8 @@ function switchCPanel(menuKey) {
 // ── E 영역: pages/ fetch 로드 ──
 let _currentMenu = '';
 async function switchMenu(menuKey) {
-  if (_currentMenu === menuKey) return;
+  // myspace는 매번 새로 fetch (renderMySpaceView 타이밍 보장)
+  if (_currentMenu === menuKey && menuKey !== 'myspace') return;
   _currentMenu = menuKey;
 
   // B 메뉴 active
@@ -1272,9 +1273,15 @@ async function switchMenu(menuKey) {
       document.body.removeChild(newScript);
     });
     // 페이지 초기화 함수 호출
-    if (menuKey === 'myspace' && typeof window.renderMySpaceView === 'function') {
-      window.renderMySpaceView('scripts');
-      window.setWriteModeVisual(false);
+    if (menuKey === 'myspace') {
+      setTimeout(function() {
+        if (typeof window.renderMySpaceView === 'function') {
+          window.renderMySpaceView('scripts');
+        }
+        if (typeof window.setWriteModeVisual === 'function') {
+          window.setWriteModeVisual(false);
+        }
+      }, 50);
     }
   } catch(e) {
     area.innerHTML = `<div class="card"><h2>준비 중</h2><p>${menuKey} 페이지를 불러오지 못했습니다.</p></div>`;
