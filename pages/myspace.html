@@ -674,6 +674,108 @@ const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
 const ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
 
 // ── 토큰 즉시 세팅 (로딩 속도 개선) ──
+const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
+if (!_initToken || !_initAuth.id) { window.location.href = 'index.html'; }
+window._userToken = _initToken;
+window._userId = _initAuth.id;
+
+// ── 스크립트 저장 ──
+async function saveScriptToSupabase() {
+  const title = (document.getElementById('script-title')?.value || '').trim();
+  const scriptText = (document.getElementById('script-text')?.value || '').trim();
+  const highlight = (document.getElementById('script-highlight')?.value || '').trim();
+  if (!title) { alert('제목을 입력해 주세요.'); return; }
+  if (!scriptText) { alert('스크립트 내용을 입력해 주세요.'); return; }
+  if (!highlight) { alert('핵심 멘트를 입력해 주세요.'); return; }
+  const btn = document.getElementById('save-script-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scripts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${window._userToken}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        title,
+        script_text: scriptText,
+        highlight_text: highlight,
+        owner_id: window._userId,
+        scope: 'personal',
+        is_active: true
+      })
+    });
+    if (res.ok || res.status === 201) {
+      alert('스크립트가 저장됐습니다!');
+      document.getElementById('script-title').value = '';
+      document.getElementById('script-text').value = '';
+      document.getElementById('script-highlight').value = '';
+      saveAndReturnToMySpace();
+    } else {
+      const err = await res.json();
+      alert('저장 실패: ' + (err.message || res.status));
+    }
+  } catch(e) { alert('네트워크 오류가 발생했습니다.'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '스크립트 저장하기'; } }
+}
+
+// ── 자료 저장 ──
+async function saveLibraryToSupabase() {
+  const title = (document.getElementById('lib-title')?.value || '').trim();
+  const description = (document.getElementById('lib-desc')?.value || '').trim();
+  if (!title) { alert('자료 제목을 입력해 주세요.'); return; }
+  if (!description) { alert('자료 설명을 입력해 주세요.'); return; }
+  const btn = document.getElementById('save-library-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+  try {
+    const linkUrl = (document.getElementById('lib-link')?.value || '').trim();
+    const memoText = (document.getElementById('lib-memo')?.value || '').trim();
+    let fileUrl = '';
+    let imageUrl = '';
+    const fileInput = document.getElementById('lib-file-input');
+    if (fileInput && fileInput.files[0]) {
+      try { fileUrl = await uploadFileToStorage(fileInput.files[0], 'files'); } catch(e) { alert('파일 업로드 실패: ' + e.message); return; }
+    }
+    const imgInput = document.getElementById('lib-image-input');
+    if (imgInput && imgInput.files[0]) {
+      try { imageUrl = await uploadFileToStorage(imgInput.files[0], 'images'); } catch(e) { alert('이미지 업로드 실패: ' + e.message); return; }
+    }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/library`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${window._userToken}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        title,
+        description,
+        owner_id: window._userId,
+        link_url: linkUrl || null,
+        memo_text: memoText || null,
+        file_url: fileUrl || null,
+        image_url: imageUrl || null
+      })
+    });
+    if (res.ok || res.status === 201) {
+      alert('자료가 저장됐습니다!');
+      document.getElementById('lib-title').value = '';
+      document.getElementById('lib-desc').value = '';
+      if (document.getElementById('lib-link')) document.getElementById('lib-link').value = '';
+      if (document.getElementById('lib-memo')) document.getElementById('lib-memo').value = '';
+      saveAndReturnToLibrary();
+    } else {
+      const err = await res.json();
+      alert('저장 실패: ' + (err.message || res.status));
+    }
+  } catch(e) { alert('네트워크 오류가 발생했습니다.'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '나의 자료 저장하기'; } }
+}
+
 // ── 스크립트 목록 로드 ──
 let _allScripts = [];
 let _allLibrary = [];
@@ -860,8 +962,6 @@ async function loadUserInfo() {
       document.getElementById('edit-company').value = u.company || '';
       document.getElementById('edit-branch').value = u.branch || '';
       document.getElementById('edit-team').value = u.team || '';
-      window._userId = authUser.id;
-      window._userToken = token;
       window._userEmail = u.email;
     }
   } catch(e) { console.error(e); }
