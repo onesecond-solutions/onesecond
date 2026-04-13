@@ -40,7 +40,7 @@
 
 .sc-drill {
   display:grid;
-  grid-template-columns:80px 200px 200px 1fr;
+  grid-template-columns:300px 300px 300px 1fr;
   height:calc(100vh - 240px);
   border-top:1px solid #ddc8b4;
 }
@@ -51,49 +51,51 @@
 .sc-col1 { background:#faf8f5; }
 .sc-group-cell {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; padding:10px 4px; cursor:pointer;
-  border-left:4px solid transparent; border-bottom:1px solid #ddc8b4;
-  transition:filter .15s; gap:4px;
-  font-size:0.7em; font-weight:700; line-height:1.4;
+  text-align:center; padding:16px 12px; cursor:pointer;
+  border-left:6px solid transparent; border-bottom:1px solid #ddc8b4;
+  transition:filter .15s; gap:8px;
+  font-size:1.05em; font-weight:900; line-height:1.4;
   font-family:Pretendard,'Noto Sans KR',sans-serif;
-  min-height:56px; flex-shrink:0;
+  min-height:56px; flex-shrink:0; letter-spacing:-0.3px;
 }
 .sc-group-cell:hover { filter:brightness(0.93); }
 .sc-group-cell.active { border-left-color:currentColor; filter:brightness(0.91); }
-.sc-g-icon { font-size:1.5em; }
+.sc-g-icon { font-size:2.2em; }
 .sc-g-count { font-size:0.8em; font-weight:700; padding:1px 6px; border-radius:20px; color:white; margin-top:2px; }
 
 /* 2열 */
 .sc-col2 { background:#fff; }
 .sc-script-item {
-  padding:11px 14px; cursor:pointer;
+  padding:14px 20px; cursor:pointer;
   border-bottom:1px solid #f0e6dc;
-  border-left:3px solid transparent;
+  border-left:4px solid transparent;
   transition:background .1s;
   min-height:56px; flex-shrink:0;
   display:flex; flex-direction:column; justify-content:center;
 }
 .sc-script-item:hover { background:#faf5f0; }
 .sc-script-item.active { border-left-color:currentColor; }
-.sc-script-title { font-size:0.8421em; font-weight:700; line-height:1.4; }
-.sc-script-sub { font-size:0.7368em; color:#9a7a62; margin-top:3px; line-height:1.4; }
+.sc-script-title { font-size:0.95em; font-weight:700; line-height:1.5; }
+.sc-script-sub { font-size:0.82em; color:#9a7a62; margin-top:5px; line-height:1.5; }
 
 /* 3열 */
 .sc-col3 { background:#fff; }
 .sc-block-item {
-  padding:11px 14px; cursor:pointer;
+  padding:14px 20px; cursor:pointer;
   border-bottom:1px solid #f0e6dc;
-  border-left:3px solid transparent;
+  border-left:4px solid transparent;
   transition:background .1s;
+  min-height:56px; flex-shrink:0;
+  display:flex; flex-direction:column; justify-content:center;
 }
 .sc-block-item:hover { background:#faf5f0; }
 .sc-block-item.active { border-left-color:currentColor; }
 .sc-block-num { font-size:0.7em; font-weight:700; padding:2px 7px; border-radius:20px; display:inline-block; margin-bottom:4px; color:white; }
-.sc-block-title { font-size:0.8421em; font-weight:700; line-height:1.4; }
-.sc-block-sub { font-size:0.7368em; color:#9a7a62; margin-top:3px; line-height:1.4; }
+.sc-block-title { font-size:0.95em; font-weight:700; line-height:1.5; }
+.sc-block-sub { font-size:0.82em; color:#9a7a62; margin-top:5px; line-height:1.5; }
 
 /* 4열 */
-.sc-col4 { background:#f7f2ec; padding:20px 24px; overflow-y:auto; }
+.sc-col4 { background:#f7f2ec; padding:24px 28px; overflow-y:auto; }
 .sc-detail-empty { display:flex; align-items:center; justify-content:center; flex:1; color:#9a7a62; font-size:0.8em; text-align:center; padding:30px; line-height:1.8; height:100%; }
 .sc-detail-tag { font-size:0.7368em; font-weight:700; padding:3px 10px; border-radius:20px; display:inline-block; margin-bottom:10px; color:white; }
 .sc-detail-title { font-size:1.1em; font-weight:800; margin-bottom:4px; }
@@ -104,6 +106,29 @@
 
 .sc-col-empty { display:flex; align-items:center; justify-content:center; flex:1; color:#9a7a62; font-size:0.8em; text-align:center; padding:30px; line-height:1.8; }
 .sc-bottom-bar { background:#3d2b1f; color:#fff6ef; text-align:center; font-size:0.7895em; font-weight:800; padding:10px 14px; }
+
+/* ── 반응형 ── */
+@media (max-width:1400px) {
+  .sc-drill { grid-template-columns:260px 260px 260px 1fr; }
+}
+@media (max-width:1100px) {
+  .sc-drill { grid-template-columns:240px 240px 1fr; }
+  #sc-col3 { display:none; }
+}
+@media (max-width:800px) {
+  .sc-drill { grid-template-columns:200px 1fr; }
+  #sc-col2 { display:none; }
+  #sc-col3 { display:none; }
+}
+@media (max-width:600px) {
+  .sc-tab-bar { display:none; }
+  .sc-drill { grid-template-columns:1fr; height:auto; }
+  #sc-col1 { display:none; }
+  #sc-col2 { display:flex; }
+  #sc-col3 { display:none; }
+  #sc-col4 { display:none; }
+  .sc-group-cell { font-size:0.85em; padding:10px 8px; }
+}
 </style>
 
 <div>
@@ -256,10 +281,19 @@ window.scSelectGroup = async function(el) {
   var gcEl = document.getElementById('gc-' + color);
   if (gcEl) gcEl.textContent = scripts.length + '개';
 
-  // 1열 병합 높이: 스크립트 수 × 56px (아이템 고정 높이)
-  var ROW_H = 56;
-  el.style.height = (scripts.length * ROW_H) + 'px';
+  // 1열 병합 높이: 렌더링 후 2열 실제 높이로 맞춤
   el.style.flex = 'none';
+  el.style.height = 'auto';
+  setTimeout(function() {
+    var col2El = document.getElementById('sc-col2');
+    if (col2El) {
+      var totalH = 0;
+      col2El.querySelectorAll('.sc-script-item').forEach(function(item) {
+        totalH += item.offsetHeight;
+      });
+      if (totalH > 0) el.style.height = totalH + 'px';
+    }
+  }, 50);
 
   if (!scripts.length) { col2.innerHTML = '<div class="sc-col-empty">스크립트가 없습니다</div>'; return; }
   var bg = scGv(color,'bg'), t = scGv(color,'t'), b = scGv(color,'b');
@@ -329,7 +363,6 @@ window.scSelectBlock = function(el, idx) {
       var gcEl = document.getElementById('gc-' + color);
       if (gcEl) gcEl.textContent = data.length + '개';
       if (data.length) {
-        el.style.height = (data.length * ROW_H) + 'px';
         el.style.flex = 'none';
       }
     });
