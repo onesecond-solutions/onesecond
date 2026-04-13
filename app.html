@@ -1082,6 +1082,7 @@ async function loadUserInfo() {
       if (editBranch) editBranch.value = u.branch || '';
       if (editTeam) editTeam.value = u.team || '';
       renderProBadge(u.plan || 'free', u.role);
+      renderSearchBox();
     }
   } catch(e) { console.error('loadUserInfo error:', e); }
 }
@@ -1315,7 +1316,7 @@ window.closeSearchDropdown = closeSearchDropdown;
 window.onSearchInput = onSearchInput;
 
 // loadUserInfo 완료 후 검색창 권한 렌더 (500ms 대기)
-setTimeout(renderSearchBox, 500);
+// loadUserInfo 완료 후 renderSearchBox 호출 (loadUserInfo 내부에서 직접 호출)
 function switchCPanel(menuKey) {
   document.querySelectorAll('.c-section').forEach(el => {
     el.classList.toggle('active', el.id === 'c-' + menuKey);
