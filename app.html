@@ -1028,11 +1028,17 @@ async function switchMenu(menuKey) {
     if (!res.ok) throw new Error('not found');
     const html = await res.text();
     area.innerHTML = html;
-    // 로드된 콘텐츠 내 script 실행 — IIFE로 const 재선언 충돌 방지, 개별 try-catch로 하나 실패해도 나머지 계속 실행
+    // 로드된 콘텐츠 내 script 실행
+    // quick: window.* 전역 선언 구조이므로 IIFE 래핑 없이 그대로 실행
+    // 그 외: IIFE로 const 재선언 충돌 방지
     area.querySelectorAll('script').forEach(oldScript => {
       try {
         const newScript = document.createElement('script');
-        newScript.textContent = '(function(){\n' + oldScript.textContent + '\n})();';
+        if (menuKey === 'quick') {
+          newScript.textContent = oldScript.textContent;
+        } else {
+          newScript.textContent = '(function(){\n' + oldScript.textContent + '\n})();';
+        }
         document.body.appendChild(newScript);
         document.body.removeChild(newScript);
       } catch(e) { console.error('script exec error:', e); }
