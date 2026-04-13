@@ -265,9 +265,9 @@ body { font-family: inherit; background: var(--cream); color: var(--text-dark); 
   position: fixed; inset: 0; z-index: 300;
   background: rgba(26,16,8,.72);
   backdrop-filter: blur(3px);
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 20px;
 }
 .detail-overlay.active { display: flex; animation: fadeIn .2s ease; }
 @keyframes fadeIn { from{opacity:0}to{opacity:1} }
@@ -276,7 +276,7 @@ body { font-family: inherit; background: var(--cream); color: var(--text-dark); 
   background: var(--white);
   width: 100%; max-width: 680px;
   max-height: 90vh;
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px;
   display: flex; flex-direction: column;
   overflow: hidden;
   animation: slideUp .28s cubic-bezier(.34,1.2,.64,1);
@@ -424,8 +424,9 @@ body { font-family: inherit; background: var(--cream); color: var(--text-dark); 
   position: fixed; inset: 0; z-index: 400;
   background: rgba(26,16,8,.75);
   backdrop-filter: blur(4px);
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  padding: 20px;
 }
 .write-overlay.active { display: flex; animation: fadeIn .2s ease; }
 
@@ -433,7 +434,7 @@ body { font-family: inherit; background: var(--cream); color: var(--text-dark); 
   background: var(--white);
   width: 100%; max-width: 600px;
   max-height: 88vh;
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px;
   display: flex; flex-direction: column;
   overflow: hidden;
   animation: slideUp .28s cubic-bezier(.34,1.2,.64,1);
