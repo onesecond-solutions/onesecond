@@ -1004,6 +1004,17 @@ if (!_initToken || !_initAuth.id) { window.location.href = 'index.html'; }
 window._userToken = _initToken;
 window._userId = _initAuth.id;
 
+// 토큰 만료 여부 체크 → 만료되었으면 즉시 갱신
+(async function() {
+  try {
+    var payload = JSON.parse(atob(_initToken.split('.')[1]));
+    if (Date.now() / 1000 > payload.exp) {
+      var newToken = await refreshToken();
+      if (!newToken) { handleTokenExpired(); }
+    }
+  } catch(e) { /* 파싱 실패 시 무시 — fetchWithAuth가 처리 */ }
+})();
+
 function getToken() { return localStorage.getItem('os_token') || sessionStorage.getItem('os_token'); }
 
 async function refreshToken() {
@@ -1053,9 +1064,7 @@ async function loadUserInfo() {
   if (!token || !window._userId) return;
   window._userToken = token;
   try {
-    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}&select=name,role,phone,email,company,branch,team,plan`, {
-      headers: {'apikey':window.SUPABASE_KEY,'Authorization':`Bearer ${token}`}
-    });
+    const res = await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}&select=name,role,phone,email,company,branch,team,plan`);
     const data = await res.json();
     if (data && data[0]) {
       const u = data[0];
@@ -1084,7 +1093,10 @@ async function loadUserInfo() {
       renderProBadge(u.plan || 'free', u.role);
       renderSearchBox();
     }
-  } catch(e) { console.error('loadUserInfo error:', e); }
+  } catch(e) {
+    if (e.message === 'TOKEN_EXPIRED') return;
+    console.error('loadUserInfo error:', e);
+  }
 }
 
 function renderProBadge(plan, role) {
@@ -1481,12 +1493,8 @@ async function openQuickOverlay(key) {
 
   // 캐시 없으면 Supabase quick_contents에서 직접 fetch (myspace 패턴 동일)
   try {
-    const headers = { 'apikey': window.SUPABASE_KEY };
-    if (window._userToken) headers['Authorization'] = 'Bearer ' + window._userToken;
-
-    const res = await fetch(
-      window.SUPABASE_URL + '/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,content_html&limit=1',
-      { headers }
+    const res = await fetchWithAuth(
+      window.SUPABASE_URL + '/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,content_html&limit=1'
     );
 
     if (!res.ok) throw new Error('fetch 실패: ' + res.status);
