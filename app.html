@@ -396,7 +396,7 @@ html,body{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:200;
+  z-index:500;
   backdrop-filter:blur(4px);
   padding:16px;
 }
@@ -815,17 +815,8 @@ html,body{
     <div class="quick-dropdown-wrap">
       <button class="quick-btn" id="openQuick" onclick="toggleQuickDropdown(event)">⚡ 빠른 실행 ▾</button>
       <div class="quick-dropdown" id="quickDropdown">
-        <div class="quick-dd-item" onclick="openQuickOverlay('가입설계 / 선심사 동의 녹취 스크립트')">
-          <span class="quick-dd-icon">📝</span>선심사 동의 녹취 스크립트
-        </div>
-        <div class="quick-dd-item" onclick="openQuickOverlay('미러링 전 녹취 스크립트')">
-          <span class="quick-dd-icon">🎙️</span>미러링 전 녹취 스크립트
-        </div>
-        <div class="quick-dd-item" onclick="openQuickOverlay('회사별 BMI 심사기준')">
-          <span class="quick-dd-icon">📊</span>BMI 기준
-        </div>
-        <div class="quick-dd-item" onclick="openQuickOverlay('보험연령표')">
-          <span class="quick-dd-icon">📅</span>보험 나이
+        <div id="quick-dd-items">
+          <div class="quick-dd-item" style="color:#aaa;font-size:12px;padding:10px 16px;">불러오는 중...</div>
         </div>
         <div class="quick-dd-footer">
           <button class="quick-dd-footer-btn accent" onclick="goQuickMenu()">Quick 메뉴 바로가기</button>
@@ -1473,6 +1464,43 @@ function toggleQuickDropdown(e) {
   e.stopPropagation();
   const dd = document.getElementById('quickDropdown');
   dd.classList.toggle('show');
+  if (dd.classList.contains('show')) loadQuickDdItems();
+}
+
+async function loadQuickDdItems() {
+  const wrap = document.getElementById('quick-dd-items');
+  if (!wrap) return;
+  // 이미 로드된 경우 스킵
+  if (wrap.dataset.loaded === 'true') return;
+  try {
+    const headers = { 'apikey': window.SUPABASE_KEY };
+    if (window._userToken) headers['Authorization'] = 'Bearer ' + window._userToken;
+    const res = await fetch(
+      window.SUPABASE_URL + '/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order',
+      { headers }
+    );
+    if (!res.ok) throw new Error('fetch 실패');
+    const data = await res.json();
+    const icons = {
+      recording_script: '📝',
+      mirror_script: '🎙️',
+      bmi_standard: '📊',
+      insurance_age: '📅',
+      payment_info: '💳',
+      system_links: '🔗',
+      contact_info: '📞'
+    };
+    wrap.innerHTML = data.map(function(item) {
+      const icon = icons[item.tab_key] || '📄';
+      return '<div class="quick-dd-item" onclick="openQuickOverlay('' + item.tab_title.replace(/'/g, "\'") + '')">' +
+        '<span class="quick-dd-icon">' + icon + '</span>' + item.tab_title +
+        '</div>';
+    }).join('');
+    wrap.dataset.loaded = 'true';
+  } catch(e) {
+    console.error('loadQuickDdItems error:', e);
+    wrap.innerHTML = '<div class="quick-dd-item" style="color:#aaa;font-size:12px;">불러오기 실패</div>';
+  }
 }
 document.addEventListener('click', function(e) {
   const wrap = document.querySelector('.quick-dropdown-wrap');
