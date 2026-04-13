@@ -1352,6 +1352,16 @@ async function switchMenu(menuKey) {
   });
   // C 영역 전환
   switchCPanel(menuKey);
+  // scripts: C영역 숨김/복원
+  const mainEl = document.querySelector('.main');
+  const cEl = document.querySelector('.c');
+  if (menuKey === 'scripts') {
+    if (mainEl) mainEl.style.gridTemplateColumns = '220px 1fr';
+    if (cEl) cEl.style.display = 'none';
+  } else {
+    if (mainEl) mainEl.style.gridTemplateColumns = '';
+    if (cEl) cEl.style.display = '';
+  }
   // localStorage 저장
   localStorage.setItem('selected_menu', menuKey);
 
