@@ -12,6 +12,7 @@
   position: relative;
   min-height: 180px;
   gap: 48px;
+  width: 100%;
 }
 .home-banner-left {
   flex: 1;
@@ -149,7 +150,6 @@
   }
 
   function isPro() {
-    // manager, branch_manager는 plan 무관 PRO 취급 (app.html renderProBadge와 동일 기준)
     var role = window._userRole || '';
     if (['manager','branch_manager'].includes(role)) return true;
     var plan = window._userPlan || '';
@@ -157,13 +157,10 @@
   }
 
   function checkUpgradeBar() {
-    // app.html이 이미 _userPlan, _userRole 세팅한 경우
     if (window._userPlan !== undefined) {
       if (!isPro()) showUpgradeBar();
       return;
     }
-
-    // fallback: Supabase에서 직접 조회
     var userId = window._userId;
     var url = window.SUPABASE_URL;
     var key = window.SUPABASE_KEY;
@@ -183,7 +180,6 @@
     .catch(function() { showUpgradeBar(); });
   }
 
-  // 700ms 대기 후 실행 (app.html loadUserInfo 완료 보장)
   setTimeout(checkUpgradeBar, 700);
 })();
 </script>
