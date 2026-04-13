@@ -128,16 +128,16 @@ if (!window.overlayContent) window.overlayContent = {};
 window._loadQuickContents = async function() {
   try {
     var supaUrl = window.SUPABASE_URL || 'https://qursjteiovcylqiepmlo.supabase.co';
-    var supaKey = window.SUPABASE_KEY || 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
-    var token = window._userToken || localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 
-    var headers = { 'apikey': supaKey };
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-
-    var res = await fetch(
-      supaUrl + '/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html',
-      { headers: headers }
-    );
+    var res;
+    try {
+      res = await fetchWithAuth(
+        supaUrl + '/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html'
+      );
+    } catch(fetchErr) {
+      if (fetchErr.message === 'TOKEN_EXPIRED') return false;
+      throw fetchErr;
+    }
 
     if (!res.ok) {
       console.error('quick_contents fetch 실패:', res.status);
@@ -221,26 +221,28 @@ window.toggleMirrorScript = function(company) {
 // ── 우측 패널 ──
 window._initQuickPanel = function() {
   var supaUrl = window.SUPABASE_URL || 'https://qursjteiovcylqiepmlo.supabase.co';
-  var supaKey = window.SUPABASE_KEY || 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
-  var token = window._userToken || localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
   var userId = window._userId;
 
-  if (!token) return;
+  if (!window._userToken) return;
 
-  fetch(supaUrl + '/rest/v1/scripts?is_recommended=eq.true&select=title&limit=5', {
-    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + token }
-  }).then(function(r) { return r.json(); }).then(function(data) {
+  fetchWithAuth(supaUrl + '/rest/v1/scripts?is_recommended=eq.true&select=title&limit=5')
+  .then(function(r) { return r.json(); }).then(function(data) {
     var card = document.getElementById('right-recommended');
-    if (card && data && data.length) {
+    if (!card) return;
+    if (data && data.length) {
       card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div>' +
         data.map(function(s) { return '<div class="panel-item">' + s.title + '</div>'; }).join('');
+    } else {
+      card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">추천 스크립트가 없습니다.</div>';
     }
-  }).catch(function(){});
+  }).catch(function(){
+    var card = document.getElementById('right-recommended');
+    if (card) card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">불러오지 못했습니다.</div>';
+  });
 
   if (userId) {
-    fetch(supaUrl + '/rest/v1/script_usage_logs?user_id=eq.' + userId + '&select=script_title&order=created_at.desc&limit=20', {
-      headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + token }
-    }).then(function(r) { return r.json(); }).then(function(data) {
+    fetchWithAuth(supaUrl + '/rest/v1/script_usage_logs?user_id=eq.' + userId + '&select=script_title&order=created_at.desc&limit=20')
+    .then(function(r) { return r.json(); }).then(function(data) {
       var seen = {};
       var unique = [];
       if (data) data.forEach(function(d) {
@@ -248,11 +250,17 @@ window._initQuickPanel = function() {
       });
       unique = unique.slice(0, 5);
       var card = document.getElementById('right-recent');
-      if (card && unique.length) {
+      if (!card) return;
+      if (unique.length) {
         card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div>' +
           unique.map(function(s) { return '<div class="panel-item">' + s.script_title + '</div>'; }).join('');
+      } else {
+        card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">최근 기록이 없습니다.</div>';
       }
-    }).catch(function(){});
+    }).catch(function(){
+      var card = document.getElementById('right-recent');
+      if (card) card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">불러오지 못했습니다.</div>';
+    });
   }
 };
 
