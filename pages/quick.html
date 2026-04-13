@@ -117,102 +117,97 @@
 </div>
 
 <script>
-// ── quick_contents DB 연동 ──
-// overlayContent는 DB fetch 완료 후 채워짐 (하드코딩 제거)
+// ── quick.html 전체 스크립트 ──
+// app.html의 IIFE 래핑(switchMenu)과 충돌하지 않도록
+// 최상위에 window.* 선언만 두고, 로직은 모두 window.* 함수로 등록
+
+// overlayContent 캐시 초기화
 if (!window.overlayContent) window.overlayContent = {};
 
-(function() {
-  // myspace 패턴 동일: if(!window.XXX) 선언으로 중복 방지
-  if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
-  if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
-  if (!window._userToken) window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+// ── DB fetch: quick_contents 전체 로드 ──
+window._loadQuickContents = async function() {
+  try {
+    var supaUrl = window.SUPABASE_URL || 'https://qursjteiovcylqiepmlo.supabase.co';
+    var supaKey = window.SUPABASE_KEY || 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+    var token = window._userToken || localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 
-  // DB에서 quick_contents 전체 fetch → overlayContent 객체에 tab_title 키로 저장
-  async function loadQuickContents() {
-    try {
-      const headers = { 'apikey': window.SUPABASE_KEY };
-      if (window._userToken) headers['Authorization'] = 'Bearer ' + window._userToken;
+    var headers = { 'apikey': supaKey };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
 
-      const res = await fetch(
-        window.SUPABASE_URL + '/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html',
-        { headers }
-      );
+    var res = await fetch(
+      supaUrl + '/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html',
+      { headers: headers }
+    );
 
-      if (!res.ok) {
-        console.error('quick_contents fetch 실패:', res.status);
-        return false;
-      }
-
-      const data = await res.json();
-      if (!data || !data.length) {
-        console.warn('quick_contents: 데이터 없음');
-        return false;
-      }
-
-      // tab_title → content_html 매핑
-      data.forEach(function(row) {
-        if (row.tab_title && row.content_html) {
-          window.overlayContent[row.tab_title] = row.content_html;
-        }
-      });
-
-      return true;
-    } catch(e) {
-      console.error('quick_contents fetch 오류:', e);
+    if (!res.ok) {
+      console.error('quick_contents fetch 실패:', res.status);
       return false;
     }
-  }
 
-  // content-slot DOM + DB 로드 모두 완료 후 기본 탭 렌더
-  function initQuickContent() {
-    var slot = document.getElementById('content-slot');
-    if (!slot) {
-      setTimeout(initQuickContent, 50);
-      return;
+    var data = await res.json();
+    if (!data || !data.length) {
+      console.warn('quick_contents: 데이터 없음');
+      return false;
     }
-    // 로딩 중 표시
-    var defaultKey = '가입설계 / 선심사 동의 녹취 스크립트';
-    slot.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:0.8947em;">불러오는 중...</div>';
-    var titleEl = document.getElementById('content-title');
-    if (titleEl) titleEl.textContent = defaultKey;
 
-    loadQuickContents().then(function(ok) {
-      var html;
-      if (ok && window.overlayContent[defaultKey]) {
-        html = window.overlayContent[defaultKey];
-      } else if (!ok) {
-        html = '<div style="padding:40px;text-align:center;color:#c0392b;font-size:0.8947em;">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
-      } else {
-        html = '<div style="padding:40px;text-align:center;color:#aaa;font-size:0.8947em;">준비 중입니다.</div>';
+    data.forEach(function(row) {
+      if (row.tab_title && row.content_html) {
+        window.overlayContent[row.tab_title] = row.content_html;
       }
-      slot.innerHTML = html;
-      window._quickReady = true;
     });
+
+    return true;
+  } catch(e) {
+    console.error('quick_contents fetch 오류:', e);
+    return false;
+  }
+};
+
+// ── 초기화: content-slot에 기본 탭 렌더 ──
+window._initQuickSlot = function() {
+  var slot = document.getElementById('content-slot');
+  if (!slot) {
+    setTimeout(window._initQuickSlot, 50);
+    return;
   }
 
-  setTimeout(initQuickContent, 100);
-})();
+  var defaultKey = '가입설계 / 선심사 동의 녹취 스크립트';
+  slot.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:0.8947em;">불러오는 중...</div>';
+  var titleEl = document.getElementById('content-title');
+  if (titleEl) titleEl.textContent = defaultKey;
 
-// ── 이하 기존 하드코딩 데이터 삭제됨 — DB로 대체 ──
-// (삭제된 블록: window.overlayContent = { ... })
-var _quickLegacyRemoved = true;
+  window._loadQuickContents().then(function(ok) {
+    var html;
+    if (ok && window.overlayContent[defaultKey]) {
+      html = window.overlayContent[defaultKey];
+    } else if (!ok) {
+      html = '<div style="padding:40px;text-align:center;color:#c0392b;font-size:0.8947em;">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+    } else {
+      html = '<div style="padding:40px;text-align:center;color:#aaa;font-size:0.8947em;">준비 중입니다.</div>';
+    }
+    slot.innerHTML = html;
+    window._quickReady = true;
+  });
+};
 
+// ── 탭 클릭 ──
 window.selectQuickMain = function(btn, title) {
-  document.querySelectorAll('.main-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.main-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
-  const titleEl = document.getElementById('content-title');
-  const slot = document.getElementById('content-slot');
+  var titleEl = document.getElementById('content-title');
+  var slot = document.getElementById('content-slot');
   if (titleEl) titleEl.textContent = title;
   if (slot) slot.innerHTML = window.overlayContent[title] || '<div style="padding:40px;text-align:center;color:#aaa;">준비 중입니다.</div>';
-  ['mirror-meritz','mirror-heungkuk'].forEach(id => {
-    const el = document.getElementById(id);
+  ['mirror-meritz','mirror-heungkuk'].forEach(function(id) {
+    var el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-}
+};
 
+// ── 미러링 토글 ──
 window.toggleMirrorScript = function(company) {
-  const meritz = document.getElementById('mirror-meritz');
-  const heungkuk = document.getElementById('mirror-heungkuk');
+  var meritz = document.getElementById('mirror-meritz');
+  var heungkuk = document.getElementById('mirror-heungkuk');
   if (!meritz || !heungkuk) return;
   if (company === 'meritz') {
     meritz.style.display = meritz.style.display === 'none' ? 'block' : 'none';
@@ -221,41 +216,50 @@ window.toggleMirrorScript = function(company) {
     heungkuk.style.display = heungkuk.style.display === 'none' ? 'block' : 'none';
     meritz.style.display = 'none';
   }
-}
+};
 
-// ── 우측 패널 데이터 로드 ──
-(function() {
+// ── 우측 패널 ──
+window._initQuickPanel = function() {
   var supaUrl = window.SUPABASE_URL || 'https://qursjteiovcylqiepmlo.supabase.co';
   var supaKey = window.SUPABASE_KEY || 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
   var token = window._userToken || localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
   var userId = window._userId;
 
-  if (token) {
-    fetch(`${supaUrl}/rest/v1/scripts?is_recommended=eq.true&select=title&limit=5`, {
-      headers: {'apikey': supaKey, 'Authorization': `Bearer ${token}`}
-    }).then(r => r.json()).then(data => {
-      const card = document.getElementById('right-recommended');
-      if (card && data.length) {
-        card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div>' + data.map(s => `<div class="panel-item">${s.title}</div>`).join('');
-      }
-    }).catch(() => {});
+  if (!token) return;
 
-    if (userId) {
-      fetch(`${supaUrl}/rest/v1/script_usage_logs?user_id=eq.${userId}&select=script_title&order=created_at.desc&limit=20`, {
-        headers: {'apikey': supaKey, 'Authorization': `Bearer ${token}`}
-      }).then(r => r.json()).then(data => {
-        const seen = new Set();
-        const unique = data.filter(d => {
-          if (seen.has(d.script_title)) return false;
-          seen.add(d.script_title); return true;
-        }).slice(0,5);
-        const card = document.getElementById('right-recent');
-        if (card && unique.length) {
-          card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div>' + unique.map(s => `<div class="panel-item">${s.script_title}</div>`).join('');
-        }
-      }).catch(() => {});
+  fetch(supaUrl + '/rest/v1/scripts?is_recommended=eq.true&select=title&limit=5', {
+    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + token }
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var card = document.getElementById('right-recommended');
+    if (card && data && data.length) {
+      card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div>' +
+        data.map(function(s) { return '<div class="panel-item">' + s.title + '</div>'; }).join('');
     }
+  }).catch(function(){});
+
+  if (userId) {
+    fetch(supaUrl + '/rest/v1/script_usage_logs?user_id=eq.' + userId + '&select=script_title&order=created_at.desc&limit=20', {
+      headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + token }
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      var seen = {};
+      var unique = [];
+      if (data) data.forEach(function(d) {
+        if (!seen[d.script_title]) { seen[d.script_title] = true; unique.push(d); }
+      });
+      unique = unique.slice(0, 5);
+      var card = document.getElementById('right-recent');
+      if (card && unique.length) {
+        card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div>' +
+          unique.map(function(s) { return '<div class="panel-item">' + s.script_title + '</div>'; }).join('');
+      }
+    }).catch(function(){});
   }
-})();
+};
+
+// ── 실행 ──
+setTimeout(function() {
+  window._initQuickSlot();
+  window._initQuickPanel();
+}, 100);
 
 </script>
