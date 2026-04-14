@@ -1396,6 +1396,7 @@ async function switchMenu(menuKey) {
     // 페이지 초기화 함수 호출
     if (menuKey === 'myspace') {
       // 두 스크립트 모두 실행 완료(_myspaceReady) 후 renderMySpaceView 호출
+      window._myspaceReady = false; // 진입 전 반드시 리셋
       let waited = 0;
       const waitAndRender = setInterval(function() {
         waited += 20;
