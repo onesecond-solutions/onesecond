@@ -152,9 +152,11 @@ html,body{
   padding:0;
   font-size:calc(1em * var(--d-scale, 1));
   overflow-y:auto;
+  overflow-x:hidden;
   min-height:0;
   display:flex;
   flex-direction:column;
+  scrollbar-gutter:stable;
 }
 .d-section{display:none;}
 .d-section.active{display:block;}
@@ -1343,8 +1345,8 @@ function switchCPanel(menuKey) {
 // ── E 영역: pages/ fetch 로드 ──
 let _currentMenu = '';
 async function switchMenu(menuKey) {
-  // myspace는 매번 새로 fetch (renderMySpaceView 타이밍 보장)
-  if (_currentMenu === menuKey && menuKey !== 'myspace') return;
+  // myspace/scripts는 매번 새로 fetch (초기화 타이밍 보장)
+  if (_currentMenu === menuKey && menuKey !== 'myspace' && menuKey !== 'scripts') return;
   _currentMenu = menuKey;
 
   // B 메뉴 active
