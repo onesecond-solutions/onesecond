@@ -17,26 +17,32 @@
   padding:0 24px; flex-shrink:0;
 }
 .sc-page-title { font-family:Pretendard,'Noto Sans KR',sans-serif; font-size:1.5em; font-weight:800; color:#fff; letter-spacing:-0.5px; margin-bottom:6px; }
-.sc-page-desc { font-family:Pretendard,'Noto Sans KR',sans-serif; font-size:0.75em; color:rgba(255,255,255,0.65); }
-.sc-page-icon { font-size:2.8em; opacity:0.15; }
+.sc-page-desc  { font-family:Pretendard,'Noto Sans KR',sans-serif; font-size:0.75em; color:rgba(255,255,255,0.65); }
+.sc-page-icon  { font-size:2.8em; opacity:0.15; }
 
-/* 상단 탭바 — sticky */
+/* 탭바 — flex-shrink:0 으로 고정, 스크롤 없음 */
 .sc-tab-bar {
-  position:sticky; top:0; z-index:10;
+  flex-shrink:0;
   display:flex; gap:0; flex-wrap:nowrap;
   border-bottom:2px solid #ddc8b4;
-  background:#faf8f5;
+  background:var(--s1bg);
   overflow-x:auto;
+  transition:background .25s, border-color .25s;
 }
 .sc-tab-btn {
   padding:11px 16px; border:none; background:transparent;
-  font-size:0.8421em; font-weight:600; color:#9a7a62;
+  font-size:0.8421em; font-weight:600;
   font-family:Pretendard,inherit; cursor:pointer; white-space:nowrap;
   border-bottom:3px solid transparent; margin-bottom:-2px;
   transition:all .15s; flex-shrink:0;
 }
-.sc-tab-btn:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); background:#f3e4d6; }
+.sc-tab-btn:hover { filter:brightness(0.92); }
 .sc-tab-btn.active { font-weight:800; }
+
+/* 스크롤 영역 */
+.sc-scroll {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+}
 
 /* 본문 그리드 */
 .sc-body {
@@ -48,12 +54,11 @@
 /* 그룹 구분선 */
 .sc-divider-row {
   grid-column:1 / -1;
-  height:5px;
-  background:linear-gradient(90deg,#c8a080,#e8d8c8,#c8a080);
+  height:3px;
 }
 
 /* 1열 */
-.sc-col1 { border-right:1px solid #ddc8b4; }
+.sc-col1 { border-right:2px solid #c8b4a0; }
 .sc-group-cell {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   text-align:center; padding:12px 6px;
@@ -65,14 +70,14 @@
   cursor:pointer; transition:filter .15s;
 }
 .sc-group-cell:hover { filter:brightness(0.92); }
-.sc-g-icon { font-size:1.5em; }
+.sc-g-icon  { font-size:1.5em; }
 .sc-g-count { font-size:0.72em; font-weight:700; padding:1px 5px; border-radius:20px; color:white; margin-top:2px; }
 
 /* 2열 */
 .sc-col2 { border-right:1px solid #ddc8b4; }
 .sc-script-item {
   padding:13px 16px; cursor:pointer;
-  border-bottom:1px solid #f0e6dc;
+  border-bottom:1px solid #ede0d4;
   border-left:4px solid transparent;
   transition:background .1s;
   min-height:56px;
@@ -81,13 +86,13 @@
 }
 .sc-script-item:hover { filter:brightness(0.97); }
 .sc-script-title { font-size:0.88em; font-weight:700; line-height:1.5; }
-.sc-script-sub { font-size:0.76em; color:#9a7a62; margin-top:3px; line-height:1.4; }
+.sc-script-sub   { font-size:0.76em; color:#9a7a62; margin-top:3px; line-height:1.4; }
 
 /* 3열 */
 .sc-col3 { border-right:1px solid #ddc8b4; }
 .sc-block-item {
   padding:13px 16px; cursor:pointer;
-  border-bottom:1px solid #f0e6dc;
+  border-bottom:1px solid #ede0d4;
   border-left:4px solid transparent;
   transition:background .1s;
   min-height:56px;
@@ -95,44 +100,36 @@
   background:#fff;
 }
 .sc-block-item:hover { filter:brightness(0.97); }
-.sc-block-num { font-size:0.68em; font-weight:700; padding:2px 6px; border-radius:20px; display:inline-block; margin-bottom:3px; color:white; }
+.sc-block-num   { font-size:0.68em; font-weight:700; padding:2px 6px; border-radius:20px; display:inline-block; margin-bottom:3px; color:white; }
 .sc-block-title { font-size:0.88em; font-weight:700; line-height:1.5; }
-.sc-block-sub { font-size:0.76em; color:#9a7a62; margin-top:3px; line-height:1.4; }
+.sc-block-sub   { font-size:0.76em; color:#9a7a62; margin-top:3px; line-height:1.4; }
 
 /* 4열 */
 .sc-col4 { background:#f7f2ec; }
 .sc-detail-panel {
-  padding:18px 18px;
+  padding:18px;
   min-height:56px;
-  border-bottom:1px solid #e8ddd4;
+  border-bottom:1px solid #e0d0c0;
 }
-.sc-detail-tag { font-size:0.68em; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:7px; color:white; }
+.sc-detail-tag   { font-size:0.68em; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:7px; color:white; }
 .sc-detail-title { font-size:0.95em; font-weight:800; margin-bottom:4px; line-height:1.4; }
-.sc-detail-sub { font-size:0.76em; color:#9a7a62; margin-bottom:10px; line-height:1.6; }
-.sc-detail-body { background:#fff; border:1px solid #ddc8b4; border-radius:10px; overflow:hidden; }
+.sc-detail-sub   { font-size:0.76em; color:#9a7a62; margin-bottom:10px; line-height:1.6; }
+.sc-detail-body  { background:#fff; border:1px solid #ddc8b4; border-radius:10px; overflow:hidden; }
 .sc-html { font-size:0.84em; color:#2a2018; line-height:1.9; }
 .sc-html div, .sc-html p { max-width:100%; }
 .sc-detail-empty { display:flex; align-items:center; justify-content:center; color:#c0a898; font-size:0.76em; padding:18px 12px; text-align:center; line-height:1.8; min-height:56px; }
 
-.sc-loading { grid-column:1/-1; display:flex; align-items:center; justify-content:center; padding:40px; color:#9a7a62; font-size:0.85em; }
-.sc-bottom-bar { background:#3d2b1f; color:#fff6ef; text-align:center; font-size:0.7895em; font-weight:800; padding:10px 14px; }
+.sc-loading  { grid-column:1/-1; display:flex; align-items:center; justify-content:center; padding:40px; color:#9a7a62; font-size:0.85em; }
+.sc-bottom-bar { background:#3d2b1f; color:#fff6ef; text-align:center; font-size:0.7895em; font-weight:800; padding:10px 14px; flex-shrink:0; }
 
 /* 반응형 */
-@media (max-width:1100px) {
-  .sc-body { grid-template-columns:100px 1fr 1fr 1fr; }
-}
-@media (max-width:800px) {
-  .sc-body { grid-template-columns:80px 1fr 1fr; }
-  .sc-col4 { display:none; }
-}
-@media (max-width:600px) {
-  .sc-tab-bar { display:none; }
-  .sc-body { grid-template-columns:70px 1fr; }
-  .sc-col3, .sc-col4 { display:none; }
-}
+@media (max-width:1100px) { .sc-body { grid-template-columns:100px 1fr 1fr 1fr; } }
+@media (max-width:800px)  { .sc-body { grid-template-columns:80px 1fr 1fr; } .sc-col4 { display:none; } }
+@media (max-width:600px)  { .sc-tab-bar { display:none; } .sc-body { grid-template-columns:70px 1fr; } .sc-col3,.sc-col4 { display:none; } }
 </style>
 
-<div>
+<div style="display:flex;flex-direction:column;height:100%;">
+
   <div class="sc-page-header">
     <div>
       <div class="sc-page-title">📞 스크립트</div>
@@ -141,6 +138,7 @@
     <div class="sc-page-icon">📋</div>
   </div>
 
+  <!-- 탭바: 고정 -->
   <div class="sc-tab-bar" id="sc-tab-bar">
     <button class="sc-tab-btn active" data-color="1" style="color:var(--s1t);border-bottom-color:var(--s1b);" onclick="window.scScrollToGroup(1)">📞 도입인사</button>
     <button class="sc-tab-btn" data-color="2" style="color:var(--s2t);" onclick="window.scScrollToGroup(2)">🔥 필요성강조</button>
@@ -151,11 +149,14 @@
     <button class="sc-tab-btn" data-color="7" style="color:var(--s7t);" onclick="window.scScrollToGroup(7)">⚡ 반론대응</button>
   </div>
 
-  <div class="sc-body" id="sc-body">
-    <div class="sc-loading">스크립트를 불러오는 중...</div>
+  <!-- 스크롤 영역 -->
+  <div class="sc-scroll" id="sc-scroll">
+    <div class="sc-body" id="sc-body">
+      <div class="sc-loading">스크립트를 불러오는 중...</div>
+    </div>
+    <div class="sc-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
   </div>
 
-  <div class="sc-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
 </div>
 
 <script>
@@ -196,53 +197,59 @@ window.scParseBlocks = function(html) {
   tmp.querySelectorAll('div[style*="border:1.5px solid #DCDCDC"]').forEach(function(el) {
     var rows = el.querySelectorAll('div[style*="font-size:13px"][style*="font-weight:700"]');
     var title = rows[0] ? rows[0].textContent.trim() : '';
-    var sub = rows[1] ? rows[1].textContent.trim() : '';
+    var sub   = rows[1] ? rows[1].textContent.trim() : '';
     if (title) blocks.push({ title:title, sub:sub, html:el.outerHTML });
   });
   if (!blocks.length) blocks.push({ title:'전체 스크립트', sub:'', html:html });
   return blocks;
 };
 
+/* 탭바 배경 + 활성 버튼 업데이트 */
 window.scUpdateTab = function(color) {
+  var tabBar = document.getElementById('sc-tab-bar');
+  if (tabBar) {
+    var bg = window.scGv(color,'bg');
+    var b  = window.scGv(color,'b');
+    tabBar.style.background    = bg;
+    tabBar.style.borderBottomColor = b;
+  }
   document.querySelectorAll('.sc-tab-btn').forEach(function(x) {
     var c = parseInt(x.dataset.color);
     var match = c === color;
     x.classList.toggle('active', match);
     x.style.borderBottomColor = match ? window.scGv(c,'b') : 'transparent';
+    x.style.fontWeight = match ? '800' : '600';
   });
 };
 
+/* 탭 클릭 → 해당 그룹으로 스크롤 */
 window.scScrollToGroup = function(color) {
-  var target = document.getElementById('sc-group-' + color);
-  if (!target) return;
+  var target  = document.getElementById('sc-group-' + color);
+  var scrollEl = document.getElementById('sc-scroll');
+  if (!target || !scrollEl) return;
   var tabBar = document.getElementById('sc-tab-bar');
-  var tabH = tabBar ? tabBar.offsetHeight : 44;
-  var ca = document.getElementById('content-area') || document.querySelector('.content-area');
-  if (ca) {
-    var caRect = ca.getBoundingClientRect();
-    var tRect = target.getBoundingClientRect();
-    ca.scrollTop += (tRect.top - caRect.top) - tabH - 4;
-  } else {
-    window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - tabH - 4, behavior:'smooth' });
-  }
+  var tabH   = tabBar ? tabBar.offsetHeight : 44;
+  var sRect  = scrollEl.getBoundingClientRect();
+  var tRect  = target.getBoundingClientRect();
+  scrollEl.scrollTop += (tRect.top - sRect.top) - 4;
   window.scUpdateTab(color);
 };
 
+/* 2열 스크립트 클릭 */
 window.scSelectScript = function(el, color, idx) {
   var scripts = window._sc_cache['group_' + color] || [];
   var sc = scripts[idx];
   if (!sc) return;
 
+  window.scUpdateTab(color);
+
   var col2 = document.getElementById('sc-scripts-' + color);
   if (col2) {
     col2.querySelectorAll('.sc-script-item').forEach(function(x) {
-      x.classList.remove('active');
-      x.style.background = '';
-      x.style.borderLeftColor = window.scGv(color,'b');
+      x.classList.remove('active'); x.style.background = '';
     });
     el.classList.add('active');
     el.style.background = window.scGv(color,'bg');
-    el.style.borderLeftColor = window.scGv(color,'b');
   }
 
   var col3 = document.getElementById('sc-blocks-' + color);
@@ -251,13 +258,13 @@ window.scSelectScript = function(el, color, idx) {
 
   var blocks = window.scParseBlocks(sc.script_text);
   window._sc_cache['blocks_' + color] = blocks;
-  window._sc_cache['cursc_' + color] = sc;
+  window._sc_cache['cursc_'  + color] = sc;
 
   var numLabels = ['①','②','③','④','⑤','⑥','⑦','⑧'];
   var t = window.scGv(color,'t'), b = window.scGv(color,'b');
   col3.innerHTML = blocks.map(function(bl, i) {
-    var numMatch = bl.title.match(/^[①②③④⑤⑥⑦⑧]/);
-    var num = numMatch ? numMatch[0] : (numLabels[i] || (i+1)+'');
+    var numMatch   = bl.title.match(/^[①②③④⑤⑥⑦⑧]/);
+    var num        = numMatch ? numMatch[0] : (numLabels[i] || (i+1)+'');
     var cleanTitle = bl.title.replace(/^[①②③④⑤⑥⑦⑧]\s*/,'');
     return '<div class="sc-block-item" style="border-left-color:' + b + ';" onclick="window.scSelectBlock(this,' + color + ',' + i + ')">' +
       '<span class="sc-block-num" style="background:' + b + ';">' + num + '</span>' +
@@ -267,15 +274,15 @@ window.scSelectScript = function(el, color, idx) {
   }).join('');
 
   if (col4) col4.innerHTML = '<div class="sc-detail-empty">← 세부 항목을 선택하세요</div>';
-
   var first = col3.querySelector('.sc-block-item');
   if (first) window.scSelectBlock(first, color, 0);
 };
 
+/* 3열 블록 클릭 */
 window.scSelectBlock = function(el, color, idx) {
   var blocks = window._sc_cache['blocks_' + color] || [];
-  var sc = window._sc_cache['cursc_' + color];
-  var bl = blocks[idx];
+  var sc     = window._sc_cache['cursc_'  + color];
+  var bl     = blocks[idx];
   if (!bl) return;
 
   var col3 = document.getElementById('sc-blocks-' + color);
@@ -297,26 +304,29 @@ window.scSelectBlock = function(el, color, idx) {
     '</div>';
 };
 
+/* 전체 렌더링 */
 window.scRenderAll = async function() {
   var body = document.getElementById('sc-body');
   if (!body) return;
   body.innerHTML = '';
 
   for (var gi = 0; gi < window._SC_GROUPS.length; gi++) {
-    var g = window._SC_GROUPS[gi];
+    var g     = window._SC_GROUPS[gi];
     var color = g.color;
     var bg = window.scGv(color,'bg'), t = window.scGv(color,'t'), b = window.scGv(color,'b');
 
     var scripts = await window.scFetch(g.stages);
     window._sc_cache['group_' + color] = scripts;
 
+    /* 그룹 구분선 (첫 그룹 제외) */
     if (gi > 0) {
       var divider = document.createElement('div');
       divider.className = 'sc-divider-row';
+      divider.style.background = 'linear-gradient(90deg,' + b + ' 0%, ' + bg + ' 50%, ' + b + ' 100%)';
       body.appendChild(divider);
     }
 
-    // 1열
+    /* 1열 */
     var cell1 = document.createElement('div');
     cell1.className = 'sc-col1';
     cell1.id = 'sc-group-' + color;
@@ -327,7 +337,7 @@ window.scRenderAll = async function() {
         '<span class="sc-g-count" style="background:' + b + ';">' + scripts.length + '개</span>' +
       '</div>';
 
-    // 2열
+    /* 2열 */
     var cell2 = document.createElement('div');
     cell2.className = 'sc-col2';
     cell2.id = 'sc-scripts-' + color;
@@ -340,13 +350,13 @@ window.scRenderAll = async function() {
         }).join('')
       : '<div class="sc-detail-empty">스크립트 없음</div>';
 
-    // 3열
+    /* 3열 */
     var cell3 = document.createElement('div');
     cell3.className = 'sc-col3';
     cell3.id = 'sc-blocks-' + color;
     cell3.innerHTML = '<div class="sc-detail-empty">← 선택하세요</div>';
 
-    // 4열
+    /* 4열 */
     var cell4 = document.createElement('div');
     cell4.className = 'sc-col4';
     cell4.id = 'sc-detail-' + color;
@@ -357,23 +367,25 @@ window.scRenderAll = async function() {
     body.appendChild(cell3);
     body.appendChild(cell4);
 
-    // 첫 스크립트 자동 선택
+    /* 첫 스크립트 자동 선택 */
     if (scripts.length) {
       var firstItem = cell2.querySelector('.sc-script-item');
       if (firstItem) window.scSelectScript(firstItem, color, 0);
     }
   }
 
-  // 스크롤 감지 → 상단 탭 색상 자동 변경
-  if ('IntersectionObserver' in window) {
+  /* IntersectionObserver — 스크롤 위치에 따라 탭 색상 자동 변경 */
+  var scrollEl = document.getElementById('sc-scroll');
+  if (scrollEl && 'IntersectionObserver' in window) {
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
-          var color = parseInt(entry.target.id.replace('sc-group-',''));
-          if (!isNaN(color)) window.scUpdateTab(color);
+          var c = parseInt(entry.target.id.replace('sc-group-',''));
+          if (!isNaN(c)) window.scUpdateTab(c);
         }
       });
-    }, { threshold: 0.4 });
+    }, { root: scrollEl, threshold: 0.3 });
+
     window._SC_GROUPS.forEach(function(g) {
       var el = document.getElementById('sc-group-' + g.color);
       if (el) observer.observe(el);
