@@ -281,6 +281,7 @@ html,body{
 .badge-script{background:#e8f4fd;color:#1a3f7a;}
 .badge-post{background:#e8fde8;color:#1a5c35;}
 .badge-quick{background:#faeeda;color:#854f0b;}
+.badge-disease{background:#fde8e8;color:#7a1a1a;}
 .search-empty{padding:28px 16px;text-align:center;font-size:13px;color:#bbb;}
 .search-footer{
   padding:10px 16px;text-align:center;
@@ -1187,22 +1188,44 @@ async function fetchSearchPreview(q) {
   try {
     const encoded = encodeURIComponent(q);
     const headers = { 'apikey': window.SUPABASE_KEY, 'Authorization': 'Bearer ' + window._userToken };
-    const [sr, pr, qr] = await Promise.all([
+    const [sr, pr, qr, dr] = await Promise.all([
       fetch(`${window.SUPABASE_URL}/rest/v1/scripts?or=(title.ilike.*${encoded}*,script_text.ilike.*${encoded}*,highlight_text.ilike.*${encoded}*)&is_active=eq.true&select=id,title,highlight_text,stage&limit=4`, { headers }),
       fetch(`${window.SUPABASE_URL}/rest/v1/posts?or=(title.ilike.*${encoded}*,content.ilike.*${encoded}*)&select=id,title,content,category&limit=4`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/quick_contents?or=(tab_title.ilike.*${encoded}*,search_text.ilike.*${encoded}*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3`, { headers })
+      fetch(`${window.SUPABASE_URL}/rest/v1/quick_contents?or=(tab_title.ilike.*${encoded}*,search_text.ilike.*${encoded}*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3`, { headers }),
+      fetch(`${window.SUPABASE_URL}/rest/v1/exception_diseases?disease_name=ilike.*${encoded}*&select=insurer_name,disease_code,disease_name,is_available,condition&limit=5`, { headers })
     ]);
-    const [scripts, posts, quicks] = await Promise.all([
+    const [scripts, posts, quicks, diseases] = await Promise.all([
       sr.ok ? sr.json() : [],
       pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : []
+      qr.ok ? qr.json() : [],
+      dr.ok ? dr.json() : []
     ]);
-    const total = scripts.length + posts.length + quicks.length;
+    // 예외질환은 회사별로 중복 제거 후 최대 3개 회사만 미리보기
+    const diseasePreview = diseases.reduce((acc, d) => {
+      if (!acc.find(x => x.insurer_name === d.insurer_name)) acc.push(d);
+      return acc;
+    }, []).slice(0, 3);
+    const total = scripts.length + posts.length + quicks.length + diseases.length;
     if (total === 0) {
       dd.innerHTML = `<div class="search-empty">🔍 '<b>${q}</b>' 검색 결과가 없습니다.</div>`;
       return;
     }
     let html = '';
+    if (diseasePreview.length) {
+      html += `<div class="search-section-label">🏥 예외질환 (${diseases.length}건)</div>`;
+      diseasePreview.forEach(d => {
+        const avail = d.is_available === 'O' ? '✅ 가능' : d.is_available === 'X' ? '❌ 불가' : '⚠️ 조건부';
+        const cond = (d.condition||'').slice(0, 30);
+        html += `<div class="search-result-item" onclick="doSearch('${q.replace(/'/g,"\\'")}');closeSearchDropdown();">
+          <span class="search-result-icon">🏥</span>
+          <div class="search-result-body">
+            <div class="search-result-title">${d.disease_name} · ${d.insurer_name}</div>
+            <div class="search-result-desc">${avail}${cond ? ' / ' + cond : ''}</div>
+          </div>
+          <span class="search-result-badge badge-disease">예외질환</span>
+        </div>`;
+      });
+    }
     if (scripts.length) {
       html += `<div class="search-section-label">📋 스크립트</div>`;
       scripts.forEach(s => {
@@ -1263,27 +1286,68 @@ async function doSearch(q) {
   try {
     const encoded = encodeURIComponent(q);
     const headers = { 'apikey': window.SUPABASE_KEY, 'Authorization': 'Bearer ' + window._userToken };
-    const [sr, pr, qr] = await Promise.all([
+    const [sr, pr, qr, dr] = await Promise.all([
       fetch(`${window.SUPABASE_URL}/rest/v1/scripts?or=(title.ilike.*${encoded}*,script_text.ilike.*${encoded}*,highlight_text.ilike.*${encoded}*)&is_active=eq.true&select=id,title,highlight_text,stage,type&limit=20`, { headers }),
       fetch(`${window.SUPABASE_URL}/rest/v1/posts?or=(title.ilike.*${encoded}*,content.ilike.*${encoded}*)&select=id,title,content,category&limit=20`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/quick_contents?or=(tab_title.ilike.*${encoded}*,search_text.ilike.*${encoded}*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10`, { headers })
+      fetch(`${window.SUPABASE_URL}/rest/v1/quick_contents?or=(tab_title.ilike.*${encoded}*,search_text.ilike.*${encoded}*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10`, { headers }),
+      fetch(`${window.SUPABASE_URL}/rest/v1/exception_diseases?disease_name=ilike.*${encoded}*&select=insurer_name,disease_code,disease_name,is_available,condition,coverage&order=insurer_name,disease_code&limit=100`, { headers })
     ]);
-    const [scripts, posts, quicks] = await Promise.all([
+    const [scripts, posts, quicks, diseases] = await Promise.all([
       sr.ok ? sr.json() : [],
       pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : []
+      qr.ok ? qr.json() : [],
+      dr.ok ? dr.json() : []
     ]);
-    const total = scripts.length + posts.length + quicks.length;
+    const total = scripts.length + posts.length + quicks.length + diseases.length;
     let html = `<div class="search-result-page">
       <div class="search-result-page-header">
         <div>
           <div class="search-result-page-title">🔍 &nbsp;"${q}" 검색 결과</div>
-          <div class="search-result-page-sub">총 ${total}건 — 스크립트 ${scripts.length}건 · 게시판 ${posts.length}건 · 업무자료 ${quicks.length}건</div>
+          <div class="search-result-page-sub">총 ${total}건 — 예외질환 ${diseases.length}건 · 스크립트 ${scripts.length}건 · 게시판 ${posts.length}건 · 업무자료 ${quicks.length}건</div>
         </div>
         <button class="search-result-page-close" onclick="switchMenu('home')">✕ 닫기</button>
       </div>`;
     if (total === 0) {
       html += `<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:0.9em;">검색 결과가 없습니다.<br><span style="font-size:0.85em;color:#ccc;">다른 키워드로 검색해 보세요.</span></div>`;
+    }
+    if (diseases.length) {
+      // 회사별로 그룹핑
+      const byInsurer = diseases.reduce((acc, d) => {
+        if (!acc[d.insurer_name]) acc[d.insurer_name] = [];
+        acc[d.insurer_name].push(d);
+        return acc;
+      }, {});
+      html += `<div class="search-group-title">🏥 예외질환 (${diseases.length}건)</div>`;
+      html += `<div style="overflow-x:auto;margin-bottom:8px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8em;">
+          <thead>
+            <tr style="background:#f5ede4;color:#3d2b1f;">
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;white-space:nowrap;">회사</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;white-space:nowrap;">질병코드</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;">질병명</th>
+              <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #ddc8b4;white-space:nowrap;">가능여부</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;">조건</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      Object.entries(byInsurer).forEach(([insurer, rows], gi) => {
+        rows.forEach((d, i) => {
+          const avail = d.is_available === 'O'
+            ? '<span style="color:#1a7a3f;font-weight:700;">✅ 가능</span>'
+            : d.is_available === 'X'
+            ? '<span style="color:#7a1a1a;font-weight:700;">❌ 불가</span>'
+            : '<span style="color:#7a4e1a;font-weight:700;">⚠️ 조건부</span>';
+          const bg = gi % 2 === 0 ? '#fff' : '#fdf9f6';
+          html += `<tr style="background:${bg};border-bottom:1px solid #edddd0;">
+            <td style="padding:7px 10px;white-space:nowrap;color:#6b4226;font-weight:${i===0?'600':'400'};">${i===0?insurer:''}</td>
+            <td style="padding:7px 10px;white-space:nowrap;font-family:monospace;font-size:0.95em;">${d.disease_code||'-'}</td>
+            <td style="padding:7px 10px;">${d.disease_name}</td>
+            <td style="padding:7px 10px;text-align:center;">${avail}</td>
+            <td style="padding:7px 10px;font-size:0.9em;color:#666;">${(d.condition||'-').replace(/\//g,' / ')}</td>
+          </tr>`;
+        });
+      });
+      html += `</tbody></table></div>`;
     }
     if (scripts.length) {
       html += `<div class="search-group-title">📋 스크립트 (${scripts.length}건)</div>`;
