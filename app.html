@@ -1492,7 +1492,7 @@ async function loadQuickDdItems() {
     };
     wrap.innerHTML = data.map(function(item) {
       const icon = icons[item.tab_key] || '📄';
-      return '<div class="quick-dd-item" onclick="openQuickOverlay('' + item.tab_title.replace(/'/g, "\'") + '')">' +
+      return '<div class="quick-dd-item" onclick="openQuickOverlay(\'' + item.tab_title.replace(/'/g, '&#39;') + '\')">' +
         '<span class="quick-dd-icon">' + icon + '</span>' + item.tab_title +
         '</div>';
     }).join('');
