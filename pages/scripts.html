@@ -1,13 +1,13 @@
 <style>
 :root {
   --brown-dark:#3d2b1f;
-  --s1bg:#ffd6d6; --s1t:#8b1a1a; --s1b:#cc6060;
-  --s2bg:#ffe4cc; --s2t:#7a3300; --s2b:#d4894a;
-  --s3bg:#fff6cc; --s3t:#5a4400; --s3b:#c8a030;
-  --s4bg:#d6f5e3; --s4t:#1a5c35; --s4b:#3a9e60;
-  --s5bg:#d6eaff; --s5t:#1a3f7a; --s5b:#4a80c8;
-  --s6bg:#d6d9ff; --s6t:#1a1f7a; --s6b:#5055c8;
-  --s7bg:#ead6ff; --s7t:#4a1a7a; --s7b:#8050c0;
+  --s1bg:#f5ede4; --s1t:#6b4226; --s1b:#c8a080;
+  --s2bg:#edddd0; --s2t:#5e3820; --s2b:#b08060;
+  --s3bg:#e0c9b8; --s3t:#52301a; --s3b:#966840;
+  --s4bg:#cfb09a; --s4t:#3d2214; --s4b:#7a5030;
+  --s5bg:#bc9478; --s5t:#ffffff; --s5b:#5e3820;
+  --s6bg:#a67858; --s6t:#ffffff; --s6b:#3d2b1f;
+  --s7bg:#3d2b1f; --s7t:#fff6ef; --s7b:#c8a080;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 
@@ -41,10 +41,11 @@
 .sc-drill {
   display:grid;
   grid-template-columns:300px 300px 300px 1fr;
-  height:calc(100vh - 240px);
+  height:auto;
   border-top:1px solid #ddc8b4;
+  align-items:start;
 }
-.sc-col { border-right:1px solid #ddc8b4; overflow-y:auto; display:flex; flex-direction:column; }
+.sc-col { border-right:1px solid #ddc8b4; overflow-y:visible; display:flex; flex-direction:column; }
 .sc-col:last-child { border-right:none; }
 
 /* 1열 */
@@ -95,7 +96,7 @@
 .sc-block-sub { font-size:0.82em; color:#9a7a62; margin-top:5px; line-height:1.5; }
 
 /* 4열 */
-.sc-col4 { background:#f7f2ec; padding:24px 28px; overflow-y:auto; }
+.sc-col4 { background:#f7f2ec; padding:24px 28px; overflow-y:visible; }
 .sc-detail-empty { display:flex; align-items:center; justify-content:center; flex:1; color:#9a7a62; font-size:0.8em; text-align:center; padding:30px; line-height:1.8; height:100%; }
 .sc-detail-tag { font-size:0.7368em; font-weight:700; padding:3px 10px; border-radius:20px; display:inline-block; margin-bottom:10px; color:white; }
 .sc-detail-title { font-size:1.1em; font-weight:800; margin-bottom:4px; }
@@ -281,19 +282,9 @@ window.scSelectGroup = async function(el) {
   var gcEl = document.getElementById('gc-' + color);
   if (gcEl) gcEl.textContent = scripts.length + '개';
 
-  // 1열 병합 높이: 렌더링 후 2열 실제 높이로 맞춤
+  // 1열 그룹 셀은 자연 높이로 흘러감 (overflow 해제로 자동 정렬)
   el.style.flex = 'none';
   el.style.height = 'auto';
-  setTimeout(function() {
-    var col2El = document.getElementById('sc-col2');
-    if (col2El) {
-      var totalH = 0;
-      col2El.querySelectorAll('.sc-script-item').forEach(function(item) {
-        totalH += item.offsetHeight;
-      });
-      if (totalH > 0) el.style.height = totalH + 'px';
-    }
-  }, 50);
 
   if (!scripts.length) { col2.innerHTML = '<div class="sc-col-empty">스크립트가 없습니다</div>'; return; }
   var bg = scGv(color,'bg'), t = scGv(color,'t'), b = scGv(color,'b');
