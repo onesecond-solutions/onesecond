@@ -1319,14 +1319,21 @@ async function doSearch(q) {
       }, {});
       html += `<div class="search-group-title">🏥 예외질환 (${diseases.length}건)</div>`;
       html += `<div style="overflow-x:auto;margin-bottom:8px;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.8em;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8em;table-layout:fixed;">
+          <colgroup>
+            <col style="width:13%;">
+            <col style="width:10%;">
+            <col style="width:42%;">
+            <col style="width:10%;">
+            <col style="width:25%;">
+          </colgroup>
           <thead>
             <tr style="background:#f5ede4;color:#3d2b1f;">
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;white-space:nowrap;">회사</th>
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;white-space:nowrap;">질병코드</th>
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;">질병명</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">회사</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">질병코드</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">질병명</th>
               <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #ddc8b4;white-space:nowrap;">가능여부</th>
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;">조건</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">조건</th>
             </tr>
           </thead>
           <tbody>`;
@@ -1338,12 +1345,13 @@ async function doSearch(q) {
             ? '<span style="color:#7a1a1a;font-weight:700;">❌ 불가</span>'
             : '<span style="color:#7a4e1a;font-weight:700;">⚠️ 조건부</span>';
           const bg = gi % 2 === 0 ? '#fff' : '#fdf9f6';
+          const tdBase = 'padding:7px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
           html += `<tr style="background:${bg};border-bottom:1px solid #edddd0;">
-            <td style="padding:7px 10px;white-space:nowrap;color:#6b4226;font-weight:${i===0?'600':'400'};">${i===0?insurer:''}</td>
-            <td style="padding:7px 10px;white-space:nowrap;font-family:monospace;font-size:0.95em;">${d.disease_code||'-'}</td>
-            <td style="padding:7px 10px;">${d.disease_name}</td>
-            <td style="padding:7px 10px;text-align:center;">${avail}</td>
-            <td style="padding:7px 10px;font-size:0.9em;color:#666;">${(d.condition||'-').replace(/\//g,' / ')}</td>
+            <td style="${tdBase}color:#6b4226;font-weight:${i===0?'600':'400'};">${i===0?insurer:''}</td>
+            <td style="${tdBase}font-family:monospace;font-size:0.95em;">${d.disease_code||'-'}</td>
+            <td style="${tdBase}" title="${d.disease_name}">${d.disease_name}</td>
+            <td style="padding:7px 10px;text-align:center;white-space:nowrap;">${avail}</td>
+            <td style="${tdBase}font-size:0.9em;color:#666;" title="${(d.condition||'-')}">${(d.condition||'-').replace(/\//g,' / ')}</td>
           </tr>`;
         });
       });
