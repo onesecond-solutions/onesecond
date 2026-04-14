@@ -866,7 +866,7 @@ window.loadLibraryList = async function() {
     const data = await res.json();
     window._allLibrary = data || [];
     window.renderLibraryList(window._allLibrary);
-  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패. 새로고침 해주세요.</div>'; } }
+  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패. 새로고침 해주세요.</div>'; }
 }
 
 window.renderLibraryList = function(items) {
