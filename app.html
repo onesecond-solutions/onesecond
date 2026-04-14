@@ -1384,7 +1384,7 @@ async function switchMenu(menuKey) {
     area.querySelectorAll('script').forEach(oldScript => {
       try {
         const newScript = document.createElement('script');
-        if (menuKey === 'quick') {
+        if (menuKey === 'quick' || menuKey === 'myspace') {
           newScript.textContent = oldScript.textContent;
         } else {
           newScript.textContent = '(function(){\n' + oldScript.textContent + '\n})();';
