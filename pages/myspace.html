@@ -986,14 +986,7 @@ window.loadUserInfo = async function() {
     }
   } catch(e) { console.error(e); }
 }
-window.toggleUserDropdown = function(event) {
-  if (event) event.stopPropagation();
-  document.getElementById('user-dropdown').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  const wrap = document.getElementById('user-dropdown-wrap');
-  if (wrap && !wrap.contains(e.target)) document.getElementById('user-dropdown').classList.remove('open');
-});
+// toggleUserDropdown / click 외부닫기 → app.html 원본 함수 사용 (재정의 불필요)
 
 window.openEditProfile = function() { document.getElementById('edit-overlay').classList.add('active'); document.body.style.overflow='hidden'; }
 window.closeEditProfile = function() { document.getElementById('edit-overlay').classList.remove('active'); document.body.style.overflow=''; }
@@ -1032,7 +1025,7 @@ window.sendPasswordReset = async function() {
   } catch(e){alert('네트워크 오류가 발생했습니다.');}
 }
 
-window.doLogout = function() { sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user'); window.location.href='index.html'; }
+// doLogout → app.html 원본 함수 사용 (재정의 불필요)
 
 window._myspaceReady = true;
 </script>
