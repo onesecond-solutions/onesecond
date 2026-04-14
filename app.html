@@ -1133,6 +1133,38 @@ function loadPricing() {
 
 loadUserInfo();
 
+// ── app_settings fetch → B영역 메뉴 ON/OFF 적용 ──
+async function applyMenuSettings() {
+  try {
+    const token = getToken();
+    if (!token) return;
+    const res = await fetch(
+      `${window.SUPABASE_URL}/rest/v1/app_settings?group_name=eq.menu_b&select=key,value`,
+      { headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': 'Bearer ' + token } }
+    );
+    if (!res.ok) return;
+    const rows = await res.json();
+    rows.forEach(r => {
+      // key: "menu_home" → data-menu="home"
+      const menuKey = r.key.replace('menu_', '');
+      // admin 메뉴는 renderProBadge가 별도 제어 → 스킵
+      if (menuKey === 'admin') return;
+      const el = document.querySelector(`.menu-item[data-menu="${menuKey}"]`);
+      const tabEl = document.querySelector(`.tab-item[data-menu="${menuKey}"]`);
+      if (r.value === 'off') {
+        if (el) el.style.display = 'none';
+        if (tabEl) tabEl.style.display = 'none';
+      } else {
+        if (el) el.style.display = '';
+        if (tabEl) tabEl.style.display = '';
+      }
+    });
+  } catch(e) {
+    console.warn('applyMenuSettings error:', e);
+  }
+}
+applyMenuSettings();
+
 // ── 검색 기능 ──
 function isPro() {
   return window._userPlan === 'pro' || ['manager','branch_manager','admin'].includes(window._userRole);
