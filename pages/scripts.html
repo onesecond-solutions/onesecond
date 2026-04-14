@@ -428,6 +428,61 @@ window.scRenderAll = async function() {
       if (el) observer.observe(el);
     });
   }
+
+  /* ── 검색에서 넘어온 경우: _pendingScript 처리 ── */
+  if (window._pendingScript) {
+    var ps = window._pendingScript;
+    window._pendingScript = null; // 소비 후 초기화
+
+    var targetColor = ps.color;
+    var targetTitle = ps.title;
+
+    if (targetColor) {
+      // 해당 그룹 스크립트 목록에서 title 매칭
+      var groupScripts = window._sc_cache['group_' + targetColor] || [];
+      var matchIdx = -1;
+      for (var mi = 0; mi < groupScripts.length; mi++) {
+        if (groupScripts[mi].title === targetTitle) { matchIdx = mi; break; }
+      }
+
+      // 해당 그룹 펼치기
+      var targetContent = document.getElementById('sc-content-' + targetColor);
+      var targetHeader  = document.getElementById('sc-header-'  + targetColor);
+      if (targetContent && targetContent.classList.contains('collapsed')) {
+        targetContent.classList.remove('collapsed');
+        if (targetHeader) targetHeader.classList.add('open');
+      }
+
+      // 첫 번째 그룹(도입인사) 닫기 — 다른 그룹으로 이동할 때
+      if (targetColor !== 1) {
+        var firstContent = document.getElementById('sc-content-1');
+        var firstHeader  = document.getElementById('sc-header-1');
+        if (firstContent && !firstContent.classList.contains('collapsed')) {
+          firstContent.classList.add('collapsed');
+          if (firstHeader) firstHeader.classList.remove('open');
+        }
+      }
+
+      // 스크립트 항목 선택
+      if (matchIdx >= 0) {
+        var col2 = document.getElementById('sc-scripts-' + targetColor);
+        if (col2) {
+          var items = col2.querySelectorAll('.sc-script-item');
+          if (items[matchIdx]) window.scSelectScript(items[matchIdx], targetColor, matchIdx);
+        }
+      } else if (groupScripts.length) {
+        // title 매칭 실패 시 첫 번째 항목 선택
+        var col2fb = document.getElementById('sc-scripts-' + targetColor);
+        if (col2fb) {
+          var firstItem = col2fb.querySelector('.sc-script-item');
+          if (firstItem) window.scSelectScript(firstItem, targetColor, 0);
+        }
+      }
+
+      // 해당 그룹으로 스크롤
+      window.scScrollToGroup(targetColor);
+    }
+  }
 };
 
 setTimeout(function() { window.scRenderAll(); }, 150);
