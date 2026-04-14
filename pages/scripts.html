@@ -1,6 +1,5 @@
 <style>
 :root {
-  --brown-dark:#3d2b1f;
   --s1bg:#f5ede4; --s1t:#6b4226; --s1b:#c8a080;
   --s2bg:#edddd0; --s2t:#5e3820; --s2b:#b08060;
   --s3bg:#e0c9b8; --s3t:#52301a; --s3b:#966840;
@@ -21,11 +20,12 @@
 .sc-page-desc { font-family:Pretendard,'Noto Sans KR',sans-serif; font-size:0.75em; color:rgba(255,255,255,0.65); }
 .sc-page-icon { font-size:2.8em; opacity:0.15; }
 
-/* 상단 탭바 */
+/* 상단 탭바 — sticky */
 .sc-tab-bar {
+  position:sticky; top:0; z-index:10;
   display:flex; gap:0; flex-wrap:nowrap;
   border-bottom:2px solid #ddc8b4;
-  background:#faf8f5; flex-shrink:0;
+  background:#faf8f5;
   overflow-x:auto;
 }
 .sc-tab-btn {
@@ -36,99 +36,99 @@
   transition:all .15s; flex-shrink:0;
 }
 .sc-tab-btn:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); background:#f3e4d6; }
-.sc-tab-btn.active { font-weight:800; border-bottom-color:currentColor; }
+.sc-tab-btn.active { font-weight:800; }
 
-.sc-drill {
+/* 본문 그리드 */
+.sc-body {
   display:grid;
-  grid-template-columns:300px 300px 300px 1fr;
-  height:auto;
+  grid-template-columns:120px 1fr 1fr 1fr;
   border-top:1px solid #ddc8b4;
-  align-items:start;
 }
-.sc-col { border-right:1px solid #ddc8b4; overflow-y:visible; display:flex; flex-direction:column; }
-.sc-col:last-child { border-right:none; }
+
+/* 그룹 구분선 */
+.sc-divider-row {
+  grid-column:1 / -1;
+  height:5px;
+  background:linear-gradient(90deg,#c8a080,#e8d8c8,#c8a080);
+}
 
 /* 1열 */
-.sc-col1 { background:#faf8f5; }
+.sc-col1 { border-right:1px solid #ddc8b4; }
 .sc-group-cell {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; padding:16px 12px; cursor:pointer;
-  border-left:6px solid transparent; border-bottom:1px solid #ddc8b4;
-  transition:filter .15s; gap:8px;
-  font-size:1.05em; font-weight:900; line-height:1.4;
+  text-align:center; padding:12px 6px;
+  border-left:5px solid;
+  font-size:0.82em; font-weight:900; line-height:1.4;
   font-family:Pretendard,'Noto Sans KR',sans-serif;
-  min-height:56px; flex-shrink:0; letter-spacing:-0.3px;
+  letter-spacing:-0.3px; gap:5px;
+  height:100%; min-height:56px;
+  cursor:pointer; transition:filter .15s;
 }
-.sc-group-cell:hover { filter:brightness(0.93); }
-.sc-group-cell.active { border-left-color:currentColor; filter:brightness(0.91); }
-.sc-g-icon { font-size:2.2em; }
-.sc-g-count { font-size:0.8em; font-weight:700; padding:1px 6px; border-radius:20px; color:white; margin-top:2px; }
+.sc-group-cell:hover { filter:brightness(0.92); }
+.sc-g-icon { font-size:1.5em; }
+.sc-g-count { font-size:0.72em; font-weight:700; padding:1px 5px; border-radius:20px; color:white; margin-top:2px; }
 
 /* 2열 */
-.sc-col2 { background:#fff; }
+.sc-col2 { border-right:1px solid #ddc8b4; }
 .sc-script-item {
-  padding:14px 20px; cursor:pointer;
+  padding:13px 16px; cursor:pointer;
   border-bottom:1px solid #f0e6dc;
   border-left:4px solid transparent;
   transition:background .1s;
-  min-height:56px; flex-shrink:0;
+  min-height:56px;
   display:flex; flex-direction:column; justify-content:center;
+  background:#fff;
 }
-.sc-script-item:hover { background:#faf5f0; }
-.sc-script-item.active { border-left-color:currentColor; }
-.sc-script-title { font-size:0.95em; font-weight:700; line-height:1.5; }
-.sc-script-sub { font-size:0.82em; color:#9a7a62; margin-top:5px; line-height:1.5; }
+.sc-script-item:hover { filter:brightness(0.97); }
+.sc-script-title { font-size:0.88em; font-weight:700; line-height:1.5; }
+.sc-script-sub { font-size:0.76em; color:#9a7a62; margin-top:3px; line-height:1.4; }
 
 /* 3열 */
-.sc-col3 { background:#fff; }
+.sc-col3 { border-right:1px solid #ddc8b4; }
 .sc-block-item {
-  padding:14px 20px; cursor:pointer;
+  padding:13px 16px; cursor:pointer;
   border-bottom:1px solid #f0e6dc;
   border-left:4px solid transparent;
   transition:background .1s;
-  min-height:56px; flex-shrink:0;
+  min-height:56px;
   display:flex; flex-direction:column; justify-content:center;
+  background:#fff;
 }
-.sc-block-item:hover { background:#faf5f0; }
-.sc-block-item.active { border-left-color:currentColor; }
-.sc-block-num { font-size:0.7em; font-weight:700; padding:2px 7px; border-radius:20px; display:inline-block; margin-bottom:4px; color:white; }
-.sc-block-title { font-size:0.95em; font-weight:700; line-height:1.5; }
-.sc-block-sub { font-size:0.82em; color:#9a7a62; margin-top:5px; line-height:1.5; }
+.sc-block-item:hover { filter:brightness(0.97); }
+.sc-block-num { font-size:0.68em; font-weight:700; padding:2px 6px; border-radius:20px; display:inline-block; margin-bottom:3px; color:white; }
+.sc-block-title { font-size:0.88em; font-weight:700; line-height:1.5; }
+.sc-block-sub { font-size:0.76em; color:#9a7a62; margin-top:3px; line-height:1.4; }
 
 /* 4열 */
-.sc-col4 { background:#f7f2ec; padding:24px 28px; overflow-y:visible; }
-.sc-detail-empty { display:flex; align-items:center; justify-content:center; flex:1; color:#9a7a62; font-size:0.8em; text-align:center; padding:30px; line-height:1.8; height:100%; }
-.sc-detail-tag { font-size:0.7368em; font-weight:700; padding:3px 10px; border-radius:20px; display:inline-block; margin-bottom:10px; color:white; }
-.sc-detail-title { font-size:1.1em; font-weight:800; margin-bottom:4px; }
-.sc-detail-sub { font-size:0.8em; color:#9a7a62; margin-bottom:16px; line-height:1.6; }
-.sc-detail-body { background:#fff; border:1px solid #ddc8b4; border-radius:12px; overflow:hidden; }
-.sc-html { font-size:0.9em; color:#2a2018; line-height:1.9; }
+.sc-col4 { background:#f7f2ec; }
+.sc-detail-panel {
+  padding:18px 18px;
+  min-height:56px;
+  border-bottom:1px solid #e8ddd4;
+}
+.sc-detail-tag { font-size:0.68em; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:7px; color:white; }
+.sc-detail-title { font-size:0.95em; font-weight:800; margin-bottom:4px; line-height:1.4; }
+.sc-detail-sub { font-size:0.76em; color:#9a7a62; margin-bottom:10px; line-height:1.6; }
+.sc-detail-body { background:#fff; border:1px solid #ddc8b4; border-radius:10px; overflow:hidden; }
+.sc-html { font-size:0.84em; color:#2a2018; line-height:1.9; }
 .sc-html div, .sc-html p { max-width:100%; }
+.sc-detail-empty { display:flex; align-items:center; justify-content:center; color:#c0a898; font-size:0.76em; padding:18px 12px; text-align:center; line-height:1.8; min-height:56px; }
 
-.sc-col-empty { display:flex; align-items:center; justify-content:center; flex:1; color:#9a7a62; font-size:0.8em; text-align:center; padding:30px; line-height:1.8; }
+.sc-loading { grid-column:1/-1; display:flex; align-items:center; justify-content:center; padding:40px; color:#9a7a62; font-size:0.85em; }
 .sc-bottom-bar { background:#3d2b1f; color:#fff6ef; text-align:center; font-size:0.7895em; font-weight:800; padding:10px 14px; }
 
-/* ── 반응형 ── */
-@media (max-width:1400px) {
-  .sc-drill { grid-template-columns:260px 260px 260px 1fr; }
-}
+/* 반응형 */
 @media (max-width:1100px) {
-  .sc-drill { grid-template-columns:240px 240px 1fr; }
-  #sc-col3 { display:none; }
+  .sc-body { grid-template-columns:100px 1fr 1fr 1fr; }
 }
 @media (max-width:800px) {
-  .sc-drill { grid-template-columns:200px 1fr; }
-  #sc-col2 { display:none; }
-  #sc-col3 { display:none; }
+  .sc-body { grid-template-columns:80px 1fr 1fr; }
+  .sc-col4 { display:none; }
 }
 @media (max-width:600px) {
   .sc-tab-bar { display:none; }
-  .sc-drill { grid-template-columns:1fr; height:auto; }
-  #sc-col1 { display:none; }
-  #sc-col2 { display:flex; }
-  #sc-col3 { display:none; }
-  #sc-col4 { display:none; }
-  .sc-group-cell { font-size:0.85em; padding:10px 8px; }
+  .sc-body { grid-template-columns:70px 1fr; }
+  .sc-col3, .sc-col4 { display:none; }
 }
 </style>
 
@@ -141,64 +141,18 @@
     <div class="sc-page-icon">📋</div>
   </div>
 
-  <!-- 상단 탭바 -->
   <div class="sc-tab-bar" id="sc-tab-bar">
-    <button class="sc-tab-btn active" data-stages="opening,opening_rejection" data-color="1" style="color:var(--s1t);border-bottom-color:var(--s1b);" onclick="window.scSelectGroupByTab(this)">📞 도입인사</button>
-    <button class="sc-tab-btn" data-stages="need_emphasis,need_emphasis_2" data-color="2" style="color:var(--s2t);" onclick="window.scSelectGroupByTab(this)">🔥 필요성강조</button>
-    <button class="sc-tab-btn" data-stages="situation_check" data-color="3" style="color:var(--s3t);" onclick="window.scSelectGroupByTab(this)">🔎 상황확인</button>
-    <button class="sc-tab-btn" data-stages="analysis" data-color="4" style="color:var(--s4t);" onclick="window.scSelectGroupByTab(this)">📊 보장분석</button>
-    <button class="sc-tab-btn" data-stages="product" data-color="5" style="color:var(--s5t);" onclick="window.scSelectGroupByTab(this)">📦 상품설명</button>
-    <button class="sc-tab-btn" data-stages="closing,closing_second" data-color="6" style="color:var(--s6t);" onclick="window.scSelectGroupByTab(this)">✅ 클로징</button>
-    <button class="sc-tab-btn" data-stages="objection" data-color="7" style="color:var(--s7t);" onclick="window.scSelectGroupByTab(this)">⚡ 반론대응</button>
+    <button class="sc-tab-btn active" data-color="1" style="color:var(--s1t);border-bottom-color:var(--s1b);" onclick="window.scScrollToGroup(1)">📞 도입인사</button>
+    <button class="sc-tab-btn" data-color="2" style="color:var(--s2t);" onclick="window.scScrollToGroup(2)">🔥 필요성강조</button>
+    <button class="sc-tab-btn" data-color="3" style="color:var(--s3t);" onclick="window.scScrollToGroup(3)">🔎 상황확인</button>
+    <button class="sc-tab-btn" data-color="4" style="color:var(--s4t);" onclick="window.scScrollToGroup(4)">📊 보장분석</button>
+    <button class="sc-tab-btn" data-color="5" style="color:var(--s5t);" onclick="window.scScrollToGroup(5)">📦 상품설명</button>
+    <button class="sc-tab-btn" data-color="6" style="color:var(--s6t);" onclick="window.scScrollToGroup(6)">✅ 클로징</button>
+    <button class="sc-tab-btn" data-color="7" style="color:var(--s7t);" onclick="window.scScrollToGroup(7)">⚡ 반론대응</button>
   </div>
 
-  <div class="sc-drill">
-    <!-- 1열 -->
-    <div class="sc-col sc-col1" id="sc-col1">
-      <div class="sc-group-cell active" style="background:var(--s1bg);color:var(--s1t);" data-stages="opening,opening_rejection" data-color="1" onclick="window.scSelectGroup(this)">
-        <span class="sc-g-icon">📞</span><span>도입<br>인사</span>
-        <span class="sc-g-count" style="background:var(--s1b);" id="gc-1">…</span>
-      </div>
-      <div class="sc-group-cell" style="background:var(--s2bg);color:var(--s2t);" data-stages="need_emphasis,need_emphasis_2" data-color="2" onclick="window.scSelectGroup(this)">
-        <span class="sc-g-icon">🔥</span><span>필요성<br>강조</span>
-        <span class="sc-g-count" style="background:var(--s2b);" id="gc-2">…</span>
-      </div>
-      <div class="sc-group-cell" style="background:var(--s3bg);color:var(--s3t);" data-stages="situation_check" data-color="3" onclick="window.scSelectGroup(this)">
-        <span class="sc-g-icon">🔎</span><span>상황<br>확인</span>
-        <span class="sc-g-count" style="background:var(--s3b);" id="gc-3">…</span>
-      </div>
-      <div class="sc-group-cell" style="background:var(--s4bg);color:var(--s4t);" data-stages="analysis" data-color="4" onclick="window.scSelectGroup(this)">
-        <span class="sc-g-icon">📊</span><span>보장<br>분석</span>
-        <span class="sc-g-count" style="background:var(--s4b);" id="gc-4">…</span>
-      </div>
-      <div class="sc-group-cell" style="background:var(--s5bg);color:var(--s5t);" data-stages="product" data-color="5" onclick="window.scSelectGroup(this)">
-        <span class="sc-g-icon">📦</span><span>상품<br>설명</span>
-        <span class="sc-g-count" style="background:var(--s5b);" id="gc-5">…</span>
-      </div>
-      <div class="sc-group-cell" style="background:var(--s6bg);color:var(--s6t);" data-stages="closing,closing_second" data-color="6" onclick="window.scSelectGroup(this)">
-        <span class="sc-g-icon">✅</span><span>클로징</span>
-        <span class="sc-g-count" style="background:var(--s6b);" id="gc-6">…</span>
-      </div>
-      <div class="sc-group-cell" style="background:var(--s7bg);color:var(--s7t);" data-stages="objection" data-color="7" onclick="window.scSelectGroup(this)">
-        <span class="sc-g-icon">⚡</span><span>반론<br>대응</span>
-        <span class="sc-g-count" style="background:var(--s7b);" id="gc-7">…</span>
-      </div>
-    </div>
-
-    <!-- 2열 -->
-    <div class="sc-col sc-col2" id="sc-col2">
-      <div class="sc-col-empty">← 단계를 선택하세요</div>
-    </div>
-
-    <!-- 3열 -->
-    <div class="sc-col sc-col3" id="sc-col3">
-      <div class="sc-col-empty">← 스크립트를<br>선택하세요</div>
-    </div>
-
-    <!-- 4열 -->
-    <div class="sc-col sc-col4" id="sc-col4">
-      <div class="sc-detail-empty">← 세부 항목을 선택하세요</div>
-    </div>
+  <div class="sc-body" id="sc-body">
+    <div class="sc-loading">스크립트를 불러오는 중...</div>
   </div>
 
   <div class="sc-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
@@ -206,14 +160,22 @@
 
 <script>
 if (!window._sc_cache) window._sc_cache = {};
-if (!window._sc_curColor) window._sc_curColor = 1;
-if (!window._sc_curScript) window._sc_curScript = null;
 
-function scGv(n, t) {
+window._SC_GROUPS = [
+  { color:1, icon:'📞', label:'도입\n인사',   stages:['opening','opening_rejection'] },
+  { color:2, icon:'🔥', label:'필요성\n강조', stages:['need_emphasis','need_emphasis_2'] },
+  { color:3, icon:'🔎', label:'상황\n확인',   stages:['situation_check'] },
+  { color:4, icon:'📊', label:'보장\n분석',   stages:['analysis'] },
+  { color:5, icon:'📦', label:'상품\n설명',   stages:['product'] },
+  { color:6, icon:'✅', label:'클로징',        stages:['closing','closing_second'] },
+  { color:7, icon:'⚡', label:'반론\n대응',   stages:['objection'] }
+];
+
+window.scGv = function(n, t) {
   return getComputedStyle(document.documentElement).getPropertyValue('--s' + n + t).trim();
-}
+};
 
-async function scFetch(stages) {
+window.scFetch = async function(stages) {
   var key = stages.join(',');
   if (window._sc_cache[key]) return window._sc_cache[key];
   var url = window.SUPABASE_URL + '/rest/v1/scripts?stage=in.(' + stages.join(',') + ')&is_active=eq.true&order=stage,title&select=id,title,stage,top_category,highlight_text,script_text';
@@ -224,9 +186,9 @@ async function scFetch(stages) {
     window._sc_cache[key] = data;
     return data;
   } catch(e) { return []; }
-}
+};
 
-function scParseBlocks(html) {
+window.scParseBlocks = function(html) {
   if (!html) return [];
   var tmp = document.createElement('div');
   tmp.innerHTML = html;
@@ -235,133 +197,189 @@ function scParseBlocks(html) {
     var rows = el.querySelectorAll('div[style*="font-size:13px"][style*="font-weight:700"]');
     var title = rows[0] ? rows[0].textContent.trim() : '';
     var sub = rows[1] ? rows[1].textContent.trim() : '';
-    if (title) blocks.push({ title: title, sub: sub, html: el.outerHTML });
+    if (title) blocks.push({ title:title, sub:sub, html:el.outerHTML });
   });
-  // 파싱 실패 시 전체 반환
-  if (!blocks.length) blocks.push({ title: '전체 스크립트', sub: '', html: html });
+  if (!blocks.length) blocks.push({ title:'전체 스크립트', sub:'', html:html });
   return blocks;
-}
-
-// 상단 탭에서 호출
-window.scSelectGroupByTab = function(tabEl) {
-  var color = parseInt(tabEl.dataset.color);
-  // 상단 탭 active 업데이트
-  document.querySelectorAll('.sc-tab-btn').forEach(function(x) {
-    x.classList.remove('active');
-    x.style.borderBottomColor = 'transparent';
-  });
-  tabEl.classList.add('active');
-  tabEl.style.borderBottomColor = scGv(color,'b');
-  // 1열 대응 그룹 셀 클릭
-  var cell = document.querySelector('.sc-group-cell[data-color="' + color + '"]');
-  if (cell) window.scSelectGroup(cell);
 };
 
-window.scSelectGroup = async function(el) {
-  document.querySelectorAll('.sc-group-cell').forEach(function(x) { x.classList.remove('active'); });
-  el.classList.add('active');
-  var color = parseInt(el.dataset.color);
-  window._sc_curColor = color;
-  var stages = el.dataset.stages.split(',');
-
-  // 상단 탭 연동
+window.scUpdateTab = function(color) {
   document.querySelectorAll('.sc-tab-btn').forEach(function(x) {
-    var match = x.dataset.color === String(color);
+    var c = parseInt(x.dataset.color);
+    var match = c === color;
     x.classList.toggle('active', match);
-    x.style.borderBottomColor = match ? scGv(color,'b') : 'transparent';
+    x.style.borderBottomColor = match ? window.scGv(c,'b') : 'transparent';
   });
-
-  var col2 = document.getElementById('sc-col2');
-  var col3 = document.getElementById('sc-col3');
-  var col4 = document.getElementById('sc-col4');
-  col2.innerHTML = '<div class="sc-col-empty">불러오는 중...</div>';
-  col3.innerHTML = '<div class="sc-col-empty">← 스크립트를<br>선택하세요</div>';
-  col4.innerHTML = '<div class="sc-detail-empty">← 세부 항목을 선택하세요</div>';
-  var scripts = await scFetch(stages);
-  window._sc_cache['_cur'] = scripts;
-  var gcEl = document.getElementById('gc-' + color);
-  if (gcEl) gcEl.textContent = scripts.length + '개';
-
-  // 1열 그룹 셀은 자연 높이로 흘러감 (overflow 해제로 자동 정렬)
-  el.style.flex = 'none';
-  el.style.height = 'auto';
-
-  if (!scripts.length) { col2.innerHTML = '<div class="sc-col-empty">스크립트가 없습니다</div>'; return; }
-  var bg = scGv(color,'bg'), t = scGv(color,'t'), b = scGv(color,'b');
-  col2.innerHTML = scripts.map(function(sc, i) {
-    return '<div class="sc-script-item" style="border-left-color:' + b + ';" onclick="window.scSelectScript(this,' + i + ')">' +
-      '<div class="sc-script-title" style="color:' + t + ';">' + sc.title + '</div>' +
-      '<div class="sc-script-sub">' + (sc.highlight_text || '').replace(/<[^>]+>/g,'').slice(0,28) + '</div>' +
-    '</div>';
-  }).join('');
-  var first = col2.querySelector('.sc-script-item');
-  if (first) window.scSelectScript(first, 0);
 };
 
-window.scSelectScript = function(el, idx) {
-  var color = window._sc_curColor;
-  var scripts = window._sc_cache['_cur'] || [];
+window.scScrollToGroup = function(color) {
+  var target = document.getElementById('sc-group-' + color);
+  if (!target) return;
+  var tabBar = document.getElementById('sc-tab-bar');
+  var tabH = tabBar ? tabBar.offsetHeight : 44;
+  var ca = document.getElementById('content-area') || document.querySelector('.content-area');
+  if (ca) {
+    var caRect = ca.getBoundingClientRect();
+    var tRect = target.getBoundingClientRect();
+    ca.scrollTop += (tRect.top - caRect.top) - tabH - 4;
+  } else {
+    window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - tabH - 4, behavior:'smooth' });
+  }
+  window.scUpdateTab(color);
+};
+
+window.scSelectScript = function(el, color, idx) {
+  var scripts = window._sc_cache['group_' + color] || [];
   var sc = scripts[idx];
   if (!sc) return;
-  window._sc_curScript = sc;
-  var bg = scGv(color,'bg'), t = scGv(color,'t'), b = scGv(color,'b');
-  document.querySelectorAll('#sc-col2 .sc-script-item').forEach(function(x) { x.classList.remove('active'); x.style.background=''; });
-  el.classList.add('active'); el.style.background = bg;
-  var col3 = document.getElementById('sc-col3');
-  var col4 = document.getElementById('sc-col4');
-  col4.innerHTML = '<div class="sc-detail-empty">← 세부 항목을 선택하세요</div>';
-  var blocks = scParseBlocks(sc.script_text);
-  window._sc_cache['_cur_blocks'] = blocks;
+
+  var col2 = document.getElementById('sc-scripts-' + color);
+  if (col2) {
+    col2.querySelectorAll('.sc-script-item').forEach(function(x) {
+      x.classList.remove('active');
+      x.style.background = '';
+      x.style.borderLeftColor = window.scGv(color,'b');
+    });
+    el.classList.add('active');
+    el.style.background = window.scGv(color,'bg');
+    el.style.borderLeftColor = window.scGv(color,'b');
+  }
+
+  var col3 = document.getElementById('sc-blocks-' + color);
+  var col4 = document.getElementById('sc-detail-' + color);
+  if (!col3) return;
+
+  var blocks = window.scParseBlocks(sc.script_text);
+  window._sc_cache['blocks_' + color] = blocks;
+  window._sc_cache['cursc_' + color] = sc;
+
   var numLabels = ['①','②','③','④','⑤','⑥','⑦','⑧'];
+  var t = window.scGv(color,'t'), b = window.scGv(color,'b');
   col3.innerHTML = blocks.map(function(bl, i) {
     var numMatch = bl.title.match(/^[①②③④⑤⑥⑦⑧]/);
-    var num = numMatch ? numMatch[0] : numLabels[i] || (i+1)+'';
+    var num = numMatch ? numMatch[0] : (numLabels[i] || (i+1)+'');
     var cleanTitle = bl.title.replace(/^[①②③④⑤⑥⑦⑧]\s*/,'');
-    return '<div class="sc-block-item" style="border-left-color:' + b + ';" onclick="window.scSelectBlock(this,' + i + ')">' +
+    return '<div class="sc-block-item" style="border-left-color:' + b + ';" onclick="window.scSelectBlock(this,' + color + ',' + i + ')">' +
       '<span class="sc-block-num" style="background:' + b + ';">' + num + '</span>' +
       '<div class="sc-block-title" style="color:' + t + ';">' + cleanTitle + '</div>' +
-      '<div class="sc-block-sub">' + bl.sub.slice(0,24) + '</div>' +
+      '<div class="sc-block-sub">' + (bl.sub||'').slice(0,24) + '</div>' +
     '</div>';
   }).join('');
+
+  if (col4) col4.innerHTML = '<div class="sc-detail-empty">← 세부 항목을 선택하세요</div>';
+
   var first = col3.querySelector('.sc-block-item');
-  if (first) window.scSelectBlock(first, 0);
+  if (first) window.scSelectBlock(first, color, 0);
 };
 
-window.scSelectBlock = function(el, idx) {
-  var color = window._sc_curColor;
-  var blocks = window._sc_cache['_cur_blocks'] || [];
-  var sc = window._sc_curScript;
+window.scSelectBlock = function(el, color, idx) {
+  var blocks = window._sc_cache['blocks_' + color] || [];
+  var sc = window._sc_cache['cursc_' + color];
   var bl = blocks[idx];
   if (!bl) return;
-  var bg = scGv(color,'bg'), t = scGv(color,'t'), b = scGv(color,'b');
-  document.querySelectorAll('#sc-col3 .sc-block-item').forEach(function(x) { x.classList.remove('active'); x.style.background=''; });
-  el.classList.add('active'); el.style.background = bg;
-  var col4 = document.getElementById('sc-col4');
+
+  var col3 = document.getElementById('sc-blocks-' + color);
+  if (col3) {
+    col3.querySelectorAll('.sc-block-item').forEach(function(x) { x.classList.remove('active'); x.style.background=''; });
+    el.classList.add('active');
+    el.style.background = window.scGv(color,'bg');
+  }
+
+  var col4 = document.getElementById('sc-detail-' + color);
+  if (!col4) return;
+  var t = window.scGv(color,'t'), b = window.scGv(color,'b');
   col4.innerHTML =
-    '<div class="sc-detail-tag" style="background:' + b + ';">' + (sc ? sc.title : '') + '</div>' +
-    '<div class="sc-detail-title" style="color:' + t + ';">' + bl.title + '</div>' +
-    '<div class="sc-detail-sub">' + bl.sub + '</div>' +
-    '<div class="sc-detail-body"><div class="sc-html">' + bl.html + '</div></div>';
+    '<div class="sc-detail-panel">' +
+      '<div class="sc-detail-tag" style="background:' + b + ';">' + (sc ? sc.title : '') + '</div>' +
+      '<div class="sc-detail-title" style="color:' + t + ';">' + bl.title + '</div>' +
+      '<div class="sc-detail-sub">' + (bl.sub||'') + '</div>' +
+      '<div class="sc-detail-body"><div class="sc-html">' + bl.html + '</div></div>' +
+    '</div>';
 };
 
-(function init() {
-  var ROW_H = 56;
-  // 모든 그룹 개수 미리 로드 + height 고정
-  document.querySelectorAll('.sc-group-cell').forEach(function(el) {
-    var stages = el.dataset.stages.split(',');
-    var color = el.dataset.color;
-    scFetch(stages).then(function(data) {
-      var gcEl = document.getElementById('gc-' + color);
-      if (gcEl) gcEl.textContent = data.length + '개';
-      if (data.length) {
-        el.style.flex = 'none';
-      }
+window.scRenderAll = async function() {
+  var body = document.getElementById('sc-body');
+  if (!body) return;
+  body.innerHTML = '';
+
+  for (var gi = 0; gi < window._SC_GROUPS.length; gi++) {
+    var g = window._SC_GROUPS[gi];
+    var color = g.color;
+    var bg = window.scGv(color,'bg'), t = window.scGv(color,'t'), b = window.scGv(color,'b');
+
+    var scripts = await window.scFetch(g.stages);
+    window._sc_cache['group_' + color] = scripts;
+
+    if (gi > 0) {
+      var divider = document.createElement('div');
+      divider.className = 'sc-divider-row';
+      body.appendChild(divider);
+    }
+
+    // 1열
+    var cell1 = document.createElement('div');
+    cell1.className = 'sc-col1';
+    cell1.id = 'sc-group-' + color;
+    cell1.innerHTML =
+      '<div class="sc-group-cell" style="background:' + bg + ';color:' + t + ';border-left-color:' + b + ';" onclick="window.scScrollToGroup(' + color + ')">' +
+        '<span class="sc-g-icon">' + g.icon + '</span>' +
+        '<span>' + g.label.replace('\n','<br>') + '</span>' +
+        '<span class="sc-g-count" style="background:' + b + ';">' + scripts.length + '개</span>' +
+      '</div>';
+
+    // 2열
+    var cell2 = document.createElement('div');
+    cell2.className = 'sc-col2';
+    cell2.id = 'sc-scripts-' + color;
+    cell2.innerHTML = scripts.length
+      ? scripts.map(function(sc, i) {
+          return '<div class="sc-script-item" style="border-left-color:' + b + ';" onclick="window.scSelectScript(this,' + color + ',' + i + ')">' +
+            '<div class="sc-script-title" style="color:' + t + ';">' + sc.title + '</div>' +
+            '<div class="sc-script-sub">' + (sc.highlight_text||'').replace(/<[^>]+>/g,'').slice(0,30) + '</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="sc-detail-empty">스크립트 없음</div>';
+
+    // 3열
+    var cell3 = document.createElement('div');
+    cell3.className = 'sc-col3';
+    cell3.id = 'sc-blocks-' + color;
+    cell3.innerHTML = '<div class="sc-detail-empty">← 선택하세요</div>';
+
+    // 4열
+    var cell4 = document.createElement('div');
+    cell4.className = 'sc-col4';
+    cell4.id = 'sc-detail-' + color;
+    cell4.innerHTML = '<div class="sc-detail-empty">← 선택하세요</div>';
+
+    body.appendChild(cell1);
+    body.appendChild(cell2);
+    body.appendChild(cell3);
+    body.appendChild(cell4);
+
+    // 첫 스크립트 자동 선택
+    if (scripts.length) {
+      var firstItem = cell2.querySelector('.sc-script-item');
+      if (firstItem) window.scSelectScript(firstItem, color, 0);
+    }
+  }
+
+  // 스크롤 감지 → 상단 탭 색상 자동 변경
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var color = parseInt(entry.target.id.replace('sc-group-',''));
+          if (!isNaN(color)) window.scUpdateTab(color);
+        }
+      });
+    }, { threshold: 0.4 });
+    window._SC_GROUPS.forEach(function(g) {
+      var el = document.getElementById('sc-group-' + g.color);
+      if (el) observer.observe(el);
     });
-  });
-  // 첫 그룹 자동 선택
-  setTimeout(function() {
-    var first = document.querySelector('.sc-group-cell');
-    if (first) window.scSelectGroup(first);
-  }, 300);
-})();
+  }
+};
+
+setTimeout(function() { window.scRenderAll(); }, 150);
 </script>
