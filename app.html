@@ -992,14 +992,16 @@ if (!window.overlayContent) window.overlayContent = {};
 // ── Supabase 설정 ──
 window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
 window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
-window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
+window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝', admin:'관리자' };
 
 // ── 토큰 초기화 및 세션 체크 ──
 const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
-if (!_initToken || !_initAuth.id) { window.location.href = 'index.html'; }
+// Supabase 인증 객체: id / sub / user.id 등 여러 구조 대응
+const _resolvedId = _initAuth.id || _initAuth.sub || (_initAuth.user && (_initAuth.user.id || _initAuth.user.sub)) || null;
+if (!_initToken || !_resolvedId) { window.location.href = 'index.html'; }
 window._userToken = _initToken;
-window._userId = _initAuth.id;
+window._userId = _resolvedId;
 
 // 토큰 만료 여부 체크 → 만료되었으면 즉시 갱신
 (async function() {
@@ -1066,9 +1068,9 @@ async function loadUserInfo() {
     if (data && data[0]) {
       const u = data[0];
       const roleName = window.ROLE_LABEL[u.role] || '';
-      const displayName = `${u.name} ${roleName}`;
+      const displayName = roleName ? `${u.name} ${roleName}` : u.name;
       const userEl = document.getElementById('topbar-user');
-      if (userEl) userEl.textContent = `${displayName}(${u.email}) ▾`;
+      if (userEl) userEl.textContent = `${displayName} (${u.email}) ▾`;
       const greetEl = document.getElementById('a2-greeting');
       if (greetEl) greetEl.innerHTML = `안녕하세요, <strong style="color:#a0724a;">${displayName}</strong>님! 오늘도 화이팅입니다 🔥`;
       window._userEmail = u.email;
