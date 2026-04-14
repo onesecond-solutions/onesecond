@@ -1207,7 +1207,7 @@ async function fetchSearchPreview(q) {
       html += `<div class="search-section-label">📋 스크립트</div>`;
       scripts.forEach(s => {
         const desc = (s.highlight_text||'').replace(/<[^>]+>/g,'').slice(0,40);
-        html += `<div class="search-result-item" onclick="doSearch('${q.replace(/'/g,"\\'")}')">
+        html += `<div class="search-result-item" onclick="navigateToScript('${(s.stage||'').replace(/'/g,"\\'")}','${s.title.replace(/'/g,"\\'")}');closeSearchDropdown();">
           <span class="search-result-icon">📋</span>
           <div class="search-result-body">
             <div class="search-result-title">${s.title}</div>
@@ -1289,7 +1289,7 @@ async function doSearch(q) {
       html += `<div class="search-group-title">📋 스크립트 (${scripts.length}건)</div>`;
       scripts.forEach(s => {
         const desc = (s.highlight_text||'').replace(/<[^>]+>/g,'').slice(0,80);
-        html += `<div class="search-card" onclick="switchMenu('scripts')">
+        html += `<div class="search-card" onclick="navigateToScript('${(s.stage||'').replace(/'/g,"\\'")}','${s.title.replace(/'/g,"\\'")}')">
           <div class="search-card-top">
             <span class="search-result-badge badge-script">스크립트</span>
             <span class="search-card-title">${s.title}</span>
@@ -1439,6 +1439,26 @@ async function switchMenu(menuKey) {
   }
 }
 window.switchMenu = switchMenu;
+
+// stage 문자열 → scripts.html의 color 번호로 변환
+function stageToColor(stage) {
+  var map = {
+    opening:1, opening_rejection:1,
+    need_emphasis:2, need_emphasis_2:2,
+    situation_check:3,
+    analysis:4,
+    product:5,
+    closing:6, closing_second:6,
+    objection:7
+  };
+  return map[stage] || null;
+}
+
+// 검색 결과에서 스크립트 클릭 시 호출
+window.navigateToScript = function(stage, title) {
+  window._pendingScript = { stage: stage, title: title, color: stageToColor(stage) };
+  switchMenu('scripts');
+};
 
 function calcInsAge(){
   var birth=document.getElementById('ins-birth');
