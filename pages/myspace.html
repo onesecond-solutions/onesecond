@@ -681,7 +681,7 @@ if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.su
 if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
 if (!window.ROLE_LABEL) window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
 if (!window._userToken) window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id; }
+if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id || _a.user_id || null; }
 
 // ── 스크립트 저장 ──
 window.saveScriptToSupabase = async function() {
@@ -786,6 +786,10 @@ window._allLibrary = window._allLibrary || [];
 window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
+  if (!window._userId) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">로그인 정보를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+    return;
+  }
   try {
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/scripts?owner_id=eq.${window._userId}&order=created_at.desc`, {
       headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': `Bearer ${window._userToken}` }
@@ -1029,4 +1033,5 @@ window.sendPasswordReset = async function() {
 
 window.doLogout = function() { sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user'); window.location.href='index.html'; }
 
+window._myspaceReady = true;
 </script>
