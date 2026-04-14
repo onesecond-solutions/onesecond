@@ -842,6 +842,7 @@ html,body{
         <div class="menu-item" data-menu="myspace">MY SPACE</div>
         <div class="menu-item" data-menu="news">보험뉴스</div>
         <div class="menu-item" data-menu="quick">Quick 메뉴</div>
+        <div class="menu-item" data-menu="admin" id="menu-admin" style="display:none;margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:16px;color:#ffd700;">🛡️ 관리자</div>
       </div>
       <div class="pro">PRO 이용중</div>
     </div>
@@ -1098,6 +1099,12 @@ async function loadUserInfo() {
 function renderProBadge(plan, role) {
   const wrap = document.querySelector('.pro');
   if (!wrap) return;
+  if (role === 'admin') {
+    wrap.innerHTML = '<a onclick="switchMenu(\'admin\')" style="color:#ffd700;text-decoration:none;font-size:14px;font-weight:700;cursor:pointer;">🛡️ 관리자</a>';
+    const adminMenuItem = document.getElementById('menu-admin');
+    if (adminMenuItem) adminMenuItem.style.display = 'block';
+    return;
+  }
   const isFreeRole = ['manager','branch_manager'].includes(role);
   if (isFreeRole || plan === 'pro') {
     wrap.innerHTML = '<a onclick="loadPricing()" style="color:white;text-decoration:none;font-size:14px;font-weight:600;cursor:pointer;">✅ PRO 이용 중</a>';
@@ -1123,7 +1130,7 @@ loadUserInfo();
 
 // ── 검색 기능 ──
 function isPro() {
-  return window._userPlan === 'pro' || ['manager','branch_manager'].includes(window._userRole);
+  return window._userPlan === 'pro' || ['manager','branch_manager','admin'].includes(window._userRole);
 }
 
 // PRO 여부에 따라 검색창 렌더 (loadUserInfo 완료 후 호출)
@@ -1348,10 +1355,10 @@ async function switchMenu(menuKey) {
   });
   // C 영역 전환
   switchCPanel(menuKey);
-  // scripts: C영역 숨김/복원
+  // scripts/admin: C영역 숨김/복원
   const mainEl = document.querySelector('.main');
   const cEl = document.querySelector('.c');
-  if (menuKey === 'scripts') {
+  if (menuKey === 'scripts' || menuKey === 'admin') {
     if (mainEl) mainEl.style.gridTemplateColumns = '220px 1fr';
     if (cEl) cEl.style.display = 'none';
   } else {
