@@ -618,6 +618,7 @@ window.saveAndReturnToMySpace = function(){
 
 window.renderMySpaceView = function(view){
   const slot=document.getElementById('view-myspace');
+  if(!slot) return;
   slot.innerHTML=window.mySpaceViews[view]||window.mySpaceViews.scripts;
   // 탭 버튼 active 동기화 (초기 진입 시에도 적용)
   document.querySelectorAll('.myspace-tabs .main-btn').forEach(function(btn){
@@ -681,7 +682,7 @@ if (!window.SUPABASE_URL) window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.su
 if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
 if (!window.ROLE_LABEL) window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
 if (!window._userToken) window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id || _a.user_id || null; }
+if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id || _a.sub || (_a.user && (_a.user.id || _a.user.sub)) || null; }
 
 // ── 스크립트 저장 ──
 window.saveScriptToSupabase = async function() {
