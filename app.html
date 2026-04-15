@@ -4,343 +4,283 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>원세컨드</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap">
+
+<!-- ── 폰트 ── -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+<!-- ── Phase 1 공통 파일 ── -->
+<link rel="stylesheet" href="css/tokens.css">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-
-:root{
-  --brown-main:#4a2f1f;
-  --brown-dark:#3b2416;
-  --brown-light:#a0724a;
-  --brown-pale:#f5ede4;
-  --bg-main:#f6f3ee;
-  --panel:#ffffff;
-  --line:#e6dfd7;
-  --right-bg:#efe5da;
-  --text:#2f2a26;
+/* ── 프레임 레이아웃 (A1/A2/B/C/D/E) ── */
+html, body {
+  font-size: 16px;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
 }
 
-html,body{
-  font-size:16px;
-  font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif;
-  background:var(--bg-main);
+@keyframes liveBlink {
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:0.3; transform:scale(0.8); }
 }
 
 /* ── A1 ── */
-.a1{
-  height:80px;
-  background:linear-gradient(90deg,var(--brown-dark),var(--brown-main));
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 24px;
-  flex-shrink:0;
+.a1 {
+  height: var(--header-a1);
+  background: var(--gradient-header);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  flex-shrink: 0;
 }
-.brand{font-size:24px;font-weight:700;color:#c8753a;letter-spacing:-0.5px;}
-.a1-right{display:flex;gap:10px;}
-@keyframes liveBlink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.8)} }
-.pill{
-  padding:6px 14px;
-  border-radius:20px;
-  background:rgba(255,255,255,0.12);
-  border:1px solid rgba(255,255,255,0.2);
-  font-size:13px;
-  cursor:default;
+.brand { font-size: 1.5em; font-weight: var(--fw-bold); color: #fff; letter-spacing: -0.5px; }
+.a1-right { display: flex; gap: var(--space-2); align-items: center; }
+.pill {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  font-size: 0.8125em;
+  cursor: default;
 }
 
 /* ── A2 ── */
-.a2{
-  height:70px;
-  background:white;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 24px;
-  flex-shrink:0;
-  gap:12px;
+.a2 {
+  height: var(--header-a2);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  flex-shrink: 0;
+  gap: var(--space-3);
 }
-.quick-btn{
-  padding:10px 16px;
-  border-radius:10px;
-  background:#f1e4d7;
-  border:1px solid var(--line);
-  cursor:pointer;
-  font-weight:700;
-  font-family:inherit;
-  font-size:15px;
+#a2-greeting {
+  font-size: 0.875em;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.quick-btn:hover{background:#e8d5c4;}
+.quick-btn {
+  padding: 10px var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  font-weight: var(--fw-bold);
+  font-family: inherit;
+  font-size: 0.9375em;
+  transition: background var(--transition-fast);
+}
+.quick-btn:hover { background: var(--color-border); }
 
 /* ── 글자 크기 컨트롤러 ── */
-.font-ctrl-wrap{
-  display:flex;align-items:center;gap:7px;
-  background:#f1e4d7;border:1px solid var(--line);
-  border-radius:10px;padding:5px 10px;
-  user-select:none;
+.font-ctrl-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); padding: 5px 10px;
+  user-select: none;
 }
-.font-ctrl-label{
-  font-size:15px;font-weight:900;color:var(--brown-main);
-  line-height:1;
+.font-ctrl-label { font-size: 0.9375em; font-weight: var(--fw-black); color: var(--color-brand); line-height: 1; }
+.font-ctrl-btns { display: flex; gap: 3px; }
+.font-ctrl-btn {
+  width: 28px; height: 26px;
+  border-radius: var(--radius-xs); border: 1px solid transparent;
+  background: transparent; font-size: 0.75em; font-weight: var(--fw-bold);
+  font-family: inherit; color: var(--color-text-secondary);
+  cursor: pointer; transition: all var(--transition-fast);
+  display: flex; align-items: center; justify-content: center;
 }
-.font-ctrl-btns{
-  display:flex;gap:3px;
-}
-.font-ctrl-btn{
-  width:28px;height:26px;
-  border-radius:6px;border:1px solid transparent;
-  background:transparent;
-  font-size:12px;font-weight:700;
-  font-family:inherit;color:#8a6040;
-  cursor:pointer;transition:all 0.15s;
-  display:flex;align-items:center;justify-content:center;
-}
-.font-ctrl-btn:hover{
-  background:rgba(74,47,31,0.1);
-  color:var(--brown-main);
-}
-.font-ctrl-btn.active{
-  background:var(--brown-main);
-  color:#fff;
-  border-color:var(--brown-dark);
-}
+.font-ctrl-btn:hover { background: rgba(160,82,45,0.1); color: var(--color-brand); }
+.font-ctrl-btn.active { background: var(--color-brand); color: #fff; border-color: var(--color-brand); }
 
 /* ── Layout ── */
-.app{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-.main{
-  flex:1;
-  display:grid;
-  grid-template-columns:220px 1fr 220px;
-  min-height:0;
-  overflow:hidden;
+.app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--rightbar-width);
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* ── B ── */
-.b{
-  background:linear-gradient(180deg,var(--brown-dark),var(--brown-main));
-  color:white;
-  padding:24px 16px;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  overflow-y:auto;
+/* ── B: 사이드바 ── */
+.b {
+  background: linear-gradient(180deg, var(--color-brand) 0%, var(--color-brand-light) 100%);
+  color: #fff;
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
 }
-.menu{display:flex;flex-direction:column;gap:8px;}
-.menu-item{
-  padding:12px 14px;
-  border-radius:12px;
-  cursor:pointer;
-  font-size:15px;
-  transition:background 0.15s;
-  user-select:none;
+.menu { display: flex; flex-direction: column; gap: var(--space-2); }
+.menu-item {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.9375em;
+  color: var(--color-sidebar-text);
+  transition: background var(--transition-fast);
+  user-select: none;
 }
-.menu-item:hover{background:rgba(255,255,255,0.1);}
-.menu-item.active{background:rgba(255,255,255,0.18);font-weight:700;}
-.pro{
-  background:rgba(255,255,255,0.12);
-  padding:14px;
-  border-radius:12px;
-  text-align:center;
-  font-size:15px;
-  font-weight:600;
+.menu-item:hover { background: var(--color-sidebar-hover); }
+.menu-item.active { background: var(--color-sidebar-active); font-weight: var(--fw-bold); color: #fff; }
+.pro {
+  background: rgba(255,255,255,0.12);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: 0.9375em;
+  font-weight: var(--fw-semibold);
 }
 
-/* ── D ── */
-.d{
-  padding:0;
-  font-size:calc(1em * var(--d-scale, 1));
-  overflow-y:auto;
-  overflow-x:hidden;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  scrollbar-gutter:stable;
+/* ── D: 콘텐츠 영역 ── */
+.d {
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  scrollbar-gutter: stable;
 }
-.d-section{display:none;}
-.d-section.active{display:block;}
-.card{
-  background:white;
-  border:1px solid var(--line);
-  border-radius:20px;
-  padding:24px;
-  margin-bottom:20px;
-}
-.card h2{font-size:18px;margin-bottom:8px;color:var(--brown-dark);}
-.card p{font-size:14px;color:#888;line-height:1.7;}
 
-/* ── C ── */
-.c{
-  background:var(--right-bg);
-  padding:20px 16px;
-  border-left:1px solid var(--line);
-  overflow-y:auto;
+/* ── C: 우측 패널 ── */
+.c {
+  background: var(--color-surface-2);
+  padding: var(--space-5) var(--space-4);
+  border-left: 1px solid var(--color-border);
+  overflow-y: auto;
 }
-.c-section{display:none;flex-direction:column;gap:14px;}
-.c-section.active{display:flex;}
-.c-box{
-  background:white;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:16px;
+.c-section { display: none; flex-direction: column; gap: 14px; }
+.c-section.active { display: flex; }
+.c-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
 }
-.c-box-label{
-  font-size:11px;
-  font-weight:700;
-  color:#b08060;
-  letter-spacing:0.5px;
-  text-transform:uppercase;
-  margin-bottom:6px;
+.c-box-label {
+  font-size: 0.6875em; font-weight: var(--fw-bold);
+  color: var(--color-text-tertiary); letter-spacing: 0.5px;
+  text-transform: uppercase; margin-bottom: var(--space-1);
 }
-.c-box-title{
-  font-size:14px;
-  font-weight:700;
-  color:var(--brown-dark);
-  margin-bottom:4px;
-}
-.c-box-desc{
-  font-size:12px;
-  color:#999;
-  line-height:1.6;
-}
+.c-box-title { font-size: 0.875em; font-weight: var(--fw-bold); color: var(--color-text-primary); margin-bottom: var(--space-1); }
+.c-box-desc { font-size: 0.75em; color: var(--color-text-tertiary); line-height: 1.6; }
 
 /* ── 검색창 ── */
-.search-wrap{
-  position:relative;
-  flex:1;
-  max-width:420px;
-  margin:0 16px;
+.search-wrap { position: relative; flex: 1; max-width: 420px; margin: 0 var(--space-4); }
+.search-input-row {
+  display: flex; align-items: center;
+  background: var(--color-surface-2); border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm); padding: 0 var(--space-3);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
-.search-input-row{
-  display:flex;align-items:center;
-  background:#f1e4d7;border:1.5px solid var(--line);
-  border-radius:10px;padding:0 12px;
-  transition:border-color 0.2s, box-shadow 0.2s;
+.search-input-row:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(212,132,90,0.14);
+  background: var(--color-surface);
 }
-.search-input-row:focus-within{
-  border-color:#c8753a;
-  box-shadow:0 0 0 3px rgba(200,117,58,0.12);
-  background:#fff;
+.search-icon { font-size: 0.9375em; flex-shrink: 0; margin-right: 7px; opacity: 0.6; }
+.search-input {
+  flex: 1; border: none; background: transparent;
+  font-size: 0.875em; font-family: inherit; color: var(--color-text-primary);
+  padding: 10px 0; outline: none; min-width: 0;
 }
-.search-icon{font-size:15px;flex-shrink:0;margin-right:7px;opacity:0.6;}
-.search-input{
-  flex:1;border:none;background:transparent;
-  font-size:14px;font-family:inherit;color:var(--text);
-  padding:10px 0;outline:none;min-width:0;
+.search-input::placeholder { color: var(--color-text-tertiary); }
+.search-clear {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.8125em; color: var(--color-text-tertiary);
+  padding: 2px 4px; flex-shrink: 0; transition: color var(--transition-fast);
 }
-.search-input::placeholder{color:#b09880;}
-.search-clear{
-  background:none;border:none;cursor:pointer;
-  font-size:13px;color:#b09880;padding:2px 4px;
-  flex-shrink:0;transition:color 0.15s;
+.search-clear:hover { color: var(--color-brand); }
+.search-lock-wrap {
+  display: flex; align-items: center; gap: var(--space-2);
+  background: var(--color-surface-2); border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm); padding: 0 14px; height: 42px;
+  cursor: pointer; flex: 1; max-width: 420px; margin: 0 var(--space-4);
+  transition: background var(--transition-fast);
 }
-.search-clear:hover{color:var(--brown-main);}
-.search-lock-wrap{
-  display:flex;align-items:center;gap:8px;
-  background:#f1e4d7;border:1.5px solid var(--line);
-  border-radius:10px;padding:0 14px;height:42px;
-  cursor:pointer;flex:1;max-width:420px;margin:0 16px;
-  transition:background 0.15s;
+.search-lock-wrap:hover { background: var(--color-border); }
+.search-lock-text { font-size: 0.8125em; color: var(--color-text-tertiary); font-weight: var(--fw-medium); }
+.search-lock-badge {
+  font-size: 0.6875em; font-weight: var(--fw-bold); padding: 2px 8px;
+  border-radius: var(--radius-full); background: var(--color-accent); color: #fff; white-space: nowrap;
 }
-.search-lock-wrap:hover{background:#e8d5c4;}
-.search-lock-text{font-size:13px;color:#b09880;font-weight:500;}
-.search-lock-badge{
-  font-size:11px;font-weight:700;padding:2px 8px;
-  border-radius:20px;background:#c8753a;color:#fff;white-space:nowrap;
+.search-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+  z-index: 400; overflow: hidden; max-height: 420px; overflow-y: auto;
 }
-.search-dropdown{
-  position:absolute;top:calc(100% + 6px);left:0;right:0;
-  background:#fff;border:1px solid #e6dfd7;
-  border-radius:12px;box-shadow:0 8px 28px rgba(61,43,31,0.16);
-  z-index:400;overflow:hidden;max-height:420px;overflow-y:auto;
+.search-section-label {
+  font-size: 0.6875em; font-weight: var(--fw-bold); color: var(--color-text-tertiary);
+  letter-spacing: 0.5px; padding: 10px var(--space-4) 4px;
+  border-bottom: 1px solid var(--color-surface-2); background: var(--color-surface);
 }
-.search-section-label{
-  font-size:11px;font-weight:700;color:#b09880;
-  letter-spacing:0.5px;padding:10px 16px 4px;
-  border-bottom:1px solid #f5ede4;background:#fdfaf7;
+.search-result-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px var(--space-4); border-bottom: 1px solid var(--color-surface-2);
+  cursor: pointer; transition: background var(--transition-fast);
 }
-.search-result-item{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:11px 16px;border-bottom:1px solid #f5ede4;
-  cursor:pointer;transition:background 0.12s;
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--color-surface-2); }
+.search-result-icon { font-size: 1em; flex-shrink: 0; margin-top: 1px; }
+.search-result-body { flex: 1; min-width: 0; }
+.search-result-title { font-size: 0.875em; font-weight: var(--fw-semibold); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-result-desc { font-size: 0.75em; color: #aaa; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-empty { padding: 28px var(--space-4); text-align: center; font-size: 0.8125em; color: #bbb; }
+.search-footer {
+  padding: 10px var(--space-4); text-align: center;
+  background: var(--color-surface); border-top: 1px solid var(--color-surface-2);
+  font-size: 0.8125em; color: var(--color-accent); font-weight: var(--fw-semibold); cursor: pointer;
 }
-.search-result-item:last-child{border-bottom:none;}
-.search-result-item:hover{background:#fdf5ee;}
-.search-result-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
-.search-result-body{flex:1;min-width:0;}
-.search-result-title{
-  font-size:14px;font-weight:600;color:var(--text);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+.search-footer:hover { background: var(--color-surface-2); }
+.search-result-page { padding: var(--space-1) 0; }
+.search-result-page-header {
+  background: var(--gradient-header);
+  border-radius: var(--radius-lg); padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-5);
+  display: flex; align-items: center; justify-content: space-between;
 }
-.search-result-desc{font-size:12px;color:#aaa;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.search-result-badge{
-  font-size:10px;font-weight:700;padding:2px 7px;
-  border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:2px;
+.search-result-page-title { font-size: 1.2em; font-weight: var(--fw-black); color: #fff; }
+.search-result-page-sub { font-size: 0.8em; color: rgba(255,255,255,0.65); margin-top: var(--space-1); }
+.search-result-page-close {
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  border-radius: var(--radius-sm); padding: var(--space-2) 14px;
+  font-size: 0.8em; font-weight: var(--fw-bold);
+  cursor: pointer; font-family: inherit; transition: background var(--transition-fast);
 }
-.badge-script{background:#e8f4fd;color:#1a3f7a;}
-.badge-post{background:#e8fde8;color:#1a5c35;}
-.badge-quick{background:#faeeda;color:#854f0b;}
-.badge-disease{background:#fde8e8;color:#7a1a1a;}
-.search-empty{padding:28px 16px;text-align:center;font-size:13px;color:#bbb;}
-.search-footer{
-  padding:10px 16px;text-align:center;
-  background:#fdfaf7;border-top:1px solid #f5ede4;
-  font-size:13px;color:#c8753a;font-weight:600;cursor:pointer;
+.search-result-page-close:hover { background: rgba(255,255,255,0.25); }
+.search-group-title {
+  font-size: 0.75em; font-weight: var(--fw-black); color: var(--color-accent);
+  letter-spacing: 0.5px; margin: var(--space-4) 0 var(--space-2);
+  display: flex; align-items: center; gap: var(--space-2);
 }
-.search-footer:hover{background:#f5ede4;}
-.search-result-page{padding:4px 0;}
-.search-result-page-header{
-  background:linear-gradient(135deg,#3d2b1f 0%,#6b4226 100%);
-  border-radius:16px;padding:20px 24px;margin-bottom:20px;
-  display:flex;align-items:center;justify-content:space-between;
+.search-card {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 14px var(--space-4);
+  margin-bottom: var(--space-2); cursor: pointer; transition: all var(--transition-fast);
 }
-.search-result-page-title{font-size:1.2em;font-weight:800;color:#fff;}
-.search-result-page-sub{font-size:0.8em;color:rgba(255,255,255,0.65);margin-top:4px;}
-.search-result-page-close{
-  background:rgba(255,255,255,0.15);border:none;color:#fff;
-  border-radius:8px;padding:8px 14px;font-size:0.8em;font-weight:700;
-  cursor:pointer;font-family:inherit;transition:background 0.15s;
-}
-.search-result-page-close:hover{background:rgba(255,255,255,0.25);}
-.search-group-title{
-  font-size:0.75em;font-weight:800;color:#c8753a;
-  letter-spacing:0.5px;margin:16px 0 8px;
-  display:flex;align-items:center;gap:6px;
-}
-.search-card{
-  background:#fff;border:1px solid var(--line);
-  border-radius:12px;padding:14px 16px;margin-bottom:8px;
-  cursor:pointer;transition:all 0.15s;
-}
-.search-card:hover{border-color:#c8753a;box-shadow:0 4px 12px rgba(200,117,58,0.1);}
-.search-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.search-card-title{font-size:0.85em;font-weight:700;color:var(--text);flex:1;}
-.search-card-body{font-size:0.8em;color:#888;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-
-/* Quick 메뉴 선택 시 C영역 숨김 */
-.c-empty{
-  display:none;
-  padding:20px;
-  text-align:center;
-  color:#ccc;
-  font-size:13px;
-}
+.search-card:hover { border-color: var(--color-accent); box-shadow: var(--shadow-md); }
+.search-card-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.search-card-title { font-size: 0.85em; font-weight: var(--fw-bold); color: var(--color-text-primary); flex: 1; }
+.search-card-body { font-size: 0.8em; color: #888; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* ── 빠른실행 드롭다운 ── */
 .quick-dropdown-wrap { position: relative; }
 .quick-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: #fff;
-  border-radius: 12px;
-  min-width: 240px;
-  box-shadow: 0 8px 28px rgba(61,43,31,0.18);
-  border: 1px solid #e6dfd7;
-  overflow: hidden;
-  z-index: 300;
+  display: none; position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--color-surface); border-radius: var(--radius-md);
+  min-width: 240px; box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  overflow: hidden; z-index: 300;
   animation: dropdownIn 0.15s ease;
 }
 @keyframes dropdownIn {
@@ -349,430 +289,141 @@ html,body{
 }
 .quick-dropdown.show { display: block; }
 .quick-dd-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #3b2416;
-  cursor: pointer;
-  border-bottom: 1px solid #f5ede4;
-  transition: background 0.12s;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px var(--space-4); font-size: 0.8125em; font-weight: var(--fw-semibold);
+  color: var(--color-text-primary); cursor: pointer;
+  border-bottom: 1px solid var(--color-surface-2);
+  transition: background var(--transition-fast);
 }
 .quick-dd-item:last-child { border-bottom: none; }
-.quick-dd-item:hover { background: #f5ede4; }
-.quick-dd-icon { font-size: 15px; flex-shrink: 0; }
+.quick-dd-item:hover { background: var(--color-surface-2); }
+.quick-dd-icon { font-size: 0.9375em; flex-shrink: 0; }
 .quick-dd-footer {
-  padding: 10px 14px;
-  background: #faf7f3;
-  border-top: 1px solid #e6dfd7;
-  display: flex;
-  gap: 8px;
+  padding: 10px 14px; background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+  display: flex; gap: var(--space-2);
 }
 .quick-dd-footer-btn {
-  flex: 1;
-  padding: 7px 0;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  border: 1px solid #e6dfd7;
-  background: #fff;
-  color: #3b2416;
-  text-align: center;
-  transition: background 0.12s;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: 1; padding: 7px 0; border-radius: var(--radius-sm);
+  font-size: 0.75em; font-weight: var(--fw-bold); font-family: inherit;
+  cursor: pointer; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-text-primary);
+  text-align: center; transition: background var(--transition-fast);
+  display: flex; align-items: center; justify-content: center;
 }
-.quick-dd-footer-btn:hover { background: #f0e0d0; }
-.quick-dd-footer-btn.accent {
-  background: #3b2416;
-  color: #fff;
-  border-color: #3b2416;
-}
-.quick-dd-footer-btn.accent:hover { background: #4a2f1f; }
+.quick-dd-footer-btn:hover { background: var(--color-border); }
+.quick-dd-footer-btn.accent { background: var(--color-brand); color: #fff; border-color: var(--color-brand); }
+.quick-dd-footer-btn.accent:hover { background: var(--color-brand-light); }
 
 /* ── 빠른실행 오버레이 ── */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(26,16,8,0.70);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:500;
-  backdrop-filter:blur(4px);
-  padding:16px;
+.overlay {
+  position: fixed; inset: 0;
+  background: var(--color-overlay);
+  display: none; align-items: center; justify-content: center;
+  z-index: 500; backdrop-filter: blur(4px); padding: var(--space-4);
 }
-.overlay.show{display:flex;animation:overlayFadeIn 0.2s ease;}
-@keyframes overlayFadeIn{from{opacity:0}to{opacity:1}}
+.overlay.show { display: flex; animation: overlayFadeIn 0.2s ease; }
+@keyframes overlayFadeIn { from{opacity:0} to{opacity:1} }
+.quick-modal-wrap {
+  background: var(--color-surface); border-radius: var(--radius-lg);
+  width: 100%; max-width: 860px; max-height: 90vh;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-xl); overflow: hidden;
+  animation: modalSlideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalSlideUp {
+  from{ opacity:0; transform:translateY(20px) scale(0.97) }
+  to{ opacity:1; transform:translateY(0) scale(1) }
+}
+.qm-header {
+  background: var(--color-brand);
+  padding: var(--space-4) var(--space-5);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.qm-header-title { font-size: 0.9375em; font-weight: var(--fw-bold); color: #fff; }
+.qm-close {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.12); border: none; color: #fff;
+  cursor: pointer; font-size: 0.875em;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit; transition: background var(--transition-fast);
+}
+.qm-close:hover { background: rgba(255,255,255,0.22); }
+.qm-content { flex: 1; overflow-y: auto; padding: var(--space-5); min-height: 0; }
+.qm-content-inner { font-size: 0.9375em; color: var(--color-text-primary); line-height: 1.9; }
+.qm-content-inner * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; box-sizing: border-box; }
+.qm-content-inner table { width: 100%!important; table-layout: auto; }
+.qm-footer {
+  padding: 10px var(--space-5) 14px;
+  display: flex; justify-content: flex-end; flex-shrink: 0;
+}
+.qm-footer-btn {
+  padding: 10px 22px; border-radius: var(--radius-sm);
+  background: var(--color-brand); color: #fff;
+  border: none; font-size: 0.875em; font-weight: var(--fw-bold);
+  font-family: inherit; cursor: pointer; transition: background var(--transition-fast);
+}
+.qm-footer-btn:hover { background: var(--color-brand-light); }
 
-/* 빠른실행 모달 — quick-menu 오버레이와 동일 사이즈 */
-.quick-modal-wrap{
-  background:#fff;
-  border-radius:16px;
-  width:100%;
-  max-width:860px;
-  max-height:90vh;
-  display:flex;
-  flex-direction:column;
-  box-shadow:0 24px 60px rgba(0,0,0,0.32);
-  overflow:hidden;
-  animation:modalSlideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
-}
-@keyframes modalSlideUp{
-  from{opacity:0;transform:translateY(20px) scale(0.97)}
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
+/* ── Quick 콘텐츠 슬롯 ── */
+#quick-content-slot * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; box-sizing: border-box; }
+#quick-content-slot table { width: 100%!important; table-layout: auto; }
 
-/* 모달 헤더 */
-.qm-header{
-  background:var(--brown-dark);
-  padding:16px 20px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  flex-shrink:0;
+/* ── 푸터 ── */
+.site-footer {
+  flex-shrink: 0; width: 100%;
+  background: var(--color-brand);
+  color: rgba(255,255,255,0.92);
+  padding: 12px var(--space-6);
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
-.qm-header-title{font-size:15px;font-weight:700;color:#fff;}
-.qm-close{
-  width:28px;height:28px;border-radius:50%;
-  background:rgba(255,255,255,0.12);
-  border:none;color:#fff;cursor:pointer;font-size:14px;
-  display:flex;align-items:center;justify-content:center;
-  font-family:inherit;transition:background 0.15s;
+.footer-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--space-5); flex-wrap: wrap; max-width: 100%;
 }
-.qm-close:hover{background:rgba(255,255,255,0.22);}
+.footer-brand { font-size: 0.875em; font-weight: var(--fw-black); color: #fff; letter-spacing: -0.3px; white-space: nowrap; }
+.footer-brand span { color: var(--color-accent); }
+.footer-copy { font-size: 0.6875em; color: rgba(255,255,255,0.5); white-space: nowrap; }
+.footer-link { font-size: 0.6875em; color: rgba(255,255,255,0.55); text-decoration: none; white-space: nowrap; transition: color var(--transition-fast); }
+.footer-link:hover { color: rgba(255,255,255,0.9); }
+.footer-kakao {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  height: 32px; padding: 0 14px; border-radius: var(--radius-sm);
+  background: #FEE500; color: #2B1E14;
+  text-decoration: none; font-size: 0.75em; font-weight: var(--fw-black);
+  white-space: nowrap; box-shadow: var(--shadow-sm); transition: filter var(--transition-fast);
+}
+.footer-kakao:hover { filter: brightness(0.95); }
 
-/* 버튼 4개 영역 */
-.qm-btns{
-  padding:16px 20px 12px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  flex-shrink:0;
-  border-bottom:1px solid #f0e4d8;
-}
-.qm-btn{
-  width:100%;
-  padding:14px 16px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:#faf7f3;
-  font-size:15px;font-weight:700;
-  cursor:pointer;text-align:left;
-  font-family:inherit;color:var(--text);
-  transition:all 0.15s;
-  display:flex;align-items:center;gap:10px;
-}
-.qm-btn:hover{background:#f1e4d7;border-color:#c8a080;}
-.qm-btn.active{
-  background:var(--brown-dark);color:#fff;
-  border-color:var(--brown-dark);
-}
-.qm-btn-icon{font-size:16px;flex-shrink:0;}
-
-/* 콘텐츠 영역 */
-.qm-content{
-  flex:1;
-  overflow-y:auto;
-  padding:20px;
-  min-height:0;
-}
-.qm-content-inner{
-  font-size:15px;color:var(--text);line-height:1.9;
-}
-.qm-content-inner * {
-  max-width:100%;
-  overflow-wrap:anywhere;
-  word-break:break-word;
-  box-sizing:border-box;
-}
-.qm-content-inner table{width:100%!important;table-layout:auto;}
-
-/* 모달 헬퍼 */
-.qm-helper{
-  padding:12px 20px 10px;
-  flex-shrink:0;
-  border-top:1px solid #f0e4d8;
-}
-.qm-helper-text{
-  font-size:13px;color:#999;line-height:1.6;margin-bottom:10px;
-}
-.qm-helper-btns{
-  display:flex;gap:8px;flex-wrap:wrap;
-}
-.qm-helper-btn{
-  padding:8px 14px;border-radius:8px;
-  border:1px solid var(--line);background:#fff;
-  font-size:13px;font-weight:600;
-  font-family:inherit;cursor:pointer;
-  color:var(--text);transition:background 0.15s;
-}
-.qm-helper-btn:hover{background:#f1e4d7;}
-.qm-helper-btn.accent{
-  background:var(--brown-dark);color:#fff;
-  border-color:var(--brown-dark);
-}
-.qm-helper-btn.accent:hover{background:var(--brown-main);}
-
-/* 모달 푸터 */
-.qm-footer{
-  padding:10px 20px 14px;
-  display:flex;justify-content:flex-end;
-  flex-shrink:0;
-}
-.qm-footer-btn{
-  padding:10px 22px;border-radius:10px;
-  background:var(--brown-dark);color:#fff;
-  border:none;font-size:14px;font-weight:700;
-  font-family:inherit;cursor:pointer;transition:background 0.15s;
-}
-.qm-footer-btn:hover{background:var(--brown-main);}
-
-
-/* ── Quick 메뉴 분류 버튼 ── */
-.q-main-btn {
-  padding:8px 14px;
-  border-radius:8px;
-  border:1px solid #d4b8a0;
-  background:#fdf8f3;
-  font-size:13px;font-weight:500;color:#5a3e2b;
-  font-family:inherit;cursor:pointer;white-space:nowrap;
-  transition:all 0.15s;
-}
-.q-main-btn:hover{background:#f0e0d0;border-color:#c8a080;}
-.q-main-btn.active{background:var(--brown-dark);color:#fff;border-color:var(--brown-dark);}
-
-/* Quick 콘텐츠 슬롯 반응형 */
-#quick-content-slot * {
-  max-width:100%;
-  overflow-wrap:anywhere;
-  word-break:break-word;
-  box-sizing:border-box;
-}
-#quick-content-slot table {
-  width:100%!important;
-  table-layout:auto;
+/* ── 반응형: 태블릿 ── */
+@media(max-width:960px) {
+  .main { grid-template-columns: 200px 1fr; }
+  .c { display: none; }
 }
 
-
-
-/* ── Home D영역 ── */
-.home-wrap{padding:4px 0;}
-
-/* 상단 바로실행 카드 */
-.home-quick-title{
-  font-size:13px;font-weight:800;color:var(--brown-main);
-  letter-spacing:0.3px;
-  margin-bottom:12px;display:flex;align-items:center;gap:6px;
-  padding-bottom:8px;border-bottom:1px solid var(--line);
-}
-.home-quick-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
-  margin-bottom:20px;
-}
-.home-quick-card{
-  background:white;border:1.5px solid var(--line);
-  border-radius:14px;padding:16px 14px;
-  cursor:pointer;transition:all 0.18s;
-  display:flex;flex-direction:column;gap:6px;
-}
-.home-quick-card:hover{
-  border-color:var(--brown-main);
-  box-shadow:0 4px 14px rgba(61,43,31,0.12);
-  transform:translateY(-2px);
-}
-.home-quick-card-icon{font-size:20px;}
-.home-quick-card-label{
-  font-size:16px;font-weight:700;color:var(--brown-main);
-}
-.home-quick-card-desc{
-  font-size:14px;color:#aaa;line-height:1.5;
-}
-.home-quick-card-btn{
-  margin-top:4px;padding:6px 0;
-  background:var(--brown-main);color:white;
-  border:none;border-radius:8px;font-size:13px;
-  font-weight:700;cursor:pointer;font-family:inherit;
-  transition:background 0.15s;
-}
-.home-quick-card-btn:hover{background:var(--brown-dark);}
-
-/* 중단 2열 그리드 */
-.home-mid-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:14px;
-  margin-bottom:14px;
-}
-.home-panel{
-  background:white;border:1px solid var(--line);
-  border-radius:16px;overflow:hidden;
-}
-.home-panel-header{
-  padding:11px 16px;
-  background:#e8d5c2;
-  border-bottom:1.5px solid #d4b8a0;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.home-panel-title{
-  font-size:16px;font-weight:800;color:#3b2416;
-  display:flex;align-items:center;gap:6px;
-}
-.home-panel-more{
-  font-size:13px;color:#7a5230;
-  text-decoration:none;cursor:pointer;font-weight:700;
-  transition:color 0.15s;
-}
-.home-panel-more:hover{color:#3b2416;}
-.home-panel-body{padding:6px 0;}
-.home-panel-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;border-bottom:1px solid var(--line);
-  cursor:pointer;transition:background 0.12s;
-  font-size:16px;color:var(--text);
-}
-.home-panel-item:last-child{border-bottom:none;}
-.home-panel-item:hover{background:#fdf8f3;}
-.home-panel-item-arrow{color:#ccc;font-size:12px;}
-.home-panel-item-badge{
-  font-size:10px;font-weight:700;padding:2px 7px;
-  border-radius:20px;background:#faeeda;color:#854f0b;
-  margin-left:6px;white-space:nowrap;
-}
-.home-panel-empty{
-  padding:20px 16px;text-align:center;
-  font-size:14px;color:#bbb;
-}
-
-/* 뉴스 아이템 */
-.home-news-item{
-  padding:10px 16px;border-bottom:1px solid var(--line);
-  cursor:pointer;transition:background 0.12s;
-}
-.home-news-item:last-child{border-bottom:none;}
-.home-news-item:hover{background:#fdf8f3;}
-.home-news-title{
-  font-size:16px;font-weight:600;color:var(--text);
-  line-height:1.5;margin-bottom:3px;
-}
-.home-news-meta{
-  font-size:13px;color:#bbb;
-  display:flex;gap:8px;
-}
-
-/* 게시글 아이템 */
-.home-board-badge{
-  font-size:10px;font-weight:700;padding:2px 7px;
-  border-radius:20px;margin-right:6px;white-space:nowrap;
-}
-.badge-notice{background:#fde8e8;color:#c0392b;}
-.badge-product{background:#e8f4fd;color:#1a5c7a;}
-.badge-underwriting{background:#e8fde8;color:#1a5c35;}
-
-/* ── E: 푸터 ── */
-.site-footer{
-  flex-shrink:0;
-  width:100%;
-  background:var(--brown-dark);
-  color:rgba(255,255,255,.92);
-  padding:12px 24px;
-  border-top:1px solid rgba(255,255,255,0.08);
-}
-.footer-inner{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:20px;
-  flex-wrap:wrap;
-  max-width:100%;
-}
-
-.footer-brand{
-  font-size:14px;font-weight:900;
-  color:#fff;letter-spacing:-0.3px;white-space:nowrap;
-}
-.footer-brand span{color:#c8916b;}
-.footer-copy{
-  font-size:11px;
-  color:rgba(255,255,255,.5);
-  white-space:nowrap;
-}
-.footer-links{
-  display:flex;gap:14px;align-items:center;
-}
-.footer-link{
-  font-size:11px;color:rgba(255,255,255,.55);
-  text-decoration:none;white-space:nowrap;
-  transition:color 0.15s;
-}
-.footer-link:hover{color:rgba(255,255,255,.9);}
-.footer-kakao{
-  display:inline-flex;align-items:center;gap:6px;
-  height:32px;padding:0 14px;border-radius:8px;
-  background:#FEE500;color:#2B1E14;
-  text-decoration:none;font-size:12px;font-weight:900;
-  white-space:nowrap;
-  box-shadow:0 2px 6px rgba(0,0,0,.14);
-  transition:filter 0.15s;
-}
-.footer-kakao:hover{filter:brightness(.95);}
-
-/* 모바일 푸터 */
-@media(max-width:767px){
-  .site-footer{display:none;}
-}
-
-/* ── 반응형 ── */
-/* 태블릿: C영역 숨김 */
-@media(max-width:960px){
-  .main{grid-template-columns:200px 1fr;}
-  .c{display:none;}
-}
-
-/* 모바일: B메뉴 숨김 → 하단 탭바 */
-@media(max-width:767px){
-  html,body{overflow:auto;}
-  .app{height:auto;min-height:100vh;}
-  .main{
-    grid-template-columns:1fr;
-    padding-bottom:64px;
+/* ── 반응형: 모바일 ── */
+@media(max-width:767px) {
+  html, body { overflow: auto; }
+  .app { height: auto; min-height: 100vh; }
+  .main { grid-template-columns: 1fr; padding-bottom: 64px; }
+  .b { display: none; }
+  .d { overflow-y: visible; }
+  .site-footer { display: none; }
+  .tab-bar {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    height: 64px; background: var(--color-brand);
+    z-index: 50; border-top: 1px solid rgba(255,255,255,0.1);
   }
-  .b{display:none;}
-  .d{overflow-y:visible;}
-
-  /* 하단 탭바 */
-  .tab-bar{
-    display:flex;
-    position:fixed;
-    bottom:0;left:0;right:0;
-    height:64px;
-    background:var(--brown-dark);
-    z-index:50;
-    border-top:1px solid rgba(255,255,255,0.1);
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.55); font-size: 0.8125em;
+    gap: 3px; cursor: pointer; transition: color var(--transition-fast);
   }
-  .tab-item{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    color:rgba(255,255,255,0.55);
-    font-size:13px;
-    gap:3px;
-    cursor:pointer;
-    transition:color 0.15s;
-  }
-  .tab-item.active{color:white;}
-  .tab-item .tab-icon{font-size:20px;}
+  .tab-item.active { color: #fff; }
+  .tab-item .tab-icon { font-size: 1.25em; }
 }
-
-@media(min-width:768px){
-  .tab-bar{display:none;}
-}
+@media(min-width:768px) { .tab-bar { display: none; } }
 </style>
 </head>
 
@@ -786,32 +437,39 @@ html,body{
       <div class="pill" style="display:flex;align-items:center;gap:6px;">
         <span style="width:7px;height:7px;border-radius:50%;background:#4caf50;display:inline-block;animation:liveBlink 1.5s infinite;flex-shrink:0;"></span>실시간
       </div>
-      <a href="https://open.kakao.com/o/svu80Moi" target="_blank" style="height:28px;padding:0 12px;border-radius:6px;background:rgba(255,100,100,0.18);border:1px solid rgba(255,100,100,0.35);color:#ffaaaa;font-size:12px;font-weight:700;display:flex;align-items:center;text-decoration:none;white-space:nowrap;transition:background .15s;" onmouseover="this.style.background='rgba(255,100,100,0.3)'" onmouseout="this.style.background='rgba(255,100,100,0.18)'">⚠️ 전산장애신고</a>
+      <a href="https://open.kakao.com/o/svu80Moi" target="_blank"
+         style="height:28px;padding:0 12px;border-radius:var(--radius-xs);background:rgba(255,100,100,0.18);border:1px solid rgba(255,100,100,0.35);color:#ffaaaa;font-size:0.75em;font-weight:700;display:flex;align-items:center;text-decoration:none;white-space:nowrap;transition:background .15s;"
+         onmouseover="this.style.background='rgba(255,100,100,0.3)'"
+         onmouseout="this.style.background='rgba(255,100,100,0.18)'">⚠️ 전산장애신고</a>
       <div style="position:relative;" id="user-dropdown-wrap">
-  <div class="pill" id="topbar-user" onclick="toggleUserDropdown(event)" style="cursor:pointer;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ▾</div>
-  <div id="user-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:10px;min-width:150px;box-shadow:0 8px 24px rgba(61,43,31,.22);border:1px solid #e0d0c0;overflow:hidden;z-index:200;">
-    <div onclick="openEditProfile();toggleUserDropdown(event);" style="padding:11px 16px;font-size:13px;color:#3d2b1f;cursor:pointer;font-weight:600;border-bottom:1px solid #f0e6dc;">👤 내 정보 수정</div>
-    <div onclick="doLogout()" style="padding:11px 16px;font-size:13px;color:#3d2b1f;cursor:pointer;font-weight:600;">🚪 로그아웃</div>
-  </div>
-</div>
+        <div class="pill" id="topbar-user" onclick="toggleUserDropdown(event)"
+             style="cursor:pointer;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ▾</div>
+        <div id="user-dropdown"
+             style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--color-surface);border-radius:var(--radius-sm);min-width:150px;box-shadow:var(--shadow-lg);border:1px solid var(--color-border);overflow:hidden;z-index:200;">
+          <div onclick="openEditProfile();toggleUserDropdown(event);"
+               style="padding:11px var(--space-4);font-size:0.8125em;color:var(--color-text-primary);cursor:pointer;font-weight:var(--fw-semibold);border-bottom:1px solid var(--color-border);">👤 내 정보 수정</div>
+          <div onclick="window.Auth.logout()"
+               style="padding:11px var(--space-4);font-size:0.8125em;color:var(--color-text-primary);cursor:pointer;font-weight:var(--fw-semibold);">🚪 로그아웃</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- A2 -->
   <div class="a2">
-    <div id="a2-greeting">안녕하세요, 임태성 실장님. 오늘도 화이팅입니다 🔥</div>
-    <!-- 검색창 -->
+    <div id="a2-greeting">안녕하세요! 오늘도 화이팅입니다 🔥</div>
     <div class="search-wrap" id="search-wrap">
       <div class="search-input-row">
         <span class="search-icon">🔍</span>
-        <input class="search-input" id="search-input" type="text" placeholder="스크립트, 게시글, 업무자료 검색..." autocomplete="off"
-          oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Enter')doSearch(this.value)">
+        <input class="search-input" id="search-input" type="text"
+               placeholder="스크립트, 게시글, 업무자료 검색..." autocomplete="off"
+               oninput="onSearchInput(this.value)"
+               onkeydown="if(event.key==='Enter')doSearch(this.value)">
         <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
       </div>
       <div class="search-dropdown" id="search-dropdown" style="display:none;"></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <!-- 글자 크기 컨트롤러 -->
       <div class="font-ctrl-wrap">
         <span class="font-ctrl-label">가</span>
         <div class="font-ctrl-btns">
@@ -820,23 +478,23 @@ html,body{
           <button class="font-ctrl-btn" onclick="setFontScale(1.25)" data-scale="1.25" title="크게">대</button>
         </div>
       </div>
-    <div class="quick-dropdown-wrap">
-      <button class="quick-btn" id="openQuick" onclick="toggleQuickDropdown(event)">⚡ 빠른 실행 ▾</button>
-      <div class="quick-dropdown" id="quickDropdown">
-        <div id="quick-dd-items">
-          <div class="quick-dd-item" style="color:#aaa;font-size:12px;padding:10px 16px;">불러오는 중...</div>
-        </div>
-        <div class="quick-dd-footer">
-          <button class="quick-dd-footer-btn accent" onclick="goQuickMenu()">Quick 메뉴 바로가기</button>
+      <div class="quick-dropdown-wrap">
+        <button class="quick-btn" id="openQuick" onclick="toggleQuickDropdown(event)">⚡ 빠른 실행 ▾</button>
+        <div class="quick-dropdown" id="quickDropdown">
+          <div id="quick-dd-items">
+            <div class="quick-dd-item" style="color:#aaa;font-size:0.75em;padding:10px var(--space-4);">불러오는 중...</div>
+          </div>
+          <div class="quick-dd-footer">
+            <button class="quick-dd-footer-btn accent" onclick="goQuickMenu()">Quick 메뉴 바로가기</button>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   </div>
 
   <div class="main">
 
-    <!-- B: 좌측 메뉴 -->
+    <!-- B: 사이드바 -->
     <div class="b">
       <div class="menu">
         <div class="menu-item active" data-menu="home">홈</div>
@@ -845,94 +503,38 @@ html,body{
         <div class="menu-item" data-menu="myspace">MY SPACE</div>
         <div class="menu-item" data-menu="news">보험뉴스</div>
         <div class="menu-item" data-menu="quick">Quick 메뉴</div>
-        <div class="menu-item" data-menu="admin" id="menu-admin" style="display:none;margin-top:8px;border-top:1px solid rgba(255,255,255,0.15);padding-top:16px;color:#ffd700;">🛡️ 관리자</div>
+        <div class="menu-item" data-menu="admin" id="menu-admin"
+             style="display:none;margin-top:var(--space-2);border-top:1px solid rgba(255,255,255,0.15);padding-top:var(--space-4);color:#ffd700;">🛡️ 관리자</div>
       </div>
       <div class="pro">PRO 이용중</div>
     </div>
 
-    <!-- D: E 영역 - 동적 콘텐츠 슬롯 -->
-    <div class="d" id="content-area">
-      <!-- pages/xxx.html 이 fetch로 여기에 로드됩니다 -->
-    </div>
+    <!-- D: 동적 콘텐츠 슬롯 -->
+    <div class="d" id="content-area"></div>
 
-        <!-- C: 우측 배너 -->
+    <!-- C: 우측 패널 -->
     <div class="c">
-
-      <!-- 홈 -->
       <div class="c-section active" id="c-home">
-        <div class="c-box">
-          <div class="c-box-label">오늘의 공지</div>
-          <div class="c-box-title">공지사항</div>
-          <div class="c-box-desc">오늘의 공지 내용이 여기에 표시됩니다.</div>
-        </div>
-        <div class="c-box">
-          <div class="c-box-label">추천 배너</div>
-          <div class="c-box-title">오늘의 추천</div>
-          <div class="c-box-desc">추천 스크립트 및 배너가 여기에 표시됩니다.</div>
-        </div>
+        <div class="c-box"><div class="c-box-label">오늘의 공지</div><div class="c-box-title">공지사항</div><div class="c-box-desc">오늘의 공지 내용이 표시됩니다.</div></div>
+        <div class="c-box"><div class="c-box-label">추천 배너</div><div class="c-box-title">오늘의 추천</div><div class="c-box-desc">추천 스크립트 및 배너가 표시됩니다.</div></div>
       </div>
-
-      <!-- 스크립트 -->
       <div class="c-section" id="c-scripts">
-        <div class="c-box">
-          <div class="c-box-label">실전 스크립트 추천</div>
-          <div class="c-box-title">추천 스크립트</div>
-          <div class="c-box-desc">오늘의 실전 스크립트 추천이 표시됩니다.</div>
-        </div>
-        <div class="c-box">
-          <div class="c-box-label">Leader Pick</div>
-          <div class="c-box-title">팀장 추천</div>
-          <div class="c-box-desc">팀장이 선택한 추천 스크립트입니다.</div>
-        </div>
+        <div class="c-box"><div class="c-box-label">실전 스크립트 추천</div><div class="c-box-title">추천 스크립트</div><div class="c-box-desc">오늘의 실전 스크립트 추천이 표시됩니다.</div></div>
+        <div class="c-box"><div class="c-box-label">Leader Pick</div><div class="c-box-title">팀장 추천</div><div class="c-box-desc">팀장이 선택한 추천 스크립트입니다.</div></div>
       </div>
-
-      <!-- 게시판 -->
       <div class="c-section" id="c-board">
-        <div class="c-box">
-          <div class="c-box-label">최신 질문</div>
-          <div class="c-box-title">최근 올라온 질문</div>
-          <div class="c-box-desc">최신 게시글 질문이 여기에 표시됩니다.</div>
-        </div>
-        <div class="c-box">
-          <div class="c-box-label">답변 유도 배너</div>
-          <div class="c-box-title">답변이 필요해요</div>
-          <div class="c-box-desc">답변을 기다리는 질문들이 표시됩니다.</div>
-        </div>
+        <div class="c-box"><div class="c-box-label">최신 질문</div><div class="c-box-title">최근 올라온 질문</div><div class="c-box-desc">최신 게시글 질문이 표시됩니다.</div></div>
+        <div class="c-box"><div class="c-box-label">답변 유도 배너</div><div class="c-box-title">답변이 필요해요</div><div class="c-box-desc">답변을 기다리는 질문들이 표시됩니다.</div></div>
       </div>
-
-      <!-- MY SPACE -->
       <div class="c-section" id="c-myspace">
-        <div class="c-box">
-          <div class="c-box-label">나의 스크립트</div>
-          <div class="c-box-title">직접 저장한 멘트</div>
-          <div class="c-box-desc">막혔던 순간의 멘트를 저장하고 다음 통화에서 바로 꺼내 쓰세요.</div>
-        </div>
-        <div class="c-box">
-          <div class="c-box-label">나의 자료</div>
-          <div class="c-box-title">통화 중 꺼낼 자료</div>
-          <div class="c-box-desc">파일, 링크, 메모, 이미지를 한곳에 모아 바로 활용하세요.</div>
-        </div>
+        <div class="c-box"><div class="c-box-label">나의 스크립트</div><div class="c-box-title">직접 저장한 멘트</div><div class="c-box-desc">막혔던 순간의 멘트를 저장하고 다음 통화에서 바로 꺼내 쓰세요.</div></div>
+        <div class="c-box"><div class="c-box-label">나의 자료</div><div class="c-box-title">통화 중 꺼낼 자료</div><div class="c-box-desc">파일, 링크, 메모, 이미지를 한곳에 모아 바로 활용하세요.</div></div>
       </div>
-
-      <!-- 보험뉴스 -->
       <div class="c-section" id="c-news">
-        <div class="c-box">
-          <div class="c-box-label">오늘의 뉴스</div>
-          <div class="c-box-title">보험 뉴스</div>
-          <div class="c-box-desc">오늘의 주요 보험 뉴스입니다.</div>
-        </div>
-        <div class="c-box">
-          <div class="c-box-label">해석 포인트</div>
-          <div class="c-box-title">뉴스 해석</div>
-          <div class="c-box-desc">뉴스의 핵심 해석 포인트를 확인하세요.</div>
-        </div>
+        <div class="c-box"><div class="c-box-label">오늘의 뉴스</div><div class="c-box-title">보험 뉴스</div><div class="c-box-desc">오늘의 주요 보험 뉴스입니다.</div></div>
+        <div class="c-box"><div class="c-box-label">해석 포인트</div><div class="c-box-title">뉴스 해석</div><div class="c-box-desc">뉴스의 핵심 해석 포인트를 확인하세요.</div></div>
       </div>
-
-      <!-- Quick 메뉴: C영역 없음 -->
-      <div class="c-section" id="c-quick">
-        <!-- 비어있음 -->
-      </div>
-
+      <div class="c-section" id="c-quick"></div>
     </div>
 
   </div>
@@ -943,43 +545,29 @@ html,body{
       <div class="footer-brand">원세컨드 <span>1s</span></div>
       <div class="footer-copy">© 2026 OneSecond. All rights reserved.</div>
       <a class="footer-link" href="#" onclick="event.preventDefault();switchMenu('about')">서비스 소개</a>
-      <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">
-        💬 카카오 오픈채팅 문의
-      </a>
+      <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">💬 카카오 오픈채팅 문의</a>
     </div>
   </footer>
 </div>
 
 <!-- 하단 탭바 (모바일) -->
 <div class="tab-bar">
-  <div class="tab-item active" data-menu="home">
-    <span class="tab-icon">🏠</span>홈
-  </div>
-  <div class="tab-item" data-menu="scripts">
-    <span class="tab-icon">📞</span>스크립트
-  </div>
-  <div class="tab-item" data-menu="board">
-    <span class="tab-icon">📋</span>게시판
-  </div>
-  <div class="tab-item" data-menu="myspace">
-    <span class="tab-icon">👤</span>MY
-  </div>
-  <div class="tab-item" data-menu="news">
-    <span class="tab-icon">📰</span>뉴스
-  </div>
-  <div class="tab-item" data-menu="quick">
-    <span class="tab-icon">⚡</span>Quick
-  </div>
+  <div class="tab-item active" data-menu="home"><span class="tab-icon">🏠</span>홈</div>
+  <div class="tab-item" data-menu="scripts"><span class="tab-icon">📞</span>스크립트</div>
+  <div class="tab-item" data-menu="board"><span class="tab-icon">📋</span>게시판</div>
+  <div class="tab-item" data-menu="myspace"><span class="tab-icon">👤</span>MY</div>
+  <div class="tab-item" data-menu="news"><span class="tab-icon">📰</span>뉴스</div>
+  <div class="tab-item" data-menu="quick"><span class="tab-icon">⚡</span>Quick</div>
 </div>
 
-<!-- 빠른실행 오버레이 (콘텐츠 표시용) -->
+<!-- 빠른실행 오버레이 -->
 <div class="overlay" id="quickOverlay" onclick="handleQuickOverlayClick(event)">
   <div class="quick-modal-wrap">
     <div class="qm-header">
       <div class="qm-header-title" id="qm-title">⚡ 빠른 실행</div>
       <button class="qm-close" onclick="closeQuick()">✕</button>
     </div>
-    <div class="qm-content" id="qm-content" style="display:block;">
+    <div class="qm-content" id="qm-content">
       <div class="qm-content-inner" id="qm-content-inner"></div>
     </div>
     <div class="qm-footer">
@@ -988,463 +576,500 @@ html,body{
   </div>
 </div>
 
+<!-- 내 정보 수정 모달 -->
+<div id="edit-overlay"
+     style="display:none;position:fixed;inset:0;background:var(--color-overlay);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:var(--color-surface);border-radius:var(--radius-lg);width:100%;max-width:400px;box-shadow:var(--shadow-xl);overflow:hidden;margin:var(--space-4);max-height:90vh;overflow-y:auto;">
+    <div style="background:var(--color-brand);padding:var(--space-4) var(--space-5);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;">
+      <div style="font-size:0.9375em;font-weight:var(--fw-black);color:#fff;">내 정보 수정</div>
+      <button onclick="closeEditProfile()" style="width:28px;height:28px;border-radius:var(--radius-full);background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;font-size:1em;">✕</button>
+    </div>
+    <div style="padding:var(--space-4) 22px var(--space-2);">
+      <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:var(--space-4);font-size:0.75em;color:var(--color-text-secondary);line-height:1.7;">
+        📌 <strong>지점·팀 게시판 공유 안내</strong><br>팀원들과 같은 게시판을 사용하려면<br><strong>회사명 / 지점(센터)명 / 팀명</strong>을 팀원과 동일하게 입력해 주세요.
+      </div>
+      <div style="margin-bottom:13px;"><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">이름 *</div><input id="edit-name" type="text" placeholder="홍길동" class="input"></div>
+      <div style="margin-bottom:13px;"><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">핸드폰 번호</div><input id="edit-phone" type="tel" placeholder="010-1234-5678" class="input"></div>
+      <div style="margin-bottom:13px;"><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">이메일 <span style="font-size:0.85em;color:var(--color-text-tertiary);">(변경 불가)</span></div><input id="edit-email" type="email" disabled class="input"></div>
+      <div style="margin-bottom:13px;"><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">회사명</div><input id="edit-company" type="text" placeholder="소속 회사명" class="input"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;">
+        <div><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">지점(센터)명</div><input id="edit-branch" type="text" placeholder="더원지점" class="input"></div>
+        <div><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">팀명</div><input id="edit-team" type="text" placeholder="4팀" class="input"></div>
+      </div>
+    </div>
+    <div style="padding:4px 22px 20px;display:flex;gap:var(--space-2);flex-wrap:wrap;">
+      <button onclick="window.Auth.logout()" class="btn btn-ghost" style="flex:0 0 auto;height:38px;">로그아웃</button>
+      <button onclick="sendPasswordReset()" class="btn btn-ghost" style="flex:0 0 auto;height:38px;border-color:var(--color-accent);color:var(--color-accent);">비밀번호 변경</button>
+      <button id="edit-save-btn" onclick="saveProfile()" class="btn btn-primary" style="flex:1;height:38px;">저장하기</button>
+    </div>
+  </div>
+</div>
+<style>#edit-overlay.active { display:flex!important; }</style>
+
+
+<!-- ── 공통 파일 로드 ── -->
+<script src="js/db.js" defer></script>
+<script src="js/auth.js" defer></script>
+
 <script>
-// ── overlayContent: quick_contents DB에서 채워짐 (하드코딩 제거됨) ──
+document.addEventListener('DOMContentLoaded', function () {
+// ════════════════════════════════════════════════════════════════════════════
+//  app.html 핵심 스크립트
+//  역할: ① 인증 초기화  ② A1/A2 UI 렌더  ③ 라우팅(switchMenu)
+//        ④ 빠른실행  ⑤ 검색  ⑥ 폰트 스케일  ⑦ 내 정보 수정 모달
+//  금지: 페이지 내부 초기화 관여 / window._xxx 플래그 / 폴링
+// ════════════════════════════════════════════════════════════════════════════
+
 if (!window.overlayContent) window.overlayContent = {};
 
-// ── Supabase 설정 ──
-window.SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
-window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
-window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝', admin:'관리자' };
+// ── ① 인증 초기화 ──────────────────────────────────────────────────────────
+// Auth.init() 이 인증 체크 + AppState 세팅 + loadUser() + appstate:ready 발행
+window.Auth.init();
 
-// ── 토큰 초기화 및 세션 체크 ──
-const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
-// Supabase 인증 객체: id / sub / user.id 등 여러 구조 대응
-const _resolvedId = _initAuth.id || _initAuth.sub || (_initAuth.user && (_initAuth.user.id || _initAuth.user.sub)) || null;
-if (!_initToken || !_resolvedId) { window.location.href = 'index.html'; }
-window._userToken = _initToken;
-window._userId = _resolvedId;
+// AppState 준비 완료 → A1/A2 UI 업데이트
+document.addEventListener('appstate:ready', function () {
+  var s = window.AppState;
+  var roleLabel = window.Auth.getRoleLabel(s.role);
+  var displayName = roleLabel ? s.name + ' ' + roleLabel : s.name;
 
-// 토큰 만료 여부 체크 → 만료되었으면 즉시 갱신
-(async function() {
-  try {
-    var payload = JSON.parse(atob(_initToken.split('.')[1]));
-    if (Date.now() / 1000 > payload.exp) {
-      var newToken = await refreshToken();
-      if (!newToken) { handleTokenExpired(); }
-    }
-  } catch(e) { /* 파싱 실패 시 무시 — fetchWithAuth가 처리 */ }
-})();
+  // A1 사용자 표시
+  var userEl = document.getElementById('topbar-user');
+  if (userEl) userEl.textContent = displayName + ' (' + s.email + ') ▾';
 
-function getToken() { return localStorage.getItem('os_token') || sessionStorage.getItem('os_token'); }
+  // A2 인사말
+  var greetEl = document.getElementById('a2-greeting');
+  if (greetEl) greetEl.innerHTML = '안녕하세요, <strong style="color:var(--color-accent);">'
+    + displayName + '</strong>님! 오늘도 화이팅입니다 🔥';
 
-async function refreshToken() {
-  const refreshTk = localStorage.getItem('os_refresh_token');
-  if (!refreshTk) return null;
-  try {
-    const res = await fetch(`${window.SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method:'POST', headers:{'Content-Type':'application/json','apikey':window.SUPABASE_KEY},
-      body: JSON.stringify({refresh_token: refreshTk})
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    localStorage.setItem('os_token', data.access_token);
-    localStorage.setItem('os_refresh_token', data.refresh_token);
-    localStorage.setItem('os_user', JSON.stringify(data.user));
-    sessionStorage.setItem('os_token', data.access_token);
-    sessionStorage.setItem('os_user', JSON.stringify(data.user));
-    window._userToken = data.access_token;
-    return data.access_token;
-  } catch(e) { return null; }
-}
+  // 내 정보 수정 모달 필드 초기화
+  var fields = ['name','phone','email','company','branch','team'];
+  fields.forEach(function (f) {
+    var el = document.getElementById('edit-' + f);
+    if (el) el.value = s[f] || '';
+  });
 
-async function fetchWithAuth(url, options={}) {
-  options.headers = options.headers || {};
-  options.headers['apikey'] = window.SUPABASE_KEY;
-  options.headers['Authorization'] = `Bearer ${window._userToken}`;
-  let res = await fetch(url, options);
-  if (res.status === 401) {
-    const newToken = await refreshToken();
-    if (!newToken) { handleTokenExpired(); throw new Error('TOKEN_EXPIRED'); }
-    options.headers['Authorization'] = `Bearer ${newToken}`;
-    res = await fetch(url, options);
-  }
-  return res;
-}
+  // PRO 뱃지 렌더
+  renderProBadge(s.plan, s.role);
 
-function handleTokenExpired() {
-  alert('로그인 세션이 만료됐습니다.\n다시 로그인해 주세요.');
-  localStorage.removeItem('os_token'); localStorage.removeItem('os_refresh_token'); localStorage.removeItem('os_user');
-  sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user');
-  window.location.href = 'index.html';
-}
+  // 검색창 렌더 (PRO 여부 확정 후)
+  renderSearchBox();
 
-// ── 사용자 정보 로드 ──
-async function loadUserInfo() {
-  const token = getToken();
-  if (!token || !window._userId) return;
-  window._userToken = token;
-  try {
-    const res = await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}&select=name,role,phone,email,company,branch,team,plan`);
-    const data = await res.json();
-    if (data && data[0]) {
-      const u = data[0];
-      const roleName = window.ROLE_LABEL[u.role] || '';
-      const displayName = roleName ? `${u.name} ${roleName}` : u.name;
-      const userEl = document.getElementById('topbar-user');
-      if (userEl) userEl.textContent = `${displayName} (${u.email}) ▾`;
-      const greetEl = document.getElementById('a2-greeting');
-      if (greetEl) greetEl.innerHTML = `안녕하세요, <strong style="color:#a0724a;">${displayName}</strong>님! 오늘도 화이팅입니다 🔥`;
-      window._userEmail = u.email;
-      window._userRole = u.role;
-      window._userName = u.name;
-      window._userPlan = u.plan || 'free';
-      const editName = document.getElementById('edit-name');
-      const editPhone = document.getElementById('edit-phone');
-      const editEmail = document.getElementById('edit-email');
-      const editCompany = document.getElementById('edit-company');
-      const editBranch = document.getElementById('edit-branch');
-      const editTeam = document.getElementById('edit-team');
-      if (editName) editName.value = u.name || '';
-      if (editPhone) editPhone.value = u.phone || '';
-      if (editEmail) editEmail.value = u.email || '';
-      if (editCompany) editCompany.value = u.company || '';
-      if (editBranch) editBranch.value = u.branch || '';
-      if (editTeam) editTeam.value = u.team || '';
-      // 접속 로그 INSERT (세션당 1회)
-      if (!sessionStorage.getItem('_loginLogged')) {
-        sessionStorage.setItem('_loginLogged', '1');
-        fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/activity_logs`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            user_id: window._userId,
-            event_type: 'login',
-            target_type: null,
-            target_id: null
-          })
-        }).catch(() => {});
-      }
-      renderProBadge(u.plan || 'free', u.role);
-      renderSearchBox();
-    }
-  } catch(e) {
-    if (e.message === 'TOKEN_EXPIRED') return;
-    console.error('loadUserInfo error:', e);
-  }
-}
+  // 메뉴 설정 적용
+  applyMenuSettings();
+});
 
+// ── ② PRO 뱃지 ─────────────────────────────────────────────────────────────
 function renderProBadge(plan, role) {
-  const wrap = document.querySelector('.pro');
+  var wrap = document.querySelector('.pro');
   if (!wrap) return;
   if (role === 'admin') {
-    wrap.innerHTML = '<a onclick="switchMenu(\'admin\')" style="color:#ffd700;text-decoration:none;font-size:14px;font-weight:700;cursor:pointer;">🛡️ 관리자</a>';
-    const adminMenuItem = document.getElementById('menu-admin');
-    if (adminMenuItem) adminMenuItem.style.display = 'block';
+    wrap.innerHTML = '<a onclick="switchMenu(\'admin\')" style="color:#ffd700;text-decoration:none;font-size:0.875em;font-weight:700;cursor:pointer;">🛡️ 관리자</a>';
+    var adminMenu = document.getElementById('menu-admin');
+    if (adminMenu) adminMenu.style.display = 'block';
     return;
   }
-  const isFreeRole = ['manager','branch_manager'].includes(role);
-  if (isFreeRole || plan === 'pro') {
-    wrap.innerHTML = '<a onclick="loadPricing()" style="color:white;text-decoration:none;font-size:14px;font-weight:600;cursor:pointer;">✅ PRO 이용 중</a>';
-  } else {
-    wrap.innerHTML = '<a onclick="loadPricing()" style="color:#e8906a;text-decoration:none;font-size:14px;font-weight:600;cursor:pointer;">⚡ PRO로 업그레이드</a>';
-  }
+  var isPro = ['manager','branch_manager'].includes(role) || plan === 'pro';
+  wrap.innerHTML = isPro
+    ? '<a onclick="loadPricing()" style="color:#fff;text-decoration:none;font-size:0.875em;font-weight:600;cursor:pointer;">✅ PRO 이용 중</a>'
+    : '<a onclick="loadPricing()" style="color:var(--color-accent);text-decoration:none;font-size:0.875em;font-weight:600;cursor:pointer;">⚡ PRO로 업그레이드</a>';
 }
 
-function loadPricing() {
-  document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.c-section').forEach(el => el.classList.remove('active'));
-  _currentMenu = '';
-  const area = document.getElementById('content-area');
-  area.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:14px;">로딩 중...</div>';
-  fetch('pages/pricing-content.html')
-    .then(res => res.text())
-    .then(html => { area.innerHTML = html; })
-    .catch(() => { area.innerHTML = '<div class="card"><h2>요금제</h2><p>페이지를 불러오지 못했습니다.</p></div>'; });
-}
-
-loadUserInfo();
-
-// ── app_settings fetch → B영역 메뉴 ON/OFF 적용 ──
+// ── ③ 메뉴 설정 (app_settings) ─────────────────────────────────────────────
 async function applyMenuSettings() {
   try {
-    const token = getToken();
-    if (!token) return;
-    const res = await fetch(
-      `${window.SUPABASE_URL}/rest/v1/app_settings?group_name=eq.menu_b&select=key,value`,
-      { headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': 'Bearer ' + token } }
-    );
+    var res = await window.db.fetch('/rest/v1/app_settings?group_name=eq.menu_b&select=key,value');
     if (!res.ok) return;
-    const rows = await res.json();
-    rows.forEach(r => {
-      // key: "menu_home" → data-menu="home"
-      const menuKey = r.key.replace('menu_', '');
-      // admin 메뉴는 renderProBadge가 별도 제어 → 스킵
+    var rows = await res.json();
+    rows.forEach(function (r) {
+      var menuKey = r.key.replace('menu_', '');
       if (menuKey === 'admin') return;
-      const el = document.querySelector(`.menu-item[data-menu="${menuKey}"]`);
-      const tabEl = document.querySelector(`.tab-item[data-menu="${menuKey}"]`);
-      if (r.value === 'off') {
-        if (el) el.style.display = 'none';
-        if (tabEl) tabEl.style.display = 'none';
-      } else {
-        if (el) el.style.display = '';
-        if (tabEl) tabEl.style.display = '';
-      }
+      var el    = document.querySelector('.menu-item[data-menu="' + menuKey + '"]');
+      var tabEl = document.querySelector('.tab-item[data-menu="' + menuKey + '"]');
+      var show  = r.value !== 'off';
+      if (el)    el.style.display    = show ? '' : 'none';
+      if (tabEl) tabEl.style.display = show ? '' : 'none';
     });
-  } catch(e) {
+  } catch (e) {
     console.warn('applyMenuSettings error:', e);
   }
 }
-applyMenuSettings();
 
-// ── 검색 기능 ──
-function isPro() {
-  return window._userPlan === 'pro' || ['manager','branch_manager','admin'].includes(window._userRole);
+// ── ④ 라우팅 (switchMenu) ──────────────────────────────────────────────────
+var _currentMenu = '';
+
+async function switchMenu(menuKey) {
+  if (_currentMenu === menuKey && menuKey !== 'myspace' && menuKey !== 'scripts') return;
+  _currentMenu = menuKey;
+
+  // 메뉴 active 갱신
+  document.querySelectorAll('.menu-item').forEach(function (el) {
+    el.classList.toggle('active', el.dataset.menu === menuKey);
+  });
+  document.querySelectorAll('.tab-item').forEach(function (el) {
+    el.classList.toggle('active', el.dataset.menu === menuKey);
+  });
+
+  // C영역 전환
+  document.querySelectorAll('.c-section').forEach(function (el) {
+    el.classList.toggle('active', el.id === 'c-' + menuKey);
+  });
+
+  // scripts·admin: C영역 숨김
+  var mainEl = document.querySelector('.main');
+  var cEl    = document.querySelector('.c');
+  if (menuKey === 'scripts' || menuKey === 'admin') {
+    if (mainEl) mainEl.style.gridTemplateColumns = 'var(--sidebar-width) 1fr';
+    if (cEl)    cEl.style.display = 'none';
+  } else {
+    if (mainEl) mainEl.style.gridTemplateColumns = '';
+    if (cEl)    cEl.style.display = '';
+  }
+
+  localStorage.setItem('selected_menu', menuKey);
+
+  // D영역 페이지 로드
+  var area = document.getElementById('content-area');
+  area.innerHTML = '<div class="loading-placeholder">로딩 중...</div>';
+  try {
+    var res  = await fetch('pages/' + menuKey + '.html');
+    if (!res.ok) throw new Error('not found');
+    var html = await res.text();
+    area.innerHTML = html;
+
+    // script 태그 실행 (IIFE 래핑 — 모든 페이지 동일)
+    area.querySelectorAll('script').forEach(function (oldScript) {
+      try {
+        var newScript = document.createElement('script');
+        newScript.textContent = '(function(){\n' + oldScript.textContent + '\n})();';
+        document.body.appendChild(newScript);
+        document.body.removeChild(newScript);
+      } catch (e) { console.error('script exec error:', e); }
+    });
+
+  } catch (e) {
+    area.innerHTML = '<div class="card" style="margin:var(--space-5);"><h2 style="font-size:1.1em;margin-bottom:var(--space-2);">준비 중</h2><p style="font-size:0.875em;color:var(--color-text-tertiary);">' + menuKey + ' 페이지를 불러오지 못했습니다.</p></div>';
+  }
+}
+window.switchMenu = switchMenu;
+
+// 스크립트 검색 결과 → 스크립트 페이지 직접 이동
+function stageToColor(stage) {
+  var map = { opening:1, opening_rejection:1, need_emphasis:2, need_emphasis_2:2, situation_check:3, analysis:4, product:5, closing:6, closing_second:6, objection:7 };
+  return map[stage] || null;
+}
+window.navigateToScript = function (stage, title) {
+  window._pendingScript = { stage: stage, title: title, color: stageToColor(stage) };
+  switchMenu('scripts');
+};
+
+// 요금제 페이지 로드
+function loadPricing() {
+  document.querySelectorAll('.menu-item, .tab-item').forEach(function (el) { el.classList.remove('active'); });
+  document.querySelectorAll('.c-section').forEach(function (el) { el.classList.remove('active'); });
+  _currentMenu = '';
+  var area = document.getElementById('content-area');
+  area.innerHTML = '<div class="loading-placeholder">로딩 중...</div>';
+  fetch('pages/pricing.html')
+    .then(function (r) { return r.text(); })
+    .then(function (html) { area.innerHTML = html; })
+    .catch(function () { area.innerHTML = '<div class="card" style="margin:var(--space-5);"><h2>요금제</h2><p>페이지를 불러오지 못했습니다.</p></div>'; });
 }
 
-// PRO 여부에 따라 검색창 렌더 (loadUserInfo 완료 후 호출)
-function renderSearchBox() {
-  const wrap = document.getElementById('search-wrap');
-  if (!wrap) return;
-  if (!isPro()) {
-    wrap.innerHTML = `
-      <div class="search-lock-wrap" onclick="loadPricing()">
-        <span style="font-size:15px;opacity:0.5;">🔍</span>
-        <span class="search-lock-text">스크립트, 게시글, 업무자료 검색...</span>
-        <span class="search-lock-badge">PRO 전용</span>
-      </div>`;
+// 페이지 복원
+(function () {
+  var saved = localStorage.getItem('selected_menu') || 'home';
+  switchMenu(saved);
+})();
+
+// ── ⑤ 빠른실행 ────────────────────────────────────────────────────────────
+function toggleQuickDropdown(e) {
+  e.stopPropagation();
+  var dd = document.getElementById('quickDropdown');
+  dd.classList.toggle('show');
+  if (dd.classList.contains('show')) loadQuickDdItems();
+}
+
+async function loadQuickDdItems() {
+  var wrap = document.getElementById('quick-dd-items');
+  if (!wrap || wrap.dataset.loaded === 'true') return;
+  try {
+    var res  = await window.db.fetchPublic('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
+    if (!res.ok) throw new Error('fetch 실패');
+    var data = await res.json();
+    var icons = { recording_script:'📝', mirror_script:'🎙️', bmi_standard:'📊', insurance_age:'📅', payment_info:'💳', system_links:'🔗', contact_info:'📞' };
+    wrap.innerHTML = data.map(function (item) {
+      var icon = icons[item.tab_key] || '📄';
+      return '<div class="quick-dd-item" onclick="openQuickOverlay(\'' + item.tab_title.replace(/'/g,'&#39;') + '\')">'
+        + '<span class="quick-dd-icon">' + icon + '</span>' + item.tab_title + '</div>';
+    }).join('');
+    wrap.dataset.loaded = 'true';
+  } catch (e) {
+    wrap.innerHTML = '<div class="quick-dd-item" style="color:#aaa;font-size:0.75em;">불러오기 실패</div>';
   }
 }
 
-let _searchTimer = null;
+document.addEventListener('click', function (e) {
+  var wrap = document.querySelector('.quick-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('quickDropdown').classList.remove('show');
+  }
+});
+
+async function openQuickOverlay(key) {
+  document.getElementById('quickDropdown').classList.remove('show');
+  var titleEl      = document.getElementById('qm-title');
+  var contentInner = document.getElementById('qm-content-inner');
+  if (titleEl) titleEl.textContent = '⚡ ' + key;
+  contentInner.innerHTML = '<div class="loading-placeholder">불러오는 중...</div>';
+  document.getElementById('quickOverlay').classList.add('show');
+
+  var curScale = parseFloat(localStorage.getItem('os_font_scale') || '1');
+  if (contentInner) contentInner.style.fontSize = _fontSizeMap[curScale] || '19px';
+
+  if (window.overlayContent && window.overlayContent[key]) {
+    contentInner.innerHTML = window.overlayContent[key];
+    return;
+  }
+  try {
+    var res  = await window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,content_html&limit=1');
+    if (!res.ok) throw new Error('fetch 실패: ' + res.status);
+    var data = await res.json();
+    if (data && data[0] && data[0].content_html) {
+      if (!window.overlayContent) window.overlayContent = {};
+      window.overlayContent[key] = data[0].content_html;
+      contentInner.innerHTML = data[0].content_html;
+    } else {
+      contentInner.innerHTML = '<div class="loading-placeholder">준비 중입니다.</div>';
+    }
+  } catch (e) {
+    contentInner.innerHTML = '<div class="loading-placeholder" style="color:var(--color-danger);">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+  }
+}
+window.openQuickOverlay = openQuickOverlay;
+
+function closeQuick() {
+  var el = document.getElementById('quickOverlay');
+  if (el) { el.classList.remove('show'); el.style.display = ''; }
+}
+window.closeQuick = closeQuick;
+
+function handleQuickOverlayClick(e) {
+  if (e.target === document.getElementById('quickOverlay')) closeQuick();
+}
+
+function goQuickMenu() {
+  document.getElementById('quickDropdown').classList.remove('show');
+  closeQuick();
+  switchMenu('quick');
+}
+
+// ── ⑥ 검색 ────────────────────────────────────────────────────────────────
+function isPro() {
+  return window.Auth ? window.Auth.isPro() : false;
+}
+
+function renderSearchBox() {
+  var wrap = document.getElementById('search-wrap');
+  if (!wrap) return;
+  if (!isPro()) {
+    wrap.innerHTML = '<div class="search-lock-wrap" onclick="loadPricing()">'
+      + '<span style="font-size:0.9375em;opacity:0.5;">🔍</span>'
+      + '<span class="search-lock-text">스크립트, 게시글, 업무자료 검색...</span>'
+      + '<span class="search-lock-badge">PRO 전용</span></div>';
+  }
+}
+
+var _searchTimer = null;
 
 function onSearchInput(val) {
-  const clearBtn = document.getElementById('search-clear');
+  var clearBtn = document.getElementById('search-clear');
   if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
   clearTimeout(_searchTimer);
   if (!val.trim()) { closeSearchDropdown(); return; }
-  _searchTimer = setTimeout(() => fetchSearchPreview(val.trim()), 300);
+  _searchTimer = setTimeout(function () { fetchSearchPreview(val.trim()); }, 300);
 }
 
 function closeSearchDropdown() {
-  const dd = document.getElementById('search-dropdown');
+  var dd = document.getElementById('search-dropdown');
   if (dd) dd.style.display = 'none';
 }
 
 function clearSearch() {
-  const inp = document.getElementById('search-input');
+  var inp = document.getElementById('search-input');
   if (inp) inp.value = '';
-  const clearBtn = document.getElementById('search-clear');
+  var clearBtn = document.getElementById('search-clear');
   if (clearBtn) clearBtn.style.display = 'none';
   closeSearchDropdown();
 }
 
-document.addEventListener('click', function(e) {
-  const wrap = document.getElementById('search-wrap');
+document.addEventListener('click', function (e) {
+  var wrap = document.getElementById('search-wrap');
   if (wrap && !wrap.contains(e.target)) closeSearchDropdown();
 });
 
 async function fetchSearchPreview(q) {
-  const dd = document.getElementById('search-dropdown');
+  var dd = document.getElementById('search-dropdown');
   if (!dd) return;
   dd.style.display = 'block';
   dd.innerHTML = '<div class="search-empty">검색 중...</div>';
   try {
-    const encoded = encodeURIComponent(q);
-    const headers = { 'apikey': window.SUPABASE_KEY, 'Authorization': 'Bearer ' + window._userToken };
-    const [sr, pr, qr, dr] = await Promise.all([
-      fetch(`${window.SUPABASE_URL}/rest/v1/scripts?or=(title.ilike.*${encoded}*,script_text.ilike.*${encoded}*,highlight_text.ilike.*${encoded}*)&is_active=eq.true&select=id,title,highlight_text,stage&limit=4`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/posts?or=(title.ilike.*${encoded}*,content.ilike.*${encoded}*)&select=id,title,content,category&limit=4`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/quick_contents?or=(tab_title.ilike.*${encoded}*,search_text.ilike.*${encoded}*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/exception_diseases?disease_name=ilike.*${encoded}*&select=insurer_name,disease_code,disease_name,is_available,condition&limit=5`, { headers })
+    var enc = encodeURIComponent(q);
+    var token = window.db.getToken();
+    var h = { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token };
+    var [sr, pr, qr, dr] = await Promise.all([
+      fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage&limit=4', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)&select=id,title,content,category&limit=4', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/exception_diseases?disease_name=ilike.*' + enc + '*&select=insurer_name,disease_code,disease_name,is_available,condition&limit=5', { headers: h })
     ]);
-    const [scripts, posts, quicks, diseases] = await Promise.all([
-      sr.ok ? sr.json() : [],
-      pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : [],
-      dr.ok ? dr.json() : []
+    var [scripts, posts, quicks, diseases] = await Promise.all([
+      sr.ok ? sr.json() : [], pr.ok ? pr.json() : [],
+      qr.ok ? qr.json() : [], dr.ok ? dr.json() : []
     ]);
-    // 예외질환은 회사별로 중복 제거 후 최대 3개 회사만 미리보기
-    const diseasePreview = diseases.reduce((acc, d) => {
-      if (!acc.find(x => x.insurer_name === d.insurer_name)) acc.push(d);
+    var diseasePreview = diseases.reduce(function (acc, d) {
+      if (!acc.find(function (x) { return x.insurer_name === d.insurer_name; })) acc.push(d);
       return acc;
     }, []).slice(0, 3);
-    const total = scripts.length + posts.length + quicks.length + diseases.length;
-    if (total === 0) {
-      dd.innerHTML = `<div class="search-empty">🔍 '<b>${q}</b>' 검색 결과가 없습니다.</div>`;
-      return;
-    }
-    let html = '';
+    var total = scripts.length + posts.length + quicks.length + diseases.length;
+    if (total === 0) { dd.innerHTML = '<div class="search-empty">🔍 \'' + q + '\' 검색 결과가 없습니다.</div>'; return; }
+    var html = '';
     if (diseasePreview.length) {
-      html += `<div class="search-section-label">🏥 예외질환 (${diseases.length}건)</div>`;
-      diseasePreview.forEach(d => {
-        const avail = d.is_available === 'O' ? '✅ 가능' : d.is_available === 'X' ? '❌ 불가' : '⚠️ 조건부';
-        const cond = (d.condition||'').slice(0, 30);
-        html += `<div class="search-result-item" onclick="doSearch('${q.replace(/'/g,"\\'")}');closeSearchDropdown();">
-          <span class="search-result-icon">🏥</span>
-          <div class="search-result-body">
-            <div class="search-result-title">${d.disease_name} · ${d.insurer_name}</div>
-            <div class="search-result-desc">${avail}${cond ? ' / ' + cond : ''}</div>
-          </div>
-          <span class="search-result-badge badge-disease">예외질환</span>
-        </div>`;
+      html += '<div class="search-section-label">🏥 예외질환 (' + diseases.length + '건)</div>';
+      diseasePreview.forEach(function (d) {
+        var avail = d.is_available === 'O' ? '✅ 가능' : d.is_available === 'X' ? '❌ 불가' : '⚠️ 조건부';
+        html += '<div class="search-result-item" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\');closeSearchDropdown();">'
+          + '<span class="search-result-icon">🏥</span>'
+          + '<div class="search-result-body"><div class="search-result-title">' + d.disease_name + ' · ' + d.insurer_name + '</div>'
+          + '<div class="search-result-desc">' + avail + '</div></div>'
+          + '<span class="search-result-badge badge-disease">예외질환</span></div>';
       });
     }
     if (scripts.length) {
-      html += `<div class="search-section-label">📋 스크립트</div>`;
-      scripts.forEach(s => {
-        const desc = (s.highlight_text||'').replace(/<[^>]+>/g,'').slice(0,40);
-        html += `<div class="search-result-item" onclick="navigateToScript('${(s.stage||'').replace(/'/g,"\\'")}','${s.title.replace(/'/g,"\\'")}');closeSearchDropdown();">
-          <span class="search-result-icon">📋</span>
-          <div class="search-result-body">
-            <div class="search-result-title">${s.title}</div>
-            ${desc?`<div class="search-result-desc">${desc}</div>`:''}
-          </div>
-          <span class="search-result-badge badge-script">스크립트</span>
-        </div>`;
+      html += '<div class="search-section-label">📋 스크립트</div>';
+      scripts.forEach(function (s) {
+        var desc = (s.highlight_text || '').replace(/<[^>]+>/g, '').slice(0, 40);
+        html += '<div class="search-result-item" onclick="navigateToScript(\'' + (s.stage||'').replace(/'/g,"\\'") + '\',\'' + s.title.replace(/'/g,"\\'") + '\');closeSearchDropdown();">'
+          + '<span class="search-result-icon">📋</span>'
+          + '<div class="search-result-body"><div class="search-result-title">' + s.title + '</div>'
+          + (desc ? '<div class="search-result-desc">' + desc + '</div>' : '') + '</div>'
+          + '<span class="search-result-badge badge-script">스크립트</span></div>';
       });
     }
     if (posts.length) {
-      html += `<div class="search-section-label">💬 게시판</div>`;
-      posts.forEach(p => {
-        const desc = (p.content||'').replace(/<[^>]+>/g,'').slice(0,40);
-        html += `<div class="search-result-item" onclick="doSearch('${q.replace(/'/g,"\\'")}')">
-          <span class="search-result-icon">💬</span>
-          <div class="search-result-body">
-            <div class="search-result-title">${p.title}</div>
-            ${desc?`<div class="search-result-desc">${desc}</div>`:''}
-          </div>
-          <span class="search-result-badge badge-post">게시판</span>
-        </div>`;
+      html += '<div class="search-section-label">💬 게시판</div>';
+      posts.forEach(function (p) {
+        html += '<div class="search-result-item" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\')">'
+          + '<span class="search-result-icon">💬</span>'
+          + '<div class="search-result-body"><div class="search-result-title">' + p.title + '</div></div>'
+          + '<span class="search-result-badge badge-post">게시판</span></div>';
       });
     }
     if (quicks.length) {
-      html += `<div class="search-section-label">⚡ 업무자료</div>`;
-      quicks.forEach(qk => {
-        html += `<div class="search-result-item" onclick="openQuickOverlay('${qk.tab_title.replace(/'/g,"\\'")}');closeSearchDropdown();">
-          <span class="search-result-icon">⚡</span>
-          <div class="search-result-body"><div class="search-result-title">${qk.tab_title}</div></div>
-          <span class="search-result-badge badge-quick">업무자료</span>
-        </div>`;
+      html += '<div class="search-section-label">⚡ 업무자료</div>';
+      quicks.forEach(function (qk) {
+        html += '<div class="search-result-item" onclick="openQuickOverlay(\'' + qk.tab_title.replace(/'/g,"\\'") + '\');closeSearchDropdown();">'
+          + '<span class="search-result-icon">⚡</span>'
+          + '<div class="search-result-body"><div class="search-result-title">' + qk.tab_title + '</div></div>'
+          + '<span class="search-result-badge badge-quick">업무자료</span></div>';
       });
     }
-    html += `<div class="search-footer" onclick="doSearch('${q.replace(/'/g,"\\'")}')">전체 결과 보기 →</div>`;
+    html += '<div class="search-footer" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\')">전체 결과 보기 →</div>';
     dd.innerHTML = html;
-  } catch(e) {
-    console.error('search preview error:', e);
+  } catch (e) {
     dd.innerHTML = '<div class="search-empty">검색 중 오류가 발생했습니다.</div>';
   }
 }
 
 async function doSearch(q) {
-  if (!q) q = (document.getElementById('search-input')||{}).value||'';
+  if (!q) q = (document.getElementById('search-input') || {}).value || '';
   q = q.trim();
   if (!q) return;
   closeSearchDropdown();
   _currentMenu = '';
-  document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.c-section').forEach(el => el.classList.remove('active'));
-  const area = document.getElementById('content-area');
-  area.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:14px;">검색 중...</div>';
+  document.querySelectorAll('.menu-item, .tab-item').forEach(function (el) { el.classList.remove('active'); });
+  document.querySelectorAll('.c-section').forEach(function (el) { el.classList.remove('active'); });
+  var area = document.getElementById('content-area');
+  area.innerHTML = '<div class="loading-placeholder">검색 중...</div>';
   try {
-    const encoded = encodeURIComponent(q);
-    const headers = { 'apikey': window.SUPABASE_KEY, 'Authorization': 'Bearer ' + window._userToken };
-    const [sr, pr, qr, dr] = await Promise.all([
-      fetch(`${window.SUPABASE_URL}/rest/v1/scripts?or=(title.ilike.*${encoded}*,script_text.ilike.*${encoded}*,highlight_text.ilike.*${encoded}*)&is_active=eq.true&select=id,title,highlight_text,stage,type&limit=20`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/posts?or=(title.ilike.*${encoded}*,content.ilike.*${encoded}*)&select=id,title,content,category&limit=20`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/quick_contents?or=(tab_title.ilike.*${encoded}*,search_text.ilike.*${encoded}*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10`, { headers }),
-      fetch(`${window.SUPABASE_URL}/rest/v1/exception_diseases?disease_name=ilike.*${encoded}*&select=insurer_name,disease_code,disease_name,is_available,condition,coverage&order=insurer_name,disease_code&limit=100`, { headers })
+    var enc = encodeURIComponent(q);
+    var token = window.db.getToken();
+    var h = { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token };
+    var [sr, pr, qr, dr] = await Promise.all([
+      fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage,type&limit=20', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)&select=id,title,content,category&limit=20', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/exception_diseases?disease_name=ilike.*' + enc + '*&select=insurer_name,disease_code,disease_name,is_available,condition,coverage&order=insurer_name,disease_code&limit=100', { headers: h })
     ]);
-    const [scripts, posts, quicks, diseases] = await Promise.all([
-      sr.ok ? sr.json() : [],
-      pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : [],
-      dr.ok ? dr.json() : []
+    var [scripts, posts, quicks, diseases] = await Promise.all([
+      sr.ok ? sr.json() : [], pr.ok ? pr.json() : [],
+      qr.ok ? qr.json() : [], dr.ok ? dr.json() : []
     ]);
-    const total = scripts.length + posts.length + quicks.length + diseases.length;
-    let html = `<div class="search-result-page">
-      <div class="search-result-page-header">
-        <div>
-          <div class="search-result-page-title">🔍 &nbsp;"${q}" 검색 결과</div>
-          <div class="search-result-page-sub">총 ${total}건 — 예외질환 ${diseases.length}건 · 스크립트 ${scripts.length}건 · 게시판 ${posts.length}건 · 업무자료 ${quicks.length}건</div>
-        </div>
-        <button class="search-result-page-close" onclick="switchMenu('home')">✕ 닫기</button>
-      </div>`;
-    if (total === 0) {
-      html += `<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:0.9em;">검색 결과가 없습니다.<br><span style="font-size:0.85em;color:#ccc;">다른 키워드로 검색해 보세요.</span></div>`;
-    }
+    var total = scripts.length + posts.length + quicks.length + diseases.length;
+    var html = '<div class="search-result-page">'
+      + '<div class="search-result-page-header"><div>'
+      + '<div class="search-result-page-title">🔍 &nbsp;"' + q + '" 검색 결과</div>'
+      + '<div class="search-result-page-sub">총 ' + total + '건 — 예외질환 ' + diseases.length + '건 · 스크립트 ' + scripts.length + '건 · 게시판 ' + posts.length + '건 · 업무자료 ' + quicks.length + '건</div>'
+      + '</div><button class="search-result-page-close" onclick="switchMenu(\'home\')">✕ 닫기</button></div>';
+    if (total === 0) html += '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:0.9em;">검색 결과가 없습니다.</div>';
     if (diseases.length) {
-      // 회사별로 그룹핑
-      const byInsurer = diseases.reduce((acc, d) => {
-        if (!acc[d.insurer_name]) acc[d.insurer_name] = [];
-        acc[d.insurer_name].push(d);
-        return acc;
-      }, {});
-      html += `<div class="search-group-title">🏥 예외질환 (${diseases.length}건)</div>`;
-      html += `<div style="overflow-x:auto;margin-bottom:8px;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.8em;table-layout:fixed;">
-          <colgroup>
-            <col style="width:13%;">
-            <col style="width:10%;">
-            <col style="width:42%;">
-            <col style="width:10%;">
-            <col style="width:25%;">
-          </colgroup>
-          <thead>
-            <tr style="background:#f5ede4;color:#3d2b1f;">
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">회사</th>
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">질병코드</th>
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">질병명</th>
-              <th style="padding:8px 10px;text-align:center;border-bottom:2px solid #ddc8b4;white-space:nowrap;">가능여부</th>
-              <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #ddc8b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">조건</th>
-            </tr>
-          </thead>
-          <tbody>`;
-      Object.entries(byInsurer).forEach(([insurer, rows], gi) => {
-        rows.forEach((d, i) => {
-          const avail = d.is_available === 'O'
-            ? '<span style="color:#1a7a3f;font-weight:700;">✅ 가능</span>'
-            : d.is_available === 'X'
-            ? '<span style="color:#7a1a1a;font-weight:700;">❌ 불가</span>'
-            : '<span style="color:#7a4e1a;font-weight:700;">⚠️ 조건부</span>';
-          const bg = gi % 2 === 0 ? '#fff' : '#fdf9f6';
-          const tdBase = 'padding:7px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-          html += `<tr style="background:${bg};border-bottom:1px solid #edddd0;">
-            <td style="${tdBase}color:#6b4226;font-weight:${i===0?'600':'400'};">${i===0?insurer:''}</td>
-            <td style="${tdBase}font-family:monospace;font-size:0.95em;">${d.disease_code||'-'}</td>
-            <td style="${tdBase}" title="${d.disease_name}">${d.disease_name}</td>
-            <td style="padding:7px 10px;text-align:center;white-space:nowrap;">${avail}</td>
-            <td style="${tdBase}font-size:0.9em;color:#666;" title="${(d.condition||'-')}">${(d.condition||'-').replace(/\//g,' / ')}</td>
-          </tr>`;
+      var byInsurer = diseases.reduce(function (acc, d) { if (!acc[d.insurer_name]) acc[d.insurer_name] = []; acc[d.insurer_name].push(d); return acc; }, {});
+      html += '<div class="search-group-title">🏥 예외질환 (' + diseases.length + '건)</div>'
+        + '<div style="overflow-x:auto;margin-bottom:var(--space-2);"><table style="width:100%;border-collapse:collapse;font-size:0.8em;table-layout:fixed;">'
+        + '<colgroup><col style="width:13%;"><col style="width:10%;"><col style="width:42%;"><col style="width:10%;"><col style="width:25%;"></colgroup>'
+        + '<thead><tr style="background:var(--color-surface-2);color:var(--color-text-primary);">'
+        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">회사</th>'
+        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">질병코드</th>'
+        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">질병명</th>'
+        + '<th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--color-border);">가능여부</th>'
+        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">조건</th>'
+        + '</tr></thead><tbody>';
+      Object.entries(byInsurer).forEach(function (entry, gi) {
+        var insurer = entry[0], rows = entry[1];
+        rows.forEach(function (d, i) {
+          var avail = d.is_available === 'O' ? '<span style="color:var(--color-success);font-weight:700;">✅ 가능</span>'
+            : d.is_available === 'X' ? '<span style="color:var(--color-danger);font-weight:700;">❌ 불가</span>'
+            : '<span style="color:var(--color-warning);font-weight:700;">⚠️ 조건부</span>';
+          var bg = gi % 2 === 0 ? '#fff' : 'var(--color-surface-2)';
+          html += '<tr style="background:' + bg + ';border-bottom:1px solid var(--color-border);">'
+            + '<td style="padding:7px 10px;color:var(--color-text-secondary);font-weight:' + (i===0?'600':'400') + ';">' + (i===0?insurer:'') + '</td>'
+            + '<td style="padding:7px 10px;font-family:var(--font-mono);font-size:0.95em;">' + (d.disease_code||'-') + '</td>'
+            + '<td style="padding:7px 10px;" title="' + d.disease_name + '">' + d.disease_name + '</td>'
+            + '<td style="padding:7px 10px;text-align:center;">' + avail + '</td>'
+            + '<td style="padding:7px 10px;font-size:0.9em;color:#666;">' + (d.condition||'-').replace(/\//g,' / ') + '</td>'
+            + '</tr>';
         });
       });
-      html += `</tbody></table></div>`;
+      html += '</tbody></table></div>';
     }
     if (scripts.length) {
-      html += `<div class="search-group-title">📋 스크립트 (${scripts.length}건)</div>`;
-      scripts.forEach(s => {
-        const desc = (s.highlight_text||'').replace(/<[^>]+>/g,'').slice(0,80);
-        html += `<div class="search-card" onclick="navigateToScript('${(s.stage||'').replace(/'/g,"\\'")}','${s.title.replace(/'/g,"\\'")}')">
-          <div class="search-card-top">
-            <span class="search-result-badge badge-script">스크립트</span>
-            <span class="search-card-title">${s.title}</span>
-          </div>
-          ${desc?`<div class="search-card-body">${desc}</div>`:''}
-        </div>`;
+      html += '<div class="search-group-title">📋 스크립트 (' + scripts.length + '건)</div>';
+      scripts.forEach(function (s) {
+        var desc = (s.highlight_text || '').replace(/<[^>]+>/g, '').slice(0, 80);
+        html += '<div class="search-card" onclick="navigateToScript(\'' + (s.stage||'').replace(/'/g,"\\'") + '\',\'' + s.title.replace(/'/g,"\\'") + '\')">'
+          + '<div class="search-card-top"><span class="search-result-badge badge-script">스크립트</span><span class="search-card-title">' + s.title + '</span></div>'
+          + (desc ? '<div class="search-card-body">' + desc + '</div>' : '') + '</div>';
       });
     }
     if (posts.length) {
-      html += `<div class="search-group-title">💬 게시판 (${posts.length}건)</div>`;
-      posts.forEach(p => {
-        const desc = (p.content||'').replace(/<[^>]+>/g,'').slice(0,80);
-        html += `<div class="search-card" onclick="switchMenu('board')">
-          <div class="search-card-top">
-            <span class="search-result-badge badge-post">게시판</span>
-            <span class="search-card-title">${p.title}</span>
-          </div>
-          ${desc?`<div class="search-card-body">${desc}</div>`:''}
-        </div>`;
+      html += '<div class="search-group-title">💬 게시판 (' + posts.length + '건)</div>';
+      posts.forEach(function (p) {
+        var desc = (p.content || '').replace(/<[^>]+>/g, '').slice(0, 80);
+        html += '<div class="search-card" onclick="switchMenu(\'board\')">'
+          + '<div class="search-card-top"><span class="search-result-badge badge-post">게시판</span><span class="search-card-title">' + p.title + '</span></div>'
+          + (desc ? '<div class="search-card-body">' + desc + '</div>' : '') + '</div>';
       });
     }
     if (quicks.length) {
-      html += `<div class="search-group-title">⚡ 업무자료 (${quicks.length}건)</div>`;
-      quicks.forEach(qk => {
-        html += `<div class="search-card" onclick="openQuickOverlay('${qk.tab_title.replace(/'/g,"\\'")}')">
-          <div class="search-card-top">
-            <span class="search-result-badge badge-quick">업무자료</span>
-            <span class="search-card-title">${qk.tab_title}</span>
-          </div>
-        </div>`;
+      html += '<div class="search-group-title">⚡ 업무자료 (' + quicks.length + '건)</div>';
+      quicks.forEach(function (qk) {
+        html += '<div class="search-card" onclick="openQuickOverlay(\'' + qk.tab_title.replace(/'/g,"\\'") + '\')">'
+          + '<div class="search-card-top"><span class="search-result-badge badge-quick">업무자료</span><span class="search-card-title">' + qk.tab_title + '</span></div></div>';
       });
     }
     html += '</div>';
     area.innerHTML = html;
-  } catch(e) {
-    console.error('doSearch error:', e);
-    area.innerHTML = '<div class="card"><h2>검색 오류</h2><p>검색 중 오류가 발생했습니다. 새로고침 후 다시 시도해 주세요.</p></div>';
+  } catch (e) {
+    area.innerHTML = '<div class="card" style="margin:var(--space-5);"><h2>검색 오류</h2><p>검색 중 오류가 발생했습니다.</p></div>';
   }
 }
 window.doSearch = doSearch;
@@ -1452,399 +1077,120 @@ window.clearSearch = clearSearch;
 window.closeSearchDropdown = closeSearchDropdown;
 window.onSearchInput = onSearchInput;
 
-// loadUserInfo 완료 후 검색창 권한 렌더 (500ms 대기)
-// loadUserInfo 완료 후 renderSearchBox 호출 (loadUserInfo 내부에서 직접 호출)
-function switchCPanel(menuKey) {
-  document.querySelectorAll('.c-section').forEach(el => {
-    el.classList.toggle('active', el.id === 'c-' + menuKey);
+// ── ⑦ 폰트 스케일 ─────────────────────────────────────────────────────────
+var _fontSizeMap = { 0.88: '18px', 1: '19px', 1.25: '20px' };
+
+function setFontScale(scale) {
+  var area = document.getElementById('content-area');
+  if (area) area.style.fontSize = _fontSizeMap[scale] || '19px';
+  var overlayInner = document.getElementById('qm-content-inner');
+  if (overlayInner) overlayInner.style.fontSize = _fontSizeMap[scale] || '19px';
+  document.documentElement.style.setProperty('--page-scale', scale);
+  localStorage.setItem('os_font_scale', scale);
+  document.querySelectorAll('.font-ctrl-btn').forEach(function (btn) {
+    btn.classList.toggle('active', parseFloat(btn.dataset.scale) === scale);
   });
 }
-
-// ── E 영역: pages/ fetch 로드 ──
-let _currentMenu = '';
-async function switchMenu(menuKey) {
-  // myspace/scripts는 매번 새로 fetch (초기화 타이밍 보장)
-  if (_currentMenu === menuKey && menuKey !== 'myspace' && menuKey !== 'scripts') return;
-  _currentMenu = menuKey;
-
-  // B 메뉴 active
-  document.querySelectorAll('.menu-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.menu === menuKey);
-  });
-  // 하단 탭바 active
-  document.querySelectorAll('.tab-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.menu === menuKey);
-  });
-  // C 영역 전환
-  switchCPanel(menuKey);
-  // scripts/admin: C영역 숨김/복원
-  const mainEl = document.querySelector('.main');
-  const cEl = document.querySelector('.c');
-  if (menuKey === 'scripts' || menuKey === 'admin') {
-    if (mainEl) mainEl.style.gridTemplateColumns = '220px 1fr';
-    if (cEl) cEl.style.display = 'none';
+(function () {
+  var saved = parseFloat(localStorage.getItem('os_font_scale'));
+  if (saved && [0.88, 1, 1.25].includes(saved)) {
+    setFontScale(saved);
   } else {
-    if (mainEl) mainEl.style.gridTemplateColumns = '';
-    if (cEl) cEl.style.display = '';
+    var area = document.getElementById('content-area');
+    if (area) area.style.fontSize = '19px';
   }
-  // localStorage 저장
-  localStorage.setItem('selected_menu', menuKey);
-
-  // E 영역에 pages/xxx.html 로드
-  const area = document.getElementById('content-area');
-  area.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:14px;">로딩 중...</div>';
-  try {
-    const res = await fetch(`pages/${menuKey}.html`);
-    if (!res.ok) throw new Error('not found');
-    const html = await res.text();
-    area.innerHTML = html;
-    // 로드된 콘텐츠 내 script 실행
-    // quick: window.* 전역 선언 구조이므로 IIFE 래핑 없이 그대로 실행
-    // 그 외: IIFE로 const 재선언 충돌 방지
-    area.querySelectorAll('script').forEach(oldScript => {
-      try {
-        const newScript = document.createElement('script');
-        if (menuKey === 'quick' || menuKey === 'myspace') {
-          newScript.textContent = oldScript.textContent;
-        } else {
-          newScript.textContent = '(function(){\n' + oldScript.textContent + '\n})();';
-        }
-        document.body.appendChild(newScript);
-        document.body.removeChild(newScript);
-      } catch(e) { console.error('script exec error:', e); }
-    });
-    // 페이지 초기화 함수 호출
-    if (menuKey === 'myspace') {
-      // myspace.html 두 번째 <script> 블록 끝에서 window._myspaceReady = true 를 세팅함
-      // 이 폴링이 그 신호를 확인한 뒤 renderMySpaceView를 호출하는 구조
-      window._myspaceReady = false; // 진입 전 리셋 (재진입 대비)
-      let waited = 0;
-      const waitAndRender = setInterval(function() {
-        waited += 20;
-        const ready = window._myspaceReady === true;
-        const canRender = typeof window.renderMySpaceView === 'function';
-        if (ready && canRender) {
-          clearInterval(waitAndRender);
-          window._myspaceReady = false; // 다음 진입 시 재사용 대비 리셋
-          window.renderMySpaceView('scripts');
-          if (typeof window.setWriteModeVisual === 'function') {
-            window.setWriteModeVisual(false);
-          }
-        } else if (waited >= 3000) {
-          // 3초 내 신호 미도달: 함수가 존재하면 fallback 렌더링 시도
-          clearInterval(waitAndRender);
-          if (canRender) {
-            window.renderMySpaceView('scripts');
-            if (typeof window.setWriteModeVisual === 'function') {
-              window.setWriteModeVisual(false);
-            }
-          } else {
-            console.error('myspace init failed: renderMySpaceView not defined after 3s');
-          }
-        }
-      }, 20);
-    }
-    if (menuKey === 'quick') {
-      // _quickReady 플래그 폴링 — quick.html 초기화(content-slot 렌더) 완료 대기
-      window._quickReady = false;
-      let qWaited = 0;
-      const waitQuick = setInterval(function() {
-        qWaited += 20;
-        if (window._quickReady) {
-          clearInterval(waitQuick);
-        } else if (qWaited >= 2000) {
-          // 타임아웃 fallback: DB fetch가 완료되지 않은 경우
-          clearInterval(waitQuick);
-          const slot = document.getElementById('content-slot');
-          if (slot && !slot.innerHTML.trim()) {
-            slot.innerHTML = '<div style="padding:40px;text-align:center;color:#c0392b;font-size:13px;">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
-          }
-          window._quickReady = true;
-        }
-      }, 20);
-    }
-  } catch(e) {
-    area.innerHTML = `<div class="card"><h2>준비 중</h2><p>${menuKey} 페이지를 불러오지 못했습니다.</p></div>`;
-  }
-}
-window.switchMenu = switchMenu;
-
-// stage 문자열 → scripts.html의 color 번호로 변환
-function stageToColor(stage) {
-  var map = {
-    opening:1, opening_rejection:1,
-    need_emphasis:2, need_emphasis_2:2,
-    situation_check:3,
-    analysis:4,
-    product:5,
-    closing:6, closing_second:6,
-    objection:7
-  };
-  return map[stage] || null;
-}
-
-// 검색 결과에서 스크립트 클릭 시 호출
-window.navigateToScript = function(stage, title) {
-  window._pendingScript = { stage: stage, title: title, color: stageToColor(stage) };
-  switchMenu('scripts');
-};
-
-function calcInsAge(){
-  var birth=document.getElementById('ins-birth');
-  if(!birth||!birth.value){alert('생년월일을 입력해 주세요.');return;}
-  var today=new Date();
-  var b=new Date(birth.value);
-  var age=today.getFullYear()-b.getFullYear();
-  var months=(today.getMonth()-b.getMonth())*30+(today.getDate()-b.getDate());
-  if(months < -182) age--;
-  else if(months >= 183) age++;
-  var el=document.getElementById('ins-age-result');
-  if(el){el.style.display='block';el.textContent='보험나이: '+age+'세';}
-}
-function calcBMI(){
-  var h=parseFloat(document.getElementById('bmi-height').value);
-  var w=parseFloat(document.getElementById('bmi-weight').value);
-  if(!h||!w){alert('키와 몸무게를 입력해 주세요.');return;}
-  var bmi=(w/((h/100)*(h/100))).toFixed(1);
-  var el=document.getElementById('bmi-result');
-  if(el){el.style.display='block';el.textContent='BMI: '+bmi;}
-}
-
-// B 메뉴 클릭
-document.querySelectorAll('.menu-item').forEach(el => {
-  el.addEventListener('click', () => switchMenu(el.dataset.menu));
-});
-// 하단 탭바 클릭
-document.querySelectorAll('.tab-item').forEach(el => {
-  el.addEventListener('click', () => switchMenu(el.dataset.menu));
-});
-
-// ── 페이지 로드 시 복원 ──
-(function(){
-  const saved = localStorage.getItem('selected_menu') || 'home';
-  switchMenu(saved);
 })();
 
-// ── 빠른실행 드롭다운 ──
-function toggleQuickDropdown(e) {
-  e.stopPropagation();
-  const dd = document.getElementById('quickDropdown');
-  dd.classList.toggle('show');
-  if (dd.classList.contains('show')) loadQuickDdItems();
+// ── ⑧ 내 정보 수정 모달 ──────────────────────────────────────────────────
+function openEditProfile() { document.getElementById('edit-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeEditProfile() { document.getElementById('edit-overlay').classList.remove('active'); document.body.style.overflow = ''; }
+
+async function saveProfile() {
+  var name = document.getElementById('edit-name').value.trim();
+  if (!name) { alert('이름을 입력해 주세요.'); return; }
+  var btn = document.getElementById('edit-save-btn');
+  btn.disabled = true; btn.textContent = '저장 중...';
+  var fields = {
+    name:    name,
+    phone:   document.getElementById('edit-phone').value.trim(),
+    company: document.getElementById('edit-company').value.trim(),
+    branch:  document.getElementById('edit-branch').value.trim(),
+    team:    document.getElementById('edit-team').value.trim()
+  };
+  var ok = await window.Auth.saveUser(fields);
+  if (ok) {
+    closeEditProfile();
+    // A1/A2 이름 즉시 갱신
+    var roleLabel   = window.Auth.getRoleLabel(window.AppState.role);
+    var displayName = roleLabel ? name + ' ' + roleLabel : name;
+    var userEl  = document.getElementById('topbar-user');
+    var greetEl = document.getElementById('a2-greeting');
+    if (userEl)  userEl.textContent = displayName + ' (' + window.AppState.email + ') ▾';
+    if (greetEl) greetEl.innerHTML  = '안녕하세요, <strong style="color:var(--color-accent);">' + displayName + '</strong>님! 오늘도 화이팅입니다 🔥';
+  } else {
+    alert('저장 중 오류가 발생했습니다.');
+  }
+  btn.disabled = false; btn.textContent = '저장하기';
 }
 
-async function loadQuickDdItems() {
-  const wrap = document.getElementById('quick-dd-items');
-  if (!wrap) return;
-  // 이미 로드된 경우 스킵
-  if (wrap.dataset.loaded === 'true') return;
+async function sendPasswordReset() {
+  var email = document.getElementById('edit-email').value;
+  if (!email) { alert('이메일 정보를 불러오는 중입니다.'); return; }
   try {
-    const headers = { 'apikey': window.SUPABASE_KEY };
-    if (window._userToken) headers['Authorization'] = 'Bearer ' + window._userToken;
-    const res = await fetch(
-      window.SUPABASE_URL + '/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order',
-      { headers }
-    );
-    if (!res.ok) throw new Error('fetch 실패');
-    const data = await res.json();
-    const icons = {
-      recording_script: '📝',
-      mirror_script: '🎙️',
-      bmi_standard: '📊',
-      insurance_age: '📅',
-      payment_info: '💳',
-      system_links: '🔗',
-      contact_info: '📞'
-    };
-    wrap.innerHTML = data.map(function(item) {
-      const icon = icons[item.tab_key] || '📄';
-      return '<div class="quick-dd-item" onclick="openQuickOverlay(\'' + item.tab_title.replace(/'/g, '&#39;') + '\')">' +
-        '<span class="quick-dd-icon">' + icon + '</span>' + item.tab_title +
-        '</div>';
-    }).join('');
-    wrap.dataset.loaded = 'true';
-  } catch(e) {
-    console.error('loadQuickDdItems error:', e);
-    wrap.innerHTML = '<div class="quick-dd-item" style="color:#aaa;font-size:12px;">불러오기 실패</div>';
-  }
-}
-document.addEventListener('click', function(e) {
-  const wrap = document.querySelector('.quick-dropdown-wrap');
-  if (wrap && !wrap.contains(e.target)) {
-    document.getElementById('quickDropdown').classList.remove('show');
-  }
-});
-
-// 드롭다운 항목 클릭 → 오버레이로 콘텐츠 표시
-async function openQuickOverlay(key) {
-  document.getElementById('quickDropdown').classList.remove('show');
-  const titleEl = document.getElementById('qm-title');
-  const contentInner = document.getElementById('qm-content-inner');
-  if (titleEl) titleEl.textContent = '⚡ ' + key;
-  contentInner.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">불러오는 중...</div>';
-  document.getElementById('quickOverlay').classList.add('show');
-  // 현재 폰트 크기 오버레이에 적용
-  const _curScale = parseFloat(localStorage.getItem('os_font_scale') || '1');
-  if (contentInner) contentInner.style.fontSize = _fontSizeMap[_curScale] || '19px';
-
-  // ── DB 연동: window.overlayContent에 캐시된 경우 즉시 표시
-  // quick.html 로드 시 DB fetch 후 overlayContent가 채워지므로,
-  // 캐시가 있으면 바로 사용, 없으면 Supabase에서 직접 fetch
-  if (window.overlayContent && window.overlayContent[key]) {
-    contentInner.innerHTML = window.overlayContent[key];
-    return;
-  }
-
-  // 캐시 없으면 Supabase quick_contents에서 직접 fetch (myspace 패턴 동일)
-  try {
-    const res = await fetchWithAuth(
-      window.SUPABASE_URL + '/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,content_html&limit=1'
-    );
-
-    if (!res.ok) throw new Error('fetch 실패: ' + res.status);
-    const data = await res.json();
-
-    if (data && data[0] && data[0].content_html) {
-      // 캐시에도 저장 (다음 호출 시 즉시 사용)
-      window.overlayContent[key] = data[0].content_html;
-      contentInner.innerHTML = data[0].content_html;
-    } else {
-      contentInner.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">준비 중입니다.</div>';
-    }
-  } catch(e) {
-    console.error('openQuickOverlay fetch 오류:', e);
-    contentInner.innerHTML = '<div style="padding:20px;text-align:center;color:#c0392b;font-size:13px;">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
-  }
+    var res = await fetch(window.SUPABASE_URL + '/auth/v1/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': window.db.key },
+      body: JSON.stringify({ email: email })
+    });
+    if (res.ok) alert(email + '으로 비밀번호 재설정 링크를 발송했습니다.\n메일함을 확인해 주세요.');
+    else alert('발송 중 오류가 발생했습니다.');
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 }
 
-function closeQuick() {
-  try {
-    const el = document.getElementById('quickOverlay');
-    if (el) { el.classList.remove('show'); el.style.display = ''; }
-  } catch(e) { console.error('closeQuick error:', e); }
-}
-window.closeQuick = closeQuick;
-function handleQuickOverlayClick(e) {
-  if (e.target === document.getElementById('quickOverlay')) closeQuick();
-}
-function goQuickMenu() {
-  document.getElementById('quickDropdown').classList.remove('show');
-  closeQuick();
-  switchMenu('quick');
-}
-
-// ── 사용자 드롭다운 ──
+// ── ⑨ 사용자 드롭다운 ─────────────────────────────────────────────────────
 function toggleUserDropdown(event) {
   if (event) event.stopPropagation();
-  const dd = document.getElementById('user-dropdown');
+  var dd = document.getElementById('user-dropdown');
   if (!dd) return;
   dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
 }
-document.addEventListener('click', function(e) {
-  const wrap = document.getElementById('user-dropdown-wrap');
+document.addEventListener('click', function (e) {
+  var wrap = document.getElementById('user-dropdown-wrap');
   if (wrap && !wrap.contains(e.target)) {
-    const dd = document.getElementById('user-dropdown');
+    var dd = document.getElementById('user-dropdown');
     if (dd) dd.style.display = 'none';
   }
 });
 
-// ── 내 정보 수정 모달 ──
-function openEditProfile(){document.getElementById('edit-overlay').classList.add('active');document.body.style.overflow='hidden';}
-function closeEditProfile(){document.getElementById('edit-overlay').classList.remove('active');document.body.style.overflow='';}
-async function saveProfile(){
-  const name=document.getElementById('edit-name').value.trim();
-  if(!name){alert('이름을 입력해 주세요.');return;}
-  const btn=document.getElementById('edit-save-btn');
-  btn.disabled=true;btn.textContent='저장 중...';
-  try{
-    const res=await fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}`,{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({name,phone:document.getElementById('edit-phone').value.trim(),company:document.getElementById('edit-company').value.trim(),branch:document.getElementById('edit-branch').value.trim(),team:document.getElementById('edit-team').value.trim()})
-    });
-    if(res.ok){closeEditProfile();await loadUserInfo();}
-    else alert('저장 중 오류가 발생했습니다.');
-  }catch(e){alert('네트워크 오류가 발생했습니다.');}
-  finally{btn.disabled=false;btn.textContent='저장하기';}
+// BMI / 보험나이 계산 (Quick 메뉴 내 사용)
+function calcInsAge() {
+  var birth = document.getElementById('ins-birth');
+  if (!birth || !birth.value) { alert('생년월일을 입력해 주세요.'); return; }
+  var today = new Date(), b = new Date(birth.value);
+  var age = today.getFullYear() - b.getFullYear();
+  var months = (today.getMonth() - b.getMonth()) * 30 + (today.getDate() - b.getDate());
+  if (months < -182) age--; else if (months >= 183) age++;
+  var el = document.getElementById('ins-age-result');
+  if (el) { el.style.display = 'block'; el.textContent = '보험나이: ' + age + '세'; }
 }
-async function sendPasswordReset(){
-  const email=document.getElementById('edit-email').value;
-  if(!email){alert('이메일 정보를 불러오는 중입니다.');return;}
-  try{
-    const res=await fetch(`${window.SUPABASE_URL}/auth/v1/recover`,{method:'POST',headers:{'Content-Type':'application/json','apikey':window.SUPABASE_KEY},body:JSON.stringify({email})});
-    if(res.ok)alert(`${email}으로 비밀번호 재설정 링크를 발송했습니다.\n메일함을 확인해 주세요.`);
-    else alert('발송 중 오류가 발생했습니다.');
-  }catch(e){alert('네트워크 오류가 발생했습니다.');}
+function calcBMI() {
+  var h = parseFloat(document.getElementById('bmi-height').value);
+  var w = parseFloat(document.getElementById('bmi-weight').value);
+  if (!h || !w) { alert('키와 몸무게를 입력해 주세요.'); return; }
+  var bmi = (w / ((h / 100) * (h / 100))).toFixed(1);
+  var el = document.getElementById('bmi-result');
+  if (el) { el.style.display = 'block'; el.textContent = 'BMI: ' + bmi; }
 }
 
-// ── 글자 크기 컨트롤러 ──
-const _fontSizeMap = { 0.88: '18px', 1: '19px', 1.25: '20px' };
+// ── ⑩ 메뉴 이벤트 ─────────────────────────────────────────────────────────
+document.querySelectorAll('.menu-item').forEach(function (el) {
+  el.addEventListener('click', function () { switchMenu(el.dataset.menu); });
+});
+document.querySelectorAll('.tab-item').forEach(function (el) {
+  el.addEventListener('click', function () { switchMenu(el.dataset.menu); });
+});
 
-function setFontScale(scale) {
-  // D 영역 font-size 직접 px 지정 → em 상속 기반으로 하위 전체 확대/축소
-  const area = document.getElementById('content-area');
-  if (area) area.style.fontSize = _fontSizeMap[scale] || '16px';
-  // 오버레이(빠른실행) 폰트도 동일 적용
-  const overlayContent = document.getElementById('qm-content-inner');
-  if (overlayContent) overlayContent.style.fontSize = _fontSizeMap[scale] || '16px';
-  // CSS 변수도 병행 유지 (pages/*.html 자체 로드 시 대비)
-  document.documentElement.style.setProperty('--d-scale', scale);
-  document.documentElement.style.setProperty('--page-scale', scale);
-  localStorage.setItem('os_font_scale', scale);
-  document.querySelectorAll('.font-ctrl-btn').forEach(btn => {
-    btn.classList.toggle('active', parseFloat(btn.dataset.scale) === scale);
-  });
-}
-(function(){
-  const saved = parseFloat(localStorage.getItem('os_font_scale'));
-  if (saved && [0.88, 1, 1.25].includes(saved)) {
-    setFontScale(saved);
-  } else {
-    // 기본값 중(16px) 적용
-    const area = document.getElementById('content-area');
-    if (area) area.style.fontSize = '16px';
-  }
-})();
-
-// ── 로그아웃 ──
-function doLogout() {
-  localStorage.removeItem('os_token');
-  localStorage.removeItem('os_refresh_token');
-  localStorage.removeItem('os_user');
-  localStorage.removeItem('selected_menu');
-  sessionStorage.removeItem('os_token');
-  sessionStorage.removeItem('os_user');
-  window.location.href = 'index.html';
-}
+}); // DOMContentLoaded
 </script>
-
-<!-- 내 정보 수정 모달 -->
-<div id="edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,16,8,.72);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
-  <div style="background:#fff;border-radius:18px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;margin:16px;max-height:90vh;overflow-y:auto;">
-    <div style="background:#3d2b1f;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;">
-      <div style="font-size:15px;font-weight:800;color:#fff;">내 정보 수정</div>
-      <button onclick="closeEditProfile()" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;font-size:16px;">✕</button>
-    </div>
-    <div style="padding:16px 22px 8px;">
-      <div style="background:#f5ede4;border:1px solid #e0c9b4;border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:12px;color:#5a3e2b;line-height:1.7;">
-        📌 <strong>지점·팀 게시판 공유 안내</strong><br>팀원들과 같은 게시판을 사용하려면<br><strong>회사명 / 지점(센터)명 / 팀명</strong>을 팀원과 동일하게 입력해 주세요.
-      </div>
-      <div style="margin-bottom:13px;"><div style="font-size:12px;font-weight:700;color:#3d2b1f;margin-bottom:5px;">이름 *</div><input id="edit-name" type="text" placeholder="홍길동" style="width:100%;height:40px;padding:0 12px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;"></div>
-      <div style="margin-bottom:13px;"><div style="font-size:12px;font-weight:700;color:#3d2b1f;margin-bottom:5px;">핸드폰 번호</div><input id="edit-phone" type="tel" placeholder="010-1234-5678" style="width:100%;height:40px;padding:0 12px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;"></div>
-      <div style="margin-bottom:13px;"><div style="font-size:12px;font-weight:700;color:#3d2b1f;margin-bottom:5px;">이메일 <span style="font-size:11px;color:#9a7a62;">(변경 불가)</span></div><input id="edit-email" type="email" disabled style="width:100%;height:40px;padding:0 12px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:#f5f5f5;color:#999;"></div>
-      <div style="margin-bottom:13px;"><div style="font-size:12px;font-weight:700;color:#3d2b1f;margin-bottom:5px;">회사명</div><input id="edit-company" type="text" placeholder="소속 회사명" style="width:100%;height:40px;padding:0 12px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;">
-        <div><div style="font-size:12px;font-weight:700;color:#3d2b1f;margin-bottom:5px;">지점(센터)명</div><input id="edit-branch" type="text" placeholder="더원지점" style="width:100%;height:40px;padding:0 12px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;"></div>
-        <div><div style="font-size:12px;font-weight:700;color:#3d2b1f;margin-bottom:5px;">팀명</div><input id="edit-team" type="text" placeholder="4팀" style="width:100%;height:40px;padding:0 12px;border:1.5px solid #e0d4cc;border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;"></div>
-      </div>
-    </div>
-    <div style="padding:4px 22px 20px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button onclick="doLogout()" style="flex:0 0 auto;height:38px;padding:0 14px;border:1.5px solid #e0d4cc;border-radius:8px;background:#fff;font-size:12px;font-weight:700;color:#9a7a62;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">로그아웃</button>
-      <button onclick="sendPasswordReset()" style="flex:0 0 auto;height:38px;padding:0 14px;border:1.5px solid #c8753a;border-radius:8px;background:#fff;font-size:12px;font-weight:700;color:#c8753a;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">비밀번호 변경</button>
-      <button id="edit-save-btn" onclick="saveProfile()" style="flex:1;height:38px;background:#c8753a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">저장하기</button>
-    </div>
-  </div>
-</div>
-<style>#edit-overlay.active{display:flex!important;}</style>
 </body>
 </html>
