@@ -1,0 +1,215 @@
+<!--
+================================================================================
+  pages/_template.html
+  원세컨드 — pages/*.html 표준 초기화 패턴 기준서
+
+  ▸ 이 파일은 "기준서"입니다. 실제 페이지가 아닙니다.
+  ▸ 새 pages/*.html 작업 시 이 파일을 복사해서 시작하세요.
+  ▸ [REPLACE:*] 표시 부분만 교체. 나머지 구조는 절대 변경 금지.
+
+  의존 순서 (app.html이 먼저 로드):
+    1. css/tokens.css   — 디자인 변수
+    2. js/db.js         — window.db
+    3. js/auth.js       — window.AppState, window.Auth
+
+  금지 사항:
+    ✗ Supabase URL·KEY 직접 선언
+    ✗ window._xxx 임시 플래그 사용
+    ✗ app.html 함수 직접 호출 (switchMenu 제외)
+    ✗ px 고정 폰트 (em 단위만 허용)
+    ✗ 하드코딩 색상 (tokens.css 변수만 허용)
+    ✗ IIFE 래핑 예외 없음 (quick·myspace 포함 동일)
+
+  pages → app 통신:
+    ✓ window.AppState 읽기
+    ✓ window.db.fetch() 사용
+    ✓ window.Auth.isPro() / isAdmin() 사용
+    ✓ window.switchMenu('메뉴키') 호출 가능
+    ✓ app → page 이벤트: document.dispatchEvent(new CustomEvent('appstate:ready'))
+================================================================================
+-->
+
+<!-- ❶ 페이지 래퍼 — D영역 안에 삽입되는 루트 요소 -->
+<div id="page-[REPLACE:menuKey]" class="page-wrap">
+
+  <!-- ❷ 페이지 헤더 — tokens.css .page-header 공통 클래스 사용 -->
+  <div class="page-header">
+    <div>
+      <div class="page-header-title">[REPLACE:페이지 타이틀]</div>
+      <div class="page-header-sub">[REPLACE:페이지 서브타이틀]</div>
+    </div>
+    <span class="page-header-icon">[REPLACE:이모지 아이콘]</span>
+  </div>
+
+  <!-- ❸ 탭 (탭이 없는 페이지는 이 블록 삭제) -->
+  <div class="tab-underline" id="[REPLACE:menuKey]-tabs">
+    <button class="tab-underline-btn active"
+            onclick="[REPLACE:menuKey]SwitchTab('tab1')" data-tab="tab1">
+      [REPLACE:탭1 이름]
+    </button>
+    <button class="tab-underline-btn"
+            onclick="[REPLACE:menuKey]SwitchTab('tab2')" data-tab="tab2">
+      [REPLACE:탭2 이름]
+    </button>
+  </div>
+
+  <!-- ❹ 탭 콘텐츠 패널 -->
+  <div id="[REPLACE:menuKey]-tab1" class="tab-panel">
+    <!-- 탭1 콘텐츠 -->
+  </div>
+  <div id="[REPLACE:menuKey]-tab2" class="tab-panel" style="display:none;">
+    <!-- 탭2 콘텐츠 -->
+  </div>
+
+  <!-- ❺ 로딩·에러 상태 (공통 클래스 사용) -->
+  <div id="[REPLACE:menuKey]-loading" class="loading-placeholder" style="display:none;">
+    불러오는 중...
+  </div>
+  <div id="[REPLACE:menuKey]-error" class="loading-placeholder" style="display:none;color:var(--color-danger);">
+    데이터를 불러오지 못했습니다. 새로고침 해주세요.
+  </div>
+
+</div><!-- /page-wrap -->
+
+
+<!-- ───────────────────────────────────────────────────────────────────────────
+  페이지 전용 스타일
+  ▸ tokens.css 변수만 사용. 하드코딩 색상·radius·px 폰트 금지
+  ▸ 셀렉터는 #page-[menuKey] 하위로 스코프 제한 (전역 오염 방지)
+──────────────────────────────────────────────────────────────────────────── -->
+<style>
+/* 페이지 래퍼 */
+#page-[REPLACE:menuKey] {
+  padding: 4px 0;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+}
+
+/* 탭 패널 */
+#page-[REPLACE:menuKey] .tab-panel {
+  /* 탭 전환 시 display:none / display:block 토글 */
+}
+
+/* [REPLACE: 페이지 전용 스타일 추가] */
+</style>
+
+
+<!-- ───────────────────────────────────────────────────────────────────────────
+  페이지 스크립트
+  ▸ 반드시 IIFE로 래핑 (app.html이 자동 래핑하지만 자체 보호 목적)
+  ▸ 외부에서 호출해야 하는 함수만 window.함수명 = 으로 선언
+  ▸ 내부 전용 함수는 var/function 로컬 선언 유지
+──────────────────────────────────────────────────────────────────────────── -->
+<script>
+(function () {
+  'use strict';
+
+  // ── 상수 ──────────────────────────────────────────────────────────────────
+  var MENU_KEY = '[REPLACE:menuKey]'; // 이 페이지의 메뉴 식별자
+
+  // ── 상태 ──────────────────────────────────────────────────────────────────
+  var _currentTab = 'tab1';  // 현재 활성 탭
+  var _data = [];            // fetch한 데이터 캐시
+
+  // ── 탭 전환 ───────────────────────────────────────────────────────────────
+  // onclick에서 호출하므로 window 선언 필수
+  window[MENU_KEY + 'SwitchTab'] = function (tabKey) {
+    _currentTab = tabKey;
+
+    // 탭 버튼 active 토글
+    var tabWrap = document.getElementById(MENU_KEY + '-tabs');
+    if (tabWrap) {
+      tabWrap.querySelectorAll('.tab-underline-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.tab === tabKey);
+      });
+    }
+
+    // 탭 패널 show/hide
+    ['tab1', 'tab2'].forEach(function (key) {
+      var panel = document.getElementById(MENU_KEY + '-' + key);
+      if (panel) panel.style.display = key === tabKey ? '' : 'none';
+    });
+
+    // 탭 전환 시 필요한 추가 로직
+    // [REPLACE: 탭별 fetch 등 로직 추가]
+  };
+
+  // ── 로딩 상태 헬퍼 ────────────────────────────────────────────────────────
+  function showLoading(show) {
+    var el = document.getElementById(MENU_KEY + '-loading');
+    if (el) el.style.display = show ? '' : 'none';
+  }
+
+  function showError(show) {
+    var el = document.getElementById(MENU_KEY + '-error');
+    if (el) el.style.display = show ? '' : 'none';
+  }
+
+  // ── 데이터 fetch ──────────────────────────────────────────────────────────
+  async function fetchData() {
+    showLoading(true);
+    showError(false);
+    try {
+      var res = await window.db.fetch(
+        '/rest/v1/[REPLACE:테이블명]?[REPLACE:쿼리파라미터]'
+      );
+      if (!res.ok) throw new Error('fetch 실패: ' + res.status);
+      _data = await res.json();
+      render();
+    } catch (e) {
+      console.error(MENU_KEY + ' fetchData error:', e);
+      showError(true);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // ── 렌더링 ────────────────────────────────────────────────────────────────
+  function render() {
+    var panel = document.getElementById(MENU_KEY + '-tab1');
+    if (!panel) return;
+
+    if (!_data.length) {
+      panel.innerHTML = '<div class="loading-placeholder">데이터가 없습니다.</div>';
+      return;
+    }
+
+    // [REPLACE: 실제 렌더링 로직]
+    panel.innerHTML = _data.map(function (item) {
+      return '<div class="card">' + item.title + '</div>';
+    }).join('');
+  }
+
+  // ── 초기화 ────────────────────────────────────────────────────────────────
+  // 패턴 A: AppState가 이미 준비된 경우 (재진입 시)
+  // 패턴 B: AppState 아직 미준비 — appstate:ready 이벤트 대기
+  function init() {
+    if (!window.AppState || !window.AppState.ready) {
+      // AppState 미준비 → 이벤트 대기
+      document.addEventListener('appstate:ready', function onReady() {
+        document.removeEventListener('appstate:ready', onReady);
+        _boot();
+      });
+      return;
+    }
+    // AppState 이미 준비됨 → 즉시 실행
+    _boot();
+  }
+
+  function _boot() {
+    // role·plan 기반 권한 분기
+    // [REPLACE: PRO 전용 페이지인 경우 아래 주석 해제]
+    // if (!window.Auth.isPro()) {
+    //   document.getElementById(MENU_KEY + '-tab1').innerHTML =
+    //     '<div class="loading-placeholder">PRO 플랜 전용 기능입니다.</div>';
+    //   return;
+    // }
+
+    fetchData();
+  }
+
+  // ── 진입점 ────────────────────────────────────────────────────────────────
+  init();
+
+})();
+</script>
