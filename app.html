@@ -934,7 +934,8 @@ async function fetchSearchPreview(q) {
     if (total === 0) { dd.innerHTML = '<div class="search-empty">🔍 \'' + q + '\' 검색 결과가 없습니다.</div>'; return; }
     var html = '';
     if (diseasePreview.length) {
-      html += '<div class="search-section-label">🏥 예외질환 (' + diseases.length + '건)</div>';
+      html += '<div class="search-section-label">🏥 예외질환 (' + diseases.length + '건)</div>'
+        + '<div style="font-size:0.72em;color:var(--color-warning);background:rgba(255,180,0,0.08);padding:5px 12px;border-left:3px solid var(--color-warning);">⚠️ 인수기준은 수시로 변경됩니다. 반드시 해당 보험사 확인 후 진행하세요.</div>';
       diseasePreview.forEach(function (d) {
         var avail = d.is_available === 'O' ? '✅ 가능' : d.is_available === 'X' ? '❌ 불가' : '⚠️ 조건부';
         html += '<div class="search-result-item" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\');closeSearchDropdown();">'
@@ -1014,6 +1015,7 @@ async function doSearch(q) {
     if (diseases.length) {
       var byInsurer = diseases.reduce(function (acc, d) { if (!acc[d.insurer_name]) acc[d.insurer_name] = []; acc[d.insurer_name].push(d); return acc; }, {});
       html += '<div class="search-group-title">🏥 예외질환 (' + diseases.length + '건)</div>'
+        + '<div style="font-size:0.78em;color:var(--color-warning);background:rgba(255,180,0,0.08);padding:8px 14px;border-left:3px solid var(--color-warning);margin-bottom:var(--space-2);border-radius:0 6px 6px 0;">⚠️ 아래 정보는 참고용입니다. 인수기준은 수시로 변경되므로 <strong>반드시 해당 보험사에서 최신 기준을 확인</strong>하신 후 진행하세요.</div>'
         + '<div style="overflow-x:auto;margin-bottom:var(--space-2);"><table style="width:100%;border-collapse:collapse;font-size:0.8em;table-layout:fixed;">'
         + '<colgroup><col style="width:13%;"><col style="width:10%;"><col style="width:42%;"><col style="width:10%;"><col style="width:25%;"></colgroup>'
         + '<thead><tr style="background:var(--color-surface-2);color:var(--color-text-primary);">'
