@@ -1515,21 +1515,32 @@ async function switchMenu(menuKey) {
     });
     // 페이지 초기화 함수 호출
     if (menuKey === 'myspace') {
-      // 두 스크립트 모두 실행 완료(_myspaceReady) 후 renderMySpaceView 호출
-      window._myspaceReady = false; // 진입 전 반드시 리셋
+      // myspace.html 두 번째 <script> 블록 끝에서 window._myspaceReady = true 를 세팅함
+      // 이 폴링이 그 신호를 확인한 뒤 renderMySpaceView를 호출하는 구조
+      window._myspaceReady = false; // 진입 전 리셋 (재진입 대비)
       let waited = 0;
       const waitAndRender = setInterval(function() {
         waited += 20;
-        if (window._myspaceReady && typeof window.renderMySpaceView === 'function') {
+        const ready = window._myspaceReady === true;
+        const canRender = typeof window.renderMySpaceView === 'function';
+        if (ready && canRender) {
           clearInterval(waitAndRender);
-          window._myspaceReady = false; // 다음 진입 시 재사용 대비 초기화
+          window._myspaceReady = false; // 다음 진입 시 재사용 대비 리셋
           window.renderMySpaceView('scripts');
           if (typeof window.setWriteModeVisual === 'function') {
             window.setWriteModeVisual(false);
           }
-        } else if (waited >= 2000) {
+        } else if (waited >= 3000) {
+          // 3초 내 신호 미도달: 함수가 존재하면 fallback 렌더링 시도
           clearInterval(waitAndRender);
-          console.error('myspace init timeout after 2s');
+          if (canRender) {
+            window.renderMySpaceView('scripts');
+            if (typeof window.setWriteModeVisual === 'function') {
+              window.setWriteModeVisual(false);
+            }
+          } else {
+            console.error('myspace init failed: renderMySpaceView not defined after 3s');
+          }
         }
       }, 20);
     }
