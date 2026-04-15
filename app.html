@@ -1092,6 +1092,20 @@ async function loadUserInfo() {
       if (editCompany) editCompany.value = u.company || '';
       if (editBranch) editBranch.value = u.branch || '';
       if (editTeam) editTeam.value = u.team || '';
+      // 접속 로그 INSERT (세션당 1회)
+      if (!sessionStorage.getItem('_loginLogged')) {
+        sessionStorage.setItem('_loginLogged', '1');
+        fetchWithAuth(`${window.SUPABASE_URL}/rest/v1/activity_logs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            user_id: window._userId,
+            event_type: 'login',
+            target_type: null,
+            target_id: null
+          })
+        }).catch(() => {});
+      }
       renderProBadge(u.plan || 'free', u.role);
       renderSearchBox();
     }
