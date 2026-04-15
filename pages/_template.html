@@ -2,25 +2,33 @@
 ================================================================================
   pages/_template.html
   원세컨드 — pages/*.html 표준 초기화 패턴 기준서
+  레이아웃 기준: scripts.html (v12 승인본)
+  디자인 기준:   css/tokens.css (design_guide.md)
 
   ▸ 이 파일은 "기준서"입니다. 실제 페이지가 아닙니다.
   ▸ 새 pages/*.html 작업 시 이 파일을 복사해서 시작하세요.
   ▸ [REPLACE:*] 표시 부분만 교체. 나머지 구조는 절대 변경 금지.
 
-  의존 순서 (app.html이 먼저 로드):
+  ── 표준 레이아웃 구조 ──────────────────────────────────────────────────────
+    ① 타이틀 블록  (.pg-header-block)   — 갈색 그라데이션 헤더
+    ② 탭바 블록    (.pg-tab-block)      — 모든 페이지 필수
+    ③ 콘텐츠 블록  (.pg-content-block)  — 페이지별 주요 내용
+    ④ 푸터 블록    (.pg-footer-block)   — 하단 한 줄 메시지 바
+    ※ 블록 간 간격: .pg-outer gap:6px / padding:6px
+
+  ── 의존 순서 (app.html이 먼저 로드) ────────────────────────────────────────
     1. css/tokens.css   — 디자인 변수
     2. js/db.js         — window.db
     3. js/auth.js       — window.AppState, window.Auth
 
-  금지 사항:
+  ── 금지 사항 ────────────────────────────────────────────────────────────────
     ✗ Supabase URL·KEY 직접 선언
-    ✗ window._xxx 임시 플래그 사용
-    ✗ app.html 함수 직접 호출 (switchMenu 제외)
-    ✗ px 고정 폰트 (em 단위만 허용)
-    ✗ 하드코딩 색상 (tokens.css 변수만 허용)
-    ✗ IIFE 래핑 예외 없음 (quick·myspace 포함 동일)
+    ✗ 하드코딩 색상값 (#hex) — tokens.css 변수만 허용
+    ✗ 하드코딩 border-radius (px) — --radius-* 변수만 허용
+    ✗ px 고정 폰트 — em 단위만 허용
+    ✗ IIFE 래핑 예외 없음
 
-  pages → app 통신:
+  ── pages → app 통신 ─────────────────────────────────────────────────────────
     ✓ window.AppState 읽기
     ✓ window.db.fetch() 사용
     ✓ window.Auth.isPro() / isAdmin() 사용
@@ -29,187 +37,308 @@
 ================================================================================
 -->
 
-<!-- ❶ 페이지 래퍼 — D영역 안에 삽입되는 루트 요소 -->
-<div id="page-[REPLACE:menuKey]" class="page-wrap">
-
-  <!-- ❷ 페이지 헤더 — tokens.css .page-header 공통 클래스 사용 -->
-  <div class="page-header">
-    <div>
-      <div class="page-header-title">[REPLACE:페이지 타이틀]</div>
-      <div class="page-header-sub">[REPLACE:페이지 서브타이틀]</div>
-    </div>
-    <span class="page-header-icon">[REPLACE:이모지 아이콘]</span>
-  </div>
-
-  <!-- ❸ 탭 (탭이 없는 페이지는 이 블록 삭제) -->
-  <div class="tab-underline" id="[REPLACE:menuKey]-tabs">
-    <button class="tab-underline-btn active"
-            onclick="[REPLACE:menuKey]SwitchTab('tab1')" data-tab="tab1">
-      [REPLACE:탭1 이름]
-    </button>
-    <button class="tab-underline-btn"
-            onclick="[REPLACE:menuKey]SwitchTab('tab2')" data-tab="tab2">
-      [REPLACE:탭2 이름]
-    </button>
-  </div>
-
-  <!-- ❹ 탭 콘텐츠 패널 -->
-  <div id="[REPLACE:menuKey]-tab1" class="tab-panel">
-    <!-- 탭1 콘텐츠 -->
-  </div>
-  <div id="[REPLACE:menuKey]-tab2" class="tab-panel" style="display:none;">
-    <!-- 탭2 콘텐츠 -->
-  </div>
-
-  <!-- ❺ 로딩·에러 상태 (공통 클래스 사용) -->
-  <div id="[REPLACE:menuKey]-loading" class="loading-placeholder" style="display:none;">
-    불러오는 중...
-  </div>
-  <div id="[REPLACE:menuKey]-error" class="loading-placeholder" style="display:none;color:var(--color-danger);">
-    데이터를 불러오지 못했습니다. 새로고침 해주세요.
-  </div>
-
-</div><!-- /page-wrap -->
-
-
-<!-- ───────────────────────────────────────────────────────────────────────────
-  페이지 전용 스타일
-  ▸ tokens.css 변수만 사용. 하드코딩 색상·radius·px 폰트 금지
-  ▸ 셀렉터는 #page-[menuKey] 하위로 스코프 제한 (전역 오염 방지)
-──────────────────────────────────────────────────────────────────────────── -->
 <style>
-/* 페이지 래퍼 */
-#page-[REPLACE:menuKey] {
-  padding: 4px 0;
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
+/* ════════════════════════════════════════════════════════════
+   [REPLACE:menuKey] 페이지 전용 스타일
+   ▸ 셀렉터는 #page-[REPLACE:menuKey] 하위로 스코프 제한
+   ▸ tokens.css 변수만 사용. 하드코딩 색상·radius·px 폰트 절대 금지
+════════════════════════════════════════════════════════════ */
+
+/* ── 최상위 래퍼 ── */
+.pg-outer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface-2, #F3EFE9);
+  gap: 6px;
+  padding: 6px;
 }
 
-/* 탭 패널 */
-#page-[REPLACE:menuKey] .tab-panel {
-  /* 탭 전환 시 display:none / display:block 토글 */
+/* ── ① 타이틀 블록 ── */
+.pg-header-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pg-page-header {
+  height: 120px;
+  background: linear-gradient(135deg, var(--color-brand, #A0522D) 0%, var(--color-brand-light, #C4733A) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+.pg-page-title {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 1.5em;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.pg-page-desc {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 0.842em;
+  color: rgba(255, 255, 255, 0.65);
+}
+.pg-page-icon {
+  font-size: 2.8em;
+  opacity: 0.15;
 }
 
-/* [REPLACE: 페이지 전용 스타일 추가] */
+/* ── ② 탭바 블록 ── */
+.pg-tab-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+}
+.pg-tab-bar {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.pg-tab-btn {
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  font-size: 0.895em;
+  font-weight: 600;
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--color-text-secondary, #7A5C44);
+  border-bottom: 3px solid transparent;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.pg-tab-btn:hover { color: var(--color-text-primary, #3D2C1E); }
+.pg-tab-btn.active {
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+  border-bottom-color: var(--color-accent, #D4845A);
+}
+
+/* ── ③ 콘텐츠 블록 ── */
+.pg-content-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border, #E4DBCE);
+  background: var(--color-surface, #fff);
+}
+.pg-body {
+  padding: 16px;
+}
+
+/* ── 탭 패널 ── */
+.pg-tab-panel { display: none; }
+.pg-tab-panel.active { display: block; }
+
+/* ── 로딩·빈 상태 ── */
+.pg-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--color-text-tertiary, #B89880);
+  font-size: 0.842em;
+}
+.pg-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary, #B89880);
+  font-size: 0.842em;
+  padding: 18px 12px;
+  text-align: center;
+  line-height: 1.8;
+  min-height: 56px;
+}
+
+/* ── ④ 푸터 블록 ── */
+.pg-footer-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pg-bottom-bar {
+  background: var(--color-brand, #A0522D);
+  color: #fff;
+  text-align: center;
+  font-size: 0.790em;
+  font-weight: 800;
+  padding: 10px 14px;
+}
+
+/* ── [REPLACE: 페이지 전용 스타일 추가] ── */
+
 </style>
 
 
-<!-- ───────────────────────────────────────────────────────────────────────────
-  페이지 스크립트
-  ▸ 반드시 IIFE로 래핑 (app.html이 자동 래핑하지만 자체 보호 목적)
-  ▸ 외부에서 호출해야 하는 함수만 window.함수명 = 으로 선언
-  ▸ 내부 전용 함수는 var/function 로컬 선언 유지
-──────────────────────────────────────────────────────────────────────────── -->
+<!-- ════════════════════════════════════════════════════════════
+     HTML 구조
+     ① 타이틀 블록 → ② 탭바 블록 → ③ 콘텐츠 블록 → ④ 푸터 블록
+════════════════════════════════════════════════════════════ -->
+<div class="pg-outer" id="page-[REPLACE:menuKey]">
+
+  <!-- ① 타이틀 블록 -->
+  <div class="pg-header-block">
+    <div class="pg-page-header">
+      <div>
+        <div class="pg-page-title">[REPLACE:이모지 + 페이지 타이틀]</div>
+        <div class="pg-page-desc">[REPLACE:서브타이틀 한 줄]</div>
+      </div>
+      <div class="pg-page-icon">[REPLACE:이모지 아이콘]</div>
+    </div>
+  </div>
+
+  <!-- ② 탭바 블록 (모든 페이지 필수) -->
+  <div class="pg-tab-block">
+    <div class="pg-tab-bar" id="[REPLACE:menuKey]-tab-bar">
+      <button class="pg-tab-btn active" data-tab="tab1"
+              onclick="window.[REPLACE:menuKey]SwitchTab('tab1')">
+        [REPLACE:탭1 이름]
+      </button>
+      <button class="pg-tab-btn" data-tab="tab2"
+              onclick="window.[REPLACE:menuKey]SwitchTab('tab2')">
+        [REPLACE:탭2 이름]
+      </button>
+      <!-- 필요 시 탭 추가 -->
+    </div>
+  </div>
+
+  <!-- ③ 콘텐츠 블록 -->
+  <div class="pg-content-block">
+    <div class="pg-body" id="[REPLACE:menuKey]-body">
+
+      <!-- 탭1 패널 -->
+      <div class="pg-tab-panel active" id="[REPLACE:menuKey]-tab1">
+        <div class="pg-loading" id="[REPLACE:menuKey]-loading">불러오는 중...</div>
+        <!-- [REPLACE: 탭1 콘텐츠] -->
+      </div>
+
+      <!-- 탭2 패널 -->
+      <div class="pg-tab-panel" id="[REPLACE:menuKey]-tab2">
+        <!-- [REPLACE: 탭2 콘텐츠] -->
+      </div>
+
+      <!-- 탭 추가 시 동일 패턴으로 복사 -->
+
+    </div>
+  </div>
+
+  <!-- ④ 푸터 블록 -->
+  <div class="pg-footer-block">
+    <div class="pg-bottom-bar">[REPLACE: 하단 한 줄 메시지]</div>
+  </div>
+
+</div><!-- /pg-outer -->
+
+
+<!-- ════════════════════════════════════════════════════════════
+     페이지 스크립트
+     ▸ 반드시 IIFE 래핑
+     ▸ onclick 등 외부 호출 함수만 window.함수명 선언
+     ▸ 내부 전용 함수는 로컬 선언 유지
+════════════════════════════════════════════════════════════ -->
 <script>
 (function () {
   'use strict';
 
-  // ── 상수 ──────────────────────────────────────────────────────────────────
-  var MENU_KEY = '[REPLACE:menuKey]'; // 이 페이지의 메뉴 식별자
+  /* ── 상수 ── */
+  var MENU_KEY = '[REPLACE:menuKey]';
 
-  // ── 상태 ──────────────────────────────────────────────────────────────────
-  var _currentTab = 'tab1';  // 현재 활성 탭
-  var _data = [];            // fetch한 데이터 캐시
+  /* ── 상태 ── */
+  var _currentTab = 'tab1';
+  var _cache = {};
 
-  // ── 탭 전환 ───────────────────────────────────────────────────────────────
-  // onclick에서 호출하므로 window 선언 필수
+  /* ── 탭 전환 (onclick에서 호출 → window 선언 필수) ── */
   window[MENU_KEY + 'SwitchTab'] = function (tabKey) {
     _currentTab = tabKey;
 
-    // 탭 버튼 active 토글
-    var tabWrap = document.getElementById(MENU_KEY + '-tabs');
-    if (tabWrap) {
-      tabWrap.querySelectorAll('.tab-underline-btn').forEach(function (btn) {
+    /* 탭 버튼 active */
+    var bar = document.getElementById(MENU_KEY + '-tab-bar');
+    if (bar) {
+      bar.querySelectorAll('.pg-tab-btn').forEach(function (btn) {
         btn.classList.toggle('active', btn.dataset.tab === tabKey);
       });
     }
 
-    // 탭 패널 show/hide
-    ['tab1', 'tab2'].forEach(function (key) {
-      var panel = document.getElementById(MENU_KEY + '-' + key);
-      if (panel) panel.style.display = key === tabKey ? '' : 'none';
-    });
+    /* 탭 패널 show/hide */
+    var body = document.getElementById(MENU_KEY + '-body');
+    if (body) {
+      body.querySelectorAll('.pg-tab-panel').forEach(function (panel) {
+        panel.classList.toggle('active', panel.id === MENU_KEY + '-' + tabKey);
+      });
+    }
 
-    // 탭 전환 시 필요한 추가 로직
-    // [REPLACE: 탭별 fetch 등 로직 추가]
+    /* [REPLACE: 탭별 추가 로직 (fetch 등)] */
   };
 
-  // ── 로딩 상태 헬퍼 ────────────────────────────────────────────────────────
+  /* ── 로딩 상태 헬퍼 ── */
   function showLoading(show) {
     var el = document.getElementById(MENU_KEY + '-loading');
     if (el) el.style.display = show ? '' : 'none';
   }
 
-  function showError(show) {
-    var el = document.getElementById(MENU_KEY + '-error');
-    if (el) el.style.display = show ? '' : 'none';
-  }
-
-  // ── 데이터 fetch ──────────────────────────────────────────────────────────
+  /* ── 데이터 fetch ── */
   async function fetchData() {
     showLoading(true);
-    showError(false);
     try {
       var res = await window.db.fetch(
         '/rest/v1/[REPLACE:테이블명]?[REPLACE:쿼리파라미터]'
       );
       if (!res.ok) throw new Error('fetch 실패: ' + res.status);
-      _data = await res.json();
-      render();
+      var data = await res.json();
+      _cache['tab1'] = data;
+      render(data);
     } catch (e) {
       console.error(MENU_KEY + ' fetchData error:', e);
-      showError(true);
+      var panel = document.getElementById(MENU_KEY + '-tab1');
+      if (panel) panel.innerHTML = '<div class="pg-empty">데이터를 불러오지 못했습니다.</div>';
     } finally {
       showLoading(false);
     }
   }
 
-  // ── 렌더링 ────────────────────────────────────────────────────────────────
-  function render() {
+  /* ── 렌더링 ── */
+  function render(data) {
     var panel = document.getElementById(MENU_KEY + '-tab1');
     if (!panel) return;
 
-    if (!_data.length) {
-      panel.innerHTML = '<div class="loading-placeholder">데이터가 없습니다.</div>';
+    if (!data || !data.length) {
+      panel.innerHTML = '<div class="pg-empty">데이터가 없습니다.</div>';
       return;
     }
 
-    // [REPLACE: 실제 렌더링 로직]
-    panel.innerHTML = _data.map(function (item) {
-      return '<div class="card">' + item.title + '</div>';
+    /* [REPLACE: 실제 렌더링 로직] */
+    panel.innerHTML = data.map(function (item) {
+      return '<div>' + (item.title || '') + '</div>';
     }).join('');
   }
 
-  // ── 초기화 ────────────────────────────────────────────────────────────────
-  // 패턴 A: AppState가 이미 준비된 경우 (재진입 시)
-  // 패턴 B: AppState 아직 미준비 — appstate:ready 이벤트 대기
-  function init() {
-    if (!window.AppState || !window.AppState.ready) {
-      // AppState 미준비 → 이벤트 대기
-      document.addEventListener('appstate:ready', function onReady() {
-        document.removeEventListener('appstate:ready', onReady);
-        _boot();
-      });
+  /* ── 부팅 ── */
+  function _boot() {
+    /* [REPLACE: PRO 전용인 경우 주석 해제]
+    if (!window.Auth || !window.Auth.isPro()) {
+      var panel = document.getElementById(MENU_KEY + '-tab1');
+      if (panel) panel.innerHTML = '<div class="pg-empty">PRO 플랜 전용 기능입니다.</div>';
       return;
     }
-    // AppState 이미 준비됨 → 즉시 실행
-    _boot();
-  }
-
-  function _boot() {
-    // role·plan 기반 권한 분기
-    // [REPLACE: PRO 전용 페이지인 경우 아래 주석 해제]
-    // if (!window.Auth.isPro()) {
-    //   document.getElementById(MENU_KEY + '-tab1').innerHTML =
-    //     '<div class="loading-placeholder">PRO 플랜 전용 기능입니다.</div>';
-    //   return;
-    // }
-
+    */
     fetchData();
   }
 
-  // ── 진입점 ────────────────────────────────────────────────────────────────
-  init();
+  /* ── 진입점: appstate:ready 표준 패턴 ── */
+  if (window.AppState && window.AppState.ready) {
+    _boot();
+  } else {
+    document.addEventListener('appstate:ready', function () { _boot(); }, { once: true });
+  }
 
 })();
 </script>

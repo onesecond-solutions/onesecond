@@ -1,4 +1,5 @@
 <style>
+/* ── 단계별 색상 변수 ── */
 :root {
   --s1bg:#f5ede4; --s1t:#6b4226; --s1b:#c8a080;
   --s2bg:#edddd0; --s2t:#5e3820; --s2b:#b08060;
@@ -12,41 +13,61 @@
   --tab-underline:#c8753a;
   --line:#ddc8b4;
   --line-item:#e8d8c8;
+  --sc-gap-bg:#ede8e3;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 
-.sc-page-header {
-  height:120px; background:#3d2b1f;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 24px; flex-shrink:0;
+/* ── 최상위 래퍼 ── */
+.sc-outer {
+  display:flex; flex-direction:column; width:100%;
+  background:var(--sc-gap-bg); gap:6px; padding:6px;
 }
-.sc-page-title { font-family:Pretendard,'Noto Sans KR',sans-serif; font-size:1.5em; font-weight:800; color:#fff; letter-spacing:-0.5px; margin-bottom:6px; }
-.sc-page-desc  { font-family:Pretendard,'Noto Sans KR',sans-serif; font-size:0.842em; color:rgba(255,255,255,0.65); }
+
+/* ── 헤더 블록 ── */
+.sc-header-block {
+  border-radius:10px; overflow:hidden; flex-shrink:0;
+}
+.sc-page-header {
+  height:120px; background:linear-gradient(135deg,#7B3F1E 0%,#A0522D 100%);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px;
+}
+.sc-page-title { font-family:var(--font-sans,Pretendard,'Noto Sans KR',sans-serif); font-size:1.5em; font-weight:800; color:#fff; letter-spacing:-0.5px; margin-bottom:6px; }
+.sc-page-desc  { font-family:var(--font-sans,Pretendard,'Noto Sans KR',sans-serif); font-size:0.842em; color:rgba(255,255,255,0.65); }
 .sc-page-icon  { font-size:2.8em; opacity:0.15; }
 
+/* ── 탭 블록 ── */
+.sc-tab-block {
+  border-radius:10px; overflow:hidden; flex-shrink:0;
+  background:var(--color-background-primary,#fff);
+  border:1px solid var(--line);
+}
 .sc-tab-bar {
-  flex-shrink:0; display:flex; flex-direction:row; gap:0; flex-wrap:nowrap;
-  border-bottom:2px solid var(--line); background:var(--s1bg); overflow-x:auto;
+  display:flex; flex-direction:row; gap:0; flex-wrap:nowrap;
+  overflow-x:auto;
 }
 .sc-tab-btn {
   padding:11px 16px; border:none; background:transparent;
-  font-size:0.8421em; font-weight:600; font-family:Pretendard,inherit;
+  font-size:0.8421em; font-weight:600; font-family:var(--font-sans,Pretendard,inherit);
   cursor:pointer; white-space:nowrap; color:var(--tab-text);
-  border-bottom:3px solid transparent; margin-bottom:-2px; transition:all .15s; flex-shrink:0;
+  border-bottom:3px solid transparent; transition:all .15s; flex-shrink:0;
 }
 .sc-tab-btn:hover { color:var(--tab-text-active); }
 .sc-tab-btn.active { font-weight:800; color:var(--tab-text-active); border-bottom-color:var(--tab-underline); }
 
-.sc-content { display:flex; flex-direction:column; }
-.sc-body { border-top:1px solid var(--line); }
+/* ── 콘텐츠 블록 ── */
+.sc-content-block {
+  border-radius:10px; overflow:hidden; flex-shrink:0;
+  border:1px solid var(--line);
+}
+.sc-body { background:var(--color-background-primary,#fff); }
 
 /* ── 그룹 블록 ── */
 .sc-group-block { border-bottom:1px solid var(--line); }
 
-/* 아코디언 헤더: 1열 빈칸 | 2~4열 레이블 */
+/* 아코디언 헤더 */
 .sc-acc-header {
-  display:grid;
-  grid-template-columns:300px 1fr;
+  display:grid; grid-template-columns:300px 1fr;
   border-bottom:1px solid var(--line);
   cursor:pointer; user-select:none;
 }
@@ -55,17 +76,15 @@
   display:flex; align-items:center; justify-content:flex-end;
   padding:7px 14px; gap:8px;
   font-size:0.842em; font-weight:700;
-  font-family:Pretendard,'Noto Sans KR',sans-serif;
+  font-family:var(--font-sans,Pretendard,'Noto Sans KR',sans-serif);
 }
 .sc-acc-arrow { font-size:0.85em; transition:transform .2s; display:inline-block; }
 .sc-acc-header.open .sc-acc-arrow { transform:rotate(180deg); }
 
-/* 아코디언 콘텐츠: 4열 그리드 */
+/* 아코디언 콘텐츠 */
 .sc-acc-content {
-  display:grid;
-  grid-template-columns:300px 300px 300px 1fr;
-  overflow:hidden;
-  max-height:4000px;
+  display:grid; grid-template-columns:300px 300px 300px 1fr;
+  overflow:hidden; max-height:4000px;
   transition:max-height .3s ease;
 }
 .sc-acc-content.collapsed { max-height:0; }
@@ -76,7 +95,7 @@
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   text-align:center; padding:14px 10px; border-left:4px solid;
   font-size:0.842em; font-weight:900; line-height:1.4;
-  font-family:Pretendard,'Noto Sans KR',sans-serif;
+  font-family:var(--font-sans,Pretendard,'Noto Sans KR',sans-serif);
   letter-spacing:-0.3px; gap:5px; height:100%; min-height:64px;
 }
 .sc-g-icon  { font-size:1.4em; }
@@ -125,59 +144,148 @@
 }
 
 .sc-loading { display:flex; align-items:center; justify-content:center; padding:40px; color:#9a7a62; font-size:0.842em; }
-.sc-bottom-bar { background:#3d2b1f; color:#fff6ef; text-align:center; font-size:0.7895em; font-weight:800; padding:10px 14px; flex-shrink:0; }
 
-/* 반응형 */
+/* ── 푸터 블록 ── */
+.sc-footer-block {
+  border-radius:10px; overflow:hidden; flex-shrink:0;
+}
+.sc-bottom-bar {
+  background:#8B4513; color:#fff6ef;
+  text-align:center; font-size:0.7895em; font-weight:800;
+  padding:10px 14px;
+}
+
+/* ════════════════════════════════════
+   모바일 스텝 UI (900px 이하)
+════════════════════════════════════ */
+.sc-mobile { display:none; }
+
+/* 스텝 헤더 */
+.sc-step-header {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 16px; background:var(--color-background-primary,#fff);
+  border-bottom:1px solid var(--line);
+}
+.sc-step-back {
+  border:none; background:transparent; font-size:1.1em;
+  cursor:pointer; padding:4px 6px; color:#6b4226;
+  display:flex; align-items:center;
+}
+.sc-step-title {
+  font-size:0.895em; font-weight:700; color:#3d2b1f; flex:1;
+}
+.sc-step-indicator {
+  font-size:0.75em; color:#9a7a62; font-weight:600;
+}
+
+/* 스텝1: 단계 카드 목록 */
+.sc-m-stage-list { display:flex; flex-direction:column; }
+.sc-m-stage-item {
+  display:flex; align-items:center; gap:12px;
+  padding:16px 18px; cursor:pointer;
+  border-bottom:1px solid var(--line-item);
+  background:#fff; transition:filter .1s;
+}
+.sc-m-stage-item:hover { filter:brightness(0.97); }
+.sc-m-stage-icon {
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.3em; flex-shrink:0;
+}
+.sc-m-stage-info { flex:1; }
+.sc-m-stage-name { font-size:0.947em; font-weight:700; color:#3d2b1f; line-height:1.4; }
+.sc-m-stage-cnt  { font-size:0.790em; color:#9a7a62; margin-top:2px; }
+.sc-m-stage-arr  { font-size:0.85em; color:#c8a080; }
+
+/* 스텝2·3: 리스트 공통 */
+.sc-m-list-item {
+  padding:14px 18px; cursor:pointer;
+  border-bottom:1px solid var(--line-item);
+  border-left:4px solid transparent;
+  background:#fff; transition:background .1s;
+  display:flex; flex-direction:column; justify-content:center;
+}
+.sc-m-list-item:hover { filter:brightness(0.97); }
+.sc-m-list-item.active { border-left-color:var(--tab-underline); background:#fef9f5; }
+.sc-m-item-title { font-size:0.947em; font-weight:700; color:#3d2b1f; line-height:1.5; }
+.sc-m-item-sub   { font-size:0.842em; color:#9a7a62; margin-top:3px; line-height:1.4; }
+
+/* 스텝4: 본문 */
+.sc-m-detail { padding:16px; background:#f7f2ec; min-height:200px; }
+.sc-m-detail-tag   { font-size:0.75em; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-block; margin-bottom:8px; color:white; }
+.sc-m-detail-title { font-size:0.947em; font-weight:800; margin-bottom:4px; line-height:1.4; color:#3d2b1f; }
+.sc-m-detail-sub   { font-size:0.842em; color:#9a7a62; margin-bottom:12px; line-height:1.6; }
+.sc-m-detail-body  { background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+
+/* ── 반응형 ── */
 @media (max-width:1200px) {
-  .sc-acc-header { grid-template-columns:220px 1fr; }
+  .sc-acc-header  { grid-template-columns:220px 1fr; }
   .sc-acc-content { grid-template-columns:220px 220px 220px 1fr; }
 }
 @media (max-width:900px) {
-  .sc-acc-header { grid-template-columns:180px 1fr; }
-  .sc-acc-content { grid-template-columns:180px 1fr 1fr; }
-  .sc-col4 { display:none; }
-}
-@media (max-width:600px) {
-  .sc-tab-bar { display:none; }
-  .sc-acc-header { grid-template-columns:140px 1fr; }
-  .sc-acc-content { grid-template-columns:140px 1fr; }
-  .sc-col3, .sc-col4 { display:none; }
+  /* 데스크탑 UI 숨김, 모바일 UI 표시 */
+  .sc-tab-block   { display:none; }
+  .sc-content-block .sc-body { display:none; }
+  .sc-mobile      { display:block; }
 }
 </style>
 
-<div style="display:flex;flex-direction:column;width:100%;">
+<div class="sc-outer" id="page-scripts">
 
-  <div class="sc-page-header">
-    <div>
-      <div class="sc-page-title">📞 스크립트</div>
-      <div class="sc-page-desc">TM 상담 흐름에 맞는 멘트를 1초 안에 꺼내세요</div>
+  <!-- 헤더 블록 -->
+  <div class="sc-header-block">
+    <div class="sc-page-header">
+      <div>
+        <div class="sc-page-title">📞 스크립트</div>
+        <div class="sc-page-desc">TM 상담 흐름에 맞는 멘트를 1초 안에 꺼내세요</div>
+      </div>
+      <div class="sc-page-icon">📋</div>
     </div>
-    <div class="sc-page-icon">📋</div>
   </div>
 
-  <div class="sc-tab-bar" id="sc-tab-bar">
-    <button class="sc-tab-btn active" data-color="1" onclick="window.scScrollToGroup(1)">📞 도입인사</button>
-    <button class="sc-tab-btn" data-color="2" onclick="window.scScrollToGroup(2)">🔥 필요성강조</button>
-    <button class="sc-tab-btn" data-color="3" onclick="window.scScrollToGroup(3)">🔎 상황확인</button>
-    <button class="sc-tab-btn" data-color="4" onclick="window.scScrollToGroup(4)">📊 보장분석</button>
-    <button class="sc-tab-btn" data-color="5" onclick="window.scScrollToGroup(5)">📦 상품설명</button>
-    <button class="sc-tab-btn" data-color="6" onclick="window.scScrollToGroup(6)">✅ 클로징</button>
-    <button class="sc-tab-btn" data-color="7" onclick="window.scScrollToGroup(7)">⚡ 반론대응</button>
+  <!-- 탭 블록 (데스크탑) -->
+  <div class="sc-tab-block">
+    <div class="sc-tab-bar" id="sc-tab-bar">
+      <button class="sc-tab-btn active" data-color="1" onclick="window.scScrollToGroup(1)">📞 도입인사</button>
+      <button class="sc-tab-btn" data-color="2" onclick="window.scScrollToGroup(2)">🔥 필요성강조</button>
+      <button class="sc-tab-btn" data-color="3" onclick="window.scScrollToGroup(3)">🔎 상황확인</button>
+      <button class="sc-tab-btn" data-color="4" onclick="window.scScrollToGroup(4)">📊 보장분석</button>
+      <button class="sc-tab-btn" data-color="5" onclick="window.scScrollToGroup(5)">📦 상품설명</button>
+      <button class="sc-tab-btn" data-color="6" onclick="window.scScrollToGroup(6)">✅ 클로징</button>
+      <button class="sc-tab-btn" data-color="7" onclick="window.scScrollToGroup(7)">⚡ 반론대응</button>
+    </div>
   </div>
 
-  <div class="sc-content">
+  <!-- 콘텐츠 블록 (데스크탑) -->
+  <div class="sc-content-block">
     <div class="sc-body" id="sc-body">
       <div class="sc-loading">스크립트를 불러오는 중...</div>
     </div>
+  </div>
+
+  <!-- 모바일 스텝 UI (900px 이하) -->
+  <div class="sc-mobile sc-content-block" id="sc-mobile">
+    <div class="sc-loading">스크립트를 불러오는 중...</div>
+  </div>
+
+  <!-- 푸터 블록 -->
+  <div class="sc-footer-block">
     <div class="sc-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
   </div>
 
 </div>
 
 <script>
-if (!window._sc_cache) window._sc_cache = {};
+(function() {
 
-window._SC_GROUPS = [
+/* ── 상태 ── */
+var _cache = {};
+var _mStep = 1;       /* 모바일 현재 스텝 1~4 */
+var _mColor = 0;      /* 선택된 단계 color */
+var _mScIdx = -1;     /* 선택된 스크립트 인덱스 */
+var _mBlIdx = -1;     /* 선택된 블록 인덱스 */
+
+var GROUPS = [
   { color:1, icon:'📞', label:'도입\n인사',   stages:['opening','opening_rejection'] },
   { color:2, icon:'🔥', label:'필요성\n강조', stages:['need_emphasis','need_emphasis_2'] },
   { color:3, icon:'🔎', label:'상황\n확인',   stages:['situation_check'] },
@@ -186,24 +294,28 @@ window._SC_GROUPS = [
   { color:6, icon:'✅', label:'클로징',        stages:['closing','closing_second'] },
   { color:7, icon:'⚡', label:'반론\n대응',   stages:['objection'] }
 ];
+window._SC_GROUPS = GROUPS;
 
+/* ── CSS 변수 읽기 ── */
 window.scGv = function(n, t) {
   return getComputedStyle(document.documentElement).getPropertyValue('--s' + n + t).trim();
 };
 
+/* ── Supabase fetch (window.db 위임) ── */
 window.scFetch = async function(stages) {
   var key = stages.join(',');
-  if (window._sc_cache[key]) return window._sc_cache[key];
-  var url = window.SUPABASE_URL + '/rest/v1/scripts?stage=in.(' + stages.join(',') + ')&is_active=eq.true&order=stage,title&select=id,title,stage,top_category,highlight_text,script_text';
+  if (_cache[key]) return _cache[key];
+  var path = '/rest/v1/scripts?stage=in.(' + stages.join(',') + ')&is_active=eq.true&order=stage,title&select=id,title,stage,top_category,highlight_text,script_text';
   try {
-    var res = await fetch(url, { headers: { 'apikey': window.SUPABASE_KEY, 'Authorization': 'Bearer ' + (window._userToken || window.SUPABASE_KEY) } });
+    var res = await window.db.fetch(path);
     if (!res.ok) return [];
     var data = await res.json();
-    window._sc_cache[key] = data;
+    _cache[key] = data;
     return data;
   } catch(e) { return []; }
 };
 
+/* ── 블록 파싱 ── */
 window.scParseBlocks = function(html) {
   if (!html) return [];
   var tmp = document.createElement('div');
@@ -219,17 +331,19 @@ window.scParseBlocks = function(html) {
   return blocks;
 };
 
+/* ── 탭 업데이트 ── */
 window.scUpdateTab = function(color) {
   document.querySelectorAll('.sc-tab-btn').forEach(function(x) {
     x.classList.toggle('active', parseInt(x.dataset.color) === color);
   });
 };
 
+/* ── 그룹 스크롤 (데스크탑) ── */
 window.scScrollToGroup = function(color) {
   var block = document.getElementById('sc-block-' + color);
   if (!block) return;
   var content = document.getElementById('sc-content-' + color);
-  var header  = document.getElementById('sc-header-' + color);
+  var header  = document.getElementById('sc-header-'  + color);
   if (content && content.classList.contains('collapsed')) {
     content.classList.remove('collapsed');
     if (header) header.classList.add('open');
@@ -250,9 +364,10 @@ window.scScrollToGroup = function(color) {
   window.scUpdateTab(color);
 };
 
+/* ── 그룹 토글 (데스크탑) ── */
 window.scToggleGroup = function(color) {
   var content = document.getElementById('sc-content-' + color);
-  var header  = document.getElementById('sc-header-' + color);
+  var header  = document.getElementById('sc-header-'  + color);
   if (!content) return;
   var isOpen = !content.classList.contains('collapsed');
   if (isOpen) {
@@ -270,28 +385,22 @@ window.scToggleGroup = function(color) {
   }
 };
 
+/* ── 스크립트 선택 (데스크탑) ── */
 window.scSelectScript = function(el, color, idx) {
-  var scripts = window._sc_cache['group_' + color] || [];
+  var scripts = _cache['group_' + color] || [];
   var sc = scripts[idx];
   if (!sc) return;
-  // 스크립트 사용 로그 INSERT
-  if (window._userId && window._userToken) {
-    fetch(window.SUPABASE_URL + '/rest/v1/activity_logs', {
+
+  /* activity_log */
+  var userId = window.AppState && window.AppState.userId;
+  if (userId) {
+    window.db.fetch('/rest/v1/activity_logs', {
       method: 'POST',
-      headers: {
-        'apikey': window.SUPABASE_KEY,
-        'Authorization': 'Bearer ' + window._userToken,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        user_id: window._userId,
-        event_type: 'script_view',
-        target_type: 'script',
-        target_id: String(sc.id)
-      })
+      headers: { 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+      body: JSON.stringify({ user_id:userId, event_type:'script_view', target_type:'script', target_id:String(sc.id) })
     }).catch(function(){});
   }
+
   window.scUpdateTab(color);
   var col2 = document.getElementById('sc-scripts-' + color);
   if (col2) {
@@ -303,13 +412,13 @@ window.scSelectScript = function(el, color, idx) {
   var col4 = document.getElementById('sc-detail-' + color);
   if (!col3) return;
   var blocks = window.scParseBlocks(sc.script_text);
-  window._sc_cache['blocks_' + color] = blocks;
-  window._sc_cache['cursc_'  + color] = sc;
+  _cache['blocks_' + color] = blocks;
+  _cache['cursc_'  + color] = sc;
   var numLabels = ['①','②','③','④','⑤','⑥','⑦','⑧'];
-  var t = window.scGv(color,'t'), b = window.scGv(color,'b');
+  var b = window.scGv(color,'b');
   col3.innerHTML = blocks.map(function(bl, i) {
-    var numMatch   = bl.title.match(/^[①②③④⑤⑥⑦⑧]/);
-    var num        = numMatch ? numMatch[0] : (numLabels[i] || (i+1)+'');
+    var numMatch = bl.title.match(/^[①②③④⑤⑥⑦⑧]/);
+    var num      = numMatch ? numMatch[0] : (numLabels[i] || (i+1)+'');
     var cleanTitle = bl.title.replace(/^[①②③④⑤⑥⑦⑧]\s*/,'');
     return '<div class="sc-block-item" style="border-left-color:' + b + ';" onclick="window.scSelectBlock(this,' + color + ',' + i + ')">' +
       '<span class="sc-block-num" style="background:' + b + ';">' + num + '</span>' +
@@ -322,9 +431,10 @@ window.scSelectScript = function(el, color, idx) {
   if (first) window.scSelectBlock(first, color, 0);
 };
 
+/* ── 블록 선택 (데스크탑) ── */
 window.scSelectBlock = function(el, color, idx) {
-  var blocks = window._sc_cache['blocks_' + color] || [];
-  var sc     = window._sc_cache['cursc_'  + color];
+  var blocks = _cache['blocks_' + color] || [];
+  var sc     = _cache['cursc_'  + color];
   var bl     = blocks[idx];
   if (!bl) return;
   var col3 = document.getElementById('sc-blocks-' + color);
@@ -345,26 +455,152 @@ window.scSelectBlock = function(el, color, idx) {
     '</div>';
 };
 
+/* ════════════════════════════════════
+   모바일 스텝 함수
+════════════════════════════════════ */
+
+function mLabel(color) {
+  var g = GROUPS[color-1];
+  return g ? g.label.replace('\n','') : '';
+}
+
+/* 스텝 헤더 렌더 */
+function mRenderHeader(step, color) {
+  var stepNames = ['','단계 선택','스크립트 선택','세부 항목 선택','스크립트 본문'];
+  var showBack  = step > 1;
+  var title     = step === 1 ? '스크립트' : mLabel(color) + ' · ' + stepNames[step];
+  return '<div class="sc-step-header">' +
+    (showBack ? '<button class="sc-step-back" onclick="window.scMobileBack()">◀</button>' : '') +
+    '<div class="sc-step-title">' + title + '</div>' +
+    '<div class="sc-step-indicator">' + step + ' / 4</div>' +
+  '</div>';
+}
+
+/* 스텝1: 단계 목록 */
+function mRenderStep1() {
+  var html = mRenderHeader(1, 0) + '<div class="sc-m-stage-list">';
+  GROUPS.forEach(function(g) {
+    var scripts = _cache['group_' + g.color] || [];
+    var bg = window.scGv(g.color,'bg');
+    var t  = window.scGv(g.color,'t');
+    html +=
+      '<div class="sc-m-stage-item" onclick="window.scMobileStep2(' + g.color + ')">' +
+        '<div class="sc-m-stage-icon" style="background:' + bg + ';color:' + t + ';">' + g.icon + '</div>' +
+        '<div class="sc-m-stage-info">' +
+          '<div class="sc-m-stage-name">' + g.label.replace('\n','') + '</div>' +
+          '<div class="sc-m-stage-cnt">' + scripts.length + '개 스크립트</div>' +
+        '</div>' +
+        '<span class="sc-m-stage-arr">▶</span>' +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* 스텝2: 스크립트 목록 */
+function mRenderStep2(color) {
+  var scripts = _cache['group_' + color] || [];
+  var b = window.scGv(color,'b');
+  var html = mRenderHeader(2, color) + '<div>';
+  if (scripts.length) {
+    scripts.forEach(function(sc, i) {
+      html +=
+        '<div class="sc-m-list-item" style="border-left-color:' + b + ';" onclick="window.scMobileStep3(' + color + ',' + i + ')">' +
+          '<div class="sc-m-item-title">' + sc.title + '</div>' +
+          '<div class="sc-m-item-sub">' + (sc.highlight_text||'').replace(/<[^>]+>/g,'').slice(0,40) + '</div>' +
+        '</div>';
+    });
+  } else {
+    html += '<div class="sc-detail-empty">스크립트가 없습니다</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+/* 스텝3: 블록 목록 */
+function mRenderStep3(color, scIdx) {
+  var scripts = _cache['group_' + color] || [];
+  var sc = scripts[scIdx];
+  if (!sc) return mRenderStep2(color);
+  var blocks = window.scParseBlocks(sc.script_text);
+  _cache['blocks_m_' + color] = blocks;
+  _cache['cursc_m_'  + color] = sc;
+  var b = window.scGv(color,'b');
+  var numLabels = ['①','②','③','④','⑤','⑥','⑦','⑧'];
+  var html = mRenderHeader(3, color) + '<div>';
+  blocks.forEach(function(bl, i) {
+    var numMatch   = bl.title.match(/^[①②③④⑤⑥⑦⑧]/);
+    var num        = numMatch ? numMatch[0] : (numLabels[i] || (i+1)+'');
+    var cleanTitle = bl.title.replace(/^[①②③④⑤⑥⑦⑧]\s*/,'');
+    html +=
+      '<div class="sc-m-list-item" style="border-left-color:' + b + ';" onclick="window.scMobileStep4(' + color + ',' + i + ')">' +
+        '<span class="sc-block-num" style="background:' + b + ';margin-bottom:4px;">' + num + '</span>' +
+        '<div class="sc-m-item-title">' + cleanTitle + '</div>' +
+        '<div class="sc-m-item-sub">' + (bl.sub||'').slice(0,30) + '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* 스텝4: 본문 */
+function mRenderStep4(color, blIdx) {
+  var blocks = _cache['blocks_m_' + color] || [];
+  var sc     = _cache['cursc_m_'  + color];
+  var bl     = blocks[blIdx];
+  if (!bl) return mRenderStep3(color, _mScIdx);
+  var t = window.scGv(color,'t'), b = window.scGv(color,'b');
+  return mRenderHeader(4, color) +
+    '<div class="sc-m-detail">' +
+      '<div class="sc-m-detail-tag" style="background:' + b + ';">' + (sc ? sc.title : '') + '</div>' +
+      '<div class="sc-m-detail-title">' + bl.title + '</div>' +
+      '<div class="sc-m-detail-sub">' + (bl.sub||'') + '</div>' +
+      '<div class="sc-m-detail-body"><div class="sc-html">' + bl.html + '</div></div>' +
+    '</div>';
+}
+
+/* 모바일 스텝 이동 함수 */
+window.scMobileStep2 = function(color) {
+  _mStep = 2; _mColor = color;
+  document.getElementById('sc-mobile').innerHTML = mRenderStep2(color);
+};
+window.scMobileStep3 = function(color, scIdx) {
+  _mStep = 3; _mScIdx = scIdx;
+  document.getElementById('sc-mobile').innerHTML = mRenderStep3(color, scIdx);
+};
+window.scMobileStep4 = function(color, blIdx) {
+  _mStep = 4; _mBlIdx = blIdx;
+  document.getElementById('sc-mobile').innerHTML = mRenderStep4(color, blIdx);
+};
+window.scMobileBack = function() {
+  if (_mStep === 2) { _mStep = 1; document.getElementById('sc-mobile').innerHTML = mRenderStep1(); }
+  else if (_mStep === 3) { _mStep = 2; document.getElementById('sc-mobile').innerHTML = mRenderStep2(_mColor); }
+  else if (_mStep === 4) { _mStep = 3; document.getElementById('sc-mobile').innerHTML = mRenderStep3(_mColor, _mScIdx); }
+};
+
+/* ════════════════════════════════════
+   전체 렌더링
+════════════════════════════════════ */
 window.scRenderAll = async function() {
-  var body = document.getElementById('sc-body');
+  var body   = document.getElementById('sc-body');
+  var mobile = document.getElementById('sc-mobile');
   if (!body) return;
   body.innerHTML = '';
 
-  for (var gi = 0; gi < window._SC_GROUPS.length; gi++) {
-    var g = window._SC_GROUPS[gi];
+  for (var gi = 0; gi < GROUPS.length; gi++) {
+    var g = GROUPS[gi];
     var color = g.color;
     var isFirst = (gi === 0);
     var bg = window.scGv(color,'bg'), t = window.scGv(color,'t'), b = window.scGv(color,'b');
 
     var scripts = await window.scFetch(g.stages);
-    window._sc_cache['group_' + color] = scripts;
+    _cache['group_' + color] = scripts;
 
-    /* 그룹 블록 */
+    /* 그룹 블록 (데스크탑) */
     var block = document.createElement('div');
     block.className = 'sc-group-block';
     block.id = 'sc-block-' + color;
 
-    /* 아코디언 헤더 */
     var header = document.createElement('div');
     header.className = 'sc-acc-header' + (isFirst ? ' open' : '');
     header.id = 'sc-header-' + color;
@@ -376,12 +612,10 @@ window.scRenderAll = async function() {
         '<span class="sc-acc-arrow">▲</span>' +
       '</div>';
 
-    /* 아코디언 콘텐츠 */
     var content = document.createElement('div');
     content.className = 'sc-acc-content' + (isFirst ? '' : ' collapsed');
     content.id = 'sc-content-' + color;
 
-    /* 1열 */
     var cell1 = document.createElement('div');
     cell1.className = 'sc-col1';
     cell1.innerHTML =
@@ -391,7 +625,6 @@ window.scRenderAll = async function() {
         '<span class="sc-g-count" style="background:' + b + ';">' + scripts.length + '개</span>' +
       '</div>';
 
-    /* 2열 */
     var cell2 = document.createElement('div');
     cell2.className = 'sc-col2';
     cell2.id = 'sc-scripts-' + color;
@@ -404,13 +637,11 @@ window.scRenderAll = async function() {
         }).join('')
       : '<div class="sc-detail-empty">스크립트 없음</div>';
 
-    /* 3열 */
     var cell3 = document.createElement('div');
     cell3.className = 'sc-col3';
     cell3.id = 'sc-blocks-' + color;
     cell3.innerHTML = '<div class="sc-detail-empty">← 선택하세요</div>';
 
-    /* 4열 */
     var cell4 = document.createElement('div');
     cell4.className = 'sc-col4';
     cell4.id = 'sc-detail-' + color;
@@ -430,7 +661,7 @@ window.scRenderAll = async function() {
     }
   }
 
-  /* IntersectionObserver */
+  /* IntersectionObserver (데스크탑) */
   var dArea = document.querySelector('.d');
   if (dArea && 'IntersectionObserver' in window) {
     var observer = new IntersectionObserver(function(entries) {
@@ -441,37 +672,33 @@ window.scRenderAll = async function() {
         }
       });
     }, { root: dArea, threshold: 0.3 });
-    window._SC_GROUPS.forEach(function(g) {
+    GROUPS.forEach(function(g) {
       var el = document.getElementById('sc-block-' + g.color);
       if (el) observer.observe(el);
     });
   }
 
-  /* ── 검색에서 넘어온 경우: _pendingScript 처리 ── */
+  /* 모바일 스텝1 초기 렌더 */
+  if (mobile) mobile.innerHTML = mRenderStep1();
+
+  /* 검색에서 넘어온 경우: _pendingScript 처리 */
   if (window._pendingScript) {
     var ps = window._pendingScript;
-    window._pendingScript = null; // 소비 후 초기화
-
+    window._pendingScript = null;
     var targetColor = ps.color;
     var targetTitle = ps.title;
-
     if (targetColor) {
-      // 해당 그룹 스크립트 목록에서 title 매칭
-      var groupScripts = window._sc_cache['group_' + targetColor] || [];
+      var groupScripts = _cache['group_' + targetColor] || [];
       var matchIdx = -1;
       for (var mi = 0; mi < groupScripts.length; mi++) {
         if (groupScripts[mi].title === targetTitle) { matchIdx = mi; break; }
       }
-
-      // 해당 그룹 펼치기
       var targetContent = document.getElementById('sc-content-' + targetColor);
       var targetHeader  = document.getElementById('sc-header-'  + targetColor);
       if (targetContent && targetContent.classList.contains('collapsed')) {
         targetContent.classList.remove('collapsed');
         if (targetHeader) targetHeader.classList.add('open');
       }
-
-      // 첫 번째 그룹(도입인사) 닫기 — 다른 그룹으로 이동할 때
       if (targetColor !== 1) {
         var firstContent = document.getElementById('sc-content-1');
         var firstHeader  = document.getElementById('sc-header-1');
@@ -480,28 +707,27 @@ window.scRenderAll = async function() {
           if (firstHeader) firstHeader.classList.remove('open');
         }
       }
-
-      // 스크립트 항목 선택
-      if (matchIdx >= 0) {
-        var col2 = document.getElementById('sc-scripts-' + targetColor);
-        if (col2) {
-          var items = col2.querySelectorAll('.sc-script-item');
-          if (items[matchIdx]) window.scSelectScript(items[matchIdx], targetColor, matchIdx);
-        }
-      } else if (groupScripts.length) {
-        // title 매칭 실패 시 첫 번째 항목 선택
-        var col2fb = document.getElementById('sc-scripts-' + targetColor);
-        if (col2fb) {
-          var firstItem = col2fb.querySelector('.sc-script-item');
-          if (firstItem) window.scSelectScript(firstItem, targetColor, 0);
-        }
+      var col2t = document.getElementById('sc-scripts-' + targetColor);
+      if (col2t) {
+        var items = col2t.querySelectorAll('.sc-script-item');
+        var selIdx = matchIdx >= 0 ? matchIdx : 0;
+        if (items[selIdx]) window.scSelectScript(items[selIdx], targetColor, selIdx);
       }
-
-      // 해당 그룹으로 스크롤
       window.scScrollToGroup(targetColor);
     }
   }
 };
 
-setTimeout(function() { window.scRenderAll(); }, 150);
+/* ── 초기화: AppState 패턴 ── */
+function _boot() {
+  window.scRenderAll();
+}
+
+if (window.AppState && window.AppState.ready) {
+  _boot();
+} else {
+  document.addEventListener('appstate:ready', function() { _boot(); }, { once: true });
+}
+
+})();
 </script>

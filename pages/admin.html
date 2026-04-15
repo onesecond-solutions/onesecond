@@ -1,255 +1,320 @@
 <!-- pages/admin.html — 원세컨드 관리자 페이지 -->
 <style>
-/* ── 공통 ── */
-.adm-wrap{padding:0;min-height:100%;}
+/* ════════════════════════════════════════════════════════════
+   admin.html 전용 스타일
+   레이아웃 구조: _template.html 표준 (pg-outer / pg-header-block / pg-tab-block / pg-content-block / pg-footer-block)
+   design_guide.md 준수 — tokens.css 변수만 사용
+════════════════════════════════════════════════════════════ */
 
-/* ── 페이지 헤더 ── */
-.adm-header{
-  height:120px;
-  background:linear-gradient(135deg,#1a0f0a 0%,#3d2b1f 50%,#6b4226 100%);
-  border-radius:16px;
-  margin-bottom:0;
-  padding:0 28px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:relative;overflow:hidden;
-}
-.adm-header::before{
-  content:'🛡️';
-  position:absolute;right:24px;top:50%;transform:translateY(-50%);
-  font-size:4em;opacity:0.1;pointer-events:none;
-}
-.adm-header-left{}
-.adm-header-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);
-  border-radius:20px;padding:3px 12px;
-  font-size:0.63em;font-weight:700;color:#ffd700;
-  letter-spacing:0.5px;margin-bottom:8px;
-}
-.adm-header-title{
-  font-size:1.5em;font-weight:800;color:#fff;
-  line-height:1.2;letter-spacing:-0.5px;
-}
-.adm-header-sub{
-  font-size:0.842em;color:rgba(255,255,255,0.6);margin-top:4px;
+/* ── 최상위 래퍼 ── */
+.pg-outer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface-2, #F3EFE9);
+  gap: 6px;
+  padding: 6px;
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  min-height: 100%;
 }
 
-/* ── 탭바 ── */
-.adm-tab-bar{
-  display:flex;gap:0;
-  border-top:1px solid rgba(200,117,58,0.15);
-  padding-top:4px;
-  background:#fff;
-  border-bottom:2px solid #f0e6dc;
-  position:sticky;top:0;z-index:10;
-  padding-left:4px;
+/* ── ① 타이틀 블록 ── */
+.pg-header-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
 }
-.adm-tab{
-  padding:13px 18px;
-  font-size:0.8947em;font-weight:600;
-  color:#9a7a62;border:none;background:none;
-  cursor:pointer;font-family:inherit;
-  border-bottom:3px solid transparent;
-  transition:all 0.15s;white-space:nowrap;
+.pg-page-header {
+  height: 120px;
+  background: linear-gradient(135deg, #1a0f0a 0%, var(--color-brand, #A0522D) 50%, var(--color-brand-light, #C4733A) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: relative;
+  overflow: hidden;
 }
-.adm-tab:hover{color:#3d2b1f;background:#fdf8f3;}
-.adm-tab.active{color:#c8753a;border-bottom-color:#c8753a;font-weight:700;}
+.pg-page-header::before {
+  content: '🛡️';
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-size: 4em; opacity: 0.1; pointer-events: none;
+}
+.adm-header-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255, 215, 0, 0.15); border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: var(--radius-full, 9999px); padding: 3px 12px;
+  font-size: 0.63em; font-weight: 700; color: #ffd700;
+  letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.pg-page-title {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 1.5em; font-weight: 800; color: #fff;
+  letter-spacing: -0.5px; margin-bottom: 0;
+}
+.pg-page-desc {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 0.842em; color: rgba(255, 255, 255, 0.6); margin-top: 4px;
+}
+.pg-page-icon { display: none; } /* 헤더 ::before 아이콘으로 대체 */
 
-/* ── 콘텐츠 영역 ── */
-.adm-content{padding:20px 4px 4px;}
+/* ── ② 탭바 블록 ── */
+.pg-tab-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+}
+.pg-tab-bar {
+  display: flex; gap: 0; flex-wrap: nowrap; overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.pg-tab-bar::-webkit-scrollbar { display: none; }
+.pg-tab-btn {
+  padding: 11px 18px; border: none; background: transparent;
+  font-size: 0.895em; font-weight: 600;
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  cursor: pointer; white-space: nowrap;
+  color: var(--color-text-secondary, #7A5C44);
+  border-bottom: 3px solid transparent;
+  transition: all .15s; flex-shrink: 0;
+}
+.pg-tab-btn:hover { color: var(--color-text-primary, #3D2C1E); background: var(--color-surface-2, #F3EFE9); }
+.pg-tab-btn.active {
+  font-weight: 700; color: var(--color-accent, #D4845A);
+  border-bottom-color: var(--color-accent, #D4845A);
+}
+
+/* ── ③ 콘텐츠 블록 ── */
+.pg-content-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border, #E4DBCE);
+  background: var(--color-bg, #FAF8F5);
+}
+
+/* ── 관리자 콘텐츠 영역 ── */
+.adm-content { padding: 20px; }
 
 /* ── 카드 ── */
-.adm-card{
-  background:#fff;border:1px solid #e6dfd7;
-  border-radius:14px;padding:20px;margin-bottom:14px;
+.adm-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-md, 12px);
+  padding: 20px; margin-bottom: 14px;
 }
-.adm-card-title{
-  font-size:0.842em;font-weight:800;color:#3d2b1f;
-  margin-bottom:14px;display:flex;align-items:center;gap:6px;
-  padding-bottom:10px;border-bottom:1px solid #f0e6dc;
+.adm-card-title {
+  font-size: 0.842em; font-weight: 800; color: var(--color-text-primary, #3D2C1E);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--color-border, #E4DBCE);
 }
 
 /* ── 통계 카드 ── */
-.adm-stats-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
-  margin-bottom:16px;
+.adm-stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 16px;
 }
-.adm-stat{
-  background:#fff;border:1px solid #e6dfd7;border-radius:12px;
-  padding:16px;text-align:center;
+.adm-stat {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  padding: 16px; text-align: center;
 }
-.adm-stat-num{
-  font-size:1.6em;font-weight:900;color:#3d2b1f;line-height:1;
-  margin-bottom:4px;
+.adm-stat-num {
+  font-size: 1.6em; font-weight: 900;
+  color: var(--color-text-primary, #3D2C1E);
+  line-height: 1; margin-bottom: 4px;
 }
-.adm-stat-num span{font-size:0.6em;font-weight:400;color:#9a7a62;}
-.adm-stat-label{font-size:0.7em;color:#9a7a62;font-weight:600;}
+.adm-stat-num span { font-size: 0.6em; font-weight: 400; color: var(--color-text-tertiary, #B89880); }
+.adm-stat-label { font-size: 0.7em; color: var(--color-text-tertiary, #B89880); font-weight: 600; }
 
 /* ── 테이블 ── */
-.adm-table-wrap{overflow-x:auto;}
-.adm-table{
-  width:100%;border-collapse:collapse;font-size:0.842em;
+.adm-table-wrap { overflow-x: auto; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 0.842em; }
+.adm-table th {
+  background: var(--color-surface-2, #F3EFE9);
+  color: var(--color-text-secondary, #7A5C44); font-weight: 700;
+  padding: 10px 14px; text-align: left;
+  border-bottom: 2px solid var(--color-border, #E4DBCE); white-space: nowrap;
 }
-.adm-table th{
-  background:#f5ede4;color:#5a3e2b;font-weight:700;
-  padding:10px 14px;text-align:left;
-  border-bottom:2px solid #e0c9b4;white-space:nowrap;
+.adm-table th:first-child { border-radius: var(--radius-sm, 8px) 0 0 0; }
+.adm-table th:last-child  { border-radius: 0 var(--radius-sm, 8px) 0 0; }
+.adm-table td {
+  padding: 10px 14px; border-bottom: 1px solid var(--color-border, #E4DBCE);
+  vertical-align: middle; color: var(--color-text-primary, #3D2C1E);
 }
-.adm-table th:first-child{border-radius:8px 0 0 0;}
-.adm-table th:last-child{border-radius:0 8px 0 0;}
-.adm-table td{
-  padding:10px 14px;border-bottom:1px solid #f0e6dc;
-  vertical-align:middle;color:#3d2b1f;
-}
-.adm-table tr:last-child td{border-bottom:none;}
-.adm-table tr:hover td{background:#fdf8f3;}
+.adm-table tr:last-child td { border-bottom: none; }
+.adm-table tr:hover td { background: var(--color-surface-2, #F3EFE9); }
 
 /* ── 뱃지 ── */
-.role-badge{
-  display:inline-block;padding:2px 9px;border-radius:20px;
-  font-size:0.78em;font-weight:700;white-space:nowrap;
-}
-.role-admin{background:#fff3cd;color:#856404;}
-.role-branch{background:#d1ecf1;color:#0c5460;}
-.role-manager{background:#d4edda;color:#155724;}
-.role-member{background:#f5ede4;color:#5a3e2b;}
+.role-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; white-space: nowrap; }
+.role-admin   { background: #fff3cd; color: #856404; }
+.role-branch  { background: #d1ecf1; color: #0c5460; }
+.role-manager { background: #d4edda; color: #155724; }
+.role-member  { background: var(--color-surface-2, #F3EFE9); color: var(--color-text-secondary, #7A5C44); }
 
-.plan-badge{
-  display:inline-block;padding:2px 9px;border-radius:20px;
-  font-size:0.78em;font-weight:700;
-}
-.plan-pro{background:#e8f4fd;color:#1a3f7a;}
-.plan-free{background:#f5f5f5;color:#888;}
+.plan-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; }
+.plan-pro  { background: #e8f4fd; color: #1a3f7a; }
+.plan-free { background: #f5f5f5; color: #888; }
 
-.status-badge{
-  display:inline-block;padding:2px 9px;border-radius:20px;
-  font-size:0.78em;font-weight:700;
-}
-.status-active{background:#d4edda;color:#155724;}
-.status-inactive{background:#f5c6cb;color:#721c24;}
+.status-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; }
+.status-active   { background: #d4edda; color: #155724; }
+.status-inactive { background: #f5c6cb; color: #721c24; }
 
 /* ── 버튼 ── */
-.adm-btn{
-  padding:6px 12px;border-radius:7px;font-size:0.78em;font-weight:700;
-  font-family:inherit;cursor:pointer;transition:all 0.15s;border:1px solid;
+.adm-btn {
+  padding: 6px 12px; border-radius: var(--radius-sm, 8px);
+  font-size: 0.78em; font-weight: 700; font-family: inherit;
+  cursor: pointer; transition: all 0.15s; border: 1px solid;
 }
-.adm-btn-primary{background:#3d2b1f;color:#fff;border-color:#3d2b1f;}
-.adm-btn-primary:hover{background:#6b4226;}
-.adm-btn-accent{background:#c8753a;color:#fff;border-color:#c8753a;}
-.adm-btn-accent:hover{background:#b5642e;}
-.adm-btn-ghost{background:#fff;color:#3d2b1f;border-color:#e6dfd7;}
-.adm-btn-ghost:hover{background:#f5ede4;}
-.adm-btn-danger{background:#fff;color:#c0392b;border-color:#e0b4b4;}
-.adm-btn-danger:hover{background:#fde8e8;}
-.adm-btn-sm{padding:4px 9px;font-size:0.72em;}
+.adm-btn-primary { background: var(--color-text-primary, #3D2C1E); color: #fff; border-color: var(--color-text-primary, #3D2C1E); }
+.adm-btn-primary:hover { background: var(--color-text-secondary, #7A5C44); }
+.adm-btn-accent  { background: var(--color-accent, #D4845A); color: #fff; border-color: var(--color-accent, #D4845A); }
+.adm-btn-accent:hover  { background: var(--color-brand, #A0522D); }
+.adm-btn-ghost   { background: var(--color-surface, #fff); color: var(--color-text-primary, #3D2C1E); border-color: var(--color-border, #E4DBCE); }
+.adm-btn-ghost:hover   { background: var(--color-surface-2, #F3EFE9); }
+.adm-btn-danger  { background: var(--color-surface, #fff); color: #c0392b; border-color: #e0b4b4; }
+.adm-btn-danger:hover  { background: #fde8e8; }
+.adm-btn-sm { padding: 4px 9px; font-size: 0.72em; }
 
 /* ── 입력 ── */
-.adm-input{
-  width:100%;padding:9px 12px;border:1.5px solid #e0d4cc;border-radius:8px;
-  font-size:0.842em;font-family:inherit;outline:none;
-  transition:border-color 0.15s;
+.adm-input {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.842em; font-family: inherit; outline: none;
+  transition: border-color 0.15s; background: var(--color-surface, #fff);
 }
-.adm-input:focus{border-color:#c8753a;box-shadow:0 0 0 3px rgba(200,117,58,0.1);}
-.adm-select{
-  padding:8px 12px;border:1.5px solid #e0d4cc;border-radius:8px;
-  font-size:0.842em;font-family:inherit;outline:none;background:#fff;cursor:pointer;
+.adm-input:focus { border-color: var(--color-accent, #D4845A); box-shadow: 0 0 0 3px rgba(212, 132, 90, 0.1); }
+
+.adm-select {
+  padding: 8px 12px;
+  border: 1.5px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.842em; font-family: inherit; outline: none;
+  background: var(--color-surface, #fff); cursor: pointer;
 }
-.adm-select:focus{border-color:#c8753a;}
+.adm-select:focus { border-color: var(--color-accent, #D4845A); }
 
 /* ── 검색바 ── */
-.adm-search-bar{
-  display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;
-}
+.adm-search-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
 
 /* ── 로딩/빈 상태 ── */
-.adm-loading{padding:40px;text-align:center;color:#bbb;font-size:0.842em;}
-.adm-empty{padding:40px;text-align:center;color:#bbb;font-size:0.842em;}
+.adm-loading { padding: 40px; text-align: center; color: var(--color-text-tertiary, #B89880); font-size: 0.842em; }
+.adm-empty   { padding: 40px; text-align: center; color: var(--color-text-tertiary, #B89880); font-size: 0.842em; }
 
 /* ── 로그 아이템 ── */
-.adm-log-item{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:10px 0;border-bottom:1px solid #f0e6dc;
-  font-size:0.842em;
+.adm-log-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--color-border, #E4DBCE);
+  font-size: 0.842em;
 }
-.adm-log-item:last-child{border-bottom:none;}
-.adm-log-icon{
-  width:30px;height:30px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.9em;flex-shrink:0;
+.adm-log-item:last-child { border-bottom: none; }
+.adm-log-icon {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9em; flex-shrink: 0;
 }
-.adm-log-body{flex:1;min-width:0;}
-.adm-log-text{color:#3d2b1f;line-height:1.5;}
-.adm-log-time{color:#bbb;font-size:0.85em;margin-top:2px;}
+.adm-log-body { flex: 1; min-width: 0; }
+.adm-log-text { color: var(--color-text-primary, #3D2C1E); line-height: 1.5; }
+.adm-log-time { color: var(--color-text-tertiary, #B89880); font-size: 0.85em; margin-top: 2px; }
 
 /* ── 공지 폼 ── */
-.adm-form-row{margin-bottom:12px;}
-.adm-form-label{
-  font-size:0.78em;font-weight:700;color:#3d2b1f;
-  margin-bottom:5px;display:block;
+.adm-form-row { margin-bottom: 12px; }
+.adm-form-label { font-size: 0.78em; font-weight: 700; color: var(--color-text-primary, #3D2C1E); margin-bottom: 5px; display: block; }
+.adm-textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.842em; font-family: inherit; outline: none;
+  resize: vertical; min-height: 80px;
+  transition: border-color 0.15s; background: var(--color-surface, #fff);
 }
-.adm-textarea{
-  width:100%;padding:10px 12px;border:1.5px solid #e0d4cc;border-radius:8px;
-  font-size:0.842em;font-family:inherit;outline:none;resize:vertical;min-height:80px;
-  transition:border-color 0.15s;
-}
-.adm-textarea:focus{border-color:#c8753a;box-shadow:0 0 0 3px rgba(200,117,58,0.1);}
+.adm-textarea:focus { border-color: var(--color-accent, #D4845A); box-shadow: 0 0 0 3px rgba(212, 132, 90, 0.1); }
 
-/* ── role 수정 모달 ── */
-.adm-modal-overlay{
-  display:none;position:fixed;inset:0;background:rgba(26,16,8,.72);
-  z-index:600;align-items:center;justify-content:center;
-  backdrop-filter:blur(4px);
+/* ── 역할 수정 모달 ── */
+.adm-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(26, 16, 8, .72); z-index: 600;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
 }
-.adm-modal-overlay.active{display:flex;}
-.adm-modal{
-  background:#fff;border-radius:16px;width:100%;max-width:380px;
-  box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;margin:16px;
+.adm-modal-overlay.active { display: flex; }
+.adm-modal {
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-lg, 16px);
+  width: 100%; max-width: 380px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .3); overflow: hidden; margin: 16px;
 }
-.adm-modal-header{
-  background:linear-gradient(135deg,#3d2b1f,#6b4226);
-  padding:14px 20px;display:flex;align-items:center;justify-content:space-between;
+.adm-modal-header {
+  background: linear-gradient(135deg, var(--color-brand, #A0522D), var(--color-brand-light, #C4733A));
+  padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
 }
-.adm-modal-title{font-size:0.9em;font-weight:800;color:#fff;}
-.adm-modal-close{
-  width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.12);
-  border:none;color:#fff;cursor:pointer;font-size:14px;
-  display:flex;align-items:center;justify-content:center;
+.adm-modal-title { font-size: 0.9em; font-weight: 800; color: #fff; }
+.adm-modal-close {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255, 255, 255, .12); border: none; color: #fff;
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
 }
-.adm-modal-body{padding:18px 20px;}
-.adm-modal-footer{
-  padding:8px 20px 16px;display:flex;gap:8px;justify-content:flex-end;
+.adm-modal-body   { padding: 18px 20px; }
+.adm-modal-footer { padding: 8px 20px 16px; display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── ④ 푸터 블록 ── */
+.pg-footer-block { border-radius: var(--radius-md, 12px); overflow: hidden; flex-shrink: 0; }
+.pg-bottom-bar {
+  background: var(--color-brand, #A0522D); color: #fff;
+  text-align: center; font-size: 0.790em; font-weight: 800; padding: 10px 14px;
+}
+
+@media (max-width: 768px) {
+  .adm-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 
-<div class="adm-wrap">
 
-  <!-- 헤더 -->
-  <div class="adm-header">
-    <div class="adm-header-left">
-      <div class="adm-header-badge">ADMIN ONLY</div>
-      <div class="adm-header-title">관리자 페이지</div>
-      <div class="adm-header-sub">원세컨드 서비스 운영 대시보드</div>
+<div class="pg-outer" id="page-admin">
+
+  <!-- ① 타이틀 블록 -->
+  <div class="pg-header-block">
+    <div class="pg-page-header">
+      <div>
+        <div class="adm-header-badge">ADMIN ONLY</div>
+        <div class="pg-page-title">관리자 페이지</div>
+        <div class="pg-page-desc">원세컨드 서비스 운영 대시보드</div>
+      </div>
     </div>
   </div>
 
-  <!-- 탭바 -->
-  <div class="adm-tab-bar">
-    <button class="adm-tab active" onclick="window.admSwitchTab('users', this)">👥 사용자</button>
-    <button class="adm-tab" onclick="window.admSwitchTab('scripts', this)">📋 스크립트</button>
-    <button class="adm-tab" onclick="window.admSwitchTab('board', this)">💬 게시판</button>
-    <button class="adm-tab" onclick="window.admSwitchTab('logs', this)">📊 로그</button>
-    <button class="adm-tab" onclick="window.admSwitchTab('notice', this)">📢 공지·배너</button>
-    <button class="adm-tab" onclick="window.admSwitchTab('settings', this)">⚙️ 화면설정</button>
+  <!-- ② 탭바 블록 -->
+  <div class="pg-tab-block">
+    <div class="pg-tab-bar" id="admin-tab-bar">
+      <button class="pg-tab-btn active" data-tab="users"   onclick="window.admSwitchTab('users', this)">👥 사용자</button>
+      <button class="pg-tab-btn"        data-tab="scripts" onclick="window.admSwitchTab('scripts', this)">📋 스크립트</button>
+      <button class="pg-tab-btn"        data-tab="board"   onclick="window.admSwitchTab('board', this)">💬 게시판</button>
+      <button class="pg-tab-btn"        data-tab="logs"    onclick="window.admSwitchTab('logs', this)">📊 로그</button>
+      <button class="pg-tab-btn"        data-tab="notice"  onclick="window.admSwitchTab('notice', this)">📢 공지·배너</button>
+    </div>
   </div>
 
-  <!-- 콘텐츠 -->
-  <div class="adm-content" id="adm-content">
-    <div class="adm-loading">로딩 중...</div>
+  <!-- ③ 콘텐츠 블록 -->
+  <div class="pg-content-block">
+    <div class="adm-content" id="adm-content">
+      <div class="adm-loading">로딩 중...</div>
+    </div>
   </div>
 
-</div>
+  <!-- ④ 푸터 블록 -->
+  <div class="pg-footer-block">
+    <div class="pg-bottom-bar">- 관리자 전용 페이지입니다 -</div>
+  </div>
 
-<!-- role 수정 모달 -->
+</div><!-- /.pg-outer -->
+
+
+<!-- 역할 수정 모달 -->
 <div class="adm-modal-overlay" id="adm-role-modal">
   <div class="adm-modal">
     <div class="adm-modal-header">
@@ -257,7 +322,7 @@
       <button class="adm-modal-close" onclick="window.admCloseRoleModal()">✕</button>
     </div>
     <div class="adm-modal-body">
-      <div style="font-size:0.842em;color:#5a3e2b;margin-bottom:12px;">
+      <div style="font-size:0.842em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">
         <strong id="adm-modal-username"></strong> 님의 역할을 변경합니다.
       </div>
       <div class="adm-form-row">
@@ -284,52 +349,54 @@
   </div>
 </div>
 
-<script>
-// ── 현재 탭 ──
-if (!window._admTab) window._admTab = 'users';
-if (!window._admEditUserId) window._admEditUserId = null;
-if (!window._admUsersCache) window._admUsersCache = null;
 
-// ── 탭 전환 ──
-window.admSwitchTab = function(tab, btn) {
-  window._admTab = tab;
-  document.querySelectorAll('.adm-tab').forEach(el => el.classList.remove('active'));
+<script>
+(function () {
+'use strict';
+
+/* ── 로컬 상태 ── */
+var _admTab = 'users';
+var _admEditUserId = null;
+var _admUsersCache = null;
+var _admScriptsCache = null;
+
+/* ── 공통 fetch (window.db 위임) ── */
+function admFetch(path, options) {
+  return window.db.fetch(path, options);
+}
+
+function admContent(html) {
+  var el = document.getElementById('adm-content');
+  if (el) el.innerHTML = html;
+}
+
+/* ── 탭 전환 (onclick에서 호출 → window 선언 필수) ── */
+window.admSwitchTab = function (tab, btn) {
+  _admTab = tab;
+  document.querySelectorAll('#admin-tab-bar .pg-tab-btn').forEach(function (el) {
+    el.classList.remove('active');
+  });
   if (btn) btn.classList.add('active');
-  const map = {
-    users: window.admLoadUsers,
+  var map = {
+    users:   window.admLoadUsers,
     scripts: window.admLoadScripts,
-    board: window.admLoadBoard,
-    logs: window.admLoadLogs,
-    notice: window.admLoadNotice,
-    settings: window.admLoadSettings
+    board:   window.admLoadBoard,
+    logs:    window.admLoadLogs,
+    notice:  window.admLoadNotice
   };
   if (map[tab]) map[tab]();
 };
 
-// ── 공통 fetch ──
-function admFetch(url, options) {
-  const headers = {
-    'apikey': window.SUPABASE_KEY,
-    'Authorization': 'Bearer ' + (window._userToken || ''),
-    ...(options && options.headers || {})
-  };
-  return fetch(url, { ...(options || {}), headers });
-}
-
-function admContent(html) {
-  const el = document.getElementById('adm-content');
-  if (el) el.innerHTML = html;
-}
-
+/* ── 유틸 ── */
 function admRoleBadge(role) {
-  const map = {
-    admin: ['role-admin','관리자'],
-    branch_manager: ['role-branch','지점장'],
-    manager: ['role-manager','실장'],
-    member: ['role-member','설계사']
+  var map = {
+    admin:          ['role-admin',   '관리자'],
+    branch_manager: ['role-branch',  '지점장'],
+    manager:        ['role-manager', '실장'],
+    member:         ['role-member',  '설계사']
   };
-  const [cls, label] = map[role] || ['role-member', role||'-'];
-  return `<span class="role-badge ${cls}">${label}</span>`;
+  var entry = map[role] || ['role-member', role || '-'];
+  return '<span class="role-badge ' + entry[0] + '">' + entry[1] + '</span>';
 }
 
 function admPlanBadge(plan) {
@@ -340,1029 +407,580 @@ function admPlanBadge(plan) {
 
 function admTimeAgo(ts) {
   if (!ts) return '-';
-  const d = new Date(ts);
-  return d.toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  var d = new Date(ts);
+  return d.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-// ══════════════════════════════════════════
-// 탭 1: 사용자 관리
-// ══════════════════════════════════════════
-window.admLoadUsers = async function(filter) {
+/* ════════════════════════════════════════
+   탭 1: 사용자 관리
+════════════════════════════════════════ */
+window.admLoadUsers = async function (filter) {
   admContent('<div class="adm-loading">사용자 목록 로딩 중...</div>');
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/users?select=id,name,email,role,plan,company,branch,team,created_at&order=created_at.desc&limit=100'
+    var res = await admFetch(
+      '/rest/v1/users?select=id,name,email,role,plan,company,branch,team,created_at&order=created_at.desc&limit=100'
     );
-    const data = await res.json();
-    window._admUsersCache = data;
+    var data = await res.json();
+    _admUsersCache = data;
     window.admRenderUsers(data, filter || '');
-  } catch(e) {
+  } catch (e) {
     admContent('<div class="adm-empty">사용자 목록을 불러오지 못했습니다.</div>');
   }
 };
 
-window.admRenderUsers = function(data, filter) {
-  let list = data;
+window.admRenderUsers = function (data, filter) {
+  var list = data;
   if (filter) {
-    const q = filter.toLowerCase();
-    list = data.filter(u =>
-      (u.name||'').toLowerCase().includes(q) ||
-      (u.email||'').toLowerCase().includes(q) ||
-      (u.company||'').toLowerCase().includes(q) ||
-      (u.branch||'').toLowerCase().includes(q)
-    );
-  }
-
-  // 통계
-  const total = data.length;
-  const proCount = data.filter(u => u.plan === 'pro').length;
-  const adminCount = data.filter(u => u.role === 'admin').length;
-  const todayStr = new Date().toISOString().slice(0,10);
-  const todayCount = data.filter(u => (u.created_at||'').startsWith(todayStr)).length;
-
-  let html = `
-    <div class="adm-stats-grid">
-      <div class="adm-stat">
-        <div class="adm-stat-num">${total}<span>명</span></div>
-        <div class="adm-stat-label">전체 가입자</div>
-      </div>
-      <div class="adm-stat">
-        <div class="adm-stat-num">${proCount}<span>명</span></div>
-        <div class="adm-stat-label">PRO 구독</div>
-      </div>
-      <div class="adm-stat">
-        <div class="adm-stat-num">${todayCount}<span>명</span></div>
-        <div class="adm-stat-label">오늘 가입</div>
-      </div>
-      <div class="adm-stat">
-        <div class="adm-stat-num">${adminCount}<span>명</span></div>
-        <div class="adm-stat-label">관리자</div>
-      </div>
-    </div>
-
-    <div class="adm-card">
-      <div class="adm-card-title">👥 사용자 목록</div>
-      <div class="adm-search-bar">
-        <input class="adm-input" style="max-width:280px;" id="adm-user-search"
-          placeholder="이름·이메일·지점 검색..."
-          oninput="window.admRenderUsers(window._admUsersCache, this.value)">
-        <button class="adm-btn adm-btn-ghost" onclick="window.admLoadUsers()">🔄 새로고침</button>
-      </div>
-      <div class="adm-table-wrap">
-        <table class="adm-table">
-          <thead>
-            <tr>
-              <th>이름</th>
-              <th>이메일</th>
-              <th>역할</th>
-              <th>플랜</th>
-              <th>소속</th>
-              <th>가입일</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-  if (list.length === 0) {
-    html += `<tr><td colspan="7" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>`;
-  } else {
-    list.forEach(u => {
-      const org = [u.company, u.branch, u.team].filter(Boolean).join(' / ') || '-';
-      html += `<tr>
-        <td><strong>${u.name||'-'}</strong></td>
-        <td style="color:#888;font-size:0.9em;">${u.email||'-'}</td>
-        <td>${admRoleBadge(u.role)}</td>
-        <td>${admPlanBadge(u.plan)}</td>
-        <td style="font-size:0.85em;color:#888;">${org}</td>
-        <td style="color:#aaa;font-size:0.85em;">${(u.created_at||'').slice(0,10)||'-'}</td>
-        <td>
-          <button class="adm-btn adm-btn-ghost adm-btn-sm"
-            onclick="window.admOpenRoleModal('${u.id}','${(u.name||'').replace(/'/g,'&apos;')}','${u.role||'member'}','${u.plan||'free'}')">
-            역할 변경
-          </button>
-        </td>
-      </tr>`;
+    var q = filter.toLowerCase();
+    list = data.filter(function (u) {
+      return (u.name || '').toLowerCase().includes(q) ||
+             (u.email || '').toLowerCase().includes(q) ||
+             (u.company || '').toLowerCase().includes(q) ||
+             (u.branch || '').toLowerCase().includes(q);
     });
   }
 
-  html += `</tbody></table></div></div>`;
+  var total      = data.length;
+  var proCount   = data.filter(function (u) { return u.plan === 'pro'; }).length;
+  var adminCount = data.filter(function (u) { return u.role === 'admin'; }).length;
+  var todayStr   = new Date().toISOString().slice(0, 10);
+  var todayCount = data.filter(function (u) { return (u.created_at || '').startsWith(todayStr); }).length;
+
+  var html =
+    '<div class="adm-stats-grid">' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + total      + '<span>명</span></div><div class="adm-stat-label">전체 가입자</div></div>' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + proCount   + '<span>명</span></div><div class="adm-stat-label">PRO 구독</div></div>' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + todayCount + '<span>명</span></div><div class="adm-stat-label">오늘 가입</div></div>' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + adminCount + '<span>명</span></div><div class="adm-stat-label">관리자</div></div>' +
+    '</div>' +
+    '<div class="adm-card">' +
+      '<div class="adm-card-title">👥 사용자 목록</div>' +
+      '<div class="adm-search-bar">' +
+        '<input class="adm-input" style="max-width:280px;" id="adm-user-search"' +
+          ' placeholder="이름·이메일·지점 검색..."' +
+          ' oninput="window.admRenderUsers(window._admUsersCache_pub, this.value)">' +
+        '<button class="adm-btn adm-btn-ghost" onclick="window.admLoadUsers()">🔄 새로고침</button>' +
+      '</div>' +
+      '<div class="adm-table-wrap">' +
+        '<table class="adm-table">' +
+          '<thead><tr>' +
+            '<th>이름</th><th>이메일</th><th>역할</th><th>플랜</th><th>소속</th><th>가입일</th><th>관리</th>' +
+          '</tr></thead><tbody>';
+
+  if (list.length === 0) {
+    html += '<tr><td colspan="7" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>';
+  } else {
+    list.forEach(function (u) {
+      var org = [u.company, u.branch, u.team].filter(Boolean).join(' / ') || '-';
+      html +=
+        '<tr>' +
+          '<td><strong>' + (u.name || '-') + '</strong></td>' +
+          '<td style="color:#888;font-size:0.9em;">' + (u.email || '-') + '</td>' +
+          '<td>' + admRoleBadge(u.role) + '</td>' +
+          '<td>' + admPlanBadge(u.plan) + '</td>' +
+          '<td style="font-size:0.85em;color:#888;">' + org + '</td>' +
+          '<td style="color:#aaa;font-size:0.85em;">' + ((u.created_at || '').slice(0, 10) || '-') + '</td>' +
+          '<td>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admOpenRoleModal(\'' + u.id + '\',\'' + (u.name || '').replace(/'/g, '&apos;') + '\',\'' + (u.role || 'member') + '\',\'' + (u.plan || 'free') + '\')">' +
+              '역할 변경' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+    });
+  }
+
+  html += '</tbody></table></div></div>';
   admContent(html);
-  // 검색어 복원
+
+  /* 공개 캐시 — 검색 oninput에서 접근 */
+  window._admUsersCache_pub = _admUsersCache;
+
   if (filter) {
-    const inp = document.getElementById('adm-user-search');
+    var inp = document.getElementById('adm-user-search');
     if (inp) inp.value = filter;
   }
 };
 
-// ── role 수정 모달 ──
-window.admOpenRoleModal = function(id, name, role, plan) {
-  window._admEditUserId = id;
+/* ── 역할 수정 모달 ── */
+window.admOpenRoleModal = function (id, name, role, plan) {
+  _admEditUserId = id;
   document.getElementById('adm-modal-username').textContent = name;
   document.getElementById('adm-role-select').value = role;
   document.getElementById('adm-plan-select').value = plan || 'free';
   document.getElementById('adm-role-modal').classList.add('active');
 };
 
-window.admCloseRoleModal = function() {
+window.admCloseRoleModal = function () {
   document.getElementById('adm-role-modal').classList.remove('active');
-  window._admEditUserId = null;
+  _admEditUserId = null;
 };
 
-window.admSaveRole = async function() {
-  const id = window._admEditUserId;
-  const role = document.getElementById('adm-role-select').value;
-  const plan = document.getElementById('adm-plan-select').value;
+window.admSaveRole = async function () {
+  var id   = _admEditUserId;
+  var role = document.getElementById('adm-role-select').value;
+  var plan = document.getElementById('adm-plan-select').value;
   if (!id) return;
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/users?id=eq.' + id,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ role, plan })
-      }
-    );
-    if (res.ok) {
-      window.admCloseRoleModal();
-      window.admLoadUsers();
-    } else {
-      alert('저장 중 오류가 발생했습니다.');
-    }
-  } catch(e) {
-    alert('네트워크 오류가 발생했습니다.');
-  }
+    var res = await admFetch('/rest/v1/users?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ role: role, plan: plan })
+    });
+    if (res.ok) { window.admCloseRoleModal(); window.admLoadUsers(); }
+    else alert('저장 중 오류가 발생했습니다.');
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 };
 
-// ══════════════════════════════════════════
-// 탭 2: 스크립트 관리
-// ══════════════════════════════════════════
-window.admLoadScripts = async function() {
+/* ════════════════════════════════════════
+   탭 2: 스크립트 관리
+════════════════════════════════════════ */
+var STAGE_LABEL = {
+  opening: '도입인사', opening_rejection: '도입반론',
+  need_emphasis: '필요성강조', need_emphasis_2: '필요성강조2',
+  situation_check: '상황확인', analysis: '보장분석',
+  product: '상품설명', objection: '반론대응',
+  closing: '클로징', closing_second: '2차클로징'
+};
+
+window.admLoadScripts = async function () {
   admContent('<div class="adm-loading">스크립트 목록 로딩 중...</div>');
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/scripts?select=id,title,stage,type,scope,is_active,is_leader_pick&order=stage,title&limit=200'
+    var res = await admFetch(
+      '/rest/v1/scripts?select=id,title,stage,type,scope,is_active,is_leader_pick&order=stage,title&limit=200'
     );
-    const data = await res.json();
-    window._admScriptsCache = data;
+    var data = await res.json();
+    _admScriptsCache = data;
+    window._admScriptsCache_pub = data;
 
-    const total = data.length;
-    const active = data.filter(s => s.is_active).length;
-    const leaderPick = data.filter(s => s.is_leader_pick).length;
+    var total      = data.length;
+    var active     = data.filter(function (s) { return s.is_active; }).length;
+    var leaderPick = data.filter(function (s) { return s.is_leader_pick; }).length;
 
-    const stageLabel = {
-      opening:'도입인사', opening_rejection:'도입반론', need_emphasis:'필요성강조',
-      need_emphasis_2:'필요성강조2', situation_check:'상황확인', analysis:'보장분석',
-      product:'상품설명', objection:'반론대응', closing:'클로징', closing_second:'2차클로징'
-    };
+    var stageOptions = Object.entries(STAGE_LABEL).map(function (e) {
+      return '<option value="' + e[0] + '">' + e[1] + '</option>';
+    }).join('');
 
-    let html = `
-      <div class="adm-stats-grid">
-        <div class="adm-stat"><div class="adm-stat-num">${total}<span>개</span></div><div class="adm-stat-label">전체 스크립트</div></div>
-        <div class="adm-stat"><div class="adm-stat-num">${active}<span>개</span></div><div class="adm-stat-label">활성</div></div>
-        <div class="adm-stat"><div class="adm-stat-num">${total-active}<span>개</span></div><div class="adm-stat-label">비활성</div></div>
-        <div class="adm-stat"><div class="adm-stat-num">${leaderPick}<span>개</span></div><div class="adm-stat-label">Leader Pick</div></div>
-      </div>
+    var html =
+      '<div class="adm-stats-grid">' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + total + '<span>개</span></div><div class="adm-stat-label">전체 스크립트</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + active + '<span>개</span></div><div class="adm-stat-label">활성</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + (total - active) + '<span>개</span></div><div class="adm-stat-label">비활성</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + leaderPick + '<span>개</span></div><div class="adm-stat-label">Leader Pick</div></div>' +
+      '</div>' +
+      '<div class="adm-card">' +
+        '<div class="adm-card-title">📋 스크립트 목록</div>' +
+        '<div class="adm-search-bar">' +
+          '<input class="adm-input" style="max-width:280px;" id="adm-script-search" placeholder="스크립트 제목 검색..."' +
+            ' oninput="window.admFilterScripts(this.value)">' +
+          '<select class="adm-select" id="adm-script-stage-filter"' +
+            ' onchange="window.admFilterScripts(document.getElementById(\'adm-script-search\').value)">' +
+            '<option value="">전체 단계</option>' + stageOptions +
+          '</select>' +
+          '<button class="adm-btn adm-btn-ghost" onclick="window.admLoadScripts()">🔄 새로고침</button>' +
+        '</div>' +
+        '<div id="adm-script-table-wrap">' +
+          window.admBuildScriptTable(data) +
+        '</div>' +
+      '</div>';
 
-      <div class="adm-card">
-        <div class="adm-card-title">📋 스크립트 목록</div>
-        <div class="adm-search-bar">
-          <input class="adm-input" style="max-width:280px;" placeholder="스크립트 제목 검색..."
-            oninput="window.admFilterScripts(this.value)">
-          <select class="adm-select" id="adm-script-stage-filter" onchange="window.admFilterScripts(document.querySelector('#adm-content .adm-input').value)">
-            <option value="">전체 단계</option>
-            ${Object.entries(stageLabel).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
-          </select>
-          <button class="adm-btn adm-btn-ghost" onclick="window.admLoadScripts()">🔄 새로고침</button>
-        </div>
-        <div id="adm-script-table-wrap">`;
-
-    html += window.admBuildScriptTable(data, stageLabel);
-    html += `</div></div>`;
     admContent(html);
-  } catch(e) {
+  } catch (e) {
     admContent('<div class="adm-empty">스크립트 목록을 불러오지 못했습니다.</div>');
   }
 };
 
-window.admBuildScriptTable = function(data, stageLabel) {
-  if (!stageLabel) {
-    stageLabel = {
-      opening:'도입인사', opening_rejection:'도입반론', need_emphasis:'필요성강조',
-      need_emphasis_2:'필요성강조2', situation_check:'상황확인', analysis:'보장분석',
-      product:'상품설명', objection:'반론대응', closing:'클로징', closing_second:'2차클로징'
-    };
-  }
-  let html = `<div class="adm-table-wrap"><table class="adm-table">
-    <thead><tr>
-      <th>제목</th><th>단계</th><th>범위</th><th>상태</th><th>LeaderPick</th><th>관리</th>
-    </tr></thead><tbody>`;
+window.admBuildScriptTable = function (data) {
+  var html =
+    '<div class="adm-table-wrap"><table class="adm-table">' +
+    '<thead><tr><th>제목</th><th>단계</th><th>범위</th><th>상태</th><th>LeaderPick</th><th>관리</th></tr></thead>' +
+    '<tbody>';
 
-  if (data.length === 0) {
-    html += `<tr><td colspan="6" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>`;
+  if (!data || data.length === 0) {
+    html += '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>';
   } else {
-    data.forEach(s => {
-      const stage = stageLabel[s.stage] || s.stage || '-';
-      html += `<tr>
-        <td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.title||'-'}</td>
-        <td><span style="font-size:0.8em;background:#f5ede4;padding:2px 8px;border-radius:20px;color:#5a3e2b;">${stage}</span></td>
-        <td><span style="font-size:0.8em;color:#888;">${s.scope||'-'}</span></td>
-        <td>
-          <span class="status-badge ${s.is_active ? 'status-active':'status-inactive'}">
-            ${s.is_active ? '활성':'비활성'}
-          </span>
-        </td>
-        <td style="text-align:center;">${s.is_leader_pick ? '⭐':'－'}</td>
-        <td style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button class="adm-btn adm-btn-ghost adm-btn-sm"
-            onclick="window.admToggleScript('${s.id}','is_active',${!s.is_active})">
-            ${s.is_active ? '비활성화':'활성화'}
-          </button>
-          <button class="adm-btn adm-btn-ghost adm-btn-sm"
-            onclick="window.admToggleScript('${s.id}','is_leader_pick',${!s.is_leader_pick})">
-            ${s.is_leader_pick ? 'Pick 해제':'Pick 설정'}
-          </button>
-        </td>
-      </tr>`;
+    data.forEach(function (s) {
+      var stage = STAGE_LABEL[s.stage] || s.stage || '-';
+      html +=
+        '<tr>' +
+          '<td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.title || '-') + '</td>' +
+          '<td><span style="font-size:0.8em;background:var(--color-surface-2,#F3EFE9);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary,#7A5C44);">' + stage + '</span></td>' +
+          '<td><span style="font-size:0.8em;color:#888;">' + (s.scope || '-') + '</span></td>' +
+          '<td><span class="status-badge ' + (s.is_active ? 'status-active' : 'status-inactive') + '">' + (s.is_active ? '활성' : '비활성') + '</span></td>' +
+          '<td style="text-align:center;">' + (s.is_leader_pick ? '⭐' : '－') + '</td>' +
+          '<td style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admToggleScript(\'' + s.id + '\',\'is_active\',' + (!s.is_active) + ')">' +
+              (s.is_active ? '비활성화' : '활성화') +
+            '</button>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admToggleScript(\'' + s.id + '\',\'is_leader_pick\',' + (!s.is_leader_pick) + ')">' +
+              (s.is_leader_pick ? 'Pick 해제' : 'Pick 설정') +
+            '</button>' +
+          '</td>' +
+        '</tr>';
     });
   }
-  html += `</tbody></table></div>`;
+  html += '</tbody></table></div>';
   return html;
 };
 
-window.admFilterScripts = function(q) {
-  const stageFilter = (document.getElementById('adm-script-stage-filter')||{}).value || '';
-  let data = window._admScriptsCache || [];
-  if (q) data = data.filter(s => (s.title||'').toLowerCase().includes(q.toLowerCase()));
-  if (stageFilter) data = data.filter(s => s.stage === stageFilter);
-  const wrap = document.getElementById('adm-script-table-wrap');
+window.admFilterScripts = function (q) {
+  var stageEl  = document.getElementById('adm-script-stage-filter');
+  var stageFilter = stageEl ? stageEl.value : '';
+  var data = _admScriptsCache || [];
+  if (q) data = data.filter(function (s) { return (s.title || '').toLowerCase().includes(q.toLowerCase()); });
+  if (stageFilter) data = data.filter(function (s) { return s.stage === stageFilter; });
+  var wrap = document.getElementById('adm-script-table-wrap');
   if (wrap) wrap.innerHTML = window.admBuildScriptTable(data);
 };
 
-window.admToggleScript = async function(id, field, val) {
+window.admToggleScript = async function (id, field, val) {
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/scripts?id=eq.' + id,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ [field]: val })
-      }
-    );
+    var body = {};
+    body[field] = val;
+    var res = await admFetch('/rest/v1/scripts?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
     if (res.ok) window.admLoadScripts();
     else alert('수정 중 오류가 발생했습니다.');
-  } catch(e) { alert('네트워크 오류가 발생했습니다.'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 };
 
-// ══════════════════════════════════════════
-// 탭 3: 게시판 관리
-// ══════════════════════════════════════════
-window.admLoadBoard = async function() {
+/* ════════════════════════════════════════
+   탭 3: 게시판 관리
+════════════════════════════════════════ */
+window.admLoadBoard = async function () {
   admContent('<div class="adm-loading">게시글 로딩 중...</div>');
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/posts?select=id,title,category,author_name,created_at,is_hidden,is_notice&order=created_at.desc&limit=100'
+    var res = await admFetch(
+      '/rest/v1/posts?select=id,title,category,author_name,created_at,is_hidden,is_notice&order=created_at.desc&limit=100'
     );
-    const data = await res.json();
+    var data = await res.json();
 
-    const catLabel = { notice:'공지', qa_product:'상품Q&A', qa_underwriting:'인수Q&A' };
-    const total = data.length;
-    const notices = data.filter(p => p.is_notice).length;
-    const hidden = data.filter(p => p.is_hidden).length;
+    var catLabel = { notice: '공지', qa_product: '상품Q&A', qa_underwriting: '인수Q&A' };
+    var total   = data.length;
+    var notices = data.filter(function (p) { return p.is_notice; }).length;
+    var hidden  = data.filter(function (p) { return p.is_hidden; }).length;
 
-    let html = `
-      <div class="adm-stats-grid">
-        <div class="adm-stat"><div class="adm-stat-num">${total}<span>개</span></div><div class="adm-stat-label">전체 게시글</div></div>
-        <div class="adm-stat"><div class="adm-stat-num">${notices}<span>개</span></div><div class="adm-stat-label">공지</div></div>
-        <div class="adm-stat"><div class="adm-stat-num">${hidden}<span>개</span></div><div class="adm-stat-label">숨김 처리</div></div>
-        <div class="adm-stat"><div class="adm-stat-num">${total-notices-hidden}<span>개</span></div><div class="adm-stat-label">일반 게시글</div></div>
-      </div>
-
-      <div class="adm-card">
-        <div class="adm-card-title">💬 게시글 목록</div>
-        <div class="adm-search-bar">
-          <button class="adm-btn adm-btn-ghost" onclick="window.admLoadBoard()">🔄 새로고침</button>
-        </div>
-        <div class="adm-table-wrap">
-          <table class="adm-table">
-            <thead><tr>
-              <th>제목</th><th>카테고리</th><th>작성자</th><th>작성일</th><th>상태</th><th>관리</th>
-            </tr></thead>
-            <tbody>`;
+    var html =
+      '<div class="adm-stats-grid">' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + total   + '<span>개</span></div><div class="adm-stat-label">전체 게시글</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + notices + '<span>개</span></div><div class="adm-stat-label">공지</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + hidden  + '<span>개</span></div><div class="adm-stat-label">숨김 처리</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + (total - notices - hidden) + '<span>개</span></div><div class="adm-stat-label">일반 게시글</div></div>' +
+      '</div>' +
+      '<div class="adm-card">' +
+        '<div class="adm-card-title">💬 게시글 목록</div>' +
+        '<div class="adm-search-bar">' +
+          '<button class="adm-btn adm-btn-ghost" onclick="window.admLoadBoard()">🔄 새로고침</button>' +
+        '</div>' +
+        '<div class="adm-table-wrap"><table class="adm-table">' +
+          '<thead><tr><th>제목</th><th>카테고리</th><th>작성자</th><th>작성일</th><th>상태</th><th>관리</th></tr></thead>' +
+          '<tbody>';
 
     if (data.length === 0) {
-      html += `<tr><td colspan="6" style="text-align:center;color:#bbb;padding:30px;">게시글이 없습니다.</td></tr>`;
+      html += '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:30px;">게시글이 없습니다.</td></tr>';
     } else {
-      data.forEach(p => {
-        const cat = catLabel[p.category] || p.category || '-';
-        const status = p.is_hidden
+      data.forEach(function (p) {
+        var cat    = catLabel[p.category] || p.category || '-';
+        var status = p.is_hidden
           ? '<span class="status-badge status-inactive">숨김</span>'
-          : (p.is_notice ? '<span class="status-badge status-active">공지</span>' : '<span style="color:#aaa;font-size:0.85em;">일반</span>');
-        html += `<tr>
-          <td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.title||'-'}</td>
-          <td><span style="font-size:0.8em;background:#f5ede4;padding:2px 8px;border-radius:20px;color:#5a3e2b;">${cat}</span></td>
-          <td style="color:#888;font-size:0.9em;">${p.author_name||'-'}</td>
-          <td style="color:#aaa;font-size:0.85em;">${(p.created_at||'').slice(0,10)||'-'}</td>
-          <td>${status}</td>
-          <td style="display:flex;gap:4px;flex-wrap:wrap;">
-            <button class="adm-btn adm-btn-ghost adm-btn-sm"
-              onclick="window.admTogglePost('${p.id}','is_notice',${!p.is_notice})">
-              ${p.is_notice ? '공지 해제':'공지 설정'}
-            </button>
-            <button class="adm-btn ${p.is_hidden ? 'adm-btn-ghost':'adm-btn-danger'} adm-btn-sm"
-              onclick="window.admTogglePost('${p.id}','is_hidden',${!p.is_hidden})">
-              ${p.is_hidden ? '숨김 해제':'숨김'}
-            </button>
-          </td>
-        </tr>`;
+          : (p.is_notice
+              ? '<span class="status-badge status-active">공지</span>'
+              : '<span style="color:#aaa;font-size:0.85em;">일반</span>');
+        html +=
+          '<tr>' +
+            '<td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.title || '-') + '</td>' +
+            '<td><span style="font-size:0.8em;background:var(--color-surface-2,#F3EFE9);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary,#7A5C44);">' + cat + '</span></td>' +
+            '<td style="color:#888;font-size:0.9em;">' + (p.author_name || '-') + '</td>' +
+            '<td style="color:#aaa;font-size:0.85em;">' + ((p.created_at || '').slice(0, 10) || '-') + '</td>' +
+            '<td>' + status + '</td>' +
+            '<td style="display:flex;gap:4px;flex-wrap:wrap;">' +
+              '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+                ' onclick="window.admTogglePost(\'' + p.id + '\',\'is_notice\',' + (!p.is_notice) + ')">' +
+                (p.is_notice ? '공지 해제' : '공지 설정') +
+              '</button>' +
+              '<button class="adm-btn ' + (p.is_hidden ? 'adm-btn-ghost' : 'adm-btn-danger') + ' adm-btn-sm"' +
+                ' onclick="window.admTogglePost(\'' + p.id + '\',\'is_hidden\',' + (!p.is_hidden) + ')">' +
+                (p.is_hidden ? '숨김 해제' : '숨김') +
+              '</button>' +
+            '</td>' +
+          '</tr>';
       });
     }
 
-    html += `</tbody></table></div></div>`;
+    html += '</tbody></table></div></div>';
     admContent(html);
-  } catch(e) {
+  } catch (e) {
     admContent('<div class="adm-empty">게시글을 불러오지 못했습니다.</div>');
   }
 };
 
-window.admTogglePost = async function(id, field, val) {
+window.admTogglePost = async function (id, field, val) {
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/posts?id=eq.' + id,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ [field]: val })
-      }
-    );
+    var body = {};
+    body[field] = val;
+    var res = await admFetch('/rest/v1/posts?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
     if (res.ok) window.admLoadBoard();
     else alert('수정 중 오류가 발생했습니다.');
-  } catch(e) { alert('네트워크 오류가 발생했습니다.'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 };
 
-// ══════════════════════════════════════════
-// 탭 4: 로그 확인
-// ══════════════════════════════════════════
-window.admLoadLogs = async function() {
+/* ════════════════════════════════════════
+   탭 4: 로그 확인
+════════════════════════════════════════ */
+window.admLoadLogs = async function () {
   admContent('<div class="adm-loading">로그 로딩 중...</div>');
   try {
-    const role = window._userRole || '';
-    const isMgr = role === 'manager';
-    const isBranch = role === 'branch_manager';
-    const isAdmin = role === 'admin';
-
-    // ── 팀원 접속 현황 (manager / branch_manager / admin) ──
-    let memberHtml = '';
-    if (isMgr || isBranch || isAdmin) {
-      // 내 소속 정보 조회
-      const meRes = await admFetch(
-        window.SUPABASE_URL + '/rest/v1/users?id=eq.' + (window._userId || '') +
-        '&select=branch,team&limit=1'
-      );
-      const meData = meRes.ok ? await meRes.json() : [];
-      const myBranch = (meData[0] && meData[0].branch) || '';
-      const myTeam   = (meData[0] && meData[0].team)   || '';
-
-      // 조회 대상 users 필터
-      let usersFilter = '';
-      if (isAdmin) {
-        usersFilter = 'role=in.(member,manager,branch_manager)&order=branch,team,name';
-      } else if (isBranch) {
-        usersFilter = 'branch=eq.' + encodeURIComponent(myBranch) +
-                      '&role=in.(member,manager)&order=team,name';
-      } else {
-        // manager: 같은 팀 member만
-        usersFilter = 'team=eq.' + encodeURIComponent(myTeam) +
-                      '&role=eq.member&order=name';
-      }
-
-      const membersRes = await admFetch(
-        window.SUPABASE_URL + '/rest/v1/users?' + usersFilter +
-        '&select=id,auth_user_id,name,role,team,branch'
-      );
-      const members = membersRes.ok ? await membersRes.json() : [];
-
-      if (members.length > 0) {
-        // 오늘 날짜 기준
-        const todayStr = new Date().toISOString().slice(0, 10);
-
-        // 대상자 auth_user_id 목록
-        const authIds = members.map(m => m.auth_user_id).filter(Boolean);
-
-        // 접속 로그 (login 이벤트) — 최근 30일
-        const since = new Date(Date.now() - 30*24*60*60*1000).toISOString();
-        const loginRes = await admFetch(
-          window.SUPABASE_URL + '/rest/v1/activity_logs' +
-          '?event_type=eq.login' +
-          '&created_at=gte.' + since +
-          '&select=user_id,created_at' +
-          '&order=created_at.desc&limit=1000'
-        );
-        const loginLogs = loginRes.ok ? await loginRes.json() : [];
-
-        // 스크립트 사용 로그 — 최근 30일
-        const scriptLogRes = await admFetch(
-          window.SUPABASE_URL + '/rest/v1/activity_logs' +
-          '?event_type=eq.script_view' +
-          '&created_at=gte.' + since +
-          '&select=user_id,created_at' +
-          '&limit=2000'
-        );
-        const scriptLogs = scriptLogRes.ok ? await scriptLogRes.json() : [];
-
-        // user_id 기준 집계
-        const loginMap  = {};  // user_id → 최근 접속일시
-        const todayMap  = {};  // user_id → 오늘 접속 여부
-        const scriptToday = {}; // user_id → 오늘 스크립트 사용 수
-        const scriptTotal = {}; // user_id → 누적 스크립트 사용 수
-
-        loginLogs.forEach(l => {
-          if (!loginMap[l.user_id]) loginMap[l.user_id] = l.created_at;
-          if (l.created_at && l.created_at.slice(0,10) === todayStr) todayMap[l.user_id] = true;
-        });
-        scriptLogs.forEach(l => {
-          scriptTotal[l.user_id] = (scriptTotal[l.user_id] || 0) + 1;
-          if (l.created_at && l.created_at.slice(0,10) === todayStr)
-            scriptToday[l.user_id] = (scriptToday[l.user_id] || 0) + 1;
-        });
-
-        const roleLabel = { member:'설계사', manager:'실장', branch_manager:'지점장' };
-
-        memberHtml = `
-          <div class="adm-card" style="margin-bottom:14px;">
-            <div class="adm-card-title">👥 팀원 접속 현황 <span style="font-size:0.78em;color:#aaa;font-weight:400;">(최근 30일 기준)</span></div>
-            <div style="overflow-x:auto;">
-              <table style="width:100%;border-collapse:collapse;font-size:0.8em;">
-                <thead>
-                  <tr style="background:#f5ede4;text-align:left;">
-                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">이름</th>
-                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">역할</th>
-                    ${isAdmin || isBranch ? '<th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">팀</th>' : ''}
-                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">오늘 접속</th>
-                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">최근 접속</th>
-                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">오늘 스크립트</th>
-                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">누적 스크립트</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${members.map((m, i) => {
-                    const uid = m.auth_user_id;
-                    const lastLogin = loginMap[uid];
-                    const isToday = !!todayMap[uid];
-                    const sCnt = scriptToday[uid] || 0;
-                    const sTotal = scriptTotal[uid] || 0;
-                    const lastStr = lastLogin
-                      ? admTimeAgo(lastLogin)
-                      : '<span style="color:#ccc;">없음</span>';
-                    const todayBadge = isToday
-                      ? '<span style="background:#d4edda;color:#1a6630;padding:2px 8px;border-radius:10px;font-weight:700;">✅ 접속</span>'
-                      : '<span style="background:#f0f0f0;color:#aaa;padding:2px 8px;border-radius:10px;">미접속</span>';
-                    const bg = i % 2 === 0 ? '#fff' : '#fdf9f6';
-                    return `<tr style="background:${bg};border-bottom:1px solid #f0e6dc;">
-                      <td style="padding:8px 10px;font-weight:600;color:#3d2b1f;">${m.name || '-'}</td>
-                      <td style="padding:8px 10px;color:#7a5c44;">${roleLabel[m.role] || m.role}</td>
-                      ${isAdmin || isBranch ? `<td style="padding:8px 10px;color:#7a5c44;">${m.team || '-'}</td>` : ''}
-                      <td style="padding:8px 10px;">${todayBadge}</td>
-                      <td style="padding:8px 10px;color:#888;">${lastStr}</td>
-                      <td style="padding:8px 10px;text-align:center;color:${sCnt > 0 ? '#c8753a' : '#ccc'};font-weight:${sCnt > 0 ? '700' : '400'};">${sCnt > 0 ? sCnt + '회' : '-'}</td>
-                      <td style="padding:8px 10px;text-align:center;color:${sTotal > 0 ? '#3d2b1f' : '#ccc'};font-weight:${sTotal > 0 ? '600' : '400'};">${sTotal > 0 ? sTotal + '회' : '-'}</td>
-                    </tr>`;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>`;
-      } else {
-        memberHtml = `
-          <div class="adm-card" style="margin-bottom:14px;">
-            <div class="adm-card-title">👥 팀원 접속 현황</div>
-            <div class="adm-empty" style="padding:20px;">조회 가능한 팀원이 없습니다.<br><small style="color:#ccc;">소속 팀/지점 정보가 설정되어 있는지 확인해 주세요.</small></div>
-          </div>`;
-      }
-    }
-
-    // 스크립트 사용 로그 (admin 전용 통계)
-    const [logRes, scriptRes] = await Promise.all([
-      admFetch(window.SUPABASE_URL + '/rest/v1/activity_logs?select=id,event_type,target_type,target_id,created_at,users(name)&order=created_at.desc&limit=50'),
-      admFetch(window.SUPABASE_URL + '/rest/v1/activity_logs?select=target_id,scripts(title)&event_type=eq.script_view&limit=500')
+    var results = await Promise.all([
+      admFetch('/rest/v1/activity_logs?select=id,event_type,target_type,target_id,created_at,users(name)&order=created_at.desc&limit=50'),
+      admFetch('/rest/v1/activity_logs?select=target_id,scripts(title)&event_type=eq.view_script&limit=500')
     ]);
 
-    const logs = logRes.ok ? await logRes.json() : [];
-    const scriptLogs = scriptRes.ok ? await scriptRes.json() : [];
+    var logs        = results[0].ok ? await results[0].json() : [];
+    var scriptLogs  = results[1].ok ? await results[1].json() : [];
 
-    // 인기 스크립트 집계
-    const scriptCount = {};
-    scriptLogs.forEach(l => {
-      const title = (l.scripts && l.scripts.title) || l.target_id || '알 수 없음';
+    /* 인기 스크립트 집계 */
+    var scriptCount = {};
+    scriptLogs.forEach(function (l) {
+      var title = (l.scripts && l.scripts.title) || l.target_id || '알 수 없음';
       scriptCount[title] = (scriptCount[title] || 0) + 1;
     });
-    const topScripts = Object.entries(scriptCount)
-      .sort((a,b) => b[1]-a[1])
-      .slice(0,10);
+    var topScripts = Object.entries(scriptCount).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 10);
 
-    const eventIcon = {
-      login:'🔑', script_view:'📋', click_quick:'⚡',
-      add_favorite:'⭐', open_post:'💬', search:'🔍'
+    var eventIcon = {
+      login: '🔑', view_script: '📋', click_quick: '⚡',
+      add_favorite: '⭐', open_post: '💬', search: '🔍'
+    };
+    var eventMap = {
+      login: '로그인', view_script: '스크립트 조회', click_quick: 'Quick 메뉴',
+      add_favorite: '즐겨찾기 추가', open_post: '게시글 조회', search: '검색'
     };
 
-    let html = memberHtml + `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-        <div class="adm-card">
-          <div class="adm-card-title">🏆 인기 스크립트 TOP 10</div>`;
+    var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">';
 
+    /* 인기 스크립트 TOP 10 */
+    html += '<div class="adm-card"><div class="adm-card-title">🏆 인기 스크립트 TOP 10</div>';
     if (topScripts.length === 0) {
-      html += `<div class="adm-empty" style="padding:20px;">로그 데이터가 없습니다.<br><small style="color:#ccc;">activity_logs 테이블에 데이터가 쌓이면 표시됩니다.</small></div>`;
+      html += '<div class="adm-empty" style="padding:20px;">로그 데이터가 없습니다.<br><small style="color:#ccc;">activity_logs 테이블에 데이터가 쌓이면 표시됩니다.</small></div>';
     } else {
-      topScripts.forEach(([title, count], i) => {
-        const pct = Math.round((count / (topScripts[0][1]||1)) * 100);
-        html += `
-          <div style="margin-bottom:10px;">
-            <div style="display:flex;justify-content:space-between;font-size:0.8em;margin-bottom:4px;">
-              <span style="font-weight:600;color:#3d2b1f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${i+1}. ${title}</span>
-              <span style="color:#c8753a;font-weight:700;flex-shrink:0;margin-left:8px;">${count}회</span>
-            </div>
-            <div style="height:6px;background:#f0e6dc;border-radius:3px;">
-              <div style="height:100%;width:${pct}%;background:#c8753a;border-radius:3px;transition:width 0.5s;"></div>
-            </div>
-          </div>`;
+      topScripts.forEach(function (entry, i) {
+        var pct = Math.round((entry[1] / (topScripts[0][1] || 1)) * 100);
+        html +=
+          '<div style="margin-bottom:10px;">' +
+            '<div style="display:flex;justify-content:space-between;font-size:0.8em;margin-bottom:4px;">' +
+              '<span style="font-weight:600;color:var(--color-text-primary,#3D2C1E);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">' + (i + 1) + '. ' + entry[0] + '</span>' +
+              '<span style="color:var(--color-accent,#D4845A);font-weight:700;flex-shrink:0;margin-left:8px;">' + entry[1] + '회</span>' +
+            '</div>' +
+            '<div style="height:6px;background:var(--color-surface-2,#F3EFE9);border-radius:3px;">' +
+              '<div style="height:100%;width:' + pct + '%;background:var(--color-accent,#D4845A);border-radius:3px;transition:width 0.5s;"></div>' +
+            '</div>' +
+          '</div>';
       });
     }
+    html += '</div>';
 
-    html += `
-        </div>
-        <div class="adm-card">
-          <div class="adm-card-title">⏱️ 최근 활동 로그</div>`;
-
+    /* 최근 활동 로그 */
+    html += '<div class="adm-card"><div class="adm-card-title">⏱️ 최근 활동 로그</div>';
     if (logs.length === 0) {
-      html += `<div class="adm-empty" style="padding:20px;">로그 데이터가 없습니다.<br><small style="color:#ccc;">activity_logs 테이블 생성 후 수집됩니다.</small></div>`;
+      html += '<div class="adm-empty" style="padding:20px;">로그 데이터가 없습니다.<br><small style="color:#ccc;">activity_logs 테이블 생성 후 수집됩니다.</small></div>';
     } else {
-      logs.slice(0,20).forEach(l => {
-        const icon = eventIcon[l.event_type] || '📌';
-        const name = (l.users && l.users.name) || '알 수 없음';
-        const eventMap = {
-          login:'로그인', script_view:'스크립트 조회', click_quick:'Quick 메뉴',
-          add_favorite:'즐겨찾기 추가', open_post:'게시글 조회', search:'검색'
-        };
-        const event = eventMap[l.event_type] || l.event_type;
-        html += `
-          <div class="adm-log-item">
-            <div class="adm-log-icon" style="background:#f5ede4;">${icon}</div>
-            <div class="adm-log-body">
-              <div class="adm-log-text"><strong>${name}</strong> · ${event}</div>
-              <div class="adm-log-time">${admTimeAgo(l.created_at)}</div>
-            </div>
-          </div>`;
+      logs.slice(0, 20).forEach(function (l) {
+        var icon  = eventIcon[l.event_type]  || '📌';
+        var event = eventMap[l.event_type]   || l.event_type;
+        var name  = (l.users && l.users.name) || '알 수 없음';
+        html +=
+          '<div class="adm-log-item">' +
+            '<div class="adm-log-icon" style="background:var(--color-surface-2,#F3EFE9);">' + icon + '</div>' +
+            '<div class="adm-log-body">' +
+              '<div class="adm-log-text"><strong>' + name + '</strong> · ' + event + '</div>' +
+              '<div class="adm-log-time">' + admTimeAgo(l.created_at) + '</div>' +
+            '</div>' +
+          '</div>';
       });
     }
+    html += '</div></div>';
 
-    html += `</div></div>
-
-      <!-- activity_logs 테이블 안내 -->
-      <div class="adm-card" style="background:#fdf8f3;border-color:#e0c9b4;">
-        <div class="adm-card-title">💡 로그 수집 설정 안내</div>
-        <div style="font-size:0.8em;color:#5a3e2b;line-height:1.8;">
-          로그 수집을 시작하려면 Supabase에서 <code style="background:#f0e6dc;padding:1px 6px;border-radius:4px;">activity_logs</code> 테이블을 생성해야 합니다.<br>
-          <strong>필수 컬럼:</strong> id (bigserial), user_id (uuid), event_type (text), target_type (text), target_id (text), created_at (timestamptz)<br>
-          <strong>수집 항목:</strong> 로그인 / 스크립트 클릭 / Quick 메뉴 클릭 / 즐겨찾기 추가
-        </div>
-      </div>`;
+    /* 안내 카드 */
+    html +=
+      '<div class="adm-card" style="background:var(--color-surface-2,#F3EFE9);">' +
+        '<div class="adm-card-title">💡 로그 수집 설정 안내</div>' +
+        '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);line-height:1.8;">' +
+          '로그 수집을 시작하려면 Supabase에서 <code style="background:var(--color-border,#E4DBCE);padding:1px 6px;border-radius:4px;">activity_logs</code> 테이블을 생성해야 합니다.<br>' +
+          '<strong>필수 컬럼:</strong> id (bigserial), user_id (uuid), event_type (text), target_type (text), target_id (text), created_at (timestamptz)<br>' +
+          '<strong>수집 항목:</strong> 로그인 / 스크립트 클릭 / Quick 메뉴 클릭 / 즐겨찾기 추가' +
+        '</div>' +
+      '</div>';
 
     admContent(html);
-  } catch(e) {
+  } catch (e) {
     admContent('<div class="adm-empty">로그를 불러오지 못했습니다.</div>');
   }
 };
 
-// ══════════════════════════════════════════
-// 탭 5: 공지·배너 관리
-// ══════════════════════════════════════════
-window.admLoadNotice = async function() {
-  // 현재 공지 게시글 로드
+/* ════════════════════════════════════════
+   탭 5: 공지·배너 관리
+════════════════════════════════════════ */
+window.admLoadNotice = async function () {
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/posts?is_notice=eq.true&select=id,title,content,created_at&order=created_at.desc&limit=10'
-    );
-    const notices = res.ok ? await res.json() : [];
+    var res     = await admFetch('/rest/v1/posts?is_notice=eq.true&select=id,title,content,created_at&order=created_at.desc&limit=10');
+    var notices = res.ok ? await res.json() : [];
 
-    let noticeList = '';
+    var noticeList = '';
     if (notices.length === 0) {
-      noticeList = '<div style="padding:16px;color:#bbb;font-size:0.842em;text-align:center;">등록된 공지가 없습니다.</div>';
+      noticeList = '<div style="padding:16px;color:var(--color-text-tertiary,#B89880);font-size:0.842em;text-align:center;">등록된 공지가 없습니다.</div>';
     } else {
-      notices.forEach(n => {
-        noticeList += `
-          <div style="padding:12px 0;border-bottom:1px solid #f0e6dc;display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:0.842em;font-weight:700;color:#3d2b1f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n.title||'-'}</div>
-              <div style="font-size:0.75em;color:#aaa;margin-top:2px;">${(n.created_at||'').slice(0,10)}</div>
-            </div>
-            <button class="adm-btn adm-btn-danger adm-btn-sm"
-              onclick="window.admTogglePost('${n.id}','is_notice',false);setTimeout(window.admLoadNotice,500)">
-              공지 해제
-            </button>
-          </div>`;
+      notices.forEach(function (n) {
+        noticeList +=
+          '<div style="padding:12px 0;border-bottom:1px solid var(--color-border,#E4DBCE);display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-size:0.842em;font-weight:700;color:var(--color-text-primary,#3D2C1E);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (n.title || '-') + '</div>' +
+              '<div style="font-size:0.75em;color:#aaa;margin-top:2px;">' + ((n.created_at || '').slice(0, 10)) + '</div>' +
+            '</div>' +
+            '<button class="adm-btn adm-btn-danger adm-btn-sm"' +
+              ' onclick="window.admTogglePost(\'' + n.id + '\',\'is_notice\',false);setTimeout(window.admLoadNotice,500)">' +
+              '공지 해제' +
+            '</button>' +
+          '</div>';
       });
     }
 
-    const html = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-
-        <!-- 공지 작성 -->
-        <div class="adm-card">
-          <div class="adm-card-title">📢 공지 작성</div>
-          <div class="adm-form-row">
-            <label class="adm-form-label">제목 *</label>
-            <input class="adm-input" id="adm-notice-title" placeholder="공지 제목을 입력하세요">
-          </div>
-          <div class="adm-form-row">
-            <label class="adm-form-label">내용 *</label>
-            <textarea class="adm-textarea" id="adm-notice-content" placeholder="공지 내용을 입력하세요" style="min-height:120px;"></textarea>
-          </div>
-          <div class="adm-form-row">
-            <label class="adm-form-label">게시판 범위</label>
-            <select class="adm-select" id="adm-notice-scope" style="width:100%;">
-              <option value="global">전체 (허브)</option>
-              <option value="branch">지점 공지</option>
-            </select>
-          </div>
-          <button class="adm-btn adm-btn-accent" style="width:100%;padding:10px;" onclick="window.admPostNotice()">
-            공지 등록하기
-          </button>
-        </div>
-
-        <!-- 현재 공지 목록 -->
-        <div class="adm-card">
-          <div class="adm-card-title">📋 현재 공지 목록</div>
-          ${noticeList}
-          <div style="margin-top:12px;">
-            <button class="adm-btn adm-btn-ghost" onclick="window.admLoadNotice()">🔄 새로고침</button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- 홈 안내 배너 -->
-      <div class="adm-card" style="margin-top:0;">
-        <div class="adm-card-title">🎯 홈 안내 배너</div>
-        <div style="font-size:0.8em;color:#9a7a62;margin-bottom:12px;">
-          홈 화면 상단에 표시되는 안내 문구를 관리합니다. (home.html 업그레이드 띠 연동 예정)
-        </div>
-        <div class="adm-form-row">
-          <label class="adm-form-label">배너 문구</label>
-          <input class="adm-input" id="adm-banner-text" placeholder="예: 🎉 베타 오픈 기간 무료 체험 진행 중!">
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="adm-btn adm-btn-accent" onclick="window.admSaveBanner()">배너 저장</button>
-          <button class="adm-btn adm-btn-ghost" onclick="window.admClearBanner()">배너 숨김</button>
-        </div>
-        <div id="adm-banner-preview" style="margin-top:12px;display:none;
-          background:#c8753a;color:#fff;border-radius:8px;padding:10px 14px;
-          font-size:0.842em;font-weight:600;text-align:center;"></div>
-      </div>`;
+    var html =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
+        /* 공지 작성 */
+        '<div class="adm-card">' +
+          '<div class="adm-card-title">📢 공지 작성</div>' +
+          '<div class="adm-form-row"><label class="adm-form-label">제목 *</label>' +
+            '<input class="adm-input" id="adm-notice-title" placeholder="공지 제목을 입력하세요"></div>' +
+          '<div class="adm-form-row"><label class="adm-form-label">내용 *</label>' +
+            '<textarea class="adm-textarea" id="adm-notice-content" placeholder="공지 내용을 입력하세요" style="min-height:120px;"></textarea></div>' +
+          '<div class="adm-form-row"><label class="adm-form-label">게시판 범위</label>' +
+            '<select class="adm-select" id="adm-notice-scope" style="width:100%;">' +
+              '<option value="global">전체 (허브)</option>' +
+              '<option value="branch">지점 공지</option>' +
+            '</select></div>' +
+          '<button class="adm-btn adm-btn-accent" style="width:100%;padding:10px;" onclick="window.admPostNotice()">공지 등록하기</button>' +
+        '</div>' +
+        /* 공지 목록 */
+        '<div class="adm-card">' +
+          '<div class="adm-card-title">📋 현재 공지 목록</div>' +
+          noticeList +
+          '<div style="margin-top:12px;"><button class="adm-btn adm-btn-ghost" onclick="window.admLoadNotice()">🔄 새로고침</button></div>' +
+        '</div>' +
+      '</div>' +
+      /* 홈 안내 배너 */
+      '<div class="adm-card" style="margin-top:0;">' +
+        '<div class="adm-card-title">🎯 홈 안내 배너</div>' +
+        '<div style="font-size:0.8em;color:var(--color-text-tertiary,#B89880);margin-bottom:12px;">' +
+          '홈 화면 상단에 표시되는 안내 문구를 관리합니다.' +
+        '</div>' +
+        '<div class="adm-form-row"><label class="adm-form-label">배너 문구</label>' +
+          '<input class="adm-input" id="adm-banner-text" placeholder="예: 🎉 베타 오픈 기간 무료 체험 진행 중!"></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="adm-btn adm-btn-accent" onclick="window.admSaveBanner()">배너 저장</button>' +
+          '<button class="adm-btn adm-btn-ghost"  onclick="window.admClearBanner()">배너 숨김</button>' +
+        '</div>' +
+        '<div id="adm-banner-preview" style="margin-top:12px;display:none;' +
+          'background:var(--color-accent,#D4845A);color:#fff;border-radius:var(--radius-sm,8px);' +
+          'padding:10px 14px;font-size:0.842em;font-weight:600;text-align:center;"></div>' +
+      '</div>';
 
     admContent(html);
 
-    // 저장된 배너 복원
-    const savedBanner = localStorage.getItem('os_admin_banner');
+    /* 저장된 배너 복원 */
+    var savedBanner = localStorage.getItem('os_admin_banner');
     if (savedBanner) {
-      const inp = document.getElementById('adm-banner-text');
-      if (inp) inp.value = savedBanner;
-      const preview = document.getElementById('adm-banner-preview');
+      var inp     = document.getElementById('adm-banner-text');
+      var preview = document.getElementById('adm-banner-preview');
+      if (inp)     inp.value = savedBanner;
       if (preview) { preview.textContent = savedBanner; preview.style.display = 'block'; }
     }
-  } catch(e) {
+  } catch (e) {
     admContent('<div class="adm-empty">공지 정보를 불러오지 못했습니다.</div>');
   }
 };
 
-window.admPostNotice = async function() {
-  const title = (document.getElementById('adm-notice-title')||{}).value?.trim();
-  const content = (document.getElementById('adm-notice-content')||{}).value?.trim();
-  const scope = (document.getElementById('adm-notice-scope')||{}).value || 'global';
+window.admPostNotice = async function () {
+  var titleEl   = document.getElementById('adm-notice-title');
+  var contentEl = document.getElementById('adm-notice-content');
+  var scopeEl   = document.getElementById('adm-notice-scope');
+  var title   = titleEl   ? titleEl.value.trim()   : '';
+  var content = contentEl ? contentEl.value.trim() : '';
+  var scope   = scopeEl   ? scopeEl.value           : 'global';
   if (!title || !content) { alert('제목과 내용을 모두 입력해 주세요.'); return; }
   try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/posts',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          title, content, category: 'notice',
-          is_notice: true, scope,
-          author_id: window._userId,
-          author_name: window._userName || '관리자',
-          created_at: new Date().toISOString()
-        })
-      }
-    );
+    var s = window.AppState || {};
+    var res = await admFetch('/rest/v1/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        title: title, content: content, category: 'notice',
+        is_notice: true, scope: scope,
+        author_id: s.userId || '',
+        author_name: s.name || '관리자',
+        created_at: new Date().toISOString()
+      })
+    });
     if (res.ok) {
       alert('공지가 등록되었습니다.');
-      const titleInp = document.getElementById('adm-notice-title');
-      const contentInp = document.getElementById('adm-notice-content');
-      if (titleInp) titleInp.value = '';
-      if (contentInp) contentInp.value = '';
+      if (titleEl)   titleEl.value   = '';
+      if (contentEl) contentEl.value = '';
       setTimeout(window.admLoadNotice, 300);
     } else {
       alert('등록 중 오류가 발생했습니다.');
     }
-  } catch(e) { alert('네트워크 오류가 발생했습니다.'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 };
 
-window.admSaveBanner = function() {
-  const text = (document.getElementById('adm-banner-text')||{}).value?.trim();
+window.admSaveBanner = function () {
+  var inp  = document.getElementById('adm-banner-text');
+  var text = inp ? inp.value.trim() : '';
   if (!text) { alert('배너 문구를 입력해 주세요.'); return; }
   localStorage.setItem('os_admin_banner', text);
-  const preview = document.getElementById('adm-banner-preview');
+  var preview = document.getElementById('adm-banner-preview');
   if (preview) { preview.textContent = text; preview.style.display = 'block'; }
   alert('배너가 저장되었습니다.');
 };
 
-window.admClearBanner = function() {
+window.admClearBanner = function () {
   localStorage.removeItem('os_admin_banner');
-  const inp = document.getElementById('adm-banner-text');
-  if (inp) inp.value = '';
-  const preview = document.getElementById('adm-banner-preview');
-  if (preview) { preview.style.display = 'none'; }
+  var inp     = document.getElementById('adm-banner-text');
+  var preview = document.getElementById('adm-banner-preview');
+  if (inp)     inp.value = '';
+  if (preview) preview.style.display = 'none';
   alert('배너가 숨김 처리됐습니다.');
 };
 
-// ══════════════════════════════════════════
-// 탭 6: 메뉴·화면 설정
-// ══════════════════════════════════════════
-window.admLoadSettings = async function() {
-  admContent('<div class="adm-loading">설정 로딩 중...</div>');
-  try {
-    const res = await admFetch(
-      window.SUPABASE_URL + '/rest/v1/app_settings?order=id'
+/* ── 부트 ── */
+function _boot() {
+  /* 관리자 권한 확인 */
+  var s = window.AppState;
+  if (!s || s.role !== 'admin') {
+    admContent(
+      '<div class="adm-empty" style="padding:60px;">' +
+        '<div style="font-size:2em;margin-bottom:12px;">🔒</div>' +
+        '<div style="font-weight:700;margin-bottom:6px;">접근 권한이 없습니다</div>' +
+        '<div style="font-size:0.842em;color:var(--color-text-tertiary,#B89880);">관리자 계정으로 로그인해 주세요.</div>' +
+      '</div>'
     );
-    const rows = res.ok ? await res.json() : [];
-
-    const menuRows    = rows.filter(r => r.group_name === 'menu_b');
-    const bannerRows  = rows.filter(r => r.group_name === 'banner');
-
-    // ── 메뉴 토글 렌더 ──
-    let menuHtml = '';
-    menuRows.forEach(r => {
-      const isOn = r.value === 'on';
-      menuHtml += `
-        <div style="display:flex;align-items:center;justify-content:space-between;
-          padding:12px 0;border-bottom:1px solid #f0e6dc;">
-          <span style="font-size:0.842em;font-weight:600;color:#3d2b1f;">${r.label}</span>
-          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
-            <input type="checkbox" id="stg-${r.key}"
-              ${isOn ? 'checked' : ''}
-              onchange="window.admToggleSetting('${r.key}', this.checked)"
-              style="opacity:0;width:0;height:0;">
-            <span style="
-              position:absolute;inset:0;border-radius:24px;transition:0.2s;
-              background:${isOn ? '#c8753a' : '#ddd'};
-            " id="stg-track-${r.key}"></span>
-            <span style="
-              position:absolute;top:3px;left:${isOn ? '23px' : '3px'};
-              width:18px;height:18px;border-radius:50%;background:#fff;
-              box-shadow:0 1px 3px rgba(0,0,0,.25);transition:0.2s;
-            " id="stg-thumb-${r.key}"></span>
-          </label>
-        </div>`;
-    });
-
-    // ── 배너 설정 ──
-    const bannerVisible = (bannerRows.find(r => r.key === 'banner_visible') || {}).value === 'on';
-    const bannerText    = (bannerRows.find(r => r.key === 'banner_text') || {}).value || '';
-
-    const html = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-
-        <!-- B영역 메뉴 ON/OFF -->
-        <div class="adm-card">
-          <div class="adm-card-title">📋 B영역 메뉴 항목</div>
-          <div style="font-size:0.78em;color:#9a7a62;margin-bottom:12px;">
-            OFF 설정 시 해당 메뉴가 사이드바에서 숨겨집니다.
-          </div>
-          ${menuHtml}
-          <div style="margin-top:14px;">
-            <button class="adm-btn adm-btn-ghost" style="font-size:0.78em;"
-              onclick="window.admLoadSettings()">🔄 새로고침</button>
-          </div>
-        </div>
-
-        <!-- 홈 배너 -->
-        <div class="adm-card">
-          <div class="adm-card-title">🎯 홈 배너 설정</div>
-          <div style="font-size:0.78em;color:#9a7a62;margin-bottom:14px;">
-            홈 화면 상단 안내 띠 문구를 관리합니다.
-          </div>
-
-          <div class="adm-form-row">
-            <label class="adm-form-label">배너 표시</label>
-            <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
-              <input type="checkbox" id="stg-banner_visible"
-                ${bannerVisible ? 'checked' : ''}
-                onchange="window.admToggleSetting('banner_visible', this.checked)"
-                style="opacity:0;width:0;height:0;">
-              <span style="position:absolute;inset:0;border-radius:24px;transition:0.2s;
-                background:${bannerVisible ? '#c8753a' : '#ddd'};"
-                id="stg-track-banner_visible"></span>
-              <span style="position:absolute;top:3px;left:${bannerVisible ? '23px' : '3px'};
-                width:18px;height:18px;border-radius:50%;background:#fff;
-                box-shadow:0 1px 3px rgba(0,0,0,.25);transition:0.2s;"
-                id="stg-thumb-banner_visible"></span>
-            </label>
-          </div>
-
-          <div class="adm-form-row" style="margin-top:10px;">
-            <label class="adm-form-label">배너 문구</label>
-            <input class="adm-input" id="adm-stg-banner-text"
-              value="${bannerText}"
-              placeholder="예: 🎉 베타 오픈 기간 무료 체험 진행 중!">
-          </div>
-
-          <div id="adm-stg-banner-preview" style="
-            margin:10px 0;border-radius:8px;padding:10px 14px;
-            background:#c8753a;color:#fff;font-size:0.842em;font-weight:600;
-            text-align:center;${bannerText && bannerVisible ? '' : 'display:none;'}">
-            ${bannerText}
-          </div>
-
-          <div style="display:flex;gap:8px;margin-top:4px;">
-            <button class="adm-btn adm-btn-accent" onclick="window.admSaveSettingBanner()">
-              저장
-            </button>
-            <button class="adm-btn adm-btn-ghost" onclick="window.admClearSettingBanner()">
-              배너 숨김
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- 안내 -->
-      <div class="adm-card" style="background:#fdf8f3;border-color:#e0c9b4;margin-top:0;">
-        <div class="adm-card-title">💡 설정 반영 안내</div>
-        <div style="font-size:0.8em;color:#5a3e2b;line-height:1.9;">
-          · 메뉴 ON/OFF는 <strong>앱 재접속 시</strong> 반영됩니다.<br>
-          · 배너는 <strong>홈 화면 진입 시</strong> DB에서 실시간 로드됩니다.<br>
-          · 관리자(admin) 메뉴는 OFF해도 관리자 계정에는 항상 표시됩니다.
-        </div>
-      <!-- 화면 영역 참고도 -->
-      <div class="adm-card" style="margin-top:14px;">
-        <div class="adm-card-title">🗺️ 화면 영역 참고도</div>
-        <div style="font-size:0.78em;color:#888;margin-bottom:12px;">각 영역의 역할과 관리자 제어 범위</div>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:0.8em;">
-
-          <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-            <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">A-1 &nbsp;·&nbsp; 상단 헤더</div>
-            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #e8ddd2;border-radius:6px;padding:6px 10px;">
-              <span style="font-weight:600;color:#3d2b1f;">🔖 원세컨드</span>
-              <span style="flex:1;"></span>
-              <span style="color:#888;">임태성 팀장 ▾</span>
-              <span style="background:#f0e6dc;color:#7a5238;padding:1px 7px;border-radius:8px;">✅ PRO</span>
-            </div>
-            <div style="color:#999;margin-top:5px;">제어 항목: 로고 문구</div>
-          </div>
-
-          <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-            <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">A-2 &nbsp;·&nbsp; 서브 헤더</div>
-            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:0.5px solid #e8ddd2;border-radius:6px;padding:6px 10px;">
-              <span style="color:#888;flex:1;">안녕하세요, 임태성 팀장님! 🔥</span>
-              <span style="background:#f5ede4;padding:2px 8px;border-radius:5px;color:#7a5238;">🔍 검색</span>
-              <span style="background:#f5ede4;padding:2px 8px;border-radius:5px;color:#7a5238;">⚡ 빠른실행</span>
-            </div>
-            <div style="color:#999;margin-top:5px;">제어 항목: ON/OFF · 검색/빠른실행 노출</div>
-          </div>
-
-          <div style="display:flex;gap:6px;">
-            <div style="width:110px;flex-shrink:0;border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-              <div style="font-weight:700;color:#3d2b1f;margin-bottom:6px;">B &nbsp;·&nbsp; 사이드 메뉴</div>
-              <div style="display:flex;flex-direction:column;gap:3px;">
-                <span style="background:#f0e6dc;color:#3d2b1f;padding:3px 7px;border-radius:5px;">🏠 홈</span>
-                <span style="color:#888;padding:3px 7px;">📋 스크립트</span>
-                <span style="color:#888;padding:3px 7px;">🗂 게시판</span>
-                <span style="color:#888;padding:3px 7px;">⚡ Quick</span>
-                <span style="color:#888;padding:3px 7px;">👤 MY SPACE</span>
-                <span style="color:#c8a96e;padding:3px 7px;">🛡️ 관리자</span>
-              </div>
-              <div style="color:#999;margin-top:6px;">제어: 항목별 ON/OFF</div>
-            </div>
-
-            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;gap:6px;">
-                <div style="flex:1;border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-                  <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">D-1 &nbsp;·&nbsp; 배너</div>
-                  <div style="background:#fff3e0;border-radius:5px;padding:4px 8px;text-align:center;color:#c8753a;">📢 공지 배너 문구</div>
-                  <div style="color:#999;margin-top:5px;">제어: ON/OFF · 문구</div>
-                </div>
-                <div style="width:88px;flex-shrink:0;border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-                  <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">C &nbsp;·&nbsp; 우측 패널</div>
-                  <div style="color:#888;line-height:1.8;">업그레이드<br>즐겨찾기<br>바로가기</div>
-                  <div style="color:#999;margin-top:4px;">제어: ON/OFF</div>
-                </div>
-              </div>
-              <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-                <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">D-2 &nbsp;·&nbsp; 페이지 헤더</div>
-                <div style="background:linear-gradient(135deg,#3d2b1f,#6b4226);border-radius:6px;padding:8px 12px;">
-                  <span style="color:#fff;font-weight:600;">📋 스크립트</span>
-                  <span style="display:block;color:rgba(255,255,255,0.55);font-size:0.9em;margin-top:1px;">TM 상담 흐름 스크립트 모음</span>
-                </div>
-                <div style="color:#999;margin-top:5px;">제어: ON/OFF · 페이지별 타이틀·부제</div>
-              </div>
-              <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-                <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">D-3 &nbsp;·&nbsp; 콘텐츠 영역</div>
-                <div style="display:flex;gap:6px;">
-                  <div style="flex:1;height:36px;background:#f5ede4;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#999;">스크립트 목록</div>
-                  <div style="flex:1;height:36px;background:#f5ede4;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#999;">상세 내용</div>
-                </div>
-                <div style="color:#999;margin-top:5px;">제어: 페이지별 콘텐츠 순서·문구</div>
-              </div>
-            </div>
-          </div>
-
-          <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
-            <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">E &nbsp;·&nbsp; 하단 푸터</div>
-            <div style="display:flex;gap:16px;background:#fff;border:0.5px solid #e8ddd2;border-radius:6px;padding:6px 10px;justify-content:center;">
-              <span style="color:#aaa;">© 원세컨드</span>
-              <span style="color:#aaa;">이용약관</span>
-              <span style="color:#aaa;">개인정보처리방침</span>
-              <span style="color:#aaa;">고객센터</span>
-            </div>
-            <div style="color:#999;margin-top:5px;">제어: ON/OFF · 링크·문구</div>
-          </div>
-
-        </div>
-      </div>\`;
-
-    admContent(html);
-  } catch(e) {
-    admContent('<div class="adm-empty">설정을 불러오지 못했습니다.</div>');
+    return;
   }
-};
+  window.admLoadUsers();
+}
 
-// 메뉴 토글 저장
-window.admToggleSetting = async function(key, checked) {
-  const val = checked ? 'on' : 'off';
-  // 토글 UI 즉시 반영
-  const track = document.getElementById('stg-track-' + key);
-  const thumb = document.getElementById('stg-thumb-' + key);
-  if (track) track.style.background = checked ? '#c8753a' : '#ddd';
-  if (thumb) thumb.style.left = checked ? '23px' : '3px';
-  try {
-    await admFetch(
-      window.SUPABASE_URL + '/rest/v1/app_settings?key=eq.' + key,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ value: val, updated_at: new Date().toISOString() })
-      }
-    );
-  } catch(e) { alert('저장 중 오류가 발생했습니다.'); }
-};
+/* ── appstate:ready 표준 패턴 ── */
+if (window.AppState && window.AppState.ready) {
+  _boot();
+} else {
+  document.addEventListener('appstate:ready', function () { _boot(); }, { once: true });
+}
 
-// 배너 문구 저장
-window.admSaveSettingBanner = async function() {
-  const text = (document.getElementById('adm-stg-banner-text') || {}).value?.trim() || '';
-  try {
-    await admFetch(
-      window.SUPABASE_URL + '/rest/v1/app_settings?key=eq.banner_text',
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ value: text, updated_at: new Date().toISOString() })
-      }
-    );
-    await admFetch(
-      window.SUPABASE_URL + '/rest/v1/app_settings?key=eq.banner_visible',
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ value: text ? 'on' : 'off', updated_at: new Date().toISOString() })
-      }
-    );
-    const preview = document.getElementById('adm-stg-banner-preview');
-    if (preview) {
-      if (text) { preview.textContent = text; preview.style.display = 'block'; }
-      else { preview.style.display = 'none'; }
-    }
-    alert('배너가 저장되었습니다.');
-  } catch(e) { alert('저장 중 오류가 발생했습니다.'); }
-};
-
-// 배너 숨김
-window.admClearSettingBanner = async function() {
-  try {
-    await admFetch(
-      window.SUPABASE_URL + '/rest/v1/app_settings?key=eq.banner_visible',
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ value: 'off', updated_at: new Date().toISOString() })
-      }
-    );
-    const inp = document.getElementById('adm-stg-banner-text');
-    if (inp) inp.value = '';
-    const preview = document.getElementById('adm-stg-banner-preview');
-    if (preview) preview.style.display = 'none';
-    alert('배너가 숨김 처리됐습니다.');
-  } catch(e) { alert('오류가 발생했습니다.'); }
-};
-
-// ── 초기 로드 ──
-window.admLoadUsers();
+})();
 </script>

@@ -1,161 +1,268 @@
 <style>
-:root{
-  --brown-main:#4a2f1f;
-  --brown-dark:#3b2416;
-  --accent:#c8753a;
-  --line:#e6dfd7;
-  --text:#2f2a26;
-}
-/* ── 페이지 헤더 ── */
-.quick-page-header {
-  height:120px;
-  background:linear-gradient(135deg, #3d2b1f 0%, #6b4226 100%);
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 24px; flex-shrink:0;
-}
-.quick-page-title {
-  font-family:Pretendard,'Noto Sans KR',sans-serif;
-  font-size:1.5em; font-weight:800;
-  color:#fff; letter-spacing:-0.5px; margin-bottom:6px;
-}
-.quick-page-desc {
-  font-family:Pretendard,'Noto Sans KR',sans-serif;
-  font-size:0.7895em; font-weight:400;
-  color:rgba(255,255,255,0.65); letter-spacing:-0.2px;
-}
-.quick-page-icon { font-size:2.8em; opacity:0.15; }
-.main-btns {
-  display:flex; gap:0; flex-wrap:wrap;
-  padding:4px 16px 0;
-  border-top:1px solid rgba(200,117,58,0.15);
-  border-bottom:1px solid #ddc8b4;
-  background:#faf8f5;
-  flex-shrink:0;
-}
-.main-btn {
-  padding:13px 16px; border-radius:0;
-  border:none; border-bottom:3px solid transparent;
-  background:transparent;
-  font-size:0.8947em; font-weight:600; color:#9a7a62;
-  font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s;
-}
-.main-btn:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); background:#f0e0d0; }
-.main-btn.active { color:#3b2416; border-bottom-color:#c8753a; font-weight:700; }
+/* ════════════════════════════════════════════════════════════
+   quick.html 전용 스타일
+   레이아웃 구조: _template.html 표준 (pg-outer / pg-header-block / pg-tab-block / pg-content-block / pg-footer-block)
+   design_guide.md 준수 — tokens.css 변수만 사용
+════════════════════════════════════════════════════════════ */
 
-.quick-frame-body {
-  display:grid; grid-template-columns:1fr 200px; gap:16px; align-items:start;
+/* ── 최상위 래퍼 ── */
+.pg-outer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface-2, #F3EFE9);
+  gap: 6px;
+  padding: 6px;
+  padding-bottom: 24px;
+  box-sizing: border-box;
 }
-.content-shell {
-  background:white; border:1px solid var(--line); border-radius:16px; overflow:hidden;
+
+/* ── ① 타이틀 블록 ── */
+.pg-header-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
 }
-.content-slot-header {
-  padding:12px 16px; background:#e8d5c2; border-bottom:1px solid #d4b8a0;
+.pg-page-header {
+  height: 120px;
+  background: linear-gradient(135deg, var(--color-brand, #A0522D) 0%, var(--color-brand-light, #C4733A) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
 }
-.content-slot-title { font-size:0.8947em; font-weight:800; color:#3b2416; }
-.content-slot {
-  padding:20px; min-height:300px; overflow-x:hidden;
-  overflow-wrap:anywhere; word-break:break-word;
+.pg-page-title {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 1.5em;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
 }
-.content-slot * { max-width:100%; overflow-wrap:anywhere; word-break:break-word; box-sizing:border-box; }
-.content-slot table { width:100%!important; table-layout:auto; }
-.next-btn {
-  text-align:center; padding:14px; font-size:0.7895em;
-  color:#aaa; font-style:italic; border-top:1px solid var(--line);
+.pg-page-desc {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 0.842em;
+  color: rgba(255, 255, 255, 0.65);
 }
-.right-panel { display:flex; flex-direction:column; gap:12px; }
-.panel-card { background:white; border:1px solid var(--line); border-radius:12px; padding:14px; }
-.panel-title { font-size:0.7895em; font-weight:800; color:#3b2416; margin-bottom:8px; }
-.panel-item {
-  font-size:0.7895em; color:var(--text); padding:6px 0;
-  border-bottom:1px solid var(--line); cursor:pointer;
+.pg-page-icon {
+  font-size: 2.8em;
+  opacity: 0.15;
 }
-.panel-item:last-child { border-bottom:none; }
-.panel-item:hover { color:var(--accent); }
-@media(max-width:900px){
-  .quick-frame-body { grid-template-columns:1fr; }
-  .right-panel { display:none; }
+
+/* ── ② 탭바 블록 ── */
+.pg-tab-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+}
+.pg-tab-bar {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  flex-wrap: wrap;
+  overflow-x: auto;
+}
+.pg-tab-btn {
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  font-size: 0.895em;
+  font-weight: 600;
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--color-text-secondary, #7A5C44);
+  border-bottom: 3px solid transparent;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.pg-tab-btn:hover { color: var(--color-text-primary, #3D2C1E); }
+.pg-tab-btn.active {
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+  border-bottom-color: var(--color-accent, #D4845A);
+}
+
+/* ── ③ 콘텐츠 블록 ── */
+.pg-content-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border, #E4DBCE);
+  background: var(--color-surface, #fff);
+}
+
+/* ── 콘텐츠 내부 레이아웃 (2열: 본문 + 우측 패널) ── */
+.qck-body-inner {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
+}
+.qck-content-shell {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+}
+.qck-content-head {
+  padding: 12px 16px;
+  background: var(--color-surface-2, #F3EFE9);
+  border-bottom: 1px solid var(--color-border, #E4DBCE);
+}
+.qck-content-head-title {
+  font-size: 0.895em;
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+}
+.qck-content-slot {
+  padding: 20px;
+  min-height: 300px;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.qck-content-slot * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+.qck-content-slot table { width: 100% !important; table-layout: auto; }
+
+/* ── 우측 패널 ── */
+.qck-right-panel { display: flex; flex-direction: column; gap: 12px; }
+.qck-panel-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px;
+}
+.qck-panel-title {
+  font-size: 0.790em;
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+  margin-bottom: 8px;
+}
+.qck-panel-item {
+  font-size: 0.790em;
+  color: var(--color-text-primary, #3D2C1E);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border, #E4DBCE);
+  cursor: pointer;
+}
+.qck-panel-item:last-child { border-bottom: none; }
+.qck-panel-item:hover { color: var(--color-accent, #D4845A); }
+
+/* ── ④ 푸터 블록 ── */
+.pg-footer-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pg-bottom-bar {
+  background: var(--color-brand, #A0522D);
+  color: #fff;
+  text-align: center;
+  font-size: 0.790em;
+  font-weight: 800;
+  padding: 10px 14px;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 900px) {
+  .qck-body-inner { grid-template-columns: 1fr; }
+  .qck-right-panel { display: none; }
 }
 </style>
 
-<div style="width:100%">
-<div class="quick-page-header">
-  <div>
-    <div class="quick-page-title">⚡ Quick 메뉴</div>
-    <div class="quick-page-desc">업무 지원 도구 · 녹취 스크립트 · 보험사 정보</div>
-  </div>
-  <div class="quick-page-icon">🛠️</div>
-</div>
-<div class="main-btns">
-  <button class="main-btn active" onclick="selectQuickMain(this,'가입설계 / 선심사 동의 녹취 스크립트')">가입설계 / 선심사 동의 녹취 스크립트</button>
-  <button class="main-btn" onclick="selectQuickMain(this,'회사별 BMI 심사기준')">회사별 BMI 심사기준</button>
-  <button class="main-btn" onclick="selectQuickMain(this,'보험연령표')">보험연령표</button>
-  <button class="main-btn" onclick="selectQuickMain(this,'보험회사 결제정보')">보험회사 결제정보</button>
-  <button class="main-btn" onclick="selectQuickMain(this,'미러링 전 녹취 스크립트')">미러링 전 녹취 스크립트</button>
-  <button class="main-btn" onclick="selectQuickMain(this,'원전산 설계 바로가기')">원전산 설계 바로가기</button>
-  <button class="main-btn" onclick="selectQuickMain(this,'보험회사 (모니터링) 연락처')">보험회사 (모니터링) 연락처</button>
-</div>
 
-<div class="quick-frame-body">
-  <div class="content-shell">
-    <div class="content-slot-header">
-      <div class="content-slot-title" id="content-title">가입설계 / 선심사 동의 녹취 스크립트</div>
-    </div>
-    <div class="content-slot" id="content-slot"></div>
-    <div class="next-btn">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
-  </div>
-  <div class="right-panel">
-    <div class="panel-card" id="right-recommended">
-      <div class="panel-title">🔥 추천 스크립트</div>
-      <div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">불러오는 중...</div>
-    </div>
-    <div class="panel-card" id="right-recent">
-      <div class="panel-title">🕐 최근 많이 본</div>
-      <div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">불러오는 중...</div>
+<div class="pg-outer" id="page-quick">
+
+  <!-- ① 타이틀 블록 -->
+  <div class="pg-header-block">
+    <div class="pg-page-header">
+      <div>
+        <div class="pg-page-title">⚡ Quick 메뉴</div>
+        <div class="pg-page-desc">업무 지원 도구 · 녹취 스크립트 · 보험사 정보</div>
+      </div>
+      <div class="pg-page-icon">🛠️</div>
     </div>
   </div>
-</div>
+
+  <!-- ② 탭바 블록 -->
+  <div class="pg-tab-block">
+    <div class="pg-tab-bar" id="quick-tab-bar">
+      <button class="pg-tab-btn active" onclick="window.selectQuickMain(this,'가입설계 / 선심사 동의 녹취 스크립트')">가입설계 / 선심사 동의 녹취 스크립트</button>
+      <button class="pg-tab-btn" onclick="window.selectQuickMain(this,'회사별 BMI 심사기준')">회사별 BMI 심사기준</button>
+      <button class="pg-tab-btn" onclick="window.selectQuickMain(this,'보험연령표')">보험연령표</button>
+      <button class="pg-tab-btn" onclick="window.selectQuickMain(this,'보험회사 결제정보')">보험회사 결제정보</button>
+      <button class="pg-tab-btn" onclick="window.selectQuickMain(this,'미러링 전 녹취 스크립트')">미러링 전 녹취 스크립트</button>
+      <button class="pg-tab-btn" onclick="window.selectQuickMain(this,'원전산 설계 바로가기')">원전산 설계 바로가기</button>
+      <button class="pg-tab-btn" onclick="window.selectQuickMain(this,'보험회사 (모니터링) 연락처')">보험회사 (모니터링) 연락처</button>
+    </div>
+  </div>
+
+  <!-- ③ 콘텐츠 블록 -->
+  <div class="pg-content-block">
+    <div class="qck-body-inner">
+      <div class="qck-content-shell">
+        <div class="qck-content-head">
+          <div class="qck-content-head-title" id="qck-content-title">가입설계 / 선심사 동의 녹취 스크립트</div>
+        </div>
+        <div class="qck-content-slot" id="qck-content-slot"></div>
+      </div>
+      <div class="qck-right-panel">
+        <div class="qck-panel-card" id="qck-right-recommended">
+          <div class="qck-panel-title">🔥 추천 스크립트</div>
+          <div style="font-size:0.690em;color:var(--color-text-tertiary,#B89880);padding:4px 0;">불러오는 중...</div>
+        </div>
+        <div class="qck-panel-card" id="qck-right-recent">
+          <div class="qck-panel-title">🕐 최근 많이 본</div>
+          <div style="font-size:0.690em;color:var(--color-text-tertiary,#B89880);padding:4px 0;">불러오는 중...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 푸터 블록 -->
+  <div class="pg-footer-block">
+    <div class="pg-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
+  </div>
+
+</div><!-- /.pg-outer -->
+
 
 <script>
-// ── quick.html 전체 스크립트 ──
-// app.html의 IIFE 래핑(switchMenu)과 충돌하지 않도록
-// 최상위에 window.* 선언만 두고, 로직은 모두 window.* 함수로 등록
+(function() {
+'use strict';
 
-// overlayContent 캐시 초기화
-if (!window.overlayContent) window.overlayContent = {};
+/* ── 캐시 초기화 ── */
+if (!window._qckCache) window._qckCache = {};
 
-// ── DB fetch: quick_contents 전체 로드 ──
+/* ── DB fetch: quick_contents 전체 로드 ── */
 window._loadQuickContents = async function() {
   try {
-    var supaUrl = window.SUPABASE_URL;
-    if (!supaUrl) { console.error('SUPABASE_URL 미설정'); return false; }
-
-    var res;
-    try {
-      res = await fetchWithAuth(
-        supaUrl + '/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html'
-      );
-    } catch(fetchErr) {
-      if (fetchErr.message === 'TOKEN_EXPIRED') return false;
-      throw fetchErr;
-    }
-
+    var res = await window.db.fetch(
+      '/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html'
+    );
     if (!res.ok) {
       console.error('quick_contents fetch 실패:', res.status);
       return false;
     }
-
     var data = await res.json();
     if (!data || !data.length) {
       console.warn('quick_contents: 데이터 없음');
       return false;
     }
-
     data.forEach(function(row) {
       if (row.tab_title && row.content_html) {
-        window.overlayContent[row.tab_title] = row.content_html;
+        window._qckCache[row.tab_title] = row.content_html;
       }
     });
-
     return true;
   } catch(e) {
     console.error('quick_contents fetch 오류:', e);
@@ -163,112 +270,131 @@ window._loadQuickContents = async function() {
   }
 };
 
-// ── 초기화: content-slot에 기본 탭 렌더 ──
-window._initQuickSlot = function(retry) {
-  retry = retry || 0;
-  var slot = document.getElementById('content-slot');
-  if (!slot) {
-    if (retry < 20) setTimeout(function() { window._initQuickSlot(retry + 1); }, 50);
-    else console.warn('quick: content-slot DOM을 찾지 못했습니다.');
-    return;
-  }
+/* ── 콘텐츠 슬롯 초기화 ── */
+window._initQuickSlot = function() {
+  var slot = document.getElementById('qck-content-slot');
+  if (!slot) { console.warn('quick: qck-content-slot DOM 없음'); return; }
 
   var defaultKey = '가입설계 / 선심사 동의 녹취 스크립트';
-  slot.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:0.8947em;">불러오는 중...</div>';
-  var titleEl = document.getElementById('content-title');
+  slot.innerHTML = '<div style="padding:40px;text-align:center;color:var(--color-text-tertiary,#B89880);font-size:0.842em;">불러오는 중...</div>';
+
+  var titleEl = document.getElementById('qck-content-title');
   if (titleEl) titleEl.textContent = defaultKey;
 
   window._loadQuickContents().then(function(ok) {
     var html;
-    if (ok && window.overlayContent[defaultKey]) {
-      html = window.overlayContent[defaultKey];
+    if (ok && window._qckCache[defaultKey]) {
+      html = window._qckCache[defaultKey];
     } else if (!ok) {
-      html = '<div style="padding:40px;text-align:center;color:#c0392b;font-size:0.8947em;">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+      html = '<div style="padding:40px;text-align:center;color:var(--color-text-tertiary,#B89880);font-size:0.842em;">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
     } else {
-      html = '<div style="padding:40px;text-align:center;color:#aaa;font-size:0.8947em;">준비 중입니다.</div>';
+      html = '<div style="padding:40px;text-align:center;color:var(--color-text-tertiary,#B89880);font-size:0.842em;">준비 중입니다.</div>';
     }
     slot.innerHTML = html;
-    window._quickReady = true;
   });
 };
 
-// ── 탭 클릭 ──
+/* ── 탭 클릭 ── */
 window.selectQuickMain = function(btn, title) {
-  document.querySelectorAll('.main-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('#quick-tab-bar .pg-tab-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
-  var titleEl = document.getElementById('content-title');
-  var slot = document.getElementById('content-slot');
+  var titleEl = document.getElementById('qck-content-title');
+  var slot = document.getElementById('qck-content-slot');
   if (titleEl) titleEl.textContent = title;
-  if (slot) slot.innerHTML = window.overlayContent[title] || '<div style="padding:40px;text-align:center;color:#aaa;">준비 중입니다.</div>';
+  if (slot) slot.innerHTML = window._qckCache[title] ||
+    '<div style="padding:40px;text-align:center;color:var(--color-text-tertiary,#B89880);font-size:0.842em;">준비 중입니다.</div>';
   ['mirror-meritz','mirror-heungkuk'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
 };
 
-// ── 미러링 토글 ──
+/* ── 미러링 토글 (quick_contents에서 호출) ── */
 window.toggleMirrorScript = function(company) {
-  var meritz = document.getElementById('mirror-meritz');
+  var meritz   = document.getElementById('mirror-meritz');
   var heungkuk = document.getElementById('mirror-heungkuk');
   if (!meritz || !heungkuk) return;
   if (company === 'meritz') {
-    meritz.style.display = meritz.style.display === 'none' ? 'block' : 'none';
+    meritz.style.display   = meritz.style.display   === 'none' ? 'block' : 'none';
     heungkuk.style.display = 'none';
   } else {
     heungkuk.style.display = heungkuk.style.display === 'none' ? 'block' : 'none';
-    meritz.style.display = 'none';
+    meritz.style.display   = 'none';
   }
 };
 
-// ── 우측 패널 ──
+/* ── 우측 패널 로드 ── */
 window._initQuickPanel = function() {
-  var supaUrl = window.SUPABASE_URL;
-  if (!supaUrl || !window._userToken) return;
+  if (!window.db || !window.AppState || !window.AppState.ready) return;
 
-  fetchWithAuth(supaUrl + '/rest/v1/scripts?is_recommended=eq.true&select=title&limit=5')
-  .then(function(r) { return r.json(); }).then(function(data) {
-    var card = document.getElementById('right-recommended');
+  /* 추천 스크립트 */
+  window.db.fetch('/rest/v1/scripts?is_recommended=eq.true&select=title&limit=5')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var card = document.getElementById('qck-right-recommended');
     if (!card) return;
     if (data && data.length) {
-      card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div>' +
-        data.map(function(s) { return '<div class="panel-item">' + s.title + '</div>'; }).join('');
+      card.innerHTML = '<div class="qck-panel-title">🔥 추천 스크립트</div>' +
+        data.map(function(s) {
+          return '<div class="qck-panel-item">' + s.title + '</div>';
+        }).join('');
     } else {
-      card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">추천 스크립트가 없습니다.</div>';
+      card.innerHTML = '<div class="qck-panel-title">🔥 추천 스크립트</div>' +
+        '<div style="font-size:0.690em;color:var(--color-text-tertiary,#B89880);padding:4px 0;">추천 스크립트가 없습니다.</div>';
     }
-  }).catch(function(){
-    var card = document.getElementById('right-recommended');
-    if (card) card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">불러오지 못했습니다.</div>';
+  })
+  .catch(function() {
+    var card = document.getElementById('qck-right-recommended');
+    if (card) card.innerHTML = '<div class="qck-panel-title">🔥 추천 스크립트</div>' +
+      '<div style="font-size:0.690em;color:var(--color-text-tertiary,#B89880);padding:4px 0;">불러오지 못했습니다.</div>';
   });
 
-  var userId = window._userId;
+  /* 최근 많이 본 */
+  var userId = window.AppState.userId;
   if (userId) {
-    fetchWithAuth(supaUrl + '/rest/v1/script_usage_logs?user_id=eq.' + userId + '&select=script_title&order=created_at.desc&limit=20')
-    .then(function(r) { return r.json(); }).then(function(data) {
-      var seen = {};
-      var unique = [];
+    window.db.fetch(
+      '/rest/v1/script_usage_logs?user_id=eq.' + userId +
+      '&select=script_title&order=created_at.desc&limit=20'
+    )
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var seen = {}, unique = [];
       if (data) data.forEach(function(d) {
         if (!seen[d.script_title]) { seen[d.script_title] = true; unique.push(d); }
       });
       unique = unique.slice(0, 5);
-      var card = document.getElementById('right-recent');
+      var card = document.getElementById('qck-right-recent');
       if (!card) return;
       if (unique.length) {
-        card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div>' +
-          unique.map(function(s) { return '<div class="panel-item">' + s.script_title + '</div>'; }).join('');
+        card.innerHTML = '<div class="qck-panel-title">🕐 최근 많이 본</div>' +
+          unique.map(function(s) {
+            return '<div class="qck-panel-item">' + s.script_title + '</div>';
+          }).join('');
       } else {
-        card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">최근 기록이 없습니다.</div>';
+        card.innerHTML = '<div class="qck-panel-title">🕐 최근 많이 본</div>' +
+          '<div style="font-size:0.690em;color:var(--color-text-tertiary,#B89880);padding:4px 0;">최근 기록이 없습니다.</div>';
       }
-    }).catch(function(){
-      var card = document.getElementById('right-recent');
-      if (card) card.innerHTML = '<div class="panel-title">🕐 최근 많이 본</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">불러오지 못했습니다.</div>';
+    })
+    .catch(function() {
+      var card = document.getElementById('qck-right-recent');
+      if (card) card.innerHTML = '<div class="qck-panel-title">🕐 최근 많이 본</div>' +
+        '<div style="font-size:0.690em;color:var(--color-text-tertiary,#B89880);padding:4px 0;">불러오지 못했습니다.</div>';
     });
   }
 };
 
-// ── 실행 ──
-setTimeout(function() {
+/* ── 부트 ── */
+function _boot() {
   window._initQuickSlot();
   window._initQuickPanel();
-}, 100);
+}
 
+/* ── appstate:ready 표준 패턴 ── */
+if (window.AppState && window.AppState.ready) {
+  _boot();
+} else {
+  document.addEventListener('appstate:ready', function() { _boot(); }, { once: true });
+}
+
+})();
 </script>
