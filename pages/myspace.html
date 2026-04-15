@@ -44,7 +44,7 @@ button, input { font-family: inherit; }
 
 .main-btn:hover { background:#f0e0d0; }
 
-.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; max-width:680px; margin:0 auto; }
+.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; }
 
 .content-slot-header { background:#fff; border:1px solid var(--line); border-radius:14px 14px 0 0; padding:18px 20px 14px; border-bottom:none; }
 .content-slot-title { font-size:0.8947em; font-weight:800; }
@@ -395,7 +395,7 @@ button, input { font-family: inherit; }
 
 .main-btn:hover { background:#f0e0d0; }
 
-.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; max-width:680px; margin:0 auto; }
+.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; }
 
 .content-slot-header { background:#fff; border:1px solid var(--line); border-radius:14px 14px 0 0; padding:18px 20px 14px; border-bottom:none; }
 .content-slot-title { font-size:0.8947em; font-weight:800; }
@@ -682,6 +682,10 @@ if (!window.SUPABASE_KEY) window.SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1
 if (!window.ROLE_LABEL) window.ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
 if (!window._userToken) window._userToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 if (!window._userId) { const _a = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); window._userId = _a.id; }
+
+// ── 준비 완료 신호 ──
+// app.html switchMenu()의 폴링이 이 플래그를 확인하고 renderMySpaceView를 호출함
+window._myspaceReady = true;
 
 // ── 스크립트 저장 ──
 window.saveScriptToSupabase = async function() {
