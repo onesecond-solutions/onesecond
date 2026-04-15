@@ -39,9 +39,8 @@
   font-size:0.8947em; font-weight:600; color:#9a7a62;
   font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s;
 }
-.main-btn:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); }
+.main-btn:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); background:#f0e0d0; }
 .main-btn.active { color:#3b2416; border-bottom-color:#c8753a; font-weight:700; }
-.main-btn:hover { background:#f0e0d0; border-color:#c8a080; }
 
 .quick-frame-body {
   display:grid; grid-template-columns:1fr 200px; gap:16px; align-items:start;
@@ -78,7 +77,7 @@
 }
 </style>
 
-<div>
+<div style="width:100%">
 <div class="quick-page-header">
   <div>
     <div class="quick-page-title">⚡ Quick 메뉴</div>
@@ -127,7 +126,8 @@ if (!window.overlayContent) window.overlayContent = {};
 // ── DB fetch: quick_contents 전체 로드 ──
 window._loadQuickContents = async function() {
   try {
-    var supaUrl = window.SUPABASE_URL || 'https://qursjteiovcylqiepmlo.supabase.co';
+    var supaUrl = window.SUPABASE_URL;
+    if (!supaUrl) { console.error('SUPABASE_URL 미설정'); return false; }
 
     var res;
     try {
@@ -164,10 +164,12 @@ window._loadQuickContents = async function() {
 };
 
 // ── 초기화: content-slot에 기본 탭 렌더 ──
-window._initQuickSlot = function() {
+window._initQuickSlot = function(retry) {
+  retry = retry || 0;
   var slot = document.getElementById('content-slot');
   if (!slot) {
-    setTimeout(window._initQuickSlot, 50);
+    if (retry < 20) setTimeout(function() { window._initQuickSlot(retry + 1); }, 50);
+    else console.warn('quick: content-slot DOM을 찾지 못했습니다.');
     return;
   }
 
@@ -220,10 +222,8 @@ window.toggleMirrorScript = function(company) {
 
 // ── 우측 패널 ──
 window._initQuickPanel = function() {
-  var supaUrl = window.SUPABASE_URL || 'https://qursjteiovcylqiepmlo.supabase.co';
-  var userId = window._userId;
-
-  if (!window._userToken) return;
+  var supaUrl = window.SUPABASE_URL;
+  if (!supaUrl || !window._userToken) return;
 
   fetchWithAuth(supaUrl + '/rest/v1/scripts?is_recommended=eq.true&select=title&limit=5')
   .then(function(r) { return r.json(); }).then(function(data) {
@@ -240,6 +240,7 @@ window._initQuickPanel = function() {
     if (card) card.innerHTML = '<div class="panel-title">🔥 추천 스크립트</div><div style="font-size:0.6875em;color:#9a7a62;padding:4px 0;">불러오지 못했습니다.</div>';
   });
 
+  var userId = window._userId;
   if (userId) {
     fetchWithAuth(supaUrl + '/rest/v1/script_usage_logs?user_id=eq.' + userId + '&select=script_title&order=created_at.desc&limit=20')
     .then(function(r) { return r.json(); }).then(function(data) {
