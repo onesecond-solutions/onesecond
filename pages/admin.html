@@ -705,10 +705,145 @@ window.admTogglePost = async function(id, field, val) {
 window.admLoadLogs = async function() {
   admContent('<div class="adm-loading">로그 로딩 중...</div>');
   try {
-    // 스크립트 사용 로그
+    const role = window._userRole || '';
+    const isMgr = role === 'manager';
+    const isBranch = role === 'branch_manager';
+    const isAdmin = role === 'admin';
+
+    // ── 팀원 접속 현황 (manager / branch_manager / admin) ──
+    let memberHtml = '';
+    if (isMgr || isBranch || isAdmin) {
+      // 내 소속 정보 조회
+      const meRes = await admFetch(
+        window.SUPABASE_URL + '/rest/v1/users?id=eq.' + (window._userId || '') +
+        '&select=branch,team&limit=1'
+      );
+      const meData = meRes.ok ? await meRes.json() : [];
+      const myBranch = (meData[0] && meData[0].branch) || '';
+      const myTeam   = (meData[0] && meData[0].team)   || '';
+
+      // 조회 대상 users 필터
+      let usersFilter = '';
+      if (isAdmin) {
+        usersFilter = 'role=in.(member,manager,branch_manager)&order=branch,team,name';
+      } else if (isBranch) {
+        usersFilter = 'branch=eq.' + encodeURIComponent(myBranch) +
+                      '&role=in.(member,manager)&order=team,name';
+      } else {
+        // manager: 같은 팀 member만
+        usersFilter = 'team=eq.' + encodeURIComponent(myTeam) +
+                      '&role=eq.member&order=name';
+      }
+
+      const membersRes = await admFetch(
+        window.SUPABASE_URL + '/rest/v1/users?' + usersFilter +
+        '&select=id,auth_user_id,name,role,team,branch'
+      );
+      const members = membersRes.ok ? await membersRes.json() : [];
+
+      if (members.length > 0) {
+        // 오늘 날짜 기준
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        // 대상자 auth_user_id 목록
+        const authIds = members.map(m => m.auth_user_id).filter(Boolean);
+
+        // 접속 로그 (login 이벤트) — 최근 30일
+        const since = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+        const loginRes = await admFetch(
+          window.SUPABASE_URL + '/rest/v1/activity_logs' +
+          '?event_type=eq.login' +
+          '&created_at=gte.' + since +
+          '&select=user_id,created_at' +
+          '&order=created_at.desc&limit=1000'
+        );
+        const loginLogs = loginRes.ok ? await loginRes.json() : [];
+
+        // 스크립트 사용 로그 — 최근 30일
+        const scriptLogRes = await admFetch(
+          window.SUPABASE_URL + '/rest/v1/activity_logs' +
+          '?event_type=eq.script_view' +
+          '&created_at=gte.' + since +
+          '&select=user_id,created_at' +
+          '&limit=2000'
+        );
+        const scriptLogs = scriptLogRes.ok ? await scriptLogRes.json() : [];
+
+        // user_id 기준 집계
+        const loginMap  = {};  // user_id → 최근 접속일시
+        const todayMap  = {};  // user_id → 오늘 접속 여부
+        const scriptToday = {}; // user_id → 오늘 스크립트 사용 수
+        const scriptTotal = {}; // user_id → 누적 스크립트 사용 수
+
+        loginLogs.forEach(l => {
+          if (!loginMap[l.user_id]) loginMap[l.user_id] = l.created_at;
+          if (l.created_at && l.created_at.slice(0,10) === todayStr) todayMap[l.user_id] = true;
+        });
+        scriptLogs.forEach(l => {
+          scriptTotal[l.user_id] = (scriptTotal[l.user_id] || 0) + 1;
+          if (l.created_at && l.created_at.slice(0,10) === todayStr)
+            scriptToday[l.user_id] = (scriptToday[l.user_id] || 0) + 1;
+        });
+
+        const roleLabel = { member:'설계사', manager:'실장', branch_manager:'지점장' };
+
+        memberHtml = `
+          <div class="adm-card" style="margin-bottom:14px;">
+            <div class="adm-card-title">👥 팀원 접속 현황 <span style="font-size:0.78em;color:#aaa;font-weight:400;">(최근 30일 기준)</span></div>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:0.8em;">
+                <thead>
+                  <tr style="background:#f5ede4;text-align:left;">
+                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">이름</th>
+                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">역할</th>
+                    ${isAdmin || isBranch ? '<th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">팀</th>' : ''}
+                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">오늘 접속</th>
+                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">최근 접속</th>
+                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">오늘 스크립트</th>
+                    <th style="padding:8px 10px;color:#5a3e2b;font-weight:700;">누적 스크립트</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${members.map((m, i) => {
+                    const uid = m.auth_user_id;
+                    const lastLogin = loginMap[uid];
+                    const isToday = !!todayMap[uid];
+                    const sCnt = scriptToday[uid] || 0;
+                    const sTotal = scriptTotal[uid] || 0;
+                    const lastStr = lastLogin
+                      ? admTimeAgo(lastLogin)
+                      : '<span style="color:#ccc;">없음</span>';
+                    const todayBadge = isToday
+                      ? '<span style="background:#d4edda;color:#1a6630;padding:2px 8px;border-radius:10px;font-weight:700;">✅ 접속</span>'
+                      : '<span style="background:#f0f0f0;color:#aaa;padding:2px 8px;border-radius:10px;">미접속</span>';
+                    const bg = i % 2 === 0 ? '#fff' : '#fdf9f6';
+                    return `<tr style="background:${bg};border-bottom:1px solid #f0e6dc;">
+                      <td style="padding:8px 10px;font-weight:600;color:#3d2b1f;">${m.name || '-'}</td>
+                      <td style="padding:8px 10px;color:#7a5c44;">${roleLabel[m.role] || m.role}</td>
+                      ${isAdmin || isBranch ? `<td style="padding:8px 10px;color:#7a5c44;">${m.team || '-'}</td>` : ''}
+                      <td style="padding:8px 10px;">${todayBadge}</td>
+                      <td style="padding:8px 10px;color:#888;">${lastStr}</td>
+                      <td style="padding:8px 10px;text-align:center;color:${sCnt > 0 ? '#c8753a' : '#ccc'};font-weight:${sCnt > 0 ? '700' : '400'};">${sCnt > 0 ? sCnt + '회' : '-'}</td>
+                      <td style="padding:8px 10px;text-align:center;color:${sTotal > 0 ? '#3d2b1f' : '#ccc'};font-weight:${sTotal > 0 ? '600' : '400'};">${sTotal > 0 ? sTotal + '회' : '-'}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      } else {
+        memberHtml = `
+          <div class="adm-card" style="margin-bottom:14px;">
+            <div class="adm-card-title">👥 팀원 접속 현황</div>
+            <div class="adm-empty" style="padding:20px;">조회 가능한 팀원이 없습니다.<br><small style="color:#ccc;">소속 팀/지점 정보가 설정되어 있는지 확인해 주세요.</small></div>
+          </div>`;
+      }
+    }
+
+    // 스크립트 사용 로그 (admin 전용 통계)
     const [logRes, scriptRes] = await Promise.all([
       admFetch(window.SUPABASE_URL + '/rest/v1/activity_logs?select=id,event_type,target_type,target_id,created_at,users(name)&order=created_at.desc&limit=50'),
-      admFetch(window.SUPABASE_URL + '/rest/v1/activity_logs?select=target_id,scripts(title)&event_type=eq.view_script&limit=500')
+      admFetch(window.SUPABASE_URL + '/rest/v1/activity_logs?select=target_id,scripts(title)&event_type=eq.script_view&limit=500')
     ]);
 
     const logs = logRes.ok ? await logRes.json() : [];
@@ -725,11 +860,11 @@ window.admLoadLogs = async function() {
       .slice(0,10);
 
     const eventIcon = {
-      login:'🔑', view_script:'📋', click_quick:'⚡',
+      login:'🔑', script_view:'📋', click_quick:'⚡',
       add_favorite:'⭐', open_post:'💬', search:'🔍'
     };
 
-    let html = `
+    let html = memberHtml + `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
         <div class="adm-card">
           <div class="adm-card-title">🏆 인기 스크립트 TOP 10</div>`;
@@ -764,7 +899,7 @@ window.admLoadLogs = async function() {
         const icon = eventIcon[l.event_type] || '📌';
         const name = (l.users && l.users.name) || '알 수 없음';
         const eventMap = {
-          login:'로그인', view_script:'스크립트 조회', click_quick:'Quick 메뉴',
+          login:'로그인', script_view:'스크립트 조회', click_quick:'Quick 메뉴',
           add_favorite:'즐겨찾기 추가', open_post:'게시글 조회', search:'검색'
         };
         const event = eventMap[l.event_type] || l.event_type;
@@ -1067,7 +1202,92 @@ window.admLoadSettings = async function() {
           · 배너는 <strong>홈 화면 진입 시</strong> DB에서 실시간 로드됩니다.<br>
           · 관리자(admin) 메뉴는 OFF해도 관리자 계정에는 항상 표시됩니다.
         </div>
-      </div>`;
+      <!-- 화면 영역 참고도 -->
+      <div class="adm-card" style="margin-top:14px;">
+        <div class="adm-card-title">🗺️ 화면 영역 참고도</div>
+        <div style="font-size:0.78em;color:#888;margin-bottom:12px;">각 영역의 역할과 관리자 제어 범위</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:0.8em;">
+
+          <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+            <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">A-1 &nbsp;·&nbsp; 상단 헤더</div>
+            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #e8ddd2;border-radius:6px;padding:6px 10px;">
+              <span style="font-weight:600;color:#3d2b1f;">🔖 원세컨드</span>
+              <span style="flex:1;"></span>
+              <span style="color:#888;">임태성 팀장 ▾</span>
+              <span style="background:#f0e6dc;color:#7a5238;padding:1px 7px;border-radius:8px;">✅ PRO</span>
+            </div>
+            <div style="color:#999;margin-top:5px;">제어 항목: 로고 문구</div>
+          </div>
+
+          <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+            <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">A-2 &nbsp;·&nbsp; 서브 헤더</div>
+            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:0.5px solid #e8ddd2;border-radius:6px;padding:6px 10px;">
+              <span style="color:#888;flex:1;">안녕하세요, 임태성 팀장님! 🔥</span>
+              <span style="background:#f5ede4;padding:2px 8px;border-radius:5px;color:#7a5238;">🔍 검색</span>
+              <span style="background:#f5ede4;padding:2px 8px;border-radius:5px;color:#7a5238;">⚡ 빠른실행</span>
+            </div>
+            <div style="color:#999;margin-top:5px;">제어 항목: ON/OFF · 검색/빠른실행 노출</div>
+          </div>
+
+          <div style="display:flex;gap:6px;">
+            <div style="width:110px;flex-shrink:0;border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+              <div style="font-weight:700;color:#3d2b1f;margin-bottom:6px;">B &nbsp;·&nbsp; 사이드 메뉴</div>
+              <div style="display:flex;flex-direction:column;gap:3px;">
+                <span style="background:#f0e6dc;color:#3d2b1f;padding:3px 7px;border-radius:5px;">🏠 홈</span>
+                <span style="color:#888;padding:3px 7px;">📋 스크립트</span>
+                <span style="color:#888;padding:3px 7px;">🗂 게시판</span>
+                <span style="color:#888;padding:3px 7px;">⚡ Quick</span>
+                <span style="color:#888;padding:3px 7px;">👤 MY SPACE</span>
+                <span style="color:#c8a96e;padding:3px 7px;">🛡️ 관리자</span>
+              </div>
+              <div style="color:#999;margin-top:6px;">제어: 항목별 ON/OFF</div>
+            </div>
+
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;gap:6px;">
+                <div style="flex:1;border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+                  <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">D-1 &nbsp;·&nbsp; 배너</div>
+                  <div style="background:#fff3e0;border-radius:5px;padding:4px 8px;text-align:center;color:#c8753a;">📢 공지 배너 문구</div>
+                  <div style="color:#999;margin-top:5px;">제어: ON/OFF · 문구</div>
+                </div>
+                <div style="width:88px;flex-shrink:0;border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+                  <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">C &nbsp;·&nbsp; 우측 패널</div>
+                  <div style="color:#888;line-height:1.8;">업그레이드<br>즐겨찾기<br>바로가기</div>
+                  <div style="color:#999;margin-top:4px;">제어: ON/OFF</div>
+                </div>
+              </div>
+              <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+                <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">D-2 &nbsp;·&nbsp; 페이지 헤더</div>
+                <div style="background:linear-gradient(135deg,#3d2b1f,#6b4226);border-radius:6px;padding:8px 12px;">
+                  <span style="color:#fff;font-weight:600;">📋 스크립트</span>
+                  <span style="display:block;color:rgba(255,255,255,0.55);font-size:0.9em;margin-top:1px;">TM 상담 흐름 스크립트 모음</span>
+                </div>
+                <div style="color:#999;margin-top:5px;">제어: ON/OFF · 페이지별 타이틀·부제</div>
+              </div>
+              <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+                <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">D-3 &nbsp;·&nbsp; 콘텐츠 영역</div>
+                <div style="display:flex;gap:6px;">
+                  <div style="flex:1;height:36px;background:#f5ede4;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#999;">스크립트 목록</div>
+                  <div style="flex:1;height:36px;background:#f5ede4;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#999;">상세 내용</div>
+                </div>
+                <div style="color:#999;margin-top:5px;">제어: 페이지별 콘텐츠 순서·문구</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border:0.5px solid #e0cfc4;border-radius:8px;padding:8px 12px;background:#fdf8f3;">
+            <div style="font-weight:700;color:#3d2b1f;margin-bottom:4px;">E &nbsp;·&nbsp; 하단 푸터</div>
+            <div style="display:flex;gap:16px;background:#fff;border:0.5px solid #e8ddd2;border-radius:6px;padding:6px 10px;justify-content:center;">
+              <span style="color:#aaa;">© 원세컨드</span>
+              <span style="color:#aaa;">이용약관</span>
+              <span style="color:#aaa;">개인정보처리방침</span>
+              <span style="color:#aaa;">고객센터</span>
+            </div>
+            <div style="color:#999;margin-top:5px;">제어: ON/OFF · 링크·문구</div>
+          </div>
+
+        </div>
+      </div>\`;
 
     admContent(html);
   } catch(e) {

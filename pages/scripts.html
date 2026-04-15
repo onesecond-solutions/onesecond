@@ -274,6 +274,24 @@ window.scSelectScript = function(el, color, idx) {
   var scripts = window._sc_cache['group_' + color] || [];
   var sc = scripts[idx];
   if (!sc) return;
+  // 스크립트 사용 로그 INSERT
+  if (window._userId && window._userToken) {
+    fetch(window.SUPABASE_URL + '/rest/v1/activity_logs', {
+      method: 'POST',
+      headers: {
+        'apikey': window.SUPABASE_KEY,
+        'Authorization': 'Bearer ' + window._userToken,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        user_id: window._userId,
+        event_type: 'script_view',
+        target_type: 'script',
+        target_id: String(sc.id)
+      })
+    }).catch(function(){});
+  }
   window.scUpdateTab(color);
   var col2 = document.getElementById('sc-scripts-' + color);
   if (col2) {
