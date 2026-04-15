@@ -1055,9 +1055,9 @@ async function doSubmit(){
     });
     const authData = await authRes.json();
 
-    if (!authRes.ok || !authData.user) {
-      const msg = authData.msg || authData.error_description || '';
-      if (msg.includes('already registered') || msg.includes('already been registered')) {
+    if (!authRes.ok) {
+      const msg = authData.msg || authData.error_description || authData.error || '';
+      if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('User already registered')) {
         alert('이미 가입된 이메일입니다. 로그인 페이지를 이용해 주세요.');
       } else {
         alert('가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
@@ -1066,29 +1066,32 @@ async function doSubmit(){
       return;
     }
 
-    const userId = authData.user.id;
+    // 이메일 인증 ON: user가 null일 수 있음 (인증 후 확정) → id는 identities에서 추출
+    const userId = authData.user?.id || authData.identities?.[0]?.user_id || null;
 
-    // 2단계: users 테이블에 추가 정보 저장
-    const profileData = {
-      id:      userId,
-      name:    document.getElementById('f-name').value.trim(),
-      phone:   document.getElementById('f-phone').value.trim(),
-      email:   email,
-      company: document.getElementById('f-company').value.trim(),
-      role:    document.getElementById('f-role').value,
-      team:    (document.getElementById('f-team') ? document.getElementById('f-team').value.trim() : ''),
-    };
+    // 2단계: userId 확보된 경우에만 users 테이블에 추가 정보 저장
+    if (userId) {
+      const profileData = {
+        id:      userId,
+        name:    document.getElementById('f-name').value.trim(),
+        phone:   document.getElementById('f-phone').value.trim(),
+        email:   email,
+        company: document.getElementById('f-company').value.trim(),
+        role:    document.getElementById('f-role').value,
+        team:    (document.getElementById('f-team') ? document.getElementById('f-team').value.trim() : ''),
+      };
 
-    await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(profileData)
-    });
+      await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(profileData)
+      });
+    }
 
     // 성공 화면 - 이메일 인증 안내
     const descEl = document.getElementById('success-email-desc');
