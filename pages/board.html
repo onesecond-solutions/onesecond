@@ -616,6 +616,8 @@ function _boot() {
   var s = window.AppState;
   if (s && s.org) {
     _userOrg = s.org;
+    _switchBoard('hub');
+    _bindOverlayClose();
   } else if (s && s.userId) {
     window.db.fetch('/rest/v1/users?id=eq.' + s.userId + '&select=company,branch,team')
       .then(function(r) { return r.json(); })
@@ -627,11 +629,18 @@ function _boot() {
             team:    data[0].team    || ''
           };
         }
+        _switchBoard('hub');
+        _bindOverlayClose();
       })
-      .catch(function(e) { console.warn('org 로드 실패', e); });
+      .catch(function(e) {
+        console.warn('org 로드 실패', e);
+        _switchBoard('hub');
+        _bindOverlayClose();
+      });
+  } else {
+    _switchBoard('hub');
+    _bindOverlayClose();
   }
-  _switchBoard('hub');
-  _bindOverlayClose();
 }
 
 if (window.AppState && window.AppState.ready) {
