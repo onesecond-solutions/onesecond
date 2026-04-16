@@ -8,7 +8,7 @@
 
 /* ── 6px 갭 래퍼 ── */
 .mys-outer {
-  background: #ede8e3;
+  background: var(--color-surface-2, #F3EFE9);
   padding: 6px;
   padding-bottom: 24px;
   display: flex;
@@ -20,23 +20,23 @@
 
 /* ── 페이지 헤더 블록 ── */
 .mys-page-header {
-  height:120px;
-  background:linear-gradient(135deg, #7B3F1E 0%, #A0522D 100%);
-  border-radius: 10px;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 24px; flex-shrink:0;
+  height: 120px;
+  background: linear-gradient(135deg, var(--color-brand, #A0522D) 0%, var(--color-brand-light, #C4733A) 100%);
+  border-radius: var(--radius-md, 12px);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; flex-shrink: 0;
 }
 .mys-page-title {
-  font-family:Pretendard,'Noto Sans KR',sans-serif;
-  font-size:1.5em; font-weight:800;
-  color:#fff; letter-spacing:-0.5px; margin-bottom:6px;
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 1.5em; font-weight: 800;
+  color: #fff; letter-spacing: -0.5px; margin-bottom: 6px;
 }
 .mys-page-desc {
-  font-family:Pretendard,'Noto Sans KR',sans-serif;
-  font-size:0.7895em; font-weight:400;
-  color:rgba(255,255,255,0.65); letter-spacing:-0.2px;
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 0.842em; font-weight: 400;
+  color: rgba(255,255,255,0.65); letter-spacing: -0.2px;
 }
-.mys-page-icon { font-size:2.8em; opacity:0.15; }
+.mys-page-icon { font-size: 2.8em; opacity: 0.15; }
 * { box-sizing: border-box; }
 button, input { font-family: inherit; }
 
@@ -62,13 +62,13 @@ button, input { font-family: inherit; }
 .content-slot { background:transparent; border:none; border-radius:0; padding:0; min-height:0; }
 /* ── 푸터 블록 (scripts 통일) ── */
 .mys-footer-block {
-  border-radius: 10px;
+  border-radius: var(--radius-md, 12px);
   overflow: hidden;
   flex-shrink: 0;
 }
 .mys-bottom-bar {
-  background: #8B4513;
-  color: #fff6ef;
+  background: var(--color-brand, #A0522D);
+  color: #fff;
   text-align: center;
   font-size: 0.7895em;
   font-weight: 800;
@@ -347,7 +347,7 @@ button, input { font-family: inherit; }
 
   <!-- 푸터 블록 -->
   <div class="mys-footer-block">
-    <div class="mys-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
+    <div class="mys-bottom-bar">- 내가 만든 한 줄이, 계약 한 건을 만듭니다 -</div>
   </div>
 <script>
 (function() {
@@ -602,7 +602,7 @@ window.saveScriptToSupabase = async function() {
   const btn = document.getElementById('save-script-btn');
   if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
   try {
-    const res = await fetch(`${window.db.url('/rest/v1/scripts`, {
+    const res = await fetch(window.db.url('/rest/v1/scripts'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -654,7 +654,7 @@ window.saveLibraryToSupabase = async function() {
     if (imgInput && imgInput.files[0]) {
       try { imageUrl = await uploadFileToStorage(imgInput.files[0], 'images'); } catch(e) { alert('이미지 업로드 실패: ' + e.message); return; }
     }
-    const res = await fetch(`${window.db.url('/rest/v1/library`, {
+    const res = await fetch(window.db.url('/rest/v1/library'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -695,7 +695,7 @@ window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   try {
-    const res = await fetch(`${window.db.url('/rest/v1/scripts?owner_id=eq.${window.AppState.userId}&order=created_at.desc`, {
+    const res = await fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${window.AppState.userId}&order=created_at.desc`), {
       headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` }
     });
     if (!res.ok) {
@@ -744,7 +744,7 @@ window.filterScriptList = function(keyword) {
 window.deleteScript = async function(id, btn) {
   if (!confirm('이 스크립트를 삭제하시겠습니까?')) return;
   try {
-    await fetch(`${window.db.url('/rest/v1/scripts?id=eq.${id}`, {
+    await fetch(window.db.url(`/rest/v1/scripts?id=eq.${id}`), {
       method: 'DELETE',
       headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` }
     });
@@ -757,7 +757,7 @@ window.loadLibraryList = async function() {
   const list = document.getElementById('library-list');
   if (!list) return;
   try {
-    const res = await fetch(`${window.db.url('/rest/v1/library?owner_id=eq.${window.AppState.userId}&order=created_at.desc`, {
+    const res = await fetch(window.db.url(`/rest/v1/library?owner_id=eq.${window.AppState.userId}&order=created_at.desc`), {
       headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` }
     });
     if (!res.ok) {
@@ -807,7 +807,7 @@ window.filterLibraryList = function(keyword) {
 window.deleteLibrary = async function(id, btn) {
   if (!confirm('이 자료를 삭제하시겠습니까?')) return;
   try {
-    await fetch(`${window.db.url('/rest/v1/library?id=eq.${id}`, {
+    await fetch(window.db.url(`/rest/v1/library?id=eq.${id}`), {
       method: 'DELETE',
       headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` }
     });
@@ -851,7 +851,7 @@ window.handleImageSelect = function(input) {
 window.uploadFileToStorage = async function(file, folder) {
   const ext = file.name.split('.').pop();
   const fileName = `${folder}/${window.AppState.userId}_${Date.now()}.${ext}`;
-  const res = await fetch(`${window.db.url('/storage/v1/object/library_files/' + fileName)}`, {
+  const res = await fetch(window.db.url(`/storage/v1/object/library_files/${fileName}`), {
     method: 'POST',
     headers: {
       'apikey': window.db.key,
@@ -862,7 +862,7 @@ window.uploadFileToStorage = async function(file, folder) {
     body: file
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.message || '업로드 실패'); }
-  return `${window.db.url('/storage/v1/object/public/library_files/' + fileName)}`;
+  return window.db.url(`/storage/v1/object/public/library_files/${fileName}`);
 }
 
 window.loadUserInfo = async function() {
@@ -870,7 +870,7 @@ window.loadUserInfo = async function() {
   const userId = window.AppState.userId;
   if (!token || !userId) return;
   try {
-    const res = await fetch(`${window.db.url('/rest/v1/users?auth_user_id=eq.${userId}&select=name,role,phone,email,company,branch,team`, {
+    const res = await fetch(window.db.url(`/rest/v1/users?auth_user_id=eq.${userId}&select=name,role,phone,email,company,branch,team`), {
       headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
@@ -914,7 +914,7 @@ window.saveProfile = async function() {
   const btn=document.getElementById('edit-save-btn');
   btn.disabled=true; btn.textContent='저장 중...';
   try {
-    const res=await fetch(`${window.db.url('/rest/v1/users?auth_user_id=eq.${window.AppState.userId}`,{
+    const res=await fetch(window.db.url(`/rest/v1/users?auth_user_id=eq.${window.AppState.userId}`),{
       method:'PATCH',
       headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':`Bearer ${window.db.getToken()}`,'Prefer':'return=minimal'},
       body:JSON.stringify({name,phone,company,branch,team})
@@ -929,7 +929,7 @@ window.sendPasswordReset = async function() {
   const email=document.getElementById('edit-email').value;
   if(!email){alert('이메일 정보를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');return;}
   try {
-    const res=await fetch(`${window.db.url('/auth/v1/recover')}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key},body:JSON.stringify({email})});
+    const res=await fetch(window.db.url('/auth/v1/recover'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key},body:JSON.stringify({email})});
     if(res.ok) alert(`${email} 으로 비밀번호 재설정 링크를 발송했습니다.\n메일함을 확인해 주세요.`);
     else alert('발송 중 오류가 발생했습니다.');
   } catch(e){alert('네트워크 오류가 발생했습니다.');}
