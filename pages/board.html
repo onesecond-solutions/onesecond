@@ -1038,39 +1038,45 @@ function _renderPostList() {
     posts = posts.filter(function(p) { return p.category === _currentCategory; });
   }
   if (!posts.length) {
-    if (_currentBoard === 'hub') {
-      list.innerHTML = buildEmpty('🌐', '허브게시판에 아직 게시글이 없습니다', '팀·지점 게시판의 좋은 글이 승인 후 이곳에 모입니다.');
-    } else if (_currentBoard === 'insurer') {
-      list.innerHTML = buildEmpty('🏦', '보험사게시판에 아직 게시글이 없습니다', '첫 글을 작성해보세요!');
-    } else {
-      var boardName = _currentBoard === 'team' ? '팀' : '지점';
-      var orgName   = '';
-      if (_userOrg) {
-        orgName = _currentBoard === 'team'
-          ? (_userOrg.team   || '')
-          : (_userOrg.branch || '');
+    /* 전체 글이 0개 → 온보딩 카드 */
+    if (!_allPosts.length) {
+      if (_currentBoard === 'hub') {
+        list.innerHTML = buildEmpty('🌐', '허브게시판에 아직 게시글이 없습니다', '팀·지점 게시판의 좋은 글이 승인 후 이곳에 모입니다.');
+      } else if (_currentBoard === 'insurer') {
+        list.innerHTML = buildEmpty('🏦', '보험사게시판에 아직 게시글이 없습니다', '첫 글을 작성해보세요!');
+      } else {
+        var boardName = _currentBoard === 'team' ? '팀' : '지점';
+        var orgName   = '';
+        if (_userOrg) {
+          orgName = _currentBoard === 'team'
+            ? (_userOrg.team   || '')
+            : (_userOrg.branch || '');
+        }
+        var titleStr = orgName ? orgName + ' 게시판 오픈을 축하합니다 🎉' : boardName + '게시판이 열렸습니다 🎉';
+        list.innerHTML = ''
+          + '<div style="'
+          +   'background:var(--color-surface,#fff);'
+          +   'border:1.5px solid rgba(160,82,45,.25);'
+          +   'border-radius:var(--radius-lg,16px);'
+          +   'padding:1.8em 1.4em;'
+          +   'text-align:center;'
+          + '">'
+          +   '<div style="font-size:2.4em;margin-bottom:.5em;">🎊</div>'
+          +   '<div style="font-size:1em;font-weight:800;color:var(--color-text-primary,#3D2C1E);margin-bottom:.5em;">' + escHtml(titleStr) + '</div>'
+          +   '<div style="font-size:.82em;color:var(--color-text-secondary,#7A5C44);line-height:1.8;margin-bottom:1.4em;">'
+          +     '이제 이 게시판에서 함께 정보를 쌓아가요.<br>'
+          +     '상품 Q&A, 인수 케이스, 공지사항 — 카카오톡에서<br>위로 밀려 사라지던 정보를 여기서 잡아두세요.'
+          +   '</div>'
+          +   '<div style="display:flex;flex-direction:column;gap:.55em;max-width:280px;margin:0 auto;">'
+          +     _onboardingTip('📌', '공지사항', '팀장·실장 공지를 고정해두세요')
+          +     _onboardingTip('💊', '상품 Q&A', '상품·특약 궁금증을 올려보세요')
+          +     _onboardingTip('🏥', '인수 Q&A', '인수 케이스를 공유하면 팀 전체 자산이 됩니다')
+          +   '</div>'
+          + '</div>';
       }
-      var titleStr = orgName ? orgName + ' 게시판 오픈을 축하합니다 🎉' : boardName + '게시판이 열렸습니다 🎉';
-      list.innerHTML = ''
-        + '<div style="'
-        +   'background:var(--color-surface,#fff);'
-        +   'border:1.5px solid rgba(160,82,45,.25);'
-        +   'border-radius:var(--radius-lg,16px);'
-        +   'padding:1.8em 1.4em;'
-        +   'text-align:center;'
-        + '">'
-        +   '<div style="font-size:2.4em;margin-bottom:.5em;">🎊</div>'
-        +   '<div style="font-size:1em;font-weight:800;color:var(--color-text-primary,#3D2C1E);margin-bottom:.5em;">' + escHtml(titleStr) + '</div>'
-        +   '<div style="font-size:.82em;color:var(--color-text-secondary,#7A5C44);line-height:1.8;margin-bottom:1.4em;">'
-        +     '이제 이 게시판에서 함께 정보를 쌓아가요.<br>'
-        +     '상품 Q&A, 인수 케이스, 공지사항 — 카카오톡에서<br>위로 밀려 사라지던 정보를 여기서 잡아두세요.'
-        +   '</div>'
-        +   '<div style="display:flex;flex-direction:column;gap:.55em;max-width:280px;margin:0 auto;">'
-        +     _onboardingTip('📌', '공지사항', '팀장·실장 공지를 고정해두세요')
-        +     _onboardingTip('💊', '상품 Q&A', '상품·특약 궁금증을 올려보세요')
-        +     _onboardingTip('🏥', '인수 Q&A', '인수 케이스를 공유하면 팀 전체 자산이 됩니다')
-        +   '</div>'
-        + '</div>';
+    } else {
+      /* 글은 있지만 해당 카테고리 글이 없을 때 */
+      list.innerHTML = buildEmpty('📭', '해당 카테고리에 게시글이 없습니다', '다른 카테고리를 선택하거나 첫 글을 작성해보세요!');
     }
     return;
   }
