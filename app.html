@@ -1202,20 +1202,7 @@ async function sendPasswordReset() {
   } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 }
 
-// ── ⑨ 사용자 드롭다운 ─────────────────────────────────────────────────────
-function toggleUserDropdown(event) {
-  if (event) event.stopPropagation();
-  var dd = document.getElementById('user-dropdown');
-  if (!dd) return;
-  dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-}
-document.addEventListener('click', function (e) {
-  var wrap = document.getElementById('user-dropdown-wrap');
-  if (wrap && !wrap.contains(e.target)) {
-    var dd = document.getElementById('user-dropdown');
-    if (dd) dd.style.display = 'none';
-  }
-});
+// ── ⑨ 사용자 드롭다운 (전역 등록은 DOMContentLoaded 밖 — window.toggleUserDropdown 참조)
 
 // BMI / 보험나이 계산 (Quick 메뉴 내 사용)
 function calcInsAge() {
@@ -1246,6 +1233,21 @@ document.querySelectorAll('.tab-item').forEach(function (el) {
 });
 
 }); // DOMContentLoaded
+
+// ── ⑨ 사용자 드롭다운 (전역 — inline onclick에서 접근 가능하도록 DOMContentLoaded 밖 선언) ──
+window.toggleUserDropdown = function(event) {
+  if (event) event.stopPropagation();
+  var dd = document.getElementById('user-dropdown');
+  if (!dd) return;
+  dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+};
+document.addEventListener('click', function (e) {
+  var wrap = document.getElementById('user-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var dd = document.getElementById('user-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
