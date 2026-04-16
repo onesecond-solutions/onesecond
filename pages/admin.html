@@ -295,8 +295,7 @@
       <button class="pg-tab-btn"        data-tab="scripts" onclick="window.admSwitchTab('scripts', this)">📋 스크립트</button>
       <button class="pg-tab-btn"        data-tab="board"   onclick="window.admSwitchTab('board', this)">💬 게시판</button>
       <button class="pg-tab-btn"        data-tab="logs"    onclick="window.admSwitchTab('logs', this)">📊 로그</button>
-      <button class="pg-tab-btn"        data-tab="notice"   onclick="window.admSwitchTab('notice', this)">📢 공지·배너</button>
-      <button class="pg-tab-btn"        data-tab="settings" onclick="window.admSwitchTab('settings', this)">⚙️ 화면설정</button>
+      <button class="pg-tab-btn"        data-tab="notice"  onclick="window.admSwitchTab('notice', this)">📢 공지·배너</button>
     </div>
   </div>
 
@@ -379,12 +378,11 @@ window.admSwitchTab = function (tab, btn) {
   });
   if (btn) btn.classList.add('active');
   var map = {
-    users:    window.admLoadUsers,
-    scripts:  window.admLoadScripts,
-    board:    window.admLoadBoard,
-    logs:     window.admLoadLogs,
-    notice:   window.admLoadNotice,
-    settings: window.admLoadSettings
+    users:   window.admLoadUsers,
+    scripts: window.admLoadScripts,
+    board:   window.admLoadBoard,
+    logs:    window.admLoadLogs,
+    notice:  window.admLoadNotice
   };
   if (map[tab]) map[tab]();
 };
@@ -422,11 +420,18 @@ window.admLoadUsers = async function (filter) {
     var res = await admFetch(
       '/rest/v1/users?select=id,name,email,role,plan,company,branch,team,created_at&order=created_at.desc&limit=100'
     );
+    if (!res.ok) {
+      var errBody = await res.text();
+      console.error('[admin] admLoadUsers fetch 실패:', res.status, errBody);
+      admContent('<div class="adm-empty">사용자 목록을 불러오지 못했습니다. (HTTP ' + res.status + ')<br><small style="color:#aaa;">' + errBody + '</small></div>');
+      return;
+    }
     var data = await res.json();
     _admUsersCache = data;
     window.admRenderUsers(data, filter || '');
   } catch (e) {
-    admContent('<div class="adm-empty">사용자 목록을 불러오지 못했습니다.</div>');
+    console.error('[admin] admLoadUsers 오류:', e);
+    admContent('<div class="adm-empty">사용자 목록을 불러오지 못했습니다.<br><small style="color:#aaa;">' + e.message + '</small></div>');
   }
 };
 
@@ -551,6 +556,12 @@ window.admLoadScripts = async function () {
     var res = await admFetch(
       '/rest/v1/scripts?select=id,title,stage,type,scope,is_active,is_leader_pick&order=stage,title&limit=200'
     );
+    if (!res.ok) {
+      var errBody = await res.text();
+      console.error('[admin] admLoadScripts fetch 실패:', res.status, errBody);
+      admContent('<div class="adm-empty">스크립트 목록을 불러오지 못했습니다. (HTTP ' + res.status + ')</div>');
+      return;
+    }
     var data = await res.json();
     _admScriptsCache = data;
     window._admScriptsCache_pub = data;
@@ -660,6 +671,12 @@ window.admLoadBoard = async function () {
     var res = await admFetch(
       '/rest/v1/posts?select=id,title,category,author_name,created_at,is_hidden,is_notice&order=created_at.desc&limit=100'
     );
+    if (!res.ok) {
+      var errBody = await res.text();
+      console.error('[admin] admLoadBoard fetch 실패:', res.status, errBody);
+      admContent('<div class="adm-empty">게시글을 불러오지 못했습니다. (HTTP ' + res.status + ')</div>');
+      return;
+    }
     var data = await res.json();
 
     var catLabel = { notice: '공지', qa_product: '상품Q&A', qa_underwriting: '인수Q&A' };
@@ -958,234 +975,6 @@ window.admClearBanner = function () {
   if (inp)     inp.value = '';
   if (preview) preview.style.display = 'none';
   alert('배너가 숨김 처리됐습니다.');
-};
-
-/* ════════════════════════════════════════
-   탭 6: 화면설정 (B영역 메뉴 ON/OFF + 페이지 배너)
-════════════════════════════════════════ */
-window.admLoadSettings = async function () {
-  admContent('<div class="adm-loading">설정 로딩 중...</div>');
-  try {
-    var res  = await admFetch('/rest/v1/app_settings?order=id');
-    var rows = res.ok ? await res.json() : [];
-
-    var menuRows   = rows.filter(function(r){ return r.group_name === 'menu_b'; });
-    var bannerRows = rows.filter(function(r){ return r.group_name === 'page_banner'; });
-
-    /* ── 메뉴 ON/OFF 토글 ── */
-    var menuHtml = '';
-    if (menuRows.length === 0) {
-      menuHtml = '<div style="font-size:0.8em;color:#bbb;padding:12px 0;">메뉴 설정 데이터가 없습니다.<br>아래 SQL을 실행해 주세요.</div>';
-    } else {
-      menuRows.forEach(function(r) {
-        var isOn = r.value === 'on';
-        menuHtml +=
-          '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f0e6dc;">' +
-            '<span style="font-size:0.842em;font-weight:600;color:#3d2b1f;">' + (r.label || r.key) + '</span>' +
-            '<label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">' +
-              '<input type="checkbox" id="stg-' + r.key + '" ' + (isOn ? 'checked' : '') +
-                ' onchange="window.admToggleSetting('' + r.key + '', this.checked)"' +
-                ' style="opacity:0;width:0;height:0;">' +
-              '<span id="stg-track-' + r.key + '" style="position:absolute;inset:0;border-radius:24px;transition:.2s;background:' + (isOn ? '#c8753a' : '#ddd') + ';"></span>' +
-              '<span id="stg-thumb-' + r.key + '" style="position:absolute;top:3px;left:' + (isOn ? '23px' : '3px') + ';width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.2s;"></span>' +
-            '</label>' +
-          '</div>';
-      });
-    }
-
-    /* ── 페이지 배너 카드 목록 ── */
-    var PAGE_LIST = [
-      { key: 'home',    label: '🏠 홈' },
-      { key: 'scripts', label: '📋 스크립트' },
-      { key: 'myspace', label: '🗂️ MY SPACE' },
-      { key: 'board',   label: '💬 게시판' },
-      { key: 'quick',   label: '⚡ Quick 메뉴' },
-      { key: 'news',    label: '📰 보험뉴스' }
-    ];
-
-    // bannerRows → key별 URL 맵
-    var bannerMap = {};
-    bannerRows.forEach(function(r){ bannerMap[r.key] = r.value || ''; });
-
-    var bannerHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
-    PAGE_LIST.forEach(function(p) {
-      var dbKey  = 'banner_img_' + p.key;
-      var curUrl = bannerMap[dbKey] || '';
-      bannerHtml +=
-        '<div class="adm-card" style="margin-bottom:0;">' +
-          '<div class="adm-card-title">' + p.label + '</div>' +
-          /* 현재 배너 미리보기 */
-          '<div id="adm-banner-preview-' + p.key + '" style="' + (curUrl ? '' : 'display:none;') + 'margin-bottom:10px;border-radius:8px;overflow:hidden;border:1px solid #e6dfd7;">' +
-            (curUrl ? '<img src="' + curUrl + '" style="width:100%;height:auto;display:block;" onerror="this.parentElement.style.display='none'">' : '') +
-          '</div>' +
-          /* 파일 업로드 */
-          '<div class="adm-form-row">' +
-            '<label class="adm-form-label">이미지 업로드</label>' +
-            '<input type="file" id="adm-banner-file-' + p.key + '" accept="image/*"' +
-              ' style="display:none;" onchange="window.admHandleBannerFile('' + p.key + '', this)">' +
-            '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
-              '<button class="adm-btn adm-btn-ghost" onclick="document.getElementById('adm-banner-file-' + p.key + '').click()">📁 파일 선택</button>' +
-              '<span id="adm-banner-filename-' + p.key + '" style="font-size:0.75em;color:#aaa;">선택된 파일 없음</span>' +
-            '</div>' +
-          '</div>' +
-          /* 저장/삭제 버튼 */
-          '<div style="display:flex;gap:8px;margin-top:8px;">' +
-            '<button class="adm-btn adm-btn-accent" onclick="window.admSavePageBanner('' + p.key + '')">💾 저장</button>' +
-            '<button class="adm-btn adm-btn-danger" onclick="window.admDeletePageBanner('' + p.key + '')"' +
-              (curUrl ? '' : ' disabled style="opacity:.4;"') + '>🗑 삭제</button>' +
-          '</div>' +
-        '</div>';
-    });
-    bannerHtml += '</div>';
-
-    var html =
-      '<div style="display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start;">' +
-
-        /* B영역 메뉴 ON/OFF */
-        '<div class="adm-card">' +
-          '<div class="adm-card-title">📋 B영역 메뉴 ON/OFF</div>' +
-          '<div style="font-size:0.78em;color:#9a7a62;margin-bottom:10px;">OFF 시 해당 메뉴가 사이드바에서 숨겨집니다.<br>반영은 앱 재접속 후 적용됩니다.</div>' +
-          menuHtml +
-          '<div style="margin-top:12px;">' +
-            '<button class="adm-btn adm-btn-ghost" style="font-size:0.78em;" onclick="window.admLoadSettings()">🔄 새로고침</button>' +
-          '</div>' +
-        '</div>' +
-
-        /* 페이지 배너 */
-        '<div>' +
-          '<div class="adm-card-title" style="font-size:0.842em;font-weight:800;color:#3d2b1f;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f0e6dc;">🖼️ 페이지별 상단 배너 이미지</div>' +
-          '<div style="font-size:0.78em;color:#9a7a62;margin-bottom:12px;">' +
-            '각 페이지 상단에 표시되는 배너 이미지를 관리합니다.<br>' +
-            'Supabase Storage <code style="background:#f0e6dc;padding:1px 5px;border-radius:4px;">page-banners</code> 버킷에 업로드됩니다.' +
-          '</div>' +
-          bannerHtml +
-        '</div>' +
-
-      '</div>' +
-
-      /* SQL 안내 */
-      '<div class="adm-card" style="margin-top:14px;background:#fdf8f3;border-color:#e0c9b4;">' +
-        '<div class="adm-card-title">💡 최초 1회 실행 SQL</div>' +
-        '<pre style="font-size:0.72em;background:#f5ede4;border-radius:6px;padding:10px;overflow-x:auto;line-height:1.7;color:#3d2b1f;">' +
-'INSERT INTO app_settings (key, value, label, group_name) VALUES
-' +
-'  ('banner_img_home',    '', '홈 배너',          'page_banner'),
-' +
-'  ('banner_img_scripts', '', '스크립트 배너',    'page_banner'),
-' +
-'  ('banner_img_myspace', '', 'MY SPACE 배너',   'page_banner'),
-' +
-'  ('banner_img_board',   '', '게시판 배너',      'page_banner'),
-' +
-'  ('banner_img_quick',   '', 'Quick 메뉴 배너',  'page_banner'),
-' +
-'  ('banner_img_news',    '', '보험뉴스 배너',    'page_banner')
-' +
-'ON CONFLICT (key) DO NOTHING;' +
-        '</pre>' +
-      '</div>';
-
-    admContent(html);
-
-  } catch(e) {
-    admContent('<div class="adm-empty">설정을 불러오지 못했습니다.</div>');
-  }
-};
-
-/* ── 메뉴 토글 저장 ── */
-window.admToggleSetting = async function(key, checked) {
-  var val   = checked ? 'on' : 'off';
-  var track = document.getElementById('stg-track-' + key);
-  var thumb = document.getElementById('stg-thumb-' + key);
-  if (track) track.style.background = checked ? '#c8753a' : '#ddd';
-  if (thumb) thumb.style.left       = checked ? '23px'    : '3px';
-  try {
-    await admFetch('/rest/v1/app_settings?key=eq.' + key, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ value: val, updated_at: new Date().toISOString() })
-    });
-  } catch(e) { alert('저장 중 오류가 발생했습니다.'); }
-};
-
-/* ── 파일 선택 핸들러 ── */
-window.admHandleBannerFile = function(pageKey, input) {
-  var name = input.files && input.files[0] ? input.files[0].name : '선택된 파일 없음';
-  var el   = document.getElementById('adm-banner-filename-' + pageKey);
-  if (el) el.textContent = name;
-};
-
-/* ── 배너 저장 (Supabase Storage 업로드 → URL → app_settings PATCH) ── */
-window.admSavePageBanner = async function(pageKey) {
-  var input = document.getElementById('adm-banner-file-' + pageKey);
-  if (!input || !input.files || !input.files[0]) {
-    alert('업로드할 이미지 파일을 먼저 선택해 주세요.'); return;
-  }
-  var file    = input.files[0];
-  var ext     = file.name.split('.').pop().toLowerCase();
-  var allowed = ['jpg','jpeg','png','gif','webp','svg'];
-  if (!allowed.includes(ext)) { alert('jpg, png, gif, webp, svg 형식만 가능합니다.'); return; }
-
-  var fileName = 'banner_' + pageKey + '_' + Date.now() + '.' + ext;
-  var bucket   = 'page-banners';
-
-  try {
-    /* 1. Storage 업로드 */
-    var upRes = await admFetch('/storage/v1/object/' + bucket + '/' + fileName, {
-      method:  'POST',
-      headers: { 'Content-Type': file.type, 'x-upsert': 'true' },
-      body:    file
-    });
-    if (!upRes.ok) {
-      var err = await upRes.text();
-      alert('업로드 실패: ' + err); return;
-    }
-
-    /* 2. 공개 URL 생성 */
-    var publicUrl = window.SUPABASE_URL + '/storage/v1/object/public/' + bucket + '/' + fileName;
-
-    /* 3. app_settings PATCH */
-    var dbKey  = 'banner_img_' + pageKey;
-    var patchRes = await admFetch('/rest/v1/app_settings?key=eq.' + dbKey, {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body:    JSON.stringify({ value: publicUrl, updated_at: new Date().toISOString() })
-    });
-
-    if (patchRes.ok) {
-      /* 미리보기 즉시 갱신 */
-      var preview = document.getElementById('adm-banner-preview-' + pageKey);
-      if (preview) {
-        preview.style.display = 'block';
-        preview.innerHTML = '<img src="' + publicUrl + '" style="width:100%;height:auto;display:block;" onerror="this.parentElement.style.display='none'">';
-      }
-      /* app.html 배너 캐시 무효화 */
-      if (window.clearBannerCache) window.clearBannerCache(pageKey);
-      alert('✅ ' + pageKey + ' 배너가 저장되었습니다.');
-    } else {
-      alert('DB 저장 실패. 다시 시도해 주세요.');
-    }
-  } catch(e) {
-    alert('오류: ' + e.message);
-  }
-};
-
-/* ── 배너 삭제 ── */
-window.admDeletePageBanner = async function(pageKey) {
-  if (!confirm(pageKey + ' 배너를 삭제하시겠습니까?')) return;
-  var dbKey = 'banner_img_' + pageKey;
-  try {
-    await admFetch('/rest/v1/app_settings?key=eq.' + dbKey, {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body:    JSON.stringify({ value: '', updated_at: new Date().toISOString() })
-    });
-    var preview = document.getElementById('adm-banner-preview-' + pageKey);
-    if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
-    if (window.clearBannerCache) window.clearBannerCache(pageKey);
-    alert('배너가 삭제되었습니다.');
-    window.admLoadSettings();
-  } catch(e) { alert('삭제 중 오류가 발생했습니다.'); }
 };
 
 /* ── 부트 ── */
