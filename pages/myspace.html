@@ -639,26 +639,6 @@ window.initMySpace = function() {
   window.setWriteModeVisual(false);
 };
 })(); // /IIFE
-
-// ── appstate:ready 부트 ──
-(function() {
-  function _boot() {
-    window.renderMySpaceView('scripts');
-    window.setWriteModeVisual(false);
-  }
-  if (window.AppState && window.AppState.ready) {
-    _boot();
-  } else {
-    document.addEventListener('appstate:ready', function() { _boot(); }, { once: true });
-    // 안전망: 1.5초 후에도 미부팅이면 강제 실행
-    setTimeout(function() {
-      if (!document.getElementById('scripts-list')) {
-        window.renderMySpaceView && window.renderMySpaceView('scripts');
-        window.setWriteModeVisual && window.setWriteModeVisual(false);
-      }
-    }, 1500);
-  }
-})();
 </script><script>
 (function() {
 // ── myspace 초기화 — appstate:ready 표준 패턴 ──
@@ -1164,6 +1144,23 @@ window.toggleLeaderPick = async function(event, id, btn) {
 };
 
 })(); // /IIFE
+
+// ── appstate:ready 부트 (모든 함수 선언 완료 후 실행) ──
+(function() {
+  function _boot() {
+    window.renderMySpaceView('scripts');
+    window.setWriteModeVisual && window.setWriteModeVisual(false);
+  }
+  if (window.AppState && window.AppState.ready) {
+    _boot();
+  } else {
+    document.addEventListener('appstate:ready', function() { _boot(); }, { once: true });
+    setTimeout(function() {
+      window.renderMySpaceView && window.renderMySpaceView('scripts');
+      window.setWriteModeVisual && window.setWriteModeVisual(false);
+    }, 1500);
+  }
+})();
 </script>
 
 <!-- 리더 추천 상세 모달 -->
