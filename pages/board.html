@@ -856,11 +856,39 @@ function fmtDate(iso) {
   return d.getFullYear() + '.' + mm + '.' + dd;
 }
 
-function buildEmpty(icon, title, desc) {
+function buildEmpty(icon, title, desc, subItems) {
+  var subHtml = '';
+  if (subItems && subItems.length) {
+    subHtml = '<div class="empty-sub-list">'
+      + subItems.map(function(s) {
+          return '<div class="empty-sub-item">'
+            + '<span class="empty-sub-icon">' + s.icon + '</span>'
+            + '<span class="empty-sub-text">' + s.text + '</span>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
   return '<div class="empty-state">'
     + '<div class="empty-icon">'  + icon  + '</div>'
     + '<div class="empty-title">' + title + '</div>'
     + '<div class="empty-desc">'  + desc  + '</div>'
+    + subHtml
+    + '</div>';
+}
+
+function _onboardingTip(icon, label, desc) {
+  return '<div style="'
+    +   'display:flex;align-items:center;gap:.7em;'
+    +   'background:var(--color-surface-2,#F3EFE9);'
+    +   'border:1px solid var(--color-border,#E4DBCE);'
+    +   'border-radius:var(--radius-sm,8px);'
+    +   'padding:.55em .85em;text-align:left;'
+    + '">'
+    +   '<span style="font-size:1.1em;flex-shrink:0;">' + icon + '</span>'
+    +   '<div>'
+    +     '<div style="font-size:.8em;font-weight:700;color:var(--color-text-primary,#3D2C1E);">' + label + '</div>'
+    +     '<div style="font-size:.74em;color:var(--color-text-tertiary,#B89880);">' + desc + '</div>'
+    +   '</div>'
     + '</div>';
 }
 
@@ -1010,14 +1038,40 @@ function _renderPostList() {
     posts = posts.filter(function(p) { return p.category === _currentCategory; });
   }
   if (!posts.length) {
-    var msgs = {
-      hub:     { icon: '🌐', title: '허브게시판에 아직 게시글이 없습니다',  desc: '팀·지점 게시판의 좋은 글이 승인 후 이곳에 모입니다.' },
-      team:    { icon: '👥', title: '팀게시판에 아직 게시글이 없습니다',    desc: '첫 글을 작성해보세요!' },
-      branch:  { icon: '🏢', title: '지점게시판에 아직 게시글이 없습니다',  desc: '첫 글을 작성해보세요!' },
-      insurer: { icon: '🏦', title: '보험사게시판에 아직 게시글이 없습니다', desc: '첫 글을 작성해보세요!' }
-    };
-    var m = msgs[_currentBoard] || msgs.hub;
-    list.innerHTML = buildEmpty(m.icon, m.title, m.desc);
+    if (_currentBoard === 'hub') {
+      list.innerHTML = buildEmpty('🌐', '허브게시판에 아직 게시글이 없습니다', '팀·지점 게시판의 좋은 글이 승인 후 이곳에 모입니다.');
+    } else if (_currentBoard === 'insurer') {
+      list.innerHTML = buildEmpty('🏦', '보험사게시판에 아직 게시글이 없습니다', '첫 글을 작성해보세요!');
+    } else {
+      var boardName = _currentBoard === 'team' ? '팀' : '지점';
+      var orgName   = '';
+      if (_userOrg) {
+        orgName = _currentBoard === 'team'
+          ? (_userOrg.team   || '')
+          : (_userOrg.branch || '');
+      }
+      var titleStr = orgName ? orgName + ' 게시판 오픈을 축하합니다 🎉' : boardName + '게시판이 열렸습니다 🎉';
+      list.innerHTML = ''
+        + '<div style="'
+        +   'background:var(--color-surface,#fff);'
+        +   'border:1.5px solid rgba(160,82,45,.25);'
+        +   'border-radius:var(--radius-lg,16px);'
+        +   'padding:1.8em 1.4em;'
+        +   'text-align:center;'
+        + '">'
+        +   '<div style="font-size:2.4em;margin-bottom:.5em;">🎊</div>'
+        +   '<div style="font-size:1em;font-weight:800;color:var(--color-text-primary,#3D2C1E);margin-bottom:.5em;">' + escHtml(titleStr) + '</div>'
+        +   '<div style="font-size:.82em;color:var(--color-text-secondary,#7A5C44);line-height:1.8;margin-bottom:1.4em;">'
+        +     '이제 이 게시판에서 함께 정보를 쌓아가요.<br>'
+        +     '상품 Q&A, 인수 케이스, 공지사항 — 카카오톡에서<br>위로 밀려 사라지던 정보를 여기서 잡아두세요.'
+        +   '</div>'
+        +   '<div style="display:flex;flex-direction:column;gap:.55em;max-width:280px;margin:0 auto;">'
+        +     _onboardingTip('📌', '공지사항', '팀장·실장 공지를 고정해두세요')
+        +     _onboardingTip('💊', '상품 Q&A', '상품·특약 궁금증을 올려보세요')
+        +     _onboardingTip('🏥', '인수 Q&A', '인수 케이스를 공유하면 팀 전체 자산이 됩니다')
+        +   '</div>'
+        + '</div>';
+    }
     return;
   }
   list.innerHTML = posts.map(_buildPostItem).join('');
