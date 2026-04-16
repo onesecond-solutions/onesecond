@@ -654,9 +654,21 @@ function _switchBoard(board) {
   var notice = document.getElementById('hub-notice');
   if (notice) notice.style.display = (board === 'hub') ? 'flex' : 'none';
 
-  /* 글쓰기 버튼: 허브는 숨김 */
-  var wb = document.getElementById('write-btn');
-  if (wb) wb.style.display = (board === 'hub') ? 'none' : 'block';
+  /* 글쓰기 버튼 표시 여부 */
+  var wb   = document.getElementById('write-btn');
+  var role = (window.AppState && window.AppState.role) || '';
+  if (wb) {
+    if (board === 'hub') {
+      /* 허브: 항상 숨김 */
+      wb.style.display = 'none';
+    } else if (board === 'insurer') {
+      /* 보험사게시판: admin + insurer role만 표시 */
+      wb.style.display = ['admin', 'insurer'].includes(role) ? 'block' : 'none';
+    } else {
+      /* 팀/지점: 기존대로 표시 */
+      wb.style.display = 'block';
+    }
+  }
 
   _renderCategoryPills(board);
   _loadPosts();
@@ -963,9 +975,14 @@ window.submitPost = async function() {
   if (!title)   { alert('제목을 입력해 주세요.'); return; }
   if (!content) { alert('내용을 입력해 주세요.'); return; }
 
+  /* 보험사게시판 권한 체크 (프론트 방어) */
   var s     = window.AppState || {};
-  var org   = _userOrg || {};
   var board = _currentBoard;
+  if (board === 'insurer' && !['admin', 'insurer'].includes(s.role)) {
+    alert('보험사게시판은 보험사 계정 또는 관리자만 작성할 수 있습니다.');
+    return;
+  }
+  var org   = _userOrg || {};
   var orgId = '';
   if (board === 'team')   orgId = (org.company || '') + '_' + (org.branch || '') + '_' + (org.team || '');
   if (board === 'branch') orgId = (org.company || '') + '_' + (org.branch || '');
