@@ -1,13 +1,17 @@
 <style>
-/* ── 로컬 변수 ── */
+/* ── 로컬 변수 (tokens.css 변수 참조) ── */
 :root {
-  --mys-panel:#f3ece4; --mys-panel-soft:#f8f3ee;
-  --mys-line:#e0d0c0; --mys-line-soft:#efe5dc;
-  --mys-text-dark:#1a1008; --mys-text-mid:#5a3e2b; --mys-text-light:#9a7a62;
+  --mys-panel: var(--color-surface-2, #F3EFE9);
+  --mys-panel-soft: var(--color-bg, #FAF8F5);
+  --mys-line: var(--color-border, #E4DBCE);
+  --mys-line-soft: var(--color-border, #E4DBCE);
+  --mys-text-dark: var(--color-text-primary, #3D2C1E);
+  --mys-text-mid: var(--color-text-secondary, #7A5C44);
+  --mys-text-light: var(--color-text-tertiary, #B89880);
 }
 
-/* ── 6px 갭 래퍼 ── */
-.mys-outer {
+/* ── pg-outer 래퍼 ── */
+.pg-outer {
   background: var(--color-surface-2, #F3EFE9);
   padding: 6px;
   padding-bottom: 24px;
@@ -18,55 +22,53 @@
   min-height: 100%;
 }
 
-/* ── 페이지 헤더 블록 ── */
-.mys-page-header {
-  height: 120px;
-  background: linear-gradient(135deg, var(--color-brand, #A0522D) 0%, var(--color-brand-light, #C4733A) 100%);
-  border-radius: var(--radius-md, 12px);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; flex-shrink: 0;
-}
-.mys-page-title {
-  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
-  font-size: 1.5em; font-weight: 800;
-  color: #fff; letter-spacing: -0.5px; margin-bottom: 6px;
-}
-.mys-page-desc {
-  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
-  font-size: 0.842em; font-weight: 400;
-  color: rgba(255,255,255,0.65); letter-spacing: -0.2px;
-}
-.mys-page-icon { font-size: 2.8em; opacity: 0.15; }
-* { box-sizing: border-box; }
-button, input { font-family: inherit; }
-
-/* 탭 버튼 — quick.html 기준 색상 통일 */
-.step1 { padding:10px 20px 8px; background:#fdf8f3; border-bottom:1px solid #ead9cc; }
-.main-btns { display:flex; gap:0; flex-wrap:wrap; padding:0 16px; border-bottom:1px solid #ddc8b4; background:#faf8f5; flex-shrink:0; }
-.main-btn {
-  padding:10px 16px; border-radius:0;
-  border:none; border-bottom:3px solid transparent;
-  background:transparent;
-  font-size:0.8947em; font-weight:600; color:#9a7a62;
-  font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s;
-}
-.main-btn:hover { color:#3b2416; border-bottom-color:rgba(200,117,58,0.4); }
-.main-btn.active { color:#3b2416; border-bottom-color:#c8753a; font-weight:700; }
-
-.main-btn:hover { background:#f0e0d0; }
-
-.frame-body { padding:14px 20px 16px; display:block; overflow-x:hidden; }
-
-.content-slot-header { background:#fff; border:1px solid var(--mys-line); border-radius:14px 14px 0 0; padding:18px 20px 14px; border-bottom:none; }
-.content-slot-title { font-size:0.8947em; font-weight:800; }
-.content-slot { background:transparent; border:none; border-radius:0; padding:0; min-height:0; }
-/* ── 푸터 블록 (scripts 통일) ── */
-.mys-footer-block {
+/* ── 탭바 블록 ── */
+.pg-tab-block {
+  background: var(--color-surface, #fff);
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
   flex-shrink: 0;
 }
-.mys-bottom-bar {
+.pg-tab-bar {
+  display: flex;
+  gap: 0;
+  flex-wrap: wrap;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--color-border, #E4DBCE);
+}
+.pg-tab-btn {
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  font-size: 0.8947em; font-weight: 600;
+  color: var(--color-text-tertiary, #B89880);
+  font-family: inherit; cursor: pointer;
+  white-space: nowrap; transition: all .15s;
+}
+.pg-tab-btn:hover { color: var(--color-text-primary, #3D2C1E); background: var(--color-surface-2, #F3EFE9); border-bottom-color: rgba(212,132,90,0.4); }
+.pg-tab-btn.active { color: var(--color-text-primary, #3D2C1E); border-bottom-color: var(--color-accent, #D4845A); font-weight: 700; }
+
+/* ── 콘텐츠 블록 ── */
+.pg-content-block {
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex: 1;
+}
+.pg-content-inner {
+  padding: 14px 20px 16px;
+  display: block;
+  overflow-x: hidden;
+}
+
+/* ── 푸터 블록 ── */
+.pg-footer-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pg-bottom-bar {
   background: var(--color-brand, #A0522D);
   color: #fff;
   text-align: center;
@@ -82,86 +84,87 @@ button, input { font-family: inherit; }
 
 
 .myspace-wrap { width:100%; }
-.mys-card { background:var(--mys-panel); border:1px solid #d8c6b5; border-radius:16px; padding:18px 18px 12px; margin-bottom:18px; }
-.mys-card-title { font-size:0.8947em; font-weight:900; color:#2c1c12; display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.mys-card-desc { font-size:15px; color:#7d6452; line-height:1.75; margin-bottom:14px; }
-.mys-guide { background:var(--mys-panel-soft); border:1px solid #d9c8ba; border-radius:12px; padding:12px 14px; }
+.mys-card { background:var(--mys-panel); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-lg, 16px); padding:18px 18px 12px; margin-bottom:18px; }
+.mys-card-title { font-size:0.8947em; font-weight:900; color:var(--color-text-primary, #3D2C1E); display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.mys-card-desc { font-size:0.842em; color:var(--color-text-secondary, #7A5C44); line-height:1.75; margin-bottom:14px; }
+.mys-guide { background:var(--mys-panel-soft); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-md, 12px); padding:12px 14px; }
 .mys-guide ul { list-style:none; display:flex; flex-direction:column; gap:8px; }
-.mys-guide li { font-size:0.7895em; color:#6e5645; display:flex; gap:7px; line-height:1.6; }
-.mys-list-shell { background:#fff; border:1px solid #e1d4c8; border-radius:16px; padding:14px 14px 16px; }
+.mys-guide li { font-size:0.7895em; color:var(--color-text-secondary, #7A5C44); display:flex; gap:7px; line-height:1.6; }
+.mys-list-shell { background:var(--color-surface, #fff); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-lg, 16px); padding:14px 14px 16px; }
 .mys-list-top { display:flex; justify-content:flex-end; margin-bottom:12px; }
-.mys-search { width:260px; max-width:100%; height:36px; border:1px solid #e0d5ca; border-radius:8px; padding:0 12px; background:#f5f2ef; font-size:0.7895em; color:#5f4d40; }
+.mys-search { width:260px; max-width:100%; height:36px; border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-sm, 8px); padding:0 12px; background:var(--color-surface-2, #F3EFE9); font-size:0.7895em; color:var(--color-text-secondary, #7A5C44); }
 .mys-list { border-top:1px solid var(--mys-line-soft); }
 .mys-item { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:14px 10px; border-bottom:1px solid var(--mys-line-soft); }
 .mys-item-left { min-width:0; flex:1; }
-.mys-item-title { font-size:0.7895em; font-weight:800; color:#2a1b12; margin-bottom:4px; }
-.mys-item-preview { font-size:0.7895em; color:#8c7666; line-height:1.65; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mys-item-date { font-size:0.7895em; color:#b09a89; }
-.mys-item-more { border:none; background:transparent; color:#7d6452; font-size:0.8947em; line-height:1; padding:4px 6px; cursor:pointer; }
-.mys-list-note { text-align:center; font-size:0.7895em; color:#8b725e; margin:16px 0 10px; font-weight:700; }
-.mys-write-btn { display:block; width:380px; max-width:100%; margin:0 auto; height:40px; border:none; border-radius:8px; background:#744b2f; color:#fff; font-size:0.7895em; font-weight:800; cursor:pointer; }
-.mys-write-btn:hover { background:#5f3d27; }
+.mys-item-title { font-size:0.7895em; font-weight:800; color:var(--color-text-primary, #3D2C1E); margin-bottom:4px; }
+.mys-item-preview { font-size:0.7895em; color:var(--color-text-tertiary, #B89880); line-height:1.65; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mys-item-date { font-size:0.7895em; color:var(--color-text-tertiary, #B89880); }
+.mys-item-more { border:none; background:transparent; color:var(--color-text-secondary, #7A5C44); font-size:0.8947em; line-height:1; padding:4px 6px; cursor:pointer; }
+.mys-list-note { text-align:center; font-size:0.7895em; color:var(--color-text-secondary, #7A5C44); margin:16px 0 10px; font-weight:700; }
+.mys-write-btn { display:block; width:380px; max-width:100%; margin:0 auto; height:40px; border:none; border-radius:var(--radius-sm, 8px); background:var(--color-brand, #A0522D); color:#fff; font-size:0.7895em; font-weight:800; cursor:pointer; }
+.mys-write-btn:hover { background:var(--color-brand-light, #C4733A); }
 
 .write-wrap { width:100%; }
-.write-hero { background:var(--mys-panel); border:1px solid #dccabb; border-radius:18px; padding:22px 20px 16px; margin-bottom:18px; }
-.write-title { font-size:0.8947em; font-weight:900; color:#2c1c12; display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.write-hero { background:var(--mys-panel); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-lg, 16px); padding:22px 20px 16px; margin-bottom:18px; }
+.write-title { font-size:0.8947em; font-weight:900; color:var(--color-text-primary, #3D2C1E); display:flex; align-items:center; gap:10px; margin-bottom:8px; }
 .write-sub { font-size:0.7895em; line-height:1.75; color:var(--mys-text-mid); margin-bottom:14px; }
-.write-trigger { background:linear-gradient(90deg,#fff8f3 0%,#f6eee6 100%); border:1px solid #dccabb; border-radius:12px; padding:12px 14px; font-size:0.7895em; font-weight:900; color:#5b3e2c; }
+.write-trigger { background:linear-gradient(90deg,var(--color-surface, #fff) 0%,var(--color-surface-2, #F3EFE9) 100%); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-md, 12px); padding:12px 14px; font-size:0.7895em; font-weight:900; color:var(--color-text-secondary, #7A5C44); }
 .write-trigger span { color:var(--color-brand, #A0522D); }
-.guide-toggle { margin-top:14px; display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid #dbc9bb; border-radius:999px; padding:8px 14px; font-size:0.7895em; font-weight:800; color:#6b4226; cursor:pointer; }
-.guide-toggle:hover { background:#faf5ef; }
-.guide-box { margin-top:12px; background:var(--mys-panel-soft); border:1px solid #d9c8ba; border-radius:14px; padding:14px 16px; display:none; }
+.guide-toggle { margin-top:14px; display:inline-flex; align-items:center; gap:8px; background:var(--color-surface, #fff); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-full, 9999px); padding:8px 14px; font-size:0.7895em; font-weight:800; color:var(--color-text-secondary, #7A5C44); cursor:pointer; }
+.guide-toggle:hover { background:var(--color-surface-2, #F3EFE9); }
+.guide-box { margin-top:12px; background:var(--mys-panel-soft); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-md, 12px); padding:14px 16px; display:none; }
 .guide-box.open { display:block; }
-.guide-box h3 { font-size:0.7895em; font-weight:900; color:#5b3e2c; margin-bottom:10px; }
+.guide-box h3 { font-size:0.7895em; font-weight:900; color:var(--color-text-secondary, #7A5C44); margin-bottom:10px; }
 .guide-box ul { padding-left:18px; display:flex; flex-direction:column; gap:8px; }
-.guide-box li { font-size:0.7895em; line-height:1.65; color:#5f4d40; }
-.form-shell { background:#fff; border:1px solid #e1d4c8; border-radius:18px; padding:18px 18px 20px; }
+.guide-box li { font-size:0.7895em; line-height:1.65; color:var(--color-text-secondary, #7A5C44); }
+.form-shell { background:var(--color-surface, #fff); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-lg, 16px); padding:18px 18px 20px; }
 .form-grid { display:flex; flex-direction:column; gap:14px; }
-.field-block { background:#fcfaf8; border:1px solid #eadfd5; border-radius:14px; padding:16px; }
+.field-block { background:var(--color-surface-2, #F3EFE9); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-md, 12px); padding:16px; }
 .field-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
-.field-title { font-size:0.7895em; font-weight:900; color:#2a1b12; }
+.field-title { font-size:0.7895em; font-weight:900; color:var(--color-text-primary, #3D2C1E); }
 .field-desc { font-size:0.7895em; line-height:1.65; color:var(--mys-text-light); margin-top:5px; }
-.required { font-size:0.7895em; font-weight:800; color:#ab6a3c; white-space:nowrap; }
-.text-input, .text-area { width:100%; border:1px solid #ddd0c5; background:#fff; border-radius:10px; padding:13px 14px; font-size:0.7895em; color:var(--mys-text-dark); outline:none; transition:border-color .15s, box-shadow .15s; }
-.text-input::placeholder, .text-area::placeholder { color:#b2a090; }
-.text-input:focus, .text-area:focus { border-color:#caa585; box-shadow:0 0 0 3px rgba(200,117,58,.08); }
+.required { font-size:0.7895em; font-weight:800; color:var(--color-accent, #D4845A); white-space:nowrap; }
+.text-input, .text-area { width:100%; border:1px solid var(--color-border, #E4DBCE); background:var(--color-surface, #fff); border-radius:var(--radius-sm, 8px); padding:13px 14px; font-size:0.7895em; color:var(--mys-text-dark); outline:none; transition:border-color .15s, box-shadow .15s; }
+.text-input::placeholder, .text-area::placeholder { color:var(--color-text-tertiary, #B89880); }
+.text-input:focus, .text-area:focus { border-color:var(--color-accent, #D4845A); box-shadow:0 0 0 3px rgba(212,132,90,.08); }
 .text-area { min-height:148px; resize:vertical; line-height:1.7; }
 .highlight-area { min-height:92px; }
-.save-note { margin-top:16px; background:var(--mys-panel-soft); border:1px solid #e5d7cb; border-radius:12px; padding:14px 16px; font-size:0.7895em; line-height:1.7; color:#7b6352; }
-.action-row { display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:18px; padding-top:14px; border-top:1px solid #eadfd5; }
-.action-copy { font-size:0.7895em; font-weight:800; color:#7d6452; }
+.save-note { margin-top:16px; background:var(--mys-panel-soft); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-md, 12px); padding:14px 16px; font-size:0.7895em; line-height:1.7; color:var(--color-text-secondary, #7A5C44); }
+.action-row { display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:18px; padding-top:14px; border-top:1px solid var(--color-border, #E4DBCE); }
+.action-copy { font-size:0.7895em; font-weight:800; color:var(--color-text-secondary, #7A5C44); }
 .submit-btn {
-  width:380px; max-width:100%; height:40px; border:1px solid #744b2f; border-radius:8px;
-  background:#744b2f; color:#fff; font-size:0.7895em; font-weight:800; cursor:pointer;
+  width:380px; max-width:100%; height:40px; border:1px solid var(--color-brand, #A0522D); border-radius:var(--radius-sm, 8px);
+  background:var(--color-brand, #A0522D); color:#fff; font-size:0.7895em; font-weight:800; cursor:pointer;
   display:flex; align-items:center; justify-content:center; margin:0 auto;
 }
-.submit-btn:hover { background:#5f3d27; }
+.submit-btn:hover { background:var(--color-brand-light, #C4733A); }
 .write-back-row { display:flex; justify-content:flex-end; margin-bottom:12px; }
-.write-back-btn { display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid #dbc9bb; border-radius:999px; padding:8px 14px; font-size:0.7895em; font-weight:800; color:#6b4226; cursor:pointer; }
-.write-back-btn:hover { background:#faf5ef; }
+.write-back-btn { display:inline-flex; align-items:center; gap:8px; background:var(--color-surface, #fff); border:1px solid var(--color-border, #E4DBCE); border-radius:var(--radius-full, 9999px); padding:8px 14px; font-size:0.7895em; font-weight:800; color:var(--color-text-secondary, #7A5C44); cursor:pointer; }
+.write-back-btn:hover { background:var(--color-surface-2, #F3EFE9); }
 
-.attach-chip { padding:6px 14px; border-radius:99px; border:1px solid #dbc9bb; background:#fff; font-size:0.7895em; font-weight:700; color:#6b4226; cursor:pointer; margin-right:6px; margin-bottom:6px; }
-.attach-chip:hover { background:#faf5ef; }
+.attach-chip { padding:6px 14px; border-radius:var(--radius-full, 9999px); border:1px solid var(--color-border, #E4DBCE); background:var(--color-surface, #fff); font-size:0.7895em; font-weight:700; color:var(--color-text-secondary, #7A5C44); cursor:pointer; margin-right:6px; margin-bottom:6px; }
+.attach-chip:hover { background:var(--color-surface-2, #F3EFE9); }
 .attach-section { margin-top:12px; }
-.attach-label { font-size:0.7895em; font-weight:700; color:#5b3e2c; margin-bottom:6px; }
+.attach-label { font-size:0.7895em; font-weight:700; color:var(--color-text-secondary, #7A5C44); margin-bottom:6px; }
 .attach-actions { display:flex; flex-wrap:wrap; margin-bottom:4px; }
 
-@media(max-width:1200px) { .frame-body{flex-direction:column} }
-@media(max-width:768px) { .frame-body{padding:14px} .content-slot{padding:14px} .main-btn{min-width:auto} .mys-search{width:100%} }
+@media(max-width:768px) { .pg-content-inner{padding:14px} .pg-tab-btn{min-width:auto} .mys-search{width:100%} }
 </style>
-<div class="mys-outer">
+<div class="pg-outer">
 <!-- 배너 슬롯 -->
-<div id="page-banner-slot" style="display:none;flex-shrink:0;border-radius:10px;overflow:hidden;"></div>
-  <div class="mys-body" style="background:var(--color-bg,#FAF8F5);border-radius:10px;">
-      <div class="step1">
-        <div class="main-btns myspace-tabs">
-          <button class="main-btn active" data-tab="scripts" onclick="switchMySpaceTab(this,'scripts')">📝 나의 스크립트</button>
-          <button class="main-btn" data-tab="library" onclick="switchMySpaceTab(this,'library')">📁 나의 자료</button>
-        </div>
-      </div>
+<div id="page-banner-slot" style="display:none;flex-shrink:0;border-radius:var(--radius-md,12px);overflow:hidden;"></div>
 
-      <div class="frame-body">
-        <div class="content-slot">
+  <!-- 탭바 블록 -->
+  <div class="pg-tab-block">
+    <div class="pg-tab-bar myspace-tabs">
+      <button class="pg-tab-btn active" data-tab="scripts" onclick="switchMySpaceTab(this,'scripts')">📝 나의 스크립트</button>
+      <button class="pg-tab-btn" data-tab="library" onclick="switchMySpaceTab(this,'library')">📁 나의 자료</button>
+    </div>
+  </div>
+
+  <!-- 콘텐츠 블록 -->
+  <div class="pg-content-block">
+        <div class="pg-content-inner">
             <div id="view-myspace"></div>
             <div id="view-write" style="display:none;">
 <div class="write-wrap">
@@ -300,10 +303,10 @@ button, input { font-family: inherit; }
                           style="display:none;" onchange="handleFileSelect(this,'lib-file-preview','lib-file-name')">
                         <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
                           <button type="button" onclick="document.getElementById('lib-file-input').click()"
-                            style="height:36px;padding:0 16px;border:1.5px solid #d5bda8;border-radius:8px;background:#fff8f2;font-size:12px;font-weight:700;color:#6b4226;cursor:pointer;">📎 파일 선택</button>
-                          <span id="lib-file-name" style="font-size:12px;color:#9a7a62;">선택된 파일 없음</span>
+                            style="height:36px;padding:0 16px;border:1.5px solid var(--color-border,#E4DBCE);border-radius:var(--radius-sm,8px);background:var(--color-surface-2,#F3EFE9);font-size:0.632em;font-weight:700;color:var(--color-text-secondary,#7A5C44);cursor:pointer;">📎 파일 선택</button>
+                          <span id="lib-file-name" style="font-size:0.632em;color:var(--color-text-tertiary,#B89880);">선택된 파일 없음</span>
                         </div>
-                        <div id="lib-file-preview" style="margin-top:6px;font-size:11px;color:#c8753a;display:none;"></div>
+                        <div id="lib-file-preview" style="margin-top:6px;font-size:0.579em;color:var(--color-accent,#D4845A);display:none;"></div>
                         <input type="hidden" id="lib-file" />
                       </div>
                       <div class="attach-section" id="attach-link" style="display:none;">
@@ -320,10 +323,10 @@ button, input { font-family: inherit; }
                           style="display:none;" onchange="handleImageSelect(this)">
                         <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
                           <button type="button" onclick="document.getElementById('lib-image-input').click()"
-                            style="height:36px;padding:0 16px;border:1.5px solid #d5bda8;border-radius:8px;background:#fff8f2;font-size:12px;font-weight:700;color:#6b4226;cursor:pointer;">🖼 이미지 선택</button>
-                          <span id="lib-image-name" style="font-size:12px;color:#9a7a62;">선택된 이미지 없음</span>
+                            style="height:36px;padding:0 16px;border:1.5px solid var(--color-border,#E4DBCE);border-radius:var(--radius-sm,8px);background:var(--color-surface-2,#F3EFE9);font-size:0.632em;font-weight:700;color:var(--color-text-secondary,#7A5C44);cursor:pointer;">🖼 이미지 선택</button>
+                          <span id="lib-image-name" style="font-size:0.632em;color:var(--color-text-tertiary,#B89880);">선택된 이미지 없음</span>
                         </div>
-                        <img id="lib-image-preview" style="display:none;max-width:100%;max-height:160px;margin-top:8px;border-radius:8px;border:1px solid #e0d0c0;" />
+                        <img id="lib-image-preview" style="display:none;max-width:100%;max-height:160px;margin-top:8px;border-radius:var(--radius-sm,8px);border:1px solid var(--color-border,#E4DBCE);" />
                         <input type="hidden" id="lib-image" />
                       </div>
                     </div>
@@ -340,15 +343,15 @@ button, input { font-family: inherit; }
                   <button class="submit-btn library-submit-btn" id="save-library-btn" type="button" onclick="saveLibraryToSupabase()">나의 자료 저장하기</button>
                 </div>
               </section></div>
-            </div>
-          </div>
-        </div>
-  </div><!-- /mys-body -->
+            </div><!-- /view-library-add -->
+        </div><!-- /pg-content-inner -->
+  </div><!-- /pg-content-block -->
 
   <!-- 푸터 블록 -->
-  <div class="mys-footer-block">
-    <div class="mys-bottom-bar">- 내가 만든 한 줄이, 계약 한 건을 만듭니다 -</div>
+  <div class="pg-footer-block">
+    <div class="pg-bottom-bar">- 내가 만든 한 줄이, 계약 한 건을 만듭니다 -</div>
   </div>
+</div><!-- /pg-outer -->
 <script>
 (function() {
 window.overlayContent = window.overlayContent || {
@@ -392,7 +395,7 @@ window.mySpaceViews = window.mySpaceViews || {
       </section>
       <section class="mys-list-shell">
         <div class="mys-list-top"><input class="mys-search" type="text" placeholder="🔍  검색" aria-label="나의 스크립트 검색" oninput="filterScriptList(this.value)"></div>
-        <div class="mys-list" id="scripts-list"><div style="text-align:center;padding:30px;color:#9a7a62;font-size:13px;">불러오는 중...</div></div>
+        <div class="mys-list" id="scripts-list"><div style="text-align:center;padding:30px;color:var(--color-text-tertiary,#B89880);font-size:0.790em;">불러오는 중...</div></div>
         <div class="mys-list-note">새 멘트를 직접 저장하고, MY SPACE에서 바로 관리할 수 있습니다.</div>
         <button class="mys-write-btn" type="button" onclick="openWriteView()">스크립트 작성하기</button>
       </section>
@@ -412,7 +415,7 @@ window.mySpaceViews = window.mySpaceViews || {
       </section>
       <section class="mys-list-shell">
         <div class="mys-list-top"><input class="mys-search" type="text" placeholder="🔍  검색" aria-label="나의 자료 검색" oninput="filterLibraryList(this.value)"></div>
-        <div class="mys-list" id="library-list"><div style="text-align:center;padding:30px;color:#9a7a62;font-size:13px;">불러오는 중...</div></div>
+        <div class="mys-list" id="library-list"><div style="text-align:center;padding:30px;color:var(--color-text-tertiary,#B89880);font-size:0.790em;">불러오는 중...</div></div>
         <div class="mys-list-note">새 자료를 추가하고, MY SPACE에서 바로 관리할 수 있습니다.</div>
         <button class="mys-write-btn" type="button" onclick="openLibraryAddView()">나의 자료 추가하기</button>
       </section>
@@ -425,26 +428,22 @@ window.openLibraryAddView = function(){
   const myspace=document.getElementById('view-myspace');
   const write=document.getElementById('view-write');
   const libraryAdd=document.getElementById('view-library-add');
-  const title=document.querySelector('.content-slot-title');
   if(myspace) myspace.style.display='none';
   if(write) write.style.display='none';
   if(libraryAdd) libraryAdd.style.display='block';
-  if(title) title.textContent='나의 자료 추가하기';
   setWriteModeVisual(true);
   window.scrollTo({top:0, behavior:'smooth'});
 }
 window.closeLibraryAddView = function(){
   const myspace=document.getElementById('view-myspace');
   const libraryAdd=document.getElementById('view-library-add');
-  const title=document.querySelector('.content-slot-title');
   if(libraryAdd) libraryAdd.style.display='none';
   if(myspace) myspace.style.display='block';
-  if(title) title.textContent='MY SPACE';
   setWriteModeVisual(false);
 }
 window.saveAndReturnToLibrary = function(){
-  document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
-  const libraryBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="library"]');
+  document.querySelectorAll('.myspace-tabs .pg-tab-btn').forEach(btn=>btn.classList.remove('active'));
+  const libraryBtn=document.querySelector('.myspace-tabs .pg-tab-btn[data-tab="library"]');
   if(libraryBtn) libraryBtn.classList.add('active');
   renderMySpaceView('library');
   closeLibraryAddView();
@@ -466,10 +465,8 @@ window.toggleAttachSection = function(type){
 window.openWriteView = function(){
   const myspace=document.getElementById('view-myspace');
   const write=document.getElementById('view-write');
-  const title=document.querySelector('.content-slot-title');
   if(myspace) myspace.style.display='none';
   if(write) write.style.display='block';
-  if(title) title.textContent='스크립트 작성하기';
   setWriteModeVisual(true);
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -477,11 +474,9 @@ window.closeWriteView = function(){
   const myspace=document.getElementById('view-myspace');
   const write=document.getElementById('view-write');
   const libraryAdd=document.getElementById('view-library-add');
-  const title=document.querySelector('.content-slot-title');
   if(write) write.style.display='none';
   if(libraryAdd) libraryAdd.style.display='none';
   if(myspace) myspace.style.display='block';
-  if(title) title.textContent='MY SPACE';
   setWriteModeVisual(false);
 }
 window.toggleGuide = function(){
@@ -495,13 +490,13 @@ window.toggleGuide = function(){
 
 
 window.setWriteModeVisual = function(isWrite){
-  var footerEl = document.querySelector('.mys-footer-block');
+  var footerEl = document.querySelector('.pg-footer-block');
   if (footerEl) footerEl.style.display = isWrite ? 'none' : '';
 }
 
 window.saveAndReturnToMySpace = function(){
-  document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
-  const scriptBtn=document.querySelector('.myspace-tabs .main-btn[data-tab="scripts"]');
+  document.querySelectorAll('.myspace-tabs .pg-tab-btn').forEach(btn=>btn.classList.remove('active'));
+  const scriptBtn=document.querySelector('.myspace-tabs .pg-tab-btn[data-tab="scripts"]');
   if(scriptBtn) scriptBtn.classList.add('active');
   renderMySpaceView('scripts');
   closeWriteView();
@@ -511,14 +506,14 @@ window.renderMySpaceView = function(view){
   const slot=document.getElementById('view-myspace');
   slot.innerHTML=window.mySpaceViews[view]||window.mySpaceViews.scripts;
   // 탭 버튼 active 동기화 (초기 진입 시에도 적용)
-  document.querySelectorAll('.myspace-tabs .main-btn').forEach(function(btn){
+  document.querySelectorAll('.myspace-tabs .pg-tab-btn').forEach(function(btn){
     btn.classList.toggle('active', btn.dataset.tab === view);
   });
   if(view==='scripts') window.loadScriptsList();
   if(view==='library') window.loadLibraryList();
 }
 window.switchMySpaceTab = function(button,view){
-  document.querySelectorAll('.myspace-tabs .main-btn').forEach(btn=>btn.classList.remove('active'));
+  document.querySelectorAll('.myspace-tabs .pg-tab-btn').forEach(btn=>btn.classList.remove('active'));
   button.classList.add('active');
   closeWriteView();
   renderMySpaceView(view);
@@ -719,7 +714,7 @@ window.loadScriptsList = async function() {
     if (!res.ok) {
       const err = await res.json();
       console.error('scripts fetch error:', res.status, err);
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패 (' + res.status + '). 새로고침 해주세요.</div>';
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + res.status + '). 새로고침 해주세요.</div>';
       return;
     }
     const data = await res.json();
@@ -758,7 +753,7 @@ window.loadScriptsList = async function() {
     }
 
     window.renderScriptsList(window._allScripts);
-  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패. 새로고침 해주세요.</div>'; }
+  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패. 새로고침 해주세요.</div>'; }
 }
 
 window.renderScriptsList = function(items) {
@@ -767,8 +762,8 @@ window.renderScriptsList = function(items) {
   if (!items || items.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:36px 20px;">
       <div style="font-size:32px;margin-bottom:12px;">✍️</div>
-      <div style="font-size:15px;font-weight:800;color:#3d2b1f;margin-bottom:8px;">아직 저장된 스크립트가 없습니다</div>
-      <div style="font-size:13px;color:#9a7a62;line-height:1.7;">오늘 통화 중 막혔던 순간이 있었나요?<br>그 멘트를 지금 바로 저장해두세요.<br>다음 통화에서 바로 꺼내 쓸 수 있습니다.</div>
+      <div style="font-size:0.842em;font-weight:800;color:var(--color-text-primary,#3D2C1E);margin-bottom:8px;">아직 저장된 스크립트가 없습니다</div>
+      <div style="font-size:0.790em;color:var(--color-text-tertiary,#B89880);line-height:1.7;">오늘 통화 중 막혔던 순간이 있었나요?<br>그 멘트를 지금 바로 저장해두세요.<br>다음 통화에서 바로 꺼내 쓸 수 있습니다.</div>
     </div>`;
     return;
   }
@@ -814,13 +809,13 @@ window.loadLibraryList = async function() {
     if (!res.ok) {
       const err = await res.json();
       console.error('library fetch error:', res.status, err);
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패 (' + res.status + '). 새로고침 해주세요.</div>';
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + res.status + '). 새로고침 해주세요.</div>';
       return;
     }
     const data = await res.json();
     window._allLibrary = data || [];
     window.renderLibraryList(window._allLibrary);
-  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패. 새로고침 해주세요.</div>'; }
+  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패. 새로고침 해주세요.</div>'; }
 }
 
 window.renderLibraryList = function(items) {
@@ -829,8 +824,8 @@ window.renderLibraryList = function(items) {
   if (!items || items.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:36px 20px;">
       <div style="font-size:32px;margin-bottom:12px;">📁</div>
-      <div style="font-size:15px;font-weight:800;color:#3d2b1f;margin-bottom:8px;">아직 저장된 자료가 없습니다</div>
-      <div style="font-size:13px;color:#9a7a62;line-height:1.7;">통화 중 설명이 길어지는 순간,<br>바로 꺼내 보여줄 자료를 저장해두세요.<br>링크, 메모, 파일, 이미지 모두 저장 가능합니다.</div>
+      <div style="font-size:0.842em;font-weight:800;color:var(--color-text-primary,#3D2C1E);margin-bottom:8px;">아직 저장된 자료가 없습니다</div>
+      <div style="font-size:0.790em;color:var(--color-text-tertiary,#B89880);line-height:1.7;">통화 중 설명이 길어지는 순간,<br>바로 꺼내 보여줄 자료를 저장해두세요.<br>링크, 메모, 파일, 이미지 모두 저장 가능합니다.</div>
     </div>`;
     return;
   }
@@ -840,7 +835,7 @@ window.renderLibraryList = function(items) {
     const tags = [s.file_url?'📎파일':null, s.link_url?'🔗링크':null, s.memo_text?'📝메모':null, s.image_url?'🖼이미지':null].filter(Boolean).join(' ');
     return `<div class="mys-item">
       <div class="mys-item-left">
-        <div class="mys-item-title">${s.title || '제목 없음'}${tags ? ' <span style="font-size:11px;color:#9a7a62;font-weight:400;">'+tags+'</span>' : ''}</div>
+        <div class="mys-item-title">${s.title || '제목 없음'}${tags ? ' <span style="font-size:0.579em;color:var(--color-text-tertiary,#B89880);font-weight:400;">'+tags+'</span>' : ''}</div>
         <div class="mys-item-preview">${preview}</div>
         <div class="mys-item-date">${date}</div>
       </div>
