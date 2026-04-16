@@ -1306,18 +1306,30 @@ window.admBannerClear = function (pageKey) {
 /* 메뉴 ON/OFF 저장 */
 window.admSaveMenuSettings = async function () {
   var keys = ['home','scripts','board','myspace','news','quick'];
-  var upsertRows = keys.map(function (k) {
+  var rows = keys.map(function (k) {
     var el = document.getElementById('setting-menu_' + k);
     return { group_name: 'menu_b', key: 'menu_' + k, value: el && el.checked ? 'true' : 'false' };
   });
   try {
-    var res = await admFetch('/rest/v1/app_settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify(upsertRows)
+    /* 1) 기존 menu_b 행 전체 삭제 */
+    var delRes = await admFetch('/rest/v1/app_settings?group_name=eq.menu_b', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
     });
-    if (res.ok) { alert('메뉴 설정이 저장됐습니다.'); }
-    else { var e = await res.text(); console.error('[admin] 메뉴 저장 실패:', res.status, e); alert('저장 실패 (HTTP ' + res.status + ')'); }
+    if (!delRes.ok && delRes.status !== 404) {
+      var e = await delRes.text();
+      console.error('[admin] 메뉴 삭제 실패:', delRes.status, e);
+      alert('저장 실패 (삭제 단계 오류)');
+      return;
+    }
+    /* 2) 새 값 INSERT */
+    var insRes = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    if (insRes.ok) { alert('메뉴 설정이 저장됐습니다.'); }
+    else { var e2 = await insRes.text(); console.error('[admin] 메뉴 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
   } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 };
 
@@ -1374,11 +1386,20 @@ window.admSaveBannerSettings = async function () {
     }
   }
 
-  /* app_settings upsert */
+  /* app_settings DELETE → INSERT */
   try {
+    var delRes2 = await admFetch('/rest/v1/app_settings?group_name=eq.banner_img', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!delRes2.ok && delRes2.status !== 404) {
+      alert('저장 실패 (삭제 단계 오류)');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+      return;
+    }
     var res = await admFetch('/rest/v1/app_settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify(upsertRows)
     });
     if (res.ok) {
