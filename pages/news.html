@@ -1,33 +1,296 @@
+<!-- =====================================================
+   pages/news.html  —  보험뉴스
+   pg-outer 표준 구조 / design_guide.md 준수
+   2026-04-16
+===================================================== -->
 <style>
-.news-page-header {
+/* ── 래퍼 ── */
+.news-outer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+/* ── 헤더 ── */
+.news-header {
   height: 120px;
-  background: linear-gradient(135deg, #3d2b1f 0%, #6b4226 100%);
+  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-light) 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   flex-shrink: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
-.news-page-title {
-  font-family: Pretendard, 'Noto Sans KR', sans-serif;
+.news-header-text {}
+.news-header-title {
   font-size: 1.5em;
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.5px;
   margin-bottom: 6px;
 }
-.news-page-desc {
-  font-family: Pretendard, 'Noto Sans KR', sans-serif;
+.news-header-sub {
   font-size: 0.842em;
   font-weight: 400;
   color: rgba(255,255,255,0.65);
   letter-spacing: -0.2px;
 }
-.news-page-icon { font-size: 2.8em; opacity: 0.15; }
-.card { padding: 16px 20px; }
+.news-header-icon {
+  font-size: 2.8em;
+  opacity: 0.15;
+}
+
+/* ── 탭 필터 ── */
+.news-tab-bar {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+.news-tab-btn {
+  font-size: 0.895em;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 14px 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.news-tab-btn:hover {
+  color: var(--color-text-primary);
+}
+.news-tab-btn.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  font-weight: 700;
+}
+
+/* ── 콘텐츠 스크롤 ── */
+.news-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 0;
+}
+
+/* ── 뉴스 카드 ── */
+.news-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.news-card:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border-color: var(--color-accent);
+}
+.news-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.news-card-category {
+  font-size: 0.790em;
+  font-weight: 600;
+  color: var(--color-accent);
+  background: var(--color-surface-2);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+}
+.news-card-source {
+  font-size: 0.790em;
+  color: var(--color-text-tertiary);
+}
+.news-card-date {
+  font-size: 0.790em;
+  color: var(--color-text-tertiary);
+  margin-left: auto;
+}
+.news-card-title {
+  font-size: 0.942em;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+.news-card-summary {
+  font-size: 0.842em;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+.news-card-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.790em;
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.news-card-link:hover { text-decoration: underline; }
+
+/* ── 로딩 ── */
+.news-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 12px;
+  color: var(--color-text-tertiary);
+  font-size: 0.842em;
+}
+.news-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: var(--radius-full);
+  animation: news-spin 0.7s linear infinite;
+}
+@keyframes news-spin { to { transform: rotate(360deg); } }
+
+/* ── 빈 상태 ── */
+.news-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 10px;
+  color: var(--color-text-tertiary);
+  font-size: 0.842em;
+}
+.news-empty-icon { font-size: 2.4em; opacity: 0.4; }
+
+/* ── 푸터 ── */
+.news-footer {
+  background: var(--color-brand);
+  color: #fff;
+  text-align: center;
+  font-size: 0.790em;
+  padding: 12px 16px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin-top: 4px;
+}
 </style>
+
 <!-- 배너 슬롯 -->
 <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
-<div class="card">
-  <p>보험 뉴스 목록이 들어갈 영역입니다.</p>
+
+<div class="news-outer">
+
+  <!-- 헤더 -->
+  <div class="news-header">
+    <div class="news-header-text">
+      <div class="news-header-title">📰 보험뉴스</div>
+      <div class="news-header-sub">보험 업계 최신 소식을 빠르게 확인하세요</div>
+    </div>
+    <div class="news-header-icon">📰</div>
+  </div>
+
+  <!-- 탭 필터 -->
+  <div class="news-tab-bar">
+    <button class="news-tab-btn active" onclick="window.newsFilterTab('전체')">전체</button>
+    <button class="news-tab-btn" onclick="window.newsFilterTab('생명보험')">생명보험</button>
+    <button class="news-tab-btn" onclick="window.newsFilterTab('손해보험')">손해보험</button>
+    <button class="news-tab-btn" onclick="window.newsFilterTab('제도·규제')">제도·규제</button>
+  </div>
+
+  <!-- 콘텐츠 -->
+  <div class="news-content" id="news-content-area">
+    <div class="news-loading" id="news-loading">
+      <div class="news-spinner"></div>
+      <span>뉴스를 불러오는 중...</span>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="news-footer">뉴스를 스크립트로, 스크립트를 계약으로</div>
+
 </div>
+
+<script>
+(function () {
+  var _allNews = [];
+  var _currentCategory = '전체';
+
+  /* ── 탭 전환 ── */
+  window.newsFilterTab = function (category) {
+    _currentCategory = category;
+    document.querySelectorAll('.news-tab-btn').forEach(function (btn) {
+      btn.classList.toggle('active', btn.textContent.trim() === category);
+    });
+    window.newsRender();
+  };
+
+  /* ── 렌더 ── */
+  window.newsRender = function () {
+    var area = document.getElementById('news-content-area');
+    var filtered = _currentCategory === '전체'
+      ? _allNews
+      : _allNews.filter(function (n) { return n.category === _currentCategory; });
+
+    if (filtered.length === 0) {
+      area.innerHTML = '<div class="news-empty"><div class="news-empty-icon">📭</div><span>등록된 뉴스가 없습니다.</span></div>';
+      return;
+    }
+
+    area.innerHTML = filtered.map(function (n) {
+      var dateStr = n.published_at ? n.published_at.slice(0, 10) : '';
+      return [
+        '<div class="news-card">',
+        '  <div class="news-card-top">',
+        '    <span class="news-card-category">' + (n.category || '전체') + '</span>',
+        '    <span class="news-card-source">' + (n.source || '') + '</span>',
+        '    <span class="news-card-date">' + dateStr + '</span>',
+        '  </div>',
+        '  <div class="news-card-title">' + n.title + '</div>',
+        n.summary ? '  <div class="news-card-summary">' + n.summary + '</div>' : '',
+        n.url ? '  <a class="news-card-link" href="' + n.url + '" target="_blank" rel="noopener">원문 보기 →</a>' : '',
+        '</div>'
+      ].join('');
+    }).join('');
+  };
+
+  /* ── 데이터 로드 ── */
+  function loadNews() {
+    if (!window.db) return;
+    fetch(window.db.url('/rest/v1/news?is_active=eq.true&order=published_at.desc'), {
+      headers: {
+        'apikey': window.db.key,
+        'Authorization': 'Bearer ' + window.db.key
+      }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      _allNews = Array.isArray(data) ? data : [];
+      window.newsRender();
+    })
+    .catch(function (e) {
+      console.error('[news] fetch error', e);
+      var area = document.getElementById('news-content-area');
+      area.innerHTML = '<div class="news-empty"><div class="news-empty-icon">⚠️</div><span>뉴스를 불러오지 못했습니다.</span></div>';
+    });
+  }
+
+  /* ── 부트 ── */
+  if (window.AppState && window.AppState.ready) {
+    loadNews();
+  } else {
+    document.addEventListener('appstate:ready', function () { loadNews(); }, { once: true });
+  }
+})();
+</script>
