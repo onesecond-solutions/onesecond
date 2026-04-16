@@ -796,7 +796,7 @@ function _renderBannerSlot(slot, url) {
   slot.innerHTML =
     '<img src="' + url + '" alt="배너 이미지"'
     + ' style="width:100%;height:auto;display:block;border-radius:var(--radius-md,12px);overflow:hidden;"'
-    + ' onerror="this.parentElement.style.display='none'">';
+    + ' onerror="this.parentElement.style.display=\'none\'">';
 }
 
 // 관리자 저장 후 캐시 무효화 (즉시 반영용)
