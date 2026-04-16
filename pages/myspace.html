@@ -53,8 +53,7 @@
 .pg-content-block {
   background: var(--color-surface, #fff);
   border-radius: var(--radius-md, 12px);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   flex: 1;
 }
 .pg-content-inner {
@@ -640,6 +639,26 @@ window.initMySpace = function() {
   window.setWriteModeVisual(false);
 };
 })(); // /IIFE
+
+// ── appstate:ready 부트 ──
+(function() {
+  function _boot() {
+    window.renderMySpaceView('scripts');
+    window.setWriteModeVisual(false);
+  }
+  if (window.AppState && window.AppState.ready) {
+    _boot();
+  } else {
+    document.addEventListener('appstate:ready', function() { _boot(); }, { once: true });
+    // 안전망: 1.5초 후에도 미부팅이면 강제 실행
+    setTimeout(function() {
+      if (!document.getElementById('scripts-list')) {
+        window.renderMySpaceView && window.renderMySpaceView('scripts');
+        window.setWriteModeVisual && window.setWriteModeVisual(false);
+      }
+    }, 1500);
+  }
+})();
 </script><script>
 (function() {
 // ── myspace 초기화 — appstate:ready 표준 패턴 ──
@@ -766,45 +785,30 @@ window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   try {
-    const userId  = window.AppState.userId;
-    const role    = (window.AppState && window.AppState.role) || '';
-    const isAdmin = role === 'admin';
+    const userId = window.AppState.userId;
     const headers = { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` };
 
-    let allScripts = [];
+    /* ── 내 스크립트 + 샘플 스크립트 병렬 fetch ── */
+    const [resOwn, resSample] = await Promise.all([
+      fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers }),
+      fetch(window.db.url(`/rest/v1/scripts?is_sample=eq.true&is_active=eq.true&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers })
+    ]);
 
-    if (isAdmin) {
-      /* ── 관리자: 전체 스크립트 조회 ── */
-      const res = await fetch(window.db.url(
-        `/rest/v1/scripts?order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,scope,created_at`
-      ), { headers });
-      if (!res.ok) {
-        const err = await res.json();
-        console.error('scripts fetch error:', res.status, err);
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + res.status + '). 새로고침 해주세요.</div>';
-        return;
-      }
-      allScripts = await res.json();
-    } else {
-      /* ── 일반 사용자: 내 스크립트 + 샘플 병렬 fetch ── */
-      const [resOwn, resSample] = await Promise.all([
-        fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers }),
-        fetch(window.db.url(`/rest/v1/scripts?is_sample=eq.true&is_active=eq.true&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers })
-      ]);
-      if (!resOwn.ok) {
-        const err = await resOwn.json();
-        console.error('scripts fetch error:', resOwn.status, err);
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + resOwn.status + '). 새로고침 해주세요.</div>';
-        return;
-      }
-      const ownData       = await resOwn.json();
-      const sampleData    = resSample.ok ? await resSample.json() : [];
-      const ownIds        = new Set((ownData || []).map(function(s) { return s.id; }));
-      const uniqueSamples = (sampleData || []).filter(function(s) { return !ownIds.has(s.id); });
-      allScripts = (ownData || []).concat(uniqueSamples);
+    if (!resOwn.ok) {
+      const err = await resOwn.json();
+      console.error('scripts fetch error:', resOwn.status, err);
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + resOwn.status + '). 새로고침 해주세요.</div>';
+      return;
     }
 
-    window._allScripts = allScripts;
+    const ownData = await resOwn.json();
+    const sampleData = resSample.ok ? await resSample.json() : [];
+
+    /* ── 중복 제거 후 합치기: 내 스크립트 우선, 샘플은 뒤에 ── */
+    const ownIds = new Set((ownData || []).map(function(s) { return s.id; }));
+    const uniqueSamples = (sampleData || []).filter(function(s) { return !ownIds.has(s.id); });
+
+    window._allScripts = (ownData || []).concat(uniqueSamples);
     window.renderScriptsList(window._allScripts);
 
   } catch(e) {
@@ -812,7 +816,33 @@ window.loadScriptsList = async function() {
     if (list2) list2.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패. 새로고침 해주세요.</div>';
   }
 }
-window.renderScriptsList = function(items) {
+
+
+/* ── 페이지네이션 공통 상태 ── */
+window._PAGE_SIZE = 10;
+window._scriptPage  = 1;
+window._libraryPage = 1;
+window._leaderPage  = 1;
+
+/* ── 공통 페이지네이션 UI 빌더 ── */
+window._buildPaging = function(total, currentPage, onClickFn) {
+  const totalPages = Math.ceil(total / window._PAGE_SIZE);
+  if (totalPages <= 1) return '';
+  let nums = '';
+  for (let p = 1; p <= totalPages; p++) {
+    const active = p === currentPage;
+    nums += '<button onclick="' + onClickFn + '(' + p + ')" style="min-width:30px;height:30px;border-radius:var(--radius-sm,8px);border:1px solid ' + (active ? 'var(--color-brand,#A0522D)' : 'var(--color-border,#E4DBCE)') + ';background:' + (active ? 'var(--color-brand,#A0522D)' : 'transparent') + ';color:' + (active ? '#fff' : 'var(--color-text-secondary,#7A5C44)') + ';font-size:0.790em;font-weight:' + (active ? '700' : '500') + ';cursor:pointer;font-family:inherit;">' + p + '</button>';
+  }
+  const prevStyle = currentPage <= 1 ? 'opacity:0.3;pointer-events:none;' : '';
+  const nextStyle = currentPage >= totalPages ? 'opacity:0.3;pointer-events:none;' : '';
+  return '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 0 4px;">'
+    + '<button onclick="' + onClickFn + '(' + (currentPage - 1) + ')" style="' + prevStyle + 'min-width:30px;height:30px;border-radius:var(--radius-sm,8px);border:1px solid var(--color-border,#E4DBCE);background:transparent;color:var(--color-text-secondary,#7A5C44);font-size:0.790em;cursor:pointer;font-family:inherit;">‹</button>'
+    + nums
+    + '<button onclick="' + onClickFn + '(' + (currentPage + 1) + ')" style="' + nextStyle + 'min-width:30px;height:30px;border-radius:var(--radius-sm,8px);border:1px solid var(--color-border,#E4DBCE);background:transparent;color:var(--color-text-secondary,#7A5C44);font-size:0.790em;cursor:pointer;font-family:inherit;">›</button>'
+    + '</div>';
+};
+
+window.renderScriptsList = function(items, page) {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   if (!items || items.length === 0) {
@@ -823,28 +853,43 @@ window.renderScriptsList = function(items) {
     </div>`;
     return;
   }
-  list.innerHTML = items.map(s => {
+  const cp = page || window._scriptPage || 1;
+  const total = items.length;
+  const tp = Math.ceil(total / window._PAGE_SIZE);
+  window._scriptPage = Math.min(Math.max(1, cp), tp);
+  const start = (window._scriptPage - 1) * window._PAGE_SIZE;
+  const pageItems = items.slice(start, start + window._PAGE_SIZE);
+
+  list.innerHTML = pageItems.map(function(s, i) {
+    const num = String(start + i + 1).padStart(2, '0');
     const date = s.created_at ? s.created_at.slice(0,10).replace(/-/g,'.') : '';
-    const preview = (s.highlight_text || s.script_text || '').slice(0,60);
-    const sampleBadge = s.is_sample ? `<span style="display:inline-block;font-size:0.68em;font-weight:700;color:var(--color-accent,#D4845A);background:rgba(212,132,90,0.12);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle;">샘플</span>` : '';
+    const preview = (s.highlight_text || s.script_text || '').replace(/<[^>]+>/g,'').slice(0,60);
+    const sampleBadge = s.is_sample ? '<span style="display:inline-block;font-size:0.68em;font-weight:700;color:var(--color-accent,#D4845A);background:rgba(212,132,90,0.12);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle;">샘플</span>' : '';
     const moreBtn = s.is_sample
-      ? `<span style="width:28px;"></span>`
-      : `<button class="mys-item-more" onclick="deleteScript(${s.id}, this)">…</button>`;
-    return `<div class="mys-item">
-      <div class="mys-item-left">
-        <div class="mys-item-title">${s.title || '제목 없음'}${sampleBadge}</div>
-        <div class="mys-item-preview">${preview}</div>
-        <div class="mys-item-date">${date}</div>
-      </div>
-      ${moreBtn}
-    </div>`;
-  }).join('');
+      ? '<span style="width:28px;"></span>'
+      : '<button class="mys-item-more" onclick="deleteScript(' + s.id + ', this)">…</button>';
+    return '<div class="mys-item">'
+      + '<span style="flex-shrink:0;min-width:22px;font-size:0.700em;font-weight:800;color:var(--color-text-tertiary,#B89880);padding-top:2px;">' + num + '</span>'
+      + '<div class="mys-item-left" style="flex:1;min-width:0;">'
+      + '<div class="mys-item-title">' + (s.title || '제목 없음') + sampleBadge + '</div>'
+      + '<div class="mys-item-preview">' + preview + '</div>'
+      + '<div class="mys-item-date">' + date + '</div>'
+      + '</div>'
+      + moreBtn
+      + '</div>';
+  }).join('') + window._buildPaging(total, window._scriptPage, 'window.goScriptPage');
+}
+
+window.goScriptPage = function(p) {
+  window._scriptPage = p;
+  window.renderScriptsList(window._allScripts, p);
 }
 
 window.filterScriptList = function(keyword) {
+  window._scriptPage = 1;
   if (!keyword) { window.renderScriptsList(window._allScripts); return; }
-  const filtered = window._allScripts.filter(s => (s.title||'').includes(keyword) || (s.script_text||'').includes(keyword));
-  renderScriptsList(filtered);
+  const filtered = window._allScripts.filter(function(s) { return (s.title||'').includes(keyword) || (s.script_text||'').replace(/<[^>]+>/g,'').includes(keyword); });
+  window.renderScriptsList(filtered);
 }
 
 window.deleteScript = async function(id, btn) {
@@ -878,7 +923,7 @@ window.loadLibraryList = async function() {
   } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패. 새로고침 해주세요.</div>'; }
 }
 
-window.renderLibraryList = function(items) {
+window.renderLibraryList = function(items, page) {
   const list = document.getElementById('library-list');
   if (!list) return;
   if (!items || items.length === 0) {
@@ -889,25 +934,40 @@ window.renderLibraryList = function(items) {
     </div>`;
     return;
   }
-  list.innerHTML = items.map(s => {
+  const cp = page || window._libraryPage || 1;
+  const total = items.length;
+  const tp = Math.ceil(total / window._PAGE_SIZE);
+  window._libraryPage = Math.min(Math.max(1, cp), tp);
+  const start = (window._libraryPage - 1) * window._PAGE_SIZE;
+  const pageItems = items.slice(start, start + window._PAGE_SIZE);
+
+  list.innerHTML = pageItems.map(function(s, i) {
+    const num = String(start + i + 1).padStart(2, '0');
     const date = s.created_at ? s.created_at.slice(0,10).replace(/-/g,'.') : '';
     const preview = (s.description || '').slice(0,60);
-    const tags = [s.file_url?'📎파일':null, s.link_url?'🔗링크':null, s.memo_text?'📝메모':null, s.image_url?'🖼이미지':null].filter(Boolean).join(' ');
-    return `<div class="mys-item">
-      <div class="mys-item-left">
-        <div class="mys-item-title">${s.title || '제목 없음'}${tags ? ' <span style="font-size:0.579em;color:var(--color-text-tertiary,#B89880);font-weight:400;">'+tags+'</span>' : ''}</div>
-        <div class="mys-item-preview">${preview}</div>
-        <div class="mys-item-date">${date}</div>
-      </div>
-      <button class="mys-item-more" onclick="deleteLibrary(${s.id}, this)">…</button>
-    </div>`;
-  }).join('');
+    const tags = [s.file_url ? '📎파일' : null, s.link_url ? '🔗링크' : null, s.memo_text ? '📝메모' : null, s.image_url ? '🖼이미지' : null].filter(Boolean).join(' ');
+    return '<div class="mys-item">'
+      + '<span style="flex-shrink:0;min-width:22px;font-size:0.700em;font-weight:800;color:var(--color-text-tertiary,#B89880);padding-top:2px;">' + num + '</span>'
+      + '<div class="mys-item-left" style="flex:1;min-width:0;">'
+      + '<div class="mys-item-title">' + (s.title || '제목 없음') + (tags ? ' <span style="font-size:0.579em;color:var(--color-text-tertiary,#B89880);font-weight:400;">' + tags + '</span>' : '') + '</div>'
+      + '<div class="mys-item-preview">' + preview + '</div>'
+      + '<div class="mys-item-date">' + date + '</div>'
+      + '</div>'
+      + '<button class="mys-item-more" onclick="deleteLibrary(' + s.id + ', this)">…</button>'
+      + '</div>';
+  }).join('') + window._buildPaging(total, window._libraryPage, 'window.goLibraryPage');
+}
+
+window.goLibraryPage = function(p) {
+  window._libraryPage = p;
+  window.renderLibraryList(window._allLibrary, p);
 }
 
 window.filterLibraryList = function(keyword) {
+  window._libraryPage = 1;
   if (!keyword) { window.renderLibraryList(window._allLibrary); return; }
-  const filtered = window._allLibrary.filter(s => (s.title||'').includes(keyword) || (s.description||'').includes(keyword));
-  renderLibraryList(filtered);
+  const filtered = window._allLibrary.filter(function(s) { return (s.title||'').includes(keyword) || (s.description||'').includes(keyword); });
+  window.renderLibraryList(filtered);
 }
 
 window.deleteLibrary = async function(id, btn) {
@@ -1015,7 +1075,7 @@ var _STAGE_LABEL = {
   product: '상품 설명', objection: '반론 대응', closing: '클로징', closing_second: '2차 클로징'
 };
 
-window.renderLeaderList = function(items) {
+window.renderLeaderList = function(items, page) {
   const list = document.getElementById('leader-list');
   if (!list) return;
   if (!items || items.length === 0) {
@@ -1026,26 +1086,41 @@ window.renderLeaderList = function(items) {
     </div>`;
     return;
   }
-  list.innerHTML = items.map(function(s) {
+  const cp = page || window._leaderPage || 1;
+  const total = items.length;
+  const tp = Math.ceil(total / window._PAGE_SIZE);
+  window._leaderPage = Math.min(Math.max(1, cp), tp);
+  const start = (window._leaderPage - 1) * window._PAGE_SIZE;
+  const pageItems = items.slice(start, start + window._PAGE_SIZE);
+
+  list.innerHTML = pageItems.map(function(s, i) {
+    const num = String(start + i + 1).padStart(2, '0');
     const date = s.created_at ? s.created_at.slice(0,10).replace(/-/g,'.') : '';
     const preview = (s.highlight_text || s.script_text || '').replace(/<[^>]+>/g,'').slice(0,60);
     const stageLabel = _STAGE_LABEL[s.stage] || s.stage || '';
-    return `<div class="mys-item" style="cursor:pointer;" onclick="openLeaderModal(${s.id})">
-      <div class="mys-item-left">
-        <div class="mys-item-title">${s.title || '제목 없음'}${stageLabel ? ' <span style="font-size:0.700em;color:var(--color-accent,#D4845A);font-weight:700;background:rgba(212,132,90,0.1);padding:1px 6px;border-radius:4px;">'+stageLabel+'</span>' : ''}</div>
-        <div class="mys-item-preview">${preview}</div>
-        <div class="mys-item-date">${date}</div>
-      </div>
-      <span style="font-size:0.790em;color:var(--color-text-tertiary,#B89880);flex-shrink:0;">▶</span>
-    </div>`;
-  }).join('');
+    return '<div class="mys-item" style="cursor:pointer;" onclick="openLeaderModal(' + s.id + ')">'
+      + '<span style="flex-shrink:0;min-width:22px;font-size:0.700em;font-weight:800;color:var(--color-text-tertiary,#B89880);padding-top:2px;">' + num + '</span>'
+      + '<div class="mys-item-left" style="flex:1;min-width:0;">'
+      + '<div class="mys-item-title">' + (s.title || '제목 없음') + (stageLabel ? ' <span style="font-size:0.700em;color:var(--color-accent,#D4845A);font-weight:700;background:rgba(212,132,90,0.1);padding:1px 6px;border-radius:4px;">' + stageLabel + '</span>' : '') + '</div>'
+      + '<div class="mys-item-preview">' + preview + '</div>'
+      + '<div class="mys-item-date">' + date + '</div>'
+      + '</div>'
+      + '<span style="font-size:0.790em;color:var(--color-text-tertiary,#B89880);flex-shrink:0;">▶</span>'
+      + '</div>';
+  }).join('') + window._buildPaging(total, window._leaderPage, 'window.goLeaderPage');
 };
 
+window.goLeaderPage = function(p) {
+  window._leaderPage = p;
+  window.renderLeaderList(window._allLeaderScripts, p);
+}
+
 window.filterLeaderList = function(keyword) {
+  window._leaderPage = 1;
   if (!keyword) { window.renderLeaderList(window._allLeaderScripts); return; }
-  const filtered = window._allLeaderScripts.filter(s =>
-    (s.title||'').includes(keyword) || (s.script_text||'').replace(/<[^>]+>/g,'').includes(keyword)
-  );
+  const filtered = window._allLeaderScripts.filter(function(s) {
+    return (s.title||'').includes(keyword) || (s.script_text||'').replace(/<[^>]+>/g,'').includes(keyword);
+  });
   window.renderLeaderList(filtered);
 };
 
@@ -1145,23 +1220,6 @@ window.toggleLeaderPick = async function(event, id, btn) {
 };
 
 })(); // /IIFE
-
-// ── appstate:ready 부트 (모든 함수 선언 완료 후 실행) ──
-(function() {
-  function _boot() {
-    window.renderMySpaceView('scripts');
-    window.setWriteModeVisual && window.setWriteModeVisual(false);
-  }
-  if (window.AppState && window.AppState.ready) {
-    _boot();
-  } else {
-    document.addEventListener('appstate:ready', function() { _boot(); }, { once: true });
-    setTimeout(function() {
-      window.renderMySpaceView && window.renderMySpaceView('scripts');
-      window.setWriteModeVisual && window.setWriteModeVisual(false);
-    }, 1500);
-  }
-})();
 </script>
 
 <!-- 리더 추천 상세 모달 -->
