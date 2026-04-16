@@ -150,6 +150,11 @@ html, body {
   flex-direction: column;
   scrollbar-gutter: stable;
 }
+/* D영역 직접 자식(pg-outer 등)이 높이를 채우도록 */
+.d > * {
+  flex-shrink: 0;
+  width: 100%;
+}
 
 /* ── C: 우측 패널 ── */
 .c {
