@@ -101,9 +101,21 @@
         '/rest/v1/users?id=eq.' + window.AppState.userId
         + '&select=name,role,phone,email,company,branch,team,plan'
       );
-      if (!res.ok) return;
+      if (!res.ok) {
+        // fetch 실패해도 appstate:ready는 발화 (이름/이메일은 빈값)
+        document.dispatchEvent(new CustomEvent('appstate:ready', {
+          detail: { user: window.AppState }
+        }));
+        return;
+      }
       var data = await res.json();
-      if (!data || !data[0]) return;
+      if (!data || !data[0]) {
+        // 데이터 없어도 appstate:ready 발화 (A1은 이메일만 표시)
+        document.dispatchEvent(new CustomEvent('appstate:ready', {
+          detail: { user: window.AppState }
+        }));
+        return;
+      }
       var u = data[0];
 
       // AppState 갱신
@@ -182,6 +194,10 @@
     window.AppState.userId = userId;
     window.AppState.token  = token;
 
+    // 하위 호환: window._userToken / _userId 동기화
+    window._userToken = token;
+    window._userId    = userId;
+
     // 토큰 만료 시 갱신 시도
     if (isTokenExpired(token)) {
       var newToken = await window.db.fetch('/auth/v1/token?grant_type=refresh_token', {
@@ -201,6 +217,7 @@
         sessionStorage.setItem('os_token', newToken.access_token);
         sessionStorage.setItem('os_user', JSON.stringify(newToken.user));
         window.AppState.token = newToken.access_token;
+        window._userToken     = newToken.access_token;
       } else {
         // 갱신 실패 → 로그인 페이지
         window.location.href = 'index.html';
