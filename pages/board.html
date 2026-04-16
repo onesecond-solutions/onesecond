@@ -579,6 +579,107 @@
 }
 .detail-attach-dl { font-size: 0.78em; color: var(--color-brand, #A0522D); flex-shrink: 0; }
 
+/* ── 보험사 게시판 2컬럼 레이아웃 ── */
+.insurer-layout {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.insurer-col1 {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.insurer-col1-label {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: var(--color-text-tertiary, #B89880);
+  padding: 0 2px 4px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.insurer-seg-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-secondary, #7A5C44);
+  font-size: 0.842em;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: all .15s;
+}
+.insurer-seg-btn:hover:not(.active) { background: var(--color-surface-2, #F3EFE9); }
+.insurer-seg-btn.active {
+  background: rgba(160, 82, 45, .08);
+  border-color: rgba(160, 82, 45, .4);
+  color: var(--color-brand, #A0522D);
+}
+.insurer-dropdown {
+  display: none;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-primary, #3D2C1E);
+  font-size: 0.79em;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  outline: none;
+}
+.insurer-dropdown.visible { display: block; }
+.insurer-dropdown:focus { border-color: var(--color-brand, #A0522D); }
+
+.insurer-col2 { min-width: 0; }
+.insurer-cat-tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border, #E4DBCE);
+  margin-bottom: 0.85em;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.insurer-cat-tab-bar::-webkit-scrollbar { display: none; }
+.insurer-cat-btn {
+  padding: 8px 11px;
+  border: none;
+  background: transparent;
+  font-size: 0.842em;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--color-text-tertiary, #B89880);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.insurer-cat-btn:hover { color: var(--color-text-secondary, #7A5C44); }
+.insurer-cat-btn.active {
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+  border-bottom-color: var(--color-accent, #D4845A);
+}
+
+/* 보험사 게시판 전용 뱃지 */
+.ins-type-badge {
+  padding: 0.12em 0.5em;
+  border-radius: var(--radius-xs, 6px);
+  font-size: 0.68em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.ins-type-badge.nonlife { background: #dbeafe; color: #1e40af; }
+.ins-type-badge.life    { background: #dcfce7; color: #166534; }
+
 .write-select:disabled {
   background: var(--color-surface-2, #F3EFE9);
   color: var(--color-text-secondary, #7A5C44);
@@ -631,16 +732,83 @@
           <span>허브게시판은 팀·지점 게시판에서 좋은 글이 승인된 공개 게시판입니다. 직접 글쓰기는 불가합니다.</span>
         </div>
 
-        <!-- 카테고리 필터 + 글쓰기 -->
-        <div class="board-filter-bar">
-          <div class="category-pills" id="category-pills"></div>
-          <button class="write-btn" id="write-btn" onclick="window.onClickWriteBtn()">✏️ 글쓰기</button>
+        <!-- ── 일반 게시판 뷰 (hub/team/branch) ── -->
+        <div id="normal-board-view">
+          <!-- 카테고리 필터 + 글쓰기 -->
+          <div class="board-filter-bar">
+            <div class="category-pills" id="category-pills"></div>
+            <button class="write-btn" id="write-btn" onclick="window.onClickWriteBtn()">✏️ 글쓰기</button>
+          </div>
+          <!-- 게시글 목록 -->
+          <div class="post-list" id="post-list">
+            <div class="loading-msg">불러오는 중...</div>
+          </div>
         </div>
 
-        <!-- 게시글 목록 -->
-        <div class="post-list" id="post-list">
-          <div class="loading-msg">불러오는 중...</div>
+        <!-- ── 보험사 게시판 전용 2컬럼 뷰 ── -->
+        <div id="insurer-board-view" style="display:none;">
+          <div class="insurer-layout">
+            <!-- 왼쪽: 보험 구분 + 드롭다운 -->
+            <div class="insurer-col1">
+              <div class="insurer-col1-label">보험 구분</div>
+              <button class="insurer-seg-btn active" onclick="window.selectInsurerType('all')">전체</button>
+              <button class="insurer-seg-btn" onclick="window.selectInsurerType('nonlife')">손해보험</button>
+              <select class="insurer-dropdown" id="insurer-nonlife-select"
+                onchange="window.onInsurerSelectChange('nonlife', this.value)">
+                <option value="">DB손해보험</option>
+                <option>DB손해보험</option>
+                <option>KB손해보험</option>
+                <option>메리츠화재</option>
+                <option>흥국화재</option>
+                <option>삼성화재</option>
+                <option>한화손해보험</option>
+                <option>롯데손해보험</option>
+                <option>NH농협손해보험</option>
+                <option>라이나손보</option>
+                <option>AIG손해보험</option>
+              </select>
+              <button class="insurer-seg-btn" onclick="window.selectInsurerType('life')">생명보험</button>
+              <select class="insurer-dropdown" id="insurer-life-select"
+                onchange="window.onInsurerSelectChange('life', this.value)">
+                <option value="">ABL생명</option>
+                <option>ABL생명</option>
+                <option>DB생명</option>
+                <option>IBK연금보험</option>
+                <option>iM라이프</option>
+                <option>KB라이프</option>
+                <option>NH농협생명</option>
+                <option>KDB생명</option>
+                <option>교보생명</option>
+                <option>동양생명</option>
+                <option>라이나생명</option>
+                <option>미래에셋생명</option>
+                <option>메트라이프</option>
+                <option>삼성생명</option>
+                <option>신한라이프</option>
+                <option>한화생명</option>
+                <option>흥국생명(T-Life)</option>
+                <option>흥국생명(e-life)</option>
+                <option>처브라이프</option>
+                <option>AIA생명</option>
+                <option>BNP파리바 카디프생명</option>
+                <option>푸본현대생명</option>
+              </select>
+            </div>
+            <!-- 오른쪽: 카테고리 탭 + 글 목록 -->
+            <div class="insurer-col2">
+              <div class="insurer-cat-tab-bar" id="insurer-cat-tab-bar">
+                <button class="insurer-cat-btn active" onclick="window.selectInsurerCat('all')">전체</button>
+                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('공지사항')">공지사항</button>
+                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('상품Q&A')">상품Q&A</button>
+                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('인수Q&A')">인수Q&A</button>
+              </div>
+              <div class="post-list" id="insurer-post-list">
+                <div class="loading-msg">불러오는 중...</div>
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
 
       <!-- ── 글쓰기 뷰 ── -->
@@ -660,9 +828,52 @@
             <!-- 상품Q&A 추가 필드 -->
             <div id="fields-product" style="display:none; flex-direction:column; gap:0.9em;">
               <div>
-                <label class="write-label">보험사</label>
-                <input class="write-input" type="text" id="write-insurer"
-                  placeholder="예: 삼성생명, 흥국화재" maxlength="50">
+                <label class="write-label">보험사 선택</label>
+                <div style="display:flex;gap:0.5em;margin-bottom:0.5em;">
+                  <button type="button" class="insurer-seg-btn" id="form-type-nonlife"
+                    onclick="window.formSelectInsurerType('nonlife')" style="flex:1;">손해보험</button>
+                  <button type="button" class="insurer-seg-btn" id="form-type-life"
+                    onclick="window.formSelectInsurerType('life')" style="flex:1;">생명보험</button>
+                </div>
+                <select class="write-select" id="write-insurer-nonlife" style="display:none;">
+                  <option value="">보험사를 선택하세요</option>
+                  <option>DB손해보험</option>
+                  <option>KB손해보험</option>
+                  <option>메리츠화재</option>
+                  <option>흥국화재</option>
+                  <option>삼성화재</option>
+                  <option>한화손해보험</option>
+                  <option>롯데손해보험</option>
+                  <option>NH농협손해보험</option>
+                  <option>라이나손보</option>
+                  <option>AIG손해보험</option>
+                </select>
+                <select class="write-select" id="write-insurer-life" style="display:none;">
+                  <option value="">보험사를 선택하세요</option>
+                  <option>ABL생명</option>
+                  <option>DB생명</option>
+                  <option>IBK연금보험</option>
+                  <option>iM라이프</option>
+                  <option>KB라이프</option>
+                  <option>NH농협생명</option>
+                  <option>KDB생명</option>
+                  <option>교보생명</option>
+                  <option>동양생명</option>
+                  <option>라이나생명</option>
+                  <option>미래에셋생명</option>
+                  <option>메트라이프</option>
+                  <option>삼성생명</option>
+                  <option>신한라이프</option>
+                  <option>한화생명</option>
+                  <option>흥국생명(T-Life)</option>
+                  <option>흥국생명(e-life)</option>
+                  <option>처브라이프</option>
+                  <option>AIA생명</option>
+                  <option>BNP파리바 카디프생명</option>
+                  <option>푸본현대생명</option>
+                </select>
+                <!-- 기존 코드 호환용 hidden input -->
+                <input type="hidden" id="write-insurer">
               </div>
               <div>
                 <label class="write-label">상품 카테고리</label>
@@ -673,6 +884,52 @@
 
             <!-- 인수Q&A 추가 필드 -->
             <div id="fields-underwriting" style="display:none; flex-direction:column; gap:0.9em;">
+              <div>
+                <label class="write-label">보험사 선택</label>
+                <div style="display:flex;gap:0.5em;margin-bottom:0.5em;">
+                  <button type="button" class="insurer-seg-btn" id="form-uw-type-nonlife"
+                    onclick="window.formSelectInsurerTypeUW('nonlife')" style="flex:1;">손해보험</button>
+                  <button type="button" class="insurer-seg-btn" id="form-uw-type-life"
+                    onclick="window.formSelectInsurerTypeUW('life')" style="flex:1;">생명보험</button>
+                </div>
+                <select class="write-select" id="write-uw-insurer-nonlife" style="display:none;">
+                  <option value="">보험사를 선택하세요</option>
+                  <option>DB손해보험</option>
+                  <option>KB손해보험</option>
+                  <option>메리츠화재</option>
+                  <option>흥국화재</option>
+                  <option>삼성화재</option>
+                  <option>한화손해보험</option>
+                  <option>롯데손해보험</option>
+                  <option>NH농협손해보험</option>
+                  <option>라이나손보</option>
+                  <option>AIG손해보험</option>
+                </select>
+                <select class="write-select" id="write-uw-insurer-life" style="display:none;">
+                  <option value="">보험사를 선택하세요</option>
+                  <option>ABL생명</option>
+                  <option>DB생명</option>
+                  <option>IBK연금보험</option>
+                  <option>iM라이프</option>
+                  <option>KB라이프</option>
+                  <option>NH농협생명</option>
+                  <option>KDB생명</option>
+                  <option>교보생명</option>
+                  <option>동양생명</option>
+                  <option>라이나생명</option>
+                  <option>미래에셋생명</option>
+                  <option>메트라이프</option>
+                  <option>삼성생명</option>
+                  <option>신한라이프</option>
+                  <option>한화생명</option>
+                  <option>흥국생명(T-Life)</option>
+                  <option>흥국생명(e-life)</option>
+                  <option>처브라이프</option>
+                  <option>AIA생명</option>
+                  <option>BNP파리바 카디프생명</option>
+                  <option>푸본현대생명</option>
+                </select>
+              </div>
               <div style="display:flex; gap:0.7em;">
                 <div style="flex:1;">
                   <label class="write-label">나이</label>
@@ -836,6 +1093,11 @@ var _currentPostId   = null;
 var _editingPostId   = null;   /* 수정 모드일 때 대상 postId */
 var _userOrg         = null;
 
+/* 보험사 게시판 전용 상태 */
+var _insurerType     = 'all';   /* all / nonlife / life */
+var _insurerName     = '';      /* 선택된 특정 보험사명 */
+var _insurerCategory = 'all';   /* all / 공지사항 / 상품Q&A / 인수Q&A */
+
 /* ── 유틸 ── */
 function escHtml(str) {
   return String(str)
@@ -951,26 +1213,142 @@ function _switchBoard(board) {
   var notice = document.getElementById('hub-notice');
   if (notice) notice.style.display = (board === 'hub') ? 'flex' : 'none';
 
-  /* 글쓰기 버튼 표시 여부 */
-  var wb   = document.getElementById('write-btn');
-  var role = (window.AppState && window.AppState.role) || '';
-  if (wb) {
-    if (board === 'hub') {
-      /* 허브: 항상 숨김 */
-      wb.style.display = 'none';
-    } else if (board === 'insurer') {
-      /* 보험사게시판: admin + insurer role만 표시 */
-      wb.style.display = ['admin', 'insurer'].includes(role) ? 'block' : 'none';
-    } else {
-      /* 팀/지점: 기존대로 표시 */
-      wb.style.display = 'block';
-    }
-  }
+  /* 일반 뷰 / 보험사 뷰 전환 */
+  var normalView  = document.getElementById('normal-board-view');
+  var insurerView = document.getElementById('insurer-board-view');
+  if (board === 'insurer') {
+    if (normalView)  normalView.style.display  = 'none';
+    if (insurerView) insurerView.style.display = 'block';
+    /* 보험사 게시판 상태 초기화 */
+    _insurerType     = 'all';
+    _insurerName     = '';
+    _insurerCategory = 'all';
+    _resetInsurerUI();
+    _loadPosts();
+  } else {
+    if (normalView)  normalView.style.display  = '';
+    if (insurerView) insurerView.style.display = 'none';
 
-  _renderCategoryPills(board);
-  _loadPosts();
+    /* 글쓰기 버튼 표시 여부 */
+    var wb   = document.getElementById('write-btn');
+    var role = (window.AppState && window.AppState.role) || '';
+    if (wb) {
+      wb.style.display = (board === 'hub') ? 'none' : 'block';
+    }
+
+    _renderCategoryPills(board);
+    _loadPosts();
+  }
 }
 window.switchBoard = _switchBoard;
+
+/* 보험사 게시판 UI 초기화 */
+function _resetInsurerUI() {
+  /* 세그먼트 버튼 초기화 */
+  document.querySelectorAll('.insurer-seg-btn').forEach(function(b) { b.classList.remove('active'); });
+  var firstBtn = document.querySelector('.insurer-seg-btn');
+  if (firstBtn) firstBtn.classList.add('active');
+  /* 드롭다운 숨김 */
+  document.querySelectorAll('.insurer-dropdown').forEach(function(s) {
+    s.classList.remove('visible');
+    s.selectedIndex = 0;
+  });
+  /* 카테고리 탭 초기화 */
+  document.querySelectorAll('.insurer-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+  var firstCat = document.querySelector('.insurer-cat-btn');
+  if (firstCat) firstCat.classList.add('active');
+}
+
+/* 보험사 구분 선택 (전체 / 손해보험 / 생명보험) */
+window.selectInsurerType = function(type) {
+  _insurerType = type;
+  _insurerName = '';
+  /* 세그먼트 버튼 active */
+  var btns = document.querySelectorAll('.insurer-seg-btn');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  var idx = { all: 0, nonlife: 1, life: 2 }[type] || 0;
+  if (btns[idx]) btns[idx].classList.add('active');
+  /* 드롭다운 표시/숨김 */
+  var nonlifeSelect = document.getElementById('insurer-nonlife-select');
+  var lifeSelect    = document.getElementById('insurer-life-select');
+  if (nonlifeSelect) { nonlifeSelect.classList.toggle('visible', type === 'nonlife'); nonlifeSelect.selectedIndex = 0; }
+  if (lifeSelect)    { lifeSelect.classList.toggle('visible',    type === 'life');    lifeSelect.selectedIndex = 0; }
+  _renderInsurerPostList();
+};
+
+/* 보험사 드롭다운 변경 */
+window.onInsurerSelectChange = function(type, value) {
+  _insurerName = value || '';
+  _renderInsurerPostList();
+};
+
+/* 보험사 카테고리 탭 선택 */
+window.selectInsurerCat = function(cat) {
+  _insurerCategory = cat;
+  document.querySelectorAll('.insurer-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btns = document.querySelectorAll('.insurer-cat-btn');
+  var labels = ['all', '공지사항', '상품Q&A', '인수Q&A'];
+  var idx = labels.indexOf(cat);
+  if (btns[idx]) btns[idx].classList.add('active');
+  _renderInsurerPostList();
+};
+
+/* 보험사 게시판 글 목록 렌더링 */
+function _renderInsurerPostList() {
+  var list = document.getElementById('insurer-post-list');
+  if (!list) return;
+  var posts = _allPosts.slice();
+  /* 보험 구분 필터 */
+  if (_insurerType === 'nonlife') {
+    posts = posts.filter(function(p) { return p.insurance_type === 'nonlife'; });
+  } else if (_insurerType === 'life') {
+    posts = posts.filter(function(p) { return p.insurance_type === 'life'; });
+  }
+  /* 특정 보험사 필터 */
+  if (_insurerName) {
+    posts = posts.filter(function(p) {
+      return (p.insurer_name || p.target_insurer_name || '') === _insurerName;
+    });
+  }
+  /* 카테고리 필터 */
+  if (_insurerCategory !== 'all') {
+    posts = posts.filter(function(p) { return p.category === _insurerCategory; });
+  }
+  if (!posts.length) {
+    list.innerHTML = buildEmpty('📭', '게시글이 없습니다', '조건을 바꿔보거나 첫 질문을 남겨보세요!');
+    return;
+  }
+  list.innerHTML = posts.map(_buildInsurerPostItem).join('');
+}
+
+/* 보험사 게시판 전용 글 아이템 빌더 */
+function _buildInsurerPostItem(p) {
+  var catClass   = CAT_CLASS[p.category] || 'product';
+  var isNew      = p.created_at && (Date.now() - new Date(p.created_at)) < 86400000;
+  var preview    = (p.content || '').replace(/\n/g, ' ').substring(0, 50);
+  var typeLabel  = p.insurance_type === 'nonlife' ? '손해' : p.insurance_type === 'life' ? '생명' : '';
+  var typeCls    = p.insurance_type === 'nonlife' ? 'nonlife' : 'life';
+  var insurerBadge = typeLabel
+    ? '<span class="ins-type-badge ' + typeCls + '">' + typeLabel + '</span>' : '';
+  var insurerName = escHtml(p.insurer_name || p.target_insurer_name || '');
+  return '<div class="post-item" onclick="window.openDetail(\'' + p.id + '\')">'
+    + '<div class="post-top">'
+    + insurerBadge
+    + '<span class="post-cat-badge ' + catClass + '">' + escHtml(p.category || '') + '</span>'
+    + (insurerName ? '<span style="font-size:0.72em;color:var(--color-text-tertiary,#B89880);flex-shrink:0;">' + insurerName + '</span>' : '')
+    + '<span class="post-title">' + escHtml(p.title || '') + '</span>'
+    + (isNew ? '<span class="post-new-dot"></span>' : '')
+    + '</div>'
+    + '<div class="post-preview">' + escHtml(preview) + '</div>'
+    + '<div class="post-meta">'
+    + '<span>✍️ ' + escHtml(p.display_name || p.author_name || '알 수 없음') + '</span>'
+    + '<span>🕐 ' + fmtDate(p.created_at) + '</span>'
+    + '<span>👁 ' + (p.view_count || 0) + '</span>'
+    + '<span>❤️ ' + (p.like_count || 0) + '</span>'
+    + '<span>💬 ' + (p.comment_count || 0) + '</span>'
+    + '</div>'
+    + '</div>';
+}
 
 function _renderCategoryPills(board) {
   var cats = BOARD_CATEGORIES[board] || ['전체'];
@@ -1022,7 +1400,11 @@ async function _loadPosts() {
     var res  = await window.db.fetch(path);
     var data = await res.json();
     _allPosts = Array.isArray(data) ? data : [];
-    _renderPostList();
+    if (_currentBoard === 'insurer') {
+      _renderInsurerPostList();
+    } else {
+      _renderPostList();
+    }
   } catch(e) {
     console.error(e);
     var list2 = document.getElementById('post-list');
@@ -1335,10 +1717,17 @@ window.editPost = function() {
   /* 추가 필드 복원 */
   _switchFormFields(post.category || '');
   if (post.category === '상품Q&A') {
-    var insurerEl  = document.getElementById('write-insurer');
     var prodCatEl  = document.getElementById('write-product-category');
-    if (insurerEl)  insurerEl.value  = post.insurer_name     || '';
     if (prodCatEl)  prodCatEl.value  = post.product_category || '';
+    /* 보험사 드롭다운 복원 */
+    if (post.insurer_name && post.insurance_type) {
+      window.formSelectInsurerType(post.insurance_type);
+      var selId = post.insurance_type === 'nonlife' ? 'write-insurer-nonlife' : 'write-insurer-life';
+      var selEl = document.getElementById(selId);
+      if (selEl) {
+        Array.from(selEl.options).forEach(function(o) { if (o.value === post.insurer_name) o.selected = true; });
+      }
+    }
   }
   if (post.category === '인수Q&A') {
     var ageEl      = document.getElementById('write-age');
@@ -1395,13 +1784,64 @@ function _switchFormFields(category) {
 }
 
 function _clearExtraFields() {
-  ['write-insurer','write-product-category','write-age','write-disease',
+  ['write-product-category','write-age','write-disease',
    'write-diagnosis-timing','write-current-status'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
   var gender = document.getElementById('write-gender');
   if (gender) gender.value = '';
+  /* 보험사 드롭다운 초기화 */
+  ['write-insurer-nonlife','write-insurer-life',
+   'write-uw-insurer-nonlife','write-uw-insurer-life'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.selectedIndex = 0; el.style.display = 'none'; }
+  });
+  ['form-type-nonlife','form-type-life',
+   'form-uw-type-nonlife','form-uw-type-life'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+}
+
+/* ── 글쓰기 폼 보험사 선택 ── */
+window.formSelectInsurerType = function(type) {
+  var btnNL = document.getElementById('form-type-nonlife');
+  var btnL  = document.getElementById('form-type-life');
+  var selNL = document.getElementById('write-insurer-nonlife');
+  var selL  = document.getElementById('write-insurer-life');
+  if (btnNL) btnNL.classList.toggle('active', type === 'nonlife');
+  if (btnL)  btnL.classList.toggle('active',  type === 'life');
+  if (selNL) { selNL.style.display = type === 'nonlife' ? 'block' : 'none'; selNL.selectedIndex = 0; }
+  if (selL)  { selL.style.display  = type === 'life'    ? 'block' : 'none'; selL.selectedIndex  = 0; }
+};
+
+window.formSelectInsurerTypeUW = function(type) {
+  var btnNL = document.getElementById('form-uw-type-nonlife');
+  var btnL  = document.getElementById('form-uw-type-life');
+  var selNL = document.getElementById('write-uw-insurer-nonlife');
+  var selL  = document.getElementById('write-uw-insurer-life');
+  if (btnNL) btnNL.classList.toggle('active', type === 'nonlife');
+  if (btnL)  btnL.classList.toggle('active',  type === 'life');
+  if (selNL) { selNL.style.display = type === 'nonlife' ? 'block' : 'none'; selNL.selectedIndex = 0; }
+  if (selL)  { selL.style.display  = type === 'life'    ? 'block' : 'none'; selL.selectedIndex  = 0; }
+};
+
+/* 글쓰기 폼에서 선택된 보험사명 + insurance_type 반환 */
+function _getFormInsurer(category) {
+  var name = '', type = '';
+  if (category === '상품Q&A') {
+    var selNL = document.getElementById('write-insurer-nonlife');
+    var selL  = document.getElementById('write-insurer-life');
+    if (selNL && selNL.style.display !== 'none') { name = selNL.value || ''; type = 'nonlife'; }
+    else if (selL && selL.style.display !== 'none') { name = selL.value || ''; type = 'life'; }
+  } else if (category === '인수Q&A') {
+    var selNL2 = document.getElementById('write-uw-insurer-nonlife');
+    var selL2  = document.getElementById('write-uw-insurer-life');
+    if (selNL2 && selNL2.style.display !== 'none') { name = selNL2.value || ''; type = 'nonlife'; }
+    else if (selL2 && selL2.style.display !== 'none') { name = selL2.value || ''; type = 'life'; }
+  }
+  return { name: name, insurance_type: type };
 }
 
 /* ── 글쓰기 버튼 클릭 ── */
@@ -1580,7 +2020,9 @@ window.submitPost = async function() {
   if (!content) { alert('내용을 입력해 주세요.'); return; }
 
   /* 상품Q&A 추가 필드 */
-  var insurer         = (document.getElementById('write-insurer')          || {}).value || '';
+  var formInsurer     = _getFormInsurer(category);
+  var insurer         = formInsurer.name;
+  var insuranceType   = formInsurer.insurance_type;
   var productCategory = (document.getElementById('write-product-category') || {}).value || '';
 
   /* 인수Q&A 추가 필드 */
@@ -1661,6 +2103,7 @@ window.submitPost = async function() {
     if (category === '상품Q&A') {
       postBody.insurer_name     = insurer         || null;
       postBody.product_category = productCategory || null;
+      postBody.insurance_type   = insuranceType   || null;
     }
     if (category === '인수Q&A') {
       postBody.patient_age      = age       ? parseInt(age) : null;
@@ -1668,6 +2111,7 @@ window.submitPost = async function() {
       postBody.disease_name     = disease   || null;
       postBody.diagnosis_timing = diagnosisTiming || null;
       postBody.current_status   = currentStatus   || null;
+      postBody.insurance_type   = insuranceType   || null;
     }
     var postRes = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
