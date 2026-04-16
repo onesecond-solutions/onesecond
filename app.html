@@ -746,11 +746,64 @@ async function switchMenu(menuKey) {
       } catch (e) { console.error('script exec error:', e); }
     });
 
+    // 페이지 배너 주입
+    injectPageBanner(menuKey);
+
   } catch (e) {
     area.innerHTML = '<div class="card" style="margin:var(--space-5);"><h2 style="font-size:1.1em;margin-bottom:var(--space-2);">준비 중</h2><p style="font-size:0.875em;color:var(--color-text-tertiary);">' + menuKey + ' 페이지를 불러오지 못했습니다.</p></div>';
   }
 }
 window.switchMenu = switchMenu;
+
+// ── 페이지 배너 주입 ──────────────────────────────────────────────────────
+// app_settings 에서 banner_img_{menuKey} 값을 읽어 #page-banner-slot 에 img 주입
+var _bannerCache = {};
+
+async function injectPageBanner(menuKey) {
+  var slot = document.getElementById('page-banner-slot');
+  if (!slot) return; // 슬롯 없는 페이지 스킵
+
+  slot.innerHTML = '';
+  var cacheKey = 'banner_img_' + menuKey;
+
+  // 캐시 히트
+  if (_bannerCache[cacheKey] !== undefined) {
+    _renderBannerSlot(slot, _bannerCache[cacheKey]);
+    return;
+  }
+
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/app_settings?key=eq.' + cacheKey + '&select=value&limit=1'
+    );
+    if (!res.ok) { slot.style.display = 'none'; return; }
+    var data = await res.json();
+    var url  = (data && data[0] && data[0].value) ? data[0].value.trim() : '';
+    _bannerCache[cacheKey] = url;
+    _renderBannerSlot(slot, url);
+  } catch(e) {
+    slot.style.display = 'none';
+    console.warn('injectPageBanner error:', e);
+  }
+}
+
+function _renderBannerSlot(slot, url) {
+  if (!url) {
+    slot.style.display = 'none';
+    return;
+  }
+  slot.style.display = 'block';
+  slot.innerHTML =
+    '<img src="' + url + '" alt="배너 이미지"'
+    + ' style="width:100%;height:auto;display:block;border-radius:var(--radius-md,12px);overflow:hidden;"'
+    + ' onerror="this.parentElement.style.display='none'">';
+}
+
+// 관리자 저장 후 캐시 무효화 (즉시 반영용)
+window.clearBannerCache = function(menuKey) {
+  if (menuKey) { delete _bannerCache['banner_img_' + menuKey]; }
+  else         { _bannerCache = {}; }
+};
 
 // 스크립트 검색 결과 → 스크립트 페이지 직접 이동
 function stageToColor(stage) {
