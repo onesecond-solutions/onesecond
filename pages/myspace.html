@@ -691,6 +691,24 @@ window.saveLibraryToSupabase = async function() {
 window._allScripts = window._allScripts || [];
 window._allLibrary = window._allLibrary || [];
 
+var _SAMPLE_SCRIPTS = [
+  {
+    title: '첫 인사 멘트',
+    script_text: '안녕하세요, 고객님. 저는 AZ금융서비스 원세컨드팀 [이름]입니다.\n고객님께 꼭 필요한 보험 안내 하나 드리려고 연락드렸는데요,\n딱 30초만 시간 주시겠어요?',
+    highlight_text: '고객님, 딱 30초만요. 꼭 필요한 안내 하나만 드리겠습니다.'
+  },
+  {
+    title: '바빠요 반론 대응',
+    script_text: '아, 바쁘신 거 충분히 이해합니다.\n그런데 사실 바쁘실수록 이 한 가지는 꼭 챙겨드리고 싶어서 연락드렸어요.\n딱 한 가지만 여쭤봐도 될까요?',
+    highlight_text: '바쁘실수록 이 한 가지는 꼭 챙겨드리고 싶어서 연락드렸습니다.'
+  },
+  {
+    title: '생각해볼게요 클로징 대응',
+    script_text: '네, 충분히 생각해보고 싶으신 마음 이해합니다.\n다만 고객님, 생각하시는 사이에 조건이 바뀔 수 있거든요.\n오늘 딱 조건 확인만 해드리고, 결정은 고객님이 하시면 어떨까요?',
+    highlight_text: '생각하시는 동안 조건이 바뀔 수 있어서, 오늘 확인만 해드리려고요.'
+  }
+];
+
 window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
@@ -706,6 +724,39 @@ window.loadScriptsList = async function() {
     }
     const data = await res.json();
     window._allScripts = data || [];
+
+    /* ── 샘플 자동 생성: 스크립트가 0개일 때만 ── */
+    if (window._allScripts.length === 0) {
+      try {
+        const userId = window.AppState.userId;
+        const samples = _SAMPLE_SCRIPTS.map(function(s) {
+          return Object.assign({}, s, {
+            owner_id: userId,
+            scope: 'personal',
+            is_active: true
+          });
+        });
+        await fetch(window.db.url('/rest/v1/scripts'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': window.db.key,
+            'Authorization': `Bearer ${window.db.getToken()}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(samples)
+        });
+        /* 샘플 insert 후 다시 로드 */
+        const res2 = await fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc`), {
+          headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` }
+        });
+        const data2 = await res2.json();
+        window._allScripts = data2 || [];
+      } catch(e) {
+        console.warn('샘플 스크립트 생성 실패:', e);
+      }
+    }
+
     window.renderScriptsList(window._allScripts);
   } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:13px;">불러오기 실패. 새로고침 해주세요.</div>'; }
 }
