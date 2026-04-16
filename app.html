@@ -608,8 +608,8 @@ html, body {
 
 
 <!-- ── 공통 파일 로드 ── -->
-<script src="js/db.js" defer></script>
-<script src="js/auth.js" defer></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -845,8 +845,9 @@ function toggleQuickDropdown(e) {
 async function loadQuickDdItems() {
   var wrap = document.getElementById('quick-dd-items');
   if (!wrap || wrap.dataset.loaded === 'true') return;
+  if (!window.db) { wrap.innerHTML = '<div class="quick-dd-item" style="color:#aaa;font-size:0.75em;">초기화 중...</div>'; return; }
   try {
-    var res  = await window.db.fetchPublic('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
+    var res  = await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
     if (!res.ok) throw new Error('fetch 실패');
     var data = await res.json();
     var icons = { recording_script:'📝', mirror_script:'🎙️', bmi_standard:'📊', insurance_age:'📅', payment_info:'💳', system_links:'🔗', contact_info:'📞' };
