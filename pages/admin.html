@@ -584,7 +584,7 @@ window.admLoadScripts = async function () {
   admContent('<div class="adm-loading">스크립트 목록 로딩 중...</div>');
   try {
     var res = await admFetch(
-      '/rest/v1/scripts?select=id,title,stage,type,scope,is_active,is_leader_pick&order=stage,title&limit=200'
+      '/rest/v1/scripts?select=id,title,stage,type,scope,is_active,is_leader_pick,is_sample&order=stage,title&limit=200'
     );
     if (!res.ok) {
       var errBody = await res.text();
@@ -599,6 +599,7 @@ window.admLoadScripts = async function () {
     var total      = data.length;
     var active     = data.filter(function (s) { return s.is_active; }).length;
     var leaderPick = data.filter(function (s) { return s.is_leader_pick; }).length;
+    var sampleCnt  = data.filter(function (s) { return s.is_sample; }).length;
 
     var stageOptions = Object.entries(STAGE_LABEL).map(function (e) {
       return '<option value="' + e[0] + '">' + e[1] + '</option>';
@@ -608,17 +609,68 @@ window.admLoadScripts = async function () {
       '<div class="adm-stats-grid">' +
         '<div class="adm-stat"><div class="adm-stat-num">' + total + '<span>개</span></div><div class="adm-stat-label">전체 스크립트</div></div>' +
         '<div class="adm-stat"><div class="adm-stat-num">' + active + '<span>개</span></div><div class="adm-stat-label">활성</div></div>' +
-        '<div class="adm-stat"><div class="adm-stat-num">' + (total - active) + '<span>개</span></div><div class="adm-stat-label">비활성</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + sampleCnt + '<span>개</span></div><div class="adm-stat-label">샘플</div></div>' +
         '<div class="adm-stat"><div class="adm-stat-num">' + leaderPick + '<span>개</span></div><div class="adm-stat-label">Leader Pick</div></div>' +
       '</div>' +
+
+      /* ── 신규 스크립트 작성 폼 ── */
+      '<div class="adm-card" style="margin-bottom:8px;">' +
+        '<div class="adm-card-title" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="window.admToggleWriteForm()">' +
+          '<span>✏️ 새 스크립트 작성</span>' +
+          '<span id="adm-write-chevron" style="font-size:0.8em;color:var(--color-text-tertiary,#B89880);">▶ 펼치기</span>' +
+        '</div>' +
+        '<div id="adm-script-write-form" style="display:none;margin-top:12px;">' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+            '<div>' +
+              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">제목 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+              '<input class="adm-input" id="adm-w-title" placeholder="스크립트 제목">' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">단계 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+              '<select class="adm-select" id="adm-w-stage">' +
+                '<option value="">단계 선택</option>' + stageOptions +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-bottom:8px;">' +
+            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">핵심 멘트</div>' +
+            '<input class="adm-input" id="adm-w-highlight" placeholder="핵심 문장 한 줄 (목록에서 미리보기로 표시)">' +
+          '</div>' +
+          '<div style="margin-bottom:8px;">' +
+            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">본문 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+            '<textarea class="adm-input" id="adm-w-body" rows="5" placeholder="스크립트 본문을 입력하세요." style="resize:vertical;font-family:inherit;line-height:1.7;"></textarea>' +
+          '</div>' +
+          '<div style="display:flex;gap:16px;margin-bottom:12px;">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary,#7A5C44);cursor:pointer;">' +
+              '<input type="checkbox" id="adm-w-sample" style="accent-color:var(--color-accent,#D4845A);width:16px;height:16px;"> 샘플 스크립트로 등록' +
+            '</label>' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary,#7A5C44);cursor:pointer;">' +
+              '<input type="checkbox" id="adm-w-leader" style="accent-color:var(--color-accent,#D4845A);width:16px;height:16px;"> ⭐ 리더 추천으로 등록' +
+            '</label>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveNewScript()">💾 저장</button>' +
+            '<button class="adm-btn adm-btn-ghost" onclick="window.admClearWriteForm()">초기화</button>' +
+          '</div>' +
+          '<div id="adm-w-msg" style="margin-top:8px;font-size:0.790em;"></div>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── 스크립트 목록 ── */
       '<div class="adm-card">' +
         '<div class="adm-card-title">📋 스크립트 목록</div>' +
         '<div class="adm-search-bar">' +
-          '<input class="adm-input" style="max-width:280px;" id="adm-script-search" placeholder="스크립트 제목 검색..."' +
+          '<input class="adm-input" style="max-width:240px;" id="adm-script-search" placeholder="스크립트 제목 검색..."' +
             ' oninput="window.admFilterScripts(this.value)">' +
           '<select class="adm-select" id="adm-script-stage-filter"' +
             ' onchange="window.admFilterScripts(document.getElementById(\'adm-script-search\').value)">' +
             '<option value="">전체 단계</option>' + stageOptions +
+          '</select>' +
+          '<select class="adm-select" id="adm-script-type-filter"' +
+            ' onchange="window.admFilterScripts(document.getElementById(\'adm-script-search\').value)">' +
+            '<option value="">전체 유형</option>' +
+            '<option value="sample">샘플만</option>' +
+            '<option value="leader">Leader Pick만</option>' +
           '</select>' +
           '<button class="adm-btn adm-btn-ghost" onclick="window.admLoadScripts()">🔄 새로고침</button>' +
         '</div>' +
@@ -636,20 +688,21 @@ window.admLoadScripts = async function () {
 window.admBuildScriptTable = function (data) {
   var html =
     '<div class="adm-table-wrap"><table class="adm-table">' +
-    '<thead><tr><th>제목</th><th>단계</th><th>범위</th><th>상태</th><th>LeaderPick</th><th>관리</th></tr></thead>' +
+    '<thead><tr><th>제목</th><th>단계</th><th>범위</th><th>상태</th><th>샘플</th><th>LeaderPick</th><th>관리</th></tr></thead>' +
     '<tbody>';
 
   if (!data || data.length === 0) {
-    html += '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>';
+    html += '<tr><td colspan="7" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>';
   } else {
     data.forEach(function (s) {
       var stage = STAGE_LABEL[s.stage] || s.stage || '-';
       html +=
         '<tr>' +
-          '<td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.title || '-') + '</td>' +
+          '<td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.title || '-') + '</td>' +
           '<td><span style="font-size:0.8em;background:var(--color-surface-2,#F3EFE9);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary,#7A5C44);">' + stage + '</span></td>' +
           '<td><span style="font-size:0.8em;color:#888;">' + (s.scope || '-') + '</span></td>' +
           '<td><span class="status-badge ' + (s.is_active ? 'status-active' : 'status-inactive') + '">' + (s.is_active ? '활성' : '비활성') + '</span></td>' +
+          '<td style="text-align:center;">' + (s.is_sample ? '<span style="font-size:0.75em;font-weight:700;color:var(--color-accent,#D4845A);background:rgba(212,132,90,0.12);border-radius:4px;padding:1px 7px;">샘플</span>' : '－') + '</td>' +
           '<td style="text-align:center;">' + (s.is_leader_pick ? '⭐' : '－') + '</td>' +
           '<td style="display:flex;gap:4px;flex-wrap:wrap;">' +
             '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
@@ -657,8 +710,16 @@ window.admBuildScriptTable = function (data) {
               (s.is_active ? '비활성화' : '활성화') +
             '</button>' +
             '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admToggleScript(\'' + s.id + '\',\'is_sample\',' + (!s.is_sample) + ')">' +
+              (s.is_sample ? '샘플해제' : '샘플설정') +
+            '</button>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
               ' onclick="window.admToggleScript(\'' + s.id + '\',\'is_leader_pick\',' + (!s.is_leader_pick) + ')">' +
-              (s.is_leader_pick ? 'Pick 해제' : 'Pick 설정') +
+              (s.is_leader_pick ? 'Pick해제' : 'Pick설정') +
+            '</button>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm" style="color:#c0392b;"' +
+              ' onclick="window.admDeleteScript(\'' + s.id + '\',\'' + (s.title||'').replace(/'/g,'') + '\')">' +
+              '삭제' +
             '</button>' +
           '</td>' +
         '</tr>';
@@ -670,10 +731,14 @@ window.admBuildScriptTable = function (data) {
 
 window.admFilterScripts = function (q) {
   var stageEl  = document.getElementById('adm-script-stage-filter');
+  var typeEl   = document.getElementById('adm-script-type-filter');
   var stageFilter = stageEl ? stageEl.value : '';
+  var typeFilter  = typeEl  ? typeEl.value  : '';
   var data = _admScriptsCache || [];
   if (q) data = data.filter(function (s) { return (s.title || '').toLowerCase().includes(q.toLowerCase()); });
   if (stageFilter) data = data.filter(function (s) { return s.stage === stageFilter; });
+  if (typeFilter === 'sample') data = data.filter(function (s) { return s.is_sample; });
+  if (typeFilter === 'leader') data = data.filter(function (s) { return s.is_leader_pick; });
   var wrap = document.getElementById('adm-script-table-wrap');
   if (wrap) wrap.innerHTML = window.admBuildScriptTable(data);
 };
@@ -690,6 +755,79 @@ window.admToggleScript = async function (id, field, val) {
     if (res.ok) window.admLoadScripts();
     else alert('수정 중 오류가 발생했습니다.');
   } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+window.admDeleteScript = async function (id, title) {
+  if (!confirm('「' + title + '」 스크립트를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  try {
+    var res = await admFetch('/rest/v1/scripts?id=eq.' + id, { method: 'DELETE' });
+    if (res.ok) { window.admLoadScripts(); }
+    else alert('삭제 중 오류가 발생했습니다.');
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+window.admToggleWriteForm = function () {
+  var form = document.getElementById('adm-script-write-form');
+  var chevron = document.getElementById('adm-write-chevron');
+  if (!form) return;
+  var isOpen = form.style.display !== 'none';
+  form.style.display = isOpen ? 'none' : 'block';
+  if (chevron) chevron.textContent = isOpen ? '▶ 펼치기' : '▼ 접기';
+};
+
+window.admClearWriteForm = function () {
+  ['adm-w-title','adm-w-highlight','adm-w-body'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['adm-w-sample','adm-w-leader'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.checked = false;
+  });
+  var el = document.getElementById('adm-w-stage'); if (el) el.value = '';
+  var msg = document.getElementById('adm-w-msg'); if (msg) msg.textContent = '';
+};
+
+window.admSaveNewScript = async function () {
+  var title     = (document.getElementById('adm-w-title') || {}).value || '';
+  var stage     = (document.getElementById('adm-w-stage') || {}).value || '';
+  var highlight = (document.getElementById('adm-w-highlight') || {}).value || '';
+  var body      = (document.getElementById('adm-w-body') || {}).value || '';
+  var isSample  = (document.getElementById('adm-w-sample') || {}).checked || false;
+  var isLeader  = (document.getElementById('adm-w-leader') || {}).checked || false;
+  var msgEl     = document.getElementById('adm-w-msg');
+
+  if (!title.trim()) { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='제목을 입력해 주세요.'; } return; }
+  if (!stage)        { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='단계를 선택해 주세요.'; } return; }
+  if (!body.trim())  { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='본문을 입력해 주세요.'; } return; }
+
+  if (msgEl) { msgEl.style.color='var(--color-text-tertiary,#B89880)'; msgEl.textContent='저장 중...'; }
+
+  try {
+    var payload = {
+      title: title.trim(),
+      stage: stage,
+      highlight_text: highlight.trim() || null,
+      script_text: body.trim(),
+      scope: 'global',
+      is_active: true,
+      is_sample: isSample,
+      is_leader_pick: isLeader
+    };
+    var res = await admFetch('/rest/v1/scripts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      if (msgEl) { msgEl.style.color='#27ae60'; msgEl.textContent='✅ 저장되었습니다!'; }
+      window.admClearWriteForm();
+      setTimeout(function () { window.admLoadScripts(); }, 800);
+    } else {
+      var errBody = await res.text();
+      if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='저장 실패: ' + errBody; }
+    }
+  } catch (e) {
+    if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='네트워크 오류가 발생했습니다.'; }
+  }
 };
 
 /* ════════════════════════════════════════

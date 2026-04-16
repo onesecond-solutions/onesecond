@@ -785,30 +785,45 @@ window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   try {
-    const userId = window.AppState.userId;
+    const userId  = window.AppState.userId;
+    const role    = (window.AppState && window.AppState.role) || '';
+    const isAdmin = role === 'admin';
     const headers = { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` };
 
-    /* ── 내 스크립트 + 샘플 스크립트 병렬 fetch ── */
-    const [resOwn, resSample] = await Promise.all([
-      fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers }),
-      fetch(window.db.url(`/rest/v1/scripts?is_sample=eq.true&is_active=eq.true&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers })
-    ]);
+    let allScripts = [];
 
-    if (!resOwn.ok) {
-      const err = await resOwn.json();
-      console.error('scripts fetch error:', resOwn.status, err);
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + resOwn.status + '). 새로고침 해주세요.</div>';
-      return;
+    if (isAdmin) {
+      /* ── 관리자: 전체 스크립트 조회 ── */
+      const res = await fetch(window.db.url(
+        `/rest/v1/scripts?order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,scope,created_at`
+      ), { headers });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('scripts fetch error:', res.status, err);
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + res.status + '). 새로고침 해주세요.</div>';
+        return;
+      }
+      allScripts = await res.json();
+    } else {
+      /* ── 일반 사용자: 내 스크립트 + 샘플 병렬 fetch ── */
+      const [resOwn, resSample] = await Promise.all([
+        fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers }),
+        fetch(window.db.url(`/rest/v1/scripts?is_sample=eq.true&is_active=eq.true&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers })
+      ]);
+      if (!resOwn.ok) {
+        const err = await resOwn.json();
+        console.error('scripts fetch error:', resOwn.status, err);
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + resOwn.status + '). 새로고침 해주세요.</div>';
+        return;
+      }
+      const ownData       = await resOwn.json();
+      const sampleData    = resSample.ok ? await resSample.json() : [];
+      const ownIds        = new Set((ownData || []).map(function(s) { return s.id; }));
+      const uniqueSamples = (sampleData || []).filter(function(s) { return !ownIds.has(s.id); });
+      allScripts = (ownData || []).concat(uniqueSamples);
     }
 
-    const ownData = await resOwn.json();
-    const sampleData = resSample.ok ? await resSample.json() : [];
-
-    /* ── 중복 제거 후 합치기: 내 스크립트 우선, 샘플은 뒤에 ── */
-    const ownIds = new Set((ownData || []).map(function(s) { return s.id; }));
-    const uniqueSamples = (sampleData || []).filter(function(s) { return !ownIds.has(s.id); });
-
-    window._allScripts = (ownData || []).concat(uniqueSamples);
+    window._allScripts = allScripts;
     window.renderScriptsList(window._allScripts);
 
   } catch(e) {
@@ -816,7 +831,6 @@ window.loadScriptsList = async function() {
     if (list2) list2.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패. 새로고침 해주세요.</div>';
   }
 }
-
 window.renderScriptsList = function(items) {
   const list = document.getElementById('scripts-list');
   if (!list) return;
