@@ -1204,6 +1204,20 @@ async function sendPasswordReset() {
 
 // ── ⑨ 사용자 드롭다운 (전역 등록은 DOMContentLoaded 밖 — window.toggleUserDropdown 참조)
 
+// ── inline onclick 전역 노출 (DOMContentLoaded 안 지역함수 → window. 등록) ──────────
+window.toggleQuickDropdown = toggleQuickDropdown;
+window.goQuickMenu         = goQuickMenu;
+window.handleQuickOverlayClick = handleQuickOverlayClick;
+window.setFontScale        = setFontScale;
+window.openEditProfile     = openEditProfile;
+window.closeEditProfile    = closeEditProfile;
+window.saveProfile         = saveProfile;
+window.sendPasswordReset   = sendPasswordReset;
+window.loadPricing         = loadPricing;
+window.calcInsAge          = calcInsAge;
+window.calcBMI             = calcBMI;
+window.isPro               = isPro;
+
 // BMI / 보험나이 계산 (Quick 메뉴 내 사용)
 function calcInsAge() {
   var birth = document.getElementById('ins-birth');
