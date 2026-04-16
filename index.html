@@ -49,12 +49,13 @@
   .logo-text span { color: var(--accent); }
 
   .header-right { display:flex; align-items:center; gap:16px; }
-  .header-link {
-    font-size: 14px; color: var(--text-light);
-    text-decoration: none; font-weight: 500;
-    transition: color 0.2s;
+  .header-login {
+    font-size: 13px; font-weight: 600; color: var(--text-mid);
+    background: none; border: none; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    text-decoration: none; transition: color 0.2s;
   }
-  .header-link:hover { color: var(--brown-dark); }
+  .header-login:hover { color: var(--brown-dark); }
 
   .header-btn {
     padding: 9px 22px;
@@ -694,6 +695,7 @@
 <header>
   <div class="logo-text">원세컨드 <span>1s</span></div>
   <div class="header-right">
+    <a class="header-login" href="login.html">로그인</a>
     <button class="header-btn" onclick="openModal()">30일 무료체험</button>
   </div>
 </header>
@@ -1034,8 +1036,7 @@
         <div class="success-desc">
           가입 정보를 확인 후<br>
           <strong>24시간 이내</strong>에 안내 문자를 드립니다.<br><br>
-          문자 수신 전까지 잠시 기다려 주세요.<br>
-          문의는 카카오 오픈채팅으로 연락 주세요 😊
+          30일 무료체험 기간 동안<br>원세컨드를 마음껏 사용해 보세요 😊
         </div>
       </div>
     </div>
