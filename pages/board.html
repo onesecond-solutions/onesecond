@@ -501,6 +501,66 @@
   width: 0%;
 }
 
+/* ── 수정/삭제 액션바 ── */
+.detail-action-bar {
+  flex-shrink: 0;
+  padding: 0.6em 1.2em;
+  border-top: 1px solid var(--color-border, #E4DBCE);
+  display: flex;
+  gap: 0.5em;
+  justify-content: flex-end;
+  background: var(--color-surface-2, #F3EFE9);
+}
+.detail-edit-btn, .detail-delete-btn {
+  padding: 0.4em 0.95em;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.8em; font-weight: 700; font-family: inherit;
+  cursor: pointer; border: 1.5px solid; transition: all .15s;
+}
+.detail-edit-btn {
+  background: var(--color-surface, #fff);
+  border-color: var(--color-border, #E4DBCE);
+  color: var(--color-text-secondary, #7A5C44);
+}
+.detail-edit-btn:hover { border-color: var(--color-brand, #A0522D); color: var(--color-brand, #A0522D); }
+.detail-delete-btn {
+  background: var(--color-surface, #fff);
+  border-color: #e8b4b4;
+  color: #c0392b;
+}
+.detail-delete-btn:hover { background: #fde8e8; }
+
+/* ── 첨부파일 표시 ── */
+.detail-attach-list { display: flex; flex-direction: column; gap: 6px; }
+.detail-attach-label {
+  font-size: 0.78em; font-weight: 700;
+  color: var(--color-text-secondary, #7A5C44);
+  margin-bottom: 6px;
+}
+.detail-attach-item {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--color-surface-2, #F3EFE9);
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  padding: 7px 10px;
+  text-decoration: none;
+  transition: border-color .15s;
+}
+.detail-attach-item:hover { border-color: var(--color-brand, #A0522D); }
+.detail-attach-thumb {
+  width: 36px; height: 36px; border-radius: 6px;
+  object-fit: cover; flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2em; overflow: hidden;
+}
+.detail-attach-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.detail-attach-name {
+  flex: 1; font-size: 0.82em; color: var(--color-text-primary, #3D2C1E);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.detail-attach-dl { font-size: 0.78em; color: var(--color-brand, #A0522D); flex-shrink: 0; }
+
 /* ── ④ 푸터 블록 ── */
 .pg-footer-block {
   border-radius: var(--radius-md, 12px);
@@ -645,6 +705,13 @@
     </div>
     <div class="detail-body">
       <div class="detail-content" id="detail-content"></div>
+      <!-- 첨부파일 표시 영역 -->
+      <div id="detail-attachments" style="display:none; margin-top:1em;"></div>
+    </div>
+    <!-- 수정/삭제 버튼 (본인 글 또는 관리자만 표시) -->
+    <div class="detail-action-bar" id="detail-action-bar" style="display:none;">
+      <button class="detail-edit-btn" onclick="window.editPost()">✏️ 수정</button>
+      <button class="detail-delete-btn" onclick="window.deletePost()">🗑 삭제</button>
     </div>
     <div class="detail-like-area">
       <button class="like-btn" id="like-btn" onclick="window.toggleLike()">
@@ -691,6 +758,7 @@ var _currentBoard    = 'hub';
 var _currentCategory = 'all';
 var _allPosts        = [];
 var _currentPostId   = null;
+var _editingPostId   = null;   /* 수정 모드일 때 대상 postId */
 var _userOrg         = null;
 
 /* ── 유틸 ── */
@@ -923,6 +991,42 @@ window.openDetail = async function(postId) {
   if (contentEl) contentEl.textContent = post.content || '';
   if (likeCount) likeCount.textContent = post.like_count || 0;
 
+  /* 수정/삭제 버튼 노출 여부 */
+  var s = window.AppState || {};
+  var isAuthor = post.author_id && s.userId && String(post.author_id) === String(s.userId);
+  var isAdmin  = ['admin', 'branch_manager', 'manager'].includes(s.role);
+  var actionBar = document.getElementById('detail-action-bar');
+  if (actionBar) actionBar.style.display = (isAuthor || isAdmin) ? 'flex' : 'none';
+
+  /* 첨부파일 렌더링 */
+  var attachArea = document.getElementById('detail-attachments');
+  if (attachArea) {
+    var attachUrls = [];
+    try { attachUrls = post.attachments ? JSON.parse(post.attachments) : []; } catch(e) {}
+    if (attachUrls.length) {
+      attachArea.style.display = 'block';
+      attachArea.innerHTML = '<div class="detail-attach-label">📎 첨부파일 (' + attachUrls.length + '개)</div>'
+        + '<div class="detail-attach-list">'
+        + attachUrls.map(function(url) {
+            var fileName = decodeURIComponent(url.split('/').pop().replace(/^\d+_\d+_\d+\./, ''));
+            var ext = (url.split('.').pop() || '').toLowerCase();
+            var isImg = ['jpg','jpeg','png','gif','webp'].includes(ext);
+            var thumbHtml = isImg
+              ? '<img src="' + url + '" alt="">'
+              : (ext === 'pdf' ? '📄' : '📊');
+            return '<a class="detail-attach-item" href="' + url + '" target="_blank" download>'
+              + '<div class="detail-attach-thumb">' + thumbHtml + '</div>'
+              + '<span class="detail-attach-name">' + escHtml(fileName) + '</span>'
+              + '<span class="detail-attach-dl">↓ 다운로드</span>'
+              + '</a>';
+          }).join('')
+        + '</div>';
+    } else {
+      attachArea.style.display = 'none';
+      attachArea.innerHTML = '';
+    }
+  }
+
   var likeBtn = document.getElementById('like-btn');
   if (likeBtn) likeBtn.classList.remove('liked');
 
@@ -1040,6 +1144,56 @@ window.autoResizeComment = function(el) {
   el.style.height = Math.min(el.scrollHeight, 96) + 'px';
 };
 
+/* ── 수정 ── */
+window.editPost = function() {
+  var post = _allPosts.find(function(p) { return String(p.id) === String(_currentPostId); });
+  if (!post) return;
+
+  /* 상세 오버레이 닫기 */
+  window.closeDetail();
+
+  /* 글쓰기 뷰 열기 + 기존 내용 채우기 */
+  window.openWriteView();
+  var titleEl   = document.getElementById('write-title');
+  var contentEl = document.getElementById('write-content');
+  var catEl     = document.getElementById('write-category');
+  if (titleEl)   titleEl.value   = post.title   || '';
+  if (contentEl) contentEl.value = post.content || '';
+  if (catEl && post.category) {
+    Array.from(catEl.options).forEach(function(opt) {
+      if (opt.value === post.category) opt.selected = true;
+    });
+  }
+
+  /* 수정 모드 플래그 — submitPost에서 PATCH로 처리 */
+  _editingPostId = String(post.id);
+
+  /* 헤더 타이틀 변경 */
+  var viewTitle = document.getElementById('write-view-title');
+  if (viewTitle) viewTitle.textContent = '✏️ 글 수정';
+
+  /* 등록 버튼 텍스트 변경 */
+  var submitBtn = document.querySelector('.write-submit');
+  if (submitBtn) submitBtn.textContent = '수정 완료';
+};
+
+/* ── 삭제 ── */
+window.deletePost = async function() {
+  if (!_currentPostId) return;
+  if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
+  try {
+    await window.db.fetch('/rest/v1/posts?id=eq.' + _currentPostId, {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    window.closeDetail();
+    await _loadPosts();
+  } catch(e) {
+    alert('삭제 중 오류가 발생했습니다.');
+    console.error(e);
+  }
+};
+
 /* ── 글쓰기 ── */
 /* 첨부파일 상태 */
 var _attachFiles = [];
@@ -1074,7 +1228,8 @@ window.openWriteView = function() {
   if (viewTitle) viewTitle.textContent = '✏️ ' + (BOARD_LABEL[board] || '') + ' 글쓰기';
 
   /* 첨부파일 초기화 */
-  _attachFiles = [];
+  _attachFiles   = [];
+  _editingPostId = null;
   _renderAttachPreview();
 
   /* 뷰 전환 */
@@ -1089,8 +1244,14 @@ window.closeWriteView = function() {
   var writeView = document.getElementById('board-write-view');
   if (listView)  listView.style.display  = '';
   if (writeView) writeView.classList.remove('active');
-  _attachFiles = [];
+  _attachFiles   = [];
+  _editingPostId = null;
   _renderAttachPreview();
+  /* 버튼/헤더 초기화 */
+  var submitBtn = document.querySelector('.write-submit');
+  if (submitBtn) submitBtn.textContent = '등록하기';
+  var viewTitle = document.getElementById('write-view-title');
+  if (viewTitle && _currentBoard) viewTitle.textContent = '✏️ ' + (BOARD_LABEL[_currentBoard] || '') + ' 글쓰기';
 };
 
 /* 첨부파일 선택 핸들러 */
@@ -1203,9 +1364,22 @@ window.submitPost = async function() {
   }
 
   var btn = document.querySelector('.write-submit');
-  if (btn) { btn.disabled = true; btn.textContent = '등록 중...'; }
+  if (btn) { btn.disabled = true; btn.textContent = _editingPostId ? '수정 중...' : '등록 중...'; }
 
   try {
+    /* ── 수정 모드 (PATCH) ── */
+    if (_editingPostId) {
+      await window.db.fetch('/rest/v1/posts?id=eq.' + _editingPostId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ title: title, content: content, category: category })
+      });
+      window.closeWriteView();
+      await _loadPosts();
+      return;
+    }
+
+    /* ── 신규 등록 (POST) ── */
     /* 1) 게시글 먼저 등록 (Prefer: return=representation 으로 id 받기) */
     var postRes = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
@@ -1248,10 +1422,10 @@ window.submitPost = async function() {
     window.closeWriteView();
     await _loadPosts();
   } catch(e) {
-    alert('글 등록 중 오류가 발생했습니다.');
+    alert(_editingPostId ? '수정 중 오류가 발생했습니다.' : '글 등록 중 오류가 발생했습니다.');
     console.error(e);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '등록하기'; }
+    if (btn) { btn.disabled = false; btn.textContent = _editingPostId ? '수정 완료' : '등록하기'; }
   }
 };
 
