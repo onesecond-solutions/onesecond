@@ -501,6 +501,24 @@
   width: 0%;
 }
 
+/* ── 상세 추가 정보 (상품/인수 Q&A) ── */
+.detail-extra-list {
+  display: flex; flex-direction: column; gap: 4px;
+  background: var(--color-surface-2, #F3EFE9);
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-md, 12px);
+  padding: 0.8em 1em;
+}
+.detail-extra-row {
+  display: flex; align-items: baseline; gap: 0.6em;
+  font-size: 0.82em; line-height: 1.6;
+}
+.detail-extra-label {
+  font-weight: 700; color: var(--color-text-secondary, #7A5C44);
+  flex-shrink: 0; min-width: 7em;
+}
+.detail-extra-value { color: var(--color-text-primary, #3D2C1E); }
+
 /* ── 수정/삭제 액션바 ── */
 .detail-action-bar {
   flex-shrink: 0;
@@ -639,6 +657,54 @@
               <label class="write-label">카테고리</label>
               <select class="write-select" id="write-category"></select>
             </div>
+            <!-- 상품Q&A 추가 필드 -->
+            <div id="fields-product" style="display:none; display:flex; flex-direction:column; gap:0.9em;">
+              <div>
+                <label class="write-label">보험사</label>
+                <input class="write-input" type="text" id="write-insurer"
+                  placeholder="예: 삼성생명, 흥국화재" maxlength="50">
+              </div>
+              <div>
+                <label class="write-label">상품 카테고리</label>
+                <input class="write-input" type="text" id="write-product-category"
+                  placeholder="예: 종신, 암보험, 실손" maxlength="50">
+              </div>
+            </div>
+
+            <!-- 인수Q&A 추가 필드 -->
+            <div id="fields-underwriting" style="display:none; flex-direction:column; gap:0.9em;">
+              <div style="display:flex; gap:0.7em;">
+                <div style="flex:1;">
+                  <label class="write-label">나이</label>
+                  <input class="write-input" type="number" id="write-age"
+                    placeholder="예: 45" min="1" max="99" style="width:100%;">
+                </div>
+                <div style="flex:1;">
+                  <label class="write-label">성별</label>
+                  <select class="write-select" id="write-gender">
+                    <option value="">선택</option>
+                    <option value="남">남</option>
+                    <option value="여">여</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="write-label">질병명</label>
+                <input class="write-input" type="text" id="write-disease"
+                  placeholder="예: 고혈압, 당뇨, 위용종" maxlength="100">
+              </div>
+              <div>
+                <label class="write-label">진단 시기</label>
+                <input class="write-input" type="text" id="write-diagnosis-timing"
+                  placeholder="예: 2년 전, 2023년 3월" maxlength="100">
+              </div>
+              <div>
+                <label class="write-label">현재 상태</label>
+                <input class="write-input" type="text" id="write-current-status"
+                  placeholder="예: 완치, 투약 중, 수술 후 관리 중" maxlength="200">
+              </div>
+            </div>
+
             <div>
               <label class="write-label">제목</label>
               <input class="write-input" type="text" id="write-title"
@@ -711,6 +777,8 @@
       <span>👁 <span id="detail-views"></span></span>
     </div>
     <div class="detail-body">
+      <!-- 카테고리별 추가 정보 -->
+      <div id="detail-extra-fields" style="display:none; margin-bottom:1em;"></div>
       <div class="detail-content" id="detail-content"></div>
       <!-- 첨부파일 표시 영역 -->
       <div id="detail-attachments" style="display:none; margin-top:1em;"></div>
@@ -793,6 +861,13 @@ function buildEmpty(icon, title, desc) {
     + '<div class="empty-icon">'  + icon  + '</div>'
     + '<div class="empty-title">' + title + '</div>'
     + '<div class="empty-desc">'  + desc  + '</div>'
+    + '</div>';
+}
+
+function _extraRow(label, value) {
+  return '<div class="detail-extra-row">'
+    + '<span class="detail-extra-label">' + label + '</span>'
+    + '<span class="detail-extra-value">' + escHtml(String(value)) + '</span>'
     + '</div>';
 }
 
@@ -998,6 +1073,30 @@ window.openDetail = async function(postId) {
   if (contentEl) contentEl.textContent = post.content || '';
   if (likeCount) likeCount.textContent = post.like_count || 0;
 
+  /* 카테고리별 추가 정보 표시 */
+  var extraArea = document.getElementById('detail-extra-fields');
+  if (extraArea) {
+    var extraHtml = '';
+    if (post.category === '상품Q&A') {
+      if (post.insurer_name)     extraHtml += _extraRow('🏦 보험사', post.insurer_name);
+      if (post.product_category) extraHtml += _extraRow('📦 상품 카테고리', post.product_category);
+    }
+    if (post.category === '인수Q&A') {
+      var ageGender = [post.patient_age ? post.patient_age + '세' : '', post.patient_gender || ''].filter(Boolean).join(' / ');
+      if (ageGender)               extraHtml += _extraRow('👤 나이/성별', ageGender);
+      if (post.disease_name)       extraHtml += _extraRow('🏥 질병명', post.disease_name);
+      if (post.diagnosis_timing)   extraHtml += _extraRow('📅 진단 시기', post.diagnosis_timing);
+      if (post.current_status)     extraHtml += _extraRow('💊 현재 상태', post.current_status);
+    }
+    if (extraHtml) {
+      extraArea.style.display = 'block';
+      extraArea.innerHTML = '<div class="detail-extra-list">' + extraHtml + '</div>';
+    } else {
+      extraArea.style.display = 'none';
+      extraArea.innerHTML = '';
+    }
+  }
+
   /* 수정/삭제 버튼 노출 여부 */
   var s = window.AppState || {};
   var isAuthor = post.author_id && s.userId && String(post.author_id) === String(s.userId);
@@ -1172,6 +1271,27 @@ window.editPost = function() {
     });
   }
 
+  /* 추가 필드 복원 */
+  _switchFormFields(post.category || '');
+  if (post.category === '상품Q&A') {
+    var insurerEl  = document.getElementById('write-insurer');
+    var prodCatEl  = document.getElementById('write-product-category');
+    if (insurerEl)  insurerEl.value  = post.insurer_name     || '';
+    if (prodCatEl)  prodCatEl.value  = post.product_category || '';
+  }
+  if (post.category === '인수Q&A') {
+    var ageEl      = document.getElementById('write-age');
+    var genderEl   = document.getElementById('write-gender');
+    var diseaseEl  = document.getElementById('write-disease');
+    var diagEl     = document.getElementById('write-diagnosis-timing');
+    var statusEl   = document.getElementById('write-current-status');
+    if (ageEl)     ageEl.value    = post.patient_age       || '';
+    if (genderEl)  genderEl.value = post.patient_gender    || '';
+    if (diseaseEl) diseaseEl.value = post.disease_name     || '';
+    if (diagEl)    diagEl.value   = post.diagnosis_timing  || '';
+    if (statusEl)  statusEl.value = post.current_status    || '';
+  }
+
   /* 수정 모드 플래그 — submitPost에서 PATCH로 처리 */
   _editingPostId = String(post.id);
 
@@ -1205,6 +1325,24 @@ window.deletePost = async function() {
 /* 첨부파일 상태 */
 var _attachFiles = [];
 
+/* ── 카테고리별 추가 필드 전환 ── */
+function _switchFormFields(category) {
+  var fp = document.getElementById('fields-product');
+  var fu = document.getElementById('fields-underwriting');
+  if (fp) fp.style.display = (category === '상품Q&A') ? 'flex' : 'none';
+  if (fu) fu.style.display = (category === '인수Q&A') ? 'flex' : 'none';
+}
+
+function _clearExtraFields() {
+  ['write-insurer','write-product-category','write-age','write-disease',
+   'write-diagnosis-timing','write-current-status'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var gender = document.getElementById('write-gender');
+  if (gender) gender.value = '';
+}
+
 /* ── 글쓰기 버튼 클릭 ── */
 window.onClickWriteBtn = function() {
   if (_currentCategory === 'all') {
@@ -1237,6 +1375,11 @@ window.openWriteView = function() {
   var contentEl = document.getElementById('write-content');
   if (titleEl)   titleEl.value   = '';
   if (contentEl) contentEl.value = '';
+  _clearExtraFields();
+
+  /* 카테고리에 따라 추가 필드 표시 */
+  var selectedCat = (_currentCategory && _currentCategory !== 'all') ? _currentCategory : '';
+  _switchFormFields(selectedCat);
 
   var anonRow   = document.getElementById('anon-row');
   var anonCheck = document.getElementById('write-anon');
@@ -1273,6 +1416,8 @@ window.closeWriteView = function() {
   if (writeView) writeView.classList.remove('active');
   _attachFiles   = [];
   _editingPostId = null;
+  _clearExtraFields();
+  _switchFormFields('');
   _renderAttachPreview();
   /* 버튼/헤더/카테고리 초기화 */
   var submitBtn = document.querySelector('.write-submit');
@@ -1373,6 +1518,21 @@ window.submitPost = async function() {
   if (!title)   { alert('제목을 입력해 주세요.'); return; }
   if (!content) { alert('내용을 입력해 주세요.'); return; }
 
+  /* 상품Q&A 추가 필드 */
+  var insurer         = (document.getElementById('write-insurer')          || {}).value || '';
+  var productCategory = (document.getElementById('write-product-category') || {}).value || '';
+
+  /* 인수Q&A 추가 필드 */
+  var age             = (document.getElementById('write-age')              || {}).value || '';
+  var gender          = (document.getElementById('write-gender')           || {}).value || '';
+  var disease         = (document.getElementById('write-disease')          || {}).value || '';
+  var diagnosisTiming = (document.getElementById('write-diagnosis-timing') || {}).value || '';
+  var currentStatus   = (document.getElementById('write-current-status')   || {}).value || '';
+
+  /* 카테고리별 필수값 검사 */
+  if (category === '상품Q&A' && !insurer.trim()) { alert('보험사를 입력해 주세요.'); return; }
+  if (category === '인수Q&A' && !disease.trim()) { alert('질병명을 입력해 주세요.'); return; }
+
   /* 보험사게시판 권한 체크 (프론트 방어) */
   var s     = window.AppState || {};
   var board = _currentBoard;
@@ -1398,10 +1558,22 @@ window.submitPost = async function() {
   try {
     /* ── 수정 모드 (PATCH) ── */
     if (_editingPostId) {
+      var patchBody = { title: title, content: content, category: category };
+      if (category === '상품Q&A') {
+        patchBody.insurer_name    = insurer;
+        patchBody.product_category = productCategory;
+      }
+      if (category === '인수Q&A') {
+        patchBody.patient_age       = age       ? parseInt(age) : null;
+        patchBody.patient_gender    = gender    || null;
+        patchBody.disease_name      = disease   || null;
+        patchBody.diagnosis_timing  = diagnosisTiming || null;
+        patchBody.current_status    = currentStatus   || null;
+      }
       await window.db.fetch('/rest/v1/posts?id=eq.' + _editingPostId, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ title: title, content: content, category: category })
+        body: JSON.stringify(patchBody)
       });
       window.closeWriteView();
       await _loadPosts();
@@ -1410,24 +1582,36 @@ window.submitPost = async function() {
 
     /* ── 신규 등록 (POST) ── */
     /* 1) 게시글 먼저 등록 (Prefer: return=representation 으로 id 받기) */
+    var postBody = {
+      board_type:      board,
+      category:        category,
+      title:           title,
+      content:         content,
+      author_id:       s.userId || '',
+      author_name:     s.name   || '알 수 없음',
+      organization_id: orgId,
+      is_hub_visible:  false,
+      is_anonymous:    isAnon,
+      display_name:    displayName,
+      view_count:      0,
+      like_count:      0,
+      comment_count:   0
+    };
+    if (category === '상품Q&A') {
+      postBody.insurer_name     = insurer         || null;
+      postBody.product_category = productCategory || null;
+    }
+    if (category === '인수Q&A') {
+      postBody.patient_age      = age       ? parseInt(age) : null;
+      postBody.patient_gender   = gender    || null;
+      postBody.disease_name     = disease   || null;
+      postBody.diagnosis_timing = diagnosisTiming || null;
+      postBody.current_status   = currentStatus   || null;
+    }
     var postRes = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({
-        board_type:      board,
-        category:        category,
-        title:           title,
-        content:         content,
-        author_id:       s.userId || '',
-        author_name:     s.name   || '알 수 없음',
-        organization_id: orgId,
-        is_hub_visible:  false,
-        is_anonymous:    isAnon,
-        display_name:    displayName,
-        view_count:      0,
-        like_count:      0,
-        comment_count:   0
-      })
+      body: JSON.stringify(postBody)
     });
     var postData = await postRes.json();
     var postId = (Array.isArray(postData) ? postData[0] : postData).id;
