@@ -561,6 +561,13 @@
 }
 .detail-attach-dl { font-size: 0.78em; color: var(--color-brand, #A0522D); flex-shrink: 0; }
 
+.write-select:disabled {
+  background: var(--color-surface-2, #F3EFE9);
+  color: var(--color-text-secondary, #7A5C44);
+  cursor: default;
+  opacity: 1;
+}
+
 /* ── ④ 푸터 블록 ── */
 .pg-footer-block {
   border-radius: var(--radius-md, 12px);
@@ -609,7 +616,7 @@
         <!-- 카테고리 필터 + 글쓰기 -->
         <div class="board-filter-bar">
           <div class="category-pills" id="category-pills"></div>
-          <button class="write-btn" id="write-btn" onclick="window.openWriteView()">✏️ 글쓰기</button>
+          <button class="write-btn" id="write-btn" onclick="window.onClickWriteBtn()">✏️ 글쓰기</button>
         </div>
 
         <!-- 게시글 목록 -->
@@ -1198,13 +1205,33 @@ window.deletePost = async function() {
 /* 첨부파일 상태 */
 var _attachFiles = [];
 
+/* ── 글쓰기 버튼 클릭 ── */
+window.onClickWriteBtn = function() {
+  if (_currentCategory === 'all') {
+    alert('카테고리를 먼저 선택해 주세요.');
+    return;
+  }
+  window.openWriteView();
+};
+
 window.openWriteView = function() {
   var board      = _currentBoard;
   var categories = (BOARD_CATEGORIES[board] || ['상품Q&A']).filter(function(c) { return c !== '전체'; });
   var select     = document.getElementById('write-category');
-  if (select) select.innerHTML = categories.map(function(c) {
-    return '<option value="' + c + '">' + c + '</option>';
-  }).join('');
+  if (select) {
+    select.innerHTML = categories.map(function(c) {
+      return '<option value="' + c + '">' + c + '</option>';
+    }).join('');
+    /* 현재 선택된 카테고리 고정 */
+    if (_currentCategory && _currentCategory !== 'all') {
+      Array.from(select.options).forEach(function(opt) {
+        if (opt.value === _currentCategory) opt.selected = true;
+      });
+      select.disabled = true;
+    } else {
+      select.disabled = false;
+    }
+  }
 
   var titleEl   = document.getElementById('write-title');
   var contentEl = document.getElementById('write-content');
@@ -1247,11 +1274,13 @@ window.closeWriteView = function() {
   _attachFiles   = [];
   _editingPostId = null;
   _renderAttachPreview();
-  /* 버튼/헤더 초기화 */
+  /* 버튼/헤더/카테고리 초기화 */
   var submitBtn = document.querySelector('.write-submit');
   if (submitBtn) submitBtn.textContent = '등록하기';
   var viewTitle = document.getElementById('write-view-title');
   if (viewTitle && _currentBoard) viewTitle.textContent = '✏️ ' + (BOARD_LABEL[_currentBoard] || '') + ' 글쓰기';
+  var select = document.getElementById('write-category');
+  if (select) select.disabled = false;
 };
 
 /* 첨부파일 선택 핸들러 */
