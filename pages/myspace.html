@@ -785,52 +785,36 @@ window.loadScriptsList = async function() {
   const list = document.getElementById('scripts-list');
   if (!list) return;
   try {
-    const res = await fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${window.AppState.userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,created_at`), {
-      headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` }
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      console.error('scripts fetch error:', res.status, err);
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + res.status + '). 새로고침 해주세요.</div>';
+    const userId = window.AppState.userId;
+    const headers = { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` };
+
+    /* ── 내 스크립트 + 샘플 스크립트 병렬 fetch ── */
+    const [resOwn, resSample] = await Promise.all([
+      fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers }),
+      fetch(window.db.url(`/rest/v1/scripts?is_sample=eq.true&is_active=eq.true&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers })
+    ]);
+
+    if (!resOwn.ok) {
+      const err = await resOwn.json();
+      console.error('scripts fetch error:', resOwn.status, err);
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패 (' + resOwn.status + '). 새로고침 해주세요.</div>';
       return;
     }
-    const data = await res.json();
-    window._allScripts = data || [];
 
-    /* ── 샘플 자동 생성: 스크립트가 0개일 때만 ── */
-    if (window._allScripts.length === 0) {
-      try {
-        const userId = window.AppState.userId;
-        const samples = _SAMPLE_SCRIPTS.map(function(s) {
-          return Object.assign({}, s, {
-            owner_id: userId,
-            scope: 'personal',
-            is_active: true
-          });
-        });
-        await fetch(window.db.url('/rest/v1/scripts'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': window.db.key,
-            'Authorization': `Bearer ${window.db.getToken()}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify(samples)
-        });
-        /* 샘플 insert 후 다시 로드 */
-        const res2 = await fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc`), {
-          headers: { 'apikey': window.db.key, 'Authorization': `Bearer ${window.db.getToken()}` }
-        });
-        const data2 = await res2.json();
-        window._allScripts = data2 || [];
-      } catch(e) {
-        console.warn('샘플 스크립트 생성 실패:', e);
-      }
-    }
+    const ownData = await resOwn.json();
+    const sampleData = resSample.ok ? await resSample.json() : [];
 
+    /* ── 중복 제거 후 합치기: 내 스크립트 우선, 샘플은 뒤에 ── */
+    const ownIds = new Set((ownData || []).map(function(s) { return s.id; }));
+    const uniqueSamples = (sampleData || []).filter(function(s) { return !ownIds.has(s.id); });
+
+    window._allScripts = (ownData || []).concat(uniqueSamples);
     window.renderScriptsList(window._allScripts);
-  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패. 새로고침 해주세요.</div>'; }
+
+  } catch(e) {
+    const list2 = document.getElementById('scripts-list');
+    if (list2) list2.innerHTML = '<div style="text-align:center;padding:20px;color:#c0392b;font-size:0.790em;">불러오기 실패. 새로고침 해주세요.</div>';
+  }
 }
 
 window.renderScriptsList = function(items) {
@@ -847,13 +831,17 @@ window.renderScriptsList = function(items) {
   list.innerHTML = items.map(s => {
     const date = s.created_at ? s.created_at.slice(0,10).replace(/-/g,'.') : '';
     const preview = (s.highlight_text || s.script_text || '').slice(0,60);
+    const sampleBadge = s.is_sample ? `<span style="display:inline-block;font-size:0.68em;font-weight:700;color:var(--color-accent,#D4845A);background:rgba(212,132,90,0.12);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle;">샘플</span>` : '';
+    const moreBtn = s.is_sample
+      ? `<span style="width:28px;"></span>`
+      : `<button class="mys-item-more" onclick="deleteScript(${s.id}, this)">…</button>`;
     return `<div class="mys-item">
       <div class="mys-item-left">
-        <div class="mys-item-title">${s.title || '제목 없음'}</div>
+        <div class="mys-item-title">${s.title || '제목 없음'}${sampleBadge}</div>
         <div class="mys-item-preview">${preview}</div>
         <div class="mys-item-date">${date}</div>
       </div>
-      <button class="mys-item-more" onclick="deleteScript(${s.id}, this)">…</button>
+      ${moreBtn}
     </div>`;
   }).join('');
 }
