@@ -860,11 +860,16 @@ window.renderScriptsList = function(items, page) {
   const start = (window._scriptPage - 1) * window._PAGE_SIZE;
   const pageItems = items.slice(start, start + window._PAGE_SIZE);
 
+  const role = (window.AppState && window.AppState.role) || '';
+  const isLeader = (role === 'manager' || role === 'branch_manager' || role === 'admin');
+
   list.innerHTML = pageItems.map(function(s, i) {
     const num = String(start + i + 1).padStart(2, '0');
     const date = s.created_at ? s.created_at.slice(0,10).replace(/-/g,'.') : '';
     const preview = (s.highlight_text || s.script_text || '').replace(/<[^>]+>/g,'').slice(0,60);
     const sampleBadge = s.is_sample ? '<span style="display:inline-block;font-size:0.68em;font-weight:700;color:var(--color-accent,#D4845A);background:rgba(212,132,90,0.12);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle;">샘플</span>' : '';
+    const toggleHtml = isLeader
+      ? '<button class="leader-toggle-btn' + (s.is_leader_pick ? ' on' : '') + '" onclick="toggleLeaderPick(event,' + s.id + ',this)" title="' + (s.is_leader_pick ? '팀원 공유 중 (클릭 시 해제)' : '팀원에게 공유') + '">' + (s.is_leader_pick ? '⭐ 공유 중' : '☆ 팀원 공유') + '</button>' : '';
     const moreBtn = s.is_sample
       ? '<span style="width:28px;"></span>'
       : '<button class="mys-item-more" onclick="deleteScript(' + s.id + ', this)">…</button>';
@@ -873,7 +878,7 @@ window.renderScriptsList = function(items, page) {
       + '<div class="mys-item-left" style="flex:1;min-width:0;">'
       + '<div class="mys-item-title">' + (s.title || '제목 없음') + sampleBadge + '</div>'
       + '<div class="mys-item-preview">' + preview + '</div>'
-      + '<div class="mys-item-date">' + date + '</div>'
+      + '<div class="mys-item-date" style="display:flex;align-items:center;gap:8px;">' + date + toggleHtml + '</div>'
       + '</div>'
       + moreBtn
       + '</div>';
@@ -1156,40 +1161,7 @@ window._closeLeaderModalOverlay = function() {
   document.body.style.overflow = '';
 };
 
-// ── 나의 스크립트 목록 렌더 — 리더 공유 토글 추가 버전 ──────────────────────
-// 기존 renderScriptsList를 role 감지하여 오버라이드
-(function() {
-  var _origRender = window.renderScriptsList;
-  window.renderScriptsList = function(items) {
-    const list = document.getElementById('scripts-list');
-    if (!list) return;
-    const role = (window.AppState && window.AppState.role) || '';
-    const isLeader = (role === 'manager' || role === 'branch_manager' || role === 'admin');
-
-    if (!items || items.length === 0) {
-      list.innerHTML = `<div style="text-align:center;padding:36px 20px;">
-        <div style="font-size:32px;margin-bottom:12px;">✍️</div>
-        <div style="font-size:0.842em;font-weight:800;color:var(--color-text-primary,#3D2C1E);margin-bottom:8px;">아직 저장된 스크립트가 없습니다</div>
-        <div style="font-size:0.790em;color:var(--color-text-tertiary,#B89880);line-height:1.7;">오늘 통화 중 막혔던 순간이 있었나요?<br>그 멘트를 지금 바로 저장해두세요.<br>다음 통화에서 바로 꺼내 쓸 수 있습니다.</div>
-      </div>`;
-      return;
-    }
-    list.innerHTML = items.map(function(s) {
-      const date = s.created_at ? s.created_at.slice(0,10).replace(/-/g,'.') : '';
-      const preview = (s.highlight_text || s.script_text || '').slice(0,60);
-      const toggleHtml = isLeader
-        ? `<button class="leader-toggle-btn${s.is_leader_pick ? ' on' : ''}" onclick="toggleLeaderPick(event,${s.id},this)" title="${s.is_leader_pick ? '팀원 공유 중 (클릭 시 해제)' : '팀원에게 공유'}">${s.is_leader_pick ? '⭐ 공유 중' : '☆ 팀원 공유'}</button>` : '';
-      return `<div class="mys-item">
-        <div class="mys-item-left">
-          <div class="mys-item-title">${s.title || '제목 없음'}</div>
-          <div class="mys-item-preview">${preview}</div>
-          <div class="mys-item-date" style="display:flex;align-items:center;gap:8px;">${date}${toggleHtml}</div>
-        </div>
-        <button class="mys-item-more" onclick="deleteScript(${s.id}, this)">…</button>
-      </div>`;
-    }).join('');
-  };
-})();
+// ── renderScriptsList에 리더 토글 통합 완료 (오버라이드 제거) ──
 
 // 리더 공유 토글 PATCH
 window.toggleLeaderPick = async function(event, id, btn) {
