@@ -980,41 +980,42 @@ window.admClearBanner = function () {
 };
 
 /* ════════════════════════════════════════
-   탭 6: 화면설정 (B영역 메뉴 ON/OFF)
+   탭 6: 화면설정 (메뉴 ON/OFF + 배너 이미지)
 ════════════════════════════════════════ */
 window.admLoadSettings = async function () {
   admContent('<div class="adm-loading">설정 로딩 중...</div>');
 
-  /* B영역 메뉴 목록 정의 */
-  var menuDefs = [
-    { key: 'menu_home',    label: '🏠 홈',        desc: '메인 홈 화면' },
-    { key: 'menu_scripts', label: '📋 스크립트',   desc: 'TM 상담 스크립트 모음' },
-    { key: 'menu_board',   label: '💬 게시판',     desc: '공지·상품·인수 게시판' },
-    { key: 'menu_myspace', label: '🗂️ MY SPACE',  desc: '나만의 스크립트·자료방' },
-    { key: 'menu_news',    label: '📰 보험뉴스',   desc: '보험 업계 최신 뉴스' },
-    { key: 'menu_quick',   label: '⚡ Quick 메뉴', desc: '업무 지원 도구 모음' }
+  var pageDefs = [
+    { key: 'home',    label: '🏠 홈' },
+    { key: 'scripts', label: '📋 스크립트' },
+    { key: 'board',   label: '💬 게시판' },
+    { key: 'myspace', label: '🗂️ MY SPACE' },
+    { key: 'news',    label: '📰 보험뉴스' },
+    { key: 'quick',   label: '⚡ Quick 메뉴' }
   ];
 
-  /* app_settings fetch */
+  /* app_settings 전체 fetch (menu_b + banner_img) */
   var savedMap = {};
   try {
-    var res = await admFetch('/rest/v1/app_settings?group_name=eq.menu_b&select=key,value');
+    var res = await admFetch('/rest/v1/app_settings?select=key,value');
     if (res.ok) {
       var rows = await res.json();
       rows.forEach(function (r) { savedMap[r.key] = r.value; });
     }
   } catch (e) { /* 테이블 없으면 기본값 사용 */ }
 
-  var rows = menuDefs.map(function (m) {
-    var isOn = savedMap[m.key] !== 'false'; /* 기본값: ON */
+  /* ── 섹션1: 메뉴 표시 설정 ── */
+  var menuRows = pageDefs.map(function (p) {
+    var key  = 'menu_' + p.key;
+    var isOn = savedMap[key] !== 'false';
     return (
       '<tr>' +
-        '<td style="font-weight:600;">' + m.label + '</td>' +
-        '<td style="color:var(--color-text-secondary,#7A5C44);font-size:0.85em;">' + m.desc + '</td>' +
+        '<td style="font-weight:600;">' + p.label + '</td>' +
         '<td style="text-align:center;">' +
           '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">' +
-            '<input type="checkbox" id="setting-' + m.key + '"' + (isOn ? ' checked' : '') +
-              ' style="width:16px;height:16px;accent-color:var(--color-brand,#6B3A2A);cursor:pointer;">' +
+            '<input type="checkbox" id="setting-' + key + '"' + (isOn ? ' checked' : '') +
+              ' style="width:16px;height:16px;accent-color:var(--color-brand,#6B3A2A);cursor:pointer;"' +
+              ' onchange="this.nextElementSibling.textContent=this.checked?\'표시\':\'숨김\';this.nextElementSibling.style.color=this.checked?\'var(--color-brand,#6B3A2A)\':\'#aaa\'">' +
             '<span style="font-size:0.85em;color:' + (isOn ? 'var(--color-brand,#6B3A2A)' : '#aaa') + ';">' +
               (isOn ? '표시' : '숨김') +
             '</span>' +
@@ -1024,21 +1025,65 @@ window.admLoadSettings = async function () {
     );
   }).join('');
 
+  /* ── 섹션2: 배너 이미지 설정 ── */
+  var bannerRows = pageDefs.map(function (p) {
+    var key = 'banner_img_' + p.key;
+    var url = savedMap[key] || '';
+    return (
+      '<tr>' +
+        '<td style="font-weight:600;white-space:nowrap;">' + p.label + '</td>' +
+        '<td>' +
+          '<input type="text" id="banner-' + p.key + '" value="' + url.replace(/"/g, '&quot;') + '"' +
+            ' placeholder="이미지 URL 입력 (https://...)"' +
+            ' style="width:100%;padding:7px 10px;border:1px solid var(--color-border,#E4DBCE);border-radius:var(--radius-sm,8px);font-size:0.82em;font-family:inherit;background:var(--color-surface,#fff);color:var(--color-text-primary,#3D2C1E);"' +
+            ' oninput="window.admBannerPreview(\'' + p.key + '\')">' +
+        '</td>' +
+        '<td style="text-align:center;width:60px;">' +
+          '<div id="banner-preview-' + p.key + '" style="width:52px;height:32px;border-radius:4px;overflow:hidden;border:1px solid var(--color-border,#E4DBCE);background:var(--color-surface-2,#F3EFE9);display:flex;align-items:center;justify-content:center;">' +
+            (url
+              ? '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'<span style=&quot;font-size:0.7em;color:#ccc;&quot;>오류</span>\'">'
+              : '<span style="font-size:0.7em;color:#ccc;">없음</span>') +
+          '</div>' +
+        '</td>' +
+        '<td style="text-align:center;width:60px;">' +
+          '<button class="adm-btn adm-btn-danger adm-btn-sm"' +
+            ' onclick="document.getElementById(\'banner-' + p.key + '\').value=\'\';window.admBannerPreview(\'' + p.key + '\')">삭제</button>' +
+        '</td>' +
+      '</tr>'
+    );
+  }).join('');
+
   var html =
-    '<div class="adm-card">' +
+    /* 메뉴 ON/OFF 카드 */
+    '<div class="adm-card" style="margin-bottom:14px;">' +
       '<div class="adm-card-title">⚙️ B영역 메뉴 표시 설정</div>' +
-      '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:14px;">' +
-        '사이드바(B영역)에 표시할 메뉴를 ON/OFF 할 수 있습니다.<br>' +
-        '<span style="color:#c0392b;font-weight:600;">※ app_settings 테이블이 없으면 저장이 되지 않습니다.</span>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">사이드바에 표시할 메뉴를 ON/OFF 할 수 있습니다.</div>' +
+      '<div class="adm-table-wrap">' +
+        '<table class="adm-table">' +
+          '<thead><tr><th>메뉴</th><th style="text-align:center;width:90px;">표시</th></tr></thead>' +
+          '<tbody>' + menuRows + '</tbody>' +
+        '</table>' +
+      '</div>' +
+      '<div style="margin-top:14px;display:flex;gap:8px;">' +
+        '<button class="adm-btn adm-btn-primary" onclick="window.admSaveMenuSettings()">💾 메뉴 설정 저장</button>' +
+      '</div>' +
+    '</div>' +
+
+    /* 배너 이미지 카드 */
+    '<div class="adm-card">' +
+      '<div class="adm-card-title">🖼️ 페이지별 배너 이미지 설정</div>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">' +
+        '각 페이지 상단에 표시할 배너 이미지 URL을 입력하세요.<br>' +
+        '<span style="color:#888;">권장: 가로 1200px 이상 · 세로 120~200px · JPG/PNG/WebP</span>' +
       '</div>' +
       '<div class="adm-table-wrap">' +
         '<table class="adm-table">' +
-          '<thead><tr><th>메뉴</th><th>설명</th><th style="text-align:center;width:80px;">표시</th></tr></thead>' +
-          '<tbody>' + rows + '</tbody>' +
+          '<thead><tr><th style="width:110px;">페이지</th><th>이미지 URL</th><th style="width:60px;">미리보기</th><th style="width:60px;">삭제</th></tr></thead>' +
+          '<tbody>' + bannerRows + '</tbody>' +
         '</table>' +
       '</div>' +
-      '<div style="margin-top:16px;display:flex;gap:8px;">' +
-        '<button class="adm-btn adm-btn-primary" onclick="window.admSaveSettings()">💾 저장</button>' +
+      '<div style="margin-top:14px;display:flex;gap:8px;">' +
+        '<button class="adm-btn adm-btn-primary" onclick="window.admSaveBannerSettings()">💾 배너 설정 저장</button>' +
         '<button class="adm-btn adm-btn-ghost"   onclick="window.admLoadSettings()">🔄 새로고침</button>' +
       '</div>' +
     '</div>';
@@ -1046,32 +1091,60 @@ window.admLoadSettings = async function () {
   admContent(html);
 };
 
-window.admSaveSettings = async function () {
-  var menuKeys = ['menu_home','menu_scripts','menu_board','menu_myspace','menu_news','menu_quick'];
-  var upsertRows = menuKeys.map(function (key) {
-    var el = document.getElementById('setting-' + key);
-    return { group_name: 'menu_b', key: key, value: el && el.checked ? 'true' : 'false' };
-  });
+/* URL 입력 시 미리보기 즉시 반영 */
+window.admBannerPreview = function (pageKey) {
+  var url     = (document.getElementById('banner-' + pageKey) || {}).value || '';
+  var preview = document.getElementById('banner-preview-' + pageKey);
+  if (!preview) return;
+  if (url) {
+    preview.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;"'
+      + ' onerror="this.parentElement.innerHTML=\'<span style=&quot;font-size:0.7em;color:#ccc;&quot;>오류</span>\'">';
+  } else {
+    preview.innerHTML = '<span style="font-size:0.7em;color:#ccc;">없음</span>';
+  }
+};
 
+/* 메뉴 ON/OFF 저장 */
+window.admSaveMenuSettings = async function () {
+  var keys = ['home','scripts','board','myspace','news','quick'];
+  var upsertRows = keys.map(function (k) {
+    var el = document.getElementById('setting-menu_' + k);
+    return { group_name: 'menu_b', key: 'menu_' + k, value: el && el.checked ? 'true' : 'false' };
+  });
   try {
     var res = await admFetch('/rest/v1/app_settings', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(upsertRows)
+    });
+    if (res.ok) { alert('메뉴 설정이 저장됐습니다.'); }
+    else { var e = await res.text(); console.error('[admin] 메뉴 저장 실패:', res.status, e); alert('저장 실패 (HTTP ' + res.status + ')'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* 배너 이미지 URL 저장 */
+window.admSaveBannerSettings = async function () {
+  var keys = ['home','scripts','board','myspace','news','quick'];
+  var upsertRows = keys.map(function (k) {
+    var el = document.getElementById('banner-' + k);
+    return { group_name: 'banner_img', key: 'banner_img_' + k, value: el ? el.value.trim() : '' };
+  });
+  try {
+    var res = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
       body: JSON.stringify(upsertRows)
     });
     if (res.ok) {
-      alert('설정이 저장됐습니다.\n새로고침 시 반영됩니다.');
+      /* 캐시 무효화 → 다음 페이지 전환 시 즉시 반영 */
+      if (window.clearBannerCache) window.clearBannerCache();
+      alert('배너 설정이 저장됐습니다.\n페이지 전환 시 즉시 반영됩니다.');
     } else {
-      var err = await res.text();
-      console.error('[admin] admSaveSettings 실패:', res.status, err);
-      alert('저장 실패 (HTTP ' + res.status + ')\n콘솔을 확인해 주세요.');
+      var e = await res.text();
+      console.error('[admin] 배너 저장 실패:', res.status, e);
+      alert('저장 실패 (HTTP ' + res.status + ')');
     }
-  } catch (e) {
-    alert('네트워크 오류가 발생했습니다.');
-  }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
 };
 
 /* ── 부트 ── */
