@@ -467,7 +467,7 @@ html, body {
       <div class="search-input-row">
         <span class="search-icon">🔍</span>
         <input class="search-input" id="search-input" type="text"
-               placeholder="스크립트, 게시글, 업무자료 검색..." autocomplete="off"
+               placeholder="스크립트, 게시글, 예외질환, 업무자료 검색..." autocomplete="off"
                oninput="onSearchInput(this.value)"
                onkeydown="if(event.key==='Enter')doSearch(this.value)">
         <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
@@ -684,6 +684,9 @@ function renderProBadge(plan, role) {
 
 // ── ③ 메뉴 설정 (app_settings) ─────────────────────────────────────────────
 async function applyMenuSettings() {
+  // [2026-04-17] 관리자는 표시 설정과 무관하게 항상 모든 메뉴 표시
+  // (실제 사용자 화면은 admin.html의 미리보기로 확인)
+  if (window.AppState && window.AppState.role === 'admin') return;
   try {
     var res = await window.db.fetch('/rest/v1/app_settings?group_name=eq.menu_b&select=key,value');
     if (!res.ok) return;
@@ -704,23 +707,25 @@ async function applyMenuSettings() {
 }
 
 // ── [2026-04-17] 기능 게이트 설정 (app_settings.group_name='gate') ─────────
-// gate_quick_a2: A2 영역 '⚡ 빠른 실행' 버튼의 PRO 전용 여부
+// gate_quick_a2:  A2 영역 '⚡ 빠른 실행' 버튼의 PRO 전용 여부
+// gate_search_a2: A2 영역 '🔍 검색창' 의 PRO 전용 여부
 //   - 'true' (기본): PRO 전용 — 일반 사용자 클릭 시 pricing 안내, PRO 뱃지 부착
 //   - 'false': 전체 공개 — 모두 사용 가능
 async function applyGateSettings() {
-  var btn = document.getElementById('openQuick');
-  if (!btn) return;
+  // [2026-04-17] 관리자는 게이트와 무관하게 전체 기능 접근
+  // (실제 사용자 화면은 admin.html의 미리보기로 확인)
+  if (window.AppState && window.AppState.role === 'admin') return;
 
-  /* 기본값: PRO 전용 */
-  var gateOn = true;
+  /* 기본값: 둘 다 PRO 전용 */
+  var quickGateOn  = true;
+  var searchGateOn = true;
   try {
     var res = await window.db.fetch('/rest/v1/app_settings?group_name=eq.gate&select=key,value');
     if (res.ok) {
       var rows = await res.json();
       rows.forEach(function (r) {
-        if (r.key === 'gate_quick_a2') {
-          gateOn = r.value !== 'false';
-        }
+        if (r.key === 'gate_quick_a2')  quickGateOn  = r.value !== 'false';
+        if (r.key === 'gate_search_a2') searchGateOn = r.value !== 'false';
       });
     }
   } catch (e) {
@@ -728,34 +733,36 @@ async function applyGateSettings() {
     /* fetch 실패 시 기본값(PRO 전용) 유지 */
   }
 
-  /* 기존 PRO 뱃지 제거 후 재부착 */
-  var oldBadge = btn.querySelector('.quick-pro-badge');
-  if (oldBadge) oldBadge.remove();
+  /* ① 빠른 실행 버튼 제어 */
+  var btn = document.getElementById('openQuick');
+  if (btn) {
+    var oldBadge = btn.querySelector('.quick-pro-badge');
+    if (oldBadge) oldBadge.remove();
 
-  if (gateOn) {
-    /* PRO 전용 모드: 뱃지 부착 + PRO 아니면 클릭 차단 */
-    var isProUser = window.Auth && window.Auth.isPro && window.Auth.isPro();
-    if (!isProUser) {
-      var badge = document.createElement('span');
-      badge.className = 'quick-pro-badge';
-      badge.textContent = 'PRO';
-      badge.style.cssText = 'display:inline-block;margin-left:6px;padding:2px 6px;background:var(--color-accent);color:#fff;'
-        + 'font-size:0.65em;font-weight:700;border-radius:4px;vertical-align:middle;letter-spacing:0.02em;';
-      /* ▾ 앞에 삽입 */
-      btn.appendChild(badge);
-      /* 클릭 시 pricing으로 */
-      btn.onclick = function (e) {
-        e.stopPropagation();
-        if (typeof loadPricing === 'function') loadPricing();
-      };
+    if (quickGateOn) {
+      var isProUser = window.Auth && window.Auth.isPro && window.Auth.isPro();
+      if (!isProUser) {
+        var badge = document.createElement('span');
+        badge.className = 'quick-pro-badge';
+        badge.textContent = 'PRO';
+        badge.style.cssText = 'display:inline-block;margin-left:6px;padding:2px 6px;background:var(--color-accent);color:#fff;'
+          + 'font-size:0.65em;font-weight:700;border-radius:4px;vertical-align:middle;letter-spacing:0.02em;';
+        btn.appendChild(badge);
+        btn.onclick = function (e) {
+          e.stopPropagation();
+          if (typeof loadPricing === 'function') loadPricing();
+        };
+      } else {
+        btn.onclick = function (e) { toggleQuickDropdown(e); };
+      }
     } else {
-      /* PRO 사용자: 정상 동작 복원 */
       btn.onclick = function (e) { toggleQuickDropdown(e); };
     }
-  } else {
-    /* 전체 공개 모드: 뱃지 제거 + 정상 동작 */
-    btn.onclick = function (e) { toggleQuickDropdown(e); };
   }
+
+  /* ② 검색창 제어 — 전역 플래그로 renderSearchBox에 전달 */
+  window._gateSearchA2 = searchGateOn;
+  if (typeof renderSearchBox === 'function') renderSearchBox();
 }
 
 // ── ④ 라우팅 (switchMenu) ──────────────────────────────────────────────────
@@ -989,11 +996,30 @@ function isPro() {
 function renderSearchBox() {
   var wrap = document.getElementById('search-wrap');
   if (!wrap) return;
-  if (!isPro()) {
+  // [2026-04-17] 기능 게이트(gate_search_a2) 기반으로 잠금 판정
+  //   - 기본값: true (DB 로드 전에는 PRO 전용으로 안전하게 동작)
+  //   - applyGateSettings가 window._gateSearchA2를 세팅 후 이 함수를 재호출
+  var gateOn = (window._gateSearchA2 === undefined) ? true : window._gateSearchA2;
+  var locked = gateOn && !isPro();
+  if (locked) {
     wrap.innerHTML = '<div class="search-lock-wrap" onclick="loadPricing()">'
       + '<span style="font-size:0.9375em;opacity:0.5;">🔍</span>'
-      + '<span class="search-lock-text">스크립트, 게시글, 업무자료 검색...</span>'
+      + '<span class="search-lock-text">스크립트, 게시글, 예외질환, 업무자료 검색...</span>'
       + '<span class="search-lock-badge">PRO 전용</span></div>';
+  } else {
+    // 게이트 OFF 또는 PRO 사용자: 원래 검색 UI 복구
+    // (HTML에 이미 마크업이 있으면 그대로, 덮어썼다가 돌아온 경우 재마크업)
+    if (!document.getElementById('search-input')) {
+      wrap.innerHTML = '<div class="search-input-row">'
+        + '<span class="search-icon">🔍</span>'
+        + '<input class="search-input" id="search-input" type="text"'
+        + ' placeholder="스크립트, 게시글, 예외질환, 업무자료 검색..." autocomplete="off"'
+        + ' oninput="onSearchInput(this.value)"'
+        + ' onkeydown="if(event.key===\'Enter\')doSearch(this.value)">'
+        + '<button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>'
+        + '</div>'
+        + '<div class="search-dropdown" id="search-dropdown" style="display:none;"></div>';
+    }
   }
 }
 
