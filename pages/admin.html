@@ -1230,6 +1230,95 @@ window.admLoadSettings = async function () {
   }).join('');
 
   var html =
+    /* [2026-04-17 추가] 🔧 디버그 패널 - DB값 vs 화면적용 비교 */
+    (function () {
+      /* menu_b 그룹 진단 */
+      var menuDiag = ['home','scripts','board','myspace','news','quick'].map(function (k) {
+        var dbVal  = savedMap['menu_' + k];
+        var dbStr  = dbVal === undefined ? '(없음)' : dbVal;
+        var dbShow = dbVal !== 'false';  // app.html applyMenuSettings 로직
+        var labelMap = { home:'🏠 홈', scripts:'📋 스크립트', board:'💬 게시판', myspace:'🗂️ MY SPACE', news:'📰 보험뉴스', quick:'⚡ Quick 메뉴' };
+        return {
+          group: 'menu_b',
+          key:   'menu_' + k,
+          label: labelMap[k] || k,
+          dbVal: dbStr,
+          expectedShow: dbShow,
+          target: '사이드바 ' + labelMap[k]
+        };
+      });
+      /* feature_gate 그룹 진단 */
+      var gateDiag = [
+        { key: 'feature_quickaction', label: '⚡ 빠른 실행 PRO 게이트' }
+      ].map(function (g) {
+        var dbVal = savedMap[g.key];
+        var dbStr = dbVal === undefined ? '(없음)' : dbVal;
+        var dbOn  = dbVal !== 'false';  // app.html loadFeatureGates 로직
+        return {
+          group: 'feature_gate',
+          key:   g.key,
+          label: g.label,
+          dbVal: dbStr,
+          expectedShow: dbOn,
+          target: dbOn ? 'PRO 전용' : '전체 공개'
+        };
+      });
+      /* board_visibility 그룹 진단 (현재 미적용 - 게시판 페이지 제작 후) */
+      var boardDiag = ['notice','qa_product','qa_underwriting','hub','company'].map(function (k) {
+        var dbVal = savedMap['board_' + k];
+        var dbStr = dbVal === undefined ? '(없음)' : dbVal;
+        var dbShow = dbVal !== 'false';
+        var labelMap = { notice:'📢 공지사항', qa_product:'🛡️ 상품 Q&A', qa_underwriting:'📋 인수 Q&A', hub:'🌐 허브게시판', company:'🏢 보험사게시판' };
+        return {
+          group: 'board_visibility',
+          key:   'board_' + k,
+          label: labelMap[k] || k,
+          dbVal: dbStr,
+          expectedShow: dbShow,
+          target: '⏸️ 게시판 페이지 제작 후 적용'
+        };
+      });
+      var allDiag = menuDiag.concat(gateDiag).concat(boardDiag);
+      var diagRows = allDiag.map(function (d) {
+        var dbColor = d.dbVal === '(없음)' ? '#aaa' : (d.expectedShow ? '#2e7d32' : '#c62828');
+        var dbBadge = d.dbVal === '(없음)' ? '⚪ 미설정' : (d.expectedShow ? '🟢 ' + d.dbVal : '🔴 ' + d.dbVal);
+        return (
+          '<tr>' +
+            '<td style="font-size:0.78em;color:#888;font-family:monospace;">' + d.group + '</td>' +
+            '<td style="font-size:0.78em;font-family:monospace;">' + d.key + '</td>' +
+            '<td style="font-weight:600;">' + d.label + '</td>' +
+            '<td style="text-align:center;color:' + dbColor + ';font-weight:700;font-size:0.82em;">' + dbBadge + '</td>' +
+            '<td style="font-size:0.8em;color:#555;">' + d.target + '</td>' +
+          '</tr>'
+        );
+      }).join('');
+      return (
+        '<div class="adm-card" style="margin-bottom:14px;background:#fffbe6;border:1px solid #f0d878;">' +
+          '<div class="adm-card-title" style="color:#7a5c00;">🔧 컨트롤러 진단 패널</div>' +
+          '<div style="font-size:0.78em;color:#7a5c00;margin-bottom:12px;line-height:1.5;">' +
+            '현재 <code>app_settings</code> DB값과 예상 화면 적용 결과를 표시합니다.<br>' +
+            '🟢 = 표시/활성  ·  🔴 = 숨김/비활성  ·  ⚪ = DB에 행 없음 (기본값 적용)' +
+          '</div>' +
+          '<div class="adm-table-wrap">' +
+            '<table class="adm-table" style="font-size:0.85em;">' +
+              '<thead><tr>' +
+                '<th style="width:130px;">그룹</th>' +
+                '<th style="width:170px;">키</th>' +
+                '<th>대상</th>' +
+                '<th style="text-align:center;width:110px;">DB값</th>' +
+                '<th style="width:200px;">예상 동작</th>' +
+              '</tr></thead>' +
+              '<tbody>' + diagRows + '</tbody>' +
+            '</table>' +
+          '</div>' +
+          '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="window.admLoadSettings()">🔄 진단 새로고침</button>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="window.admDiagOpenSite()">🌐 사이트 열어 적용 확인</button>' +
+          '</div>' +
+        '</div>'
+      );
+    })() +
+
     /* 메뉴 ON/OFF 카드 */
     '<div class="adm-card" style="margin-bottom:14px;">' +
       '<div class="adm-card-title">⚙️ B영역 메뉴 표시 설정</div>' +
@@ -1244,6 +1333,89 @@ window.admLoadSettings = async function () {
         '<button class="adm-btn adm-btn-primary" onclick="window.admSaveMenuSettings()">💾 메뉴 설정 저장</button>' +
       '</div>' +
     '</div>' +
+
+    /* [2026-04-17 추가] 기능 게이트 카드 - 빠른 실행 PRO 전용 ON/OFF */
+    (function () {
+      var quickActionPro = savedMap['feature_quickaction'] !== 'false';  // 기본값: PRO 전용
+      return (
+        '<div class="adm-card" style="margin-bottom:14px;">' +
+          '<div class="adm-card-title">🔒 기능 게이트 (PRO 전용 설정)</div>' +
+          '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">' +
+            '특정 기능을 PRO 전용으로 제한하거나 전체 공개할 수 있습니다.' +
+          '</div>' +
+          '<div class="adm-table-wrap">' +
+            '<table class="adm-table">' +
+              '<thead><tr><th>기능</th><th style="text-align:center;width:120px;">PRO 전용</th></tr></thead>' +
+              '<tbody>' +
+                '<tr>' +
+                  '<td style="font-weight:600;">⚡ 빠른 실행 (A2 영역)</td>' +
+                  '<td style="text-align:center;">' +
+                    '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">' +
+                      '<input type="checkbox" id="setting-feature_quickaction"' + (quickActionPro ? ' checked' : '') +
+                        ' style="width:16px;height:16px;accent-color:var(--color-brand,#6B3A2A);cursor:pointer;"' +
+                        ' onchange="this.nextElementSibling.textContent=this.checked?\'PRO 전용\':\'전체 공개\';this.nextElementSibling.style.color=this.checked?\'var(--color-brand,#6B3A2A)\':\'#aaa\'">' +
+                      '<span style="font-size:0.85em;color:' + (quickActionPro ? 'var(--color-brand,#6B3A2A)' : '#aaa') + ';">' +
+                        (quickActionPro ? 'PRO 전용' : '전체 공개') +
+                      '</span>' +
+                    '</label>' +
+                  '</td>' +
+                '</tr>' +
+              '</tbody>' +
+            '</table>' +
+          '</div>' +
+          '<div style="margin-top:14px;display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveFeatureGates()">💾 기능 게이트 저장</button>' +
+          '</div>' +
+        '</div>'
+      );
+    })() +
+
+    /* [2026-04-17 추가] 게시판 표시 설정 카드 */
+    (function () {
+      var boardDefs = [
+        { key: 'notice',          label: '📢 공지사항' },
+        { key: 'qa_product',      label: '🛡️ 상품 Q&A' },
+        { key: 'qa_underwriting', label: '📋 인수 Q&A' },
+        { key: 'hub',             label: '🌐 허브게시판' },
+        { key: 'company',         label: '🏢 보험사게시판' }
+      ];
+      var boardRows = boardDefs.map(function (b) {
+        var key  = 'board_' + b.key;
+        var isOn = savedMap[key] !== 'false';  // 기본값: 표시
+        return (
+          '<tr>' +
+            '<td style="font-weight:600;">' + b.label + '</td>' +
+            '<td style="text-align:center;">' +
+              '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">' +
+                '<input type="checkbox" id="setting-' + key + '"' + (isOn ? ' checked' : '') +
+                  ' style="width:16px;height:16px;accent-color:var(--color-brand,#6B3A2A);cursor:pointer;"' +
+                  ' onchange="this.nextElementSibling.textContent=this.checked?\'표시\':\'숨김\';this.nextElementSibling.style.color=this.checked?\'var(--color-brand,#6B3A2A)\':\'#aaa\'">' +
+                '<span style="font-size:0.85em;color:' + (isOn ? 'var(--color-brand,#6B3A2A)' : '#aaa') + ';">' +
+                  (isOn ? '표시' : '숨김') +
+                '</span>' +
+              '</label>' +
+            '</td>' +
+          '</tr>'
+        );
+      }).join('');
+      return (
+        '<div class="adm-card" style="margin-bottom:14px;">' +
+          '<div class="adm-card-title">💬 게시판 표시 설정</div>' +
+          '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">' +
+            '게시판별 ON/OFF 설정. (보험사게시판은 추후 보험사별 개별 토글 예정)' +
+          '</div>' +
+          '<div class="adm-table-wrap">' +
+            '<table class="adm-table">' +
+              '<thead><tr><th>게시판</th><th style="text-align:center;width:90px;">표시</th></tr></thead>' +
+              '<tbody>' + boardRows + '</tbody>' +
+            '</table>' +
+          '</div>' +
+          '<div style="margin-top:14px;display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveBoardVisibility()">💾 게시판 표시 저장</button>' +
+          '</div>' +
+        '</div>'
+      );
+    })() +
 
     /* 배너 이미지 카드 */
     '<div class="adm-card">' +
@@ -1331,6 +1503,71 @@ window.admSaveMenuSettings = async function () {
     if (insRes.ok) { alert('메뉴 설정이 저장됐습니다.'); }
     else { var e2 = await insRes.text(); console.error('[admin] 메뉴 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
   } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* [2026-04-17 추가] 기능 게이트 저장 (PRO 전용 ON/OFF) */
+window.admSaveFeatureGates = async function () {
+  var keys = ['quickaction'];  // 향후 기능 추가 시 여기에 키 추가
+  var rows = keys.map(function (k) {
+    var el = document.getElementById('setting-feature_' + k);
+    return { group_name: 'feature_gate', key: 'feature_' + k, value: el && el.checked ? 'true' : 'false' };
+  });
+  try {
+    /* 1) 기존 feature_gate 행 전체 삭제 */
+    var delRes = await admFetch('/rest/v1/app_settings?group_name=eq.feature_gate', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!delRes.ok && delRes.status !== 404) {
+      var e = await delRes.text();
+      console.error('[admin] 게이트 삭제 실패:', delRes.status, e);
+      alert('저장 실패 (삭제 단계 오류)');
+      return;
+    }
+    /* 2) 새 값 INSERT */
+    var insRes = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    if (insRes.ok) { alert('기능 게이트가 저장됐습니다.\n변경사항은 새로고침 후 적용됩니다.'); }
+    else { var e2 = await insRes.text(); console.error('[admin] 게이트 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* [2026-04-17 추가] 게시판 표시 저장 (board_visibility 그룹) */
+window.admSaveBoardVisibility = async function () {
+  var keys = ['notice','qa_product','qa_underwriting','hub','company'];
+  var rows = keys.map(function (k) {
+    var el = document.getElementById('setting-board_' + k);
+    return { group_name: 'board_visibility', key: 'board_' + k, value: el && el.checked ? 'true' : 'false' };
+  });
+  try {
+    /* 1) 기존 board_visibility 행 전체 삭제 */
+    var delRes = await admFetch('/rest/v1/app_settings?group_name=eq.board_visibility', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!delRes.ok && delRes.status !== 404) {
+      var e = await delRes.text();
+      console.error('[admin] 게시판 표시 삭제 실패:', delRes.status, e);
+      alert('저장 실패 (삭제 단계 오류)');
+      return;
+    }
+    /* 2) 새 값 INSERT */
+    var insRes = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    if (insRes.ok) { alert('게시판 표시 설정이 저장됐습니다.\n게시판 페이지 제작 후 자동 적용됩니다.'); }
+    else { var e2 = await insRes.text(); console.error('[admin] 게시판 표시 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* [2026-04-17 추가] 디버그 패널 - 사이트 새 탭으로 열기 (실제 적용 확인용) */
+window.admDiagOpenSite = function () {
+  window.open('/app.html', '_blank');
 };
 
 /* 배너 이미지 저장 (파일 선택 → Storage 업로드 → URL → app_settings upsert) */
