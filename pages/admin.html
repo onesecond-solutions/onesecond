@@ -343,9 +343,14 @@
 
 /* 기능 게이트 미리보기 */
 .adm-a2-pv { padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: center; background: #fff; min-height: 140px; justify-content: center; }
-.adm-a2-top { width: 100%; height: 28px; background: var(--color-brand, #6B3A2A); border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding: 0 10px; }
-.adm-a2-btn { background: #EF9F27; color: #412402; font-size: 0.78em; padding: 4px 11px; border-radius: 4px; font-weight: 700; position: relative; }
+.adm-a2-top { width: 100%; min-height: 34px; background: var(--color-brand, #6B3A2A); border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding: 4px 8px; gap: 8px; }
+.adm-a2-btn { background: #EF9F27; color: #412402; font-size: 0.78em; padding: 4px 11px; border-radius: 4px; font-weight: 700; position: relative; flex-shrink: 0; }
 .adm-a2-btn.gated::after { content: 'PRO'; position: absolute; top: -6px; right: -10px; font-size: 0.65em; background: #3D2C1E; color: #fff; padding: 1px 5px; border-radius: 3px; line-height: 1; font-weight: 700; }
+/* [2026-04-17] 검색창 미리보기 */
+.adm-pv-search { flex: 1; min-width: 0; background: #F5F0E8; color: #7A5C44; font-size: 0.72em; padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; position: relative; overflow: hidden; white-space: nowrap; }
+.adm-pv-search-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-pv-search.gated { padding-right: 36px; }
+.adm-pv-search.gated::after { content: 'PRO'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 0.65em; background: #3D2C1E; color: #fff; padding: 1px 5px; border-radius: 3px; line-height: 1; font-weight: 700; }
 .adm-a2-cap { font-size: 0.78em; color: var(--color-text-secondary, #7A5C44); text-align: center; }
 
 /* 게시판 미리보기 */
@@ -1310,9 +1315,10 @@ window.admLoadSettings = async function () {
   } catch (e) { /* 테이블 없으면 기본값 사용 */ }
 
   /* 저장값 로드 */
-  var hubOn     = savedMap['board_tab_hub']     !== 'false';
-  var companyOn = savedMap['board_tab_company'] === 'true';
-  var quickGate = savedMap['gate_quick_a2']     !== 'false';
+  var hubOn      = savedMap['board_tab_hub']     !== 'false';
+  var companyOn  = savedMap['board_tab_company'] === 'true';
+  var quickGate  = savedMap['gate_quick_a2']     !== 'false';
+  var searchGate = savedMap['gate_search_a2']    !== 'false';  /* [2026-04-17] 검색기 PRO 게이트 (기본 PRO 전용) */
 
   /* ─────────────────────────────────────────────
      섹션 1: B영역 메뉴 표시 설정
@@ -1385,6 +1391,7 @@ window.admLoadSettings = async function () {
       '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">특정 기능을 PRO 전용으로 제한하거나 전체 공개할 수 있습니다.</div>' +
       '<div class="adm-set-sec">' +
         '<div>' +
+          /* 행1: 빠른 실행 */
           '<div class="adm-set-row ' + (quickGate ? '' : 'is-off') + '">' +
             '<span class="adm-set-rlabel on">' +
               '<span class="adm-set-dot"></span>⚡ 빠른 실행 (A2 영역)' +
@@ -1392,6 +1399,16 @@ window.admLoadSettings = async function () {
             '<label class="adm-cb-wrap">' +
               '<input type="checkbox" id="setting-gate_quick_a2" data-s-gate="quick_a2"' + (quickGate ? ' checked' : '') + '>' +
               '<span class="adm-cb-state ' + (quickGate ? 'on' : 'off') + '">' + (quickGate ? 'PRO 전용' : '전체 공개') + '</span>' +
+            '</label>' +
+          '</div>' +
+          /* 행2: 검색기 [2026-04-17 신규] */
+          '<div class="adm-set-row ' + (searchGate ? '' : 'is-off') + '">' +
+            '<span class="adm-set-rlabel on">' +
+              '<span class="adm-set-dot"></span>🔍 검색기 (A2 영역)' +
+            '</span>' +
+            '<label class="adm-cb-wrap">' +
+              '<input type="checkbox" id="setting-gate_search_a2" data-s-gate="search_a2"' + (searchGate ? ' checked' : '') + '>' +
+              '<span class="adm-cb-state ' + (searchGate ? 'on' : 'off') + '">' + (searchGate ? 'PRO 전용' : '전체 공개') + '</span>' +
             '</label>' +
           '</div>' +
           '<div style="margin-top:14px;display:flex;gap:8px;">' +
@@ -1406,11 +1423,19 @@ window.admLoadSettings = async function () {
           '<div class="adm-frame">' +
             '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
             '<div class="adm-a2-pv">' +
-              '<div class="adm-a2-top">' +
+              /* A2 영역: 검색창 + 빠른 실행 버튼 [2026-04-17 검색창 추가] */
+              '<div class="adm-a2-top" style="gap:8px;">' +
+                '<span class="adm-pv-search ' + (searchGate ? 'gated' : '') + '" id="adm-pv-search-box">' +
+                  '<span style="opacity:0.6;">🔍</span>' +
+                  '<span class="adm-pv-search-text">스크립트, 게시글, 예외질환, 업무자료 검색...</span>' +
+                '</span>' +
                 '<span class="adm-a2-btn ' + (quickGate ? 'gated' : '') + '" id="adm-pv-quick-btn">⚡ 빠른 실행</span>' +
               '</div>' +
               '<div class="adm-a2-cap" id="adm-pv-quick-cap">' +
-                (quickGate ? 'A2 영역 우측에 PRO 뱃지와 함께 표시됩니다' : 'A2 영역에 모든 사용자에게 표시됩니다') +
+                (quickGate && searchGate ? '검색창·빠른 실행 모두 PRO 전용으로 표시됩니다'
+                  : !quickGate && !searchGate ? '검색창·빠른 실행 모두 전체 공개됩니다'
+                  : quickGate ? '빠른 실행만 PRO 전용, 검색창은 전체 공개'
+                  : '검색창만 PRO 전용, 빠른 실행은 전체 공개') +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -1744,8 +1769,13 @@ window.admBannerClear = function (pageKey) {
 
 /* 기능 게이트 저장 (PRO 전용 설정) */
 window.admSaveGateSettings = async function () {
-  var el = document.getElementById('setting-gate_quick_a2');
-  var row = { group_name: 'gate', key: 'gate_quick_a2', value: el && el.checked ? 'true' : 'false' };
+  /* [2026-04-17] 검색기 게이트 추가 */
+  var quickEl  = document.getElementById('setting-gate_quick_a2');
+  var searchEl = document.getElementById('setting-gate_search_a2');
+  var rows = [
+    { group_name: 'gate', key: 'gate_quick_a2',  value: quickEl  && quickEl.checked  ? 'true' : 'false' },
+    { group_name: 'gate', key: 'gate_search_a2', value: searchEl && searchEl.checked ? 'true' : 'false' }
+  ];
   try {
     var delRes = await admFetch('/rest/v1/app_settings?group_name=eq.gate', {
       method: 'DELETE',
@@ -1760,7 +1790,7 @@ window.admSaveGateSettings = async function () {
     var insRes = await admFetch('/rest/v1/app_settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify([row])
+      body: JSON.stringify(rows)
     });
     if (insRes.ok) { alert('기능 게이트 설정이 저장됐습니다.'); }
     else { var e2 = await insRes.text(); console.error('[admin] 게이트 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
