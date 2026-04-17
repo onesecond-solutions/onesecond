@@ -1161,36 +1161,86 @@ function _extraRow(label, value) {
     + '</div>';
 }
 
+/* ── [2026-04-17] 1차 탭 가시성 상태 (app_settings 반영) ── */
+/* 기본값: 허브 표시 / 팀·지점 항상 표시(잠금) / 보험사 숨김 */
+var _boardTabVisible = { hub: true, team: true, branch: true, insurer: false };
+
+/* ── [2026-04-17] app_settings에서 1차 탭 설정 로드 ── */
+function _loadBoardTabSettings() {
+  if (!window.db || !window.db.fetch) {
+    return Promise.resolve();
+  }
+  return window.db.fetch('/rest/v1/app_settings?group_name=eq.board_tab&select=key,value')
+    .then(function(r) { return r.ok ? r.json() : []; })
+    .then(function(rows) {
+      if (!rows || !rows.length) return; /* DB 레코드 없으면 기본값 유지 */
+      var map = {};
+      rows.forEach(function(r) { map[r.key] = r.value; });
+      /* 허브: 기본 표시, 명시적 'false'일 때만 숨김 */
+      if (map.board_tab_hub !== undefined) {
+        _boardTabVisible.hub = map.board_tab_hub !== 'false';
+      }
+      /* 보험사: 기본 숨김, 명시적 'true'일 때만 표시 (v2.0 대기) */
+      if (map.board_tab_company !== undefined) {
+        _boardTabVisible.insurer = map.board_tab_company === 'true';
+      }
+      /* 팀·지점은 잠금 — 토글 무시 */
+    })
+    .catch(function(e) { console.warn('[board] app_settings 로드 실패', e); });
+}
+
+/* ── [2026-04-17] 1차 탭 가시성 적용 + 기본 탭 결정 ── */
+function _applyBoardTabVisibility() {
+  var bar = document.getElementById('board-tab-bar');
+  if (!bar) return 'hub';
+  ['hub','team','branch','insurer'].forEach(function(key) {
+    var btn = bar.querySelector('.pg-tab-btn[data-board="' + key + '"]');
+    if (!btn) return;
+    btn.style.display = _boardTabVisible[key] ? '' : 'none';
+  });
+  /* 표시 가능한 첫 번째 탭을 기본으로 */
+  var order = ['hub','team','branch','insurer'];
+  for (var i = 0; i < order.length; i++) {
+    if (_boardTabVisible[order[i]]) return order[i];
+  }
+  return 'hub'; /* 안전망 */
+}
+
 /* ── 초기화: appstate:ready 표준 패턴 ── */
 function _boot() {
   var s = window.AppState;
-  if (s && s.org) {
-    _userOrg = s.org;
-    _switchBoard('hub');
-    _bindOverlayClose();
-  } else if (s && s.userId) {
-    window.db.fetch('/rest/v1/users?id=eq.' + s.userId + '&select=company,branch,team')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data && data[0]) {
-          _userOrg = {
-            company: data[0].company || '',
-            branch:  data[0].branch  || '',
-            team:    data[0].team    || ''
-          };
-        }
-        _switchBoard('hub');
-        _bindOverlayClose();
-      })
-      .catch(function(e) {
-        console.warn('org 로드 실패', e);
-        _switchBoard('hub');
-        _bindOverlayClose();
-      });
-  } else {
-    _switchBoard('hub');
-    _bindOverlayClose();
-  }
+  /* [2026-04-17] app_settings 로드 → 탭 가시성 적용 → _switchBoard */
+  _loadBoardTabSettings().then(function() {
+    var defaultBoard = _applyBoardTabVisibility();
+
+    if (s && s.org) {
+      _userOrg = s.org;
+      _switchBoard(defaultBoard);
+      _bindOverlayClose();
+    } else if (s && s.userId) {
+      window.db.fetch('/rest/v1/users?id=eq.' + s.userId + '&select=company,branch,team')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data[0]) {
+            _userOrg = {
+              company: data[0].company || '',
+              branch:  data[0].branch  || '',
+              team:    data[0].team    || ''
+            };
+          }
+          _switchBoard(defaultBoard);
+          _bindOverlayClose();
+        })
+        .catch(function(e) {
+          console.warn('org 로드 실패', e);
+          _switchBoard(defaultBoard);
+          _bindOverlayClose();
+        });
+    } else {
+      _switchBoard(defaultBoard);
+      _bindOverlayClose();
+    }
+  });
 }
 
 if (window.AppState && window.AppState.ready) {
