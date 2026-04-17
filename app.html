@@ -661,6 +661,9 @@ document.addEventListener('appstate:ready', function () {
 
   // 메뉴 설정 적용
   applyMenuSettings();
+
+  // 기능 게이트 로드 [2026-04-17 추가] - 빠른 실행 PRO 게이트 등
+  loadFeatureGates();
 });
 
 // ── ② PRO 뱃지 ─────────────────────────────────────────────────────────────
@@ -690,7 +693,7 @@ async function applyMenuSettings() {
       if (menuKey === 'admin') return;
       var el    = document.querySelector('.menu-item[data-menu="' + menuKey + '"]');
       var tabEl = document.querySelector('.tab-item[data-menu="' + menuKey + '"]');
-      var show  = r.value !== 'off';
+      var show  = r.value !== 'false';  // [2026-04-17 패치] DB 저장값('true'/'false')과 통일
       if (el)    el.style.display    = show ? '' : 'none';
       if (tabEl) tabEl.style.display = show ? '' : 'none';
     });
@@ -840,8 +843,29 @@ function loadPricing() {
 })();
 
 // ── ⑤ 빠른실행 ────────────────────────────────────────────────────────────
+// ── 빠른 실행 PRO 게이트 [2026-04-17 추가] ─────────────────────────────────
+// app_settings.feature_quickaction = 'true' 면 PRO 전용, 'false' 면 전체 공개
+var _featureQuickActionPro = true;  // 기본값: PRO 전용 (DB 로드 전 안전 측)
+async function loadFeatureGates() {
+  try {
+    var res = await window.db.fetch('/rest/v1/app_settings?group_name=eq.feature_gate&select=key,value');
+    if (!res.ok) return;
+    var rows = await res.json();
+    rows.forEach(function (r) {
+      if (r.key === 'feature_quickaction') _featureQuickActionPro = (r.value !== 'false');
+    });
+  } catch (e) { console.warn('loadFeatureGates error:', e); }
+}
+
 function toggleQuickDropdown(e) {
   e.stopPropagation();
+  // PRO 게이트: 게이트 ON + 비-PRO 사용자 → 요금제 페이지로 유도
+  if (_featureQuickActionPro && !isPro()) {
+    if (confirm('⚡ 빠른 실행은 PRO 전용 기능입니다.\n\n요금제 페이지로 이동하시겠습니까?')) {
+      loadPricing();
+    }
+    return;
+  }
   var dd = document.getElementById('quickDropdown');
   dd.classList.toggle('show');
   if (dd.classList.contains('show')) loadQuickDdItems();
