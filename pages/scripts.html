@@ -46,11 +46,13 @@
   transition: all var(--transition-fast);
 }
 .sc-tab-label {
-  font-size: 0.8947em;  /* ≈17px — 이모지 제거로 공간 확보되어 확대 */
+  font-size: 0.8947em;  /* ≈17px 고정 — 좁은 화면에선 자동 2줄로 줄바꿈 */
   font-weight: var(--fw-semibold);
   color: var(--color-text-secondary);
-  white-space: nowrap;
   letter-spacing: -0.3px;
+  line-height: 1.25;
+  text-align: center;
+  word-break: keep-all;   /* 한국어 단어 단위 줄바꿈 */
   transition: color var(--transition-fast), font-weight var(--transition-fast);
 }
 .sc-tab-btn:hover .sc-tab-label { color: var(--color-text-primary); }
@@ -464,18 +466,10 @@
 }
 
 /* ── 반응형 중간 구간 ─────────────────────────────────────────── */
-@media (max-width: 1400px) and (min-width: 1201px) {
-  .sc-tab-label { font-size: 0.8421em; }  /* ≈16px */
-}
-@media (max-width: 1200px) and (min-width: 1001px) {
-  .sc-tab-label { font-size: 0.7895em; }  /* ≈15px */
-  .sc-tab-btn   { padding: var(--space-3) 4px; }
-}
+/* 탭 라벨은 17px 고정, 좁은 화면에선 자동 2줄 줄바꿈으로 대응 */
 @media (max-width: 1000px) and (min-width: 901px) {
   .sc-grid { min-height: 420px; }
   .sc-detail { padding: var(--space-4); }
-  .sc-tab-label { font-size: 0.7368em; letter-spacing: -0.5px; }  /* ≈14px */
-  .sc-tab-btn   { padding: var(--space-2) 2px; }
   /* 좁은 화면에선 열 2·3 폰트 한 단계씩 축소 */
   .sc-col-2 .sc-list-title { font-size: 0.72em; }
   .sc-col-3 .sc-list-title { font-size: 0.82em; }
