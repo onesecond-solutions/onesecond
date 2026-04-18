@@ -44,15 +44,13 @@
 }
 .sc-tab-bar {
   display:flex; flex-direction:row; gap:0; flex-wrap:nowrap;
-  width:100%;
+  overflow-x:auto;
 }
 .sc-tab-btn {
-  flex:1; min-width:0;
-  padding:13px 10px; border:none; background:transparent;
-  font-size:0.8947em; font-weight:600; font-family:var(--font-sans,Pretendard,inherit);
+  padding:11px 16px; border:none; background:transparent;
+  font-size:0.8421em; font-weight:600; font-family:var(--font-sans,Pretendard,inherit);
   cursor:pointer; white-space:nowrap; color:var(--tab-text);
-  border-bottom:3px solid transparent; transition:all .15s;
-  text-align:center; letter-spacing:-0.3px;
+  border-bottom:3px solid transparent; transition:all .15s; flex-shrink:0;
 }
 .sc-tab-btn:hover { color:var(--tab-text-active); }
 .sc-tab-btn.active { font-weight:800; color:var(--tab-text-active); border-bottom-color:var(--tab-underline); }
@@ -220,16 +218,9 @@
 .sc-m-detail-body  { background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
 
 /* ── 반응형 ── */
-@media (max-width:1400px) {
-  .sc-tab-btn { font-size:0.8421em; padding:12px 6px; }
-}
 @media (max-width:1200px) {
   .sc-acc-header  { grid-template-columns:220px 1fr; }
   .sc-acc-content { grid-template-columns:220px 220px 220px 1fr; }
-  .sc-tab-btn { font-size:0.7895em; padding:11px 4px; letter-spacing:-0.5px; }
-}
-@media (max-width:1000px) {
-  .sc-tab-btn { font-size:0.7368em; padding:10px 2px; }
 }
 @media (max-width:900px) {
   /* 데스크탑 UI 숨김, 모바일 UI 표시 */
@@ -241,19 +232,27 @@
 
 <div class="sc-outer" id="page-scripts">
 
-  <!-- 배너 슬롯 -->
-  <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
+  <!-- 헤더 블록 -->
+  <div class="sc-header-block">
+    <div class="sc-page-header">
+      <div>
+        <div class="sc-page-title">📞 스크립트</div>
+        <div class="sc-page-desc">TM 상담 흐름에 맞는 멘트를 1초 안에 꺼내세요</div>
+      </div>
+      <div class="sc-page-icon">📋</div>
+    </div>
+  </div>
 
   <!-- 탭 블록 (데스크탑) -->
   <div class="sc-tab-block">
     <div class="sc-tab-bar" id="sc-tab-bar">
-      <button class="sc-tab-btn active" data-color="1" onclick="window.scScrollToGroup(1)">도입인사</button>
-      <button class="sc-tab-btn" data-color="2" onclick="window.scScrollToGroup(2)">필요성강조</button>
-      <button class="sc-tab-btn" data-color="3" onclick="window.scScrollToGroup(3)">상황확인</button>
-      <button class="sc-tab-btn" data-color="4" onclick="window.scScrollToGroup(4)">보장분석</button>
-      <button class="sc-tab-btn" data-color="5" onclick="window.scScrollToGroup(5)">상품설명</button>
-      <button class="sc-tab-btn" data-color="6" onclick="window.scScrollToGroup(6)">클로징</button>
-      <button class="sc-tab-btn" data-color="7" onclick="window.scScrollToGroup(7)">반론대응</button>
+      <button class="sc-tab-btn active" data-color="1" onclick="window.scScrollToGroup(1)">📞 도입인사</button>
+      <button class="sc-tab-btn" data-color="2" onclick="window.scScrollToGroup(2)">🔥 필요성강조</button>
+      <button class="sc-tab-btn" data-color="3" onclick="window.scScrollToGroup(3)">🔎 상황확인</button>
+      <button class="sc-tab-btn" data-color="4" onclick="window.scScrollToGroup(4)">📊 보장분석</button>
+      <button class="sc-tab-btn" data-color="5" onclick="window.scScrollToGroup(5)">📦 상품설명</button>
+      <button class="sc-tab-btn" data-color="6" onclick="window.scScrollToGroup(6)">✅ 클로징</button>
+      <button class="sc-tab-btn" data-color="7" onclick="window.scScrollToGroup(7)">⚡ 반론대응</button>
     </div>
   </div>
 
@@ -348,12 +347,11 @@ window.scScrollToGroup = function(color) {
   if (content && content.classList.contains('collapsed')) {
     content.classList.remove('collapsed');
     if (header) header.classList.add('open');
-  }
-  /* 해당 그룹에 active 스크립트 없으면 첫 번째 자동 선택 */
-  var col2 = document.getElementById('sc-scripts-' + color);
-  if (col2 && !col2.querySelector('.sc-script-item.active')) {
-    var first = col2.querySelector('.sc-script-item');
-    if (first) window.scSelectScript(first, color, 0);
+    var col2 = document.getElementById('sc-scripts-' + color);
+    if (col2 && !col2.querySelector('.sc-script-item.active')) {
+      var first = col2.querySelector('.sc-script-item');
+      if (first) window.scSelectScript(first, color, 0);
+    }
   }
   var dArea = block.closest('.d') || document.querySelector('.d');
   if (dArea) {
