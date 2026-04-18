@@ -61,7 +61,10 @@
   letter-spacing: -0.3px;
   line-height: 1.25;
   text-align: center;
-  word-break: keep-all;   /* 한국어 단어 단위 줄바꿈 */
+  word-break: keep-all;       /* 한국어 단어 단위 줄바꿈 */
+  overflow-wrap: break-word;  /* 공백 기준 줄바꿈 보강 */
+  min-width: 0;               /* flex 자식 줄바꿈 허용 (핵심) */
+  width: 100%;                /* 부모 너비 100% 써서 줄바꿈 트리거 */
   transition: color var(--transition-fast),
               font-weight var(--transition-fast),
               font-size var(--transition-fast);
