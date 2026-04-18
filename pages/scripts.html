@@ -75,8 +75,8 @@
 .sc-tab-btn.active {
   border-bottom-color: var(--stg-fg, var(--color-accent));
   background: var(--stg-bg-soft, var(--color-surface));
-  /* 활성 양각 (중) — 더 높이 */
-  transform: translateY(-2px);
+  /* 활성 양각 (약) — 1px 위로 */
+  transform: translateY(-1px);
   box-shadow: 0 6px 14px rgba(101, 66, 38, 0.18),
               0 3px 6px rgba(101, 66, 38, 0.10);
   z-index: 2;
@@ -98,18 +98,18 @@
 }
 .sc-grid {
   display: grid;
-  /* 기본(STEP 1): 열1 130px 고정 / 열2 활성 / 열3·4 흐림 */
-  grid-template-columns: 130px 1.3fr 1.3fr 2.65fr;
+  /* STEP 1: 스크립트 고르는 중 — 열2 최대 확장 */
+  grid-template-columns: 130px 3.5fr 1.5fr 2.5fr;
   transition: grid-template-columns 0.35s ease;
   min-height: 460px;
 }
-/* STEP 2: 스크립트 선택 후 → 열3 활성 */
+/* STEP 2: 블록 고르는 중 — 열3 최대 확장 */
 .sc-grid.step-2 {
-  grid-template-columns: 130px 0.9fr 2.3fr 2.25fr;
+  grid-template-columns: 130px 1.2fr 3.5fr 2.8fr;
 }
-/* STEP 3: 세부 선택 후 → 열4 최대 활성 */
+/* STEP 3: 본문 읽는 중 — 열4 최대 확장 */
 .sc-grid.step-3 {
-  grid-template-columns: 130px 0.65fr 0.9fr 4.0fr;
+  grid-template-columns: 130px 0.8fr 1.0fr 5.0fr;
 }
 
 .sc-col {
@@ -141,10 +141,10 @@
   border-left: 4px solid var(--stg-fg, var(--color-accent));
   border-radius: var(--radius-sm);
   text-align: center;
-  /* 활성 양각 (중) — 현재 선택된 단계 */
+  /* 활성 양각 (약) — 1px 위로 */
   box-shadow: 0 6px 14px rgba(101, 66, 38, 0.18),
               0 3px 6px rgba(101, 66, 38, 0.10);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 .sc-stage-icon { font-size: 1.6em; line-height: 1; }
 .sc-stage-name {
@@ -197,8 +197,8 @@
 .sc-list-item.active {
   border-left-color: var(--stg-fg, var(--color-accent));
   background: var(--stg-bg, var(--color-surface-2));
-  /* 활성 양각 (중) — 더 높이 */
-  transform: translateY(-2px);
+  /* 활성 양각 (약) — 1px 위로 */
+  transform: translateY(-1px);
   box-shadow: 0 6px 14px rgba(101, 66, 38, 0.18),
               0 3px 6px rgba(101, 66, 38, 0.10);
   z-index: 1;
@@ -294,10 +294,10 @@
   border-radius: var(--radius-md);
   padding: var(--space-5);         /* 패딩 var(--space-4)→var(--space-5) 확대 */
   margin-bottom: var(--space-3);
-  /* 활성 양각 (중) — 현재 보고 있는 본문 */
+  /* 활성 양각 (약) — 1px 위로 */
   box-shadow: 0 6px 14px rgba(101, 66, 38, 0.18),
               0 3px 6px rgba(101, 66, 38, 0.10);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 .sc-detail-body .sc-html {
   font-size: var(--text-tab);      /* 0.895em ≈17px — 통화 중 가독성 최우선 */
@@ -600,18 +600,18 @@ var _mState = {
 };
 
 /* 10단계 GROUPS (확정 사양) */
-/* label: 탭바 표시용 짧은 라벨 / labelFull: 열1/모바일용 긴 라벨 */
+/* label: 탭바 표시용 — 공백 포함해서 좁은 화면에서 자동 2줄 줄바꿈 / labelFull: 열1·모바일용 긴 라벨 */
 var GROUPS = [
-  { color: 1,  icon: '📞', label: '도입인사',   labelFull: '도입인사',      stage: 'opening' },
-  { color: 2,  icon: '💬', label: '도입반론',   labelFull: '도입반론',      stage: 'opening_rejection' },
-  { color: 3,  icon: '🔥', label: '필요성①',   labelFull: '필요성 강조 1', stage: 'need_emphasis' },
-  { color: 4,  icon: '🔎', label: '상황확인',   labelFull: '상황 확인',     stage: 'situation_check' },
-  { color: 5,  icon: '📊', label: '보장분석',   labelFull: '보장 분석',     stage: 'analysis' },
-  { color: 6,  icon: '📦', label: '상품설명',   labelFull: '상품 설명',     stage: 'product' },
-  { color: 7,  icon: '🔥', label: '필요성②',   labelFull: '필요성 강조 2', stage: 'need_emphasis_2' },
-  { color: 8,  icon: '✅', label: '클로징',     labelFull: '클로징',        stage: 'closing' },
-  { color: 9,  icon: '⚡', label: '반론대응',   labelFull: '반론 대응',     stage: 'objection' },
-  { color: 10, icon: '🔚', label: '2차클로징', labelFull: '2차 클로징',    stage: 'closing_second' }
+  { color: 1,  icon: '📞', label: '도입 인사',   labelFull: '도입인사',      stage: 'opening' },
+  { color: 2,  icon: '💬', label: '도입 반론',   labelFull: '도입반론',      stage: 'opening_rejection' },
+  { color: 3,  icon: '🔥', label: '필요성 ①',    labelFull: '필요성 강조 1', stage: 'need_emphasis' },
+  { color: 4,  icon: '🔎', label: '상황 확인',   labelFull: '상황 확인',     stage: 'situation_check' },
+  { color: 5,  icon: '📊', label: '보장 분석',   labelFull: '보장 분석',     stage: 'analysis' },
+  { color: 6,  icon: '📦', label: '상품 설명',   labelFull: '상품 설명',     stage: 'product' },
+  { color: 7,  icon: '🔥', label: '필요성 ②',    labelFull: '필요성 강조 2', stage: 'need_emphasis_2' },
+  { color: 8,  icon: '✅', label: '클로징',      labelFull: '클로징',        stage: 'closing' },
+  { color: 9,  icon: '⚡', label: '반론 대응',   labelFull: '반론 대응',     stage: 'objection' },
+  { color: 10, icon: '🔚', label: '2차 클로징', labelFull: '2차 클로징',    stage: 'closing_second' }
 ];
 window._SC_GROUPS = GROUPS;
 
@@ -853,11 +853,7 @@ window.scSelectStage = async function(color) {
   renderCol3([]);
   renderCol4(null, null);
   applyStepState();
-
-  /* 첫 스크립트 자동 선택 → 3열·4열 자동 연쇄 노출 */
-  if (scripts.length) {
-    window.scSelectScript(0);
-  }
+  /* 자동 선택 제거: 사용자가 직접 스크립트를 클릭해야 STEP 2로 전환됨 */
 };
 
 /* 스크립트 선택 */
@@ -894,11 +890,7 @@ window.scSelectScript = function(idx) {
   renderCol3(blocks);
   renderCol4(null, null);
   applyStepState();
-
-  /* 자동으로 첫 블록 선택 */
-  if (blocks.length) {
-    setTimeout(function() { window.scSelectBlock(0); }, 50);
-  }
+  /* 자동 선택 제거: 사용자가 직접 블록을 클릭해야 STEP 3로 전환됨 */
 };
 
 /* 블록 선택 */
@@ -1107,7 +1099,7 @@ window.scRenderAll = async function() {
     });
   }));
 
-  /* 3. 첫 단계 데스크탑 활성화 (내부에서 첫 스크립트·블록 자동 선택) */
+  /* 3. 첫 단계 데스크탑 활성화 — 스크립트 목록까지만 표시 (STEP 1) */
   await window.scSelectStage(1);
 
   /* 4. 모바일 초기 렌더 */
