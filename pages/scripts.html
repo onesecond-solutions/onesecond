@@ -61,9 +61,10 @@
   letter-spacing: -0.3px;
   line-height: 1.25;
   text-align: center;
+  white-space: normal;        /* flex 자식 강제 줄바꿈 허용 (핵심) */
   word-break: keep-all;       /* 한국어 단어 단위 줄바꿈 */
   overflow-wrap: break-word;  /* 공백 기준 줄바꿈 보강 */
-  min-width: 0;               /* flex 자식 줄바꿈 허용 (핵심) */
+  min-width: 0;               /* flex 자식 줄바꿈 허용 */
   width: 100%;                /* 부모 너비 100% 써서 줄바꿈 트리거 */
   transition: color var(--transition-fast),
               font-weight var(--transition-fast),
@@ -657,7 +658,7 @@ function applyStageVars(color) {
 window.scFetch = async function(stage) {
   if (_cache[stage]) return _cache[stage];
   var path = '/rest/v1/scripts?stage=eq.' + encodeURIComponent(stage) +
-             '&is_active=eq.true&order=title' +
+             '&is_active=eq.true&order=sort_order.asc,title.asc' +
              '&select=id,title,stage,top_category,highlight_text,script_text';
   try {
     var res = await window.db.fetch(path);
