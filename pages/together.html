@@ -1,0 +1,1064 @@
+<!--
+================================================================================
+  pages/together.html
+  원세컨드 — 함께해요 (커뮤니티 공간)
+
+  ▸ 설계사를 공동 제작자로 위치시키는 참여 공간
+  ▸ 업무 게시판(board.html)과 분리된 커뮤니티 영역
+  ▸ 구조 기준: _template.html (pg-outer / pg-header-block / pg-tab-block / pg-content-block / pg-footer-block)
+  ▸ 톤: 업무 게시판보다 부드럽고 친근한 커뮤니티 느낌
+
+  현재 단계(3-1): 구조와 스타일만
+  다음 단계(3-2): Supabase fetch, 글쓰기 모달, 상세 오버레이, 댓글
+================================================================================
+-->
+
+<style>
+/* ════════════════════════════════════════════════════════════
+   together 페이지 전용 스타일
+   ▸ 셀렉터는 #page-together 하위로 스코프 제한
+   ▸ tokens.css 변수만 사용
+════════════════════════════════════════════════════════════ */
+
+/* ── 최상위 래퍼 ── */
+#page-together.pg-outer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface-2, #F3EFE9);
+  gap: 8px;
+  padding: 8px;
+  padding-bottom: 24px;
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  color: var(--color-text-primary, #3D2C1E);
+  min-height: 100%;
+}
+
+/* ── ① 타이틀 블록 (3단 텍스트, 웜 브라운 + 주황 액센트) ── */
+#page-together .pg-header-block {
+  border-radius: var(--radius-lg, 16px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+#page-together .pg-page-header {
+  min-height: 148px;
+  background: linear-gradient(135deg, var(--color-brand, #A0522D) 0%, var(--color-brand-light, #C4733A) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+/* 헤더 우측 은은한 주황 글로우 — 커뮤니티 톤 강조 */
+#page-together .pg-page-header::after {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,132,90,0.35) 0%, rgba(212,132,90,0) 70%);
+  pointer-events: none;
+}
+#page-together .pg-header-text { position: relative; z-index: 1; max-width: 640px; }
+#page-together .pg-page-title {
+  font-size: 1.5em;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+#page-together .pg-page-sub {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+#page-together .pg-page-desc {
+  font-size: 0.842em;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+}
+#page-together .pg-page-icon {
+  font-size: 2.8em;
+  opacity: 0.22;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+/* ── ② 액션바 (글쓰기 버튼) ── */
+#page-together .tg-actionbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+#page-together .tg-write-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--color-accent, #D4845A);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.895em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 6px rgba(212,132,90,0.25);
+}
+#page-together .tg-write-btn:hover {
+  background: var(--color-brand-light, #C4733A);
+}
+#page-together .tg-write-btn:active { transform: translateY(1px); }
+#page-together .tg-write-btn .tg-write-ico {
+  font-size: 1.05em;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── ③ 탭바 블록 ── */
+#page-together .pg-tab-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #E4DBCE);
+}
+#page-together .pg-tab-bar {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 0 8px;
+}
+#page-together .pg-tab-btn {
+  padding: 12px 18px;
+  border: none;
+  background: transparent;
+  font-size: 0.895em;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--color-text-secondary, #7A5C44);
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+#page-together .pg-tab-btn:hover { color: var(--color-text-primary, #3D2C1E); }
+#page-together .pg-tab-btn.active {
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+  border-bottom-color: var(--color-accent, #D4845A);
+}
+
+/* ── ④ 콘텐츠 블록 ── */
+#page-together .pg-content-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border, #E4DBCE);
+  background: var(--color-surface, #fff);
+}
+#page-together .pg-body { padding: 6px 0; }
+#page-together .pg-tab-panel { display: none; }
+#page-together .pg-tab-panel.active { display: block; }
+
+/* ── 리스트 ── */
+#page-together .tg-list { list-style: none; margin: 0; padding: 0; }
+#page-together .tg-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border, #E4DBCE);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+#page-together .tg-item:last-child { border-bottom: none; }
+#page-together .tg-item:hover { background: var(--color-surface-2, #F3EFE9); }
+
+#page-together .tg-item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#page-together .tg-cat-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: var(--radius-xs, 6px);
+  font-size: 0.735em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(212,132,90,0.12);
+  color: var(--color-accent, #D4845A);
+}
+#page-together .tg-cat-badge.tg-cat-notice {
+  background: var(--color-brand, #A0522D);
+  color: #fff;
+}
+#page-together .tg-cat-badge.tg-cat-feature_request {
+  background: rgba(212,132,90,0.16);
+  color: var(--color-brand, #A0522D);
+}
+#page-together .tg-cat-badge.tg-cat-review {
+  background: rgba(160,82,45,0.10);
+  color: var(--color-brand, #A0522D);
+}
+#page-together .tg-cat-badge.tg-cat-free {
+  background: var(--color-surface-2, #F3EFE9);
+  color: var(--color-text-secondary, #7A5C44);
+}
+#page-together .tg-title {
+  font-size: 0.947em;
+  font-weight: 600;
+  color: var(--color-text-primary, #3D2C1E);
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+#page-together .tg-item-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.790em;
+  color: var(--color-text-tertiary, #B89880);
+  align-items: center;
+}
+#page-together .tg-meta-dot {
+  display: inline-block;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--color-text-tertiary, #B89880);
+}
+#page-together .tg-comment-count {
+  color: var(--color-accent, #D4845A);
+  font-weight: 600;
+}
+
+/* ── 빈 상태 / 로딩 ── */
+#page-together .pg-loading,
+#page-together .pg-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--color-text-tertiary, #B89880);
+  font-size: 0.842em;
+  text-align: center;
+  line-height: 1.7;
+}
+#page-together .pg-empty {
+  flex-direction: column;
+  gap: 8px;
+}
+#page-together .pg-empty-ico {
+  font-size: 1.8em;
+  opacity: 0.4;
+}
+
+/* ── ⑤ 푸터 블록 (커뮤니티 톤) ── */
+#page-together .pg-footer-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+#page-together .pg-bottom-bar {
+  background: var(--color-accent, #D4845A);
+  color: #fff;
+  text-align: center;
+  font-size: 0.790em;
+  font-weight: 700;
+  padding: 11px 14px;
+  letter-spacing: 0.01em;
+}
+
+/* ════════════════════════════════════════════════════════════
+   3-2 추가 — 오버레이 (글쓰기 모달 + 상세 보기)
+════════════════════════════════════════════════════════════ */
+
+/* ── 공통 오버레이 ── */
+#page-together .tg-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(61, 44, 30, 0.55);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#page-together .tg-overlay.active { display: flex; }
+#page-together .tg-modal {
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-lg, 16px);
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+}
+#page-together .tg-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border, #E4DBCE);
+  flex-shrink: 0;
+}
+#page-together .tg-modal-title {
+  font-size: 1.05em;
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+}
+#page-together .tg-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.2em;
+  color: var(--color-text-tertiary, #B89880);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs, 6px);
+  font-family: inherit;
+  line-height: 1;
+}
+#page-together .tg-modal-close:hover {
+  background: var(--color-surface-2, #F3EFE9);
+  color: var(--color-text-primary, #3D2C1E);
+}
+#page-together .tg-modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+#page-together .tg-modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border, #E4DBCE);
+  flex-shrink: 0;
+}
+
+/* ── 버튼 공통 ── */
+#page-together .tg-btn {
+  padding: 9px 18px;
+  border-radius: var(--radius-sm, 8px);
+  font-family: inherit;
+  font-size: 0.895em;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+#page-together .tg-btn-primary {
+  background: var(--color-accent, #D4845A);
+  color: #fff;
+}
+#page-together .tg-btn-primary:hover { background: var(--color-brand-light, #C4733A); }
+#page-together .tg-btn-primary:disabled {
+  background: var(--color-text-tertiary, #B89880);
+  cursor: not-allowed;
+}
+#page-together .tg-btn-secondary {
+  background: var(--color-surface, #fff);
+  color: var(--color-text-secondary, #7A5C44);
+  border-color: var(--color-border, #E4DBCE);
+}
+#page-together .tg-btn-secondary:hover { background: var(--color-surface-2, #F3EFE9); }
+
+/* ── 글쓰기 폼 ── */
+#page-together .tg-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+#page-together .tg-form-label {
+  font-size: 0.790em;
+  font-weight: 700;
+  color: var(--color-text-secondary, #7A5C44);
+}
+#page-together .tg-form-label .tg-req { color: var(--color-accent, #D4845A); }
+#page-together .tg-form-input,
+#page-together .tg-form-select,
+#page-together .tg-form-textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #E4DBCE);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface, #fff);
+  font-family: inherit;
+  font-size: 0.895em;
+  color: var(--color-text-primary, #3D2C1E);
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+#page-together .tg-form-input:focus,
+#page-together .tg-form-select:focus,
+#page-together .tg-form-textarea:focus {
+  border-color: var(--color-accent, #D4845A);
+  box-shadow: 0 0 0 3px rgba(212, 132, 90, 0.14);
+}
+#page-together .tg-form-textarea {
+  min-height: 180px;
+  resize: vertical;
+  line-height: 1.55;
+}
+#page-together .tg-form-hint {
+  font-size: 0.735em;
+  color: var(--color-text-tertiary, #B89880);
+}
+
+/* ── 상세 보기 ── */
+#page-together .tg-detail-title {
+  font-size: 1.15em;
+  font-weight: 800;
+  color: var(--color-text-primary, #3D2C1E);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+#page-together .tg-detail-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border, #E4DBCE);
+  font-size: 0.790em;
+  color: var(--color-text-tertiary, #B89880);
+}
+#page-together .tg-detail-body {
+  font-size: 0.947em;
+  line-height: 1.7;
+  color: var(--color-text-primary, #3D2C1E);
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border, #E4DBCE);
+  margin-bottom: 18px;
+}
+#page-together .tg-comment-section-title {
+  font-size: 0.842em;
+  font-weight: 700;
+  color: var(--color-text-secondary, #7A5C44);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#page-together .tg-comment-count-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  background: var(--color-accent, #D4845A);
+  color: #fff;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.842em;
+  font-weight: 700;
+}
+#page-together .tg-comment-list { list-style: none; margin: 0; padding: 0; }
+#page-together .tg-comment-item {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface-2, #F3EFE9);
+  margin-bottom: 8px;
+}
+#page-together .tg-comment-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 0.735em;
+  color: var(--color-text-tertiary, #B89880);
+  margin-bottom: 4px;
+}
+#page-together .tg-comment-author {
+  font-weight: 700;
+  color: var(--color-text-secondary, #7A5C44);
+}
+#page-together .tg-comment-text {
+  font-size: 0.842em;
+  line-height: 1.6;
+  color: var(--color-text-primary, #3D2C1E);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+#page-together .tg-comment-empty {
+  padding: 14px;
+  text-align: center;
+  font-size: 0.790em;
+  color: var(--color-text-tertiary, #B89880);
+}
+#page-together .tg-comment-form {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+#page-together .tg-comment-form .tg-form-textarea {
+  min-height: 68px;
+  flex: 1;
+}
+
+/* ── 로그인 안내 바 ── */
+#page-together .tg-login-notice {
+  padding: 10px 14px;
+  background: rgba(212, 132, 90, 0.10);
+  border: 1px solid rgba(212, 132, 90, 0.25);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.842em;
+  color: var(--color-text-secondary, #7A5C44);
+  text-align: center;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 640px) {
+  #page-together .pg-page-header {
+    padding: 18px 20px;
+    min-height: 132px;
+  }
+  #page-together .pg-page-title { font-size: 1.25em; }
+  #page-together .pg-page-sub { font-size: 0.947em; }
+  #page-together .pg-page-icon { display: none; }
+  #page-together .tg-item { padding: 12px 16px; }
+  #page-together .pg-tab-btn { padding: 11px 14px; }
+  #page-together .tg-write-btn { padding: 9px 14px; font-size: 0.842em; }
+  #page-together .tg-modal { max-height: 100vh; border-radius: var(--radius-md, 12px); }
+  #page-together .tg-modal-body { padding: 14px 16px; }
+  #page-together .tg-comment-form { flex-direction: column; align-items: stretch; }
+}
+</style>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     HTML 구조
+     ① 타이틀 블록 (3단) → ② 액션바 → ③ 탭바 → ④ 콘텐츠 → ⑤ 푸터
+════════════════════════════════════════════════════════════ -->
+<div class="pg-outer" id="page-together">
+
+  <!-- ① 타이틀 블록 (3단 텍스트) -->
+  <div class="pg-header-block">
+    <div class="pg-page-header">
+      <div class="pg-header-text">
+        <div class="pg-page-title">함께해요</div>
+        <div class="pg-page-sub">필요한 기능이 있나요? 만들어 드립니다</div>
+        <div class="pg-page-desc">17년 현장 경험 위에, 여러분의 경험을 더합니다</div>
+      </div>
+      <div class="pg-page-icon">🤝</div>
+    </div>
+  </div>
+
+  <!-- ② 액션바 (글쓰기 버튼) -->
+  <div class="tg-actionbar">
+    <button class="tg-write-btn" type="button" onclick="window.togetherOpenWrite()">
+      <span class="tg-write-ico">+</span>
+      <span>글쓰기</span>
+    </button>
+  </div>
+
+  <!-- ③ 탭바 -->
+  <div class="pg-tab-block">
+    <div class="pg-tab-bar" id="together-tab-bar">
+      <button class="pg-tab-btn active" type="button" data-tab="all"
+              onclick="window.togetherSwitchTab('all')">전체</button>
+      <button class="pg-tab-btn" type="button" data-tab="feature_request"
+              onclick="window.togetherSwitchTab('feature_request')">기능 요청</button>
+      <button class="pg-tab-btn" type="button" data-tab="review"
+              onclick="window.togetherSwitchTab('review')">사용 후기</button>
+      <button class="pg-tab-btn" type="button" data-tab="free"
+              onclick="window.togetherSwitchTab('free')">자유 공유</button>
+    </div>
+  </div>
+
+  <!-- ④ 콘텐츠 블록 -->
+  <div class="pg-content-block">
+    <div class="pg-body" id="together-body">
+
+      <!-- 전체 패널 (기본 활성) -->
+      <div class="pg-tab-panel active" id="together-tab-all">
+        <div class="pg-loading">불러오는 중...</div>
+      </div>
+
+      <!-- 기능 요청 패널 -->
+      <div class="pg-tab-panel" id="together-tab-feature_request"></div>
+
+      <!-- 사용 후기 패널 -->
+      <div class="pg-tab-panel" id="together-tab-review"></div>
+
+      <!-- 자유 공유 패널 -->
+      <div class="pg-tab-panel" id="together-tab-free"></div>
+
+    </div>
+  </div>
+
+  <!-- ⑤ 푸터 블록 -->
+  <div class="pg-footer-block">
+    <div class="pg-bottom-bar">원세컨드는 여러분의 의견으로 자랍니다</div>
+  </div>
+
+  <!-- ⑥ 글쓰기 모달 (3-2) -->
+  <div class="tg-overlay" id="together-write-overlay" onclick="window.togetherHandleOverlayClick(event, 'write')">
+    <div class="tg-modal" role="dialog" aria-labelledby="together-write-title">
+      <div class="tg-modal-header">
+        <div class="tg-modal-title" id="together-write-title">글쓰기</div>
+        <button type="button" class="tg-modal-close" aria-label="닫기"
+                onclick="window.togetherCloseWrite()">✕</button>
+      </div>
+      <div class="tg-modal-body">
+        <div class="tg-form-field">
+          <label class="tg-form-label" for="tg-form-category">
+            카테고리 <span class="tg-req">*</span>
+          </label>
+          <select class="tg-form-select" id="tg-form-category">
+            <option value="feature_request">기능 요청</option>
+            <option value="review">사용 후기</option>
+            <option value="free">자유 공유</option>
+          </select>
+        </div>
+        <div class="tg-form-field">
+          <label class="tg-form-label" for="tg-form-title">
+            제목 <span class="tg-req">*</span>
+          </label>
+          <input type="text" class="tg-form-input" id="tg-form-title"
+                 maxlength="100" placeholder="간단히 적어주세요">
+          <div class="tg-form-hint">2~100자</div>
+        </div>
+        <div class="tg-form-field">
+          <label class="tg-form-label" for="tg-form-content">
+            내용 <span class="tg-req">*</span>
+          </label>
+          <textarea class="tg-form-textarea" id="tg-form-content"
+                    maxlength="5000" placeholder="편하게 써주세요"></textarea>
+          <div class="tg-form-hint">10~5000자</div>
+        </div>
+      </div>
+      <div class="tg-modal-footer">
+        <button type="button" class="tg-btn tg-btn-secondary"
+                onclick="window.togetherCloseWrite()">취소</button>
+        <button type="button" class="tg-btn tg-btn-primary" id="tg-form-submit"
+                onclick="window.togetherSubmitWrite()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ 상세 보기 오버레이 (3-2) -->
+  <div class="tg-overlay" id="together-detail-overlay" onclick="window.togetherHandleOverlayClick(event, 'detail')">
+    <div class="tg-modal" role="dialog">
+      <div class="tg-modal-header">
+        <div class="tg-modal-title">상세 보기</div>
+        <button type="button" class="tg-modal-close" aria-label="닫기"
+                onclick="window.togetherCloseDetail()">✕</button>
+      </div>
+      <div class="tg-modal-body" id="together-detail-body">
+        <div class="pg-loading">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pg-outer -->
+
+
+<!-- ════════════════════════════════════════════════════════════
+     페이지 스크립트
+     ▸ IIFE 래핑 (app.html이 자동 래핑하지만 안전상 명시)
+     ▸ onclick 호출 함수는 window.* 전역 등록
+     ▸ appstate:ready 표준 부트 패턴
+     ▸ 현재 단계(3-1): 탭 전환 UI만. fetch·모달·댓글 로직은 3-2에서 추가
+════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── 상수 ── */
+  var CAT_LABEL = {
+    feature_request: '기능 요청',
+    review: '사용 후기',
+    free: '자유 공유'
+  };
+
+  /* ── 상태 ── */
+  var _currentTab = 'all';
+  var _posts = [];            // 캐시: together 게시글 전체
+  var _postsLoading = false;
+  var _currentDetailId = null;
+  var _submittingWrite = false;
+  var _submittingComment = false;
+
+  /* ── 유틸 ─────────────────────────────────────────────────── */
+
+  /* HTML escape — 사용자 입력 렌더링 시 XSS 방지 */
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /* YYYY.MM.DD */
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate());
+  }
+
+  /* 로그인 필요 처리 */
+  function requireLogin(actionLabel) {
+    var s = window.AppState || {};
+    if (!s.userId) {
+      alert((actionLabel || '작성') + '은 로그인 후 이용할 수 있습니다.');
+      return false;
+    }
+    return true;
+  }
+
+  /* 현재 사용자 표시명 (AppState.name 우선) */
+  function getAuthorName() {
+    var s = window.AppState || {};
+    return (s.name && s.name.trim()) ? s.name : '익명';
+  }
+
+  /* ── 데이터 로드 ──────────────────────────────────────────── */
+
+  async function loadTogetherPosts() {
+    if (_postsLoading) return;
+    _postsLoading = true;
+    try {
+      var path = '/rest/v1/posts'
+        + '?board_type=eq.together'
+        + '&is_hidden=eq.false'
+        + '&order=is_notice.desc,created_at.desc'
+        + '&select=id,title,content,category,author_name,is_notice,created_at,user_id';
+      var res = await window.db.fetch(path);
+      if (!res.ok) throw new Error('posts fetch 실패: ' + res.status);
+      _posts = await res.json();
+    } catch (e) {
+      console.error('[together] loadTogetherPosts error:', e);
+      _posts = [];
+      var panel = document.getElementById('together-tab-' + _currentTab);
+      if (panel) panel.innerHTML = '<div class="pg-empty"><div class="pg-empty-ico">⚠️</div><div>글을 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.</div></div>';
+      return;
+    } finally {
+      _postsLoading = false;
+    }
+    renderList();
+  }
+
+  /* ── 리스트 렌더 ─────────────────────────────────────────── */
+
+  function renderList() {
+    var panel = document.getElementById('together-tab-' + _currentTab);
+    if (!panel) return;
+
+    var items = (_currentTab === 'all')
+      ? _posts
+      : _posts.filter(function (p) { return p.category === _currentTab; });
+
+    if (!items || items.length === 0) {
+      panel.innerHTML = ''
+        + '<div class="pg-empty">'
+        +   '<div class="pg-empty-ico">💬</div>'
+        +   '<div>아직 글이 없습니다.<br>첫 이야기를 남겨보세요.</div>'
+        + '</div>';
+      return;
+    }
+
+    var html = '<ul class="tg-list">';
+    items.forEach(function (p) {
+      html += '<li class="tg-item" onclick="window.togetherOpenDetail(\'' + esc(p.id) + '\')">'
+            +   '<div class="tg-item-top">'
+            +     renderBadge(p)
+            +     '<div class="tg-title">' + esc(p.title || '(제목 없음)') + '</div>'
+            +   '</div>'
+            +   '<div class="tg-item-meta">'
+            +     '<span>' + esc(p.author_name || '익명') + '</span>'
+            +     '<span class="tg-meta-dot"></span>'
+            +     '<span>' + esc(fmtDate(p.created_at)) + '</span>'
+            +   '</div>'
+            + '</li>';
+    });
+    html += '</ul>';
+    panel.innerHTML = html;
+  }
+
+  function renderBadge(p) {
+    if (p.is_notice) {
+      return '<span class="tg-cat-badge tg-cat-notice">공지</span>';
+    }
+    var cat = p.category || 'free';
+    var label = CAT_LABEL[cat] || '자유 공유';
+    return '<span class="tg-cat-badge tg-cat-' + esc(cat) + '">' + esc(label) + '</span>';
+  }
+
+  /* ── 탭 전환 ─────────────────────────────────────────────── */
+
+  window.togetherSwitchTab = function (tabKey) {
+    _currentTab = tabKey;
+
+    var bar = document.getElementById('together-tab-bar');
+    if (bar) {
+      bar.querySelectorAll('.pg-tab-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.tab === tabKey);
+      });
+    }
+
+    var body = document.getElementById('together-body');
+    if (body) {
+      body.querySelectorAll('.pg-tab-panel').forEach(function (panel) {
+        panel.classList.toggle('active', panel.id === 'together-tab-' + tabKey);
+      });
+    }
+
+    renderList();
+  };
+
+  /* ── 글쓰기 모달 ─────────────────────────────────────────── */
+
+  window.togetherOpenWrite = function () {
+    if (!requireLogin('글쓰기')) return;
+    var ov = document.getElementById('together-write-overlay');
+    if (!ov) return;
+    document.getElementById('tg-form-category').value = 'feature_request';
+    document.getElementById('tg-form-title').value = '';
+    document.getElementById('tg-form-content').value = '';
+    ov.classList.add('active');
+    setTimeout(function () {
+      var t = document.getElementById('tg-form-title');
+      if (t) t.focus();
+    }, 50);
+  };
+
+  window.togetherCloseWrite = function () {
+    var ov = document.getElementById('together-write-overlay');
+    if (ov) ov.classList.remove('active');
+  };
+
+  window.togetherHandleOverlayClick = function (ev, which) {
+    if (ev.target && ev.target.classList && ev.target.classList.contains('tg-overlay')) {
+      if (which === 'write') window.togetherCloseWrite();
+      else if (which === 'detail') window.togetherCloseDetail();
+    }
+  };
+
+  window.togetherSubmitWrite = async function () {
+    if (_submittingWrite) return;
+    if (!requireLogin('글쓰기')) return;
+
+    var category = document.getElementById('tg-form-category').value;
+    var title    = (document.getElementById('tg-form-title').value || '').trim();
+    var content  = (document.getElementById('tg-form-content').value || '').trim();
+
+    if (!CAT_LABEL[category]) { alert('카테고리를 선택해 주세요.'); return; }
+    if (title.length < 2 || title.length > 100) { alert('제목은 2~100자로 입력해 주세요.'); return; }
+    if (content.length < 10 || content.length > 5000) { alert('내용은 10~5000자로 입력해 주세요.'); return; }
+
+    _submittingWrite = true;
+    var btn = document.getElementById('tg-form-submit');
+    if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+
+    try {
+      var payload = {
+        title: title,
+        content: content,
+        category: category,
+        board_type: 'together',
+        author_name: getAuthorName(),
+        user_id: window.AppState.userId,
+        is_notice: false,
+        is_hidden: false
+      };
+      var res = await window.db.fetch('/rest/v1/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        var msg = await res.text().catch(function () { return ''; });
+        throw new Error('insert 실패 ' + res.status + ' ' + msg);
+      }
+      window.togetherCloseWrite();
+      await loadTogetherPosts();
+    } catch (e) {
+      console.error('[together] save post error:', e);
+      alert('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      _submittingWrite = false;
+      if (btn) { btn.disabled = false; btn.textContent = '저장'; }
+    }
+  };
+
+  /* ── 상세 보기 ───────────────────────────────────────────── */
+
+  window.togetherOpenDetail = async function (postId) {
+    if (!postId) return;
+    _currentDetailId = postId;
+    var ov = document.getElementById('together-detail-overlay');
+    var body = document.getElementById('together-detail-body');
+    if (!ov || !body) return;
+    body.innerHTML = '<div class="pg-loading">불러오는 중...</div>';
+    ov.classList.add('active');
+
+    var post = _posts.find(function (p) { return String(p.id) === String(postId); });
+    if (!post) {
+      body.innerHTML = '<div class="pg-empty"><div class="pg-empty-ico">⚠️</div><div>게시글을 찾을 수 없습니다.</div></div>';
+      return;
+    }
+
+    renderDetail(post);
+    await loadAndRenderComments(postId);
+  };
+
+  window.togetherCloseDetail = function () {
+    var ov = document.getElementById('together-detail-overlay');
+    if (ov) ov.classList.remove('active');
+    _currentDetailId = null;
+  };
+
+  function renderDetail(p) {
+    var body = document.getElementById('together-detail-body');
+    if (!body) return;
+    var html = ''
+      + '<div class="tg-detail-title">' + esc(p.title || '(제목 없음)') + '</div>'
+      + '<div class="tg-detail-meta">'
+      +   renderBadge(p)
+      +   '<span>' + esc(p.author_name || '익명') + '</span>'
+      +   '<span class="tg-meta-dot"></span>'
+      +   '<span>' + esc(fmtDate(p.created_at)) + '</span>'
+      + '</div>'
+      + '<div class="tg-detail-body">' + esc(p.content || '') + '</div>'
+      + '<div class="tg-comment-section">'
+      +   '<div class="tg-comment-section-title">'
+      +     '<span>댓글</span>'
+      +     '<span class="tg-comment-count-pill" id="tg-comment-count">0</span>'
+      +   '</div>'
+      +   '<ul class="tg-comment-list" id="tg-comment-list">'
+      +     '<li class="tg-comment-empty">불러오는 중...</li>'
+      +   '</ul>'
+      +   renderCommentForm()
+      + '</div>';
+    body.innerHTML = html;
+  }
+
+  function renderCommentForm() {
+    var logged = !!(window.AppState && window.AppState.userId);
+    if (!logged) {
+      return '<div class="tg-login-notice">로그인 후 댓글을 남길 수 있습니다.</div>';
+    }
+    return ''
+      + '<div class="tg-comment-form">'
+      +   '<textarea class="tg-form-textarea" id="tg-comment-input" '
+      +             'maxlength="2000" placeholder="댓글을 남겨주세요"></textarea>'
+      +   '<button type="button" class="tg-btn tg-btn-primary" '
+      +           'id="tg-comment-submit" onclick="window.togetherSubmitComment()">등록</button>'
+      + '</div>';
+  }
+
+  /* ── 댓글 (comments 테이블, author_id 텍스트) ─────────────── */
+
+  async function loadAndRenderComments(postId) {
+    var list = document.getElementById('tg-comment-list');
+    var cnt  = document.getElementById('tg-comment-count');
+    try {
+      var path = '/rest/v1/comments'
+        + '?post_id=eq.' + encodeURIComponent(postId)
+        + '&order=created_at.asc'
+        + '&select=id,post_id,content,author_id,author_name,created_at';
+      var res = await window.db.fetch(path);
+      if (!res.ok) throw new Error('comments fetch 실패: ' + res.status);
+      var rows = await res.json();
+      if (cnt) cnt.textContent = String(rows.length);
+      if (!list) return;
+
+      if (!rows.length) {
+        list.innerHTML = '<li class="tg-comment-empty">첫 댓글을 남겨보세요.</li>';
+        return;
+      }
+      var html = '';
+      rows.forEach(function (c) {
+        html += '<li class="tg-comment-item">'
+              +   '<div class="tg-comment-meta">'
+              +     '<span class="tg-comment-author">' + esc(c.author_name || '익명') + '</span>'
+              +     '<span class="tg-meta-dot"></span>'
+              +     '<span>' + esc(fmtDate(c.created_at)) + '</span>'
+              +   '</div>'
+              +   '<div class="tg-comment-text">' + esc(c.content || '') + '</div>'
+              + '</li>';
+      });
+      list.innerHTML = html;
+    } catch (e) {
+      console.error('[together] loadComments error:', e);
+      if (list) list.innerHTML = '<li class="tg-comment-empty">댓글을 불러오지 못했습니다.</li>';
+    }
+  }
+
+  window.togetherSubmitComment = async function () {
+    if (_submittingComment) return;
+    if (!_currentDetailId) return;
+    if (!requireLogin('댓글')) return;
+
+    var input = document.getElementById('tg-comment-input');
+    var content = (input && input.value || '').trim();
+    if (content.length < 1) { alert('댓글 내용을 입력해 주세요.'); return; }
+    if (content.length > 2000) { alert('댓글은 2000자 이내로 입력해 주세요.'); return; }
+
+    _submittingComment = true;
+    var btn = document.getElementById('tg-comment-submit');
+    if (btn) { btn.disabled = true; btn.textContent = '등록 중...'; }
+
+    try {
+      var payload = {
+        post_id: _currentDetailId,
+        content: content,
+        author_id: String(window.AppState.userId),   // comments.author_id (text) — RLS: auth.uid()::text 비교
+        author_name: getAuthorName()
+      };
+      var res = await window.db.fetch('/rest/v1/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        var msg = await res.text().catch(function () { return ''; });
+        throw new Error('comment insert 실패 ' + res.status + ' ' + msg);
+      }
+      if (input) input.value = '';
+      await loadAndRenderComments(_currentDetailId);
+    } catch (e) {
+      console.error('[together] save comment error:', e);
+      alert('댓글 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      _submittingComment = false;
+      if (btn) { btn.disabled = false; btn.textContent = '등록'; }
+    }
+  };
+
+  /* ── 부팅 ─────────────────────────────────────────────────── */
+
+  function _boot() {
+    loadTogetherPosts();
+  }
+
+  if (window.AppState && window.AppState.ready) {
+    _boot();
+  } else {
+    document.addEventListener('appstate:ready', function () { _boot(); }, { once: true });
+  }
+
+})();
+</script>

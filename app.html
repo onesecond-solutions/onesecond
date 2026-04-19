@@ -131,6 +131,24 @@ html, body {
 }
 .menu-item:hover { background: var(--color-sidebar-hover); }
 .menu-item.active { background: var(--color-sidebar-active); font-weight: var(--fw-bold); color: #fff; }
+
+/* ── 함께해요 메뉴 (주황 차별화, 지시서 옵션 B) ── */
+.menu-item.menu-together {
+  background: rgba(212, 132, 90, 0.12);
+  border-left: 3px solid var(--color-accent);
+  color: #fff;
+  font-weight: var(--fw-semibold);
+  padding-left: 11px;
+}
+.menu-item.menu-together:hover {
+  background: rgba(212, 132, 90, 0.22);
+}
+.menu-item.menu-together.active {
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: var(--fw-bold);
+}
+
 .pro {
   background: rgba(255,255,255,0.12);
   padding: 14px;
@@ -508,6 +526,7 @@ html, body {
         <div class="menu-item" data-menu="myspace">MY SPACE</div>
         <div class="menu-item" data-menu="news">보험뉴스</div>
         <div class="menu-item" data-menu="quick">Quick 메뉴</div>
+        <div class="menu-item menu-together" data-menu="together">함께해요</div>
         <div class="menu-item" data-menu="admin" id="menu-admin"
              style="display:none;margin-top:var(--space-2);border-top:1px solid rgba(255,255,255,0.15);padding-top:var(--space-4);color:#ffd700;">🛡️ 관리자</div>
       </div>
@@ -671,7 +690,8 @@ function renderProBadge(plan, role) {
   var wrap = document.querySelector('.pro');
   if (!wrap) return;
   if (role === 'admin') {
-    wrap.innerHTML = '<a onclick="switchMenu(\'admin\')" style="color:#ffd700;text-decoration:none;font-size:0.875em;font-weight:700;cursor:pointer;">🛡️ 관리자</a>';
+    // [2026-04-19] .pro 슬롯 덮어쓰기 제거 — 사이드바 상단 #menu-admin 만 사용 (관리자 버튼 중복 방지)
+    wrap.style.display = 'none';
     var adminMenu = document.getElementById('menu-admin');
     if (adminMenu) adminMenu.style.display = 'block';
     return;
