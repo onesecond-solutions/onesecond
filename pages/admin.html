@@ -1294,12 +1294,13 @@ window.admLoadSettings = async function () {
   admContent('<div class="adm-loading">설정 로딩 중...</div>');
 
   var pageDefs = [
-    { key: 'home',    label: '🏠 홈' },
-    { key: 'scripts', label: '📋 스크립트' },
-    { key: 'board',   label: '💬 게시판' },
-    { key: 'myspace', label: '🗂️ MY SPACE' },
-    { key: 'news',    label: '📰 보험뉴스' },
-    { key: 'quick',   label: '⚡ Quick 메뉴' }
+    { key: 'home',     label: '🏠 홈' },
+    { key: 'scripts',  label: '📋 스크립트' },
+    { key: 'board',    label: '💬 게시판' },
+    { key: 'myspace',  label: '🗂️ MY SPACE' },
+    { key: 'news',     label: '📰 보험뉴스' },
+    { key: 'quick',    label: '⚡ Quick 메뉴' },
+    { key: 'together', label: '🤝 함께해요' }
   ];
   /* 배너 대상: Quick 제외 (Quick은 사이드바 메뉴라 배너 없음) */
   var bannerPages = pageDefs.filter(function (p) { return p.key !== 'quick'; });
@@ -1828,7 +1829,7 @@ window.admSaveBoardTabs = async function () {
 
 /* 메뉴 ON/OFF 저장 */
 window.admSaveMenuSettings = async function () {
-  var keys = ['home','scripts','board','myspace','news','quick'];
+  var keys = ['home','scripts','board','myspace','news','quick','together'];
   var rows = keys.map(function (k) {
     var el = document.getElementById('setting-menu_' + k);
     return { group_name: 'menu_b', key: 'menu_' + k, value: el && el.checked ? 'true' : 'false' };
@@ -1858,7 +1859,7 @@ window.admSaveMenuSettings = async function () {
 
 /* 배너 이미지 저장 (파일 선택 → Storage 업로드 → URL → app_settings upsert) */
 window.admSaveBannerSettings = async function () {
-  var keys = ['home','scripts','board','myspace','news','quick'];
+  var keys = ['home','scripts','board','myspace','news','quick','together'];
 
   var upsertRows = [];
   var hasUpload = false;
