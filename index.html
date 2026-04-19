@@ -667,6 +667,98 @@ header.scrolled{
   .together-cta { width:100%; padding:16px 24px; }
 }
 
+/* ── TOGETHER 공감 오버레이 (CTA 1차 착지) ── */
+.together-intro-overlay {
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(26,16,8,0.72);
+  z-index:300;
+  align-items:center; justify-content:center;
+  padding:16px;
+  backdrop-filter:blur(4px);
+}
+.together-intro-overlay.active {
+  display:flex;
+  animation:overlayIn 0.2s ease;
+}
+.together-intro-modal {
+  position:relative;
+  background:var(--together-bg);
+  border-radius:20px;
+  width:100%; max-width:540px;
+  padding:56px 40px 44px;
+  text-align:center;
+  box-shadow:0 24px 60px rgba(0,0,0,0.32);
+  animation:modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+.ti-eyebrow {
+  color:var(--accent);
+  font-size:12px; font-weight:800;
+  letter-spacing:2px;
+  margin-bottom:14px;
+}
+.ti-title {
+  font-size:clamp(22px, 2.4vw, 30px);
+  font-weight:900;
+  color:var(--brown-dark);
+  letter-spacing:-1px;
+  line-height:1.35;
+  margin:0 0 40px;
+}
+.ti-questions { margin-bottom:36px; }
+.ti-q {
+  font-size:clamp(15px, 1.6vw, 17px);
+  color:var(--text-mid);
+  font-weight:500;
+  line-height:1.65;
+  margin:0 0 12px;
+}
+.ti-q:last-child { margin-bottom:0; }
+.ti-promise {
+  font-size:clamp(18px, 2vw, 22px);
+  font-weight:900;
+  color:var(--accent);
+  letter-spacing:-0.5px;
+  margin:0 0 36px;
+}
+.ti-cta {
+  display:inline-block;
+  width:100%;
+  background:linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color:var(--white);
+  font-size:16px; font-weight:800;
+  padding:16px 24px;
+  border:none; border-radius:14px;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(200,117,58,0.25);
+  transition:all 0.28s;
+  letter-spacing:-0.3px;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.ti-cta:hover {
+  transform:translateY(-2px);
+  box-shadow:0 12px 32px rgba(200,117,58,0.35);
+}
+.ti-note {
+  margin-top:24px;
+  font-size:13px;
+  color:var(--text-light);
+  font-weight:500;
+}
+.ti-note a {
+  color:var(--accent);
+  font-weight:700;
+  text-decoration:none;
+}
+.ti-note a:hover { text-decoration:underline; }
+
+@media (max-width:480px) {
+  .together-intro-modal { padding:44px 24px 32px; border-radius:16px; }
+  .ti-title { margin-bottom:28px; }
+  .ti-questions { margin-bottom:24px; }
+  .ti-promise { margin-bottom:28px; }
+}
+
 /* ── 듀얼 모니터 목업 ── */
 .mockup-wrap {
   position:relative;
@@ -1920,9 +2012,44 @@ footer {
   </div>
 </div>
 
+<!-- TOGETHER 공감 오버레이 (CTA 1차 착지) -->
+<div class="together-intro-overlay" id="togetherIntroOverlay" onclick="handleTogetherIntroOverlayClick(event)">
+  <div class="together-intro-modal">
+    <button type="button" class="close-btn" onclick="closeTogetherIntro()" aria-label="닫기">
+      <svg viewBox="0 0 14 14" fill="none" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
+    </button>
+    <div class="ti-eyebrow">TOGETHER</div>
+    <h2 class="ti-title">함께 만들어가는 원세컨드</h2>
+    <div class="ti-questions">
+      <p class="ti-q">그동안 불편한 기능을 말해본 적이 있으신가요?</p>
+      <p class="ti-q">이런 게 있었으면 하는 메뉴가 해결된 경험을 해본 적이 있으신가요?</p>
+    </div>
+    <p class="ti-promise">원세컨드가 해결해 드립니다</p>
+    <button type="button" class="ti-cta" onclick="startTrialFromIntro()">
+      30일 무료체험 시작하기
+    </button>
+    <p class="ti-note">이미 계정이 있으신가요? <a href="login.html?redirect=together">로그인</a></p>
+  </div>
+</div>
+
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
-function goToTogether(){ window.location.href='app.html?redirect=together'; }
+function goToTogether(){ openTogetherIntro(); }
+function openTogetherIntro(){
+  document.getElementById('togetherIntroOverlay').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+function closeTogetherIntro(){
+  document.getElementById('togetherIntroOverlay').classList.remove('active');
+  document.body.style.overflow='';
+}
+function handleTogetherIntroOverlayClick(e){
+  if(e.target===document.getElementById('togetherIntroOverlay')) closeTogetherIntro();
+}
+function startTrialFromIntro(){
+  closeTogetherIntro();
+  setTimeout(function(){ openModal(); }, 200);
+}
 function openModal(){document.getElementById('overlay').classList.add('active');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('overlay').classList.remove('active');document.body.style.overflow='';}
 function handleOverlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
