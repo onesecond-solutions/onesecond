@@ -2031,12 +2031,12 @@ footer {
           <div class="m-row-2">
             <div class="m-group">
               <div class="m-label">이름 <span class="m-req">*</span></div>
-              <input class="m-input" type="text" id="f-name" placeholder="홍길동" maxlength="20">
+              <input class="m-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
               <div class="m-err" id="e-name">이름을 입력해 주세요.</div>
             </div>
             <div class="m-group">
               <div class="m-label">역할 <span class="m-req">*</span></div>
-              <select class="m-select" id="f-role" onchange="onRoleChange()">
+              <select class="m-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
                 <option value="">선택해 주세요</option>
                 <option value="member">팀장 / 설계사</option>
                 <option value="manager">매니저 / 실장</option>
@@ -2051,12 +2051,12 @@ footer {
           <div class="m-row-2">
             <div class="m-group">
               <div class="m-label">핸드폰 번호 <span class="m-req">*</span></div>
-              <input class="m-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this)">
+              <input class="m-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
               <div class="m-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
             </div>
             <div class="m-group">
               <div class="m-label">이메일 <span class="m-req">*</span></div>
-              <input class="m-input" type="email" id="f-email" placeholder="example@email.com">
+              <input class="m-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email')">
               <div class="m-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
             </div>
           </div>
@@ -2064,7 +2064,7 @@ footer {
             <div class="m-group">
               <div class="m-label">비밀번호 <span class="m-req">*</span></div>
               <div style="position:relative;">
-                <input class="m-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" style="padding-right:52px;">
+                <input class="m-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw','e-pw')">
                 <button type="button" onclick="toggleRegPw('f-pw','reg-pw-toggle')" id="reg-pw-toggle"
                   style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-light);font-family:'Noto Sans KR',sans-serif;">보기</button>
               </div>
@@ -2073,7 +2073,7 @@ footer {
             <div class="m-group">
               <div class="m-label">비밀번호 확인 <span class="m-req">*</span></div>
               <div style="position:relative;">
-                <input class="m-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" style="padding-right:52px;">
+                <input class="m-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw2','e-pw2')">
                 <button type="button" onclick="toggleRegPw('f-pw2','reg-pw2-toggle')" id="reg-pw2-toggle"
                   style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-light);font-family:'Noto Sans KR',sans-serif;">보기</button>
               </div>
@@ -2098,7 +2098,7 @@ footer {
             </div>
           </div>
           <div class="consent-row">
-            <input type="checkbox" id="f-consent">
+            <input type="checkbox" id="f-consent" onchange="clearFieldError('f-consent','e-consent')">
             <label class="consent-txt" for="f-consent">
               개인정보 수집 및 허브 공개에 동의합니다.
               <span class="consent-link" onclick="showPrivacy()">[약관보기]</span>
@@ -2206,6 +2206,13 @@ function fmtPhone(input){
   else if(v.length<=7)input.value=v.slice(0,3)+'-'+v.slice(3);
   else input.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
 }
+/* [P0-1] 입력 시 해당 필드의 에러 표시 즉시 해제 */
+function clearFieldError(inputId, errorId){
+  const inp = document.getElementById(inputId);
+  const err = document.getElementById(errorId);
+  if (inp) inp.classList.remove('err');
+  if (err) err.classList.remove('on');
+}
 const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
 
@@ -2282,11 +2289,12 @@ async function doSubmit(){
         phone:   document.getElementById('f-phone').value.trim(),
         email:   email,
         company: document.getElementById('f-company').value.trim(),
+        branch:  (document.getElementById('f-branch') ? document.getElementById('f-branch').value.trim() : ''),
         role:    document.getElementById('f-role').value,
         team:    (document.getElementById('f-team') ? document.getElementById('f-team').value.trim() : ''),
       };
 
-      await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+      const uRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2296,6 +2304,16 @@ async function doSubmit(){
         },
         body: JSON.stringify(profileData)
       });
+
+      if (!uRes.ok) {
+        const errText = await uRes.text().catch(() => '');
+        console.error('users INSERT 실패:', uRes.status, errText);
+        alert('가입 정보 저장 중 오류가 발생했습니다.\n다시 시도하시거나 관리자에게 문의해 주세요.');
+        btn.disabled = false;
+        txt.style.display = 'block';
+        spin.style.display = 'none';
+        return;
+      }
     }
 
     // 성공 화면 - 이메일 인증 안내

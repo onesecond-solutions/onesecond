@@ -748,7 +748,10 @@ async function applyGateSettings() {
   // (실제 사용자 화면은 admin.html의 미리보기로 확인)
   if (window.AppState && window.AppState.role === 'admin') return;
 
-  /* 기본값: 둘 다 PRO 전용 */
+  /* [TEMP] 첫 배포 정책(2026-04-21): 모든 가입자 허용. v1.2에서 복원 예정 */
+  var quickGateOn  = false;
+  var searchGateOn = false;
+  /* v1.2 복원 시 위 2줄 삭제 + 아래 블록 주석 해제
   var quickGateOn  = true;
   var searchGateOn = true;
   try {
@@ -762,8 +765,8 @@ async function applyGateSettings() {
     }
   } catch (e) {
     console.warn('applyGateSettings error:', e);
-    /* fetch 실패 시 기본값(PRO 전용) 유지 */
   }
+  */
 
   /* ① 빠른 실행 버튼 제어 */
   var btn = document.getElementById('openQuick');
@@ -925,8 +928,8 @@ function loadPricing() {
   _currentMenu = '';
   var area = document.getElementById('content-area');
   area.innerHTML = '<div class="loading-placeholder">로딩 중...</div>';
-  fetch('pages/pricing.html')
-    .then(function (r) { return r.text(); })
+  fetch('pages/pricing-content.html')
+    .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)); })
     .then(function (html) { area.innerHTML = html; })
     .catch(function () { area.innerHTML = '<div class="card" style="margin:var(--space-5);"><h2>요금제</h2><p>페이지를 불러오지 못했습니다.</p></div>'; });
 }
@@ -1029,9 +1032,12 @@ function renderSearchBox() {
   var wrap = document.getElementById('search-wrap');
   if (!wrap) return;
   // [2026-04-17] 기능 게이트(gate_search_a2) 기반으로 잠금 판정
-  //   - 기본값: true (DB 로드 전에는 PRO 전용으로 안전하게 동작)
   //   - applyGateSettings가 window._gateSearchA2를 세팅 후 이 함수를 재호출
-  var gateOn = (window._gateSearchA2 === undefined) ? true : window._gateSearchA2;
+  /* [TEMP] 첫 배포 정책(2026-04-21): 모든 가입자 허용. v1.2에서 복원 예정 */
+  var gateOn = (window._gateSearchA2 === undefined) ? false : window._gateSearchA2;
+  /* v1.2 복원 시 위 1줄 삭제 + 아래 1줄 주석 해제 (기본값: true — DB 로드 전에는 PRO 전용으로 안전하게 동작)
+  // var gateOn = (window._gateSearchA2 === undefined) ? true : window._gateSearchA2;
+  */
   var locked = gateOn && !isPro();
   if (locked) {
     wrap.innerHTML = '<div class="search-lock-wrap" onclick="loadPricing()">'

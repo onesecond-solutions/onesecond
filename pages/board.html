@@ -179,6 +179,49 @@
 }
 .write-btn:hover { background: var(--color-brand-light, #C4733A); }
 
+/* ── 업그레이드 토스트 (무료플랜 글쓰기 안내) ── */
+.os-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translate(-50%, 20px);
+  background: var(--color-text-primary, #3D2C1E);
+  color: #fff;
+  padding: 12px 16px 12px 18px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.88em;
+  line-height: 1.5;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+  max-width: calc(100vw - 32px);
+}
+.os-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+.os-toast-msg { white-space: pre-line; }
+.os-toast-upgrade {
+  flex-shrink: 0;
+  background: var(--color-accent, #D4845A);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.88em;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.os-toast-upgrade:hover { background: var(--color-brand-light, #C4733A); }
+
 /* ── 게시글 목록 ── */
 .post-list { display: flex; flex-direction: column; gap: 0.6em; }
 .post-item {
@@ -1675,7 +1718,7 @@ async function _loadComments(postId) {
   if (!commentList) return;
   commentList.innerHTML = '<div style="font-size:0.78em;color:var(--color-text-tertiary,#B89880);padding:0.4em 0;">불러오는 중...</div>';
   try {
-    var res     = await window.db.fetch('/rest/v1/replies?post_id=eq.' + postId + '&order=created_at.asc');
+    var res     = await window.db.fetch('/rest/v1/comments?post_id=eq.' + postId + '&order=created_at.asc&select=id,post_id,content,author_id,author_name,created_at');
     var data    = await res.json();
     var replies = Array.isArray(data) ? data : [];
     if (countLabel) countLabel.textContent = '(' + replies.length + ')';
@@ -1706,18 +1749,20 @@ window.submitComment = async function() {
 
   var s = window.AppState || {};
   try {
-    await window.db.fetch('/rest/v1/replies', {
+    var cRes = await window.db.fetch('/rest/v1/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({
-        post_id:      _currentPostId,
-        author_id:    s.userId || '',
-        author_name:  s.name   || '알 수 없음',
-        display_name: s.name   || '알 수 없음',
-        content:      text,
-        is_anonymous: false
+        post_id:     _currentPostId,
+        content:     text,
+        author_id:   String(s.userId || ''),
+        author_name: s.name || '알 수 없음'
       })
     });
+    if (!cRes.ok) {
+      var errMsg = await cRes.text().catch(function() { return ''; });
+      throw new Error('comment insert ' + cRes.status + ' ' + errMsg);
+    }
     var post = _allPosts.find(function(p) { return String(p.id) === String(_currentPostId); });
     if (post) {
       var newCnt = (post.comment_count || 0) + 1;
@@ -1894,12 +1939,48 @@ function _getFormInsurer(category) {
   return { name: name, insurance_type: type };
 }
 
+/* ── 업그레이드 토스트 (무료플랜 글쓰기 안내) ── */
+var _toastTimer = null;
+window.showUpgradeToast = function(message) {
+  var t = document.getElementById('os-upgrade-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'os-upgrade-toast';
+    t.className = 'os-toast';
+    t.innerHTML = '<span class="os-toast-msg"></span>'
+      + '<button type="button" class="os-toast-upgrade" onclick="window.onClickToastUpgrade()">업그레이드</button>';
+    document.body.appendChild(t);
+  }
+  var msgEl = t.querySelector('.os-toast-msg');
+  if (msgEl) msgEl.textContent = message || 'PRO 플랜에서 이용할 수 있습니다.';
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  requestAnimationFrame(function() { t.classList.add('show'); });
+  _toastTimer = setTimeout(function() {
+    t.classList.remove('show');
+    _toastTimer = null;
+  }, 3000);
+};
+window.onClickToastUpgrade = function() {
+  var t = document.getElementById('os-upgrade-toast');
+  if (t) t.classList.remove('show');
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  if (typeof window.loadPricing === 'function') window.loadPricing();
+};
+
 /* ── 글쓰기 버튼 클릭 ── */
 window.onClickWriteBtn = function() {
   if (_currentCategory === 'all') {
     alert('카테고리를 먼저 선택해 주세요.');
     return;
   }
+  /* [TEMP] 첫 배포 정책(2026-04-21): 모든 가입자 허용. v1.2에서 복원 예정 */
+  /* [P0-4] 무료플랜 글쓰기 차단 — Auth.isPro(): plan=pro 또는 role in (manager/branch_manager/admin)
+   * var isProUser = window.Auth && window.Auth.isPro && window.Auth.isPro();
+   * if (!isProUser) {
+   *   window.showUpgradeToast('글쓰기는 PRO 플랜에서 이용할 수 있어요.');
+   *   return;
+   * }
+   */
   window.openWriteView();
 };
 
