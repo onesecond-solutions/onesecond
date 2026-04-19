@@ -349,7 +349,9 @@ async function doLogin() {
       document.getElementById('success-screen').style.display = 'block';
 
       setTimeout(() => {
-        window.location.href = 'app.html';
+        // [2026-04-19] redirect 파라미터 있으면 app.html?redirect=X로 전달 (함께 만들어가는 원세컨드 동선)
+        var _r = new URLSearchParams(window.location.search).get('redirect');
+        window.location.href = _r ? 'app.html?redirect=' + encodeURIComponent(_r) : 'app.html';
       }, 1200);
     } else {
       // 에러 메시지 한국어 처리

@@ -683,6 +683,18 @@ document.addEventListener('appstate:ready', function () {
 
   // [2026-04-17] 기능 게이트 설정 적용 (A2 빠른 실행 PRO 제어)
   applyGateSettings();
+
+  // [2026-04-19] 랜딩페이지 '함께 만들어가는 원세컨드' CTA로부터 진입 시 함께해요 자동 선택
+  try {
+    var _rparams = new URLSearchParams(window.location.search);
+    var _rTarget = _rparams.get('redirect');
+    if (_rTarget === 'together') {
+      setTimeout(function () {
+        var _rEl = document.querySelector('.menu-item[data-menu="together"]');
+        if (_rEl) _rEl.click();
+      }, 500);
+    }
+  } catch (e) { /* URLSearchParams 미지원 환경 무시 */ }
 });
 
 // ── ② PRO 뱃지 ─────────────────────────────────────────────────────────────

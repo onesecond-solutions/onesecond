@@ -19,6 +19,7 @@
   --text-mid: #5a3e2b;
   --text-light: #9a7a62;
   --white: #ffffff;
+  --together-bg: #F9E4D5;
   --max-w: 1100px;
 }
 
@@ -601,6 +602,69 @@ header.scrolled{
 }
 @media (max-width:860px) {
   .target-grid { grid-template-columns:1fr; gap:16px; }
+}
+
+/* ── TOGETHER (함께 만들어가는 원세컨드) 섹션 ── */
+.together-section {
+  padding:100px 40px;
+  background:var(--together-bg);
+}
+.together-inner {
+  max-width:760px; margin:0 auto; text-align:center;
+}
+.together-eyebrow {
+  color:var(--accent); font-size:12px; font-weight:800;
+  letter-spacing:2px; margin-bottom:16px;
+}
+.together-title {
+  font-size:clamp(28px, 3vw, 42px);
+  font-weight:900; color:var(--brown-dark);
+  letter-spacing:-1.5px;
+  margin-bottom:36px;
+  line-height:1.3;
+}
+.together-questions { margin-bottom:32px; }
+.together-q {
+  font-size:clamp(16px, 1.6vw, 19px);
+  color:var(--text-mid);
+  font-weight:500; line-height:1.6;
+  margin:0 0 8px;
+}
+.together-promise {
+  font-size:clamp(20px, 2.2vw, 26px);
+  font-weight:900; color:var(--accent);
+  letter-spacing:-0.8px;
+  margin-bottom:36px;
+}
+.together-cta {
+  display:inline-block;
+  background:linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color:var(--white);
+  font-size:16px; font-weight:800;
+  padding:18px 44px;
+  border:none; border-radius:14px;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(200,117,58,0.25);
+  transition:all 0.28s;
+  letter-spacing:-0.3px;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.together-cta:hover {
+  transform:translateY(-2px);
+  box-shadow:0 12px 32px rgba(200,117,58,0.35);
+}
+.together-note {
+  margin-top:20px;
+  font-size:13px;
+  color:var(--text-light);
+  font-weight:500;
+}
+@media (max-width:768px) {
+  .together-section { padding:64px 24px; }
+  .together-title { margin-bottom:28px; }
+  .together-questions { margin-bottom:24px; }
+  .together-promise { margin-bottom:28px; }
+  .together-cta { width:100%; padding:16px 24px; }
 }
 
 /* ── 듀얼 모니터 목업 ── */
@@ -1605,6 +1669,27 @@ footer {
   </div>
 </section>
 
+<!-- TOGETHER (함께 만들어가는 원세컨드) -->
+<section class="together-section">
+  <div class="together-inner">
+    <div class="together-eyebrow">TOGETHER</div>
+    <h2 class="together-title">함께 만들어가는 원세컨드</h2>
+
+    <div class="together-questions">
+      <p class="together-q">그동안 불편한 기능이 있었나요?</p>
+      <p class="together-q">이런 게 있었으면 하는 메뉴가 있었나요?</p>
+    </div>
+
+    <p class="together-promise">원세컨드가 해결해 드립니다</p>
+
+    <button type="button" class="together-cta" onclick="goToTogether()">
+      불편했던 거 말씀해주세요 →
+    </button>
+
+    <p class="together-note">여러분의 한마디가 다음 업데이트가 됩니다</p>
+  </div>
+</section>
+
 <!-- PRICING -->
 <section class="pricing">
   <div class="sec-inner">
@@ -1837,6 +1922,7 @@ footer {
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
+function goToTogether(){ window.location.href='app.html?redirect=together'; }
 function openModal(){document.getElementById('overlay').classList.add('active');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('overlay').classList.remove('active');document.body.style.overflow='';}
 function handleOverlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}

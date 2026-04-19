@@ -180,14 +180,27 @@
     }
   }
 
+  // ── [2026-04-19] 미인증 시 redirect 파라미터 보존 헬퍼 ──────────────────
+  // redirect 파라미터가 있으면 login.html?redirect=X로, 없으면 index.html로
+  function _redirectToAuthPage() {
+    try {
+      var _r = new URLSearchParams(window.location.search).get('redirect');
+      if (_r) {
+        window.location.href = 'login.html?redirect=' + encodeURIComponent(_r);
+        return;
+      }
+    } catch (e) { /* URLSearchParams 미지원 환경 무시 */ }
+    window.location.href = 'index.html';
+  }
+
   // ── 10. 앱 진입 시 인증 체크 + 초기화 ───────────────────────────────────
   async function init() {
     var token  = window.db.getToken();
     var userId = resolveUserId();
 
-    // 미인증 → 로그인 페이지
+    // 미인증 → 로그인 페이지 (redirect 파라미터 보존)
     if (!token || !userId) {
-      window.location.href = 'index.html';
+      _redirectToAuthPage();
       return;
     }
 
@@ -219,8 +232,8 @@
         window.AppState.token = newToken.access_token;
         window._userToken     = newToken.access_token;
       } else {
-        // 갱신 실패 → 로그인 페이지
-        window.location.href = 'index.html';
+        // 갱신 실패 → 로그인 페이지 (redirect 파라미터 보존)
+        _redirectToAuthPage();
         return;
       }
     }
