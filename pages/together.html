@@ -738,7 +738,7 @@
         + '?board_type=eq.together'
         + '&is_hidden=eq.false'
         + '&order=is_notice.desc,created_at.desc'
-        + '&select=id,title,content,category,author_name,is_notice,created_at,user_id';
+        + '&select=id,title,content,category,author_name,is_notice,created_at,author_id';
       var res = await window.db.fetch(path);
       if (!res.ok) throw new Error('posts fetch 실패: ' + res.status);
       _posts = await res.json();
@@ -873,7 +873,7 @@
         category: category,
         board_type: 'together',
         author_name: getAuthorName(),
-        user_id: window.AppState.userId,
+        author_id: window.AppState.userId,
         is_notice: false,
         is_hidden: false
       };
