@@ -432,6 +432,13 @@ html, body {
   .b { display: none; }
   .d { overflow-y: visible; }
   .site-footer { display: none; }
+  /* 모바일 A1 헤더 압축 — 좁은 폭에서 로고/배지/버튼 잘림 방지 */
+  .a1 { padding: 0 var(--space-3); gap: var(--space-2); }
+  .a1 .brand { font-size: 1.05em; letter-spacing: -0.3px; flex-shrink: 0; }
+  .a1-right { gap: 6px; min-width: 0; }
+  .a1-right .pill { padding: 4px 9px; font-size: 0.7em; white-space: nowrap; flex-shrink: 0; }
+  .a1-right a[href*="open.kakao"] { padding: 0 8px !important; font-size: 0.65em !important; }
+  #topbar-user { max-width: 110px !important; font-size: 0.72em; }
   .tab-bar {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;
     height: 64px; background: var(--color-brand);

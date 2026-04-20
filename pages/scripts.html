@@ -400,6 +400,10 @@
   font-weight: var(--fw-bold);
   color: var(--color-text-primary);
   flex: 1;
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  line-height: 1.35;
 }
 .sc-m-step-count {
   font-size: var(--text-xs);
@@ -421,8 +425,14 @@
   display: flex; align-items: center; gap: var(--space-3);
   transition: background var(--transition-fast);
   border-left: 3px solid var(--stg-fg, transparent);
+  min-width: 0;
+  overflow: hidden;
 }
 .sc-m-stage-card:hover { background: var(--color-surface-2); }
+/* 초소형 뷰포트(갤럭시 기본형 등)에선 1열 강제 */
+@media (max-width: 380px) {
+  .sc-m-stage-grid { grid-template-columns: 1fr; }
+}
 .sc-m-stage-card-icon {
   width: 38px; height: 38px;
   border-radius: var(--radius-full);
@@ -1023,11 +1033,10 @@ function mRenderStep4(color, blIdx) {
   var tipText = sc && sc.highlight_text
     ? sc.highlight_text
     : '<strong>현장 팁:</strong> 문장 하나가 흐름을 바꿉니다.';
+  // bl.html(outerHTML)에 타이틀/sub가 이미 포함되어 있어 바깥 title/sub 제거 (중복 방지)
   return mRenderHeader(4, color) +
     '<div class="sc-m-detail">' +
       '<div class="sc-m-detail-tag">' + (sc ? sc.title : '') + '</div>' +
-      '<div class="sc-m-detail-title">' + bl.title + '</div>' +
-      (bl.sub ? '<div class="sc-m-detail-sub">' + bl.sub + '</div>' : '') +
       '<div class="sc-m-detail-body"><div class="sc-html">' + bl.html + '</div></div>' +
       '<div class="sc-tip" style="margin-top:var(--space-3);">' + tipText + '</div>' +
     '</div>';
