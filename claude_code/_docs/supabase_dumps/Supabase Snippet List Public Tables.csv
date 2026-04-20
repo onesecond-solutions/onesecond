@@ -1,0 +1,120 @@
+table_name,column_name,data_type,udt_name,is_nullable,column_default,character_maximum_length
+activity_logs,id,bigint,int8,NO,nextval('activity_logs_id_seq'::regclass),null
+activity_logs,user_id,uuid,uuid,YES,null,null
+activity_logs,event_type,text,text,YES,null,null
+activity_logs,target_type,text,text,YES,null,null
+activity_logs,target_id,text,text,YES,null,null
+activity_logs,created_at,timestamp with time zone,timestamptz,YES,now(),null
+app_settings,id,bigint,int8,NO,nextval('app_settings_id_seq'::regclass),null
+app_settings,key,text,text,NO,null,null
+app_settings,value,text,text,YES,null,null
+app_settings,label,text,text,YES,null,null
+app_settings,group_name,text,text,YES,null,null
+app_settings,updated_at,timestamp with time zone,timestamptz,YES,now(),null
+comments,id,bigint,int8,NO,null,null
+comments,created_at,timestamp with time zone,timestamptz,NO,now(),null
+comments,post_id,bigint,int8,YES,null,null
+comments,author_id,text,text,YES,null,null
+comments,author_name,text,text,YES,null,null
+comments,content,text,text,YES,null,null
+exception_diseases,id,uuid,uuid,NO,gen_random_uuid(),null
+exception_diseases,insurer_name,text,text,NO,null,null
+exception_diseases,disease_code,text,text,YES,null,null
+exception_diseases,disease_name,text,text,NO,null,null
+exception_diseases,is_available,text,text,YES,null,null
+exception_diseases,condition,text,text,YES,null,null
+exception_diseases,coverage,text,text,YES,null,null
+exception_diseases,standard_date,date,date,YES,null,null
+exception_diseases,raw_data,jsonb,jsonb,YES,null,null
+exception_diseases,created_at,timestamp with time zone,timestamptz,YES,now(),null
+library,id,bigint,int8,NO,null,null
+library,created_at,timestamp with time zone,timestamptz,NO,now(),null
+library,owner_id,text,text,YES,null,null
+library,owner_email,text,text,YES,null,null
+library,title,text,text,YES,null,null
+library,description,text,text,YES,null,null
+library,file_url,text,text,YES,null,null
+library,link_url,text,text,YES,null,null
+library,memo_text,text,text,YES,null,null
+library,image_url,text,text,YES,null,null
+library,scope,text,text,YES,null,null
+news,id,uuid,uuid,NO,gen_random_uuid(),null
+news,title,text,text,NO,null,null
+news,summary,text,text,YES,null,null
+news,source,text,text,YES,null,null
+news,url,text,text,YES,null,null
+news,category,text,text,YES,'전체'::text,null
+news,published_at,date,date,YES,null,null
+news,is_active,boolean,bool,YES,true,null
+news,created_at,timestamp with time zone,timestamptz,YES,now(),null
+posts,id,bigint,int8,NO,null,null
+posts,created_at,timestamp with time zone,timestamptz,NO,now(),null
+posts,board_type,text,text,YES,''::text,null
+posts,category,text,text,YES,''::text,null
+posts,title,text,text,YES,''::text,null
+posts,content,text,text,YES,null,null
+posts,author_id,text,text,YES,null,null
+posts,author_name,text,text,YES,null,null
+posts,organization_id,text,text,YES,null,null
+posts,is_hub_visible,boolean,bool,YES,false,null
+posts,view_count,bigint,int8,YES,'0'::bigint,null
+posts,like_count,bigint,int8,YES,'0'::bigint,null
+posts,comment_count,bigint,int8,YES,'0'::bigint,null
+posts,is_anonymous,boolean,bool,YES,false,null
+posts,display_name,text,text,YES,null,null
+posts,is_hidden,boolean,bool,YES,false,null
+posts,is_notice,boolean,bool,YES,false,null
+posts,attachments,text,text,YES,null,null
+posts,insurer_name,text,text,YES,null,null
+posts,product_category,text,text,YES,null,null
+posts,patient_age,integer,int4,YES,null,null
+posts,patient_gender,text,text,YES,null,null
+posts,disease_name,text,text,YES,null,null
+posts,diagnosis_timing,text,text,YES,null,null
+posts,current_status,text,text,YES,null,null
+quick_contents,id,bigint,int8,NO,null,null
+quick_contents,tab_key,text,text,YES,null,null
+quick_contents,tab_title,text,text,YES,null,null
+quick_contents,sort_order,smallint,int2,YES,null,null
+quick_contents,content_html,text,text,YES,null,null
+quick_contents,is_active,boolean,bool,YES,true,null
+quick_contents,updated_at,timestamp with time zone,timestamptz,YES,null,null
+quick_contents,search_text,text,text,YES,null,null
+script_usage_logs,id,bigint,int8,NO,null,null
+script_usage_logs,created_at,timestamp with time zone,timestamptz,NO,now(),null
+script_usage_logs,user_id,text,text,YES,null,null
+script_usage_logs,script_title,text,text,YES,null,null
+script_usage_logs,script_screen,text,text,YES,null,null
+script_usage_logs,script_main,text,text,YES,null,null
+scripts,id,bigint,int8,NO,null,null
+scripts,created_at,timestamp with time zone,timestamptz,NO,now(),null
+scripts,owner_id,text,text,YES,null,null
+scripts,owner_email,text,text,YES,null,null
+scripts,title,text,text,YES,null,null
+scripts,script_text,text,text,YES,null,null
+scripts,highlight_text,text,text,YES,null,null
+scripts,scope,text,text,YES,'personal'::text,null
+scripts,is_recommended,boolean,bool,YES,false,null
+scripts,recommended_by_role,text,text,YES,null,null
+scripts,use_count,integer,int4,NO,0,null
+scripts,script_type,text,text,YES,null,null
+scripts,top_category,text,text,YES,null,null
+scripts,stage,text,text,YES,null,null
+scripts,type,text,text,YES,null,null
+scripts,is_active,boolean,bool,YES,true,null
+scripts,is_leader_pick,boolean,bool,YES,false,null
+scripts,html_block_id,text,text,YES,null,null
+scripts,search_text,text,text,YES,null,null
+scripts,is_sample,boolean,bool,YES,false,null
+scripts,sort_order,integer,int4,YES,999,null
+users,id,uuid,uuid,NO,gen_random_uuid(),null
+users,created_at,timestamp with time zone,timestamptz,NO,now(),null
+users,name,text,text,YES,null,null
+users,phone,text,text,YES,null,null
+users,email,text,text,YES,null,null
+users,company,text,text,YES,null,null
+users,role,text,text,YES,'member'::text,null
+users,team,text,text,YES,null,null
+users,auth_user_id,uuid,uuid,YES,gen_random_uuid(),null
+users,branch,text,text,YES,null,null
+users,plan,text,text,YES,null,null

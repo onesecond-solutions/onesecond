@@ -1,0 +1,132 @@
+# ─────────────────────────────────────────────────────────
+# 원세컨드 .gitignore (2026-04-20 최종 통합본)
+# Git으로 추적하지 않을 파일 목록
+# 구버전 안전 규칙 + 신버전 확장 규칙 통합
+# ─────────────────────────────────────────────────────────
+
+# ── 환경 변수·비밀 키 (절대 커밋 금지) ────────────────────
+.env
+.env.local
+.env.production
+.env.development
+.env.*.local
+*.env
+*.key
+*.pem
+
+# Supabase service_role key·민감 정보
+**/secrets.js
+**/secrets.json
+secrets.json
+**/*-secret.*
+supabase-credentials.json
+*_service_role*
+supabase_secrets*
+
+# ── 실제 사용자 데이터 (절대 커밋 금지) ───────────────────
+exports/
+user_data/
+backups/
+real_users.csv
+actual_*.csv
+
+# ── OS 생성 파일 ──────────────────────────────────────────
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ── 에디터·IDE 설정 ───────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ── 로그·임시 파일 ────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+logs/
+tmp/
+.cache/
+
+# ── Node.js (Claude Code 설치 시 생성) ───────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ── Python (혹시 사용 시) ────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+
+# ── 빌드·배포 산출물 ──────────────────────────────────────
+dist/
+build/
+out/
+
+# ── 테스트 산출물 ─────────────────────────────────────────
+test-output/
+test-results/
+coverage/
+
+# ── 대용량 미디어 (GitHub Pages 용량 관리) ───────────────
+# 원본 영상·고해상도 이미지는 별도 관리
+*.mov
+*.mp4
+*.psd
+*.ai
+
+# ── 압축 파일 ─────────────────────────────────────────────
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ── Claude Code 전용 (인증·로컬 설정) ────────────────────
+.claude/
+CLAUDE.md.local
+
+# ── Claude Code 작업 임시물 (지시서·맥락은 유지) ─────────
+claude_code/_tmp/
+claude_code/_scratch/
+
+# ── 개인 메모 (로컬 전용) ─────────────────────────────────
+NOTES.md
+TODO.md
+SCRATCH.md
+_private/
+
+# ─────────────────────────────────────────────────────────
+# ── 허용 예외 (명시적 추적) ───────────────────────────────
+# 위 규칙에도 불구하고 아래 항목은 Git이 추적함
+# ─────────────────────────────────────────────────────────
+!.gitignore
+!README.md
+!claude_code/**
