@@ -663,14 +663,24 @@ document.addEventListener('appstate:ready', function () {
   var roleLabel = window.Auth.getRoleLabel(s.role);
   var displayName = roleLabel ? s.name + ' ' + roleLabel : s.name;
 
-  // A1 사용자 표시
+  // A1 사용자 표시 [2026-04-20 3단계 fallback]
+  //  1) name+email → "홍길동 팀장 (email) ▾"
+  //  2) email only → "email ▾"
+  //  3) 둘 다 없음 → "프로필 설정 필요 ▾" (드롭다운에서 내 정보 수정으로 유도)
   var userEl = document.getElementById('topbar-user');
-  if (userEl) userEl.textContent = displayName + ' (' + s.email + ') ▾';
+  if (userEl) {
+    if (s.name && s.email)      userEl.textContent = displayName + ' (' + s.email + ') ▾';
+    else if (s.email)           userEl.textContent = s.email + ' ▾';
+    else                        userEl.textContent = '프로필 설정 필요 ▾';
+  }
 
-  // A2 인사말
+  // A2 인사말 [2026-04-20 fallback]
   var greetEl = document.getElementById('a2-greeting');
-  if (greetEl) greetEl.innerHTML = '안녕하세요, <strong style="color:var(--color-accent);">'
-    + displayName + '</strong>님! 오늘도 화이팅입니다 🔥';
+  if (greetEl) {
+    var greetName = s.name ? displayName : (s.email || '원세컨드 이용자');
+    greetEl.innerHTML = '안녕하세요, <strong style="color:var(--color-accent);">'
+      + greetName + '</strong>님! 오늘도 화이팅입니다 🔥';
+  }
 
   // 내 정보 수정 모달 필드 초기화
   var fields = ['name','phone','email','company','branch','team'];
@@ -867,6 +877,26 @@ async function switchMenu(menuKey) {
   }
 }
 window.switchMenu = switchMenu;
+
+// ── [2026-04-20] Quick 미러링 전역 fallback ──────────────────────────────
+// A2 드롭다운 → quickOverlay 경로는 quick.html의 IIFE를 거치지 않아
+// toggleMirrorScript가 미등록일 수 있음. 전역 fallback을 미리 등록하여
+// member 계정이 Quick 사이드바 방문 없이 오버레이 사용 시에도 동작 보장.
+// quick.html IIFE가 나중에 실행돼도 if 가드로 원본 우선.
+if (!window.toggleMirrorScript) {
+  window.toggleMirrorScript = function (company) {
+    var m = document.getElementById('mirror-meritz');
+    var h = document.getElementById('mirror-heungkuk');
+    if (!m || !h) return;
+    if (company === 'meritz') {
+      m.style.display = m.style.display === 'none' ? 'block' : 'none';
+      h.style.display = 'none';
+    } else {
+      h.style.display = h.style.display === 'none' ? 'block' : 'none';
+      m.style.display = 'none';
+    }
+  };
+}
 
 // ── 페이지 배너 주입 ──────────────────────────────────────────────────────
 // app_settings 에서 banner_img_{menuKey} 값을 읽어 #page-banner-slot 에 img 주입
@@ -1311,13 +1341,21 @@ async function saveProfile() {
   var ok = await window.Auth.saveUser(fields);
   if (ok) {
     closeEditProfile();
-    // A1/A2 이름 즉시 갱신
+    // A1/A2 이름 즉시 갱신 [2026-04-20 3단계 fallback — appstate:ready와 동일 규칙]
     var roleLabel   = window.Auth.getRoleLabel(window.AppState.role);
     var displayName = roleLabel ? name + ' ' + roleLabel : name;
+    var email       = window.AppState.email;
     var userEl  = document.getElementById('topbar-user');
     var greetEl = document.getElementById('a2-greeting');
-    if (userEl)  userEl.textContent = displayName + ' (' + window.AppState.email + ') ▾';
-    if (greetEl) greetEl.innerHTML  = '안녕하세요, <strong style="color:var(--color-accent);">' + displayName + '</strong>님! 오늘도 화이팅입니다 🔥';
+    if (userEl) {
+      if (name && email)      userEl.textContent = displayName + ' (' + email + ') ▾';
+      else if (email)         userEl.textContent = email + ' ▾';
+      else                    userEl.textContent = '프로필 설정 필요 ▾';
+    }
+    if (greetEl) {
+      var greetName = name ? displayName : (email || '원세컨드 이용자');
+      greetEl.innerHTML = '안녕하세요, <strong style="color:var(--color-accent);">' + greetName + '</strong>님! 오늘도 화이팅입니다 🔥';
+    }
   } else {
     alert('저장 중 오류가 발생했습니다.');
   }

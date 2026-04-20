@@ -96,13 +96,25 @@
   // ── 8. DB에서 사용자 정보 fetch → AppState 갱신 ──────────────────────────
   async function loadUser() {
     if (!window.AppState.userId) return;
+
+    // [2026-04-20] public.users row 누락 시 os_user에서 email만이라도 복구
+    function _applyAuthFallback() {
+      try {
+        var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+        var u = JSON.parse(raw);
+        var fbEmail = u.email || (u.user && u.user.email) || '';
+        if (fbEmail && !window.AppState.email) window.AppState.email = fbEmail;
+      } catch (e) { /* ignore */ }
+    }
+
     try {
       var res = await window.db.fetch(
         '/rest/v1/users?id=eq.' + window.AppState.userId
         + '&select=name,role,phone,email,company,branch,team,plan'
       );
       if (!res.ok) {
-        // fetch 실패해도 appstate:ready는 발화 (이름/이메일은 빈값)
+        // fetch 실패해도 appstate:ready는 발화 (이름/이메일은 빈값 + email fallback)
+        _applyAuthFallback();
         document.dispatchEvent(new CustomEvent('appstate:ready', {
           detail: { user: window.AppState }
         }));
@@ -110,7 +122,8 @@
       }
       var data = await res.json();
       if (!data || !data[0]) {
-        // 데이터 없어도 appstate:ready 발화 (A1은 이메일만 표시)
+        // 데이터 없어도 appstate:ready 발화 (A1은 email fallback으로 표시)
+        _applyAuthFallback();
         document.dispatchEvent(new CustomEvent('appstate:ready', {
           detail: { user: window.AppState }
         }));

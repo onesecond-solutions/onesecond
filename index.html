@@ -2258,7 +2258,18 @@ async function doSubmit(){
   const email = document.getElementById('f-email').value.trim();
   const pw    = document.getElementById('f-pw').value;
 
+  function _resetBtn(){ btn.disabled=false; txt.style.display='block'; spin.style.display='none'; }
+
   try {
+    // ────────────────────────────────────────────────────────
+    // [2026-04-20 회원가입 견고화]
+    //  ① userId 추출 경로 3단계 확장 (authData.user.identities 중첩 포함)
+    //  ② userId 확보 실패 시 조용히 성공화면으로 넘어가지 않고 명시 안내
+    //  ③ users INSERT 실패해도 계정 자체는 생성됐으므로 fallback 안내 후 성공화면
+    //  ④ 이메일 인증 상태(email_confirmed_at)에 따라 성공화면 분기
+    //  ⑤ 중복 가입 시 로그인 페이지 이동 confirm
+    // ────────────────────────────────────────────────────────
+
     // 1단계: Supabase Auth 회원가입
     const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
       method: 'POST',
@@ -2270,30 +2281,46 @@ async function doSubmit(){
     if (!authRes.ok) {
       const msg = authData.msg || authData.error_description || authData.error || '';
       if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('User already registered')) {
-        alert('이미 가입된 이메일입니다. 로그인 페이지를 이용해 주세요.');
+        if (confirm('이미 가입된 이메일입니다.\n로그인 페이지로 이동할까요?')) {
+          window.location.href = 'login.html';
+          return;
+        }
       } else {
         alert('가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
       }
-      btn.disabled=false;txt.style.display='block';spin.style.display='none';
+      _resetBtn();
       return;
     }
 
-    // 이메일 인증 ON: user가 null일 수 있음 (인증 후 확정) → id는 identities에서 추출
-    const userId = authData.user?.id || authData.identities?.[0]?.user_id || null;
+    // [2026-04-20] userId 추출 경로 확장
+    const userId =
+         authData.user?.id
+      || authData.identities?.[0]?.user_id
+      || authData.user?.identities?.[0]?.user_id
+      || null;
 
-    // 2단계: userId 확보된 경우에만 users 테이블에 추가 정보 저장
-    if (userId) {
-      const profileData = {
-        id:      userId,
-        name:    document.getElementById('f-name').value.trim(),
-        phone:   document.getElementById('f-phone').value.trim(),
-        email:   email,
-        company: document.getElementById('f-company').value.trim(),
-        branch:  (document.getElementById('f-branch') ? document.getElementById('f-branch').value.trim() : ''),
-        role:    document.getElementById('f-role').value,
-        team:    (document.getElementById('f-team') ? document.getElementById('f-team').value.trim() : ''),
-      };
+    // [2026-04-20] userId 미확보 시 조용히 넘어가지 않고 명시적 중단
+    if (!userId) {
+      console.warn('signup: userId 확보 실패', authData);
+      alert('가입 처리가 일시적으로 지연됐습니다.\n잠시 후 다시 시도하시거나, 문제가 계속되면 관리자에게 문의해 주세요.');
+      _resetBtn();
+      return;
+    }
 
+    // 2단계: users 테이블 프로필 INSERT
+    const profileData = {
+      id:      userId,
+      name:    document.getElementById('f-name').value.trim(),
+      phone:   document.getElementById('f-phone').value.trim(),
+      email:   email,
+      company: document.getElementById('f-company').value.trim(),
+      branch:  (document.getElementById('f-branch') ? document.getElementById('f-branch').value.trim() : ''),
+      role:    document.getElementById('f-role').value,
+      team:    (document.getElementById('f-team') ? document.getElementById('f-team').value.trim() : ''),
+    };
+
+    let profileSaved = true;
+    try {
       const uRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
         method: 'POST',
         headers: {
@@ -2304,28 +2331,38 @@ async function doSubmit(){
         },
         body: JSON.stringify(profileData)
       });
-
       if (!uRes.ok) {
+        profileSaved = false;
         const errText = await uRes.text().catch(() => '');
         console.error('users INSERT 실패:', uRes.status, errText);
-        alert('가입 정보 저장 중 오류가 발생했습니다.\n다시 시도하시거나 관리자에게 문의해 주세요.');
-        btn.disabled = false;
-        txt.style.display = 'block';
-        spin.style.display = 'none';
-        return;
       }
+    } catch (insErr) {
+      profileSaved = false;
+      console.error('users INSERT 네트워크 오류:', insErr);
     }
 
-    // 성공 화면 - 이메일 인증 안내
+    // [2026-04-20] 성공 화면 분기: email_confirmed_at + profileSaved
     const descEl = document.getElementById('success-email-desc');
-    if (descEl) descEl.innerHTML = `<strong>${email}</strong> 으로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br><strong>30일 무료체험</strong>을 바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:#b09a89;">스팸함도 꼭 확인해 주세요</span>`;
+    const emailConfirmed = !!authData.user?.email_confirmed_at;
+    if (descEl) {
+      let html;
+      if (emailConfirmed) {
+        html = `<strong>${email}</strong><br>가입이 완료됐습니다!<br><br><strong>30일 무료체험</strong>을 바로 시작할 수 있습니다 😊<br><br><a href="login.html" style="display:inline-block;margin-top:12px;padding:10px 22px;background:var(--color-brand,#A0522D);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">로그인하러 가기 →</a>`;
+      } else {
+        html = `<strong>${email}</strong> 으로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br><strong>30일 무료체험</strong>을 바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:#b09a89;">스팸함도 꼭 확인해 주세요</span>`;
+      }
+      if (!profileSaved) {
+        html += `<br><br><div style="margin-top:12px;padding:10px;background:#FFF3E0;border-radius:8px;font-size:12px;color:#8B6F4A;">※ 이름/소속 정보 저장이 지연됐습니다.<br>로그인 후 <strong>내 정보 수정</strong>에서 다시 입력해 주세요.</div>`;
+      }
+      descEl.innerHTML = html;
+    }
     document.getElementById('modal-body').style.display='none';
     document.getElementById('success-screen').style.display='block';
 
   } catch(e){
     console.error('네트워크 오류:',e);
     alert('네트워크 오류가 발생했습니다. 다시 시도해 주세요.');
-    btn.disabled=false;txt.style.display='block';spin.style.display='none';
+    _resetBtn();
   }
 }
 function showPrivacy(){document.getElementById('privacy-overlay').classList.add('active');}
