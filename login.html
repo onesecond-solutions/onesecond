@@ -169,6 +169,20 @@ body {
 </style>
 </head>
 <body>
+<!-- [2026-04-20] DB 재설계 점검 배너 — 완료 후 제거 -->
+<div id="maintenance-banner" style="
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: #C4733A; color: #fff; padding: 14px 20px;
+  text-align: center; font-weight: 700; font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+  🛠️ 서비스 점검 중 — 원세컨드 DB 재설계 작업 진행 중입니다.
+  <br><span style="font-weight: 400; font-size: 12px;">
+  내일 오전 중 복구 예정입니다. 불편을 드려 죄송합니다.
+  </span>
+</div>
+<style>
+  body { padding-top: 72px; }  /* 배너 높이만큼 본문 아래로 */
+</style>
 
 <!-- 상단 로고 -->
 <div class="top-logo">
