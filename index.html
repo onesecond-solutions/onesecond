@@ -2256,8 +2256,8 @@ function clearFieldError(inputId, errorId){
   if (inp) inp.classList.remove('err');
   if (err) err.classList.remove('on');
 }
-const SUPABASE_URL = 'https://qursjteiovcylqiepmlo.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JG_lIUT7MjcLwel1oa-BZg_o_IDOCIL';
+const SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
 
 function toggleRegPw(inputId, btnId) {
   const input = document.getElementById(inputId);
@@ -2364,24 +2364,27 @@ async function doSubmit(){
 
     let profileSaved = true;
     try {
-      const uRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-        method: 'POST',
+      // [2026-04-22] handle_new_user 트리거가 (id, email) row를 먼저 생성하므로
+      // INSERT 대신 PATCH(UPDATE)로 나머지 필드 보강
+      const { id: _omitId, email: _omitEmail, ...updateData } = profileData;
+      const uRes = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_KEY,
           'Authorization': `Bearer ${SUPABASE_KEY}`,
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify(profileData)
+        body: JSON.stringify(updateData)
       });
       if (!uRes.ok) {
         profileSaved = false;
         const errText = await uRes.text().catch(() => '');
-        console.error('users INSERT 실패:', uRes.status, errText);
+        console.error('users PATCH 실패:', uRes.status, errText);
       }
     } catch (insErr) {
       profileSaved = false;
-      console.error('users INSERT 네트워크 오류:', insErr);
+      console.error('users PATCH 네트워크 오류:', insErr);
     }
 
     // [2026-04-20] 성공 화면 분기: email_confirmed_at + profileSaved
