@@ -1,447 +1,765 @@
+<!--
+================================================================================
+  pages/home.html
+  원세컨드 — 6각 다이어그램 홈
+
+  ▸ 버전:    v3.1 (2026-04-23 지시서 기준)
+  ▸ 작성일:  2026-04-23 ~ 2026-04-24 세션
+  ▸ 지시서:  claude_code/_instructions/20260423_home_hexagon_spec.md
+  ▸ 진행 상태: 청크 1/3 (style + HTML 마크업) — script는 청크 2/3에서 추가 예정
+
+  ── 화면 구조 ─────────────────────────────────────────────────────────────
+    1. 상단 안내 (.page-header 공통 자산)
+    2. A2 UI 인라인 미리보기 영역 (.card 기반 + 검색기/빠른실행 슬롯)
+    3. 6각형 다이어그램 (청크 2에서 JS가 SVG·중앙 로고 주입)
+    4. 호버 설명 패널 (.home-detail-panel)
+
+  ── 공통 자산 활용 (tokens.css 142~324줄) ────────────────────────────────
+    .page-header / .page-header-title / .page-header-sub / .page-header-icon
+    .card               (미리보기 컨테이너 베이스)
+    .input              (검색 미리보기 input)
+    .btn .btn-primary   (빠른실행 토글 버튼)
+    .loading-placeholder (빠른실행 항목 로딩)
+    .section-title      (미리보기 슬롯 라벨)
+
+  ── 커스텀 클래스 (.home-*) ──────────────────────────────────────────────
+    1) .home-hex-wrap, .home-hex-svg, .home-hex-line                — SVG 컨테이너
+    2) .home-hex-node, .home-hex-node-rect, .home-hex-node-label    — 노드 + 상태
+    3) .home-hex-center, .home-hex-logo, .home-hex-tagline          — 중앙 로고
+    4) .home-detail-panel + 5개 자식                                — 호버 패널
+    5) .home-a2-preview + 자식들                                    — 미리보기 보조
+    6) .home-search-row                                             — 검색 input wrap
+    7) .home-quick-dropdown, .home-quick-dd-item                    — 빠른실행 드롭다운
+    + @keyframes home-pulse                                         — 노드 펄스
+================================================================================
+-->
+
 <style>
-/* ── 홈 배너 ── */
-.home-banner {
-  background: linear-gradient(135deg, #3d2b1f 0%, #6b4226 100%);
-  padding: 28px 24px 24px;
-  flex-shrink: 0;
-  width: 100%;
-  box-sizing: border-box;
+
+/* ════════════════════════════════════════════════════════════
+   0. 홈 전용 오버라이드 (.page-header 공통 자산 위에 적용)
+════════════════════════════════════════════════════════════ */
+
+/* 상단 안내 배너 — 브라운 바탕 제거 + 중앙 정렬
+   ▸ background: transparent → 페이지 배경(--color-bg, 크림 아이보리) 노출
+   ▸ home.html에서만 .home-intro-header가 함께 부여되므로 다른 페이지의 .page-header에는 영향 없음 */
+.home-intro-header {
+  /* .page-header의 flex 레이아웃 무력화 → 자식 블록 쌓임 + text-align: center 정상 작동 */
+  display: block;
+  background: transparent;
+  color: var(--color-text-primary);
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: none;
+  box-shadow: none;
+}
+.home-intro-header .page-header-title {
+  color: var(--color-text-primary);
+}
+.home-intro-header .page-header-sub {
+  color: var(--color-text-secondary);
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   1. 6각형 다이어그램 (.home-hex-*)
+════════════════════════════════════════════════════════════ */
+
+.home-hex-wrap {
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  max-width: 600px;
+  margin: var(--space-6) auto var(--space-5);
+  aspect-ratio: 1 / 1;
 }
-.home-banner::before {
-  content: '₩';
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 4.5em;
-  font-weight: 900;
-  color: rgba(255,255,255,0.07);
-  line-height: 1;
+
+.home-hex-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.home-hex-line {
+  stroke: var(--color-border);
+  stroke-width: 2;
+  fill: none;
+}
+
+.home-hex-node {
+  cursor: pointer;
+  transform-origin: center;
+  transition: transform var(--transition-normal);
+}
+
+.home-hex-node-rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+  /* rx/ry는 SVG 속성으로 JS에서 setAttribute (구버전 브라우저 호환) */
+  transition: fill var(--transition-normal), stroke var(--transition-normal), stroke-width var(--transition-normal);
+}
+
+.home-hex-node-label {
+  font-family: inherit;
+  font-size: 0.842em;
+  font-weight: var(--fw-bold);
+  fill: var(--color-text-primary);
+  text-anchor: middle;
+  dominant-baseline: central;
   pointer-events: none;
-  letter-spacing: -2px;
 }
-.home-banner-slogan {
-  font-size: 1.3em;
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -0.5px;
-  line-height: 1.35;
-  margin-bottom: 8px;
+
+/* 호버 상태 */
+.home-hex-node:hover .home-hex-node-rect,
+.home-hex-node.hover .home-hex-node-rect {
+  fill: var(--color-surface-2);
+  stroke: var(--color-accent);
+  stroke-width: 2;
 }
-.home-banner-slogan span {
-  color: #f5b97d;
+.home-hex-node:hover,
+.home-hex-node.hover {
+  transform: scale(1.05);
 }
-.home-banner-sub {
-  font-size: 0.8em;
-  color: rgba(255,255,255,0.6);
-  font-weight: 400;
+
+/* 클릭 순간 피드백 */
+.home-hex-node.clicking {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-out;
+}
+
+/* 펄스 (호버·클릭 중에는 중단) */
+.home-hex-node:not(:hover):not(.hover):not(.clicking) {
+  animation: home-pulse 2s ease-in-out infinite;
+}
+
+/* 중앙 로고 박스 */
+.home-hex-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 2px solid var(--color-brand);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
+.home-hex-logo {
+  font-size: 1.5em;
+  font-weight: var(--fw-black);
+  color: var(--color-brand);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.home-hex-tagline {
+  font-size: 0.842em;
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
   line-height: 1.5;
 }
 
-/* ── 업그레이드 띠 (무료 플랜만) ── */
-.home-upgrade-bar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: linear-gradient(90deg, #fff8f2 0%, #fdf0e6 100%);
-  border-bottom: 1px solid #e8c9a8;
-  padding: 10px 24px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-.home-upgrade-bar.visible { display: flex; }
-.home-upgrade-bar-text {
-  font-size: 0.8em;
-  color: #5a3e2b;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.home-upgrade-btn {
-  height: 32px;
-  padding: 0 16px;
-  background: #c8753a;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.78em;
-  font-weight: 800;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background .15s;
-  flex-shrink: 0;
-}
-.home-upgrade-btn:hover { background: #b5642e; }
 
-/* ── 본문 래퍼 ── */
-.home-wrap {
-  padding: 16px 16px 32px;
+/* ════════════════════════════════════════════════════════════
+   2. 호버 설명 패널 (.home-detail-*)
+════════════════════════════════════════════════════════════ */
+
+.home-detail-panel {
+  max-width: 640px;
+  margin: 0 auto var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-height: 110px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-sizing: border-box;
-  width: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  opacity: 0.6;
+  transition: opacity var(--transition-normal), border-color var(--transition-normal);
+}
+.home-detail-panel.active {
+  opacity: 1;
+  border-color: var(--color-accent);
 }
 
-/* ── 바로 실행 타이틀 ── */
-.home-quick-title {
-  font-size: 0.78em;
-  font-weight: 700;
-  color: #8a6648;
-  letter-spacing: 0.02em;
-  margin-bottom: -8px;
+.home-detail-icon  { font-size: 1.6em; line-height: 1; }
+.home-detail-title { font-size: 1em; font-weight: var(--fw-black); color: var(--color-text-primary); }
+.home-detail-desc  { font-size: 0.842em; color: var(--color-text-secondary); line-height: 1.55; max-width: 480px; }
+.home-detail-hint  { font-size: 0.737em; color: var(--color-accent); font-weight: var(--fw-bold); margin-top: var(--space-1); }
+
+/* 초기 안내 (active 없을 때) */
+.home-detail-panel:not(.active)::before {
+  content: "⬆ 6개 영역에 마우스를 올려보세요";
+  font-size: 0.842em;
+  color: var(--color-text-tertiary);
+}
+.home-detail-panel:not(.active) > * { display: none; }
+
+
+/* ════════════════════════════════════════════════════════════
+   3. A2 UI 인라인 미리보기 (.home-a2-preview*)
+   ▸ .card 위에 fade-in + accent border만 커스텀
+════════════════════════════════════════════════════════════ */
+
+.home-a2-preview {
+  max-width: 640px;
+  margin: 0 auto var(--space-5);
+  border-color: var(--color-accent);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+.home-a2-preview.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-/* ── 바로 실행 카드 그리드 ── */
-.home-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-@media (max-width: 600px) {
-  .home-quick-grid { grid-template-columns: repeat(2, 1fr); }
-}
-.home-quick-card {
-  background: #fff;
-  border: 1px solid rgba(168,114,74,0.18);
-  border-radius: 12px;
-  padding: 14px 12px 12px;
+.home-a2-preview-inner {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-.home-quick-card-icon { font-size: 1.4em; line-height: 1; }
-.home-quick-card-label {
-  font-size: 0.84em;
-  font-weight: 700;
-  color: #3d2b1f;
-  margin-top: 2px;
-}
-.home-quick-card-desc {
-  font-size: 0.72em;
-  color: #9a7d67;
-  line-height: 1.35;
-  flex: 1;
-}
-.home-quick-card-btn {
-  margin-top: 8px;
-  height: 28px;
-  background: #c8753a;
-  color: #fff;
-  border: none;
-  border-radius: 7px;
-  font-size: 0.72em;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background .15s;
-}
-.home-quick-card-btn:hover { background: #b5642e; }
-
-/* ── 중단 2열 그리드 ── */
-.home-mid-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-@media (max-width: 500px) {
-  .home-mid-grid { grid-template-columns: 1fr; }
+  gap: var(--space-3);
 }
 
-/* ── 패널 ── */
-.home-panel {
-  background: #fff;
-  border: 1px solid rgba(168,114,74,0.18);
-  border-radius: 12px;
-  overflow: hidden;
+.home-a2-preview-hint {
+  font-size: 0.737em;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border);
 }
-.home-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 11px 14px;
-  border-bottom: 1px solid rgba(168,114,74,0.1);
-  background: #fdf8f3;
+
+/* 검색 input 행 — .input 위에 검색 아이콘만 얹음 */
+.home-search-row {
+  position: relative;
 }
-.home-panel-title {
-  font-size: 0.8em;
-  font-weight: 700;
-  color: #3d2b1f;
+.home-search-row .input {
+  padding-left: 40px;
 }
-.home-panel-more {
-  font-size: 0.7em;
-  color: #c8753a;
-  font-weight: 600;
-  cursor: pointer;
-}
-.home-panel-more:hover { text-decoration: underline; }
-.home-panel-body { padding: 6px 0; }
-.home-panel-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 14px;
-  font-size: 0.78em;
-  color: #3d2b1f;
-  cursor: pointer;
-  transition: background .12s;
-  gap: 8px;
-}
-.home-panel-item:hover { background: #fdf8f3; }
-.home-panel-item-badge {
-  display: inline-block;
-  background: #fff3e8;
-  color: #c8753a;
-  font-size: 0.72em;
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 1px 5px;
-  margin-left: 5px;
-  vertical-align: middle;
-}
-.home-panel-item-arrow {
-  color: #c8a88a;
+.home-search-row::before {
+  content: "🔍";
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
   font-size: 1em;
-  flex-shrink: 0;
-}
-.home-panel-empty {
-  padding: 8px 14px;
-  font-size: 0.72em;
-  color: #b09a88;
+  pointer-events: none;
+  opacity: 0.7;
 }
 
-/* ── 뉴스 아이템 ── */
-.home-news-item {
-  padding: 9px 14px;
-  border-bottom: 1px solid rgba(168,114,74,0.08);
-  cursor: pointer;
-  transition: background .12s;
+/* 빠른실행 드롭다운 (tokens.css에 드롭다운 패턴 없음 → 커스텀) */
+.home-quick-dropdown {
+  margin-top: var(--space-2);
+  display: none;             /* 기본 닫힘. 토글 버튼으로만 열림 */
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  max-height: 280px;
+  overflow-y: auto;
 }
-.home-news-item:last-child { border-bottom: none; }
-.home-news-item:hover { background: #fdf8f3; }
-.home-news-title {
-  font-size: 0.78em;
-  color: #3d2b1f;
-  font-weight: 500;
-  line-height: 1.4;
-  margin-bottom: 4px;
-}
-.home-news-meta {
+.home-quick-dd-item {
   display: flex;
-  gap: 8px;
-  font-size: 0.68em;
-  color: #9a7d67;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.842em;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.home-quick-dd-item:last-child { border-bottom: none; }
+.home-quick-dd-item:hover { background: var(--color-surface); }
+
+/* 빠른실행 슬롯 — 라벨·버튼 우측 정렬 (드롭다운·안내는 영향 없음) */
+#home-a2-preview-quick .section-title { justify-content: flex-end; }
+#home-a2-preview-quick > .btn { display: block; margin-left: auto; }
+
+
+/* ════════════════════════════════════════════════════════════
+   4. Keyframes
+════════════════════════════════════════════════════════════ */
+
+@keyframes home-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.02); }
 }
 
-/* ── 게시판 배지 ── */
-.home-board-badge {
-  display: inline-block;
-  font-size: 0.72em;
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 1px 5px;
-  margin-right: 4px;
-  vertical-align: middle;
+
+/* ════════════════════════════════════════════════════════════
+   5. 모바일 반응형 (≤640px)
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+
+  .home-hex-wrap {
+    max-width: 360px;
+    margin: var(--space-4) auto;
+  }
+
+  .home-hex-node-label { font-size: 0.737em; }
+
+  .home-hex-center { padding: var(--space-3) var(--space-4); }
+  .home-hex-logo   { font-size: 1.2em; }
+  .home-hex-tagline { font-size: 0.737em; }
+
+  /* 호버 비활성 (터치 디바이스) */
+  .home-hex-node:hover .home-hex-node-rect {
+    fill: var(--color-surface);
+    stroke: var(--color-border);
+    stroke-width: 1.5;
+  }
+  .home-hex-node:hover { transform: none; }
+
+  /* 호버 설명 패널 숨김 (모바일은 탭 = 즉시 반응) */
+  .home-detail-panel { display: none; }
+
+  /* 미리보기 패딩 축소 */
+  .home-a2-preview { padding: var(--space-4); }
 }
-.badge-notice         { background: #fff0e0; color: #c8753a; }
-.badge-product        { background: #e8f4ff; color: #2d7bbf; }
-.badge-underwriting   { background: #edfaf0; color: #2a8a4a; }
+
 </style>
 
-<!-- 배너 슬롯 -->
+
+<!-- ════════════════════════════════════════════════════════════
+     HTML 마크업
+════════════════════════════════════════════════════════════ -->
+
+<!-- 페이지 배너 슬롯 (app_settings에서 주입) -->
 <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
 
-<!-- ── 무료 플랜 업그레이드 띠 ── -->
-<div class="home-upgrade-bar" id="home-upgrade-bar">
-  <div class="home-upgrade-bar-text">
-    🔒 무료 플랜 이용 중 &nbsp;·&nbsp; 스크립트 작성·게시판 글쓰기는 PRO에서 가능합니다
+
+<!-- 1. 상단 안내 — .page-header 공통 자산 + .home-intro-header 오버라이드 -->
+<div class="page-header home-intro-header">
+  <div>
+    <div class="page-header-title">상담 중, 원세컨드는 이렇게 작동합니다</div>
+    <div class="page-header-sub">6개 핵심 기능이 유기적으로 연결된 17년 현장 도구</div>
   </div>
-  <button class="home-upgrade-btn" onclick="alert('준비 중입니다.')">
-    30일 무료체험 시작하기 →
-  </button>
+  <div class="page-header-icon">⬡</div>
 </div>
 
-<!-- ── 본문 ── -->
-<div class="home-wrap">
 
-  <!-- 바로 실행 카드 -->
-  <div class="home-quick-title">🔥 바로 실행 — 자주 쓰는 스크립트</div>
-  <div class="home-quick-grid">
-    <div class="home-quick-card">
-      <div class="home-quick-card-icon">📞</div>
-      <div class="home-quick-card-label">도입 인사</div>
-      <div class="home-quick-card-desc">통화 시작 첫 멘트</div>
-      <button class="home-quick-card-btn" onclick="window.switchMenu('scripts')">바로 실행 →</button>
-    </div>
-    <div class="home-quick-card">
-      <div class="home-quick-card-icon">⚡</div>
-      <div class="home-quick-card-label">반론 대응</div>
-      <div class="home-quick-card-desc">"바빠요" "생각해볼게요"</div>
-      <button class="home-quick-card-btn" onclick="window.switchMenu('scripts')">바로 실행 →</button>
-    </div>
-    <div class="home-quick-card">
-      <div class="home-quick-card-icon">✅</div>
-      <div class="home-quick-card-label">클로징</div>
-      <div class="home-quick-card-desc">계약 마무리 멘트</div>
-      <button class="home-quick-card-btn" onclick="window.switchMenu('scripts')">바로 실행 →</button>
-    </div>
-    <div class="home-quick-card">
-      <div class="home-quick-card-icon">🔥</div>
-      <div class="home-quick-card-label">필요성 강조</div>
-      <div class="home-quick-card-desc">보험 필요성 어필</div>
-      <button class="home-quick-card-btn" onclick="window.switchMenu('scripts')">바로 실행 →</button>
-    </div>
-  </div>
+<!-- 2. A2 UI 인라인 미리보기 영역 (검색기/빠른실행 노드 클릭 시 표시) -->
+<div id="home-a2-preview" class="card home-a2-preview" style="display:none;">
+  <div class="home-a2-preview-inner">
 
-  <!-- 중단 2열 패널 -->
-  <div class="home-mid-grid">
-
-    <!-- 나의 스크립트 -->
-    <div class="home-panel">
-      <div class="home-panel-header">
-        <div class="home-panel-title">📌 나의 스크립트</div>
-        <span class="home-panel-more" onclick="window.switchMenu('myspace')">MY SPACE →</span>
+    <!-- 검색기 슬롯 -->
+    <div id="home-a2-preview-search" class="home-a2-preview-slot" style="display:none;">
+      <div class="section-title">🔍 검색기</div>
+      <div class="home-search-row">
+        <input type="text" class="input" id="home-search-input"
+               placeholder="검색어 입력 후 Enter"
+               autocomplete="off"
+               onkeydown="if(event.key==='Enter')window.homePreviewSearchEnter(this.value)">
       </div>
-      <div class="home-panel-body">
-        <div class="home-panel-item">
-          <span>시간 회피형 멘트<span class="home-panel-item-badge">즐겨찾기</span></span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span>좋은 보험은 이렇게 구성됩니다</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span>보험 점검형 오프닝</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-empty">+ MY SPACE에서 스크립트를 추가하세요</div>
+      <div class="home-a2-preview-hint">
+        💡 Enter를 누르면 스크립트, 게시글, 업무자료를 한번에 검색할 수 있어요
       </div>
     </div>
 
-    <!-- 오늘의 보험뉴스 -->
-    <div class="home-panel">
-      <div class="home-panel-header">
-        <div class="home-panel-title">📰 오늘의 보험뉴스</div>
-        <span class="home-panel-more" onclick="window.switchMenu('news')">더보기 →</span>
-      </div>
-      <div class="home-panel-body">
-        <div class="home-news-item">
-          <div class="home-news-title">금융위, 실손보험 구조개편안 발표…4세대 전환 가속화</div>
-          <div class="home-news-meta"><span>보험업계</span><span>2026.04.10</span></div>
-        </div>
-        <div class="home-news-item">
-          <div class="home-news-title">TM 채널 규제 강화, 녹취 기준 일부 변경 예고</div>
-          <div class="home-news-meta"><span>규제·정책</span><span>2026.04.09</span></div>
-        </div>
-        <div class="home-news-item">
-          <div class="home-news-title">메리츠화재, 간편심사 상품 라인업 확대 발표</div>
-          <div class="home-news-meta"><span>상품</span><span>2026.04.08</span></div>
+    <!-- 빠른실행 슬롯 -->
+    <div id="home-a2-preview-quick" class="home-a2-preview-slot" style="display:none;">
+      <div class="section-title">⚡ 빠른실행</div>
+      <button class="btn btn-primary" onclick="window.homePreviewQuickToggle()">
+        ⚡ 빠른 실행 ▾
+      </button>
+      <div class="home-quick-dropdown" id="home-quick-preview-dropdown">
+        <div id="home-quick-preview-items">
+          <div class="loading-placeholder">불러오는 중...</div>
         </div>
       </div>
-    </div>
-
-    <!-- 최신 게시글 -->
-    <div class="home-panel">
-      <div class="home-panel-header">
-        <div class="home-panel-title">📋 최신 게시글</div>
-        <span class="home-panel-more" onclick="window.switchMenu('board')">게시판 →</span>
-      </div>
-      <div class="home-panel-body">
-        <div class="home-panel-item">
-          <span><span class="home-board-badge badge-notice">공지</span>4월 인수기준 변경사항 안내</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span><span class="home-board-badge badge-underwriting">인수Q&amp;A</span>고혈압 3년 경과 후 가입 가능 여부</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span><span class="home-board-badge badge-product">상품Q&amp;A</span>흥국생명 간편형 실비 인수 기준 질문</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Leader Pick -->
-    <div class="home-panel">
-      <div class="home-panel-header">
-        <div class="home-panel-title">👍 Leader Pick</div>
-        <span class="home-panel-more" onclick="window.switchMenu('scripts')">스크립트 →</span>
-      </div>
-      <div class="home-panel-body">
-        <div class="home-panel-item">
-          <span>보험 조회 안내형</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span>시간 회피형</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span>통화 차단형 대응</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span>보험 점검형</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
-        <div class="home-panel-item">
-          <span>보장 분석 안내형</span>
-          <span class="home-panel-item-arrow">›</span>
-        </div>
+      <div class="home-a2-preview-hint">
+        💡 상단 헤더의 「⚡」 버튼이 같은 기능입니다
       </div>
     </div>
 
   </div>
-  <!-- 끝: 중단 2열 -->
-
 </div>
 
+
+<!-- 3. 6각형 다이어그램 컨테이너 (청크 2: JS가 SVG + 중앙 로고 주입) -->
+<div class="home-hex-wrap" id="homeHexWrap"></div>
+
+
+<!-- 4. 호버 설명 패널 -->
+<div id="home-detail-panel" class="home-detail-panel"></div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     <script> 청크 2/3 — NODES + SVG 렌더 + 호버/클릭 핸들러
+     ▸ 청크 3에서 미리보기 함수가 별도 <script>로 추가됨
+     ▸ home.html은 사용자 정보 의존도 0 → appstate:ready 대기 불필요
+================================================================================ -->
 <script>
-(function() {
-  function showUpgradeBar() {
-    var bar = document.getElementById('home-upgrade-bar');
-    if (bar) bar.classList.add('visible');
+(function () {
+  'use strict';
+
+  // ──────────────────────────────────────────────────────────
+  // NODES 데이터 (지시서 4-4 확정 — 6개 고정, 추가·삭제 금지)
+  // angle: 12시(0°)부터 시계방향, 60° 간격으로 6개 꼭짓점 배치
+  // ──────────────────────────────────────────────────────────
+  var NODES = [
+    {
+      id: 'scripts',
+      label: '📜 스크립트',
+      title: '📜 스크립트',
+      description: '17년 현장 경험이 담긴 멘트. 도입 → 필요성 → 반론 대응까지. 상담 흐름 그대로 준비됐습니다.',
+      angle: 0,            // 12시
+      behavior: 'navigate',
+      target: 'scripts'
+    },
+    {
+      id: 'board',
+      label: '💬 현장 Q&A',
+      title: '💬 현장 Q&A',
+      description: '설계사들의 질문과 답변이 쌓이는 곳. 혼자 고민하지 말고, 팀 동료들의 경험을 활용하세요.',
+      angle: 60,           // 2시
+      behavior: 'navigate',
+      target: 'board'
+    },
+    {
+      id: 'quick',
+      label: '⚡ 빠른실행',
+      title: '⚡ 빠른실행',
+      description: '자주 쓰는 회사 양식, 연결 페이지를 한 번 클릭으로 실행. 상단 헤더의 「빠른 실행」 버튼을 눌러보세요.',
+      angle: 120,          // 4시
+      behavior: 'inline-preview',
+      previewType: 'quick'
+    },
+    {
+      id: 'myspace',
+      label: '📁 MY SPACE',
+      title: '📁 MY SPACE',
+      description: '나만의 자료를 저장하는 공간. 자주 쓰는 멘트, 회사 양식, 개인 스크립트를 한 곳에서 관리.',
+      angle: 180,          // 6시
+      behavior: 'navigate',
+      target: 'myspace'
+    },
+    {
+      id: 'together',
+      label: '🤝 함께해요',
+      title: '🤝 함께해요',
+      description: '원세컨드는 현장의 목소리로 만들어집니다. 불편한 점, 필요한 기능을 직접 제안할 수 있습니다.',
+      angle: 240,          // 8시
+      behavior: 'navigate',
+      target: 'together'
+    },
+    {
+      id: 'search',
+      label: '🔍 검색기',
+      title: '🔍 검색기',
+      description: '스크립트, 게시글, 업무자료를 검색어 하나로 즉시 찾기. 상단 헤더의 검색창이 같은 기능입니다.',
+      angle: 300,          // 10시
+      behavior: 'inline-preview',
+      previewType: 'search'
+    }
+  ];
+
+  // ──────────────────────────────────────────────────────────
+  // SVG 좌표 상수 (모두 변수화 — 하드코딩 금지 원칙)
+  // ──────────────────────────────────────────────────────────
+  var VIEW_W = 600;
+  var VIEW_H = 600;
+  var CX     = 300;        // 중심 X
+  var CY     = 300;        // 중심 Y
+  var R_HEX  = 220;        // 중심에서 노드 중심까지 반지름
+  var NODE_W = 140;
+  var NODE_H = 80;
+  /* tokens.css의 --radius-md(12px) 미러링.
+     SVG rx/ry CSS는 구버전 브라우저 비호환으로 JS 속성 설정 */
+  var RECT_RADIUS = 12;
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  // angle(°) → SVG 좌표 변환 (12시=0°, 시계방향)
+  function angleToXY(angleDeg) {
+    var rad = angleDeg * Math.PI / 180;
+    return {
+      x: CX + R_HEX * Math.sin(rad),
+      y: CY - R_HEX * Math.cos(rad)
+    };
   }
 
-  function isPro() {
-    var role = window._userRole || '';
-    if (['manager','branch_manager'].includes(role)) return true;
-    var plan = window._userPlan || '';
-    return plan === 'pro';
+  // ──────────────────────────────────────────────────────────
+  // SVG 동적 생성 (라인 6개 + 노드 6개 + 중앙 로고)
+  // 색상은 모두 CSS 변수 (.home-hex-* 클래스)에서 관리
+  // ──────────────────────────────────────────────────────────
+  function renderHex() {
+    var wrap = document.getElementById('homeHexWrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';   // 재호출 안전 (예: 모바일 회전)
+
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + VIEW_W + ' ' + VIEW_H);
+    svg.setAttribute('class', 'home-hex-svg');
+
+    // 1) 중심 → 각 노드 중심으로 라인
+    NODES.forEach(function (node) {
+      var pt = angleToXY(node.angle);
+      var line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('class', 'home-hex-line');
+      line.setAttribute('x1', CX);
+      line.setAttribute('y1', CY);
+      line.setAttribute('x2', pt.x);
+      line.setAttribute('y2', pt.y);
+      svg.appendChild(line);
+    });
+
+    // 2) 각 노드 그룹 (rect + label)
+    NODES.forEach(function (node) {
+      var pt = angleToXY(node.angle);
+
+      var g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('class', 'home-hex-node');
+      g.setAttribute('id', 'home-node-' + node.id);
+      g.addEventListener('mouseenter', function () { window.homeNodeHover(node.id); });
+      g.addEventListener('mouseleave', function () { window.homeNodeOut(node.id); });
+      g.addEventListener('click',      function () { window.homeNodeClick(node.id); });
+
+      var rect = document.createElementNS(SVG_NS, 'rect');
+      rect.setAttribute('class', 'home-hex-node-rect');
+      rect.setAttribute('x', pt.x - NODE_W / 2);
+      rect.setAttribute('y', pt.y - NODE_H / 2);
+      rect.setAttribute('width', NODE_W);
+      rect.setAttribute('height', NODE_H);
+      rect.setAttribute('rx', RECT_RADIUS);
+      rect.setAttribute('ry', RECT_RADIUS);
+      g.appendChild(rect);
+
+      var text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute('class', 'home-hex-node-label');
+      text.setAttribute('x', pt.x);
+      text.setAttribute('y', pt.y);
+      text.textContent = node.label;
+      g.appendChild(text);
+
+      svg.appendChild(g);
+    });
+
+    wrap.appendChild(svg);
+
+    // 3) 중앙 로고 박스 (SVG 위에 절대 위치 div, pointer-events: none)
+    var center = document.createElement('div');
+    center.className = 'home-hex-center';
+    center.innerHTML =
+      '<div class="home-hex-logo">원세컨드</div>' +
+      '<div class="home-hex-tagline">17년 현장이 담긴<br>TM 상담 도구</div>';
+    wrap.appendChild(center);
   }
 
-  function checkUpgradeBar() {
-    if (window._userPlan !== undefined) {
-      if (!isPro()) showUpgradeBar();
+  // ──────────────────────────────────────────────────────────
+  // 노드 호버 (데스크탑 — 모바일은 CSS에서 :hover 비활성)
+  // ──────────────────────────────────────────────────────────
+  window.homeNodeHover = function (nodeId) {
+    var node = NODES.filter(function (n) { return n.id === nodeId; })[0];
+    if (!node) return;
+
+    var panel = document.getElementById('home-detail-panel');
+    if (panel) {
+      panel.innerHTML =
+        '<div class="home-detail-icon">' + (node.label.split(' ')[0] || '') + '</div>' +
+        '<div class="home-detail-title">' + node.title + '</div>' +
+        '<div class="home-detail-desc">' + node.description + '</div>' +
+        '<div class="home-detail-hint">' +
+          (node.behavior === 'inline-preview'
+            ? '노드를 클릭하면 바로 미리보기가 나타납니다'
+            : '노드를 클릭하면 해당 페이지로 이동합니다') +
+        '</div>';
+      panel.classList.add('active');
+    }
+
+    var nodeEl = document.getElementById('home-node-' + nodeId);
+    if (nodeEl) nodeEl.classList.add('hover');
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 노드 호버 아웃 — 패널은 유지(마지막 호버 정보 계속 표시)
+  // ──────────────────────────────────────────────────────────
+  window.homeNodeOut = function (nodeId) {
+    var nodeEl = document.getElementById('home-node-' + nodeId);
+    if (nodeEl) nodeEl.classList.remove('hover');
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 노드 클릭 — behavior 분기 (navigate vs inline-preview)
+  // ▸ inline-preview: 청크 3에서 정의될 window.homeShowPreview 호출
+  // ▸ navigate:       window.switchMenu(target) 호출
+  // ──────────────────────────────────────────────────────────
+  window.homeNodeClick = function (nodeId) {
+    var node = NODES.filter(function (n) { return n.id === nodeId; })[0];
+    if (!node) return;
+
+    // 클릭 피드백 (0.1초 scale-down)
+    var nodeEl = document.getElementById('home-node-' + nodeId);
+    if (nodeEl) {
+      nodeEl.classList.add('clicking');
+      setTimeout(function () { nodeEl.classList.remove('clicking'); }, 100);
+    }
+
+    if (node.behavior === 'inline-preview') {
+      if (window.homeShowPreview) {
+        window.homeShowPreview(node.previewType);
+      }
+    } else if (node.behavior === 'navigate') {
+      if (window.switchMenu) {
+        window.switchMenu(node.target);
+      }
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 초기 렌더 — DOM은 이미 (위쪽 HTML로) 준비되어 있음
+  // ──────────────────────────────────────────────────────────
+  renderHex();
+
+})();
+</script>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     <script> 청크 3/3 — 미리보기 핸들러 + 영역밖 클릭
+     ▸ A2 함수(doSearch, loadQuickDdItems, openQuickOverlay) 호출 시
+       typeof === 'function' 가드 선행
+     ▸ 빠른실행 항목은 A2의 #quick-dd-items 결과를 미러링하여 표시
+       (loadQuickDdItems 1회 호출 + 인라인 onclick=openQuickOverlay 그대로 동작)
+================================================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  var quickItemsLoaded = false;
+
+  // ──────────────────────────────────────────────────────────
+  // 미리보기 영역 표시 — 검색기 또는 빠른실행 슬롯 활성화
+  // ──────────────────────────────────────────────────────────
+  window.homeShowPreview = function (previewType) {
+    var container  = document.getElementById('home-a2-preview');
+    var searchSlot = document.getElementById('home-a2-preview-search');
+    var quickSlot  = document.getElementById('home-a2-preview-quick');
+    if (!container || !searchSlot || !quickSlot) return;
+
+    searchSlot.style.display = (previewType === 'search') ? 'block' : 'none';
+    quickSlot.style.display  = (previewType === 'quick')  ? 'block' : 'none';
+
+    // fade-in (display 후 다음 프레임에서 .show 토글)
+    container.style.display = 'block';
+    requestAnimationFrame(function () {
+      container.classList.add('show');
+    });
+
+    if (previewType === 'quick') {
+      loadQuickItemsIfNeeded();
+    } else if (previewType === 'search') {
+      setTimeout(function () {
+        var inp = document.getElementById('home-search-input');
+        if (inp) { try { inp.focus(); } catch (e) {} }
+      }, 120);
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 미리보기 숨김 — fade-out 후 display:none
+  // ──────────────────────────────────────────────────────────
+  window.homeHidePreview = function () {
+    var container = document.getElementById('home-a2-preview');
+    if (!container) return;
+    container.classList.remove('show');
+    setTimeout(function () { container.style.display = 'none'; }, 250);
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 검색 Enter — A2의 doSearch 직접 호출 (Q3 결정: Enter만 작동)
+  // doSearch가 #content-area를 검색 결과로 교체 → home은 자동으로 사라짐
+  // ──────────────────────────────────────────────────────────
+  window.homePreviewSearchEnter = function (q) {
+    q = (q || '').trim();
+    if (!q) return;
+    if (typeof window.doSearch === 'function') {
+      window.doSearch(q);
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 빠른실행 드롭다운 토글 (펼쳐진 상태로 시작)
+  // ──────────────────────────────────────────────────────────
+  window.homePreviewQuickToggle = function () {
+    var dd = document.getElementById('home-quick-preview-dropdown');
+    if (!dd) return;
+    /* getComputedStyle: CSS .home-quick-dropdown { display:none } 을 읽기 위해.
+       dd.style.display는 인라인만 읽어서 빈 문자열이 나오는 문제 회피 */
+    var isOpen = getComputedStyle(dd).display !== 'none';
+    dd.style.display = isOpen ? 'none' : 'block';
+  };
+
+  // ──────────────────────────────────────────────────────────
+  // 빠른실행 항목 로드 — A2 결과를 home으로 미러링
+  // ▸ window.loadQuickDdItems가 #quick-dd-items에 박음 (인라인 onclick 포함)
+  // ▸ dataset.loaded='true' 신호 후 innerHTML 복사
+  // ──────────────────────────────────────────────────────────
+  function loadQuickItemsIfNeeded() {
+    if (quickItemsLoaded) return;
+    var homeContainer = document.getElementById('home-quick-preview-items');
+    if (!homeContainer) return;
+
+    if (typeof window.loadQuickDdItems !== 'function' || typeof window.openQuickOverlay !== 'function') {
+      homeContainer.innerHTML =
+        '<div class="loading-placeholder" style="color:var(--color-danger);">' +
+        '빠른실행 함수를 찾을 수 없습니다 (loadQuickDdItems / openQuickOverlay)</div>';
       return;
     }
-    var userId = window._userId;
-    var url = window.SUPABASE_URL;
-    var key = window.SUPABASE_KEY;
-    var token = window._userToken;
-    if (!userId || !url || !key) { showUpgradeBar(); return; }
 
-    fetch(url + '/rest/v1/users?id=eq.' + userId + '&select=plan,role', {
-      headers: { 'apikey': key, 'Authorization': 'Bearer ' + (token || key) }
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var row = data && data[0];
-      window._userPlan = (row && row.plan) || 'free';
-      window._userRole = window._userRole || (row && row.role) || '';
-      if (!isPro()) showUpgradeBar();
-    })
-    .catch(function() { showUpgradeBar(); });
+    window.loadQuickDdItems();
+    mirrorQuickItems(0);
   }
 
-  /* [TEMP] 첫 배포 정책(2026-04-21): 모든 가입자 허용. v1.2에서 복원 예정 */
-  /* setTimeout(checkUpgradeBar, 700); */
+  function mirrorQuickItems(attempt) {
+    var src = document.getElementById('quick-dd-items');
+    var dst = document.getElementById('home-quick-preview-items');
+    if (!src || !dst) return;
+
+    if (src.dataset.loaded === 'true') {
+      dst.innerHTML = src.innerHTML;
+      // 보여주기 전용 — 모든 onclick 제거 (A2 헤더의 ⚡이 실제 실행 담당)
+      var items = dst.querySelectorAll('[onclick]');
+      for (var i = 0; i < items.length; i++) {
+        items[i].removeAttribute('onclick');
+        items[i].style.cursor = 'default';
+      }
+      quickItemsLoaded = true;
+      return;
+    }
+    if (attempt >= 20) {        // 약 2초 폴링
+      dst.innerHTML =
+        '<div class="loading-placeholder" style="color:var(--color-danger);">' +
+        '항목 로드에 실패했습니다</div>';
+      return;
+    }
+    setTimeout(function () { mirrorQuickItems(attempt + 1); }, 100);
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // 영역밖 클릭 → 미리보기 닫기
+  // ▸ 미리보기 컨테이너 또는 6각형 wrap 안 클릭은 무시
+  // ──────────────────────────────────────────────────────────
+  document.addEventListener('click', function (e) {
+    var container = document.getElementById('home-a2-preview');
+    if (!container || container.style.display === 'none') return;
+
+    if (container.contains(e.target)) return;
+
+    var hexWrap = document.getElementById('homeHexWrap');
+    if (hexWrap && hexWrap.contains(e.target)) return;
+
+    window.homeHidePreview();
+  });
+
+  // init: 미리보기 hidden·호버 패널 placeholder·6각형 모두 청크 1·2에서 처리됨
+  // 영역밖 클릭 핸들러는 위에서 등록 완료 — 별도 init() 호출 불필요
+
 })();
 </script>
