@@ -735,7 +735,8 @@ function renderProBadge(plan, role) {
 async function applyMenuSettings() {
   // [2026-04-17] 관리자는 표시 설정과 무관하게 항상 모든 메뉴 표시
   // (실제 사용자 화면은 admin.html의 미리보기로 확인)
-  if (window.AppState && window.AppState.role === 'admin') return;
+  // [2026-04-23] 00_MASTER.md 5-4항 — admin·branch_manager 둘 다 관리자 예외
+  if (window.AppState && ['admin','branch_manager'].includes(window.AppState.role)) return;
   try {
     var res = await window.db.fetch('/rest/v1/app_settings?group_name=eq.menu_b&select=key,value');
     if (!res.ok) return;
@@ -763,7 +764,8 @@ async function applyMenuSettings() {
 async function applyGateSettings() {
   // [2026-04-17] 관리자는 게이트와 무관하게 전체 기능 접근
   // (실제 사용자 화면은 admin.html의 미리보기로 확인)
-  if (window.AppState && window.AppState.role === 'admin') return;
+  // [2026-04-23] 00_MASTER.md 5-4항 — admin·branch_manager 둘 다 관리자 예외
+  if (window.AppState && ['admin','branch_manager'].includes(window.AppState.role)) return;
 
   /* [TEMP] 첫 배포 정책(2026-04-21): 모든 가입자 허용. v1.2에서 복원 예정 */
   var quickGateOn  = false;
