@@ -1072,95 +1072,6 @@ header.scrolled{
   font-weight: 500 !important;
 }
 
-/* ── PRICING ── */
-.pricing {
-  padding:64px 40px;
-  background:var(--cream);
-}
-.pricing .sec-title { color:var(--brown-dark); }
-.pricing .sec-sub { color:var(--text-light); }
-
-.price-grid {
-  display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;
-  max-width:1060px; margin:0 auto;
-  align-items:stretch;
-}
-.price-card {
-  background:white;
-  border:1.5px solid rgba(168,114,74,0.18);
-  border-radius:16px; padding:28px 24px;
-  box-shadow:0 4px 16px rgba(61,43,31,0.05);
-  display:flex; flex-direction:column;
-  transition:all 0.22s;
-}
-.price-card:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(61,43,31,0.1); }
-.price-card.hot {
-  border:2px solid var(--brown-dark);
-  box-shadow:0 6px 24px rgba(61,43,31,0.12);
-}
-.price-badge {
-  display:inline-block; padding:3px 12px;
-  border-radius:99px; font-size:11px; font-weight:700; margin-bottom:16px;
-  background:var(--brown-pale); color:var(--brown-mid);
-}
-.price-badge.hot { background:var(--accent); color:white; }
-.price-num {
-  font-size:36px; font-weight:900; color:var(--brown-dark);
-  letter-spacing:-1.5px; line-height:1;
-}
-.price-num span { font-size:14px; font-weight:400; color:var(--text-light); letter-spacing:0; }
-.price-trial { font-size:12px; color:var(--accent); font-weight:700; margin-top:4px; margin-bottom:14px; }
-.price-note {
-  font-size:11px; color:var(--text-light);
-  background:var(--brown-pale); border-radius:7px;
-  padding:9px 11px; margin-bottom:18px; line-height:1.65;
-}
-.price-list { list-style:none; flex:1; margin-bottom:20px; }
-.price-list li {
-  font-size:12px; color:var(--text-mid);
-  padding:7px 0; border-bottom:1px solid #f0e6dc;
-  display:flex; align-items:center; gap:7px;
-}
-.price-list li::before { content:"✓"; color:var(--accent); font-weight:700; flex-shrink:0; }
-.price-list li.no { color:var(--text-light); text-decoration:line-through; }
-.price-list li.no::before { content:"✕"; color:#ccc; }
-.price-btn {
-  width:100%; padding:13px;
-  background:var(--accent); color:white;
-  border:none; border-radius:9px;
-  font-size:14px; font-weight:700; font-family:'Noto Sans KR',sans-serif;
-  cursor:pointer; letter-spacing:-0.3px; transition:all 0.2s;
-}
-.price-btn:hover { background:var(--accent-dark); transform:translateY(-1px); }
-.price-btn.ghost {
-  background:transparent; color:var(--brown-mid);
-  border:1.5px solid rgba(168,114,74,0.3);
-}
-.price-btn.ghost:hover { background:var(--brown-pale); }
-
-
-/* ── B2B 카드 ── */
-.price-card.b2b {
-  border:2px solid var(--accent);
-  background:linear-gradient(145deg,#3d2b1f,#6b4226);
-}
-.price-card.b2b:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(200,117,58,0.25); }
-.price-card.b2b .price-badge { background:rgba(200,117,58,0.25); color:#f5c89a; }
-.price-card.b2b .price-num { color:#fff; font-size:26px; }
-.price-card.b2b .price-trial { color:#f5c89a; }
-.price-card.b2b .price-note { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.85); line-height:1.8; }
-.price-card.b2b .price-list li { color:rgba(255,255,255,0.85); border-bottom-color:rgba(255,255,255,0.1); }
-.price-card.b2b .price-list li::before { color:#f5c89a; }
-.price-btn.b2b-btn {
-  width:100%; padding:13px;
-  background:#fff; color:#3d2b1f;
-  border:none; border-radius:9px;
-  font-size:14px; font-weight:700; font-family:'Noto Sans KR',sans-serif;
-  cursor:pointer; letter-spacing:-0.3px; transition:all 0.2s;
-  text-decoration:none; display:block; text-align:center; margin-top:auto;
-}
-.price-btn.b2b-btn:hover { background:#f5ede4; transform:translateY(-1px); }
-
 /* ── 푸터 ── */
 footer {
   background:var(--brown-dark);
@@ -1185,7 +1096,6 @@ footer {
   .hero { grid-template-columns:1fr; padding:72px 24px 48px; gap:36px; }
   .hero-title { font-size:clamp(28px, 8vw, 42px) !important; letter-spacing:-1.5px; }
   .feat-grid { grid-template-columns:1fr 1fr; }
-  .price-grid { grid-template-columns:1fr; max-width:440px; }
   .target-grid { grid-template-columns:1fr; }
   footer { gap:12px; }
   .ft-sep { display:none; }
@@ -1196,7 +1106,7 @@ footer {
 }
 @media(max-width:640px){
   header { padding:0 20px; }
-  .features,.pricing { padding:48px 20px; }
+  .features { padding:48px 20px; }
   .reality-section, .vs-section, .target-cta-section { padding:56px 20px; }
   .feat-grid { grid-template-columns:1fr; }
   footer { padding:20px; flex-direction:column; gap:8px; text-align:center; }
@@ -1539,7 +1449,7 @@ footer {
   <div class="logo">원세컨드 <span>1s</span></div>
   <div class="header-right">
     <a class="header-login" href="login.html">로그인</a>
-    <button class="header-btn" onclick="openModal()">30일 무료체험</button>
+    <button class="header-btn" onclick="openModal()">무료회원 가입하기</button>
   </div>
 </header>
 
@@ -1559,7 +1469,7 @@ footer {
         막히는 순간, 화면에 보이는 그대로 읽으세요.
       </p>
       <a href="#" class="inaction-cta" onclick="event.preventDefault(); openModal();">
-        30일 무료체험 시작하기 →
+        무료회원 가입하기
       </a>
       <div class="inaction-cardinfo">신용카드 불필요 · 30일 후 월 9,900원</div>
       <div class="inaction-stats">
@@ -1597,7 +1507,7 @@ footer {
       <h1 class="hero-title">메시지 <span class="big-num">330개</span>.<br>필요한 건 단 <em>3개</em>.</h1>
       <p class="hero-sub"><strong>상담 중 멈추지 않는 1초.</strong><br>하루 수백 개 단톡방 알림에 휩쓸리지 않고,<br>고객에게 필요한 한 문장을 바로 꺼내세요.</p>
       <div>
-        <button class="cta-main" onclick="openModal()">30일 무료체험 시작하기 →</button>
+        <button class="cta-main" onclick="openModal()">무료회원 가입하기</button>
         <p class="cta-note">신용카드 불필요 · 30일 후 월 9,900원</p>
       </div>
       <div class="hero-stats">
@@ -1900,7 +1810,7 @@ footer {
         <div class="target-badge-top">설계사 · 팀장</div>
         <div class="target-card-title">지금 상담 중<br>멈추지 않으려면</div>
         <div class="target-card-desc">17년 현장 경험으로 만든 스크립트 · 게시판 · 퀵 도구. 30일 무료로 직접 써보세요. 단톡방 없이도 통화가 끊기지 않습니다.</div>
-        <button class="target-card-btn" onclick="openModal()">30일 무료로 시작하기 →</button>
+        <button class="target-card-btn" onclick="openModal()">무료회원 가입하기</button>
       </div>
 
       <!-- 매니저/지점장 카드 -->
@@ -1941,63 +1851,6 @@ footer {
     </button>
 
     <p class="together-note">여러분의 한마디가 다음 업데이트가 됩니다</p>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="pricing">
-  <div class="sec-inner">
-    <div class="sec-eyebrow" style="color:var(--accent);">PRICING</div>
-    <h2 class="sec-title">요금제</h2>
-    <p class="sec-sub">30일 무료체험 후 결정하세요</p>
-    <div class="price-grid">
-
-      <div class="price-card">
-        <div class="price-badge">무료 플랜</div>
-        <div class="price-num">0<span>원 / 월</span></div>
-        <div class="price-trial">가입 즉시 영구 무료</div>
-        <div class="price-note">매니저(실장) · 지점장(센터장)은<br>무료 플랜에서도 글쓰기 가능</div>
-        <ul class="price-list">
-          <li>스크립트 전체 열람</li>
-          <li>게시판 전체 열람</li>
-          <li>모바일 최적화</li>
-          <li class="no">스크립트 작성 (설계사 제한)</li>
-          <li class="no">게시판 질문 작성 (설계사 제한)</li>
-        </ul>
-        <button class="price-btn ghost" onclick="openModal()">무료로 시작하기</button>
-      </div>
-
-      <div class="price-card hot">
-        <div class="price-badge hot">유료 플랜 · 추천</div>
-        <div class="price-num">9,900<span>원 / 월</span></div>
-        <div class="price-trial">첫 30일 완전 무료 체험</div>
-        <div class="price-note">설계사·팀장도 글쓰기까지<br>모든 기능을 사용할 수 있어요</div>
-        <ul class="price-list">
-          <li>스크립트 전체 열람 + 작성</li>
-          <li>게시판 질문 · 답변 작성</li>
-          <li>모바일 최적화</li>
-          <li>신규 스크립트 · 기능 우선 업데이트</li>
-          <li>언제든 해지 가능</li>
-        </ul>
-        <button class="price-btn" onclick="openModal()">30일 무료로 시작하기</button>
-      </div>
-
-      <div class="price-card b2b">
-        <div class="price-badge">B2B 제휴</div>
-        <div class="price-num">맞춤 협의</div>
-        <div class="price-trial">보험사 · GA · 교육기관 전용</div>
-        <div class="price-note">우리 조직 전용으로 구축하세요.<br>기능·운영·데이터 모두 <span style="background:rgba(200,117,58,0.5);color:#fff;font-weight:800;padding:1px 6px;border-radius:4px;">맞춤 협의</span> 가능합니다</div>
-        <ul class="price-list">
-          <li>조직 전용 게시판 운영</li>
-          <li>데이터 자산화 지원</li>
-          <li>파일럿 1~3개월 무료 제공</li>
-          <li>맞춤 기능 협의 가능</li>
-          <li>전담 운영 지원</li>
-        </ul>
-        <a class="price-btn b2b-btn" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 제휴 문의하기</a>
-      </div>
-
-    </div>
   </div>
 </section>
 
@@ -2135,7 +1988,7 @@ footer {
           </div>
           <div class="m-err" id="e-consent">동의가 필요합니다.</div>
           <button type="button" class="submit-btn" id="sub-btn" onclick="doSubmit()">
-            <span id="btn-txt">30일 무료체험 시작하기</span>
+            <span id="btn-txt">무료회원 가입하기</span>
             <div class="spinner" id="spinner"></div>
           </button>
         </form>
@@ -2195,7 +2048,7 @@ footer {
     </div>
     <p class="ti-promise">원세컨드가 해결해 드립니다</p>
     <button type="button" class="ti-cta" onclick="startTrialFromIntro()">
-      30일 무료체험 시작하기
+      무료회원 가입하기
     </button>
     <p class="ti-note">이미 계정이 있으신가요? <a href="login.html?redirect=together">로그인</a></p>
   </div>
