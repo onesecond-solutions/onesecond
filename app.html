@@ -492,7 +492,7 @@ html, body {
       <div class="search-input-row">
         <span class="search-icon">🔍</span>
         <input class="search-input" id="search-input" type="text"
-               placeholder="스크립트, 게시글, 예외질환, 업무자료 검색..." autocomplete="off"
+               placeholder="스크립트, 게시글, 업무자료 검색..." autocomplete="off"
                oninput="onSearchInput(this.value)"
                onkeydown="if(event.key==='Enter')doSearch(this.value)">
         <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
@@ -1079,7 +1079,7 @@ function renderSearchBox() {
   if (locked) {
     wrap.innerHTML = '<div class="search-lock-wrap" onclick="loadPricing()">'
       + '<span style="font-size:0.9375em;opacity:0.5;">🔍</span>'
-      + '<span class="search-lock-text">스크립트, 게시글, 예외질환, 업무자료 검색...</span>'
+      + '<span class="search-lock-text">스크립트, 게시글, 업무자료 검색...</span>'
       + '<span class="search-lock-badge">PRO 전용</span></div>';
   } else {
     // 게이트 OFF 또는 PRO 사용자: 원래 검색 UI 복구
@@ -1088,7 +1088,7 @@ function renderSearchBox() {
       wrap.innerHTML = '<div class="search-input-row">'
         + '<span class="search-icon">🔍</span>'
         + '<input class="search-input" id="search-input" type="text"'
-        + ' placeholder="스크립트, 게시글, 예외질환, 업무자료 검색..." autocomplete="off"'
+        + ' placeholder="스크립트, 게시글, 업무자료 검색..." autocomplete="off"'
         + ' oninput="onSearchInput(this.value)"'
         + ' onkeydown="if(event.key===\'Enter\')doSearch(this.value)">'
         + '<button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>'
