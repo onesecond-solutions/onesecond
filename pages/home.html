@@ -52,9 +52,22 @@
   color: var(--color-text-primary);
   text-align: center;
   padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   border: none;
   box-shadow: none;
+}
+
+/* 상단 로고 아이콘 (v3.3) — 타이틀과 6각 다이어그램 사이 브랜드 각인 */
+.home-hero-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: var(--space-1) auto var(--space-3);
+}
+.home-hero-logo img {
+  height: 72px;
+  width: auto;
+  display: block;
 }
 .home-intro-header .page-header-title {
   color: var(--color-text-primary);
@@ -72,7 +85,7 @@
   position: relative;
   width: 100%;
   max-width: 600px;
-  margin: var(--space-2) auto var(--space-3);
+  margin: var(--space-1) auto var(--space-3);
   aspect-ratio: 1 / 1;
   overflow: visible;
 }
@@ -372,6 +385,9 @@
   /* 모바일 툴팁 — 화면 폭 대비 축소 */
   .home-hex-tooltip { width: 240px; }
 
+  /* 모바일 로고 — 60px로 축소 */
+  .home-hero-logo img { height: 60px; }
+
   /* 미리보기 패딩 축소 */
   .home-a2-preview { padding: var(--space-4); }
 }
@@ -393,7 +409,12 @@
     <div class="page-header-title">상담 중, 원세컨드는 이렇게 작동합니다</div>
     <div class="page-header-sub">6개 핵심 기능이 유기적으로 연결된 17년 현장 도구</div>
   </div>
-  <div class="page-header-icon">⬡</div>
+</div>
+
+
+<!-- 1-2. 원세컨드 로고 아이콘 (v3.3 — 이전 page-header-icon 유니코드 ⬡ 대체) -->
+<div class="home-hero-logo">
+  <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고">
 </div>
 
 
