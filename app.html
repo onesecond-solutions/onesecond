@@ -529,7 +529,7 @@ html, body {
       <div class="menu">
         <div class="menu-item active" data-menu="home">홈</div>
         <div class="menu-item" data-menu="scripts">스크립트</div>
-        <div class="menu-item" data-menu="board">게시판</div>
+        <div class="menu-item" data-menu="board">현장 Q&A</div>
         <div class="menu-item" data-menu="myspace">MY SPACE</div>
         <div class="menu-item" data-menu="news">보험뉴스</div>
         <div class="menu-item" data-menu="quick">Quick 메뉴</div>
@@ -585,7 +585,7 @@ html, body {
 <div class="tab-bar">
   <div class="tab-item active" data-menu="home"><span class="tab-icon">🏠</span>홈</div>
   <div class="tab-item" data-menu="scripts"><span class="tab-icon">📞</span>스크립트</div>
-  <div class="tab-item" data-menu="board"><span class="tab-icon">📋</span>게시판</div>
+  <div class="tab-item" data-menu="board"><span class="tab-icon">📋</span>현장 Q&A</div>
   <div class="tab-item" data-menu="myspace"><span class="tab-icon">👤</span>MY</div>
   <div class="tab-item" data-menu="news"><span class="tab-icon">📰</span>뉴스</div>
   <div class="tab-item" data-menu="quick"><span class="tab-icon">⚡</span>Quick</div>
@@ -1178,12 +1178,12 @@ async function fetchSearchPreview(q) {
       });
     }
     if (posts.length) {
-      html += '<div class="search-section-label">💬 게시판</div>';
+      html += '<div class="search-section-label">💬 현장 Q&A</div>';
       posts.forEach(function (p) {
         html += '<div class="search-result-item" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\')">'
           + '<span class="search-result-icon">💬</span>'
           + '<div class="search-result-body"><div class="search-result-title">' + p.title + '</div></div>'
-          + '<span class="search-result-badge badge-post">게시판</span></div>';
+          + '<span class="search-result-badge badge-post">현장 Q&A</span></div>';
       });
     }
     if (quicks.length) {
@@ -1230,7 +1230,7 @@ async function doSearch(q) {
     var html = '<div class="search-result-page">'
       + '<div class="search-result-page-header"><div>'
       + '<div class="search-result-page-title">🔍 &nbsp;"' + q + '" 검색 결과</div>'
-      + '<div class="search-result-page-sub">총 ' + total + '건 — 예외질환 ' + diseases.length + '건 · 스크립트 ' + scripts.length + '건 · 게시판 ' + posts.length + '건 · 업무자료 ' + quicks.length + '건</div>'
+      + '<div class="search-result-page-sub">총 ' + total + '건 — 예외질환 ' + diseases.length + '건 · 스크립트 ' + scripts.length + '건 · 현장 Q&A ' + posts.length + '건 · 업무자료 ' + quicks.length + '건</div>'
       + '</div><button class="search-result-page-close" onclick="switchMenu(\'home\')">✕ 닫기</button></div>';
     if (total === 0) html += '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:0.9em;">검색 결과가 없습니다.</div>';
     if (diseases.length) {
@@ -1274,11 +1274,11 @@ async function doSearch(q) {
       });
     }
     if (posts.length) {
-      html += '<div class="search-group-title">💬 게시판 (' + posts.length + '건)</div>';
+      html += '<div class="search-group-title">💬 현장 Q&A (' + posts.length + '건)</div>';
       posts.forEach(function (p) {
         var desc = (p.content || '').replace(/<[^>]+>/g, '').slice(0, 80);
         html += '<div class="search-card" onclick="switchMenu(\'board\')">'
-          + '<div class="search-card-top"><span class="search-result-badge badge-post">게시판</span><span class="search-card-title">' + p.title + '</span></div>'
+          + '<div class="search-card-top"><span class="search-result-badge badge-post">현장 Q&A</span><span class="search-card-title">' + p.title + '</span></div>'
           + (desc ? '<div class="search-card-body">' + desc + '</div>' : '') + '</div>';
       });
     }
