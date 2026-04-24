@@ -27,7 +27,7 @@
   ── 커스텀 클래스 (.home-*) ──────────────────────────────────────────────
     1) .home-hex-wrap, .home-hex-svg, .home-hex-line                — SVG 컨테이너
     2) .home-hex-node, .home-hex-node-rect, .home-hex-node-label    — 노드 + 상태
-    3) .home-hex-center, .home-hex-logo, .home-hex-tagline          — 중앙 로고
+    3) .home-hex-center, .home-hex-logo-img                         — 중앙 로고 이미지
     4) .home-hex-tooltip + [data-pos] + .home-hex-tip-*             — 6방향 툴팁
     5) .home-a2-preview + 자식들                                    — 미리보기 보조
     6) .home-search-row                                             — 검색 input wrap
@@ -46,34 +46,55 @@
    ▸ background: transparent → 페이지 배경(--color-bg, 크림 아이보리) 노출
    ▸ home.html에서만 .home-intro-header가 함께 부여되므로 다른 페이지의 .page-header에는 영향 없음 */
 .home-intro-header {
-  /* .page-header의 flex 레이아웃 무력화 → 자식 블록 쌓임 + text-align: center 정상 작동 */
+  /* .page-header의 flex 레이아웃 무력화 → 자식 블록 쌓임 + text-align: left 정상 작동
+     ▸ 2026-04-24: 중앙 정렬 → 좌측 정렬, 좌측 padding 30px (팀장 지정, tokens.css에 30px 단일 토큰 없어 하드코딩) */
   display: block;
   background: transparent;
   color: var(--color-text-primary);
-  text-align: center;
-  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  padding: var(--space-3) var(--space-4) var(--space-3) 30px;
   margin-bottom: var(--space-1);
   border: none;
   box-shadow: none;
 }
 
-/* 상단 로고 아이콘 (v3.4) — 타이틀과 6각 다이어그램 사이 브랜드 각인 */
-.home-hero-logo {
-  display: flex;
-  justify-content: center;
+/* 2026-04-24: 상단 .home-hero-logo 블록 제거 (logo05.png가 6각 중앙으로 이동) */
+/* ─── 3단 카피 (index.html B영역 .inaction-* 이식 + home 레이아웃 스케일 조정) ─────
+   1) .home-intro-badge : pill 배지 (font 0.75em, surface-2 배경, accent 색상)
+   2) .home-intro-title : 메인 슬로건 3줄 (2em, 원세컨드만 accent 강조)
+   3) .home-intro-sub   : 서브 카피 2줄 (0.9375em, text-secondary) */
+
+.home-intro-badge {
+  display: inline-flex;
   align-items: center;
-  margin: 0 auto var(--space-1);
+  gap: var(--space-2);
+  padding: 6px 14px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-full);
+  font-size: 0.75em;
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  width: fit-content;
+  margin-bottom: var(--space-3);
 }
-.home-hero-logo img {
-  height: 72px;
-  width: auto;
-  display: block;
-}
-.home-intro-header .page-header-title {
+
+.home-intro-title {
+  margin: 0 0 var(--space-3);
+  font-size: 2em;
+  font-weight: var(--fw-black);
   color: var(--color-text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
 }
-.home-intro-header .page-header-sub {
+.home-intro-title .accent {
+  color: var(--color-accent);
+}
+
+.home-intro-sub {
+  margin: 0;
+  font-size: 0.9375em;
   color: var(--color-text-secondary);
+  line-height: 1.7;
 }
 
 
@@ -85,7 +106,10 @@
   position: relative;
   width: 100%;
   max-width: 600px;
-  margin: 0 auto var(--space-3);
+  /* margin-top -160px: 6각 최상단 노드의 위 라인을 슬로건 "이어갑니다" 라인에 맞춤
+     계산: 현재 wrap top(≈244px) + 노드 상단 오프셋(40px) - "이어갑니다" 상단(≈127px) ≈ 157px 끌어올림
+     좌우 정렬은 auto로 중앙 유지. 실측 후 조정 필요 시 이 값만 변경 */
+  margin: calc(var(--space-10) * -4) auto var(--space-3);
   aspect-ratio: 1 / 1;
   overflow: visible;
 }
@@ -149,32 +173,26 @@
   animation: home-pulse 2s ease-in-out infinite;
 }
 
-/* 중앙 로고 박스 */
+/* 중앙 로고 박스 (2026-04-24: 텍스트 2줄 → logo05.png 이미지 1장, 박스 제거 / 이미지만 부각) */
 .home-hex-center {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: var(--space-4) var(--space-5);
-  background: var(--color-surface);
-  border: 2px solid var(--color-brand);
-  border-radius: var(--radius-lg);
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   text-align: center;
   pointer-events: none;
-  box-shadow: var(--shadow-sm);
 }
-.home-hex-logo {
-  font-size: 1.5em;
-  font-weight: var(--fw-black);
-  color: var(--color-brand);
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-.home-hex-tagline {
-  font-size: 0.842em;
-  color: var(--color-text-secondary);
-  margin-top: var(--space-1);
-  line-height: 1.5;
+.home-hex-logo-img {
+  display: block;
+  width: 120px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 
@@ -365,14 +383,14 @@
 
   .home-hex-wrap {
     max-width: 360px;
+    /* 모바일: 겹침 해제 — 카피와 6각이 거의 같은 폭이라 겹치면 시각 혼란 → 세로 스택 복원 */
     margin: var(--space-4) auto;
   }
 
   .home-hex-node-label { font-size: 0.737em; }
 
-  .home-hex-center { padding: var(--space-3) var(--space-4); }
-  .home-hex-logo   { font-size: 1.2em; }
-  .home-hex-tagline { font-size: 0.737em; }
+  .home-hex-center    { padding: 0; }
+  .home-hex-logo-img  { width: 88px; }
 
   /* 호버 비활성 (터치 디바이스) — 탭으로 툴팁 토글 */
   .home-hex-node:hover .home-hex-node-rect {
@@ -385,11 +403,17 @@
   /* 모바일 툴팁 — 화면 폭 대비 축소 */
   .home-hex-tooltip { width: 240px; }
 
-  /* 모바일 로고 — 60px로 축소 */
-  .home-hero-logo img { height: 60px; }
-
   /* 미리보기 패딩 축소 */
   .home-a2-preview { padding: var(--space-4); }
+
+  /* 모바일 3단 카피 — 슬로건/서브 축소 */
+  .home-intro-title { font-size: 1.5em; letter-spacing: -0.3px; }
+  .home-intro-sub   { font-size: 0.875em; }
+}
+
+/* 태블릿 (641~1024px) — 슬로건 중간 크기 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .home-intro-title { font-size: 1.75em; }
 }
 
 </style>
@@ -403,18 +427,21 @@
 <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
 
 
-<!-- 1. 상단 안내 — .page-header 공통 자산 + .home-intro-header 오버라이드 -->
+<!-- 1. 상단 3단 카피 (index.html B영역 IN ACTION 이식)
+     ▸ 배지(pill) + 메인 슬로건 3줄(원세컨드 accent 강조) + 서브 카피 2줄
+     ▸ .home-intro-header 컨테이너는 그대로 (좌측정렬 + padding-left 30px 유지) -->
 <div class="page-header home-intro-header">
   <div>
-    <div class="page-header-title">상담 중, 원세컨드는 이렇게 작동합니다</div>
-    <div class="page-header-sub">6개 핵심 기능이 유기적으로 연결된 17년 현장 도구</div>
+    <div class="home-intro-badge">현직 보험 설계사가 직접 만든 TM 상담 도구</div>
+    <h2 class="home-intro-title">
+      통화 중 멈추는 순간,<br>
+      <span class="accent">원세컨드</span>가 이어갑니다
+    </h2>
+    <p class="home-intro-sub">
+      17년 대면 · TM 보험 현장에서 나온 도구.<br>
+      막히는 순간, 화면에 보이는 그대로 읽으세요.
+    </p>
   </div>
-</div>
-
-
-<!-- 1-2. 원세컨드 로고 아이콘 (v3.3 — 이전 page-header-icon 유니코드 ⬡ 대체) -->
-<div class="home-hero-logo">
-  <img src="assets/images/logo/logo05.png" alt="원세컨드 로고">
 </div>
 
 
@@ -630,11 +657,11 @@
     wrap.appendChild(svg);
 
     // 3) 중앙 로고 박스 (SVG 위에 절대 위치 div, pointer-events: none)
+    //    2026-04-24: 텍스트 2줄 → logo05.png 이미지 1장으로 교체
     var center = document.createElement('div');
     center.className = 'home-hex-center';
     center.innerHTML =
-      '<div class="home-hex-logo">원세컨드</div>' +
-      '<div class="home-hex-tagline">17년 현장이 담긴<br>TM 상담 도구</div>';
+      '<img src="assets/images/logo/logo05.png" alt="원세컨드" class="home-hex-logo-img">';
     wrap.appendChild(center);
 
     // 4) 6개 툴팁 DOM 생성 (노드별 absolute 배치)
