@@ -123,6 +123,28 @@ WHERE au.email = 'bylts0428@gmail.com';
 - CSS는 tokens.css 커스텀 프로퍼티 사용 (도메인 특화 stage 색상 팔레트 제외 하드코딩 금지)
 - 모든 컴포넌트 최소 --radius-sm 적용, 직각 모서리 금지
 
+## 👥 role 체계 (총 9개)
+
+| 구분 | role | 현장 호칭 |
+|---|---|---|
+| 플랫폼 | `admin` | 어드민 (팀장님 본인, 전역 권한) |
+| GA | `ga_branch_manager` | 지점장/센터장 |
+| GA | `ga_manager` | 실장 |
+| GA | `ga_member` | 설계사/팀장 |
+| GA | `ga_staff` | 스텝/총무 |
+| 원수사 | `insurer_branch_manager` | 원수사 지점장 |
+| 원수사 | `insurer_manager` | 원수사 매니저 |
+| 원수사 | `insurer_member` | 원수사 일반 직원 |
+| 원수사 | `insurer_staff` | 원수사 스텝 |
+
+- **접두어 원칙**: `admin` 무접두어 / GA는 `ga_` / 원수사는 `insurer_`
+- **화면설정(`applyMenuSettings`) 무시 대상**: `admin` 만 (나머지 9개 role은 모두 화면설정 적용 대상)
+- **무료 혜택 대상**: `admin` + 각 소속의 `branch_manager`·`manager` (매니저 이상 무료 원칙)
+- **"지점장" 호칭 혼동 금지**: `admin`/`ga_branch_manager`/`insurer_branch_manager`는 완전히 다른 권한군. 코드·설명에서 뭉뚱그리지 말 것
+- **Phase 1 마이그레이션 대기 중**: 기존 `branch_manager`/`manager`/`member`/`staff` → `ga_*` 접두어 UPDATE (팀장님 승인 전 실행 금지)
+
+상세: [`docs/role_system.md`](docs/role_system.md) — 마이그레이션 SQL, RLS 패턴, Phase 2 원수사 입점 계획 포함
+
 ## 📂 주요 경로
 
 - 작업 디렉토리: C:\limtaesung\github\onesecond
