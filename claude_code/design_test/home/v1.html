@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>[Test v1] home.html — 브라운 최소화 + 여백 확대</title>
+
+  <!-- Google Fonts (원본 tokens.css 상단 주석 참조) -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+  <!-- 원본 tokens.css 읽기 전용 참조 (수정 금지) -->
+  <link rel="stylesheet" href="../../../css/tokens.css">
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       DESIGN TEST OVERRIDES — v1 (2026-04-25)
+       원칙 A. 브라운 95% → 5% (강조 포인트에만 유지)
+       원칙 B. 여백 확대로 촘촘함 해소
+       tokens.css는 한 줄도 수정하지 않음. 여기서만 재정의.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <style>
+    :root {
+      /* ── 중성 전환 (브라운 제거) ─── */
+      --color-bg:             #FFFFFF;
+      --color-surface:        #FFFFFF;
+      --color-surface-2:      #F6F7F9;
+      --color-border:         #E5E7EB;
+      --color-text-primary:   #1F2937;
+      --color-text-secondary: #6B7280;
+      --color-text-tertiary:  #9CA3AF;
+
+      /* 페이지 헤더 그라데이션 제거 */
+      --gradient-header: transparent;
+
+      /* 그림자 중성화 */
+      --shadow-sm: 0 2px 6px rgba(17, 24, 39, 0.06);
+      --shadow-md: 0 4px 14px rgba(17, 24, 39, 0.08);
+      --shadow-lg: 0 8px 28px rgba(17, 24, 39, 0.12);
+
+      /* brand/accent 값은 그대로 유지 (강조 포인트 전용)
+         --color-brand:       #A0522D
+         --color-brand-light: #C4733A
+         --color-accent:      #D4845A */
+
+      /* 여백 확대용 변수 */
+      --test-card-pad:     32px;
+      --test-card-gap:     40px;
+      --test-body-leading: 1.75;
+    }
+
+    body {
+      background: var(--color-bg);
+      line-height: var(--test-body-leading);
+    }
+
+    /* 테스트 래퍼 — 원본 content-area 폭과 font-size 시뮬레이션 */
+    .test-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 32px 96px;
+      font-size: 19px; /* app.html content-area '중' 기준 */
+    }
+
+    /* 상단 안내 배너 */
+    .test-banner {
+      background: #FFF8F3;
+      border: 1px solid var(--color-border);
+      border-left: 3px solid var(--color-accent);
+      padding: 10px 16px;
+      margin-bottom: 48px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      border-radius: 6px;
+      line-height: 1.6;
+    }
+    .test-banner strong { color: var(--color-accent); font-weight: 700; }
+    .test-banner code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: #fff;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid var(--color-border);
+    }
+
+    /* ─── home.html 시각 재조정 ───
+       ▸ 홈은 어제(2026-04-24) 레이아웃 그대로 유지
+         · 좌측 30px 패딩 (카피 왼쪽 이동)
+         · hex -160px 상승 (수직 상승 오버랩)
+       ▸ 색상만 중성화 + 호버 하이라이트 유지
+    */
+
+    /* 페이지 헤더 공통 — 그라데이션 제거 (home-intro-header는 이미 transparent 처리됨) */
+    .page-header {
+      box-shadow: none !important;
+      border: none !important;
+    }
+
+    /* 배지 — 웜 베이지 배경 → 중성 배경 */
+    .home-intro-badge {
+      background: #F6F7F9 !important;
+      color: var(--color-accent) !important;
+      border: 1px solid var(--color-border);
+    }
+
+    /* SVG 노드 호버 — 옅은 웜 하이라이트 (accent 포인트) */
+    .home-hex-node:hover .home-hex-node-rect,
+    .home-hex-node.hover .home-hex-node-rect {
+      fill: #FFF8F3 !important;
+      stroke: var(--color-accent) !important;
+      stroke-width: 2 !important;
+    }
+
+    /* 미리보기 카드 — 액센트 좌측 라인만 유지 */
+    .home-a2-preview {
+      border-color: var(--color-border) !important;
+      border-left: 3px solid var(--color-accent) !important;
+    }
+    .home-a2-preview-hint {
+      border-top-color: var(--color-border) !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="test-wrap">
+
+  <div class="test-banner">
+    <strong>[Design Test v1]</strong> home.html — 브라운 최소화 + 여백 확대
+    · 원본 <code>pages/home.html</code>
+    · 규칙 <code>../../README.md</code>
+    · 이 파일은 프로덕션과 <strong>독립</strong>입니다.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ↓↓↓ pages/home.html 원본 내용 복제 (v3.2, 2026-04-23~24)
+       변경: <img src="assets/images/logo/logo05.png">
+          → <img src="../../../assets/images/logo/logo05.png">
+            (독립 실행 시 상대 경로 조정)
+  ═══════════════════════════════════════════════════════════════════ -->
+
+<style>
+
+/* ════════════════════════════════════════════════════════════
+   0. 홈 전용 오버라이드 (.page-header 공통 자산 위에 적용)
+════════════════════════════════════════════════════════════ */
+
+.home-intro-header {
+  display: block;
+  background: transparent;
+  color: var(--color-text-primary);
+  text-align: left;
+  padding: var(--space-3) var(--space-4) var(--space-3) 30px;
+  margin-bottom: var(--space-1);
+  border: none;
+  box-shadow: none;
+}
+
+.home-intro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 14px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-full);
+  font-size: 0.75em;
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  width: fit-content;
+  margin-bottom: var(--space-3);
+}
+
+.home-intro-title {
+  margin: 0 0 var(--space-3);
+  font-size: 2em;
+  font-weight: var(--fw-black);
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+.home-intro-title .accent {
+  color: var(--color-accent);
+}
+
+.home-intro-sub {
+  margin: 0;
+  font-size: 0.9375em;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   1. 6각형 다이어그램 (.home-hex-*)
+════════════════════════════════════════════════════════════ */
+
+.home-hex-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: calc(var(--space-10) * -4) auto var(--space-3);
+  aspect-ratio: 1 / 1;
+  overflow: visible;
+}
+
+.home-hex-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.home-hex-line {
+  stroke: var(--color-border);
+  stroke-width: 2;
+  fill: none;
+}
+
+.home-hex-node {
+  cursor: pointer;
+  transform-origin: center;
+  transition: transform var(--transition-normal);
+}
+
+.home-hex-node-rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+  transition: fill var(--transition-normal), stroke var(--transition-normal), stroke-width var(--transition-normal);
+}
+
+.home-hex-node-label {
+  font-family: inherit;
+  font-size: 0.842em;
+  font-weight: var(--fw-bold);
+  fill: var(--color-text-primary);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.home-hex-node:hover .home-hex-node-rect,
+.home-hex-node.hover .home-hex-node-rect {
+  fill: var(--color-surface-2);
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+.home-hex-node:hover,
+.home-hex-node.hover {
+  transform: scale(1.05);
+}
+
+.home-hex-node.clicking {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-out;
+}
+
+.home-hex-node:not(:hover):not(.hover):not(.clicking) {
+  animation: home-pulse 2s ease-in-out infinite;
+}
+
+.home-hex-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  text-align: center;
+  pointer-events: none;
+}
+.home-hex-logo-img {
+  display: block;
+  width: 120px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   2. 호버 툴팁 (.home-hex-tooltip*) — 6방향 말풍선
+════════════════════════════════════════════════════════════ */
+
+.home-hex-tooltip {
+  position: absolute;
+  width: 280px;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  opacity: 0;
+  transform: var(--tip-align, none) scale(0.95);
+  transform-origin: center;
+  pointer-events: none;
+  z-index: 20;
+  transition: opacity 150ms ease-in, transform 180ms ease-out;
+}
+.home-hex-tooltip.active {
+  opacity: 1;
+  transform: var(--tip-align, none) scale(1);
+  pointer-events: auto;
+}
+
+.home-hex-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+}
+.home-hex-tooltip[data-pos="12"]::before { bottom: -17px; left: 50%; transform: translateX(-50%); border-top-color: var(--color-surface); }
+.home-hex-tooltip[data-pos="6"]::before  { top: -17px;  left: 50%; transform: translateX(-50%); border-bottom-color: var(--color-brand); }
+.home-hex-tooltip[data-pos="2"]::before  { top: 14px;   left: -17px; border-right-color: var(--color-brand); }
+.home-hex-tooltip[data-pos="4"]::before  { bottom: 14px; left: -17px; border-right-color: var(--color-surface); }
+.home-hex-tooltip[data-pos="8"]::before  { bottom: 14px; right: -17px; border-left-color: var(--color-surface); }
+.home-hex-tooltip[data-pos="10"]::before { top: 14px;   right: -17px; border-left-color: var(--color-brand); }
+
+.home-hex-tip-header {
+  background: var(--color-brand);
+  color: #fff;
+  padding: var(--space-2) var(--space-3);
+  font-weight: var(--fw-bold);
+  font-size: 0.937em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  line-height: 1.3;
+}
+
+.home-hex-tip-body {
+  padding: var(--space-3);
+  font-size: 0.875em;
+  color: var(--color-text-primary);
+  line-height: 1.55;
+}
+
+.home-hex-tip-cta {
+  display: block;
+  width: calc(100% - var(--space-6));
+  margin: 0 var(--space-3) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: var(--fw-bold);
+  font-size: 0.842em;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: background var(--transition-fast);
+}
+.home-hex-tip-cta:hover,
+.home-hex-tip-cta:focus-visible {
+  background: var(--color-accent-dark, #b86a44);
+  outline: none;
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   3. A2 UI 인라인 미리보기
+════════════════════════════════════════════════════════════ */
+
+.home-a2-preview {
+  max-width: 640px;
+  margin: 0 auto var(--space-5);
+  border-color: var(--color-accent);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+.home-a2-preview.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.home-a2-preview-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.home-a2-preview-hint {
+  font-size: 0.737em;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border);
+}
+
+.home-search-row {
+  position: relative;
+}
+.home-search-row .input {
+  padding-left: 40px;
+}
+.home-search-row::before {
+  content: "🔍";
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  font-size: 1em;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.home-quick-dropdown {
+  margin-top: var(--space-2);
+  display: none;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  max-height: 280px;
+  overflow-y: auto;
+}
+.home-quick-dd-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.842em;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.home-quick-dd-item:last-child { border-bottom: none; }
+.home-quick-dd-item:hover { background: var(--color-surface); }
+
+#home-a2-preview-quick .section-title { justify-content: flex-end; }
+#home-a2-preview-quick > .btn { display: block; margin-left: auto; }
+
+
+/* ════════════════════════════════════════════════════════════
+   4. Keyframes
+════════════════════════════════════════════════════════════ */
+
+@keyframes home-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.02); }
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   5. 모바일 반응형 (≤640px)
+════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+
+  .home-hex-wrap {
+    max-width: 360px;
+    margin: var(--space-4) auto;
+  }
+
+  .home-hex-node-label { font-size: 0.737em; }
+
+  .home-hex-center    { padding: 0; }
+  .home-hex-logo-img  { width: 88px; }
+
+  .home-hex-node:hover .home-hex-node-rect {
+    fill: var(--color-surface);
+    stroke: var(--color-border);
+    stroke-width: 1.5;
+  }
+  .home-hex-node:hover { transform: none; }
+
+  .home-hex-tooltip { width: 240px; }
+
+  .home-a2-preview { padding: var(--space-4); }
+
+  .home-intro-title { font-size: 1.5em; letter-spacing: -0.3px; }
+  .home-intro-sub   { font-size: 0.875em; }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .home-intro-title { font-size: 1.75em; }
+}
+
+</style>
+
+
+<!-- 페이지 배너 슬롯 (app_settings 주입용 — 테스트에서는 비활성) -->
+<div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
+
+
+<!-- 1. 상단 3단 카피 -->
+<div class="page-header home-intro-header">
+  <div>
+    <div class="home-intro-badge">현직 보험 설계사가 직접 만든 TM 상담 도구</div>
+    <h2 class="home-intro-title">
+      통화 중 멈추는 순간,<br>
+      <span class="accent">원세컨드</span>가 이어갑니다
+    </h2>
+    <p class="home-intro-sub">
+      17년 대면 · TM 보험 현장에서 나온 도구.<br>
+      막히는 순간, 화면에 보이는 그대로 읽으세요.
+    </p>
+  </div>
+</div>
+
+
+<!-- 2. A2 UI 인라인 미리보기 -->
+<div id="home-a2-preview" class="card home-a2-preview" style="display:none;">
+  <div class="home-a2-preview-inner">
+
+    <div id="home-a2-preview-search" class="home-a2-preview-slot" style="display:none;">
+      <div class="section-title">🔍 검색기</div>
+      <div class="home-search-row">
+        <input type="text" class="input" id="home-search-input"
+               placeholder="검색어 입력 후 Enter"
+               autocomplete="off"
+               onkeydown="if(event.key==='Enter')window.homePreviewSearchEnter(this.value)">
+      </div>
+      <div class="home-a2-preview-hint">
+        💡 Enter를 누르면 스크립트, 게시글, 업무자료를 한번에 검색할 수 있어요
+      </div>
+    </div>
+
+    <div id="home-a2-preview-quick" class="home-a2-preview-slot" style="display:none;">
+      <div class="section-title">⚡ 빠른실행</div>
+      <button class="btn btn-primary" onclick="window.homePreviewQuickToggle()">
+        ⚡ 빠른 실행 ▾
+      </button>
+      <div class="home-quick-dropdown" id="home-quick-preview-dropdown">
+        <div id="home-quick-preview-items">
+          <div class="loading-placeholder">불러오는 중...</div>
+        </div>
+      </div>
+      <div class="home-a2-preview-hint">
+        💡 상단 헤더의 「⚡」 버튼이 같은 기능입니다
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- 3. 6각형 다이어그램 컨테이너 -->
+<div class="home-hex-wrap" id="homeHexWrap"></div>
+
+
+<script>
+(function () {
+  'use strict';
+
+  var NODES = [
+    { id: 'scripts',  label: '📜 스크립트',  tipDesc: '17년 현장에서 검증된 상담 멘트',   angle: 0,   tooltipPosition: '12', targetUrl: 'scripts' },
+    { id: 'board',    label: '💬 현장 Q&A',  tipDesc: '영업 현장의 공지, 인수, 상품 소식', angle: 60,  tooltipPosition: '2',  targetUrl: 'board' },
+    { id: 'quick',    label: '⚡ 빠른실행',   tipDesc: '클로징 타이밍 바로 클릭',          angle: 120, tooltipPosition: '4',  targetUrl: null, behavior: 'inline-preview', previewType: 'quick' },
+    { id: 'myspace',  label: '📁 MY SPACE', tipDesc: '내 멘트, 내 자료, 한 곳에',        angle: 180, tooltipPosition: '6',  targetUrl: 'myspace' },
+    { id: 'together', label: '🤝 함께해요',  tipDesc: '불편한 점·필요한 기능 직접 제안',   angle: 240, tooltipPosition: '8',  targetUrl: 'together' },
+    { id: 'search',   label: '🔍 검색기',    tipDesc: '스크립트·게시글·자료 한 번에 검색', angle: 300, tooltipPosition: '10', targetUrl: null, behavior: 'inline-preview', previewType: 'search' }
+  ];
+
+  var VIEW_W = 600, VIEW_H = 600, CX = 300, CY = 300, R_HEX = 220;
+  var NODE_W = 140, NODE_H = 80, RECT_RADIUS = 12;
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function angleToXY(angleDeg) {
+    var rad = angleDeg * Math.PI / 180;
+    return { x: CX + R_HEX * Math.sin(rad), y: CY - R_HEX * Math.cos(rad) };
+  }
+
+  function renderHex() {
+    var wrap = document.getElementById('homeHexWrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + VIEW_W + ' ' + VIEW_H);
+    svg.setAttribute('class', 'home-hex-svg');
+
+    NODES.forEach(function (node) {
+      var pt = angleToXY(node.angle);
+      var line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('class', 'home-hex-line');
+      line.setAttribute('x1', CX); line.setAttribute('y1', CY);
+      line.setAttribute('x2', pt.x); line.setAttribute('y2', pt.y);
+      svg.appendChild(line);
+    });
+
+    NODES.forEach(function (node) {
+      var pt = angleToXY(node.angle);
+      var g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('class', 'home-hex-node');
+      g.setAttribute('id', 'home-node-' + node.id);
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('role', 'button');
+      g.setAttribute('aria-label', node.label);
+      g.setAttribute('aria-describedby', 'home-tip-' + node.id);
+      g.addEventListener('mouseenter', function () { window.homeNodeHover(node.id); });
+      g.addEventListener('mouseleave', function () { window.homeNodeOut(node.id); });
+      g.addEventListener('focusin',    function () { window.homeNodeHover(node.id); });
+      g.addEventListener('focusout',   function () { window.homeNodeOut(node.id); });
+      g.addEventListener('click',      function () { window.homeNodeClick(node.id); });
+      g.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.homeNodeClick(node.id); }
+      });
+
+      var rect = document.createElementNS(SVG_NS, 'rect');
+      rect.setAttribute('class', 'home-hex-node-rect');
+      rect.setAttribute('x', pt.x - NODE_W / 2);
+      rect.setAttribute('y', pt.y - NODE_H / 2);
+      rect.setAttribute('width', NODE_W);
+      rect.setAttribute('height', NODE_H);
+      rect.setAttribute('rx', RECT_RADIUS);
+      rect.setAttribute('ry', RECT_RADIUS);
+      g.appendChild(rect);
+
+      var text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute('class', 'home-hex-node-label');
+      text.setAttribute('x', pt.x);
+      text.setAttribute('y', pt.y);
+      text.textContent = node.label;
+      g.appendChild(text);
+
+      svg.appendChild(g);
+    });
+
+    wrap.appendChild(svg);
+
+    var center = document.createElement('div');
+    center.className = 'home-hex-center';
+    center.innerHTML = '<img src="../../../assets/images/logo/logo05.png" alt="원세컨드" class="home-hex-logo-img">';
+    wrap.appendChild(center);
+
+    renderTooltips(wrap);
+  }
+
+  var HALF_W_PCT = (NODE_W / 2 / VIEW_W) * 100;
+  var HALF_H_PCT = (NODE_H / 2 / VIEW_H) * 100;
+  var TIP_OFFSET_PCT = 3;
+
+  function computeTooltipStyle(nx, ny, pos) {
+    var px = (nx / VIEW_W) * 100, py = (ny / VIEW_H) * 100;
+    switch (pos) {
+      case '12': return { left: px + '%',                              top: (py - HALF_H_PCT - TIP_OFFSET_PCT) + '%', transform: 'translate(-50%, -100%)' };
+      case '6':  return { left: px + '%',                              top: (py + HALF_H_PCT + TIP_OFFSET_PCT) + '%', transform: 'translate(-50%, 0)'      };
+      case '2':  return { left: (px + HALF_W_PCT + TIP_OFFSET_PCT) + '%', top: py + '%',                              transform: 'translate(0, -50%)'      };
+      case '4':  return { left: (px + HALF_W_PCT + TIP_OFFSET_PCT) + '%', top: py + '%',                              transform: 'translate(0, -50%)'      };
+      case '8':  return { left: (px - HALF_W_PCT - TIP_OFFSET_PCT) + '%', top: py + '%',                              transform: 'translate(-100%, -50%)'  };
+      case '10': return { left: (px - HALF_W_PCT - TIP_OFFSET_PCT) + '%', top: py + '%',                              transform: 'translate(-100%, -50%)'  };
+      default:   return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+    }
+  }
+
+  function renderTooltips(wrap) {
+    NODES.forEach(function (node) {
+      var nodePt = angleToXY(node.angle);
+      var style  = computeTooltipStyle(nodePt.x, nodePt.y, node.tooltipPosition);
+
+      var tip = document.createElement('div');
+      tip.className = 'home-hex-tooltip';
+      tip.id = 'home-tip-' + node.id;
+      tip.setAttribute('role', 'tooltip');
+      tip.setAttribute('aria-hidden', 'true');
+      tip.setAttribute('data-pos', node.tooltipPosition);
+      tip.style.left = style.left;
+      tip.style.top  = style.top;
+      tip.style.setProperty('--tip-align', style.transform);
+
+      var html = '<div class="home-hex-tip-header">' + escapeHTML(node.label) + '</div>'
+               + '<div class="home-hex-tip-body">'   + escapeHTML(node.tipDesc) + '</div>';
+      if (node.targetUrl) {
+        var menuName = node.label.replace(/^[^\s]+\s*/, '');
+        html += '<button type="button" class="home-hex-tip-cta" '
+             +  'onclick="window.homeTipCtaClick(\'' + node.targetUrl + '\')">'
+             +  escapeHTML(menuName) + ' 바로가기 →</button>';
+      }
+      tip.innerHTML = html;
+
+      tip.addEventListener('mouseenter', function () { cancelHideTimer(node.id); });
+      tip.addEventListener('mouseleave', function () { scheduleHideTimer(node.id); });
+
+      wrap.appendChild(tip);
+    });
+  }
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  var HIDE_DELAY = 200;
+  var hideTimers = {};
+  function cancelHideTimer(nodeId) { if (hideTimers[nodeId]) { clearTimeout(hideTimers[nodeId]); delete hideTimers[nodeId]; } }
+  function scheduleHideTimer(nodeId) { cancelHideTimer(nodeId); hideTimers[nodeId] = setTimeout(function () { hideTooltip(nodeId); }, HIDE_DELAY); }
+  function hideTooltip(nodeId) {
+    var tip = document.getElementById('home-tip-' + nodeId);
+    if (tip) { tip.classList.remove('active'); tip.setAttribute('aria-hidden', 'true'); }
+  }
+  function hideAllTooltips() {
+    NODES.forEach(function (n) {
+      cancelHideTimer(n.id);
+      hideTooltip(n.id);
+      var ne = document.getElementById('home-node-' + n.id);
+      if (ne) ne.classList.remove('hover');
+    });
+  }
+
+  window.homeNodeHover = function (nodeId) {
+    cancelHideTimer(nodeId);
+    NODES.forEach(function (n) {
+      if (n.id === nodeId) return;
+      cancelHideTimer(n.id);
+      hideTooltip(n.id);
+      var ne = document.getElementById('home-node-' + n.id);
+      if (ne) ne.classList.remove('hover');
+    });
+    var tip = document.getElementById('home-tip-' + nodeId);
+    if (tip) { tip.classList.add('active'); tip.setAttribute('aria-hidden', 'false'); }
+    var nodeEl = document.getElementById('home-node-' + nodeId);
+    if (nodeEl) nodeEl.classList.add('hover');
+  };
+
+  window.homeNodeOut = function (nodeId) {
+    var nodeEl = document.getElementById('home-node-' + nodeId);
+    if (nodeEl) nodeEl.classList.remove('hover');
+    scheduleHideTimer(nodeId);
+  };
+
+  window.homeNodeClick = function (nodeId) {
+    var node = NODES.filter(function (n) { return n.id === nodeId; })[0];
+    if (!node) return;
+    var nodeEl = document.getElementById('home-node-' + nodeId);
+    if (nodeEl) {
+      nodeEl.classList.add('clicking');
+      setTimeout(function () { nodeEl.classList.remove('clicking'); }, 100);
+    }
+    if (node.behavior === 'inline-preview') {
+      if (window.homeShowPreview) window.homeShowPreview(node.previewType);
+    }
+  };
+
+  window.homeTipCtaClick = function (targetUrl) {
+    hideAllTooltips();
+    if (window.switchMenu) window.switchMenu(targetUrl);
+  };
+
+  document.addEventListener('click', function (e) {
+    var wrap = document.getElementById('homeHexWrap');
+    if (wrap && !wrap.contains(e.target)) hideAllTooltips();
+  });
+
+  renderHex();
+})();
+</script>
+
+
+<script>
+(function () {
+  'use strict';
+
+  var quickItemsLoaded = false;
+
+  window.homeShowPreview = function (previewType) {
+    var container  = document.getElementById('home-a2-preview');
+    var searchSlot = document.getElementById('home-a2-preview-search');
+    var quickSlot  = document.getElementById('home-a2-preview-quick');
+    if (!container || !searchSlot || !quickSlot) return;
+
+    searchSlot.style.display = (previewType === 'search') ? 'block' : 'none';
+    quickSlot.style.display  = (previewType === 'quick')  ? 'block' : 'none';
+
+    container.style.display = 'block';
+    requestAnimationFrame(function () { container.classList.add('show'); });
+
+    if (previewType === 'quick') {
+      loadQuickItemsIfNeeded();
+    } else if (previewType === 'search') {
+      setTimeout(function () {
+        var inp = document.getElementById('home-search-input');
+        if (inp) { try { inp.focus(); } catch (e) {} }
+      }, 120);
+    }
+  };
+
+  window.homeHidePreview = function () {
+    var container = document.getElementById('home-a2-preview');
+    if (!container) return;
+    container.classList.remove('show');
+    setTimeout(function () { container.style.display = 'none'; }, 250);
+  };
+
+  window.homePreviewSearchEnter = function (q) {
+    q = (q || '').trim();
+    if (!q) return;
+    if (typeof window.doSearch === 'function') { window.doSearch(q); }
+  };
+
+  window.homePreviewQuickToggle = function () {
+    var dd = document.getElementById('home-quick-preview-dropdown');
+    if (!dd) return;
+    var isOpen = getComputedStyle(dd).display !== 'none';
+    dd.style.display = isOpen ? 'none' : 'block';
+  };
+
+  function loadQuickItemsIfNeeded() {
+    if (quickItemsLoaded) return;
+    var homeContainer = document.getElementById('home-quick-preview-items');
+    if (!homeContainer) return;
+
+    if (typeof window.loadQuickDdItems !== 'function' || typeof window.openQuickOverlay !== 'function') {
+      homeContainer.innerHTML =
+        '<div class="loading-placeholder" style="color:var(--color-danger);">' +
+        '[TEST] 빠른실행 함수는 프로덕션(app.html) 환경에서만 동작합니다</div>';
+      return;
+    }
+
+    window.loadQuickDdItems();
+    mirrorQuickItems(0);
+  }
+
+  function mirrorQuickItems(attempt) {
+    var src = document.getElementById('quick-dd-items');
+    var dst = document.getElementById('home-quick-preview-items');
+    if (!src || !dst) return;
+
+    if (src.dataset.loaded === 'true') {
+      dst.innerHTML = src.innerHTML;
+      var items = dst.querySelectorAll('[onclick]');
+      for (var i = 0; i < items.length; i++) {
+        items[i].removeAttribute('onclick');
+        items[i].style.cursor = 'default';
+      }
+      quickItemsLoaded = true;
+      return;
+    }
+    if (attempt >= 20) {
+      dst.innerHTML =
+        '<div class="loading-placeholder" style="color:var(--color-danger);">' +
+        '항목 로드에 실패했습니다</div>';
+      return;
+    }
+    setTimeout(function () { mirrorQuickItems(attempt + 1); }, 100);
+  }
+
+  document.addEventListener('click', function (e) {
+    var container = document.getElementById('home-a2-preview');
+    if (!container || container.style.display === 'none') return;
+    if (container.contains(e.target)) return;
+    var hexWrap = document.getElementById('homeHexWrap');
+    if (hexWrap && hexWrap.contains(e.target)) return;
+    window.homeHidePreview();
+  });
+
+})();
+</script>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     외부 함수 스텁 — 독립 실행 시 에러 방지
+     실제 app.html 환경에서는 이들 함수가 미리 정의되어 있음
+═══════════════════════════════════════════════════════════════════ -->
+<script>
+  window.switchMenu = window.switchMenu || function(t){
+    alert('[TEST 모드] 실제 환경에서는 «' + t + '» 페이지로 이동합니다');
+  };
+  window.doSearch = window.doSearch || function(q){
+    alert('[TEST 모드] 실제 환경에서는 "' + q + '" 검색을 실행합니다');
+  };
+</script>
+
+</body>
+</html>

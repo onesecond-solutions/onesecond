@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[Test v1-full] MY SPACE (myspace)</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<link rel="stylesheet" href="../../../css/tokens.css">
+
+<style>
+:root {
+  --color-bg: #FFFFFF; --color-surface: #FFFFFF; --color-surface-2: #F6F7F9;
+  --color-border: #E5E7EB;
+  --color-text-primary: #1F2937; --color-text-secondary: #6B7280; --color-text-tertiary: #9CA3AF;
+  --gradient-header: transparent;
+  --shadow-sm: 0 2px 6px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 4px 14px rgba(17, 24, 39, 0.08);
+  --shadow-lg: 0 8px 28px rgba(17, 24, 39, 0.12);
+  --sidebar-width: 180px;
+}
+</style>
+
+<style>
+html, body { font-size: 16px; font-family: var(--font-sans); background: var(--color-bg); margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+@keyframes liveBlink { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.3; transform:scale(0.8); } }
+
+.a1 { height: var(--header-a1); background: #FFFFFF; border-bottom: 1px solid var(--color-border); color: var(--color-text-primary); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-6); flex-shrink: 0; }
+.brand { font-size: 1.5em; font-weight: var(--fw-bold); color: var(--color-text-primary); }
+.brand .brand-accent { color: var(--color-accent); }
+.a1-right { display: flex; gap: var(--space-3); align-items: center; }
+.pill { padding: 6px 14px; border-radius: var(--radius-full); background: var(--color-surface-2); border: 1px solid var(--color-border); font-size: 0.8125em; }
+.pill.pill-user { cursor: pointer; font-weight: var(--fw-semibold); }
+.pill.pill-live { color: var(--color-text-secondary); }
+
+.a2 { min-height: var(--header-a2); background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-6); gap: var(--space-4); }
+#a2-greeting { font-size: 0.9375em; color: var(--color-text-secondary); }
+.quick-btn { padding: 10px var(--space-4); border-radius: var(--radius-sm); background: var(--color-brand); border: 1px solid var(--color-brand); color: #fff; cursor: pointer; font-weight: var(--fw-bold); font-family: inherit; font-size: 0.9375em; }
+.font-ctrl-wrap { display: flex; align-items: center; gap: 7px; background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 5px 10px; }
+.font-ctrl-label { font-size: 0.9375em; font-weight: var(--fw-black); color: var(--color-text-secondary); }
+.font-ctrl-btns { display: flex; gap: 3px; }
+.font-ctrl-btn { width: 28px; height: 26px; border-radius: var(--radius-xs); border: 1px solid transparent; background: transparent; font-size: 0.75em; font-weight: var(--fw-bold); font-family: inherit; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.font-ctrl-btn.active { background: var(--color-brand); color: #fff; border-color: var(--color-brand); }
+.search-wrap { position: relative; flex: 1; max-width: 480px; }
+.search-input-row { display: flex; align-items: center; background: var(--color-surface-2); border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); padding: 0 var(--space-3); }
+.search-icon { font-size: 0.9375em; margin-right: 8px; opacity: 0.6; }
+.search-input { flex: 1; border: none; background: transparent; font-size: 0.875em; font-family: inherit; padding: 11px 0; outline: none; }
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.main { flex: 1; display: grid; grid-template-columns: var(--sidebar-width) 1fr var(--rightbar-width); min-height: 0; }
+
+.b { background: var(--color-surface-2); padding: var(--space-6) var(--space-3); display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--color-border); }
+.menu { display: flex; flex-direction: column; gap: var(--space-2); }
+.menu-item { padding: 12px 14px; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9375em; font-weight: var(--fw-medium); color: var(--color-text-secondary); white-space: nowrap; }
+.menu-item:hover { background: #FFFFFF; color: var(--color-text-primary); }
+.menu-item.active { background: var(--color-brand); color: #fff; font-weight: var(--fw-bold); box-shadow: 0 2px 6px rgba(160, 82, 45, 0.22); }
+.menu-item.menu-together { background: rgba(212, 132, 90, 0.08); border-left: 3px solid var(--color-accent); color: var(--color-text-primary); font-weight: var(--fw-semibold); padding-left: 11px; }
+.pro { background: #FFFFFF; border: 1px solid var(--color-border); padding: 14px; border-radius: var(--radius-md); text-align: center; font-size: 0.8125em; font-weight: var(--fw-semibold); color: var(--color-text-secondary); }
+.pro strong { color: var(--color-accent); }
+
+.d { padding: var(--space-6) var(--space-8); min-height: 0; display: flex; flex-direction: column; background: var(--color-bg); font-size: 19px; }
+.d > * { flex-shrink: 0; width: 100%; }
+
+.c { background: var(--color-surface-2); padding: var(--space-8) var(--space-5); border-left: 1px solid var(--color-border); }
+.c-box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5); margin-bottom: var(--space-4); }
+.c-box-label { font-size: 0.6875em; font-weight: var(--fw-bold); color: var(--color-accent); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: var(--space-2); }
+.c-box-title { font-size: 0.875em; font-weight: var(--fw-bold); color: var(--color-text-primary); margin-bottom: var(--space-2); }
+.c-box-desc { font-size: 0.8125em; color: var(--color-text-secondary); line-height: 1.7; }
+
+.site-footer { flex-shrink: 0; width: 100%; background: var(--color-surface-2); color: var(--color-text-secondary); padding: 14px var(--space-6); border-top: 1px solid var(--color-border); }
+.footer-inner { display: flex; align-items: center; justify-content: center; gap: var(--space-5); flex-wrap: wrap; }
+.footer-brand { font-size: 0.875em; font-weight: var(--fw-black); color: var(--color-text-primary); }
+.footer-brand span { color: var(--color-accent); }
+.footer-copy { font-size: 0.6875em; color: var(--color-text-tertiary); }
+.footer-link { font-size: 0.75em; color: var(--color-text-secondary); text-decoration: none; }
+.footer-kakao { display: inline-flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 14px; border-radius: var(--radius-sm); background: #FEE500; color: #2B1E14; text-decoration: none; font-size: 0.75em; font-weight: var(--fw-black); }
+
+.test-mode-bar { background: #FFF8F3; border-bottom: 1px solid var(--color-accent); padding: 6px var(--space-6); font-size: 11px; color: var(--color-accent); text-align: center; font-weight: var(--fw-bold); letter-spacing: 0.5px; }
+
+@media(max-width:960px) { .main { grid-template-columns: 160px 1fr; } .c { display: none; } }
+@media(max-width:767px) { .main { grid-template-columns: 1fr; } .b, .site-footer { display: none; } }
+</style>
+
+<style>
+.pg-outer { display: flex; flex-direction: column; width: 100%; gap: var(--space-4); }
+.pg-header-block { border-radius: var(--radius-md); overflow: hidden; }
+.pg-page-header { background: transparent; padding: var(--space-5) var(--space-1) var(--space-5) 24px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.pg-page-title { font-size: 1.5em; font-weight: var(--fw-black); color: var(--color-text-primary); letter-spacing: -0.5px; margin-bottom: 4px; }
+.pg-page-title .accent { color: var(--color-accent); }
+.pg-page-desc { font-size: 0.875em; color: var(--color-text-secondary); line-height: 1.6; }
+.pg-page-icon { font-size: 2.2em; opacity: 0.35; color: var(--color-accent); }
+
+.pg-tab-block { border-radius: var(--radius-md); background: var(--color-surface); border: 1px solid var(--color-border); padding: 2px var(--space-2); }
+.pg-tab-bar { display: flex; flex-wrap: wrap; gap: 0; }
+.pg-tab-btn { padding: 12px var(--space-4); border: none; background: transparent; font-size: 0.895em; font-weight: var(--fw-semibold); font-family: inherit; cursor: pointer; white-space: nowrap; color: var(--color-text-secondary); border-bottom: 3px solid transparent; transition: all var(--transition-fast); }
+.pg-tab-btn:hover { color: var(--color-text-primary); }
+.pg-tab-btn.active { font-weight: var(--fw-black); color: var(--color-accent); border-bottom-color: var(--color-accent); }
+
+.pg-content-block { border-radius: var(--radius-md); background: var(--color-surface); border: 1px solid var(--color-border); overflow: hidden; }
+.pg-content-inner { padding: var(--space-6); }
+
+.pg-footer-block { border-radius: var(--radius-md); overflow: hidden; }
+.pg-bottom-bar { background: var(--color-surface-2); color: var(--color-text-secondary); text-align: center; font-size: 0.8125em; font-weight: var(--fw-bold); padding: 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+</style>
+
+<style>
+.mys-actions { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: 0 0 var(--space-4); flex-wrap: wrap; }
+.mys-count { font-size: 0.8125em; color: var(--color-text-secondary); }
+.mys-count strong { color: var(--color-accent); font-weight: var(--fw-bold); }
+.mys-write-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--color-brand); color: #fff; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.895em; font-weight: var(--fw-bold); cursor: pointer; box-shadow: 0 2px 6px rgba(160, 82, 45, 0.22); }
+.mys-write-btn:hover { background: var(--color-brand-light); }
+
+.mys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+.mys-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.04);
+}
+.mys-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(17, 24, 39, 0.08); border-color: var(--color-accent); }
+.mys-card-stage {
+  display: inline-block;
+  font-size: 0.6875em; font-weight: var(--fw-bold);
+  padding: 2px 8px; border-radius: var(--radius-full);
+  background: var(--color-surface-2); color: var(--color-accent);
+  margin-bottom: var(--space-3);
+}
+.mys-card-title { font-size: 0.9375em; font-weight: var(--fw-bold); color: var(--color-text-primary); margin-bottom: var(--space-3); line-height: 1.4; }
+.mys-card-body { font-size: 0.8em; color: var(--color-text-secondary); line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: var(--space-4); }
+.mys-card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.7em; color: var(--color-text-tertiary); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+</style>
+
+</head>
+<body>
+
+<div class="test-mode-bar">
+  [DESIGN TEST v1-full] MY SPACE (myspace) · 사이드바 180px + 브라운 최소화 + 여백 확대
+</div>
+
+<div class="app">
+
+  <div class="a1">
+    <div class="brand">원세컨드 <span class="brand-accent">1s</span></div>
+    <div class="a1-right">
+      <div class="pill pill-live" style="display:flex;align-items:center;gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:#4caf50;display:inline-block;animation:liveBlink 1.5s infinite;"></span>실시간</div>
+      <a href="#" onclick="event.preventDefault();" style="height:28px;padding:0 12px;border-radius:var(--radius-xs);background:#FEF2F2;border:1px solid #FCA5A5;color:#B91C1C;font-size:0.75em;font-weight:700;display:flex;align-items:center;text-decoration:none;">⚠️ 전산장애신고</a>
+      <div class="pill pill-user">팀장님 팀장 ▾</div>
+    </div>
+  </div>
+
+  <div class="a2">
+    <div id="a2-greeting">안녕하세요 팀장님! 오늘도 화이팅입니다 🔥</div>
+    <div class="search-wrap"><div class="search-input-row"><span class="search-icon">🔍</span><input class="search-input" type="text" placeholder="스크립트, 게시글, 업무자료 검색..."></div></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="font-ctrl-wrap"><span class="font-ctrl-label">가</span><div class="font-ctrl-btns"><button class="font-ctrl-btn" onclick="setFontScale(this, 0.88)">소</button><button class="font-ctrl-btn active" onclick="setFontScale(this, 1)">중</button><button class="font-ctrl-btn" onclick="setFontScale(this, 1.25)">대</button></div></div>
+      <button class="quick-btn">⚡ 빠른 실행 ▾</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="b">
+      <div class="menu">
+        <div class="menu-item" onclick="switchMenuVisual(this)">홈</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">스크립트</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">현장 Q&amp;A</div>
+        <div class="menu-item active" onclick="switchMenuVisual(this)">MY SPACE</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">보험뉴스</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">Quick 메뉴</div>
+        <div class="menu-item menu-together" onclick="switchMenuVisual(this)">함께해요</div>
+      </div>
+      <div class="pro"><strong>PRO</strong> 이용중</div>
+    </div>
+
+    <div class="d" id="content-area">
+      <div class="pg-outer" id="page-myspace">
+
+        <div class="pg-header-block">
+          <div class="pg-page-header">
+            <div>
+              <div class="pg-page-title"><span class="accent">MY SPACE</span> · 나만의 도구 모음</div>
+              <div class="pg-page-desc">내 멘트, 내 자료, 리더 추천을 한 곳에서 관리합니다.</div>
+            </div>
+            <div class="pg-page-icon">📁</div>
+          </div>
+        </div>
+
+        <div class="pg-tab-block">
+          <div class="pg-tab-bar">
+            <button class="pg-tab-btn active" onclick="switchTab(this)">📝 나의 스크립트</button>
+            <button class="pg-tab-btn" onclick="switchTab(this)">📁 나의 자료</button>
+            <button class="pg-tab-btn" onclick="switchTab(this)">⭐ 리더 추천</button>
+          </div>
+        </div>
+
+        <div class="pg-content-block">
+          <div class="pg-content-inner">
+
+            <div class="mys-actions">
+              <div class="mys-count">전체 <strong>4</strong>개의 멘트</div>
+              <button class="mys-write-btn" onclick="alert('[TEST] 스크립트 작성 화면 이동')">✏️ 새 멘트 작성</button>
+            </div>
+
+            <div class="mys-grid">
+
+              <div class="mys-card" onclick="alert('[TEST] 멘트 상세 열기')">
+                <span class="mys-card-stage">도입반론</span>
+                <div class="mys-card-title">"지금 시간 안 되세요?" 받을 때 클로징으로 가는 한 문장</div>
+                <div class="mys-card-body">보통은 "그럼 언제가 괜찮으세요?"라고 되묻는데, 그러면 고객이 시간을 미룰 구실을 만들어줍니다. 저는 이 멘트로 바로 전환합니다 — "그럼 3분만 들어보시고 판단하시는 게..."</div>
+                <div class="mys-card-meta"><span>수정: 2일 전</span><span>사용: 12회</span></div>
+              </div>
+
+              <div class="mys-card" onclick="alert('[TEST] 멘트 상세 열기')">
+                <span class="mys-card-stage">필요성 강조</span>
+                <div class="mys-card-title">50대 부부, "아이 다 키웠다" 방어에 대응하는 논점 전환</div>
+                <div class="mys-card-body">아이를 다 키웠다는 건 목표 하나를 달성한 거지만, 실은 그 시점부터 '나와 아내의 건강'이 가정 전체의 안전망이 됩니다. 아이들이 독립한 후에도 부모의 병원비가...</div>
+                <div class="mys-card-meta"><span>수정: 5일 전</span><span>사용: 8회</span></div>
+              </div>
+
+              <div class="mys-card" onclick="alert('[TEST] 멘트 상세 열기')">
+                <span class="mys-card-stage">클로징</span>
+                <div class="mys-card-title">"생각해보겠다"는 고객 말에 침묵 후 이어붙이는 문장</div>
+                <div class="mys-card-body">침묵 3초를 먼저 둡니다. 그 후 "고객님, 생각하실 시간 드리는 게 맞죠. 그런데 지금 이 순간에도 조건이 바뀌고 있어서, 오늘 이야기 정리만 해두시면..."</div>
+                <div class="mys-card-meta"><span>수정: 1주 전</span><span>사용: 34회 ★</span></div>
+              </div>
+
+              <div class="mys-card" onclick="alert('[TEST] 멘트 상세 열기')">
+                <span class="mys-card-stage">반론 대응</span>
+                <div class="mys-card-title">"이미 보험 있어요" 받을 때 가치 재정의 멘트</div>
+                <div class="mys-card-body">기존에 가입한 보험이 있다고 거절하시는 분들에게 — "혹시 어느 회사 상품이신지 여쭤봐도 될까요? 저도 업계에 오래 있다 보니..."로 정보 확보하면서 전환하는...</div>
+                <div class="mys-card-meta"><span>수정: 2주 전</span><span>사용: 19회</span></div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <div class="pg-footer-block">
+          <div class="pg-bottom-bar">- 내가 만든 한 줄이, 계약 한 건을 만듭니다 -</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="c">
+      <div class="c-box">
+        <div class="c-box-label">나의 스크립트</div>
+        <div class="c-box-title">직접 저장한 멘트</div>
+        <div class="c-box-desc">막혔던 순간의 멘트를 저장하고 다음 통화에서 바로 꺼내 쓰세요.</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-label">나의 자료</div>
+        <div class="c-box-title">통화 중 꺼낼 자료</div>
+        <div class="c-box-desc">파일, 링크, 메모, 이미지를 한곳에 모아 바로 활용하세요.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">원세컨드 <span>1s</span></div>
+      <div class="footer-copy">© 2026 OneSecond. All rights reserved.</div>
+      <a class="footer-link" href="#" onclick="event.preventDefault();alert('[TEST] about 페이지');">서비스 소개</a>
+      <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 카카오 오픈채팅 문의</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+function switchMenuVisual(el) {
+  var menu = el.parentElement;
+  var items = menu.querySelectorAll('.menu-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+  el.classList.add('active');
+  if (el.textContent.trim() !== 'MY SPACE') {
+    alert('[TEST 모드] 실제 환경에서는 "' + el.textContent.trim() + '" 페이지로 이동합니다');
+  }
+}
+function setFontScale(btn, scale) {
+  var wrap = btn.parentElement;
+  var btns = wrap.querySelectorAll('.font-ctrl-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+  var area = document.getElementById('content-area');
+  if (area) area.style.fontSize = (19 * scale) + 'px';
+}
+function switchTab(btn) {
+  var bar = btn.parentElement;
+  var btns = bar.querySelectorAll('.pg-tab-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

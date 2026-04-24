@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[Test v2-full] 스크립트 — 사이드바 축소 + 세로 탭바 + 3열 본문</title>
+
+<!-- 폰트 -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+<!-- 원본 tokens.css -->
+<link rel="stylesheet" href="../../../css/tokens.css">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     v2 전역 오버라이드 (v1 + 사이드바 220→180 축소)
+═══════════════════════════════════════════════════════════════════ -->
+<style>
+  :root {
+    /* 중성 전환 */
+    --color-bg:             #FFFFFF;
+    --color-surface:        #FFFFFF;
+    --color-surface-2:      #F6F7F9;
+    --color-border:         #E5E7EB;
+    --color-text-primary:   #1F2937;
+    --color-text-secondary: #6B7280;
+    --color-text-tertiary:  #9CA3AF;
+    --gradient-header: transparent;
+    --shadow-sm: 0 2px 6px rgba(17, 24, 39, 0.06);
+    --shadow-md: 0 4px 14px rgba(17, 24, 39, 0.08);
+    --shadow-lg: 0 8px 28px rgba(17, 24, 39, 0.12);
+
+    /* ★ v2 핵심 변경: 사이드바 220→180 축소 */
+    --sidebar-width: 180px;
+
+    /* 10단계 색상 팔레트 (유지) */
+    --stg-1-fg:  #D4845A;  --stg-1-bg:  #FBEEE5;
+    --stg-2-fg:  #B5673E;  --stg-2-bg:  #F5E4D5;
+    --stg-3-fg:  #A0522D;  --stg-3-bg:  #F0D9C2;
+    --stg-4-fg:  #8B4513;  --stg-4-bg:  #E8CDB0;
+    --stg-5-fg:  #7B3F1E;  --stg-5-bg:  #E0C29A;
+    --stg-6-fg:  #6B3410;  --stg-6-bg:  #D4B088;
+    --stg-7-fg:  #A0522D;  --stg-7-bg:  #F0D9C2;
+    --stg-8-fg:  #5C2A0A;  --stg-8-bg:  #C89E76;
+    --stg-9-fg:  #4A2108;  --stg-9-bg:  #B88C64;
+    --stg-10-fg: #3D1A05;  --stg-10-bg: #A87A52;
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     app.html 프레임 CSS
+═══════════════════════════════════════════════════════════════════ -->
+<style>
+html, body { font-size: 16px; font-family: var(--font-sans); background: var(--color-bg); margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
+
+@keyframes liveBlink { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.3; transform:scale(0.8); } }
+
+/* A1 */
+.a1 { height: var(--header-a1); background: #FFFFFF; border-bottom: 1px solid var(--color-border); color: var(--color-text-primary); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-6); flex-shrink: 0; }
+.brand { font-size: 1.5em; font-weight: var(--fw-bold); color: var(--color-text-primary); letter-spacing: -0.5px; }
+.brand .brand-accent { color: var(--color-accent); }
+.a1-right { display: flex; gap: var(--space-3); align-items: center; }
+.pill { padding: 6px 14px; border-radius: var(--radius-full); background: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text-primary); font-size: 0.8125em; cursor: default; }
+.pill.pill-live { color: var(--color-text-secondary); }
+.pill.pill-user { cursor: pointer; font-weight: var(--fw-semibold); }
+.pill.pill-user:hover { background: var(--color-border); }
+
+/* A2 */
+.a2 { min-height: var(--header-a2); background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-6); flex-shrink: 0; gap: var(--space-4); }
+#a2-greeting { font-size: 0.9375em; color: var(--color-text-secondary); white-space: nowrap; }
+.quick-btn { padding: 10px var(--space-4); border-radius: var(--radius-sm); background: var(--color-brand); border: 1px solid var(--color-brand); color: #fff; cursor: pointer; font-weight: var(--fw-bold); font-family: inherit; font-size: 0.9375em; transition: background var(--transition-fast); }
+.quick-btn:hover { background: var(--color-brand-light); border-color: var(--color-brand-light); }
+
+.font-ctrl-wrap { display: flex; align-items: center; gap: 7px; background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 5px 10px; user-select: none; }
+.font-ctrl-label { font-size: 0.9375em; font-weight: var(--fw-black); color: var(--color-text-secondary); line-height: 1; }
+.font-ctrl-btns { display: flex; gap: 3px; }
+.font-ctrl-btn { width: 28px; height: 26px; border-radius: var(--radius-xs); border: 1px solid transparent; background: transparent; font-size: 0.75em; font-weight: var(--fw-bold); font-family: inherit; color: var(--color-text-secondary); cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; }
+.font-ctrl-btn:hover { background: var(--color-surface-2); color: var(--color-text-primary); }
+.font-ctrl-btn.active { background: var(--color-brand); color: #fff; border-color: var(--color-brand); }
+
+.search-wrap { position: relative; flex: 1; max-width: 480px; }
+.search-input-row { display: flex; align-items: center; background: var(--color-surface-2); border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); padding: 0 var(--space-3); transition: border-color var(--transition-normal), box-shadow var(--transition-normal); }
+.search-input-row:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(212,132,90,0.14); background: var(--color-surface); }
+.search-icon { font-size: 0.9375em; flex-shrink: 0; margin-right: 8px; opacity: 0.6; }
+.search-input { flex: 1; border: none; background: transparent; font-size: 0.875em; font-family: inherit; color: var(--color-text-primary); padding: 11px 0; outline: none; min-width: 0; }
+.search-input::placeholder { color: var(--color-text-tertiary); }
+
+/* Layout */
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.main { flex: 1; display: grid; grid-template-columns: var(--sidebar-width) 1fr var(--rightbar-width); min-height: 0; }
+
+/* B 사이드바 — 180px 축소, 내부 패딩 축소로 가독성 확보 */
+.b { background: var(--color-surface-2); color: var(--color-text-primary); padding: var(--space-6) var(--space-3); display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--color-border); }
+.menu { display: flex; flex-direction: column; gap: var(--space-2); }
+.menu-item { padding: 12px 14px; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9375em; font-weight: var(--fw-medium); color: var(--color-text-secondary); transition: background var(--transition-fast), color var(--transition-fast); user-select: none; white-space: nowrap; }
+.menu-item:hover { background: #FFFFFF; color: var(--color-text-primary); }
+.menu-item.active { background: var(--color-brand); color: #fff; font-weight: var(--fw-bold); box-shadow: 0 2px 6px rgba(160, 82, 45, 0.22); }
+.menu-item.menu-together { background: rgba(212, 132, 90, 0.08); border-left: 3px solid var(--color-accent); color: var(--color-text-primary); font-weight: var(--fw-semibold); padding-left: 11px; }
+.menu-item.menu-together:hover { background: rgba(212, 132, 90, 0.16); }
+.pro { background: #FFFFFF; border: 1px solid var(--color-border); padding: 14px; border-radius: var(--radius-md); text-align: center; font-size: 0.8125em; font-weight: var(--fw-semibold); color: var(--color-text-secondary); }
+.pro strong { color: var(--color-accent); }
+
+/* D 콘텐츠 */
+.d { padding: var(--space-6) var(--space-8); min-height: 0; display: flex; flex-direction: column; background: var(--color-bg); font-size: 19px; }
+.d > * { flex-shrink: 0; width: 100%; }
+
+/* C 우측바 */
+.c { background: var(--color-surface-2); padding: var(--space-8) var(--space-5); border-left: 1px solid var(--color-border); }
+.c-box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5); margin-bottom: var(--space-4); }
+.c-box-label { font-size: 0.6875em; font-weight: var(--fw-bold); color: var(--color-accent); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: var(--space-2); }
+.c-box-title { font-size: 0.875em; font-weight: var(--fw-bold); color: var(--color-text-primary); margin-bottom: var(--space-2); }
+.c-box-desc { font-size: 0.8125em; color: var(--color-text-secondary); line-height: 1.7; }
+
+/* 푸터 */
+.site-footer { flex-shrink: 0; width: 100%; background: var(--color-surface-2); color: var(--color-text-secondary); padding: 14px var(--space-6); border-top: 1px solid var(--color-border); }
+.footer-inner { display: flex; align-items: center; justify-content: center; gap: var(--space-5); flex-wrap: wrap; }
+.footer-brand { font-size: 0.875em; font-weight: var(--fw-black); color: var(--color-text-primary); }
+.footer-brand span { color: var(--color-accent); }
+.footer-copy { font-size: 0.6875em; color: var(--color-text-tertiary); }
+.footer-link { font-size: 0.75em; color: var(--color-text-secondary); text-decoration: none; }
+.footer-link:hover { color: var(--color-accent); }
+.footer-kakao { display: inline-flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 14px; border-radius: var(--radius-sm); background: #FEE500; color: #2B1E14; text-decoration: none; font-size: 0.75em; font-weight: var(--fw-black); }
+
+.test-mode-bar { background: #FFF8F3; border-bottom: 1px solid var(--color-accent); padding: 6px var(--space-6); font-size: 11px; color: var(--color-accent); text-align: center; font-weight: var(--fw-bold); letter-spacing: 0.5px; }
+
+@media(max-width:960px) { .main { grid-template-columns: 160px 1fr; } .c { display: none; } }
+@media(max-width:767px) { .main { grid-template-columns: 1fr; } .b, .site-footer { display: none; } }
+</style>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     scripts v2 레이아웃 — 세로 탭바 + 3열 본문
+═══════════════════════════════════════════════════════════════════ -->
+<style>
+.sc-outer { display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* ★ 세로 탭바 + 본문 — 가로 2단 구조 */
+.sc-body-wrap {
+  display: grid;
+  grid-template-columns: 180px 1fr;   /* 세로 탭 180px + 나머지 */
+  gap: var(--space-5);
+  min-height: 600px;
+}
+
+/* 세로 탭바 */
+.sc-vtab-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex; flex-direction: column; gap: var(--space-2);
+  align-self: flex-start;
+  position: sticky; top: var(--space-3);
+}
+.sc-vtab-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: 12px var(--space-3);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  background: transparent;
+  transition: all var(--transition-fast);
+  min-height: 44px;
+}
+.sc-vtab-item:hover { background: var(--color-surface-2); transform: translateX(1px); }
+/* ★ 활성 탭 — 사이드바 활성 버튼처럼 solid fill + 임팩트 강화 */
+.sc-vtab-item.active {
+  background: var(--stg-fg, var(--color-brand));
+  border-left-color: var(--stg-fg, var(--color-accent));
+  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.18),
+              0 2px 6px rgba(17, 24, 39, 0.10);
+  transform: translateX(3px);
+  z-index: 2;
+}
+.sc-vtab-icon {
+  font-size: 1.1em;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: filter var(--transition-fast);
+}
+.sc-vtab-item.active .sc-vtab-icon {
+  filter: brightness(0) invert(1); /* 이모지를 흰색 실루엣으로 */
+}
+.sc-vtab-label {
+  flex: 1;
+  font-size: 0.875em;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition-fast), font-weight var(--transition-fast);
+}
+.sc-vtab-item.active .sc-vtab-label {
+  color: #fff;
+  font-weight: var(--fw-black);
+}
+.sc-vtab-count {
+  font-size: 0.6875em;
+  font-weight: var(--fw-bold);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.sc-vtab-item.active .sc-vtab-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+/* 3열 그리드 (col-1 제거, col-2/3/4만) */
+.sc-grid-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: visible;
+  padding: 2px;
+}
+.sc-grid {
+  display: grid;
+  /* 기본 = STEP 1 (스크립트 선택 중, col-2 최대) */
+  grid-template-columns: 3fr 1fr 1fr;
+  transition: grid-template-columns 0.35s ease;
+  min-height: 580px;
+}
+/* STEP 2: 블록 고르는 중 — col-3 최대 */
+.sc-grid.step-2 {
+  grid-template-columns: 1fr 3.5fr 2fr;
+}
+/* STEP 3: 본문 읽는 중 — col-4 최대 */
+.sc-grid.step-3 {
+  grid-template-columns: 0.8fr 1fr 5fr;
+}
+.sc-col { border-right: 1px solid var(--color-border); overflow: visible; transition: opacity 0.25s ease; display: flex; flex-direction: column; }
+.sc-col:last-child { border-right: none; }
+.sc-col.dim  { opacity: 0.55; }
+.sc-col.now  { opacity: 1; background: #FAFBFC; }
+.sc-col.done { opacity: 0.85; }
+
+.sc-list { display: flex; flex-direction: column; padding: var(--space-4); gap: var(--space-3); }
+.sc-list-item { padding: var(--space-4) var(--space-4); border-radius: var(--radius-sm); border-left: 3px solid transparent; cursor: pointer; background: var(--color-surface); min-height: 64px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 4px rgba(17, 24, 39, 0.04), 0 1px 2px rgba(17, 24, 39, 0.03); transform: translateY(0); transition: all var(--transition-fast); }
+.sc-list-item:hover { background: var(--color-surface-2); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(17, 24, 39, 0.08), 0 2px 4px rgba(17, 24, 39, 0.05); }
+.sc-list-item.active { border-left-color: var(--stg-fg, var(--color-accent)); background: var(--stg-bg, var(--color-surface-2)); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(17, 24, 39, 0.12), 0 3px 6px rgba(17, 24, 39, 0.06); z-index: 1; }
+.sc-list-item.active .sc-list-title { color: var(--stg-fg, var(--color-brand)); }
+.sc-list-item .sc-num { display: inline-block; font-size: var(--text-xs); font-weight: var(--fw-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--color-text-tertiary); color: #fff; margin-bottom: 4px; width: fit-content; transition: background var(--transition-fast); }
+.sc-list-item.active .sc-num { background: var(--stg-fg, var(--color-brand)); }
+.sc-list-title { font-size: var(--text-body); font-weight: var(--fw-bold); color: var(--color-text-primary); line-height: 1.4; }
+.sc-list-sub { font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 3px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* 열별 폰트 */
+.sc-col-2 .sc-list-title { font-size: var(--text-label); }
+.sc-col-2 .sc-list-sub   { font-size: 0.632em; }
+.sc-col-2 .sc-list-item.active .sc-list-title { font-size: 0.842em; }
+.sc-col-3 .sc-list-title { font-size: var(--text-tab); }
+.sc-col-3 .sc-list-sub   { font-size: var(--text-xs); }
+.sc-col-3 .sc-list-item.active .sc-list-title { font-size: 0.9474em; }
+
+.sc-col.done .sc-list-item:not(.active) { opacity: 0.5; }
+.sc-col.done .sc-list-item:not(.active) .sc-list-title { color: var(--color-text-secondary); }
+
+/* 열 4 */
+.sc-col-4 { background: var(--color-surface-2); }
+.sc-detail { padding: var(--space-10); overflow-y: auto; height: 100%; }
+.sc-detail-tag { display: inline-block; font-size: var(--text-xs); font-weight: var(--fw-bold); padding: 4px 12px; border-radius: var(--radius-full); background: var(--stg-fg, var(--color-brand)); color: #fff; margin-bottom: var(--space-3); box-shadow: 0 2px 4px rgba(17, 24, 39, 0.08); }
+.sc-detail-title { font-size: var(--text-h2); font-weight: var(--fw-black); color: var(--color-text-primary); margin-bottom: 4px; line-height: 1.4; letter-spacing: -0.3px; }
+.sc-detail-sub { font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: var(--space-5); line-height: 1.5; }
+.sc-detail-body { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-8); margin-bottom: var(--space-4); box-shadow: 0 6px 14px rgba(17, 24, 39, 0.10), 0 3px 6px rgba(17, 24, 39, 0.05); transform: translateY(-1px); }
+.sc-detail-body .sc-html { font-size: var(--text-tab); color: var(--color-text-primary); line-height: 2; }
+.sc-detail-body .sc-html strong { color: var(--stg-fg, var(--color-brand)); font-weight: var(--fw-black); }
+.sc-detail-body .sc-html p { margin-bottom: var(--space-3); }
+.sc-detail-body .sc-html p:last-child { margin-bottom: 0; }
+
+.sc-tip { background: var(--stg-bg, var(--color-surface-2)); border-left: 3px solid var(--stg-fg, var(--color-accent)); border-radius: var(--radius-sm); padding: var(--space-4) var(--space-5); font-size: var(--text-xs); color: var(--color-text-secondary); line-height: 1.7; }
+.sc-tip strong { color: var(--stg-fg, var(--color-brand)); font-weight: var(--fw-bold); }
+
+.sc-footer { background: var(--color-surface-2); color: var(--color-text-secondary); text-align: center; font-size: var(--text-label); font-weight: var(--fw-bold); padding: var(--space-4) var(--space-5); border-radius: var(--radius-md); border: 1px solid var(--color-border); }
+
+/* 반응형 — 중간 폭에서 세로 탭 축소 */
+@media (max-width: 1200px) {
+  .sc-body-wrap { grid-template-columns: 160px 1fr; gap: var(--space-4); }
+  .sc-vtab-item { padding: 10px var(--space-2); }
+  .sc-vtab-label { font-size: 0.8125em; }
+}
+@media (max-width: 900px) {
+  .sc-body-wrap { grid-template-columns: 1fr; }
+  .sc-vtab-wrap { flex-direction: row; flex-wrap: wrap; position: static; }
+  .sc-vtab-item { flex: 1 1 140px; }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="test-mode-bar">
+  [DESIGN TEST v2-full] 사이드바 180px 축소 + 세로 탭바 + 3열 본문 · STEP 3 상태 · v1과 비교용
+</div>
+
+<div class="app">
+
+  <!-- A1 -->
+  <div class="a1">
+    <div class="brand">원세컨드 <span class="brand-accent">1s</span></div>
+    <div class="a1-right">
+      <div class="pill pill-live" style="display:flex;align-items:center;gap:6px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#4caf50;display:inline-block;animation:liveBlink 1.5s infinite;"></span>실시간
+      </div>
+      <a href="https://open.kakao.com/o/svu80Moi" target="_blank"
+         style="height:28px;padding:0 12px;border-radius:var(--radius-xs);background:#FEF2F2;border:1px solid #FCA5A5;color:#B91C1C;font-size:0.75em;font-weight:700;display:flex;align-items:center;text-decoration:none;white-space:nowrap;">
+        ⚠️ 전산장애신고
+      </a>
+      <div class="pill pill-user">팀장님 팀장 ▾</div>
+    </div>
+  </div>
+
+  <!-- A2 -->
+  <div class="a2">
+    <div id="a2-greeting">안녕하세요 팀장님! 오늘도 화이팅입니다 🔥</div>
+    <div class="search-wrap">
+      <div class="search-input-row">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="스크립트, 게시글, 업무자료 검색..." autocomplete="off">
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="font-ctrl-wrap">
+        <span class="font-ctrl-label">가</span>
+        <div class="font-ctrl-btns">
+          <button class="font-ctrl-btn" onclick="setFontScale(this, 0.88)">소</button>
+          <button class="font-ctrl-btn active" onclick="setFontScale(this, 1)">중</button>
+          <button class="font-ctrl-btn" onclick="setFontScale(this, 1.25)">대</button>
+        </div>
+      </div>
+      <button class="quick-btn">⚡ 빠른 실행 ▾</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- B 사이드바 (180px 축소) — 스크립트 활성 -->
+    <div class="b">
+      <div class="menu">
+        <div class="menu-item" onclick="switchMenuVisual(this)">홈</div>
+        <div class="menu-item active" onclick="switchMenuVisual(this)">스크립트</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">현장 Q&amp;A</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">MY SPACE</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">보험뉴스</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">Quick 메뉴</div>
+        <div class="menu-item menu-together" onclick="switchMenuVisual(this)">함께해요</div>
+      </div>
+      <div class="pro"><strong>PRO</strong> 이용중</div>
+    </div>
+
+    <!-- D 콘텐츠 -->
+    <div class="d" id="content-area">
+
+      <div class="sc-outer" id="page-scripts">
+
+        <div class="sc-body-wrap">
+
+          <!-- 세로 탭바 (10단계) -->
+          <div class="sc-vtab-wrap" id="sc-vtab-wrap">
+            <div class="sc-vtab-item" onclick="activateVtab(this, 1)" style="--stg-fg: var(--stg-1-fg); --stg-bg: var(--stg-1-bg);">
+              <span class="sc-vtab-icon">📞</span><span class="sc-vtab-label">도입인사</span><span class="sc-vtab-count">4</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 2)" style="--stg-fg: var(--stg-2-fg); --stg-bg: var(--stg-2-bg);">
+              <span class="sc-vtab-icon">💬</span><span class="sc-vtab-label">도입반론</span><span class="sc-vtab-count">3</span>
+            </div>
+            <div class="sc-vtab-item active" onclick="activateVtab(this, 3)" style="--stg-fg: var(--stg-3-fg); --stg-bg: var(--stg-3-bg);">
+              <span class="sc-vtab-icon">🔥</span><span class="sc-vtab-label">필요성 ①</span><span class="sc-vtab-count">3</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 4)" style="--stg-fg: var(--stg-4-fg); --stg-bg: var(--stg-4-bg);">
+              <span class="sc-vtab-icon">🔎</span><span class="sc-vtab-label">상황 확인</span><span class="sc-vtab-count">5</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 5)" style="--stg-fg: var(--stg-5-fg); --stg-bg: var(--stg-5-bg);">
+              <span class="sc-vtab-icon">📊</span><span class="sc-vtab-label">보장 분석</span><span class="sc-vtab-count">2</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 6)" style="--stg-fg: var(--stg-6-fg); --stg-bg: var(--stg-6-bg);">
+              <span class="sc-vtab-icon">📦</span><span class="sc-vtab-label">상품 설명</span><span class="sc-vtab-count">4</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 7)" style="--stg-fg: var(--stg-7-fg); --stg-bg: var(--stg-7-bg);">
+              <span class="sc-vtab-icon">🔥</span><span class="sc-vtab-label">필요성 ②</span><span class="sc-vtab-count">2</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 8)" style="--stg-fg: var(--stg-8-fg); --stg-bg: var(--stg-8-bg);">
+              <span class="sc-vtab-icon">✅</span><span class="sc-vtab-label">클로징</span><span class="sc-vtab-count">3</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 9)" style="--stg-fg: var(--stg-9-fg); --stg-bg: var(--stg-9-bg);">
+              <span class="sc-vtab-icon">⚡</span><span class="sc-vtab-label">반론 대응</span><span class="sc-vtab-count">5</span>
+            </div>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 10)" style="--stg-fg: var(--stg-10-fg); --stg-bg: var(--stg-10-bg);">
+              <span class="sc-vtab-icon">🔚</span><span class="sc-vtab-label">2차 클로징</span><span class="sc-vtab-count">2</span>
+            </div>
+          </div>
+
+          <!-- 3열 그리드 (col-2, col-3, col-4) -->
+          <div class="sc-grid-wrap">
+            <div class="sc-grid step-3" id="sc-grid" style="--stg-fg: var(--stg-3-fg); --stg-bg: var(--stg-3-bg); --stg-bg-soft: var(--stg-3-bg);">
+
+              <div class="sc-col sc-col-2 done" id="sc-col-2">
+                <div class="sc-list">
+                  <div class="sc-list-item active" onclick="selectScript(this, 1)">
+                    <div class="sc-num">1</div>
+                    <div class="sc-list-title">왜 보험이 필요한가</div>
+                    <div class="sc-list-sub">불확실성의 시대, 가족을 지키는 최소한의 준비</div>
+                  </div>
+                  <div class="sc-list-item" onclick="selectScript(this, 2)">
+                    <div class="sc-num">2</div>
+                    <div class="sc-list-title">준비 없는 노후의 위험</div>
+                    <div class="sc-list-sub">평균 수명 증가와 의료비 급등</div>
+                  </div>
+                  <div class="sc-list-item" onclick="selectScript(this, 3)">
+                    <div class="sc-num">3</div>
+                    <div class="sc-list-title">국가보장의 한계</div>
+                    <div class="sc-list-sub">건강보험만으로는 부족한 이유</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sc-col sc-col-3 done" id="sc-col-3">
+                <div class="sc-list">
+                  <div class="sc-list-item" onclick="selectBlock(this, 1)">
+                    <div class="sc-num">①</div>
+                    <div class="sc-list-title">불확실성의 시대</div>
+                    <div class="sc-list-sub">예측할 수 없는 리스크</div>
+                  </div>
+                  <div class="sc-list-item active" onclick="selectBlock(this, 2)">
+                    <div class="sc-num">②</div>
+                    <div class="sc-list-title">가족을 위한 안전장치</div>
+                    <div class="sc-list-sub">남겨진 사람들의 삶</div>
+                  </div>
+                  <div class="sc-list-item" onclick="selectBlock(this, 3)">
+                    <div class="sc-num">③</div>
+                    <div class="sc-list-title">전문가의 관점</div>
+                    <div class="sc-list-sub">재무설계사가 말하는 보험의 본질</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sc-col sc-col-4 now" id="sc-col-4">
+                <div class="sc-detail">
+                  <span class="sc-detail-tag">왜 보험이 필요한가</span>
+                  <div class="sc-detail-title">② 가족을 위한 안전장치</div>
+                  <div class="sc-detail-sub">필요성 강조 1 · 남겨진 사람들의 삶을 구체적으로 그리게 하는 단계</div>
+
+                  <div class="sc-detail-body">
+                    <div class="sc-html">
+                      <p>고객님, 혹시 <strong>"내가 없으면 가족이 어떻게 될까"</strong> 라고 진지하게 생각해보신 적 있으세요?</p>
+                      <p>대부분의 가장님들은 이 질문을 받으면 잠시 멈칫하십니다. 평소엔 생각하지 않지만, 막상 떠올리면 <strong>가장 중요한 질문</strong>이기 때문이에요.</p>
+                      <p>지금 고객님이 내는 월 15만원은 <strong>커피 한두 잔 값</strong>입니다. 그런데 그 금액이 <strong>사랑하는 가족의 미래</strong>를 지켜준다면, 이건 보험료가 아니라 <strong>사랑의 표현</strong>이 아닐까요?</p>
+                      <p>아이가 아직 초등학생이시죠? 그 아이가 고등학교, 대학교, 결혼까지 — 고객님이 끝까지 옆에 있을 수 있다면 좋겠지만, 세상 일은 우리가 원하는 대로만 흘러가지 않습니다.</p>
+                    </div>
+                  </div>
+
+                  <div class="sc-tip">
+                    <strong>현장 팁:</strong> "만약"이라는 단어보다 "끝까지 옆에 있을 수 있다면"처럼 긍정형으로 돌려 표현하세요. 고객이 거부감 없이 이미지를 떠올립니다.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="sc-footer">
+          - 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- C 우측바 -->
+    <div class="c">
+      <div class="c-box">
+        <div class="c-box-label">실전 스크립트 추천</div>
+        <div class="c-box-title">추천 스크립트</div>
+        <div class="c-box-desc">오늘의 실전 스크립트 추천이 이 자리에 표시됩니다.</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-label">Leader Pick</div>
+        <div class="c-box-title">팀장 추천</div>
+        <div class="c-box-desc">팀장이 선택한 추천 스크립트입니다.</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-label">진행 상태</div>
+        <div class="c-box-title">현재 STEP 3</div>
+        <div class="c-box-desc">좌측 세로 탭에서 단계를 선택하면 오른쪽 본문이 해당 단계로 전환됩니다.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">원세컨드 <span>1s</span></div>
+      <div class="footer-copy">© 2026 OneSecond. All rights reserved.</div>
+      <a class="footer-link" href="#" onclick="event.preventDefault();alert('[TEST] about 페이지로 이동');">서비스 소개</a>
+      <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 카카오 오픈채팅 문의</a>
+    </div>
+  </footer>
+</div>
+
+
+<script>
+function switchMenuVisual(el) {
+  var menu = el.parentElement;
+  var items = menu.querySelectorAll('.menu-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+  el.classList.add('active');
+  if (el.textContent.trim() !== '스크립트') {
+    alert('[TEST 모드] 실제 환경에서는 "' + el.textContent.trim() + '" 페이지로 이동합니다');
+  }
+}
+
+function setFontScale(btn, scale) {
+  var wrap = btn.parentElement;
+  var btns = wrap.querySelectorAll('.font-ctrl-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+  var area = document.getElementById('content-area');
+  if (area) area.style.fontSize = (19 * scale) + 'px';
+}
+
+/* 세로 탭 클릭 → 단계 색상 전환 */
+function activateVtab(el, stageNum) {
+  var wrap = el.parentElement;
+  var items = wrap.querySelectorAll('.sc-vtab-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+  el.classList.add('active');
+
+  var fg = 'var(--stg-' + stageNum + '-fg)';
+  var bg = 'var(--stg-' + stageNum + '-bg)';
+
+  var grid = document.getElementById('sc-grid');
+  if (grid) {
+    grid.style.setProperty('--stg-fg', fg);
+    grid.style.setProperty('--stg-bg', bg);
+    grid.style.setProperty('--stg-bg-soft', bg);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   슬라이드 애니메이션 — STEP 전환 (열 폭 0.35s 전환)
+═══════════════════════════════════════════════ */
+
+var _col4OriginalHTML = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  // 초기 col-4 본문 HTML을 캐시 (STEP 2에서 복원용 placeholder 이전에 보존)
+  var col4 = document.getElementById('sc-col-4');
+  if (col4) _col4OriginalHTML = col4.innerHTML;
+});
+
+function setGridStep(step) {
+  var grid = document.getElementById('sc-grid');
+  if (!grid) return;
+  grid.classList.remove('step-2', 'step-3');
+  if (step === 2) grid.classList.add('step-2');
+  else if (step === 3) grid.classList.add('step-3');
+  /* step === 1: 기본 CSS (3fr 1fr 1fr) */
+
+  var col2 = document.getElementById('sc-col-2');
+  var col3 = document.getElementById('sc-col-3');
+  var col4 = document.getElementById('sc-col-4');
+
+  [col2, col3, col4].forEach(function(c){
+    if (!c) return;
+    c.classList.remove('now','dim','done');
+  });
+
+  if (step === 1) {
+    col2.classList.add('now'); col3.classList.add('dim'); col4.classList.add('dim');
+  } else if (step === 2) {
+    col2.classList.add('done'); col3.classList.add('now'); col4.classList.add('dim');
+  } else {
+    col2.classList.add('done'); col3.classList.add('done'); col4.classList.add('now');
+  }
+}
+
+/* 스크립트 클릭 → STEP 2 로 전환 (col-3 확장, col-4 접힘) */
+function selectScript(el, scriptNum) {
+  var col2 = document.getElementById('sc-col-2');
+  if (!col2) return;
+
+  /* 이미 활성이면 역방향으로 전진(STEP 3) — 데모 편의 */
+  if (el.classList.contains('active')) {
+    setGridStep(3);
+    return;
+  }
+
+  var items = col2.querySelectorAll('.sc-list-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+  el.classList.add('active');
+
+  /* col-3 활성 선택 초기화 */
+  var col3 = document.getElementById('sc-col-3');
+  var blocks = col3.querySelectorAll('.sc-list-item');
+  for (var j = 0; j < blocks.length; j++) blocks[j].classList.remove('active');
+
+  /* col-4 placeholder 로 */
+  var col4 = document.getElementById('sc-col-4');
+  if (col4) col4.innerHTML = '<div class="sc-empty" style="flex:1;">← 세부 항목 선택</div>';
+
+  setGridStep(2);
+}
+
+/* 블록 클릭 → STEP 3 로 전환 (col-4 확장, 본문 복원) */
+function selectBlock(el, blockNum) {
+  var col3 = document.getElementById('sc-col-3');
+  if (!col3) return;
+
+  var items = col3.querySelectorAll('.sc-list-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+  el.classList.add('active');
+
+  /* col-4 본문 복원 + 타이틀을 선택한 블록으로 동기화 (시각만) */
+  var col4 = document.getElementById('sc-col-4');
+  if (col4 && _col4OriginalHTML) {
+    col4.innerHTML = _col4OriginalHTML;
+    var numMarks = ['','①','②','③'];
+    var labels   = ['','불확실성의 시대','가족을 위한 안전장치','전문가의 관점'];
+    var titleEl = col4.querySelector('.sc-detail-title');
+    if (titleEl && blockNum && labels[blockNum]) {
+      titleEl.textContent = numMarks[blockNum] + ' ' + labels[blockNum];
+    }
+  }
+
+  setGridStep(3);
+}
+</script>
+
+</body>
+</html>
