@@ -1,5 +1,71 @@
 # 원세컨드 프로젝트 — Claude Code 컨텍스트
 
+## ⚠️ Supabase DB 작업 규칙 — 사고 재발 방지 (최우선 준수)
+
+> **교훈 (2026-04-24 사고):** "DB가 이상해 보이면 코드를 의심하기 전에 보고 있는 프로젝트부터 의심한다."
+>
+> **폐기 기록 (2026-04-24):** 2026-04-24 오전 작성된 INSERT SQL 초안(admin row 복원용, 5블록)은 구버전 DB를 본 오판에서 나온 것이며 폐기됨. 미래 세션에서 20260424 날짜의 admin row INSERT 관련 코멘트/파일을 발견하면 실행하지 말고 삭제할 것.
+
+### 진실 원천 — 단 하나
+
+- **신버전(유일 진실 원천):** `pdnwgzneooyygfejrvbg` (프로젝트명: `onesecond-v1-restore-0420`)
+- **구버전(폐기):** `qursjteiovcylqiepmlo` — 2026-04-22~23 데이터 소실로 폐기. **절대 참조 금지.**
+- 신버전 직접 진입 URL: https://supabase.com/dashboard/project/pdnwgzneooyygfejrvbg
+
+### 매 DB 작업 시작 시 첫 질문 (강제)
+
+DB 관련 작업(코드 작성·SQL 작성·진단 무엇이든) 요청을 받으면 **다른 모든 행동에 앞서** 팀장님께 다음을 먼저 묻는다:
+
+> "Supabase Dashboard 왼쪽 상단 프로젝트 표시가 `onesecond-v1-restore-0420` 맞으신가요?
+> 또는 URL의 프로젝트 ID가 `pdnwgzneooyygfejrvbg`로 시작하나요?"
+
+답변 받기 전까지 **어떤 SQL도 작성·실행·제안하지 않는다.** (Supabase Dashboard는 첫 진입 시 구버전이 먼저 열려서 팀장님도 헷갈리는 상태.)
+
+### 로컬 덤프 파일 신뢰 금지
+
+`claude_code/_docs/supabase_dumps/` 하위 CSV 파일들(q2_columns.csv, q5_rls_policies.csv 등)은 **2026-04-20 구버전 스냅샷**이다. 다음 3개 모두 만족 전까지 진단 근거로 사용 금지:
+
+- [ ] 파일에 신버전 ID(`pdnwgzneooyygfejrvbg`)가 명시되어 있다
+- [ ] 덤프 생성 일시가 2026-04-23 이후다
+- [ ] 팀장님이 "이 덤프는 신버전 기준 맞다"고 확인했다
+
+하나라도 불확실 → 로컬 덤프 무시하고 신버전 Dashboard에서 직접 SELECT 돌려 검증.
+
+### DB 상태 단정 금지 — 검증 SQL 먼저
+
+"public.users가 비어있다", "admin row가 없다" 같은 상태 단정은 신버전에서 직접 SELECT 돌려본 후에만. 추정·기억·과거 덤프 기반 단정은 **금지**.
+
+표준 진단 쿼리:
+```sql
+-- 신버전 DB임을 한 번 더 확인
+SELECT current_database();
+
+-- public.users 전수 확인
+SELECT COUNT(*) FROM public.users;
+SELECT role, COUNT(*) FROM public.users GROUP BY role ORDER BY 2 DESC;
+
+-- admin 본 계정 정합성
+SELECT
+  au.id AS auth_id, pu.id AS public_id, pu.auth_user_id,
+  pu.email, pu.role, pu.plan, pu.name,
+  (au.id = pu.id)            AS id_match,
+  (au.id = pu.auth_user_id)  AS auth_user_id_match
+FROM auth.users au
+LEFT JOIN public.users pu ON pu.email = au.email
+WHERE au.email = 'bylts0428@gmail.com';
+```
+
+### 사고 신호 발생 시 즉시 정지
+
+다음 신호가 나타나면 모든 작업 중단하고 팀장님께 즉시 보고:
+- 로컬 덤프 결과와 Dashboard 결과가 다르다
+- "분명히 row가 있어야 하는데 없다" / "없어야 하는데 있다"
+- RLS 정책 개수, 컬럼 구성, 테이블 목록이 메모리·CLAUDE.md와 다르다
+
+→ **90% 확률로 구버전을 보고 있는 것.** 즉시 위 "첫 질문"으로 복귀.
+
+---
+
 ## 🤝 Claude 3역할 협업 체계
 
 이 프로젝트는 Claude 3개 인스턴스가 역할을 나눠 협업한다.
@@ -63,7 +129,8 @@
 - 슬래시 커맨드: .claude/commands/
 - 세션 요약 아카이브: docs/sessions/
 - 디자인 토큰: css/tokens.css
-- Supabase 프로젝트 ID: qursjteiovcylqiepmlo
+- Supabase 프로젝트 ID (신버전·유일 진실): `pdnwgzneooyygfejrvbg` (프로젝트명: `onesecond-v1-restore-0420`)
+- Supabase 프로젝트 ID (구버전·폐기): `qursjteiovcylqiepmlo` — 2026-04-22~23 데이터 소실. **절대 참조 금지**
 - 라이브 사이트: https://onesecond.solutions
 
 ## 🔄 세션 종료 시
