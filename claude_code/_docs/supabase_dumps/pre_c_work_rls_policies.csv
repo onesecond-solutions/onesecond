@@ -1,0 +1,55 @@
+schemaname,tablename,policyname,permissive,roles,cmd,qual,with_check
+public,activity_logs,activity_logs_insert_own,PERMISSIVE,{authenticated},INSERT,null,(user_id = auth.uid())
+public,activity_logs,activity_logs_select_admin,PERMISSIVE,{authenticated},SELECT,"(EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.auth_user_id = auth.uid()) AND (users.role = 'admin'::text))))",null
+public,activity_logs,activity_logs_select_branch_manager,PERMISSIVE,{authenticated},SELECT,"(EXISTS ( SELECT 1
+   FROM (users me
+     JOIN users target ON ((target.auth_user_id = activity_logs.user_id)))
+  WHERE ((me.auth_user_id = auth.uid()) AND (me.role = 'branch_manager'::text) AND (target.branch = me.branch))))",null
+public,activity_logs,activity_logs_select_manager,PERMISSIVE,{authenticated},SELECT,"(EXISTS ( SELECT 1
+   FROM (users me
+     JOIN users target ON ((target.auth_user_id = activity_logs.user_id)))
+  WHERE ((me.auth_user_id = auth.uid()) AND (me.role = 'manager'::text) AND (target.team = me.team) AND (target.role = 'member'::text))))",null
+public,activity_logs,activity_logs_select_own,PERMISSIVE,{authenticated},SELECT,(user_id = auth.uid()),null
+public,activity_logs,admin read all logs,PERMISSIVE,{authenticated},SELECT,"(EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",null
+public,activity_logs,users insert own logs,PERMISSIVE,{authenticated},INSERT,null,(auth.uid() = user_id)
+public,app_settings,admin write app_settings,PERMISSIVE,{authenticated},ALL,"(EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",null
+public,app_settings,authenticated read app_settings,PERMISSIVE,{authenticated},SELECT,true,null
+public,comments,anyone can read comments,PERMISSIVE,"{anon,authenticated}",SELECT,true,null
+public,comments,authenticated users insert comments,PERMISSIVE,{authenticated},INSERT,null,((auth.uid())::text = author_id)
+public,comments,own comments delete,PERMISSIVE,{authenticated},DELETE,((auth.uid())::text = author_id),null
+public,comments,own comments update,PERMISSIVE,{authenticated},UPDATE,((auth.uid())::text = author_id),null
+public,exception_diseases,authenticated users can read exception_diseases,PERMISSIVE,{authenticated},SELECT,true,null
+public,posts,anyone can read together posts,PERMISSIVE,"{anon,authenticated}",SELECT,((board_type = 'together'::text) AND (is_hidden = false)),null
+public,posts,authenticated insert posts,PERMISSIVE,{authenticated},INSERT,null,((auth.uid())::text = author_id)
+public,posts,authenticated read non-together posts,PERMISSIVE,{authenticated},SELECT,((board_type <> 'together'::text) AND (is_hidden = false)),null
+public,posts,author or admin delete posts,PERMISSIVE,{authenticated},DELETE,"(((auth.uid())::text = author_id) OR (EXISTS ( SELECT 1
+   FROM users
+  WHERE (((users.id)::text = (auth.uid())::text) AND (users.role = 'admin'::text)))))",null
+public,posts,author or admin update posts,PERMISSIVE,{authenticated},UPDATE,"(((auth.uid())::text = author_id) OR (EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text)))))",null
+public,posts,insurer board insert,PERMISSIVE,{authenticated},INSERT,null,"((board_type = 'insurer_board'::text) AND (EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'insurer'::text]))))))"
+public,posts,insurer board update,PERMISSIVE,{authenticated},UPDATE,"((board_type = 'insurer_board'::text) AND ((author_id = (auth.uid())::text) OR (EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))))",null
+public,quick_contents,allow_read_quick_contents,PERMISSIVE,{authenticated},SELECT,true,null
+public,script_usage_logs,admin read logs,PERMISSIVE,{authenticated},SELECT,"(EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = ANY (ARRAY['admin'::text, 'branch_manager'::text])))))",null
+public,script_usage_logs,authenticated users insert logs,PERMISSIVE,{authenticated},INSERT,null,true
+public,scripts,admin manage scripts,PERMISSIVE,{authenticated},ALL,"(EXISTS ( SELECT 1
+   FROM users
+  WHERE ((users.id = auth.uid()) AND (users.role = 'admin'::text))))",null
+public,scripts,authenticated read scripts,PERMISSIVE,{authenticated},SELECT,true,null
+public,users,admin update all,PERMISSIVE,{public},UPDATE,(auth.uid() = id),null
+public,users,user insert own,PERMISSIVE,{authenticated},INSERT,null,(auth.uid() = id)
+public,users,user read own,PERMISSIVE,{public},SELECT,(auth.uid() = id),null
+public,users,user update own,PERMISSIVE,{authenticated},UPDATE,(auth.uid() = id),null
