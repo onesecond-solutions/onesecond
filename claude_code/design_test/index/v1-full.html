@@ -113,9 +113,23 @@ body{
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(229,231,235,0.6);
-  transition: box-shadow var(--duration-normal) var(--ease-smooth);
+  transition: background-color var(--duration-normal) var(--ease-smooth),
+              border-color var(--duration-normal) var(--ease-smooth),
+              box-shadow var(--duration-normal) var(--ease-smooth);
 }
-.nav.scrolled { box-shadow: var(--elevation-2); }
+/* A1 — 스크롤 시 브라운 고정 (프리미엄 네비 패턴) */
+.nav.scrolled {
+  background: var(--brand-700);
+  border-bottom-color: var(--brand-800);
+  box-shadow: var(--elevation-2);
+}
+.nav.scrolled .nav-brand { color: #fff; }
+.nav.scrolled .nav-menu { background: rgba(255,255,255,0.08); }
+.nav.scrolled .nav-item { color: rgba(255,255,255,0.75); }
+.nav.scrolled .nav-item:hover { color: #fff; background: rgba(255,255,255,0.12); }
+.nav.scrolled .nav-item.active { background: #fff; color: var(--brand-700); }
+.nav.scrolled .nav-login { color: rgba(255,255,255,0.85); }
+.nav.scrolled .nav-login:hover { color: #fff; background: rgba(255,255,255,0.1); }
 .nav-inner {
   max-width: 1280px; margin: 0 auto;
   height: 100%;
@@ -1106,8 +1120,14 @@ body{
 }
 .footer-inner {
   max-width: 1200px; margin: 0 auto;
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.footer-top {
+  display: flex; align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
 }
 .footer-brand {
   display: flex; align-items: center; gap: var(--space-2-5);
@@ -1123,8 +1143,7 @@ body{
   display: flex; align-items: center; justify-content: center;
   font-size: var(--text-sm); font-weight: 900;
 }
-.footer-brand .accent { color: var(--accent-300); }
-.footer-links { display: flex; gap: var(--space-6); }
+.footer-links { display: flex; gap: var(--space-5); }
 .footer-link {
   font-size: var(--text-sm);
   color: rgba(255,255,255,0.6);
@@ -1132,10 +1151,10 @@ body{
   transition: color var(--duration-fast);
 }
 .footer-link:hover { color: #fff; }
-.footer-copy { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 .footer-kakao {
   display: inline-flex; align-items: center; gap: var(--space-2);
   height: 36px; padding: 0 16px;
+  margin-left: auto;
   background: #FEE500; color: #2B1E14;
   border-radius: var(--radius);
   text-decoration: none;
@@ -1143,6 +1162,11 @@ body{
   transition: all var(--duration-fast);
 }
 .footer-kakao:hover { transform: translateY(-1px); }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: var(--space-4);
+}
+.footer-copy { font-size: var(--text-xs); color: rgba(255,255,255,0.4); }
 </style>
 
 </head>
@@ -1159,7 +1183,7 @@ body{
   <div class="nav-inner">
     <a href="#top" class="nav-brand">
       <div class="nav-brand-mark">1s</div>
-      <span>원세컨드<span class="accent">1s</span></span>
+      <span>원세컨드</span>
     </a>
     <div class="nav-menu">
       <a href="#hero" class="nav-item active">소개</a>
@@ -1170,7 +1194,7 @@ body{
       <a href="#signup" class="nav-item">가입하기</a>
     </div>
     <div class="nav-right">
-      <a href="#" class="nav-login" onclick="event.preventDefault();alert('[TEST] 로그인 이동')">로그인</a>
+      <a href="login.html" class="nav-login">로그인</a>
       <a href="#signup" class="nav-cta">무료 시작하기 →</a>
     </div>
   </div>
@@ -1197,8 +1221,7 @@ body{
         막히는 순간, 바로 옆 모니터에서 <strong>1초 안에</strong> 꺼내 쓰세요.
       </p>
       <div class="hero-cta-group">
-        <a href="#signup" class="hero-cta">30일 무료 시작하기 →</a>
-        <span class="hero-cta-note">신용카드 불필요 · 30일 후 월 9,900원</span>
+        <a href="#signup" class="hero-cta">무료회원 가입하기 →</a>
       </div>
       <div class="hero-stats">
         <div>
@@ -1416,7 +1439,7 @@ body{
     <div class="together-answer">원세컨드가 해결해 드립니다</div>
 
     <div>
-      <button class="together-cta" onclick="alert('[TEST] 함께해요 페이지로 이동');">
+      <button class="together-cta" onclick="location.href='login.html?redirect=together';">
         불편했던 거 말씀해주세요 →
       </button>
     </div>
@@ -1441,8 +1464,8 @@ body{
       <div class="target-card primary">
         <span class="target-badge">🎯 설계사 · 팀장</span>
         <h3 class="target-title">지금 상담 중<br>멈추지 않으려면</h3>
-        <p class="target-desc">17년 현장 경험으로 만든 스크립트 · 게시판 · 퀵 도구. 30일 무료로 직접 써보세요. 단톡방 없이도 통화가 끊기지 않습니다.</p>
-        <a href="#signup" class="target-btn">30일 무료 시작 →</a>
+        <p class="target-desc">17년 현장 경험으로 만든 스크립트 · 게시판 · 퀵 도구. 단톡방 없이도 통화가 끊기지 않습니다.</p>
+        <a href="#signup" class="target-btn">무료회원 가입하기 →</a>
       </div>
 
       <div class="target-card">
@@ -1471,8 +1494,7 @@ body{
 
     <div class="signup-left">
       <span class="section-eyebrow">GET STARTED</span>
-      <h2 class="section-title">지금 <span class="accent">30일 무료</span>로 시작하세요</h2>
-      <p class="section-sub">신용카드 불필요 · 30일 후 월 9,900원 · 언제든 취소</p>
+      <h2 class="section-title"><span class="accent">무료회원 가입하기</span></h2>
 
       <div class="signup-features">
         <div class="signup-feature">
@@ -1590,12 +1612,11 @@ body{
         </div>
 
         <button type="submit" class="form-submit">
-          🎉 30일 무료로 시작하기
+          🎉 무료회원 가입하기
         </button>
 
         <div class="form-footer">
-          <strong>체험 기간 종료 후 자동 결제되지 않습니다</strong><br>
-          이미 계정이 있으신가요? <a href="#" onclick="event.preventDefault();alert('[TEST] 로그인')" style="color:var(--brand-500);font-weight:700;">로그인</a>
+          이미 계정이 있으신가요? <a href="login.html" style="color:var(--brand-500);font-weight:700;">로그인</a>
         </div>
 
       </form>
@@ -1609,17 +1630,21 @@ body{
 ═══════════════════════════════════ -->
 <footer class="footer">
   <div class="footer-inner">
-    <div class="footer-brand">
-      <div class="footer-brand-mark">1s</div>
-      <span>원세컨드<span class="accent">1s</span></span>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-brand-mark">1s</div>
+        <span>원세컨드</span>
+      </div>
+      <div class="footer-links">
+        <a href="#" class="footer-link" onclick="event.preventDefault();">서비스 소개</a>
+        <a href="#" class="footer-link" onclick="event.preventDefault();">이용약관</a>
+        <a href="#" class="footer-link" onclick="event.preventDefault();">개인정보처리방침</a>
+      </div>
+      <a href="https://open.kakao.com/o/svu80Moi" target="_blank" class="footer-kakao">💬 카카오 문의</a>
     </div>
-    <div class="footer-links">
-      <a href="#" class="footer-link" onclick="event.preventDefault();">서비스 소개</a>
-      <a href="#" class="footer-link" onclick="event.preventDefault();">이용약관</a>
-      <a href="#" class="footer-link" onclick="event.preventDefault();">개인정보처리방침</a>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 OneSecond</div>
     </div>
-    <div class="footer-copy">© 2026 OneSecond</div>
-    <a href="https://open.kakao.com/o/svu80Moi" target="_blank" class="footer-kakao">💬 카카오 문의</a>
   </div>
 </footer>
 
@@ -1655,7 +1680,6 @@ function updateRoleHint(sel){
   var hint = document.getElementById('roleHint');
   var text = document.getElementById('roleHintText');
   var msgs = {
-    member: '설계사·팀장은 <strong>첫 30일 무료</strong> 후 월 9,900원으로 전환됩니다.',
     manager: '매니저·실장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.',
     branch_manager: '지점장·센터장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.'
   };
