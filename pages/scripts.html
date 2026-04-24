@@ -38,12 +38,12 @@
   padding-bottom: 2px;  /* 하단 그림자 공간 */
 }
 .sc-tab-bar {
-  display: flex; width: 100%;
+  display: flex; flex-wrap: wrap; width: 100%;
   border-top: 1px solid rgba(200,117,58,0.15);
   padding-top: 4px;
 }
 .sc-tab-btn {
-  flex: 1 1 0; min-width: 0;
+  flex: 1 1 120px; min-width: 120px;
   padding: var(--space-3) var(--space-1);
   margin: 4px 2px 0;  /* 양각 그림자 공간 확보 */
   border: none;
@@ -59,17 +59,14 @@
   transition: all var(--transition-fast);
 }
 .sc-tab-label {
-  font-size: 0.8947em;  /* ≈17px 고정 — 좁은 화면에선 자동 2줄로 줄바꿈 */
+  font-size: 0.8947em;  /* ≈17px 고정 */
   font-weight: var(--fw-semibold);
   color: var(--color-text-secondary);
   letter-spacing: -0.3px;
   line-height: 1.25;
   text-align: center;
-  white-space: normal;        /* flex 자식 강제 줄바꿈 허용 (핵심) */
-  word-break: keep-all;       /* 한국어 단어 단위 줄바꿈 */
-  overflow-wrap: break-word;  /* 공백 기준 줄바꿈 보강 */
-  min-width: 0;               /* flex 자식 줄바꿈 허용 */
-  width: 100%;                /* 부모 너비 100% 써서 줄바꿈 트리거 */
+  white-space: nowrap;        /* 글자 세로 꺾임 금지 — 탭 통째로 다음 줄 이동 */
+  width: 100%;
   transition: color var(--transition-fast),
               font-weight var(--transition-fast),
               font-size var(--transition-fast);
