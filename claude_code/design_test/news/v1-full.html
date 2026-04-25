@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[Test v1-full] 보험뉴스 (news)</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<link rel="stylesheet" href="../../../css/tokens.css">
+
+<!-- v1 전역 오버라이드 -->
+<style>
+:root {
+  --color-bg: #FFFFFF; --color-surface: #FFFFFF; --color-surface-2: #F6F7F9;
+  --color-border: #E5E7EB;
+  --color-text-primary: #1F2937; --color-text-secondary: #6B7280; --color-text-tertiary: #9CA3AF;
+  --color-text-placeholder: #9CA3AF;
+  --shadow-sm: 0 2px 6px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 4px 14px rgba(17, 24, 39, 0.08);
+  --shadow-lg: 0 8px 28px rgba(17, 24, 39, 0.12);
+
+  --neutral-100: #F4F5F7; --neutral-200: #E5E7EB; --neutral-700: #374151; --neutral-800: #1F2937;
+  --brand-50: #FDF4EF; --brand-400: #C4733A; --brand-500: #A0522D; --brand-700: #66331A;
+  --accent-50: #FEF3EA; --accent-200: #F8B583; --accent-400: #D4845A;
+  --gradient-brand: linear-gradient(135deg, var(--brand-500) 0%, var(--accent-400) 100%);
+  --color-success-bg: #ECFDF5;
+  --color-danger-bg: #FEF2F2;
+  --elevation-warm-2: 0 4px 14px -4px rgba(160, 82, 45, 0.14), 0 2px 6px -2px rgba(160, 82, 45, 0.08);
+  --ring-accent: 0 0 0 4px rgba(212, 132, 90, 0.18);
+
+  --sidebar-width: 180px;
+  --z-sticky: 20;
+}
+</style>
+
+<!-- 앱 쉘 CSS (v2 chrome — 사스브라운 topbar + 180px 사이드바) -->
+<style>
+html, body { font-size: 16px; font-family: var(--font-sans); background: var(--color-bg); margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+@keyframes liveBlink { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.3; transform:scale(0.8); } }
+
+/* ── A1+A2 통합 슬림 헤더 (사스브라운 항시 적용) ── */
+.topbar { height: var(--header-h, 64px); background: var(--gradient-brand); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-6); flex-shrink: 0; position: sticky; top: 0; z-index: var(--z-sticky); }
+.tb-brand { display: flex; align-items: center; gap: var(--space-2-5); font-size: 1.25em; font-weight: 800; letter-spacing: -0.025em; color: #fff; }
+.tb-brand-mark { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.875em; font-weight: 900; letter-spacing: -0.06em; }
+.tb-brand .accent { color: var(--accent-200); }
+.tb-center { flex: 1; max-width: 420px; margin: 0 var(--space-6); }
+.tb-search { display: flex; align-items: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-3); background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; transition: all 120ms cubic-bezier(0.25,0.46,0.45,0.94); }
+.tb-search:focus-within { background: rgba(255,255,255,0.96); border-color: var(--accent-200); box-shadow: var(--ring-accent); }
+.tb-search:focus-within .tb-search-icon, .tb-search:focus-within input { color: var(--color-text-primary); }
+.tb-search:focus-within input::placeholder { color: var(--color-text-placeholder); }
+.tb-search-icon { font-size: 0.875em; color: rgba(255,255,255,0.85); }
+.tb-search input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.875em; color: #fff; }
+.tb-search input::placeholder { color: rgba(255,255,255,0.55); }
+.tb-search kbd { font-family: var(--font-mono, monospace); font-size: 0.75em; padding: 2px 6px; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.22); border-radius: 4px; color: rgba(255,255,255,0.9); }
+.tb-right { display: flex; align-items: center; gap: var(--space-3); }
+.tb-status { display: inline-flex; align-items: center; gap: var(--space-2); padding: 6px 12px; background: var(--color-success-bg); border: 1px solid rgba(16,185,129,0.18); border-radius: 9999px; font-size: 0.75em; font-weight: 700; color: #047857; }
+.tb-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,0.24); animation: pulseDot 1.8s ease-in-out infinite; }
+@keyframes pulseDot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.85); } }
+.tb-alert { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 8px; background: var(--color-danger-bg); color: #B91C1C; border: 1px solid rgba(239,68,68,0.22); font-size: 0.75em; font-weight: 700; text-decoration: none; transition: all 120ms cubic-bezier(0.25,0.46,0.45,0.94); }
+.tb-alert:hover { background: #FEE2E2; }
+.tb-user { display: flex; align-items: center; gap: var(--space-2); height: 36px; padding: 0 12px 0 4px; background: #fff; border: 1px solid var(--color-border); border-radius: 9999px; cursor: pointer; color: var(--color-text-primary); transition: all 120ms cubic-bezier(0.25,0.46,0.45,0.94); }
+.tb-user:hover { background: var(--neutral-100); }
+.tb-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--gradient-brand); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: 800; }
+.tb-user-name { font-size: 0.875em; font-weight: 700; }
+.tb-user-caret { color: var(--color-text-tertiary); font-size: 0.75em; }
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.main { flex: 1; display: grid; grid-template-columns: var(--sidebar-width) 1fr var(--rightbar-width); min-height: 0; }
+
+/* B 사이드바 */
+.b { background: var(--color-surface-2); padding: var(--space-6) var(--space-3); display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--color-border); }
+.menu { display: flex; flex-direction: column; gap: var(--space-2); }
+.menu-item { padding: 12px 14px; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9375em; font-weight: var(--fw-medium); color: var(--color-text-secondary); white-space: nowrap; }
+.menu-item:hover { background: #FFFFFF; color: var(--color-text-primary); }
+.menu-item.active { background: var(--color-brand); color: #fff; font-weight: var(--fw-bold); box-shadow: 0 2px 6px rgba(160, 82, 45, 0.22); }
+.menu-item.menu-together { background: rgba(212, 132, 90, 0.08); border-left: 3px solid var(--color-accent); color: var(--color-text-primary); font-weight: var(--fw-semibold); padding-left: 11px; }
+.pro { background: #FFFFFF; border: 1px solid var(--color-border); padding: 14px; border-radius: var(--radius-md); text-align: center; font-size: 0.8125em; font-weight: var(--fw-semibold); color: var(--color-text-secondary); }
+.pro strong { color: var(--color-accent); }
+
+/* D 콘텐츠 */
+.d { padding: var(--space-8) var(--space-10) var(--space-10); min-height: 0; display: flex; flex-direction: column; background: var(--color-bg); font-size: 19px; }
+.d > * { flex-shrink: 0; width: 100%; }
+
+/* C 우측바 */
+.c { background: var(--color-surface-2); padding: var(--space-8) var(--space-5); border-left: 1px solid var(--color-border); }
+.c-box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5); margin-bottom: var(--space-4); }
+.c-box-label { font-size: 0.6875em; font-weight: var(--fw-bold); color: var(--color-accent); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: var(--space-2); }
+.c-box-title { font-size: 0.875em; font-weight: var(--fw-bold); color: var(--color-text-primary); margin-bottom: var(--space-2); }
+.c-box-desc { font-size: 0.8125em; color: var(--color-text-secondary); line-height: 1.7; }
+
+/* 푸터 */
+.site-footer { flex-shrink: 0; width: 100%; background: var(--color-surface-2); color: var(--color-text-secondary); padding: 14px var(--space-6); border-top: 1px solid var(--color-border); }
+.footer-inner { display: flex; align-items: center; justify-content: center; gap: var(--space-5); flex-wrap: wrap; }
+.footer-brand { font-size: 0.875em; font-weight: var(--fw-black); color: var(--color-text-primary); }
+.footer-brand span { color: var(--color-accent); }
+.footer-copy { font-size: 0.6875em; color: var(--color-text-tertiary); }
+.footer-link { font-size: 0.75em; color: var(--color-text-secondary); text-decoration: none; }
+.footer-link:hover { color: var(--color-accent); }
+.footer-kakao { display: inline-flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 14px; border-radius: var(--radius-sm); background: #FEE500; color: #2B1E14; text-decoration: none; font-size: 0.75em; font-weight: var(--fw-black); }
+
+.test-mode-bar { background: #FFF8F3; border-bottom: 1px solid var(--color-accent); padding: 6px var(--space-6); font-size: 11px; color: var(--color-accent); text-align: center; font-weight: var(--fw-bold); letter-spacing: 0.5px; }
+
+@media(max-width:1100px) { .main { grid-template-columns: 180px 1fr; } .c { display: none; } }
+@media(max-width:767px) { .main { grid-template-columns: 1fr; } .b, .site-footer { display: none; } .tb-center { display: none; } }
+</style>
+
+<!-- news 페이지 전용 CSS -->
+<style>
+/* 페이지 헤더 (사스브라운 카드) */
+.news-page-head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-7) var(--space-8); background: var(--gradient-brand); border-radius: var(--radius-lg); color: #fff; margin-bottom: var(--space-6); box-shadow: var(--elevation-warm-2); }
+.news-page-title { font-size: 1.4em; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 6px; }
+.news-page-sub { font-size: 0.842em; color: rgba(255,255,255,0.78); letter-spacing: -0.015em; }
+.news-page-icon { font-size: 2.4em; opacity: 0.32; }
+
+/* 탭 필터 */
+.news-tab-bar { display: flex; gap: var(--space-2); padding: var(--space-2); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-5); }
+.news-tab-btn { flex: 1; font-size: 0.842em; font-weight: 600; color: var(--color-text-secondary); background: transparent; border: none; border-radius: var(--radius-sm); padding: 10px 14px; cursor: pointer; transition: all 120ms cubic-bezier(0.25,0.46,0.45,0.94); white-space: nowrap; font-family: inherit; }
+.news-tab-btn:hover { color: var(--color-text-primary); background: var(--color-surface-2); }
+.news-tab-btn.active { color: #fff; background: var(--gradient-brand); font-weight: 700; box-shadow: var(--elevation-warm-2); }
+
+/* 카드 리스트 */
+.news-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.news-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5) var(--space-6); cursor: pointer; transition: all 120ms cubic-bezier(0.25,0.46,0.45,0.94); }
+.news-card:hover { box-shadow: var(--elevation-warm-2); border-color: var(--brand-400); transform: translateY(-1px); }
+.news-card-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.news-card-category { font-size: 0.7em; font-weight: 700; color: var(--brand-500); background: var(--brand-50); padding: 3px 10px; border-radius: 9999px; letter-spacing: 0.025em; }
+.news-card-source { font-size: 0.7em; color: var(--color-text-tertiary); }
+.news-card-date { font-size: 0.7em; color: var(--color-text-tertiary); margin-left: auto; }
+.news-card-title { font-size: 0.95em; font-weight: 700; color: var(--color-text-primary); line-height: 1.45; margin-bottom: 8px; letter-spacing: -0.015em; }
+.news-card-summary { font-size: 0.79em; color: var(--neutral-700); line-height: 1.65; margin-bottom: 12px; }
+.news-card-link { display: inline-block; font-size: 0.74em; color: var(--brand-500); font-weight: 700; text-decoration: none; transition: color 120ms; }
+.news-card-link:hover { color: var(--brand-700); text-decoration: underline; }
+
+/* 빈 상태 */
+.news-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; gap: var(--space-3); color: var(--color-text-tertiary); font-size: 0.842em; }
+.news-empty-icon { font-size: 2.4em; opacity: 0.4; }
+</style>
+</head>
+
+<body>
+
+<div class="test-mode-bar">
+  [DESIGN TEST v1-full] 보험뉴스 (news) · v2 chrome (사스브라운 topbar + 180px 사이드바)
+</div>
+
+<div class="app">
+
+  <!-- A1+A2 통합 슬림 헤더 (사스브라운) -->
+  <div class="topbar">
+    <div class="tb-brand">
+      <div class="tb-brand-mark">1s</div>
+      <span>원세컨드</span>
+    </div>
+    <div class="tb-center">
+      <div class="tb-search">
+        <span class="tb-search-icon">🔍</span>
+        <input type="text" placeholder="스크립트·게시글·업무자료 검색">
+        <kbd>⌘K</kbd>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-status"><span class="dot"></span>실시간</div>
+      <a href="https://open.kakao.com/o/svu80Moi" target="_blank" class="tb-alert">⚠️ 전산장애신고</a>
+      <div class="tb-user" onclick="alert('[TEST] 사용자 드롭다운')">
+        <div class="tb-user-avatar">팀</div>
+        <div class="tb-user-name">팀장님</div>
+        <div class="tb-user-caret">▾</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- B 사이드바 — 보험뉴스 활성 -->
+    <div class="b">
+      <div class="menu">
+        <div class="menu-item" onclick="switchMenuVisual(this)">홈</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">스크립트</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">현장 Q&amp;A</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">MY SPACE</div>
+        <div class="menu-item active" onclick="switchMenuVisual(this)">보험뉴스</div>
+        <div class="menu-item" onclick="switchMenuVisual(this)">Quick 메뉴</div>
+        <div class="menu-item menu-together" onclick="switchMenuVisual(this)">함께해요</div>
+      </div>
+      <div class="pro"><strong>PRO</strong> 이용중</div>
+    </div>
+
+    <!-- D 콘텐츠 -->
+    <div class="d" id="content-area">
+
+      <!-- 페이지 헤더 -->
+      <div class="news-page-head">
+        <div>
+          <div class="news-page-title">📰 보험뉴스</div>
+          <div class="news-page-sub">보험 업계 최신 소식을 빠르게 확인하세요</div>
+        </div>
+        <div class="news-page-icon">📰</div>
+      </div>
+
+      <!-- 탭 필터 -->
+      <div class="news-tab-bar">
+        <button class="news-tab-btn active" onclick="filterNews(this, '전체')">전체</button>
+        <button class="news-tab-btn" onclick="filterNews(this, '생명보험')">생명보험</button>
+        <button class="news-tab-btn" onclick="filterNews(this, '손해보험')">손해보험</button>
+        <button class="news-tab-btn" onclick="filterNews(this, '제도·규제')">제도·규제</button>
+      </div>
+
+      <!-- 뉴스 카드 리스트 (샘플 데이터) -->
+      <div class="news-list" id="news-list">
+        <div class="news-card" data-category="제도·규제">
+          <div class="news-card-top">
+            <span class="news-card-category">제도·규제</span>
+            <span class="news-card-source">금융감독원</span>
+            <span class="news-card-date">2026-04-23</span>
+          </div>
+          <div class="news-card-title">금감원, 변액보험 사업비 공시 강화 시행 예정</div>
+          <div class="news-card-summary">2026년 하반기부터 변액보험 사업비 공시 항목이 확대됩니다. 설계사·소비자 모두 가입 전 사업비 구조를 한눈에 비교할 수 있게 됩니다.</div>
+          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
+        </div>
+
+        <div class="news-card" data-category="생명보험">
+          <div class="news-card-top">
+            <span class="news-card-category">생명보험</span>
+            <span class="news-card-source">한국경제</span>
+            <span class="news-card-date">2026-04-22</span>
+          </div>
+          <div class="news-card-title">생보업계, 무·저해지 환급금 보험 신상품 잇따라 출시</div>
+          <div class="news-card-summary">대형 생보사들이 환급금 부담을 줄인 무·저해지 상품을 잇따라 내놓고 있습니다. 보험료 인하 효과로 경쟁이 가열되는 분위기.</div>
+          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
+        </div>
+
+        <div class="news-card" data-category="손해보험">
+          <div class="news-card-top">
+            <span class="news-card-category">손해보험</span>
+            <span class="news-card-source">매일경제</span>
+            <span class="news-card-date">2026-04-22</span>
+          </div>
+          <div class="news-card-title">자동차보험 손해율 81% 진입 — 보험료 인상 압력</div>
+          <div class="news-card-summary">1분기 자동차보험 손해율이 81%대로 진입하면서 하반기 보험료 인상 가능성이 거론됩니다. 사고 빈도와 수리비 단가 상승이 주 원인.</div>
+          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
+        </div>
+
+        <div class="news-card" data-category="제도·규제">
+          <div class="news-card-top">
+            <span class="news-card-category">제도·규제</span>
+            <span class="news-card-source">금융위원회</span>
+            <span class="news-card-date">2026-04-21</span>
+          </div>
+          <div class="news-card-title">실손보험 청구 간소화 시행 1년, 청구 건수 38% 증가</div>
+          <div class="news-card-summary">실손보험 청구 간소화 도입 1년이 지난 시점, 월평균 청구 건수가 38% 늘었습니다. 소액 청구 활성화가 두드러진 변화.</div>
+          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
+        </div>
+
+        <div class="news-card" data-category="생명보험">
+          <div class="news-card-top">
+            <span class="news-card-category">생명보험</span>
+            <span class="news-card-source">서울경제</span>
+            <span class="news-card-date">2026-04-20</span>
+          </div>
+          <div class="news-card-title">CSM 회계기준 적용 2년차, 생보사 실적 양극화 심화</div>
+          <div class="news-card-summary">새 회계기준(IFRS17·K-ICS) 적용 2년차에 접어들면서 생보사 실적 격차가 벌어지고 있습니다. 보장성 비중이 높은 회사가 강세.</div>
+          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
+        </div>
+
+        <div class="news-card" data-category="손해보험">
+          <div class="news-card-top">
+            <span class="news-card-category">손해보험</span>
+            <span class="news-card-source">조선비즈</span>
+            <span class="news-card-date">2026-04-19</span>
+          </div>
+          <div class="news-card-title">반려동물 보험, 가입률 1.7% — 시장 잠재력 재조명</div>
+          <div class="news-card-summary">국내 반려동물 보험 가입률은 1.7%로 일본·영국 대비 현저히 낮은 수준. 펫보험 표준약관 마련으로 시장 활성화 기대.</div>
+          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
+        </div>
+      </div>
+
+      <!-- 빈 상태 (필터 시 등장) -->
+      <div class="news-empty" id="news-empty" style="display:none;">
+        <div class="news-empty-icon">📭</div>
+        <span>해당 카테고리의 뉴스가 없습니다.</span>
+      </div>
+
+    </div>
+
+    <!-- C 우측바 -->
+    <div class="c">
+      <div class="c-box">
+        <div class="c-box-label">매일 업데이트</div>
+        <div class="c-box-title">현장에 꼭 필요한 뉴스만</div>
+        <div class="c-box-desc">설계사 시각에서 선별된 보험 업계 소식을 매일 정리해 드립니다. 가입설계·심사·제도 변화를 빠르게 파악하세요.</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-label">Tip</div>
+        <div class="c-box-title">탭으로 빠른 필터링</div>
+        <div class="c-box-desc">생명보험 / 손해보험 / 제도·규제 탭으로 관심 분야 뉴스만 추려서 볼 수 있습니다.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">원세컨드 <span>1s</span></div>
+      <div class="footer-copy">© 2026 OneSecond</div>
+      <a class="footer-link" href="#" onclick="event.preventDefault();">이용약관</a>
+      <a class="footer-link" href="#" onclick="event.preventDefault();">개인정보처리방침</a>
+      <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 카카오 오픈채팅 문의</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+function switchMenuVisual(el) {
+  var menu = el.parentElement;
+  var items = menu.querySelectorAll('.menu-item');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+  el.classList.add('active');
+  if (el.textContent.trim() !== '보험뉴스') {
+    alert('[TEST 모드] 실제 환경에서는 "' + el.textContent.trim() + '" 페이지로 이동합니다');
+  }
+}
+
+function filterNews(btn, category) {
+  var bar = btn.parentElement;
+  var btns = bar.querySelectorAll('.news-tab-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+
+  var list = document.getElementById('news-list');
+  var empty = document.getElementById('news-empty');
+  var cards = list.querySelectorAll('.news-card');
+  var visible = 0;
+  for (var j = 0; j < cards.length; j++) {
+    var match = (category === '전체') || (cards[j].getAttribute('data-category') === category);
+    cards[j].style.display = match ? '' : 'none';
+    if (match) visible++;
+  }
+  list.style.display = visible === 0 ? 'none' : '';
+  empty.style.display = visible === 0 ? '' : 'none';
+}
+</script>
+</body>
+</html>
