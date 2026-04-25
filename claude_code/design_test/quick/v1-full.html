@@ -123,7 +123,7 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 
 <style>
 /* quick 전용 2-col 내부 레이아웃 */
-.qck-body-inner { display: grid; grid-template-columns: 1fr 220px; gap: var(--space-5); align-items: start; padding: var(--space-5); }
+.qck-body-inner { padding: var(--space-5); }
 
 .qck-content-shell { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
 .qck-content-head { padding: var(--space-4) var(--space-5); background: var(--color-surface-2); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--space-3); }
@@ -137,14 +137,7 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 .qck-content-slot th { background: var(--color-surface-2); color: var(--color-text-primary); font-weight: var(--fw-bold); }
 .qck-content-slot tr:nth-child(even) td { background: #FAFBFC; }
 
-.qck-right-panel { display: flex; flex-direction: column; gap: var(--space-3); position: sticky; top: var(--space-3); }
-.qck-panel-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
-.qck-panel-title { font-size: 0.8125em; font-weight: var(--fw-black); color: var(--color-text-primary); margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
-.qck-panel-item { font-size: 0.7875em; color: var(--color-text-primary); padding: 7px 0; border-bottom: 1px solid var(--color-border); cursor: pointer; transition: color var(--transition-fast); }
-.qck-panel-item:last-child { border-bottom: none; }
-.qck-panel-item:hover { color: var(--color-accent); }
 
-@media (max-width: 900px) { .qck-body-inner { grid-template-columns: 1fr; } .qck-right-panel { display: none; } }
 </style>
 
 </head>
@@ -248,24 +241,6 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
                 </table>
 
                 <p><strong>현장 팁:</strong> 동의 멘트 후 <strong>2초 침묵</strong>을 두고 고객의 명확한 "예" 답변을 받으세요. 동의가 모호하면 재녹취 사유가 됩니다.</p>
-              </div>
-            </div>
-
-            <div class="qck-right-panel">
-              <div class="qck-panel-card">
-                <div class="qck-panel-title">🔥 추천 스크립트</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">도입인사 — 첫 3초 신뢰 구축</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">필요성 ① — 50대 부부 공감</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">클로징 — "생각해볼게요" 대응</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">반론 — 이미 보험 있음</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">2차 클로징 — 마무리 한 문장</div>
-              </div>
-              <div class="qck-panel-card">
-                <div class="qck-panel-title">🕐 최근 많이 본</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">회사별 BMI 심사기준</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">보험연령표</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">보험회사 결제정보</div>
-                <div class="qck-panel-item" onclick="alert('[TEST] 이동')">미러링 전 녹취 스크립트</div>
               </div>
             </div>
 
