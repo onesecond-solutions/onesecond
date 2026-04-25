@@ -107,35 +107,109 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 @media(max-width:767px) { .main { grid-template-columns: 1fr; } .b, .site-footer { display: none; } .tb-center { display: none; } }
 </style>
 
-<!-- news 페이지 전용 CSS -->
+<!-- _template.html 공통 pg-* CSS (다른 페이지와 일관) -->
 <style>
-/* 페이지 헤더 (사스브라운 카드) */
-.news-page-head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-7) var(--space-8); background: var(--gradient-brand); border-radius: var(--radius-lg); color: #fff; margin-bottom: var(--space-6); box-shadow: var(--elevation-warm-2); }
-.news-page-title { font-size: 1.4em; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 6px; }
-.news-page-sub { font-size: 0.842em; color: rgba(255,255,255,0.78); letter-spacing: -0.015em; }
-.news-page-icon { font-size: 2.4em; opacity: 0.32; }
+.pg-outer { display: flex; flex-direction: column; width: 100%; gap: var(--space-4); }
 
-/* 탭 필터 */
-.news-tab-bar { display: flex; gap: var(--space-2); padding: var(--space-2); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-5); }
-.news-tab-btn { flex: 1; font-size: 0.842em; font-weight: 600; color: var(--color-text-secondary); background: transparent; border: none; border-radius: var(--radius-sm); padding: 10px 14px; cursor: pointer; transition: all 120ms cubic-bezier(0.25,0.46,0.45,0.94); white-space: nowrap; font-family: inherit; }
-.news-tab-btn:hover { color: var(--color-text-primary); background: var(--color-surface-2); }
-.news-tab-btn.active { color: #fff; background: var(--gradient-brand); font-weight: 700; box-shadow: var(--elevation-warm-2); }
+/* 페이지 타이틀 — 순백 + 좌측 정렬 */
+.pg-header-block { border-radius: var(--radius-md); overflow: hidden; }
+.pg-page-header {
+  background: transparent;
+  padding: var(--space-5) var(--space-1) var(--space-5) 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4);
+}
+.pg-page-title { font-size: 1.5em; font-weight: var(--fw-black); color: var(--color-text-primary); letter-spacing: -0.5px; margin-bottom: 4px; }
+.pg-page-title .accent { color: var(--color-accent); }
+.pg-page-desc { font-size: 0.875em; color: var(--color-text-secondary); line-height: 1.6; }
+.pg-page-icon { font-size: 2.2em; opacity: 0.35; color: var(--color-accent); }
 
-/* 카드 리스트 */
-.news-list { display: flex; flex-direction: column; gap: var(--space-3); }
-.news-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-5) var(--space-6); cursor: pointer; transition: all 120ms cubic-bezier(0.25,0.46,0.45,0.94); }
-.news-card:hover { box-shadow: var(--elevation-warm-2); border-color: var(--brand-400); transform: translateY(-1px); }
-.news-card-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
-.news-card-category { font-size: 0.7em; font-weight: 700; color: var(--brand-500); background: var(--brand-50); padding: 3px 10px; border-radius: 9999px; letter-spacing: 0.025em; }
-.news-card-source { font-size: 0.7em; color: var(--color-text-tertiary); }
-.news-card-date { font-size: 0.7em; color: var(--color-text-tertiary); margin-left: auto; }
-.news-card-title { font-size: 0.95em; font-weight: 700; color: var(--color-text-primary); line-height: 1.45; margin-bottom: 8px; letter-spacing: -0.015em; }
-.news-card-summary { font-size: 0.79em; color: var(--neutral-700); line-height: 1.65; margin-bottom: 12px; }
-.news-card-link { display: inline-block; font-size: 0.74em; color: var(--brand-500); font-weight: 700; text-decoration: none; transition: color 120ms; }
-.news-card-link:hover { color: var(--brand-700); text-decoration: underline; }
+/* 탭바 */
+.pg-tab-block { border-radius: var(--radius-md); background: var(--color-surface); border: 1px solid var(--color-border); padding: 2px var(--space-2); }
+.pg-tab-bar { display: flex; flex-wrap: wrap; gap: 0; }
+.pg-tab-btn {
+  padding: 12px var(--space-4);
+  border: none; background: transparent;
+  font-size: 0.895em; font-weight: var(--fw-semibold);
+  font-family: inherit;
+  cursor: pointer; white-space: nowrap;
+  color: var(--color-text-secondary);
+  border-bottom: 3px solid transparent;
+  transition: all var(--transition-fast);
+}
+.pg-tab-btn:hover { color: var(--color-text-primary); }
+.pg-tab-btn.active {
+  font-weight: var(--fw-black);
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
 
-/* 빈 상태 */
-.news-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; gap: var(--space-3); color: var(--color-text-tertiary); font-size: 0.842em; }
+/* 콘텐츠 */
+.pg-content-block { border-radius: var(--radius-md); background: var(--color-surface); border: 1px solid var(--color-border); overflow: hidden; }
+.pg-content-inner { padding: var(--space-6); }
+
+/* 푸터 */
+.pg-footer-block { border-radius: var(--radius-md); overflow: hidden; }
+.pg-bottom-bar { background: var(--color-surface-2); color: var(--color-text-secondary); text-align: center; font-size: 0.8125em; font-weight: var(--fw-bold); padding: 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+</style>
+
+<!-- news 전용 CSS -->
+<style>
+.news-list { display: flex; flex-direction: column; }
+.news-item {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-5) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.news-item:last-child { border-bottom: none; }
+.news-item:hover { background: var(--color-surface-2); }
+.news-item-top {
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.news-item-category {
+  display: inline-flex; align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.6875em; font-weight: var(--fw-black);
+  letter-spacing: 0.3px;
+  background: var(--brand-50); color: var(--brand-500);
+}
+.news-item-source {
+  font-size: 0.7em; color: var(--color-text-tertiary);
+}
+.news-item-date {
+  font-size: 0.7em; color: var(--color-text-tertiary);
+  margin-left: auto;
+}
+.news-item-title {
+  font-size: 0.975em; font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+}
+.news-item-summary {
+  font-size: 0.8em; color: var(--color-text-secondary);
+  line-height: 1.65;
+}
+.news-item-link {
+  display: inline-block;
+  font-size: 0.74em; color: var(--color-accent);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  margin-top: 4px;
+}
+.news-item-link:hover { color: var(--brand-500); text-decoration: underline; }
+
+.news-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 60px 0; gap: var(--space-3);
+  color: var(--color-text-tertiary);
+  font-size: 0.875em;
+}
 .news-empty-icon { font-size: 2.4em; opacity: 0.4; }
 </style>
 </head>
@@ -143,7 +217,7 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 <body>
 
 <div class="test-mode-bar">
-  [DESIGN TEST v1-full] 보험뉴스 (news) · v2 chrome (사스브라운 topbar + 180px 사이드바)
+  [DESIGN TEST v1-full] 보험뉴스 (news) · v2 chrome + pg-* 표준 레이아웃
 </div>
 
 <div class="app">
@@ -190,99 +264,111 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 
     <!-- D 콘텐츠 -->
     <div class="d" id="content-area">
+      <div class="pg-outer" id="page-news">
 
-      <!-- 페이지 헤더 -->
-      <div class="news-page-head">
-        <div>
-          <div class="news-page-title">📰 보험뉴스</div>
-          <div class="news-page-sub">보험 업계 최신 소식을 빠르게 확인하세요</div>
+        <div class="pg-header-block">
+          <div class="pg-page-header">
+            <div>
+              <div class="pg-page-title"><span class="accent">보험뉴스</span> · 매일 업데이트</div>
+              <div class="pg-page-desc">설계사 시각으로 선별된 보험 업계 최신 소식. 가입설계·심사·제도 변화를 빠르게 파악하세요.</div>
+            </div>
+            <div class="pg-page-icon">📰</div>
+          </div>
         </div>
-        <div class="news-page-icon">📰</div>
+
+        <div class="pg-tab-block">
+          <div class="pg-tab-bar" id="news-tab-bar">
+            <button class="pg-tab-btn active" onclick="filterNews(this, '전체')">전체</button>
+            <button class="pg-tab-btn" onclick="filterNews(this, '생명보험')">생명보험</button>
+            <button class="pg-tab-btn" onclick="filterNews(this, '손해보험')">손해보험</button>
+            <button class="pg-tab-btn" onclick="filterNews(this, '제도·규제')">제도·규제</button>
+          </div>
+        </div>
+
+        <div class="pg-content-block">
+          <div class="pg-content-inner">
+
+            <div class="news-list" id="news-list">
+              <div class="news-item" data-category="제도·규제" onclick="alert('[TEST] 원문 이동')">
+                <div class="news-item-top">
+                  <span class="news-item-category">제도·규제</span>
+                  <span class="news-item-source">금융감독원</span>
+                  <span class="news-item-date">2026-04-23</span>
+                </div>
+                <div class="news-item-title">금감원, 변액보험 사업비 공시 강화 시행 예정</div>
+                <div class="news-item-summary">2026년 하반기부터 변액보험 사업비 공시 항목이 확대됩니다. 설계사·소비자 모두 가입 전 사업비 구조를 한눈에 비교할 수 있게 됩니다.</div>
+                <a href="#" onclick="event.preventDefault();event.stopPropagation();alert('[TEST] 원문 이동');" class="news-item-link">원문 보기 →</a>
+              </div>
+
+              <div class="news-item" data-category="생명보험" onclick="alert('[TEST] 원문 이동')">
+                <div class="news-item-top">
+                  <span class="news-item-category">생명보험</span>
+                  <span class="news-item-source">한국경제</span>
+                  <span class="news-item-date">2026-04-22</span>
+                </div>
+                <div class="news-item-title">생보업계, 무·저해지 환급금 보험 신상품 잇따라 출시</div>
+                <div class="news-item-summary">대형 생보사들이 환급금 부담을 줄인 무·저해지 상품을 잇따라 내놓고 있습니다. 보험료 인하 효과로 경쟁이 가열되는 분위기.</div>
+                <a href="#" onclick="event.preventDefault();event.stopPropagation();alert('[TEST] 원문 이동');" class="news-item-link">원문 보기 →</a>
+              </div>
+
+              <div class="news-item" data-category="손해보험" onclick="alert('[TEST] 원문 이동')">
+                <div class="news-item-top">
+                  <span class="news-item-category">손해보험</span>
+                  <span class="news-item-source">매일경제</span>
+                  <span class="news-item-date">2026-04-22</span>
+                </div>
+                <div class="news-item-title">자동차보험 손해율 81% 진입 — 보험료 인상 압력</div>
+                <div class="news-item-summary">1분기 자동차보험 손해율이 81%대로 진입하면서 하반기 보험료 인상 가능성이 거론됩니다. 사고 빈도와 수리비 단가 상승이 주 원인.</div>
+                <a href="#" onclick="event.preventDefault();event.stopPropagation();alert('[TEST] 원문 이동');" class="news-item-link">원문 보기 →</a>
+              </div>
+
+              <div class="news-item" data-category="제도·규제" onclick="alert('[TEST] 원문 이동')">
+                <div class="news-item-top">
+                  <span class="news-item-category">제도·규제</span>
+                  <span class="news-item-source">금융위원회</span>
+                  <span class="news-item-date">2026-04-21</span>
+                </div>
+                <div class="news-item-title">실손보험 청구 간소화 시행 1년, 청구 건수 38% 증가</div>
+                <div class="news-item-summary">실손보험 청구 간소화 도입 1년이 지난 시점, 월평균 청구 건수가 38% 늘었습니다. 소액 청구 활성화가 두드러진 변화.</div>
+                <a href="#" onclick="event.preventDefault();event.stopPropagation();alert('[TEST] 원문 이동');" class="news-item-link">원문 보기 →</a>
+              </div>
+
+              <div class="news-item" data-category="생명보험" onclick="alert('[TEST] 원문 이동')">
+                <div class="news-item-top">
+                  <span class="news-item-category">생명보험</span>
+                  <span class="news-item-source">서울경제</span>
+                  <span class="news-item-date">2026-04-20</span>
+                </div>
+                <div class="news-item-title">CSM 회계기준 적용 2년차, 생보사 실적 양극화 심화</div>
+                <div class="news-item-summary">새 회계기준(IFRS17·K-ICS) 적용 2년차에 접어들면서 생보사 실적 격차가 벌어지고 있습니다. 보장성 비중이 높은 회사가 강세.</div>
+                <a href="#" onclick="event.preventDefault();event.stopPropagation();alert('[TEST] 원문 이동');" class="news-item-link">원문 보기 →</a>
+              </div>
+
+              <div class="news-item" data-category="손해보험" onclick="alert('[TEST] 원문 이동')">
+                <div class="news-item-top">
+                  <span class="news-item-category">손해보험</span>
+                  <span class="news-item-source">조선비즈</span>
+                  <span class="news-item-date">2026-04-19</span>
+                </div>
+                <div class="news-item-title">반려동물 보험, 가입률 1.7% — 시장 잠재력 재조명</div>
+                <div class="news-item-summary">국내 반려동물 보험 가입률은 1.7%로 일본·영국 대비 현저히 낮은 수준. 펫보험 표준약관 마련으로 시장 활성화 기대.</div>
+                <a href="#" onclick="event.preventDefault();event.stopPropagation();alert('[TEST] 원문 이동');" class="news-item-link">원문 보기 →</a>
+              </div>
+            </div>
+
+            <div class="news-empty" id="news-empty" style="display:none;">
+              <div class="news-empty-icon">📭</div>
+              <span>해당 카테고리의 뉴스가 없습니다.</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="pg-footer-block">
+          <div class="pg-bottom-bar">- 뉴스를 스크립트로, 스크립트를 계약으로 -</div>
+        </div>
+
       </div>
-
-      <!-- 탭 필터 -->
-      <div class="news-tab-bar">
-        <button class="news-tab-btn active" onclick="filterNews(this, '전체')">전체</button>
-        <button class="news-tab-btn" onclick="filterNews(this, '생명보험')">생명보험</button>
-        <button class="news-tab-btn" onclick="filterNews(this, '손해보험')">손해보험</button>
-        <button class="news-tab-btn" onclick="filterNews(this, '제도·규제')">제도·규제</button>
-      </div>
-
-      <!-- 뉴스 카드 리스트 (샘플 데이터) -->
-      <div class="news-list" id="news-list">
-        <div class="news-card" data-category="제도·규제">
-          <div class="news-card-top">
-            <span class="news-card-category">제도·규제</span>
-            <span class="news-card-source">금융감독원</span>
-            <span class="news-card-date">2026-04-23</span>
-          </div>
-          <div class="news-card-title">금감원, 변액보험 사업비 공시 강화 시행 예정</div>
-          <div class="news-card-summary">2026년 하반기부터 변액보험 사업비 공시 항목이 확대됩니다. 설계사·소비자 모두 가입 전 사업비 구조를 한눈에 비교할 수 있게 됩니다.</div>
-          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
-        </div>
-
-        <div class="news-card" data-category="생명보험">
-          <div class="news-card-top">
-            <span class="news-card-category">생명보험</span>
-            <span class="news-card-source">한국경제</span>
-            <span class="news-card-date">2026-04-22</span>
-          </div>
-          <div class="news-card-title">생보업계, 무·저해지 환급금 보험 신상품 잇따라 출시</div>
-          <div class="news-card-summary">대형 생보사들이 환급금 부담을 줄인 무·저해지 상품을 잇따라 내놓고 있습니다. 보험료 인하 효과로 경쟁이 가열되는 분위기.</div>
-          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
-        </div>
-
-        <div class="news-card" data-category="손해보험">
-          <div class="news-card-top">
-            <span class="news-card-category">손해보험</span>
-            <span class="news-card-source">매일경제</span>
-            <span class="news-card-date">2026-04-22</span>
-          </div>
-          <div class="news-card-title">자동차보험 손해율 81% 진입 — 보험료 인상 압력</div>
-          <div class="news-card-summary">1분기 자동차보험 손해율이 81%대로 진입하면서 하반기 보험료 인상 가능성이 거론됩니다. 사고 빈도와 수리비 단가 상승이 주 원인.</div>
-          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
-        </div>
-
-        <div class="news-card" data-category="제도·규제">
-          <div class="news-card-top">
-            <span class="news-card-category">제도·규제</span>
-            <span class="news-card-source">금융위원회</span>
-            <span class="news-card-date">2026-04-21</span>
-          </div>
-          <div class="news-card-title">실손보험 청구 간소화 시행 1년, 청구 건수 38% 증가</div>
-          <div class="news-card-summary">실손보험 청구 간소화 도입 1년이 지난 시점, 월평균 청구 건수가 38% 늘었습니다. 소액 청구 활성화가 두드러진 변화.</div>
-          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
-        </div>
-
-        <div class="news-card" data-category="생명보험">
-          <div class="news-card-top">
-            <span class="news-card-category">생명보험</span>
-            <span class="news-card-source">서울경제</span>
-            <span class="news-card-date">2026-04-20</span>
-          </div>
-          <div class="news-card-title">CSM 회계기준 적용 2년차, 생보사 실적 양극화 심화</div>
-          <div class="news-card-summary">새 회계기준(IFRS17·K-ICS) 적용 2년차에 접어들면서 생보사 실적 격차가 벌어지고 있습니다. 보장성 비중이 높은 회사가 강세.</div>
-          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
-        </div>
-
-        <div class="news-card" data-category="손해보험">
-          <div class="news-card-top">
-            <span class="news-card-category">손해보험</span>
-            <span class="news-card-source">조선비즈</span>
-            <span class="news-card-date">2026-04-19</span>
-          </div>
-          <div class="news-card-title">반려동물 보험, 가입률 1.7% — 시장 잠재력 재조명</div>
-          <div class="news-card-summary">국내 반려동물 보험 가입률은 1.7%로 일본·영국 대비 현저히 낮은 수준. 펫보험 표준약관 마련으로 시장 활성화 기대.</div>
-          <a href="#" onclick="event.preventDefault();alert('[TEST] 원문 이동')" class="news-card-link">원문 보기 →</a>
-        </div>
-      </div>
-
-      <!-- 빈 상태 (필터 시 등장) -->
-      <div class="news-empty" id="news-empty" style="display:none;">
-        <div class="news-empty-icon">📭</div>
-        <span>해당 카테고리의 뉴스가 없습니다.</span>
-      </div>
-
     </div>
 
     <!-- C 우측바 -->
@@ -290,7 +376,7 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
       <div class="c-box">
         <div class="c-box-label">매일 업데이트</div>
         <div class="c-box-title">현장에 꼭 필요한 뉴스만</div>
-        <div class="c-box-desc">설계사 시각에서 선별된 보험 업계 소식을 매일 정리해 드립니다. 가입설계·심사·제도 변화를 빠르게 파악하세요.</div>
+        <div class="c-box-desc">설계사 시각에서 선별된 보험 업계 소식을 매일 정리해 드립니다.</div>
       </div>
       <div class="c-box">
         <div class="c-box-label">Tip</div>
@@ -326,17 +412,17 @@ function switchMenuVisual(el) {
 
 function filterNews(btn, category) {
   var bar = btn.parentElement;
-  var btns = bar.querySelectorAll('.news-tab-btn');
+  var btns = bar.querySelectorAll('.pg-tab-btn');
   for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
   btn.classList.add('active');
 
   var list = document.getElementById('news-list');
   var empty = document.getElementById('news-empty');
-  var cards = list.querySelectorAll('.news-card');
+  var items = list.querySelectorAll('.news-item');
   var visible = 0;
-  for (var j = 0; j < cards.length; j++) {
-    var match = (category === '전체') || (cards[j].getAttribute('data-category') === category);
-    cards[j].style.display = match ? '' : 'none';
+  for (var j = 0; j < items.length; j++) {
+    var match = (category === '전체') || (items[j].getAttribute('data-category') === category);
+    items[j].style.display = match ? '' : 'none';
     if (match) visible++;
   }
   list.style.display = visible === 0 ? 'none' : '';
