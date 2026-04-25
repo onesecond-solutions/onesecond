@@ -293,34 +293,23 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
   min-height: 44px;
 }
 .sc-vtab-item:hover { background: var(--color-surface-2); transform: translateX(1px); }
-/* ★ 활성 탭 — 사이드바 활성 버튼처럼 solid fill + 임팩트 강화 */
+/* ★ 활성 탭 — 단일 사스브라운 강조 (그리드 색과 일관) */
 .sc-vtab-item.active {
-  background: var(--stg-fg, var(--color-brand));
-  border-left-color: var(--stg-fg, var(--color-accent));
-  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.18),
-              0 2px 6px rgba(17, 24, 39, 0.10);
+  background: var(--gradient-brand);
+  border-left-color: var(--brand-700);
+  box-shadow: var(--elevation-warm-2);
   transform: translateX(3px);
   z-index: 2;
 }
-.sc-vtab-icon {
-  font-size: 1.1em;
-  line-height: 1;
-  flex-shrink: 0;
-  transition: filter var(--transition-fast);
-}
-.sc-vtab-item.active .sc-vtab-icon {
-  filter: brightness(0) invert(1); /* 이모지를 흰색 실루엣으로 */
-}
 .sc-vtab-label {
   flex: 1;
-  font-size: 0.875em;
+  font-size: 0.9375em;
   font-weight: var(--fw-semibold);
   color: var(--color-text-secondary);
   letter-spacing: -0.3px;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: keep-all;
   transition: color var(--transition-fast), font-weight var(--transition-fast);
 }
 .sc-vtab-item.active .sc-vtab-label {
@@ -374,19 +363,19 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 .sc-list { display: flex; flex-direction: column; padding: var(--space-4); gap: var(--space-3); }
 .sc-list-item { padding: var(--space-4) var(--space-4); border-radius: var(--radius-sm); border-left: 3px solid transparent; cursor: pointer; background: var(--color-surface); min-height: 64px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 4px rgba(17, 24, 39, 0.04), 0 1px 2px rgba(17, 24, 39, 0.03); transform: translateY(0); transition: all var(--transition-fast); }
 .sc-list-item:hover { background: var(--color-surface-2); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(17, 24, 39, 0.08), 0 2px 4px rgba(17, 24, 39, 0.05); }
-.sc-list-item.active { border-left-color: var(--stg-fg, var(--color-accent)); background: var(--stg-bg, var(--color-surface-2)); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(17, 24, 39, 0.12), 0 3px 6px rgba(17, 24, 39, 0.06); z-index: 1; }
-.sc-list-item.active .sc-list-title { color: var(--stg-fg, var(--color-brand)); }
+.sc-list-item.active { border-left-color: var(--brand-500); background: var(--brand-50); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(17, 24, 39, 0.12), 0 3px 6px rgba(17, 24, 39, 0.06); z-index: 1; }
+.sc-list-item.active .sc-list-title { color: var(--brand-500); }
 .sc-list-item .sc-num { display: inline-block; font-size: var(--text-xs); font-weight: var(--fw-bold); padding: 2px 7px; border-radius: var(--radius-full); background: var(--color-text-tertiary); color: #fff; margin-bottom: 4px; width: fit-content; transition: background var(--transition-fast); }
-.sc-list-item.active .sc-num { background: var(--stg-fg, var(--color-brand)); }
+.sc-list-item.active .sc-num { background: var(--brand-500); }
 .sc-list-title { font-size: var(--text-body); font-weight: var(--fw-bold); color: var(--color-text-primary); line-height: 1.4; }
-.sc-list-sub { font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 3px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sc-list-sub { font-size: 0.7895em; color: var(--neutral-700); margin-top: 4px; line-height: 1.55; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: keep-all; }
 
-/* 열별 폰트 */
+/* 열별 폰트 — 가시성 확보 (서브 문구 키움) */
 .sc-col-2 .sc-list-title { font-size: var(--text-label); }
-.sc-col-2 .sc-list-sub   { font-size: 0.632em; }
+.sc-col-2 .sc-list-sub   { font-size: 0.737em; }
 .sc-col-2 .sc-list-item.active .sc-list-title { font-size: 0.842em; }
 .sc-col-3 .sc-list-title { font-size: var(--text-tab); }
-.sc-col-3 .sc-list-sub   { font-size: var(--text-xs); }
+.sc-col-3 .sc-list-sub   { font-size: 0.7895em; }
 .sc-col-3 .sc-list-item.active .sc-list-title { font-size: 0.9474em; }
 
 .sc-col.done .sc-list-item:not(.active) { opacity: 0.5; }
@@ -395,17 +384,17 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 /* 열 4 */
 .sc-col-4 { background: var(--color-surface-2); }
 .sc-detail { padding: var(--space-10); overflow-y: auto; height: 100%; }
-.sc-detail-tag { display: inline-block; font-size: var(--text-xs); font-weight: var(--fw-bold); padding: 4px 12px; border-radius: var(--radius-full); background: var(--stg-fg, var(--color-brand)); color: #fff; margin-bottom: var(--space-3); box-shadow: 0 2px 4px rgba(17, 24, 39, 0.08); }
+.sc-detail-tag { display: inline-block; font-size: var(--text-xs); font-weight: var(--fw-bold); padding: 4px 12px; border-radius: var(--radius-full); background: var(--brand-500); color: #fff; margin-bottom: var(--space-3); box-shadow: 0 2px 4px rgba(17, 24, 39, 0.08); }
 .sc-detail-title { font-size: var(--text-h2); font-weight: var(--fw-black); color: var(--color-text-primary); margin-bottom: 4px; line-height: 1.4; letter-spacing: -0.3px; }
 .sc-detail-sub { font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: var(--space-5); line-height: 1.5; }
 .sc-detail-body { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-8); margin-bottom: var(--space-4); box-shadow: 0 6px 14px rgba(17, 24, 39, 0.10), 0 3px 6px rgba(17, 24, 39, 0.05); transform: translateY(-1px); }
 .sc-detail-body .sc-html { font-size: var(--text-tab); color: var(--color-text-primary); line-height: 2; }
-.sc-detail-body .sc-html strong { color: var(--stg-fg, var(--color-brand)); font-weight: var(--fw-black); }
+.sc-detail-body .sc-html strong { color: var(--brand-500); font-weight: var(--fw-black); }
 .sc-detail-body .sc-html p { margin-bottom: var(--space-3); }
 .sc-detail-body .sc-html p:last-child { margin-bottom: 0; }
 
-.sc-tip { background: var(--stg-bg, var(--color-surface-2)); border-left: 3px solid var(--stg-fg, var(--color-accent)); border-radius: var(--radius-sm); padding: var(--space-4) var(--space-5); font-size: var(--text-xs); color: var(--color-text-secondary); line-height: 1.7; }
-.sc-tip strong { color: var(--stg-fg, var(--color-brand)); font-weight: var(--fw-bold); }
+.sc-tip { background: var(--brand-50); border-left: 3px solid var(--brand-500); border-radius: var(--radius-sm); padding: var(--space-4) var(--space-5); font-size: var(--text-xs); color: var(--color-text-secondary); line-height: 1.7; }
+.sc-tip strong { color: var(--brand-500); font-weight: var(--fw-bold); }
 
 .sc-footer { background: var(--color-surface-2); color: var(--color-text-secondary); text-align: center; font-size: var(--text-label); font-weight: var(--fw-bold); padding: var(--space-4) var(--space-5); border-radius: var(--radius-md); border: 1px solid var(--color-border); }
 
@@ -479,43 +468,43 @@ html, body { font-size: 16px; font-family: var(--font-sans); background: var(--c
 
         <div class="sc-body-wrap">
 
-          <!-- 세로 탭바 (10단계) -->
+          <!-- 세로 탭바 (10단계) — 이모지 제거, 단일색 시스템 -->
           <div class="sc-vtab-wrap" id="sc-vtab-wrap">
-            <div class="sc-vtab-item" onclick="activateVtab(this, 1)" style="--stg-fg: var(--stg-1-fg); --stg-bg: var(--stg-1-bg);">
-              <span class="sc-vtab-icon">📞</span><span class="sc-vtab-label">도입인사</span><span class="sc-vtab-count">4</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 1)">
+              <span class="sc-vtab-label">도입 인사</span><span class="sc-vtab-count">4</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 2)" style="--stg-fg: var(--stg-2-fg); --stg-bg: var(--stg-2-bg);">
-              <span class="sc-vtab-icon">💬</span><span class="sc-vtab-label">도입반론</span><span class="sc-vtab-count">3</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 2)">
+              <span class="sc-vtab-label">도입 반론</span><span class="sc-vtab-count">3</span>
             </div>
-            <div class="sc-vtab-item active" onclick="activateVtab(this, 3)" style="--stg-fg: var(--stg-3-fg); --stg-bg: var(--stg-3-bg);">
-              <span class="sc-vtab-icon">🔥</span><span class="sc-vtab-label">필요성 ①</span><span class="sc-vtab-count">3</span>
+            <div class="sc-vtab-item active" onclick="activateVtab(this, 3)">
+              <span class="sc-vtab-label">필요성 강조 ①</span><span class="sc-vtab-count">3</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 4)" style="--stg-fg: var(--stg-4-fg); --stg-bg: var(--stg-4-bg);">
-              <span class="sc-vtab-icon">🔎</span><span class="sc-vtab-label">상황 확인</span><span class="sc-vtab-count">5</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 4)">
+              <span class="sc-vtab-label">상황 확인</span><span class="sc-vtab-count">5</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 5)" style="--stg-fg: var(--stg-5-fg); --stg-bg: var(--stg-5-bg);">
-              <span class="sc-vtab-icon">📊</span><span class="sc-vtab-label">보장 분석</span><span class="sc-vtab-count">2</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 5)">
+              <span class="sc-vtab-label">보장 분석</span><span class="sc-vtab-count">2</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 6)" style="--stg-fg: var(--stg-6-fg); --stg-bg: var(--stg-6-bg);">
-              <span class="sc-vtab-icon">📦</span><span class="sc-vtab-label">상품 설명</span><span class="sc-vtab-count">4</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 6)">
+              <span class="sc-vtab-label">상품 설명</span><span class="sc-vtab-count">4</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 7)" style="--stg-fg: var(--stg-7-fg); --stg-bg: var(--stg-7-bg);">
-              <span class="sc-vtab-icon">🔥</span><span class="sc-vtab-label">필요성 ②</span><span class="sc-vtab-count">2</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 7)">
+              <span class="sc-vtab-label">필요성 강조 ②</span><span class="sc-vtab-count">2</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 8)" style="--stg-fg: var(--stg-8-fg); --stg-bg: var(--stg-8-bg);">
-              <span class="sc-vtab-icon">✅</span><span class="sc-vtab-label">클로징</span><span class="sc-vtab-count">3</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 8)">
+              <span class="sc-vtab-label">클로징</span><span class="sc-vtab-count">3</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 9)" style="--stg-fg: var(--stg-9-fg); --stg-bg: var(--stg-9-bg);">
-              <span class="sc-vtab-icon">⚡</span><span class="sc-vtab-label">반론 대응</span><span class="sc-vtab-count">5</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 9)">
+              <span class="sc-vtab-label">반론 대응</span><span class="sc-vtab-count">5</span>
             </div>
-            <div class="sc-vtab-item" onclick="activateVtab(this, 10)" style="--stg-fg: var(--stg-10-fg); --stg-bg: var(--stg-10-bg);">
-              <span class="sc-vtab-icon">🔚</span><span class="sc-vtab-label">2차 클로징</span><span class="sc-vtab-count">2</span>
+            <div class="sc-vtab-item" onclick="activateVtab(this, 10)">
+              <span class="sc-vtab-label">2차 클로징</span><span class="sc-vtab-count">2</span>
             </div>
           </div>
 
           <!-- 3열 그리드 (col-2, col-3, col-4) -->
           <div class="sc-grid-wrap">
-            <div class="sc-grid step-3" id="sc-grid" style="--stg-fg: var(--stg-3-fg); --stg-bg: var(--stg-3-bg); --stg-bg-soft: var(--stg-3-bg);">
+            <div class="sc-grid step-3" id="sc-grid">
 
               <div class="sc-col sc-col-2 done" id="sc-col-2">
                 <div class="sc-list">
@@ -635,22 +624,12 @@ function switchMenuVisual(el) {
   }
 }
 
-/* 세로 탭 클릭 → 단계 색상 전환 */
+/* 세로 탭 클릭 → 활성 전환 (단일 사스브라운 시스템이라 색 주입 불필요) */
 function activateVtab(el, stageNum) {
   var wrap = el.parentElement;
   var items = wrap.querySelectorAll('.sc-vtab-item');
   for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
   el.classList.add('active');
-
-  var fg = 'var(--stg-' + stageNum + '-fg)';
-  var bg = 'var(--stg-' + stageNum + '-bg)';
-
-  var grid = document.getElementById('sc-grid');
-  if (grid) {
-    grid.style.setProperty('--stg-fg', fg);
-    grid.style.setProperty('--stg-bg', bg);
-    grid.style.setProperty('--stg-bg-soft', bg);
-  }
 }
 
 /* ═══════════════════════════════════════════════
