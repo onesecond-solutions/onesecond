@@ -1471,7 +1471,6 @@ footer {
       <a href="#" class="inaction-cta" onclick="event.preventDefault(); openModal();">
         무료회원 가입하기
       </a>
-      <div class="inaction-cardinfo">신용카드 불필요 · 30일 후 월 9,900원</div>
       <div class="inaction-stats">
         <div class="inaction-stat">
           <div class="inaction-stat-num normal">1<b>초</b></div>
@@ -1508,7 +1507,6 @@ footer {
       <p class="hero-sub"><strong>상담 중 멈추지 않는 1초.</strong><br>하루 수백 개 단톡방 알림에 휩쓸리지 않고,<br>고객에게 필요한 한 문장을 바로 꺼내세요.</p>
       <div>
         <button class="cta-main" onclick="openModal()">무료회원 가입하기</button>
-        <p class="cta-note">신용카드 불필요 · 30일 후 월 9,900원</p>
       </div>
       <div class="hero-stats">
         <div class="stat">
@@ -1809,7 +1807,7 @@ footer {
       <div class="target-card primary">
         <div class="target-badge-top">설계사 · 팀장</div>
         <div class="target-card-title">지금 상담 중<br>멈추지 않으려면</div>
-        <div class="target-card-desc">17년 현장 경험으로 만든 스크립트 · 게시판 · 퀵 도구. 30일 무료로 직접 써보세요. 단톡방 없이도 통화가 끊기지 않습니다.</div>
+        <div class="target-card-desc">17년 현장 경험으로 만든 스크립트 · 게시판 · 퀵 도구. 단톡방 없이도 통화가 끊기지 않습니다.</div>
         <button class="target-card-btn" onclick="openModal()">무료회원 가입하기</button>
       </div>
 
@@ -1883,7 +1881,6 @@ footer {
           </div>
           <div class="ml-logo-name">원세컨드 <span>1s</span></div>
         </div>
-        <div class="ml-badge">30일 완전 무료 · 카드 불필요</div>
         <div class="ml-title">통화 중 멈추는<br>순간, <em>원세컨드</em>가<br>이어갑니다</div>
         <div class="ml-desc">현장 17년 경력 설계사가 직접 만든<br>TM 상담 1초 실행 도구</div>
         <div class="ml-features">
@@ -1920,7 +1917,6 @@ footer {
               <div class="m-err" id="e-role">역할을 선택해 주세요.</div>
             </div>
           </div>
-          <div class="role-hint" id="rh-member">📱 설계사·팀장은 <strong>첫 30일 무료</strong> 후 월 9,900원으로 전환됩니다.</div>
           <div class="role-hint" id="rh-manager">✅ 매니저·실장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.</div>
           <div class="role-hint" id="rh-branch">✅ 지점장·센터장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.</div>
           <div class="m-row-2">
@@ -1998,7 +1994,7 @@ footer {
           <svg viewBox="0 0 28 28" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,14 11,21 24,7"/></svg>
         </div>
         <div class="success-ttl">이메일 인증을 완료해 주세요!</div>
-        <div class="success-desc" id="success-email-desc">입력하신 이메일로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br><strong>30일 무료체험</strong>을 바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:#b09a89;">스팸함도 꼭 확인해 주세요</span></div>
+        <div class="success-desc" id="success-email-desc">입력하신 이메일로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br>바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:#b09a89;">스팸함도 꼭 확인해 주세요</span></div>
       </div>
     </div>
   </div>
@@ -2078,7 +2074,6 @@ function handleOverlayClick(e){if(e.target===document.getElementById('overlay'))
 function onRoleChange(){
   const r=document.getElementById('f-role').value;
   document.querySelectorAll('.role-hint').forEach(el=>el.classList.remove('on'));
-  if(r==='member')document.getElementById('rh-member').classList.add('on');
   if(r==='manager')document.getElementById('rh-manager').classList.add('on');
   if(r==='branch_manager')document.getElementById('rh-branch').classList.add('on');
 }
