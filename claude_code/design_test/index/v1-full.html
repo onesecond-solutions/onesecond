@@ -714,10 +714,6 @@ body{
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-5);
 }
-.pillars-grid .pillar:nth-child(1),
-.pillars-grid .pillar:nth-child(2) {
-  grid-column: span 1;
-}
 @media(max-width:1024px) { .pillars-grid { grid-template-columns: repeat(2, 1fr); } }
 @media(max-width:640px)  { .pillars-grid { grid-template-columns: 1fr; } }
 
@@ -773,26 +769,6 @@ body{
   color: var(--color-text-secondary);
   line-height: var(--leading-relaxed);
 }
-.pillar.featured {
-  background: linear-gradient(135deg, #fff 0%, var(--accent-50) 100%);
-  border: 2px solid var(--accent-400);
-  grid-column: span 2;
-}
-.pillar.featured .pillar-icon { background: var(--gradient-brand); color: #fff; }
-.pillar.featured::before {
-  content: '⭐ 사용자와 함께 만들어갑니다';
-  position: absolute; top: 16px; right: 16px;
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--brand-500);
-  background: rgba(255,255,255,0.8);
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  letter-spacing: var(--tracking-wide);
-}
-.pillar.featured .pillar-title { font-size: var(--text-2xl); }
-@media(max-width:640px) { .pillar.featured { grid-column: span 1; } }
-
 /* ═════════════════════════════════════════════════════════
    5. TOGETHER (순서 변경 — 앞쪽으로)
 ═════════════════════════════════════════════════════════ */
@@ -1377,9 +1353,9 @@ body{
 <section class="pillars" id="pillars">
   <div class="pillars-inner">
     <div class="section-head">
-      <span class="section-eyebrow">FIVE PILLARS</span>
-      <h2 class="section-title">원세컨드의 <span class="accent">5가지 기둥</span></h2>
-      <p class="section-sub">상담 중 · 급할 때 · 질문 있을 때 · 나만의 자산 · 함께 만드는</p>
+      <span class="section-eyebrow">SIX PILLARS</span>
+      <h2 class="section-title">원세컨드의 <span class="accent">6가지 기둥</span></h2>
+      <p class="section-sub">상담 중 · 질문 있을 때 · 급할 때 · 나만의 자산 · 함께 만드는 · 찾을 때</p>
     </div>
 
     <div class="pillars-grid">
@@ -1392,17 +1368,17 @@ body{
       </div>
 
       <div class="pillar">
-        <div class="pillar-icon">⚡</div>
-        <span class="pillar-tag">· 급할 때 ·</span>
-        <h3 class="pillar-title">상단 퀵 메뉴</h3>
-        <p class="pillar-desc">BMI · 보험연령표 · 녹취 스크립트 · 전산장애 연락처. 단톡방에 물어볼 시간 없는 순간 상단에서 바로.</p>
-      </div>
-
-      <div class="pillar">
         <div class="pillar-icon">💬</div>
         <span class="pillar-tag">· 질문 있을 때 ·</span>
         <h3 class="pillar-title">현장 Q&amp;A</h3>
         <p class="pillar-desc">단톡방을 업그레이드한 게시판. 설계사 질문 → 관리자 확인 → 보험사 공식 답변. 검색되고 쌓입니다.</p>
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-icon">⚡</div>
+        <span class="pillar-tag">· 급할 때 ·</span>
+        <h3 class="pillar-title">Quick 메뉴</h3>
+        <p class="pillar-desc">BMI · 보험연령표 · 녹취 스크립트 · 전산장애 연락처. 단톡방에 물어볼 시간 없는 순간 상단에서 바로.</p>
       </div>
 
       <div class="pillar">
@@ -1412,11 +1388,18 @@ body{
         <p class="pillar-desc">내가 만든 스크립트 · 즐겨찾기 · 메모. 번뜩이는 멘트를 저장해 나만의 무기로 만드세요.</p>
       </div>
 
-      <div class="pillar featured">
+      <div class="pillar">
         <div class="pillar-icon">🤝</div>
         <span class="pillar-tag">· 함께 만드는 ·</span>
         <h3 class="pillar-title">함께해요</h3>
         <p class="pillar-desc">원세컨드는 설계사분들의 제안으로 자랍니다. 불편한 점·필요한 기능을 직접 제안하시면 다음 버전에 반영됩니다. 현장이 만드는 현장 도구입니다.</p>
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-icon">🔍</div>
+        <span class="pillar-tag">· 찾을 때 ·</span>
+        <h3 class="pillar-title">검색기</h3>
+        <p class="pillar-desc">스크립트 · 게시글 · 자료. 흩어진 현장 정보를 한 줄 검색으로 한 번에. 단톡방 스크롤 대신 검색창으로.</p>
       </div>
 
     </div>
@@ -1601,7 +1584,7 @@ body{
         <div class="form-check">
           <input type="checkbox" id="agree1" required>
           <label for="agree1">
-            <strong style="color:var(--color-text-primary);">(필수)</strong> <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다
+            <strong style="color:var(--color-text-primary);">(필수)</strong> <a href="terms.html" target="_blank" rel="noopener">이용약관</a> 및 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다
           </label>
         </div>
         <div class="form-check">
@@ -1636,9 +1619,9 @@ body{
         <span>원세컨드</span>
       </div>
       <div class="footer-links">
-        <a href="#" class="footer-link" onclick="event.preventDefault();">서비스 소개</a>
-        <a href="#" class="footer-link" onclick="event.preventDefault();">이용약관</a>
-        <a href="#" class="footer-link" onclick="event.preventDefault();">개인정보처리방침</a>
+        <a href="#pillars" class="footer-link">서비스 소개</a>
+        <a href="terms.html" class="footer-link">이용약관</a>
+        <a href="privacy.html" class="footer-link">개인정보처리방침</a>
       </div>
       <a href="https://open.kakao.com/o/svu80Moi" target="_blank" class="footer-kakao">💬 카카오 문의</a>
     </div>

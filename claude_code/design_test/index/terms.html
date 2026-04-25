@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이용약관 — 원세컨드</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<link rel="stylesheet" href="../../../css/tokens.css">
+
+<style>
+:root {
+  --brand-500:#A0522D; --brand-600:#824220;
+  --accent-50:#FEF3EA; --accent-400:#D4845A;
+  --neutral-100:#F4F5F7; --neutral-200:#E5E7EB;
+  --neutral-500:#6B7280; --neutral-700:#374151; --neutral-800:#1F2937;
+  --gradient-brand: linear-gradient(135deg, #A0522D 0%, #D4845A 100%);
+  --gradient-soft: linear-gradient(135deg, #FDF4EF 0%, #FEF3EA 100%);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  background: var(--gradient-soft);
+  color: var(--neutral-800);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+.nav {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--neutral-200);
+  padding: 16px 32px;
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-mark {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--gradient-brand);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
+.logo-text { font-weight: 800; font-size: 18px; color: var(--neutral-800); letter-spacing: -0.02em; }
+
+.main {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 64px 24px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--neutral-200);
+  border-radius: 24px;
+  padding: 64px 48px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(160,82,45,0.08);
+}
+.icon {
+  width: 72px; height: 72px;
+  border-radius: 18px;
+  background: var(--accent-50);
+  color: var(--brand-500);
+  font-size: 32px;
+  margin: 0 auto 24px;
+  display: flex; align-items: center; justify-content: center;
+}
+.badge {
+  display: inline-block;
+  background: var(--accent-50);
+  color: var(--brand-500);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+  letter-spacing: 0.04em;
+}
+.title {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--neutral-800);
+  letter-spacing: -0.025em;
+  margin-bottom: 16px;
+}
+.body {
+  font-size: 16px;
+  color: var(--neutral-500);
+  line-height: 1.75;
+  margin-bottom: 32px;
+}
+.body strong { color: var(--brand-500); font-weight: 700; }
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  letter-spacing: -0.01em;
+}
+.btn-primary {
+  background: var(--gradient-brand);
+  color: #fff;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(160,82,45,0.3);
+}
+.btn-secondary {
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  border: 1px solid var(--neutral-200);
+}
+.btn-secondary:hover { background: var(--neutral-200); }
+
+.foot {
+  border-top: 1px solid var(--neutral-200);
+  background: rgba(255,255,255,0.6);
+  padding: 24px 32px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--neutral-500);
+}
+
+@media (max-width: 640px) {
+  .card { padding: 48px 28px; border-radius: 20px; }
+  .title { font-size: 26px; }
+  .body { font-size: 15px; }
+}
+</style>
+</head>
+
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="logo-mark">1s</div>
+    <div class="logo-text">원세컨드</div>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="card">
+    <div class="icon">📋</div>
+    <span class="badge">준비 중</span>
+    <h1 class="title">이용약관</h1>
+    <p class="body">
+      원세컨드 이용약관은 <strong>변호사 검수를 거쳐 5월 중</strong> 정식 게시될 예정입니다.<br>
+      문의 사항은 아래 카카오톡 오픈채팅으로 연락 주시면 빠르게 답변드리겠습니다.
+    </p>
+    <div class="btn-row">
+      <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener" class="btn btn-primary">💬 카카오 문의</a>
+      <a href="javascript:history.back()" class="btn btn-secondary">← 돌아가기</a>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">© 2026 OneSecond</footer>
+</body>
+</html>
