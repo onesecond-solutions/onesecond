@@ -323,6 +323,7 @@ IIFE 래핑 예외. 전역 함수 직접 선언 가능.
 | 2026-04-20 | v1.1 — 함께해요 토큰 추가, 탭 스타일·페이지 배너 슬롯 규정, 코드 구조 규칙(IIFE·window 등록) 명문화, 컴포넌트 체크리스트 추가 |
 | 2026-04-23 | origin 이력 흡수 — CDN 로드 예시, 헤더 그라데이션 마이그레이션 노트, 변경 이력 섹션 신설 |
 | 2026-04-25 | v2 디자인 시스템 결정 박제 — A1+A2 통합 슬림 topbar, 사이드바 180px, 화이트+blur 글래스모피즘, 확장 토큰 시스템 (§15 신설). 라이브 승격은 4/30·5/9~10 단계적 |
+| 2026-04-25 (재고) | A1 톤 결정 재고 — home topbar **사스브라운 항시 적용**으로 변경 (이전 "화이트+blur" 폐기). 라벨 헷갈림으로 의도 반대로 박제됐던 부분 정정. §15.2 갱신, `home/v2-full.html` 반영 |
 
 ---
 
@@ -354,12 +355,21 @@ IIFE 래핑 예외. 전역 함수 직접 선언 가능.
 
 | 속성 | 값 |
 |---|---|
-| `background` | `rgba(255, 255, 255, 0.72)` |
-| `backdrop-filter` | `blur(16px) saturate(180%)` |
-| `border-bottom` | `1px solid var(--color-border)` |
+| `background` | `var(--gradient-brand)` (사스브라운 그라데이션 #A0522D → #D4845A) |
+| `color` | `#fff` (자식 텍스트 기본 흰색 상속) |
+| `border-bottom` | (없음 — 그라데이션 자체로 영역 구분) |
 | `position` | `sticky; top: 0; z-index: var(--z-sticky)` |
 
-→ A1 브라운 그라데이션(`--gradient-header`) **사용 안 함.** 브랜드 정체성은 로고 마크(`.tb-brand-mark`)의 `--gradient-brand`로 압축.
+→ A1 사스브라운 항시 적용. 라이브 `app.html` 브랜드 톤과 정합 (이전 결정 "화이트 + blur" 폐기, 2026-04-25 재고).
+
+**자식 요소 색상 매핑 (사스브라운 배경 기준):**
+- `.tb-brand` 텍스트: `#fff`
+- `.tb-brand .accent`: `var(--accent-200)` (밝은 살구톤, 가시성 확보)
+- `.tb-search` 컨테이너: `rgba(255,255,255,0.14)` 반투명 + 1px 화이트 18% 윤곽
+- `.tb-search input` 텍스트: `#fff`, placeholder `rgba(255,255,255,0.55)`
+- `.tb-search` 포커스 시: `rgba(255,255,255,0.96)` 거의 화이트 + accent-200 보더 + 자식 텍스트 다크로 자동 반전
+- `.tb-status` / `.tb-alert` / `.tb-user`: 색칠된 알약 (각각 success / danger / 화이트 톤) — 사스브라운 배경 위에서도 가시성 충분, 그대로 유지
+- `.tb-user` 텍스트만 명시적 `var(--color-text-primary)` (부모 흰색 상속 차단 — 흰색 배경 위 흰색 글자 방지)
 
 ### 15.3 확장 토큰 시스템
 
