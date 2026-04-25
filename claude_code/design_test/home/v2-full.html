@@ -710,7 +710,7 @@ html, body {
 .hex-tip[data-pos="10"]::before { right: -19px; border-left-color: var(--brand-500); }
 
 /* ═══════════════════════════════════════════════════════════
-   인라인 미리보기 (검색/빠른실행 노드 클릭 시)
+   인라인 미리보기 (검색/Quick 노드 클릭 시)
 ═══════════════════════════════════════════════════════════ */
 .inline-preview {
   max-width: 640px;
@@ -944,7 +944,7 @@ html, body {
           </div>
         </section>
 
-        <!-- 인라인 미리보기 (검색기·빠른실행 노드 클릭 시 표시) -->
+        <!-- 인라인 미리보기 (검색기·Quick 노드 클릭 시 표시) -->
         <div id="inline-preview" class="inline-preview" style="display:none;">
           <div id="preview-search" style="display:none;">
             <div class="inline-preview-title">🔍 검색기</div>
@@ -955,7 +955,7 @@ html, body {
             <div class="inline-preview-hint">💡 Enter 시 스크립트·게시글·자료를 한 번에 검색합니다</div>
           </div>
           <div id="preview-quick" style="display:none;">
-            <div class="inline-preview-title">⚡ 빠른실행</div>
+            <div class="inline-preview-title">⚡ Quick 메뉴</div>
             <div style="padding: 20px; text-align: center; font-size: var(--text-sm); color: var(--color-text-secondary);">
               상단 「⚡」 버튼과 같은 동작 · 프로덕션 환경에서만 활성
             </div>
@@ -1033,7 +1033,7 @@ html, body {
   var NODES = [
     { id:'scripts',  label:'📜 스크립트',   desc:'17년 현장에서 검증된 상담 멘트',       angle:0,   pos:'12', url:'scripts' },
     { id:'board',    label:'💬 현장 Q&A',   desc:'영업 현장의 공지·인수·상품 소식',      angle:60,  pos:'2',  url:'board' },
-    { id:'quick',    label:'⚡ 빠른실행',    desc:'클로징 타이밍에 바로 누르세요',         angle:120, pos:'4',  url:null, behavior:'inline', preview:'quick' },
+    { id:'quick',    label:'⚡ Quick 메뉴',  desc:'클로징 타이밍에 바로 누르세요',         angle:120, pos:'4',  url:null, behavior:'inline', preview:'quick' },
     { id:'myspace',  label:'📁 MY SPACE',  desc:'내 멘트·자료를 한 곳에 정리',           angle:180, pos:'6',  url:'myspace' },
     { id:'together', label:'🤝 함께해요',   desc:'불편한 점·필요한 기능을 직접 제안',     angle:240, pos:'8',  url:'together' },
     { id:'search',   label:'🔍 검색기',     desc:'스크립트·게시글·자료 한 번에 검색',     angle:300, pos:'10', url:null, behavior:'inline', preview:'search' }
