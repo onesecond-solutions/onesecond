@@ -1086,6 +1086,62 @@ body{
 }
 .form-footer strong { color: var(--color-text-secondary); font-weight: 700; }
 
+.form-input.err, .form-select.err {
+  border-color: var(--color-danger);
+}
+.form-input.err:focus, .form-select.err:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+.form-err {
+  display: none;
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  margin-top: 2px;
+  letter-spacing: var(--tracking-tight);
+}
+.form-err.on { display: block; }
+
+.form-submit { position: relative; }
+.form-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+.form-spinner {
+  display: none;
+  position: absolute;
+  top: 50%; right: 18px;
+  transform: translateY(-50%);
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: form-spin 0.7s linear infinite;
+}
+@keyframes form-spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+.signup-success {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+.signup-success-icon {
+  width: 64px; height: 64px;
+  margin: 0 auto var(--space-5);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border-radius: 50%;
+}
+.signup-success-icon svg { width: 32px; height: 32px; }
+.signup-success-title {
+  font-size: var(--text-lg);
+  font-weight: 900;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+  letter-spacing: var(--tracking-tight);
+}
+.signup-success-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
 /* ═════════════════════════════════════════════════════════
    FOOTER
 ═════════════════════════════════════════════════════════ */
@@ -1517,21 +1573,23 @@ body{
         <span class="signup-form-badge">✓ 카드 불필요</span>
       </div>
 
-      <form onsubmit="event.preventDefault(); alert('[TEST] 가입 완료 · 실제 환경에서는 Supabase 가입 처리');">
+      <form id="reg-form" novalidate>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">이름 <span class="req">*</span></label>
-            <input class="form-input" type="text" placeholder="홍길동" required>
+            <label class="form-label" for="f-name">이름 <span class="req">*</span></label>
+            <input class="form-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
+            <div class="form-err" id="e-name">이름을 입력해 주세요.</div>
           </div>
           <div class="form-group">
-            <label class="form-label">역할 <span class="req">*</span></label>
-            <select class="form-select" onchange="updateRoleHint(this)">
+            <label class="form-label" for="f-role">역할 <span class="req">*</span></label>
+            <select class="form-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
               <option value="">선택해 주세요</option>
               <option value="member">팀장 / 설계사</option>
               <option value="manager">매니저 / 실장</option>
               <option value="branch_manager">지점장 / 센터장</option>
             </select>
+            <div class="form-err" id="e-role">역할을 선택해 주세요.</div>
           </div>
         </div>
 
@@ -1541,23 +1599,35 @@ body{
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">핸드폰 번호 <span class="req">*</span></label>
-            <input class="form-input" type="tel" placeholder="010-1234-5678" required>
+            <label class="form-label" for="f-phone">핸드폰 번호 <span class="req">*</span></label>
+            <input class="form-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
+            <div class="form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
           </div>
           <div class="form-group">
-            <label class="form-label">이메일 <span class="req">*</span></label>
-            <input class="form-input" type="email" placeholder="example@email.com" required>
+            <label class="form-label" for="f-email">이메일 <span class="req">*</span></label>
+            <input class="form-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email')">
+            <div class="form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">비밀번호 <span class="req">*</span></label>
-            <input class="form-input" type="password" placeholder="영문+숫자 8자 이상" required>
+            <label class="form-label" for="f-pw">비밀번호 <span class="req">*</span></label>
+            <div style="position:relative;">
+              <input class="form-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw','e-pw')">
+              <button type="button" id="reg-pw-toggle" onclick="toggleRegPw('f-pw','reg-pw-toggle')"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;color:var(--color-text-tertiary);font-family:inherit;">보기</button>
+            </div>
+            <div class="form-err" id="e-pw">영문+숫자 8자 이상 입력해 주세요.</div>
           </div>
           <div class="form-group">
-            <label class="form-label">비밀번호 확인 <span class="req">*</span></label>
-            <input class="form-input" type="password" placeholder="비밀번호 재입력" required>
+            <label class="form-label" for="f-pw2">비밀번호 확인 <span class="req">*</span></label>
+            <div style="position:relative;">
+              <input class="form-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw2','e-pw2')">
+              <button type="button" id="reg-pw2-toggle" onclick="toggleRegPw('f-pw2','reg-pw2-toggle')"
+                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;color:var(--color-text-tertiary);font-family:inherit;">보기</button>
+            </div>
+            <div class="form-err" id="e-pw2">비밀번호가 일치하지 않습니다.</div>
           </div>
         </div>
 
@@ -1565,28 +1635,29 @@ body{
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">회사명</label>
-            <input class="form-input" type="text" placeholder="소속 회사명">
+            <label class="form-label" for="f-company">회사명</label>
+            <input class="form-input" type="text" id="f-company" placeholder="소속 회사명" maxlength="50">
           </div>
           <div class="form-group">
-            <label class="form-label">지점 / 센터명</label>
-            <input class="form-input" type="text" placeholder="더원지점">
+            <label class="form-label" for="f-branch">지점 / 센터명</label>
+            <input class="form-input" type="text" id="f-branch" placeholder="더원지점" maxlength="50">
           </div>
         </div>
 
         <div class="form-row single">
           <div class="form-group">
-            <label class="form-label">팀명</label>
-            <input class="form-input" type="text" placeholder="4팀">
+            <label class="form-label" for="f-team">팀명</label>
+            <input class="form-input" type="text" id="f-team" placeholder="4팀" maxlength="30">
           </div>
         </div>
 
         <div class="form-check">
-          <input type="checkbox" id="agree1" required>
-          <label for="agree1">
+          <input type="checkbox" id="f-consent" onchange="clearFieldError('f-consent','e-consent')">
+          <label for="f-consent">
             <strong style="color:var(--color-text-primary);">(필수)</strong> <a href="terms.html" target="_blank" rel="noopener">이용약관</a> 및 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다
           </label>
         </div>
+        <div class="form-err" id="e-consent" style="margin-top:4px;">동의가 필요합니다.</div>
         <div class="form-check">
           <input type="checkbox" id="agree2">
           <label for="agree2">
@@ -1594,8 +1665,9 @@ body{
           </label>
         </div>
 
-        <button type="submit" class="form-submit">
-          🎉 무료회원 가입하기
+        <button type="button" class="form-submit" id="sub-btn" onclick="doSubmit()">
+          <span id="btn-txt">🎉 무료회원 가입하기</span>
+          <span class="form-spinner" id="spinner" aria-hidden="true"></span>
         </button>
 
         <div class="form-footer">
@@ -1603,6 +1675,22 @@ body{
         </div>
 
       </form>
+
+      <div class="signup-success" id="signup-success" style="display:none;">
+        <div class="signup-success-icon">
+          <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4,14 11,21 24,7"/>
+          </svg>
+        </div>
+        <div class="signup-success-title">이메일 인증을 완료해 주세요!</div>
+        <div class="signup-success-desc" id="signup-success-desc">
+          입력하신 이메일로<br>
+          인증 링크를 발송했습니다.<br><br>
+          메일함을 확인해 인증을 완료하시면<br>
+          바로 시작할 수 있습니다 😊<br><br>
+          <span style="font-size:var(--text-xs);color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요</span>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -1658,10 +1746,12 @@ body{
   onScroll();
 })();
 
-// 역할 선택 힌트
-function updateRoleHint(sel){
+// 역할 선택 힌트 (시안 단일 패턴)
+function onRoleChange(){
+  var sel = document.getElementById('f-role');
   var hint = document.getElementById('roleHint');
   var text = document.getElementById('roleHintText');
+  if (!sel || !hint || !text) return;
   var msgs = {
     manager: '매니저·실장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.',
     branch_manager: '지점장·센터장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.'
@@ -1671,6 +1761,148 @@ function updateRoleHint(sel){
     text.innerHTML = msgs[sel.value];
   } else {
     hint.style.display = 'none';
+  }
+}
+
+// ─── 가입 폼 보조 함수 ─────────────────────────────────
+function fmtPhone(input){
+  var v = input.value.replace(/\D/g,'');
+  if (v.length<=3) input.value = v;
+  else if (v.length<=7) input.value = v.slice(0,3)+'-'+v.slice(3);
+  else input.value = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+}
+
+function clearFieldError(inputId, errorId){
+  var inp = document.getElementById(inputId);
+  var err = document.getElementById(errorId);
+  if (inp) inp.classList.remove('err');
+  if (err) err.classList.remove('on');
+}
+
+function toggleRegPw(inputId, btnId){
+  var input = document.getElementById(inputId);
+  var btn   = document.getElementById(btnId);
+  if (!input || !btn) return;
+  if (input.type === 'password'){ input.type = 'text';     btn.textContent = '숨기기'; }
+  else                          { input.type = 'password'; btn.textContent = '보기';  }
+}
+
+function validate(){
+  var ok = true;
+  [{id:'f-name',eid:'e-name'},{id:'f-phone',eid:'e-phone'}].forEach(function(f){
+    var el = document.getElementById(f.id), er = document.getElementById(f.eid);
+    if (!el.value.trim()){ el.classList.add('err'); er.classList.add('on'); ok = false; }
+    else                 { el.classList.remove('err'); er.classList.remove('on'); }
+  });
+  var role = document.getElementById('f-role');
+  if (!role.value){ role.classList.add('err'); document.getElementById('e-role').classList.add('on'); ok = false; }
+  else            { role.classList.remove('err'); document.getElementById('e-role').classList.remove('on'); }
+  var email = document.getElementById('f-email');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){
+    email.classList.add('err'); document.getElementById('e-email').classList.add('on'); ok = false;
+  } else { email.classList.remove('err'); document.getElementById('e-email').classList.remove('on'); }
+  var pw  = document.getElementById('f-pw');
+  var pw2 = document.getElementById('f-pw2');
+  if (!pw.value || pw.value.length < 8 || !/[a-zA-Z]/.test(pw.value) || !/[0-9]/.test(pw.value)){
+    pw.classList.add('err'); document.getElementById('e-pw').classList.add('on'); ok = false;
+  } else { pw.classList.remove('err'); document.getElementById('e-pw').classList.remove('on'); }
+  if (pw2.value !== pw.value){
+    pw2.classList.add('err'); document.getElementById('e-pw2').classList.add('on'); ok = false;
+  } else { pw2.classList.remove('err'); document.getElementById('e-pw2').classList.remove('on'); }
+  if (!document.getElementById('f-consent').checked){
+    document.getElementById('e-consent').classList.add('on'); ok = false;
+  } else { document.getElementById('e-consent').classList.remove('on'); }
+  return ok;
+}
+
+// ─── Supabase 가입 처리 (라이브 index.html doSubmit과 동일 흐름) ────
+// [참고] Phase 4-2-1 트리거(handle_new_user)가 raw_user_meta_data를 추출해
+//        public.users INSERT를 단독 처리. 클라이언트는 PATCH 안 함.
+var SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
+
+async function doSubmit(){
+  if (!validate()) return;
+  var btn  = document.getElementById('sub-btn');
+  var txt  = document.getElementById('btn-txt');
+  var spin = document.getElementById('spinner');
+  btn.disabled = true;
+  if (txt)  txt.style.opacity = '0';
+  if (spin) spin.style.display = 'block';
+
+  var email = document.getElementById('f-email').value.trim();
+  var pw    = document.getElementById('f-pw').value;
+
+  function _resetBtn(){
+    btn.disabled = false;
+    if (txt)  txt.style.opacity = '';
+    if (spin) spin.style.display = 'none';
+  }
+
+  try {
+    var authRes = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        email: email,
+        password: pw,
+        data: {
+          name:    document.getElementById('f-name').value.trim(),
+          phone:   document.getElementById('f-phone').value.trim(),
+          company: document.getElementById('f-company').value.trim(),
+          branch:  document.getElementById('f-branch').value.trim(),
+          role:    document.getElementById('f-role').value,
+          team:    document.getElementById('f-team').value.trim()
+        }
+      })
+    });
+    var authData = await authRes.json();
+
+    if (!authRes.ok){
+      var msg = authData.msg || authData.error_description || authData.error || '';
+      if (msg.indexOf('already registered') !== -1 || msg.indexOf('already been registered') !== -1 || msg.indexOf('User already registered') !== -1){
+        if (confirm('이미 가입된 이메일입니다.\n로그인 페이지로 이동할까요?')){
+          window.location.href = 'login.html';
+          return;
+        }
+      } else {
+        alert('가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      }
+      _resetBtn();
+      return;
+    }
+
+    var userId =
+         (authData.user && authData.user.id)
+      || (authData.identities && authData.identities[0] && authData.identities[0].user_id)
+      || (authData.user && authData.user.identities && authData.user.identities[0] && authData.user.identities[0].user_id)
+      || null;
+
+    if (!userId){
+      console.warn('signup: userId 확보 실패', authData);
+      alert('가입 처리가 일시적으로 지연됐습니다.\n잠시 후 다시 시도하시거나, 문제가 계속되면 관리자에게 문의해 주세요.');
+      _resetBtn();
+      return;
+    }
+
+    var descEl = document.getElementById('signup-success-desc');
+    var emailConfirmed = !!(authData.user && authData.user.email_confirmed_at);
+    if (descEl){
+      var html;
+      if (emailConfirmed){
+        html = '<strong>' + email + '</strong><br>가입이 완료됐습니다!<br><br>지금 바로 로그인해서 시작해 보세요 😊<br><br><a href="login.html" style="display:inline-block;margin-top:12px;padding:10px 22px;background:var(--brand-500);color:#fff;border-radius:var(--radius);text-decoration:none;font-weight:700;">로그인하러 가기 →</a>';
+      } else {
+        html = '<strong>' + email + '</strong> 으로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br>바로 시작할 수 있습니다 😊<br><br><span style="font-size:var(--text-xs);color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요</span>';
+      }
+      descEl.innerHTML = html;
+    }
+    document.getElementById('reg-form').style.display = 'none';
+    document.getElementById('signup-success').style.display = 'block';
+
+  } catch(e){
+    console.error('네트워크 오류:', e);
+    alert('네트워크 오류가 발생했습니다. 다시 시도해 주세요.');
+    _resetBtn();
   }
 }
 </script>
