@@ -13,25 +13,12 @@
 }
 
 /* ── 최상위 래퍼 ── */
+/* 2026-04-27 shell v1: 스코프 오버라이드 제거 — 글로벌 tokens.css 7값으로 일원화
+   배경 제거 — D 영역의 var(--color-bg)=#FFFFFF가 비치도록 (시안 .pg-outer는 background 무지정) */
 .pg-outer {
-  /* v1 디자인 토큰 오버라이드 (board scope만 — 다른 페이지 영향 0)
-     2026-04-27 board v1 전면 개편: 시안 design_test/board/v1-full.html 기반
-     색상 7종 + 그림자 3종 */
-  --color-bg:             #FFFFFF;
-  --color-surface:        #FFFFFF;
-  --color-surface-2:      #F6F7F9;
-  --color-border:         #E5E7EB;
-  --color-text-primary:   #1F2937;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary:  #9CA3AF;
-  --shadow-sm: 0 2px 6px rgba(17, 24, 39, 0.06);
-  --shadow-md: 0 4px 14px rgba(17, 24, 39, 0.08);
-  --shadow-lg: 0 8px 28px rgba(17, 24, 39, 0.12);
-
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--color-surface-2);
   gap: 6px;
   padding: 6px;
   padding-bottom: 24px;
@@ -769,12 +756,15 @@
   flex-shrink: 0;
 }
 .pg-bottom-bar {
-  background: var(--color-brand, #A0522D);
-  color: #fff;
+  /* 2026-04-27 shell v1: 브라운 → 시안 그레이 톤 (B/C 영역과 동일 surface-2) */
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
   text-align: center;
-  font-size: 0.790em;
-  font-weight: 800;
-  padding: 10px 14px;
+  font-size: 0.8125em;
+  font-weight: var(--fw-bold, 700);
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
 }
 </style>
 
