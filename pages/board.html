@@ -1236,11 +1236,16 @@ function _loadBoardTabSettings() {
 function _applyBoardTabVisibility() {
   var bar = document.getElementById('board-tab-bar');
   if (!bar) return 'hub';
+  /* [2026-04-27] admin은 화면설정 무시 — 모든 탭 표시 + 기본은 hub
+     CLAUDE.md "화면설정 무시 대상: admin 만" 원칙. branch_manager 미포함(콘텐츠 정책) */
+  var role = (window.AppState && window.AppState.role) || '';
+  var isAdmin = (role === 'admin');
   ['hub','team','branch','insurer'].forEach(function(key) {
     var btn = bar.querySelector('.pg-tab-btn[data-board="' + key + '"]');
     if (!btn) return;
-    btn.style.display = _boardTabVisible[key] ? '' : 'none';
+    btn.style.display = (isAdmin || _boardTabVisible[key]) ? '' : 'none';
   });
+  if (isAdmin) return 'hub';
   /* 표시 가능한 첫 번째 탭을 기본으로 */
   var order = ['hub','team','branch','insurer'];
   for (var i = 0; i < order.length; i++) {
