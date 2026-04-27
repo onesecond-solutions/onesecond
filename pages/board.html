@@ -14,15 +14,29 @@
 
 /* ── 최상위 래퍼 ── */
 .pg-outer {
+  /* v1 디자인 토큰 오버라이드 (board scope만 — 다른 페이지 영향 0)
+     2026-04-27 board v1 전면 개편: 시안 design_test/board/v1-full.html 기반
+     색상 7종 + 그림자 3종 */
+  --color-bg:             #FFFFFF;
+  --color-surface:        #FFFFFF;
+  --color-surface-2:      #F6F7F9;
+  --color-border:         #E5E7EB;
+  --color-text-primary:   #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary:  #9CA3AF;
+  --shadow-sm: 0 2px 6px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 4px 14px rgba(17, 24, 39, 0.08);
+  --shadow-lg: 0 8px 28px rgba(17, 24, 39, 0.12);
+
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--color-surface-2, #F3EFE9);
+  background: var(--color-surface-2);
   gap: 6px;
   padding: 6px;
   padding-bottom: 24px;
   font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
-  color: var(--color-text-primary, #3D2C1E);
+  color: var(--color-text-primary);
   min-height: 100%;
 }
 
@@ -33,28 +47,31 @@
   flex-shrink: 0;
 }
 .pg-page-header {
-  height: 120px;
-  background: linear-gradient(135deg, var(--color-brand, #A0522D) 0%, var(--color-brand-light, #C4733A) 100%);
+  background: transparent;
+  padding: var(--space-5, 20px) var(--space-1, 4px) var(--space-5, 20px) 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  gap: var(--space-4, 16px);
 }
 .pg-page-title {
   font-size: 1.5em;
-  font-weight: 800;
-  color: #fff;
+  font-weight: var(--fw-black, 900);
+  color: var(--color-text-primary);
   letter-spacing: -0.5px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
+.pg-page-title .accent { color: var(--color-accent, #D4845A); }
 .pg-page-desc {
-  font-size: 0.842em;
+  font-size: 0.875em;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
 }
 .pg-page-icon {
-  font-size: 2.8em;
-  opacity: 0.15;
+  font-size: 2.2em;
+  opacity: 0.35;
+  color: var(--color-accent, #D4845A);
 }
 
 /* ── ② 탭바 블록 ── */
@@ -62,8 +79,9 @@
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
   flex-shrink: 0;
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #E4DBCE);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 2px var(--space-2, 8px);
 }
 .pg-tab-bar {
   display: flex;
@@ -76,23 +94,23 @@
 }
 .pg-tab-bar::-webkit-scrollbar { display: none; }
 .pg-tab-btn {
-  padding: 11px 16px;
+  padding: 12px var(--space-4, 16px);
   border: none;
   background: transparent;
   font-size: 0.895em;
-  font-weight: 600;
-  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-weight: var(--fw-semibold, 600);
+  font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  color: var(--color-text-secondary, #7A5C44);
+  color: var(--color-text-secondary);
   border-bottom: 3px solid transparent;
-  transition: all .15s;
+  transition: all var(--transition-fast, .15s);
   flex-shrink: 0;
 }
-.pg-tab-btn:hover { color: var(--color-text-primary, #3D2C1E); }
+.pg-tab-btn:hover { color: var(--color-text-primary); }
 .pg-tab-btn.active {
-  font-weight: 800;
-  color: var(--color-text-primary, #3D2C1E);
+  font-weight: var(--fw-black, 900);
+  color: var(--color-accent, #D4845A);
   border-bottom-color: var(--color-accent, #D4845A);
 }
 .hub-badge {
@@ -163,19 +181,21 @@
 .cat-pill.active { background: var(--color-text-primary, #3D2C1E); color: #fff; border-color: var(--color-text-primary, #3D2C1E); }
 
 .write-btn {
-  height: 2.1em;
-  padding: 0 0.9em;
+  /* 2026-04-27 board v1 — 시안 .brd-write-btn 스타일 (클래스명 보존) */
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px;
   background: var(--color-brand, #A0522D);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm, 8px);
-  font-size: 0.842em;
-  font-weight: 700;
   font-family: inherit;
+  font-size: 0.895em;
+  font-weight: var(--fw-bold, 700);
   cursor: pointer;
   white-space: nowrap;
-  transition: background .15s;
   flex-shrink: 0;
+  transition: background var(--transition-fast, .15s);
+  box-shadow: 0 2px 6px rgba(160, 82, 45, 0.22);
 }
 .write-btn:hover { background: var(--color-brand-light, #C4733A); }
 
@@ -222,53 +242,65 @@
 }
 .os-toast-upgrade:hover { background: var(--color-brand-light, #C4733A); }
 
-/* ── 게시글 목록 ── */
-.post-list { display: flex; flex-direction: column; gap: 0.6em; }
-.post-item {
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #E4DBCE);
-  border-radius: var(--radius-md, 12px);
-  padding: 0.85em 1em;
+/* ── 게시글 목록 (v1 디자인 — 시안 design_test/board/v1-full.html 기반) ── */
+.brd-list { display: flex; flex-direction: column; }
+.brd-item {
+  display: flex; gap: var(--space-4, 16px);
+  padding: var(--space-5, 20px) var(--space-2, 8px);
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
-  transition: all .15s;
+  transition: background var(--transition-fast, .15s);
 }
-.post-item:hover {
-  border-color: rgba(160, 82, 45, .35);
-  box-shadow: 0 2px 10px rgba(61, 44, 30, .07);
-  transform: translateY(-1px);
-}
-.post-top {
-  display: flex; align-items: center; gap: 0.5em; margin-bottom: 0.4em;
-}
-.post-cat-badge {
-  padding: 0.15em 0.55em;
-  border-radius: var(--radius-xs, 6px);
-  font-size: 0.72em;
-  font-weight: 700;
+.brd-item:last-child { border-bottom: none; }
+.brd-item:hover { background: var(--color-surface-2); }
+.brd-badge {
   flex-shrink: 0;
+  display: inline-flex; align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.6875em; font-weight: var(--fw-black, 900);
+  letter-spacing: 0.3px;
+  align-self: flex-start;
+  margin-top: 4px;
 }
-.post-cat-badge.notice       { background: #fff3cd; color: #856404; }
-.post-cat-badge.product      { background: #d1ecf1; color: #0c5460; }
-.post-cat-badge.underwriting { background: #d4edda; color: #155724; }
-.post-title {
-  font-size: 0.895em; font-weight: 700;
-  color: var(--color-text-primary, #3D2C1E);
-  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.brd-badge-notice   { background: #FDE8E8; color: #C0392B; }
+.brd-badge-question { background: #E8F4FD; color: #1A5C7A; }
+.brd-badge-info     { background: #E8FDE8; color: #1A7A3F; }
+.brd-main { flex: 1; min-width: 0; }
+.brd-title {
+  font-size: 0.975em; font-weight: var(--fw-bold, 700);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2, 8px);
+  line-height: 1.4;
 }
-.post-new-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--color-accent, #D4845A); flex-shrink: 0;
+.brd-new-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent, #D4845A);
+  margin-left: 6px;
+  vertical-align: middle;
 }
-.post-preview {
-  font-size: 0.8em; color: var(--color-text-tertiary, #B89880);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  margin-bottom: 0.5em; line-height: 1.5;
+.brd-insurer-name {
+  font-size: 0.78em;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-2, 8px);
 }
-.post-meta {
-  display: flex; align-items: center; gap: 0.7em;
-  font-size: 0.72em; color: var(--color-text-tertiary, #B89880);
+.brd-excerpt {
+  font-size: 0.8em; color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-2, 8px);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.post-meta span { display: flex; align-items: center; gap: 0.25em; }
+.brd-meta {
+  display: flex; gap: var(--space-3, 12px);
+  font-size: 0.7em; color: var(--color-text-tertiary);
+}
+.brd-meta strong { color: var(--color-text-secondary); font-weight: var(--fw-semibold, 600); }
 
 /* ── 빈 상태 ── */
 .empty-state { text-align: center; padding: 3em 1em; color: var(--color-text-tertiary, #B89880); }
@@ -750,6 +782,16 @@
 <div class="pg-outer" id="page-board">
 
   <!-- ① 타이틀 블록 -->
+  <div class="pg-header-block">
+    <div class="pg-page-header">
+      <div>
+        <div class="pg-page-title"><span class="accent">현장 Q&amp;A</span> · 실시간 이슈 공유</div>
+        <div class="pg-page-desc">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
+      </div>
+      <div class="pg-page-icon">💬</div>
+    </div>
+  </div>
+
   <!-- 배너 슬롯 -->
   <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
 
@@ -783,7 +825,7 @@
             <button class="write-btn" id="write-btn" onclick="window.onClickWriteBtn()">✏️ 글쓰기</button>
           </div>
           <!-- 게시글 목록 -->
-          <div class="post-list" id="post-list">
+          <div class="brd-list" id="post-list">
             <div class="loading-msg">불러오는 중...</div>
           </div>
         </div>
@@ -845,7 +887,7 @@
                 <button class="insurer-cat-btn" onclick="window.selectInsurerCat('상품Q&A')">상품Q&A</button>
                 <button class="insurer-cat-btn" onclick="window.selectInsurerCat('인수Q&A')">인수Q&A</button>
               </div>
-              <div class="post-list" id="insurer-post-list">
+              <div class="brd-list" id="insurer-post-list">
                 <div class="loading-msg">불러오는 중...</div>
               </div>
             </div>
@@ -1416,29 +1458,30 @@ function _renderInsurerPostList() {
 
 /* 보험사 게시판 전용 글 아이템 빌더 */
 function _buildInsurerPostItem(p) {
-  var catClass   = CAT_CLASS[p.category] || 'product';
-  var isNew      = p.created_at && (Date.now() - new Date(p.created_at)) < 86400000;
-  var preview    = (p.content || '').replace(/\n/g, ' ').substring(0, 50);
-  var typeLabel  = p.insurance_type === 'nonlife' ? '손해' : p.insurance_type === 'life' ? '생명' : '';
-  var typeCls    = p.insurance_type === 'nonlife' ? 'nonlife' : 'life';
+  var catClass     = CAT_CLASS[p.category] || 'product';
+  var badgeVariant = (catClass === 'notice') ? 'brd-badge-notice'
+                   : (catClass === 'underwriting') ? 'brd-badge-question'
+                   : 'brd-badge-info';
+  var isNew        = p.created_at && (Date.now() - new Date(p.created_at)) < 86400000;
+  var preview      = (p.content || '').replace(/\n/g, ' ').substring(0, 80);
+  var typeLabel    = p.insurance_type === 'nonlife' ? '손해' : p.insurance_type === 'life' ? '생명' : '';
+  var typeCls      = p.insurance_type === 'nonlife' ? 'nonlife' : 'life';
   var insurerBadge = typeLabel
     ? '<span class="ins-type-badge ' + typeCls + '">' + typeLabel + '</span>' : '';
-  var insurerName = escHtml(p.insurer_name || p.target_insurer_name || '');
-  return '<div class="post-item" onclick="window.openDetail(\'' + p.id + '\')">'
-    + '<div class="post-top">'
-    + insurerBadge
-    + '<span class="post-cat-badge ' + catClass + '">' + escHtml(p.category || '') + '</span>'
-    + (insurerName ? '<span style="font-size:0.72em;color:var(--color-text-tertiary,#B89880);flex-shrink:0;">' + insurerName + '</span>' : '')
-    + '<span class="post-title">' + escHtml(p.title || '') + '</span>'
-    + (isNew ? '<span class="post-new-dot"></span>' : '')
-    + '</div>'
-    + '<div class="post-preview">' + escHtml(preview) + '</div>'
-    + '<div class="post-meta">'
-    + '<span>✍️ ' + escHtml(p.display_name || p.author_name || '알 수 없음') + '</span>'
-    + '<span>🕐 ' + fmtDate(p.created_at) + '</span>'
+  var insurerName  = escHtml(p.insurer_name || p.target_insurer_name || '');
+  return '<div class="brd-item" onclick="window.openDetail(\'' + p.id + '\')">'
+    + '<span class="brd-badge ' + badgeVariant + '">' + escHtml(p.category || '') + '</span>'
+    + '<div class="brd-main">'
+    + '<div class="brd-title">' + insurerBadge + escHtml(p.title || '') + (isNew ? '<span class="brd-new-dot"></span>' : '') + '</div>'
+    + (insurerName ? '<div class="brd-insurer-name">' + insurerName + '</div>' : '')
+    + (preview ? '<div class="brd-excerpt">' + escHtml(preview) + '</div>' : '')
+    + '<div class="brd-meta">'
+    + '<strong>' + escHtml(p.display_name || p.author_name || '알 수 없음') + '</strong>'
+    + '<span>' + fmtDate(p.created_at) + '</span>'
     + '<span>👁 ' + (p.view_count || 0) + '</span>'
     + '<span>❤️ ' + (p.like_count || 0) + '</span>'
     + '<span>💬 ' + (p.comment_count || 0) + '</span>'
+    + '</div>'
     + '</div>'
     + '</div>';
 }
@@ -1561,21 +1604,23 @@ function _renderPostList() {
 
 function _buildPostItem(p) {
   var catClass = CAT_CLASS[p.category] || 'product';
+  var badgeVariant = (catClass === 'notice') ? 'brd-badge-notice'
+                   : (catClass === 'underwriting') ? 'brd-badge-question'
+                   : 'brd-badge-info';
   var isNew    = p.created_at && (Date.now() - new Date(p.created_at)) < 86400000;
-  var preview  = (p.content || '').replace(/\n/g, ' ').substring(0, 60);
-  return '<div class="post-item" onclick="window.openDetail(\'' + p.id + '\')">'
-    + '<div class="post-top">'
-    + '<span class="post-cat-badge ' + catClass + '">' + escHtml(p.category || '') + '</span>'
-    + '<span class="post-title">' + escHtml(p.title || '') + '</span>'
-    + (isNew ? '<span class="post-new-dot"></span>' : '')
-    + '</div>'
-    + '<div class="post-preview">' + escHtml(preview) + '</div>'
-    + '<div class="post-meta">'
-    + '<span>✍️ ' + escHtml(p.display_name || p.author_name || '알 수 없음') + '</span>'
-    + '<span>🕐 ' + fmtDate(p.created_at) + '</span>'
+  var preview  = (p.content || '').replace(/\n/g, ' ').substring(0, 80);
+  return '<div class="brd-item" onclick="window.openDetail(\'' + p.id + '\')">'
+    + '<span class="brd-badge ' + badgeVariant + '">' + escHtml(p.category || '') + '</span>'
+    + '<div class="brd-main">'
+    + '<div class="brd-title">' + escHtml(p.title || '') + (isNew ? '<span class="brd-new-dot"></span>' : '') + '</div>'
+    + (preview ? '<div class="brd-excerpt">' + escHtml(preview) + '</div>' : '')
+    + '<div class="brd-meta">'
+    + '<strong>' + escHtml(p.display_name || p.author_name || '알 수 없음') + '</strong>'
+    + '<span>' + fmtDate(p.created_at) + '</span>'
     + '<span>👁 ' + (p.view_count || 0) + '</span>'
     + '<span>❤️ ' + (p.like_count || 0) + '</span>'
     + '<span>💬 ' + (p.comment_count || 0) + '</span>'
+    + '</div>'
     + '</div>'
     + '</div>';
 }
