@@ -1,8 +1,8 @@
 # 원세컨드 디자인 테스트 워크스페이스
 
-> ⚠️ **이 폴더의 모든 파일은 디자인 실험용입니다.**
-> 원세컨드 제품(`pages/*.html`, `css/tokens.css`, `js/*.js`, `app.html`)에 자동으로 반영되지 않습니다.
-> 테스트 결과를 제품에 적용하려면 팀장님의 명시적 승인 + 별도 반영 작업이 필요합니다.
+> 🚀 **이 폴더는 라이브 페이지 전면 교체용 시안 워크스페이스입니다.**
+> 시안 OK 받으면 `pages/<page>.html` / `app.html` / `tokens.css`에 **승격 적용**합니다.
+> 자동 승격되지 않으며, 페이지별로 명시 승인 + 별도 작업지시서가 필요합니다.
 
 ---
 
@@ -34,6 +34,7 @@ claude_code/design_test/
 3. **토큰 오버라이드** — `tokens.css`는 `../../../css/tokens.css`로 참조만 하고, 값은 테스트 HTML 내부 `<style>`의 `:root { }` 재정의로만 변경한다.
 4. **원본 구조 복제** — 테스트 대상 페이지의 HTML/CSS/JS 구조는 원본과 동일하게 복사한다(로고 등 상대 경로만 조정).
 5. **변경 기록** — 각 페이지 폴더의 `notes.md`에 "무엇을·왜·어떻게"를 남긴다.
+6. **부수 사항 분리** — 전면 교체 진행 중 발견되는 부수적 사항(미세 색상 / 잔여 갭 / 인접 영역 정비 등)은 **별도 메모로 저장만 해두고**, 전면 교체 완료 후 별도 트랙으로 진행한다. 중간에 부수 작업으로 빠지지 않는다.
 
 ## 🎨 v1 디자인 원칙 (2026-04-25 확정)
 
@@ -77,20 +78,29 @@ claude_code/design_test/
 | 컨텐츠 좌우 여백 | ~16px | 32px | +100% |
 | 컨텐츠 max-width | 없음 | 900px | 신규 |
 
-## 🧪 테스트 페이지 리스트
+## 🚀 승격 진행 순서 (Phase 1)
 
-| 페이지 | 상태 | 최신 버전 |
-|---|---|---|
-| home | 진행 중 | `home/v2-full.html` (2026-04-25, **프리미엄 리뉴얼** · 확장 토큰 · A2 제거 · 6각 그라·aura) · `home/v1-full.html` (초기) |
-| **index** (랜딩) | 진행 중 | `index/v1-full.html` (2026-04-25, 프리미엄 네비 + 듀얼 모니터 + 병합 섹션 + 인라인 가입) |
-| about | — | — |
-| admin | 진행 중 | `admin/v1-full.html` (2026-04-25, Make.com 2단 네비 + 분석 대시보드) |
-| board | 진행 중 | `board/v1-full.html` (2026-04-25) |
-| myspace | 진행 중 | `myspace/v1-full.html` (2026-04-25) |
-| news | — | — |
-| quick | 진행 중 | `quick/v1-full.html` (2026-04-25) |
-| scripts | 진행 중 | `scripts/v2-full.html` (2026-04-25, 세로 탭바) · `scripts/v1-full.html` (원본 구조) |
-| together | 진행 중 | `together/v1-full.html` (2026-04-25) |
+아래 순서대로 라이브 페이지에 시안을 승격한다. 각 페이지는 별도 작업지시서로 진행하며, 한 페이지 승격 완료 후 다음 페이지로 이동.
+
+| 순서 | 페이지 | 시안 파일 | 승격 상태 | 비고 |
+|:---:|---|---|:---:|---|
+| 1 | `index.html` | `index/v1-full.html` | 🔄 시안 대기 | |
+| 2 | `pages/home.html` | `home/v2-full.html` (`v1-full.html` 보조) | 🔄 시안 대기 | 4/28 회귀 stash 보관 중 (`feat/home-gpt-v1-adoption`) |
+| 3 | `pages/scripts.html` | `scripts/v2-full.html` (`v1-full.html` 보조) | 🔄 시안 대기 | 영향 범위 최대 (54개 데이터) |
+| 4 | `pages/board.html` | `board/v1-full.html` | ✅ 승격 완료 | 4/26 `ebb9b3b` |
+| 5 | `pages/myspace.html` | `myspace/v1-full.html` | 🔄 시안 대기 | |
+| 6 | `pages/news.html` | `news/v1-full.html` | 🔄 시안 대기 | |
+| 7 | `pages/quick.html` | `quick/v1-full.html` | 🔄 시안 대기 | |
+| 8 | `pages/together.html` | `together/v1-full.html` | 🔄 시안 대기 | board 패턴 복제 |
+| 9 | `pages/admin.html` | `admin/v1-full.html` | 🔄 시안 대기 | Make.com 2단 네비 + 분석 대시보드 |
+
+**범례**: ✅ 승격 완료 / 🔄 시안 대기 / ❌ 보류
+
+## 🧩 추가 수정 사항 (전면 교체와 병행 또는 후속)
+
+전면 교체 트랙 외에 별도로 처리할 사항. 각 항목은 별도 작업지시서로 진행:
+
+- **C영역 빠른실행 버튼 → D영역 중앙 상단 오버레이 작업** — 상세 사양은 `~/.claude/projects/.../memory/project_quick_overlay_v2_spec.md` 참조 (4그룹 구조 + ④검색·조회 + 모바일 시트)
 
 ## 🔄 제품 반영 절차
 
