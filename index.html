@@ -182,6 +182,7 @@ body{
   text-decoration: none;
   border-radius: var(--radius);
   transition: all var(--duration-fast);
+  white-space: nowrap;
 }
 .nav-login:hover { color: var(--brand-500); background: var(--neutral-100); }
 .nav-cta {
@@ -199,12 +200,18 @@ body{
   box-shadow: var(--elevation-warm-2);
   transition: all var(--duration-fast) var(--ease-smooth);
   text-decoration: none;
+  white-space: nowrap;
 }
 .nav-cta:hover { transform: translateY(-1px); box-shadow: var(--elevation-warm-3); }
 
 @media(max-width:880px){
   .nav-menu { display: none; }
   .nav-brand span { display: none; }   /* 모바일 로고만 표시 */
+}
+
+/* B-2 #3: hero-stats 모바일 분기 — flex 가로 squeeze로 카드 겹침 방지 */
+@media(max-width:640px){
+  .hero-stats { flex-direction: column; gap: var(--space-6); }
 }
 
 /* ═════════════════════════════════════════════════════════
