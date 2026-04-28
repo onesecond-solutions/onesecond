@@ -504,81 +504,120 @@ html, body {
 #quick-content-slot * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; box-sizing: border-box; }
 #quick-content-slot table { width: 100%!important; table-layout: auto; }
 
-/* ── 푸터 (2026-04-29 4컬럼 라이트 톤 + 사업자 정보 노출) ──
-   교체 근거: index.html(c2186a1) 4컬럼 패턴 정합 + 전자상거래법 표시 의무.
-   컬럼 2는 app 환경 메뉴(switchMenu)로 변형. 모바일 <768px 푸터 숨김 유지. */
-.site-footer {
+/* ── D 영역 wrapper (2026-04-29 푸터 미니화 — 푸터를 .d 스크롤 안으로 이동)
+   #content-area가 D 영역 가용 높이를 채워 푸터를 자연스럽게 스크롤 끝으로 밀어냄.
+   첫 화면 푸터 노출 0px → 작업 공간 100% 확보. */
+#content-area {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+#content-area > * { flex-shrink: 0; width: 100%; }
+
+/* ── 푸터 미니 (한 줄, D 영역 스크롤 안)
+   사업자 정보는 모달 오버레이로 처리. 라이브 검수에서 4컬럼 130~170px 압박 확인 후 압축. */
+.site-footer-mini {
   flex-shrink: 0;
-  width: 100%;
-  background: var(--color-surface-2);
-  color: var(--color-text-primary);
-  border-top: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
-  padding: var(--space-6) var(--space-6) var(--space-5);
-}
-.footer-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-}
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 1.6fr;
-  gap: var(--space-7);
-}
-.footer-col { display: flex; flex-direction: column; gap: var(--space-2); }
-.footer-col-title {
-  font-size: 12px;
-  font-weight: var(--fw-bold);
-  color: var(--color-text-primary);
-  letter-spacing: 0.02em;
-  margin-bottom: var(--space-1);
-}
-.footer-brand {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-1);
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
 }
-.footer-brand-logo { height: 24px; width: auto; display: block; flex-shrink: 0; border-radius: var(--radius-xs); }
-.footer-brand-name {
-  font-size: 14px;
-  font-weight: var(--fw-black);
-  color: var(--color-text-primary);
-  letter-spacing: -0.3px;
-}
-.footer-brand-tagline {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
+.site-footer-mini .footer-copy {
   margin: 0;
-}
-.footer-link {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  transition: color var(--transition-fast);
+  color: var(--color-text-tertiary);
   white-space: nowrap;
 }
-.footer-link:hover { color: var(--color-brand); }
-.footer-biz { font-size: 12px; color: var(--neutral-600); line-height: 1.7; }
-.footer-biz .row { margin: 0; }
-.footer-biz .row strong { color: var(--neutral-700); font-weight: var(--fw-bold); margin-right: var(--space-1); }
-.footer-biz a { color: inherit; text-decoration: none; transition: color var(--transition-fast); }
-.footer-biz a:hover { color: var(--color-brand); }
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
+.site-footer-mini .footer-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
 }
-.footer-copy { font-size: var(--text-xs); color: var(--color-text-tertiary); margin: 0; }
+.site-footer-mini .footer-link:hover { color: var(--color-brand); }
+.site-footer-mini .footer-sep {
+  color: var(--color-text-tertiary);
+  user-select: none;
+  opacity: 0.55;
+}
 
-/* 푸터 반응형 — 1024px↓ 2컬럼 (모바일 <768은 .site-footer 숨김 별도 처리) */
-@media (max-width: 1024px) {
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: var(--space-6); }
-  .footer-bottom { flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+/* ── 사업자 정보 모달 (전자상거래법 표시 의무 — 푸터 클릭 트리거) ── */
+.biz-info-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 600;
+  backdrop-filter: blur(4px);
+  padding: var(--space-4);
 }
+.biz-info-overlay.show { display: flex; animation: overlayFadeIn 0.2s ease; }
+.biz-info-modal {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  animation: modalSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: var(--space-6);
+  position: relative;
+  border-top: 3px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
+}
+.biz-info-modal-title {
+  font-size: 1em;
+  font-weight: var(--fw-black);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+}
+.biz-info-modal-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: none;
+  cursor: pointer;
+  font-size: 0.875em;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.biz-info-modal-close:hover {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+.biz-info-modal .footer-biz {
+  font-size: 13px;
+  color: var(--neutral-600);
+  line-height: 1.7;
+}
+.biz-info-modal .footer-biz .row { margin: 0; }
+.biz-info-modal .footer-biz .row strong {
+  color: var(--neutral-700);
+  font-weight: var(--fw-bold);
+  margin-right: var(--space-1);
+}
+.biz-info-modal .footer-biz a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.biz-info-modal .footer-biz a:hover { color: var(--color-brand); }
 
 /* ── 반응형: 태블릿 ── */
 @media(max-width:960px) {
@@ -593,7 +632,6 @@ html, body {
   .main { grid-template-columns: 1fr; padding-bottom: 64px; }
   .b { display: none; }
   .d { overflow-y: visible; }
-  .site-footer { display: none; }
   /* 모바일 A1 헤더 — 로고 이미지만 + 검색창 + (이름 ellipsis 아바타) */
   .a1 {
     padding: 0 var(--space-3);
@@ -695,8 +733,23 @@ html, body {
       <div class="pro">PRO 이용중</div>
     </div>
 
-    <!-- D: 동적 콘텐츠 슬롯 -->
-    <div class="d" id="content-area"></div>
+    <!-- D: 동적 콘텐츠 슬롯 + 푸터 미니 (스크롤 안 위치) -->
+    <div class="d">
+      <div id="content-area"></div>
+      <footer class="site-footer-mini">
+        <p class="footer-copy">© 2026 onesecond</p>
+        <span class="footer-sep">·</span>
+        <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">카카오</a>
+        <span class="footer-sep">·</span>
+        <a class="footer-link" href="mailto:bylts0428@gmail.com">이메일</a>
+        <span class="footer-sep">·</span>
+        <a class="footer-link" href="terms.html" target="_blank" rel="noopener">이용약관</a>
+        <span class="footer-sep">·</span>
+        <a class="footer-link" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
+        <span class="footer-sep">·</span>
+        <a class="footer-link" href="#" onclick="event.preventDefault();openBizInfo()">사업자 정보</a>
+      </footer>
+    </div>
 
     <!-- C: 우측 패널 -->
     <div class="c">
@@ -740,60 +793,7 @@ html, body {
 
   </div>
 
-  <!-- 푸터 (2026-04-29 4컬럼 라이트 톤 + 사업자 정보) -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-grid">
-
-        <!-- 컬럼 1: 브랜드 -->
-        <div class="footer-col">
-          <div class="footer-brand">
-            <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="footer-brand-logo">
-            <span class="footer-brand-name">원세컨드</span>
-          </div>
-          <p class="footer-brand-tagline">통화 중 멈추는 순간, 1초 안에 꺼내 쓰는 상담 도구</p>
-        </div>
-
-        <!-- 컬럼 2: 서비스 (app 환경 메뉴 — switchMenu) -->
-        <div class="footer-col">
-          <div class="footer-col-title">서비스</div>
-          <a class="footer-link" href="#" onclick="event.preventDefault();switchMenu('scripts')">스크립트</a>
-          <a class="footer-link" href="#" onclick="event.preventDefault();switchMenu('myspace')">MY SPACE</a>
-          <a class="footer-link" href="#" onclick="event.preventDefault();switchMenu('quick')">Quick 메뉴</a>
-          <a class="footer-link" href="#" onclick="event.preventDefault();switchMenu('together')">함께해요</a>
-        </div>
-
-        <!-- 컬럼 3: 지원 -->
-        <div class="footer-col">
-          <div class="footer-col-title">지원</div>
-          <a class="footer-link" href="#" onclick="event.preventDefault();switchMenu('about')">서비스 소개</a>
-          <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">💬 카카오 오픈채팅</a>
-          <a class="footer-link" href="mailto:bylts0428@gmail.com">✉️ 이메일 문의</a>
-          <a class="footer-link" href="terms.html" target="_blank" rel="noopener">이용약관</a>
-          <a class="footer-link" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
-        </div>
-
-        <!-- 컬럼 4: 사업자 정보 (전자상거래법 표시 의무) -->
-        <div class="footer-col">
-          <div class="footer-col-title">사업자 정보</div>
-          <div class="footer-biz">
-            <p class="row"><strong>상호</strong>티솔루션(T-Solutions)</p>
-            <p class="row"><strong>대표자</strong>임태성</p>
-            <p class="row"><strong>사업자등록번호</strong>604-10-68738</p>
-            <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라프라자)</p>
-            <p class="row"><strong>개인정보보호책임자</strong>임태성</p>
-            <p class="row"><strong>통신판매업 신고</strong>준비 중</p>
-            <p class="row"><strong>이메일</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a></p>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="footer-bottom">
-        <p class="footer-copy">© 2026 onesecond. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
+  <!-- 푸터는 D 영역 스크롤 안으로 이동 (.site-footer-mini 참조) -->
 </div>
 
 <!-- 하단 탭바 (모바일) -->
@@ -818,6 +818,23 @@ html, body {
     </div>
     <div class="qm-footer">
       <button class="qm-footer-btn" onclick="closeQuick()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 사업자 정보 모달 (푸터 미니 → 클릭 트리거) -->
+<div class="biz-info-overlay" id="bizInfoOverlay" onclick="handleBizInfoOverlayClick(event)">
+  <div class="biz-info-modal" role="dialog" aria-labelledby="biz-info-title" aria-modal="true">
+    <button type="button" class="biz-info-modal-close" onclick="closeBizInfo()" aria-label="닫기">✕</button>
+    <h2 class="biz-info-modal-title" id="biz-info-title">사업자 정보</h2>
+    <div class="footer-biz">
+      <p class="row"><strong>상호</strong>티솔루션(T-Solutions)</p>
+      <p class="row"><strong>대표자</strong>임태성</p>
+      <p class="row"><strong>사업자등록번호</strong>604-10-68738</p>
+      <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라프라자)</p>
+      <p class="row"><strong>개인정보보호책임자</strong>임태성</p>
+      <p class="row"><strong>통신판매업 신고</strong>준비 중</p>
+      <p class="row"><strong>이메일</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a></p>
     </div>
   </div>
 </div>
@@ -1262,6 +1279,31 @@ function goQuickMenu() {
   closeQuick();
   switchMenu('quick');
 }
+
+// ── 사업자 정보 모달 (푸터 미니 트리거) ──────────────────────────────────
+function openBizInfo() {
+  var ol = document.getElementById('bizInfoOverlay');
+  if (!ol) return;
+  ol.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeBizInfo() {
+  var ol = document.getElementById('bizInfoOverlay');
+  if (!ol) return;
+  ol.classList.remove('show');
+  document.body.style.overflow = '';
+}
+function handleBizInfoOverlayClick(e) {
+  if (e.target === document.getElementById('bizInfoOverlay')) closeBizInfo();
+}
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  var ol = document.getElementById('bizInfoOverlay');
+  if (ol && ol.classList.contains('show')) closeBizInfo();
+});
+window.openBizInfo = openBizInfo;
+window.closeBizInfo = closeBizInfo;
+window.handleBizInfoOverlayClick = handleBizInfoOverlayClick;
 
 // ── ⑥ 검색 ────────────────────────────────────────────────────────────────
 function isPro() {
