@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--color-surface-2, #F3EFE9);
+  background: var(--color-surface-2);
   gap: 6px;
   padding: 6px;
   padding-bottom: 24px;
@@ -64,7 +64,7 @@
   overflow: hidden;
   flex-shrink: 0;
   background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #E4DBCE);
+  border: 1px solid var(--color-border);
 }
 .pg-tab-bar {
   display: flex; gap: 0; flex-wrap: nowrap; overflow-x: auto;
@@ -76,11 +76,11 @@
   font-size: 0.895em; font-weight: 600;
   font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
   cursor: pointer; white-space: nowrap;
-  color: var(--color-text-secondary, #7A5C44);
+  color: var(--color-text-secondary);
   border-bottom: 3px solid transparent;
   transition: all .15s; flex-shrink: 0;
 }
-.pg-tab-btn:hover { color: var(--color-text-primary, #3D2C1E); background: var(--color-surface-2, #F3EFE9); }
+.pg-tab-btn:hover { color: var(--color-text-primary); background: var(--color-surface-2); }
 .pg-tab-btn.active {
   font-weight: 700; color: var(--color-accent, #D4845A);
   border-bottom-color: var(--color-accent, #D4845A);
@@ -91,8 +91,8 @@
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
   flex-shrink: 0;
-  border: 1px solid var(--color-border, #E4DBCE);
-  background: var(--color-bg, #FAF8F5);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
 }
 
 /* ── 관리자 콘텐츠 영역 ── */
@@ -101,14 +101,14 @@
 /* ── 카드 ── */
 .adm-card {
   background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #E4DBCE);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 12px);
   padding: 20px; margin-bottom: 14px;
 }
 .adm-card-title {
-  font-size: 0.842em; font-weight: 800; color: var(--color-text-primary, #3D2C1E);
+  font-size: 0.842em; font-weight: 800; color: var(--color-text-primary);
   margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
-  padding-bottom: 10px; border-bottom: 1px solid var(--color-border, #E4DBCE);
+  padding-bottom: 10px; border-bottom: 1px solid var(--color-border);
 }
 
 /* ── 통계 카드 ── */
@@ -118,42 +118,42 @@
 }
 .adm-stat {
   background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #E4DBCE);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm, 8px);
   padding: 16px; text-align: center;
 }
 .adm-stat-num {
   font-size: 1.6em; font-weight: 900;
-  color: var(--color-text-primary, #3D2C1E);
+  color: var(--color-text-primary);
   line-height: 1; margin-bottom: 4px;
 }
-.adm-stat-num span { font-size: 0.6em; font-weight: 400; color: var(--color-text-tertiary, #B89880); }
-.adm-stat-label { font-size: 0.7em; color: var(--color-text-tertiary, #B89880); font-weight: 600; }
+.adm-stat-num span { font-size: 0.6em; font-weight: 400; color: var(--color-text-tertiary); }
+.adm-stat-label { font-size: 0.7em; color: var(--color-text-tertiary); font-weight: 600; }
 
 /* ── 테이블 ── */
 .adm-table-wrap { overflow-x: auto; }
 .adm-table { width: 100%; border-collapse: collapse; font-size: 0.842em; }
 .adm-table th {
-  background: var(--color-surface-2, #F3EFE9);
-  color: var(--color-text-secondary, #7A5C44); font-weight: 700;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary); font-weight: 700;
   padding: 10px 14px; text-align: left;
-  border-bottom: 2px solid var(--color-border, #E4DBCE); white-space: nowrap;
+  border-bottom: 2px solid var(--color-border); white-space: nowrap;
 }
 .adm-table th:first-child { border-radius: var(--radius-sm, 8px) 0 0 0; }
 .adm-table th:last-child  { border-radius: 0 var(--radius-sm, 8px) 0 0; }
 .adm-table td {
-  padding: 10px 14px; border-bottom: 1px solid var(--color-border, #E4DBCE);
-  vertical-align: middle; color: var(--color-text-primary, #3D2C1E);
+  padding: 10px 14px; border-bottom: 1px solid var(--color-border);
+  vertical-align: middle; color: var(--color-text-primary);
 }
 .adm-table tr:last-child td { border-bottom: none; }
-.adm-table tr:hover td { background: var(--color-surface-2, #F3EFE9); }
+.adm-table tr:hover td { background: var(--color-surface-2); }
 
 /* ── 뱃지 ── */
 .role-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; white-space: nowrap; }
 .role-admin   { background: #fff3cd; color: #856404; }
 .role-branch  { background: #d1ecf1; color: #0c5460; }
 .role-manager { background: #d4edda; color: #155724; }
-.role-member  { background: var(--color-surface-2, #F3EFE9); color: var(--color-text-secondary, #7A5C44); }
+.role-member  { background: var(--color-surface-2); color: var(--color-text-secondary); }
 
 .plan-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; }
 .plan-pro  { background: #e8f4fd; color: #1a3f7a; }
@@ -169,12 +169,12 @@
   font-size: 0.78em; font-weight: 700; font-family: inherit;
   cursor: pointer; transition: all 0.15s; border: 1px solid;
 }
-.adm-btn-primary { background: var(--color-text-primary, #3D2C1E); color: #fff; border-color: var(--color-text-primary, #3D2C1E); }
-.adm-btn-primary:hover { background: var(--color-text-secondary, #7A5C44); }
+.adm-btn-primary { background: var(--color-text-primary); color: #fff; border-color: var(--color-text-primary); }
+.adm-btn-primary:hover { background: var(--color-text-secondary); }
 .adm-btn-accent  { background: var(--color-accent, #D4845A); color: #fff; border-color: var(--color-accent, #D4845A); }
 .adm-btn-accent:hover  { background: var(--color-brand, #A0522D); }
-.adm-btn-ghost   { background: var(--color-surface, #fff); color: var(--color-text-primary, #3D2C1E); border-color: var(--color-border, #E4DBCE); }
-.adm-btn-ghost:hover   { background: var(--color-surface-2, #F3EFE9); }
+.adm-btn-ghost   { background: var(--color-surface, #fff); color: var(--color-text-primary); border-color: var(--color-border); }
+.adm-btn-ghost:hover   { background: var(--color-surface-2); }
 .adm-btn-danger  { background: var(--color-surface, #fff); color: #c0392b; border-color: #e0b4b4; }
 .adm-btn-danger:hover  { background: #fde8e8; }
 .adm-btn-sm { padding: 4px 9px; font-size: 0.72em; }
@@ -182,7 +182,7 @@
 /* ── 입력 ── */
 .adm-input {
   width: 100%; padding: 9px 12px;
-  border: 1.5px solid var(--color-border, #E4DBCE);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm, 8px);
   font-size: 0.842em; font-family: inherit; outline: none;
   transition: border-color 0.15s; background: var(--color-surface, #fff);
@@ -191,7 +191,7 @@
 
 .adm-select {
   padding: 8px 12px;
-  border: 1.5px solid var(--color-border, #E4DBCE);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm, 8px);
   font-size: 0.842em; font-family: inherit; outline: none;
   background: var(--color-surface, #fff); cursor: pointer;
@@ -202,13 +202,13 @@
 .adm-search-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
 
 /* ── 로딩/빈 상태 ── */
-.adm-loading { padding: 40px; text-align: center; color: var(--color-text-tertiary, #B89880); font-size: 0.842em; }
-.adm-empty   { padding: 40px; text-align: center; color: var(--color-text-tertiary, #B89880); font-size: 0.842em; }
+.adm-loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 0.842em; }
+.adm-empty   { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 0.842em; }
 
 /* ── 로그 아이템 ── */
 .adm-log-item {
   display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 0; border-bottom: 1px solid var(--color-border, #E4DBCE);
+  padding: 10px 0; border-bottom: 1px solid var(--color-border);
   font-size: 0.842em;
 }
 .adm-log-item:last-child { border-bottom: none; }
@@ -218,15 +218,15 @@
   font-size: 0.9em; flex-shrink: 0;
 }
 .adm-log-body { flex: 1; min-width: 0; }
-.adm-log-text { color: var(--color-text-primary, #3D2C1E); line-height: 1.5; }
-.adm-log-time { color: var(--color-text-tertiary, #B89880); font-size: 0.85em; margin-top: 2px; }
+.adm-log-text { color: var(--color-text-primary); line-height: 1.5; }
+.adm-log-time { color: var(--color-text-tertiary); font-size: 0.85em; margin-top: 2px; }
 
 /* ── 공지 폼 ── */
 .adm-form-row { margin-bottom: 12px; }
-.adm-form-label { font-size: 0.78em; font-weight: 700; color: var(--color-text-primary, #3D2C1E); margin-bottom: 5px; display: block; }
+.adm-form-label { font-size: 0.78em; font-weight: 700; color: var(--color-text-primary); margin-bottom: 5px; display: block; }
 .adm-textarea {
   width: 100%; padding: 10px 12px;
-  border: 1.5px solid var(--color-border, #E4DBCE);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm, 8px);
   font-size: 0.842em; font-family: inherit; outline: none;
   resize: vertical; min-height: 80px;
@@ -270,14 +270,14 @@
 
 .adm-set-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 12px; background: var(--color-surface-2, #F3EFE9);
+  padding: 10px 12px; background: var(--color-surface-2);
   border-radius: var(--radius-sm, 8px); margin-bottom: 6px;
   font-size: 0.842em;
 }
 .adm-set-row.is-off { opacity: 0.55; }
 .adm-set-row.is-locked { background: #F1EFE8; opacity: 0.75; }
-.adm-set-rlabel { display: flex; align-items: center; gap: 8px; color: var(--color-text-primary, #3D2C1E); font-weight: 600; }
-.adm-set-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--color-text-tertiary, #B89880); }
+.adm-set-rlabel { display: flex; align-items: center; gap: 8px; color: var(--color-text-primary); font-weight: 600; }
+.adm-set-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--color-text-tertiary); }
 .adm-set-rlabel.on .adm-set-dot { background: #0F6E56; }
 .adm-set-row.is-locked .adm-set-dot { background: #888780; }
 
@@ -285,14 +285,14 @@
 .adm-cb-wrap input { width: 15px; height: 15px; margin: 0; cursor: pointer; accent-color: var(--color-brand, #6B3A2A); }
 .adm-cb-state { font-size: 0.842em; min-width: 52px; text-align: left; font-weight: 600; }
 .adm-cb-state.on  { color: #0F6E56; }
-.adm-cb-state.off { color: var(--color-text-tertiary, #B89880); }
+.adm-cb-state.off { color: var(--color-text-tertiary); }
 
 .adm-lock-tag {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 0.78em; color: var(--color-text-tertiary, #888780);
   padding: 3px 10px; background: #fff;
   border-radius: var(--radius-full, 9999px);
-  border: 1px solid var(--color-border, #E4DBCE);
+  border: 1px solid var(--color-border);
 }
 
 .adm-ver-badge {
@@ -309,19 +309,19 @@
 .adm-hint-box strong { font-weight: 700; }
 
 /* 미리보기 패널 */
-.adm-pv { background: var(--color-surface-2, #F3EFE9); border-radius: var(--radius-md, 12px); padding: 14px; }
+.adm-pv { background: var(--color-surface-2); border-radius: var(--radius-md, 12px); padding: 14px; }
 .adm-pv-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.adm-pv-label { font-size: 0.78em; color: var(--color-text-secondary, #7A5C44); font-weight: 700; letter-spacing: 0.3px; }
+.adm-pv-label { font-size: 0.78em; color: var(--color-text-secondary); font-weight: 700; letter-spacing: 0.3px; }
 .adm-pv-tag { font-size: 0.72em; padding: 2px 9px; border-radius: var(--radius-full, 9999px); background: #E1F5EE; color: #085041; font-weight: 700; }
-.adm-pv-foot { margin-top: 10px; font-size: 0.78em; color: var(--color-text-secondary, #7A5C44); text-align: center; }
+.adm-pv-foot { margin-top: 10px; font-size: 0.78em; color: var(--color-text-secondary); text-align: center; }
 .adm-pv-count {
   display: inline-block; background: #fff; padding: 2px 8px;
   border-radius: var(--radius-full, 9999px); font-weight: 700;
-  color: var(--color-text-primary, #3D2C1E); margin: 0 2px;
+  color: var(--color-text-primary); margin: 0 2px;
 }
 
 /* 브라우저 프레임 */
-.adm-frame { background: #fff; border: 1px solid var(--color-border, #E4DBCE); border-radius: var(--radius-sm, 8px); overflow: hidden; }
+.adm-frame { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-sm, 8px); overflow: hidden; }
 .adm-frame-bar { height: 18px; background: var(--color-brand, #6B3A2A); display: flex; align-items: center; padding: 0 8px; gap: 4px; }
 .adm-fr-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.35); }
 
@@ -337,9 +337,9 @@
 .adm-mini-menu .emo { font-size: 14px; line-height: 1; }
 .adm-mini-menu.hidden { display: none; }
 .adm-mini-main { padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 6px; }
-.adm-mini-title { font-size: 0.842em; font-weight: 700; color: var(--color-text-primary, #3D2C1E); }
-.adm-mini-desc { font-size: 0.78em; color: var(--color-text-tertiary, #B89880); line-height: 1.5; }
-.adm-empty-msg { font-size: 0.72em; color: var(--color-text-tertiary, #B89880); text-align: center; padding: 14px 4px; font-style: italic; }
+.adm-mini-title { font-size: 0.842em; font-weight: 700; color: var(--color-text-primary); }
+.adm-mini-desc { font-size: 0.78em; color: var(--color-text-tertiary); line-height: 1.5; }
+.adm-empty-msg { font-size: 0.72em; color: var(--color-text-tertiary); text-align: center; padding: 14px 4px; font-style: italic; }
 
 /* 기능 게이트 미리보기 */
 .adm-a2-pv { padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: center; background: #fff; min-height: 140px; justify-content: center; }
@@ -351,14 +351,14 @@
 .adm-pv-search-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adm-pv-search.gated { padding-right: 36px; }
 .adm-pv-search.gated::after { content: 'PRO'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 0.65em; background: #3D2C1E; color: #fff; padding: 1px 5px; border-radius: 3px; line-height: 1; font-weight: 700; }
-.adm-a2-cap { font-size: 0.78em; color: var(--color-text-secondary, #7A5C44); text-align: center; }
+.adm-a2-cap { font-size: 0.78em; color: var(--color-text-secondary); text-align: center; }
 
 /* 게시판 미리보기 */
 .adm-bd-pv { padding: 14px; background: #fff; min-height: 170px; }
-.adm-bd-t1 { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--color-border, #E4DBCE); padding-bottom: 10px; }
+.adm-bd-t1 { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; }
 .adm-bd-t1-tab {
   font-size: 0.78em; padding: 6px 11px; border-radius: 5px;
-  background: var(--color-surface-2, #F3EFE9); color: var(--color-text-secondary, #7A5C44);
+  background: var(--color-surface-2); color: var(--color-text-secondary);
   display: inline-flex; align-items: center; gap: 5px;
 }
 .adm-bd-t1-tab.on { background: var(--color-brand, #6B3A2A); color: #fff; font-weight: 700; }
@@ -372,17 +372,17 @@
 .adm-bd-t2 { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
 .adm-bd-t2-tab {
   font-size: 0.72em; padding: 3px 10px; border-radius: var(--radius-full, 9999px);
-  background: var(--color-surface-2, #F3EFE9); color: var(--color-text-secondary, #7A5C44);
-  border: 1px solid var(--color-border, #E4DBCE);
+  background: var(--color-surface-2); color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
 }
 .adm-bd-t2-tab.on { background: #3D2C1E; color: #fff; border-color: #3D2C1E; }
 
 .adm-bd-info {
-  font-size: 0.72em; color: var(--color-text-tertiary, #B89880);
+  font-size: 0.72em; color: var(--color-text-tertiary);
   line-height: 1.6; padding: 8px 10px;
-  background: var(--color-surface-2, #F3EFE9); border-radius: 4px;
+  background: var(--color-surface-2); border-radius: 4px;
 }
-.adm-bd-info strong { color: var(--color-text-primary, #3D2C1E); font-weight: 700; }
+.adm-bd-info strong { color: var(--color-text-primary); font-weight: 700; }
 
 /* 배너 업로드 (기존 호환 + 미리보기 전환) */
 .adm-bn-pv-body { padding: 14px; background: #fff; min-height: 150px; }
@@ -391,15 +391,15 @@
   font-size: 0.842em; font-weight: 700; border-radius: 4px 4px 0 0;
 }
 .adm-bn-content {
-  padding: 10px 12px; border: 1px solid var(--color-border, #E4DBCE);
+  padding: 10px 12px; border: 1px solid var(--color-border);
   border-top: none; border-radius: 0 0 4px 4px;
-  font-size: 0.72em; color: var(--color-text-tertiary, #B89880); line-height: 1.5;
+  font-size: 0.72em; color: var(--color-text-tertiary); line-height: 1.5;
 }
 .adm-bn-selector { margin-top: 12px; display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
 .adm-bn-sel-btn {
   font-size: 0.78em; padding: 4px 10px; border-radius: 4px;
-  background: #fff; border: 1px solid var(--color-border, #E4DBCE);
-  cursor: pointer; color: var(--color-text-secondary, #7A5C44);
+  background: #fff; border: 1px solid var(--color-border);
+  cursor: pointer; color: var(--color-text-secondary);
   font-family: inherit;
 }
 .adm-bn-sel-btn.active { background: var(--color-brand, #6B3A2A); color: #fff; border-color: var(--color-brand, #6B3A2A); }
@@ -465,7 +465,7 @@
       <button class="adm-modal-close" onclick="window.admCloseRoleModal()">✕</button>
     </div>
     <div class="adm-modal-body">
-      <div style="font-size:0.842em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">
+      <div style="font-size:0.842em;color:var(--color-text-secondary);margin-bottom:12px;">
         <strong id="adm-modal-username"></strong> 님의 역할을 변경합니다.
       </div>
       <div class="adm-form-row">
@@ -759,34 +759,34 @@ window.admLoadScripts = async function () {
       '<div class="adm-card" style="margin-bottom:8px;">' +
         '<div class="adm-card-title" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="window.admToggleWriteForm()">' +
           '<span>✏️ 새 스크립트 작성</span>' +
-          '<span id="adm-write-chevron" style="font-size:0.8em;color:var(--color-text-tertiary,#B89880);">▶ 펼치기</span>' +
+          '<span id="adm-write-chevron" style="font-size:0.8em;color:var(--color-text-tertiary);">▶ 펼치기</span>' +
         '</div>' +
         '<div id="adm-script-write-form" style="display:none;margin-top:12px;">' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
             '<div>' +
-              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">제목 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">제목 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
               '<input class="adm-input" id="adm-w-title" placeholder="스크립트 제목">' +
             '</div>' +
             '<div>' +
-              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">단계 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">단계 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
               '<select class="adm-select" id="adm-w-stage">' +
                 '<option value="">단계 선택</option>' + stageOptions +
               '</select>' +
             '</div>' +
           '</div>' +
           '<div style="margin-bottom:8px;">' +
-            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">핵심 멘트</div>' +
+            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">핵심 멘트</div>' +
             '<input class="adm-input" id="adm-w-highlight" placeholder="핵심 문장 한 줄 (목록에서 미리보기로 표시)">' +
           '</div>' +
           '<div style="margin-bottom:8px;">' +
-            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary,#7A5C44);margin-bottom:4px;">본문 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">본문 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
             '<textarea class="adm-input" id="adm-w-body" rows="5" placeholder="스크립트 본문을 입력하세요." style="resize:vertical;font-family:inherit;line-height:1.7;"></textarea>' +
           '</div>' +
           '<div style="display:flex;gap:16px;margin-bottom:12px;">' +
-            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary,#7A5C44);cursor:pointer;">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary);cursor:pointer;">' +
               '<input type="checkbox" id="adm-w-sample" style="accent-color:var(--color-accent,#D4845A);width:16px;height:16px;"> 샘플 스크립트로 등록' +
             '</label>' +
-            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary,#7A5C44);cursor:pointer;">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary);cursor:pointer;">' +
               '<input type="checkbox" id="adm-w-leader" style="accent-color:var(--color-accent,#D4845A);width:16px;height:16px;"> ⭐ 리더 추천으로 등록' +
             '</label>' +
           '</div>' +
@@ -841,7 +841,7 @@ window.admBuildScriptTable = function (data) {
       html +=
         '<tr>' +
           '<td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.title || '-') + '</td>' +
-          '<td><span style="font-size:0.8em;background:var(--color-surface-2,#F3EFE9);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary,#7A5C44);">' + stage + '</span></td>' +
+          '<td><span style="font-size:0.8em;background:var(--color-surface-2);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary);">' + stage + '</span></td>' +
           '<td><span style="font-size:0.8em;color:#888;">' + (s.scope || '-') + '</span></td>' +
           '<td><span class="status-badge ' + (s.is_active ? 'status-active' : 'status-inactive') + '">' + (s.is_active ? '활성' : '비활성') + '</span></td>' +
           '<td style="text-align:center;">' + (s.is_sample ? '<span style="font-size:0.75em;font-weight:700;color:var(--color-accent,#D4845A);background:rgba(212,132,90,0.12);border-radius:4px;padding:1px 7px;">샘플</span>' : '－') + '</td>' +
@@ -941,7 +941,7 @@ window.admSaveNewScript = async function () {
   if (!stage)        { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='단계를 선택해 주세요.'; } return; }
   if (!body.trim())  { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='본문을 입력해 주세요.'; } return; }
 
-  if (msgEl) { msgEl.style.color='var(--color-text-tertiary,#B89880)'; msgEl.textContent='저장 중...'; }
+  if (msgEl) { msgEl.style.color='var(--color-text-tertiary)'; msgEl.textContent='저장 중...'; }
 
   try {
     var payload = {
@@ -1023,7 +1023,7 @@ window.admLoadBoard = async function () {
         html +=
           '<tr>' +
             '<td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.title || '-') + '</td>' +
-            '<td><span style="font-size:0.8em;background:var(--color-surface-2,#F3EFE9);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary,#7A5C44);">' + cat + '</span></td>' +
+            '<td><span style="font-size:0.8em;background:var(--color-surface-2);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary);">' + cat + '</span></td>' +
             '<td style="color:#888;font-size:0.9em;">' + (p.author_name || '-') + '</td>' +
             '<td style="color:#aaa;font-size:0.85em;">' + ((p.created_at || '').slice(0, 10) || '-') + '</td>' +
             '<td>' + status + '</td>' +
@@ -1105,10 +1105,10 @@ window.admLoadLogs = async function () {
         html +=
           '<div style="margin-bottom:10px;">' +
             '<div style="display:flex;justify-content:space-between;font-size:0.8em;margin-bottom:4px;">' +
-              '<span style="font-weight:600;color:var(--color-text-primary,#3D2C1E);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">' + (i + 1) + '. ' + entry[0] + '</span>' +
+              '<span style="font-weight:600;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">' + (i + 1) + '. ' + entry[0] + '</span>' +
               '<span style="color:var(--color-accent,#D4845A);font-weight:700;flex-shrink:0;margin-left:8px;">' + entry[1] + '회</span>' +
             '</div>' +
-            '<div style="height:6px;background:var(--color-surface-2,#F3EFE9);border-radius:3px;">' +
+            '<div style="height:6px;background:var(--color-surface-2);border-radius:3px;">' +
               '<div style="height:100%;width:' + pct + '%;background:var(--color-accent,#D4845A);border-radius:3px;transition:width 0.5s;"></div>' +
             '</div>' +
           '</div>';
@@ -1127,7 +1127,7 @@ window.admLoadLogs = async function () {
         var name  = (l.users && l.users.name) || '알 수 없음';
         html +=
           '<div class="adm-log-item">' +
-            '<div class="adm-log-icon" style="background:var(--color-surface-2,#F3EFE9);">' + icon + '</div>' +
+            '<div class="adm-log-icon" style="background:var(--color-surface-2);">' + icon + '</div>' +
             '<div class="adm-log-body">' +
               '<div class="adm-log-text"><strong>' + name + '</strong> · ' + event + '</div>' +
               '<div class="adm-log-time">' + admTimeAgo(l.created_at) + '</div>' +
@@ -1139,10 +1139,10 @@ window.admLoadLogs = async function () {
 
     /* 안내 카드 */
     html +=
-      '<div class="adm-card" style="background:var(--color-surface-2,#F3EFE9);">' +
+      '<div class="adm-card" style="background:var(--color-surface-2);">' +
         '<div class="adm-card-title">💡 로그 수집 설정 안내</div>' +
-        '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);line-height:1.8;">' +
-          '로그 수집을 시작하려면 Supabase에서 <code style="background:var(--color-border,#E4DBCE);padding:1px 6px;border-radius:4px;">activity_logs</code> 테이블을 생성해야 합니다.<br>' +
+        '<div style="font-size:0.8em;color:var(--color-text-secondary);line-height:1.8;">' +
+          '로그 수집을 시작하려면 Supabase에서 <code style="background:var(--color-border);padding:1px 6px;border-radius:4px;">activity_logs</code> 테이블을 생성해야 합니다.<br>' +
           '<strong>필수 컬럼:</strong> id (bigserial), user_id (uuid), event_type (text), target_type (text), target_id (text), created_at (timestamptz)<br>' +
           '<strong>수집 항목:</strong> 로그인 / 스크립트 클릭 / Quick 메뉴 클릭 / 즐겨찾기 추가' +
         '</div>' +
@@ -1164,13 +1164,13 @@ window.admLoadNotice = async function () {
 
     var noticeList = '';
     if (notices.length === 0) {
-      noticeList = '<div style="padding:16px;color:var(--color-text-tertiary,#B89880);font-size:0.842em;text-align:center;">등록된 공지가 없습니다.</div>';
+      noticeList = '<div style="padding:16px;color:var(--color-text-tertiary);font-size:0.842em;text-align:center;">등록된 공지가 없습니다.</div>';
     } else {
       notices.forEach(function (n) {
         noticeList +=
-          '<div style="padding:12px 0;border-bottom:1px solid var(--color-border,#E4DBCE);display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+          '<div style="padding:12px 0;border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
             '<div style="flex:1;min-width:0;">' +
-              '<div style="font-size:0.842em;font-weight:700;color:var(--color-text-primary,#3D2C1E);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (n.title || '-') + '</div>' +
+              '<div style="font-size:0.842em;font-weight:700;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (n.title || '-') + '</div>' +
               '<div style="font-size:0.75em;color:#aaa;margin-top:2px;">' + ((n.created_at || '').slice(0, 10)) + '</div>' +
             '</div>' +
             '<button class="adm-btn adm-btn-danger adm-btn-sm"' +
@@ -1207,7 +1207,7 @@ window.admLoadNotice = async function () {
       /* 홈 안내 배너 */
       '<div class="adm-card" style="margin-top:0;">' +
         '<div class="adm-card-title">🎯 홈 안내 배너</div>' +
-        '<div style="font-size:0.8em;color:var(--color-text-tertiary,#B89880);margin-bottom:12px;">' +
+        '<div style="font-size:0.8em;color:var(--color-text-tertiary);margin-bottom:12px;">' +
           '홈 화면 상단에 표시되는 안내 문구를 관리합니다.' +
         '</div>' +
         '<div class="adm-form-row"><label class="adm-form-label">배너 문구</label>' +
@@ -1355,7 +1355,7 @@ window.admLoadSettings = async function () {
   var section1 =
     '<div class="adm-card" style="margin-bottom:14px;">' +
       '<div class="adm-card-title">⚙️ B영역 메뉴 표시 설정</div>' +
-      '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">체크를 바꾸면 오른쪽 "설정 후 사용자 화면"에 즉시 반영됩니다.</div>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">체크를 바꾸면 오른쪽 "설정 후 사용자 화면"에 즉시 반영됩니다.</div>' +
       '<div class="adm-set-sec">' +
         '<div>' +
           menuRowsHtml +
@@ -1389,7 +1389,7 @@ window.admLoadSettings = async function () {
   var section2 =
     '<div class="adm-card" style="margin-bottom:14px;">' +
       '<div class="adm-card-title">🔒 기능 게이트 (PRO 전용 설정)</div>' +
-      '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">특정 기능을 PRO 전용으로 제한하거나 전체 공개할 수 있습니다.</div>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">특정 기능을 PRO 전용으로 제한하거나 전체 공개할 수 있습니다.</div>' +
       '<div class="adm-set-sec">' +
         '<div>' +
           /* 행1: 빠른 실행 */
@@ -1450,9 +1450,9 @@ window.admLoadSettings = async function () {
   var section3 =
     '<div class="adm-card" style="margin-bottom:14px;">' +
       '<div class="adm-card-title">💬 게시판 1차 탭 표시</div>' +
-      '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">' +
         '게시판 페이지 상단 1차 탭(허브/팀/지점/보험사) 노출 여부를 관리합니다. ' +
-        '<strong style="color:var(--color-text-primary,#3D2C1E);font-weight:700;">팀·지점 게시판은 현장 업무용이라 항상 표시</strong>되며 잠금 상태입니다.' +
+        '<strong style="color:var(--color-text-primary);font-weight:700;">팀·지점 게시판은 현장 업무용이라 항상 표시</strong>되며 잠금 상태입니다.' +
       '</div>' +
       '<div class="adm-set-sec">' +
         '<div>' +
@@ -1530,15 +1530,15 @@ window.admLoadSettings = async function () {
     return (
       '<div class="adm-set-row" style="padding:8px 10px;">' +
         '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">' +
-          '<span style="width:100px;font-weight:700;color:var(--color-text-primary,#3D2C1E);font-size:0.842em;flex-shrink:0;">' + p.label + '</span>' +
+          '<span style="width:100px;font-weight:700;color:var(--color-text-primary);font-size:0.842em;flex-shrink:0;">' + p.label + '</span>' +
           '<input type="hidden" id="banner-' + p.key + '" value="' + safeUrl + '">' +
           '<input type="file" id="banner-file-' + p.key + '" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="window.admBannerFileSelected(\'' + p.key + '\')">' +
-          '<div id="banner-preview-' + p.key + '" style="width:40px;height:22px;border-radius:3px;overflow:hidden;border:1px solid var(--color-border,#E4DBCE);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+          '<div id="banner-preview-' + p.key + '" style="width:40px;height:22px;border-radius:3px;overflow:hidden;border:1px solid var(--color-border);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
             (url
               ? '<img src="' + safeUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'<span style=&quot;font-size:0.65em;color:#ccc;&quot;>X</span>\'">'
               : '<span style="font-size:0.65em;color:#ccc;">없음</span>') +
           '</div>' +
-          '<span id="banner-filename-' + p.key + '" style="flex:1;min-width:0;font-size:0.78em;color:' + (url ? 'var(--color-text-secondary,#7A5C44)' : '#aaa') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+          '<span id="banner-filename-' + p.key + '" style="flex:1;min-width:0;font-size:0.78em;color:' + (url ? 'var(--color-text-secondary)' : '#aaa') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
             fileName +
           '</span>' +
         '</div>' +
@@ -1561,7 +1561,7 @@ window.admLoadSettings = async function () {
   var section4 =
     '<div class="adm-card">' +
       '<div class="adm-card-title">🖼️ 페이지별 배너 이미지</div>' +
-      '<div style="font-size:0.8em;color:var(--color-text-secondary,#7A5C44);margin-bottom:12px;">' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">' +
         '📁 파일 선택 버튼으로 내 컴퓨터에서 이미지를 선택하세요. 저장 시 자동 업로드됩니다.<br>' +
         '<span style="color:#888;">권장: 가로 1200px 이상 · 세로 120~200px · JPG/PNG/WebP · 최대 5MB</span>' +
       '</div>' +
@@ -1743,7 +1743,7 @@ window.admBannerFileSelected = function (pageKey) {
   /* 파일명 표시 */
   if (filename) {
     filename.textContent = file.name;
-    filename.style.color = 'var(--color-text-primary,#3D2C1E)';
+    filename.style.color = 'var(--color-text-primary)';
   }
 
   /* 로컬 미리보기 */
@@ -1950,7 +1950,7 @@ function _boot() {
       '<div class="adm-empty" style="padding:60px;">' +
         '<div style="font-size:2em;margin-bottom:12px;">🔒</div>' +
         '<div style="font-weight:700;margin-bottom:6px;">접근 권한이 없습니다</div>' +
-        '<div style="font-size:0.842em;color:var(--color-text-tertiary,#B89880);">관리자 계정으로 로그인해 주세요.</div>' +
+        '<div style="font-size:0.842em;color:var(--color-text-tertiary);">관리자 계정으로 로그인해 주세요.</div>' +
       '</div>'
     );
     return;
