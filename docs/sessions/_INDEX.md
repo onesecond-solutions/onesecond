@@ -1,0 +1,90 @@
+# 세션 인덱스 — 현재 큰 그림 한눈에
+
+> **마지막 갱신:** 2026-04-28
+> **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
+> **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
+
+---
+
+## 🎯 현재 메인 트랙 — design_test 시안 라이브 승격
+
+`claude_code/design_test/<page>/v1-full.html` 시안을 라이브 페이지(`pages/<page>.html` / `app.html` / `css/tokens.css`)에 승격하는 트랙.
+
+승격 절차 (`claude_code/design_test/README.md` 명시): 팀장님 OK → 적용 버전 지정 → 별도 작업지시서 → 라이브 반영 → 시안 폴더는 레퍼런스로 유지.
+
+### 승격 진행 현황 (2026-04-28 기준)
+
+| 영역 | 상태 | 근거 커밋 |
+|---|---|---|
+| `css/tokens.css` (9 시안 :root 통합) | ✅ 완료 | `71f08b0` (4/27) |
+| `app.html` (shell v1) | ✅ 완료 + 4/28 A1 라이트 톤 후속 | `5592749` (4/27) → `fd8b264` `1ab35c4` (4/28) |
+| `pages/board.html` | ✅ **시안 통째 적용** | `ebb9b3b` (4/26 — design_test/board/v1-full.html 기반) |
+| `index.html` | 부분 (가입 폼 등) | `d8a7d50`, `70545bd` 등 |
+| `pages/home.html` | ❌ 미진행 (GPT v1 흡수 시도 → 회귀, stash 보관) | — |
+| `pages/admin.html` | ❌ 미진행 (4/28 standalone hex 8건 토큰화는 별건) | — |
+| `pages/myspace.html` | ❌ 미진행 | — |
+| `pages/scripts.html` | ❌ 미진행 | — |
+| `pages/news.html` | ❌ 미진행 | — |
+| `pages/quick.html` | ❌ 미진행 | — |
+| `pages/together.html` | ❌ 미진행 | — |
+
+**다음 후보**: `home / myspace / scripts / news / quick / together / admin` 7개 페이지 승격 우선순위 결정 대기.
+
+---
+
+## 🚧 미해결 이슈 (인계)
+
+1. **home GPT v1 흡수 회귀 미해결** — `feat/home-gpt-v1-adoption` 브랜치 stash 보관 (`wip: home GPT v1 adoption — 회귀 미해결`). hexagon·노드·도넛이 라이브에서 표시 안 됨. GPT-4 롤백 후 검수 미진행.
+2. **admin standalone hex 8건 토큰화 (4/28 머지 완료)** — admin/v1-full.html 시안이 통째 교체 디자인이라 시안 승격 시 .adm-mini-side 등 토큰화한 클래스가 모두 사라짐. **현재 main에 머지된 상태(`a0bdfbf`)로 둘지 / revert할지 결정 대기**.
+3. **B 사이드바 "함께해요" 활성 오작동** — home 진입 시 잘못된 메뉴 활성. home.html과 무관한 별개 이슈로 추정. 별도 진단 필요.
+4. **나머지 7개 페이지(home·myspace·scripts·news·quick·together·admin) 승격 우선순위** — 미정.
+
+---
+
+## 📋 결정 대기 항목
+
+1. **design_test 트랙 vs 부분 개편 트랙** — board는 4/26에 시안 통째 승격됐는데 그 후 1주일간 다른 페이지 승격 0건. 트랙이 실질 활성인지 / 일시 중단인지 / 다른 방향으로 전환됐는지 명문 결정 없음.
+2. **GPT v1 트랙 폐기 명문화** — 4/28 사용자 발언("심야 결정 무시")으로 묵시적 폐기 추정. `docs/decisions/2026-04-28_gpt_v1_deprecation.md` 같은 명시 문서 신설 권장.
+3. **admin standalone hex 8건 처리** — 위 미해결 이슈 #2 참조.
+
+---
+
+## 🗓️ 최신 세션 요약 (시간 역순)
+
+- `docs/sessions/2026-04-28_0004.md` — 4/28 심야 (home GPT v1 회귀, /session-end 중단)
+- `docs/sessions/2026-04-27_pre_sweep_diagnosis.md` — 4/27 sweep 진입 전 시스템 안정성 진단
+- `docs/sessions/2026-04-27_fallback_sweep_scan.md` — 4/27 fallback 부채 전수 스캔
+- `docs/sessions/2026-04-27_1905.md` — 4/27 저녁
+- `docs/sessions/2026-04-27_fallback_debt_finding.md` — 4/27 옛 브라운 fallback 발견
+- `docs/sessions/2026-04-27_gap_analysis.md` — 4/27 9페이지 갭 분석
+
+---
+
+## 📌 폐기 / 보류된 트랙
+
+- **`claude_code/design_test/gpt_v1/` 트랙** (4/27 도입, 4/28 묵시적 폐기) — GPT 이미지 생성 PNG 시안 4종(home/board/myspace/scripts). home 흡수 시도 → 회귀 → 사용자 "심야 결정 무시" 발언으로 폐기 해석. 명문 결정 문서 미작성.
+- **구버전 Supabase `qursjteiovcylqiepmlo`** (4/24 사고 후 폐기) — `pdnwgzneooyygfejrvbg`(신버전)이 유일 진실 원천.
+
+---
+
+## 🔄 진행 중·완료된 별건 트랙 (메인 트랙과 분리)
+
+| 트랙 | 상태 | 근거 |
+|---|---|---|
+| **fallback sweep** (옛 브라운 6값 → 새 토큰 본체) | ✅ 4슬롯 완료 (4/28 누적 346건) | `70fd368` `2b9a4b0` `f2db460` `6587254` |
+| **admin standalone hex 8건 토큰화** | ⚠️ 머지 완료, 시안 승격 시 무효 가능 | `a0bdfbf` (4/28) |
+| **A1 헤더 라이트 톤 + 모바일 반응형** | ✅ 완료 (4/28) | `fd8b264` `1ab35c4` |
+| **빠른실행 v2 사양 메모리 등록** | ✅ 등록 완료 (코드 변경 없음, 향후 작업 대기) | `project_quick_overlay_v2_spec.md` |
+
+---
+
+## 🔗 참고 문서
+
+- `claude_code/design_test/README.md` — 디자인 테스트 워크스페이스 전역 규칙
+- `docs/decisions/2026-04-25_holds_and_priorities.md` — 보류 항목·우선순위
+- `docs/role_system.md` — 9개 role 체계
+- `docs/work_order_template.md` — 작업지시서 표준 템플릿 (0번 정합성 검증 필수)
+
+---
+
+*본 인덱스는 `/session-end` 슬래시 커맨드 5단계에서 자동 갱신됩니다. 수동 편집 시 `마지막 갱신` 날짜를 함께 갱신하세요.*
