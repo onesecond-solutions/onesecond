@@ -44,16 +44,9 @@ body {
   align-items: center;
   gap: 12px;
 }
-.logo-mark {
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  background: var(--gradient-brand);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 900; font-size: 14px;
-  letter-spacing: -0.02em;
-}
+.logo-mark { height: 32px; width: auto; display: block; flex-shrink: 0; }
 .logo-text { font-weight: 800; font-size: 18px; color: var(--neutral-800); letter-spacing: -0.02em; }
+@media(max-width:880px){ .logo-text { display: none; } }   /* 모바일 로고만 표시 */
 
 .main {
   flex: 1;
@@ -215,7 +208,7 @@ body {
 <body>
 <nav class="nav">
   <div class="nav-inner">
-    <div class="logo-mark">1s</div>
+    <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="logo-mark">
     <div class="logo-text">원세컨드</div>
   </div>
 </nav>

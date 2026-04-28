@@ -96,7 +96,7 @@ body{
 ═════════════════════════════════════════════════════════ */
 .nav {
   position: sticky;
-  top: 24px;
+  top: 0;
   z-index: 100;
   height: var(--nav-h);
   background: rgba(255,255,255,0.82);
@@ -137,16 +137,8 @@ body{
   color: var(--color-text-primary);
   text-decoration: none;
 }
-.nav-brand-mark {
-  width: 36px; height: 36px;
-  border-radius: var(--radius-md);
-  background: var(--gradient-brand);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: var(--text-sm);
-  font-weight: 900;
-  letter-spacing: var(--tracking-tightest);
-  box-shadow: var(--elevation-warm-2);
+.nav-brand-logo {
+  height: 32px; width: auto; display: block; flex-shrink: 0;
 }
 .nav-brand .accent { color: var(--accent-400); margin-left: 4px; }
 
@@ -210,7 +202,10 @@ body{
 }
 .nav-cta:hover { transform: translateY(-1px); box-shadow: var(--elevation-warm-3); }
 
-@media(max-width:880px){ .nav-menu { display: none; } }
+@media(max-width:880px){
+  .nav-menu { display: none; }
+  .nav-brand span { display: none; }   /* 모바일 로고만 표시 */
+}
 
 /* ═════════════════════════════════════════════════════════
    2. HERO (A2 영역 — 기존 카피 유지 + 듀얼 모니터 CSS 목업)
@@ -1291,10 +1286,10 @@ body{
 <!-- ═══════════════════════════════════
      1. 프리미엄 네비 (A1 영역)
 ═══════════════════════════════════ -->
-<nav class="nav" id="nav" style="margin-top:24px;">
+<nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="#top" class="nav-brand">
-      <div class="nav-brand-mark">1s</div>
+      <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="nav-brand-logo">
       <span>원세컨드</span>
     </a>
     <div class="nav-menu">
