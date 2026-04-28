@@ -19,7 +19,7 @@
 | `css/tokens.css` (9 시안 :root 통합) | ✅ 완료 | `71f08b0` (4/27) |
 | `app.html` (shell v1) | ✅ 완료 + 4/28 A1 라이트 톤 후속 | `5592749` (4/27) → `fd8b264` `1ab35c4` (4/28) |
 | `pages/board.html` | ✅ **시안 통째 적용** | `ebb9b3b` (4/26 — design_test/board/v1-full.html 기반) |
-| `index.html` | 부분 (가입 폼 등) | `d8a7d50`, `70545bd` 등 |
+| `index.html` | 🔄 **시안 대기** — 사전 결정 6건 완료(2026-04-28), 작업지시서 발행 대기 | 부분 이력: `d8a7d50`, `70545bd`. 갭 분석: `0af6491` |
 | `pages/home.html` | ❌ 미진행 (GPT v1 흡수 시도 → 회귀, stash 보관) | — |
 | `pages/admin.html` | ❌ 미진행 (4/28 standalone hex 8건 토큰화는 별건) | — |
 | `pages/myspace.html` | ❌ 미진행 | — |
@@ -28,7 +28,31 @@
 | `pages/quick.html` | ❌ 미진행 | — |
 | `pages/together.html` | ❌ 미진행 | — |
 
-**다음 후보**: `home / myspace / scripts / news / quick / together / admin` 7개 페이지 승격 우선순위 결정 대기.
+**다음 후보 (우선순위 확정 — `claude_code/design_test/README.md` Phase 1 표)**:
+1. `index.html` (현재 진행 — 결정 완료, 작업지시서 대기)
+2. `pages/home.html`
+3. `pages/scripts.html`
+4. ✅ `pages/board.html`
+5. `pages/myspace.html`
+6. `pages/news.html`
+7. `pages/quick.html`
+8. `pages/together.html` (board 패턴 복제)
+9. `pages/admin.html` (Make.com 2단 네비)
+
+### index.html 승격 사전 결정 6건 (2026-04-28 확정)
+
+작업지시서 발행 시 아래 결정에 따라 진행:
+
+| # | 항목 | 결정 |
+|:---:|---|---|
+| 1 | 적용 방식 | **(A) 시안 통째 승격** (board 패턴) |
+| 2 | `inaction-section` 카피 | **(b) 폐기** |
+| 3 | `vs-section` BEFORE/AFTER | **(a) 폐기** |
+| 4 | `#togetherIntroOverlay` | **(a) 보존** — 시안 `together` 섹션 클릭 트리거에 연결 |
+| 5 | 가입 폼 패러다임 | **(a) 시안 인라인 채택** (모달 제거) |
+| 6 | privacy/terms 외부 페이지 전환 | **OK** — 시안 폴더의 `privacy.html` / `terms.html`을 라이브 루트로 복사. 라이브 인라인 `#privacy-overlay` 본문 폐기. 가입 동의 체크박스 클릭 시 외부 페이지 새 탭 진입 동선 유지 |
+
+근거 보고서: `docs/sessions/work_index_gap_analysis_2026-04-28.md` (커밋 `902dca0`)
 
 ---
 
@@ -37,20 +61,24 @@
 1. **home GPT v1 흡수 회귀 미해결** — `feat/home-gpt-v1-adoption` 브랜치 stash 보관 (`wip: home GPT v1 adoption — 회귀 미해결`). hexagon·노드·도넛이 라이브에서 표시 안 됨. GPT-4 롤백 후 검수 미진행.
 2. **admin standalone hex 8건 토큰화 (4/28 머지 완료)** — admin/v1-full.html 시안이 통째 교체 디자인이라 시안 승격 시 .adm-mini-side 등 토큰화한 클래스가 모두 사라짐. **현재 main에 머지된 상태(`a0bdfbf`)로 둘지 / revert할지 결정 대기**.
 3. **B 사이드바 "함께해요" 활성 오작동** — home 진입 시 잘못된 메뉴 활성. home.html과 무관한 별개 이슈로 추정. 별도 진단 필요.
-4. **나머지 7개 페이지(home·myspace·scripts·news·quick·together·admin) 승격 우선순위** — 미정.
 
 ---
 
 ## 📋 결정 대기 항목
 
-1. **design_test 트랙 vs 부분 개편 트랙** — board는 4/26에 시안 통째 승격됐는데 그 후 1주일간 다른 페이지 승격 0건. 트랙이 실질 활성인지 / 일시 중단인지 / 다른 방향으로 전환됐는지 명문 결정 없음.
-2. **GPT v1 트랙 폐기 명문화** — 4/28 사용자 발언("심야 결정 무시")으로 묵시적 폐기 추정. `docs/decisions/2026-04-28_gpt_v1_deprecation.md` 같은 명시 문서 신설 권장.
-3. **admin standalone hex 8건 처리** — 위 미해결 이슈 #2 참조.
+1. **GPT v1 트랙 폐기 명문화** — 4/28 사용자 발언("심야 결정 무시")으로 묵시적 폐기 추정. `docs/decisions/2026-04-28_gpt_v1_deprecation.md` 같은 명시 문서 신설 권장.
+2. **admin standalone hex 8건 처리** — 위 미해결 이슈 #2 참조.
+
+### 📝 4/28 결정 완료 (참고)
+- ✅ **design_test 트랙 활성 여부** — 메인 트랙으로 명시 확정 (`design_test/README.md` 갱신 + 본 _INDEX.md)
+- ✅ **7페이지 승격 우선순위** — README Phase 1 표 1~9번 순서 확정
+- ✅ **index.html 승격 사전 결정 6건** — 위 메인 트랙 섹션 참조
 
 ---
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/work_index_gap_analysis_2026-04-28.md` — 4/28 index.html 승격 진입 전 갭 분석 (사전 결정 6건 도출)
 - `docs/sessions/2026-04-28_0004.md` — 4/28 심야 (home GPT v1 회귀, /session-end 중단)
 - `docs/sessions/2026-04-27_pre_sweep_diagnosis.md` — 4/27 sweep 진입 전 시스템 안정성 진단
 - `docs/sessions/2026-04-27_fallback_sweep_scan.md` — 4/27 fallback 부채 전수 스캔
