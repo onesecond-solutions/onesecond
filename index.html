@@ -99,27 +99,11 @@ body{
   top: 0;
   z-index: 100;
   height: var(--nav-h);
-  background: rgba(255,255,255,0.82);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(229,231,235,0.6);
-  transition: background-color var(--duration-normal) var(--ease-smooth),
-              border-color var(--duration-normal) var(--ease-smooth),
-              box-shadow var(--duration-normal) var(--ease-smooth);
+  background: #FFFFFF;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
+  transition: box-shadow var(--duration-normal) var(--ease-smooth);
 }
-/* A1 — 스크롤 시 브라운 고정 (프리미엄 네비 패턴) */
-.nav.scrolled {
-  background: var(--brand-700);
-  border-bottom-color: var(--brand-800);
-  box-shadow: var(--elevation-2);
-}
-.nav.scrolled .nav-brand { color: #fff; }
-.nav.scrolled .nav-menu { background: rgba(255,255,255,0.08); }
-.nav.scrolled .nav-item { color: rgba(255,255,255,0.75); }
-.nav.scrolled .nav-item:hover { color: #fff; background: rgba(255,255,255,0.12); }
-.nav.scrolled .nav-item.active { background: #fff; color: var(--brand-700); }
-.nav.scrolled .nav-login { color: rgba(255,255,255,0.85); }
-.nav.scrolled .nav-login:hover { color: #fff; background: rgba(255,255,255,0.1); }
+/* A1 패턴 정합 (2026-04-28) — scrolled 톤 변환 폐기, 항상 라이트 톤 유지 */
 .nav-inner {
   max-width: 1280px; margin: 0 auto;
   height: 100%;
@@ -1317,7 +1301,7 @@ body{
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="#top" class="nav-brand">
-      <img src="assets/images/logo/logo05.png" alt="원세컨드 로고" class="nav-brand-logo">
+      <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="nav-brand-logo">
       <span>원세컨드</span>
     </a>
     <div class="nav-menu">
