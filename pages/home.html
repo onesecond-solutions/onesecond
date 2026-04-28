@@ -416,6 +416,59 @@
   .home-intro-title { font-size: 1.75em; }
 }
 
+/* ════════════════════════════════════════════════════════════
+   C-1: hero 통계 3카드 (시안 v2-full line 479-503 흡수, 2026-04-28)
+   ▸ 클래스 home- 접두 컨벤션 유지 (.hero-stats → .home-stats)
+   ▸ .home-intro-header > div 안 마지막 자식으로 들어감 (4/24 좌측 30px padding 자연 적용)
+   ▸ SVG 좌표계와 분리된 일반 flow HTML (옵션 B 회피 — HTML 영역 별도 컨테이너)
+════════════════════════════════════════════════════════════ */
+.home-stats {
+  display: flex;
+  gap: var(--space-8, 32px);
+  margin-top: var(--space-6, 24px);
+  padding-top: var(--space-5, 20px);
+  border-top: 1px solid var(--color-border);
+}
+.home-stat-item { /* flex 자식 단위 */ }
+.home-stat-label {
+  font-size: var(--text-xs, 0.75em);
+  font-weight: 700;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.home-stat-value {
+  font-size: 1.5em;
+  font-weight: 900;
+  color: var(--color-brand);
+  letter-spacing: -0.02em;
+  font-feature-settings: 'tnum';
+  line-height: 1.1;
+}
+.home-stat-unit {
+  font-size: 0.625em;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0;
+  margin-left: 3px;
+}
+
+/* 모바일 (~640px) — 카드 간격 축소, 가로 한 줄 유지 */
+@media (max-width: 640px) {
+  .home-stats {
+    gap: var(--space-5, 20px);
+    margin-top: var(--space-5, 20px);
+    padding-top: var(--space-4, 16px);
+  }
+  .home-stat-value { font-size: 1.3em; }
+}
+@media (max-width: 480px) {
+  .home-stats { gap: var(--space-4, 16px); }
+  .home-stat-value { font-size: 1.2em; }
+  .home-stat-label { font-size: 0.69em; }
+}
+
 </style>
 
 
@@ -441,6 +494,22 @@
       17년 대면 · TM 보험 현장에서 나온 도구.<br>
       막히는 순간, 화면에 보이는 그대로 읽으세요.
     </p>
+
+    <!-- C-1: hero 통계 3카드 (시안 v2-full line 933-947 흡수, 2026-04-28) -->
+    <div class="home-stats">
+      <div class="home-stat-item">
+        <div class="home-stat-label">현장 경력</div>
+        <div class="home-stat-value">17<span class="home-stat-unit">년</span></div>
+      </div>
+      <div class="home-stat-item">
+        <div class="home-stat-label">핵심 카테고리</div>
+        <div class="home-stat-value">6<span class="home-stat-unit">가지</span></div>
+      </div>
+      <div class="home-stat-item">
+        <div class="home-stat-label">상담 단계</div>
+        <div class="home-stat-value">10<span class="home-stat-unit">단계</span></div>
+      </div>
+    </div>
   </div>
 </div>
 
