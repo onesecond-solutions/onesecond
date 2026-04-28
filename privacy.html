@@ -302,7 +302,7 @@ body {
 
     <div class="btn-row">
       <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener" class="btn btn-primary">💬 카카오 문의</a>
-      <a href="javascript:history.back()" class="btn btn-secondary">← 돌아가기</a>
+      <a href="#" onclick="event.preventDefault();closeOrFallback();" class="btn btn-secondary">✕ 닫기</a>
     </div>
   </div>
 </main>
@@ -356,5 +356,15 @@ body {
     </div>
   </div>
 </footer>
+
+<script>
+function closeOrFallback() {
+  window.close();
+  // window.close()는 스크립트가 직접 연 창이 아니면 차단됨 → 살아있으면 메인으로 fallback
+  setTimeout(function () {
+    if (!window.closed) location.href = 'index.html';
+  }, 100);
+}
+</script>
 </body>
 </html>
