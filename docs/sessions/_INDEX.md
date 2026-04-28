@@ -20,7 +20,7 @@
 | `app.html` (shell v1) | ✅ 완료 + 4/28 A1 라이트 톤 후속 | `5592749` (4/27) → `fd8b264` `1ab35c4` (4/28) |
 | `pages/board.html` | ✅ **시안 통째 적용** | `ebb9b3b` (4/26 — design_test/board/v1-full.html 기반) |
 | `index.html` | ✅ **시안 통째 승격 완료** + 헤더 라이트 톤 + 푸터 4컬럼 + 가입 폼 보강 (2026-04-28) | 승격: `83665c4` / 헤더: `001af79` / 푸터: `c2186a1` / 카드: `3342e9d` / 안내박스: `69f2678` |
-| `pages/home.html` | 🔄 **부분 흡수 (C) 트랙** — 결정 10건 완료(2026-04-28), C-1 작업지시서 대기 | GPT v1 stash·브랜치 정리 완료. 갭 분석 v2: `d20cb05` |
+| `pages/home.html` | 🔄 **부분 흡수 (C) 트랙 진행 중** — C-1 완료, C-2 라이브 검수 후 진입 대기 | C-1 hero 통계 3카드: `b854878` (2026-04-28). C-2 배지 dot / C-3 카피 / C-4 도넛 / C-5 C영역(별 트랙) 대기 |
 | `pages/admin.html` | ❌ 미진행 (4/28 standalone hex 8건 토큰화는 별건) | — |
 | `pages/myspace.html` | ❌ 미진행 | — |
 | `pages/scripts.html` | ❌ 미진행 | — |
@@ -30,7 +30,7 @@
 
 **다음 후보 (우선순위 확정 — `claude_code/design_test/README.md` Phase 1 표)**:
 1. ✅ `index.html` (시안 통째 승격 + 헤더/푸터/가입 폼 fix 완료)
-2. 🔄 `pages/home.html` (부분 흡수 (C) 트랙 — C-1 작업지시서 대기)
+2. 🔄 `pages/home.html` (부분 흡수 (C) 트랙 — C-1 완료, C-2 라이브 검수 후 진입)
 3. `pages/scripts.html`
 4. ✅ `pages/board.html`
 5. `pages/myspace.html`
@@ -60,7 +60,8 @@
 
 1. **admin standalone hex 8건 토큰화 (4/28 머지 완료)** — admin/v1-full.html 시안이 통째 교체 디자인이라 시안 승격 시 .adm-mini-side 등 토큰화한 클래스가 모두 사라짐. **현재 main에 머지된 상태(`a0bdfbf`)로 둘지 / revert할지 결정 대기**.
 2. **B 사이드바 "함께해요" 활성 오작동** — home 진입 시 잘못된 메뉴 활성. home.html과 무관한 app.html 책임 영역. home 작업 트랙과 분리 (별 트랙 진단 대기).
-3. **home 라이브 시각 검수 미완** — 4/28 회귀 영역(hexagon·노드·도넛) 현재 라이브 표시 상태 미확인. C-1 작업 진입 전 라이브 검수 권장.
+3. **home 라이브 시각 검수 미완** — C-1 완료(`b854878`) 후 hero 통계 3카드 + 4/28 회귀 영역(hexagon·노드·도넛) 라이브 표시 상태 검수 대기. OK이면 C-2 진입.
+4. **logo03.jpg 라이트 헤더 사각형 경계** — 이미지 배경 옅은 그레이/아이보리(JPG, 투명 X). index/privacy/terms 헤더에서 경계 보이면 logo05.png 투명본 또는 이미지 편집 별 트랙 (라이브 검수 시점 결정).
 
 ---
 
@@ -86,6 +87,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-04-28_1929.md` — 4/28 저녁 (대규모 27 커밋: A1 라이트 톤 / sweep 4슬롯 / 컨텍스트 방어 인프라 / index 시안 통째 승격 + fix 다수 / home 갭 분석 v1·v2 + C-1)
 - `docs/sessions/work_home_gap_analysis_2026-04-28_v2.md` — 4/28 home 갭 분석 v2 (결론 정정, 5개 영역 정확 비교, 결정 10건 도출)
 - `docs/sessions/work_home_gap_analysis_2026-04-28.md` — 4/28 home 갭 분석 v1 (참조용 보존, 결론은 v2가 최종)
 - `docs/sessions/work_index_header_a1_pattern_2026-04-28.md` — 4/28 index 헤더 A1 패턴 이식 분석
