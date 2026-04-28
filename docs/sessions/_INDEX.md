@@ -19,8 +19,8 @@
 | `css/tokens.css` (9 시안 :root 통합) | ✅ 완료 | `71f08b0` (4/27) |
 | `app.html` (shell v1) | ✅ 완료 + 4/28 A1 라이트 톤 후속 | `5592749` (4/27) → `fd8b264` `1ab35c4` (4/28) |
 | `pages/board.html` | ✅ **시안 통째 적용** | `ebb9b3b` (4/26 — design_test/board/v1-full.html 기반) |
-| `index.html` | 🔄 **시안 대기** — 사전 결정 6건 완료(2026-04-28), 작업지시서 발행 대기 | 부분 이력: `d8a7d50`, `70545bd`. 갭 분석: `0af6491` |
-| `pages/home.html` | ❌ 미진행 (GPT v1 흡수 시도 → 회귀, stash 보관) | — |
+| `index.html` | ✅ **시안 통째 승격 완료** + 헤더 라이트 톤 + 푸터 4컬럼 + 가입 폼 보강 (2026-04-28) | 승격: `83665c4` / 헤더: `001af79` / 푸터: `c2186a1` / 카드: `3342e9d` / 안내박스: `69f2678` |
+| `pages/home.html` | 🔄 **부분 흡수 (C) 트랙** — 결정 10건 완료(2026-04-28), C-1 작업지시서 대기 | GPT v1 stash·브랜치 정리 완료. 갭 분석 v2: `d20cb05` |
 | `pages/admin.html` | ❌ 미진행 (4/28 standalone hex 8건 토큰화는 별건) | — |
 | `pages/myspace.html` | ❌ 미진행 | — |
 | `pages/scripts.html` | ❌ 미진행 | — |
@@ -29,8 +29,8 @@
 | `pages/together.html` | ❌ 미진행 | — |
 
 **다음 후보 (우선순위 확정 — `claude_code/design_test/README.md` Phase 1 표)**:
-1. `index.html` (현재 진행 — 결정 완료, 작업지시서 대기)
-2. `pages/home.html`
+1. ✅ `index.html` (시안 통째 승격 + 헤더/푸터/가입 폼 fix 완료)
+2. 🔄 `pages/home.html` (부분 흡수 (C) 트랙 — C-1 작업지시서 대기)
 3. `pages/scripts.html`
 4. ✅ `pages/board.html`
 5. `pages/myspace.html`
@@ -58,9 +58,9 @@
 
 ## 🚧 미해결 이슈 (인계)
 
-1. **home GPT v1 흡수 회귀 미해결** — `feat/home-gpt-v1-adoption` 브랜치 stash 보관 (`wip: home GPT v1 adoption — 회귀 미해결`). hexagon·노드·도넛이 라이브에서 표시 안 됨. GPT-4 롤백 후 검수 미진행.
-2. **admin standalone hex 8건 토큰화 (4/28 머지 완료)** — admin/v1-full.html 시안이 통째 교체 디자인이라 시안 승격 시 .adm-mini-side 등 토큰화한 클래스가 모두 사라짐. **현재 main에 머지된 상태(`a0bdfbf`)로 둘지 / revert할지 결정 대기**.
-3. **B 사이드바 "함께해요" 활성 오작동** — home 진입 시 잘못된 메뉴 활성. home.html과 무관한 별개 이슈로 추정. 별도 진단 필요.
+1. **admin standalone hex 8건 토큰화 (4/28 머지 완료)** — admin/v1-full.html 시안이 통째 교체 디자인이라 시안 승격 시 .adm-mini-side 등 토큰화한 클래스가 모두 사라짐. **현재 main에 머지된 상태(`a0bdfbf`)로 둘지 / revert할지 결정 대기**.
+2. **B 사이드바 "함께해요" 활성 오작동** — home 진입 시 잘못된 메뉴 활성. home.html과 무관한 app.html 책임 영역. home 작업 트랙과 분리 (별 트랙 진단 대기).
+3. **home 라이브 시각 검수 미완** — 4/28 회귀 영역(hexagon·노드·도넛) 현재 라이브 표시 상태 미확인. C-1 작업 진입 전 라이브 검수 권장.
 
 ---
 
@@ -72,12 +72,24 @@
 ### 📝 4/28 결정 완료 (참고)
 - ✅ **design_test 트랙 활성 여부** — 메인 트랙으로 명시 확정 (`design_test/README.md` 갱신 + 본 _INDEX.md)
 - ✅ **7페이지 승격 우선순위** — README Phase 1 표 1~9번 순서 확정
-- ✅ **index.html 승격 사전 결정 6건** — 위 메인 트랙 섹션 참조
+- ✅ **index.html 승격 사전 결정 6건** — 시안 통째 승격 + 헤더/푸터/가입 폼 fix 모두 완료
+- ✅ **home.html 부분 흡수 결정 10건** (2026-04-28, 갭 분석 v2 `d20cb05` 기반):
+  · 적용 방식 (C) 부분 흡수 — 단계 분할 C-1→C-2→C-3→C-4 (C-5 별 트랙)
+  · 우선순위: hero 통계(1) → 배지 dot(2) → 카피(3) → 도넛(4)
+  · 옵션 B 회피: HTML 영역 별도 컨테이너 분리
+  · 4/24 확정 레이아웃 절대 보존 + A2 미리보기 + 6방향 툴팁 보존
+  · 클래스 체계 라이브 컨벤션 (`home-` 접두) 유지
+  · B 사이드바 오작동·C 영역 콘텐츠는 별 트랙 (app.html 책임)
+  · **각 단계 완료 후 라이브 검수 1회 → 다음 단계 진입** (단일 브랜치 / 단일 커밋 / `--no-ff` 머지)
 
 ---
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/work_home_gap_analysis_2026-04-28_v2.md` — 4/28 home 갭 분석 v2 (결론 정정, 5개 영역 정확 비교, 결정 10건 도출)
+- `docs/sessions/work_home_gap_analysis_2026-04-28.md` — 4/28 home 갭 분석 v1 (참조용 보존, 결론은 v2가 최종)
+- `docs/sessions/work_index_header_a1_pattern_2026-04-28.md` — 4/28 index 헤더 A1 패턴 이식 분석
+- `docs/sessions/work_index_mobile_review_2026-04-28.md` — 4/28 index 모바일 전면 재검토
 - `docs/sessions/work_index_gap_analysis_2026-04-28.md` — 4/28 index.html 승격 진입 전 갭 분석 (사전 결정 6건 도출)
 - `docs/sessions/2026-04-28_0004.md` — 4/28 심야 (home GPT v1 회귀, /session-end 중단)
 - `docs/sessions/2026-04-27_pre_sweep_diagnosis.md` — 4/27 sweep 진입 전 시스템 안정성 진단
