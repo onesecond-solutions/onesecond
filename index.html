@@ -1026,6 +1026,27 @@ body{
 }
 .form-hint strong { color: var(--brand-600); font-weight: 800; }
 
+/* 가입 폼 — 소속 정보 안내 박스 (.form-hint 패턴 차용 + 사이즈 보강) */
+.signup-info-box {
+  margin: var(--space-2) 0 var(--space-4);
+  padding: 14px 16px;
+  background: var(--accent-50);
+  border-left: 4px solid var(--accent-400);
+  border-radius: var(--radius-md);
+}
+.signup-info-box p {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+.signup-info-box p strong { color: var(--brand-600); font-weight: 800; }
+.signup-info-box .signup-info-sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
 .form-divider {
   margin: var(--space-6) 0;
   display: flex; align-items: center; gap: var(--space-3);
@@ -1714,6 +1735,11 @@ body{
         </div>
 
         <div class="form-divider">소속 정보 (선택)</div>
+
+        <div class="signup-info-box">
+          <p>💡 회사명 · 지점/센터명 · 팀명을 모두 입력하시면 <strong>팀 게시판</strong>과 <strong>지점 게시판</strong>이 활성화됩니다.</p>
+          <p class="signup-info-sub">(선택 입력이지만, 미입력 시 해당 게시판은 사용 불가)</p>
+        </div>
 
         <div class="form-row">
           <div class="form-group">
