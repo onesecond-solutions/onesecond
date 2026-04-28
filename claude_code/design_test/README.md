@@ -35,6 +35,12 @@ claude_code/design_test/
 4. **원본 구조 복제** — 테스트 대상 페이지의 HTML/CSS/JS 구조는 원본과 동일하게 복사한다(로고 등 상대 경로만 조정).
 5. **변경 기록** — 각 페이지 폴더의 `notes.md`에 "무엇을·왜·어떻게"를 남긴다.
 6. **부수 사항 분리** — 전면 교체 진행 중 발견되는 부수적 사항(미세 색상 / 잔여 갭 / 인접 영역 정비 등)은 **별도 메모로 저장만 해두고**, 전면 교체 완료 후 별도 트랙으로 진행한다. 중간에 부수 작업으로 빠지지 않는다.
+   _4/28~29 사례 (라이브 검수 1회 후 다음 단계 진입 원칙 재강조):_
+   - 4/28 index 헤더 라이트 톤 회귀 → A1 패턴 이식 정정 (`001af79`)
+   - 4/28 index 푸터 4컬럼 보강 (`c2186a1`)
+   - 4/29 app 푸터 4컬럼 → 한 줄 미니 정정 — D 영역 130~170px 압박 발견 (`54cd148`/`fa835d2`)
+   - 4/29 app 푸터 D 영역 안 → 셸 최하단 정정 — 위치 어색 라이브 검수 (`79c0052`)
+   - 4/29 terms/privacy 돌아가기 → 닫기 — 새 탭 환경 `history.back()` 미작동 (`710d452`)
 
 ## 🎨 v1 디자인 원칙 (2026-04-25 확정)
 
@@ -78,14 +84,31 @@ claude_code/design_test/
 | 컨텐츠 좌우 여백 | ~16px | 32px | +100% |
 | 컨텐츠 max-width | 없음 | 900px | 신규 |
 
+### C. 토큰 확장 — 9 시안 :root 통합 (2026-04-27 `71f08b0` main 머지 완료)
+
+**배경**: 9개 시안(`home/index/scripts/board/myspace/news/quick/together/admin`)이 각자 `<style>` 내부 `:root { }` override로 신규 토큰을 임시 정의 → 본체 통합 필요.
+
+**적용 결과** (`tokens.css` 본체):
+- 신규 **~94개 토큰** 추가 (기존 토큰 절대 보존, 신규만 추가)
+- Shadow 토큰 톤 갱신: 브라운 → **차콜** (`--shadow-sm/md/lg`. `--shadow-xl`은 보존)
+- Neutral 10단계 / Brand 10단계 / Accent 7단계 + Elevation·Ring·Leading·Tracking·Ease·Duration·Space 확장·Radius 확장·Z-index·Layout 확장
+- 9개 시안의 `:root override` → `tokens.css` 단일 진실 원천으로 통합
+
+**향후 시안 :root override 처리 기준**:
+- **신규 토큰** (본체에 없는 변수): 시안 단계 `:root override`로 임시 정의 → 시안 OK 후 본체로 승격
+- **기존 토큰 값 변경**: 시안 단계에서만 override로 검증 → 본체 변경은 별도 작업지시서로 별 트랙 (시안과 본체 변경 분리)
+- **다음 페이지 승격 시**: 시안의 `:root override`를 본체로 통합 여부 결정 + 신규 토큰 우선 사용
+
+근거: `docs/sessions/2026-04-27_gap_analysis.md`
+
 ## 🚀 승격 진행 순서 (Phase 1)
 
 아래 순서대로 라이브 페이지에 시안을 승격한다. 각 페이지는 별도 작업지시서로 진행하며, 한 페이지 승격 완료 후 다음 페이지로 이동.
 
 | 순서 | 페이지 | 시안 파일 | 승격 상태 | 비고 |
 |:---:|---|---|:---:|---|
-| 1 | `index.html` | `index/v1-full.html` | 🔄 시안 대기 | |
-| 2 | `pages/home.html` | `home/v2-full.html` (`v1-full.html` 보조) | 🔄 시안 대기 | 4/28 회귀 stash 보관 중 (`feat/home-gpt-v1-adoption`) |
+| 1 | `index.html` | `index/v1-full.html` | ✅ 승격 완료 | 4/28 시안 통째 승격 (`83665c4`) + 헤더 라이트 톤(`001af79`)·푸터 4컬럼(`c2186a1`)·가입 폼 fix |
+| 2 | `pages/home.html` | `home/v2-full.html` (`v1-full.html` 보조) | 🔄 부분 흡수 (C) 트랙 | C-1 hero 통계 3카드 완료 (4/28 `b854878`), C-2 배지 dot 라이브 검수 후 진입 |
 | 3 | `pages/scripts.html` | `scripts/v2-full.html` (`v1-full.html` 보조) | 🔄 시안 대기 | 영향 범위 최대 (54개 데이터) |
 | 4 | `pages/board.html` | `board/v1-full.html` | ✅ 승격 완료 | 4/26 `ebb9b3b` |
 | 5 | `pages/myspace.html` | `myspace/v1-full.html` | 🔄 시안 대기 | |
