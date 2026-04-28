@@ -32,6 +32,10 @@ html, body {
   background: #FFFFFF;
   color: var(--color-text-primary);
   border-bottom: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
+  /* body 스크롤 시 헤더 고정 (2026-04-29 푸터 셸 최하단 정정) */
+  position: sticky;
+  top: 0;
+  z-index: 50;
   /* 2026-04-27 shell v1: flex(space-between) → grid(1fr / 420max / 1fr)
      형제 폭 변화(특히 #topbar-user JS 갱신)로 검색창이 좌측으로 밀리던 현상 차단 */
   display: grid;
@@ -200,13 +204,14 @@ html, body {
 .c-quick-launcher .quick-btn { width: 100%; }
 
 /* ── Layout ── */
-.app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+/* 2026-04-29 푸터 셸 최하단 정정: viewport-lock(.app overflow:hidden + .d 내부 스크롤) →
+   body 스크롤 + A1/B/C sticky 패턴. .main min-height로 짧은 페이지에서도 푸터 화면 아래 자연 배치. */
+.app { min-height: 100vh; display: flex; flex-direction: column; }
 .main {
   flex: 1;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr var(--rightbar-width);
-  min-height: 0;
-  overflow: hidden;
+  min-height: calc(100vh - var(--header-a1));
 }
 
 /* ── B: 사이드바 (2026-04-27 shell v1 — 시안 라이트 톤) ── */
@@ -217,6 +222,11 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  /* body 스크롤 시 사이드바 viewport에 고정 (2026-04-29 푸터 셸 최하단 정정) */
+  position: sticky;
+  top: var(--header-a1);
+  align-self: start;
+  max-height: calc(100vh - var(--header-a1));
   overflow-y: auto;
 }
 .menu { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -270,27 +280,26 @@ html, body {
 }
 .pro strong { color: var(--color-accent); }
 
-/* ── D: 콘텐츠 영역 ── */
+/* ── D: 콘텐츠 영역 (2026-04-29 body 스크롤로 위임) ── */
 .d {
   padding: 0;
-  overflow-y: auto;
   overflow-x: hidden;
-  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  scrollbar-gutter: stable;
 }
-/* D영역 직접 자식(pg-outer 등)이 높이를 채우도록 */
-.d > * {
-  flex-shrink: 0;
-  width: 100%;
-}
+.d > * { flex-shrink: 0; width: 100%; }
 
 /* ── C: 우측 패널 ── */
 .c {
   background: var(--color-surface-2);
   padding: var(--space-5) var(--space-4);
   border-left: 1px solid var(--color-border);
+  /* body 스크롤 시 우측 패널 viewport에 고정 (2026-04-29 푸터 셸 최하단 정정) */
+  position: sticky;
+  top: var(--header-a1);
+  align-self: start;
+  max-height: calc(100vh - var(--header-a1));
   overflow-y: auto;
 }
 .c-section { display: none; flex-direction: column; gap: 14px; }
@@ -504,30 +513,18 @@ html, body {
 #quick-content-slot * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; box-sizing: border-box; }
 #quick-content-slot table { width: 100%!important; table-layout: auto; }
 
-/* ── D 영역 wrapper (2026-04-29 푸터 미니화 — 푸터를 .d 스크롤 안으로 이동)
-   #content-area가 D 영역 가용 높이를 채워 푸터를 자연스럽게 스크롤 끝으로 밀어냄.
-   첫 화면 푸터 노출 0px → 작업 공간 100% 확보. */
-#content-area {
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-#content-area > * { flex-shrink: 0; width: 100%; }
-
-/* ── 푸터 미니 (한 줄, D 영역 스크롤 안)
-   사업자 정보는 모달 오버레이로 처리. 라이브 검수에서 4컬럼 130~170px 압박 확인 후 압축. */
+/* ── 푸터 미니 (셸 최하단, B+C+D 가로폭 전체, body 스크롤 끝에서 등장)
+   사업자 정보는 모달 오버레이로 처리. 직전 D 영역 스크롤 안 위치(e0ab0ed)는 라이브 검수 결과 어색 → 정정. */
 .site-footer-mini {
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-3);
   flex-wrap: wrap;
-  padding: var(--space-2) var(--space-5);
+  padding: var(--space-3) var(--space-5);
   background: var(--color-surface-2);
   border-top: 1px solid var(--color-border);
-  font-size: 11px;
+  font-size: 12px;
 }
 .site-footer-mini .footer-copy {
   margin: 0;
@@ -629,9 +626,18 @@ html, body {
 @media(max-width:767px) {
   html, body { overflow: auto; }
   .app { height: auto; min-height: 100vh; }
-  .main { grid-template-columns: 1fr; padding-bottom: 64px; }
+  .main {
+    grid-template-columns: 1fr;
+    /* 모바일은 단일 컬럼이라 sticky/min-height 불필요 — 데스크톱 규칙 무력화 */
+    min-height: auto;
+  }
+  /* 모바일 sticky 해제 (단일 컬럼이라 sticky 의미 없음) */
+  .a1 { position: static; }
   .b { display: none; }
+  .c { position: static; max-height: none; align-self: auto; }
   .d { overflow-y: visible; }
+  /* 모바일 푸터: 탭바(fixed bottom 64px)와 겹치지 않게 마진 확보 */
+  .site-footer-mini { margin-bottom: 64px; }
   /* 모바일 A1 헤더 — 로고 이미지만 + 검색창 + (이름 ellipsis 아바타) */
   .a1 {
     padding: 0 var(--space-3);
@@ -733,23 +739,8 @@ html, body {
       <div class="pro">PRO 이용중</div>
     </div>
 
-    <!-- D: 동적 콘텐츠 슬롯 + 푸터 미니 (스크롤 안 위치) -->
-    <div class="d">
-      <div id="content-area"></div>
-      <footer class="site-footer-mini">
-        <p class="footer-copy">© 2026 onesecond</p>
-        <span class="footer-sep">·</span>
-        <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">카카오</a>
-        <span class="footer-sep">·</span>
-        <a class="footer-link" href="mailto:bylts0428@gmail.com">이메일</a>
-        <span class="footer-sep">·</span>
-        <a class="footer-link" href="terms.html" target="_blank" rel="noopener">이용약관</a>
-        <span class="footer-sep">·</span>
-        <a class="footer-link" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
-        <span class="footer-sep">·</span>
-        <a class="footer-link" href="#" onclick="event.preventDefault();openBizInfo()">사업자 정보</a>
-      </footer>
-    </div>
+    <!-- D: 동적 콘텐츠 슬롯 -->
+    <div class="d" id="content-area"></div>
 
     <!-- C: 우측 패널 -->
     <div class="c">
@@ -793,7 +784,20 @@ html, body {
 
   </div>
 
-  <!-- 푸터는 D 영역 스크롤 안으로 이동 (.site-footer-mini 참조) -->
+  <!-- 푸터 미니 (셸 최하단, B+C+D 가로폭 전체, body 스크롤 끝에서 등장) -->
+  <footer class="site-footer-mini">
+    <p class="footer-copy">© 2026 onesecond</p>
+    <span class="footer-sep">·</span>
+    <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener noreferrer">카카오</a>
+    <span class="footer-sep">·</span>
+    <a class="footer-link" href="mailto:bylts0428@gmail.com">이메일</a>
+    <span class="footer-sep">·</span>
+    <a class="footer-link" href="terms.html" target="_blank" rel="noopener">이용약관</a>
+    <span class="footer-sep">·</span>
+    <a class="footer-link" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
+    <span class="footer-sep">·</span>
+    <a class="footer-link" href="#" onclick="event.preventDefault();openBizInfo()">사업자 정보</a>
+  </footer>
 </div>
 
 <!-- 하단 탭바 (모바일) -->
