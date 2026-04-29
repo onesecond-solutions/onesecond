@@ -421,13 +421,11 @@
    ▸ 클래스 home- 접두 컨벤션 유지 (.hero-stats → .home-stats)
    ▸ .home-intro-header > div 안 마지막 자식으로 들어감 (4/24 좌측 30px padding 자연 적용)
    ▸ SVG 좌표계와 분리된 일반 flow HTML (옵션 B 회피 — HTML 영역 별도 컨테이너)
+   ▸ 2026-04-29: 단일 가로선 제거 — 위 .home-hero-divider(줄무늬 5개)가 spacing 전담
 ════════════════════════════════════════════════════════════ */
 .home-stats {
   display: flex;
   gap: var(--space-8, 32px);
-  margin-top: var(--space-6, 24px);
-  padding-top: var(--space-5, 20px);
-  border-top: 1px solid var(--color-border);
 }
 .home-stat-item { /* flex 자식 단위 */ }
 .home-stat-label {
@@ -458,8 +456,6 @@
 @media (max-width: 640px) {
   .home-stats {
     gap: var(--space-5, 20px);
-    margin-top: var(--space-5, 20px);
-    padding-top: var(--space-4, 16px);
   }
   .home-stat-value { font-size: 1.3em; }
 }
@@ -467,6 +463,36 @@
   .home-stats { gap: var(--space-4, 16px); }
   .home-stat-value { font-size: 1.2em; }
   .home-stat-label { font-size: 0.69em; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   2026-04-29: hero 줄무늬 그라데이션 디바이더
+   ▸ D 영역 hero 카피 ~ 통계 3카드 사이
+   ▸ 단일 가로선(.home-stats border-top) → 줄무늬 5개 점진 축소 페이드
+   ▸ 색상: --brand-600 (#824220) opacity 60→15% (tokens.css 진한 브라운)
+   ▸ 디자인 의도: "통화 중 멈춤 → 이어짐" 카피와 시각 흐름 일치
+════════════════════════════════════════════════════════════ */
+.home-hero-divider {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: var(--space-6, 24px);
+  margin-bottom: 36px;
+}
+.home-hero-divider-line {
+  display: block;
+  height: 1px;
+  background: var(--brand-600);
+}
+.home-hero-divider-line.line-1 { width: 100%; height: 1.5px; opacity: 0.60; }
+.home-hero-divider-line.line-2 { width: 80%;  opacity: 0.50; }
+.home-hero-divider-line.line-3 { width: 60%;  opacity: 0.35; }
+.home-hero-divider-line.line-4 { width: 40%;  opacity: 0.25; }
+.home-hero-divider-line.line-5 { width: 25%;  opacity: 0.15; }
+
+/* 모바일 768px 이하 — 줄무늬 4개로 축소 (line-5 숨김) */
+@media (max-width: 768px) {
+  .home-hero-divider-line.line-5 { display: none; }
 }
 
 </style>
@@ -494,6 +520,16 @@
       17년 대면 · TM 보험 현장에서 나온 도구.<br>
       막히는 순간, 화면에 보이는 그대로 읽으세요.
     </p>
+
+    <!-- 2026-04-29: hero 줄무늬 그라데이션 디바이더 (단일 가로선 → 5개 점진 축소 페이드)
+         ▸ 모바일 768px 이하: line-5 숨김 (4개로 축소) -->
+    <div class="home-hero-divider" aria-hidden="true">
+      <span class="home-hero-divider-line line-1"></span>
+      <span class="home-hero-divider-line line-2"></span>
+      <span class="home-hero-divider-line line-3"></span>
+      <span class="home-hero-divider-line line-4"></span>
+      <span class="home-hero-divider-line line-5"></span>
+    </div>
 
     <!-- C-1: hero 통계 3카드 (시안 v2-full line 933-947 흡수, 2026-04-28) -->
     <div class="home-stats">
