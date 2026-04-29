@@ -258,6 +258,13 @@
   --space-32: 128px;
   --space-40: 160px;
 
+  /* ── Page Layout 간격 토큰 (2026-04-30 신설 — myspace 기준값으로 추출, 페이지별 :root에서 재정의 가능) */
+  --pg-header-bottom:  var(--space-4);  /* pg-header-block → 다음 블록 사이 (16px) */
+  --pg-tab-bottom:     var(--space-4);  /* pg-tab-block → 콘텐츠 블록 사이 (16px) */
+  --pg-content-gap:    var(--space-4);  /* 안내 박스 → 리스트/그리드 사이 (16px) */
+  --pg-item-gap:       var(--space-4);  /* 그리드 아이템 / 리스트 행 간격 (16px) */
+  --pg-side-padding:   6px;             /* D 영역 .pg-outer 좌우 padding */
+
   /* ── Radius 확장 (기존 --radius-xs/sm/md/lg/xl/full 보존) ──────────── */
   --radius:     8px;     /* 시안 default — 본체 --radius-sm과 동일 값, 시안 호환 별칭 */
   --radius-2xl: 24px;
