@@ -125,7 +125,7 @@
 .mys-card-stage { display:inline-block; font-size:0.6875em; font-weight:var(--fw-bold, 700); padding:2px 8px; border-radius:var(--radius-full, 9999px); background:var(--color-surface-2); color:var(--color-accent, #D4845A); margin-bottom:var(--space-3, 12px); }
 .mys-card-title { font-size:0.8947em; font-weight:900; color:var(--color-text-primary); display:flex; align-items:center; gap:8px; margin-bottom:8px; }
 .mys-card-desc { font-size:0.842em; color:var(--color-text-secondary); line-height:1.75; margin-bottom:14px; }
-.mys-guide { background:var(--mys-panel-soft); border:1px solid var(--color-border); border-radius:var(--radius-md, 12px); padding:12px 14px; }
+.mys-guide { background:transparent; border:none; border-radius:var(--radius-md, 12px); padding:12px 14px; }
 .mys-guide ul { list-style:none; display:flex; flex-direction:column; gap:8px; }
 .mys-guide li { font-size:0.7895em; color:var(--color-text-secondary); display:flex; gap:7px; line-height:1.6; }
 .mys-list-shell { background:var(--color-surface, #fff); border:1px solid var(--color-border); border-radius:var(--radius-md, 12px); padding:14px 14px 16px; box-shadow:0 1px 3px rgba(17, 24, 39, 0.04); }
@@ -158,7 +158,7 @@
 .mys-grid-card-sample-tag { display:inline-block; font-size:0.625em; font-weight:var(--fw-bold, 700); padding:3px 8px; border-radius:var(--radius-full, 9999px); background:var(--color-surface-2); color:var(--color-text-secondary); border:1px solid var(--color-border); letter-spacing:0.2px; }
 .mys-grid-card-close { position:absolute; top:8px; right:8px; border:none; background:transparent; color:var(--color-text-tertiary); font-size:0.75em; line-height:1; padding:4px 6px; cursor:pointer; border-radius:var(--radius-sm, 8px); }
 .mys-grid-card-close:hover { background:var(--color-surface-2); color:var(--color-text-primary); }
-.mys-grid-card.fade-out { opacity:0; transform:scale(0.96); transition:opacity .25s ease, transform .25s ease; pointer-events:none; }
+.mys-grid-card.fade-out, .mys-item.fade-out { opacity:0; transform:scale(0.96); transition:opacity .25s ease, transform .25s ease; pointer-events:none; }
 .mys-grid-card--sample { cursor:pointer; }
 
 .mys-actions-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -563,11 +563,16 @@ window.mySpaceViews = window.mySpaceViews || {
           </ul>
         </div>
       </section>
+      <div class="mys-actions">
+        <span class="mys-count">전체 <strong id="library-count">0</strong>건의 자료</span>
+        <div class="mys-actions-right">
+          <button class="mys-restore-samples" id="mys-restore-library-samples" type="button" onclick="restoreLibrarySamples()">📌 예시 자료 다시 보기</button>
+          <button class="mys-write-btn-top" type="button" onclick="openLibraryAddView()">📁 나의 자료 추가하기</button>
+        </div>
+      </div>
       <section class="mys-list-shell">
         <div class="mys-list-top"><input class="mys-search" type="text" placeholder="🔍  검색" aria-label="나의 자료 검색" oninput="filterLibraryList(this.value)"></div>
         <div class="mys-list" id="library-list"><div style="text-align:center;padding:30px;color:var(--color-text-tertiary);font-size:0.790em;">불러오는 중...</div></div>
-        <div class="mys-list-note">새 자료를 추가하고, MY SPACE에서 바로 관리할 수 있습니다.</div>
-        <button class="mys-write-btn" type="button" onclick="openLibraryAddView()">나의 자료 추가하기</button>
       </section>
     </div>`,
   leader: `
@@ -577,7 +582,7 @@ window.mySpaceViews = window.mySpaceViews || {
         <div class="mys-card-desc" id="leader-card-desc">팀원들에게 공유된 추천 스크립트입니다. 클릭하면 전체 내용을 확인할 수 있습니다.</div>
         <div class="mys-guide" id="leader-guide" style="display:none;">
           <ul>
-            <li><span>💡</span><span>본인 스크립트에 ⭐ 버튼을 눌러 팀원에게 공유할 수 있습니다</span></li>
+            <li><span>💡</span><span>본인 스크립트에 ★ 버튼을 눌러 팀원에게 공유할 수 있습니다</span></li>
             <li><span>💡</span><span>공유된 스크립트는 팀원의 리더 추천 탭에 바로 표시됩니다</span></li>
             <li><span>💡</span><span>다시 누르면 공유가 해제됩니다</span></li>
           </ul>
@@ -965,7 +970,7 @@ window.renderScriptsList = function(items, page) {
       ? '<span class="mys-grid-card-stage">' + stageLabel + '</span>'
       : '';
     const toggleHtml = isLeader
-      ? '<button class="leader-toggle-btn' + (s.is_leader_pick ? ' on' : '') + '" onclick="toggleLeaderPick(event,' + s.id + ',this)" title="' + (s.is_leader_pick ? '팀원 공유 중 (클릭 시 해제)' : '팀원에게 공유') + '">' + (s.is_leader_pick ? '⭐ 공유 중' : '☆ 팀원 공유') + '</button>'
+      ? '<button class="leader-toggle-btn' + (s.is_leader_pick ? ' on' : '') + '" onclick="toggleLeaderPick(event,' + s.id + ',this)" title="' + (s.is_leader_pick ? '팀원 공유 중 (클릭 시 해제)' : '팀원에게 공유') + '">' + (s.is_leader_pick ? '★ 공유 중' : '☆ 팀원 공유') + '</button>'
       : '';
     const moreBtn = s.is_sample
       ? ''
@@ -1035,7 +1040,21 @@ window.loadLibraryList = async function() {
 window.renderLibraryList = function(items, page) {
   const list = document.getElementById('library-list');
   if (!list) return;
-  if (!items || items.length === 0) {
+
+  /* 카운트 갱신 — 사용자 자료만 (예시 제외) */
+  const userCount = (items || []).length;
+  const countEl = document.getElementById('library-count');
+  if (countEl) countEl.textContent = String(userCount);
+
+  /* 예시 자료 dismissed 필터 */
+  const dismissed = _readDismissedLib();
+  const visibleSamples = _SAMPLE_LIBRARY.filter(function(s) { return dismissed.indexOf(s.id) === -1; });
+
+  /* "다시 보기" 메뉴 토글 */
+  _refreshRestoreLibraryMenu();
+
+  /* 빈 상태: 사용자 0건 + 모든 예시 dismissed */
+  if (userCount === 0 && visibleSamples.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:36px 20px;">
       <div style="font-size:32px;margin-bottom:12px;">📁</div>
       <div style="font-size:0.842em;font-weight:800;color:var(--color-text-primary);margin-bottom:8px;">아직 저장된 자료가 없습니다</div>
@@ -1043,14 +1062,22 @@ window.renderLibraryList = function(items, page) {
     </div>`;
     return;
   }
+
+  /* 페이징 — 사용자 자료 기준 */
   const cp = page || window._libraryPage || 1;
-  const total = items.length;
-  const tp = Math.ceil(total / window._PAGE_SIZE);
+  const total = userCount;
+  const tp = Math.max(1, Math.ceil(total / window._PAGE_SIZE));
   window._libraryPage = Math.min(Math.max(1, cp), tp);
   const start = (window._libraryPage - 1) * window._PAGE_SIZE;
-  const pageItems = items.slice(start, start + window._PAGE_SIZE);
+  const pageItems = (items || []).slice(start, start + window._PAGE_SIZE);
 
-  list.innerHTML = pageItems.map(function(s, i) {
+  /* 예시 자료 — 1페이지에만 노출 */
+  const sampleHtml = (window._libraryPage === 1)
+    ? visibleSamples.map(_buildLibrarySampleHtml).join('')
+    : '';
+
+  /* 사용자 자료 */
+  const userHtml = pageItems.map(function(s, i) {
     const num = String(start + i + 1).padStart(2, '0');
     const date = s.created_at ? s.created_at.slice(0,10).replace(/-/g,'.') : '';
     const preview = (s.description || '').slice(0,60);
@@ -1064,7 +1091,11 @@ window.renderLibraryList = function(items, page) {
       + '</div>'
       + '<button class="mys-item-more" onclick="deleteLibrary(' + s.id + ', this)">…</button>'
       + '</div>';
-  }).join('') + window._buildPaging(total, window._libraryPage, 'window.goLibraryPage');
+  }).join('');
+
+  const pagingHtml = (total > 0) ? window._buildPaging(total, window._libraryPage, 'window.goLibraryPage') : '';
+
+  list.innerHTML = sampleHtml + userHtml + pagingHtml;
 }
 
 window.goLibraryPage = function(p) {
@@ -1159,7 +1190,7 @@ window.loadLeaderScripts = async function() {
   const descEl = document.getElementById('leader-card-desc');
   const guideEl = document.getElementById('leader-guide');
   if (isLeader) {
-    if (descEl) descEl.textContent = '팀원들에게 공유할 스크립트를 직접 선택할 수 있습니다. "나의 스크립트" 탭에서 ⭐ 버튼을 눌러 공유해 보세요.';
+    if (descEl) descEl.textContent = '팀원들에게 공유할 스크립트를 직접 선택할 수 있습니다. "나의 스크립트" 탭에서 ★ 버튼을 눌러 공유해 보세요.';
     if (guideEl) guideEl.style.display = '';
   }
 
@@ -1184,15 +1215,16 @@ var _STAGE_LABEL = {
   product: '상품 설명', objection: '반론 대응', closing: '클로징', closing_second: '2차 클로징'
 };
 
-// 상대 시간 표기 (myspace 카드 그리드 메타용 — board.html fmtDate 변형 / 7일 미만 'N일 전' 추가)
+// 상대 시간 표기 (myspace 카드/리스트 메타용 — 1h '방금 전' / 24h 'N시간 전' / 7d 'N일 전' / 30d 'N주 전' / else 절대 표기)
 var _mysTimeAgo = function(iso) {
   if (!iso) return '';
   var d = new Date(iso);
   var now = new Date();
   var diff = (now - d) / 1000;
-  if (diff < 3600)   return '방금 전';
-  if (diff < 86400)  return Math.floor(diff / 3600) + '시간 전';
-  if (diff < 604800) return Math.floor(diff / 86400) + '일 전';
+  if (diff < 3600)    return '방금 전';
+  if (diff < 86400)   return Math.floor(diff / 3600)  + '시간 전';
+  if (diff < 604800)  return Math.floor(diff / 86400) + '일 전';
+  if (diff < 2592000) return Math.floor(diff / 604800) + '주 전';
   var mm = String(d.getMonth() + 1).padStart(2, '0');
   var dd = String(d.getDate()).padStart(2, '0');
   return d.getFullYear() + '.' + mm + '.' + dd;
@@ -1348,12 +1380,150 @@ function _removeSampleBanner() {
   }
 })();
 
+// ── library 탭 예시 자료 (cold start 해결, scripts와 동일 패턴) ─────────
+var _SAMPLE_LIBRARY = [
+  {
+    id: 'sample-lib-1',
+    title: 'BMI 자가 진단표',
+    description: '키와 몸무게로 비만도 자가 측정. 위험 인식 도구.',
+    type: 'link',
+    url: '',
+    relativeDate: '예시'
+  },
+  {
+    id: 'sample-lib-2',
+    title: '보험연령 환산표',
+    description: '만 나이 → 보험 나이 자동 계산. 가입 가능 연령 안내.',
+    type: 'link',
+    url: '',
+    relativeDate: '예시'
+  },
+  {
+    id: 'sample-lib-3',
+    title: '보장 분석 양식',
+    description: '기존 보험 보장 항목 점검. 무료 보장분석 진입.',
+    type: 'memo',
+    content: '',
+    relativeDate: '예시'
+  }
+];
+
+var _DISMISSED_LIB_KEY = 'os_myspace_dismissed_library_samples';
+function _readDismissedLib() {
+  try { return JSON.parse(localStorage.getItem(_DISMISSED_LIB_KEY) || '[]') || []; }
+  catch(e) { return []; }
+}
+function _writeDismissedLib(arr) {
+  try { localStorage.setItem(_DISMISSED_LIB_KEY, JSON.stringify(arr || [])); }
+  catch(e) {}
+}
+
+function _buildLibrarySampleHtml(s) {
+  var typeTag = s.type === 'file'  ? '📎파일'
+              : s.type === 'link'  ? '🔗링크'
+              : s.type === 'memo'  ? '📝메모'
+              : s.type === 'image' ? '🖼이미지' : '';
+  return '<div class="mys-item mys-item--sample" data-sample-id="' + _esc(s.id) + '" onclick="openSampleLibraryInWriteView(\'' + _esc(s.id) + '\')" style="cursor:pointer;">'
+    + '<span style="flex-shrink:0;min-width:22px;font-size:0.700em;font-weight:800;color:var(--color-text-tertiary);padding-top:2px;">·</span>'
+    + '<div class="mys-item-left" style="flex:1;min-width:0;">'
+    + '<div class="mys-item-title">' + _esc(s.title)
+    +   ' <span class="mys-grid-card-sample-tag">예시</span>'
+    +   (typeTag ? ' <span style="font-size:0.579em;color:var(--color-text-tertiary);font-weight:400;">' + _esc(typeTag) + '</span>' : '')
+    + '</div>'
+    + '<div class="mys-item-preview">' + _esc(s.description) + '</div>'
+    + '<div class="mys-item-date">' + _esc(s.relativeDate || '예시') + '</div>'
+    + '</div>'
+    + '<button class="mys-item-more" type="button" onclick="event.stopPropagation();dismissLibrarySample(event,\'' + _esc(s.id) + '\',this)" aria-label="예시 자료 닫기" title="예시 닫기">✕</button>'
+    + '</div>';
+}
+
+function _refreshRestoreLibraryMenu() {
+  var btn = document.getElementById('mys-restore-library-samples');
+  if (!btn) return;
+  if (_readDismissedLib().length > 0) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+}
+
+window.dismissLibrarySample = function(event, id, btn) {
+  if (event && event.stopPropagation) event.stopPropagation();
+  var item = btn && btn.closest ? btn.closest('.mys-item') : null;
+  if (item) item.classList.add('fade-out');
+  var arr = _readDismissedLib();
+  if (arr.indexOf(id) === -1) arr.push(id);
+  _writeDismissedLib(arr);
+  setTimeout(function() {
+    window.renderLibraryList(window._allLibrary);
+  }, 280);
+};
+
+window.restoreLibrarySamples = function() {
+  _writeDismissedLib([]);
+  window.renderLibraryList(window._allLibrary);
+};
+
+window.openSampleLibraryInWriteView = function(id) {
+  var sample = null;
+  for (var i = 0; i < _SAMPLE_LIBRARY.length; i++) {
+    if (_SAMPLE_LIBRARY[i].id === id) { sample = _SAMPLE_LIBRARY[i]; break; }
+  }
+  if (!sample) return;
+  if (typeof window.openLibraryAddView === 'function') window.openLibraryAddView();
+  var titleEl = document.getElementById('lib-title');
+  var descEl  = document.getElementById('lib-desc');
+  if (titleEl) titleEl.value = sample.title;
+  if (descEl)  descEl.value  = sample.description;
+  if (sample.type === 'link') {
+    var linkEl = document.getElementById('lib-link');
+    if (linkEl && sample.url) linkEl.value = sample.url;
+    if (typeof window.toggleAttachSection === 'function') window.toggleAttachSection('link');
+  } else if (sample.type === 'memo') {
+    var memoEl = document.getElementById('lib-memo');
+    if (memoEl && sample.content) memoEl.value = sample.content;
+    if (typeof window.toggleAttachSection === 'function') window.toggleAttachSection('memo');
+  }
+  _showLibrarySampleBanner();
+};
+
+function _showLibrarySampleBanner() {
+  _removeLibrarySampleBanner();
+  var view = document.getElementById('view-library-add');
+  if (!view) return;
+  var wrap = view.querySelector('.library-add-wrap') || view.querySelector('.write-wrap');
+  if (!wrap) return;
+  var banner = document.createElement('div');
+  banner.id = 'sample-library-banner';
+  banner.className = 'sample-banner';
+  banner.innerHTML = '<span>📌</span><span>예시를 참고해 자유롭게 수정하세요</span>';
+  wrap.insertBefore(banner, wrap.firstChild);
+}
+function _removeLibrarySampleBanner() {
+  var existing = document.getElementById('sample-library-banner');
+  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+}
+(function() {
+  var origOpen = window.openLibraryAddView;
+  if (typeof origOpen === 'function') {
+    window.openLibraryAddView = function() {
+      var ret = origOpen.apply(this, arguments);
+      _removeLibrarySampleBanner();
+      return ret;
+    };
+  }
+  var origClose = window.closeLibraryAddView;
+  if (typeof origClose === 'function') {
+    window.closeLibraryAddView = function() {
+      _removeLibrarySampleBanner();
+      return origClose.apply(this, arguments);
+    };
+  }
+})();
+
 window.renderLeaderList = function(items, page) {
   const list = document.getElementById('leader-list');
   if (!list) return;
   if (!items || items.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:36px 20px;">
-      <div style="font-size:32px;margin-bottom:12px;">⭐</div>
+      <div style="font-size:32px;margin-bottom:12px;color:var(--color-brand, #A0522D);">★</div>
       <div style="font-size:0.842em;font-weight:800;color:var(--color-text-primary);margin-bottom:8px;">아직 공유된 스크립트가 없습니다</div>
       <div style="font-size:0.790em;color:var(--color-text-tertiary);line-height:1.7;">리더가 추천 스크립트를 공유하면 여기에 표시됩니다.</div>
     </div>`;
@@ -1448,7 +1618,7 @@ window.toggleLeaderPick = async function(event, id, btn) {
       const target = window._allScripts.find(function(s){ return s.id === id; });
       if (target) target.is_leader_pick = newVal;
       btn.classList.toggle('on', newVal);
-      btn.textContent = newVal ? '⭐ 공유 중' : '☆ 팀원 공유';
+      btn.textContent = newVal ? '★ 공유 중' : '☆ 팀원 공유';
     } else {
       alert('변경에 실패했습니다. 다시 시도해 주세요.');
     }
