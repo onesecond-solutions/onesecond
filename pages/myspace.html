@@ -151,6 +151,22 @@
 
 @media(max-width:1100px) { .mys-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 @media(max-width:600px)  { .mys-grid { grid-template-columns:1fr; } }
+
+/* ── 예시 카드 (sample card) ── */
+.mys-grid-card-badges { display:inline-flex; align-items:center; gap:6px; margin-bottom:var(--space-3, 12px); flex-wrap:wrap; }
+.mys-grid-card-badges .mys-grid-card-stage { margin-bottom:0; align-self:auto; }
+.mys-grid-card-sample-tag { display:inline-block; font-size:0.625em; font-weight:var(--fw-bold, 700); padding:3px 8px; border-radius:var(--radius-full, 9999px); background:var(--color-surface-2); color:var(--color-text-secondary); border:1px solid var(--color-border); letter-spacing:0.2px; }
+.mys-grid-card-close { position:absolute; top:8px; right:8px; border:none; background:transparent; color:var(--color-text-tertiary); font-size:0.75em; line-height:1; padding:4px 6px; cursor:pointer; border-radius:var(--radius-sm, 8px); }
+.mys-grid-card-close:hover { background:var(--color-surface-2); color:var(--color-text-primary); }
+.mys-grid-card.fade-out { opacity:0; transform:scale(0.96); transition:opacity .25s ease, transform .25s ease; pointer-events:none; }
+.mys-grid-card--sample { cursor:pointer; }
+
+.mys-actions-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.mys-restore-samples { display:none; align-items:center; gap:6px; padding:8px 14px; background:transparent; color:var(--color-text-secondary); border:1px solid var(--color-border); border-radius:var(--radius-sm, 8px); font-family:inherit; font-size:0.8em; font-weight:var(--fw-bold, 700); cursor:pointer; transition:background var(--transition-fast, .15s); }
+.mys-restore-samples.visible { display:inline-flex; }
+.mys-restore-samples:hover { background:var(--color-surface-2); color:var(--color-text-primary); }
+
+.sample-banner { background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:var(--radius-sm, 8px); padding:10px 14px; margin-bottom:var(--space-3, 12px); font-size:0.8em; color:var(--color-text-secondary); display:flex; align-items:center; gap:8px; }
 .mys-list-top { display:flex; justify-content:flex-end; margin-bottom:12px; }
 .mys-search { width:260px; max-width:100%; height:36px; border:1px solid var(--color-border); border-radius:var(--radius-sm, 8px); padding:0 12px; background:var(--color-surface-2); font-size:0.7895em; color:var(--color-text-secondary); }
 .mys-list { border-top:1px solid var(--mys-line-soft); }
@@ -524,7 +540,10 @@ window.mySpaceViews = window.mySpaceViews || {
       </section>
       <div class="mys-actions">
         <span class="mys-count">전체 <strong id="scripts-count">0</strong>개의 멘트</span>
-        <button class="mys-write-btn-top" type="button" onclick="openWriteView()">✏ 새 멘트 작성</button>
+        <div class="mys-actions-right">
+          <button class="mys-restore-samples" id="mys-restore-samples" type="button" onclick="restoreSamples()">📌 예시 카드 다시 보기</button>
+          <button class="mys-write-btn-top" type="button" onclick="openWriteView()">✏ 새 멘트 작성</button>
+        </div>
       </div>
       <section class="mys-list-shell">
         <div class="mys-list-top"><input class="mys-search" type="text" placeholder="🔍  검색" aria-label="나의 스크립트 검색" oninput="filterScriptList(this.value)"></div>
@@ -843,8 +862,8 @@ window.loadScriptsList = async function() {
 
     /* ── 내 스크립트 + 샘플 스크립트 병렬 fetch ── */
     const [resOwn, resSample] = await Promise.all([
-      fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at,updated_at`), { headers }),
-      fetch(window.db.url(`/rest/v1/scripts?is_sample=eq.true&is_active=eq.true&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at,updated_at`), { headers })
+      fetch(window.db.url(`/rest/v1/scripts?owner_id=eq.${userId}&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers }),
+      fetch(window.db.url(`/rest/v1/scripts?is_sample=eq.true&is_active=eq.true&order=created_at.desc&select=id,title,script_text,highlight_text,stage,is_leader_pick,is_sample,created_at`), { headers })
     ]);
 
     if (!resOwn.ok) {
@@ -898,10 +917,20 @@ window._buildPaging = function(total, currentPage, onClickFn) {
 window.renderScriptsList = function(items, page) {
   const list = document.getElementById('scripts-list');
   if (!list) return;
-  /* 상단 카운트 동기화 */
+  /* 상단 카운트 동기화 — 사용자 멘트만 (예시 카드 제외) */
+  const userCount = (items || []).length;
   const countEl = document.getElementById('scripts-count');
-  if (countEl) countEl.textContent = String((items || []).length);
-  if (!items || items.length === 0) {
+  if (countEl) countEl.textContent = String(userCount);
+
+  /* 예시 카드: dismissed 필터 + 1페이지에만 노출 */
+  const dismissed = _readDismissed();
+  const visibleSamples = _SAMPLE_CARDS.filter(function(s) { return dismissed.indexOf(s.id) === -1; });
+
+  /* "다시 보기" 메뉴 표시 토글 */
+  _refreshRestoreMenu();
+
+  /* 빈 상태: 사용자 0건 + 모든 예시 dismissed */
+  if (userCount === 0 && visibleSamples.length === 0) {
     list.innerHTML = `<div class="mys-grid-empty" style="text-align:center;padding:36px 20px;">
       <div style="font-size:32px;margin-bottom:12px;">✍️</div>
       <div style="font-size:0.842em;font-weight:800;color:var(--color-text-primary);margin-bottom:8px;">아직 저장된 스크립트가 없습니다</div>
@@ -909,17 +938,25 @@ window.renderScriptsList = function(items, page) {
     </div>`;
     return;
   }
+
+  /* 페이징 — 사용자 멘트 기준 */
   const cp = page || window._scriptPage || 1;
-  const total = items.length;
-  const tp = Math.ceil(total / window._PAGE_SIZE);
+  const total = userCount;
+  const tp = Math.max(1, Math.ceil(total / window._PAGE_SIZE));
   window._scriptPage = Math.min(Math.max(1, cp), tp);
   const start = (window._scriptPage - 1) * window._PAGE_SIZE;
-  const pageItems = items.slice(start, start + window._PAGE_SIZE);
+  const pageItems = (items || []).slice(start, start + window._PAGE_SIZE);
 
   const role = (window.AppState && window.AppState.role) || '';
   const isLeader = (role === 'manager' || role === 'branch_manager' || role === 'admin');
 
-  list.innerHTML = pageItems.map(function(s) {
+  /* 예시 카드는 1페이지에만 노출 */
+  const sampleHtml = (window._scriptPage === 1)
+    ? visibleSamples.map(_buildSampleCardHtml).join('')
+    : '';
+
+  /* 사용자 카드 */
+  const userHtml = pageItems.map(function(s) {
     const dateIso = s.updated_at || s.created_at || '';
     const relTime = _mysTimeAgo(dateIso);
     const preview = (s.highlight_text || s.script_text || '').replace(/<[^>]+>/g,'');
@@ -943,7 +980,13 @@ window.renderScriptsList = function(items, page) {
       + '</div>'
       + moreBtn
       + '</div>';
-  }).join('') + '<div class="mys-grid-paging">' + window._buildPaging(total, window._scriptPage, 'window.goScriptPage') + '</div>';
+  }).join('');
+
+  const pagingHtml = (total > 0)
+    ? '<div class="mys-grid-paging">' + window._buildPaging(total, window._scriptPage, 'window.goScriptPage') + '</div>'
+    : '';
+
+  list.innerHTML = sampleHtml + userHtml + pagingHtml;
 }
 
 window.goScriptPage = function(p) {
@@ -1154,6 +1197,156 @@ var _mysTimeAgo = function(iso) {
   var dd = String(d.getDate()).padStart(2, '0');
   return d.getFullYear() + '.' + mm + '.' + dd;
 };
+
+// ── 예시 카드 (cold start 해결 + 자기 학습 도구화) ──────────────────────
+var _SAMPLE_CARDS = [
+  {
+    id: 'sample-1',
+    stage: 'opening_rejection',
+    title: '"지금 시간 안 되세요?" 받을 때 클로징으로 가는 한 문장',
+    body: '보통은 "그럼 언제가 괜찮으세요?"라고 되묻는데, 그러면 고객이 시간을 미룰 구실을 만들어줍니다. 저는 이 멘트로 바로 전환합니다 — "그럼 3분만..."',
+    relativeDate: '2일 전'
+  },
+  {
+    id: 'sample-2',
+    stage: 'need_emphasis',
+    title: '50대 부부, "아이 다 키웠다" 방어에 대응하는 논점 전환',
+    body: '아이를 다 키웠다는 건 목표 하나를 달성한 거지만, 실은 그 시점부터 \'나와 아내의 건강\'이 가정 전체의 안전망이 됩니다. 아이들이 독립한 후에...',
+    relativeDate: '5일 전'
+  },
+  {
+    id: 'sample-3',
+    stage: 'closing',
+    title: '"생각해보겠다"는 고객 말에 침묵 후 이어붙이는 문장',
+    body: '침묵 3초를 먼저 둡니다. 그 후 "고객님, 생각하실 시간 드리는 게 맞죠. 그런데 지금 이 순간에도 조건이 바뀌고 있어서, 오늘 이야기 정리만 해두시...',
+    relativeDate: '1주 전'
+  },
+  {
+    id: 'sample-4',
+    stage: 'objection',
+    title: '"이미 보험 있어요" 받을 때 가치 재정의 멘트',
+    body: '기존에 가입한 보험이 있다고 거절하시는 분들에게 — "혹시 어느 회사 상품이신지 여쭤봐도 될까요? 저도 업계에 오래 있다 보니..."로 정보 확보...',
+    relativeDate: '2주 전'
+  }
+];
+
+// localStorage 헬퍼 (try-catch로 비활성 환경 대응)
+var _DISMISSED_KEY = 'os_myspace_dismissed_samples';
+function _readDismissed() {
+  try { return JSON.parse(localStorage.getItem(_DISMISSED_KEY) || '[]') || []; }
+  catch(e) { return []; }
+}
+function _writeDismissed(arr) {
+  try { localStorage.setItem(_DISMISSED_KEY, JSON.stringify(arr || [])); }
+  catch(e) {}
+}
+
+// HTML escape (제목·본문 XSS 방지)
+function _esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// 예시 카드 1건 HTML 빌더
+function _buildSampleCardHtml(s) {
+  var stageLabel = _STAGE_LABEL[s.stage] || s.stage || '';
+  var stageBadge = stageLabel
+    ? '<span class="mys-grid-card-stage">' + _esc(stageLabel) + '</span>'
+    : '';
+  return '<div class="mys-grid-card mys-grid-card--sample" data-sample-id="' + _esc(s.id) + '" onclick="openSampleInWriteView(\'' + _esc(s.id) + '\')">'
+    + '<div class="mys-grid-card-badges">'
+    +   stageBadge
+    +   '<span class="mys-grid-card-sample-tag">예시</span>'
+    + '</div>'
+    + '<div class="mys-grid-card-title">' + _esc(s.title) + '</div>'
+    + '<div class="mys-grid-card-body">' + _esc(s.body) + '</div>'
+    + '<div class="mys-grid-card-meta">'
+    +   '<span>수정: ' + _esc(s.relativeDate) + '</span>'
+    +   '<span></span>'
+    + '</div>'
+    + '<button class="mys-grid-card-close" type="button" onclick="event.stopPropagation();dismissSample(event,\'' + _esc(s.id) + '\',this)" aria-label="예시 카드 닫기">✕</button>'
+    + '</div>';
+}
+
+// "다시 보기" 메뉴 표시 토글 (dismissed 1건 이상일 때만)
+function _refreshRestoreMenu() {
+  var btn = document.getElementById('mys-restore-samples');
+  if (!btn) return;
+  if (_readDismissed().length > 0) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+}
+
+// 예시 카드 dismiss (X 클릭)
+window.dismissSample = function(event, id, btn) {
+  if (event && event.stopPropagation) event.stopPropagation();
+  var card = btn && btn.closest ? btn.closest('.mys-grid-card') : null;
+  if (card) card.classList.add('fade-out');
+  var arr = _readDismissed();
+  if (arr.indexOf(id) === -1) arr.push(id);
+  _writeDismissed(arr);
+  setTimeout(function() {
+    window.renderScriptsList(window._allScripts);
+  }, 280);
+};
+
+// 예시 카드 모두 복원
+window.restoreSamples = function() {
+  _writeDismissed([]);
+  window.renderScriptsList(window._allScripts);
+};
+
+// 예시 카드 클릭 → 작성 뷰 진입 + 폼 자동 입력 + 안내 배너
+window.openSampleInWriteView = function(id) {
+  var sample = null;
+  for (var i = 0; i < _SAMPLE_CARDS.length; i++) {
+    if (_SAMPLE_CARDS[i].id === id) { sample = _SAMPLE_CARDS[i]; break; }
+  }
+  if (!sample) return;
+  if (typeof window.openWriteView === 'function') window.openWriteView();
+  // 폼 자동 입력 (라이브 폼에 stage select 부재 → title/body만 입력, highlight는 비움)
+  var titleEl = document.getElementById('script-title');
+  var textEl  = document.getElementById('script-text');
+  if (titleEl) titleEl.value = sample.title;
+  if (textEl)  textEl.value  = sample.body;
+  _showSampleBanner();
+};
+
+// 안내 배너 동적 삽입 (view-write 폼 정적 DOM 미변경)
+function _showSampleBanner() {
+  _removeSampleBanner();
+  var writeView = document.getElementById('view-write');
+  if (!writeView) return;
+  var writeWrap = writeView.querySelector('.write-wrap');
+  if (!writeWrap) return;
+  var banner = document.createElement('div');
+  banner.id = 'sample-banner';
+  banner.className = 'sample-banner';
+  banner.innerHTML = '<span>📌</span><span>예시를 참고해 자유롭게 수정하세요</span>';
+  writeWrap.insertBefore(banner, writeWrap.firstChild);
+}
+function _removeSampleBanner() {
+  var existing = document.getElementById('sample-banner');
+  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+}
+// 일반 작성 진입 / 진출 시 배너 자동 정리 (예시 진입에서 남은 배너 제거)
+(function() {
+  var origOpen = window.openWriteView;
+  if (typeof origOpen === 'function') {
+    window.openWriteView = function() {
+      var ret = origOpen.apply(this, arguments);
+      // 예시 진입 핸들러는 호출 직후 _showSampleBanner를 다시 부르므로 여기서 제거해도 안전
+      _removeSampleBanner();
+      return ret;
+    };
+  }
+  var origClose = window.closeWriteView;
+  if (typeof origClose === 'function') {
+    window.closeWriteView = function() {
+      _removeSampleBanner();
+      return origClose.apply(this, arguments);
+    };
+  }
+})();
 
 window.renderLeaderList = function(items, page) {
   const list = document.getElementById('leader-list');
