@@ -173,19 +173,31 @@
   animation: home-pulse 2s ease-in-out infinite;
 }
 
-/* 중앙 로고 박스 (2026-04-24: 텍스트 2줄 → logo05.png 이미지 1장, 박스 제거 / 이미지만 부각) */
+/* 중앙 로고 박스 (2026-04-24: 텍스트 2줄 → logo05.png 이미지 1장, 박스 제거 / 이미지만 부각)
+   2026-04-29: 흰색 원형 카드 부활 — 방사형 선이 시계 로고 안쪽까지 통과하던 시각 어색 시정
+   ▸ 시안 design_test/home/v2-full.html `.hex-center-inner` 패턴 이식 (단, 라이브는 단일 div 구조 유지)
+   ▸ z-index: 2 — SVG 방사형 선(.home-hex-line) 위에 배치
+   ▸ 카드 크기 140px = 이미지 120px + 좌우 패딩 10px (이미지 보존) */
 .home-hex-center {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 0;
-  background: transparent;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
   border: none;
-  border-radius: 0;
-  box-shadow: none;
+  border-radius: 50%;
+  box-shadow:
+    0 20px 40px -8px rgba(160, 82, 45, 0.22),
+    0 8px 16px -4px rgba(160, 82, 45, 0.14),
+    inset 0 0 0 1px rgba(212, 132, 90, 0.12);
   text-align: center;
   pointer-events: none;
+  z-index: 2;
 }
 .home-hex-logo-img {
   display: block;
@@ -389,7 +401,8 @@
 
   .home-hex-node-label { font-size: 0.737em; }
 
-  .home-hex-center    { padding: 0; }
+  /* 모바일: 카드 크기 110px (이미지 88px + 좌우 패딩 11px) — 데스크톱 140/120 비례 유지 */
+  .home-hex-center    { width: 110px; height: 110px; }
   .home-hex-logo-img  { width: 88px; }
 
   /* 호버 비활성 (터치 디바이스) — 탭으로 툴팁 토글 */
