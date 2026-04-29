@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-04-29 오후
+> **마지막 갱신:** 2026-04-29 저녁
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -12,31 +12,31 @@
 
 승격 절차 (`claude_code/design_test/README.md` 명시): 팀장님 OK → 적용 버전 지정 → 별도 작업지시서 → 라이브 반영 → 시안 폴더는 레퍼런스로 유지.
 
-### 승격 진행 현황 (2026-04-29 기준)
+### 승격 진행 현황 (2026-04-29 저녁 기준)
 
 | 영역 | 상태 | 근거 커밋 |
 |---|---|---|
-| `css/tokens.css` (9 시안 :root 통합) | ✅ 완료 | `71f08b0` (4/27) |
+| `css/tokens.css` (9 시안 :root 통합 + **공통 간격 토큰 5종 4/29 저녁 신규**) | ✅ 완료 | 통합: `71f08b0` (4/27) / 간격 토큰 5종: `2cd372e` (4/29 저녁 — `--pg-header-bottom`/`--pg-tab-bottom`/`--pg-content-gap`/`--pg-item-gap`/`--pg-side-padding`) |
 | `app.html` (shell v1) | ✅ 완료 + 4/28 A1 라이트 톤 + **4/29 푸터 트랙 (4컬럼 → 카피라이트 단일 → 한 줄 미니 → 셸 최하단 정정)** | shell: `5592749` (4/27) → 헤더: `fd8b264` `1ab35c4` (4/28) → 푸터: `54cd148` `fa835d2` `ae669d0` `79c0052` (4/29) |
-| `pages/board.html` | ✅ **시안 통째 적용** | `ebb9b3b` (4/26 — design_test/board/v1-full.html 기반) |
+| `pages/board.html` | ✅ **시안 통째 적용** + **4/29 저녁 공통 간격 토큰 적용 + `.hub-notice` 톤 정정 (transparent + border:none)** | 통째: `ebb9b3b` (4/26) / 토큰: `e5b5afe` (4/29 저녁) |
 | `index.html` | ✅ **시안 통째 승격 완료** + 헤더 라이트 톤 + 푸터 4컬럼 + 가입 폼 보강 (4/28) + **카피라이트 onesecond 단일 표기 동기화 (4/29)** | 승격: `83665c4` / 헤더: `001af79` / 푸터: `c2186a1` / 카드: `3342e9d` / 안내박스: `69f2678` / 카피라이트: `216ce9f` |
 | `pages/home.html` | 🔄 **부분 흡수 (C) 트랙 진행 중** — C-1 + C-2(줄무늬) + hexagon 카드 완료, 라이브 검수 미완 | C-1: `b854878` (4/28) / **C-2 줄무늬 디바이더: `869510d` `c71db6d` (4/29 오후)** / **hexagon 시계 흰 원형 카드: `4071194` (4/29 오후, v2-full `.hex-center-inner` 패턴)**. C-3 카피 / C-4 도넛 / C-5 C영역(별 트랙) 대기 |
 | `pages/admin.html` | ❌ 미진행 (4/28 standalone hex 8건 토큰화는 별건) | — |
-| `pages/myspace.html` | ❌ 미진행 | — |
+| `pages/myspace.html` | ✅ **부분 흡수 (A) Phase 1 완주 — 4/29 저녁 7커밋, 라이브 검수 미완** | 갭 분석 v2: `978904c` / pg-page-header + 카드 토큰: `656aa99` / pg-outer board 정합: `9be9d3c` / 카드 그리드 + 그레이 푸터 + 공통 간격 토큰 5종: `2cd372e` / scripts fetch 400 회귀 수정 + 예시 카드 4건: `efeb1ad` / 4건 통합 정리(상대시간 / 안내박스 / library 시드 3건 / ★ brown): `6ede634` |
 | `pages/scripts.html` | ✅ **v2-full 통째 승격 완료** + 폰트 위계 + C영역 ON (4/29 오후, 라이브 검수 미완) | D 영역: `6882753` (v2-full 통째: 세로 탭바 sc-vtab-* + 3열 + brand 단색, --stg-* 폐기, +161/-240) / 폰트 위계: `be40cc6` (vtab 19→20, detail-title 19→21) / C영역 ON: `c96d833` (admin만 숨김 유지, board와 동일 220px rightbar + 진행 상태 박스 추가) |
-| `pages/news.html` | ❌ 미진행 | — |
-| `pages/quick.html` | ❌ 미진행 | — |
-| `pages/together.html` | ❌ 미진행 | — |
+| `pages/news.html` | ❌ 미진행 + **표준 `.pg-outer` 구조 미준수 (별 트랙 마이그레이션 대기)** | — |
+| `pages/quick.html` | 🔄 **공통 간격 토큰 적용 + 그레이 배경 제거 (4/29 저녁, 시안 승격 미진행)** | 토큰: `e5b5afe` (4/29 저녁 — gap 6→16, padding-bottom 24→40, 배경 제거) |
+| `pages/together.html` | 🔄 **공통 간격 토큰 적용 + 그레이 배경 제거 (4/29 저녁, 시안 승격 미진행)** | 토큰: `e5b5afe` (4/29 저녁 — gap 8→16, padding 8→6, padding-bottom 24→40, 배경 제거) |
 
 **다음 후보 (우선순위 확정 — `claude_code/design_test/README.md` Phase 1 표)**:
 1. ✅ `index.html` (시안 통째 승격 + 헤더/푸터/가입 폼 fix 완료)
 2. 🔄 `pages/home.html` (부분 흡수 (C) 트랙 — C-1 + C-2 + hexagon 카드 완료, C-3 카피 / C-4 도넛 대기)
 3. ✅ `pages/scripts.html` (v2-full 통째 승격 완료, 라이브 검수 대기)
-4. ✅ `pages/board.html`
-5. `pages/myspace.html` ← **다음 우선순위**
-6. `pages/news.html`
-7. `pages/quick.html`
-8. `pages/together.html` (board 패턴 복제)
+4. ✅ `pages/board.html` (+ 공통 간격 토큰 적용)
+5. ✅ `pages/myspace.html` (부분 흡수 (A) Phase 1 완주, 라이브 검수 대기)
+6. `pages/news.html` ← **다음 우선순위** (표준 `.pg-outer` 마이그레이션 선행 필요)
+7. `pages/quick.html` (공통 간격 토큰만 적용, 시안 승격 미진행)
+8. `pages/together.html` (공통 간격 토큰만 적용, board 패턴 복제 시안 승격 미진행)
 9. `pages/admin.html` (Make.com 2단 네비)
 
 ### index.html 승격 사전 결정 6건 (2026-04-28 확정)
@@ -60,13 +60,19 @@
 
 1. **admin standalone hex 8건 토큰화 (4/28 머지 완료)** — admin/v1-full.html 시안이 통째 교체 디자인이라 시안 승격 시 .adm-mini-side 등 토큰화한 클래스가 모두 사라짐. **현재 main에 머지된 상태(`a0bdfbf`)로 둘지 / revert할지 결정 대기**.
 2. **B 사이드바 "함께해요" 활성 오작동** — home 진입 시 잘못된 메뉴 활성. home.html과 무관한 app.html 책임 영역. home 작업 트랙과 분리 (별 트랙 진단 대기).
-3. **🔥 라이브 검수 부채 통합 누적 (4/29 오후 6커밋)** — home(줄무늬 디바이더 신설/정정 + hexagon 흰 카드) + scripts(D영역 v2 통째 승격 + 폰트 위계 + C영역 ON) 모두 라이브 검수 미완. **C영역 ON으로 D 영역 폭 220px 줄어든 영향(sc-body-wrap 180+1fr 좁은 D)도 함께 검수 필요**. 통합 검수 시점 결정 필요.
+3. **🔥 라이브 검수 부채 통합 누적 (4/29 오후~저녁 13커밋)** — home(줄무늬 + hexagon) + scripts(D영역 v2 + 폰트 위계 + C영역) + **myspace(부분 흡수 7커밋)** + **board/quick/together(공통 간격 토큰 1커밋)** 모두 라이브 검수 미완. C영역 ON으로 D 영역 폭 220px 줄어든 영향도 함께 검수. **통합 검수 시점 결정 시급**.
 4. **logo03.jpg 라이트 헤더 사각형 경계** — 이미지 배경 옅은 그레이/아이보리(JPG, 투명 X). index/privacy/terms 헤더에서 경계 보이면 logo05.png 투명본 또는 이미지 편집 별 트랙 (라이브 검수 시점 결정).
 5. **app 푸터 셸 최하단 정정 라이브 검수 미완** (`79c0052`, 4/29 오전) — 8페이지 첫 화면 D 작업 공간 회복(약 +196px) / body 스크롤 끝 푸터 등장 / A1·B·C sticky 동작 / 사업자 정보 모달 / 모바일 wrap — 실제 브라우저 검수 대기.
 6. **terms/privacy 닫기 버튼 라이브 검수 미완** (`710d452`, 4/29 오전) — 새 탭 환경 `window.close()` + `index.html` fallback 동작 + 직접 URL 진입 fallback 확인 대기.
 7. **scripts 동적 STEP 표시 별 트랙** — C영역 "진행 상태 / 단계 선택 중" 박스 현재 정적. STEP 1/2/3 진입 시 "현재 STEP X — Y 선택 중"으로 동적 갱신 미구현 (`c96d833` 후속).
 8. **scripts v2 sticky 세로 탭바 미이식** — v2-full `.sc-vtab-wrap { position: sticky }` 미적용 (라이브 환경 보장 어려워 보수적 제외). 라이브 검수 후 필요 시 보강.
 9. **scripts top_category 컬럼 활용 미정** — Supabase select 포함되었으나 화면 미렌더. sc-detail-tag에 title 대신 top_category 표시 등 작업지시서 의도 확인 시 별 트랙.
+10. **(신규 4/29 저녁) news.html 표준 `.pg-outer` 구조 마이그레이션** — 현재 자체 `.news-outer`/`.news-header`/`.news-tab-bar` 사용. 공통 간격 토큰 적용 + 시안 승격 진입 전 표준 구조 정합 필요.
+11. **(신규 4/29 저녁) 안내박스 글로벌 클래스 `.pg-guide` 정착** — myspace `.mys-guide` + board `.hub-notice` 통합. 현재 클래스 분리 + 톤만 정합.
+12. **(신규 4/29 저녁) `.mys-card-stage` 클래스 JS 인라인 정리** — 클래스 정의는 추가됐으나 `renderScriptsList`/`renderLeaderList`에서 인라인 스타일 출력 중. JS 변경 0건 원칙으로 분리 보류.
+13. **(신규 4/29 저녁) myspace 검색 모드 예시 카드 인터랙션 미정의** — 검색 결과 0건이어도 예시 카드 1페이지 노출.
+14. **(신규 4/29 저녁) myspace view-write 폼 stage select 부재** — 예시 카드 클릭 시 stage 자동 입력 미적용. 폼 DOM 변경 결정 후 별 트랙.
+15. **(신규 4/29 저녁) `_SAMPLE_LIBRARY` url/content 빈값** — BMI/연령표/보장분석 3건 url/content 빈값 상태. 팀장님 추후 실제 데이터 별 트랙.
 
 ---
 
@@ -74,6 +80,8 @@
 
 1. **GPT v1 트랙 폐기 명문화** — 4/28 사용자 발언("심야 결정 무시")으로 묵시적 폐기. **4/29 작업 디렉토리 GPT v1 잔재(home.html 4/27 저녁 튜닝) (a) 폐기 결정 + design_test/README 원칙 #6 사례 추가(`c2e2d86`)로 묵시→명시 한 단계 진행.** 명문 결정 문서(`docs/decisions/2026-04-29_gpt_v1_deprecation.md`) 신설은 여전히 대기.
 2. **admin standalone hex 8건 처리** — 위 미해결 이슈 #1 참조.
+3. **(신규 4/29 저녁) 라이브 검수 통합 시점** — 4/29 오후~저녁 13커밋 누적. 다음 세션 시작 시 검수 단일 시점 진행 권장.
+4. **(신규 4/29 저녁) news 작업 진행 순서** — (옵션 ①) 표준 `.pg-outer` 마이그레이션 선행 → 간격 토큰 적용 → 시안 승격 / (옵션 ②) 시안 승격 시 표준 구조 일괄 정합. 결정 필요.
 
 ### 📝 4/28 결정 완료 (참고)
 - ✅ **design_test 트랙 활성 여부** — 메인 트랙으로 명시 확정 (`design_test/README.md` 갱신 + 본 _INDEX.md)
@@ -92,6 +100,8 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-04-29_1932.md` — 4/29 저녁 (7커밋 + 5머지 / **myspace Phase 1 단일 세션 완주: 갭 분석 v2 → 부분 흡수 → pg-outer board 정합 → 카드 그리드 + 그레이 푸터 + 공통 간격 토큰 5종 글로벌 등록 → scripts fetch 400 회귀 수정 + 예시 카드 4건 → 4건 통합 정리(상대시간 / 안내박스 / library 시드 3건 / ★ brown)** / **3페이지 공통 간격 토큰 적용(board/quick/together) + board hub-notice 톤 정정** / 신규 부채 6건)
+- `docs/sessions/work_myspace_gap_analysis_2026-04-30.md` — 4/29 저녁 myspace 갭 분석 v2 (3개 탭 전체 비교, 권장안 (A) 부분 흡수)
 - `docs/sessions/2026-04-29_1348.md` — 4/29 오후 (6커밋 + 6머지 / home C-2 줄무늬 디바이더 신설+정정 / home hexagon 흰 원형 카드 / scripts v2-full D영역 통째 승격 / scripts 폰트 위계 / scripts C영역 ON+진행 상태 박스 / 정합성 사고 2회 즉시 보고)
 - `docs/sessions/2026-04-29_0657.md` — 4/29 오전 (푸터 트랙 4커밋: 4컬럼 → 카피라이트 단일 → 한 줄 미니+모달 → 셸 최하단 정정 / index/privacy/terms 카피라이트 동기화 / terms/privacy 돌아가기→닫기 / design_test/README 갱신 3건)
 - `docs/sessions/2026-04-28_1929.md` — 4/28 저녁 (대규모 27 커밋: A1 라이트 톤 / sweep 4슬롯 / 컨텍스트 방어 인프라 / index 시안 통째 승격 + fix 다수 / home 갭 분석 v1·v2 + C-1)
@@ -133,6 +143,13 @@
 | **scripts D영역 v2-full 통째 승격** | ✅ 완료 (4/29 오후, 라이브 검수 대기 — 미해결 #3) | `6882753` (+161/-240, 세로 탭바 + 3열 + brand 단색) |
 | **scripts 컬럼 1·4 폰트 위계 회복** | ✅ 완료 (4/29 오후) | `be40cc6` (vtab 19/20 + detail-title 21) |
 | **scripts C영역 표시 ON + 진행 상태 박스** | ✅ 완료 (4/29 오후, 라이브 검수 대기 — 미해결 #3) | `c96d833` (admin만 숨김 유지, board 동일 220px) |
+| **myspace 갭 분석 v2 (3개 탭 전체)** | ✅ 완료 (4/29 저녁) | `978904c` (work_myspace_gap_analysis_2026-04-30.md, 권장안 (A) 부분 흡수) |
+| **myspace 부분 흡수 — pg-page-header + 카드 토큰** | ✅ 완료 (4/29 저녁, 라이브 검수 대기 — 미해결 #3) | `656aa99` |
+| **myspace `.pg-outer` board 정합 통일** | ✅ 완료 (4/29 저녁) | `9be9d3c` (그레이 배경 제거 → 흰색 비침) |
+| **myspace 카드 그리드 + 그레이 푸터 + 공통 간격 토큰 5종 글로벌 등록** | ✅ 완료 (4/29 저녁, 라이브 검수 대기 — 미해결 #3) | `2cd372e` (tokens.css `--pg-header-bottom`/`--pg-tab-bottom`/`--pg-content-gap`/`--pg-item-gap`/`--pg-side-padding`) |
+| **myspace scripts fetch 400 회귀 수정 + 예시 카드 4건** | ✅ 완료 (4/29 저녁, 라이브 검수 대기 — 미해결 #3) | `efeb1ad` (`,updated_at` 제거 + `_SAMPLE_CARDS` + dismiss/restore + localStorage `os_myspace_dismissed_samples`) |
+| **myspace 4건 통합 정리** | ✅ 완료 (4/29 저녁, 라이브 검수 대기 — 미해결 #3) | `6ede634` (① 상대시간 7~30일 'N주 전' / ② `.mys-guide` 톤 / ③ library 시드 3건 + `os_myspace_dismissed_library_samples` / ④ ⭐→★ brown 통일) |
+| **3페이지 공통 간격 토큰 적용 + board `.hub-notice` 톤 정정** | ✅ 완료 (4/29 저녁, 라이브 검수 대기 — 미해결 #3) | `e5b5afe` (board/quick/together — quick·together 그레이 배경 제거 / hub-notice transparent + border:none) |
 
 ---
 
