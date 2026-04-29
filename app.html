@@ -766,6 +766,7 @@ html, body {
       <div class="c-section" id="c-scripts">
         <div class="c-box"><div class="c-box-label">실전 스크립트 추천</div><div class="c-box-title">추천 스크립트</div><div class="c-box-desc">오늘의 실전 스크립트 추천이 표시됩니다.</div></div>
         <div class="c-box"><div class="c-box-label">Leader Pick</div><div class="c-box-title">팀장 추천</div><div class="c-box-desc">팀장이 선택한 추천 스크립트입니다.</div></div>
+        <div class="c-box"><div class="c-box-label">진행 상태</div><div class="c-box-title">단계 선택 중</div><div class="c-box-desc">좌측 세로 탭에서 단계를 선택하면 오른쪽 본문이 해당 단계로 전환됩니다.</div></div>
       </div>
       <div class="c-section" id="c-board">
         <div class="c-box"><div class="c-box-label">최신 질문</div><div class="c-box-title">최근 올라온 질문</div><div class="c-box-desc">최신 게시글 질문이 표시됩니다.</div></div>
@@ -1061,10 +1062,10 @@ async function switchMenu(menuKey) {
     el.classList.toggle('active', el.id === 'c-' + menuKey);
   });
 
-  // scripts·admin: C영역 숨김
+  // admin만 C영역 숨김 (scripts는 2026-04-29 v2 승격 시 표시 ON — board 패턴과 동일 220px rightbar)
   var mainEl = document.querySelector('.main');
   var cEl    = document.querySelector('.c');
-  if (menuKey === 'scripts' || menuKey === 'admin') {
+  if (menuKey === 'admin') {
     if (mainEl) mainEl.style.gridTemplateColumns = 'var(--sidebar-width) 1fr';
     if (cEl)    cEl.style.display = 'none';
   } else {
