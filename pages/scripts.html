@@ -60,18 +60,19 @@
 }
 .sc-vtab-label {
   flex: 1;
-  font-size: 0.9375em;
+  font-size: 1.000em;          /* 19px — D 영역 기준 동일, 시선 유도 좌측 강조 */
   font-weight: var(--fw-semibold);
   color: var(--color-text-secondary);
   letter-spacing: -0.3px;
   line-height: 1.4;
   white-space: normal;
   word-break: keep-all;
-  transition: color var(--transition-fast), font-weight var(--transition-fast);
+  transition: color var(--transition-fast), font-weight var(--transition-fast), font-size var(--transition-fast);
 }
 .sc-vtab-item.active .sc-vtab-label {
   color: #fff;
   font-weight: var(--fw-black);
+  font-size: 1.0526em;          /* 20px (+1px) — 다른 컬럼 활성 +1 패턴 일관 */
 }
 .sc-vtab-count {
   font-size: 0.6875em;
@@ -236,7 +237,7 @@
   box-shadow: 0 2px 4px rgba(101, 66, 38, 0.15);
 }
 .sc-detail-title {
-  font-size: var(--text-h2);       /* 1.0em ≈19px — 최대 강조 */
+  font-size: 1.1053em;             /* 21px — 컬럼 1 활성(20px) 위 최대 강조, 시선 유도 종착점 */
   font-weight: var(--fw-black);
   color: var(--color-text-primary);
   margin-bottom: 4px;
