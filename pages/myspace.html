@@ -10,14 +10,13 @@
   --mys-text-light: var(--color-text-tertiary);
 }
 
-/* ── pg-outer 래퍼 ── */
+/* ── pg-outer 래퍼 (board.html 정합) ── */
 .pg-outer {
-  background: var(--color-surface-2);
   padding: 6px;
-  padding-bottom: 24px;
+  padding-bottom: var(--space-10);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-4);
   box-sizing: border-box;
   min-height: 100%;
 }
@@ -116,7 +115,7 @@
 
 
 .myspace-wrap { width:100%; }
-.mys-card { background:var(--mys-panel); border:1px solid var(--color-border); border-radius:var(--radius-md, 12px); padding:18px 18px 12px; margin-bottom:18px; box-shadow:0 1px 3px rgba(17, 24, 39, 0.04); }
+.mys-card { background:var(--mys-panel); border:1px solid var(--color-border); border-radius:var(--radius-md, 12px); padding:18px 18px 12px; margin-bottom:var(--space-4, 16px); box-shadow:0 1px 3px rgba(17, 24, 39, 0.04); }
 .mys-card-stage { display:inline-block; font-size:0.6875em; font-weight:var(--fw-bold, 700); padding:2px 8px; border-radius:var(--radius-full, 9999px); background:var(--color-surface-2); color:var(--color-accent, #D4845A); margin-bottom:var(--space-3, 12px); }
 .mys-card-title { font-size:0.8947em; font-weight:900; color:var(--color-text-primary); display:flex; align-items:center; gap:8px; margin-bottom:8px; }
 .mys-card-desc { font-size:0.842em; color:var(--color-text-secondary); line-height:1.75; margin-bottom:14px; }
