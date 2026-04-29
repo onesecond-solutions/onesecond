@@ -471,6 +471,8 @@
    ▸ 단일 가로선(.home-stats border-top) → 줄무늬 5개 점진 축소 페이드
    ▸ 색상: --brand-600 (#824220) opacity 60→15% (tokens.css 진한 브라운)
    ▸ 디자인 의도: "통화 중 멈춤 → 이어짐" 카피와 시각 흐름 일치
+   ▸ 2026-04-29 정정: max-width 480px — hero 카피 박스 폭(서브 카피 자연 폭) 종속
+     (직전 D 영역 가로폭 100% → hexagon 영역 침범 시정)
 ════════════════════════════════════════════════════════════ */
 .home-hero-divider {
   display: flex;
@@ -478,6 +480,7 @@
   gap: 7px;
   margin-top: var(--space-6, 24px);
   margin-bottom: 36px;
+  max-width: 480px;
 }
 .home-hero-divider-line {
   display: block;
