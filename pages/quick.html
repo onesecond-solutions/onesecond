@@ -35,7 +35,7 @@
 .pg-page-title {
   font-size: 1.5em;
   font-weight: var(--fw-black, 900);
-  color: var(--color-text-primary);
+  color: var(--color-brand);
   letter-spacing: -0.5px;
   margin-bottom: 4px;
 }
@@ -52,7 +52,7 @@
   color: var(--color-accent, #D4845A);
 }
 
-/* ── ② 탭바 블록 ── */
+/* ── ② 탭바 블록 (좌우 16px margin: .qck-body-inner padding 정합 → .qck-content-shell 시각 경계와 일치) ── */
 .pg-tab-block {
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
@@ -60,6 +60,8 @@
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border);
   margin-bottom: var(--pg-tab-bottom);
+  margin-left: 16px;
+  margin-right: 16px;
 }
 .pg-tab-bar {
   display: flex;
