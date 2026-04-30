@@ -280,6 +280,37 @@
   --nav-h:    72px;             /* index v1 랜딩 — 프리미엄 네비 높이 */
   --header-h: var(--header-a1); /* 시안 v2 chrome 호환 별칭 (= 64px) */
 
+  /* ══════════════════════════════════════════════════════════════════
+     Admin Dark Theme (2026-04-30 풀 스케일 admin v2 신설)
+     - admin_v2.html 전용 스코프. 다른 페이지는 이 토큰을 참조하지 않음.
+     - 4종 톤 토글은 body[data-admin-tone="slate|warm|black|navy"]로 override.
+     - TEMP: 기본값은 (나) 웜 다크. 라이브 4종 비교 후 팀장님 결정 시 일괄 교체.
+     ════════════════════════════════════════════════════════════════ */
+  --admin-bg:              #1A130E;
+  --admin-surface:         #2A1F18;
+  --admin-surface-2:       #221912;
+  --admin-surface-elev:    #34281F;
+
+  --admin-text-primary:    #F5EFE6;
+  --admin-text-secondary:  #B8A99A;
+  --admin-text-tertiary:   #8B7B6B;
+
+  --admin-border:          #3F3027;
+  --admin-border-strong:   #564238;
+
+  --admin-rail-bg:         linear-gradient(180deg, var(--brand-700) 0%, var(--brand-500) 100%);
+  --admin-menu-bg:         var(--admin-surface);
+
+  --admin-info-bg:         rgba(59, 130, 246, 0.18);
+  --admin-success-bg:      rgba(16, 185, 129, 0.18);
+  --admin-warning-bg:      rgba(245, 158, 11, 0.18);
+  --admin-danger-bg:       rgba(239, 68, 68, 0.18);
+
+  --admin-shadow-rail:     4px 0 20px rgba(0, 0, 0, 0.45);
+  --admin-shadow-menu:     6px 0 16px rgba(0, 0, 0, 0.32);
+  --admin-shadow-panel:    0 4px 14px rgba(0, 0, 0, 0.35);
+  --admin-shadow-elev:     0 12px 32px rgba(0, 0, 0, 0.50);
+
 }
 
 

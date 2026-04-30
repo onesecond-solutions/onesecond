@@ -1,0 +1,1969 @@
+<!-- pages/admin.html — 원세컨드 관리자 페이지 -->
+<style>
+/* ════════════════════════════════════════════════════════════
+   admin.html 전용 스타일
+   레이아웃 구조: _template.html 표준 (pg-outer / pg-header-block / pg-tab-block / pg-content-block / pg-footer-block)
+   design_guide.md 준수 — tokens.css 변수만 사용
+════════════════════════════════════════════════════════════ */
+
+/* ── 최상위 래퍼 ── */
+.pg-outer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--color-surface-2);
+  gap: 6px;
+  padding: 6px;
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  min-height: 100%;
+}
+
+/* ── ① 타이틀 블록 ── */
+.pg-header-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pg-page-header {
+  height: 120px;
+  background: linear-gradient(135deg, #1a0f0a 0%, var(--color-brand, #A0522D) 50%, var(--color-brand-light, #C4733A) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: relative;
+  overflow: hidden;
+}
+.pg-page-header::before {
+  content: '🛡️';
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-size: 4em; opacity: 0.1; pointer-events: none;
+}
+.adm-header-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255, 215, 0, 0.15); border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: var(--radius-full, 9999px); padding: 3px 12px;
+  font-size: 0.63em; font-weight: 700; color: #ffd700;
+  letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.pg-page-title {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 1.5em; font-weight: 800; color: #fff;
+  letter-spacing: -0.5px; margin-bottom: 0;
+}
+.pg-page-desc {
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  font-size: 0.842em; color: rgba(255, 255, 255, 0.6); margin-top: 4px;
+}
+.pg-page-icon { display: none; } /* 헤더 ::before 아이콘으로 대체 */
+
+/* ── ② 탭바 블록 ── */
+.pg-tab-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border);
+}
+.pg-tab-bar {
+  display: flex; gap: 0; flex-wrap: nowrap; overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.pg-tab-bar::-webkit-scrollbar { display: none; }
+.pg-tab-btn {
+  padding: 11px 18px; border: none; background: transparent;
+  font-size: 0.895em; font-weight: 600;
+  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
+  cursor: pointer; white-space: nowrap;
+  color: var(--color-text-secondary);
+  border-bottom: 3px solid transparent;
+  transition: all .15s; flex-shrink: 0;
+}
+.pg-tab-btn:hover { color: var(--color-text-primary); background: var(--color-surface-2); }
+.pg-tab-btn.active {
+  font-weight: 700; color: var(--color-accent, #D4845A);
+  border-bottom-color: var(--color-accent, #D4845A);
+}
+
+/* ── ③ 콘텐츠 블록 ── */
+.pg-content-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+/* ── 관리자 콘텐츠 영역 ── */
+.adm-content { padding: 20px; }
+
+/* ── 카드 ── */
+.adm-card {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
+  padding: 20px; margin-bottom: 14px;
+}
+.adm-card-title {
+  font-size: 0.842em; font-weight: 800; color: var(--color-text-primary);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--color-border);
+}
+
+/* ── 통계 카드 ── */
+.adm-stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 16px;
+}
+.adm-stat {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 8px);
+  padding: 16px; text-align: center;
+}
+.adm-stat-num {
+  font-size: 1.6em; font-weight: 900;
+  color: var(--color-text-primary);
+  line-height: 1; margin-bottom: 4px;
+}
+.adm-stat-num span { font-size: 0.6em; font-weight: 400; color: var(--color-text-tertiary); }
+.adm-stat-label { font-size: 0.7em; color: var(--color-text-tertiary); font-weight: 600; }
+
+/* ── 테이블 ── */
+.adm-table-wrap { overflow-x: auto; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 0.842em; }
+.adm-table th {
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary); font-weight: 700;
+  padding: 10px 14px; text-align: left;
+  border-bottom: 2px solid var(--color-border); white-space: nowrap;
+}
+.adm-table th:first-child { border-radius: var(--radius-sm, 8px) 0 0 0; }
+.adm-table th:last-child  { border-radius: 0 var(--radius-sm, 8px) 0 0; }
+.adm-table td {
+  padding: 10px 14px; border-bottom: 1px solid var(--color-border);
+  vertical-align: middle; color: var(--color-text-primary);
+}
+.adm-table tr:last-child td { border-bottom: none; }
+.adm-table tr:hover td { background: var(--color-surface-2); }
+
+/* ── 뱃지 ── */
+.role-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; white-space: nowrap; }
+.role-admin   { background: #fff3cd; color: #856404; }
+.role-branch  { background: #d1ecf1; color: #0c5460; }
+.role-manager { background: #d4edda; color: #155724; }
+.role-member  { background: var(--color-surface-2); color: var(--color-text-secondary); }
+
+.plan-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; }
+.plan-pro  { background: #e8f4fd; color: #1a3f7a; }
+.plan-free { background: #f5f5f5; color: #888; }
+
+.status-badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full, 9999px); font-size: 0.78em; font-weight: 700; }
+.status-active   { background: #d4edda; color: #155724; }
+.status-inactive { background: #f5c6cb; color: #721c24; }
+
+/* ── 버튼 ── */
+.adm-btn {
+  padding: 6px 12px; border-radius: var(--radius-sm, 8px);
+  font-size: 0.78em; font-weight: 700; font-family: inherit;
+  cursor: pointer; transition: all 0.15s; border: 1px solid;
+}
+.adm-btn-primary { background: var(--color-text-primary); color: #fff; border-color: var(--color-text-primary); }
+.adm-btn-primary:hover { background: var(--color-text-secondary); }
+.adm-btn-accent  { background: var(--color-accent, #D4845A); color: #fff; border-color: var(--color-accent, #D4845A); }
+.adm-btn-accent:hover  { background: var(--color-brand, #A0522D); }
+.adm-btn-ghost   { background: var(--color-surface, #fff); color: var(--color-text-primary); border-color: var(--color-border); }
+.adm-btn-ghost:hover   { background: var(--color-surface-2); }
+.adm-btn-danger  { background: var(--color-surface, #fff); color: #c0392b; border-color: #e0b4b4; }
+.adm-btn-danger:hover  { background: #fde8e8; }
+.adm-btn-sm { padding: 4px 9px; font-size: 0.72em; }
+
+/* ── 입력 ── */
+.adm-input {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.842em; font-family: inherit; outline: none;
+  transition: border-color 0.15s; background: var(--color-surface, #fff);
+}
+.adm-input:focus { border-color: var(--color-accent, #D4845A); box-shadow: 0 0 0 3px rgba(212, 132, 90, 0.1); }
+
+.adm-select {
+  padding: 8px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.842em; font-family: inherit; outline: none;
+  background: var(--color-surface, #fff); cursor: pointer;
+}
+.adm-select:focus { border-color: var(--color-accent, #D4845A); }
+
+/* ── 검색바 ── */
+.adm-search-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+
+/* ── 로딩/빈 상태 ── */
+.adm-loading { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 0.842em; }
+.adm-empty   { padding: 40px; text-align: center; color: var(--color-text-tertiary); font-size: 0.842em; }
+
+/* ── 로그 아이템 ── */
+.adm-log-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--color-border);
+  font-size: 0.842em;
+}
+.adm-log-item:last-child { border-bottom: none; }
+.adm-log-icon {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9em; flex-shrink: 0;
+}
+.adm-log-body { flex: 1; min-width: 0; }
+.adm-log-text { color: var(--color-text-primary); line-height: 1.5; }
+.adm-log-time { color: var(--color-text-tertiary); font-size: 0.85em; margin-top: 2px; }
+
+/* ── 공지 폼 ── */
+.adm-form-row { margin-bottom: 12px; }
+.adm-form-label { font-size: 0.78em; font-weight: 700; color: var(--color-text-primary); margin-bottom: 5px; display: block; }
+.adm-textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.842em; font-family: inherit; outline: none;
+  resize: vertical; min-height: 80px;
+  transition: border-color 0.15s; background: var(--color-surface, #fff);
+}
+.adm-textarea:focus { border-color: var(--color-accent, #D4845A); box-shadow: 0 0 0 3px rgba(212, 132, 90, 0.1); }
+
+/* ── 역할 수정 모달 ── */
+.adm-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(26, 16, 8, .72); z-index: 600;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.adm-modal-overlay.active { display: flex; }
+.adm-modal {
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-lg, 16px);
+  width: 100%; max-width: 380px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .3); overflow: hidden; margin: 16px;
+}
+.adm-modal-header {
+  background: linear-gradient(135deg, var(--color-brand, #A0522D), var(--color-brand-light, #C4733A));
+  padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+}
+.adm-modal-title { font-size: 0.9em; font-weight: 800; color: #fff; }
+.adm-modal-close {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255, 255, 255, .12); border: none; color: #fff;
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.adm-modal-body   { padding: 18px 20px; }
+.adm-modal-footer { padding: 8px 20px 16px; display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ══════════════════════════════════════════════
+   화면설정 탭 전용 — 5:5 2컬럼 + 실시간 미리보기
+════════════════════════════════════════════════ */
+.adm-set-sec { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 768px) { .adm-set-sec { grid-template-columns: 1fr; } }
+
+.adm-set-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; background: var(--color-surface-2);
+  border-radius: var(--radius-sm, 8px); margin-bottom: 6px;
+  font-size: 0.842em;
+}
+.adm-set-row.is-off { opacity: 0.55; }
+.adm-set-row.is-locked { background: #F1EFE8; opacity: 0.75; }
+.adm-set-rlabel { display: flex; align-items: center; gap: 8px; color: var(--color-text-primary); font-weight: 600; }
+.adm-set-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--color-text-tertiary); }
+.adm-set-rlabel.on .adm-set-dot { background: #0F6E56; }
+.adm-set-row.is-locked .adm-set-dot { background: #888780; }
+
+.adm-cb-wrap { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.adm-cb-wrap input { width: 15px; height: 15px; margin: 0; cursor: pointer; accent-color: var(--color-brand, #6B3A2A); }
+.adm-cb-state { font-size: 0.842em; min-width: 52px; text-align: left; font-weight: 600; }
+.adm-cb-state.on  { color: #0F6E56; }
+.adm-cb-state.off { color: var(--color-text-tertiary); }
+
+.adm-lock-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.78em; color: var(--color-text-tertiary, #888780);
+  padding: 3px 10px; background: #fff;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--color-border);
+}
+
+.adm-ver-badge {
+  font-size: 0.72em; background: #FAC775; color: #412402;
+  padding: 1px 6px; border-radius: var(--radius-full, 9999px);
+  font-weight: 700; margin-left: 6px;
+}
+
+.adm-hint-box {
+  margin-top: 10px; font-size: 0.78em; color: #854F0B;
+  line-height: 1.6; background: #FAEEDA;
+  padding: 8px 12px; border-radius: var(--radius-sm, 8px);
+}
+.adm-hint-box strong { font-weight: 700; }
+
+/* 미리보기 패널 */
+.adm-pv { background: var(--color-surface-2); border-radius: var(--radius-md, 12px); padding: 14px; }
+.adm-pv-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.adm-pv-label { font-size: 0.78em; color: var(--color-text-secondary); font-weight: 700; letter-spacing: 0.3px; }
+.adm-pv-tag { font-size: 0.72em; padding: 2px 9px; border-radius: var(--radius-full, 9999px); background: #E1F5EE; color: #085041; font-weight: 700; }
+.adm-pv-foot { margin-top: 10px; font-size: 0.78em; color: var(--color-text-secondary); text-align: center; }
+.adm-pv-count {
+  display: inline-block; background: #fff; padding: 2px 8px;
+  border-radius: var(--radius-full, 9999px); font-weight: 700;
+  color: var(--color-text-primary); margin: 0 2px;
+}
+
+/* 브라우저 프레임 */
+.adm-frame { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-sm, 8px); overflow: hidden; }
+.adm-frame-bar { height: 18px; background: var(--color-brand, #6B3A2A); display: flex; align-items: center; padding: 0 8px; gap: 4px; }
+.adm-fr-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.35); }
+
+/* 메뉴 미리보기 */
+.adm-pv-body { display: grid; grid-template-columns: 74px 1fr; min-height: 180px; }
+.adm-mini-side { background: var(--color-surface-2); padding: 10px 4px; display: flex; flex-direction: column; gap: 5px; align-items: center; }
+.adm-mini-menu {
+  width: 62px; padding: 6px 0; font-size: 0.72em; color: var(--color-text-primary);
+  background: #fff; border-radius: 5px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.adm-mini-menu .emo { font-size: 14px; line-height: 1; }
+.adm-mini-menu.hidden { display: none; }
+.adm-mini-main { padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 6px; }
+.adm-mini-title { font-size: 0.842em; font-weight: 700; color: var(--color-text-primary); }
+.adm-mini-desc { font-size: 0.78em; color: var(--color-text-tertiary); line-height: 1.5; }
+.adm-empty-msg { font-size: 0.72em; color: var(--color-text-tertiary); text-align: center; padding: 14px 4px; font-style: italic; }
+
+/* 기능 게이트 미리보기 */
+.adm-a2-pv { padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: center; background: #fff; min-height: 140px; justify-content: center; }
+.adm-a2-top { width: 100%; min-height: 34px; background: var(--color-brand, #6B3A2A); border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding: 4px 8px; gap: 8px; }
+.adm-a2-btn { background: #EF9F27; color: #412402; font-size: 0.78em; padding: 4px 11px; border-radius: 4px; font-weight: 700; position: relative; flex-shrink: 0; }
+.adm-a2-btn.gated::after { content: 'PRO'; position: absolute; top: -6px; right: -10px; font-size: 0.65em; background: var(--color-text-primary); color: #fff; padding: 1px 5px; border-radius: 3px; line-height: 1; font-weight: 700; }
+/* [2026-04-17] 검색창 미리보기 */
+.adm-pv-search { flex: 1; min-width: 0; background: var(--color-surface-3); color: var(--color-text-secondary); font-size: 0.72em; padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; position: relative; overflow: hidden; white-space: nowrap; }
+.adm-pv-search-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-pv-search.gated { padding-right: 36px; }
+.adm-pv-search.gated::after { content: 'PRO'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 0.65em; background: var(--color-text-primary); color: #fff; padding: 1px 5px; border-radius: 3px; line-height: 1; font-weight: 700; }
+.adm-a2-cap { font-size: 0.78em; color: var(--color-text-secondary); text-align: center; }
+
+/* 게시판 미리보기 */
+.adm-bd-pv { padding: 14px; background: #fff; min-height: 170px; }
+.adm-bd-t1 { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; }
+.adm-bd-t1-tab {
+  font-size: 0.78em; padding: 6px 11px; border-radius: 5px;
+  background: var(--color-surface-2); color: var(--color-text-secondary);
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.adm-bd-t1-tab.on { background: var(--color-brand, #6B3A2A); color: #fff; font-weight: 700; }
+.adm-bd-t1-tab .mini-bd {
+  font-size: 0.72em; padding: 1px 5px; border-radius: var(--radius-full, 9999px);
+  background: #FAC775; color: #412402; font-weight: 700;
+}
+.adm-bd-t1-tab.on .mini-bd { background: rgba(255,255,255,0.2); color: #fff; }
+.adm-bd-t1-tab.hidden { display: none; }
+
+.adm-bd-t2 { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+.adm-bd-t2-tab {
+  font-size: 0.72em; padding: 3px 10px; border-radius: var(--radius-full, 9999px);
+  background: var(--color-surface-2); color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+.adm-bd-t2-tab.on { background: var(--color-text-primary); color: #fff; border-color: var(--color-text-primary); }
+
+.adm-bd-info {
+  font-size: 0.72em; color: var(--color-text-tertiary);
+  line-height: 1.6; padding: 8px 10px;
+  background: var(--color-surface-2); border-radius: 4px;
+}
+.adm-bd-info strong { color: var(--color-text-primary); font-weight: 700; }
+
+/* 배너 업로드 (기존 호환 + 미리보기 전환) */
+.adm-bn-pv-body { padding: 14px; background: #fff; min-height: 150px; }
+.adm-bn-banner {
+  height: 50px; display: flex; align-items: center; justify-content: center;
+  font-size: 0.842em; font-weight: 700; border-radius: 4px 4px 0 0;
+}
+.adm-bn-content {
+  padding: 10px 12px; border: 1px solid var(--color-border);
+  border-top: none; border-radius: 0 0 4px 4px;
+  font-size: 0.72em; color: var(--color-text-tertiary); line-height: 1.5;
+}
+.adm-bn-selector { margin-top: 12px; display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+.adm-bn-sel-btn {
+  font-size: 0.78em; padding: 4px 10px; border-radius: 4px;
+  background: #fff; border: 1px solid var(--color-border);
+  cursor: pointer; color: var(--color-text-secondary);
+  font-family: inherit;
+}
+.adm-bn-sel-btn.active { background: var(--color-brand, #6B3A2A); color: #fff; border-color: var(--color-brand, #6B3A2A); }
+
+/* ── ④ 푸터 블록 ── */
+.pg-footer-block { border-radius: var(--radius-md, 12px); overflow: hidden; flex-shrink: 0; }
+.pg-bottom-bar {
+  background: var(--color-brand, #A0522D); color: #fff;
+  text-align: center; font-size: 0.790em; font-weight: 800; padding: 10px 14px;
+}
+
+@media (max-width: 768px) {
+  .adm-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+
+<div class="pg-outer" id="page-admin">
+
+  <!-- ① 타이틀 블록 -->
+  <div class="pg-header-block">
+    <div class="pg-page-header">
+      <div>
+        <div class="adm-header-badge">ADMIN ONLY</div>
+        <div class="pg-page-title">관리자 페이지</div>
+        <div class="pg-page-desc">원세컨드 서비스 운영 대시보드</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 탭바 블록 -->
+  <div class="pg-tab-block">
+    <div class="pg-tab-bar" id="admin-tab-bar">
+      <button class="pg-tab-btn active" data-tab="users"   onclick="window.admSwitchTab('users', this)">👥 사용자</button>
+      <button class="pg-tab-btn"        data-tab="scripts" onclick="window.admSwitchTab('scripts', this)">📋 스크립트</button>
+      <button class="pg-tab-btn"        data-tab="board"   onclick="window.admSwitchTab('board', this)">💬 게시판</button>
+      <button class="pg-tab-btn"        data-tab="logs"    onclick="window.admSwitchTab('logs', this)">📊 로그</button>
+      <button class="pg-tab-btn"        data-tab="notice"   onclick="window.admSwitchTab('notice', this)">📢 공지·배너</button>
+      <button class="pg-tab-btn"        data-tab="settings" onclick="window.admSwitchTab('settings', this)">⚙️ 화면설정</button>
+    </div>
+  </div>
+
+  <!-- ③ 콘텐츠 블록 -->
+  <div class="pg-content-block">
+    <div class="adm-content" id="adm-content">
+      <div class="adm-loading">로딩 중...</div>
+    </div>
+  </div>
+
+  <!-- ④ 푸터 블록 -->
+  <div class="pg-footer-block">
+    <div class="pg-bottom-bar">- 관리자 전용 페이지입니다 -</div>
+  </div>
+
+</div><!-- /.pg-outer -->
+
+
+<!-- 역할 수정 모달 -->
+<div class="adm-modal-overlay" id="adm-role-modal">
+  <div class="adm-modal">
+    <div class="adm-modal-header">
+      <div class="adm-modal-title">역할 변경</div>
+      <button class="adm-modal-close" onclick="window.admCloseRoleModal()">✕</button>
+    </div>
+    <div class="adm-modal-body">
+      <div style="font-size:0.842em;color:var(--color-text-secondary);margin-bottom:12px;">
+        <strong id="adm-modal-username"></strong> 님의 역할을 변경합니다.
+      </div>
+      <div class="adm-form-row">
+        <label class="adm-form-label">역할</label>
+        <select class="adm-select" id="adm-role-select" style="width:100%;">
+          <option value="member">팀장 / 설계사 (member)</option>
+          <option value="manager">매니저 / 실장 (manager)</option>
+          <option value="branch_manager">지점장 / 센터장 (branch_manager)</option>
+          <option value="admin">관리자 (admin)</option>
+        </select>
+      </div>
+      <div class="adm-form-row">
+        <label class="adm-form-label">플랜</label>
+        <select class="adm-select" id="adm-plan-select" style="width:100%;">
+          <option value="free">무료 (free)</option>
+          <option value="pro">PRO (pro)</option>
+        </select>
+      </div>
+    </div>
+    <div class="adm-modal-footer">
+      <button class="adm-btn adm-btn-ghost" onclick="window.admCloseRoleModal()">취소</button>
+      <button class="adm-btn adm-btn-accent" onclick="window.admSaveRole()">저장</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function () {
+'use strict';
+
+/* ── 로컬 상태 ── */
+var _admTab = 'users';
+var _admEditUserId = null;
+var _admUsersCache = null;
+var _admScriptsCache = null;
+
+/* ── 공통 fetch (window.db 위임) ── */
+function admFetch(path, options) {
+  return window.db.fetch(path, options);
+}
+
+/* ── Storage 업로드 헬퍼 ── */
+async function admStorageUpload(bucket, filePath, file) {
+  /* db.js의 Supabase base URL 접근 (공개 속성 순서대로 시도) */
+  var base = (window.db && window.db.url)
+    || (window.db && window.db._url)
+    || window._SUPABASE_URL
+    || window.SUPABASE_URL
+    || '';
+
+  var token = (window.db && typeof window.db.getToken === 'function')
+    ? window.db.getToken()
+    : '';
+
+  if (!base) {
+    throw new Error('Supabase URL을 찾을 수 없습니다.\ndb.js에서 window.db.url을 공개 속성으로 노출해 주세요.');
+  }
+
+  return fetch(base + '/storage/v1/object/' + bucket + '/' + filePath, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': file.type,
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+}
+
+function admContent(html) {
+  var el = document.getElementById('adm-content');
+  if (el) el.innerHTML = html;
+}
+
+/* ── 탭 전환 (onclick에서 호출 → window 선언 필수) ── */
+window.admSwitchTab = function (tab, btn) {
+  _admTab = tab;
+  document.querySelectorAll('#admin-tab-bar .pg-tab-btn').forEach(function (el) {
+    el.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  var map = {
+    users:    window.admLoadUsers,
+    scripts:  window.admLoadScripts,
+    board:    window.admLoadBoard,
+    logs:     window.admLoadLogs,
+    notice:   window.admLoadNotice,
+    settings: window.admLoadSettings
+  };
+  if (map[tab]) map[tab]();
+};
+
+/* ── 유틸 ── */
+function admRoleBadge(role) {
+  var map = {
+    admin:          ['role-admin',   '관리자'],
+    branch_manager: ['role-branch',  '지점장'],
+    manager:        ['role-manager', '실장'],
+    member:         ['role-member',  '설계사']
+  };
+  var entry = map[role] || ['role-member', role || '-'];
+  return '<span class="role-badge ' + entry[0] + '">' + entry[1] + '</span>';
+}
+
+function admPlanBadge(plan) {
+  return plan === 'pro'
+    ? '<span class="plan-badge plan-pro">PRO</span>'
+    : '<span class="plan-badge plan-free">무료</span>';
+}
+
+function admTimeAgo(ts) {
+  if (!ts) return '-';
+  var d = new Date(ts);
+  return d.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+/* ════════════════════════════════════════
+   탭 1: 사용자 관리
+════════════════════════════════════════ */
+window.admLoadUsers = async function (filter) {
+  admContent('<div class="adm-loading">사용자 목록 로딩 중...</div>');
+  try {
+    var res = await admFetch(
+      '/rest/v1/users?select=id,name,email,role,plan,company,branch,team,created_at&order=created_at.desc&limit=100'
+    );
+    if (!res.ok) {
+      var errBody = await res.text();
+      console.error('[admin] admLoadUsers fetch 실패:', res.status, errBody);
+      admContent('<div class="adm-empty">사용자 목록을 불러오지 못했습니다. (HTTP ' + res.status + ')<br><small style="color:#aaa;">' + errBody + '</small></div>');
+      return;
+    }
+    var data = await res.json();
+    _admUsersCache = data;
+    window.admRenderUsers(data, filter || '');
+  } catch (e) {
+    console.error('[admin] admLoadUsers 오류:', e);
+    admContent('<div class="adm-empty">사용자 목록을 불러오지 못했습니다.<br><small style="color:#aaa;">' + e.message + '</small></div>');
+  }
+};
+
+window.admRenderUsers = function (data, filter) {
+  var list = data;
+  if (filter) {
+    var q = filter.toLowerCase();
+    list = data.filter(function (u) {
+      return (u.name || '').toLowerCase().includes(q) ||
+             (u.email || '').toLowerCase().includes(q) ||
+             (u.company || '').toLowerCase().includes(q) ||
+             (u.branch || '').toLowerCase().includes(q);
+    });
+  }
+
+  var total      = data.length;
+  var proCount   = data.filter(function (u) { return u.plan === 'pro'; }).length;
+  var adminCount = data.filter(function (u) { return u.role === 'admin'; }).length;
+  var todayStr   = new Date().toISOString().slice(0, 10);
+  var todayCount = data.filter(function (u) { return (u.created_at || '').startsWith(todayStr); }).length;
+
+  var html =
+    '<div class="adm-stats-grid">' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + total      + '<span>명</span></div><div class="adm-stat-label">전체 가입자</div></div>' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + proCount   + '<span>명</span></div><div class="adm-stat-label">PRO 구독</div></div>' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + todayCount + '<span>명</span></div><div class="adm-stat-label">오늘 가입</div></div>' +
+      '<div class="adm-stat"><div class="adm-stat-num">' + adminCount + '<span>명</span></div><div class="adm-stat-label">관리자</div></div>' +
+    '</div>' +
+    '<div class="adm-card">' +
+      '<div class="adm-card-title">👥 사용자 목록</div>' +
+      '<div class="adm-search-bar">' +
+        '<input class="adm-input" style="max-width:280px;" id="adm-user-search"' +
+          ' placeholder="이름·이메일·지점 검색..."' +
+          ' oninput="window.admRenderUsers(window._admUsersCache_pub, this.value)">' +
+        '<button class="adm-btn adm-btn-ghost" onclick="window.admLoadUsers()">🔄 새로고침</button>' +
+      '</div>' +
+      '<div class="adm-table-wrap">' +
+        '<table class="adm-table">' +
+          '<thead><tr>' +
+            '<th>이름</th><th>이메일</th><th>역할</th><th>플랜</th><th>소속</th><th>가입일</th><th>관리</th>' +
+          '</tr></thead><tbody>';
+
+  if (list.length === 0) {
+    html += '<tr><td colspan="7" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>';
+  } else {
+    list.forEach(function (u) {
+      var org = [u.company, u.branch, u.team].filter(Boolean).join(' / ') || '-';
+      html +=
+        '<tr>' +
+          '<td><strong>' + (u.name || '-') + '</strong></td>' +
+          '<td style="color:#888;font-size:0.9em;">' + (u.email || '-') + '</td>' +
+          '<td>' + admRoleBadge(u.role) + '</td>' +
+          '<td>' + admPlanBadge(u.plan) + '</td>' +
+          '<td style="font-size:0.85em;color:#888;">' + org + '</td>' +
+          '<td style="color:#aaa;font-size:0.85em;">' + ((u.created_at || '').slice(0, 10) || '-') + '</td>' +
+          '<td>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admOpenRoleModal(\'' + u.id + '\',\'' + (u.name || '').replace(/'/g, '&apos;') + '\',\'' + (u.role || 'member') + '\',\'' + (u.plan || 'free') + '\')">' +
+              '역할 변경' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+    });
+  }
+
+  html += '</tbody></table></div></div>';
+  admContent(html);
+
+  /* 공개 캐시 — 검색 oninput에서 접근 */
+  window._admUsersCache_pub = _admUsersCache;
+
+  if (filter) {
+    var inp = document.getElementById('adm-user-search');
+    if (inp) inp.value = filter;
+  }
+};
+
+/* ── 역할 수정 모달 ── */
+window.admOpenRoleModal = function (id, name, role, plan) {
+  _admEditUserId = id;
+  document.getElementById('adm-modal-username').textContent = name;
+  document.getElementById('adm-role-select').value = role;
+  document.getElementById('adm-plan-select').value = plan || 'free';
+  document.getElementById('adm-role-modal').classList.add('active');
+};
+
+window.admCloseRoleModal = function () {
+  document.getElementById('adm-role-modal').classList.remove('active');
+  _admEditUserId = null;
+};
+
+window.admSaveRole = async function () {
+  var id   = _admEditUserId;
+  var role = document.getElementById('adm-role-select').value;
+  var plan = document.getElementById('adm-plan-select').value;
+  if (!id) return;
+  try {
+    var res = await admFetch('/rest/v1/users?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ role: role, plan: plan })
+    });
+    if (res.ok) { window.admCloseRoleModal(); window.admLoadUsers(); }
+    else alert('저장 중 오류가 발생했습니다.');
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* ════════════════════════════════════════
+   탭 2: 스크립트 관리
+════════════════════════════════════════ */
+var STAGE_LABEL = {
+  opening: '도입인사', opening_rejection: '도입반론',
+  need_emphasis: '필요성강조', need_emphasis_2: '필요성강조2',
+  situation_check: '상황확인', analysis: '보장분석',
+  product: '상품설명', objection: '반론대응',
+  closing: '클로징', closing_second: '2차클로징'
+};
+
+window.admLoadScripts = async function () {
+  admContent('<div class="adm-loading">스크립트 목록 로딩 중...</div>');
+  try {
+    var res = await admFetch(
+      '/rest/v1/scripts?select=id,title,stage,type,scope,is_active,is_leader_pick,is_sample&order=stage,title&limit=200'
+    );
+    if (!res.ok) {
+      var errBody = await res.text();
+      console.error('[admin] admLoadScripts fetch 실패:', res.status, errBody);
+      admContent('<div class="adm-empty">스크립트 목록을 불러오지 못했습니다. (HTTP ' + res.status + ')</div>');
+      return;
+    }
+    var data = await res.json();
+    _admScriptsCache = data;
+    window._admScriptsCache_pub = data;
+
+    var total      = data.length;
+    var active     = data.filter(function (s) { return s.is_active; }).length;
+    var leaderPick = data.filter(function (s) { return s.is_leader_pick; }).length;
+    var sampleCnt  = data.filter(function (s) { return s.is_sample; }).length;
+
+    var stageOptions = Object.entries(STAGE_LABEL).map(function (e) {
+      return '<option value="' + e[0] + '">' + e[1] + '</option>';
+    }).join('');
+
+    var html =
+      '<div class="adm-stats-grid">' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + total + '<span>개</span></div><div class="adm-stat-label">전체 스크립트</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + active + '<span>개</span></div><div class="adm-stat-label">활성</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + sampleCnt + '<span>개</span></div><div class="adm-stat-label">샘플</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + leaderPick + '<span>개</span></div><div class="adm-stat-label">Leader Pick</div></div>' +
+      '</div>' +
+
+      /* ── 신규 스크립트 작성 폼 ── */
+      '<div class="adm-card" style="margin-bottom:8px;">' +
+        '<div class="adm-card-title" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="window.admToggleWriteForm()">' +
+          '<span>✏️ 새 스크립트 작성</span>' +
+          '<span id="adm-write-chevron" style="font-size:0.8em;color:var(--color-text-tertiary);">▶ 펼치기</span>' +
+        '</div>' +
+        '<div id="adm-script-write-form" style="display:none;margin-top:12px;">' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+            '<div>' +
+              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">제목 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+              '<input class="adm-input" id="adm-w-title" placeholder="스크립트 제목">' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">단계 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+              '<select class="adm-select" id="adm-w-stage">' +
+                '<option value="">단계 선택</option>' + stageOptions +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-bottom:8px;">' +
+            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">핵심 멘트</div>' +
+            '<input class="adm-input" id="adm-w-highlight" placeholder="핵심 문장 한 줄 (목록에서 미리보기로 표시)">' +
+          '</div>' +
+          '<div style="margin-bottom:8px;">' +
+            '<div style="font-size:0.790em;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">본문 <span style="color:var(--color-accent,#D4845A);">*</span></div>' +
+            '<textarea class="adm-input" id="adm-w-body" rows="5" placeholder="스크립트 본문을 입력하세요." style="resize:vertical;font-family:inherit;line-height:1.7;"></textarea>' +
+          '</div>' +
+          '<div style="display:flex;gap:16px;margin-bottom:12px;">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary);cursor:pointer;">' +
+              '<input type="checkbox" id="adm-w-sample" style="accent-color:var(--color-accent,#D4845A);width:16px;height:16px;"> 샘플 스크립트로 등록' +
+            '</label>' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:0.842em;color:var(--color-text-secondary);cursor:pointer;">' +
+              '<input type="checkbox" id="adm-w-leader" style="accent-color:var(--color-accent,#D4845A);width:16px;height:16px;"> ⭐ 리더 추천으로 등록' +
+            '</label>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveNewScript()">💾 저장</button>' +
+            '<button class="adm-btn adm-btn-ghost" onclick="window.admClearWriteForm()">초기화</button>' +
+          '</div>' +
+          '<div id="adm-w-msg" style="margin-top:8px;font-size:0.790em;"></div>' +
+        '</div>' +
+      '</div>' +
+
+      /* ── 스크립트 목록 ── */
+      '<div class="adm-card">' +
+        '<div class="adm-card-title">📋 스크립트 목록</div>' +
+        '<div class="adm-search-bar">' +
+          '<input class="adm-input" style="max-width:240px;" id="adm-script-search" placeholder="스크립트 제목 검색..."' +
+            ' oninput="window.admFilterScripts(this.value)">' +
+          '<select class="adm-select" id="adm-script-stage-filter"' +
+            ' onchange="window.admFilterScripts(document.getElementById(\'adm-script-search\').value)">' +
+            '<option value="">전체 단계</option>' + stageOptions +
+          '</select>' +
+          '<select class="adm-select" id="adm-script-type-filter"' +
+            ' onchange="window.admFilterScripts(document.getElementById(\'adm-script-search\').value)">' +
+            '<option value="">전체 유형</option>' +
+            '<option value="sample">샘플만</option>' +
+            '<option value="leader">Leader Pick만</option>' +
+          '</select>' +
+          '<button class="adm-btn adm-btn-ghost" onclick="window.admLoadScripts()">🔄 새로고침</button>' +
+        '</div>' +
+        '<div id="adm-script-table-wrap">' +
+          window.admBuildScriptTable(data) +
+        '</div>' +
+      '</div>';
+
+    admContent(html);
+  } catch (e) {
+    admContent('<div class="adm-empty">스크립트 목록을 불러오지 못했습니다.</div>');
+  }
+};
+
+window.admBuildScriptTable = function (data) {
+  var html =
+    '<div class="adm-table-wrap"><table class="adm-table">' +
+    '<thead><tr><th>제목</th><th>단계</th><th>범위</th><th>상태</th><th>샘플</th><th>LeaderPick</th><th>관리</th></tr></thead>' +
+    '<tbody>';
+
+  if (!data || data.length === 0) {
+    html += '<tr><td colspan="7" style="text-align:center;color:#bbb;padding:30px;">검색 결과가 없습니다.</td></tr>';
+  } else {
+    data.forEach(function (s) {
+      var stage = STAGE_LABEL[s.stage] || s.stage || '-';
+      html +=
+        '<tr>' +
+          '<td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.title || '-') + '</td>' +
+          '<td><span style="font-size:0.8em;background:var(--color-surface-2);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary);">' + stage + '</span></td>' +
+          '<td><span style="font-size:0.8em;color:#888;">' + (s.scope || '-') + '</span></td>' +
+          '<td><span class="status-badge ' + (s.is_active ? 'status-active' : 'status-inactive') + '">' + (s.is_active ? '활성' : '비활성') + '</span></td>' +
+          '<td style="text-align:center;">' + (s.is_sample ? '<span style="font-size:0.75em;font-weight:700;color:var(--color-accent,#D4845A);background:rgba(212,132,90,0.12);border-radius:4px;padding:1px 7px;">샘플</span>' : '－') + '</td>' +
+          '<td style="text-align:center;">' + (s.is_leader_pick ? '⭐' : '－') + '</td>' +
+          '<td style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admToggleScript(\'' + s.id + '\',\'is_active\',' + (!s.is_active) + ')">' +
+              (s.is_active ? '비활성화' : '활성화') +
+            '</button>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admToggleScript(\'' + s.id + '\',\'is_sample\',' + (!s.is_sample) + ')">' +
+              (s.is_sample ? '샘플해제' : '샘플설정') +
+            '</button>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+              ' onclick="window.admToggleScript(\'' + s.id + '\',\'is_leader_pick\',' + (!s.is_leader_pick) + ')">' +
+              (s.is_leader_pick ? 'Pick해제' : 'Pick설정') +
+            '</button>' +
+            '<button class="adm-btn adm-btn-ghost adm-btn-sm" style="color:#c0392b;"' +
+              ' onclick="window.admDeleteScript(\'' + s.id + '\',\'' + (s.title||'').replace(/'/g,'') + '\')">' +
+              '삭제' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+    });
+  }
+  html += '</tbody></table></div>';
+  return html;
+};
+
+window.admFilterScripts = function (q) {
+  var stageEl  = document.getElementById('adm-script-stage-filter');
+  var typeEl   = document.getElementById('adm-script-type-filter');
+  var stageFilter = stageEl ? stageEl.value : '';
+  var typeFilter  = typeEl  ? typeEl.value  : '';
+  var data = _admScriptsCache || [];
+  if (q) data = data.filter(function (s) { return (s.title || '').toLowerCase().includes(q.toLowerCase()); });
+  if (stageFilter) data = data.filter(function (s) { return s.stage === stageFilter; });
+  if (typeFilter === 'sample') data = data.filter(function (s) { return s.is_sample; });
+  if (typeFilter === 'leader') data = data.filter(function (s) { return s.is_leader_pick; });
+  var wrap = document.getElementById('adm-script-table-wrap');
+  if (wrap) wrap.innerHTML = window.admBuildScriptTable(data);
+};
+
+window.admToggleScript = async function (id, field, val) {
+  try {
+    var body = {};
+    body[field] = val;
+    var res = await admFetch('/rest/v1/scripts?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) window.admLoadScripts();
+    else alert('수정 중 오류가 발생했습니다.');
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+window.admDeleteScript = async function (id, title) {
+  if (!confirm('「' + title + '」 스크립트를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  try {
+    var res = await admFetch('/rest/v1/scripts?id=eq.' + id, { method: 'DELETE' });
+    if (res.ok) { window.admLoadScripts(); }
+    else alert('삭제 중 오류가 발생했습니다.');
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+window.admToggleWriteForm = function () {
+  var form = document.getElementById('adm-script-write-form');
+  var chevron = document.getElementById('adm-write-chevron');
+  if (!form) return;
+  var isOpen = form.style.display !== 'none';
+  form.style.display = isOpen ? 'none' : 'block';
+  if (chevron) chevron.textContent = isOpen ? '▶ 펼치기' : '▼ 접기';
+};
+
+window.admClearWriteForm = function () {
+  ['adm-w-title','adm-w-highlight','adm-w-body'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['adm-w-sample','adm-w-leader'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.checked = false;
+  });
+  var el = document.getElementById('adm-w-stage'); if (el) el.value = '';
+  var msg = document.getElementById('adm-w-msg'); if (msg) msg.textContent = '';
+};
+
+window.admSaveNewScript = async function () {
+  var title     = (document.getElementById('adm-w-title') || {}).value || '';
+  var stage     = (document.getElementById('adm-w-stage') || {}).value || '';
+  var highlight = (document.getElementById('adm-w-highlight') || {}).value || '';
+  var body      = (document.getElementById('adm-w-body') || {}).value || '';
+  var isSample  = (document.getElementById('adm-w-sample') || {}).checked || false;
+  var isLeader  = (document.getElementById('adm-w-leader') || {}).checked || false;
+  var msgEl     = document.getElementById('adm-w-msg');
+
+  if (!title.trim()) { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='제목을 입력해 주세요.'; } return; }
+  if (!stage)        { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='단계를 선택해 주세요.'; } return; }
+  if (!body.trim())  { if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='본문을 입력해 주세요.'; } return; }
+
+  if (msgEl) { msgEl.style.color='var(--color-text-tertiary)'; msgEl.textContent='저장 중...'; }
+
+  try {
+    var payload = {
+      title: title.trim(),
+      stage: stage,
+      highlight_text: highlight.trim() || null,
+      script_text: body.trim(),
+      scope: 'global',
+      is_active: true,
+      is_sample: isSample,
+      is_leader_pick: isLeader
+    };
+    var res = await admFetch('/rest/v1/scripts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      if (msgEl) { msgEl.style.color='#27ae60'; msgEl.textContent='✅ 저장되었습니다!'; }
+      window.admClearWriteForm();
+      setTimeout(function () { window.admLoadScripts(); }, 800);
+    } else {
+      var errBody = await res.text();
+      if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='저장 실패: ' + errBody; }
+    }
+  } catch (e) {
+    if (msgEl) { msgEl.style.color='#c0392b'; msgEl.textContent='네트워크 오류가 발생했습니다.'; }
+  }
+};
+
+/* ════════════════════════════════════════
+   탭 3: 게시판 관리
+════════════════════════════════════════ */
+window.admLoadBoard = async function () {
+  admContent('<div class="adm-loading">게시글 로딩 중...</div>');
+  try {
+    var res = await admFetch(
+      '/rest/v1/posts?select=id,title,category,author_name,created_at,is_hidden,is_notice&order=created_at.desc&limit=100'
+    );
+    if (!res.ok) {
+      var errBody = await res.text();
+      console.error('[admin] admLoadBoard fetch 실패:', res.status, errBody);
+      admContent('<div class="adm-empty">게시글을 불러오지 못했습니다. (HTTP ' + res.status + ')</div>');
+      return;
+    }
+    var data = await res.json();
+
+    var catLabel = { notice: '공지', qa_product: '상품Q&A', qa_underwriting: '인수Q&A' };
+    var total   = data.length;
+    var notices = data.filter(function (p) { return p.is_notice; }).length;
+    var hidden  = data.filter(function (p) { return p.is_hidden; }).length;
+
+    var html =
+      '<div class="adm-stats-grid">' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + total   + '<span>개</span></div><div class="adm-stat-label">전체 게시글</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + notices + '<span>개</span></div><div class="adm-stat-label">공지</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + hidden  + '<span>개</span></div><div class="adm-stat-label">숨김 처리</div></div>' +
+        '<div class="adm-stat"><div class="adm-stat-num">' + (total - notices - hidden) + '<span>개</span></div><div class="adm-stat-label">일반 게시글</div></div>' +
+      '</div>' +
+      '<div class="adm-card">' +
+        '<div class="adm-card-title">💬 게시글 목록</div>' +
+        '<div class="adm-search-bar">' +
+          '<button class="adm-btn adm-btn-ghost" onclick="window.admLoadBoard()">🔄 새로고침</button>' +
+        '</div>' +
+        '<div class="adm-table-wrap"><table class="adm-table">' +
+          '<thead><tr><th>제목</th><th>카테고리</th><th>작성자</th><th>작성일</th><th>상태</th><th>관리</th></tr></thead>' +
+          '<tbody>';
+
+    if (data.length === 0) {
+      html += '<tr><td colspan="6" style="text-align:center;color:#bbb;padding:30px;">게시글이 없습니다.</td></tr>';
+    } else {
+      data.forEach(function (p) {
+        var cat    = catLabel[p.category] || p.category || '-';
+        var status = p.is_hidden
+          ? '<span class="status-badge status-inactive">숨김</span>'
+          : (p.is_notice
+              ? '<span class="status-badge status-active">공지</span>'
+              : '<span style="color:#aaa;font-size:0.85em;">일반</span>');
+        html +=
+          '<tr>' +
+            '<td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.title || '-') + '</td>' +
+            '<td><span style="font-size:0.8em;background:var(--color-surface-2);padding:2px 8px;border-radius:var(--radius-full,9999px);color:var(--color-text-secondary);">' + cat + '</span></td>' +
+            '<td style="color:#888;font-size:0.9em;">' + (p.author_name || '-') + '</td>' +
+            '<td style="color:#aaa;font-size:0.85em;">' + ((p.created_at || '').slice(0, 10) || '-') + '</td>' +
+            '<td>' + status + '</td>' +
+            '<td style="display:flex;gap:4px;flex-wrap:wrap;">' +
+              '<button class="adm-btn adm-btn-ghost adm-btn-sm"' +
+                ' onclick="window.admTogglePost(\'' + p.id + '\',\'is_notice\',' + (!p.is_notice) + ')">' +
+                (p.is_notice ? '공지 해제' : '공지 설정') +
+              '</button>' +
+              '<button class="adm-btn ' + (p.is_hidden ? 'adm-btn-ghost' : 'adm-btn-danger') + ' adm-btn-sm"' +
+                ' onclick="window.admTogglePost(\'' + p.id + '\',\'is_hidden\',' + (!p.is_hidden) + ')">' +
+                (p.is_hidden ? '숨김 해제' : '숨김') +
+              '</button>' +
+            '</td>' +
+          '</tr>';
+      });
+    }
+
+    html += '</tbody></table></div></div>';
+    admContent(html);
+  } catch (e) {
+    admContent('<div class="adm-empty">게시글을 불러오지 못했습니다.</div>');
+  }
+};
+
+window.admTogglePost = async function (id, field, val) {
+  try {
+    var body = {};
+    body[field] = val;
+    var res = await admFetch('/rest/v1/posts?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) window.admLoadBoard();
+    else alert('수정 중 오류가 발생했습니다.');
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* ════════════════════════════════════════
+   탭 4: 로그 확인
+════════════════════════════════════════ */
+window.admLoadLogs = async function () {
+  admContent('<div class="adm-loading">로그 로딩 중...</div>');
+  try {
+    var results = await Promise.all([
+      admFetch('/rest/v1/activity_logs?select=id,event_type,target_type,target_id,created_at,users(name)&order=created_at.desc&limit=50'),
+      admFetch('/rest/v1/activity_logs?select=target_id,scripts(title)&event_type=eq.view_script&limit=500')
+    ]);
+
+    var logs        = results[0].ok ? await results[0].json() : [];
+    var scriptLogs  = results[1].ok ? await results[1].json() : [];
+
+    /* 인기 스크립트 집계 */
+    var scriptCount = {};
+    scriptLogs.forEach(function (l) {
+      var title = (l.scripts && l.scripts.title) || l.target_id || '알 수 없음';
+      scriptCount[title] = (scriptCount[title] || 0) + 1;
+    });
+    var topScripts = Object.entries(scriptCount).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 10);
+
+    var eventIcon = {
+      login: '🔑', view_script: '📋', click_quick: '⚡',
+      add_favorite: '⭐', open_post: '💬', search: '🔍'
+    };
+    var eventMap = {
+      login: '로그인', view_script: '스크립트 조회', click_quick: 'Quick 메뉴',
+      add_favorite: '즐겨찾기 추가', open_post: '게시글 조회', search: '검색'
+    };
+
+    var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">';
+
+    /* 인기 스크립트 TOP 10 */
+    html += '<div class="adm-card"><div class="adm-card-title">🏆 인기 스크립트 TOP 10</div>';
+    if (topScripts.length === 0) {
+      html += '<div class="adm-empty" style="padding:20px;">로그 데이터가 없습니다.<br><small style="color:#ccc;">activity_logs 테이블에 데이터가 쌓이면 표시됩니다.</small></div>';
+    } else {
+      topScripts.forEach(function (entry, i) {
+        var pct = Math.round((entry[1] / (topScripts[0][1] || 1)) * 100);
+        html +=
+          '<div style="margin-bottom:10px;">' +
+            '<div style="display:flex;justify-content:space-between;font-size:0.8em;margin-bottom:4px;">' +
+              '<span style="font-weight:600;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">' + (i + 1) + '. ' + entry[0] + '</span>' +
+              '<span style="color:var(--color-accent,#D4845A);font-weight:700;flex-shrink:0;margin-left:8px;">' + entry[1] + '회</span>' +
+            '</div>' +
+            '<div style="height:6px;background:var(--color-surface-2);border-radius:3px;">' +
+              '<div style="height:100%;width:' + pct + '%;background:var(--color-accent,#D4845A);border-radius:3px;transition:width 0.5s;"></div>' +
+            '</div>' +
+          '</div>';
+      });
+    }
+    html += '</div>';
+
+    /* 최근 활동 로그 */
+    html += '<div class="adm-card"><div class="adm-card-title">⏱️ 최근 활동 로그</div>';
+    if (logs.length === 0) {
+      html += '<div class="adm-empty" style="padding:20px;">로그 데이터가 없습니다.<br><small style="color:#ccc;">activity_logs 테이블 생성 후 수집됩니다.</small></div>';
+    } else {
+      logs.slice(0, 20).forEach(function (l) {
+        var icon  = eventIcon[l.event_type]  || '📌';
+        var event = eventMap[l.event_type]   || l.event_type;
+        var name  = (l.users && l.users.name) || '알 수 없음';
+        html +=
+          '<div class="adm-log-item">' +
+            '<div class="adm-log-icon" style="background:var(--color-surface-2);">' + icon + '</div>' +
+            '<div class="adm-log-body">' +
+              '<div class="adm-log-text"><strong>' + name + '</strong> · ' + event + '</div>' +
+              '<div class="adm-log-time">' + admTimeAgo(l.created_at) + '</div>' +
+            '</div>' +
+          '</div>';
+      });
+    }
+    html += '</div></div>';
+
+    /* 안내 카드 */
+    html +=
+      '<div class="adm-card" style="background:var(--color-surface-2);">' +
+        '<div class="adm-card-title">💡 로그 수집 설정 안내</div>' +
+        '<div style="font-size:0.8em;color:var(--color-text-secondary);line-height:1.8;">' +
+          '로그 수집을 시작하려면 Supabase에서 <code style="background:var(--color-border);padding:1px 6px;border-radius:4px;">activity_logs</code> 테이블을 생성해야 합니다.<br>' +
+          '<strong>필수 컬럼:</strong> id (bigserial), user_id (uuid), event_type (text), target_type (text), target_id (text), created_at (timestamptz)<br>' +
+          '<strong>수집 항목:</strong> 로그인 / 스크립트 클릭 / Quick 메뉴 클릭 / 즐겨찾기 추가' +
+        '</div>' +
+      '</div>';
+
+    admContent(html);
+  } catch (e) {
+    admContent('<div class="adm-empty">로그를 불러오지 못했습니다.</div>');
+  }
+};
+
+/* ════════════════════════════════════════
+   탭 5: 공지·배너 관리
+════════════════════════════════════════ */
+window.admLoadNotice = async function () {
+  try {
+    var res     = await admFetch('/rest/v1/posts?is_notice=eq.true&select=id,title,content,created_at&order=created_at.desc&limit=10');
+    var notices = res.ok ? await res.json() : [];
+
+    var noticeList = '';
+    if (notices.length === 0) {
+      noticeList = '<div style="padding:16px;color:var(--color-text-tertiary);font-size:0.842em;text-align:center;">등록된 공지가 없습니다.</div>';
+    } else {
+      notices.forEach(function (n) {
+        noticeList +=
+          '<div style="padding:12px 0;border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-size:0.842em;font-weight:700;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (n.title || '-') + '</div>' +
+              '<div style="font-size:0.75em;color:#aaa;margin-top:2px;">' + ((n.created_at || '').slice(0, 10)) + '</div>' +
+            '</div>' +
+            '<button class="adm-btn adm-btn-danger adm-btn-sm"' +
+              ' onclick="window.admTogglePost(\'' + n.id + '\',\'is_notice\',false);setTimeout(window.admLoadNotice,500)">' +
+              '공지 해제' +
+            '</button>' +
+          '</div>';
+      });
+    }
+
+    var html =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
+        /* 공지 작성 */
+        '<div class="adm-card">' +
+          '<div class="adm-card-title">📢 공지 작성</div>' +
+          '<div class="adm-form-row"><label class="adm-form-label">제목 *</label>' +
+            '<input class="adm-input" id="adm-notice-title" placeholder="공지 제목을 입력하세요"></div>' +
+          '<div class="adm-form-row"><label class="adm-form-label">내용 *</label>' +
+            '<textarea class="adm-textarea" id="adm-notice-content" placeholder="공지 내용을 입력하세요" style="min-height:120px;"></textarea></div>' +
+          '<div class="adm-form-row"><label class="adm-form-label">게시판 범위</label>' +
+            '<select class="adm-select" id="adm-notice-scope" style="width:100%;">' +
+              '<option value="global">전체 (허브)</option>' +
+              '<option value="branch">지점 공지</option>' +
+            '</select></div>' +
+          '<button class="adm-btn adm-btn-accent" style="width:100%;padding:10px;" onclick="window.admPostNotice()">공지 등록하기</button>' +
+        '</div>' +
+        /* 공지 목록 */
+        '<div class="adm-card">' +
+          '<div class="adm-card-title">📋 현재 공지 목록</div>' +
+          noticeList +
+          '<div style="margin-top:12px;"><button class="adm-btn adm-btn-ghost" onclick="window.admLoadNotice()">🔄 새로고침</button></div>' +
+        '</div>' +
+      '</div>' +
+      /* 홈 안내 배너 */
+      '<div class="adm-card" style="margin-top:0;">' +
+        '<div class="adm-card-title">🎯 홈 안내 배너</div>' +
+        '<div style="font-size:0.8em;color:var(--color-text-tertiary);margin-bottom:12px;">' +
+          '홈 화면 상단에 표시되는 안내 문구를 관리합니다.' +
+        '</div>' +
+        '<div class="adm-form-row"><label class="adm-form-label">배너 문구</label>' +
+          '<input class="adm-input" id="adm-banner-text" placeholder="예: 🎉 베타 오픈 기간 무료 체험 진행 중!"></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="adm-btn adm-btn-accent" onclick="window.admSaveBanner()">배너 저장</button>' +
+          '<button class="adm-btn adm-btn-ghost"  onclick="window.admClearBanner()">배너 숨김</button>' +
+        '</div>' +
+        '<div id="adm-banner-preview" style="margin-top:12px;display:none;' +
+          'background:var(--color-accent,#D4845A);color:#fff;border-radius:var(--radius-sm,8px);' +
+          'padding:10px 14px;font-size:0.842em;font-weight:600;text-align:center;"></div>' +
+      '</div>';
+
+    admContent(html);
+
+    /* 저장된 배너 복원 */
+    var savedBanner = localStorage.getItem('os_admin_banner');
+    if (savedBanner) {
+      var inp     = document.getElementById('adm-banner-text');
+      var preview = document.getElementById('adm-banner-preview');
+      if (inp)     inp.value = savedBanner;
+      if (preview) { preview.textContent = savedBanner; preview.style.display = 'block'; }
+    }
+  } catch (e) {
+    admContent('<div class="adm-empty">공지 정보를 불러오지 못했습니다.</div>');
+  }
+};
+
+window.admPostNotice = async function () {
+  var titleEl   = document.getElementById('adm-notice-title');
+  var contentEl = document.getElementById('adm-notice-content');
+  var scopeEl   = document.getElementById('adm-notice-scope');
+  var title   = titleEl   ? titleEl.value.trim()   : '';
+  var content = contentEl ? contentEl.value.trim() : '';
+  var scope   = scopeEl   ? scopeEl.value           : 'global';
+  if (!title || !content) { alert('제목과 내용을 모두 입력해 주세요.'); return; }
+  try {
+    var s = window.AppState || {};
+    var res = await admFetch('/rest/v1/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        title: title, content: content, category: 'notice',
+        is_notice: true, scope: scope,
+        author_id: s.userId || '',
+        author_name: s.name || '관리자',
+        created_at: new Date().toISOString()
+      })
+    });
+    if (res.ok) {
+      alert('공지가 등록되었습니다.');
+      if (titleEl)   titleEl.value   = '';
+      if (contentEl) contentEl.value = '';
+      setTimeout(window.admLoadNotice, 300);
+    } else {
+      alert('등록 중 오류가 발생했습니다.');
+    }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+window.admSaveBanner = function () {
+  var inp  = document.getElementById('adm-banner-text');
+  var text = inp ? inp.value.trim() : '';
+  if (!text) { alert('배너 문구를 입력해 주세요.'); return; }
+  localStorage.setItem('os_admin_banner', text);
+  var preview = document.getElementById('adm-banner-preview');
+  if (preview) { preview.textContent = text; preview.style.display = 'block'; }
+  alert('배너가 저장되었습니다.');
+};
+
+window.admClearBanner = function () {
+  localStorage.removeItem('os_admin_banner');
+  var inp     = document.getElementById('adm-banner-text');
+  var preview = document.getElementById('adm-banner-preview');
+  if (inp)     inp.value = '';
+  if (preview) preview.style.display = 'none';
+  alert('배너가 숨김 처리됐습니다.');
+};
+
+/* ════════════════════════════════════════
+   탭 6: 화면설정 (메뉴 ON/OFF + 배너 이미지)
+════════════════════════════════════════ */
+window.admLoadSettings = async function () {
+  admContent('<div class="adm-loading">설정 로딩 중...</div>');
+
+  var pageDefs = [
+    { key: 'home',     label: '🏠 홈' },
+    { key: 'scripts',  label: '📋 스크립트' },
+    { key: 'board',    label: '💬 게시판' },
+    { key: 'myspace',  label: '🗂️ MY SPACE' },
+    { key: 'news',     label: '📰 보험뉴스' },
+    { key: 'quick',    label: '⚡ Quick 메뉴' },
+    { key: 'together', label: '🤝 함께해요' }
+  ];
+  /* 배너 대상: Quick 제외 (Quick은 사이드바 메뉴라 배너 없음) */
+  var bannerPages = pageDefs.filter(function (p) { return p.key !== 'quick'; });
+
+  /* app_settings 전체 fetch */
+  var savedMap = {};
+  try {
+    var res = await admFetch('/rest/v1/app_settings?select=key,value');
+    if (res.ok) {
+      var rows = await res.json();
+      rows.forEach(function (r) { savedMap[r.key] = r.value; });
+    }
+  } catch (e) { /* 테이블 없으면 기본값 사용 */ }
+
+  /* 저장값 로드 */
+  var hubOn      = savedMap['board_tab_hub']     !== 'false';
+  var companyOn  = savedMap['board_tab_company'] === 'true';
+  var quickGate  = savedMap['gate_quick_a2']     !== 'false';
+  var searchGate = savedMap['gate_search_a2']    !== 'false';  /* [2026-04-17] 검색기 PRO 게이트 (기본 PRO 전용) */
+
+  /* ─────────────────────────────────────────────
+     섹션 1: B영역 메뉴 표시 설정
+  ───────────────────────────────────────────── */
+  var menuRowsHtml = pageDefs.map(function (p) {
+    var key  = 'menu_' + p.key;
+    var isOn = savedMap[key] !== 'false';
+    return (
+      '<div class="adm-set-row ' + (isOn ? '' : 'is-off') + '">' +
+        '<span class="adm-set-rlabel ' + (isOn ? 'on' : '') + '">' +
+          '<span class="adm-set-dot"></span>' + p.label +
+        '</span>' +
+        '<label class="adm-cb-wrap">' +
+          '<input type="checkbox" id="setting-' + key + '" data-s-menu="' + p.key + '"' + (isOn ? ' checked' : '') + '>' +
+          '<span class="adm-cb-state ' + (isOn ? 'on' : 'off') + '">' + (isOn ? '표시' : '숨김') + '</span>' +
+        '</label>' +
+      '</div>'
+    );
+  }).join('');
+
+  var menuPvHtml = pageDefs.map(function (p) {
+    var isOn  = savedMap['menu_' + p.key] !== 'false';
+    var emo   = p.label.split(' ')[0];
+    var nm    = p.label.replace(emo, '').trim();
+    if (nm.length > 4) nm = nm.slice(0, 4);
+    return (
+      '<div class="adm-mini-menu ' + (isOn ? '' : 'hidden') + '" data-pv-menu="' + p.key + '">' +
+        '<span class="emo">' + emo + '</span>' + nm +
+      '</div>'
+    );
+  }).join('');
+
+  var section1 =
+    '<div class="adm-card" style="margin-bottom:14px;">' +
+      '<div class="adm-card-title">⚙️ B영역 메뉴 표시 설정</div>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">체크를 바꾸면 오른쪽 "설정 후 사용자 화면"에 즉시 반영됩니다.</div>' +
+      '<div class="adm-set-sec">' +
+        '<div>' +
+          menuRowsHtml +
+          '<div style="margin-top:14px;display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveMenuSettings()">💾 메뉴 설정 저장</button>' +
+          '</div>' +
+        '</div>' +
+        '<aside class="adm-pv">' +
+          '<div class="adm-pv-head">' +
+            '<span class="adm-pv-label">설정 후 사용자 화면</span>' +
+            '<span class="adm-pv-tag">실시간</span>' +
+          '</div>' +
+          '<div class="adm-frame">' +
+            '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+            '<div class="adm-pv-body">' +
+              '<div class="adm-mini-side" id="adm-pv-sb-menu">' + menuPvHtml + '</div>' +
+              '<div class="adm-mini-main">' +
+                '<div class="adm-mini-title">원세컨드</div>' +
+                '<div class="adm-mini-desc">왼쪽 사이드바에 보이는 메뉴가 설계사 화면에 그대로 나타납니다.</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="adm-pv-foot">표시 중 <span class="adm-pv-count" id="adm-pv-menu-on">0</span> · 숨김 <span class="adm-pv-count" id="adm-pv-menu-off">0</span></div>' +
+        '</aside>' +
+      '</div>' +
+    '</div>';
+
+  /* ─────────────────────────────────────────────
+     섹션 2: 기능 게이트 (PRO 전용 설정)
+  ───────────────────────────────────────────── */
+  var section2 =
+    '<div class="adm-card" style="margin-bottom:14px;">' +
+      '<div class="adm-card-title">🔒 기능 게이트 (PRO 전용 설정)</div>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">특정 기능을 PRO 전용으로 제한하거나 전체 공개할 수 있습니다.</div>' +
+      '<div class="adm-set-sec">' +
+        '<div>' +
+          /* 행1: 빠른 실행 */
+          '<div class="adm-set-row ' + (quickGate ? '' : 'is-off') + '">' +
+            '<span class="adm-set-rlabel on">' +
+              '<span class="adm-set-dot"></span>⚡ 빠른 실행 (A2 영역)' +
+            '</span>' +
+            '<label class="adm-cb-wrap">' +
+              '<input type="checkbox" id="setting-gate_quick_a2" data-s-gate="quick_a2"' + (quickGate ? ' checked' : '') + '>' +
+              '<span class="adm-cb-state ' + (quickGate ? 'on' : 'off') + '">' + (quickGate ? 'PRO 전용' : '전체 공개') + '</span>' +
+            '</label>' +
+          '</div>' +
+          /* 행2: 검색기 [2026-04-17 신규] */
+          '<div class="adm-set-row ' + (searchGate ? '' : 'is-off') + '">' +
+            '<span class="adm-set-rlabel on">' +
+              '<span class="adm-set-dot"></span>🔍 검색기 (A2 영역)' +
+            '</span>' +
+            '<label class="adm-cb-wrap">' +
+              '<input type="checkbox" id="setting-gate_search_a2" data-s-gate="search_a2"' + (searchGate ? ' checked' : '') + '>' +
+              '<span class="adm-cb-state ' + (searchGate ? 'on' : 'off') + '">' + (searchGate ? 'PRO 전용' : '전체 공개') + '</span>' +
+            '</label>' +
+          '</div>' +
+          '<div style="margin-top:14px;display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveGateSettings()">💾 기능 게이트 저장</button>' +
+          '</div>' +
+        '</div>' +
+        '<aside class="adm-pv">' +
+          '<div class="adm-pv-head">' +
+            '<span class="adm-pv-label">설정 후 사용자 화면</span>' +
+            '<span class="adm-pv-tag">실시간</span>' +
+          '</div>' +
+          '<div class="adm-frame">' +
+            '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+            '<div class="adm-a2-pv">' +
+              /* A2 영역: 검색창 + 빠른 실행 버튼 [2026-04-17 검색창 추가] */
+              '<div class="adm-a2-top" style="gap:8px;">' +
+                '<span class="adm-pv-search ' + (searchGate ? 'gated' : '') + '" id="adm-pv-search-box">' +
+                  '<span style="opacity:0.6;">🔍</span>' +
+                  '<span class="adm-pv-search-text">스크립트, 게시글, 예외질환, 업무자료 검색...</span>' +
+                '</span>' +
+                '<span class="adm-a2-btn ' + (quickGate ? 'gated' : '') + '" id="adm-pv-quick-btn">⚡ 빠른 실행</span>' +
+              '</div>' +
+              '<div class="adm-a2-cap" id="adm-pv-quick-cap">' +
+                (quickGate && searchGate ? '검색창·빠른 실행 모두 PRO 전용으로 표시됩니다'
+                  : !quickGate && !searchGate ? '검색창·빠른 실행 모두 전체 공개됩니다'
+                  : quickGate ? '빠른 실행만 PRO 전용, 검색창은 전체 공개'
+                  : '검색창만 PRO 전용, 빠른 실행은 전체 공개') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</aside>' +
+      '</div>' +
+    '</div>';
+
+  /* ─────────────────────────────────────────────
+     섹션 3: 게시판 1차 탭 표시 (허브/보험사만 토글)
+  ───────────────────────────────────────────── */
+  var section3 =
+    '<div class="adm-card" style="margin-bottom:14px;">' +
+      '<div class="adm-card-title">💬 게시판 1차 탭 표시</div>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">' +
+        '게시판 페이지 상단 1차 탭(허브/팀/지점/보험사) 노출 여부를 관리합니다. ' +
+        '<strong style="color:var(--color-text-primary);font-weight:700;">팀·지점 게시판은 현장 업무용이라 항상 표시</strong>되며 잠금 상태입니다.' +
+      '</div>' +
+      '<div class="adm-set-sec">' +
+        '<div>' +
+          '<div class="adm-set-row ' + (hubOn ? '' : 'is-off') + '">' +
+            '<span class="adm-set-rlabel ' + (hubOn ? 'on' : '') + '">' +
+              '<span class="adm-set-dot"></span>🌐 허브게시판' +
+            '</span>' +
+            '<label class="adm-cb-wrap">' +
+              '<input type="checkbox" id="setting-board_tab_hub" data-s-btab="hub"' + (hubOn ? ' checked' : '') + '>' +
+              '<span class="adm-cb-state ' + (hubOn ? 'on' : 'off') + '">' + (hubOn ? '표시' : '숨김') + '</span>' +
+            '</label>' +
+          '</div>' +
+          '<div class="adm-set-row is-locked">' +
+            '<span class="adm-set-rlabel"><span class="adm-set-dot"></span>👥 팀게시판</span>' +
+            '<span class="adm-lock-tag">🔒 항상 표시 (고정)</span>' +
+          '</div>' +
+          '<div class="adm-set-row is-locked">' +
+            '<span class="adm-set-rlabel"><span class="adm-set-dot"></span>🏢 지점게시판</span>' +
+            '<span class="adm-lock-tag">🔒 항상 표시 (고정)</span>' +
+          '</div>' +
+          '<div class="adm-set-row ' + (companyOn ? '' : 'is-off') + '">' +
+            '<span class="adm-set-rlabel ' + (companyOn ? 'on' : '') + '">' +
+              '<span class="adm-set-dot"></span>🏛️ 보험사게시판 <span class="adm-ver-badge">v2.0</span>' +
+            '</span>' +
+            '<label class="adm-cb-wrap">' +
+              '<input type="checkbox" id="setting-board_tab_company" data-s-btab="company"' + (companyOn ? ' checked' : '') + '>' +
+              '<span class="adm-cb-state ' + (companyOn ? 'on' : 'off') + '">' + (companyOn ? '표시' : '숨김') + '</span>' +
+            '</label>' +
+          '</div>' +
+          '<div style="margin-top:14px;display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveBoardTabs()">💾 게시판 탭 저장</button>' +
+          '</div>' +
+          '<div class="adm-hint-box">' +
+            '💡 <strong>보험사게시판</strong>은 v2.0 기능으로, 출시 전까지 숨김이 기본값입니다. 노출하면 설계사가 "원세컨드가 보험사 자료를 직접 제공한다"고 오해할 수 있습니다.' +
+          '</div>' +
+        '</div>' +
+        '<aside class="adm-pv">' +
+          '<div class="adm-pv-head">' +
+            '<span class="adm-pv-label">설정 후 사용자 화면 (게시판 페이지)</span>' +
+            '<span class="adm-pv-tag">실시간</span>' +
+          '</div>' +
+          '<div class="adm-frame">' +
+            '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+            '<div class="adm-bd-pv">' +
+              '<div class="adm-bd-t1" id="adm-pv-bd-t1">' +
+                '<div class="adm-bd-t1-tab ' + (hubOn ? 'on' : 'hidden') + '" data-pv-t1="hub">🌐 허브<span class="mini-bd">공개</span></div>' +
+                '<div class="adm-bd-t1-tab ' + (hubOn ? '' : 'on') + '" data-pv-t1="team">👥 팀</div>' +
+                '<div class="adm-bd-t1-tab" data-pv-t1="branch">🏢 지점</div>' +
+                '<div class="adm-bd-t1-tab ' + (companyOn ? '' : 'hidden') + '" data-pv-t1="company">🏛️ 보험사</div>' +
+              '</div>' +
+              '<div class="adm-bd-t2">' +
+                '<div class="adm-bd-t2-tab on">전체</div>' +
+                '<div class="adm-bd-t2-tab">공지사항</div>' +
+                '<div class="adm-bd-t2-tab">상품Q&amp;A</div>' +
+                '<div class="adm-bd-t2-tab">인수Q&amp;A</div>' +
+              '</div>' +
+              '<div class="adm-bd-info">' +
+                '<strong>허브게시판</strong>은 팀·지점 게시판에서 좋은 글이 승인된 공개 게시판입니다.<br>2차 탭(전체/공지/상품/인수)은 모든 1차 탭에 공통 표시됩니다.' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="adm-pv-foot">1차 탭 표시 중 <span class="adm-pv-count" id="adm-pv-bd-on">0</span> / <span class="adm-pv-count">4</span></div>' +
+        '</aside>' +
+      '</div>' +
+    '</div>';
+
+  /* ─────────────────────────────────────────────
+     섹션 4: 페이지별 배너 이미지 (좌: 업로드 / 우: 전환 미리보기)
+  ───────────────────────────────────────────── */
+  var bannerRowsHtml = bannerPages.map(function (p) {
+    var key = 'banner_img_' + p.key;
+    var url = savedMap[key] || '';
+    var safeUrl = url.replace(/"/g, '&quot;');
+    var fileName = url ? url.split('/').pop() : '선택된 파일 없음';
+    return (
+      '<div class="adm-set-row" style="padding:8px 10px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">' +
+          '<span style="width:100px;font-weight:700;color:var(--color-text-primary);font-size:0.842em;flex-shrink:0;">' + p.label + '</span>' +
+          '<input type="hidden" id="banner-' + p.key + '" value="' + safeUrl + '">' +
+          '<input type="file" id="banner-file-' + p.key + '" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="window.admBannerFileSelected(\'' + p.key + '\')">' +
+          '<div id="banner-preview-' + p.key + '" style="width:40px;height:22px;border-radius:3px;overflow:hidden;border:1px solid var(--color-border);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+            (url
+              ? '<img src="' + safeUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'<span style=&quot;font-size:0.65em;color:#ccc;&quot;>X</span>\'">'
+              : '<span style="font-size:0.65em;color:#ccc;">없음</span>') +
+          '</div>' +
+          '<span id="banner-filename-' + p.key + '" style="flex:1;min-width:0;font-size:0.78em;color:' + (url ? 'var(--color-text-secondary)' : '#aaa') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+            fileName +
+          '</span>' +
+        '</div>' +
+        (url
+          ? '<button class="adm-btn adm-btn-danger adm-btn-sm" onclick="window.admBannerClear(\'' + p.key + '\')">삭제</button>'
+          : '<button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="document.getElementById(\'banner-file-' + p.key + '\').click()">📁 선택</button>'
+        ) +
+      '</div>'
+    );
+  }).join('');
+
+  var firstBannerKey = bannerPages[0].key;
+  var firstBannerUrl = savedMap['banner_img_' + firstBannerKey] || '';
+  var firstBannerLabel = bannerPages[0].label;
+
+  var selectorBtns = bannerPages.map(function (p, i) {
+    return '<button class="adm-bn-sel-btn ' + (i === 0 ? 'active' : '') + '" onclick="window.admBnSelect(\'' + p.key + '\', \'' + p.label.replace(/'/g, '&apos;') + '\')">' + p.label + '</button>';
+  }).join('');
+
+  var section4 =
+    '<div class="adm-card">' +
+      '<div class="adm-card-title">🖼️ 페이지별 배너 이미지</div>' +
+      '<div style="font-size:0.8em;color:var(--color-text-secondary);margin-bottom:12px;">' +
+        '📁 파일 선택 버튼으로 내 컴퓨터에서 이미지를 선택하세요. 저장 시 자동 업로드됩니다.<br>' +
+        '<span style="color:#888;">권장: 가로 1200px 이상 · 세로 120~200px · JPG/PNG/WebP · 최대 5MB</span>' +
+      '</div>' +
+      '<div class="adm-set-sec">' +
+        '<div>' +
+          bannerRowsHtml +
+          '<div style="margin-top:14px;display:flex;gap:8px;">' +
+            '<button class="adm-btn adm-btn-primary" onclick="window.admSaveBannerSettings()">💾 배너 설정 저장</button>' +
+            '<button class="adm-btn adm-btn-ghost"   onclick="window.admLoadSettings()">🔄 새로고침</button>' +
+          '</div>' +
+        '</div>' +
+        '<aside class="adm-pv">' +
+          '<div class="adm-pv-head">' +
+            '<span class="adm-pv-label">설정 후 사용자 화면</span>' +
+            '<span class="adm-pv-tag">실시간</span>' +
+          '</div>' +
+          '<div class="adm-frame">' +
+            '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+            '<div class="adm-bn-pv-body">' +
+              '<div class="adm-bn-banner" id="adm-pv-bn-banner" ' +
+                (firstBannerUrl
+                  ? 'style="background-image:url(\'' + firstBannerUrl.replace(/'/g, '&apos;') + '\');background-size:cover;background-position:center;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);"'
+                  : 'style="background:var(--color-brand,#6B3A2A);color:#fff;"') +
+                '>' +
+                firstBannerLabel + (firstBannerUrl ? ' 배너' : ' — 배너 없음 (기본 갈색)') +
+              '</div>' +
+              '<div class="adm-bn-content">페이지 상단에 이렇게 표시됩니다. 아래 버튼으로 다른 페이지 미리보기로 전환할 수 있습니다.</div>' +
+              '<div class="adm-bn-selector">' + selectorBtns + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</aside>' +
+      '</div>' +
+    '</div>';
+
+  admContent(section1 + section2 + section3 + section4);
+
+  /* 이벤트 바인딩 + 초기 동기화 */
+  window.admBindSettingsEvents();
+  window.admSyncMenuPreview();
+  window.admSyncBoardPreview();
+};
+
+/* ─────────────────────────────────────────────
+   이벤트 바인딩 (화면설정 탭 내부)
+───────────────────────────────────────────── */
+window.admBindSettingsEvents = function () {
+  document.querySelectorAll('[data-s-menu]').forEach(function (cb) {
+    cb.addEventListener('change', window.admSyncMenuPreview);
+  });
+  document.querySelectorAll('[data-s-gate]').forEach(function (cb) {
+    cb.addEventListener('change', window.admSyncGatePreview);
+  });
+  document.querySelectorAll('[data-s-btab]').forEach(function (cb) {
+    cb.addEventListener('change', window.admSyncBoardPreview);
+  });
+};
+
+window.admSyncMenuPreview = function () {
+  var on = 0, off = 0;
+  document.querySelectorAll('[data-s-menu]').forEach(function (cb) {
+    var key = cb.getAttribute('data-s-menu');
+    var row = cb.closest('.adm-set-row');
+    var lab = row.querySelector('.adm-set-rlabel');
+    var st  = cb.parentElement.querySelector('.adm-cb-state');
+    var pv  = document.querySelector('[data-pv-menu="' + key + '"]');
+    if (cb.checked) {
+      st.textContent = '표시'; st.classList.add('on'); st.classList.remove('off');
+      row.classList.remove('is-off'); lab.classList.add('on');
+      if (pv) pv.classList.remove('hidden');
+      on++;
+    } else {
+      st.textContent = '숨김'; st.classList.add('off'); st.classList.remove('on');
+      row.classList.add('is-off'); lab.classList.remove('on');
+      if (pv) pv.classList.add('hidden');
+      off++;
+    }
+  });
+  var onEl = document.getElementById('adm-pv-menu-on');
+  var offEl = document.getElementById('adm-pv-menu-off');
+  if (onEl) onEl.textContent = on;
+  if (offEl) offEl.textContent = off;
+
+  var sb = document.getElementById('adm-pv-sb-menu');
+  if (sb) {
+    var existing = sb.querySelector('.adm-empty-msg');
+    if (on === 0 && !existing) {
+      var e = document.createElement('div'); e.className = 'adm-empty-msg'; e.textContent = '모든 메뉴 숨김';
+      sb.appendChild(e);
+    } else if (on > 0 && existing) existing.remove();
+  }
+};
+
+window.admSyncGatePreview = function () {
+  var cb = document.querySelector('[data-s-gate="quick_a2"]');
+  if (!cb) return;
+  var st  = cb.parentElement.querySelector('.adm-cb-state');
+  var row = cb.closest('.adm-set-row');
+  var btn = document.getElementById('adm-pv-quick-btn');
+  var cap = document.getElementById('adm-pv-quick-cap');
+  if (cb.checked) {
+    st.textContent = 'PRO 전용'; st.classList.add('on'); st.classList.remove('off');
+    row.classList.remove('is-off');
+    if (btn) btn.classList.add('gated');
+    if (cap) cap.textContent = 'A2 영역 우측에 PRO 뱃지와 함께 표시됩니다';
+  } else {
+    st.textContent = '전체 공개'; st.classList.add('off'); st.classList.remove('on');
+    row.classList.add('is-off');
+    if (btn) btn.classList.remove('gated');
+    if (cap) cap.textContent = 'A2 영역에 모든 사용자에게 표시됩니다';
+  }
+};
+
+window.admSyncBoardPreview = function () {
+  var on = 2; /* 팀+지점 항상 표시 */
+  document.querySelectorAll('[data-s-btab]').forEach(function (cb) {
+    var key = cb.getAttribute('data-s-btab');
+    var row = cb.closest('.adm-set-row');
+    var lab = row.querySelector('.adm-set-rlabel');
+    var st  = cb.parentElement.querySelector('.adm-cb-state');
+    var pv  = document.querySelector('[data-pv-t1="' + key + '"]');
+    if (cb.checked) {
+      st.textContent = '표시'; st.classList.add('on'); st.classList.remove('off');
+      row.classList.remove('is-off'); lab.classList.add('on');
+      if (pv) pv.classList.remove('hidden');
+      on++;
+    } else {
+      st.textContent = '숨김'; st.classList.add('off'); st.classList.remove('on');
+      row.classList.add('is-off'); lab.classList.remove('on');
+      if (pv) pv.classList.add('hidden');
+    }
+  });
+  var onEl = document.getElementById('adm-pv-bd-on');
+  if (onEl) onEl.textContent = on;
+
+  /* 첫 번째 표시 탭을 active로 */
+  var firstOn = document.querySelector('.adm-bd-t1-tab:not(.hidden)');
+  document.querySelectorAll('.adm-bd-t1-tab').forEach(function (t) { t.classList.remove('on'); });
+  if (firstOn) firstOn.classList.add('on');
+};
+
+/* 배너 미리보기 페이지 전환 */
+window.admBnSelect = function (key, label) {
+  document.querySelectorAll('.adm-bn-sel-btn').forEach(function (b) { b.classList.remove('active'); });
+  var btns = document.querySelectorAll('.adm-bn-sel-btn');
+  btns.forEach(function (b) {
+    if (b.textContent.trim() === label.replace(/&apos;/g, "'")) b.classList.add('active');
+  });
+
+  var hidden = document.getElementById('banner-' + key);
+  var url = (hidden && hidden.value) ? hidden.value : '';
+  var banner = document.getElementById('adm-pv-bn-banner');
+  if (!banner) return;
+
+  if (url) {
+    banner.style.backgroundImage = "url('" + url.replace(/'/g, "\\'") + "')";
+    banner.style.backgroundSize = 'cover';
+    banner.style.backgroundPosition = 'center';
+    banner.style.background = banner.style.background;
+    banner.style.color = '#fff';
+    banner.style.textShadow = '0 1px 3px rgba(0,0,0,0.5)';
+    banner.textContent = label + ' 배너';
+  } else {
+    banner.style.backgroundImage = 'none';
+    banner.style.background = 'var(--color-brand, #6B3A2A)';
+    banner.style.color = '#fff';
+    banner.style.textShadow = 'none';
+    banner.textContent = label + ' — 배너 없음 (기본 갈색)';
+  }
+};
+
+/* 파일 선택 시 로컬 미리보기 즉시 반영 */
+window.admBannerFileSelected = function (pageKey) {
+  var fileInput = document.getElementById('banner-file-' + pageKey);
+  var preview   = document.getElementById('banner-preview-' + pageKey);
+  var filename  = document.getElementById('banner-filename-' + pageKey);
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+  var file = fileInput.files[0];
+
+  /* 파일명 표시 */
+  if (filename) {
+    filename.textContent = file.name;
+    filename.style.color = 'var(--color-text-primary)';
+  }
+
+  /* 로컬 미리보기 */
+  if (preview) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;">';
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+/* 배너 삭제 (UI 초기화 + hidden input 비우기) */
+window.admBannerClear = function (pageKey) {
+  var hiddenInput = document.getElementById('banner-' + pageKey);
+  var fileInput   = document.getElementById('banner-file-' + pageKey);
+  var preview     = document.getElementById('banner-preview-' + pageKey);
+  var filename    = document.getElementById('banner-filename-' + pageKey);
+  if (hiddenInput) hiddenInput.value = '';
+  if (fileInput)   fileInput.value = '';
+  if (preview)     preview.innerHTML = '<span style="font-size:0.7em;color:#ccc;">없음</span>';
+  if (filename)  { filename.textContent = '선택된 파일 없음'; filename.style.color = '#aaa'; }
+};
+
+/* 기능 게이트 저장 (PRO 전용 설정) */
+window.admSaveGateSettings = async function () {
+  /* [2026-04-17] 검색기 게이트 추가 */
+  var quickEl  = document.getElementById('setting-gate_quick_a2');
+  var searchEl = document.getElementById('setting-gate_search_a2');
+  var rows = [
+    { group_name: 'gate', key: 'gate_quick_a2',  value: quickEl  && quickEl.checked  ? 'true' : 'false' },
+    { group_name: 'gate', key: 'gate_search_a2', value: searchEl && searchEl.checked ? 'true' : 'false' }
+  ];
+  try {
+    var delRes = await admFetch('/rest/v1/app_settings?group_name=eq.gate', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!delRes.ok && delRes.status !== 404) {
+      var e1 = await delRes.text();
+      console.error('[admin] 게이트 삭제 실패:', delRes.status, e1);
+      alert('저장 실패 (삭제 단계 오류)');
+      return;
+    }
+    var insRes = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    if (insRes.ok) { alert('기능 게이트 설정이 저장됐습니다.'); }
+    else { var e2 = await insRes.text(); console.error('[admin] 게이트 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* 게시판 1차 탭 저장 (허브/보험사만) */
+window.admSaveBoardTabs = async function () {
+  var hubEl     = document.getElementById('setting-board_tab_hub');
+  var companyEl = document.getElementById('setting-board_tab_company');
+  var rows = [
+    { group_name: 'board_tab', key: 'board_tab_hub',     value: hubEl     && hubEl.checked     ? 'true' : 'false' },
+    { group_name: 'board_tab', key: 'board_tab_company', value: companyEl && companyEl.checked ? 'true' : 'false' }
+  ];
+  try {
+    var delRes = await admFetch('/rest/v1/app_settings?group_name=eq.board_tab', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!delRes.ok && delRes.status !== 404) {
+      var e1 = await delRes.text();
+      console.error('[admin] 게시판 탭 삭제 실패:', delRes.status, e1);
+      alert('저장 실패 (삭제 단계 오류)');
+      return;
+    }
+    var insRes = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    if (insRes.ok) { alert('게시판 1차 탭 설정이 저장됐습니다.\n※ 실제 게시판 페이지에 반영하려면 board.html에서 이 값을 읽는 작업이 추가로 필요합니다.'); }
+    else { var e2 = await insRes.text(); console.error('[admin] 게시판 탭 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* 메뉴 ON/OFF 저장 */
+window.admSaveMenuSettings = async function () {
+  var keys = ['home','scripts','board','myspace','news','quick','together'];
+  var rows = keys.map(function (k) {
+    var el = document.getElementById('setting-menu_' + k);
+    return { group_name: 'menu_b', key: 'menu_' + k, value: el && el.checked ? 'true' : 'false' };
+  });
+  try {
+    /* 1) 기존 menu_b 행 전체 삭제 */
+    var delRes = await admFetch('/rest/v1/app_settings?group_name=eq.menu_b', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!delRes.ok && delRes.status !== 404) {
+      var e = await delRes.text();
+      console.error('[admin] 메뉴 삭제 실패:', delRes.status, e);
+      alert('저장 실패 (삭제 단계 오류)');
+      return;
+    }
+    /* 2) 새 값 INSERT */
+    var insRes = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    if (insRes.ok) { alert('메뉴 설정이 저장됐습니다.'); }
+    else { var e2 = await insRes.text(); console.error('[admin] 메뉴 저장 실패:', insRes.status, e2); alert('저장 실패 (HTTP ' + insRes.status + ')'); }
+  } catch (e) { alert('네트워크 오류가 발생했습니다.'); }
+};
+
+/* 배너 이미지 저장 (파일 선택 → Storage 업로드 → URL → app_settings upsert) */
+window.admSaveBannerSettings = async function () {
+  var keys = ['home','scripts','board','myspace','news','quick','together'];
+
+  var upsertRows = [];
+  var hasUpload = false;
+
+  /* 진행 표시 */
+  var saveBtn = document.querySelector('[onclick="window.admSaveBannerSettings()"]');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ 저장 중...'; }
+
+  for (var i = 0; i < keys.length; i++) {
+    var k         = keys[i];
+    var fileInput = document.getElementById('banner-file-' + k);
+    var hidden    = document.getElementById('banner-' + k);
+    var file      = fileInput && fileInput.files && fileInput.files[0];
+
+    if (file) {
+      /* 파일이 선택된 경우 → Storage 업로드 */
+      hasUpload = true;
+      var ext      = file.name.split('.').pop().toLowerCase();
+      var filePath = k + '_' + Date.now() + '.' + ext;
+
+      try {
+        var upRes = await admStorageUpload('onesecond_banner', filePath, file);
+        if (!upRes.ok) {
+          var upErr = await upRes.text();
+          console.error('[admin] 배너 업로드 실패 (' + k + '):', upRes.status, upErr);
+          alert('업로드 실패: ' + k + ' 페이지 (HTTP ' + upRes.status + ')\n\n' + upErr);
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+          return;
+        }
+        /* Public URL: Supabase Storage 공개 URL 패턴 */
+        var base = (window.db && window.db.url) ? window.db.url : '';
+        var publicUrl = base + '/storage/v1/object/public/onesecond_banner/' + filePath;
+        if (hidden) hidden.value = publicUrl;
+        upsertRows.push({ group_name: 'banner_img', key: 'banner_img_' + k, value: publicUrl });
+      } catch (e) {
+        console.error('[admin] 업로드 네트워크 오류:', e);
+        alert('네트워크 오류가 발생했습니다.\n' + e.message);
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+        return;
+      }
+
+    } else if (hidden && hidden.value.trim()) {
+      /* 파일 미선택 + 기존 URL 있음 → 기존값 유지 */
+      upsertRows.push({ group_name: 'banner_img', key: 'banner_img_' + k, value: hidden.value.trim() });
+    } else {
+      /* 삭제된 경우 → 빈 값 저장 */
+      upsertRows.push({ group_name: 'banner_img', key: 'banner_img_' + k, value: '' });
+    }
+  }
+
+  /* app_settings DELETE → INSERT */
+  try {
+    var delRes2 = await admFetch('/rest/v1/app_settings?group_name=eq.banner_img', {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!delRes2.ok && delRes2.status !== 404) {
+      alert('저장 실패 (삭제 단계 오류)');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+      return;
+    }
+    var res = await admFetch('/rest/v1/app_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(upsertRows)
+    });
+    if (res.ok) {
+      if (window.clearBannerCache) window.clearBannerCache();
+      alert('배너 설정이 저장됐습니다.' + (hasUpload ? '\n✅ 이미지 업로드 및 URL 저장 완료.' : '') + '\n페이지 전환 시 즉시 반영됩니다.');
+    } else {
+      var e = await res.text();
+      console.error('[admin] 배너 저장 실패:', res.status, e);
+      alert('저장 실패 (HTTP ' + res.status + ')');
+    }
+  } catch (e) {
+    alert('네트워크 오류가 발생했습니다.');
+  }
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+};
+
+/* ── 부트 ── */
+function _boot() {
+  /* 관리자 권한 확인 */
+  var s = window.AppState;
+  if (!s || s.role !== 'admin') {
+    admContent(
+      '<div class="adm-empty" style="padding:60px;">' +
+        '<div style="font-size:2em;margin-bottom:12px;">🔒</div>' +
+        '<div style="font-weight:700;margin-bottom:6px;">접근 권한이 없습니다</div>' +
+        '<div style="font-size:0.842em;color:var(--color-text-tertiary);">관리자 계정으로 로그인해 주세요.</div>' +
+      '</div>'
+    );
+    return;
+  }
+  window.admLoadUsers();
+}
+
+/* ── appstate:ready 표준 패턴 ── */
+if (window.AppState && window.AppState.ready) {
+  _boot();
+} else {
+  document.addEventListener('appstate:ready', function () { _boot(); }, { once: true });
+}
+
+})();
+</script>
