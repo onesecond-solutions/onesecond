@@ -2,50 +2,54 @@
 /* ════════════════════════════════════════════════════════════
    quick.html 전용 스타일
    레이아웃 구조: _template.html 표준 (pg-outer / pg-header-block / pg-tab-block / pg-content-block / pg-footer-block)
+   2026-04-30: myspace.html 정합 통일 (헤더·패딩·푸터·C영역 분리·D 외곽선 정리)
    design_guide.md 준수 — tokens.css 변수만 사용
 ════════════════════════════════════════════════════════════ */
 
-/* ── 최상위 래퍼 ── */
+/* ── 최상위 래퍼 (myspace 정합: gap:0 + 블록별 margin-bottom) ── */
 .pg-outer {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: var(--pg-tab-bottom);
   padding: var(--pg-side-padding);
   padding-bottom: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   box-sizing: border-box;
+  min-height: 100%;
 }
 
-/* ── ① 타이틀 블록 ── */
+/* ── ① 타이틀 블록 (myspace 정합) ── */
 .pg-header-block {
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
   flex-shrink: 0;
+  margin-bottom: var(--pg-header-bottom);
 }
 .pg-page-header {
-  height: 120px;
-  background: linear-gradient(135deg, var(--color-brand, #A0522D) 0%, var(--color-brand-light, #C4733A) 100%);
+  background: transparent;
+  padding: var(--space-5, 20px) var(--space-1, 4px) var(--space-5, 20px) 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  gap: var(--space-4, 16px);
 }
 .pg-page-title {
-  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
   font-size: 1.5em;
-  font-weight: 800;
-  color: #fff;
+  font-weight: var(--fw-black, 900);
+  color: var(--color-text-primary);
   letter-spacing: -0.5px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
+.pg-page-title .accent { color: var(--color-accent, #D4845A); }
 .pg-page-desc {
-  font-family: var(--font-sans, 'DM Sans', Pretendard, sans-serif);
-  font-size: 0.842em;
-  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.875em;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
 }
 .pg-page-icon {
-  font-size: 2.8em;
-  opacity: 0.15;
+  font-size: 2.2em;
+  opacity: 0.35;
+  color: var(--color-accent, #D4845A);
 }
 
 /* ── ② 탭바 블록 ── */
@@ -55,6 +59,7 @@
   flex-shrink: 0;
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border);
+  margin-bottom: var(--pg-tab-bottom);
 }
 .pg-tab-bar {
   display: flex;
@@ -84,21 +89,17 @@
   border-bottom-color: var(--color-accent, #D4845A);
 }
 
-/* ── ③ 콘텐츠 블록 ── */
+/* ── ③ 콘텐츠 블록 (myspace 정합: 외곽 border 제거, 안쪽 .qck-content-shell 라인만 유지) ── */
 .pg-content-block {
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
   flex-shrink: 0;
-  border: 1px solid var(--color-border);
   background: var(--color-surface, #fff);
+  margin-bottom: var(--space-4);
 }
 
-/* ── 콘텐츠 내부 레이아웃 (2열: 본문 + 우측 패널) ── */
+/* ── 콘텐츠 내부 레이아웃 (C영역 분리 후 단일 컬럼) ── */
 .qck-body-inner {
-  display: grid;
-  grid-template-columns: 1fr 200px;
-  gap: 16px;
-  align-items: start;
   padding: 16px;
 }
 .qck-content-shell {
@@ -132,14 +133,7 @@
 }
 .qck-content-slot table { width: 100% !important; table-layout: auto; }
 
-/* ── 우측 패널 ── */
-.qck-right-panel { display: flex; flex-direction: column; gap: 12px; }
-.qck-panel-card {
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 12px);
-  padding: 14px;
-}
+/* ── C영역 우측 패널 아이템 스타일 (app.html #c-quick 내부에서 사용) ── */
 .qck-panel-title {
   font-size: 0.790em;
   font-weight: 800;
@@ -156,25 +150,21 @@
 .qck-panel-item:last-child { border-bottom: none; }
 .qck-panel-item:hover { color: var(--color-accent, #D4845A); }
 
-/* ── ④ 푸터 블록 ── */
+/* ── ④ 푸터 블록 (myspace 정합: 회색 톤 한 줄 박스) ── */
 .pg-footer-block {
   border-radius: var(--radius-md, 12px);
   overflow: hidden;
   flex-shrink: 0;
 }
 .pg-bottom-bar {
-  background: var(--color-brand, #A0522D);
-  color: #fff;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
   text-align: center;
-  font-size: 0.790em;
-  font-weight: 800;
-  padding: 10px 14px;
-}
-
-/* ── 반응형 ── */
-@media (max-width: 900px) {
-  .qck-body-inner { grid-template-columns: 1fr; }
-  .qck-right-panel { display: none; }
+  font-size: 0.8125em;
+  font-weight: var(--fw-bold, 700);
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
 }
 </style>
 
@@ -183,6 +173,17 @@
 
   <!-- 배너 슬롯 -->
   <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
+
+  <!-- ① 타이틀 블록 -->
+  <div class="pg-header-block">
+    <div class="pg-page-header">
+      <div>
+        <div class="pg-page-title">Quick 메뉴</div>
+        <div class="pg-page-desc">긴박한 순간, 자주 쓰는 자료를 한 곳에서</div>
+      </div>
+      <div class="pg-page-icon">⚡</div>
+    </div>
+  </div>
 
   <!-- ② 탭바 블록 -->
   <div class="pg-tab-block">
@@ -197,7 +198,7 @@
     </div>
   </div>
 
-  <!-- ③ 콘텐츠 블록 -->
+  <!-- ③ 콘텐츠 블록 (C영역 분리: 추천/최근 패널은 app.html #c-quick으로 이동) -->
   <div class="pg-content-block">
     <div class="qck-body-inner">
       <div class="qck-content-shell">
@@ -205,16 +206,6 @@
           <div class="qck-content-head-title" id="qck-content-title">가입설계 / 선심사 동의 녹취 스크립트</div>
         </div>
         <div class="qck-content-slot" id="qck-content-slot"></div>
-      </div>
-      <div class="qck-right-panel">
-        <div class="qck-panel-card" id="qck-right-recommended">
-          <div class="qck-panel-title">🔥 추천 스크립트</div>
-          <div style="font-size:0.690em;color:var(--color-text-tertiary);padding:4px 0;">불러오는 중...</div>
-        </div>
-        <div class="qck-panel-card" id="qck-right-recent">
-          <div class="qck-panel-title">🕐 최근 많이 본</div>
-          <div style="font-size:0.690em;color:var(--color-text-tertiary);padding:4px 0;">불러오는 중...</div>
-        </div>
       </div>
     </div>
   </div>
