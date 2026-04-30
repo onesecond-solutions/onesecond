@@ -24,6 +24,7 @@ body[data-admin-tone="warm"] {
   --admin-text-secondary: #B8A99A;
   --admin-text-tertiary:  #8B7B6B;
   --admin-text-pending:   #998A7C;
+  --admin-text-label:     #A89B8E;
   --admin-border:        #3F3027;
   --admin-border-strong: #564238;
 }
@@ -36,6 +37,7 @@ body[data-admin-tone="slate"] {
   --admin-text-secondary: #94A3B8;
   --admin-text-tertiary:  #64748B;
   --admin-text-pending:   #8794A3;
+  --admin-text-label:     #99A6B5;
   --admin-border:        #334155;
   --admin-border-strong: #475569;
 }
@@ -48,6 +50,7 @@ body[data-admin-tone="navy"] {
   --admin-text-secondary: #94A3B8;
   --admin-text-tertiary:  #6B7A92;
   --admin-text-pending:   #8B97A8;
+  --admin-text-label:     #99A6B5;
   --admin-border:        #2A3754;
   --admin-border-strong: #3F4E6E;
 }
@@ -218,7 +221,7 @@ body.adm-active { overflow: hidden !important; }
 .adm-menu-section-title {
   font-size: 11px;
   font-weight: var(--fw-bold);
-  color: var(--admin-text-tertiary);
+  color: var(--admin-text-label);
   letter-spacing: 0.6px;
   text-transform: uppercase;
   margin-bottom: 12px;
@@ -951,6 +954,7 @@ body.adm-active { overflow: hidden !important; }
         <div class="name">팀장님</div>
         <div class="caret">▾</div>
       </div>
+      <button class="adm-header-btn" onclick="window.admExit()" title="원세컨드 본 앱으로 돌아가기">🚪</button>
     </div>
   </header>
 
@@ -1343,12 +1347,8 @@ body.adm-active { overflow: hidden !important; }
     try { return localStorage.getItem('os_admin_tone') || 'black'; }
     catch(e){ return 'black'; }
   })();
-  // 'black'은 :root 기본값이므로 data 속성 미설정 (왔다 갔다 일관성)
-  if (savedTone === 'black') {
-    document.body.removeAttribute('data-admin-tone');
-  } else {
-    document.body.setAttribute('data-admin-tone', savedTone);
-  }
+  // 5종 일관성 — 모든 톤에 attribute 부착 (black 포함, selector 기반 styling 안정)
+  document.body.setAttribute('data-admin-tone', savedTone);
 
   // 톤 토글 버튼 active 동기화
   setTimeout(function(){
@@ -1410,12 +1410,8 @@ body.adm-active { overflow: hidden !important; }
   // ── 톤 전환 (영구 운영 기능 — 5종: light/warm/slate/black/navy) ───────
   window.admSwitchTone = function (tone) {
     if (['light','warm','slate','black','navy'].indexOf(tone) === -1) return;
-    // 'black'은 :root 기본값 (tokens.css) — data 속성 제거로 toggle
-    if (tone === 'black') {
-      document.body.removeAttribute('data-admin-tone');
-    } else {
-      document.body.setAttribute('data-admin-tone', tone);
-    }
+    // 5종 일관성 — black 포함 모든 톤 attribute 부착 (selector 기반 styling 안정)
+    document.body.setAttribute('data-admin-tone', tone);
     document.querySelectorAll('.adm-tone-btn').forEach(function(btn){
       btn.classList.toggle('active', btn.dataset.tone === tone);
     });
@@ -1443,12 +1439,15 @@ body.adm-active { overflow: hidden !important; }
       window.admExit();
     }
   };
-  // #2 hashchange (사용자가 URL 직접 변경)
+  // #2 hashchange (사용자가 URL 직접 변경) + #admin/* 외 패턴이면 admin 자동 닫기
   var hashHandler = function () {
     var h = location.hash || '';
     if (h.indexOf('#admin/') === 0) {
       var key = h.replace('#admin/', '');
       if (VIEW_LABELS[key]) window.admSwitchView(key);
+    } else {
+      // hash가 #admin/* 패턴이 아니면 admin 자동 닫기 (안전장치 — 본 앱은 hash 라우팅 미사용)
+      window.admExit();
     }
   };
   // #3 pagehide (탭 닫힘·뒤로가기)

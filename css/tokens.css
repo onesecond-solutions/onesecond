@@ -297,6 +297,7 @@
   --admin-text-secondary:  #A1A1AA;
   --admin-text-tertiary:   #71717A;
   --admin-text-pending:    #8C8C95;  /* B영역 pending 메뉴 전용 — primary 대비 30~40% 명도 차이, opacity 미사용 */
+  --admin-text-label:      #98989F;  /* B영역 그룹 라벨 전용 — menu-bg #1A1A1A 대비 ~6:1 (AA+) */
 
   --admin-border:          #2E2E2E;
   --admin-border-strong:   #404040;
@@ -333,9 +334,13 @@ body[data-admin-tone="light"] {
   --admin-text-secondary: #404040;
   --admin-text-tertiary:  #737373;
   --admin-text-pending:   #6B6B6B;   /* light bg #FCFCFC 대비 ~5.2:1 (AA 통과) */
+  --admin-text-label:     #5A5A5A;   /* B영역 그룹 라벨 전용 — bg #FFFFFF 대비 ~7:1 (AAA) */
 
   --admin-border:        #E5E5E5;
   --admin-border-strong: #D4D4D4;
+
+  /* light 명시 menu-bg — :root의 var(--admin-surface) lazy eval 안전망 */
+  --admin-menu-bg:      #FFFFFF;
 
   --admin-shadow-rail:  4px 0 12px rgba(0, 0, 0, 0.04);
   --admin-shadow-menu:  6px 0 12px rgba(0, 0, 0, 0.04);
