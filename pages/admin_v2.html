@@ -23,6 +23,7 @@ body[data-admin-tone="warm"] {
   --admin-text-primary:   #F5EFE6;
   --admin-text-secondary: #B8A99A;
   --admin-text-tertiary:  #8B7B6B;
+  --admin-text-pending:   #998A7C;
   --admin-border:        #3F3027;
   --admin-border-strong: #564238;
 }
@@ -34,6 +35,7 @@ body[data-admin-tone="slate"] {
   --admin-text-primary:   #F1F5F9;
   --admin-text-secondary: #94A3B8;
   --admin-text-tertiary:  #64748B;
+  --admin-text-pending:   #8794A3;
   --admin-border:        #334155;
   --admin-border-strong: #475569;
 }
@@ -45,6 +47,7 @@ body[data-admin-tone="navy"] {
   --admin-text-primary:   #E8EEF7;
   --admin-text-secondary: #94A3B8;
   --admin-text-tertiary:  #6B7A92;
+  --admin-text-pending:   #8B97A8;
   --admin-border:        #2A3754;
   --admin-border-strong: #3F4E6E;
 }
@@ -255,20 +258,20 @@ body.adm-active { overflow: hidden !important; }
   margin: 4px 0 24px;
 }
 
-/* Pending 메뉴 (Phase B 빈 셸 표시) */
+/* Pending 메뉴 (Phase B 빈 셸 표시 — 5종 톤 가독성 표준화 2026-05-01) */
 .adm-menu-item.pending {
-  opacity: 0.5;
+  color: var(--admin-text-pending);
   cursor: not-allowed;
 }
-.adm-menu-item.pending:hover { background: transparent; color: var(--admin-text-secondary); }
+.adm-menu-item.pending:hover { background: transparent; color: var(--admin-text-pending); }
 .adm-menu-item .pending-mark {
   margin-left: auto;
   font-size: 10px;
   font-weight: var(--fw-bold);
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  background: var(--admin-surface-elev);
-  color: var(--admin-text-tertiary);
+  background: var(--admin-border);
+  color: var(--admin-text-secondary);
   letter-spacing: 0.4px;
   text-transform: uppercase;
 }
