@@ -1,18 +1,31 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
   pages/admin_v2.html — 원세컨드 풀 스케일 관리자 콘솔 v2
-  - 작성: 2026-04-30 (Phase B 골격)
+  - 작성: 2026-04-30 (Phase B 골격 → B-2 정착)
   - 시안: claude_code/design_test/admin/v1-full.html (1026줄, 4/25)
   - 진입: pages/admin.html (stub) → 본 파일을 #adm-root에 innerHTML 로드
   - 풀 viewport takeover: position:fixed inset:0 z-index:9000
-  - 다크 테마: tokens.css :root --admin-* (TEMP 웜 다크 / 4종 토글 body[data-admin-tone])
+  - 다크 테마: tokens.css :root --admin-* (기본값 black / 4종 토글 영구 — body[data-admin-tone="warm|slate|navy"])
   - 8섹션 in-document SPA: window.admSwitchView(key)
   - 안전장치 4중: ESC / 🚪 본 앱 / pagehide / MutationObserver unmount
 ═══════════════════════════════════════════════════════════════════════════ -->
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
-   Admin Tone 4종 토글 (Phase B 임시 — 라이브 비교 후 결정 시 (가/다/라) 절 제거)
+   Admin Tone 4종 토글 (영구 운영 기능 — 외부 시연 컨텍스트별 톤 전환 자유도)
+   ─ 기본값(black) = tokens.css :root 정의
+   ─ warm/slate/navy = 본 절에서 override
    ─────────────────────────────────────────────────────────────────────────── */
+body[data-admin-tone="warm"] {
+  --admin-bg:           #1A130E;
+  --admin-surface:      #2A1F18;
+  --admin-surface-2:    #221912;
+  --admin-surface-elev: #34281F;
+  --admin-text-primary:   #F5EFE6;
+  --admin-text-secondary: #B8A99A;
+  --admin-text-tertiary:  #8B7B6B;
+  --admin-border:        #3F3027;
+  --admin-border-strong: #564238;
+}
 body[data-admin-tone="slate"] {
   --admin-bg:           #0F172A;
   --admin-surface:      #1E293B;
@@ -23,17 +36,6 @@ body[data-admin-tone="slate"] {
   --admin-text-tertiary:  #64748B;
   --admin-border:        #334155;
   --admin-border-strong: #475569;
-}
-body[data-admin-tone="black"] {
-  --admin-bg:           #0A0A0A;
-  --admin-surface:      #1A1A1A;
-  --admin-surface-2:    #141414;
-  --admin-surface-elev: #2E2E2E;
-  --admin-text-primary:   #FAFAFA;
-  --admin-text-secondary: #A0A0A0;
-  --admin-text-tertiary:  #707070;
-  --admin-border:        #2E2E2E;
-  --admin-border-strong: #4A4A4A;
 }
 body[data-admin-tone="navy"] {
   --admin-bg:           #0B1426;
@@ -46,7 +48,7 @@ body[data-admin-tone="navy"] {
   --admin-border:        #2A3754;
   --admin-border-strong: #3F4E6E;
 }
-/* warm = :root 기본값 (tokens.css 정의) */
+/* black = :root 기본값 (tokens.css 정의 — 별도 절 불필요) */
 
 body.adm-active { overflow: hidden !important; }
 
@@ -295,7 +297,7 @@ body.adm-active { overflow: hidden !important; }
   font-size: 14px;
 }
 .adm-header-search {
-  flex: 1; max-width: 420px;
+  flex: 0 1 480px;     /* Phase B-2: 50% → 35%(약 480px cap) — 우측 액션 영역 확대 */
   display: flex; align-items: center; gap: 10px;
   height: 38px; padding: 0 14px;
   background: var(--admin-surface-2);
@@ -369,7 +371,7 @@ body.adm-active { overflow: hidden !important; }
 .adm-header-user .name { font-size: 13px; font-weight: var(--fw-bold); color: var(--admin-text-primary); }
 .adm-header-user .caret { color: var(--admin-text-tertiary); font-size: 11px; }
 
-/* 톤 비교 토글 (Phase B 임시 — 결정 후 제거) */
+/* 톤 토글 (영구 운영 — 외부 시연 컨텍스트별 톤 전환 자유도) */
 .adm-tone-toggle {
   display: flex; align-items: center; gap: 4px;
   height: 32px;
@@ -390,10 +392,19 @@ body.adm-active { overflow: hidden !important; }
   border-color: var(--color-accent);
   box-shadow: var(--ring-accent);
 }
+.adm-tone-btn[data-tone="light"] { background: #FCFCFC; border-color: #D4D4D4; }
+.adm-tone-btn[data-tone="light"].active { border-color: var(--color-accent); }   /* 라이트 원 active 시각 — 다른 4종과 동일 패턴 */
 .adm-tone-btn[data-tone="warm"]  { background: #1A130E; }
 .adm-tone-btn[data-tone="slate"] { background: #0F172A; }
 .adm-tone-btn[data-tone="black"] { background: #0A0A0A; }
 .adm-tone-btn[data-tone="navy"]  { background: #0B1426; }
+
+/* 라이트 톤 한정 폰트 weight 보강 (가독성·눈 편의 우선 — 시력 부담 ↓) */
+[data-admin-tone="light"] .adm-text-secondary,
+[data-admin-tone="light"] .adm-rank-stage,
+[data-admin-tone="light"] .adm-timeline-time {
+  font-weight: 500;   /* 400 → 500, 라이트 환경 가독성 보강 */
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    4. 메인 콘텐츠
@@ -501,7 +512,9 @@ body.adm-active { overflow: hidden !important; }
 .adm-kpi-icon.info    { background: var(--admin-info-bg);    color: var(--color-info); }
 .adm-kpi-icon.success { background: var(--admin-success-bg); color: var(--color-success); }
 .adm-kpi-icon.warning { background: var(--admin-warning-bg); color: var(--color-warning); }
-.adm-kpi-icon.danger  { background: var(--admin-danger-bg);  color: var(--color-danger); }
+/* Phase B-2: danger 카드 이중 강조 완화 — 아이콘 배경은 다른 3개와 동일 톤,
+   빨간 강조는 아이콘 색 + 트렌드 ▼ 화살표만 유지 */
+.adm-kpi-icon.danger  { background: var(--admin-surface-2);  color: var(--color-danger); }
 .adm-kpi-value {
   font-size: 30px;
   font-weight: var(--fw-black);
@@ -811,19 +824,19 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-menu-section">
         <div class="adm-menu-section-title">오늘</div>
         <div class="adm-menu-item active"><span class="icon">📊</span>전체 개요<span class="count">LIVE</span></div>
-        <div class="adm-menu-item pending"><span class="icon">⚡</span>실시간 활동<span class="pending-mark">곧</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🔥</span>인기 스크립트<span class="pending-mark">곧</span></div>
-        <div class="adm-menu-item pending"><span class="icon">📞</span>신규 가입<span class="pending-mark">곧</span></div>
+        <div class="adm-menu-item pending"><span class="icon">⚡</span>실시간 활동<span class="pending-mark">Phase D-8</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🔥</span>인기 스크립트<span class="pending-mark">Phase D-2</span></div>
+        <div class="adm-menu-item pending"><span class="icon">📞</span>신규 가입<span class="pending-mark">Phase D-1</span></div>
       </div>
 
       <div class="adm-menu-divider"></div>
 
       <div class="adm-menu-section">
         <div class="adm-menu-section-title">점검</div>
-        <div class="adm-menu-item pending"><span class="icon">🚨</span>오류 리포트<span class="pending-mark">곧</span></div>
-        <div class="adm-menu-item pending"><span class="icon">⏳</span>미처리 신고<span class="pending-mark">곧</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🧪</span>시스템 상태<span class="pending-mark">곧</span></div>
-        <div class="adm-menu-item pending"><span class="icon">💾</span>DB 사용량<span class="pending-mark">곧</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🚨</span>오류 리포트<span class="pending-mark">Phase D-6</span></div>
+        <div class="adm-menu-item pending"><span class="icon">⏳</span>미처리 신고<span class="pending-mark">Phase D-3</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🧪</span>시스템 상태<span class="pending-mark">Phase D-8</span></div>
+        <div class="adm-menu-item pending"><span class="icon">💾</span>DB 사용량<span class="pending-mark">Phase D-8</span></div>
       </div>
 
       <div class="adm-menu-divider"></div>
@@ -920,11 +933,12 @@ body.adm-active { overflow: hidden !important; }
       <kbd>⌘K</kbd>
     </div>
     <div class="adm-header-right">
-      <!-- 톤 비교 토글 (Phase B 임시) -->
-      <div class="adm-tone-toggle" title="다크 톤 비교 (Phase B 임시 — 결정 후 제거)">
-        <button class="adm-tone-btn active" data-tone="warm"  onclick="window.admSwitchTone('warm')"  title="웜 다크"></button>
+      <!-- 톤 토글 (영구 — 컨텍스트별 자유 전환, 5종 운영 / 밝은 → 어두운 흐름) -->
+      <div class="adm-tone-toggle" title="톤 전환">
+        <button class="adm-tone-btn"        data-tone="light" onclick="window.admSwitchTone('light')" title="라이트 톤 (눈 편의)"></button>
+        <button class="adm-tone-btn"        data-tone="warm"  onclick="window.admSwitchTone('warm')"  title="웜 다크"></button>
         <button class="adm-tone-btn"        data-tone="slate" onclick="window.admSwitchTone('slate')" title="슬레이트"></button>
-        <button class="adm-tone-btn"        data-tone="black" onclick="window.admSwitchTone('black')" title="블랙·그레이"></button>
+        <button class="adm-tone-btn active" data-tone="black" onclick="window.admSwitchTone('black')" title="블랙·그레이 (기본)"></button>
         <button class="adm-tone-btn"        data-tone="navy"  onclick="window.admSwitchTone('navy')"  title="다크 네이비"></button>
       </div>
       <button class="adm-header-btn" onclick="alert('[Phase B] 알림 패널 — 추후')" title="알림"><span>🔔</span><span class="badge"></span></button>
@@ -1015,11 +1029,11 @@ body.adm-active { overflow: hidden !important; }
             <svg class="adm-chart" viewBox="0 0 600 220" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="admAccentArea" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%"   stop-color="#D4845A" stop-opacity="0.42"/>
+                  <stop offset="0%"   stop-color="#D4845A" stop-opacity="0.16"/>
                   <stop offset="100%" stop-color="#D4845A" stop-opacity="0"/>
                 </linearGradient>
                 <linearGradient id="admInfoArea" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%"   stop-color="#3B82F6" stop-opacity="0.30"/>
+                  <stop offset="0%"   stop-color="#3B82F6" stop-opacity="0.10"/>
                   <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
                 </linearGradient>
               </defs>
@@ -1321,11 +1335,17 @@ body.adm-active { overflow: hidden !important; }
   // body class + 톤 적용
   document.body.classList.add('adm-active');
 
+  // 기본값: 'black' (tokens.css :root). localStorage 우선.
   var savedTone = (function(){
-    try { return localStorage.getItem('os_admin_tone') || 'warm'; }
-    catch(e){ return 'warm'; }
+    try { return localStorage.getItem('os_admin_tone') || 'black'; }
+    catch(e){ return 'black'; }
   })();
-  document.body.setAttribute('data-admin-tone', savedTone);
+  // 'black'은 :root 기본값이므로 data 속성 미설정 (왔다 갔다 일관성)
+  if (savedTone === 'black') {
+    document.body.removeAttribute('data-admin-tone');
+  } else {
+    document.body.setAttribute('data-admin-tone', savedTone);
+  }
 
   // 톤 토글 버튼 active 동기화
   setTimeout(function(){
@@ -1384,10 +1404,15 @@ body.adm-active { overflow: hidden !important; }
     try { history.replaceState(null, '', '#admin/' + viewKey); } catch(e) {}
   };
 
-  // ── 톤 전환 (Phase B 임시) ──────────────────────────────────────────
+  // ── 톤 전환 (영구 운영 기능 — 5종: light/warm/slate/black/navy) ───────
   window.admSwitchTone = function (tone) {
-    if (['warm','slate','black','navy'].indexOf(tone) === -1) return;
-    document.body.setAttribute('data-admin-tone', tone);
+    if (['light','warm','slate','black','navy'].indexOf(tone) === -1) return;
+    // 'black'은 :root 기본값 (tokens.css) — data 속성 제거로 toggle
+    if (tone === 'black') {
+      document.body.removeAttribute('data-admin-tone');
+    } else {
+      document.body.setAttribute('data-admin-tone', tone);
+    }
     document.querySelectorAll('.adm-tone-btn').forEach(function(btn){
       btn.classList.toggle('active', btn.dataset.tone === tone);
     });

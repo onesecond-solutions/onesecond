@@ -281,22 +281,24 @@
   --header-h: var(--header-a1); /* 시안 v2 chrome 호환 별칭 (= 64px) */
 
   /* ══════════════════════════════════════════════════════════════════
-     Admin Dark Theme (2026-04-30 풀 스케일 admin v2 신설)
+     Admin Dark Theme (2026-04-30 풀 스케일 admin v2 — Phase B-2 정착)
      - admin_v2.html 전용 스코프. 다른 페이지는 이 토큰을 참조하지 않음.
-     - 4종 톤 토글은 body[data-admin-tone="slate|warm|black|navy"]로 override.
-     - TEMP: 기본값은 (나) 웜 다크. 라이브 4종 비교 후 팀장님 결정 시 일괄 교체.
+     - 4종 톤 토글은 body[data-admin-tone="warm|slate|navy"]로 override.
+       (black은 :root 기본값이므로 별도 절 불필요)
+     - 기본값: (다) 블랙·그레이 — Phase B 라이브 비교 후 팀장님 확정 (2026-04-30).
+     - 4종 토글은 영구 운영 기능 (외부 시연 컨텍스트별 톤 전환 자유도).
      ════════════════════════════════════════════════════════════════ */
-  --admin-bg:              #1A130E;
-  --admin-surface:         #2A1F18;
-  --admin-surface-2:       #221912;
-  --admin-surface-elev:    #34281F;
+  --admin-bg:              #0A0A0A;
+  --admin-surface:         #1A1A1A;
+  --admin-surface-2:       #141414;
+  --admin-surface-elev:    #1F1F1F;
 
-  --admin-text-primary:    #F5EFE6;
-  --admin-text-secondary:  #B8A99A;
-  --admin-text-tertiary:   #8B7B6B;
+  --admin-text-primary:    #F5F5F7;
+  --admin-text-secondary:  #A1A1AA;
+  --admin-text-tertiary:   #71717A;
 
-  --admin-border:          #3F3027;
-  --admin-border-strong:   #564238;
+  --admin-border:          #2E2E2E;
+  --admin-border-strong:   #404040;
 
   --admin-rail-bg:         linear-gradient(180deg, var(--brand-700) 0%, var(--brand-500) 100%);
   --admin-menu-bg:         var(--admin-surface);
@@ -311,6 +313,32 @@
   --admin-shadow-panel:    0 4px 14px rgba(0, 0, 0, 0.35);
   --admin-shadow-elev:     0 12px 32px rgba(0, 0, 0, 0.50);
 
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Admin Tone — 라이트 (5번째 영구 토글, 2026-04-30 Phase B-2 보완)
+   - 설계 원칙: 눈 편의·가독성 우선 (미관 < 시력 부담 ↓)
+   - 콘트라스트 명확 (살짝 부드러운 화이트 #FCFCFC + 거의 검정 #0A0A0A)
+   - 그림자 약하게 (시야 분산 ↓)
+   - rail 브라운 그라데이션은 모든 톤 공통 (--admin-rail-bg 무변경)
+   ════════════════════════════════════════════════════════════════════════ */
+body[data-admin-tone="light"] {
+  --admin-bg:           #FCFCFC;     /* 살짝 부드러운 화이트, 순백 자극 완화 */
+  --admin-surface:      #FFFFFF;
+  --admin-surface-2:    #F5F5F5;
+  --admin-surface-elev: #FFFFFF;
+
+  --admin-text-primary:   #0A0A0A;   /* 거의 검정 — 가독성 최대 */
+  --admin-text-secondary: #404040;
+  --admin-text-tertiary:  #737373;
+
+  --admin-border:        #E5E5E5;
+  --admin-border-strong: #D4D4D4;
+
+  --admin-shadow-rail:  4px 0 12px rgba(0, 0, 0, 0.04);
+  --admin-shadow-menu:  6px 0 12px rgba(0, 0, 0, 0.04);
+  --admin-shadow-panel: 0 2px 8px  rgba(0, 0, 0, 0.06);
+  --admin-shadow-elev:  0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 
