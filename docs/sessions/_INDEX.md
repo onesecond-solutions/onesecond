@@ -1,44 +1,64 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-04-30 (admin_v2 풀 스케일 트랙 신규 등록)
+> **마지막 갱신:** 2026-05-01 (admin_v2 Phase C 확정 + 5종 톤 운영 + 80셀 WCAG AA)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
 ---
 
-## 🎯 현재 메인 트랙 — admin_v2.html 풀 스케일 구축 (사업 전략 핵심 축)
+## 🎯 현재 메인 트랙 — admin_v2.html Phase D 진입 대기 (2026-05-01 Phase C 확정)
 
-`pages/admin_v2.html` 신규 생성 트랙. 시안 `claude_code/design_test/admin/v1-full.html` (1026줄, 4/25) 기반 8섹션 풀 스케일 관리자 콘솔. **다크 테마 채택** (사용자 페이지와 의도적 차별화). 외부 미팅·원수사 입점 영업·투자/제휴 시 결정적 무기.
+`pages/admin_v2.html` 풀 스케일 관리자 콘솔. 시안 `claude_code/design_test/admin/v1-full.html` (1026줄, 4/25) 기반. **5종 톤 운영 확정** (light + warm + slate + black + navy). 외부 미팅·원수사 입점 영업·투자/제휴 시 결정적 무기.
 
-- **통합 방식:** (a)+(c) 조합 — admin.html을 admin_v2.html 호출 stub으로 교체, app.js 무변경, app.html 프레임 무변경
+- **통합 방식:** (a)+(c) — admin.html을 admin_v2.html 호출 stub으로 교체, app.js 무변경, app.html 프레임 무변경
 - **백업 보존:** `claude_code/_archive/admin_v1_20260430.html` (기존 admin.html 1969줄 / 100KB)
-- **다크 톤:** Phase B 골격 완성 후 라이브 4종 비교 결정 (TEMP 웜 다크 #1A130E 임시 적용 / 4종 토글 기능 부착)
-- **단계:** Phase A(분석·완료) → B(골격) → C(7섹션 mock 채우기) → D(실 데이터) → E(정밀화)
-- **추정:** 14~21세션
-- **viewport takeover:** 풀 화면 점유 (position:fixed inset:0 z-index:9000) + 4중 안전장치(🚪/ESC/hash/MutationObserver)
+- **5종 톤 확정 (2026-05-01):** light(#FCFCFC, 눈 편의) / warm(#1A130E) / slate(#0F172A) / **black(#0A0A0A, 기본)** / navy(#0B1426). 영구 운영 토글 + localStorage 저장
+- **라인 수 추이:** 902 (4/30 골격) → 1,484 (Phase B 마무리) → **2,855 (Phase C 확정)**
+- **단계:** Phase A(분석·완료) → B(골격·완료) → **C(7섹션 mock·완료)** → D(실 데이터·진입 대기) → E(정밀화·대기)
+- **viewport takeover:** 풀 화면 점유 + 4중 안전장치(🚪 rail + 🚪 헤더 / ESC / hashchange `#admin/*` 외 자동 admExit / MutationObserver)
 
-### admin_v2 진행 현황 (2026-04-30 기준)
+### admin_v2 진행 현황 (2026-05-01 기준)
 
-| 단계 | 상태 | 비고 |
+| 단계 | 상태 | 근거 커밋 / 비고 |
 |---|---|---|
-| Phase A 사전 분석 | ✅ 완료 (2026-04-30) | v1-full 1026줄 정독 + 영역 충돌 매핑 + tokens.css 다크 토큰 설계 + 8섹션 라우팅 + 위험 8건 |
-| Phase B 골격 | 🔄 **본 세션 진행** | admin_v2.html 신규 + admin.html stub + tokens.css 다크 토큰 + 4종 토글 + 연결 상태 시각 구분 |
-| Phase C 7섹션 외곽 | 대기 | mock 데이터 시연 완성도 100% |
-| Phase D 실 데이터 | 대기 | 8개 섹션 우선순위순 (D-1 사용자 → D-2 콘텐츠 → D-3 게시판 → D-4 공지 → D-5 통계 → D-6 로그 → D-7 결제 → D-8 대시보드 종합) |
+| Phase A 사전 분석 | ✅ 완료 (2026-04-30) | v1-full 1026줄 정독 + 영역 충돌 매핑 + 다크 토큰 설계 + 위험 8건 |
+| Phase B 골격 | ✅ 완료 (2026-04-30) | `e8949f2` admin_v2.html 신규(902줄) + admin.html stub + tokens.css admin 토큰 + 4종 톤 토글 + 연결 상태 시각 구분 |
+| Phase B-2 가독성 표준화 | ✅ 완료 (2026-05-01) | `fece099` `--admin-text-pending` 신규 토큰 (B영역 pending 메뉴 5종 톤 AA) |
+| Phase B 마무리 결함 5건 | ✅ 완료 (2026-05-01) | `99f70e4` light menu-bg #FFFFFF / black setAttribute / `--admin-text-label` 토큰 / 헤더 🚪 admExit / hash 자동 닫기 |
+| Phase C 7섹션 mock | ✅ 완료 (2026-05-01) | `5fb83bf` D-1~D-7 풀 채움 (+1,371줄) + status-bg 토큰 4종 5종 톤 정의 |
+| Phase C 뱃지 AA 확보 | ✅ 완료 (2026-05-01) | `e2d7a78` `--admin-info-text/success-text/warning-text/danger-text` 4토큰 + 9역할 직급 그룹 재매핑 (admin=danger / 지점장=info / 매니저=success / member·staff=neutral) — 80셀 전부 AA |
+| **Phase D 실 데이터** | 🟡 진입 대기 | 8개 섹션 우선순위순: D-1 사용자 → D-2 콘텐츠 → D-3 게시판 → D-4 공지 → D-5 통계 → D-6 로그 → D-7 결제 → D-8 대시보드 종합. 9역할 RBAC 권한 검증 로직 필요 |
 | Phase E 정밀화 | 대기 | SQL 콘솔 / Export 게이트 / 활동 로그 / 검색 인덱싱 |
 
-### 8섹션 ↔ 데이터 소스 매핑
+### 8섹션 ↔ 데이터 소스 매핑 (2026-05-01 Phase C 확정 기준)
 
-| # | 섹션 | 라우팅 키 | 상태 | Phase D 순서 |
-|:---:|---|---|---|:---:|
-| 1 | 대시보드 | dashboard | 🟢 Live (Phase B mock) | 8 (집계 종합) |
-| 2 | 사용자 관리 | users | ⏸️ Pending | 1 |
-| 3 | 콘텐츠 관리 | content | ⏸️ Pending | 2 |
-| 4 | 게시판 관리 | board | ⏸️ Pending | 3 |
-| 5 | 통계·분석 | analytics | ⏸️ Pending | 5 |
-| 6 | 공지·배너 | notice | ⏸️ Pending | 4 |
-| 7 | 로그 | logs | ⏸️ Pending | 6 |
-| 8 | 결제·플랜 | billing | ⏸️ Pending | 7 |
+| # | 섹션 | 라우팅 키 | 상태 | Phase D 순서 | Phase C mock 콘텐츠 |
+|:---:|---|---|---|:---:|---|
+| 1 | 대시보드 | dashboard | 🟢 Live (Phase B mock) | 8 (집계 종합) | KPI 4카드 / 차트 SVG / timeline 6건 / 최근 가입자 5행 / 하단 2-col |
+| 2 | 사용자 관리 | users | 🟢 Live (Phase C mock) | 1 | KPI 3카드 + 9역할 칩 10개 + 사용자 테이블 10행 (9역할 모두 1행+) |
+| 3 | 콘텐츠 관리 | content | 🟢 Live (Phase C mock) | 2 | KPI 3카드 + stage 10단계 도넛 SVG + 콘텐츠 테이블 8행 |
+| 4 | 게시판 관리 | board | 🟢 Live (Phase C mock) | 3 | KPI 3카드 + 게시판별 활동 라인차트(3계열) + 신고 5행 (보험사 게시판 v2.0 대기) |
+| 5 | 통계·분석 | analytics | 🟢 Live (Phase C mock) | 5 | KPI 4카드 + DAU 90일 라인 + 6메뉴 막대 |
+| 6 | 공지·배너 | notice | 🟢 Live (Phase C mock) | 4 | 활성 카드 4개(toggle) + 작성 이력 5행 |
+| 7 | 로그 | logs | 🟢 Live (Phase C mock) | 6 | 검색·필터바(날짜·사용자·액션·결과) + 로그 12행 |
+| 8 | 결제·플랜 | billing | 🟢 Live (Phase C mock) | 7 | KPI 3카드 + 4플랜 도넛(무료/PRO 9,900/CRM 19,900/원수사 1,000,000) + 결제 8행 |
+
+### admin_v2 신규 토큰 12종 (Phase B-2 → Phase C 확정 누적)
+
+| 분류 | 토큰 | 5종 톤 정의 위치 | 도입 커밋 |
+|---|---|---|---|
+| 텍스트 | `--admin-text-pending` | tokens.css :root + light / admin_v2.html warm·slate·navy | `fece099` |
+| 텍스트 | `--admin-text-label` | 동일 5종 | `99f70e4` |
+| 배경 | `--admin-info-bg` / `--admin-success-bg` / `--admin-warning-bg` / `--admin-danger-bg` | 동일 5종 (light hex / 다크 rgba 18~22%) | `5fb83bf` |
+| 텍스트 | `--admin-info-text` / `--admin-success-text` / `--admin-warning-text` / `--admin-danger-text` | 동일 5종 (light Tailwind 700~800 / 다크 Tailwind 300) | `e2d7a78` |
+| menu-bg | `--admin-menu-bg` (light 명시 #FFFFFF — :root lazy eval 안전망) | tokens.css light | `99f70e4` |
+
+### data-status 시각 구분 규칙 (2026-05-01 명문화)
+
+- **rail 7섹션**: `data-status="pending"` 그대로 + opacity 0.55 (실 기능 미구현 표시)
+- **메뉴 pane 항목**: `.pending` 클래스 + `.pending-mark` ("Phase D-X" 또는 "Phase v2.0") 그대로
+- **섹션 타이틀 우측**: `[Phase C mock]` 라벨 (Phase C에서 신규 부착, accent 색)
+- Phase D 진입 시: 섹션별 실 데이터 연결 후 위 마커 단계적 제거
 
 ---
 
@@ -55,7 +75,7 @@
 | `pages/board.html` | ✅ 시안 통째 적용 + 공통 간격 토큰 적용 + `.hub-notice` 톤 정정 | 통째: `ebb9b3b` (4/26) / 토큰: `e5b5afe` (4/29 저녁) |
 | `index.html` | ✅ 시안 통째 승격 완료 + 헤더 라이트 톤 + 푸터 4컬럼 + 가입 폼 보강 + 카피라이트 onesecond 단일 | 승격: `83665c4` / 헤더: `001af79` / 푸터: `c2186a1` / 카드: `3342e9d` / 안내박스: `69f2678` / 카피라이트: `216ce9f` |
 | `pages/home.html` | 🔄 부분 흡수 (C) 트랙 진행 중 — C-1 + C-2(줄무늬) + hexagon 카드 완료, 라이브 검수 미완 | C-1: `b854878` (4/28) / C-2 줄무늬 디바이더: `869510d` `c71db6d` (4/29 오후) / hexagon 시계 흰 원형 카드: `4071194` (4/29 오후). C-3 카피 / C-4 도넛 / C-5 C영역(별 트랙) 대기 |
-| `pages/admin.html` | 🛑 **stub 교체 (4/30 admin_v2 트랙 격상)** — 기존 1969줄은 `_archive/admin_v1_20260430.html` 보존 | stub: 본 세션 / 백업: `_archive/admin_v1_20260430.html` |
+| `pages/admin.html` | 🛑 **stub 90줄 교체 완료 (4/30 admin_v2 트랙 격상)** — 기존 1969줄은 `_archive/admin_v1_20260430.html` 보존 / admin_v2.html이 메인 트랙으로 진행 (Phase C 확정 5/1) | stub: `e8949f2` / 백업: `_archive/admin_v1_20260430.html` |
 | `pages/myspace.html` | ✅ 부분 흡수 (A) Phase 1 완주 — 4/29 저녁 7커밋, 라이브 검수 미완 | 갭 분석 v2: `978904c` / pg-page-header + 카드 토큰: `656aa99` / pg-outer board 정합: `9be9d3c` / 카드 그리드 + 공통 간격 토큰: `2cd372e` / scripts fetch 400 회귀: `efeb1ad` / 4건 통합 정리: `6ede634` |
 | `pages/scripts.html` | ✅ v2-full 통째 승격 완료 + 폰트 위계 + C영역 ON (4/29 오후, 라이브 검수 미완) | D 영역: `6882753` / 폰트 위계: `be40cc6` / C영역 ON: `c96d833` |
 | `pages/news.html` | 🛑 **트랙 폐기·후순위** (2026-04-30 admin_v2 작업지시서 §4-2) | 헤더·푸터 board 통일만 진행: `ee64d9a` (4/30) / Phase A 분석 보존: `claude_code/_archive/news_migration_phaseA_20260430.md` |
@@ -107,9 +127,10 @@
 13. **(4/29 저녁) myspace 검색 모드 예시 카드 인터랙션 미정의**.
 14. **(4/29 저녁) myspace view-write 폼 stage select 부재**.
 15. **(4/29 저녁) `_SAMPLE_LIBRARY` url/content 빈값**.
-16. **(신규 4/30) admin_v2 다크 톤 4종 후보 결정** — (가) 슬레이트 / (나) 웜 다크(TEMP 임시) / (다) 블랙·그레이 / (라) 다크 네이비. **Phase B 골격 완성 후 라이브 4종 비교 결정** (Phase B 진입 차단 아님). admin_v2 헤더 우측 톤 토글 부착됨, 결정 후 토글 + 미선택 3종 토큰 절 제거.
-17. **(신규 4/30) 보험뉴스 메뉴 숨김** — 현재 화면설정 admin.html에서 이미 숨김 처리 확인. 별도 작업 불필요.
-18. **(신규 4/30) admin_v2 라이브 검수 통합 시점** — Phase B 완료 후 4종 톤 비교 + viewport takeover 4중 안전장치(🚪/ESC/hash/MutationObserver) 작동 확인 + 8섹션 라우팅 작동 확인 일괄 진행.
+16. ~~**(신규 4/30) admin_v2 다크 톤 4종 후보 결정**~~ → **✅ 해소 (2026-05-01)**: 4종 → **5종 운영 확정** (light 추가 — 눈 편의 목적). 영구 토글 5종 모두 토큰 분기, 기본값 black. 토글·토큰 모두 보존.
+17. ~~**(신규 4/30) 보험뉴스 메뉴 숨김**~~ → **✅ 해소** (이미 화면설정 admin.html에서 숨김 처리됨, 별도 작업 불필요).
+18. ~~**(신규 4/30) admin_v2 라이브 검수 통합 시점**~~ → **✅ 해소 (2026-05-01)**: Phase B 라이브 검수 + 결함 5건 일괄 수정 + Phase C 진입·확정 라이브 검수 모두 완료. 4중 안전장치(🚪 rail + 🚪 헤더 / ESC / hashchange / MutationObserver) + 5종 톤 + 8섹션 라우팅 작동 확인.
+19. **(신규 5/1) admin_v2 Phase D 진입 — 9역할 RBAC 권한 검증 로직** — Phase D는 mock → 실 Supabase 연결. 9역할 체계 RLS 정책 검증 + admin 본 계정 정합성 확인 + D-1 사용자 테이블 우선. 다음 메인 트랙.
 
 ---
 
@@ -119,7 +140,7 @@
 2. **admin standalone hex 8건 처리** — admin_v2 트랙 격상으로 사실상 무효화. 추가 결정 불필요.
 3. **(4/29 저녁) 라이브 검수 통합 시점** — 4/29 + 4/30 17커밋 누적. admin_v2 작업과 별도 트랙 진행 가능.
 4. ~~(4/29 저녁) news 작업 진행 순서~~ — **후순위 폐기로 무효화** (4/30 admin_v2 작업지시서 §4-2).
-5. **(신규 4/30) admin_v2 다크 톤 4종 비교 결정** — Phase B 골격 라이브 검수 시 4종 토글로 비교 → 결정 → 토큰 일괄 교체.
+5. ~~**(신규 4/30) admin_v2 다크 톤 4종 비교 결정**~~ → **✅ 해소 (2026-05-01)**: 5종 운영 확정 (light + warm + slate + black + navy). 영구 토글 + localStorage 저장.
 
 ### 📝 4/28 결정 완료 (참고)
 - ✅ design_test 트랙 활성 여부 — 메인 트랙 → 보조 트랙 강등 (4/30)
@@ -136,11 +157,21 @@
 - ✅ **news.html 후순위 폐기** — 보험뉴스 엔진 가동 시점에 함께 처리
 - ✅ **_INDEX.md 즉시 갱신** — 큰 그림 변화는 즉시 반영 (GitHub = 진실 원천 원칙)
 
+### 📝 5/1 결정 완료 (참고)
+- ✅ **admin_v2 5종 톤 운영 확정** — light + warm + slate + black + navy. light는 "눈 편의" 목적 추가. 영구 토글 + localStorage 저장. 기본값 black
+- ✅ **admin_v2 Phase B 마무리 결함 5건 일괄 처리** (`99f70e4`) — light menu-bg 누락 / black setAttribute 누락 / 그룹 라벨 저대비 / 헤더 admExit 미구현 / hash 자동 닫기 미구현
+- ✅ **admin_v2 Phase C 7섹션 mock 풀 채움** (`5fb83bf`) — D-1~D-7 모든 섹션이 dashboard 수준 시연 가능. mock 데이터 한국 이름 10명 풀 + 9역할 + 보험 도메인 + 원화
+- ✅ **admin_v2 9역할 직급 그룹 색계열 매핑 확정** (`e2d7a78`) — admin=danger / 지점장 2종=info / 매니저 2종=success / member·staff 4종=neutral·secondary. 소속(GA/원수사) 구분은 텍스트 prefix
+- ✅ **admin_v2 모든 뱃지·메뉴 5종 톤 WCAG AA 통과** — 80셀(20셀 토큰 + 45셀 9역할 + 15셀 메뉴) 전부 ≥4.5:1
+- ✅ **신규 토큰 12종 5종 톤 정의 완료** — admin-text-pending / text-label / info·success·warning·danger-bg / info·success·warning·danger-text / menu-bg(light)
+- ✅ **3개 영역 디자인 정체성 분리 명문화** — 사용자 페이지(밝은 브라운·아이보리) / admin_v2(5종 톤) / 4팀 비밀의 공간(웜 다크 — admin 완료 후 별 트랙)
+
 ---
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
-- `docs/sessions/2026-04-30_<TBD>.md` — 4/30 (admin_v2 풀 스케일 트랙 진입: Phase A 분석 + Phase B 골격 진행 중 — admin_v2.html 신규 + admin.html stub + tokens.css 다크 토큰 + 4종 토글 / 4/30 누적 4커밋 별 트랙 정리: news 헤더·푸터 board 통일 / quick myspace 정합 5건 + 헤더 brown / together MY SPACE 룩 통일)
+- `docs/sessions/2026-05-01_<TBD>.md` — 5/1 (admin_v2 Phase B 마무리 + Phase C 진입·확정 단일 세션 / 4커밋 누적: `fece099` B-2 가독성 표준화 + `99f70e4` Phase B 마무리 결함 5건 + `5fb83bf` Phase C 7섹션 mock 풀 채움 + `e2d7a78` status·역할 badge 5종 톤 AA / 라인 수 1,484 → 2,855 (+1,371) / 신규 토큰 12종 / 5종 톤 운영 확정 / 80셀 WCAG AA 통과 / Chrome 라이브 재검수 완료)
+- `docs/sessions/2026-04-30_<TBD>.md` — 4/30 (admin_v2 풀 스케일 트랙 진입: Phase A 분석 + Phase B 골격 — admin_v2.html 신규(902줄) + admin.html stub + tokens.css 다크 토큰 + 4종 토글 / 4/30 누적 4커밋 별 트랙 정리: news 헤더·푸터 board 통일 / quick myspace 정합 5건 + 헤더 brown / together MY SPACE 룩 통일)
 - `claude_code/_archive/news_migration_phaseA_20260430.md` — 4/30 news 트랙 후순위 폐기 시 Phase A 분석 보존본
 - `docs/sessions/2026-04-29_1932.md` — 4/29 저녁 (7커밋 + 5머지 / myspace Phase 1 단일 세션 완주)
 - `docs/sessions/work_myspace_gap_analysis_2026-04-30.md` — 4/29 저녁 myspace 갭 분석 v2
@@ -198,7 +229,46 @@
 | **quick myspace 정합 5건 (헤더/패딩/푸터/C영역/D외곽선)** | ✅ 완료 (4/30, 라이브 검수 대기 — 미해결 #3) | `3846dc2` |
 | **quick 헤더 타이틀 brown + 탭바 폭 콘텐츠 정합** | ✅ 완료 (4/30, 라이브 검수 대기 — 미해결 #3) | `68b2cba` |
 | **together MY SPACE 룩 통일 + 카드 그리드 반응형** | ✅ 완료 (4/30, 라이브 검수 대기 — 미해결 #3) | `86c9807` |
-| **🔴 admin_v2 풀 스케일 Phase B 골격 (메인 트랙)** | 🔄 본 세션 진행 | admin.html stub 교체 + admin_v2.html 신규(902줄) + tokens.css 다크 토큰 절(33줄) + 4종 토글 + 연결 상태 시각 구분 + 4중 안전장치 + _archive 백업(1969줄) + _INDEX 갱신 |
+| **🔴 admin_v2 풀 스케일 Phase B 골격 (메인 트랙)** | ✅ 완료 (2026-04-30) | `e8949f2` admin.html stub 교체 + admin_v2.html 신규(902줄) + tokens.css 다크 토큰 절 + 4종 토글 + 연결 상태 시각 구분 + 4중 안전장치 + _archive 백업(1969줄) |
+| **🔴 admin_v2 Phase B-2 B영역 가독성 표준화** | ✅ 완료 (2026-05-01) | `fece099` `--admin-text-pending` 신규 토큰 5종 톤 정의 + `.adm-menu-item.pending` opacity 0.5 폐기 + `.pending-mark` 뱃지 토큰 자동 적응 |
+| **🔴 admin_v2 Phase B 마무리 결함 5건 일괄** | ✅ 완료 (2026-05-01) | `99f70e4` light `--admin-menu-bg #FFFFFF` / black `setAttribute` 통일 / `--admin-text-label` 신규 토큰 / 헤더 우측 🚪 admExit 버튼 / hashchange `#admin/*` 외 자동 admExit |
+| **🔴 admin_v2 Phase C 7섹션 mock 콘텐츠 풀 채움 (메인 트랙)** | ✅ 완료 (2026-05-01) | `5fb83bf` D-1 users(테이블 10행) / D-2 content(stage 10단계 도넛) / D-3 board(라인차트 + 신고 5행) / D-4 notice(활성 카드 4) / D-5 analytics(DAU 90일 + 막대) / D-6 logs(검색·필터 + 12행) / D-7 billing(4플랜 도넛 + 결제 8행). 라인 +1,371. status-bg 토큰 4종 5종 톤 정의 |
+| **🔴 admin_v2 status·역할 badge 5종 톤 WCAG AA 확보** | ✅ 완료 (2026-05-01) | `e2d7a78` `--admin-info-text/success-text/warning-text/danger-text` 4토큰 5종 톤 정의 + 9역할 직급 그룹 재매핑(admin=danger / 지점장=info / 매니저=success / member·staff=neutral·secondary) + 80셀 WCAG AA 통과 + 폴백 안전장치 |
+
+---
+
+## 🪧 별 트랙 후보 — admin_v2 Phase C 확정 외 (2026-05-01 신규 등록)
+
+admin_v2 Phase D 진입과 별개로, Chrome 라이브 검수에서 발견된 잔여 결함 + Phase B 마무리 borderline:
+
+| # | 트랙 | 대상 | 원인 / 상태 | 권장 처리 시점 |
+|---|---|---|---|---|
+| **B-1** | 차트 SVG grid line light 톤 무대비 | dashboard / D-3 board / D-5 analytics 차트 | `stroke="rgba(255,255,255,0.06)"` 하드코딩 — light bg #FCFCFC 위 무대비. 차트 자체 폴리라인은 정상 표시 | grid line stroke를 CSS 변수화 (예: `--admin-chart-grid`). dashboard·D-3·D-5 일관 처리. Phase D 진입 후 별 트랙 또는 5월 패키지에 묶음 |
+| **B-2** | dashboard 기본 뱃지 light 톤 미달 | `.adm-badge.online` / `.pro` / `.branch` / `.manager` / `.admin` (라인 677~683) | Phase C에서 도입한 `--admin-info-text/success-text/warning-text/danger-text` 4토큰 미적용 — 구 `var(--color-*)` 잔존. Phase C 작업 §5 "dashboard 변경 금지" 준수로 보존 | dashboard 기본 뱃지 7종을 신규 텍스트 토큰으로 마이그레이션. Phase D 진입 시 D-8 대시보드 종합 단계에 묶음 |
+| **B-3** | Phase B 마무리 borderline — light 액센트 #D4845A | B영역 카테고리 라벨 (`.adm-menu-category`) + C영역 활성 메뉴 | light bg vs accent ~3.7:1 (11px+bold+uppercase로 시각 가독 확보). AA 4.5:1 미달이지만 large text 기준(3:1) 통과 | 별 트랙 우선순위 낮음. Phase D 또는 5월 패키지에서 함께 검토 |
+
+---
+
+## 🚀 다음 트랙 후보 (2026-05-01 admin_v2 Phase C 확정 직후)
+
+| # | 트랙 | 분류 | 비고 |
+|---|---|---|---|
+| **(1)** | **admin_v2 Phase D 진입 — 실 Supabase 연동** | 🔴 메인 트랙 다음 단계 | mock → 실 데이터 전환. 9역할 RBAC 권한 검증 로직 + RLS 정책 정합. D-1 users 테이블 우선(실 사용자 데이터) |
+| (2) | myspace 갭 분석 6항목 결정 | 🟡 별 트랙 | 2026-04-30 분석 보고(`work_myspace_gap_analysis_2026-04-30.md`) 기반 6항목 결정 후 부분 흡수 작업지시서 발행 |
+| (3) | 5/9~10 주말 패키지 | 🟡 별 트랙 | UI 스케일 슬라이더(CSS zoom + localStorage 6단계) / Sticky Nav 메뉴 + 햄버거 / Safari `-webkit-backdrop-filter` 보강. 별 트랙 B-1·B-2·B-3 일부 묶음 가능 |
+| (4) | 보험뉴스 → 스크립트 자동 증식 엔진 | 🟢 큰 별 트랙 | 5/6 후 본격 시작 예정. 자동수집 → Claude API 분류 → 매니저 검수 → 자동 추가. v1.5~v2.0 보험뉴스 엔진 가동 시점에 news.html 라이브 트랙 동시 재가동 |
+
+---
+
+## 🎨 3개 영역 디자인 정체성 (2026-04-30 확정 / 2026-05-01 명문화)
+
+| 영역 | 톤 / 정체성 | 토큰 prefix | 상태 |
+|---|---|---|---|
+| **사용자 페이지** (index / home / scripts / board / quick / together / myspace 등) | 밝은 브라운·아이보리 80%. 브라운 면적 40→20% 축소. shell v1 라이트 톤 (4/27~4/28 전환 완료) | (기본 — prefix 없음) | ✅ 라이브 운영 |
+| **admin_v2** (관리자 콘솔 풀 스케일) | 5종 톤 영구 토글 (light + warm + slate + black + navy). 기본값 black `#0A0A0A`, light `#FCFCFC`. 외부 시연 컨텍스트별 자유 전환 | `--admin-*` | ✅ Phase C 확정 (2026-05-01) |
+| **4팀 비밀의 공간** (AZ 더원 4팀 40명 전용) | 웜 다크 — 사용자 페이지(밝은 톤)와 admin(5종 토글) 양쪽 모두와 구분되는 제3의 정체성. 4팀 외부 노출 X | `--team4-*` (예정) | 🟡 admin 완료 후 별 트랙 (Phase D 이후) |
+
+**3정체성 분리 원칙:** 토큰 prefix로 영역 격리 → 한 영역 토큰 변경이 다른 영역에 영향 0. 사용자 페이지는 기본, admin·4팀은 prefix로 명시 격리.
 
 ---
 
