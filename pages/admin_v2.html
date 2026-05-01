@@ -27,6 +27,10 @@ body[data-admin-tone="warm"] {
   --admin-text-label:     #A89B8E;
   --admin-border:        #3F3027;
   --admin-border-strong: #564238;
+  --admin-info-bg:       rgba(59, 130, 246, 0.18);
+  --admin-success-bg:    rgba(16, 185, 129, 0.18);
+  --admin-warning-bg:    rgba(245, 158, 11, 0.18);
+  --admin-danger-bg:     rgba(239, 68, 68, 0.18);
 }
 body[data-admin-tone="slate"] {
   --admin-bg:           #0F172A;
@@ -40,6 +44,10 @@ body[data-admin-tone="slate"] {
   --admin-text-label:     #99A6B5;
   --admin-border:        #334155;
   --admin-border-strong: #475569;
+  --admin-info-bg:       rgba(59, 130, 246, 0.22);
+  --admin-success-bg:    rgba(16, 185, 129, 0.22);
+  --admin-warning-bg:    rgba(245, 158, 11, 0.22);
+  --admin-danger-bg:     rgba(239, 68, 68, 0.22);
 }
 body[data-admin-tone="navy"] {
   --admin-bg:           #0B1426;
@@ -53,6 +61,10 @@ body[data-admin-tone="navy"] {
   --admin-text-label:     #99A6B5;
   --admin-border:        #2A3754;
   --admin-border-strong: #3F4E6E;
+  --admin-info-bg:       rgba(59, 130, 246, 0.22);
+  --admin-success-bg:    rgba(16, 185, 129, 0.22);
+  --admin-warning-bg:    rgba(245, 158, 11, 0.22);
+  --admin-danger-bg:     rgba(239, 68, 68, 0.22);
 }
 /* black = :root 기본값 (tokens.css 정의 — 별도 절 불필요) */
 
@@ -780,6 +792,191 @@ body.adm-active { overflow: hidden !important; }
   border: 1.5px solid var(--admin-text-tertiary);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase C — D-1 ~ D-7 신규 컴포넌트 (mock 데이터 시연 / 2026-05-01)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* 섹션 헤드 (페이지 타이틀 + 액션 — dashboard .adm-page-head 패턴 보조용) */
+.adm-section-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.adm-section-head .adm-section-title {
+  font-size: 24px;
+  font-weight: var(--fw-bold);
+  color: var(--admin-text-primary);
+  letter-spacing: -0.6px;
+  margin-bottom: 4px;
+}
+.adm-section-head .adm-section-desc {
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+}
+
+/* 필터·검색 바 */
+.adm-filter-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.adm-filter-search {
+  flex: 1 1 280px;
+  display: flex; align-items: center; gap: 10px;
+  height: 36px; padding: 0 12px;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+}
+.adm-filter-search input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-size: 13px;
+  color: var(--admin-text-primary);
+  font-family: inherit;
+}
+.adm-filter-search input::placeholder { color: var(--admin-text-tertiary); }
+
+/* 역할 칩 그룹 */
+.adm-role-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-role-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 12px;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: var(--fw-semibold);
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+.adm-role-chip:hover { background: var(--admin-surface-elev); color: var(--admin-text-primary); }
+.adm-role-chip.active {
+  background: rgba(212, 132, 90, 0.18);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.adm-role-chip .count {
+  font-weight: var(--fw-bold);
+  font-size: 11px;
+  opacity: 0.85;
+  font-feature-settings: 'tnum';
+}
+
+/* 인라인 셀렉트 */
+.adm-inline-select {
+  height: 36px; padding: 0 12px;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--admin-text-primary);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 9역할 뱃지 (dashboard .adm-badge 패턴 확장) */
+.adm-badge.role-admin                  { background: rgba(212,132,90,0.18); color: var(--color-accent); }
+.adm-badge.role-ga-branch-manager      { background: var(--admin-info-bg);    color: var(--color-info); }
+.adm-badge.role-ga-manager             { background: rgba(139,92,246,0.18);   color: #C4A8FF; }
+.adm-badge.role-ga-member              { background: var(--admin-surface-2);  color: var(--admin-text-secondary); }
+.adm-badge.role-ga-staff               { background: var(--admin-surface-2);  color: var(--admin-text-tertiary); }
+.adm-badge.role-insurer-branch-manager { background: var(--admin-success-bg); color: var(--color-success); }
+.adm-badge.role-insurer-manager        { background: var(--admin-warning-bg); color: var(--color-warning); }
+.adm-badge.role-insurer-member         { background: var(--admin-surface-2);  color: var(--admin-text-secondary); }
+.adm-badge.role-insurer-staff          { background: var(--admin-surface-2);  color: var(--admin-text-tertiary); }
+
+/* 상태 뱃지 */
+.adm-badge.status-active    { background: var(--admin-success-bg); color: var(--color-success); }
+.adm-badge.status-suspended { background: rgba(239,68,68,0.18);    color: var(--color-danger); }
+.adm-badge.status-pending   { background: var(--admin-warning-bg); color: var(--color-warning); }
+
+/* 테이블 액션 버튼 */
+.adm-table .row-actions { display: inline-flex; gap: 4px; }
+.adm-table .row-actions button {
+  width: 28px; height: 28px;
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--admin-text-secondary);
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+.adm-table .row-actions button:hover {
+  background: var(--admin-surface-2);
+  color: var(--admin-text-primary);
+}
+
+/* 활성 공지·배너 카드 그리드 (D-4) */
+.adm-notice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.adm-notice-card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex; flex-direction: column;
+  gap: 10px;
+}
+.adm-notice-card .head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+}
+.adm-notice-card .type {
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.adm-notice-card .toggle {
+  width: 36px; height: 20px;
+  background: var(--admin-success-bg);
+  border-radius: var(--radius-full);
+  position: relative;
+  cursor: pointer;
+}
+.adm-notice-card .toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 16px; height: 16px;
+  background: var(--color-success);
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+.adm-notice-card.off .toggle { background: var(--admin-surface-2); }
+.adm-notice-card.off .toggle::after {
+  right: auto; left: 2px;
+  background: var(--admin-text-tertiary);
+}
+.adm-notice-card .title {
+  font-size: 15px;
+  font-weight: var(--fw-bold);
+  color: var(--admin-text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.4;
+}
+.adm-notice-card .meta {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11px;
+  color: var(--admin-text-tertiary);
+  flex-wrap: wrap;
+}
+.adm-notice-card .meta strong { color: var(--admin-text-secondary); font-weight: var(--fw-bold); }
+
 /* 반응형 */
 @media (max-width: 1280px) {
   .adm-kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -860,18 +1057,18 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-menu-category">ADMIN · 사용자</div>
       <div class="adm-menu-title">사용자 관리</div>
       <div class="adm-menu-section">
-        <div class="adm-menu-section-title">곧 도착</div>
+        <div class="adm-menu-section-title">사용자 운영</div>
         <div class="adm-menu-item pending"><span class="icon">👥</span>전체 사용자<span class="pending-mark">Phase D-1</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🛡️</span>권한 관리<span class="pending-mark">Phase D-1</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🏢</span>소속/지점<span class="pending-mark">Phase D-1</span></div>
+        <div class="adm-menu-item pending"><span class="icon">⏳</span>가입 대기<span class="pending-mark">Phase D-1</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🚫</span>정지·차단<span class="pending-mark">Phase D-1</span></div>
       </div>
     </div>
     <div class="adm-menu-pane" data-view="content" style="display:none;">
       <div class="adm-menu-category">ADMIN · 콘텐츠</div>
       <div class="adm-menu-title">콘텐츠 관리</div>
       <div class="adm-menu-section">
-        <div class="adm-menu-section-title">곧 도착</div>
-        <div class="adm-menu-item pending"><span class="icon">📝</span>스크립트 라이브러리<span class="pending-mark">Phase D-2</span></div>
+        <div class="adm-menu-section-title">콘텐츠 운영</div>
+        <div class="adm-menu-item pending"><span class="icon">📝</span>스크립트<span class="pending-mark">Phase D-2</span></div>
         <div class="adm-menu-item pending"><span class="icon">📂</span>자료실<span class="pending-mark">Phase D-2</span></div>
       </div>
     </div>
@@ -879,45 +1076,46 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-menu-category">ADMIN · 게시판</div>
       <div class="adm-menu-title">게시판 관리</div>
       <div class="adm-menu-section">
-        <div class="adm-menu-section-title">곧 도착</div>
-        <div class="adm-menu-item pending"><span class="icon">💬</span>현장 Q&amp;A<span class="pending-mark">Phase D-3</span></div>
-        <div class="adm-menu-item pending"><span class="icon">⏳</span>모더레이션 큐<span class="pending-mark">Phase D-3</span></div>
+        <div class="adm-menu-section-title">게시판 운영</div>
+        <div class="adm-menu-item pending"><span class="icon">📢</span>공지 게시판<span class="pending-mark">Phase D-3</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🤝</span>함께해요<span class="pending-mark">Phase D-3</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🏛️</span>보험사 게시판<span class="pending-mark">v2.0</span></div>
       </div>
     </div>
     <div class="adm-menu-pane" data-view="analytics" style="display:none;">
       <div class="adm-menu-category">ADMIN · 통계</div>
       <div class="adm-menu-title">통계·분석</div>
       <div class="adm-menu-section">
-        <div class="adm-menu-section-title">곧 도착</div>
-        <div class="adm-menu-item pending"><span class="icon">📈</span>DAU/MAU<span class="pending-mark">Phase D-5</span></div>
-        <div class="adm-menu-item pending"><span class="icon">💹</span>전환율<span class="pending-mark">Phase D-5</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🎯</span>리텐션<span class="pending-mark">Phase D-5</span></div>
+        <div class="adm-menu-section-title">분석</div>
+        <div class="adm-menu-item pending"><span class="icon">📈</span>사용량<span class="pending-mark">Phase D-5</span></div>
+        <div class="adm-menu-item pending"><span class="icon">📊</span>성장<span class="pending-mark">Phase D-5</span></div>
+        <div class="adm-menu-item pending"><span class="icon">📑</span>리포트<span class="pending-mark">Phase D-5</span></div>
       </div>
     </div>
     <div class="adm-menu-pane" data-view="notice" style="display:none;">
       <div class="adm-menu-category">ADMIN · 운영</div>
       <div class="adm-menu-title">공지·배너</div>
       <div class="adm-menu-section">
-        <div class="adm-menu-section-title">곧 도착</div>
-        <div class="adm-menu-item pending"><span class="icon">📢</span>전역 공지<span class="pending-mark">Phase D-4</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🖼️</span>페이지 배너<span class="pending-mark">Phase D-4</span></div>
+        <div class="adm-menu-section-title">알림 운영</div>
+        <div class="adm-menu-item pending"><span class="icon">📢</span>공지<span class="pending-mark">Phase D-4</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🖼️</span>배너<span class="pending-mark">Phase D-4</span></div>
       </div>
     </div>
     <div class="adm-menu-pane" data-view="logs" style="display:none;">
       <div class="adm-menu-category">ADMIN · 로그</div>
       <div class="adm-menu-title">로그</div>
       <div class="adm-menu-section">
-        <div class="adm-menu-section-title">곧 도착</div>
+        <div class="adm-menu-section-title">로그 보기</div>
         <div class="adm-menu-item pending"><span class="icon">📜</span>활동 로그<span class="pending-mark">Phase D-6</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🚨</span>오류 로그<span class="pending-mark">Phase D-6</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🛠️</span>시스템 로그<span class="pending-mark">Phase D-6</span></div>
       </div>
     </div>
     <div class="adm-menu-pane" data-view="billing" style="display:none;">
       <div class="adm-menu-category">ADMIN · 결제</div>
       <div class="adm-menu-title">결제·플랜</div>
       <div class="adm-menu-section">
-        <div class="adm-menu-section-title">곧 도착</div>
-        <div class="adm-menu-item pending"><span class="icon">💳</span>결제 내역<span class="pending-mark">Phase D-7</span></div>
+        <div class="adm-menu-section-title">결제 운영</div>
+        <div class="adm-menu-item pending"><span class="icon">💳</span>구독·결제<span class="pending-mark">Phase D-7</span></div>
         <div class="adm-menu-item pending"><span class="icon">📦</span>플랜 관리<span class="pending-mark">Phase D-7</span></div>
       </div>
     </div>
@@ -1265,68 +1463,1241 @@ body.adm-active { overflow: hidden !important; }
     <!-- 2~8. 7개 빈 셸 (Phase C에서 mock 데이터로 채움)                       -->
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
 
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 2. USERS (Phase C mock — 사용자 관리)                                 -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="users">
-      <div class="adm-view-pending">
-        <div class="adm-pending-icon">👥</div>
-        <div class="adm-pending-title">사용자 관리</div>
-        <div class="adm-pending-sub">전체 사용자 목록 · 권한 · 플랜 · 소속/지점 · 검색 · 페이징 · 일괄 편집 — Phase C에서 mock 데이터, Phase D-1에서 Supabase users 테이블 실 연결.</div>
-        <div class="adm-pending-meta">PENDING · Phase D-1</div>
-      </div>
-    </div>
 
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">사용자 관리</div>
+          <div class="adm-section-desc">전체 가입자 · 9역할 권한 · 플랜 · 소속/지점 · 상태 관리. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+        </div>
+        <div class="adm-page-actions">
+          <button class="adm-btn adm-btn-ghost">📤 내보내기</button>
+          <button class="adm-btn adm-btn-primary">＋ 신규 사용자</button>
+        </div>
+      </div>
+
+      <!-- KPI 3카드 -->
+      <div class="adm-kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">전체 가입자</div>
+            <div class="adm-kpi-icon info">👥</div>
+          </div>
+          <div class="adm-kpi-value">1,284</div>
+          <div class="adm-kpi-trend up">▲ 12.3% <span class="vs">vs 지난 달</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">활성 사용자 (7일)</div>
+            <div class="adm-kpi-icon success">⚡</div>
+          </div>
+          <div class="adm-kpi-value">487</div>
+          <div class="adm-kpi-trend up">▲ 8.4% <span class="vs">vs 지난 주</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">신규 가입 (7일)</div>
+            <div class="adm-kpi-icon warning">🆕</div>
+          </div>
+          <div class="adm-kpi-value">47</div>
+          <div class="adm-kpi-trend down">▼ 3건 <span class="vs">vs 지난 주</span></div>
+        </div>
+      </div>
+
+      <!-- 필터·검색 바 -->
+      <div class="adm-filter-bar">
+        <div class="adm-filter-search">
+          <span style="opacity:0.6;">🔍</span>
+          <input type="text" placeholder="이름·이메일·소속 검색…" />
+        </div>
+        <div class="adm-role-chips">
+          <button class="adm-role-chip active">전체 <span class="count">1,284</span></button>
+          <button class="adm-role-chip">어드민 <span class="count">3</span></button>
+          <button class="adm-role-chip">GA 지점장 <span class="count">42</span></button>
+          <button class="adm-role-chip">GA 실장 <span class="count">128</span></button>
+          <button class="adm-role-chip">GA 설계사 <span class="count">847</span></button>
+          <button class="adm-role-chip">GA 스텝 <span class="count">62</span></button>
+          <button class="adm-role-chip">원수사 지점장 <span class="count">14</span></button>
+          <button class="adm-role-chip">원수사 매니저 <span class="count">38</span></button>
+          <button class="adm-role-chip">원수사 직원 <span class="count">126</span></button>
+          <button class="adm-role-chip">원수사 스텝 <span class="count">24</span></button>
+        </div>
+        <select class="adm-inline-select">
+          <option>최근 가입 순</option>
+          <option>이름 가나다 순</option>
+          <option>마지막 접속 순</option>
+        </select>
+      </div>
+
+      <!-- 사용자 테이블 10행 -->
+      <div class="adm-panel">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">사용자 목록</div>
+            <div class="adm-panel-meta">전체 1,284명 · 1~10행 표시 · Phase C mock</div>
+          </div>
+          <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">컬럼 설정 ⚙️</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>사용자</th><th>역할</th><th>플랜</th><th>소속</th><th>상태</th><th>가입일</th><th>마지막 접속</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#D4845A,#A0522D)">임</div>
+                  <div class="user-info"><div class="name">임태성</div><div class="email">bylts0428@gmail.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-admin">어드민</span></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td>원세컨드 본사</td>
+                <td><span class="adm-badge online">온라인</span></td>
+                <td>2025-09-01</td>
+                <td>지금</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1E40AF)">김</div>
+                  <div class="user-info"><div class="name">김지훈</div><div class="email">kim.jh@az-finance.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-ga-branch-manager">GA 지점장</span></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td>강남센터</td>
+                <td><span class="adm-badge online">온라인</span></td>
+                <td>2025-10-12</td>
+                <td>5분 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#8B5CF6,#5B21B6)">박</div>
+                  <div class="user-info"><div class="name">박서연</div><div class="email">park.sy@az-finance.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-ga-manager">GA 실장</span></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td>강남센터 · 1팀</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>2025-11-03</td>
+                <td>1시간 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#10B981,#047857)">이</div>
+                  <div class="user-info"><div class="name">이도윤</div><div class="email">lee.dy@az-finance.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-ga-member">GA 설계사</span></td>
+                <td><span class="adm-badge free">FREE</span></td>
+                <td>강남센터 · 1팀</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>2025-12-19</td>
+                <td>어제</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#B45309)">최</div>
+                  <div class="user-info"><div class="name">최민지</div><div class="email">choi.mj@onesecond.solutions</div></div>
+                </div></td>
+                <td><span class="adm-badge role-ga-member">GA 설계사</span></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td>판교본부 · 3팀</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>2026-01-08</td>
+                <td>3시간 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#71717A,#3F3F46)">정</div>
+                  <div class="user-info"><div class="name">정수아</div><div class="email">jung.sa@az-finance.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-ga-staff">GA 스텝</span></td>
+                <td><span class="adm-badge free">FREE</span></td>
+                <td>판교본부</td>
+                <td><span class="adm-badge status-suspended">정지</span></td>
+                <td>2026-01-22</td>
+                <td>5일 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#10B981,#065F46)">강</div>
+                  <div class="user-info"><div class="name">강현우</div><div class="email">kang.hw@kpi-insure.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-insurer-branch-manager">원수사 지점장</span></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td>KPI 강남지점</td>
+                <td><span class="adm-badge online">온라인</span></td>
+                <td>2026-02-04</td>
+                <td>30분 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#92400E)">윤</div>
+                  <div class="user-info"><div class="name">윤다은</div><div class="email">yoon.de@kpi-insure.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-insurer-manager">원수사 매니저</span></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td>KPI 강남지점</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>2026-02-18</td>
+                <td>2시간 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#A1A1AA,#52525B)">한</div>
+                  <div class="user-info"><div class="name">한지우</div><div class="email">han.ji@kpi-insure.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-insurer-member">원수사 직원</span></td>
+                <td><span class="adm-badge free">FREE</span></td>
+                <td>KPI 부산지점</td>
+                <td><span class="adm-badge status-pending">가입 대기</span></td>
+                <td>2026-04-25</td>
+                <td>—</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell">
+                  <div class="avatar" style="background:linear-gradient(135deg,#7C3AED,#4C1D95)">송</div>
+                  <div class="user-info"><div class="name">송예린</div><div class="email">song.yr@kpi-insure.com</div></div>
+                </div></td>
+                <td><span class="adm-badge role-insurer-staff">원수사 스텝</span></td>
+                <td><span class="adm-badge free">FREE</span></td>
+                <td>KPI 부산지점</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>2026-04-29</td>
+                <td>1일 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.adm-view users -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 3. CONTENT (Phase C mock — 콘텐츠 관리)                              -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="content">
-      <div class="adm-view-pending">
-        <div class="adm-pending-icon">📋</div>
-        <div class="adm-pending-title">콘텐츠 관리</div>
-        <div class="adm-pending-sub">스크립트 라이브러리 · 자료실 · 카테고리 · 게시 관리 — Phase C에서 mock 데이터, Phase D-2에서 Supabase scripts/posts 테이블 실 연결.</div>
-        <div class="adm-pending-meta">PENDING · Phase D-2</div>
-      </div>
-    </div>
 
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">콘텐츠 관리</div>
+          <div class="adm-section-desc">스크립트 라이브러리 · 자료실 · 10단계 stage 분포 · 게시 관리. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+        </div>
+        <div class="adm-page-actions">
+          <button class="adm-btn adm-btn-ghost">📤 내보내기</button>
+          <button class="adm-btn adm-btn-primary">＋ 새 콘텐츠</button>
+        </div>
+      </div>
+
+      <!-- KPI 3카드 -->
+      <div class="adm-kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">전체 스크립트</div>
+            <div class="adm-kpi-icon info">📝</div>
+          </div>
+          <div class="adm-kpi-value">3,847</div>
+          <div class="adm-kpi-trend up">▲ 184건 <span class="vs">vs 지난 달</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">전체 자료</div>
+            <div class="adm-kpi-icon success">📂</div>
+          </div>
+          <div class="adm-kpi-value">628</div>
+          <div class="adm-kpi-trend up">▲ 27건 <span class="vs">vs 지난 달</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">오늘 작성</div>
+            <div class="adm-kpi-icon warning">✨</div>
+          </div>
+          <div class="adm-kpi-value">23</div>
+          <div class="adm-kpi-trend up">▲ 5건 <span class="vs">vs 어제</span></div>
+        </div>
+      </div>
+
+      <!-- 단계별(stage) 분포 도넛 + 범례 (10단계) -->
+      <div class="adm-content-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="adm-panel">
+          <div class="adm-panel-head">
+            <div>
+              <div class="adm-panel-title">stage 10단계 분포</div>
+              <div class="adm-panel-meta">전체 3,847 스크립트 기준</div>
+            </div>
+          </div>
+          <div class="adm-panel-body" style="display:flex; align-items:center; justify-content:center;">
+            <svg viewBox="0 0 220 220" style="width: 220px; height: 220px;">
+              <g transform="translate(110, 110) rotate(-90)">
+                <circle r="80" fill="none" stroke="var(--admin-surface-2)" stroke-width="32"/>
+                <circle r="80" fill="none" stroke="#D4845A" stroke-width="32" stroke-dasharray="40.21 462.44" stroke-dashoffset="0"/>
+                <circle r="80" fill="none" stroke="#E89A6F" stroke-width="32" stroke-dasharray="60.32 442.33" stroke-dashoffset="-40.21"/>
+                <circle r="80" fill="none" stroke="#FBB08A" stroke-width="32" stroke-dasharray="90.48 412.17" stroke-dashoffset="-100.53"/>
+                <circle r="80" fill="none" stroke="#3B82F6" stroke-width="32" stroke-dasharray="70.37 432.28" stroke-dashoffset="-191.01"/>
+                <circle r="80" fill="none" stroke="#60A5FA" stroke-width="32" stroke-dasharray="60.32 442.33" stroke-dashoffset="-261.38"/>
+                <circle r="80" fill="none" stroke="#93C5FD" stroke-width="32" stroke-dasharray="50.27 452.38" stroke-dashoffset="-321.70"/>
+                <circle r="80" fill="none" stroke="#10B981" stroke-width="32" stroke-dasharray="40.21 462.44" stroke-dashoffset="-371.97"/>
+                <circle r="80" fill="none" stroke="#34D399" stroke-width="32" stroke-dasharray="35.19 467.46" stroke-dashoffset="-412.18"/>
+                <circle r="80" fill="none" stroke="#F59E0B" stroke-width="32" stroke-dasharray="30.16 472.49" stroke-dashoffset="-447.37"/>
+                <circle r="80" fill="none" stroke="#FCD34D" stroke-width="32" stroke-dasharray="25.13 477.52" stroke-dashoffset="-477.53"/>
+              </g>
+              <text x="110" y="105" text-anchor="middle" font-size="32" font-weight="900" fill="var(--admin-text-primary)" font-family="DM Sans">3,847</text>
+              <text x="110" y="128" text-anchor="middle" font-size="11" font-weight="700" fill="var(--admin-text-tertiary)" font-family="DM Sans" letter-spacing="0.5">총 스크립트</text>
+            </svg>
+          </div>
+        </div>
+        <div class="adm-panel">
+          <div class="adm-panel-head">
+            <div>
+              <div class="adm-panel-title">단계별 비율</div>
+              <div class="adm-panel-meta">최다: 니즈 발굴 18%</div>
+            </div>
+          </div>
+          <div class="adm-panel-body">
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#D4845A; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">1. 인사·라포</span><span style="color:var(--admin-text-secondary); font-weight:700;">8% · 308</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#E89A6F; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">2. 도입</span><span style="color:var(--admin-text-secondary); font-weight:700;">12% · 462</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#FBB08A; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">3. 니즈 발굴</span><span style="color:var(--color-accent); font-weight:700;">18% · 692</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#3B82F6; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">4. 보장 분석</span><span style="color:var(--admin-text-secondary); font-weight:700;">14% · 539</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#60A5FA; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">5. 솔루션 제시</span><span style="color:var(--admin-text-secondary); font-weight:700;">12% · 462</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#93C5FD; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">6. 클로징</span><span style="color:var(--admin-text-secondary); font-weight:700;">10% · 385</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#10B981; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">7. 반론 대응</span><span style="color:var(--admin-text-secondary); font-weight:700;">8% · 308</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#34D399; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">8. 계약</span><span style="color:var(--admin-text-secondary); font-weight:700;">7% · 269</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#F59E0B; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">9. 인계</span><span style="color:var(--admin-text-secondary); font-weight:700;">6% · 231</span></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:10px; height:10px; background:#FCD34D; border-radius:2px;"></span><span style="flex:1; color:var(--admin-text-primary);">10. 사후 관리</span><span style="color:var(--admin-text-secondary); font-weight:700;">5% · 192</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 최근 작성 콘텐츠 테이블 8행 -->
+      <div class="adm-panel" style="margin-top: 20px;">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">최근 작성 콘텐츠</div>
+            <div class="adm-panel-meta">스크립트 + 자료 통합 · 1~8행 표시</div>
+          </div>
+          <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">전체 보기 →</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>유형</th><th>제목</th><th>단계</th><th>작성자</th><th>조회</th><th>저장</th><th>작성일</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">스크립트</span></td>
+                <td><strong>"생각해볼게요" 클로징 반론 — 3가지 패턴</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-secondary);">7. 반론 대응</span></td>
+                <td>김지훈</td>
+                <td style="font-feature-settings:'tnum';">847</td>
+                <td style="font-feature-settings:'tnum';">62</td>
+                <td>3시간 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">스크립트</span></td>
+                <td><strong>40대 여성 보장분석 도입 — 라이프 시점 강조</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-secondary);">4. 보장 분석</span></td>
+                <td>박서연</td>
+                <td style="font-feature-settings:'tnum';">534</td>
+                <td style="font-feature-settings:'tnum';">38</td>
+                <td>5시간 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-success-bg); color:var(--color-success);">자료</span></td>
+                <td><strong>2026 4월 보장분석 표준 양식 v3.2.pdf</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-tertiary);">—</span></td>
+                <td>최민지</td>
+                <td style="font-feature-settings:'tnum';">428</td>
+                <td style="font-feature-settings:'tnum';">213</td>
+                <td>어제</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">스크립트</span></td>
+                <td><strong>TM 첫 30초 — 인사·라포 골든 오프닝</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-secondary);">1. 인사·라포</span></td>
+                <td>이도윤</td>
+                <td style="font-feature-settings:'tnum';">321</td>
+                <td style="font-feature-settings:'tnum';">29</td>
+                <td>어제</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">스크립트</span></td>
+                <td><strong>"가족력 있어요" 발화 → 니즈 발굴 전환</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-secondary);">3. 니즈 발굴</span></td>
+                <td>강현우</td>
+                <td style="font-feature-settings:'tnum';">287</td>
+                <td style="font-feature-settings:'tnum';">21</td>
+                <td>2일 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-success-bg); color:var(--color-success);">자료</span></td>
+                <td><strong>KPI보험 대표 상품 라인업 한눈에 (2026 Q2).pdf</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-tertiary);">—</span></td>
+                <td>윤다은</td>
+                <td style="font-feature-settings:'tnum';">267</td>
+                <td style="font-feature-settings:'tnum';">142</td>
+                <td>2일 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">스크립트</span></td>
+                <td><strong>계약 직전 보호자 동의 마무리 멘트</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-secondary);">8. 계약</span></td>
+                <td>김지훈</td>
+                <td style="font-feature-settings:'tnum';">198</td>
+                <td style="font-feature-settings:'tnum';">14</td>
+                <td>3일 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">스크립트</span></td>
+                <td><strong>사후 관리 — 90일차 인콜 멘트</strong></td>
+                <td><span style="font-size:11px; color:var(--admin-text-secondary);">10. 사후 관리</span></td>
+                <td>박서연</td>
+                <td style="font-feature-settings:'tnum';">142</td>
+                <td style="font-feature-settings:'tnum';">8</td>
+                <td>4일 전</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.adm-view content -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 4. BOARD (Phase C mock — 게시판 관리)                                -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="board">
-      <div class="adm-view-pending">
-        <div class="adm-pending-icon">💬</div>
-        <div class="adm-pending-title">게시판 관리</div>
-        <div class="adm-pending-sub">현장 Q&A 모더레이션 · 신고 처리 · 답변 유도 · 핀고정 — Phase C에서 mock 데이터, Phase D-3에서 Supabase posts 테이블 실 연결.</div>
-        <div class="adm-pending-meta">PENDING · Phase D-3</div>
-      </div>
-    </div>
 
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">게시판 관리</div>
+          <div class="adm-section-desc">공지 게시판 · 함께해요 · 신고 모더레이션 · 핀고정. 보험사 게시판은 v2.0 대기. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+        </div>
+        <div class="adm-page-actions">
+          <button class="adm-btn adm-btn-ghost">📤 내보내기</button>
+          <button class="adm-btn adm-btn-primary">＋ 새 공지 작성</button>
+        </div>
+      </div>
+
+      <!-- KPI 3카드 -->
+      <div class="adm-kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">전체 게시글</div>
+            <div class="adm-kpi-icon info">💬</div>
+          </div>
+          <div class="adm-kpi-value">2,847</div>
+          <div class="adm-kpi-trend up">▲ 84건 <span class="vs">vs 지난 주</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">댓글</div>
+            <div class="adm-kpi-icon success">💭</div>
+          </div>
+          <div class="adm-kpi-value">11,428</div>
+          <div class="adm-kpi-trend up">▲ 312건 <span class="vs">vs 지난 주</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">신고 대기</div>
+            <div class="adm-kpi-icon danger">🚨</div>
+          </div>
+          <div class="adm-kpi-value">5</div>
+          <div class="adm-kpi-trend down">▼ 2건 <span class="vs">vs 어제</span></div>
+        </div>
+      </div>
+
+      <!-- 게시판별 활동 추이 라인 차트 -->
+      <div class="adm-panel" style="margin-bottom: 20px;">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">게시판별 활동 추이</div>
+            <div class="adm-panel-meta">최근 30일 · 일간 게시글 수</div>
+          </div>
+        </div>
+        <div class="adm-chart-legend">
+          <span><span class="adm-chart-legend-dot" style="background:var(--color-accent)"></span>공지 게시판</span>
+          <span><span class="adm-chart-legend-dot" style="background:var(--color-info)"></span>함께해요</span>
+          <span><span class="adm-chart-legend-dot" style="background:var(--admin-text-tertiary)"></span>보험사 게시판 (v2.0 대기)</span>
+        </div>
+        <div class="adm-panel-body" style="padding-top:8px;">
+          <svg class="adm-chart" viewBox="0 0 600 220" preserveAspectRatio="none">
+            <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+              <line x1="0" y1="40"  x2="600" y2="40"/>
+              <line x1="0" y1="90"  x2="600" y2="90"/>
+              <line x1="0" y1="140" x2="600" y2="140"/>
+              <line x1="0" y1="190" x2="600" y2="190"/>
+            </g>
+            <g font-size="10" fill="rgba(255,255,255,0.4)" font-family="DM Sans">
+              <text x="5" y="44">120</text>
+              <text x="5" y="94">90</text>
+              <text x="5" y="144">60</text>
+              <text x="5" y="194">30</text>
+            </g>
+            <polyline fill="none" stroke="#D4845A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+              points="40,120 60,115 80,108 100,114 120,102 140,95 160,108 180,98 200,88 220,92 240,80 260,86 280,72 300,82 320,68 340,76 360,62 380,72 400,55 420,68 440,52 460,62 480,48 500,58 520,42 540,52 560,38 580,48"/>
+            <polyline fill="none" stroke="#3B82F6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
+              points="40,150 60,142 80,148 100,134 120,138 140,128 160,120 180,124 200,112 220,118 240,108 260,114 280,100 300,108 320,94 340,102 360,86 380,94 400,80 420,88 440,72 460,80 480,68 500,76 520,62 540,72 560,58 580,68"/>
+            <polyline fill="none" stroke="var(--admin-text-tertiary)" stroke-width="1.5" stroke-dasharray="4,4" stroke-linejoin="round"
+              points="40,195 60,194 80,196 100,193 120,195 140,194 160,196 180,193 200,195 220,194 240,196 260,193 280,195 300,194 320,196 340,193 360,195 380,194 400,196 420,193 440,195 460,194 480,196 500,193 520,195 540,194 560,196 580,193"/>
+            <circle cx="580" cy="48" r="5" fill="#D4845A" stroke="#fff" stroke-width="2"/>
+            <circle cx="580" cy="68" r="4" fill="#3B82F6" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 신고 대기 테이블 5행 -->
+      <div class="adm-panel">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">신고 대기 게시글</div>
+            <div class="adm-panel-meta">우선 처리 권장 · 5건</div>
+          </div>
+          <button class="adm-btn adm-btn-primary" style="height:32px;font-size:12px;padding:0 14px;">일괄 처리</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>게시판</th><th>제목</th><th>작성자</th><th>신고 사유</th><th>신고 수</th><th>접수</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="adm-badge role-ga-member">함께해요</span></td>
+                <td><strong>"○○생명 파트너 모집 제안" — 외부 영업 글</strong></td>
+                <td>이도윤</td>
+                <td><span class="adm-badge status-suspended">광고·홍보</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">12</td>
+                <td>12분 전</td>
+                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge role-ga-member">함께해요</span></td>
+                <td><strong>"실적 1위 비결 — DM 환영" 글에 부정확 정보</strong></td>
+                <td>최민지</td>
+                <td><span class="adm-badge status-pending">허위·부정확</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">7</td>
+                <td>1시간 전</td>
+                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge role-ga-branch-manager">공지</span></td>
+                <td><strong>"고객 정보 공유 요청" — 개인정보 노출 우려</strong></td>
+                <td>김지훈</td>
+                <td><span class="adm-badge status-suspended">개인정보</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">5</td>
+                <td>3시간 전</td>
+                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge role-ga-member">함께해요</span></td>
+                <td><strong>"동료 비방성 발언" — 댓글 다툼 발생</strong></td>
+                <td>정수아</td>
+                <td><span class="adm-badge status-suspended">비방·다툼</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">4</td>
+                <td>5시간 전</td>
+                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge role-ga-member">함께해요</span></td>
+                <td><strong>"중복 게시" — 동일 내용 3회 게시</strong></td>
+                <td>박서연</td>
+                <td><span class="adm-badge status-pending">스팸·중복</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">2</td>
+                <td>어제</td>
+                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.adm-view board -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 5. ANALYTICS (Phase C mock — 통계·분석)                              -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="analytics">
-      <div class="adm-view-pending">
-        <div class="adm-pending-icon">📈</div>
-        <div class="adm-pending-title">통계·분석</div>
-        <div class="adm-pending-sub">DAU/MAU · 전환율 · 리텐션 · 코호트 · 시간대별 사용 패턴 — Phase C에서 mock 데이터, Phase D-5에서 집계 RPC 쿼리 실 연결.</div>
-        <div class="adm-pending-meta">PENDING · Phase D-5</div>
-      </div>
-    </div>
 
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">통계·분석</div>
+          <div class="adm-section-desc">DAU/WAU/MAU · 리텐션 · 기능별 사용량 · 코호트. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+        </div>
+        <div class="adm-page-actions">
+          <button class="adm-btn adm-btn-ghost">📅 기간 선택</button>
+          <button class="adm-btn adm-btn-ghost">📤 리포트 PDF</button>
+        </div>
+      </div>
+
+      <!-- KPI 4카드 -->
+      <div class="adm-kpi-grid" style="margin-bottom: 24px;">
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">DAU (오늘)</div>
+            <div class="adm-kpi-icon info">⚡</div>
+          </div>
+          <div class="adm-kpi-value">342</div>
+          <div class="adm-kpi-trend up">▲ 8.7% <span class="vs">vs 어제</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">WAU (7일)</div>
+            <div class="adm-kpi-icon success">📅</div>
+          </div>
+          <div class="adm-kpi-value">847</div>
+          <div class="adm-kpi-trend up">▲ 14.2% <span class="vs">vs 지난 주</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">MAU (30일)</div>
+            <div class="adm-kpi-icon warning">🗓️</div>
+          </div>
+          <div class="adm-kpi-value">1,128</div>
+          <div class="adm-kpi-trend up">▲ 22.8% <span class="vs">vs 지난 달</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">리텐션 (D-30)</div>
+            <div class="adm-kpi-icon danger">🎯</div>
+          </div>
+          <div class="adm-kpi-value">68.4%</div>
+          <div class="adm-kpi-trend up">▲ 3.1%p <span class="vs">vs 지난 달</span></div>
+        </div>
+      </div>
+
+      <!-- DAU 추이 라인 차트 (90일) -->
+      <div class="adm-panel" style="margin-bottom: 20px;">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">DAU 추이 — 최근 90일</div>
+            <div class="adm-panel-meta">2026-02-01 ~ 2026-04-30 · 일간 활성 사용자</div>
+          </div>
+          <div class="adm-page-actions">
+            <button class="adm-btn adm-btn-ghost active" style="height:32px;font-size:12px;padding:0 12px;">90일</button>
+            <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 12px;">30일</button>
+            <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 12px;">7일</button>
+          </div>
+        </div>
+        <div class="adm-panel-body" style="padding-top:8px;">
+          <svg class="adm-chart" viewBox="0 0 600 220" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="admDauArea" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%"   stop-color="#D4845A" stop-opacity="0.20"/>
+                <stop offset="100%" stop-color="#D4845A" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+              <line x1="0" y1="40"  x2="600" y2="40"/>
+              <line x1="0" y1="90"  x2="600" y2="90"/>
+              <line x1="0" y1="140" x2="600" y2="140"/>
+              <line x1="0" y1="190" x2="600" y2="190"/>
+            </g>
+            <g font-size="10" fill="rgba(255,255,255,0.4)" font-family="DM Sans">
+              <text x="5" y="44">400</text>
+              <text x="5" y="94">300</text>
+              <text x="5" y="144">200</text>
+              <text x="5" y="194">100</text>
+            </g>
+            <path d="M40,170 L46,165 L52,168 L58,160 L64,158 L70,162 L76,154 L82,150 L88,156 L94,148 L100,144 L106,150 L112,142 L118,138 L124,144 L130,134 L136,128 L142,134 L148,126 L154,120 L160,128 L166,118 L172,112 L178,120 L184,110 L190,104 L196,114 L202,106 L208,98 L214,108 L220,98 L226,92 L232,102 L238,92 L244,86 L250,96 L256,86 L262,78 L268,90 L274,80 L280,72 L286,84 L292,72 L298,66 L304,76 L310,68 L316,60 L322,72 L328,62 L334,54 L340,66 L346,58 L352,50 L358,62 L364,52 L370,46 L376,58 L382,48 L388,42 L394,54 L400,44 L406,38 L412,50 L418,40 L424,34 L430,46 L436,36 L442,30 L448,42 L454,34 L460,28 L466,40 L472,32 L478,26 L484,38 L490,28 L496,22 L502,34 L508,26 L514,20 L520,32 L526,24 L532,18 L538,30 L544,22 L550,14 L556,26 L562,18 L568,12 L574,24 L580,16 L580,200 L40,200 Z"
+              fill="url(#admDauArea)"/>
+            <polyline fill="none" stroke="#D4845A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+              points="40,170 46,165 52,168 58,160 64,158 70,162 76,154 82,150 88,156 94,148 100,144 106,150 112,142 118,138 124,144 130,134 136,128 142,134 148,126 154,120 160,128 166,118 172,112 178,120 184,110 190,104 196,114 202,106 208,98 214,108 220,98 226,92 232,102 238,92 244,86 250,96 256,86 262,78 268,90 274,80 280,72 286,84 292,72 298,66 304,76 310,68 316,60 322,72 328,62 334,54 340,66 346,58 352,50 358,62 364,52 370,46 376,58 382,48 388,42 394,54 400,44 406,38 412,50 418,40 424,34 430,46 436,36 442,30 448,42 454,34 460,28 466,40 472,32 478,26 484,38 490,28 496,22 502,34 508,26 514,20 520,32 526,24 532,18 538,30 544,22 550,14 556,26 562,18 568,12 574,24 580,16"/>
+            <circle cx="580" cy="16" r="5" fill="#D4845A" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 기능별 사용량 막대 차트 (6개 메뉴) -->
+      <div class="adm-panel">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">기능별 사용량 — Top 6 메뉴</div>
+            <div class="adm-panel-meta">최근 7일 · 페이지뷰 합계</div>
+          </div>
+        </div>
+        <div class="adm-panel-body">
+          <svg class="adm-chart" viewBox="0 0 600 240" preserveAspectRatio="none" style="height: 260px;">
+            <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+              <line x1="120" y1="20"  x2="120" y2="220"/>
+              <line x1="220" y1="20"  x2="220" y2="220"/>
+              <line x1="320" y1="20"  x2="320" y2="220"/>
+              <line x1="420" y1="20"  x2="420" y2="220"/>
+              <line x1="520" y1="20"  x2="520" y2="220"/>
+            </g>
+            <g font-size="11" fill="var(--admin-text-secondary)" font-family="DM Sans">
+              <text x="115" y="40" text-anchor="end">스크립트 라이브러리</text>
+              <text x="115" y="72" text-anchor="end">홈 (대시보드)</text>
+              <text x="115" y="104" text-anchor="end">함께해요 게시판</text>
+              <text x="115" y="136" text-anchor="end">마이스페이스</text>
+              <text x="115" y="168" text-anchor="end">자료실</text>
+              <text x="115" y="200" text-anchor="end">공지 게시판</text>
+            </g>
+            <g>
+              <rect x="120" y="26" width="430" height="20" fill="#D4845A" rx="4"/>
+              <rect x="120" y="58" width="370" height="20" fill="#E89A6F" rx="4"/>
+              <rect x="120" y="90" width="280" height="20" fill="#3B82F6" rx="4"/>
+              <rect x="120" y="122" width="220" height="20" fill="#60A5FA" rx="4"/>
+              <rect x="120" y="154" width="150" height="20" fill="#10B981" rx="4"/>
+              <rect x="120" y="186" width="90" height="20" fill="#34D399" rx="4"/>
+            </g>
+            <g font-size="11" font-weight="700" fill="var(--admin-text-primary)" font-family="DM Sans" font-feature-settings="'tnum'">
+              <text x="558" y="40">8,472</text>
+              <text x="498" y="72">7,284</text>
+              <text x="408" y="104">5,521</text>
+              <text x="348" y="136">4,328</text>
+              <text x="278" y="168">2,947</text>
+              <text x="218" y="200">1,768</text>
+            </g>
+            <g font-size="9" fill="var(--admin-text-tertiary)" font-family="DM Sans">
+              <text x="120" y="232">0</text>
+              <text x="220" y="232">2k</text>
+              <text x="320" y="232">4k</text>
+              <text x="420" y="232">6k</text>
+              <text x="520" y="232">8k</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+    </div><!-- /.adm-view analytics -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 6. NOTICE (Phase C mock — 공지·배너 관리)                            -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="notice">
-      <div class="adm-view-pending">
-        <div class="adm-pending-icon">📢</div>
-        <div class="adm-pending-title">공지·배너</div>
-        <div class="adm-pending-sub">전역 공지 · 페이지 배너 · 노출 기간 · 대상 role 분기 — Phase C에서 mock 데이터, Phase D-4에서 app_settings 테이블 실 연결.</div>
-        <div class="adm-pending-meta">PENDING · Phase D-4</div>
-      </div>
-    </div>
 
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">공지·배너</div>
+          <div class="adm-section-desc">전역 공지 · 페이지 배너 · 노출 기간 · 대상 role 분기. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+        </div>
+        <div class="adm-page-actions">
+          <button class="adm-btn adm-btn-ghost">📢 새 공지</button>
+          <button class="adm-btn adm-btn-primary">🖼️ 새 배너</button>
+        </div>
+      </div>
+
+      <!-- 활성 공지·배너 카드 4개 -->
+      <div class="adm-notice-grid">
+        <div class="adm-notice-card">
+          <div class="head">
+            <div class="type">🟢 활성 · 공지</div>
+            <div class="toggle"></div>
+          </div>
+          <div class="title">2026 5월 정기 업데이트 안내 — 어드민 콘솔 v2 정식 오픈</div>
+          <div class="meta">
+            <span>대상: <strong>전체 사용자</strong></span>
+            <span>노출: <strong>2026-05-01 ~ 05-15</strong></span>
+            <span>조회: <strong>847</strong></span>
+          </div>
+        </div>
+        <div class="adm-notice-card">
+          <div class="head">
+            <div class="type">🟢 활성 · 배너</div>
+            <div class="toggle"></div>
+          </div>
+          <div class="title">PRO 플랜 5월 한정 — 첫 달 50% 할인 (₩9,900 → ₩4,950)</div>
+          <div class="meta">
+            <span>대상: <strong>FREE 사용자</strong></span>
+            <span>노출: <strong>홈 / 마이스페이스 상단</strong></span>
+            <span>전환: <strong>23명</strong></span>
+          </div>
+        </div>
+        <div class="adm-notice-card">
+          <div class="head">
+            <div class="type">🟢 활성 · 공지</div>
+            <div class="toggle"></div>
+          </div>
+          <div class="title">함께해요 게시판 가이드 — 광고·홍보 게시 금지 안내</div>
+          <div class="meta">
+            <span>대상: <strong>GA · 원수사</strong></span>
+            <span>노출: <strong>2026-04-20 ~ 상시</strong></span>
+            <span>조회: <strong>421</strong></span>
+          </div>
+        </div>
+        <div class="adm-notice-card off">
+          <div class="head">
+            <div class="type" style="color: var(--admin-text-tertiary);">⚪ 비활성 · 배너</div>
+            <div class="toggle"></div>
+          </div>
+          <div class="title">[종료] 2026 4월 보장분석 표준 양식 v3.2 배포</div>
+          <div class="meta">
+            <span>대상: <strong>GA 매니저 이상</strong></span>
+            <span>노출 종료: <strong>2026-04-30</strong></span>
+            <span>조회: <strong>1,284</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 작성 이력 테이블 5행 -->
+      <div class="adm-panel">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">작성 이력</div>
+            <div class="adm-panel-meta">최근 작성 5건 · 활성 4 / 비활성 1</div>
+          </div>
+          <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">전체 보기 →</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>유형</th><th>제목</th><th>대상 role</th><th>작성자</th><th>상태</th><th>노출 기간</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">공지</span></td>
+                <td><strong>2026 5월 정기 업데이트 — admin v2 정식 오픈</strong></td>
+                <td>전체</td>
+                <td>임태성</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>05-01 ~ 05-15</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-warning-bg); color:var(--color-warning);">배너</span></td>
+                <td><strong>PRO 첫 달 50% 할인 캠페인</strong></td>
+                <td>FREE 사용자</td>
+                <td>임태성</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>05-01 ~ 05-31</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">공지</span></td>
+                <td><strong>함께해요 게시판 가이드 — 광고·홍보 금지</strong></td>
+                <td>GA · 원수사</td>
+                <td>임태성</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>04-20 ~ 상시</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-warning-bg); color:var(--color-warning);">배너</span></td>
+                <td><strong>2026 4월 보장분석 표준 양식 v3.2 배포</strong></td>
+                <td>GA 매니저 이상</td>
+                <td>김지훈</td>
+                <td><span class="adm-badge status-suspended">종료</span></td>
+                <td>04-15 ~ 04-30</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+              <tr>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">공지</span></td>
+                <td><strong>2026 Q1 시스템 점검 사전 안내</strong></td>
+                <td>전체</td>
+                <td>임태성</td>
+                <td><span class="adm-badge status-active">활성</span></td>
+                <td>03-25 ~ 04-01</td>
+                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.adm-view notice -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 7. LOGS (Phase C mock — 활동 로그 / 시스템 로그)                     -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="logs">
-      <div class="adm-view-pending">
-        <div class="adm-pending-icon">🗂️</div>
-        <div class="adm-pending-title">로그</div>
-        <div class="adm-pending-sub">활동 로그 · 오류 로그 · admin 작업 추적 — Phase C에서 mock 데이터, Phase D-6에서 Sentry 등 외부 서비스 통합 후 실 연결.</div>
-        <div class="adm-pending-meta">PENDING · Phase D-6</div>
-      </div>
-    </div>
 
-    <div class="adm-view" data-view="billing">
-      <div class="adm-view-pending">
-        <div class="adm-pending-icon">💳</div>
-        <div class="adm-pending-title">결제·플랜</div>
-        <div class="adm-pending-sub">결제 내역 · 플랜 관리 · 환불 · 매출 — Phase C에서 mock 데이터, Phase D-7에서 결제 시스템 도입 후 실 연결.</div>
-        <div class="adm-pending-meta">PENDING · Phase D-7</div>
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">로그</div>
+          <div class="adm-section-desc">활동 로그 + 시스템 로그 통합 · 사용자·관리자 액션 추적 · 오류 발생 추적. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+        </div>
+        <div class="adm-page-actions">
+          <button class="adm-btn adm-btn-ghost">📤 CSV</button>
+          <button class="adm-btn adm-btn-ghost">🔄 새로고침</button>
+        </div>
       </div>
-    </div>
+
+      <!-- 검색·필터 바 -->
+      <div class="adm-filter-bar">
+        <div class="adm-filter-search">
+          <span style="opacity:0.6;">🔍</span>
+          <input type="text" placeholder="사용자·액션·대상 검색…" />
+        </div>
+        <input type="date" class="adm-inline-select" value="2026-04-30" style="font-feature-settings:'tnum';" />
+        <select class="adm-inline-select">
+          <option>모든 사용자</option>
+          <option>임태성 (어드민)</option>
+          <option>김지훈 (GA 지점장)</option>
+          <option>박서연 (GA 실장)</option>
+        </select>
+        <select class="adm-inline-select">
+          <option>모든 액션</option>
+          <option>로그인</option>
+          <option>스크립트 작성·편집</option>
+          <option>게시글 작성·편집</option>
+          <option>결제·플랜 변경</option>
+          <option>관리자 작업</option>
+          <option>오류·예외</option>
+        </select>
+        <select class="adm-inline-select">
+          <option>모든 결과</option>
+          <option>성공</option>
+          <option>실패</option>
+        </select>
+      </div>
+
+      <!-- 로그 테이블 12행 -->
+      <div class="adm-panel">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">활동 로그 — 2026-05-01</div>
+            <div class="adm-panel-meta">최근 12건 · 전체 5,847건</div>
+          </div>
+          <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">전체 보기 →</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>시각</th><th>사용자</th><th>액션</th><th>대상</th><th>결과</th><th>상세</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:28:42</td>
+                <td><strong>임태성</strong> <span class="adm-badge role-admin" style="margin-left:6px;">어드민</span></td>
+                <td>관리자 콘솔 진입</td>
+                <td>admin_v2.html</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">IP 121.135.x.x · Chrome 122</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:24:18</td>
+                <td><strong>김지훈</strong> <span class="adm-badge role-ga-branch-manager" style="margin-left:6px;">GA 지점장</span></td>
+                <td>스크립트 작성</td>
+                <td>"생각해볼게요" 클로징 반론</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">script_id=a8472d</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:22:03</td>
+                <td><strong>박서연</strong> <span class="adm-badge role-ga-manager" style="margin-left:6px;">GA 실장</span></td>
+                <td>로그인</td>
+                <td>—</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">IP 175.193.x.x · Safari iOS</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:18:51</td>
+                <td><strong>최민지</strong> <span class="adm-badge role-ga-member" style="margin-left:6px;">GA 설계사</span></td>
+                <td>플랜 변경 (FREE → PRO)</td>
+                <td>결제 ₩9,900</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">payment_id=p_3847</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:14:27</td>
+                <td><strong>강현우</strong> <span class="adm-badge role-insurer-branch-manager" style="margin-left:6px;">원수사 지점장</span></td>
+                <td>자료 업로드</td>
+                <td>KPI보험 상품 라인업 Q2.pdf</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">size=2.3MB</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:08:14</td>
+                <td><strong>SYSTEM</strong> <span class="adm-badge" style="background:var(--admin-warning-bg); color:var(--color-warning); margin-left:6px;">시스템</span></td>
+                <td>API 응답 지연</td>
+                <td>/api/scripts/search</td>
+                <td><span class="adm-badge status-pending">경고</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">avg_latency=2.4s</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:02:38</td>
+                <td><strong>이도윤</strong> <span class="adm-badge role-ga-member" style="margin-left:6px;">GA 설계사</span></td>
+                <td>게시글 작성</td>
+                <td>함께해요 #3847</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">post_id=h_3847</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:58:02</td>
+                <td><strong>윤다은</strong> <span class="adm-badge role-insurer-manager" style="margin-left:6px;">원수사 매니저</span></td>
+                <td>비밀번호 변경 시도</td>
+                <td>—</td>
+                <td><span class="adm-badge status-suspended">실패</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">현재 비밀번호 불일치</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:52:47</td>
+                <td><strong>임태성</strong> <span class="adm-badge role-admin" style="margin-left:6px;">어드민</span></td>
+                <td>사용자 정지</td>
+                <td>정수아 (ga_staff)</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">사유: 약관 위반</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:44:21</td>
+                <td><strong>SYSTEM</strong> <span class="adm-badge" style="background:rgba(239,68,68,0.18); color:var(--color-danger); margin-left:6px;">오류</span></td>
+                <td>DB connection timeout</td>
+                <td>supabase pdnwgzn...</td>
+                <td><span class="adm-badge status-suspended">실패</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">자동 재연결 → 정상</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:38:10</td>
+                <td><strong>한지우</strong> <span class="adm-badge role-insurer-member" style="margin-left:6px;">원수사 직원</span></td>
+                <td>회원가입 (대기)</td>
+                <td>han.ji@kpi-insure.com</td>
+                <td><span class="adm-badge status-pending">대기</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">관리자 승인 필요</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:32:55</td>
+                <td><strong>송예린</strong> <span class="adm-badge role-insurer-staff" style="margin-left:6px;">원수사 스텝</span></td>
+                <td>로그인</td>
+                <td>—</td>
+                <td><span class="adm-badge status-active">성공</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">IP 218.144.x.x · Chrome 122</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.adm-view logs -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 8. BILLING (Phase C mock — 결제·플랜)                                -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="adm-view" data-view="billing">
+
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">결제·플랜</div>
+          <div class="adm-section-desc">월 매출 · 활성 구독 · 결제 실패 · 4플랜 분포. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+        </div>
+        <div class="adm-page-actions">
+          <button class="adm-btn adm-btn-ghost">📤 매출 리포트</button>
+          <button class="adm-btn adm-btn-ghost">💳 환불 처리</button>
+        </div>
+      </div>
+
+      <!-- KPI 3카드 -->
+      <div class="adm-kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">이번 달 매출</div>
+            <div class="adm-kpi-icon success">💰</div>
+          </div>
+          <div class="adm-kpi-value">₩48,720,000</div>
+          <div class="adm-kpi-trend up">▲ 18.4% <span class="vs">vs 지난 달</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">활성 구독</div>
+            <div class="adm-kpi-icon info">📦</div>
+          </div>
+          <div class="adm-kpi-value">487</div>
+          <div class="adm-kpi-trend up">▲ 32건 <span class="vs">vs 지난 달</span></div>
+        </div>
+        <div class="adm-kpi-card">
+          <div class="adm-kpi-top">
+            <div class="adm-kpi-label">결제 실패 (7일)</div>
+            <div class="adm-kpi-icon danger">⚠️</div>
+          </div>
+          <div class="adm-kpi-value">3</div>
+          <div class="adm-kpi-trend down">▼ 2건 <span class="vs">vs 지난 주</span></div>
+        </div>
+      </div>
+
+      <!-- 플랜별 가입자 도넛 + 범례 -->
+      <div class="adm-content-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="adm-panel">
+          <div class="adm-panel-head">
+            <div>
+              <div class="adm-panel-title">플랜별 가입자 분포</div>
+              <div class="adm-panel-meta">활성 구독 487 + 무료 797 = 1,284명</div>
+            </div>
+          </div>
+          <div class="adm-panel-body" style="display:flex; align-items:center; justify-content:center;">
+            <svg viewBox="0 0 220 220" style="width: 220px; height: 220px;">
+              <g transform="translate(110, 110) rotate(-90)">
+                <circle r="80" fill="none" stroke="var(--admin-surface-2)" stroke-width="32"/>
+                <!-- 무료 62.1% (797/1284), PRO 28.0% (360/1284), CRM 8.9% (114/1284), 원수사 1.0% (13/1284) -->
+                <circle r="80" fill="none" stroke="#71717A" stroke-width="32" stroke-dasharray="312.15 502.65" stroke-dashoffset="0"/>
+                <circle r="80" fill="none" stroke="#10B981" stroke-width="32" stroke-dasharray="140.74 502.65" stroke-dashoffset="-312.15"/>
+                <circle r="80" fill="none" stroke="#3B82F6" stroke-width="32" stroke-dasharray="44.74 502.65" stroke-dashoffset="-452.89"/>
+                <circle r="80" fill="none" stroke="#D4845A" stroke-width="32" stroke-dasharray="5.03 502.65" stroke-dashoffset="-497.62"/>
+              </g>
+              <text x="110" y="105" text-anchor="middle" font-size="32" font-weight="900" fill="var(--admin-text-primary)" font-family="DM Sans">487</text>
+              <text x="110" y="128" text-anchor="middle" font-size="11" font-weight="700" fill="var(--admin-text-tertiary)" font-family="DM Sans" letter-spacing="0.5">활성 구독</text>
+            </svg>
+          </div>
+        </div>
+        <div class="adm-panel">
+          <div class="adm-panel-head">
+            <div>
+              <div class="adm-panel-title">플랜 라인업 + ARPU</div>
+              <div class="adm-panel-meta">월 평균 가입자당 매출</div>
+            </div>
+          </div>
+          <div class="adm-panel-body">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--admin-surface-2); border-radius:8px;">
+                <span style="width:12px; height:12px; background:#71717A; border-radius:3px;"></span>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:700; color:var(--admin-text-primary);">FREE</div>
+                  <div style="font-size:11px; color:var(--admin-text-tertiary);">무료 · 797명 · 62.1%</div>
+                </div>
+                <div style="font-size:13px; font-weight:700; color:var(--admin-text-secondary); font-feature-settings:'tnum';">₩0</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--admin-surface-2); border-radius:8px;">
+                <span style="width:12px; height:12px; background:#10B981; border-radius:3px;"></span>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:700; color:var(--admin-text-primary);">PRO</div>
+                  <div style="font-size:11px; color:var(--admin-text-tertiary);">개인 설계사 · 360명 · 28.0%</div>
+                </div>
+                <div style="font-size:13px; font-weight:700; color:var(--color-success); font-feature-settings:'tnum';">₩9,900/월</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--admin-surface-2); border-radius:8px;">
+                <span style="width:12px; height:12px; background:#3B82F6; border-radius:3px;"></span>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:700; color:var(--admin-text-primary);">CRM</div>
+                  <div style="font-size:11px; color:var(--admin-text-tertiary);">팀 · 지점 단위 · 114명 · 8.9%</div>
+                </div>
+                <div style="font-size:13px; font-weight:700; color:var(--color-info); font-feature-settings:'tnum';">₩19,900/월</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; background:rgba(212,132,90,0.10); border-radius:8px; border:1px solid rgba(212,132,90,0.28);">
+                <span style="width:12px; height:12px; background:#D4845A; border-radius:3px;"></span>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:700; color:var(--admin-text-primary);">원수사</div>
+                  <div style="font-size:11px; color:var(--admin-text-tertiary);">기업 입점 · 13명(KPI보험 외 1) · 1.0%</div>
+                </div>
+                <div style="font-size:13px; font-weight:700; color:var(--color-accent); font-feature-settings:'tnum';">₩1,000,000/월</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 최근 결제 테이블 8행 -->
+      <div class="adm-panel" style="margin-top: 20px;">
+        <div class="adm-panel-head">
+          <div>
+            <div class="adm-panel-title">최근 결제</div>
+            <div class="adm-panel-meta">2026-04 · 1~8행 표시</div>
+          </div>
+          <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">전체 보기 →</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>결제일</th><th>사용자</th><th>플랜</th><th>금액</th><th>방법</th><th>상태</th><th>비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-30</td>
+                <td><strong>최민지</strong></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩9,900</td>
+                <td>카드 · 신한 7***</td>
+                <td><span class="adm-badge status-active">완료</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">자동 갱신</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-29</td>
+                <td><strong>강현우</strong></td>
+                <td><span class="adm-badge" style="background:rgba(212,132,90,0.18); color:var(--color-accent);">원수사</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩1,000,000</td>
+                <td>세금계산서</td>
+                <td><span class="adm-badge status-active">완료</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">KPI보험 4월분</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-28</td>
+                <td><strong>박서연</strong></td>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">CRM</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩19,900</td>
+                <td>카드 · KB 4***</td>
+                <td><span class="adm-badge status-active">완료</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">강남센터 1팀 단위</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-27</td>
+                <td><strong>김지훈</strong></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩9,900</td>
+                <td>카드 · 삼성 1***</td>
+                <td><span class="adm-badge status-active">완료</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">자동 갱신</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-26</td>
+                <td><strong>윤다은</strong></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩9,900</td>
+                <td>카드 · 농협 9***</td>
+                <td><span class="adm-badge status-active">완료</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">매니저 무료 → PRO 자발 전환</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-25</td>
+                <td><strong>정수아</strong></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩9,900</td>
+                <td>카드 · 우리 6***</td>
+                <td><span class="adm-badge status-suspended">실패</span></td>
+                <td style="color:var(--color-danger); font-size:11px;">한도 초과 — 재시도 예정</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-24</td>
+                <td><strong>이도윤</strong></td>
+                <td><span class="adm-badge pro">PRO</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩9,900</td>
+                <td>카드 · 신한 7***</td>
+                <td><span class="adm-badge status-active">완료</span></td>
+                <td style="color:var(--admin-text-tertiary); font-size:11px;">신규 가입</td>
+              </tr>
+              <tr>
+                <td style="font-feature-settings:'tnum';">2026-04-22</td>
+                <td><strong>송예린</strong></td>
+                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">CRM</span></td>
+                <td style="font-feature-settings:'tnum'; font-weight:700;">₩19,900</td>
+                <td>카드 · 하나 3***</td>
+                <td><span class="adm-badge status-pending">환불 처리</span></td>
+                <td style="color:var(--color-warning); font-size:11px;">중복 결제 — 환불 진행</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.adm-view billing -->
 
   </main>
 
