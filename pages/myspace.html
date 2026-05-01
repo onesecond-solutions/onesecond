@@ -953,7 +953,7 @@ window.renderScriptsList = function(items, page) {
   const pageItems = (items || []).slice(start, start + window._PAGE_SIZE);
 
   const role = (window.AppState && window.AppState.role) || '';
-  const isLeader = (role === 'manager' || role === 'branch_manager' || role === 'admin');
+  const isLeader = !!(window.Auth && window.Auth.isFreeTier(role));
 
   /* 예시 카드는 1페이지에만 노출 */
   const sampleHtml = (window._scriptPage === 1)
@@ -1186,7 +1186,7 @@ window.loadLeaderScripts = async function() {
 
   // 리더 role 여부에 따라 안내 카드 분기
   const role = (window.AppState && window.AppState.role) || '';
-  const isLeader = (role === 'manager' || role === 'branch_manager' || role === 'admin');
+  const isLeader = !!(window.Auth && window.Auth.isFreeTier(role));
   const descEl = document.getElementById('leader-card-desc');
   const guideEl = document.getElementById('leader-guide');
   if (isLeader) {

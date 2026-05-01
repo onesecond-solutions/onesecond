@@ -124,11 +124,15 @@
   window.SUPABASE_URL = SUPABASE_URL;
   window.SUPABASE_KEY = SUPABASE_KEY;
   window.ROLE_LABEL = {
-    member: '팀장',
-    manager: '실장',
-    branch_manager: '지점장',
-    staff: '스텝',
-    admin: '관리자'
+    admin:                  '어드민',
+    ga_branch_manager:      'GA 지점장',
+    ga_manager:             'GA 실장',
+    ga_member:              'GA 설계사',
+    ga_staff:               'GA 스텝',
+    insurer_branch_manager: '원수사 지점장',
+    insurer_manager:        '원수사 매니저',
+    insurer_member:         '원수사 직원',
+    insurer_staff:          '원수사 스텝'
   };
 
 })();

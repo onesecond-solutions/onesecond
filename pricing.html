@@ -222,7 +222,17 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 <script>
 const SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
-const ROLE_LABEL = { member:'팀장', manager:'실장', branch_manager:'지점장', staff:'스텝' };
+const ROLE_LABEL = {
+  admin:                  '어드민',
+  ga_branch_manager:      'GA 지점장',
+  ga_manager:             'GA 실장',
+  ga_member:              'GA 설계사',
+  ga_staff:               'GA 스텝',
+  insurer_branch_manager: '원수사 지점장',
+  insurer_manager:        '원수사 매니저',
+  insurer_member:         '원수사 직원',
+  insurer_staff:          '원수사 스텝'
+};
 
 const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
@@ -251,7 +261,10 @@ async function loadUserInfo() {
       banner.style.display = 'flex';
 
       const isPro = u.plan === 'pro';
-      const isFreeRole = ['manager','branch_manager'].includes(u.role);
+      const isFreeRole = [
+        'ga_branch_manager', 'ga_manager',
+        'insurer_branch_manager', 'insurer_manager'
+      ].includes(u.role);
 
       if (isFreeRole) {
         planValue.textContent = '매니저/지점장 영구 무료';
@@ -283,7 +296,10 @@ async function loadUserInfo() {
 function renderSidebarUpgrade(plan, role) {
   const wrap = document.getElementById('sidebar-upgrade-wrap');
   if (!wrap) return;
-  const isFreeRole = ['manager','branch_manager'].includes(role);
+  const isFreeRole = [
+    'ga_branch_manager', 'ga_manager',
+    'insurer_branch_manager', 'insurer_manager'
+  ].includes(role);
   if (isFreeRole || plan === 'pro') {
     wrap.innerHTML = `<div class="pro-badge">✅ PRO 이용 중</div>`;
   } else {

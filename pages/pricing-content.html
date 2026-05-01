@@ -241,7 +241,10 @@
   const planName = document.getElementById('pr-plan-name');
   const planBadge = document.getElementById('pr-plan-badge');
 
-  if (role === 'manager' || role === 'branch_manager') {
+  if ([
+    'ga_branch_manager', 'ga_manager',
+    'insurer_branch_manager', 'insurer_manager'
+  ].includes(role)) {
     planName.textContent = '매니저 / 지점장 영구 무료';
     planBadge.textContent = '영구 무료';
     planBadge.style.background = '#5a8a5a';

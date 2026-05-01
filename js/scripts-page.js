@@ -267,13 +267,6 @@ function handleTokenExpired() {
 }
 
 
-const ROLE_LABEL = {
-  member: '팀장',
-  manager: '실장',
-  branch_manager: '지점장',
-  staff: '스텝'
-};
-
 async function loadUserInfo() {
   const token = getToken();
   const authUser = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
@@ -285,7 +278,7 @@ async function loadUserInfo() {
     const data = await res.json();
     if (data && data[0]) {
       const u = data[0];
-      const roleLabel = ROLE_LABEL[u.role] || '';
+      const roleLabel = (window.ROLE_LABEL && window.ROLE_LABEL[u.role]) || '';
       const displayName = `${u.name} ${roleLabel}`;
       const emailStr = u.email || '';
       // topbar-user: app.html에서 처리

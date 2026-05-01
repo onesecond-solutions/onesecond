@@ -27,7 +27,7 @@
     token:   null,   // 현재 access_token
     name:    '',     // users.name
     email:   '',     // users.email
-    role:    '',     // users.role (member/manager/branch_manager/staff/admin)
+    role:    '',     // users.role (admin / ga_*·insurer_* 4종 = 9역할)
     plan:    'free', // users.plan (free/pro)
     phone:   '',
     company: '',
@@ -71,29 +71,44 @@
     window.location.href = 'index.html';
   }
 
-  // ── 5. PRO 판단 ───────────────────────────────────────────────────────────
-  // PRO = plan이 'pro' 이거나, role이 manager/branch_manager/admin
-  function isPro() {
-    var s = window.AppState;
-    return s.plan === 'pro'
-      || ['manager', 'branch_manager', 'admin'].includes(s.role);
+  // ── 5. 무료 혜택 / 매니저 이상 판별 헬퍼 (D-pre G-2·결정 C 정합) ─────────
+  // CLAUDE.md "매니저 이상 무료 원칙" = admin + 각 소속의 branch_manager·manager (5종)
+  function isFreeTier(role) {
+    return [
+      'admin',
+      'ga_branch_manager', 'ga_manager',
+      'insurer_branch_manager', 'insurer_manager'
+    ].includes(role);
+  }
+  function isManagerOrAbove(role) {
+    return isFreeTier(role); // 의미 alias
   }
 
-  // ── 6. Admin 판단 ─────────────────────────────────────────────────────────
+  // ── 6. PRO 판단 ───────────────────────────────────────────────────────────
+  // PRO = plan이 'pro' 이거나, role이 매니저 이상 (무료 혜택 대상)
+  function isPro() {
+    var s = window.AppState;
+    return s.plan === 'pro' || isFreeTier(s.role);
+  }
+
+  // ── 7. Admin 판단 ─────────────────────────────────────────────────────────
   function isAdmin() {
     return window.AppState.role === 'admin';
   }
 
-  // ── 7. role → 한글 직책명 ─────────────────────────────────────────────────
+  // ── 8. role → 한글 직책명 ─────────────────────────────────────────────────
   function getRoleLabel(role) {
     var map = window.ROLE_LABEL || {
-      member: '팀장', manager: '실장',
-      branch_manager: '지점장', staff: '스텝', admin: '관리자'
+      admin: '어드민',
+      ga_branch_manager: 'GA 지점장', ga_manager: 'GA 실장',
+      ga_member: 'GA 설계사', ga_staff: 'GA 스텝',
+      insurer_branch_manager: '원수사 지점장', insurer_manager: '원수사 매니저',
+      insurer_member: '원수사 직원', insurer_staff: '원수사 스텝'
     };
     return map[role] || '';
   }
 
-  // ── 8. DB에서 사용자 정보 fetch → AppState 갱신 ──────────────────────────
+  // ── 9. DB에서 사용자 정보 fetch → AppState 갱신 ──────────────────────────
   async function loadUser() {
     if (!window.AppState.userId) return;
 
@@ -169,7 +184,7 @@
     }
   }
 
-  // ── 9. 사용자 정보 저장 (내 정보 수정 모달용) ────────────────────────────
+  // ── 10. 사용자 정보 저장 (내 정보 수정 모달용) ───────────────────────────
   async function saveUser(fields) {
     // fields: { name, phone, company, branch, team }
     if (!window.AppState.userId) return false;
@@ -206,7 +221,7 @@
     window.location.href = 'index.html';
   }
 
-  // ── 10. 앱 진입 시 인증 체크 + 초기화 ───────────────────────────────────
+  // ── 11. 앱 진입 시 인증 체크 + 초기화 ───────────────────────────────────
   async function init() {
     var token  = window.db.getToken();
     var userId = resolveUserId();
@@ -255,15 +270,17 @@
     await loadUser();
   }
 
-  // ── 11. 공개 API: window.Auth ─────────────────────────────────────────────
+  // ── 12. 공개 API: window.Auth ─────────────────────────────────────────────
   window.Auth = {
-    init:         init,
-    loadUser:     loadUser,
-    saveUser:     saveUser,
-    isPro:        isPro,
-    isAdmin:      isAdmin,
-    getRoleLabel: getRoleLabel,
-    logout:       logout
+    init:             init,
+    loadUser:         loadUser,
+    saveUser:         saveUser,
+    isPro:            isPro,
+    isAdmin:          isAdmin,
+    isFreeTier:       isFreeTier,
+    isManagerOrAbove: isManagerOrAbove,
+    getRoleLabel:     getRoleLabel,
+    logout:           logout
   };
 
   // 하위 호환: 기존 app.html 함수명 유지 (Phase 2 완료 후 제거 예정)
