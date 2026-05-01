@@ -185,6 +185,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-01_2257.md` — 2026-05-01 저녁 (Phase D-pre 마이그레이션 첫 코드 변경 단계 완수 (Step A·B·C·D 전 구간))
 - `docs/sessions/2026-05-01_1834.md` — 2026-05-01 저녁 (DB 변경 0건)
 - `docs/sessions/2026-05-01_1044.md` — 2026-05-01 오전 (Quick "미러링 전 녹취 스크립트" 카드 1줄 2컬럼 + 오타 4건 통일 — DB-only / quick_contents id=7 row UPDATE 6 instances 치환 / 백업 row + RLS service_role 정책 적용 / 라이브 검수 부채 18건 누적)
 - `docs/sessions/2026-05-01_1036.md` — 2026-05-01 오전 (admin_v2.html: 1,484 → 2,855줄 (+1,371))
