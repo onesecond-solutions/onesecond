@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-01 오전
+> **마지막 갱신:** 2026-05-01 오후 (Phase D-pre 4개 항목 완료 + 산출물 3종 1,697줄)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -27,8 +27,23 @@
 | Phase B 마무리 결함 5건 | ✅ 완료 (2026-05-01) | `99f70e4` light menu-bg #FFFFFF / black setAttribute / `--admin-text-label` 토큰 / 헤더 🚪 admExit / hash 자동 닫기 |
 | Phase C 7섹션 mock | ✅ 완료 (2026-05-01) | `5fb83bf` D-1~D-7 풀 채움 (+1,371줄) + status-bg 토큰 4종 5종 톤 정의 |
 | Phase C 뱃지 AA 확보 | ✅ 완료 (2026-05-01) | `e2d7a78` `--admin-info-text/success-text/warning-text/danger-text` 4토큰 + 9역할 직급 그룹 재매핑 (admin=danger / 지점장=info / 매니저=success / member·staff=neutral) — 80셀 전부 AA |
-| **Phase D 실 데이터** | 🟡 진입 대기 | 8개 섹션 우선순위순: D-1 사용자 → D-2 콘텐츠 → D-3 게시판 → D-4 공지 → D-5 통계 → D-6 로그 → D-7 결제 → D-8 대시보드 종합. 9역할 RBAC 권한 검증 로직 필요 |
+| **Phase D 실 데이터** | 🟡 D-pre 진입 (2026-05-01) | 세부 단계 표 아래 참조. D-pre → D-1~D-8 → D-final 순. mock → 실 Supabase 연동 + 9역할 RBAC + RLS 정합 |
 | Phase E 정밀화 | 대기 | SQL 콘솔 / Export 게이트 / 활동 로그 / 검색 인덱싱 |
+
+### Phase D 세부 단계 (2026-05-01 D-pre 작업지시서 정의)
+
+| 단계 | 상태 | 산출물 / 비고 |
+|---|---|---|
+| **D-pre** 사전 분석 | ✅ **완료 (2026-05-01)** | 산출물 3종·1,697줄 / 4개 항목 모두 승인 #1~#4 완료 / 결정 27건 명문화 (1·4·5·6·8 + A·B·C·D·E·F + G-1~G-4 + H-1~H-3) / DB·admin_v2.html·js/db.js 변경 0건 / 산출물: `docs/architecture/db_schema_20260501.md` (561줄, 12 테이블 + 30 RLS + role 분포 raw) / `docs/architecture/role_migration_plan.md` (698줄, 9역할 SQL 초안 + Step C-1.5 함수 정정 + 롤백) / `docs/specs/admin_v2_phase_d_pre.md` (438줄, ROLE_LABEL 9개 + fetch 패턴 + D-1 시범 코드) |
+| D-1 users | 🟡 **작업지시서 대기 (2026-05-01)** | D-pre 종료 + 마이그레이션(Step A·B·C·D) → admin_v2 D-1 mock 실 데이터 연결 / 작업지시서 발행 전 사전 정렬: 마이그레이션 + D-1 묶음 vs 분리 결정 |
+| D-2 content | 대기 | scripts·자료실 테이블 + stage 10단계 분포 RPC |
+| D-3 board | 대기 | posts + post_reports + 모더레이션 액션 |
+| D-4 notice | 대기 | app_settings(또는 notices/banners) + 노출 기간 + role 분기 |
+| D-5 analytics | 대기 | DAU/WAU/MAU RPC + 기능별 사용량 |
+| D-6 logs | 대기 | activity_logs + system_logs (또는 Sentry 통합) |
+| D-7 billing | 대기 | payments + subscriptions + 4플랜 분포 |
+| D-8 dashboard 종합 | 대기 | KPI 4 + timeline + 최근 가입자 + 시스템 상태 + Top 스크립트 모두 실 연결 + **별 트랙 B-2 dashboard 기본 뱃지 토큰 마이그레이션 묶음** |
+| **D-final** 보안 검증 | 대기 | 9역할 RLS 정합 + admin 무접두어 vs ga_*/insurer_* + admin 진입 게이트 + 비-admin 진입 차단 검증 |
 
 ### 8섹션 ↔ 데이터 소스 매핑 (2026-05-01 Phase C 확정 기준)
 
