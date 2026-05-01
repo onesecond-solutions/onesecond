@@ -31,6 +31,10 @@ body[data-admin-tone="warm"] {
   --admin-success-bg:    rgba(16, 185, 129, 0.18);
   --admin-warning-bg:    rgba(245, 158, 11, 0.18);
   --admin-danger-bg:     rgba(239, 68, 68, 0.18);
+  --admin-info-text:     #93C5FD;
+  --admin-success-text:  #6EE7B7;
+  --admin-warning-text:  #FCD34D;
+  --admin-danger-text:   #FCA5A5;
 }
 body[data-admin-tone="slate"] {
   --admin-bg:           #0F172A;
@@ -48,6 +52,10 @@ body[data-admin-tone="slate"] {
   --admin-success-bg:    rgba(16, 185, 129, 0.22);
   --admin-warning-bg:    rgba(245, 158, 11, 0.22);
   --admin-danger-bg:     rgba(239, 68, 68, 0.22);
+  --admin-info-text:     #93C5FD;
+  --admin-success-text:  #6EE7B7;
+  --admin-warning-text:  #FCD34D;
+  --admin-danger-text:   #FCA5A5;
 }
 body[data-admin-tone="navy"] {
   --admin-bg:           #0B1426;
@@ -65,6 +73,10 @@ body[data-admin-tone="navy"] {
   --admin-success-bg:    rgba(16, 185, 129, 0.22);
   --admin-warning-bg:    rgba(245, 158, 11, 0.22);
   --admin-danger-bg:     rgba(239, 68, 68, 0.22);
+  --admin-info-text:     #93C5FD;
+  --admin-success-text:  #6EE7B7;
+  --admin-warning-text:  #FCD34D;
+  --admin-danger-text:   #FCA5A5;
 }
 /* black = :root 기본값 (tokens.css 정의 — 별도 절 불필요) */
 
@@ -881,21 +893,23 @@ body.adm-active { overflow: hidden !important; }
   cursor: pointer;
 }
 
-/* 9역할 뱃지 (dashboard .adm-badge 패턴 확장) */
-.adm-badge.role-admin                  { background: rgba(212,132,90,0.18); color: var(--color-accent); }
-.adm-badge.role-ga-branch-manager      { background: var(--admin-info-bg);    color: var(--color-info); }
-.adm-badge.role-ga-manager             { background: rgba(139,92,246,0.18);   color: #C4A8FF; }
+/* 9역할 뱃지 — 직급 그룹 색계열 매핑 (5종 톤 AA 4.5:1 이상)
+   admin = danger / 지점장 2종 = info / 매니저 2종 = success / 일반·스텝 4종 = neutral
+   소속(GA/원수사) 구분은 텍스트 prefix로 (색은 4계열 + neutral 한계상 직급 우선) */
+.adm-badge.role-admin                  { background: var(--admin-danger-bg);  color: var(--admin-danger-text, #B91C1C); }
+.adm-badge.role-ga-branch-manager      { background: var(--admin-info-bg);    color: var(--admin-info-text, #1D4ED8); }
+.adm-badge.role-ga-manager             { background: var(--admin-success-bg); color: var(--admin-success-text, #047857); }
 .adm-badge.role-ga-member              { background: var(--admin-surface-2);  color: var(--admin-text-secondary); }
-.adm-badge.role-ga-staff               { background: var(--admin-surface-2);  color: var(--admin-text-tertiary); }
-.adm-badge.role-insurer-branch-manager { background: var(--admin-success-bg); color: var(--color-success); }
-.adm-badge.role-insurer-manager        { background: var(--admin-warning-bg); color: var(--color-warning); }
+.adm-badge.role-ga-staff               { background: var(--admin-surface-2);  color: var(--admin-text-secondary); }
+.adm-badge.role-insurer-branch-manager { background: var(--admin-info-bg);    color: var(--admin-info-text, #1D4ED8); }
+.adm-badge.role-insurer-manager        { background: var(--admin-success-bg); color: var(--admin-success-text, #047857); }
 .adm-badge.role-insurer-member         { background: var(--admin-surface-2);  color: var(--admin-text-secondary); }
-.adm-badge.role-insurer-staff          { background: var(--admin-surface-2);  color: var(--admin-text-tertiary); }
+.adm-badge.role-insurer-staff          { background: var(--admin-surface-2);  color: var(--admin-text-secondary); }
 
-/* 상태 뱃지 */
-.adm-badge.status-active    { background: var(--admin-success-bg); color: var(--color-success); }
-.adm-badge.status-suspended { background: rgba(239,68,68,0.18);    color: var(--color-danger); }
-.adm-badge.status-pending   { background: var(--admin-warning-bg); color: var(--color-warning); }
+/* 상태 뱃지 — 텍스트 토큰 분기 + suspended 배경 토큰화 */
+.adm-badge.status-active    { background: var(--admin-success-bg); color: var(--admin-success-text, #047857); }
+.adm-badge.status-suspended { background: var(--admin-danger-bg);  color: var(--admin-danger-text, #B91C1C); }
+.adm-badge.status-pending   { background: var(--admin-warning-bg); color: var(--admin-warning-text, #92400E); }
 
 /* 테이블 액션 버튼 */
 .adm-table .row-actions { display: inline-flex; gap: 4px; }
