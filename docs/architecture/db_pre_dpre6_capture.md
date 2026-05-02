@@ -431,37 +431,168 @@ USING (
 
 ## 4. Step D — 사후 검증 SELECT (DB 변경 후 raw 캡처)
 
-> 🟡 **실행 대기.** Step C 완료 후 4건 검증.
+> ✅ **실행 완료 (2026-05-02).** Chrome 에이전트 SQL 4건 + Code 직접 D-4 grep 검증. **D-3-A 0행** = RLS 30개 전수 5역할 단일 키 잔존 0건 확정 (어제 C-4 사고 재정합 회귀 검증 핵심).
 
 ### 4.1 D-1. users_role_check 9키 정합 raw 검증
 
-_(대기 중)_
+| conname | definition |
+|---|---|
+| `users_role_check` | `CHECK ((role = ANY (ARRAY['admin'::text, 'ga_branch_manager'::text, 'ga_manager'::text, 'ga_member'::text, 'ga_staff'::text, 'insurer_branch_manager'::text, 'insurer_manager'::text, 'insurer_member'::text, 'insurer_staff'::text])))` |
+
+→ 9키 모두 포함 ✅ + 5역할 단일 키(`'branch_manager'`/`'manager'`/`'member'`/`'staff'`/`'insurer'`) 0건 ✅. B-2 직후 검증과 동일 결과 — 사후 종합 검증 통과.
 
 ### 4.2 D-2. admin row CHECK 통과
 
-_(대기 중 — admin email/role 1행 정상)_
+| email | role | status |
+|---|---|---|
+| `bylts0428@gmail.com` | `admin` | `active` |
+
+→ admin 1행 보존 ✅ + role=admin (9키 통과) ✅ + status=active (D-pre.5 status 컬럼 영향 없음) ✅.
 
 ### 4.3 D-3. activity_logs RLS 정책 2건 9역할 정합 raw 검증
 
-_(대기 중)_
+| policyname | cmd | qual |
+|---|---|---|
+| `activity_logs_select_branch_manager` | SELECT | `(EXISTS ( SELECT 1 FROM (users me JOIN users target ON ((target.id = activity_logs.user_id))) WHERE ((me.id = auth.uid()) AND (me.role = ANY (ARRAY['ga_branch_manager'::text, 'insurer_branch_manager'::text])) AND (target.branch = me.branch))))` |
+| `activity_logs_select_manager` | SELECT | `(EXISTS ( SELECT 1 FROM (users me JOIN users target ON ((target.id = activity_logs.user_id))) WHERE ((me.id = auth.uid()) AND (me.role = ANY (ARRAY['ga_manager'::text, 'insurer_manager'::text])) AND (target.team = me.team) AND (target.role = ANY (ARRAY['ga_member'::text, 'insurer_member'::text])))))` |
 
-### 4.4 D-4. board.html 정정 후 git diff + grep 검증
+(with_check 양쪽 모두 NULL — SELECT 정책이라 정합)
 
-_(대기 중 — `'admin', 'insurer'` 단일 키 0건)_
+→ activity_logs_select_branch_manager qual에 `ga_branch_manager` + `insurer_branch_manager` 명시 ✅
+→ activity_logs_select_manager qual에 `ga_manager` + `insurer_manager` + `ga_member` + `insurer_member` 명시 ✅
+→ 사후 종합 검증 통과 (B-3·B-4 직후 검증과 동일).
+
+### 4.4 D-3-A. RLS 전수 5역할 단일 키 잔존 회귀 검증 ⭐ 핵심
+
+```
+Success. No rows returned  (0 row)
+```
+
+→ **RLS 30개 정책 전수에 5역할 단일 키(`branch_manager`/`manager`/`member`/`staff`/`insurer`) 잔존 0건 확정.** 어제 C-4 사고(activity_logs 2건 미정착)가 본 D-pre.6 B-3·B-4로 재정합되어 RLS 영역의 5역할 부채 영구 청산 ✅.
+
+### 4.5 D-4. board.html 정정 후 git diff + grep (Code 직접 검증)
+
+git diff:
+```diff
+@@ -2210,7 +2210,10 @@ window.submitPost = async function() {
+-  if (board === 'insurer' && !['admin', 'insurer'].includes(s.role)) {
++  if (board === 'insurer' && ![
++    'admin',
++    'insurer_branch_manager','insurer_manager','insurer_member','insurer_staff'
++  ].includes(s.role)) {
+```
+
+grep `'admin',\s*'insurer'` 단일 키 패턴: **0건** ✅
+
+→ board.html 5역할 + 'insurer' 단일 키 영구 제거. RLS `posts.insurer_board_insert` 정합 + 어제 결정 4 정합.
+
+### 4.6 Step D 종합 판정
+
+| # | 항목 | 결과 | 판정 |
+|:---:|---|---|:---:|
+| 1 | D-1 users_role_check 9키 정의 | 9키 + 5역할 0건 | ✅ |
+| 2 | D-2 admin row 정합 | role=admin / status=active | ✅ |
+| 3 | D-3 activity_logs 정책 2건 qual 9역할 | ga_*·insurer_* 명시 | ✅ |
+| 4 | **D-3-A RLS 전수 5역할 잔존 0건** | **0행 ⭐** | ✅ **회귀 검증 핵심** |
+| 5 | D-4 board.html grep + git diff | 5역할 단일 키 0건 + -1 +4 | ✅ |
+
+**결론: 5건 전건 통과. DB CHECK + RLS 2건 + board.html 모두 9역할 정합 + 회귀 0 확정. Step E 라이브 검증 진입 가능.**
 
 ---
 
 ## 5. Step E — 라이브 검증 (회귀 0 확인)
 
-> 🟡 **실행 대기.** Step D 통과 후 팀장님 직접 검증.
+> ✅ **실행 완료 (2026-05-02 KST).** 팀장님 직접 검증 + Chrome. **5건 전건 통과 → 회귀 0 확정.** D-pre.6 (A) 확장 작업 (DB CHECK + RLS 2건 + board.html) 모두 라이브 동작 영향 0건. **board.html 라인 2213 정정으로 admin이 보험사 게시판 작성 가능 = 9역할 정합 검증 핵심 통과.**
+
+### 5.1 E-1. 로그인 진입
+
+- 로그인 페이지 로드: ✅
+- 자동완성 로그인 성공 (Chrome 저장본): ✅
+- 메인 페이지(`/app.html`) 진입: ✅
+- 에러 토스트: 0건
+
+→ 자가 판정: ✅
+
+### 5.2 E-2. admin AppState 5건
+
+콘솔 출력 raw:
+
+```json
+{
+  "role": "admin",
+  "name": "어드민",
+  "email": "bylts0428@gmail.com",
+  "plan": "free",
+  "ready": true
+}
+```
+
+- 5개 키 모두 존재 + 값 정상
+- D-pre.5 status / D-pre.6 CHECK·RLS·board.html 변경 후 admin AppState 보존 ✅
+
+→ 자가 판정: ✅
+
+### 5.3 E-3. admin_v2 풀스크린 진입
+
+- 풀스크린 진입 성공 ✅ (대시보드 KPI: 총 사용자 1,284 / 오늘 활성 342 정상)
+- 콘솔 ERROR 0건
+- 화면 정상 표시
+
+→ 자가 판정: ✅
+
+### 5.4 E-4. 5종 톤 토글 정상 동작
+
+| 톤 | 결과 |
+|---|:---:|
+| **light** | ✅ 밝은 배경 즉시 전환 |
+| **warm** | ✅ 웜 다크 전환 |
+| **slate** | ✅ 슬레이트 다크 전환 |
+| **black** | ✅ 블랙 전환 |
+| **navy** | ✅ 네이비 다크 전환 |
+
+→ 자가 판정: ✅
+
+### 5.5 E-5. 보험사 게시판 회귀 검증 ⭐ (board.html 라인 2213 핵심)
+
+#### 글 작성 절차
+
+| 단계 | 결과 |
+|---|:---:|
+| 게시판 진입 | ✅ |
+| 보험사 탭 전환 | ✅ |
+| 글 작성 폼 진입 (`openWriteView('insurer')` — "보험사게시판 글쓰기" 헤더) | ✅ |
+| **작성 시 alert 차단 발생: 없음** ⭐ | ✅ (board.html 라인 2213 정정 적용 확인) |
+| posts INSERT 성공 | ✅ |
+| 게시판 목록에 `[D-pre.6 회귀 검증]` 표시 (어드민, 방금 전) | ✅ |
+| 콘솔 ERROR | 0건 |
+
+#### 글 삭제 절차
+
+| 단계 | 결과 |
+|---|:---:|
+| 글 상세 진입 (삭제 버튼 표시 확인) | ✅ |
+| 삭제 정상 완료 | ✅ |
+| 게시판 목록에서 사라짐 ("게시글이 없습니다" 표시) | ✅ |
+| 콘솔 ERROR | 0건 |
+
+→ 자가 판정: ✅
+
+**핵심 의미:**
+- `board.html` 라인 2213 정정 후에도 admin은 **9키 5종**(`admin`/`insurer_*` 4종) 중 `admin`에 매치 → alert 차단 없이 통과
+- RLS `posts.insurer_board_insert` 정책도 admin 통과 → posts INSERT 성공
+- 어제 D-pre 결정 4 (insurer 4종 모두 권한) + 본 D-pre.6 라인 2213 정합 = **insurer 입점 시 즉시 사고 위험 영구 청산**
+
+### 5.6 Step E 종합 판정
 
 | F | 검증 항목 | 결과 |
 |:---:|---|:---:|
-| E-1 | 로그인 정상 진입 | _(대기)_ |
-| E-2 | admin AppState 5건 정상 출력 | _(대기)_ |
-| E-3 | admin_v2 풀스크린 진입 | _(대기)_ |
-| E-4 | 5종 톤 토글 정상 동작 | _(대기)_ |
-| E-5 | admin이 "[D-pre.6 회귀 검증]" 보험사 게시판 작성 → posts INSERT 성공 → 게시 확인 → admin 직접 삭제 | _(대기)_ |
+| E-1 | 로그인 정상 진입 | ✅ |
+| E-2 | admin AppState 5건 | ✅ |
+| E-3 | admin_v2 풀스크린 진입 | ✅ |
+| E-4 | 5종 톤 토글 5종 모두 | ✅ |
+| **E-5** | **admin 보험사 게시판 작성 → INSERT 성공 → 삭제** | ✅ ⭐ |
+
+**결론: 5건 전건 통과. DB CHECK + activity_logs RLS 2건 + board.html 라인 2213 정정이 라이브 동작에 영향 0건. 회귀 0 확정. D-pre.6 마이그레이션 정상 종료.**
 
 ---
 
