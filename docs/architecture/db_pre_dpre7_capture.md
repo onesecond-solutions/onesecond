@@ -24,8 +24,9 @@
 | **사고 발생** | **1차 시도 EXISTS 자기 참조 패턴 → PostgreSQL 무한 재귀(42P17) 에러** — 라이브 사이트 영향 가능성 우려 → 비상 롤백 즉시 실행 |
 | 재진입 패턴 | **SECURITY DEFINER 함수 (`is_admin()`)** — 함수 정의자 권한으로 RLS 우회 → 자기 참조 차단. 정책 USING 절에서 단순 함수 호출. 표준 PostgreSQL RLS 회피 패턴. |
 | 결정 #1 ("분리") 정합 | D-1 작업지시서 § 2 결정 #1 "분리" 원칙 그대로 유지 |
-| 변경 영역 | DB 변경 3건: `is_admin()` 함수 1건 + CREATE POLICY 2건 (admin_select_all_users + admin_select_all_library) — 코드 변경 0건 |
-| 학습 영구 명문화 | **RLS 자기 참조 회피 표준** — admin 권한 검증 시 SECURITY DEFINER 함수 또는 JWT 클레임 사용. 정책 USING 절에서 동일 테이블 SELECT 서브쿼리 절대 금지 |
+| 변경 영역 | DB 변경 5건: `is_admin()` 함수 1건 + CREATE POLICY 3건 (admin_select_all_users + admin_select_all_library + admin_update_all_users 정정) + DROP POLICY 1건 (구 EXISTS admin_update_all_users) — 코드 변경 0건 |
+| **추가 발견 + 후속 정정 (점검 3 회귀)** | 최종 회귀 점검 5건 중 점검 3에서 **`admin_update_all_users` UPDATE 정책의 EXISTS 자기 참조 잔존 발견** (D-pre.7 본 트랙은 SELECT만 처리). admin이 다른 사용자 row UPDATE 시도 시 42P17 재발 가능성. 옵션 A(SECURITY DEFINER 패턴 교체) 채택 → 후속 7건 검증 전건 통과 (§ 9 참조) → users 테이블 자기 참조 패턴 영구 청산 |
+| 학습 영구 명문화 | **RLS 자기 참조 회피 표준** — admin 권한 검증 시 SECURITY DEFINER 함수 또는 JWT 클레임 사용. 정책 USING/WITH CHECK 절에서 동일 테이블 SELECT 서브쿼리 절대 금지. **"같은 테이블의 다른 cmd(UPDATE/INSERT/DELETE) 정책에도 동일 패턴 잔존 가능 — 전수 sweep 필수"** (점검 3 학습) |
 | posts 별 트랙 부채 | `is_hidden=false` 조건으로 admin도 숨김 게시물 SELECT 차단 — 사업 판단 필요 |
 
 ---
@@ -399,11 +400,14 @@ ORDER BY tablename;
 
 > ⚠️ **자동 실행 금지.** 회귀 발견 시 또는 사용자 명시 지시 시에만 실행.
 
-### 6.1 정책 2건 제거
+### 6.1 정책 3건 제거 (admin SELECT 2건 + admin UPDATE 1건 — § 9 후속 정정 포함)
 
 ```sql
 DROP POLICY IF EXISTS admin_select_all_users ON public.users;
 DROP POLICY IF EXISTS admin_select_all_library ON public.library;
+DROP POLICY IF EXISTS admin_update_all_users ON public.users;
+-- 단, admin_update_all_users 롤백 시 admin이 다른 사용자 UPDATE 권한 0이 됨.
+-- 구 EXISTS 패턴으로 복구 원하면 § 9.5 별도 SQL 사용 (재귀 위험 인지 후).
 ```
 
 ### 6.2 함수 제거 (정책 제거 후)
@@ -511,4 +515,157 @@ D-1 Step 6 R6 검증으로 발견된 admin SELECT 정책 부재가 **D-pre.7 트
 
 ---
 
-*본 캡처본은 D-pre.7 마이그레이션 단일 진실 원천. § 1~§ 7 모두 raw로 누적. 1차 EXISTS 사고 + 2차 SECURITY DEFINER 재진입 + 영구 학습 명문화. D-1 진입 가능.*
+## § 9. admin_update_all_users 후속 정정 (점검 3 회귀 → 옵션 A 채택)
+
+### 9.1 발견 경위
+
+D-pre.7 § 8.2 최종 회귀 점검 5건 중 **점검 3 (재귀 패턴 전 테이블 sweep)에서 1행 발견:**
+
+```
+tablename: users
+policyname: admin_update_all_users
+qual: EXISTS ( SELECT 1 FROM users me WHERE ((me.id = auth.uid()) AND (me.role = 'admin'::text)))
+```
+
+→ D-pre.7 본 트랙(SELECT 정책만 SECURITY DEFINER 패턴 교체) 후에도 **UPDATE 정책에 동일 자기 참조 잔존**. SELECT는 안전하지만 admin이 다른 사용자 row UPDATE 시도 시 42P17 재발 가능. D-1 본 작업지시서 mock에 "✏️ 편집" 버튼 포함 → D-1 진입 시 사고 잠재 위험.
+
+### 9.2 옵션 A 채택 사유 (Code 권장)
+
+| 옵션 | 내용 | 채택 |
+|---|---|:---:|
+| **(A)** SECURITY DEFINER 패턴 교체 | DROP + CREATE with `is_admin()` USING + WITH CHECK | ⭐ |
+| (B) 다음 세션 D-pre.8로 인계 | 본 세션 종료, D-1에 임시 안전망 | ❌ |
+| (C) DROP만 즉시 | 검증 부실 | ❌ |
+
+→ **(A) 채택** — D-pre.7 트랙 일관성 + 즉시 사고 차단 + 검증 표준 준수.
+
+### 9.3 SQL-I. DROP (구 EXISTS 패턴 제거)
+
+```sql
+DROP POLICY admin_update_all_users ON public.users;
+```
+
+**실행 결과:** `Success. No rows returned` ✅
+
+### 9.4 SQL-J. CREATE (새 `is_admin()` 패턴, USING + WITH CHECK)
+
+```sql
+CREATE POLICY admin_update_all_users
+ON public.users FOR UPDATE
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
+```
+
+**실행 결과:** `Success. No rows returned` ✅
+
+> ⚠️ **UPDATE 정책은 USING + WITH CHECK 둘 다 필수.**
+> - **USING:** 어떤 row를 UPDATE할 수 있는지 (수정 대상 자격) — admin이 모든 사용자 row UPDATE 가능
+> - **WITH CHECK:** UPDATE 후 결과 row가 정책 통과해야 함 (수정 결과 자격) — admin이 자기 권한 박탈 row UPDATE 후에도 admin 유지
+
+### 9.5 사후 검증 SQL-K (정의 raw 비교)
+
+```sql
+SELECT policyname, cmd, qual, with_check
+FROM pg_policies
+WHERE tablename='users' AND policyname='admin_update_all_users';
+```
+
+**raw 결과:**
+
+| policyname | cmd | qual | with_check |
+|---|---|---|---|
+| `admin_update_all_users` | `UPDATE` | `is_admin()` | `is_admin()` |
+
+→ **EXISTS / FROM users me 패턴 부재 확인** ✅. SECURITY DEFINER 패턴 정합.
+
+### 9.6 사후 검증 SQL-L (users 테이블 전 정책 sweep)
+
+```sql
+SELECT policyname, cmd,
+       CASE WHEN qual ILIKE '%FROM users me%' OR with_check ILIKE '%FROM users me%' THEN 'OLD_PATTERN'
+            WHEN qual ILIKE '%is_admin()%' OR with_check ILIKE '%is_admin()%' THEN 'NEW_PATTERN'
+            ELSE 'OTHER'
+       END AS pattern_type
+FROM pg_policies WHERE tablename='users' ORDER BY policyname;
+```
+
+**raw 결과 (5행):**
+
+| policyname | cmd | pattern_type |
+|---|---|---|
+| `admin_select_all_users` | SELECT | NEW_PATTERN |
+| `admin_update_all_users` | UPDATE | **NEW_PATTERN** ⭐ |
+| `user insert own` | INSERT | OTHER |
+| `user read own` | SELECT | OTHER |
+| `user update own` | UPDATE | OTHER |
+
+→ **OLD_PATTERN 카운트 0** ⭐ users 테이블 자기 참조 패턴 영구 청산.
+
+### 9.7 라이브 UPDATE 검증 JS-A (재귀 회귀 0 핵심)
+
+```javascript
+const userId = window.AppState?.userId;
+const res = await window.db.fetch('/rest/v1/users?id=eq.' + userId, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+  body: JSON.stringify({ name: '어드민' })
+});
+```
+
+**raw 결과:**
+- `status: 200` ✅
+- `data:` admin 1행 (`{name:'어드민', email:'bylts0428@gmail.com', role:'admin', ...}`)
+- 콘솔 에러 0건
+
+→ **42P17 재귀 회귀 0** ✅. UPDATE 정책 SECURITY DEFINER 패턴 정합 확정.
+
+### 9.8 라이브 SELECT 회귀 0 재확인 JS-B
+
+```javascript
+await window.db.fetch('/rest/v1/users?select=*', {headers:{'Prefer':'count=exact'}});
+```
+
+**raw 결과:** status=200 / count="0-0/1" / data 1행 ✅ — UPDATE 정책 변경이 SELECT에 영향 0.
+
+### 9.9 재귀 패턴 전 테이블 sweep SQL-M (점검 3 재실행)
+
+```sql
+SELECT tablename, policyname, qual, with_check
+FROM pg_policies
+WHERE schemaname='public'
+  AND (qual ILIKE '%FROM users me%' OR qual ILIKE '%FROM public.users me%'
+       OR with_check ILIKE '%FROM users me%' OR with_check ILIKE '%FROM public.users me%')
+ORDER BY tablename, policyname;
+```
+
+**raw 결과:** **0행** ✅ — 점검 3에서 1행 → § 9 후속 정정 후 0행 = 영구 청산 확인.
+
+### 9.10 § 9 종합 판정
+
+| Step | 검증 | 결과 | 판정 |
+|:---:|---|---|:---:|
+| 9.3 | SQL-I DROP | Success | ✅ |
+| 9.4 | SQL-J CREATE | Success | ✅ |
+| 9.5 | SQL-K 정의 raw | qual=is_admin() / with_check=is_admin() | ✅ |
+| 9.6 | SQL-L 전 정책 sweep | OLD_PATTERN 0건 | ✅ |
+| 9.7 | JS-A 라이브 UPDATE | status=200 + 1행 + 재귀 0 | ✅ |
+| 9.8 | JS-B 라이브 SELECT 회귀 0 재확인 | status=200 + 1행 | ✅ |
+| 9.9 | SQL-M 재귀 sweep | 0행 | ✅ |
+
+**§ 9 후속 정정 7건 전건 통과.** users 테이블 자기 참조 패턴 영구 청산 + UPDATE 재귀 위험 차단 완료.
+
+### 9.11 § 9 추가 학습 (영구 명문화)
+
+**"같은 테이블의 다른 cmd(UPDATE/INSERT/DELETE) 정책에도 동일 패턴 잔존 가능."**
+
+D-pre.7 본 트랙은 SELECT 정책 부재만 검증 + 정정. UPDATE 정책의 동일 자기 참조 패턴은 **점검 3 (전 테이블 sweep)에서 사후 발견**. 향후 RLS 작업 시:
+
+1. **단일 cmd 검증으로 안전 단정 금지** — 같은 테이블의 모든 cmd 정책 전수 점검 필수
+2. **자기 참조 sweep SQL을 사전 검증(Step A) 필수 항목에 포함** — `WHERE qual ILIKE '%FROM <table> me%'` 패턴
+3. **회귀 점검 단계가 아니라 사전 검증 단계에서 잡아야** — 점검 3은 사후 발견 도구로 작동했지만, 사전 검증에서 잡았어야 효율적
+
+→ 향후 Phase D 잔여 섹션(D-2~D-8) RLS 작업 시 본 학습 표준 적용. 메모리 `rls_self_reference_avoidance.md` 갱신 권장.
+
+---
+
+*본 캡처본은 D-pre.7 마이그레이션 단일 진실 원천. § 1~§ 9 모두 raw로 누적. 1차 EXISTS 사고 + 2차 SECURITY DEFINER 재진입 + § 9 admin_update_all_users 후속 정정 + 영구 학습 명문화. D-1 진입 가능.*
