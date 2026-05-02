@@ -193,7 +193,7 @@ EXISTS (
 
 ## 2. Step B — 마이그레이션 실행 기록 (DB 변경)
 
-> 🟡 **실행 대기.** Chrome 에이전트가 Step B-1·B-2·B-3·B-4 4단계 분할 실행 + 각 직후 검증 SELECT 통과 확인 후 다음 진행. 본 절은 raw 결과로 채움.
+> ✅ **실행 완료 (2026-05-02).** Chrome 에이전트 4단계 분할 실행 + 각 직후 정의 raw 검증 통과. 어제 C-4 사고 회피 패턴 적용 — 정의 raw 검증 표준 100% 적용.
 
 ### 2.1 B-1. DROP CONSTRAINT users_role_check
 
@@ -201,8 +201,15 @@ EXISTS (
 ALTER TABLE public.users DROP CONSTRAINT users_role_check;
 ```
 
-**실행 결과:** _(대기 중)_
-**B-1 직후 검증:** _(대기 중 — pg_constraint에서 users_role_check 0행)_
+**실행 결과:** `Success` ✅
+
+**B-1 직후 검증** (`pg_constraint`에서 users_role_check 0행):
+
+```
+Success. No rows returned  (0 rows)
+```
+
+→ 5역할 5키 constraint 완전 제거 확인 ✅. attisdropped 마킹 없이 즉시 제거 (constraint는 컬럼과 달리 attisdropped 슬롯 없음).
 
 ### 2.2 B-2. ADD CONSTRAINT users_role_check 9키
 
@@ -222,9 +229,23 @@ CHECK (role = ANY (ARRAY[
 ]));
 ```
 
-**실행 결과:** _(대기 중)_
-**B-2 직후 검증 1:** _(정의 raw 9키 정합)_
-**B-2 직후 검증 2:** _(admin row CHECK 통과)_
+**실행 결과:** `Success` ✅
+
+**B-2 직후 검증 1** (정의 raw 9키 정합):
+
+| conname | definition |
+|---|---|
+| `users_role_check` | `CHECK ((role = ANY (ARRAY['admin'::text, 'ga_branch_manager'::text, 'ga_manager'::text, 'ga_member'::text, 'ga_staff'::text, 'insurer_branch_manager'::text, 'insurer_manager'::text, 'insurer_member'::text, 'insurer_staff'::text])))` |
+
+→ **9키 모두 포함 ✅** + 5역할 단일 키(`'branch_manager'`/`'manager'`/`'member'`/`'staff'`/`'insurer'`) **0건 ✅**.
+
+**B-2 직후 검증 2** (admin row CHECK 통과):
+
+| email | role | status |
+|---|---|---|
+| `bylts0428@gmail.com` | `admin` | `active` |
+
+→ admin 1행 보존 + role=admin (9키 통과) + status=active (D-pre.5 status 컬럼 영향 없음) ✅. **PostgreSQL 11+ ADD CONSTRAINT 메타데이터 검증으로 admin row 자동 통과 — 추가 시뮬레이션 불요.**
 
 ### 2.3 B-3. activity_logs_select_branch_manager 9역할 정합
 
@@ -246,8 +267,20 @@ USING (
 );
 ```
 
-**실행 결과:** _(대기 중)_
-**B-3 직후 검증:** _(qual에 9역할 키 명시 + 5역할 단일 키 0건)_
+**실행 결과:** DROP `Success` ✅ + CREATE `Success` ✅
+
+**B-3 직후 검증** (qual raw 9역할 정합):
+
+| policyname | cmd | qual |
+|---|---|---|
+| `activity_logs_select_branch_manager` | SELECT | `(EXISTS ( SELECT 1 FROM (users me JOIN users target ON ((target.id = activity_logs.user_id))) WHERE ((me.id = auth.uid()) AND (me.role = ANY (ARRAY['ga_branch_manager'::text, 'insurer_branch_manager'::text])) AND (target.branch = me.branch))))` |
+
+→ **9역할 키 명시 검증:**
+- `ga_branch_manager` ✅
+- `insurer_branch_manager` ✅
+- 5역할 단일 키 `'branch_manager'::text` (전치사 없는 단일 키) **0건** ✅
+
+→ **PostgreSQL이 `IN (...)` 구문을 `= ANY (ARRAY[...])`로 정규화하여 저장.** 어제 정정본과 동일 의미. **C-4-a 사고 재정합 완료.**
 
 ### 2.4 B-4. activity_logs_select_manager 9역할 정합
 
@@ -270,8 +303,45 @@ USING (
 );
 ```
 
-**실행 결과:** _(대기 중)_
-**B-4 직후 검증:** _(qual에 9역할 키 명시 + 5역할 단일 키 0건)_
+**실행 결과:** DROP `Success` ✅ + CREATE `Success` ✅
+
+**B-4 직후 검증** (qual raw 9역할 정합):
+
+| policyname | cmd | qual |
+|---|---|---|
+| `activity_logs_select_manager` | SELECT | `(EXISTS ( SELECT 1 FROM (users me JOIN users target ON ((target.id = activity_logs.user_id))) WHERE ((me.id = auth.uid()) AND (me.role = ANY (ARRAY['ga_manager'::text, 'insurer_manager'::text])) AND (target.team = me.team) AND (target.role = ANY (ARRAY['ga_member'::text, 'insurer_member'::text])))))` |
+
+→ **9역할 키 명시 검증:**
+- `me.role IN ('ga_manager', 'insurer_manager')` ✅
+- `target.role IN ('ga_member', 'insurer_member')` ✅
+- 5역할 단일 키 `'manager'::text` / `'member'::text` 0건 ✅
+- staff 미포함 — 어제 D-pre § 5 변경 매핑 정합 (사유 § 2.5 명문화)
+
+→ **C-4-b 사고 재정합 완료.**
+
+### 2.5 Step B 종합 판정
+
+| # | 항목 | 결과 | 판정 |
+|:---:|---|---|:---:|
+| 1 | B-1 ALTER DROP | Success + 0 rows | ✅ |
+| 2 | B-2 ALTER ADD | Success | ✅ |
+| 3 | B-2 검증 1 (9키 정의 raw) | 9키 모두 + 5역할 0건 | ✅ |
+| 4 | B-2 검증 2 (admin row) | role=admin / status=active | ✅ |
+| 5 | B-3 DROP+CREATE | Success | ✅ |
+| 6 | B-3 검증 (qual 9역할) | ga_branch_manager + insurer_branch_manager 명시 | ✅ |
+| 7 | B-4 DROP+CREATE | Success | ✅ |
+| 8 | B-4 검증 (qual 9역할) | ga_manager/insurer_manager + ga_member/insurer_member 명시 | ✅ |
+
+**결론: 4단계 8건 전건 통과.** 정의 raw 검증 표준 100% 적용 → 어제 C-4 사고 회피 패턴 입증. Step C 진입 가능.
+
+### 2.6 어제 C-4 사고 재정합 결과 명문화
+
+| 사고 | 어제 5/1 보고 | 실제 5/1 상태 | 5/2 D-pre.6 정합 후 |
+|---|:---:|:---:|:---:|
+| C-4-a (`activity_logs_select_branch_manager`) | "완주" 표시 | 5역할 단일 키 잔존 | ✅ 9역할 정합 (B-3) |
+| C-4-b (`activity_logs_select_manager`) | "완주" 표시 | 5역할 단일 키 잔존 | ✅ 9역할 정합 (B-4) |
+
+→ 어제 분할 재실행 보고가 잘못됐던 정책 2건이 본 D-pre.6 Step B-3·B-4로 **확정 정합**. 향후 § 1.A-3.4 정의 raw 검증 표준 적용 의무화.
 
 ### 2.5 B-4 staff 미포함 사유 명문화
 
@@ -292,32 +362,70 @@ USING (
 
 ## 3. Step C — 코드 변경 (Code 직접 Edit)
 
-> 🟡 **실행 대기.** Step B-4 통과 후 Code가 `pages/board.html` 라인 2213 직접 Edit. 본 절은 변경 후 git diff raw로 채움.
+> ✅ **실행 완료 (2026-05-02).** Code Edit 도구로 `pages/board.html` 라인 2213 직접 정정. CLAUDE.md 절대 원칙(app.html 보호 대상 X) + 줄바꿈 4줄 형식 + 어제 라인 2225 정합 일관성 보존.
 
 ### 3.1 변경 대상
 
 | 파일 | 라인 | 변경 |
 |---|:---:|---|
-| `pages/board.html` | 2213 | 1라인 → 4라인 (줄바꿈 4줄 형식) |
+| `pages/board.html` | 2213 → 2213~2216 | 1라인 → 4라인 (줄바꿈 4줄 형식) |
 
-### 3.2 변경 사양 (사전 정렬)
+### 3.2 변경 후 raw (라인 2210~2219)
 
 ```js
-// 변경 전 (현재)
-if (board === 'insurer' && !['admin', 'insurer'].includes(s.role)) {
-
-// 변경 후 (Code Edit 후)
-if (board === 'insurer' && ![
-  'admin',
-  'insurer_branch_manager','insurer_manager','insurer_member','insurer_staff'
-].includes(s.role)) {
+2210:  /* 보험사게시판 권한 체크 (프론트 방어) */
+2211:  var s     = window.AppState || {};
+2212:  var board = _currentBoard;
+2213:  if (board === 'insurer' && ![
+2214:    'admin',
+2215:    'insurer_branch_manager','insurer_manager','insurer_member','insurer_staff'
+2216:  ].includes(s.role)) {
+2217:    alert('보험사게시판은 보험사 계정 또는 관리자만 작성할 수 있습니다.');
+2218:    return;
+2219:  }
 ```
 
-→ 어제 결정 4 (RLS `posts.insurer_board_insert` 정합) + 본 분석 § 4.1 (가) RLS 정합 결정. admin + insurer_* 4종 = 5키.
+→ 어제 결정 4 (RLS `posts.insurer_board_insert` 정합) + `d-pre6-spec-analysis.md` § 4.1 (가) RLS 정합 결정. **admin + insurer_* 4종 = 5키**. 같은 파일 라인 2225 (displayName 매니저급 분기) 보존.
 
-### 3.3 변경 후 검증
+### 3.3 git diff 검증
 
-_(대기 중 — git diff + grep으로 5역할 단일 키 0건)_
+```diff
+@@ -2210,7 +2210,10 @@ window.submitPost = async function() {
+   /* 보험사게시판 권한 체크 (프론트 방어) */
+   var s     = window.AppState || {};
+   var board = _currentBoard;
+-  if (board === 'insurer' && !['admin', 'insurer'].includes(s.role)) {
++  if (board === 'insurer' && ![
++    'admin',
++    'insurer_branch_manager','insurer_manager','insurer_member','insurer_staff'
++  ].includes(s.role)) {
+     alert('보험사게시판은 보험사 계정 또는 관리자만 작성할 수 있습니다.');
+     return;
+   }
+```
+
+→ -1 +4 = 순 +3라인. 함수 의미·alert·return 보존.
+
+### 3.4 grep 검증 (5역할 단일 키 0건)
+
+| 검색 패턴 | 결과 | 판정 |
+|---|:---:|:---:|
+| `'admin',\s*'insurer'` (구 5역할 단일 키 패턴) | 0건 | ✅ |
+| `s.role` 비교 영역 | 9키 5종 (admin + insurer_* 4종) | ✅ |
+
+→ board.html에서 5역할 + 'insurer' 단일 키 패턴 완전 제거 ✅. **사용 시 Code 작업 100% 완료.**
+
+### 3.5 Step C 종합 판정
+
+| # | 항목 | 결과 | 판정 |
+|:---:|---|---|:---:|
+| 1 | board.html 라인 2213 Edit | 1라인 → 4라인 줄바꿈 형식 | ✅ |
+| 2 | git diff | -1 +4 = 순 +3 | ✅ |
+| 3 | 9키 5종 정합 (admin + insurer_*) | RLS `posts.insurer_board_insert` 정합 | ✅ |
+| 4 | grep 5역할 단일 키 잔존 | 0건 | ✅ |
+| 5 | alert·return·라인 2225 보존 | 보존 | ✅ |
+
+**결론: Step C board.html 정정 완료. 5역할 + 'insurer' 단일 키 영구 제거.**
 
 ---
 
