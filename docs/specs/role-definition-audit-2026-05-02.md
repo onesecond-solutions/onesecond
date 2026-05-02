@@ -303,25 +303,40 @@ if (window.AppState && ['admin','branch_manager'].includes(window.AppState.role)
 
 ## 5. § 5 통합 진단 + 위험도 매트릭스
 
-### 5.1 잔존 부채 전수 (5/2 본 감사 기준)
+### 5.1 잔존 부채 전수 (5/2 본 감사 기준 + D-pre.6 종료 후 갱신)
 
-| # | 잔존 위치 | 분류 | 위험도 | 시급성 | 처리 시점 권고 | 사유 |
-|:---:|---|---|:---:|:---:|---|---|
-| **1** | `users_role_check` (5값 비표준 — admin/branch_manager/manager/member/insurer) | DB CHECK | 🔴 **출시 차단** | 🔴 **즉시** | **D-pre.6** (5/2 같은 세션) | 9역할 신규 가입 시 INSERT 거부 → 트랜잭션 ROLLBACK → auth.users INSERT까지 영향 추정 → 가입 페이지 "가입 실패" 사고 |
-| **2** | `pages/board.html` 라인 2213 `['admin', 'insurer']` | 코드 | 🔴 **insurer 입점 시 즉시 사고** | 🟡 **D-pre.6 직후 또는 D-1** | D-pre.6 묶음 또는 별 미니 트랙 | 9역할 출시 후 insurer_* 사용자 보험사 게시판 작성 시도 즉시 alert 차단. 단 admin·GA는 영향 없음 |
-| **3** | `pricing.html` 라인 225 자체 ROLE_LABEL 9키 (window.ROLE_LABEL과 중복) | 코드 | 🟡 단일 진실 원천 위반 | 🟢 동작 정합 (즉시 위험 0) | admin_v2 Phase D 후 별 세션 | 동작은 9역할 정합. 미래 라벨 변경 시 1곳 누락 위험 |
-| **4** | `app.html` 라인 960·971·1000 (`['manager','branch_manager']` / `['admin','branch_manager']`) | 코드 | 🟡 admin·9역할 매니저 우회 시 권한 분기 잘못 | 🟡 admin은 통과·매니저급은 일부 분기 X | admin_v2 Phase D 완료 후 별 세션 (B-4 등록됨) | CLAUDE.md 절대 원칙 보호 + 정책 결정 보류 |
-| **5** | (미검증) 다른 테이블 CHECK constraint 5역할 잔존 | DB CHECK | ⚠️ 미확인 | 🟡 D-pre.6 Step A에 6-A SELECT 묶음 | D-pre.6 | pg_constraint 전수 SELECT로 검증 |
-| **6** | (미검증) handle_new_user 외 함수 5역할 하드코딩 | DB 함수 | ⚠️ 미확인 | 🟡 D-pre.6 Step A에 6-C SELECT 묶음 | D-pre.6 | `current_user_role()` 등 4/20 정의 함수 부재 검증 + pg_proc 전수 grep |
-| **7** | (미검증) RLS 정책 어제 5건 외 잔존 | DB RLS | ⚠️ 미확인 | 🟡 D-pre.6 Step A에 6-B SELECT 묶음 | D-pre.6 | pg_policies 전수 grep |
-| **8** | (미검증) 트리거 handle_new_user 외 등록 | DB 트리거 | ⚠️ 미확인 | 🟢 낮음 | D-pre.6 Step A에 6-D SELECT 묶음 | information_schema.triggers 전수 |
+> **갱신 (2026-05-02 D-pre.6 종료 직후, 커밋 `91cb00b` 시점):** #1·#2 ✅ 해소 (D-pre.6 묶음). #5·#6 ✅ 검증 0건 통과 (Step A-2·A-4). #7 ⚠️ Step A-3에서 부채 2건 발견 → D-pre.6 (A) 확장으로 ✅ 해소 (Step B-3·B-4). #3·#4 별 트랙 잔존. #8 트리거 검증은 본 D-pre.6 Step A에 미포함 — 다음 트랙 이월 (낮은 우선순위).
 
-### 5.2 위험도 분포 요약
+| # | 잔존 위치 | 분류 | 위험도 | 처리 결과 | 갱신 상태 |
+|:---:|---|---|:---:|---|:---:|
+| **1** | `users_role_check` (5값 비표준 — admin/branch_manager/manager/member/insurer) | DB CHECK | 🔴 출시 차단 | **D-pre.6 Step B-1·B-2 완료** (DROP+ADD 9키, 커밋 `4fcaf93`) | ✅ **해소** |
+| **2** | `pages/board.html` 라인 2213 `['admin', 'insurer']` | 코드 | 🔴 insurer 입점 시 즉시 사고 | **D-pre.6 Step C-1 완료** (Code Edit 줄바꿈 4줄, admin + insurer_* 4종 = 5키, 커밋 `4fcaf93`) | ✅ **해소** |
+| **3** | `pricing.html` 라인 225 자체 ROLE_LABEL 9키 (window.ROLE_LABEL과 중복) | 코드 | 🟡 단일 진실 원천 위반 | admin_v2 Phase D 후 별 세션 | 🟡 **잔존** |
+| **4** | `app.html` 라인 960·971·1000 (`['manager','branch_manager']` / `['admin','branch_manager']`) | 코드 | 🟡 admin·9역할 매니저 분기 잘못 | admin_v2 Phase D 완료 후 별 세션 (B-4 등록됨) | 🟡 **잔존** |
+| **5** | (미검증) 다른 테이블 CHECK constraint 5역할 잔존 | DB CHECK | ⚠️ 미확인 | **D-pre.6 Step A-2 완료** — `users_role_check`만 1행, 다른 테이블 CHECK 0건 | ✅ **해소** (검증 0건) |
+| **6** | (미검증) handle_new_user 외 함수 5역할 하드코딩 | DB 함수 | ⚠️ 미확인 | **D-pre.6 Step A-4 완료** — 0행. `current_user_role()` 부재 재확인 | ✅ **해소** (검증 0건) |
+| **7** | (미검증) RLS 정책 어제 5건 외 잔존 | DB RLS | ⚠️ 미확인 | **D-pre.6 Step A-3 ⭐ 부채 2건 발견** (`activity_logs_select_branch_manager` / `activity_logs_select_manager` — 어제 5/1 C-4 사고 미정착) → **(A) 확장 Step B-3·B-4로 9역할 재정합 완료** + **Step D-3-A 회귀 검증 0건 확정** (커밋 `4fcaf93` + `91cb00b`) | ✅ **해소** (어제 사고 재정합) |
+| **8** | (미검증) 트리거 handle_new_user 외 등록 | DB 트리거 | ⚠️ 미확인 | 본 D-pre.6 Step A는 information_schema.triggers 미포함 — **다음 트랙 이월** | 🟡 **이월** (낮은 우선순위) |
 
-- 🔴 출시 차단 1건 (#1)
-- 🔴 insurer 입점 사고 1건 (#2) ⭐ **신규 발견**
-- 🟡 동작 무영향이지만 부채 2건 (#3·#4) — 별 세션
-- ⚠️ 미검증 4건 (#5·#6·#7·#8) — D-pre.6 Step A 추가 SELECT로 일거 해소
+### 5.2 위험도 분포 요약 (D-pre.6 종료 후 갱신)
+
+- ✅ **해소 5건**: #1 (CHECK 9키) / #2 (board.html 2213) / #5 (다른 CHECK 0건) / #6 (함수 0건) / #7 (RLS 2건 — 어제 사고 재정합)
+- 🟡 **별 트랙 잔존 2건**: #3 (pricing.html 자체 ROLE_LABEL) / #4 (app.html B-4 3곳) — admin_v2 Phase D 후 처리
+- 🟡 **다음 트랙 이월 1건**: #8 (트리거 검증) — 우선순위 낮음
+
+→ **D-pre.6으로 9역할 마이그레이션 핵심 부채(#1·#2·#5·#6·#7) 모두 해소. 출시 차단 위험 + insurer 입점 사고 위험 영구 청산.**
+
+### 5.3 D-pre.6 첨가 학습 — 정의 raw 검증 표준 첫 작동 사례
+
+§ 4.1·§ 4.2 누락 방지 체크리스트 명문화 직후 D-pre.6에 즉시 적용한 결과:
+
+| 사례 | 표준 적용 | 효과 |
+|---|---|---|
+| Step A-3 RLS 정책 본문 5역할 grep | `pg_policies` qual·with_check 본문 직접 검색 | **어제 5/1 C-4 사고 (분할 재실행 완주 표시 vs 실제 미정착) 재발견** |
+| Step B-3·B-4 직후 검증 (정의 raw 비교) | `pg_policies.qual`에 9역할 키 명시 + 5역할 단일 키 0건 grep | 정착 여부 100% 확인 (어제 사고 회피) |
+| Step D-3-A 전수 회귀 검증 | RLS 30개 정책 5역할 단일 키 잔존 0건 검증 | **어제 사고 영구 청산 확정** |
+
+→ **표준이 도입 직후 첫 사례에서 어제 사고 재발 방지에 직접 기여.** 향후 모든 role 정합 작업에 의무 적용.
 
 ---
 
