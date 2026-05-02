@@ -131,7 +131,7 @@ WHERE table_schema = 'public' AND table_name = 'users'
 
 ## 2. Step B — 마이그레이션 실행 기록 (DB 변경)
 
-> 🟡 **실행 대기.** Chrome 에이전트가 Step B SQL 패키지 (B-1 / B-2 분할 + 각 검증 SELECT) 실행 후 raw 결과로 본 절 채움.
+> ✅ **실행 완료 (2026-05-02).** B-1·B-2 분할 실행 + 각 직후 검증 SELECT 통과. 어제 C-4 부분 실행 사고(5건 묶음 SQL 앞 2건 정착·뒤 3건 미실행) 패턴 회피 — **별도 코드블록 2개로 분리 실행** 표준화.
 
 ### 2.1 B-1. status 컬럼 추가
 
@@ -141,12 +141,33 @@ ADD COLUMN status text NOT NULL DEFAULT 'active'
 CHECK (status IN ('active', 'suspended', 'pending'));
 ```
 
-**실행 시각:** _(대기 중)_
-**결과:** _(대기 중)_
+**실행 결과:** `Success. No rows returned` ✅
 
-### 2.2 B-1 직후 검증 SELECT
+### 2.2 B-1 직후 검증 SELECT 3건
 
-_(대기 중 — Step B 패키지에 정의된 즉시 반영 확인 SELECT)_
+#### ① status 컬럼 존재 + 사양 검증
+
+| column_name | data_type | is_nullable | column_default |
+|---|---|:---:|---|
+| `status` | text | NO | `'active'::text` |
+
+→ 사양 정합 ✅ (text / NOT NULL / DEFAULT 'active')
+
+#### ② CHECK constraint 존재 검증
+
+| conname | definition |
+|---|---|
+| `users_status_check` | `CHECK ((status = ANY (ARRAY['active'::text, 'suspended'::text, 'pending'::text])))` |
+
+→ PostgreSQL 자동 명명 = `users_status_check`. 정의에 3종 키 포함 확인 ✅. **롤백 시 `DROP COLUMN status` 실행으로 자동 제거됨.**
+
+#### ③ admin row status='active' 즉시 백필 확인 (PG11+ 메타데이터 기반)
+
+| email | status |
+|---|---|
+| `bylts0428@gmail.com` | `active` |
+
+→ **PostgreSQL 11+ DEFAULT 메타데이터 기반 즉시 적용 검증** ✅. 행 재작성 0 + 백필 SQL 0건으로 admin row 자동 'active' 처리.
 
 ### 2.3 B-2. last_seen_at 컬럼 추가
 
@@ -155,12 +176,47 @@ ALTER TABLE public.users
 ADD COLUMN last_seen_at timestamptz;
 ```
 
-**실행 시각:** _(대기 중)_
-**결과:** _(대기 중)_
+**실행 결과:** `Success. No rows returned` ✅
 
-### 2.4 B-2 직후 검증 SELECT
+### 2.4 B-2 직후 검증 SELECT 2건
 
-_(대기 중)_
+#### ④ last_seen_at 컬럼 존재 + 사양 검증
+
+| column_name | data_type | is_nullable | column_default |
+|---|---|:---:|---|
+| `last_seen_at` | timestamp with time zone | YES | NULL |
+
+→ 사양 정합 ✅ (timestamptz / NULL 허용 / DEFAULT 없음)
+
+#### ⑤ admin row last_seen_at IS NULL 확인
+
+| email | last_seen_at |
+|---|---|
+| `bylts0428@gmail.com` | NULL |
+
+→ DEFAULT 없음으로 admin row last_seen_at 자동 NULL ✅. D-1 작업 시 auth.js loadUser() 라인 161 PATCH로 자연 채워질 예정.
+
+### 2.5 Step B 종합 판정
+
+| # | 항목 | 결과 | 판정 |
+|:---:|---|---|:---:|
+| 1 | B-1 ALTER (status) | Success | ✅ |
+| 2 | 검증 ① status 사양 | text / NO / `'active'::text` | ✅ |
+| 3 | 검증 ② CHECK constraint | `users_status_check` (3종) | ✅ |
+| 4 | 검증 ③ admin status 백필 | `active` (PG11+ 즉시 적용) | ✅ |
+| 5 | B-2 ALTER (last_seen_at) | Success | ✅ |
+| 6 | 검증 ④ last_seen_at 사양 | timestamptz / YES / NULL | ✅ |
+| 7 | 검증 ⑤ admin last_seen_at | NULL | ✅ |
+
+**결론: B-1·B-2 ALTER 2건 + 검증 5건 전건 통과 → Step C 진입 가능.**
+
+### 2.6 분할 실행 패턴 표준화 명문화 (어제 C-4 사고 회피)
+
+| 사고 사례 (5/1) | 본 D-pre.5 (5/2) |
+|---|---|
+| 5건 묶음 SQL → 앞 2건 정착·뒤 3건 미실행 → 분할 재실행 + 셀프체크 표준화 | **B-1·B-2를 처음부터 별도 코드블록 2개로 분리 발행** + 각 직후 검증 SELECT 묶음 + B-1 통과 확인 후에만 B-2 진행 게이트 명시 |
+
+→ 어제 사고 패턴 학습이 본 D-pre.5 Step B 패키지 설계에 적용. 부분 실행 위험 0.
 
 ---
 
