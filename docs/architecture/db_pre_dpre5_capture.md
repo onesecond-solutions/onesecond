@@ -222,38 +222,127 @@ ADD COLUMN last_seen_at timestamptz;
 
 ## 3. Step C — 사후 검증 SELECT 4건 raw 캡처 (DB 변경 후)
 
-> 🟡 **실행 대기.** Step B 통과 후 Step C 패키지 실행하고 본 절 채움.
+> ✅ **실행 완료 (2026-05-02).** 4건 전건 통과 + **발견 사항 1건** (`users_role_check` 5역할 잔존). 발견 사항은 **D-pre.6 트랙으로 이관**: `docs/specs/role-definition-audit-2026-05-02.md` (커밋 `1365c55`) § 5 위험도 매트릭스 #1·#2 + § 6 D-pre.6 트랙 사양 초안 참조.
 
 ### 3.1 C-1. 신규 컬럼 2종 존재 + 사양 검증
 
-_(대기 중)_
+| column_name | data_type | is_nullable | column_default |
+|---|---|:---:|---|
+| `last_seen_at` | timestamp with time zone | YES | NULL |
+| `status` | text | NO | `'active'::text` |
 
-### 3.2 C-2. CHECK constraint 존재 검증
+→ **2행 / 기댓값 완전 일치** ✅. D-pre.5 § 1 확정 사양과 100% 정합.
 
-_(대기 중)_
+### 3.2 C-2. CHECK constraint 존재 검증 ⚠️ 발견 사항 1건
+
+| conname | definition |
+|---|---|
+| `users_role_check` | `CHECK ((role = ANY (ARRAY['admin', 'branch_manager', 'manager', 'member', 'insurer'])))` |
+| `users_status_check` | `CHECK ((status = ANY (ARRAY['active', 'suspended', 'pending'])))` |
+
+→ **`users_status_check` 정합** ✅ (D-pre.5 § 1 확정 사양 3종 키 정합)
+→ ⚠️ **`users_role_check` 5역할 잔존 — D-pre 누락 영역 발견**
+
+**발견 사항 D-pre.6 트랙 이관 명시:**
+- `users_role_check` 5값(`admin/branch_manager/manager/member/insurer`)이 9역할 표준에도 5역할 표준(`staff` 누락+`insurer` 추가)에도 정합 안 됨 — v1 초기 가설 잔재
+- D-pre 산출물 4종(`role_migration_plan.md` 698줄 등) 어디에도 `users_role_check` 키워드 0건 → **검토 영역 자체에서 누락**
+- 9역할 신규 가입 시 100% CHECK 위반 거부 = 출시 차단 위험
+- → **D-pre.6 트랙으로 이관**: DROP + ADD CONSTRAINT 9키 정정 + board.html 라인 2213 정합 + 추가 SELECT 4건(다른 CHECK / RLS / 함수 / 트리거 전수) + INSERT 시뮬레이션. 산출물 `docs/specs/role-definition-audit-2026-05-02.md` § 6.2 D-pre.6 트랙 사양 초안 + § 6.3 SQL 패키지 + § 6.4 9키 정의 후보 + § 6.5 board.html 정정 후보 참조.
+- **본 D-pre.5 트랙 종료에는 영향 0** (status / last_seen_at 컬럼 추가 회귀 0).
 
 ### 3.3 C-3. status 백필 검증 (전 사용자가 'active'인지)
 
-_(대기 중 — 기댓값: active = 1, 그 외 0건)_
+| status | count |
+|---:|---:|
+| `active` | 1 |
+
+→ **`active=1` (A-2 행 수와 동일), 그 외 0건** ✅. PostgreSQL 11+ DEFAULT 메타데이터 기반 즉시 백필 검증 ✅. 백필 SQL 0건으로 admin row 자동 'active' 처리.
 
 ### 3.4 C-4. last_seen_at NULL 검증
 
-_(대기 중 — 기댓값: 1)_
+| total_rows | null_count | not_null_count |
+|---:|---:|---:|
+| 1 | 1 | 0 |
+
+→ **기댓값 완전 일치** ✅. DEFAULT 없음으로 admin row last_seen_at 자동 NULL. D-1 작업 시 auth.js loadUser() 라인 161 PATCH로 자연 채워질 예정.
+
+### 3.5 Step C 종합 판정
+
+| # | 항목 | 결과 | 판정 |
+|:---:|---|---|:---:|
+| 1 | C-1 신규 컬럼 2종 사양 | 2행 정합 | ✅ |
+| 2 | C-2 users_status_check | 1행 (3종 키) | ✅ |
+| 3 | C-2 users_role_check **(발견 사항)** | 5역할 잔존 | ⚠️ D-pre.6 트랙 이관 |
+| 4 | C-3 status 백필 분포 | active=1 | ✅ |
+| 5 | C-4 last_seen_at NULL 분포 | total=1 / null=1 | ✅ |
+
+**결론: D-pre.5 사후 검증 4건 본질 모두 통과. C-2의 `users_role_check` 5역할 잔존은 D-pre 누락 영역 발견으로 D-pre.6 트랙 이관. 본 D-pre.5 status/last_seen_at 마이그레이션 자체는 정합 ✅.**
 
 ---
 
 ## 4. Step D — 라이브 검증 (회귀 0 확인)
 
-> 🟡 **실행 대기.** Step C 통과 후 팀장님이 Chrome 직접 검증.
+> ✅ **실행 완료 (2026-05-02 오전 KST).** Chrome 에이전트 + 팀장님 (`bylts0428@gmail.com` 계정) 직접 검증. **4건 전건 통과 → users.status / users.last_seen_at 컬럼 2개 추가가 라이브 페이지 동작에 영향 0건.**
+
+### 4.1 D-1. 로그인 진입
+
+- 로그인 페이지 로드: ✅ (정상)
+- 자동완성 로그인 성공
+- 메인 페이지(`/app.html`) 진입: ✅
+- 에러 토스트: 0건
+
+→ 자가 판정: ✅
+
+### 4.2 D-2. admin AppState 5건
+
+콘솔 출력 raw:
+
+```json
+{
+  "role": "admin",
+  "name": "어드민",
+  "email": "bylts0428@gmail.com",
+  "plan": "free",
+  "ready": true
+}
+```
+
+- 5개 키 모두 존재 + 값 정상
+- D-pre 마이그레이션 후 admin AppState 보존 확인 (어제 F-1 정합 유지)
+
+→ 자가 판정: ✅
+
+### 4.3 D-3. admin_v2 풀스크린 진입
+
+- 좌측 사이드바 "🛡️ 관리자" 클릭 → 풀스크린 진입
+- 대시보드 타이틀 "ADMIN·운영 / 대시보드" 정상 렌더링
+- 총 사용자 1,284 / 오늘 활성 사용자 342 (mock 데이터 정상)
+- 콘솔 ERROR 0건 / 빈 화면 없음
+
+→ 자가 판정: ✅
+
+### 4.4 D-4. 5종 톤 토글 정상 동작
+
+| 톤 | 결과 |
+|---|:---:|
+| **light** (`#FCFCFC`) | ✅ 밝은 배경 즉시 전환 |
+| **warm** (`#1A130E`) | ✅ 웜 다크 계열 |
+| **slate** (`#0F172A`) | ✅ 청회색 슬레이트 |
+| **black** (`#0A0A0A`, 기본) | ✅ 순수 블랙·그레이 |
+| **navy** (`#0B1426`) | ✅ 다크 네이비 |
+
+→ 자가 판정: ✅
+
+### 4.5 Step D 종합 판정
 
 | F | 검증 항목 | 결과 |
 |:---:|---|:---:|
-| D-1 | https://onesecond.solutions/login 정상 진입 | _(대기)_ |
-| D-2 | 로그인 후 admin AppState 5건 (role/name/email/plan/ready) 정상 출력 | _(대기)_ |
-| D-3 | admin_v2 풀스크린 진입 (`bylts0428@gmail.com` 계정) | _(대기)_ |
-| D-4 | admin_v2 5종 톤 토글 정상 동작 (light/warm/slate/black/navy) | _(대기)_ |
+| D-1 | 로그인 정상 진입 | ✅ |
+| D-2 | admin AppState 5건 정상 출력 | ✅ |
+| D-3 | admin_v2 풀스크린 진입 | ✅ |
+| D-4 | 5종 톤 토글 정상 동작 | ✅ |
 
-**1건이라도 회귀 발견 시 Step E 롤백 SQL 실행 + 즉시 보고.**
+**결론: 4건 전건 통과. status / last_seen_at 컬럼 2개 추가가 라이브 동작에 영향 0건. D-pre.5 마이그레이션 회귀 0 확인.**
 
 ---
 
