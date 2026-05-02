@@ -35,7 +35,8 @@
 | 단계 | 상태 | 산출물 / 비고 |
 |---|---|---|
 | **D-pre** 사전 분석 | ✅ **완료 (2026-05-01)** | 산출물 3종·1,697줄 / 4개 항목 모두 승인 #1~#4 완료 / 결정 27건 명문화 (1·4·5·6·8 + A·B·C·D·E·F + G-1~G-4 + H-1~H-3) / DB·admin_v2.html·js/db.js 변경 0건 / 산출물: `docs/architecture/db_schema_20260501.md` (561줄, 12 테이블 + 30 RLS + role 분포 raw) / `docs/architecture/role_migration_plan.md` (698줄, 9역할 SQL 초안 + Step C-1.5 함수 정정 + 롤백) / `docs/specs/admin_v2_phase_d_pre.md` (438줄, ROLE_LABEL 9개 + fetch 패턴 + D-1 시범 코드) |
-| D-1 users | 🟡 **작업지시서 대기 (2026-05-01)** | D-pre 종료 + 마이그레이션(Step A·B·C·D) → admin_v2 D-1 mock 실 데이터 연결 / 작업지시서 발행 전 사전 정렬: 마이그레이션 + D-1 묶음 vs 분리 결정 |
+| **D-pre.5** users 신규 컬럼 (status / last_seen_at) | 🟡 **사양 분석 완료 (2026-05-02), 팀장님 결정 대기** | D-1 진입 전 분리 마이그레이션. AI(Claude 채팅) 추천 vs Code 의견 비교 산출 / 핵심 의견: status는 **3종(active/suspended/pending)** 추천 (AI 2종 반대 — mock CSS 토큰 + admin_v2 4값 정합 위반), 나머지 4건은 AI 동의 + text + CHECK constraint 추가 권장 / 산출물: `docs/specs/d-pre5-spec-analysis.md` / 결정 후 D-pre.5 실행 작업지시서 발행 → DB ALTER 2건 + 검증 SELECT 3건 |
+| D-1 users | 🟡 **작업지시서 대기 (2026-05-01)** | D-pre + D-pre.5 종료 → admin_v2 D-1 mock 실 데이터 연결 / 작업지시서 발행 전 사전 정렬: 마이그레이션 + D-1 묶음 vs 분리 결정 |
 | D-2 content | 대기 | scripts·자료실 테이블 + stage 10단계 분포 RPC |
 | D-3 board | 대기 | posts + post_reports + 모더레이션 액션 |
 | D-4 notice | 대기 | app_settings(또는 notices/banners) + 노출 기간 + role 분기 |
