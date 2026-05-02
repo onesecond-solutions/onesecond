@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-01 저녁
+> **마지막 갱신:** 2026-05-02 저녁
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -188,6 +188,8 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-02_2002.md` — 2026-05-02 저녁 (D-9 보류 결정 명문화 + D-pre.7 1차 EXISTS 사고 + 2차 SECURITY DEFINER 재진입 + § 9 admin_update_all_users 후속 정정 — users 자기 참조 영구 청산 + RLS 자기 참조 회피 표준 6건 영구 명문화)
+- `docs/sessions/2026-05-02_1557.md` — 2026-05-02 오후 (D-pre.5 + D-pre.6 두 트랙 완수 — 검증 37건 + 산출물 5종 2,427줄)
 - `docs/sessions/2026-05-01_2257.md` — 2026-05-01 저녁 (Phase D-pre 마이그레이션 첫 코드 변경 단계 완수 (Step A·B·C·D 전 구간))
 - `docs/sessions/2026-05-01_1834.md` — 2026-05-01 저녁 (DB 변경 0건)
 - `docs/sessions/2026-05-01_1044.md` — 2026-05-01 오전 (Quick "미러링 전 녹취 스크립트" 카드 1줄 2컬럼 + 오타 4건 통일 — DB-only / quick_contents id=7 row UPDATE 6 instances 치환 / 백업 row + RLS service_role 정책 적용 / 라이브 검수 부채 18건 누적)
