@@ -253,6 +253,7 @@
   /* ── 렌더 ── */
   window.newsRender = function () {
     var area = document.getElementById('news-content-area');
+    if (!area) return;
     var filtered = _currentCategory === '전체'
       ? _allNews
       : _allNews.filter(function (n) { return n.category === _currentCategory; });
@@ -296,6 +297,7 @@
     .catch(function (e) {
       console.error('[news] fetch error', e);
       var area = document.getElementById('news-content-area');
+      if (!area) return;
       area.innerHTML = '<div class="news-empty"><div class="news-empty-icon">⚠️</div><span>뉴스를 불러오지 못했습니다.</span></div>';
     });
   }
