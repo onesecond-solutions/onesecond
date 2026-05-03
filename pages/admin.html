@@ -1,3 +1,11 @@
+<script>
+(function(){
+  var _t = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  var _u = {}; try { _u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e) {}
+  if (!_t || !_u.id) { window.location.href = '/login.html'; }
+})();
+</script>
+
 <!-- ═══════════════════════════════════════════════════════════════════════════
   pages/admin.html — admin_v2.html 진입 stub (2026-04-30 Phase B)
   ─────────────────────────────────────────────────────────────────────────────

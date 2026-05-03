@@ -1,3 +1,11 @@
+<script>
+(function(){
+  var _t = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  var _u = {}; try { _u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e) {}
+  if (!_t || !_u.id) { window.location.href = '/login.html'; }
+})();
+</script>
+
 <style>
 /* ════════════════════════════════════════════════════════════
    board.html 전용 스타일

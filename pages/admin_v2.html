@@ -1,3 +1,11 @@
+<script>
+(function(){
+  var _t = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  var _u = {}; try { _u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e) {}
+  if (!_t || !_u.id) { window.location.href = '/login.html'; }
+})();
+</script>
+
 <!-- ═══════════════════════════════════════════════════════════════════════════
   pages/admin_v2.html — 원세컨드 풀 스케일 관리자 콘솔 v2
   - 작성: 2026-04-30 (Phase B 골격 → B-2 정착)
