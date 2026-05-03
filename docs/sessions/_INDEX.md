@@ -189,6 +189,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-03_1534.md` — 2026-05-03 오후 (D-1 Step 1 사전 검증 완료 — Phase 1 마이그레이션 불필요 확정 (5역할 잔존 0). Step 2·3·7 스킵, Step 4 즉시 진입 가능 / 5/3 푸시 3건: `c1575de` 모바일 탭바 이모티콘+함께해요 합류 + `991f473` 7페이지 직접 URL → app.html shell redirect + `c0b0e07` news.html DOM 가드 / Chrome 라이브 검수 25 PASS / 산출물 4건: D-1 작업지시서 + DB capture + scripts spec/template)
 - `docs/sessions/2026-05-03_*` — 2026-05-03 (재오픈 전 헬스 체크 R1~R6 + 별 트랙 α exception_diseases 검색 차단 UI+DB 이중 잠금 + 별 트랙 β pages/*.html 9페이지 인증 게이트 + D-pre.8 R6 sweep 후속 5항목 일괄 청산 — DROP 9건 + CREATE 10건 트랜잭션 / D-pre 시리즈 모두 종료 → D-1 진입 즉시 가능 / 산출물 3건: `docs/specs/exception_diseases_block_2026-05-03.md` + `docs/specs/pages_auth_gate_2026-05-03.md` + `docs/architecture/db_pre_dpre8_capture.md`)
 - `docs/sessions/2026-05-02_2002.md` — 2026-05-02 저녁 (D-9 보류 결정 명문화 + D-pre.7 1차 EXISTS 사고 + 2차 SECURITY DEFINER 재진입 + § 9 admin_update_all_users 후속 정정 — users 자기 참조 영구 청산 + RLS 자기 참조 회피 표준 6건 영구 명문화)
 - `docs/sessions/2026-05-02_1557.md` — 2026-05-02 오후 (D-pre.5 + D-pre.6 두 트랙 완수 — 검증 37건 + 산출물 5종 2,427줄)
