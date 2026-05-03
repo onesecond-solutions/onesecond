@@ -662,11 +662,20 @@ html, body {
   .tab-item {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.55); font-size: 0.8125em;
-    gap: 3px; cursor: pointer; transition: color var(--transition-fast);
+    color: rgba(255,255,255,0.55);
+    cursor: pointer; transition: color var(--transition-fast);
+    position: relative;
   }
   .tab-item.active { color: #fff; }
-  .tab-item .tab-icon { font-size: 1.25em; }
+  .tab-item.active::before {
+    content: '';
+    position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 24px; height: 3px;
+    background: #fff;
+    border-radius: 0 0 2px 2px;
+  }
+  .tab-item .tab-icon { font-size: 1.5em; }
 }
 @media(min-width:768px) { .tab-bar { display: none; } }
 </style>
@@ -812,12 +821,13 @@ html, body {
 
 <!-- 하단 탭바 (모바일) -->
 <div class="tab-bar">
-  <div class="tab-item active" data-menu="home"><span class="tab-icon">🏠</span>홈</div>
-  <div class="tab-item" data-menu="scripts"><span class="tab-icon">📞</span>스크립트</div>
-  <div class="tab-item" data-menu="board"><span class="tab-icon">📋</span>현장 Q&A</div>
-  <div class="tab-item" data-menu="myspace"><span class="tab-icon">👤</span>MY</div>
-  <div class="tab-item" data-menu="news"><span class="tab-icon">📰</span>뉴스</div>
-  <div class="tab-item" data-menu="quick"><span class="tab-icon">⚡</span>Quick</div>
+  <div class="tab-item active" data-menu="home"     aria-label="홈"><span class="tab-icon">🏠</span></div>
+  <div class="tab-item"        data-menu="scripts"  aria-label="스크립트"><span class="tab-icon">📞</span></div>
+  <div class="tab-item"        data-menu="board"    aria-label="현장 Q&A"><span class="tab-icon">📋</span></div>
+  <div class="tab-item"        data-menu="myspace"  aria-label="MY SPACE"><span class="tab-icon">👤</span></div>
+  <div class="tab-item"        data-menu="news"     aria-label="보험뉴스"><span class="tab-icon">📰</span></div>
+  <div class="tab-item"        data-menu="quick"    aria-label="Quick 메뉴"><span class="tab-icon">⚡</span></div>
+  <div class="tab-item"        data-menu="together" aria-label="함께해요"><span class="tab-icon">🤝</span></div>
 </div>
 
 <!-- 빠른실행 오버레이 -->
