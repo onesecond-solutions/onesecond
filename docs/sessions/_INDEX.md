@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-03 오후
+> **마지막 갱신:** 2026-05-03 저녁 (D-1 진입 직전 design_test 트랙 라벨 정합화)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -93,25 +93,25 @@
 | `app.html` (shell v1) | ✅ 완료 + 4/28 A1 라이트 톤 + 4/29 푸터 트랙 (4컬럼 → 카피라이트 단일 → 한 줄 미니 → 셸 최하단 정정) | shell: `5592749` (4/27) → 헤더: `fd8b264` `1ab35c4` (4/28) → 푸터: `54cd148` `fa835d2` `ae669d0` `79c0052` (4/29) |
 | `pages/board.html` | ✅ 시안 통째 적용 + 공통 간격 토큰 적용 + `.hub-notice` 톤 정정 | 통째: `ebb9b3b` (4/26) / 토큰: `e5b5afe` (4/29 저녁) |
 | `index.html` | ✅ 시안 통째 승격 완료 + 헤더 라이트 톤 + 푸터 4컬럼 + 가입 폼 보강 + 카피라이트 onesecond 단일 | 승격: `83665c4` / 헤더: `001af79` / 푸터: `c2186a1` / 카드: `3342e9d` / 안내박스: `69f2678` / 카피라이트: `216ce9f` |
-| `pages/home.html` | 🔄 부분 흡수 (C) 트랙 진행 중 — C-1 + C-2(줄무늬) + hexagon 카드 완료, 라이브 검수 미완 | C-1: `b854878` (4/28) / C-2 줄무늬 디바이더: `869510d` `c71db6d` (4/29 오후) / hexagon 시계 흰 원형 카드: `4071194` (4/29 오후). C-3 카피 / C-4 도넛 / C-5 C영역(별 트랙) 대기 |
+| `pages/home.html` | 🟡 **사실상 흡수 완료** — 라이브 1116줄 vs 시안 1202줄 (-86). 잔여 = C-3 hero 서브 카피 1문장 + C-4 중앙 도넛 SVG `<defs>` 그라데이션 (둘 다 미세 조정). 라이브 검수만 미완 (별 카운터). | C-1: `b854878` (4/28) / C-2 줄무늬 디바이더: `869510d` `c71db6d` (4/29 오후) / hexagon 시계 흰 원형 카드: `4071194` (4/29 오후). C-3 카피 / C-4 도넛 SVG defs / C-5 C영역(별 트랙) 대기 |
 | `pages/admin.html` | 🛑 **stub 90줄 교체 완료 (4/30 admin_v2 트랙 격상)** — 기존 1969줄은 `_archive/admin_v1_20260430.html` 보존 / admin_v2.html이 메인 트랙으로 진행 (Phase C 확정 5/1) | stub: `e8949f2` / 백업: `_archive/admin_v1_20260430.html` |
 | `pages/myspace.html` | ✅ 부분 흡수 (A) Phase 1 완주 — 4/29 저녁 7커밋, 라이브 검수 미완 | 갭 분석 v2: `978904c` / pg-page-header + 카드 토큰: `656aa99` / pg-outer board 정합: `9be9d3c` / 카드 그리드 + 공통 간격 토큰: `2cd372e` / scripts fetch 400 회귀: `efeb1ad` / 4건 통합 정리: `6ede634` |
 | `pages/scripts.html` | ✅ v2-full 통째 승격 완료 + 폰트 위계 + C영역 ON (4/29 오후, 라이브 검수 미완) | D 영역: `6882753` / 폰트 위계: `be40cc6` / C영역 ON: `c96d833` |
 | `pages/news.html` | 🛑 **트랙 폐기·후순위** (2026-04-30 admin_v2 작업지시서 §4-2) | 헤더·푸터 board 통일만 진행: `ee64d9a` (4/30) / Phase A 분석 보존: `claude_code/_archive/news_migration_phaseA_20260430.md` |
-| `pages/quick.html` | 🔄 myspace 정합 5건 + 헤더 brown 통일 (4/30 신규) | 토큰: `e5b5afe` (4/29) / myspace 정합 5건: `3846dc2` (4/30) / 헤더 brown + 탭바 폭: `68b2cba` (4/30) |
-| `pages/together.html` | 🔄 MY SPACE 룩 통일 + 카드 그리드 반응형 (4/30 신규) | 토큰: `e5b5afe` (4/29) / 룩 통일: `86c9807` (4/30) |
+| `pages/quick.html` | 🟢 **흡수 완료** — 라이브 396줄 ≥ 시안 302줄 (라이브가 시안 +94줄로 더 큼, 시안은 컨셉 무드보드). myspace 정합 5건 + 헤더 brown 통일 추가. 라이브 검수만 미완 (별 카운터). | 토큰: `e5b5afe` (4/29) / myspace 정합 5건: `3846dc2` (4/30) / 헤더 brown + 탭바 폭: `68b2cba` (4/30) |
+| `pages/together.html` | 🟢 **흡수 완료** — 라이브 1088줄 ≥ 시안 373줄 (라이브가 시안의 약 3배, 시안은 컨셉 무드보드). MY SPACE 룩 통일 + 카드 그리드 반응형 추가. 라이브 검수만 미완 (별 카운터). | 토큰: `e5b5afe` (4/29) / 룩 통일: `86c9807` (4/30) |
 
 ### 다음 후보 (메인 트랙 격상 후 우선순위 변경 — 2026-04-30)
 
 1. 🔴 **admin_v2.html 풀 스케일 (메인 트랙)** — 사업 전략 핵심 축
 2. ✅ `index.html` (시안 통째 승격 완료)
-3. 🔄 `pages/home.html` (부분 흡수 (C) 트랙 — C-3 카피 / C-4 도넛 대기)
+3. 🟡 `pages/home.html` (사실상 흡수 완료 — 잔여 = C-3 카피 1문장 + C-4 SVG `<defs>`)
 4. ✅ `pages/scripts.html` (v2-full 통째 승격 완료, 라이브 검수 대기)
 5. ✅ `pages/board.html`
 6. ✅ `pages/myspace.html` (부분 흡수 (A) Phase 1 완주, 라이브 검수 대기)
 7. 🛑 ~~`pages/news.html`~~ → **후순위 폐기** (보험뉴스 엔진 가동 시점에 함께 처리)
-8. `pages/quick.html` (myspace 정합 + 시안 승격 미진행)
-9. `pages/together.html` (MY SPACE 룩 통일 + 시안 승격 미진행)
+8. 🟢 `pages/quick.html` (흡수 완료 — 라이브 396줄 ≥ 시안 302줄)
+9. 🟢 `pages/together.html` (흡수 완료 — 라이브 1088줄 ≥ 시안 373줄)
 10. 🛑 ~~`pages/admin.html`~~ → **admin_v2 메인 트랙으로 격상·이전**
 
 ### index.html 승격 사전 결정 6건 (2026-04-28 확정 — 참고용 보존)
@@ -133,7 +133,7 @@
 
 1. **admin standalone hex 8건 토큰화 (4/28 머지 완료)** — admin/v1-full.html 시안이 통째 교체 디자인이라 시안 승격 시 .adm-mini-side 등 토큰화한 클래스가 모두 사라짐. **admin_v2 트랙 격상으로 사실상 무효화**(stub 교체로 이전 admin.html 콘텐츠 _archive 이동). main 머지된 상태(`a0bdfbf`)는 git 히스토리에만 잔존.
 2. **B 사이드바 "함께해요" 활성 오작동** — home 진입 시 잘못된 메뉴 활성. home.html과 무관한 app.html 책임 영역. home 작업 트랙과 분리 (별 트랙 진단 대기).
-3. **🔥 라이브 검수 부채 통합 누적 (4/29 + 4/30 17커밋)** — home(줄무늬 + hexagon) + scripts(D영역 v2 + 폰트 위계 + C영역) + myspace(부분 흡수 7커밋) + board/quick/together(공통 간격 토큰 1커밋) + **4/30 quick·together·news 4커밋 추가** 모두 라이브 검수 미완. **통합 검수 시점 결정 시급**. admin_v2 메인 트랙 진행 중에도 검수 별 트랙 가능.
+3. **🟡 라이브 검수 부채 (별 카운터, 4/29 + 4/30 17커밋)** — **코드 자체는 완료**, 팀장님 Chrome 1회 PASS만 남은 상태. home(줄무늬 + hexagon) + scripts(D영역 v2 + 폰트 위계 + C영역) + myspace(부분 흡수 7커밋) + board/quick/together(공통 간격 토큰 1커밋) + 4/30 quick·together·news 4커밋. admin_v2 메인 트랙과 별 트랙 병렬 가능. **"미완료" 아님 — 화면 멀쩡히 작동, 검수 액션만 미수행** (2026-05-03 라벨 정합화).
 4. **logo03.jpg 라이트 헤더 사각형 경계** — 이미지 배경 옅은 그레이/아이보리(JPG, 투명 X). index/privacy/terms 헤더에서 경계 보이면 logo05.png 투명본 또는 이미지 편집 별 트랙.
 5. **app 푸터 셸 최하단 정정 라이브 검수 미완** (`79c0052`, 4/29 오전).
 6. **terms/privacy 닫기 버튼 라이브 검수 미완** (`710d452`, 4/29 오전).
