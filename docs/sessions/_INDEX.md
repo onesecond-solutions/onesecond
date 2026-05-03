@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-02 저녁
+> **마지막 갱신:** 2026-05-03 오후
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -38,7 +38,8 @@
 | **D-pre.5** users 신규 컬럼 (status / last_seen_at) | ✅ **완료 (2026-05-02)** | D-1 진입 전 분리 마이그레이션. Code 의견 전면 채택 (status 3종 active/suspended/pending + text + CHECK + NOT NULL DEFAULT 'active' / last_seen_at timestamptz NULL) / Step A 사전 캡처 5건 → Step B ALTER 2건 분할 실행 → Step C 사후 검증 4건 → Step D 라이브 검증 4건 모두 통과 (회귀 0). 발견 사항 1건: `users_role_check` 5역할 잔존 → **D-pre.6 트랙 이관**. 산출물: `docs/specs/d-pre5-spec-analysis.md` (커밋 `2be0dca`) + `docs/architecture/db_pre_dpre5_capture.md` (커밋 `c6373a5`/`8ad91ce` 누적) + `docs/specs/role-definition-audit-2026-05-02.md` (커밋 `1365c55`) |
 | **D-pre.6** users_role_check 9역할 정합 + activity_logs RLS 2건 + board.html 라인 2213 | ✅ **완료 (2026-05-02)** | D-pre.5 Step C 발견(users_role_check 5역할 잔존) + role 감사(`role-definition-audit-2026-05-02.md` 커밋 `1365c55`) board.html 라인 2213 신규 발견 + Step A 추가 발견(activity_logs RLS 2건 — **어제 5/1 D-pre Step C-4 분할 재실행 "완주" 표시 vs 실제 미정착 사고 재발견**) (A) 범위 확장 처리. **5단계 17건 전건 통과**: Step A 사전 검증 5건 → B DB ALTER 4건 분할 (DROP CHECK + ADD CHECK 9키 + activity_logs 정책 2건 9역할 재작성) → C board.html 라인 2213 Code Edit (5키 9역할, 줄바꿈 4줄) → D 사후 검증 5건(D-3-A RLS 전수 5역할 잔존 0건 회귀 검증 핵심) → E 라이브 검증 5건 (E-5 admin이 보험사 게시판 작성→삭제 회귀 검증). 정의 raw 검증 표준 채택 (어제 사고 회피). 산출물: `docs/architecture/db_pre_dpre6_capture.md` (커밋 `54314c0`/`4fcaf93` 누적) / `pages/board.html` 라인 2213 정정 (커밋 `4fcaf93`). 잔존 부채 별 트랙: pricing.html 자체 ROLE_LABEL · app.html B-4 3곳 (admin_v2 Phase D 후). **D-pre + D-pre.5 + D-pre.6 모두 종료 → D-1 작업지시서 발행 가능** |
 | **D-pre.7** Phase D 8테이블 admin SELECT 정책 점검 → users + library SELECT 2건 + admin_update_all_users 후속 정정 (1차 EXISTS 사고 + 2차 SECURITY DEFINER 재진입 + § 9 후속 정정) | ✅ **완료 (2026-05-02)** | D-1 Step 6 R6 검증 SQL로 발견된 admin SELECT 정책 부재 청산. **A 본문 정밀 검토로 6→2 정정**. **🚨 1차 EXISTS 자기 참조 패턴 → PostgreSQL 무한 재귀(42P17) 발생** → 비상 롤백 → **2차 SECURITY DEFINER 함수 패턴 재진입** (`is_admin()` STABLE) + 새 정책 2건 → 9건 전건 통과. **🚨 최종 회귀 점검 5건 중 점검 3에서 `admin_update_all_users` UPDATE 정책 EXISTS 자기 참조 잔존 사후 발견** → 옵션 A 채택(SECURITY DEFINER 패턴 교체) → § 9 후속 정정 7건 전건 통과 + users 자기 참조 영구 청산. **누적 검증 16건 (2차 9 + § 9 후속 7)**. 영구 학습 6건: (1) RLS USING/WITH CHECK 동일 테이블 SELECT 서브쿼리 절대 금지 (2) admin/role 검증은 SECURITY DEFINER 함수 표준 (3) DB 메타 통과 ≠ 라이브 안전 (4) `admin_update_all_users` 작동해도 같은 패턴 SELECT 추가 시 chain 형성 (5) Code "재귀 안전 ✅" 단정 결론 금지 (6) **같은 테이블 다른 cmd(UPDATE/INSERT/DELETE) 정책에도 동일 패턴 잔존 가능 — 사전 검증 단계 전수 sweep 필수** (점검 3 사후 발견 학습). 산출물: `docs/architecture/db_pre_dpre7_capture.md` (515줄+, 1차 사고 + 2차 재진입 + § 9 후속 정정). 잔존 부채: posts is_hidden + news 후순위 + RLS 자기 참조 회피 표준 메모리 등록. **D-pre 시리즈 모두 종료 → D-1 본 진입 100% 정합 보장** |
-| D-1 users | 🟡 **작업지시서 발행됨, 결정 8건 확정, D-pre.7 완료 후 본 진입 대기 (2026-05-02)** | admin_v2 D-1 mock 실 데이터 연결. 사전 정렬 결정 3건 확정 (분리 / 온라인 10분 / PATCH 위치 auth.js 라인 174 직후 sibling). Step 0 mock 분석 완료 → 결정 8건 확정 → D-pre.7 완료 → **다음 세션 Step 1 진입** |
+| **D-pre.8** R6 sweep 후속 5항목 일괄 청산 (B + ② + ⑤ + ⑤-2 + ⑦) | ✅ **완료 (2026-05-03)** | R6에서 발견된 추가 정합 부채 일괄 청산. (B) posts/scripts admin 인라인 EXISTS 5건 → `is_admin()` 통일 / (②) comments + posts(together) anon 2건 → `{authenticated}` 전용 / (⑤) script_usage_logs 정책명 구버전 네이밍 정합화 / (⑤-2) script_usage_logs 사용자 자기 row SELECT 신설 (quick.html 라인 336 일반 사용자 6역할 작동 보장) / (⑦) news_admin_all 인라인 EXISTS → `is_admin()`. **트랜잭션 1건 = DROP 9 + CREATE 10 + 사후 검증 SELECT 18행** 모두 정합 → COMMIT 확정. 자기참조/인라인 admin EXISTS 잔존 0건. 영구 학습 3건 추가 (D-pre.8 § 8). 산출물: `docs/architecture/db_pre_dpre8_capture.md`. **별 트랙 α/β + D-pre.8 모두 종료 → D-1 진입 즉시 가능** |
+| D-1 users | 🟢 **즉시 진입 가능 — 작업지시서·결정 8건 확정, D-pre 시리즈 + α + β 전건 종료 (2026-05-03)** | admin_v2 D-1 mock 실 데이터 연결. 사전 정렬 결정 3건 + 결정 8건 확정 → D-pre.7 + D-pre.8 + 별 트랙 α + β 모두 종료 → **다음 세션 Step 1 즉시 진입 (`js/admin_v2.js` 신설)** |
 | D-2 content | 대기 | scripts·자료실 테이블 + stage 10단계 분포 RPC |
 | D-3 board | 대기 | posts + post_reports + 모더레이션 액션 |
 | D-4 notice | 대기 | app_settings(또는 notices/banners) + 노출 기간 + role 분기 |
@@ -188,6 +189,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-03_*` — 2026-05-03 (재오픈 전 헬스 체크 R1~R6 + 별 트랙 α exception_diseases 검색 차단 UI+DB 이중 잠금 + 별 트랙 β pages/*.html 9페이지 인증 게이트 + D-pre.8 R6 sweep 후속 5항목 일괄 청산 — DROP 9건 + CREATE 10건 트랜잭션 / D-pre 시리즈 모두 종료 → D-1 진입 즉시 가능 / 산출물 3건: `docs/specs/exception_diseases_block_2026-05-03.md` + `docs/specs/pages_auth_gate_2026-05-03.md` + `docs/architecture/db_pre_dpre8_capture.md`)
 - `docs/sessions/2026-05-02_2002.md` — 2026-05-02 저녁 (D-9 보류 결정 명문화 + D-pre.7 1차 EXISTS 사고 + 2차 SECURITY DEFINER 재진입 + § 9 admin_update_all_users 후속 정정 — users 자기 참조 영구 청산 + RLS 자기 참조 회피 표준 6건 영구 명문화)
 - `docs/sessions/2026-05-02_1557.md` — 2026-05-02 오후 (D-pre.5 + D-pre.6 두 트랙 완수 — 검증 37건 + 산출물 5종 2,427줄)
 - `docs/sessions/2026-05-01_2257.md` — 2026-05-01 저녁 (Phase D-pre 마이그레이션 첫 코드 변경 단계 완수 (Step A·B·C·D 전 구간))
@@ -258,6 +260,9 @@
 | **🔴 admin_v2 Phase B 마무리 결함 5건 일괄** | ✅ 완료 (2026-05-01) | `99f70e4` light `--admin-menu-bg #FFFFFF` / black `setAttribute` 통일 / `--admin-text-label` 신규 토큰 / 헤더 우측 🚪 admExit 버튼 / hashchange `#admin/*` 외 자동 admExit |
 | **🔴 admin_v2 Phase C 7섹션 mock 콘텐츠 풀 채움 (메인 트랙)** | ✅ 완료 (2026-05-01) | `5fb83bf` D-1 users(테이블 10행) / D-2 content(stage 10단계 도넛) / D-3 board(라인차트 + 신고 5행) / D-4 notice(활성 카드 4) / D-5 analytics(DAU 90일 + 막대) / D-6 logs(검색·필터 + 12행) / D-7 billing(4플랜 도넛 + 결제 8행). 라인 +1,371. status-bg 토큰 4종 5종 톤 정의 |
 | **🔴 admin_v2 status·역할 badge 5종 톤 WCAG AA 확보** | ✅ 완료 (2026-05-01) | `e2d7a78` `--admin-info-text/success-text/warning-text/danger-text` 4토큰 5종 톤 정의 + 9역할 직급 그룹 재매핑(admin=danger / 지점장=info / 매니저=success / member·staff=neutral·secondary) + 80셀 WCAG AA 통과 + 폴백 안전장치 |
+| **별 트랙 α — exception_diseases 검색 전면 차단 (UI + DB 이중 잠금)** | ✅ 완료 (2026-05-03) | `7ea9044` UI 차단 (app.html fetchSearchPreview/doSearch에서 fetch 2건 + 렌더 블록 2건 제거, 49줄 순감소) + DB 정책 admin only (USING `is_admin()`) + 산출물 `docs/specs/exception_diseases_block_2026-05-03.md` (`61545f9`). 데이터 23,463건 보존, 향후 표준화 재시도 시 admin 직접 SELECT 가능 |
+| **별 트랙 β — pages/*.html 9페이지 직접 URL 인증 게이트** | ✅ 완료 (2026-05-03) | `2142ab1` 인라인 IIFE 게이트 9페이지 적용 (admin/admin_v2/board/home/myspace/news/quick/scripts/together) + `pricing.html` 라인 237 패턴 기반 + 산출물 `docs/specs/pages_auth_gate_2026-05-03.md` (`7096c6b`). 미인증 직접 URL 접근 시 `/login.html` 즉시 redirect / 셸 동작 영향 0 |
+| **🔴 D-pre.8 — DB 정합 일괄 청산 5항목 (B + ② + ⑤ + ⑤-2 + ⑦)** | ✅ 완료 (2026-05-03) | 트랜잭션 1건: DROP 9 + CREATE 10 + 사후 검증 SELECT 18행 모두 정합 → COMMIT 확정. posts/scripts/news 인라인 EXISTS → `is_admin()` 통일 + comments/posts(together) anon 제거 + script_usage_logs 정책명 정합화 + 사용자 자기 row SELECT 신설 (quick.html 라인 336 일반 사용자 6역할 작동 보장). 산출물 `docs/architecture/db_pre_dpre8_capture.md`. 자기참조 0건 / 인라인 admin EXISTS 잔존 0건 |
 
 ---
 
