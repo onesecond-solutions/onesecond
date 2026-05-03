@@ -2,7 +2,11 @@
 (function(){
   var _t = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
   var _u = {}; try { _u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e) {}
-  if (!_t || !_u.id) { window.location.href = '/login.html'; }
+  if (!_t || !_u.id) { window.location.href = '/login.html'; return; }
+  if (window.location.pathname.indexOf('/pages/') !== -1) {
+    var _seg = window.location.pathname.split('/').pop().replace('.html', '');
+    if (_seg) { localStorage.setItem('selected_menu', _seg); window.location.replace('/app.html'); }
+  }
 })();
 </script>
 
