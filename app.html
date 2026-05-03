@@ -1430,35 +1430,18 @@ async function fetchSearchPreview(q) {
     var enc = encodeURIComponent(q);
     var token = window.db.getToken();
     var h = { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token };
-    var [sr, pr, qr, dr] = await Promise.all([
+    var [sr, pr, qr] = await Promise.all([
       fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage&limit=4', { headers: h }),
       fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)&select=id,title,content,category&limit=4', { headers: h }),
-      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3', { headers: h }),
-      fetch(window.SUPABASE_URL + '/rest/v1/exception_diseases?disease_name=ilike.*' + enc + '*&select=insurer_name,disease_code,disease_name,is_available,condition&limit=5', { headers: h })
+      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3', { headers: h })
     ]);
-    var [scripts, posts, quicks, diseases] = await Promise.all([
+    var [scripts, posts, quicks] = await Promise.all([
       sr.ok ? sr.json() : [], pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : [], dr.ok ? dr.json() : []
+      qr.ok ? qr.json() : []
     ]);
-    var diseasePreview = diseases.reduce(function (acc, d) {
-      if (!acc.find(function (x) { return x.insurer_name === d.insurer_name; })) acc.push(d);
-      return acc;
-    }, []).slice(0, 3);
-    var total = scripts.length + posts.length + quicks.length + diseases.length;
+    var total = scripts.length + posts.length + quicks.length;
     if (total === 0) { dd.innerHTML = '<div class="search-empty">🔍 \'' + q + '\' 검색 결과가 없습니다.</div>'; return; }
     var html = '';
-    if (diseasePreview.length) {
-      html += '<div class="search-section-label">🏥 예외질환 (' + diseases.length + '건)</div>'
-        + '<div style="font-size:0.72em;color:var(--color-warning);background:rgba(255,180,0,0.08);padding:5px 12px;border-left:3px solid var(--color-warning);">⚠️ 인수기준은 수시로 변경됩니다. 반드시 해당 보험사 확인 후 진행하세요.</div>';
-      diseasePreview.forEach(function (d) {
-        var avail = d.is_available === 'O' ? '✅ 가능' : d.is_available === 'X' ? '❌ 불가' : '⚠️ 조건부';
-        html += '<div class="search-result-item" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\');closeSearchDropdown();">'
-          + '<span class="search-result-icon">🏥</span>'
-          + '<div class="search-result-body"><div class="search-result-title">' + d.disease_name + ' · ' + d.insurer_name + '</div>'
-          + '<div class="search-result-desc">' + avail + '</div></div>'
-          + '<span class="search-result-badge badge-disease">예외질환</span></div>';
-      });
-    }
     if (scripts.length) {
       html += '<div class="search-section-label">📋 스크립트</div>';
       scripts.forEach(function (s) {
@@ -1509,54 +1492,22 @@ async function doSearch(q) {
     var enc = encodeURIComponent(q);
     var token = window.db.getToken();
     var h = { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token };
-    var [sr, pr, qr, dr] = await Promise.all([
+    var [sr, pr, qr] = await Promise.all([
       fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage,type&limit=20', { headers: h }),
       fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)&select=id,title,content,category&limit=20', { headers: h }),
-      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10', { headers: h }),
-      fetch(window.SUPABASE_URL + '/rest/v1/exception_diseases?disease_name=ilike.*' + enc + '*&select=insurer_name,disease_code,disease_name,is_available,condition,coverage&order=insurer_name,disease_code&limit=100', { headers: h })
+      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10', { headers: h })
     ]);
-    var [scripts, posts, quicks, diseases] = await Promise.all([
+    var [scripts, posts, quicks] = await Promise.all([
       sr.ok ? sr.json() : [], pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : [], dr.ok ? dr.json() : []
+      qr.ok ? qr.json() : []
     ]);
-    var total = scripts.length + posts.length + quicks.length + diseases.length;
+    var total = scripts.length + posts.length + quicks.length;
     var html = '<div class="search-result-page">'
       + '<div class="search-result-page-header"><div>'
       + '<div class="search-result-page-title">🔍 &nbsp;"' + q + '" 검색 결과</div>'
-      + '<div class="search-result-page-sub">총 ' + total + '건 — 예외질환 ' + diseases.length + '건 · 스크립트 ' + scripts.length + '건 · 현장 Q&A ' + posts.length + '건 · 업무자료 ' + quicks.length + '건</div>'
+      + '<div class="search-result-page-sub">총 ' + total + '건 — 스크립트 ' + scripts.length + '건 · 현장 Q&A ' + posts.length + '건 · 업무자료 ' + quicks.length + '건</div>'
       + '</div><button class="search-result-page-close" onclick="switchMenu(\'home\')">✕ 닫기</button></div>';
     if (total === 0) html += '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:0.9em;">검색 결과가 없습니다.</div>';
-    if (diseases.length) {
-      var byInsurer = diseases.reduce(function (acc, d) { if (!acc[d.insurer_name]) acc[d.insurer_name] = []; acc[d.insurer_name].push(d); return acc; }, {});
-      html += '<div class="search-group-title">🏥 예외질환 (' + diseases.length + '건)</div>'
-        + '<div style="font-size:0.78em;color:var(--color-warning);background:rgba(255,180,0,0.08);padding:8px 14px;border-left:3px solid var(--color-warning);margin-bottom:var(--space-2);border-radius:0 6px 6px 0;">⚠️ 아래 정보는 참고용입니다. 인수기준은 수시로 변경되므로 <strong>반드시 해당 보험사에서 최신 기준을 확인</strong>하신 후 진행하세요.</div>'
-        + '<div style="overflow-x:auto;margin-bottom:var(--space-2);"><table style="width:100%;border-collapse:collapse;font-size:0.8em;table-layout:fixed;">'
-        + '<colgroup><col style="width:13%;"><col style="width:10%;"><col style="width:42%;"><col style="width:10%;"><col style="width:25%;"></colgroup>'
-        + '<thead><tr style="background:var(--color-surface-2);color:var(--color-text-primary);">'
-        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">회사</th>'
-        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">질병코드</th>'
-        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">질병명</th>'
-        + '<th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--color-border);">가능여부</th>'
-        + '<th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--color-border);">조건</th>'
-        + '</tr></thead><tbody>';
-      Object.entries(byInsurer).forEach(function (entry, gi) {
-        var insurer = entry[0], rows = entry[1];
-        rows.forEach(function (d, i) {
-          var avail = d.is_available === 'O' ? '<span style="color:var(--color-success);font-weight:700;">✅ 가능</span>'
-            : d.is_available === 'X' ? '<span style="color:var(--color-danger);font-weight:700;">❌ 불가</span>'
-            : '<span style="color:var(--color-warning);font-weight:700;">⚠️ 조건부</span>';
-          var bg = gi % 2 === 0 ? '#fff' : 'var(--color-surface-2)';
-          html += '<tr style="background:' + bg + ';border-bottom:1px solid var(--color-border);">'
-            + '<td style="padding:7px 10px;color:var(--color-text-secondary);font-weight:' + (i===0?'600':'400') + ';">' + (i===0?insurer:'') + '</td>'
-            + '<td style="padding:7px 10px;font-family:var(--font-mono);font-size:0.95em;">' + (d.disease_code||'-') + '</td>'
-            + '<td style="padding:7px 10px;" title="' + d.disease_name + '">' + d.disease_name + '</td>'
-            + '<td style="padding:7px 10px;text-align:center;">' + avail + '</td>'
-            + '<td style="padding:7px 10px;font-size:0.9em;color:#666;">' + (d.condition||'-').replace(/\//g,' / ') + '</td>'
-            + '</tr>';
-        });
-      });
-      html += '</tbody></table></div>';
-    }
     if (scripts.length) {
       html += '<div class="search-group-title">📋 스크립트 (' + scripts.length + '건)</div>';
       scripts.forEach(function (s) {
