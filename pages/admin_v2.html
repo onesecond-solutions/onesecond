@@ -1010,6 +1010,45 @@ body.adm-active { overflow: hidden !important; }
   .adm-menu { display: none; }
   .adm-header, .adm-main { grid-column: 2; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Admin Toast — D-1 신설 (D-2~D-8 공통, .adm-toast 컴포넌트)
+   - 우측 하단 fixed, slide-in, 5초 자동 사라짐, danger/info/success 3톤
+   - showAdminToast(msg, type) 헬퍼는 js/admin_v2.js 에서 호출
+   - 호스트 컨테이너 #adm-toast-host는 첫 호출 시 동적 생성
+   ─────────────────────────────────────────────────────────────────────────── */
+#adm-toast-host {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9500;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.adm-toast {
+  pointer-events: auto;
+  min-width: 240px;
+  max-width: 380px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background: var(--admin-surface-elev);
+  color: var(--admin-text-primary);
+  border: 1px solid var(--admin-border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  font-size: 13px;
+  font-weight: var(--fw-medium);
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.adm-toast.show { opacity: 1; transform: translateX(0); }
+.adm-toast.info    { border-left: 4px solid var(--color-info); }
+.adm-toast.success { border-left: 4px solid var(--color-success); }
+.adm-toast.warning { border-left: 4px solid var(--color-warning); }
+.adm-toast.danger  { border-left: 4px solid var(--color-danger); }
 </style>
 
 
@@ -1486,14 +1525,14 @@ body.adm-active { overflow: hidden !important; }
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
 
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-    <!-- 2. USERS (Phase C mock — 사용자 관리)                                 -->
+    <!-- 2. USERS (Phase D-1 실 데이터 — js/admin_v2.js)                       -->
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="users">
 
       <div class="adm-section-head">
         <div>
           <div class="adm-section-title">사용자 관리</div>
-          <div class="adm-section-desc">전체 가입자 · 9역할 권한 · 플랜 · 소속/지점 · 상태 관리. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+          <div class="adm-section-desc">전체 가입자 · 9역할 권한 · 플랜 · 소속/지점 · 상태 관리.</div>
         </div>
         <div class="adm-page-actions">
           <button class="adm-btn adm-btn-ghost">📤 내보내기</button>
@@ -1501,65 +1540,63 @@ body.adm-active { overflow: hidden !important; }
         </div>
       </div>
 
-      <!-- KPI 3카드 -->
+      <!-- KPI 3카드 (D-1 실 데이터) -->
       <div class="adm-kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">전체 가입자</div>
             <div class="adm-kpi-icon info">👥</div>
           </div>
-          <div class="adm-kpi-value">1,284</div>
-          <div class="adm-kpi-trend up">▲ 12.3% <span class="vs">vs 지난 달</span></div>
+          <div class="adm-kpi-value" id="adm-kpi-all">—</div>
         </div>
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">활성 사용자 (7일)</div>
             <div class="adm-kpi-icon success">⚡</div>
           </div>
-          <div class="adm-kpi-value">487</div>
-          <div class="adm-kpi-trend up">▲ 8.4% <span class="vs">vs 지난 주</span></div>
+          <div class="adm-kpi-value" id="adm-kpi-active7">—</div>
         </div>
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">신규 가입 (7일)</div>
             <div class="adm-kpi-icon warning">🆕</div>
           </div>
-          <div class="adm-kpi-value">47</div>
-          <div class="adm-kpi-trend down">▼ 3건 <span class="vs">vs 지난 주</span></div>
+          <div class="adm-kpi-value" id="adm-kpi-new7">—</div>
         </div>
       </div>
 
-      <!-- 필터·검색 바 -->
+      <!-- 필터·검색 바 (D-1 실 데이터) -->
       <div class="adm-filter-bar">
         <div class="adm-filter-search">
           <span style="opacity:0.6;">🔍</span>
-          <input type="text" placeholder="이름·이메일·소속 검색…" />
+          <input type="text" id="adm-users-search" placeholder="이름·이메일·소속 검색…"
+                 oninput="window.admUsersSearch && window.admUsersSearch(this.value)" />
         </div>
         <div class="adm-role-chips">
-          <button class="adm-role-chip active">전체 <span class="count">1,284</span></button>
-          <button class="adm-role-chip">어드민 <span class="count">3</span></button>
-          <button class="adm-role-chip">GA 지점장 <span class="count">42</span></button>
-          <button class="adm-role-chip">GA 실장 <span class="count">128</span></button>
-          <button class="adm-role-chip">GA 설계사 <span class="count">847</span></button>
-          <button class="adm-role-chip">GA 스텝 <span class="count">62</span></button>
-          <button class="adm-role-chip">원수사 지점장 <span class="count">14</span></button>
-          <button class="adm-role-chip">원수사 매니저 <span class="count">38</span></button>
-          <button class="adm-role-chip">원수사 직원 <span class="count">126</span></button>
-          <button class="adm-role-chip">원수사 스텝 <span class="count">24</span></button>
+          <button class="adm-role-chip active" data-role="all"                    onclick="window.admUsersFilterRole && window.admUsersFilterRole('all')">전체 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="admin"                  onclick="window.admUsersFilterRole && window.admUsersFilterRole('admin')">어드민 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="ga_branch_manager"      onclick="window.admUsersFilterRole && window.admUsersFilterRole('ga_branch_manager')">GA 지점장 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="ga_manager"             onclick="window.admUsersFilterRole && window.admUsersFilterRole('ga_manager')">GA 실장 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="ga_member"              onclick="window.admUsersFilterRole && window.admUsersFilterRole('ga_member')">GA 설계사 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="ga_staff"               onclick="window.admUsersFilterRole && window.admUsersFilterRole('ga_staff')">GA 스텝 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="insurer_branch_manager" onclick="window.admUsersFilterRole && window.admUsersFilterRole('insurer_branch_manager')">원수사 지점장 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="insurer_manager"        onclick="window.admUsersFilterRole && window.admUsersFilterRole('insurer_manager')">원수사 매니저 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="insurer_member"         onclick="window.admUsersFilterRole && window.admUsersFilterRole('insurer_member')">원수사 직원 <span class="count">—</span></button>
+          <button class="adm-role-chip"        data-role="insurer_staff"          onclick="window.admUsersFilterRole && window.admUsersFilterRole('insurer_staff')">원수사 스텝 <span class="count">—</span></button>
         </div>
-        <select class="adm-inline-select">
-          <option>최근 가입 순</option>
-          <option>이름 가나다 순</option>
-          <option>마지막 접속 순</option>
+        <select class="adm-inline-select" onchange="window.admUsersChangeSort && window.admUsersChangeSort(this.value)">
+          <option value="created_at.desc">최근 가입 순</option>
+          <option value="name.asc">이름 가나다 순</option>
+          <option value="last_seen_at.desc">마지막 접속 순</option>
         </select>
       </div>
 
-      <!-- 사용자 테이블 10행 -->
+      <!-- 사용자 테이블 (D-1 실 데이터) -->
       <div class="adm-panel">
         <div class="adm-panel-head">
           <div>
             <div class="adm-panel-title">사용자 목록</div>
-            <div class="adm-panel-meta">전체 1,284명 · 1~10행 표시 · Phase C mock</div>
+            <div class="adm-panel-meta" id="adm-users-meta">데이터 로딩 중…</div>
           </div>
           <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">컬럼 설정 ⚙️</button>
         </div>
@@ -1570,137 +1607,8 @@ body.adm-active { overflow: hidden !important; }
                 <th>사용자</th><th>역할</th><th>플랜</th><th>소속</th><th>상태</th><th>가입일</th><th>마지막 접속</th><th></th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#D4845A,#A0522D)">임</div>
-                  <div class="user-info"><div class="name">임태성</div><div class="email">bylts0428@gmail.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-admin">어드민</span></td>
-                <td><span class="adm-badge pro">PRO</span></td>
-                <td>원세컨드 본사</td>
-                <td><span class="adm-badge online">온라인</span></td>
-                <td>2025-09-01</td>
-                <td>지금</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1E40AF)">김</div>
-                  <div class="user-info"><div class="name">김지훈</div><div class="email">kim.jh@az-finance.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-ga-branch-manager">GA 지점장</span></td>
-                <td><span class="adm-badge pro">PRO</span></td>
-                <td>강남센터</td>
-                <td><span class="adm-badge online">온라인</span></td>
-                <td>2025-10-12</td>
-                <td>5분 전</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#8B5CF6,#5B21B6)">박</div>
-                  <div class="user-info"><div class="name">박서연</div><div class="email">park.sy@az-finance.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-ga-manager">GA 실장</span></td>
-                <td><span class="adm-badge pro">PRO</span></td>
-                <td>강남센터 · 1팀</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>2025-11-03</td>
-                <td>1시간 전</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#10B981,#047857)">이</div>
-                  <div class="user-info"><div class="name">이도윤</div><div class="email">lee.dy@az-finance.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-ga-member">GA 설계사</span></td>
-                <td><span class="adm-badge free">FREE</span></td>
-                <td>강남센터 · 1팀</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>2025-12-19</td>
-                <td>어제</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#B45309)">최</div>
-                  <div class="user-info"><div class="name">최민지</div><div class="email">choi.mj@onesecond.solutions</div></div>
-                </div></td>
-                <td><span class="adm-badge role-ga-member">GA 설계사</span></td>
-                <td><span class="adm-badge pro">PRO</span></td>
-                <td>판교본부 · 3팀</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>2026-01-08</td>
-                <td>3시간 전</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#71717A,#3F3F46)">정</div>
-                  <div class="user-info"><div class="name">정수아</div><div class="email">jung.sa@az-finance.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-ga-staff">GA 스텝</span></td>
-                <td><span class="adm-badge free">FREE</span></td>
-                <td>판교본부</td>
-                <td><span class="adm-badge status-suspended">정지</span></td>
-                <td>2026-01-22</td>
-                <td>5일 전</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#10B981,#065F46)">강</div>
-                  <div class="user-info"><div class="name">강현우</div><div class="email">kang.hw@kpi-insure.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-insurer-branch-manager">원수사 지점장</span></td>
-                <td><span class="adm-badge pro">PRO</span></td>
-                <td>KPI 강남지점</td>
-                <td><span class="adm-badge online">온라인</span></td>
-                <td>2026-02-04</td>
-                <td>30분 전</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#92400E)">윤</div>
-                  <div class="user-info"><div class="name">윤다은</div><div class="email">yoon.de@kpi-insure.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-insurer-manager">원수사 매니저</span></td>
-                <td><span class="adm-badge pro">PRO</span></td>
-                <td>KPI 강남지점</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>2026-02-18</td>
-                <td>2시간 전</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#A1A1AA,#52525B)">한</div>
-                  <div class="user-info"><div class="name">한지우</div><div class="email">han.ji@kpi-insure.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-insurer-member">원수사 직원</span></td>
-                <td><span class="adm-badge free">FREE</span></td>
-                <td>KPI 부산지점</td>
-                <td><span class="adm-badge status-pending">가입 대기</span></td>
-                <td>2026-04-25</td>
-                <td>—</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><div class="user-cell">
-                  <div class="avatar" style="background:linear-gradient(135deg,#7C3AED,#4C1D95)">송</div>
-                  <div class="user-info"><div class="name">송예린</div><div class="email">song.yr@kpi-insure.com</div></div>
-                </div></td>
-                <td><span class="adm-badge role-insurer-staff">원수사 스텝</span></td>
-                <td><span class="adm-badge free">FREE</span></td>
-                <td>KPI 부산지점</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>2026-04-29</td>
-                <td>1일 전</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
+            <tbody id="adm-users-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px 0;color:var(--admin-text-tertiary);">데이터 로딩 중…</td></tr>
             </tbody>
           </table>
         </div>
@@ -2726,6 +2634,10 @@ body.adm-active { overflow: hidden !important; }
 </div><!-- /.adm-root-view -->
 
 
+<!-- D-1 진입 직전 신설 — admin_v2 전용 데이터 fetch/render JS (다른 페이지 영향 0)
+     ※ path는 app.html(루트) 기준. admin.html stub이 src 분기 처리 (5/3 D-1 5a) -->
+<script src="js/admin_v2.js"></script>
+
 <script>
 (function () {
   // ── 진입 시점: stub의 fetch가 IIFE 안에서 이 스크립트를 실행 ───────────
@@ -2798,6 +2710,11 @@ body.adm-active { overflow: hidden !important; }
 
     // URL hash 업데이트 (안전장치 #3)
     try { history.replaceState(null, '', '#admin/' + viewKey); } catch(e) {}
+
+    // Phase D 진입 분기 — view별 데이터 로드 (admin_v2.js 정의 함수 호출, race-safe 가드)
+    if (viewKey === 'users' && typeof window.admLoadUsers === 'function') {
+      window.admLoadUsers();
+    }
   };
 
   // ── 톤 전환 (영구 운영 기능 — 5종: light/warm/slate/black/navy) ───────

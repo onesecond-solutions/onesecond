@@ -75,7 +75,11 @@
       root.querySelectorAll('script').forEach(function (oldScript) {
         try {
           var newScript = document.createElement('script');
-          newScript.textContent = '(function(){\n' + oldScript.textContent + '\n})();';
+          if (oldScript.src) {
+            newScript.src = oldScript.src;
+          } else {
+            newScript.textContent = '(function(){\n' + oldScript.textContent + '\n})();';
+          }
           document.body.appendChild(newScript);
           document.body.removeChild(newScript);
         } catch (e) { console.error('[admin stub] script exec error:', e); }
