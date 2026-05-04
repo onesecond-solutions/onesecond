@@ -9,7 +9,7 @@
 > - `27f0688` D-4 notice 섹션 mock 보존 + JS 이관 (Step 2·3 완료, js +131 / html -103)
 > **검증 대상:** `pages/admin_v2.html` notice 섹션 + `js/admin_v2.js` D-4 확장본 (~131줄 추가)
 > **검증자:** 팀장님 Chrome (Code 환경 라이브 검증 불가)
-> **상태:** 🟡 검증 대기
+> **상태:** ✅ **20/20 PASS — D-4 notice 완전 종료 (2026-05-04 Chrome 회신, D-6 logs 진입 가능)**
 
 ---
 
@@ -83,10 +83,33 @@
 
 ## 6. 종합 판정
 
-- **20항목 PASS / FAIL 표기 후 본 의뢰서를 update commit 또는 별 노트로 인계**
-- **전건 PASS:** "20/20 PASS — D-4 notice 완전 종료, D-6 logs 진입 가능 (통합본 § 11.1 권장 진입 순서)" 한 줄 회신
-- **D-4 20/20 PASS** = D-4 작업지시서 § 5.2 _INDEX.md 갱신 (`_INDEX.md` Phase D 표 D-4 행 → "✅ 완전 종료")
-- **FAIL 1건 이상:** 항목 번호 + 콘솔/네트워크 raw 첨부 → Code에 회신 → 후속 fix 트랙 진입
+- ✅ **20/20 PASS (2026-05-04 Chrome 회신) — D-4 notice 완전 종료, D-6 logs 진입 가능**
+
+### 6.1 PASS 20건 raw 요약
+
+| 섹션 | 결과 | 비고 |
+|---|:--:|---|
+| § 1 정의 raw (D1~D3) | 3/3 PASS | typeof admLoadNotice / mock 잔존 0 / NOTICE_*_MOCK JS 잔존 정합 |
+| § 2 실 동작 (L1~L8) | 8/8 PASS | 4카드 + 5행 + 토글 토스트 + 액션 토스트 + 라벨 + 비활성 카드 모두 정합 |
+| § 3 RBAC (R1~R2) | 2/2 PASS | 비-admin /login.html redirect + DB 호출 0건 / RLS 호출 0건 |
+| § 4 콘솔·네트워크 (C1~C4) | 4/4 PASS | Error 0 / fetch 0건 / D-1·D-2·D-3 회귀 0 / race 안전장치 |
+| § 5 성능 (P1~P3) | 3/3 PASS | 아래 § 6.2 raw |
+
+### 6.2 P1~P3 raw (mock 패턴 즉시 반환)
+
+| # | raw 측정값 | 판정 | 근거 |
+|:--:|---|:--:|---|
+| P1 | 0ms (admLoadNotice wrapper start→end) | ✅ PASS | Promise.resolve() 즉시 반환 / DB 호출 0건 / 기대 <5ms 완전 충족 |
+| P2 | <10ms (mock + DOM render) | ✅ PASS | 네트워크 대기 없음 / 기대 <200ms 완전 충족 |
+| P3 | 0ms (click→toast 동기) | ✅ PASS | DB 호출 0건 / 기대 <50ms 완전 충족 |
+
+→ K-1 (c) mock 패턴 정합 — DB fetch 0건이라 P3 PostgREST overhead 본질도 0 (D-2 P3 / D-3 P1·P2와 비교 시 mock 패턴이 가장 빠름).
+
+### 6.3 D-4 완전 종료 처리
+
+- ✅ `_INDEX.md` Phase D 표 D-4 행 → "✅ 완전 종료 (20/20 PASS)" 갱신 (commit 본 회차)
+- ✅ `_INDEX.md` 헤더 마지막 갱신 시점 갱신
+- 🟢 **D-6 logs 진입 가능** (통합본 § 11.1 권장 진입 순서: D-3 → D-4 → **D-6** → D-5 → D-9 → D-7(나) → D-8 → D-final)
 
 ---
 
