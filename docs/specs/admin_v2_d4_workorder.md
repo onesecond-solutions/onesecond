@@ -37,7 +37,7 @@ admin_v2.html `notice` 섹션의 Phase C mock(활성 카드 4 + 작성 이력 5)
 
 | # | 결정 | 채택 | 영향 |
 |:--:|---|---|---|
-| **K-1** ⭐ | 데이터 테이블 결정 | (a) app_settings 통합 — `group_name='notice'/'banner'` 패턴 | **DB 변경 0건** (board.html 라인 1260 패턴 정합) |
+| **K-1** ⭐ | 데이터 테이블 결정 | **(c) v2.0 대기 + mock 보존** (D-3 J-2 (b) 패턴 정합) — **5/4 재결재** | DB 변경 0건 + JS 측 NOTICE_*_MOCK 배열 + admin_v2.html mock 라벨만 동적. 사전 검증 raw 분석 결과 app_settings 컬럼 부재(role/expires_at/view_count)로 mock 풍부 메타데이터 표시 불가 → (a) → (c) 분기 |
 | **K-2** | 노출 기간 default | (b) 1주 | 새 공지 작성 시 default 7일 |
 | **K-3** | role 분기 표시 | (b) enum 5종 (전체/FREE/GA/원수사/매니저 이상) | mock 자유 텍스트 → enum 매핑 코드 |
 | **K-4** | 토글 즉시 반영 | (a) 즉시 PATCH | 토글 클릭 → app_settings UPDATE 1회 |
@@ -59,20 +59,22 @@ admin_v2.html `notice` 섹션의 Phase C mock(활성 카드 4 + 작성 이력 5)
 
 ---
 
-## 2. 변경 범위 (3파일, K-1 (a) 채택으로 DB 0건)
+## 2. 변경 범위 (3파일, K-1 (c) 채택으로 DB 0건 + mock 보존)
 
 | 파일 | 변경 유형 | 라인 |
 |---|---|---|
-| `js/admin_v2.js` | UPDATE — notice 섹션 함수 4~5종 추가 | 끝부분 +150~200줄 |
-| `pages/admin_v2.html` | UPDATE — notice mock 제거 + 슬롯 ID 부여 + 라벨 갱신 | 라인 2025~2156 (~130줄 영향) |
-| Supabase DB | **변경 0건** — app_settings 정합 (board.html 패턴 재활용) + RLS 회귀 검증만 | 0 |
+| `js/admin_v2.js` | UPDATE — D-3 J-2 (b) 패턴 — NOTICE_ACTIVE_MOCK + NOTICE_HISTORY_MOCK + render 함수 + 토글 핸들러 | 끝부분 +120~160줄 (D-3 BOARD_REPORTS_MOCK 패턴 정합) |
+| `pages/admin_v2.html` | UPDATE — notice mock 정적 → JS 측 이관 + 슬롯 ID + 라벨 갱신 (`[Phase C mock]` → `[v1.1 mock + v2.0 대기]`) | 라인 1960~2092 (~130줄 영향) |
+| Supabase DB | **변경 0건** — app_settings 컬럼 부재로 K-1 (c) 채택. RLS 회귀 검증은 본 D-4 외 (별도 청산 완료 — `admin write app_settings` 정책 `is_admin()` 통일) | 0 |
 | 라이브 회귀 의뢰서 | 신설 — `docs/specs/admin_v2_d4_live_regression_<date>.md` | ~20항목 |
 
 **제외 (D-4 범위 외):**
+- notices/banners 테이블 신설 (K-1 (c) v2.0 대기) — v2.0 (보험사 입점·CS 영업 시점)
 - 신규 공지 작성 form (K-5 (b) Phase E)
 - 조회수 표시 (K-6 (b) 별 트랙)
 - 자동 만료 알림 — 별 트랙
 - D-9 ⚙️ 화면설정 섹션의 배너 이미지 (별 단계 D-9에서 처리)
+- 토글 즉시 PATCH 실작동 (K-4 (a) 결재는 v2.0 시점 적용 — D-4에서는 mock key/userId null로 토스트 즉시 표시, D-3 J-2 (b) 패턴 정합)
 
 ---
 
@@ -131,37 +133,38 @@ ORDER BY cmd, policyname;
 
 → ① ⑥ FAIL 시 D-4 진입 차단. ② ~ ⑤ FAIL 시 결정 분기 (예: ③ 1행 이상 = 기존 데이터 정리 필요).
 
-### Step 2 — js/admin_v2.js 확장 (D-2/D-3 패턴, ~150~200줄)
+### Step 2 — js/admin_v2.js 확장 (D-3 J-2 (b) 패턴 정합, ~120~160줄)
 
-#### 2-1. 추가 함수 5종
+#### 2-1. mock 배열 + 함수
 
-| 함수 | 시그니처 | 데이터 소스 |
+| 함수 | 시그니처 | 정합 (K-1 (c) v2.0 대기) |
 |---|---|---|
-| `fetchNoticeActiveCards()` | `→ Promise<Array<4행>>` | `app_settings?group_name=eq.notice&select=key,value,label,updated_at` (활성 4개 토글 raw) |
-| `fetchNoticeHistory(limit)` | `→ Promise<Array<5행>>` | `app_settings?group_name=eq.notice&select=*&order=updated_at.desc&limit=5` (작성 이력) |
-| `handleNoticeToggle(key, isActive)` | `→ Promise<boolean>` | `app_settings?key=eq.{X}` PATCH `{value: 'true'/'false'}` (K-4 (a) 즉시 PATCH) |
-| `mapRoleEnum(roleText)` | `→ string` | K-3 enum 5종 매핑 — 자유 텍스트 → '전체'/'FREE'/'GA'/'원수사'/'매니저 이상' |
-| `formatExpiry(updatedAt, periodDays)` | `→ string` | K-2 (b) 1주 default — 만료 D-N 표시 |
+| `NOTICE_ACTIVE_MOCK` (배열) | 4행 — admin_v2.html 라인 1973~2023 raw 그대로 (제목/유형/대상/노출/조회수) | D-3 BOARD_REPORTS_MOCK 패턴 정합 |
+| `NOTICE_HISTORY_MOCK` (배열) | 5행 — admin_v2.html 라인 2041~2086 raw 그대로 (유형/제목/role/작성자/상태/노출 기간) | 동일 |
+| `fetchNoticeActiveMock()` | `→ Promise<Array<4행 mock>>` | mock 그대로 반환 |
+| `fetchNoticeHistoryMock()` | `→ Promise<Array<5행 mock>>` | mock 그대로 반환 |
+| `handleNoticeToggle(key)` | `→ Promise<boolean>` | key null이면 "v2.0 대기 mock — notices 테이블 신설 후 작동" 토스트 (D-3 patterns) |
+| `handleNoticeAction(action, id)` | `→ Promise<boolean>` | 동일 토스트 패턴 (👁️ 상세 / ✏️ 편집) |
 
 #### 2-2. render 함수 3종
 
 | 함수 | 슬롯 ID | 정합 |
 |---|---|---|
-| `renderNoticeActiveCards(cards)` | `adm-notice-active-grid` | 4행 카드 + 토글 스위치 (체크박스) + role 분기 라벨 + 만료일 |
-| `renderNoticeHistory(rows)` | `adm-notice-history-tbody` | 5행 테이블 + 액션 버튼 (편집/삭제 — Phase E 위임 토스트) |
-| `attachNoticeToggleEvents()` | (이벤트 위임) | `data-notice-key` 토글 변경 → `handleNoticeToggle` 호출 |
+| `renderNoticeActiveCards(cards)` | `adm-notice-active-grid` (admin_v2.html `.adm-notice-grid` host) | 4행 카드 정적 mock 그대로 + 토글 스위치 (data-notice-key=null) |
+| `renderNoticeHistory(rows)` | `adm-notice-history-tbody` (admin_v2.html `.adm-table tbody` host) | 5행 테이블 정적 mock 그대로 + 액션 버튼 (data-notice-id=null) |
+| `attachNoticeActions()` | (이벤트 위임) | 토글 + 액션 버튼 클릭 → handle* 토스트 |
 
 #### 2-3. 진입점
 
 ```js
 window.admLoadNotice = async function () {
   var [active, history] = await Promise.all([
-    fetchNoticeActiveCards(), fetchNoticeHistory(5)
+    fetchNoticeActiveMock(), fetchNoticeHistoryMock()
   ]);
   if (!document.querySelector('.adm-view[data-view="notice"].active')) return;
   if (active)  renderNoticeActiveCards(active);
   if (history) renderNoticeHistory(history);
-  attachNoticeToggleEvents();
+  attachNoticeActions();
 };
 ```
 
@@ -196,11 +199,13 @@ window.admLoadNotice = async function () {
 
 | # | 항목 | 권장 처리 |
 |:--:|---|---|
-| 1 | 신규 공지 작성 form (K-5 (b) Phase E) | Phase E |
-| 2 | 조회수 표시 (K-6 (b) 별 트랙) | view_count 신설 별 트랙 |
-| 3 | 자동 만료 알림 (K-2 (b) 1주 default 만료 시) | 별 트랙 (Sentry/Slack hook) |
-| 4 | 노출 통계 — admin이 활성 카드별 클릭 수 확인 | Phase E (D-5 analytics와 묶음) |
-| 5 | 배너 이미지 — 본 D-4는 텍스트 공지만 / 배너는 D-9 ⚙️ 화면설정 섹션 4 처리 | D-9 진입 시 |
+| 1 | **notices/banners 테이블 신설 + RLS 4건** (K-1 (c) v2.0 대기) | v2.0 (보험사 입점·CS 영업 시점) |
+| 2 | 신규 공지 작성 form (K-5 (b) Phase E) | Phase E (notices 테이블 신설 후) |
+| 3 | 조회수 표시 (K-6 (b) 별 트랙) | view_count 컬럼 신설 별 트랙 (notices 테이블 신설 후) |
+| 4 | 자동 만료 알림 (K-2 (b) 1주 default 만료 시) | 별 트랙 (Sentry/Slack hook) |
+| 5 | 노출 통계 — admin이 활성 카드별 클릭 수 확인 | Phase E (D-5 analytics와 묶음) |
+| 6 | 배너 이미지 — 본 D-4는 텍스트 공지만 / 배너는 D-9 ⚙️ 화면설정 섹션 4 처리 | D-9 진입 시 |
+| 7 | ✅ **app_settings RLS `admin write app_settings` 정책 청산** (D-pre.8 sweep 누락 보강) — 5/4 D-4 Step 1 ⑥ FAIL 발견 → 즉시 청산 (DDL 1쌍, 인라인 EXISTS → `is_admin()` 통일) | 청산 완료 (capture mini-doc 보류 — 본 commit에 통합 기록) |
 
 #### 5-2. _INDEX.md 갱신 (Step 4 PASS 회신 후)
 

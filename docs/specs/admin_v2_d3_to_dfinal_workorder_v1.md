@@ -247,14 +247,14 @@
 
 | # | 결정 후보 | 채택 | 옵션 (참고) |
 |:--:|---|---|---|
-| **K-1** ⭐ | 데이터 테이블 결정 | ✅ **(a) app_settings 통합** (`group_name='notice'/'banner'`) — DB 변경 0건 | (b) notices/banners 신설 (DB 1테이블 + RLS 4건) / (c) v2.0 대기 + mock 보존 |
+| **K-1** ⭐ | 데이터 테이블 결정 | ✅ **(c) v2.0 대기 + mock 보존** (D-3 J-2 (b) 패턴 정합) — DB 변경 0건. **5/4 재결재** — 사전 검증 ② ③ raw에서 app_settings 컬럼 부재(role/expires_at/view_count) 발견 → mock 풍부 메타데이터 표시 불가 → (a) → (c) 분기 | (a) app_settings 통합 (제한적 표시 — role/expires_at/view_count 부재) / (b) notices/banners 신설 (DB 1~2테이블 + RLS 4건) |
 | **K-2** | 노출 기간 default | ✅ **(b) 1주** | (a) 영구 / (c) 사용자 입력 필수 |
 | **K-3** | role 분기 표시 | ✅ **(b) enum 5종** (전체/FREE/GA/원수사/매니저 이상) | (a) 자유 텍스트 |
 | **K-4** | 토글 즉시 반영 | ✅ **(a) 즉시 PATCH** | (b) 배치 (저장 버튼) |
 | **K-5** | 신규 공지 작성 form | ✅ **(b) Phase E** | (a) D-4 범위 |
 | **K-6** | 조회수 표시 | ✅ **(b) 별 트랙** | (a) view_count 신설 |
 
-**결재 영향 정합:** K-1 (a) 채택으로 DB 변경 0건 → Step 분할 5단계 표준 (D-2·D-3 패턴) + 라이브 회귀 ~20항목 + 잔여 견적 0.8~1.0세션. D-4 작업지시서 본 발행 — `docs/specs/admin_v2_d4_workorder.md`.
+**결재 영향 정합:** K-1 (c) 채택으로 DB 변경 0건 + JS 측 NOTICE_*_MOCK 배열 보존 (D-3 BOARD_REPORTS_MOCK 패턴 정합) + admin_v2.html mock JS로 이관 + 라벨만 동적 (`[Phase C mock]` → `[v1.1 mock + v2.0 대기]`). 잔여 견적 0.3~0.5세션 (D-3 J-2 (b)와 정확히 동일 패턴). D-4 작업지시서 본 발행 — `docs/specs/admin_v2_d4_workorder.md`.
 
 ### 3.6 Step 분할 (5단계 — K-1 (a) 채택 시 DB 변경 0건)
 ### 3.7 라이브 회귀 항목 추정 (~20항목 — D-3보다 가벼움)
