@@ -1962,7 +1962,7 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-section-head">
         <div>
           <div class="adm-section-title">공지·배너</div>
-          <div class="adm-section-desc">전역 공지 · 페이지 배너 · 노출 기간 · 대상 role 분기. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+          <div class="adm-section-desc">전역 공지 · 페이지 배너 · 노출 기간 · 대상 role 분기. <span style="color:var(--color-accent);font-weight:700;">[v1.1 mock + v2.0 대기 — notices 테이블 신설 후]</span></div>
         </div>
         <div class="adm-page-actions">
           <button class="adm-btn adm-btn-ghost">📢 새 공지</button>
@@ -1970,64 +1970,15 @@ body.adm-active { overflow: hidden !important; }
         </div>
       </div>
 
-      <!-- 활성 공지·배너 카드 4개 -->
-      <div class="adm-notice-grid">
-        <div class="adm-notice-card">
-          <div class="head">
-            <div class="type">🟢 활성 · 공지</div>
-            <div class="toggle"></div>
-          </div>
-          <div class="title">2026 5월 정기 업데이트 안내 — 어드민 콘솔 v2 정식 오픈</div>
-          <div class="meta">
-            <span>대상: <strong>전체 사용자</strong></span>
-            <span>노출: <strong>2026-05-01 ~ 05-15</strong></span>
-            <span>조회: <strong>847</strong></span>
-          </div>
-        </div>
-        <div class="adm-notice-card">
-          <div class="head">
-            <div class="type">🟢 활성 · 배너</div>
-            <div class="toggle"></div>
-          </div>
-          <div class="title">PRO 플랜 5월 한정 — 첫 달 50% 할인 (₩9,900 → ₩4,950)</div>
-          <div class="meta">
-            <span>대상: <strong>FREE 사용자</strong></span>
-            <span>노출: <strong>홈 / 마이스페이스 상단</strong></span>
-            <span>전환: <strong>23명</strong></span>
-          </div>
-        </div>
-        <div class="adm-notice-card">
-          <div class="head">
-            <div class="type">🟢 활성 · 공지</div>
-            <div class="toggle"></div>
-          </div>
-          <div class="title">함께해요 게시판 가이드 — 광고·홍보 게시 금지 안내</div>
-          <div class="meta">
-            <span>대상: <strong>GA · 원수사</strong></span>
-            <span>노출: <strong>2026-04-20 ~ 상시</strong></span>
-            <span>조회: <strong>421</strong></span>
-          </div>
-        </div>
-        <div class="adm-notice-card off">
-          <div class="head">
-            <div class="type" style="color: var(--admin-text-tertiary);">⚪ 비활성 · 배너</div>
-            <div class="toggle"></div>
-          </div>
-          <div class="title">[종료] 2026 4월 보장분석 표준 양식 v3.2 배포</div>
-          <div class="meta">
-            <span>대상: <strong>GA 매니저 이상</strong></span>
-            <span>노출 종료: <strong>2026-04-30</strong></span>
-            <span>조회: <strong>1,284</strong></span>
-          </div>
-        </div>
-      </div>
+      <!-- 활성 공지·배너 카드 (K-1 (c) v2.0 대기 — JS NOTICE_ACTIVE_MOCK 보존) -->
+      <div class="adm-notice-grid"></div>
 
-      <!-- 작성 이력 테이블 5행 -->
+      <!-- 작성 이력 테이블 (K-1 (c) v2.0 대기 — JS NOTICE_HISTORY_MOCK 보존) -->
       <div class="adm-panel">
         <div class="adm-panel-head">
           <div>
             <div class="adm-panel-title">작성 이력</div>
-            <div class="adm-panel-meta">최근 작성 5건 · 활성 4 / 비활성 1</div>
+            <div class="adm-panel-meta">[v2.0 대기 — notices 테이블 신설 후 실 데이터] · 5건 mock</div>
           </div>
           <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">전체 보기 →</button>
         </div>
@@ -2038,53 +1989,7 @@ body.adm-active { overflow: hidden !important; }
                 <th>유형</th><th>제목</th><th>대상 role</th><th>작성자</th><th>상태</th><th>노출 기간</th><th></th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">공지</span></td>
-                <td><strong>2026 5월 정기 업데이트 — admin v2 정식 오픈</strong></td>
-                <td>전체</td>
-                <td>임태성</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>05-01 ~ 05-15</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge" style="background:var(--admin-warning-bg); color:var(--color-warning);">배너</span></td>
-                <td><strong>PRO 첫 달 50% 할인 캠페인</strong></td>
-                <td>FREE 사용자</td>
-                <td>임태성</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>05-01 ~ 05-31</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">공지</span></td>
-                <td><strong>함께해요 게시판 가이드 — 광고·홍보 금지</strong></td>
-                <td>GA · 원수사</td>
-                <td>임태성</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>04-20 ~ 상시</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge" style="background:var(--admin-warning-bg); color:var(--color-warning);">배너</span></td>
-                <td><strong>2026 4월 보장분석 표준 양식 v3.2 배포</strong></td>
-                <td>GA 매니저 이상</td>
-                <td>김지훈</td>
-                <td><span class="adm-badge status-suspended">종료</span></td>
-                <td>04-15 ~ 04-30</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge" style="background:var(--admin-info-bg); color:var(--color-info);">공지</span></td>
-                <td><strong>2026 Q1 시스템 점검 사전 안내</strong></td>
-                <td>전체</td>
-                <td>임태성</td>
-                <td><span class="adm-badge status-active">활성</span></td>
-                <td>03-25 ~ 04-01</td>
-                <td><div class="row-actions"><button title="상세">👁️</button><button title="편집">✏️</button></div></td>
-              </tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
@@ -2556,6 +2461,8 @@ body.adm-active { overflow: hidden !important; }
       window.admLoadContent();
     } else if (viewKey === 'board' && typeof window.admLoadBoard === 'function') {
       window.admLoadBoard();
+    } else if (viewKey === 'notice' && typeof window.admLoadNotice === 'function') {
+      window.admLoadNotice();
     }
   };
 

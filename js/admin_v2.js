@@ -886,14 +886,141 @@
     attachReportActions();
   };
 
-  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3 통합)
-  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
+  // ════════════════════════════════════════════════════════════════════════
+  // D-4 notice — v2.0 대기 + mock 보존 (D-3 J-2 (b) 패턴 정합) (2026-05-04 신설)
+  // 작업지시서: docs/specs/admin_v2_d4_workorder.md (commit 16cbdbc)
+  // 결재: K-1(c) v2.0 대기 + mock 보존 (5/4 재결재 — app_settings 컬럼 부재 발견)
+  //       K-2(b) 노출 1주 / K-3(b) role enum 5종 / K-4(a) 즉시 PATCH (v2.0 시점 적용)
+  //       K-5(b) 작성 form Phase E / K-6(b) 조회수 별 트랙
+  // 사전 검증: D-4 Step 1 5/6 PASS + ⑥ FAIL 청산 (app_settings RLS is_admin() 통일)
+  // ════════════════════════════════════════════════════════════════════════
+
+  // ── K-1 (c) v2.0 대기 — 활성 카드 4행 mock 보존 ────────────────────────
+  var NOTICE_ACTIVE_MOCK = [
+    { id: null, type: '공지', isActive: true,  isBanner: false, title: '2026 5월 정기 업데이트 안내 — 어드민 콘솔 v2 정식 오픈',         target: '전체 사용자',     period: '2026-05-01 ~ 05-15',     metric: '조회 847' },
+    { id: null, type: '배너', isActive: true,  isBanner: true,  title: 'PRO 플랜 5월 한정 — 첫 달 50% 할인 (₩9,900 → ₩4,950)',           target: 'FREE 사용자',     period: '홈 / 마이스페이스 상단', metric: '전환 23명' },
+    { id: null, type: '공지', isActive: true,  isBanner: false, title: '함께해요 게시판 가이드 — 광고·홍보 게시 금지 안내',                target: 'GA · 원수사',     period: '2026-04-20 ~ 상시',      metric: '조회 421' },
+    { id: null, type: '배너', isActive: false, isBanner: true,  title: '[종료] 2026 4월 보장분석 표준 양식 v3.2 배포',                    target: 'GA 매니저 이상',  period: '노출 종료 2026-04-30',   metric: '조회 1,284' }
+  ];
+
+  // ── K-1 (c) v2.0 대기 — 작성 이력 5행 mock 보존 ────────────────────────
+  var NOTICE_HISTORY_MOCK = [
+    { id: null, isBanner: false, title: '2026 5월 정기 업데이트 — admin v2 정식 오픈', target: '전체',        author: '임태성', isActive: true,  status: '활성', period: '05-01 ~ 05-15' },
+    { id: null, isBanner: true,  title: 'PRO 첫 달 50% 할인 캠페인',                  target: 'FREE 사용자', author: '임태성', isActive: true,  status: '활성', period: '05-01 ~ 05-31' },
+    { id: null, isBanner: false, title: '함께해요 게시판 가이드 — 광고·홍보 금지',     target: 'GA · 원수사', author: '임태성', isActive: true,  status: '활성', period: '04-20 ~ 상시' },
+    { id: null, isBanner: true,  title: '2026 4월 보장분석 표준 양식 v3.2 배포',       target: 'GA 매니저 이상', author: '김지훈', isActive: false, status: '종료', period: '04-15 ~ 04-30' },
+    { id: null, isBanner: false, title: '2026 Q1 시스템 점검 사전 안내',              target: '전체',        author: '임태성', isActive: true,  status: '활성', period: '03-25 ~ 04-01' }
+  ];
+
+  // ── J-2 (b) 패턴 — mock 즉시 반환 ──────────────────────────────────────
+  function fetchNoticeActiveMock()  { return Promise.resolve(NOTICE_ACTIVE_MOCK); }
+  function fetchNoticeHistoryMock() { return Promise.resolve(NOTICE_HISTORY_MOCK); }
+
+  // ── K-1 (c) v2.0 대기 — 토글/액션 핸들러 (id null이라 토스트 즉시) ─────
+  function handleNoticeToggle(id, isActive) {
+    if (!id) {
+      showAdminToast('K-1 (c) v2.0 대기 mock — notices 테이블 신설 후 작동', 'warning');
+      return Promise.resolve(false);
+    }
+    return Promise.resolve(false);
+  }
+
+  function handleNoticeAction(action, id) {
+    if (!id) {
+      showAdminToast(action + ' — K-1 (c) v2.0 대기 mock (notices 테이블 신설 후)', 'warning');
+      return false;
+    }
+    return false;
+  }
+
+  // ── render: 활성 카드 4 (mock 그대로 + 토글 스위치) ───────────────────
+  function renderNoticeActiveCards(cards) {
+    var grid = document.querySelector('.adm-view[data-view="notice"] .adm-notice-grid');
+    if (!grid || !cards) return;
+    grid.innerHTML = cards.map(function (c) {
+      var typeColor = c.isActive ? '🟢 활성' : '⚪ 비활성';
+      var typeStyle = c.isActive ? '' : ' style="color: var(--admin-text-tertiary);"';
+      return ''
+        + '<div class="adm-notice-card' + (c.isActive ? '' : ' off') + '">'
+        +   '<div class="head">'
+        +     '<div class="type"' + typeStyle + '>' + typeColor + ' · ' + c.type + '</div>'
+        +     '<div class="toggle"><input type="checkbox" data-notice-toggle="' + (c.id || '') + '"' + (c.isActive ? ' checked' : '') + '></div>'
+        +   '</div>'
+        +   '<div class="title">' + c.title + '</div>'
+        +   '<div class="meta">'
+        +     '<span>대상: <strong>' + c.target + '</strong></span>'
+        +     '<span>노출: <strong>' + c.period + '</strong></span>'
+        +     '<span>' + c.metric + '</span>'
+        +   '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ── render: 작성 이력 테이블 5행 (mock 그대로) ─────────────────────────
+  function renderNoticeHistory(rows) {
+    var tbody = document.querySelector('.adm-view[data-view="notice"] .adm-table tbody');
+    if (!tbody || !rows) return;
+    tbody.innerHTML = rows.map(function (r) {
+      var typeBg    = r.isBanner ? 'var(--admin-warning-bg)' : 'var(--admin-info-bg)';
+      var typeFg    = r.isBanner ? 'var(--color-warning)'    : 'var(--color-info)';
+      var typeLabel = r.isBanner ? '배너' : '공지';
+      var statusCls = r.isActive ? 'status-active' : 'status-suspended';
+      return ''
+        + '<tr>'
+        +   '<td><span class="adm-badge" style="background:' + typeBg + '; color:' + typeFg + ';">' + typeLabel + '</span></td>'
+        +   '<td><strong>' + r.title + '</strong></td>'
+        +   '<td>' + r.target + '</td>'
+        +   '<td>' + r.author + '</td>'
+        +   '<td><span class="adm-badge ' + statusCls + '">' + r.status + '</span></td>'
+        +   '<td>' + r.period + '</td>'
+        +   '<td><div class="row-actions">'
+        +     '<button title="상세" data-notice-action="detail" data-notice-id="' + (r.id || '') + '">👁️</button>'
+        +     '<button title="편집" data-notice-action="edit"   data-notice-id="' + (r.id || '') + '">✏️</button>'
+        +   '</div></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  // ── attach: 토글 + 액션 버튼 이벤트 위임 ──────────────────────────────
+  function attachNoticeActions() {
+    var view = document.querySelector('.adm-view[data-view="notice"]');
+    if (!view || view.dataset.noticeAttached) return;
+    view.dataset.noticeAttached = '1';
+    view.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-notice-action]');
+      if (!btn) return;
+      handleNoticeAction(btn.dataset.noticeAction, btn.dataset.noticeId || null);
+    });
+    view.addEventListener('change', function (e) {
+      var input = e.target.closest('input[data-notice-toggle]');
+      if (!input) return;
+      handleNoticeToggle(input.dataset.noticeToggle || null, input.checked).then(function (ok) {
+        if (!ok) input.checked = !input.checked;
+      });
+    });
+  }
+
+  // ── 진입점 (admin_v2 notice 뷰 활성화 시 호출) ────────────────────────
+  window.admLoadNotice = async function () {
+    var [active, history] = await Promise.all([
+      fetchNoticeActiveMock(), fetchNoticeHistoryMock()
+    ]);
+    if (!document.querySelector('.adm-view[data-view="notice"].active')) return;
+    if (active)  renderNoticeActiveCards(active);
+    if (history) renderNoticeHistory(history);
+    attachNoticeActions();
+  };
+
+  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3·D-4 통합)
+  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 또는 #admin/notice 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
   if (document.querySelector('.adm-view[data-view="users"].active')) {
     window.admLoadUsers();
   } else if (document.querySelector('.adm-view[data-view="content"].active')) {
     window.admLoadContent();
   } else if (document.querySelector('.adm-view[data-view="board"].active')) {
     window.admLoadBoard();
+  } else if (document.querySelector('.adm-view[data-view="notice"].active')) {
+    window.admLoadNotice();
   }
 
 })();
