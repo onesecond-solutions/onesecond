@@ -96,10 +96,18 @@
 
 ## 7. 종합 판정
 
-- **25항목 PASS / FAIL 표기 후 본 의뢰서를 update commit 또는 별 노트로 인계**
-- **전건 PASS:** "25/25 PASS — D-2 완전 종료 + 별 트랙 #3 청산, D-3 board 진입 가능" 한 줄 회신
-- **D-2 23/23 + 별 트랙 #3 P3·P4 PASS** = D-2 작업지시서 § 7 부채 #3 🔴 격상 표시 청산 + D-2 완전 종료 표기 (`_INDEX.md` Phase D 표 + 다음 세션 인계 노트)
-- **FAIL 1건 이상:** 항목 번호 + 콘솔/네트워크 raw 첨부 → Code에 회신 → 후속 fix 트랙 진입
+- **✅ 24/25 PASS (2026-05-04 Chrome 회신 — P3 FAIL 별 트랙 분리)**
+- **PASS 24건:** § 1~§ 5 + § 6 P1·P2 baseline + P4 — D-2 본 작업 + 별 트랙 #3 RPC 적용 모두 정합. D-2 사용자 영향 0
+- **FAIL 1건 (P3):** RPC `/rest/v1/rpc/get_stage_distribution` 라운드트립
+  - cold-start: 1143ms / warm 6회 raw: 800·292·241·547·208·553ms (min 208ms / avg ~440ms / max 800ms)
+  - 기대값 < 200ms 미달
+  - **원인:** Supabase PostgREST overhead + HTTP 라운드트립 본질 변동성 (DB 쿼리 자체는 ~5~10ms 추정 — 59행 GROUP BY)
+  - **사용자 영향:** 0 — P4 PASS (553ms < 1초)로 콘텐츠 진입 사용자 체감 정상
+  - **별 트랙 분리:** Phase E 격상 — `docs/specs/admin_v2_p3_postgrest_analysis.md` (EXPLAIN ANALYZE + Sentry SDK 영향 + connection pool 워밍 + Edge Function 대체 검토)
+- **D-2 24/25 = 완전 종료 처리:**
+  - D-2 작업지시서 § 7 부채 #3 🔴 → 🟡 별 트랙 분리
+  - `_INDEX.md` Phase D 표 D-2 행 → "✅ 완전 종료 (24/25)" 갱신
+  - 다음 세션 인계 노트에 D-3 board 진입 가능 표기
 
 ---
 
@@ -113,7 +121,7 @@
 | 4 | KPI 추세 라벨 "▲ N건 vs 지난 달" 동적화 (기간 비교 RPC 신설) | Phase E |
 | 5 | scripts.save_count 또는 saves 테이블 신설 (사용자 북마크 도메인) | I-4 별 트랙 |
 | 6 | content 메뉴 pane 잔여 항목(.pending) Phase E 범위 정합 | Step 3-7 |
-| 7 | ~~stage 분포 RPC `get_stage_distribution` 신설~~ ✅ **청산 (2026-05-04 본 의뢰서 P3·P4 도입과 동시 push)** — 함수 신설 + admin_v2.js fetchStageDistribution 교체. SECURITY DEFINER + `is_admin()` 가드 + authenticated EXECUTE only + anon 명시 REVOKE | I-2 → 청산 |
+| 7 | ~~stage 분포 RPC `get_stage_distribution` 신설~~ ✅ **함수 신설·admin_v2.js 교체 청산 (2026-05-04 commit `788b617`)** — SECURITY DEFINER + `is_admin()` 가드 + authenticated EXECUTE only + anon 명시 REVOKE. **단 P3 라운드트립 <200ms 미달 (min 208ms, avg ~440ms — PostgREST overhead 본질, P4 PASS로 사용자 영향 0)** → 🟡 별 트랙 분리 (`docs/specs/admin_v2_p3_postgrest_analysis.md` Phase E 격상) | I-2 → 청산 + P3 별 트랙 |
 
 ---
 

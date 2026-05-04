@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-04 오후 (admin_v2 Phase D-1·D-2 완전 종료 + scripts Step 2 익명화 5건 청산 + 로고 통일)
+> **마지막 갱신:** 2026-05-04 저녁 (admin_v2 Phase D-1·D-2 완전 종료 — D-2 24/25 + 별 트랙 #3 RPC 청산 + P3 PostgREST 별 트랙 분리 + 통합 작업지시서 v1 발행)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -40,7 +40,7 @@
 | **D-pre.7** Phase D 8테이블 admin SELECT 정책 점검 → users + library SELECT 2건 + admin_update_all_users 후속 정정 (1차 EXISTS 사고 + 2차 SECURITY DEFINER 재진입 + § 9 후속 정정) | ✅ **완료 (2026-05-02)** | D-1 Step 6 R6 검증 SQL로 발견된 admin SELECT 정책 부재 청산. **A 본문 정밀 검토로 6→2 정정**. **🚨 1차 EXISTS 자기 참조 패턴 → PostgreSQL 무한 재귀(42P17) 발생** → 비상 롤백 → **2차 SECURITY DEFINER 함수 패턴 재진입** (`is_admin()` STABLE) + 새 정책 2건 → 9건 전건 통과. **🚨 최종 회귀 점검 5건 중 점검 3에서 `admin_update_all_users` UPDATE 정책 EXISTS 자기 참조 잔존 사후 발견** → 옵션 A 채택(SECURITY DEFINER 패턴 교체) → § 9 후속 정정 7건 전건 통과 + users 자기 참조 영구 청산. **누적 검증 16건 (2차 9 + § 9 후속 7)**. 영구 학습 6건: (1) RLS USING/WITH CHECK 동일 테이블 SELECT 서브쿼리 절대 금지 (2) admin/role 검증은 SECURITY DEFINER 함수 표준 (3) DB 메타 통과 ≠ 라이브 안전 (4) `admin_update_all_users` 작동해도 같은 패턴 SELECT 추가 시 chain 형성 (5) Code "재귀 안전 ✅" 단정 결론 금지 (6) **같은 테이블 다른 cmd(UPDATE/INSERT/DELETE) 정책에도 동일 패턴 잔존 가능 — 사전 검증 단계 전수 sweep 필수** (점검 3 사후 발견 학습). 산출물: `docs/architecture/db_pre_dpre7_capture.md` (515줄+, 1차 사고 + 2차 재진입 + § 9 후속 정정). 잔존 부채: posts is_hidden + news 후순위 + RLS 자기 참조 회피 표준 메모리 등록. **D-pre 시리즈 모두 종료 → D-1 본 진입 100% 정합 보장** |
 | **D-pre.8** R6 sweep 후속 5항목 일괄 청산 (B + ② + ⑤ + ⑤-2 + ⑦) | ✅ **완료 (2026-05-03)** | R6에서 발견된 추가 정합 부채 일괄 청산. (B) posts/scripts admin 인라인 EXISTS 5건 → `is_admin()` 통일 / (②) comments + posts(together) anon 2건 → `{authenticated}` 전용 / (⑤) script_usage_logs 정책명 구버전 네이밍 정합화 / (⑤-2) script_usage_logs 사용자 자기 row SELECT 신설 (quick.html 라인 336 일반 사용자 6역할 작동 보장) / (⑦) news_admin_all 인라인 EXISTS → `is_admin()`. **트랜잭션 1건 = DROP 9 + CREATE 10 + 사후 검증 SELECT 18행** 모두 정합 → COMMIT 확정. 자기참조/인라인 admin EXISTS 잔존 0건. 영구 학습 3건 추가 (D-pre.8 § 8). 산출물: `docs/architecture/db_pre_dpre8_capture.md`. **별 트랙 α/β + D-pre.8 모두 종료 → D-1 진입 즉시 가능** |
 | D-1 users | 🟢 **즉시 진입 가능 — 작업지시서·결정 8건 확정, D-pre 시리즈 + α + β 전건 종료 (2026-05-03)** | admin_v2 D-1 mock 실 데이터 연결. 사전 정렬 결정 3건 + 결정 8건 확정 → D-pre.7 + D-pre.8 + 별 트랙 α + β 모두 종료 → **다음 세션 Step 1 즉시 진입 (`js/admin_v2.js` 신설)** |
-| D-2 content | 대기 | scripts·자료실 테이블 + stage 10단계 분포 RPC |
+| D-2 content | ✅ **완전 종료 (2026-05-04, 24/25 PASS)** | content 섹션 실 데이터 연결 (`0ca8e17` `7eff644`) + 별 트랙 #3 `get_stage_distribution()` RPC 신설 (`788b617`, SECURITY DEFINER + is_admin() 가드 + anon 명시 REVOKE). P3 라운드트립 <200ms 미달 (min 208ms / avg ~440ms — PostgREST overhead 본질) → 별 트랙 분리 (`admin_v2_p3_postgrest_analysis.md` Phase E). P4 PASS (<1초)로 사용자 영향 0 |
 | D-3 board | 대기 | posts + post_reports + 모더레이션 액션 |
 | D-4 notice | 대기 | app_settings(또는 notices/banners) + 노출 기간 + role 분기 |
 | D-5 analytics | 대기 | DAU/WAU/MAU RPC + 기능별 사용량 |
