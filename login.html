@@ -40,6 +40,9 @@ body {
 }
 .logo-txt { font-size:18px; font-weight:900; color:var(--brown-dark); letter-spacing:-0.5px; text-decoration:none; }
 .logo-txt span { color:var(--accent); }
+/* 2026-05-04: index.html A1 영역 로고 정합 — 텍스트 단독 → logo03.jpg + 원세컨드 병행 */
+.nav-brand { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:900; color:var(--brown-dark); letter-spacing:-0.5px; text-decoration:none; }
+.nav-brand-logo { height:28px; width:auto; display:block; flex-shrink:0; }
 
 /* ── 카드 ── */
 .login-wrap {
@@ -170,9 +173,12 @@ body {
 </head>
 <body>
 
-<!-- 상단 로고 -->
+<!-- 상단 로고 (2026-05-04: index.html A1 영역 정합 — 텍스트 단독 → logo03.jpg + 원세컨드) -->
 <div class="top-logo">
-  <a class="logo-txt" href="index.html">원세컨드 <span>1s</span></a>
+  <a class="nav-brand" href="index.html">
+    <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="nav-brand-logo">
+    <span>원세컨드</span>
+  </a>
 </div>
 
 <!-- 로그인 카드 -->
