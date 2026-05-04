@@ -1,8 +1,11 @@
-# admin_v2 D-2 라이브 회귀 검증 의뢰서 (Step 4, 23항목)
+# admin_v2 D-2 라이브 회귀 검증 의뢰서 (Step 4, 25항목 — 5/4 별 트랙 #3 RPC 청산 P3·P4 추가)
 
 > **작성일:** 2026-05-04
 > **선행 산출물:** `docs/specs/admin_v2_d2_workorder.md` § 3 Step 4
-> **선행 커밋:** `0ca8e17 feat(admin_v2): D-2 content 섹션 실 데이터 연결`
+> **선행 커밋:**
+> - `0ca8e17` D-2 content 섹션 실 데이터 연결
+> - `7eff644` D-2 회귀 D2 FAIL 청산 + § 7 부채 #3 🔴 격상
+> - **(본 회신 대상 — 5/4 별 트랙 #3 청산, 이 의뢰서와 동시 push)** `get_stage_distribution()` RPC 신설 + `js/admin_v2.js` `fetchStageDistribution()` 교체
 > **검증 대상:** `pages/admin_v2.html` content 섹션 + `js/admin_v2.js` D-2 확장본 (~281줄 추가)
 > **검증자:** 팀장님 Chrome (Code 환경 라이브 검증 불가)
 > **상태:** 🟡 검증 대기
@@ -76,21 +79,26 @@
 
 ---
 
-## 6. 성능 검증 — 2항목 (옵션)
+## 6. 성능 검증 — 4항목 (P1·P2는 RPC 미적용 baseline 보존 / P3·P4가 본 회신 대상)
+
+> **5/4 1차 회귀 결과:** P1 = 243~1022ms / P2 = >1초 → 둘 다 FAIL → 별 트랙 #3 격상 → RPC 신설 (본 의뢰서 동시 push) → P3·P4 재측정 진입.
 
 | # | 항목 | 기대값 | 결과 |
 |:--:|---|---|:--:|
-| P1 | stage 분포 fetch 라운드트립 (`/scripts?select=stage&limit=10000`) 시간 | < 200ms (59행 부담 적음) | ☐ |
-| P2 | content 섹션 진입 → 모든 데이터 표시까지 총 시간 | < 1초 | ☐ |
+| P1 | (RPC 미적용 baseline 참고용) `/scripts?select=stage&limit=10000` 라운드트립 | 5/4 회신 raw: 243~1022ms (FAIL) | ✅ baseline (재측정 불필요) |
+| P2 | (RPC 미적용 baseline) content 섹션 진입 → 표시까지 총 시간 | 5/4 회신 raw: >1초 (FAIL) | ✅ baseline (재측정 불필요) |
+| **P3** | **(RPC 적용 본 회신 대상)** `/rest/v1/rpc/get_stage_distribution` POST 라운드트립 | < 200ms (cold-start 1회 제외 안정 상태) | ☐ |
+| **P4** | **(RPC 적용 본 회신 대상)** content 섹션 진입 → 모든 데이터 표시까지 총 시간 | < 1초 | ☐ |
 
-→ 1초 이상 소요 시 별 트랙 #3 (`get_stage_distribution` RPC 신설) 우선순위 격상.
+→ P3 ≥ 200ms 또는 P4 ≥ 1초 시 Code에 raw 회신. 별 트랙 #3 청산 효과 미달이면 추가 분석 필요 (PostgREST overhead / 네트워크 지연 / Sentry 영향).
 
 ---
 
 ## 7. 종합 판정
 
-- **23항목 PASS / FAIL 표기 후 본 의뢰서를 update commit 또는 별 노트로 인계**
-- **전건 PASS:** "23/23 PASS — D-2 완전 종료, D-3 board 진입 가능" 한 줄 회신
+- **25항목 PASS / FAIL 표기 후 본 의뢰서를 update commit 또는 별 노트로 인계**
+- **전건 PASS:** "25/25 PASS — D-2 완전 종료 + 별 트랙 #3 청산, D-3 board 진입 가능" 한 줄 회신
+- **D-2 23/23 + 별 트랙 #3 P3·P4 PASS** = D-2 작업지시서 § 7 부채 #3 🔴 격상 표시 청산 + D-2 완전 종료 표기 (`_INDEX.md` Phase D 표 + 다음 세션 인계 노트)
 - **FAIL 1건 이상:** 항목 번호 + 콘솔/네트워크 raw 첨부 → Code에 회신 → 후속 fix 트랙 진입
 
 ---
@@ -105,7 +113,7 @@
 | 4 | KPI 추세 라벨 "▲ N건 vs 지난 달" 동적화 (기간 비교 RPC 신설) | Phase E |
 | 5 | scripts.save_count 또는 saves 테이블 신설 (사용자 북마크 도메인) | I-4 별 트랙 |
 | 6 | content 메뉴 pane 잔여 항목(.pending) Phase E 범위 정합 | Step 3-7 |
-| 7 | stage 분포 RPC `get_stage_distribution` 신설 (라운드트립 최적화) | I-2 — P1 결과에 따라 |
+| 7 | ~~stage 분포 RPC `get_stage_distribution` 신설~~ ✅ **청산 (2026-05-04 본 의뢰서 P3·P4 도입과 동시 push)** — 함수 신설 + admin_v2.js fetchStageDistribution 교체. SECURITY DEFINER + `is_admin()` 가드 + authenticated EXECUTE only + anon 명시 REVOKE | I-2 → 청산 |
 
 ---
 
@@ -113,6 +121,11 @@
 
 - D-2 작업지시서: `docs/specs/admin_v2_d2_workorder.md` (commit `5f1261a`)
 - D-2 본 commit: `0ca8e17` (js/admin_v2.js +281 / pages/admin_v2.html -100)
+- D-2 fix commit: `7eff644` (adm-panel-meta 동적화 + § 7 부채 #3 격상)
+- 별 트랙 #3 RPC 신설 (본 의뢰서와 동시 push):
+  - DB DDL: `CREATE OR REPLACE FUNCTION public.get_stage_distribution() RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER` + `is_admin()` 가드 + `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO authenticated` + `REVOKE EXECUTE FROM anon`
+  - JS 교체: `js/admin_v2.js` 라인 401~426 — `fetchStageDistribution()` REST `select=stage&limit=10000` + 클라이언트 forEach GROUP BY → `/rpc/get_stage_distribution` POST + jsonb 반환 직접 사용 (`renderStageDonut` 호환 형식 유지로 호출부 무변경)
+  - Chrome 검증: 사전 5/5 PASS / RPC 본 SQL + 정합 3/3 PASS / anon 명시 REVOKE 2/2 PASS — raw는 본 세션 채팅 영구 기록
 - 사전 검증 결과: D-2 Step 1 (1)~(8) 8/8 클리어 (5/4 paste raw)
 - D-pre 시리즈 학습: `docs/architecture/db_pre_dpre7_capture.md` / `db_pre_dpre8_capture.md`
 - D-1 회귀 의뢰서 (참고 패턴): `docs/specs/admin_v2_d1_live_regression_2026-05-03.md`

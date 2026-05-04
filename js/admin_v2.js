@@ -398,29 +398,27 @@
     }
   }
 
-  // ── stage 10단계 분포 (scripts 단독 — I-6 결정) ───────────────────────
+  // ── stage 10단계 분포 (RPC — 별 트랙 #3 청산) ────────────────────────
+  // 기존 1 fetch + 클라이언트 GROUP BY (243~1022ms) → RPC 서버 GROUP BY (~50ms 기대)
+  // RPC: public.get_stage_distribution() — SECURITY DEFINER + is_admin() 가드 + authenticated EXECUTE only
   async function fetchStageDistribution() {
     try {
       var res = await window.db.fetch(
-        '/rest/v1/scripts?select=stage&limit=10000',
-        { headers: { 'Prefer': 'count=exact' } }
+        '/rest/v1/rpc/get_stage_distribution',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}'
+        }
       );
       if (res.status === 403 && typeof window.admExit === 'function') window.admExit();
       if (!res.ok) {
         showAdminToast('stage 분포 로드 실패 (' + res.status + ')', 'danger');
         return null;
       }
-      var rows = await res.json();
-      var totalRange = res.headers.get('Content-Range') || '0-0/0';
-      var total = parseInt(totalRange.split('/')[1], 10) || rows.length;
-
-      // 클라이언트 GROUP BY (DB 영문 슬러그 키)
-      var counts = {};
-      rows.forEach(function (r) {
-        var k = r.stage || '(미지정)';
-        counts[k] = (counts[k] || 0) + 1;
-      });
-      return { total: total, counts: counts };
+      var data = await res.json();
+      // RPC 반환 jsonb { total, counts } — renderStageDonut 호환 형식 유지
+      return { total: data.total || 0, counts: data.counts || {} };
     } catch (e) {
       if (e.message !== 'TOKEN_EXPIRED' && window.Sentry) window.Sentry.captureException(e);
       return null;
