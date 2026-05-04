@@ -2635,8 +2635,9 @@ body.adm-active { overflow: hidden !important; }
 
 
 <!-- D-1 진입 직전 신설 — admin_v2 전용 데이터 fetch/render JS (다른 페이지 영향 0)
-     ※ path는 app.html(루트) 기준. admin.html stub이 src 분기 처리 (5/3 D-1 5a) -->
-<script src="js/admin_v2.js"></script>
+     ※ 절대 경로(/js/...) — 직접 URL `/pages/admin.html` 진입 시 상대경로가
+        `pages/js/...`로 해석되어 404 발생하는 회귀 차단 (5/3 라이브 회귀 진단 결과) -->
+<script src="/js/admin_v2.js"></script>
 
 <script>
 (function () {
