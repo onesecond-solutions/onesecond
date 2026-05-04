@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-04 저녁 (admin_v2 Phase D-1·D-2·D-3·D-4 완전 종료 — D-4 20/20 PASS + K-1 (c) v2.0 대기 + mock 보존 (D-3 J-2 (b) 패턴 정합) + app_settings RLS 청산 (D-pre.8 sweep 누락 보강) + 통합본 v1.1 D-9 ⚙️ 화면설정 신규)
+> **마지막 갱신:** 2026-05-05 (admin_v2 Phase D-6 완전 종료 — 20/20 PASS + M-1~M-9 결재 (M-7 (c) result 통일 / M-8 (b) 라이브 2종 / M-9 (a) admin_read_all_logs is_admin() 청산) + D-pre.8 sweep 누락 보강 + 잔여 견적 ~9.1 → ~8.3세션)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -44,7 +44,7 @@
 | D-3 board | ✅ **완전 종료 (2026-05-04, 25/25 PASS)** | board 섹션 실 데이터 연결 (`f5c6c5e` js +278 / html -67) + J-2 (b) post_reports v2.0 대기 + J-1 (a) 모더레이션 3종 (숨김/삭제/정지) + J-5 (a) 클라 GROUP BY. P1·P2 warm 250~544ms (PostgREST overhead 본질, J-5 (b) RPC 격상 불필요 청산). 의뢰서: `admin_v2_d3_live_regression_2026-05-04.md` |
 | D-4 notice | ✅ **완전 종료 (2026-05-04, 20/20 PASS)** | K-1 (c) v2.0 대기 + mock 보존 채택 (D-3 J-2 (b) 패턴 정합) — admin_v2.html mock 4카드 + 5행 작성이력 → JS NOTICE_*_MOCK 이관 (`27f0688` js +131 / html -103). 토글/액션 id null 토스트 즉시 표기. P1·P2·P3 모두 <10ms (DB 호출 0건). 부수: app_settings RLS `admin write` 정책 인라인 EXISTS → `is_admin()` 청산 (D-pre.8 sweep 누락 보강). 의뢰서: `admin_v2_d4_live_regression_2026-05-04.md` |
 | D-5 analytics | 대기 | DAU/WAU/MAU RPC + 기능별 사용량 |
-| D-6 logs | 대기 | activity_logs + system_logs (또는 Sentry 통합) |
+| D-6 logs | ✅ **완전 종료 (2026-05-05, 20/20 PASS)** | activity_logs 정합 (`33b3e24` js +255 / html -102) + M-2 (c) SYSTEM 2행 mock 합치기 + M-7 (c) result 컬럼 부재 → 모든 행 "성공" 통일 + M-8 (b) event_type 라이브 2종 (login/script_view) + admin_read_all_logs `is_admin()` 청산 (D-pre.8 sweep 누락 보강). P1 504ms / P2 cold 1293ms (PostgREST overhead 본질, RPC 격상 불필요 청산 — D-3 J-5 (b) 패턴 정합). 의뢰서: `admin_v2_d6_live_regression_2026-05-05.md` |
 | D-7 billing | 대기 | payments + subscriptions + 4플랜 분포 |
 | D-8 dashboard 종합 | 대기 | KPI 4 + timeline + 최근 가입자 + 시스템 상태 + Top 스크립트 모두 실 연결 + **별 트랙 B-2 dashboard 기본 뱃지 토큰 마이그레이션 묶음** |
 | **D-9 ⚙️ 화면설정 (5/4 신규)** | 대기 | **옛 admin v1 화면설정 탭(`_archive/admin_v1_20260430.html` 라인 1290~1605, ~315줄) 포팅** — 4섹션(메뉴 ON/OFF + PRO 게이트 + 게시판 탭 + 배너 이미지) + 실시간 미리보기. app_settings 정합 (DB 변경 0건). 결정 Q-4 Supabase Storage bucket 신설 분기 |
@@ -190,6 +190,8 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-05_<TBD>.md` — 2026-05-05 (admin_v2 Phase D-6 logs 완전 종료 — 단일 세션 4 commit / `7cda0b8` D-6 작업지시서(308줄) + Step 1 사전 검증 6/6 (컬럼 raw `event_type`/`target_type`/`target_id` + result 부재 + users 2명) + Step 1.5 admin_read_all_logs 인라인 EXISTS → `is_admin()` 청산 4/4 PASS + `33b3e24` D-6 코드 (js/admin_v2.js +255줄 9함수 / pages/admin_v2.html -102줄 mock 12행 제거) + `21968ac` 회귀 의뢰서(138줄, 20항목) + 본 commit PASS 종료 / M-1~M-9 결재 (M-1 (b) LIKE / M-2 (c) SYSTEM mock 합치기 / M-7 (c) result 통일 / M-8 (b) event_type 2종 / M-9 (a) RLS 청산) / 영구 학습 후보 — D-pre.8 sweep 누락 잔존 부채 패턴 (D-4 app_settings + D-6 admin_read_all_logs 동일 패턴) + 추가 결재 분기 발견 패턴 (Step 1 raw 분석으로 result 컬럼 부재·event_type 분포 차이 발견 → M-7·M-8 신규 결재) / 잔여 견적 ~9.1 → ~8.3세션 / D-5 analytics 즉시 진입 가능)
+- `fe19b3d` 원격 업로드 (2026-05-05 04:48 KST, 팀장님 GitHub 웹 직접 업로드) — `2026-05-05_index_hero_headline_c_plus.md` (267줄) + `2026-05-05_team4_vault_phase1.md` (455줄) — D-6 본 트랙 외 별 트랙 후보, D-6 종료 후 큰 그림 정합 검토 대기
 - `docs/sessions/2026-05-04_2032.md` — 2026-05-04 저녁 (admin_v2 Phase D-2 24/25 종료 + D-3·D-4 25/25·20/20 PASS — 단일 세션 13 commit / 5/4 누적 22 push: `788b617` RPC #3 청산 + `85ff4d2` 통합본 v1 발행 704줄 + `ace85d0` D-2 종료 + `a3aa439` D-3 작업지시서 + `f5c6c5e` D-3 코드 + `3bc7f84` D-3 의뢰서 + `23e1b2d` 통합본 v1.1 D-9 ⚙️ 화면설정 신규 + `1c55171` D-3 25/25 PASS + `8c79012` D-4 작업지시서 + `16cbdbc` D-4 K-1 재결재 (a)→(c) + `27f0688` D-4 코드 + `e5e64b7` D-4 의뢰서 + `70fb91c` D-4 20/20 PASS / 영구 학습 5건 (RPC PostgREST overhead 본질 / mock+v2.0 대기 패턴 표준화 / 결재 한계 발견 패턴 / D-pre.8 sweep 누락 발견 / 옛 admin v1 화면설정 누락) / 별 트랙 — app_settings RLS 청산 + P3 분석 Phase E 격상 + Q-7 사용자별 impersonation 보류 / 잔여 견적 ~9.1세션 / D-6 logs 즉시 진입 가능)
 - `docs/sessions/2026-05-04_1630.md` — 2026-05-04 오후 (admin_v2 Phase D-1·D-2 완전 종료 — D-1 fix `3e08dc8` script src 절대경로화 후 17/17 PASS / D-2 content 실 데이터 연결 `0ca8e17` + D2 fix `7eff644` 후 21/23 PASS (P1·P2 별 트랙 #3 격상) + scripts 보강 Step 2 실명 익명화 5건 청산 `4f6b8c4` (보험업법 위험 0) + 로고 통일 (login A1 logo03.jpg + 원세컨드 / admin rail 최상단 logo05.png) / 5/4 푸시 9건: `3e08dc8` `4f6b8c4` `ad69a5b` `5f1261a` `10ea87f` `0ca8e17` `0d463fc` `1ebf44f` `7eff644` / 영구 학습 4건 (script src 절대경로화 / STAGE_LABELS 분류 차이 / n_tup_upd 진단 / 의뢰서 PASS 가정 단정 위험) / D-3 board 즉시 진입 가능)
 - `docs/sessions/2026-05-03_1747.md` — 2026-05-03 오후 (admin_v2 D-1 Step 4·5 완료 — js/admin_v2.js 신설 342줄 + users 섹션 mock 제거 + 동적 슬롯 + .adm-toast 컴포넌트 + race 안전장치 / 5/3 저녁 푸시 3건: `8f1cd6e` _INDEX design_test 트랙 라벨 정합화 + `f65580a` D-1 users 실 데이터 연결 + `22ff008` 라이브 회귀 17항목 의뢰서 / design_test 트랙 사실상 종결 / 영구 학습 1건 메모리 통합 / 외부 인계 노트 1건 발견: `2026-05-03_handoff.md` 자료 자산화 트랙)

@@ -7,7 +7,7 @@
 > - **`admin read all logs` RLS 청산** (D-pre.8 sweep 누락 보강 — 인라인 EXISTS → `is_admin()`, Step 1.5 Chrome 위임 4/4 PASS, capture mini-doc 보류 — D-6 commit 잔존 부채 통합 기록)
 > **검증 대상:** `pages/admin_v2.html` logs 섹션 + `js/admin_v2.js` D-6 확장본 (~255줄 추가)
 > **검증자:** 팀장님 Chrome (Code 환경 라이브 검증 불가)
-> **상태:** ☐ Chrome 검증 대기
+> **상태:** ✅ **20/20 PASS — D-6 logs 완전 종료 (2026-05-05 Chrome 회신, D-5 analytics 진입 가능)**
 
 ---
 
@@ -81,30 +81,37 @@
 
 ## 6. 종합 판정
 
-- ☐ **NN/20 PASS — D-6 logs 완전 종료 + D-5 analytics 진입 가능 (Chrome 회신 후 갱신)**
+- ✅ **20/20 PASS (2026-05-05 Chrome 회신) — D-6 logs 완전 종료, D-5 analytics 진입 가능**
 
-### 6.1 PASS NN건 raw 요약 (회신 후 채움)
+### 6.1 PASS 20건 raw 요약
 
 | 섹션 | 결과 | 비고 |
 |---|:--:|---|
-| § 1 정의 raw (D1~D3) | NN/3 PASS | typeof admLoadLogs / mock 잔존 0 / 5함수 정의 정합 |
-| § 2 실 동작 (L1~L9) | NN/9 PASS | today default + 실 데이터 + SYSTEM mock 합치기 + 4필터 + CSV/새로고침 정합 |
-| § 3 RBAC (R1~R2) | NN/2 PASS | 비-admin redirect + admin SELECT 200 OK |
-| § 4 콘솔·네트워크 (C1~C4) | NN/4 PASS | Error 0 / fetch 2건 / 디바운스 1회 / D-1·D-2·D-3·D-4 회귀 0 |
-| § 5 성능 (P1~P2) | NN/2 PASS | 회신 후 raw |
+| § 1 정의 raw (D1~D3) | 3/3 PASS | typeof admLoadLogs / mock 잔존 0 / 5필터 함수 정의 정합 |
+| § 2 실 동작 (L1~L9) | 9/9 PASS | today default 2026-05-04 / mergeSystemLogsMock 호출 / 사용자 select 3 옵션 동적 (어드민·조현명) / 디바운스 304ms / 4필터 + 결과 select / CSV+토스트 / 새로고침 + 전체 보기 disabled 모두 정합 |
+| § 3 RBAC (R1~R2) | 2/2 PASS | 비-admin redirect (auth.js role 체크) + admLoadLogs 12건 526ms |
+| § 4 콘솔·네트워크 (C1~C4) | 4/4 PASS | Error 0 / fetch 2건 (fetchUsersForLogs + fetchActivityLogs) / 디바운스 1회 / D-1~D-4 회귀 0 |
+| § 5 성능 (P1~P2) | 2/2 PASS | 아래 § 6.2 raw |
 
-### 6.2 P1~P2 raw (회신 후 채움)
+### 6.2 P1~P2 raw
 
 | # | raw 측정값 | 판정 | 근거 |
 |:--:|---|:--:|---|
-| P1 | TBD ms | ☐ | 검색 디바운스 후 PostgREST 응답 시간 |
-| P2 | TBD ms (cold) / TBD ms (warm) | ☐ | logs 섹션 진입 → DOM 첫 렌더까지 |
+| P1 | 504ms | ✅ PASS | 검색 디바운스 후 PostgREST 응답 / 기대 <800ms 충족 (D-2 P3 / D-3 P1·P2 본질 정합 — PostgREST overhead 본질) |
+| P2 | 1293ms (cold, TTFB 208ms / DCL 486ms) | ✅ PASS | logs 섹션 진입 → DOM 첫 렌더까지 / 기대 <1.5초 cold 충족 |
 
-### 6.3 D-6 완전 종료 처리
+→ M-1 (b) 단순 LIKE 패턴 + M-2 (c) SYSTEM mock 합치기 + M-3 4필터 모두 PostgREST overhead 임계 충족. P1·P2 별 트랙 격상 불필요 (D-3 J-5 (b) RPC 격상 청산 패턴 정합).
 
-- ☐ `_INDEX.md` Phase D 표 D-6 행 → "✅ 완전 종료 (NN/20 PASS)" 갱신 (commit 본 회차)
-- ☐ `_INDEX.md` 헤더 마지막 갱신 시점 갱신
-- ☐ 통합본 v1.1 § 11.2 잔여 견적 ~9.1 → ~8.3세션 (D-6 0.8 차감)
+### 6.3 라이브 검증 부수 발견
+
+- **빌드 해시 5f1261a 표시** — Last-Modified 메타 2026-05-04 20:11:25는 정적 호스팅 캐시 메타이며 D-6 코드(D-6 logs — activity_logs 검색·4필터 + SYSTEM mock 주석)는 라이브에 완전 반영 확인. 기능 검증 영향 0.
+- **L8 `showAdminToast` 노출 범위** — IIFE 내부 함수로 `window.*` 노출 X. 본 D-6 코드는 IIFE 내부에서만 호출(admLogsExportCSV / admLogsFilterResult / fetchActivityLogs 에러 핸들러)하므로 작동 정합. 외부 노출이 필요하면 별 트랙 (현재 부채 아님).
+
+### 6.4 D-6 완전 종료 처리
+
+- ✅ `_INDEX.md` Phase D 표 D-6 행 → "✅ 완전 종료 (20/20 PASS)" 갱신 (commit 본 회차)
+- ✅ `_INDEX.md` 헤더 마지막 갱신 시점 갱신
+- ✅ 통합본 v1.1 § 11.2 잔여 견적 ~9.1 → ~8.3세션 (D-6 0.8 차감)
 - 🟢 **D-5 analytics 진입 가능** (통합본 § 11.1 권장 진입 순서: D-3 → D-4 → D-6 → **D-5** → D-9 → D-7(나) → D-8 → D-final)
 
 ---
