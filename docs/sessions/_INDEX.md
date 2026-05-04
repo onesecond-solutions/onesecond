@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-04 저녁 (admin_v2 Phase D-1·D-2 완전 종료 — D-2 24/25 + 별 트랙 #3 RPC 청산 + P3 PostgREST 별 트랙 분리 + 통합 작업지시서 v1 발행)
+> **마지막 갱신:** 2026-05-04 저녁 (admin_v2 Phase D-1·D-2·D-3 완전 종료 — D-3 25/25 PASS + J-5 (b) RPC 격상 불필요 청산 + 통합 작업지시서 v1.1 발행 + D-9 ⚙️ 화면설정 신규 추가)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -41,7 +41,7 @@
 | **D-pre.8** R6 sweep 후속 5항목 일괄 청산 (B + ② + ⑤ + ⑤-2 + ⑦) | ✅ **완료 (2026-05-03)** | R6에서 발견된 추가 정합 부채 일괄 청산. (B) posts/scripts admin 인라인 EXISTS 5건 → `is_admin()` 통일 / (②) comments + posts(together) anon 2건 → `{authenticated}` 전용 / (⑤) script_usage_logs 정책명 구버전 네이밍 정합화 / (⑤-2) script_usage_logs 사용자 자기 row SELECT 신설 (quick.html 라인 336 일반 사용자 6역할 작동 보장) / (⑦) news_admin_all 인라인 EXISTS → `is_admin()`. **트랜잭션 1건 = DROP 9 + CREATE 10 + 사후 검증 SELECT 18행** 모두 정합 → COMMIT 확정. 자기참조/인라인 admin EXISTS 잔존 0건. 영구 학습 3건 추가 (D-pre.8 § 8). 산출물: `docs/architecture/db_pre_dpre8_capture.md`. **별 트랙 α/β + D-pre.8 모두 종료 → D-1 진입 즉시 가능** |
 | D-1 users | 🟢 **즉시 진입 가능 — 작업지시서·결정 8건 확정, D-pre 시리즈 + α + β 전건 종료 (2026-05-03)** | admin_v2 D-1 mock 실 데이터 연결. 사전 정렬 결정 3건 + 결정 8건 확정 → D-pre.7 + D-pre.8 + 별 트랙 α + β 모두 종료 → **다음 세션 Step 1 즉시 진입 (`js/admin_v2.js` 신설)** |
 | D-2 content | ✅ **완전 종료 (2026-05-04, 24/25 PASS)** | content 섹션 실 데이터 연결 (`0ca8e17` `7eff644`) + 별 트랙 #3 `get_stage_distribution()` RPC 신설 (`788b617`, SECURITY DEFINER + is_admin() 가드 + anon 명시 REVOKE). P3 라운드트립 <200ms 미달 (min 208ms / avg ~440ms — PostgREST overhead 본질) → 별 트랙 분리 (`admin_v2_p3_postgrest_analysis.md` Phase E). P4 PASS (<1초)로 사용자 영향 0 |
-| D-3 board | 대기 | posts + post_reports + 모더레이션 액션 |
+| D-3 board | ✅ **완전 종료 (2026-05-04, 25/25 PASS)** | board 섹션 실 데이터 연결 (`f5c6c5e` js +278 / html -67) + J-2 (b) post_reports v2.0 대기 + J-1 (a) 모더레이션 3종 (숨김/삭제/정지) + J-5 (a) 클라 GROUP BY. P1·P2 warm 250~544ms (PostgREST overhead 본질, J-5 (b) RPC 격상 불필요 청산). 의뢰서: `admin_v2_d3_live_regression_2026-05-04.md` |
 | D-4 notice | 대기 | app_settings(또는 notices/banners) + 노출 기간 + role 분기 |
 | D-5 analytics | 대기 | DAU/WAU/MAU RPC + 기능별 사용량 |
 | D-6 logs | 대기 | activity_logs + system_logs (또는 Sentry 통합) |

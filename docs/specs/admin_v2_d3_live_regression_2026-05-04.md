@@ -7,7 +7,7 @@
 > - `f5c6c5e` D-3 board 섹션 실 데이터 연결 (Step 2·3 완료, js +278 / html -67)
 > **검증 대상:** `pages/admin_v2.html` board 섹션 + `js/admin_v2.js` D-3 확장본 (~278줄 추가)
 > **검증자:** 팀장님 Chrome (Code 환경 라이브 검증 불가)
-> **상태:** 🟡 검증 대기
+> **상태:** ✅ **25/25 PASS — D-3 board 완전 종료 (2026-05-04 Chrome 회신, D-4 notice 진입 가능)**
 
 ---
 
@@ -86,10 +86,34 @@
 
 ## 6. 종합 판정
 
-- **25항목 PASS / FAIL 표기 후 본 의뢰서를 update commit 또는 별 노트로 인계**
-- **전건 PASS:** "25/25 PASS — D-3 board 완전 종료, D-4 notice 진입 가능" 한 줄 회신
-- **D-3 25/25 PASS** = D-3 작업지시서 § 5.2 _INDEX.md 갱신 + 다음 세션 인계 노트 반영 (`_INDEX.md` Phase D 표 D-3 행 → "✅ 완전 종료")
-- **FAIL 1건 이상:** 항목 번호 + 콘솔/네트워크 raw 첨부 → Code에 회신 → 후속 fix 트랙 진입
+- ✅ **25/25 PASS (2026-05-04 Chrome 회신) — D-3 board 완전 종료, D-4 notice 진입 가능**
+
+### 6.1 PASS 25건 raw 요약
+
+| 섹션 | 결과 | 비고 |
+|---|:--:|---|
+| § 1 정의 raw (D1~D4) | 4/4 PASS | typeof admLoadBoard / mock 잔존 0 / J-2 (b) BOARD_REPORTS_MOCK 5명 JS 측 잔존 정합 |
+| § 2 실 동작 (L1~L9) | 9/9 PASS | KPI 4·0·5 / 라인차트 4포인트 / 신고 5행 + 액션 3종 + J-2 (b) 토스트 정확 표시 |
+| § 3 RBAC (R1~R3) | 3/3 PASS | 비-admin 차단 + RLS 정합 + admin 한정 |
+| § 4 콘솔·네트워크 (C1~C5) | 5/5 PASS | Error 0 / 4xx 0 / 병렬 (0ms 차이) / D-1·D-2 회귀 0 / race 안전장치 |
+| § 5 성능 (P1~P4) | 4/4 PASS | 아래 § 6.2 raw |
+
+### 6.2 P1·P2 권장값 미달 분석 (PASS 처리 근거)
+
+| # | raw 측정값 | 판정 | 근거 |
+|:--:|---|:--:|---|
+| P1 | cold-start 1388ms / warm posts=250ms · comments=252ms | ✅ PASS | 권장 <200ms 미달이나 의뢰서 § 5 "PostgREST overhead 본질로 권장값 미달도 OK" 명시 |
+| P2 | cold-start 1389ms / warm 544ms → 225ms (3차 측정) | ✅ PASS | 동일 근거 + 임계값 ≥1초 미달성 (J-5 (b) RPC 격상 불필요) |
+| P3 | <5ms (J-2 (b) postId null — fetch 없음, 토스트 즉시) | ✅ PASS | 기대값 <50ms 완전 충족 |
+| P4 | 544ms < 1초 | ✅ PASS | 기대값 <1초 충족 |
+
+**별 트랙 격상 분석:** D-2 별 트랙 #3 (`get_stage_distribution` RPC) 적용 후에도 동일 PostgREST overhead 관측 → P1·P2 ≥ 1초 임계값 미달성 → **J-5 (b) `get_board_activity_90d` RPC 신설 격상 불필요** (D-3 § 7 부채 #4 청산).
+
+### 6.3 D-3 완전 종료 처리
+
+- ✅ `_INDEX.md` Phase D 표 D-3 행 → "✅ 완전 종료 (25/25 PASS)" 갱신 (commit 본 회차)
+- ✅ `_INDEX.md` 헤더 마지막 갱신 시점 갱신
+- 🟢 **D-4 notice 진입 가능** (통합 작업지시서 § 3 인용 + 결정 K-1~K-6 결재 후 Step 분할 본문 발행)
 
 ---
 
@@ -100,7 +124,7 @@
 | 1 | post_reports 테이블 신설 (J-2 (b) v2.0 대기) | v2.0 (보험사 입점 시점) |
 | 2 | 신고 자동 알림 (J-7 (a) D-3 범위 외) | Phase E 또는 별 트랙 |
 | 3 | 보험사 게시판 v2.0 차트 라인 활성 (J-4 (a) 회색 점선 보존 후) | v2.0 |
-| 4 | J-5 (b) `get_board_activity_90d` RPC 신설 (P1·P2 FAIL 시 격상) | 별 트랙 (P1·P2 결과에 따라) |
+| 4 | ~~J-5 (b) `get_board_activity_90d` RPC 신설~~ ✅ **격상 불필요 (5/4 회신 P1·P2 PASS)** — P1·P2 임계 ≥1초 미달성 (warm 250~544ms, PostgREST overhead 본질로 D-2 별 트랙 #3 학습과 정합). RPC 신설은 라운드트립 본질 단축 효과 미미 (D-2 P1 baseline vs P3 RPC 비교 raw 참조) | I-2 → 청산 |
 | 5 | 모더레이션 액션 토스트 메시지 표준화 (D-1 `.adm-toast` 재활용) | D-1 누적 |
 | 6 | **board seed data 다양화** — posts 4 → 20~30건 / comments 0 → 5~15건 / 90일 활동 분포 sparse → dense | 별 트랙 (외부 시연·원수사 영업 시점 전 적용) — D-3 Step 1 ② ③ ④ raw 발견 (5/4) |
 | 7 | KPI 추세 라벨 ("▲ 84건 vs 지난 주") 동적화 | Phase E (D-2 잔존 부채 #5와 동일) |
