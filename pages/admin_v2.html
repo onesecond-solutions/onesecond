@@ -1727,7 +1727,7 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-section-head">
         <div>
           <div class="adm-section-title">게시판 관리</div>
-          <div class="adm-section-desc">공지 게시판 · 함께해요 · 신고 모더레이션 · 핀고정. 보험사 게시판은 v2.0 대기. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+          <div class="adm-section-desc">공지 게시판 · 함께해요 · 신고 모더레이션 · 핀고정. 보험사 게시판은 v2.0 대기. <span style="color:var(--color-accent);font-weight:700;">[v1.1 라이브 + v2.0 대기]</span></div>
         </div>
         <div class="adm-page-actions">
           <button class="adm-btn adm-btn-ghost">📤 내보내기</button>
@@ -1735,14 +1735,14 @@ body.adm-active { overflow: hidden !important; }
         </div>
       </div>
 
-      <!-- KPI 3카드 -->
+      <!-- KPI 3카드 (D-3 실 데이터 — posts/comments count + reports mock 5) -->
       <div class="adm-kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 24px;">
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">전체 게시글</div>
             <div class="adm-kpi-icon info">💬</div>
           </div>
-          <div class="adm-kpi-value">2,847</div>
+          <div class="adm-kpi-value" id="adm-board-kpi-posts">—</div>
           <div class="adm-kpi-trend up">▲ 84건 <span class="vs">vs 지난 주</span></div>
         </div>
         <div class="adm-kpi-card">
@@ -1750,7 +1750,7 @@ body.adm-active { overflow: hidden !important; }
             <div class="adm-kpi-label">댓글</div>
             <div class="adm-kpi-icon success">💭</div>
           </div>
-          <div class="adm-kpi-value">11,428</div>
+          <div class="adm-kpi-value" id="adm-board-kpi-comments">—</div>
           <div class="adm-kpi-trend up">▲ 312건 <span class="vs">vs 지난 주</span></div>
         </div>
         <div class="adm-kpi-card">
@@ -1758,56 +1758,37 @@ body.adm-active { overflow: hidden !important; }
             <div class="adm-kpi-label">신고 대기</div>
             <div class="adm-kpi-icon danger">🚨</div>
           </div>
-          <div class="adm-kpi-value">5</div>
+          <div class="adm-kpi-value" id="adm-board-kpi-reports">—</div>
           <div class="adm-kpi-trend down">▼ 2건 <span class="vs">vs 어제</span></div>
         </div>
       </div>
 
-      <!-- 게시판별 활동 추이 라인 차트 -->
+      <!-- 게시판별 활동 추이 라인 차트 (D-3 실 데이터 — 90일 클라이언트 GROUP BY) -->
       <div class="adm-panel" style="margin-bottom: 20px;">
         <div class="adm-panel-head">
           <div>
             <div class="adm-panel-title">게시판별 활동 추이</div>
-            <div class="adm-panel-meta">최근 30일 · 일간 게시글 수</div>
+            <div class="adm-panel-meta">최근 90일 · 일간 게시글 수</div>
           </div>
         </div>
         <div class="adm-chart-legend">
-          <span><span class="adm-chart-legend-dot" style="background:var(--color-accent)"></span>공지 게시판</span>
-          <span><span class="adm-chart-legend-dot" style="background:var(--color-info)"></span>함께해요</span>
+          <span><span class="adm-chart-legend-dot" style="background:var(--color-accent)"></span>공지 게시판 (team)</span>
+          <span><span class="adm-chart-legend-dot" style="background:var(--color-info)"></span>함께해요 (together)</span>
           <span><span class="adm-chart-legend-dot" style="background:var(--admin-text-tertiary)"></span>보험사 게시판 (v2.0 대기)</span>
         </div>
         <div class="adm-panel-body" style="padding-top:8px;">
           <svg class="adm-chart" viewBox="0 0 600 220" preserveAspectRatio="none">
-            <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
-              <line x1="0" y1="40"  x2="600" y2="40"/>
-              <line x1="0" y1="90"  x2="600" y2="90"/>
-              <line x1="0" y1="140" x2="600" y2="140"/>
-              <line x1="0" y1="190" x2="600" y2="190"/>
-            </g>
-            <g font-size="10" fill="rgba(255,255,255,0.4)" font-family="DM Sans">
-              <text x="5" y="44">120</text>
-              <text x="5" y="94">90</text>
-              <text x="5" y="144">60</text>
-              <text x="5" y="194">30</text>
-            </g>
-            <polyline fill="none" stroke="#D4845A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
-              points="40,120 60,115 80,108 100,114 120,102 140,95 160,108 180,98 200,88 220,92 240,80 260,86 280,72 300,82 320,68 340,76 360,62 380,72 400,55 420,68 440,52 460,62 480,48 500,58 520,42 540,52 560,38 580,48"/>
-            <polyline fill="none" stroke="#3B82F6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
-              points="40,150 60,142 80,148 100,134 120,138 140,128 160,120 180,124 200,112 220,118 240,108 260,114 280,100 300,108 320,94 340,102 360,86 380,94 400,80 420,88 440,72 460,80 480,68 500,76 520,62 540,72 560,58 580,68"/>
-            <polyline fill="none" stroke="var(--admin-text-tertiary)" stroke-width="1.5" stroke-dasharray="4,4" stroke-linejoin="round"
-              points="40,195 60,194 80,196 100,193 120,195 140,194 160,196 180,193 200,195 220,194 240,196 260,193 280,195 300,194 320,196 340,193 360,195 380,194 400,196 420,193 440,195 460,194 480,196 500,193 520,195 540,194 560,196 580,193"/>
-            <circle cx="580" cy="48" r="5" fill="#D4845A" stroke="#fff" stroke-width="2"/>
-            <circle cx="580" cy="68" r="4" fill="#3B82F6" stroke="#fff" stroke-width="2"/>
+            <g id="adm-board-activity-chart"></g>
           </svg>
         </div>
       </div>
 
-      <!-- 신고 대기 테이블 5행 -->
+      <!-- 신고 대기 테이블 (J-2 (b) v2.0 대기 — mock 5행 라벨만 동적) -->
       <div class="adm-panel">
         <div class="adm-panel-head">
           <div>
             <div class="adm-panel-title">신고 대기 게시글</div>
-            <div class="adm-panel-meta">우선 처리 권장 · 5건</div>
+            <div class="adm-panel-meta">[v2.0 대기 — post_reports 테이블 신설 후 실 데이터] · 5건 mock</div>
           </div>
           <button class="adm-btn adm-btn-primary" style="height:32px;font-size:12px;padding:0 14px;">일괄 처리</button>
         </div>
@@ -1818,53 +1799,7 @@ body.adm-active { overflow: hidden !important; }
                 <th>게시판</th><th>제목</th><th>작성자</th><th>신고 사유</th><th>신고 수</th><th>접수</th><th></th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><span class="adm-badge role-ga-member">함께해요</span></td>
-                <td><strong>"○○생명 파트너 모집 제안" — 외부 영업 글</strong></td>
-                <td>이도윤</td>
-                <td><span class="adm-badge status-suspended">광고·홍보</span></td>
-                <td style="font-feature-settings:'tnum'; font-weight:700;">12</td>
-                <td>12분 전</td>
-                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge role-ga-member">함께해요</span></td>
-                <td><strong>"실적 1위 비결 — DM 환영" 글에 부정확 정보</strong></td>
-                <td>최민지</td>
-                <td><span class="adm-badge status-pending">허위·부정확</span></td>
-                <td style="font-feature-settings:'tnum'; font-weight:700;">7</td>
-                <td>1시간 전</td>
-                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge role-ga-branch-manager">공지</span></td>
-                <td><strong>"고객 정보 공유 요청" — 개인정보 노출 우려</strong></td>
-                <td>김지훈</td>
-                <td><span class="adm-badge status-suspended">개인정보</span></td>
-                <td style="font-feature-settings:'tnum'; font-weight:700;">5</td>
-                <td>3시간 전</td>
-                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge role-ga-member">함께해요</span></td>
-                <td><strong>"동료 비방성 발언" — 댓글 다툼 발생</strong></td>
-                <td>정수아</td>
-                <td><span class="adm-badge status-suspended">비방·다툼</span></td>
-                <td style="font-feature-settings:'tnum'; font-weight:700;">4</td>
-                <td>5시간 전</td>
-                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
-              </tr>
-              <tr>
-                <td><span class="adm-badge role-ga-member">함께해요</span></td>
-                <td><strong>"중복 게시" — 동일 내용 3회 게시</strong></td>
-                <td>박서연</td>
-                <td><span class="adm-badge status-pending">스팸·중복</span></td>
-                <td style="font-feature-settings:'tnum'; font-weight:700;">2</td>
-                <td>어제</td>
-                <td><div class="row-actions"><button title="처리">⚖️</button><button title="삭제">🗑️</button></div></td>
-              </tr>
-            </tbody>
+            <tbody id="adm-board-reports-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -2619,6 +2554,8 @@ body.adm-active { overflow: hidden !important; }
       window.admLoadUsers();
     } else if (viewKey === 'content' && typeof window.admLoadContent === 'function') {
       window.admLoadContent();
+    } else if (viewKey === 'board' && typeof window.admLoadBoard === 'function') {
+      window.admLoadBoard();
     }
   };
 

@@ -614,12 +614,286 @@
     showAdminToast('편집 — Phase D 후 구현 (' + type + ' #' + id + ')', 'info');
   };
 
-  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2 통합)
-  //   (예: #admin/users 또는 #admin/content 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
+  // ════════════════════════════════════════════════════════════════════════
+  // D-3 board — posts + comments + 신고 mock + 모더레이션 액션 3종 (2026-05-04 신설)
+  // 작업지시서: docs/specs/admin_v2_d3_workorder.md (commit a3aa439)
+  // 결재: J-1(a) 모더레이션 3종 / J-2(b) post_reports v2.0 대기 / J-3(a) 정지 직접
+  //       J-4(a) 보험사 회색 점선 / J-5(a) 클라 GROUP BY / J-6(a) comments 전체 / J-7(a) 알림 범위 외
+  // 사전 검증: D-3 Step 1 9/9 PASS (5/4 raw)
+  // ════════════════════════════════════════════════════════════════════════
+
+  // ── J-2 (b) v2.0 대기 — 신고 5행 mock 보존 ──────────────────────────────
+  var BOARD_REPORTS_MOCK = [
+    { board: '함께해요', boardClass: 'role-ga-member',         title: '"○○생명 파트너 모집 제안" — 외부 영업 글', author: '이도윤', authorId: null, postId: null, reasonLabel: '광고·홍보',  reasonClass: 'status-suspended', count: 12, ago: '12분 전' },
+    { board: '함께해요', boardClass: 'role-ga-member',         title: '"실적 1위 비결 — DM 환영" 글에 부정확 정보',   author: '최민지', authorId: null, postId: null, reasonLabel: '허위·부정확', reasonClass: 'status-pending',   count: 7,  ago: '1시간 전' },
+    { board: '공지',     boardClass: 'role-ga-branch-manager', title: '"고객 정보 공유 요청" — 개인정보 노출 우려',    author: '김지훈', authorId: null, postId: null, reasonLabel: '개인정보',    reasonClass: 'status-suspended', count: 5,  ago: '3시간 전' },
+    { board: '함께해요', boardClass: 'role-ga-member',         title: '"동료 비방성 발언" — 댓글 다툼 발생',            author: '정수아', authorId: null, postId: null, reasonLabel: '비방·다툼',   reasonClass: 'status-suspended', count: 4,  ago: '5시간 전' },
+    { board: '함께해요', boardClass: 'role-ga-member',         title: '"중복 게시" — 동일 내용 3회 게시',              author: '박서연', authorId: null, postId: null, reasonLabel: '스팸·중복',   reasonClass: 'status-pending',   count: 2,  ago: '어제' }
+  ];
+
+  // ── KPI 3카드 (J-6 (a) comments 전체 count + reportsPending mock 5) ───
+  async function fetchBoardKPI() {
+    try {
+      var [postsRes, commentsRes] = await Promise.all([
+        window.db.fetch('/rest/v1/posts?select=id',    { headers: { 'Prefer': 'count=exact' } }),
+        window.db.fetch('/rest/v1/comments?select=id', { headers: { 'Prefer': 'count=exact' } })
+      ]);
+      if (postsRes.status === 403 && typeof window.admExit === 'function') window.admExit();
+      if (!postsRes.ok || !commentsRes.ok) {
+        var bad = !postsRes.ok ? postsRes : commentsRes;
+        showAdminToast('게시판 KPI 로드 실패 (' + bad.status + ')', 'danger');
+        return null;
+      }
+      function parseCount(r) {
+        return parseInt((r.headers.get('Content-Range') || '0-0/0').split('/')[1], 10) || 0;
+      }
+      return {
+        posts:          parseCount(postsRes),
+        comments:       parseCount(commentsRes),
+        reportsPending: BOARD_REPORTS_MOCK.length
+      };
+    } catch (e) {
+      if (e.message !== 'TOKEN_EXPIRED' && window.Sentry) window.Sentry.captureException(e);
+      return null;
+    }
+  }
+
+  // ── 90일 활동 분포 (J-5 (a) 클라이언트 GROUP BY, KST 자정 기준) ────────
+  async function fetchBoardActivity90d() {
+    try {
+      var since90d = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      var res = await window.db.fetch(
+        '/rest/v1/posts?select=created_at,board_type&created_at=gte.' + since90d +
+        '&order=created_at.asc&limit=10000'
+      );
+      if (res.status === 403 && typeof window.admExit === 'function') window.admExit();
+      if (!res.ok) {
+        showAdminToast('게시판 활동 로드 실패 (' + res.status + ')', 'danger');
+        return null;
+      }
+      var rows = await res.json();
+      var grouped = {};
+      rows.forEach(function (r) {
+        var kstDay = new Date(new Date(r.created_at).getTime() + 9 * 3600 * 1000)
+          .toISOString().split('T')[0];
+        var key = kstDay + '|' + (r.board_type || '(미지정)');
+        grouped[key] = (grouped[key] || 0) + 1;
+      });
+      var result = [];
+      Object.keys(grouped).forEach(function (k) {
+        var parts = k.split('|');
+        result.push({ day: parts[0], board_type: parts[1], cnt: grouped[k] });
+      });
+      return result.sort(function (a, b) { return a.day < b.day ? -1 : 1; });
+    } catch (e) {
+      if (e.message !== 'TOKEN_EXPIRED' && window.Sentry) window.Sentry.captureException(e);
+      return null;
+    }
+  }
+
+  // ── J-2 (b) 신고 5행 mock 그대로 반환 ─────────────────────────────────
+  function fetchBoardReportsMock() {
+    return Promise.resolve(BOARD_REPORTS_MOCK);
+  }
+
+  // ── J-1 (a) 숨김 액션 (posts.is_hidden = true) ────────────────────────
+  async function handleHidePost(postId) {
+    if (!postId) {
+      showAdminToast('postId 없음 (J-2 (b) v2.0 대기 mock — 실 데이터 연결 후 작동)', 'warning');
+      return false;
+    }
+    try {
+      var res = await window.db.fetch('/rest/v1/posts?id=eq.' + encodeURIComponent(postId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ is_hidden: true })
+      });
+      if (res.status === 403 && typeof window.admExit === 'function') window.admExit();
+      if (!res.ok) {
+        showAdminToast('숨김 실패 (' + res.status + ')', 'danger');
+        return false;
+      }
+      showAdminToast('게시글 숨김 완료', 'success');
+      return true;
+    } catch (e) {
+      if (e.message !== 'TOKEN_EXPIRED' && window.Sentry) window.Sentry.captureException(e);
+      return false;
+    }
+  }
+
+  // ── J-1 (a) 삭제 액션 (DELETE FROM posts) ─────────────────────────────
+  async function handleDeletePost(postId) {
+    if (!postId) {
+      showAdminToast('postId 없음 (J-2 (b) v2.0 대기 mock — 실 데이터 연결 후 작동)', 'warning');
+      return false;
+    }
+    if (!confirm('게시글을 삭제하시겠습니까?\n(되돌릴 수 없습니다)')) return false;
+    try {
+      var res = await window.db.fetch('/rest/v1/posts?id=eq.' + encodeURIComponent(postId), {
+        method: 'DELETE',
+        headers: { 'Prefer': 'return=minimal' }
+      });
+      if (res.status === 403 && typeof window.admExit === 'function') window.admExit();
+      if (!res.ok) {
+        showAdminToast('삭제 실패 (' + res.status + ')', 'danger');
+        return false;
+      }
+      showAdminToast('게시글 삭제 완료', 'success');
+      return true;
+    } catch (e) {
+      if (e.message !== 'TOKEN_EXPIRED' && window.Sentry) window.Sentry.captureException(e);
+      return false;
+    }
+  }
+
+  // ── J-3 (a) 사용자 정지 액션 (D-pre.5 status='suspended') ─────────────
+  async function handleSuspendUser(userId) {
+    if (!userId) {
+      showAdminToast('userId 없음 (J-2 (b) v2.0 대기 mock — 실 데이터 연결 후 작동)', 'warning');
+      return false;
+    }
+    if (!confirm('사용자를 정지하시겠습니까?\n(status: active → suspended)')) return false;
+    try {
+      var res = await window.db.fetch('/rest/v1/users?id=eq.' + encodeURIComponent(userId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ status: 'suspended' })
+      });
+      if (res.status === 403 && typeof window.admExit === 'function') window.admExit();
+      if (!res.ok) {
+        showAdminToast('정지 실패 (' + res.status + ')', 'danger');
+        return false;
+      }
+      showAdminToast('사용자 정지 완료', 'success');
+      return true;
+    } catch (e) {
+      if (e.message !== 'TOKEN_EXPIRED' && window.Sentry) window.Sentry.captureException(e);
+      return false;
+    }
+  }
+
+  // ── render: KPI 3카드 ─────────────────────────────────────────────────
+  function renderBoardKPI(kpi) {
+    if (!kpi) return;
+    var elPosts    = document.getElementById('adm-board-kpi-posts');
+    var elComments = document.getElementById('adm-board-kpi-comments');
+    var elReports  = document.getElementById('adm-board-kpi-reports');
+    if (elPosts)    elPosts.textContent    = kpi.posts.toLocaleString('ko-KR');
+    if (elComments) elComments.textContent = kpi.comments.toLocaleString('ko-KR');
+    if (elReports)  elReports.textContent  = kpi.reportsPending.toLocaleString('ko-KR');
+  }
+
+  // ── render: 90일 활동 라인차트 SVG (J-4 (a) 보험사 v2.0 회색 점선 보존) ─
+  function renderBoardActivityChart(rows) {
+    var host = document.getElementById('adm-board-activity-chart');
+    if (!host) return;
+    if (!rows || rows.length === 0) {
+      host.innerHTML = '<text x="300" y="110" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.4)">데이터 수집 중 (게시글 0건)</text>';
+      return;
+    }
+    var byType = { team: [], together: [], insurer_board: [] };
+    rows.forEach(function (r) { if (byType[r.board_type]) byType[r.board_type].push(r); });
+
+    var dayMap = {};
+    rows.forEach(function (r) { dayMap[r.day] = true; });
+    var days = Object.keys(dayMap).sort();
+    if (days.length < 2) days = days.length === 1 ? [days[0], days[0]] : ['2026-01-01', '2026-04-30'];
+    var xStep = (560 - 40) / Math.max(days.length - 1, 1);
+    var dayIdx = {};
+    days.forEach(function (d, i) { dayIdx[d] = i; });
+
+    var maxCnt = 1;
+    rows.forEach(function (r) { if (r.cnt > maxCnt) maxCnt = r.cnt; });
+    var yScale = function (cnt) { return 195 - (cnt / maxCnt) * 155; };
+
+    function buildPoints(typeRows) {
+      if (!typeRows || typeRows.length === 0) return '';
+      return typeRows.map(function (r) {
+        return (40 + dayIdx[r.day] * xStep) + ',' + yScale(r.cnt);
+      }).join(' ');
+    }
+
+    var teamPoints     = buildPoints(byType.team);
+    var togetherPoints = buildPoints(byType.together);
+
+    var svg = ''
+      + '<g stroke="rgba(255,255,255,0.06)" stroke-width="1">'
+      +   '<line x1="0" y1="40"  x2="600" y2="40"/>'
+      +   '<line x1="0" y1="90"  x2="600" y2="90"/>'
+      +   '<line x1="0" y1="140" x2="600" y2="140"/>'
+      +   '<line x1="0" y1="190" x2="600" y2="190"/>'
+      + '</g>'
+      + '<g font-size="10" fill="rgba(255,255,255,0.4)" font-family="DM Sans">'
+      +   '<text x="5" y="44">' + maxCnt + '</text>'
+      +   '<text x="5" y="194">0</text>'
+      + '</g>';
+    if (teamPoints)     svg += '<polyline fill="none" stroke="#D4845A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="' + teamPoints + '"/>';
+    if (togetherPoints) svg += '<polyline fill="none" stroke="#3B82F6" stroke-width="2"   stroke-linejoin="round" stroke-linecap="round" points="' + togetherPoints + '"/>';
+    // J-4 (a) 보험사 v2.0 회색 점선 (정적 — 데이터 0)
+    svg += '<polyline fill="none" stroke="var(--admin-text-tertiary)" stroke-width="1.5" stroke-dasharray="4,4" stroke-linejoin="round" points="40,195 580,195"/>';
+
+    host.innerHTML = svg;
+  }
+
+  // ── render: 신고 5행 mock 테이블 (J-2 (b) 라벨만 동적) ────────────────
+  function renderBoardReportsTable(rows) {
+    var tbody = document.getElementById('adm-board-reports-tbody');
+    if (!tbody || !rows) return;
+    tbody.innerHTML = rows.map(function (r) {
+      return ''
+        + '<tr>'
+        +   '<td><span class="adm-badge ' + r.boardClass + '">' + r.board + '</span></td>'
+        +   '<td><strong>' + r.title + '</strong></td>'
+        +   '<td>' + r.author + '</td>'
+        +   '<td><span class="adm-badge ' + r.reasonClass + '">' + r.reasonLabel + '</span></td>'
+        +   '<td style="font-feature-settings:\'tnum\'; font-weight:700;">' + r.count + '</td>'
+        +   '<td>' + r.ago + '</td>'
+        +   '<td><div class="row-actions">'
+        +     '<button title="숨김" data-action="hide"    data-post-id="' + (r.postId || '') + '">👁️</button>'
+        +     '<button title="삭제" data-action="delete"  data-post-id="' + (r.postId || '') + '">🗑️</button>'
+        +     '<button title="정지" data-action="suspend" data-user-id="' + (r.authorId || '') + '">⛔</button>'
+        +   '</div></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  // ── attach: 신고 행 액션 버튼 이벤트 위임 ─────────────────────────────
+  function attachReportActions() {
+    var tbody = document.getElementById('adm-board-reports-tbody');
+    if (!tbody || tbody.dataset.actionsAttached) return;
+    tbody.dataset.actionsAttached = '1';
+    tbody.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      var action = btn.dataset.action;
+      var postId = btn.dataset.postId || null;
+      var userId = btn.dataset.userId || null;
+      if (action === 'hide')    handleHidePost(postId);
+      if (action === 'delete')  handleDeletePost(postId);
+      if (action === 'suspend') handleSuspendUser(userId);
+    });
+  }
+
+  // ── 진입점 (admin_v2 board 뷰 활성화 시 호출) ─────────────────────────
+  window.admLoadBoard = async function () {
+    var [kpi, activity, reports] = await Promise.all([
+      fetchBoardKPI(), fetchBoardActivity90d(), fetchBoardReportsMock()
+    ]);
+    if (!document.querySelector('.adm-view[data-view="board"].active')) return;
+    if (kpi)      renderBoardKPI(kpi);
+    if (activity) renderBoardActivityChart(activity);
+    if (reports)  renderBoardReportsTable(reports);
+    attachReportActions();
+  };
+
+  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3 통합)
+  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
   if (document.querySelector('.adm-view[data-view="users"].active')) {
     window.admLoadUsers();
   } else if (document.querySelector('.adm-view[data-view="content"].active')) {
     window.admLoadContent();
+  } else if (document.querySelector('.adm-view[data-view="board"].active')) {
+    window.admLoadBoard();
   }
 
 })();
