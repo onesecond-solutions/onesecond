@@ -47,6 +47,7 @@
 | D-6 logs | 대기 | activity_logs + system_logs (또는 Sentry 통합) |
 | D-7 billing | 대기 | payments + subscriptions + 4플랜 분포 |
 | D-8 dashboard 종합 | 대기 | KPI 4 + timeline + 최근 가입자 + 시스템 상태 + Top 스크립트 모두 실 연결 + **별 트랙 B-2 dashboard 기본 뱃지 토큰 마이그레이션 묶음** |
+| **D-9 ⚙️ 화면설정 (5/4 신규)** | 대기 | **옛 admin v1 화면설정 탭(`_archive/admin_v1_20260430.html` 라인 1290~1605, ~315줄) 포팅** — 4섹션(메뉴 ON/OFF + PRO 게이트 + 게시판 탭 + 배너 이미지) + 실시간 미리보기. app_settings 정합 (DB 변경 0건). 결정 Q-4 Supabase Storage bucket 신설 분기 |
 | **D-final** 보안 검증 | 대기 | 9역할 RLS 정합 + admin 무접두어 vs ga_*/insurer_* + admin 진입 게이트 + 비-admin 진입 차단 검증 |
 
 ### 8섹션 ↔ 데이터 소스 매핑 (2026-05-01 Phase C 확정 기준)

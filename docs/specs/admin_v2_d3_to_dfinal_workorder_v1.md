@@ -1,4 +1,4 @@
-# admin_v2 Phase D-3 ~ D-final 통합 작업지시서 v1
+# admin_v2 Phase D-3 ~ D-final 통합 작업지시서 v1.1 (D-9 ⚙️ 화면설정 추가)
 
 > **작성일:** 2026-05-04
 > **작성자:** Claude Code (Agent 사전 분석 raw 기반)
@@ -534,7 +534,107 @@
 
 ---
 
-## 8. D-final 보안 검증 사전 분석 — 9역할 RLS 전수 sweep + 종합 sanity
+## 8. D-9 ⚙️ 화면설정 사전 분석 — 사용자 화면 미세 콘트롤 + 실시간 미리보기 (5/4 신규 추가)
+
+### 8.1 작업 배경
+
+| 항목 | 내용 |
+|---|---|
+| 목표 | 옛 admin v1 화면설정 탭(`_archive/admin_v1_20260430.html` 라인 1290~1605, ~315줄)을 admin_v2.html에 신규 신설. 4섹션(메뉴 ON/OFF + PRO 게이트 + 게시판 탭 + 배너 이미지) + 실시간 미리보기. |
+| **격상 근거** | **5/4 D-3 진입 직후 발견** — admin_v2 격상(4/30) 시 옛 admin v1 화면설정 탭 누락. 사용자 화면 미세 콘트롤이 admin UI에서 사라진 상태. 메커니즘(`applyMenuSettings` / `applyGateSettings` — app.html 라인 977·1006)은 살아있음. |
+| 메인 트랙 정합 | _INDEX.md Phase D 표에 D-9 신규 추가. 진입 순서 권장: D-3 → D-4 → D-6 → D-5 → D-9 → D-7(나) → D-8 → D-final |
+
+### 8.2 변경 범위 (3파일)
+
+| 파일 | 변경 유형 | 라인 |
+|---|---|---|
+| `js/admin_v2.js` | UPDATE — settings 섹션 함수 다수 추가 | +400~500줄 (옛 admin v1 1605줄 중 화면설정 ~315줄 + admin_v2 디자인 정합 재구성) |
+| `pages/admin_v2.html` | UPDATE — 7섹션 → 8섹션. settings rail 추가 + view 라우팅 + section body 신설 | +200~300줄 |
+| Supabase DB | **변경 0건** — app_settings 정합 (이미 가동 중) | 0 |
+
+### 8.3 데이터 소스 raw
+
+**app_settings 컬럼 (q2_columns.csv 검증):** id / **key** / **value** / label / **group_name** / updated_at
+
+**기존 활용 키 (옛 admin v1 라인 1318~1322 + 1525~1554 raw):**
+
+| key 패턴 | default | 의미 |
+|---|---|---|
+| `menu_home` / `menu_scripts` / `menu_board` / `menu_myspace` / `menu_news` / `menu_quick` / `menu_together` (7개) | `true` | 사이드바 메뉴 ON/OFF |
+| `gate_quick_a2` | `true` | A2 빠른 실행 PRO 게이트 |
+| `gate_search_a2` | `true` | A2 검색기 PRO 게이트 |
+| `board_tab_hub` | `true` | 게시판 1차 허브 탭 노출 |
+| `board_tab_company` | `false` | 게시판 1차 보험사 탭 노출 (v2.0 대기) |
+| `banner_img_<page_key>` (Quick 제외 6개) | `''` | 페이지별 배너 이미지 URL |
+
+**전체 fetch:** `app_settings?select=key,value` (전체 row)
+
+### 8.4 옛 admin v1 4섹션 raw 구조 (포팅 대상)
+
+| 섹션 | 옛 admin v1 라인 | 핵심 요소 | admin_v2 포팅 시 |
+|---|---|---|---|
+| **섹션 1: B영역 메뉴 표시** | 1325~1384 | 7페이지 토글 + 사이드바 74px 미니뷰 미리보기 (실시간) | `adm-pv` + `adm-mini-side` 컴포넌트 5종 톤 정합 재구성 |
+| **섹션 2: 기능 게이트** | 1386~1445 | 빠른 실행 / 검색기 PRO 토글 + A2 미리보기 + caption 4가지 분기 | `adm-a2-pv` 컴포넌트 정합 |
+| **섹션 3: 게시판 1차 탭** | 1447~1520 | 허브 / 팀(잠금) / 지점(잠금) / 보험사(v2.0) 토글 + 게시판 미리보기 | `adm-bd-pv` 컴포넌트 정합 + J-2 (b) 보험사 v2.0 대기 정합 |
+| **섹션 4: 페이지별 배너 이미지** | 1522~1597 | 6페이지 업로드 + 전환 미리보기 + 권장 사양(1200px+, JPG/PNG/WebP, 5MB) | Q-4 결정 — Supabase Storage bucket 신설 vs 외부 URL |
+
+**저장 함수 4종 (포팅 대상):**
+- `window.admSaveMenuSettings` — 메뉴 ON/OFF (`menu_*` UPSERT 7건)
+- `window.admSaveGateSettings` — PRO 게이트 (`gate_*` UPSERT 2건)
+- `window.admSaveBoardTabs` — 게시판 1차 탭 (`board_tab_*` UPSERT 2건)
+- `window.admSaveBannerSettings` — 배너 이미지 (`banner_img_*` UPSERT 6건)
+
+**이벤트 함수 (포팅 대상):**
+- `window.admBindSettingsEvents` — 토글 시 즉시 미리보기 갱신
+- `window.admSyncMenuPreview` / `admSyncBoardPreview` — 미리보기 카운트·노출 동기화
+
+### 8.5 결정 항목 신규 후보 (5~7건 — Q-1 ~ Q-7)
+
+| # | 결정 후보 | 옵션 | 권장 |
+|:--:|---|---|---|
+| **Q-1** | rail에 settings 섹션 추가 위치 | (a) 가장 마지막 (8번째) / (b) board 직후 (4번째) | **(a) 가장 마지막** — _INDEX.md 표 정합 |
+| **Q-2** | settings 섹션 아이콘 | ⚙️ (옛 admin v1 정합) | **⚙️ 채택** |
+| **Q-3** | 옛 admin v1 4섹션 모두 포팅 vs 일부만 | (a) 4섹션 모두 / (b) 메뉴+게이트+게시판 3섹션 + 배너 별 트랙 | **(a) 4섹션 모두** — 옛 admin raw 통째 보존 + Q-4 결정 후 진행 |
+| **Q-4** ⭐ | 배너 이미지 저장소 | (a) 신규 Supabase Storage bucket `banners` + RLS / (b) 외부 CDN URL 직접 입력 / (c) base64 inline (DB 부담) | **(a) Storage** — 미정 (admin 본 작업, 사용자 업로드 없음으로 RLS 단순) |
+| **Q-5** | 실시간 미리보기 vs 저장 시 반영 | (a) 토글 즉시 미리보기 (옛 admin v1 정합) / (b) 저장 후 미리보기 | **(a) 즉시** UX 정합 |
+| **Q-6** | role별 미리보기 (admin 시점 / GA 매니저 시점 / member 시점) | (a) D-9 범위 외 / (b) Phase E 별 트랙 | **(a) 범위 외** D-9는 설정별 시뮬레이션만 |
+| **Q-7** | 사용자별 impersonation (특정 김설계 계정 화면 미러뷰) | (a) D-9 범위 외 / (b) 별 트랙 | **(a) 범위 외** D-9 + Phase E 모두 후순위 (보안·세션 분리 설계 필요) |
+
+### 8.6 Step 분할 (5단계 — D-2 패턴, DB 변경 0건)
+
+- **Step 1** 사전 검증 (app_settings raw 14키 + applyMenuSettings/Gate 라이브 작동 검증 + Storage bucket 존재 확인 — Q-4 결정 후)
+- **Step 2** js/admin_v2.js 확장 (~400~500줄 — 옛 admin v1 admLoadSettings + admSave* 4종 + admBindSettingsEvents + admSync* 2종 포팅 + admin_v2 디자인 정합)
+- **Step 3** admin_v2.html 8섹션 신설 (settings rail + view 라우팅 + section body)
+- **Step 4** 라이브 회귀 의뢰서 발행 (~30항목)
+- **Step 5** 잔존 부채 등록 + _INDEX.md 갱신
+
+### 8.7 라이브 회귀 항목 추정 (~30항목)
+
+| 섹션 | 수 | 핵심 |
+|---|:--:|---|
+| § 1 정의 raw | 4 | typeof admLoadSettings / admSave* 4종 / admBindSettingsEvents |
+| § 2 실 동작 (4섹션) | 12 | 각 섹션 토글·저장·미리보기 동작 (3항목 × 4섹션) |
+| § 4 RBAC | 3 | 비-admin 차단 / admin 저장 RLS / app_settings 정합 |
+| § 5 콘솔·네트워크 | 4 | Error 0 / 4xx 0 / 토글 즉시 미리보기 / D-1~D-8 회귀 |
+| § 6 **라이브 사용자 화면 영향** | 5 | **비-admin 사용자 로그인 → 메뉴 ON/OFF 적용 / 빠른 실행 PRO 게이트 / 게시판 탭 노출 / 배너 이미지 표시 / Hard refresh 후 정합** |
+| § 7 성능 | 2 | P1 토글 즉시 미리보기 / P2 저장 PATCH 라운드트립 |
+| **합계** | **30** | |
+
+→ § 6 라이브 사용자 화면 영향 = D-9의 핵심 가치 검증.
+
+### 8.8 잔존 부채 후보
+
+| # | 항목 | 권장 |
+|:--:|---|---|
+| 1 | role별 미리보기 (admin / GA 매니저 / member 시점) | Phase E 별 트랙 |
+| 2 | 사용자별 impersonation (특정 사용자 화면 미러뷰) | 별 트랙 (보안·세션 분리 설계 필요) |
+| 3 | 배너 이미지 Storage RLS 정합 (Q-4 결정 후) | D-9 본 작업 또는 별 트랙 |
+| 4 | 옛 admin v1 _archive 보존본 → D-9 종료 후 폐기 결정 | D-final 후 |
+| 5 | app_settings.group_name 활용 (현재 D-9에서 미사용 — board.html은 'board_tab' 사용 중) | D-9 본 작업에서 group_name='settings' 일괄 정합 가능 |
+
+---
+
+## 9. D-final 보안 검증 사전 분석 — 9역할 RLS 전수 sweep + 종합 sanity
 
 ### 8.1 작업 배경
 
@@ -602,7 +702,7 @@
 
 ---
 
-## 9. 절대 원칙 + 누적 학습 15건
+## 10. 절대 원칙 + 누적 학습 15건
 
 ### 9.1 모든 단계 진입 시 첫 검증 (D-pre.5/6/7/8 + D-1 + D-2 + 별 트랙 #3 누적)
 
@@ -634,9 +734,9 @@
 
 ---
 
-## 10. 진입 순서 + 일정 견적 + 부채 누적 표
+## 11. 진입 순서 + 일정 견적 + 부채 누적 표
 
-### 10.1 권장 진입 순서
+### 11.1 권장 진입 순서 (v1.1 — D-9 추가)
 
 | 순서 | 단계 | 권장 사유 |
 |:--:|---|---|
@@ -644,13 +744,14 @@
 | 2 | D-4 notice | K-1 (a) 채택 시 가벼움 (DB 변경 0건) |
 | 3 | D-6 logs | activity_logs 정합 + RPC 0건 = 가벼움 + D-5 진입 전 데이터 raw 확인 가치 |
 | 4 | **D-5 analytics** | 가장 무거운 단계 (RPC 4종) + B-1 grid 토큰 묶음 |
-| 5 | D-7 billing | (나) v2.0 대기 권장 → 매우 가벼움 |
-| 6 | D-8 dashboard 종합 | 다른 섹션 함수 재활용 + B-2 토큰 묶음 |
-| 7 | **D-final 보안 sweep** | 7단계 종합 sanity |
+| 5 | **D-9 ⚙️ 화면설정** | 옛 admin v1 raw 통째 보존 — 포팅 비용 적음. D-5 후 진입으로 사용자 화면 미세 콘트롤 본격 활용 가능 |
+| 6 | D-7 billing | (나) v2.0 대기 권장 → 매우 가벼움 |
+| 7 | D-8 dashboard 종합 | 다른 섹션 함수 재활용 + B-2 토큰 묶음 |
+| 8 | **D-final 보안 sweep** | 8단계 종합 sanity (D-9 RBAC 회귀 포함) |
 
 → 순서 변경 가능 (팀장님 결정).
 
-### 10.2 일정 견적 (D-1·D-2 실측 패턴 기반, 옵션 B 적용)
+### 11.2 일정 견적 (D-1·D-2 실측 패턴 기반, 옵션 B 적용 + D-9 추가)
 
 | 단계 | 추정 세션 | 본 통합본 적용 효과 |
 |---|:--:|---|
@@ -658,21 +759,22 @@
 | D-4 notice | 1.0 | (a) 채택 시 가벼움 |
 | D-5 analytics | 1.8 | RPC 4종 본 작성·검증 무거움 |
 | D-6 logs | 0.8 | RPC 0건 가벼움 |
+| **D-9 ⚙️ 화면설정 (5/4 신규)** | **1.8** | **옛 admin v1 raw 포팅 ~315줄 + admin_v2 디자인 정합 + Q-4 Storage bucket 결정** |
 | D-7 billing | 0.3 | (나) 채택 시 매우 가벼움 |
 | D-8 dashboard 종합 | 1.3 | 함수 재활용 절감 + B-2 묶음 |
-| D-final 보안 sweep | 1.0 | 검증 위주 |
-| 회귀·fix 마진 (+30%) | 2.3 | D-1·D-2 실측 |
-| **잔여 D 합계** | **~9.8세션** | (옵션 A 14세션 → 옵션 B 12세션 → 권장 진입 순서 적용 시 ~10세션) |
+| D-final 보안 sweep | 1.0 | 검증 위주 + D-9 RBAC 회귀 추가 |
+| 회귀·fix 마진 (+30%) | 2.8 | D-1·D-2 실측 + D-9 마진 |
+| **잔여 D 합계 (v1.1)** | **~12.1세션** | (v1: ~9.8세션 → v1.1: +2.3세션 = D-9 추가) |
 
-### 10.3 잔존 부채 누적 (본 통합본 작성 시점 12건 + D-3~D-final 진행 중 신규 발견)
+### 11.3 잔존 부채 누적 (본 통합본 작성 시점 12건 + D-3~D-final 진행 중 신규 발견)
 
 본 통합본 § 1.5 표 그대로 + 단계별 신규 부채는 단계 진입 시 별 트랙·Phase E·v2.0 분류.
 
 ---
 
-## 11. 참고
+## 12. 참고
 
-### 11.1 본 통합본 진실 원천
+### 12.1 본 통합본 진실 원천
 
 - `docs/specs/admin_v2_phase_d_pre.md` (D-pre 결정 27건)
 - `docs/specs/admin_v2_d1_workorder.md` (D-1 패턴)
