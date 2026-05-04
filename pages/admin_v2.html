@@ -1807,148 +1807,85 @@ body.adm-active { overflow: hidden !important; }
     </div><!-- /.adm-view board -->
 
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-    <!-- 5. ANALYTICS (Phase C mock — 통계·분석)                              -->
+    <!-- 5. ANALYTICS (v1.1 라이브 — RPC 4종 + activity_logs 정합) -->
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="analytics">
 
       <div class="adm-section-head">
         <div>
           <div class="adm-section-title">통계·분석</div>
-          <div class="adm-section-desc">DAU/WAU/MAU · 리텐션 · 기능별 사용량 · 코호트. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+          <div class="adm-section-desc">DAU/WAU/MAU · 리텐션 · 기능별 사용량 · 코호트. <span style="color:var(--color-accent);font-weight:700;">[v1.1 라이브 — RPC 4종 + activity_logs 정합]</span></div>
         </div>
         <div class="adm-page-actions">
-          <button class="adm-btn adm-btn-ghost">📅 기간 선택</button>
-          <button class="adm-btn adm-btn-ghost">📤 리포트 PDF</button>
+          <button class="adm-btn adm-btn-ghost" onclick="window.admAnalyticsDateSelect()">📅 기간 선택</button>
+          <button class="adm-btn adm-btn-ghost" onclick="window.admAnalyticsExportPDF()">📤 리포트 PDF</button>
         </div>
       </div>
 
-      <!-- KPI 4카드 -->
+      <!-- KPI 4카드 (실 RPC 호출 — get_dau today / get_wau / get_mau / get_retention_d30) -->
       <div class="adm-kpi-grid" style="margin-bottom: 24px;">
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">DAU (오늘)</div>
             <div class="adm-kpi-icon info">⚡</div>
           </div>
-          <div class="adm-kpi-value">342</div>
-          <div class="adm-kpi-trend up">▲ 8.7% <span class="vs">vs 어제</span></div>
+          <div class="adm-kpi-value" id="adm-analytics-kpi-dau">—</div>
+          <div class="adm-kpi-trend">실 RPC 집계</div>
         </div>
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">WAU (7일)</div>
             <div class="adm-kpi-icon success">📅</div>
           </div>
-          <div class="adm-kpi-value">847</div>
-          <div class="adm-kpi-trend up">▲ 14.2% <span class="vs">vs 지난 주</span></div>
+          <div class="adm-kpi-value" id="adm-analytics-kpi-wau">—</div>
+          <div class="adm-kpi-trend">실 RPC 집계</div>
         </div>
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">MAU (30일)</div>
             <div class="adm-kpi-icon warning">🗓️</div>
           </div>
-          <div class="adm-kpi-value">1,128</div>
-          <div class="adm-kpi-trend up">▲ 22.8% <span class="vs">vs 지난 달</span></div>
+          <div class="adm-kpi-value" id="adm-analytics-kpi-mau">—</div>
+          <div class="adm-kpi-trend">실 RPC 집계</div>
         </div>
         <div class="adm-kpi-card">
           <div class="adm-kpi-top">
             <div class="adm-kpi-label">리텐션 (D-30)</div>
             <div class="adm-kpi-icon danger">🎯</div>
           </div>
-          <div class="adm-kpi-value">68.4%</div>
-          <div class="adm-kpi-trend up">▲ 3.1%p <span class="vs">vs 지난 달</span></div>
+          <div class="adm-kpi-value" id="adm-analytics-kpi-retention">—</div>
+          <div class="adm-kpi-trend" id="adm-analytics-kpi-retention-trend">데이터 수집 중</div>
         </div>
       </div>
 
-      <!-- DAU 추이 라인 차트 (90일) -->
+      <!-- DAU 추이 라인 차트 (90/30/7일 토글) -->
       <div class="adm-panel" style="margin-bottom: 20px;">
         <div class="adm-panel-head">
           <div>
-            <div class="adm-panel-title">DAU 추이 — 최근 90일</div>
-            <div class="adm-panel-meta">2026-02-01 ~ 2026-04-30 · 일간 활성 사용자</div>
+            <div class="adm-panel-title">DAU 추이</div>
+            <div class="adm-panel-meta" id="adm-analytics-dau-meta">로딩…</div>
           </div>
           <div class="adm-page-actions">
-            <button class="adm-btn adm-btn-ghost active" style="height:32px;font-size:12px;padding:0 12px;">90일</button>
-            <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 12px;">30일</button>
-            <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 12px;">7일</button>
+            <button class="adm-btn adm-btn-ghost active" data-analytics-range="90" onclick="window.admAnalyticsTimeRange(90)" style="height:32px;font-size:12px;padding:0 12px;">90일</button>
+            <button class="adm-btn adm-btn-ghost" data-analytics-range="30" onclick="window.admAnalyticsTimeRange(30)" style="height:32px;font-size:12px;padding:0 12px;">30일</button>
+            <button class="adm-btn adm-btn-ghost" data-analytics-range="7" onclick="window.admAnalyticsTimeRange(7)" style="height:32px;font-size:12px;padding:0 12px;">7일</button>
           </div>
         </div>
         <div class="adm-panel-body" style="padding-top:8px;">
-          <svg class="adm-chart" viewBox="0 0 600 220" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="admDauArea" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%"   stop-color="#D4845A" stop-opacity="0.20"/>
-                <stop offset="100%" stop-color="#D4845A" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
-              <line x1="0" y1="40"  x2="600" y2="40"/>
-              <line x1="0" y1="90"  x2="600" y2="90"/>
-              <line x1="0" y1="140" x2="600" y2="140"/>
-              <line x1="0" y1="190" x2="600" y2="190"/>
-            </g>
-            <g font-size="10" fill="rgba(255,255,255,0.4)" font-family="DM Sans">
-              <text x="5" y="44">400</text>
-              <text x="5" y="94">300</text>
-              <text x="5" y="144">200</text>
-              <text x="5" y="194">100</text>
-            </g>
-            <path d="M40,170 L46,165 L52,168 L58,160 L64,158 L70,162 L76,154 L82,150 L88,156 L94,148 L100,144 L106,150 L112,142 L118,138 L124,144 L130,134 L136,128 L142,134 L148,126 L154,120 L160,128 L166,118 L172,112 L178,120 L184,110 L190,104 L196,114 L202,106 L208,98 L214,108 L220,98 L226,92 L232,102 L238,92 L244,86 L250,96 L256,86 L262,78 L268,90 L274,80 L280,72 L286,84 L292,72 L298,66 L304,76 L310,68 L316,60 L322,72 L328,62 L334,54 L340,66 L346,58 L352,50 L358,62 L364,52 L370,46 L376,58 L382,48 L388,42 L394,54 L400,44 L406,38 L412,50 L418,40 L424,34 L430,46 L436,36 L442,30 L448,42 L454,34 L460,28 L466,40 L472,32 L478,26 L484,38 L490,28 L496,22 L502,34 L508,26 L514,20 L520,32 L526,24 L532,18 L538,30 L544,22 L550,14 L556,26 L562,18 L568,12 L574,24 L580,16 L580,200 L40,200 Z"
-              fill="url(#admDauArea)"/>
-            <polyline fill="none" stroke="#D4845A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
-              points="40,170 46,165 52,168 58,160 64,158 70,162 76,154 82,150 88,156 94,148 100,144 106,150 112,142 118,138 124,144 130,134 136,128 142,134 148,126 154,120 160,128 166,118 172,112 178,120 184,110 190,104 196,114 202,106 208,98 214,108 220,98 226,92 232,102 238,92 244,86 250,96 256,86 262,78 268,90 274,80 280,72 286,84 292,72 298,66 304,76 310,68 316,60 322,72 328,62 334,54 340,66 346,58 352,50 358,62 364,52 370,46 376,58 382,48 388,42 394,54 400,44 406,38 412,50 418,40 424,34 430,46 436,36 442,30 448,42 454,34 460,28 466,40 472,32 478,26 484,38 490,28 496,22 502,34 508,26 514,20 520,32 526,24 532,18 538,30 544,22 550,14 556,26 562,18 568,12 574,24 580,16"/>
-            <circle cx="580" cy="16" r="5" fill="#D4845A" stroke="#fff" stroke-width="2"/>
-          </svg>
+          <svg id="adm-analytics-dau-chart" class="adm-chart" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
         </div>
       </div>
 
-      <!-- 기능별 사용량 막대 차트 (6개 메뉴) -->
+      <!-- 기능별 사용량 막대 차트 (6개 메뉴 — L-4 (b) 매핑) -->
       <div class="adm-panel">
         <div class="adm-panel-head">
           <div>
             <div class="adm-panel-title">기능별 사용량 — Top 6 메뉴</div>
-            <div class="adm-panel-meta">최근 7일 · 페이지뷰 합계</div>
+            <div class="adm-panel-meta">90/30/7일 토글 · activity_logs.target_type 매핑 (L-4 (b))</div>
           </div>
         </div>
         <div class="adm-panel-body">
-          <svg class="adm-chart" viewBox="0 0 600 240" preserveAspectRatio="none" style="height: 260px;">
-            <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
-              <line x1="120" y1="20"  x2="120" y2="220"/>
-              <line x1="220" y1="20"  x2="220" y2="220"/>
-              <line x1="320" y1="20"  x2="320" y2="220"/>
-              <line x1="420" y1="20"  x2="420" y2="220"/>
-              <line x1="520" y1="20"  x2="520" y2="220"/>
-            </g>
-            <g font-size="11" fill="var(--admin-text-secondary)" font-family="DM Sans">
-              <text x="115" y="40" text-anchor="end">스크립트 라이브러리</text>
-              <text x="115" y="72" text-anchor="end">홈 (대시보드)</text>
-              <text x="115" y="104" text-anchor="end">함께해요 게시판</text>
-              <text x="115" y="136" text-anchor="end">마이스페이스</text>
-              <text x="115" y="168" text-anchor="end">자료실</text>
-              <text x="115" y="200" text-anchor="end">공지 게시판</text>
-            </g>
-            <g>
-              <rect x="120" y="26" width="430" height="20" fill="#D4845A" rx="4"/>
-              <rect x="120" y="58" width="370" height="20" fill="#E89A6F" rx="4"/>
-              <rect x="120" y="90" width="280" height="20" fill="#3B82F6" rx="4"/>
-              <rect x="120" y="122" width="220" height="20" fill="#60A5FA" rx="4"/>
-              <rect x="120" y="154" width="150" height="20" fill="#10B981" rx="4"/>
-              <rect x="120" y="186" width="90" height="20" fill="#34D399" rx="4"/>
-            </g>
-            <g font-size="11" font-weight="700" fill="var(--admin-text-primary)" font-family="DM Sans" font-feature-settings="'tnum'">
-              <text x="558" y="40">8,472</text>
-              <text x="498" y="72">7,284</text>
-              <text x="408" y="104">5,521</text>
-              <text x="348" y="136">4,328</text>
-              <text x="278" y="168">2,947</text>
-              <text x="218" y="200">1,768</text>
-            </g>
-            <g font-size="9" fill="var(--admin-text-tertiary)" font-family="DM Sans">
-              <text x="120" y="232">0</text>
-              <text x="220" y="232">2k</text>
-              <text x="320" y="232">4k</text>
-              <text x="420" y="232">6k</text>
-              <text x="520" y="232">8k</text>
-            </g>
-          </svg>
+          <svg id="adm-analytics-feature-usage" class="adm-chart" viewBox="0 0 600 240" preserveAspectRatio="none" style="height: 260px;"></svg>
         </div>
       </div>
 
@@ -2359,6 +2296,8 @@ body.adm-active { overflow: hidden !important; }
       window.admLoadBoard();
     } else if (viewKey === 'notice' && typeof window.admLoadNotice === 'function') {
       window.admLoadNotice();
+    } else if (viewKey === 'analytics' && typeof window.admLoadAnalytics === 'function') {
+      window.admLoadAnalytics();
     } else if (viewKey === 'logs' && typeof window.admLoadLogs === 'function') {
       window.admLoadLogs();
     }

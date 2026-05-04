@@ -1264,8 +1264,277 @@
     window.admLoadLogs();
   };
 
-  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3·D-4·D-6 통합)
-  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 또는 #admin/notice 또는 #admin/logs 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
+  // ════════════════════════════════════════════════════════════════════════
+  // D-5 analytics — DAU/WAU/MAU/리텐션 + 6메뉴 막대 + RPC 4종 (2026-05-05 신설)
+  // 작업지시서: docs/specs/admin_v2_d5_workorder.md
+  // 사전 검증: D-5 Step 1 7/7 + Step 2 RPC 5종 등록 + Step 3 정합 검증 15/15 PASS
+  // 결재: L-1 KST 자정 / L-2 cold-start / L-3 (a) 90일 default / L-4 (b) 6메뉴 매핑 / L-5 (b) 코호트 별 트랙
+  //       L-6 "데이터 수집 중" 라벨 / L-7 B-1 grid 토큰 / L-8 정의 명문화 / L-9 SECURITY DEFINER 표준 / L-10 (a) mock 보존
+  // RPC: get_dau / get_wau / get_mau / get_feature_usage / get_retention_d30
+  // ════════════════════════════════════════════════════════════════════════
+
+  // 6메뉴 매핑 (L-4 (b) — admin_v2.html 라인 1921~1926 정합)
+  var FEATURE_LABELS = {
+    script:   '스크립트 라이브러리',
+    home:     '홈 (대시보드)',
+    together: '함께해요 게시판',
+    myspace:  '마이스페이스',
+    library:  '자료실',
+    notice:   '공지 게시판'
+  };
+
+  var FEATURE_COLORS = {
+    script:   '#D4845A',
+    home:     '#E89A6F',
+    together: '#3B82F6',
+    myspace:  '#60A5FA',
+    library:  '#10B981',
+    notice:   '#34D399'
+  };
+
+  var FEATURE_ORDER = ['script','home','together','myspace','library','notice'];
+
+  var _analyticsState = { days: 90 };
+
+  // ── KST today (L-1 — D-2 fetchContentKPI 패턴) ─────────────────────────
+  function _kstToday() { return new Date().toISOString().slice(0, 10); }
+  function _kstDaysAgo(days) {
+    var d = new Date(); d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // ── fetch — RPC 호출 표준 (POST /rest/v1/rpc/<name>) ────────────────────
+  async function _callRpc(name, args) {
+    try {
+      var res = await window.db.fetch('/rest/v1/rpc/' + name, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args || {})
+      });
+      if (res.status === 403) {
+        if (typeof window.admExit === 'function') window.admExit();
+        throw new Error('관리자 권한 없음');
+      }
+      if (!res.ok) {
+        showAdminToast('RPC ' + name + ' 오류 (' + res.status + ')', 'danger');
+        if (window.Sentry) window.Sentry.captureMessage('[admin_v2 D-5] RPC ' + name + ' HTTP ' + res.status);
+        throw new Error('HTTP ' + res.status);
+      }
+      return await res.json();
+    } catch (e) {
+      if (e.name === 'TypeError' && /network|fetch|failed/i.test(e.message)) {
+        await new Promise(function (r) { setTimeout(r, 3000); });
+        return _callRpc(name, args);
+      }
+      if (e.message !== 'TOKEN_EXPIRED' && e.message !== '관리자 권한 없음') {
+        if (window.Sentry) window.Sentry.captureException(e);
+      }
+      return null;
+    }
+  }
+
+  // ── fetch — KPI 4종 병렬 (Promise.all) ─────────────────────────────────
+  async function fetchAnalyticsKPI() {
+    var today = _kstToday();
+    var [dauRows, wau, mau, retention] = await Promise.all([
+      _callRpc('get_dau', { start_date: today, end_date: today }),
+      _callRpc('get_wau', {}),
+      _callRpc('get_mau', {}),
+      _callRpc('get_retention_d30', {})
+    ]);
+    return {
+      dau: (dauRows && dauRows.length > 0) ? Number(dauRows[0].dau) : 0,
+      wau: wau != null ? Number(wau) : 0,
+      mau: mau != null ? Number(mau) : 0,
+      retention: retention != null ? Number(retention) : 0
+    };
+  }
+
+  // ── fetch — DAU N일 라인차트 ────────────────────────────────────────────
+  async function fetchDAU(days) {
+    return _callRpc('get_dau', {
+      start_date: _kstDaysAgo(days), end_date: _kstToday()
+    });
+  }
+
+  // ── fetch — 6메뉴 사용량 ────────────────────────────────────────────────
+  async function fetchFeatureUsage(days) {
+    return _callRpc('get_feature_usage', {
+      start_date: _kstDaysAgo(days), end_date: _kstToday()
+    });
+  }
+
+  // ── render — KPI 4카드 ─────────────────────────────────────────────────
+  function renderAnalyticsKPI(kpi) {
+    var elDau = document.getElementById('adm-analytics-kpi-dau');
+    var elWau = document.getElementById('adm-analytics-kpi-wau');
+    var elMau = document.getElementById('adm-analytics-kpi-mau');
+    var elRet = document.getElementById('adm-analytics-kpi-retention');
+    if (elDau) elDau.textContent = (kpi.dau || 0).toLocaleString();
+    if (elWau) elWau.textContent = (kpi.wau || 0).toLocaleString();
+    if (elMau) elMau.textContent = (kpi.mau || 0).toLocaleString();
+    if (elRet) {
+      // L-6: last_seen_at 미기록 등으로 0% 표시 시 "데이터 수집 중" 라벨
+      var r = kpi.retention || 0;
+      elRet.textContent = (r > 0) ? r.toFixed(1) + '%' : '— %';
+      var elRetTrend = document.getElementById('adm-analytics-kpi-retention-trend');
+      if (elRetTrend) {
+        elRetTrend.textContent = (r > 0) ? '집계 활성' : '데이터 수집 중';
+        elRetTrend.className = 'adm-kpi-trend' + ((r > 0) ? ' up' : '');
+      }
+    }
+  }
+
+  // ── render — DAU 라인차트 (SVG 동적, viewBox 0 0 600 220) ──────────────
+  function renderDAUChart(rows, days) {
+    var svg = document.getElementById('adm-analytics-dau-chart');
+    if (!svg) return;
+    var meta = document.getElementById('adm-analytics-dau-meta');
+    if (meta) {
+      meta.textContent = _kstDaysAgo(days) + ' ~ ' + _kstToday() + ' · 일간 활성 사용자';
+    }
+    if (!rows || !rows.length) {
+      svg.innerHTML = '<text x="300" y="110" text-anchor="middle" font-size="14" fill="var(--admin-text-tertiary)">데이터 수집 중 — 4팀 오픈 후 자동 누적</text>';
+      return;
+    }
+    // 좌표 계산: x = 40 ~ 580 (440px) / y = 200 (max=0) ~ 20 (max=N)
+    var maxDau = Math.max.apply(null, rows.map(function (r) { return Number(r.dau) || 0; }));
+    if (maxDau < 4) maxDau = 4; // 최소 스케일
+    var w = 540, x0 = 40, y0 = 200, h = 180;
+    var step = (rows.length > 1) ? w / (rows.length - 1) : 0;
+    var pts = rows.map(function (r, i) {
+      var y = y0 - (Number(r.dau) || 0) * h / maxDau;
+      return { x: x0 + i * step, y: y, dau: Number(r.dau) || 0, day: r.day };
+    });
+    var poly = pts.map(function (p) { return p.x + ',' + p.y; }).join(' ');
+    var pathD = 'M' + pts[0].x + ',' + pts[0].y + ' '
+      + pts.slice(1).map(function (p) { return 'L' + p.x + ',' + p.y; }).join(' ')
+      + ' L' + pts[pts.length - 1].x + ',' + y0
+      + ' L' + pts[0].x + ',' + y0 + ' Z';
+    // y축 눈금 라벨 (4단계)
+    var yTicks = [
+      { v: maxDau,             y: 20  },
+      { v: Math.round(maxDau * 0.75), y: 65 },
+      { v: Math.round(maxDau * 0.5),  y: 110 },
+      { v: Math.round(maxDau * 0.25), y: 155 }
+    ];
+    svg.innerHTML =
+      '<defs>'
+        + '<linearGradient id="admDauArea" x1="0" x2="0" y1="0" y2="1">'
+          + '<stop offset="0%"   stop-color="#D4845A" stop-opacity="0.20"/>'
+          + '<stop offset="100%" stop-color="#D4845A" stop-opacity="0"/>'
+        + '</linearGradient>'
+      + '</defs>'
+      + '<g stroke="var(--admin-chart-grid)" stroke-width="1">'
+        + '<line x1="0" y1="20"  x2="600" y2="20"/>'
+        + '<line x1="0" y1="65"  x2="600" y2="65"/>'
+        + '<line x1="0" y1="110" x2="600" y2="110"/>'
+        + '<line x1="0" y1="155" x2="600" y2="155"/>'
+        + '<line x1="0" y1="200" x2="600" y2="200"/>'
+      + '</g>'
+      + '<g font-size="10" fill="var(--admin-text-tertiary)" font-family="DM Sans">'
+        + yTicks.map(function (t) { return '<text x="5" y="' + (t.y + 4) + '">' + t.v + '</text>'; }).join('')
+      + '</g>'
+      + '<path d="' + pathD + '" fill="url(#admDauArea)"/>'
+      + '<polyline fill="none" stroke="#D4845A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="' + poly + '"/>'
+      + '<circle cx="' + pts[pts.length - 1].x + '" cy="' + pts[pts.length - 1].y
+                  + '" r="5" fill="#D4845A" stroke="#fff" stroke-width="2"/>';
+  }
+
+  // ── render — 6메뉴 막대 (SVG 동적, viewBox 0 0 600 240) ────────────────
+  function renderFeatureUsage(rows) {
+    var svg = document.getElementById('adm-analytics-feature-usage');
+    if (!svg) return;
+    if (!rows || !rows.length) {
+      svg.innerHTML = '<text x="300" y="120" text-anchor="middle" font-size="14" fill="var(--admin-text-tertiary)">데이터 수집 중</text>';
+      return;
+    }
+    // 매핑: rows = [{feature: 'script', count: 580}, ...]
+    var byFeat = {};
+    rows.forEach(function (r) { byFeat[r.feature] = Number(r.count) || 0; });
+    // 6종 강제 보장 + 정렬(desc)
+    var ordered = FEATURE_ORDER.map(function (k) {
+      return { feature: k, count: byFeat[k] || 0 };
+    }).sort(function (a, b) { return b.count - a.count; });
+
+    var maxCount = Math.max.apply(null, ordered.map(function (r) { return r.count; }));
+    if (maxCount < 1) maxCount = 1;
+    // 막대 그리드 + 라벨 + rect + 값
+    var rows_y = [40, 72, 104, 136, 168, 200];
+    var x0 = 120, w = 430;
+    var bars = ordered.map(function (r, i) {
+      var width = (r.count / maxCount) * w;
+      var color = FEATURE_COLORS[r.feature];
+      return '<rect x="' + x0 + '" y="' + (rows_y[i] - 14)
+        + '" width="' + width + '" height="20" fill="' + color + '" rx="4"/>';
+    }).join('');
+    var labels = ordered.map(function (r, i) {
+      return '<text x="115" y="' + rows_y[i] + '" text-anchor="end">' + FEATURE_LABELS[r.feature] + '</text>';
+    }).join('');
+    var values = ordered.map(function (r, i) {
+      var x = x0 + (r.count / maxCount) * w + 8;
+      return '<text x="' + x + '" y="' + rows_y[i] + '">' + r.count.toLocaleString() + '</text>';
+    }).join('');
+    // x축 5단계 (0/25/50/75/100%)
+    var xAxis = [0, 0.25, 0.5, 0.75, 1].map(function (p) {
+      var x = x0 + p * w;
+      var label = (p === 0) ? '0' : (Math.round(maxCount * p)).toLocaleString();
+      return '<line x1="' + x + '" y1="20" x2="' + x + '" y2="220" stroke="var(--admin-chart-grid)" stroke-width="1"/>'
+        + '<text x="' + x + '" y="232" font-size="9" fill="var(--admin-text-tertiary)">' + label + '</text>';
+    }).join('');
+    svg.innerHTML =
+      '<g>' + xAxis + '</g>'
+      + '<g font-size="11" fill="var(--admin-text-secondary)" font-family="DM Sans">' + labels + '</g>'
+      + '<g>' + bars + '</g>'
+      + '<g font-size="11" font-weight="700" fill="var(--admin-text-primary)" font-family="DM Sans" font-feature-settings="tnum">' + values + '</g>';
+  }
+
+  // ── render — 시간축 토글 active 갱신 ──────────────────────────────────
+  function _setTimeRangeActive(days) {
+    document.querySelectorAll('[data-analytics-range]').forEach(function (btn) {
+      btn.classList.toggle('active', Number(btn.dataset.analyticsRange) === days);
+    });
+  }
+
+  // ── 진입점 ────────────────────────────────────────────────────────────
+  window.admLoadAnalytics = async function () {
+    if (!window.db) return;
+    var [kpi, dau, feat] = await Promise.all([
+      fetchAnalyticsKPI(),
+      fetchDAU(_analyticsState.days),
+      fetchFeatureUsage(_analyticsState.days)
+    ]);
+    if (!document.querySelector('.adm-view[data-view="analytics"].active')) return;
+    if (kpi)  renderAnalyticsKPI(kpi);
+    if (dau)  renderDAUChart(dau, _analyticsState.days);
+    if (feat) renderFeatureUsage(feat);
+    _setTimeRangeActive(_analyticsState.days);
+  };
+
+  // ── 핸들러 — 시간축 토글 (L-3 (a) 90일 default) ───────────────────────
+  window.admAnalyticsTimeRange = function (days) {
+    _analyticsState.days = Number(days) || 90;
+    _setTimeRangeActive(_analyticsState.days);
+    Promise.all([
+      fetchDAU(_analyticsState.days),
+      fetchFeatureUsage(_analyticsState.days)
+    ]).then(function (r) {
+      if (!document.querySelector('.adm-view[data-view="analytics"].active')) return;
+      if (r[0]) renderDAUChart(r[0], _analyticsState.days);
+      if (r[1]) renderFeatureUsage(r[1]);
+    });
+  };
+
+  // ── 핸들러 — 기간 선택 / 리포트 PDF (L-10 (a) mock 보존) ──────────────
+  window.admAnalyticsDateSelect = function () {
+    showAdminToast('Phase E 대기 — 기간 선택 (L-10 (a) mock 보존)', 'info');
+  };
+  window.admAnalyticsExportPDF = function () {
+    showAdminToast('Phase E 대기 — 리포트 PDF (L-10 (a) mock 보존)', 'info');
+  };
+
+  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3·D-4·D-5·D-6 통합)
+  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 또는 #admin/notice 또는 #admin/analytics 또는 #admin/logs 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
   if (document.querySelector('.adm-view[data-view="users"].active')) {
     window.admLoadUsers();
   } else if (document.querySelector('.adm-view[data-view="content"].active')) {
@@ -1274,6 +1543,8 @@
     window.admLoadBoard();
   } else if (document.querySelector('.adm-view[data-view="notice"].active')) {
     window.admLoadNotice();
+  } else if (document.querySelector('.adm-view[data-view="analytics"].active')) {
+    window.admLoadAnalytics();
   } else if (document.querySelector('.adm-view[data-view="logs"].active')) {
     window.admLoadLogs();
   }
