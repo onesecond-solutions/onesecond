@@ -499,6 +499,10 @@
     var total = dist.total || 1;
     if (totalEl) totalEl.textContent = total.toLocaleString('ko-KR');
 
+    // panel-meta 부제목 갱신 (D-2 회귀 D2 FAIL fix — 5/4)
+    var metaEl = document.getElementById('adm-content-stage-meta');
+    if (metaEl) metaEl.textContent = '전체 ' + total.toLocaleString('ko-KR') + ' 스크립트 기준';
+
     // STAGE_KEY_ORDER 순서대로 DB 영문 키 → 한국어 라벨 매핑 (F-1 청산)
     var ordered = STAGE_KEY_ORDER.map(function (key, i) {
       var cnt = dist.counts[key] || 0;

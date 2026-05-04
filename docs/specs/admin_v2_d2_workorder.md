@@ -667,7 +667,7 @@ docs/sessions/_INDEX.md                        ← Step 5 갱신 (Phase D 표 + 
 |:--:|---|---|
 | 1 | `scripts.save_count` 또는 `saves` 테이블 신설 (사용자 북마크) | I-4 |
 | 2 | "전체 보기" 버튼 → content 풀 페이지 (페이징·검색·필터·정렬) | I-7 |
-| 3 | `get_stage_distribution` RPC 신설 (옵션 b 라운드트립 최적화) | I-2 |
+| 3 | **🔴 우선순위 격상 (5/4 회귀 P1·P2 FAIL)** `get_stage_distribution` RPC 신설 — 현재 라운드트립 243~1022ms (Supabase cold-start 포함 1초 경계 초과). 의뢰서 § 8 P1(<200ms) / P2(<1초) FAIL 근거. RPC로 9 query 1 round trip 변환 + 서버측 GROUP BY 효과 ↑ | I-2 → P1·P2 |
 | 4 | `owner_id` (text) ↔ `users` join 패턴 RPC (작성자 이름·역할 표시) | I-5 |
 | 5 | KPI 카드 추세 라벨 "▲ 184건 vs 지난 달" 동적화 (기간 비교 RPC) | Step 3-1 |
 | 6 | content 메뉴 pane 잔여 항목(.pending 유지) Phase E 범위 정합 | Step 3-7 |
