@@ -1011,8 +1011,261 @@
     attachNoticeActions();
   };
 
-  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3·D-4 통합)
-  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 또는 #admin/notice 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
+  // ════════════════════════════════════════════════════════════════════════
+  // D-6 logs — activity_logs 검색·4필터 + SYSTEM mock 합치기 (2026-05-05 신설)
+  // 작업지시서: docs/specs/admin_v2_d6_workorder.md
+  // 사전 검증: D-6 Step 1 6/6 + Step 1.5 admin read all logs is_admin() 통일
+  // 결재: M-1 (b) 단순 LIKE / M-2 (c) SYSTEM mock 보존 / M-3 표준 / M-4 (a) 오늘 / M-5 (b) 영구 / M-6 (b) Phase E
+  // 추가 결재: M-7 (c) result 컬럼 부재 → 모든 행 "성공" 통일 / M-8 (b) event_type select 라이브 2종 / M-9 (a) admin RLS is_admin() 청산 완료
+  // ════════════════════════════════════════════════════════════════════════
+
+  var LOGS_PAGE_SIZE = 12;
+
+  // event_type → 한국어 라벨 (M-8 (b) 라이브 2종 — 분포 확장 시 별 트랙 #9에서 동적 채움)
+  var EVENT_TYPE_LABEL = {
+    login: '로그인',
+    script_view: '스크립트 조회'
+  };
+
+  // SYSTEM_LOGS_MOCK — M-2 (c) admin_v2.html mock SYSTEM 2행 raw 보존
+  var SYSTEM_LOGS_MOCK = [
+    { id: 'sys_1', user_id: null, event_type: 'system_warn',
+      target_type: 'api', target_id: '/api/scripts/search',
+      created_at: null, _system: true, _label: 'API 응답 지연',
+      _result: 'warn', _detail: 'avg_latency=2.4s' },
+    { id: 'sys_2', user_id: null, event_type: 'system_error',
+      target_type: 'db', target_id: 'supabase pdnwgzn...',
+      created_at: null, _system: true, _label: 'DB connection timeout',
+      _result: 'fail', _detail: '자동 재연결 → 정상' }
+  ];
+
+  var _logsState = {
+    search: '', date: '', userId: 'all', eventType: 'all', result: 'all',
+    total: 0, _userMap: null
+  };
+
+  // ── fetch — activity_logs 12행 ─────────────────────────────────────────
+  async function fetchActivityLogs(opts) {
+    opts = opts || {};
+    Object.assign(_logsState, opts);
+
+    var params = new URLSearchParams();
+    params.set('select', 'id,user_id,event_type,target_type,target_id,created_at');
+    params.set('order', 'created_at.desc');
+    params.set('limit', String(LOGS_PAGE_SIZE));
+
+    // M-3 #1 — 날짜 필터 (M-4 (a) today default)
+    if (_logsState.date) {
+      var d = _logsState.date;
+      params.append('created_at', 'gte.' + d + 'T00:00:00');
+      params.append('created_at', 'lt.'  + d + 'T23:59:59.999');
+    }
+    // M-3 #2 — 사용자 필터
+    if (_logsState.userId && _logsState.userId !== 'all') {
+      params.set('user_id', 'eq.' + _logsState.userId);
+    }
+    // M-3 #3 — 액션(event_type) 필터
+    if (_logsState.eventType && _logsState.eventType !== 'all') {
+      params.set('event_type', 'eq.' + _logsState.eventType);
+    }
+    // 검색 — M-1 (b) 단순 LIKE (event_type / target_type / target_id ilike)
+    if (_logsState.search && _logsState.search.trim()) {
+      var safe = _logsState.search.trim().replace(/[*,()]/g, '');
+      params.set('or', '(event_type.ilike.*' + safe + '*,target_type.ilike.*' + safe + '*,target_id.ilike.*' + safe + '*)');
+    }
+    // M-3 #4 result는 컬럼 부재(M-7 (c)) → 필터 무관 (UI는 그대로, 모든 행 "성공" 통일)
+
+    try {
+      var res = await window.db.fetch('/rest/v1/activity_logs?' + params.toString(), {
+        headers: { 'Prefer': 'count=exact' }
+      });
+      if (res.status === 403) {
+        if (typeof window.admExit === 'function') window.admExit();
+        throw new Error('관리자 권한 없음');
+      }
+      if (!res.ok) {
+        showAdminToast('서버 오류 (' + res.status + '). 잠시 후 다시 시도해 주세요.', 'danger');
+        if (window.Sentry) window.Sentry.captureMessage('[admin_v2 D-6] fetchActivityLogs HTTP ' + res.status);
+        throw new Error('HTTP ' + res.status);
+      }
+      var rows = await res.json();
+      _logsState.total = parseCount(res);
+      return { rows: rows, total: _logsState.total };
+    } catch (e) {
+      if (e.name === 'TypeError' && /network|fetch|failed/i.test(e.message)) {
+        await new Promise(function (r) { setTimeout(r, 3000); });
+        return fetchActivityLogs(opts);
+      }
+      if (e.message !== 'TOKEN_EXPIRED' && e.message !== '관리자 권한 없음') {
+        if (window.Sentry) window.Sentry.captureException(e);
+      }
+      return null;
+    }
+  }
+
+  // ── fetch — 사용자 옵션 (admin SELECT 활용 — D-1 정합) ─────────────────
+  async function fetchUsersForLogs() {
+    if (_logsState._userMap) return _logsState._userMap;
+    try {
+      var res = await window.db.fetch('/rest/v1/users?select=id,name,role&order=name.asc');
+      if (!res.ok) return null;
+      var rows = await res.json();
+      var map = {};
+      rows.forEach(function (u) { map[u.id] = u; });
+      _logsState._userMap = map;
+      return map;
+    } catch (e) { return null; }
+  }
+
+  // ── M-2 (c) — SYSTEM mock 합치기 (필터 활성 시 자동 제외) ───────────────
+  function mergeSystemLogsMock(rows, opts) {
+    opts = opts || {};
+    if ((opts.userId && opts.userId !== 'all') ||
+        (opts.eventType && opts.eventType !== 'all') ||
+        (opts.search && opts.search.trim())) {
+      return rows;
+    }
+    return rows.concat(SYSTEM_LOGS_MOCK).slice(0, LOGS_PAGE_SIZE);
+  }
+
+  // ── render — logs 테이블 ──────────────────────────────────────────────
+  function renderLogsTable(rows) {
+    var tbody = document.getElementById('adm-logs-tbody');
+    if (!tbody) return;
+    if (!rows || !rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--admin-text-tertiary);padding:24px;">로그가 없습니다.</td></tr>';
+      return;
+    }
+    var userMap = _logsState._userMap || {};
+    tbody.innerHTML = rows.map(function (r) {
+      // 시각
+      var time = '—';
+      if (r.created_at) {
+        var d = new Date(r.created_at);
+        time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+      }
+      // 사용자
+      var userCell;
+      if (r._system) {
+        var sysCls = r.event_type === 'system_error' ? 'rgba(239,68,68,0.18)' : 'var(--admin-warning-bg)';
+        var sysClr = r.event_type === 'system_error' ? 'var(--color-danger)' : 'var(--color-warning)';
+        var sysLbl = r.event_type === 'system_error' ? '오류' : '시스템';
+        userCell = '<strong>SYSTEM</strong> <span class="adm-badge" style="background:' + sysCls + ';color:' + sysClr + ';margin-left:6px;">' + sysLbl + '</span>';
+      } else if (r.user_id && userMap[r.user_id]) {
+        var u = userMap[r.user_id];
+        var roleClass = ROLE_BADGE_CLASS[u.role] || '';
+        var roleLabel = (window.ROLE_LABEL && window.ROLE_LABEL[u.role]) || u.role || '—';
+        userCell = '<strong>' + escapeHtml(u.name || '—') + '</strong> <span class="adm-badge ' + roleClass + '" style="margin-left:6px;">' + escapeHtml(roleLabel) + '</span>';
+      } else {
+        userCell = '<span style="color:var(--admin-text-tertiary);">—</span>';
+      }
+      // 액션
+      var action = r._system ? r._label : (EVENT_TYPE_LABEL[r.event_type] || r.event_type || '—');
+      // 대상
+      var target;
+      if (r._system) target = r.target_id;
+      else if (r.target_type && r.target_id) target = r.target_type + '#' + r.target_id;
+      else target = '—';
+      // 결과 (M-7 (c) — 모든 행 "성공" 통일 / SYSTEM은 mock 결과)
+      var resultBadge;
+      if (r._system) {
+        if (r._result === 'fail')      resultBadge = '<span class="adm-badge status-suspended">실패</span>';
+        else if (r._result === 'warn') resultBadge = '<span class="adm-badge status-pending">경고</span>';
+        else                           resultBadge = '<span class="adm-badge status-active">성공</span>';
+      } else {
+        resultBadge = '<span class="adm-badge status-active">성공</span>';
+      }
+      // 상세
+      var detail = r._system ? r._detail : ('id=' + (r.id != null ? r.id : '—'));
+      return '<tr>'
+        + '<td style="font-feature-settings:\'tnum\';color:var(--admin-text-tertiary);">' + escapeHtml(time) + '</td>'
+        + '<td>' + userCell + '</td>'
+        + '<td>' + escapeHtml(action) + '</td>'
+        + '<td>' + escapeHtml(target) + '</td>'
+        + '<td>' + resultBadge + '</td>'
+        + '<td style="color:var(--admin-text-tertiary);font-size:11px;">' + escapeHtml(detail) + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  // ── render — 패널 메타 ────────────────────────────────────────────────
+  function renderLogsMeta(total) {
+    var meta = document.getElementById('adm-logs-meta');
+    if (meta) meta.textContent = '최근 ' + LOGS_PAGE_SIZE + '건 · 전체 ' + (total || 0).toLocaleString() + '건';
+  }
+
+  // ── render — 사용자 select 동적 채움 (D-1 admin SELECT 정합) ─────────
+  function renderLogsUserSelect(userMap) {
+    var sel = document.getElementById('adm-logs-user-filter');
+    if (!sel || !userMap) return;
+    var current = sel.value;
+    var opts = ['<option value="all">모든 사용자</option>'];
+    Object.keys(userMap).forEach(function (id) {
+      var u = userMap[id];
+      var label = (u.name || '—') + ' (' + ((window.ROLE_LABEL && window.ROLE_LABEL[u.role]) || u.role || '—') + ')';
+      opts.push('<option value="' + escapeHtml(id) + '">' + escapeHtml(label) + '</option>');
+    });
+    sel.innerHTML = opts.join('');
+    if (current) sel.value = current;
+  }
+
+  // ── 진입점 ────────────────────────────────────────────────────────────
+  window.admLoadLogs = async function () {
+    if (!window.db) return;
+    var dateInput = document.getElementById('adm-logs-date');
+    if (dateInput && !dateInput.value) {
+      dateInput.value = new Date().toISOString().slice(0, 10); // M-4 (a) today default
+    }
+    var userMap = await fetchUsersForLogs();
+    if (userMap) renderLogsUserSelect(userMap);
+
+    var result = await fetchActivityLogs({ date: dateInput ? dateInput.value : '' });
+    if (!document.querySelector('.adm-view[data-view="logs"].active')) return; // race
+    if (result) {
+      var merged = mergeSystemLogsMock(result.rows, _logsState);
+      renderLogsTable(merged);
+      renderLogsMeta(result.total);
+    }
+  };
+
+  // ── 핸들러 — 검색 (300ms 디바운스) ─────────────────────────────────────
+  function _logsApply(r) {
+    if (!r) return;
+    var merged = mergeSystemLogsMock(r.rows, _logsState);
+    renderLogsTable(merged);
+    renderLogsMeta(r.total);
+  }
+  window.admLogsSearch = adm_debounce(function (val) {
+    fetchActivityLogs({ search: val || '' }).then(_logsApply);
+  }, DEBOUNCE_MS);
+
+  // ── 핸들러 — 4필터 (M-3 표준 — 날짜 → 사용자 → 액션 → 결과) ────────────
+  window.admLogsFilterDate = function (val) {
+    fetchActivityLogs({ date: val || '' }).then(_logsApply);
+  };
+  window.admLogsFilterUser = function (val) {
+    fetchActivityLogs({ userId: val || 'all' }).then(_logsApply);
+  };
+  window.admLogsFilterAction = function (val) {
+    fetchActivityLogs({ eventType: val || 'all' }).then(_logsApply);
+  };
+  window.admLogsFilterResult = function (val) {
+    // M-7 (c) — DB result 컬럼 부재로 필터 무관 (UI 그대로 / 'all' 외 선택 시 안내 토스트)
+    if (val && val !== 'all') {
+      showAdminToast('결과 필터: result 컬럼 부재(M-7 (c)) — 모든 행 "성공" 통일 표시', 'info');
+    }
+  };
+
+  // ── 핸들러 — CSV / 새로고침 ───────────────────────────────────────────
+  window.admLogsExportCSV = function () {
+    showAdminToast('Phase E 대기 — CSV 내보내기 (M-6 (b))', 'info');
+  };
+  window.admLogsRefresh = function () {
+    window.admLoadLogs();
+  };
+
+  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3·D-4·D-6 통합)
+  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 또는 #admin/notice 또는 #admin/logs 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
   if (document.querySelector('.adm-view[data-view="users"].active')) {
     window.admLoadUsers();
   } else if (document.querySelector('.adm-view[data-view="content"].active')) {
@@ -1021,6 +1274,8 @@
     window.admLoadBoard();
   } else if (document.querySelector('.adm-view[data-view="notice"].active')) {
     window.admLoadNotice();
+  } else if (document.querySelector('.adm-view[data-view="logs"].active')) {
+    window.admLoadLogs();
   }
 
 })();

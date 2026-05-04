@@ -1997,58 +1997,51 @@ body.adm-active { overflow: hidden !important; }
     </div><!-- /.adm-view notice -->
 
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-    <!-- 7. LOGS (Phase C mock — 활동 로그 / 시스템 로그)                     -->
+    <!-- 7. LOGS (v1.1 라이브 — activity_logs 정합 / SYSTEM 2행 mock 보존 — M-2 (c)) -->
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="adm-view" data-view="logs">
 
       <div class="adm-section-head">
         <div>
           <div class="adm-section-title">로그</div>
-          <div class="adm-section-desc">활동 로그 + 시스템 로그 통합 · 사용자·관리자 액션 추적 · 오류 발생 추적. <span style="color:var(--color-accent);font-weight:700;">[Phase C mock]</span></div>
+          <div class="adm-section-desc">활동 로그 + 시스템 로그 통합 · 사용자·관리자 액션 추적 · 오류 발생 추적. <span style="color:var(--color-accent);font-weight:700;">[v1.1 라이브 — activity_logs 정합]</span></div>
         </div>
         <div class="adm-page-actions">
-          <button class="adm-btn adm-btn-ghost">📤 CSV</button>
-          <button class="adm-btn adm-btn-ghost">🔄 새로고침</button>
+          <button class="adm-btn adm-btn-ghost" onclick="window.admLogsExportCSV()">📤 CSV</button>
+          <button class="adm-btn adm-btn-ghost" onclick="window.admLogsRefresh()">🔄 새로고침</button>
         </div>
       </div>
 
-      <!-- 검색·필터 바 -->
+      <!-- 검색·필터 바 (M-3 표준 — 날짜 → 사용자 → 액션 → 결과) -->
       <div class="adm-filter-bar">
         <div class="adm-filter-search">
           <span style="opacity:0.6;">🔍</span>
-          <input type="text" placeholder="사용자·액션·대상 검색…" />
+          <input type="text" id="adm-logs-search" placeholder="event_type · target 검색…" oninput="window.admLogsSearch(this.value)" />
         </div>
-        <input type="date" class="adm-inline-select" value="2026-04-30" style="font-feature-settings:'tnum';" />
-        <select class="adm-inline-select">
-          <option>모든 사용자</option>
-          <option>임태성 (어드민)</option>
-          <option>김지훈 (GA 지점장)</option>
-          <option>박서연 (GA 실장)</option>
+        <input type="date" id="adm-logs-date" class="adm-inline-select" style="font-feature-settings:'tnum';" onchange="window.admLogsFilterDate(this.value)" />
+        <select id="adm-logs-user-filter" class="adm-inline-select" onchange="window.admLogsFilterUser(this.value)">
+          <option value="all">모든 사용자</option>
         </select>
-        <select class="adm-inline-select">
-          <option>모든 액션</option>
-          <option>로그인</option>
-          <option>스크립트 작성·편집</option>
-          <option>게시글 작성·편집</option>
-          <option>결제·플랜 변경</option>
-          <option>관리자 작업</option>
-          <option>오류·예외</option>
+        <select id="adm-logs-action-filter" class="adm-inline-select" onchange="window.admLogsFilterAction(this.value)">
+          <option value="all">모든 액션</option>
+          <option value="login">로그인</option>
+          <option value="script_view">스크립트 조회</option>
         </select>
-        <select class="adm-inline-select">
-          <option>모든 결과</option>
-          <option>성공</option>
-          <option>실패</option>
+        <select id="adm-logs-result-filter" class="adm-inline-select" onchange="window.admLogsFilterResult(this.value)">
+          <option value="all">모든 결과</option>
+          <option value="success">성공</option>
+          <option value="fail">실패</option>
         </select>
       </div>
 
-      <!-- 로그 테이블 12행 -->
+      <!-- 로그 테이블 12행 (실 activity_logs + SYSTEM 2행 mock 합쳐 표시) -->
       <div class="adm-panel">
         <div class="adm-panel-head">
           <div>
-            <div class="adm-panel-title">활동 로그 — 2026-05-01</div>
-            <div class="adm-panel-meta">최근 12건 · 전체 5,847건</div>
+            <div class="adm-panel-title">활동 로그</div>
+            <div class="adm-panel-meta" id="adm-logs-meta">로딩…</div>
           </div>
-          <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;">전체 보기 →</button>
+          <button class="adm-btn adm-btn-ghost" style="height:32px;font-size:12px;padding:0 14px;opacity:0.55;cursor:not-allowed;" disabled>전체 보기 → (Phase E)</button>
         </div>
         <div class="adm-table-wrap">
           <table class="adm-table">
@@ -2057,104 +2050,7 @@ body.adm-active { overflow: hidden !important; }
                 <th>시각</th><th>사용자</th><th>액션</th><th>대상</th><th>결과</th><th>상세</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:28:42</td>
-                <td><strong>임태성</strong> <span class="adm-badge role-admin" style="margin-left:6px;">어드민</span></td>
-                <td>관리자 콘솔 진입</td>
-                <td>admin_v2.html</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">IP 121.135.x.x · Chrome 122</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:24:18</td>
-                <td><strong>김지훈</strong> <span class="adm-badge role-ga-branch-manager" style="margin-left:6px;">GA 지점장</span></td>
-                <td>스크립트 작성</td>
-                <td>"생각해볼게요" 클로징 반론</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">script_id=a8472d</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:22:03</td>
-                <td><strong>박서연</strong> <span class="adm-badge role-ga-manager" style="margin-left:6px;">GA 실장</span></td>
-                <td>로그인</td>
-                <td>—</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">IP 175.193.x.x · Safari iOS</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:18:51</td>
-                <td><strong>최민지</strong> <span class="adm-badge role-ga-member" style="margin-left:6px;">GA 설계사</span></td>
-                <td>플랜 변경 (FREE → PRO)</td>
-                <td>결제 ₩9,900</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">payment_id=p_3847</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:14:27</td>
-                <td><strong>강현우</strong> <span class="adm-badge role-insurer-branch-manager" style="margin-left:6px;">원수사 지점장</span></td>
-                <td>자료 업로드</td>
-                <td>KPI보험 상품 라인업 Q2.pdf</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">size=2.3MB</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:08:14</td>
-                <td><strong>SYSTEM</strong> <span class="adm-badge" style="background:var(--admin-warning-bg); color:var(--color-warning); margin-left:6px;">시스템</span></td>
-                <td>API 응답 지연</td>
-                <td>/api/scripts/search</td>
-                <td><span class="adm-badge status-pending">경고</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">avg_latency=2.4s</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">14:02:38</td>
-                <td><strong>이도윤</strong> <span class="adm-badge role-ga-member" style="margin-left:6px;">GA 설계사</span></td>
-                <td>게시글 작성</td>
-                <td>함께해요 #3847</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">post_id=h_3847</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:58:02</td>
-                <td><strong>윤다은</strong> <span class="adm-badge role-insurer-manager" style="margin-left:6px;">원수사 매니저</span></td>
-                <td>비밀번호 변경 시도</td>
-                <td>—</td>
-                <td><span class="adm-badge status-suspended">실패</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">현재 비밀번호 불일치</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:52:47</td>
-                <td><strong>임태성</strong> <span class="adm-badge role-admin" style="margin-left:6px;">어드민</span></td>
-                <td>사용자 정지</td>
-                <td>정수아 (ga_staff)</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">사유: 약관 위반</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:44:21</td>
-                <td><strong>SYSTEM</strong> <span class="adm-badge" style="background:rgba(239,68,68,0.18); color:var(--color-danger); margin-left:6px;">오류</span></td>
-                <td>DB connection timeout</td>
-                <td>supabase pdnwgzn...</td>
-                <td><span class="adm-badge status-suspended">실패</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">자동 재연결 → 정상</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:38:10</td>
-                <td><strong>한지우</strong> <span class="adm-badge role-insurer-member" style="margin-left:6px;">원수사 직원</span></td>
-                <td>회원가입 (대기)</td>
-                <td>han.ji@kpi-insure.com</td>
-                <td><span class="adm-badge status-pending">대기</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">관리자 승인 필요</td>
-              </tr>
-              <tr>
-                <td style="font-feature-settings:'tnum'; color:var(--admin-text-tertiary);">13:32:55</td>
-                <td><strong>송예린</strong> <span class="adm-badge role-insurer-staff" style="margin-left:6px;">원수사 스텝</span></td>
-                <td>로그인</td>
-                <td>—</td>
-                <td><span class="adm-badge status-active">성공</span></td>
-                <td style="color:var(--admin-text-tertiary); font-size:11px;">IP 218.144.x.x · Chrome 122</td>
-              </tr>
-            </tbody>
+            <tbody id="adm-logs-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -2463,6 +2359,8 @@ body.adm-active { overflow: hidden !important; }
       window.admLoadBoard();
     } else if (viewKey === 'notice' && typeof window.admLoadNotice === 'function') {
       window.admLoadNotice();
+    } else if (viewKey === 'logs' && typeof window.admLoadLogs === 'function') {
+      window.admLoadLogs();
     }
   };
 
