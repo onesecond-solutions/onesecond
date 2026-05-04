@@ -141,6 +141,8 @@ body.adm-active { overflow: hidden !important; }
   transition: background var(--transition-fast);
 }
 .adm-rail-logo:hover { background: rgba(255,255,255,0.28); }
+/* 2026-05-04: rail 최상단 로고 — 텍스트 "1s" → logo05.png 투명 PNG (5종 톤 모두 정합) */
+.adm-rail-logo-img { width: 30px; height: 30px; object-fit: contain; display: block; }
 .adm-rail-nav {
   display: flex; flex-direction: column; gap: 4px;
   flex: 1; width: 100%;
@@ -1059,7 +1061,9 @@ body.adm-active { overflow: hidden !important; }
 
   <!-- ─── 1. 아이콘 레일 ─── -->
   <aside class="adm-rail">
-    <div class="adm-rail-logo" title="원세컨드">1s</div>
+    <div class="adm-rail-logo" title="원세컨드">
+      <img src="/assets/images/logo/logo05.png" alt="원세컨드" class="adm-rail-logo-img">
+    </div>
     <nav class="adm-rail-nav" id="adm-rail-nav">
       <button class="adm-rail-btn active" data-tooltip="대시보드"   data-view="dashboard" data-status="live"    onclick="window.admSwitchView('dashboard')">📊<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="사용자 관리" data-view="users"     data-status="pending" onclick="window.admSwitchView('users')">👥<span class="adm-rail-status"></span></button>
