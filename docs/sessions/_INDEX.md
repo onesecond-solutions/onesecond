@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-04 심야 (admin_v2 Phase D-1·D-2·D-3·D-4 완전 종료 — D-4 20/20 PASS + K-1 (c) v2.0 대기 + mock 보존 (D-3 J-2 (b) 패턴 정합) + app_settings RLS 청산 (D-pre.8 sweep 누락 보강))
+> **마지막 갱신:** 2026-05-04 저녁 (admin_v2 Phase D-1·D-2·D-3·D-4 완전 종료 — D-4 20/20 PASS + K-1 (c) v2.0 대기 + mock 보존 (D-3 J-2 (b) 패턴 정합) + app_settings RLS 청산 (D-pre.8 sweep 누락 보강) + 통합본 v1.1 D-9 ⚙️ 화면설정 신규)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -190,6 +190,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-04_2032.md` — 2026-05-04 저녁 (admin_v2 Phase D-2 24/25 종료 + D-3·D-4 25/25·20/20 PASS — 단일 세션 13 commit / 5/4 누적 22 push: `788b617` RPC #3 청산 + `85ff4d2` 통합본 v1 발행 704줄 + `ace85d0` D-2 종료 + `a3aa439` D-3 작업지시서 + `f5c6c5e` D-3 코드 + `3bc7f84` D-3 의뢰서 + `23e1b2d` 통합본 v1.1 D-9 ⚙️ 화면설정 신규 + `1c55171` D-3 25/25 PASS + `8c79012` D-4 작업지시서 + `16cbdbc` D-4 K-1 재결재 (a)→(c) + `27f0688` D-4 코드 + `e5e64b7` D-4 의뢰서 + `70fb91c` D-4 20/20 PASS / 영구 학습 5건 (RPC PostgREST overhead 본질 / mock+v2.0 대기 패턴 표준화 / 결재 한계 발견 패턴 / D-pre.8 sweep 누락 발견 / 옛 admin v1 화면설정 누락) / 별 트랙 — app_settings RLS 청산 + P3 분석 Phase E 격상 + Q-7 사용자별 impersonation 보류 / 잔여 견적 ~9.1세션 / D-6 logs 즉시 진입 가능)
 - `docs/sessions/2026-05-04_1630.md` — 2026-05-04 오후 (admin_v2 Phase D-1·D-2 완전 종료 — D-1 fix `3e08dc8` script src 절대경로화 후 17/17 PASS / D-2 content 실 데이터 연결 `0ca8e17` + D2 fix `7eff644` 후 21/23 PASS (P1·P2 별 트랙 #3 격상) + scripts 보강 Step 2 실명 익명화 5건 청산 `4f6b8c4` (보험업법 위험 0) + 로고 통일 (login A1 logo03.jpg + 원세컨드 / admin rail 최상단 logo05.png) / 5/4 푸시 9건: `3e08dc8` `4f6b8c4` `ad69a5b` `5f1261a` `10ea87f` `0ca8e17` `0d463fc` `1ebf44f` `7eff644` / 영구 학습 4건 (script src 절대경로화 / STAGE_LABELS 분류 차이 / n_tup_upd 진단 / 의뢰서 PASS 가정 단정 위험) / D-3 board 즉시 진입 가능)
 - `docs/sessions/2026-05-03_1747.md` — 2026-05-03 오후 (admin_v2 D-1 Step 4·5 완료 — js/admin_v2.js 신설 342줄 + users 섹션 mock 제거 + 동적 슬롯 + .adm-toast 컴포넌트 + race 안전장치 / 5/3 저녁 푸시 3건: `8f1cd6e` _INDEX design_test 트랙 라벨 정합화 + `f65580a` D-1 users 실 데이터 연결 + `22ff008` 라이브 회귀 17항목 의뢰서 / design_test 트랙 사실상 종결 / 영구 학습 1건 메모리 통합 / 외부 인계 노트 1건 발견: `2026-05-03_handoff.md` 자료 자산화 트랙)
 - `docs/sessions/2026-05-03_1534.md` — 2026-05-03 오후 (D-1 Step 1 사전 검증 완료 — Phase 1 마이그레이션 불필요 확정 (5역할 잔존 0). Step 2·3·7 스킵, Step 4 즉시 진입 가능 / 5/3 푸시 3건: `c1575de` 모바일 탭바 이모티콘+함께해요 합류 + `991f473` 7페이지 직접 URL → app.html shell redirect + `c0b0e07` news.html DOM 가드 / Chrome 라이브 검수 25 PASS / 산출물 4건: D-1 작업지시서 + DB capture + scripts spec/template)
