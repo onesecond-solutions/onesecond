@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-05 새벽 + 후속 — D-5·D-6 완전 종료 (29/30 + 20/20 PASS, 단일 세션 push 11 commit + rebase 2) / 알림 시스템 전면 재설계 통찰 문서 (`docs/sessions/2026-05-05_dawn_notification_system.md` 443줄, Claude AI 새벽 통찰) 큰 별 트랙 등록 — v1.1~v3.0 7개 분할 spec 예정, v1.1 5개 항목(C영역 5배너·호버 프리뷰·MY SPACE 알림 설정·DND·A1 🔔)이 5/15 4팀 오픈 시점
+> **마지막 갱신:** 2026-05-05 오전 — D-5·D-6 완전 종료 (29/30 + 20/20 PASS) + 알림 시스템 v1.1~v3.0 통찰 문서 큰 별 트랙 등록 + admin_v2 D-9 진입 (작업지시서 발행 + Q-1~Q-8 일괄 (a) 승인 + Step 1 Chrome 위임 + SQL 6개 raw capture + 발견 3건 — Q-9·Q-10 신규 결재 후보) / 단일 일자 누적 push 15 commit + rebase 2 (5월 가장 큰 진행량)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -201,6 +201,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-05_0813.md` — 2026-05-05 오전 후속 (admin_v2 D-9 진입 + 알림 시스템 통찰 등록 — push 4 commit / D-9 작업지시서 (`6f0e665` 241줄) + Q-1~Q-8 일괄 (a) 승인 + Chrome 위임 의뢰서 (`cc6fdc7` 335줄) + Step 1 capture (`902e24e` 192줄) + 알림 통찰 별 트랙 (`d1e2133` _INDEX 갱신) / 발견 3건 — banner_img↔page_banner group_name 불일치 (Q-9 후보) / menu_home=false 라이브 (미해결 #24 후보) / Storage RLS admin 3종 is_admin() 가드 부재 (Q-10 후보 + Step 1.6 청산 분기) / 영구 학습 3건 / 잔여 견적 ~5.9 → ~6.1~6.3세션 / 단일 일자 누적 15 commit + rebase 2)
 - `docs/sessions/2026-05-05_0659.md` — 2026-05-05 새벽 (admin_v2 Phase D-5·D-6 완전 종료 단일 세션 — push 11 commit + rebase 2 / D-6 logs 4건 (`7cda0b8` `33b3e24` `21968ac` `d72320a`) + 정리 (`ee53976` 두 5/5 작업지시서 docs/specs 이동) + 안전장치 결정 (`4cd4603` v1.1 PITR/Sentry/Playwright 일정) + D-5 4건 (`4957e53` `b6912f8` `33df2f7` `14f4aa2`) / 결재 22건 일괄 (M-1~M-9 + L-1~L-10 + 안전장치 3) / D-pre.8 sweep 누락 보강 (admin_read_all_logs 청산) / 영구 학습 6건 / 잔여 견적 ~9.1 → ~5.9세션 / D-9 ⚙️ 화면설정 즉시 진입 가능 + 별 트랙 #A PITR 5/7 진입 가능)
 - `fe19b3d` 원격 업로드 (2026-05-05 04:48 KST, 팀장님 GitHub 웹 직접 업로드) — `docs/specs/2026-05-05_index_hero_headline_c_plus.md` (267줄, 별 트랙 — 5/12 이후 적용, 결정 6건 ⏸ 결재 대기) + `docs/specs/2026-05-05_team4_vault_phase1.md` (455줄, 자료 자산화 본 트랙 1차 실행 — 5/12 이후 진입, 결정 8건 + 11개 카테고리 확정 ⏸ 결재 대기) — D-6 종료 후 큰 그림 정합 검토 완료, D-5 진입 차단 0 (두 문서 모두 5/12 이후 적용으로 admin Phase D 진행과 병렬 정합) / 본 commit에서 `docs/sessions/` → `docs/specs/` 이동 정리
 - `docs/sessions/2026-05-04_2032.md` — 2026-05-04 저녁 (admin_v2 Phase D-2 24/25 종료 + D-3·D-4 25/25·20/20 PASS — 단일 세션 13 commit / 5/4 누적 22 push: `788b617` RPC #3 청산 + `85ff4d2` 통합본 v1 발행 704줄 + `ace85d0` D-2 종료 + `a3aa439` D-3 작업지시서 + `f5c6c5e` D-3 코드 + `3bc7f84` D-3 의뢰서 + `23e1b2d` 통합본 v1.1 D-9 ⚙️ 화면설정 신규 + `1c55171` D-3 25/25 PASS + `8c79012` D-4 작업지시서 + `16cbdbc` D-4 K-1 재결재 (a)→(c) + `27f0688` D-4 코드 + `e5e64b7` D-4 의뢰서 + `70fb91c` D-4 20/20 PASS / 영구 학습 5건 (RPC PostgREST overhead 본질 / mock+v2.0 대기 패턴 표준화 / 결재 한계 발견 패턴 / D-pre.8 sweep 누락 발견 / 옛 admin v1 화면설정 누락) / 별 트랙 — app_settings RLS 청산 + P3 분석 Phase E 격상 + Q-7 사용자별 impersonation 보류 / 잔여 견적 ~9.1세션 / D-6 logs 즉시 진입 가능)
