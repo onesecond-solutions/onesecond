@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-03 오후 (admin_v2 D-1 Step 4·5 완료 + 라이브 회귀 의뢰서 인계)
+> **마지막 갱신:** 2026-05-04 오후 (admin_v2 Phase D-1·D-2 완전 종료 + scripts Step 2 익명화 5건 청산 + 로고 통일)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -189,6 +189,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-04_1630.md` — 2026-05-04 오후 (admin_v2 Phase D-1·D-2 완전 종료 — D-1 fix `3e08dc8` script src 절대경로화 후 17/17 PASS / D-2 content 실 데이터 연결 `0ca8e17` + D2 fix `7eff644` 후 21/23 PASS (P1·P2 별 트랙 #3 격상) + scripts 보강 Step 2 실명 익명화 5건 청산 `4f6b8c4` (보험업법 위험 0) + 로고 통일 (login A1 logo03.jpg + 원세컨드 / admin rail 최상단 logo05.png) / 5/4 푸시 9건: `3e08dc8` `4f6b8c4` `ad69a5b` `5f1261a` `10ea87f` `0ca8e17` `0d463fc` `1ebf44f` `7eff644` / 영구 학습 4건 (script src 절대경로화 / STAGE_LABELS 분류 차이 / n_tup_upd 진단 / 의뢰서 PASS 가정 단정 위험) / D-3 board 즉시 진입 가능)
 - `docs/sessions/2026-05-03_1747.md` — 2026-05-03 오후 (admin_v2 D-1 Step 4·5 완료 — js/admin_v2.js 신설 342줄 + users 섹션 mock 제거 + 동적 슬롯 + .adm-toast 컴포넌트 + race 안전장치 / 5/3 저녁 푸시 3건: `8f1cd6e` _INDEX design_test 트랙 라벨 정합화 + `f65580a` D-1 users 실 데이터 연결 + `22ff008` 라이브 회귀 17항목 의뢰서 / design_test 트랙 사실상 종결 / 영구 학습 1건 메모리 통합 / 외부 인계 노트 1건 발견: `2026-05-03_handoff.md` 자료 자산화 트랙)
 - `docs/sessions/2026-05-03_1534.md` — 2026-05-03 오후 (D-1 Step 1 사전 검증 완료 — Phase 1 마이그레이션 불필요 확정 (5역할 잔존 0). Step 2·3·7 스킵, Step 4 즉시 진입 가능 / 5/3 푸시 3건: `c1575de` 모바일 탭바 이모티콘+함께해요 합류 + `991f473` 7페이지 직접 URL → app.html shell redirect + `c0b0e07` news.html DOM 가드 / Chrome 라이브 검수 25 PASS / 산출물 4건: D-1 작업지시서 + DB capture + scripts spec/template)
 - `docs/sessions/2026-05-03_*` — 2026-05-03 (재오픈 전 헬스 체크 R1~R6 + 별 트랙 α exception_diseases 검색 차단 UI+DB 이중 잠금 + 별 트랙 β pages/*.html 9페이지 인증 게이트 + D-pre.8 R6 sweep 후속 5항목 일괄 청산 — DROP 9건 + CREATE 10건 트랜잭션 / D-pre 시리즈 모두 종료 → D-1 진입 즉시 가능 / 산출물 3건: `docs/specs/exception_diseases_block_2026-05-03.md` + `docs/specs/pages_auth_gate_2026-05-03.md` + `docs/architecture/db_pre_dpre8_capture.md`)
