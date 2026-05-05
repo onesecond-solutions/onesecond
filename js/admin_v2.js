@@ -1533,8 +1533,655 @@
     showAdminToast('Phase E 대기 — 리포트 PDF (L-10 (a) mock 보존)', 'info');
   };
 
-  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3·D-4·D-5·D-6 통합)
-  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 또는 #admin/notice 또는 #admin/analytics 또는 #admin/logs 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
+  // ════════════════════════════════════════════════════════════════════════
+  // D-9 ⚙️ 화면설정 (2026-05-05 신설, 옛 admin v1 라인 1290~1942 포팅)
+  // - 4섹션: B영역 메뉴 ON/OFF / PRO 게이트 / 게시판 1차 탭 / 페이지별 배너 이미지
+  // - Q-1~Q-8 일괄 (a) 승인 / Q-9 (a) page_banner / Q-10 (a) Step 1.6 청산
+  // - admin_v2 패턴 정합: window.db.fetch + showAdminToast + adm-set-card
+  // - DB 변경 0건 (app_settings 그대로 사용, group_name banner_img → page_banner)
+  // ════════════════════════════════════════════════════════════════════════
+
+  /* Storage 업로드 헬퍼 (D-9 신설) — admin_v2 정합 (window.db.url() 함수 호출 + apikey 헤더) */
+  async function admStorageUpload(bucket, filePath, file) {
+    if (!window.db) throw new Error('window.db 미정의');
+    var base = window.db.url();
+    var token = (typeof window.db.getToken === 'function') ? window.db.getToken() : '';
+    var apikey = window.db.key;
+    if (!base) throw new Error('Supabase URL 미정의');
+    if (!token) throw new Error('인증 토큰 없음');
+    return fetch(base + '/storage/v1/object/' + bucket + '/' + filePath, {
+      method: 'POST',
+      headers: {
+        'apikey': apikey,
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': file.type,
+        'x-upsert': 'true'
+      },
+      body: file
+    });
+  }
+
+  /* 메인 진입 — settings 4섹션 동적 렌더 + 이벤트 바인딩 + 미리보기 동기화 */
+  window.admLoadSettings = async function () {
+    var slot = document.getElementById('adm-settings-content');
+    if (!slot) return;
+    slot.innerHTML = '<div class="adm-set-loading">설정 로딩 중...</div>';
+
+    var pageDefs = [
+      { key: 'home',     label: '🏠 홈' },
+      { key: 'scripts',  label: '📋 스크립트' },
+      { key: 'board',    label: '💬 게시판' },
+      { key: 'myspace',  label: '🗂️ MY SPACE' },
+      { key: 'news',     label: '📰 보험뉴스' },
+      { key: 'quick',    label: '⚡ Quick 메뉴' },
+      { key: 'together', label: '🤝 함께해요' }
+    ];
+    /* 배너 대상: Quick 제외 6개 (Quick은 사이드바 메뉴라 배너 없음) */
+    var bannerPages = pageDefs.filter(function (p) { return p.key !== 'quick'; });
+
+    /* app_settings 전체 fetch */
+    var savedMap = {};
+    try {
+      var res = await window.db.fetch('/rest/v1/app_settings?select=key,value');
+      if (res.ok) {
+        var rows = await res.json();
+        rows.forEach(function (r) { savedMap[r.key] = r.value; });
+      }
+    } catch (e) { /* 테이블 fetch 실패 시 기본값 */ }
+
+    /* 저장값 로드 */
+    var hubOn      = savedMap['board_tab_hub']     !== 'false';
+    var companyOn  = savedMap['board_tab_company'] === 'true';
+    var quickGate  = savedMap['gate_quick_a2']     !== 'false';
+    var searchGate = savedMap['gate_search_a2']    !== 'false';
+
+    /* ─────────── 섹션 1: B영역 메뉴 ON/OFF ─────────── */
+    var menuRowsHtml = pageDefs.map(function (p) {
+      var key  = 'menu_' + p.key;
+      var isOn = savedMap[key] !== 'false';
+      return '<div class="adm-set-row ' + (isOn ? '' : 'is-off') + '">' +
+        '<span class="adm-set-rlabel ' + (isOn ? 'on' : '') + '">' +
+          '<span class="adm-set-dot"></span>' + p.label +
+        '</span>' +
+        '<label class="adm-cb-wrap">' +
+          '<input type="checkbox" id="setting-' + key + '" data-s-menu="' + p.key + '"' + (isOn ? ' checked' : '') + '>' +
+          '<span class="adm-cb-state ' + (isOn ? 'on' : 'off') + '">' + (isOn ? '표시' : '숨김') + '</span>' +
+        '</label>' +
+      '</div>';
+    }).join('');
+
+    var menuPvHtml = pageDefs.map(function (p) {
+      var isOn = savedMap['menu_' + p.key] !== 'false';
+      var emo  = p.label.split(' ')[0];
+      var nm   = p.label.replace(emo, '').trim();
+      if (nm.length > 4) nm = nm.slice(0, 4);
+      return '<div class="adm-mini-menu ' + (isOn ? '' : 'hidden') + '" data-pv-menu="' + p.key + '">' +
+        '<span class="emo">' + emo + '</span>' + nm +
+      '</div>';
+    }).join('');
+
+    var section1 =
+      '<div class="adm-set-card">' +
+        '<div class="adm-set-card-title">⚙️ B영역 메뉴 표시 설정</div>' +
+        '<div class="adm-set-card-desc">체크를 바꾸면 오른쪽 "설정 후 사용자 화면"에 즉시 반영됩니다.</div>' +
+        '<div class="adm-set-sec">' +
+          '<div>' +
+            menuRowsHtml +
+            '<div style="margin-top:14px;display:flex;gap:8px;">' +
+              '<button class="adm-btn adm-btn-primary" onclick="window.admSaveMenuSettings()">💾 메뉴 설정 저장</button>' +
+            '</div>' +
+          '</div>' +
+          '<aside class="adm-pv">' +
+            '<div class="adm-pv-head">' +
+              '<span class="adm-pv-label">설정 후 사용자 화면</span>' +
+              '<span class="adm-pv-tag">실시간</span>' +
+            '</div>' +
+            '<div class="adm-frame">' +
+              '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+              '<div class="adm-pv-body">' +
+                '<div class="adm-mini-side" id="adm-pv-sb-menu">' + menuPvHtml + '</div>' +
+                '<div class="adm-mini-main">' +
+                  '<div class="adm-mini-title">원세컨드</div>' +
+                  '<div class="adm-mini-desc">왼쪽 사이드바에 보이는 메뉴가 설계사 화면에 그대로 나타납니다.</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="adm-pv-foot">표시 중 <span class="adm-pv-count" id="adm-pv-menu-on">0</span> · 숨김 <span class="adm-pv-count" id="adm-pv-menu-off">0</span></div>' +
+          '</aside>' +
+        '</div>' +
+      '</div>';
+
+    /* ─────────── 섹션 2: PRO 게이트 ─────────── */
+    var section2 =
+      '<div class="adm-set-card">' +
+        '<div class="adm-set-card-title">🔒 기능 게이트 (PRO 전용 설정)</div>' +
+        '<div class="adm-set-card-desc">특정 기능을 PRO 전용으로 제한하거나 전체 공개할 수 있습니다.</div>' +
+        '<div class="adm-set-sec">' +
+          '<div>' +
+            '<div class="adm-set-row ' + (quickGate ? '' : 'is-off') + '">' +
+              '<span class="adm-set-rlabel on"><span class="adm-set-dot"></span>⚡ 빠른 실행 (A2 영역)</span>' +
+              '<label class="adm-cb-wrap">' +
+                '<input type="checkbox" id="setting-gate_quick_a2" data-s-gate="quick_a2"' + (quickGate ? ' checked' : '') + '>' +
+                '<span class="adm-cb-state ' + (quickGate ? 'on' : 'off') + '">' + (quickGate ? 'PRO 전용' : '전체 공개') + '</span>' +
+              '</label>' +
+            '</div>' +
+            '<div class="adm-set-row ' + (searchGate ? '' : 'is-off') + '">' +
+              '<span class="adm-set-rlabel on"><span class="adm-set-dot"></span>🔍 검색기 (A2 영역)</span>' +
+              '<label class="adm-cb-wrap">' +
+                '<input type="checkbox" id="setting-gate_search_a2" data-s-gate="search_a2"' + (searchGate ? ' checked' : '') + '>' +
+                '<span class="adm-cb-state ' + (searchGate ? 'on' : 'off') + '">' + (searchGate ? 'PRO 전용' : '전체 공개') + '</span>' +
+              '</label>' +
+            '</div>' +
+            '<div style="margin-top:14px;display:flex;gap:8px;">' +
+              '<button class="adm-btn adm-btn-primary" onclick="window.admSaveGateSettings()">💾 기능 게이트 저장</button>' +
+            '</div>' +
+          '</div>' +
+          '<aside class="adm-pv">' +
+            '<div class="adm-pv-head">' +
+              '<span class="adm-pv-label">설정 후 사용자 화면</span>' +
+              '<span class="adm-pv-tag">실시간</span>' +
+            '</div>' +
+            '<div class="adm-frame">' +
+              '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+              '<div class="adm-a2-pv">' +
+                '<div class="adm-a2-top" style="gap:8px;">' +
+                  '<span class="adm-pv-search ' + (searchGate ? 'gated' : '') + '" id="adm-pv-search-box">' +
+                    '<span style="opacity:0.6;">🔍</span>' +
+                    '<span class="adm-pv-search-text">스크립트, 게시글, 예외질환, 업무자료 검색...</span>' +
+                  '</span>' +
+                  '<span class="adm-a2-btn ' + (quickGate ? 'gated' : '') + '" id="adm-pv-quick-btn">⚡ 빠른 실행</span>' +
+                '</div>' +
+                '<div class="adm-a2-cap" id="adm-pv-quick-cap">' +
+                  (quickGate && searchGate ? '검색창·빠른 실행 모두 PRO 전용으로 표시됩니다'
+                    : !quickGate && !searchGate ? '검색창·빠른 실행 모두 전체 공개됩니다'
+                    : quickGate ? '빠른 실행만 PRO 전용, 검색창은 전체 공개'
+                    : '검색창만 PRO 전용, 빠른 실행은 전체 공개') +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</aside>' +
+        '</div>' +
+      '</div>';
+
+    /* ─────────── 섹션 3: 게시판 1차 탭 ─────────── */
+    var section3 =
+      '<div class="adm-set-card">' +
+        '<div class="adm-set-card-title">💬 게시판 1차 탭 표시</div>' +
+        '<div class="adm-set-card-desc">게시판 페이지 상단 1차 탭(허브/팀/지점/보험사) 노출 여부. <strong>팀·지점은 현장 업무용이라 항상 표시</strong>되며 잠금 상태입니다.</div>' +
+        '<div class="adm-set-sec">' +
+          '<div>' +
+            '<div class="adm-set-row ' + (hubOn ? '' : 'is-off') + '">' +
+              '<span class="adm-set-rlabel ' + (hubOn ? 'on' : '') + '"><span class="adm-set-dot"></span>🌐 허브게시판</span>' +
+              '<label class="adm-cb-wrap">' +
+                '<input type="checkbox" id="setting-board_tab_hub" data-s-btab="hub"' + (hubOn ? ' checked' : '') + '>' +
+                '<span class="adm-cb-state ' + (hubOn ? 'on' : 'off') + '">' + (hubOn ? '표시' : '숨김') + '</span>' +
+              '</label>' +
+            '</div>' +
+            '<div class="adm-set-row is-locked">' +
+              '<span class="adm-set-rlabel"><span class="adm-set-dot"></span>👥 팀게시판</span>' +
+              '<span class="adm-lock-tag">🔒 항상 표시</span>' +
+            '</div>' +
+            '<div class="adm-set-row is-locked">' +
+              '<span class="adm-set-rlabel"><span class="adm-set-dot"></span>🏢 지점게시판</span>' +
+              '<span class="adm-lock-tag">🔒 항상 표시</span>' +
+            '</div>' +
+            '<div class="adm-set-row ' + (companyOn ? '' : 'is-off') + '">' +
+              '<span class="adm-set-rlabel ' + (companyOn ? 'on' : '') + '"><span class="adm-set-dot"></span>🏛️ 보험사게시판<span class="adm-ver-badge">v2.0</span></span>' +
+              '<label class="adm-cb-wrap">' +
+                '<input type="checkbox" id="setting-board_tab_company" data-s-btab="company"' + (companyOn ? ' checked' : '') + '>' +
+                '<span class="adm-cb-state ' + (companyOn ? 'on' : 'off') + '">' + (companyOn ? '표시' : '숨김') + '</span>' +
+              '</label>' +
+            '</div>' +
+            '<div style="margin-top:14px;display:flex;gap:8px;">' +
+              '<button class="adm-btn adm-btn-primary" onclick="window.admSaveBoardTabs()">💾 게시판 탭 저장</button>' +
+            '</div>' +
+            '<div class="adm-hint-box">💡 <strong>보험사게시판</strong>은 v2.0 기능으로 출시 전까지 숨김이 기본값. 노출 시 설계사가 "원세컨드가 보험사 자료를 직접 제공한다"고 오해할 수 있습니다.<br><span style="color:var(--admin-text-tertiary);font-style:italic;">※ board.html에서 이 값을 read하는 작업은 별 트랙 (Q-7 (a))</span></div>' +
+          '</div>' +
+          '<aside class="adm-pv">' +
+            '<div class="adm-pv-head">' +
+              '<span class="adm-pv-label">설정 후 사용자 화면 (게시판 페이지)</span>' +
+              '<span class="adm-pv-tag">실시간</span>' +
+            '</div>' +
+            '<div class="adm-frame">' +
+              '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+              '<div class="adm-bd-pv">' +
+                '<div class="adm-bd-t1" id="adm-pv-bd-t1">' +
+                  '<div class="adm-bd-t1-tab ' + (hubOn ? 'on' : 'hidden') + '" data-pv-t1="hub">🌐 허브<span class="mini-bd">공개</span></div>' +
+                  '<div class="adm-bd-t1-tab ' + (hubOn ? '' : 'on') + '" data-pv-t1="team">👥 팀</div>' +
+                  '<div class="adm-bd-t1-tab" data-pv-t1="branch">🏢 지점</div>' +
+                  '<div class="adm-bd-t1-tab ' + (companyOn ? '' : 'hidden') + '" data-pv-t1="company">🏛️ 보험사</div>' +
+                '</div>' +
+                '<div class="adm-bd-t2">' +
+                  '<div class="adm-bd-t2-tab on">전체</div>' +
+                  '<div class="adm-bd-t2-tab">공지사항</div>' +
+                  '<div class="adm-bd-t2-tab">상품Q&amp;A</div>' +
+                  '<div class="adm-bd-t2-tab">인수Q&amp;A</div>' +
+                '</div>' +
+                '<div class="adm-bd-info"><strong>허브게시판</strong>은 팀·지점에서 좋은 글이 승인된 공개 게시판입니다.<br>2차 탭(전체/공지/상품/인수)은 모든 1차 탭에 공통 표시됩니다.</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="adm-pv-foot">1차 탭 표시 중 <span class="adm-pv-count" id="adm-pv-bd-on">0</span> / <span class="adm-pv-count">4</span></div>' +
+          '</aside>' +
+        '</div>' +
+      '</div>';
+
+    /* ─────────── 섹션 4: 페이지별 배너 이미지 ─────────── */
+    var bannerRowsHtml = bannerPages.map(function (p) {
+      /* Q-9 (a): key 패턴 옛 v1 그대로 banner_img_<page> */
+      var key = 'banner_img_' + p.key;
+      var url = savedMap[key] || '';
+      var safeUrl = url.replace(/"/g, '&quot;');
+      var fileName = url ? url.split('/').pop() : '선택된 파일 없음';
+      return '<div class="adm-set-row" style="padding:8px 10px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">' +
+          '<span style="width:100px;font-weight:700;color:var(--admin-text-primary);font-size:0.842em;flex-shrink:0;">' + p.label + '</span>' +
+          '<input type="hidden" id="banner-' + p.key + '" value="' + safeUrl + '">' +
+          '<input type="file" id="banner-file-' + p.key + '" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="window.admBannerFileSelected(\'' + p.key + '\')">' +
+          '<div id="banner-preview-' + p.key + '" style="width:40px;height:22px;border-radius:3px;overflow:hidden;border:1px solid var(--admin-border);background:var(--admin-surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+            (url
+              ? '<img src="' + safeUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'<span style=&quot;font-size:0.65em;color:var(--admin-text-tertiary);&quot;>X</span>\'">'
+              : '<span style="font-size:0.65em;color:var(--admin-text-tertiary);">없음</span>') +
+          '</div>' +
+          '<span id="banner-filename-' + p.key + '" style="flex:1;min-width:0;font-size:0.78em;color:' + (url ? 'var(--admin-text-secondary)' : 'var(--admin-text-tertiary)') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + fileName + '</span>' +
+        '</div>' +
+        (url
+          ? '<button class="adm-btn adm-btn-danger adm-btn-sm" onclick="window.admBannerClear(\'' + p.key + '\')">삭제</button>'
+          : '<button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="document.getElementById(\'banner-file-' + p.key + '\').click()">📁 선택</button>'
+        ) +
+      '</div>';
+    }).join('');
+
+    var firstBannerKey   = bannerPages[0].key;
+    var firstBannerUrl   = savedMap['banner_img_' + firstBannerKey] || '';
+    var firstBannerLabel = bannerPages[0].label;
+
+    var selectorBtns = bannerPages.map(function (p, i) {
+      return '<button class="adm-bn-sel-btn ' + (i === 0 ? 'active' : '') + '" onclick="window.admBnSelect(\'' + p.key + '\', \'' + p.label.replace(/'/g, '&apos;') + '\')">' + p.label + '</button>';
+    }).join('');
+
+    var section4 =
+      '<div class="adm-set-card">' +
+        '<div class="adm-set-card-title">🖼️ 페이지별 배너 이미지</div>' +
+        '<div class="adm-set-card-desc">📁 파일 선택 버튼으로 내 컴퓨터에서 이미지를 선택하세요. 저장 시 자동 업로드됩니다.<br><span style="color:var(--admin-text-tertiary);">권장: 가로 1200px 이상 · 세로 120~200px · JPG/PNG/WebP · 최대 5MB</span></div>' +
+        '<div class="adm-set-sec">' +
+          '<div>' +
+            bannerRowsHtml +
+            '<div style="margin-top:14px;display:flex;gap:8px;">' +
+              '<button class="adm-btn adm-btn-primary" onclick="window.admSaveBannerSettings()">💾 배너 설정 저장</button>' +
+              '<button class="adm-btn adm-btn-ghost"   onclick="window.admLoadSettings()">🔄 새로고침</button>' +
+            '</div>' +
+          '</div>' +
+          '<aside class="adm-pv">' +
+            '<div class="adm-pv-head">' +
+              '<span class="adm-pv-label">설정 후 사용자 화면</span>' +
+              '<span class="adm-pv-tag">실시간</span>' +
+            '</div>' +
+            '<div class="adm-frame">' +
+              '<div class="adm-frame-bar"><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span><span class="adm-fr-dot"></span></div>' +
+              '<div class="adm-bn-pv-body">' +
+                '<div class="adm-bn-banner" id="adm-pv-bn-banner" ' +
+                  (firstBannerUrl
+                    ? 'style="background-image:url(\'' + firstBannerUrl.replace(/'/g, '&apos;') + '\');background-size:cover;background-position:center;"'
+                    : '') +
+                  '>' +
+                  firstBannerLabel + (firstBannerUrl ? ' 배너' : ' — 배너 없음') +
+                '</div>' +
+                '<div class="adm-bn-content">페이지 상단에 이렇게 표시됩니다. 아래 버튼으로 다른 페이지 미리보기 전환.</div>' +
+                '<div class="adm-bn-selector">' + selectorBtns + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</aside>' +
+        '</div>' +
+      '</div>';
+
+    slot.innerHTML = section1 + section2 + section3 + section4;
+
+    /* 이벤트 바인딩 + 초기 동기화 */
+    window.admBindSettingsEvents();
+    window.admSyncMenuPreview();
+    window.admSyncBoardPreview();
+  };
+
+  /* 이벤트 바인딩 */
+  window.admBindSettingsEvents = function () {
+    document.querySelectorAll('[data-s-menu]').forEach(function (cb) {
+      cb.addEventListener('change', window.admSyncMenuPreview);
+    });
+    document.querySelectorAll('[data-s-gate]').forEach(function (cb) {
+      cb.addEventListener('change', window.admSyncGatePreview);
+    });
+    document.querySelectorAll('[data-s-btab]').forEach(function (cb) {
+      cb.addEventListener('change', window.admSyncBoardPreview);
+    });
+  };
+
+  /* 미리보기 동기화 — 메뉴 */
+  window.admSyncMenuPreview = function () {
+    var on = 0, off = 0;
+    document.querySelectorAll('[data-s-menu]').forEach(function (cb) {
+      var key = cb.getAttribute('data-s-menu');
+      var row = cb.closest('.adm-set-row');
+      var lab = row.querySelector('.adm-set-rlabel');
+      var st  = cb.parentElement.querySelector('.adm-cb-state');
+      var pv  = document.querySelector('[data-pv-menu="' + key + '"]');
+      if (cb.checked) {
+        st.textContent = '표시'; st.classList.add('on'); st.classList.remove('off');
+        row.classList.remove('is-off'); lab.classList.add('on');
+        if (pv) pv.classList.remove('hidden');
+        on++;
+      } else {
+        st.textContent = '숨김'; st.classList.add('off'); st.classList.remove('on');
+        row.classList.add('is-off'); lab.classList.remove('on');
+        if (pv) pv.classList.add('hidden');
+        off++;
+      }
+    });
+    var onEl  = document.getElementById('adm-pv-menu-on');
+    var offEl = document.getElementById('adm-pv-menu-off');
+    if (onEl)  onEl.textContent  = on;
+    if (offEl) offEl.textContent = off;
+
+    var sb = document.getElementById('adm-pv-sb-menu');
+    if (sb) {
+      var existing = sb.querySelector('.adm-empty-msg');
+      if (on === 0 && !existing) {
+        var e = document.createElement('div'); e.className = 'adm-empty-msg'; e.textContent = '모든 메뉴 숨김';
+        sb.appendChild(e);
+      } else if (on > 0 && existing) existing.remove();
+    }
+  };
+
+  /* 미리보기 동기화 — 게이트 (검색기 + 빠른 실행) */
+  window.admSyncGatePreview = function () {
+    var quickCb  = document.querySelector('[data-s-gate="quick_a2"]');
+    var searchCb = document.querySelector('[data-s-gate="search_a2"]');
+    if (!quickCb || !searchCb) return;
+    var quickGate  = quickCb.checked;
+    var searchGate = searchCb.checked;
+
+    [quickCb, searchCb].forEach(function (cb) {
+      var st  = cb.parentElement.querySelector('.adm-cb-state');
+      var row = cb.closest('.adm-set-row');
+      if (cb.checked) {
+        st.textContent = 'PRO 전용'; st.classList.add('on'); st.classList.remove('off');
+        row.classList.remove('is-off');
+      } else {
+        st.textContent = '전체 공개'; st.classList.add('off'); st.classList.remove('on');
+        row.classList.add('is-off');
+      }
+    });
+
+    var btn  = document.getElementById('adm-pv-quick-btn');
+    var sbox = document.getElementById('adm-pv-search-box');
+    var cap  = document.getElementById('adm-pv-quick-cap');
+    if (btn)  btn.classList.toggle('gated', quickGate);
+    if (sbox) sbox.classList.toggle('gated', searchGate);
+    if (cap) {
+      cap.textContent = (quickGate && searchGate) ? '검색창·빠른 실행 모두 PRO 전용으로 표시됩니다'
+        : (!quickGate && !searchGate) ? '검색창·빠른 실행 모두 전체 공개됩니다'
+        : quickGate ? '빠른 실행만 PRO 전용, 검색창은 전체 공개'
+        : '검색창만 PRO 전용, 빠른 실행은 전체 공개';
+    }
+  };
+
+  /* 미리보기 동기화 — 게시판 1차 탭 */
+  window.admSyncBoardPreview = function () {
+    var on = 2; /* 팀+지점 항상 표시 */
+    document.querySelectorAll('[data-s-btab]').forEach(function (cb) {
+      var key = cb.getAttribute('data-s-btab');
+      var row = cb.closest('.adm-set-row');
+      var lab = row.querySelector('.adm-set-rlabel');
+      var st  = cb.parentElement.querySelector('.adm-cb-state');
+      var pv  = document.querySelector('[data-pv-t1="' + key + '"]');
+      if (cb.checked) {
+        st.textContent = '표시'; st.classList.add('on'); st.classList.remove('off');
+        row.classList.remove('is-off'); lab.classList.add('on');
+        if (pv) pv.classList.remove('hidden');
+        on++;
+      } else {
+        st.textContent = '숨김'; st.classList.add('off'); st.classList.remove('on');
+        row.classList.add('is-off'); lab.classList.remove('on');
+        if (pv) pv.classList.add('hidden');
+      }
+    });
+    var onEl = document.getElementById('adm-pv-bd-on');
+    if (onEl) onEl.textContent = on;
+
+    document.querySelectorAll('.adm-bd-t1-tab').forEach(function (t) { t.classList.remove('on'); });
+    var firstOn = document.querySelector('.adm-bd-t1-tab:not(.hidden)');
+    if (firstOn) firstOn.classList.add('on');
+  };
+
+  /* 배너 미리보기 페이지 전환 */
+  window.admBnSelect = function (key, label) {
+    var btns = document.querySelectorAll('.adm-bn-sel-btn');
+    btns.forEach(function (b) {
+      b.classList.toggle('active', b.textContent.trim() === label.replace(/&apos;/g, "'"));
+    });
+
+    var hidden = document.getElementById('banner-' + key);
+    var url = (hidden && hidden.value) ? hidden.value : '';
+    var banner = document.getElementById('adm-pv-bn-banner');
+    if (!banner) return;
+
+    if (url) {
+      banner.style.backgroundImage    = "url('" + url.replace(/'/g, "\\'") + "')";
+      banner.style.backgroundSize     = 'cover';
+      banner.style.backgroundPosition = 'center';
+      banner.textContent = label + ' 배너';
+    } else {
+      banner.style.backgroundImage = '';
+      banner.textContent = label + ' — 배너 없음';
+    }
+  };
+
+  /* 파일 선택 시 로컬 미리보기 즉시 반영 */
+  window.admBannerFileSelected = function (pageKey) {
+    var fileInput = document.getElementById('banner-file-' + pageKey);
+    var preview   = document.getElementById('banner-preview-' + pageKey);
+    var filename  = document.getElementById('banner-filename-' + pageKey);
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+    var file = fileInput.files[0];
+
+    if (filename) {
+      filename.textContent = file.name;
+      filename.style.color = 'var(--admin-text-primary)';
+    }
+    if (preview) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;">';
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  /* 배너 삭제 (UI 초기화 + hidden input 비우기) */
+  window.admBannerClear = function (pageKey) {
+    var hiddenInput = document.getElementById('banner-' + pageKey);
+    var fileInput   = document.getElementById('banner-file-' + pageKey);
+    var preview     = document.getElementById('banner-preview-' + pageKey);
+    var filename    = document.getElementById('banner-filename-' + pageKey);
+    if (hiddenInput) hiddenInput.value = '';
+    if (fileInput)   fileInput.value = '';
+    if (preview)     preview.innerHTML = '<span style="font-size:0.7em;color:var(--admin-text-tertiary);">없음</span>';
+    if (filename)  { filename.textContent = '선택된 파일 없음'; filename.style.color = 'var(--admin-text-tertiary)'; }
+  };
+
+  /* 메뉴 ON/OFF 저장 (group_name=menu_b) */
+  window.admSaveMenuSettings = async function () {
+    var keys = ['home','scripts','board','myspace','news','quick','together'];
+    var rows = keys.map(function (k) {
+      var el = document.getElementById('setting-menu_' + k);
+      return { group_name: 'menu_b', key: 'menu_' + k, value: el && el.checked ? 'true' : 'false' };
+    });
+    try {
+      var delRes = await window.db.fetch('/rest/v1/app_settings?group_name=eq.menu_b', {
+        method: 'DELETE',
+        headers: { 'Prefer': 'return=minimal' }
+      });
+      if (!delRes.ok && delRes.status !== 404) {
+        showAdminToast('저장 실패 (메뉴 삭제 단계 HTTP ' + delRes.status + ')', 'danger');
+        return;
+      }
+      var insRes = await window.db.fetch('/rest/v1/app_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(rows)
+      });
+      if (insRes.ok) {
+        showAdminToast('메뉴 설정 저장 완료. 사용자 페이지 새로고침 후 반영.', 'success');
+      } else {
+        showAdminToast('메뉴 저장 실패 (HTTP ' + insRes.status + ')', 'danger');
+      }
+    } catch (e) { showAdminToast('네트워크 오류 — 메뉴 저장 실패', 'danger'); }
+  };
+
+  /* 게이트 저장 (group_name=gate) */
+  window.admSaveGateSettings = async function () {
+    var quickEl  = document.getElementById('setting-gate_quick_a2');
+    var searchEl = document.getElementById('setting-gate_search_a2');
+    var rows = [
+      { group_name: 'gate', key: 'gate_quick_a2',  value: quickEl  && quickEl.checked  ? 'true' : 'false' },
+      { group_name: 'gate', key: 'gate_search_a2', value: searchEl && searchEl.checked ? 'true' : 'false' }
+    ];
+    try {
+      var delRes = await window.db.fetch('/rest/v1/app_settings?group_name=eq.gate', {
+        method: 'DELETE',
+        headers: { 'Prefer': 'return=minimal' }
+      });
+      if (!delRes.ok && delRes.status !== 404) {
+        showAdminToast('저장 실패 (게이트 삭제 단계 HTTP ' + delRes.status + ')', 'danger');
+        return;
+      }
+      var insRes = await window.db.fetch('/rest/v1/app_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(rows)
+      });
+      if (insRes.ok) {
+        showAdminToast('기능 게이트 설정 저장 완료', 'success');
+      } else {
+        showAdminToast('게이트 저장 실패 (HTTP ' + insRes.status + ')', 'danger');
+      }
+    } catch (e) { showAdminToast('네트워크 오류 — 게이트 저장 실패', 'danger'); }
+  };
+
+  /* 게시판 1차 탭 저장 (group_name=board_tab) */
+  window.admSaveBoardTabs = async function () {
+    var hubEl     = document.getElementById('setting-board_tab_hub');
+    var companyEl = document.getElementById('setting-board_tab_company');
+    var rows = [
+      { group_name: 'board_tab', key: 'board_tab_hub',     value: hubEl     && hubEl.checked     ? 'true' : 'false' },
+      { group_name: 'board_tab', key: 'board_tab_company', value: companyEl && companyEl.checked ? 'true' : 'false' }
+    ];
+    try {
+      var delRes = await window.db.fetch('/rest/v1/app_settings?group_name=eq.board_tab', {
+        method: 'DELETE',
+        headers: { 'Prefer': 'return=minimal' }
+      });
+      if (!delRes.ok && delRes.status !== 404) {
+        showAdminToast('저장 실패 (게시판 탭 삭제 단계 HTTP ' + delRes.status + ')', 'danger');
+        return;
+      }
+      var insRes = await window.db.fetch('/rest/v1/app_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(rows)
+      });
+      if (insRes.ok) {
+        showAdminToast('게시판 1차 탭 저장 완료. board.html read 패치는 별 트랙 (Q-7).', 'success');
+      } else {
+        showAdminToast('게시판 탭 저장 실패 (HTTP ' + insRes.status + ')', 'danger');
+      }
+    } catch (e) { showAdminToast('네트워크 오류 — 게시판 탭 저장 실패', 'danger'); }
+  };
+
+  /* 배너 이미지 저장 — Q-9 (a) group_name=page_banner, key=banner_img_<page> (옛 v1 정합) */
+  window.admSaveBannerSettings = async function () {
+    /* Q-9 (a): Quick 제외 6개 (옛 v1 bannerPages.filter quick !== 정합) */
+    var keys = ['home','scripts','board','myspace','news','together'];
+
+    var upsertRows = [];
+    var hasUpload  = false;
+
+    var saveBtn = document.querySelector('[onclick="window.admSaveBannerSettings()"]');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ 저장 중...'; }
+
+    for (var i = 0; i < keys.length; i++) {
+      var k         = keys[i];
+      var fileInput = document.getElementById('banner-file-' + k);
+      var hidden    = document.getElementById('banner-' + k);
+      var file      = fileInput && fileInput.files && fileInput.files[0];
+
+      if (file) {
+        /* Storage 업로드 */
+        hasUpload = true;
+        var ext      = file.name.split('.').pop().toLowerCase();
+        var filePath = k + '_' + Date.now() + '.' + ext;
+
+        try {
+          var upRes = await admStorageUpload('onesecond_banner', filePath, file);
+          if (!upRes.ok) {
+            var upErr = await upRes.text();
+            console.error('[admin_v2] 배너 업로드 실패 (' + k + '):', upRes.status, upErr);
+            showAdminToast('업로드 실패: ' + k + ' (HTTP ' + upRes.status + ')', 'danger');
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+            return;
+          }
+          var publicUrl = window.db.url('/storage/v1/object/public/onesecond_banner/' + filePath);
+          if (hidden) hidden.value = publicUrl;
+          /* Q-9 (a): group_name = 'page_banner' (옛 v1 banner_img → 신버전 DB 정합 변경) */
+          upsertRows.push({ group_name: 'page_banner', key: 'banner_img_' + k, value: publicUrl });
+        } catch (e) {
+          console.error('[admin_v2] 업로드 네트워크 오류:', e);
+          showAdminToast('네트워크 오류 — 업로드 실패: ' + (e.message || k), 'danger');
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+          return;
+        }
+
+      } else if (hidden && hidden.value.trim()) {
+        /* 기존 URL 유지 */
+        upsertRows.push({ group_name: 'page_banner', key: 'banner_img_' + k, value: hidden.value.trim() });
+      } else {
+        /* 삭제된 경우 → 빈 값 */
+        upsertRows.push({ group_name: 'page_banner', key: 'banner_img_' + k, value: '' });
+      }
+    }
+
+    /* app_settings DELETE → INSERT (Q-9 (a) page_banner) */
+    try {
+      var delRes2 = await window.db.fetch('/rest/v1/app_settings?group_name=eq.page_banner', {
+        method: 'DELETE',
+        headers: { 'Prefer': 'return=minimal' }
+      });
+      if (!delRes2.ok && delRes2.status !== 404) {
+        showAdminToast('저장 실패 (배너 삭제 단계 HTTP ' + delRes2.status + ')', 'danger');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+        return;
+      }
+      var res = await window.db.fetch('/rest/v1/app_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(upsertRows)
+      });
+      if (res.ok) {
+        if (window.clearBannerCache) window.clearBannerCache();
+        showAdminToast('배너 설정 저장 완료' + (hasUpload ? ' (업로드 + URL 저장)' : ''), 'success');
+      } else {
+        var e2 = await res.text();
+        console.error('[admin_v2] 배너 저장 실패:', res.status, e2);
+        showAdminToast('배너 저장 실패 (HTTP ' + res.status + ')', 'danger');
+      }
+    } catch (e) {
+      showAdminToast('네트워크 오류 — 배너 저장 실패', 'danger');
+    }
+
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 배너 설정 저장'; }
+  };
+
+  // ── race 안전장치 — admin_v2.js 로드 시점에 active view 즉시 로드 (D-1·D-2·D-3·D-4·D-5·D-6·D-9 통합)
+  //   (예: #admin/users 또는 #admin/content 또는 #admin/board 또는 #admin/notice 또는 #admin/analytics 또는 #admin/logs 또는 #admin/settings 직접 hash 진입 시 inline script가 src script보다 먼저 admSwitchView 호출)
   if (document.querySelector('.adm-view[data-view="users"].active')) {
     window.admLoadUsers();
   } else if (document.querySelector('.adm-view[data-view="content"].active')) {
@@ -1547,6 +2194,8 @@
     window.admLoadAnalytics();
   } else if (document.querySelector('.adm-view[data-view="logs"].active')) {
     window.admLoadLogs();
+  } else if (document.querySelector('.adm-view[data-view="settings"].active')) {
+    window.admLoadSettings();
   }
 
 })();

@@ -43,6 +43,9 @@ body[data-admin-tone="warm"] {
   --admin-success-text:  #6EE7B7;
   --admin-warning-text:  #FCD34D;
   --admin-danger-text:   #FCA5A5;
+
+  /* D-9 settings 신규 토큰 — warm 톤 set-bg override (다른 4토큰은 :root 상속) */
+  --admin-set-bg:        #1F1712;   /* warm surface-2(#221912) 대비 살짝 어둡게 */
 }
 body[data-admin-tone="slate"] {
   --admin-bg:           #0F172A;
@@ -64,6 +67,9 @@ body[data-admin-tone="slate"] {
   --admin-success-text:  #6EE7B7;
   --admin-warning-text:  #FCD34D;
   --admin-danger-text:   #FCA5A5;
+
+  /* D-9 settings 신규 토큰 — slate 톤 set-bg override */
+  --admin-set-bg:        #131822;   /* slate surface-2(#161E2E) 대비 살짝 어둡게 */
 }
 body[data-admin-tone="navy"] {
   --admin-bg:           #0B1426;
@@ -85,6 +91,9 @@ body[data-admin-tone="navy"] {
   --admin-success-text:  #6EE7B7;
   --admin-warning-text:  #FCD34D;
   --admin-danger-text:   #FCA5A5;
+
+  /* D-9 settings 신규 토큰 — navy 톤 set-bg override */
+  --admin-set-bg:        #0E1622;   /* navy surface-2(#111B2F) 대비 살짝 어둡게 */
 }
 /* black = :root 기본값 (tokens.css 정의 — 별도 절 불필요) */
 
@@ -1051,6 +1060,399 @@ body.adm-active { overflow: hidden !important; }
 .adm-toast.success { border-left: 4px solid var(--color-success); }
 .adm-toast.warning { border-left: 4px solid var(--color-warning); }
 .adm-toast.danger  { border-left: 4px solid var(--color-danger); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   D-9 화면설정 섹션 (2026-05-05 신설, Q-1~Q-8 일괄 (a) 승인)
+   - Q-5 (a) 5종 톤 토큰화: --admin-set-bg / set-border / frame-bg / pv-tag-bg / bn-banner-bg
+   - 옛 v1 .adm-card → admin_v2 .adm-set-card (panel보다 가벼운 set 전용 카드)
+   - 4섹션 = 메뉴 ON/OFF / PRO 게이트 / 게시판 1차 탭 / 배너 이미지
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* set 카드 — 옛 v1 .adm-card 매핑 (settings 4섹션 컨테이너) */
+.adm-set-card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: var(--admin-shadow-panel);
+}
+.adm-set-card-title {
+  font-size: 1.02em;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  margin-bottom: 4px;
+}
+.adm-set-card-desc {
+  font-size: 0.82em;
+  color: var(--admin-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+/* set 섹션 컨테이너 (좌 설정 + 우 미리보기 2-col grid) */
+.adm-set-sec {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 1100px) { .adm-set-sec { grid-template-columns: 1fr; } }
+
+/* set-row — 토글 row */
+.adm-set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--admin-set-bg);
+  border: 1px solid var(--admin-set-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  transition: opacity 0.18s ease;
+}
+.adm-set-row.is-off { opacity: 0.55; }
+.adm-set-row.is-locked { opacity: 0.7; cursor: not-allowed; }
+
+/* set-row 라벨 */
+.adm-set-rlabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92em;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+.adm-set-rlabel.on { color: var(--admin-text-primary); }
+.adm-set-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--admin-text-tertiary);
+  border-radius: 50%;
+}
+.adm-set-rlabel.on .adm-set-dot { background: var(--color-success); }
+
+/* 체크박스 wrapper */
+.adm-cb-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.adm-cb-wrap input[type="checkbox"] {
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+.adm-cb-state {
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--admin-surface-2);
+  color: var(--admin-text-secondary);
+}
+.adm-cb-state.on  { background: var(--admin-success-bg); color: var(--admin-success-text, #047857); }
+.adm-cb-state.off { background: var(--admin-surface-2); color: var(--admin-text-tertiary); }
+
+/* 잠금 태그 (팀/지점 게시판) */
+.adm-lock-tag {
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--admin-surface-2);
+  color: var(--admin-text-tertiary);
+}
+
+/* v2.0 뱃지 (보험사게시판) */
+.adm-ver-badge {
+  display: inline-block;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--admin-warning-bg);
+  color: var(--admin-warning-text, #92400E);
+  margin-left: 6px;
+}
+
+/* 힌트 박스 (게시판 v2.0 안내 등) */
+.adm-hint-box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--admin-info-bg);
+  border-left: 3px solid var(--color-info);
+  border-radius: var(--radius-xs);
+  font-size: 0.82em;
+  color: var(--admin-text-primary);
+  line-height: 1.5;
+}
+
+/* 미리보기 컨테이너 */
+.adm-pv {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adm-pv-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.adm-pv-label {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+.adm-pv-tag {
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--admin-pv-tag-bg);
+  color: var(--admin-warning-text, #92400E);
+}
+.adm-pv-foot {
+  font-size: 0.78em;
+  color: var(--admin-text-tertiary);
+  text-align: right;
+  padding-top: 4px;
+}
+.adm-pv-count {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  min-width: 14px;
+  text-align: center;
+}
+
+/* 프레임 (브라우저 chrome 시뮬레이션) */
+.adm-frame {
+  background: var(--admin-frame-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.adm-frame-bar {
+  display: flex;
+  gap: 5px;
+  padding: 8px 10px;
+  background: var(--admin-surface-2);
+  border-bottom: 1px solid var(--admin-border);
+}
+.adm-fr-dot {
+  width: 9px; height: 9px;
+  background: var(--admin-text-tertiary);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+.adm-pv-body {
+  display: flex;
+  min-height: 180px;
+}
+
+/* 미니 사이드바 (메뉴 미리보기) */
+.adm-mini-side {
+  width: 38%;
+  padding: 10px;
+  background: var(--admin-surface-2);
+  border-right: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adm-mini-menu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  font-size: 0.78em;
+  color: var(--admin-text-primary);
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.04);
+}
+[data-admin-tone="light"] .adm-mini-menu { background: rgba(0, 0, 0, 0.04); }
+.adm-mini-menu.hidden { display: none; }
+.adm-mini-menu .emo { font-size: 0.95em; }
+.adm-empty-msg {
+  padding: 6px 8px;
+  font-size: 0.74em;
+  color: var(--admin-text-tertiary);
+  font-style: italic;
+}
+
+/* 미니 메인 */
+.adm-mini-main {
+  flex: 1;
+  padding: 12px;
+}
+.adm-mini-title {
+  font-size: 0.95em;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  margin-bottom: 4px;
+}
+.adm-mini-desc {
+  font-size: 0.78em;
+  color: var(--admin-text-secondary);
+  line-height: 1.5;
+}
+
+/* A2 영역 미리보기 (PRO 게이트) */
+.adm-a2-pv { flex: 1; padding: 14px; }
+.adm-a2-top {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.adm-pv-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.78em;
+  flex: 1;
+  min-width: 0;
+}
+.adm-pv-search.gated { background: var(--admin-warning-bg); }
+.adm-pv-search-text {
+  color: var(--admin-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.adm-a2-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 0.82em;
+  font-weight: 600;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  color: var(--admin-text-primary);
+  white-space: nowrap;
+}
+.adm-a2-btn.gated { background: var(--admin-warning-bg); color: var(--admin-warning-text, #92400E); }
+.adm-a2-cap {
+  font-size: 0.74em;
+  color: var(--admin-text-tertiary);
+  font-style: italic;
+}
+
+/* 게시판 1차 탭 미리보기 */
+.adm-bd-pv { flex: 1; padding: 12px; }
+.adm-bd-t1 {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.adm-bd-t1-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.78em;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-full);
+  color: var(--admin-text-secondary);
+}
+.adm-bd-t1-tab.on { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.adm-bd-t1-tab.hidden { display: none; }
+.adm-bd-t1-tab .mini-bd {
+  font-size: 0.7em;
+  opacity: 0.7;
+  margin-left: 2px;
+}
+.adm-bd-t2 {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--admin-border);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.adm-bd-t2-tab {
+  font-size: 0.74em;
+  padding: 2px 8px;
+  color: var(--admin-text-tertiary);
+}
+.adm-bd-t2-tab.on { color: var(--admin-text-primary); font-weight: 600; }
+.adm-bd-info {
+  padding: 8px;
+  font-size: 0.74em;
+  color: var(--admin-text-tertiary);
+  background: var(--admin-surface-2);
+  border-radius: var(--radius-xs);
+  line-height: 1.5;
+}
+
+/* 배너 이미지 미리보기 */
+.adm-bn-pv-body { flex: 1; padding: 12px; }
+.adm-bn-banner {
+  height: 80px;
+  background: var(--admin-bn-banner-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92em;
+  font-weight: 700;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.adm-bn-content {
+  font-size: 0.78em;
+  color: var(--admin-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.adm-bn-selector {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.adm-bn-sel-btn {
+  font-size: 0.74em;
+  padding: 4px 10px;
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-full);
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+}
+.adm-bn-sel-btn:hover { background: var(--admin-surface-elev); }
+.adm-bn-sel-btn.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+
+/* btn-danger / btn-sm (D-9에서 신규 정의 — settings 배너 삭제 버튼용) */
+.adm-btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+  border: 1px solid var(--color-danger);
+}
+.adm-btn-danger:hover { background: #C53030; border-color: #C53030; }
+.adm-btn-sm {
+  height: 28px;
+  font-size: 0.78em;
+  padding: 0 10px;
+}
+
+/* settings 로딩 메시지 */
+.adm-set-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--admin-text-tertiary);
+  font-size: 0.92em;
+}
 </style>
 
 
@@ -1073,6 +1475,7 @@ body.adm-active { overflow: hidden !important; }
       <button class="adm-rail-btn"        data-tooltip="공지·배너"   data-view="notice"    data-status="pending" onclick="window.admSwitchView('notice')">📢<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="로그"        data-view="logs"      data-status="pending" onclick="window.admSwitchView('logs')">🗂️<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="결제·플랜"   data-view="billing"   data-status="pending" onclick="window.admSwitchView('billing')">💳<span class="adm-rail-status"></span></button>
+      <button class="adm-rail-btn"        data-tooltip="화면설정"    data-view="settings"  onclick="window.admSwitchView('settings')">⚙️<span class="adm-rail-status"></span></button>
     </nav>
     <div class="adm-rail-bottom">
       <button class="adm-rail-btn" data-tooltip="도움말" onclick="alert('[Phase B] 도움말 — 추후 Phase E')">❓</button>
@@ -1182,6 +1585,17 @@ body.adm-active { overflow: hidden !important; }
         <div class="adm-menu-section-title">결제 운영</div>
         <div class="adm-menu-item pending"><span class="icon">💳</span>구독·결제<span class="pending-mark">Phase D-7</span></div>
         <div class="adm-menu-item pending"><span class="icon">📦</span>플랜 관리<span class="pending-mark">Phase D-7</span></div>
+      </div>
+    </div>
+    <div class="adm-menu-pane" data-view="settings" style="display:none;">
+      <div class="adm-menu-category">ADMIN · 운영</div>
+      <div class="adm-menu-title">화면설정</div>
+      <div class="adm-menu-section">
+        <div class="adm-menu-section-title">B영역·게이트·게시판·배너</div>
+        <div class="adm-menu-item"><span class="icon">📺</span>B영역 메뉴 ON/OFF</div>
+        <div class="adm-menu-item"><span class="icon">🔒</span>PRO 게이트</div>
+        <div class="adm-menu-item"><span class="icon">💬</span>게시판 1차 탭</div>
+        <div class="adm-menu-item"><span class="icon">🖼️</span>배너 이미지</div>
       </div>
     </div>
 
@@ -2204,6 +2618,26 @@ body.adm-active { overflow: hidden !important; }
 
     </div><!-- /.adm-view billing -->
 
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 9. SETTINGS (Phase D-9 실 데이터 — 옛 admin v1 화면설정 4섹션 포팅)  -->
+    <!--    Q-1~Q-8 일괄 (a) 승인 / Q-9 (a) page_banner / Q-10 (a) Step 1.6  -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="adm-view" data-view="settings">
+
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">화면설정</div>
+          <div class="adm-section-desc">B영역 메뉴 / PRO 게이트 / 게시판 1차 탭 / 페이지별 배너 이미지 — 4섹션 통합 운영. 저장 시 사용자 페이지 새로고침 후 반영.</div>
+        </div>
+      </div>
+
+      <!-- 4섹션 동적 렌더 컨테이너 (admLoadSettings가 fill) -->
+      <div id="adm-settings-content">
+        <div class="adm-set-loading">설정 로딩 중...</div>
+      </div>
+
+    </div><!-- /.adm-view settings -->
+
   </main>
 
 </div><!-- /.adm-root-view -->
@@ -2247,7 +2681,8 @@ body.adm-active { overflow: hidden !important; }
     analytics: { breadcrumb: ['ADMIN', '통계·분석', '대시보드'],   menuLabel: '통계·분석' },
     notice:    { breadcrumb: ['ADMIN', '운영', '공지·배너'],       menuLabel: '공지·배너' },
     logs:      { breadcrumb: ['ADMIN', '로그', '전체'],            menuLabel: '로그' },
-    billing:   { breadcrumb: ['ADMIN', '결제', '관리'],            menuLabel: '결제·플랜' }
+    billing:   { breadcrumb: ['ADMIN', '결제', '관리'],            menuLabel: '결제·플랜' },
+    settings:  { breadcrumb: ['ADMIN', '운영', '화면설정'],        menuLabel: '화면설정' }
   };
 
   window.admSwitchView = function (viewKey) {
@@ -2300,6 +2735,8 @@ body.adm-active { overflow: hidden !important; }
       window.admLoadAnalytics();
     } else if (viewKey === 'logs' && typeof window.admLoadLogs === 'function') {
       window.admLoadLogs();
+    } else if (viewKey === 'settings' && typeof window.admLoadSettings === 'function') {
+      window.admLoadSettings();
     }
   };
 

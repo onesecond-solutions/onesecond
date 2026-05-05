@@ -325,6 +325,14 @@
   /* 다크 4종(warm/slate/black/navy) 기본값 상속, light는 분기에서 override */
   --admin-chart-grid:      rgba(255, 255, 255, 0.10);
 
+  /* D-9 settings 섹션 신규 토큰 5종 (2026-05-05 Q-5 (a) 채택) */
+  /* 다크 4종 black 기본 + warm/slate/navy 분기에서 override */
+  --admin-set-bg:          #161616;                                                       /* set-row 배경 */
+  --admin-set-border:      var(--admin-border);                                           /* set-row 테두리 */
+  --admin-frame-bg:        var(--admin-surface);                                          /* 미리보기 프레임 배경 */
+  --admin-pv-tag-bg:       rgba(245, 158, 11, 0.20);                                      /* 실시간 태그 배경 (warning 강화) */
+  --admin-bn-banner-bg:    linear-gradient(135deg, var(--brand-700), var(--brand-500));   /* 배너 fallback (rail 정합 brown) */
+
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -372,6 +380,13 @@ body[data-admin-tone="light"] {
   /* 차트 grid line — D-5 별 트랙 B-1 light 분기 (2026-05-05) */
   /* light bg #FCFCFC 위 가시성 — 다크 rgba 흰색은 무대비, 검정 8% 톤 */
   --admin-chart-grid:   rgba(0, 0, 0, 0.08);
+
+  /* D-9 settings 섹션 신규 토큰 5종 — light override (Q-5 (a)) */
+  --admin-set-bg:       #F8F8F8;                                                       /* light bg #FCFCFC 대비 살짝 그레이 */
+  --admin-set-border:   var(--admin-border);                                           /* light: #E5E5E5 */
+  --admin-frame-bg:     #FFFFFF;                                                       /* 미리보기 프레임 — 순백 */
+  --admin-pv-tag-bg:    #FEF3C7;                                                       /* light warning bg 정합 */
+  --admin-bn-banner-bg: linear-gradient(135deg, var(--brand-600), var(--brand-400));   /* light brand 정합 */
 }
 
 
