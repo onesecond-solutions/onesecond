@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-05 후속 — **무료 회원 저장 공간 정책 검증 별 트랙 종료** (`docs/decisions/2026-05-05_free-tier-storage-validation.md` 신설, 정책 골격 ✅ + 후속 4건 ⚠️ 보류) + 게시판 이미지 원클릭 복사 백로그 신설 (`docs/product/backlog/2026-05-05_image-copy-feature.md`) + 미해결 #27 + 결정 대기 #10 등재. 메인 트랙 복귀. (직전 갱신 = 트랙 #A PITR 결제 직전 5/5 PASS / 결제 완료 후 사후 검증 의뢰서 발행 대기)
+> **마지막 갱신:** 2026-05-05 오후 — 세션 종료 인계 노트 (`2026-05-05_1613.md`) — v1.1 안전장치 결재 a/a/a + PITR 결제 직전 5/5 PASS + 사후 검증 의뢰서 발행 + D-9 Step 5 의뢰서 + 무료 회원 저장 공간 정책 검증 별 트랙 종료 (직전 갱신 = 무료 회원 저장 공간 정책 별 트랙 등재 + 미해결 #27 / 결정 대기 #10)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -207,6 +207,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-05_1613.md` — 2026-05-05 오후 (v1.1 안전장치 결재 a/a/a + PITR 결제 직전 5/5 PASS + 사후 검증 의뢰서 발행 + D-9 Step 5 의뢰서 + 무료 회원 저장 공간 정책 검증 별 트랙 종료)
 - `docs/sessions/2026-05-05_1054.md` — 2026-05-05 오전 후속 (D-9 Step 1.6 옵션 B 청산 + Step 2~4 묶음 settings 4섹션 1107줄 신설 + 카톡 마이그레이션 보류 결정 + 일정 1일 shift 5/14 버퍼 확보 — push 7 commit / Q-9·Q-10 일괄 (a) 결재 (`9af3c0b`) + operations 정정 (`c6a38f6`) + Step 1.6 트랜잭션 결과 (`a503680`) + Step 2~4 묶음 (`aadc3e1` 1107줄) + capture § 7 + _INDEX 갱신 (`6d05e4c`) + 카톡 보류 일정 1일 shift (`90c44f7`) / 영구 학습 4건 / 잔여 견적 ~3.8~4.1세션 / 단일 일자 누적 22 commit + rebase 2 (5월 가장 큰 진행량 갱신))
 - `docs/sessions/2026-05-05_0813.md` — 2026-05-05 오전 후속 (admin_v2 D-9 진입 + 알림 시스템 통찰 등록 — push 4 commit / D-9 작업지시서 (`6f0e665` 241줄) + Q-1~Q-8 일괄 (a) 승인 + Chrome 위임 의뢰서 (`cc6fdc7` 335줄) + Step 1 capture (`902e24e` 192줄) + 알림 통찰 별 트랙 (`d1e2133` _INDEX 갱신) / 발견 3건 — banner_img↔page_banner group_name 불일치 (Q-9 후보) / menu_home=false 라이브 (미해결 #24 후보) / Storage RLS admin 3종 is_admin() 가드 부재 (Q-10 후보 + Step 1.6 청산 분기) / 영구 학습 3건 / 잔여 견적 ~5.9 → ~6.1~6.3세션 / 단일 일자 누적 15 commit + rebase 2)
 - `docs/sessions/2026-05-05_0659.md` — 2026-05-05 새벽 (admin_v2 Phase D-5·D-6 완전 종료 단일 세션 — push 11 commit + rebase 2 / D-6 logs 4건 (`7cda0b8` `33b3e24` `21968ac` `d72320a`) + 정리 (`ee53976` 두 5/5 작업지시서 docs/specs 이동) + 안전장치 결정 (`4cd4603` v1.1 PITR/Sentry/Playwright 일정) + D-5 4건 (`4957e53` `b6912f8` `33df2f7` `14f4aa2`) / 결재 22건 일괄 (M-1~M-9 + L-1~L-10 + 안전장치 3) / D-pre.8 sweep 누락 보강 (admin_read_all_logs 청산) / 영구 학습 6건 / 잔여 견적 ~9.1 → ~5.9세션 / D-9 ⚙️ 화면설정 즉시 진입 가능 + 별 트랙 #A PITR 5/7 진입 가능)
