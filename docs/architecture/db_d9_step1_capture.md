@@ -1,11 +1,13 @@
-# admin_v2 Phase D-9 Step 1 capture — 사전 검증 SQL 6개 결과 raw + 발견 3건
+# admin_v2 Phase D-9 Step 1 capture — 사전 검증 SQL 6개 결과 raw + 발견 3건 + 후속 갱신
 
-> **작성일:** 2026-05-05
+> **작성일:** 2026-05-05 (오전 0813 신설 → 오전 후속 09:30 갱신)
 > **작성자:** Claude Code
 > **선행 산출물:**
 > - 작업지시서: `docs/specs/admin_v2_d9_workorder.md` (241줄, Q-1~Q-8 일괄 (a) 승인)
-> - Chrome 위임 의뢰서: `docs/specs/admin_v2_d9_step1_chrome_request_2026-05-05.md` (335줄)
-> **상태:** 🟡 핵심 발견 3건 — Q-9·Q-10 신규 결재 + Step 1.6 Storage RLS 보강 분기 결정 필요
+> - Chrome 위임 의뢰서 ①: `docs/specs/admin_v2_d9_step1_chrome_request_2026-05-05.md` (335줄, 회신 완료)
+> - Chrome 위임 의뢰서 ② (후속 SQL): `docs/specs/admin_v2_d9_step1_followup_chrome_request_2026-05-05.md`
+> - Chrome 위임 의뢰서 ③ (Step 1.6 트랜잭션 — 갱신 대기): `docs/specs/admin_v2_d9_step1_6_chrome_request_2026-05-05.md` (옵션 B 채택으로 갱신)
+> **상태:** 🟢 Q-9·Q-10 결재 (a)(a) 승인 + 후속 SQL 회신 완료 + Step 1.6 옵션 B 채택 (admin 3정책만 청산, 범용 정책 + library_files/board_attachments 정책 = 별 트랙 #25 분리)
 
 ---
 
@@ -54,7 +56,7 @@ postgres
 
 **⚠️ 발견 #1:** 옛 v1 코드는 `group_name = 'banner_img'`로 저장하는데, 신버전 DB에는 **`banner_img` 0건 + `page_banner` 6건** 존재. 옛 v1 코드 그대로 포팅 시 배너 데이터 read 실패.
 
-### ② 4그룹 key·value 전수 (11 rows)
+### ② 4그룹 key·value 전수 (11 rows — menu_b/gate/board_tab/banner_img)
 
 | key                  | value |
 |---|---|
@@ -74,10 +76,39 @@ postgres
 - menu_b 7행 정합 (home/scripts/board/myspace/news/quick/together)
 - gate 2행 모두 PRO 전용 (true)
 - board_tab 2행 모두 숨김 (false) — 1차 탭은 팀+지점만 표시 중
+- banner_img 0행 (옛 v1 코드 group_name 부재) — 발견 #1 분기
 
-**⚠️ 발견 #2:** `menu_home = false` (홈 메뉴 숨김). 미해결 #17은 보험뉴스만 다뤘으나, 홈도 숨김 상태. 라이브 운영 의도(home 메뉴 미표시 — A1 영역에서 home 진입 다른 경로 활용?) 또는 잔재인지 확인 필요.
+**⚠️ 발견 #2:** `menu_home = false` (홈 메뉴 숨김). 미해결 #17은 보험뉴스만 다뤘으나, 홈도 숨김 상태. 라이브 운영 의도(home 메뉴 미표시 — A1 영역에서 home 진입 다른 경로 활용?) 또는 잔재인지 확인 필요. **미해결 #24로 등록 (2026-05-05 후속).**
 
 `menu_news = false` ✅ 정합 (미해결 #17 보험뉴스 메뉴 숨김 옛 admin.html 처리 결과)
+
+### ② 후속 SQL — 4그룹 key·value 전수 (14 rows — page_banner / board_visibility / banner / feature_gate, 2026-05-05 후속 회신)
+
+| group_name        | key                    | value |
+|---|---|---|
+| banner            | banner_text            |       |
+| banner            | banner_visible         | off   |
+| board_visibility  | board_company          | false |
+| board_visibility  | board_hub              | false |
+| board_visibility  | board_notice           | true  |
+| board_visibility  | board_qa_product       | true  |
+| board_visibility  | board_qa_underwriting  | true  |
+| feature_gate      | feature_quickaction    | false |
+| **page_banner**   | **banner_img_board**   |       |
+| **page_banner**   | **banner_img_home**    |       |
+| **page_banner**   | **banner_img_myspace** |       |
+| **page_banner**   | **banner_img_news**    |       |
+| **page_banner**   | **banner_img_quick**   |       |
+| **page_banner**   | **banner_img_scripts** |       |
+
+**Q-9 (a) 정밀화 결론 (좋은 소식):**
+- `page_banner` 그룹의 key 패턴 = `banner_img_<page>` (board / home / myspace / news / quick / scripts 6개) → **옛 v1 admSaveBannerSettings 코드 패턴 그대로**
+- → **Step 2 코드 정합: group_name 1라인만 `banner_img` → `page_banner` 변경**, key 패턴·키명·로직 코드 그대로 사용 가능 (변경 최소)
+
+**신규 그룹 분기 (D-9 범위 외 별 트랙):**
+- `banner` 2행 (`banner_text`/`banner_visible=off`) — 텍스트 띠배너 추정. `page_banner`(이미지)와 의미 분리. → 별 트랙 (Phase E 또는 v1.1 띠배너 운영 트랙)
+- `feature_gate` 1행 (`feature_quickaction=false`) — `gate` 그룹과 분리 운영. → Q-2 (a) `gate` 사용 그대로 + `feature_gate`는 별 트랙
+- `board_visibility` 5행 (`board_company`/`board_hub`/`board_notice`/`board_qa_product`/`board_qa_underwriting`) — 개별 게시판 노출. `board_tab`(2행, 1차 탭)과 의미 다름. → Q-3 (a) `board_tab` 사용 그대로 + `board_visibility`는 별 트랙 (게시판 개별 토글)
 
 ### ③ app_settings RLS 정책 (2 rows)
 
@@ -157,7 +188,26 @@ D-pre.8 sweep 누락 보강 (D-4 K-1 / D-6 admin_read_all_logs 패턴 정합).
 - (b) D-9 범위 외 별 트랙 (보안 부채 누적) — admin_v2 운영 영향 0이지만 다른 9역할 업로드 위험 잔존
 - (c) 범용 정책 1apfxtf_0만 폐기 (admin 3정책 그대로) — 부분 청산
 
-**Code 권장:** (a) Step 1.6 청산 — 5/15 4팀 오픈 직전이라 보안 우선 + D-pre.8 sweep 표준 정합 (별 트랙 누적은 유지보수 부채)
+**Code 권장 1차:** (a) Step 1.6 청산 — 5/15 4팀 오픈 직전이라 보안 우선 + D-pre.8 sweep 표준 정합
+
+### 발견 #3 후속 (2026-05-05 Step A 회신) — 옵션 B 채택 분기 결정
+
+Step 1.6 의뢰서 ③ Step A 회신으로 **3개 버킷 + 범용 정책 영향 범위 발견**:
+
+| 버킷 | public | INSERT 의존 정책 | 신설 필요 |
+|---|---|---|---|
+| `onesecond_banner` | true | admin 3정책 (is_admin() 가드 부재 — 본 청산 대상) | DROP 3 + CREATE 3 |
+| `library_files` | false | **`Allow authenticated uploads 1apfxtf_0` (범용, with_check=true) — 유일 INSERT 정책** | 별 트랙 #25 (myspace 업로드 폴더 패턴 raw 검토 후) |
+| `board_attachments` | true | **동일 범용 정책 — 유일 INSERT 정책** | 별 트랙 #25 (게시판 첨부 폴더 패턴 raw 검토 후) |
+
+**범용 정책 폐기는 library_files / board_attachments INSERT 정책 신설과 반드시 묶여야 안전.** 본 시점 단독 폐기 시 두 버킷 업로드 차단 → myspace 자료 업로드 / 게시판 첨부 회귀 발생.
+
+**옵션 B 채택 (2026-05-05 09:30 일괄 결재):**
+- 본 트랜잭션 = onesecond_banner admin 3정책만 청산 (DROP 3 + CREATE 3, 범용 정책 보존)
+- 범용 정책 폐기 + library_files / board_attachments INSERT 정책 신설 = **별 트랙 #25 = Storage RLS 전수 sweep 작업지시서** (5/12 슬롯, `docs/specs/storage_rls_full_sweep_workorder.md`)
+- 본 시점 청산 정도: onesecond_banner 정합화 즉시 (~80%) + 범용 부채는 5/12 별 트랙 청산
+
+**Code 권장 2차 (분기 후):** 옵션 B + 별 트랙 #25 신설 + 미해결 #25 등록
 
 ---
 
@@ -176,17 +226,44 @@ ORDER BY group_name, key;
 
 ---
 
-## 4. 다음 단계 결정 (팀장님)
+## 4. 다음 단계 결정 (팀장님 — 2026-05-05 09:30 일괄 결재 완료)
 
-| 결정 | 내용 |
-|:--:|---|
-| **D1** | Q-9 채택 (a / b / c 중 하나) — 추가 SQL 결과 raw 후 결정 가능 |
-| **D2** | Q-10 채택 (a / b / c 중 하나) — Step 1.6 Storage RLS 보강 분기 |
-| **D3** | 추가 SQL 1건 (§ 3) Chrome 위임 즉시 실행 vs 다음 세션 |
-| **D4** | 발견 #2 menu_home=false 별도 미해결 이슈 등록 vs 라이브 회귀 의뢰서로 위임 |
-
-**Code 일괄 권장:** D1 (a) + D2 (a) + D3 즉시 실행 + D4 미해결 이슈 #24 등록
+| 결정 | 내용 | 결재 결과 |
+|:--:|---|---|
+| **D1** | Q-9 채택 (a / b / c 중 하나) | **(a) ⭐** — page_banner group_name 사용. 후속 SQL raw 정밀화 결과 = key 패턴 옛 v1 그대로 (`banner_img_<page>`) → 코드 변경 최소 (group_name 1라인) |
+| **D2** | Q-10 채택 (a / b / c 중 하나) — Step 1.6 분기 | **(a) → 옵션 B 변형** — Step A 회신으로 영향 범위 재분석 후 옵션 B 채택 (admin 3정책만 청산, 범용 정책 + library_files / board_attachments 정책 = 별 트랙 #25) |
+| **D3** | 추가 SQL 1건 즉시 실행 | **즉시 실행 완료 (2026-05-05 09:30)** — 후속 SQL 의뢰서 회신 raw § 1 ② 후속 갱신 |
+| **D4** | 발견 #2 menu_home=false 미해결 이슈 등록 | **YES** — 미해결 #24 등록 |
+| **D5** (신규) | 별 트랙 #25 = Storage RLS 전수 sweep 작업지시서 신설 | **YES** — `docs/specs/storage_rls_full_sweep_workorder.md` 신설 (5/12 슬롯) |
 
 ---
 
-*본 capture는 D-9 Step 1 사전 검증 SQL 6개 결과 raw + 발견 3건 raw 정리. Q-9·Q-10 결재 + 추가 SQL 결과 후 D-9 작업지시서 §1.2 갱신 + Step 분기 결정.*
+## 5. 영구 학습 후보 (2026-05-05 후속 누적)
+
+### 학습 #1 (D-pre.8 sweep Storage 누락 영구 학습) — Step A 회신으로 강화
+
+D-pre.8 sweep은 public schema 인라인 EXISTS만 청산. **storage.objects RLS는 sweep 범위 밖**이라:
+- 옛 v1 시점 admin 3정책 (`bucket_id` 체크만, is_admin() 가드 부재) 잔존
+- **추가 발견:** 범용 정책 `Allow authenticated uploads 1apfxtf_0` (with_check=true)이 library_files / board_attachments의 **유일 INSERT 정책**으로 잔존 — 폐기 시 두 버킷 업로드 회귀
+
+→ **D-final P-* 시점 또는 별 트랙 #25 Storage RLS 전수 sweep 1회 추가** 필수. Storage 정책 표준 = `bucket_id` + `is_admin()` 또는 `(storage.foldername(name))[1] = auth.uid()::text` 패턴 채택.
+
+### 학습 #2 (그룹 명명 분기 — 옛 v1 코드 vs 신버전 DB 운영) — Q-9 정밀화로 부분 해소
+
+옛 v1 admin.html 화면설정 4섹션 코드는 `banner_img` group_name + `banner_img_<page>` key 패턴을 사용. 신버전 DB는 `page_banner` group_name + `banner_img_<page>` key 패턴을 사용.
+
+→ **차이는 group_name 1단어만**. 즉 옛 v1 시점 이후 누군가가 group_name을 바꿨지만 key 패턴은 보존. D-9 코드 정합 = group_name 1라인 변경.
+
+추가로 신버전 DB에 신규 그룹 3종 (`banner` / `feature_gate` / `board_visibility`) 운영 중 → D-9 범위 외 별 트랙으로 분리 (Phase E 또는 별 트랙).
+
+### 학습 #3 (트랜잭션 사전 검증 가치) — Step A 회신 핵심 가치
+
+Step 1.6 의뢰서가 BEGIN ... 사후 검증 ... COMMIT/ROLLBACK 패턴이었음에도, **사전 검증 (Step A) 단계에서 영향 범위 발견 → 트랜잭션 미진입**이 핵심 가치 발휘.
+
+→ Step A 미실행 채 BEGIN 진입 시: 사후 검증 검증 1 (5행 정합)은 통과했을 것 (onesecond_banner 정합 한정 검증). library_files / board_attachments 영향은 사후 라이브 회귀에서야 발견 → ROLLBACK 시점 늦어짐.
+
+**표준화:** Storage RLS 트랜잭션 의뢰서는 항상 § Step A 사전 검증 = 모든 버킷 raw + 모든 storage 정책 raw 1쌍 필수. 트랜잭션 진입 전 영향 범위 명문화.
+
+---
+
+*본 capture는 D-9 Step 1 사전 검증 SQL 6개 결과 raw + 발견 3건 + 후속 SQL raw + 옵션 B 채택 분기 + 영구 학습 3건 누적. Step 1.6 갱신 트랜잭션 (DROP 3 + CREATE 3) Chrome 회신 후 Step 2 진입.*

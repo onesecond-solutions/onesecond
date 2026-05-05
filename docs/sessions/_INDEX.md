@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-05 오전 — D-5·D-6 완전 종료 (29/30 + 20/20 PASS) + 알림 시스템 v1.1~v3.0 통찰 문서 큰 별 트랙 등록 + admin_v2 D-9 진입 (작업지시서 발행 + Q-1~Q-8 일괄 (a) 승인 + Step 1 Chrome 위임 + SQL 6개 raw capture + 발견 3건 — Q-9·Q-10 신규 결재 후보) / 단일 일자 누적 push 15 commit + rebase 2 (5월 가장 큰 진행량)
+> **마지막 갱신:** 2026-05-05 오전 후속 09:30 — D-9 Step 1 후속 SQL 회신 + Q-9·Q-10 일괄 (a) 결재 + Step 1.6 옵션 B 분기 채택 (영향 범위 발견 — 3개 버킷 + 범용 정책이 library_files / board_attachments 유일 INSERT 정책 → admin 3정책만 청산, 범용 정책 + 다른 2버킷 INSERT 정책 = 별 트랙 #25 분리) + 미해결 #24 (menu_home=false) / #25 (Storage RLS 전수 sweep) 등록 + 별 트랙 #25 작업지시서 신설 (`docs/specs/storage_rls_full_sweep_workorder.md`) / 5/5 단일 일자 누적 push 17+ commit + rebase 2 (5월 가장 큰 진행량 갱신)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -155,6 +155,8 @@
 21. **(신규 5/5) 메모리 #11 자료 자산화 본 트랙 격상이 _INDEX.md 미반영** — 두 5/5 작업지시서가 메모리 #11에 의존하나 _INDEX.md에는 "⏸️ 자료 자산화 트랙 (저작권 보류)"로 표기. 5/4 격상 결정 시점 명문화 필요 (Phase D 후 별 트랙 진행 시점에 _INDEX.md 갱신).
 22. **(신규 5/5) v1.1 운영 안전장치 3종 (PITR / Sentry / Playwright) 작업 스케줄 미반영** — 5/4 Claude AI 인계 노트(`2026-05-04_session.md` 라인 197) 첫 언급. 5/15 4팀 오픈 직전 골든타임 5/7~5/14 도입 권장. **결정 문서 명문화 완료** (`docs/decisions/2026-05-05_v1_1_safety_3track_schedule.md`). 트랙 #A PITR 5/7 + #B Sentry 5/12 + #C Playwright 5/13~14 권장. 결재 3건 ⏸ 대기 (PITR 비용 / Sentry DSN / Playwright 범위).
 23. **(신규 5/5 후속) 알림 시스템 전면 재설계 v1.1~v3.0 통찰 문서 별 트랙 등록** — `docs/sessions/2026-05-05_dawn_notification_system.md` (443줄, Claude AI 새벽 통찰). 본문 §0 자체 검증으로 큰 그림 정합 OK (v1.1 5/15 4팀 오픈 일정 영향 0). v1.1 5개 항목(C영역 5배너 + 호버 프리뷰 + MY SPACE 알림 설정 + DND + A1 🔔)이 5/15 4팀 오픈 시점이라 admin Phase D 잔여 ~5.9세션과 **일정 충돌 가능성**. 7개 분할 spec(v1.1 C영역·v1.1 호버·v1.1 설정·v1.2 PC 토스트·v1.3 동기화·v1.5 PWA 푸시·v2.0 상담 모드) 작성 시점 = admin Phase D 마무리 후(5/11~12경) 권장 — 본 통찰 문서 §14 정직성 노트(코드 베이스 재검증 필요) 정합. 위치: docs/sessions 유지 (본문 §0/§13 명시 — 통찰 문서, spec 분할분만 docs/specs로 이동).
+24. **(신규 5/5 후속 09:30) menu_home = false 라이브 의도 vs 잔재 확인 필요** — D-9 Step 1 capture § 1 ② 후속 SQL 회신에서 발견. 미해결 #17은 보험뉴스 메뉴 숨김만 다뤘으나, 홈 메뉴(`menu_home = false`)도 라이브 운영 시점에 숨김 상태. A1 영역에서 home 진입 다른 경로 활용 의도 vs 옛 admin 운영 잔재인지 확인 필요. **D-9 진행 차단 아님** — admin이 D-9 화면설정 완성 후 토글로 즉시 ON 가능. D-9 라이브 회귀 의뢰서 §S 시리즈에서 검증 위임 또는 별도 결재.
+25. **(신규 5/5 후속 09:30) Storage RLS 전수 sweep 별 트랙 (작업지시서 신설)** — D-9 Step 1.6 옵션 B 채택 후 잔여 부채. Step A 회신으로 영향 범위 발견: 범용 정책 `Allow authenticated uploads 1apfxtf_0` (with_check=true)이 library_files / board_attachments의 **유일 INSERT 정책**. 폐기 시 두 버킷 업로드 차단 → 정책 신설 필수. 작업지시서: `docs/specs/storage_rls_full_sweep_workorder.md` (4 Step 분할: 옛 v1 코드 raw 검토 → 정책 결재 R-1~R-6 → 트랜잭션 → 라이브 회귀). 추정 진행량 ~0.6세션. **5/12 슬롯 진입 권장** (admin Phase D 잔여 ~5.9세션과 병렬 가능). 영구 학습 등록 후보 3건 (D-pre.8 sweep 영구 표준 갱신 / Storage RLS 표준 패턴 / 트랜잭션 사전 검증 표준).
 
 ---
 
