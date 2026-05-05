@@ -328,4 +328,64 @@ proname=is_admin, security_definer=true, provolatile=s
 
 ---
 
-*본 capture는 D-9 Step 1 사전 검증 SQL 6개 결과 raw + 발견 3건 + 후속 SQL raw + 옵션 B 채택 분기 + Step 1.6 트랜잭션 결과 raw + 영구 학습 3건 누적. Step 2 진입 즉시 가능.*
+## 7. Step 2~4 묶음 작성 결과 raw (2026-05-05 09:30 후속, 1107줄)
+
+### 7-1. 변경 파일 + 라인 수
+
+| 파일 | 변경 라인 | 내용 |
+|---|:--:|---|
+| `css/tokens.css` | +15 | 신규 토큰 5종 (--admin-set-bg / set-border / frame-bg / pv-tag-bg / bn-banner-bg) — :root (다크 4종 black 기본) + light override |
+| `pages/admin_v2.html` | +439 | warm/slate/navy 5종 톤 set-bg override (1토큰) + settings CSS 클래스 290줄 (.adm-set-card / .adm-set-row / .adm-pv / .adm-frame / .adm-mini-* / .adm-a2-* / .adm-bd-* / .adm-bn-* / .adm-btn-danger / .adm-btn-sm) + rail 9번째 버튼 + menu pane 9번째 + view 슬롯 9번째 + VIEW_LABELS.settings + admSwitchView dispatch 분기 |
+| `js/admin_v2.js` | +653 | admStorageUpload (Storage REST 헬퍼) + admLoadSettings + admBindSettingsEvents + admSyncMenuPreview + admSyncGatePreview + admSyncBoardPreview + admSaveMenuSettings + admSaveGateSettings + admSaveBoardTabs + admSaveBannerSettings + admBnSelect + admBannerFileSelected + admBannerClear (총 13함수) + race 안전장치 settings 분기 |
+| **합계** | **+1107** | (작업지시서 추정 ~790~880줄 대비 +25%, CSS 클래스 + 안전장치 + 주석 풍부화) |
+
+### 7-2. 옛 v1 → admin_v2 변환 정합 (영구 학습 #4)
+
+| 옛 v1 패턴 | admin_v2 정합 | 비고 |
+|---|---|---|
+| `admContent(html)` 헬퍼 | `document.getElementById('adm-settings-content').innerHTML = html` | view 슬롯 직접 inject |
+| `admFetch(...)` 헬퍼 | `window.db.fetch(...)` | H-1 정합 (D-1~D-6 패턴) |
+| `alert(...)` | `showAdminToast(msg, type)` (info/success/danger/warning) | D-1~D-6 패턴 정합 |
+| `var savedMap` IIFE 내 | 그대로 (admin_v2 IIFE 안 var 패턴 정합) | ES6+ 변환 불필요 |
+| group_name `'banner_img'` | `'page_banner'` | Q-9 (a) — 신버전 DB 정합 |
+| key 패턴 `'banner_img_' + k` | 동일 (옛 v1 패턴 보존) | Q-9 (a) 정밀화로 옛 v1 그대로 |
+| `admStorageUpload` (옛 v1 admin.html 라인 512~537) | admin_v2.js 신설 (window.db.url() 함수 호출 + apikey 헤더) | 옛 v1은 `window.db.url`을 string으로 가정한 버그, admin_v2는 함수 호출 정합 |
+| `.adm-card` 클래스 | `.adm-set-card` 신설 (admin_v2 .adm-panel 대비 가벼운 카드) | settings 4섹션 전용 |
+| `.adm-card-title` | `.adm-set-card-title` |  |
+| 색상 하드코딩 (`#fff`/`#6B3A2A`) | 5종 톤 토큰 (`--admin-frame-bg`/`--admin-bn-banner-bg`) | Q-5 (a) 정합 |
+
+### 7-3. Q-9 (a) 정밀화 결론 (영구 학습)
+
+후속 SQL 회신으로 page_banner 그룹 keys = `banner_img_<page>` 옛 v1 정합 확인. 즉 **옛 v1 시점 이후 누군가가 group_name만 `banner_img` → `page_banner` 변경, key 패턴은 보존**. D-9 코드 정합 = group_name 1라인 변경 (admSaveBannerSettings 라인 ~580 + admLoadSettings 라인 ~456).
+
+→ Step 2 코드 변경 최소 정합 보장.
+
+### 7-4. Q-10 (a) → 옵션 B 채택 결과
+
+Step A 회신으로 영향 범위 발견 (3개 버킷 + 범용 정책이 library_files/board_attachments 유일 INSERT 정책) → 옵션 B 채택:
+- onesecond_banner admin 3정책 청산 (DROP 3 + CREATE 3) ✅ COMMIT 완료
+- 범용 정책 + library_files/board_attachments 정책 = 별 트랙 #25 (5/12 슬롯)
+
+→ admStorageUpload 함수의 onesecond_banner INSERT 권한은 admin only (`is_admin()`) 정합. 다른 9역할은 INSERT 차단 (Q-8 (a) admin 본인 무시 정합 보장).
+
+### 7-5. 라이브 회귀 5/7 슬롯 진입 차단 0건
+
+- DB 변경 0건 (Step 1.6 청산 후 app_settings + Storage 정합 완료)
+- 5종 톤 토큰 25셀 정합 (`--admin-set-bg` warm/slate/navy 1각 + 4토큰 :root 상속)
+- admin_v2.html view 슬롯 + 라우팅 + race 안전장치 모두 settings 분기 추가 (D-1~D-6 패턴 정합)
+- Step 5 라이브 회귀 의뢰서는 5/7 슬롯 직전 발행 권장 (실 라이브 상태 raw 기준 회귀 항목 정밀화)
+
+### 7-6. 5/5 09:30 후속 push 누적 (4 commit)
+
+| 커밋 | 내용 |
+|---|---|
+| `9af3c0b` | docs(admin_v2): D-9 Step 1 후속 — Q-9·Q-10 일괄 결재 + Step 1.6 옵션 B 분기 + 별 트랙 #25 신설 (5 files, +838줄) |
+| `c6a38f6` | docs(operations): 폴더 placeholder 정정 — 단일 파일 → README.md 교체 (2 files, +19줄) |
+| `a503680` | docs(admin_v2): D-9 Step 1.6 트랜잭션 결과 raw + 영구 학습 #3 갱신 (1 file, +63줄) |
+| `aadc3e1` | feat(admin_v2): D-9 Step 2~4 묶음 — settings 4섹션 신설 (3 files, +1107줄) |
+
+**5/5 단일 일자 누적: 20 commit + rebase 2** (5월 가장 큰 진행량 갱신).
+
+---
+
+*본 capture는 D-9 Step 1 사전 검증 + 발견 3건 + 후속 SQL raw + 옵션 B 채택 분기 + Step 1.6 COMMIT 결과 + Step 2~4 묶음 작성 결과 + 영구 학습 4건 누적. Step 5 라이브 회귀 5/7 슬롯 대기.*

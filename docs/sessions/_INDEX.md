@@ -1,6 +1,6 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-05 오전 후속 09:30 — D-9 Step 1 후속 SQL 회신 + Q-9·Q-10 일괄 (a) 결재 + Step 1.6 옵션 B 분기 채택 (영향 범위 발견 — 3개 버킷 + 범용 정책이 library_files / board_attachments 유일 INSERT 정책 → admin 3정책만 청산, 범용 정책 + 다른 2버킷 INSERT 정책 = 별 트랙 #25 분리) + 미해결 #24 (menu_home=false) / #25 (Storage RLS 전수 sweep) 등록 + 별 트랙 #25 작업지시서 신설 (`docs/specs/storage_rls_full_sweep_workorder.md`) / 5/5 단일 일자 누적 push 17+ commit + rebase 2 (5월 가장 큰 진행량 갱신)
+> **마지막 갱신:** 2026-05-05 09:30 후속 — D-9 Step 1.6 옵션 B 청산 COMMIT 정합 (admin 3정책 is_admin() 가드, 범용 정책은 별 트랙 #25 분리) + **Step 2~4 묶음 완료** (settings 4섹션 신설, 1107줄, 13함수 — opt v1 라인 1290~1942 포팅, Q-5 (a) 5종 토큰 25셀 + Q-9 (a) page_banner group_name 1라인 변경 + admStorageUpload 신설) + Step 5 라이브 회귀 5/7 슬롯 대기 / 미해결 #24 (menu_home=false) / #25 (Storage RLS 전수 sweep) 등록 + 별 트랙 #25 작업지시서 신설 / **5/5 단일 일자 누적 push 20 commit + rebase 2** (5월 가장 큰 진행량 갱신)
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -47,7 +47,7 @@
 | D-6 logs | ✅ **완전 종료 (2026-05-05, 20/20 PASS)** | activity_logs 정합 (`33b3e24` js +255 / html -102) + M-2 (c) SYSTEM 2행 mock 합치기 + M-7 (c) result 컬럼 부재 → 모든 행 "성공" 통일 + M-8 (b) event_type 라이브 2종 (login/script_view) + admin_read_all_logs `is_admin()` 청산 (D-pre.8 sweep 누락 보강). P1 504ms / P2 cold 1293ms (PostgREST overhead 본질, RPC 격상 불필요 청산 — D-3 J-5 (b) 패턴 정합). 의뢰서: `admin_v2_d6_live_regression_2026-05-05.md` |
 | D-7 billing | 대기 | payments + subscriptions + 4플랜 분포 |
 | D-8 dashboard 종합 | 대기 | KPI 4 + timeline + 최근 가입자 + 시스템 상태 + Top 스크립트 모두 실 연결 + **별 트랙 B-2 dashboard 기본 뱃지 토큰 마이그레이션 묶음** |
-| **D-9 ⚙️ 화면설정 (5/4 신규)** | 🟢 **작업지시서 발행 + Q-1~Q-8 일괄 승인 (2026-05-05)** | **옛 admin v1 화면설정 탭(`_archive/admin_v1_20260430.html` 라인 1290~1942 ~650줄) 포팅** — 4섹션(메뉴 ON/OFF + PRO 게이트 + 게시판 탭 + 배너 이미지) + 5종 톤 토큰화. 작업지시서: `docs/specs/admin_v2_d9_workorder.md` (241줄) / 결재 8건 옵션 (a) 일괄 채택 / Q-4 Storage `onesecond_banner` 버킷 신설 분기 (Step 1.5) / Q-7 board.html `board_tab` read 별 트랙 분리 / Q-8 admin 본인 무시 (CLAUDE.md 정합). Step 1 사전 검증 SQL Chrome 위임 즉시 진입 가능 |
+| **D-9 ⚙️ 화면설정 (5/4 신규)** | 🟢 **Step 1.6 청산 COMMIT + Step 2~4 묶음 완료 (2026-05-05 09:30 후속, 1107줄)** — Step 5 라이브 회귀 5/7 슬롯 대기 | **옛 admin v1 화면설정 탭(`_archive/admin_v1_20260430.html` 라인 1290~1942 ~650줄) 포팅 완료** — 4섹션(메뉴 ON/OFF + PRO 게이트 + 게시판 탭 + 배너 이미지) + Q-5 (a) 5종 톤 토큰 25셀. Step 1 SQL 6개 capture (`db_d9_step1_capture.md` 192→327줄) + Step 1.6 옵션 B 청산 (admin 3정책 is_admin() 가드, 범용 정책 별 트랙 #25) + Step 2~4 묶음 (`tokens.css +15` / `admin_v2.html +439` / `admin_v2.js +653`, 13함수 — admStorageUpload + admLoadSettings + 4 Sync + 4 Save + 3 배너 헬퍼). Q-9 (a) page_banner group_name 1라인 변경 / Q-10 (a) → 옵션 B (영향 범위 발견 분기) / Q-7 board.html read 별 트랙 / Q-8 admin 본인 무시. Step 5 라이브 회귀 의뢰서는 5/7 슬롯 직전 발행 권장 |
 | **D-final** 보안 검증 | 대기 | 9역할 RLS 정합 + admin 무접두어 vs ga_*/insurer_* + admin 진입 게이트 + 비-admin 진입 차단 검증 |
 
 ### 8섹션 ↔ 데이터 소스 매핑 (2026-05-01 Phase C 확정 기준)
