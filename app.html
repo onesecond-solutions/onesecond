@@ -200,7 +200,6 @@ html, body {
   margin-bottom: var(--space-4);
   flex-shrink: 0;
 }
-.c-quick-launcher .quick-dropdown-wrap { width: 100%; }
 .c-quick-launcher .quick-btn { width: 100%; }
 
 /* ── Layout ── */
@@ -417,49 +416,7 @@ html, body {
 .search-card-title { font-size: 0.85em; font-weight: var(--fw-bold); color: var(--color-text-primary); flex: 1; }
 .search-card-body { font-size: 0.8em; color: #888; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* ── 빠른실행 드롭다운 ── */
-.quick-dropdown-wrap { position: relative; }
-.quick-dropdown {
-  display: none; position: absolute; top: calc(100% + 8px); right: 0;
-  background: var(--color-surface); border-radius: var(--radius-md);
-  min-width: 240px; box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-border);
-  overflow: hidden; z-index: 300;
-  animation: dropdownIn 0.15s ease;
-}
-@keyframes dropdownIn {
-  from { opacity:0; transform:translateY(-6px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-.quick-dropdown.show { display: block; }
-.quick-dd-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px var(--space-4); font-size: 0.8125em; font-weight: var(--fw-semibold);
-  color: var(--color-text-primary); cursor: pointer;
-  border-bottom: 1px solid var(--color-surface-2);
-  transition: background var(--transition-fast);
-}
-.quick-dd-item:last-child { border-bottom: none; }
-.quick-dd-item:hover { background: var(--color-surface-2); }
-.quick-dd-icon { font-size: 0.9375em; flex-shrink: 0; }
-.quick-dd-footer {
-  padding: 10px 14px; background: var(--color-surface-2);
-  border-top: 1px solid var(--color-border);
-  display: flex; gap: var(--space-2);
-}
-.quick-dd-footer-btn {
-  flex: 1; padding: 7px 0; border-radius: var(--radius-sm);
-  font-size: 0.75em; font-weight: var(--fw-bold); font-family: inherit;
-  cursor: pointer; border: 1px solid var(--color-border);
-  background: var(--color-surface); color: var(--color-text-primary);
-  text-align: center; transition: background var(--transition-fast);
-  display: flex; align-items: center; justify-content: center;
-}
-.quick-dd-footer-btn:hover { background: var(--color-border); }
-.quick-dd-footer-btn.accent { background: var(--color-brand); color: #fff; border-color: var(--color-brand); }
-.quick-dd-footer-btn.accent:hover { background: var(--color-brand-light); }
-
-/* ── 빠른실행 오버레이 (1턴 — centered modal, 평소 DOM 부재) ──
+/* ── 빠른실행 오버레이 (1턴 b — centered modal, 평소 DOM 부재) ──
    사용자 페이지 톤 정합 (밝은 브라운·아이보리 80% / surface·border·shadow-md 토큰).
    4그룹 슬롯은 자리만, 내용은 2턴. */
 .qov-backdrop {
@@ -793,17 +750,9 @@ html, body {
     <div class="c">
       <!-- C 최상단: 빠른 실행 진입 (2026-04-27 shell v1: A2에서 C로 이동) -->
       <div class="c-quick-launcher">
-        <div class="quick-dropdown-wrap">
-          <button class="quick-btn" id="openQuick" onclick="toggleQuickDropdown(event)">⚡ 빠른 실행 ▾</button>
-          <div class="quick-dropdown" id="quickDropdown">
-            <div id="quick-dd-items">
-              <div class="quick-dd-item" style="color:#aaa;font-size:0.75em;padding:10px var(--space-4);">불러오는 중...</div>
-            </div>
-            <div class="quick-dd-footer">
-              <button class="quick-dd-footer-btn accent" onclick="goQuickMenu()">Quick 메뉴 바로가기</button>
-            </div>
-          </div>
-        </div>
+        <button class="quick-btn" id="openQuick" onclick="openQuickLauncher()">⚡ 빠른 실행</button>
+        <!-- home C영역 빠른실행 미러링 source — 시각 비표시. loadQuickDdItems()가 채움. -->
+        <div id="quick-dd-items" style="display:none;"></div>
       </div>
 
       <div class="c-section active" id="c-home">
@@ -1073,10 +1022,10 @@ async function applyGateSettings() {
           if (typeof loadPricing === 'function') loadPricing();
         };
       } else {
-        btn.onclick = function (e) { toggleQuickDropdown(e); };
+        btn.onclick = function (e) { e.stopPropagation(); openQuickLauncher(); };
       }
     } else {
-      btn.onclick = function (e) { toggleQuickDropdown(e); };
+      btn.onclick = function (e) { e.stopPropagation(); openQuickLauncher(); };
     }
   }
 
@@ -1245,22 +1194,17 @@ function loadPricing() {
   switchMenu(saved);
 })();
 
-// ── ⑤ 빠른실행 (1턴 — lazy mount + centered modal + 4그룹 빈 슬롯) ───────
-// 평소 DOM 미렌더. mountQuickOverlay()로 클릭 시 동적 생성, closeQuick()에서 cleanup.
+// ── ⑤ 빠른실행 (1턴 b — ⚡ 버튼 → 모달 직진, 드롭다운 폐기) ───────────────
+// 평소 DOM 미렌더. ⚡ 클릭 시 openQuickLauncher() → mountQuickOverlay() 동적 생성.
 // 4그룹(녹취·스크립트 / 기준·정보 / 바로가기·연락처 / 검색·조회) 슬롯은 자리만 잡고
-// 실제 버튼·인터랙션은 2턴에서 채움. 검색 결과 호출(라인 1478, 1542 onclick)은
+// 실제 버튼·인터랙션은 2턴에서 채움. 검색 결과 호출(search-result-item / search-card)은
 // openQuickOverlay(tab_title) 시그니처 보존으로 호환.
-function toggleQuickDropdown(e) {
-  e.stopPropagation();
-  var dd = document.getElementById('quickDropdown');
-  dd.classList.toggle('show');
-  if (dd.classList.contains('show')) loadQuickDdItems();
-}
+// loadQuickDdItems() + #quick-dd-items hidden 컨테이너는 home C영역 미러링 source로 보존.
 
 async function loadQuickDdItems() {
   var wrap = document.getElementById('quick-dd-items');
   if (!wrap || wrap.dataset.loaded === 'true') return;
-  if (!window.db) { wrap.innerHTML = '<div class="quick-dd-item" style="color:#aaa;font-size:0.75em;">초기화 중...</div>'; return; }
+  if (!window.db) return;
   try {
     var res  = await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
     if (!res.ok) throw new Error('fetch 실패');
@@ -1272,18 +1216,8 @@ async function loadQuickDdItems() {
         + '<span class="quick-dd-icon">' + icon + '</span>' + item.tab_title + '</div>';
     }).join('');
     wrap.dataset.loaded = 'true';
-  } catch (e) {
-    wrap.innerHTML = '<div class="quick-dd-item" style="color:#aaa;font-size:0.75em;">불러오기 실패</div>';
-  }
+  } catch (e) { /* home 미러링 source — 실패 시 home 측에서 처리 */ }
 }
-
-document.addEventListener('click', function (e) {
-  var wrap = document.querySelector('.quick-dropdown-wrap');
-  if (wrap && !wrap.contains(e.target)) {
-    var dd = document.getElementById('quickDropdown');
-    if (dd) dd.classList.remove('show');
-  }
-});
 
 // lazy mount factory — 평소 DOM 부재, 첫 호출 시점에 모달 DOM 생성
 function mountQuickOverlay() {
@@ -1327,9 +1261,17 @@ function mountQuickOverlay() {
 }
 window.mountQuickOverlay = mountQuickOverlay;
 
+// ⚡ 빠른 실행 버튼 직접 클릭 — 4그룹 모달 표시 (key 없음, 1턴 b 신규)
+function openQuickLauncher() {
+  mountQuickOverlay();
+  var titleEl = document.getElementById('qov-title');
+  if (titleEl) titleEl.textContent = '⚡ 빠른 실행';
+  var contentInner = document.getElementById('qm-content-inner');
+  if (contentInner) contentInner.innerHTML = '';
+}
+window.openQuickLauncher = openQuickLauncher;
+
 async function openQuickOverlay(key) {
-  var dd = document.getElementById('quickDropdown');
-  if (dd) dd.classList.remove('show');
   mountQuickOverlay();
 
   var titleEl      = document.getElementById('qov-title');
@@ -1378,13 +1320,6 @@ document.addEventListener('keydown', function (e) {
   var ol = document.getElementById('quickOverlay');
   if (ol) closeQuick();
 });
-
-function goQuickMenu() {
-  var dd = document.getElementById('quickDropdown');
-  if (dd) dd.classList.remove('show');
-  closeQuick();
-  switchMenu('quick');
-}
 
 // ── 사업자 정보 모달 (푸터 미니 트리거) ──────────────────────────────────
 function openBizInfo() {
@@ -1706,9 +1641,7 @@ async function sendPasswordReset() {
 // ── ⑨ 사용자 드롭다운 (전역 등록은 DOMContentLoaded 밖 — window.toggleUserDropdown 참조)
 
 // ── inline onclick 전역 노출 (DOMContentLoaded 안 지역함수 → window. 등록) ──────────
-window.toggleQuickDropdown = toggleQuickDropdown;
 window.loadQuickDdItems    = loadQuickDdItems;
-window.goQuickMenu         = goQuickMenu;
 window.handleQuickOverlayClick = handleQuickOverlayClick;
 window.setFontScale        = setFontScale;
 window.openEditProfile     = openEditProfile;
