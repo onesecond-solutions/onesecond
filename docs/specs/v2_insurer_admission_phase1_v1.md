@@ -2,8 +2,8 @@
 
 > **spec명:** `docs/specs/v2_insurer_admission_phase1_v1.md`
 > **작성일:** 2026-05-07
-> **진실 원천 (현행):** `docs/strategy/onesecond_os_definition_v2_2026-05-07.md` (540줄, v2 OS 정의)
-> **진실 원천 (폐기 v1):** `docs/strategy/onesecond_phase1_definition_20260507.md` (521줄, 헤더 표시) — 이력 보존용
+> **진실 원천 (현행):** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄, v2 OS 정의)
+> **진실 원천 (폐기 v1):** `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, 헤더 표시) — 이력 보존용
 > **상태:** Phase 1 spec 명문화 완료. 본 spec ↔ 진실 원천 v2 충돌 시 **진실 원천 v2 우선**.
 > **메인 트랙 전환:** admin_v2 Phase D → **v2.0 원수사 입점 모델 Phase 1**
 > **버전 진화:** v1.0 (본 spec) → v1.5 (Phase 2 진입 시) → v2.0 (admin_v2 D-10 가동 시)
@@ -30,7 +30,7 @@
 
 ## 0-1. 진실 원천 문서 통독
 
-**경로:** `docs/strategy/onesecond_phase1_definition_20260507.md` (521줄, commit `c6359b4` 2026-05-07)
+**경로:** `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, commit `c6359b4` 2026-05-07)
 
 본 spec의 모든 결정은 진실 원천 문서 PART 1~12 기반. 본 spec과 진실 원천 사이 충돌 시 **진실 원천 우선**.
 
@@ -834,7 +834,7 @@ Step D — 라이브 검증 (라이브 사이트)
 
 ## 7-4. 진실 원천 우선 원칙
 
-본 spec ↔ 진실 원천 (`docs/strategy/onesecond_phase1_definition_20260507.md`) 충돌 시 **진실 원천 우선**.
+본 spec ↔ 진실 원천 (`docs/deprecated/onesecond_phase1_definition_20260507.md`) 충돌 시 **진실 원천 우선**.
 
 본 spec 작성 후 진실 원천 변경 시 spec 갱신 의뢰 필요.
 

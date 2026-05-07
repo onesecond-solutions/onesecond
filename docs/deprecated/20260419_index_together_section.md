@@ -1,7 +1,7 @@
 > ⚠️ **폐기 / 재정의 검토 — 2026-05-07**
 > **사유:** 본 문서가 명시한 권한 모델·교차 보조 모델은 2026-05-07 메인 트랙 전환으로 **사이트 단위 단순화 + 사이트 분리(원세컨드 무료 / 원세컨드 PRO)** 로 재정의됨. 교차 보조 모델 폐기.
 > **대체:** `docs/specs/v2_insurer_admission_phase1_v1.md` § 2-3 + 진실 원천 PART 10·14
-> **진실 원천:** `docs/strategy/onesecond_phase1_definition_20260507.md`
+> **진실 원천:** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (v2, 2026-05-07 재작성)
 > **보존 사유:** 이력 추적 (즉시 삭제 X)
 
 ---

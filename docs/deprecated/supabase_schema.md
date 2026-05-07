@@ -6,7 +6,7 @@
 > - SECURITY DEFINER 함수 신설 (`is_manager()` / `current_user_insurer_id()`)
 > - RLS 정책 재정의 (posts 4분기 / users 3분기 / insurers 신설)
 > **대체:** `docs/specs/v2_insurer_admission_phase1_v1.md` § 2-4 / § 6 (Phase 1 DB 스키마 + RLS 매트릭스)
-> **진실 원천:** `docs/strategy/onesecond_phase1_definition_20260507.md`
+> **진실 원천:** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (v2, 2026-05-07 재작성)
 > **보존 사유:** 이력 추적. Phase 1 DB 마이그레이션 진행 후 본 문서 v2 갱신 권장.
 
 ---
