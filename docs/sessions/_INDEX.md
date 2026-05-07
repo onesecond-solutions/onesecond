@@ -1,7 +1,7 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
 > **🎯 원세컨드 핵심 정의:** **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X. 진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md`
-> **마지막 갱신:** 2026-05-07 저녁 — **Phase 1 / Step 2 (DB 마이그레이션) 종료** + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. Phase 1 진행률 2/16 (잔여 14단계 약 8.9세션). / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄, OS 정의 + 17섹션 + 5-Layer 아키텍처 + Phase 1 정합 매트릭스). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄, v2 정합 매트릭스 검증 통과). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료 (5/7 빠른실행 6 commit 누적).
+> **마지막 갱신:** 2026-05-08 새벽 — **Phase 1 Step B capture § 7 신설** (Step B-extra + B' + C-meta 통합, 31사 매트릭스 명문화) + **Phase 1 / Step 3 (Quick 메뉴 §원전산 전환) 종료**. 결정 (a) v1.0 단순 채택 — `scripts-data.js` 라인 28 content_html 보존, insurers는 라우팅·회원가입용으로만. 라이브 코드 영향 0. 31사 정합 매트릭스 (3 source: scripts-data.js URL 29 / step_b § 7-2 31 row / step_a § Q8 slug) 채팅 진실 원천 명문화 (산출물 파일 신설 X). Phase 1 진행률 **3/16** (잔여 13단계 약 8.4세션). / 2026-05-07 저녁 — Phase 1 / Step 2 (DB 마이그레이션) 종료 + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료.
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -29,10 +29,10 @@
 
 | # | 단계 | 세션 |
 |---|---|---|
-| 0 | spec 명문화 + _INDEX.md 메인 트랙 재정의 | ✅ 완료 (본 갱신) |
+| 0 | spec 명문화 + _INDEX.md 메인 트랙 재정의 | ✅ 완료 (5/7 오후) |
 | 1 | (병행) D-9 Step 5 라이브 회귀 회신 마무리 | 별도 30분 |
-| 2 | DB 마이그레이션 (insurers + posts ALTER + users.insurer_id + RLS sweep) | 1.0 |
-| 3 | Quick 메뉴 §원전산 전환 (Step A·B·C·D 분할) | 0.7 |
+| 2 | DB 마이그레이션 (insurers + posts ALTER + users.insurer_id + RLS sweep) | ✅ 완료 (5/7 오후) |
+| 3 | Quick 메뉴 §원전산 전환 — (a) v1.0 단순 채택, content_html 보존, insurers는 라우팅·회원가입용 | ✅ 완료 (5/8 새벽) |
 | 4 | Supabase Auth 이메일 인증 ON | 0.3 |
 | 5 | 보험사 회원가입 폼 (4중 방어) | 1.0 |
 | 6 | 보험사 독립 페이지 (insurer.html 동적 라우팅) | 0.5 |
@@ -217,7 +217,7 @@
 27. **(신규 5/5 후속) 무료 회원 저장 공간 정책 검증 — 별 트랙 종료** — Claude AI 정책 초안(프로필 1장/200KB·게시판 글당 3장/장당 500KB·MY SPACE 20MB·1인 30MB·채팅 템플릿/PDF ❌) Code 기술 타당성 검증 5/5 완료. **결과:** 정책 골격 ✅ 그대로 진행 가능 + 4건 ⚠️ 보강 필요 (Cloudflare CDN 도입 시점 / 30MB 한도 강제 3중 방어 구조 / 다운그레이드 grace period / 5,000명 진입 전 한도 재검토). 결정 문서: `docs/decisions/2026-05-05_free-tier-storage-validation.md`. 메모리·`docs/product/content-policy.md` 정식 반영은 4건 결정 완료 후 별도 진행 (현재 "검증 완료 / 결정 보류" 상태). 부수: 게시판 이미지 원클릭 복사 백로그 신설(`docs/product/backlog/2026-05-05_image-copy-feature.md`, v1.1→v1.5→v2.0 로드맵, 메모리 모바일 채팅 템플릿 라이브러리 트랙과 통합 검토).
 28. ~~**(신규 5/7 새벽) C영역 빠른실행 오버레이 STEP 2 / 1턴 + (b) 드롭다운 폐기 후속**~~ → **✅ 종료 (2026-05-07 오전, 6 commit 누적)**: 1턴 골격 (`4e19408`) + (b) 드롭다운 폐기·⚡ 직진 (`25892fb`) + 레이아웃 b 1x4 세로 (`f9eded8`) + 2턴 4그룹 채움 + ④검색 + 모바일 시트 (`48dabab`) + 그룹 인라인 아코디언 (`d6a8268`) + BMI/연락처 1열 2카드 (`d6e9cc2`). **결정 6건 모두 처리:** ① 메모리 spec 진실 확정 (본 PC 발견) / ② 4그룹 매핑 라이브 DB 7 row 기준 / ③ ④검색·조회 사양 메모리 그대로 / ④ 모바일 <768px 하단 시트 / ⑤ 레이아웃 b / ⑥ toggleMirrorScript fallback 유지. 라이브 임시 영향 해소.
 
-29. **(신규 5/7 오전) v2.0 원수사 입점 모델 Phase 1 메인 트랙 전환** — admin_v2 Phase D → 본 트랙 전환. 진실 원천 `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, `c6359b4`) + 통합 spec `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). 결정 7건 + 추가 검토 6건 명문화. **다음 단계:** spec 승인 후 Step 2 (DB 마이그레이션) 별도 의뢰서 발송 → 16단계 (10.4세션) 순차 진행. admin Phase D 잔여(D-1/D-7/D-8/D-9/D-10/D-final)는 융합 트랙으로 격하.
+29. **(신규 5/7 오전) v2.0 원수사 입점 모델 Phase 1 메인 트랙 전환** — admin_v2 Phase D → 본 트랙 전환. 진실 원천 `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄) + 통합 spec `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). 결정 7건 + 추가 검토 6건 명문화. **진행 상태:** Step 0 + Step 2 + Step 3 종료 (3/16, 18.75%) → **다음 단계: Step 4 (Supabase Auth 이메일 인증 ON, 0.3세션) 진입 대기**. admin Phase D 잔여(D-1/D-7/D-8/D-9/D-10/D-final)는 융합 트랙으로 격하 (Step 10~15).
 
 ---
 
