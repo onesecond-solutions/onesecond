@@ -186,6 +186,8 @@ CLAUDE.md § role 체계 + `docs/role_system.md` 그대로 활용:
 
 ### 2-4-1. `insurers` 테이블 신설 (v1.0)
 
+> **patched 2026-05-07** — Step A capture (`db_phase1_step_a_capture.md` § 2 결정 6) 반영. domain NOT NULL → nullable.
+
 ```sql
 -- v1.0 (Phase 1) — 단순 컬럼만
 CREATE TABLE insurers (
@@ -193,7 +195,7 @@ CREATE TABLE insurers (
   slug TEXT UNIQUE NOT NULL,           -- 'meritz' / 'lotte' / 'db' / 'kb'
   name TEXT NOT NULL,                   -- '메리츠화재'
   type TEXT NOT NULL,                   -- '손해보험' / '생명보험'
-  domain TEXT NOT NULL,                 -- '@meritzfire.com'
+  domain TEXT,                          -- '@meritzfire.com' (사후 admin 입력 — INSERT 시 NULL 허용)
   admin_url TEXT,                       -- §원전산 URL (Phase 1 진입)
   logo_url TEXT,
   brand_color TEXT,
@@ -208,34 +210,47 @@ CREATE TABLE insurers (
 );
 
 CREATE INDEX idx_insurers_slug ON insurers(slug);
-CREATE INDEX idx_insurers_domain ON insurers(domain);
+CREATE INDEX idx_insurers_domain ON insurers(domain) WHERE domain IS NOT NULL;
 ```
 
-### 2-4-2. `posts` 테이블 ALTER (Phase 1 신규 컬럼)
+### 2-4-2. `posts` 테이블 ALTER (Phase 1 정합화)
+
+> **patched 2026-05-07** — Step A capture § 2 결정 1 반영. 라이브 5컬럼 보존 (patient_age/patient_gender/disease_name/diagnosis_timing/current_status) + spec 컬럼 정합화. 12 ADD → 6 ADD + 1 ALTER TYPE.
 
 ```sql
-ALTER TABLE posts ADD COLUMN question_type TEXT;        -- '인수' / '상품' / '모름'
-ALTER TABLE posts ADD COLUMN insurer_target TEXT;       -- '회사지정' / '손보전체' / '생보전체'
-ALTER TABLE posts ADD COLUMN product_category TEXT;     -- '암' / '실비' / '운전자' 등
-ALTER TABLE posts ADD COLUMN age_band TEXT;             -- 자유 입력
-ALTER TABLE posts ADD COLUMN gender TEXT;               -- 자유 입력
-ALTER TABLE posts ADD COLUMN medical_history TEXT;      -- 자유 입력
-ALTER TABLE posts ADD COLUMN diagnosis_period TEXT;     -- 자유 입력
-ALTER TABLE posts ADD COLUMN drug_usage TEXT;           -- 자유 입력
-ALTER TABLE posts ADD COLUMN current_state TEXT;        -- 자유 입력
-ALTER TABLE posts ADD COLUMN keywords TEXT[];           -- GIN 인덱스
-ALTER TABLE posts ADD COLUMN status TEXT DEFAULT '답변대기';  -- '답변대기' / '해결완료'
-ALTER TABLE posts ADD COLUMN insurer_id UUID REFERENCES insurers(id);  -- NULL = 현장 Q&A / 매니저 공지
+-- 라이브 5컬럼 보존 + spec 정합화
+ALTER TABLE posts ALTER COLUMN patient_age TYPE TEXT;  -- integer → text (자유 입력 정합)
+
+-- 신규 6 ADD (drug_usage / question_type / insurer_target / keywords / status / insurer_id)
+ALTER TABLE posts ADD COLUMN drug_usage TEXT;          -- 자유 입력 (6필드 중 신규)
+ALTER TABLE posts ADD COLUMN question_type TEXT;       -- '인수' / '상품' / '모름'
+ALTER TABLE posts ADD COLUMN insurer_target TEXT;      -- '회사지정' / '손보전체' / '생보전체'
+ALTER TABLE posts ADD COLUMN keywords TEXT[];          -- GIN 인덱스
+ALTER TABLE posts ADD COLUMN status TEXT DEFAULT '답변대기';
+ALTER TABLE posts ADD COLUMN insurer_id UUID REFERENCES insurers(id);
+-- insurer_name (라이브 보존) = 캐시용 / insurer_id = FK (정규화)
 
 CREATE INDEX idx_posts_keywords_gin ON posts USING GIN (keywords);
 CREATE INDEX idx_posts_insurer_id ON posts(insurer_id);
 CREATE INDEX idx_posts_question_type ON posts(question_type);
 
+-- 6필드 라이브 정합 매트릭스:
+-- 연령      → patient_age (text 변환)
+-- 성별      → patient_gender (그대로)
+-- 병력      → disease_name (그대로 — 의미 정합)
+-- 진단시기   → diagnosis_timing (그대로)
+-- 약복용    → drug_usage (신규)
+-- 현재상태   → current_status (그대로)
+
 -- board_type 의미 재정의:
--- - 'qna' (현장 Q&A)
--- - 'manager_notice' (매니저 공지사항)
--- - 'insurer' (보험사 게시판, insurer_id NOT NULL)
--- - 폐기: 'hub' / 'team' / 'branch' / 'insurer4' (기존 4탭)
+-- - 'qna' (현장 Q&A) — 신규
+-- - 'manager_notice' (매니저 공지사항) — 신규
+-- - 'insurer' (보험사 게시판, insurer_id NOT NULL) — 'insurer_board' 정합화
+-- - 'archive_legacy' (라이브 4 row 보존) — together 3 + team 1 마이그레이션
+-- - 폐기: 'hub' / 'team' / 'branch' / 'insurer4' (기존 4탭, 데이터 부재)
+
+-- 기존 board_type 4 row archive 처리
+UPDATE posts SET board_type = 'archive_legacy' WHERE board_type IN ('together', 'team');
 ```
 
 ### 2-4-3. `users` 테이블 ALTER
@@ -588,8 +603,10 @@ manager+ = admin
 
 ## 6-1. SECURITY DEFINER 헬퍼 함수
 
+> **patched 2026-05-07** — Step A capture § 2 결정 5 반영. 신규 함수 4종 (insurer_board 정책 인라인 EXISTS 청산 추가).
+
 ```sql
--- 신규 함수 1. is_manager() — 매니저 공지 쓰기 권한
+-- 신규 함수 1. is_manager() — 매니저 공지 쓰기 권한 (admin + GA/insurer 매니저급 6역할)
 CREATE OR REPLACE FUNCTION is_manager()
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER
@@ -601,7 +618,31 @@ AS $$
   );
 $$;
 
--- 신규 함수 2. current_user_insurer_id() — 본인 회사 게시판 RLS용
+-- 신규 함수 2. is_insurer_employee() — insurer_* 4역할 (insurer_board 정책 청산용)
+CREATE OR REPLACE FUNCTION is_insurer_employee()
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid()
+    AND role IN ('insurer_branch_manager', 'insurer_manager', 'insurer_member', 'insurer_staff')
+  );
+$$;
+
+-- 신규 함수 3. is_insurer_manager() — insurer_branch_manager + insurer_manager (pending 승인용)
+CREATE OR REPLACE FUNCTION is_insurer_manager()
+RETURNS BOOLEAN
+LANGUAGE sql STABLE SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid()
+    AND role IN ('insurer_branch_manager', 'insurer_manager')
+  );
+$$;
+
+-- 신규 함수 4. current_user_insurer_id() — 본인 회사 게시판 RLS용
 CREATE OR REPLACE FUNCTION current_user_insurer_id()
 RETURNS UUID
 LANGUAGE sql STABLE SECURITY DEFINER
