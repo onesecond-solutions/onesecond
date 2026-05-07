@@ -1,7 +1,7 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
 > **🎯 원세컨드 핵심 정의:** **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X. 진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md`
-> **마지막 갱신:** 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄, OS 정의 + 17섹션 + 5-Layer 아키텍처 + Phase 1 정합 매트릭스). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄, v2 정합 매트릭스 검증 통과). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료 (5/7 빠른실행 6 commit 누적).
+> **마지막 갱신:** 2026-05-07 저녁 — **Phase 1 / Step 2 (DB 마이그레이션) 종료** + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. Phase 1 진행률 2/16 (잔여 14단계 약 8.9세션). / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄, OS 정의 + 17섹션 + 5-Layer 아키텍처 + Phase 1 정합 매트릭스). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄, v2 정합 매트릭스 검증 통과). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료 (5/7 빠른실행 6 commit 누적).
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -301,6 +301,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-07_1940.md` — 2026-05-07 저녁 (메인 트랙 전환 admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1 + OS 정의 v2 재정의 "보험 상담 흐름 운영체제" + Phase 1 / Step 2 (DB 마이그레이션) 종료 + docs/ 재정렬 GPT 권장 정합 — 17 commit 누적 (오전 8 + 오후 9) / `c6359b4` 진실 원천 v1 521줄 (팀장님 업로드) → `f403b82` Phase 1 spec 829줄 + 메인 트랙 전환 → `73c0730` OS 정의 v2 540줄 신설 → `9d689f9` Step A capture + spec § 2-4 patch → `f667faf` docs/core + docs/deprecated 신설 + 폐기 5건 이전 → `ea8dfb6` Step B capture + spec § 6 patch → `7f7ed8a` 추가 폐기 2건 / 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS / 영구 학습 1건 등록 (SECURITY DEFINER 함수 컬럼 의존) / 보안 위험 1건 청산 (posts_update_insurer 일반 직원 권한 좁힘) / Phase 1 진행률 2/16 단계 종료 (Step 0 + Step 2) / 잔여 14단계 약 8.9세션)
 - `docs/sessions/2026-05-07_0704.md` — 2026-05-07 새벽 (전략·큰 그림·원칙 통합 스냅샷 940줄 신설 + C영역 빠른실행 오버레이 STEP 2 / 1턴 골격 + (b) 드롭다운 폐기·⚡ 버튼 → 모달 직진 후속 — 3 commit / `398f12a` 전략 스냅샷 + `4e19408` 1턴 골격 + `25892fb` (b) 후속 / STEP 1·1.5·2 + b 4단계 흐름 / 미해결 #28 신설 (2턴 진입 전 결정 6건 + 라이브 임시 영향) / 라이브 임시 영향: ⚡ 직접 클릭 시 빈 4그룹 / 검색 결과 진입은 정상 / home C영역 미러링 정상)
 - `docs/sessions/2026-05-05_1613.md` — 2026-05-05 오후 (v1.1 안전장치 결재 a/a/a + PITR 결제 직전 5/5 PASS + 사후 검증 의뢰서 발행 + D-9 Step 5 의뢰서 + 무료 회원 저장 공간 정책 검증 별 트랙 종료)
 - `docs/sessions/2026-05-05_1054.md` — 2026-05-05 오전 후속 (D-9 Step 1.6 옵션 B 청산 + Step 2~4 묶음 settings 4섹션 1107줄 신설 + 카톡 마이그레이션 보류 결정 + 일정 1일 shift 5/14 버퍼 확보 — push 7 commit / Q-9·Q-10 일괄 (a) 결재 (`9af3c0b`) + operations 정정 (`c6a38f6`) + Step 1.6 트랜잭션 결과 (`a503680`) + Step 2~4 묶음 (`aadc3e1` 1107줄) + capture § 7 + _INDEX 갱신 (`6d05e4c`) + 카톡 보류 일정 1일 shift (`90c44f7`) / 영구 학습 4건 / 잔여 견적 ~3.8~4.1세션 / 단일 일자 누적 22 commit + rebase 2 (5월 가장 큰 진행량 갱신))
