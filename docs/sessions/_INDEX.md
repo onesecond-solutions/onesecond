@@ -1,12 +1,67 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-07 새벽 — 세션 종료 인계 노트 (`2026-05-07_0704.md`) — 전략·큰 그림·원칙 통합 스냅샷 940줄 신설 + C영역 빠른실행 오버레이 STEP 2 / 1턴 골격 + (b) 드롭다운 폐기·⚡ 버튼 → 모달 직진 후속 (3 commit / 미해결 #28 신설 — 빠른실행 2턴 진입 전 결정 6건 + 라이브 임시 영향)
+> **마지막 갱신:** 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1). 진실 원천 문서 신설 (`docs/strategy/onesecond_phase1_definition_20260507.md` 521줄, commit `c6359b4`) + 통합 spec 명문화 (`docs/specs/v2_insurer_admission_phase1_v1.md` 829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하** (D-1/D-7/D-8/D-9/D-10/D-final). 미해결 #28 (C영역 빠른실행) 종료 — 6 commit (`4e19408`/`25892fb`/`f9eded8`/`48dabab`/`d6a8268`/`d6e9cc2`) + 그룹 인라인 아코디언 + BMI/연락처 1열 2카드 완료.
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
 ---
 
-## 🎯 현재 메인 트랙 — admin_v2.html Phase D 진입 대기 (2026-05-01 Phase C 확정)
+## 🎯 현재 메인 트랙 — v2.0 원수사 입점 모델 Phase 1 (2026-05-07 전환)
+
+**진실 원천:** `docs/strategy/onesecond_phase1_definition_20260507.md` (521줄, commit `c6359b4`)
+**통합 spec:** `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄, 본 갱신 commit)
+**전환 사유:** 게시판·회원가입·보험사 페이지 전면 재정의. 4탭 → 2탭 / 9역할 차등 → 사이트 단위 단순화 / 보험사 게시판 = 공급 레이어 / 현장 Q&A = 소비 레이어.
+
+### 결정 통보 7건 + 추가 검토 6건 (본 spec § 1)
+
+| # | 결정 | 채택 |
+|---|---|---|
+| 1 | 6필드 직접 입력 (연령/성별/병력/진단시기/약복용/현재상태 자유 텍스트) | ✅ |
+| 2 | 보험사 게시판 = 물리적으로 독립된 페이지 (`/insurer/{slug}` 동적 라우팅) | ✅ |
+| 3 | 회원가입 진입 = (b) 일반 폼 첫 단계 분기 | ✅ |
+| 4 | 본 의뢰 최우선 트랙 (admin_v2 Phase D 융합) | ✅ |
+| A | Supabase Auth 이메일 인증 (4중 방어 격상) | ✅ |
+| B | admin Phase D 잔여 융합 (D-1/D-7/D-8/D-9/D-10/D-final) | ✅ |
+| C | Quick 메뉴 통합 B안 (Phase 1 §원전산 / Phase 2 §결제·연락처·BMI) | ✅ |
+
+### Phase 1 작업 순서 (10.4세션, 16단계)
+
+| # | 단계 | 세션 |
+|---|---|---|
+| 0 | spec 명문화 + _INDEX.md 메인 트랙 재정의 | ✅ 완료 (본 갱신) |
+| 1 | (병행) D-9 Step 5 라이브 회귀 회신 마무리 | 별도 30분 |
+| 2 | DB 마이그레이션 (insurers + posts ALTER + users.insurer_id + RLS sweep) | 1.0 |
+| 3 | Quick 메뉴 §원전산 전환 (Step A·B·C·D 분할) | 0.7 |
+| 4 | Supabase Auth 이메일 인증 ON | 0.3 |
+| 5 | 보험사 회원가입 폼 (4중 방어) | 1.0 |
+| 6 | 보험사 독립 페이지 (insurer.html 동적 라우팅) | 0.5 |
+| 7 | 게시판 2탭 재구조화 (board.html) | 1.0 |
+| 8 | 6필드 직접 입력 UI + 정규식 차단 | 1.5 |
+| 9 | 보험사 게시판 ↔ 현장 Q&A 미러링 | 1.0 |
+| 10~15 | admin_v2 D-1/D-9/D-10/D-7/D-8/D-final 융합 | 2.4 |
+| 16 | 라이브 회귀 + 9역할 종합 검수 | 0.5 |
+| | **소계** | **10.4세션** |
+
+### 4중 방어 (가짜 보험사 임직원 가입 방지)
+
+```
+1. 도메인 화이트리스트 (insurers.domain)
+2. Supabase Auth 이메일 인증 ⭐ 신규
+3. status='pending' (D-pre.5 활용)
+4. 매니저 승인 (insurer_branch_manager 또는 admin)
+```
+
+### 버전 진화
+
+| 버전 | 진입 시점 | 범위 |
+|---|---|---|
+| **v1.0 (본 spec)** | 즉시 | insurers 단순 컬럼 + admin_url + Phase 1 16단계 |
+| v1.5 (Phase 2) | 4팀 안정화 후 (5/22 이후 권장) | metadata JSONB + Quick §결제·연락처·BMI 마이그레이션 (2.7세션) |
+| v2.0 | admin_v2 D-10 본격 가동 시 | metadata JSONB → 별도 3 테이블 분리 (1.5세션) |
+
+---
+
+## 🎯 융합 트랙 — admin_v2.html Phase D (2026-05-01 Phase C 확정 / 2026-05-07 융합 전환)
 
 `pages/admin_v2.html` 풀 스케일 관리자 콘솔. 시안 `claude_code/design_test/admin/v1-full.html` (1026줄, 4/25) 기반. **5종 톤 운영 확정** (light + warm + slate + black + navy). 외부 미팅·원수사 입점 영업·투자/제휴 시 결정적 무기.
 
@@ -159,7 +214,40 @@
 25. **(신규 5/5 후속 09:30) Storage RLS 전수 sweep 별 트랙 (작업지시서 신설)** — D-9 Step 1.6 옵션 B 채택 후 잔여 부채. Step A 회신으로 영향 범위 발견: 범용 정책 `Allow authenticated uploads 1apfxtf_0` (with_check=true)이 library_files / board_attachments의 **유일 INSERT 정책**. 폐기 시 두 버킷 업로드 차단 → 정책 신설 필수. 작업지시서: `docs/specs/storage_rls_full_sweep_workorder.md` (4 Step 분할: 옛 v1 코드 raw 검토 → 정책 결재 R-1~R-6 → 트랜잭션 → 라이브 회귀). 추정 진행량 ~0.6세션. **5/11 슬롯 진입 권장** (1일 shift 적용). 영구 학습 등록 후보 3건.
 26. **(신규 5/5 10:30 후속) 카톡 → 원세컨드 마이그레이션 트랙 보류** — 5/5 D-9 Step 2~4 종료 직후 팀장님 보류 결정. "다시 방향 잡고 의논 중" 상태. 메모리 [kakao_migration_strategy.md]에 보류 명문화 (4/26 작성 전략 보존, 의논 결과 후 재가동 가능). **영향:** 5/6 슬롯 = 카톡 본 진입에서 D-9 Step 5 라이브 회귀로 전환 → **전체 일정 1일 shift, 5/14 = 1일 버퍼 확보** (4팀 오픈 5/15 직전 안전판). 메모리 §본질("4팀 옮겨오게 만들려면 평소 쓰던 자료가 게시판에 있어야 한다") 자체는 여전히 유효 가설 — 카톡 자료 없이 4팀 오픈 시 사용자 카톡 회귀 위험은 의논 시점에 별도 평가 필요.
 27. **(신규 5/5 후속) 무료 회원 저장 공간 정책 검증 — 별 트랙 종료** — Claude AI 정책 초안(프로필 1장/200KB·게시판 글당 3장/장당 500KB·MY SPACE 20MB·1인 30MB·채팅 템플릿/PDF ❌) Code 기술 타당성 검증 5/5 완료. **결과:** 정책 골격 ✅ 그대로 진행 가능 + 4건 ⚠️ 보강 필요 (Cloudflare CDN 도입 시점 / 30MB 한도 강제 3중 방어 구조 / 다운그레이드 grace period / 5,000명 진입 전 한도 재검토). 결정 문서: `docs/decisions/2026-05-05_free-tier-storage-validation.md`. 메모리·`docs/product/content-policy.md` 정식 반영은 4건 결정 완료 후 별도 진행 (현재 "검증 완료 / 결정 보류" 상태). 부수: 게시판 이미지 원클릭 복사 백로그 신설(`docs/product/backlog/2026-05-05_image-copy-feature.md`, v1.1→v1.5→v2.0 로드맵, 메모리 모바일 채팅 템플릿 라이브러리 트랙과 통합 검토).
-28. **(신규 5/7 새벽) C영역 빠른실행 오버레이 STEP 2 / 1턴 + (b) 드롭다운 폐기 후속** — `app.html` 1턴 골격(lazy mount + centered modal + 4그룹 빈 슬롯 2x2 + ESC + #quick-content-slot 청산, `4e19408` +143/-61) + (b) 드롭다운 폐기·⚡ 버튼 → 모달 직진(`25892fb` +22/-89). **2턴 진입 전 결정 필요 6건**: ① 메모리 `project_quick_overlay_v2_spec.md` 진실 확정 (본 PC 부재) / ② 4그룹 매핑 컨펌 (Code 가안 = 녹취·스크립트·기준·정보·바로가기·연락처 + ④검색·조회) / ③ ④검색·조회 사양 / ④ 모바일 시트 분기 / ⑤ 4그룹 레이아웃 (현재 2x2 vs (b) 1x4 / (c) 4x1 / (d) 검색 상단 + 콘텐츠 3가로 / (e) 헤더 검색 아이콘 + 3그룹 본문, **Code 권장 (d) 또는 (e)**) / ⑥ `toggleMirrorScript` fallback 처리. ⚠️ **라이브 임시 영향:** 2턴 진입 전 ⚡ 직접 클릭 시 빈 4그룹만 노출 (검색 결과 진입은 정상). 2턴 슬롯 진입 + 5/14 버퍼 안에서 마무리 가정. 부수: 5/7 전략 통합 스냅샷 신설(`docs/strategy/onesecond_strategy_overview_2026-05-07.md` 940줄, `398f12a`) + 분리 사이트 모델(5/4 본격 명문화) [⚠️ GitHub 미반영]에 잘못 분류 → 정합성 점검 필요로 이동 후보.
+28. ~~**(신규 5/7 새벽) C영역 빠른실행 오버레이 STEP 2 / 1턴 + (b) 드롭다운 폐기 후속**~~ → **✅ 종료 (2026-05-07 오전, 6 commit 누적)**: 1턴 골격 (`4e19408`) + (b) 드롭다운 폐기·⚡ 직진 (`25892fb`) + 레이아웃 b 1x4 세로 (`f9eded8`) + 2턴 4그룹 채움 + ④검색 + 모바일 시트 (`48dabab`) + 그룹 인라인 아코디언 (`d6a8268`) + BMI/연락처 1열 2카드 (`d6e9cc2`). **결정 6건 모두 처리:** ① 메모리 spec 진실 확정 (본 PC 발견) / ② 4그룹 매핑 라이브 DB 7 row 기준 / ③ ④검색·조회 사양 메모리 그대로 / ④ 모바일 <768px 하단 시트 / ⑤ 레이아웃 b / ⑥ toggleMirrorScript fallback 유지. 라이브 임시 영향 해소.
+
+29. **(신규 5/7 오전) v2.0 원수사 입점 모델 Phase 1 메인 트랙 전환** — admin_v2 Phase D → 본 트랙 전환. 진실 원천 `docs/strategy/onesecond_phase1_definition_20260507.md` (521줄, `c6359b4`) + 통합 spec `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). 결정 7건 + 추가 검토 6건 명문화. **다음 단계:** spec 승인 후 Step 2 (DB 마이그레이션) 별도 의뢰서 발송 → 16단계 (10.4세션) 순차 진행. admin Phase D 잔여(D-1/D-7/D-8/D-9/D-10/D-final)는 융합 트랙으로 격하.
+
+---
+
+## 🗑️ 폐기 / 재정의 대상 문서 (2026-05-07 메인 트랙 전환 동반)
+
+본 트랙 전환 시점에 다음 문서들이 **폐기 또는 재정의 대상**으로 식별됨. 본 spec(`v2_insurer_admission_phase1_v1.md`)이 우선.
+
+### 헤더 표시 처리 완료
+
+| 문서 | 위치 | 사유 | 처리 |
+|---|---|---|---|
+| `20260418_board_tab_visibility.md` | `claude_code/_instructions/` | 4탭 구조 기반 (허브/팀/지점/보험사) → 2탭 전환 | 헤더 표시 |
+| `20260419_index_together_section.md` | `claude_code/_instructions/` | 구 권한 모델 가능성 | 헤더 표시 |
+| `supabase_schema.md` | `claude_code/_docs/` | Phase 1 신규 컬럼 미반영 (insurers / posts ALTER / users.insurer_id) | 헤더 표시 |
+
+### 부재 문서
+
+| 문서 | 사유 |
+|---|---|
+| `01_RULES_AND_STANDARDS.md` | 진실 원천 명시 항목이나 본 PC + GitHub 부재. 보고만. |
+
+### 추가 발견 — 재정의 후보 (팀장님 결정 후 처리)
+
+| 문서 | 위치 | 사유 |
+|---|---|---|
+| `00_MASTER.md` | `claude_code/_context/` | 메인 컨텍스트 — 4탭 / 9역할 차등 명시 가능성 |
+| `onesecond_context_update_20260419_evening.md` | `claude_code/_instructions/` | 구 컨텍스트 업데이트 |
+
+### 보존 대상 (이력 인계 노트)
+
+`docs/sessions/` 인계 노트 5건 (2026-04-25 / 2026-04-28 / 2026-05-04 / 2026-05-05 / COWORK_ONBOARDING) 4탭·5등급·교차보조 키워드 매칭 확인. 인계 노트는 **이력 보존 대상**이므로 폐기 X. 본 _INDEX.md 헤더에 진실 원천 명시 (메인 트랙 전환 표시).
 
 ---
 
