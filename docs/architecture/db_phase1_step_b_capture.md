@@ -1,11 +1,11 @@
 # Phase 1 Step B — DB 마이그레이션 트랜잭션 capture
 
-> **작성일:** 2026-05-07 오후
-> **단계:** v2.0 원수사 입점 모델 Phase 1 / Step 2 / Step B
+> **작성일:** 2026-05-07 오후 (§ 7 신설 2026-05-08 새벽)
+> **단계:** v2.0 원수사 입점 모델 Phase 1 / Step 2 (Step B + B-extra + B' + C-meta 통합)
 > **선행:** `db_phase1_step_a_capture.md` (Step A 진단 + 결정 6건)
-> **트랜잭션 결과:** 1차 ROLLBACK (사고 신호 #1 발생) → 수정 후 2차 **COMMIT 성공 ✅**
-> **사고 신호:** 1차 1건 / 2차 0건
-> **다음 단계:** Step B-extra 정정 patch + Step B' INSERT 31 row + Step C 사후 검증 + Step D 라이브 회귀
+> **트랜잭션 결과:** Step B 1차 ROLLBACK (사고 신호 #1) → 2차 COMMIT ✅ → Step B-extra / B' / C-meta 3건 모두 COMMIT ✅ (4 트랜잭션 누적)
+> **사고 신호:** Step B 1차 1건 / Step B 2차 + B-extra + B' + C-meta 0건 추가
+> **다음 단계:** Step D 라이브 회귀 = Step 16 통합 (board.html 작성 후 자연 검증, § 7-4 결정)
 
 ---
 
@@ -243,7 +243,7 @@ USING (
 | **users** | insurer_id UUID FK + 인덱스 + RLS 1 신설 (users_select_insurer_manager) |
 | **archive_legacy** | together 3 + team 1 변환 |
 
-**INSERT 31 row:** Step B' 별도 의뢰서 (대기).
+**INSERT 31 row:** Step B' 종료 ✅ (§ 7-2 명문화).
 
 ---
 
@@ -271,8 +271,168 @@ Step A 사전 분석 → Step B (DDL + RLS) → Step B-extra (정정 patch) → 
 
 ---
 
+# § 7. Step B-extra + B' + C-meta 후속 트랜잭션 결과 (5/7 오후)
+
+## § 7-1. Step B-extra — 보안 위험 청산 (`posts_update_insurer` → `posts_update_insurer_manager`)
+
+### 7-1-1. 의도
+
+§ 3 검토 사항 1건 (일반 직원이 같은 회사 다른 직원 글 수정 가능 = 보안 위험) 청산.
+
+### 7-1-2. 트랜잭션 SQL
+
+```sql
+BEGIN;
+
+DROP POLICY posts_update_insurer ON posts;
+
+CREATE POLICY posts_update_insurer_manager ON posts FOR UPDATE TO authenticated
+USING (
+  board_type = 'insurer'
+  AND insurer_id IS NOT NULL
+  AND insurer_id = current_user_insurer_id()
+  AND is_insurer_manager()
+);
+
+COMMIT;
+```
+
+### 7-1-3. 권한 매트릭스 (정정 후)
+
+| 시나리오 | 결과 | 사용 정책 |
+|---|---|---|
+| 본인 글 수정 (모든 사용자) | ✅ 가능 | `author or admin update posts` (보존) |
+| admin 모든 글 수정 | ✅ 가능 | `author or admin update posts` (보존) |
+| 매니저 본인 회사 임직원 글 모더레이션 | ✅ 가능 | `posts_update_insurer_manager` (신규) |
+| **일반 직원이 같은 회사 다른 직원 글 수정** | **❌ 차단** | (보안 위험 청산) |
+| 다른 회사 임직원 글 수정 | ❌ 차단 | (정책 부재) |
+
+### 7-1-4. 결과
+
+- ✅ COMMIT 성공
+- 사고 신호 0건
+- 데이터 영향 0 (insurer 게시판 row 0건)
+- 일반 직원 본인 글 수정은 보존 정책으로 유지
+
+---
+
+## § 7-2. Step B' — insurers 31사 INSERT (Quick 메뉴 §원전산 추출)
+
+### 7-2-1. 의도
+
+Quick 메뉴 §원전산 `quick_contents.system_links.content_html` (17,888자) 추출 31사를 insurers 마스터 테이블에 INSERT. v1.0 단순 진행 (자동 생성 함수는 v1.5 격상 후보).
+
+### 7-2-2. slug 충돌 회피 정책
+
+**손보+생보 동시 존재** → `{회사}-fire` / `{회사}-life` 분리:
+- `db / kb / samsung / hanwha / nh / lina` (6개 그룹 12 row)
+
+**손보 단독** → `-fire` 명시:
+- `meritz / heungkuk-fire / lotte-fire / aig-fire` (4 row)
+
+**생보 단독** → 단순 slug:
+- `abl / ibk / im-life / kdb / kyobo / dongyang / miraeasset / metlife / shinhan / heungkuk-tlife / heungkuk-elife / chubb / aia / bnp-cardif / fubon-hyundai` (15 row)
+
+### 7-2-3. 31사 매트릭스
+
+| # | 종류 | slug | 비고 |
+|:-:|:-:|---|---|
+| 1 | 손보 | `db-fire` | DB손해보험 |
+| 2 | 손보 | `kb-fire` | KB손해보험 |
+| 3 | 손보 | `meritz` | 메리츠화재 |
+| 4 | 손보 | `heungkuk-fire` | 흥국화재 |
+| 5 | 손보 | `samsung-fire` | 삼성화재 |
+| 6 | 손보 | `hanwha-fire` | 한화손해보험 |
+| 7 | 손보 | `lotte-fire` | 롯데손해보험 |
+| 8 | 손보 | `nh-fire` | NH농협손해보험 |
+| 9 | 손보 | `lina-fire` | 라이나손해보험 |
+| 10 | 손보 | `aig-fire` | AIG손해보험 |
+| 11 | 생보 | `abl` | ABL생명 |
+| 12 | 생보 | `db-life` | DB생명 |
+| 13 | 생보 | `ibk` | IBK연금보험 |
+| 14 | 생보 | `im-life` | iM라이프 |
+| 15 | 생보 | `kb-life` | KB라이프 |
+| 16 | 생보 | `nh-life` | NH농협생명 |
+| 17 | 생보 | `kdb` | KDB생명 |
+| 18 | 생보 | `kyobo` | 교보생명 |
+| 19 | 생보 | `dongyang` | 동양생명 |
+| 20 | 생보 | `lina-life` | 라이나생명 |
+| 21 | 생보 | `miraeasset` | 미래에셋생명 |
+| 22 | 생보 | `metlife` | 메트라이프 |
+| 23 | 생보 | `samsung-life` | 삼성생명 |
+| 24 | 생보 | `shinhan` | 신한라이프 |
+| 25 | 생보 | `hanwha-life` | 한화생명 |
+| 26 | 생보 | `heungkuk-tlife` | 흥국생명 (텔레마케팅) |
+| 27 | 생보 | `heungkuk-elife` | 흥국생명 (대면) |
+| 28 | 생보 | `chubb` | 처브라이프 |
+| 29 | 생보 | `aia` | AIA생명 |
+| 30 | 생보 | `bnp-cardif` | BNP파리바카디프 (admin_url 부재) |
+| 31 | 생보 | `fubon-hyundai` | 푸본현대생명 (admin_url 부재) |
+
+### 7-2-4. 결과
+
+- ✅ COMMIT 성공
+- INSERT 31 row 정합 (손보 10 + 생보 21)
+- `admin_url` 부재 2건 (`bnp-cardif`, `fubon-hyundai`) → NULL 유지. 회원가입 도메인 화이트리스트(`insurers.domain`) 검증은 별 트랙 (Phase 1 Step 5 진입 시 결재)
+- 사고 신호 0건
+
+---
+
+## § 7-3. Step C-meta — 사후 메타 검증 9건
+
+### 7-3-1. 의도
+
+Step B + B-extra + B' 누적 결과의 메타 정합성 검증. 자기 참조 EXISTS 잔존 0건 (D-pre.7 영구 학습 정합).
+
+### 7-3-2. 결과 요약
+
+- ✅ 10/10 PASS (검증 9건 + 종합 1건)
+- 자기 참조 EXISTS 잔존 0건
+- RLS 정책 cmd 매트릭스 (posts/users/insurers) 정합
+- SECURITY DEFINER 함수 4종 (`is_manager` / `is_insurer_employee` / `is_insurer_manager` / `current_user_insurer_id`) 모두 STABLE + secdef=true 정합
+
+### 7-3-3. ⚠️ raw 보강 필요 (별 트랙)
+
+본 PC에 라이브 SELECT 9건 raw 결과 행 부재 (5/7 19:40 인계 노트 line 53 한 줄 요약만). 다음 정합 검증 시점에 라이브 재실행 raw 보강 권장:
+
+```
+점검 1: posts RLS 10정책 cmd 분포 (DELETE 1 + INSERT 4 + SELECT 3 + UPDATE 2 = 10)
+점검 2: users RLS 6정책 cmd 분포 (INSERT 1 + SELECT 3 + UPDATE 2 = 6)
+점검 3: insurers RLS 3정책 cmd 분포 (SELECT 2 + ALL 1 = 3)
+점검 4: SECURITY DEFINER 함수 4종 secdef=true 확인
+점검 5: 자기 참조 EXISTS 잔존 0건 (information_schema 패턴 검색)
+점검 6: posts_update_insurer 폐기 + posts_update_insurer_manager 신설 정합
+점검 7: insurers row count = 31
+점검 8: archive_legacy row count = 4 (together 3 + team 1)
+점검 9: posts 신규 컬럼 7개 (drug_usage / patient_age / question_type / insurer_target / keywords / status / insurer_id) data_type 정합
+종합: 위 9건 ALL PASS
+```
+
+→ Step 3 (Quick 메뉴 §원전산 전환) 진입 전 라이브 재실행으로 보강 가능 / Step D 라이브 회귀 시 통합 검증 가능.
+
+---
+
+## § 7-4. Step D 라이브 회귀 분기 결정
+
+### 7-4-1. 결정
+
+**Step 16 통합 (board.html 작성 후 자연 검증)** — 단독 라이브 회귀 의뢰서 발행 X.
+
+### 7-4-2. 사유
+
+- Step 5~9 (회원가입 폼 + 보험사 페이지 + 게시판 2탭 + 6필드 입력 + 미러링)에서 라이브 코드 정합화 시점에 9역할 × board_type 라운드트립 자연 검증 가능
+- 단독 회귀 의뢰서는 Chrome 회신 부담 ↑ + 코드 부재 상태 검증은 의미 한정 (RLS 단독 검증은 § 7-3 메타 검증으로 대체)
+- D-pre.5/6/7/8 패턴은 코드 정합화 단계와 분리됐으나, Phase 1 Step 2는 Step 5~9가 코드 정합화 단계 = 자연 통합 가능
+
+### 7-4-3. 적용
+
+- Step 16 (라이브 회귀 + 9역할 종합 검수) 시 본 capture § 7-3 점검 9건 + 9역할 × board_type 라운드트립 통합 의뢰서 발행
+- 그 사이 별 부채 누적 시 § 7-3 raw 보강을 우선 처리
+
+---
+
 **END OF CAPTURE**
 
-> 본 capture는 Phase 1 Step B 트랜잭션 결과 + 영구 학습 1건 + 검토 1건을 명문화한 진실 원천입니다.
-> Step B-extra 정정 트랜잭션은 본 capture § 3-3을 근거로 작성됩니다.
-> Step B' INSERT 의뢰서는 별도 진행.
+> 본 capture는 Phase 1 Step B + B-extra + B' + C-meta 4 트랜잭션 누적 결과 + 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 청산 1건 (posts_update_insurer_manager) + 31사 INSERT 매트릭스를 명문화한 진실 원천입니다.
+> Step D 라이브 회귀는 Phase 1 Step 16 통합 검수에 합쳐서 진행 (§ 7-4 결정).
+> § 7-3 라이브 raw 보강은 별 트랙 — Step 3 진입 또는 Step 16 라이브 회귀 시 통합 가능.
