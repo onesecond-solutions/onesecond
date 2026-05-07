@@ -474,7 +474,6 @@ html, body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-4);
-  min-height: 96px;
 }
 .qov-group-title {
   font-size: 0.75em; font-weight: var(--fw-bold);
@@ -483,9 +482,78 @@ html, body {
   text-transform: uppercase;
   margin-bottom: var(--space-3);
 }
-.qov-group-slot {
+.qov-group-items {
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.qov-group-loading {
   font-size: 0.8125em; color: var(--color-text-tertiary);
-  font-style: italic;
+  font-style: italic; padding: var(--space-2) 0;
+}
+.qov-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit; font-size: 0.875em;
+  cursor: pointer; text-align: left;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+.qov-item:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+.qov-item-icon { font-size: 1em; flex-shrink: 0; }
+
+/* ④ 검색·조회 입력 패널 */
+.qov-search-panel { display: none; flex-direction: column; gap: var(--space-3); }
+.qov-group[data-group="search"].search-active .qov-group-items { display: none; }
+.qov-group[data-group="search"].search-active .qov-search-panel { display: flex; }
+.qov-search-input {
+  padding: var(--space-3); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); font-family: inherit;
+  font-size: 0.9375em; background: var(--color-surface);
+  color: var(--color-text-primary); outline: none;
+  transition: border-color var(--transition-fast); width: 100%;
+}
+.qov-search-input:focus { border-color: var(--color-brand); }
+.qov-search-actions { display: flex; gap: var(--space-2); }
+.qov-search-btn {
+  flex: 1; padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: inherit; font-size: 0.8125em; font-weight: var(--fw-bold);
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.qov-search-btn:hover { background: var(--color-surface-2); }
+.qov-search-btn-primary {
+  background: var(--color-brand); color: #fff; border-color: var(--color-brand);
+}
+.qov-search-btn-primary:hover { background: var(--color-brand-light); }
+
+/* 모바일 하단 시트 (<768px) */
+@media (max-width: 768px) {
+  .qov-backdrop { padding: 0; align-items: flex-end; }
+  .qov-modal {
+    max-width: 100%; width: 100%; max-height: 85vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    animation: sheetSlideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes sheetSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .qov-modal::before {
+    content: ''; display: block;
+    width: 40px; height: 4px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    margin: 8px auto 0; flex-shrink: 0;
+  }
 }
 .qov-content {
   font-size: 0.9375em; color: var(--color-text-primary); line-height: 1.9;
@@ -1233,19 +1301,30 @@ function mountQuickOverlay() {
     +       '<div class="qov-groups" id="qov-groups">'
     +         '<div class="qov-group" data-group="recording_script">'
     +           '<div class="qov-group-title">녹취·스크립트</div>'
-    +           '<div class="qov-group-slot">(2턴에서 채워집니다)</div>'
+    +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
     +         '</div>'
     +         '<div class="qov-group" data-group="info">'
     +           '<div class="qov-group-title">기준·정보</div>'
-    +           '<div class="qov-group-slot">(2턴에서 채워집니다)</div>'
+    +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
     +         '</div>'
     +         '<div class="qov-group" data-group="shortcuts">'
     +           '<div class="qov-group-title">바로가기·연락처</div>'
-    +           '<div class="qov-group-slot">(2턴에서 채워집니다)</div>'
+    +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
     +         '</div>'
     +         '<div class="qov-group" data-group="search">'
     +           '<div class="qov-group-title">검색·조회</div>'
-    +           '<div class="qov-group-slot">(2턴에서 채워집니다)</div>'
+    +           '<div class="qov-group-items">'
+    +             '<button type="button" class="qov-item" onclick="quickSearchOpen(\'naver\')"><span class="qov-item-icon">🔍</span><span>네이버 검색</span></button>'
+    +             '<button type="button" class="qov-item" onclick="quickSearchOpen(\'google\')"><span class="qov-item-icon">🔍</span><span>구글 검색</span></button>'
+    +             '<button type="button" class="qov-item" onclick="quickSearchOpen(\'daum\')"><span class="qov-item-icon">🔍</span><span>다음 검색</span></button>'
+    +           '</div>'
+    +           '<div class="qov-search-panel">'
+    +             '<input type="text" id="qov-search-input" class="qov-search-input" placeholder="검색어를 입력하세요" oncompositionstart="_qovIMEComposing=true" oncompositionend="_qovIMEComposing=false" onkeydown="quickSearchKeydown(event)" />'
+    +             '<div class="qov-search-actions">'
+    +               '<button type="button" class="qov-search-btn" onclick="quickSearchBack()">← 뒤로</button>'
+    +               '<button type="button" class="qov-search-btn qov-search-btn-primary" onclick="quickSearchSubmit()">검색하기</button>'
+    +             '</div>'
+    +           '</div>'
     +         '</div>'
     +       '</div>'
     +       '<div class="qov-content" id="qm-content-inner"></div>'
@@ -1261,6 +1340,123 @@ function mountQuickOverlay() {
 }
 window.mountQuickOverlay = mountQuickOverlay;
 
+// ── 2턴 — 4그룹 매핑 (Q3 라이브 DB 7 row 기준) ─────────────────────────
+var QUICK_GROUP_MAP = {
+  recording_script: 'recording_script',  // ① 녹취·스크립트
+  mirror_script:    'recording_script',
+  bmi_standard:     'info',               // ② 기준·정보
+  insurance_age:    'info',
+  payment_info:     'info',
+  system_links:     'shortcuts',          // ③ 바로가기·연락처
+  contact_info:     'shortcuts'
+  // ④ search 그룹은 DB 무관 정적 마크업 (네이버/구글/다음)
+};
+var QUICK_ITEM_ICONS = {
+  recording_script:'📝', mirror_script:'🎙️',
+  bmi_standard:'📊', insurance_age:'📅', payment_info:'💳',
+  system_links:'🔗', contact_info:'📞'
+};
+
+async function loadQuickOverlayItems() {
+  var groups = {
+    recording_script: document.querySelector('.qov-group[data-group="recording_script"] .qov-group-items'),
+    info:             document.querySelector('.qov-group[data-group="info"] .qov-group-items'),
+    shortcuts:        document.querySelector('.qov-group[data-group="shortcuts"] .qov-group-items')
+  };
+  if (!groups.recording_script) return;
+  if (groups.recording_script.dataset.loaded === 'true') return;
+  if (!window.db) return;
+  try {
+    var res = await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
+    if (!res.ok) throw new Error('fetch 실패: ' + res.status);
+    var data = await res.json();
+    var buckets = { recording_script:[], info:[], shortcuts:[] };
+    data.forEach(function (item) {
+      var gKey = QUICK_GROUP_MAP[item.tab_key];
+      if (!gKey || !buckets[gKey]) return;
+      buckets[gKey].push(item);
+    });
+    Object.keys(buckets).forEach(function (gKey) {
+      var slot = groups[gKey];
+      if (!slot) return;
+      if (buckets[gKey].length === 0) {
+        slot.innerHTML = '<div class="qov-group-loading">항목 없음</div>';
+      } else {
+        slot.innerHTML = buckets[gKey].map(function (item) {
+          var icon = QUICK_ITEM_ICONS[item.tab_key] || '📄';
+          var safe = String(item.tab_title).replace(/'/g, '&#39;');
+          return '<button type="button" class="qov-item" onclick="openQuickOverlay(\'' + safe + '\')">'
+            + '<span class="qov-item-icon">' + icon + '</span>'
+            + '<span>' + item.tab_title + '</span>'
+            + '</button>';
+        }).join('');
+      }
+      slot.dataset.loaded = 'true';
+    });
+  } catch (e) {
+    Object.keys(groups).forEach(function (gKey) {
+      var slot = groups[gKey];
+      if (slot && slot.dataset.loaded !== 'true') {
+        slot.innerHTML = '<div class="qov-group-loading" style="color:var(--color-danger);">불러오기 실패</div>';
+      }
+    });
+  }
+}
+window.loadQuickOverlayItems = loadQuickOverlayItems;
+
+// ── 2턴 — ④ 검색·조회 동작 (네이버/구글/다음 외부 새 탭 + IME + ESC 단계) ──
+var QUICK_SEARCH_URLS = {
+  naver:  'https://search.naver.com/search.naver?query=',
+  google: 'https://www.google.com/search?q=',
+  daum:   'https://search.daum.net/search?q='
+};
+var QUICK_SEARCH_LABELS = { naver:'네이버', google:'구글', daum:'다음' };
+var _qovSearchEngine = null;
+var _qovIMEComposing = false;
+window._qovIMEComposing = false; // inline oncomposition* 핸들러용
+
+function quickSearchOpen(engine) {
+  _qovSearchEngine = engine;
+  var grp = document.querySelector('.qov-group[data-group="search"]');
+  if (!grp) return;
+  grp.classList.add('search-active');
+  var input = document.getElementById('qov-search-input');
+  if (input) {
+    input.value = '';
+    input.placeholder = (QUICK_SEARCH_LABELS[engine] || '') + ' 검색어를 입력하세요';
+    setTimeout(function () { input.focus(); }, 0);
+  }
+}
+window.quickSearchOpen = quickSearchOpen;
+
+function quickSearchBack() {
+  var grp = document.querySelector('.qov-group[data-group="search"]');
+  if (!grp) return;
+  grp.classList.remove('search-active');
+  _qovSearchEngine = null;
+}
+window.quickSearchBack = quickSearchBack;
+
+function quickSearchSubmit() {
+  var input = document.getElementById('qov-search-input');
+  if (!input || !_qovSearchEngine) return;
+  var q = (input.value || '').trim();
+  if (!q) { input.focus(); return; }
+  var url = QUICK_SEARCH_URLS[_qovSearchEngine] + encodeURIComponent(q);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  closeQuick();
+}
+window.quickSearchSubmit = quickSearchSubmit;
+
+function quickSearchKeydown(e) {
+  // IME 조합 중 Enter 무시 (한글 마지막 글자 처리 방지)
+  if (e.key === 'Enter' && !window._qovIMEComposing) {
+    e.preventDefault();
+    quickSearchSubmit();
+  }
+}
+window.quickSearchKeydown = quickSearchKeydown;
+
 // ⚡ 빠른 실행 버튼 직접 클릭 — 4그룹 모달 표시 (key 없음, 1턴 b 신규)
 function openQuickLauncher() {
   mountQuickOverlay();
@@ -1268,11 +1464,13 @@ function openQuickLauncher() {
   if (titleEl) titleEl.textContent = '⚡ 빠른 실행';
   var contentInner = document.getElementById('qm-content-inner');
   if (contentInner) contentInner.innerHTML = '';
+  loadQuickOverlayItems();
 }
 window.openQuickLauncher = openQuickLauncher;
 
 async function openQuickOverlay(key) {
   mountQuickOverlay();
+  loadQuickOverlayItems(); // 검색 결과 / 미러링 source 진입 시에도 4그룹 채움 (UX 일관성)
 
   var titleEl      = document.getElementById('qov-title');
   var contentInner = document.getElementById('qm-content-inner');
@@ -1318,7 +1516,14 @@ window.handleQuickOverlayClick = handleQuickOverlayClick;
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   var ol = document.getElementById('quickOverlay');
-  if (ol) closeQuick();
+  if (!ol) return;
+  // ESC 단계 — 검색 입력창 활성 시 입력창만 닫고 3버튼으로 복귀
+  var searchActive = ol.querySelector('.qov-group[data-group="search"].search-active');
+  if (searchActive) {
+    quickSearchBack();
+    return;
+  }
+  closeQuick();
 });
 
 // ── 사업자 정보 모달 (푸터 미니 트리거) ──────────────────────────────────
