@@ -431,7 +431,7 @@ html, body {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  width: 100%; max-width: 720px; max-height: 80vh;
+  width: 100%; max-width: 800px; max-height: 80vh;
   display: flex; flex-direction: column;
   box-shadow: var(--shadow-md);
   overflow: hidden;
@@ -534,6 +534,16 @@ html, body {
 }
 .qov-group-content * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; box-sizing: border-box; }
 .qov-group-content table { width: 100%!important; table-layout: auto; }
+/* content_html 안 인라인 grid (minmax 360px auto-fit) → 모달 폭 안에서 1열 2카드 강제 */
+.qov-group-content [style*="grid-template-columns"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+@media (max-width: 600px) {
+  .qov-group-content [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
 
 /* ④ 검색·조회 입력 패널 */
 .qov-search-panel { display: none; flex-direction: column; gap: var(--space-3); }
