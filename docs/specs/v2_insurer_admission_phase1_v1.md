@@ -2,10 +2,12 @@
 
 > **spec명:** `docs/specs/v2_insurer_admission_phase1_v1.md`
 > **작성일:** 2026-05-07
-> **진실 원천:** `docs/strategy/onesecond_phase1_definition_20260507.md` (521줄, commit `c6359b4`)
-> **상태:** Phase 1 spec 명문화 완료. 본 문서 ↔ 진실 원천 충돌 시 **진실 원천 우선**.
+> **진실 원천 (현행):** `docs/strategy/onesecond_os_definition_v2_2026-05-07.md` (540줄, v2 OS 정의)
+> **진실 원천 (폐기 v1):** `docs/strategy/onesecond_phase1_definition_20260507.md` (521줄, 헤더 표시) — 이력 보존용
+> **상태:** Phase 1 spec 명문화 완료. 본 spec ↔ 진실 원천 v2 충돌 시 **진실 원천 v2 우선**.
 > **메인 트랙 전환:** admin_v2 Phase D → **v2.0 원수사 입점 모델 Phase 1**
 > **버전 진화:** v1.0 (본 spec) → v1.5 (Phase 2 진입 시) → v2.0 (admin_v2 D-10 가동 시)
+> **OS 정의 정합:** 본 spec은 v2 PART C (Phase 1 정합 매트릭스) 검증 통과 — 작업 명세 변경 0
 
 ---
 

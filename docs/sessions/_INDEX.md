@@ -1,6 +1,7 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
-> **마지막 갱신:** 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1). 진실 원천 문서 신설 (`docs/strategy/onesecond_phase1_definition_20260507.md` 521줄, commit `c6359b4`) + 통합 spec 명문화 (`docs/specs/v2_insurer_admission_phase1_v1.md` 829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하** (D-1/D-7/D-8/D-9/D-10/D-final). 미해결 #28 (C영역 빠른실행) 종료 — 6 commit (`4e19408`/`25892fb`/`f9eded8`/`48dabab`/`d6a8268`/`d6e9cc2`) + 그룹 인라인 아코디언 + BMI/연락처 1열 2카드 완료.
+> **🎯 원세컨드 핵심 정의:** **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X. 진실 원천: `docs/strategy/onesecond_os_definition_v2_2026-05-07.md`
+> **마지막 갱신:** 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/strategy/onesecond_os_definition_v2_2026-05-07.md` (540줄, OS 정의 + 17섹션 + 5-Layer 아키텍처 + Phase 1 정합 매트릭스). 폐기: `docs/strategy/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄, v2 정합 매트릭스 검증 통과). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료 (5/7 빠른실행 6 commit 누적).
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
