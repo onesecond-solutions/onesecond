@@ -704,7 +704,23 @@ WITH CHECK (is_admin());
 
 -- UPDATE / DELETE 정책: 본인 글 + admin (D-pre.7~.8 패턴 정합)
 -- (자기 참조 EXISTS 절대 금지 — auth.uid() = author_id 또는 is_admin() 패턴)
+
+-- 보존: author or admin update posts / author or admin delete posts (라이브 그대로)
+
+-- 신규 UPDATE — 보험사 매니저 모더레이션 (Step B-extra 정정 반영, 2026-05-07)
+-- patched: posts_update_insurer → posts_update_insurer_manager (is_insurer_manager() 가드 추가)
+CREATE POLICY posts_update_insurer_manager ON posts FOR UPDATE TO authenticated
+USING (
+  board_type = 'insurer'
+  AND insurer_id IS NOT NULL
+  AND insurer_id = current_user_insurer_id()
+  AND is_insurer_manager()  -- insurer_branch_manager + insurer_manager 만
+);
+-- (일반 직원은 'author or admin update posts'로 본인 글만 수정)
+-- (admin은 'author or admin update posts' 보존 정책으로 모든 글)
 ```
+
+> **patched 2026-05-07 (Step B-extra)** — Step B 트랜잭션 결과 발견된 권한 범위 검토(`db_phase1_step_b_capture.md` § 3) 반영. 일반 직원이 같은 회사 다른 직원 글 수정 가능한 보안 위험 청산.
 
 ## 6-3. `users` 테이블 RLS 정책
 
