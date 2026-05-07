@@ -219,6 +219,8 @@
 
 29. **(신규 5/7 오전) v2.0 원수사 입점 모델 Phase 1 메인 트랙 전환** — admin_v2 Phase D → 본 트랙 전환. 진실 원천 `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄) + 통합 spec `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). 결정 7건 + 추가 검토 6건 명문화. **진행 상태:** Step 0 + Step 2 + Step 3 종료 (3/16, 18.75%) → **다음 단계: Step 4 (Supabase Auth 이메일 인증 ON, 0.3세션) 진입 대기**. admin Phase D 잔여(D-1/D-7/D-8/D-9/D-10/D-final)는 융합 트랙으로 격하 (Step 10~15).
 
+30. **(신규 5/8 새벽) Custom SMTP 도입 — 4팀 오픈 5/15 직전 전환** — Phase 1 Step 4 진입 시 검토 발견. Supabase 기본 SMTP rate limit = **3 emails/hour** (built-in 제한). 5/15 4팀 165명 동시 가입 시 인증 메일 차단 리스크. **결정:** (a) 채택 — 5/11~12 슬롯에 Custom SMTP 별 트랙 신설 (SendGrid / Mailgun / Resend 후보 중 결정). Step 4 진입 자체는 영향 0 (현재 가입자 적음, rate limit 본질 위험 0). 트리거 = 4팀 가입 직전. 진실 원천 = 본 항목.
+
 ---
 
 ## 🗑️ 폐기 / 재정의 대상 문서 (2026-05-07 메인 트랙 전환 동반)
