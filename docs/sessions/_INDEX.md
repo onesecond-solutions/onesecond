@@ -240,12 +240,12 @@
 |---|---|
 | `01_RULES_AND_STANDARDS.md` | 진실 원천 명시 항목이나 본 PC + GitHub 부재. 보고만. |
 
-### 추가 발견 — 재정의 후보 (팀장님 결정 후 처리)
+### 추가 후보 처리 완료 (2026-05-07 오후)
 
-| 문서 | 위치 | 사유 |
-|---|---|---|
-| `00_MASTER.md` | `claude_code/_context/` | 메인 컨텍스트 — 4탭 / 9역할 차등 명시 가능성 |
-| `onesecond_context_update_20260419_evening.md` | `claude_code/_instructions/` | 구 컨텍스트 업데이트 |
+| 문서 | 처리 결과 |
+|---|---|
+| `00_MASTER.md` | ✅ **폐기 헤더 + `docs/deprecated/` 이전** (정체성 정의 일부 v2 정합 / 4/20 작성본이라 5/7 이후 결정 미반영 / MASTER 역할 = OS 정의 v2로 이전) |
+| `onesecond_context_update_20260419_evening.md` | ✅ **폐기 헤더 + `docs/deprecated/` 이전** (4/19 세션 원본 — 명확한 구 컨텍스트) |
 
 ### 보존 대상 (이력 인계 노트)
 
