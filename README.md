@@ -5,7 +5,7 @@
 
 **배포 URL:** https://onesecond.solutions
 **버전:** v1.1 (개발 중)
-**첫 배포:** 2026-04-20 배포 연기 → DB 재설계 후 재배포 예정
+**첫 배포:** 2026-05-15 4팀 오픈 (v2.0 원수사 입점 모델 Phase 1 완료 후)
 
 ---
 
@@ -18,7 +18,7 @@
 - 고객정보 저장 안 함, 내부 상담 도구
 - 교육 플랫폼 아님, CRM 아님
 
-### 4축 구조
+### 5축 구조
 - **스크립트** — 상담 중 참조
 - **퀵메뉴** — 긴급 접근
 - **게시판** — KakaoTalk 그룹채팅 대체
@@ -149,18 +149,28 @@ claude_code/_instructions/YYYYMMDD_주제.md 의 작업을 수행해줘.
 
 ---
 
-## 권한 구조
+## 권한 구조 (9역할)
 
-| 현장 호칭 | role |
-|---|---|
-| 설계사, 팀장 | `member` |
-| 실장 | `manager` |
-| 지점장, 센터장 | `branch_manager` |
-| 스텝, 총무 | `staff` |
-| 보험사 담당자 | `insurer` |
-| 운영자 | `admin` |
+> 단일 진실 원천: `docs/role_system.md`
 
-**PRO 접근:** `plan === 'pro'` OR role이 `manager` 이상
+| 구분 | role | 현장 호칭 |
+|---|---|---|
+| 플랫폼 | `admin` | 어드민 (운영자, 전역 권한) |
+| GA | `ga_branch_manager` | 지점장/센터장 |
+| GA | `ga_manager` | 실장 |
+| GA | `ga_member` | 설계사/팀장 |
+| GA | `ga_staff` | 스텝/총무 |
+| 원수사 | `insurer_branch_manager` | 원수사 지점장 |
+| 원수사 | `insurer_manager` | 원수사 매니저 |
+| 원수사 | `insurer_member` | 원수사 일반 직원 |
+| 원수사 | `insurer_staff` | 원수사 스텝 |
+
+- **접두어 원칙:** `admin` 무접두어 / GA는 `ga_` / 원수사는 `insurer_`
+- **무료 혜택 대상 (매니저 이상 무료):** `admin` + `ga_branch_manager` + `ga_manager` + `insurer_branch_manager` + `insurer_manager` (5역할)
+- **유료 대상:** `ga_member` + `ga_staff` + `insurer_member` + `insurer_staff` (4역할)
+- **화면설정 무시 대상:** `admin` 만 (나머지 8역할은 화면설정 적용)
+
+**PRO 접근:** `plan === 'pro'` OR `is_manager()` SECURITY DEFINER 함수 통과 (admin + ga/insurer 매니저급 5역할)
 
 ---
 
@@ -193,7 +203,7 @@ claude_code/_instructions/YYYYMMDD_주제.md 의 작업을 수행해줘.
 - 재설계 완료 후 재배포
 
 ### 📋 대기
-- AZ금융서비스 더원지점 4팀 40명 첫 배포 (DB 재설계 후)
+- AZ금융서비스 더원지점 4팀 첫 배포 (v2.0 원수사 입점 모델 Phase 1 완료 + 5/15 오픈)
 - 해피톡 응대 템플릿
 - 광고 배너 메뉴 (v1.5~v2.0)
 
