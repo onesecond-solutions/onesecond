@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>원세컨드 — Home v2 (Framer Feed Preview, A/B 테스트)</title>
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <!--
+  ================================================================================
+    pages/home_v2.html — 단독 페이지 디자인 미리보기 (A/B 테스트)
+    ▸ 발행: 2026-05-09 오후
+    ▸ 메인 home.html 무관, app.html 통합 ❌, app.js 무변경, tokens.css 무변경
+    ▸ 시안 출처: 팀장님 제공 Framer 감성 시안 (~270줄, 다크 톤)
+    ▸ 변환: 다크 → 라이트 75% / 그레이 20% / 블랙 4% / 브라운 포인트 1%
+    ▸ 가져온 것:  Hero 큰 카드 + Feed Grid 3카드 + 호버 미리보기 패턴 + 카테고리 탭
+    ▸ 버린 것:    다크 배경 / Top bar 마케팅 메뉴 (Product/Teams/Pricing) / hardcoded 색상
+    ▸ 라우팅:     window.switchMenu(menu) — 단독 페이지에서는 stub 동작 (app 통합 시 실 라우팅)
+  ================================================================================
+  -->
+  <style>
+    /* ────────────────────────────────────────────────────────────────────────
+       Page-scope 변수 (tokens.css 무변경, 본 페이지 한정)
+       시안 max-width 1280 + 카드 radius (xl/lg) tokens.css 정합으로 매핑
+    ──────────────────────────────────────────────────────────────────────── */
+    .hv2-page {
+      --hv2-max:        1280px;
+      --hv2-card-radius: var(--radius-xl);
+      --hv2-pill-radius: var(--radius-full);
+      --hv2-grid-gap:   var(--space-5);
+      --hv2-text-muted: var(--color-text-secondary);
+      --hv2-text-soft:  var(--color-text-tertiary);
+      --hv2-line:       var(--color-border);
+      --hv2-line-strong: var(--color-border-strong);
+      --hv2-surface:    var(--color-surface);
+      --hv2-surface-2:  var(--color-surface-2);
+      --hv2-surface-3:  var(--color-surface-3);
+      --hv2-brand:      var(--color-brand);
+      --hv2-brand-soft: var(--brand-50);
+      --hv2-accent:     var(--color-accent);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Pretendard, 'Apple SD Gothic Neo', sans-serif;
+      overflow-x: hidden;
+    }
+    button { font: inherit; }
+
+    /* ────────────────────────────────────────────────────────────────────────
+       라이트 페이지 컨테이너 (75% 화이트 톤)
+       상단 hero 위쪽에 옅은 brown gradient (브라운 포인트 1% — 페이지 시그니처)
+    ──────────────────────────────────────────────────────────────────────── */
+    .hv2-page {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% -10%, var(--brand-50) 0%, transparent 32%),
+        var(--color-bg);
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       1. Top bar — 시안 마케팅 메뉴 제거, 원세컨드 5탭 정합화
+       ──────────────────────────────────────────────────────────────────── */
+    .hv2-topbar {
+      height: 4em;
+      border-bottom: 1px solid var(--hv2-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--space-5);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .hv2-topbar-inner {
+      width: 100%;
+      max-width: var(--hv2-max);
+      display: grid;
+      grid-template-columns: 11em 1fr 11em;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .hv2-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--color-text-primary);
+    }
+    .hv2-logo-mark {
+      width: 1.5em;
+      height: 1.5em;
+      border-radius: var(--radius-sm);
+      background: var(--color-brand);
+      color: var(--color-text-inverse);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85em;
+      font-weight: 900;
+    }
+    .hv2-nav {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-6);
+    }
+    .hv2-nav button,
+    .hv2-right button,
+    .hv2-category button {
+      background: none;
+      border: 0;
+      color: var(--hv2-text-muted);
+      cursor: pointer;
+      padding: var(--space-2) 0;
+      transition: color var(--transition-normal);
+      font-size: var(--text-tab);
+    }
+    .hv2-nav button:hover,
+    .hv2-right button:hover,
+    .hv2-category button:hover {
+      color: var(--color-text-primary);
+    }
+    .hv2-right {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      align-items: center;
+      font-size: var(--text-label);
+    }
+    .hv2-pill {
+      border: 1px solid var(--hv2-line) !important;
+      border-radius: var(--hv2-pill-radius) !important;
+      padding: var(--space-2) var(--space-3) !important;
+      color: var(--color-text-primary) !important;
+      background: var(--color-surface) !important;
+    }
+    .hv2-pill:hover {
+      background: var(--color-surface-2) !important;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       2. 카테고리 탭 — 6탭 (All / 스크립트 / 현장 Q&A / 보험뉴스 / Quick / MY SPACE)
+       ──────────────────────────────────────────────────────────────────── */
+    .hv2-category-wrap {
+      height: 3.6em;
+      border-bottom: 1px solid var(--hv2-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--space-5);
+    }
+    .hv2-category {
+      width: 100%;
+      max-width: var(--hv2-max);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-6);
+      position: relative;
+    }
+    .hv2-category button {
+      font-weight: 700;
+      font-size: var(--text-label);
+      position: relative;
+    }
+    .hv2-category button.active {
+      color: var(--color-text-primary);
+    }
+    .hv2-category button.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.6em;
+      height: 0.18em;
+      background: var(--color-brand);
+      border-radius: var(--radius-full);
+    }
+    .hv2-search {
+      position: absolute;
+      right: 0;
+      width: 2.4em;
+      height: 2.4em;
+      border: 1px solid var(--hv2-line);
+      border-radius: var(--hv2-pill-radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-primary);
+      background: var(--color-surface);
+      cursor: pointer;
+      transition: background var(--transition-normal);
+    }
+    .hv2-search:hover {
+      background: var(--color-surface-2);
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       3. 메인 컨테이너
+       ──────────────────────────────────────────────────────────────────── */
+    .hv2-main {
+      max-width: var(--hv2-max);
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-5) var(--space-10);
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       4. Hero 큰 카드 — 라이트 톤 + 브라운 포인트 1% 강조
+       ──────────────────────────────────────────────────────────────────── */
+    .hv2-hero {
+      position: relative;
+      width: 100%;
+      min-height: 36em;
+      border-radius: var(--hv2-card-radius);
+      overflow: hidden;
+      border: 1px solid var(--hv2-line);
+      background: var(--color-surface);
+      cursor: pointer;
+      isolation: isolate;
+      transition: transform var(--transition-slow), border-color var(--transition-slow), box-shadow var(--transition-slow);
+      box-shadow: var(--elevation-1);
+    }
+    .hv2-hero:hover {
+      transform: translateY(-2px);
+      border-color: var(--hv2-line-strong);
+      box-shadow: var(--elevation-2);
+    }
+    /* 그라데이션 오버레이 (브라운 포인트만 미세, 본문 가독성 보장) */
+    .hv2-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 78% 22%, rgba(212, 132, 90, 0.10), transparent 32%),
+        linear-gradient(135deg, rgba(160, 82, 45, 0.04) 0%, transparent 50%);
+      z-index: 1;
+      transition: opacity var(--transition-slow);
+    }
+    /* 미세한 그리드 라인 (가독성 0% 영향) */
+    .hv2-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(31, 41, 55, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(31, 41, 55, 0.035) 1px, transparent 1px);
+      background-size: 4em 4em;
+      opacity: 0.5;
+      z-index: 0;
+    }
+    .hv2-hero-visual {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, var(--color-surface-2) 0%, var(--color-surface) 48%, var(--brand-50) 100%);
+    }
+    .hv2-orb {
+      position: absolute;
+      border-radius: var(--radius-full);
+      filter: blur(0.6em);
+      opacity: 0.85;
+    }
+    .hv2-orb.one {
+      width: 23em;
+      height: 23em;
+      right: 8%;
+      top: 8%;
+      background: radial-gradient(circle, rgba(212, 132, 90, 0.18), transparent 66%);
+    }
+    .hv2-orb.two {
+      width: 14em;
+      height: 14em;
+      right: 26%;
+      bottom: 14%;
+      background: radial-gradient(circle, rgba(160, 82, 45, 0.20), transparent 70%);
+    }
+    /* Hero 우상단 mock 화면 (스크립트 미리보기 UI 분위기) */
+    .hv2-screen {
+      position: absolute;
+      right: 7%;
+      top: 14%;
+      width: 26em;
+      height: 18em;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--hv2-line);
+      background: var(--color-surface);
+      box-shadow: var(--elevation-3);
+      transform: rotate(-2deg);
+    }
+    .hv2-screen::before {
+      content: "";
+      position: absolute;
+      left: 1.5em;
+      top: 1.7em;
+      width: 9em;
+      height: 0.85em;
+      border-radius: var(--radius-full);
+      background: var(--neutral-200);
+      box-shadow:
+        0 2.2em 0 var(--neutral-100),
+        0 4.4em 0 var(--neutral-100);
+    }
+    .hv2-screen::after {
+      content: "";
+      position: absolute;
+      right: 1.6em;
+      bottom: 1.6em;
+      width: 9em;
+      height: 6.5em;
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, rgba(212, 132, 90, 0.30), var(--brand-50));
+    }
+    .hv2-hero-content {
+      position: absolute;
+      left: 2em;
+      right: 2em;
+      bottom: 2em;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-5);
+      align-items: flex-end;
+    }
+    .hv2-hero-copy {
+      max-width: 47em;
+    }
+    /* Hero eyebrow — 브라운 포인트 1% (전 페이지 통틀어 가장 진한 브라운) */
+    .hv2-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-full);
+      color: var(--color-text-inverse);
+      background: var(--color-brand);
+      font-size: var(--text-xs);
+      font-weight: 800;
+      margin-bottom: var(--space-4);
+      letter-spacing: -0.01em;
+    }
+    .hv2-hero-title {
+      margin: 0;
+      font-size: clamp(2.2em, 5.3vw, 4.5em);
+      line-height: 1;
+      letter-spacing: -0.05em;
+      font-weight: 900;
+      color: var(--color-text-primary);
+    }
+    .hv2-hero-title .accent {
+      color: var(--color-brand);
+    }
+    .hv2-hero-sub {
+      margin: var(--space-4) 0 0;
+      color: var(--hv2-text-muted);
+      font-size: var(--text-body);
+      line-height: 1.72;
+      max-width: 38em;
+    }
+    .hv2-readmore {
+      min-width: 8em;
+      height: 2.8em;
+      border-radius: var(--hv2-pill-radius);
+      border: 1px solid var(--hv2-line-strong);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      padding: 0 var(--space-4);
+      font-weight: 700;
+      font-size: var(--text-label);
+    }
+    .hv2-hero:hover .hv2-readmore {
+      background: var(--color-brand);
+      color: var(--color-text-inverse);
+      border-color: var(--color-brand);
+    }
+    /* 호버 미리보기 패널 (Hero 우상단) */
+    .hv2-preview {
+      position: absolute;
+      right: 2.2em;
+      top: 2.2em;
+      z-index: 3;
+      width: 19em;
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--hv2-line);
+      background: var(--color-surface);
+      box-shadow: var(--elevation-3);
+      opacity: 0;
+      transform: translateY(0.5em);
+      transition: all var(--transition-slow);
+      pointer-events: none;
+    }
+    .hv2-hero:hover .hv2-preview {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .hv2-preview-title {
+      font-weight: 900;
+      margin-bottom: var(--space-2);
+      color: var(--color-text-primary);
+      font-size: var(--text-body);
+    }
+    .hv2-preview-text {
+      color: var(--hv2-text-muted);
+      font-size: var(--text-label);
+      line-height: 1.6;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       5. Feed Grid — 3카드 (FIELD Q&A tall + INSURANCE NEWS + MY SPACE)
+       ──────────────────────────────────────────────────────────────────── */
+    .hv2-feed-grid {
+      margin-top: var(--space-5);
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr 0.9fr;
+      gap: var(--hv2-grid-gap);
+    }
+    .hv2-feed-card {
+      min-height: 14em;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--hv2-line);
+      background: var(--color-surface);
+      padding: var(--space-5);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      box-shadow: var(--elevation-1);
+    }
+    .hv2-feed-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--hv2-line-strong);
+      background: var(--color-surface-2);
+      box-shadow: var(--elevation-2);
+    }
+    .hv2-feed-card.tall {
+      min-height: 20em;
+    }
+    .hv2-card-kicker {
+      color: var(--hv2-text-soft);
+      font-size: var(--text-xs);
+      font-weight: 800;
+      margin-bottom: var(--space-3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .hv2-card-title {
+      font-size: 1.45em;
+      line-height: 1.18;
+      letter-spacing: -0.03em;
+      font-weight: 900;
+      margin-bottom: var(--space-3);
+      color: var(--color-text-primary);
+    }
+    .hv2-card-desc {
+      color: var(--hv2-text-muted);
+      line-height: 1.65;
+      font-size: var(--text-label);
+    }
+    .hv2-card-arrow {
+      position: absolute;
+      right: var(--space-4);
+      bottom: var(--space-4);
+      width: 2.6em;
+      height: 2.6em;
+      border-radius: var(--radius-full);
+      background: var(--color-surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-primary);
+      transition: background var(--transition-normal);
+    }
+    .hv2-feed-card:hover .hv2-card-arrow {
+      background: var(--color-brand);
+      color: var(--color-text-inverse);
+    }
+    /* 카드 우상단 미세 brown glow (포인트 1%) */
+    .hv2-card-glow {
+      position: absolute;
+      width: 11em;
+      height: 11em;
+      right: -4em;
+      top: -4em;
+      border-radius: var(--radius-full);
+      background: radial-gradient(circle, rgba(212, 132, 90, 0.10), transparent 68%);
+      pointer-events: none;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════
+       6. 모바일 반응형
+       ──────────────────────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .hv2-topbar-inner { grid-template-columns: 1fr auto; }
+      .hv2-nav { display: none; }
+      .hv2-category { justify-content: flex-start; overflow-x: auto; padding-right: 4em; }
+      .hv2-hero { min-height: 32em; }
+      .hv2-screen { width: 20em; height: 14em; opacity: 0.7; }
+      .hv2-feed-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .hv2-topbar, .hv2-category-wrap { padding: 0 var(--space-4); }
+      .hv2-main { padding: var(--space-4) var(--space-4) var(--space-8); }
+      .hv2-logo span:last-child { display: none; }
+      .hv2-right { gap: var(--space-2); }
+      .hv2-pill { display: none; }
+      .hv2-category { gap: var(--space-4); }
+      .hv2-hero { min-height: 30em; border-radius: var(--radius-lg); }
+      .hv2-screen { display: none; }
+      .hv2-hero-content { left: 1.4em; right: 1.4em; bottom: 1.4em; display: block; }
+      .hv2-hero-title { font-size: 2.4em; }
+      .hv2-hero-sub { font-size: var(--text-label); }
+      .hv2-readmore { margin-top: var(--space-5); }
+      /* 모바일 = 호버 대신 클릭 토글 (.is-tap-open 클래스) */
+      .hv2-preview { position: static; opacity: 0; transform: none; pointer-events: none; height: 0; padding: 0; border: 0; transition: none; overflow: hidden; }
+      .hv2-hero.is-tap-open .hv2-preview { opacity: 1; height: auto; padding: var(--space-4); border: 1px solid var(--hv2-line); margin-top: var(--space-4); }
+      .hv2-hero:hover .hv2-preview { opacity: 0; }
+      .hv2-hero.is-tap-open:hover .hv2-preview { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="hv2-page" id="hv2-page">
+
+  <!-- ────────────────────────────────────────────────────────────────────
+       1. Top bar (원세컨드 5탭 정합화)
+       ──────────────────────────────────────────────────────────────────── -->
+  <header class="hv2-topbar">
+    <div class="hv2-topbar-inner">
+      <div class="hv2-logo">
+        <span class="hv2-logo-mark">1</span>
+        <span>ONESECOND</span>
+      </div>
+      <nav class="hv2-nav" aria-label="홈 메뉴">
+        <button type="button" onclick="hv2GoMenu('home')">홈</button>
+        <button type="button" onclick="hv2GoMenu('scripts')">스크립트</button>
+        <button type="button" onclick="hv2GoMenu('board')">현장 Q&amp;A</button>
+        <button type="button" onclick="hv2GoMenu('news')">보험뉴스</button>
+        <button type="button" onclick="hv2GoMenu('quick')">Quick</button>
+        <button type="button" onclick="hv2GoMenu('myspace')">MY SPACE</button>
+      </nav>
+      <div class="hv2-right">
+        <button type="button" class="hv2-pill" onclick="hv2GoMenu('myspace')">MY SPACE</button>
+        <button type="button" aria-label="검색" onclick="hv2OpenSearch()">⌕</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ────────────────────────────────────────────────────────────────────
+       2. 카테고리 탭 (호버 미리보기 트리거)
+       ──────────────────────────────────────────────────────────────────── -->
+  <div class="hv2-category-wrap">
+    <div class="hv2-category" id="hv2-category">
+      <button type="button" class="active" data-cat="all">All</button>
+      <button type="button" data-cat="scripts">스크립트</button>
+      <button type="button" data-cat="board">현장 Q&amp;A</button>
+      <button type="button" data-cat="news">보험뉴스</button>
+      <button type="button" data-cat="quick">Quick</button>
+      <button type="button" data-cat="myspace">MY SPACE</button>
+      <div class="hv2-search" role="button" tabindex="0" aria-label="검색" onclick="hv2OpenSearch()">⌕</div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────────────────────
+       3. 메인 영역 — Hero + Feed Grid
+       ──────────────────────────────────────────────────────────────────── -->
+  <main class="hv2-main">
+
+    <!-- Hero 큰 카드 (스크립트 메뉴 진입) -->
+    <section class="hv2-hero" id="hv2-hero" onclick="hv2HeroClick()">
+      <div class="hv2-hero-visual">
+        <div class="hv2-orb one"></div>
+        <div class="hv2-orb two"></div>
+        <div class="hv2-screen"></div>
+      </div>
+
+      <div class="hv2-preview" id="hv2-preview">
+        <div class="hv2-preview-title" id="hv2-preview-title">호버 미리보기</div>
+        <div class="hv2-preview-text" id="hv2-preview-text">
+          통화 중 바로 읽는 핵심 멘트, 반론 대응, 상품별 스크립트를 한 화면에서 확인합니다.
+        </div>
+      </div>
+
+      <div class="hv2-hero-content">
+        <div class="hv2-hero-copy">
+          <div class="hv2-eyebrow">상담 흐름 운영체제</div>
+          <h1 class="hv2-hero-title">
+            통화 중 멈추는 순간,<br />
+            <span class="accent">원세컨드</span>가 이어갑니다.
+          </h1>
+          <p class="hv2-hero-sub">
+            스크립트, 현장 질문, 보험뉴스, 빠른 실행까지.<br />
+            흩어진 상담 흐름을 하나의 실행 화면으로 연결합니다.
+          </p>
+        </div>
+        <button type="button" class="hv2-readmore" onclick="event.stopPropagation(); hv2GoMenu('scripts');">
+          Read more <span aria-hidden="true">›</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Feed Grid 3카드 -->
+    <section class="hv2-feed-grid">
+      <article class="hv2-feed-card tall" onclick="hv2GoMenu('board')">
+        <div class="hv2-card-glow"></div>
+        <div class="hv2-card-kicker">FIELD Q&amp;A</div>
+        <div class="hv2-card-title">
+          카톡방에 흩어진 질문을<br />
+          현장 데이터로 바꿉니다.
+        </div>
+        <div class="hv2-card-desc">
+          상품, 인수, 공지 질문을 게시판처럼 보이게 하되 내부는 검색 가능한 질문 DB로 축적합니다.
+        </div>
+        <div class="hv2-card-arrow" aria-hidden="true">↗</div>
+      </article>
+
+      <article class="hv2-feed-card" onclick="hv2GoMenu('news')">
+        <div class="hv2-card-glow"></div>
+        <div class="hv2-card-kicker">INSURANCE NEWS</div>
+        <div class="hv2-card-title">뉴스가 스크립트가 되는 흐름</div>
+        <div class="hv2-card-desc">
+          보험뉴스를 해석하고 현장 적용 멘트로 전환합니다.
+        </div>
+        <div class="hv2-card-arrow" aria-hidden="true">↗</div>
+      </article>
+
+      <article class="hv2-feed-card" onclick="hv2GoMenu('myspace')">
+        <div class="hv2-card-glow"></div>
+        <div class="hv2-card-kicker">MY SPACE</div>
+        <div class="hv2-card-title">내 멘트와 자료를 한 곳에</div>
+        <div class="hv2-card-desc">
+          자주 쓰는 자료, 즐겨찾기, 나만의 스크립트를 관리합니다.
+        </div>
+        <div class="hv2-card-arrow" aria-hidden="true">↗</div>
+      </article>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ────────────────────────────────────────────────────────────────────
+  // 미리보기 콘텐츠 5종 (카테고리 탭 호버/클릭 시 Hero preview 패널 갱신)
+  // ────────────────────────────────────────────────────────────────────
+  var HV2_PREVIEWS = {
+    all: {
+      title: '오늘의 흐름',
+      text: '스크립트 · 현장 질문 · 뉴스 · Quick · 내 자료 — 흩어진 상담 흐름을 한 화면으로 연결합니다.'
+    },
+    scripts: {
+      title: '스크립트 라이브러리',
+      text: '통화 중 바로 읽는 핵심 멘트, 반론 대응, 상품별 스크립트를 한 화면에서 확인합니다.'
+    },
+    board: {
+      title: '현장 Q&A',
+      text: '카톡방에 흩어진 질문을 게시판처럼 보이게 하되 내부는 검색 가능한 DB로 축적합니다.'
+    },
+    news: {
+      title: '보험 뉴스',
+      text: '오늘의 보험 뉴스를 현장 적용 멘트로 전환합니다. 뉴스가 스크립트가 되는 흐름.'
+    },
+    quick: {
+      title: 'Quick 메뉴',
+      text: 'BMI · 보험연령 · 녹취 가이드 · 전산장애 연락처. 단톡방 묻기 전 상단에서 바로.'
+    },
+    myspace: {
+      title: 'MY SPACE',
+      text: '자주 쓰는 자료, 즐겨찾기, 나만의 스크립트를 관리합니다.'
+    }
+  };
+
+  // ────────────────────────────────────────────────────────────────────
+  // 카테고리 탭 분기 (데스크탑 = mouseenter, 모바일 = click)
+  // ────────────────────────────────────────────────────────────────────
+  function setActiveCategory(cat){
+    var buttons = document.querySelectorAll('#hv2-category button[data-cat]');
+    buttons.forEach(function(b){
+      if (b.getAttribute('data-cat') === cat) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+  }
+
+  function applyPreview(cat){
+    var data = HV2_PREVIEWS[cat] || HV2_PREVIEWS.all;
+    var titleEl = document.getElementById('hv2-preview-title');
+    var textEl  = document.getElementById('hv2-preview-text');
+    if (titleEl) titleEl.textContent = data.title;
+    if (textEl)  textEl.textContent  = data.text;
+  }
+
+  function bindCategory(){
+    var buttons = document.querySelectorAll('#hv2-category button[data-cat]');
+    var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+    buttons.forEach(function(b){
+      var cat = b.getAttribute('data-cat');
+      // 데스크탑 호버 = 미리보기만 (활성 탭 변경 X, 시안 정합)
+      b.addEventListener('mouseenter', function(){
+        if (!isTouch) applyPreview(cat);
+      });
+      // 클릭 = 활성 탭 + 미리보기 (모바일 + 데스크탑 모두)
+      b.addEventListener('click', function(){
+        setActiveCategory(cat);
+        applyPreview(cat);
+        // 모바일 = Hero 클릭 토글 시 preview 보이도록 .is-tap-open 부착
+        if (isTouch) {
+          var hero = document.getElementById('hv2-hero');
+          if (hero) hero.classList.add('is-tap-open');
+        }
+      });
+    });
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Hero 클릭 → 모바일 = preview 토글, 데스크탑 = 스크립트 메뉴 진입
+  // ────────────────────────────────────────────────────────────────────
+  window.hv2HeroClick = function(){
+    var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    var hero = document.getElementById('hv2-hero');
+    if (isTouch) {
+      if (hero) hero.classList.toggle('is-tap-open');
+      return;
+    }
+    // 데스크탑 = Read more 버튼 효과 (스크립트 메뉴 진입)
+    hv2GoMenu('scripts');
+  };
+
+  // ────────────────────────────────────────────────────────────────────
+  // 메뉴 진입 (단독 페이지에서는 stub)
+  //   - app.html 통합 모드 = window.switchMenu 사용
+  //   - 단독 미리보기 모드 = console + alert 안내
+  // ────────────────────────────────────────────────────────────────────
+  window.hv2GoMenu = function(menu){
+    if (typeof window.switchMenu === 'function') {
+      window.switchMenu(menu);
+      return;
+    }
+    // 단독 미리보기 모드 — A/B 테스트 디자인 검증 한정
+    console.info('[home_v2 preview] menu =', menu);
+    var label = ({
+      home: '홈', scripts: '스크립트', board: '현장 Q&A',
+      news: '보험뉴스', quick: 'Quick', myspace: 'MY SPACE'
+    })[menu] || menu;
+    alert('[디자인 미리보기] "' + label + '" 메뉴로 라우팅됩니다.\n(라이브 통합 시 실 라우팅 동작)');
+  };
+
+  // 검색 stub
+  window.hv2OpenSearch = function(){
+    if (typeof window.openSearch === 'function') { window.openSearch(); return; }
+    alert('[디자인 미리보기] 검색 모달 진입');
+  };
+
+  // ────────────────────────────────────────────────────────────────────
+  // 초기화
+  // ────────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function(){
+    bindCategory();
+    applyPreview('all'); // 초기 = All 미리보기
+  });
+})();
+</script>
+
+</body>
+</html>
