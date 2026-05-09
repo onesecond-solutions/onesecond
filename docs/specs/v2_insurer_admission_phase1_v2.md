@@ -193,10 +193,10 @@ RLS 가시성 분기:
 |---|---|---|---|
 | `qna` | 현장 Q&A | 지점 단위 + 시드 글로벌 | — |
 | `manager_notice` | 매니저 공지 | **팀 단위 격리** ⭐ | — |
-| `manager_lounge` | 매니저 라운지 | 매니저급+ × 지점 | #1 (`manager_lounge_enabled`, 기본 OFF) |
+| `manager_lounge` | 매니저 라운지 (= "관리자 라운지" 동의어) | 매니저급+ × 지점 | #1 (`manager_lounge_enabled`, 기본 OFF) |
 | `navigation` | 네비게이션방 ⭐ 신규 | 지점 단위 | — |
 | `insurer` | 보험사 게시판 | 보험사 × 임직원 담당지점 N:M | #2 (`insurer_unified_view`, 기본 OFF) |
-| `hub` | 허브 게시판 ⭐ 신규 | 글로벌 (잠정 admin) | #3 (`hub_public`, 기본 OFF) |
+| `hub` | 허브 게시판 ⭐ 신규 — **모든 지식의 저장소 (현재 미오픈)** ⭐ 팀장님 본질 명시 (5/10 새벽). 분류 안 된 글의 default 적재처 (4팀 자산화 30.7% = 481건 매칭 부재 흡수) | 글로벌 (잠정 admin) | #3 (`hub_public`, 기본 OFF) |
 | `archive_legacy` | 폐기 4 row 보존 | (admin 격리) | — |
 
 폐기 처리 (board.html 라인 1166~1173 갱신 필요, Step 7):
