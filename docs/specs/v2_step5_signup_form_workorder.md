@@ -384,7 +384,19 @@ $function$;
 - **insurers 31사 domain 컬럼 전부 NULL (0/31 SET)** → D2 결재 (a) "클라+서버 도메인 화이트리스트 검증" 전제 비어있음
 - → § 8-X 후속 결재 대기 (D2-bis) 신설
 
-## 4-B. Step 5-B: DB 신설 (RPC 2건 + RLS 정책 2건) (~45분)
+## 4-B. Step 5-B: DB 신설 (RPC 2건 + RLS 정책 1건 + 28사 도메인 UPDATE) ✅ **종료 (2026-05-09 오후)**
+
+**산출물:**
+- `docs/architecture/db_step5_b_capture.md` (Chrome RUN 1+2+3 PASS, RPC 2 + RLS 1 + 28사 UPDATE) ✅
+  - RUN 1 Pre-flight 6/6 PASS
+  - RUN 2 메인 트랜잭션 BEGIN~COMMIT (RPC 2 + RLS 1 + 28사 UPDATE) 에러 없이 완료
+  - RUN 3 사후 검증 6/6 PASS (28사 SET / 3사 NULL / 그룹 공통 4건 / 사용자 무영향)
+
+**잠재 발견 (별 트랙 #45 신설):** RPC 2종 PUBLIC EXECUTE 잔존 (PostgreSQL default GRANT). 본문 로직으로 실질 차단되어 보안 위험 0이지만 best practice로 `REVOKE FROM PUBLIC` 추가 권장. Step 5-C 후 또는 별 트랙 단독 처리.
+
+---
+
+## 4-B. Step 5-B 원본 SQL (참조용 보존)
 
 **트랜잭션 1건 (BEGIN ~ COMMIT 한 RUN, RUN 단위 세션 분리 학습 정합):**
 
