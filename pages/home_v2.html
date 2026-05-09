@@ -3,14 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>원세컨드 — Home v2 (hover preview, 단독 HTML)</title>
+<title>원세컨드 — Home v2 (hover preview + 통합 인증 모달, 단독 HTML)</title>
 <!--
 ================================================================================
   pages/home_v2.html — 단독 HTML 원칙 (app.html / app.js / tokens.css 의존 0)
-  방향: hover = 미리보기 / Read more = 실제 페이지 진입
+  방향:
+    · hover = 미리보기 / Read more = 실제 페이지 진입
+    · "로그인" / "무료 시작하기" 두 버튼 = 같은 통합 모달 진입
+      └ 상단 로그인(화이트) + 하단 가입(그레이) 톤 분리
   자산: ../assets/images/preview/{key}.jpg, ../assets/images/logo/logo03.jpg
   진입: 같은 pages/ 폴더의 board.html / scripts.html / quick.html / myspace.html / together.html
-  5/15 후 root index.html로 이전 시 변경 = JS 상수 PREVIEW_BASE / PAGES_BASE / LOGO_SRC 3 라인
+  Auth: Supabase 직접 fetch (apikey 헤더). SUPABASE_URL/KEY 코드 박힘.
+  5/15 후 root index.html 이전 시 변경 = JS 상수 PREVIEW_BASE / PAGES_BASE / LOGO_SRC 3 라인
 ================================================================================
 -->
 
@@ -18,13 +22,20 @@
 :root {
   --color-brand: #A0522D;
   --brand-50: #F6ECE6;
+  --brand-500: #A0522D;
   --color-bg: #FAFAF9;
   --color-surface: #FFFFFF;
   --color-surface-2: #F5F5F4;
   --color-text-primary: #111827;
   --color-text-secondary: #4B5563;
+  --color-text-tertiary: #9CA3AF;
   --color-border: #E5E7EB;
+  --color-border-2: #D1D5DB;
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEF2F2;
 
+  --radius-sm: 8px;
+  --radius: 12px;
   --radius-lg: 20px;
   --radius-xl: 28px;
   --radius-full: 999px;
@@ -38,6 +49,7 @@
 
   --shadow-1: 0 4px 12px rgba(0,0,0,0.05);
   --shadow-2: 0 20px 48px rgba(0,0,0,0.12);
+  --shadow-modal: 0 24px 64px rgba(0,0,0,0.24);
 }
 
 * { box-sizing: border-box; }
@@ -95,6 +107,7 @@ body {
   position: relative;
   transition: color 0.25s ease;
   padding: 4px 0;
+  font-family: inherit;
 }
 
 .nav button::after {
@@ -326,7 +339,7 @@ body {
 .kicker {
   font-size: 12px;
   letter-spacing: 0.08em;
-  color: #9CA3AF;
+  color: var(--color-text-tertiary);
   font-weight: 800;
 }
 
@@ -383,6 +396,401 @@ body {
   .badge { margin-top: 24px; }
   .hero.preview-open .badge { margin-top: 24px; }
 }
+
+/* ============================================================
+   통합 인증 모달 (상단 로그인 화이트 + 하단 가입 그레이)
+   ============================================================ */
+
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 16px;
+  overflow-y: auto;
+}
+
+.auth-overlay[hidden] { display: none; }
+
+.auth-modal {
+  width: 100%;
+  max-width: 560px;
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  position: relative;
+  animation: authIn 0.25s ease;
+}
+
+@keyframes authIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(0,0,0,0.04);
+  color: var(--color-text-secondary);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.auth-close:hover {
+  background: rgba(0,0,0,0.08);
+  color: var(--color-text-primary);
+}
+
+.auth-section {
+  padding: 36px 32px 32px;
+}
+
+.auth-login-section {
+  background: var(--color-surface);
+}
+
+.auth-signup-section {
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.auth-section-title {
+  font-size: 22px;
+  font-weight: 900;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.auth-section-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0 0 22px;
+}
+
+.auth-section-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--brand-50);
+  color: var(--color-brand);
+  font-size: 11px;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 32px 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.12em;
+  background: var(--color-surface);
+  position: relative;
+  z-index: 1;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ── 공용 폼 요소 ── */
+.auth-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.auth-form-row.single { grid-template-columns: 1fr; }
+.auth-form-group { display: flex; flex-direction: column; }
+
+.auth-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+.auth-label .req { color: var(--color-danger); margin-left: 2px; }
+
+.auth-input,
+.auth-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  background: white;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-input:focus,
+.auth-select:focus {
+  outline: 0;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(160,82,45,0.12);
+}
+
+.auth-input.err,
+.auth-select.err {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+}
+
+.auth-pw-wrap { position: relative; }
+.auth-pw-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-family: inherit;
+  padding: 4px 6px;
+}
+
+.auth-form-err {
+  font-size: 12px;
+  color: var(--color-danger);
+  margin-top: 4px;
+  display: none;
+}
+.auth-form-err.on { display: block; }
+
+.auth-err-box {
+  display: none;
+  background: var(--color-danger-bg);
+  border: 1px solid #FCA5A5;
+  color: var(--color-danger);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.auth-err-box.on { display: block; }
+
+.auth-btn {
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--color-brand);
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  position: relative;
+  letter-spacing: -0.01em;
+}
+.auth-btn:hover:not([disabled]) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(160,82,45,0.22);
+}
+.auth-btn[disabled] { opacity: 0.6; cursor: default; }
+
+.auth-spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.32);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: authSpin 0.8s linear infinite;
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+@keyframes authSpin { to { transform: translateY(-50%) rotate(360deg); } }
+
+.auth-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  padding: 0;
+}
+.auth-link:hover { color: var(--color-brand); text-decoration: underline; }
+
+.auth-success {
+  text-align: center;
+  padding: 24px 12px;
+}
+.auth-success-icon {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.auth-success-title {
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.auth-success-desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+/* ── 가입 폼 (하단 그레이) 전용 ── */
+.site-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.site-card {
+  background: white;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.site-card:hover {
+  border-color: var(--color-border-2);
+  transform: translateY(-2px);
+}
+.site-card.is-active {
+  border-color: var(--color-brand);
+  background: var(--brand-50);
+}
+.site-card-icon { font-size: 24px; margin-bottom: 6px; }
+.site-card-title { font-size: 13px; font-weight: 800; color: var(--color-text-primary); }
+.site-card-desc  { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; line-height: 1.4; }
+
+.signup-form-body { display: none; }
+.signup-form-body.is-open { display: block; }
+
+.insurer-fields,
+.ga-fields { display: none; }
+.insurer-fields.is-open,
+.ga-fields.is-open { display: block; }
+
+.form-divider {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--color-text-tertiary);
+  margin: 18px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.signup-info-box {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  color: var(--color-text-secondary);
+}
+.signup-info-box p { margin: 0; }
+.signup-info-box .signup-info-sub { margin-top: 4px; font-size: 11px; }
+
+.domain-guide {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: white;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.role-hint {
+  display: none;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.role-hint.on { display: block; }
+
+.form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 8px 0;
+  line-height: 1.5;
+}
+.form-check input { margin-top: 3px; flex-shrink: 0; }
+.form-check a { color: var(--color-brand); text-decoration: underline; }
+
+.pending-notice {
+  display: none;
+  background: var(--brand-50);
+  border: 1px solid rgba(160,82,45,0.25);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+/* ── 모달 모바일 분기 ── */
+@media (max-width: 600px) {
+  .auth-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+  .auth-modal {
+    max-width: none;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+  .auth-section { padding: 28px 20px; }
+  .auth-form-row { grid-template-columns: 1fr; }
+  .site-picker { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -404,8 +812,8 @@ body {
     </nav>
 
     <div class="auth-actions">
-      <button class="auth-login" type="button">로그인</button>
-      <button class="auth-start" type="button">무료 시작하기</button>
+      <button class="auth-login" type="button" onclick="openAuthModal('login')">로그인</button>
+      <button class="auth-start" type="button" onclick="openAuthModal('signup')">무료 시작하기</button>
     </div>
   </div>
 </header>
@@ -466,22 +874,357 @@ body {
 
 </main>
 
+<!-- ============================================================
+     통합 인증 모달 (상단 로그인 화이트 + 하단 가입 그레이)
+     ============================================================ -->
+<div class="auth-overlay" id="authOverlay" hidden>
+  <div class="auth-modal" role="dialog" aria-labelledby="authLoginTitle" aria-modal="true">
+    <button class="auth-close" type="button" onclick="closeAuthModal()" aria-label="닫기">×</button>
+
+    <!-- ───────── 상단 로그인 (화이트) ───────── -->
+    <section class="auth-section auth-login-section" id="authLoginSection">
+
+      <!-- 로그인 폼 -->
+      <div id="loginFormArea">
+        <h2 id="authLoginTitle" class="auth-section-title">로그인</h2>
+        <p class="auth-section-sub">가입 시 등록한 이메일과 비밀번호를 입력하세요</p>
+
+        <div class="auth-err-box" id="loginErrBox"></div>
+
+        <div class="auth-form-row single">
+          <div class="auth-form-group">
+            <label class="auth-label" for="f-email-login">이메일 <span class="req">*</span></label>
+            <input class="auth-input" type="email" id="f-email-login" placeholder="example@email.com" autocomplete="email">
+            <div class="auth-form-err" id="e-email-login">올바른 이메일을 입력해 주세요.</div>
+          </div>
+        </div>
+
+        <div class="auth-form-row single">
+          <div class="auth-form-group">
+            <label class="auth-label" for="f-pw-login">비밀번호 <span class="req">*</span></label>
+            <div class="auth-pw-wrap">
+              <input class="auth-input" type="password" id="f-pw-login" placeholder="비밀번호 입력" autocomplete="current-password" style="padding-right:52px;">
+              <button class="auth-pw-toggle" type="button" id="pw-toggle-login-btn" onclick="togglePw('f-pw-login','pw-toggle-login-btn')">보기</button>
+            </div>
+            <div class="auth-form-err" id="e-pw-login">비밀번호를 입력해 주세요.</div>
+          </div>
+        </div>
+
+        <button class="auth-btn" id="login-btn" type="button" onclick="doLogin()" style="margin-top:6px;">
+          <span id="login-btn-txt">로그인</span>
+          <span class="auth-spinner" id="login-spinner" aria-hidden="true"></span>
+        </button>
+
+        <div style="text-align:center; margin-top:10px;">
+          <button class="auth-link" type="button" onclick="showForgotInline()">비밀번호를 잊으셨나요?</button>
+        </div>
+      </div>
+
+      <!-- 비밀번호 찾기 인라인 토글 -->
+      <div id="forgotInlineArea" hidden>
+        <h2 class="auth-section-title">비밀번호 찾기</h2>
+        <p class="auth-section-sub">가입 시 등록한 이메일로 재설정 링크를 보내드립니다.</p>
+
+        <div class="auth-err-box" id="forgotErrBox"></div>
+
+        <div class="auth-form-row single">
+          <div class="auth-form-group">
+            <label class="auth-label" for="f-forgot-email">이메일 <span class="req">*</span></label>
+            <input class="auth-input" type="email" id="f-forgot-email" placeholder="example@email.com" autocomplete="email">
+            <div class="auth-form-err" id="e-forgot-email">올바른 이메일을 입력해 주세요.</div>
+          </div>
+        </div>
+
+        <button class="auth-btn" id="forgot-btn" type="button" onclick="doForgot()" style="margin-top:6px;">
+          <span id="forgot-btn-txt">재설정 링크 보내기</span>
+          <span class="auth-spinner" id="forgot-spinner" aria-hidden="true"></span>
+        </button>
+
+        <div style="text-align:center; margin-top:10px;">
+          <button class="auth-link" type="button" onclick="hideForgotInline()">← 로그인으로 돌아가기</button>
+        </div>
+      </div>
+
+      <!-- 비밀번호 찾기 성공 -->
+      <div id="forgotSuccessArea" hidden>
+        <div class="auth-success">
+          <div class="auth-success-icon">📧</div>
+          <div class="auth-success-title">메일 발송 완료</div>
+          <div class="auth-success-desc" id="forgotSuccessDesc"></div>
+        </div>
+        <div style="text-align:center; margin-top:8px;">
+          <button class="auth-link" type="button" onclick="hideForgotInline()">← 로그인으로 돌아가기</button>
+        </div>
+      </div>
+
+      <!-- 로그인 성공 -->
+      <div id="loginSuccessArea" hidden>
+        <div class="auth-success">
+          <div class="auth-success-icon">✅</div>
+          <div class="auth-success-title">로그인 성공!</div>
+          <div class="auth-success-desc">잠시 후 메인 화면으로 이동합니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── 하단 가입 (그레이) ───────── -->
+    <div class="auth-divider"><span style="background:var(--color-surface);padding:0 12px;">또는 새 계정 만들기</span></div>
+
+    <section class="auth-section auth-signup-section" id="authSignupSection">
+
+      <!-- 가입 폼 -->
+      <div id="signupFormArea">
+        <h2 class="auth-section-title">무료회원 가입 <span class="auth-section-badge">✓ 카드 불필요</span></h2>
+        <p class="auth-section-sub">즉시 실행 스크립트, MY SPACE, Quick 메뉴, 함께해요 커뮤니티를 모두 무료로.</p>
+
+        <div class="auth-err-box" id="signupErrBox"></div>
+
+        <form id="reg-form" novalidate>
+
+          <!-- 사이트 분기 카드 -->
+          <div class="site-picker" id="site-picker" role="radiogroup" aria-label="가입자 유형 선택">
+            <div class="site-card" id="site-card-ga" onclick="selectSite('ga')" role="radio" aria-checked="false" tabindex="0">
+              <div class="site-card-icon">👥</div>
+              <div class="site-card-title">GA 설계사 · 매니저</div>
+              <div class="site-card-desc">법인보험대리점 / 지점·팀 소속</div>
+            </div>
+            <div class="site-card" id="site-card-insurer" onclick="selectSite('insurer')" role="radio" aria-checked="false" tabindex="0">
+              <div class="site-card-icon">🏢</div>
+              <div class="site-card-title">보험사 임직원</div>
+              <div class="site-card-desc">31개 손·생명 보험사 직원</div>
+            </div>
+          </div>
+
+          <div class="signup-form-body" id="signup-form-body">
+
+            <div class="auth-form-row">
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-name">이름 <span class="req">*</span></label>
+                <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
+                <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-role">직급 <span class="req">*</span></label>
+                <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
+                  <option value="">선택해 주세요</option>
+                  <option value="branch_manager">지점장 / 센터장</option>
+                  <option value="manager">매니저 / 실장</option>
+                  <option value="member">설계사 / 팀장</option>
+                  <option value="staff">스텝 / 총무</option>
+                </select>
+                <div class="auth-form-err" id="e-role">직급을 선택해 주세요.</div>
+              </div>
+            </div>
+
+            <div class="role-hint" id="roleHint">
+              💡 <span id="roleHintText"></span>
+            </div>
+
+            <div class="auth-form-row">
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-phone">핸드폰 <span class="req">*</span></label>
+                <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
+                <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-email">이메일 <span class="req">*</span></label>
+                <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); checkInsurerDomain();">
+                <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
+              </div>
+            </div>
+
+            <div class="auth-form-row">
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-pw">비밀번호 <span class="req">*</span></label>
+                <div class="auth-pw-wrap">
+                  <input class="auth-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw','e-pw')">
+                  <button class="auth-pw-toggle" type="button" id="reg-pw-toggle" onclick="togglePw('f-pw','reg-pw-toggle')">보기</button>
+                </div>
+                <div class="auth-form-err" id="e-pw">영문+숫자 8자 이상 입력해 주세요.</div>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-pw2">비밀번호 확인 <span class="req">*</span></label>
+                <div class="auth-pw-wrap">
+                  <input class="auth-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw2','e-pw2')">
+                  <button class="auth-pw-toggle" type="button" id="reg-pw2-toggle" onclick="togglePw('f-pw2','reg-pw2-toggle')">보기</button>
+                </div>
+                <div class="auth-form-err" id="e-pw2">비밀번호가 일치하지 않습니다.</div>
+              </div>
+            </div>
+
+            <div class="form-divider">소속 정보</div>
+
+            <!-- 보험사 분기 -->
+            <div class="insurer-fields" id="insurer-fields">
+              <div class="auth-form-row single">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="f-insurer">보험사 <span class="req">*</span></label>
+                  <select class="auth-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
+                    <option value="">선택해 주세요</option>
+                    <optgroup label="손해보험">
+                      <option value="aig-fire">AIG손해보험</option>
+                      <option value="db-fire">DB손해보험</option>
+                      <option value="kb-fire">KB손해보험</option>
+                      <option value="nh-fire">NH농협손해보험</option>
+                      <option value="lina-fire">라이나손해보험</option>
+                      <option value="lotte-fire">롯데손해보험</option>
+                      <option value="meritz">메리츠화재</option>
+                      <option value="samsung-fire">삼성화재</option>
+                      <option value="hanwha-fire">한화손해보험</option>
+                      <option value="heungkuk-fire">흥국화재</option>
+                    </optgroup>
+                    <optgroup label="생명보험">
+                      <option value="abl">ABL생명</option>
+                      <option value="aia">AIA생명</option>
+                      <option value="bnp-cardif">BNP파리바 카디프생명</option>
+                      <option value="db-life">DB생명</option>
+                      <option value="ibk">IBK연금보험</option>
+                      <option value="im-life">iM라이프</option>
+                      <option value="kb-life">KB라이프</option>
+                      <option value="kdb">KDB생명</option>
+                      <option value="nh-life">NH농협생명</option>
+                      <option value="kyobo">교보생명</option>
+                      <option value="dongyang">동양생명</option>
+                      <option value="lina-life">라이나생명</option>
+                      <option value="metlife">메트라이프</option>
+                      <option value="miraeasset">미래에셋생명</option>
+                      <option value="samsung-life">삼성생명</option>
+                      <option value="shinhan">신한라이프</option>
+                      <option value="chubb">처브라이프</option>
+                      <option value="fubon-hyundai">푸본현대생명</option>
+                      <option value="hanwha-life">한화생명</option>
+                      <option value="heungkuk-elife">흥국생명 (e-life)</option>
+                      <option value="heungkuk-tlife">흥국생명 (T-Life)</option>
+                    </optgroup>
+                  </select>
+                  <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
+                </div>
+              </div>
+              <div class="domain-guide" id="domain-guide" style="display:none;">
+                💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다. 이메일 입력 시 일치 여부를 확인합니다.
+              </div>
+              <div class="signup-info-box">
+                <p>🛡️ 보험사 임직원 가입은 <strong>4중 방어</strong>를 거칩니다.</p>
+                <p class="signup-info-sub">이메일 도메인 검증 → 이메일 인증 → 가입 후 <strong>매니저 승인 대기</strong> → 승인 후 사용 시작.</p>
+              </div>
+            </div>
+
+            <!-- GA 분기 -->
+            <div class="ga-fields" id="ga-fields">
+              <div class="signup-info-box">
+                <p>💡 소속 정보를 정확히 입력하시면 <strong>지점 게시판</strong>과 <strong>팀 게시판</strong>이 활성화됩니다.</p>
+                <p class="signup-info-sub">목록에 없으면 "기타 입력"으로 입력해 주세요. 매니저 승인 시 매핑됩니다.</p>
+              </div>
+              <div class="auth-form-row">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="f-company-select">회사명</label>
+                  <select class="auth-select" id="f-company-select" onchange="onGaCompanyChange()">
+                    <option value="AZ금융">AZ금융</option>
+                    <option value="__other__">기타 입력</option>
+                  </select>
+                </div>
+                <div class="auth-form-group">
+                  <label class="auth-label" for="f-company-text">회사명 (직접 입력)</label>
+                  <input class="auth-input" type="text" id="f-company-text" placeholder="소속 회사명" maxlength="50" disabled style="opacity:0.5;">
+                </div>
+              </div>
+              <div class="auth-form-row">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="f-branch-select">지점 / 센터</label>
+                  <select class="auth-select" id="f-branch-select" onchange="onGaBranchChange()">
+                    <option value="396edf6a-15db-4b69-a6b9-dae74b08cd33" data-name="더원지점">더원지점</option>
+                    <option value="__other__" data-name="">기타 입력</option>
+                  </select>
+                </div>
+                <div class="auth-form-group">
+                  <label class="auth-label" for="f-branch-text">지점명 (직접 입력)</label>
+                  <input class="auth-input" type="text" id="f-branch-text" placeholder="지점/센터명" maxlength="50" disabled style="opacity:0.5;">
+                </div>
+              </div>
+              <div class="auth-form-row">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="f-team-select">팀</label>
+                  <select class="auth-select" id="f-team-select" onchange="onGaTeamChange()">
+                    <option value="">선택 안 함</option>
+                    <option value="95088922-c76e-45b5-bb68-8ce1e914a6c4" data-name="1팀">1팀</option>
+                    <option value="741bce8a-e264-4f69-bc23-a7fff3478bec" data-name="2팀">2팀</option>
+                    <option value="482c8c2d-b6f6-4188-9657-80f30d22431f" data-name="3팀">3팀</option>
+                    <option value="5fccd362-9ee3-4165-8960-7cb0b7ec72fa" data-name="4팀">4팀</option>
+                    <option value="__other__" data-name="">기타 입력</option>
+                  </select>
+                </div>
+                <div class="auth-form-group">
+                  <label class="auth-label" for="f-team-text">팀명 (직접 입력)</label>
+                  <input class="auth-input" type="text" id="f-team-text" placeholder="팀명" maxlength="30" disabled style="opacity:0.5;">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-check">
+              <input type="checkbox" id="f-consent" onchange="clearFieldError('f-consent','e-consent')">
+              <label for="f-consent">
+                <strong style="color:var(--color-text-primary);">(필수)</strong>
+                <a href="../terms.html" target="_blank" rel="noopener">이용약관</a> 및
+                <a href="../privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다
+              </label>
+            </div>
+            <div class="auth-form-err" id="e-consent">동의가 필요합니다.</div>
+
+            <div class="form-check">
+              <input type="checkbox" id="agree2">
+              <label for="agree2">(선택) 마케팅 정보 수신에 동의합니다</label>
+            </div>
+
+            <button class="auth-btn" id="sub-btn" type="button" onclick="doSubmit()" style="margin-top:10px;">
+              <span id="sub-btn-txt">🎉 무료회원 가입하기</span>
+              <span class="auth-spinner" id="signup-spinner" aria-hidden="true"></span>
+            </button>
+
+          </div><!-- /.signup-form-body -->
+
+        </form>
+      </div>
+
+      <!-- 가입 성공 -->
+      <div id="signupSuccessArea" hidden>
+        <div class="auth-success">
+          <div class="auth-success-icon">🎉</div>
+          <div class="auth-success-title">가입 완료!</div>
+          <div class="auth-success-desc" id="signup-success-desc"></div>
+          <div class="pending-notice" id="pending-notice">
+            ⏳ <strong>매니저 승인 대기 중입니다.</strong><br>
+            보험사 임직원 가입은 매니저 승인 후 사용이 활성화됩니다. 승인 결과는 가입한 이메일로 안내됩니다.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
 <script>
 // ============================================================================
-// home_v2.html — hover preview / Read more = 실제 페이지 진입
+// home_v2.html — hover preview / Read more = 실제 페이지 진입 / 통합 인증 모달
 // 5/15 후 root index.html로 이전 시 아래 3 라인만 변경:
 //   PREVIEW_BASE → 'assets/images/preview/'
 //   PAGES_BASE   → 'pages/'
 //   LOGO_SRC     → 'assets/images/logo/logo03.jpg'
 // ============================================================================
 var PREVIEW_BASE = '../assets/images/preview/';
-var PAGES_BASE   = '';                                  // pages/ 안에서 같은 폴더 진입 = 빈 prefix
+var PAGES_BASE   = '';
 var LOGO_SRC     = '../assets/images/logo/logo03.jpg';
 
-// 로고 src 주입 (5/15 후 이전 시 위 LOGO_SRC만 갱신)
-var logoEl = document.getElementById('logoImg');
-if (logoEl) logoEl.src = LOGO_SRC;
+var SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
 
+// 로고 src 주입 (5/15 후 이전 시 위 LOGO_SRC만 갱신)
+(function () {
+  var logoEl = document.getElementById('logoImg');
+  if (logoEl) logoEl.src = LOGO_SRC;
+})();
+
+// ─────────────────────────────────────────────
+//  hover preview 데이터 (5종 image + home/together text 분기는 자산 추가에 따라 갱신)
+// ─────────────────────────────────────────────
 var previewData = {
   home: {
     type: 'text',
@@ -528,9 +1271,6 @@ var previewData = {
 
 var currentPreview = 'home';
 
-function escapeAttr(s) {
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
 function escapeText(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -543,7 +1283,6 @@ function updatePreview(key) {
   var readmore = document.getElementById('readmoreBtn');
 
   if (!box || !content) return;
-
   currentPreview = key;
 
   if (hero) {
@@ -576,44 +1315,650 @@ function updatePreview(key) {
     box.classList.add('preview-active');
   });
 
-  // Read more — home은 비활성, 나머지는 활성
   if (readmore) {
     if (data.href) readmore.removeAttribute('disabled');
     else readmore.setAttribute('disabled', 'disabled');
   }
 }
 
-// 메뉴(.nav button) + 카드(.card) hover/focus → preview 갱신
-var hoverEls = document.querySelectorAll('[data-preview]');
-for (var i = 0; i < hoverEls.length; i++) {
-  (function (el) {
-    el.addEventListener('mouseenter', function () { updatePreview(el.dataset.preview); });
-    el.addEventListener('focus',      function () { updatePreview(el.dataset.preview); });
-  })(hoverEls[i]);
-}
-
-// 카드 클릭 → 해당 페이지 진입 (메뉴 클릭은 진입 X — Read more가 진입 트리거)
-var cardEls = document.querySelectorAll('.card[data-preview]');
-for (var j = 0; j < cardEls.length; j++) {
-  (function (el) {
-    el.addEventListener('click', function () {
-      var data = previewData[el.dataset.preview];
+// 메뉴 + 카드 hover/focus → preview
+(function () {
+  var hoverEls = document.querySelectorAll('[data-preview]');
+  for (var i = 0; i < hoverEls.length; i++) {
+    (function (el) {
+      el.addEventListener('mouseenter', function () { updatePreview(el.dataset.preview); });
+      el.addEventListener('focus',      function () { updatePreview(el.dataset.preview); });
+    })(hoverEls[i]);
+  }
+  // 카드 클릭 → 페이지 진입 (메뉴 클릭은 진입 X — Read more 트리거)
+  var cardEls = document.querySelectorAll('.card[data-preview]');
+  for (var j = 0; j < cardEls.length; j++) {
+    (function (el) {
+      el.addEventListener('click', function () {
+        var data = previewData[el.dataset.preview];
+        if (data && data.href) window.location.href = data.href;
+      });
+    })(cardEls[j]);
+  }
+  // Read more → currentPreview 진입
+  var readmoreBtn = document.getElementById('readmoreBtn');
+  if (readmoreBtn) {
+    readmoreBtn.addEventListener('click', function () {
+      var data = previewData[currentPreview];
       if (data && data.href) window.location.href = data.href;
     });
-  })(cardEls[j]);
+  }
+  updatePreview('home');
+})();
+
+// ============================================================================
+//  통합 인증 모달 — 모달 컨트롤 (open/close/ESC/외부클릭/자동 스크롤·포커스)
+// ============================================================================
+function openAuthModal(focusSection) {
+  var overlay = document.getElementById('authOverlay');
+  if (!overlay) return;
+  overlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+
+  // 진입 분기
+  setTimeout(function () {
+    if (focusSection === 'signup') {
+      var sigSec = document.getElementById('authSignupSection');
+      if (sigSec) sigSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var nameEl = document.getElementById('f-name');
+      if (nameEl) nameEl.focus();
+    } else {
+      var emailEl = document.getElementById('f-email-login');
+      if (emailEl) emailEl.focus();
+    }
+  }, 80);
 }
 
-// Read more 클릭 → currentPreview 기반 페이지 진입
-var readmoreBtn = document.getElementById('readmoreBtn');
-if (readmoreBtn) {
-  readmoreBtn.addEventListener('click', function () {
-    var data = previewData[currentPreview];
-    if (data && data.href) window.location.href = data.href;
+function closeAuthModal() {
+  var overlay = document.getElementById('authOverlay');
+  if (!overlay) return;
+  overlay.hidden = true;
+  document.body.style.overflow = '';
+}
+
+// ESC 닫기 + 외부 클릭 닫기 + 엔터 로그인
+document.addEventListener('keydown', function (e) {
+  var overlay = document.getElementById('authOverlay');
+  if (!overlay || overlay.hidden) return;
+  if (e.key === 'Escape') closeAuthModal();
+  // 엔터키 = 로그인 폼 활성 시만
+  if (e.key === 'Enter') {
+    var loginVis = document.getElementById('loginFormArea') && !document.getElementById('loginFormArea').hidden;
+    var forgotVis = document.getElementById('forgotInlineArea') && !document.getElementById('forgotInlineArea').hidden;
+    if (loginVis && (document.activeElement.id === 'f-email-login' || document.activeElement.id === 'f-pw-login')) {
+      e.preventDefault();
+      doLogin();
+    } else if (forgotVis && document.activeElement.id === 'f-forgot-email') {
+      e.preventDefault();
+      doForgot();
+    }
+  }
+});
+
+(function () {
+  var overlay = document.getElementById('authOverlay');
+  if (!overlay) return;
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeAuthModal();
   });
+})();
+
+// ============================================================================
+//  비밀번호 보기/숨기기 토글 (로그인 + 가입 공용)
+// ============================================================================
+function togglePw(inputId, btnId) {
+  var input = document.getElementById(inputId);
+  var btn   = document.getElementById(btnId);
+  if (!input || !btn) return;
+  if (input.type === 'password') { input.type = 'text';     btn.textContent = '숨기기'; }
+  else                           { input.type = 'password'; btn.textContent = '보기';  }
 }
 
-// 초기 = home (Read more 비활성)
-updatePreview('home');
+function clearFieldError(inputId, errorId) {
+  var inp = document.getElementById(inputId);
+  var err = document.getElementById(errorId);
+  if (inp) inp.classList.remove('err');
+  if (err) err.classList.remove('on');
+}
+
+// ============================================================================
+//  로그인 (login.html doLogin/doForgot 흡수)
+// ============================================================================
+function showForgotInline() {
+  document.getElementById('loginFormArea').hidden = true;
+  document.getElementById('forgotInlineArea').hidden = false;
+  document.getElementById('forgotSuccessArea').hidden = true;
+  setTimeout(function () { var e = document.getElementById('f-forgot-email'); if (e) e.focus(); }, 50);
+}
+
+function hideForgotInline() {
+  document.getElementById('forgotInlineArea').hidden = true;
+  document.getElementById('forgotSuccessArea').hidden = true;
+  document.getElementById('loginFormArea').hidden = false;
+  setTimeout(function () { var e = document.getElementById('f-email-login'); if (e) e.focus(); }, 50);
+}
+
+function validateLogin() {
+  var ok = true;
+  var email = document.getElementById('f-email-login');
+  var pw = document.getElementById('f-pw-login');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    email.classList.add('err'); document.getElementById('e-email-login').classList.add('on'); ok = false;
+  } else { email.classList.remove('err'); document.getElementById('e-email-login').classList.remove('on'); }
+  if (!pw.value.trim()) {
+    pw.classList.add('err'); document.getElementById('e-pw-login').classList.add('on'); ok = false;
+  } else { pw.classList.remove('err'); document.getElementById('e-pw-login').classList.remove('on'); }
+  return ok;
+}
+
+async function doLogin() {
+  var errBox = document.getElementById('loginErrBox');
+  errBox.classList.remove('on');
+  if (!validateLogin()) return;
+
+  var btn  = document.getElementById('login-btn');
+  var txt  = document.getElementById('login-btn-txt');
+  var spin = document.getElementById('login-spinner');
+  btn.disabled = true;
+  if (txt)  txt.style.opacity = '0';
+  if (spin) spin.style.display = 'block';
+
+  function _resetBtn() {
+    btn.disabled = false;
+    if (txt)  txt.style.opacity = '';
+    if (spin) spin.style.display = 'none';
+  }
+
+  var email = document.getElementById('f-email-login').value.trim();
+  var pw    = document.getElementById('f-pw-login').value;
+
+  try {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ email: email, password: pw })
+    });
+    var data = await res.json();
+
+    if (res.ok && data.access_token) {
+      localStorage.setItem('os_token', data.access_token);
+      localStorage.setItem('os_refresh_token', data.refresh_token);
+      localStorage.setItem('os_user', JSON.stringify(data.user));
+      sessionStorage.setItem('os_token', data.access_token);
+      sessionStorage.setItem('os_user', JSON.stringify(data.user));
+
+      // 성공 화면 (1200ms 후 redirect)
+      document.getElementById('loginFormArea').hidden = true;
+      document.getElementById('forgotInlineArea').hidden = true;
+      document.getElementById('loginSuccessArea').hidden = false;
+
+      setTimeout(function () {
+        var _r = new URLSearchParams(window.location.search).get('redirect');
+        // home_v2가 pages/ 안에 있으므로 ../app.html (5/15 후 root 이전 시 'app.html'로 변경)
+        var appUrl = '../app.html';
+        window.location.href = _r ? appUrl + '?redirect=' + encodeURIComponent(_r) : appUrl;
+      }, 1200);
+    } else {
+      var errMsg = data.error_description || data.msg || data.error || '';
+      if (errMsg.indexOf('Email not confirmed') !== -1) {
+        errBox.textContent = '이메일 인증이 완료되지 않았습니다. 가입 시 받으신 인증 메일을 확인해 주세요.';
+      } else if (errMsg.indexOf('Invalid login credentials') !== -1 || errMsg.indexOf('invalid_grant') !== -1) {
+        errBox.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.';
+      } else if (errMsg.indexOf('Too many requests') !== -1 || res.status === 429) {
+        errBox.textContent = '잠시 후 다시 시도해 주세요. (요청이 너무 많습니다)';
+      } else {
+        errBox.textContent = '로그인 중 오류가 발생했습니다. 다시 시도해 주세요.';
+      }
+      errBox.classList.add('on');
+      _resetBtn();
+    }
+  } catch (e) {
+    console.error('[login error]', e);
+    errBox.textContent = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.';
+    errBox.classList.add('on');
+    _resetBtn();
+  }
+}
+
+async function doForgot() {
+  var errBox = document.getElementById('forgotErrBox');
+  errBox.classList.remove('on');
+  var emailEl = document.getElementById('f-forgot-email');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
+    emailEl.classList.add('err');
+    document.getElementById('e-forgot-email').classList.add('on');
+    return;
+  }
+  emailEl.classList.remove('err');
+  document.getElementById('e-forgot-email').classList.remove('on');
+
+  var btn  = document.getElementById('forgot-btn');
+  var txt  = document.getElementById('forgot-btn-txt');
+  var spin = document.getElementById('forgot-spinner');
+  btn.disabled = true;
+  if (txt)  txt.style.opacity = '0';
+  if (spin) spin.style.display = 'block';
+
+  function _resetBtn() {
+    btn.disabled = false;
+    if (txt)  txt.style.opacity = '';
+    if (spin) spin.style.display = 'none';
+  }
+
+  try {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ email: emailEl.value.trim() })
+    });
+    if (res.ok) {
+      document.getElementById('forgotInlineArea').hidden = true;
+      document.getElementById('loginFormArea').hidden = true;
+      document.getElementById('forgotSuccessArea').hidden = false;
+      var desc = document.getElementById('forgotSuccessDesc');
+      if (desc) desc.innerHTML = '<strong>' + escapeText(emailEl.value.trim()) + '</strong> 으로<br>비밀번호 재설정 링크를 보내드렸습니다.<br><br>메일함을 확인해 주세요.<br><span style="font-size:12px;color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요.</span>';
+    } else {
+      var data = {};
+      try { data = await res.json(); } catch (e) {}
+      var msg = data.error_description || data.msg || data.error || '';
+      if (msg.indexOf('Too many requests') !== -1 || res.status === 429) {
+        errBox.textContent = '잠시 후 다시 시도해 주세요. (요청이 너무 많습니다)';
+      } else {
+        errBox.textContent = '재설정 메일 발송 중 오류가 발생했습니다.';
+      }
+      errBox.classList.add('on');
+      _resetBtn();
+    }
+  } catch (e) {
+    console.error('[forgot error]', e);
+    errBox.textContent = '네트워크 오류가 발생했습니다.';
+    errBox.classList.add('on');
+    _resetBtn();
+  }
+}
+
+// ============================================================================
+//  가입 (Step 5-C 흡수: site-picker / 도메인 화이트리스트 / 9 role 매핑 / signup endpoint)
+// ============================================================================
+var INSURER_DOMAINS = {
+  'aig-fire':       '@aig.com',
+  'db-fire':        '@dbins.co.kr',
+  'kb-fire':        '@kbinsure.co.kr',
+  'nh-fire':        '@nonghyup.com',
+  'lina-fire':      '@chubb.com',
+  'lotte-fire':     '@lotteins.co.kr',
+  'meritz':         '@meritz.co.kr',
+  'samsung-fire':   '@samsung.com',
+  'hanwha-fire':    '@hanwha.com',
+  'heungkuk-fire':  '@heungkukfire.co.kr',
+  'abl':            '@abllife.co.kr',
+  'aia':            '@aia.com',
+  'bnp-cardif':     '@cardif.co.kr',
+  'ibk':            '@ibki.co.kr',
+  'kdb':            '@kdblife.co.kr',
+  'nh-life':        '@nonghyup.com',
+  'kyobo':          '@kyobo.com',
+  'dongyang':       '@myangel.co.kr',
+  'lina-life':      '@cigna.com',
+  'metlife':        '@metlife.com',
+  'miraeasset':     '@miraeasset.com',
+  'samsung-life':   '@samsunglife.com',
+  'shinhan':        '@shinhan.com',
+  'chubb':          '@chubb.com',
+  'fubon-hyundai':  '@fubonhyundai.com',
+  'hanwha-life':    '@hanwha.com',
+  'heungkuk-elife': '@heungkuklife.co.kr',
+  'heungkuk-tlife': '@heungkuklife.co.kr'
+  // db-life / im-life / kb-life — domain NULL (별 트랙 #43 사후 검증)
+};
+
+window.gSignupSite = null;
+
+function selectSite(site) {
+  window.gSignupSite = site;
+  var cardGa      = document.getElementById('site-card-ga');
+  var cardInsurer = document.getElementById('site-card-insurer');
+  if (cardGa)      cardGa.classList.toggle('is-active',      site === 'ga');
+  if (cardInsurer) cardInsurer.classList.toggle('is-active', site === 'insurer');
+  if (cardGa)      cardGa.setAttribute('aria-checked',      site === 'ga');
+  if (cardInsurer) cardInsurer.setAttribute('aria-checked', site === 'insurer');
+
+  var formBody = document.getElementById('signup-form-body');
+  var insurerFields = document.getElementById('insurer-fields');
+  var gaFields = document.getElementById('ga-fields');
+  if (formBody) formBody.classList.add('is-open');
+  if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
+  if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
+
+  onRoleChange();
+}
+
+function onInsurerChange() {
+  var sel = document.getElementById('f-insurer');
+  var slug = sel ? sel.value : '';
+  var guide = document.getElementById('domain-guide');
+  var nameEl = document.getElementById('domain-guide-name');
+  var domEl  = document.getElementById('domain-guide-domain');
+  var domain = INSURER_DOMAINS[slug] || null;
+  if (slug && domain) {
+    var label = sel.options[sel.selectedIndex].textContent;
+    if (nameEl) nameEl.textContent = label;
+    if (domEl)  domEl.textContent  = domain;
+    if (guide)  guide.style.display = 'block';
+  } else if (slug && !domain) {
+    var label2 = sel.options[sel.selectedIndex].textContent;
+    if (nameEl) nameEl.textContent = label2;
+    if (domEl)  domEl.textContent  = '(미확인 — admin 확인 후 활성화 예정)';
+    if (guide)  guide.style.display = 'block';
+  } else {
+    if (guide) guide.style.display = 'none';
+  }
+  checkInsurerDomain();
+}
+
+function checkInsurerDomain() {
+  if (window.gSignupSite !== 'insurer') return;
+  var sel = document.getElementById('f-insurer');
+  var emailEl = document.getElementById('f-email');
+  if (!sel || !emailEl) return;
+  var slug = sel.value;
+  var email = (emailEl.value || '').trim().toLowerCase();
+  var domain = INSURER_DOMAINS[slug];
+  if (!slug || !domain || !email) return;
+  if (!email.endsWith(domain.toLowerCase())) {
+    emailEl.classList.add('err');
+    var er = document.getElementById('e-email');
+    if (er) {
+      er.textContent = '이메일이 ' + domain + ' 도메인이어야 합니다.';
+      er.classList.add('on');
+    }
+  }
+}
+
+function _toggleOtherInput(selectId, textId) {
+  var sel = document.getElementById(selectId);
+  var txt = document.getElementById(textId);
+  if (!sel || !txt) return;
+  var isOther = sel.value === '__other__';
+  txt.disabled = !isOther;
+  txt.style.opacity = isOther ? '1' : '0.5';
+  if (!isOther) txt.value = '';
+}
+function onGaCompanyChange() { _toggleOtherInput('f-company-select', 'f-company-text'); }
+function onGaBranchChange()  { _toggleOtherInput('f-branch-select',  'f-branch-text');  }
+function onGaTeamChange()    { _toggleOtherInput('f-team-select',    'f-team-text');    }
+
+function mapToRoleKey(site, gradeShort) {
+  if (!site || !gradeShort) return 'ga_member';
+  return site + '_' + gradeShort;
+}
+
+function onRoleChange() {
+  var sel  = document.getElementById('f-role');
+  var hint = document.getElementById('roleHint');
+  var text = document.getElementById('roleHintText');
+  if (!sel || !hint || !text) return;
+  var grade = sel.value;
+  var site = window.gSignupSite;
+  if (!grade || !site) {
+    hint.classList.remove('on');
+    return;
+  }
+  var sitePrefix = site === 'insurer' ? '보험사' : 'GA';
+  var labels = {
+    branch_manager: '지점장/센터장',
+    manager:        '매니저/실장',
+    member:         '설계사/팀장',
+    staff:          '스텝/총무'
+  };
+  var freeBenefit = (grade === 'branch_manager' || grade === 'manager')
+    ? ' (<strong>무료 플랜에서도 글쓰기 가능</strong>)'
+    : '';
+  text.innerHTML = sitePrefix + ' ' + labels[grade] + ' 권한으로 가입됩니다.' + freeBenefit;
+  hint.classList.add('on');
+}
+
+function fmtPhone(input) {
+  var v = input.value.replace(/\D/g, '');
+  if (v.length <= 3)      input.value = v;
+  else if (v.length <= 7) input.value = v.slice(0, 3) + '-' + v.slice(3);
+  else                    input.value = v.slice(0, 3) + '-' + v.slice(3, 7) + '-' + v.slice(7, 11);
+}
+
+function validateSignup() {
+  var ok = true;
+  var errBox = document.getElementById('signupErrBox');
+  errBox.classList.remove('on');
+
+  if (!window.gSignupSite) {
+    errBox.textContent = '상단 카드에서 보험사 임직원 또는 GA 중 하나를 선택해 주세요.';
+    errBox.classList.add('on');
+    return false;
+  }
+
+  ['f-name','f-phone'].forEach(function (id) {
+    var el = document.getElementById(id);
+    var er = document.getElementById('e-' + id.split('-')[1]);
+    if (!el.value.trim()) { el.classList.add('err'); er.classList.add('on'); ok = false; }
+    else                  { el.classList.remove('err'); er.classList.remove('on'); }
+  });
+  var role = document.getElementById('f-role');
+  if (!role.value) { role.classList.add('err'); document.getElementById('e-role').classList.add('on'); ok = false; }
+  else             { role.classList.remove('err'); document.getElementById('e-role').classList.remove('on'); }
+  var email = document.getElementById('f-email');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    email.classList.add('err');
+    var er2 = document.getElementById('e-email');
+    er2.textContent = '올바른 이메일을 입력해 주세요.';
+    er2.classList.add('on'); ok = false;
+  } else { email.classList.remove('err'); document.getElementById('e-email').classList.remove('on'); }
+
+  // 4중 방어 #1: 보험사 분기 도메인 화이트리스트
+  if (window.gSignupSite === 'insurer') {
+    var ins = document.getElementById('f-insurer');
+    if (!ins.value) {
+      ins.classList.add('err'); document.getElementById('e-insurer').classList.add('on'); ok = false;
+    } else {
+      ins.classList.remove('err'); document.getElementById('e-insurer').classList.remove('on');
+      var expectedDomain = INSURER_DOMAINS[ins.value];
+      if (expectedDomain) {
+        var emailVal = (email.value || '').trim().toLowerCase();
+        if (!emailVal.endsWith(expectedDomain.toLowerCase())) {
+          email.classList.add('err');
+          var er3 = document.getElementById('e-email');
+          er3.textContent = '이메일이 ' + expectedDomain + ' 도메인이어야 합니다.';
+          er3.classList.add('on'); ok = false;
+        }
+      } else {
+        // 미확인 도메인 (db-life / im-life / kb-life) 일시 차단
+        errBox.textContent = '선택하신 보험사는 도메인 확인이 진행 중입니다. admin 확인 후 가입이 활성화됩니다.';
+        errBox.classList.add('on');
+        ok = false;
+      }
+    }
+  }
+
+  var pw  = document.getElementById('f-pw');
+  var pw2 = document.getElementById('f-pw2');
+  if (!pw.value || pw.value.length < 8 || !/[a-zA-Z]/.test(pw.value) || !/[0-9]/.test(pw.value)) {
+    pw.classList.add('err'); document.getElementById('e-pw').classList.add('on'); ok = false;
+  } else { pw.classList.remove('err'); document.getElementById('e-pw').classList.remove('on'); }
+  if (pw2.value !== pw.value) {
+    pw2.classList.add('err'); document.getElementById('e-pw2').classList.add('on'); ok = false;
+  } else { pw2.classList.remove('err'); document.getElementById('e-pw2').classList.remove('on'); }
+  if (!document.getElementById('f-consent').checked) {
+    document.getElementById('e-consent').classList.add('on'); ok = false;
+  } else { document.getElementById('e-consent').classList.remove('on'); }
+
+  return ok;
+}
+
+async function doSubmit() {
+  if (!validateSignup()) return;
+
+  var btn  = document.getElementById('sub-btn');
+  var txt  = document.getElementById('sub-btn-txt');
+  var spin = document.getElementById('signup-spinner');
+  var errBox = document.getElementById('signupErrBox');
+
+  btn.disabled = true;
+  if (txt)  txt.style.opacity = '0';
+  if (spin) spin.style.display = 'block';
+
+  function _resetBtn() {
+    btn.disabled = false;
+    if (txt)  txt.style.opacity = '';
+    if (spin) spin.style.display = 'none';
+  }
+
+  var email = document.getElementById('f-email').value.trim();
+  var pw    = document.getElementById('f-pw').value;
+  var site  = window.gSignupSite;
+  var gradeShort = document.getElementById('f-role').value;
+  var roleKey = mapToRoleKey(site, gradeShort);
+
+  var insurerId = '';
+  var branchId  = '';
+  var teamId    = '';
+  var statusValue = 'active';
+  var companyName = '';
+  var branchName  = '';
+  var teamName    = '';
+
+  if (site === 'insurer') {
+    var insSel = document.getElementById('f-insurer');
+    var insSlug = insSel.value;
+    companyName = insSel.options[insSel.selectedIndex].textContent;
+    statusValue = 'pending'; // 매니저 승인 대기
+
+    try {
+      var insRes = await fetch(SUPABASE_URL + '/rest/v1/insurers?slug=eq.' + encodeURIComponent(insSlug) + '&select=id', {
+        headers: { 'apikey': SUPABASE_KEY }
+      });
+      var insData = await insRes.json();
+      if (insData && insData.length > 0 && insData[0].id) {
+        insurerId = insData[0].id;
+      } else {
+        errBox.textContent = '보험사 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.';
+        errBox.classList.add('on');
+        _resetBtn();
+        return;
+      }
+    } catch (e) {
+      console.error('[insurer slug → id 매핑 실패]', e);
+      errBox.textContent = '네트워크 오류가 발생했습니다. 다시 시도해 주세요.';
+      errBox.classList.add('on');
+      _resetBtn();
+      return;
+    }
+  } else {
+    // GA 분기 — 시드 매핑 또는 free text
+    var bSel = document.getElementById('f-branch-select');
+    var tSel = document.getElementById('f-team-select');
+    if (bSel.value && bSel.value !== '__other__') {
+      branchId = bSel.value;
+      branchName = bSel.options[bSel.selectedIndex].getAttribute('data-name') || '';
+    } else {
+      branchName = (document.getElementById('f-branch-text').value || '').trim();
+    }
+    if (tSel.value && tSel.value !== '__other__') {
+      teamId = tSel.value;
+      teamName = tSel.options[tSel.selectedIndex].getAttribute('data-name') || '';
+    } else {
+      teamName = (document.getElementById('f-team-text').value || '').trim();
+    }
+    var compSel = document.getElementById('f-company-select');
+    if (compSel.value && compSel.value !== '__other__') {
+      companyName = compSel.value;
+    } else {
+      companyName = (document.getElementById('f-company-text').value || '').trim();
+    }
+    statusValue = 'active';
+  }
+
+  try {
+    var authRes = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        email: email,
+        password: pw,
+        data: {
+          name:    document.getElementById('f-name').value.trim(),
+          phone:   document.getElementById('f-phone').value.trim(),
+          company: companyName,
+          branch:  branchName,
+          role:    roleKey,
+          team:    teamName,
+          insurer_id:  insurerId,
+          branch_id:   branchId,
+          team_id:     teamId,
+          status:      statusValue
+        }
+      })
+    });
+    var authData = await authRes.json();
+
+    if (!authRes.ok) {
+      var msg = authData.msg || authData.error_description || authData.error || '';
+      console.error('[signup error]', { status: authRes.status, statusText: authRes.statusText, authData: authData });
+      if (msg.indexOf('already registered') !== -1 || msg.indexOf('already been registered') !== -1 || msg.indexOf('User already registered') !== -1) {
+        errBox.innerHTML = '이미 가입된 이메일입니다. 위 로그인 영역에서 로그인해 주세요.';
+      } else if (msg.indexOf('rate') !== -1 || msg.indexOf('limit') !== -1 || authRes.status === 429) {
+        errBox.textContent = '이메일 발송 한도를 초과했습니다. 1시간 후 다시 시도해 주세요.';
+      } else {
+        errBox.textContent = '가입 중 오류가 발생했습니다. (' + authRes.status + ')';
+      }
+      errBox.classList.add('on');
+      _resetBtn();
+      return;
+    }
+
+    var userId =
+         (authData.user && authData.user.id)
+      || (authData.identities && authData.identities[0] && authData.identities[0].user_id)
+      || (authData.user && authData.user.identities && authData.user.identities[0] && authData.user.identities[0].user_id)
+      || null;
+
+    if (!userId) {
+      console.warn('[signup] userId 확보 실패', authData);
+      errBox.textContent = '가입 처리가 일시적으로 지연됐습니다. 잠시 후 다시 시도해 주세요.';
+      errBox.classList.add('on');
+      _resetBtn();
+      return;
+    }
+
+    // 가입 성공 화면
+    var descEl = document.getElementById('signup-success-desc');
+    var pendingNoticeEl = document.getElementById('pending-notice');
+    var emailConfirmed = !!(authData.user && authData.user.email_confirmed_at);
+    if (descEl) {
+      var html;
+      if (emailConfirmed) {
+        html = '<strong>' + escapeText(email) + '</strong><br>가입이 완료됐습니다!<br>위 로그인 영역에서 바로 시작해 보세요 😊';
+      } else {
+        html = '<strong>' + escapeText(email) + '</strong> 으로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br>바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요</span>';
+      }
+      descEl.innerHTML = html;
+    }
+    if (pendingNoticeEl) {
+      pendingNoticeEl.style.display = (site === 'insurer') ? 'block' : 'none';
+    }
+    document.getElementById('signupFormArea').hidden = true;
+    document.getElementById('signupSuccessArea').hidden = false;
+
+  } catch (e) {
+    console.error('[signup network error]', e);
+    errBox.textContent = '네트워크 오류가 발생했습니다.';
+    errBox.classList.add('on');
+    _resetBtn();
+  }
+}
 </script>
 
 </body>
