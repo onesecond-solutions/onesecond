@@ -177,4 +177,64 @@ FAIL 발생 시 즉시 Code 인계 → 보강 commit → 재검증 RUN.
 
 ---
 
-본 의뢰서는 #47 + #48 commit 직후 5/15 4팀 오픈 D-5일 기준 라이브 톤 점검용. P1.5-E ⑥ rate limit (별 트랙 #45) 처럼 의도된 외부 영향이 없으므로 18/18 PASS 기대.
+# § 7. 검증 결과 (2026-05-10, Claude in Chrome 시연 완료)
+
+**검증 환경:** `https://onesecond.solutions` (GitHub Pages + Supabase 신버전 `pdnwgzneooyygfejrvbg` `onesecond-v1-restore-0420`)
+**로그인 계정:** `bylts@naver.com` (role: `ga_manager`)
+**진입:** Hard Reload (Ctrl+Shift+R)
+**검증자:** Claude in Chrome
+
+| 시나리오 | 결과 | 비고 |
+|---|---|---|
+| A-1. PC 사이드바 7항목 순서 | ✅ PASS | DOM 순서 raw = home → board → quick → scripts → myspace → together → news → admin(숨김). 보험뉴스 7번째(끝) ✅, Quick 메뉴 3번째 ✅ |
+| A-2. 사이드바 호칭 "현장의 소리" | ✅ PASS | `[data-menu="board"].menu-item.textContent = "현장의 소리"`. "현장 Q&A" 잔존 0건 |
+| A-3. "현장의 소리" 클릭 → board 진입 | ✅ PASS | 사이드바 클릭 후 board.html 정상 로드. 페이지 타이틀 "현장의 소리 · 실시간 이슈 공유" 표시. active 이동 |
+| A-4. 보험뉴스 끝 클릭 진입 | ✅ PASS | `[data-menu="news"]` click() 후 news.html 정상 로드. active = 보험뉴스 |
+| A-5. admin 메뉴 노출 (admin 로그인 시) | ✅ PASS | 본 검증은 ga_manager 로그인이라 `#menu-admin → display:none` 확인. style raw 정합 (border-top + brown 색). renderProBadge() 분기 소스 확인 |
+| B-1. 모바일 탭바 7항목 아이콘 순서 | ✅ PASS | DOM 기준 🏠→📋→⚡→📞→👤→🤝→📰. data-menu home→board→quick→scripts→myspace→together→news. ※ viewport 강제 변경 미지원으로 CSS 표시는 미확인이나 DOM/JS 기준 완전 정합 |
+| B-2. 두 번째 탭 aria-label "현장의 소리" | ✅ PASS | `.tab-item[data-menu="board"].aria-label = "현장의 소리"`. 잔존 0건 |
+| B-3. 두 번째 탭 → board 진입 | ✅ PASS | click() 후 board 페이지 정상 로드. 사이드바 active도 동기화 |
+| B-4. 마지막 탭 → news 진입 | ✅ PASS | click() 후 news 페이지 정상 로드 |
+| C-1. 검색 preview 섹션 라벨 "💬 현장의 소리" | ✅ PASS (소스 기준) | posts 0건으로 drawer 미표시(N/A). 소스 raw `<div class="search-section-label">💬 현장의 소리</div>` 확인 |
+| C-2. 검색 preview badge "현장의 소리" | ✅ PASS (소스 기준) | posts 0건 N/A. 소스 raw `<span class="search-result-badge badge-post">현장의 소리</span>` 확인 |
+| C-3. 검색 결과 페이지 sub 호칭 | ✅ PASS | "보험" 검색 → sub raw = `총 26건 — 스크립트 20건 · 현장의 소리 0건 · 업무자료 6건` |
+| C-4. 검색 결과 페이지 그룹 타이틀 | ✅ PASS (소스 기준) | posts 0건 N/A. 소스 raw `💬 현장의 소리 (' + posts.length + '건)` 확인 |
+| C-5. 검색 결과 카드 badge | ✅ PASS (소스 기준) | posts 0건 N/A. 소스 raw 확인 |
+| D-1. board.html 페이지 타이틀 호칭 | ✅ PASS | 페이지 타이틀 raw = `현장의 소리 · 실시간 이슈 공유`. brown(#A0522D) accent 강조 |
+| D-2. home.html 룰렛 카드 라벨 호칭 | ✅ PASS | `#home-node-board.textContent = "💬 현장의 소리"`. tip 라벨 raw 정합 |
+| E-1. home_v2 kicker "FIELD Q&A" 영문 보존 | ✅ PASS | board 카드 kicker raw = `FIELD Q&A` (영문 대문자). 변경 없음 확인 |
+| E-2. data-menu='board' 라우팅 키 보존 | ✅ PASS | 사이드바 + 모바일 탭 모두 보존. A-3/B-3 클릭 진입 PASS로 자동 검증. (home_v2는 독립 랜딩, `data-preview="board"` + `href: board.html` 별도 구조) |
+
+**총 결과: 18 PASS / 0 FAIL → #47 + #48 ✅ 종료**
+
+---
+
+# § 8. 추가 관찰 사항 (FAIL 아님 / 별 트랙 신설)
+
+본 검증 과정에서 #47/#48 본질과 무관하지만 5/15 4팀 오픈 전 처리 검토가 필요한 관찰 2건 발견.
+
+## #50 (신설) — app_settings menu_home / menu_news display:none ⚠️ 의도 확인 필요
+
+- **관찰:** `app_settings(group_name='menu_b')`에서 `menu_home='false'`, `menu_news='false'` 설정값으로 인해 사이드바·모바일 탭에서 **홈**과 **보험뉴스**가 `display:none` 처리됨
+- **DOM/순서 정합성:** 영향 없음 (DOM 순서 자체는 #47 commit 그대로)
+- **사용자 영향 잠재 위험:**
+  - `app.html` 진입한 사용자가 사이드바에서 "홈" 미노출 → 메인 page(home.html)으로 돌아갈 동선 부재
+  - 5/15 4팀 오픈 시 home_v2.html이 메인 진입로지만, app.html 셸 진입 후 홈 메뉴 미노출은 UX 단절
+- **처리 옵션:**
+  - (a) 의도된 설정 (예: 5/15 전 의도적으로 홈/보험뉴스 숨김) → 그대로 보존, _INDEX.md에 기록만
+  - (b) 의도되지 않은 설정 (예: D-9 화면설정 mock 작업 중 잔존) → 5/15 전 `app_settings` UPDATE로 `menu_home='true', menu_news='true'` 복원
+- **팀장님 의도 확인 후 처리** ⭐
+
+## #51 (신설) — public.posts 테이블 게시글 0건 (시드 데이터 부재)
+
+- **관찰:** `public.posts` 테이블 게시글 0건 → 검색 preview drawer (C-1/C-2) + 검색 결과 카드 (C-4/C-5)를 라이브에서 육안 시각 검증 불가. 본 검증은 소스 코드 raw 기준 PASS 처리
+- **5/15 영향:** 4팀 오픈 첫날 가입자가 board 페이지 진입 시 빈 화면. 시드 게시글 없으면 "이 게시판에 뭐가 있는 거야" 인지 격차
+- **처리 옵션:**
+  - (a) 5/15 직전 (5/14~15 새벽) 시드 게시글 5~10건 INSERT (4팀 + 허브 + 본부 게시판 균형 분배)
+  - (b) 4팀 자산화 트랙(165 파일 마이그레이션) 결과로 자동 시드 (Claude AI 측 결재 후)
+  - (c) 라이브 자연 누적 (사용자가 직접 작성)
+- **권장:** (a) + (b) 병행 — 5/15 전 최소 시드 + 자산화 트랙 결과로 후속 보강
+
+---
+
+본 의뢰서는 #47 + #48 commit 직후 5/15 4팀 오픈 D-5일 기준 라이브 톤 점검용. 18/18 PASS로 #47/#48 트랙 ✅ 종료. 추가 관찰 2건은 별 트랙 #50/#51로 분리 누적, 다음 세션 _INDEX.md 갱신 시 반영.
