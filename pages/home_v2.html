@@ -1475,6 +1475,17 @@ document.addEventListener('keydown', function (e) {
   });
 })();
 
+// URL 파라미터 진입 분기 — login.html → ?auth=login / index.html → ?auth=signup 등 redirect 시 자동 모달 open
+(function () {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var authParam = params.get('auth');
+    if (authParam === 'login' || authParam === 'signup') {
+      setTimeout(function () { openAuthModal(authParam); }, 120);
+    }
+  } catch (e) { /* noop */ }
+})();
+
 // ============================================================================
 //  비밀번호 보기/숨기기 토글 (로그인 + 가입 공용)
 // ============================================================================
