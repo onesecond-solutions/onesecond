@@ -191,11 +191,20 @@
 
 ---
 
-# § 4. 작업 분할 (5단계)
+# § 4. 작업 분할 (5단계) — ✅ 전 단계 종료 (2026-05-10 새벽 마감)
 
 > 결재 후 진입. 각 단계는 독립 commit + 검증.
+>
+> | Step | 결과 | commit |
+> |---|---|---|
+> | 4-A | ✅ | `2b41101` |
+> | 4-B+C | ✅ | `9db69c4` (본진) + `d859b9c` (Google UI) |
+> | 4-D | ✅ | `0aa50e1` |
+> | 4-E | ✅ | `c17c82c` (⑤ 보강) + `fb1c48e` (캡처 의뢰) + `ae04a8e` (UUID 1글자 수정) + `30e7a1f` (브랜드 강조) |
+>
+> 라이브 회귀 13+2건 = 14 PASS / 1 ⚠️ (⑥ Supabase rate limit, 코드 무관) → 별 트랙 #44 Custom SMTP로 누적.
 
-## 4-A. Step P1.5-A: 사전 분석 + 라이브 raw 캡처 (~30분)
+## 4-A. Step P1.5-A: 사전 분석 + 라이브 raw 캡처 (~30분) ✅
 
 **산출물:**
 - `docs/architecture/db_phase15_pre_capture.md`
@@ -205,7 +214,7 @@
 
 **도구:** Read 분석.
 
-## 4-B. Step P1.5-B: home_v2.html 가입 폼 통합 (Step 5-C 코드 이전, ~2시간)
+## 4-B. Step P1.5-B: home_v2.html 가입 폼 통합 (Step 5-C 코드 이전, ~2시간) ✅
 
 **작업:**
 - index.html 라인 1671~2087 가입 폼 마크업 (사이트 분기 카드 + 보험사/GA 분기 + JS) → home_v2.html에 이전
@@ -219,7 +228,7 @@
 - 사이트 분기 카드 작동
 - 도메인 화이트리스트 검증
 
-## 4-C. Step P1.5-C: home_v2.html 로그인 통합 (~1시간)
+## 4-C. Step P1.5-C: home_v2.html 로그인 통합 (~1시간) ✅
 
 **작업:**
 - DH2 (a) 채택 시 = home_v2에 로그인 모달 신설 + login.html 핵심 로직 이전
@@ -232,7 +241,7 @@
 - 비밀번호 찾기 모달 분기
 - 성공 → app.html redirect
 
-## 4-D. Step P1.5-D: index.html → home_v2 redirect (~10분)
+## 4-D. Step P1.5-D: index.html → home_v2 redirect (~10분) ✅
 
 **작업:**
 - DH3 (a) 채택 시 = index.html 본문 = `<meta http-equiv="refresh" content="0; url=/pages/home_v2.html">` + 1줄 JS fallback
@@ -243,7 +252,7 @@
 - index.html 진입 → home_v2.html 즉시 이동
 - 외부 link / 책갈피 호환
 
-## 4-E. Step P1.5-E: Chrome 라이브 회귀 + 종료 commit (~30분)
+## 4-E. Step P1.5-E: Chrome 라이브 회귀 + 종료 commit (~30분) ✅
 
 **라이브 회귀 시나리오 9건:**
 1. home_v2 진입 (랜딩 + Hero + Feed)

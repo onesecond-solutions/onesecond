@@ -1,27 +1,30 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
 > **🎯 원세컨드 핵심 정의:** **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X. 진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md`
-> **🚨 마지막 갱신:** 2026-05-09 저녁 — **Phase 1.5 즉시 흡수 결정 (옵션 Y' 채택)** ⭐ Step 5 (index.html 가입 폼) 마무리 보류 + home_v2.html이 가입/로그인/랜딩 흡수. Step 5-C 본 빌드 라이브 테스트에서 branches RLS FK 위반 발견 + 팀장님 지적 ("인덱스 안 쓸 건데 시간지체할 필요?") + Code 큰 그림 재정독 → 옵션 Y' Code 추천 + 팀장님 채택. 5/9 오후 결정("Phase 1 동안 index 그대로") 재고. **5/15 4팀 오픈까지 ~3.5세션 분량 (home_v2 가입/로그인 통합) 진입.** Phase 1 Step 6~16 잔여 ~7세션은 5/15 후. branches+teams RLS 비활성화 (마스터 데이터 정합, Phase 1.5에서도 필수). spec v2 § 9 + 메모리 갱신 commit 예정. /
+> **🚨 마지막 갱신:** 2026-05-10 새벽 — **Phase 1.5 본진 ✅ 종료** (P1.5-A 사전 회귀 + P1.5-B+C 통합 모달 본진 + P1.5-D index/login redirect + P1.5-E 라이브 회귀 14/15 PASS, ⑥ Supabase rate limit만 #30 Custom SMTP 별 트랙 누적). 5/15 4팀 오픈 = home_v2 메인 진입로 가동. UUID 1글자 오타 수정 학습 2건(#45/#46). / 2026-05-09 저녁 — **Phase 1.5 즉시 흡수 결정 (옵션 Y' 채택)** ⭐ Step 5 (index.html 가입 폼) 마무리 보류 + home_v2.html이 가입/로그인/랜딩 흡수. Step 5-C 본 빌드 라이브 테스트에서 branches RLS FK 위반 발견 + 팀장님 지적 ("인덱스 안 쓸 건데 시간지체할 필요?") + Code 큰 그림 재정독 → 옵션 Y' Code 추천 + 팀장님 채택. 5/9 오후 결정("Phase 1 동안 index 그대로") 재고. **5/15 4팀 오픈까지 ~3.5세션 분량 (home_v2 가입/로그인 통합) 진입.** Phase 1 Step 6~16 잔여 ~7세션은 5/15 후. branches+teams RLS 비활성화 (마스터 데이터 정합, Phase 1.5에서도 필수). spec v2 § 9 + 메모리 갱신 commit 예정. /
 > **이전 갱신:** 2026-05-09 점심 — **Step 2-bis B-6.5 + B-7 본 진입 (Step 2-bis 본질 종료 ✅)** (라이브 commit 추가 트랜잭션 2건). get_my_role() 함수 신설 (총 17 SEC DEF) + posts 정책 sweep (DROP 7 + CREATE 14, UPDATE/DELETE 보존 3) + 신설 3 테이블 RLS 활성화 + 정책 8건. 자기참조 잔재 0건 회귀. Step C 사실상 종료 (RUN #5에 메타+자기참조+함수 본문 검증 포함). Step D는 라이브 9역할 중 6역할 가입자 0건이라 5/15 4팀 오픈 후 Step 16 통합 권장. Phase 1 진행률 **8/18 (44.4%)**. / 2026-05-09 새벽 — **Step 2-bis Step A + Step B-1 + Step B-2~B-6 본 진입** (라이브 commit 3건, 트랜잭션 3건). branches/teams/IEB 신설 + 시드 5 row + users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT 정정) + CHECK 3종 + app_settings +3 row + SECURITY DEFINER 함수 4종 (총 16). 사고 학습 2건 영구 명문화 (Supabase SQL Editor RUN 단위 세션 분리 + ALTER REFERENCES 참조 PK 타입 사전 확인). 별 트랙 #33~#36 신설. strategy_overview 갱신 별도 commit `b7d88a3` (1163줄, § 8 추가 보강 8건 + § 5-12·5-14 본질 재정의). / 2026-05-08 저녁 — **세션 종료 인계 노트 자동 커밋** (`docs/sessions/2026-05-08_2020.md`, `/session-end` 자동 생성) / 2026-05-08 오전 — **Step 0-bis 종료 (spec v2 재작성, 42건 결정 통합 + v1 폐기 헤더)** + **Step 0-tris 종료 (README.md 9역할 정합 + 5축 구조 + 4팀 표기 정리)**. 진실 원천 = `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄). strategy_overview § ⚠️ 9건 처리 (본 spec § 0-5에서 4 해소 + 00_MASTER 폐기로 4 자동 해소 + Step 0-tris 분리 1). Phase 1 진행률 **6/18 (33.3%)**. commit `bdc5c19` push 완료. / 2026-05-08 새벽 — **Phase 1 Step B capture § 7 신설** (Step B-extra + B' + C-meta 통합, 31사 매트릭스 명문화) + **Step 3 (Quick 메뉴 §원전산 전환) 종료** + **Step 4 (Supabase Auth 이메일 인증 ON) 사실상 종료** (Confirm email 이미 ON 상태로 발견 = 검증 단계, 라이브 변경 0건. Chrome 시나리오 4건 PASS, 시나리오 3 팀장님 직접 1건 보류). 부수 발견: (1) `login.html:367` 차단 메시지 한국어 커스텀 = 2026-04-09 초기 통째 업로드 (`4ed5282d`, Phase 1 무관). (2) 인증 메일 템플릿 영문 기본 → 결정 대기 #12 신설. (3) Custom SMTP OFF 라이브 검증 → Supabase 공식 경고 raw 확보 ("This service has rate limits and is not meant to be used for production apps") = #30 별 트랙 트리거 확실. Phase 1 진행률 **4/16** (잔여 12단계 약 7.7세션). / 2026-05-07 저녁 — Phase 1 / Step 2 (DB 마이그레이션) 종료 + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료.
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
 ---
 
-## 🎯 현재 메인 트랙 — Phase 1.5 즉시 흡수 (2026-05-09 저녁 전환, 옵션 Y')
+## 🎯 현재 메인 트랙 — Phase 1.5 ✅ 종료 (2026-05-10 새벽 마감) → Phase 1 잔여 5/15 후
 
-> **5/9 저녁 전략 재수정:** Phase 1 (보험사 입점 18단계) → **Phase 1.5 home_v2 통합 + Phase 1 잔여 5/15 후**로 재정의. Step 5 (index.html 가입 폼) 마무리 보류 + home_v2.html이 가입/로그인/랜딩 흡수. 본질 정합 + sunk cost 0.
+> **5/10 새벽 마감:** Phase 1.5 본진(P1.5-A/B/C/D/E) 코드 측면 모두 ✅. 라이브 회귀 14 PASS / 1 ⚠️ (⑥ Supabase rate limit, 코드 무관 → 별 트랙 #45). home_v2.html 통합 모달 가동 (가입+로그인+Google UI 자리). index/login → home_v2 redirect 정합. **5/15 4팀 오픈 = home_v2 메인 진입로 가동.**
+>
+> **5/9 저녁 전환:** Phase 1 (보험사 입점 18단계) → **Phase 1.5 home_v2 통합 + Phase 1 잔여 5/15 후**로 재정의. Step 5 (index.html 가입 폼) 마무리 보류 + home_v2.html이 가입/로그인/랜딩 흡수. 본질 정합 + sunk cost 0.
 
-### 즉시 진행 단계 (5/9 저녁 ~ 5/15)
-| # | 단계 | 분량 | 상태 |
-|---|---|---|---|
-| 1 | branches+teams RLS 비활성화 (Chrome 트랜잭션) | 5분 | 진입 (Chrome 의뢰서 발행) |
-| 2 | 메모리 + _INDEX.md + spec v2 § 9 갱신 commit | 0.3세션 | **진행 중** ⭐ |
-| 3 | Phase 1.5 작업지시서 발행 (home_v2 가입/로그인 통합 + 결재 박스) | 0.5세션 | 다음 |
-| 4 | home_v2.html 가입/로그인 통합 본 빌드 (Step 5-C 코드 이전) | 2세션 | |
-| 5 | index.html → home_v2 redirect (또는 단순 랜딩 보존) | 0.2세션 | |
-| 6 | Chrome 라이브 회귀 (시나리오 9건) | 0.5세션 | 5/15 직전 |
-| | **Phase 1.5 본진** | **~3.5세션** | |
+### Phase 1.5 본진 (5/9 저녁 ~ 5/10 새벽) — ✅ 전 단계 종료
+| # | 단계 | 분량 | 상태 | commit |
+|---|---|---|---|---|
+| 1 | branches+teams RLS 비활성화 | 5분 | ✅ | `09a7a74` |
+| 2 | 메모리 + _INDEX.md + spec v2 § 9 갱신 | 0.3세션 | ✅ | `94f702a` |
+| 3 | Phase 1.5 작업지시서 발행 + 결재 7건 | 0.5세션 | ✅ | `eb46288` |
+| P1.5-A | 사전 분석 + 라이브 raw 캡처 | ~30분 | ✅ | `2b41101` |
+| P1.5-B+C | home_v2 통합 모달 본진 (가입+로그인) | ~3h | ✅ | `9db69c4` + `d859b9c` |
+| P1.5-D | index/login → home_v2 redirect | ~10분 | ✅ | `0aa50e1` |
+| P1.5-E | 라이브 회귀 13+2건 + ⑤⑥ 보강 | ~1h | ✅ | `c17c82c`/`fb1c48e`/`ae04a8e`/`30e7a1f` |
+| | **합계** | **~5세션** | **✅ 전 단계 종료** | |
 
 ### Phase 1 잔여 (5/15 4팀 오픈 후 진행)
 | # | 단계 | 분량 |
@@ -253,7 +256,7 @@
 
 29. **(신규 5/7 오전, 갱신 5/8 오전) v2.0 원수사 입점 모델 Phase 1 메인 트랙 전환** — admin_v2 Phase D → 본 트랙 전환. **진실 원천 (현행 v2):** `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄, 5/8 오전 commit `bdc5c19`, 42건 결정 통합). **폐기 v1:** `docs/specs/v2_insurer_admission_phase1_v1.md` (폐기 헤더 박힘). **OS 정의:** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄). **진행 상태:** Step 0 + 0-bis + 0-tris + Step 2 + 3 + 4 종료 (6/18, 33.3%) → **다음 단계: Step 2-bis (DB 보강 마이그레이션, branches/teams/IEB, 1.0+ 세션) 의뢰서 발행 대기**. admin Phase D 잔여(D-1/D-7/D-8/D-9/D-10/D-final)는 융합 트랙으로 격하 (Step 10~15). v2 핵심 보강: 4단계 데이터 파이프라인 (시드 + Q&A + 정제 + 허브) / 7종 board_type / 단일 데이터 + RLS 가시성 분기 (복제 ❌) / 보험사 임직원-지점 N:M / admin 토글 3건 / 운영 단위 = 지점 / 매니저 공지 = 팀 단위 격리 / 검색창 = 현장 Q&A 페이지 큼지막 구글 느낌.
 
-30. **(신규 5/8 새벽) Custom SMTP 도입 — 4팀 오픈 5/15 직전 전환** — Phase 1 Step 4 진입 시 검토 발견. Supabase 기본 SMTP rate limit = **3 emails/hour** (built-in 제한). 5/15 4팀 165명 동시 가입 시 인증 메일 차단 리스크. **5/8 라이브 검증 raw 보강:** Supabase 공식 경고 표기 확인 — `"This service has rate limits and is not meant to be used for production apps"` (Authentication → Email → Templates 또는 Settings 화면). 즉 production 부적합 명시 = 트리거 확실. **결정:** (a) 채택 — 5/11~12 슬롯에 Custom SMTP 별 트랙 신설 (SendGrid / Mailgun / Resend 후보 중 결정). Step 4 진입 자체는 영향 0 (현재 가입자 적음). 트리거 = 4팀 가입 직전. 진실 원천 = 본 항목.
+30. **(신규 5/8 새벽 / 갱신 5/10 새벽 — 🔴 Critical 격상) Custom SMTP 도입 — 5/15 전 필수** — Phase 1 Step 4 진입 시 검토 발견. Supabase 기본 SMTP rate limit = **3 emails/hour** (built-in 제한). 5/15 4팀 165명 동시 가입 시 인증 메일 차단 리스크. **5/8 라이브 검증 raw:** Supabase 공식 경고 `"This service has rate limits and is not meant to be used for production apps"`. **5/10 새벽 P1.5-E ⑥ 사고로 입증:** 단순 집중 테스트(같은 IP 다회 가입 시도)에서도 1시간 rate limit 도달 = 4팀 165명 동시 가입 시 100% 차단. ⑥ 실 가입 시연도 본 사유로 미완(#45). **결정:** (a) 채택 — 5/11~12 슬롯에 Custom SMTP 별 트랙 신설 (SendGrid / Mailgun / Resend 후보). Step 4 진입 자체는 영향 0 (현재 가입자 적음). **트리거 = 5/15 전 필수 (격상)**. 후보 분석: SendGrid 무료 100/일 + Supabase Auth Custom SMTP 5분 설정 / Resend 무료 100/일 + 도메인 인증 / AWS SES Sandbox 200/일 → production 무제한 + 별 도메인 인증.
 
 31. **(신규 5/8 새벽) 인증 메일 템플릿 한국어 변경 미작업** — Phase 1 Step 4 Chrome 검증에서 발견. `Confirm Your Signup` 영문 Subject + `<h2>Confirm your signup</h2>` 영문 Body 그대로. 4팀 165명 한국어 사용자 대상 → 신뢰도 저하 우려. 부수 정합화: 차단 메시지(`login.html:367`)는 2026-04-09 초기 셋업(`4ed5282d`)부터 한국어 커스텀 적용된 상태. 인증 메일만 영문 잔존. **트리거:** Step 5 (보험사 회원가입 폼) 진입 시 통합 처리 권장 또는 별 트랙 분리. 결정 대기 #12 동반.
 
@@ -282,6 +285,12 @@
 43. **(신규 5/9 오후) ⚠️ 추정 3사 도메인 사후 검증 (db-life / im-life / kb-life)** — Step 5-A Chrome 조사에서 ⚠️ 추정 표기. Step 5-B 트랜잭션에서 NULL 유지. 도메인 화이트리스트 검증 시 이 3사 보험사 임직원 가입 차단됨 (검증 통과 row 부재). **트리거 = 첫 입점 시점 admin 사후 보강** (영업 트랙). 후보: db-life=`@dblife.co.kr` / im-life=`@imlife.co.kr` / kb-life=`@kblife.co.kr` 또는 `@kbfg.com`.
 
 44. **(신규 5/9 오후) RPC 2종 PUBLIC EXECUTE 후속 정정** — Step 5-B RUN 3 5-4 사후 검증에서 발견. `complete_signup` / `admin_approve_user` 둘 다 PostgreSQL default `GRANT EXECUTE TO PUBLIC` 잔존 (의뢰서 SQL `REVOKE FROM anon`만, `REVOKE FROM PUBLIC` 누락). 본문 로직 (`auth.uid() IS NULL` + `is_admin()/role` 체크)으로 실질 차단됨 → **보안 위험 0**. best practice 정합으로 `REVOKE EXECUTE ... FROM PUBLIC` 추가 권장. Step 5-C 후 30분 SQL 1줄 추가 또는 별 트랙 단독 처리.
+
+45. **(신규 5/10 새벽) 🔴 P1.5-E ⑥ 실 가입 시연 후속 — Supabase rate limit 해소 후 GA 가입 PASS 확인** — UUID 1글자 수정(`ae04a8e`)으로 FK 23503 해소 ✅. 단 5/9 야간 집중 테스트로 Supabase 기본 SMTP 시간당 3건 제한 도달 → ⑥ 실 가입 미완. **트리거 = rate limit 해소 후 약 1시간 (5/10 새벽~오전).** GA 테스트 계정 가입 시 `success` + `pending notice 미표시` (active) 회귀. 본 항목은 #30 Custom SMTP 도입(별 트랙)으로 근본 해결 = 본 #45는 5/15 전 1회 PASS 확인용.
+
+46. **(신규 5/10 새벽) home_v2.html signup form select 동적 lookup 전환 — 보험사 패턴 정합** — P1.5-E ⑥ 진단으로 노출. 보험사(`/rest/v1/insurers?slug=eq.X`)는 동적 lookup → DB 정합. GA(`f-branch-select`/`f-team-select`)는 정적 하드코딩 → DB ↔ 코드 정합 깨질 위험. 이번 1글자 오타(`396edf6a` → `306edf6a`)도 본 패턴 차이 때문. **트리거 = Phase 1.5 종료 후 별 트랙** (~30분, 미래 안전성). 후보 SQL: 가입 모달 진입 시 `/rest/v1/branches?select=id,name` + `/rest/v1/teams?select=id,name,branch_id` fetch → select 동적 채움. branches/teams RLS 비활성 상태라 anon SELECT 통과.
+
+47. **(신규 5/10 새벽) 사이드바 메뉴 순서 정합 (app.html ↔ home_v2 Top bar)** — 팀장님 5/10 새벽 지시. home_v2 Top bar 순서(홈/현장의 소리/Quick/스크립트/MY SPACE/함께해요)와 app.html 사이드바 순서 정합화 필요. DH7 결재 (a) "둘 다 보존" 본문 그대로 유지 + 사이드바 순서만 정합. **트리거 = P1.5 종료 commit 후 즉시 진입** (~30분).
 
 ---
 
