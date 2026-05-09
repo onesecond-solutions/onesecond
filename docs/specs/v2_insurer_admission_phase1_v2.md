@@ -821,6 +821,62 @@ Step D — 라이브 검증
 
 이유: 신설 3 테이블 + 시드 데이터 입력 + users 21건 분배 + posts 기존 row branch_id 부여 + RLS 7+3 정책 sweep + 9역할 라이브 회귀 = 트랜잭션 7건 분할 + 라이브 검증.
 
+## 7-4. Step 2-bis 본 진입 영구 학습 (2026-05-09 새벽)
+
+본 진입에서 발견된 사고 학습 2건 + Step A 결재 결과 + Step B-1~B-6 진행 누적 명문화. spec v3 작성 시점에 본 § 7-4 발췌·흡수 권장.
+
+### 7-4-1. 사고 학습 1 — Supabase SQL Editor RUN 단위 세션 분리
+
+본 spec v1에서 트랜잭션을 1단계(BEGIN+명령)+2단계(검증)+3단계(COMMIT) 3 RUN으로 분리 가정 → Supabase 자동 ROLLBACK 사고. 표준 정정:
+
+- **Pre-flight RUN:** 신설 항목 부재 + 참조 PK 타입 사전 확인
+- **메인 트랜잭션 RUN:** BEGIN ~ COMMIT 모두 한 RUN (세션 종료 시 미COMMIT 자동 ROLLBACK 회피)
+- **검증 RUN:** COMMIT 후 별도 RUN
+- **함수 의존 분리:** SECURITY DEFINER 함수가 ALTER ADD COLUMN으로 신설된 컬럼 참조 시 트랜잭션 분리 (컬럼 신설 트랜잭션 → COMMIT → 함수 신설 트랜잭션, 5/7 ROLLBACK 학습 정합)
+- **검증 실패 시:** 수동 DROP/REVERT SQL 별도 의뢰서 발행
+
+메모리 등록: `supabase_sql_editor_session_isolation.md`.
+
+### 7-4-2. 사고 학습 2 — parent_post_id UUID → BIGINT 정정 (참조 PK 타입 사전 확인)
+
+본 spec § 7-2-3 SQL = `parent_post_id UUID REFERENCES posts(id)` → 라이브 posts.id = **bigint** 타입과 불일치 → FK 위반 → 자동 ROLLBACK. 정정 적용:
+
+- spec v2 § 7-2-3 정정: `parent_post_id BIGINT REFERENCES posts(id)`
+- 별 트랙 #36 누적 — posts PK 타입 통일 (bigint → uuid, author_id #33과 묶음, Phase 1 종료 후)
+- **영구 학습:** ALTER ADD COLUMN ... REFERENCES 시 참조 PK 타입 사전 확인 필수 (Pre-flight RUN에 참조 PK 타입 raw 검증 SQL 포함)
+
+### 7-4-3. Step A 결재 결과 (2026-05-09 본 진입)
+
+| 결재 | 확정 | Step B 영향 |
+|---|---|---|
+| ① users 분배 | 3계정 NULL 유지 (admin/조현영/테스트). 5/15 매니저 승인 흐름에서 부여 | B-2 UPDATE 0건 |
+| ② posts branch_id | 4건 모두 NULL (archive_legacy 폐기 게시판) | B-3 UPDATE 0건 |
+| ③ author_id 타입 | 별 트랙 #33 누적 (Phase 1 종료 후) | 영향 없음 |
+| ④ app_settings | (key, value, label, group_name, updated_at) 5컬럼 정합 SQL + 별 트랙 #34 (hub_public ↔ board_hub 통합) | B-5 SQL 정정 |
+| ⑤ parent_post_id | BIGINT 정정 + 별 트랙 #36 (PK 타입 통일) | B-3 SQL 정정 |
+
+### 7-4-4. Step B 진행 누적 (2026-05-09 새벽)
+
+| Step | 트랜잭션 | 라이브 변경 | 상태 |
+|---|---|---|---|
+| B-1 | 1건 | branches/teams/IEB 신설 + 시드 5 row + 인덱스 4건 | ✅ commit |
+| B-2~B-5 | 1건 | users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT) + CHECK 3 + app_settings +3 row + 인덱스 6 | ✅ commit |
+| B-6 | 1건 | SECURITY DEFINER 함수 4종 (my_team_id / my_branch_id / my_assigned_branches / is_setting_enabled). 총 16 함수 | ✅ commit |
+| **B-7** | **대기** | **posts RLS sweep (DROP + CREATE) + 신설 3 테이블 RLS** | **다음 세션** |
+| **C** | **대기** | **사후 검증 (메타 조회 + 자기참조 EXISTS 0건)** | **다음 세션** |
+| **D** | **대기** | **라이브 검증 (9역할 진입 회귀)** | **다음 세션** |
+
+### 7-4-5. 다음 세션 진입 인계 (Step B-7 본 의뢰서 작성부터)
+
+1. spec v2 § 6-2 ~ § 6-4 raw 확인 (posts SELECT/INSERT/UPDATE/DELETE 정책)
+2. § 7-2-9 (branches/teams/IEB RLS) raw 확인
+3. § 6-5 RLS 사전 검증 표준 (D-pre.7~.8 정합)
+4. Pre-flight: posts 기존 정책 raw + 자기참조 EXISTS 잔재 검증
+5. 트랜잭션 분할 (DROP 묶음 → CREATE 묶음 → 자기참조 0건 검증)
+6. 라이브 9역할 회귀 검증 (Step D)
+
+진실 원천: 본 spec § 7-4 + 메모리 [`supabase_sql_editor_session_isolation.md`] + [`rls_self_reference_avoidance.md`].
+
 ---
 
 # § 8. 시드 데이터 흐름 (단일 데이터 + RLS 가시성 분기)
