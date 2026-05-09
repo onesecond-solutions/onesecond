@@ -213,17 +213,14 @@ FAIL 발생 시 즉시 Code 인계 → 보강 commit → 재검증 RUN.
 
 본 검증 과정에서 #47/#48 본질과 무관하지만 5/15 4팀 오픈 전 처리 검토가 필요한 관찰 2건 발견.
 
-## #50 (신설) — app_settings menu_home / menu_news display:none ⚠️ 의도 확인 필요
+## #50 — app_settings menu_home / menu_news ✅ 의도된 설정 (종료, 사고 아님)
 
-- **관찰:** `app_settings(group_name='menu_b')`에서 `menu_home='false'`, `menu_news='false'` 설정값으로 인해 사이드바·모바일 탭에서 **홈**과 **보험뉴스**가 `display:none` 처리됨
-- **DOM/순서 정합성:** 영향 없음 (DOM 순서 자체는 #47 commit 그대로)
-- **사용자 영향 잠재 위험:**
-  - `app.html` 진입한 사용자가 사이드바에서 "홈" 미노출 → 메인 page(home.html)으로 돌아갈 동선 부재
-  - 5/15 4팀 오픈 시 home_v2.html이 메인 진입로지만, app.html 셸 진입 후 홈 메뉴 미노출은 UX 단절
-- **처리 옵션:**
-  - (a) 의도된 설정 (예: 5/15 전 의도적으로 홈/보험뉴스 숨김) → 그대로 보존, _INDEX.md에 기록만
-  - (b) 의도되지 않은 설정 (예: D-9 화면설정 mock 작업 중 잔존) → 5/15 전 `app_settings` UPDATE로 `menu_home='true', menu_news='true'` 복원
-- **팀장님 의도 확인 후 처리** ⭐
+- **관찰:** `app_settings(group_name='menu_b')`에서 `menu_home='false'`, `menu_news='false'` 설정값으로 사이드바·모바일 탭에서 홈+보험뉴스가 `display:none` 처리됨
+- **팀장님 직접 확인 (2026-05-10):**
+  - 일반 사용자(ga_manager 등) 사이드바에서 보험뉴스 미노출 = **의도된 설정** (admin이 어드민 페이지에서 설정한 화면설정 정상 작동)
+  - admin 계정으로 검증 시 보험뉴스 정상 노출 = **이상 없음**
+  - CLAUDE.md role 체계 § "**화면설정(`applyMenuSettings`) 무시 대상: `admin`만**" 정합 작동 확인
+- **결론:** 사고 아님. #47 본질과 무관한 의도된 화면설정 정합 동작. 본 트랙 ✅ 종료
 
 ## #51 (신설) — public.posts 테이블 게시글 0건 (시드 데이터 부재)
 
