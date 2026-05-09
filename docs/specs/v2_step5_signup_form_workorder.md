@@ -489,7 +489,37 @@ SELECT routine_name, grantee, privilege_type FROM information_schema.routine_pri
 WHERE routine_name IN ('complete_signup', 'admin_approve_user');
 ```
 
-## 4-C. Step 5-C: 라이브 코드 신설 (index.html 폼 분기 + JS) (~1.5시간)
+## 4-C. Step 5-C: 라이브 코드 신설 (index.html 폼 분기 + JS + trigger 정정) ✅ **종료 (2026-05-09 오후)**
+
+**산출물:**
+- `index.html` 본 빌드 (2090 → 2524줄, +434줄)
+  - 사이트 분기 카드 2개 (보험사 임직원 / GA 설계사·매니저)
+  - 보험사 폼 (31사 optgroup 손/생 select + 도메인 화이트리스트 + 직급)
+  - GA 폼 (회사·지점·팀 시드 하이브리드 select + free text fallback)
+  - JS 신설 함수 7건 (`selectSite` / `onInsurerChange` / `checkInsurerDomain` / `onGaCompanyChange` / `onGaBranchChange` / `onGaTeamChange` / `mapToRoleKey`)
+  - JS 정정 함수 3건 (`onRoleChange` / `validate` / `doSubmit`)
+  - 4중 방어 #1 + #3 + 9역할 매핑 + slug→UUID 매핑 (anon SELECT)
+- `handle_new_user` trigger 4컬럼 추가 정정 (D5 재결재 (a))
+  - DECLARE에 `v_status` 추가 + valid 체크
+  - INSERT 컬럼 10 → 14개 (`+insurer_id` / `+branch_id` / `+team_id` / `+status`)
+  - 9역할 IN 절 + 폴백 'ga_member' + plan='free' + ON CONFLICT 보존
+  - 캡처: `docs/architecture/db_step5_handle_new_user_capture.md` (Chrome RUN 1+2+3 PASS)
+
+**D5 재결재 흐름 (b → a):**
+- 원래 결재 (b) "trigger 무변경 + RPC `complete_signup` 호출"
+- 본 진입 직전 발견: Auth 이메일 인증 ON 상태에서 signup 직후 session 부재 → RPC 차단
+- (a) 재결재: trigger 정정 (4컬럼 추가) + RPC 호출 폐기
+- `complete_signup` RPC = Phase 1.5+ 정보 변경 용도로 보존 (DROP 안 함)
+- `admin_approve_user` RPC = Step 10~15 admin 융합 트랙 그대로 보존
+
+**Code 검수:**
+- `var(--*)` 토큰 사용 492회 (룰 정합)
+- `tokens.css` / `app.html` / `app.js` / `login.html` 무변경 (룰 정합)
+- 직각 모서리 0건 / em·token 우선
+
+---
+
+## 4-C. Step 5-C 원본 SQL/JS 설계 (참조용 보존)
 
 **index.html 변경:**
 - 사이트 분기 첫 화면 카드 2개 마크업 (D1 결정 정합) — 라인 1632 직전 또는 직후 삽입

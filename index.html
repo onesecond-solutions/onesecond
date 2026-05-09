@@ -1304,6 +1304,78 @@ body{
   .ti-questions { margin-bottom: 24px; }
   .ti-promise { margin-bottom: 28px; }
 }
+
+/* ════════════════════════════════════════════════
+   Step 5-C 가입 폼 사이트 분기 (2026-05-09)
+   - 보험사 임직원 / GA 설계사·매니저
+   - 4중 방어 #1 도메인 화이트리스트 + #3 status='pending' 분기
+   - tokens.css 정합 (라이트 75% / 그레이 20% / 블랙 4% / 브라운 1%)
+════════════════════════════════════════════════ */
+.site-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+@media (max-width: 560px) { .site-picker { grid-template-columns: 1fr; } }
+
+.site-card {
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-align: center;
+}
+.site-card:hover {
+  border-color: var(--color-brand);
+  background: var(--brand-50);
+  transform: translateY(-2px);
+}
+.site-card.is-active {
+  border-color: var(--color-brand);
+  background: var(--brand-50);
+  box-shadow: 0 4px 12px rgba(160, 82, 45, 0.15);
+}
+.site-card-icon { font-size: 2em; margin-bottom: var(--space-2); line-height: 1; }
+.site-card-title { font-size: var(--text-sm); font-weight: 800; color: var(--color-text-primary); margin-bottom: var(--space-1); }
+.site-card-desc { font-size: var(--text-xs); color: var(--color-text-secondary); line-height: 1.5; }
+
+/* 분기 후 폼 노출 토글 */
+.signup-form-body { display: none; }
+.signup-form-body.is-open { display: block; }
+
+/* 보험사 분기 ↔ GA 분기 토글 */
+.insurer-fields, .ga-fields { display: none; }
+.insurer-fields.is-open, .ga-fields.is-open { display: block; }
+
+/* 도메인 안내 박스 */
+.domain-guide {
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.domain-guide strong { color: var(--brand-700); }
+
+/* pending 안내 박스 (success 화면 보험사 분기) */
+.pending-notice {
+  background: var(--color-warning-bg);
+  border-left: 3px solid var(--color-warning);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  text-align: left;
+}
 </style>
 
 </head>
@@ -1676,6 +1748,23 @@ body{
 
       <form id="reg-form" novalidate>
 
+        <!-- Step 5-C: 사이트 분기 카드 (보험사 임직원 / GA 설계사·매니저) -->
+        <div class="site-picker" id="site-picker" role="radiogroup" aria-label="가입자 유형 선택">
+          <div class="site-card" id="site-card-ga" onclick="selectSite('ga')" role="radio" aria-checked="false" tabindex="0">
+            <div class="site-card-icon">👥</div>
+            <div class="site-card-title">GA 설계사 · 매니저</div>
+            <div class="site-card-desc">법인보험대리점 / 지점·팀 소속</div>
+          </div>
+          <div class="site-card" id="site-card-insurer" onclick="selectSite('insurer')" role="radio" aria-checked="false" tabindex="0">
+            <div class="site-card-icon">🏢</div>
+            <div class="site-card-title">보험사 임직원</div>
+            <div class="site-card-desc">31개 손·생명 보험사 직원</div>
+          </div>
+        </div>
+
+        <!-- 분기 선택 후 펼쳐지는 폼 영역 -->
+        <div class="signup-form-body" id="signup-form-body">
+
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="f-name">이름 <span class="req">*</span></label>
@@ -1683,14 +1772,15 @@ body{
             <div class="form-err" id="e-name">이름을 입력해 주세요.</div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="f-role">역할 <span class="req">*</span></label>
+            <label class="form-label" for="f-role">직급 <span class="req">*</span></label>
             <select class="form-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
               <option value="">선택해 주세요</option>
-              <option value="member">팀장 / 설계사</option>
-              <option value="manager">매니저 / 실장</option>
               <option value="branch_manager">지점장 / 센터장</option>
+              <option value="manager">매니저 / 실장</option>
+              <option value="member">설계사 / 팀장</option>
+              <option value="staff">스텝 / 총무</option>
             </select>
-            <div class="form-err" id="e-role">역할을 선택해 주세요.</div>
+            <div class="form-err" id="e-role">직급을 선택해 주세요.</div>
           </div>
         </div>
 
@@ -1706,7 +1796,7 @@ body{
           </div>
           <div class="form-group">
             <label class="form-label" for="f-email">이메일 <span class="req">*</span></label>
-            <input class="form-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email')">
+            <input class="form-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); checkInsurerDomain();">
             <div class="form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
           </div>
         </div>
@@ -1732,28 +1822,111 @@ body{
           </div>
         </div>
 
-        <div class="form-divider">소속 정보 (선택)</div>
+        <div class="form-divider">소속 정보</div>
 
-        <div class="signup-info-box">
-          <p>💡 회사명 · 지점/센터명 · 팀명을 모두 입력하시면 <strong>팀 게시판</strong>과 <strong>지점 게시판</strong>이 활성화됩니다.</p>
-          <p class="signup-info-sub">(선택 입력이지만, 미입력 시 해당 게시판은 사용 불가)</p>
+        <!-- 보험사 분기 폼 -->
+        <div class="insurer-fields" id="insurer-fields">
+          <div class="form-row single">
+            <div class="form-group">
+              <label class="form-label" for="f-insurer">보험사 <span class="req">*</span></label>
+              <select class="form-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
+                <option value="">선택해 주세요</option>
+                <optgroup label="손해보험">
+                  <option value="aig-fire">AIG손해보험</option>
+                  <option value="db-fire">DB손해보험</option>
+                  <option value="kb-fire">KB손해보험</option>
+                  <option value="nh-fire">NH농협손해보험</option>
+                  <option value="lina-fire">라이나손해보험</option>
+                  <option value="lotte-fire">롯데손해보험</option>
+                  <option value="meritz">메리츠화재</option>
+                  <option value="samsung-fire">삼성화재</option>
+                  <option value="hanwha-fire">한화손해보험</option>
+                  <option value="heungkuk-fire">흥국화재</option>
+                </optgroup>
+                <optgroup label="생명보험">
+                  <option value="abl">ABL생명</option>
+                  <option value="aia">AIA생명</option>
+                  <option value="bnp-cardif">BNP파리바 카디프생명</option>
+                  <option value="db-life">DB생명</option>
+                  <option value="ibk">IBK연금보험</option>
+                  <option value="im-life">iM라이프</option>
+                  <option value="kb-life">KB라이프</option>
+                  <option value="kdb">KDB생명</option>
+                  <option value="nh-life">NH농협생명</option>
+                  <option value="kyobo">교보생명</option>
+                  <option value="dongyang">동양생명</option>
+                  <option value="lina-life">라이나생명</option>
+                  <option value="metlife">메트라이프</option>
+                  <option value="miraeasset">미래에셋생명</option>
+                  <option value="samsung-life">삼성생명</option>
+                  <option value="shinhan">신한라이프</option>
+                  <option value="chubb">처브라이프</option>
+                  <option value="fubon-hyundai">푸본현대생명</option>
+                  <option value="hanwha-life">한화생명</option>
+                  <option value="heungkuk-elife">흥국생명 (e-life)</option>
+                  <option value="heungkuk-tlife">흥국생명 (T-Life)</option>
+                </optgroup>
+              </select>
+              <div class="form-err" id="e-insurer">보험사를 선택해 주세요.</div>
+            </div>
+          </div>
+          <div class="domain-guide" id="domain-guide" style="display:none;">
+            💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다. 이메일 입력 시 일치 여부를 확인합니다.
+          </div>
+          <div class="signup-info-box">
+            <p>🛡️ 보험사 임직원 가입은 <strong>4중 방어</strong>를 거칩니다.</p>
+            <p class="signup-info-sub">이메일 도메인 검증 → 이메일 인증 → 가입 후 <strong>매니저 승인 대기</strong> → 승인 후 사용 시작.</p>
+          </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="f-company">회사명</label>
-            <input class="form-input" type="text" id="f-company" placeholder="소속 회사명" maxlength="50">
+        <!-- GA 분기 폼 -->
+        <div class="ga-fields" id="ga-fields">
+          <div class="signup-info-box">
+            <p>💡 소속 정보를 정확히 입력하시면 <strong>지점 게시판</strong>과 <strong>팀 게시판</strong>이 활성화됩니다.</p>
+            <p class="signup-info-sub">목록에 없으면 "기타 입력"으로 입력해 주세요. 매니저 승인 시 매핑됩니다.</p>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="f-branch">지점 / 센터명</label>
-            <input class="form-input" type="text" id="f-branch" placeholder="더원지점" maxlength="50">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="f-company-select">회사명</label>
+              <select class="form-select" id="f-company-select" onchange="onGaCompanyChange()">
+                <option value="AZ금융">AZ금융</option>
+                <option value="__other__">기타 입력</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-company-text">회사명 (직접 입력)</label>
+              <input class="form-input" type="text" id="f-company-text" placeholder="소속 회사명" maxlength="50" disabled style="opacity:0.5;">
+            </div>
           </div>
-        </div>
-
-        <div class="form-row single">
-          <div class="form-group">
-            <label class="form-label" for="f-team">팀명</label>
-            <input class="form-input" type="text" id="f-team" placeholder="4팀" maxlength="30">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="f-branch-select">지점 / 센터</label>
+              <select class="form-select" id="f-branch-select" onchange="onGaBranchChange()">
+                <option value="396edf6a-15db-4b69-a6b9-dae74b08cd33" data-name="더원지점">더원지점</option>
+                <option value="__other__" data-name="">기타 입력</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-branch-text">지점명 (직접 입력)</label>
+              <input class="form-input" type="text" id="f-branch-text" placeholder="지점/센터명" maxlength="50" disabled style="opacity:0.5;">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="f-team-select">팀</label>
+              <select class="form-select" id="f-team-select" onchange="onGaTeamChange()">
+                <option value="">선택 안 함</option>
+                <option value="95088922-c76e-45b5-bb68-8ce1e914a6c4" data-name="1팀">1팀</option>
+                <option value="741bce8a-e264-4f69-bc23-a7fff3478bec" data-name="2팀">2팀</option>
+                <option value="482c8c2d-b6f6-4188-9657-80f30d22431f" data-name="3팀">3팀</option>
+                <option value="5fccd362-9ee3-4165-8960-7cb0b7ec72fa" data-name="4팀">4팀</option>
+                <option value="__other__" data-name="">기타 입력</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-team-text">팀명 (직접 입력)</label>
+              <input class="form-input" type="text" id="f-team-text" placeholder="팀명" maxlength="30" disabled style="opacity:0.5;">
+            </div>
           </div>
         </div>
 
@@ -1780,6 +1953,8 @@ body{
           이미 계정이 있으신가요? <a href="login.html" style="color:var(--brand-500);font-weight:700;">로그인</a>
         </div>
 
+        </div><!-- /.signup-form-body -->
+
       </form>
 
       <div class="signup-success" id="signup-success" style="display:none;">
@@ -1795,6 +1970,12 @@ body{
           메일함을 확인해 인증을 완료하시면<br>
           바로 시작할 수 있습니다 😊<br><br>
           <span style="font-size:var(--text-xs);color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요</span>
+        </div>
+        <!-- Step 5-C: 보험사 임직원 가입 시 매니저 승인 대기 안내 -->
+        <div class="pending-notice" id="pending-notice" style="display:none;">
+          🛡️ <strong>매니저 승인 대기 중</strong><br>
+          이메일 인증 완료 후 보험사 매니저(또는 admin)의 승인이 필요합니다.<br>
+          승인 완료 시 별도 안내드립니다. (보통 1영업일 이내)
         </div>
       </div>
     </div>
@@ -1905,22 +2086,160 @@ body{
   onScroll();
 })();
 
-// 역할 선택 힌트 (시안 단일 패턴)
+// ════════════════════════════════════════════════════
+// Step 5-C 가입 폼 분기 + 4중 방어 (2026-05-09)
+// ════════════════════════════════════════════════════
+
+// 보험사 31사 도메인 캐시 (Step 5-A 캡처 raw 정합 — 28사 SET / 3사 NULL)
+var INSURER_DOMAINS = {
+  'abl':           '@abllife.co.kr',
+  'aia':           '@aia.com',
+  'aig-fire':      '@aig.com',
+  'bnp-cardif':    '@cardif.co.kr',
+  'db-life':       null, // 미확인 (별 트랙 #43)
+  'db-fire':       '@dbins.co.kr',
+  'ibk':           '@ibki.co.kr',
+  'im-life':       null, // 미확인 (별 트랙 #43)
+  'kb-life':       null, // 미확인 (별 트랙 #43)
+  'kb-fire':       '@kbinsure.co.kr',
+  'kdb':           '@kdblife.co.kr',
+  'nh-life':       '@nonghyup.com',
+  'nh-fire':       '@nonghyup.com',
+  'kyobo':         '@kyobo.com',
+  'dongyang':      '@myangel.co.kr',
+  'lina-life':     '@cigna.com',
+  'lina-fire':     '@chubb.com',
+  'lotte-fire':    '@lotteins.co.kr',
+  'meritz':        '@meritz.co.kr',
+  'metlife':       '@metlife.com',
+  'miraeasset':    '@miraeasset.com',
+  'samsung-life':  '@samsunglife.com',
+  'samsung-fire':  '@samsung.com',
+  'shinhan':       '@shinhan.com',
+  'chubb':         '@chubb.com',
+  'fubon-hyundai': '@fubonhyundai.com',
+  'hanwha-life':   '@hanwha.com',
+  'hanwha-fire':   '@hanwha.com',
+  'heungkuk-elife':'@heungkuklife.co.kr',
+  'heungkuk-tlife':'@heungkuklife.co.kr',
+  'heungkuk-fire': '@heungkukfire.co.kr'
+};
+
+// 사이트 분기 상태
+window.gSignupSite = null; // 'insurer' | 'ga' | null
+
+// 사이트 선택 분기 처리
+function selectSite(site){
+  window.gSignupSite = site;
+
+  // 카드 활성 표시
+  var cardGa      = document.getElementById('site-card-ga');
+  var cardInsurer = document.getElementById('site-card-insurer');
+  if (cardGa)      cardGa.classList.toggle('is-active',      site === 'ga');
+  if (cardInsurer) cardInsurer.classList.toggle('is-active', site === 'insurer');
+  if (cardGa)      cardGa.setAttribute('aria-checked',      site === 'ga');
+  if (cardInsurer) cardInsurer.setAttribute('aria-checked', site === 'insurer');
+
+  // 폼 영역 펼침
+  var formBody = document.getElementById('signup-form-body');
+  var insurerFields = document.getElementById('insurer-fields');
+  var gaFields = document.getElementById('ga-fields');
+  if (formBody) formBody.classList.add('is-open');
+  if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
+  if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
+
+  onRoleChange();
+}
+
+// 보험사 select 변경 시 도메인 안내 박스 갱신
+function onInsurerChange(){
+  var sel = document.getElementById('f-insurer');
+  var slug = sel ? sel.value : '';
+  var guide = document.getElementById('domain-guide');
+  var nameEl = document.getElementById('domain-guide-name');
+  var domEl = document.getElementById('domain-guide-domain');
+  var domain = INSURER_DOMAINS[slug] || null;
+  if (slug && domain) {
+    var label = sel.options[sel.selectedIndex].textContent;
+    if (nameEl) nameEl.textContent = label;
+    if (domEl)  domEl.textContent  = domain;
+    if (guide)  guide.style.display = 'block';
+  } else if (slug && !domain) {
+    // 미확인 도메인 (db-life / im-life / kb-life)
+    var label2 = sel.options[sel.selectedIndex].textContent;
+    if (nameEl) nameEl.textContent = label2;
+    if (domEl)  domEl.textContent  = '(미확인 — admin 확인 후 활성화 예정)';
+    if (guide)  guide.style.display = 'block';
+  } else {
+    if (guide) guide.style.display = 'none';
+  }
+  checkInsurerDomain();
+}
+
+// 이메일 입력 시 실시간 도메인 검증 (보험사 분기 한정)
+function checkInsurerDomain(){
+  if (window.gSignupSite !== 'insurer') return;
+  var sel = document.getElementById('f-insurer');
+  var emailEl = document.getElementById('f-email');
+  if (!sel || !emailEl) return;
+  var slug = sel.value;
+  var email = (emailEl.value || '').trim().toLowerCase();
+  var domain = INSURER_DOMAINS[slug];
+  if (!slug || !domain || !email) return;
+  if (!email.endsWith(domain.toLowerCase())) {
+    emailEl.classList.add('err');
+    var er = document.getElementById('e-email');
+    if (er) {
+      er.textContent = '이메일이 ' + domain + ' 도메인이어야 합니다.';
+      er.classList.add('on');
+    }
+  }
+}
+
+// GA 분기 — "기타 입력" 토글
+function _toggleOtherInput(selectId, textId){
+  var sel = document.getElementById(selectId);
+  var txt = document.getElementById(textId);
+  if (!sel || !txt) return;
+  var isOther = sel.value === '__other__';
+  txt.disabled = !isOther;
+  txt.style.opacity = isOther ? '1' : '0.5';
+  if (!isOther) txt.value = '';
+}
+function onGaCompanyChange(){ _toggleOtherInput('f-company-select', 'f-company-text'); }
+function onGaBranchChange()  { _toggleOtherInput('f-branch-select',  'f-branch-text');  }
+function onGaTeamChange()    { _toggleOtherInput('f-team-select',    'f-team-text');    }
+
+// 직급 한국어 → 9역할 키 매핑
+function mapToRoleKey(site, gradeShort){
+  if (!site || !gradeShort) return 'ga_member'; // 폴백
+  return site + '_' + gradeShort;
+}
+
+// 직급 선택 시 안내 (사이트 분기와 결합)
 function onRoleChange(){
-  var sel = document.getElementById('f-role');
+  var sel  = document.getElementById('f-role');
   var hint = document.getElementById('roleHint');
   var text = document.getElementById('roleHintText');
   if (!sel || !hint || !text) return;
-  var msgs = {
-    manager: '매니저·실장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.',
-    branch_manager: '지점장·센터장은 <strong>무료 플랜에서도 글쓰기</strong>까지 이용 가능합니다.'
-  };
-  if (msgs[sel.value]) {
-    hint.style.display = 'block';
-    text.innerHTML = msgs[sel.value];
-  } else {
+  var grade = sel.value;
+  var site = window.gSignupSite;
+  if (!grade || !site) {
     hint.style.display = 'none';
+    return;
   }
+  var sitePrefix = site === 'insurer' ? '보험사' : 'GA';
+  var labels = {
+    branch_manager: '지점장/센터장',
+    manager:        '매니저/실장',
+    member:         '설계사/팀장',
+    staff:          '스텝/총무'
+  };
+  var freeBenefit = (grade === 'branch_manager' || grade === 'manager')
+    ? ' (<strong>무료 플랜에서도 글쓰기 가능</strong>)'
+    : '';
+  text.innerHTML = sitePrefix + ' ' + labels[grade] + ' 권한으로 가입됩니다.' + freeBenefit;
+  hint.style.display = 'block';
 }
 
 // ─── 가입 폼 보조 함수 ─────────────────────────────────
@@ -1948,6 +2267,14 @@ function toggleRegPw(inputId, btnId){
 
 function validate(){
   var ok = true;
+
+  // 사이트 분기 미선택 차단
+  if (!window.gSignupSite) {
+    alert('상단 카드에서 보험사 임직원 또는 GA 중 하나를 선택해 주세요.');
+    return false;
+  }
+
+  // 공통 필드 검증
   [{id:'f-name',eid:'e-name'},{id:'f-phone',eid:'e-phone'}].forEach(function(f){
     var el = document.getElementById(f.id), er = document.getElementById(f.eid);
     if (!el.value.trim()){ el.classList.add('err'); er.classList.add('on'); ok = false; }
@@ -1958,8 +2285,41 @@ function validate(){
   else            { role.classList.remove('err'); document.getElementById('e-role').classList.remove('on'); }
   var email = document.getElementById('f-email');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)){
-    email.classList.add('err'); document.getElementById('e-email').classList.add('on'); ok = false;
+    email.classList.add('err');
+    var er2 = document.getElementById('e-email');
+    er2.textContent = '올바른 이메일을 입력해 주세요.';
+    er2.classList.add('on'); ok = false;
   } else { email.classList.remove('err'); document.getElementById('e-email').classList.remove('on'); }
+
+  // 4중 방어 #1: 보험사 분기 시 도메인 화이트리스트 검증 (클라 1차)
+  if (window.gSignupSite === 'insurer') {
+    var ins = document.getElementById('f-insurer');
+    if (!ins.value){
+      ins.classList.add('err');
+      document.getElementById('e-insurer').classList.add('on');
+      ok = false;
+    } else {
+      ins.classList.remove('err');
+      document.getElementById('e-insurer').classList.remove('on');
+      // 도메인 검증
+      var expectedDomain = INSURER_DOMAINS[ins.value];
+      if (expectedDomain) {
+        var emailVal = (email.value || '').trim().toLowerCase();
+        if (!emailVal.endsWith(expectedDomain.toLowerCase())) {
+          email.classList.add('err');
+          var er3 = document.getElementById('e-email');
+          er3.textContent = '이메일이 ' + expectedDomain + ' 도메인이어야 합니다.';
+          er3.classList.add('on');
+          ok = false;
+        }
+      } else {
+        // 미확인 도메인 (db-life / im-life / kb-life) 일시 차단
+        alert('선택하신 보험사는 도메인 확인이 진행 중입니다. admin 확인 후 가입이 활성화됩니다. 잠시만 기다려 주세요.');
+        ok = false;
+      }
+    }
+  }
+
   var pw  = document.getElementById('f-pw');
   var pw2 = document.getElementById('f-pw2');
   if (!pw.value || pw.value.length < 8 || !/[a-zA-Z]/.test(pw.value) || !/[0-9]/.test(pw.value)){
@@ -1974,9 +2334,10 @@ function validate(){
   return ok;
 }
 
-// ─── Supabase 가입 처리 (라이브 index.html doSubmit과 동일 흐름) ────
-// [참고] Phase 4-2-1 트리거(handle_new_user)가 raw_user_meta_data를 추출해
-//        public.users INSERT를 단독 처리. 클라이언트는 PATCH 안 함.
+// ─── Supabase 가입 처리 ────────────────────────────
+// [참고] handle_new_user trigger (Step 5-C 정정 후)가 raw_user_meta_data에서
+//        insurer_id / branch_id / team_id / status 4컬럼 추가 활용 → public.users INSERT.
+//        클라이언트 RPC 호출 불필요 (Auth 이메일 인증 ON 정합).
 var SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
 
@@ -1989,13 +2350,74 @@ async function doSubmit(){
   if (txt)  txt.style.opacity = '0';
   if (spin) spin.style.display = 'block';
 
-  var email = document.getElementById('f-email').value.trim();
-  var pw    = document.getElementById('f-pw').value;
-
   function _resetBtn(){
     btn.disabled = false;
     if (txt)  txt.style.opacity = '';
     if (spin) spin.style.display = 'none';
+  }
+
+  var email = document.getElementById('f-email').value.trim();
+  var pw    = document.getElementById('f-pw').value;
+  var site  = window.gSignupSite;
+  var gradeShort = document.getElementById('f-role').value;
+  var roleKey = mapToRoleKey(site, gradeShort);
+
+  // 분기별 메타 데이터 수집
+  var insurerId = '';
+  var branchId  = '';
+  var teamId    = '';
+  var statusValue = 'active';
+  var companyName = '';
+  var branchName  = '';
+  var teamName    = '';
+
+  if (site === 'insurer') {
+    var insSel = document.getElementById('f-insurer');
+    var insSlug = insSel.value;
+    companyName = insSel.options[insSel.selectedIndex].textContent;
+    statusValue = 'pending'; // D3 결재 (a) — 보험사 임직원 매니저 승인 대기
+    // slug → UUID 매핑 (anon SELECT, RLS insurers_select_anon_domain_check 통과)
+    try {
+      var insRes = await fetch(SUPABASE_URL + '/rest/v1/insurers?slug=eq.' + encodeURIComponent(insSlug) + '&select=id', {
+        headers: { 'apikey': SUPABASE_KEY }
+      });
+      var insData = await insRes.json();
+      if (insData && insData.length > 0 && insData[0].id) {
+        insurerId = insData[0].id;
+      } else {
+        alert('보험사 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.');
+        _resetBtn();
+        return;
+      }
+    } catch (e) {
+      console.error('insurer slug → id 매핑 실패', e);
+      alert('네트워크 오류가 발생했습니다. 다시 시도해 주세요.');
+      _resetBtn();
+      return;
+    }
+  } else {
+    // GA 분기 — 시드 매핑 또는 free text
+    var bSel = document.getElementById('f-branch-select');
+    var tSel = document.getElementById('f-team-select');
+    if (bSel.value && bSel.value !== '__other__') {
+      branchId = bSel.value;
+      branchName = bSel.options[bSel.selectedIndex].getAttribute('data-name') || '';
+    } else {
+      branchName = (document.getElementById('f-branch-text').value || '').trim();
+    }
+    if (tSel.value && tSel.value !== '__other__') {
+      teamId = tSel.value;
+      teamName = tSel.options[tSel.selectedIndex].getAttribute('data-name') || '';
+    } else {
+      teamName = (document.getElementById('f-team-text').value || '').trim();
+    }
+    var compSel = document.getElementById('f-company-select');
+    if (compSel.value && compSel.value !== '__other__') {
+      companyName = compSel.value;
+    } else {
+      companyName = (document.getElementById('f-company-text').value || '').trim();
+    }
+    statusValue = 'active';
   }
 
   try {
@@ -2008,10 +2430,15 @@ async function doSubmit(){
         data: {
           name:    document.getElementById('f-name').value.trim(),
           phone:   document.getElementById('f-phone').value.trim(),
-          company: document.getElementById('f-company').value.trim(),
-          branch:  document.getElementById('f-branch').value.trim(),
-          role:    document.getElementById('f-role').value,
-          team:    document.getElementById('f-team').value.trim()
+          company: companyName,
+          branch:  branchName,
+          role:    roleKey,
+          team:    teamName,
+          // Step 5-C 신규 4 키 (handle_new_user trigger 정정 후 활용)
+          insurer_id:  insurerId,
+          branch_id:   branchId,
+          team_id:     teamId,
+          status:      statusValue
         }
       })
     });
@@ -2044,7 +2471,9 @@ async function doSubmit(){
       return;
     }
 
+    // success 화면 분기 (보험사 = pending 안내 / GA = 즉시 active)
     var descEl = document.getElementById('signup-success-desc');
+    var pendingNoticeEl = document.getElementById('pending-notice');
     var emailConfirmed = !!(authData.user && authData.user.email_confirmed_at);
     if (descEl){
       var html;
@@ -2054,6 +2483,10 @@ async function doSubmit(){
         html = '<strong>' + email + '</strong> 으로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br>바로 시작할 수 있습니다 😊<br><br><span style="font-size:var(--text-xs);color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요</span>';
       }
       descEl.innerHTML = html;
+    }
+    // 보험사 분기 시 매니저 승인 대기 안내 박스 노출
+    if (pendingNoticeEl) {
+      pendingNoticeEl.style.display = (site === 'insurer') ? 'block' : 'none';
     }
     document.getElementById('reg-form').style.display = 'none';
     document.getElementById('signup-success').style.display = 'block';
