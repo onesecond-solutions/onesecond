@@ -1,13 +1,39 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
 > **🎯 원세컨드 핵심 정의:** **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X. 진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md`
-> **마지막 갱신:** 2026-05-09 점심 — **Step 2-bis B-6.5 + B-7 본 진입 (Step 2-bis 본질 종료 ✅)** (라이브 commit 추가 트랜잭션 2건). get_my_role() 함수 신설 (총 17 SEC DEF) + posts 정책 sweep (DROP 7 + CREATE 14, UPDATE/DELETE 보존 3) + 신설 3 테이블 RLS 활성화 + 정책 8건. 자기참조 잔재 0건 회귀. Step C 사실상 종료 (RUN #5에 메타+자기참조+함수 본문 검증 포함). Step D는 라이브 9역할 중 6역할 가입자 0건이라 5/15 4팀 오픈 후 Step 16 통합 권장. Phase 1 진행률 **8/18 (44.4%)**. / 2026-05-09 새벽 — **Step 2-bis Step A + Step B-1 + Step B-2~B-6 본 진입** (라이브 commit 3건, 트랜잭션 3건). branches/teams/IEB 신설 + 시드 5 row + users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT 정정) + CHECK 3종 + app_settings +3 row + SECURITY DEFINER 함수 4종 (총 16). 사고 학습 2건 영구 명문화 (Supabase SQL Editor RUN 단위 세션 분리 + ALTER REFERENCES 참조 PK 타입 사전 확인). 별 트랙 #33~#36 신설. strategy_overview 갱신 별도 commit `b7d88a3` (1163줄, § 8 추가 보강 8건 + § 5-12·5-14 본질 재정의). / 2026-05-08 저녁 — **세션 종료 인계 노트 자동 커밋** (`docs/sessions/2026-05-08_2020.md`, `/session-end` 자동 생성) / 2026-05-08 오전 — **Step 0-bis 종료 (spec v2 재작성, 42건 결정 통합 + v1 폐기 헤더)** + **Step 0-tris 종료 (README.md 9역할 정합 + 5축 구조 + 4팀 표기 정리)**. 진실 원천 = `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄). strategy_overview § ⚠️ 9건 처리 (본 spec § 0-5에서 4 해소 + 00_MASTER 폐기로 4 자동 해소 + Step 0-tris 분리 1). Phase 1 진행률 **6/18 (33.3%)**. commit `bdc5c19` push 완료. / 2026-05-08 새벽 — **Phase 1 Step B capture § 7 신설** (Step B-extra + B' + C-meta 통합, 31사 매트릭스 명문화) + **Step 3 (Quick 메뉴 §원전산 전환) 종료** + **Step 4 (Supabase Auth 이메일 인증 ON) 사실상 종료** (Confirm email 이미 ON 상태로 발견 = 검증 단계, 라이브 변경 0건. Chrome 시나리오 4건 PASS, 시나리오 3 팀장님 직접 1건 보류). 부수 발견: (1) `login.html:367` 차단 메시지 한국어 커스텀 = 2026-04-09 초기 통째 업로드 (`4ed5282d`, Phase 1 무관). (2) 인증 메일 템플릿 영문 기본 → 결정 대기 #12 신설. (3) Custom SMTP OFF 라이브 검증 → Supabase 공식 경고 raw 확보 ("This service has rate limits and is not meant to be used for production apps") = #30 별 트랙 트리거 확실. Phase 1 진행률 **4/16** (잔여 12단계 약 7.7세션). / 2026-05-07 저녁 — Phase 1 / Step 2 (DB 마이그레이션) 종료 + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료.
+> **🚨 마지막 갱신:** 2026-05-09 저녁 — **Phase 1.5 즉시 흡수 결정 (옵션 Y' 채택)** ⭐ Step 5 (index.html 가입 폼) 마무리 보류 + home_v2.html이 가입/로그인/랜딩 흡수. Step 5-C 본 빌드 라이브 테스트에서 branches RLS FK 위반 발견 + 팀장님 지적 ("인덱스 안 쓸 건데 시간지체할 필요?") + Code 큰 그림 재정독 → 옵션 Y' Code 추천 + 팀장님 채택. 5/9 오후 결정("Phase 1 동안 index 그대로") 재고. **5/15 4팀 오픈까지 ~3.5세션 분량 (home_v2 가입/로그인 통합) 진입.** Phase 1 Step 6~16 잔여 ~7세션은 5/15 후. branches+teams RLS 비활성화 (마스터 데이터 정합, Phase 1.5에서도 필수). spec v2 § 9 + 메모리 갱신 commit 예정. /
+> **이전 갱신:** 2026-05-09 점심 — **Step 2-bis B-6.5 + B-7 본 진입 (Step 2-bis 본질 종료 ✅)** (라이브 commit 추가 트랜잭션 2건). get_my_role() 함수 신설 (총 17 SEC DEF) + posts 정책 sweep (DROP 7 + CREATE 14, UPDATE/DELETE 보존 3) + 신설 3 테이블 RLS 활성화 + 정책 8건. 자기참조 잔재 0건 회귀. Step C 사실상 종료 (RUN #5에 메타+자기참조+함수 본문 검증 포함). Step D는 라이브 9역할 중 6역할 가입자 0건이라 5/15 4팀 오픈 후 Step 16 통합 권장. Phase 1 진행률 **8/18 (44.4%)**. / 2026-05-09 새벽 — **Step 2-bis Step A + Step B-1 + Step B-2~B-6 본 진입** (라이브 commit 3건, 트랜잭션 3건). branches/teams/IEB 신설 + 시드 5 row + users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT 정정) + CHECK 3종 + app_settings +3 row + SECURITY DEFINER 함수 4종 (총 16). 사고 학습 2건 영구 명문화 (Supabase SQL Editor RUN 단위 세션 분리 + ALTER REFERENCES 참조 PK 타입 사전 확인). 별 트랙 #33~#36 신설. strategy_overview 갱신 별도 commit `b7d88a3` (1163줄, § 8 추가 보강 8건 + § 5-12·5-14 본질 재정의). / 2026-05-08 저녁 — **세션 종료 인계 노트 자동 커밋** (`docs/sessions/2026-05-08_2020.md`, `/session-end` 자동 생성) / 2026-05-08 오전 — **Step 0-bis 종료 (spec v2 재작성, 42건 결정 통합 + v1 폐기 헤더)** + **Step 0-tris 종료 (README.md 9역할 정합 + 5축 구조 + 4팀 표기 정리)**. 진실 원천 = `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄). strategy_overview § ⚠️ 9건 처리 (본 spec § 0-5에서 4 해소 + 00_MASTER 폐기로 4 자동 해소 + Step 0-tris 분리 1). Phase 1 진행률 **6/18 (33.3%)**. commit `bdc5c19` push 완료. / 2026-05-08 새벽 — **Phase 1 Step B capture § 7 신설** (Step B-extra + B' + C-meta 통합, 31사 매트릭스 명문화) + **Step 3 (Quick 메뉴 §원전산 전환) 종료** + **Step 4 (Supabase Auth 이메일 인증 ON) 사실상 종료** (Confirm email 이미 ON 상태로 발견 = 검증 단계, 라이브 변경 0건. Chrome 시나리오 4건 PASS, 시나리오 3 팀장님 직접 1건 보류). 부수 발견: (1) `login.html:367` 차단 메시지 한국어 커스텀 = 2026-04-09 초기 통째 업로드 (`4ed5282d`, Phase 1 무관). (2) 인증 메일 템플릿 영문 기본 → 결정 대기 #12 신설. (3) Custom SMTP OFF 라이브 검증 → Supabase 공식 경고 raw 확보 ("This service has rate limits and is not meant to be used for production apps") = #30 별 트랙 트리거 확실. Phase 1 진행률 **4/16** (잔여 12단계 약 7.7세션). / 2026-05-07 저녁 — Phase 1 / Step 2 (DB 마이그레이션) 종료 + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료.
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
 ---
 
-## 🎯 현재 메인 트랙 — v2.0 원수사 입점 모델 Phase 1 (2026-05-07 전환)
+## 🎯 현재 메인 트랙 — Phase 1.5 즉시 흡수 (2026-05-09 저녁 전환, 옵션 Y')
+
+> **5/9 저녁 전략 재수정:** Phase 1 (보험사 입점 18단계) → **Phase 1.5 home_v2 통합 + Phase 1 잔여 5/15 후**로 재정의. Step 5 (index.html 가입 폼) 마무리 보류 + home_v2.html이 가입/로그인/랜딩 흡수. 본질 정합 + sunk cost 0.
+
+### 즉시 진행 단계 (5/9 저녁 ~ 5/15)
+| # | 단계 | 분량 | 상태 |
+|---|---|---|---|
+| 1 | branches+teams RLS 비활성화 (Chrome 트랜잭션) | 5분 | 진입 (Chrome 의뢰서 발행) |
+| 2 | 메모리 + _INDEX.md + spec v2 § 9 갱신 commit | 0.3세션 | **진행 중** ⭐ |
+| 3 | Phase 1.5 작업지시서 발행 (home_v2 가입/로그인 통합 + 결재 박스) | 0.5세션 | 다음 |
+| 4 | home_v2.html 가입/로그인 통합 본 빌드 (Step 5-C 코드 이전) | 2세션 | |
+| 5 | index.html → home_v2 redirect (또는 단순 랜딩 보존) | 0.2세션 | |
+| 6 | Chrome 라이브 회귀 (시나리오 9건) | 0.5세션 | 5/15 직전 |
+| | **Phase 1.5 본진** | **~3.5세션** | |
+
+### Phase 1 잔여 (5/15 4팀 오픈 후 진행)
+| # | 단계 | 분량 |
+|---|---|---|
+| 6 | 보험사 독립 페이지 (insurer.html) | 0.5세션 |
+| 7~9 | 게시판 7메뉴 + 6필드 검색 + 미러링 | 4.4세션 |
+| 10~16 | admin 융합 + 회귀 | 2.9세션 |
+| | **잔여 합계** | **~7.8세션** |
+
+---
+
+## 🎯 이전 메인 트랙 (보존, 5/9 저녁 재정의 대상) — v2.0 원수사 입점 모델 Phase 1 (2026-05-07 전환)
 
 **진실 원천 (OS 정의):** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄)
 **통합 spec (현행 v2):** `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄, commit `bdc5c19`, 42건 결정 통합) ⭐
@@ -249,7 +275,7 @@
 
 40. **(신규 5/9 오후) admin_v2 D-1 매니저 승인 UI (Phase 1 Step 10~15 융합)** — Step 5 결재 D4 = (a) admin_v2 D-1 융합. Step 5는 RPC `admin_approve_user` 신설까지만. UI = Phase 1 Step 10~15 admin 융합 트랙(2.4세션) 안에서 자연 흡수. UI 부착 시점에 별도 결재.
 
-41. **(신규 5/9 오후) ✨ Phase 1.5 사전 축적 트랙 = home_v2.html (5/9 신설)** ⭐ — strategy_overview § 8-4 (index 철학 변경) + § 6-12 (hover preview reveal UX) 정합. **home_v2.html = 단순 시안 검증이 아닌 Phase 1.5 메인 트랙의 사전 디자인 축적 트랙**. commit `ee70558` (Framer 감성 라이트 변환 신설) + `8f7557a` (호버 강화). Phase 1 동안은 index.html 인라인 #signup 그대로 운영. **Phase 1.5 진입 시점 (5/15 4팀 오픈 후) home이 index 흡수 + 비로그인 미리보기 + hover preview reveal**. spec v2 미흡수 상태 → Phase 1.5 spec 별도 작성 필요. 메모리 [phase_1_5_index_home_absorption.md] 박힘.
+41. **(갱신 5/9 저녁) 🚨 Phase 1.5 즉시 흡수 결정 (옵션 Y' 채택)** ⭐⭐ — 5/9 오후 결정 ("Phase 1 동안 index 그대로, Phase 1.5는 5/15 후") **재고**. Step 5-C 본 빌드 + 라이브 테스트 → branches RLS FK 위반 발견 → 팀장님 지적 "시간지체할 필요 있냐" → Code 큰 그림 재정독 + 옵션 X/Y'/Z 분석 → 옵션 Y' Code 추천 + 팀장님 채택. **변경 본질:** Step 5 (index.html 인라인 가입 폼) 마무리 보류 + Phase 1.5 home_v2 가입/로그인 통합 즉시 진입. index.html 폐기. 5/15 4팀 165명 오픈 = home_v2.html이 메인 진입로. **Sunk cost = 0:** Step 5-B (DB 신설) + Step 5-C (trigger 정정 + 4중 방어 로직 + 9역할 매핑)는 100% 재사용. index.html 가입 폼 코드(434줄)도 home_v2.html로 이전. **분량:** ~3.5세션 (5/15 일정 정합). Phase 1 Step 6~16 잔여 ~7세션은 5/15 후. **즉시 처방:** branches+teams RLS 비활성화 (FK 위반 해소, 마스터 데이터 정합). 메모리 [phase_1_5_index_home_absorption.md] 갱신 + spec v2 § 9 갱신 예정.
 
 42. **(신규 5/9 오후) 흥국 e-life / T-Life slug 통합 결재** — Step 5-A 도메인 캡처에서 발견. 두 slug = 동일 법인 (흥국생명보험㈜) + 동일 사이트 (heungkuklife.co.kr) + 동일 도메인 (`@heungkuklife.co.kr`). insurers row 통합 또는 그대로 유지 결정. **트리거 = Phase 2 진입 시점** (5/22 이후).
 
