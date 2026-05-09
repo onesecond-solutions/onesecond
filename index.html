@@ -2446,13 +2446,18 @@ async function doSubmit(){
 
     if (!authRes.ok){
       var msg = authData.msg || authData.error_description || authData.error || '';
+      // [Step 5-D 디버그 patch] 진단 정보 raw 출력
+      console.error('[signup error]', { status: authRes.status, statusText: authRes.statusText, authData: authData, payload_meta: { insurerId: insurerId, branchId: branchId, teamId: teamId, statusValue: statusValue, roleKey: roleKey } });
       if (msg.indexOf('already registered') !== -1 || msg.indexOf('already been registered') !== -1 || msg.indexOf('User already registered') !== -1){
         if (confirm('이미 가입된 이메일입니다.\n로그인 페이지로 이동할까요?')){
           window.location.href = 'login.html';
           return;
         }
+      } else if (msg.indexOf('rate') !== -1 || msg.indexOf('limit') !== -1 || authRes.status === 429){
+        alert('이메일 발송 한도 초과. 1시간 후 다시 시도해 주세요.\n(Supabase 기본 SMTP rate limit 3건/시간)\n\n[디버그] ' + authRes.status + ' ' + (msg || authRes.statusText));
       } else {
-        alert('가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
+        // [디버그 patch] alert에 raw 에러 노출 (Step 5-D 진단 한정, 종료 후 원복)
+        alert('가입 중 오류가 발생했습니다.\n\n[디버그 진단] ' + authRes.status + ' ' + (msg || authRes.statusText) + '\n\n자세한 정보는 F12 콘솔 확인.');
       }
       _resetBtn();
       return;
@@ -2492,8 +2497,8 @@ async function doSubmit(){
     document.getElementById('signup-success').style.display = 'block';
 
   } catch(e){
-    console.error('네트워크 오류:', e);
-    alert('네트워크 오류가 발생했습니다. 다시 시도해 주세요.');
+    console.error('[signup network error]', e);
+    alert('네트워크 오류가 발생했습니다.\n\n[디버그] ' + (e && e.message ? e.message : String(e)) + '\n\n자세한 정보는 F12 콘솔 확인.');
     _resetBtn();
   }
 }
