@@ -1993,6 +1993,7 @@ async function doSubmit() {
       })
     });
     var authData = await authRes.json();
+    console.log('[signup success raw]', { ok: authRes.ok, status: authRes.status, authData: authData });
 
     if (!authRes.ok) {
       var msg = authData.msg || authData.error_description || authData.error || '';
@@ -2032,7 +2033,7 @@ async function doSubmit() {
       if (emailConfirmed) {
         html = '<strong>' + escapeText(email) + '</strong><br>가입이 완료됐습니다!<br>위 로그인 영역에서 바로 시작해 보세요 😊';
       } else {
-        html = '<strong>' + escapeText(email) + '</strong> 으로<br>인증 링크를 발송했습니다.<br><br>메일함을 확인해 인증을 완료하시면<br>바로 시작할 수 있습니다 😊<br><br><span style="font-size:12px;color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요</span>';
+        html = '📧 <strong>' + escapeText(email) + '</strong><br>이 이메일로 인증 링크를 발송했습니다.<br><br><strong style="color:var(--color-brand);">메일함(스팸함 포함)을 확인하고<br>링크를 눌러 인증을 완료하세요.</strong><br><br><span style="font-size:12px;color:var(--color-text-tertiary);">인증 완료 후 위 로그인 영역에서 시작하실 수 있습니다.</span>';
       }
       descEl.innerHTML = html;
     }
@@ -2041,6 +2042,13 @@ async function doSubmit() {
     }
     document.getElementById('signupFormArea').hidden = true;
     document.getElementById('signupSuccessArea').hidden = false;
+
+    // 인증 메일 안내 강제 표시 (모달 안 description 묻힐 가능성 회피, 사고 #49 처방)
+    if (!emailConfirmed) {
+      setTimeout(function () {
+        alert('📧 인증 메일을 발송했습니다.\n\n' + email + '\n메일함(스팸함 포함)을 확인하시고\n링크를 눌러 인증을 완료해 주세요.\n\n인증 완료 후 위 로그인 영역에서 로그인할 수 있습니다.');
+      }, 200);
+    }
 
   } catch (e) {
     console.error('[signup network error]', e);
