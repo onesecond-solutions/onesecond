@@ -241,6 +241,22 @@
 
 36. **(신규 5/9 새벽) posts PK 타입 통일 (bigint → uuid 마이그레이션)** — Step 2-bis Step B-2~B-5 트랜잭션 1차 시도에서 발견. spec v2 § 7-2-3 SQL = `parent_post_id UUID REFERENCES posts(id)` → posts.id = **bigint** 타입과 불일치 → FK 위반 → 자동 ROLLBACK. **정정 적용:** parent_post_id BIGINT로 정정 후 재시도 PASS. **별 트랙 본질:** posts.id bigint → uuid 일괄 마이그레이션 (파급 영향 = 모든 FK + RLS + 라이브 코드 참조). #33 author_id text → uuid와 묶음 처리 권장. **트리거 = Phase 1 종료 후** (5/15 4팀 오픈 안정화 후). 영구 학습: ALTER ADD COLUMN ... REFERENCES 시 참조 PK 타입 사전 확인 필수 (spec v2 § 7-4 박음).
 
+37. **(신규 5/9 오후) 인증 메일 한국어 템플릿 (#31과 묶음, D8 결재 (b))** — Step 5 결재 D8 = (b) 별 트랙 분리. Step 5 본질은 폼+DB. 인증 메일 템플릿은 운영 별도 트랙. 5/12~14 슬롯 진행 권장. Supabase Dashboard 단독 작업, 라이브 코드 0건.
+
+38. **(신규 5/9 오후) 5/15 4팀 165명 직급 분포 사전 매핑 운영 데이터 (영업 트랙)** — Step 5 결재 D7 = (c) 하이브리드 정합 후속. Code 책임 외 영업 트랙. 165명 명단 확보 후 ga_manager / ga_member / ga_branch_manager / ga_staff 분포 사전 매핑 → 매니저 승격 부담 최소화. 5/12~14 슬롯 권장.
+
+39. **(신규 5/9 오후) 첫 보험사 매니저 admin 직접 생성 흐름 (Phase 1 종료 후)** — Step 5 결재 D9 = (b) Phase 1 후로 미룸. 닭-달걀 문제 (admin이 첫 insurer_branch_manager 1명 직접 생성) → 그 후 일반 회원가입 흐름 = 매니저 승인 의존. 영업 트랙 정합 (Phase 1 = GA 4팀 우선).
+
+40. **(신규 5/9 오후) admin_v2 D-1 매니저 승인 UI (Phase 1 Step 10~15 융합)** — Step 5 결재 D4 = (a) admin_v2 D-1 융합. Step 5는 RPC `admin_approve_user` 신설까지만. UI = Phase 1 Step 10~15 admin 융합 트랙(2.4세션) 안에서 자연 흡수. UI 부착 시점에 별도 결재.
+
+41. **(신규 5/9 오후) ✨ Phase 1.5 사전 축적 트랙 = home_v2.html (5/9 신설)** ⭐ — strategy_overview § 8-4 (index 철학 변경) + § 6-12 (hover preview reveal UX) 정합. **home_v2.html = 단순 시안 검증이 아닌 Phase 1.5 메인 트랙의 사전 디자인 축적 트랙**. commit `ee70558` (Framer 감성 라이트 변환 신설) + `8f7557a` (호버 강화). Phase 1 동안은 index.html 인라인 #signup 그대로 운영. **Phase 1.5 진입 시점 (5/15 4팀 오픈 후) home이 index 흡수 + 비로그인 미리보기 + hover preview reveal**. spec v2 미흡수 상태 → Phase 1.5 spec 별도 작성 필요. 메모리 [phase_1_5_index_home_absorption.md] 박힘.
+
+42. **(신규 5/9 오후) 흥국 e-life / T-Life slug 통합 결재** — Step 5-A 도메인 캡처에서 발견. 두 slug = 동일 법인 (흥국생명보험㈜) + 동일 사이트 (heungkuklife.co.kr) + 동일 도메인 (`@heungkuklife.co.kr`). insurers row 통합 또는 그대로 유지 결정. **트리거 = Phase 2 진입 시점** (5/22 이후).
+
+43. **(신규 5/9 오후) ⚠️ 추정 3사 도메인 사후 검증 (db-life / im-life / kb-life)** — Step 5-A Chrome 조사에서 ⚠️ 추정 표기. Step 5-B 트랜잭션에서 NULL 유지. 도메인 화이트리스트 검증 시 이 3사 보험사 임직원 가입 차단됨 (검증 통과 row 부재). **트리거 = 첫 입점 시점 admin 사후 보강** (영업 트랙). 후보: db-life=`@dblife.co.kr` / im-life=`@imlife.co.kr` / kb-life=`@kblife.co.kr` 또는 `@kbfg.com`.
+
+44. **(신규 5/9 오후) RPC 2종 PUBLIC EXECUTE 후속 정정** — Step 5-B RUN 3 5-4 사후 검증에서 발견. `complete_signup` / `admin_approve_user` 둘 다 PostgreSQL default `GRANT EXECUTE TO PUBLIC` 잔존 (의뢰서 SQL `REVOKE FROM anon`만, `REVOKE FROM PUBLIC` 누락). 본문 로직 (`auth.uid() IS NULL` + `is_admin()/role` 체크)으로 실질 차단됨 → **보안 위험 0**. best practice 정합으로 `REVOKE EXECUTE ... FROM PUBLIC` 추가 권장. Step 5-C 후 30분 SQL 1줄 추가 또는 별 트랙 단독 처리.
+
 ---
 
 ## 🗑️ 폐기 / 재정의 대상 문서 (2026-05-07 메인 트랙 전환 동반)
