@@ -1428,17 +1428,20 @@ function openAuthModal(focusSection) {
   document.body.style.overflow = 'hidden';
 
   // 진입 분기
+  // overlay가 스크롤 컨테이너 — sigSec.scrollIntoView는 window 스크롤이라 무동작 → overlay.scrollTop 직접 박음
+  // 이름 input은 진입 시점 hidden 상태(.signup-form-body 미펼침) → 진입 시 site-picker 첫 카드 포커스 → site 선택 후 selectSite()에서 이름 input 자동 포커스
   setTimeout(function () {
     if (focusSection === 'signup') {
       var sigSec = document.getElementById('authSignupSection');
-      if (sigSec) sigSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      var nameEl = document.getElementById('f-name');
-      if (nameEl) nameEl.focus();
+      if (sigSec) overlay.scrollTop = sigSec.offsetTop - 24;
+      var gaCard = document.getElementById('site-card-ga');
+      if (gaCard) gaCard.focus();
     } else {
+      overlay.scrollTop = 0;
       var emailEl = document.getElementById('f-email-login');
       if (emailEl) emailEl.focus();
     }
-  }, 80);
+  }, 100);
 }
 
 function closeAuthModal() {
@@ -1714,6 +1717,15 @@ function selectSite(site) {
   if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
 
   onRoleChange();
+
+  // site 선택 후 이름 input 자동 포커스 (UX — 진입 직후 site-picker 카드에 포커스 박혀있을 때만)
+  setTimeout(function () {
+    var nameEl = document.getElementById('f-name');
+    var active = document.activeElement;
+    if (nameEl && active && active.classList && active.classList.contains('site-card')) {
+      nameEl.focus();
+    }
+  }, 80);
 }
 
 function onInsurerChange() {
