@@ -855,25 +855,65 @@ Step D — 라이브 검증
 | ④ app_settings | (key, value, label, group_name, updated_at) 5컬럼 정합 SQL + 별 트랙 #34 (hub_public ↔ board_hub 통합) | B-5 SQL 정정 |
 | ⑤ parent_post_id | BIGINT 정정 + 별 트랙 #36 (PK 타입 통일) | B-3 SQL 정정 |
 
-### 7-4-4. Step B 진행 누적 (2026-05-09 새벽)
+### 7-4-4. Step B 진행 누적 (2026-05-09 새벽 + 점심)
 
 | Step | 트랜잭션 | 라이브 변경 | 상태 |
 |---|---|---|---|
-| B-1 | 1건 | branches/teams/IEB 신설 + 시드 5 row + 인덱스 4건 | ✅ commit |
-| B-2~B-5 | 1건 | users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT) + CHECK 3 + app_settings +3 row + 인덱스 6 | ✅ commit |
-| B-6 | 1건 | SECURITY DEFINER 함수 4종 (my_team_id / my_branch_id / my_assigned_branches / is_setting_enabled). 총 16 함수 | ✅ commit |
-| **B-7** | **대기** | **posts RLS sweep (DROP + CREATE) + 신설 3 테이블 RLS** | **다음 세션** |
-| **C** | **대기** | **사후 검증 (메타 조회 + 자기참조 EXISTS 0건)** | **다음 세션** |
-| **D** | **대기** | **라이브 검증 (9역할 진입 회귀)** | **다음 세션** |
+| B-1 | 1건 | branches/teams/IEB 신설 + 시드 5 row + 인덱스 4건 | ✅ commit (새벽) |
+| B-2~B-5 | 1건 | users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT) + CHECK 3 + app_settings +3 row + 인덱스 6 | ✅ commit (새벽) |
+| B-6 | 1건 | SECURITY DEFINER 함수 4종 (my_team_id / my_branch_id / my_assigned_branches / is_setting_enabled). 총 16 함수 | ✅ commit (새벽) |
+| **B-6.5** | **1건** | **get_my_role() 함수 신설 (§ 6-3 정책 1번 (b) 정정 의존). 총 17 함수** | **✅ commit (점심)** |
+| **B-7** | **1건** | **posts 정책 sweep (DROP 7 + CREATE 14, UPDATE/DELETE 보존 3) + 신설 3 테이블 RLS 활성화 + 정책 8건 (branches 2 + teams 3 + IEB 3)** | **✅ commit (점심)** |
+| **C** | **0건** | **사후 검증 (RUN #5에 메타+자기참조 0건+함수 본문 모두 포함)** | **✅ 사실상 종료** |
+| **D** | **0건** | **라이브 9역할 회귀 — admin + ga_member 2명만 가입, 6역할 0건** | **🟡 보류 (5/15 4팀 오픈 후 Step 16 통합 권장)** |
 
-### 7-4-5. 다음 세션 진입 인계 (Step B-7 본 의뢰서 작성부터)
+### 7-4-5. Step B-7 본 진입 결재 (2026-05-09 점심)
 
-1. spec v2 § 6-2 ~ § 6-4 raw 확인 (posts SELECT/INSERT/UPDATE/DELETE 정책)
-2. § 7-2-9 (branches/teams/IEB RLS) raw 확인
-3. § 6-5 RLS 사전 검증 표준 (D-pre.7~.8 정합)
-4. Pre-flight: posts 기존 정책 raw + 자기참조 EXISTS 잔재 검증
-5. 트랜잭션 분할 (DROP 묶음 → CREATE 묶음 → 자기참조 0건 검증)
-6. 라이브 9역할 회귀 검증 (Step D)
+| 결재 | 채택 | 사유 |
+|---|---|---|
+| § 6-3 정책 1번 자기참조 + ga_branch_manager 누락 정정 | (b) get_my_role() 범용 함수 신설 + 인라인 IN ('admin', 'ga_branch_manager', 'ga_manager') | 향후 다른 정책 재활용 가능 + D-pre.7~.8 SECURITY DEFINER 함수 표준 정합 |
+
+### 7-4-6. Step B-7 라이브 정책 sweep raw (2026-05-09 점심)
+
+**DROP 7건 (옛 spec 정책, Step 2 commit 시점):**
+- `posts_insert_admin` / `posts_insert_insurer` / `posts_insert_manager_notice` / `posts_insert_qna` (INSERT 4)
+- `posts_select_admin` / `posts_select_insurer` / `posts_select_qna_notice` (SELECT 3)
+
+**CREATE 14건 (spec v2 § 6-2 + § 6-3, 정책 1번 (b) 정정 적용):**
+- SELECT 7: posts_select_qna_seed_or_branch / navigation / insurer_employee / manager_notice / manager_lounge / hub / admin
+- INSERT 7: posts_insert_manager_notice (get_my_role() IN 패턴) / manager_lounge / navigation / insurer / admin_seed / hub / qna_system
+
+**보존 3건 (spec v2 § 6-4 정합):**
+- `author or admin delete posts` (DELETE)
+- `author or admin update posts` (UPDATE)
+- `posts_update_insurer_manager` (UPDATE, is_insurer_manager 가드)
+
+**branches/teams/IEB RLS 정책 8건:**
+- branches 2: branches_select_authenticated / branches_write_admin
+- teams 3: teams_select_my_branch / teams_select_admin / teams_write_admin
+- IEB 3: ieb_select_self / ieb_select_admin / ieb_write_admin
+
+### 7-4-7. Step C 사후 검증 결과 + Step D 인계
+
+**Step C (사실상 종료, RUN #5에 통합):**
+- 메타 조회: pg_policies (posts 17 정책 + branches/teams/IEB 8 정책) ✅
+- 자기참조 EXISTS 잔존 0건 sweep ✅
+- SECURITY DEFINER 함수 17개 본문 검증 ✅
+- 데이터 회귀 (users=3 / posts=4) ✅
+
+**Step D (보류 → 5/15 후 Step 16 통합):**
+- 본 시점 라이브 = admin 1 + ga_member 2 (3계정), 6역할(ga_branch_manager / ga_manager / ga_staff / insurer_* 4종) 가입자 0건
+- 9역할 진입 회귀 = 본질 검증 불가
+- **권장:** Phase 1 Step 16 (라이브 회귀 + 9역할 종합 검수) 시점에 4팀 가입자 + 보험사 임직원 가입자 활용 통합 진행
+
+### 7-4-8. Step 2-bis 종료 인계 (다음 메인 트랙 = Step 5)
+
+본 spec § 9 (작업 순서 18단계) 정합:
+- ✅ 종료 7건: Step 0 + 0-bis + 0-tris + 2 + **2-bis** + 3 + 4
+- 🟡 보류 1건: Step 1 D-9 회귀 회신 마무리 (별도 30분)
+- ⏸ 잔여 9건: Step 5 + 6 + 7 + 8 + 9 + 10~15 (admin 융합) + 16
+
+다음 메인 트랙 진입 = **Step 5 보험사 회원가입 폼** (1.0세션, 4중 방어 + 직급→9역할 매핑).
 
 진실 원천: 본 spec § 7-4 + 메모리 [`supabase_sql_editor_session_isolation.md`] + [`rls_self_reference_avoidance.md`].
 

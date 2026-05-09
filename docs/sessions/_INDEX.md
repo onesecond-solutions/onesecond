@@ -1,7 +1,7 @@
 # 세션 인덱스 — 현재 큰 그림 한눈에
 
 > **🎯 원세컨드 핵심 정의:** **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X. 진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md`
-> **마지막 갱신:** 2026-05-09 새벽 — **Step 2-bis Step A + Step B-1 + Step B-2~B-6 본 진입** (라이브 commit 3건, 트랜잭션 3건). branches/teams/IEB 신설 + 시드 5 row + users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT 정정) + CHECK 3종 + app_settings +3 row + SECURITY DEFINER 함수 4종 (총 16). Step B-7 (RLS sweep) + Step C + Step D 다음 세션 진입 대기. 사고 학습 2건 영구 명문화 (Supabase SQL Editor RUN 단위 세션 분리 + ALTER REFERENCES 참조 PK 타입 사전 확인). 별 트랙 #33~#36 신설. strategy_overview 갱신 별도 commit `b7d88a3` (1163줄, § 8 추가 보강 8건 + § 5-12·5-14 본질 재정의). / 2026-05-08 저녁 — **세션 종료 인계 노트 자동 커밋** (`docs/sessions/2026-05-08_2020.md`, `/session-end` 자동 생성) / 2026-05-08 오전 — **Step 0-bis 종료 (spec v2 재작성, 42건 결정 통합 + v1 폐기 헤더)** + **Step 0-tris 종료 (README.md 9역할 정합 + 5축 구조 + 4팀 표기 정리)**. 진실 원천 = `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄). strategy_overview § ⚠️ 9건 처리 (본 spec § 0-5에서 4 해소 + 00_MASTER 폐기로 4 자동 해소 + Step 0-tris 분리 1). Phase 1 진행률 **6/18 (33.3%)**. commit `bdc5c19` push 완료. / 2026-05-08 새벽 — **Phase 1 Step B capture § 7 신설** (Step B-extra + B' + C-meta 통합, 31사 매트릭스 명문화) + **Step 3 (Quick 메뉴 §원전산 전환) 종료** + **Step 4 (Supabase Auth 이메일 인증 ON) 사실상 종료** (Confirm email 이미 ON 상태로 발견 = 검증 단계, 라이브 변경 0건. Chrome 시나리오 4건 PASS, 시나리오 3 팀장님 직접 1건 보류). 부수 발견: (1) `login.html:367` 차단 메시지 한국어 커스텀 = 2026-04-09 초기 통째 업로드 (`4ed5282d`, Phase 1 무관). (2) 인증 메일 템플릿 영문 기본 → 결정 대기 #12 신설. (3) Custom SMTP OFF 라이브 검증 → Supabase 공식 경고 raw 확보 ("This service has rate limits and is not meant to be used for production apps") = #30 별 트랙 트리거 확실. Phase 1 진행률 **4/16** (잔여 12단계 약 7.7세션). / 2026-05-07 저녁 — Phase 1 / Step 2 (DB 마이그레이션) 종료 + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료.
+> **마지막 갱신:** 2026-05-09 점심 — **Step 2-bis B-6.5 + B-7 본 진입 (Step 2-bis 본질 종료 ✅)** (라이브 commit 추가 트랜잭션 2건). get_my_role() 함수 신설 (총 17 SEC DEF) + posts 정책 sweep (DROP 7 + CREATE 14, UPDATE/DELETE 보존 3) + 신설 3 테이블 RLS 활성화 + 정책 8건. 자기참조 잔재 0건 회귀. Step C 사실상 종료 (RUN #5에 메타+자기참조+함수 본문 검증 포함). Step D는 라이브 9역할 중 6역할 가입자 0건이라 5/15 4팀 오픈 후 Step 16 통합 권장. Phase 1 진행률 **8/18 (44.4%)**. / 2026-05-09 새벽 — **Step 2-bis Step A + Step B-1 + Step B-2~B-6 본 진입** (라이브 commit 3건, 트랜잭션 3건). branches/teams/IEB 신설 + 시드 5 row + users +2 컬럼 + posts +6 컬럼 (parent_post_id BIGINT 정정) + CHECK 3종 + app_settings +3 row + SECURITY DEFINER 함수 4종 (총 16). 사고 학습 2건 영구 명문화 (Supabase SQL Editor RUN 단위 세션 분리 + ALTER REFERENCES 참조 PK 타입 사전 확인). 별 트랙 #33~#36 신설. strategy_overview 갱신 별도 commit `b7d88a3` (1163줄, § 8 추가 보강 8건 + § 5-12·5-14 본질 재정의). / 2026-05-08 저녁 — **세션 종료 인계 노트 자동 커밋** (`docs/sessions/2026-05-08_2020.md`, `/session-end` 자동 생성) / 2026-05-08 오전 — **Step 0-bis 종료 (spec v2 재작성, 42건 결정 통합 + v1 폐기 헤더)** + **Step 0-tris 종료 (README.md 9역할 정합 + 5축 구조 + 4팀 표기 정리)**. 진실 원천 = `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄). strategy_overview § ⚠️ 9건 처리 (본 spec § 0-5에서 4 해소 + 00_MASTER 폐기로 4 자동 해소 + Step 0-tris 분리 1). Phase 1 진행률 **6/18 (33.3%)**. commit `bdc5c19` push 완료. / 2026-05-08 새벽 — **Phase 1 Step B capture § 7 신설** (Step B-extra + B' + C-meta 통합, 31사 매트릭스 명문화) + **Step 3 (Quick 메뉴 §원전산 전환) 종료** + **Step 4 (Supabase Auth 이메일 인증 ON) 사실상 종료** (Confirm email 이미 ON 상태로 발견 = 검증 단계, 라이브 변경 0건. Chrome 시나리오 4건 PASS, 시나리오 3 팀장님 직접 1건 보류). 부수 발견: (1) `login.html:367` 차단 메시지 한국어 커스텀 = 2026-04-09 초기 통째 업로드 (`4ed5282d`, Phase 1 무관). (2) 인증 메일 템플릿 영문 기본 → 결정 대기 #12 신설. (3) Custom SMTP OFF 라이브 검증 → Supabase 공식 경고 raw 확보 ("This service has rate limits and is not meant to be used for production apps") = #30 별 트랙 트리거 확실. Phase 1 진행률 **4/16** (잔여 12단계 약 7.7세션). / 2026-05-07 저녁 — Phase 1 / Step 2 (DB 마이그레이션) 종료 + docs/ 재정렬 + 17 commit 누적. 라이브 DB 트랜잭션 4건 (Step B + B-extra + B' + C-meta) 모두 PASS. 영구 학습 1건 (SECURITY DEFINER 함수 컬럼 의존) + 보안 위험 1건 청산. / 2026-05-07 오전 — **메인 트랙 전환** (admin_v2 Phase D → v2.0 원수사 입점 모델 Phase 1) + **OS 정의 v2 신설** (진실 원천 v1 → v2 재작성). 신설: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄). 폐기: `docs/deprecated/onesecond_phase1_definition_20260507.md` (521줄, v1 헤더 표시). 통합 spec: `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄). admin_v2 Phase D 잔여 = **융합 트랙으로 격하**. 미해결 #28 종료.
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 > **목적:** Claude Code가 작업 요청 진입 시 가장 먼저 읽고 큰 그림 정합성 검증.
 
@@ -27,7 +27,7 @@
 | B | admin Phase D 잔여 융합 (D-1/D-7/D-8/D-9/D-10/D-final) | ✅ |
 | C | Quick 메뉴 통합 B안 (Phase 1 §원전산 / Phase 2 §결제·연락처·BMI) | ✅ |
 
-### Phase 1 작업 순서 (18단계, 종료 6건 / 잔여 ~10.6세션)
+### Phase 1 작업 순서 (18단계, 종료 7건 + Step 2-bis ✅ / 잔여 ~9.6세션)
 
 > spec v2 § 9-1 정합. 본 표는 v2 작업 순서 그대로.
 
@@ -38,7 +38,7 @@
 | **0-tris** | **README.md 9역할 정합 + 5축 + 4팀 표기 정리** | ✅ **완료 (5/8 오전, commit `bdc5c19`)** ⭐ |
 | 1 | (병행) D-9 Step 5 라이브 회귀 회신 마무리 | 별도 30분 |
 | 2 | DB 마이그레이션 (insurers + posts ALTER + users.insurer_id + RLS sweep) | ✅ 완료 (5/7 오후) |
-| **2-bis** | **DB 보강 마이그레이션 (branches/teams/IEB + 컬럼 +5 + parent_post_id + RLS sweep)** | 🟡 **진행 중 (5/9 새벽 — Step A + B-1 + B-2~B-6 ✅ commit 3건. B-7/C/D 다음 세션. parent_post_id BIGINT 정정 + 별 트랙 #33~#36 누적)** ⭐ |
+| **2-bis** | **DB 보강 마이그레이션 (branches/teams/IEB + 컬럼 +5 + parent_post_id + RLS sweep)** | ✅ **완료 (5/9 새벽 + 점심, commit 5건 / 라이브 트랜잭션 5건 / 사고 학습 2건 + 별 트랙 #33~#36). Step D만 5/15 후 Step 16 통합 권장 (라이브 6역할 가입자 0건)** ⭐ |
 | 3 | Quick 메뉴 §원전산 전환 (옵션 a 단순 채택) | ✅ 완료 (5/8 새벽) |
 | 4 | Supabase Auth 이메일 인증 ON (사실상 검증 단계) | ✅ 완료 (5/8 새벽) |
 | 5 | 보험사 회원가입 폼 (4중 방어 + 직급→9역할 매핑) | 1.0 |
@@ -48,8 +48,8 @@
 | 9 | 양방향 미러링 + 시드 자동 분기 + 통합 view 1차 준비 | 1.3 |
 | 10~15 | admin_v2 D-1/D-9/D-10/D-7/D-8/D-final 융합 | 2.4 |
 | 16 | 라이브 회귀 + 9역할 종합 검수 | 0.5 |
-| | **종료** | **6건 (Step 0 + 0-bis + 0-tris + 2 + 3 + 4)** |
-| | **잔여 소계** | **~10.6세션** |
+| | **종료** | **7건 (Step 0 + 0-bis + 0-tris + 2 + 2-bis + 3 + 4)** |
+| | **잔여 소계** | **~9.6세션** |
 
 ### 4중 방어 (가짜 보험사 임직원 가입 방지)
 
