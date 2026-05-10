@@ -73,7 +73,7 @@ body.data = { name, phone, company, branch, role, team }
    │   │                   └─ 매니저 승인 대기 (insurer_branch_manager 또는 admin UPDATE → 'active')
    │   │
    │   └─ "GA 설계사·매니저" 카드
-   │       └─ 회사·지점·팀 입력 (5/15 4팀 165명 시드 드롭다운 권장 → § 결정 D7)
+   │       └─ 회사·지점·팀 입력 (5/15 4팀 약 40~50명 시드 드롭다운 권장 → § 결정 D7)
    │           └─ 직급 입력 → ga_* 4역할 매핑
    │               └─ Auth 가입 (이메일 인증 ON)
    │                   └─ trigger handle_new_user → public.users (status='active' 즉시)
@@ -226,11 +226,11 @@ $function$;
 **옵션:**
 - (a) **보험사 임직원만 pending, GA는 active default** ⭐ Code 추천
 - (b) 전원 pending (admin이 모든 가입 승인)
-- (c) 첫 입점 보험사 + 신규 GA만 pending / 4팀 165명 active
+- (c) 첫 입점 보험사 + 신규 GA만 pending / 4팀 약 40~50명 active
 
 **영향:**
-- (a): trigger가 메타 `intent='insurer'` 시 `status='pending'` INSERT, 그 외 'active' 자동. 4팀 165명은 가입 즉시 사용 가능. spec § 1 #3 D-pre.5 활용 정합.
-- (b): admin 운영 부담 폭증 (165명 + 보험사 + 향후 가입자 모두 일일이 승인). Phase 1 일정 (5/15) 위협.
+- (a): trigger가 메타 `intent='insurer'` 시 `status='pending'` INSERT, 그 외 'active' 자동. 4팀 약 40~50명은 가입 즉시 사용 가능. spec § 1 #3 D-pre.5 활용 정합.
+- (b): admin 운영 부담 폭증 (4팀 인원 + 보험사 + 향후 가입자 모두 일일이 승인). Phase 1 일정 (5/15) 위협.
 - (c): GA 신규 = 신규 회원가입 가능한 GA가 늘어날 때 (5/22 이후 Phase 2 진입). 5/15 4팀 안정화 동안은 (a)와 동일.
 
 **Code 추천:** (a) — 4팀 오픈 트래픽 흡수 + 보험사 임직원만 검증 게이트.
@@ -312,7 +312,7 @@ $function$;
 
 ---
 
-## 3-D7. GA 측 회사명 / 지점 / 팀명 처리 (5/15 4팀 165명용)
+## 3-D7. GA 측 회사명 / 지점 / 팀명 처리 (5/15 4팀 약 40~50명용)
 
 **옵션:**
 - (a) 시드 드롭다운만 (더원지점 + 1팀~4팀, 신규 회사·지점·팀 가입 거부)
@@ -320,13 +320,13 @@ $function$;
 - (c) **하이브리드 — 회사명 시드 드롭다운 + 지점/팀 드롭다운 + "기타 입력" 옵션** ⭐ Code 추천
 
 **영향:**
-- (a): 4팀 165명 가입 100% 매핑 자동 / 향후 신규 GA 거부 → Phase 2 (5/22~) 시점에 풀림.
-- (b): 165명 free text 입력 시 오타·표기 혼선 → 매니저 일일이 매핑 부담. trigger가 branch_id / team_id NULL INSERT 후 별 트랙 매핑.
+- (a): 4팀 약 40~50명 가입 100% 매핑 자동 / 향후 신규 GA 거부 → Phase 2 (5/22~) 시점에 풀림.
+- (b): 4팀 인원 free text 입력 시 오타·표기 혼선 → 매니저 일일이 매핑 부담. trigger가 branch_id / team_id NULL INSERT 후 별 트랙 매핑.
 - (c): 시드 일치하면 자동 ID 매핑, 일치 안하면 free text 저장 + 매니저 승인 시 매핑. UX 부드러움.
 
-**Code 추천:** (c) — 5/15 165명 자동 매핑 + 신규 가입자 흐름 보존.
+**Code 추천:** (c) — 5/15 4팀 인원 자동 매핑 + 신규 가입자 흐름 보존.
 **구현:** 회사명 select (AZ금융 / 기타) → 더원지점 select (1팀~4팀 / 기타) → 자동 매핑.
-**위험:** 5/15 165명 직급 분포 사전 매핑 자료 없으면 ga_member 일괄 가입 후 매니저가 일부 ga_manager 승격 (별 트랙 운영 데이터).
+**위험:** 5/15 4팀 인원 직급 분포 사전 매핑 자료 없으면 ga_member 일괄 가입 후 매니저가 일부 ga_manager 승격 (별 트랙 운영 데이터).
 **롤백:** select 마크업 → free text 복원.
 
 **결재:** ✅ **(c) 채택** (2026-05-09) — 하이브리드 (시드 일치 자동 매핑 + "기타 입력" 보존)
@@ -357,7 +357,7 @@ $function$;
 
 **영향:**
 - (a): Step 5 분량 초과 (~1.5세션). admin_v2 UI 추가 마크업.
-- (b): Phase 1 5/15 오픈 = GA 4팀 165명 우선. 첫 보험사 입점은 Phase 1 종료 후 영업 트랙 (별 트랙).
+- (b): Phase 1 5/15 오픈 = GA 4팀 약 40~50명 우선. 첫 보험사 입점은 Phase 1 종료 후 영업 트랙 (별 트랙).
 
 **Code 추천:** (b) — Phase 1 골격 단계 본질 + 영업 트랙 분리.
 
@@ -618,7 +618,7 @@ SELECT COUNT(*) FROM insurer_employee_branches;
 | `admin` | (메타 차단 회귀) | admin_v2 진입 회귀 | 9역할 가시성 종합 |
 | `ga_branch_manager` | 가입 시나리오 | 매니저 라운지 | 본인 지점 R/W |
 | `ga_manager` | 가입 시나리오 | 매니저 공지 작성 | 본인 팀 R/W |
-| `ga_member` | 가입 시나리오 (4팀 165명 표준) | — | 현장 Q&A R |
+| `ga_member` | 가입 시나리오 (4팀 약 40~50명 표준) | — | 현장 Q&A R |
 | `ga_staff` | 가입 시나리오 | — | 본인 팀 R |
 | `insurer_branch_manager` | 가입 + admin 직접 생성 회귀 | 본인사 게시판 | 매니저 승인 흐름 |
 | `insurer_manager` | 가입 + 매니저 승인 흐름 | — | 본인사 게시판 |
@@ -636,7 +636,7 @@ SELECT COUNT(*) FROM insurer_employee_branches;
 | 1 | trigger 변경 시 신규 가입 깨짐 | D5 (b) 채택 시 trigger 무변경 | 🟢 낮음 |
 | 2 | RPC `complete_signup` SECURITY DEFINER 권한 누설 | `auth.uid()` 본인 row 한정 + status valid 체크 | 🟢 낮음 |
 | 3 | 도메인 화이트리스트 anon RLS 누설 | public 정보(보험사 도메인 공식 사이트)이므로 risk 낮음 | 🟢 낮음 |
-| 4 | 4팀 165명 직급 분포 사전 매핑 부재 | 일괄 ga_member 가입 후 매니저 승격 (별 트랙) | 🟡 중간 |
+| 4 | 4팀 약 40~50명 직급 분포 사전 매핑 부재 | 일괄 ga_member 가입 후 매니저 승격 (별 트랙) | 🟡 중간 |
 | 5 | 가짜 보험사 임직원 우회 가입 | 4중 방어 (도메인 + Auth + pending + 매니저 승인) | 🟢 낮음 |
 | 6 | admin_v2 D-1 융합 지연 → pending 사용자 무한 대기 | Step 5-B에 admin Dashboard SQL 임시 승인 가이드 포함 | 🟡 중간 |
 | 7 | 도메인 변경 (예: 메리츠 → meritzfire.co.kr) | admin이 insurers.domain UPDATE 가능 (admin_v2 D-7 융합) | 🟢 낮음 |
@@ -667,7 +667,7 @@ COMMIT;
 | 별 트랙 # | 후보 | 분리 사유 |
 |---|---|---|
 | **#37** | 이메일 인증 한국어 템플릿 (Supabase Dashboard) | D8 (b) 채택 시 별 트랙. 5/12~14 사이 처리 권장 |
-| **#38** | 5/15 4팀 165명 직급 분포 사전 매핑 운영 데이터 | 영업 트랙 (Code 책임 외) — 165명 명단 확보 후 ga_manager / ga_member 사전 매핑 |
+| **#38** | 5/15 4팀 약 40~50명 직급 분포 사전 매핑 운영 데이터 | 영업 트랙 (Code 책임 외) — 4팀 인원 명단 확보 후 ga_manager / ga_member 사전 매핑 |
 | **#39** | 첫 보험사 매니저 admin 직접 생성 흐름 (닭-달걀) | D9 (b) 채택 시 Phase 1 종료 후 영업 트랙 |
 | **#40** | admin_v2 D-1 매니저 승인 UI (Phase 1 Step 10~15 융합) | Step 5 본질 외 — admin_v2 융합 트랙 흡수 |
 

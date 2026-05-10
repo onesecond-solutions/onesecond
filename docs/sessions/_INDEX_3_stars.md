@@ -45,7 +45,7 @@
 
 30. **🚨 (Critical 격상 5/10) Custom SMTP 도입 — 5/15 전 필수** — Phase 1 Step 4 진입 시 검토 발견. Supabase 기본 SMTP rate limit = **3 emails/hour**. **5/10 새벽 P1.5-E ⑥ 사고로 입증** + **5/10 #49 검증 중 over_email_send_rate_limit (429) 라이브 입증**. **결정:** (a) 채택 — 5/11~12 슬롯에 별 트랙 신설 (SendGrid / Mailgun / Resend / AWS SES 후보)
 
-31. **(5/8 새벽) 인증 메일 템플릿 한국어 변경 미작업** — Phase 1 Step 4 검증에서 발견. `Confirm Your Signup` 영문 잔존. 4팀 165명 한국어 사용자 대상 → 신뢰도 저하 우려
+31. **(5/8 새벽) 인증 메일 템플릿 한국어 변경 미작업** — Phase 1 Step 4 검증에서 발견. `Confirm Your Signup` 영문 잔존. 4팀 약 40~50명 한국어 사용자 대상 → 신뢰도 저하 우려
 
 32. **(5/8 새벽) Step 4-D 시나리오 3 미완 — 팀장님 직접 메일 클릭 검증** — 시나리오 1·2·4 PASS로 본질 검증 충분
 
@@ -59,7 +59,7 @@
 
 37. **(5/9 오후) 인증 메일 한국어 템플릿 (#31과 묶음, D8 결재 (b))** — 5/12~14 슬롯 진행 권장
 
-38. **(5/9 오후) 5/15 4팀 165명 직급 분포 사전 매핑 운영 데이터 (영업 트랙)** — 165명 명단 확보 후 ga_manager / ga_member / ga_branch_manager / ga_staff 분포 사전 매핑
+38. **(5/9 오후) 5/15 4팀 약 40~50명 직급 분포 사전 매핑 운영 데이터 (영업 트랙)** — 4팀 명단 확보 후 ga_manager / ga_member / ga_branch_manager / ga_staff 분포 사전 매핑
 
 39. **(5/9 오후) 첫 보험사 매니저 admin 직접 생성 흐름 (Phase 1 종료 후)** — 닭-달걀 문제
 

@@ -88,7 +88,7 @@
 **변경 본질:**
 - Step 5 (index.html 인라인 가입 폼) 마무리 보류 + Phase 1.5 home_v2 가입/로그인 통합 즉시 진입
 - index.html 폐기 (redirect 페이지로 교체)
-- 5/15 4팀 165명 오픈 = home_v2.html이 메인 진입로
+- 5/15 4팀 약 40~50명 오픈 = home_v2.html이 메인 진입로
 
 **Sunk cost = 0:**
 - Step 5-B (DB 신설) + Step 5-C (trigger 정정 + 4중 방어 로직 + 9역할 매핑)는 100% 재사용
