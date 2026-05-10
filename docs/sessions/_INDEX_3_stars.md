@@ -1,7 +1,7 @@
 # 인덱스 상세 3 — 별 트랙 + 미해결 + 결정 대기 + design_test 승격
 
 > **상위 인덱스:** [`_INDEX.md`](./_INDEX.md) (압축본 ~150줄)
-> **본 파일 범위:** 미해결 #1~#51 + 별 트랙 후보 + 결정 대기 + design_test 9 시안 승격 진행
+> **본 파일 범위:** 미해결 #1~#57 + 별 트랙 후보 + 결정 대기 + design_test 9 시안 승격 진행
 
 ---
 
@@ -89,7 +89,15 @@
 
 50. ~~app_settings menu_home/menu_news 의도 확인~~ → ✅ 종료 (5/10 오전, 의도된 화면설정 + admin 정상 노출 확인)
 
-51. **(5/10 오전) public.posts 0건 시드 부재** — 4팀 오픈 첫날 board 빈 화면 위험. **트리거 = 5/14~15 새벽 5~10건 INSERT** 또는 4팀 자산화 트랙 결과 자동 시드
+51. ~~(5/10 오전) public.posts 0건 시드 부재~~ → ✅ **종료 (5/11 오후, Chrome AI PASS)** — public.posts 10건 박힘 (기존 4 + 시드 6, B-7 archive_legacy SKIP 정합) / 라이브 board.html 7탭 PASS (콘솔 에러 0건) / commit `9751fb0` (시드 SQL) + Chrome 결과 MD `star_51_seed_chrome_result_2026-05-11.md`
+
+---
+
+### 5/11 오후 신설 (Chrome AI #51 검수 발견)
+
+56. **(5/11 오후, Chrome 검수 발견) 매니저 라운지 탭 오버플로우 UX** — 7탭 가로 폭 초과 박힘 (매니저 라운지 탭 다음 줄 떨어짐/잘림). 시드 노출 자체 PASS, 모바일 퍼스트 정합 회귀 신호 가능성. **트리거 = 슬롯 6 박음 후 별도 슬롯**
+
+57. **(5/11 오후, Chrome 검수 발견) 시드 SQL 파일 스키마 정합 갱신** — `docs/migrations/2026-05-11_seed_posts.sql` ↔ 실제 DB 차이: (1) `created_by` → `author_id` (text 타입) / (2) `question_type` '운영'/'안내' → NULL/'공지'/'상품'/'인수'. 메모리 #33/#36 본진과 정합 (Phase 1 종료 후 묶음). **트리거 = Phase 1 종료 후 묶음 박음**
 
 ---
 
