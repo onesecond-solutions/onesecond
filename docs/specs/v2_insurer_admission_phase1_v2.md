@@ -470,24 +470,123 @@ USING (
   AND NOT is_insurer_employee()
 );
 
--- 정책 3. 보험사 임직원 (네비방 질문 + 보험사 게시판)
-CREATE POLICY posts_select_insurer_employee ON posts FOR SELECT TO authenticated
+-- ════════════════════════════════════════════════════════════════
+-- 정책 3. 보험사 임직원 (보험사 게시판 + 네비방 질문)
+-- ⭐ 2026-05-10 정정 결재 — v0 / Phase 3 분기 박힘
+--   사유: 본 정책 ↔ § 6-3 정책 3 (네비방 INSERT, insurer_id IS NULL) 모순 발견.
+--         "v0 = 가짜 연결 (모든 row SELECT) / Phase 3 = insurer_target 매칭 가동" 분기 채택.
+-- ════════════════════════════════════════════════════════════════
+
+-- ── (3-A) 보험사 게시판 본인 회사 (모든 단계 공통) ──────────────────
+CREATE POLICY posts_select_insurer_employee_board ON posts FOR SELECT TO authenticated
 USING (
   is_insurer_employee()
+  AND board_type = 'insurer'
+  AND insurer_id = current_user_insurer_id()
   AND (
-    -- 보험사 게시판 본인 회사
-    (board_type = 'insurer' AND insurer_id = current_user_insurer_id())
-    OR
-    -- 네비방 질문 (답변 작성용 노출)
-    (board_type = 'navigation' AND insurer_id = current_user_insurer_id())
-  )
-  AND (
-    -- 통합 view 토글 ON OR 본인 담당 지점
+    -- 통합 view 토글 ON OR 본인 담당 지점 OR 시드 글로벌
     is_setting_enabled('insurer_unified_view')
     OR branch_id = ANY(my_assigned_branches())
-    OR branch_id IS NULL  -- 시드 글로벌
+    OR branch_id IS NULL
   )
 );
+
+-- ── (3-B-v0) 네비방 SELECT — v0 단계 (현행, 2026-05-10 ~ Phase 3 진입 전) ──
+-- 본질: 보험사 임직원 4역할이 네비방 모든 row SELECT 가능. 정보 격차 0.
+-- 사유: ① 본 세션 결정 정합 (보험사 미러링 = 가짜 연결로 먼저 / RLS 분기 안 함)
+--       ② Phase 1 v0 본질 = 질문 생성 UX 검증 집중
+--       ③ 5/15 4팀 오픈 시점 보험사 임직원 가입 0명 → 정보 격차 사고 위험 0
+--       ④ § 6-5 D-pre.7~.8 RLS 자기참조 EXISTS 위험 미발동
+CREATE POLICY policy_navigation_select_insurer_employee_v0
+ON public.posts
+FOR SELECT
+TO authenticated
+USING (
+  board_type = 'navigation'
+  AND EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.auth_user_id = auth.uid()
+      AND u.role IN (
+        'insurer_branch_manager',
+        'insurer_manager',
+        'insurer_member',
+        'insurer_staff'
+      )
+  )
+);
+
+-- ── v0 단계 한계 (영구 명시) ───────────────────────────────────
+-- - 보험사 임직원이 모든 네비방 질문 SELECT 가능 → 정보 격차 0
+-- - 다중 보험사 분기 미작동 (UI "이 질문이 [N개 보험사]에 보입니다" = v0에선 가짜 연결)
+-- - Phase 3 본격화 시점에 아래 v1 정책으로 전환 필수
+
+-- ── (3-B-v1) 네비방 SELECT — Phase 3 본격화 단계 (보험사 임직원 가입 시작 시점) ──
+-- 진입 트리거 (3건 모두 만족 시 결재):
+--   ① Phase 2 (질문량 확인) 결과 = 본 트랙 본질 검증 완료
+--   ② 보험사 임직원 가입자 발생 (insurer_* 역할 user 1명 이상)
+--   ③ 팀장님 결재 완료
+--
+-- Phase 3 진입 시 박는 SQL (현재는 박지 않음, 본 spec에 명세만 보존):
+/*
+DROP POLICY IF EXISTS policy_navigation_select_insurer_employee_v0 ON public.posts;
+
+CREATE POLICY policy_navigation_select_insurer_employee_v1
+ON public.posts
+FOR SELECT
+TO authenticated
+USING (
+  board_type = 'navigation'
+  AND EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.auth_user_id = auth.uid()
+      AND u.role IN (
+        'insurer_branch_manager',
+        'insurer_manager',
+        'insurer_member',
+        'insurer_staff'
+      )
+      AND (
+        -- 전체 공개
+        posts.insurer_target = '전체'
+        -- 손보전체 (current_user 소속이 손보일 때)
+        OR (
+          posts.insurer_target = '손보전체'
+          AND EXISTS (
+            SELECT 1 FROM public.insurers i
+            WHERE i.id = u.insurer_id
+              AND i.category = '손보'
+          )
+        )
+        -- 생보전체 (current_user 소속이 생보일 때)
+        OR (
+          posts.insurer_target = '생보전체'
+          AND EXISTS (
+            SELECT 1 FROM public.insurers i
+            WHERE i.id = u.insurer_id
+              AND i.category = '생보'
+          )
+        )
+        -- 회사지정 (current_user 소속이 target_insurer_ids 배열에 포함)
+        OR (
+          posts.insurer_target = '회사지정'
+          AND u.insurer_id = ANY(posts.target_insurer_ids)
+        )
+      )
+  )
+);
+*/
+
+-- ── Phase 3 진입 결재 항목 (영구 박힘) ─────────────────────────
+-- [ ] § 6-2 정책 3 v0 → v1 전환 (위 SQL 주석 해제 + DROP/CREATE)
+-- [ ] posts.target_insurer_ids UUID[] 컬럼 신설 마이그레이션
+-- [ ] insurers.category ENUM CHECK ('손보' / '생보') 박힘 검증
+-- [ ] 라이브 회귀 (네비방 INSERT 시 insurer_target 4종 분기 + 보험사 임직원 SELECT 정합)
+-- [ ] UI 라벨 "이 질문이 [N개 보험사]에 보입니다" 가짜 연결 → 실 연결 전환
+
+-- ── § 6-3 정책 3 (네비방 INSERT) — 갱신 X ──────────────────────
+-- 현행 그대로 유지: insurer_id IS NULL + insurer_target 4종 + target_insurer_ids UUID[]
+-- v0 단계에서도 INSERT 정상 동작 → row에 insurer_target/target_insurer_ids 박힘 →
+-- Phase 3 진입 시 v1 정책 가동되면 동일 row 자동 분기 가시 (재작업 0, 마이그레이션 0)
 
 -- 정책 4. 매니저 공지 (팀 단위 격리)
 CREATE POLICY posts_select_manager_notice ON posts FOR SELECT TO authenticated
@@ -1248,6 +1347,11 @@ $$;
 > ⚠️ SECURITY DEFINER 함수 컬럼 의존 — 함수 정의 시점에 참조 컬럼 존재 확인 필수 (Step B 1차 ROLLBACK)
 > ⚠️ 라이브 컬럼 보존 우선 — 라이브 5컬럼(`patient_age` 등) 보존 + spec 정합화 (5/7 Step A 결정 1)
 > ⚠️ board_type 의미 재정의 시 데이터 마이그레이션 — archive_legacy 변환 패턴 (5/7 Step A 결정 3)
+> ⚠️ **RLS 정책 v0 / v1 분기 패턴** (2026-05-10 박힘) — v0 = 가짜 연결 (모든 row SELECT 가능), v1 = 본격화 (분기 가동). v0 → v1 전환은 사용자 풀 확보 후 결재. 정보 격차 사고 위험 = v0 단계 사용자 풀 0이면 0.
+>   - 파생 원칙 1: spec 자체 모순 발견 시 → "v0 / v1 분기" 패턴 적용 검토 (한쪽 선택 후 후회 X)
+>   - 파생 원칙 2: v0 SQL과 v1 SQL을 spec에 동시 박음 → Phase 3 진입 시 재설계 0
+>   - 파생 원칙 3: v0 단계 한계는 spec에 영구 명시 (§ 6-2 정책 3 v0 단계 한계 박힘 정합)
+>   - 본 패턴 적용 사례: § 6-2 정책 3 (보험사 임직원 SELECT) — 본 세션 자문에서 § 6-3 정책 3과 모순 발견 후 분기 채택
 
 ---
 
