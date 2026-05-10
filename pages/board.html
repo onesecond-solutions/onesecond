@@ -800,10 +800,13 @@
   <!-- ② 탭바 블록 -->
   <div class="pg-tab-block">
     <div class="pg-tab-bar" id="board-tab-bar">
-      <button class="pg-tab-btn active" data-board="hub"     onclick="window.switchBoard('hub')">🌐 허브게시판 <span class="hub-badge">공개</span></button>
-      <button class="pg-tab-btn"        data-board="team"    onclick="window.switchBoard('team')">👥 팀게시판</button>
-      <button class="pg-tab-btn"        data-board="branch"  onclick="window.switchBoard('branch')">🏢 지점게시판</button>
-      <button class="pg-tab-btn"        data-board="insurer" onclick="window.switchBoard('insurer')">🏦 보험사게시판</button>
+      <button class="pg-tab-btn active" data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 매니저 공지</button>
+      <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')">☕ 매니저 라운지</button>
+      <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
+      <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')">📋 현장 Q&amp;A</button>
+      <button class="pg-tab-btn"        data-board="insurer"        onclick="window.switchBoard('insurer')">🏦 보험사 게시판</button>
+      <button class="pg-tab-btn"        data-board="hub"             onclick="window.switchBoard('hub')">🌐 허브 게시판 <span class="hub-badge">공개</span></button>
+      <button class="pg-tab-btn"        data-board="archive_legacy"  onclick="window.switchBoard('archive_legacy')">🗄️ 폐기 보존</button>
     </div>
   </div>
 
@@ -885,9 +888,9 @@
             <div class="insurer-col2">
               <div class="insurer-cat-tab-bar" id="insurer-cat-tab-bar">
                 <button class="insurer-cat-btn active" onclick="window.selectInsurerCat('all')">전체</button>
-                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('공지사항')">공지사항</button>
-                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('상품Q&A')">상품Q&A</button>
-                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('인수Q&A')">인수Q&A</button>
+                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('공지')">공지</button>
+                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('상품')">상품</button>
+                <button class="insurer-cat-btn" onclick="window.selectInsurerCat('인수')">인수</button>
               </div>
               <div class="brd-list" id="insurer-post-list">
                 <div class="loading-msg">불러오는 중...</div>
@@ -1156,24 +1159,34 @@
 <script>
 (function() {
 
-/* ── 상수 ── */
+/* ── 상수 (spec v2 § 2-1 board_type 7종 정합, v1.x question_type 시작값 = 공지/상품/인수) ── */
 var BOARD_CATEGORIES = {
-  hub:     ['전체', '공지사항', '상품Q&A', '인수Q&A'],
-  team:    ['전체', '공지사항', '상품Q&A', '인수Q&A'],
-  branch:  ['전체', '공지사항', '상품Q&A', '인수Q&A'],
-  insurer: ['전체', '공지사항', '상품Q&A', '인수Q&A', '보험사 공지']
+  qna:             ['전체', '공지', '상품', '인수'],
+  manager_notice:  ['전체', '공지', '상품', '인수'],
+  manager_lounge:  ['전체', '공지', '상품', '인수'],
+  navigation:      ['전체', '공지', '상품', '인수'],
+  insurer:         ['전체', '공지', '상품', '인수', '보험사 공지'],
+  hub:             ['전체', '공지', '상품', '인수'],
+  archive_legacy:  ['전체']
 };
 var BOARD_LABEL = {
-  hub: '허브게시판', team: '팀게시판',
-  branch: '지점게시판', insurer: '보험사게시판'
+  qna:             '현장 Q&A',
+  manager_notice:  '매니저 공지',
+  manager_lounge:  '매니저 라운지',
+  navigation:      '네비게이션방',
+  insurer:         '보험사 게시판',
+  hub:             '허브 게시판',
+  archive_legacy:  '폐기 보존'
 };
 var CAT_CLASS = {
-  '공지사항': 'notice', '상품Q&A': 'product',
-  '인수Q&A': 'underwriting', '보험사 공지': 'notice'
+  '공지':       'notice',
+  '상품':       'product',
+  '인수':       'underwriting',
+  '보험사 공지': 'notice'
 };
 
 /* ── 페이지 로컬 상태 ── */
-var _currentBoard    = 'hub';
+var _currentBoard    = 'qna';     /* 기본 진입 = 현장 Q&A (사용자 본질 페이지) */
 var _currentCategory = 'all';
 var _allPosts        = [];
 var _currentPostId   = null;
@@ -1248,54 +1261,91 @@ function _extraRow(label, value) {
     + '</div>';
 }
 
-/* ── [2026-04-17] 1차 탭 가시성 상태 (app_settings 반영) ── */
-/* 기본값: 허브 표시 / 팀·지점 항상 표시(잠금) / 보험사 숨김 */
-var _boardTabVisible = { hub: true, team: true, branch: true, insurer: false };
+/* ── 1차 탭 가시성 상태 (spec v2 § 2-1 7종 + § 4-1 admin 토글 3종 정합) ──
+   기본값:
+   - qna / manager_notice / navigation = 기본 표시 (사용자 본질)
+   - manager_lounge = 토글 #1(manager_lounge_enabled) OFF 기본
+   - insurer       = role 분기 (insurer_* 만 표시)
+   - hub           = 토글 #3(hub_public) OFF 기본 (admin only)
+   - archive_legacy = admin only */
+var _boardTabVisible = {
+  qna:             true,
+  manager_notice:  true,
+  manager_lounge:  false,
+  navigation:      true,
+  insurer:         false,
+  hub:             false,
+  archive_legacy:  false
+};
 
-/* ── [2026-04-17] app_settings에서 1차 탭 설정 로드 ── */
+/* ── app_settings 토글 3종 로드 (spec § 4-1) ── */
 function _loadBoardTabSettings() {
   if (!window.db || !window.db.fetch) {
     return Promise.resolve();
   }
-  return window.db.fetch('/rest/v1/app_settings?group_name=eq.board_tab&select=key,value')
+  return window.db.fetch('/rest/v1/app_settings?key=in.(manager_lounge_enabled,insurer_unified_view,hub_public)&select=key,value')
     .then(function(r) { return r.ok ? r.json() : []; })
     .then(function(rows) {
-      if (!rows || !rows.length) return; /* DB 레코드 없으면 기본값 유지 */
+      if (!rows || !rows.length) return; /* DB 레코드 없으면 기본값 유지 (모두 OFF) */
       var map = {};
       rows.forEach(function(r) { map[r.key] = r.value; });
-      /* 허브: 기본 표시, 명시적 'false'일 때만 숨김 */
-      if (map.board_tab_hub !== undefined) {
-        _boardTabVisible.hub = map.board_tab_hub !== 'false';
+      /* 매니저 라운지: 토글 ON 시 표시 후보 (실 노출은 role 분기에서) */
+      if (map.manager_lounge_enabled !== undefined) {
+        _boardTabVisible.manager_lounge = (map.manager_lounge_enabled === 'true' || map.manager_lounge_enabled === true);
       }
-      /* 보험사: 기본 숨김, 명시적 'true'일 때만 표시 (v2.0 대기) */
-      if (map.board_tab_company !== undefined) {
-        _boardTabVisible.insurer = map.board_tab_company === 'true';
+      /* 허브: 토글 ON 시 일반 사용자 노출 (admin은 항상 표시) */
+      if (map.hub_public !== undefined) {
+        _boardTabVisible.hub = (map.hub_public === 'true' || map.hub_public === true);
       }
-      /* 팀·지점은 잠금 — 토글 무시 */
+      /* insurer_unified_view: 메뉴 노출 X (보험사 임직원 통합 view 옵션, _loadPosts 내부 분기) */
     })
     .catch(function(e) { console.warn('[board] app_settings 로드 실패', e); });
 }
 
-/* ── [2026-04-17] 1차 탭 가시성 적용 + 기본 탭 결정 ── */
+/* ── 1차 탭 가시성 적용 + 기본 탭 결정 (spec v2 § 1-3 사용자 영역별 진입 동선 정합) ──
+   admin                    : 7탭 전체 표시 (화면설정 무시), 기본 = qna
+   ga_*                     : 매니저공지 / 매니저라운지(토글) / 네비방 / 현장Q&A / 허브(토글), 기본 = qna
+                              → 보험사·archive_legacy 비노출
+   insurer_*                : 현장Q&A / 보험사 (2탭, 매니저급+토글 시 라운지 추가), 기본 = qna
+                              → 매니저공지·네비방·archive_legacy 비노출 (영역 분리 본질) */
 function _applyBoardTabVisibility() {
   var bar = document.getElementById('board-tab-bar');
-  if (!bar) return 'hub';
-  /* [2026-04-27] admin은 화면설정 무시 — 모든 탭 표시 + 기본은 hub
-     CLAUDE.md "화면설정 무시 대상: admin 만" 원칙. branch_manager 미포함(콘텐츠 정책) */
-  var role = (window.AppState && window.AppState.role) || '';
-  var isAdmin = (role === 'admin');
-  ['hub','team','branch','insurer'].forEach(function(key) {
+  if (!bar) return 'qna';
+
+  var role     = (window.AppState && window.AppState.role) || '';
+  var isAdmin  = (role === 'admin');
+  var isGA     = (role.indexOf('ga_') === 0);
+  var isIns    = (role.indexOf('insurer_') === 0);
+  var isMgrPlus = (
+    role === 'admin' ||
+    role === 'ga_branch_manager' || role === 'ga_manager' ||
+    role === 'insurer_branch_manager' || role === 'insurer_manager'
+  );
+
+  /* 7종 board_type 별 가시성 결정 */
+  var visible = {
+    qna:             true,                                    /* 모든 사용자 (admin/ga_*/insurer_*) */
+    manager_notice:  isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출) */
+    manager_lounge:  _boardTabVisible.manager_lounge && isMgrPlus, /* 토글 #1 ON + 매니저급+ */
+    navigation:      isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출, spec § 5-4) */
+    insurer:         isAdmin || isIns,                         /* admin + insurer_* (ga_* 비노출, spec § 5-1) */
+    hub:             isAdmin || _boardTabVisible.hub,          /* admin 항상 + 토글 #3 ON 시 일반 노출 */
+    archive_legacy:  isAdmin                                   /* admin only */
+  };
+
+  /* 7탭 visibility 적용 */
+  ['qna','manager_notice','manager_lounge','navigation','insurer','hub','archive_legacy'].forEach(function(key) {
     var btn = bar.querySelector('.pg-tab-btn[data-board="' + key + '"]');
     if (!btn) return;
-    btn.style.display = (isAdmin || _boardTabVisible[key]) ? '' : 'none';
+    btn.style.display = visible[key] ? '' : 'none';
   });
-  if (isAdmin) return 'hub';
-  /* 표시 가능한 첫 번째 탭을 기본으로 */
-  var order = ['hub','team','branch','insurer'];
+
+  /* 기본 탭 = qna (사용자 본질 페이지). qna 비노출 시(이론상 발생 X) 표시 가능한 첫 탭 */
+  var order = ['qna','manager_notice','navigation','insurer','manager_lounge','hub','archive_legacy'];
   for (var i = 0; i < order.length; i++) {
-    if (_boardTabVisible[order[i]]) return order[i];
+    if (visible[order[i]]) return order[i];
   }
-  return 'hub'; /* 안전망 */
+  return 'qna'; /* 안전망 */
 }
 
 /* ── 초기화: appstate:ready 표준 패턴 ── */
@@ -1341,7 +1391,7 @@ if (window.AppState && window.AppState.ready) {
   document.addEventListener('appstate:ready', function() { _boot(); }, { once: true });
 }
 
-/* ── 탭 전환 ── */
+/* ── 탭 전환 (spec v2 § 2-1 7종 정합) ── */
 function _switchBoard(board) {
   _currentBoard    = board;
   _currentCategory = 'all';
@@ -1351,11 +1401,11 @@ function _switchBoard(board) {
   var tab = document.querySelector('#board-tab-bar .pg-tab-btn[data-board="' + board + '"]');
   if (tab) tab.classList.add('active');
 
-  /* 허브 안내 표시/숨김 */
+  /* 허브 안내 표시/숨김 (admin 토글 #3 hub_public OFF 시 안내) */
   var notice = document.getElementById('hub-notice');
   if (notice) notice.style.display = (board === 'hub') ? 'flex' : 'none';
 
-  /* 일반 뷰 / 보험사 뷰 전환 */
+  /* 일반 뷰 / 보험사 뷰 전환 (insurer 만 별도 뷰, 그 외 6종 = 일반 뷰) */
   var normalView  = document.getElementById('normal-board-view');
   var insurerView = document.getElementById('insurer-board-view');
   if (board === 'insurer') {
@@ -1371,11 +1421,35 @@ function _switchBoard(board) {
     if (normalView)  normalView.style.display  = '';
     if (insurerView) insurerView.style.display = 'none';
 
-    /* 글쓰기 버튼 표시 여부 */
-    var wb   = document.getElementById('write-btn');
-    var role = (window.AppState && window.AppState.role) || '';
+    /* 글쓰기 버튼 표시 여부 (7-D RBAC 정합 — admin / 매니저 / 일반 분기) */
+    var wb    = document.getElementById('write-btn');
+    var role  = (window.AppState && window.AppState.role) || '';
+    var isAdm = (role === 'admin');
     if (wb) {
-      wb.style.display = (board === 'hub') ? 'none' : 'block';
+      var canWrite = true;
+      /* hub / archive_legacy = admin only */
+      if (board === 'hub' || board === 'archive_legacy') canWrite = isAdm;
+      /* manager_notice = admin + ga_manager (본인 팀) */
+      else if (board === 'manager_notice') canWrite = (isAdm || role === 'ga_manager');
+      /* manager_lounge = admin + 매니저급 4종 (admin 토글 #1 ON + role) */
+      else if (board === 'manager_lounge') {
+        canWrite = (isAdm
+                 || role === 'ga_branch_manager'
+                 || role === 'ga_manager'
+                 || role === 'insurer_branch_manager'
+                 || role === 'insurer_manager');
+      }
+      /* qna = admin R/W, ga_* 는 R only (질문은 navigation에서) */
+      else if (board === 'qna') canWrite = isAdm;
+      /* navigation = ga_* 본 지점 R/W, insurer_* 비노출 (메뉴 자체 차단) */
+      else if (board === 'navigation') {
+        canWrite = (isAdm
+                 || role === 'ga_branch_manager'
+                 || role === 'ga_manager'
+                 || role === 'ga_member'
+                 || role === 'ga_staff');
+      }
+      wb.style.display = canWrite ? 'block' : 'none';
     }
 
     _renderCategoryPills(board);
@@ -1429,7 +1503,7 @@ window.selectInsurerCat = function(cat) {
   _insurerCategory = cat;
   document.querySelectorAll('.insurer-cat-btn').forEach(function(b) { b.classList.remove('active'); });
   var btns = document.querySelectorAll('.insurer-cat-btn');
-  var labels = ['all', '공지사항', '상품Q&A', '인수Q&A'];
+  var labels = ['all', '공지', '상품', '인수'];
   var idx = labels.indexOf(cat);
   if (btns[idx]) btns[idx].classList.add('active');
   _renderInsurerPostList();
@@ -1517,28 +1591,9 @@ async function _loadPosts() {
   list.innerHTML = '<div class="loading-msg">불러오는 중...</div>';
   try {
     var board = _currentBoard;
-    var org   = _userOrg || {};
-    var path  = '';
-
-    if (board === 'hub') {
-      path = '/rest/v1/posts?is_hub_visible=eq.true&order=created_at.desc';
-    } else if (board === 'team') {
-      if (!org.team) {
-        list.innerHTML = buildEmpty('👥', '소속 팀 정보가 없습니다', '내 정보 수정에서 팀명을 등록해 주세요.');
-        return;
-      }
-      var orgId = encodeURIComponent(org.company + '_' + org.branch + '_' + org.team);
-      path = '/rest/v1/posts?board_type=eq.team&organization_id=eq.' + orgId + '&order=created_at.desc';
-    } else if (board === 'branch') {
-      if (!org.branch) {
-        list.innerHTML = buildEmpty('🏢', '소속 지점 정보가 없습니다', '내 정보 수정에서 지점명을 등록해 주세요.');
-        return;
-      }
-      var orgId2 = encodeURIComponent(org.company + '_' + org.branch);
-      path = '/rest/v1/posts?board_type=eq.branch&organization_id=eq.' + orgId2 + '&order=created_at.desc';
-    } else {
-      path = '/rest/v1/posts?board_type=eq.insurer&order=created_at.desc';
-    }
+    /* spec v2 § 3-1 정합: board_type 필터만 적용 + RLS가 자동 가시성 분기
+       (지점/팀/시드/N:M 가시성은 posts SELECT 정책이 RLS 함수 9종으로 처리) */
+    var path = '/rest/v1/posts?board_type=eq.' + encodeURIComponent(board) + '&order=created_at.desc';
 
     var res  = await window.db.fetch(path);
     var data = await res.json();
@@ -1563,21 +1618,24 @@ function _renderPostList() {
     posts = posts.filter(function(p) { return p.category === _currentCategory; });
   }
   if (!posts.length) {
-    /* 전체 글이 0개 → 온보딩 카드 */
+    /* 전체 글이 0개 → 온보딩 카드 (spec v2 § 2-1 board_type 7종 정합) */
     if (!_allPosts.length) {
       if (_currentBoard === 'hub') {
-        list.innerHTML = buildEmpty('🌐', '허브게시판에 아직 게시글이 없습니다', '팀·지점 게시판의 좋은 글이 승인 후 이곳에 모입니다.');
+        list.innerHTML = buildEmpty('🌐', '허브 게시판에 아직 게시글이 없습니다', '현장의 소리에서 선별된 글이 이곳에 모입니다.');
       } else if (_currentBoard === 'insurer') {
-        list.innerHTML = buildEmpty('🏦', '보험사게시판에 아직 게시글이 없습니다', '첫 글을 작성해보세요!');
+        list.innerHTML = buildEmpty('🏦', '보험사 게시판에 아직 게시글이 없습니다', '첫 글을 작성해보세요!');
+      } else if (_currentBoard === 'archive_legacy') {
+        list.innerHTML = buildEmpty('🗄️', '폐기 보존 영역에 아직 항목이 없습니다', 'admin 격리 영역입니다.');
+      } else if (_currentBoard === 'manager_lounge') {
+        list.innerHTML = buildEmpty('☕', '매니저 라운지에 아직 게시글이 없습니다', '매니저급 운영 의논을 시작해보세요.');
       } else {
-        var boardName = _currentBoard === 'team' ? '팀' : '지점';
-        var orgName   = '';
-        if (_userOrg) {
-          orgName = _currentBoard === 'team'
-            ? (_userOrg.team   || '')
-            : (_userOrg.branch || '');
-        }
-        var titleStr = orgName ? orgName + ' 게시판 오픈을 축하합니다 🎉' : boardName + '게시판이 열렸습니다 🎉';
+        var labelMap = {
+          qna:            '현장 Q&A',
+          manager_notice: '매니저 공지',
+          navigation:     '네비게이션방'
+        };
+        var boardName = labelMap[_currentBoard] || (BOARD_LABEL[_currentBoard] || '게시판');
+        var titleStr  = boardName + '이(가) 열렸습니다 🎉';
         list.innerHTML = ''
           + '<div style="'
           +   'background:var(--color-surface,#fff);'
@@ -1594,9 +1652,9 @@ function _renderPostList() {
           +     '💡 팀원이 많을수록 더 유용해집니다. 팀원을 초대해보세요!'
           +   '</div>'
           +   '<div style="display:flex;flex-direction:column;gap:.55em;max-width:280px;margin:0 auto;">'
-          +     _onboardingTip('📌', '공지사항', '팀장·실장 공지를 고정해두세요')
-          +     _onboardingTip('💊', '상품 Q&A', '상품·특약 궁금증을 올려보세요')
-          +     _onboardingTip('🏥', '인수 Q&A', '인수 케이스를 공유하면 팀 전체 자산이 됩니다')
+          +     _onboardingTip('📌', '공지', '팀장·실장 공지를 고정해두세요')
+          +     _onboardingTip('💊', '상품', '상품·특약 궁금증을 올려보세요')
+          +     _onboardingTip('🏥', '인수', '인수 케이스를 공유하면 팀 전체 자산이 됩니다')
           +   '</div>'
           + '</div>';
       }
@@ -1665,11 +1723,11 @@ window.openDetail = async function(postId) {
   var extraArea = document.getElementById('detail-extra-fields');
   if (extraArea) {
     var extraHtml = '';
-    if (post.category === '상품Q&A') {
+    if (post.category === '상품') {
       if (post.insurer_name)     extraHtml += _extraRow('🏦 보험사', post.insurer_name);
       if (post.product_category) extraHtml += _extraRow('📦 상품 카테고리', post.product_category);
     }
-    if (post.category === '인수Q&A') {
+    if (post.category === '인수') {
       var ageGender = [post.patient_age ? post.patient_age + '세' : '', post.patient_gender || ''].filter(Boolean).join(' / ');
       if (ageGender)               extraHtml += _extraRow('👤 나이/성별', ageGender);
       if (post.disease_name)       extraHtml += _extraRow('🏥 질병명', post.disease_name);
@@ -1863,7 +1921,7 @@ window.editPost = function() {
 
   /* 추가 필드 복원 */
   _switchFormFields(post.category || '');
-  if (post.category === '상품Q&A') {
+  if (post.category === '상품') {
     var prodCatEl  = document.getElementById('write-product-category');
     if (prodCatEl)  prodCatEl.value  = post.product_category || '';
     /* 보험사 드롭다운 복원 */
@@ -1876,7 +1934,7 @@ window.editPost = function() {
       }
     }
   }
-  if (post.category === '인수Q&A') {
+  if (post.category === '인수') {
     var ageEl      = document.getElementById('write-age');
     var genderEl   = document.getElementById('write-gender');
     var diseaseEl  = document.getElementById('write-disease');
@@ -1926,8 +1984,8 @@ var _attachFiles = [];
 function _switchFormFields(category) {
   var fp = document.getElementById('fields-product');
   var fu = document.getElementById('fields-underwriting');
-  if (fp) fp.style.display = (category === '상품Q&A') ? 'flex' : 'none';
-  if (fu) fu.style.display = (category === '인수Q&A') ? 'flex' : 'none';
+  if (fp) fp.style.display = (category === '상품') ? 'flex' : 'none';
+  if (fu) fu.style.display = (category === '인수') ? 'flex' : 'none';
 }
 
 function _clearExtraFields() {
@@ -1977,12 +2035,12 @@ window.formSelectInsurerTypeUW = function(type) {
 /* 글쓰기 폼에서 선택된 보험사명 + insurance_type 반환 */
 function _getFormInsurer(category) {
   var name = '', type = '';
-  if (category === '상품Q&A') {
+  if (category === '상품') {
     var selNL = document.getElementById('write-insurer-nonlife');
     var selL  = document.getElementById('write-insurer-life');
     if (selNL && selNL.style.display !== 'none') { name = selNL.value || ''; type = 'nonlife'; }
     else if (selL && selL.style.display !== 'none') { name = selL.value || ''; type = 'life'; }
-  } else if (category === '인수Q&A') {
+  } else if (category === '인수') {
     var selNL2 = document.getElementById('write-uw-insurer-nonlife');
     var selL2  = document.getElementById('write-uw-insurer-life');
     if (selNL2 && selNL2.style.display !== 'none') { name = selNL2.value || ''; type = 'nonlife'; }
@@ -2038,7 +2096,7 @@ window.onClickWriteBtn = function() {
 
 window.openWriteView = function() {
   var board      = _currentBoard;
-  var categories = (BOARD_CATEGORIES[board] || ['상품Q&A']).filter(function(c) { return c !== '전체'; });
+  var categories = (BOARD_CATEGORIES[board] || ['상품']).filter(function(c) { return c !== '전체'; });
   var select     = document.getElementById('write-category');
   if (select) {
     select.innerHTML = categories.map(function(c) {
@@ -2215,24 +2273,44 @@ window.submitPost = async function() {
   var diagnosisTiming = (document.getElementById('write-diagnosis-timing') || {}).value || '';
   var currentStatus   = (document.getElementById('write-current-status')   || {}).value || '';
 
-  /* 카테고리별 필수값 검사 */
-  if (category === '상품Q&A' && !insurer.trim()) { alert('보험사를 입력해 주세요.'); return; }
-  if (category === '인수Q&A' && !disease.trim()) { alert('질병명을 입력해 주세요.'); return; }
+  /* 카테고리별 필수값 검사 (spec v2 § 2-2 v1.x question_type = 공지/상품/인수) */
+  if (category === '상품' && !insurer.trim()) { alert('보험사를 입력해 주세요.'); return; }
+  if (category === '인수' && !disease.trim()) { alert('질병명을 입력해 주세요.'); return; }
 
-  /* 보험사게시판 권한 체크 (프론트 방어) */
+  /* 보험사 게시판 권한 체크 (spec § 5-1 RBAC: insurer_* + admin 만) */
   var s     = window.AppState || {};
   var board = _currentBoard;
   if (board === 'insurer' && ![
     'admin',
     'insurer_branch_manager','insurer_manager','insurer_member','insurer_staff'
   ].includes(s.role)) {
-    alert('보험사게시판은 보험사 계정 또는 관리자만 작성할 수 있습니다.');
+    alert('보험사 게시판은 보험사 계정 또는 관리자만 작성할 수 있습니다.');
+    return;
+  }
+  /* hub / archive_legacy = admin only (spec § 5-1) */
+  if ((board === 'hub' || board === 'archive_legacy') && s.role !== 'admin') {
+    alert('이 게시판은 관리자만 작성할 수 있습니다.');
+    return;
+  }
+  /* manager_notice = admin + ga_manager (본인 팀, spec § 5-2) */
+  if (board === 'manager_notice' && !['admin','ga_manager'].includes(s.role)) {
+    alert('매니저 공지는 관리자 또는 실장(ga_manager)만 작성할 수 있습니다.');
+    return;
+  }
+  /* manager_lounge = admin + 매니저급 4종 (admin 토글 #1 ON 시점, spec § 5-3) */
+  if (board === 'manager_lounge' && ![
+    'admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'
+  ].includes(s.role)) {
+    alert('매니저 라운지는 매니저급 이상만 작성할 수 있습니다.');
     return;
   }
   var org   = _userOrg || {};
+  /* spec v2 § 7-2-3 신 컬럼: branch_id / team_id 박기. 옛 organization_id는 호환 유지용 보존 */
   var orgId = '';
-  if (board === 'team')   orgId = (org.company || '') + '_' + (org.branch || '') + '_' + (org.team || '');
-  if (board === 'branch') orgId = (org.company || '') + '_' + (org.branch || '');
+  if (board === 'manager_notice') orgId = (org.company || '') + '_' + (org.branch || '') + '_' + (org.team || '');
+  else if (board === 'qna' || board === 'navigation' || board === 'manager_lounge') {
+    orgId = (org.company || '') + '_' + (org.branch || '');
+  }
 
   var displayName = s.name || '알 수 없음';
   if (isAnon) {
@@ -2248,14 +2326,14 @@ window.submitPost = async function() {
   if (btn) { btn.disabled = true; btn.textContent = _editingPostId ? '수정 중...' : '등록 중...'; }
 
   try {
-    /* ── 수정 모드 (PATCH) ── */
+    /* ── 수정 모드 (PATCH, v1.x category = 공지/상품/인수) ── */
     if (_editingPostId) {
       var patchBody = { title: title, content: content, category: category };
-      if (category === '상품Q&A') {
+      if (category === '상품') {
         patchBody.insurer_name    = insurer;
         patchBody.product_category = productCategory;
       }
-      if (category === '인수Q&A') {
+      if (category === '인수') {
         patchBody.patient_age       = age       ? parseInt(age) : null;
         patchBody.patient_gender    = gender    || null;
         patchBody.disease_name      = disease   || null;
@@ -2289,12 +2367,12 @@ window.submitPost = async function() {
       like_count:      0,
       comment_count:   0
     };
-    if (category === '상품Q&A') {
+    if (category === '상품') {
       postBody.insurer_name     = insurer         || null;
       postBody.product_category = productCategory || null;
       postBody.insurance_type   = insuranceType   || null;
     }
-    if (category === '인수Q&A') {
+    if (category === '인수') {
       postBody.patient_age      = age       ? parseInt(age) : null;
       postBody.patient_gender   = gender    || null;
       postBody.disease_name     = disease   || null;
