@@ -32,7 +32,7 @@
 
 본 매트릭스 = **라이브 검수 기준값**. 라이브 결과 ↔ 본 매트릭스 차이 발견 시 사고 신호.
 
-| role | 한국어 | 매니저공지 | 매니저라운지 | 네비방 | 현장Q&A | 보험사게시판 | 허브 | archive_legacy |
+| role | 한국어 | 매니저공지 | 매니저라운지 | 네비방 | 스마트 게시판 | 보험사게시판 | 허브 | archive_legacy |
 |---|---|---|---|---|---|---|---|---|
 | **admin** | 어드민 | ✅ | ✅ (토글 무관) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **ga_branch_manager** | 지점장/센터장 | ✅ | ✅ (토글 ON 시) | ✅ | ✅ | ❌ | ❌ | ❌ |
@@ -71,20 +71,20 @@
 ### B-2. ga_branch_manager 시뮬레이션
 - 로그인: ga_branch_manager 시드 계정 (없으면 ga_member로 대체)
 - 진입: 동일
-- 검수: 매니저공지 + 네비방 + 현장Q&A 3탭 노출 (매니저라운지 = `manager_lounge_enabled` 토글 OFF 시 비노출)
+- 검수: 매니저공지 + 네비방 + 스마트 게시판 3탭 노출 (매니저라운지 = `manager_lounge_enabled` 토글 OFF 시 비노출)
 
 ### B-3. ga_manager 시뮬레이션 (실장)
 - 동일 (B-2와 동일 노출)
 
 ### B-4. ga_member 시뮬레이션 (설계사)
-- 매니저공지 + 네비방 + 현장Q&A 3탭 노출
+- 매니저공지 + 네비방 + 스마트 게시판 3탭 노출
 - 매니저라운지 = ❌ (role 분기 비노출)
 
 ### B-5. ga_staff 시뮬레이션
 - B-4와 동일
 
 ### B-6~B-9. insurer_* 4종 시뮬레이션
-- 현장Q&A + 보험사게시판 2탭 노출 (현 spec § 1-3 박힘)
+- 스마트 게시판 + 보험사게시판 2탭 노출 (현 spec § 1-3 박힘)
 - ⚠️ **결재 4 박음 후 = 보험사게시판 비노출 박음**
 
 ### 라이브 시드 계정 박힘 박음
@@ -117,7 +117,7 @@ ORDER BY cmd, policyname;
 - INSERT 7건: posts_insert_manager_notice / manager_lounge / navigation / insurer / admin_seed / hub / qna_system
 - UPDATE 1건 + DELETE 1건 + ETC = 17건
 
-**현장Q&A admin write-only 박힘 검증 (마스터 §13 결재 1):**
+**스마트 게시판 admin write-only 박힘 검증 (마스터 §13 결재 1):**
 
 ```sql
 -- C-2. qna board_type INSERT 정책 박힘

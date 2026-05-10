@@ -88,7 +88,7 @@ exception_diseases admin only  | SELECT | {authenticated} | is_admin()   | NULL
 | 영역 | 영향 |
 |---|---|
 | 사용자 화면 | 헤더 통합 검색 드롭다운 + 결과 페이지에서 🏥 예외질환 섹션 사라짐 |
-| 다른 검색 결과 | 스크립트 / 현장 Q&A / 업무자료 3섹션 정상 작동 (변경 없음) |
+| 다른 검색 결과 | 스크립트 / 스마트 게시판 / 업무자료 3섹션 정상 작동 (변경 없음) |
 | API 직접 호출 | anon key로 호출 시 빈 배열 반환 (admin 외 SELECT 차단) |
 | admin 데이터 접근 | Supabase SQL Editor / DB 도구로 정상 SELECT 가능 (`is_admin()` 통과) |
 | 데이터 보존 | 23,463건 그대로 (DROP/UPDATE 없음) |

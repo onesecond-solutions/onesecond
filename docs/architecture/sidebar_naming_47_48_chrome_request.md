@@ -1,11 +1,11 @@
 # 별 트랙 #47 + #48 라이브 검증 의뢰서 (Chrome 시연용)
 
 > **작성일:** 2026-05-10 (Phase 1.5 본진 ✅ 종료 후속, 5/15 4팀 오픈 D-5)
-> **트랙:** #47 사이드바·모바일 탭 메뉴 순서 정합 + #48 호칭 정합 ("현장 Q&A" → "현장의 소리")
+> **트랙:** #47 사이드바·모바일 탭 메뉴 순서 정합 + #48 호칭 정합 ("스마트 게시판" → "현장의 소리")
 > **선행 commit:** `5b161ac` (#47, app.html 순서 정합) / `8c544d8` (#48, 라이브 코드 4 파일 호칭 정합)
 > **실행자:** Claude in Chrome (라이브 시연)
 > **신버전 검증:** 라이브 = `https://onesecond.solutions` (GitHub Pages, Supabase 백엔드 `pdnwgzneooyygfejrvbg` `onesecond-v1-restore-0420`)
-> **목적:** 5/15 4팀 사용자 노출 톤 통일 + home_v2 Top bar 정합 라이브 회귀 (잔존 "현장 Q&A" 노출 0건 보장)
+> **목적:** 5/15 4팀 사용자 노출 톤 통일 + home_v2 Top bar 정합 라이브 회귀 (잔존 "스마트 게시판" 노출 0건 보장)
 > **결과 기준:** 18건 모두 PASS → #47/#48 ✅ 종료 / 1건 이상 FAIL → 즉시 보강
 
 ---
@@ -41,7 +41,7 @@
 
 ### A-2. 사이드바 두 번째 항목 호칭 = "현장의 소리" ✅
 - 사이드바 두 번째 메뉴 텍스트 raw = `현장의 소리`
-- "현장 Q&A" 잔존 시 즉시 FAIL 보고
+- "스마트 게시판" 잔존 시 즉시 FAIL 보고
 - DevTools Elements: `[data-menu="board"]` text content `현장의 소리`
 
 ### A-3. "현장의 소리" 클릭 → board 진입 정합 ✅
@@ -80,7 +80,7 @@
 ### B-2. 두 번째 탭(📋) aria-label = "현장의 소리" ✅
 - DevTools Elements 패널 → `.tab-bar > [data-menu="board"]`
 - `aria-label="현장의 소리"` raw 확인
-- 사고 신호: aria-label "현장 Q&A" 잔존
+- 사고 신호: aria-label "스마트 게시판" 잔존
 
 ### B-3. 두 번째 탭(📋) 탭 → board 페이지 진입 ✅
 - 탭 후 `pages/board.html` 정상 로드
@@ -96,26 +96,26 @@
 ### C-1. 검색 preview drawer 섹션 라벨 = "💬 현장의 소리" ✅
 - `/app.html` 상단 검색창 클릭 + "보험" 또는 게시글이 있을 만한 단어 입력
 - preview drawer 노출 시 게시글 섹션 라벨 raw = `💬 현장의 소리`
-- 사고 신호: "💬 현장 Q&A" 잔존
+- 사고 신호: "💬 스마트 게시판" 잔존
 - (검색 결과 게시글이 0건이면 본 항목 N/A 처리, 다른 키워드로 재시도)
 
 ### C-2. 검색 preview drawer badge = "현장의 소리" ✅
 - C-1과 동일 진입
 - 게시글 카드 우측 badge raw = `현장의 소리`
-- 사고 신호: badge "현장 Q&A" 잔존
+- 사고 신호: badge "스마트 게시판" 잔존
 
 ### C-3. 검색 결과 페이지 sub 텍스트 호칭 ✅
 - 검색창 Enter (또는 검색 실행) → search-result-page 진입
 - sub 텍스트 raw = `총 N건 — 스크립트 X건 · 현장의 소리 Y건 · 업무자료 Z건` 형식
-- 사고 신호: "현장 Q&A Y건" 잔존
+- 사고 신호: "스마트 게시판 Y건" 잔존
 
 ### C-4. 검색 결과 페이지 그룹 타이틀 ✅
 - C-3와 동일 진입, 게시글 그룹 타이틀 raw = `💬 현장의 소리 (Y건)`
-- 사고 신호: "💬 현장 Q&A (Y건)" 잔존
+- 사고 신호: "💬 스마트 게시판 (Y건)" 잔존
 
 ### C-5. 검색 결과 카드 badge ✅
 - 게시글 카드 좌측 상단 badge raw = `현장의 소리`
-- 사고 신호: badge "현장 Q&A" 잔존
+- 사고 신호: badge "스마트 게시판" 잔존
 
 ---
 
@@ -125,12 +125,12 @@
 - 직접 진입: `/pages/board.html`
 - 페이지 상단 타이틀 raw = `현장의 소리 · 실시간 이슈 공유`
 - accent 강조 영역(brown)이 "현장의 소리"에 부착
-- 사고 신호: "현장 Q&A · 실시간 이슈 공유" 잔존
+- 사고 신호: "스마트 게시판 · 실시간 이슈 공유" 잔존
 
 ### D-2. /pages/home.html 룰렛 카드 라벨 ✅
 - 직접 진입: `/pages/home.html` (또는 home_v2 → app.html → 홈 메뉴)
 - 중앙 룰렛 60도 위치 board 카드 호버 시 tip 라벨 raw = `💬 현장의 소리`
-- 사고 신호: tip 라벨 "💬 현장 Q&A" 잔존
+- 사고 신호: tip 라벨 "💬 스마트 게시판" 잔존
 
 ---
 
@@ -139,7 +139,7 @@
 ### E-1. home_v2 카드 kicker "FIELD Q&A" 영문 보존 ✅
 - `/pages/home_v2.html` 메인 카드 그리드
 - 현장의 소리 카드 상단 kicker raw = `FIELD Q&A` (영문, 대문자) 보존
-- 사고 신호: 한국어 "현장의 소리" 또는 "현장 Q&A"로 변경됨 (의도된 보존 깨짐)
+- 사고 신호: 한국어 "현장의 소리" 또는 "스마트 게시판"로 변경됨 (의도된 보존 깨짐)
 
 ### E-2. data-menu='board' 라우팅 키 보존 ✅
 - DevTools Elements: 사이드바·모바일 탭·home_v2 카드의 board 진입 element 모두 `data-menu="board"` 보존
@@ -187,7 +187,7 @@ FAIL 발생 시 즉시 Code 인계 → 보강 commit → 재검증 RUN.
 | 시나리오 | 결과 | 비고 |
 |---|---|---|
 | A-1. PC 사이드바 7항목 순서 | ✅ PASS | DOM 순서 raw = home → board → quick → scripts → myspace → together → news → admin(숨김). 보험뉴스 7번째(끝) ✅, Quick 메뉴 3번째 ✅ |
-| A-2. 사이드바 호칭 "현장의 소리" | ✅ PASS | `[data-menu="board"].menu-item.textContent = "현장의 소리"`. "현장 Q&A" 잔존 0건 |
+| A-2. 사이드바 호칭 "현장의 소리" | ✅ PASS | `[data-menu="board"].menu-item.textContent = "현장의 소리"`. "스마트 게시판" 잔존 0건 |
 | A-3. "현장의 소리" 클릭 → board 진입 | ✅ PASS | 사이드바 클릭 후 board.html 정상 로드. 페이지 타이틀 "현장의 소리 · 실시간 이슈 공유" 표시. active 이동 |
 | A-4. 보험뉴스 끝 클릭 진입 | ✅ PASS | `[data-menu="news"]` click() 후 news.html 정상 로드. active = 보험뉴스 |
 | A-5. admin 메뉴 노출 (admin 로그인 시) | ✅ PASS | 본 검증은 ga_manager 로그인이라 `#menu-admin → display:none` 확인. style raw 정합 (border-top + brown 색). renderProBadge() 분기 소스 확인 |

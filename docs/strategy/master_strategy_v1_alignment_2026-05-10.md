@@ -11,7 +11,7 @@
 
 | # | 결재 항목 (마스터 §13) | 본문 권고 | 현 spec/코드 정합 | 박음 본진 |
 |---|---|---|---|---|
-| 1 | 현장Q&A admin write-only RLS 강제 (v0부터) | YES | ✅ 정합 | Chrome 라이브 RLS 검증만 |
+| 1 | 스마트 게시판 admin write-only RLS 강제 (v0부터) | YES | ✅ 정합 | Chrome 라이브 RLS 검증만 |
 | 2 | 양방향 미러링 → 일방향 자동 저장 | YES | ⚠️ 모순 | spec § 6-2 / § 1-1 갱신 (사고 위험 0) |
 | 3 | "매니저 공지" → "실장님 공지" 명명 변경 | YES | ⚠️ 모순 | board.html + admin_v2 + spec 일괄 박음 (사고 위험 ⚠️) |
 | 4 | 보험사 게시판 노출 = admin 수동 토글 (당분간 정의) | 자발 요청 시점 | ✅ 부분 정합 | spec § 1-3 박힘 보강 + admin_v2 D-1 토글 UI |
@@ -20,7 +20,7 @@
 
 ---
 
-## 결재 1 — 현장Q&A admin write-only RLS 강제 (v0부터)
+## 결재 1 — 스마트 게시판 admin write-only RLS 강제 (v0부터)
 
 ### 본문 권고
 > "YES (Step 8 진입 전 spec 박음)"
@@ -56,7 +56,7 @@ admin only + source_type IN ('navigation_distilled', 'seed')
 ❌ 양방향 미러링 → ✅ 일방향 자동 저장
 ```
 > "미러링(양쪽 동기화) X — 팀장님 본인이 작성·삭제 권한 보유 위해"
-> "일방향 자동 저장 = 보험사 게시판 = 저장소, 현장Q&A = 노출"
+> "일방향 자동 저장 = 보험사 게시판 = 저장소, 스마트 게시판 = 노출"
 
 ### 현 spec 박힘 (모순 검증)
 
@@ -139,7 +139,7 @@ admin only + source_type IN ('navigation_distilled', 'seed')
 
 **spec § 1-3 박힘:**
 ```
-[보험사 임직원 (insurer_*)] 현장Q&A / 보험사게시판 (2탭)
+[보험사 임직원 (insurer_*)] 스마트 게시판 / 보험사게시판 (2탭)
 ```
 
 → insurer_* role 자체에는 보험사 게시판 노출 박힘.

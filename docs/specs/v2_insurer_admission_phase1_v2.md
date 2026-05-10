@@ -125,7 +125,7 @@ posts INSERT 1회 (단일 row, 복제 ❌)
   ↓
 RLS 가시성 분기 (SELECT 시점에 자동)
   - 보험사 게시판: posts_select_insurer_employee → 보험사 임직원
-  - 현장 Q&A:     posts_select_qna_seed_or_branch → 모든 지점 사용자
+  - 스마트 게시판:     posts_select_qna_seed_or_branch → 모든 지점 사용자
   → 단일 row, 두 영역에 노출 (가시성 분기, 복제 ❌)
 
 [B. Q&A 트랙 — 정상 가동 후]
@@ -152,13 +152,13 @@ RLS 가시성 분기:
   - 사용자 네비방: 답변 row도 함께 노출 (parent_post_id 매칭)
   - 보험사 임직원: 본인 담당 지점만 (or 통합 view 토글)
 
-[C. 시스템 정제 → 현장 Q&A]
+[C. 시스템 정제 → 스마트 게시판]
   v1.0 = 단순 수동 승격 (admin이 우수 질답 선별)
   v1.5+ = 키워드 추출 자동 분류
   v2.0+ = LLM 정제 (Claude API)
 
 [D. 허브 승격 (선별)]
-  현장 Q&A 누적 → admin 큐레이션 → 허브 게시판 promotion
+  스마트 게시판 누적 → admin 큐레이션 → 허브 게시판 promotion
   허브 게시판 → admin 토글로 사용자 노출 (보험판 구글 검색창)
 ```
 
@@ -166,7 +166,7 @@ RLS 가시성 분기:
 
 | 위치 | 검색 범위 | UI 톤 |
 |---|---|---|
-| **현장 Q&A 페이지 상단** | 본인 지점 안 (시드 + 정제 + 답변) | **큼지막 구글 느낌** ⭐ |
+| **스마트 게시판 페이지 상단** | 본인 지점 안 (시드 + 정제 + 답변) | **큼지막 구글 느낌** ⭐ |
 | **허브 / 보험판 구글** | 글로벌 (오픈 시점 admin 토글) | 보험판 구글 = 최종 목표 |
 
 검색 = `posts.keywords` GIN 인덱스 + 본문 텍스트 검색 (TBD: tsvector or pg_trgm) — Step 8에서 구현.
@@ -174,9 +174,9 @@ RLS 가시성 분기:
 ## 1-3. 사용자 영역별 진입 동선
 
 ```
-[admin]                매니저공지 / 현장Q&A / 네비게이션방 / 보험사게시판 (4탭)
-[사용자 (ga_*)]         매니저공지 / 현장Q&A / 네비게이션방 (3탭)
-[보험사 임직원 (insurer_*)] 현장Q&A / 보험사게시판 (2탭) ⭐ 네비방 비노출
+[admin]                매니저공지 / 스마트 게시판 / 네비게이션방 / 보험사게시판 (4탭)
+[사용자 (ga_*)]         매니저공지 / 스마트 게시판 / 네비게이션방 (3탭)
+[보험사 임직원 (insurer_*)] 스마트 게시판 / 보험사게시판 (2탭) ⭐ 네비방 비노출
 [보험사 임직원 (admin 토글 매니저 라운지 ON 시)] 위 + 매니저 라운지 추가
 ```
 
@@ -191,7 +191,7 @@ RLS 가시성 분기:
 
 | board_type | 한국어 | 가시성 단위 | admin 토글 |
 |---|---|---|---|
-| `qna` | 현장 Q&A | 지점 단위 + 시드 글로벌 | — |
+| `qna` | 스마트 게시판 | 지점 단위 + 시드 글로벌 | — |
 | `manager_notice` | 매니저 공지 | **팀 단위 격리** ⭐ | — |
 | `manager_lounge` | 매니저 라운지 (= "관리자 라운지" 동의어) | 매니저급+ × 지점 | #1 (`manager_lounge_enabled`, 기본 OFF) |
 | `navigation` | 네비게이션방 ⭐ 신규 | 지점 단위 | — |
@@ -236,7 +236,7 @@ question_type → scope 결정 → 검색 분류 → 허브 승격 → 보험사
 
 | source_type | 의미 | 작성자 |
 |---|---|---|
-| `seed` | admin 시드 (보험사 게시판 → RLS로 현장 Q&A 노출) | admin |
+| `seed` | admin 시드 (보험사 게시판 → RLS로 스마트 게시판 노출) | admin |
 | `insurer_post` | 보험사 임직원 답변 + 자발 글 | 보험사 임직원 |
 | `navigation_distilled` | 네비방 질문·답변 정제 (v1.5+) | 시스템 |
 | `user_post` | 사용자 네비방 질문 | 사용자 (ga_*) |
@@ -270,7 +270,7 @@ INSERT INTO posts (
 | 매니저 공지 | **팀 단위 격리** ⭐ | `team_id = my_team_id()` |
 | 매니저 라운지 | 매니저급+ × 지점 (admin 토글 #1) | `is_manager() AND branch_id = my_branch_id() AND is_setting_enabled('manager_lounge_enabled')` |
 | 네비게이션방 | 지점 단위 | `branch_id = my_branch_id() AND NOT is_insurer_employee()` |
-| 현장 Q&A | 지점 단위 + 시드 글로벌 | `(branch_id = my_branch_id()) OR (board_type='insurer' AND source_type='seed' AND branch_id IS NULL)` |
+| 스마트 게시판 | 지점 단위 + 시드 글로벌 | `(branch_id = my_branch_id()) OR (board_type='insurer' AND source_type='seed' AND branch_id IS NULL)` |
 | 보험사 게시판 | 보험사 × 임직원 담당지점 N:M (admin 토글 #2) | `is_insurer_employee() AND insurer_id = current_user_insurer_id() AND (is_setting_enabled('insurer_unified_view') OR branch_id = ANY(my_assigned_branches()) OR branch_id IS NULL)` |
 | 허브 게시판 | 글로벌 (admin 토글 #3) | `is_admin() OR is_setting_enabled('hub_public')` |
 
@@ -351,7 +351,7 @@ INSERT INTO app_settings (key, value, description, updated_at) VALUES
 
 ## 5-1. 9역할 × 7영역 권한표
 
-| role | 매니저공지 | 매니저라운지 | 네비방 | 현장Q&A | 보험사 | 허브 | 회원가입 폼 |
+| role | 매니저공지 | 매니저라운지 | 네비방 | 스마트 게시판 | 보험사 | 허브 | 회원가입 폼 |
 |---|---|---|---|---|---|---|---|
 | `admin` | 전체 R/W | 전체 R/W | 전체 R | R/W | 전체 R/W | R/W | (admin 직접 생성) |
 | `ga_branch_manager` | ❌ ⭐ | 본인 지점 R/W | 본 지점 R/W | R | ❌ | ❌ | 설계사 폼 |
@@ -386,12 +386,12 @@ INSERT INTO app_settings (key, value, description, updated_at) VALUES
 
 ## 5-4. 보험사 임직원 가시성 (네비방 비노출 + 본인 회사 게시판 + 답변 + 자발 글)
 
-- 사이드바 메뉴: 현장 Q&A / 보험사 게시판 (2탭, 네비방 비노출)
+- 사이드바 메뉴: 스마트 게시판 / 보험사 게시판 (2탭, 네비방 비노출)
 - 본인 회사 게시판:
   - 답변 (parent_post_id 박힌 글) ✅
   - 자발 글 (공지/상품/인수 양식 차용) ✅
   - 가시성 = 본인 담당 지점 (admin 토글 #2 OFF 기본)
-- 현장 Q&A: 담당 지점 글 R (시드 + 정제 + 답변)
+- 스마트 게시판: 담당 지점 글 R (시드 + 정제 + 답변)
 
 ## 5-5. 화면설정(`applyMenuSettings`) 무시 대상
 
@@ -426,7 +426,7 @@ AS $$
   SELECT team_id FROM users WHERE id = auth.uid();
 $$;
 
--- 7. my_branch_id() — 네비방·현장Q&A 가시성용
+-- 7. my_branch_id() — 네비방·스마트 게시판 가시성용
 CREATE OR REPLACE FUNCTION my_branch_id() RETURNS UUID
 LANGUAGE sql STABLE SECURITY DEFINER
 AS $$
@@ -452,10 +452,10 @@ $$;
 ## 6-2. posts SELECT 정책 골격
 
 ```sql
--- 정책 1. 현장 Q&A + 시드 OR 분기 (보강 1 결정 반영) ⭐
+-- 정책 1. 스마트 게시판 + 시드 OR 분기 (보강 1 결정 반영) ⭐
 CREATE POLICY posts_select_qna_seed_or_branch ON posts FOR SELECT TO authenticated
 USING (
-  -- 일반 현장 Q&A: 본인 지점 안
+  -- 일반 스마트 게시판: 본인 지점 안
   (board_type = 'qna' AND branch_id = my_branch_id())
   OR
   -- 시드 데이터: 보험사 게시판이지만 모든 지점 사용자에게 노출
@@ -673,7 +673,7 @@ WITH CHECK (
   AND is_admin()
 );
 
--- 정책 7. 현장 Q&A INSERT — 시스템 정제 결과만 (사용자 직접 쓰기 ❌)
+-- 정책 7. 스마트 게시판 INSERT — 시스템 정제 결과만 (사용자 직접 쓰기 ❌)
 CREATE POLICY posts_insert_qna_system ON posts FOR INSERT TO authenticated
 WITH CHECK (
   board_type = 'qna'
@@ -722,7 +722,7 @@ Step 2 commit (`b5cf51c` + 후속) 그대로 보존:
 |---|---|
 | ✅ `insurers` 31사 INSERT | 그대로 (보험사 게시판 + 회원가입 드롭다운 + 보험사 선택 메커니즘) |
 | ✅ `posts.insurer_target` | 네비방 보험사 선택 메커니즘으로 활용 ⭐ |
-| ✅ `posts.keywords` | 검색 인프라 (현장 Q&A 검색창 + 허브 검색) |
+| ✅ `posts.keywords` | 검색 인프라 (스마트 게시판 검색창 + 허브 검색) |
 | ✅ `posts.question_type` | v1.x 3개로 시작 (CHECK 제약 추가) |
 | ✅ `posts.status` | pending/active/suspended 흐름 |
 | ✅ `posts.drug_usage` | 6필드 단계형 입력 |
@@ -1074,7 +1074,7 @@ is_insurer_employee()
 (board_type = 'insurer' AND source_type = 'seed' AND branch_id IS NULL)  -- 통과 ⭐
 ```
 
-→ 더원지점 사용자가 현장 Q&A 페이지 진입 시 시드 글 노출 (메리츠 시드 = 모든 지점 공유).
+→ 더원지점 사용자가 스마트 게시판 페이지 진입 시 시드 글 노출 (메리츠 시드 = 모든 지점 공유).
 
 ### 8-2-3. RLS 복잡도 캡슐화
 
@@ -1098,11 +1098,11 @@ $$;
 | 매니저 공지 | `manager_notice` |
 | 매니저 라운지 | `manager_lounge` |
 | 네비게이션방 | `navigation` |
-| 현장 Q&A | `qna` (+ 시드는 `insurer` + RLS OR 분기로 흡수) |
+| 스마트 게시판 | `qna` (+ 시드는 `insurer` + RLS OR 분기로 흡수) |
 | 보험사 게시판 | `insurer` ⭐ 시드 + 답변 + 자발 글 모두 |
 | 허브 게시판 | `hub` |
 
-**시드 데이터:** `board_type='insurer'` (메뉴-DB 일치) + 현장 Q&A에는 RLS OR 분기로 노출.
+**시드 데이터:** `board_type='insurer'` (메뉴-DB 일치) + 스마트 게시판에는 RLS OR 분기로 노출.
 
 이유 (보강 1 정합):
 - 메뉴-DB 일치 본질 정합 (보험사 게시판 메뉴 = `board_type='insurer'`)
@@ -1111,7 +1111,7 @@ $$;
 
 ## 8-4. 사용자 화면 노출 패턴
 
-### 8-4-1. 현장 Q&A 페이지 진입
+### 8-4-1. 스마트 게시판 페이지 진입
 
 ```
 [큼지막 구글 느낌 검색창]

@@ -75,7 +75,7 @@ SELECT COUNT(*) FROM public.posts;
 
 ### B-1. board_type별 시드 박힘 박음
 
-#### B-1-a. qna (현장 Q&A) — admin 시드 ⭐
+#### B-1-a. qna (스마트 게시판) — admin 시드 ⭐
 ```sql
 INSERT INTO public.posts (
   board_type, source_type, title, content,
