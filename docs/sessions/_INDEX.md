@@ -1,6 +1,10 @@
 # 세션 인덱스 — 큰 그림 압축본
 
-> **🎯 원세컨드 핵심 정의:** **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X. 진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md`
+> **🎯 원세컨드 본질 (양면 진실 원천 — 매 세션 통째 필독):**
+> - **영업·사업 본질** ⭐⭐⭐ (모든 결정 기준): `docs/core/onesecond_master_strategy_v1_20260510.md` ⭐ NEW (5/10, 507줄, 14섹션)
+> - **시스템 본질**: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄)
+> - **한 줄:** 보험업 운영 흐름 네트워크 + 보험 검색 인프라 + 반복 질문 감소 시스템
+> - **0순위 정체성:** 중립 독립 SaaS (특정 보험사·GA 종속 X)
 >
 > **🚨 마지막 갱신:** 2026-05-10 오후 (16:54) — **Phase 1 Step 7 ✅ 종료** (board.html 4탭 → 7종 board_type 재구조화) + **spec § 6-2 정책 3 v0/v1 분기 결재** (자체 모순 해소) + **D-6 라이브 DB 진단 영구 보존** (`db_v0_diagnosis_2026-05-10.md` 267줄 신설) + 라이브 안정화 4건 (syntax 핫픽스 / PRO 배지 숨김 / home_v2 .nav 반응형 / 옛 index 푸터 이식). 직전: 2026-05-10 오후 (12:57) #30 Custom SMTP ✅ 종료 + 165 자기 복제 정정.
 >

@@ -9,6 +9,8 @@
 
 | 상황 | 파일 |
 |---|---|
+| **영업·사업 본질 (모든 결정 기준)** ⭐⭐⭐ | **`docs/core/onesecond_master_strategy_v1_20260510.md`** ⭐ NEW (5/10) |
+| **시스템 본질 (OS 정의, 양면 진실 원천)** ⭐⭐ | **`docs/core/onesecond_os_definition_v2_2026-05-07.md`** ⭐ |
 | 오늘 뭐 하나 / 어디까지 진행됐나 | **`docs/02_CURRENT_STATUS.md`** ⭐ |
 | 활성 방향 / 핵심 철학 / 일정 | **`docs/00_CURRENT_DIRECTION.md`** ⭐ |
 | 어떤 게 폐기됐는지 / 절대 하지 말 것 | **`docs/01_DO_NOT_DO.md`** ⭐ |
