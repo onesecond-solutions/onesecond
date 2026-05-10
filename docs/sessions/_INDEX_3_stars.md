@@ -91,6 +91,8 @@
 
 51. ~~(5/10 오전) public.posts 0건 시드 부재~~ → ✅ **종료 (5/11 오후, Chrome AI PASS)** — public.posts 10건 박힘 (기존 4 + 시드 6, B-7 archive_legacy SKIP 정합) / 라이브 board.html 7탭 PASS (콘솔 에러 0건) / commit `9751fb0` (시드 SQL) + Chrome 결과 MD `star_51_seed_chrome_result_2026-05-11.md`
 
+53. ~~(5/10 오후 박힘) Step 7 라이브 회귀 검수 Chrome AI~~ → ✅ **종료 (5/11 오후, Chrome AI PASS, _INDEX 사후 등록)** — 4역할 라이브 검수 PASS (admin/ga_manager/ga_member/insurer_branch_manager) + 5역할 소스 분석 정합 (ga_branch_manager/ga_staff/insurer_manager/insurer_member/insurer_staff) / RLS 17건 PASS / CHECK 7종 PASS / 사고 신호 1건 발견 → 핫픽스 박힘 (commit `6a6c16e`, board.html L1329 admin × manager_lounge 토글 무관) / 결과 MD `step7_live_regression_chrome_result_2026-05-11.md`
+
 ---
 
 ### 5/11 오후 신설 (Chrome AI #51 검수 발견)
