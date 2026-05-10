@@ -800,7 +800,7 @@
   <!-- ② 탭바 블록 -->
   <div class="pg-tab-block">
     <div class="pg-tab-bar" id="board-tab-bar">
-      <button class="pg-tab-btn active" data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 매니저 공지</button>
+      <button class="pg-tab-btn active" data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 실장님 공지</button>
       <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')">☕ 매니저 라운지</button>
       <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
       <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
@@ -1171,7 +1171,7 @@ var BOARD_CATEGORIES = {
 };
 var BOARD_LABEL = {
   qna:             '스마트 게시판',
-  manager_notice:  '매니저 공지',
+  manager_notice:  '실장님 공지',
   manager_lounge:  '매니저 라운지',
   navigation:      '네비게이션방',
   insurer:         '보험사 게시판',
@@ -1631,7 +1631,7 @@ function _renderPostList() {
       } else {
         var labelMap = {
           qna:            '스마트 게시판',
-          manager_notice: '매니저 공지',
+          manager_notice: '실장님 공지',
           navigation:     '네비게이션방'
         };
         var boardName = labelMap[_currentBoard] || (BOARD_LABEL[_currentBoard] || '게시판');
@@ -2294,7 +2294,7 @@ window.submitPost = async function() {
   }
   /* manager_notice = admin + ga_manager (본인 팀, spec § 5-2) */
   if (board === 'manager_notice' && !['admin','ga_manager'].includes(s.role)) {
-    alert('매니저 공지는 관리자 또는 실장(ga_manager)만 작성할 수 있습니다.');
+    alert('실장님 공지는 관리자 또는 실장(ga_manager)만 작성할 수 있습니다.');
     return;
   }
   /* manager_lounge = admin + 매니저급 4종 (admin 토글 #1 ON 시점, spec § 5-3) */
