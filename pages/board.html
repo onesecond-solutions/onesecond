@@ -805,7 +805,7 @@
       <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
       <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')">📋 현장 Q&amp;A</button>
       <button class="pg-tab-btn"        data-board="insurer"        onclick="window.switchBoard('insurer')">🏦 보험사 게시판</button>
-      <button class="pg-tab-btn"        data-board="hub"             onclick="window.switchBoard('hub')">🌐 허브 게시판 <span class="hub-badge">공개</span></button>
+      <button class="pg-tab-btn"        data-board="hub"             onclick="window.switchBoard('hub')">🌐 허브 게시판</button>
       <button class="pg-tab-btn"        data-board="archive_legacy"  onclick="window.switchBoard('archive_legacy')">🗄️ 폐기 보존</button>
     </div>
   </div>
@@ -1324,7 +1324,7 @@ function _applyBoardTabVisibility() {
 
   /* 7종 board_type 별 가시성 결정 */
   var visible = {
-    qna:             true,                                    /* 모든 사용자 (admin/ga_*/insurer_*) */
+    qna:             true,                                    /* 모든 사용자 (admin + ga + insurer 전부) */
     manager_notice:  isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출) */
     manager_lounge:  _boardTabVisible.manager_lounge && isMgrPlus, /* 토글 #1 ON + 매니저급+ */
     navigation:      isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출, spec § 5-4) */
