@@ -7,6 +7,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-10_0943.md` — **2026-05-10 오전 (1단계 응급 안정화 ✅ 종료)** ⭐⭐ CURRENT 계층 5 파일(00~04) + 분할 _INDEX 5 파일 + AI 협업 전략 영구 진실 원천(`docs/core/AI_COLLABORATION_STRATEGY.md`) + 핵심 철학 5종(0+1~4) 명문화 (0순위 = 중립 독립 SaaS 브랜드 정체성 추가) / #47/#48 라이브 18/18 PASS + #49 UX 종료 + #50 의도 확인 종료 / push 7 commit / 사고 학습 영구 박음 (5/10 컨텍스트 폭증 + 옛 분류 인용) / 메모리 `ai_collaboration_priority.md` 신설 + `user_work_style.md` 보강 / 본 세션 본질 = 기능 < 컨텍스트 안정화 (5/15 4팀 오픈 본진의 전제 조건)
 - `docs/sessions/2026-05-10_0042.md` — **2026-05-10 심야 (Phase 1.5 본진 ✅ 종료)** P1.5-A/B/C/D/E 라이브 회귀 14/15 PASS / 통합 모달 본진 home_v2.html 619→1,965줄 / index/login → home_v2 redirect 통째 폐기 (-2,990줄) / 사이드바 정합 #47 + 호칭 정합 #48 / UUID 1글자 오타 수정 (396→306) / 4팀 자산화 트랙 채팅 로그 archive / 사고 학습 3건 메모리 박음 / push 16 commit / 별 트랙 #45/#46/#47/#48 신설 + #30 Custom SMTP Critical 격상
 - `docs/sessions/2026-05-10_0037_kakao_migration_chat_archive.md` ⭐ — 4팀 자산화 트랙 컨텍스트 archive (1,564건 인덱싱 + 5 카테고리 + 마법사 UX)
 - `docs/sessions/2026-05-09_1757.md` — 2026-05-09 오후·저녁 (Step 5 본진 5-A/5-B/5-C 종료 + Phase 1.5 즉시 흡수 결정 (옵션 Y' 채택) / push 10 commit +3,611줄 / 사고 학습 1건 / 미해결 #37~#44 누적)
