@@ -192,7 +192,7 @@ RLS 가시성 분기:
 | board_type | 한국어 | 가시성 단위 | admin 토글 |
 |---|---|---|---|
 | `qna` | 스마트 게시판 | 지점 단위 + 시드 글로벌 | — |
-| `manager_notice` | 매니저 공지 | **팀 단위 격리** ⭐ | — |
+| `manager_notice` | 실장님 공지 | **팀 단위 격리** ⭐ | — |
 | `manager_lounge` | 매니저 라운지 (= "관리자 라운지" 동의어) | 매니저급+ × 지점 | #1 (`manager_lounge_enabled`, 기본 OFF) |
 | `navigation` | 네비게이션방 ⭐ 신규 | 지점 단위 | — |
 | `insurer` | 보험사 게시판 | 보험사 × 임직원 담당지점 N:M | #2 (`insurer_unified_view`, 기본 OFF) |
@@ -267,7 +267,7 @@ INSERT INTO posts (
 
 | 게시판 | 가시성 단위 | RLS 핵심 조건 |
 |---|---|---|
-| 매니저 공지 | **팀 단위 격리** ⭐ | `team_id = my_team_id()` |
+| 실장님 공지 | **팀 단위 격리** ⭐ | `team_id = my_team_id()` |
 | 매니저 라운지 | 매니저급+ × 지점 (admin 토글 #1) | `is_manager() AND branch_id = my_branch_id() AND is_setting_enabled('manager_lounge_enabled')` |
 | 네비게이션방 | 지점 단위 | `branch_id = my_branch_id() AND NOT is_insurer_employee()` |
 | 스마트 게시판 | 지점 단위 + 시드 글로벌 | `(branch_id = my_branch_id()) OR (board_type='insurer' AND source_type='seed' AND branch_id IS NULL)` |
@@ -363,13 +363,13 @@ INSERT INTO app_settings (key, value, description, updated_at) VALUES
 | `insurer_member` | ❌ | ❌ | ❌ | 담당 지점 R | 본인사 R/W | ❌ | 보험사 폼 (기본) |
 | `insurer_staff` | ❌ | ❌ | ❌ | 담당 지점 R | 본인사 R/W | ❌ | 보험사 폼 |
 
-## 5-2. 핵심 정정 — `ga_branch_manager` 매니저 공지 ❌ ⭐
+## 5-2. 핵심 정정 — `ga_branch_manager` 실장님 공지 ❌ ⭐
 
-**이유:** 매니저 공지 = 해당 팀만, **타 팀 매니저·지점장도 못 봄** (본질 격리).
+**이유:** 실장님 공지 = 해당 팀만, **타 팀 매니저·지점장도 못 봄** (본질 격리).
 
 지점장이 운영 공지 필요 시 → **매니저 라운지 사용** (admin 토글 #1 ON 후).
 
-매니저 공지 작성 권한 정정:
+실장님 공지 작성 권한 정정:
 - `admin`: 전사 (admin은 무한 권한)
 - `ga_manager`: 본인 팀 (실장이 본인 팀에 공지)
 - (기타 매니저 그룹 = 매니저 라운지 사용)
@@ -419,7 +419,7 @@ INSERT INTO app_settings (key, value, description, updated_at) VALUES
 ### 신규 4종 (Step 2-bis)
 
 ```sql
--- 6. my_team_id() — 매니저 공지 가시성용
+-- 6. my_team_id() — 실장님 공지 가시성용
 CREATE OR REPLACE FUNCTION my_team_id() RETURNS UUID
 LANGUAGE sql STABLE SECURITY DEFINER
 AS $$
@@ -588,7 +588,7 @@ USING (
 -- v0 단계에서도 INSERT 정상 동작 → row에 insurer_target/target_insurer_ids 박힘 →
 -- Phase 3 진입 시 v1 정책 가동되면 동일 row 자동 분기 가시 (재작업 0, 마이그레이션 0)
 
--- 정책 4. 매니저 공지 (팀 단위 격리)
+-- 정책 4. 실장님 공지 (팀 단위 격리)
 CREATE POLICY posts_select_manager_notice ON posts FOR SELECT TO authenticated
 USING (
   board_type = 'manager_notice'
@@ -619,7 +619,7 @@ USING (is_admin());
 ## 6-3. posts INSERT 정책 골격
 
 ```sql
--- 정책 1. 매니저 공지 INSERT — 본인 팀 + 매니저(ga_manager + admin)
+-- 정책 1. 실장님 공지 INSERT — 본인 팀 + 매니저(ga_manager + admin)
 CREATE POLICY posts_insert_manager_notice ON posts FOR INSERT TO authenticated
 WITH CHECK (
   board_type = 'manager_notice'
@@ -691,7 +691,7 @@ WITH CHECK (
 -- 보험사 매니저 모더레이션 (Step B-extra 정정 정합)
 -- 보존: posts_update_insurer_manager (is_insurer_manager() 가드)
 
--- 매니저 공지/라운지: 작성자 본인 + 같은 매니저급 (TBD)
+-- 실장님 공지/라운지: 작성자 본인 + 같은 매니저급 (TBD)
 -- → Step 2-bis 본문에서 결정
 ```
 
@@ -1095,7 +1095,7 @@ $$;
 
 | 메뉴 | board_type DB 값 |
 |---|---|
-| 매니저 공지 | `manager_notice` |
+| 실장님 공지 | `manager_notice` |
 | 매니저 라운지 | `manager_lounge` |
 | 네비게이션방 | `navigation` |
 | 스마트 게시판 | `qna` (+ 시드는 `insurer` + RLS OR 분기로 흡수) |
@@ -1331,7 +1331,7 @@ $$;
 | 7 | 9역할 + insurer_id + status + branch_id + team_id RLS 복합 | D-pre.7~.8 패턴 정합 + 자기 참조 EXISTS 금지 | 🟡 중간 |
 | 8 | Auth 메일 템플릿 영문 잔존 | 미해결 #31, Step 5 진입 시 통합 처리 | 🟢 낮음 |
 | 9 | board_type 의미 변경 시 데이터 손실 | Step A·B·C 분할 + 'archive_legacy' 보존 | 🟡 중간 |
-| 10 | 매니저 공지 팀 격리 운영 혼동 | spec § 5-2 명문화 + 매니저 라운지 분리 | 🟢 낮음 |
+| 10 | 실장님 공지 팀 격리 운영 혼동 | spec § 5-2 명문화 + 매니저 라운지 분리 | 🟢 낮음 |
 | 11 | 시드 데이터 RLS OR 분기 복잡도 | SECURITY DEFINER 함수 캡슐화 + 라이브 회귀 9건 | 🟡 중간 |
 | 12 | 보험사 임직원 N:M 다대다 분배 운영 부담 | admin_v2 D-10에서 입점 관리 UI 신설 | 🟢 낮음 |
 

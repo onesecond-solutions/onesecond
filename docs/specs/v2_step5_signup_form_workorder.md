@@ -617,7 +617,7 @@ SELECT COUNT(*) FROM insurer_employee_branches;
 |---|---|---|---|
 | `admin` | (메타 차단 회귀) | admin_v2 진입 회귀 | 9역할 가시성 종합 |
 | `ga_branch_manager` | 가입 시나리오 | 매니저 라운지 | 본인 지점 R/W |
-| `ga_manager` | 가입 시나리오 | 매니저 공지 작성 | 본인 팀 R/W |
+| `ga_manager` | 가입 시나리오 | 실장님 공지 작성 | 본인 팀 R/W |
 | `ga_member` | 가입 시나리오 (4팀 약 40~50명 표준) | — | 스마트 게시판 R |
 | `ga_staff` | 가입 시나리오 | — | 본인 팀 R |
 | `insurer_branch_manager` | 가입 + admin 직접 생성 회귀 | 본인사 게시판 | 매니저 승인 흐름 |
