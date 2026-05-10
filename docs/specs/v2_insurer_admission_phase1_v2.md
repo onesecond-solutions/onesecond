@@ -548,22 +548,22 @@ USING (
       AND (
         -- 전체 공개
         posts.insurer_target = '전체'
-        -- 손보전체 (current_user 소속이 손보일 때)
+        -- 손보전체 (current_user 소속이 손해보험일 때)
         OR (
           posts.insurer_target = '손보전체'
           AND EXISTS (
             SELECT 1 FROM public.insurers i
             WHERE i.id = u.insurer_id
-              AND i.category = '손보'
+              AND i.type = '손해보험'
           )
         )
-        -- 생보전체 (current_user 소속이 생보일 때)
+        -- 생보전체 (current_user 소속이 생명보험일 때)
         OR (
           posts.insurer_target = '생보전체'
           AND EXISTS (
             SELECT 1 FROM public.insurers i
             WHERE i.id = u.insurer_id
-              AND i.category = '생보'
+              AND i.type = '생명보험'
           )
         )
         -- 회사지정 (current_user 소속이 target_insurer_ids 배열에 포함)
@@ -579,7 +579,7 @@ USING (
 -- ── Phase 3 진입 결재 항목 (영구 박힘) ─────────────────────────
 -- [ ] § 6-2 정책 3 v0 → v1 전환 (위 SQL 주석 해제 + DROP/CREATE)
 -- [ ] posts.target_insurer_ids UUID[] 컬럼 신설 마이그레이션
--- [ ] insurers.category ENUM CHECK ('손보' / '생보') 박힘 검증
+-- [ ] insurers.type 값 ('손해보험' / '생명보험') 정합 검증 (CHECK 부재 OK, 31사 데이터로 검증, 2026-05-10 라이브 진단 박힘)
 -- [ ] 라이브 회귀 (네비방 INSERT 시 insurer_target 4종 분기 + 보험사 임직원 SELECT 정합)
 -- [ ] UI 라벨 "이 질문이 [N개 보험사]에 보입니다" 가짜 연결 → 실 연결 전환
 
