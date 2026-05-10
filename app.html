@@ -279,6 +279,15 @@ html, body {
 }
 .pro strong { color: var(--color-accent); }
 
+/* ── PRO 배지 일괄 숨김 (2026-05-10, 4팀 오픈 직전 KCP 결제 시스템 미가동 시점)
+   사이드바 PRO 슬롯 / A2 빠른 실행 PRO 작은 배지 / 검색창 'PRO 전용' 배지 모두 숨김.
+   결제 시스템 가동 후 본 블록 제거 또는 주석 처리. */
+.pro,
+.quick-pro-badge,
+.search-lock-badge {
+  display: none !important;
+}
+
 /* ── D: 콘텐츠 영역 (2026-04-29 body 스크롤로 위임) ── */
 .d {
   padding: 0;
