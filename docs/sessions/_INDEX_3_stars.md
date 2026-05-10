@@ -43,9 +43,9 @@
 
 ### 🚨 5/15 4팀 오픈 영향 (Critical / 시급)
 
-30. **🚨 (Critical 격상 5/10) Custom SMTP 도입 — 5/15 전 필수** — Phase 1 Step 4 진입 시 검토 발견. Supabase 기본 SMTP rate limit = **3 emails/hour**. **5/10 새벽 P1.5-E ⑥ 사고로 입증** + **5/10 #49 검증 중 over_email_send_rate_limit (429) 라이브 입증**. **결정:** (a) 채택 — 5/11~12 슬롯에 별 트랙 신설 (SendGrid / Mailgun / Resend / AWS SES 후보)
+30. **🚨 (Critical 격상 5/10) Custom SMTP 도입 — 5/15 전 필수** → ✅ **종료 (5/10 오후, Resend Custom SMTP 가동, 8단계 PASS)** — Phase 1 Step 4 진입 시 검토 발견. Supabase 기본 SMTP rate limit = **3 emails/hour**. **5/10 새벽 P1.5-E ⑥ 사고로 입증** + **5/10 #49 검증 중 over_email_send_rate_limit (429) 라이브 입증**. **결정:** (a) 채택 — Resend 채택 + 도메인 SPF/DKIM/DMARC 박힘 + Supabase Custom SMTP ON + 6종 한국어 템플릿 적용. **자동 해소 별 트랙 4건:** #31 / #37 / #45 / #49.
 
-31. **(5/8 새벽) 인증 메일 템플릿 한국어 변경 미작업** — Phase 1 Step 4 검증에서 발견. `Confirm Your Signup` 영문 잔존. 4팀 약 40~50명 한국어 사용자 대상 → 신뢰도 저하 우려
+31. **(5/8 새벽) 인증 메일 템플릿 한국어 변경 미작업** → ✅ **종료 (5/10 오후, #30 단계 4 6종 한국어 적용 자동 해소)** — Phase 1 Step 4 검증에서 발견. `Confirm Your Signup` 영문 잔존. 4팀 약 40~50명 한국어 사용자 대상 → 신뢰도 저하 우려
 
 32. **(5/8 새벽) Step 4-D 시나리오 3 미완 — 팀장님 직접 메일 클릭 검증** — 시나리오 1·2·4 PASS로 본질 검증 충분
 
@@ -57,7 +57,7 @@
 
 36. **(5/9 새벽) posts PK 타입 통일 (bigint → uuid 마이그레이션)** — Step 2-bis 1차 시도 발견. parent_post_id BIGINT로 정정 후 PASS. **트리거 = Phase 1 종료 후**. #33과 묶음
 
-37. **(5/9 오후) 인증 메일 한국어 템플릿 (#31과 묶음, D8 결재 (b))** — 5/12~14 슬롯 진행 권장
+37. **(5/9 오후) 인증 메일 한국어 템플릿 (#31과 묶음, D8 결재 (b))** → ✅ **종료 (5/10 오후, #30 단계 4 6종 한국어 적용 자동 해소)** — 5/12~14 슬롯 진행 권장 → #30 트랙 안에서 동시 처리됨
 
 38. **(5/9 오후) 5/15 4팀 약 40~50명 직급 분포 사전 매핑 운영 데이터 (영업 트랙)** — 4팀 명단 확보 후 ga_manager / ga_member / ga_branch_manager / ga_staff 분포 사전 매핑
 
@@ -77,7 +77,7 @@
 
 ### 5/10 새벽~5/10 신설 (Phase 1.5 후속 + #49 처방)
 
-45. **(5/10 새벽) 🟠 P1.5-E ⑥ 실 가입 시연 후속 — Supabase rate limit 해소 후 GA 가입 PASS** — UUID 1글자 수정(`ae04a8e`) FK 23503 해소 ✅ / rate limit 해소 후 1회 PASS 확인용. **#30 Custom SMTP 후 자동 추적**
+45. **(5/10 새벽) 🟠 P1.5-E ⑥ 실 가입 시연 후속 — Supabase rate limit 해소 후 GA 가입 PASS** → ✅ **자동 해소 (5/10 오후, #30 단계 5-B 실 가입 시연 PASS)** — UUID 1글자 수정(`ae04a8e`) FK 23503 해소 ✅ / rate limit 해소 후 1회 PASS 확인용. **#30 Custom SMTP 후 자동 추적**
 
 46. **(5/10 새벽) home_v2.html signup form select 동적 lookup 전환 — 보험사 패턴 정합** — 정적 하드코딩 → DB 정합 깨질 위험. **트리거 = Phase 1.5 종료 후 별 트랙** (~30분, 미래 안전성)
 
