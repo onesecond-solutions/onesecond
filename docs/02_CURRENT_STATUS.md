@@ -49,6 +49,24 @@
 
 ---
 
+## 🏢 비즈니스 인프라 가동 상태 (5/15 4팀 오픈 D-5일)
+
+| 항목 | 상태 |
+|---|---|
+| 사업자 | **T-Solutions (티솔루션)** — bylts0428@gmail.com |
+| 도메인 | `onesecond.solutions` — **아이네임즈** 등록 |
+| 인증 메일 | **Resend** (`noreply@onesecond.solutions`) — #30 Custom SMTP 도입 시 교체 검토 |
+| 결제 | **PortOne → KG이니시스** 신청 — 4 services (일반결제 + 빌링 + 카카오페이(간편결제) + 본인인증) / `console.portone.io` / 영업일 3일 내 컨택 대기 |
+| 통신판매업 신고 | **정부24** 진행 — 에스크로 인증서 수령 대기 |
+| PG 심사 사이트 6 요건 | ① 약관 ② 개인정보처리방침 ③ 환불정책 ④ 사업자정보 ⑤ 가격정보 ⑥ 고객센터 — 6 페이지 가동 필요 |
+| 4팀 오픈 타깃 | **AZ금융서비스 더원지점 4팀 약 40명** (5/15 보험사 마지막 교육 후) |
+| 라이브 사이트 | https://onesecond.solutions (GitHub Pages) |
+| Supabase 프로젝트 | `pdnwgzneooyygfejrvbg` (`onesecond-v1-restore-0420`, 신버전 유일 진실) |
+
+⚠️ 구버전 Supabase `qursjteiovcylqiepmlo`는 4/24 사고 후 폐기 — 절대 참조 금지.
+
+---
+
 ## 🗂️ 진실 원천 위치
 
 - 큰 그림: `docs/sessions/_INDEX.md` (압축본 ~155줄, 분할 후)
