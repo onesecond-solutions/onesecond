@@ -1326,7 +1326,7 @@ function _applyBoardTabVisibility() {
   var visible = {
     qna:             true,                                    /* 모든 사용자 (admin + ga + insurer 전부) */
     manager_notice:  isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출) */
-    manager_lounge:  _boardTabVisible.manager_lounge && isMgrPlus, /* 토글 #1 ON + 매니저급+ */
+    manager_lounge:  isAdmin || (_boardTabVisible.manager_lounge && isMgrPlus), /* admin 항상 + 토글 #1 ON + 매니저급+ */
     navigation:      isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출, spec § 5-4) */
     insurer:         isAdmin || isIns,                         /* admin + insurer_* (ga_* 비노출, spec § 5-1) */
     hub:             isAdmin || _boardTabVisible.hub,          /* admin 항상 + 토글 #3 ON 시 일반 노출 */
