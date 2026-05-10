@@ -119,7 +119,7 @@ insurers_exists = false
 | **is_admin** | true | s | boolean |
 
 → Phase 1 신규 신설 4종 필요:
-- `is_manager()` — 매니저 공지 쓰기 6역할
+- `is_manager()` — 실장님 공지 쓰기 6역할
 - `is_insurer_employee()` — insurer_* 4역할 (insurer_board 정책 청산용)
 - `is_insurer_manager()` — insurer_branch_manager + insurer_manager 2역할
 - `current_user_insurer_id()` — 본인 회사 게시판 RLS용

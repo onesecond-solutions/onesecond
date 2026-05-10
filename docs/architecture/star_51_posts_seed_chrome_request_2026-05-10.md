@@ -94,7 +94,7 @@ INSERT INTO public.posts (
 );
 ```
 
-#### B-1-b. manager_notice (매니저 공지) — 실장 박음 박힘
+#### B-1-b. manager_notice (실장님 공지) — 실장 박음 박힘
 ```sql
 INSERT INTO public.posts (
   board_type, source_type, title, content,
