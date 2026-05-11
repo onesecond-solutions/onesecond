@@ -672,13 +672,64 @@
   }
 }
 
-/* ── 공지사항 폼 (#58 슬롯 6 v0, spec §2-1) ── */
-.write-form-notice {
+/* ── 공지사항 폼 (#58 슬롯 6 v0, spec §2-1) + 인수 폼 (#58 슬롯 7 v0, spec §2-2) ── */
+.write-form-notice,
+.write-form-incoming {
   display: none;
   flex-direction: column;
   gap: 1rem;
 }
-.write-form-notice.active { display: flex; }
+.write-form-notice.active,
+.write-form-incoming.active { display: flex; }
+
+/* 인수 폼 전용 박음 */
+.wfn-warn-box {
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+  border-radius: var(--radius-sm, 8px);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #92400E;
+}
+.wfn-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.wfn-optional {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #4B5563);
+  font-weight: 400;
+  margin-left: 0.3rem;
+}
+.write-form-incoming select,
+.write-form-incoming input,
+.write-form-incoming textarea {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border, #E5E7EB);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--color-text-primary, #111827);
+}
+.write-form-incoming textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+.write-form-incoming select:focus,
+.write-form-incoming input:focus,
+.write-form-incoming textarea:focus {
+  outline: none;
+  border-color: var(--color-brand, #A0522D);
+  box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.12);
+}
+@media (max-width: 640px) {
+  .wfn-row-2col { grid-template-columns: 1fr; }
+}
+
+/* === 공지 폼 본문 (기존 박힘 그대로) === */
 .write-form-notice-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -1363,6 +1414,86 @@
           </span>
         </button>
       </div>
+
+      <!-- 인수 질문 폼 (#58 슬롯 7 v0, spec §2-2 정합) -->
+      <form class="write-form-incoming" id="write-form-incoming" onsubmit="event.preventDefault(); window.submitIncomingForm();">
+        <div class="wfn-warn-box">
+          ⚠️ 개인정보(이름 / 전화번호 / 주민번호)는 입력하지 마세요.
+        </div>
+        <div class="write-form-notice-grid">
+          <div class="write-form-notice-left">
+            <label class="wfn-field">
+              <span class="wfn-label">제목 <span class="wfn-optional">(선택, 비우면 자동 생성)</span></span>
+              <input type="text" id="incoming-title" maxlength="100" placeholder="예: 60대 여성 갑상선 결절 인수 가능?">
+            </label>
+            <div class="wfn-row-2col">
+              <label class="wfn-field">
+                <span class="wfn-label">연령 <em>*</em></span>
+                <input type="number" id="incoming-age" min="0" max="120" required>
+              </label>
+              <label class="wfn-field">
+                <span class="wfn-label">성별 <em>*</em></span>
+                <select id="incoming-gender" required>
+                  <option value="">선택</option>
+                  <option value="남">남</option>
+                  <option value="여">여</option>
+                </select>
+              </label>
+            </div>
+            <label class="wfn-field">
+              <span class="wfn-label">직업</span>
+              <input type="text" id="incoming-occupation" maxlength="40" placeholder="예: 사무직 / 운전직 / 농업">
+            </label>
+            <label class="wfn-field">
+              <span class="wfn-label">병력 <em>*</em></span>
+              <input type="text" id="incoming-disease" maxlength="80" required placeholder="예: 갑상선 결절 / 고혈압 / 당뇨">
+            </label>
+            <div class="wfn-row-2col">
+              <label class="wfn-field">
+                <span class="wfn-label">진단시기</span>
+                <input type="text" id="incoming-diagnosis-timing" maxlength="40" placeholder="예: 2025년 3월">
+              </label>
+              <label class="wfn-field">
+                <span class="wfn-label">약복용 유무</span>
+                <select id="incoming-drug-usage">
+                  <option value="">선택</option>
+                  <option value="복용 중">복용 중</option>
+                  <option value="복용 안 함">복용 안 함</option>
+                  <option value="모름">모름</option>
+                </select>
+              </label>
+            </div>
+            <label class="wfn-field">
+              <span class="wfn-label">현재 상태</span>
+              <input type="text" id="incoming-current-status" maxlength="80" placeholder="예: 추적관찰 중 / 수술 완료">
+            </label>
+            <label class="wfn-field">
+              <span class="wfn-label">기타 적고 싶은 내용</span>
+              <textarea id="incoming-extra" rows="4" placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea>
+            </label>
+          </div>
+          <div class="write-form-notice-right">
+            <label class="wfn-field">
+              <span class="wfn-label">보험사 범위 <em>*</em></span>
+              <select id="incoming-insurer-target" required onchange="window.onIncomingInsurerTargetChange()">
+                <option value="all" selected>전체 (손·생보)</option>
+                <option value="nonlife_all">전체 손해보험</option>
+                <option value="life_all">전체 생명보험</option>
+                <option value="insurer_specific">회사 지정</option>
+              </select>
+            </label>
+            <label class="wfn-field" id="incoming-insurer-name-field" style="display:none;">
+              <span class="wfn-label">회사명 <em>*</em></span>
+              <input type="text" id="incoming-insurer-name" maxlength="40" placeholder="예: 메리츠화재 / 삼성생명">
+              <span class="wfn-hint">v0 단계 = 자유 입력 (Phase 3 = 31사 자동완성 박음)</span>
+            </label>
+          </div>
+        </div>
+        <div class="write-form-notice-actions">
+          <button type="button" class="wfn-btn-secondary" onclick="window.cancelIncomingForm()">← 카테고리 다시 선택</button>
+          <button type="submit" class="wfn-btn-primary">등록하기</button>
+        </div>
+      </form>
 
       <!-- 공지사항 폼 (#58 슬롯 6 v0 — admin/매니저급만, spec §2-1 정합) -->
       <form class="write-form-notice" id="write-form-notice" onsubmit="event.preventDefault(); window.submitNoticeForm();">
@@ -2423,10 +2554,12 @@ window.openWriteOverlay = function() {
 window.closeWriteOverlay = function() {
   var overlay = document.getElementById('write-overlay');
   if (overlay) overlay.classList.remove('active');
-  /* 모달 닫힘 시 폼 영역도 리셋 (다음 진입 시 카드 영역부터 박힘) */
-  var form  = document.getElementById('write-form-notice');
-  var cards = document.getElementById('write-overlay-cards');
-  if (form)  form.classList.remove('active');
+  /* 모달 닫힘 시 폼 영역들도 모두 리셋 (다음 진입 시 카드 영역부터 박힘) */
+  var formNotice   = document.getElementById('write-form-notice');
+  var formIncoming = document.getElementById('write-form-incoming');
+  var cards        = document.getElementById('write-overlay-cards');
+  if (formNotice)   formNotice.classList.remove('active');
+  if (formIncoming) formIncoming.classList.remove('active');
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
@@ -2448,15 +2581,193 @@ window.selectWriteCategory = function(category) {
     if (titleEl)    titleEl.value    = '';
     if (contentEl)  contentEl.value  = '';
     if (audienceEl) audienceEl.value = 'team_internal';
-    /* 헤더 라벨 갱신 */
     var headerTitle = document.getElementById('write-overlay-title');
     if (headerTitle) headerTitle.textContent = '📢 공지사항 작성';
     if (titleEl) titleEl.focus();
     return;
   }
-  /* 인수/상품/기타 = placeholder (다음 슬롯 박음, 별 트랙 #58 후속) */
+  if (category === '인수') {
+    /* 인수 폼 박음 (#58 슬롯 7 v0, spec §2-2) */
+    var cards2 = document.getElementById('write-overlay-cards');
+    var form2  = document.getElementById('write-form-incoming');
+    if (cards2) cards2.style.display = 'none';
+    if (form2)  form2.classList.add('active');
+    /* 폼 초기화 */
+    [
+      'incoming-title','incoming-age','incoming-occupation','incoming-disease',
+      'incoming-diagnosis-timing','incoming-current-status','incoming-extra','incoming-insurer-name'
+    ].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    var genderEl = document.getElementById('incoming-gender');         if (genderEl) genderEl.value = '';
+    var drugEl   = document.getElementById('incoming-drug-usage');     if (drugEl)   drugEl.value   = '';
+    var targetEl = document.getElementById('incoming-insurer-target'); if (targetEl) targetEl.value = 'all';
+    var nameField = document.getElementById('incoming-insurer-name-field');
+    if (nameField) nameField.style.display = 'none';
+    var headerTitle2 = document.getElementById('write-overlay-title');
+    if (headerTitle2) headerTitle2.textContent = '🩺 인수 질문 작성';
+    var firstFocus = document.getElementById('incoming-age');
+    if (firstFocus) firstFocus.focus();
+    return;
+  }
+  /* 상품/기타 = placeholder (다음 슬롯 박음, 별 트랙 #58 후속) */
   alert('[TODO] ' + category + ' 폼 본진 = 다음 단계 박음 (별 트랙 #58 후속).\n\n어제 5/10 채팅 + navigation_write_overlay_v0_2026-05-11.md 본진 raw 정합.');
   window.closeWriteOverlay();
+};
+
+/* 인수 폼 우측 회사 지정 토글 */
+window.onIncomingInsurerTargetChange = function() {
+  var target = document.getElementById('incoming-insurer-target');
+  var field  = document.getElementById('incoming-insurer-name-field');
+  if (!target || !field) return;
+  field.style.display = (target.value === 'insurer_specific') ? '' : 'none';
+};
+
+/* 인수 폼 취소 — 카드 영역으로 복귀 */
+window.cancelIncomingForm = function() {
+  var cards = document.getElementById('write-overlay-cards');
+  var form  = document.getElementById('write-form-incoming');
+  if (form)  form.classList.remove('active');
+  if (cards) cards.style.display = '';
+  var headerTitle = document.getElementById('write-overlay-title');
+  if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+};
+
+/* 인수 폼 정규식 차단 3종 (spec §6 사고 위험 #1 v0 단계 = 4중 방어 중 (1)+(2)) */
+window._incomingPiiPatterns = [
+  { name: '주민번호',    regex: /\b\d{6}[-\s]?\d{7}\b/ },
+  { name: '전화번호',    regex: /\b01[016789][-\s]?\d{3,4}[-\s]?\d{4}\b/ },
+  { name: '실명 패턴',   regex: /[가-힣]{2,4}\s*(님|씨|환자|고객)\b/ }
+];
+window._scanIncomingPii = function(fields) {
+  for (var i = 0; i < fields.length; i++) {
+    var f = fields[i];
+    if (!f.value) continue;
+    for (var j = 0; j < window._incomingPiiPatterns.length; j++) {
+      var p = window._incomingPiiPatterns[j];
+      if (p.regex.test(f.value)) {
+        return { fieldLabel: f.label, patternName: p.name, value: f.value, el: f.el };
+      }
+    }
+  }
+  return null;
+};
+
+/* 인수 폼 제출 — posts INSERT (board_type='navigation', category='인수') */
+window.submitIncomingForm = async function() {
+  var titleEl    = document.getElementById('incoming-title');
+  var ageEl      = document.getElementById('incoming-age');
+  var genderEl   = document.getElementById('incoming-gender');
+  var occupEl    = document.getElementById('incoming-occupation');
+  var diseaseEl  = document.getElementById('incoming-disease');
+  var diagEl     = document.getElementById('incoming-diagnosis-timing');
+  var drugEl     = document.getElementById('incoming-drug-usage');
+  var statusEl   = document.getElementById('incoming-current-status');
+  var extraEl    = document.getElementById('incoming-extra');
+  var targetEl   = document.getElementById('incoming-insurer-target');
+  var insurerEl  = document.getElementById('incoming-insurer-name');
+
+  var title    = titleEl   ? titleEl.value.trim()   : '';
+  var ageStr   = ageEl     ? ageEl.value.trim()     : '';
+  var gender   = genderEl  ? genderEl.value         : '';
+  var occup    = occupEl   ? occupEl.value.trim()   : '';
+  var disease  = diseaseEl ? diseaseEl.value.trim() : '';
+  var diag     = diagEl    ? diagEl.value.trim()    : '';
+  var drug     = drugEl    ? drugEl.value           : '';
+  var status   = statusEl  ? statusEl.value.trim()  : '';
+  var extra    = extraEl   ? extraEl.value.trim()   : '';
+  var target   = targetEl  ? targetEl.value         : 'all';
+  var insurer  = insurerEl ? insurerEl.value.trim() : '';
+
+  /* 필수값 검증 */
+  if (!ageStr)  { alert('연령을 입력해 주세요.');           if (ageEl) ageEl.focus();         return; }
+  if (!gender)  { alert('성별을 선택해 주세요.');           if (genderEl) genderEl.focus();   return; }
+  if (!disease) { alert('병력을 입력해 주세요.');           if (diseaseEl) diseaseEl.focus(); return; }
+  if (target === 'insurer_specific' && !insurer) {
+    alert('회사 지정을 선택하셨습니다. 회사명을 입력해 주세요.');
+    if (insurerEl) insurerEl.focus();
+    return;
+  }
+
+  /* 정규식 차단 (spec §6 사고 위험 #1 — 4중 방어 (1)) */
+  var scanFields = [
+    { label: '제목',      value: title,   el: titleEl   },
+    { label: '직업',      value: occup,   el: occupEl   },
+    { label: '병력',      value: disease, el: diseaseEl },
+    { label: '진단시기',  value: diag,    el: diagEl    },
+    { label: '현재 상태', value: status,  el: statusEl  },
+    { label: '기타',      value: extra,   el: extraEl   }
+  ];
+  var hit = window._scanIncomingPii(scanFields);
+  if (hit) {
+    alert(
+      '⚠️ 개인정보 입력 차단\n\n' +
+      '"' + hit.fieldLabel + '" 필드에서 ' + hit.patternName + ' 패턴이 감지되었습니다.\n\n' +
+      '이름·전화번호·주민번호는 입력하지 마세요.\n해당 정보를 제거한 후 다시 등록해 주세요.'
+    );
+    if (hit.el) hit.el.focus();
+    return;
+  }
+
+  /* content 흡수 (결재 ① = c 정합) */
+  var contentParts = [];
+  if (occup) contentParts.push('[직업:' + occup + ']');
+  if (extra) contentParts.push('[기타:' + extra + ']');
+  var content = contentParts.join('\n');
+  if (!content) content = '[직업:]\n[기타:]'; /* posts.content NOT NULL 방어 */
+
+  /* 자동 title fallback */
+  if (!title) {
+    title = '[인수] ' + ageStr + '대 ' + gender + ' ' + disease;
+    /* 너무 길면 잘림 */
+    if (title.length > 100) title = title.slice(0, 97) + '...';
+  }
+
+  /* AppState */
+  var s = window.AppState || {};
+
+  var submitBtn = document.querySelector('#write-form-incoming .wfn-btn-primary');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }
+
+  try {
+    var postBody = {
+      board_type:       'navigation',
+      category:         '인수',
+      title:            title,
+      content:          content,
+      author_id:        s.userId || '',
+      author_name:      s.name   || '알 수 없음',
+      display_name:     s.name   || '알 수 없음',
+      is_hub_visible:   false,
+      is_anonymous:     false,
+      view_count:       0,
+      like_count:       0,
+      comment_count:    0,
+      patient_age:      ageStr  ? parseInt(ageStr, 10) : null,
+      patient_gender:   gender  || null,
+      disease_name:     disease || null,
+      diagnosis_timing: diag    || null,
+      drug_usage:       drug    || null,
+      current_status:   status  || null,
+      insurer_target:   target,
+      insurer_name:     (target === 'insurer_specific') ? insurer : null
+    };
+    await window.db.fetch('/rest/v1/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(postBody)
+    });
+    window.closeWriteOverlay();
+    window.cancelIncomingForm();
+    if (typeof _loadPosts === 'function') _loadPosts();
+    alert('인수 질문이 등록되었습니다.');
+  } catch (err) {
+    console.error('[submitIncomingForm] INSERT 실패:', err);
+    alert('인수 질문 등록 실패: ' + (err.message || err));
+  } finally {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록하기'; }
+  }
 };
 
 /* 공지 폼 취소 — 카드 영역으로 복귀 */
