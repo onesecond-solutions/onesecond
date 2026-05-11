@@ -79,7 +79,7 @@
 
 45. **(5/10 새벽) 🟠 P1.5-E ⑥ 실 가입 시연 후속 — Supabase rate limit 해소 후 GA 가입 PASS** → ✅ **자동 해소 (5/10 오후, #30 단계 5-B 실 가입 시연 PASS)** — UUID 1글자 수정(`ae04a8e`) FK 23503 해소 ✅ / rate limit 해소 후 1회 PASS 확인용. **#30 Custom SMTP 후 자동 추적**
 
-46. **(5/10 새벽) home_v2.html signup form select 동적 lookup 전환 — 보험사 패턴 정합** — 정적 하드코딩 → DB 정합 깨질 위험. **트리거 = Phase 1.5 종료 후 별 트랙** (~30분, 미래 안전성)
+46. ~~(5/10 새벽) home_v2.html signup form select 동적 lookup 전환 — 보험사 패턴 정합~~ → ✅ **종료 (2026-05-11 오전, 라이브 검증 PASS)** — RLS 정책 1건 신설 (`insurers_select_anon_signup`) + home_v2.html 수정 9건. 보험사 31건 / branches 1건 / teams 4건 모두 동적 lookup. KB라이프·DB생명·iM라이프 select 옵션 노출 회귀 해소 (선택 시 #43 화이트리스트 차단 메시지 그대로 유지). GA 더원지점 4팀 5/15 본진 ⭐ 라이브 검증 PASS. 흥국 e-life/T-Life 양쪽 노출 (#42 정합). 콘솔 에러 0건. commit `804ee40` (RLS docs) + `378102d` (home_v2 코드).
 
 47. ~~사이드바 메뉴 순서 정합~~ → ✅ 종료 (5/10 새벽 commit `5b161ac` + 18/18 PASS)
 
