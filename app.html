@@ -407,23 +407,31 @@ html, body {
   margin-top: 2px;
 }
 
-/* A. 내 흐름 — 브랜드 브라운 강조 (재접속 유도 핵심) */
+/* A. 내 흐름 — 브랜드 브라운 강조 (재접속 유도 핵심)
+   [2026-05-11 색상 보강] background alpha 미세 +, hover box-shadow 추가 (스캔 hierarchy 1순위) */
 .c-box.notify-mine {
-  background: var(--brand-50);
+  background: rgba(160, 82, 45, 0.07);
   border-left-color: var(--color-brand);
 }
-.c-box.notify-mine:hover { border-color: var(--color-brand); }
+.c-box.notify-mine:hover {
+  border-color: var(--color-brand);
+  box-shadow: 0 2px 8px rgba(160, 82, 45, 0.08);
+}
 .notify-mine .notify-kicker { color: var(--color-brand); }
 
-/* B. 운영 신호 — warning 톤 (전산 장애·긴급 공지) */
+/* B. 운영 신호 — warning 톤 (전산 장애·긴급 공지)
+   [2026-05-11 색상 보강] background에 미세 warning tint (전체 배경 거의 유지, 좌측 line 보강) */
 .c-box.notify-ops {
+  background: rgba(245, 158, 11, 0.025);
   border-left-color: var(--color-warning);
 }
 .c-box.notify-ops:hover { border-color: var(--color-warning); }
 .notify-ops .notify-kicker { color: var(--color-warning); }
 
-/* C. 팀 흐름 — 중립 회색 (운영 활성도) */
+/* C. 팀 흐름 — 중립 회색 (운영 활성도)
+   [2026-05-11 색상 보강] gray-blue tint 아주 약하게 (정보 카드 톤) */
 .c-box.notify-team {
+  background: rgba(59, 130, 246, 0.025);
   border-left-color: var(--color-border);
 }
 .c-box.notify-team:hover { border-color: var(--color-text-tertiary); }
