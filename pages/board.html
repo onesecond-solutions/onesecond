@@ -672,17 +672,19 @@
   }
 }
 
-/* ── 공지사항 폼 (#58 슬롯 6 v0, spec §2-1) + 인수 폼 (#58 슬롯 7 v0, spec §2-2) ── */
+/* ── 공지/인수/상품 폼 공통 (#58 슬롯 6/7/8 v0, spec §2-1/2/3) ── */
 .write-form-notice,
-.write-form-incoming {
+.write-form-incoming,
+.write-form-product {
   display: none;
   flex-direction: column;
   gap: 1rem;
 }
 .write-form-notice.active,
-.write-form-incoming.active { display: flex; }
+.write-form-incoming.active,
+.write-form-product.active { display: flex; }
 
-/* 인수 폼 전용 박음 */
+/* 인수 폼 경고 박스 (노란 톤 — PII 차단 강조) */
 .wfn-warn-box {
   background: #FEF3C7;
   border: 1px solid #F59E0B;
@@ -691,6 +693,17 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: #92400E;
+}
+
+/* 상품 폼 안내 박스 (블루 톤 — 운영 질문 안내, 교육 게시판 오해 방지) */
+.wfn-info-box {
+  background: #DBEAFE;
+  border: 1px solid #60A5FA;
+  border-radius: var(--radius-sm, 8px);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1E3A8A;
 }
 .wfn-row-2col {
   display: grid;
@@ -705,7 +718,10 @@
 }
 .write-form-incoming select,
 .write-form-incoming input,
-.write-form-incoming textarea {
+.write-form-incoming textarea,
+.write-form-product select,
+.write-form-product input,
+.write-form-product textarea {
   padding: 0.65rem 0.85rem;
   border: 1px solid var(--color-border, #E5E7EB);
   border-radius: var(--radius-sm, 8px);
@@ -714,13 +730,17 @@
   background: #ffffff;
   color: var(--color-text-primary, #111827);
 }
-.write-form-incoming textarea {
+.write-form-incoming textarea,
+.write-form-product textarea {
   resize: vertical;
   min-height: 5rem;
 }
 .write-form-incoming select:focus,
 .write-form-incoming input:focus,
-.write-form-incoming textarea:focus {
+.write-form-incoming textarea:focus,
+.write-form-product select:focus,
+.write-form-product input:focus,
+.write-form-product textarea:focus {
   outline: none;
   border-color: var(--color-brand, #A0522D);
   box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.12);
@@ -1491,6 +1511,87 @@
         </div>
         <div class="write-form-notice-actions">
           <button type="button" class="wfn-btn-secondary" onclick="window.cancelIncomingForm()">← 카테고리 다시 선택</button>
+          <button type="submit" class="wfn-btn-primary">등록하기</button>
+        </div>
+      </form>
+
+      <!-- 상품 질문 폼 (#58 슬롯 8 v0, spec §2-3 정합) -->
+      <form class="write-form-product" id="write-form-product" onsubmit="event.preventDefault(); window.submitProductForm();">
+        <div class="wfn-info-box">
+          💬 실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.
+        </div>
+        <div class="write-form-notice-grid">
+          <div class="write-form-notice-left">
+            <label class="wfn-field">
+              <span class="wfn-label">상품군 <em>*</em></span>
+              <select id="product-category" required>
+                <option value="">선택</option>
+                <option value="실손">실손</option>
+                <option value="암">암</option>
+                <option value="2대·3대">2대·3대</option>
+                <option value="간병">간병</option>
+                <option value="치매">치매</option>
+                <option value="운전자">운전자</option>
+                <option value="치아">치아</option>
+                <option value="종신">종신</option>
+                <option value="정기">정기</option>
+                <option value="화재">화재</option>
+                <option value="기타">기타</option>
+              </select>
+            </label>
+            <div class="wfn-row-2col">
+              <label class="wfn-field">
+                <span class="wfn-label">건강체</span>
+                <select id="product-health-grade">
+                  <option value="">선택</option>
+                  <option value="초건강체형(10년고지형)">초건강체형(10년고지형)</option>
+                  <option value="초유병자형(10년고지형)">초유병자형(10년고지형)</option>
+                  <option value="기타">기타</option>
+                </select>
+              </label>
+              <label class="wfn-field">
+                <span class="wfn-label">확인하고 싶은 내용</span>
+                <select id="product-inquiry-focus">
+                  <option value="">선택</option>
+                  <option value="보장내용">보장내용</option>
+                  <option value="특약">특약</option>
+                  <option value="보험료">보험료</option>
+                  <option value="가입조건">가입조건</option>
+                  <option value="판매중지">판매중지</option>
+                  <option value="비교">비교</option>
+                  <option value="설계방법">설계방법</option>
+                  <option value="기타">기타</option>
+                </select>
+              </label>
+            </div>
+            <label class="wfn-field">
+              <span class="wfn-label">질문 제목 <em>*</em></span>
+              <input type="text" id="product-title" maxlength="100" required placeholder="예: 메리츠 실손 특약 비교 질문">
+            </label>
+            <label class="wfn-field">
+              <span class="wfn-label">질문 내용 <em>*</em></span>
+              <textarea id="product-content" rows="6" placeholder="어떤 부분이 헷갈리셨나요?" required></textarea>
+            </label>
+          </div>
+          <div class="write-form-notice-right">
+            <label class="wfn-field">
+              <span class="wfn-label">보험사 범위 <em>*</em></span>
+              <select id="product-insurer-target" required onchange="window.onProductInsurerTargetChange()">
+                <option value="all" selected>전체 (손·생보)</option>
+                <option value="nonlife_all">전체 손해보험</option>
+                <option value="life_all">전체 생명보험</option>
+                <option value="insurer_specific">회사 지정</option>
+              </select>
+            </label>
+            <label class="wfn-field" id="product-insurer-name-field" style="display:none;">
+              <span class="wfn-label">회사명 <em>*</em></span>
+              <input type="text" id="product-insurer-name" maxlength="40" placeholder="예: 메리츠화재 / 삼성생명">
+              <span class="wfn-hint">v0 단계 = 자유 입력 (Phase 3 = 31사 자동완성 박음)</span>
+            </label>
+          </div>
+        </div>
+        <div class="write-form-notice-actions">
+          <button type="button" class="wfn-btn-secondary" onclick="window.cancelProductForm()">← 카테고리 다시 선택</button>
           <button type="submit" class="wfn-btn-primary">등록하기</button>
         </div>
       </form>
@@ -2557,9 +2658,11 @@ window.closeWriteOverlay = function() {
   /* 모달 닫힘 시 폼 영역들도 모두 리셋 (다음 진입 시 카드 영역부터 박힘) */
   var formNotice   = document.getElementById('write-form-notice');
   var formIncoming = document.getElementById('write-form-incoming');
+  var formProduct  = document.getElementById('write-form-product');
   var cards        = document.getElementById('write-overlay-cards');
   if (formNotice)   formNotice.classList.remove('active');
   if (formIncoming) formIncoming.classList.remove('active');
+  if (formProduct)  formProduct.classList.remove('active');
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
@@ -2611,9 +2714,125 @@ window.selectWriteCategory = function(category) {
     if (firstFocus) firstFocus.focus();
     return;
   }
-  /* 상품/기타 = placeholder (다음 슬롯 박음, 별 트랙 #58 후속) */
+  if (category === '상품') {
+    /* 상품 폼 박음 (#58 슬롯 8 v0, spec §2-3) */
+    var cards3 = document.getElementById('write-overlay-cards');
+    var form3  = document.getElementById('write-form-product');
+    if (cards3) cards3.style.display = 'none';
+    if (form3)  form3.classList.add('active');
+    /* 폼 초기화 */
+    [
+      'product-category','product-health-grade','product-inquiry-focus',
+      'product-title','product-content','product-insurer-name'
+    ].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    var targetEl2 = document.getElementById('product-insurer-target');
+    if (targetEl2) targetEl2.value = 'all';
+    var nameField2 = document.getElementById('product-insurer-name-field');
+    if (nameField2) nameField2.style.display = 'none';
+    var headerTitle3 = document.getElementById('write-overlay-title');
+    if (headerTitle3) headerTitle3.textContent = '📦 상품 질문 작성';
+    var firstFocus2 = document.getElementById('product-category');
+    if (firstFocus2) firstFocus2.focus();
+    return;
+  }
+  /* 기타 = placeholder (다음 슬롯 박음, 별 트랙 #58 후속) */
   alert('[TODO] ' + category + ' 폼 본진 = 다음 단계 박음 (별 트랙 #58 후속).\n\n어제 5/10 채팅 + navigation_write_overlay_v0_2026-05-11.md 본진 raw 정합.');
   window.closeWriteOverlay();
+};
+
+/* 상품 폼 우측 회사 지정 토글 */
+window.onProductInsurerTargetChange = function() {
+  var target = document.getElementById('product-insurer-target');
+  var field  = document.getElementById('product-insurer-name-field');
+  if (!target || !field) return;
+  field.style.display = (target.value === 'insurer_specific') ? '' : 'none';
+};
+
+/* 상품 폼 취소 — 카드 영역으로 복귀 */
+window.cancelProductForm = function() {
+  var cards = document.getElementById('write-overlay-cards');
+  var form  = document.getElementById('write-form-product');
+  if (form)  form.classList.remove('active');
+  if (cards) cards.style.display = '';
+  var headerTitle = document.getElementById('write-overlay-title');
+  if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+};
+
+/* 상품 폼 제출 — posts INSERT (board_type='navigation', category='상품') */
+window.submitProductForm = async function() {
+  var catEl       = document.getElementById('product-category');
+  var healthEl    = document.getElementById('product-health-grade');
+  var inquiryEl   = document.getElementById('product-inquiry-focus');
+  var titleEl     = document.getElementById('product-title');
+  var contentEl   = document.getElementById('product-content');
+  var targetEl    = document.getElementById('product-insurer-target');
+  var insurerEl   = document.getElementById('product-insurer-name');
+
+  var productCat = catEl     ? catEl.value           : '';
+  var health     = healthEl  ? healthEl.value        : '';
+  var inquiry    = inquiryEl ? inquiryEl.value       : '';
+  var title      = titleEl   ? titleEl.value.trim()  : '';
+  var rawContent = contentEl ? contentEl.value.trim(): '';
+  var target     = targetEl  ? targetEl.value        : 'all';
+  var insurer    = insurerEl ? insurerEl.value.trim(): '';
+
+  /* 필수값 검증 */
+  if (!productCat) { alert('상품군을 선택해 주세요.');         if (catEl) catEl.focus();         return; }
+  if (!title)      { alert('질문 제목을 입력해 주세요.');      if (titleEl) titleEl.focus();     return; }
+  if (!rawContent) { alert('질문 내용을 입력해 주세요.');      if (contentEl) contentEl.focus(); return; }
+  if (target === 'insurer_specific' && !insurer) {
+    alert('회사 지정을 선택하셨습니다. 회사명을 입력해 주세요.');
+    if (insurerEl) insurerEl.focus();
+    return;
+  }
+
+  /* content 흡수 (결재 ① = c 패턴 정합, 빈 값 키도 박힘 = AI 구조화 일관) */
+  var content =
+    '[건강체:' + health + ']\n' +
+    '[확인내용:' + inquiry + ']\n' +
+    rawContent;
+
+  var s = window.AppState || {};
+
+  var submitBtn = document.querySelector('#write-form-product .wfn-btn-primary');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }
+
+  try {
+    var postBody = {
+      board_type:        'navigation',
+      category:          '상품',
+      title:             title,
+      content:           content,
+      author_id:         s.userId || '',
+      author_name:       s.name   || '알 수 없음',
+      display_name:      s.name   || '알 수 없음',
+      is_hub_visible:    false,
+      is_anonymous:      false,
+      view_count:        0,
+      like_count:        0,
+      comment_count:     0,
+      product_category:  productCat,
+      insurer_target:    target,
+      insurer_name:      (target === 'insurer_specific') ? insurer : null
+    };
+    await window.db.fetch('/rest/v1/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(postBody)
+    });
+    window.closeWriteOverlay();
+    window.cancelProductForm();
+    if (typeof _loadPosts === 'function') _loadPosts();
+    alert('상품 질문이 등록되었습니다.');
+  } catch (err) {
+    console.error('[submitProductForm] INSERT 실패:', err);
+    alert('상품 질문 등록 실패: ' + (err.message || err));
+  } finally {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록하기'; }
+  }
 };
 
 /* 인수 폼 우측 회사 지정 토글 */
