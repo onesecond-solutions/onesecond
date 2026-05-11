@@ -851,77 +851,135 @@ body {
 }
 
 /* ═════════════════════════════════════════════════════════
-   FOOTER — 라이트 톤 4컬럼 (옛 index.html 푸터 이식, 2026-05-10)
-   원본: 2026-04-28 commit c2186a1
+   FOOTER — 블랙 SaaS 톤 4컬럼 (2026-05-11 재작성)
+   원본 라이트 톤 → 블랙 배경 + 흰/연회색 텍스트로 전환
+   ▸ 자체 :root 변수 + 직접 hex (단독 HTML 원칙 정합)
+   ▸ 정렬 균일 / 사업자 정보 작고 정돈 / copyright 중앙
 ═════════════════════════════════════════════════════════ */
 .footer {
-  background: var(--color-surface-2);
-  border-top: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
-  padding: var(--space-12) var(--space-8) var(--space-8);
-  color: var(--color-text-primary);
+  background: #0F1419;
+  border-top: 1px solid #1F2937;
+  padding: 64px 32px 32px;
+  color: #F9FAFB;
 }
 .footer-inner {
-  max-width: 1280px; margin: 0 auto;
-  display: flex; flex-direction: column; gap: var(--space-10);
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
 }
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 1.6fr;
-  gap: var(--space-10);
+  grid-template-columns: 1fr 1fr 1fr 1.4fr;
+  gap: 40px;
+  align-items: start;
 }
-.footer-col { display: flex; flex-direction: column; gap: var(--space-3); }
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
 .footer-col-title {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  letter-spacing: var(--tracking-tight);
-  margin-bottom: var(--space-1);
+  font-size: 13px;
+  font-weight: 800;
+  color: #F9FAFB;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
 }
 .footer-brand {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
 }
-.footer-brand-logo { height: 32px; width: auto; display: block; flex-shrink: 0; }
+.footer-brand-logo {
+  height: 32px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+  border-radius: 6px;
+  opacity: 0.95;
+}
 .footer-brand-name {
-  font-size: var(--text-lg);
+  font-size: 17px;
   font-weight: 900;
-  color: var(--color-text-primary);
-  letter-spacing: var(--tracking-tight);
+  color: #F9FAFB;
+  letter-spacing: -0.02em;
 }
 .footer-brand-tagline {
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-  line-height: 1.55;
+  font-size: 12px;
+  color: #9CA3AF;
+  line-height: 1.6;
   margin: 0;
 }
 .footer-link {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
+  font-size: 13px;
+  color: #9CA3AF;
   text-decoration: none;
   cursor: pointer;
-  transition: color var(--duration-fast);
+  transition: color 0.18s ease;
+  line-height: 1.5;
 }
-.footer-link:hover { color: var(--brand-500); }
-.footer-biz { font-size: 12px; color: var(--neutral-600); line-height: 1.7; }
-.footer-biz .row { margin: 0; }
-.footer-biz .row strong { color: var(--neutral-700); font-weight: 700; margin-right: 4px; }
-.footer-biz a { color: inherit; text-decoration: none; transition: color var(--duration-fast); }
-.footer-biz a:hover { color: var(--brand-500); }
+.footer-link:hover {
+  color: #DE9B66;
+}
+.footer-biz {
+  font-size: 11px;
+  color: #9CA3AF;
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.footer-biz .row {
+  margin: 0;
+}
+.footer-biz .row strong {
+  color: #D1D5DB;
+  font-weight: 700;
+  margin-right: 6px;
+}
+.footer-biz a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+.footer-biz a:hover {
+  color: #DE9B66;
+}
 .footer-bottom {
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-5);
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: var(--space-4);
+  border-top: 1px solid #1F2937;
+  padding-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
-.footer-copy { font-size: var(--text-xs); color: var(--color-text-tertiary); }
-.footer-sns { display: flex; gap: var(--space-3); }
+.footer-copy {
+  font-size: 12px;
+  color: #6B7280;
+  letter-spacing: 0.01em;
+}
 
-@media(max-width:1024px) {
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: var(--space-8); }
+@media (max-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 36px 32px;
+  }
 }
-@media(max-width:768px) {
-  .footer-grid { grid-template-columns: 1fr; gap: var(--space-7); }
-  .footer { padding: var(--space-10) var(--space-5) var(--space-6); }
+@media (max-width: 600px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .footer {
+    padding: 48px 20px 24px;
+  }
+  .footer-inner {
+    gap: 32px;
+  }
 }
 </style>
 </head>
@@ -1057,7 +1115,6 @@ body {
 
     <div class="footer-bottom">
       <div class="footer-copy">© 2026 onesecond. All rights reserved.</div>
-      <div class="footer-sns"><!-- SNS·외부 링크 자리 (추후 추가) --></div>
     </div>
   </div>
 </footer>
