@@ -369,6 +369,66 @@ html, body {
 .c-box-title { font-size: 0.875em; font-weight: var(--fw-bold); color: var(--color-text-primary); margin-bottom: var(--space-1); }
 .c-box-desc { font-size: 0.75em; color: var(--color-text-tertiary); line-height: 1.6; }
 
+/* ════════════════════════════════════════════════════════════
+   [2026-05-11] 운영 알림 카드 v1 — C영역 c-home + c-board (Step 2)
+   작업지시서 §2: A 내 흐름 / B 운영 신호 / C 팀 흐름 3종
+   §4 색상: 내 흐름 = 브랜드 브라운 강조 / 전체 흐름 = 중립
+════════════════════════════════════════════════════════════ */
+.c-box.notify-card {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  border-left-width: 3px;
+}
+.c-box.notify-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+.notify-kicker {
+  font-size: 0.6875em;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  color: var(--color-text-tertiary);
+}
+.notify-title {
+  font-size: 0.875em;
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.notify-desc {
+  font-size: 0.7375em;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  margin-top: 2px;
+}
+
+/* A. 내 흐름 — 브랜드 브라운 강조 (재접속 유도 핵심) */
+.c-box.notify-mine {
+  background: var(--brand-50);
+  border-left-color: var(--color-brand);
+}
+.c-box.notify-mine:hover { border-color: var(--color-brand); }
+.notify-mine .notify-kicker { color: var(--color-brand); }
+
+/* B. 운영 신호 — warning 톤 (전산 장애·긴급 공지) */
+.c-box.notify-ops {
+  border-left-color: var(--color-warning);
+}
+.c-box.notify-ops:hover { border-color: var(--color-warning); }
+.notify-ops .notify-kicker { color: var(--color-warning); }
+
+/* C. 팀 흐름 — 중립 회색 (운영 활성도) */
+.c-box.notify-team {
+  border-left-color: var(--color-border);
+}
+.c-box.notify-team:hover { border-color: var(--color-text-tertiary); }
+.notify-team .notify-kicker { color: var(--color-text-tertiary); }
+
 /* ── 검색창 ── */
 .search-wrap { position: relative; flex: 1; max-width: 420px; margin: 0 var(--space-4); }
 .search-input-row {
@@ -929,8 +989,23 @@ html, body {
       </div>
 
       <div class="c-section active" id="c-home">
-        <div class="c-box"><div class="c-box-label">오늘의 공지</div><div class="c-box-title">공지사항</div><div class="c-box-desc">오늘의 공지 내용이 표시됩니다.</div></div>
-        <div class="c-box"><div class="c-box-label">추천 배너</div><div class="c-box-title">오늘의 추천</div><div class="c-box-desc">추천 스크립트 및 배너가 표시됩니다.</div></div>
+        <!-- [2026-05-11] 운영 알림 v1 Step 2 — c-home (작업지시서 §2 A/B/C 3종)
+             샘플 3건 placeholder, 실제 알림 DB 미연동 -->
+        <div class="c-box notify-card notify-mine">
+          <div class="notify-kicker">내 알림</div>
+          <div class="notify-title">실장님 답변 도착</div>
+          <div class="notify-desc">내 질문 1건에 답변이 등록되었습니다.</div>
+        </div>
+        <div class="c-box notify-card notify-ops">
+          <div class="notify-kicker">운영 신호</div>
+          <div class="notify-title">전산 장애 안내</div>
+          <div class="notify-desc">일부 보험사 전산 일시 지연 — 실시간 확인 중</div>
+        </div>
+        <div class="c-box notify-card notify-team">
+          <div class="notify-kicker">팀 흐름</div>
+          <div class="notify-title">오늘 질문 12건</div>
+          <div class="notify-desc">팀 전체 운영 흐름 — 답변 대기 3건</div>
+        </div>
       </div>
       <div class="c-section" id="c-scripts">
         <div class="c-box"><div class="c-box-label">실전 스크립트 추천</div><div class="c-box-title">추천 스크립트</div><div class="c-box-desc">오늘의 실전 스크립트 추천이 표시됩니다.</div></div>
@@ -938,8 +1013,23 @@ html, body {
         <div class="c-box"><div class="c-box-label">진행 상태</div><div class="c-box-title">단계 선택 중</div><div class="c-box-desc">좌측 세로 탭에서 단계를 선택하면 오른쪽 본문이 해당 단계로 전환됩니다.</div></div>
       </div>
       <div class="c-section" id="c-board">
-        <div class="c-box"><div class="c-box-label">최신 질문</div><div class="c-box-title">최근 올라온 질문</div><div class="c-box-desc">최신 게시글 질문이 표시됩니다.</div></div>
-        <div class="c-box"><div class="c-box-label">답변 유도 배너</div><div class="c-box-title">답변이 필요해요</div><div class="c-box-desc">답변을 기다리는 질문들이 표시됩니다.</div></div>
+        <!-- [2026-05-11] 운영 알림 v1 Step 2 — c-board (작업지시서 §2 A/B/C 3종)
+             게시판 본진 맥락. c-home과 동일 패턴, 동일 샘플 (구조 선언 본질) -->
+        <div class="c-box notify-card notify-mine">
+          <div class="notify-kicker">내 알림</div>
+          <div class="notify-title">실장님 답변 도착</div>
+          <div class="notify-desc">내 질문 1건에 답변이 등록되었습니다.</div>
+        </div>
+        <div class="c-box notify-card notify-ops">
+          <div class="notify-kicker">운영 신호</div>
+          <div class="notify-title">전산 장애 안내</div>
+          <div class="notify-desc">일부 보험사 전산 일시 지연 — 실시간 확인 중</div>
+        </div>
+        <div class="c-box notify-card notify-team">
+          <div class="notify-kicker">팀 흐름</div>
+          <div class="notify-title">오늘 질문 12건</div>
+          <div class="notify-desc">팀 전체 운영 흐름 — 답변 대기 3건</div>
+        </div>
       </div>
       <div class="c-section" id="c-myspace">
         <div class="c-box"><div class="c-box-label">나의 스크립트</div><div class="c-box-title">직접 저장한 멘트</div><div class="c-box-desc">막혔던 순간의 멘트를 저장하고 다음 통화에서 바로 꺼내 쓰세요.</div></div>
