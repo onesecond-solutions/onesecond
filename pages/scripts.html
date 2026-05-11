@@ -39,6 +39,40 @@
 }
 
 /* 세로 탭바 (10단계) */
+/* ── D영역 상단 타이틀 블록 (board.html 패턴 정합, sc-* prefix로 영역 격리) ── */
+.sc-header-block {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sc-page-header {
+  background: transparent;
+  padding: var(--space-5, 20px) var(--space-1, 4px) var(--space-5, 20px) 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4, 16px);
+}
+.sc-page-title {
+  font-size: 1.5em;
+  font-weight: var(--fw-black, 900);
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.sc-page-title .accent { color: var(--color-accent, #D4845A); }
+.sc-page-desc {
+  font-size: 0.875em;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.sc-page-icon {
+  font-size: 2.2em;
+  opacity: 0.35;
+  color: var(--color-accent, #D4845A);
+}
+
 .sc-vtab-wrap {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -527,11 +561,81 @@
   <!-- 배너 슬롯 (app.html이 관리자 배너 이미지 자동 주입) -->
   <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
 
+  <!-- ① 타이틀 블록 -->
+  <div class="sc-header-block">
+    <div class="sc-page-header">
+      <div>
+        <div class="sc-page-title"><span class="accent">상담 스크립트</span> · 막히는 순간 바로 실행</div>
+        <div class="sc-page-desc">도입부터 반론 대응까지, 통화 흐름에 맞는 멘트를 바로 선택하세요.</div>
+      </div>
+      <div class="sc-page-icon">📞</div>
+    </div>
+  </div>
+
   <!-- v2: 세로 탭바(10단계) + 3열 본문 그리드 (데스크탑) -->
   <div class="sc-body-wrap">
-    <!-- 세로 탭바 (10개 단계, JS 동적 렌더) -->
+    <!-- 세로 탭바 (10개 단계, 정적 HTML — 첫 paint 부터 도입인사 active 보장. count 는 _prefetchAllGroups → updateTabCounts 로 갱신) -->
     <div class="sc-vtab-wrap" id="sc-vtab-wrap">
-      <!-- JS에서 렌더링 -->
+      <div class="sc-vtab-item active" data-color="1" role="button" tabindex="0"
+           onclick="window.scSelectStage(1)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(1);}">
+        <span class="sc-vtab-label">도입인사</span>
+        <span class="sc-vtab-count" data-count-color="1">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="2" role="button" tabindex="0"
+           onclick="window.scSelectStage(2)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(2);}">
+        <span class="sc-vtab-label">도입반론</span>
+        <span class="sc-vtab-count" data-count-color="2">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="3" role="button" tabindex="0"
+           onclick="window.scSelectStage(3)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(3);}">
+        <span class="sc-vtab-label">필요성 강조 1</span>
+        <span class="sc-vtab-count" data-count-color="3">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="4" role="button" tabindex="0"
+           onclick="window.scSelectStage(4)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(4);}">
+        <span class="sc-vtab-label">상황 확인</span>
+        <span class="sc-vtab-count" data-count-color="4">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="5" role="button" tabindex="0"
+           onclick="window.scSelectStage(5)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(5);}">
+        <span class="sc-vtab-label">보장 분석</span>
+        <span class="sc-vtab-count" data-count-color="5">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="6" role="button" tabindex="0"
+           onclick="window.scSelectStage(6)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(6);}">
+        <span class="sc-vtab-label">상품 설명</span>
+        <span class="sc-vtab-count" data-count-color="6">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="7" role="button" tabindex="0"
+           onclick="window.scSelectStage(7)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(7);}">
+        <span class="sc-vtab-label">필요성 강조 2</span>
+        <span class="sc-vtab-count" data-count-color="7">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="8" role="button" tabindex="0"
+           onclick="window.scSelectStage(8)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(8);}">
+        <span class="sc-vtab-label">클로징</span>
+        <span class="sc-vtab-count" data-count-color="8">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="9" role="button" tabindex="0"
+           onclick="window.scSelectStage(9)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(9);}">
+        <span class="sc-vtab-label">반론 대응</span>
+        <span class="sc-vtab-count" data-count-color="9">-</span>
+      </div>
+      <div class="sc-vtab-item" data-color="10" role="button" tabindex="0"
+           onclick="window.scSelectStage(10)"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.scSelectStage(10);}">
+        <span class="sc-vtab-label">2차 클로징</span>
+        <span class="sc-vtab-count" data-count-color="10">-</span>
+      </div>
     </div>
 
     <!-- 3열 동적 확장 그리드 (col-2/3/4) -->
@@ -645,18 +749,9 @@ window.scParseBlocks = function(html) {
 ═══════════════════════════════════════════════════════════════════ */
 
 function renderTabs() {
-  var wrap = document.getElementById('sc-vtab-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = GROUPS.map(function(g) {
-    /* count는 prefetch 후 updateTabCounts()에서 갱신 */
-    return '<div class="sc-vtab-item" data-color="' + g.color + '" ' +
-           'role="button" tabindex="0" ' +
-           'onclick="window.scSelectStage(' + g.color + ')" ' +
-           'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();window.scSelectStage(' + g.color + ');}">' +
-           '<span class="sc-vtab-label">' + g.labelFull + '</span>' +
-           '<span class="sc-vtab-count" data-count-color="' + g.color + '">-</span>' +
-           '</div>';
-  }).join('');
+  /* [2026-05-11] 탭바 HTML 정적 박힘 (line 533~) — 첫 paint 부터 도입인사 active 보장.
+     본 함수는 active 상태 동기 보장만 담당 (호환 유지). count 는 updateTabCounts()에서 갱신. */
+  updateActiveTab(_state.activeStage);
 }
 
 /* prefetch 완료 후 각 vtab의 count 갱신 */
