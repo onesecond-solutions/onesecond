@@ -101,6 +101,8 @@
 
 57. **(5/11 오후, Chrome 검수 발견) 시드 SQL 파일 스키마 정합 갱신** — `docs/migrations/2026-05-11_seed_posts.sql` ↔ 실제 DB 차이: (1) `created_by` → `author_id` (text 타입) / (2) `question_type` '운영'/'안내' → NULL/'공지'/'상품'/'인수'. 메모리 #33/#36 본진과 정합 (Phase 1 종료 후 묶음). **트리거 = Phase 1 종료 후 묶음 박음**
 
+58. **(5/11 오전, 어제 5/10 채팅 본문 인계 누락 박음 발견) 네비게이션방 글쓰기 팝업 오버레이 v0 본진** — board.html 글쓰기 버튼 클릭 시 2층 구조 모달 오버레이 (상단 흰색 "지금 어떤 질문인가요?" + 하단 회색 4 카드: 공지/인수/상품/기타). 9역할 RBAC 분기 (공지 카드 = admin/매니저만). 4종 폼 raw + DB 신설 컬럼 (audience_target / responder_hint / occupation / extra_note 등) + v0 단순 INSERT (가짜 연결). 영구 진실 원천 = `docs/architecture/navigation_write_overlay_v0_2026-05-11.md`. **마스터 전략 § 13 결재 #1 ("Step 8 진입 전 spec 박음") 정합**. **트리거 = D-2 진입 결재 후 박음 진입** (본 슬롯 = UI 골격 1차 박음 → 팀장님 라이브 검증 → 후속 박음).
+
 ---
 
 ## 🪧 별 트랙 후보 — admin_v2 Phase C 외 (2026-05-01 신규 등록)
