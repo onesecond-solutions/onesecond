@@ -560,6 +560,118 @@
 .write-submit:hover    { background: var(--color-brand-light, #C4733A); }
 .write-submit:disabled { background: #ccc; cursor: not-allowed; }
 
+/* ── 글쓰기 팝업 오버레이 (별 트랙 #58, 2026-05-11 v0 1차 — navigation 탭 본진) ── */
+.write-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.write-overlay.active { display: flex; }
+.write-overlay-modal {
+  background: #ffffff;
+  border-radius: var(--radius-lg, 16px);
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.write-overlay-header {
+  background: #ffffff;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--color-border, #E5E7EB);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.write-overlay-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+  margin: 0;
+}
+.write-overlay-close {
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  color: var(--color-text-tertiary, #9CA3AF);
+  cursor: pointer;
+  padding: 0.1rem 0.5rem;
+  line-height: 1;
+  border-radius: var(--radius-sm, 8px);
+}
+.write-overlay-close:hover {
+  color: var(--color-text-primary, #111827);
+  background: var(--color-surface-2, #F5F5F4);
+}
+.write-overlay-body {
+  background: var(--color-surface-2, #F5F5F4);
+  padding: 1.5rem 2rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.write-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.write-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #E5E7EB);
+  border-radius: var(--radius, 12px);
+  padding: 1.1rem 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+}
+.write-card:hover {
+  background: var(--color-surface-2, #F5F5F4);
+  border-color: var(--color-brand, #A0522D);
+}
+.write-card:active { transform: scale(0.99); }
+.write-card-icon {
+  font-size: 1.7rem;
+  flex-shrink: 0;
+}
+.write-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.write-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+}
+.write-card-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #4B5563);
+}
+@media (max-width: 640px) {
+  .write-overlay { padding: 0; align-items: flex-end; }
+  .write-overlay-modal {
+    max-width: 100%;
+    border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
+    max-height: 95vh;
+  }
+  .write-overlay-header, .write-overlay-body {
+    padding-left: 1.25rem; padding-right: 1.25rem;
+  }
+}
+
 /* 업로드 진행바 */
 .upload-progress {
   display: none; margin-top: 8px;
@@ -1107,6 +1219,48 @@
 
 </div><!-- /.pg-outer -->
 
+
+<!-- ── 글쓰기 팝업 오버레이 (별 트랙 #58, navigation 탭 본진) ── -->
+<div class="write-overlay" id="write-overlay" onclick="if(event.target===this) window.closeWriteOverlay()">
+  <div class="write-overlay-modal" role="dialog" aria-labelledby="write-overlay-title" aria-modal="true">
+    <div class="write-overlay-header">
+      <h2 class="write-overlay-title" id="write-overlay-title">지금 어떤 질문인가요?</h2>
+      <button class="write-overlay-close" type="button" onclick="window.closeWriteOverlay()" aria-label="닫기">×</button>
+    </div>
+    <div class="write-overlay-body">
+      <div class="write-card-list">
+        <button class="write-card" id="write-card-notice" type="button" onclick="window.selectWriteCategory('공지')" style="display:none;">
+          <span class="write-card-icon">📢</span>
+          <span class="write-card-text">
+            <span class="write-card-title">공지사항</span>
+            <span class="write-card-desc">팀에 전달할 운영·긴급·상품·인수·교육·일정 안내</span>
+          </span>
+        </button>
+        <button class="write-card" type="button" onclick="window.selectWriteCategory('인수')">
+          <span class="write-card-icon">🩺</span>
+          <span class="write-card-text">
+            <span class="write-card-title">인수 같음</span>
+            <span class="write-card-desc">환자 상태·병력 기반 보험사 인수 가능 여부 질문</span>
+          </span>
+        </button>
+        <button class="write-card" type="button" onclick="window.selectWriteCategory('상품')">
+          <span class="write-card-icon">📦</span>
+          <span class="write-card-text">
+            <span class="write-card-title">상품 같음</span>
+            <span class="write-card-desc">상품군·건강체·보장내용 등 상품 질문</span>
+          </span>
+        </button>
+        <button class="write-card" type="button" onclick="window.selectWriteCategory('기타')">
+          <span class="write-card-icon">❓</span>
+          <span class="write-card-text">
+            <span class="write-card-title">기타 잘 모르겠음</span>
+            <span class="write-card-desc">녹취·서류·전산·민원·고객응대 등 현장 운영 질문</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── 게시글 상세 오버레이 ── -->
 <div class="detail-overlay" id="detail-overlay">
@@ -2079,6 +2233,11 @@ window.onClickToastUpgrade = function() {
 
 /* ── 글쓰기 버튼 클릭 ── */
 window.onClickWriteBtn = function() {
+  /* navigation 탭 = 2층 구조 4 카드 모달 오버레이 본진 (별 트랙 #58, 2026-05-11 v0 1차) */
+  if (_currentBoard === 'navigation') {
+    window.openWriteOverlay();
+    return;
+  }
   if (_currentCategory === 'all') {
     alert('카테고리를 먼저 선택해 주세요.');
     return;
@@ -2093,6 +2252,43 @@ window.onClickWriteBtn = function() {
    */
   window.openWriteView();
 };
+
+/* ── 글쓰기 팝업 오버레이 (별 트랙 #58, navigation 탭 v0 1차 본진) ── */
+/* 본진 spec: docs/architecture/navigation_write_overlay_v0_2026-05-11.md          */
+/* 카드 클릭 시 폼 본진 = 다음 단계 박음 (현재 placeholder)                       */
+window.openWriteOverlay = function() {
+  var role = (window.AppState && window.AppState.role) || '';
+  var isAdmin = (role === 'admin');
+  var isMgrPlus = isAdmin
+                  || role === 'ga_branch_manager'
+                  || role === 'ga_manager'
+                  || role === 'insurer_branch_manager'
+                  || role === 'insurer_manager';
+  /* 공지 카드 = admin/매니저급만 노출 (마스터 전략 §4 A — 실장님 공지 본진) */
+  var cardNotice = document.getElementById('write-card-notice');
+  if (cardNotice) cardNotice.style.display = isMgrPlus ? 'flex' : 'none';
+  var overlay = document.getElementById('write-overlay');
+  if (overlay) overlay.classList.add('active');
+};
+window.closeWriteOverlay = function() {
+  var overlay = document.getElementById('write-overlay');
+  if (overlay) overlay.classList.remove('active');
+};
+window.selectWriteCategory = function(category) {
+  /* v0 1차 = placeholder. 각 카테고리별 폼 본진은 다음 단계 박음 (별 트랙 #58 후속) */
+  console.log('[write overlay] category selected:', category);
+  alert('[TODO] ' + category + ' 폼 본진 = 다음 단계 박음 (별 트랙 #58 후속).\n\n어제 5/10 채팅 + navigation_write_overlay_v0_2026-05-11.md 본진 raw 정합.');
+  window.closeWriteOverlay();
+};
+/* ESC 키 박음 (overlay active 상태에서만 닫기) */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var overlay = document.getElementById('write-overlay');
+    if (overlay && overlay.classList.contains('active')) {
+      window.closeWriteOverlay();
+    }
+  }
+});
 
 window.openWriteView = function() {
   var board      = _currentBoard;
