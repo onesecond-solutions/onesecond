@@ -14,6 +14,19 @@
 <link rel="stylesheet" href="css/tokens.css">
 
 <style>
+/* ── FOUC 안전장치 (페이지 CSS 적용 전 보호 — 운영툴 톤, transition 없음) ──
+   글로벌 hidden 패턴 + D영역 페이지 교체 1 frame visibility 가드 + B 사이드바 ready 가드.
+   !important 금지: page CSS의 .write-overlay.active / .detail-overlay.active 풀기 막힘. */
+.hidden, .is-hidden,
+.write-view, .write-overlay, .detail-overlay,
+[data-menu-panel] { display: none; }
+
+#content-area.is-swapping { visibility: hidden; }
+
+.menu.is-pending { opacity: 0.4; pointer-events: none; }
+
+.loading-placeholder { min-height: 320px; }
+
 /* ── 프레임 레이아웃 (A1/A2/B/C/D/E) ── */
 html, body {
   font-size: 16px;
@@ -843,7 +856,7 @@ html, body {
 
     <!-- B: 사이드바 -->
     <div class="b">
-      <div class="menu">
+      <div class="menu is-pending">
         <div class="menu-item active" data-menu="home">홈</div>
         <div class="menu-item" data-menu="board">현장의 소리</div>
         <div class="menu-item" data-menu="quick">Quick 메뉴</div>
@@ -1065,7 +1078,11 @@ async function applyMenuSettings() {
   // [2026-04-17] 관리자는 표시 설정과 무관하게 항상 모든 메뉴 표시
   // (실제 사용자 화면은 admin.html의 미리보기로 확인)
   // [2026-04-23] 00_MASTER.md 5-4항 — admin·branch_manager 둘 다 관리자 예외
-  if (window.AppState && ['admin','branch_manager'].includes(window.AppState.role)) return;
+  if (window.AppState && ['admin','branch_manager'].includes(window.AppState.role)) {
+    var menuElA = document.querySelector('.menu');
+    if (menuElA) menuElA.classList.remove('is-pending');
+    return;
+  }
   try {
     var res = await window.db.fetch('/rest/v1/app_settings?group_name=eq.menu_b&select=key,value');
     if (!res.ok) return;
@@ -1082,6 +1099,9 @@ async function applyMenuSettings() {
     });
   } catch (e) {
     console.warn('applyMenuSettings error:', e);
+  } finally {
+    var menuEl = document.querySelector('.menu');
+    if (menuEl) menuEl.classList.remove('is-pending');
   }
 }
 
@@ -1183,6 +1203,7 @@ async function switchMenu(menuKey) {
 
   // D영역 페이지 로드
   var area = document.getElementById('content-area');
+  area.classList.add('is-swapping');
   area.innerHTML = '<div class="loading-placeholder">로딩 중...</div>';
   try {
     var res  = await fetch('pages/' + menuKey + '.html');
@@ -1203,8 +1224,16 @@ async function switchMenu(menuKey) {
     // 페이지 배너 주입
     injectPageBanner(menuKey);
 
+    /* innerHTML + script append 후 page CSS 적용 안정성 확보 — raf 이중으로 1 frame 더 양보 */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        area.classList.remove('is-swapping');
+      });
+    });
+
   } catch (e) {
     area.innerHTML = '<div class="card" style="margin:var(--space-5);"><h2 style="font-size:1.1em;margin-bottom:var(--space-2);">준비 중</h2><p style="font-size:0.875em;color:var(--color-text-tertiary);">' + menuKey + ' 페이지를 불러오지 못했습니다.</p></div>';
+    area.classList.remove('is-swapping');
   }
 }
 window.switchMenu = switchMenu;
