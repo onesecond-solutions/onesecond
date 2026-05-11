@@ -523,6 +523,100 @@
   .home-hero-divider-line.line-5 { display: none; }
 }
 
+
+/* ════════════════════════════════════════════════════════════
+   6. home_v2 흡수 — 운영형 preview grid 카드 3종 (2026-05-11)
+   ▸ 6각 다이어그램 아래 신규 섹션 (라이브 정체성 6각 유지)
+   ▸ home_v2.html .grid/.card 패턴 cherry-pick (자체 :root 미사용)
+   ▸ tokens.css 변수만 참조 — 토큰 충돌 방지
+   ▸ 카드 클릭 → window.switchMenu() — app.html 셸 라우팅 보존
+════════════════════════════════════════════════════════════ */
+
+.home-cards-section {
+  max-width: 1100px;
+  margin: var(--space-10) auto 0;
+  padding: 0 var(--space-4);
+}
+
+.home-cards-section-title {
+  font-size: 0.737em;
+  letter-spacing: 0.12em;
+  color: var(--color-text-tertiary);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-2);
+}
+
+.home-cards-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr 0.9fr;
+  gap: var(--space-5);
+}
+
+.home-cards-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  min-height: 240px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-slow), border-color var(--transition-slow), box-shadow var(--transition-slow);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-cards-card:hover,
+.home-cards-card:focus-visible {
+  transform: translateY(-6px);
+  border-color: var(--brand-300);
+  box-shadow: var(--shadow-lg);
+  outline: none;
+}
+
+.home-cards-kicker {
+  font-size: 0.737em;
+  letter-spacing: 0.08em;
+  color: var(--color-text-tertiary);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+
+.home-cards-title {
+  font-size: 1.375em;
+  line-height: 1.3;
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-primary);
+  font-weight: var(--fw-black);
+  letter-spacing: -0.01em;
+}
+.home-cards-title .accent { color: var(--color-brand); }
+
+.home-cards-desc {
+  font-size: 0.875em;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* 태블릿 1024px 이하 — 1 컬럼 */
+@media (max-width: 1024px) {
+  .home-cards-grid { grid-template-columns: 1fr; }
+  .home-cards-card { min-height: auto; }
+}
+
+/* 모바일 640px 이하 — padding 축소 */
+@media (max-width: 640px) {
+  .home-cards-section {
+    margin-top: var(--space-8);
+    padding: 0 var(--space-3);
+  }
+  .home-cards-card { padding: var(--space-6); }
+  .home-cards-title { font-size: 1.25em; }
+}
+
 </style>
 
 
@@ -618,6 +712,48 @@
 
 <!-- 3. 6각형 다이어그램 컨테이너 (청크 2: JS가 SVG + 중앙 로고 + 6개 툴팁 주입) -->
 <div class="home-hex-wrap" id="homeHexWrap"></div>
+
+
+<!-- 4. home_v2 흡수 — 운영형 preview grid 카드 3종 (2026-05-11)
+     ▸ 6각 다이어그램 아래 신규 섹션 (라이브 정체성 6각 유지)
+     ▸ 카드 클릭 → switchMenu() (app.html 셸 라우팅 보존, window.location.href 금지)
+     ▸ board / quick / myspace 3종 (scripts·together는 본 범위 외) -->
+<section class="home-cards-section" aria-label="주요 메뉴 안내">
+  <h3 class="home-cards-section-title">현장에서 바로 쓰는 도구</h3>
+  <div class="home-cards-grid">
+
+    <div class="home-cards-card" role="button" tabindex="0"
+         data-home-card="board"
+         onclick="window.switchMenu &amp;&amp; window.switchMenu('board')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.switchMenu &amp;&amp; window.switchMenu('board');}"
+         aria-label="현장의 소리로 이동">
+      <div class="home-cards-kicker">FIELD Q&amp;A</div>
+      <h4 class="home-cards-title">카톡방에 흩어진 자료들, 질문들을 한공간에 <span class="accent">쏘옥</span></h4>
+      <p class="home-cards-desc">상품·인수·공지 질문을 스마트하게 정리한 게시판과 네비게이션을 제공합니다.</p>
+    </div>
+
+    <div class="home-cards-card" role="button" tabindex="0"
+         data-home-card="quick"
+         onclick="window.switchMenu &amp;&amp; window.switchMenu('quick')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.switchMenu &amp;&amp; window.switchMenu('quick');}"
+         aria-label="빠른 실행으로 이동">
+      <div class="home-cards-kicker">QUICK MENU</div>
+      <h4 class="home-cards-title">긴박한 순간, 허둥대지 마세요. 바로 <span class="accent">딸깍</span></h4>
+      <p class="home-cards-desc">BMI·보험연령·녹취 스크립트·전산장애 신고처럼 통화 중 필요한 기능을 빠르게 꺼내 씁니다.</p>
+    </div>
+
+    <div class="home-cards-card" role="button" tabindex="0"
+         data-home-card="myspace"
+         onclick="window.switchMenu &amp;&amp; window.switchMenu('myspace')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.switchMenu &amp;&amp; window.switchMenu('myspace');}"
+         aria-label="MY SPACE로 이동">
+      <div class="home-cards-kicker">MY SPACE</div>
+      <h4 class="home-cards-title">나만의 멘트를 작성하고, 사용해보세요. 내 입에 <span class="accent">착</span></h4>
+      <p class="home-cards-desc">고민했던 순간의 멘트, 한 줄 핵심 멘트가 먼저 보이게 정리해두세요.</p>
+    </div>
+
+  </div>
+</section>
 
 
 <!-- ════════════════════════════════════════════════════════════
