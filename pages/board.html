@@ -17,11 +17,13 @@
    design_guide.md 준수 — tokens.css 변수만 사용
 ════════════════════════════════════════════════════════════ */
 
-/* ── ready 가드 (탭 RBAC 비동기 적용 동안 탭바·콘텐츠 영역 가림 — header 는 표시) ──
-   _loadBoardTabSettings() + _applyBoardTabVisibility() + _switchBoard() 완료 후
-   _boot()이 data-ready="true" 박음. transition 없음, visibility 기반. */
-.pg-outer[data-ready="false"] .pg-tab-block,
-.pg-outer[data-ready="false"] .pg-content-block { visibility: hidden; }
+/* ── ready 가드 — DB 토글 의존 2 탭만 (manager_lounge / hub) ──
+   role 기반 5 탭(qna / manager_notice / navigation / insurer / archive_legacy)은
+   _boot() 진입 즉시 동기 판정·표시. 콘텐츠 영역도 가드 무관 즉시 표시 (qna 기본 흐름).
+   _loadBoardTabSettings() 백그라운드 fetch 완료 후 2 탭 토글 적용 + data-ready="true".
+   visibility 기반 — 자리 차지 유지로 ready=true 시점 layout 미세 변화 최소화. */
+.pg-outer[data-ready="false"] .pg-tab-btn[data-board="manager_lounge"],
+.pg-outer[data-ready="false"] .pg-tab-btn[data-board="hub"] { visibility: hidden; }
 
 /* ── 리셋 ── */
 .pg-outer, .pg-outer *,
@@ -1103,10 +1105,10 @@
   <!-- ② 탭바 블록 -->
   <div class="pg-tab-block">
     <div class="pg-tab-bar" id="board-tab-bar">
-      <button class="pg-tab-btn active" data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 실장님 공지</button>
+      <button class="pg-tab-btn"        data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 실장님 공지</button>
       <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')">☕ 매니저 라운지</button>
       <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
-      <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
+      <button class="pg-tab-btn active" data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
       <button class="pg-tab-btn"        data-board="insurer"        onclick="window.switchBoard('insurer')">🏦 보험사 게시판</button>
       <button class="pg-tab-btn"        data-board="hub"             onclick="window.switchBoard('hub')">🌐 허브 게시판</button>
       <button class="pg-tab-btn"        data-board="archive_legacy"  onclick="window.switchBoard('archive_legacy')">🗄️ 폐기 보존</button>
@@ -1908,100 +1910,114 @@ function _loadBoardTabSettings() {
     .catch(function(e) { console.warn('[board] app_settings 로드 실패', e); });
 }
 
-/* ── 1차 탭 가시성 적용 + 기본 탭 결정 (spec v2 § 1-3 사용자 영역별 진입 동선 정합) ──
-   admin                    : 7탭 전체 표시 (화면설정 무시), 기본 = qna
+/* ── 탭 가시성 — role 기반 동기 판정 (5 탭) + DB 토글 의존 (2 탭) 분리 ──
+   admin                    : 7탭 전체 표시, 기본 = qna
    ga_*                     : 실장님 공지 / 매니저라운지(토글) / 네비방 / 스마트 게시판 / 허브(토글), 기본 = qna
-                              → 보험사·archive_legacy 비노출
-   insurer_*                : 스마트 게시판 / 보험사 (2탭, 매니저급+토글 시 라운지 추가), 기본 = qna
-                              → 실장님 공지·네비방·archive_legacy 비노출 (영역 분리 본질) */
-function _applyBoardTabVisibility() {
+   insurer_*                : 스마트 게시판 / 보험사 (2탭, 매니저급+토글 시 라운지 추가), 기본 = qna */
+
+/* (a) role 기반 5 탭 — _boot() 진입 즉시 동기 호출 (DB fetch 무관) */
+function _applyTabVisibilityByRole() {
   var bar = document.getElementById('board-tab-bar');
   if (!bar) return 'qna';
 
-  var role     = (window.AppState && window.AppState.role) || '';
-  var isAdmin  = (role === 'admin');
-  var isGA     = (role.indexOf('ga_') === 0);
-  var isIns    = (role.indexOf('insurer_') === 0);
+  var role    = (window.AppState && window.AppState.role) || '';
+  var isAdmin = (role === 'admin');
+  var isGA    = (role.indexOf('ga_') === 0);
+  var isIns   = (role.indexOf('insurer_') === 0);
+
+  var roleVisible = {
+    qna:             true,                /* 모든 사용자 */
+    manager_notice:  isAdmin || isGA,     /* admin + ga_* */
+    navigation:      isAdmin || isGA,     /* admin + ga_* (spec § 5-4) */
+    insurer:         isAdmin || isIns,    /* admin + insurer_* (spec § 5-1) */
+    archive_legacy:  isAdmin              /* admin only */
+  };
+  Object.keys(roleVisible).forEach(function(key) {
+    var btn = bar.querySelector('.pg-tab-btn[data-board="' + key + '"]');
+    if (!btn) return;
+    btn.style.display = roleVisible[key] ? '' : 'none';
+  });
+
+  /* defaultBoard = qna (모든 사용자 visible, 사용자 본질 페이지) */
+  return 'qna';
+}
+
+/* (b) DB 토글 의존 2 탭 — _loadBoardTabSettings() 완료 후 호출 (manager_lounge / hub) */
+function _applyTabVisibilityByToggle() {
+  var bar = document.getElementById('board-tab-bar');
+  if (!bar) return;
+
+  var role    = (window.AppState && window.AppState.role) || '';
+  var isAdmin = (role === 'admin');
   var isMgrPlus = (
     role === 'admin' ||
     role === 'ga_branch_manager' || role === 'ga_manager' ||
     role === 'insurer_branch_manager' || role === 'insurer_manager'
   );
 
-  /* 7종 board_type 별 가시성 결정 */
-  var visible = {
-    qna:             true,                                    /* 모든 사용자 (admin + ga + insurer 전부) */
-    manager_notice:  isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출) */
-    manager_lounge:  isAdmin || (_boardTabVisible.manager_lounge && isMgrPlus), /* admin 항상 + 토글 #1 ON + 매니저급+ */
-    navigation:      isAdmin || isGA,                          /* admin + ga_* (insurer_* 비노출, spec § 5-4) */
-    insurer:         isAdmin || isIns,                         /* admin + insurer_* (ga_* 비노출, spec § 5-1) */
-    hub:             isAdmin || _boardTabVisible.hub,          /* admin 항상 + 토글 #3 ON 시 일반 노출 */
-    archive_legacy:  isAdmin                                   /* admin only */
+  var toggleVisible = {
+    manager_lounge: isAdmin || (_boardTabVisible.manager_lounge && isMgrPlus),
+    hub:            isAdmin || _boardTabVisible.hub
   };
-
-  /* 7탭 visibility 적용 */
-  ['qna','manager_notice','manager_lounge','navigation','insurer','hub','archive_legacy'].forEach(function(key) {
+  Object.keys(toggleVisible).forEach(function(key) {
     var btn = bar.querySelector('.pg-tab-btn[data-board="' + key + '"]');
     if (!btn) return;
-    btn.style.display = visible[key] ? '' : 'none';
+    btn.style.display = toggleVisible[key] ? '' : 'none';
   });
-
-  /* 기본 탭 = qna (사용자 본질 페이지). qna 비노출 시(이론상 발생 X) 표시 가능한 첫 탭 */
-  var order = ['qna','manager_notice','navigation','insurer','manager_lounge','hub','archive_legacy'];
-  for (var i = 0; i < order.length; i++) {
-    if (visible[order[i]]) return order[i];
-  }
-  return 'qna'; /* 안전망 */
 }
 
-/* ── 초기화: appstate:ready 표준 패턴 ── */
+/* ── 초기화: appstate:ready 표준 패턴 (옵션 E — role 동기 즉시 + DB 토글 백그라운드) ── */
 function _boot() {
   var s = window.AppState;
-  /* ready 가드 풀기 — 탭 RBAC + _switchBoard 완료 시점에 호출 (모든 분기 + 안전망 catch) */
+  /* ready 가드 풀기 — _loadBoardTabSettings + _applyTabVisibilityByToggle 완료 시점에 호출 */
   var _finalize = function() {
     var pg = document.getElementById('page-board');
     if (pg) pg.setAttribute('data-ready', 'true');
   };
-  /* [2026-04-17] app_settings 로드 → 탭 가시성 적용 → _switchBoard */
-  _loadBoardTabSettings().then(function() {
-    var defaultBoard = _applyBoardTabVisibility();
 
-    if (s && s.org) {
-      _userOrg = s.org;
-      _switchBoard(defaultBoard);
-      _bindOverlayClose();
+  /* (1) role 기반 5 탭 즉시 판정 + defaultBoard 결정 (동기, DB fetch 무관) */
+  var defaultBoard = _applyTabVisibilityByRole();
+
+  /* (2) org 정보 분기 → _switchBoard(qna) 호출 → 콘텐츠 로딩 시작 */
+  var _afterOrg = function() {
+    _switchBoard(defaultBoard);
+    _bindOverlayClose();
+  };
+  if (s && s.org) {
+    _userOrg = s.org;
+    _afterOrg();
+  } else if (s && s.userId) {
+    window.db.fetch('/rest/v1/users?id=eq.' + s.userId + '&select=company,branch,team')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data[0]) {
+          _userOrg = {
+            company: data[0].company || '',
+            branch:  data[0].branch  || '',
+            team:    data[0].team    || ''
+          };
+        }
+        _afterOrg();
+      })
+      .catch(function(e) {
+        console.warn('org 로드 실패', e);
+        _afterOrg();
+      });
+  } else {
+    _afterOrg();
+  }
+
+  /* (3) DB 토글 의존 2 탭 백그라운드 fetch → 최종 가시성 적용 + ready 가드 풀기 */
+  _loadBoardTabSettings()
+    .then(function() {
+      _applyTabVisibilityByToggle();
       _finalize();
-    } else if (s && s.userId) {
-      window.db.fetch('/rest/v1/users?id=eq.' + s.userId + '&select=company,branch,team')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data && data[0]) {
-            _userOrg = {
-              company: data[0].company || '',
-              branch:  data[0].branch  || '',
-              team:    data[0].team    || ''
-            };
-          }
-          _switchBoard(defaultBoard);
-          _bindOverlayClose();
-          _finalize();
-        })
-        .catch(function(e) {
-          console.warn('org 로드 실패', e);
-          _switchBoard(defaultBoard);
-          _bindOverlayClose();
-          _finalize();
-        });
-    } else {
-      _switchBoard(defaultBoard);
-      _bindOverlayClose();
+    })
+    .catch(function(e) {
+      /* 안전망: fetch throw 시에도 ready 가드 풀어줘서 manager_lounge/hub 영구 hidden 방지 */
+      console.warn('[board] _loadBoardTabSettings 실패', e);
       _finalize();
-    }
-  }).catch(function(e) {
-    /* 안전망: _loadBoardTabSettings 자체 throw 시에도 ready 가드 풀어줘서 영구 hidden 방지 */
-    console.warn('[board] _boot 진입 실패', e);
-    _finalize();
-  });
+    });
 }
 
 if (window.AppState && window.AppState.ready) {

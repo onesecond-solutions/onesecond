@@ -25,9 +25,9 @@
 
 .menu.is-pending { opacity: 0.4; pointer-events: none; }
 
-/* board.html ready 가드 보호 (page CSS 적용 전에도 탭바·콘텐츠 가림 — header 는 표시) */
-.pg-outer[data-ready="false"] .pg-tab-block,
-.pg-outer[data-ready="false"] .pg-content-block { visibility: hidden; }
+/* board.html ready 가드 보호 (page CSS 적용 전에도 DB 토글 의존 2 탭만 가림) */
+.pg-outer[data-ready="false"] .pg-tab-btn[data-board="manager_lounge"],
+.pg-outer[data-ready="false"] .pg-tab-btn[data-board="hub"] { visibility: hidden; }
 
 .loading-placeholder { min-height: 320px; }
 
