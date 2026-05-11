@@ -1142,6 +1142,126 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md, 12px);
 }
+
+/* ════════════════════════════════════════════════════════════
+   [2026-05-11] 운영 캘린더 보드 v1 — 보험 운영 시간축 (작업지시서 §3 위치 4)
+   ▸ 일반 캘린더 X, "운영 일정 보드형" — 시간 흐름 운영 데이터 선언
+   ▸ 유형 4종 (공지/인수/신상품/긴급) 미세 점 컬러 (라이트 SaaS 톤)
+   ▸ placeholder 4건, 실제 DB 미연동
+════════════════════════════════════════════════════════════ */
+.pg-calendar-board {
+  margin: var(--space-3, 12px) var(--space-4, 16px);
+  padding: var(--space-4, 16px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
+}
+.pg-calendar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-3, 12px);
+  padding-bottom: var(--space-3, 12px);
+  border-bottom: 1px dashed var(--color-border);
+}
+.pg-calendar-icon { font-size: 1.05em; }
+.pg-calendar-title {
+  font-size: 0.9375em;
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.pg-calendar-sub {
+  font-size: 0.75em;
+  color: var(--color-text-tertiary);
+  margin-left: auto;
+  font-weight: var(--fw-medium, 500);
+}
+.pg-calendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pg-calendar-item {
+  display: flex;
+  gap: var(--space-3, 12px);
+  align-items: center;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.pg-calendar-item:hover { background: var(--color-surface-2); }
+.pg-cal-date {
+  flex: 0 0 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+  padding-right: var(--space-3, 12px);
+  border-right: 1px solid var(--color-border);
+}
+.pg-cal-month {
+  font-size: 0.6875em;
+  color: var(--color-text-tertiary);
+  font-weight: var(--fw-bold, 700);
+}
+.pg-cal-day {
+  font-size: 1.25em;
+  color: var(--color-text-primary);
+  font-weight: var(--fw-black, 900);
+  font-feature-settings: 'tnum';
+  margin-top: 2px;
+}
+.pg-cal-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-width: 0;
+}
+.pg-cal-event {
+  flex: 1;
+  font-size: 0.875em;
+  color: var(--color-text-primary);
+  font-weight: var(--fw-semibold, 600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pg-cal-tag {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px 2px 7px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.6875em;
+  font-weight: var(--fw-bold, 700);
+  letter-spacing: 0.02em;
+}
+.pg-cal-tag::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+/* 유형 4종 미세 점 컬러 (작업지시서 §6) — 라이트 SaaS 톤 유지 */
+.pg-cal-tag-notice     { background: rgba(160, 82, 45, 0.08); color: var(--color-brand); }
+.pg-cal-tag-notice::before     { background: var(--color-brand); }
+.pg-cal-tag-acceptance { background: rgba(245, 158, 11, 0.10); color: #B45309; }
+.pg-cal-tag-acceptance::before { background: var(--color-warning, #F59E0B); }
+.pg-cal-tag-product    { background: rgba(59, 130, 246, 0.09); color: #1D4ED8; }
+.pg-cal-tag-product::before    { background: var(--color-info, #3B82F6); }
+.pg-cal-tag-urgent     { background: rgba(239, 68, 68, 0.09); color: #B91C1C; }
+.pg-cal-tag-urgent::before     { background: var(--color-danger, #EF4444); }
+
+@media (max-width: 640px) {
+  .pg-calendar-board { margin: var(--space-2, 8px) var(--space-3, 12px); padding: var(--space-3, 12px); }
+  .pg-cal-date { flex-basis: 48px; }
+  .pg-cal-event { font-size: 0.8125em; }
+}
 </style>
 
 
@@ -1190,6 +1310,65 @@
       <button class="pg-tab-btn"        data-board="archive_legacy"  onclick="window.switchBoard('archive_legacy')">🗄️ 폐기 보존</button>
     </div>
   </div>
+
+  <!-- [2026-05-11] 운영 캘린더 보드 v1 — 보험 운영 시간축 (작업지시서 §3 위치 4)
+       탭바 ↔ 글 리스트 사이. "운영 일정 보드형" placeholder
+       유형 4종 (공지/인수/신상품/긴급) 미세 점 컬러
+       실제 DB 미연동, 월간 캘린더 X -->
+  <section class="pg-calendar-board" aria-label="이번 주 운영 일정">
+    <div class="pg-calendar-header">
+      <span class="pg-calendar-icon" aria-hidden="true">📅</span>
+      <h3 class="pg-calendar-title">이번 주 운영 일정</h3>
+      <span class="pg-calendar-sub">보험 운영 시간축 · 4건</span>
+    </div>
+    <div class="pg-calendar-list">
+
+      <div class="pg-calendar-item">
+        <div class="pg-cal-date">
+          <span class="pg-cal-month">5월</span>
+          <span class="pg-cal-day">15</span>
+        </div>
+        <div class="pg-cal-body">
+          <div class="pg-cal-event">메리츠 인수 변경</div>
+          <span class="pg-cal-tag pg-cal-tag-acceptance">인수</span>
+        </div>
+      </div>
+
+      <div class="pg-calendar-item">
+        <div class="pg-cal-date">
+          <span class="pg-cal-month">5월</span>
+          <span class="pg-cal-day">16</span>
+        </div>
+        <div class="pg-cal-body">
+          <div class="pg-cal-event">KB 신상품 출시</div>
+          <span class="pg-cal-tag pg-cal-tag-product">신상품</span>
+        </div>
+      </div>
+
+      <div class="pg-calendar-item">
+        <div class="pg-cal-date">
+          <span class="pg-cal-month">5월</span>
+          <span class="pg-cal-day">18</span>
+        </div>
+        <div class="pg-cal-body">
+          <div class="pg-cal-event">전산 점검</div>
+          <span class="pg-cal-tag pg-cal-tag-urgent">긴급</span>
+        </div>
+      </div>
+
+      <div class="pg-calendar-item">
+        <div class="pg-cal-date">
+          <span class="pg-cal-month">5월</span>
+          <span class="pg-cal-day">20</span>
+        </div>
+        <div class="pg-cal-body">
+          <div class="pg-cal-event">녹취 변경</div>
+          <span class="pg-cal-tag pg-cal-tag-notice">공지</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
 
   <!-- ③ 콘텐츠 블록 -->
   <div class="pg-content-block">
