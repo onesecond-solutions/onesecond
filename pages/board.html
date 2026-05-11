@@ -1151,6 +1151,42 @@
   overflow: hidden;
   flex-shrink: 0;
 }
+/* ════════════════════════════════════════════════════════════
+   [2026-05-11 운영 콘솔 Step B] 2컬럼 grid (68:32) — 작업지시서 §3
+   ▸ 좌 .pg-console-main 68% = 게시판 흐름 본체 (글쓰기 + 글 리스트)
+   ▸ 우 .pg-console-side 32% = 운영 일정 (캘린더 우측 이동)
+   ▸ 모바일 1024px 이하 1컬럼 + order (캘린더 → 게시판) — §4 정합
+════════════════════════════════════════════════════════════ */
+.pg-console-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 68fr) minmax(0, 32fr);
+  gap: var(--space-4, 16px);
+  padding: 0 var(--space-4, 16px);
+  margin-top: var(--space-3, 12px);
+  align-items: start;
+}
+.pg-console-main { min-width: 0; }
+.pg-console-side { min-width: 0; }
+
+/* 캘린더가 우측 컬럼(32%) 안 → 자체 grid는 항상 1열 강제 + margin reset (grid gap이 처리) */
+.pg-console-side .pg-calendar-board { margin: 0; }
+.pg-console-side .pg-calendar-list  { grid-template-columns: 1fr; }
+
+@media (max-width: 1024px) {
+  .pg-console-grid {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+  /* §4 모바일 순서: 운영 일정(우) → 게시판(좌) */
+  .pg-console-side { order: 1; }
+  .pg-console-main { order: 2; }
+  /* 모바일에서 캘린더 자체 margin 복원 */
+  .pg-console-side .pg-calendar-board { margin: var(--space-3, 12px) var(--space-4, 16px); }
+}
+@media (max-width: 640px) {
+  .pg-console-side .pg-calendar-board { margin: var(--space-2, 8px) var(--space-3, 12px); }
+}
+
 .pg-bottom-bar {
   /* 2026-04-27 shell v1: 브라운 → 시안 그레이 톤 (B/C 영역과 동일 surface-2) */
   background: var(--color-surface-2);
@@ -1390,67 +1426,14 @@
     </div>
   </div>
 
-  <!-- [2026-05-11] 운영 캘린더 보드 v1 — 보험 운영 시간축 (작업지시서 §3 위치 4)
-       탭바 ↔ 글 리스트 사이. "운영 일정 보드형" placeholder
-       유형 4종 (공지/인수/신상품/긴급) 미세 점 컬러
-       실제 DB 미연동, 월간 캘린더 X -->
-  <section class="pg-calendar-board" aria-label="이번 주 운영 일정">
-    <div class="pg-calendar-header">
-      <span class="pg-calendar-icon" aria-hidden="true">📅</span>
-      <h3 class="pg-calendar-title">이번 주 운영 일정</h3>
-      <span class="pg-calendar-sub">보험 운영 시간축 · 4건</span>
-    </div>
-    <div class="pg-calendar-list">
+  <!-- [2026-05-11 운영 콘솔 Step B] 2컬럼 grid (68:32) — 작업지시서 §3
+       좌(main): 게시판 흐름 본체 (글쓰기 + 글 리스트, 기존 pg-content-block 그대로)
+       우(aside): 운영 일정 (캘린더 위치 이동) — pg-content-block 닫힘 다음 박힘 -->
+  <div class="pg-console-grid">
+    <main class="pg-console-main">
 
-      <div class="pg-calendar-item" data-cal-type="acceptance">
-        <div class="pg-cal-date">
-          <span class="pg-cal-month">5월</span>
-          <span class="pg-cal-day">15</span>
-        </div>
-        <div class="pg-cal-body">
-          <div class="pg-cal-event">메리츠 인수 변경</div>
-          <span class="pg-cal-tag pg-cal-tag-acceptance">인수</span>
-        </div>
-      </div>
-
-      <div class="pg-calendar-item" data-cal-type="product">
-        <div class="pg-cal-date">
-          <span class="pg-cal-month">5월</span>
-          <span class="pg-cal-day">16</span>
-        </div>
-        <div class="pg-cal-body">
-          <div class="pg-cal-event">KB 신상품 출시</div>
-          <span class="pg-cal-tag pg-cal-tag-product">신상품</span>
-        </div>
-      </div>
-
-      <div class="pg-calendar-item" data-cal-type="urgent">
-        <div class="pg-cal-date">
-          <span class="pg-cal-month">5월</span>
-          <span class="pg-cal-day">18</span>
-        </div>
-        <div class="pg-cal-body">
-          <div class="pg-cal-event">전산 점검</div>
-          <span class="pg-cal-tag pg-cal-tag-urgent">긴급</span>
-        </div>
-      </div>
-
-      <div class="pg-calendar-item" data-cal-type="notice">
-        <div class="pg-cal-date">
-          <span class="pg-cal-month">5월</span>
-          <span class="pg-cal-day">20</span>
-        </div>
-        <div class="pg-cal-body">
-          <div class="pg-cal-event">녹취 변경</div>
-          <span class="pg-cal-tag pg-cal-tag-notice">공지</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ③ 콘텐츠 블록 -->
-  <div class="pg-content-block">
+      <!-- ③ 콘텐츠 블록 -->
+      <div class="pg-content-block">
     <div class="board-content">
 
       <!-- ── 목록 뷰 ── -->
@@ -1737,7 +1720,69 @@
       </div>
 
     </div>
-  </div>
+  </div><!-- /.pg-content-block -->
+
+    </main><!-- /.pg-console-main -->
+
+    <aside class="pg-console-side" aria-label="운영 일정 (시간축 레이어)">
+      <!-- [Step B] 운영 캘린더 보드 v1 — 위치 이동 (탭바 다음 → 우측 컬럼 안) -->
+      <section class="pg-calendar-board" aria-label="이번 주 운영 일정">
+        <div class="pg-calendar-header">
+          <span class="pg-calendar-icon" aria-hidden="true">📅</span>
+          <h3 class="pg-calendar-title">이번 주 운영 일정</h3>
+          <span class="pg-calendar-sub">보험 운영 시간축 · 4건</span>
+        </div>
+        <div class="pg-calendar-list">
+
+          <div class="pg-calendar-item" data-cal-type="acceptance">
+            <div class="pg-cal-date">
+              <span class="pg-cal-month">5월</span>
+              <span class="pg-cal-day">15</span>
+            </div>
+            <div class="pg-cal-body">
+              <div class="pg-cal-event">메리츠 인수 변경</div>
+              <span class="pg-cal-tag pg-cal-tag-acceptance">인수</span>
+            </div>
+          </div>
+
+          <div class="pg-calendar-item" data-cal-type="product">
+            <div class="pg-cal-date">
+              <span class="pg-cal-month">5월</span>
+              <span class="pg-cal-day">16</span>
+            </div>
+            <div class="pg-cal-body">
+              <div class="pg-cal-event">KB 신상품 출시</div>
+              <span class="pg-cal-tag pg-cal-tag-product">신상품</span>
+            </div>
+          </div>
+
+          <div class="pg-calendar-item" data-cal-type="urgent">
+            <div class="pg-cal-date">
+              <span class="pg-cal-month">5월</span>
+              <span class="pg-cal-day">18</span>
+            </div>
+            <div class="pg-cal-body">
+              <div class="pg-cal-event">전산 점검</div>
+              <span class="pg-cal-tag pg-cal-tag-urgent">긴급</span>
+            </div>
+          </div>
+
+          <div class="pg-calendar-item" data-cal-type="notice">
+            <div class="pg-cal-date">
+              <span class="pg-cal-month">5월</span>
+              <span class="pg-cal-day">20</span>
+            </div>
+            <div class="pg-cal-body">
+              <div class="pg-cal-event">녹취 변경</div>
+              <span class="pg-cal-tag pg-cal-tag-notice">공지</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </aside>
+
+  </div><!-- /.pg-console-grid -->
 
   <!-- ④ 푸터 블록 -->
   <div class="pg-footer-block">
