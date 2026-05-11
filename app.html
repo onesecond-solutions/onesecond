@@ -118,8 +118,34 @@ html, body {
   font-size: 1em;
   cursor: pointer;
   transition: background var(--transition-fast);
+  position: relative;
 }
 .a1-notify:hover { background: var(--color-surface-2); }
+
+/* [2026-05-11] 알림 레이어 v1 1단 — 최소 신호 감지 (운영 알림 작업지시서 §1)
+   ▸ 상세 텍스트·리스트 금지 — "무언가 있다"만 알리는 layer
+   ▸ brown badge = 일반 / .is-urgent = 긴급 신호
+   ▸ 0건 = .is-empty 클래스로 hide */
+.a1-notify-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 0.6em;
+  font-weight: var(--fw-bold);
+  line-height: 16px;
+  border-radius: var(--radius-full);
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 0 0 1.5px var(--color-bg);
+  letter-spacing: 0;
+}
+.a1-notify-badge.is-empty { display: none; }
+.a1-notify-badge.is-urgent { background: var(--color-danger); }
 
 /* ── A1 사용자 (아바타 + 이름 + ▾) ── */
 .a1-user {
@@ -834,7 +860,11 @@ html, body {
         <span class="a1-chip-dot"></span>실시간
       </div>
       <a class="a1-chip" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">⚠️ 전산장애신고</a>
-      <button class="a1-notify" type="button" aria-label="알림" onclick="onNotifyClick(event)">🔔</button>
+      <button class="a1-notify" type="button" aria-label="알림" onclick="onNotifyClick(event)">
+        🔔
+        <!-- [2026-05-11] 알림 v1 1단 — 최소 신호 (placeholder 3) -->
+        <span class="a1-notify-badge" id="a1-notify-badge" data-count="3">3</span>
+      </button>
       <div style="position:relative;" id="user-dropdown-wrap">
         <button class="a1-user" id="topbar-user" type="button" onclick="toggleUserDropdown(event)">
           <span class="a1-user-avatar" id="topbar-user-avatar">?</span>
