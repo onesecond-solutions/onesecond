@@ -1,0 +1,410 @@
+<script>
+(function(){
+  var _t = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  var _u = {}; try { _u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e) {}
+  if (!_t || !_u.id) { window.location.href = '/login.html'; return; }
+  if (window.location.pathname.indexOf('/pages/') !== -1) {
+    var _seg = window.location.pathname.split('/').pop().replace('.html', '');
+    if (_seg) { localStorage.setItem('selected_menu', _seg); window.location.replace('/app.html'); }
+  }
+})();
+</script>
+
+<!--
+================================================================================
+  pages/team-management.html
+  팀원 관리 — 조직 운영 네트워크 구조 v1 placeholder (2026-05-11)
+
+  ▸ 본진: 기능 완성 X, 구조 존재 선언 ⭕
+  ▸ 본질: 카카오톡 단톡방 운영 구조 → 원세컨드 이동의 첫 UI 흔적
+  ▸ AI 회귀 방지 — 원세컨드는 단순 게시판 SaaS X, 조직 운영 네트워크 시스템
+  ▸ 표시 조건: ga_manager / ga_branch_manager / admin (app.html applyOpsMenuByRole)
+  ▸ 4 섹션: 팀원 목록 / 초대하기 / 보험사 협업 계정 / 역할 구조 안내
+
+  ── 미구현 (다음 단계) ──────────────────────────────────────────────
+    - 실제 초대 이메일 발송 / 가입 승인 / 권한 매트릭스
+    - 조직 이동 시스템 / 활동 로그 / 실시간 동기화
+    - Phase 2 원수사 입점 시 보험사 협업 영역 확장
+
+  ── CSS 톤 ───────────────────────────────────────────────────────────
+    사용자 페이지 라이트 톤 (tokens.css 공용 변수)
+    board / scripts 카드 패턴 정합, 아이보리·화이트·브라운 포인트
+================================================================================
+-->
+
+<style>
+/* 섹션 공용 */
+.tm-page-header {
+  max-width: 1100px;
+  margin: 0 auto var(--space-6);
+  padding: var(--space-5) var(--space-4) 0;
+}
+.tm-page-title {
+  margin: 0 0 var(--space-1);
+  font-size: 1.5em;
+  font-weight: var(--fw-black);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+.tm-page-sub {
+  margin: 0;
+  font-size: 0.875em;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.tm-section {
+  max-width: 1100px;
+  margin: 0 auto var(--space-8);
+  padding: 0 var(--space-4);
+}
+
+.tm-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-left: var(--space-1);
+  border-left: 3px solid var(--color-brand);
+  padding-left: var(--space-3);
+}
+.tm-section-title {
+  font-size: 1.0625em;
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.tm-section-sub {
+  font-size: 0.8125em;
+  color: var(--color-text-tertiary);
+}
+
+/* 팀원 목록 — 카드 그리드 */
+.tm-members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+.tm-member-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.tm-member-card:hover {
+  border-color: var(--brand-300);
+  box-shadow: var(--shadow-sm);
+}
+.tm-member-name {
+  font-size: 0.9375em;
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+.tm-member-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8125em;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.tm-member-meta .label {
+  display: inline-block;
+  min-width: 44px;
+  color: var(--color-text-tertiary);
+  font-size: 0.92em;
+  margin-right: var(--space-1);
+}
+.tm-member-meta code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  color: var(--color-brand);
+}
+
+.tm-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7em;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.02em;
+  align-self: flex-start;
+}
+.tm-status.active   { background: #ECFDF5; color: #065F46; }
+.tm-status.inactive { background: #F3F4F6; color: #6B7280; }
+.tm-status.pending  { background: #FEF3C7; color: #92400E; }
+
+/* 초대하기 영역 */
+.tm-invite-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.tm-invite-btn {
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: 0.875em;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+.tm-invite-btn:hover {
+  border-color: var(--color-brand);
+  background: var(--brand-50);
+  color: var(--color-brand);
+}
+.tm-invite-btn.primary {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: #fff;
+}
+.tm-invite-btn.primary:hover {
+  background: var(--color-brand-light);
+  border-color: var(--color-brand-light);
+  color: #fff;
+}
+.tm-invite-note {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125em;
+  color: var(--color-text-tertiary);
+  line-height: 1.7;
+}
+
+/* 보험사 협업 카드 */
+.tm-insurer-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* 역할 구조 안내 표 */
+.tm-roles-table {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.tm-roles-row {
+  display: grid;
+  grid-template-columns: 200px 1fr 90px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875em;
+  align-items: center;
+}
+.tm-roles-row:last-child { border-bottom: none; }
+.tm-roles-row.head {
+  background: var(--color-surface-2);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-tertiary);
+  font-size: 0.737em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tm-role-key {
+  font-family: var(--font-mono);
+  color: var(--color-brand);
+  font-weight: var(--fw-bold);
+  font-size: 0.9em;
+}
+.tm-role-desc {
+  color: var(--color-text-secondary);
+}
+.tm-role-scope {
+  font-size: 0.75em;
+  color: var(--color-text-tertiary);
+  text-align: right;
+  font-weight: var(--fw-bold);
+}
+
+/* 모바일 분기 */
+@media (max-width: 640px) {
+  .tm-page-header,
+  .tm-section {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+  .tm-section { margin-bottom: var(--space-6); }
+  .tm-members-grid { grid-template-columns: 1fr; }
+  .tm-roles-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+  .tm-role-scope { text-align: left; }
+}
+</style>
+
+
+<!-- 페이지 배너 슬롯 -->
+<div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     페이지 헤더
+════════════════════════════════════════════════════════════ -->
+<div class="tm-page-header">
+  <h2 class="tm-page-title">👥 팀원 관리</h2>
+  <p class="tm-page-sub">팀원, 지점원, 보험사 협업 계정을 관리합니다. 카카오톡 단톡방 운영 구조를 원세컨드 안으로 옮기는 운영 레이어입니다.</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     1. 팀원 목록
+════════════════════════════════════════════════════════════ -->
+<section class="tm-section">
+  <div class="tm-section-header">
+    <h3 class="tm-section-title">팀원 목록</h3>
+    <span class="tm-section-sub">총 4명 · 같은 팀 · 같은 지점 (샘플)</span>
+  </div>
+
+  <div class="tm-members-grid">
+
+    <div class="tm-member-card">
+      <div class="tm-member-name">박실장</div>
+      <div class="tm-member-meta">
+        <div><span class="label">역할</span><code>ga_manager</code></div>
+        <div><span class="label">소속</span>더원지점 · 4팀</div>
+      </div>
+      <span class="tm-status active">● active</span>
+    </div>
+
+    <div class="tm-member-card">
+      <div class="tm-member-name">이센터장</div>
+      <div class="tm-member-meta">
+        <div><span class="label">역할</span><code>ga_branch_manager</code></div>
+        <div><span class="label">소속</span>더원지점</div>
+      </div>
+      <span class="tm-status active">● active</span>
+    </div>
+
+    <div class="tm-member-card">
+      <div class="tm-member-name">김설계</div>
+      <div class="tm-member-meta">
+        <div><span class="label">역할</span><code>member</code></div>
+        <div><span class="label">소속</span>더원지점 · 4팀</div>
+      </div>
+      <span class="tm-status active">● active</span>
+    </div>
+
+    <div class="tm-member-card">
+      <div class="tm-member-name">정스텝</div>
+      <div class="tm-member-meta">
+        <div><span class="label">역할</span><code>member</code></div>
+        <div><span class="label">소속</span>더원지점 · 4팀</div>
+      </div>
+      <span class="tm-status inactive">○ inactive</span>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     2. 초대하기
+════════════════════════════════════════════════════════════ -->
+<section class="tm-section">
+  <div class="tm-section-header">
+    <h3 class="tm-section-title">초대하기</h3>
+    <span class="tm-section-sub">팀원 / 보험사 담당자</span>
+  </div>
+
+  <div class="tm-invite-actions">
+    <button type="button" class="tm-invite-btn primary"
+            onclick="window.alert('팀원 초대 기능은 곧 활성화 예정입니다.')">+ 팀원 초대</button>
+    <button type="button" class="tm-invite-btn"
+            onclick="window.alert('보험사 담당자 초대 기능은 곧 활성화 예정입니다.')">+ 보험사 담당자 초대</button>
+  </div>
+
+  <div class="tm-invite-note">
+    초대 링크 발송, 가입 승인, 권한 매트릭스 매핑은 다음 단계에서 활성화됩니다.<br>
+    현재 화면은 <strong>조직 운영 구조가 준비되어 있다는 것</strong>을 보여주는 단계입니다.
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     3. 보험사 협업 계정
+════════════════════════════════════════════════════════════ -->
+<section class="tm-section">
+  <div class="tm-section-header">
+    <h3 class="tm-section-title">보험사 협업 계정</h3>
+    <span class="tm-section-sub">원수사 매핑 · 협업 채널</span>
+  </div>
+
+  <div class="tm-insurer-card">
+    <div class="tm-member-name">최담당</div>
+    <div class="tm-member-meta">
+      <div><span class="label">역할</span><code>insurer_staff</code></div>
+      <div><span class="label">소속</span>(미연동 보험사)</div>
+    </div>
+    <span class="tm-status pending">◐ pending</span>
+  </div>
+
+  <div class="tm-invite-note">
+    보험사 매니저 · 일반 직원 · 스텝(<code>insurer_manager</code> / <code>insurer_member</code> / <code>insurer_staff</code>) 계정은 별도 가입 폼으로 연결됩니다.<br>
+    원수사 입점 Phase 2 진행 시 본 영역이 확장됩니다.
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════
+     4. 역할 구조 안내 (9 role 체계 일부)
+════════════════════════════════════════════════════════════ -->
+<section class="tm-section">
+  <div class="tm-section-header">
+    <h3 class="tm-section-title">역할 구조</h3>
+    <span class="tm-section-sub">9 role 체계 — 운영 · 협업 · 권한</span>
+  </div>
+
+  <div class="tm-roles-table">
+    <div class="tm-roles-row head">
+      <div>role</div>
+      <div>설명</div>
+      <div>구분</div>
+    </div>
+    <div class="tm-roles-row">
+      <div class="tm-role-key">admin</div>
+      <div class="tm-role-desc">원세컨드 플랫폼 전역 권한 (어드민)</div>
+      <div class="tm-role-scope">플랫폼</div>
+    </div>
+    <div class="tm-roles-row">
+      <div class="tm-role-key">ga_branch_manager</div>
+      <div class="tm-role-desc">GA 지점장 · 센터장 — 지점 전체 관리</div>
+      <div class="tm-role-scope">GA</div>
+    </div>
+    <div class="tm-roles-row">
+      <div class="tm-role-key">ga_manager</div>
+      <div class="tm-role-desc">GA 실장 — 팀 운영 · 팀원 관리</div>
+      <div class="tm-role-scope">GA</div>
+    </div>
+    <div class="tm-roles-row">
+      <div class="tm-role-key">member</div>
+      <div class="tm-role-desc">일반 설계사 · 팀원</div>
+      <div class="tm-role-scope">GA</div>
+    </div>
+    <div class="tm-roles-row">
+      <div class="tm-role-key">insurer_staff</div>
+      <div class="tm-role-desc">원수사 스텝 · 협업 계정 (Phase 2)</div>
+      <div class="tm-role-scope">원수사</div>
+    </div>
+  </div>
+</section>

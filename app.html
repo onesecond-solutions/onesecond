@@ -868,6 +868,18 @@ html, body {
         <div class="menu-item" data-menu="myspace">MY SPACE</div>
         <div class="menu-item menu-together" data-menu="together">함께해요</div>
         <div class="menu-item" data-menu="news">보험뉴스</div>
+
+        <!-- [2026-05-11] 운영 카테고리 — 조직 운영 네트워크 구조 v1 존재 선언
+             표시 조건: ga_manager / ga_branch_manager / admin (+ OLD: manager / branch_manager)
+             일반 member·staff·insurer_* 비노출.
+             role 분기 = applyOpsMenuByRole() (DB 토글과 무관, role 기반) -->
+        <div data-role-section="ops"
+             style="display:none;margin:var(--space-3) 0 var(--space-1);border-top:1px solid var(--color-border);"></div>
+        <div data-role-section="ops"
+             style="display:none;padding:var(--space-1) 14px;font-size:0.737em;font-weight:var(--fw-bold);color:var(--color-text-tertiary);letter-spacing:0.08em;text-transform:uppercase;">운영</div>
+        <div class="menu-item" data-menu="team-management" data-role-section="ops"
+             style="display:none;">👥 팀원관리</div>
+
         <div class="menu-item" data-menu="admin" id="menu-admin"
              style="display:none;margin-top:var(--space-2);border-top:1px solid var(--color-border);padding-top:var(--space-4);color:var(--color-brand);">🛡️ 관리자</div>
       </div>
@@ -1077,8 +1089,26 @@ function renderProBadge(plan, role) {
     : '<a onclick="loadPricing()" style="color:var(--color-accent);text-decoration:none;font-size:0.875em;font-weight:600;cursor:pointer;">⚡ PRO로 업그레이드</a>';
 }
 
+// ── [2026-05-11] 운영 카테고리 role 분기 — 조직 운영 네트워크 구조 v1
+//   표시 조건: ga_manager / ga_branch_manager / admin (+ OLD: manager / branch_manager)
+//   DB app_settings 토글과 무관, role 기반 분기.
+//   data-role-section="ops" 모든 요소(구분선/헤더/메뉴) 일괄 토글.
+function applyOpsMenuByRole() {
+  var role = window.AppState && window.AppState.role;
+  if (!role) return;
+  var allowed = ['admin', 'ga_branch_manager', 'ga_manager', 'branch_manager', 'manager'];
+  var show = allowed.indexOf(role) !== -1;
+  var els = document.querySelectorAll('[data-role-section="ops"]');
+  for (var i = 0; i < els.length; i++) {
+    els[i].style.display = show ? '' : 'none';
+  }
+}
+
 // ── ③ 메뉴 설정 (app_settings) ─────────────────────────────────────────────
 async function applyMenuSettings() {
+  // [2026-05-11] 운영 카테고리는 DB 토글 무관, role 기반 분기 (조직 운영 네트워크 구조 v1)
+  applyOpsMenuByRole();
+
   // [2026-04-17] 관리자는 표시 설정과 무관하게 항상 모든 메뉴 표시
   // (실제 사용자 화면은 admin.html의 미리보기로 확인)
   // [2026-04-23] 00_MASTER.md 5-4항 — admin·branch_manager 둘 다 관리자 예외
