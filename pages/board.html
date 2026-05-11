@@ -1262,12 +1262,52 @@
 .pg-cal-tag-urgent     { background: rgba(239, 68, 68, 0.09); color: #B91C1C; }
 .pg-cal-tag-urgent::before     { background: var(--color-danger, #EF4444); }
 
-/* [2026-05-11 색상 보강] 캘린더 좌측 세로선 — 유형 4종 빠른 스캔 (작업지시서 §7)
-   inset box-shadow = spacing 변경 0, 좌측 2px 미세 강조만 */
-.pg-calendar-item[data-cal-type="acceptance"] { box-shadow: inset 2px 0 0 rgba(245, 158, 11, 0.45); }
-.pg-calendar-item[data-cal-type="product"]    { box-shadow: inset 2px 0 0 rgba(59, 130, 246, 0.45); }
-.pg-calendar-item[data-cal-type="urgent"]     { box-shadow: inset 2px 0 0 rgba(239, 68, 68, 0.50); }
-.pg-calendar-item[data-cal-type="notice"]     { box-shadow: inset 2px 0 0 rgba(160, 82, 45, 0.45); }
+/* ════════════════════════════════════════════════════════════
+   [2026-05-11 색상 hierarchy v2] 운영 캘린더 보강 (작업지시서 §3~9)
+   ▸ §4 좌측 세로선 — ::before pseudo, 카드 높이 70% (top/bottom 15%), 두께 3px
+   ▸ §5 카드 배경 — alpha 0.05~0.07 미세 tint (full color card 금지)
+   ▸ §6 긴급 = 다른 유형보다 15~20% 강조 허용
+   ▸ §7 날짜 영역 border-right — 유형별 색상 연결 (date accent)
+   ▸ §8 hover — 유형별 tint 미세 증가
+   ▸ §9 hierarchy: 긴급 > 인수/신상품 > 공지
+════════════════════════════════════════════════════════════ */
+.pg-calendar-item { position: relative; }
+.pg-calendar-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 2px;
+  background: transparent;
+  transition: background var(--transition-fast);
+  pointer-events: none;
+}
+
+/* 인수 — amber/orange (운영 실무) */
+.pg-calendar-item[data-cal-type="acceptance"]               { background: rgba(245, 158, 11, 0.05); }
+.pg-calendar-item[data-cal-type="acceptance"]::before        { background: rgba(245, 158, 11, 0.65); }
+.pg-calendar-item[data-cal-type="acceptance"] .pg-cal-date   { border-right-color: rgba(245, 158, 11, 0.30); }
+.pg-calendar-item[data-cal-type="acceptance"]:hover          { background: rgba(245, 158, 11, 0.08); }
+
+/* 신상품 — blue (정보/출시) */
+.pg-calendar-item[data-cal-type="product"]               { background: rgba(59, 130, 246, 0.05); }
+.pg-calendar-item[data-cal-type="product"]::before        { background: rgba(59, 130, 246, 0.65); }
+.pg-calendar-item[data-cal-type="product"] .pg-cal-date   { border-right-color: rgba(59, 130, 246, 0.30); }
+.pg-calendar-item[data-cal-type="product"]:hover          { background: rgba(59, 130, 246, 0.08); }
+
+/* 긴급 — red (다른 유형 +15~20% 강조, §9 hierarchy 1순위) */
+.pg-calendar-item[data-cal-type="urgent"]               { background: rgba(239, 68, 68, 0.07); }
+.pg-calendar-item[data-cal-type="urgent"]::before        { background: rgba(239, 68, 68, 0.85); }
+.pg-calendar-item[data-cal-type="urgent"] .pg-cal-date   { border-right-color: rgba(239, 68, 68, 0.45); }
+.pg-calendar-item[data-cal-type="urgent"]:hover          { background: rgba(239, 68, 68, 0.11); }
+
+/* 공지 — brown (onesecond 기본 톤) */
+.pg-calendar-item[data-cal-type="notice"]               { background: rgba(160, 82, 45, 0.05); }
+.pg-calendar-item[data-cal-type="notice"]::before        { background: rgba(160, 82, 45, 0.65); }
+.pg-calendar-item[data-cal-type="notice"] .pg-cal-date   { border-right-color: rgba(160, 82, 45, 0.30); }
+.pg-calendar-item[data-cal-type="notice"]:hover          { background: rgba(160, 82, 45, 0.08); }
 
 @media (max-width: 640px) {
   .pg-calendar-board { margin: var(--space-2, 8px) var(--space-3, 12px); padding: var(--space-3, 12px); }
