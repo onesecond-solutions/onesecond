@@ -1177,10 +1177,15 @@
   margin-left: auto;
   font-weight: var(--fw-medium, 500);
 }
+/* [2026-05-11 grid 보강] 1열 → 반응형 multi-column (작업지시서 운영 스캔 보드)
+   PC 기본 2컬럼 / 1600px+ 3컬럼 / 모바일 640px 이하 1컬럼 (아래 media 분기) */
 .pg-calendar-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2, 8px);
+}
+@media (min-width: 1600px) {
+  .pg-calendar-list { grid-template-columns: repeat(3, 1fr); }
 }
 .pg-calendar-item {
   display: flex;
@@ -1266,6 +1271,7 @@
 
 @media (max-width: 640px) {
   .pg-calendar-board { margin: var(--space-2, 8px) var(--space-3, 12px); padding: var(--space-3, 12px); }
+  .pg-calendar-list { grid-template-columns: 1fr; }
   .pg-cal-date { flex-basis: 48px; }
   .pg-cal-event { font-size: 0.8125em; }
 }
