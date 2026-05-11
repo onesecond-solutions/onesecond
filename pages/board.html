@@ -1670,6 +1670,10 @@
 
       <!-- 공지사항 폼 (#58 슬롯 6 v0 — admin/매니저급만, spec §2-1 정합) -->
       <form class="write-form-notice" id="write-form-notice" onsubmit="event.preventDefault(); window.submitNoticeForm();">
+        <!-- manager_notice 모드 한정 안내 박스 (navigation 모드 = display:none) -->
+        <div class="wfn-info-box" id="notice-info-box" style="display:none;">
+          📌 팀 운영에 필요한 공지를 작성해 주세요.
+        </div>
         <div class="write-form-notice-grid">
           <div class="write-form-notice-left">
             <label class="wfn-field">
@@ -1796,6 +1800,8 @@ var CAT_CLASS = {
 /* ── 페이지 로컬 상태 ── */
 var _currentBoard    = 'qna';     /* 기본 진입 = 스마트 게시판 (사용자 본질 페이지) */
 var _currentCategory = 'all';
+/* 공지 폼 모드 — 'navigation' (4 카드 → 공지 카드 진입) | 'manager_notice' (실장님 공지 탭 직접 진입) */
+var _noticeWriteMode = 'navigation';
 var _allPosts        = [];
 var _currentPostId   = null;
 var _editingPostId   = null;   /* 수정 모드일 때 대상 postId */
@@ -2064,8 +2070,8 @@ function _switchBoard(board) {
       var canWrite = true;
       /* hub / archive_legacy = admin only */
       if (board === 'hub' || board === 'archive_legacy') canWrite = isAdm;
-      /* manager_notice = admin + ga_manager (본인 팀) */
-      else if (board === 'manager_notice') canWrite = (isAdm || role === 'ga_manager');
+      /* manager_notice = admin + ga_branch_manager + ga_manager (본인 팀·지점) */
+      else if (board === 'manager_notice') canWrite = (isAdm || role === 'ga_branch_manager' || role === 'ga_manager');
       /* manager_lounge = admin + 매니저급 4종 (admin 토글 #1 ON + role) */
       else if (board === 'manager_lounge') {
         canWrite = (isAdm
@@ -2714,6 +2720,11 @@ window.onClickToastUpgrade = function() {
 
 /* ── 글쓰기 버튼 클릭 ── */
 window.onClickWriteBtn = function() {
+  /* 실장님 공지 탭 = 4 카드 건너뛰고 바로 공지 폼 진입 (manager_notice 모드) */
+  if (_currentBoard === 'manager_notice') {
+    window.openManagerNoticeOverlay();
+    return;
+  }
   /* navigation 탭 = 2층 구조 4 카드 모달 오버레이 본진 (별 트랙 #58, 2026-05-11 v0 1차) */
   if (_currentBoard === 'navigation') {
     window.openWriteOverlay();
@@ -2767,11 +2778,67 @@ window.closeWriteOverlay = function() {
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+  /* mode + insurer_specific 옵션 + 안내 박스 + 취소 버튼 라벨 reset (다음 진입 정합 보장) */
+  _noticeWriteMode = 'navigation';
+  var audienceReset = document.getElementById('notice-audience');
+  if (audienceReset) {
+    var insurerOpt = audienceReset.querySelector('option[value="insurer_specific"]');
+    if (insurerOpt) insurerOpt.hidden = false;
+  }
+  var infoBox = document.getElementById('notice-info-box');
+  if (infoBox) infoBox.style.display = 'none';
+  var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
+  if (cancelBtn) cancelBtn.textContent = '← 카테고리 다시 선택';
 };
+/* ── 실장님 공지 글쓰기 진입 (manager_notice 모드, 4 카드 건너뛰고 바로 공지 폼) ── */
+window.openManagerNoticeOverlay = function() {
+  /* RBAC 1차 방어 — admin / ga_branch_manager / ga_manager 만 진입 (line 2068 _switchBoard / line 3470 submit 정합) */
+  var s = window.AppState || {};
+  var role = s.role || '';
+  if (['admin','ga_branch_manager','ga_manager'].indexOf(role) === -1) {
+    alert('실장님 공지는 관리자 또는 지점장·실장만 작성할 수 있습니다.');
+    return;
+  }
+  _noticeWriteMode = 'manager_notice';
+
+  var overlay = document.getElementById('write-overlay');
+  var cards   = document.getElementById('write-overlay-cards');
+  var form    = document.getElementById('write-form-notice');
+  if (cards) cards.style.display = 'none';
+  if (form)  form.classList.add('active');
+
+  /* 폼 초기화 (audience_target 기본값 = team_internal) */
+  var typeEl     = document.getElementById('notice-type');
+  var titleEl    = document.getElementById('notice-title');
+  var contentEl  = document.getElementById('notice-content');
+  var audienceEl = document.getElementById('notice-audience');
+  if (typeEl)     typeEl.value     = '운영';
+  if (titleEl)    titleEl.value    = '';
+  if (contentEl)  contentEl.value  = '';
+  if (audienceEl) audienceEl.value = 'team_internal';
+
+  /* manager_notice 모드 — insurer_specific 옵션 hide (본질 = 팀·지점·네비방·운영진 4종) */
+  if (audienceEl) {
+    var insurerOpt = audienceEl.querySelector('option[value="insurer_specific"]');
+    if (insurerOpt) insurerOpt.hidden = true;
+  }
+  /* 안내 박스 표시 + 헤더 변경 + 취소 버튼 라벨 변경 */
+  var infoBox = document.getElementById('notice-info-box');
+  if (infoBox) infoBox.style.display = 'flex';
+  var headerTitle = document.getElementById('write-overlay-title');
+  if (headerTitle) headerTitle.textContent = '📌 실장님 공지 작성';
+  var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
+  if (cancelBtn) cancelBtn.textContent = '취소';
+
+  if (overlay) overlay.classList.add('active');
+  if (titleEl) setTimeout(function(){ titleEl.focus(); }, 50);
+};
+
 window.selectWriteCategory = function(category) {
   console.log('[write overlay] category selected:', category);
   if (category === '공지') {
-    /* 공지 폼 박음 (#58 슬롯 6 v0, spec §2-1) */
+    /* 공지 폼 박음 (#58 슬롯 6 v0, spec §2-1) — navigation 모드 */
+    _noticeWriteMode = 'navigation';
     var cards = document.getElementById('write-overlay-cards');
     var form  = document.getElementById('write-form-notice');
     if (cards) cards.style.display = 'none';
@@ -2785,6 +2852,15 @@ window.selectWriteCategory = function(category) {
     if (titleEl)    titleEl.value    = '';
     if (contentEl)  contentEl.value  = '';
     if (audienceEl) audienceEl.value = 'team_internal';
+    /* navigation 모드 — insurer_specific 옵션 다시 표시 + 안내 박스 hide + 취소 버튼 라벨 복귀 */
+    if (audienceEl) {
+      var insurerOptNav = audienceEl.querySelector('option[value="insurer_specific"]');
+      if (insurerOptNav) insurerOptNav.hidden = false;
+    }
+    var infoBoxNav = document.getElementById('notice-info-box');
+    if (infoBoxNav) infoBoxNav.style.display = 'none';
+    var cancelBtnNav = document.querySelector('#write-form-notice .wfn-btn-secondary');
+    if (cancelBtnNav) cancelBtnNav.textContent = '← 카테고리 다시 선택';
     var headerTitle = document.getElementById('write-overlay-title');
     if (headerTitle) headerTitle.textContent = '📢 공지사항 작성';
     if (titleEl) titleEl.focus();
@@ -3184,6 +3260,12 @@ window.submitIncomingForm = async function() {
 
 /* 공지 폼 취소 — 카드 영역으로 복귀 */
 window.cancelNoticeForm = function() {
+  /* manager_notice 모드: "← 카테고리 다시 선택"이 무의미 — 모달 통째 닫기 (closeWriteOverlay 가 mode 까지 reset) */
+  if (_noticeWriteMode === 'manager_notice') {
+    window.closeWriteOverlay();
+    return;
+  }
+  /* navigation 모드: 4 카드 화면 복귀 (기존) */
   var cards = document.getElementById('write-overlay-cards');
   var form  = document.getElementById('write-form-notice');
   if (form)  form.classList.remove('active');
@@ -3209,24 +3291,30 @@ window.submitNoticeForm = async function() {
   if (!rawContent) { alert('공지 내용을 입력해 주세요.'); return; }
   if (!audience)   { alert('공지 범위를 선택해 주세요.'); return; }
 
-  /* RBAC 2중 방어 (UI 카드 노출 + 본 제출 시 재확인) */
+  /* RBAC 2중 방어 — 모드별 분기 */
   var s    = window.AppState || {};
   var role = s.role || '';
-  var allowedRoles = ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
+  var allowedRoles = _noticeWriteMode === 'manager_notice'
+    ? ['admin','ga_branch_manager','ga_manager']
+    : ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
   if (allowedRoles.indexOf(role) === -1) {
-    alert('공지는 관리자 또는 매니저급만 작성할 수 있습니다.');
+    alert(_noticeWriteMode === 'manager_notice'
+      ? '실장님 공지는 관리자 또는 지점장·실장만 작성할 수 있습니다.'
+      : '공지는 관리자 또는 매니저급만 작성할 수 있습니다.');
     return;
   }
 
   /* content 흡수 포맷 (팀장님 결재 ② — AI/search_index/컬럼 분리 대비) */
   var content = '[공지유형:' + noticeType + ']\n' + rawContent;
+  /* board_type — 모드별 분기 (manager_notice 탭 직접 진입 vs navigation 4 카드 진입) */
+  var boardType = _noticeWriteMode === 'manager_notice' ? 'manager_notice' : 'navigation';
 
   var submitBtn = document.querySelector('#write-form-notice .wfn-btn-primary');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }
 
   try {
     var postBody = {
-      board_type:      'navigation',
+      board_type:      boardType,
       category:        '공지',
       title:           title,
       content:         content,
@@ -3245,11 +3333,12 @@ window.submitNoticeForm = async function() {
       headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify(postBody)
     });
-    /* 모달 닫음 + 폼 영역 리셋 + 게시판 새로고침 */
+    /* 성공 메시지 (모드별) — 모달 닫기 + 폼 reset 후 toast */
+    var successMsg = boardType === 'manager_notice' ? '실장님 공지가 등록되었습니다.' : '공지가 등록되었습니다.';
+    /* 모달 닫음 (closeWriteOverlay 가 mode reset 까지 수행) + 게시판 새로고침 */
     window.closeWriteOverlay();
-    window.cancelNoticeForm();
     if (typeof _loadPosts === 'function') _loadPosts();
-    alert('공지가 등록되었습니다.');
+    alert(successMsg);
   } catch (err) {
     console.error('[submitNoticeForm] INSERT 실패:', err);
     alert('공지 등록 실패: ' + (err.message || err));
@@ -3466,9 +3555,9 @@ window.submitPost = async function() {
     alert('이 게시판은 관리자만 작성할 수 있습니다.');
     return;
   }
-  /* manager_notice = admin + ga_manager (본인 팀, spec § 5-2) */
-  if (board === 'manager_notice' && !['admin','ga_manager'].includes(s.role)) {
-    alert('실장님 공지는 관리자 또는 실장(ga_manager)만 작성할 수 있습니다.');
+  /* manager_notice = admin + ga_branch_manager + ga_manager (본인 팀·지점, spec § 5-2) */
+  if (board === 'manager_notice' && !['admin','ga_branch_manager','ga_manager'].includes(s.role)) {
+    alert('실장님 공지는 관리자 또는 지점장·실장만 작성할 수 있습니다.');
     return;
   }
   /* manager_lounge = admin + 매니저급 4종 (admin 토글 #1 ON 시점, spec § 5-3) */
