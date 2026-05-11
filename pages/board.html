@@ -1165,7 +1165,16 @@
   margin-top: var(--space-3, 12px);
   align-items: start;
 }
-.pg-console-main { min-width: 0; margin: 0; padding: 0; }
+/* [2026-05-12] main은 flex column + gap — 탭바↔게시판 카드 자연 분리
+   (gap은 flex/grid item 사이만 적용 → 첫 자식 top y축 정렬 영향 0) */
+.pg-console-main {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
 .pg-console-side { min-width: 0; margin: 0; padding: 0; }
 
 /* [2026-05-12 상단 정렬 보강] 좌우 카드 top y축 동일 라인 시작
