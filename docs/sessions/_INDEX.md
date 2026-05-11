@@ -6,7 +6,7 @@
 > - **한 줄:** 보험업 운영 흐름 네트워크 + 보험 검색 인프라 + 반복 질문 감소 시스템
 > - **0순위 정체성:** 중립 독립 SaaS (특정 보험사·GA 종속 X)
 >
-> **🚨 마지막 갱신:** 2026-05-11 오전 (07:08) — **슬롯 4 (시드) + 슬롯 3 (검수) 양 슬롯 종료 박힘 + 발견 1 핫픽스 박힘**. 본 세션 commit 10건 (5da64ac → fb83a7e). 묶음 1 (슬롯 1+2 "매니저 공지"→"실장님 공지" + "양방향 미러링"→"일방향 자동 저장") 논스톱 박음 / 묶음 2 슬롯 4 (#51 public.posts 시드 10건 박힘, Chrome AI 라이브 PASS) + 슬롯 3 (#53 Step 7 라이브 회귀 검수 Chrome AI PASS, 4역할 라이브 + 5역할 소스 분석, RLS 17 / CHECK 7 / 사고 신호 1건 발견) / 발견 1 핫픽스 board.html L1329 admin × manager_lounge 토글 무관 (commit `6a6c16e`, syntax PASS 2/2). 별 트랙 #51/#53 ✅ 종료 + #56/#57 신설. 다음 진입 = 슬롯 5 home_v2 select 동적 lookup (~30분, 위험 0) 결재 대기. 직전: 2026-05-11 심야 (04:39) "현장 Q&A" → "스마트 게시판" 일괄 박힘 (commit `b5e3629`).
+> **🚨 마지막 갱신:** 2026-05-11 오후 (17:00) — **별 트랙 #58 슬롯 5 ✅ 마이그레이션 SQL 박음 + 푸시**. `docs/migrations/2026-05-11_notice_form_columns.sql` (97줄, posts.audience_target ENUM 5종 CHECK + responder_hint text) 박음. 팀장님 라이브 진단 4건 PASS — public.posts 10건 = legacy 4 + 시드 6, 모두 NULL 정합. 검증 3 expected 주석 4→10 갱신 (출처 박음). commit `9d1ce22` 푸시. Supabase Dashboard 실행은 팀장님 별도 진행 대기 (Code는 작성만, 실행 X — CLAUDE.md DB 작업 규칙 정합). 다음 진입 = SQL 실행 후 검증 / #58 spec 다음 슬롯 (carousel placeholder → 4종 폼 실제 박음). 5/15 D-4일. 직전: 2026-05-11 오전 (07:08) 슬롯 4 (#51 시드 10건) + 슬롯 3 (#53 Step 7 라이브 회귀 검수) 종료.
 >
 > **자동 갱신 도구:** `/session-end` 슬래시 커맨드 (5단계에서 본 파일 함께 갱신·커밋)
 >
