@@ -1101,8 +1101,16 @@ async function applyMenuSettings() {
       var tabEl = document.querySelector('.tab-item[data-menu="' + menuKey + '"]');
       /* [2026-04-17] admin.html 저장 형식('true'/'false')과 통일 */
       var show  = r.value !== 'false';
-      if (el)    el.style.display    = show ? '' : 'none';
-      if (tabEl) tabEl.style.display = show ? '' : 'none';
+      /* [2026-05-11] visibility 기반 — display:none 으로 DOM 자리 제거 시 사이드바 길이 출렁임 발생.
+         자리(height/layout) 유지하면서 hide. pointer-events 로 클릭 차단. transition 없음. */
+      if (el) {
+        el.style.visibility    = show ? '' : 'hidden';
+        el.style.pointerEvents = show ? '' : 'none';
+      }
+      if (tabEl) {
+        tabEl.style.visibility    = show ? '' : 'hidden';
+        tabEl.style.pointerEvents = show ? '' : 'none';
+      }
     });
   } catch (e) {
     console.warn('applyMenuSettings error:', e);
