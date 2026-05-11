@@ -1165,11 +1165,15 @@
   margin-top: var(--space-3, 12px);
   align-items: start;
 }
-.pg-console-main { min-width: 0; }
-.pg-console-side { min-width: 0; }
+.pg-console-main { min-width: 0; margin: 0; padding: 0; }
+.pg-console-side { min-width: 0; margin: 0; padding: 0; }
 
-/* 캘린더가 우측 컬럼(32%) 안 → 자체 grid는 항상 1열 강제 + margin reset (grid gap이 처리) */
-.pg-console-side .pg-calendar-board { margin: 0; }
+/* [2026-05-12 상단 정렬 보강] 좌우 카드 top y축 동일 라인 시작
+   ▸ main 직계 .pg-content-block / aside 직계 .pg-calendar-board 둘 다 margin-top 0
+   ▸ align-items: start 는 grid 자체에 이미 박힘 (Step B)
+   ▸ 카드 내부 padding·디자인은 보존 (상단 정렬만 강제) */
+.pg-console-main > .pg-content-block { margin: 0; }
+.pg-console-side > .pg-calendar-board { margin: 0; }
 .pg-console-side .pg-calendar-list  { grid-template-columns: 1fr; }
 
 @media (max-width: 1024px) {
