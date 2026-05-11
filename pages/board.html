@@ -672,6 +672,111 @@
   }
 }
 
+/* ── 공지사항 폼 (#58 슬롯 6 v0, spec §2-1) ── */
+.write-form-notice {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+}
+.write-form-notice.active { display: flex; }
+.write-form-notice-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+}
+.write-form-notice-left,
+.write-form-notice-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.wfn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.wfn-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+}
+.wfn-label em {
+  color: #C53030;
+  font-style: normal;
+  margin-left: 0.25rem;
+}
+.wfn-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #4B5563);
+  margin-top: 0.25rem;
+}
+.write-form-notice select,
+.write-form-notice input,
+.write-form-notice textarea {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border, #E5E7EB);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--color-text-primary, #111827);
+}
+.write-form-notice textarea {
+  resize: vertical;
+  min-height: 9rem;
+}
+.write-form-notice select:focus,
+.write-form-notice input:focus,
+.write-form-notice textarea:focus {
+  outline: none;
+  border-color: var(--color-brand, #A0522D);
+  box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.12);
+}
+.write-form-notice-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border, #E5E7EB);
+}
+.wfn-btn-primary,
+.wfn-btn-secondary {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+.wfn-btn-primary {
+  background: var(--color-accent, #D4845A);
+  color: #ffffff;
+}
+.wfn-btn-primary:hover {
+  background: var(--color-brand-light, #C4733A);
+}
+.wfn-btn-primary:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+.wfn-btn-secondary {
+  background: transparent;
+  color: var(--color-text-secondary, #4B5563);
+  border-color: var(--color-border, #E5E7EB);
+}
+.wfn-btn-secondary:hover {
+  border-color: var(--color-brand, #A0522D);
+  color: var(--color-text-primary, #111827);
+}
+@media (max-width: 640px) {
+  .write-form-notice-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}
+
 /* 업로드 진행바 */
 .upload-progress {
   display: none; margin-top: 8px;
@@ -1228,7 +1333,7 @@
       <button class="write-overlay-close" type="button" onclick="window.closeWriteOverlay()" aria-label="닫기">×</button>
     </div>
     <div class="write-overlay-body">
-      <div class="write-card-list">
+      <div class="write-card-list" id="write-overlay-cards">
         <button class="write-card" id="write-card-notice" type="button" onclick="window.selectWriteCategory('공지')" style="display:none;">
           <span class="write-card-icon">📢</span>
           <span class="write-card-text">
@@ -1258,6 +1363,51 @@
           </span>
         </button>
       </div>
+
+      <!-- 공지사항 폼 (#58 슬롯 6 v0 — admin/매니저급만, spec §2-1 정합) -->
+      <form class="write-form-notice" id="write-form-notice" onsubmit="event.preventDefault(); window.submitNoticeForm();">
+        <div class="write-form-notice-grid">
+          <div class="write-form-notice-left">
+            <label class="wfn-field">
+              <span class="wfn-label">공지 유형 <em>*</em></span>
+              <select id="notice-type" required>
+                <option value="운영">운영 공지</option>
+                <option value="긴급">긴급 공지</option>
+                <option value="상품">상품 공지</option>
+                <option value="인수">인수 공지</option>
+                <option value="교육">교육 안내</option>
+                <option value="이벤트일정">이벤트/일정</option>
+                <option value="기타">기타</option>
+              </select>
+            </label>
+            <label class="wfn-field">
+              <span class="wfn-label">공지 제목 <em>*</em></span>
+              <input type="text" id="notice-title" maxlength="100" required>
+            </label>
+            <label class="wfn-field">
+              <span class="wfn-label">공지 내용 <em>*</em></span>
+              <textarea id="notice-content" rows="8" placeholder="전달하고 싶은 내용을 작성해 주세요." required></textarea>
+            </label>
+          </div>
+          <div class="write-form-notice-right">
+            <label class="wfn-field">
+              <span class="wfn-label">공지 범위 <em>*</em></span>
+              <select id="notice-audience" required>
+                <option value="team_internal" selected>팀 내부</option>
+                <option value="branch">지점</option>
+                <option value="navigation_all">전체 네비게이션방</option>
+                <option value="insurer_specific">특정 보험사</option>
+                <option value="admin_only">운영진만</option>
+              </select>
+              <span class="wfn-hint">기본값 = "팀 내부" (초기 운영 사고 방지 정책)</span>
+            </label>
+          </div>
+        </div>
+        <div class="write-form-notice-actions">
+          <button type="button" class="wfn-btn-secondary" onclick="window.cancelNoticeForm()">← 카테고리 다시 선택</button>
+          <button type="submit" class="wfn-btn-primary">등록하기</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -2273,13 +2423,118 @@ window.openWriteOverlay = function() {
 window.closeWriteOverlay = function() {
   var overlay = document.getElementById('write-overlay');
   if (overlay) overlay.classList.remove('active');
+  /* 모달 닫힘 시 폼 영역도 리셋 (다음 진입 시 카드 영역부터 박힘) */
+  var form  = document.getElementById('write-form-notice');
+  var cards = document.getElementById('write-overlay-cards');
+  if (form)  form.classList.remove('active');
+  if (cards) cards.style.display = '';
+  var headerTitle = document.getElementById('write-overlay-title');
+  if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
 };
 window.selectWriteCategory = function(category) {
-  /* v0 1차 = placeholder. 각 카테고리별 폼 본진은 다음 단계 박음 (별 트랙 #58 후속) */
   console.log('[write overlay] category selected:', category);
+  if (category === '공지') {
+    /* 공지 폼 박음 (#58 슬롯 6 v0, spec §2-1) */
+    var cards = document.getElementById('write-overlay-cards');
+    var form  = document.getElementById('write-form-notice');
+    if (cards) cards.style.display = 'none';
+    if (form)  form.classList.add('active');
+    /* 폼 초기화 (audience_target 기본값 = team_internal, 초기 운영 사고 방지) */
+    var typeEl     = document.getElementById('notice-type');
+    var titleEl    = document.getElementById('notice-title');
+    var contentEl  = document.getElementById('notice-content');
+    var audienceEl = document.getElementById('notice-audience');
+    if (typeEl)     typeEl.value     = '운영';
+    if (titleEl)    titleEl.value    = '';
+    if (contentEl)  contentEl.value  = '';
+    if (audienceEl) audienceEl.value = 'team_internal';
+    /* 헤더 라벨 갱신 */
+    var headerTitle = document.getElementById('write-overlay-title');
+    if (headerTitle) headerTitle.textContent = '📢 공지사항 작성';
+    if (titleEl) titleEl.focus();
+    return;
+  }
+  /* 인수/상품/기타 = placeholder (다음 슬롯 박음, 별 트랙 #58 후속) */
   alert('[TODO] ' + category + ' 폼 본진 = 다음 단계 박음 (별 트랙 #58 후속).\n\n어제 5/10 채팅 + navigation_write_overlay_v0_2026-05-11.md 본진 raw 정합.');
   window.closeWriteOverlay();
 };
+
+/* 공지 폼 취소 — 카드 영역으로 복귀 */
+window.cancelNoticeForm = function() {
+  var cards = document.getElementById('write-overlay-cards');
+  var form  = document.getElementById('write-form-notice');
+  if (form)  form.classList.remove('active');
+  if (cards) cards.style.display = '';
+  var headerTitle = document.getElementById('write-overlay-title');
+  if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+};
+
+/* 공지 폼 제출 — posts INSERT (board_type='navigation', category='공지') */
+window.submitNoticeForm = async function() {
+  var typeEl     = document.getElementById('notice-type');
+  var titleEl    = document.getElementById('notice-title');
+  var contentEl  = document.getElementById('notice-content');
+  var audienceEl = document.getElementById('notice-audience');
+
+  var noticeType = typeEl     ? typeEl.value           : '';
+  var title      = titleEl    ? titleEl.value.trim()   : '';
+  var rawContent = contentEl  ? contentEl.value.trim() : '';
+  var audience   = audienceEl ? audienceEl.value       : 'team_internal';
+
+  if (!noticeType) { alert('공지 유형을 선택해 주세요.'); return; }
+  if (!title)      { alert('공지 제목을 입력해 주세요.'); return; }
+  if (!rawContent) { alert('공지 내용을 입력해 주세요.'); return; }
+  if (!audience)   { alert('공지 범위를 선택해 주세요.'); return; }
+
+  /* RBAC 2중 방어 (UI 카드 노출 + 본 제출 시 재확인) */
+  var s    = window.AppState || {};
+  var role = s.role || '';
+  var allowedRoles = ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
+  if (allowedRoles.indexOf(role) === -1) {
+    alert('공지는 관리자 또는 매니저급만 작성할 수 있습니다.');
+    return;
+  }
+
+  /* content 흡수 포맷 (팀장님 결재 ② — AI/search_index/컬럼 분리 대비) */
+  var content = '[공지유형:' + noticeType + ']\n' + rawContent;
+
+  var submitBtn = document.querySelector('#write-form-notice .wfn-btn-primary');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }
+
+  try {
+    var postBody = {
+      board_type:      'navigation',
+      category:        '공지',
+      title:           title,
+      content:         content,
+      author_id:       s.userId || '',
+      author_name:     s.name   || '알 수 없음',
+      display_name:    s.name   || '알 수 없음',
+      is_hub_visible:  false,
+      is_anonymous:    false,
+      view_count:      0,
+      like_count:      0,
+      comment_count:   0,
+      audience_target: audience
+    };
+    await window.db.fetch('/rest/v1/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(postBody)
+    });
+    /* 모달 닫음 + 폼 영역 리셋 + 게시판 새로고침 */
+    window.closeWriteOverlay();
+    window.cancelNoticeForm();
+    if (typeof _loadPosts === 'function') _loadPosts();
+    alert('공지가 등록되었습니다.');
+  } catch (err) {
+    console.error('[submitNoticeForm] INSERT 실패:', err);
+    alert('공지 등록 실패: ' + (err.message || err));
+  } finally {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록하기'; }
+  }
+};
+
 /* ESC 키 박음 (overlay active 상태에서만 닫기) */
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
