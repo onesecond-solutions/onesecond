@@ -149,7 +149,16 @@
   .pg-summary-chip { padding: 5px 12px; font-size: 0.75em; }
 }
 
+/* [2026-05-11 운영 콘솔 Step A] 탭바 2줄 hierarchy
+   1줄(.pg-tab-row-primary) = 핵심 운영 흐름 (매일 사용 본체, active 유지)
+   2줄(.pg-tab-row-secondary) = 보조·확장·보관 레이어 (subdued)
+   ▸ pg-tab-bar는 row stack 컨테이너로 전환 (flex column) */
 .pg-tab-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pg-tab-row {
   display: flex;
   flex-direction: row;
   gap: 0;
@@ -158,7 +167,18 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-.pg-tab-bar::-webkit-scrollbar { display: none; }
+.pg-tab-row::-webkit-scrollbar { display: none; }
+
+.pg-tab-row-secondary {
+  border-top: 1px dashed var(--color-border);
+}
+.pg-tab-row-secondary .pg-tab-btn {
+  font-size: 0.82em;
+  opacity: 0.72;
+  padding: 10px var(--space-3, 12px);
+}
+.pg-tab-row-secondary .pg-tab-btn:hover,
+.pg-tab-row-secondary .pg-tab-btn.active { opacity: 1; }
 .pg-tab-btn {
   padding: 12px var(--space-4, 16px);
   border: none;
@@ -1354,13 +1374,19 @@
   <!-- ② 탭바 블록 -->
   <div class="pg-tab-block">
     <div class="pg-tab-bar" id="board-tab-bar">
-      <button class="pg-tab-btn"        data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 실장님 공지</button>
-      <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
-      <button class="pg-tab-btn active" data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
-      <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')">☕ 매니저 라운지</button>
-      <button class="pg-tab-btn"        data-board="insurer"        onclick="window.switchBoard('insurer')">🏦 보험사 게시판</button>
-      <button class="pg-tab-btn"        data-board="hub"             onclick="window.switchBoard('hub')">🌐 허브 게시판</button>
-      <button class="pg-tab-btn"        data-board="archive_legacy"  onclick="window.switchBoard('archive_legacy')">🗄️ 폐기 보존</button>
+      <!-- 1줄 — 핵심 운영 흐름 (매일 사용 본체, active hierarchy 유지) -->
+      <div class="pg-tab-row pg-tab-row-primary">
+        <button class="pg-tab-btn"        data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 실장님 공지</button>
+        <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
+        <button class="pg-tab-btn active" data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
+        <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')">☕ 매니저 라운지</button>
+      </div>
+      <!-- 2줄 — 보조·확장·보관 레이어 (subdued) -->
+      <div class="pg-tab-row pg-tab-row-secondary">
+        <button class="pg-tab-btn"        data-board="insurer"        onclick="window.switchBoard('insurer')">🏦 보험사 게시판</button>
+        <button class="pg-tab-btn"        data-board="hub"             onclick="window.switchBoard('hub')">🌐 허브 게시판</button>
+        <button class="pg-tab-btn"        data-board="archive_legacy"  onclick="window.switchBoard('archive_legacy')">🗄️ 폐기 보존</button>
+      </div>
     </div>
   </div>
 
