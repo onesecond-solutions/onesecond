@@ -90,6 +90,65 @@
   border: 1px solid var(--color-border);
   padding: 2px var(--space-2, 8px);
 }
+/* ════════════════════════════════════════════════════════════
+   [2026-05-11] 운영 알림 v1 Step 3 — 전체/내 알림 집계 바
+   작업지시서 §3: 현장의 소리 본 페이지 = 실제 처리 레이어
+   §4 색상: 전체 = 중립 회색 (운영 온도) / 내 알림 = brand 강조 (행동 트리거)
+   ▸ board_type 탭 보존 + 위 placeholder 집계 바만 추가
+   ▸ 필터 로직 X, 알림 DB X
+════════════════════════════════════════════════════════════ */
+.pg-summary-bar {
+  display: flex;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px) var(--space-2, 8px);
+  align-items: center;
+}
+.pg-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: 6px 14px 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full, 9999px);
+  background: var(--color-surface);
+  font-size: 0.8125em;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+  font-family: inherit;
+}
+.pg-summary-chip:hover { border-color: var(--color-text-tertiary); }
+.pg-summary-label {
+  font-weight: var(--fw-semibold, 600);
+  color: var(--color-text-secondary);
+}
+.pg-summary-count {
+  font-weight: var(--fw-black, 900);
+  font-size: 0.95em;
+  color: var(--color-text-primary);
+  font-feature-settings: 'tnum';
+}
+
+/* 전체 — 중립 회색 (운영 온도, 강조 약함) */
+.pg-summary-total .pg-summary-label { color: var(--color-text-secondary); }
+.pg-summary-total .pg-summary-count { color: var(--color-text-primary); }
+
+/* 내 알림 — 브랜드 브라운 강조 (행동 트리거) */
+.pg-summary-mine {
+  background: var(--brand-50, #FDF4EF);
+  border-color: var(--color-brand);
+}
+.pg-summary-mine .pg-summary-label { color: var(--color-brand); font-weight: var(--fw-bold, 700); }
+.pg-summary-mine .pg-summary-count { color: var(--color-brand); }
+.pg-summary-mine:hover {
+  background: #F9E3D2;
+  border-color: var(--color-brand);
+}
+
+@media (max-width: 640px) {
+  .pg-summary-bar { padding: var(--space-2, 8px) var(--space-3, 12px); gap: var(--space-2, 8px); }
+  .pg-summary-chip { padding: 5px 12px; font-size: 0.75em; }
+}
+
 .pg-tab-bar {
   display: flex;
   flex-direction: row;
@@ -1101,6 +1160,23 @@
 
   <!-- 배너 슬롯 -->
   <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
+
+  <!-- [2026-05-11] 운영 알림 v1 Step 3 — 전체/내 알림 집계 바 placeholder
+       작업지시서 §3 현장의 소리 본 페이지 = 실제 처리 레이어
+       전체 = 현장 전체 흐름 (중립) / 내 알림 = 내가 확인해야 할 흐름 (brand)
+       ▸ 필터 로직 X, 집계 데이터 X — placeholder 수준 -->
+  <div class="pg-summary-bar" aria-label="현장 흐름 집계 (placeholder)">
+    <button type="button" class="pg-summary-chip pg-summary-total"
+            onclick="window.alert('전체 필터는 곧 활성화 예정입니다.')">
+      <span class="pg-summary-label">전체</span>
+      <span class="pg-summary-count">24</span>
+    </button>
+    <button type="button" class="pg-summary-chip pg-summary-mine"
+            onclick="window.alert('내 알림 필터는 곧 활성화 예정입니다.')">
+      <span class="pg-summary-label">내 알림</span>
+      <span class="pg-summary-count">3</span>
+    </button>
+  </div>
 
   <!-- ② 탭바 블록 -->
   <div class="pg-tab-block">
