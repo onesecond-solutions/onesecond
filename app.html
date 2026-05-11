@@ -25,6 +25,10 @@
 
 .menu.is-pending { opacity: 0.4; pointer-events: none; }
 
+/* board.html ready 가드 보호 (page CSS 적용 전에도 탭바·콘텐츠 가림 — header 는 표시) */
+.pg-outer[data-ready="false"] .pg-tab-block,
+.pg-outer[data-ready="false"] .pg-content-block { visibility: hidden; }
+
 .loading-placeholder { min-height: 320px; }
 
 /* ── 프레임 레이아웃 (A1/A2/B/C/D/E) ── */
@@ -1090,6 +1094,9 @@ async function applyMenuSettings() {
     rows.forEach(function (r) {
       var menuKey = r.key.replace('menu_', '');
       if (menuKey === 'admin') return;
+      /* [2026-05-11] home은 기본 진입 메뉴 — app_settings 토글 무시 강제 표시
+         (admin_v2 토글 UI에서 실수로 OFF 박혀도 홈 메뉴는 항상 노출 보장) */
+      if (menuKey === 'home') return;
       var el    = document.querySelector('.menu-item[data-menu="' + menuKey + '"]');
       var tabEl = document.querySelector('.tab-item[data-menu="' + menuKey + '"]');
       /* [2026-04-17] admin.html 저장 형식('true'/'false')과 통일 */

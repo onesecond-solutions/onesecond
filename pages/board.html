@@ -17,6 +17,12 @@
    design_guide.md 준수 — tokens.css 변수만 사용
 ════════════════════════════════════════════════════════════ */
 
+/* ── ready 가드 (탭 RBAC 비동기 적용 동안 탭바·콘텐츠 영역 가림 — header 는 표시) ──
+   _loadBoardTabSettings() + _applyBoardTabVisibility() + _switchBoard() 완료 후
+   _boot()이 data-ready="true" 박음. transition 없음, visibility 기반. */
+.pg-outer[data-ready="false"] .pg-tab-block,
+.pg-outer[data-ready="false"] .pg-content-block { visibility: hidden; }
+
 /* ── 리셋 ── */
 .pg-outer, .pg-outer *,
 .detail-overlay, .detail-overlay *,
@@ -1078,7 +1084,7 @@
 </style>
 
 
-<div class="pg-outer" id="page-board">
+<div class="pg-outer" id="page-board" data-ready="false">
 
   <!-- ① 타이틀 블록 -->
   <div class="pg-header-block">
@@ -1951,6 +1957,11 @@ function _applyBoardTabVisibility() {
 /* ── 초기화: appstate:ready 표준 패턴 ── */
 function _boot() {
   var s = window.AppState;
+  /* ready 가드 풀기 — 탭 RBAC + _switchBoard 완료 시점에 호출 (모든 분기 + 안전망 catch) */
+  var _finalize = function() {
+    var pg = document.getElementById('page-board');
+    if (pg) pg.setAttribute('data-ready', 'true');
+  };
   /* [2026-04-17] app_settings 로드 → 탭 가시성 적용 → _switchBoard */
   _loadBoardTabSettings().then(function() {
     var defaultBoard = _applyBoardTabVisibility();
@@ -1959,6 +1970,7 @@ function _boot() {
       _userOrg = s.org;
       _switchBoard(defaultBoard);
       _bindOverlayClose();
+      _finalize();
     } else if (s && s.userId) {
       window.db.fetch('/rest/v1/users?id=eq.' + s.userId + '&select=company,branch,team')
         .then(function(r) { return r.json(); })
@@ -1972,16 +1984,23 @@ function _boot() {
           }
           _switchBoard(defaultBoard);
           _bindOverlayClose();
+          _finalize();
         })
         .catch(function(e) {
           console.warn('org 로드 실패', e);
           _switchBoard(defaultBoard);
           _bindOverlayClose();
+          _finalize();
         });
     } else {
       _switchBoard(defaultBoard);
       _bindOverlayClose();
+      _finalize();
     }
+  }).catch(function(e) {
+    /* 안전망: _loadBoardTabSettings 자체 throw 시에도 ready 가드 풀어줘서 영구 hidden 방지 */
+    console.warn('[board] _boot 진입 실패', e);
+    _finalize();
   });
 }
 
