@@ -7,6 +7,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-13_0035.md` — **2026-05-13 심야 (단톡방 셸 + 듀얼 모드 + next-card 큰 그림 3-archive 박힘 — 2 commit + 시안 2건 untracked)** ⭐⭐⭐ Code 본진 수행 / 단톡방 의뢰서 답변(5/12 23:30 시나리오 A/B/C + 회귀 신호 후보 3건) / 듀얼 모드 archive `29b4cee` (OS v2 §16 확장 = 콜·채팅 양 채널 흡수) / 실장님 공지방 mockup v2-notice-room (1차 카카오 본질 v2-talkroom → 2차 브랜드 웜톤 + 용어 정합 / 카카오 변수 5종 제거 / "단톡방·카톡·카카오" 잔존 0건 / commit X 의뢰서 정합) / next-card archive `75e4e10` (좌 채팅 + 우 다음 멘트 자동 준비 / OS v2 §1·§2·§4·§6·§11·§13·§16·§17 한 페이지 결합 / §4 회피 결재 필수). 3-archive 결합 = 스크립트 페이지 본진 재설계 큰 그림 박힘. 5/18 본진(실장님 공지방 단독) 흔들지 X / 라이브 영향 0 / 코드 변경 0 / DB 변경 0 / 회귀 신호 0. AI 인계 프로토콜 정합 표준 가동 (archive + 메모리 2건 + _INDEX.md + commit·push). 결재 11건 누적 (시나리오 / 회귀 신호 후보 3건 / Q24 / 듀얼 3건 / next-card 5건 / mockup). 다음 진입 = 단톡방 의뢰서 결재 + 회귀 신호 해소 + mockup 시각 결재 + Phase E Step E-3 부채.
 - `docs/sessions/2026-05-12_2150.md` — 2026-05-12 저녁 (4팀 단톡방 → manager_notice 215건 INSERT 본진 박힘 — 4 commit + 1 SQL 폐기)
 - `docs/sessions/2026-05-12_1908.md` — 2026-05-12 저녁 (Phase E 본진 진입 + 인지 정정 + 별 트랙 정리 — 6 commit)
 - `docs/sessions/2026-05-12_1602.md` — 2026-05-12 오후 (Phase A 본진 박은 큰 날 + Phase E Step E-1 SQL 박음 — 20 commit)
