@@ -1,7 +1,8 @@
 # admin_v2 Phase E 작업지시서 — 9 role × 8 menu 메뉴 가시성 매트릭스
 
-> **작성일(spec 원본):** 2026-05-11 (Claude AI 채팅 인계)
 > **MD 파일 박음:** 2026-05-12 (Code D 트랙, Step E-1 박음 후 사후 정식화)
+> **출처 정정 (2026-05-12):** 본 spec MD는 **Code 재구성 산출물**입니다. Claude AI 인계 spec 본문은 **부재** — 직전 세션(2026-05-12_1602) 인계는 "Step E-2~E-5 새 세션 진입 대기" 한 줄까지였고, c426542 commit body의 "Claude AI 작성, 2026-05-11" 단언은 부정확.
+> **재구성 출처:** c426542 commit body + `docs/migrations/2026-05-11_phase_e_menu_settings_by_role.sql` 헤더 + `docs/sessions/2026-05-12_1602.md` + 본 세션 Step E-1 검증 결과 4건
 > **메인 트랙:** admin_v2 Phase E (운영 토글 8종 = Phase A 완료 후 별 트랙)
 > **선행 종료:** Phase 1.5 (5/10) + Phase A 운영 토글 8종 (5/12, 20 commit) + Phase 1 9역할 마이그레이션 (검증 0건 잔존)
 > **본 작업지시서 본질:** admin이 사이드바 메뉴 가시성을 9 role × 8 menu 매트릭스로 직접 제어 + 사용자 실제 화면 미러링.
@@ -51,6 +52,11 @@
 ---
 
 # § 2. 본진 5 Step 흐름
+
+> ⚠️ **본 § 2 Step E-2~E-5 본문은 Code 재구성 추정안입니다.**
+> - Step E-1 박힘 결과(2026-05-12 검증 4건 100%)는 사실 기반.
+> - Step E-2~E-5 흐름은 Code가 raw 재료(c426542 commit body + SQL 헤더 + 세션 노트)로 추정 재구성.
+> - **Claude AI 신규 spec 본문 회신 시 § 2 통째 교체 예정.** Step E-2 박음 진입 전 결재 필수.
 
 ## Step E-1 — DB 마이그레이션 (완료, 2026-05-12)
 
