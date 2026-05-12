@@ -1217,6 +1217,81 @@ function renderProBadge(plan, role) {
     : '<a onclick="loadPricing()" style="color:var(--color-accent);text-decoration:none;font-size:0.875em;font-weight:600;cursor:pointer;">⚡ PRO로 업그레이드</a>';
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// [2026-05-12 Phase E Step E-2] role × menu 매트릭스 (menu_settings_by_role)
+// ──────────────────────────────────────────────────────────────────────
+//   SQL menu_key (menu_*) ↔ DOM data-menu (무 prefix / underscore→hyphen) 매핑
+//   Phase E spec MD § 7 결정 1·2 정합 (docs/specs/admin_v2_phase_e_role_based_menu_control.md)
+window.MENU_KEY_TO_DATA_MENU = {
+  menu_home:       'home',
+  menu_scripts:    'scripts',
+  menu_board:      'board',
+  menu_myspace:    'myspace',
+  menu_news:       'news',
+  menu_quick:      'quick',
+  menu_together:   'together',
+  menu_team_mgmt:  'team-management'
+};
+
+//   admin_v2 Step E-3 UI에서 사용 (Phase E spec MD § 7 결정 3)
+//   라이브 사이드바 라벨 그대로 (app.html:960~979 raw 캡처 정합)
+window.MENU_LABEL = {
+  menu_home:       '홈',
+  menu_scripts:    '스크립트',
+  menu_board:      '현장의 소리',
+  menu_myspace:    'MY SPACE',
+  menu_news:       '보험뉴스',
+  menu_quick:      'Quick 메뉴',
+  menu_together:   '함께해요',
+  menu_team_mgmt:  '👥 팀원관리'
+};
+
+// ── [Phase E Step E-2] role 기반 메뉴 가시성 DB 적용 ──────────────────
+//   menu_settings_by_role 테이블 SELECT → 사이드바 + 탭바 visibility 적용
+//   AND 조건: 기존 applyMenuSettings (전역 토글) 다음 단계로 박음 — Phase E spec § 7 결정 4
+//   admin role은 skip (CLAUDE.md § role 체계 + applyMenuSettings 정합)
+//   home 메뉴 강제 표시 (applyMenuSettings line 1294 정합)
+//   FOUC 가드: visibility + pointer-events 패턴 (display:none 금지, 메모리 § FOUC visibility 패턴)
+async function applyMenuSettingsByRole() {
+  var role = window.AppState && window.AppState.role;
+  if (!role) return;
+  if (role === 'admin') return; // admin은 모든 메뉴 노출
+
+  if (!window.db || !window.db.fetch) return;
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/menu_settings_by_role?role=eq.' + encodeURIComponent(role)
+      + '&select=menu_key,is_visible'
+    );
+    if (!res.ok) return;
+    var rows = await res.json();
+    if (!rows || !rows.length) return;
+
+    rows.forEach(function (r) {
+      if (r.menu_key === 'menu_home') return; // home 강제 표시
+
+      var dataMenu = window.MENU_KEY_TO_DATA_MENU[r.menu_key];
+      if (!dataMenu) return;
+
+      // AND 조건: SQL 매트릭스 false → 강제 hide (전역 토글 true여도 무시)
+      if (r.is_visible === false) {
+        var el    = document.querySelector('.menu-item[data-menu="' + dataMenu + '"]');
+        var tabEl = document.querySelector('.tab-item[data-menu="' + dataMenu + '"]');
+        if (el) {
+          el.style.visibility    = 'hidden';
+          el.style.pointerEvents = 'none';
+        }
+        if (tabEl) {
+          tabEl.style.visibility    = 'hidden';
+          tabEl.style.pointerEvents = 'none';
+        }
+      }
+    });
+  } catch (e) {
+    console.warn('applyMenuSettingsByRole error:', e);
+  }
+}
+
 // ── [2026-05-11] 운영 카테고리 role 분기 — 조직 운영 네트워크 구조 v1
 //   표시 조건: ga_manager / ga_branch_manager / admin (+ OLD: manager / branch_manager)
 //   DB app_settings 토글과 무관, role 기반 분기.
@@ -1312,6 +1387,8 @@ async function applyMenuSettings() {
   } catch (e) {
     console.warn('applyMenuSettings error:', e);
   } finally {
+    /* [Phase E Step E-2] role × menu 매트릭스 AND 조건 — is-pending 제거 전 박음 (FOUC 회피) */
+    try { await applyMenuSettingsByRole(); } catch (e) { console.warn('applyMenuSettingsByRole error:', e); }
     var menuEl = document.querySelector('.menu');
     if (menuEl) menuEl.classList.remove('is-pending');
   }
