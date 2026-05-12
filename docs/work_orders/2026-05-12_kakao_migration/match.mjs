@@ -240,8 +240,10 @@ sqlLines.push('-- 4팀 단톡방 → manager_notice INSERT 드라이런');
 sqlLines.push('-- 본 SQL = 검수용. 실 실행 X (BEGIN/ROLLBACK 흐름).');
 sqlLines.push(`-- 생성: ${new Date().toISOString()}`);
 sqlLines.push(`-- 대상: 전체 ${clusters.length}건 (Q9 = C 결재 정합)`);
-sqlLines.push('-- author_user_id = SELECT 서브쿼리 (한재성 실장 ga_manager 식별)');
-sqlLines.push('-- 첨부 정책: 15형식 + ≤10MB + ≤10개 → attachments_json / 외 → 본문 link');
+sqlLines.push('-- author_id = 6f5aaa10-be20-4274-a190-53ce38ed3850 (한재성 실장, jaisung78@gmail.com)');
+sqlLines.push('-- team_id = 5fccd362-9ee3-4165-8960-7cb0b7ec72fa (4팀)');
+sqlLines.push('-- 첨부 정책: 15형식 + ≤10MB + ≤10개 → attachments (text JSON) / 외 → 본문 link');
+sqlLines.push('-- source_label = JSON (cluster_rank / n_attach / license_risks) — Q18 A 결재 정합');
 sqlLines.push('-- ============================================');
 sqlLines.push('');
 sqlLines.push('BEGIN;');
@@ -282,9 +284,8 @@ for (const c of clusters) {
   }
 
   const content = bodyLines.join('\n');
-  const attachmentsJson = JSON.stringify(supportedAttach);
-  const sourceMeta = JSON.stringify({
-    source: 'kakao_4team',
+  const attachmentsStr = JSON.stringify(supportedAttach);  // text 컬럼 박음 (JSONB X)
+  const sourceLabel = JSON.stringify({                      // Q18 A: source_label에 JSON 박음
     cluster_rank: c.rank,
     n_attach_supported: supportedAttach.length,
     n_attach_link_only: linkOnly.length,
@@ -293,24 +294,33 @@ for (const c of clusters) {
 
   sqlLines.push(`-- Cluster #${c.rank} | ${c.date} ${c.time} | text ${c.text_len}자 | files ${(c.drive_matches || []).length}건 (지원 ${supportedAttach.length} / link ${linkOnly.length})`);
   sqlLines.push(`INSERT INTO public.posts (`);
-  sqlLines.push(`  board_type, title, content, attachments_json, author_user_id, created_at, source_meta`);
+  sqlLines.push(`  board_type, title, content,`);
+  sqlLines.push(`  author_id, author_name, team_id,`);
+  sqlLines.push(`  attachments, source_type, source_label, display_author,`);
+  sqlLines.push(`  is_notice, audience_target, created_at`);
   sqlLines.push(`) VALUES (`);
   sqlLines.push(`  'manager_notice',`);
   sqlLines.push(`  ${sqlStr(title)},`);
   sqlLines.push(`  ${sqlStr(content)},`);
-  sqlLines.push(`  ${sqlStr(attachmentsJson)}::jsonb,`);
-  sqlLines.push(`  (SELECT id FROM public.users WHERE role = 'ga_manager' AND name LIKE '%한재성%' LIMIT 1),`);
-  sqlLines.push(`  ${sqlStr(c.ts_start)}::timestamptz,`);
-  sqlLines.push(`  ${sqlStr(sourceMeta)}::jsonb`);
+  sqlLines.push(`  '6f5aaa10-be20-4274-a190-53ce38ed3850',`);  // 한재성 실장 UUID (jaisung78@gmail.com)
+  sqlLines.push(`  '한재성',`);
+  sqlLines.push(`  '5fccd362-9ee3-4165-8960-7cb0b7ec72fa',`);  // 4팀 team_id UUID
+  sqlLines.push(`  ${sqlStr(attachmentsStr)},`);                // attachments (text)
+  sqlLines.push(`  'kakao_4team',`);                            // source_type
+  sqlLines.push(`  ${sqlStr(sourceLabel)},`);                   // source_label (Q18 A: JSON 박음)
+  sqlLines.push(`  '한재성',`);                                  // display_author
+  sqlLines.push(`  true,`);                                     // is_notice
+  sqlLines.push(`  'team_internal',`);                          // audience_target
+  sqlLines.push(`  ${sqlStr(c.ts_start)}::timestamptz`);
   sqlLines.push(`);`);
   sqlLines.push('');
 }
 
 sqlLines.push('-- ============================================');
-sqlLines.push('-- 본 SQL 검수 후 결재 통과 시 COMMIT, 위험 발견 시 ROLLBACK');
-sqlLines.push('-- ROLLBACK;');
-sqlLines.push('-- COMMIT;');
+sqlLines.push('-- 명시적 COMMIT — Q20 A 결재 정합 (자동 commit 흐름)');
+sqlLines.push('-- 회귀 시 별도 SQL: DELETE FROM public.posts WHERE source_type = ' + "'kakao_4team';");
 sqlLines.push('-- ============================================');
+sqlLines.push('COMMIT;');
 
 writeFileSync(join(ROOT, 'insert_dryrun.sql'), sqlLines.join('\n'), 'utf-8');
 
