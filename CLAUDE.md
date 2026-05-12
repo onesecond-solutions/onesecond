@@ -165,9 +165,15 @@ WHERE au.email = 'bylts0428@gmail.com';
 - **화면설정(`applyMenuSettings`) 무시 대상**: `admin` 만 (나머지 9개 role은 모두 화면설정 적용 대상)
 - **무료 혜택 대상**: `admin` + 각 소속의 `branch_manager`·`manager` (매니저 이상 무료 원칙)
 - **"지점장" 호칭 혼동 금지**: `admin`/`ga_branch_manager`/`insurer_branch_manager`는 완전히 다른 권한군. 코드·설명에서 뭉뚱그리지 말 것
-- **Phase 1 마이그레이션 대기 중**: 기존 `branch_manager`/`manager`/`member`/`staff` → `ga_*` 접두어 UPDATE (팀장님 승인 전 실행 금지)
+- **Phase 1 9역할 마이그레이션 완료** (2026-05-12 검증): 옛 5역할(`branch_manager`/`manager`/`member`/`staff`/무접두어) 잔존 0건. 현 사용자 10명 분포 = admin 1 / ga_manager 2 / ga_member 5 / insurer_branch_manager 1 / insurer_member 1. ga_branch_manager / ga_staff / insurer_manager / insurer_staff = 현재 0명이나 매트릭스 9 role 전부 박혀 향후 사용자 진입 시 정합.
 
 상세: [`docs/role_system.md`](docs/role_system.md) — 마이그레이션 SQL, RLS 패턴, Phase 2 원수사 입점 계획 포함
+
+## 📅 4팀 오픈일 (2026-05-12 결재)
+
+- **오픈일:** 2026-05-18 (월)
+- **shift 사유:** 5/15 → 5/18 (D-3일 → D-6일, 안전마진 2x 확보)
+- **본질:** Phase E 본진(~4h) + 본 세션 20 commit 라이브 검증(~1세션) + 회귀 패치 여유
 
 ## 📂 주요 경로
 
