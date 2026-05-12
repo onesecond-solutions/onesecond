@@ -243,7 +243,8 @@ sqlLines.push(`-- 대상: 전체 ${clusters.length}건 (Q9 = C 결재 정합)`);
 sqlLines.push('-- author_id = 6f5aaa10-be20-4274-a190-53ce38ed3850 (한재성 실장, jaisung78@gmail.com)');
 sqlLines.push('-- team_id = 5fccd362-9ee3-4165-8960-7cb0b7ec72fa (4팀)');
 sqlLines.push('-- 첨부 정책: 15형식 + ≤10MB + ≤10개 → attachments (text JSON) / 외 → 본문 link');
-sqlLines.push('-- source_label = JSON (cluster_rank / n_attach / license_risks) — Q18 A 결재 정합');
+sqlLines.push('-- source_type = seed (Q21 A 결재, posts_source_type_check CHECK 제약 정합)');
+sqlLines.push('-- source_label = JSON (source/cluster_rank/n_attach/license_risks) — Q18 A + Q21 A 결재 정합');
 sqlLines.push('-- ============================================');
 sqlLines.push('');
 sqlLines.push('BEGIN;');
@@ -285,7 +286,8 @@ for (const c of clusters) {
 
   const content = bodyLines.join('\n');
   const attachmentsStr = JSON.stringify(supportedAttach);  // text 컬럼 박음 (JSONB X)
-  const sourceLabel = JSON.stringify({                      // Q18 A: source_label에 JSON 박음
+  const sourceLabel = JSON.stringify({                      // Q18 A + Q21 A: source 키 추가
+    source: 'kakao_4team',                                  // Q21 A: CHECK 제약 정합 위해 source_type='seed' 박음, 출처는 여기 보존
     cluster_rank: c.rank,
     n_attach_supported: supportedAttach.length,
     n_attach_link_only: linkOnly.length,
@@ -306,7 +308,7 @@ for (const c of clusters) {
   sqlLines.push(`  '한재성',`);
   sqlLines.push(`  '5fccd362-9ee3-4165-8960-7cb0b7ec72fa',`);  // 4팀 team_id UUID
   sqlLines.push(`  ${sqlStr(attachmentsStr)},`);                // attachments (text)
-  sqlLines.push(`  'kakao_4team',`);                            // source_type
+  sqlLines.push(`  'seed',`);                                   // source_type (Q21 A: CHECK 제약 정합, 출처는 source_label JSON.source 박힘)
   sqlLines.push(`  ${sqlStr(sourceLabel)},`);                   // source_label (Q18 A: JSON 박음)
   sqlLines.push(`  '한재성',`);                                  // display_author
   sqlLines.push(`  true,`);                                     // is_notice
