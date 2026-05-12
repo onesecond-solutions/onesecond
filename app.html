@@ -927,7 +927,7 @@ html, body {
       <div class="a1-chip is-static" aria-label="실시간 접속">
         <span class="a1-chip-dot"></span>실시간
       </div>
-      <a class="a1-chip" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">⚠️ 전산장애신고</a>
+      <a class="a1-chip" href="#" role="button" onclick="event.preventDefault(); window.openTogetherBugReport(); return false;">⚠️ 전산장애신고</a>
       <button class="a1-notify" type="button" aria-label="알림" onclick="onNotifyClick(event)">
         🔔
         <!-- [2026-05-11] 알림 v1 1단 — 최소 신호 (placeholder 3) -->
@@ -1968,6 +1968,23 @@ function onNotifyClick(event) {
   if (event && event.preventDefault) event.preventDefault();
   // TODO: 알림 패널 연결 예정
 }
+
+// ⚠️ 전산장애신고 — 함께해요 페이지 bug_report 카테고리 자동 진입
+window.openTogetherBugReport = function () {
+  if (window.togetherOpenWrite && document.getElementById('page-together')) {
+    window.togetherOpenWrite();
+    setTimeout(function () {
+      var sel = document.getElementById('tg-form-category');
+      if (sel) sel.value = 'bug_report';
+    }, 80);
+    return;
+  }
+  try {
+    localStorage.setItem('selected_menu', 'together');
+    localStorage.setItem('together_auto_write_category', 'bug_report');
+  } catch (e) {}
+  window.location.replace('/app.html');
+};
 
 document.addEventListener('click', function (e) {
   var wrap = document.getElementById('search-wrap');

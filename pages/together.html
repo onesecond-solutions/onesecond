@@ -258,6 +258,10 @@
   background: rgba(160,82,45,0.10);
   color: var(--color-brand, #A0522D);
 }
+#page-together .tg-cat-badge.tg-cat-bug_report {
+  background: rgba(216, 76, 76, 0.12);
+  color: #c0392b;
+}
 #page-together .tg-cat-badge.tg-cat-free {
   background: var(--color-surface-2);
   color: var(--color-text-secondary);
@@ -598,6 +602,8 @@
               onclick="window.togetherSwitchTab('feature_request')">기능 요청</button>
       <button class="pg-tab-btn" type="button" data-tab="review"
               onclick="window.togetherSwitchTab('review')">사용 후기</button>
+      <button class="pg-tab-btn" type="button" data-tab="bug_report"
+              onclick="window.togetherSwitchTab('bug_report')">⚠️ 전산장애 신고</button>
       <button class="pg-tab-btn" type="button" data-tab="free"
               onclick="window.togetherSwitchTab('free')">자유 공유</button>
     </div>
@@ -617,6 +623,9 @@
 
       <!-- 사용 후기 패널 -->
       <div class="pg-tab-panel" id="together-tab-review"></div>
+
+      <!-- 전산장애 신고 패널 -->
+      <div class="pg-tab-panel" id="together-tab-bug_report"></div>
 
       <!-- 자유 공유 패널 -->
       <div class="pg-tab-panel" id="together-tab-free"></div>
@@ -645,6 +654,7 @@
           <select class="tg-form-select" id="tg-form-category">
             <option value="feature_request">기능 요청</option>
             <option value="review">사용 후기</option>
+            <option value="bug_report">⚠️ 전산장애 신고</option>
             <option value="free">자유 공유</option>
           </select>
         </div>
@@ -706,6 +716,7 @@
   var CAT_LABEL = {
     feature_request: '기능 요청',
     review: '사용 후기',
+    bug_report: '전산장애 신고',
     free: '자유 공유'
   };
 
@@ -1076,6 +1087,17 @@
 
   function _boot() {
     loadTogetherPosts();
+    /* A1 ⚠️ 전산장애신고 진입 시 자동 모달 + bug_report 카테고리 선택 */
+    var auto;
+    try { auto = localStorage.getItem('together_auto_write_category'); } catch (e) {}
+    if (auto) {
+      try { localStorage.removeItem('together_auto_write_category'); } catch (e) {}
+      setTimeout(function () {
+        window.togetherOpenWrite();
+        var sel = document.getElementById('tg-form-category');
+        if (sel) sel.value = auto;
+      }, 120);
+    }
   }
 
   if (window.AppState && window.AppState.ready) {
