@@ -1,0 +1,21 @@
+# 4팀 단톡방 → manager_notice 마이그레이션 — 라이센스 위험 자료 git 박음 X
+# Public repo (github.com/onesecond-solutions/onesecond) 정합 (2026-05-12 Q10 결재)
+#
+# 위험 분류:
+#   고: 보험사 PDF 본문 추출 (라이나/메리츠/KB 등 "무단 전재 및 복사 금지" 명시 자료)
+#   중: 4팀 카톡 본문 + 보험사 자료 라벨 (라이센스 13개 보험사 키워드 검출)
+#
+# Q4 RLS 4팀 한정 정책으로 Supabase 측 보호. git 측은 .gitignore로 차단.
+# 본 자료는 로컬 보존만 + 단계 4(실 INSERT) 후 폐기 또는 별도 archive.
+
+# 입력 데이터 (보험사 PDF 본문)
+file_content.csv
+file_content_phase2.csv
+
+# 카톡 본문 + 매칭 결과 (라이센스 13개 보험사 키워드 검출)
+clusters_full.json
+clusters_summary.csv
+clusters_with_drive.json
+
+# 215건 INSERT 드라이런 SQL (카톡 본문 풀 인용)
+insert_dryrun.sql
