@@ -3246,9 +3246,10 @@ body.adm-active { overflow: hidden !important; }
     // Phase D 진입 분기 — view별 데이터 로드 (admin_v2.js 정의 함수 호출, race-safe 가드)
     if (viewKey === 'operations' && typeof window.admLoadOperationsToggles === 'function') {
       window.admLoadOperationsToggles();
-    } else if (viewKey === 'settings' && typeof window.admReloadPreview === 'function') {
-      /* [Step 4] settings 진입 시 미러링 iframe 첫 로드 (admLoadSettings는 admin_v2.js에서 별도 가동) */
-      window.admReloadPreview();
+    } else if (viewKey === 'settings') {
+      /* [Step 4] settings — admLoadSettings (admin_v2.js) + 미러링 iframe 동시 호출 */
+      if (typeof window.admLoadSettings   === 'function') window.admLoadSettings();
+      if (typeof window.admReloadPreview === 'function') window.admReloadPreview();
     } else if (viewKey === 'users' && typeof window.admLoadUsers === 'function') {
       window.admLoadUsers();
     } else if (viewKey === 'content' && typeof window.admLoadContent === 'function') {
@@ -3261,9 +3262,8 @@ body.adm-active { overflow: hidden !important; }
       window.admLoadAnalytics();
     } else if (viewKey === 'logs' && typeof window.admLoadLogs === 'function') {
       window.admLoadLogs();
-    } else if (viewKey === 'settings' && typeof window.admLoadSettings === 'function') {
-      window.admLoadSettings();
     }
+    /* [Step 4 정합] settings 분기는 위 elseif (operations 다음)로 통합 — admLoadSettings + admReloadPreview 동시 호출 */
   };
 
   // ── 톤 전환 (영구 운영 기능 — 5종: light/warm/slate/black/navy) ───────
