@@ -1293,13 +1293,14 @@ async function applyMenuSettingsByRole() {
 }
 
 // ── [2026-05-11] 운영 카테고리 role 분기 — 조직 운영 네트워크 구조 v1
-//   표시 조건: ga_manager / ga_branch_manager / admin (+ OLD: manager / branch_manager)
+//   표시 조건: admin / ga_branch_manager / ga_manager
 //   DB app_settings 토글과 무관, role 기반 분기.
 //   data-role-section="ops" 모든 요소(구분선/헤더/메뉴) 일괄 토글.
+//   [2026-05-12 정리] 옛 5역할(branch_manager/manager) 제거 — Phase 1 9역할 마이그레이션 완료 정합
 function applyOpsMenuByRole() {
   var role = window.AppState && window.AppState.role;
   if (!role) return;
-  var allowed = ['admin', 'ga_branch_manager', 'ga_manager', 'branch_manager', 'manager'];
+  var allowed = ['admin', 'ga_branch_manager', 'ga_manager'];
   var show = allowed.indexOf(role) !== -1;
   var els = document.querySelectorAll('[data-role-section="ops"]');
   for (var i = 0; i < els.length; i++) {
@@ -1353,8 +1354,8 @@ async function applyMenuSettings() {
 
   // [2026-04-17] 관리자는 표시 설정과 무관하게 항상 모든 메뉴 표시
   // (실제 사용자 화면은 admin.html의 미리보기로 확인)
-  // [2026-04-23] 00_MASTER.md 5-4항 — admin·branch_manager 둘 다 관리자 예외
-  if (window.AppState && ['admin','branch_manager'].includes(window.AppState.role)) {
+  // [2026-05-12 정리] 옛 5역할 branch_manager 제거 — Phase 1 9역할 마이그레이션 완료 정합. admin만 화면설정 무시 (CLAUDE.md § role 체계)
+  if (window.AppState && window.AppState.role === 'admin') {
     var menuElA = document.querySelector('.menu');
     if (menuElA) menuElA.classList.remove('is-pending');
     return;
