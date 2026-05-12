@@ -1564,7 +1564,7 @@ body.adm-active { overflow: hidden !important; }
 ════════════════════════════════════════════════════════════ */
 .adm-ops-grid {
   display: grid;
-  grid-template-columns: minmax(0, 60fr) minmax(0, 40fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);  /* 5:5 비율 — 2026-05-12 팀장님 결재 */
   gap: 16px;
   align-items: start;
 }
@@ -1618,17 +1618,18 @@ body.adm-active { overflow: hidden !important; }
 .adm-preview-iframe-wrap {
   position: relative;
   width: 100%;
-  height: 600px;
+  height: 700px;
   border: 1px solid var(--admin-border, #e5e7eb);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: hidden;          /* scale 후 잘림 차단 */
   background: var(--admin-surface-2, #f5f5f4);
 }
+/* [2026-05-12] iframe = PC 너비 1400px 강제 + JS가 wrap 폭에 맞춰 동적 scale
+   (글씨 작아져도 모바일 break point 회피 = 사용자 실제 PC 화면 미러링) */
 .adm-preview-iframe {
-  width: 100%;
-  height: 100%;
   border: none;
   background: #fff;
+  /* width/height/transform는 _admScalePreview() 가 인라인 설정 */
 }
 .adm-preview-footer-note {
   font-size: 0.7em;
@@ -2207,6 +2208,18 @@ body.adm-active { overflow: hidden !important; }
             <span class="adm-toggle-slider"></span>
           </label>
           <span class="adm-toggle-status" data-toggle-status="hub_public">로딩 중...</span>
+        </div>
+
+        <div class="adm-toggle-row" data-toggle-key="qna_visible">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">📋 스마트 게시판 표시</div>
+            <div class="adm-toggle-desc">role 무관 강제 hide. OFF 시 네비방 탭 자동 활성. 시드 데이터 부족 시 일시 차단.</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="qna_visible" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="qna_visible">로딩 중...</span>
         </div>
       </div>
 
@@ -3058,7 +3071,7 @@ body.adm-active { overflow: hidden !important; }
      ▸ UPSERT 패턴: DELETE → INSERT (admin_v2.js banner/menu_b/gate 패턴 정합)
   ════════════════════════════════════════════════════════════ */
   var _admOpsKeys = [
-    'manager_lounge_enabled', 'insurer_unified_view', 'hub_public',
+    'manager_lounge_enabled', 'insurer_unified_view', 'hub_public', 'qna_visible',
     'ops_organization', 'ops_notify', 'ops_calendar', 'ops_console'
   ];
 
@@ -3083,8 +3096,32 @@ body.adm-active { overflow: hidden !important; }
     /* operations + settings 미러링 iframe 모두 갱신 (한 시점에 visible은 하나뿐, 비용 미세) */
     var iframes = document.querySelectorAll('.adm-preview-iframe');
     var stamp = '/app.html?_preview=' + Date.now();
-    iframes.forEach(function (f) { f.src = stamp; });
+    iframes.forEach(function (f) {
+      f.onload = function () { if (window._admScalePreview) window._admScalePreview(); };
+      f.src = stamp;
+    });
+    if (window._admScalePreview) window._admScalePreview();  /* 즉시 1회 (load 전이라도 width 박음) */
   };
+
+  /* [2026-05-12] iframe = PC 너비 1400px 강제 + wrap 폭에 맞춰 동적 scale
+     ▸ glass break point 회피 (모바일 미디어 쿼리 비활성화)
+     ▸ 글씨 작아져도 사용자 실제 PC 화면 미러링 */
+  window._admScalePreview = function () {
+    document.querySelectorAll('.adm-preview-iframe-wrap').forEach(function (wrap) {
+      var iframe = wrap.querySelector('.adm-preview-iframe');
+      if (!iframe || wrap.offsetWidth === 0) return;
+      var targetWidth = 1400;
+      var scale = wrap.offsetWidth / targetWidth;
+      if (scale > 1) scale = 1;
+      iframe.style.transform       = 'scale(' + scale + ')';
+      iframe.style.transformOrigin = 'top left';
+      iframe.style.width           = targetWidth + 'px';
+      iframe.style.height          = Math.round(wrap.offsetHeight / scale) + 'px';
+    });
+  };
+  window.addEventListener('resize', function () {
+    if (window._admScalePreview) window._admScalePreview();
+  });
 
   window.admLoadOperationsToggles = async function () {
     if (!window.db || !window.db.fetch) return;

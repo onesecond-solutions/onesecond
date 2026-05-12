@@ -2373,7 +2373,7 @@ function _loadBoardTabSettings() {
   if (!window.db || !window.db.fetch) {
     return Promise.resolve();
   }
-  return window.db.fetch('/rest/v1/app_settings?key=in.(manager_lounge_enabled,insurer_unified_view,hub_public,ops_organization,ops_notify,ops_calendar,ops_console)&select=key,value')
+  return window.db.fetch('/rest/v1/app_settings?key=in.(manager_lounge_enabled,insurer_unified_view,hub_public,qna_visible,ops_organization,ops_notify,ops_calendar,ops_console)&select=key,value')
     .then(function(r) { return r.ok ? r.json() : []; })
     .then(function(rows) {
       if (!rows || !rows.length) return; /* DB 레코드 없으면 기본값 유지 (manager/hub OFF, ops_* ON = 현재 가동 상태) */
@@ -2391,6 +2391,21 @@ function _loadBoardTabSettings() {
 
       /* [2026-05-12 운영 4 레이어] default ON (row 없으면 현재 가동 상태 유지), OFF만 hide */
       var isOff = function (k) { return map[k] === 'false' || map[k] === false; };
+
+      /* qna_visible OFF — 스마트 게시판 탭 강제 hide (role 무관) + 다른 탭 자동 활성 */
+      if (isOff('qna_visible')) {
+        var qnaBtn = document.querySelector('.pg-tab-btn[data-board="qna"]');
+        if (qnaBtn) qnaBtn.style.display = 'none';
+        /* qna가 현재 active면 첫 visible 탭으로 자동 전환 */
+        if (qnaBtn && qnaBtn.classList.contains('active')) {
+          var fallback = document.querySelector('.pg-tab-btn[data-board="navigation"]')
+                      || document.querySelector('.pg-tab-btn[data-board="manager_notice"]');
+          if (fallback && typeof window.switchBoard === 'function') {
+            var fbKey = fallback.dataset.board;
+            window.switchBoard(fbKey);
+          }
+        }
+      }
 
       /* ops_console OFF — 2컬럼 grid → 1컬럼 복귀 (캘린더 자동 hide) */
       if (isOff('ops_console')) {
