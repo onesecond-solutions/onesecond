@@ -1558,6 +1558,89 @@ body.adm-active { overflow: hidden !important; }
   .adm-toggle-row { flex-wrap: wrap; gap: 10px; }
   .adm-toggle-info { flex: 1 1 100%; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   [2026-05-12 Step 4] 운영 레이어 — 사용자 화면 미러링 (iframe + reload)
+════════════════════════════════════════════════════════════ */
+.adm-ops-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 60fr) minmax(0, 40fr);
+  gap: 16px;
+  align-items: start;
+}
+.adm-ops-toggles { min-width: 0; }
+.adm-ops-preview {
+  position: sticky;
+  top: 16px;
+  background: var(--admin-surface, #fff);
+  border: 1px solid var(--admin-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+.adm-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--admin-border, #e5e7eb);
+}
+.adm-preview-title {
+  font-size: 0.92em;
+  font-weight: 700;
+  color: var(--admin-text-primary, #111);
+}
+.adm-preview-chip-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.adm-preview-chip {
+  padding: 5px 10px;
+  border: 1px solid var(--admin-border, #e5e7eb);
+  border-radius: 16px;
+  background: var(--admin-surface, #fff);
+  font-size: 0.78em;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--admin-text-secondary, #555);
+  transition: background .12s, color .12s, border-color .12s;
+  font-family: inherit;
+}
+.adm-preview-chip:hover { background: var(--admin-surface-2, #f5f5f4); }
+.adm-preview-chip.active {
+  background: var(--color-brand, #A0522D);
+  color: #fff;
+  border-color: var(--color-brand, #A0522D);
+}
+.adm-preview-iframe-wrap {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  border: 1px solid var(--admin-border, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--admin-surface-2, #f5f5f4);
+}
+.adm-preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+}
+.adm-preview-footer-note {
+  font-size: 0.7em;
+  color: var(--admin-text-tertiary, #999);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+@media (max-width: 1024px) {
+  .adm-ops-grid { grid-template-columns: 1fr; }
+  .adm-ops-preview { position: relative; top: auto; }
+  .adm-preview-iframe-wrap { height: 500px; }
+}
 </style>
 
 
@@ -2080,9 +2163,12 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-section-head">
         <div>
           <div class="adm-section-title">🎛️ 운영 레이어 토글</div>
-          <div class="adm-section-desc">기능별 ON/OFF 다이얼. 토글 변경 즉시 페이지에 반영됩니다.</div>
+          <div class="adm-section-desc">기능별 ON/OFF 다이얼. 토글 클릭 즉시 우측 미러링에 반영됩니다.</div>
         </div>
       </div>
+
+      <div class="adm-ops-grid">
+        <div class="adm-ops-toggles">
 
       <div class="adm-toggle-group">
         <div class="adm-toggle-group-title">기능 토글 3종 (Step 2)</div>
@@ -2179,6 +2265,30 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-toggle-footer">
         <span class="adm-toggle-footer-note">💡 DB 저장 = app_settings 테이블 (key/value 패턴). 토글 변경 시 즉시 UPSERT.</span>
       </div>
+
+        </div><!-- /.adm-ops-toggles -->
+
+        <aside class="adm-ops-preview">
+          <div class="adm-preview-header">
+            <div class="adm-preview-title">📱 사용자 화면 미러링</div>
+          </div>
+          <div class="adm-preview-chip-bar">
+            <button class="adm-preview-chip active" data-preview-target="home"
+                    onclick="window.admSwitchPreviewPage('home', this)">🏠 홈</button>
+            <button class="adm-preview-chip"        data-preview-target="board"
+                    onclick="window.admSwitchPreviewPage('board', this)">📋 게시판</button>
+            <button class="adm-preview-chip"        data-preview-target="together"
+                    onclick="window.admSwitchPreviewPage('together', this)">🤝 함께해요</button>
+            <button class="adm-preview-chip"        data-preview-target="team-management"
+                    onclick="window.admSwitchPreviewPage('team-management', this)">👥 팀원관리</button>
+          </div>
+          <div class="adm-preview-iframe-wrap">
+            <iframe class="adm-preview-iframe" id="adm-preview-iframe" src="about:blank" title="사용자 화면 미러링"></iframe>
+          </div>
+          <div class="adm-preview-footer-note">💡 admin 본인 role 기준 미리보기. 다른 role(설계사·매니저) 시뮬은 Phase D 별 트랙.</div>
+        </aside>
+
+      </div><!-- /.adm-ops-grid -->
 
     </div>
 
@@ -2867,13 +2977,40 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-section-head">
         <div>
           <div class="adm-section-title">화면설정</div>
-          <div class="adm-section-desc">B영역 메뉴 / PRO 게이트 / 게시판 1차 탭 / 페이지별 배너 이미지 — 4섹션 통합 운영. 저장 시 사용자 페이지 새로고침 후 반영.</div>
+          <div class="adm-section-desc">B영역 메뉴 / PRO 게이트 / 게시판 1차 탭 / 페이지별 배너 이미지 — 4섹션 통합 운영. 저장 후 우측 🔄 새로고침으로 직관 확인.</div>
         </div>
       </div>
 
-      <!-- 4섹션 동적 렌더 컨테이너 (admLoadSettings가 fill) -->
-      <div id="adm-settings-content">
-        <div class="adm-set-loading">설정 로딩 중...</div>
+      <div class="adm-ops-grid">
+
+        <div class="adm-ops-toggles">
+          <!-- 4섹션 동적 렌더 컨테이너 (admLoadSettings가 fill) -->
+          <div id="adm-settings-content">
+            <div class="adm-set-loading">설정 로딩 중...</div>
+          </div>
+        </div>
+
+        <aside class="adm-ops-preview">
+          <div class="adm-preview-header">
+            <div class="adm-preview-title">📱 사용자 화면 미러링</div>
+            <button type="button" class="adm-preview-chip" onclick="window.admReloadPreview()" title="수동 새로고침">🔄</button>
+          </div>
+          <div class="adm-preview-chip-bar">
+            <button class="adm-preview-chip active" data-preview-target="home"
+                    onclick="window.admSwitchPreviewPage('home', this)">🏠 홈</button>
+            <button class="adm-preview-chip"        data-preview-target="board"
+                    onclick="window.admSwitchPreviewPage('board', this)">📋 게시판</button>
+            <button class="adm-preview-chip"        data-preview-target="together"
+                    onclick="window.admSwitchPreviewPage('together', this)">🤝 함께해요</button>
+            <button class="adm-preview-chip"        data-preview-target="team-management"
+                    onclick="window.admSwitchPreviewPage('team-management', this)">👥 팀원관리</button>
+          </div>
+          <div class="adm-preview-iframe-wrap">
+            <iframe class="adm-preview-iframe" id="adm-preview-iframe-settings" src="about:blank" title="사용자 화면 미러링 (settings)"></iframe>
+          </div>
+          <div class="adm-preview-footer-note">💡 화면설정 저장 후 🔄 새로고침 버튼으로 갱신 (자동 reload는 후속 박음).</div>
+        </aside>
+
       </div>
 
     </div><!-- /.adm-view settings -->
@@ -2925,6 +3062,30 @@ body.adm-active { overflow: hidden !important; }
     'ops_organization', 'ops_notify', 'ops_calendar', 'ops_console'
   ];
 
+  /* [2026-05-12 Step 4] 사용자 화면 미러링 — iframe + selected_menu localStorage 분기 */
+  var _admPreviewMenuKey = 'home';
+
+  window.admSwitchPreviewPage = function (menuKey, btnEl) {
+    if (!menuKey) return;
+    _admPreviewMenuKey = menuKey;
+    /* chip active 갱신 */
+    document.querySelectorAll('.adm-preview-chip').forEach(function (c) {
+      c.classList.toggle('active', c.dataset.previewTarget === menuKey);
+    });
+    /* iframe reload */
+    window.admReloadPreview();
+  };
+
+  window.admReloadPreview = function () {
+    /* iframe 안에서 admin 본인 토큰 공유 (localStorage) — selected_menu만 미리보기 페이지로 박음
+       admin 본인의 selected_menu 잔여 = 다음 진입 시 미리보기 페이지로 시작됨 (자연스러움) */
+    try { localStorage.setItem('selected_menu', _admPreviewMenuKey); } catch (e) {}
+    /* operations + settings 미러링 iframe 모두 갱신 (한 시점에 visible은 하나뿐, 비용 미세) */
+    var iframes = document.querySelectorAll('.adm-preview-iframe');
+    var stamp = '/app.html?_preview=' + Date.now();
+    iframes.forEach(function (f) { f.src = stamp; });
+  };
+
   window.admLoadOperationsToggles = async function () {
     if (!window.db || !window.db.fetch) return;
     try {
@@ -2947,6 +3108,8 @@ body.adm-active { overflow: hidden !important; }
           stat.setAttribute('data-toggle-state', isOn ? 'on' : 'off');
         }
       });
+      /* [Step 4] operations 진입 직후 미러링 iframe 첫 로드 */
+      if (typeof window.admReloadPreview === 'function') window.admReloadPreview();
     } catch (e) {
       console.error('[adm ops] 토글 로드 실패:', e);
     }
@@ -2982,6 +3145,8 @@ body.adm-active { overflow: hidden !important; }
         stat.textContent = isOn ? 'ON' : 'OFF';
         stat.setAttribute('data-toggle-state', isOn ? 'on' : 'off');
       }
+      /* [Step 4] 토글 변경 즉시 미러링 iframe reload — admin 직관적 확인 */
+      if (typeof window.admReloadPreview === 'function') window.admReloadPreview();
     } catch (e) {
       console.error('[adm ops] 토글 저장 실패:', e);
       alert('토글 저장 실패: ' + (e.message || e));
@@ -3044,6 +3209,9 @@ body.adm-active { overflow: hidden !important; }
     // Phase D 진입 분기 — view별 데이터 로드 (admin_v2.js 정의 함수 호출, race-safe 가드)
     if (viewKey === 'operations' && typeof window.admLoadOperationsToggles === 'function') {
       window.admLoadOperationsToggles();
+    } else if (viewKey === 'settings' && typeof window.admReloadPreview === 'function') {
+      /* [Step 4] settings 진입 시 미러링 iframe 첫 로드 (admLoadSettings는 admin_v2.js에서 별도 가동) */
+      window.admReloadPreview();
     } else if (viewKey === 'users' && typeof window.admLoadUsers === 'function') {
       window.admLoadUsers();
     } else if (viewKey === 'content' && typeof window.admLoadContent === 'function') {
