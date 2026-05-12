@@ -2368,15 +2368,15 @@ var _boardTabVisible = {
   archive_legacy:  false
 };
 
-/* ── app_settings 토글 3종 로드 (spec § 4-1) ── */
+/* ── app_settings 토글 7종 로드 (spec § 4-1 + 2026-05-12 ops_* 4종 확장) ── */
 function _loadBoardTabSettings() {
   if (!window.db || !window.db.fetch) {
     return Promise.resolve();
   }
-  return window.db.fetch('/rest/v1/app_settings?key=in.(manager_lounge_enabled,insurer_unified_view,hub_public)&select=key,value')
+  return window.db.fetch('/rest/v1/app_settings?key=in.(manager_lounge_enabled,insurer_unified_view,hub_public,ops_organization,ops_notify,ops_calendar,ops_console)&select=key,value')
     .then(function(r) { return r.ok ? r.json() : []; })
     .then(function(rows) {
-      if (!rows || !rows.length) return; /* DB 레코드 없으면 기본값 유지 (모두 OFF) */
+      if (!rows || !rows.length) return; /* DB 레코드 없으면 기본값 유지 (manager/hub OFF, ops_* ON = 현재 가동 상태) */
       var map = {};
       rows.forEach(function(r) { map[r.key] = r.value; });
       /* 매니저 라운지: 토글 ON 시 표시 후보 (실 노출은 role 분기에서) */
@@ -2388,6 +2388,27 @@ function _loadBoardTabSettings() {
         _boardTabVisible.hub = (map.hub_public === 'true' || map.hub_public === true);
       }
       /* insurer_unified_view: 메뉴 노출 X (보험사 임직원 통합 view 옵션, _loadPosts 내부 분기) */
+
+      /* [2026-05-12 운영 4 레이어] default ON (row 없으면 현재 가동 상태 유지), OFF만 hide */
+      var isOff = function (k) { return map[k] === 'false' || map[k] === false; };
+
+      /* ops_console OFF — 2컬럼 grid → 1컬럼 복귀 (캘린더 자동 hide) */
+      if (isOff('ops_console')) {
+        var grid = document.querySelector('.pg-console-grid');
+        if (grid) grid.style.gridTemplateColumns = '1fr';
+        var side = document.querySelector('.pg-console-side');
+        if (side) side.style.display = 'none';
+      }
+      /* ops_calendar OFF — 운영 캘린더 보드 hide (단독, ops_console ON이라도) */
+      else if (isOff('ops_calendar')) {
+        var calBoard = document.querySelector('.pg-calendar-board');
+        if (calBoard) calBoard.style.display = 'none';
+      }
+      /* ops_notify OFF — 게시판 집계 바 hide */
+      if (isOff('ops_notify')) {
+        var sumBar = document.querySelector('.pg-summary-bar');
+        if (sumBar) sumBar.style.display = 'none';
+      }
     })
     .catch(function(e) { console.warn('[board] app_settings 로드 실패', e); });
 }

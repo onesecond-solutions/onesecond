@@ -1232,10 +1232,44 @@ function applyOpsMenuByRole() {
   }
 }
 
+// ── [2026-05-12 admin 토글 Step 3] 운영 4 레이어 토글 로드 (app_settings 정합)
+//   default ON (row 없으면 가동 상태 유지), OFF만 hide.
+//   ops_organization: 사이드바 운영 카테고리 강제 hide (role 기반과 AND)
+//   ops_notify:       A1 🔔 button + C영역 .notify-ops 카드 hide
+async function _loadOpsLayerToggles() {
+  if (!window.db || !window.db.fetch) return;
+  try {
+    var res = await window.db.fetch('/rest/v1/app_settings?key=in.(ops_organization,ops_notify)&select=key,value');
+    if (!res.ok) return;
+    var rows = await res.json();
+    if (!rows || !rows.length) return;
+    var map = {};
+    rows.forEach(function (r) { map[r.key] = r.value; });
+    var isOff = function (k) { return map[k] === 'false' || map[k] === false; };
+
+    if (isOff('ops_organization')) {
+      document.querySelectorAll('[data-role-section="ops"]').forEach(function (el) {
+        el.style.display = 'none';
+      });
+    }
+    if (isOff('ops_notify')) {
+      var notifyBtn = document.querySelector('.a1-notify');
+      if (notifyBtn) notifyBtn.style.display = 'none';
+      document.querySelectorAll('.notify-ops').forEach(function (el) {
+        el.style.display = 'none';
+      });
+    }
+  } catch (e) {
+    console.warn('[app] ops layer toggles 로드 실패', e);
+  }
+}
+
 // ── ③ 메뉴 설정 (app_settings) ─────────────────────────────────────────────
 async function applyMenuSettings() {
   // [2026-05-11] 운영 카테고리는 DB 토글 무관, role 기반 분기 (조직 운영 네트워크 구조 v1)
   applyOpsMenuByRole();
+  // [2026-05-12 Step 3] 운영 4 레이어 토글 — app_settings ops_* 비동기 로드 (race-safe, role 분기 후 강제 hide)
+  _loadOpsLayerToggles();
 
   // [2026-04-17] 관리자는 표시 설정과 무관하게 항상 모든 메뉴 표시
   // (실제 사용자 화면은 admin.html의 미리보기로 확인)
