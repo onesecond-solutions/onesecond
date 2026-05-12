@@ -1467,15 +1467,19 @@ body.adm-active { overflow: hidden !important; }
       <img src="/assets/images/logo/logo05.png" alt="원세컨드" class="adm-rail-logo-img">
     </div>
     <nav class="adm-rail-nav" id="adm-rail-nav">
-      <button class="adm-rail-btn active" data-tooltip="대시보드"   data-view="dashboard" data-status="live"    onclick="window.admSwitchView('dashboard')">📊<span class="adm-rail-status"></span></button>
+      <!-- [2026-05-12 admin 토글 Step 1] rail 9→4 컴팩트 — live 3 + 운영 레이어 신설 1 -->
+      <button class="adm-rail-btn active" data-tooltip="대시보드"    data-view="dashboard"  data-status="live" onclick="window.admSwitchView('dashboard')">📊<span class="adm-rail-status"></span></button>
+      <button class="adm-rail-btn"        data-tooltip="운영 레이어"  data-view="operations" data-status="live" onclick="window.admSwitchView('operations')">🎛️<span class="adm-rail-status"></span></button>
+      <button class="adm-rail-btn"        data-tooltip="콘텐츠"       data-view="content"    data-status="live" onclick="window.admSwitchView('content')">📋<span class="adm-rail-status"></span></button>
+      <button class="adm-rail-btn"        data-tooltip="화면설정"     data-view="settings"   data-status="live" onclick="window.admSwitchView('settings')">⚙️<span class="adm-rail-status"></span></button>
+      <!-- [Step 1 주석 처리] 5 pending 항목 — 미래 부활 시 주석 해제만으로 즉시 가동 (Phase D 이후)
       <button class="adm-rail-btn"        data-tooltip="사용자 관리" data-view="users"     data-status="pending" onclick="window.admSwitchView('users')">👥<span class="adm-rail-status"></span></button>
-      <button class="adm-rail-btn"        data-tooltip="콘텐츠"      data-view="content"   onclick="window.admSwitchView('content')">📋<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="게시판"      data-view="board"     data-status="pending" onclick="window.admSwitchView('board')">💬<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="통계·분석"   data-view="analytics" data-status="pending" onclick="window.admSwitchView('analytics')">📈<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="공지·배너"   data-view="notice"    data-status="pending" onclick="window.admSwitchView('notice')">📢<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="로그"        data-view="logs"      data-status="pending" onclick="window.admSwitchView('logs')">🗂️<span class="adm-rail-status"></span></button>
       <button class="adm-rail-btn"        data-tooltip="결제·플랜"   data-view="billing"   data-status="pending" onclick="window.admSwitchView('billing')">💳<span class="adm-rail-status"></span></button>
-      <button class="adm-rail-btn"        data-tooltip="화면설정"    data-view="settings"  onclick="window.admSwitchView('settings')">⚙️<span class="adm-rail-status"></span></button>
+      -->
     </nav>
     <div class="adm-rail-bottom">
       <button class="adm-rail-btn" data-tooltip="도움말" onclick="alert('[Phase B] 도움말 — 추후 Phase E')">❓</button>
@@ -1517,6 +1521,26 @@ body.adm-active { overflow: hidden !important; }
         <div class="adm-menu-item pending"><span class="icon">📤</span>Export<span class="pending-mark">Phase E</span></div>
         <div class="adm-menu-item pending"><span class="icon">🔧</span>SQL 콘솔<span class="pending-mark">Phase E</span></div>
         <div class="adm-menu-item pending"><span class="icon">📜</span>활동 로그<span class="pending-mark">Phase E</span></div>
+      </div>
+    </div>
+
+    <!-- [2026-05-12 Step 1] 운영 레이어 메뉴 — Step 2/3 본진 박음 자리 placeholder -->
+    <div class="adm-menu-pane" data-view="operations" style="display:none;">
+      <div class="adm-menu-category">ADMIN · 운영 레이어</div>
+      <div class="adm-menu-title">🎛️ 운영 레이어 토글</div>
+      <div class="adm-menu-section">
+        <div class="adm-menu-section-title">기능 토글 3종</div>
+        <div class="adm-menu-item pending"><span class="icon">☕</span>매니저 라운지<span class="pending-mark">Step 2</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🏦</span>보험사 통합 view<span class="pending-mark">Step 2</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🌐</span>허브 공개<span class="pending-mark">Step 2</span></div>
+      </div>
+      <div class="adm-menu-divider"></div>
+      <div class="adm-menu-section">
+        <div class="adm-menu-section-title">운영 흐름 OS 4 레이어</div>
+        <div class="adm-menu-item pending"><span class="icon">👥</span>조직 운영<span class="pending-mark">Step 3</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🔔</span>알림 v1<span class="pending-mark">Step 3</span></div>
+        <div class="adm-menu-item pending"><span class="icon">📅</span>운영 캘린더<span class="pending-mark">Step 3</span></div>
+        <div class="adm-menu-item pending"><span class="icon">🛠️</span>운영 콘솔<span class="pending-mark">Step 3</span></div>
       </div>
     </div>
 
