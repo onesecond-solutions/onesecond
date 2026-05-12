@@ -1247,6 +1247,11 @@ async function _loadOpsLayerToggles() {
     rows.forEach(function (r) { map[r.key] = r.value; });
     var isOff = function (k) { return map[k] === 'false' || map[k] === false; };
 
+    /* [2026-05-12 미러링 분기] admin은 본인 페이지 영향 0, iframe 미러링(_preview=)만 강제 가동 */
+    var _aRole      = (window.AppState && window.AppState.role) || '';
+    var _aIsPreview = window.location.search.indexOf('_preview=') !== -1;
+    if (_aRole === 'admin' && !_aIsPreview) return; /* admin 본인 페이지 skip */
+
     if (isOff('ops_organization')) {
       document.querySelectorAll('[data-role-section="ops"]').forEach(function (el) {
         el.style.display = 'none';

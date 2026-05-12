@@ -2392,6 +2392,12 @@ function _loadBoardTabSettings() {
       /* [2026-05-12 운영 4 레이어] default ON (row 없으면 현재 가동 상태 유지), OFF만 hide */
       var isOff = function (k) { return map[k] === 'false' || map[k] === false; };
 
+      /* [2026-05-12 미러링 분기] admin은 본인 페이지 영향 0, iframe 미러링(_preview=)만 강제 가동 */
+      var _bRole       = (window.AppState && window.AppState.role) || '';
+      var _bIsPreview  = window.location.search.indexOf('_preview=') !== -1;
+      var _bApplyHide  = (_bRole !== 'admin') || _bIsPreview;
+      if (!_bApplyHide) return; /* admin 본인 페이지 = ops_* / qna_visible 모두 skip */
+
       /* qna_visible OFF — 스마트 게시판 탭 강제 hide (role 무관) + 다른 탭 자동 활성 */
       if (isOff('qna_visible')) {
         var qnaBtn = document.querySelector('.pg-tab-btn[data-board="qna"]');
