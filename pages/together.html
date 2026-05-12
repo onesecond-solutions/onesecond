@@ -565,6 +565,314 @@
   #page-together .tg-modal-body { padding: 14px 16px; }
   #page-together .tg-comment-form { flex-direction: column; align-items: stretch; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   [2026-05-12 운영 콘솔 이식 Step 2] 2컬럼 grid + 현황판 + 실장님 공지 스타일 글쓰기
+   board.html .pg-console-grid / .pg-calendar-board / .write-overlay 패턴 차용
+════════════════════════════════════════════════════════════ */
+
+/* ── 2컬럼 grid (68:32, board.html 정합) ── */
+#page-together .tg-console-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 68fr) minmax(0, 32fr);
+  gap: var(--space-4, 16px);
+  align-items: start;
+  margin-bottom: var(--space-4, 16px);
+}
+#page-together .tg-console-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+#page-together .tg-console-main > .tg-actionbar,
+#page-together .tg-console-main > .pg-tab-block,
+#page-together .tg-console-main > .pg-content-block { margin: 0; }
+#page-together .tg-console-side { min-width: 0; }
+
+@media (max-width: 1024px) {
+  #page-together .tg-console-grid { grid-template-columns: 1fr; }
+  #page-together .tg-console-side { order: 1; }
+  #page-together .tg-console-main { order: 2; }
+}
+
+/* ── 현황판 박스 (board .pg-calendar-board 패턴 차용) ── */
+#page-together .tg-status-board {
+  padding: var(--space-4, 16px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
+}
+#page-together .tg-status-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-3, 12px);
+  padding-bottom: var(--space-3, 12px);
+  border-bottom: 1px dashed var(--color-border);
+}
+#page-together .tg-status-icon { font-size: 1.05em; }
+#page-together .tg-status-title {
+  font-size: 0.9375em;
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+#page-together .tg-status-sub {
+  font-size: 0.75em;
+  color: var(--color-text-tertiary);
+  margin-left: auto;
+  font-weight: var(--fw-medium, 500);
+}
+#page-together .tg-status-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2, 8px);
+}
+#page-together .tg-status-item {
+  position: relative;
+  display: flex;
+  gap: var(--space-3, 12px);
+  align-items: center;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+#page-together .tg-status-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 2px;
+  background: transparent;
+}
+#page-together .tg-status-stage {
+  flex: 0 0 48px;
+  text-align: center;
+  padding-right: var(--space-3, 12px);
+  border-right: 1px solid var(--color-border);
+}
+#page-together .tg-status-stage-label {
+  font-size: 0.75em;
+  font-weight: var(--fw-bold, 700);
+  color: var(--color-text-secondary);
+}
+#page-together .tg-status-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-width: 0;
+}
+#page-together .tg-status-event {
+  flex: 1;
+  font-size: 0.875em;
+  color: var(--color-text-primary);
+  font-weight: var(--fw-semibold, 600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#page-together .tg-status-tag {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.6875em;
+  font-weight: var(--fw-bold, 700);
+  letter-spacing: 0.02em;
+}
+/* 단계별 색상 (요청=blue / 진행=amber / 완료=green) */
+#page-together .tg-status-item[data-tg-status="requested"]               { background: rgba(59, 130, 246, 0.05); }
+#page-together .tg-status-item[data-tg-status="requested"]::before        { background: rgba(59, 130, 246, 0.65); }
+#page-together .tg-status-item[data-tg-status="requested"] .tg-status-stage { border-right-color: rgba(59, 130, 246, 0.30); }
+#page-together .tg-status-item[data-tg-status="requested"]:hover         { background: rgba(59, 130, 246, 0.08); }
+#page-together .tg-status-tag-requested                                  { background: rgba(59, 130, 246, 0.10); color: #1D4ED8; }
+
+#page-together .tg-status-item[data-tg-status="in_progress"]             { background: rgba(245, 158, 11, 0.05); }
+#page-together .tg-status-item[data-tg-status="in_progress"]::before      { background: rgba(245, 158, 11, 0.65); }
+#page-together .tg-status-item[data-tg-status="in_progress"] .tg-status-stage { border-right-color: rgba(245, 158, 11, 0.30); }
+#page-together .tg-status-item[data-tg-status="in_progress"]:hover       { background: rgba(245, 158, 11, 0.08); }
+#page-together .tg-status-tag-in_progress                                { background: rgba(245, 158, 11, 0.10); color: #B45309; }
+
+#page-together .tg-status-item[data-tg-status="completed"]               { background: rgba(34, 197, 94, 0.05); }
+#page-together .tg-status-item[data-tg-status="completed"]::before        { background: rgba(34, 197, 94, 0.65); }
+#page-together .tg-status-item[data-tg-status="completed"] .tg-status-stage { border-right-color: rgba(34, 197, 94, 0.30); }
+#page-together .tg-status-item[data-tg-status="completed"]:hover         { background: rgba(34, 197, 94, 0.08); }
+#page-together .tg-status-tag-completed                                  { background: rgba(34, 197, 94, 0.10); color: #15803D; }
+
+/* ── 글쓰기 오버레이 (board .write-overlay 패턴 차용, body-level 셀렉터) ── */
+.tg-write-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.tg-write-overlay.active { display: flex; }
+.tg-write-modal {
+  background: #ffffff;
+  border-radius: var(--radius-lg, 16px);
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.tg-write-header {
+  background: #ffffff;
+  padding: 1.25rem 1.75rem;
+  border-bottom: 1px solid var(--color-border, #E5E7EB);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.tg-write-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+  margin: 0;
+}
+.tg-write-close {
+  background: transparent;
+  border: none;
+  font-size: 1.6rem;
+  color: var(--color-text-tertiary, #9CA3AF);
+  cursor: pointer;
+  padding: 0.1rem 0.5rem;
+  line-height: 1;
+  border-radius: var(--radius-sm, 8px);
+}
+.tg-write-close:hover {
+  color: var(--color-text-primary, #111827);
+  background: var(--color-surface-2, #F5F5F4);
+}
+.tg-write-body {
+  background: var(--color-surface-2, #F5F5F4);
+  padding: 1.25rem 1.75rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.tg-write-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.tg-wfn-info-box {
+  background: rgba(212, 132, 90, 0.10);
+  border: 1px solid rgba(212, 132, 90, 0.30);
+  border-radius: var(--radius-sm, 8px);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-brand, #A0522D);
+}
+.tg-wfn-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+}
+.tg-wfn-left,
+.tg-wfn-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.tg-wfn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.tg-wfn-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+}
+.tg-wfn-label em {
+  color: #C53030;
+  font-style: normal;
+  margin-left: 0.25rem;
+}
+.tg-wfn-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #4B5563);
+  margin-top: 0.2rem;
+}
+.tg-write-form select,
+.tg-write-form input,
+.tg-write-form textarea {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border, #E5E7EB);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--color-text-primary, #111827);
+}
+.tg-write-form textarea {
+  resize: vertical;
+  min-height: 9rem;
+}
+.tg-write-form select:focus,
+.tg-write-form input:focus,
+.tg-write-form textarea:focus {
+  outline: none;
+  border-color: var(--color-brand, #A0522D);
+  box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.12);
+}
+.tg-write-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border, #E5E7EB);
+}
+.tg-wfn-btn-primary,
+.tg-wfn-btn-secondary {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+.tg-wfn-btn-primary {
+  background: var(--color-accent, #D4845A);
+  color: #ffffff;
+}
+.tg-wfn-btn-primary:hover { background: var(--color-brand-light, #C4733A); }
+.tg-wfn-btn-primary:disabled { background: #cccccc; cursor: not-allowed; }
+.tg-wfn-btn-secondary {
+  background: transparent;
+  color: var(--color-text-secondary, #4B5563);
+  border-color: var(--color-border, #E5E7EB);
+}
+.tg-wfn-btn-secondary:hover {
+  border-color: var(--color-brand, #A0522D);
+  color: var(--color-text-primary, #111827);
+}
+@media (max-width: 640px) {
+  .tg-write-overlay { padding: 0; align-items: flex-end; }
+  .tg-write-modal {
+    max-width: 100%;
+    border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
+    max-height: 95vh;
+  }
+  .tg-write-header, .tg-write-body { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .tg-wfn-grid { grid-template-columns: 1fr; gap: 0.85rem; }
+}
 </style>
 
 
@@ -585,101 +893,171 @@
     </div>
   </div>
 
-  <!-- ② 액션바 (글쓰기 버튼) -->
-  <div class="tg-actionbar">
-    <button class="tg-write-btn" type="button" onclick="window.togetherOpenWrite()">
-      <span class="tg-write-ico">+</span>
-      <span>새 글 작성</span>
-    </button>
-  </div>
+  <!-- [2026-05-12 운영 콘솔 Step 2] 2컬럼 grid (좌 게시판 본체 / 우 현황판) -->
+  <div class="tg-console-grid">
+    <main class="tg-console-main">
 
-  <!-- ③ 탭바 -->
-  <div class="pg-tab-block">
-    <div class="pg-tab-bar" id="together-tab-bar">
-      <button class="pg-tab-btn active" type="button" data-tab="all"
-              onclick="window.togetherSwitchTab('all')">전체</button>
-      <button class="pg-tab-btn" type="button" data-tab="feature_request"
-              onclick="window.togetherSwitchTab('feature_request')">기능 요청</button>
-      <button class="pg-tab-btn" type="button" data-tab="review"
-              onclick="window.togetherSwitchTab('review')">사용 후기</button>
-      <button class="pg-tab-btn" type="button" data-tab="bug_report"
-              onclick="window.togetherSwitchTab('bug_report')">⚠️ 전산장애 신고</button>
-      <button class="pg-tab-btn" type="button" data-tab="free"
-              onclick="window.togetherSwitchTab('free')">자유 공유</button>
-    </div>
-  </div>
-
-  <!-- ④ 콘텐츠 블록 -->
-  <div class="pg-content-block">
-    <div class="pg-body" id="together-body">
-
-      <!-- 전체 패널 (기본 활성) -->
-      <div class="pg-tab-panel active" id="together-tab-all">
-        <div class="pg-loading">불러오는 중...</div>
+      <!-- ② 액션바 (글쓰기 버튼) -->
+      <div class="tg-actionbar">
+        <button class="tg-write-btn" type="button" onclick="window.togetherOpenWrite()">
+          <span class="tg-write-ico">+</span>
+          <span>새 글 작성</span>
+        </button>
       </div>
 
-      <!-- 기능 요청 패널 -->
-      <div class="pg-tab-panel" id="together-tab-feature_request"></div>
+      <!-- ③ 탭바 -->
+      <div class="pg-tab-block">
+        <div class="pg-tab-bar" id="together-tab-bar">
+          <button class="pg-tab-btn active" type="button" data-tab="all"
+                  onclick="window.togetherSwitchTab('all')">전체</button>
+          <button class="pg-tab-btn" type="button" data-tab="feature_request"
+                  onclick="window.togetherSwitchTab('feature_request')">기능 요청</button>
+          <button class="pg-tab-btn" type="button" data-tab="review"
+                  onclick="window.togetherSwitchTab('review')">사용 후기</button>
+          <button class="pg-tab-btn" type="button" data-tab="bug_report"
+                  onclick="window.togetherSwitchTab('bug_report')">⚠️ 전산장애 신고</button>
+          <button class="pg-tab-btn" type="button" data-tab="free"
+                  onclick="window.togetherSwitchTab('free')">자유 공유</button>
+        </div>
+      </div>
 
-      <!-- 사용 후기 패널 -->
-      <div class="pg-tab-panel" id="together-tab-review"></div>
+      <!-- ④ 콘텐츠 블록 -->
+      <div class="pg-content-block">
+        <div class="pg-body" id="together-body">
 
-      <!-- 전산장애 신고 패널 -->
-      <div class="pg-tab-panel" id="together-tab-bug_report"></div>
+          <!-- 전체 패널 (기본 활성) -->
+          <div class="pg-tab-panel active" id="together-tab-all">
+            <div class="pg-loading">불러오는 중...</div>
+          </div>
 
-      <!-- 자유 공유 패널 -->
-      <div class="pg-tab-panel" id="together-tab-free"></div>
+          <!-- 기능 요청 패널 -->
+          <div class="pg-tab-panel" id="together-tab-feature_request"></div>
 
-    </div>
-  </div>
+          <!-- 사용 후기 패널 -->
+          <div class="pg-tab-panel" id="together-tab-review"></div>
+
+          <!-- 전산장애 신고 패널 -->
+          <div class="pg-tab-panel" id="together-tab-bug_report"></div>
+
+          <!-- 자유 공유 패널 -->
+          <div class="pg-tab-panel" id="together-tab-free"></div>
+
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ⑤ 우측 현황판 (board.html .pg-calendar-board 패턴 차용, placeholder 4건) -->
+    <aside class="tg-console-side" aria-label="개선 요청 현황판">
+      <section class="tg-status-board" aria-label="개선 요청 현황">
+        <div class="tg-status-header">
+          <span class="tg-status-icon">🛠️</span>
+          <h3 class="tg-status-title">개선 요청 현황</h3>
+          <span class="tg-status-sub">v0 · 4건</span>
+        </div>
+        <div class="tg-status-list">
+
+          <div class="tg-status-item" data-tg-status="requested">
+            <div class="tg-status-stage"><span class="tg-status-stage-label">신규</span></div>
+            <div class="tg-status-body">
+              <div class="tg-status-event">검색창 키워드 자동완성 보강</div>
+              <span class="tg-status-tag tg-status-tag-requested">요청</span>
+            </div>
+          </div>
+
+          <div class="tg-status-item" data-tg-status="in_progress">
+            <div class="tg-status-stage"><span class="tg-status-stage-label">진행</span></div>
+            <div class="tg-status-body">
+              <div class="tg-status-event">모바일 푸시 알림 톤 개선</div>
+              <span class="tg-status-tag tg-status-tag-in_progress">반영중</span>
+            </div>
+          </div>
+
+          <div class="tg-status-item" data-tg-status="completed">
+            <div class="tg-status-stage"><span class="tg-status-stage-label">완료</span></div>
+            <div class="tg-status-body">
+              <div class="tg-status-event">A1 ⚠️ 전산장애신고 내부 전환</div>
+              <span class="tg-status-tag tg-status-tag-completed">완료</span>
+            </div>
+          </div>
+
+          <div class="tg-status-item" data-tg-status="completed">
+            <div class="tg-status-stage"><span class="tg-status-stage-label">완료</span></div>
+            <div class="tg-status-body">
+              <div class="tg-status-event">함께해요 카드 라벨 정렬</div>
+              <span class="tg-status-tag tg-status-tag-completed">완료</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </aside>
+
+  </div><!-- /.tg-console-grid -->
 
   <!-- ⑤ 푸터 블록 -->
   <div class="pg-footer-block">
     <div class="pg-bottom-bar">원세컨드는 여러분의 의견으로 자랍니다</div>
   </div>
 
-  <!-- ⑥ 글쓰기 모달 (3-2) -->
-  <div class="tg-overlay" id="together-write-overlay" onclick="window.togetherHandleOverlayClick(event, 'write')">
-    <div class="tg-modal" role="dialog" aria-labelledby="together-write-title">
-      <div class="tg-modal-header">
-        <div class="tg-modal-title" id="together-write-title">글쓰기</div>
-        <button type="button" class="tg-modal-close" aria-label="닫기"
-                onclick="window.togetherCloseWrite()">✕</button>
+  <!-- ⑥ 글쓰기 오버레이 (실장님 공지 스타일 이식, 2026-05-12 박음) -->
+  <div class="tg-write-overlay" id="together-write-overlay"
+       onclick="if(event.target===this) window.togetherCloseWrite()">
+    <div class="tg-write-modal" role="dialog" aria-labelledby="together-write-title" aria-modal="true">
+      <div class="tg-write-header">
+        <h2 class="tg-write-title" id="together-write-title">🤝 함께해요 — 새 글 작성</h2>
+        <button class="tg-write-close" type="button"
+                onclick="window.togetherCloseWrite()" aria-label="닫기">×</button>
       </div>
-      <div class="tg-modal-body">
-        <div class="tg-form-field">
-          <label class="tg-form-label" for="tg-form-category">
-            카테고리 <span class="tg-req">*</span>
-          </label>
-          <select class="tg-form-select" id="tg-form-category">
-            <option value="feature_request">기능 요청</option>
-            <option value="review">사용 후기</option>
-            <option value="bug_report">⚠️ 전산장애 신고</option>
-            <option value="free">자유 공유</option>
-          </select>
-        </div>
-        <div class="tg-form-field">
-          <label class="tg-form-label" for="tg-form-title">
-            제목 <span class="tg-req">*</span>
-          </label>
-          <input type="text" class="tg-form-input" id="tg-form-title"
-                 maxlength="100" placeholder="간단히 적어주세요">
-          <div class="tg-form-hint">2~100자</div>
-        </div>
-        <div class="tg-form-field">
-          <label class="tg-form-label" for="tg-form-content">
-            내용 <span class="tg-req">*</span>
-          </label>
-          <textarea class="tg-form-textarea" id="tg-form-content"
-                    maxlength="5000" placeholder="편하게 써주세요"></textarea>
-          <div class="tg-form-hint">10~5000자</div>
-        </div>
-      </div>
-      <div class="tg-modal-footer">
-        <button type="button" class="tg-btn tg-btn-secondary"
-                onclick="window.togetherCloseWrite()">취소</button>
-        <button type="button" class="tg-btn tg-btn-primary" id="tg-form-submit"
-                onclick="window.togetherSubmitWrite()">저장</button>
+      <div class="tg-write-body">
+        <form class="tg-write-form" onsubmit="event.preventDefault(); window.togetherSubmitWrite();">
+          <div class="tg-wfn-info-box">
+            💬 솔직한 의견을 기다립니다. 민감한 개인정보(이름·연락처·계약번호 등)는 자제해 주세요.
+          </div>
+          <div class="tg-wfn-grid">
+            <div class="tg-wfn-left">
+              <label class="tg-wfn-field">
+                <span class="tg-wfn-label">무엇을 해결해 드릴까요? <em>*</em></span>
+                <select id="tg-form-category" required>
+                  <option value="feature_request">🛠️ 기능 요청</option>
+                  <option value="review">✍️ 사용 후기</option>
+                  <option value="bug_report">⚠️ 전산장애 신고</option>
+                  <option value="free">💬 자유 공유</option>
+                </select>
+              </label>
+              <label class="tg-wfn-field">
+                <span class="tg-wfn-label">제목 <em>*</em></span>
+                <input type="text" id="tg-form-title" maxlength="100" required
+                       placeholder="간단히 적어주세요">
+                <span class="tg-wfn-hint">2~100자</span>
+              </label>
+              <label class="tg-wfn-field">
+                <span class="tg-wfn-label">내용 <em>*</em></span>
+                <textarea id="tg-form-content" maxlength="5000" rows="8" required
+                          placeholder="편하게 써주세요"></textarea>
+                <span class="tg-wfn-hint">10~5000자</span>
+              </label>
+            </div>
+            <div class="tg-wfn-right">
+              <label class="tg-wfn-field">
+                <span class="tg-wfn-label">함께 봤으면 하는 분 <em>*</em></span>
+                <select id="tg-form-audience" required>
+                  <option value="all" selected>전체</option>
+                  <option value="manager_up">매니저 이상</option>
+                  <option value="branch_up">지점장 이상</option>
+                  <option value="admin_only">운영진(admin)만</option>
+                  <option value="my_team">본인 팀</option>
+                </select>
+                <span class="tg-wfn-hint">기본값 = 전체 (RLS 비공개 정책은 5/18 후 박음)</span>
+              </label>
+            </div>
+          </div>
+          <div class="tg-write-actions">
+            <button type="button" class="tg-wfn-btn-secondary"
+                    onclick="window.togetherCloseWrite()">취소</button>
+            <button type="submit" class="tg-wfn-btn-primary" id="tg-form-submit">등록하기</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -863,13 +1241,17 @@
     if (!requireLogin('글쓰기')) return;
     var ov = document.getElementById('together-write-overlay');
     if (!ov) return;
-    document.getElementById('tg-form-category').value = 'feature_request';
-    document.getElementById('tg-form-title').value = '';
-    document.getElementById('tg-form-content').value = '';
+    var catEl   = document.getElementById('tg-form-category');
+    var titEl   = document.getElementById('tg-form-title');
+    var conEl   = document.getElementById('tg-form-content');
+    var audEl   = document.getElementById('tg-form-audience');
+    if (catEl) catEl.value = 'feature_request';
+    if (titEl) titEl.value = '';
+    if (conEl) conEl.value = '';
+    if (audEl) audEl.value = 'all';
     ov.classList.add('active');
     setTimeout(function () {
-      var t = document.getElementById('tg-form-title');
-      if (t) t.focus();
+      if (titEl) titEl.focus();
     }, 50);
   };
 
@@ -897,9 +1279,12 @@
     if (title.length < 2 || title.length > 100) { alert('제목은 2~100자로 입력해 주세요.'); return; }
     if (content.length < 10 || content.length > 5000) { alert('내용은 10~5000자로 입력해 주세요.'); return; }
 
+    var audienceEl = document.getElementById('tg-form-audience');
+    var audience   = audienceEl ? (audienceEl.value || 'all') : 'all';
+
     _submittingWrite = true;
     var btn = document.getElementById('tg-form-submit');
-    if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '등록 중...'; }
 
     try {
       var payload = {
@@ -909,6 +1294,7 @@
         board_type: 'together',
         author_name: getAuthorName(),
         author_id: window.AppState.userId,
+        audience_target: audience,
         is_notice: false,
         is_hidden: false
       };
@@ -928,10 +1314,10 @@
       await loadTogetherPosts();
     } catch (e) {
       console.error('[together] save post error:', e);
-      alert('저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      alert('등록에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       _submittingWrite = false;
-      if (btn) { btn.disabled = false; btn.textContent = '저장'; }
+      if (btn) { btn.disabled = false; btn.textContent = '등록하기'; }
     }
   };
 
