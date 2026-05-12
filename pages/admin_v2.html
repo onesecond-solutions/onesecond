@@ -1453,6 +1453,111 @@ body.adm-active { overflow: hidden !important; }
   color: var(--admin-text-tertiary);
   font-size: 0.92em;
 }
+
+/* ════════════════════════════════════════════════════════════
+   [2026-05-12 admin 토글 Step 2/3] 운영 레이어 토글 UI
+════════════════════════════════════════════════════════════ */
+.adm-toggle-group {
+  background: var(--admin-surface, #fff);
+  border: 1px solid var(--admin-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.adm-toggle-group-title {
+  font-size: 0.92em;
+  font-weight: 700;
+  color: var(--admin-text-primary, #111);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--admin-border, #e5e7eb);
+}
+.adm-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--admin-border, #f0f0f0);
+}
+.adm-toggle-row:last-child { border-bottom: none; }
+.adm-toggle-info {
+  flex: 1;
+  min-width: 0;
+}
+.adm-toggle-label {
+  font-size: 0.95em;
+  font-weight: 700;
+  color: var(--admin-text-primary, #111);
+  margin-bottom: 4px;
+}
+.adm-toggle-desc {
+  font-size: 0.8em;
+  color: var(--admin-text-secondary, #555);
+  line-height: 1.5;
+}
+.adm-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.adm-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.adm-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: 0.25s;
+}
+.adm-toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: 0.25s;
+}
+.adm-toggle-switch input:checked + .adm-toggle-slider {
+  background-color: #22c55e;
+}
+.adm-toggle-switch input:checked + .adm-toggle-slider::before {
+  transform: translateX(20px);
+}
+.adm-toggle-switch input:disabled + .adm-toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.adm-toggle-status {
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--admin-text-tertiary, #888);
+  min-width: 50px;
+  text-align: right;
+}
+.adm-toggle-status[data-toggle-state="on"]  { color: #15803d; }
+.adm-toggle-status[data-toggle-state="off"] { color: #9ca3af; }
+.adm-toggle-footer {
+  padding: 12px 16px;
+  background: var(--admin-surface-2, #f5f5f4);
+  border-radius: 8px;
+}
+.adm-toggle-footer-note {
+  font-size: 0.78em;
+  color: var(--admin-text-secondary, #555);
+}
+@media (max-width: 640px) {
+  .adm-toggle-row { flex-wrap: wrap; gap: 10px; }
+  .adm-toggle-info { flex: 1 1 100%; }
+}
 </style>
 
 
@@ -1965,6 +2070,117 @@ body.adm-active { overflow: hidden !important; }
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <!-- 2~8. 7개 빈 셸 (Phase C에서 mock 데이터로 채움)                       -->
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- [2026-05-12 admin 토글 Step 2/3] OPERATIONS — 운영 레이어 토글 본진     -->
+    <!-- DB: app_settings (key/value 패턴 정합) — UPSERT 7건                    -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div class="adm-view" data-view="operations">
+
+      <div class="adm-section-head">
+        <div>
+          <div class="adm-section-title">🎛️ 운영 레이어 토글</div>
+          <div class="adm-section-desc">기능별 ON/OFF 다이얼. 토글 변경 즉시 페이지에 반영됩니다.</div>
+        </div>
+      </div>
+
+      <div class="adm-toggle-group">
+        <div class="adm-toggle-group-title">기능 토글 3종 (Step 2)</div>
+
+        <div class="adm-toggle-row" data-toggle-key="manager_lounge_enabled">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">☕ 매니저 라운지</div>
+            <div class="adm-toggle-desc">실장님/매니저급만 진입하는 라운지 탭. OFF 시 게시판 탭바에서 숨김.</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="manager_lounge_enabled" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="manager_lounge_enabled">로딩 중...</span>
+        </div>
+
+        <div class="adm-toggle-row" data-toggle-key="insurer_unified_view">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">🏦 보험사 통합 view</div>
+            <div class="adm-toggle-desc">insurer_* 사용자의 보험사 게시판 통합 보기. OFF 시 회사 단위 분리 view.</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="insurer_unified_view" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="insurer_unified_view">로딩 중...</span>
+        </div>
+
+        <div class="adm-toggle-row" data-toggle-key="hub_public">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">🌐 허브 게시판 공개</div>
+            <div class="adm-toggle-desc">팀·지점 우수 글 공개 게시판. OFF 시 admin만 진입 가능.</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="hub_public" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="hub_public">로딩 중...</span>
+        </div>
+      </div>
+
+      <div class="adm-toggle-group">
+        <div class="adm-toggle-group-title">운영 흐름 OS 4 레이어 (Step 3)</div>
+
+        <div class="adm-toggle-row" data-toggle-key="ops_organization">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">👥 조직 운영 v1</div>
+            <div class="adm-toggle-desc">사이드바 운영 카테고리 + team-management.html 가시. OFF 시 모두 hide.</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="ops_organization" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="ops_organization">로딩 중...</span>
+        </div>
+
+        <div class="adm-toggle-row" data-toggle-key="ops_notify">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">🔔 알림 v1 3단</div>
+            <div class="adm-toggle-desc">A1 🔔 badge + C영역 운영 신호 카드 + 게시판 집계 바. OFF 시 모두 hide.</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="ops_notify" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="ops_notify">로딩 중...</span>
+        </div>
+
+        <div class="adm-toggle-row" data-toggle-key="ops_calendar">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">📅 운영 캘린더 v1</div>
+            <div class="adm-toggle-desc">게시판 우측 운영 캘린더 보드. OFF 시 hide (2컬럼 → 1컬럼).</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="ops_calendar" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="ops_calendar">로딩 중...</span>
+        </div>
+
+        <div class="adm-toggle-row" data-toggle-key="ops_console">
+          <div class="adm-toggle-info">
+            <div class="adm-toggle-label">🛠️ 운영 콘솔 v2</div>
+            <div class="adm-toggle-desc">게시판 2컬럼 grid + 탭바 2줄 hierarchy. OFF 시 1줄 + 1컬럼 복귀.</div>
+          </div>
+          <label class="adm-toggle-switch">
+            <input type="checkbox" data-toggle-key="ops_console" onchange="window.admToggleOperation(this)">
+            <span class="adm-toggle-slider"></span>
+          </label>
+          <span class="adm-toggle-status" data-toggle-status="ops_console">로딩 중...</span>
+        </div>
+      </div>
+
+      <div class="adm-toggle-footer">
+        <span class="adm-toggle-footer-note">💡 DB 저장 = app_settings 테이블 (key/value 패턴). 토글 변경 시 즉시 UPSERT.</span>
+      </div>
+
+    </div>
 
     <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <!-- 2. USERS (Phase D-1 실 데이터 — js/admin_v2.js)                       -->
@@ -2697,16 +2913,95 @@ body.adm-active { overflow: hidden !important; }
   }, 0);
 
   // ── 섹션 전환 (in-document SPA) ─────────────────────────────────────
+  /* ════════════════════════════════════════════════════════════
+     [2026-05-12 admin 토글 Step 2/3] 운영 레이어 토글 가동
+     ▸ DB: app_settings (key/value 텍스트 패턴, board.html _loadBoardTabSettings 정합)
+     ▸ 7 토글 키: manager_lounge_enabled / insurer_unified_view / hub_public
+                  / ops_organization / ops_notify / ops_calendar / ops_console
+     ▸ UPSERT 패턴: DELETE → INSERT (admin_v2.js banner/menu_b/gate 패턴 정합)
+  ════════════════════════════════════════════════════════════ */
+  var _admOpsKeys = [
+    'manager_lounge_enabled', 'insurer_unified_view', 'hub_public',
+    'ops_organization', 'ops_notify', 'ops_calendar', 'ops_console'
+  ];
+
+  window.admLoadOperationsToggles = async function () {
+    if (!window.db || !window.db.fetch) return;
+    try {
+      var keysQuery = _admOpsKeys.join(',');
+      var res = await window.db.fetch('/rest/v1/app_settings?key=in.(' + keysQuery + ')&select=key,value');
+      var rows = res.ok ? await res.json() : [];
+      var map = {};
+      rows.forEach(function (r) { map[r.key] = r.value; });
+      _admOpsKeys.forEach(function (k) {
+        var val   = map[k];
+        var isOn  = (val === 'true' || val === true);
+        var input = document.querySelector('input[data-toggle-key="' + k + '"]');
+        var stat  = document.querySelector('[data-toggle-status="' + k + '"]');
+        if (input) {
+          input.checked = isOn;
+          input.disabled = false;
+        }
+        if (stat) {
+          stat.textContent = isOn ? 'ON' : 'OFF';
+          stat.setAttribute('data-toggle-state', isOn ? 'on' : 'off');
+        }
+      });
+    } catch (e) {
+      console.error('[adm ops] 토글 로드 실패:', e);
+    }
+  };
+
+  window.admToggleOperation = async function (inputEl) {
+    if (!inputEl) return;
+    var key = inputEl.getAttribute('data-toggle-key');
+    if (!key) return;
+    var newVal = inputEl.checked ? 'true' : 'false';
+    var stat   = document.querySelector('[data-toggle-status="' + key + '"]');
+    inputEl.disabled = true;
+    if (stat) stat.textContent = '저장 중...';
+
+    try {
+      /* UPSERT 패턴 — admin_v2.js banner/menu_b 정합 */
+      var delRes = await window.db.fetch('/rest/v1/app_settings?key=eq.' + encodeURIComponent(key), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!delRes.ok && delRes.status !== 404) {
+        throw new Error('DELETE ' + delRes.status);
+      }
+      var insRes = await window.db.fetch('/rest/v1/app_settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ key: key, value: newVal, group_name: 'operations' })
+      });
+      if (!insRes.ok) throw new Error('INSERT ' + insRes.status);
+
+      var isOn = (newVal === 'true');
+      if (stat) {
+        stat.textContent = isOn ? 'ON' : 'OFF';
+        stat.setAttribute('data-toggle-state', isOn ? 'on' : 'off');
+      }
+    } catch (e) {
+      console.error('[adm ops] 토글 저장 실패:', e);
+      alert('토글 저장 실패: ' + (e.message || e));
+      inputEl.checked = !inputEl.checked; /* 복귀 */
+    } finally {
+      inputEl.disabled = false;
+    }
+  };
+
   var VIEW_LABELS = {
-    dashboard: { breadcrumb: ['ADMIN', '대시보드', '전체 개요'],   menuLabel: '대시보드' },
-    users:     { breadcrumb: ['ADMIN', '사용자', '관리'],          menuLabel: '사용자 관리' },
-    content:   { breadcrumb: ['ADMIN', '콘텐츠', '관리'],          menuLabel: '콘텐츠 관리' },
-    board:     { breadcrumb: ['ADMIN', '게시판', '관리'],          menuLabel: '게시판 관리' },
-    analytics: { breadcrumb: ['ADMIN', '통계·분석', '대시보드'],   menuLabel: '통계·분석' },
-    notice:    { breadcrumb: ['ADMIN', '운영', '공지·배너'],       menuLabel: '공지·배너' },
-    logs:      { breadcrumb: ['ADMIN', '로그', '전체'],            menuLabel: '로그' },
-    billing:   { breadcrumb: ['ADMIN', '결제', '관리'],            menuLabel: '결제·플랜' },
-    settings:  { breadcrumb: ['ADMIN', '운영', '화면설정'],        menuLabel: '화면설정' }
+    dashboard:  { breadcrumb: ['ADMIN', '대시보드', '전체 개요'],   menuLabel: '대시보드' },
+    operations: { breadcrumb: ['ADMIN', '운영', '레이어 토글'],     menuLabel: '운영 레이어' },
+    users:      { breadcrumb: ['ADMIN', '사용자', '관리'],          menuLabel: '사용자 관리' },
+    content:    { breadcrumb: ['ADMIN', '콘텐츠', '관리'],          menuLabel: '콘텐츠 관리' },
+    board:      { breadcrumb: ['ADMIN', '게시판', '관리'],          menuLabel: '게시판 관리' },
+    analytics:  { breadcrumb: ['ADMIN', '통계·분석', '대시보드'],   menuLabel: '통계·분석' },
+    notice:     { breadcrumb: ['ADMIN', '운영', '공지·배너'],       menuLabel: '공지·배너' },
+    logs:       { breadcrumb: ['ADMIN', '로그', '전체'],            menuLabel: '로그' },
+    billing:    { breadcrumb: ['ADMIN', '결제', '관리'],            menuLabel: '결제·플랜' },
+    settings:   { breadcrumb: ['ADMIN', '운영', '화면설정'],        menuLabel: '화면설정' }
   };
 
   window.admSwitchView = function (viewKey) {
@@ -2747,7 +3042,9 @@ body.adm-active { overflow: hidden !important; }
     try { history.replaceState(null, '', '#admin/' + viewKey); } catch(e) {}
 
     // Phase D 진입 분기 — view별 데이터 로드 (admin_v2.js 정의 함수 호출, race-safe 가드)
-    if (viewKey === 'users' && typeof window.admLoadUsers === 'function') {
+    if (viewKey === 'operations' && typeof window.admLoadOperationsToggles === 'function') {
+      window.admLoadOperationsToggles();
+    } else if (viewKey === 'users' && typeof window.admLoadUsers === 'function') {
       window.admLoadUsers();
     } else if (viewKey === 'content' && typeof window.admLoadContent === 'function') {
       window.admLoadContent();
