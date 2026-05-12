@@ -1918,6 +1918,27 @@
             </label>
           </div>
         </div>
+        <label class="wfn-field">
+          <span class="wfn-label">📎 첨부파일 <span class="wfn-optional">(선택 · 최대 3개 · 파일당 5MB)</span></span>
+          <div class="attach-zone" id="attach-incoming-zone">
+            <label class="attach-trigger" for="attach-incoming-input">
+              <div class="attach-trigger-icon">📎</div>
+              <div class="attach-trigger-text">
+                <strong>파일 첨부하기</strong>
+                <span class="attach-trigger-sub">JPG·PNG·GIF·PDF·XLS·XLSX</span>
+              </div>
+            </label>
+            <input type="file" id="attach-incoming-input" class="attach-file-input"
+                   multiple
+                   accept="image/jpeg,image/png,image/gif,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                   onchange="window.wfnOnAttachChange(this, 'incoming')">
+            <div class="upload-progress" id="attach-incoming-progress">
+              <div class="upload-progress-bar" id="attach-incoming-progress-bar"></div>
+            </div>
+            <div class="attach-preview-list" id="attach-incoming-preview"></div>
+            <div class="attach-count-note" id="attach-incoming-count"></div>
+          </div>
+        </label>
         <div class="write-form-notice-actions">
           <button type="button" class="wfn-btn-secondary" onclick="window.cancelIncomingForm()">← 카테고리 다시 선택</button>
           <button type="submit" class="wfn-btn-primary">등록하기</button>
@@ -1999,6 +2020,27 @@
             </label>
           </div>
         </div>
+        <label class="wfn-field">
+          <span class="wfn-label">📎 첨부파일 <span class="wfn-optional">(선택 · 최대 3개 · 파일당 5MB)</span></span>
+          <div class="attach-zone" id="attach-product-zone">
+            <label class="attach-trigger" for="attach-product-input">
+              <div class="attach-trigger-icon">📎</div>
+              <div class="attach-trigger-text">
+                <strong>파일 첨부하기</strong>
+                <span class="attach-trigger-sub">JPG·PNG·GIF·PDF·XLS·XLSX</span>
+              </div>
+            </label>
+            <input type="file" id="attach-product-input" class="attach-file-input"
+                   multiple
+                   accept="image/jpeg,image/png,image/gif,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                   onchange="window.wfnOnAttachChange(this, 'product')">
+            <div class="upload-progress" id="attach-product-progress">
+              <div class="upload-progress-bar" id="attach-product-progress-bar"></div>
+            </div>
+            <div class="attach-preview-list" id="attach-product-preview"></div>
+            <div class="attach-count-note" id="attach-product-count"></div>
+          </div>
+        </label>
         <div class="write-form-notice-actions">
           <button type="button" class="wfn-btn-secondary" onclick="window.cancelProductForm()">← 카테고리 다시 선택</button>
           <button type="submit" class="wfn-btn-primary">등록하기</button>
@@ -2054,6 +2096,27 @@
             </label>
           </div>
         </div>
+        <label class="wfn-field">
+          <span class="wfn-label">📎 첨부파일 <span class="wfn-optional">(선택 · 최대 3개 · 파일당 5MB)</span></span>
+          <div class="attach-zone" id="attach-etc-zone">
+            <label class="attach-trigger" for="attach-etc-input">
+              <div class="attach-trigger-icon">📎</div>
+              <div class="attach-trigger-text">
+                <strong>파일 첨부하기</strong>
+                <span class="attach-trigger-sub">JPG·PNG·GIF·PDF·XLS·XLSX</span>
+              </div>
+            </label>
+            <input type="file" id="attach-etc-input" class="attach-file-input"
+                   multiple
+                   accept="image/jpeg,image/png,image/gif,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                   onchange="window.wfnOnAttachChange(this, 'etc')">
+            <div class="upload-progress" id="attach-etc-progress">
+              <div class="upload-progress-bar" id="attach-etc-progress-bar"></div>
+            </div>
+            <div class="attach-preview-list" id="attach-etc-preview"></div>
+            <div class="attach-count-note" id="attach-etc-count"></div>
+          </div>
+        </label>
         <div class="write-form-notice-actions">
           <button type="button" class="wfn-btn-secondary" onclick="window.cancelEtcForm()">← 카테고리 다시 선택</button>
           <button type="submit" class="wfn-btn-primary">등록하기</button>
@@ -2103,6 +2166,27 @@
             </label>
           </div>
         </div>
+        <label class="wfn-field">
+          <span class="wfn-label">📎 첨부파일 <span class="wfn-optional">(선택 · 최대 3개 · 파일당 5MB)</span></span>
+          <div class="attach-zone" id="attach-notice-zone">
+            <label class="attach-trigger" for="attach-notice-input">
+              <div class="attach-trigger-icon">📎</div>
+              <div class="attach-trigger-text">
+                <strong>파일 첨부하기</strong>
+                <span class="attach-trigger-sub">JPG·PNG·GIF·PDF·XLS·XLSX</span>
+              </div>
+            </label>
+            <input type="file" id="attach-notice-input" class="attach-file-input"
+                   multiple
+                   accept="image/jpeg,image/png,image/gif,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                   onchange="window.wfnOnAttachChange(this, 'notice')">
+            <div class="upload-progress" id="attach-notice-progress">
+              <div class="upload-progress-bar" id="attach-notice-progress-bar"></div>
+            </div>
+            <div class="attach-preview-list" id="attach-notice-preview"></div>
+            <div class="attach-count-note" id="attach-notice-count"></div>
+          </div>
+        </label>
         <div class="write-form-notice-actions">
           <button type="button" class="wfn-btn-secondary" onclick="window.cancelNoticeForm()">← 카테고리 다시 선택</button>
           <button type="submit" class="wfn-btn-primary">등록하기</button>
@@ -3154,6 +3238,123 @@ window.openWriteOverlay = function() {
   var overlay = document.getElementById('write-overlay');
   if (overlay) overlay.classList.add('active');
 };
+/* ════════════════════════════════════════════════════════════
+   [2026-05-12] wfn 첨부파일 — 신버전 #58 4 폼 (notice/incoming/product/etc) 공통
+   ▸ board_attachments 버킷 + posts.attachments(JSON) 컬럼 가동
+   ▸ 구버전 _attachFiles / onAttachFileChange 와 독립 (충돌 0)
+════════════════════════════════════════════════════════════ */
+var _wfnAttachFiles = [];
+var _WFN_FORM_KEYS  = ['notice','incoming','product','etc'];
+var _WFN_MAX        = 3;
+var _WFN_MAX_BYTES  = 5 * 1024 * 1024;
+
+function _wfnEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function _wfnRenderPreview(formKey) {
+  var preview = document.getElementById('attach-' + formKey + '-preview');
+  var count   = document.getElementById('attach-' + formKey + '-count');
+  var trigger = document.querySelector('#attach-' + formKey + '-zone .attach-trigger');
+  if (!preview) return;
+  preview.innerHTML = _wfnAttachFiles.map(function(f, idx) {
+    var sizeKb = Math.round(f.size / 1024);
+    var sizeStr = sizeKb > 1024 ? (sizeKb / 1024).toFixed(1) + ' MB' : sizeKb + ' KB';
+    var ico = /^image\//.test(f.type) ? '🖼️' : (f.type === 'application/pdf' ? '📕' : '📄');
+    return '<div class="attach-item">'
+         +   '<div class="attach-item-thumb">' + ico + '</div>'
+         +   '<div class="attach-item-info">'
+         +     '<div class="attach-item-name">' + _wfnEsc(f.name) + '</div>'
+         +     '<div class="attach-item-size">' + sizeStr + '</div>'
+         +   '</div>'
+         +   '<button type="button" class="attach-item-remove" '
+         +           'onclick="window.wfnRemoveAttach(\'' + formKey + '\', ' + idx + ')">×</button>'
+         + '</div>';
+  }).join('');
+  if (count) count.textContent = _wfnAttachFiles.length > 0 ? _wfnAttachFiles.length + '/' + _WFN_MAX + '개 첨부됨' : '';
+  if (trigger) trigger.style.display = _wfnAttachFiles.length >= _WFN_MAX ? 'none' : 'flex';
+}
+
+function _wfnSyncAllPreviews() {
+  _WFN_FORM_KEYS.forEach(function(k) { _wfnRenderPreview(k); });
+}
+
+window.wfnOnAttachChange = function(input, formKey) {
+  if (!input || !input.files) return;
+  for (var i = 0; i < input.files.length; i++) {
+    var f = input.files[i];
+    if (_wfnAttachFiles.length >= _WFN_MAX) { alert('최대 ' + _WFN_MAX + '개까지 첨부 가능합니다.'); break; }
+    if (f.size > _WFN_MAX_BYTES) { alert('파일당 최대 5MB입니다: ' + f.name); continue; }
+    _wfnAttachFiles.push(f);
+  }
+  input.value = '';
+  _wfnSyncAllPreviews();
+};
+
+window.wfnRemoveAttach = function(formKey, idx) {
+  _wfnAttachFiles.splice(idx, 1);
+  _wfnSyncAllPreviews();
+};
+
+function _wfnResetAttach() {
+  _wfnAttachFiles = [];
+  _WFN_FORM_KEYS.forEach(function(k) {
+    var preview = document.getElementById('attach-' + k + '-preview');
+    var count   = document.getElementById('attach-' + k + '-count');
+    var trigger = document.querySelector('#attach-' + k + '-zone .attach-trigger');
+    var bar     = document.getElementById('attach-' + k + '-progress');
+    var barInner= document.getElementById('attach-' + k + '-progress-bar');
+    if (preview) preview.innerHTML = '';
+    if (count) count.textContent = '';
+    if (trigger) trigger.style.display = 'flex';
+    if (bar) bar.classList.remove('active');
+    if (barInner) barInner.style.width = '0%';
+  });
+}
+
+async function _wfnUploadAttachments(postId, formKey) {
+  if (!_wfnAttachFiles.length) return [];
+  var bar      = document.getElementById('attach-' + formKey + '-progress');
+  var barInner = document.getElementById('attach-' + formKey + '-progress-bar');
+  if (bar) bar.classList.add('active');
+  var urls = [];
+  for (var i = 0; i < _wfnAttachFiles.length; i++) {
+    var f = _wfnAttachFiles[i];
+    var ext = f.name.split('.').pop();
+    var fileName = 'posts/' + postId + '_' + Date.now() + '_' + i + '.' + ext;
+    var res = await fetch(window.db.url('/storage/v1/object/board_attachments/' + fileName), {
+      method: 'POST',
+      headers: {
+        'apikey': window.db.key,
+        'Authorization': 'Bearer ' + window.db.getToken(),
+        'Content-Type': f.type,
+        'x-upsert': 'true'
+      },
+      body: f
+    });
+    if (res.ok) {
+      urls.push(window.db.url('/storage/v1/object/public/board_attachments/' + fileName));
+    } else {
+      console.warn('[wfn upload] 실패:', f.name, res.status);
+    }
+    if (barInner) barInner.style.width = Math.round((i + 1) / _wfnAttachFiles.length * 100) + '%';
+  }
+  if (bar) { bar.classList.remove('active'); if (barInner) barInner.style.width = '0%'; }
+  return urls;
+}
+
+async function _wfnPatchAttachments(postId, urls) {
+  if (!urls || !urls.length) return;
+  await window.db.fetch('/rest/v1/posts?id=eq.' + encodeURIComponent(postId), {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ attachments: JSON.stringify(urls) })
+  });
+}
+
 window.closeWriteOverlay = function() {
   var overlay = document.getElementById('write-overlay');
   if (overlay) overlay.classList.remove('active');
@@ -3181,6 +3382,7 @@ window.closeWriteOverlay = function() {
   if (infoBox) infoBox.style.display = 'none';
   var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
   if (cancelBtn) cancelBtn.textContent = '← 카테고리 다시 선택';
+  _wfnResetAttach();
 };
 /* ── 실장님 공지 글쓰기 진입 (manager_notice 모드, 4 카드 건너뛰고 바로 공지 폼) ── */
 window.openManagerNoticeOverlay = function() {
@@ -3224,6 +3426,7 @@ window.openManagerNoticeOverlay = function() {
 
   if (overlay) overlay.classList.add('active');
   if (titleEl) setTimeout(function(){ titleEl.focus(); }, 50);
+  _wfnResetAttach();
 };
 
 window.selectWriteCategory = function(category) {
@@ -3341,6 +3544,7 @@ window.cancelEtcForm = function() {
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+  _wfnResetAttach();
 };
 
 /* 기타 폼 제출 — posts INSERT (board_type='navigation', category='기타') */
@@ -3387,11 +3591,18 @@ window.submitEtcForm = async function() {
       audience_target: audience,
       responder_hint:  responder || null
     };
-    await window.db.fetch('/rest/v1/posts', {
+    var _wfnIns = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(postBody)
     });
+    if (!_wfnIns.ok) throw new Error('posts INSERT ' + _wfnIns.status);
+    var _wfnArr = await _wfnIns.json();
+    var _wfnPid = _wfnArr && _wfnArr[0] && _wfnArr[0].id;
+    if (_wfnPid && _wfnAttachFiles.length) {
+      var _wfnUrls = await _wfnUploadAttachments(_wfnPid, 'etc');
+      if (_wfnUrls && _wfnUrls.length) await _wfnPatchAttachments(_wfnPid, _wfnUrls);
+    }
     window.closeWriteOverlay();
     window.cancelEtcForm();
     if (typeof _loadPosts === 'function') _loadPosts();
@@ -3420,6 +3631,7 @@ window.cancelProductForm = function() {
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+  _wfnResetAttach();
 };
 
 /* 상품 폼 제출 — posts INSERT (board_type='navigation', category='상품') */
@@ -3479,11 +3691,18 @@ window.submitProductForm = async function() {
       insurer_target:    target,
       insurer_name:      (target === 'insurer_specific') ? insurer : null
     };
-    await window.db.fetch('/rest/v1/posts', {
+    var _wfnIns = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(postBody)
     });
+    if (!_wfnIns.ok) throw new Error('posts INSERT ' + _wfnIns.status);
+    var _wfnArr = await _wfnIns.json();
+    var _wfnPid = _wfnArr && _wfnArr[0] && _wfnArr[0].id;
+    if (_wfnPid && _wfnAttachFiles.length) {
+      var _wfnUrls = await _wfnUploadAttachments(_wfnPid, 'product');
+      if (_wfnUrls && _wfnUrls.length) await _wfnPatchAttachments(_wfnPid, _wfnUrls);
+    }
     window.closeWriteOverlay();
     window.cancelProductForm();
     if (typeof _loadPosts === 'function') _loadPosts();
@@ -3512,6 +3731,7 @@ window.cancelIncomingForm = function() {
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+  _wfnResetAttach();
 };
 
 /* 인수 폼 정규식 차단 3종 (spec §6 사고 위험 #1 v0 단계 = 4중 방어 중 (1)+(2)) */
@@ -3633,11 +3853,18 @@ window.submitIncomingForm = async function() {
       insurer_target:   target,
       insurer_name:     (target === 'insurer_specific') ? insurer : null
     };
-    await window.db.fetch('/rest/v1/posts', {
+    var _wfnIns = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(postBody)
     });
+    if (!_wfnIns.ok) throw new Error('posts INSERT ' + _wfnIns.status);
+    var _wfnArr = await _wfnIns.json();
+    var _wfnPid = _wfnArr && _wfnArr[0] && _wfnArr[0].id;
+    if (_wfnPid && _wfnAttachFiles.length) {
+      var _wfnUrls = await _wfnUploadAttachments(_wfnPid, 'incoming');
+      if (_wfnUrls && _wfnUrls.length) await _wfnPatchAttachments(_wfnPid, _wfnUrls);
+    }
     window.closeWriteOverlay();
     window.cancelIncomingForm();
     if (typeof _loadPosts === 'function') _loadPosts();
@@ -3664,6 +3891,7 @@ window.cancelNoticeForm = function() {
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
+  _wfnResetAttach();
 };
 
 /* 공지 폼 제출 — posts INSERT (board_type='navigation', category='공지') */
@@ -3720,11 +3948,18 @@ window.submitNoticeForm = async function() {
       comment_count:   0,
       audience_target: audience
     };
-    await window.db.fetch('/rest/v1/posts', {
+    var _wfnIns = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(postBody)
     });
+    if (!_wfnIns.ok) throw new Error('posts INSERT ' + _wfnIns.status);
+    var _wfnArr = await _wfnIns.json();
+    var _wfnPid = _wfnArr && _wfnArr[0] && _wfnArr[0].id;
+    if (_wfnPid && _wfnAttachFiles.length) {
+      var _wfnUrls = await _wfnUploadAttachments(_wfnPid, 'notice');
+      if (_wfnUrls && _wfnUrls.length) await _wfnPatchAttachments(_wfnPid, _wfnUrls);
+    }
     /* 성공 메시지 (모드별) — 모달 닫기 + 폼 reset 후 toast */
     var successMsg = boardType === 'manager_notice' ? '실장님 공지가 등록되었습니다.' : '공지가 등록되었습니다.';
     /* 모달 닫음 (closeWriteOverlay 가 mode reset 까지 수행) + 게시판 새로고침 */
