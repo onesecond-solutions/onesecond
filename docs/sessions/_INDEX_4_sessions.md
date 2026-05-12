@@ -7,6 +7,7 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-12_2150.md` — 2026-05-12 저녁 (4팀 단톡방 → manager_notice 215건 INSERT 본진 박힘 — 4 commit + 1 SQL 폐기)
 - `docs/sessions/2026-05-12_1908.md` — 2026-05-12 저녁 (Phase E 본진 진입 + 인지 정정 + 별 트랙 정리 — 6 commit)
 - `docs/sessions/2026-05-12_1602.md` — 2026-05-12 오후 (Phase A 본진 박은 큰 날 + Phase E Step E-1 SQL 박음 — 20 commit)
 - `docs/sessions/2026-05-12_0050.md` — **2026-05-12 심야 (운영 흐름 OS 4 레이어 박음 + admin 토글 결재 대기 — 총 16 commit)** ⭐⭐⭐ home_v2 카드 흡수 `e6f576d` / home_v2 footer 블랙 SaaS `e813a15` / home-cards 여백 `76ac6a9` / 조직 운영 v1 `64180b8` (사이드바 운영 카테고리 + team-management 4섹션 placeholder + applyOpsMenuByRole) / 알림 v1 Step 1~3 `8bbf7ab`/`7ee78f1`/`e466d7a` (🔔 badge / C영역 카드 3종 / board 집계 바) / 운영 캘린더 v1 `8378ac8` (4 일정, 유형 4종) / 색상 hierarchy v1 `041f61d` / 캘린더 grid 반응형 `36d0b9c` (1→2/3열) / 색상 hierarchy v2 `38fd25e` (::before 70% 세로선 + date accent) / 운영 콘솔 Step A `84376a4` (탭 2줄) / Step B `17d4cf5` (2컬럼 68:32) / 좌우 카드 top 정렬 `f2389b2` / 탭바 top = 캘린더 top `7c51736` / 탭바↔게시판 간격 `07de08e`. 박힌 결정 영구 = "기능 완성 X, 구조 선언 ⭕" / 운영 레이어 4 트랙 (조직·알림·캘린더·콘솔) / 9 role 코드 등장 (admin/ga_*/insurer_staff) / 알림 3단 통합 본질 / 캘린더 월간 X 운영 보드형 / 콘솔 모바일 1열 + order (캘린더 → 탭바 → 게시판). 라이브 검증 부분 미수령. 회귀 0 보장. 5/15 D-3일. 5/18 본진 fix (추가 기능 X / 씨드 데이터 X). 다음 진입 = admin 토글 Step 1 rail 9→4 / Step 2/3 운영 레이어 섹션 + DB + 페이지 분기 / 본 세션 16 commit 라이브 검증.
