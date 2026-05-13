@@ -3536,7 +3536,7 @@ window.editMyMsg = function(evt, btnEl) {
   ta.addEventListener('blur', function(){ commit(true); });
 };
 
-window.attachToMyMsg = function(evt, btnEl) {
+window.attachToMyMsg = async function(evt, btnEl) {
   evt.stopPropagation();
   var bubble = btnEl.closest('.notice-msg-bubble');
   if (!bubble) return;
@@ -3546,7 +3546,58 @@ window.attachToMyMsg = function(evt, btnEl) {
     return;
   }
   bubble.classList.remove('is-menu-open');
-  alert('파일 추가 = Q12-E Drive link 박음 본진 (Step 6 진입 시 박힘)');
+
+  /* Q12-E C = 현 + Drive 폴더 공유 link 박음 정합
+     사용자가 Drive 폴더에서 파일 URL 박은 후 본 입력창에 박음 */
+  var driveUrl = prompt(
+    'Drive 파일 URL을 입력하세요 (4팀 공유 폴더에서 진입 후 \"링크 복사\" 박음):\n' +
+    '예: https://drive.google.com/file/d/{ID}/view',
+    ''
+  );
+  if (!driveUrl) return;
+  var fname = prompt('파일명 (선택):', '');
+
+  var postId = bubble.dataset.postId;
+  if (!postId) { alert('post id 부재'); return; }
+
+  try {
+    /* 기존 attachments 박힘 fetch */
+    var res = await window.db.fetch('/rest/v1/posts?id=eq.' + postId + '&select=attachments');
+    var rows = res.ok ? await res.json() : [];
+    if (rows.length === 0) throw new Error('post 부재');
+
+    var atts = [];
+    if (rows[0].attachments) {
+      try { atts = JSON.parse(rows[0].attachments); if (!Array.isArray(atts)) atts = []; }
+      catch (e) { atts = []; }
+    }
+    /* Drive URL에서 drive_id 추출 (패턴: /d/{id}/) */
+    var driveIdMatch = driveUrl.match(/\/d\/([^/]+)/);
+    var driveId = driveIdMatch ? driveIdMatch[1] : '';
+    /* 확장자 추정 (파일명 박힘 시) */
+    var extMatch = (fname || '').match(/\.([a-zA-Z0-9]+)$/);
+    var ext = extMatch ? extMatch[1].toLowerCase() : '';
+
+    atts.push({
+      drive_id:       driveId,
+      drive_filename: fname || driveUrl,
+      extension:      ext,
+      source:         'manual_drive_link'
+    });
+
+    /* attachments PATCH 박음 */
+    var patchRes = await window.db.fetch('/rest/v1/posts?id=eq.' + postId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ attachments: JSON.stringify(atts) })
+    });
+    if (!patchRes.ok) throw new Error('PATCH ' + patchRes.status);
+
+    _loadNoticeRoom(_currentBoard);  /* 재로드 = 자산 패널 + 메시지 첨부 chip 정합 */
+  } catch (e) {
+    console.error('[notice-room] 파일 추가 실패:', e);
+    alert('파일 추가 실패: ' + (e.message || e));
+  }
 };
 
 window.deleteMyMsg = async function(evt, btnEl) {
