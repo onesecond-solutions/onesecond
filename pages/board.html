@@ -1478,9 +1478,9 @@
   text-overflow: ellipsis;
 }
 
-/* 메시지 검색창 (2026-05-14 본진 5) */
+/* 메시지 검색창 (2026-05-14 본진 5 정밀 — shell 외부, 채팅창 위) */
 .notice-search-bar {
-  margin: 12px 24px 0;
+  margin: 0 0 10px 0;
 }
 .notice-search-input {
   width: 100%;
@@ -2002,6 +2002,14 @@
             <div class="loading-msg">불러오는 중...</div>
           </div>
 
+          <!-- 메시지 검색창 (2026-05-14 본진 5 정밀 — shell 외부, 채팅창 위) -->
+          <div class="notice-search-bar" id="notice-search-bar" style="display:none;">
+            <input type="search" id="notice-search" class="notice-search-input"
+                   placeholder="메시지 검색 (본문·제목·작성자)"
+                   oninput="window.onNoticeSearch(this)"
+                   autocomplete="off" />
+          </div>
+
           <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
           <!-- [2026-05-13 Step 4-d] D영역 단톡방 셸 본진 (manager_notice + navigation) -->
           <!-- 5/18 4팀 오픈 본진. _switchBoard 박힘 시 분기 박음 (Step 4-e JS)         -->
@@ -2020,14 +2028,6 @@
                     <span>핀 공지</span>
                   </div>
                   <ul class="notice-pin-list-items" id="notice-pin-list-items"></ul>
-                </div>
-
-                <!-- 메시지 검색창 (2026-05-14 작업지시서 본진 5, AND 조건 + 300ms debounce) -->
-                <div class="notice-search-bar">
-                  <input type="search" id="notice-search" class="notice-search-input"
-                         placeholder="메시지 검색 (본문·제목·작성자)"
-                         oninput="window.onNoticeSearch(this)"
-                         autocomplete="off" />
                 </div>
 
                 <!-- 메시지 흐름 -->
@@ -3283,17 +3283,20 @@ function _toggleNoticeRoomShell(board) {
   var shell = document.getElementById('notice-room-shell');
   var list  = document.getElementById('post-list');
   var bar   = document.querySelector('.board-filter-bar');
+  var search = document.getElementById('notice-search-bar');
   if (!shell || !list) return;
 
   if (_isNoticeRoomBoard(board)) {
     shell.style.display = '';
     list.style.display  = 'none';
     if (bar) bar.style.display = 'none';  /* 단톡방 셸 안 입력바가 본진 */
+    if (search) search.style.display = '';  /* 검색창 박음 (shell 외부) */
     _loadNoticeRoom(board);
   } else {
     shell.style.display = 'none';
     list.style.display  = '';
     if (bar) bar.style.display = '';
+    if (search) search.style.display = 'none';
   }
 }
 
