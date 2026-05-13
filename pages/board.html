@@ -1384,6 +1384,377 @@
   .pg-cal-date { flex-basis: 48px; }
   .pg-cal-event { font-size: 0.8125em; }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   [2026-05-13 Step 4-c] D영역 단톡방 셸 본진 (mockup v2-notice-room 흡수)
+   Q12-B② baseline 정합 — 라이브 영향 0 (prefix .notice-* 격리)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+:root {
+  /* onesecond notice room 변수 8종 (mockup 정합) */
+  --notice-bg:             #FFFFFF;
+  --notice-pin-bg:         #FFF8F1;
+  --notice-pin-border:     var(--brand-100, #F8DCC4);
+  --notice-mine-bg:        var(--brand-50, #FDF4EF);
+  --notice-mine-border:    var(--brand-100, #F8DCC4);
+  --notice-mine-text:      var(--brand-700, #66331A);
+  --notice-other-bg:       var(--neutral-100, #F4F5F7);
+  --notice-other-text:     var(--neutral-800, #1F2937);
+}
+
+/* 단톡방 셸 wrapper — board content 안 D영역 흡수 */
+.notice-room-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  height: calc(100vh - 220px);
+  background: var(--notice-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* D-grid: 좌(채팅) + 우(자산) */
+.notice-room-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* D-좌측: 채팅 */
+.notice-room-left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--notice-bg);
+}
+
+/* 공지 펼침 */
+.notice-pinned {
+  margin: 16px 24px 0;
+  background: var(--notice-pin-bg);
+  border: 1px solid var(--notice-pin-border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 120ms;
+}
+.notice-pinned:hover { box-shadow: var(--shadow-sm); }
+.notice-pinned-summary {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  font-size: 0.875em; font-weight: 600;
+  color: var(--brand-700, #66331A);
+}
+.notice-pinned-summary .pin-title { flex: 1; }
+.notice-pinned-summary .pin-caret {
+  color: var(--brand-500, #A0522D);
+  transition: transform 120ms;
+  font-size: 0.75em;
+}
+.notice-pinned.is-open .pin-caret { transform: rotate(180deg); }
+.notice-pinned-body {
+  padding: 0 14px 14px;
+  font-size: 0.8125em;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  border-top: 1px solid var(--notice-pin-border);
+}
+
+/* 메시지 흐름 */
+.notice-room-chat {
+  flex: 1; overflow-y: auto;
+  padding: 16px 24px;
+  display: flex; flex-direction: column; gap: 12px;
+  scrollbar-width: thin;
+}
+.notice-room-chat::-webkit-scrollbar { width: 6px; }
+.notice-room-chat::-webkit-scrollbar-thumb { background: var(--neutral-200, #E5E7EB); border-radius: 3px; }
+
+.notice-msg-row { display: flex; align-items: flex-end; gap: 8px; }
+.notice-msg-row.is-mine { justify-content: flex-end; }
+.notice-msg-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--gradient-brand, linear-gradient(135deg,#A0522D,#D4845A));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8125em; font-weight: 800;
+  flex-shrink: 0;
+}
+.notice-msg-bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.875em; line-height: 1.55;
+  position: relative;
+  word-break: break-word;
+}
+.notice-msg-bubble.is-mine {
+  background: var(--notice-mine-bg);
+  border: 1px solid var(--notice-mine-border);
+  color: var(--notice-mine-text);
+  border-bottom-right-radius: 4px;
+}
+.notice-msg-bubble.is-other {
+  background: var(--notice-other-bg);
+  color: var(--notice-other-text);
+  border-bottom-left-radius: 4px;
+}
+.notice-msg-author { font-size: 0.75em; font-weight: 700; margin-bottom: 4px; color: var(--brand-700, #66331A); }
+.notice-msg-time {
+  display: block; margin-top: 4px;
+  font-size: 0.6875em;
+  color: var(--color-text-tertiary);
+  text-align: right;
+}
+.notice-msg-row.is-other .notice-msg-time { text-align: left; }
+.notice-msg-date {
+  align-self: center;
+  font-size: 0.6875em;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-2);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  margin: 8px 0;
+}
+
+/* 본인 풍선 — 클릭 + 액션 메뉴 */
+.notice-msg-row.is-mine .notice-msg-bubble {
+  cursor: pointer;
+  transition: box-shadow 120ms;
+}
+.notice-msg-row.is-mine .notice-msg-bubble:hover {
+  box-shadow: 0 2px 8px rgba(160, 82, 45, 0.16);
+}
+.notice-msg-row.is-mine .notice-msg-bubble.is-editing {
+  background: #FFFFFF;
+  border-color: var(--brand-400, #C4733A);
+}
+.notice-msg-row.is-mine .notice-msg-bubble textarea.edit-area {
+  width: 100%;
+  min-height: 60px;
+  padding: 6px 8px;
+  border: 1px solid var(--brand-100, #F8DCC4);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1em;
+  line-height: 1.55;
+  background: var(--brand-50, #FDF4EF);
+  color: var(--brand-700, #66331A);
+  outline: none;
+  resize: vertical;
+}
+.notice-msg-actions {
+  position: absolute;
+  top: 100%; right: 0;
+  margin-top: 6px;
+  display: none;
+  gap: 4px;
+  padding: 6px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+}
+.notice-msg-row.is-mine .notice-msg-bubble.is-menu-open .notice-msg-actions {
+  display: inline-flex;
+}
+.notice-msg-action-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 10px;
+  background: transparent; border: 0; border-radius: 6px;
+  font-family: inherit; font-size: 0.8125em; font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer; white-space: nowrap;
+}
+.notice-msg-action-btn:hover { background: var(--brand-50, #FDF4EF); color: var(--brand-700, #66331A); }
+.notice-msg-action-btn.is-danger { color: #B91C1C; }
+.notice-msg-action-btn.is-danger:hover { background: var(--color-danger-bg, #FEF2F2); }
+
+/* 본인 풍선 첨부 chip */
+.notice-msg-attaches { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.notice-msg-attach-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--brand-100, #F8DCC4);
+  border-radius: 9999px;
+  font-size: 0.6875em;
+  color: var(--brand-700, #66331A);
+}
+
+/* 입력바 (textarea 2배 + 📎 첨부) */
+.notice-input-bar {
+  flex-shrink: 0;
+  padding: 12px 24px 18px;
+  border-top: 1px solid var(--color-border);
+  background: var(--notice-bg);
+  display: flex; gap: 8px; align-items: flex-end;
+}
+.notice-input-attach {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background: var(--color-surface-2);
+  font-size: 1em; cursor: pointer;
+  transition: background 120ms;
+}
+.notice-input-attach:hover { background: var(--brand-50, #FDF4EF); border-color: var(--brand-100, #F8DCC4); }
+.notice-input-field { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.notice-attach-preview { display: flex; flex-wrap: wrap; gap: 6px; }
+.notice-attach-preview:empty { display: none; }
+.notice-attach-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px 4px 10px;
+  background: var(--brand-50, #FDF4EF);
+  border: 1px solid var(--brand-100, #F8DCC4);
+  border-radius: 9999px;
+  font-size: 0.75em;
+  color: var(--brand-700, #66331A);
+  max-width: 220px;
+}
+.notice-attach-chip .chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice-attach-chip .chip-size { color: var(--color-text-tertiary); font-size: 0.85em; }
+.notice-attach-chip .chip-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+  border: none; border-radius: 50%;
+  background: rgba(160, 82, 45, 0.18);
+  color: var(--brand-700, #66331A);
+  font-size: 0.7em; cursor: pointer; padding: 0;
+}
+.notice-input-bar textarea {
+  width: 100%;
+  min-height: 80px;       /* 옛 40px 2배 */
+  max-height: 200px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 0.875em;
+  line-height: 1.55;
+  background: var(--color-surface-2);
+  outline: none;
+  resize: none;
+}
+.notice-input-bar textarea:focus {
+  border-color: var(--brand-400, #C4733A);
+  background: #FFFFFF;
+}
+.notice-input-send {
+  flex-shrink: 0;
+  height: 80px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 14px;
+  background: var(--brand-500, #A0522D);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.875em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.notice-input-send:hover { background: var(--brand-700, #66331A); }
+
+/* D-우측: 자산 패널 */
+.notice-room-right {
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  scrollbar-width: thin;
+}
+.notice-room-header {
+  position: sticky; top: 0;
+  background: var(--color-surface-2);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.9375em; font-weight: 700;
+  color: var(--color-text-primary);
+  z-index: 1;
+}
+.notice-room-header .room-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--gradient-brand, linear-gradient(135deg,#A0522D,#D4845A));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75em; font-weight: 800;
+}
+.notice-room-header .room-name { flex: 1; }
+.notice-room-header .room-member { font-size: 0.75em; font-weight: 500; color: var(--color-text-secondary); }
+.notice-asset-section { padding: 14px 16px; border-bottom: 1px solid var(--color-border); }
+.notice-asset-section:last-child { border-bottom: 0; }
+.notice-asset-title {
+  font-size: 0.6875em; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--color-accent, #D4845A);
+  margin-bottom: 10px;
+}
+.notice-asset-photos { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.notice-asset-photo {
+  flex-shrink: 0; width: 64px; height: 64px;
+  border-radius: 8px;
+  background: var(--neutral-100, #F4F5F7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2em;
+  border: 1px solid var(--color-border);
+}
+.notice-asset-file {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px;
+  font-size: 0.8125em; color: var(--color-text-primary);
+  cursor: pointer; margin-bottom: 4px;
+  transition: background 120ms;
+}
+.notice-asset-file:hover { background: #FFFFFF; }
+.notice-asset-file .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notice-asset-file .file-meta { font-size: 0.6875em; color: var(--color-text-tertiary); }
+.notice-asset-link {
+  display: block;
+  padding: 8px 10px; border-radius: 6px;
+  font-size: 0.8125em;
+  color: var(--brand-700, #66331A);
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+.notice-asset-link:hover { background: #FFFFFF; }
+
+.notice-memo textarea {
+  width: 100%; min-height: 80px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: inherit; font-size: 0.8125em;
+  background: #FFFFFF;
+  resize: vertical; outline: none;
+}
+.notice-memo textarea:focus { border-color: var(--brand-400, #C4733A); }
+.notice-memo .memo-actions { display: flex; gap: 6px; margin-top: 8px; }
+.notice-memo .memo-actions button {
+  flex: 1; padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #FFFFFF;
+  font-family: inherit; font-size: 0.75em; font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.notice-memo .memo-actions button.is-primary {
+  background: var(--brand-500, #A0522D);
+  color: #fff;
+  border-color: var(--brand-500, #A0522D);
+}
+
+@media (max-width: 1024px) {
+  .notice-room-grid { grid-template-columns: 1fr; }
+  .notice-room-right { display: none; }
+  .notice-room-shell { min-height: 500px; }
+}
 </style>
 
 
@@ -1431,13 +1802,16 @@
         <div class="pg-tab-bar" id="board-tab-bar">
           <!-- 1줄 — 핵심 운영 흐름 (매일 사용 본체, active hierarchy 유지) -->
           <div class="pg-tab-row pg-tab-row-primary">
-            <button class="pg-tab-btn"        data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 실장님 공지</button>
+            <!-- [2026-05-13 Step 4-b] 5/18 4팀 오픈 = 2탭만 활성 (manager_notice + navigation) -->
+            <!-- 명명 변경 박힘: 실장님 공지 → 4팀 단체방 (Q12-A② + 5/13 회의 추가) -->
+            <button class="pg-tab-btn active" data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 4팀 단체방</button>
             <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
-            <button class="pg-tab-btn active" data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
-            <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')">☕ 매니저 라운지</button>
+            <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')"            style="display:none;" data-hidden-5-18="1">📋 스마트 게시판</button>
+            <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')" style="display:none;" data-hidden-5-18="1">☕ 매니저 라운지</button>
           </div>
           <!-- 2줄 — 보조·확장·보관 레이어 (subdued) -->
-          <div class="pg-tab-row pg-tab-row-secondary">
+          <!-- [2026-05-13 Step 4-b] 5/18 4팀 오픈 = 보조 3탭 전체 hide -->
+          <div class="pg-tab-row pg-tab-row-secondary" style="display:none;" data-hidden-5-18="1">
             <button class="pg-tab-btn"        data-board="insurer"        onclick="window.switchBoard('insurer')">🏦 보험사 게시판</button>
             <button class="pg-tab-btn"        data-board="hub"             onclick="window.switchBoard('hub')">🌐 허브 게시판</button>
             <button class="pg-tab-btn"        data-board="archive_legacy"  onclick="window.switchBoard('archive_legacy')">🗄️ 폐기 보존</button>
@@ -1464,10 +1838,104 @@
             <div class="category-pills" id="category-pills"></div>
             <button class="write-btn" id="write-btn" onclick="window.onClickWriteBtn()">✏️ 글쓰기</button>
           </div>
-          <!-- 게시글 목록 -->
+          <!-- 게시글 목록 (5/19 후 qna/manager_lounge/기타 박힘 = 옛 카드 list) -->
           <div class="brd-list" id="post-list">
             <div class="loading-msg">불러오는 중...</div>
           </div>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- [2026-05-13 Step 4-d] D영역 단톡방 셸 본진 (manager_notice + navigation) -->
+          <!-- 5/18 4팀 오픈 본진. _switchBoard 박힘 시 분기 박음 (Step 4-e JS)         -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <div id="notice-room-shell" class="notice-room-shell" style="display:none;">
+            <div class="notice-room-grid">
+
+              <!-- D-좌측: 채팅 본진 -->
+              <div class="notice-room-left">
+
+                <!-- 공지 펼침 (상단 고정) -->
+                <div class="notice-pinned is-open" id="notice-pinned"
+                     onclick="window.toggleNoticePin(this, event)" style="display:none;">
+                  <div class="notice-pinned-summary">
+                    <span class="pin-icon">📌</span>
+                    <span class="pin-title" id="notice-pinned-title">최신 공지</span>
+                    <span class="pin-caret">▼</span>
+                  </div>
+                  <div class="notice-pinned-body" id="notice-pinned-body"></div>
+                </div>
+
+                <!-- 메시지 흐름 -->
+                <div class="notice-room-chat" id="notice-room-chat">
+                  <div class="loading-msg">메시지 불러오는 중...</div>
+                </div>
+
+                <!-- 입력바 (textarea + 📎 + 첨부 미리보기) -->
+                <div class="notice-input-bar">
+                  <input type="file" id="notice-file-input" multiple hidden
+                         onchange="window.onNoticeFileSelected(event)">
+                  <button class="notice-input-attach" type="button"
+                          onclick="window.openNoticeFilePicker()" title="파일 추가">📎</button>
+                  <div class="notice-input-field">
+                    <div class="notice-attach-preview" id="notice-attach-preview"></div>
+                    <textarea id="notice-input" rows="3"
+                              placeholder="메시지를 입력하세요… (Enter 전송 / Shift+Enter 줄바꿈)"></textarea>
+                  </div>
+                  <button class="notice-input-send" type="button"
+                          onclick="window.sendNoticeMsg()">전송</button>
+                </div>
+
+              </div>
+
+              <!-- D-우측: 자산 패널 -->
+              <aside class="notice-room-right">
+
+                <!-- 헤더 (방 이름 + 인원수) -->
+                <div class="notice-room-header">
+                  <div class="room-icon">4팀</div>
+                  <span class="room-name" id="notice-room-name">더원4팀 단체방</span>
+                  <span class="room-member" id="notice-room-member">· 40명</span>
+                </div>
+
+                <!-- 사진/동영상 -->
+                <div class="notice-asset-section">
+                  <div class="notice-asset-title">📸 사진·동영상</div>
+                  <div class="notice-asset-photos" id="notice-asset-photos">
+                    <span style="color:var(--color-text-tertiary);font-size:0.75em;">자료 로딩 중...</span>
+                  </div>
+                </div>
+
+                <!-- 파일 -->
+                <div class="notice-asset-section">
+                  <div class="notice-asset-title">📎 파일</div>
+                  <div id="notice-asset-files">
+                    <span style="color:var(--color-text-tertiary);font-size:0.75em;">자료 로딩 중...</span>
+                  </div>
+                </div>
+
+                <!-- 링크 -->
+                <div class="notice-asset-section">
+                  <div class="notice-asset-title">🔗 링크</div>
+                  <div id="notice-asset-links">
+                    <span style="color:var(--color-text-tertiary);font-size:0.75em;">자료 로딩 중...</span>
+                  </div>
+                </div>
+
+                <!-- 내 메모 (personal_memos 정합) -->
+                <div class="notice-asset-section notice-memo">
+                  <div class="notice-asset-title">📝 내 메모</div>
+                  <textarea id="notice-memo-text"
+                            placeholder="개인 메모 — 본인만 볼 수 있어요"></textarea>
+                  <div class="memo-actions">
+                    <button class="is-primary" onclick="window.saveNoticeMemo()">💾 저장하기</button>
+                    <button onclick="window.openMyspaceFromNotice()">📂 마이스페이스 →</button>
+                  </div>
+                </div>
+
+              </aside>
+
+            </div>
+          </div>
+
         </div>
 
         <!-- ── 보험사 게시판 전용 2컬럼 뷰 ── -->
@@ -2274,7 +2742,7 @@ var CAT_CLASS = {
 };
 
 /* ── 페이지 로컬 상태 ── */
-var _currentBoard    = 'qna';     /* 기본 진입 = 스마트 게시판 (사용자 본질 페이지) */
+var _currentBoard    = 'manager_notice';     /* [2026-05-13 Step 4-b] 5/18 4팀 오픈 = 첫 진입 = 4팀 단체방 (옛 'qna' = 5/19 후 복귀) */
 var _currentCategory = 'all';
 /* 공지 폼 모드 — 'navigation' (4 카드 → 공지 카드 진입) | 'manager_notice' (실장님 공지 탭 직접 진입) */
 var _noticeWriteMode = 'navigation';
@@ -2614,8 +3082,494 @@ function _switchBoard(board) {
     _renderCategoryPills(board);
     _loadPosts();
   }
+
+  /* [2026-05-13 Step 4-e] D영역 단톡방 셸 분기 (manager_notice + navigation) */
+  _toggleNoticeRoomShell(board);
 }
 window.switchBoard = _switchBoard;
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   [2026-05-13 Step 4-e] D영역 단톡방 셸 본진 (Q12 6건 결재 정합)
+   ▸ shell ↔ list 분기 (manager_notice/navigation = shell / 기타 = 옛 list)
+   ▸ 메시지 변환 (posts → 채팅 풍선)
+   ▸ personal_memos fetch/save (Q12-C① 정합)
+   ▸ 본인 메시지 액션 (Q12-D①+③ 정합, 5분 제한)
+   ▸ 첨부 (Q12-E = Drive link 박음)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+var _isNoticeRoomBoard = function(board) {
+  return board === 'manager_notice' || board === 'navigation';
+};
+
+function _toggleNoticeRoomShell(board) {
+  var shell = document.getElementById('notice-room-shell');
+  var list  = document.getElementById('post-list');
+  var bar   = document.querySelector('.board-filter-bar');
+  if (!shell || !list) return;
+
+  if (_isNoticeRoomBoard(board)) {
+    shell.style.display = '';
+    list.style.display  = 'none';
+    if (bar) bar.style.display = 'none';  /* 단톡방 셸 안 입력바가 본진 */
+    _loadNoticeRoom(board);
+  } else {
+    shell.style.display = 'none';
+    list.style.display  = '';
+    if (bar) bar.style.display = '';
+  }
+}
+
+/* posts → 단톡방 메시지 풍선 변환 */
+async function _loadNoticeRoom(board) {
+  var chat = document.getElementById('notice-room-chat');
+  if (!chat) return;
+  chat.innerHTML = '<div class="loading-msg">메시지 불러오는 중...</div>';
+
+  /* 헤더 명명 박음 */
+  var nameEl = document.getElementById('notice-room-name');
+  if (nameEl) {
+    nameEl.textContent = (board === 'navigation') ? '더원4팀 네비게이션방' : '더원4팀 단체방';
+  }
+
+  if (!window.db || !window.db.fetch) {
+    chat.innerHTML = '<div class="loading-msg">DB 연결 부재</div>';
+    return;
+  }
+
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/posts?board_type=eq.' + encodeURIComponent(board) +
+      '&select=id,title,content,author_id,author_name,display_name,display_author,category,attachments,is_notice,created_at' +
+      '&order=created_at.asc&limit=200'
+    );
+    var posts = res.ok ? await res.json() : [];
+
+    var meId = (window.AppState && window.AppState.userId) || '';
+    var meName = (window.AppState && window.AppState.name) || '';
+
+    var pinned = null;
+    var msgs = [];
+    posts.forEach(function(p){
+      if (p.is_notice && !pinned) pinned = p;
+      msgs.push(p);
+    });
+
+    /* 공지 펼침 박음 */
+    _renderNoticePinned(pinned);
+
+    /* 메시지 렌더 (날짜 구분선 + 풍선) */
+    if (msgs.length === 0) {
+      chat.innerHTML = '<div class="loading-msg">첫 메시지를 박아주세요.</div>';
+    } else {
+      chat.innerHTML = _renderNoticeMessages(msgs, meId, meName);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    /* 자산 패널 + 메모 박음 */
+    _renderNoticeAssets(posts);
+    _loadNoticeMemo(board);
+  } catch (e) {
+    console.error('[notice-room] 로드 실패:', e);
+    chat.innerHTML = '<div class="loading-msg">메시지 로딩 실패: ' + (e.message || e) + '</div>';
+  }
+}
+
+function _renderNoticePinned(pinned) {
+  var pin   = document.getElementById('notice-pinned');
+  var title = document.getElementById('notice-pinned-title');
+  var body  = document.getElementById('notice-pinned-body');
+  if (!pin) return;
+  if (!pinned) { pin.style.display = 'none'; return; }
+  pin.style.display = '';
+  if (title) title.textContent = '최신 공지 — ' + (pinned.title || '제목 없음');
+  if (body)  body.textContent  = (pinned.content || '').substring(0, 400);
+}
+
+function _renderNoticeMessages(msgs, meId, meName) {
+  var lastDate = '';
+  return msgs.map(function(p){
+    var d = new Date(p.created_at || Date.now());
+    var ymd = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+    var hh = String(d.getHours()).padStart(2, '0');
+    var mm = String(d.getMinutes()).padStart(2, '0');
+    var dateBar = '';
+    if (ymd !== lastDate) { dateBar = '<div class="notice-msg-date">' + ymd + '</div>'; lastDate = ymd; }
+
+    var isMine = (p.author_id && meId && String(p.author_id) === String(meId));
+    var author = p.display_author || p.display_name || p.author_name || '알 수 없음';
+    var html = _noticeEscape(p.content || p.title || '').replace(/\n/g, '<br>');
+
+    /* 첨부 chip */
+    var attHtml = '';
+    if (p.attachments) {
+      try {
+        var atts = (typeof p.attachments === 'string') ? JSON.parse(p.attachments) : p.attachments;
+        if (Array.isArray(atts) && atts.length > 0) {
+          attHtml = '<div class="notice-msg-attaches">' +
+            atts.slice(0, 4).map(function(a){
+              var name = a.drive_filename || a.kakao_label || a.name || '파일';
+              return '<span class="notice-msg-attach-chip">📎 ' + _noticeEscape(name) + '</span>';
+            }).join('') +
+          '</div>';
+        }
+      } catch (e) {}
+    }
+
+    if (isMine) {
+      return dateBar +
+        '<div class="notice-msg-row is-mine">' +
+          '<div class="notice-msg-bubble is-mine" data-post-id="' + p.id + '" ' +
+               'data-post-created="' + (p.created_at || '') + '" ' +
+               'onclick="window.openMyMsgMenu(this, event)">' +
+            '<span class="msg-text">' + html + '</span>' +
+            attHtml +
+            '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
+            '<div class="notice-msg-actions">' +
+              '<button class="notice-msg-action-btn" onclick="window.editMyMsg(event, this)">✏️ 수정</button>' +
+              '<button class="notice-msg-action-btn" onclick="window.attachToMyMsg(event, this)">📎 파일 추가</button>' +
+              '<button class="notice-msg-action-btn is-danger" onclick="window.deleteMyMsg(event, this)">🗑️ 삭제</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    } else {
+      var initial = (author || '?').substring(0, 1);
+      return dateBar +
+        '<div class="notice-msg-row is-other">' +
+          '<div class="notice-msg-avatar">' + _noticeEscape(initial) + '</div>' +
+          '<div class="notice-msg-bubble is-other">' +
+            '<div class="notice-msg-author">' + _noticeEscape(author) + '</div>' +
+            html + attHtml +
+            '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
+          '</div>' +
+        '</div>';
+    }
+  }).join('');
+}
+
+/* 자산 패널 (사진/파일/링크 분류) */
+function _renderNoticeAssets(posts) {
+  var photoBox = document.getElementById('notice-asset-photos');
+  var fileBox  = document.getElementById('notice-asset-files');
+  var linkBox  = document.getElementById('notice-asset-links');
+
+  var photos = [], files = [], links = [];
+  posts.forEach(function(p){
+    if (!p.attachments) return;
+    try {
+      var atts = (typeof p.attachments === 'string') ? JSON.parse(p.attachments) : p.attachments;
+      if (!Array.isArray(atts)) return;
+      atts.forEach(function(a){
+        var ext = (a.extension || '').toLowerCase();
+        var name = a.drive_filename || a.kakao_label || a.name || '';
+        var driveId = a.drive_id || '';
+        var url = driveId ? ('https://drive.google.com/file/d/' + driveId + '/view') : '#';
+        if (['jpg','jpeg','png','gif','webp','heic'].indexOf(ext) >= 0) photos.push({name:name, url:url});
+        else if (['mp4','mov','webm'].indexOf(ext) >= 0) photos.push({name:name, url:url, video:true});
+        else if (/^https?:/.test(name)) links.push({name:name, url:name});
+        else files.push({name:name, url:url, size:a.size_bytes});
+      });
+    } catch (e) {}
+  });
+
+  if (photoBox) {
+    photoBox.innerHTML = photos.length === 0
+      ? '<span style="color:var(--color-text-tertiary);font-size:0.75em;">사진·동영상 없음</span>'
+      : photos.slice(0,20).map(function(ph){
+          return '<a class="notice-asset-photo" href="' + ph.url + '" target="_blank" title="' + _noticeEscape(ph.name) + '">' + (ph.video ? '🎥' : '📷') + '</a>';
+        }).join('');
+  }
+  if (fileBox) {
+    fileBox.innerHTML = files.length === 0
+      ? '<span style="color:var(--color-text-tertiary);font-size:0.75em;">파일 없음</span>'
+      : files.slice(0,30).map(function(f){
+          var sz = f.size ? ((f.size/1024/1024).toFixed(1) + 'MB') : 'Drive ↗';
+          return '<a class="notice-asset-file" href="' + f.url + '" target="_blank">' +
+                   '<span class="file-icon">📄</span>' +
+                   '<span class="file-name">' + _noticeEscape(f.name) + '</span>' +
+                   '<span class="file-meta">' + sz + '</span>' +
+                 '</a>';
+        }).join('');
+  }
+  if (linkBox) {
+    linkBox.innerHTML = links.length === 0
+      ? '<span style="color:var(--color-text-tertiary);font-size:0.75em;">링크 없음</span>'
+      : links.slice(0,20).map(function(l){
+          return '<a class="notice-asset-link" href="' + _noticeEscape(l.url) + '" target="_blank">' + _noticeEscape(l.name) + ' ↗</a>';
+        }).join('');
+  }
+}
+
+/* personal_memos fetch */
+async function _loadNoticeMemo(board) {
+  var ta = document.getElementById('notice-memo-text');
+  if (!ta || !window.db || !window.db.fetch) return;
+  ta.value = '';
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/personal_memos?scope=eq.notice_room&select=content,id&order=updated_at.desc&limit=1'
+    );
+    if (res.ok) {
+      var rows = await res.json();
+      if (rows && rows.length > 0) ta.value = rows[0].content || '';
+    }
+  } catch (e) {
+    console.warn('[notice-room] 메모 로드 실패:', e);
+  }
+}
+
+/* 메모 저장 (UPSERT: DELETE → INSERT, Phase A 정합) */
+window.saveNoticeMemo = async function() {
+  var ta = document.getElementById('notice-memo-text');
+  if (!ta || !window.db || !window.db.fetch) return;
+  var content = (ta.value || '').trim();
+  var meId = (window.AppState && window.AppState.userId) || '';
+  if (!meId) { alert('로그인 정보 부재'); return; }
+
+  try {
+    /* 기존 scope='notice_room' 메모 1건 박힘 시 갱신 */
+    var res = await window.db.fetch(
+      '/rest/v1/personal_memos?scope=eq.notice_room&select=id&limit=1'
+    );
+    var rows = res.ok ? await res.json() : [];
+    if (rows.length > 0) {
+      var patchRes = await window.db.fetch(
+        '/rest/v1/personal_memos?id=eq.' + rows[0].id,
+        { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ content: content }) }
+      );
+      if (!patchRes.ok) throw new Error('PATCH ' + patchRes.status);
+    } else {
+      var insRes = await window.db.fetch('/rest/v1/personal_memos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ user_id: meId, scope: 'notice_room', content: content })
+      });
+      if (!insRes.ok) throw new Error('INSERT ' + insRes.status);
+    }
+    alert('메모 저장됨');
+  } catch (e) {
+    console.error('[notice-room] 메모 저장 실패:', e);
+    alert('메모 저장 실패: ' + (e.message || e));
+  }
+};
+
+window.openMyspaceFromNotice = function() {
+  if (typeof window.switchMenu === 'function') window.switchMenu('myspace');
+  else location.hash = '#/myspace';
+};
+
+/* 공지 펼침 토글 */
+window.toggleNoticePin = function(el, evt) {
+  if (evt) evt.stopPropagation();
+  el.classList.toggle('is-open');
+};
+
+/* ━━━ 입력바 첨부 ━━━ */
+var _noticePendingAttaches = [];
+
+window.openNoticeFilePicker = function() {
+  var fi = document.getElementById('notice-file-input');
+  if (fi) fi.click();
+};
+
+window.onNoticeFileSelected = function(evt) {
+  var files = (evt && evt.target && evt.target.files) ? evt.target.files : [];
+  for (var i = 0; i < files.length; i++) {
+    _noticePendingAttaches.push({ name: files[i].name, size: files[i].size });
+  }
+  _renderNoticeAttachPreview();
+  evt.target.value = '';
+};
+
+window.removeNoticeAttachChip = function(idx) {
+  _noticePendingAttaches.splice(idx, 1);
+  _renderNoticeAttachPreview();
+};
+
+function _renderNoticeAttachPreview() {
+  var box = document.getElementById('notice-attach-preview');
+  if (!box) return;
+  box.innerHTML = _noticePendingAttaches.map(function(f, idx){
+    var sizeKB = (f.size / 1024).toFixed(0);
+    var sizeText = sizeKB > 1024 ? (sizeKB/1024).toFixed(1) + 'MB' : sizeKB + 'KB';
+    return '<span class="notice-attach-chip">' +
+             '<span class="chip-name">📎 ' + _noticeEscape(f.name) + '</span>' +
+             '<span class="chip-size">' + sizeText + '</span>' +
+             '<button class="chip-remove" onclick="window.removeNoticeAttachChip(' + idx + ')" title="제거">✕</button>' +
+           '</span>';
+  }).join('');
+}
+
+function _noticeEscape(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* 메시지 전송 — posts INSERT (board_type = manager_notice or navigation) */
+window.sendNoticeMsg = async function() {
+  var input = document.getElementById('notice-input');
+  var txt = (input.value || '').trim();
+  if (!txt && _noticePendingAttaches.length === 0) return;
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+
+  var s = window.AppState || {};
+  var board = _currentBoard;
+  var attachments = _noticePendingAttaches.length > 0
+    ? JSON.stringify(_noticePendingAttaches.map(function(f){ return { name: f.name, size_bytes: f.size }; }))
+    : null;
+
+  try {
+    var body = {
+      board_type:      board,
+      title:           txt.substring(0, 60) || '(첨부)',
+      content:         txt,
+      author_id:       s.userId || '',
+      author_name:     s.name || '알 수 없음',
+      display_name:    s.name || '알 수 없음',
+      display_author:  s.name || '알 수 없음',
+      team_id:         s.teamId || null,
+      audience_target: 'team_internal',
+      is_hub_visible:  false,
+      is_anonymous:    false,
+      is_notice:       false,
+      attachments:     attachments,
+      source_type:     'user_post'
+    };
+    var res = await window.db.fetch('/rest/v1/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('INSERT ' + res.status);
+
+    input.value = '';
+    _noticePendingAttaches = [];
+    _renderNoticeAttachPreview();
+    _loadNoticeRoom(board);  /* 재로드 */
+  } catch (e) {
+    console.error('[notice-room] 전송 실패:', e);
+    alert('전송 실패: ' + (e.message || e));
+  }
+};
+
+/* Enter 전송 / Shift+Enter 줄바꿈 */
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.shiftKey
+      && document.activeElement && document.activeElement.id === 'notice-input') {
+    e.preventDefault();
+    window.sendNoticeMsg();
+  }
+});
+
+/* ━━━ 본인 메시지 액션 (수정/파일 추가/삭제) ━━━ */
+/* 5분 제한 = Q12-D①+③ 결재 */
+function _isWithinEditWindow(createdAt) {
+  if (!createdAt) return true;
+  var c = new Date(createdAt).getTime();
+  var now = Date.now();
+  return (now - c) <= 5 * 60 * 1000;
+}
+
+window.openMyMsgMenu = function(bubbleEl, evt) {
+  if (evt) evt.stopPropagation();
+  if (bubbleEl.classList.contains('is-editing')) return;
+  document.querySelectorAll('.notice-msg-bubble.is-menu-open').forEach(function(b){
+    if (b !== bubbleEl) b.classList.remove('is-menu-open');
+  });
+  bubbleEl.classList.toggle('is-menu-open');
+};
+
+document.addEventListener('click', function(e){
+  var inBubble = e.target.closest && e.target.closest('.notice-msg-bubble.is-mine');
+  if (!inBubble) {
+    document.querySelectorAll('.notice-msg-bubble.is-menu-open').forEach(function(b){
+      b.classList.remove('is-menu-open');
+    });
+  }
+});
+
+window.editMyMsg = function(evt, btnEl) {
+  evt.stopPropagation();
+  var bubble = btnEl.closest('.notice-msg-bubble');
+  if (!bubble) return;
+  if (!_isWithinEditWindow(bubble.dataset.postCreated)) {
+    alert('5분 지난 메시지는 수정할 수 없습니다 (Q12-D③ 정합)');
+    bubble.classList.remove('is-menu-open');
+    return;
+  }
+  bubble.classList.remove('is-menu-open');
+  bubble.classList.add('is-editing');
+
+  var textSpan = bubble.querySelector('.msg-text');
+  var oldText = textSpan ? textSpan.textContent : '';
+  var ta = document.createElement('textarea');
+  ta.className = 'edit-area';
+  ta.value = oldText;
+  textSpan.style.display = 'none';
+  textSpan.insertAdjacentElement('afterend', ta);
+  ta.focus(); ta.select();
+
+  async function commit(save) {
+    if (save && ta.value !== oldText) {
+      var postId = bubble.dataset.postId;
+      try {
+        var res = await window.db.fetch('/rest/v1/posts?id=eq.' + postId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ content: ta.value, title: ta.value.substring(0, 60) })
+        });
+        if (!res.ok) throw new Error('PATCH ' + res.status);
+        textSpan.textContent = ta.value;
+      } catch (e) {
+        console.error('[notice-room] 수정 실패:', e);
+        alert('수정 실패: ' + (e.message || e));
+      }
+    }
+    textSpan.style.display = '';
+    ta.remove();
+    bubble.classList.remove('is-editing');
+  }
+  ta.addEventListener('keydown', function(e){
+    e.stopPropagation();
+    if (e.key === 'Escape') commit(false);
+    else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) commit(true);
+  });
+  ta.addEventListener('blur', function(){ commit(true); });
+};
+
+window.attachToMyMsg = function(evt, btnEl) {
+  evt.stopPropagation();
+  var bubble = btnEl.closest('.notice-msg-bubble');
+  if (!bubble) return;
+  if (!_isWithinEditWindow(bubble.dataset.postCreated)) {
+    alert('5분 지난 메시지는 파일 추가할 수 없습니다');
+    bubble.classList.remove('is-menu-open');
+    return;
+  }
+  bubble.classList.remove('is-menu-open');
+  alert('파일 추가 = Q12-E Drive link 박음 본진 (Step 6 진입 시 박힘)');
+};
+
+window.deleteMyMsg = async function(evt, btnEl) {
+  evt.stopPropagation();
+  var bubble = btnEl.closest('.notice-msg-bubble');
+  var row = btnEl.closest('.notice-msg-row');
+  if (!row || !bubble) return;
+  if (!_isWithinEditWindow(bubble.dataset.postCreated)) {
+    alert('5분 지난 메시지는 삭제할 수 없습니다');
+    bubble.classList.remove('is-menu-open');
+    return;
+  }
+  if (!confirm('이 메시지를 삭제하시겠습니까?')) return;
+  var postId = bubble.dataset.postId;
+  try {
+    var res = await window.db.fetch('/rest/v1/posts?id=eq.' + postId, { method: 'DELETE' });
+    if (!res.ok && res.status !== 404) throw new Error('DELETE ' + res.status);
+    row.remove();
+  } catch (e) {
+    console.error('[notice-room] 삭제 실패:', e);
+    alert('삭제 실패: ' + (e.message || e));
+  }
+};
 
 /* 보험사 게시판 UI 초기화 */
 function _resetInsurerUI() {
