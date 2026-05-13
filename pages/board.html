@@ -1430,37 +1430,83 @@
   background: var(--notice-bg);
 }
 
-/* 공지 펼침 */
-.notice-pinned {
+/* 공지 핀 TOP 10 (실장님 수동 선택, 2026-05-14 본진 1) — 자동 최신 공지 폐기 */
+.notice-pin-list {
   margin: 16px 24px 0;
   background: var(--notice-pin-bg);
   border: 1px solid var(--notice-pin-border);
   border-radius: 10px;
   overflow: hidden;
-  cursor: pointer;
-  transition: box-shadow 120ms;
 }
-.notice-pinned:hover { box-shadow: var(--shadow-sm); }
-.notice-pinned-summary {
+.notice-pin-list-header {
   display: flex; align-items: center; gap: 8px;
-  padding: 12px 14px;
-  font-size: 0.875em; font-weight: 600;
+  padding: 10px 14px;
+  font-size: 0.8125em; font-weight: 700;
   color: var(--brand-700, #66331A);
+  background: var(--notice-pin-bg);
+  border-bottom: 1px solid var(--notice-pin-border);
 }
-.notice-pinned-summary .pin-title { flex: 1; }
-.notice-pinned-summary .pin-caret {
-  color: var(--brand-500, #A0522D);
-  transition: transform 120ms;
-  font-size: 0.75em;
+.notice-pin-list-header .pin-icon { font-size: 0.95em; }
+.notice-pin-list-items {
+  list-style: none;
+  margin: 0; padding: 0;
 }
-.notice-pinned.is-open .pin-caret { transform: rotate(180deg); }
-.notice-pinned:not(.is-open) .notice-pinned-body { display: none; }
-.notice-pinned-body {
-  padding: 0 14px 14px;
-  font-size: 0.8125em;
-  color: var(--color-text-secondary);
-  line-height: 1.7;
-  border-top: 1px solid var(--notice-pin-border);
+.notice-pin-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px;
+  font-size: 0.875em;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-bottom: 1px solid var(--notice-pin-border);
+  transition: background 120ms;
+}
+.notice-pin-item:last-child { border-bottom: 0; }
+.notice-pin-item:hover { background: var(--brand-50, #FDF4EF); }
+.notice-pin-item .notice-pin-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px;
+  font-size: 0.75em; font-weight: 700;
+  color: var(--brand-700, #66331A);
+  background: var(--brand-100, #F3D9C2);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.notice-pin-item .notice-pin-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 메시지 검색창 (2026-05-14 본진 5) */
+.notice-search-bar {
+  margin: 12px 24px 0;
+}
+.notice-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 0.875em;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 120ms, box-shadow 120ms;
+  box-sizing: border-box;
+}
+.notice-search-input:focus {
+  border-color: var(--brand-500, #A0522D);
+  box-shadow: 0 0 0 3px var(--brand-50, #FDF4EF);
+}
+.notice-search-empty {
+  margin: 16px 24px;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.875em;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-2, #F9FAFB);
+  border-radius: 8px;
 }
 
 /* 메시지 흐름 */
@@ -1695,7 +1741,90 @@
   letter-spacing: 0.5px; text-transform: uppercase;
   color: var(--color-accent, #D4845A);
   margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
+/* 본진 4 — 카테고리 카운트 배지 */
+.notice-asset-count {
+  font-size: 0.92em; font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-secondary);
+  background: var(--neutral-100, #F4F5F7);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+/* 본진 4 — ⭐ MY SPACE 저장 버튼 */
+.notice-asset-photo-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.notice-asset-file-row, .notice-asset-link-row {
+  display: flex; align-items: center; gap: 4px;
+}
+.notice-asset-file-row .notice-asset-file,
+.notice-asset-link-row .notice-asset-link { flex: 1; }
+.notice-asset-save-star {
+  width: 24px; height: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.75em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 120ms, transform 120ms;
+}
+.notice-asset-save-star:hover {
+  background: var(--brand-100, #F3D9C2);
+  transform: scale(1.1);
+}
+.notice-asset-photo-wrap .notice-asset-save-star {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 20px; height: 20px;
+  font-size: 0.65em;
+}
+/* 본진 2 회귀 회피 — 다른 사용자 메시지 ⭐ MY SPACE 저장 */
+.notice-msg-footer {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+.notice-msg-save-star {
+  width: 22px; height: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.7em;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 120ms, background 120ms, transform 120ms;
+}
+.notice-msg-bubble:hover .notice-msg-save-star { opacity: 1; }
+.notice-msg-save-star:hover {
+  background: var(--brand-100, #F3D9C2);
+  transform: scale(1.1);
+}
+
+/* 본진 4 — 토스트 알림 */
+.notice-toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 18px;
+  background: var(--brand-700, #66331A);
+  color: #fff;
+  font-size: 0.875em;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.15));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms;
+  z-index: 9999;
+}
+.notice-toast.is-show { opacity: 1; }
 .notice-asset-photos { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
 .notice-asset-photo {
   flex-shrink: 0; width: 64px; height: 64px;
@@ -1755,6 +1884,30 @@
   .notice-room-grid { grid-template-columns: 1fr; }
   .notice-room-right { display: none; }
   .notice-room-shell { min-height: 500px; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * 본진 7 — 모바일 인박스 제거, 채팅창 가득 (2026-05-14)
+ *   - 아웃박스(.notice-room-shell border) 정체성 유지
+ *   - 인박스 좌우 패딩/마진 24px → 8px 축소
+ *   - pg-outer padding 6px → 음수 마진으로 흡수 (화면 가득)
+ *   - 데스크톱 회귀 0 (max-width 미디어쿼리)
+ * ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .notice-room-shell {
+    margin-left: -6px;
+    margin-right: -6px;
+    border-radius: 4px;
+    height: calc(100vh - 180px);
+  }
+  .notice-pin-list { margin: 12px 8px 0; }
+  .notice-search-bar { margin: 10px 8px 0; }
+  .notice-room-chat { padding: 12px 8px; }
+  .notice-input-bar { padding: 10px 8px 14px; }
+  /* 메시지 버블 max-width = 아웃박스 폭 기준 (인박스 제거 효과) */
+  .notice-msg-bubble { max-width: calc(100vw - 80px); }
+  /* 검색 결과 없음 박힘 시 좌우 여백 동기 */
+  .notice-search-empty { margin: 12px 8px; }
 }
 </style>
 
@@ -1854,20 +2007,30 @@
               <!-- D-좌측: 채팅 본진 -->
               <div class="notice-room-left">
 
-                <!-- 공지 펼침 (상단 고정) -->
-                <div class="notice-pinned is-open" id="notice-pinned"
-                     onclick="window.toggleNoticePin(this, event)" style="display:none;">
-                  <div class="notice-pinned-summary">
+                <!-- 공지 핀 TOP 10 (실장님 수동 선택, 2026-05-14 작업지시서 본진 1 박음) -->
+                <!-- 자동 최신 공지 로직 폐기 → is_pinned=true + pin_order 1~10 박힘 -->
+                <div class="notice-pin-list" id="notice-pin-list" style="display:none;">
+                  <div class="notice-pin-list-header">
                     <span class="pin-icon">📌</span>
-                    <span class="pin-title" id="notice-pinned-title">최신 공지</span>
-                    <span class="pin-caret">▼</span>
+                    <span>핀 공지</span>
                   </div>
-                  <div class="notice-pinned-body" id="notice-pinned-body"></div>
+                  <ul class="notice-pin-list-items" id="notice-pin-list-items"></ul>
+                </div>
+
+                <!-- 메시지 검색창 (2026-05-14 작업지시서 본진 5, AND 조건 + 300ms debounce) -->
+                <div class="notice-search-bar">
+                  <input type="search" id="notice-search" class="notice-search-input"
+                         placeholder="메시지 검색 (본문·제목·작성자)"
+                         oninput="window.onNoticeSearch(this)"
+                         autocomplete="off" />
                 </div>
 
                 <!-- 메시지 흐름 -->
                 <div class="notice-room-chat" id="notice-room-chat">
                   <div class="loading-msg">메시지 불러오는 중...</div>
+                </div>
+                <div id="notice-search-no-result" class="notice-search-empty" style="display:none;">
+                  검색 결과 없음
                 </div>
 
                 <!-- 입력바 (textarea + 📎 + 첨부 미리보기) -->
@@ -1897,9 +2060,12 @@
                   <span class="room-member" id="notice-room-member">· 40명</span>
                 </div>
 
-                <!-- 사진/동영상 -->
+                <!-- 사진/동영상 (2026-05-14 본진 4: 헤더에 N건 카운트 박음) -->
                 <div class="notice-asset-section">
-                  <div class="notice-asset-title">📸 사진·동영상</div>
+                  <div class="notice-asset-title">
+                    <span>📸 사진·동영상</span>
+                    <span class="notice-asset-count" id="notice-asset-photos-count">0건</span>
+                  </div>
                   <div class="notice-asset-photos" id="notice-asset-photos">
                     <span style="color:var(--color-text-tertiary);font-size:0.75em;">자료 로딩 중...</span>
                   </div>
@@ -1907,7 +2073,10 @@
 
                 <!-- 파일 -->
                 <div class="notice-asset-section">
-                  <div class="notice-asset-title">📎 파일</div>
+                  <div class="notice-asset-title">
+                    <span>📎 파일</span>
+                    <span class="notice-asset-count" id="notice-asset-files-count">0건</span>
+                  </div>
                   <div id="notice-asset-files">
                     <span style="color:var(--color-text-tertiary);font-size:0.75em;">자료 로딩 중...</span>
                   </div>
@@ -1915,7 +2084,10 @@
 
                 <!-- 링크 -->
                 <div class="notice-asset-section">
-                  <div class="notice-asset-title">🔗 링크</div>
+                  <div class="notice-asset-title">
+                    <span>🔗 링크</span>
+                    <span class="notice-asset-count" id="notice-asset-links-count">0건</span>
+                  </div>
                   <div id="notice-asset-links">
                     <span style="color:var(--color-text-tertiary);font-size:0.75em;">자료 로딩 중...</span>
                   </div>
@@ -3140,7 +3312,7 @@ async function _loadNoticeRoom(board) {
   try {
     var res = await window.db.fetch(
       '/rest/v1/posts?board_type=eq.' + encodeURIComponent(board) +
-      '&select=id,title,content,author_id,author_name,display_name,display_author,category,attachments,is_notice,created_at' +
+      '&select=id,title,content,author_id,author_name,display_name,display_author,category,attachments,is_notice,is_pinned,pin_order,created_at' +
       '&order=created_at.asc&limit=200'
     );
     var posts = res.ok ? await res.json() : [];
@@ -3148,15 +3320,17 @@ async function _loadNoticeRoom(board) {
     var meId = (window.AppState && window.AppState.userId) || '';
     var meName = (window.AppState && window.AppState.name) || '';
 
-    var pinned = null;
+    /* 핀 TOP 10 (실장님 수동 선택, 2026-05-14 본진 1) — 자동 최신 공지 폐기 */
+    var pinned = [];
     var msgs = [];
     posts.forEach(function(p){
-      if (p.is_notice && !pinned) pinned = p;
+      if (p.is_pinned && p.pin_order != null) pinned.push(p);
       msgs.push(p);
     });
+    pinned.sort(function(a, b){ return (a.pin_order || 99) - (b.pin_order || 99); });
 
-    /* 공지 펼침 박음 */
-    _renderNoticePinned(pinned);
+    /* 핀 리스트 렌더 */
+    _renderNoticePinList(pinned);
 
     /* 메시지 렌더 (날짜 구분선 + 풍선) */
     if (msgs.length === 0) {
@@ -3175,16 +3349,79 @@ async function _loadNoticeRoom(board) {
   }
 }
 
-function _renderNoticePinned(pinned) {
-  var pin   = document.getElementById('notice-pinned');
-  var title = document.getElementById('notice-pinned-title');
-  var body  = document.getElementById('notice-pinned-body');
-  if (!pin) return;
-  if (!pinned) { pin.style.display = 'none'; return; }
-  pin.style.display = '';
-  if (title) title.textContent = '최신 공지 — ' + (pinned.title || '제목 없음');
-  if (body)  body.textContent  = (pinned.content || '').substring(0, 400);
+function _renderNoticePinList(pinned) {
+  var box = document.getElementById('notice-pin-list');
+  var ul  = document.getElementById('notice-pin-list-items');
+  if (!box || !ul) return;
+  if (!pinned || pinned.length === 0) {
+    box.style.display = 'none';
+    ul.innerHTML = '';
+    return;
+  }
+  box.style.display = '';
+  ul.innerHTML = pinned.slice(0, 10).map(function(p){
+    var title = (p.title && p.title.trim()) ? p.title : (p.content || '').substring(0, 60);
+    return '<li class="notice-pin-item" data-post-id="' + p.id + '" ' +
+                'onclick="window.scrollToPinnedMsg(\'' + p.id + '\')">' +
+             '<span class="notice-pin-num">' + (p.pin_order || 0) + '</span>' +
+             '<span class="notice-pin-title">' + _noticeEscape(title) + '</span>' +
+           '</li>';
+  }).join('');
 }
+
+/* 핀 클릭 → 해당 메시지로 스크롤 (본진 1 자연 UX, 본문/첨부 노출 X) */
+window.scrollToPinnedMsg = function(postId){
+  var chat = document.getElementById('notice-room-chat');
+  if (!chat || !postId) return;
+  var target = chat.querySelector('[data-post-id="' + postId + '"]');
+  if (!target) return;
+  try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) { target.scrollIntoView(); }
+  /* 잠깐 강조 */
+  var bubble = target.closest('.notice-msg-bubble') || target;
+  bubble.style.transition = 'background-color 600ms';
+  var prev = bubble.style.backgroundColor;
+  bubble.style.backgroundColor = 'var(--brand-100, #F3D9C2)';
+  setTimeout(function(){ bubble.style.backgroundColor = prev; }, 1200);
+};
+
+/* ─────────────────────────────────────────────────────────────
+ * 메시지 검색 (2026-05-14 작업지시서 본진 5)
+ *   - 300ms debounce
+ *   - AND 조건 (공백 split)
+ *   - textContent 기반 클라이언트 필터 (본문/제목/작성자 모두 매치)
+ * ───────────────────────────────────────────────────────────── */
+var _noticeSearchTimer = null;
+window.onNoticeSearch = function(input){
+  clearTimeout(_noticeSearchTimer);
+  _noticeSearchTimer = setTimeout(function(){
+    var q = (input.value || '').trim().toLowerCase();
+    var chat = document.getElementById('notice-room-chat');
+    var noRes = document.getElementById('notice-search-no-result');
+    if (!chat) return;
+    var rows = chat.querySelectorAll('.notice-msg-row');
+    var dateBars = chat.querySelectorAll('.notice-msg-date');
+
+    if (!q) {
+      rows.forEach(function(r){ r.style.display = ''; });
+      dateBars.forEach(function(d){ d.style.display = ''; });
+      if (noRes) noRes.style.display = 'none';
+      return;
+    }
+
+    var terms = q.split(/\s+/).filter(Boolean);
+    var matchCount = 0;
+    rows.forEach(function(r){
+      var text = (r.textContent || '').toLowerCase();
+      var match = terms.every(function(t){ return text.indexOf(t) !== -1; });
+      r.style.display = match ? '' : 'none';
+      if (match) matchCount++;
+    });
+    /* 날짜 구분선 = 검색 중에는 hide (회귀 0) */
+    dateBars.forEach(function(d){ d.style.display = 'none'; });
+
+    if (noRes) noRes.style.display = matchCount === 0 ? '' : 'none';
+  }, 300);
+};
 
 function _renderNoticeMessages(msgs, meId, meName) {
   var lastDate = '';
@@ -3217,6 +3454,16 @@ function _renderNoticeMessages(msgs, meId, meName) {
     }
 
     if (isMine) {
+      /* 핀 권한 분기 (admin + ga_manager만 노출, 2026-05-14 본진 1 + 본진 2 회귀 회피) */
+      var meRole = (window.AppState && window.AppState.role) || '';
+      var canPin = (meRole === 'admin' || meRole === 'ga_manager');
+      var pinBtnHtml = '';
+      if (canPin) {
+        var pinLabel = p.is_pinned ? '📌 핀 해제' : '📌 핀 등록';
+        pinBtnHtml = '<button class="notice-msg-action-btn" ' +
+                     'onclick="window.togglePostPin(event, \'' + p.id + '\', ' + (p.is_pinned ? 'true' : 'false') + ')">' +
+                     pinLabel + '</button>';
+      }
       return dateBar +
         '<div class="notice-msg-row is-mine">' +
           '<div class="notice-msg-bubble is-mine" data-post-id="' + p.id + '" ' +
@@ -3228,30 +3475,42 @@ function _renderNoticeMessages(msgs, meId, meName) {
             '<div class="notice-msg-actions">' +
               '<button class="notice-msg-action-btn" onclick="window.editMyMsg(event, this)">✏️ 수정</button>' +
               '<button class="notice-msg-action-btn" onclick="window.attachToMyMsg(event, this)">📎 파일 추가</button>' +
+              pinBtnHtml +
               '<button class="notice-msg-action-btn is-danger" onclick="window.deleteMyMsg(event, this)">🗑️ 삭제</button>' +
             '</div>' +
           '</div>' +
         '</div>';
     } else {
+      /* 다른 사용자 메시지 — ⭐ MY SPACE 저장 박음 (2026-05-14 본진 2 회귀 회피) */
       var initial = (author || '?').substring(0, 1);
+      var msgTitle = (p.title && p.title.trim()) ? p.title : (p.content || '').substring(0, 60);
+      var titleEsc = msgTitle.replace(/'/g, "\\'");
+      var pidEsc   = String(p.id || '').replace(/'/g, "\\'");
       return dateBar +
         '<div class="notice-msg-row is-other">' +
           '<div class="notice-msg-avatar">' + _noticeEscape(initial) + '</div>' +
           '<div class="notice-msg-bubble is-other">' +
             '<div class="notice-msg-author">' + _noticeEscape(author) + '</div>' +
             html + attHtml +
-            '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
+            '<div class="notice-msg-footer">' +
+              '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
+              '<button class="notice-msg-save-star" title="MY SPACE에 저장" ' +
+                      'onclick="window.saveToMySpace(event, \'' + pidEsc + '\', \'' + titleEsc + '\', \'\', \'message\')">⭐</button>' +
+            '</div>' +
           '</div>' +
         '</div>';
     }
   }).join('');
 }
 
-/* 자산 패널 (사진/파일/링크 분류) */
+/* 자산 패널 (사진/파일/링크 분류, 2026-05-14 본진 4: 카운트 + ⭐ MY SPACE 저장) */
 function _renderNoticeAssets(posts) {
   var photoBox = document.getElementById('notice-asset-photos');
   var fileBox  = document.getElementById('notice-asset-files');
   var linkBox  = document.getElementById('notice-asset-links');
+  var photoCnt = document.getElementById('notice-asset-photos-count');
+  var fileCnt  = document.getElementById('notice-asset-files-count');
+  var linkCnt  = document.getElementById('notice-asset-links-count');
 
   var photos = [], files = [], links = [];
   posts.forEach(function(p){
@@ -3264,19 +3523,39 @@ function _renderNoticeAssets(posts) {
         var name = a.drive_filename || a.kakao_label || a.name || '';
         var driveId = a.drive_id || '';
         var url = driveId ? ('https://drive.google.com/file/d/' + driveId + '/view') : '#';
-        if (['jpg','jpeg','png','gif','webp','heic'].indexOf(ext) >= 0) photos.push({name:name, url:url});
-        else if (['mp4','mov','webm'].indexOf(ext) >= 0) photos.push({name:name, url:url, video:true});
-        else if (/^https?:/.test(name)) links.push({name:name, url:name});
-        else files.push({name:name, url:url, size:a.size_bytes});
+        if (['jpg','jpeg','png','gif','webp','heic'].indexOf(ext) >= 0) photos.push({name:name, url:url, post_id:p.id});
+        else if (['mp4','mov','webm'].indexOf(ext) >= 0) photos.push({name:name, url:url, video:true, post_id:p.id});
+        else if (/^https?:/.test(name)) links.push({name:name, url:name, post_id:p.id});
+        else files.push({name:name, url:url, size:a.size_bytes, post_id:p.id});
       });
     } catch (e) {}
   });
+
+  /* 카운트 갱신 */
+  if (photoCnt) photoCnt.textContent = photos.length + '건';
+  if (fileCnt)  fileCnt.textContent  = files.length  + '건';
+  if (linkCnt)  linkCnt.textContent  = links.length  + '건';
+
+  /* 저장 버튼 HTML helper (이스케이프 박힌 인자 박음) */
+  function _saveBtn(postId, name, url, type) {
+    var pid = String(postId || '').replace(/'/g, "\\'");
+    var nm  = String(name || '').replace(/'/g, "\\'");
+    var u   = String(url  || '').replace(/'/g, "\\'");
+    return '<button class="notice-asset-save-star" title="MY SPACE에 저장" ' +
+           'onclick="window.saveToMySpace(event, \'' + pid + '\', \'' + nm + '\', \'' + u + '\', \'' + type + '\')">⭐</button>';
+  }
 
   if (photoBox) {
     photoBox.innerHTML = photos.length === 0
       ? '<span style="color:var(--color-text-tertiary);font-size:0.75em;">사진·동영상 없음</span>'
       : photos.slice(0,20).map(function(ph){
-          return '<a class="notice-asset-photo" href="' + ph.url + '" target="_blank" title="' + _noticeEscape(ph.name) + '">' + (ph.video ? '🎥' : '📷') + '</a>';
+          var type = ph.video ? 'video' : 'photo';
+          return '<span class="notice-asset-photo-wrap">' +
+                   '<a class="notice-asset-photo" href="' + ph.url + '" target="_blank" title="' + _noticeEscape(ph.name) + '">' +
+                     (ph.video ? '🎥' : '📷') +
+                   '</a>' +
+                   _saveBtn(ph.post_id, ph.name, ph.url, type) +
+                 '</span>';
         }).join('');
   }
   if (fileBox) {
@@ -3284,20 +3563,84 @@ function _renderNoticeAssets(posts) {
       ? '<span style="color:var(--color-text-tertiary);font-size:0.75em;">파일 없음</span>'
       : files.slice(0,30).map(function(f){
           var sz = f.size ? ((f.size/1024/1024).toFixed(1) + 'MB') : 'Drive ↗';
-          return '<a class="notice-asset-file" href="' + f.url + '" target="_blank">' +
-                   '<span class="file-icon">📄</span>' +
-                   '<span class="file-name">' + _noticeEscape(f.name) + '</span>' +
-                   '<span class="file-meta">' + sz + '</span>' +
-                 '</a>';
+          return '<div class="notice-asset-file-row">' +
+                   '<a class="notice-asset-file" href="' + f.url + '" target="_blank">' +
+                     '<span class="file-icon">📄</span>' +
+                     '<span class="file-name">' + _noticeEscape(f.name) + '</span>' +
+                     '<span class="file-meta">' + sz + '</span>' +
+                   '</a>' +
+                   _saveBtn(f.post_id, f.name, f.url, 'file') +
+                 '</div>';
         }).join('');
   }
   if (linkBox) {
     linkBox.innerHTML = links.length === 0
       ? '<span style="color:var(--color-text-tertiary);font-size:0.75em;">링크 없음</span>'
       : links.slice(0,20).map(function(l){
-          return '<a class="notice-asset-link" href="' + _noticeEscape(l.url) + '" target="_blank">' + _noticeEscape(l.name) + ' ↗</a>';
+          return '<div class="notice-asset-link-row">' +
+                   '<a class="notice-asset-link" href="' + _noticeEscape(l.url) + '" target="_blank">' + _noticeEscape(l.name) + ' ↗</a>' +
+                   _saveBtn(l.post_id, l.name, l.url, 'link') +
+                 '</div>';
         }).join('');
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * MY SPACE 저장 (2026-05-14 본진 4 + 본진 2 회귀 회피 본진)
+ *   - library 테이블 INSERT (myspace.html 정합)
+ *   - source_post_id FK + UNIQUE 인덱스 (2026-05-14_library_source_post.sql)
+ *   - 중복 저장 시 23505 → "이미 저장됨" 토스트
+ * ───────────────────────────────────────────────────────────── */
+window.saveToMySpace = async function(evt, postId, itemName, itemUrl, itemType){
+  if (evt) { evt.preventDefault(); evt.stopPropagation(); }
+  var meId = (window.AppState && window.AppState.userId) || '';
+  if (!meId) { alert('로그인 정보 부재'); return; }
+  if (!postId) { alert('원본 post 정보 부재'); return; }
+
+  var body = {
+    title: itemName || '게시판 자료',
+    description: '게시판에서 저장됨',
+    owner_id: meId,
+    source_post_id: postId
+  };
+  if (itemType === 'link') body.link_url = itemUrl;
+  else if (itemType === 'photo' || itemType === 'video') body.image_url = itemUrl;
+  else if (itemType === 'message') body.memo_text = itemName;
+  else body.file_url = itemUrl;
+
+  try {
+    var res = await window.db.fetch('/rest/v1/library', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok || res.status === 201) {
+      _showNoticeToast('MY SPACE에 저장됐어요');
+    } else if (res.status === 409) {
+      _showNoticeToast('이미 저장된 자료입니다');
+    } else {
+      var err = await res.text().catch(function(){ return ''; });
+      console.error('[myspace-save] 실패:', res.status, err);
+      alert('저장 실패: ' + res.status);
+    }
+  } catch (e) {
+    console.error('[myspace-save] 네트워크 오류:', e);
+    alert('저장 실패: ' + (e.message || e));
+  }
+};
+
+function _showNoticeToast(msg){
+  var t = document.getElementById('notice-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'notice-toast';
+    t.className = 'notice-toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('is-show');
+  clearTimeout(window._noticeToastT);
+  window._noticeToastT = setTimeout(function(){ t.classList.remove('is-show'); }, 2200);
 }
 
 /* personal_memos fetch */
@@ -3357,12 +3700,6 @@ window.saveNoticeMemo = async function() {
 window.openMyspaceFromNotice = function() {
   if (typeof window.switchMenu === 'function') window.switchMenu('myspace');
   else location.hash = '#/myspace';
-};
-
-/* 공지 펼침 토글 */
-window.toggleNoticePin = function(el, evt) {
-  if (evt) evt.stopPropagation();
-  el.classList.toggle('is-open');
 };
 
 /* ━━━ 입력바 첨부 ━━━ */
@@ -3620,6 +3957,79 @@ window.deleteMyMsg = async function(evt, btnEl) {
   } catch (e) {
     console.error('[notice-room] 삭제 실패:', e);
     alert('삭제 실패: ' + (e.message || e));
+  }
+};
+
+/* ─────────────────────────────────────────────────────────────
+ * 핀 등록/해제 (2026-05-14 작업지시서 본진 1)
+ *   - admin + ga_manager 만 허용 (UI + 트리거 양쪽 가드)
+ *   - 등록: 빈 pin_order 슬롯 박음 (기존 핀 개수 + 1, 최대 10)
+ *   - 해제: is_pinned=false / pin_order=null + 후행 슬롯 자동 보정
+ * ───────────────────────────────────────────────────────────── */
+window.togglePostPin = async function(evt, postId, isPinned) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+
+  var meRole = (window.AppState && window.AppState.role) || '';
+  if (meRole !== 'admin' && meRole !== 'ga_manager') {
+    alert('핀 등록 권한이 없습니다 (admin / 실장 한정).');
+    return;
+  }
+
+  var board = _currentBoard;
+
+  try {
+    if (isPinned) {
+      /* 해제 */
+      if (!confirm('이 메시지의 핀을 해제하시겠습니까?')) return;
+      var hp = await window.db.fetch('/rest/v1/posts?id=eq.' + encodeURIComponent(postId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ is_pinned: false, pin_order: null })
+      });
+      if (!hp.ok) throw new Error('PATCH ' + hp.status);
+    } else {
+      /* 등록 — 기존 핀 개수 조회 후 다음 슬롯 박음 */
+      var listRes = await window.db.fetch(
+        '/rest/v1/posts?board_type=eq.' + encodeURIComponent(board) +
+        '&is_pinned=eq.true&select=id,pin_order&order=pin_order.asc'
+      );
+      var existing = listRes.ok ? await listRes.json() : [];
+      if (existing.length >= 10) {
+        alert('핀은 최대 10건. 기존 핀 1건 해제 후 다시 박아주세요.');
+        return;
+      }
+      var newOrder = existing.length + 1;
+      var rp = await window.db.fetch('/rest/v1/posts?id=eq.' + encodeURIComponent(postId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ is_pinned: true, pin_order: newOrder })
+      });
+      if (!rp.ok) throw new Error('PATCH ' + rp.status);
+    }
+
+    /* 후행 슬롯 보정 — 해제 후 빈 칸이 생기면 pin_order 재정렬 */
+    if (isPinned) {
+      var afterRes = await window.db.fetch(
+        '/rest/v1/posts?board_type=eq.' + encodeURIComponent(board) +
+        '&is_pinned=eq.true&select=id,pin_order&order=pin_order.asc'
+      );
+      var afterRows = afterRes.ok ? await afterRes.json() : [];
+      for (var i = 0; i < afterRows.length; i++) {
+        var expected = i + 1;
+        if (afterRows[i].pin_order !== expected) {
+          await window.db.fetch('/rest/v1/posts?id=eq.' + encodeURIComponent(afterRows[i].id), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ pin_order: expected })
+          });
+        }
+      }
+    }
+
+    _loadNoticeRoom(board);
+  } catch (e) {
+    console.error('[pin-toggle] 실패:', e);
+    alert('핀 박음 실패: ' + (e.message || e));
   }
 };
 
