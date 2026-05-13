@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[Test v2-notice-room] 4팀 단체방 — D영역 공지방 셸 (3·4차)</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<link rel="stylesheet" href="../../../css/tokens.css">
+
+<!-- v2-notice-room 전역 오버라이드 — 어제 1·2차 + 본 3차 결재 박음 -->
+<style>
+:root {
+  /* v1-full 정합 */
+  --color-bg:             #FFFFFF;
+  --color-surface:        #FFFFFF;
+  --color-surface-2:      #F6F7F9;
+  --color-border:         #E5E7EB;
+  --color-text-primary:   #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary:  #9CA3AF;
+  --shadow-sm: 0 2px 6px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 4px 14px rgba(17, 24, 39, 0.08);
+
+  --neutral-100: #F4F5F7; --neutral-200: #E5E7EB; --neutral-700: #374151; --neutral-800: #1F2937;
+  --brand-50:  #FDF4EF;   --brand-100: #F8DCC4;   --brand-400: #C4733A;   --brand-500: #A0522D;   --brand-700: #66331A;
+  --accent-50: #FEF3EA;   --accent-200: #F8B583;  --accent-400: #D4845A;
+  --gradient-brand: linear-gradient(135deg, var(--brand-500) 0%, var(--accent-400) 100%);
+  --color-success-bg: #ECFDF5;
+  --color-danger-bg:  #FEF2F2;
+
+  --sidebar-width: 180px;
+  --rightbar-width: 280px;
+  --header-h: 64px;
+  --z-sticky: 20;
+  --z-mobile-tabs: 30;
+
+  /* 어제 박힘 — onesecond notice room 변수 8종 (카카오 변수 5종 폐기 후) */
+  --notice-bg:             #FFFFFF;            /* 채팅 본진 배경 */
+  --notice-pin-bg:         #FFF8F1;            /* 공지 펼침 배경 */
+  --notice-pin-border:     var(--brand-100);   /* 공지 펼침 보더 */
+  --notice-mine-bg:        var(--brand-50);    /* 본인 풍선 (#FDF4EF 아이보리) */
+  --notice-mine-border:    var(--brand-100);   /* 본인 풍선 보더 */
+  --notice-mine-text:      var(--brand-700);
+  --notice-other-bg:       var(--neutral-100); /* 상대 풍선 (회색) */
+  --notice-other-text:     var(--neutral-800);
+}
+</style>
+
+<!-- 앱 쉘 CSS (v1-full 정합) -->
+<style>
+html, body { font-size: 16px; font-family: var(--font-sans, 'Pretendard', system-ui, sans-serif); background: var(--color-bg); margin: 0; padding: 0; box-sizing: border-box; color: var(--color-text-primary); }
+*, *::before, *::after { box-sizing: border-box; }
+
+/* A1+A2 통합 헤더 — v1-full 정합 placeholder */
+.topbar { height: var(--header-h); background: var(--gradient-brand); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; position: sticky; top: 0; z-index: var(--z-sticky); }
+.tb-brand { display: flex; align-items: center; gap: 10px; font-size: 1.25em; font-weight: 800; letter-spacing: -0.025em; color: #fff; }
+.tb-brand-mark { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.875em; font-weight: 900; }
+.tb-brand .accent { color: var(--accent-200); }
+.tb-center { flex: 1; max-width: 420px; margin: 0 24px; }
+.tb-search { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; }
+.tb-search-icon { font-size: 0.875em; color: rgba(255,255,255,0.85); }
+.tb-search input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.875em; color: #fff; }
+.tb-search input::placeholder { color: rgba(255,255,255,0.55); }
+.tb-right { display: flex; align-items: center; gap: 12px; }
+.tb-status { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--color-success-bg); border: 1px solid rgba(16,185,129,0.18); border-radius: 9999px; font-size: 0.75em; font-weight: 700; color: #047857; }
+.tb-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; }
+.tb-alert { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 8px; background: var(--color-danger-bg); color: #B91C1C; border: 1px solid rgba(239,68,68,0.22); font-size: 0.75em; font-weight: 700; text-decoration: none; }
+.tb-user { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 4px; background: #fff; border: 1px solid var(--color-border); border-radius: 9999px; cursor: pointer; color: var(--color-text-primary); }
+.tb-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--gradient-brand); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: 800; }
+.tb-user-name { font-size: 0.875em; font-weight: 700; }
+.tb-user-caret { color: var(--color-text-tertiary); font-size: 0.75em; }
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.main { flex: 1; display: grid; grid-template-columns: var(--sidebar-width) 1fr var(--rightbar-width); min-height: 0; }
+
+/* B 좌사이드바 — v1-full 정합 placeholder */
+.b { background: var(--color-surface-2); padding: 24px 12px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--color-border); }
+.menu { display: flex; flex-direction: column; gap: 8px; }
+.menu-item { padding: 12px 14px; border-radius: 8px; cursor: pointer; font-size: 0.9375em; font-weight: 500; color: var(--color-text-secondary); white-space: nowrap; }
+.menu-item:hover { background: #FFFFFF; color: var(--color-text-primary); }
+.menu-item.active { background: var(--brand-500); color: #fff; font-weight: 700; }
+.menu-item.menu-together { background: rgba(212, 132, 90, 0.08); border-left: 3px solid var(--accent-400); color: var(--color-text-primary); font-weight: 600; padding-left: 11px; }
+.pro { background: #FFFFFF; border: 1px solid var(--color-border); padding: 14px; border-radius: 8px; text-align: center; font-size: 0.8125em; font-weight: 600; color: var(--color-text-secondary); }
+.pro strong { color: var(--accent-400); }
+
+/* C 우사이드바 — v1-full 정합 placeholder */
+.c { background: var(--color-surface-2); padding: 32px 20px; border-left: 1px solid var(--color-border); }
+.c-box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+.c-box-label { font-size: 0.6875em; font-weight: 700; color: var(--accent-400); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+.c-box-title { font-size: 0.875em; font-weight: 700; color: var(--color-text-primary); margin-bottom: 8px; }
+.c-box-desc { font-size: 0.8125em; color: var(--color-text-secondary); line-height: 1.7; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   D 영역 — 공지방 셸 본진 (3차 의뢰 본진)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.d-notice-room {
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+.d-title-bar {
+  padding: 24px 32px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.d-title-bar h1 {
+  margin: 0 0 6px;
+  font-size: 1.375em;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+.d-title-bar h1 .live-dot { color: #DC2626; font-size: 0.9em; }
+.d-title-bar p {
+  margin: 0;
+  font-size: 0.875em;
+  color: var(--color-text-secondary);
+}
+
+/* ─ 데스크탑 7탭 라운드 버튼 (가로 1단, 스크롤) ── */
+.notice-room-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 12px 32px;
+  overflow-x: auto;
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
+  scrollbar-width: thin;
+}
+.notice-room-tabs::-webkit-scrollbar { height: 4px; }
+.notice-room-tabs::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 2px; }
+
+.notice-room-tab {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background: #FFFFFF;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 0.875em;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 120ms, color 120ms, border-color 120ms;
+}
+.notice-room-tab:hover {
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border-color: var(--brand-100);
+}
+.notice-room-tab.is-active {
+  background: var(--brand-500);
+  color: #FFFFFF;
+  border-color: var(--brand-500);
+  font-weight: 700;
+}
+
+/* ─ D-grid: 좌(채팅) + 우(자산) ── */
+.notice-room-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ─ D-좌측: 채팅 본진 ── */
+.notice-room-left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--notice-bg);
+}
+
+/* 공지 펼침 (상단 고정) */
+.notice-pinned {
+  margin: 16px 24px 0;
+  background: var(--notice-pin-bg);
+  border: 1px solid var(--notice-pin-border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 120ms;
+}
+.notice-pinned:hover { box-shadow: var(--shadow-sm); }
+.notice-pinned-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  font-size: 0.875em;
+  font-weight: 600;
+  color: var(--brand-700);
+}
+.notice-pinned-summary .pin-title { flex: 1; }
+.notice-pinned-summary .pin-caret {
+  color: var(--brand-500);
+  transition: transform 120ms;
+  font-size: 0.75em;
+}
+.notice-pinned.is-open .pin-caret { transform: rotate(180deg); }
+.notice-pinned-body {
+  padding: 0 14px 14px;
+  font-size: 0.8125em;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  border-top: 1px solid var(--notice-pin-border);
+}
+
+/* 메시지 흐름 */
+.notice-room-chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+}
+.notice-room-chat::-webkit-scrollbar { width: 6px; }
+.notice-room-chat::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 3px; }
+
+.notice-msg-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.notice-msg-row.is-mine { justify-content: flex-end; }
+.notice-msg-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gradient-brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125em;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.notice-msg-bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.875em;
+  line-height: 1.55;
+  position: relative;
+  word-break: break-word;
+}
+.notice-msg-bubble.is-mine {
+  background: var(--notice-mine-bg);
+  border: 1px solid var(--notice-mine-border);
+  color: var(--notice-mine-text);
+  border-bottom-right-radius: 4px;
+}
+.notice-msg-bubble.is-other {
+  background: var(--notice-other-bg);
+  color: var(--notice-other-text);
+  border-bottom-left-radius: 4px;
+}
+.notice-msg-author {
+  font-size: 0.75em;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--brand-700);
+}
+.notice-msg-time {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.6875em;
+  color: var(--color-text-tertiary);
+  text-align: right;
+}
+.notice-msg-row.is-other .notice-msg-time { text-align: left; }
+
+/* 날짜 구분선 */
+.notice-msg-date {
+  align-self: center;
+  font-size: 0.6875em;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-2);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  margin: 8px 0;
+}
+
+/* 입력창 — 본 3차 + 4차 보강: textarea + 첨부 + 액션 */
+.notice-input-bar {
+  flex-shrink: 0;
+  padding: 12px 24px 18px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.notice-input-attach {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background: var(--color-surface-2);
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+.notice-input-attach:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-100);
+}
+.notice-input-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.notice-attach-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.notice-attach-preview:empty { display: none; }
+.notice-attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  border-radius: 9999px;
+  font-size: 0.75em;
+  color: var(--brand-700);
+  max-width: 220px;
+}
+.notice-attach-chip .chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notice-attach-chip .chip-size {
+  color: var(--color-text-tertiary);
+  font-size: 0.85em;
+}
+.notice-attach-chip .chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(160, 82, 45, 0.18);
+  color: var(--brand-700);
+  font-size: 0.7em;
+  cursor: pointer;
+  padding: 0;
+}
+.notice-attach-chip .chip-remove:hover {
+  background: var(--brand-100);
+}
+.notice-input-bar textarea {
+  width: 100%;
+  min-height: 80px;       /* 4차 본진: 옛 40px의 2배 */
+  max-height: 200px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 0.875em;
+  line-height: 1.55;
+  background: var(--color-surface-2);
+  outline: none;
+  resize: none;
+}
+.notice-input-bar textarea:focus {
+  border-color: var(--brand-400);
+  background: #FFFFFF;
+}
+.notice-input-send {
+  flex-shrink: 0;
+  height: 80px;          /* textarea 정합 */
+  padding: 0 18px;
+  border: none;
+  border-radius: 14px;
+  background: var(--brand-500);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.875em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.notice-input-send:hover { background: var(--brand-700); }
+
+/* 본인 메시지 풍선 — 클릭 가능 표시 + 액션 메뉴 */
+.notice-msg-row.is-mine .notice-msg-bubble {
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 120ms, transform 120ms;
+}
+.notice-msg-row.is-mine .notice-msg-bubble:hover {
+  box-shadow: 0 2px 8px rgba(160, 82, 45, 0.16);
+}
+.notice-msg-row.is-mine .notice-msg-bubble.is-editing {
+  background: #FFFFFF;
+  border-color: var(--brand-400);
+}
+.notice-msg-row.is-mine .notice-msg-bubble textarea.edit-area {
+  width: 100%;
+  min-height: 60px;
+  padding: 6px 8px;
+  border: 1px solid var(--brand-200, var(--brand-100));
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1em;
+  line-height: 1.55;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  outline: none;
+  resize: vertical;
+}
+.notice-msg-actions {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  display: none;
+  gap: 4px;
+  padding: 6px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+}
+.notice-msg-row.is-mine .notice-msg-bubble.is-menu-open .notice-msg-actions {
+  display: inline-flex;
+}
+.notice-msg-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.8125em;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.notice-msg-action-btn:hover { background: var(--brand-50); color: var(--brand-700); }
+.notice-msg-action-btn.is-danger { color: #B91C1C; }
+.notice-msg-action-btn.is-danger:hover { background: var(--color-danger-bg); }
+
+/* 본인 메시지 풍선 첨부 미리보기 — 메시지 안 칩 */
+.notice-msg-attaches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.notice-msg-attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--brand-100);
+  border-radius: 9999px;
+  font-size: 0.6875em;
+  color: var(--brand-700);
+}
+
+/* ─ D-우측: 자산 패널 ── */
+.notice-room-right {
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+}
+.notice-room-right::-webkit-scrollbar { width: 6px; }
+.notice-room-right::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 3px; }
+
+/* 공지방 헤더 (방 이름 + 인원수) — 본 3차 본진 박힘 */
+.notice-room-header {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface-2);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9375em;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  z-index: 1;
+}
+.notice-room-header .room-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--gradient-brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75em; font-weight: 800;
+}
+.notice-room-header .room-name { flex: 1; }
+.notice-room-header .room-member {
+  font-size: 0.75em; font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.notice-room-header .room-caret {
+  font-size: 0.7em; color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+/* 자산 섹션 (사진/파일/링크/메모) */
+.notice-asset-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.notice-asset-section:last-child { border-bottom: 0; }
+.notice-asset-title {
+  font-size: 0.6875em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--accent-400);
+  margin-bottom: 10px;
+}
+
+/* 사진/동영상 — 가로 스크롤 갤러리 */
+.notice-asset-photos {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+.notice-asset-photo {
+  flex-shrink: 0;
+  width: 64px; height: 64px;
+  border-radius: 8px;
+  background: var(--neutral-100);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2em;
+  border: 1px solid var(--color-border);
+}
+
+/* 파일 리스트 */
+.notice-asset-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.8125em;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: background 120ms;
+}
+.notice-asset-file:hover { background: #FFFFFF; }
+.notice-asset-file .file-icon { font-size: 1.1em; }
+.notice-asset-file .file-name {
+  flex: 1; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.notice-asset-file .file-meta {
+  font-size: 0.6875em; color: var(--color-text-tertiary);
+}
+
+/* 링크 */
+.notice-asset-link {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.8125em;
+  color: var(--brand-700);
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+.notice-asset-link:hover { background: #FFFFFF; }
+
+/* 내 메모 */
+.notice-memo textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.8125em;
+  background: #FFFFFF;
+  resize: vertical;
+  outline: none;
+}
+.notice-memo textarea:focus { border-color: var(--brand-400); }
+.notice-memo .memo-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.notice-memo .memo-actions button {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.notice-memo .memo-actions button.is-primary {
+  background: var(--brand-500);
+  color: #fff;
+  border-color: var(--brand-500);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   모바일 6탭 하단 그리드 (3차 § 3-4 본진)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.notice-room-mobile-tabs {
+  display: none;  /* 모바일 only */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--brand-700);
+  color: #FFFFFF;
+  z-index: var(--z-mobile-tabs);
+  box-shadow: 0 -4px 14px rgba(102, 51, 26, 0.18);
+}
+.notice-room-mobile-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.78);
+  font-family: inherit;
+  font-size: 0.75em;
+  padding: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+.notice-room-mobile-toggle .caret { transition: transform 200ms; display: inline-block; margin-left: 6px; }
+.notice-room-mobile-tabs.is-collapsed .notice-room-mobile-toggle .caret { transform: rotate(180deg); }
+.notice-room-mobile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+  transition: max-height 240ms ease, padding 240ms ease;
+  max-height: 220px;
+  overflow: hidden;
+}
+.notice-room-mobile-tabs.is-collapsed .notice-room-mobile-grid {
+  max-height: 0;
+  padding: 0 12px;
+}
+.notice-room-mobile-cell {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #FFFFFF;
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: background 120ms;
+}
+.notice-room-mobile-cell:hover,
+.notice-room-mobile-cell.is-active {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.32);
+}
+.notice-room-mobile-cell .m-icon { font-size: 1.4em; }
+.notice-room-mobile-cell .m-label {
+  font-size: 0.6875em;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   반응형 분기 (768px breakpoint)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 1024px) {
+  .main { grid-template-columns: 0 1fr var(--rightbar-width); }
+  .b { display: none; }
+}
+@media (max-width: 767px) {
+  .main { grid-template-columns: 1fr; }
+  .c { display: none; }
+  .notice-room-tabs { display: none; }            /* 데스크탑 7탭 hide */
+  .notice-room-grid { grid-template-columns: 1fr; }
+  .notice-room-right { display: none; }            /* 모바일 자산 패널 hide (별 결재 잔여) */
+  .notice-room-mobile-tabs { display: block; }     /* 모바일 6탭 show */
+  .notice-room-chat { padding-bottom: 220px; }     /* 모바일 6탭 그리드 영역 확보 */
+  .d-title-bar { padding: 16px 18px 10px; }
+  .d-title-bar h1 { font-size: 1.125em; }
+}
+
+.site-footer { flex-shrink: 0; width: 100%; background: var(--color-surface-2); color: var(--color-text-secondary); padding: 14px 24px; border-top: 1px solid var(--color-border); }
+.footer-inner { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.footer-brand { font-size: 0.875em; font-weight: 900; color: var(--color-text-primary); }
+.footer-brand span { color: var(--accent-400); }
+.footer-copy { font-size: 0.6875em; color: var(--color-text-tertiary); }
+</style>
+</head>
+
+<body>
+<div class="app">
+  <!-- ━━━━━━━━━━━━ A. 헤더 (라이브 그대로 — placeholder) ━━━━━━━━━━━━ -->
+  <header class="topbar">
+    <div class="tb-brand">
+      <div class="tb-brand-mark">1S</div>
+      <span>one<span class="accent">second</span></span>
+    </div>
+    <div class="tb-center">
+      <div class="tb-search">
+        <span class="tb-search-icon">🔍</span>
+        <input placeholder="자료·질문·답변 검색…">
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-status"><span class="dot"></span> 운영중</div>
+      <a class="tb-alert" href="#">알림 3</a>
+      <div class="tb-user">
+        <div class="tb-user-avatar">임</div>
+        <span class="tb-user-name">임태성</span>
+        <span class="tb-user-caret">▾</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- ━━━━━━━━━━━━ B. 좌사이드바 (라이브 그대로 — placeholder) ━━━━━━━━━━━━ -->
+    <aside class="b">
+      <div class="menu">
+        <div class="menu-item">🏠 홈</div>
+        <div class="menu-item active">📢 현장의 소리</div>
+        <div class="menu-item">⚡ Quick 메뉴</div>
+        <div class="menu-item">📝 스크립트</div>
+        <div class="menu-item">📂 MY SPACE</div>
+        <div class="menu-item menu-together">🤝 함께해요</div>
+        <div class="menu-item">📰 보험뉴스</div>
+      </div>
+      <div class="pro">⭐ <strong>PRO</strong> 업그레이드</div>
+    </aside>
+
+    <!-- ━━━━━━━━━━━━ D. 공지방 셸 본진 (3차 본진) ━━━━━━━━━━━━ -->
+    <section class="d-notice-room">
+      <!-- D 타이틀 (라이브 그대로) -->
+      <div class="d-title-bar">
+        <h1><span class="live-dot">🔴</span> 현장의 소리 · 실시간 이슈 공유</h1>
+        <p>허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</p>
+      </div>
+
+      <!-- 데스크탑 7탭 라운드 버튼 (3차 본진) -->
+      <nav class="notice-room-tabs" role="tablist">
+        <button class="notice-room-tab" data-tab="manager_notice"
+                onclick="selectNoticeTab('manager_notice', this)">📢 4팀 단체방</button>
+        <button class="notice-room-tab" data-tab="navigation"
+                onclick="selectNoticeTab('navigation', this)">🧭 네비게이션방</button>
+        <button class="notice-room-tab is-active" data-tab="qna"
+                onclick="selectNoticeTab('qna', this)">📝 스마트 게시판</button>
+        <button class="notice-room-tab" data-tab="manager_lounge"
+                onclick="selectNoticeTab('manager_lounge', this)">☕ 매니저 라운지</button>
+        <button class="notice-room-tab" data-tab="insurer"
+                onclick="selectNoticeTab('insurer', this)">🏢 보험사 게시판</button>
+        <button class="notice-room-tab" data-tab="hub"
+                onclick="selectNoticeTab('hub', this)">🌐 허브 게시판</button>
+        <button class="notice-room-tab" data-tab="archive_legacy"
+                onclick="selectNoticeTab('archive_legacy', this)">📦 폐기 보존</button>
+      </nav>
+
+      <!-- D-grid: 좌(채팅) + 우(자산) -->
+      <div class="notice-room-grid">
+
+        <!-- ── D-좌측: 채팅 본진 ── -->
+        <div class="notice-room-left">
+
+          <!-- 공지 펼침 (상단 고정) -->
+          <div class="notice-pinned is-open" onclick="toggleNoticePin(this, event)">
+            <div class="notice-pinned-summary">
+              <span class="pin-icon">📌</span>
+              <span class="pin-title">최신 공지 — 갑상선 결절 1cm 미만 인수 정리 (5월 기준)</span>
+              <span class="pin-caret">▼</span>
+            </div>
+            <div class="notice-pinned-body">
+              메리츠 / DB / 삼성 3사 5월 청약 기준 정리. 1cm 이하 + 양성 진단서 → 표준체 가능 (메리츠) / 1cm 이하 + 6개월 추적 정상 → 가입 가능 (DB) / 0.5cm 이하만 표준체 (삼성). 회사별 청약 시점 기준이 자주 바뀌니 청약 직전 재확인 부탁드립니다.
+            </div>
+          </div>
+
+          <!-- 메시지 흐름 -->
+          <div class="notice-room-chat" id="notice-chat">
+
+            <div class="notice-msg-date">2026년 5월 13일</div>
+
+            <div class="notice-msg-row is-other">
+              <div class="notice-msg-avatar">한</div>
+              <div class="notice-msg-bubble is-other">
+                <div class="notice-msg-author">한재성 실장</div>
+                내일(5/19) 오전 9시 4팀 정기 미팅 진행합니다. 안건 미리 확인 부탁드립니다.<br>
+                1. 5/18 onesecond 가동 첫 주 회고<br>
+                2. 주말 진행 건 공유<br>
+                3. 6월 캠페인 사전 논의
+                <span class="notice-msg-time">14:32</span>
+              </div>
+            </div>
+
+            <div class="notice-msg-row is-mine">
+              <div class="notice-msg-bubble is-mine" onclick="openMyMsgMenu(this, event)">
+                <span class="msg-text">네 확인했습니다 실장님. 6월 캠페인 자동차 보험 갱신 + 종신 신상품 자료 미리 준비해두겠습니다.</span>
+                <span class="notice-msg-time">14:35</span>
+                <div class="notice-msg-actions">
+                  <button class="notice-msg-action-btn" onclick="editMyMsg(event, this)">✏️ 수정</button>
+                  <button class="notice-msg-action-btn" onclick="attachToMyMsg(event, this)">📎 파일 추가</button>
+                  <button class="notice-msg-action-btn is-danger" onclick="deleteMyMsg(event, this)">🗑️ 삭제</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="notice-msg-row is-other">
+              <div class="notice-msg-avatar">한</div>
+              <div class="notice-msg-bubble is-other">
+                <div class="notice-msg-author">한재성 실장</div>
+                갑상선 결절 1cm 미만 인수 가능 여부 정리해서 공지 박았습니다. 본문 상단 📌 공지 펼침 확인 부탁드립니다.
+                <span class="notice-msg-time">14:48</span>
+              </div>
+            </div>
+
+            <div class="notice-msg-row is-other">
+              <div class="notice-msg-avatar">한</div>
+              <div class="notice-msg-bubble is-other">
+                <div class="notice-msg-author">한재성 실장</div>
+                📄 5월 갑상선 인수 정리.pdf (우측 파일 영역에서 다운로드 가능)
+                <span class="notice-msg-time">14:49</span>
+              </div>
+            </div>
+
+            <div class="notice-msg-row is-mine">
+              <div class="notice-msg-bubble is-mine" onclick="openMyMsgMenu(this, event)">
+                <span class="msg-text">감사합니다. 어제 메리츠 상담 건도 이 기준으로 진행하겠습니다.</span>
+                <span class="notice-msg-time">14:52</span>
+                <div class="notice-msg-actions">
+                  <button class="notice-msg-action-btn" onclick="editMyMsg(event, this)">✏️ 수정</button>
+                  <button class="notice-msg-action-btn" onclick="attachToMyMsg(event, this)">📎 파일 추가</button>
+                  <button class="notice-msg-action-btn is-danger" onclick="deleteMyMsg(event, this)">🗑️ 삭제</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="notice-msg-row is-other">
+              <div class="notice-msg-avatar">한</div>
+              <div class="notice-msg-bubble is-other">
+                <div class="notice-msg-author">한재성 실장</div>
+                자동차 보험 11회 분할 — 신용카드사별 무이자 적용 회사 정리 부탁드립니다. 6월 갱신 안내 시 활용 예정입니다.
+                <span class="notice-msg-time">15:14</span>
+              </div>
+            </div>
+
+            <div class="notice-msg-row is-mine">
+              <div class="notice-msg-bubble is-mine" onclick="openMyMsgMenu(this, event)">
+                <span class="msg-text">삼성화재 + 삼성카드 / KB손해보험 + KB국민카드 무이자 확인했습니다. 나머지 손해보험 5사는 카드사 캠페인별로 다른데 분기 단위로 갱신되는 듯합니다. 정리해서 댓글로 박겠습니다.</span>
+                <span class="notice-msg-time">15:23</span>
+                <div class="notice-msg-actions">
+                  <button class="notice-msg-action-btn" onclick="editMyMsg(event, this)">✏️ 수정</button>
+                  <button class="notice-msg-action-btn" onclick="attachToMyMsg(event, this)">📎 파일 추가</button>
+                  <button class="notice-msg-action-btn is-danger" onclick="deleteMyMsg(event, this)">🗑️ 삭제</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="notice-msg-row is-other">
+              <div class="notice-msg-avatar">한</div>
+              <div class="notice-msg-bubble is-other">
+                <div class="notice-msg-author">한재성 실장</div>
+                네 부탁드립니다. 추가로 어제 주말 사고 신고 위임장 건도 회사별 정리 글 박았으니 같이 확인 부탁드립니다.
+                <span class="notice-msg-time">15:25</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 입력창 (4차 본진: textarea 2배 + 파일 추가 + 첨부 미리보기) -->
+          <div class="notice-input-bar">
+            <input type="file" id="notice-file-input" multiple hidden
+                   onchange="onFileSelected(event)">
+            <button class="notice-input-attach" type="button"
+                    onclick="openFilePicker()" title="파일 추가">📎</button>
+            <div class="notice-input-field">
+              <div class="notice-attach-preview" id="notice-attach-preview"></div>
+              <textarea id="notice-input" rows="3"
+                        placeholder="메시지를 입력하세요… (Enter 전송 / Shift+Enter 줄바꿈)"></textarea>
+            </div>
+            <button class="notice-input-send" type="button"
+                    onclick="sendNoticeMsg()">전송</button>
+          </div>
+
+        </div>
+
+        <!-- ── D-우측: 자산 패널 (헤더 + 사진/파일/링크/메모) ── -->
+        <aside class="notice-room-right">
+
+          <!-- 공지방 헤더 (3차 본진: D-우측 최상단) -->
+          <div class="notice-room-header">
+            <div class="room-icon">4팀</div>
+            <span class="room-name">더원4팀 단체방</span>
+            <span class="room-member">· 40명</span>
+            <span class="room-caret">▼</span>
+          </div>
+
+          <!-- 사진/동영상 -->
+          <div class="notice-asset-section">
+            <div class="notice-asset-title">📸 사진·동영상</div>
+            <div class="notice-asset-photos">
+              <div class="notice-asset-photo" title="갑상선 진단서 사진">📷</div>
+              <div class="notice-asset-photo" title="자동차 사고 현장">📷</div>
+              <div class="notice-asset-photo" title="안내 카드">📷</div>
+              <div class="notice-asset-photo" title="설명 영상">🎥</div>
+              <div class="notice-asset-photo">📷</div>
+              <div class="notice-asset-photo">📷</div>
+            </div>
+          </div>
+
+          <!-- 파일 -->
+          <div class="notice-asset-section">
+            <div class="notice-asset-title">📎 파일</div>
+            <div class="notice-asset-file">
+              <span class="file-icon">📄</span>
+              <span class="file-name">5월 갑상선 인수 정리.pdf</span>
+              <span class="file-meta">1.2MB</span>
+            </div>
+            <div class="notice-asset-file">
+              <span class="file-icon">📊</span>
+              <span class="file-name">2507교안_롯데손보.pptx</span>
+              <span class="file-meta">Drive ↗</span>
+            </div>
+            <div class="notice-asset-file">
+              <span class="file-icon">📄</span>
+              <span class="file-name">자동차 보험 11회 분할 .pdf</span>
+              <span class="file-meta">820KB</span>
+            </div>
+            <div class="notice-asset-file">
+              <span class="file-icon">📄</span>
+              <span class="file-name">위임장 양식 모음 .pdf</span>
+              <span class="file-meta">440KB</span>
+            </div>
+          </div>
+
+          <!-- 링크 -->
+          <div class="notice-asset-section">
+            <div class="notice-asset-title">🔗 링크</div>
+            <a class="notice-asset-link" href="#">메리츠 5월 인수 변경 안내 ↗</a>
+            <a class="notice-asset-link" href="#">KB손해보험 11회 분할 캠페인 ↗</a>
+            <a class="notice-asset-link" href="#">DB손보 갑상선 추적 가이드 ↗</a>
+          </div>
+
+          <!-- 내 메모 -->
+          <div class="notice-asset-section notice-memo">
+            <div class="notice-asset-title">📝 내 메모</div>
+            <textarea placeholder="개인 메모 — 본인만 볼 수 있어요"></textarea>
+            <div class="memo-actions">
+              <button class="is-primary" onclick="saveMemo()">💾 저장하기</button>
+              <button onclick="openMyspace()">📂 마이스페이스 →</button>
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
+
+      <!-- ━━━━━━━ 모바일 6탭 하단 그리드 (3차 § 3-4 본진) ━━━━━━━ -->
+      <nav class="notice-room-mobile-tabs" id="mobile-tabs">
+        <button class="notice-room-mobile-toggle" onclick="toggleMobileTabs()">
+          더 알아보기 <span class="caret">︿</span>
+        </button>
+        <div class="notice-room-mobile-grid">
+          <button class="notice-room-mobile-cell" data-mobile-tab="manager_notice"
+                  onclick="selectNoticeTab('manager_notice', this)">
+            <span class="m-icon">📢</span>
+            <span class="m-label">4팀 단체방</span>
+          </button>
+          <button class="notice-room-mobile-cell" data-mobile-tab="navigation"
+                  onclick="selectNoticeTab('navigation', this)">
+            <span class="m-icon">🧭</span>
+            <span class="m-label">네비게이션방</span>
+          </button>
+          <button class="notice-room-mobile-cell is-active" data-mobile-tab="qna"
+                  onclick="selectNoticeTab('qna', this)">
+            <span class="m-icon">📝</span>
+            <span class="m-label">스마트 게시판</span>
+          </button>
+          <button class="notice-room-mobile-cell" data-mobile-tab="manager_lounge"
+                  onclick="selectNoticeTab('manager_lounge', this)">
+            <span class="m-icon">☕</span>
+            <span class="m-label">매니저 라운지</span>
+          </button>
+          <button class="notice-room-mobile-cell" data-mobile-tab="insurer"
+                  onclick="selectNoticeTab('insurer', this)">
+            <span class="m-icon">🏢</span>
+            <span class="m-label">보험사 게시판</span>
+          </button>
+          <button class="notice-room-mobile-cell" data-mobile-tab="hub"
+                  onclick="selectNoticeTab('hub', this)">
+            <span class="m-icon">🌐</span>
+            <span class="m-label">허브 게시판</span>
+          </button>
+        </div>
+      </nav>
+
+    </section>
+
+    <!-- ━━━━━━━━━━━━ C. 우사이드바 (라이브 그대로 — placeholder) ━━━━━━━━━━━━ -->
+    <aside class="c">
+      <div class="c-box">
+        <div class="c-box-label">QUICK</div>
+        <div class="c-box-title">빠른 실행</div>
+        <div class="c-box-desc">자주 쓰는 기능 3건 — 사고 접수 / 위임장 발급 / 인수 조회</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-label">ALERT</div>
+        <div class="c-box-title">내 알림 (3)</div>
+        <div class="c-box-desc">실장님 공지 1건 + 답변 도착 2건. 클릭 시 해당 글로 이동.</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-label">OPS</div>
+        <div class="c-box-title">운영 신호</div>
+        <div class="c-box-desc">오늘 4팀 진행 사고 2건 / 인수 문의 5건 / 미답변 3건.</div>
+      </div>
+      <div class="c-box">
+        <div class="c-box-label">TEAM</div>
+        <div class="c-box-title">팀 흐름</div>
+        <div class="c-box-desc">한재성 실장 30분 전 / 임태성 1시간 전 / GA테스터 어제 18시.</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-brand">one<span>second</span></span>
+      <span class="footer-copy">© 2026 onesecond solutions · v2-notice-room (3차 시안)</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     v2-notice-room JS — 시연 동작 (실 DB 호출 0)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<script>
+/* 탭 선택 — 데스크탑 7탭 + 모바일 6탭 동기 갱신 */
+function selectNoticeTab(tabKey, btnEl) {
+  document.querySelectorAll('.notice-room-tab').forEach(function(t){
+    t.classList.toggle('is-active', t.dataset.tab === tabKey);
+  });
+  document.querySelectorAll('.notice-room-mobile-cell').forEach(function(c){
+    c.classList.toggle('is-active', c.dataset.mobileTab === tabKey);
+  });
+  /* 시연: 활성 탭만 변경, 컨텐츠 분기는 본진 진입 시 박음 */
+}
+
+/* 공지 펼침/접힘 */
+function toggleNoticePin(el, evt) {
+  if (evt) evt.stopPropagation();
+  el.classList.toggle('is-open');
+}
+
+/* ━━━━━━━━━━━ 4차 보강 본진 ━━━━━━━━━━━ */
+
+/* 입력바 첨부 파일 보관 (시연 — 라이브 박음 시 FormData / Storage 박힘) */
+var _noticePendingAttaches = [];
+
+/* 파일 추가 — input[type=file] 클릭 */
+function openFilePicker() {
+  var fi = document.getElementById('notice-file-input');
+  if (fi) fi.click();
+}
+
+/* 파일 선택 → 첨부 미리보기 chip 박음 */
+function onFileSelected(evt) {
+  var files = (evt && evt.target && evt.target.files) ? evt.target.files : [];
+  for (var i = 0; i < files.length; i++) {
+    _noticePendingAttaches.push({
+      name: files[i].name,
+      size: files[i].size
+    });
+  }
+  _renderAttachPreview();
+  evt.target.value = '';  /* 동일 파일 재선택 가능 박음 */
+}
+
+/* 첨부 미리보기 render */
+function _renderAttachPreview() {
+  var box = document.getElementById('notice-attach-preview');
+  if (!box) return;
+  box.innerHTML = _noticePendingAttaches.map(function(f, idx){
+    var sizeKB = (f.size / 1024).toFixed(0);
+    var sizeText = sizeKB > 1024 ? (sizeKB/1024).toFixed(1) + 'MB' : sizeKB + 'KB';
+    return '<span class="notice-attach-chip">' +
+             '<span class="chip-name">📎 ' + _esc(f.name) + '</span>' +
+             '<span class="chip-size">' + sizeText + '</span>' +
+             '<button class="chip-remove" onclick="removeAttachChip(' + idx + ')" title="제거">✕</button>' +
+           '</span>';
+  }).join('');
+}
+
+/* 첨부 chip 제거 */
+function removeAttachChip(idx) {
+  _noticePendingAttaches.splice(idx, 1);
+  _renderAttachPreview();
+}
+
+/* HTML escape 유틸 */
+function _esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* 메시지 전송 (시연) — textarea + 첨부 박음 */
+function sendNoticeMsg() {
+  var input = document.getElementById('notice-input');
+  var txt = (input.value || '').trim();
+  if (!txt && _noticePendingAttaches.length === 0) return;
+
+  var chat = document.getElementById('notice-chat');
+  var row = document.createElement('div');
+  row.className = 'notice-msg-row is-mine';
+
+  var now = new Date();
+  var hh = String(now.getHours()).padStart(2, '0');
+  var mm = String(now.getMinutes()).padStart(2, '0');
+
+  /* 첨부 chip 박음 (본인 풍선 안 표시) */
+  var attachHtml = '';
+  if (_noticePendingAttaches.length > 0) {
+    attachHtml = '<div class="notice-msg-attaches">' +
+      _noticePendingAttaches.map(function(f){
+        return '<span class="notice-msg-attach-chip">📎 ' + _esc(f.name) + '</span>';
+      }).join('') +
+    '</div>';
+  }
+
+  row.innerHTML =
+    '<div class="notice-msg-bubble is-mine" onclick="openMyMsgMenu(this, event)">' +
+      '<span class="msg-text">' + _esc(txt).replace(/\n/g, '<br>') + '</span>' +
+      attachHtml +
+      '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
+      '<div class="notice-msg-actions">' +
+        '<button class="notice-msg-action-btn" onclick="editMyMsg(event, this)">✏️ 수정</button>' +
+        '<button class="notice-msg-action-btn" onclick="attachToMyMsg(event, this)">📎 파일 추가</button>' +
+        '<button class="notice-msg-action-btn is-danger" onclick="deleteMyMsg(event, this)">🗑️ 삭제</button>' +
+      '</div>' +
+    '</div>';
+
+  chat.appendChild(row);
+  input.value = '';
+  _noticePendingAttaches = [];
+  _renderAttachPreview();
+  chat.scrollTop = chat.scrollHeight;
+}
+
+/* Enter 전송 / Shift+Enter 줄바꿈 */
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.shiftKey
+      && document.activeElement && document.activeElement.id === 'notice-input') {
+    e.preventDefault();
+    sendNoticeMsg();
+  }
+});
+
+/* ━━━━━━━━━━━ 본인 메시지 클릭 액션 (수정/파일 추가/삭제) ━━━━━━━━━━━ */
+
+/* 본인 메시지 풍선 클릭 → 액션 메뉴 토글 */
+function openMyMsgMenu(bubbleEl, evt) {
+  if (evt) evt.stopPropagation();
+  if (bubbleEl.classList.contains('is-editing')) return; /* 수정 중이면 메뉴 X */
+  /* 다른 메뉴 닫음 */
+  document.querySelectorAll('.notice-msg-bubble.is-menu-open').forEach(function(b){
+    if (b !== bubbleEl) b.classList.remove('is-menu-open');
+  });
+  bubbleEl.classList.toggle('is-menu-open');
+}
+
+/* 외부 클릭 시 메뉴 닫음 */
+document.addEventListener('click', function(e){
+  var inBubble = e.target.closest && e.target.closest('.notice-msg-bubble.is-mine');
+  if (!inBubble) {
+    document.querySelectorAll('.notice-msg-bubble.is-menu-open').forEach(function(b){
+      b.classList.remove('is-menu-open');
+    });
+  }
+});
+
+/* 수정 — inline edit (시연: textarea 박음, 라이브 박음 시 posts UPDATE) */
+function editMyMsg(evt, btnEl) {
+  evt.stopPropagation();
+  var bubble = btnEl.closest('.notice-msg-bubble');
+  if (!bubble) return;
+  bubble.classList.remove('is-menu-open');
+  bubble.classList.add('is-editing');
+
+  var textSpan = bubble.querySelector('.msg-text');
+  var oldText = textSpan ? textSpan.textContent : '';
+
+  var ta = document.createElement('textarea');
+  ta.className = 'edit-area';
+  ta.value = oldText;
+  textSpan.style.display = 'none';
+  textSpan.insertAdjacentElement('afterend', ta);
+  ta.focus();
+  ta.select();
+
+  function commit(save) {
+    if (save) {
+      textSpan.textContent = ta.value;
+    }
+    textSpan.style.display = '';
+    ta.remove();
+    bubble.classList.remove('is-editing');
+  }
+  ta.addEventListener('keydown', function(e){
+    e.stopPropagation();
+    if (e.key === 'Escape') { commit(false); }
+    else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { commit(true); }
+  });
+  ta.addEventListener('blur', function(){ commit(true); });
+  /* 시연: Ctrl+Enter 저장 / Esc 취소 / blur 저장 */
+}
+
+/* 파일 추가 — 본인 메시지에 첨부 chip 박음 (시연: prompt) */
+function attachToMyMsg(evt, btnEl) {
+  evt.stopPropagation();
+  var bubble = btnEl.closest('.notice-msg-bubble');
+  if (!bubble) return;
+  bubble.classList.remove('is-menu-open');
+
+  var fname = prompt('첨부할 파일명을 입력하세요 (시연):', '추가자료.pdf');
+  if (!fname) return;
+
+  var attachWrap = bubble.querySelector('.notice-msg-attaches');
+  if (!attachWrap) {
+    attachWrap = document.createElement('div');
+    attachWrap.className = 'notice-msg-attaches';
+    var timeSpan = bubble.querySelector('.notice-msg-time');
+    if (timeSpan) timeSpan.insertAdjacentElement('beforebegin', attachWrap);
+    else bubble.appendChild(attachWrap);
+  }
+  var chip = document.createElement('span');
+  chip.className = 'notice-msg-attach-chip';
+  chip.innerHTML = '📎 ' + _esc(fname);
+  attachWrap.appendChild(chip);
+}
+
+/* 삭제 — DOM 제거 (시연: posts DELETE 라이브 박음 시 RLS author=본인 + 5분 제한) */
+function deleteMyMsg(evt, btnEl) {
+  evt.stopPropagation();
+  var bubble = btnEl.closest('.notice-msg-bubble');
+  var row = btnEl.closest('.notice-msg-row');
+  if (!row) return;
+  if (!confirm('이 메시지를 삭제하시겠습니까? (시연: 라이브 박음 시 5분 제한)')) return;
+  row.remove();
+}
+
+/* 모바일 6탭 펼침/접힘 토글 (수동) */
+function toggleMobileTabs() {
+  var tabs = document.getElementById('mobile-tabs');
+  tabs.classList.toggle('is-collapsed');
+}
+
+/* 모바일 6탭 — 채팅 스크롤 자동 펼침/접힘 (3차 § 3-4 결재 #1) */
+(function setupMobileTabsScroll(){
+  var chat = document.getElementById('notice-chat');
+  var tabs = document.getElementById('mobile-tabs');
+  if (!chat || !tabs) return;
+  var lastTop = 0;
+  chat.addEventListener('scroll', function(){
+    var st = chat.scrollTop;
+    if (st > lastTop && st > 40) {
+      tabs.classList.add('is-collapsed');     /* 아래로 스크롤 → 접힘 */
+    } else if (st < lastTop - 6) {
+      tabs.classList.remove('is-collapsed');  /* 위로 스크롤 → 펼침 */
+    }
+    lastTop = st;
+  });
+})();
+
+/* 메모 저장 (시연) */
+function saveMemo() {
+  alert('메모 저장됨 (시연: 로컬 저장 X — 본진 결재 잔여 § 11 박힘)');
+}
+function openMyspace() {
+  alert('마이스페이스 진입 (시연: 라이브 라우팅 X)');
+}
+</script>
+</body>
+</html>
