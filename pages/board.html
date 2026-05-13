@@ -1887,27 +1887,32 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
- * 본진 7 — 모바일 인박스 제거, 채팅창 가득 (2026-05-14)
+ * 본진 7 — 모바일 인박스 제거, 채팅창 가득 (2026-05-14 정밀)
  *   - 아웃박스(.notice-room-shell border) 정체성 유지
- *   - 인박스 좌우 패딩/마진 24px → 8px 축소
+ *   - 인박스 좌우 패딩/마진 통째 0 (인박스 완전 제거)
  *   - pg-outer padding 6px → 음수 마진으로 흡수 (화면 가득)
- *   - 데스크톱 회귀 0 (max-width 미디어쿼리)
+ *   - 768px 미만 박음 (일반 모바일 414/375/360 + 일부 태블릿)
+ *   - 데스크톱(769px+) 회귀 0
  * ───────────────────────────────────────────────────────────── */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .notice-room-shell {
     margin-left: -6px;
     margin-right: -6px;
-    border-radius: 4px;
-    height: calc(100vh - 180px);
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    height: calc(100vh - 160px);
   }
-  .notice-pin-list { margin: 12px 8px 0; }
-  .notice-search-bar { margin: 10px 8px 0; }
-  .notice-room-chat { padding: 12px 8px; }
-  .notice-input-bar { padding: 10px 8px 14px; }
-  /* 메시지 버블 max-width = 아웃박스 폭 기준 (인박스 제거 효과) */
-  .notice-msg-bubble { max-width: calc(100vw - 80px); }
-  /* 검색 결과 없음 박힘 시 좌우 여백 동기 */
-  .notice-search-empty { margin: 12px 8px; }
+  /* 인박스 통째 0 — 채팅창이 아웃박스 가득 */
+  .notice-pin-list { margin: 8px 0 0; border-radius: 0; border-left: 0; border-right: 0; }
+  .notice-search-bar { margin: 6px 0 0; padding: 0 8px; }
+  .notice-room-chat { padding: 8px 0; }
+  .notice-input-bar { padding: 8px 8px 12px; }
+  .notice-search-empty { margin: 12px 0; border-radius: 0; }
+  /* 메시지 풍선 = 화면 가득 채울 수 있도록 좌우 8px 박음 (가독성) */
+  .notice-msg-row { padding: 0 8px; }
+  .notice-msg-bubble { max-width: calc(100vw - 64px); }
+  /* 자산 패널은 1024px 미만에서 이미 hide 박힘 */
 }
 </style>
 
