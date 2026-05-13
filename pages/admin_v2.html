@@ -1642,6 +1642,66 @@ body.adm-active { overflow: hidden !important; }
   .adm-ops-preview { position: relative; top: auto; }
   .adm-preview-iframe-wrap { height: 500px; }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   [2026-05-13 Phase E Step E-3] role × menu 매트릭스 토글
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.adm-menu-matrix-wrap {
+  margin-top: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--admin-border, #e5e7eb);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--admin-surface-1, #fafafa);
+}
+.adm-menu-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--admin-text-primary, #1f1f1f);
+}
+.adm-menu-matrix th,
+.adm-menu-matrix td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--admin-border, #e5e7eb);
+  border-right: 1px solid var(--admin-border, #e5e7eb);
+}
+.adm-menu-matrix td { text-align: center; }
+.adm-menu-matrix th { text-align: left; padding-left: 14px; }
+.adm-menu-matrix tbody tr:last-child th,
+.adm-menu-matrix tbody tr:last-child td { border-bottom: 0; }
+.adm-menu-matrix th:last-child,
+.adm-menu-matrix td:last-child { border-right: 0; }
+.adm-menu-matrix thead th {
+  background: var(--admin-surface-2, #f5f5f4);
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: center;
+  padding-left: 8px;
+}
+.adm-menu-matrix thead th.adm-matrix-corner {
+  text-align: left;
+  padding-left: 14px;
+  opacity: 0.7;
+  font-weight: 500;
+}
+.adm-matrix-rolelabel {
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--admin-surface-2, #f5f5f4);
+}
+.adm-matrix-row-admin .adm-matrix-rolelabel {
+  opacity: 0.6;
+  font-style: italic;
+}
+.adm-matrix-cell input[type=checkbox] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.adm-matrix-cell input[type=checkbox]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 </style>
 
 
@@ -2302,6 +2362,42 @@ body.adm-active { overflow: hidden !important; }
         </aside>
 
       </div><!-- /.adm-ops-grid -->
+
+      <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+      <!-- [2026-05-13 Phase E Step E-3] role × menu 매트릭스 토글               -->
+      <!-- DB: menu_settings_by_role (9 role × 8 menu = 72 row, UPSERT)         -->
+      <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+      <div class="adm-section-head" style="margin-top: 32px;">
+        <div>
+          <div class="adm-section-title">🔐 role × menu 매트릭스</div>
+          <div class="adm-section-desc">9 역할 × 8 메뉴 = 72 셀. 셀 클릭 즉시 UPSERT + 우측 미러링 반영. admin row는 readonly.</div>
+        </div>
+      </div>
+
+      <div class="adm-menu-matrix-wrap">
+        <table class="adm-menu-matrix">
+          <thead>
+            <tr>
+              <th class="adm-matrix-corner">역할 \ 메뉴</th>
+              <th data-menu-key="menu_home">홈</th>
+              <th data-menu-key="menu_scripts">스크립트</th>
+              <th data-menu-key="menu_board">현장의 소리</th>
+              <th data-menu-key="menu_myspace">MY SPACE</th>
+              <th data-menu-key="menu_news">보험뉴스</th>
+              <th data-menu-key="menu_quick">Quick 메뉴</th>
+              <th data-menu-key="menu_together">함께해요</th>
+              <th data-menu-key="menu_team_mgmt">팀원관리</th>
+            </tr>
+          </thead>
+          <tbody id="adm-matrix-body">
+            <!-- admLoadMenuMatrix()가 9 row × 8 col 동적 박음 -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="adm-toggle-footer" style="margin-top: 12px;">
+        <span class="adm-toggle-footer-note">💡 DB 저장 = menu_settings_by_role. admin row 변경 X (admin은 모든 메뉴 노출 영구). 변경 즉시 우측 미러링 iframe reload.</span>
+      </div>
 
     </div>
 
@@ -3193,6 +3289,111 @@ body.adm-active { overflow: hidden !important; }
     }
   };
 
+  /* ════════════════════════════════════════════════════════════
+     [2026-05-13 Phase E Step E-3] role × menu 매트릭스 토글
+     ▸ DB: menu_settings_by_role (UPSERT 패턴 = DELETE → INSERT, Phase A 정합)
+     ▸ 9 role × 8 menu = 72 row
+     ▸ admin row readonly (CLAUDE.md § role 체계 / 메모리 project_role_bypass_policy 정합)
+     ▸ 변경 즉시 admReloadPreview() 호출 (Step E-4 postMessage 도입 전 잠정 — 별 트랙)
+  ════════════════════════════════════════════════════════════ */
+  var _admMatrixRoles = [
+    { role: 'admin',                  label: '어드민 (본인)' },
+    { role: 'ga_branch_manager',      label: 'GA 지점장' },
+    { role: 'ga_manager',             label: 'GA 실장' },
+    { role: 'ga_member',              label: 'GA 설계사' },
+    { role: 'ga_staff',               label: 'GA 스텝' },
+    { role: 'insurer_branch_manager', label: '원수사 지점장' },
+    { role: 'insurer_manager',        label: '원수사 매니저' },
+    { role: 'insurer_member',         label: '원수사 일반' },
+    { role: 'insurer_staff',          label: '원수사 스텝' }
+  ];
+  var _admMatrixMenus = [
+    'menu_home', 'menu_scripts', 'menu_board', 'menu_myspace',
+    'menu_news', 'menu_quick', 'menu_together', 'menu_team_mgmt'
+  ];
+
+  window.admLoadMenuMatrix = async function () {
+    var tbody = document.getElementById('adm-matrix-body');
+    if (!tbody) return;
+
+    /* 9 row × 8 col 골격 박음 (모든 checkbox unchecked 시작, DB 응답 후 갱신) */
+    tbody.innerHTML = _admMatrixRoles.map(function (r) {
+      var isAdmin = (r.role === 'admin');
+      var cells = _admMatrixMenus.map(function (mk) {
+        var disabledAttr = isAdmin ? ' disabled' : '';
+        return '<td class="adm-matrix-cell">' +
+                 '<input type="checkbox"' +
+                   ' data-matrix-role="' + r.role + '"' +
+                   ' data-matrix-menu="' + mk + '"' +
+                   disabledAttr +
+                   ' onchange="window.admToggleMenuMatrixCell(this)">' +
+               '</td>';
+      }).join('');
+      var rowCls = isAdmin ? 'adm-matrix-row adm-matrix-row-admin' : 'adm-matrix-row';
+      return '<tr class="' + rowCls + '">' +
+               '<th scope="row" class="adm-matrix-rolelabel">' + r.label + '</th>' +
+               cells +
+             '</tr>';
+    }).join('');
+
+    if (!window.db || !window.db.fetch) return;
+
+    /* DB SELECT — 72 row */
+    try {
+      var res = await window.db.fetch('/rest/v1/menu_settings_by_role?select=role,menu_key,is_visible');
+      var rows = res.ok ? await res.json() : [];
+      rows.forEach(function (row) {
+        var sel = 'input[data-matrix-role="' + row.role + '"][data-matrix-menu="' + row.menu_key + '"]';
+        var input = document.querySelector(sel);
+        if (input) input.checked = !!row.is_visible;
+      });
+    } catch (e) {
+      console.error('[adm matrix] 로드 실패:', e);
+    }
+  };
+
+  window.admToggleMenuMatrixCell = async function (inputEl) {
+    if (!inputEl) return;
+    var role = inputEl.getAttribute('data-matrix-role');
+    var menuKey = inputEl.getAttribute('data-matrix-menu');
+    if (!role || !menuKey) return;
+
+    /* admin row readonly 이중 방어 — HTML disabled + 클릭 진입 차단 */
+    if (role === 'admin') {
+      inputEl.checked = true;
+      return;
+    }
+
+    var newVal = !!inputEl.checked;
+    inputEl.disabled = true;
+
+    try {
+      /* UPSERT 패턴 — Phase A admToggleOperation 정합 (DELETE → INSERT, UNIQUE(role,menu_key) 정합) */
+      var delRes = await window.db.fetch(
+        '/rest/v1/menu_settings_by_role?role=eq.' + encodeURIComponent(role) +
+        '&menu_key=eq.' + encodeURIComponent(menuKey),
+        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+      );
+      if (!delRes.ok && delRes.status !== 404) throw new Error('DELETE ' + delRes.status);
+
+      var insRes = await window.db.fetch('/rest/v1/menu_settings_by_role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ role: role, menu_key: menuKey, is_visible: newVal })
+      });
+      if (!insRes.ok) throw new Error('INSERT ' + insRes.status);
+
+      /* 미러링 iframe reload — Phase A 정합 (Step E-4 postMessage 도입 전 잠정) */
+      if (typeof window.admReloadPreview === 'function') window.admReloadPreview();
+    } catch (e) {
+      console.error('[adm matrix] 저장 실패:', e);
+      alert('매트릭스 저장 실패: ' + (e.message || e));
+      inputEl.checked = !inputEl.checked; /* 복귀 */
+    } finally {
+      inputEl.disabled = false;
+    }
+  };
+
   var VIEW_LABELS = {
     dashboard:  { breadcrumb: ['ADMIN', '대시보드', '전체 개요'],   menuLabel: '대시보드' },
     operations: { breadcrumb: ['ADMIN', '운영', '레이어 토글'],     menuLabel: '운영 레이어' },
@@ -3246,6 +3447,8 @@ body.adm-active { overflow: hidden !important; }
     // Phase D 진입 분기 — view별 데이터 로드 (admin_v2.js 정의 함수 호출, race-safe 가드)
     if (viewKey === 'operations' && typeof window.admLoadOperationsToggles === 'function') {
       window.admLoadOperationsToggles();
+      /* [2026-05-13 Phase E Step E-3] role × menu 매트릭스 동시 로드 */
+      if (typeof window.admLoadMenuMatrix === 'function') window.admLoadMenuMatrix();
     } else if (viewKey === 'settings') {
       /* [Step 4] settings — admLoadSettings (admin_v2.js) + 미러링 iframe 동시 호출 */
       if (typeof window.admLoadSettings   === 'function') window.admLoadSettings();
