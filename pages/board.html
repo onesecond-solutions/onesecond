@@ -2086,8 +2086,8 @@
   gap: 6px;
   margin-top: 4px;
 }
-/* 2026-05-14 §15 정체성 본진 정합 — ⭐ → "딸깍" 박음. 작은 글씨로 눈에 확. */
-.notice-msg-save-star {
+/* 2026-05-14 §15 정체성 본진 — 5자산 통째 딸깍 패턴 (메시지/사진/동영상/파일/링크) */
+.notice-msg-save-star, .ddalkkak-btn {
   height: 22px;
   padding: 0 9px;
   border: 1px solid var(--brand-300, #DAA67B);
@@ -2106,14 +2106,122 @@
 .notice-msg-bubble.is-tap .notice-msg-save-star {
   opacity: 1;
 }
-.notice-msg-save-star:hover,
-.notice-msg-save-star:active {
+.notice-msg-save-star:hover, .notice-msg-save-star:active,
+.ddalkkak-btn:hover, .ddalkkak-btn:active {
   background: var(--brand-500, #A0522D);
   color: #FFFFFF;
   border-color: var(--brand-500, #A0522D);
   transform: scale(1.06);
   box-shadow: 0 2px 6px rgba(160, 82, 45, 0.25);
 }
+
+/* 딸깍 액션 메뉴 본진 (드롭다운) */
+.ddalkkak-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.ddalkkak-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  background: #FFFFFF;
+  border: 1px solid var(--brand-200, #EBC9A5);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 150ms, transform 150ms;
+  z-index: 95;
+}
+.ddalkkak-wrap.is-open .ddalkkak-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.ddalkkak-menu button {
+  border: none;
+  background: transparent;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-700, #66331A);
+  cursor: pointer;
+  text-align: left;
+  border-radius: 6px;
+  transition: background 100ms;
+  white-space: nowrap;
+}
+.ddalkkak-menu button:hover, .ddalkkak-menu button:active {
+  background: var(--brand-50, #FDF4EF);
+}
+
+/* 저장 완료 오버레이 (본인 명시 본진) */
+.ddalkkak-save-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ddalkkakSaveFadeIn 200ms ease-out;
+}
+@keyframes ddalkkakSaveFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.ddalkkak-save-modal {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 28px 24px 20px;
+  max-width: 340px;
+  width: calc(100% - 32px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: ddalkkakSaveSlideUp 240ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+@keyframes ddalkkakSaveSlideUp {
+  from { transform: translateY(16px); }
+  to   { transform: translateY(0); }
+}
+.ddalkkak-save-icon { font-size: 38px; margin-bottom: 6px; }
+.ddalkkak-save-title {
+  font-size: 17px; font-weight: 700;
+  color: var(--brand-700, #66331A);
+  margin-bottom: 6px;
+}
+.ddalkkak-save-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary, #6B5847);
+  margin-bottom: 18px;
+  line-height: 1.55;
+}
+.ddalkkak-save-actions { display: flex; gap: 8px; }
+.ddalkkak-save-close, .ddalkkak-save-go {
+  flex: 1; height: 42px;
+  border-radius: 9px;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms, transform 100ms;
+}
+.ddalkkak-save-close {
+  border: 1px solid var(--color-border, #E5E7EB);
+  background: #FFFFFF;
+  color: var(--color-text-primary, #1F2937);
+}
+.ddalkkak-save-close:hover { background: var(--brand-50, #FDF4EF); }
+.ddalkkak-save-go {
+  border: none;
+  background: var(--brand-500, #A0522D);
+  color: #FFFFFF;
+}
+.ddalkkak-save-go:hover { background: var(--brand-600, #8B4625); transform: translateY(-1px); }
 
 /* 본진 4 — 토스트 알림 */
 .notice-toast {
@@ -4351,8 +4459,15 @@ function _renderNoticeMessages(msgs, meId, meName) {
             html + attHtml +
             '<div class="notice-msg-footer">' +
               '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
-              '<button class="notice-msg-save-star" title="딸깍 한 번에 MY SPACE 저장" ' +
-                      'onclick="window.saveToMySpace(event, \'' + pidEsc + '\', \'' + titleEsc + '\', \'\', \'message\')">딸깍</button>' +
+              '<div class="ddalkkak-wrap">' +
+                '<button class="notice-msg-save-star" title="딸깍 한 번에 액션 열기" ' +
+                        'onclick="window.toggleDdalkkakMenu(event, \'' + pidEsc + '\', \'' + titleEsc + '\', \'\', \'message\')">딸깍</button>' +
+                '<div class="ddalkkak-menu">' +
+                  '<button type="button" onclick="window.actDdalkkakComment(event)">💬 댓글</button>' +
+                  '<button type="button" onclick="window.actDdalkkakLike(event)">👍 좋아요</button>' +
+                  '<button type="button" onclick="window.actDdalkkakSave(event)">💾 저장하기</button>' +
+                '</div>' +
+              '</div>' +
             '</div>' +
           '</div>' +
         '</div>';
@@ -4405,8 +4520,8 @@ function _renderNoticeAssets(posts) {
 window.saveToMySpace = async function(evt, postId, itemName, itemUrl, itemType){
   if (evt) { evt.preventDefault(); evt.stopPropagation(); }
   var meId = (window.AppState && window.AppState.userId) || '';
-  if (!meId) { alert('로그인 정보 부재'); return; }
-  if (!postId) { alert('원본 post 정보 부재'); return; }
+  if (!meId) { alert('로그인 정보 부재'); window._ddalkkakSaveLastOk = false; return; }
+  if (!postId) { alert('원본 post 정보 부재'); window._ddalkkakSaveLastOk = false; return; }
 
   var body = {
     title: itemName || '게시판 자료',
@@ -4426,19 +4541,110 @@ window.saveToMySpace = async function(evt, postId, itemName, itemUrl, itemType){
       body: JSON.stringify(body)
     });
     if (res.ok || res.status === 201) {
-      _showNoticeToast('MY SPACE에 저장됐어요');
+      window._ddalkkakSaveLastOk = true;
+      /* 본 자리 토스트 박지 X — 딸깍 오버레이 본진 박힘 (showDdalkkakSaveOverlay 본인 박힐 자리) */
     } else if (res.status === 409) {
+      window._ddalkkakSaveLastOk = false;
       _showNoticeToast('이미 저장된 자료입니다');
     } else {
+      window._ddalkkakSaveLastOk = false;
       var err = await res.text().catch(function(){ return ''; });
       console.error('[myspace-save] 실패:', res.status, err);
       alert('저장 실패: ' + res.status);
     }
   } catch (e) {
+    window._ddalkkakSaveLastOk = false;
     console.error('[myspace-save] 네트워크 오류:', e);
     alert('저장 실패: ' + (e.message || e));
   }
 };
+
+/* 2026-05-14 §15 정체성 본진 — 5자산 통째 딸깍 패턴 본진
+ * 메시지 / 사진 / 동영상 / 파일 / 링크 = 동일 [딸깍] 패턴 = 반복 학습 + 중독
+ * [딸깍] → 액션 메뉴 (💬 댓글 / 👍 좋아요 / 💾 저장) → 저장 시 오버레이 + MY SPACE 이동 */
+window.toggleDdalkkakMenu = function(e, pid, title, url, type) {
+  if (e) e.stopPropagation();
+  /* 다른 자리 메뉴 박지 X (한 자리만 박힘 본진) */
+  document.querySelectorAll('.ddalkkak-wrap.is-open').forEach(function(w) {
+    w.classList.remove('is-open');
+  });
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (!wrap) return;
+  wrap.classList.toggle('is-open');
+  wrap.dataset.pid   = pid || '';
+  wrap.dataset.title = title || '';
+  wrap.dataset.url   = url || '';
+  wrap.dataset.type  = type || 'message';
+};
+
+window.actDdalkkakComment = function(e) {
+  if (e) e.stopPropagation();
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (wrap) wrap.classList.remove('is-open');
+  alert('💬 댓글 본진 박을 예정 (v1.2)');
+};
+
+window.actDdalkkakLike = function(e) {
+  if (e) e.stopPropagation();
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (wrap) wrap.classList.remove('is-open');
+  alert('👍 좋아요 본진 박을 예정 (v1.2)');
+};
+
+window.actDdalkkakSave = async function(e) {
+  if (e) e.stopPropagation();
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (!wrap) return;
+  wrap.classList.remove('is-open');
+  var pid   = wrap.dataset.pid || '';
+  var title = wrap.dataset.title || '';
+  var url   = wrap.dataset.url || '';
+  var type  = wrap.dataset.type || 'message';
+  window._ddalkkakSaveLastOk = false;
+  await window.saveToMySpace(e, pid, title, url, type);
+  if (window._ddalkkakSaveLastOk) {
+    window.showDdalkkakSaveOverlay();
+  }
+};
+
+window.showDdalkkakSaveOverlay = function() {
+  var ex = document.getElementById('ddalkkak-save-overlay');
+  if (ex) ex.remove();
+  var html =
+    '<div class="ddalkkak-save-overlay" id="ddalkkak-save-overlay" onclick="if(event.target===this) window.closeDdalkkakSaveOverlay()">' +
+      '<div class="ddalkkak-save-modal">' +
+        '<div class="ddalkkak-save-icon">💾</div>' +
+        '<div class="ddalkkak-save-title">저장 완료</div>' +
+        '<div class="ddalkkak-save-desc">마이 스페이스 나의 자료 화면에서<br>확인하실 수 있습니다</div>' +
+        '<div class="ddalkkak-save-actions">' +
+          '<button class="ddalkkak-save-close" onclick="window.closeDdalkkakSaveOverlay()">닫기</button>' +
+          '<button class="ddalkkak-save-go" onclick="window.goToMySpaceFromDdalkkak()">📁 나의 자료방으로 이동</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+
+window.closeDdalkkakSaveOverlay = function() {
+  var o = document.getElementById('ddalkkak-save-overlay');
+  if (o) o.remove();
+};
+
+window.goToMySpaceFromDdalkkak = function() {
+  window.closeDdalkkakSaveOverlay();
+  if (typeof window.switchMenu === 'function') {
+    window.switchMenu('myspace');
+  } else {
+    location.hash = '#/myspace';
+  }
+};
+
+/* 외부 클릭 시 딸깍 메뉴 닫음 */
+document.addEventListener('click', function(e) {
+  document.querySelectorAll('.ddalkkak-wrap.is-open').forEach(function(w) {
+    if (!w.contains(e.target)) w.classList.remove('is-open');
+  });
+});
 
 /* 자산 오버레이 열기 (2026-05-14 본진 4 정밀) */
 window.openAssetOverlay = function(kind){
@@ -4456,25 +4662,68 @@ window.openAssetOverlay = function(kind){
   } else if (kind === 'photos') {
     bodyEl.innerHTML = '<div class="asset-overlay-grid">' + items.map(function(p){
       var icon = p.video ? '🎥' : '📷';
-      return '<a class="asset-overlay-photo" href="' + p.url + '" target="_blank" title="' + _noticeEscape(p.name) + '">' +
-               '<span style="font-size:1.6em;">' + icon + '</span>' +
-               '<span>' + _noticeEscape(p.name || '(이름 없음)') + '</span>' +
-             '</a>';
+      var type = p.video ? 'video' : 'photo';
+      var nameEsc = String(p.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      var urlEsc  = String(p.url  || '').replace(/'/g, "\\'");
+      var pidEsc  = String(p.post_id || p.postId || '').replace(/'/g, "\\'");
+      return '<div class="asset-overlay-photo-wrap" style="position:relative;">' +
+               '<a class="asset-overlay-photo" href="' + p.url + '" target="_blank" title="' + _noticeEscape(p.name) + '">' +
+                 '<span style="font-size:1.6em;">' + icon + '</span>' +
+                 '<span>' + _noticeEscape(p.name || '(이름 없음)') + '</span>' +
+               '</a>' +
+               '<div class="ddalkkak-wrap" style="position:absolute;top:4px;right:4px;">' +
+                 '<button class="ddalkkak-btn" title="딸깍 한 번에 액션 열기" ' +
+                         'onclick="window.toggleDdalkkakMenu(event, \'' + pidEsc + '\', \'' + nameEsc + '\', \'' + urlEsc + '\', \'' + type + '\')">딸깍</button>' +
+                 '<div class="ddalkkak-menu">' +
+                   '<button type="button" onclick="window.actDdalkkakComment(event)">💬 댓글</button>' +
+                   '<button type="button" onclick="window.actDdalkkakLike(event)">👍 좋아요</button>' +
+                   '<button type="button" onclick="window.actDdalkkakSave(event)">💾 저장하기</button>' +
+                 '</div>' +
+               '</div>' +
+             '</div>';
     }).join('') + '</div>';
   } else if (kind === 'files') {
     bodyEl.innerHTML = items.map(function(f){
       var sz = f.size ? ((f.size/1024/1024).toFixed(1) + 'MB') : 'Drive ↗';
-      return '<a class="asset-overlay-file" href="' + f.url + '" target="_blank">' +
-               '<span>📄</span>' +
-               '<span class="file-name">' + _noticeEscape(f.name) + '</span>' +
-               '<span class="file-meta">' + sz + '</span>' +
-             '</a>';
+      var nameEsc = String(f.name || '').replace(/'/g, "\\'");
+      var urlEsc  = String(f.url  || '').replace(/'/g, "\\'");
+      var pidEsc  = String(f.post_id || f.postId || '').replace(/'/g, "\\'");
+      return '<div class="asset-overlay-file-wrap" style="display:flex;align-items:center;gap:8px;">' +
+               '<a class="asset-overlay-file" href="' + f.url + '" target="_blank" style="flex:1;">' +
+                 '<span>📄</span>' +
+                 '<span class="file-name">' + _noticeEscape(f.name) + '</span>' +
+                 '<span class="file-meta">' + sz + '</span>' +
+               '</a>' +
+               '<div class="ddalkkak-wrap">' +
+                 '<button class="ddalkkak-btn" title="딸깍 한 번에 액션 열기" ' +
+                         'onclick="window.toggleDdalkkakMenu(event, \'' + pidEsc + '\', \'' + nameEsc + '\', \'' + urlEsc + '\', \'file\')">딸깍</button>' +
+                 '<div class="ddalkkak-menu">' +
+                   '<button type="button" onclick="window.actDdalkkakComment(event)">💬 댓글</button>' +
+                   '<button type="button" onclick="window.actDdalkkakLike(event)">👍 좋아요</button>' +
+                   '<button type="button" onclick="window.actDdalkkakSave(event)">💾 저장하기</button>' +
+                 '</div>' +
+               '</div>' +
+             '</div>';
     }).join('');
   } else {
     bodyEl.innerHTML = items.map(function(l){
-      return '<a class="asset-overlay-link" href="' + _noticeEscape(l.url) + '" target="_blank">' +
-               '<span>🔗</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + _noticeEscape(l.name) + '</span>' +
-             '</a>';
+      var nameEsc = String(l.name || '').replace(/'/g, "\\'");
+      var urlEsc  = String(l.url  || '').replace(/'/g, "\\'");
+      var pidEsc  = String(l.post_id || l.postId || '').replace(/'/g, "\\'");
+      return '<div class="asset-overlay-link-wrap" style="display:flex;align-items:center;gap:8px;">' +
+               '<a class="asset-overlay-link" href="' + _noticeEscape(l.url) + '" target="_blank" style="flex:1;">' +
+                 '<span>🔗</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + _noticeEscape(l.name) + '</span>' +
+               '</a>' +
+               '<div class="ddalkkak-wrap">' +
+                 '<button class="ddalkkak-btn" title="딸깍 한 번에 액션 열기" ' +
+                         'onclick="window.toggleDdalkkakMenu(event, \'' + pidEsc + '\', \'' + nameEsc + '\', \'' + urlEsc + '\', \'link\')">딸깍</button>' +
+                 '<div class="ddalkkak-menu">' +
+                   '<button type="button" onclick="window.actDdalkkakComment(event)">💬 댓글</button>' +
+                   '<button type="button" onclick="window.actDdalkkakLike(event)">👍 좋아요</button>' +
+                   '<button type="button" onclick="window.actDdalkkakSave(event)">💾 저장하기</button>' +
+                 '</div>' +
+               '</div>' +
+             '</div>';
     }).join('');
   }
   box.style.display = 'flex';
