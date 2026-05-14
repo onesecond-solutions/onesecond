@@ -1122,33 +1122,47 @@ html, body {
   /* 아바타+이름 영역 압축, 이름은 ellipsis 처리 */
   .a1-user { height: 32px; padding: 2px 8px 2px 3px; font-size: 0.72em; max-width: 120px; }
   .a1-user-avatar { width: 26px; height: 26px; font-size: 0.82em; }
-  /* 2026-05-14 안전망 하단 탭바 — 햄버거 격차 회귀 안전망 (어은 핸들 + 슬라이드 업 시트) */
+  /* 2026-05-14 안전망 하단 탭바 — 햄버거 격차 회귀 안전망 (▲ 핸들 + 슬라이드 업 시트) */
   .tab-bar {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
     position: fixed; bottom: 0; left: 0; right: 0;
-    z-index: 50;
+    z-index: 100;
     pointer-events: none; /* 시트 외 영역 클릭 통과 */
     background: transparent;
     height: auto;
   }
   .tab-bar-handle {
     pointer-events: auto;
-    width: 40px; height: 4px;
-    margin: 0 0 6px;
+    width: 64px; height: 24px;
+    margin: 0;
     padding: 0;
     border: none;
-    border-radius: 2px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     background: var(--brand-300, #DAA67B);
+    color: var(--brand-700, #66331A);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
     cursor: pointer;
     transition: background 150ms, transform 200ms;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.06);
   }
   .tab-bar-handle:hover,
   .tab-bar-handle:active {
+    background: var(--brand-400, #C4733A);
+    color: #FFFFFF;
+  }
+  .tab-bar.is-open .tab-bar-handle {
+    transform: rotate(180deg);
     background: var(--brand-500, #A0522D);
-    transform: scaleY(1.6);
+    color: #FFFFFF;
   }
   .tab-bar-sheet {
     pointer-events: auto;
@@ -1415,17 +1429,17 @@ html, body {
   </footer>
 </div>
 
-<!-- 안전망 하단 탭바 (모바일) — 햄버거 격차 회귀 안전망. 평상시 어은 핸들만, 딸깍 시 슬라이드 업 -->
+<!-- 안전망 하단 탭바 (모바일) — 햄버거 격차 회귀 안전망. 평상시 ▲ 핸들만, 딸깍 시 슬라이드 업. 아이콘 첫 클릭 = 라벨 노출 / 두 번째 클릭 = 이동 -->
 <div class="tab-bar" id="tab-bar-safety">
-  <button class="tab-bar-handle" type="button" onclick="window.toggleBottomSafety()" aria-label="메뉴 열기"></button>
+  <button class="tab-bar-handle" type="button" onclick="window.toggleBottomSafety()" aria-label="메뉴 열기">▲</button>
   <div class="tab-bar-sheet" id="tab-bar-sheet">
-    <div class="tab-item" data-menu="home"     onclick="window.openSafetyMenu('home')"     aria-label="홈"><span class="tab-icon">⌂</span><span class="tab-label">홈</span></div>
-    <div class="tab-item" data-menu="board"    onclick="window.openSafetyMenu('board')"    aria-label="현장의 소리"><span class="tab-icon">⦿</span><span class="tab-label">현장의 소리</span></div>
-    <div class="tab-item" data-menu="quick"    onclick="window.openSafetyMenu('quick')"    aria-label="Quick 메뉴"><span class="tab-icon">⚡</span><span class="tab-label">Quick</span></div>
-    <div class="tab-item" data-menu="scripts"  onclick="window.openSafetyMenu('scripts')"  aria-label="스크립트"><span class="tab-icon">☏</span><span class="tab-label">스크립트</span></div>
-    <div class="tab-item" data-menu="myspace"  onclick="window.openSafetyMenu('myspace')"  aria-label="MY SPACE"><span class="tab-icon">◐</span><span class="tab-label">MY SPACE</span></div>
-    <div class="tab-item" data-menu="together" onclick="window.openSafetyMenu('together')" aria-label="함께해요"><span class="tab-icon">⊞</span><span class="tab-label">함께해요</span></div>
-    <div class="tab-item" data-menu="news"     onclick="window.openSafetyMenu('news')"     aria-label="보험뉴스"><span class="tab-icon">▦</span><span class="tab-label">보험뉴스</span></div>
+    <div class="tab-item" data-menu="home"     onclick="window.handleSafetyMenuClick(event, 'home')"     aria-label="홈"><span class="tab-icon">⌂</span><span class="tab-label">홈</span></div>
+    <div class="tab-item" data-menu="board"    onclick="window.handleSafetyMenuClick(event, 'board')"    aria-label="현장의 소리"><span class="tab-icon">⦿</span><span class="tab-label">현장의 소리</span></div>
+    <div class="tab-item" data-menu="quick"    onclick="window.handleSafetyMenuClick(event, 'quick')"    aria-label="Quick 메뉴"><span class="tab-icon">⚡</span><span class="tab-label">Quick</span></div>
+    <div class="tab-item" data-menu="scripts"  onclick="window.handleSafetyMenuClick(event, 'scripts')"  aria-label="스크립트"><span class="tab-icon">☏</span><span class="tab-label">스크립트</span></div>
+    <div class="tab-item" data-menu="myspace"  onclick="window.handleSafetyMenuClick(event, 'myspace')"  aria-label="MY SPACE"><span class="tab-icon">◐</span><span class="tab-label">MY SPACE</span></div>
+    <div class="tab-item" data-menu="together" onclick="window.handleSafetyMenuClick(event, 'together')" aria-label="함께해요"><span class="tab-icon">⊞</span><span class="tab-label">함께해요</span></div>
+    <div class="tab-item" data-menu="news"     onclick="window.handleSafetyMenuClick(event, 'news')"     aria-label="보험뉴스"><span class="tab-icon">▦</span><span class="tab-label">보험뉴스</span></div>
   </div>
 </div>
 
@@ -2754,18 +2768,37 @@ document.addEventListener('click', function (e) {
   }
 });
 
-/* 2026-05-14 안전망 하단 탭바 — 햄버거 격차 회귀 안전망 (어은 핸들 + 슬라이드 업 시트) */
+/* 2026-05-14 안전망 하단 탭바 — 햄버거 격차 회귀 안전망 (▲ 핸들 + 슬라이드 업 시트) */
 window.toggleBottomSafety = function() {
   var bar = document.getElementById('tab-bar-safety');
   if (!bar) return;
+  var willOpen = !bar.classList.contains('is-open');
   bar.classList.toggle('is-open');
-};
-window.openSafetyMenu = function(menuKey) {
-  if (typeof window.switchMenu === 'function') {
-    window.switchMenu(menuKey);
+  /* 닫을 때 모든 is-focus 박지 X */
+  if (!willOpen) {
+    var items = document.querySelectorAll('#tab-bar-sheet .tab-item');
+    items.forEach(function(it) { it.classList.remove('is-focus'); });
   }
-  var bar = document.getElementById('tab-bar-safety');
-  if (bar) bar.classList.remove('is-open');
+};
+/* 아이콘 두 번 클릭 본진 — 첫 클릭 = 라벨 노출(is-focus) / 두 번째 클릭(이미 is-focus) = 이동 */
+window.handleSafetyMenuClick = function(e, menuKey) {
+  var item = e.currentTarget;
+  if (!item) return;
+  if (item.classList.contains('is-focus')) {
+    /* 두 번째 클릭 — 이동 + 시트 닫음 + 본 자리 is-focus 박지 X */
+    if (typeof window.switchMenu === 'function') {
+      window.switchMenu(menuKey);
+    }
+    var bar = document.getElementById('tab-bar-safety');
+    if (bar) bar.classList.remove('is-open');
+    var allItems = document.querySelectorAll('#tab-bar-sheet .tab-item');
+    allItems.forEach(function(it) { it.classList.remove('is-focus'); });
+  } else {
+    /* 첫 클릭 — 다른 자리 is-focus 박지 X + 본인 is-focus 박음 (라벨 노출) */
+    var allItems = document.querySelectorAll('#tab-bar-sheet .tab-item');
+    allItems.forEach(function(it) { it.classList.remove('is-focus'); });
+    item.classList.add('is-focus');
+  }
 };
 /* 시트 외부 클릭 시 닫음 */
 document.addEventListener('click', function(e) {
@@ -2773,6 +2806,8 @@ document.addEventListener('click', function(e) {
   if (!bar || !bar.classList.contains('is-open')) return;
   if (bar.contains(e.target)) return;
   bar.classList.remove('is-open');
+  var items = document.querySelectorAll('#tab-bar-sheet .tab-item');
+  items.forEach(function(it) { it.classList.remove('is-focus'); });
 });
 </script>
 
