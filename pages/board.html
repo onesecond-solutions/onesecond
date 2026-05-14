@@ -1430,9 +1430,90 @@
   background: var(--notice-bg);
 }
 
+/* v2 PART F 1단/2단 칩 본진 (2026-05-14, 카톡 본인 패턴 검증 + 디자인 디테일 4건 흡수) */
+.notice-chip-area {
+  flex-shrink: 0;
+  padding: 10px 16px 6px;
+  background: var(--notice-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+.notice-chip-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px 24px 4px 0; /* 우측 페이드 박음 — 가로 스크롤 신호 */
+  -webkit-mask-image: linear-gradient(to right, black 88%, transparent 100%);
+  mask-image: linear-gradient(to right, black 88%, transparent 100%);
+}
+.notice-chip-row::-webkit-scrollbar { display: none; }
+.notice-chip-row-secondary { margin-top: 4px; }
+.notice-chip {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px; /* 알약 풀라운드 — 카톡 디자인 디테일 1 */
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 0.8125em;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms, color 120ms, border-color 120ms;
+}
+.notice-chip:hover {
+  background: var(--brand-50, #FDF4EF);
+  border-color: var(--brand-100, #F8DCC4);
+}
+/* 활성 칩 = 흰 배경 검은 글자 (선명) — 카톡 디자인 디테일 2 (통화 중 슬쩍 봐도 활성 즉시 인지) */
+.notice-chip.active {
+  background: #FFFFFF;
+  color: var(--color-text-primary);
+  border-color: var(--brand-400, #C4733A);
+  font-weight: 700;
+}
+/* 핀 카운터 칩 (옵션 C) — 첫 칩 [📌 N] */
+.notice-chip-pin {
+  background: var(--brand-50, #FDF4EF);
+  border-color: var(--brand-200, #F0C9A6);
+  color: var(--brand-700, #66331A);
+  font-weight: 700;
+}
+.notice-chip-pin:hover { background: var(--brand-100, #F8DCC4); }
+.notice-chip-pin.active {
+  background: var(--brand-100, #F8DCC4);
+  border-color: var(--brand-400, #C4733A);
+}
+.notice-chip-pin #notice-pin-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  background: var(--brand-500, #A0522D);
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-size: 0.7em; font-weight: 700;
+}
+/* ➕ 사용자 정의 칩 — 카톡 디자인 디테일 4 (개인화 진입로) */
+.notice-chip-add {
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border-style: dashed;
+}
+.notice-chip-add:hover {
+  color: var(--brand-700);
+  border-style: solid;
+  border-color: var(--brand-300, #E0A77A);
+}
+
 /* 공지 핀 TOP 10 (실장님 수동 선택, 2026-05-14 본진 1) — 자동 최신 공지 폐기 */
+/* 핀 옵션 C 박힘 — 카운터 칩 [📌 N] 클릭 시 펼침·접힘 토글 (기본 hide) */
 .notice-pin-list {
-  margin: 16px 24px 0;
+  margin: 8px 24px 0;
   background: var(--notice-pin-bg);
   border: 1px solid var(--notice-pin-border);
   border-radius: 10px;
@@ -1447,6 +1528,16 @@
   border-bottom: 1px solid var(--notice-pin-border);
 }
 .notice-pin-list-header .pin-icon { font-size: 0.95em; }
+.notice-pin-list-close {
+  margin-left: auto;
+  width: 22px; height: 22px;
+  border: none; border-radius: 50%;
+  background: transparent;
+  color: var(--brand-700, #66331A);
+  font-size: 0.75em; cursor: pointer;
+  padding: 0;
+}
+.notice-pin-list-close:hover { background: var(--brand-100, #F8DCC4); }
 .notice-pin-list-items {
   list-style: none;
   margin: 0; padding: 0;
@@ -2102,12 +2193,52 @@
               <!-- D-좌측: 채팅 본진 -->
               <div class="notice-room-left">
 
+                <!-- v2 PART F 1단/2단 칩 본진 (2026-05-14 5/18 D-4 박음) -->
+                <!-- 카톡 본인 채팅 메인 패턴 검증 박힘 + 핀 옵션 C 카운터 칩 -->
+                <div class="notice-chip-area">
+                  <!-- 1단: 카톡 친숙 모드 필터 (학습 비용 0) -->
+                  <div class="notice-chip-row" role="tablist" aria-label="모드 필터">
+                    <button type="button" class="notice-chip notice-chip-pin" data-chip="pin"
+                            onclick="window.toggleNoticePinSheet()" title="핀 공지 펼침">📌 <span id="notice-pin-count">0</span></button>
+                    <button type="button" class="notice-chip active" data-chip1="all"
+                            onclick="window.applyNoticeChip1('all')">전체</button>
+                    <button type="button" class="notice-chip" data-chip1="urgent"
+                            onclick="window.applyNoticeChip1('urgent')">🔴 긴급</button>
+                    <button type="button" class="notice-chip" data-chip1="notice"
+                            onclick="window.applyNoticeChip1('notice')">📢 공지</button>
+                    <button type="button" class="notice-chip" data-chip1="mine"
+                            onclick="window.applyNoticeChip1('mine')">내 글</button>
+                    <button type="button" class="notice-chip" data-chip1="attach"
+                            onclick="window.applyNoticeChip1('attach')">📎 첨부</button>
+                    <button type="button" class="notice-chip notice-chip-add"
+                            onclick="window.addNoticeCustomChip(1)" title="사용자 정의 칩 추가">➕</button>
+                  </div>
+                  <!-- 2단: 보험사 분기 (onesecond 차별화, 구조화 데이터 기반) -->
+                  <div class="notice-chip-row notice-chip-row-secondary" role="tablist" aria-label="보험사 분기">
+                    <button type="button" class="notice-chip" data-chip2="meritz"
+                            onclick="window.applyNoticeChip2('meritz')">메리츠</button>
+                    <button type="button" class="notice-chip" data-chip2="db"
+                            onclick="window.applyNoticeChip2('db')">DB</button>
+                    <button type="button" class="notice-chip" data-chip2="hanwha"
+                            onclick="window.applyNoticeChip2('hanwha')">한화</button>
+                    <button type="button" class="notice-chip" data-chip2="samsung"
+                            onclick="window.applyNoticeChip2('samsung')">삼성</button>
+                    <button type="button" class="notice-chip" data-chip2="hyundae"
+                            onclick="window.applyNoticeChip2('hyundae')">현대해상</button>
+                    <button type="button" class="notice-chip" data-chip2="kb"
+                            onclick="window.applyNoticeChip2('kb')">KB</button>
+                    <button type="button" class="notice-chip notice-chip-add"
+                            onclick="window.addNoticeCustomChip(2)" title="자주 보는 보험사 추가">➕</button>
+                  </div>
+                </div>
+
                 <!-- 공지 핀 TOP 10 (실장님 수동 선택, 2026-05-14 작업지시서 본진 1 박음) -->
-                <!-- 자동 최신 공지 로직 폐기 → is_pinned=true + pin_order 1~10 박힘 -->
+                <!-- 핀 옵션 C 박힘 — 첫 칩 [📌 N] 카운터 클릭 시 펼침·접힘 토글 (기본 hide) -->
                 <div class="notice-pin-list" id="notice-pin-list" style="display:none;">
                   <div class="notice-pin-list-header">
                     <span class="pin-icon">📌</span>
                     <span>핀 공지</span>
+                    <button type="button" class="notice-pin-list-close" onclick="window.toggleNoticePinSheet()" aria-label="핀 공지 접기">✕</button>
                   </div>
                   <ul class="notice-pin-list-items" id="notice-pin-list-items"></ul>
                 </div>
@@ -3440,7 +3571,10 @@ function _renderNoticePinList(pinned) {
   var box = document.getElementById('notice-pin-list');
   var ul  = document.getElementById('notice-pin-list-items');
   if (!box || !ul) return;
-  box.style.display = '';
+  /* 옵션 C 박음: 자동 펼침 박지 않음 (카운터 칩 [📌 N] 클릭 시만 펼침) */
+  /* 카운터 칩 갱신 */
+  var countEl = document.getElementById('notice-pin-count');
+  if (countEl) countEl.textContent = (pinned && pinned.length) || 0;
   if (!pinned || pinned.length === 0) {
     var meRole = (window.AppState && window.AppState.role) || '';
     var canPin = (meRole === 'admin' || meRole === 'ga_manager');
@@ -3480,6 +3614,74 @@ window.scrollToPinnedMsg = function(postId){
   bubble.style.backgroundColor = 'var(--brand-100, #F3D9C2)';
   setTimeout(function(){ bubble.style.backgroundColor = prev; }, 1200);
 };
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   [2026-05-14 v2 PART F] 1단/2단 칩 본진 + 핀 옵션 C 카운터 토글
+   - 카톡 본인 채팅 메인 패턴 검증 박힘 (전체/안읽음 칩 흡수)
+   - 1단 = 모드 필터 (전체/긴급/공지/내 글/첨부) — 카톡 친숙 패턴
+   - 2단 = 보험사 분기 (메리츠/DB/한화/삼성/현대해상/KB) — onesecond 차별화
+   - 카운터 칩 [📌 N] = 옵션 C (펼침 토글)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+var _currentNoticeChip1 = 'all';
+var _currentNoticeChip2 = null;
+
+window.applyNoticeChip1 = function(chipKey) {
+  _currentNoticeChip1 = chipKey;
+  document.querySelectorAll('.notice-chip[data-chip1]').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.chip1 === chipKey);
+  });
+  _applyNoticeMessageFilter();
+};
+
+window.applyNoticeChip2 = function(chipKey) {
+  /* 토글 박음 — 동일 키 클릭 시 해제 (2단은 단일 선택, 다중 보험사 비교는 v1.2) */
+  if (_currentNoticeChip2 === chipKey) {
+    _currentNoticeChip2 = null;
+  } else {
+    _currentNoticeChip2 = chipKey;
+  }
+  document.querySelectorAll('.notice-chip[data-chip2]').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.chip2 === _currentNoticeChip2);
+  });
+  _applyNoticeMessageFilter();
+};
+
+window.toggleNoticePinSheet = function() {
+  var box = document.getElementById('notice-pin-list');
+  var pinBtn = document.querySelector('.notice-chip-pin');
+  if (!box) return;
+  var isOpen = box.style.display !== 'none';
+  if (isOpen) {
+    box.style.display = 'none';
+    if (pinBtn) pinBtn.classList.remove('active');
+  } else {
+    box.style.display = '';
+    if (pinBtn) pinBtn.classList.add('active');
+  }
+};
+
+window.addNoticeCustomChip = function(row) {
+  /* v1.2 박을 본진 — personal_memos 정합 (사용자 정의 칩 저장) */
+  alert('자주 보는 ' + (row === 1 ? '모드' : '보험사') + ' 칩 추가 본진은 v1.2 박을 예정 (personal_memos 정합).');
+};
+
+function _applyNoticeMessageFilter() {
+  /* 메시지 풍선 필터링 — data-* attribute는 _renderNoticeMessages 본진 4 박힘 시 부착 */
+  var rows = document.querySelectorAll('.notice-msg-row');
+  rows.forEach(function(row){
+    var keep = true;
+    var d = row.dataset || {};
+    /* 1단 필터 */
+    if (_currentNoticeChip1 === 'urgent' && d.urgent !== 'true') keep = false;
+    if (_currentNoticeChip1 === 'notice' && d.notice !== 'true') keep = false;
+    if (_currentNoticeChip1 === 'mine'   && d.mine   !== 'true') keep = false;
+    if (_currentNoticeChip1 === 'attach' && d.attach !== 'true') keep = false;
+    /* 2단 보험사 필터 (insurer attribute 박힘 시 가동) */
+    if (_currentNoticeChip2 && d.insurer !== _currentNoticeChip2) keep = false;
+    row.style.display = keep ? '' : 'none';
+  });
+}
 
 /* ─────────────────────────────────────────────────────────────
  * 메시지 검색 (2026-05-14 작업지시서 본진 5)
