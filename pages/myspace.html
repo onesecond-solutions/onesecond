@@ -294,6 +294,73 @@
   font-size:0.842em; font-weight:800; font-family:inherit; cursor:pointer; transition:background .15s;
 }
 .leader-modal-footer-btn:hover { background:var(--color-brand-light,#C4733A); }
+
+/* 2026-05-14 §15 정체성 본진 — myspace 나의 자료 [딸깍] 패턴 (board.html 본진 정합) */
+.ddalkkak-btn {
+  height: 22px;
+  padding: 0 9px;
+  border: 1px solid var(--brand-300, #DAA67B);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--brand-700, #66331A);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms, transform 120ms, box-shadow 120ms;
+}
+.ddalkkak-btn:hover, .ddalkkak-btn:active {
+  background: var(--brand-500, #A0522D);
+  color: #FFFFFF;
+  border-color: var(--brand-500, #A0522D);
+  transform: scale(1.06);
+  box-shadow: 0 2px 6px rgba(160, 82, 45, 0.25);
+}
+.ddalkkak-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.ddalkkak-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  background: #FFFFFF;
+  border: 1px solid var(--brand-200, #EBC9A5);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 150ms, transform 150ms;
+  z-index: 95;
+}
+.ddalkkak-wrap.is-open .ddalkkak-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.ddalkkak-menu button {
+  border: none;
+  background: transparent;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-700, #66331A);
+  cursor: pointer;
+  text-align: left;
+  border-radius: 6px;
+  transition: background 100ms;
+  white-space: nowrap;
+}
+.ddalkkak-menu button:hover, .ddalkkak-menu button:active {
+  background: var(--brand-50, #FDF4EF);
+}
 </style>
 <div class="pg-outer">
 <!-- 배너 슬롯 -->
@@ -1101,7 +1168,15 @@ window.renderLibraryList = function(items, page) {
       + '<div class="mys-item-preview">' + preview + '</div>'
       + '<div class="mys-item-date">' + date + '</div>'
       + '</div>'
-      + '<button class="mys-item-more" onclick="deleteLibrary(' + s.id + ', this)">…</button>'
+      + '<div class="ddalkkak-wrap" data-lib-id="' + s.id + '">'
+      +   '<button class="ddalkkak-btn" type="button" title="딸깍 한 번에 액션 열기" '
+      +           'onclick="window.toggleLibDdalkkak(event, ' + s.id + ')">딸깍</button>'
+      +   '<div class="ddalkkak-menu">'
+      +     '<button type="button" onclick="window.actLibMemo(event, ' + s.id + ')">📝 메모</button>'
+      +     '<button type="button" onclick="window.actLibShare(event, ' + s.id + ')">🔗 공유</button>'
+      +     '<button type="button" onclick="window.actLibDelete(event, ' + s.id + ')">🗑 삭제</button>'
+      +   '</div>'
+      + '</div>'
       + '</div>';
   }).join('');
 
@@ -1132,6 +1207,45 @@ window.deleteLibrary = async function(id, btn) {
     await window.loadLibraryList();
   } catch(e) { alert('삭제 중 오류가 발생했습니다.'); }
 }
+
+/* 2026-05-14 §15 정체성 본진 — myspace 나의 자료 [딸깍] 패턴 (board.html 동일 본진) */
+window.toggleLibDdalkkak = function(e, libId) {
+  if (e) e.stopPropagation();
+  /* 다른 자리 메뉴 박지 X (한 자리만 박힘 본진) */
+  document.querySelectorAll('.ddalkkak-wrap.is-open').forEach(function(w) {
+    w.classList.remove('is-open');
+  });
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (wrap) wrap.classList.toggle('is-open');
+};
+
+window.actLibMemo = function(e, libId) {
+  if (e) e.stopPropagation();
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (wrap) wrap.classList.remove('is-open');
+  alert('📝 메모 본진 박을 예정 (v1.2 — library.memo_text 컬럼 편집)');
+};
+
+window.actLibShare = function(e, libId) {
+  if (e) e.stopPropagation();
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (wrap) wrap.classList.remove('is-open');
+  alert('🔗 공유 본진 박을 예정 (v1.2 — Web Share API 또는 공유 링크 생성)');
+};
+
+window.actLibDelete = async function(e, libId) {
+  if (e) e.stopPropagation();
+  var wrap = e.currentTarget.closest('.ddalkkak-wrap');
+  if (wrap) wrap.classList.remove('is-open');
+  await window.deleteLibrary(libId, null);
+};
+
+/* 외부 클릭 시 메뉴 닫음 */
+document.addEventListener('click', function(e) {
+  document.querySelectorAll('.ddalkkak-wrap.is-open').forEach(function(w) {
+    if (!w.contains(e.target)) w.classList.remove('is-open');
+  });
+});
 
 // ── 파일 선택 핸들러 ──
 window.handleFileSelect = function(input, previewId, nameId) {

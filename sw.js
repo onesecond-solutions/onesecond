@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v7-20260514-latest-btn';
+const CACHE_NAME = 'onesecond-v8-20260514-myspace-ddalkkak';
 const CACHE_URLS = [
   '/',
   '/app.html',
