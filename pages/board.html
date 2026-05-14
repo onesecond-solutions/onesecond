@@ -4039,36 +4039,9 @@ window.toggleNoticePinSheet = function() {
   }
 };
 
-window.toggleMobileSidebar = function() {
-  /* 모바일 햄버거 ☰ 클릭 시 B영역 사이드바 표시/숨김 토글 (2026-05-14 추가) */
-  var sidebar = document.querySelector('.b');
-  if (!sidebar) { console.warn('[toggleMobileSidebar] .b 사이드바 미발견'); return; }
-  var isOpen = document.body.classList.contains('mobile-sidebar-open');
-  if (isOpen) {
-    document.body.classList.remove('mobile-sidebar-open');
-    sidebar.style.display = '';
-  } else {
-    document.body.classList.add('mobile-sidebar-open');
-  }
-};
-
-/* 사이드바 외부 클릭 시 닫기 (메뉴 항목 클릭 시 자동 진입 + 사이드바 닫기) */
-document.addEventListener('click', function(e) {
-  if (!document.body.classList.contains('mobile-sidebar-open')) return;
-  var sidebar = document.querySelector('.b');
-  var hamburger = document.getElementById('notice-mobile-hamburger');
-  if (sidebar && sidebar.contains(e.target)) {
-    /* 사이드바 안 클릭 — 메뉴 항목 클릭이면 자동 닫음 */
-    var menuItem = e.target.closest('[data-menu], [onclick*="switchMenu"], a');
-    if (menuItem) {
-      document.body.classList.remove('mobile-sidebar-open');
-    }
-    return;
-  }
-  if (hamburger && hamburger.contains(e.target)) return;
-  /* 외부 클릭 — 닫음 */
-  document.body.classList.remove('mobile-sidebar-open');
-});
+/* 옛 중복 정의(window.toggleMobileSidebar 함수 + 외부 클릭 핸들러) 제거 박음
+   — 본 자리 app.html 전역 박혀 있고, partial 핸들러가 본인 햄버거(notice-mobile-hamburger)만
+     체크하던 격차 → app.html 핸들러가 즉시 닫는 본진 회귀. app.html에서 두 자리 햄버거 동시 체크. */
 
 window.toggleNoticeSearchBar = function() {
   /* 검색바 토글 — 1단 칩 🔍 클릭 시 가동 (모바일 검색 진입로 본진) */

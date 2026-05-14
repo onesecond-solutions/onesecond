@@ -2672,17 +2672,19 @@ window.toggleMobileSidebar = function() {
     document.body.classList.add('mobile-sidebar-open');
   }
 };
-/* 사이드바 외부/메뉴 클릭 시 닫음 */
+/* 사이드바 외부/메뉴 클릭 시 닫음 — 두 자리 햄버거 모두 체크 (.mobile-header-hamburger + .notice-mobile-hamburger) */
 document.addEventListener('click', function(e) {
   if (!document.body.classList.contains('mobile-sidebar-open')) return;
   var sidebar = document.querySelector('.b');
-  var hamburger = document.querySelector('.mobile-header-hamburger');
+  var hamburger1 = document.querySelector('.mobile-header-hamburger');
+  var hamburger2 = document.querySelector('.notice-mobile-hamburger');
   if (sidebar && sidebar.contains(e.target)) {
     var menuItem = e.target.closest('[data-menu], [onclick*="switchMenu"], a');
     if (menuItem) document.body.classList.remove('mobile-sidebar-open');
     return;
   }
-  if (hamburger && hamburger.contains(e.target)) return;
+  if (hamburger1 && hamburger1.contains(e.target)) return;
+  if (hamburger2 && hamburger2.contains(e.target)) return;
   document.body.classList.remove('mobile-sidebar-open');
 });
 document.addEventListener('click', function (e) {
