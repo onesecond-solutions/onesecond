@@ -1663,6 +1663,27 @@
   text-align: right;
 }
 .notice-msg-row.is-other .notice-msg-time { text-align: left; }
+
+/* v2 PART C 축 1 맥락 태그 본진 (2026-05-14 5/18 D-4) */
+/* 통화 중 슬쩍 봐도 즉시 인지 — 6필드 구조화 메시지라야 가능, 카톡엔 없는 패턴 */
+.notice-msg-tags {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.notice-tag {
+  display: inline-flex; align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.6875em;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.tag-urgent  { background: rgba(220, 38, 38, 0.12); color: #DC2626; }
+.tag-notice  { background: var(--brand-100, #F8DCC4); color: var(--brand-700, #66331A); }
+.tag-insurer { background: var(--neutral-200, #E5E7EB); color: var(--neutral-700, #374151); }
+.tag-cat     { background: rgba(59, 130, 246, 0.12); color: #2563EB; }
+
 .notice-msg-date {
   align-self: center;
   font-size: 0.6875em;
@@ -3724,6 +3745,46 @@ window.onNoticeSearch = function(input){
   }, 300);
 };
 
+/* v2 PART C 축 1 맥락 태그 — 키워드 매칭 본진 (v1.1, v1.2에서 post_tags 컬럼 본진 박음) */
+function _extractNoticeContext(p) {
+  var text = ((p.title || '') + ' ' + (p.content || '')).toLowerCase();
+  var ctx = { urgent: false, notice: false, attach: false, insurer: null, category: null };
+  ctx.notice = !!p.is_notice;
+  ctx.attach = !!(p.attachments);
+  ctx.urgent = /긴급|urgent|🔴|즉시|asap|급해/i.test(text);
+  var insurerMap = {
+    meritz:  /메리츠|meritz/i,
+    db:      /\bdb손해|\bdb\s|디비손해|디비\s/i,
+    hanwha:  /한화/i,
+    samsung: /삼성생명|삼성화재|삼성/i,
+    hyundae: /현대해상|현대\s/i,
+    kb:      /\bkb\s|kb손해|kb생명|케이비/i
+  };
+  for (var key in insurerMap) {
+    if (insurerMap[key].test(text)) { ctx.insurer = key; break; }
+  }
+  if (p.category && p.category !== 'all') {
+    ctx.category = p.category;
+  } else if (/실손|실비/i.test(text))         ctx.category = '실손';
+  else if  (/암보험|암담보|항암/i.test(text)) ctx.category = '암';
+  else if  (/종신/i.test(text))               ctx.category = '종신';
+  else if  (/연금/i.test(text))               ctx.category = '연금';
+  return ctx;
+}
+
+function _renderNoticeContextTags(ctx) {
+  var tags = [];
+  if (ctx.urgent)   tags.push('<span class="notice-tag tag-urgent">🔴 긴급</span>');
+  if (ctx.notice)   tags.push('<span class="notice-tag tag-notice">📢 공지</span>');
+  if (ctx.insurer) {
+    var labels = { meritz: '메리츠', db: 'DB', hanwha: '한화', samsung: '삼성', hyundae: '현대해상', kb: 'KB' };
+    tags.push('<span class="notice-tag tag-insurer">' + labels[ctx.insurer] + '</span>');
+  }
+  if (ctx.category) tags.push('<span class="notice-tag tag-cat">' + _noticeEscape(ctx.category) + '</span>');
+  if (tags.length === 0) return '';
+  return '<div class="notice-msg-tags">' + tags.join('') + '</div>';
+}
+
 function _renderNoticeMessages(msgs, meId, meName) {
   var lastDate = '';
   return msgs.map(function(p){
@@ -3737,6 +3798,16 @@ function _renderNoticeMessages(msgs, meId, meName) {
     var isMine = (p.author_id && meId && String(p.author_id) === String(meId));
     var author = p.display_author || p.display_name || p.author_name || '알 수 없음';
     var html = _noticeEscape(p.content || p.title || '').replace(/\n/g, '<br>');
+
+    /* 맥락 태그 본진 (v2 PART C 축 1) + 칩 필터 정합 data-* 부착 */
+    var ctx = _extractNoticeContext(p);
+    var tagsHtml = _renderNoticeContextTags(ctx);
+    var rowData = ' data-post-id="' + p.id + '"' +
+                  ' data-urgent="' + (ctx.urgent  ? 'true' : 'false') + '"' +
+                  ' data-notice="' + (ctx.notice  ? 'true' : 'false') + '"' +
+                  ' data-attach="' + (ctx.attach  ? 'true' : 'false') + '"' +
+                  ' data-mine="'   + (isMine      ? 'true' : 'false') + '"' +
+                  (ctx.insurer ? ' data-insurer="' + ctx.insurer + '"' : '');
 
     /* 첨부 chip */
     var attHtml = '';
@@ -3766,10 +3837,11 @@ function _renderNoticeMessages(msgs, meId, meName) {
                      pinLabel + '</button>';
       }
       return dateBar +
-        '<div class="notice-msg-row is-mine">' +
+        '<div class="notice-msg-row is-mine"' + rowData + '>' +
           '<div class="notice-msg-bubble is-mine" data-post-id="' + p.id + '" ' +
                'data-post-created="' + (p.created_at || '') + '" ' +
                'onclick="window.openMyMsgMenu(this, event)">' +
+            tagsHtml +
             '<span class="msg-text">' + html + '</span>' +
             attHtml +
             '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
@@ -3788,10 +3860,11 @@ function _renderNoticeMessages(msgs, meId, meName) {
       var titleEsc = msgTitle.replace(/'/g, "\\'");
       var pidEsc   = String(p.id || '').replace(/'/g, "\\'");
       return dateBar +
-        '<div class="notice-msg-row is-other">' +
+        '<div class="notice-msg-row is-other"' + rowData + '>' +
           '<div class="notice-msg-avatar">' + _noticeEscape(initial) + '</div>' +
           '<div class="notice-msg-bubble is-other">' +
             '<div class="notice-msg-author">' + _noticeEscape(author) + '</div>' +
+            tagsHtml +
             html + attHtml +
             '<div class="notice-msg-footer">' +
               '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
