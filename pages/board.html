@@ -2080,6 +2080,28 @@
   font-size: 0.875em;
 }
 
+/* 2026-05-14 [최신글] 박힌 자리 시각 본진 */
+.notice-chip-latest {
+  background: var(--brand-50, #FDF4EF) !important;
+  color: var(--brand-700, #66331A) !important;
+  border-color: var(--brand-300, #DAA67B) !important;
+  font-weight: 700;
+}
+.notice-chip-latest:hover, .notice-chip-latest:active {
+  background: var(--brand-500, #A0522D) !important;
+  color: #FFFFFF !important;
+  border-color: var(--brand-500, #A0522D) !important;
+}
+/* 최신글 클릭 후 마지막 메시지 박힌 자리 1.5초 시각 강조 */
+.notice-msg-row.is-highlight-latest .notice-msg-bubble {
+  animation: highlightLatest 1.5s ease-out;
+}
+@keyframes highlightLatest {
+  0%   { box-shadow: 0 0 0 4px rgba(160, 82, 45, 0.45); transform: translateY(-2px); }
+  50%  { box-shadow: 0 0 0 6px rgba(160, 82, 45, 0.25); }
+  100% { box-shadow: 0 0 0 0   rgba(160, 82, 45, 0);    transform: translateY(0); }
+}
+
 /* 본진 2 회귀 회피 — 다른 사용자 메시지 ⭐ MY SPACE 저장 */
 .notice-msg-footer {
   display: flex; align-items: center; justify-content: flex-end;
@@ -2718,6 +2740,8 @@
                             onclick="window.applyNoticeChip1('all')">전체</button>
                     <button type="button" class="notice-chip" data-chip1="mine"
                             onclick="window.applyNoticeChip1('mine')">내 글</button>
+                    <button type="button" class="notice-chip notice-chip-latest"
+                            onclick="window.scrollToLatestNotice()" title="가장 최신 메시지로 이동" aria-label="최신글">⬇ 최신글</button>
                     <button type="button" class="notice-chip notice-chip-search"
                             onclick="window.toggleNoticeSearchBar()" title="메시지 검색" aria-label="검색">🔍</button>
                   </div>
@@ -4162,6 +4186,21 @@ window.toggleNoticePinSheet = function() {
 /* 옛 중복 정의(window.toggleMobileSidebar 함수 + 외부 클릭 핸들러) 제거 박음
    — 본 자리 app.html 전역 박혀 있고, partial 핸들러가 본인 햄버거(notice-mobile-hamburger)만
      체크하던 격차 → app.html 핸들러가 즉시 닫는 본진 회귀. app.html에서 두 자리 햄버거 동시 체크. */
+
+/* 2026-05-14 [최신글] 박음 — 한도끝도 없이 화면 내림 박지 X 본진 (§15 정체성 본진 정합)
+ * 단톡방 + 네비게이션방 동일 셸 박혀 본 함수 두 자리 모두 박힘 정합 */
+window.scrollToLatestNotice = function() {
+  var chat = document.querySelector('.notice-room-chat');
+  if (!chat) return;
+  chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+  /* 시각 강조 박힘 — 마지막 메시지 박힌 자리 1.5초 highlight */
+  var msgs = chat.querySelectorAll('.notice-msg-row');
+  if (msgs.length > 0) {
+    var last = msgs[msgs.length - 1];
+    last.classList.add('is-highlight-latest');
+    setTimeout(function() { last.classList.remove('is-highlight-latest'); }, 1500);
+  }
+};
 
 window.toggleNoticeSearchBar = function() {
   /* 검색바 토글 — 1단 칩 🔍 클릭 시 가동 (모바일 검색 진입로 본진) */
