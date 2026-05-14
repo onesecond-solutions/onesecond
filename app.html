@@ -101,23 +101,45 @@
 .mobile-header-logo img {
   width: 30px; height: 30px;
 }
-.mobile-header-spacer { flex: 1; }
-.mobile-header-search {
-  flex-shrink: 0;
-  width: 36px; height: 36px;
-  border: none;
-  background: transparent;
-  font-size: 18px;
-  color: var(--brand-700, #66331A);
-  cursor: pointer;
-  border-radius: 8px;
+.mobile-header-search-wrap {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-.mobile-header-search:hover,
-.mobile-header-search:active {
+  height: 36px;
   background: var(--brand-50, #FDF4EF);
+  border: 1px solid var(--brand-100, #F8DCC4);
+  border-radius: 9999px;
+  padding: 0 14px;
+  gap: 8px;
+  min-width: 0;
+}
+.mobile-header-search-wrap:focus-within {
+  border-color: var(--brand-400, #C4733A);
+  background: #FFFFFF;
+}
+.mobile-header-search-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--brand-700, #66331A);
+  line-height: 1;
+}
+.mobile-header-search-input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: #111827;
+  -webkit-text-fill-color: #111827;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  min-width: 0;
+  padding: 0;
+}
+.mobile-header-search-input::placeholder {
+  color: #9CA3AF;
+  -webkit-text-fill-color: #9CA3AF;
 }
 .mobile-header-user {
   flex-shrink: 0;
@@ -965,8 +987,8 @@ html, body {
   .b { display: none; }
   .c { position: static; max-height: none; align-self: auto; }
   .d { overflow-y: visible; }
-  /* 모바일 푸터: 탭바(fixed bottom 64px)와 겹치지 않게 마진 확보 */
-  .site-footer-mini { margin-bottom: 64px; }
+  /* 2026-05-14 갱신 — 옛 탭바 박지 X 박힌 자리 = margin 박지 X */
+  .site-footer-mini { margin-bottom: 0; }
   /* 모바일 A1 헤더 — 로고 이미지만 + 검색창 + (이름 ellipsis 아바타) */
   .a1 {
     padding: 0 var(--space-3);
@@ -984,7 +1006,9 @@ html, body {
   .a1-user { height: 32px; padding: 2px 8px 2px 3px; font-size: 0.72em; max-width: 120px; }
   .a1-user-avatar { width: 26px; height: 26px; font-size: 0.82em; }
   .tab-bar {
-    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    /* 2026-05-14 박지 X — 신 헤더 햄버거 진입로 정합 박혀 옛 하단 탭바 박지 X */
+    display: none !important;
+    position: fixed; bottom: 0; left: 0; right: 0;
     height: 64px; background: var(--color-brand);
     z-index: 50; border-top: 1px solid rgba(255,255,255,0.1);
   }
@@ -1012,7 +1036,7 @@ html, body {
 
 <body>
 
-<!-- 2026-05-14 모바일 헤더 (768px 미만만 표시) — 햄버거 + 로고 + 검색 + 사용자 한 글자 -->
+<!-- 2026-05-14 통합 헤더 (전체 페이지 한 줄) — 햄버거 + 로고 + 검색창+돋보기 + 사용자 한 글자 -->
 <header class="mobile-header" id="mobile-header">
   <button class="mobile-header-hamburger" type="button"
           onclick="window.toggleMobileSidebar()"
@@ -1020,10 +1044,11 @@ html, body {
   <a class="mobile-header-logo" href="/app.html" aria-label="원세컨드 홈">
     <img src="assets/images/logo/logo05.png" alt="원세컨드" />
   </a>
-  <div class="mobile-header-spacer"></div>
-  <button class="mobile-header-search" type="button"
-          onclick="window.openGlobalSearch && window.openGlobalSearch()"
-          aria-label="검색">🔍</button>
+  <div class="mobile-header-search-wrap">
+    <span class="mobile-header-search-icon">🔍</span>
+    <input type="search" class="mobile-header-search-input" id="mobile-header-search-input"
+           placeholder="검색" autocomplete="off" />
+  </div>
   <div class="mobile-header-user" id="mobile-header-user" title="">?</div>
 </header>
 
