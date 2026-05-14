@@ -2323,6 +2323,65 @@
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
   }
 
+  /* 모바일 햄버거 메뉴 (2026-05-14 추가) — 단톡방 풀스크린 시 다른 메뉴 진입로 */
+  .notice-mobile-hamburger {
+    display: none;
+  }
+  .pg-outer.notice-room-active .notice-mobile-hamburger {
+    position: fixed;
+    top: 4px;
+    left: 4px;
+    z-index: 102; /* 탭바(101) 위 */
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--brand-700, #66331A);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+  .pg-outer.notice-room-active .notice-mobile-hamburger:hover,
+  .pg-outer.notice-room-active .notice-mobile-hamburger:active {
+    background: var(--brand-50, #FDF4EF);
+  }
+  /* 햄버거 자리 박음 — 탭바 좌측 패딩 */
+  .pg-outer.notice-room-active .pg-tab-block {
+    padding-left: 44px;
+  }
+
+  /* 모바일 사이드바 (.b 모바일 풀스크린 슬라이드) */
+  body.mobile-sidebar-open .b {
+    display: block !important;
+    position: fixed;
+    top: 0; left: 0;
+    width: 78%;
+    max-width: 320px;
+    height: 100dvh;
+    z-index: 200;
+    background: var(--color-bg, #FAF8F5);
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    padding: 16px;
+    animation: sidebarSlideIn 200ms ease-out;
+  }
+  @keyframes sidebarSlideIn {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(0); }
+  }
+  body.mobile-sidebar-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 150;
+    pointer-events: none;
+  }
+
   /* 입력바 모바일 — 글쓰기 버튼 슬림 본진 (2026-05-14 갱신) */
   .notice-input-bar { padding: 6px 12px 10px; }
   .notice-write-btn {
@@ -2469,6 +2528,11 @@
           </div>
 
           <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 모바일 햄버거 메뉴 (2026-05-14 추가) — 단톡방 풀스크린 시 다른 메뉴 진입로 -->
+          <button id="notice-mobile-hamburger" class="notice-mobile-hamburger"
+                  type="button" onclick="window.toggleMobileSidebar()"
+                  aria-label="메뉴">☰</button>
+
           <!-- [2026-05-13 Step 4-d] D영역 단톡방 셸 본진 (manager_notice + navigation) -->
           <!-- 5/18 4팀 오픈 본진. _switchBoard 박힘 시 분기 박음 (Step 4-e JS)         -->
           <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
@@ -3923,6 +3987,37 @@ window.toggleNoticePinSheet = function() {
     if (pinBtn) pinBtn.classList.add('active');
   }
 };
+
+window.toggleMobileSidebar = function() {
+  /* 모바일 햄버거 ☰ 클릭 시 B영역 사이드바 표시/숨김 토글 (2026-05-14 추가) */
+  var sidebar = document.querySelector('.b');
+  if (!sidebar) { console.warn('[toggleMobileSidebar] .b 사이드바 미발견'); return; }
+  var isOpen = document.body.classList.contains('mobile-sidebar-open');
+  if (isOpen) {
+    document.body.classList.remove('mobile-sidebar-open');
+    sidebar.style.display = '';
+  } else {
+    document.body.classList.add('mobile-sidebar-open');
+  }
+};
+
+/* 사이드바 외부 클릭 시 닫기 (메뉴 항목 클릭 시 자동 진입 + 사이드바 닫기) */
+document.addEventListener('click', function(e) {
+  if (!document.body.classList.contains('mobile-sidebar-open')) return;
+  var sidebar = document.querySelector('.b');
+  var hamburger = document.getElementById('notice-mobile-hamburger');
+  if (sidebar && sidebar.contains(e.target)) {
+    /* 사이드바 안 클릭 — 메뉴 항목 클릭이면 자동 닫음 */
+    var menuItem = e.target.closest('[data-menu], [onclick*="switchMenu"], a');
+    if (menuItem) {
+      document.body.classList.remove('mobile-sidebar-open');
+    }
+    return;
+  }
+  if (hamburger && hamburger.contains(e.target)) return;
+  /* 외부 클릭 — 닫음 */
+  document.body.classList.remove('mobile-sidebar-open');
+});
 
 window.toggleNoticeSearchBar = function() {
   /* 검색바 토글 — 1단 칩 🔍 클릭 시 가동 (모바일 검색 진입로 본진) */
