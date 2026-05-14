@@ -2151,40 +2151,42 @@
   .notice-msg-bubble { max-width: calc(100vw - 52px); }
   /* 자산 패널은 1024px 미만에서 이미 hide 박힘 */
 
-  /* v2 PART D 카톡 톤 모바일 풀스크린 본진 (2026-05-14 5/18 D-4 갱신) ━━━━ */
-  /* 격차 본질: 100vh + sticky 격차 + 키보드 박힘 + B영역 충돌 */
-  /* 해소: position:fixed inset:0 + 100dvh + 채팅 overflow-y:auto + 입력바 sticky */
+  /* v2 PART D 카톡 톤 모바일 풀스크린 본진 (2026-05-14 5/18 D-4 처방 A 박음) ━━ */
+  /* 옛 격차: .pg-outer.notice-room-active position:fixed inset:0 박혀 부모
+              전체 viewport 박힘 → 운영 일정 카드(.pg-console-side)가 viewport
+              차지 시 단톡방 셸(#notice-room-shell)이 viewport 밖 박힘 →
+              스크롤 박지 X (overflow:hidden) → 채팅 못 봄. 5/18 오픈 차단 격차.
+     처방 A: 부모 fixed 박지 X. 단톡방 셸 본인만 fixed 박음. 다른 자식
+            (운영 일정 + summary-bar 등) hide 박음. 탭바 fixed top 박음
+            (탭 진입 본진 박힌 자리). */
 
-  /* 단톡방 진입 시 = 전체 화면 본진 박음 (B영역 + 주소창 외 박지 X 영역 통째 덮음) */
-  .pg-outer.notice-room-active {
+  /* 단톡방 진입 시 상단 페이지 헤더 + 운영 일정 + summary-bar + 검색바 hide 박음 */
+  .pg-outer.notice-room-active .pg-header-block,
+  .pg-outer.notice-room-active .pg-summary-bar,
+  .pg-outer.notice-room-active .pg-console-side,
+  .pg-outer.notice-room-active #notice-search-bar { display: none; }
+
+  /* 탭바 fixed top:0 박음 (셸 위 박음, 탭 진입 본진 박혀 있어야) */
+  .pg-outer.notice-room-active .pg-tab-block {
     position: fixed;
-    inset: 0;
-    z-index: 100;
-    overflow: hidden;
+    top: 0; left: 0; right: 0;
+    z-index: 101;
     background: var(--color-bg, #FAF8F5);
-    padding: 0;
-    margin: 0;
-  }
-
-  /* 단톡방 진입 시 상단 페이지 헤더 통째 hide */
-  .pg-outer.notice-room-active .pg-header-block { display: none; }
-
-  /* 탭바 컴팩트 + sticky top 박음 */
-  .pg-outer.notice-room-active .pg-tab-row {
+    border-bottom: 1px solid var(--color-border);
     padding: 4px 8px;
-    gap: 6px;
     margin: 0;
-    position: sticky;
-    top: 0;
-    z-index: 6;
-    background: var(--color-bg, #FAF8F5);
   }
+  .pg-outer.notice-room-active .pg-tab-row { padding: 0; gap: 6px; margin: 0; }
   .pg-outer.notice-room-active .pg-tab-btn { font-size: 0.8125em; padding: 6px 10px; }
 
-  /* 단톡방 셸 = 100dvh (모바일 주소창 박힘 정합) */
+  /* 단톡방 셸 = fixed inset:44px 0 0 0 (탭바 박힘 자리 박음) */
   .pg-outer.notice-room-active .notice-room-shell {
-    height: 100dvh;
-    min-height: 100vh; /* fallback (dvh 미지원 브라우저) */
+    position: fixed;
+    inset: 44px 0 0 0;
+    z-index: 100;
+    height: calc(100dvh - 44px);
+    min-height: calc(100vh - 44px); /* fallback (dvh 미지원) */
+    background: var(--color-bg, #FAF8F5);
     border: none;
     border-radius: 0;
     margin: 0;
@@ -2223,16 +2225,6 @@
     border-top: 1px solid var(--color-border);
     background: var(--notice-bg, #FFFFFF);
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
-  }
-
-  /* 검색바 sticky top 박음 (탭 다음) */
-  .pg-outer.notice-room-active #notice-search-bar {
-    position: sticky;
-    top: 36px;
-    z-index: 5;
-    background: var(--color-bg, #FAF8F5);
-    margin: 0;
-    padding: 4px 8px;
   }
 
   /* 입력바 1줄화 — readonly textarea 80px → 36px (본 A 시나리오 1 정합) */
@@ -3952,8 +3944,10 @@ function _lpCloseMenu() {
     var pgOuter = document.getElementById('page-board');
     if (!pgOuter || !pgOuter.classList.contains('notice-room-active')) return;
     if (window.innerWidth > 768) return;  /* 모바일 본진만 */
-    var vh = window.visualViewport.height;
-    pgOuter.style.height = vh + 'px';
+    /* 처방 A 박음: .pg-outer 박지 X, .notice-room-shell 본진 박음
+       (탭바 44px 박힌 자리 박음, 셸이 본인 fixed inset:44px 0 0 0) */
+    var shell = document.getElementById('notice-room-shell');
+    if (shell) shell.style.height = (window.visualViewport.height - 44) + 'px';
   }
   window.visualViewport.addEventListener('resize', _syncHeight);
   window.visualViewport.addEventListener('scroll', _syncHeight);
