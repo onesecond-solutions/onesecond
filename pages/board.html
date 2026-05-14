@@ -2240,6 +2240,42 @@
   body.notice-search-open .pg-outer.notice-room-active .notice-chip-area {
     visibility: hidden;
   }
+
+  /* 검색바 명시 닫기 ✕ 버튼 (브라우저 기본 ✕는 input 글자만 비움, 검색바는 안 닫힘) */
+  .pg-outer.notice-room-active #notice-search-bar { position: fixed; }
+  .pg-outer.notice-room-active .notice-search-close {
+    position: absolute;
+    top: 50%;
+    right: 22px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: var(--color-surface-2, #F3F4F6);
+    color: var(--color-text-secondary, #6B7280);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 50%;
+    z-index: 2;
+    line-height: 1;
+  }
+  .pg-outer.notice-room-active .notice-search-close:hover,
+  .pg-outer.notice-room-active .notice-search-close:active {
+    background: var(--color-border, #E5E7EB);
+    color: var(--color-text-primary, #111827);
+  }
+  /* input 우측 padding — 닫기 버튼 자리 박음 */
+  .pg-outer.notice-room-active .notice-search-input {
+    padding-right: 44px;
+  }
+  /* 데스크톱·다른 자리 hide */
+  .notice-search-close {
+    display: none;
+  }
   /* 검색 input 모바일 명시 박음 — iOS Safari zoom 박지 X + text 시각 박힘 */
   .pg-outer.notice-room-active .notice-search-input {
     width: 100%;
@@ -2530,6 +2566,10 @@
                    placeholder="메시지 검색 (본문·제목·작성자)"
                    oninput="window.onNoticeSearch(this)"
                    autocomplete="off" />
+            <!-- 2026-05-14 추가 — 검색바 닫기 ✕ (모바일 본진) -->
+            <button class="notice-search-close" type="button"
+                    onclick="window.toggleNoticeSearchBar()"
+                    aria-label="검색 닫기">✕</button>
           </div>
 
           <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
