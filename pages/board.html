@@ -2150,6 +2150,36 @@
   .notice-msg-row { padding: 0 6px; }
   .notice-msg-bubble { max-width: calc(100vw - 52px); }
   /* 자산 패널은 1024px 미만에서 이미 hide 박힘 */
+
+  /* v2 PART F 칩 영역 모바일 본진 (2026-05-14 5/18 D-4) — 모바일 화면 점유 최소화 */
+  .notice-chip-area { padding: 6px 8px 4px; }
+  .notice-chip-row { padding: 2px 16px 4px 0; }
+  .notice-chip-row-secondary { margin-top: 3px; }
+  .notice-chip {
+    height: 26px;
+    padding: 0 10px;
+    font-size: 0.75em;
+  }
+  .notice-chip-pin #notice-pin-count {
+    min-width: 16px; height: 16px;
+    font-size: 0.6875em;
+  }
+
+  /* v2 PART C 축 5 길게 누르기 메뉴 모바일 본진 — 풍선 박힘 방지 */
+  .notice-longpress-menu {
+    min-width: 160px;
+    padding: 4px;
+  }
+  .notice-longpress-menu button {
+    padding: 8px 10px;
+    font-size: 0.8125em;
+  }
+
+  /* v2 PART C 축 1 맥락 태그 모바일 본진 — 한 줄 박힘 정합 */
+  .notice-tag {
+    padding: 1px 5px;
+    font-size: 0.625em;
+  }
 }
 </style>
 
