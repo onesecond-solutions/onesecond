@@ -239,9 +239,10 @@
   background: var(--brand-50, #FDF4EF);
 }
 /* 옛 .a1 헤더 통째 hide (신 헤더 박힌 자리) */
-.a1 { display: none; }
+/* specificity 본진 (0,2,0) — 옛 .a1 본진 (line ~262 .a1 display:grid 박힌 자리) cascade 격차 해소 */
+body .a1 { display: none; }
 /* 본문 영역 = 신 헤더 박힘 자리 박음 */
-.app { padding-top: 48px; }
+body .app { padding-top: 48px; }
 /* 단톡방 풀스크린 진입 시 = 신 헤더 hide (탭바 top:0 박혀 있어 충돌 회피) */
 body.notice-room-fullscreen .mobile-header { display: none; }
 body.notice-room-fullscreen .app { padding-top: 0; }
