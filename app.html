@@ -60,20 +60,24 @@
 .loading-placeholder { min-height: 320px; }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   2026-05-14 통합 헤더 (전체 페이지 통째 정합) — ☰ 햄버거 + 🕐 로고 + 🔍 검색 + 사용자 한 글자
+   2026-05-14 모바일 헤더 (768px 미만만 표시) — ☰ + 🕐 + 🔍 + 🔔 + 사용자
+   PC 769px+ = 옛 .a1 헤더 정합 유지
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .mobile-header {
+  display: none;
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 48px;
   z-index: 90;
   background: #FFFFFF;
   border-bottom: 1px solid var(--color-border, #E5E7EB);
-  display: flex;
   flex-wrap: nowrap;
   align-items: center;
   padding: 0 12px;
   gap: 10px;
+}
+@media (max-width: 768px) {
+  .mobile-header { display: flex; }
 }
 .mobile-header-hamburger {
   flex-shrink: 0;
@@ -238,14 +242,14 @@
 .mobile-user-dd-item:hover {
   background: var(--brand-50, #FDF4EF);
 }
-/* 옛 .a1 헤더 통째 hide (신 헤더 박힌 자리) */
-/* specificity 본진 (0,2,0) — 옛 .a1 본진 (line ~262 .a1 display:grid 박힌 자리) cascade 격차 해소 */
-body .a1 { display: none; }
-/* 본문 영역 = 신 헤더 박힘 자리 박음 */
-body .app { padding-top: 48px; }
-/* 단톡방 풀스크린 진입 시 = 신 헤더 hide (탭바 top:0 박혀 있어 충돌 회피) */
-body.notice-room-fullscreen .mobile-header { display: none; }
-body.notice-room-fullscreen .app { padding-top: 0; }
+/* 모바일 한정 — 옛 .a1 hide + 본문 padding (신 헤더 박힌 자리) */
+@media (max-width: 768px) {
+  body .a1 { display: none; }
+  body .app { padding-top: 48px; }
+  /* 단톡방 풀스크린 진입 시 = 신 헤더 hide (탭바 top:0 박혀 있어 충돌 회피) */
+  body.notice-room-fullscreen .mobile-header { display: none; }
+  body.notice-room-fullscreen .app { padding-top: 0; }
+}
 
 /* 2026-05-14 모바일 사이드바 슬라이드 본진 — 전체 페이지 통째 (board.html partial 박힌 자리 = 본 본진 정합) */
 body.mobile-sidebar-open .b {
