@@ -142,6 +142,43 @@
   color: #9CA3AF;
   -webkit-text-fill-color: #9CA3AF;
 }
+.mobile-header-notify {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  color: var(--brand-700, #66331A);
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  line-height: 1;
+}
+.mobile-header-notify:hover,
+.mobile-header-notify:active {
+  background: var(--brand-50, #FDF4EF);
+}
+.mobile-header-notify-badge {
+  position: absolute;
+  top: 2px; right: 2px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  background: var(--color-brand, #A0522D);
+  color: #FFFFFF;
+  font-size: 0.6em;
+  font-weight: 700;
+  line-height: 16px;
+  border-radius: 9999px;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 0 0 1.5px #FFFFFF;
+}
+.mobile-header-notify-badge.is-empty { display: none; }
+.mobile-header-notify-badge.is-urgent { background: var(--color-danger, #DC2626); }
+
 .mobile-header-user-wrap {
   flex-shrink: 0;
   position: relative;
@@ -1096,6 +1133,11 @@ html, body {
     <input type="search" class="mobile-header-search-input" id="mobile-header-search-input"
            placeholder="검색" autocomplete="off" />
   </div>
+  <button class="mobile-header-notify" type="button" aria-label="알림"
+          onclick="onNotifyClick(event)">
+    🔔
+    <span class="mobile-header-notify-badge" id="mobile-header-notify-badge" data-count="3">3</span>
+  </button>
   <div class="mobile-header-user-wrap" id="mobile-header-user-wrap">
     <button class="mobile-header-user" id="mobile-header-user" type="button"
             onclick="window.toggleMobileUserDropdown(event)" aria-label="사용자 메뉴" title="">?</button>
