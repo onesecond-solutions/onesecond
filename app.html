@@ -247,6 +247,34 @@ body .app { padding-top: 48px; }
 body.notice-room-fullscreen .mobile-header { display: none; }
 body.notice-room-fullscreen .app { padding-top: 0; }
 
+/* 2026-05-14 모바일 사이드바 슬라이드 본진 — 전체 페이지 통째 (board.html partial 박힌 자리 = 본 본진 정합) */
+body.mobile-sidebar-open .b {
+  display: block !important;
+  position: fixed;
+  top: 0; left: 0;
+  width: 78%;
+  max-width: 320px;
+  height: 100dvh;
+  z-index: 200;
+  background: var(--color-bg, #FAF8F5);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  padding: 16px;
+  animation: sidebarSlideIn 200ms ease-out;
+}
+@keyframes sidebarSlideIn {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+body.mobile-sidebar-open::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 150;
+  pointer-events: none;
+}
+
 /* ── 프레임 레이아웃 (A1/A2/B/C/D/E) ── */
 html, body {
   font-size: 16px;
@@ -2627,6 +2655,32 @@ window.toggleMobileUserDropdown = function(event) {
   if (!dd) return;
   dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
 };
+
+/* 2026-05-14 모바일 사이드바 토글 — 전체 페이지 전역 (board.html partial 본진 박지 X 박힌 자리) */
+window.toggleMobileSidebar = function() {
+  var sidebar = document.querySelector('.b');
+  if (!sidebar) { console.warn('[toggleMobileSidebar] .b 사이드바 미발견'); return; }
+  var isOpen = document.body.classList.contains('mobile-sidebar-open');
+  if (isOpen) {
+    document.body.classList.remove('mobile-sidebar-open');
+    sidebar.style.display = '';
+  } else {
+    document.body.classList.add('mobile-sidebar-open');
+  }
+};
+/* 사이드바 외부/메뉴 클릭 시 닫음 */
+document.addEventListener('click', function(e) {
+  if (!document.body.classList.contains('mobile-sidebar-open')) return;
+  var sidebar = document.querySelector('.b');
+  var hamburger = document.querySelector('.mobile-header-hamburger');
+  if (sidebar && sidebar.contains(e.target)) {
+    var menuItem = e.target.closest('[data-menu], [onclick*="switchMenu"], a');
+    if (menuItem) document.body.classList.remove('mobile-sidebar-open');
+    return;
+  }
+  if (hamburger && hamburger.contains(e.target)) return;
+  document.body.classList.remove('mobile-sidebar-open');
+});
 document.addEventListener('click', function (e) {
   var wrap = document.getElementById('mobile-header-user-wrap');
   if (wrap && !wrap.contains(e.target)) {
