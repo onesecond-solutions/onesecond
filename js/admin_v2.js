@@ -874,16 +874,85 @@
     });
   }
 
+  // ── 🌐 허브 게시판 (admin 전용 보기) — 2026-05-14 옵션 2 본진 ──────────
+  // board.html 본진 hide(5/19 후 자동 복귀) 무관, admin은 본 panel 통해 진입
+  // 미래 100만 설계사 진입로. v1.2 승인·반려 흐름 별 트랙
+  async function fetchHubPosts() {
+    try {
+      var res = await window.db.fetch(
+        '/rest/v1/posts?board_type=eq.hub' +
+        '&select=id,title,author_name,category,created_at,is_hidden' +
+        '&order=created_at.desc&limit=50'
+      );
+      if (res.status === 403 && typeof window.admExit === 'function') window.admExit();
+      if (!res.ok) return [];
+      return await res.json();
+    } catch (e) {
+      if (e.message !== 'TOKEN_EXPIRED' && window.Sentry) window.Sentry.captureException(e);
+      return [];
+    }
+  }
+
+  function _hubEscape(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderHubTable(rows) {
+    var tbody = document.getElementById('adm-hub-posts-tbody');
+    if (!tbody) return;
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--admin-text-tertiary); padding: 24px;">허브 게시글 없음 (<code>board_type=hub</code> 0건 — 승인 흐름 v1.2 가동 후 채워질 예정)</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(function (r) {
+      var d = r.created_at ? new Date(r.created_at) : null;
+      var dateStr = d
+        ? (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'))
+        : '—';
+      var hiddenLabel = r.is_hidden
+        ? ' <span class="adm-badge" style="background:var(--admin-warning-bg, rgba(245,158,11,0.15));color:var(--color-warning, #F59E0B);">숨김</span>'
+        : '';
+      return ''
+        + '<tr>'
+        +   '<td><strong>' + _hubEscape(r.title || '(제목 없음)') + '</strong>' + hiddenLabel + '</td>'
+        +   '<td>' + _hubEscape(r.author_name || '—') + '</td>'
+        +   '<td>' + _hubEscape(r.category || '—') + '</td>'
+        +   '<td>' + dateStr + '</td>'
+        +   '<td><div class="row-actions">'
+        +     '<button title="숨김" data-action="hide"   data-post-id="' + _hubEscape(r.id || '') + '">👁️</button>'
+        +     '<button title="삭제" data-action="delete" data-post-id="' + _hubEscape(r.id || '') + '">🗑️</button>'
+        +   '</div></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function attachHubActions() {
+    var tbody = document.getElementById('adm-hub-posts-tbody');
+    if (!tbody || tbody.dataset.hubAttached) return;
+    tbody.dataset.hubAttached = '1';
+    tbody.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      var action = btn.dataset.action;
+      var postId = btn.dataset.postId || null;
+      if (action === 'hide')   handleHidePost(postId);
+      if (action === 'delete') handleDeletePost(postId);
+    });
+  }
+
   // ── 진입점 (admin_v2 board 뷰 활성화 시 호출) ─────────────────────────
   window.admLoadBoard = async function () {
-    var [kpi, activity, reports] = await Promise.all([
-      fetchBoardKPI(), fetchBoardActivity90d(), fetchBoardReportsMock()
+    var [kpi, activity, reports, hubPosts] = await Promise.all([
+      fetchBoardKPI(), fetchBoardActivity90d(), fetchBoardReportsMock(), fetchHubPosts()
     ]);
     if (!document.querySelector('.adm-view[data-view="board"].active')) return;
     if (kpi)      renderBoardKPI(kpi);
     if (activity) renderBoardActivityChart(activity);
     if (reports)  renderBoardReportsTable(reports);
+    renderHubTable(hubPosts || []);
     attachReportActions();
+    attachHubActions();
   };
 
   // ════════════════════════════════════════════════════════════════════════
