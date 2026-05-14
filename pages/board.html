@@ -1684,6 +1684,47 @@
 .tag-insurer { background: var(--neutral-200, #E5E7EB); color: var(--neutral-700, #374151); }
 .tag-cat     { background: rgba(59, 130, 246, 0.12); color: #2563EB; }
 
+/* v2 PART C 축 5 길게 누르기 4단 액션 본진 (2026-05-14 5/18 D-4) */
+/* 카톡=휘발 / onesecond=자산 — 메시지 → 채택·스크립트·북마크·공유 자산 전환 */
+.notice-longpress-menu {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  display: flex; flex-direction: column;
+  min-width: 180px;
+  animation: longpress-pop 120ms ease-out;
+}
+.notice-msg-row.is-mine .notice-longpress-menu { left: auto; right: 0; }
+@keyframes longpress-pop {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.notice-longpress-menu button {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border: none; border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.875em;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 100ms;
+}
+.notice-longpress-menu button:hover { background: var(--brand-50, #FDF4EF); }
+.notice-longpress-menu button.is-pro {
+  color: var(--brand-700, #66331A);
+  font-weight: 600;
+}
+
 .notice-msg-date {
   align-self: center;
   font-size: 0.6875em;
@@ -3579,6 +3620,7 @@ async function _loadNoticeRoom(board) {
     } else {
       chat.innerHTML = _renderNoticeMessages(msgs, meId, meName);
       chat.scrollTop = chat.scrollHeight;
+      _attachLongpressAll(chat);  /* v2 PART C 축 5 — 길게 누르기 4단 액션 부착 */
     }
 
     /* 자산 패널 + 메모 박음 */
@@ -3705,6 +3747,85 @@ function _applyNoticeMessageFilter() {
     row.style.display = keep ? '' : 'none';
   });
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   [2026-05-14 v2 PART C 축 5] 길게 누르기 4단 액션 본진
+   - 카톡=휘발, onesecond=자산 본질 차별화
+   - 메시지 → 채택·스크립트·북마크·고객 공유 자산 전환
+   - v1.1 = 시각 박음 + placeholder, v1.2 = 실 본진 (posts.is_adopted / scripts / personal_memos)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+var _longpressTimer = null;
+var _longpressMenu = null;
+var _LONGPRESS_MS = 500;
+
+function _attachLongpressAll(chat) {
+  if (!chat) return;
+  chat.querySelectorAll('.notice-msg-row').forEach(function(row){
+    var bubble = row.querySelector('.notice-msg-bubble');
+    if (!bubble || bubble.dataset.lpAttached) return;
+    bubble.dataset.lpAttached = '1';
+    var postId = row.dataset.postId || '';
+    bubble.addEventListener('mousedown',  function(e){ _lpStart(e, bubble, postId); });
+    bubble.addEventListener('touchstart', function(e){ _lpStart(e, bubble, postId); }, { passive: true });
+    bubble.addEventListener('mouseup',    _lpCancel);
+    bubble.addEventListener('mouseleave', _lpCancel);
+    bubble.addEventListener('touchend',   _lpCancel);
+    bubble.addEventListener('touchmove',  _lpCancel);
+  });
+}
+
+function _lpStart(e, bubble, postId) {
+  _lpCancel();
+  _longpressTimer = setTimeout(function(){
+    _lpShowMenu(bubble, postId);
+  }, _LONGPRESS_MS);
+}
+
+function _lpCancel() {
+  if (_longpressTimer) { clearTimeout(_longpressTimer); _longpressTimer = null; }
+}
+
+function _lpShowMenu(bubble, postId) {
+  _lpCloseMenu();
+  if (!bubble) return;
+  var menu = document.createElement('div');
+  menu.className = 'notice-longpress-menu';
+  menu.innerHTML =
+    '<button onclick="window.lpAdopt(this); event.stopPropagation();" data-post-id="' + postId + '">⭐ 채택 답변</button>' +
+    '<button onclick="window.lpToScript(this); event.stopPropagation();" data-post-id="' + postId + '">📋 스크립트로</button>' +
+    '<button onclick="window.lpBookmark(this); event.stopPropagation();" data-post-id="' + postId + '">🔖 북마크</button>' +
+    '<button class="is-pro" onclick="window.lpShare(this); event.stopPropagation();" data-post-id="' + postId + '">📤 고객 공유</button>';
+  bubble.appendChild(menu);
+  _longpressMenu = menu;
+  /* 외부 클릭 시 닫음 박음 (다음 tick 박은 후 부착) */
+  setTimeout(function(){ document.addEventListener('click', _lpCloseMenu, { once: true }); }, 50);
+}
+
+function _lpCloseMenu() {
+  if (_longpressMenu && _longpressMenu.parentNode) {
+    _longpressMenu.parentNode.removeChild(_longpressMenu);
+  }
+  _longpressMenu = null;
+}
+
+/* 4단 액션 핸들러 — v1.1 placeholder (v1.2에서 실 본진 박음) */
+window.lpAdopt = function(btn) {
+  alert('⭐ 채택 답변 본진 박을 예정 (v1.2 — posts.is_adopted 컬럼 + 상단 캐러셀)');
+  _lpCloseMenu();
+};
+window.lpToScript = function(btn) {
+  alert('📋 스크립트로 본진 박을 예정 (v1.2 — scripts 본진 정합 INSERT)');
+  _lpCloseMenu();
+};
+window.lpBookmark = function(btn) {
+  alert('🔖 북마크 본진 박을 예정 (v1.2 — personal_memos scope=bookmark)');
+  _lpCloseMenu();
+};
+window.lpShare = function(btn) {
+  alert('📤 고객 공유 본진 박을 예정 (v1.2 — PRO 스마트 설계서 진입로)');
+  _lpCloseMenu();
+};
 
 /* ─────────────────────────────────────────────────────────────
  * 메시지 검색 (2026-05-14 작업지시서 본진 5)
