@@ -5550,6 +5550,14 @@ window.onClickWriteBtn = function() {
 /* 본진 spec: docs/architecture/navigation_write_overlay_v0_2026-05-11.md          */
 /* 카드 클릭 시 폼 본진 = 다음 단계 박음 (현재 placeholder)                       */
 window.openWriteOverlay = function() {
+  /* 2026-05-14 갱신 — _editMode reset 박음 (옛 수정 모드 잔존 격차 회피) */
+  _editMode = false;
+  _editPostId = null;
+  var deleteBtnReset = document.getElementById('edit-delete-btn');
+  if (deleteBtnReset) deleteBtnReset.style.display = 'none';
+  var submitBtnReset = document.querySelector('#write-form-notice .wfn-btn-primary');
+  if (submitBtnReset) submitBtnReset.textContent = '등록하기';
+
   var role = (window.AppState && window.AppState.role) || '';
   var isAdmin = (role === 'admin');
   var isMgrPlus = isAdmin
@@ -5733,6 +5741,13 @@ window.openManagerNoticeOverlay = function() {
     alert('실장님 공지는 관리자 또는 지점장·실장만 작성할 수 있습니다.');
     return;
   }
+  /* 2026-05-14 갱신 — _editMode reset 박음 (옛 수정 모드 잔존 격차 회피) */
+  _editMode = false;
+  _editPostId = null;
+  var deleteBtnReset = document.getElementById('edit-delete-btn');
+  if (deleteBtnReset) deleteBtnReset.style.display = 'none';
+  var submitBtnReset = document.querySelector('#write-form-notice .wfn-btn-primary');
+  if (submitBtnReset) submitBtnReset.textContent = '등록하기';
   _noticeWriteMode = 'manager_notice';
 
   var overlay = document.getElementById('write-overlay');
