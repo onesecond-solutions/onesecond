@@ -59,6 +59,83 @@
 
 .loading-placeholder { min-height: 320px; }
 
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   2026-05-14 모바일 헤더 (768px 미만만 표시) — 햄버거 + 로고 + 사용자
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.mobile-header { display: none; }
+
+@media (max-width: 768px) {
+  .mobile-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    z-index: 90;
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--color-border, #E5E7EB);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 10px;
+  }
+  .mobile-header-hamburger {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    color: var(--brand-700, #66331A);
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .mobile-header-hamburger:hover,
+  .mobile-header-hamburger:active {
+    background: var(--brand-50, #FDF4EF);
+  }
+  .mobile-header-brand {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .mobile-header-brand img {
+    width: 28px; height: 28px;
+    flex-shrink: 0;
+  }
+  .mobile-header-brand span {
+    font-size: 1em;
+    font-weight: 700;
+    color: var(--brand-700, #66331A);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobile-header-user {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--brand-100, #F8DCC4);
+    color: var(--brand-700, #66331A);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875em;
+    cursor: pointer;
+  }
+  /* 옛 .a1 헤더 모바일 hide (신 헤더 박힌 자리) */
+  .a1 { display: none; }
+  /* 본문 영역 = 신 헤더 박힘 자리 박음 */
+  .app { padding-top: 48px; }
+  /* 단톡방 풀스크린 진입 시 = 신 헤더 hide (탭바 top:0 박혀 있어 충돌 회피) */
+  body.notice-room-fullscreen .mobile-header { display: none; }
+  body.notice-room-fullscreen .app { padding-top: 0; }
+}
+
 /* ── 프레임 레이아웃 (A1/A2/B/C/D/E) ── */
 html, body {
   font-size: 16px;
@@ -930,6 +1007,19 @@ html, body {
 </head>
 
 <body>
+
+<!-- 2026-05-14 모바일 헤더 (768px 미만만 표시) — 햄버거 + 로고 + 사용자 한 글자 -->
+<header class="mobile-header" id="mobile-header">
+  <button class="mobile-header-hamburger" type="button"
+          onclick="window.toggleMobileSidebar()"
+          aria-label="메뉴">☰</button>
+  <div class="mobile-header-brand">
+    <img src="assets/images/logo/logo05.png" alt="원세컨드" />
+    <span>원세컨드</span>
+  </div>
+  <div class="mobile-header-user" id="mobile-header-user" title="">?</div>
+</header>
+
 <div class="app">
 
   <!-- A1 -->
@@ -2105,6 +2195,12 @@ function renderTopbarUser(name, email, displayName) {
   if (emailEl) {
     emailEl.textContent = email || '';
     emailEl.style.display = email ? 'block' : 'none';
+  }
+  /* 2026-05-14 모바일 헤더 사용자 글자 동기 박음 */
+  var mobileUserEl = document.getElementById('mobile-header-user');
+  if (mobileUserEl) {
+    mobileUserEl.textContent = initial;
+    mobileUserEl.title = label;
   }
 }
 

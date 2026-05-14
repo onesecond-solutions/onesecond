@@ -3872,6 +3872,8 @@ function _toggleNoticeRoomShell(board) {
     /* 2026-05-14 갱신 — 검색바 기본 hide. 🔍 칩 클릭 시만 toggleNoticeSearchBar 박음 */
     if (search) search.style.display = 'none';
     if (pgOuter) pgOuter.classList.add('notice-room-active');
+    /* 신 모바일 헤더 hide (단톡방 풀스크린 정합 — 옛 .notice-mobile-hamburger 박음) */
+    document.body.classList.add('notice-room-fullscreen');
     _loadNoticeRoom(board);
   } else {
     shell.style.display = 'none';
@@ -3879,8 +3881,9 @@ function _toggleNoticeRoomShell(board) {
     if (bar) bar.style.display = '';
     if (search) search.style.display = 'none';
     if (pgOuter) pgOuter.classList.remove('notice-room-active');
-    /* 검색 모드 reset */
+    /* 검색 모드 + 풀스크린 reset */
     document.body.classList.remove('notice-search-open');
+    document.body.classList.remove('notice-room-fullscreen');
   }
 }
 
