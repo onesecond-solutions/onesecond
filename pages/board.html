@@ -1646,14 +1646,20 @@
   color: var(--brand-700, #66331A);
 }
 
-/* 입력바 (textarea 2배 + 📎 첨부) */
+/* 입력바 (2026-05-14 시나리오 1: 클릭 시 풀폼 진입, 1줄 빠른 메시지 폐기) */
 .notice-input-bar {
   flex-shrink: 0;
   padding: 12px 24px 18px;
   border-top: 1px solid var(--color-border);
   background: var(--notice-bg);
   display: flex; gap: 8px; align-items: flex-end;
+  cursor: pointer;
+  transition: background 120ms;
 }
+.notice-input-bar:hover { background: var(--brand-50, #FDF4EF); }
+.notice-input-bar:focus-visible { outline: 2px solid var(--brand-400, #C4733A); outline-offset: -2px; }
+.notice-input-bar textarea[readonly] { cursor: pointer; }
+.notice-input-bar textarea[readonly]:hover { background: #FFFFFF; }
 .notice-input-attach {
   flex-shrink: 0;
   width: 40px; height: 40px;
@@ -2114,19 +2120,18 @@
                   검색 결과 없음
                 </div>
 
-                <!-- 입력바 (textarea + 📎 + 첨부 미리보기) -->
-                <div class="notice-input-bar">
-                  <input type="file" id="notice-file-input" multiple hidden
-                         onchange="window.onNoticeFileSelected(event)">
-                  <button class="notice-input-attach" type="button"
-                          onclick="window.openNoticeFilePicker()" title="파일 추가">📎</button>
+                <!-- 입력바 (2026-05-14 시나리오 1: 1줄 빠른 메시지 폐기, 클릭 시 풀폼 진입) -->
+                <!-- onClickWriteBtn 분기 정합: manager_notice → openManagerNoticeOverlay / navigation → openWriteOverlay -->
+                <!-- 옛 빠른 메시지 함수(sendNoticeMsg / openNoticeFilePicker / onNoticeFileSelected)는 코드 보존, 호출 자리만 제거 -->
+                <div class="notice-input-bar" onclick="window.onClickWriteBtn()"
+                     role="button" tabindex="0"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.onClickWriteBtn();}">
                   <div class="notice-input-field">
-                    <div class="notice-attach-preview" id="notice-attach-preview"></div>
-                    <textarea id="notice-input" rows="3"
-                              placeholder="메시지를 입력하세요… (Enter 전송 / Shift+Enter 줄바꿈)"></textarea>
+                    <textarea id="notice-input" rows="3" readonly tabindex="-1"
+                              placeholder="✏️ 클릭하면 공지 작성 폼이 열립니다 (제목·범위·첨부 포함)"></textarea>
                   </div>
                   <button class="notice-input-send" type="button"
-                          onclick="window.sendNoticeMsg()">전송</button>
+                          onclick="event.stopPropagation(); window.onClickWriteBtn();">✏️ 공지 작성</button>
                 </div>
 
               </div>
