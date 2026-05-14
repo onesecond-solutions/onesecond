@@ -1509,6 +1509,18 @@
   border-style: solid;
   border-color: var(--brand-300, #E0A77A);
 }
+/* 🔍 검색 돋보기 칩 (2026-05-14 갱신 — 모바일 검색 진입로) */
+.notice-chip-search {
+  width: 30px;
+  padding: 0;
+  margin-left: auto; /* 우측 정렬 박음 */
+  font-size: 0.95em;
+}
+.notice-chip-search.active {
+  background: var(--brand-400, #C4733A);
+  border-color: var(--brand-400, #C4733A);
+  color: #FFFFFF;
+}
 
 /* 공지 핀 TOP 10 (실장님 수동 선택, 2026-05-14 본진 1) — 자동 최신 공지 폐기 */
 /* 핀 옵션 C 박힘 — 카운터 칩 [📌 N] 클릭 시 펼침·접힘 토글 (기본 hide) */
@@ -2188,11 +2200,23 @@
             (운영 일정 + summary-bar 등) hide 박음. 탭바 fixed top 박음
             (탭 진입 본진 박힌 자리). */
 
-  /* 단톡방 진입 시 상단 페이지 헤더 + 운영 일정 + summary-bar + 검색바 hide 박음 */
+  /* 단톡방 진입 시 상단 페이지 헤더 + 운영 일정 + summary-bar hide 박음 */
   .pg-outer.notice-room-active .pg-header-block,
   .pg-outer.notice-room-active .pg-summary-bar,
-  .pg-outer.notice-room-active .pg-console-side,
-  .pg-outer.notice-room-active #notice-search-bar { display: none; }
+  .pg-outer.notice-room-active .pg-console-side { display: none; }
+
+  /* 검색바 본진 — 기본 hide + 🔍 칩 클릭 시 inline display 박음 (탭바 위 fixed) */
+  .pg-outer.notice-room-active #notice-search-bar {
+    position: fixed;
+    top: 44px;
+    left: 0; right: 0;
+    z-index: 99;
+    margin: 0;
+    padding: 6px 12px;
+    background: var(--color-bg, #FAF8F5);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
 
   /* 탭바 fixed top:0 박음 (셸 위 박음, 탭 진입 본진 박혀 있어야) */
   .pg-outer.notice-room-active .pg-tab-block {
@@ -2410,42 +2434,19 @@
               <!-- D-좌측: 채팅 본진 -->
               <div class="notice-room-left">
 
-                <!-- v2 PART F 1단/2단 칩 본진 (2026-05-14 5/18 D-4 박음) -->
-                <!-- 카톡 본인 채팅 메인 패턴 검증 박힘 + 핀 옵션 C 카운터 칩 -->
+                <!-- v2 PART F 슬림 본진 (2026-05-14 갱신 — 1단 4건 박음, 2단 박지 X) -->
+                <!-- 본진: 핀 카운터 + 전체 + 내 글 + 🔍 검색 토글 (모바일 검색 진입로 박음) -->
+                <!-- 옛 본진 (🔴긴급/📢공지/📎첨부/➕/2단 보험사 7건) = HTML 박지 X, CSS/JS 보존 (5/19 후 복귀 안전망) -->
                 <div class="notice-chip-area">
-                  <!-- 1단: 카톡 친숙 모드 필터 (학습 비용 0) -->
                   <div class="notice-chip-row" role="tablist" aria-label="모드 필터">
                     <button type="button" class="notice-chip notice-chip-pin" data-chip="pin"
                             onclick="window.toggleNoticePinSheet()" title="핀 공지 펼침">📌 <span id="notice-pin-count">0</span></button>
                     <button type="button" class="notice-chip active" data-chip1="all"
                             onclick="window.applyNoticeChip1('all')">전체</button>
-                    <button type="button" class="notice-chip" data-chip1="urgent"
-                            onclick="window.applyNoticeChip1('urgent')">🔴 긴급</button>
-                    <button type="button" class="notice-chip" data-chip1="notice"
-                            onclick="window.applyNoticeChip1('notice')">📢 공지</button>
                     <button type="button" class="notice-chip" data-chip1="mine"
                             onclick="window.applyNoticeChip1('mine')">내 글</button>
-                    <button type="button" class="notice-chip" data-chip1="attach"
-                            onclick="window.applyNoticeChip1('attach')">📎 첨부</button>
-                    <button type="button" class="notice-chip notice-chip-add"
-                            onclick="window.addNoticeCustomChip(1)" title="사용자 정의 칩 추가">➕</button>
-                  </div>
-                  <!-- 2단: 보험사 분기 (onesecond 차별화, 구조화 데이터 기반) -->
-                  <div class="notice-chip-row notice-chip-row-secondary" role="tablist" aria-label="보험사 분기">
-                    <button type="button" class="notice-chip" data-chip2="meritz"
-                            onclick="window.applyNoticeChip2('meritz')">메리츠</button>
-                    <button type="button" class="notice-chip" data-chip2="db"
-                            onclick="window.applyNoticeChip2('db')">DB</button>
-                    <button type="button" class="notice-chip" data-chip2="hanwha"
-                            onclick="window.applyNoticeChip2('hanwha')">한화</button>
-                    <button type="button" class="notice-chip" data-chip2="samsung"
-                            onclick="window.applyNoticeChip2('samsung')">삼성</button>
-                    <button type="button" class="notice-chip" data-chip2="hyundae"
-                            onclick="window.applyNoticeChip2('hyundae')">현대해상</button>
-                    <button type="button" class="notice-chip" data-chip2="kb"
-                            onclick="window.applyNoticeChip2('kb')">KB</button>
-                    <button type="button" class="notice-chip notice-chip-add"
-                            onclick="window.addNoticeCustomChip(2)" title="자주 보는 보험사 추가">➕</button>
+                    <button type="button" class="notice-chip notice-chip-search"
+                            onclick="window.toggleNoticeSearchBar()" title="메시지 검색" aria-label="검색">🔍</button>
                   </div>
                 </div>
 
@@ -3876,6 +3877,25 @@ window.toggleNoticePinSheet = function() {
   } else {
     box.style.display = '';
     if (pinBtn) pinBtn.classList.add('active');
+  }
+};
+
+window.toggleNoticeSearchBar = function() {
+  /* 검색바 토글 — 1단 칩 🔍 클릭 시 가동 (모바일 검색 진입로 본진) */
+  var bar = document.getElementById('notice-search-bar');
+  var searchBtn = document.querySelector('.notice-chip-search');
+  if (!bar) return;
+  var isOpen = bar.style.display !== 'none' && bar.style.display !== '';
+  if (isOpen) {
+    bar.style.display = 'none';
+    if (searchBtn) searchBtn.classList.remove('active');
+  } else {
+    bar.style.display = 'flex';
+    if (searchBtn) searchBtn.classList.add('active');
+    setTimeout(function() {
+      var inp = document.getElementById('notice-search');
+      if (inp) inp.focus();
+    }, 50);
   }
 };
 
