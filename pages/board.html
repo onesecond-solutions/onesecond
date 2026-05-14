@@ -2235,6 +2235,32 @@
     border-bottom: 1px solid var(--color-border);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
+  /* 검색 input 모바일 명시 박음 — iOS Safari zoom 박지 X + text 시각 박힘 */
+  .pg-outer.notice-room-active .notice-search-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 16px;        /* iOS Safari = 16px 이상 박혀야 자동 zoom 박지 X */
+    line-height: 1.4;
+    background: #FFFFFF;
+    color: #111827;
+    -webkit-text-fill-color: #111827;
+    -webkit-appearance: none;
+    appearance: none;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-sizing: border-box;
+    outline: none;
+    display: block;
+  }
+  .pg-outer.notice-room-active .notice-search-input::placeholder {
+    color: #9CA3AF;
+    -webkit-text-fill-color: #9CA3AF;
+  }
+  .pg-outer.notice-room-active .notice-search-input:focus {
+    border-color: var(--brand-500, #A0522D);
+    box-shadow: 0 0 0 3px var(--brand-50, #FDF4EF);
+  }
 
   /* 탭바 fixed top:0 박음 (셸 위 박음, 탭 진입 본진 박혀 있어야) */
   .pg-outer.notice-room-active .pg-tab-block {
@@ -3908,7 +3934,7 @@ window.toggleNoticeSearchBar = function() {
     bar.style.display = 'none';
     if (searchBtn) searchBtn.classList.remove('active');
   } else {
-    bar.style.display = 'flex';
+    bar.style.display = 'block';  /* 옛 'flex' 박지 X — input width 100% 정합 박음 */
     if (searchBtn) searchBtn.classList.add('active');
     setTimeout(function() {
       var inp = document.getElementById('notice-search');
