@@ -1,9 +1,12 @@
-/* onesecond Service Worker — v1.1 (2026-05-14 5/18 D-4 박음)
- * 본진: PWA 박음 + 정적 자산 캐싱 + 오프라인 폴백
+/* onesecond Service Worker — v2 (2026-05-14 5/18 D-4 PWA 캐시 회귀 처방)
+ * 본진: PWA 박음 + network-first 전략 (정적 자산 + HTML 통째)
+ * 옛 격차: v1 박힌 자리 = 정적 자산 cache-first 박혀 홈 화면 PWA 진입 시
+ *         옛 화면 박힘. v2 박음 = network-first 통째 박음 + CACHE_NAME 갱신
+ *         트리거 박음.
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v1-20260514';
+const CACHE_NAME = 'onesecond-v2-20260514-pwa-fix';
 const CACHE_URLS = [
   '/',
   '/app.html',
@@ -29,39 +32,43 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-      );
-    })
+    Promise.all([
+      /* 옛 캐시 통째 청소 (CACHE_NAME 갱신 시 자동 박음) */
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        )
+      ),
+      /* 모든 클라이언트 즉시 제어 박음 */
+      self.clients.claim()
+    ])
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   /* GET 본진만 (POST·PATCH·DELETE 통째 통과) */
   if (req.method !== 'GET') return;
-  /* Supabase REST 본진 통과 (캐시 박지 X — 실 데이터 정합) */
   const url = new URL(req.url);
+  /* Supabase REST 본진 통과 (캐시 박지 X — 실 데이터 정합) */
   if (url.hostname.includes('supabase.co')) return;
-  /* 정적 자산 = cache-first, HTML = network-first (라이브 반영 정합) */
-  if (req.destination === 'document' || req.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(
-      fetch(req).catch(() => caches.match(req).then((r) => r || caches.match('/')))
-    );
-    return;
-  }
+  /* CDN 폰트·외부 자산 통과 (cache 박지 X) */
+  if (url.origin !== self.location.origin) return;
+
+  /* network-first 통째 박음 — HTML + 정적 자산 정합
+     옛 v1 격차: 정적 자산 cache-first 박혀 PWA 진입 시 옛 화면 박힘
+     v2 처방: network-first + 새 응답 박힘 시 캐시 박음 + 네트워크 실패 시 폴백 */
   event.respondWith(
-    caches.match(req).then((cached) => {
-      return cached || fetch(req).then((resp) => {
-        /* 같은 origin 정적 자산만 캐시 박음 */
-        if (resp.ok && url.origin === self.location.origin) {
-          const copy = resp.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(req, copy));
-        }
-        return resp;
-      });
+    fetch(req).then((resp) => {
+      /* 새 응답 박힘 = 캐시 박음 (다음 오프라인 진입 시 폴백 정합) */
+      if (resp && resp.ok) {
+        const copy = resp.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => null);
+      }
+      return resp;
+    }).catch(() => {
+      /* 네트워크 실패 시 캐시 폴백 박음 */
+      return caches.match(req).then((r) => r || caches.match('/'));
     })
   );
 });
