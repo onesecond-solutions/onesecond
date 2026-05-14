@@ -1801,18 +1801,46 @@
   color: var(--brand-700, #66331A);
 }
 
-/* 입력바 (2026-05-14 시나리오 1: 클릭 시 풀폼 진입, 1줄 빠른 메시지 폐기) */
+/* 입력바 (2026-05-14 슬림 본진: 글쓰기 버튼 1개, 클릭 시 풀폼 진입) */
 .notice-input-bar {
   flex-shrink: 0;
-  padding: 12px 24px 18px;
+  padding: 10px 24px 14px;
   border-top: 1px solid var(--color-border);
   background: var(--notice-bg);
-  display: flex; gap: 8px; align-items: flex-end;
-  cursor: pointer;
-  transition: background 120ms;
+  display: flex;
+  justify-content: center;
 }
-.notice-input-bar:hover { background: var(--brand-50, #FDF4EF); }
-.notice-input-bar:focus-visible { outline: 2px solid var(--brand-400, #C4733A); outline-offset: -2px; }
+.notice-write-btn {
+  width: 100%;
+  max-width: 600px;
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--brand-200, #F0C9A6);
+  border-radius: 9999px;
+  background: var(--brand-50, #FDF4EF);
+  color: var(--brand-700, #66331A);
+  font-family: inherit;
+  font-size: 0.9375em;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 120ms, border-color 120ms, transform 80ms;
+}
+.notice-write-btn:hover {
+  background: var(--brand-100, #F8DCC4);
+  border-color: var(--brand-400, #C4733A);
+}
+.notice-write-btn:active {
+  background: var(--brand-200, #F0C9A6);
+  transform: scale(0.99);
+}
+.notice-write-btn .write-icon { font-size: 1.05em; }
+.notice-write-btn .write-label { letter-spacing: -0.01em; }
+
+/* 옛 본진 보존 — textarea readonly + cursor (HTML 박지 X 박혀 있어 영향 0, 5/19 후 복귀 안전망) */
 .notice-input-bar textarea[readonly] { cursor: pointer; }
 .notice-input-bar textarea[readonly]:hover { background: #FFFFFF; }
 .notice-input-attach {
@@ -2227,8 +2255,14 @@
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
   }
 
-  /* 입력바 1줄화 — readonly textarea 80px → 36px (본 A 시나리오 1 정합) */
-  .notice-input-bar { padding: 6px 8px 8px; }
+  /* 입력바 모바일 — 글쓰기 버튼 슬림 본진 (2026-05-14 갱신) */
+  .notice-input-bar { padding: 6px 12px 10px; }
+  .notice-write-btn {
+    height: 40px;
+    font-size: 0.875em;
+    max-width: none;
+  }
+  /* 옛 본진 보존 (HTML 박지 X, 5/19 후 복귀 안전망) */
   .notice-input-bar textarea {
     min-height: 36px;
     max-height: 80px;
@@ -2434,18 +2468,14 @@
                   검색 결과 없음
                 </div>
 
-                <!-- 입력바 (2026-05-14 시나리오 1: 1줄 빠른 메시지 폐기, 클릭 시 풀폼 진입) -->
+                <!-- 입력바 (2026-05-14 슬림 본진: 글쓰기 버튼 하나, 클릭 시 풀폼 진입) -->
                 <!-- onClickWriteBtn 분기 정합: manager_notice → openManagerNoticeOverlay / navigation → openWriteOverlay -->
-                <!-- 옛 빠른 메시지 함수(sendNoticeMsg / openNoticeFilePicker / onNoticeFileSelected)는 코드 보존, 호출 자리만 제거 -->
-                <div class="notice-input-bar" onclick="window.onClickWriteBtn()"
-                     role="button" tabindex="0"
-                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.onClickWriteBtn();}">
-                  <div class="notice-input-field">
-                    <textarea id="notice-input" rows="3" readonly tabindex="-1"
-                              placeholder="✏️ 클릭하면 공지 작성 폼이 열립니다 (제목·범위·첨부 포함)"></textarea>
-                  </div>
-                  <button class="notice-input-send" type="button"
-                          onclick="event.stopPropagation(); window.onClickWriteBtn();">✏️ 공지 작성</button>
+                <!-- 옛 빠른 메시지 함수(sendNoticeMsg 등) + textarea readonly 본진 = 코드 보존, HTML만 슬림 박음 -->
+                <div class="notice-input-bar">
+                  <button class="notice-write-btn" type="button" onclick="window.onClickWriteBtn()">
+                    <span class="write-icon">✏️</span>
+                    <span class="write-label">글쓰기</span>
+                  </button>
                 </div>
 
               </div>
