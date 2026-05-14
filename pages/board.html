@@ -1831,7 +1831,7 @@
   color: var(--brand-700, #66331A);
 }
 
-/* 입력바 (2026-05-14 슬림 본진: 글쓰기 버튼 1개, 클릭 시 풀폼 진입) */
+/* 입력바 (2026-05-14 슬림 본진: 글쓰기 버튼 + [⚙ 딸깍] 본인 맞춤 설정 박힌 자리) */
 .notice-input-bar {
   flex-shrink: 0;
   padding: 10px 24px 14px;
@@ -1839,10 +1839,36 @@
   background: var(--notice-bg);
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+/* 2026-05-14 §15 정체성 본진 — [⚙ 딸깍] 본인 맞춤 설정 박힘 자리 (placeholder, spec MD 박힌 자리 5/18 후 본진 진입) */
+.notice-prefs-btn {
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--brand-300, #DAA67B);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--brand-700, #66331A);
+  font-family: inherit;
+  font-size: 0.875em;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 120ms, color 120ms, transform 120ms, border-color 120ms;
+}
+.notice-prefs-btn:hover, .notice-prefs-btn:active {
+  background: var(--brand-500, #A0522D);
+  color: #FFFFFF;
+  border-color: var(--brand-500, #A0522D);
+  transform: scale(1.04);
 }
 .notice-write-btn {
   width: 100%;
-  max-width: 600px;
+  max-width: 540px;
   height: 44px;
   padding: 0 20px;
   border: 1px solid var(--brand-200, #F0C9A6);
@@ -2770,6 +2796,9 @@
                 <!-- onClickWriteBtn 분기 정합: manager_notice → openManagerNoticeOverlay / navigation → openWriteOverlay -->
                 <!-- 옛 빠른 메시지 함수(sendNoticeMsg 등) + textarea readonly 본진 = 코드 보존, HTML만 슬림 박음 -->
                 <div class="notice-input-bar">
+                  <button class="notice-prefs-btn" type="button"
+                          onclick="window.openUserPrefsPlaceholder()"
+                          title="본인 맞춤 설정 (준비 중)">⚙ 딸깍</button>
                   <button class="notice-write-btn" type="button" onclick="window.onClickWriteBtn()">
                     <span class="write-icon">✏️</span>
                     <span class="write-label">글쓰기</span>
@@ -4186,6 +4215,16 @@ window.toggleNoticePinSheet = function() {
 /* 옛 중복 정의(window.toggleMobileSidebar 함수 + 외부 클릭 핸들러) 제거 박음
    — 본 자리 app.html 전역 박혀 있고, partial 핸들러가 본인 햄버거(notice-mobile-hamburger)만
      체크하던 격차 → app.html 핸들러가 즉시 닫는 본진 회귀. app.html에서 두 자리 햄버거 동시 체크. */
+
+/* 2026-05-14 §15 정체성 본진 — [⚙ 딸깍] 본인 맞춤 설정 placeholder (spec 본진 5/18 후 진입)
+ * 톤 본진: just funny + 헛웃음 + 딸깍 (tone_just_funny 메모리 정합) */
+window.openUserPrefsPlaceholder = function() {
+  if (typeof _showNoticeToast === 'function') {
+    _showNoticeToast('⚙ 본인 맞춤 설정 준비 중 ✨ (5/18 후 박힘)');
+  } else {
+    alert('⚙ 본인 맞춤 설정 준비 중 ✨ (5/18 후 박힘)');
+  }
+};
 
 /* 2026-05-14 [최신글] 박음 — 한도끝도 없이 화면 내림 박지 X 본진 (§15 정체성 본진 정합)
  * 단톡방 + 네비게이션방 동일 셸 박혀 본 함수 두 자리 모두 박힘 정합 */
