@@ -937,6 +937,24 @@
   border-color: var(--color-brand, #A0522D);
   color: var(--color-text-primary, #111827);
 }
+/* 삭제 버튼 (2026-05-14 박음 — 수정 모드 한정) */
+.wfn-btn-danger {
+  background: transparent;
+  color: #DC2626;
+  border: 1px solid #DC2626;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+  margin-right: auto; /* 좌측 정렬 박음 (수정/취소 버튼과 분리) */
+}
+.wfn-btn-danger:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+}
 @media (max-width: 640px) {
   .write-form-notice-grid {
     grid-template-columns: 1fr;
@@ -4145,31 +4163,18 @@ function _renderNoticeMessages(msgs, meId, meName) {
     }
 
     if (isMine) {
-      /* 핀 권한 분기 (admin + ga_manager만 노출, 2026-05-14 본진 1 + 본진 2 회귀 회피) */
-      var meRole = (window.AppState && window.AppState.role) || '';
-      var canPin = (meRole === 'admin' || meRole === 'ga_manager');
-      var pinBtnHtml = '';
-      if (canPin) {
-        var pinLabel = p.is_pinned ? '📌 핀 해제' : '📌 핀 등록';
-        pinBtnHtml = '<button class="notice-msg-action-btn" ' +
-                     'onclick="window.togglePostPin(event, \'' + p.id + '\', ' + (p.is_pinned ? 'true' : 'false') + ')">' +
-                     pinLabel + '</button>';
-      }
+      /* 본인 풍선 = 클릭 즉시 풀폼 진입 (2026-05-14 갱신 — openMyMsgMenu 액션 메뉴 박지 X) */
+      /* 수정 + 삭제 박힌 자리 = 풀폼 안. 핀 본진 = 풀폼 안 토글 박음 (admin/ga_manager만) */
+      var pidEscMine = String(p.id || '').replace(/'/g, "\\'");
       return dateBar +
         '<div class="notice-msg-row is-mine"' + rowData + '>' +
           '<div class="notice-msg-bubble is-mine" data-post-id="' + p.id + '" ' +
                'data-post-created="' + (p.created_at || '') + '" ' +
-               'onclick="window.openMyMsgMenu(this, event)">' +
+               'onclick="window.openEditNoticePost(\'' + pidEscMine + '\')">' +
             tagsHtml +
             '<span class="msg-text">' + html + '</span>' +
             attHtml +
             '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
-            '<div class="notice-msg-actions">' +
-              '<button class="notice-msg-action-btn" onclick="window.editMyMsg(event, this)">✏️ 수정</button>' +
-              '<button class="notice-msg-action-btn" onclick="window.attachToMyMsg(event, this)">📎 파일 추가</button>' +
-              pinBtnHtml +
-              '<button class="notice-msg-action-btn is-danger" onclick="window.deleteMyMsg(event, this)">🗑️ 삭제</button>' +
-            '</div>' +
           '</div>' +
         '</div>';
     } else {
@@ -4504,12 +4509,152 @@ function _isWithinEditWindow(createdAt) {
 }
 
 window.openMyMsgMenu = function(bubbleEl, evt) {
+  /* 2026-05-14 갱신 — 본 함수 보존, 호출 자리 박지 X (풍선 클릭 = openEditNoticePost 박힘) */
   if (evt) evt.stopPropagation();
   if (bubbleEl.classList.contains('is-editing')) return;
   document.querySelectorAll('.notice-msg-bubble.is-menu-open').forEach(function(b){
     if (b !== bubbleEl) b.classList.remove('is-menu-open');
   });
   bubbleEl.classList.toggle('is-menu-open');
+};
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   [2026-05-14] 본인 풍선 클릭 → 풀폼 진입 (수정 + 삭제) 본진
+   - openMyMsgMenu 액션 메뉴 박지 X (간소화)
+   - 풍선 클릭 즉시 풀폼 진입 + 옛 데이터 박음 + PATCH/DELETE 박음
+   - 5분 제한 본진 유지 (_isWithinEditWindow)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+var _editMode = false;
+var _editPostId = null;
+
+window.openEditNoticePost = async function(postId) {
+  if (!postId || !window.db || !window.db.fetch) return;
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/posts?id=eq.' + encodeURIComponent(postId) +
+      '&select=id,title,content,category,audience_target,is_pinned,is_notice,created_at,author_id'
+    );
+    if (!res.ok) { alert('메시지 박지 X (' + res.status + ')'); return; }
+    var rows = await res.json();
+    var p = rows && rows[0];
+    if (!p) { alert('메시지 박지 X'); return; }
+
+    /* 본인 검증 + 5분 제한 (admin/ga_manager는 박힘 무관 박음) */
+    var meId = (window.AppState && window.AppState.userId) || '';
+    var meRole = (window.AppState && window.AppState.role) || '';
+    var isAdminLevel = (meRole === 'admin' || meRole === 'ga_branch_manager' || meRole === 'ga_manager');
+    if (!isAdminLevel) {
+      if (String(p.author_id) !== String(meId)) {
+        alert('본인 메시지만 수정 박을 자리');
+        return;
+      }
+      if (!_isWithinEditWindow(p.created_at)) {
+        alert('5분 지난 메시지는 수정 박지 X');
+        return;
+      }
+    }
+
+    /* 풀폼 진입 박음 */
+    _noticeWriteMode = 'manager_notice';
+    _editMode = true;
+    _editPostId = postId;
+
+    var overlay = document.getElementById('write-overlay');
+    var cards   = document.getElementById('write-overlay-cards');
+    var form    = document.getElementById('write-form-notice');
+    if (cards) cards.style.display = 'none';
+    if (form)  form.classList.add('active');
+
+    /* 옛 데이터 박음 */
+    var typeEl     = document.getElementById('notice-type');
+    var titleEl    = document.getElementById('notice-title');
+    var contentEl  = document.getElementById('notice-content');
+    var audienceEl = document.getElementById('notice-audience');
+    if (typeEl)     typeEl.value     = p.category || '운영';
+    if (titleEl)    titleEl.value    = p.title || '';
+    if (contentEl)  contentEl.value  = p.content || '';
+    if (audienceEl) audienceEl.value = p.audience_target || 'team_internal';
+
+    /* 헤더 + 버튼 라벨 변경 */
+    var headerTitle = document.getElementById('write-overlay-title');
+    if (headerTitle) headerTitle.textContent = '📝 메시지 수정';
+    var submitBtn = document.querySelector('#write-form-notice .wfn-btn-primary');
+    if (submitBtn) submitBtn.textContent = '💾 수정 완료';
+    var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
+    if (cancelBtn) cancelBtn.textContent = '취소';
+
+    /* 삭제 버튼 동적 박음 (수정 모드 한정) */
+    var deleteBtn = document.getElementById('edit-delete-btn');
+    var actions = document.querySelector('#write-form-notice .write-form-notice-actions');
+    if (!deleteBtn && actions) {
+      deleteBtn = document.createElement('button');
+      deleteBtn.id = 'edit-delete-btn';
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'wfn-btn-danger';
+      deleteBtn.textContent = '🗑️ 삭제';
+      deleteBtn.onclick = function() { window.deleteEditNoticePost(); };
+      actions.insertBefore(deleteBtn, actions.firstChild);
+    }
+    if (deleteBtn) deleteBtn.style.display = '';
+
+    /* 안내 박스 hide (수정 모드) */
+    var infoBox = document.getElementById('notice-info-box');
+    if (infoBox) infoBox.style.display = 'none';
+
+    if (overlay) overlay.classList.add('active');
+    if (titleEl) setTimeout(function(){ titleEl.focus(); }, 50);
+  } catch (e) {
+    console.error('[openEditNoticePost]', e);
+    alert('수정 진입 실패: ' + (e.message || e));
+  }
+};
+
+window.submitEditNoticeForm = async function() {
+  if (!_editMode || !_editPostId || !window.db || !window.db.fetch) return;
+  var title    = (document.getElementById('notice-title')?.value    || '').trim();
+  var content  = (document.getElementById('notice-content')?.value  || '').trim();
+  var category =  document.getElementById('notice-type')?.value     || '운영';
+  var audience =  document.getElementById('notice-audience')?.value || 'team_internal';
+  if (!title || !content) { alert('제목·내용 박을 자리'); return; }
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/posts?id=eq.' + encodeURIComponent(_editPostId),
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          title: title,
+          content: content,
+          category: category,
+          audience_target: audience
+        })
+      }
+    );
+    if (!res.ok) throw new Error('PATCH ' + res.status);
+    window.closeWriteOverlay();
+    _loadNoticeRoom(_currentBoard);
+  } catch (e) {
+    console.error('[submitEditNoticeForm]', e);
+    alert('수정 실패: ' + (e.message || e));
+  }
+};
+
+window.deleteEditNoticePost = async function() {
+  if (!_editPostId || !window.db || !window.db.fetch) return;
+  if (!confirm('메시지를 삭제 박을까요?\n(되돌릴 수 없습니다)')) return;
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/posts?id=eq.' + encodeURIComponent(_editPostId),
+      { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } }
+    );
+    if (!res.ok) throw new Error('DELETE ' + res.status);
+    window.closeWriteOverlay();
+    _loadNoticeRoom(_currentBoard);
+  } catch (e) {
+    console.error('[deleteEditNoticePost]', e);
+    alert('삭제 실패: ' + (e.message || e));
+  }
 };
 
 document.addEventListener('click', function(e){
@@ -5544,6 +5689,13 @@ window.closeWriteOverlay = function() {
   if (infoBox) infoBox.style.display = 'none';
   var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
   if (cancelBtn) cancelBtn.textContent = '← 카테고리 다시 선택';
+  /* 수정 모드 reset 박음 (2026-05-14 박음) */
+  _editMode = false;
+  _editPostId = null;
+  var deleteBtn = document.getElementById('edit-delete-btn');
+  if (deleteBtn) deleteBtn.style.display = 'none';
+  var submitBtnReset = document.querySelector('#write-form-notice .wfn-btn-primary');
+  if (submitBtnReset) submitBtnReset.textContent = '등록하기';
   _wfnResetAttach();
 };
 /* ── 실장님 공지 글쓰기 진입 (manager_notice 모드, 4 카드 건너뛰고 바로 공지 폼) ── */
@@ -6058,6 +6210,10 @@ window.cancelNoticeForm = function() {
 
 /* 공지 폼 제출 — posts INSERT (board_type='navigation', category='공지') */
 window.submitNoticeForm = async function() {
+  /* 2026-05-14 갱신 — _editMode 박힘 시 PATCH 본진 분기 박음 */
+  if (_editMode && _editPostId) {
+    return window.submitEditNoticeForm();
+  }
   var typeEl     = document.getElementById('notice-type');
   var titleEl    = document.getElementById('notice-title');
   var contentEl  = document.getElementById('notice-content');
