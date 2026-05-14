@@ -2224,11 +2224,12 @@
   .pg-outer.notice-room-active .pg-console-side { display: none; }
 
   /* 검색바 본진 — 기본 hide + 🔍 칩 클릭 시 inline display 박음 (탭바 위 fixed) */
+  /* 2026-05-14 갱신 — z-index 99 → 103 (셸 100 위 박음, 가려짐 격차 해소) */
   .pg-outer.notice-room-active #notice-search-bar {
     position: fixed;
     top: 44px;
     left: 0; right: 0;
-    z-index: 99;
+    z-index: 103;
     margin: 0;
     padding: 6px 12px;
     background: var(--color-bg, #FAF8F5);
