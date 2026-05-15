@@ -3637,7 +3637,97 @@
   </div>
 </div>
 
-
+<!-- ── 첨부파일 미리보기 모달 (이미지/PDF/비디오/오디오/Office) ── -->
+<div class="preview-modal" id="preview-modal" onclick="if(event.target===this)window.closePreview()">
+  <div class="preview-content">
+    <div class="preview-header">
+      <div class="preview-title" id="preview-title">미리보기</div>
+      <div class="preview-actions">
+        <a class="preview-download" id="preview-download" href="#" download>↓ 다운로드</a>
+        <button class="preview-close" onclick="window.closePreview()" aria-label="닫기">✕</button>
+      </div>
+    </div>
+    <div class="preview-body" id="preview-body"></div>
+  </div>
+</div>
+<style>
+.preview-modal {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 10000;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.preview-modal.active { display: flex; }
+.preview-content {
+  background: #fff;
+  border-radius: var(--radius-md, 8px);
+  width: 100%; max-width: 1200px;
+  height: 100%; max-height: 90vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.preview-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  background: #fafafa;
+}
+.preview-title {
+  font-weight: 600; font-size: 0.95em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-right: 16px; flex: 1;
+}
+.preview-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.preview-download {
+  padding: 6px 12px;
+  background: var(--color-brand, #8B6F47); color: #fff;
+  border-radius: var(--radius-sm, 6px);
+  text-decoration: none; font-size: 0.85em; font-weight: 600;
+}
+.preview-download:hover { opacity: 0.9; }
+.preview-close {
+  width: 32px; height: 32px;
+  background: #f0f0f0; color: #555;
+  border: none; border-radius: 50%;
+  font-size: 1.1em; cursor: pointer; line-height: 1;
+}
+.preview-close:hover { background: #e0e0e0; }
+.preview-body {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  background: #2a2a2a;
+  overflow: auto;
+  position: relative;
+}
+.preview-body img,
+.preview-body video {
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.preview-body iframe {
+  width: 100%; height: 100%;
+  border: none;
+  background: #fff;
+}
+.preview-body audio {
+  width: 90%; max-width: 600px;
+}
+.preview-body .preview-fallback {
+  color: #fff; padding: 40px; text-align: center;
+  font-size: 0.95em; line-height: 1.6;
+}
+.preview-body .preview-fallback em { color: #ffd; font-style: normal; font-weight: 600; }
+@media (max-width: 768px) {
+  .preview-modal { padding: 0; }
+  .preview-content { max-height: 100vh; border-radius: 0; }
+  .preview-title { font-size: 0.85em; }
+  .preview-download { padding: 5px 10px; font-size: 0.8em; }
+}
+</style>
 
 
 <script>
@@ -5663,15 +5753,27 @@ window.openDetail = async function(postId) {
         + '<div class="detail-attach-list">'
         + attachUrls.map(function(url) {
             var fileName = decodeURIComponent(url.split('/').pop().replace(/^\d+_\d+_\d+\./, ''));
-            var ext = (url.split('.').pop() || '').toLowerCase();
-            var isImg = ['jpg','jpeg','png','gif','webp'].includes(ext);
-            var thumbHtml = isImg
-              ? '<img src="' + url + '" alt="">'
-              : (ext === 'pdf' ? '📄' : '📊');
-            return '<a class="detail-attach-item" href="' + url + '" target="_blank" download>'
+            var ext = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+            var isImg = ['jpg','jpeg','png','gif','webp','svg','bmp'].indexOf(ext) !== -1;
+            var thumbHtml;
+            if (isImg)                                                                            thumbHtml = '<img src="' + url + '" alt="">';
+            else if (ext === 'pdf')                                                               thumbHtml = '📄';
+            else if (['mp4','webm','mov','m4v','ogv'].indexOf(ext) !== -1)                        thumbHtml = '🎬';
+            else if (['mp3','wav','ogg','m4a','aac','flac'].indexOf(ext) !== -1)                  thumbHtml = '🎵';
+            else if (['xlsx','xls'].indexOf(ext) !== -1)                                          thumbHtml = '📊';
+            else if (['docx','doc'].indexOf(ext) !== -1)                                          thumbHtml = '📘';
+            else if (['pptx','ppt'].indexOf(ext) !== -1)                                          thumbHtml = '📙';
+            else                                                                                   thumbHtml = '📄';
+            /* 미리보기 모달 진입 (escapeHtml 박은 fileName + url 박음) */
+            var fnEsc = escHtml(fileName);
+            var urlEsc = url.replace(/'/g, "\\'");
+            var fnJsEsc = fileName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            return '<a class="detail-attach-item" href="' + url + '" '
+              + 'onclick="event.preventDefault(); window.openPreview(\'' + urlEsc + '\', \'' + fnJsEsc + '\');" '
+              + 'target="_blank">'
               + '<div class="detail-attach-thumb">' + thumbHtml + '</div>'
-              + '<span class="detail-attach-name">' + escHtml(fileName) + '</span>'
-              + '<span class="detail-attach-dl">↓ 다운로드</span>'
+              + '<span class="detail-attach-name">' + fnEsc + '</span>'
+              + '<span class="detail-attach-dl">👁 미리보기</span>'
               + '</a>';
           }).join('')
         + '</div>';
@@ -5696,6 +5798,82 @@ window.closeDetail = function() {
   document.body.style.overflow = '';
   _currentPostId = null;
 };
+
+/* ── 첨부파일 미리보기 모달 (이미지/PDF/비디오/오디오/Office) ── */
+window.openPreview = function(url, fileName) {
+  if (!url) return;
+  var ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
+  var modal   = document.getElementById('preview-modal');
+  var body    = document.getElementById('preview-body');
+  var titleEl = document.getElementById('preview-title');
+  var dlEl    = document.getElementById('preview-download');
+  if (!modal || !body || !titleEl || !dlEl) return;
+
+  titleEl.textContent = fileName || '미리보기';
+  dlEl.href = url;
+  dlEl.setAttribute('download', fileName || '');
+  body.innerHTML = '';
+
+  var imgExts    = ['jpg','jpeg','png','gif','webp','svg','bmp'];
+  var videoExts  = ['mp4','webm','mov','m4v','ogv'];
+  var audioExts  = ['mp3','wav','ogg','m4a','aac','flac'];
+  var officeExts = ['xlsx','xls','docx','doc','pptx','ppt'];
+
+  if (imgExts.indexOf(ext) !== -1) {
+    var img = document.createElement('img');
+    img.src = url;
+    img.alt = fileName || '';
+    body.appendChild(img);
+  } else if (ext === 'pdf') {
+    var ifr = document.createElement('iframe');
+    ifr.src = url;
+    body.appendChild(ifr);
+  } else if (videoExts.indexOf(ext) !== -1) {
+    var video = document.createElement('video');
+    video.src = url;
+    video.controls = true;
+    video.autoplay = false;
+    body.appendChild(video);
+  } else if (audioExts.indexOf(ext) !== -1) {
+    var audio = document.createElement('audio');
+    audio.src = url;
+    audio.controls = true;
+    body.appendChild(audio);
+  } else if (officeExts.indexOf(ext) !== -1) {
+    /* Microsoft Office Online viewer (외부 의존, 무료) */
+    var ifr2 = document.createElement('iframe');
+    ifr2.src = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(url);
+    body.appendChild(ifr2);
+  } else {
+    body.innerHTML = '<div class="preview-fallback">'
+      + '<em>미리보기 지원하지 않는 형식</em><br><br>'
+      + '확장자: .' + (ext || '?') + '<br>'
+      + '우측 상단 ↓ 다운로드 버튼으로 받아주세요.'
+      + '</div>';
+  }
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closePreview = function() {
+  var modal = document.getElementById('preview-modal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  var body = document.getElementById('preview-body');
+  if (body) body.innerHTML = ''; /* video/audio 정지 + iframe 해제 */
+  document.body.style.overflow = '';
+};
+
+/* ESC 키 — preview 모달 닫음 (detail/write 모달과 별도) */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var pv = document.getElementById('preview-modal');
+    if (pv && pv.classList.contains('active')) {
+      window.closePreview();
+    }
+  }
+});
 
 /* ── 좋아요 ── */
 window.toggleLike = async function() {
