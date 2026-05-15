@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v10-20260514-prefs-btn';
+const CACHE_NAME = 'onesecond-v11-20260515-attach-preview';
 const CACHE_URLS = [
   '/',
   '/app.html',
