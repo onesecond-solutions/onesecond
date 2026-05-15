@@ -6238,7 +6238,10 @@ window.openManagerNoticeOverlay = function() {
   }
   /* 안내 박스 표시 + 헤더 변경 + 취소 버튼 라벨 변경 */
   var infoBox = document.getElementById('notice-info-box');
-  if (infoBox) infoBox.style.display = 'flex';
+  if (infoBox) {
+    infoBox.textContent = '📌 팀 운영에 필요한 공지를 작성해 주세요.';
+    infoBox.style.display = 'flex';
+  }
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '📌 실장님 공지 작성';
   var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
@@ -6287,7 +6290,10 @@ window.openSmartBoardOverlay = function() {
     if (insurerOpt) insurerOpt.hidden = true;
   }
   var infoBox = document.getElementById('notice-info-box');
-  if (infoBox) infoBox.style.display = 'flex';
+  if (infoBox) {
+    infoBox.textContent = '📌 현장에서 필요한 업무 자료를 작성해 주세요.';
+    infoBox.style.display = 'flex';
+  }
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '📋 스마트게시판 작성';
   var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
