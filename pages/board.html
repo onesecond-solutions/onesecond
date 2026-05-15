@@ -330,6 +330,82 @@
 
 /* ── 게시글 목록 (v1 디자인 — 시안 design_test/board/v1-full.html 기반) ── */
 .brd-list { display: flex; flex-direction: column; }
+
+/* ━━━ 컴팩트 list (qna 스마트게시판 본진) ━━━ */
+.brd-list-compact { gap: 0; }
+.brd-list-compact .brd-item {
+  display: flex; align-items: center;
+  padding: 12px 14px; gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  background: var(--color-surface);
+  transition: background 0.12s ease;
+}
+.brd-list-compact .brd-item:hover { background: var(--brand-50); }
+.brd-list-compact .brd-cat {
+  flex-shrink: 0;
+  font-size: 11px; font-weight: 700;
+  color: var(--color-brand);
+  padding: 3px 8px;
+  background: var(--brand-50);
+  border: 1px solid rgba(160,82,45,0.2);
+  border-radius: 4px;
+  letter-spacing: -0.01em;
+}
+.brd-list-compact .brd-title-text {
+  flex: 1; min-width: 0;
+  font-size: 14px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--color-text-primary);
+}
+.brd-list-compact .brd-attach-icon {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+.brd-list-compact .brd-author {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  max-width: 120px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 600px) {
+  .brd-list-compact .brd-item { padding: 10px 12px; gap: 8px; }
+  .brd-list-compact .brd-cat { font-size: 10px; padding: 2px 6px; }
+  .brd-list-compact .brd-title-text { font-size: 13px; }
+  .brd-list-compact .brd-author { max-width: 80px; font-size: 11px; }
+}
+
+/* ━━━ 페이지네이션 ━━━ */
+.brd-pagination {
+  display: flex; justify-content: center; gap: 4px;
+  padding: 20px 8px;
+  flex-wrap: wrap;
+}
+.brd-pagination button {
+  min-width: 36px; height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  transition: all 0.12s ease;
+}
+.brd-pagination button:hover:not(:disabled) { background: var(--brand-50); border-color: var(--color-brand); }
+.brd-pagination button.is-active {
+  background: var(--color-brand);
+  color: #fff;
+  border-color: var(--color-brand);
+}
+.brd-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+.brd-pagination .pg-ellipsis {
+  border: 0; background: transparent;
+  cursor: default; min-width: auto; padding: 0 4px;
+}
 .brd-item {
   display: flex; gap: var(--space-4, 16px);
   padding: var(--space-5, 20px) var(--space-2, 8px);
@@ -2728,6 +2804,9 @@
             <div class="loading-msg">불러오는 중...</div>
           </div>
 
+          <!-- 페이지네이션 (qna 본진, 다른 board_type = innerHTML='') -->
+          <div class="brd-pagination" id="post-pagination"></div>
+
           <!-- 메시지 검색창 (2026-05-14 본진 5 정밀 — shell 외부, 채팅창 위) -->
           <div class="notice-search-bar" id="notice-search-bar" style="display:none;">
             <input type="search" id="notice-search" class="notice-search-input"
@@ -4053,6 +4132,7 @@ if (window.AppState && window.AppState.ready) {
 function _switchBoard(board) {
   _currentBoard    = board;
   _currentCategory = 'all';
+  _qnaPage         = 1; /* 보드 변경 시 페이지 reset */
 
   /* 탭 버튼 active */
   document.querySelectorAll('#board-tab-bar .pg-tab-btn').forEach(function(t) { t.classList.remove('active'); });
@@ -5585,6 +5665,7 @@ function _renderCategoryPills(board) {
 
 window.selectCategory = function(cat) {
   _currentCategory = cat;
+  _qnaPage = 1; /* 카테고리 변경 시 페이지 reset */
   _renderCategoryPills(_currentBoard);
   _renderPostList();
 };
@@ -5615,14 +5696,73 @@ async function _loadPosts() {
   }
 }
 
+var _qnaPage = 1;
+var _qnaPageSize = 20;
+
+function _buildCompactPostItem(p) {
+  var hasAttach = false;
+  try {
+    var atts = (typeof p.attachments === 'string') ? JSON.parse(p.attachments) : p.attachments;
+    hasAttach = atts && atts.length > 0;
+  } catch (e) {}
+  return '<div class="brd-item" onclick="window.openDetail(\'' + p.id + '\')">'
+    + '<span class="brd-cat">' + escHtml(p.category || '소식지') + '</span>'
+    + '<div class="brd-title-text">' + escHtml(p.title || '') + '</div>'
+    + (hasAttach ? '<span class="brd-attach-icon">📎</span>' : '')
+    + '<span class="brd-author">' + escHtml(p.display_name || p.author_name || '') + '</span>'
+    + '</div>';
+}
+
+function _renderPagination(totalCount, currentPage, pageSize, onClickFn) {
+  var container = document.getElementById('post-pagination');
+  if (!container) return;
+  var totalPages = Math.ceil(totalCount / pageSize);
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  var html = '';
+  html += '<button onclick="window.' + onClickFn + '(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '>← 이전</button>';
+
+  var start = Math.max(1, currentPage - 2);
+  var end   = Math.min(totalPages, currentPage + 2);
+  if (start > 1) {
+    html += '<button onclick="window.' + onClickFn + '(1)">1</button>';
+    if (start > 2) html += '<button class="pg-ellipsis" disabled>…</button>';
+  }
+  for (var i = start; i <= end; i++) {
+    html += '<button class="' + (i === currentPage ? 'is-active' : '') + '" onclick="window.' + onClickFn + '(' + i + ')">' + i + '</button>';
+  }
+  if (end < totalPages) {
+    if (end < totalPages - 1) html += '<button class="pg-ellipsis" disabled>…</button>';
+    html += '<button onclick="window.' + onClickFn + '(' + totalPages + ')">' + totalPages + '</button>';
+  }
+
+  html += '<button onclick="window.' + onClickFn + '(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '>다음 →</button>';
+
+  container.innerHTML = html;
+}
+
+window.changeQnaPage = function(page) {
+  var totalPages = Math.ceil((_allPosts.filter(function(p) {
+    return _currentCategory === 'all' || p.category === _currentCategory;
+  }).length) / _qnaPageSize);
+  if (page < 1 || page > totalPages) return;
+  _qnaPage = page;
+  _renderPostList();
+  var top = document.getElementById('post-list');
+  if (top) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 function _renderPostList() {
   var list = document.getElementById('post-list');
+  var pag  = document.getElementById('post-pagination');
   if (!list) return;
   var posts = _allPosts.slice();
   if (_currentCategory !== 'all') {
     posts = posts.filter(function(p) { return p.category === _currentCategory; });
   }
   if (!posts.length) {
+    if (pag) pag.innerHTML = '';
+    list.classList.remove('brd-list-compact');
     /* 전체 글이 0개 → 온보딩 카드 (spec v2 § 2-1 board_type 7종 정합) */
     if (!_allPosts.length) {
       if (_currentBoard === 'hub') {
@@ -5669,6 +5809,19 @@ function _renderPostList() {
     }
     return;
   }
+  // qna 박힌 자리 = 컴팩트 list + 페이지네이션 (스마트게시판 본진)
+  if (_currentBoard === 'qna') {
+    list.classList.add('brd-list-compact');
+    var totalCount = posts.length;
+    var startIdx   = (_qnaPage - 1) * _qnaPageSize;
+    var paged      = posts.slice(startIdx, startIdx + _qnaPageSize);
+    list.innerHTML = paged.map(_buildCompactPostItem).join('');
+    _renderPagination(totalCount, _qnaPage, _qnaPageSize, 'changeQnaPage');
+    return;
+  }
+  // 기타 board_type = 옛 카드 list 본진 유지
+  list.classList.remove('brd-list-compact');
+  if (pag) pag.innerHTML = '';
   list.innerHTML = posts.map(_buildPostItem).join('');
 }
 
