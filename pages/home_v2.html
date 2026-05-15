@@ -1392,23 +1392,34 @@ body {
 </footer>
 
 <!-- ============================================================
-     통합 인증 모달 (상단 로그인 화이트 + 하단 가입 그레이)
+     v2 인증 모달 (카카오 톤, 모바일 풀스크린 + multi-step)
+     - 로그인 = 1 step
+     - 가입 = 3 step (소속 → 정보 → 약관)
+     - 옛 input id 통째 유지 (JS 본진 정합)
      ============================================================ -->
 <div class="auth-overlay" id="authOverlay" hidden>
-  <div class="auth-modal" role="dialog" aria-labelledby="authLoginTitle" aria-modal="true">
-    <button class="auth-close" type="button" onclick="closeAuthModal()" aria-label="닫기">×</button>
+  <div class="auth-modal is-v2" role="dialog" aria-modal="true">
 
-    <!-- ───────── 상단 로그인 (화이트) ───────── -->
-    <section class="auth-section auth-login-section" id="authLoginSection">
+    <!-- 헤더 -->
+    <div class="auth-page-header">
+      <button class="auth-page-back" id="authBackBtn" type="button" hidden onclick="window.authPrev()" aria-label="뒤로">←</button>
+      <div class="auth-step-progress" id="authProgress" hidden>
+        <span class="is-active"></span><span></span><span></span>
+      </div>
+      <button class="auth-page-close" type="button" onclick="closeAuthModal()" aria-label="닫기">✕</button>
+    </div>
 
-      <!-- 로그인 폼 -->
-      <div id="loginFormArea">
-        <h2 id="authLoginTitle" class="auth-section-title">로그인</h2>
-        <p class="auth-section-sub">가입 시 등록한 이메일과 비밀번호를 입력하세요</p>
+    <!-- 본문 (스크롤 영역) -->
+    <div class="auth-page-body" id="authBody">
+
+      <!-- ────── 로그인 (1 step) ────── -->
+      <div class="auth-step-page is-active" id="page-login">
+        <span class="auth-friendly-emoji">👋</span>
+        <h2 class="auth-page-title">안녕하세요</h2>
+        <p class="auth-page-sub">원세컨드에 다시 오신 것을 환영해요</p>
 
         <div class="auth-err-box" id="loginErrBox"></div>
 
-        <!-- Google 로그인 (Phase 2 활성 예정 — UI 자리만) -->
         <button class="auth-google-btn" type="button" disabled aria-label="Google 로그인 (준비중)">
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
             <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
@@ -1416,193 +1427,155 @@ body {
             <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
             <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
           </svg>
-          Google로 로그인
-          <span class="auth-google-btn-soon">준비중</span>
+          Google로 로그인 <span class="auth-google-btn-soon">준비중</span>
         </button>
 
         <div class="auth-or-divider">또는 이메일로</div>
 
-        <div class="auth-form-row single">
-          <div class="auth-form-group">
-            <label class="auth-label" for="f-email-login">이메일 <span class="req">*</span></label>
-            <input class="auth-input" type="email" id="f-email-login" placeholder="example@email.com" autocomplete="email">
-            <div class="auth-form-err" id="e-email-login">올바른 이메일을 입력해 주세요.</div>
-          </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-email-login">이메일</label>
+          <input class="auth-input" type="email" id="f-email-login" placeholder="example@email.com" autocomplete="email">
+          <div class="auth-form-err" id="e-email-login">올바른 이메일을 입력해 주세요.</div>
         </div>
 
-        <div class="auth-form-row single">
-          <div class="auth-form-group">
-            <label class="auth-label" for="f-pw-login">비밀번호 <span class="req">*</span></label>
-            <div class="auth-pw-wrap">
-              <input class="auth-input" type="password" id="f-pw-login" placeholder="비밀번호 입력" autocomplete="current-password" style="padding-right:52px;">
-              <button class="auth-pw-toggle" type="button" id="pw-toggle-login-btn" onclick="togglePw('f-pw-login','pw-toggle-login-btn')">보기</button>
-            </div>
-            <div class="auth-form-err" id="e-pw-login">비밀번호를 입력해 주세요.</div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-pw-login">비밀번호</label>
+          <div class="auth-pw-wrap">
+            <input class="auth-input" type="password" id="f-pw-login" placeholder="비밀번호 입력" autocomplete="current-password">
+            <button class="auth-pw-toggle" type="button" id="pw-toggle-login-btn" onclick="togglePw('f-pw-login','pw-toggle-login-btn')">보기</button>
           </div>
+          <div class="auth-form-err" id="e-pw-login">비밀번호를 입력해 주세요.</div>
         </div>
 
-        <button class="auth-btn" id="login-btn" type="button" onclick="doLogin()" style="margin-top:6px;">
-          <span id="login-btn-txt">로그인</span>
-          <span class="auth-spinner" id="login-spinner" aria-hidden="true"></span>
-        </button>
-
-        <div style="text-align:center; margin-top:10px;">
+        <div style="text-align:right; margin-top:12px;">
           <button class="auth-link" type="button" onclick="showForgotInline()">비밀번호를 잊으셨나요?</button>
-        </div>
-
-        <div class="auth-cross-link">
-          처음 오셨나요?
-          <button class="auth-link auth-link-strong" type="button" onclick="window.switchAuthSection('signup')">회원가입하기 →</button>
         </div>
       </div>
 
-      <!-- 비밀번호 찾기 인라인 토글 -->
-      <div id="forgotInlineArea" hidden>
-        <h2 class="auth-section-title">비밀번호 찾기</h2>
-        <p class="auth-section-sub">가입 시 등록한 이메일로 재설정 링크를 보내드립니다.</p>
+      <!-- ────── 비밀번호 찾기 ────── -->
+      <div class="auth-step-page" id="page-forgot">
+        <span class="auth-friendly-emoji">🔑</span>
+        <h2 class="auth-page-title">비밀번호 찾기</h2>
+        <p class="auth-page-sub">가입 시 등록한 이메일로 재설정 링크를 보내드릴게요</p>
 
         <div class="auth-err-box" id="forgotErrBox"></div>
 
-        <div class="auth-form-row single">
-          <div class="auth-form-group">
-            <label class="auth-label" for="f-forgot-email">이메일 <span class="req">*</span></label>
-            <input class="auth-input" type="email" id="f-forgot-email" placeholder="example@email.com" autocomplete="email">
-            <div class="auth-form-err" id="e-forgot-email">올바른 이메일을 입력해 주세요.</div>
-          </div>
-        </div>
-
-        <button class="auth-btn" id="forgot-btn" type="button" onclick="doForgot()" style="margin-top:6px;">
-          <span id="forgot-btn-txt">재설정 링크 보내기</span>
-          <span class="auth-spinner" id="forgot-spinner" aria-hidden="true"></span>
-        </button>
-
-        <div style="text-align:center; margin-top:10px;">
-          <button class="auth-link" type="button" onclick="hideForgotInline()">← 로그인으로 돌아가기</button>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-forgot-email">이메일</label>
+          <input class="auth-input" type="email" id="f-forgot-email" placeholder="example@email.com" autocomplete="email">
+          <div class="auth-form-err" id="e-forgot-email">올바른 이메일을 입력해 주세요.</div>
         </div>
       </div>
 
       <!-- 비밀번호 찾기 성공 -->
-      <div id="forgotSuccessArea" hidden>
-        <div class="auth-success">
-          <div class="auth-success-icon">📧</div>
-          <div class="auth-success-title">메일 발송 완료</div>
-          <div class="auth-success-desc" id="forgotSuccessDesc"></div>
-        </div>
-        <div style="text-align:center; margin-top:8px;">
-          <button class="auth-link" type="button" onclick="hideForgotInline()">← 로그인으로 돌아가기</button>
+      <div class="auth-step-page" id="page-forgot-success">
+        <div class="auth-success" style="text-align:center; padding:32px 0;">
+          <span class="auth-friendly-emoji">📧</span>
+          <h2 class="auth-page-title" style="text-align:center;">메일 발송 완료</h2>
+          <div class="auth-page-sub" id="forgotSuccessDesc" style="text-align:center;"></div>
         </div>
       </div>
 
-      <!-- 로그인 성공 -->
-      <div id="loginSuccessArea" hidden>
-        <div class="auth-success">
-          <div class="auth-success-icon">✅</div>
-          <div class="auth-success-title">로그인 성공!</div>
-          <div class="auth-success-desc">잠시 후 메인 화면으로 이동합니다.</div>
-        </div>
+      <!-- ────── 가입 Step 1 — 소속 선택 ────── -->
+      <div class="auth-step-page" id="page-signup-1">
+        <span class="auth-friendly-emoji">🎉</span>
+        <h2 class="auth-page-title">처음이시군요</h2>
+        <p class="auth-page-sub">어떤 소속이신지 알려주세요</p>
+
+        <button class="auth-site-card-v2" type="button" id="site-card-ga" onclick="selectSite('ga'); window.authNextSignup();">
+          <div class="icon">👥</div>
+          <div class="info">
+            <div class="title">GA 설계사 · 매니저</div>
+            <div class="desc">법인보험대리점 / 지점·팀 소속</div>
+          </div>
+          <div class="arrow">→</div>
+        </button>
+
+        <button class="auth-site-card-v2" type="button" id="site-card-insurer" onclick="selectSite('insurer'); window.authNextSignup();">
+          <div class="icon">🏢</div>
+          <div class="info">
+            <div class="title">보험사 임직원</div>
+            <div class="desc">31개 손·생명 보험사 직원</div>
+          </div>
+          <div class="arrow">→</div>
+        </button>
       </div>
-    </section>
 
-    <!-- ───────── 하단 가입 (그레이) ───────── -->
-    <div class="auth-divider"><span style="background:var(--color-surface);padding:0 12px;">또는 새 계정 만들기</span></div>
-
-    <section class="auth-section auth-signup-section" id="authSignupSection">
-
-      <!-- 가입 폼 -->
-      <div id="signupFormArea">
-        <h2 class="auth-section-title">무료회원 가입 <span class="auth-section-badge">✓ 카드 불필요</span></h2>
-        <p class="auth-section-sub">즉시 실행 스크립트, MY SPACE, Quick 메뉴, 함께해요 커뮤니티를 모두 무료로.</p>
+      <!-- ────── 가입 Step 2 — 정보 입력 ────── -->
+      <div class="auth-step-page" id="page-signup-2">
+        <h2 class="auth-page-title">정보를 입력해 주세요</h2>
+        <p class="auth-page-sub">정확한 정보일수록 매니저 매핑이 정확합니다</p>
 
         <div class="auth-err-box" id="signupErrBox"></div>
 
         <form id="reg-form" novalidate>
-
-          <!-- 사이트 분기 카드 -->
-          <div class="site-picker" id="site-picker" role="radiogroup" aria-label="가입자 유형 선택">
-            <div class="site-card" id="site-card-ga" onclick="selectSite('ga')" role="radio" aria-checked="false" tabindex="0">
-              <div class="site-card-icon">👥</div>
-              <div class="site-card-title">GA 설계사 · 매니저</div>
-              <div class="site-card-desc">법인보험대리점 / 지점·팀 소속</div>
-            </div>
-            <div class="site-card" id="site-card-insurer" onclick="selectSite('insurer')" role="radio" aria-checked="false" tabindex="0">
-              <div class="site-card-icon">🏢</div>
-              <div class="site-card-title">보험사 임직원</div>
-              <div class="site-card-desc">31개 손·생명 보험사 직원</div>
-            </div>
-          </div>
-
           <div class="signup-form-body" id="signup-form-body">
 
-            <div class="auth-form-row">
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-name">이름 <span class="req">*</span></label>
-                <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
-                <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
-              </div>
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-role">직급 <span class="req">*</span></label>
-                <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
-                  <option value="">선택해 주세요</option>
-                  <option value="branch_manager">지점장 / 센터장</option>
-                  <option value="manager">매니저 / 실장</option>
-                  <option value="member">설계사 / 팀장</option>
-                  <option value="staff">스텝 / 총무</option>
-                </select>
-                <div class="auth-form-err" id="e-role">직급을 선택해 주세요.</div>
-              </div>
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-name">이름</label>
+              <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
+              <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
+            </div>
+
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-role">직급</label>
+              <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
+                <option value="">선택해 주세요</option>
+                <option value="branch_manager">지점장 / 센터장</option>
+                <option value="manager">매니저 / 실장</option>
+                <option value="member">설계사 / 팀장</option>
+                <option value="staff">스텝 / 총무</option>
+              </select>
+              <div class="auth-form-err" id="e-role">직급을 선택해 주세요.</div>
             </div>
 
             <div class="role-hint" id="roleHint">
               💡 <span id="roleHintText"></span>
             </div>
 
-            <div class="auth-form-row">
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-phone">핸드폰 <span class="req">*</span></label>
-                <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
-                <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
-              </div>
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-email">이메일 <span class="req">*</span></label>
-                <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); checkInsurerDomain();">
-                <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
-              </div>
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-phone">핸드폰</label>
+              <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
+              <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
             </div>
 
-            <div class="auth-form-row">
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-pw">비밀번호 <span class="req">*</span></label>
-                <div class="auth-pw-wrap">
-                  <input class="auth-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw','e-pw')">
-                  <button class="auth-pw-toggle" type="button" id="reg-pw-toggle" onclick="togglePw('f-pw','reg-pw-toggle')">보기</button>
-                </div>
-                <div class="auth-form-err" id="e-pw">영문+숫자 8자 이상 입력해 주세요.</div>
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-email">이메일</label>
+              <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); checkInsurerDomain();">
+              <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
+            </div>
+
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-pw">비밀번호</label>
+              <div class="auth-pw-wrap">
+                <input class="auth-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" oninput="clearFieldError('f-pw','e-pw')">
+                <button class="auth-pw-toggle" type="button" id="reg-pw-toggle" onclick="togglePw('f-pw','reg-pw-toggle')">보기</button>
               </div>
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-pw2">비밀번호 확인 <span class="req">*</span></label>
-                <div class="auth-pw-wrap">
-                  <input class="auth-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" style="padding-right:52px;" oninput="clearFieldError('f-pw2','e-pw2')">
-                  <button class="auth-pw-toggle" type="button" id="reg-pw2-toggle" onclick="togglePw('f-pw2','reg-pw2-toggle')">보기</button>
-                </div>
-                <div class="auth-form-err" id="e-pw2">비밀번호가 일치하지 않습니다.</div>
+              <div class="auth-form-err" id="e-pw">영문+숫자 8자 이상 입력해 주세요.</div>
+            </div>
+
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-pw2">비밀번호 확인</label>
+              <div class="auth-pw-wrap">
+                <input class="auth-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" oninput="clearFieldError('f-pw2','e-pw2')">
+                <button class="auth-pw-toggle" type="button" id="reg-pw2-toggle" onclick="togglePw('f-pw2','reg-pw2-toggle')">보기</button>
               </div>
+              <div class="auth-form-err" id="e-pw2">비밀번호가 일치하지 않습니다.</div>
             </div>
 
             <div class="form-divider">소속 정보</div>
 
             <!-- 보험사 분기 -->
             <div class="insurer-fields" id="insurer-fields">
-              <div class="auth-form-row single">
-                <div class="auth-form-group">
-                  <label class="auth-label" for="f-insurer">보험사 <span class="req">*</span></label>
-                  <select class="auth-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
-                    <option value="">불러오는 중…</option>
-                  </select>
-                  <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
-                </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-insurer">보험사</label>
+                <select class="auth-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
+                  <option value="">불러오는 중…</option>
+                </select>
+                <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
               </div>
               <div class="domain-guide" id="domain-guide" style="display:none;">
-                💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다. 이메일 입력 시 일치 여부를 확인합니다.
+                💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다.
               </div>
               <div class="signup-info-box">
                 <p>🛡️ 보험사 임직원 가입은 <strong>4중 방어</strong>를 거칩니다.</p>
@@ -1616,90 +1589,104 @@ body {
                 <p>💡 소속 정보를 정확히 입력하시면 <strong>지점 게시판</strong>과 <strong>팀 게시판</strong>이 활성화됩니다.</p>
                 <p class="signup-info-sub">목록에 없으면 "기타 입력"으로 입력해 주세요. 매니저 승인 시 매핑됩니다.</p>
               </div>
-              <div class="auth-form-row">
-                <div class="auth-form-group">
-                  <label class="auth-label" for="f-company-select">회사명</label>
-                  <select class="auth-select" id="f-company-select" onchange="onGaCompanyChange()">
-                    <option value="AZ금융">AZ금융</option>
-                    <option value="__other__">기타 입력</option>
-                  </select>
-                </div>
-                <div class="auth-form-group">
-                  <label class="auth-label" for="f-company-text">회사명 (직접 입력)</label>
-                  <input class="auth-input" type="text" id="f-company-text" placeholder="소속 회사명" maxlength="50" disabled style="opacity:0.5;">
-                </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-company-select">회사명</label>
+                <select class="auth-select" id="f-company-select" onchange="onGaCompanyChange()">
+                  <option value="AZ금융">AZ금융</option>
+                  <option value="__other__">기타 입력</option>
+                </select>
               </div>
-              <div class="auth-form-row">
-                <div class="auth-form-group">
-                  <label class="auth-label" for="f-branch-select">지점 / 센터</label>
-                  <select class="auth-select" id="f-branch-select" onchange="onGaBranchChange()">
-                    <option value="">불러오는 중…</option>
-                  </select>
-                </div>
-                <div class="auth-form-group">
-                  <label class="auth-label" for="f-branch-text">지점명 (직접 입력)</label>
-                  <input class="auth-input" type="text" id="f-branch-text" placeholder="지점/센터명" maxlength="50" disabled style="opacity:0.5;">
-                </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-company-text">회사명 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-company-text" placeholder="소속 회사명" maxlength="50" disabled style="opacity:0.5;">
               </div>
-              <div class="auth-form-row">
-                <div class="auth-form-group">
-                  <label class="auth-label" for="f-team-select">팀</label>
-                  <select class="auth-select" id="f-team-select" onchange="onGaTeamChange()">
-                    <option value="">선택 안 함</option>
-                  </select>
-                </div>
-                <div class="auth-form-group">
-                  <label class="auth-label" for="f-team-text">팀명 (직접 입력)</label>
-                  <input class="auth-input" type="text" id="f-team-text" placeholder="팀명" maxlength="30" disabled style="opacity:0.5;">
-                </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-branch-select">지점 / 센터</label>
+                <select class="auth-select" id="f-branch-select" onchange="onGaBranchChange()">
+                  <option value="">불러오는 중…</option>
+                </select>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-branch-text">지점명 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-branch-text" placeholder="지점/센터명" maxlength="50" disabled style="opacity:0.5;">
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-team-select">팀</label>
+                <select class="auth-select" id="f-team-select" onchange="onGaTeamChange()">
+                  <option value="">선택 안 함</option>
+                </select>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-team-text">팀명 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-team-text" placeholder="팀명" maxlength="30" disabled style="opacity:0.5;">
               </div>
             </div>
-
-            <div class="form-check">
-              <input type="checkbox" id="f-consent" onchange="clearFieldError('f-consent','e-consent')">
-              <label for="f-consent">
-                <strong style="color:var(--color-text-primary);">(필수)</strong>
-                <a href="../terms.html" target="_blank" rel="noopener">이용약관</a> 및
-                <a href="../privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다
-              </label>
-            </div>
-            <div class="auth-form-err" id="e-consent">동의가 필요합니다.</div>
-
-            <div class="form-check">
-              <input type="checkbox" id="agree2">
-              <label for="agree2">(선택) 마케팅 정보 수신에 동의합니다</label>
-            </div>
-
-            <button class="auth-btn" id="sub-btn" type="button" onclick="doSubmit()" style="margin-top:10px;">
-              <span id="sub-btn-txt">🎉 무료회원 가입하기</span>
-              <span class="auth-spinner" id="signup-spinner" aria-hidden="true"></span>
-            </button>
 
           </div><!-- /.signup-form-body -->
-
         </form>
+      </div>
 
-        <div class="auth-cross-link">
-          이미 회원이신가요?
-          <button class="auth-link auth-link-strong" type="button" onclick="window.switchAuthSection('login')">로그인 →</button>
+      <!-- ────── 가입 Step 3 — 약관 + 가입 ────── -->
+      <div class="auth-step-page" id="page-signup-3">
+        <span class="auth-friendly-emoji">🙌</span>
+        <h2 class="auth-page-title">거의 다 왔어요</h2>
+        <p class="auth-page-sub">약관 동의 후 가입이 완료됩니다</p>
+
+        <div class="form-check" style="padding:14px 0;">
+          <input type="checkbox" id="f-consent" onchange="clearFieldError('f-consent','e-consent')">
+          <label for="f-consent" style="margin-left:8px;">
+            <strong style="color:var(--color-text-primary);">(필수)</strong>
+            <a href="../terms.html" target="_blank" rel="noopener">이용약관</a> 및
+            <a href="../privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다
+          </label>
+        </div>
+        <div class="auth-form-err" id="e-consent">동의가 필요합니다.</div>
+
+        <div class="form-check" style="padding:14px 0;">
+          <input type="checkbox" id="agree2">
+          <label for="agree2" style="margin-left:8px;">(선택) 마케팅 정보 수신에 동의합니다</label>
+        </div>
+      </div>
+
+      <!-- 로그인 성공 -->
+      <div class="auth-step-page" id="page-login-success">
+        <div class="auth-success" style="text-align:center; padding:32px 0;">
+          <span class="auth-friendly-emoji">✅</span>
+          <h2 class="auth-page-title" style="text-align:center;">로그인 성공!</h2>
+          <p class="auth-page-sub" style="text-align:center;">잠시 후 메인 화면으로 이동합니다.</p>
         </div>
       </div>
 
       <!-- 가입 성공 -->
-      <div id="signupSuccessArea" hidden>
-        <div class="auth-success">
-          <div class="auth-success-icon">🎉</div>
-          <div class="auth-success-title">가입 완료!</div>
-          <div class="auth-success-desc" id="signup-success-desc"></div>
-          <div class="pending-notice" id="pending-notice">
+      <div class="auth-step-page" id="page-signup-success">
+        <div class="auth-success" style="text-align:center; padding:24px 0;">
+          <span class="auth-friendly-emoji">🎉</span>
+          <h2 class="auth-page-title" style="text-align:center;">가입 완료!</h2>
+          <div class="auth-page-sub" id="signup-success-desc" style="text-align:center;"></div>
+          <div class="pending-notice" id="pending-notice" style="margin-top:16px;">
             ⏳ <strong>매니저 승인 대기 중입니다.</strong><br>
             보험사 임직원 가입은 매니저 승인 후 사용이 활성화됩니다. 승인 결과는 가입한 이메일로 안내됩니다.
           </div>
         </div>
       </div>
-    </section>
+
+    </div><!-- /.auth-page-body -->
+
+    <!-- 하단 sticky CTA -->
+    <div class="auth-cta-area" id="authCtaArea">
+      <button class="auth-btn" id="authMainCta" type="button">
+        <span id="authMainCtaTxt">로그인</span>
+        <span class="auth-spinner" id="authMainCtaSpinner" aria-hidden="true"></span>
+      </button>
+      <div class="auth-cross-link" id="authCrossLink">
+        <span id="authCrossLinkText">처음 오셨나요?</span>
+        <button class="auth-link auth-link-strong" type="button" id="authCrossLinkBtn" onclick="window.switchAuthSection('signup')">회원가입하기 →</button>
+      </div>
+    </div>
+
   </div>
 </div>
+
 
 <script>
 // ============================================================================
@@ -1854,54 +1841,19 @@ function updatePreview(key) {
 // ============================================================================
 //  통합 인증 모달 — 모달 컨트롤 (open/close/ESC/외부클릭/자동 스크롤·포커스)
 // ============================================================================
+// ============================================================================
+//  v2 step navigation (카카오 톤, multi-step 본진)
+// ============================================================================
+var _authCurrentStep = 'login';
+
 function openAuthModal(focusSection) {
   var overlay = document.getElementById('authOverlay');
   if (!overlay) return;
-
-  // 두 섹션 분리 박음 — 진입한 자리만 show (사용자 헷갈림 회피)
-  _switchAuthDisplay(focusSection);
-
+  var startStep = (focusSection === 'signup') ? 'signup-1' : 'login';
+  _showStep(startStep);
   overlay.hidden = false;
   document.body.style.overflow = 'hidden';
-
-  setTimeout(function () {
-    overlay.scrollTop = 0;
-    if (focusSection === 'signup') {
-      var gaCard = document.getElementById('site-card-ga');
-      if (gaCard) gaCard.focus();
-    } else {
-      var emailEl = document.getElementById('f-email-login');
-      if (emailEl) emailEl.focus();
-    }
-  }, 100);
 }
-
-// 모달 안에서 로그인 ↔ 가입 전환 (cross-link 본진)
-function _switchAuthDisplay(target) {
-  var loginSec  = document.getElementById('authLoginSection');
-  var signupSec = document.getElementById('authSignupSection');
-  if (target === 'signup') {
-    if (loginSec)  loginSec.style.display  = 'none';
-    if (signupSec) signupSec.style.display = '';
-  } else {
-    if (loginSec)  loginSec.style.display  = '';
-    if (signupSec) signupSec.style.display = 'none';
-  }
-}
-window.switchAuthSection = function(target) {
-  var overlay = document.getElementById('authOverlay');
-  _switchAuthDisplay(target);
-  if (overlay) overlay.scrollTop = 0;
-  setTimeout(function() {
-    if (target === 'signup') {
-      var gaCard = document.getElementById('site-card-ga');
-      if (gaCard) gaCard.focus();
-    } else {
-      var emailEl = document.getElementById('f-email-login');
-      if (emailEl) emailEl.focus();
-    }
-  }, 50);
-};
 
 function closeAuthModal() {
   var overlay = document.getElementById('authOverlay');
@@ -1910,19 +1862,132 @@ function closeAuthModal() {
   document.body.style.overflow = '';
 }
 
-// ESC 닫기 + 외부 클릭 닫기 + 엔터 로그인
+// step 표시 + CTA + 진행 본진 + back 박음 통째
+function _showStep(step) {
+  _authCurrentStep = step;
+  var pages = document.querySelectorAll('.auth-step-page');
+  pages.forEach(function(p) { p.classList.remove('is-active'); });
+  var target = document.getElementById('page-' + step);
+  if (target) target.classList.add('is-active');
+
+  var body = document.getElementById('authBody');
+  if (body) body.scrollTop = 0;
+
+  // CTA 박음 (step별 분기)
+  var ctaArea  = document.getElementById('authCtaArea');
+  var ctaBtn   = document.getElementById('authMainCta');
+  var ctaTxt   = document.getElementById('authMainCtaTxt');
+  var crossLnk = document.getElementById('authCrossLink');
+  var crossTxt = document.getElementById('authCrossLinkText');
+  var crossBtn = document.getElementById('authCrossLinkBtn');
+  var back     = document.getElementById('authBackBtn');
+  var progress = document.getElementById('authProgress');
+
+  // 모든 자리 default reset
+  if (ctaArea)  ctaArea.style.display = '';
+  if (back)     back.hidden = true;
+  if (progress) progress.hidden = true;
+  if (crossLnk) crossLnk.style.display = 'block';
+
+  if (step === 'login') {
+    if (ctaTxt)   ctaTxt.textContent = '로그인';
+    if (ctaBtn)   ctaBtn.onclick = function() { doLogin(); };
+    if (crossTxt) crossTxt.textContent = '처음 오셨나요?';
+    if (crossBtn) { crossBtn.textContent = '회원가입하기 →'; crossBtn.onclick = function() { window.switchAuthSection('signup'); }; }
+    setTimeout(function() {
+      var el = document.getElementById('f-email-login');
+      if (el) el.focus();
+    }, 80);
+  }
+  else if (step === 'forgot') {
+    if (ctaTxt)   ctaTxt.textContent = '재설정 링크 보내기';
+    if (ctaBtn)   ctaBtn.onclick = function() { doForgot(); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('login'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    setTimeout(function() {
+      var el = document.getElementById('f-forgot-email');
+      if (el) el.focus();
+    }, 80);
+  }
+  else if (step === 'forgot-success') {
+    if (ctaTxt) ctaTxt.textContent = '로그인으로 돌아가기';
+    if (ctaBtn) ctaBtn.onclick = function() { _showStep('login'); };
+    if (crossLnk) crossLnk.style.display = 'none';
+  }
+  else if (step === 'signup-1') {
+    if (ctaArea)  ctaArea.style.display = 'none'; // Step 1 = 카드 클릭 = 자동 진입
+    if (crossTxt) crossTxt.textContent = '이미 회원이신가요?';
+    if (crossBtn) { crossBtn.textContent = '로그인 →'; crossBtn.onclick = function() { window.switchAuthSection('login'); }; }
+    if (progress) { progress.hidden = false; _setProgress(1); }
+  }
+  else if (step === 'signup-2') {
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { window.authNextSignup3(); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-1'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(2); }
+    setTimeout(function() {
+      var el = document.getElementById('f-name');
+      if (el) el.focus();
+    }, 80);
+  }
+  else if (step === 'signup-3') {
+    if (ctaTxt)   ctaTxt.textContent = '🎉 무료회원 가입하기';
+    if (ctaBtn)   ctaBtn.onclick = function() { doSubmit(); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-2'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(3); }
+  }
+  else if (step === 'login-success' || step === 'signup-success') {
+    if (ctaArea)  ctaArea.style.display = 'none';
+    if (crossLnk) crossLnk.style.display = 'none';
+  }
+}
+
+function _setProgress(activeIdx) {
+  var dots = document.querySelectorAll('#authProgress span');
+  dots.forEach(function(d, i) {
+    if (i < activeIdx) d.classList.add('is-active');
+    else               d.classList.remove('is-active');
+  });
+}
+
+window.authPrev = function() {
+  var back = document.getElementById('authBackBtn');
+  if (back && !back.hidden && back.onclick) back.onclick();
+};
+
+window.authNextSignup = function() {
+  // Step 1 카드 클릭 후 호출 — Step 2 진입
+  _showStep('signup-2');
+};
+
+window.authNextSignup3 = function() {
+  // Step 2 → Step 3 진입 (사전 폼 검증 박음)
+  if (typeof _validateSignupStep2 === 'function') {
+    if (!_validateSignupStep2()) return;
+  }
+  _showStep('signup-3');
+};
+
+window.switchAuthSection = function(target) {
+  if (target === 'signup') _showStep('signup-1');
+  else                     _showStep('login');
+};
+
+// ESC 닫기 + 외부 클릭 닫기 + 엔터 로그인 (v2 step 본진 정합)
 document.addEventListener('keydown', function (e) {
   var overlay = document.getElementById('authOverlay');
   if (!overlay || overlay.hidden) return;
   if (e.key === 'Escape') closeAuthModal();
-  // 엔터키 = 로그인 폼 활성 시만
+  // 엔터키 = step별 분기
   if (e.key === 'Enter') {
-    var loginVis = document.getElementById('loginFormArea') && !document.getElementById('loginFormArea').hidden;
-    var forgotVis = document.getElementById('forgotInlineArea') && !document.getElementById('forgotInlineArea').hidden;
-    if (loginVis && (document.activeElement.id === 'f-email-login' || document.activeElement.id === 'f-pw-login')) {
+    var ae = document.activeElement;
+    if (!ae) return;
+    if (_authCurrentStep === 'login' && (ae.id === 'f-email-login' || ae.id === 'f-pw-login')) {
       e.preventDefault();
       doLogin();
-    } else if (forgotVis && document.activeElement.id === 'f-forgot-email') {
+    } else if (_authCurrentStep === 'forgot' && ae.id === 'f-forgot-email') {
       e.preventDefault();
       doForgot();
     }
@@ -1969,19 +2034,8 @@ function clearFieldError(inputId, errorId) {
 // ============================================================================
 //  로그인 (login.html doLogin/doForgot 흡수)
 // ============================================================================
-function showForgotInline() {
-  document.getElementById('loginFormArea').hidden = true;
-  document.getElementById('forgotInlineArea').hidden = false;
-  document.getElementById('forgotSuccessArea').hidden = true;
-  setTimeout(function () { var e = document.getElementById('f-forgot-email'); if (e) e.focus(); }, 50);
-}
-
-function hideForgotInline() {
-  document.getElementById('forgotInlineArea').hidden = true;
-  document.getElementById('forgotSuccessArea').hidden = true;
-  document.getElementById('loginFormArea').hidden = false;
-  setTimeout(function () { var e = document.getElementById('f-email-login'); if (e) e.focus(); }, 50);
-}
+function showForgotInline() { _showStep('forgot'); }
+function hideForgotInline() { _showStep('login'); }
 
 function validateLogin() {
   var ok = true;
@@ -2001,16 +2055,16 @@ async function doLogin() {
   errBox.classList.remove('on');
   if (!validateLogin()) return;
 
-  var btn  = document.getElementById('login-btn');
-  var txt  = document.getElementById('login-btn-txt');
-  var spin = document.getElementById('login-spinner');
-  btn.disabled = true;
-  if (txt)  txt.style.opacity = '0';
+  var btn  = document.getElementById('authMainCta');
+  var txt  = document.getElementById('authMainCtaTxt');
+  var spin = document.getElementById('authMainCtaSpinner');
+  if (btn) btn.disabled = true;
+  if (txt) txt.style.opacity = '0';
   if (spin) spin.style.display = 'block';
 
   function _resetBtn() {
-    btn.disabled = false;
-    if (txt)  txt.style.opacity = '';
+    if (btn) btn.disabled = false;
+    if (txt) txt.style.opacity = '';
     if (spin) spin.style.display = 'none';
   }
 
@@ -2033,9 +2087,8 @@ async function doLogin() {
       sessionStorage.setItem('os_user', JSON.stringify(data.user));
 
       // 성공 화면 (1200ms 후 redirect)
-      document.getElementById('loginFormArea').hidden = true;
-      document.getElementById('forgotInlineArea').hidden = true;
-      document.getElementById('loginSuccessArea').hidden = false;
+      _resetBtn();
+      _showStep('login-success');
 
       setTimeout(function () {
         var _r = new URLSearchParams(window.location.search).get('redirect');
@@ -2077,16 +2130,16 @@ async function doForgot() {
   emailEl.classList.remove('err');
   document.getElementById('e-forgot-email').classList.remove('on');
 
-  var btn  = document.getElementById('forgot-btn');
-  var txt  = document.getElementById('forgot-btn-txt');
-  var spin = document.getElementById('forgot-spinner');
-  btn.disabled = true;
-  if (txt)  txt.style.opacity = '0';
+  var btn  = document.getElementById('authMainCta');
+  var txt  = document.getElementById('authMainCtaTxt');
+  var spin = document.getElementById('authMainCtaSpinner');
+  if (btn) btn.disabled = true;
+  if (txt) txt.style.opacity = '0';
   if (spin) spin.style.display = 'block';
 
   function _resetBtn() {
-    btn.disabled = false;
-    if (txt)  txt.style.opacity = '';
+    if (btn) btn.disabled = false;
+    if (txt) txt.style.opacity = '';
     if (spin) spin.style.display = 'none';
   }
 
@@ -2097,11 +2150,10 @@ async function doForgot() {
       body: JSON.stringify({ email: emailEl.value.trim() })
     });
     if (res.ok) {
-      document.getElementById('forgotInlineArea').hidden = true;
-      document.getElementById('loginFormArea').hidden = true;
-      document.getElementById('forgotSuccessArea').hidden = false;
+      _resetBtn();
       var desc = document.getElementById('forgotSuccessDesc');
       if (desc) desc.innerHTML = '<strong>' + escapeText(emailEl.value.trim()) + '</strong> 으로<br>비밀번호 재설정 링크를 보내드렸습니다.<br><br>메일함을 확인해 주세요.<br><span style="font-size:12px;color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요.</span>';
+      _showStep('forgot-success');
     } else {
       var data = {};
       try { data = await res.json(); } catch (e) {}
@@ -2519,9 +2571,9 @@ function validateSignup() {
 async function doSubmit() {
   if (!validateSignup()) return;
 
-  var btn  = document.getElementById('sub-btn');
-  var txt  = document.getElementById('sub-btn-txt');
-  var spin = document.getElementById('signup-spinner');
+  var btn  = document.getElementById('authMainCta');
+  var txt  = document.getElementById('authMainCtaTxt');
+  var spin = document.getElementById('authMainCtaSpinner');
   var errBox = document.getElementById('signupErrBox');
 
   btn.disabled = true;
@@ -2654,8 +2706,8 @@ async function doSubmit() {
     if (pendingNoticeEl) {
       pendingNoticeEl.style.display = (site === 'insurer') ? 'block' : 'none';
     }
-    document.getElementById('signupFormArea').hidden = true;
-    document.getElementById('signupSuccessArea').hidden = false;
+    _resetBtn();
+    _showStep('signup-success');
 
     // 인증 메일 안내 강제 표시 (모달 안 description 묻힐 가능성 회피, 사고 #49 처방)
     if (!emailConfirmed) {
