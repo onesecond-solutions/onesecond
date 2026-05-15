@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v20-20260515-desktop-hamburger-fix';
+const CACHE_NAME = 'onesecond-v21-20260515-shell-outline-removed';
 const CACHE_URLS = [
   '/',
   '/app.html',

@@ -1524,8 +1524,9 @@
   min-height: 600px;
   height: calc(100vh - 220px);
   background: var(--notice-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  /* 2026-05-15 박음: 데스크탑 아웃박스(border + radius) 박지 X — 인박스를 풀 박음 (회귀 격차 해소) */
+  border: 0;
+  border-radius: 0;
   overflow: hidden;
 }
 
