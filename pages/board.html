@@ -2447,6 +2447,9 @@
   .notice-room-shell { min-height: 500px; }
 }
 
+/* 모바일 햄버거 — 데스크탑 default hide (mobile media 안 박힌 자리 격차 회피, 2026-05-15) */
+.notice-mobile-hamburger { display: none !important; }
+
 /* ─────────────────────────────────────────────────────────────
  * 본진 7 — 모바일 인박스 제거, 채팅창 가득 (2026-05-14 정밀)
  *   - 아웃박스(.notice-room-shell border) 정체성 유지
@@ -2631,9 +2634,7 @@
   }
 
   /* 모바일 햄버거 메뉴 (2026-05-14 추가) — 단톡방 풀스크린 시 다른 메뉴 진입로 */
-  .notice-mobile-hamburger {
-    display: none;
-  }
+  /* 모바일 768px 미만 + 단톡방 active = display:flex !important (data-deprecated 자리 외 global hide override) */
   .pg-outer.notice-room-active .notice-mobile-hamburger {
     position: fixed;
     top: 4px;
@@ -2647,7 +2648,7 @@
     font-size: 20px;
     line-height: 1;
     cursor: pointer;
-    display: flex;
+    display: flex !important; /* global hide override */
     align-items: center;
     justify-content: center;
     border-radius: 8px;
