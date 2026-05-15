@@ -253,6 +253,7 @@
 }
 .category-pills { display: flex; gap: 0.4em; flex-wrap: wrap; }
 .cat-pill {
+  display: inline-flex; align-items: center; gap: 4px;
   padding: 0.3em 0.85em;
   border-radius: var(--radius-full, 9999px);
   font-size: 0.78em;
@@ -265,6 +266,27 @@
 }
 .cat-pill:hover { border-color: var(--color-brand, #A0522D); color: var(--color-brand, #A0522D); }
 .cat-pill.active { background: var(--color-text-primary); color: #fff; border-color: var(--color-text-primary); }
+.cat-pill .pill-icon { font-size: 1.05em; line-height: 1; }
+.cat-pill .pill-count {
+  font-size: 0.85em;
+  opacity: 0.7;
+  background: rgba(0,0,0,0.06);
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px; text-align: center;
+}
+.cat-pill.active .pill-count { background: rgba(255,255,255,0.25); opacity: 1; }
+
+/* 모바일 — 라벨 hide / 아이콘 + 숫자만 / 활성 시 라벨 박음 = 한 줄 본진 */
+@media (max-width: 600px) {
+  .category-pills { gap: 0.3em; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .category-pills::-webkit-scrollbar { display: none; }
+  .cat-pill { padding: 6px 10px; font-size: 12px; flex-shrink: 0; }
+  .cat-pill .pill-label { display: none; }
+  .cat-pill.active .pill-label { display: inline; }
+  .cat-pill .pill-count { background: transparent; padding: 0; }
+  .cat-pill.active .pill-count { background: rgba(255,255,255,0.25); padding: 1px 6px; }
+}
 
 .write-btn {
   /* 2026-04-27 board v1 — 시안 .brd-write-btn 스타일 (클래스명 보존) */
@@ -5652,14 +5674,32 @@ function _buildInsurerPostItem(p) {
     + '</div>';
 }
 
+var _CAT_ICONS = {
+  '전체': '☰', '소식지': '📰', '영업방향': '🎯', '상품공지': '📦',
+  '인수공지': '🩺', '교육안내': '📚', '이벤트/일정': '🎉', '기타': '📌',
+  '공지': '📢', '상품': '📦', '인수': '🩺', '보험사 공지': '🏦'
+};
+
 function _renderCategoryPills(board) {
   var cats = BOARD_CATEGORIES[board] || ['전체'];
   var container = document.getElementById('category-pills');
   if (!container) return;
+  /* 카테고리별 카운트 박음 */
+  var counts = { '전체': _allPosts.length };
+  _allPosts.forEach(function(p) {
+    var c = p.category || '기타';
+    counts[c] = (counts[c] || 0) + 1;
+  });
   container.innerHTML = cats.map(function(c) {
-    var val = (c === '전체') ? 'all' : c;
+    var val      = (c === '전체') ? 'all' : c;
     var isActive = (val === 'all' && _currentCategory === 'all') || val === _currentCategory;
-    return '<div class="cat-pill ' + (isActive ? 'active' : '') + '" onclick="window.selectCategory(\'' + val + '\')">' + c + '</div>';
+    var icon     = _CAT_ICONS[c] || '📌';
+    var count    = counts[c] || 0;
+    return '<div class="cat-pill ' + (isActive ? 'active' : '') + '" onclick="window.selectCategory(\'' + val + '\')">'
+      + '<span class="pill-icon">' + icon + '</span>'
+      + '<span class="pill-label">' + c + '</span>'
+      + '<span class="pill-count">' + count + '</span>'
+      + '</div>';
   }).join('');
 }
 

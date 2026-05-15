@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v18-20260515-qna-categories-unified';
+const CACHE_NAME = 'onesecond-v19-20260515-mobile-pills';
 const CACHE_URLS = [
   '/',
   '/app.html',
