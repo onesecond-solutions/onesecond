@@ -1746,7 +1746,8 @@
 /* 메시지 흐름 */
 .notice-room-chat {
   flex: 1; overflow-y: auto;
-  padding: 16px 24px;
+  /* 2026-05-15 박음: 좌우 padding 박지 X — 아웃박스 박지 X 박힌 자리에 본문 풀 박음 */
+  padding: 16px 0;
   display: flex; flex-direction: column; gap: 12px;
   scrollbar-width: thin;
 }
