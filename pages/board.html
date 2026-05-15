@@ -6177,11 +6177,15 @@ window.closeWriteOverlay = function() {
   if (cards) cards.style.display = '';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '지금 어떤 질문인가요?';
-  /* mode + insurer_specific 옵션 + 안내 박스 + 취소 버튼 라벨 reset (다음 진입 정합 보장) */
+  /* mode + audience 옵션 + 공지 유형 옵션 + 안내 박스 + 취소 버튼 라벨 reset (다음 진입 정합 보장) */
   _noticeWriteMode = 'navigation';
+  /* 공지 유형 옵션 옛 7건 본진 복귀 (smart_board 진입 후 다른 모드 진입 시 격차 회피) */
+  if (typeof window._setNoticeTypeOptions === 'function') window._setNoticeTypeOptions('navigation');
   var audienceReset = document.getElementById('notice-audience');
   if (audienceReset) {
+    var teamOpt    = audienceReset.querySelector('option[value="team_internal"]');
     var insurerOpt = audienceReset.querySelector('option[value="insurer_specific"]');
+    if (teamOpt)    teamOpt.hidden    = false;
     if (insurerOpt) insurerOpt.hidden = false;
   }
   var infoBox = document.getElementById('notice-info-box');
@@ -6226,14 +6230,18 @@ window.openManagerNoticeOverlay = function() {
   var titleEl    = document.getElementById('notice-title');
   var contentEl  = document.getElementById('notice-content');
   var audienceEl = document.getElementById('notice-audience');
+  /* manager_notice 모드 옵션 박음 (옛 7건 — 운영/긴급/상품/인수/교육/이벤트/기타) */
+  window._setNoticeTypeOptions('manager_notice');
   if (typeEl)     typeEl.value     = '운영';
   if (titleEl)    titleEl.value    = '';
   if (contentEl)  contentEl.value  = '';
   if (audienceEl) audienceEl.value = 'team_internal';
 
-  /* manager_notice 모드 — insurer_specific 옵션 hide (본질 = 팀·지점·네비방·운영진 4종) */
+  /* manager_notice 모드 — insurer_specific 옵션 hide / team_internal 명시 표시 (smart_board hide 격차 회피) */
   if (audienceEl) {
+    var teamOpt    = audienceEl.querySelector('option[value="team_internal"]');
     var insurerOpt = audienceEl.querySelector('option[value="insurer_specific"]');
+    if (teamOpt)    teamOpt.hidden    = false;
     if (insurerOpt) insurerOpt.hidden = true;
   }
   /* 안내 박스 표시 + 헤더 변경 + 취소 버튼 라벨 변경 */
@@ -6250,6 +6258,31 @@ window.openManagerNoticeOverlay = function() {
   if (overlay) overlay.classList.add('active');
   if (titleEl) setTimeout(function(){ titleEl.focus(); }, 50);
   _wfnResetAttach();
+};
+
+/* ── 공지 유형(#notice-type) 모드별 옵션 박음 (smart_board = 신 7건 / 그 외 = 옛 7건 HTML 본진 복귀) ── */
+window._setNoticeTypeOptions = function(mode) {
+  var typeEl = document.getElementById('notice-type');
+  if (!typeEl) return;
+  if (mode === 'smart_board') {
+    typeEl.innerHTML =
+        '<option value="소식지">소식지</option>'
+      + '<option value="영업방향">영업방향</option>'
+      + '<option value="상품공지">상품공지</option>'
+      + '<option value="인수공지">인수공지</option>'
+      + '<option value="교육안내">교육안내</option>'
+      + '<option value="이벤트일정">이벤트/일정</option>'
+      + '<option value="기타">기타</option>';
+  } else {
+    typeEl.innerHTML =
+        '<option value="운영">운영 공지</option>'
+      + '<option value="긴급">긴급 공지</option>'
+      + '<option value="상품">상품 공지</option>'
+      + '<option value="인수">인수 공지</option>'
+      + '<option value="교육">교육 안내</option>'
+      + '<option value="이벤트일정">이벤트/일정</option>'
+      + '<option value="기타">기타</option>';
+  }
 };
 
 /* ── 스마트게시판 글쓰기 진입 (qna 모드, 실장님 공지 폼 재사용 — admin 전용 시드 본진) ── */
@@ -6279,14 +6312,18 @@ window.openSmartBoardOverlay = function() {
   var titleEl    = document.getElementById('notice-title');
   var contentEl  = document.getElementById('notice-content');
   var audienceEl = document.getElementById('notice-audience');
-  if (typeEl)     typeEl.value     = '운영';
+  /* smart_board 모드 옵션 박음 (소식지/영업방향/상품공지/인수공지/교육안내/이벤트·일정/기타) */
+  window._setNoticeTypeOptions('smart_board');
+  if (typeEl)     typeEl.value     = '소식지';
   if (titleEl)    titleEl.value    = '';
   if (contentEl)  contentEl.value  = '';
-  if (audienceEl) audienceEl.value = 'team_internal';
+  if (audienceEl) audienceEl.value = 'navigation_all';
 
-  /* smart_board 모드 — insurer_specific 옵션 hide (시드 본진, 모든 사용자가 읽을 자료) */
+  /* smart_board 모드 — team_internal + insurer_specific 옵션 hide (시드 본진, 전체 네비게이션방 default) */
   if (audienceEl) {
+    var teamOpt    = audienceEl.querySelector('option[value="team_internal"]');
     var insurerOpt = audienceEl.querySelector('option[value="insurer_specific"]');
+    if (teamOpt)    teamOpt.hidden    = true;
     if (insurerOpt) insurerOpt.hidden = true;
   }
   var infoBox = document.getElementById('notice-info-box');
@@ -6318,13 +6355,17 @@ window.selectWriteCategory = function(category) {
     var titleEl    = document.getElementById('notice-title');
     var contentEl  = document.getElementById('notice-content');
     var audienceEl = document.getElementById('notice-audience');
+    /* navigation 4 카드 공지 모드 옵션 박음 (옛 7건 본진 복귀) */
+    window._setNoticeTypeOptions('navigation');
     if (typeEl)     typeEl.value     = '운영';
     if (titleEl)    titleEl.value    = '';
     if (contentEl)  contentEl.value  = '';
     if (audienceEl) audienceEl.value = 'team_internal';
-    /* navigation 모드 — insurer_specific 옵션 다시 표시 + 안내 박스 hide + 취소 버튼 라벨 복귀 */
+    /* navigation 모드 — team_internal + insurer_specific 옵션 다시 표시 (smart_board hide 격차 회피) + 안내 박스 hide + 취소 버튼 라벨 복귀 */
     if (audienceEl) {
+      var teamOptNav    = audienceEl.querySelector('option[value="team_internal"]');
       var insurerOptNav = audienceEl.querySelector('option[value="insurer_specific"]');
+      if (teamOptNav)    teamOptNav.hidden    = false;
       if (insurerOptNav) insurerOptNav.hidden = false;
     }
     var infoBoxNav = document.getElementById('notice-info-box');
