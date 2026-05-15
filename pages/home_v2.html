@@ -734,6 +734,14 @@ body {
   padding: 0;
 }
 .auth-link:hover { color: var(--color-brand); text-decoration: underline; }
+.auth-link-strong { font-weight: 600; color: var(--color-brand); }
+.auth-cross-link {
+  margin-top: 20px; padding-top: 16px;
+  border-top: 1px solid var(--color-border, #e0e0e0);
+  text-align: center; font-size: 0.9em;
+  color: var(--color-text-secondary, #666);
+}
+.auth-cross-link .auth-link-strong { padding: 4px 8px; }
 
 .auth-success {
   text-align: center;
@@ -1205,6 +1213,11 @@ body {
         <div style="text-align:center; margin-top:10px;">
           <button class="auth-link" type="button" onclick="showForgotInline()">비밀번호를 잊으셨나요?</button>
         </div>
+
+        <div class="auth-cross-link">
+          처음 오셨나요?
+          <button class="auth-link auth-link-strong" type="button" onclick="window.switchAuthSection('signup')">회원가입하기 →</button>
+        </div>
       </div>
 
       <!-- 비밀번호 찾기 인라인 토글 -->
@@ -1429,6 +1442,11 @@ body {
           </div><!-- /.signup-form-body -->
 
         </form>
+
+        <div class="auth-cross-link">
+          이미 회원이신가요?
+          <button class="auth-link auth-link-strong" type="button" onclick="window.switchAuthSection('login')">로그인 →</button>
+        </div>
       </div>
 
       <!-- 가입 성공 -->
@@ -1603,25 +1621,51 @@ function updatePreview(key) {
 function openAuthModal(focusSection) {
   var overlay = document.getElementById('authOverlay');
   if (!overlay) return;
+
+  // 두 섹션 분리 박음 — 진입한 자리만 show (사용자 헷갈림 회피)
+  _switchAuthDisplay(focusSection);
+
   overlay.hidden = false;
   document.body.style.overflow = 'hidden';
 
-  // 진입 분기
-  // overlay가 스크롤 컨테이너 — sigSec.scrollIntoView는 window 스크롤이라 무동작 → overlay.scrollTop 직접 박음
-  // 이름 input은 진입 시점 hidden 상태(.signup-form-body 미펼침) → 진입 시 site-picker 첫 카드 포커스 → site 선택 후 selectSite()에서 이름 input 자동 포커스
   setTimeout(function () {
+    overlay.scrollTop = 0;
     if (focusSection === 'signup') {
-      var sigSec = document.getElementById('authSignupSection');
-      if (sigSec) overlay.scrollTop = sigSec.offsetTop - 24;
       var gaCard = document.getElementById('site-card-ga');
       if (gaCard) gaCard.focus();
     } else {
-      overlay.scrollTop = 0;
       var emailEl = document.getElementById('f-email-login');
       if (emailEl) emailEl.focus();
     }
   }, 100);
 }
+
+// 모달 안에서 로그인 ↔ 가입 전환 (cross-link 본진)
+function _switchAuthDisplay(target) {
+  var loginSec  = document.getElementById('authLoginSection');
+  var signupSec = document.getElementById('authSignupSection');
+  if (target === 'signup') {
+    if (loginSec)  loginSec.style.display  = 'none';
+    if (signupSec) signupSec.style.display = '';
+  } else {
+    if (loginSec)  loginSec.style.display  = '';
+    if (signupSec) signupSec.style.display = 'none';
+  }
+}
+window.switchAuthSection = function(target) {
+  var overlay = document.getElementById('authOverlay');
+  _switchAuthDisplay(target);
+  if (overlay) overlay.scrollTop = 0;
+  setTimeout(function() {
+    if (target === 'signup') {
+      var gaCard = document.getElementById('site-card-ga');
+      if (gaCard) gaCard.focus();
+    } else {
+      var emailEl = document.getElementById('f-email-login');
+      if (emailEl) emailEl.focus();
+    }
+  }, 50);
+};
 
 function closeAuthModal() {
   var overlay = document.getElementById('authOverlay');
