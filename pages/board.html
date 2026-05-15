@@ -2691,7 +2691,7 @@
             <!-- 명명 변경 박힘: 실장님 공지 → 4팀 단체방 (Q12-A② + 5/13 회의 추가) -->
             <button class="pg-tab-btn active" data-board="manager_notice" onclick="window.switchBoard('manager_notice')">📢 4팀 단체방</button>
             <button class="pg-tab-btn"        data-board="navigation"     onclick="window.switchBoard('navigation')">🧭 네비게이션방</button>
-            <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')"            style="display:none;" data-hidden-5-18="1">📋 스마트 게시판</button>
+            <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
             <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')" style="display:none;" data-hidden-5-18="1">☕ 매니저 라운지</button>
           </div>
           <!-- 2줄 — 보조·확장·보관 레이어 (subdued) -->
@@ -5991,6 +5991,11 @@ window.onClickWriteBtn = function() {
     window.openWriteOverlay();
     return;
   }
+  /* qna 탭 (스마트게시판) = 실장님 공지 폼 재사용, admin 전용 시드 본진 (보험사 소식지 직접 입력) */
+  if (_currentBoard === 'qna') {
+    window.openSmartBoardOverlay();
+    return;
+  }
   if (_currentCategory === 'all') {
     alert('카테고리를 먼저 선택해 주세요.');
     return;
@@ -6236,6 +6241,55 @@ window.openManagerNoticeOverlay = function() {
   if (infoBox) infoBox.style.display = 'flex';
   var headerTitle = document.getElementById('write-overlay-title');
   if (headerTitle) headerTitle.textContent = '📌 실장님 공지 작성';
+  var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
+  if (cancelBtn) cancelBtn.textContent = '취소';
+
+  if (overlay) overlay.classList.add('active');
+  if (titleEl) setTimeout(function(){ titleEl.focus(); }, 50);
+  _wfnResetAttach();
+};
+
+/* ── 스마트게시판 글쓰기 진입 (qna 모드, 실장님 공지 폼 재사용 — admin 전용 시드 본진) ── */
+window.openSmartBoardOverlay = function() {
+  /* RBAC 1차 방어 — admin 전용 (보험사 소식지 시드 본진, submit 정합) */
+  var s = window.AppState || {};
+  var role = s.role || '';
+  if (role !== 'admin') {
+    alert('스마트게시판은 관리자만 작성할 수 있습니다.');
+    return;
+  }
+  _editMode = false;
+  _editPostId = null;
+  var deleteBtnReset = document.getElementById('edit-delete-btn');
+  if (deleteBtnReset) deleteBtnReset.style.display = 'none';
+  var submitBtnReset = document.querySelector('#write-form-notice .wfn-btn-primary');
+  if (submitBtnReset) submitBtnReset.textContent = '등록하기';
+  _noticeWriteMode = 'smart_board';
+
+  var overlay = document.getElementById('write-overlay');
+  var cards   = document.getElementById('write-overlay-cards');
+  var form    = document.getElementById('write-form-notice');
+  if (cards) cards.style.display = 'none';
+  if (form)  form.classList.add('active');
+
+  var typeEl     = document.getElementById('notice-type');
+  var titleEl    = document.getElementById('notice-title');
+  var contentEl  = document.getElementById('notice-content');
+  var audienceEl = document.getElementById('notice-audience');
+  if (typeEl)     typeEl.value     = '운영';
+  if (titleEl)    titleEl.value    = '';
+  if (contentEl)  contentEl.value  = '';
+  if (audienceEl) audienceEl.value = 'team_internal';
+
+  /* smart_board 모드 — insurer_specific 옵션 hide (시드 본진, 모든 사용자가 읽을 자료) */
+  if (audienceEl) {
+    var insurerOpt = audienceEl.querySelector('option[value="insurer_specific"]');
+    if (insurerOpt) insurerOpt.hidden = true;
+  }
+  var infoBox = document.getElementById('notice-info-box');
+  if (infoBox) infoBox.style.display = 'flex';
+  var headerTitle = document.getElementById('write-overlay-title');
+  if (headerTitle) headerTitle.textContent = '📋 스마트게시판 작성';
   var cancelBtn = document.querySelector('#write-form-notice .wfn-btn-secondary');
   if (cancelBtn) cancelBtn.textContent = '취소';
 
@@ -6694,8 +6748,8 @@ window.submitIncomingForm = async function() {
 
 /* 공지 폼 취소 — 카드 영역으로 복귀 */
 window.cancelNoticeForm = function() {
-  /* manager_notice 모드: "← 카테고리 다시 선택"이 무의미 — 모달 통째 닫기 (closeWriteOverlay 가 mode 까지 reset) */
-  if (_noticeWriteMode === 'manager_notice') {
+  /* manager_notice / smart_board 모드: "← 카테고리 다시 선택"이 무의미 — 모달 통째 닫기 (closeWriteOverlay 가 mode 까지 reset) */
+  if (_noticeWriteMode === 'manager_notice' || _noticeWriteMode === 'smart_board') {
     window.closeWriteOverlay();
     return;
   }
@@ -6733,20 +6787,30 @@ window.submitNoticeForm = async function() {
   /* RBAC 2중 방어 — 모드별 분기 */
   var s    = window.AppState || {};
   var role = s.role || '';
-  var allowedRoles = _noticeWriteMode === 'manager_notice'
-    ? ['admin','ga_branch_manager','ga_manager']
-    : ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
+  var allowedRoles;
+  if (_noticeWriteMode === 'smart_board') {
+    allowedRoles = ['admin'];
+  } else if (_noticeWriteMode === 'manager_notice') {
+    allowedRoles = ['admin','ga_branch_manager','ga_manager'];
+  } else {
+    allowedRoles = ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
+  }
   if (allowedRoles.indexOf(role) === -1) {
-    alert(_noticeWriteMode === 'manager_notice'
-      ? '실장님 공지는 관리자 또는 지점장·실장만 작성할 수 있습니다.'
-      : '공지는 관리자 또는 매니저급만 작성할 수 있습니다.');
+    var rbacMsg;
+    if (_noticeWriteMode === 'smart_board')          rbacMsg = '스마트게시판은 관리자만 작성할 수 있습니다.';
+    else if (_noticeWriteMode === 'manager_notice')  rbacMsg = '실장님 공지는 관리자 또는 지점장·실장만 작성할 수 있습니다.';
+    else                                             rbacMsg = '공지는 관리자 또는 매니저급만 작성할 수 있습니다.';
+    alert(rbacMsg);
     return;
   }
 
   /* content 흡수 포맷 (팀장님 결재 ② — AI/search_index/컬럼 분리 대비) */
   var content = '[공지유형:' + noticeType + ']\n' + rawContent;
-  /* board_type — 모드별 분기 (manager_notice 탭 직접 진입 vs navigation 4 카드 진입) */
-  var boardType = _noticeWriteMode === 'manager_notice' ? 'manager_notice' : 'navigation';
+  /* board_type — 모드별 분기 (smart_board=qna / manager_notice / navigation 4 카드) */
+  var boardType;
+  if (_noticeWriteMode === 'smart_board')         boardType = 'qna';
+  else if (_noticeWriteMode === 'manager_notice') boardType = 'manager_notice';
+  else                                            boardType = 'navigation';
 
   var submitBtn = document.querySelector('#write-form-notice .wfn-btn-primary');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }
@@ -6780,7 +6844,10 @@ window.submitNoticeForm = async function() {
       if (_wfnUrls && _wfnUrls.length) await _wfnPatchAttachments(_wfnPid, _wfnUrls);
     }
     /* 성공 메시지 (모드별) — 모달 닫기 + 폼 reset 후 toast */
-    var successMsg = boardType === 'manager_notice' ? '실장님 공지가 등록되었습니다.' : '공지가 등록되었습니다.';
+    var successMsg;
+    if (boardType === 'qna')                 successMsg = '스마트게시판 자료가 등록되었습니다.';
+    else if (boardType === 'manager_notice') successMsg = '실장님 공지가 등록되었습니다.';
+    else                                     successMsg = '공지가 등록되었습니다.';
     /* 모달 닫음 (closeWriteOverlay 가 mode reset 까지 수행) + 게시판 새로고침 */
     window.closeWriteOverlay();
     if (typeof _loadPosts === 'function') _loadPosts();
