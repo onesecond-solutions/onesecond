@@ -1949,16 +1949,16 @@
   gap: 8px;
 }
 /* 2026-05-14 §15 정체성 본진 — [⚙ 딸깍] 본인 맞춤 설정 박힘 자리 (placeholder, spec MD 박힌 자리 5/18 후 본진 진입) */
-/* 2026-05-16 박음: 좌측 이동 + 크기 축소 본진 — padding 8px 12px / font-size 0.8125em / height auto 박음 */
+/* 2026-05-16 박음: 우측 이동 + 크기 추가 축소 본진 — padding 6px 10px / font-size 0.75em / height auto 박음 (HTML 박힌 순서 글쓰기 → 딸깍) */
 .notice-prefs-btn {
   flex-shrink: 0;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid var(--brand-300, #DAA67B);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.96);
   color: var(--brand-700, #66331A);
   font-family: inherit;
-  font-size: 0.8125em;
+  font-size: 0.75em;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
@@ -2910,13 +2910,13 @@
                 <!-- onClickWriteBtn 분기 정합: manager_notice → openManagerNoticeOverlay / navigation → openWriteOverlay -->
                 <!-- 옛 빠른 메시지 함수(sendNoticeMsg 등) + textarea readonly 본진 = 코드 보존, HTML만 슬림 박음 -->
                 <div class="notice-input-bar">
-                  <button class="notice-prefs-btn" type="button"
-                          onclick="window.openUserPrefsPlaceholder()"
-                          title="본인 맞춤 설정 (준비 중)">⚙ 딸깍</button>
                   <button class="notice-write-btn" type="button" onclick="window.onClickWriteBtn()">
                     <span class="write-icon">✏️</span>
                     <span class="write-label">글쓰기</span>
                   </button>
+                  <button class="notice-prefs-btn" type="button"
+                          onclick="window.openUserPrefsPlaceholder()"
+                          title="본인 맞춤 설정 (준비 중)">⚙ 딸깍</button>
                 </div>
 
               </div>
