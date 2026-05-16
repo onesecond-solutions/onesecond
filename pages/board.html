@@ -1768,6 +1768,36 @@
   cursor: pointer;
 }
 
+/* 2026-05-17 박음: 답변 N건 있는 카드에도 "+ 답변 달기" 버튼 박음 */
+.nav-v2-reply-trigger {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  justify-content: flex-end;
+}
+.nav-v2-add-reply-btn {
+  background: transparent;
+  border: 1px solid var(--brand-300, #DAA67B);
+  color: var(--brand-700, #66331A);
+  font-family: inherit;
+  font-size: 0.8125em;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.nav-v2-add-reply-btn:hover {
+  background: var(--brand-500, #A0522D);
+  color: #FFFFFF;
+  border-color: var(--brand-500, #A0522D);
+}
+
+/* 카드 헤더·제목 클릭 hover 시각 cue */
+.nav-v2-card-header[onclick]:hover { opacity: 0.75; }
+.nav-v2-card-title[onclick]:hover { color: var(--brand-700, #66331A); }
+
 /* 2026-05-17 박음: 답변 인라인 폼 (카드 내부 펼침 박는 자리) */
 .nav-v2-reply-form {
   margin-top: 12px;
@@ -5145,18 +5175,33 @@ function _renderNavV2List() {
       ? '<button type="button" class="nav-v2-more-btn" onclick="window.expandNavV2(\'' + q.id + '\')">+ 답변 ' + (answers.length - 3) + '건 더 보기</button>'
       : '';
 
-    var answersSection = answers.length > 0
-      ? '<div class="nav-v2-answers">' + answersHtml + moreBtn + '</div>'
-      : '<div class="nav-v2-no-answers">아직 답변이 없습니다. <button type="button" class="nav-v2-reply-btn" onclick="window.openNavV2ReplyModal(\'' + q.id + '\')">답변하기</button></div>';
+    /* 2026-05-17 박음: 모든 카드에 "+ 답변 달기" 버튼 박음 (답변 N건 있어도 추가 답변 박힘 정합) */
+    var teamIdAttr = q.team_id || '';
+    var replyTriggerHtml =
+      '<button type="button" class="nav-v2-add-reply-btn" ' +
+      'onclick="event.stopPropagation(); window.openNavV2ReplyModal(\'' + q.id + '\', \'' + teamIdAttr + '\')">' +
+      '+ 답변 달기' +
+      '</button>';
 
-    return '<div class="nav-v2-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + q.question_type + '"' +
+    var answersSection;
+    if (answers.length > 0) {
+      answersSection = '<div class="nav-v2-answers">' + answersHtml + moreBtn +
+                       '<div class="nav-v2-reply-trigger">' + replyTriggerHtml + '</div>' +
+                       '</div>';
+    } else {
+      answersSection = '<div class="nav-v2-no-answers">아직 답변이 없습니다. ' + replyTriggerHtml + '</div>';
+    }
+
+    /* 카드 헤더 클릭 = 답변 폼 박음 (cursor:pointer + onclick) */
+    return '<div class="nav-v2-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + q.question_type + '" data-q-id="' + q.id + '"' +
            ' style="border-left:3px solid ' + cat.text + ';' + (isLatest ? 'background:' + cat.bg : '') + '">' +
-           '<div class="nav-v2-card-header">' +
+           '<div class="nav-v2-card-header" style="cursor:pointer" ' +
+                'onclick="window.openNavV2ReplyModal(\'' + q.id + '\', \'' + teamIdAttr + '\')">' +
              '<span class="cat-badge" style="background:' + cat.bg + ';color:' + cat.text + '">' + cat.icon + ' ' + cat.label + '</span>' +
              '<span class="card-time">' + time + '</span>' +
              statusBadge +
            '</div>' +
-           (titleEsc ? '<div class="nav-v2-card-title">' + titleEsc + '</div>' : '') +
+           (titleEsc ? '<div class="nav-v2-card-title" style="cursor:pointer" onclick="window.openNavV2ReplyModal(\'' + q.id + '\', \'' + teamIdAttr + '\')">' + titleEsc + '</div>' : '') +
            '<div class="nav-v2-card-content">' + contentEsc + '</div>' +
            answersSection +
            '</div>';
@@ -5183,15 +5228,17 @@ window.openNavV2WriteModal = function() {
 };
 
 /* 2026-05-17 박음: 네비게이션방2 답변 인라인 폼 — 모든 사용자 + insurer_* 자동 매핑 */
-window.openNavV2ReplyModal = function(qId) {
+/* qId = 질문 UUID / qTeamId = 질문 박힘 자리 team_id (admin = 본인 teamId 박지 X 박힘 fallback) */
+window.openNavV2ReplyModal = function(qId, qTeamId) {
   /* 카드 안 인라인 폼 박음 (모달 X) */
   var card = document.querySelector('.nav-v2-card[data-q-id="' + qId + '"]');
-  /* card data-q-id 박지 X 박은 자리 박힘 박는 자리 = 박지 X — 폼 박는 자리 직접 박음 */
   var formId = 'nav-v2-reply-form-' + qId;
   if (document.getElementById(formId)) {
     document.getElementById(formId).remove();
     return;
   }
+  /* 질문 team_id 박힌 자리 = 본 폼 hidden field에 박음 (submitNavV2Reply 박을 때 사용) */
+  var teamIdForReply = qTeamId || '';
 
   /* 본인 role 박힌 자리 박음 — insurer_* = 자동 매핑 / 그 외 = 드롭다운 */
   var role = (window.AppState && window.AppState.role) || '';
@@ -5214,9 +5261,9 @@ window.openNavV2ReplyModal = function(qId) {
                   insurerOptions.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
   }
 
-  /* 인라인 폼 박음 */
+  /* 인라인 폼 박음 (hidden team_id 박음) */
   var formHtml =
-    '<div class="nav-v2-reply-form" id="' + formId + '">' +
+    '<div class="nav-v2-reply-form" id="' + formId + '" data-team-id="' + teamIdForReply + '">' +
       '<div class="reply-form-row">' +
         '<label class="reply-form-label">출처 보험사:</label>' +
         '<select class="reply-form-select" id="reply-insurer-' + qId + '">' + optionsHtml + '</select>' +
@@ -5229,22 +5276,14 @@ window.openNavV2ReplyModal = function(qId) {
       '</div>' +
     '</div>';
 
-  /* 카드 박힌 자리에 인라인 폼 박음 */
-  var allCards = document.querySelectorAll('.nav-v2-card');
-  allCards.forEach(function(c) {
-    var noAns = c.querySelector('.nav-v2-no-answers');
-    var ansSection = c.querySelector('.nav-v2-answers');
-    var replyBtnInside = c.querySelector('button[onclick*="' + qId + '"]');
-    if (replyBtnInside) {
-      /* 본 카드 박은 자리 박음 */
-      var insertAfter = noAns || ansSection;
-      if (insertAfter) {
-        insertAfter.insertAdjacentHTML('afterend', formHtml);
-      } else {
-        c.insertAdjacentHTML('beforeend', formHtml);
-      }
-    }
-  });
+  /* 본 질문 카드 박힌 자리 = data-q-id 박힌 자리에 정확 박음 */
+  if (card) {
+    card.insertAdjacentHTML('beforeend', formHtml);
+  } else {
+    /* fallback: 카드 박지 X 박힌 자리 = list 박힌 자리 첫 카드 박음 */
+    var list = document.getElementById('nav-v2-list');
+    if (list && list.firstChild) list.firstChild.insertAdjacentHTML('beforeend', formHtml);
+  }
 
   /* 포커스 박음 */
   setTimeout(function() {
@@ -5259,6 +5298,7 @@ window.submitNavV2Reply = async function(qId) {
 
   var contentEl = document.getElementById('reply-content-' + qId);
   var insurerEl = document.getElementById('reply-insurer-' + qId);
+  var formEl = document.getElementById('nav-v2-reply-form-' + qId);
   var content = contentEl ? contentEl.value.trim() : '';
   var insurerCode = insurerEl ? insurerEl.value.trim() : '';
 
@@ -5267,12 +5307,28 @@ window.submitNavV2Reply = async function(qId) {
   var s = window.AppState || {};
   if (!s.userId) { alert('로그인이 필요합니다.'); return; }
 
-  /* 본인 team_id 박음 (RLS 정합) */
-  var teamId = s.teamId || null;
+  /* 2026-05-17 박음: team_id 박힌 자리 = 본인 teamId → 질문 박힌 team_id → 4팀 UUID fallback */
+  var teamId = s.teamId || (formEl && formEl.dataset.teamId) || null;
   if (!teamId) {
-    /* 4팀 단톡방 시연 본진 — 4팀 UUID lookup 박지 X 박힌 자리는 박지 X */
-    alert('팀 정보 박지 X 박혀 있습니다.');
-    return;
+    /* admin 박은 자리 fallback — 시드 박은 자리 본진 = 4팀 UUID */
+    /* 본 자리 4팀 UUID 박힌 자리 (5fccd362) — _userOrg 박힌 자리 박지 X 박은 경우 */
+    if (_userOrg && _userOrg.team) {
+      /* org 박힌 자리 박혀 있으면 그대로 박지 X — UUID 필요 박힌 자리라 fallback */
+    }
+    /* 4팀 UUID 박지 X 박혀 있으면 nav_questions 박힌 자리 SELECT 박음 */
+    try {
+      var qFetch = await window.db.fetch('/rest/v1/nav_questions?id=eq.' + encodeURIComponent(qId) + '&select=team_id');
+      var qRows = qFetch.ok ? await qFetch.json() : [];
+      if (qRows && qRows[0] && qRows[0].team_id) {
+        teamId = qRows[0].team_id;
+      }
+    } catch (e) {
+      console.warn('[nav_v2] 질문 team_id lookup 실패', e);
+    }
+    if (!teamId) {
+      alert('팀 정보를 박지 X 박혀 답변 등록 박지 X (관리자에게 문의)');
+      return;
+    }
   }
 
   var body = {
