@@ -584,13 +584,10 @@ body.mobile-sidebar-open .b .menu {
   from { transform: translateX(-100%); }
   to   { transform: translateX(0); }
 }
-body.mobile-sidebar-open::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 150;
-}
+/* 2026-05-17 갱신: backdrop 박힌 자리 박지 X 박음 (옛 박힌 자리 = D영역 어둡게 박힘 자리 = 본인 본진 박은 자리 = "깨져 보여")
+   본진 본질: B영역 박힌 자리 = 좌측 박힘 자리 + 박힘 자리 박은 자리 외부 클릭 박힘 자리 = 핸들러 박음 자리 본진 (이미 박힘 자리)
+   다만 시각 cue 박힘 자리 본진 박음 자리 = 우측 그림자 박음 자리 (B영역 박힌 자리 본진 박혀 있어) */
+body.mobile-sidebar-open::before { display: none; }
 
 /* 2026-05-17 갱신: A영역 햄버거 박지 X (B영역으로 이동) */
 .a1-hamburger { display: none !important; }
