@@ -166,8 +166,39 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  /* 2026-05-17 박음: 우측 fade cue (가로 스크롤 박혀 있다는 시각 신호) */
+  -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+          mask-image: linear-gradient(to right, black 90%, transparent 100%);
 }
 .pg-tab-row::-webkit-scrollbar { display: none; }
+
+/* 2026-05-17 박음: 모바일 768px 미만 = 탭 줄바꿈 (flex-wrap) + 폰트·패딩 축소 */
+@media (max-width: 768px) {
+  .pg-tab-row {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    -webkit-mask-image: none;
+            mask-image: none;
+  }
+  .pg-tab-btn {
+    font-size: 0.78em !important;
+    padding: 8px 10px !important;
+    flex: 1 1 auto;
+    min-width: max-content;
+  }
+  .pg-tab-row-secondary .pg-tab-btn {
+    font-size: 0.72em !important;
+    padding: 6px 8px !important;
+  }
+}
+
+/* 2026-05-17 박음: 좁은 데스크탑 (768~1024px) = 폰트만 살짝 축소 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pg-tab-btn {
+    font-size: 0.82em;
+    padding: 10px 12px;
+  }
+}
 
 .pg-tab-row-secondary {
   border-top: 1px dashed var(--color-border);
