@@ -515,9 +515,9 @@ html, body {
   width: 100%;
 }
 
-/* ── B: 햄버거 + 펼침 메뉴 (2026-05-17 박음) ── */
-/* 옛 박힘 자리 = 풀 사이드바 (220px+ 메뉴 노출) */
-/* 신 박음 = 60px 좁은 박힘 (햄버거만 박힘) + 펼침 시 = 280px (옛 메뉴 박음) */
+/* ── B: 햄버거 + dropdown 메뉴 (2026-05-17 갱신, 본인 본진 본진 정정) ── */
+/* 본진 박은 자리: 햄버거 박힌 자리 그대로 + 클릭 박은 자리 = 햄버거 박힌 자리 박힌 자리 바로 아래 박힘 자리 dropdown 박음 */
+/* 옛 박은 자리 박지 X: 모바일 슬라이드 사이드바 박힘 자리 (좌측 풀 박힘 자리) — 데스크탑 정합 박지 X */
 .b {
   background: var(--color-surface-2);
   border-right: 1px solid var(--color-border);
@@ -529,11 +529,9 @@ html, body {
   top: var(--header-a1);
   align-self: start;
   max-height: calc(100vh - var(--header-a1));
-  overflow: hidden;
   z-index: 40;
-  transition: width 200ms ease, padding 200ms ease;
 }
-/* 평상시 = 메뉴 hide (햄버거만 박힘) */
+/* 평상시 + 펼침 = 메뉴 박힌 자리 본진 = 햄버거 박힘 자리 박힘 자리만 박음 (60px 박힌 자리 유지) */
 .b .menu, .b .pro, .b .menu-cap-title, .b .menu-cap-divider {
   display: none;
 }
@@ -554,39 +552,43 @@ html, body {
 }
 .b-hamburger:hover { background: var(--brand-50, #FDF4EF); color: var(--brand-700, #66331A); }
 
-/* 2026-05-17 박음: body.mobile-sidebar-open 박힌 자리 = B영역 펼침 (280px 박힘, 메뉴 노출) */
-body.mobile-sidebar-open .b {
-  position: fixed;
-  top: var(--header-a1);
-  left: 0;
-  width: 280px;
-  height: calc(100dvh - var(--header-a1));
-  z-index: 200;
-  padding: 16px;
-  background: #FFFFFF;
-  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15);
-  overflow-y: auto;
-  align-items: stretch;
-  animation: sidebarSlideIn 200ms ease-out;
-}
-body.mobile-sidebar-open .b .menu,
-body.mobile-sidebar-open .b .pro,
-body.mobile-sidebar-open .b .menu-cap-title,
-body.mobile-sidebar-open .b .menu-cap-divider {
-  display: block;
-}
+/* 2026-05-17 갱신: body.mobile-sidebar-open 박힌 자리 = B영역 박힌 자리 그대로 (60px 유지) + 메뉴 박힌 자리 = dropdown (햄버거 박힌 자리 바로 아래 박힘 자리 fixed) */
 body.mobile-sidebar-open .b .menu {
   display: flex !important;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  position: fixed;
+  top: calc(var(--header-a1) + 56px);  /* A1 박힘 자리 + 햄버거 박힌 자리 박힌 자리 = 햄버거 박힌 자리 바로 아래 박힘 자리 */
+  left: 8px;  /* B영역 박힌 자리 좌측 박힘 자리 정합 (햄버거 박힌 자리 박힘 자리 정합) */
+  width: 240px;
+  background: #FFFFFF;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  z-index: 210;
+  max-height: calc(100dvh - var(--header-a1) - 80px);
+  overflow-y: auto;
+  animation: dropdownFadeIn 140ms ease-out;
 }
-@keyframes sidebarSlideIn {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
+body.mobile-sidebar-open .b .menu .menu-item {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375em;
+  cursor: pointer;
+  transition: background 120ms;
 }
-/* 2026-05-17 갱신: backdrop 박힌 자리 박지 X 박음 (옛 박힌 자리 = D영역 어둡게 박힘 자리 = 본인 본진 박은 자리 = "깨져 보여")
-   본진 본질: B영역 박힌 자리 = 좌측 박힘 자리 + 박힘 자리 박은 자리 외부 클릭 박힘 자리 = 핸들러 박음 자리 본진 (이미 박힘 자리)
-   다만 시각 cue 박힘 자리 본진 박음 자리 = 우측 그림자 박음 자리 (B영역 박힌 자리 본진 박혀 있어) */
+body.mobile-sidebar-open .b .menu .menu-item:hover,
+body.mobile-sidebar-open .b .menu .menu-item.active {
+  background: var(--brand-50, #FDF4EF);
+  color: var(--brand-700, #66331A);
+}
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* 옛 backdrop 박힌 자리 박지 X (dropdown 박힘 자리 본진 = 외부 클릭 박힘 자리 핸들러 박힘 자리 본진) */
 body.mobile-sidebar-open::before { display: none; }
 
 /* 2026-05-17 갱신: A영역 햄버거 박지 X (B영역으로 이동) */
