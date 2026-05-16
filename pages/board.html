@@ -3411,22 +3411,9 @@
   <!-- 배너 슬롯 -->
   <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
 
-  <!-- [2026-05-11] 운영 알림 v1 Step 3 — 전체/내 알림 집계 바 placeholder
-       작업지시서 §3 현장의 소리 본 페이지 = 실제 처리 레이어
-       전체 = 현장 전체 흐름 (중립) / 내 알림 = 내가 확인해야 할 흐름 (brand)
-       ▸ 필터 로직 X, 집계 데이터 X — placeholder 수준 -->
-  <div class="pg-summary-bar" aria-label="현장 흐름 집계 (placeholder)">
-    <button type="button" class="pg-summary-chip pg-summary-total"
-            onclick="window.alert('전체 필터는 곧 활성화 예정입니다.')">
-      <span class="pg-summary-label">전체</span>
-      <span class="pg-summary-count">24</span>
-    </button>
-    <button type="button" class="pg-summary-chip pg-summary-mine"
-            onclick="window.alert('내 알림 필터는 곧 활성화 예정입니다.')">
-      <span class="pg-summary-label">내 알림</span>
-      <span class="pg-summary-count">3</span>
-    </button>
-  </div>
+  <!-- [2026-05-17] 옛 placeholder 박지 X 박음 (사용자 이해 격차 = 임의 숫자 24/3 박지 X)
+       옛 본진: "전체 24 / 내 알림 3" placeholder + alert ("곧 활성화 예정")
+       박은 본진: 5/19 D+1 실 알림 집계 본진 박을 자리 = 본 자리 박는 자리 다시 박음 -->
 
   <!-- [2026-05-12 운영 콘솔 정렬 보강] 2컬럼 grid + 탭바 grid 안 이동
        ▸ 탭바를 grid main 첫 자식으로 이동 → 탭바 top = 캘린더 top (동일 y축)

@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v37-20260517-tab-bar-responsive';
+const CACHE_NAME = 'onesecond-v38-20260517-summary-bar-removed';
 const CACHE_URLS = [
   '/',
   '/app.html',
