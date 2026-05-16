@@ -602,37 +602,8 @@ body.mobile-sidebar-open::before {
 /* 2026-05-17 갱신: 옛 큰 오버레이 박지 X (hover popover로 박음 — 본인 본진 본질 = "마우스 가져가면 미리보기") */
 .menu-preview-overlay { display: none !important; }
 
-/* 신 박음: B영역 메뉴 hover popover (480x320 박힘 + iframe 자동 박음 — data-preview 텍스트 박지 X) */
-.menu-preview-popover {
-  display: none;
-  position: fixed;
-  left: 64px;  /* B영역 우측 박힘 자리 (60px 박힘 + 4px gap) */
-  width: 480px;
-  height: 360px;
-  background: #FFFFFF;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
-  z-index: 250;
-  overflow: hidden;
-  pointer-events: auto;
-}
-.menu-preview-popover.is-open { display: block; }
-.menu-preview-popover iframe {
-  width: 100%; height: 100%; border: 0; display: block; background: #FFFFFF;
-}
-.menu-preview-popover-label {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid var(--color-border);
-  font-size: 0.8125em;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  z-index: 2;
-  pointer-events: none;
-}
+/* 2026-05-17 갱신: 옛 작은 popover 박지 X (D영역 통째 박힘 자리로 박음) */
+.menu-preview-popover { display: none !important; }
 .menu-preview-panel {
   background: #FFFFFF;
   border-radius: 16px;
@@ -775,8 +746,37 @@ body.mobile-sidebar-open::before {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  position: relative;  /* 2026-05-17 박음: D영역 iframe overlay 박은 자리 정합 */
 }
 .d > * { flex-shrink: 0; width: 100%; }
+
+/* 2026-05-17 박음: 메뉴 hover = D영역 통째 박힘 자리 = 페이지 미리보기 박힘 */
+.d-preview-overlay {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #FFFFFF;
+  z-index: 100;
+  flex-direction: column;
+}
+.d-preview-overlay.is-open { display: flex; }
+.d-preview-overlay-label {
+  padding: 10px 16px;
+  background: var(--brand-50, #FDF4EF);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875em;
+  font-weight: 700;
+  color: var(--brand-700, #66331A);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.d-preview-overlay-iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #FFFFFF;
+}
 
 /* ── C: 우측 패널 ── */
 .c {
@@ -1531,7 +1531,16 @@ body.mobile-sidebar-open::before {
     </div>
 
     <!-- D: 동적 콘텐츠 슬롯 -->
-    <div class="d" id="content-area"></div>
+    <div class="d" id="content-area">
+      <!-- 2026-05-17 박음: D영역 메뉴 hover 미리보기 overlay (통째 박힘 자리) -->
+      <div class="d-preview-overlay" id="d-preview-overlay">
+        <div class="d-preview-overlay-label">
+          <span id="d-preview-overlay-label">미리보기</span>
+          <span style="font-weight:400;color:var(--color-text-secondary);">메뉴 박힘 자리 벗어나면 박지 X</span>
+        </div>
+        <iframe class="d-preview-overlay-iframe" id="d-preview-overlay-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+      </div>
+    </div>
 
     <!-- C: 우측 패널 -->
     <div class="c">
@@ -3067,14 +3076,14 @@ var MENU_KEY_TO_PAGE = {
 var _previewHideTimer = null;
 var _previewCurrentKey = null;
 
-function _showPreviewPopover(menuKey, label, anchorEl) {
-  var popover = document.getElementById('menu-preview-popover');
-  var iframe  = document.getElementById('menu-preview-popover-iframe');
-  var labelEl = document.getElementById('menu-preview-popover-label');
-  if (!popover || !iframe || !anchorEl) return;
+function _showPreviewPopover(menuKey, label) {
+  var overlay = document.getElementById('d-preview-overlay');
+  var iframe  = document.getElementById('d-preview-overlay-iframe');
+  var labelEl = document.getElementById('d-preview-overlay-label');
+  if (!overlay || !iframe) return;
 
   /* 같은 메뉴 박힌 자리 재진입 = 그대로 박음 (iframe 재로드 박지 X) */
-  if (_previewCurrentKey === menuKey && popover.classList.contains('is-open')) {
+  if (_previewCurrentKey === menuKey && overlay.classList.contains('is-open')) {
     clearTimeout(_previewHideTimer);
     return;
   }
@@ -3084,56 +3093,44 @@ function _showPreviewPopover(menuKey, label, anchorEl) {
   iframe.src = pageUrl + '?preview=1';
   if (labelEl) labelEl.textContent = label || '미리보기';
 
-  /* 메뉴 아이템 박힌 자리 = 세로 위치 박음 (B영역 박은 자리 우측) */
-  var rect = anchorEl.getBoundingClientRect();
-  var top = Math.max(8, Math.min(rect.top, window.innerHeight - 368));
-  popover.style.top = top + 'px';
-
-  popover.classList.add('is-open');
+  overlay.classList.add('is-open');
   clearTimeout(_previewHideTimer);
 }
 
 function _hidePreviewPopoverSoon() {
   clearTimeout(_previewHideTimer);
   _previewHideTimer = setTimeout(function() {
-    var popover = document.getElementById('menu-preview-popover');
-    var iframe  = document.getElementById('menu-preview-popover-iframe');
-    if (popover) popover.classList.remove('is-open');
+    var overlay = document.getElementById('d-preview-overlay');
+    var iframe  = document.getElementById('d-preview-overlay-iframe');
+    if (overlay) overlay.classList.remove('is-open');
     if (iframe)  iframe.src = 'about:blank';  /* 메모리 박지 X */
     _previewCurrentKey = null;
   }, 220);
 }
 
-/* B영역 메뉴 mouseenter 박음 (capture phase = 자식 박힘 자리 통과 박음) */
+/* B영역 메뉴 mouseover 박음 (capture phase = 자식 박힘 자리 통과 박음) */
 document.addEventListener('mouseover', function(e) {
   if (!e.target.closest) return;
   var mi = e.target.closest('.b .menu-item[data-menu]');
   if (mi) {
     var key = mi.dataset.menu;
     var label = (mi.textContent || '').trim() || '미리보기';
-    _showPreviewPopover(key, label, mi);
+    _showPreviewPopover(key, label);
     return;
   }
-  /* popover 자체 hover = 박음 유지 */
-  var pop = e.target.closest('#menu-preview-popover');
-  if (pop) { clearTimeout(_previewHideTimer); return; }
 });
 
 document.addEventListener('mouseout', function(e) {
   if (!e.target.closest) return;
   var mi = e.target.closest('.b .menu-item[data-menu]');
-  var pop = e.target.closest('#menu-preview-popover');
-  if (!mi && !pop) return;
-  /* relatedTarget 박은 자리가 메뉴/popover 박힘 자리면 박지 X */
+  if (!mi) return;
+  /* relatedTarget 박은 자리가 다른 메뉴 박힘 자리면 박지 X (즉 _show 박은 자리 박힘) */
   var related = e.relatedTarget;
-  if (related && related.closest) {
-    if (related.closest('.b .menu-item[data-menu]')) return;
-    if (related.closest('#menu-preview-popover')) return;
-  }
+  if (related && related.closest && related.closest('.b .menu-item[data-menu]')) return;
   _hidePreviewPopoverSoon();
 });
 
-/* B영역 자체 mouseleave = 사이드바 박지 X 박은 자리 popover 박지 X */
+/* B영역 자체 mouseleave = popover 박지 X */
 document.addEventListener('mouseleave', function(e) {
   if (e.target && e.target.classList && e.target.classList.contains('b')) {
     _hidePreviewPopoverSoon();
