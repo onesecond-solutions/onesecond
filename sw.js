@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v46-20260517-hex-tooltip-responsive';
+const CACHE_NAME = 'onesecond-v47-20260517-hamburger-fix';
 const CACHE_URLS = [
   '/',
   '/app.html',

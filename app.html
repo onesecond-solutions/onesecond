@@ -2924,12 +2924,15 @@ window.toggleMobileSidebar = function() {
     document.body.classList.add('mobile-sidebar-open');
   }
 };
-/* 사이드바 외부/메뉴 클릭 시 닫음 — 두 자리 햄버거 모두 체크 (.mobile-header-hamburger + .notice-mobile-hamburger) */
+/* 사이드바 외부/메뉴 클릭 시 닫음 — 세 자리 햄버거 모두 체크
+   (.mobile-header-hamburger + .notice-mobile-hamburger + .a1-hamburger 2026-05-17 박음) */
 document.addEventListener('click', function(e) {
   if (!document.body.classList.contains('mobile-sidebar-open')) return;
   var sidebar = document.querySelector('.b');
   var hamburger1 = document.querySelector('.mobile-header-hamburger');
   var hamburger2 = document.querySelector('.notice-mobile-hamburger');
+  /* 2026-05-17 박음: 데스크탑 햄버거 .a1-hamburger 박힌 자리 = 본 핸들러 박지 X 박음 (격차 본진 = 열림 → 즉시 닫힘) */
+  var hamburger3 = document.querySelector('.a1-hamburger');
   if (sidebar && sidebar.contains(e.target)) {
     var menuItem = e.target.closest('[data-menu], [onclick*="switchMenu"], a');
     if (menuItem) document.body.classList.remove('mobile-sidebar-open');
@@ -2937,6 +2940,7 @@ document.addEventListener('click', function(e) {
   }
   if (hamburger1 && hamburger1.contains(e.target)) return;
   if (hamburger2 && hamburger2.contains(e.target)) return;
+  if (hamburger3 && hamburger3.contains(e.target)) return;
   document.body.classList.remove('mobile-sidebar-open');
 });
 document.addEventListener('click', function (e) {
