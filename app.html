@@ -300,12 +300,11 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 50;
-  /* 2026-05-17 박음: 햄버거 추가 박혀 grid auto / 1fr / 420max / 1fr 박음 */
+  /* 2026-05-17 갱신: 햄버거 박지 X (B영역으로 이동) → 옛 grid 박음 (1fr / 420max / 1fr) */
   display: grid;
-  grid-template-columns: auto 1fr minmax(auto, 420px) 1fr;
+  grid-template-columns: 1fr minmax(auto, 420px) 1fr;
   align-items: center;
-  padding: 0 var(--space-4);
-  gap: var(--space-3);
+  padding: 0 var(--space-6);
 }
 /* 2026-05-17 박음: A영역 콘텐츠 = 1280px 박음 (로그인 전 정합). 배경 = 풀 너비 박힘 */
 @media (min-width: 1280px) {
@@ -504,46 +503,81 @@ html, body {
 /* 2026-04-29 푸터 셸 최하단 정정: viewport-lock(.app overflow:hidden + .d 내부 스크롤) →
    body 스크롤 + A1/B/C sticky 패턴. .main min-height로 짧은 페이지에서도 푸터 화면 아래 자연 배치. */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
-/* 2026-05-17 박음: B영역 사이드바 → 햄버거 통합. 데스크탑 .main = 1fr + rightbar 박음 (max-width 1280px 정합) */
+/* 2026-05-17 갱신: B영역 박힘 (좁은 햄버거 자리 60px) + D메인 + C우측 = 3컬럼 박음 (max-width 1280px 정합) */
 .main {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr var(--rightbar-width);
+  grid-template-columns: 60px 1fr var(--rightbar-width);
   min-height: calc(100vh - var(--header-a1));
   max-width: 1280px;
   margin: 0 auto;
   width: 100%;
 }
 
-/* ── B: 사이드바 (2026-04-27 shell v1 → 2026-05-17 햄버거 통합) ── */
-/* 데스크탑 박힌 자리 = display:none (햄버거 박은 자리에서 슬라이드 박힘) */
+/* ── B: 햄버거 + 펼침 메뉴 (2026-05-17 박음) ── */
+/* 옛 박힘 자리 = 풀 사이드바 (220px+ 메뉴 노출) */
+/* 신 박음 = 60px 좁은 박힘 (햄버거만 박힘) + 펼침 시 = 280px (옛 메뉴 박음) */
 .b {
-  display: none;  /* 2026-05-17 박음: 데스크탑 hide. body.mobile-sidebar-open 박힌 자리에서 박힘 (모바일 동일 패턴) */
   background: var(--color-surface-2);
   border-right: 1px solid var(--color-border);
-  padding: var(--space-6) var(--space-3);
+  padding: 12px 8px;
+  display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
   position: sticky;
   top: var(--header-a1);
   align-self: start;
   max-height: calc(100vh - var(--header-a1));
-  overflow-y: auto;
+  overflow: hidden;
+  z-index: 40;
+  transition: width 200ms ease, padding 200ms ease;
 }
+/* 평상시 = 메뉴 hide (햄버거만 박힘) */
+.b .menu, .b .pro, .b .menu-cap-title, .b .menu-cap-divider {
+  display: none;
+}
+/* B영역 안 햄버거 박음 (데스크탑 기본 박힘) */
+.b-hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 22px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 120ms;
+}
+.b-hamburger:hover { background: var(--brand-50, #FDF4EF); color: var(--brand-700, #66331A); }
 
-/* 2026-05-17 박음: body.mobile-sidebar-open 박힌 자리 = 데스크탑·모바일 모두 슬라이드 박음 */
+/* 2026-05-17 박음: body.mobile-sidebar-open 박힌 자리 = B영역 펼침 (280px 박힘, 메뉴 노출) */
 body.mobile-sidebar-open .b {
-  display: flex !important;
   position: fixed;
-  top: 0; left: 0;
+  top: var(--header-a1);
+  left: 0;
   width: 280px;
-  height: 100dvh;
+  height: calc(100dvh - var(--header-a1));
   z-index: 200;
-  padding: 64px 16px 16px;  /* 상단 헤더 박힌 자리 여백 */
+  padding: 16px;
   background: #FFFFFF;
   box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15);
   overflow-y: auto;
+  align-items: stretch;
   animation: sidebarSlideIn 200ms ease-out;
+}
+body.mobile-sidebar-open .b .menu,
+body.mobile-sidebar-open .b .pro,
+body.mobile-sidebar-open .b .menu-cap-title,
+body.mobile-sidebar-open .b .menu-cap-divider {
+  display: block;
+}
+body.mobile-sidebar-open .b .menu {
+  display: flex !important;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 @keyframes sidebarSlideIn {
   from { transform: translateX(-100%); }
@@ -557,41 +591,47 @@ body.mobile-sidebar-open::before {
   z-index: 150;
 }
 
-/* 2026-05-17 박음: 데스크탑 햄버거 박음 (헤더 좌측) */
-.a1-hamburger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  background: transparent;
-  color: var(--color-text-primary);
-  font-size: 22px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 120ms;
-}
-.a1-hamburger:hover { background: var(--color-surface-2); }
+/* 2026-05-17 갱신: A영역 햄버거 박지 X (B영역으로 이동) */
+.a1-hamburger { display: none !important; }
 
 /* 2026-05-17 박음: B영역 메뉴 클릭 = 페이지 미리보기 오버레이 (호버 박지 X) */
 .b .menu-item {
   position: relative;
 }
 
-/* 미리보기 오버레이 본진 */
-.menu-preview-overlay {
+/* 2026-05-17 갱신: 옛 큰 오버레이 박지 X (hover popover로 박음 — 본인 본진 본질 = "마우스 가져가면 미리보기") */
+.menu-preview-overlay { display: none !important; }
+
+/* 신 박음: B영역 메뉴 hover popover (480x320 박힘 + iframe 자동 박음 — data-preview 텍스트 박지 X) */
+.menu-preview-popover {
   display: none;
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+  left: 64px;  /* B영역 우측 박힘 자리 (60px 박힘 + 4px gap) */
+  width: 480px;
+  height: 360px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  z-index: 250;
+  overflow: hidden;
+  pointer-events: auto;
 }
-.menu-preview-overlay.is-open {
-  display: flex;
+.menu-preview-popover.is-open { display: block; }
+.menu-preview-popover iframe {
+  width: 100%; height: 100%; border: 0; display: block; background: #FFFFFF;
+}
+.menu-preview-popover-label {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.8125em;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  z-index: 2;
+  pointer-events: none;
 }
 .menu-preview-panel {
   background: #FFFFFF;
@@ -1407,8 +1447,6 @@ body.mobile-sidebar-open::before {
 
   <!-- A1 -->
   <div class="a1">
-    <!-- 2026-05-17 박음: 데스크탑 햄버거 (B영역 사이드바 통합) -->
-    <button class="a1-hamburger" type="button" onclick="window.toggleMobileSidebar()" aria-label="메뉴 박음">☰</button>
     <div class="brand">
       <img src="assets/images/logo/logo03.jpg" alt="원세컨드" class="brand-logo">
       <span class="brand-text">원세컨드</span>
@@ -1461,6 +1499,8 @@ body.mobile-sidebar-open::before {
 
     <!-- B: 사이드바 -->
     <div class="b">
+      <!-- 2026-05-17 박음: B영역 안 햄버거 (좁은 박힘 60px, 펼침 시 280px) -->
+      <button class="b-hamburger" type="button" onclick="window.toggleMobileSidebar()" aria-label="메뉴 박음">☰</button>
       <div class="menu is-pending">
         <!-- 2026-05-17 박음: data-preview = hover popover 박힌 자리 본진 -->
         <div class="menu-item active" data-menu="home"     data-preview="🏠 홈&#10;원세컨드 메인 대시보드. 오늘 박힌 자리(공지·일정·통계) 박힘.">홈</div>
@@ -3004,26 +3044,15 @@ document.addEventListener('click', function(e) {
     });
   }
 </script>
-<!-- 2026-05-17 박음: B영역 메뉴 클릭 = 페이지 미리보기 오버레이 본진 -->
-<div class="menu-preview-overlay" id="menu-preview-overlay" onclick="if(event.target===this)window.closeMenuPreview()">
-  <div class="menu-preview-panel">
-    <div class="menu-preview-header">
-      <h2 id="menu-preview-title">메뉴 미리보기</h2>
-      <button class="menu-preview-close" type="button" onclick="window.closeMenuPreview()" aria-label="닫음">×</button>
-    </div>
-    <div class="menu-preview-body">
-      <iframe class="menu-preview-iframe" id="menu-preview-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
-    </div>
-    <div class="menu-preview-footer">
-      <div class="menu-preview-desc" id="menu-preview-desc"></div>
-      <button class="menu-preview-go" type="button" onclick="window.goMenuFromPreview()">이 페이지로 이동 →</button>
-    </div>
-  </div>
+<!-- 2026-05-17 갱신: B영역 메뉴 hover = 작은 popover (옛 큰 오버레이 박지 X) -->
+<div class="menu-preview-popover" id="menu-preview-popover">
+  <div class="menu-preview-popover-label" id="menu-preview-popover-label">미리보기</div>
+  <iframe id="menu-preview-popover-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
 </div>
 
 <script>
-/* 2026-05-17 박음: B영역 메뉴 클릭 = 미리보기 오버레이 본진 */
-var _menuPreviewKey = null;
+/* 2026-05-17 갱신: B영역 메뉴 hover = 작은 popover (옛 큰 클릭 오버레이 박지 X)
+   본인 본진 본질: "마우스 가져가면 미리보기" + "이미지 안줘도 알아서 해결" → iframe 자동 박음 */
 var MENU_KEY_TO_PAGE = {
   home:            '/pages/home.html',
   board:           '/pages/board.html',
@@ -3035,69 +3064,81 @@ var MENU_KEY_TO_PAGE = {
   'team-management': '/pages/team-management.html',
   admin:           '/pages/admin_v2.html'
 };
+var _previewHideTimer = null;
+var _previewCurrentKey = null;
 
-window.openMenuPreview = function(menuKey, preview) {
-  var overlay = document.getElementById('menu-preview-overlay');
-  var titleEl = document.getElementById('menu-preview-title');
-  var descEl  = document.getElementById('menu-preview-desc');
-  var iframe  = document.getElementById('menu-preview-iframe');
-  if (!overlay) return;
+function _showPreviewPopover(menuKey, label, anchorEl) {
+  var popover = document.getElementById('menu-preview-popover');
+  var iframe  = document.getElementById('menu-preview-popover-iframe');
+  var labelEl = document.getElementById('menu-preview-popover-label');
+  if (!popover || !iframe || !anchorEl) return;
 
-  _menuPreviewKey = menuKey;
+  /* 같은 메뉴 박힌 자리 재진입 = 그대로 박음 (iframe 재로드 박지 X) */
+  if (_previewCurrentKey === menuKey && popover.classList.contains('is-open')) {
+    clearTimeout(_previewHideTimer);
+    return;
+  }
+  _previewCurrentKey = menuKey;
+
   var pageUrl = MENU_KEY_TO_PAGE[menuKey] || '/';
-  var firstLine = (preview || '').split('\n')[0] || '미리보기';
-  var restLines = (preview || '').split('\n').slice(1).join('\n');
+  iframe.src = pageUrl + '?preview=1';
+  if (labelEl) labelEl.textContent = label || '미리보기';
 
-  if (titleEl) titleEl.textContent = firstLine;
-  if (descEl)  descEl.textContent  = restLines;
-  if (iframe)  iframe.src = pageUrl + '?preview=1';
+  /* 메뉴 아이템 박힌 자리 = 세로 위치 박음 (B영역 박은 자리 우측) */
+  var rect = anchorEl.getBoundingClientRect();
+  var top = Math.max(8, Math.min(rect.top, window.innerHeight - 368));
+  popover.style.top = top + 'px';
 
-  /* 사이드바 박혀 있으면 닫음 (오버레이 박힘 정합) */
-  document.body.classList.remove('mobile-sidebar-open');
-  overlay.classList.add('is-open');
-};
+  popover.classList.add('is-open');
+  clearTimeout(_previewHideTimer);
+}
 
-window.closeMenuPreview = function() {
-  var overlay = document.getElementById('menu-preview-overlay');
-  var iframe  = document.getElementById('menu-preview-iframe');
-  if (overlay) overlay.classList.remove('is-open');
-  if (iframe)  iframe.src = 'about:blank';  /* 메모리 박지 X */
-  _menuPreviewKey = null;
-};
+function _hidePreviewPopoverSoon() {
+  clearTimeout(_previewHideTimer);
+  _previewHideTimer = setTimeout(function() {
+    var popover = document.getElementById('menu-preview-popover');
+    var iframe  = document.getElementById('menu-preview-popover-iframe');
+    if (popover) popover.classList.remove('is-open');
+    if (iframe)  iframe.src = 'about:blank';  /* 메모리 박지 X */
+    _previewCurrentKey = null;
+  }, 220);
+}
 
-window.goMenuFromPreview = function() {
-  var key = _menuPreviewKey;
-  window.closeMenuPreview();
-  if (key && typeof window.switchMenu === 'function') {
-    window.switchMenu(key);
-  } else if (key) {
-    /* fallback: localStorage 박음 + reload */
-    try { localStorage.setItem('selected_menu', key); } catch(e) {}
-    window.location.replace('/app.html');
-  }
-};
-
-/* B영역 메뉴 클릭 이벤트 위임 박음 (옛 switchMenu 박지 X 박음) */
-document.addEventListener('click', function(e) {
+/* B영역 메뉴 mouseenter 박음 (capture phase = 자식 박힘 자리 통과 박음) */
+document.addEventListener('mouseover', function(e) {
+  if (!e.target.closest) return;
   var mi = e.target.closest('.b .menu-item[data-menu]');
-  if (!mi) return;
-  /* 옛 switchMenu 박혀 있으면 그대로 박지 X 박음 = preventDefault */
-  e.preventDefault();
-  e.stopPropagation();
-  var menuKey = mi.dataset.menu;
-  var preview = mi.dataset.preview || '';
-  window.openMenuPreview(menuKey, preview);
-}, true);  /* capture 박음 = 옛 이벤트 박힘 박지 X 박음 */
-
-/* ESC 박은 자리 닫음 */
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    var overlay = document.getElementById('menu-preview-overlay');
-    if (overlay && overlay.classList.contains('is-open')) {
-      window.closeMenuPreview();
-    }
+  if (mi) {
+    var key = mi.dataset.menu;
+    var label = (mi.textContent || '').trim() || '미리보기';
+    _showPreviewPopover(key, label, mi);
+    return;
   }
+  /* popover 자체 hover = 박음 유지 */
+  var pop = e.target.closest('#menu-preview-popover');
+  if (pop) { clearTimeout(_previewHideTimer); return; }
 });
+
+document.addEventListener('mouseout', function(e) {
+  if (!e.target.closest) return;
+  var mi = e.target.closest('.b .menu-item[data-menu]');
+  var pop = e.target.closest('#menu-preview-popover');
+  if (!mi && !pop) return;
+  /* relatedTarget 박은 자리가 메뉴/popover 박힘 자리면 박지 X */
+  var related = e.relatedTarget;
+  if (related && related.closest) {
+    if (related.closest('.b .menu-item[data-menu]')) return;
+    if (related.closest('#menu-preview-popover')) return;
+  }
+  _hidePreviewPopoverSoon();
+});
+
+/* B영역 자체 mouseleave = 사이드바 박지 X 박은 자리 popover 박지 X */
+document.addEventListener('mouseleave', function(e) {
+  if (e.target && e.target.classList && e.target.classList.contains('b')) {
+    _hidePreviewPopoverSoon();
+  }
+}, true);
 </script>
 
 </body>
