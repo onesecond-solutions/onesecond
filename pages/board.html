@@ -1548,9 +1548,10 @@
 }
 
 /* v2 PART F 1단/2단 칩 본진 (2026-05-14, 카톡 본인 패턴 검증 + 디자인 디테일 4건 흡수) */
+/* 2026-05-16 박음: 풀 확장 본진 — 자체 padding 12px 16px 박음 + border-bottom 1px 정합 */
 .notice-chip-area {
   flex-shrink: 0;
-  padding: 10px 16px 6px;
+  padding: 12px 16px;
   background: var(--notice-bg);
   border-bottom: 1px solid var(--color-border);
 }
@@ -1744,10 +1745,14 @@
 }
 
 /* 메시지 흐름 */
+/* 2026-05-16 박음: 인박스 제거 후 콘텐츠 풀 확장 본진 — 메시지 영역 자체 padding 16px 박음 (내부 박힘) */
+/* width/height 100% = flex:1 + min-height:0 박힌 자리 정합 (parent flex column + min-height:0 박혀 있어 자동 풀 박힘) */
 .notice-room-chat {
-  flex: 1; overflow-y: auto;
-  /* 2026-05-15 박음: 좌우 padding 박지 X — 아웃박스 박지 X 박힌 자리에 본문 풀 박음 */
-  padding: 16px 0;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
   display: flex; flex-direction: column; gap: 12px;
   scrollbar-width: thin;
 }
@@ -1932,27 +1937,28 @@
 }
 
 /* 입력바 (2026-05-14 슬림 본진: 글쓰기 버튼 + [⚙ 딸깍] 본인 맞춤 설정 박힌 자리) */
+/* 2026-05-16 박음: 풀 확장 본진 — 자체 padding 12px 16px 박음 + 딸깍 좌측 / 글쓰기 우측(flex:1) 박음 */
 .notice-input-bar {
   flex-shrink: 0;
-  padding: 10px 24px 14px;
+  padding: 12px 16px;
   border-top: 1px solid var(--color-border);
   background: var(--notice-bg);
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 8px;
 }
 /* 2026-05-14 §15 정체성 본진 — [⚙ 딸깍] 본인 맞춤 설정 박힘 자리 (placeholder, spec MD 박힌 자리 5/18 후 본진 진입) */
+/* 2026-05-16 박음: 좌측 이동 + 크기 축소 본진 — padding 8px 12px / font-size 0.8125em / height auto 박음 */
 .notice-prefs-btn {
   flex-shrink: 0;
-  height: 44px;
-  padding: 0 14px;
+  padding: 8px 12px;
   border: 1px solid var(--brand-300, #DAA67B);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.96);
   color: var(--brand-700, #66331A);
   font-family: inherit;
-  font-size: 0.875em;
+  font-size: 0.8125em;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
@@ -1966,9 +1972,9 @@
   border-color: var(--brand-500, #A0522D);
   transform: scale(1.04);
 }
+/* 2026-05-16 박음: 글쓰기 flex:1 본진 — 딸깍 우측에서 남은 공간 풀 박음 (max-width 박지 X) */
 .notice-write-btn {
-  width: 100%;
-  max-width: 540px;
+  flex: 1;
   height: 44px;
   padding: 0 20px;
   border: 1px solid var(--brand-200, #F0C9A6);
@@ -2067,11 +2073,15 @@
 .notice-input-send:hover { background: var(--brand-700, #66331A); }
 
 /* D-우측: 자산 패널 */
+/* 2026-05-16 박음: 풀 높이 본진 — height 100% + align-self stretch 박음 (grid stretch 명시 박음) */
 .notice-room-right {
   border-left: 1px solid var(--color-border);
   background: var(--color-surface-2);
   overflow-y: auto;
   display: flex; flex-direction: column;
+  height: 100%;
+  align-self: stretch;
+  min-height: 0;
   scrollbar-width: thin;
 }
 .notice-room-header {
