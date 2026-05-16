@@ -1944,7 +1944,8 @@
   scrollbar-width: thin;
 }
 
-.team-feed-categories .cat-btn {
+.team-feed-categories .cat-btn,
+.team-feed-categories .catbf-btn {
   text-align: left;
   padding: 10px 12px;
   border: 0;
@@ -1957,10 +1958,12 @@
   transition: background 120ms, color 120ms;
   white-space: nowrap;
 }
-.team-feed-categories .cat-btn:hover {
+.team-feed-categories .cat-btn:hover,
+.team-feed-categories .catbf-btn:hover {
   background: var(--brand-50, #FDF4EF);
 }
-.team-feed-categories .cat-btn.active {
+.team-feed-categories .cat-btn.active,
+.team-feed-categories .catbf-btn.active {
   background: var(--brand-100, #F8DCC4);
   color: var(--brand-700, #66331A);
   font-weight: 600;
@@ -2090,7 +2093,8 @@
     scrollbar-width: none;
   }
   .team-feed-categories::-webkit-scrollbar { display: none; }
-  .team-feed-categories .cat-btn {
+  .team-feed-categories .cat-btn,
+  .team-feed-categories .catbf-btn {
     flex-shrink: 0;
     padding: 8px 12px;
     font-size: 0.8125em;
@@ -3413,6 +3417,8 @@
             <!-- 2026-05-16 박음: 네비게이션방2 시연 본진 (D안, 4유형 + 인라인 스레드 + 활성 시간순) -->
             <button class="pg-tab-btn"        data-board="nav_v2"         onclick="window.switchBoard('nav_v2')">🧭 네비게이션방2 <span style="background:var(--brand-500,#A0522D);color:#fff;font-size:0.65em;padding:1px 5px;border-radius:6px;margin-left:4px;">NEW</span></button>
             <button class="pg-tab-btn"        data-board="qna"            onclick="window.switchBoard('qna')">📋 스마트 게시판</button>
+            <!-- 2026-05-17 박음: 지점 게시판 (동적 라벨, 회사+지점 일치 시 노출 / ga_staff = 본 자리만 visible) -->
+            <button class="pg-tab-btn"        data-board="branch_feed"    onclick="window.switchBoard('branch_feed')" id="branch-feed-tab-btn" style="display:none;">📌 <span id="branch-feed-tab-label">지점 게시판</span> <span style="background:var(--brand-500,#A0522D);color:#fff;font-size:0.65em;padding:1px 5px;border-radius:6px;margin-left:4px;">NEW</span></button>
             <button class="pg-tab-btn"        data-board="manager_lounge" onclick="window.switchBoard('manager_lounge')" style="display:none;" data-hidden-5-18="1">☕ 매니저 라운지</button>
           </div>
           <!-- 2줄 — 보조·확장·보관 레이어 (subdued) -->
@@ -3572,6 +3578,40 @@
                 </div>
 
               </aside>
+
+            </div>
+          </div>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- [2026-05-17] 지점 게시판 shell — 더원지점 시연 본진 (공지 7유형 + 일원화) -->
+          <!-- 4팀 단체방2 동일 패턴 + scope='branch_internal' + branch_id 박힘            -->
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <div id="branch-feed-shell" class="team-feed-shell" style="display:none;">
+            <div class="team-feed-grid">
+
+              <!-- 좌: 카테고리 패널 (4팀 단체방2 동일 7유형) -->
+              <aside class="team-feed-categories">
+                <button type="button" class="catbf-btn active" data-cat="all" onclick="window.filterBranchFeed('all')">전체</button>
+                <button type="button" class="catbf-btn" data-cat="operation"    onclick="window.filterBranchFeed('operation')">📌 운영 공지</button>
+                <button type="button" class="catbf-btn" data-cat="urgent"       onclick="window.filterBranchFeed('urgent')">🚨 긴급 공지</button>
+                <button type="button" class="catbf-btn" data-cat="product"      onclick="window.filterBranchFeed('product')">📦 상품 공지</button>
+                <button type="button" class="catbf-btn" data-cat="underwriting" onclick="window.filterBranchFeed('underwriting')">📋 인수 공지</button>
+                <button type="button" class="catbf-btn" data-cat="education"    onclick="window.filterBranchFeed('education')">🎓 교육 안내</button>
+                <button type="button" class="catbf-btn" data-cat="event"        onclick="window.filterBranchFeed('event')">📅 이벤트/일정</button>
+                <button type="button" class="catbf-btn" data-cat="etc"          onclick="window.filterBranchFeed('etc')">💬 기타</button>
+              </aside>
+
+              <!-- 중앙: 역시간순 피드 -->
+              <main class="team-feed-main">
+                <div class="team-feed-header">
+                  <span class="team-feed-title" id="branch-feed-title">전체 공지</span>
+                  <button type="button" class="team-feed-write-btn" id="branch-feed-write-btn"
+                          onclick="window.openBranchFeedWriteModal()" style="display:none;">+ 새 공지</button>
+                </div>
+                <div class="team-feed-list" id="branch-feed-list">
+                  <div class="loading-msg">불러오는 중...</div>
+                </div>
+              </main>
 
             </div>
           </div>
@@ -4737,12 +4777,17 @@ function _applyTabVisibilityByRole() {
   var isGA    = (role.indexOf('ga_') === 0);
   var isIns   = (role.indexOf('insurer_') === 0);
 
+  /* 2026-05-17 박음: ga_staff = 지점 게시판만 visible (다른 탭 hide) */
+  var isStaff = (role === 'ga_staff');
+
   var roleVisible = {
-    qna:             true,                /* 모든 사용자 */
-    manager_notice:  isAdmin || isGA,     /* admin + ga_* */
-    navigation:      isAdmin || isGA,     /* admin + ga_* (spec § 5-4) */
-    insurer:         isAdmin || isIns,    /* admin + insurer_* (spec § 5-1) */
-    archive_legacy:  isAdmin              /* admin only */
+    qna:             !isStaff,                       /* ga_staff hide */
+    manager_notice:  (isAdmin || isGA) && !isStaff,  /* ga_staff hide */
+    navigation:      (isAdmin || isGA) && !isStaff,  /* ga_staff hide */
+    team_feed:       (isAdmin || isGA) && !isStaff,  /* ga_staff hide (4팀 단체방2) */
+    nav_v2:          (isAdmin || isGA) && !isStaff,  /* ga_staff hide (네비방2) */
+    insurer:         isAdmin || isIns,
+    archive_legacy:  isAdmin
   };
   Object.keys(roleVisible).forEach(function(key) {
     var btn = bar.querySelector('.pg-tab-btn[data-board="' + key + '"]');
@@ -4750,8 +4795,11 @@ function _applyTabVisibilityByRole() {
     btn.style.display = roleVisible[key] ? '' : 'none';
   });
 
-  /* defaultBoard = qna (모든 사용자 visible, 사용자 본질 페이지) */
-  return 'qna';
+  /* 2026-05-17 박음: 지점 게시판 동적 탭 라벨 박음 */
+  _updateBranchFeedTab();
+
+  /* defaultBoard = ga_staff = branch_feed / 그 외 = qna */
+  return isStaff ? 'branch_feed' : 'qna';
 }
 
 /* (b) DB 토글 의존 2 탭 — _loadBoardTabSettings() 완료 후 호출 (manager_lounge / hub) */
@@ -4919,6 +4967,9 @@ function _switchBoard(board) {
 
   /* [2026-05-16 D-2] nav_v2 셸 분기 (네비게이션방2 시연 본진) */
   _toggleNavV2Shell(board);
+
+  /* [2026-05-17] branch_feed 셸 분기 (지점 게시판 시연 본진) */
+  _toggleBranchFeedShell(board);
 }
 window.switchBoard = _switchBoard;
 
@@ -5422,6 +5473,154 @@ function _toggleNavV2Shell(board) {
     _loadNavV2();
   } else {
     shell.style.display = 'none';
+  }
+}
+
+/* 2026-05-17 박음: 지점 게시판 (branch_feed) — 4팀 단체방2 본진 정합 + scope='branch_internal' */
+var BRANCH_FEED_CATEGORIES = TEAM_FEED_CATEGORIES;  /* 동일 7유형 정합 */
+var _branchFeedAll = [];
+var _branchFeedCat = 'all';
+
+async function _loadBranchFeed() {
+  var list = document.getElementById('branch-feed-list');
+  if (!list) return;
+  list.innerHTML = '<div class="loading-msg">공지 불러오는 중...</div>';
+
+  /* 작성 권한 분기 — admin + ga_branch_manager + ga_manager + ga_staff (스탭 포함) */
+  var role = (window.AppState && window.AppState.role) || '';
+  var canWrite = (role === 'admin' || role === 'ga_branch_manager'
+                  || role === 'ga_manager' || role === 'ga_staff');
+  var writeBtn = document.getElementById('branch-feed-write-btn');
+  if (writeBtn) writeBtn.style.display = canWrite ? '' : 'none';
+
+  if (!window.db || !window.db.fetch) {
+    list.innerHTML = '<div class="loading-msg">DB 연결 부재</div>';
+    return;
+  }
+
+  try {
+    /* scope='branch_internal' 박힘 자료만 fetch (RLS 정합 = 본인 branch_id 자동 필터) */
+    var res = await window.db.fetch(
+      '/rest/v1/team_notices?scope=eq.branch_internal' +
+      '&select=id,branch_id,author_id,notice_type,title,content,attachments,created_at,source_type,source_id' +
+      '&order=created_at.desc&limit=200'
+    );
+    var notices = res.ok ? await res.json() : [];
+    _branchFeedAll = notices;
+    _renderBranchFeedList();
+  } catch (e) {
+    console.error('[branch_feed] 로드 실패', e);
+    list.innerHTML = '<div class="loading-msg">로딩 실패: ' + (e.message || e) + '</div>';
+  }
+}
+
+function _renderBranchFeedList() {
+  var list = document.getElementById('branch-feed-list');
+  var title = document.getElementById('branch-feed-title');
+  if (!list) return;
+
+  var filtered = (_branchFeedCat === 'all')
+    ? _branchFeedAll
+    : _branchFeedAll.filter(function(n) { return n.notice_type === _branchFeedCat; });
+
+  if (title) {
+    if (_branchFeedCat === 'all') {
+      title.textContent = '전체 공지 (' + filtered.length + '건)';
+    } else {
+      var cat = BRANCH_FEED_CATEGORIES[_branchFeedCat];
+      title.textContent = (cat ? cat.icon + ' ' + cat.label : _branchFeedCat) + ' (' + filtered.length + '건)';
+    }
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="loading-msg">해당 카테고리 공지가 아직 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function(n, idx) {
+    var cat = BRANCH_FEED_CATEGORIES[n.notice_type] || BRANCH_FEED_CATEGORIES.etc;
+    var d = new Date(n.created_at || Date.now());
+    var time = (d.getMonth()+1) + '월 ' + d.getDate() + '일 ' +
+               String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    var isLatest = (idx === 0);
+    var contentEsc = _noticeEscape(n.content || '').replace(/\n/g, '<br>');
+    var titleEsc = _noticeEscape(n.title || '');
+    /* 추천 본진 표시 (source_type 박혀 있으면 "추천 박힘" 라벨) */
+    var sourceTag = n.source_type ? ' <span style="background:var(--brand-100,#F8DCC4);color:var(--brand-700,#66331A);font-size:0.7em;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;">⭐ 추천</span>' : '';
+    return '<div class="team-feed-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + n.notice_type + '"' +
+           ' style="border-left:3px solid ' + cat.text + ';' + (isLatest ? 'background:' + cat.bg : '') + '">' +
+           '<div class="card-header">' +
+             '<span class="cat-badge" style="background:' + cat.bg + ';color:' + cat.text + '">' + cat.icon + ' ' + cat.label + sourceTag + '</span>' +
+             '<span class="card-time">' + time + '</span>' +
+           '</div>' +
+           '<div class="card-title">' + titleEsc + '</div>' +
+           '<div class="card-content">' + contentEsc + '</div>' +
+           '</div>';
+  }).join('');
+}
+
+window.filterBranchFeed = function(cat) {
+  _branchFeedCat = cat;
+  document.querySelectorAll('#branch-feed-shell .catbf-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+  _renderBranchFeedList();
+};
+
+window.openBranchFeedWriteModal = function() {
+  _noticeWriteMode = 'branch_feed';  /* submitNoticeForm에서 team_notices INSERT 분기 (scope=branch_internal) */
+  window.openManagerNoticeOverlay();
+};
+
+function _toggleBranchFeedShell(board) {
+  var shell = document.getElementById('branch-feed-shell');
+  var list  = document.getElementById('post-list');
+  var bar   = document.querySelector('.board-filter-bar');
+  var pag   = document.getElementById('post-pagination');
+  if (!shell) return;
+
+  if (board === 'branch_feed') {
+    shell.style.display = '';
+    if (list) list.style.display = 'none';
+    if (bar) bar.style.display = 'none';
+    if (pag) { pag.style.display = 'none'; pag.innerHTML = ''; }
+    _loadBranchFeed();
+  } else {
+    shell.style.display = 'none';
+  }
+}
+
+/* 동적 탭 라벨 박음 — 회사 + 지점 일치 박힌 자리만 노출 */
+function _updateBranchFeedTab() {
+  var tabBtn = document.getElementById('branch-feed-tab-btn');
+  var labelEl = document.getElementById('branch-feed-tab-label');
+  if (!tabBtn) return;
+
+  var role = (window.AppState && window.AppState.role) || '';
+  var isAdmin = (role === 'admin');
+  var isGa = (role.indexOf('ga_') === 0);
+
+  /* admin = 모든 지점 보임 / ga_* = 본인 회사+지점 일치 박힌 자리만 */
+  if (isAdmin || isGa) {
+    var company = (_userOrg && _userOrg.company) || '';
+    var branch = (_userOrg && _userOrg.branch) || '';
+    if (labelEl) {
+      if (company && branch) {
+        labelEl.textContent = company + ' ' + branch + ' 게시판';
+      } else if (isAdmin) {
+        labelEl.textContent = '지점 게시판 (admin)';
+      } else {
+        labelEl.textContent = '지점 게시판';
+      }
+    }
+    /* 회사·지점 박힌 자리 박혀 있으면 탭 노출 (admin은 항상) */
+    if (isAdmin || (company && branch)) {
+      tabBtn.style.display = '';
+    } else {
+      tabBtn.style.display = 'none';
+    }
+  } else {
+    tabBtn.style.display = 'none';
   }
 }
 
@@ -8495,6 +8694,9 @@ window.submitNoticeForm = async function() {
   } else if (_noticeWriteMode === 'manager_notice' || _noticeWriteMode === 'team_feed') {
     /* 2026-05-17 박음: team_feed = 실장 본진 (admin + ga_branch_manager + ga_manager) */
     allowedRoles = ['admin','ga_branch_manager','ga_manager'];
+  } else if (_noticeWriteMode === 'branch_feed') {
+    /* 2026-05-17 박음: branch_feed = 지점장 + 실장 + 스탭 (스탭 포함) */
+    allowedRoles = ['admin','ga_branch_manager','ga_manager','ga_staff'];
   } else if (_noticeWriteMode === 'nav_v2') {
     /* 2026-05-17 박음: nav_v2 질문 = 모든 ga_* (질문은 누구나) */
     allowedRoles = ['admin','ga_branch_manager','ga_manager','ga_member','ga_staff'];
@@ -8552,6 +8754,59 @@ window.submitNoticeForm = async function() {
     } finally {
       if (submitBtn_tf) { submitBtn_tf.disabled = false; submitBtn_tf.textContent = '등록하기'; }
       _noticeWriteMode = 'manager_notice';  /* mode reset */
+    }
+    return;
+  }
+
+  /* 2026-05-17 박음: branch_feed → team_notices INSERT 분기 (scope='branch_internal') */
+  if (_noticeWriteMode === 'branch_feed') {
+    var noticeTypeMapBf = {
+      '운영':'operation', '운영 공지':'operation',
+      '긴급':'urgent', '긴급 공지':'urgent',
+      '상품':'product', '상품 공지':'product',
+      '인수':'underwriting', '인수 공지':'underwriting',
+      '교육':'education', '교육 안내':'education',
+      '이벤트':'event', '이벤트·일정':'event', '이벤트/일정':'event',
+      '기타':'etc'
+    };
+    var ntypeBf = noticeTypeMapBf[noticeType] || 'etc';
+    /* branch_id 박힘 — _userOrg 박힌 자리에서 lookup 박지 X 박은 경우 = DB fetch */
+    var branchIdBf = (s.branchId || null);
+    if (!branchIdBf && _userOrg && _userOrg.branch) {
+      /* fetch branches WHERE name=_userOrg.branch */
+      try {
+        var brRes = await window.db.fetch('/rest/v1/branches?name=eq.' + encodeURIComponent(_userOrg.branch) + '&select=id&limit=1');
+        var brRows = brRes.ok ? await brRes.json() : [];
+        if (brRows && brRows[0]) branchIdBf = brRows[0].id;
+      } catch (e) { console.warn('[branch_feed] branch lookup 실패', e); }
+    }
+    if (!branchIdBf) { alert('지점 정보 박지 X 박혀 공지 등록 박지 X'); return; }
+    var submitBtn_bf = document.querySelector('#write-form-notice .wfn-btn-primary');
+    if (submitBtn_bf) { submitBtn_bf.disabled = true; submitBtn_bf.textContent = '등록 중...'; }
+    try {
+      var bfBody = {
+        branch_id: branchIdBf,
+        author_id: s.userId || '',
+        notice_type: ntypeBf,
+        scope: 'branch_internal',
+        title: title,
+        content: rawContent
+      };
+      var bfRes = await window.db.fetch('/rest/v1/team_notices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(bfBody)
+      });
+      if (!bfRes.ok) throw new Error('branch_feed INSERT ' + bfRes.status);
+      window.closeWriteOverlay();
+      if (typeof _loadBranchFeed === 'function') _loadBranchFeed();
+      alert('지점 게시판 공지가 등록되었습니다.');
+    } catch (e) {
+      console.error('[branch_feed] INSERT 실패:', e);
+      alert('공지 등록 실패: ' + (e.message || e));
+    } finally {
+      if (submitBtn_bf) { submitBtn_bf.disabled = false; submitBtn_bf.textContent = '등록하기'; }
+      _noticeWriteMode = 'manager_notice';
     }
     return;
   }
