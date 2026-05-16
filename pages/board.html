@@ -4256,6 +4256,8 @@ function _toggleNoticeRoomShell(board) {
   var list  = document.getElementById('post-list');
   var bar   = document.querySelector('.board-filter-bar');
   var search = document.getElementById('notice-search-bar');
+  /* 2026-05-16 박음: 단톡방 진입 시 페이지네이션 FOUC 차단 본진 (옛 qna 페이지네이션 잠깐 박혀 사라지는 격차 해소) */
+  var pag    = document.getElementById('post-pagination');
   if (!shell || !list) return;
 
   /* 모바일 카톡 톤 채팅 영역 확장 본진 (2026-05-14 v2 PART D 정합) */
@@ -4266,6 +4268,8 @@ function _toggleNoticeRoomShell(board) {
     if (bar) bar.style.display = 'none';  /* 단톡방 셸 안 입력바가 본진 */
     /* 2026-05-14 갱신 — 검색바 기본 hide. 🔍 칩 클릭 시만 toggleNoticeSearchBar 박음 */
     if (search) search.style.display = 'none';
+    /* 2026-05-16 박음: 페이지네이션 hide + innerHTML 비움 (FOUC 차단 정합) */
+    if (pag) { pag.style.display = 'none'; pag.innerHTML = ''; }
     if (pgOuter) pgOuter.classList.add('notice-room-active');
     /* 신 모바일 헤더 hide (단톡방 풀스크린 정합 — 옛 .notice-mobile-hamburger 박음) */
     document.body.classList.add('notice-room-fullscreen');
@@ -4275,6 +4279,8 @@ function _toggleNoticeRoomShell(board) {
     list.style.display  = '';
     if (bar) bar.style.display = '';
     if (search) search.style.display = 'none';
+    /* 2026-05-16 박음: 페이지네이션 display 복원 (qna 등 자리에서 다시 박힘 정합) */
+    if (pag) pag.style.display = '';
     if (pgOuter) pgOuter.classList.remove('notice-room-active');
     /* 검색 모드 + 풀스크린 reset */
     document.body.classList.remove('notice-search-open');
