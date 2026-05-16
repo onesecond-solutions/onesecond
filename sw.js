@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v26-20260516-pagination-fouc-fix';
+const CACHE_NAME = 'onesecond-v27-20260516-d2-hamburger-zindex';
 const CACHE_URLS = [
   '/',
   '/app.html',

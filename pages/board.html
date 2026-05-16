@@ -2651,11 +2651,12 @@
 
   /* 모바일 햄버거 메뉴 (2026-05-14 추가) — 단톡방 풀스크린 시 다른 메뉴 진입로 */
   /* 모바일 768px 미만 + 단톡방 active = display:flex !important (data-deprecated 자리 외 global hide override) */
+  /* 2026-05-16 박음: z-index 102 → 250 박음 (사이드바 200 + 오버레이 150 위 박힘 = 사이드바 박혀 있을 때도 닫을 자리 박힘 정합) */
   .pg-outer.notice-room-active .notice-mobile-hamburger {
     position: fixed;
     top: 4px;
     left: 4px;
-    z-index: 102; /* 탭바(101) 위 */
+    z-index: 250;
     width: 36px;
     height: 36px;
     border: none;
