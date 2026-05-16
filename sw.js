@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v28-20260516-notice-limit-1000';
+const CACHE_NAME = 'onesecond-v29-20260516-seed-qna-split';
 const CACHE_URLS = [
   '/',
   '/app.html',

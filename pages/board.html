@@ -1789,6 +1789,23 @@
   color: var(--notice-mine-text);
   border-bottom-right-radius: 4px;
 }
+/* 2026-05-16 박음: 시드 답변 (보험사 매니저) — 강조 톤 + 보험사명 강조 (질문/답변 시각 분리) */
+.notice-msg-bubble.is-mine.is-seed-answer {
+  background: var(--brand-50, #FDF4EF);
+  border: 1.5px solid var(--brand-300, #DAA67B);
+  cursor: default;
+  box-shadow: 0 1px 3px rgba(160, 82, 45, 0.10);
+}
+.notice-msg-bubble.is-mine.is-seed-answer:hover {
+  box-shadow: 0 2px 6px rgba(160, 82, 45, 0.16);
+}
+.notice-msg-bubble.is-mine.is-seed-answer .notice-msg-author {
+  font-size: 0.75em;
+  font-weight: 800;
+  color: var(--brand-700, #66331A);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
 .notice-msg-bubble.is-other {
   background: var(--notice-other-bg);
   color: var(--notice-other-text);
@@ -4708,7 +4725,25 @@ function _renderNoticeMessages(msgs, meId, meName) {
     var dateBar = '';
     if (ymd !== lastDate) { dateBar = '<div class="notice-msg-date">' + ymd + '</div>'; lastDate = ymd; }
 
-    var isMine = (p.author_id && meId && String(p.author_id) === String(meId));
+    var isOwner = (p.author_id && meId && String(p.author_id) === String(meId));
+    /* 2026-05-16 박음: 시드 메시지 source_label.kind 기반 질문/답변 시각 분리 (카톡 톤 정합) */
+    /* - kind='question' → 왼쪽 회색 풍선 (질문, 팀장님)                                       */
+    /* - kind='answer'   → 오른쪽 브라운 풍선 (답변, 보험사명) — 클릭 박지 X (본인 X)            */
+    /* - kind 박지 X (실 사용자 메시지) → 기존 isOwner 기반 (본인 vs 타인)                       */
+    var kind = null;
+    try {
+      var sl = (typeof p.source_label === 'string') ? JSON.parse(p.source_label) : p.source_label;
+      if (sl && sl.kind) kind = sl.kind;
+    } catch (e) {}
+    var isSeed = (p.source_type === 'seed');
+    /* displaySide = 시각 위치 / canEdit = 실제 본인 (수정 가능) */
+    var displaySide;
+    if (isSeed && kind === 'question') displaySide = 'other';
+    else if (isSeed && kind === 'answer') displaySide = 'mine';
+    else displaySide = isOwner ? 'mine' : 'other';
+    var canEdit = isOwner && !isSeed;
+    /* 기존 isMine 변수 = 풀폼 진입 자격 (canEdit) — 시드 답변은 클릭 박지 X */
+    var isMine = canEdit;
     var author = p.display_author || p.display_name || p.author_name || '알 수 없음';
     var html = _noticeEscape(p.content || p.title || '').replace(/\n/g, '<br>');
 
@@ -4738,8 +4773,21 @@ function _renderNoticeMessages(msgs, meId, meName) {
       } catch (e) {}
     }
 
-    if (isMine) {
-      /* 본인 풍선 = 클릭 즉시 풀폼 진입 (2026-05-14 갱신 — openMyMsgMenu 액션 메뉴 박지 X) */
+    /* 2026-05-16 박음: 시드 답변 (displaySide='mine' + canEdit=false) = 오른쪽 브라운 + 발신자명(보험사) 표시 */
+    if (displaySide === 'mine' && !canEdit) {
+      /* 시드 답변 풍선 = 오른쪽 브라운 + 발신자명 (보험사명) 표시, 클릭 박지 X */
+      return dateBar +
+        '<div class="notice-msg-row is-mine"' + rowData + '>' +
+          '<div class="notice-msg-bubble is-mine is-seed-answer">' +
+            '<div class="notice-msg-author" style="text-align:right;">' + _noticeEscape(author) + '</div>' +
+            tagsHtml +
+            '<span class="msg-text">' + html + '</span>' +
+            attHtml +
+            '<span class="notice-msg-time">' + hh + ':' + mm + '</span>' +
+          '</div>' +
+        '</div>';
+    } else if (canEdit) {
+      /* 실 본인 풍선 = 클릭 즉시 풀폼 진입 (2026-05-14 갱신 — openMyMsgMenu 액션 메뉴 박지 X) */
       /* 수정 + 삭제 박힌 자리 = 풀폼 안. 핀 본진 = 풀폼 안 토글 박음 (admin/ga_manager만) */
       var pidEscMine = String(p.id || '').replace(/'/g, "\\'");
       return dateBar +
