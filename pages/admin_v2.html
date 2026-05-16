@@ -1748,7 +1748,8 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-menu-section">
         <div class="adm-menu-section-title">오늘</div>
         <div class="adm-menu-item active"><span class="icon">📊</span>전체 개요<span class="count">LIVE</span></div>
-        <div class="adm-menu-item pending"><span class="icon">⚡</span>실시간 활동<span class="pending-mark">Phase D-8</span></div>
+        <!-- 2026-05-16 D-2 박음: D-8 dashboard 종합 mock 활성화 (D-Day 4팀 오픈 모니터링 본진) -->
+        <div class="adm-menu-item" onclick="window.admShowDashboardSection('realtime')"><span class="icon">⚡</span>실시간 활동<span class="count">MOCK</span></div>
         <div class="adm-menu-item pending"><span class="icon">🔥</span>인기 스크립트<span class="pending-mark">Phase D-2</span></div>
         <div class="adm-menu-item pending"><span class="icon">📞</span>신규 가입<span class="pending-mark">Phase D-1</span></div>
       </div>
@@ -1759,17 +1760,19 @@ body.adm-active { overflow: hidden !important; }
         <div class="adm-menu-section-title">점검</div>
         <div class="adm-menu-item pending"><span class="icon">🚨</span>오류 리포트<span class="pending-mark">Phase D-6</span></div>
         <div class="adm-menu-item pending"><span class="icon">⏳</span>미처리 신고<span class="pending-mark">Phase D-3</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🧪</span>시스템 상태<span class="pending-mark">Phase D-8</span></div>
-        <div class="adm-menu-item pending"><span class="icon">💾</span>DB 사용량<span class="pending-mark">Phase D-8</span></div>
+        <!-- 2026-05-16 D-2 박음: D-8 시스템 상태 + DB 사용량 mock 활성화 -->
+        <div class="adm-menu-item" onclick="window.admShowDashboardSection('system')"><span class="icon">🧪</span>시스템 상태<span class="count">MOCK</span></div>
+        <div class="adm-menu-item" onclick="window.admShowDashboardSection('db')"><span class="icon">💾</span>DB 사용량<span class="count">MOCK</span></div>
       </div>
 
       <div class="adm-menu-divider"></div>
 
       <div class="adm-menu-section">
         <div class="adm-menu-section-title">관리자 도구</div>
-        <div class="adm-menu-item pending"><span class="icon">📤</span>Export<span class="pending-mark">Phase E</span></div>
-        <div class="adm-menu-item pending"><span class="icon">🔧</span>SQL 콘솔<span class="pending-mark">Phase E</span></div>
-        <div class="adm-menu-item pending"><span class="icon">📜</span>활동 로그<span class="pending-mark">Phase E</span></div>
+        <!-- 2026-05-16 D-2 박음: Phase E 정밀화 mock 활성화 (Export/SQL/활동로그 안내 모달) -->
+        <div class="adm-menu-item" onclick="window.admShowEtoolModal('export')"><span class="icon">📤</span>Export<span class="count">MOCK</span></div>
+        <div class="adm-menu-item" onclick="window.admShowEtoolModal('sql')"><span class="icon">🔧</span>SQL 콘솔<span class="count">MOCK</span></div>
+        <div class="adm-menu-item" onclick="window.admShowEtoolModal('logs')"><span class="icon">📜</span>활동 로그<span class="count">MOCK</span></div>
       </div>
     </div>
 
@@ -1829,6 +1832,16 @@ body.adm-active { overflow: hidden !important; }
         <div class="adm-menu-item pending"><span class="icon">✅</span>승인 대기<span class="pending-mark">v1.2</span></div>
         <div class="adm-menu-item pending"><span class="icon">🚫</span>반려 게시글<span class="pending-mark">v1.2</span></div>
       </div>
+
+      <!-- 2026-05-16 D-2 박음: auto_hub_promotion_v1 spec §7 정합 — 자동 허브 이식 관리 신규 섹션 -->
+      <div class="adm-menu-divider"></div>
+      <div class="adm-menu-section">
+        <div class="adm-menu-section-title">🤖 자동 허브 이식 (auto_hub v1)</div>
+        <div class="adm-menu-item" onclick="window.admShowHubPromotion('pending')"><span class="icon">📋</span>승급 대기 (점수 0.4~0.6)<span class="count">MOCK</span></div>
+        <div class="adm-menu-item" onclick="window.admShowHubPromotion('promoted')"><span class="icon">✅</span>자동 승급된 자료<span class="count">MOCK</span></div>
+        <div class="adm-menu-item" onclick="window.admShowHubPromotion('revoked')"><span class="icon">🚫</span>admin 회수된 자료<span class="count">MOCK</span></div>
+        <div class="adm-menu-item" onclick="window.admShowHubPromotion('weights')"><span class="icon">⚙️</span>승급 가중치 튜닝<span class="count">MOCK</span></div>
+      </div>
     </div>
     <div class="adm-menu-pane" data-view="analytics" style="display:none;">
       <div class="adm-menu-category">ADMIN · 통계</div>
@@ -1863,8 +1876,9 @@ body.adm-active { overflow: hidden !important; }
       <div class="adm-menu-title">결제·플랜</div>
       <div class="adm-menu-section">
         <div class="adm-menu-section-title">결제 운영</div>
-        <div class="adm-menu-item pending"><span class="icon">💳</span>구독·결제<span class="pending-mark">Phase D-7</span></div>
-        <div class="adm-menu-item pending"><span class="icon">📦</span>플랜 관리<span class="pending-mark">Phase D-7</span></div>
+        <!-- 2026-05-16 D-2 박음: D-7 billing mock 활성화 (Phase C mock 본문 정합) -->
+        <div class="adm-menu-item active"><span class="icon">💳</span>구독·결제<span class="count">MOCK</span></div>
+        <div class="adm-menu-item active"><span class="icon">📦</span>플랜 관리<span class="count">MOCK</span></div>
       </div>
     </div>
     <div class="adm-menu-pane" data-view="settings" style="display:none;">
@@ -3497,9 +3511,186 @@ body.adm-active { overflow: hidden !important; }
       window.admLoadAnalytics();
     } else if (viewKey === 'logs' && typeof window.admLoadLogs === 'function') {
       window.admLoadLogs();
+    } else if (viewKey === 'billing' && typeof window.admLoadBilling === 'function') {
+      /* 2026-05-16 D-2 박음: D-7 billing mock 활성화 */
+      window.admLoadBilling();
     }
     /* [Step 4 정합] settings 분기는 위 elseif (operations 다음)로 통합 — admLoadSettings + admReloadPreview 동시 호출 */
   };
+
+  /* ═════════════════════════════════════════════════════════════════════
+   * 2026-05-16 D-2 박음: D-7 billing + D-8 dashboard 종합 + Phase E + auto_hub mock
+   * ═════════════════════════════════════════════════════════════════════ */
+
+  /* D-8 dashboard 종합 — 실시간 활동 / 시스템 상태 / DB 사용량 mock */
+  window.admShowDashboardSection = function(section) {
+    var mockData = {
+      realtime: {
+        title: '⚡ 실시간 활동 (mock — 5초 주기 갱신)',
+        body: '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0;">' +
+              '<div class="adm-kpi-card"><div class="adm-kpi-label">활성 사용자</div><div class="adm-kpi-value">12</div><div class="adm-kpi-sub">지난 5분</div></div>' +
+              '<div class="adm-kpi-card"><div class="adm-kpi-label">신규 가입</div><div class="adm-kpi-value">2</div><div class="adm-kpi-sub">오늘</div></div>' +
+              '<div class="adm-kpi-card"><div class="adm-kpi-label">신규 게시글</div><div class="adm-kpi-value">8</div><div class="adm-kpi-sub">오늘</div></div>' +
+              '<div class="adm-kpi-card"><div class="adm-kpi-label">활성 단체방</div><div class="adm-kpi-value">3</div><div class="adm-kpi-sub">현재 메시지 中</div></div>' +
+              '</div>' +
+              '<p style="color:var(--admin-text-secondary);font-size:13px;">실 데이터 연결: Supabase Realtime + presence channel (Phase D-8 구현 본진, 5/19 후 진입)</p>'
+      },
+      system: {
+        title: '🧪 시스템 상태 (mock)',
+        body: '<table style="width:100%;border-collapse:collapse;margin:20px 0;">' +
+              '<thead><tr><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">컴포넌트</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">상태</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">응답시간</th></tr></thead>' +
+              '<tbody>' +
+              '<tr><td style="padding:10px;">Supabase API</td><td><span style="color:#10b981;">● 정상</span></td><td>87ms</td></tr>' +
+              '<tr><td style="padding:10px;">Auth Service</td><td><span style="color:#10b981;">● 정상</span></td><td>52ms</td></tr>' +
+              '<tr><td style="padding:10px;">Storage</td><td><span style="color:#10b981;">● 정상</span></td><td>112ms</td></tr>' +
+              '<tr><td style="padding:10px;">Resend SMTP</td><td><span style="color:#10b981;">● 정상</span></td><td>340ms</td></tr>' +
+              '<tr><td style="padding:10px;">PWA Service Worker</td><td><span style="color:#10b981;">● v28</span></td><td>-</td></tr>' +
+              '</tbody></table>' +
+              '<p style="color:var(--admin-text-secondary);font-size:13px;">실 데이터 연결: /health endpoint + Supabase pg_stat (Phase D-8 구현 본진)</p>'
+      },
+      db: {
+        title: '💾 DB 사용량 (mock)',
+        body: '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;">' +
+              '<div class="adm-kpi-card"><div class="adm-kpi-label">posts (게시글)</div><div class="adm-kpi-value">718</div><div class="adm-kpi-sub">5/15 시드 462 + 카톡 시드 + 운영</div></div>' +
+              '<div class="adm-kpi-card"><div class="adm-kpi-label">users</div><div class="adm-kpi-value">10</div><div class="adm-kpi-sub">admin 1 + GA 9</div></div>' +
+              '<div class="adm-kpi-card"><div class="adm-kpi-label">Storage (board_attachments)</div><div class="adm-kpi-value">3.4GB</div><div class="adm-kpi-sub">462 PDF / 50MB 한도</div></div>' +
+              '</div>' +
+              '<div style="margin:30px 0;padding:16px;background:var(--admin-info-bg);border-radius:8px;">' +
+              '<strong style="color:var(--admin-info-text);">Pro 플랜 한도</strong><br>' +
+              '<span style="color:var(--admin-text-secondary);font-size:13px;">DB 8GB / Storage 100GB / Egress 250GB / Edge Function 2M</span>' +
+              '</div>' +
+              '<p style="color:var(--admin-text-secondary);font-size:13px;">실 데이터 연결: pg_size_pretty(pg_database_size) + Storage API (Phase D-8 구현 본진)</p>'
+      }
+    };
+    var data = mockData[section];
+    if (!data) return;
+    window.admShowModal(data.title, data.body);
+  };
+
+  /* Phase E 정밀화 — Export / SQL 콘솔 / 활동 로그 안내 모달 */
+  window.admShowEtoolModal = function(tool) {
+    var info = {
+      export: {
+        title: '📤 Export (Phase E 정밀화 — mock)',
+        body: '<p>다음 자료를 CSV/JSON으로 Export 박을 자리:</p>' +
+              '<ul style="margin:16px 0 16px 24px;line-height:1.8;">' +
+              '<li>전체 사용자 (users)</li>' +
+              '<li>전체 게시글 (posts) — board_type 별 필터</li>' +
+              '<li>활동 로그 (activity_logs) — 기간 필터</li>' +
+              '<li>매니저별 답변 통계</li>' +
+              '<li>허브 승급 자료 (auto_hub_promotion 정합)</li>' +
+              '</ul>' +
+              '<p style="color:var(--admin-text-secondary);font-size:13px;margin-top:20px;">구현 본진: 5/19 D+1 진입. Service Role Key + RPC + 클라이언트 다운로드 흐름.</p>'
+      },
+      sql: {
+        title: '🔧 SQL 콘솔 (Phase E 정밀화 — mock)',
+        body: '<p>admin 전용 안전 SQL 콘솔. 다음 제약 박힘:</p>' +
+              '<ul style="margin:16px 0 16px 24px;line-height:1.8;">' +
+              '<li><strong>SELECT 박는 자리만 허용</strong> (INSERT/UPDATE/DELETE/DROP 차단)</li>' +
+              '<li>실행 결과 100행 제한</li>' +
+              '<li>모든 쿼리 activity_logs에 자동 박힘 (감사 추적)</li>' +
+              '<li>쿼리 history 저장 (재실행 가능)</li>' +
+              '</ul>' +
+              '<p style="color:var(--admin-text-secondary);font-size:13px;margin-top:20px;">구현 본진: 5/19 D+1 진입. PostgreSQL EXECUTE 동적 + 정규식 사전 필터.</p>'
+      },
+      logs: {
+        title: '📜 활동 로그 (Phase E 정밀화 — mock)',
+        body: '<p>activity_logs 테이블 직접 조회 (Phase D-6에서 이미 박은 자리, Phase E 정밀화 본진):</p>' +
+              '<ul style="margin:16px 0 16px 24px;line-height:1.8;">' +
+              '<li>고급 필터 (event_type × user × 기간 × IP)</li>' +
+              '<li>실시간 tail 모드 (5초 주기 갱신)</li>' +
+              '<li>이상 활동 자동 감지 (예: 10분 안 100회 실패 로그인)</li>' +
+              '<li>CSV Export 박는 자리</li>' +
+              '</ul>' +
+              '<p style="color:var(--admin-text-secondary);font-size:13px;margin-top:20px;">기존 D-6 활동 로그 진입 = rail 로그 메뉴. 본 자리는 Phase E 고급 기능 추가.</p>'
+      }
+    };
+    var data = info[tool];
+    if (!data) return;
+    window.admShowModal(data.title, data.body);
+  };
+
+  /* auto_hub admin UI — 승급 대기 / 자동 승급 / 회수 / 가중치 튜닝 */
+  window.admShowHubPromotion = function(view) {
+    var body;
+    var title;
+    switch (view) {
+      case 'pending':
+        title = '📋 자동 허브 승급 대기 (점수 0.4~0.6)';
+        body = '<p>점수 0.4 이상이지만 0.6 미만 — admin 검토 후 수동 승급 또는 회수 박는 자리:</p>' +
+               '<table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;">' +
+               '<thead><tr><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">제목</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">점수</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">신호</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">액션</th></tr></thead>' +
+               '<tbody>' +
+               '<tr><td style="padding:10px;">68세 남 협심증 / 신장결석 종수술 ...</td><td>0.52</td><td>답변 4 / 회사 3 / 북마크 2</td><td><button class="adm-btn-sm">승급</button> <button class="adm-btn-sm adm-btn-ghost">회수</button></td></tr>' +
+               '<tr><td style="padding:10px;">간병인 사용일당 8시간 100% 지급 보험사 ...</td><td>0.58</td><td>답변 5 / 회사 4 / 북마크 3 / 구조화 0.8</td><td><button class="adm-btn-sm">승급</button> <button class="adm-btn-sm adm-btn-ghost">회수</button></td></tr>' +
+               '<tr><td style="padding:10px;">대장용종 4회 / 위 폴립 1회 뇌심+암 ...</td><td>0.45</td><td>답변 3 / 회사 2 / 북마크 1</td><td><button class="adm-btn-sm">승급</button> <button class="adm-btn-sm adm-btn-ghost">회수</button></td></tr>' +
+               '</tbody></table>' +
+               '<p style="color:var(--admin-text-secondary);font-size:13px;">실 데이터: posts WHERE promoted_score BETWEEN 0.4 AND 0.6 AND promoted_to_hub=false</p>';
+        break;
+      case 'promoted':
+        title = '✅ 자동 승급된 허브 자료 (점수 ≥ 0.6)';
+        body = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;">' +
+               '<div class="adm-kpi-card"><div class="adm-kpi-label">자동 승급 (룰)</div><div class="adm-kpi-value">0</div><div class="adm-kpi-sub">알고리즘 가동 후</div></div>' +
+               '<div class="adm-kpi-card"><div class="adm-kpi-label">AI 승급 (Claude)</div><div class="adm-kpi-value">0</div><div class="adm-kpi-sub">confidence ≥ 0.7</div></div>' +
+               '<div class="adm-kpi-card"><div class="adm-kpi-label">admin 수동 승급</div><div class="adm-kpi-value">0</div><div class="adm-kpi-sub">관리자 직접</div></div>' +
+               '</div>' +
+               '<p style="color:var(--admin-text-secondary);font-size:13px;">실 데이터: posts WHERE promoted_to_hub=true GROUP BY promotion_signals.method</p>';
+        break;
+      case 'revoked':
+        title = '🚫 admin 회수된 허브 자료';
+        body = '<p>자동 승급됐지만 admin이 다시 회수한 자료 (격리). 알고리즘 학습 자료 본진:</p>' +
+               '<table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;">' +
+               '<thead><tr><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">제목</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">회수 사유</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">회수 일시</th></tr></thead>' +
+               '<tbody>' +
+               '<tr><td colspan="3" style="padding:30px;text-align:center;color:var(--admin-text-secondary);">회수된 자료 박지 X — 알고리즘 가동 후 누적 박힘</td></tr>' +
+               '</tbody></table>';
+        break;
+      case 'weights':
+        title = '⚙️ 승급 가중치 튜닝 (auto_hub_promotion v1)';
+        body = '<p>점수 공식: <code>점수 = w_a×답변수 + w_b×회사다양성 + w_e×북마크 + w_f×구조화 + w_g×admin_boost</code></p>' +
+               '<table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;">' +
+               '<thead><tr><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">가중치</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">신호</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">현재 값</th><th style="text-align:left;padding:10px;border-bottom:1px solid var(--admin-border);">조정</th></tr></thead>' +
+               '<tbody>' +
+               '<tr><td style="padding:10px;">w_a</td><td>답변 수</td><td>0.25</td><td><input type="range" min="0" max="1" step="0.05" value="0.25" disabled></td></tr>' +
+               '<tr><td style="padding:10px;">w_b</td><td>회사 다양성 (최본진)</td><td>0.30</td><td><input type="range" min="0" max="1" step="0.05" value="0.30" disabled></td></tr>' +
+               '<tr><td style="padding:10px;">w_e</td><td>북마크</td><td>0.20</td><td><input type="range" min="0" max="1" step="0.05" value="0.20" disabled></td></tr>' +
+               '<tr><td style="padding:10px;">w_f</td><td>구조화 점수</td><td>0.15</td><td><input type="range" min="0" max="1" step="0.05" value="0.15" disabled></td></tr>' +
+               '<tr><td style="padding:10px;">w_g</td><td>admin boost</td><td>0.10</td><td><input type="range" min="0" max="1" step="0.05" value="0.10" disabled></td></tr>' +
+               '</tbody></table>' +
+               '<p style="color:var(--admin-text-secondary);font-size:13px;">조정 박는 자리 = 5/19 D+1 진입. 저장 시 app_settings 테이블에 박힘.</p>';
+        break;
+    }
+    window.admShowModal(title, body);
+  };
+
+  /* 공용 모달 (admin_v2.html 기존 .adm-modal 박혀 X 박힌 자리 — 간단 alert 또는 토스트로 대체) */
+  window.admShowModal = function(title, bodyHtml) {
+    var existing = document.getElementById('adm-mock-modal');
+    if (existing) existing.remove();
+    var modal = document.createElement('div');
+    modal.id = 'adm-mock-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;';
+    modal.innerHTML =
+      '<div style="background:var(--admin-bg);color:var(--admin-text-primary);border-radius:12px;max-width:760px;width:100%;max-height:85vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,0.4);">' +
+      '  <div style="padding:20px 24px;border-bottom:1px solid var(--admin-border);display:flex;justify-content:space-between;align-items:center;">' +
+      '    <h2 style="margin:0;font-size:18px;font-weight:700;">' + title + '</h2>' +
+      '    <button onclick="document.getElementById(\'adm-mock-modal\').remove()" style="background:transparent;border:none;color:var(--admin-text-secondary);font-size:24px;cursor:pointer;line-height:1;">×</button>' +
+      '  </div>' +
+      '  <div style="padding:24px;">' + bodyHtml + '</div>' +
+      '</div>';
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  };
+
+  /* D-7 billing — admLoadBilling (Phase C mock 본문 정합, JS 박지 X 박혀 있어 신규 박음) */
+  if (typeof window.admLoadBilling !== 'function') {
+    window.admLoadBilling = function() {
+      /* Phase C mock 본문은 HTML에 이미 박혀 있음 — JS는 단순 가시성 처리만 */
+      var section = document.querySelector('[data-section="billing"]');
+      if (section) section.style.display = '';
+      console.log('[admLoadBilling] D-7 mock 활성화 — Phase C mock 본문 정합');
+    };
+  }
 
   // ── 톤 전환 (영구 운영 기능 — 5종: light/warm/slate/black/navy) ───────
   window.admSwitchTone = function (tone) {
