@@ -2484,10 +2484,34 @@ async function fetchSearchPreview(q) {
     var enc = encodeURIComponent(q);
     var token = window.db.getToken();
     var h = { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token };
+
+    /* 2026-05-17 박음: 검색 범위 = 본인 지점 한정 본진 (멀티 테넌트 본진)
+       - 본인 branch_id / team_id lookup 박음 (users 테이블)
+       - 검색 scope = (본인 branch + 본인 team + 공용 qna) AND (텍스트 매칭)
+       - 추후 팀·지점 박힌 자리 증가 시 본진 격차 0 (RLS 본진 정합 + 클라이언트 측 안전망) */
+    var s = window.AppState || {};
+    var meBranchId = null, meTeamId = null;
+    if (s.userId) {
+      try {
+        var meRes = await fetch(window.SUPABASE_URL + '/rest/v1/users?id=eq.' + s.userId + '&select=branch_id,team_id', { headers: h });
+        var meRows = meRes.ok ? await meRes.json() : [];
+        var me = meRows[0] || {};
+        meBranchId = me.branch_id || null;
+        meTeamId = me.team_id || null;
+      } catch (e) { console.warn('[search] 사용자 정보 lookup 실패', e); }
+    }
+
+    /* PostgREST 본진: and=(or(텍스트),or(scope)) 박음 */
+    var textOr = 'or(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*,insurer_target.ilike.*' + enc + '*,display_name.ilike.*' + enc + '*,author_name.ilike.*' + enc + '*)';
+    var scopeArr = ['board_type.eq.qna'];  /* qna 소식지 = 공용 박힘 (모든 사용자) */
+    if (meBranchId) scopeArr.push('branch_id.eq.' + meBranchId);
+    if (meTeamId)   scopeArr.push('team_id.eq.' + meTeamId);
+    var scopeOr = 'or(' + scopeArr.join(',') + ')';
+    var postsUrl = window.SUPABASE_URL + '/rest/v1/posts?and=(' + textOr + ',' + scopeOr + ')&select=id,title,content,category,insurer_target&limit=10';
+
     var [sr, pr, qr] = await Promise.all([
       fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage&limit=4', { headers: h }),
-      /* 2026-05-17 박음: 검색 범위 확장 — insurer_target / display_name / author_name 박음 (회사명·발신자 검색 정합) + limit 4→10 */
-      fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*,insurer_target.ilike.*' + enc + '*,display_name.ilike.*' + enc + '*,author_name.ilike.*' + enc + '*)&select=id,title,content,category,insurer_target&limit=10', { headers: h }),
+      fetch(postsUrl, { headers: h }),
       fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3', { headers: h })
     ]);
     var [scripts, posts, quicks] = await Promise.all([
