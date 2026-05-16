@@ -1768,6 +1768,87 @@
   cursor: pointer;
 }
 
+/* 2026-05-17 박음: 답변 인라인 폼 (카드 내부 펼침 박는 자리) */
+.nav-v2-reply-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--color-surface-2, #F9FAFB);
+  border-radius: 8px;
+  border: 1.5px solid var(--brand-300, #DAA67B);
+}
+.nav-v2-reply-form .reply-form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.nav-v2-reply-form .reply-form-label {
+  font-size: 0.8125em;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.nav-v2-reply-form .reply-form-select {
+  flex: 1;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.8125em;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.nav-v2-reply-form .reply-form-textarea {
+  width: 100%;
+  min-height: 70px;
+  max-height: 200px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.8125em;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  resize: vertical;
+  box-sizing: border-box;
+}
+.nav-v2-reply-form .reply-form-textarea:focus {
+  outline: none;
+  border-color: var(--brand-400, #C4733A);
+}
+.nav-v2-reply-form .reply-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+.nav-v2-reply-form .reply-form-cancel,
+.nav-v2-reply-form .reply-form-submit {
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.8125em;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-v2-reply-form .reply-form-cancel {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+.nav-v2-reply-form .reply-form-submit {
+  background: var(--brand-500, #A0522D);
+  color: #FFFFFF;
+}
+.nav-v2-reply-form .reply-form-submit:hover {
+  background: var(--brand-700, #66331A);
+}
+
 @media (max-width: 768px) {
   .nav-v2-shell {
     height: calc(100vh - 160px);
@@ -4919,8 +5000,10 @@ window.filterTeamFeed = function(cat) {
   _renderTeamFeedList();
 };
 
+/* 2026-05-17 박음: 4팀 단체방2 새 공지 = 4팀 단체방 글쓰기 폼 재사용 + INSERT target=team_notices */
 window.openTeamFeedWriteModal = function() {
-  alert('공지 작성 본 본진 = 5/19 D+1 진입.\n\n시연 본진 = 7 샘플 박힌 자리.\n공지 7유형:\n  📌 운영 / 🚨 긴급 / 📦 상품 / 📋 인수 / 🎓 교육 / 📅 이벤트·일정 / 💬 기타');
+  _noticeWriteMode = 'team_feed';  /* submitNoticeForm에서 team_notices INSERT 분기 */
+  window.openManagerNoticeOverlay();
 };
 
 /* 2026-05-16 D-2 박음: 네비게이션방2 (nav_v2) 시연 본진 — 4유형 질문 + 인라인 답변 */
@@ -5093,12 +5176,132 @@ window.expandNavV2 = function(qId) {
   _renderNavV2List();
 };
 
+/* 2026-05-17 박음: 네비게이션방2 질문하기 = 네비게이션방 글쓰기 폼 재사용 + INSERT target=nav_questions */
 window.openNavV2WriteModal = function() {
-  alert('질문 작성 본진 = 5/19 D+1 진입.\n\n시연 본진 = 6 샘플 박힌 자리.\n질문 4유형:\n  📢 공지사항 / 🩺 인수 같음 / 📦 상품 같음 / ❓ 기타 잘 모르겠음');
+  _noticeWriteMode = 'nav_v2';  /* submitNoticeForm에서 nav_questions INSERT 분기 */
+  window.openWriteOverlay();
 };
 
+/* 2026-05-17 박음: 네비게이션방2 답변 인라인 폼 — 모든 사용자 + insurer_* 자동 매핑 */
 window.openNavV2ReplyModal = function(qId) {
-  alert('답변 작성 본진 = 5/19 D+1 진입.\n\n시연 본진 = 샘플 답변 박힌 자리.');
+  /* 카드 안 인라인 폼 박음 (모달 X) */
+  var card = document.querySelector('.nav-v2-card[data-q-id="' + qId + '"]');
+  /* card data-q-id 박지 X 박은 자리 박힘 박는 자리 = 박지 X — 폼 박는 자리 직접 박음 */
+  var formId = 'nav-v2-reply-form-' + qId;
+  if (document.getElementById(formId)) {
+    document.getElementById(formId).remove();
+    return;
+  }
+
+  /* 본인 role 박힌 자리 박음 — insurer_* = 자동 매핑 / 그 외 = 드롭다운 */
+  var role = (window.AppState && window.AppState.role) || '';
+  var isInsurerEmp = (role.indexOf('insurer_') === 0);
+
+  /* insurer_code 옵션 박음 */
+  var insurerOptions = ['DB손보', '메리츠', '삼성화재', '삼성생명', '현대해상',
+                        '한화손보', '한화생명', '흥국화재', '흥국생명',
+                        '라이나손보', '라이나생명', '신한라이프', 'KB손보', 'KB라이프',
+                        '미래에셋', 'KDB생명', '롯데손보', 'ABL', '교보생명', '농협손보', '농협생명'];
+
+  var optionsHtml;
+  if (isInsurerEmp) {
+    /* insurer_* role 박힌 자리 = 본인 회사 자동 매핑 (DB users.insurer_id 박힌 자리 본진, 다만 시연 박은 자리 = 본인 입력 박음) */
+    var myInsurer = (window.AppState && window.AppState.insurerName) || '미분류';
+    optionsHtml = '<option value="' + _noticeEscape(myInsurer) + '" selected>' + _noticeEscape(myInsurer) + ' (본인 회사)</option>';
+  } else {
+    /* admin / ga_* = 드롭다운 (NULL 허용) */
+    optionsHtml = '<option value="">출처 선택 (선택)</option>' +
+                  insurerOptions.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+  }
+
+  /* 인라인 폼 박음 */
+  var formHtml =
+    '<div class="nav-v2-reply-form" id="' + formId + '">' +
+      '<div class="reply-form-row">' +
+        '<label class="reply-form-label">출처 보험사:</label>' +
+        '<select class="reply-form-select" id="reply-insurer-' + qId + '">' + optionsHtml + '</select>' +
+      '</div>' +
+      '<textarea class="reply-form-textarea" id="reply-content-' + qId + '" ' +
+        'placeholder="답변 내용을 입력하세요... (예: [메리츠] 31간편으로 가능합니다)"></textarea>' +
+      '<div class="reply-form-actions">' +
+        '<button type="button" class="reply-form-cancel" onclick="document.getElementById(\'' + formId + '\').remove()">취소</button>' +
+        '<button type="button" class="reply-form-submit" onclick="window.submitNavV2Reply(\'' + qId + '\')">답변 등록</button>' +
+      '</div>' +
+    '</div>';
+
+  /* 카드 박힌 자리에 인라인 폼 박음 */
+  var allCards = document.querySelectorAll('.nav-v2-card');
+  allCards.forEach(function(c) {
+    var noAns = c.querySelector('.nav-v2-no-answers');
+    var ansSection = c.querySelector('.nav-v2-answers');
+    var replyBtnInside = c.querySelector('button[onclick*="' + qId + '"]');
+    if (replyBtnInside) {
+      /* 본 카드 박은 자리 박음 */
+      var insertAfter = noAns || ansSection;
+      if (insertAfter) {
+        insertAfter.insertAdjacentHTML('afterend', formHtml);
+      } else {
+        c.insertAdjacentHTML('beforeend', formHtml);
+      }
+    }
+  });
+
+  /* 포커스 박음 */
+  setTimeout(function() {
+    var txt = document.getElementById('reply-content-' + qId);
+    if (txt) txt.focus();
+  }, 50);
+};
+
+/* 답변 등록 = nav_answers INSERT (트리거가 last_activity_at + answer_count 자동 갱신) */
+window.submitNavV2Reply = async function(qId) {
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+
+  var contentEl = document.getElementById('reply-content-' + qId);
+  var insurerEl = document.getElementById('reply-insurer-' + qId);
+  var content = contentEl ? contentEl.value.trim() : '';
+  var insurerCode = insurerEl ? insurerEl.value.trim() : '';
+
+  if (!content) { alert('답변 내용을 입력해주세요.'); return; }
+
+  var s = window.AppState || {};
+  if (!s.userId) { alert('로그인이 필요합니다.'); return; }
+
+  /* 본인 team_id 박음 (RLS 정합) */
+  var teamId = s.teamId || null;
+  if (!teamId) {
+    /* 4팀 단톡방 시연 본진 — 4팀 UUID lookup 박지 X 박힌 자리는 박지 X */
+    alert('팀 정보 박지 X 박혀 있습니다.');
+    return;
+  }
+
+  var body = {
+    question_id: qId,
+    team_id: teamId,
+    author_id: s.userId,
+    content: content,
+    insurer_code: insurerCode || null
+  };
+
+  try {
+    var res = await window.db.fetch('/rest/v1/nav_answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('INSERT ' + res.status);
+
+    /* 폼 제거 + 재로드 (트리거가 last_activity_at + answer_count 갱신 = 카드 위로 이동) */
+    var formId = 'nav-v2-reply-form-' + qId;
+    var form = document.getElementById(formId);
+    if (form) form.remove();
+    /* 본인 답변 박힌 자리 표시 안내 + 새로고침 박음 */
+    _navV2ExpandedQ[qId] = true;  /* 본 카드 펼침 박은 자리 유지 */
+    _loadNavV2();
+  } catch (e) {
+    console.error('[nav_v2] 답변 등록 실패:', e);
+    alert('답변 등록 실패: ' + (e.message || e));
+  }
 };
 
 function _toggleNavV2Shell(board) {
@@ -8186,17 +8389,109 @@ window.submitNoticeForm = async function() {
   var allowedRoles;
   if (_noticeWriteMode === 'smart_board') {
     allowedRoles = ['admin'];
-  } else if (_noticeWriteMode === 'manager_notice') {
+  } else if (_noticeWriteMode === 'manager_notice' || _noticeWriteMode === 'team_feed') {
+    /* 2026-05-17 박음: team_feed = 실장 본진 (admin + ga_branch_manager + ga_manager) */
     allowedRoles = ['admin','ga_branch_manager','ga_manager'];
+  } else if (_noticeWriteMode === 'nav_v2') {
+    /* 2026-05-17 박음: nav_v2 질문 = 모든 ga_* (질문은 누구나) */
+    allowedRoles = ['admin','ga_branch_manager','ga_manager','ga_member','ga_staff'];
   } else {
     allowedRoles = ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
   }
   if (allowedRoles.indexOf(role) === -1) {
     var rbacMsg;
     if (_noticeWriteMode === 'smart_board')          rbacMsg = '스마트게시판은 관리자만 작성할 수 있습니다.';
+    else if (_noticeWriteMode === 'team_feed')       rbacMsg = '4팀 단체방2 공지는 실장 이상만 작성할 수 있습니다.';
+    else if (_noticeWriteMode === 'nav_v2')          rbacMsg = '네비게이션방2 질문은 GA 멤버만 작성할 수 있습니다.';
     else if (_noticeWriteMode === 'manager_notice')  rbacMsg = '실장님 공지는 관리자 또는 지점장·실장만 작성할 수 있습니다.';
     else                                             rbacMsg = '공지는 관리자 또는 매니저급만 작성할 수 있습니다.';
     alert(rbacMsg);
+    return;
+  }
+
+  /* 2026-05-17 박음: team_feed → team_notices INSERT 분기 */
+  if (_noticeWriteMode === 'team_feed') {
+    var noticeTypeMap = {
+      '운영':'operation', '운영 공지':'operation',
+      '긴급':'urgent', '긴급 공지':'urgent',
+      '상품':'product', '상품 공지':'product',
+      '인수':'underwriting', '인수 공지':'underwriting',
+      '교육':'education', '교육 안내':'education',
+      '이벤트':'event', '이벤트·일정':'event', '이벤트/일정':'event',
+      '기타':'etc'
+    };
+    var ntype = noticeTypeMap[noticeType] || 'etc';
+    var teamId_tf = s.teamId || null;
+    if (!teamId_tf) { alert('팀 정보 박지 X'); return; }
+    var submitBtn_tf = document.querySelector('#write-form-notice .wfn-btn-primary');
+    if (submitBtn_tf) { submitBtn_tf.disabled = true; submitBtn_tf.textContent = '등록 중...'; }
+    try {
+      var tfBody = {
+        team_id: teamId_tf,
+        author_id: s.userId || '',
+        notice_type: ntype,
+        scope: audience || 'team_internal',
+        title: title,
+        content: rawContent
+      };
+      var tfRes = await window.db.fetch('/rest/v1/team_notices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(tfBody)
+      });
+      if (!tfRes.ok) throw new Error('team_notices INSERT ' + tfRes.status);
+      window.closeWriteOverlay();
+      if (typeof _loadTeamFeed === 'function') _loadTeamFeed();
+      alert('4팀 단체방2 공지가 등록되었습니다.');
+    } catch (e) {
+      console.error('[team_feed] INSERT 실패:', e);
+      alert('공지 등록 실패: ' + (e.message || e));
+    } finally {
+      if (submitBtn_tf) { submitBtn_tf.disabled = false; submitBtn_tf.textContent = '등록하기'; }
+      _noticeWriteMode = 'manager_notice';  /* mode reset */
+    }
+    return;
+  }
+
+  /* 2026-05-17 박음: nav_v2 → nav_questions INSERT 분기 */
+  if (_noticeWriteMode === 'nav_v2') {
+    var qTypeMap = {
+      '운영':'notice', '운영 공지':'notice', '공지':'notice', '공지사항':'notice',
+      '인수':'underwriting', '인수 공지':'underwriting', '인수 같음':'underwriting',
+      '상품':'product', '상품 공지':'product', '상품 같음':'product',
+      '교육':'etc', '교육 안내':'etc',
+      '이벤트':'etc', '이벤트·일정':'etc', '이벤트/일정':'etc',
+      '기타':'etc'
+    };
+    var qtype = qTypeMap[noticeType] || 'etc';
+    var teamId_q = s.teamId || null;
+    if (!teamId_q) { alert('팀 정보 박지 X'); return; }
+    var submitBtn_q = document.querySelector('#write-form-notice .wfn-btn-primary');
+    if (submitBtn_q) { submitBtn_q.disabled = true; submitBtn_q.textContent = '등록 중...'; }
+    try {
+      var qBody = {
+        team_id: teamId_q,
+        author_id: s.userId || '',
+        question_type: qtype,
+        title: title,
+        content: rawContent
+      };
+      var qRes = await window.db.fetch('/rest/v1/nav_questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(qBody)
+      });
+      if (!qRes.ok) throw new Error('nav_questions INSERT ' + qRes.status);
+      window.closeWriteOverlay();
+      if (typeof _loadNavV2 === 'function') _loadNavV2();
+      alert('네비게이션방2 질문이 등록되었습니다.');
+    } catch (e) {
+      console.error('[nav_v2] INSERT 실패:', e);
+      alert('질문 등록 실패: ' + (e.message || e));
+    } finally {
+      if (submitBtn_q) { submitBtn_q.disabled = false; submitBtn_q.textContent = '등록하기'; }
+      _noticeWriteMode = 'navigation';  /* mode reset */
+    }
     return;
   }
 
