@@ -2486,7 +2486,8 @@ async function fetchSearchPreview(q) {
     var h = { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token };
     var [sr, pr, qr] = await Promise.all([
       fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage&limit=4', { headers: h }),
-      fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)&select=id,title,content,category&limit=4', { headers: h }),
+      /* 2026-05-17 박음: 검색 범위 확장 — insurer_target / display_name / author_name 박음 (회사명·발신자 검색 정합) + limit 4→10 */
+      fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*,insurer_target.ilike.*' + enc + '*,display_name.ilike.*' + enc + '*,author_name.ilike.*' + enc + '*)&select=id,title,content,category,insurer_target&limit=10', { headers: h }),
       fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3', { headers: h })
     ]);
     var [scripts, posts, quicks] = await Promise.all([
