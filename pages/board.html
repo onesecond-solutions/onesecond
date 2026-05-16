@@ -4307,10 +4307,12 @@ async function _loadNoticeRoom(board) {
   }
 
   try {
+    /* 2026-05-16 박음: limit=200 → 1000 (manager_notice 263건 / navigation 345건+ 잘림 격차 해소) */
+    /* 향후 1000건 초과 시 페이지네이션 도입 필요 */
     var res = await window.db.fetch(
       '/rest/v1/posts?board_type=eq.' + encodeURIComponent(board) +
       '&select=id,title,content,author_id,author_name,display_name,display_author,category,attachments,is_notice,is_pinned,pin_order,created_at' +
-      '&order=created_at.asc&limit=200'
+      '&order=created_at.asc&limit=1000'
     );
     var posts = res.ok ? await res.json() : [];
 
