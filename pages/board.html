@@ -1745,14 +1745,14 @@
 }
 
 /* 메시지 흐름 */
-/* 2026-05-16 박음: 인박스 제거 후 콘텐츠 풀 확장 본진 — 메시지 영역 자체 padding 16px 박음 (내부 박힘) */
-/* width/height 100% = flex:1 + min-height:0 박힌 자리 정합 (parent flex column + min-height:0 박혀 있어 자동 풀 박힘) */
+/* 2026-05-16 박음: 인박스 통째 제거 본진 — padding 0 (edge-to-edge) + 콘텐츠 풀 박음 */
+/* 좌우 박힘 = .notice-msg-row 자체 padding 박음 (시각 격차 0 + 인박스 박지 X 정합) */
 .notice-room-chat {
   flex: 1;
   width: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px;
+  padding: 0;
   display: flex; flex-direction: column; gap: 12px;
   scrollbar-width: thin;
 }
@@ -1761,7 +1761,11 @@
 
 /* v2 PART D-4 메시지 버블 좌우 여백 축소 (2026-05-14 5/18 D-4) */
 /* 한 줄당 글자수 확보 — 옛 "조회때 말씀드린 일배책 사 / 례들" 식 끊김 해소 */
-.notice-msg-row { display: flex; align-items: flex-end; gap: 6px; }
+/* 2026-05-16 박음: .notice-room-chat padding 0 박힌 자리 정합 — 메시지 row 자체 좌우 padding 박음 */
+/* 첫 row :first-child + 마지막 row :last-child 상하 padding 박음 (컨테이너 경계 박힘 격차 해소) */
+.notice-msg-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 16px; }
+.notice-msg-row:first-child { padding-top: 16px; }
+.notice-msg-row:last-child { padding-bottom: 16px; }
 .notice-msg-row.is-mine { justify-content: flex-end; }
 .notice-msg-avatar {
   width: 32px; height: 32px; border-radius: 50%;

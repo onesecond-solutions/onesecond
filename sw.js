@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v24-20260516-prefs-btn-right';
+const CACHE_NAME = 'onesecond-v25-20260516-chat-edge-to-edge';
 const CACHE_URLS = [
   '/',
   '/app.html',
