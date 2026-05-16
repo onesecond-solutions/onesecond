@@ -229,7 +229,9 @@
 
 .home-hex-tooltip {
   position: absolute;
-  width: 280px;
+  /* 2026-05-17 박음: 반응형 박음 — 데스크탑 280px / 모바일 = 90vw 박음 (격차 회피) */
+  width: clamp(220px, min(280px, 80vw), 280px);
+  max-width: 90vw;
   background: var(--color-surface);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-md);
