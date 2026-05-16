@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v49-20260517-d-area-hover-preview';
+const CACHE_NAME = 'onesecond-v50-20260517-cal-overlay-brand-1line';
 const CACHE_URLS = [
   '/',
   '/app.html',

@@ -300,10 +300,11 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 50;
-  /* 2026-05-17 갱신: 햄버거 박지 X (B영역으로 이동) → 옛 grid 박음 (1fr / 420max / 1fr) */
+  /* 2026-05-17 갱신: brand 박힌 자리 = auto 박음 (옛 1fr 박힌 자리 = 좁은 박힘 + 줄바꿈 격차 본진 박은 자리) */
   display: grid;
-  grid-template-columns: 1fr minmax(auto, 420px) 1fr;
+  grid-template-columns: auto minmax(auto, 420px) 1fr;
   align-items: center;
+  gap: var(--space-4);
   padding: 0 var(--space-6);
 }
 /* 2026-05-17 박음: A영역 콘텐츠 = 1280px 박음 (로그인 전 정합). 배경 = 풀 너비 박힘 */
@@ -604,6 +605,68 @@ body.mobile-sidebar-open::before {
 
 /* 2026-05-17 갱신: 옛 작은 popover 박지 X (D영역 통째 박힘 자리로 박음) */
 .menu-preview-popover { display: none !important; }
+
+/* 2026-05-17 박음: 이번 달 운영 일정 오버레이 (C영역 카드 클릭 박힘 자리) */
+.cal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.cal-overlay.is-open { display: flex; }
+.cal-overlay-panel {
+  background: #FFFFFF;
+  border-radius: 16px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.cal-overlay-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.cal-overlay-header h2 { margin: 0; font-size: 1.0625em; font-weight: 700; color: var(--color-text-primary); }
+.cal-overlay-close {
+  width: 36px; height: 36px; border: 0; background: transparent;
+  font-size: 22px; cursor: pointer; border-radius: 8px; color: var(--color-text-secondary);
+}
+.cal-overlay-close:hover { background: var(--color-surface-2); }
+.cal-overlay-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.cal-overlay-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  margin-bottom: 10px; background: var(--color-surface);
+}
+.cal-overlay-item:last-child { margin-bottom: 0; }
+.cal-overlay-date {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 56px; height: 56px; border-radius: var(--radius-sm);
+  background: var(--brand-50, #FDF4EF); color: var(--brand-700, #66331A); flex-shrink: 0;
+}
+.cal-overlay-date .m { font-size: 0.75em; font-weight: 600; }
+.cal-overlay-date .d { font-size: 1.375em; font-weight: 800; line-height: 1; }
+.cal-overlay-body-text { flex: 1; min-width: 0; }
+.cal-overlay-event { font-weight: 700; color: var(--color-text-primary); margin-bottom: 2px; }
+.cal-overlay-tag {
+  display: inline-block; font-size: 0.75em; padding: 2px 8px; border-radius: 9999px;
+  background: var(--color-surface-2); color: var(--color-text-secondary);
+}
+.cal-overlay-tag.t-acceptance { background: #FEE2E2; color: #991B1B; }
+.cal-overlay-tag.t-product    { background: #DBEAFE; color: #1E3A8A; }
+.cal-overlay-tag.t-urgent     { background: #FEF3C7; color: #92400E; }
+.cal-overlay-tag.t-notice     { background: #E0E7FF; color: #3730A3; }
 .menu-preview-panel {
   background: #FFFFFF;
   border-radius: 16px;
@@ -751,12 +814,13 @@ body.mobile-sidebar-open::before {
 .d > * { flex-shrink: 0; width: 100%; }
 
 /* 2026-05-17 박음: 메뉴 hover = D영역 통째 박힘 자리 = 페이지 미리보기 박힘 */
+/* 2026-05-17 갱신: z-index 100 → 175 박음 (body.mobile-sidebar-open::before backdrop z-index 150 박힌 자리 위, B영역 200 박힌 자리 아래) */
 .d-preview-overlay {
   display: none;
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: #FFFFFF;
-  z-index: 100;
+  z-index: 175;
   flex-direction: column;
 }
 .d-preview-overlay.is-open { display: flex; }
@@ -1592,6 +1656,12 @@ body.mobile-sidebar-open::before {
           <div class="notify-kicker">팀 흐름</div>
           <div class="notify-title">오늘 질문 12건</div>
           <div class="notify-desc">팀 전체 운영 흐름 — 답변 대기 3건</div>
+        </div>
+        <!-- 2026-05-17 박음: 이번 달 운영 일정 흡수 카드 (board.html .pg-calendar-board 박힌 자리에서 C영역 박음) -->
+        <div class="c-box notify-card c-cal-card" onclick="window.openCalendarOverlay()" style="cursor:pointer;">
+          <div class="notify-kicker">📅 이번 달 운영 일정</div>
+          <div class="notify-title">4건 박힘</div>
+          <div class="notify-desc">메리츠 인수 · KB 신상품 · 전산 점검 · 녹취 변경</div>
         </div>
       </div>
       <div class="c-section" id="c-myspace">
@@ -3059,6 +3129,46 @@ document.addEventListener('click', function(e) {
   <iframe id="menu-preview-popover-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
 </div>
 
+<!-- 2026-05-17 박음: 이번 달 운영 일정 오버레이 (C영역 카드 클릭 박힘 자리) -->
+<div class="cal-overlay" id="cal-overlay" onclick="if(event.target===this) window.closeCalendarOverlay()">
+  <div class="cal-overlay-panel">
+    <div class="cal-overlay-header">
+      <h2>📅 이번 달 운영 일정 · 4건</h2>
+      <button class="cal-overlay-close" type="button" onclick="window.closeCalendarOverlay()" aria-label="닫음">×</button>
+    </div>
+    <div class="cal-overlay-body">
+      <div class="cal-overlay-item">
+        <div class="cal-overlay-date"><span class="m">5월</span><span class="d">15</span></div>
+        <div class="cal-overlay-body-text">
+          <div class="cal-overlay-event">메리츠 인수 변경</div>
+          <span class="cal-overlay-tag t-acceptance">인수</span>
+        </div>
+      </div>
+      <div class="cal-overlay-item">
+        <div class="cal-overlay-date"><span class="m">5월</span><span class="d">16</span></div>
+        <div class="cal-overlay-body-text">
+          <div class="cal-overlay-event">KB 신상품 출시</div>
+          <span class="cal-overlay-tag t-product">신상품</span>
+        </div>
+      </div>
+      <div class="cal-overlay-item">
+        <div class="cal-overlay-date"><span class="m">5월</span><span class="d">18</span></div>
+        <div class="cal-overlay-body-text">
+          <div class="cal-overlay-event">전산 점검</div>
+          <span class="cal-overlay-tag t-urgent">긴급</span>
+        </div>
+      </div>
+      <div class="cal-overlay-item">
+        <div class="cal-overlay-date"><span class="m">5월</span><span class="d">20</span></div>
+        <div class="cal-overlay-body-text">
+          <div class="cal-overlay-event">녹취 변경</div>
+          <span class="cal-overlay-tag t-notice">공지</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* 2026-05-17 갱신: B영역 메뉴 hover = 작은 popover (옛 큰 클릭 오버레이 박지 X)
    본인 본진 본질: "마우스 가져가면 미리보기" + "이미지 안줘도 알아서 해결" → iframe 자동 박음 */
@@ -3136,6 +3246,24 @@ document.addEventListener('mouseleave', function(e) {
     _hidePreviewPopoverSoon();
   }
 }, true);
+
+/* 2026-05-17 박음: 이번 달 운영 일정 오버레이 박음 (C영역 카드 클릭 박힘 자리) */
+window.openCalendarOverlay = function() {
+  var ov = document.getElementById('cal-overlay');
+  if (ov) ov.classList.add('is-open');
+};
+window.closeCalendarOverlay = function() {
+  var ov = document.getElementById('cal-overlay');
+  if (ov) ov.classList.remove('is-open');
+};
+
+/* ESC 박은 자리 닫음 */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var ov = document.getElementById('cal-overlay');
+    if (ov && ov.classList.contains('is-open')) window.closeCalendarOverlay();
+  }
+});
 </script>
 
 </body>
