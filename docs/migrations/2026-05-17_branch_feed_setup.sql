@@ -21,6 +21,17 @@
 BEGIN;
 
 -- ┌─────────────────────────────────────────────────────────────────────┐
+-- │ [0] team_id NOT NULL 제약 해제 — 지점 게시판 = team 박지 X 박는 자리   │
+-- │     2026-05-17 Chrome AI 실행 격차 정정 (23502 NOT NULL 위반)          │
+-- └─────────────────────────────────────────────────────────────────────┘
+
+ALTER TABLE public.team_notices
+  ALTER COLUMN team_id DROP NOT NULL;
+
+COMMENT ON COLUMN public.team_notices.team_id IS
+  'team 게시판(scope=team_internal) 박힌 자리에만 박힘. 지점 게시판(scope=branch_internal) = NULL (branch_id 박힘).';
+
+-- ┌─────────────────────────────────────────────────────────────────────┐
 -- │ [1] team_notices에 branch_id 컬럼 + source 컬럼 추가 (추천 본진 대비)   │
 -- └─────────────────────────────────────────────────────────────────────┘
 
