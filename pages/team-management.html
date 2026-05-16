@@ -329,16 +329,210 @@
 
   <div class="tm-invite-actions">
     <button type="button" class="tm-invite-btn primary"
-            onclick="window.alert('팀원 초대 기능은 곧 활성화 예정입니다.')">+ 팀원 초대</button>
+            onclick="window.openTeamInviteModal('member')">+ 팀원 초대</button>
     <button type="button" class="tm-invite-btn"
-            onclick="window.alert('보험사 담당자 초대 기능은 곧 활성화 예정입니다.')">+ 보험사 담당자 초대</button>
+            onclick="window.openTeamInviteModal('insurer')">+ 보험사 담당자 초대</button>
   </div>
 
-  <div class="tm-invite-note">
-    초대 링크 발송, 가입 승인, 권한 매트릭스 매핑은 다음 단계에서 활성화됩니다.<br>
-    현재 화면은 <strong>조직 운영 구조가 준비되어 있다는 것</strong>을 보여주는 단계입니다.
+  <!-- 초대 박힌 자리 list -->
+  <div class="tm-invite-list-wrap" style="margin-top:var(--space-4);">
+    <div class="tm-invite-list-title" style="font-size:0.875em;font-weight:600;color:var(--color-text-secondary);margin-bottom:8px;">최근 초대 박힌 자리</div>
+    <div id="tm-invite-list">
+      <div class="tm-invite-note" style="opacity:0.7;">초대 박힌 자리 박지 X 박혀 있습니다.</div>
+    </div>
   </div>
 </section>
+
+<!-- ════════════════════════════════════════════════════════════
+     초대 모달 (2026-05-17 박음)
+════════════════════════════════════════════════════════════ -->
+<div id="tm-invite-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#FFFFFF;border-radius:16px;max-width:480px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.25);">
+    <h2 id="tm-invite-modal-title" style="margin:0 0 16px;font-size:18px;font-weight:700;color:var(--color-text-primary);">+ 팀원 초대</h2>
+
+    <form id="tm-invite-form" onsubmit="event.preventDefault(); window.submitTeamInvite();">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--color-text-secondary);margin-bottom:6px;">이메일 *</label>
+        <input type="email" id="tm-invite-email" required placeholder="palmember@example.com"
+               style="width:100%;height:42px;padding:0 12px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--color-text-secondary);margin-bottom:6px;">역할 *</label>
+        <select id="tm-invite-role" required
+                style="width:100%;height:42px;padding:0 12px;border:1px solid var(--color-border);border-radius:8px;font-size:14px;background:#FFFFFF;">
+          <option value="ga_member">설계사 (ga_member)</option>
+          <option value="ga_staff">스탭 (ga_staff)</option>
+          <option value="ga_manager">실장 (ga_manager)</option>
+          <option value="ga_branch_manager">지점장 (ga_branch_manager)</option>
+        </select>
+      </div>
+      <div id="tm-invite-result" style="display:none;margin:14px 0;padding:12px;background:var(--brand-50,#FDF4EF);border-radius:8px;font-size:13px;"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px;">
+        <button type="button" onclick="window.closeTeamInviteModal()"
+                style="height:38px;padding:0 16px;border:1px solid var(--color-border);background:#FFFFFF;color:var(--color-text-secondary);font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;">취소</button>
+        <button type="submit"
+                style="height:38px;padding:0 18px;border:0;background:var(--brand-500,#A0522D);color:#FFFFFF;font-size:14px;font-weight:700;border-radius:8px;cursor:pointer;">초대 링크 박음</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* 2026-05-17 박음: 팀원 초대 본진 — 모달 박음 + DB INSERT + 토큰 생성 + 클립보드 복사 */
+(function(){
+  /* 역할 구조 섹션 = admin만 박힘 (팀장님 명시 박은 자리) */
+  var s = window.AppState || {};
+  var role = s.role || '';
+  var rolesSection = document.getElementById('tm-roles-section');
+  if (rolesSection) {
+    rolesSection.style.display = (role === 'admin') ? '' : 'none';
+  }
+
+  /* 초대 박힌 자리 list 로드 */
+  loadInviteList();
+})();
+
+window.openTeamInviteModal = function(type) {
+  var modal = document.getElementById('tm-invite-modal');
+  var titleEl = document.getElementById('tm-invite-modal-title');
+  var roleSel = document.getElementById('tm-invite-role');
+  var resultEl = document.getElementById('tm-invite-result');
+  if (!modal) return;
+
+  /* type 박힌 자리: 'member' = GA / 'insurer' = 보험사 */
+  if (type === 'insurer') {
+    if (titleEl) titleEl.textContent = '+ 보험사 담당자 초대';
+    if (roleSel) {
+      roleSel.innerHTML =
+        '<option value="insurer_member">보험사 일반 직원 (insurer_member)</option>' +
+        '<option value="insurer_staff">보험사 스탭 (insurer_staff)</option>' +
+        '<option value="insurer_manager">보험사 매니저 (insurer_manager)</option>';
+    }
+  } else {
+    if (titleEl) titleEl.textContent = '+ 팀원 초대';
+    if (roleSel) {
+      roleSel.innerHTML =
+        '<option value="ga_member">설계사 (ga_member)</option>' +
+        '<option value="ga_staff">스탭 (ga_staff)</option>' +
+        '<option value="ga_manager">실장 (ga_manager)</option>' +
+        '<option value="ga_branch_manager">지점장 (ga_branch_manager)</option>';
+    }
+  }
+
+  document.getElementById('tm-invite-email').value = '';
+  if (resultEl) { resultEl.style.display = 'none'; resultEl.innerHTML = ''; }
+  modal.style.display = 'flex';
+};
+
+window.closeTeamInviteModal = function() {
+  var modal = document.getElementById('tm-invite-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.submitTeamInvite = async function() {
+  var email = document.getElementById('tm-invite-email').value.trim();
+  var invitedRole = document.getElementById('tm-invite-role').value;
+  var resultEl = document.getElementById('tm-invite-result');
+  if (!email) { alert('이메일을 입력해주세요.'); return; }
+
+  var s = window.AppState || {};
+  if (!s.userId) { alert('로그인 정보 박지 X'); return; }
+
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+
+  /* 본인 team_id / branch_id lookup */
+  var teamId = null, branchId = null;
+  try {
+    var meRes = await window.db.fetch('/rest/v1/users?id=eq.' + s.userId + '&select=team_id,branch_id');
+    var meRows = meRes.ok ? await meRes.json() : [];
+    var me = meRows[0] || {};
+    teamId = me.team_id || null;
+    branchId = me.branch_id || null;
+  } catch (e) { console.warn('[invite] 사용자 lookup 실패', e); }
+
+  var body = {
+    inviter_id: s.userId,
+    email: email,
+    invited_role: invitedRole,
+    team_id: teamId,
+    branch_id: branchId
+  };
+
+  try {
+    var res = await window.db.fetch('/rest/v1/team_invitations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('INSERT ' + res.status);
+    var arr = await res.json();
+    var row = arr && arr[0];
+    if (!row || !row.invite_token) throw new Error('토큰 박지 X');
+
+    var inviteLink = window.location.origin + '/home_v2.html?invite=' + row.invite_token;
+
+    /* 클립보드 복사 박음 */
+    var copied = false;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      copied = true;
+    } catch (e) { console.warn('[invite] clipboard 실패', e); }
+
+    if (resultEl) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML =
+        '<strong style="color:var(--brand-700,#66331A);">✅ 초대 링크 박힘 (' + (copied ? '클립보드 복사 박힘' : '클립보드 박지 X') + ')</strong><br>' +
+        '<div style="margin-top:6px;padding:8px;background:#FFF;border-radius:6px;font-size:12px;word-break:break-all;">' + inviteLink + '</div>' +
+        '<div style="margin-top:6px;font-size:11px;color:var(--color-text-tertiary);">7일 안 만료. 이메일로 박은 자리 = 5/19 D+1 본진.</div>';
+    }
+    loadInviteList();
+  } catch (e) {
+    console.error('[invite] 박지 X', e);
+    if (resultEl) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = '<strong style="color:#B91C1C;">❌ 초대 박지 X:</strong> ' + (e.message || e);
+    }
+  }
+};
+
+async function loadInviteList() {
+  var listEl = document.getElementById('tm-invite-list');
+  if (!listEl || !window.db || !window.db.fetch) return;
+
+  try {
+    var res = await window.db.fetch('/rest/v1/team_invitations?select=id,email,invited_role,status,created_at,expires_at,invite_token&order=created_at.desc&limit=10');
+    var rows = res.ok ? await res.json() : [];
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="tm-invite-note" style="opacity:0.7;">초대 박힌 자리 박지 X 박혀 있습니다.</div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(function(r) {
+      var d = new Date(r.created_at);
+      var dateStr = (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      var statusBadge;
+      if (r.status === 'pending')  statusBadge = '<span style="background:#FEF3C7;color:#92400E;font-size:0.7em;font-weight:700;padding:2px 8px;border-radius:4px;">대기</span>';
+      else if (r.status === 'accepted') statusBadge = '<span style="background:#D1FAE5;color:#065F46;font-size:0.7em;font-weight:700;padding:2px 8px;border-radius:4px;">가입 완료</span>';
+      else statusBadge = '<span style="background:#FEE2E2;color:#991B1B;font-size:0.7em;font-weight:700;padding:2px 8px;border-radius:4px;">' + r.status + '</span>';
+      var roleLabelMap = {
+        ga_branch_manager: '지점장', ga_manager: '실장', ga_member: '설계사', ga_staff: '스탭',
+        insurer_manager: '보험사 매니저', insurer_member: '보험사 직원', insurer_staff: '보험사 스탭'
+      };
+      var link = window.location.origin + '/home_v2.html?invite=' + r.invite_token;
+      return '<div style="padding:10px 12px;background:var(--color-surface-2,#F9FAFB);border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+             '<div style="flex:1;min-width:0;">' +
+               '<div style="font-size:13px;font-weight:600;color:var(--color-text-primary);">' + r.email + '</div>' +
+               '<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">' + (roleLabelMap[r.invited_role] || r.invited_role) + ' · ' + dateStr + '</div>' +
+             '</div>' +
+             statusBadge +
+             '<button type="button" onclick="navigator.clipboard.writeText(\'' + link + '\').then(function(){alert(\'링크 박힘\');})" ' +
+               'style="height:28px;padding:0 10px;border:0;background:var(--brand-500,#A0522D);color:#FFF;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;">링크 복사</button>' +
+             '</div>';
+    }).join('');
+  } catch (e) {
+    console.warn('[invite] list 로드 실패', e);
+  }
+}
+</script>
 
 
 <!-- ════════════════════════════════════════════════════════════
@@ -367,9 +561,9 @@
 
 
 <!-- ════════════════════════════════════════════════════════════
-     4. 역할 구조 안내 (9 role 체계 일부)
+     4. 역할 구조 안내 (9 role 체계 일부) — admin만 박힘
 ════════════════════════════════════════════════════════════ -->
-<section class="tm-section">
+<section class="tm-section" id="tm-roles-section" style="display:none;">
   <div class="tm-section-header">
     <h3 class="tm-section-title">역할 구조</h3>
     <span class="tm-section-sub">9 role 체계 — 운영 · 협업 · 권한</span>
