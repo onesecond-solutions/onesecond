@@ -172,33 +172,7 @@
 }
 .pg-tab-row::-webkit-scrollbar { display: none; }
 
-/* 2026-05-17 박음: 모바일 768px 미만 = 탭 줄바꿈 (flex-wrap) + 폰트·패딩 축소 */
-@media (max-width: 768px) {
-  .pg-tab-row {
-    flex-wrap: wrap;
-    overflow-x: visible;
-    -webkit-mask-image: none;
-            mask-image: none;
-  }
-  .pg-tab-btn {
-    font-size: 0.78em !important;
-    padding: 8px 10px !important;
-    flex: 1 1 auto;
-    min-width: max-content;
-  }
-  .pg-tab-row-secondary .pg-tab-btn {
-    font-size: 0.72em !important;
-    padding: 6px 8px !important;
-  }
-}
-
-/* 2026-05-17 박음: 좁은 데스크탑 (768~1024px) = 폰트만 살짝 축소 */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .pg-tab-btn {
-    font-size: 0.82em;
-    padding: 10px 12px;
-  }
-}
+/* 2026-05-17 갱신: 옛 미디어 쿼리 박힌 자리 박지 X (line 213 박힌 자리 본진 박힘 다음에 박음 — cascade 정합) */
 
 .pg-tab-row-secondary {
   border-top: 1px dashed var(--color-border);
@@ -229,6 +203,40 @@
   font-weight: var(--fw-black, 900);
   color: var(--color-accent, #D4845A);
   border-bottom-color: var(--color-accent, #D4845A);
+}
+
+/* 2026-05-17 박음 (cascade 정합) — 본 .pg-tab-btn 박힌 자리 본진 박힌 다음에 박음 */
+/* 옛 박힌 자리 = .pg-tab-btn 본진 박힘 앞에 미디어 쿼리 박혀 flex-shrink:0 박힌 자리 덮어쓰기 박지 X 박은 격차 */
+
+/* 모바일 768px 미만 = 탭 줄바꿈 (flex-wrap) + 폰트·패딩 축소 + flex-shrink:1 강제 */
+@media (max-width: 768px) {
+  .pg-tab-row {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    -webkit-mask-image: none !important;
+            mask-image: none !important;
+  }
+  .pg-tab-btn {
+    font-size: 0.72em !important;
+    padding: 8px 8px !important;
+    flex: 1 1 auto !important;
+    flex-shrink: 1 !important;
+    flex-grow: 1 !important;
+    min-width: max-content !important;
+    white-space: nowrap !important;
+  }
+  .pg-tab-row-secondary .pg-tab-btn {
+    font-size: 0.68em !important;
+    padding: 6px 6px !important;
+  }
+}
+
+/* 좁은 데스크탑 768~1024px = 폰트만 살짝 축소 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pg-tab-btn {
+    font-size: 0.78em !important;
+    padding: 10px 10px !important;
+  }
 }
 .hub-badge {
   display: inline-block;
