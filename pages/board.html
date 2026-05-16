@@ -4224,8 +4224,15 @@ function _switchBoard(board) {
       var canWrite = true;
       /* hub / archive_legacy = admin only */
       if (board === 'hub' || board === 'archive_legacy') canWrite = isAdm;
-      /* manager_notice = admin + ga_branch_manager + ga_manager (본인 팀·지점) */
-      else if (board === 'manager_notice') canWrite = (isAdm || role === 'ga_branch_manager' || role === 'ga_manager');
+      /* 2026-05-16 D-2 박음: manager_notice = 전체 GA 멤버 write 풀음 (팀 단체방 본진 — 모든 멤버 글 작성) */
+      /* 옛 본진(admin + ga_branch_manager + ga_manager만)은 실장 공지 본진 박힌 자리. 단체방은 멤버 본진 정합 */
+      else if (board === 'manager_notice') {
+        canWrite = (isAdm
+                 || role === 'ga_branch_manager'
+                 || role === 'ga_manager'
+                 || role === 'ga_member'
+                 || role === 'ga_staff');
+      }
       /* manager_lounge = admin + 매니저급 4종 (admin 토글 #1 ON + role) */
       else if (board === 'manager_lounge') {
         canWrite = (isAdm
