@@ -5360,6 +5360,53 @@ window.submitNavV2Reply = async function(qId) {
   }
 };
 
+/* 2026-05-17 박음: 옛 카톡 톤 박힌 자리(manager_notice/navigation) 글쓰기 클릭 시 신규 탭 안내 모달 */
+window.showSwitchToV2Notice = function(targetBoard, oldName, newName, icon) {
+  var existing = document.getElementById('switch-v2-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'switch-v2-modal';
+  modal.style.cssText =
+    'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);' +
+    'z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  modal.innerHTML =
+    '<div style="background:#FFFFFF;border-radius:16px;max-width:440px;width:100%;' +
+                'padding:28px 24px;box-shadow:0 20px 50px rgba(0,0,0,0.25);text-align:center;">' +
+      '<div style="font-size:48px;margin-bottom:12px;">' + icon + '</div>' +
+      '<h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:var(--color-text-primary);">' +
+        '글쓰기는 <span style="color:var(--brand-700,#66331A);">' + newName + '</span>에서 작성해주세요' +
+      '</h2>' +
+      '<p style="margin:0 0 20px;font-size:14px;color:var(--color-text-secondary);line-height:1.6;">' +
+        oldName + '은 기존 카톡 방식 그대로 박힌 자리예요.<br>' +
+        '새 ' + newName + '에서 공지 유형별로 정리해 작성하시면<br>' +
+        '<strong style="color:var(--brand-700,#66331A);">검색·보관·관리</strong>가 훨씬 편해집니다.' +
+      '</p>' +
+      '<div style="display:flex;gap:8px;justify-content:center;">' +
+        '<button type="button" onclick="document.getElementById(\'switch-v2-modal\').remove()" ' +
+          'style="height:42px;padding:0 18px;border:1px solid var(--color-border);background:#FFFFFF;' +
+                 'color:var(--color-text-secondary);font-family:inherit;font-size:14px;font-weight:600;' +
+                 'border-radius:9999px;cursor:pointer;">' +
+          '취소' +
+        '</button>' +
+        '<button type="button" onclick="document.getElementById(\'switch-v2-modal\').remove(); window.switchBoard(\'' + targetBoard + '\');" ' +
+          'style="height:42px;padding:0 24px;border:0;background:var(--brand-500,#A0522D);' +
+                 'color:#FFFFFF;font-family:inherit;font-size:14px;font-weight:700;' +
+                 'border-radius:9999px;cursor:pointer;box-shadow:0 2px 8px rgba(160,82,45,0.25);">' +
+          newName + '으로 이동 →' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+
+  /* 외부 클릭 시 닫음 */
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.remove();
+  });
+
+  document.body.appendChild(modal);
+};
+
 function _toggleNavV2Shell(board) {
   var shell = document.getElementById('nav-v2-shell');
   var list  = document.getElementById('post-list');
@@ -7589,14 +7636,14 @@ window.onClickToastUpgrade = function() {
 
 /* ── 글쓰기 버튼 클릭 ── */
 window.onClickWriteBtn = function() {
-  /* 실장님 공지 탭 = 4 카드 건너뛰고 바로 공지 폼 진입 (manager_notice 모드) */
+  /* 2026-05-17 박음: 4팀 단체방 글쓰기 = 4팀 단체방2 안내 모달 (D안 정합) */
   if (_currentBoard === 'manager_notice') {
-    window.openManagerNoticeOverlay();
+    window.showSwitchToV2Notice('team_feed', '4팀 단체방', '4팀 단체방2', '📋');
     return;
   }
-  /* navigation 탭 = 2층 구조 4 카드 모달 오버레이 본진 (별 트랙 #58, 2026-05-11 v0 1차) */
+  /* 2026-05-17 박음: 네비게이션방 글쓰기 = 네비게이션방2 안내 모달 (D안 정합) */
   if (_currentBoard === 'navigation') {
-    window.openWriteOverlay();
+    window.showSwitchToV2Notice('nav_v2', '네비게이션방', '네비게이션방2', '🧭');
     return;
   }
   /* qna 탭 (스마트게시판) = 실장님 공지 폼 재사용, admin 전용 시드 본진 (보험사 소식지 직접 입력) */
