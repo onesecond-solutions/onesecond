@@ -1395,12 +1395,12 @@ html, body {
   .a1-user-avatar { width: 26px; height: 26px; font-size: 0.82em; }
   /* 2026-05-14 안전망 하단 탭바 — 햄버거 격차 회귀 안전망 (▲ 핸들 + 슬라이드 업 시트) */
   .tab-bar {
-    display: flex;
+    display: flex !important;  /* 2026-05-17 정정: 신 게시판에서 hide 격차 회피 (강제 표시) */
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
     position: fixed; bottom: 0; left: 0; right: 0;
-    z-index: 100;
+    z-index: 9999;  /* 2026-05-17 정정: 100 → 9999 (신 게시판 컨테이너 위에 박힘 보장) */
     pointer-events: none; /* 시트 외 영역 클릭 통과 */
     background: transparent;
     height: auto;

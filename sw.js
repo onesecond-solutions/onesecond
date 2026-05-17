@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v80-20260517-nav-v2-aside-slide-panel-unify';
+const CACHE_NAME = 'onesecond-v81-20260517-tab-bar-zindex-force-display';
 const CACHE_URLS = [
   '/',
   '/app.html',
