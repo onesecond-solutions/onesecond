@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v55-20260517-a1-search-center-dangling-cleanup';
+const CACHE_NAME = 'onesecond-v56-20260517-d-area-full-width-board';
 const CACHE_URLS = [
   '/',
   '/app.html',

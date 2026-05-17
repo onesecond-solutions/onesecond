@@ -1312,9 +1312,10 @@
    ▸ 우 .pg-console-side 32% = 운영 일정 (캘린더 우측 이동)
    ▸ 모바일 1024px 이하 1컬럼 + order (캘린더 → 게시판) — §4 정합
 ════════════════════════════════════════════════════════════ */
+/* 2026-05-17 정정: 운영 일정 C영역 흡수 후 .pg-console-side aside 제거 → 1컬럼 grid 정합 (옛 32fr 자리 빈 공간 노출 격차 해소) */
 .pg-console-grid {
   display: grid;
-  grid-template-columns: minmax(0, 68fr) minmax(0, 32fr);
+  grid-template-columns: 1fr;
   gap: var(--space-4, 16px);
   padding: 0 var(--space-4, 16px);
   margin-top: var(--space-3, 12px);
