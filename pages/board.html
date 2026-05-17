@@ -2131,6 +2131,110 @@
   word-break: break-word;
 }
 
+/* 2026-05-17 박음: team_feed 상세 오버레이 본진 (카드 클릭 시 글 본문 + 첨부 + 수정/삭제) */
+.team-feed-detail-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.team-feed-detail-overlay.is-open { display: flex; }
+.team-feed-detail-panel {
+  background: var(--color-surface, #fff);
+  border-radius: 12px;
+  width: 100%; max-width: 720px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+.tfd-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+.tfd-header .tfd-cat-badge {
+  padding: 4px 10px; border-radius: 9999px;
+  font-size: 0.8125em; font-weight: 700;
+}
+.tfd-header .tfd-time {
+  font-size: 0.8125em; color: var(--color-text-secondary);
+  margin-left: 8px;
+}
+.tfd-header .tfd-close {
+  margin-left: auto;
+  background: transparent; border: 0;
+  font-size: 1.5em; cursor: pointer;
+  color: var(--color-text-secondary);
+}
+.tfd-body {
+  flex: 1; overflow-y: auto;
+  padding: 20px;
+}
+.tfd-title {
+  font-size: 1.25em; font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  word-break: break-word;
+}
+.tfd-content {
+  font-size: 0.9375em; line-height: 1.65;
+  color: var(--color-text-secondary);
+  word-break: break-word;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+.tfd-attachments {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+.tfd-attachments .tfd-attach-img {
+  max-width: 100%; max-height: 400px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  display: block;
+}
+.tfd-attachments .tfd-attach-file {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  background: var(--color-surface-2, #F9FAFB);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  font-size: 0.875em;
+  border: 1px solid var(--color-border);
+}
+.tfd-attachments .tfd-attach-file:hover {
+  background: var(--brand-50, #FDF4EF);
+}
+.tfd-actions {
+  display: flex; gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-2, #F9FAFB);
+}
+.tfd-actions button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 0;
+  font-size: 0.875em; font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.tfd-actions .tfd-edit-btn {
+  background: var(--brand-100, #F8DCC4);
+  color: var(--brand-700, #66331A);
+}
+.tfd-actions .tfd-edit-btn:hover { background: var(--brand-200, #F0C29A); }
+.tfd-actions .tfd-delete-btn {
+  background: #FEE2E2; color: #991B1B;
+}
+.tfd-actions .tfd-delete-btn:hover { background: #FECACA; }
+
 @media (max-width: 768px) {
   .team-feed-shell {
     height: calc(100vh - 160px);
@@ -3688,6 +3792,9 @@
           <!-- [2026-05-16 D-2] 4팀 단체방2 shell — 시연 본진 (공지 7유형 + 역시간순) -->
           <!-- D안 정합: 좌 카테고리 + 중앙 카드 list (역시간순) — 카톡 톤 박지 X     -->
           <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <!-- 2026-05-17 박음: team_feed 상세 오버레이 본진 (카드 클릭 시 열림) -->
+          <div id="team-feed-detail-overlay" class="team-feed-detail-overlay" onclick="window.closeTeamFeedDetail()"></div>
+
           <div id="team-feed-shell" class="team-feed-shell" style="display:none;">
             <div class="team-feed-grid">
 
@@ -5137,7 +5244,8 @@ function _renderTeamFeedList() {
         '</span>' +
       '</div>';
     return '<div class="team-feed-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + n.notice_type + '" data-n-id="' + n.id + '"' +
-           ' style="border-left:3px solid ' + cat.text + ';' + (isLatest ? 'background:' + cat.bg : '') + '">' +
+           ' style="border-left:3px solid ' + cat.text + ';' + (isLatest ? 'background:' + cat.bg : '') + ';cursor:pointer;"' +
+           ' onclick="window.openTeamFeedDetail(\'' + n.id + '\')">' +
            '<div class="card-header">' +
              '<span class="cat-badge" style="background:' + cat.bg + ';color:' + cat.text + '">' + cat.icon + ' ' + cat.label + '</span>' +
              '<span class="card-time">' + time + '</span>' +
@@ -5156,6 +5264,126 @@ window.teamFeedLike = function(nId) {
 
 window.teamFeedComment = function(nId) {
   alert('💬 댓글 기능 곧 가동 (시연 후 본진)');
+};
+
+/* 2026-05-17 박음: team_feed 상세 오버레이 본진 (글 본문 + 첨부 + 작성자 수정/삭제) */
+window.openTeamFeedDetail = async function(nId) {
+  var overlay = document.getElementById('team-feed-detail-overlay');
+  if (!overlay) return;
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+  try {
+    var res = await window.db.fetch('/rest/v1/team_notices?id=eq.' + encodeURIComponent(nId) + '&select=id,team_id,author_id,notice_type,title,content,attachments,scope,created_at');
+    var rows = res.ok ? await res.json() : [];
+    if (!rows || !rows[0]) { alert('공지를 찾을 수 없습니다.'); return; }
+    var n = rows[0];
+    var cat = TEAM_FEED_CATEGORIES[n.notice_type] || TEAM_FEED_CATEGORIES.etc;
+    var d = new Date(n.created_at || Date.now());
+    var time = (d.getMonth()+1) + '월 ' + d.getDate() + '일 ' +
+               String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    /* 첨부 파싱 */
+    var attachHtml = '';
+    if (n.attachments) {
+      try {
+        var att = typeof n.attachments === 'string' ? JSON.parse(n.attachments) : n.attachments;
+        if (Array.isArray(att) && att.length) {
+          attachHtml = '<div class="tfd-attachments">' + att.map(function(a) {
+            var url = (typeof a === 'string') ? a : (a && (a.url || a.path)) || '';
+            var name = (typeof a === 'object' && a && a.name) || url.split('/').pop() || '첨부';
+            if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url)) {
+              return '<img class="tfd-attach-img" src="' + url + '" alt="' + _noticeEscape(name) + '">';
+            }
+            return '<a class="tfd-attach-file" href="' + url + '" target="_blank" rel="noopener">📎 ' + _noticeEscape(name) + '</a>';
+          }).join('') + '</div>';
+        }
+      } catch (e) { /* skip */ }
+    }
+    /* 작성자 권한 = 본인 author_id == userId 박힘 */
+    var s = window.AppState || {};
+    var canEdit = (n.author_id === s.userId) || (s.role === 'admin');
+    var actionsHtml = canEdit
+      ? '<div class="tfd-actions">' +
+          '<button type="button" class="tfd-edit-btn" onclick="window.editTeamFeedNotice(\'' + n.id + '\')">✏️ 수정</button>' +
+          '<button type="button" class="tfd-delete-btn" onclick="window.deleteTeamFeedNotice(\'' + n.id + '\')">🗑️ 삭제</button>' +
+        '</div>'
+      : '';
+    overlay.innerHTML =
+      '<div class="team-feed-detail-panel" onclick="event.stopPropagation()">' +
+        '<div class="tfd-header">' +
+          '<span class="tfd-cat-badge" style="background:' + cat.bg + ';color:' + cat.text + '">' + cat.icon + ' ' + cat.label + '</span>' +
+          '<span class="tfd-time">' + time + '</span>' +
+          '<button type="button" class="tfd-close" onclick="window.closeTeamFeedDetail()">✕</button>' +
+        '</div>' +
+        '<div class="tfd-body">' +
+          '<div class="tfd-title">' + _noticeEscape(n.title || '') + '</div>' +
+          '<div class="tfd-content">' + _noticeEscape(n.content || '') + '</div>' +
+          attachHtml +
+        '</div>' +
+        actionsHtml +
+      '</div>';
+    overlay.classList.add('is-open');
+  } catch (e) {
+    console.error('[openTeamFeedDetail] 실패:', e);
+    alert('상세 로딩 실패: ' + (e.message || e));
+  }
+};
+
+window.closeTeamFeedDetail = function() {
+  var overlay = document.getElementById('team-feed-detail-overlay');
+  if (overlay) overlay.classList.remove('is-open');
+};
+
+/* 2026-05-17 박음: team_feed 수정 = 글쓰기 폼 진입 + prefill + _editMode 박음 */
+window.editTeamFeedNotice = async function(nId) {
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+  try {
+    var res = await window.db.fetch('/rest/v1/team_notices?id=eq.' + encodeURIComponent(nId) + '&select=title,content,notice_type,scope');
+    var rows = res.ok ? await res.json() : [];
+    if (!rows || !rows[0]) { alert('공지를 찾을 수 없습니다.'); return; }
+    var n = rows[0];
+    window.closeTeamFeedDetail();
+    window.openTeamFeedWriteModal();
+    /* prefill (openManagerNoticeOverlay가 폼 reset 후 박음) */
+    setTimeout(function() {
+      var titleEl = document.getElementById('notice-title');
+      var contentEl = document.getElementById('notice-content');
+      var typeEl = document.getElementById('notice-type');
+      var audEl = document.getElementById('notice-audience');
+      if (titleEl) titleEl.value = n.title || '';
+      if (contentEl) contentEl.value = n.content || '';
+      /* notice_type 역매핑 (operation → 운영 공지 등) */
+      var reverseTypeMap = {
+        operation: '운영 공지', urgent: '긴급 공지', product: '상품 공지',
+        underwriting: '인수 공지', education: '교육 안내', event: '이벤트·일정', etc: '기타'
+      };
+      if (typeEl) typeEl.value = reverseTypeMap[n.notice_type] || '기타';
+      if (audEl) audEl.value = n.scope || 'team_internal';
+      _editMode = true;
+      _editPostId = nId;
+      var submitBtn = document.querySelector('#write-form-notice .wfn-btn-primary');
+      if (submitBtn) submitBtn.textContent = '수정하기';
+    }, 100);
+  } catch (e) {
+    console.error('[editTeamFeedNotice] 실패:', e);
+    alert('수정 진입 실패: ' + (e.message || e));
+  }
+};
+
+window.deleteTeamFeedNotice = async function(nId) {
+  if (!confirm('정말 삭제하시겠어요? 되돌릴 수 없습니다.')) return;
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+  try {
+    var res = await window.db.fetch('/rest/v1/team_notices?id=eq.' + encodeURIComponent(nId), {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!res.ok) throw new Error('DELETE ' + res.status);
+    window.closeTeamFeedDetail();
+    if (typeof _loadTeamFeed === 'function') _loadTeamFeed();
+    alert('🗑️ 공지가 삭제되었습니다.');
+  } catch (e) {
+    console.error('[deleteTeamFeedNotice] 실패:', e);
+    alert('삭제 실패: ' + (e.message || e));
+  }
 };
 
 window.teamFeedSaveToMyspace = async function(nId) {
@@ -8898,6 +9126,31 @@ window.submitNoticeForm = async function() {
     /* 2026-05-17 정정: admin 박은 자리 fallback = 4팀 UUID (시연 본진 정합, AppState.teamId 박지 X 박힌 자리 해소) */
     var teamId_tf = s.teamId || (role === 'admin' ? '5fccd362-9ee3-4165-8960-7cb0b7ec72fa' : null);
     if (!teamId_tf) { alert('팀 정보가 박지 않아 공지 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
+    /* 2026-05-17 박음: 수정 모드 분기 = PATCH (INSERT 대신) */
+    if (_editMode && _editPostId) {
+      var submitBtn_ed = document.querySelector('#write-form-notice .wfn-btn-primary');
+      if (submitBtn_ed) { submitBtn_ed.disabled = true; submitBtn_ed.textContent = '수정 중...'; }
+      try {
+        var edBody = { notice_type: ntype, scope: audience || 'team_internal', title: title, content: rawContent };
+        var edRes = await window.db.fetch('/rest/v1/team_notices?id=eq.' + encodeURIComponent(_editPostId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(edBody)
+        });
+        if (!edRes.ok) throw new Error('team_notices PATCH ' + edRes.status);
+        window.closeWriteOverlay();
+        if (typeof _loadTeamFeed === 'function') _loadTeamFeed();
+        alert('✏️ 공지가 수정되었습니다.');
+      } catch (e) {
+        console.error('[team_feed] PATCH 실패:', e);
+        alert('수정 실패: ' + (e.message || e));
+      } finally {
+        if (submitBtn_ed) { submitBtn_ed.disabled = false; submitBtn_ed.textContent = '등록하기'; }
+        _editMode = false; _editPostId = null;
+        _noticeWriteMode = 'manager_notice';
+      }
+      return;
+    }
     var submitBtn_tf = document.querySelector('#write-form-notice .wfn-btn-primary');
     if (submitBtn_tf) { submitBtn_tf.disabled = true; submitBtn_tf.textContent = '등록 중...'; }
     try {
