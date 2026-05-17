@@ -3321,6 +3321,8 @@
   .pg-outer.notice-room-active .pg-header-block,
   .pg-outer.notice-room-active .pg-summary-bar,
   .pg-outer.notice-room-active .pg-console-side { display: none; }
+  /* 2026-05-17 박음: 모든 게시판 진입 시 "현장의 소리·실시간 이슈 공유" 헤더 hide (옛 단톡방 본진 통일) */
+  body.pg-board-active .pg-header-block { display: none; }
 
   /* 검색바 본진 — 기본 hide + 🔍 칩 클릭 시 inline display 박음 (탭바 위 fixed) */
   /* 2026-05-14 갱신 — z-index 99 → 103 (셸 100 위 박음, 가려짐 격차 해소) */
@@ -5149,6 +5151,9 @@ function _switchBoard(board) {
   _currentBoard    = board;
   _currentCategory = 'all';
   _qnaPage         = 1; /* 보드 변경 시 페이지 reset */
+
+  /* 2026-05-17 박음: 모든 게시판 진입 시 = "현장의 소리" 헤더 hide (옛 .pg-outer.notice-room-active 본진 통일) */
+  document.body.classList.add('pg-board-active');
 
   /* 탭 버튼 active */
   document.querySelectorAll('#board-tab-bar .pg-tab-btn').forEach(function(t) { t.classList.remove('active'); });
