@@ -267,6 +267,26 @@
     padding: 16px;
     animation: sidebarSlideIn 200ms ease-out;
   }
+  /* 2026-05-17 정정 — 모바일 슬라이드 안 메뉴 활성화 (default .b .menu { display:none } override 본진) */
+  body.mobile-sidebar-open .b .menu {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  body.mobile-sidebar-open .b .menu .menu-item {
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 120ms;
+  }
+  body.mobile-sidebar-open .b .menu .menu-item:hover,
+  body.mobile-sidebar-open .b .menu .menu-item.active {
+    background: var(--brand-50, #FDF4EF);
+    color: var(--brand-700, #66331A);
+  }
   body.mobile-sidebar-open::before {
     content: '';
     position: fixed;
