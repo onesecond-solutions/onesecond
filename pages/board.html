@@ -1968,7 +1968,8 @@
 .team-feed-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 180px 1fr;
+  /* 2026-05-17 정정: 시안 본진 정합 3컬럼 (좌 카테고리 140 + 중앙 메인 1fr + 우 자료 첨부 사이드바 200) */
+  grid-template-columns: 140px 1fr 200px;
   min-height: 0;
   overflow: hidden;
 }
@@ -2014,6 +2015,56 @@
   flex-direction: column;
   min-height: 0;
   background: var(--notice-bg, #FFFFFF);
+}
+
+/* 2026-05-17 정정: 우측 자료 첨부 사이드바 신설 (시안 본진 정합) */
+.team-feed-aside {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface-2, #F9FAFB);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.team-feed-aside-title {
+  font-size: 0.875em;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.team-feed-aside-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.team-feed-aside-item {
+  aspect-ratio: 1 / 1;
+  background: var(--color-surface, #FFFFFF);
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+.team-feed-aside-item:hover {
+  border-color: var(--brand-500, #A0522D);
+  color: var(--brand-500, #A0522D);
+}
+.team-feed-aside-empty {
+  margin-top: 12px;
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
 }
 
 .team-feed-header {
@@ -2118,9 +2169,11 @@
     border: 0;
   }
   .team-feed-grid {
+    /* 2026-05-17 정정: 모바일 1컬럼 = 우측 자료 첨부 사이드바 hide (메인만 노출, 자료는 별도 진입 본진) */
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
+  .team-feed-aside { display: none; }
   .team-feed-categories {
     border-right: 0;
     border-bottom: 1px solid var(--color-border);
@@ -3640,6 +3693,18 @@
                 </div>
               </main>
 
+              <!-- 2026-05-17 정정: 우측 자료 첨부 사이드바 (시안 본진 정합, 지점 게시판 동일 본진) -->
+              <aside class="team-feed-aside" id="branch-feed-aside">
+                <div class="team-feed-aside-title">📁 자료 첨부</div>
+                <div class="team-feed-aside-grid">
+                  <div class="team-feed-aside-item">+</div>
+                  <div class="team-feed-aside-item">+</div>
+                  <div class="team-feed-aside-item">+</div>
+                  <div class="team-feed-aside-item">+</div>
+                </div>
+                <div class="team-feed-aside-empty">자료 첨부<br>곧 본 자료 박힘</div>
+              </aside>
+
             </div>
           </div>
 
@@ -3673,6 +3738,18 @@
                   <div class="loading-msg">불러오는 중...</div>
                 </div>
               </main>
+
+              <!-- 2026-05-17 정정: 우측 자료 첨부 사이드바 (시안 본진 정합) -->
+              <aside class="team-feed-aside" id="team-feed-aside">
+                <div class="team-feed-aside-title">📁 자료 첨부</div>
+                <div class="team-feed-aside-grid">
+                  <div class="team-feed-aside-item">+</div>
+                  <div class="team-feed-aside-item">+</div>
+                  <div class="team-feed-aside-item">+</div>
+                  <div class="team-feed-aside-item">+</div>
+                </div>
+                <div class="team-feed-aside-empty">자료 첨부<br>곧 본 자료 박힘</div>
+              </aside>
 
             </div>
           </div>
