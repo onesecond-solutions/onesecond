@@ -1515,7 +1515,7 @@ html, body {
   <button class="mobile-header-notify" type="button" aria-label="알림"
           onclick="onNotifyClick(event)">
     🔔
-    <span class="mobile-header-notify-badge" id="mobile-header-notify-badge" data-count="3">3</span>
+    <span class="mobile-header-notify-badge is-empty" id="mobile-header-notify-badge" data-count="0">0</span>
   </button>
   <div class="mobile-header-user-wrap" id="mobile-header-user-wrap">
     <button class="mobile-header-user" id="mobile-header-user" type="button"
@@ -1558,8 +1558,8 @@ html, body {
       <a class="a1-chip" href="#" role="button" onclick="event.preventDefault(); window.openTogetherBugReport(); return false;">⚠️ 전산장애신고</a>
       <button class="a1-notify" type="button" aria-label="알림" onclick="onNotifyClick(event)">
         🔔
-        <!-- [2026-05-11] 알림 v1 1단 — 최소 신호 (placeholder 3) -->
-        <span class="a1-notify-badge" id="a1-notify-badge" data-count="3">3</span>
+        <!-- [2026-05-17 정정] 임의 숫자 hide (실 데이터 D+1 박을 때까지 is-empty) -->
+        <span class="a1-notify-badge is-empty" id="a1-notify-badge" data-count="0">0</span>
       </button>
       <div style="position:relative;" id="user-dropdown-wrap">
         <button class="a1-user" id="topbar-user" type="button" onclick="toggleUserDropdown(event)">
@@ -1643,8 +1643,8 @@ html, body {
              샘플 3건 placeholder, 실제 알림 DB 미연동 -->
         <div class="c-box notify-card notify-mine">
           <div class="notify-kicker">내 알림</div>
-          <div class="notify-title">실장님 답변 도착</div>
-          <div class="notify-desc">내 질문 1건에 답변이 등록되었습니다.</div>
+          <div class="notify-title">받은 알림 없음</div>
+          <div class="notify-desc">새 답변이 등록되면 여기에 표시됩니다.</div>
         </div>
         <div class="c-box notify-card notify-ops">
           <div class="notify-kicker">운영 신호</div>
@@ -1653,8 +1653,8 @@ html, body {
         </div>
         <div class="c-box notify-card notify-team">
           <div class="notify-kicker">팀 흐름</div>
-          <div class="notify-title">오늘 질문 12건</div>
-          <div class="notify-desc">팀 전체 운영 흐름 — 답변 대기 3건</div>
+          <div class="notify-title">집계 준비 중</div>
+          <div class="notify-desc">팀 전체 운영 흐름 통계는 곧 가동합니다.</div>
         </div>
       </div>
       <div class="c-section" id="c-scripts">
@@ -1667,8 +1667,8 @@ html, body {
              게시판 본진 맥락. c-home과 동일 패턴, 동일 샘플 (구조 선언 본질) -->
         <div class="c-box notify-card notify-mine">
           <div class="notify-kicker">내 알림</div>
-          <div class="notify-title">실장님 답변 도착</div>
-          <div class="notify-desc">내 질문 1건에 답변이 등록되었습니다.</div>
+          <div class="notify-title">받은 알림 없음</div>
+          <div class="notify-desc">새 답변이 등록되면 여기에 표시됩니다.</div>
         </div>
         <div class="c-box notify-card notify-ops">
           <div class="notify-kicker">운영 신호</div>
@@ -1677,13 +1677,13 @@ html, body {
         </div>
         <div class="c-box notify-card notify-team">
           <div class="notify-kicker">팀 흐름</div>
-          <div class="notify-title">오늘 질문 12건</div>
-          <div class="notify-desc">팀 전체 운영 흐름 — 답변 대기 3건</div>
+          <div class="notify-title">집계 준비 중</div>
+          <div class="notify-desc">팀 전체 운영 흐름 통계는 곧 가동합니다.</div>
         </div>
         <!-- 2026-05-17 박음: 이번 달 운영 일정 흡수 카드 (board.html .pg-calendar-board 박힌 자리에서 C영역 박음) -->
         <div class="c-box notify-card c-cal-card" onclick="window.openCalendarOverlay()" style="cursor:pointer;">
           <div class="notify-kicker">📅 이번 달 운영 일정</div>
-          <div class="notify-title">4건 박힘</div>
+          <div class="notify-title">주요 일정 4건</div>
           <div class="notify-desc">메리츠 인수 · KB 신상품 · 전산 점검 · 녹취 변경</div>
         </div>
       </div>
