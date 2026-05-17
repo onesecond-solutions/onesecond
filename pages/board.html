@@ -5528,12 +5528,13 @@ window.teamFeedSaveToMyspace = async function(nId) {
     var nRows = nRes.ok ? await nRes.json() : [];
     if (!nRows || !nRows[0]) { alert('공지를 찾을 수 없습니다.'); return; }
     var n = nRows[0];
+    /* 2026-05-17 정정: library 컬럼 정합 (kind/content/source_post_id uuid 컬럼 박지 X — description + 본인 email + scope) */
     var libBody = {
       owner_id: userId,
+      owner_email: s.email || '',
       title: n.title || '(제목 없음)',
-      content: n.content || '',
-      kind: 'note',
-      source_post_id: nId
+      description: n.content || '',
+      scope: 'team_notices:' + nId  /* uuid 박힘 자리 = bigint source_post_id 호환 X → scope 본문에 박음 */
     };
     var libRes = await window.db.fetch('/rest/v1/library', {
       method: 'POST',
@@ -5971,12 +5972,13 @@ window.navV2SaveToMyspace = async function(qId) {
     var qRows = qRes.ok ? await qRes.json() : [];
     if (!qRows || !qRows[0]) { alert('질문을 찾을 수 없습니다.'); return; }
     var q = qRows[0];
+    /* 2026-05-17 정정: library 컬럼 정합 (kind/content/source_post_id uuid 박지 X — description + scope) */
     var libBody = {
       owner_id: userId,
+      owner_email: s.email || '',
       title: q.title || '(제목 없음)',
-      content: q.content || '',
-      kind: 'note',
-      source_post_id: qId
+      description: q.content || '',
+      scope: 'nav_questions:' + qId
     };
     var libRes = await window.db.fetch('/rest/v1/library', {
       method: 'POST',
