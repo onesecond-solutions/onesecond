@@ -1577,6 +1577,8 @@
   grid-template-columns: 160px 1fr;
   min-height: 0;
   overflow: hidden;
+  /* 2026-05-17 박음: 자료 사이드바 슬라이드 패널 anchor (4팀 단체방2 본진 통일) */
+  position: relative;
 }
 
 .nav-v2-categories {
@@ -3939,13 +3941,50 @@
               <main class="nav-v2-main">
                 <div class="nav-v2-header">
                   <span class="nav-v2-title" id="nav-v2-title">전체 질문</span>
-                  <button type="button" class="nav-v2-write-btn"
-                          onclick="window.openNavV2WriteModal()">✏️ 질문하기</button>
+                  <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+                    <button type="button" class="nav-v2-write-btn"
+                            onclick="window.openNavV2WriteModal()">✏️ 질문하기</button>
+                    <button type="button" class="team-feed-aside-toggle"
+                            onclick="window.toggleTeamFeedAside('nav')">⚡ 딸깍 · 자료</button>
+                  </div>
                 </div>
                 <div class="nav-v2-list" id="nav-v2-list">
                   <div class="loading-msg">불러오는 중...</div>
                 </div>
               </main>
+
+              <!-- 2026-05-17 박음: nav_v2 우측 자료 슬라이드 패널 (4팀 단체방2 본진 통일) -->
+              <div class="team-feed-aside-backdrop" id="nav-v2-aside-backdrop" onclick="window.toggleTeamFeedAside('nav')"></div>
+              <aside class="team-feed-aside" id="nav-v2-aside">
+                <div class="notice-room-header">
+                  <div class="room-icon">네비</div>
+                  <span class="room-name">더원지점 네비게이션방2</span>
+                  <span class="room-member" id="nav-v2-member">· 100명</span>
+                </div>
+                <button class="notice-asset-row" type="button" onclick="window.openAssetOverlay && window.openAssetOverlay('photos')">
+                  <span class="notice-asset-row-label">📸 사진·동영상</span>
+                  <span class="notice-asset-row-count" id="nav-v2-asset-photos-count">0건</span>
+                  <span class="notice-asset-row-caret">›</span>
+                </button>
+                <button class="notice-asset-row" type="button" onclick="window.openAssetOverlay && window.openAssetOverlay('files')">
+                  <span class="notice-asset-row-label">📎 파일</span>
+                  <span class="notice-asset-row-count" id="nav-v2-asset-files-count">0건</span>
+                  <span class="notice-asset-row-caret">›</span>
+                </button>
+                <button class="notice-asset-row" type="button" onclick="window.openAssetOverlay && window.openAssetOverlay('links')">
+                  <span class="notice-asset-row-label">🔗 링크</span>
+                  <span class="notice-asset-row-count" id="nav-v2-asset-links-count">0건</span>
+                  <span class="notice-asset-row-caret">›</span>
+                </button>
+                <div class="notice-asset-section notice-memo">
+                  <div class="notice-asset-title">📝 내 메모</div>
+                  <textarea id="nav-v2-memo-text" placeholder="개인 메모 — 본인만 볼 수 있어요"></textarea>
+                  <div class="memo-actions">
+                    <button class="is-primary" onclick="window.saveNoticeMemo && window.saveNoticeMemo()">💾 저장하기</button>
+                    <button onclick="window.openMyspaceFromNotice && window.openMyspaceFromNotice()">📂 마이스페이스 →</button>
+                  </div>
+                </div>
+              </aside>
 
             </div>
           </div>
@@ -5332,10 +5371,12 @@ function _renderTeamFeedList() {
 }
 
 /* 2026-05-17 박음: team_feed [딸깍] 액션 메뉴 본진 (좋아요/댓글/저장) */
-/* 2026-05-17 박음 (3차, 슬라이드 패널 본진): 우측 자료 사이드바 toggle */
+/* 2026-05-17 박음 (3차, 슬라이드 패널 본진): 우측 자료 사이드바 toggle (team/branch/nav 본진 통일) */
 window.toggleTeamFeedAside = function(kind) {
-  var asideId    = (kind === 'branch') ? 'branch-feed-aside' : 'team-feed-aside';
-  var backdropId = (kind === 'branch') ? 'branch-feed-aside-backdrop' : 'team-feed-aside-backdrop';
+  var asideId, backdropId;
+  if (kind === 'branch')      { asideId = 'branch-feed-aside'; backdropId = 'branch-feed-aside-backdrop'; }
+  else if (kind === 'nav')    { asideId = 'nav-v2-aside';      backdropId = 'nav-v2-aside-backdrop'; }
+  else                        { asideId = 'team-feed-aside';   backdropId = 'team-feed-aside-backdrop'; }
   var aside    = document.getElementById(asideId);
   var backdrop = document.getElementById(backdropId);
   if (!aside) return;
