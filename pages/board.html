@@ -4356,7 +4356,7 @@
             <label class="wfn-field" id="incoming-insurer-name-field" style="display:none;">
               <span class="wfn-label">회사명 <em>*</em></span>
               <input type="text" id="incoming-insurer-name" maxlength="40" placeholder="예: 메리츠화재 / 삼성생명">
-              <span class="wfn-hint">v0 단계 = 자유 입력 (Phase 3 = 31사 자동완성 박음)</span>
+              <span class="wfn-hint">v0 단계 = 자유 입력 (Phase 3 = 31사 자동완성 적용 예정)</span>
             </label>
           </div>
         </div>
@@ -4458,7 +4458,7 @@
             <label class="wfn-field" id="product-insurer-name-field" style="display:none;">
               <span class="wfn-label">회사명 <em>*</em></span>
               <input type="text" id="product-insurer-name" maxlength="40" placeholder="예: 메리츠화재 / 삼성생명">
-              <span class="wfn-hint">v0 단계 = 자유 입력 (Phase 3 = 31사 자동완성 박음)</span>
+              <span class="wfn-hint">v0 단계 = 자유 입력 (Phase 3 = 31사 자동완성 적용 예정)</span>
             </label>
           </div>
         </div>
@@ -6217,7 +6217,7 @@ async function _loadNoticeRoom(board) {
 
     /* 메시지 렌더 (날짜 구분선 + 풍선) */
     if (msgs.length === 0) {
-      chat.innerHTML = '<div class="loading-msg">첫 메시지를 박아주세요.</div>';
+      chat.innerHTML = '<div class="loading-msg">첫 메시지를 작성해주세요.</div>';
     } else {
       chat.innerHTML = _renderNoticeMessages(msgs, meId, meName);
       chat.scrollTop = chat.scrollHeight;
@@ -6247,7 +6247,7 @@ function _renderNoticePinList(pinned) {
     if (canPin) {
       ul.innerHTML = '<li class="notice-pin-empty">' +
                        '📌 핀 박은 메시지가 없어요.<br>' +
-                       '<small>본인 메시지 클릭 → 📌 핀 등록 박음 (최대 10건)</small>' +
+                       '<small>본인 메시지 클릭 → 📌 핀 등록 (최대 10건)</small>' +
                      '</li>';
     } else {
       ul.innerHTML = '<li class="notice-pin-empty">' +
