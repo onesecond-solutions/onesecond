@@ -5124,25 +5124,27 @@ function _renderTeamFeedList() {
     var isLatest = (idx === 0);
     var contentEsc = _noticeEscape(n.content || '').replace(/\n/g, '<br>');
     var titleEsc = _noticeEscape(n.title || '');
-    /* 2026-05-17 박음: 카드 옆 [⚡ 딸깍] 액션 메뉴 (좋아요/댓글달기/저장하기) - §15 정체성 본진 */
+    /* 2026-05-17 갱신: [⚡ 딸깍] 카드 하단 풋터 박음 (옛 카드 헤더 위 박힌 자리 → 본문 아래로 이동) */
     var ddalkkakHtml =
-      '<span class="ddalkkak-wrap" onclick="event.stopPropagation();" style="margin-left:auto;">' +
-        '<button type="button" class="ddalkkak-btn" onclick="event.stopPropagation(); this.parentNode.classList.toggle(\'is-open\')">⚡ 딸깍</button>' +
-        '<div class="ddalkkak-menu">' +
-          '<button type="button" onclick="window.teamFeedLike(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">❤️ 좋아요</button>' +
-          '<button type="button" onclick="window.teamFeedComment(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">💬 댓글 달기</button>' +
-          '<button type="button" onclick="window.teamFeedSaveToMyspace(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">📂 저장하기</button>' +
-        '</div>' +
-      '</span>';
+      '<div class="card-footer" style="display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px solid var(--color-border);">' +
+        '<span class="ddalkkak-wrap" onclick="event.stopPropagation();">' +
+          '<button type="button" class="ddalkkak-btn" onclick="event.stopPropagation(); this.parentNode.classList.toggle(\'is-open\')">⚡ 딸깍</button>' +
+          '<div class="ddalkkak-menu">' +
+            '<button type="button" onclick="window.teamFeedLike(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">❤️ 좋아요</button>' +
+            '<button type="button" onclick="window.teamFeedComment(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">💬 댓글 달기</button>' +
+            '<button type="button" onclick="window.teamFeedSaveToMyspace(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">📂 저장하기</button>' +
+          '</div>' +
+        '</span>' +
+      '</div>';
     return '<div class="team-feed-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + n.notice_type + '" data-n-id="' + n.id + '"' +
            ' style="border-left:3px solid ' + cat.text + ';' + (isLatest ? 'background:' + cat.bg : '') + '">' +
-           '<div class="card-header" style="display:flex;align-items:center;gap:8px;">' +
+           '<div class="card-header">' +
              '<span class="cat-badge" style="background:' + cat.bg + ';color:' + cat.text + '">' + cat.icon + ' ' + cat.label + '</span>' +
              '<span class="card-time">' + time + '</span>' +
-             ddalkkakHtml +
            '</div>' +
            '<div class="card-title">' + titleEsc + '</div>' +
            '<div class="card-content">' + contentEsc + '</div>' +
+           ddalkkakHtml +
            '</div>';
   }).join('');
 }
