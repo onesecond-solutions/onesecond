@@ -1437,6 +1437,10 @@ html, body {
   }
   .tab-bar-sheet {
     pointer-events: auto;
+    /* 2026-05-17 정정 (Chrome AI 모바일 5장 격차): position:absolute bottom:100% 박음 = ▲ 핸들 위 박힘 자리 (옛 height:64px reserved space 박혀 ▲이 화면 중간 박힘 격차 해소) */
+    position: absolute;
+    bottom: 100%;
+    left: 0; right: 0;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     width: 100%;

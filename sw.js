@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v84-20260517-mobile-aside-isopen-tooltip-max';
+const CACHE_NAME = 'onesecond-v85-20260517-tab-bar-sheet-absolute-anchor';
 const CACHE_URLS = [
   '/',
   '/app.html',
