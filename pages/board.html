@@ -1968,8 +1968,8 @@
 .team-feed-grid {
   flex: 1;
   display: grid;
-  /* 2026-05-17 정정: 시안 본진 정합 3컬럼 (좌 카테고리 140 + 중앙 메인 1fr + 우 자료 첨부 사이드바 200) */
-  grid-template-columns: 140px 1fr 200px;
+  /* 2026-05-17 정정 (2차): 우측 사이드바 폭 200 → 320 확장 (옛 4팀 단체방 본진 정합, 텍스트 줄바꿈 해소 + 메모 영역 자리 확보) */
+  grid-template-columns: 140px 1fr 320px;
   min-height: 0;
   overflow: hidden;
 }
@@ -3765,8 +3765,13 @@
                 </div>
               </main>
 
-              <!-- 2026-05-17 갱신: 우측 자료 모음 사이드바 = 옛 4팀 단체방 본진 재사용 (지점 게시판 동일 본진) -->
+              <!-- 2026-05-17 정정: 우측 사이드바 = 옛 4팀 단체방 본진 100% 통째 재사용 (지점 게시판 동일) -->
               <aside class="team-feed-aside" id="branch-feed-aside">
+                <div class="notice-room-header">
+                  <div class="room-icon">지점</div>
+                  <span class="room-name">더원지점</span>
+                  <span class="room-member" id="branch-feed-member">· 100명</span>
+                </div>
                 <button class="notice-asset-row" type="button" onclick="window.openAssetOverlay && window.openAssetOverlay('photos')">
                   <span class="notice-asset-row-label">📸 사진·동영상</span>
                   <span class="notice-asset-row-count" id="branch-feed-asset-photos-count">0건</span>
@@ -3782,7 +3787,14 @@
                   <span class="notice-asset-row-count" id="branch-feed-asset-links-count">0건</span>
                   <span class="notice-asset-row-caret">›</span>
                 </button>
-                <div class="team-feed-aside-empty">지점장님이 올린 자료 모음<br>(곧 실 데이터 박힘)</div>
+                <div class="notice-asset-section notice-memo">
+                  <div class="notice-asset-title">📝 내 메모</div>
+                  <textarea id="branch-feed-memo-text" placeholder="개인 메모 — 본인만 볼 수 있어요"></textarea>
+                  <div class="memo-actions">
+                    <button class="is-primary" onclick="window.saveNoticeMemo && window.saveNoticeMemo()">💾 저장하기</button>
+                    <button onclick="window.openMyspaceFromNotice && window.openMyspaceFromNotice()">📂 마이스페이스 →</button>
+                  </div>
+                </div>
               </aside>
 
             </div>
@@ -3822,8 +3834,13 @@
                 </div>
               </main>
 
-              <!-- 2026-05-17 갱신: 우측 자료 첨부 사이드바 = 옛 4팀 단체방 본진 재사용 (카톡 톤 정합) -->
+              <!-- 2026-05-17 정정: 우측 사이드바 = 옛 4팀 단체방 본진 100% 통째 재사용 (헤더 + 자료 3건 + 내 메모) -->
               <aside class="team-feed-aside" id="team-feed-aside">
+                <div class="notice-room-header">
+                  <div class="room-icon">4팀</div>
+                  <span class="room-name">더원4팀 단체방2</span>
+                  <span class="room-member" id="team-feed-member">· 40명</span>
+                </div>
                 <button class="notice-asset-row" type="button" onclick="window.openAssetOverlay && window.openAssetOverlay('photos')">
                   <span class="notice-asset-row-label">📸 사진·동영상</span>
                   <span class="notice-asset-row-count" id="team-feed-asset-photos-count">0건</span>
@@ -3839,7 +3856,14 @@
                   <span class="notice-asset-row-count" id="team-feed-asset-links-count">0건</span>
                   <span class="notice-asset-row-caret">›</span>
                 </button>
-                <div class="team-feed-aside-empty">실장님이 올린 자료 모음<br>(곧 실 데이터 박힘)</div>
+                <div class="notice-asset-section notice-memo">
+                  <div class="notice-asset-title">📝 내 메모</div>
+                  <textarea id="team-feed-memo-text" placeholder="개인 메모 — 본인만 볼 수 있어요"></textarea>
+                  <div class="memo-actions">
+                    <button class="is-primary" onclick="window.saveNoticeMemo && window.saveNoticeMemo()">💾 저장하기</button>
+                    <button onclick="window.openMyspaceFromNotice && window.openMyspaceFromNotice()">📂 마이스페이스 →</button>
+                  </div>
+                </div>
               </aside>
 
             </div>
@@ -6791,7 +6815,7 @@ window.openAssetOverlay = function(kind){
   if (titleEl) titleEl.textContent = (titles[kind] || '자료') + ' · ' + items.length + '건';
 
   if (items.length === 0) {
-    bodyEl.innerHTML = '<div class="asset-overlay-empty">' + (titles[kind] || '자료') + ' 박은 박이 없어요</div>';
+    bodyEl.innerHTML = '<div class="asset-overlay-empty">아직 ' + (titles[kind] || '자료') + '이(가) 없어요</div>';
   } else if (kind === 'photos') {
     bodyEl.innerHTML = '<div class="asset-overlay-grid">' + items.map(function(p){
       var icon = p.video ? '🎥' : '📷';

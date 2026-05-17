@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v74-20260517-submitnotice-edit-branch-fix';
+const CACHE_NAME = 'onesecond-v75-20260517-aside-full-restore-language-fix';
 const CACHE_URLS = [
   '/',
   '/app.html',
