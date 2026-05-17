@@ -1486,7 +1486,8 @@ html, body {
     max-height: 14px;
   }
   /* 단톡방 풀스크린 진입 시 안전망 hide (채팅 입력바 자리 충돌 회피) */
-  body.notice-room-fullscreen .tab-bar { display: none; }
+  /* 2026-05-17 정정: notice-room-fullscreen hide 박힌 자리 폐기 — 모든 게시판에서 .tab-bar 표시 정합 */
+  body.notice-room-fullscreen .tab-bar { display: flex !important; }
 }
 @media(min-width:768px) { .tab-bar { display: none; } }
 </style>
