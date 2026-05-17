@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v83-20260517-library-insert-column-mismatch-fix';
+const CACHE_NAME = 'onesecond-v84-20260517-mobile-aside-isopen-tooltip-max';
 const CACHE_URLS = [
   '/',
   '/app.html',

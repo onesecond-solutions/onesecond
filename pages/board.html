@@ -2287,7 +2287,9 @@
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
+  /* 2026-05-17 정정 (Chrome AI [M-15] FAIL): is-open 시 슬라이드 패널 표시 override (옛 default hide 박힌 자리 격차 해소) */
   .team-feed-aside { display: none; }
+  .team-feed-aside.is-open { display: flex !important; }
   .team-feed-categories {
     border-right: 0;
     border-bottom: 1px solid var(--color-border);

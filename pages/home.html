@@ -413,8 +413,8 @@
   }
   .home-hex-node:hover { transform: none; }
 
-  /* 2026-05-17 정정: 모바일 툴팁 = 중앙 통합 박힘 자리 정합 (width만 축소, 위치 셀렉터는 위 정의 정합) */
-  .home-hex-tooltip { width: clamp(160px, 75vw, 240px); }
+  /* 2026-05-17 정정 (Chrome AI [M-20] 부분 FAIL): max 240 → 280 박음 (75vw 정합 도달 자리 확보) */
+  .home-hex-tooltip { width: clamp(160px, 75vw, 280px); }
 
   /* 미리보기 패딩 축소 */
   .home-a2-preview { padding: var(--space-4); }
