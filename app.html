@@ -562,7 +562,7 @@ html, body {
     gap: var(--space-1);
     position: fixed;
     top: calc(var(--header-a1) + 56px);  /* A1 높이 + 햄버거 높이 = 햄버거 바로 아래 */
-    left: 8px;  /* B영역 좌측 정합 */
+    left: calc(max(0px, (100vw - 1280px) / 2) + 8px);  /* 햄버거 좌측 라인 정합 (.main max-width 1280px 가운데 정렬 + .b padding-left 8px) */
     width: 240px;
     background: #FFFFFF;
     padding: 8px;
