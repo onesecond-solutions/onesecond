@@ -5832,7 +5832,7 @@ window.submitNavV2Reply = async function(qId) {
       console.warn('[nav_v2] 질문 team_id lookup 실패', e);
     }
     if (!teamId) {
-      alert('팀 정보를 박지 X 박혀 답변 등록 박지 X (관리자에게 문의)');
+      alert('팀 정보가 없어 답변을 등록할 수 없습니다. 관리자에게 문의해주세요.');
       return;
     }
   }
@@ -6337,7 +6337,7 @@ window.openUserPrefsPlaceholder = function() {
   if (typeof _showNoticeToast === 'function') {
     _showNoticeToast('⚙ 본인 맞춤 설정 준비 중 ✨ (5/18 후 박힘)');
   } else {
-    alert('⚙ 본인 맞춤 설정 준비 중 ✨ (5/18 후 박힘)');
+    alert('⚙ 본인 맞춤 설정 준비 중 ✨ (5/18 이후 출시 예정)');
   }
 };
 
@@ -6487,19 +6487,19 @@ function _lpCloseMenu() {
 
 /* 4단 액션 핸들러 — v1.1 placeholder (v1.2에서 실 본진 박음) */
 window.lpAdopt = function(btn) {
-  alert('⭐ 채택 답변 본진 박을 예정 (v1.2 — posts.is_adopted 컬럼 + 상단 캐러셀)');
+  alert('⭐ 채택 답변 기능은 v1.2에서 출시 예정입니다.');
   _lpCloseMenu();
 };
 window.lpToScript = function(btn) {
-  alert('📋 스크립트로 본진 박을 예정 (v1.2 — scripts 본진 정합 INSERT)');
+  alert('📋 스크립트 저장 기능은 v1.2에서 출시 예정입니다.');
   _lpCloseMenu();
 };
 window.lpBookmark = function(btn) {
-  alert('🔖 북마크 본진 박을 예정 (v1.2 — personal_memos scope=bookmark)');
+  alert('🔖 북마크 기능은 v1.2에서 출시 예정입니다.');
   _lpCloseMenu();
 };
 window.lpShare = function(btn) {
-  alert('📤 고객 공유 본진 박을 예정 (v1.2 — PRO 스마트 설계서 진입로)');
+  alert('📤 고객 공유 기능은 v1.2에서 출시 예정입니다.');
   _lpCloseMenu();
 };
 
@@ -6805,14 +6805,14 @@ window.actDdalkkakComment = function(e) {
   if (e) e.stopPropagation();
   var wrap = e.currentTarget.closest('.ddalkkak-wrap');
   if (wrap) wrap.classList.remove('is-open');
-  alert('💬 댓글 본진 박을 예정 (v1.2)');
+  alert('💬 댓글 기능은 v1.2에서 출시 예정입니다.');
 };
 
 window.actDdalkkakLike = function(e) {
   if (e) e.stopPropagation();
   var wrap = e.currentTarget.closest('.ddalkkak-wrap');
   if (wrap) wrap.classList.remove('is-open');
-  alert('👍 좋아요 본진 박을 예정 (v1.2)');
+  alert('👍 좋아요 기능은 v1.2에서 출시 예정입니다.');
 };
 
 window.actDdalkkakSave = async function(e) {
@@ -7167,10 +7167,10 @@ window.openEditNoticePost = async function(postId) {
       '/rest/v1/posts?id=eq.' + encodeURIComponent(postId) +
       '&select=id,title,content,category,audience_target,is_pinned,is_notice,created_at,author_id'
     );
-    if (!res.ok) { alert('메시지 박지 X (' + res.status + ')'); return; }
+    if (!res.ok) { alert('메시지를 불러올 수 없습니다 (' + res.status + ')'); return; }
     var rows = await res.json();
     var p = rows && rows[0];
-    if (!p) { alert('메시지 박지 X'); return; }
+    if (!p) { alert('메시지를 찾을 수 없습니다.'); return; }
 
     /* 본인 검증 + 5분 제한 (admin/ga_manager는 박힘 무관 박음) */
     var meId = (window.AppState && window.AppState.userId) || '';
@@ -7178,11 +7178,11 @@ window.openEditNoticePost = async function(postId) {
     var isAdminLevel = (meRole === 'admin' || meRole === 'ga_branch_manager' || meRole === 'ga_manager');
     if (!isAdminLevel) {
       if (String(p.author_id) !== String(meId)) {
-        alert('본인 메시지만 수정 박을 자리');
+        alert('본인이 작성한 메시지만 수정할 수 있습니다.');
         return;
       }
       if (!_isWithinEditWindow(p.created_at)) {
-        alert('5분 지난 메시지는 수정 박지 X');
+        alert('5분이 지난 메시지는 수정할 수 없습니다.');
         return;
       }
     }
@@ -7248,7 +7248,7 @@ window.submitEditNoticeForm = async function() {
   var content  = (document.getElementById('notice-content')?.value  || '').trim();
   var category =  document.getElementById('notice-type')?.value     || '운영';
   var audience =  document.getElementById('notice-audience')?.value || 'team_internal';
-  if (!title || !content) { alert('제목·내용 박을 자리'); return; }
+  if (!title || !content) { alert('제목과 내용을 입력해주세요.'); return; }
   try {
     var res = await window.db.fetch(
       '/rest/v1/posts?id=eq.' + encodeURIComponent(_editPostId),
@@ -7502,7 +7502,7 @@ window.togglePostPin = async function(evt, postId, isPinned) {
     _loadNoticeRoom(board);
   } catch (e) {
     console.error('[pin-toggle] 실패:', e);
-    alert('핀 박음 실패: ' + (e.message || e));
+    alert('핀 고정 실패: ' + (e.message || e));
   }
 };
 
