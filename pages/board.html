@@ -5060,10 +5060,37 @@ async function _loadTeamFeed() {
     var notices = res.ok ? await res.json() : [];
     _teamFeedAll = notices;
     _renderTeamFeedList();
+    /* 2026-05-17 박음: 자료 사이드바 카운트 갱신 (사진·동영상 / 파일 / 링크 분류) */
+    _updateTeamFeedAssetCounts(notices);
   } catch (e) {
     console.error('[team_feed] 로드 실패', e);
     list.innerHTML = '<div class="loading-msg">로딩 실패: ' + (e.message || e) + '</div>';
   }
+}
+
+/* 2026-05-17 박음: team_feed 자료 사이드바 카운트 본진 — attachments JSON 집계 + 확장자 분류 */
+function _updateTeamFeedAssetCounts(notices) {
+  var photoCount = 0, fileCount = 0, linkCount = 0;
+  notices.forEach(function(n) {
+    if (!n.attachments) return;
+    try {
+      var att = typeof n.attachments === 'string' ? JSON.parse(n.attachments) : n.attachments;
+      if (!Array.isArray(att)) return;
+      att.forEach(function(a) {
+        var name = ((a && (a.name || a.url || '')) + '').toLowerCase();
+        if (/\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm|m4v)$/i.test(name)) photoCount++;
+        else if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|hwp|txt)$/i.test(name)) fileCount++;
+        else if (/^https?:\/\//i.test(name)) linkCount++;
+        else fileCount++;  /* 분류 안 되는 자리 = 파일 박음 */
+      });
+    } catch (e) { /* JSON parse 실패 = skip */ }
+  });
+  var photoEl = document.getElementById('team-feed-asset-photos-count');
+  var fileEl  = document.getElementById('team-feed-asset-files-count');
+  var linkEl  = document.getElementById('team-feed-asset-links-count');
+  if (photoEl) photoEl.textContent = photoCount + '건';
+  if (fileEl)  fileEl.textContent  = fileCount  + '건';
+  if (linkEl)  linkEl.textContent  = linkCount  + '건';
 }
 
 function _renderTeamFeedList() {
@@ -5097,17 +5124,68 @@ function _renderTeamFeedList() {
     var isLatest = (idx === 0);
     var contentEsc = _noticeEscape(n.content || '').replace(/\n/g, '<br>');
     var titleEsc = _noticeEscape(n.title || '');
-    return '<div class="team-feed-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + n.notice_type + '"' +
+    /* 2026-05-17 박음: 카드 옆 [⚡ 딸깍] 액션 메뉴 (좋아요/댓글달기/저장하기) - §15 정체성 본진 */
+    var ddalkkakHtml =
+      '<span class="ddalkkak-wrap" onclick="event.stopPropagation();" style="margin-left:auto;">' +
+        '<button type="button" class="ddalkkak-btn" onclick="event.stopPropagation(); this.parentNode.classList.toggle(\'is-open\')">⚡ 딸깍</button>' +
+        '<div class="ddalkkak-menu">' +
+          '<button type="button" onclick="window.teamFeedLike(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">❤️ 좋아요</button>' +
+          '<button type="button" onclick="window.teamFeedComment(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">💬 댓글 달기</button>' +
+          '<button type="button" onclick="window.teamFeedSaveToMyspace(\'' + n.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">📂 저장하기</button>' +
+        '</div>' +
+      '</span>';
+    return '<div class="team-feed-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + n.notice_type + '" data-n-id="' + n.id + '"' +
            ' style="border-left:3px solid ' + cat.text + ';' + (isLatest ? 'background:' + cat.bg : '') + '">' +
-           '<div class="card-header">' +
+           '<div class="card-header" style="display:flex;align-items:center;gap:8px;">' +
              '<span class="cat-badge" style="background:' + cat.bg + ';color:' + cat.text + '">' + cat.icon + ' ' + cat.label + '</span>' +
              '<span class="card-time">' + time + '</span>' +
+             ddalkkakHtml +
            '</div>' +
            '<div class="card-title">' + titleEsc + '</div>' +
            '<div class="card-content">' + contentEsc + '</div>' +
            '</div>';
   }).join('');
 }
+
+/* 2026-05-17 박음: team_feed [딸깍] 액션 메뉴 본진 (좋아요/댓글/저장) */
+window.teamFeedLike = function(nId) {
+  alert('❤️ 좋아요 (곧 정식 가동)');
+};
+
+window.teamFeedComment = function(nId) {
+  alert('💬 댓글 기능 곧 가동 (시연 후 본진)');
+};
+
+window.teamFeedSaveToMyspace = async function(nId) {
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+  var s = window.AppState || {};
+  var userId = s.userId;
+  if (!userId) { alert('로그인이 필요합니다.'); return; }
+  try {
+    var nRes = await window.db.fetch('/rest/v1/team_notices?id=eq.' + encodeURIComponent(nId) + '&select=title,content,notice_type');
+    var nRows = nRes.ok ? await nRes.json() : [];
+    if (!nRows || !nRows[0]) { alert('공지를 찾을 수 없습니다.'); return; }
+    var n = nRows[0];
+    var libBody = {
+      owner_id: userId,
+      title: n.title || '(제목 없음)',
+      content: n.content || '',
+      kind: 'note',
+      source_post_id: nId
+    };
+    var libRes = await window.db.fetch('/rest/v1/library', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(libBody)
+    });
+    if (libRes.status === 409) { alert('이미 MY SPACE에 저장된 공지입니다.'); return; }
+    if (!libRes.ok) throw new Error('library INSERT ' + libRes.status);
+    alert('📂 MY SPACE에 저장되었습니다.');
+  } catch (e) {
+    console.error('[teamFeedSaveToMyspace] 실패:', e);
+    alert('저장 실패: ' + (e.message || e));
+  }
+};
 
 window.filterTeamFeed = function(cat) {
   _teamFeedCat = cat;
@@ -8093,9 +8171,11 @@ async function _wfnUploadAttachments(postId, formKey) {
   return urls;
 }
 
-async function _wfnPatchAttachments(postId, urls) {
+async function _wfnPatchAttachments(postId, urls, table) {
   if (!urls || !urls.length) return;
-  await window.db.fetch('/rest/v1/posts?id=eq.' + encodeURIComponent(postId), {
+  /* 2026-05-17 갱신: table 인자 박음 (default 'posts' = 옛 호출 정합 유지, team_feed/branch_feed = 'team_notices') */
+  var tbl = table || 'posts';
+  await window.db.fetch('/rest/v1/' + tbl + '?id=eq.' + encodeURIComponent(postId), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
     body: JSON.stringify({ attachments: JSON.stringify(urls) })
@@ -8833,6 +8913,13 @@ window.submitNoticeForm = async function() {
         body: JSON.stringify(tfBody)
       });
       if (!tfRes.ok) throw new Error('team_notices INSERT ' + tfRes.status);
+      /* 2026-05-17 박음: 첨부 업로드 + team_notices PATCH 본진 (attachments [] 격차 해소) */
+      var tfArr = await tfRes.json();
+      var tfPid = tfArr && tfArr[0] && tfArr[0].id;
+      if (tfPid && _wfnAttachFiles.length) {
+        var tfUrls = await _wfnUploadAttachments(tfPid, 'notice');
+        if (tfUrls && tfUrls.length) await _wfnPatchAttachments(tfPid, tfUrls, 'team_notices');
+      }
       window.closeWriteOverlay();
       if (typeof _loadTeamFeed === 'function') _loadTeamFeed();
       alert('4팀 단체방2 공지가 등록되었습니다.');
@@ -8894,6 +8981,13 @@ window.submitNoticeForm = async function() {
         body: JSON.stringify(bfBody)
       });
       if (!bfRes.ok) throw new Error('branch_feed INSERT ' + bfRes.status);
+      /* 2026-05-17 박음: 첨부 업로드 + team_notices PATCH (branch_feed 동일 본진) */
+      var bfArr = await bfRes.json();
+      var bfPid = bfArr && bfArr[0] && bfArr[0].id;
+      if (bfPid && _wfnAttachFiles.length) {
+        var bfUrls = await _wfnUploadAttachments(bfPid, 'notice');
+        if (bfUrls && bfUrls.length) await _wfnPatchAttachments(bfPid, bfUrls, 'team_notices');
+      }
       window.closeWriteOverlay();
       if (typeof _loadBranchFeed === 'function') _loadBranchFeed();
       alert('지점 게시판 공지가 등록되었습니다.');

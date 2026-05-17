@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v68-20260517-nav-v2-ddalkkak-actions';
+const CACHE_NAME = 'onesecond-v69-20260517-team-feed-attach-ddalkkak-counts';
 const CACHE_URLS = [
   '/',
   '/app.html',
