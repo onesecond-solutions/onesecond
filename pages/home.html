@@ -1067,10 +1067,8 @@
       setTimeout(function () { nodeEl.classList.remove('clicking'); }, 100);
     }
 
-    if (node.behavior === 'inline-preview') {
-      if (window.homeShowPreview) window.homeShowPreview(node.previewType);
-    }
-    /* 나머지 4개는 툴팁 CTA 버튼으로만 이동 (학습 기회 확보) */
+    /* 2026-05-17 정정: inline-preview 분기 제거 = 모든 노드 동일 동작 (hover/tap = tooltip만, CTA 버튼이 이동 담당)
+       격차 본진 = quick/search 클릭 시 A2 영역 별도 미리보기 중복 표시 = 모바일/데스크탑 공용 본진 인식 격차 */
   };
 
   // ──────────────────────────────────────────────────────────

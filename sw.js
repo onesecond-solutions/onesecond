@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v58-20260517-hex-shrink-tooltip-center';
+const CACHE_NAME = 'onesecond-v59-20260517-hex-click-inline-preview-removed';
 const CACHE_URLS = [
   '/',
   '/app.html',
