@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v65-20260517-a1-grid-minmax-search';
+const CACHE_NAME = 'onesecond-v66-20260517-nav-v2-last-activity-fix';
 const CACHE_URLS = [
   '/',
   '/app.html',

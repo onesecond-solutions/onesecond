@@ -8881,7 +8881,9 @@ window.submitNoticeForm = async function() {
         author_id: s.userId || '',
         question_type: qtype,
         title: title,
-        content: rawContent
+        content: rawContent,
+        /* 2026-05-17 정정: last_activity_at 박음 (NULL이면 SELECT order DESC 끝에 박혀 안 보임 격차) */
+        last_activity_at: new Date().toISOString()
       };
       var qRes = await window.db.fetch('/rest/v1/nav_questions', {
         method: 'POST',
