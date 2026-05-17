@@ -9251,7 +9251,7 @@ window.submitNoticeForm = async function() {
           if (edUrls && edUrls.length) await _wfnPatchAttachments(_editPostId, edUrls, 'team_notices');
         }
         window.closeWriteOverlay();
-        if (typeof _loadTeamFeed === 'function') _loadTeamFeed();
+        if (typeof _loadTeamFeed === 'function') await _loadTeamFeed();
         alert('✏️ 공지가 수정되었습니다.');
       } catch (e) {
         console.error('[team_feed] PATCH 실패:', e);
@@ -9288,7 +9288,7 @@ window.submitNoticeForm = async function() {
         if (tfUrls && tfUrls.length) await _wfnPatchAttachments(tfPid, tfUrls, 'team_notices');
       }
       window.closeWriteOverlay();
-      if (typeof _loadTeamFeed === 'function') _loadTeamFeed();
+      if (typeof _loadTeamFeed === 'function') await _loadTeamFeed();
       alert('4팀 단체방2 공지가 등록되었습니다.');
     } catch (e) {
       console.error('[team_feed] INSERT 실패:', e);
