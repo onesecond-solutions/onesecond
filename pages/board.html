@@ -5269,7 +5269,16 @@ function _renderNavV2List() {
       '<button type="button" class="nav-v2-add-reply-btn" ' +
       'onclick="event.stopPropagation(); window.openNavV2ReplyModal(\'' + q.id + '\', \'' + teamIdAttr + '\')">' +
       '+ 답변 달기' +
-      '</button>';
+      '</button>' +
+      /* 2026-05-17 갱신: 답변달기 옆 [딸깍] 버튼 = 좋아요/댓글달기/저장하기 메뉴 (§15 정체성 본진) */
+      '<span class="ddalkkak-wrap" onclick="event.stopPropagation();" style="margin-left:8px;">' +
+        '<button type="button" class="ddalkkak-btn" onclick="event.stopPropagation(); this.parentNode.classList.toggle(\'is-open\')">⚡ 딸깍</button>' +
+        '<div class="ddalkkak-menu">' +
+          '<button type="button" onclick="window.navV2Like(\'' + q.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">❤️ 좋아요</button>' +
+          '<button type="button" onclick="window.openNavV2ReplyModal(\'' + q.id + '\', \'' + teamIdAttr + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">💬 댓글 달기</button>' +
+          '<button type="button" onclick="window.navV2SaveToMyspace(\'' + q.id + '\'); this.closest(\'.ddalkkak-wrap\').classList.remove(\'is-open\')">📂 저장하기</button>' +
+        '</div>' +
+      '</span>';
 
     var answersSection;
     if (answers.length > 0) {
@@ -5495,6 +5504,44 @@ window.showSwitchToV2Notice = function(targetBoard, oldName, newName, icon) {
   });
 
   document.body.appendChild(modal);
+};
+
+/* 2026-05-17 박음: nav_v2 [딸깍] 액션 메뉴 본진 — 좋아요 / 저장하기 (댓글달기는 openNavV2ReplyModal 재호출) */
+window.navV2Like = function(qId) {
+  /* placeholder 본진 — 곧 nav_questions.like_count UPDATE 박음 (5/19 D+1) */
+  alert('❤️ 좋아요 (곧 정식 가동)');
+};
+
+window.navV2SaveToMyspace = async function(qId) {
+  /* MY SPACE library 저장 본진 — nav_questions 박힌 자리 lookup 후 library INSERT */
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+  var s = window.AppState || {};
+  var userId = s.userId;
+  if (!userId) { alert('로그인이 필요합니다.'); return; }
+  try {
+    var qRes = await window.db.fetch('/rest/v1/nav_questions?id=eq.' + encodeURIComponent(qId) + '&select=title,content,question_type');
+    var qRows = qRes.ok ? await qRes.json() : [];
+    if (!qRows || !qRows[0]) { alert('질문을 찾을 수 없습니다.'); return; }
+    var q = qRows[0];
+    var libBody = {
+      owner_id: userId,
+      title: q.title || '(제목 없음)',
+      content: q.content || '',
+      kind: 'note',
+      source_post_id: qId
+    };
+    var libRes = await window.db.fetch('/rest/v1/library', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(libBody)
+    });
+    if (libRes.status === 409) { alert('이미 MY SPACE에 저장된 질문입니다.'); return; }
+    if (!libRes.ok) throw new Error('library INSERT ' + libRes.status);
+    alert('📂 MY SPACE에 저장되었습니다.');
+  } catch (e) {
+    console.error('[navV2SaveToMyspace] 실패:', e);
+    alert('저장 실패: ' + (e.message || e));
+  }
 };
 
 function _toggleNavV2Shell(board) {
