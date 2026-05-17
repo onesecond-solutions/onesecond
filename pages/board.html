@@ -5311,8 +5311,9 @@ window.expandNavV2 = function(qId) {
 
 /* 2026-05-17 박음: 네비게이션방2 질문하기 = 네비게이션방 글쓰기 폼 재사용 + INSERT target=nav_questions */
 window.openNavV2WriteModal = function() {
-  window.openWriteOverlay();
-  /* 2026-05-17 정정: openWriteOverlay가 mode='navigation' 덮어쓰는 격차 회피 → 호출 후 'nav_v2' 재박음 */
+  /* 2026-05-17 정정 2차: openWriteOverlay 박은 자리 = 4 카드 UI 박힘 → 사용자 카드 클릭 시 mode 또 덮어씀 격차
+     해소 = openManagerNoticeOverlay 호출 (cards skip + notice form 직접 active) + mode 재박음 본진 */
+  window.openManagerNoticeOverlay();
   _noticeWriteMode = 'nav_v2';  /* submitNoticeForm에서 nav_questions INSERT 분기 */
 };
 

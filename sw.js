@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v66-20260517-nav-v2-last-activity-fix';
+const CACHE_NAME = 'onesecond-v67-20260517-nav-v2-cards-skip';
 const CACHE_URLS = [
   '/',
   '/app.html',
