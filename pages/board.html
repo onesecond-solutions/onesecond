@@ -5350,10 +5350,10 @@ window.editTeamFeedNotice = async function(nId) {
       var audEl = document.getElementById('notice-audience');
       if (titleEl) titleEl.value = n.title || '';
       if (contentEl) contentEl.value = n.content || '';
-      /* notice_type 역매핑 (operation → 운영 공지 등) */
+      /* 2026-05-17 정정: 옵션 값 정합 박음 (옛 '운영 공지' 박힌 자리 = 옵션 = '운영' 박혀 매치 안 됨 격차) */
       var reverseTypeMap = {
-        operation: '운영 공지', urgent: '긴급 공지', product: '상품 공지',
-        underwriting: '인수 공지', education: '교육 안내', event: '이벤트·일정', etc: '기타'
+        operation: '운영', urgent: '긴급', product: '상품',
+        underwriting: '인수', education: '교육', event: '이벤트', etc: '기타'
       };
       if (typeEl) typeEl.value = reverseTypeMap[n.notice_type] || '기타';
       if (audEl) audEl.value = n.scope || 'team_internal';
@@ -5430,6 +5430,14 @@ window.openTeamFeedWriteModal = function() {
   window.openManagerNoticeOverlay();
   /* 2026-05-17 정정: openManagerNoticeOverlay가 mode='manager_notice' 덮어쓰는 격차 회피 → 호출 후 'team_feed' 재박음 */
   _noticeWriteMode = 'team_feed';  /* submitNoticeForm에서 team_notices INSERT 분기 */
+  /* 2026-05-17 갱신: team_feed 본진 헤더/안내 박음 (옛 manager_notice 본진 덮어쓰기 격차 해소) */
+  var headerTitle = document.getElementById('write-overlay-title');
+  if (headerTitle) headerTitle.textContent = '4팀 단체방2 공지 작성';
+  var infoBox = document.getElementById('notice-info-box');
+  if (infoBox) {
+    infoBox.textContent = '📌 팀원들에게 공유할 공지를 작성해 주세요.';
+    infoBox.style.display = 'flex';
+  }
 };
 
 /* 2026-05-16 D-2 박음: 네비게이션방2 (nav_v2) 시연 본진 — 4유형 질문 + 인라인 답변 */
