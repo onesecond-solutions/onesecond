@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v86-20260517-board-header-hide-unify';
+const CACHE_NAME = 'onesecond-v87-20260517-mobile-header-icon-first-tap';
 const CACHE_URLS = [
   '/',
   '/app.html',
