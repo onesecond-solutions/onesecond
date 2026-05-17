@@ -9072,7 +9072,11 @@ window.cancelNoticeForm = function() {
 /* 공지 폼 제출 — posts INSERT (board_type='navigation', category='공지') */
 window.submitNoticeForm = async function() {
   /* 2026-05-14 갱신 — _editMode 박힘 시 PATCH 본진 분기 박음 */
-  if (_editMode && _editPostId) {
+  /* 2026-05-17 정정: team_feed/branch_feed/nav_v2 수정 모드는 submitEditNoticeForm(posts PATCH) 건너뛰고 아래 분기 진입 (Chrome AI 진단 정합) */
+  if (_editMode && _editPostId
+      && _noticeWriteMode !== 'team_feed'
+      && _noticeWriteMode !== 'branch_feed'
+      && _noticeWriteMode !== 'nav_v2') {
     return window.submitEditNoticeForm();
   }
   var typeEl     = document.getElementById('notice-type');
@@ -9127,7 +9131,7 @@ window.submitNoticeForm = async function() {
       '상품':'product', '상품 공지':'product',
       '인수':'underwriting', '인수 공지':'underwriting',
       '교육':'education', '교육 안내':'education',
-      '이벤트':'event', '이벤트·일정':'event', '이벤트/일정':'event',
+      '이벤트':'event', '이벤트·일정':'event', '이벤트/일정':'event', '이벤트일정':'event',
       '기타':'etc'
     };
     var ntype = noticeTypeMap[noticeType] || 'etc';
@@ -9213,7 +9217,7 @@ window.submitNoticeForm = async function() {
       '상품':'product', '상품 공지':'product',
       '인수':'underwriting', '인수 공지':'underwriting',
       '교육':'education', '교육 안내':'education',
-      '이벤트':'event', '이벤트·일정':'event', '이벤트/일정':'event',
+      '이벤트':'event', '이벤트·일정':'event', '이벤트/일정':'event', '이벤트일정':'event',
       '기타':'etc'
     };
     var ntypeBf = noticeTypeMapBf[noticeType] || 'etc';
@@ -9280,7 +9284,7 @@ window.submitNoticeForm = async function() {
       '인수':'underwriting', '인수 공지':'underwriting', '인수 같음':'underwriting',
       '상품':'product', '상품 공지':'product', '상품 같음':'product',
       '교육':'etc', '교육 안내':'etc',
-      '이벤트':'etc', '이벤트·일정':'etc', '이벤트/일정':'etc',
+      '이벤트':'etc', '이벤트·일정':'etc', '이벤트/일정':'etc', '이벤트일정':'etc',
       '기타':'etc'
     };
     var qtype = qTypeMap[noticeType] || 'etc';
