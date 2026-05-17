@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v63-20260517-a1-search-width-clamp';
+const CACHE_NAME = 'onesecond-v64-20260517-admin-team-branch-fallback';
 const CACHE_URLS = [
   '/',
   '/app.html',

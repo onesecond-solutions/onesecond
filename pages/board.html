@@ -8765,8 +8765,9 @@ window.submitNoticeForm = async function() {
       '기타':'etc'
     };
     var ntype = noticeTypeMap[noticeType] || 'etc';
-    var teamId_tf = s.teamId || null;
-    if (!teamId_tf) { alert('팀 정보 박지 X'); return; }
+    /* 2026-05-17 정정: admin 박은 자리 fallback = 4팀 UUID (시연 본진 정합, AppState.teamId 박지 X 박힌 자리 해소) */
+    var teamId_tf = s.teamId || (role === 'admin' ? '5fccd362-9ee3-4165-8960-7cb0b7ec72fa' : null);
+    if (!teamId_tf) { alert('팀 정보가 박지 않아 공지 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
     var submitBtn_tf = document.querySelector('#write-form-notice .wfn-btn-primary');
     if (submitBtn_tf) { submitBtn_tf.disabled = true; submitBtn_tf.textContent = '등록 중...'; }
     try {
@@ -8819,7 +8820,15 @@ window.submitNoticeForm = async function() {
         if (brRows && brRows[0]) branchIdBf = brRows[0].id;
       } catch (e) { console.warn('[branch_feed] branch lookup 실패', e); }
     }
-    if (!branchIdBf) { alert('지점 정보 박지 X 박혀 공지 등록 박지 X'); return; }
+    /* 2026-05-17 정정: admin 박은 자리 fallback — 첫 번째 지점 동적 lookup (더원지점 우선 박힘 자리 정합) */
+    if (!branchIdBf && role === 'admin') {
+      try {
+        var brAdminRes = await window.db.fetch('/rest/v1/branches?select=id&limit=1&order=created_at.asc');
+        var brAdminRows = brAdminRes.ok ? await brAdminRes.json() : [];
+        if (brAdminRows && brAdminRows[0]) branchIdBf = brAdminRows[0].id;
+      } catch (e) { console.warn('[branch_feed] admin fallback 실패', e); }
+    }
+    if (!branchIdBf) { alert('지점 정보가 박지 않아 공지 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
     var submitBtn_bf = document.querySelector('#write-form-notice .wfn-btn-primary');
     if (submitBtn_bf) { submitBtn_bf.disabled = true; submitBtn_bf.textContent = '등록 중...'; }
     try {
@@ -8861,8 +8870,9 @@ window.submitNoticeForm = async function() {
       '기타':'etc'
     };
     var qtype = qTypeMap[noticeType] || 'etc';
-    var teamId_q = s.teamId || null;
-    if (!teamId_q) { alert('팀 정보 박지 X'); return; }
+    /* 2026-05-17 정정: admin 박은 자리 fallback = 4팀 UUID (시연 본진 정합) */
+    var teamId_q = s.teamId || (role === 'admin' ? '5fccd362-9ee3-4165-8960-7cb0b7ec72fa' : null);
+    if (!teamId_q) { alert('팀 정보가 박지 않아 질문 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
     var submitBtn_q = document.querySelector('#write-form-notice .wfn-btn-primary');
     if (submitBtn_q) { submitBtn_q.disabled = true; submitBtn_q.textContent = '등록 중...'; }
     try {
