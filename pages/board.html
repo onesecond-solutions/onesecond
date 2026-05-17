@@ -5119,8 +5119,9 @@ window.filterTeamFeed = function(cat) {
 
 /* 2026-05-17 박음: 4팀 단체방2 새 공지 = 4팀 단체방 글쓰기 폼 재사용 + INSERT target=team_notices */
 window.openTeamFeedWriteModal = function() {
-  _noticeWriteMode = 'team_feed';  /* submitNoticeForm에서 team_notices INSERT 분기 */
   window.openManagerNoticeOverlay();
+  /* 2026-05-17 정정: openManagerNoticeOverlay가 mode='manager_notice' 덮어쓰는 격차 회피 → 호출 후 'team_feed' 재박음 */
+  _noticeWriteMode = 'team_feed';  /* submitNoticeForm에서 team_notices INSERT 분기 */
 };
 
 /* 2026-05-16 D-2 박음: 네비게이션방2 (nav_v2) 시연 본진 — 4유형 질문 + 인라인 답변 */
@@ -5310,8 +5311,9 @@ window.expandNavV2 = function(qId) {
 
 /* 2026-05-17 박음: 네비게이션방2 질문하기 = 네비게이션방 글쓰기 폼 재사용 + INSERT target=nav_questions */
 window.openNavV2WriteModal = function() {
-  _noticeWriteMode = 'nav_v2';  /* submitNoticeForm에서 nav_questions INSERT 분기 */
   window.openWriteOverlay();
+  /* 2026-05-17 정정: openWriteOverlay가 mode='navigation' 덮어쓰는 격차 회피 → 호출 후 'nav_v2' 재박음 */
+  _noticeWriteMode = 'nav_v2';  /* submitNoticeForm에서 nav_questions INSERT 분기 */
 };
 
 /* 2026-05-17 박음: 네비게이션방2 답변 인라인 폼 — 모든 사용자 + insurer_* 자동 매핑 */
@@ -5604,8 +5606,9 @@ window.filterBranchFeed = function(cat) {
 };
 
 window.openBranchFeedWriteModal = function() {
-  _noticeWriteMode = 'branch_feed';  /* submitNoticeForm에서 team_notices INSERT 분기 (scope=branch_internal) */
   window.openManagerNoticeOverlay();
+  /* 2026-05-17 정정: openManagerNoticeOverlay가 mode='manager_notice' 덮어쓰는 격차 회피 → 호출 후 'branch_feed' 재박음 */
+  _noticeWriteMode = 'branch_feed';  /* submitNoticeForm에서 team_notices INSERT 분기 (scope=branch_internal) */
 };
 
 function _toggleBranchFeedShell(board) {
