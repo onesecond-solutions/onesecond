@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v71-20260517-team-feed-detail-edit-delete';
+const CACHE_NAME = 'onesecond-v72-20260517-team-feed-edit-attach-error-detail';
 const CACHE_URLS = [
   '/',
   '/app.html',

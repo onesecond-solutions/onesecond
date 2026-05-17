@@ -9126,7 +9126,7 @@ window.submitNoticeForm = async function() {
     /* 2026-05-17 정정: admin 박은 자리 fallback = 4팀 UUID (시연 본진 정합, AppState.teamId 박지 X 박힌 자리 해소) */
     var teamId_tf = s.teamId || (role === 'admin' ? '5fccd362-9ee3-4165-8960-7cb0b7ec72fa' : null);
     if (!teamId_tf) { alert('팀 정보가 박지 않아 공지 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
-    /* 2026-05-17 박음: 수정 모드 분기 = PATCH (INSERT 대신) */
+    /* 2026-05-17 박음: 수정 모드 분기 = PATCH (INSERT 대신) + 신 첨부 업로드 박음 */
     if (_editMode && _editPostId) {
       var submitBtn_ed = document.querySelector('#write-form-notice .wfn-btn-primary');
       if (submitBtn_ed) { submitBtn_ed.disabled = true; submitBtn_ed.textContent = '수정 중...'; }
@@ -9137,7 +9137,16 @@ window.submitNoticeForm = async function() {
           headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify(edBody)
         });
-        if (!edRes.ok) throw new Error('team_notices PATCH ' + edRes.status);
+        if (!edRes.ok) {
+          var edErrTxt = '';
+          try { edErrTxt = await edRes.text(); } catch (e2) {}
+          throw new Error('team_notices PATCH ' + edRes.status + ' ' + edErrTxt);
+        }
+        /* 2026-05-17 박음: 신 첨부 업로드 + attachments PATCH (옛 첨부 덮어씀) */
+        if (_wfnAttachFiles.length) {
+          var edUrls = await _wfnUploadAttachments(_editPostId, 'notice');
+          if (edUrls && edUrls.length) await _wfnPatchAttachments(_editPostId, edUrls, 'team_notices');
+        }
         window.closeWriteOverlay();
         if (typeof _loadTeamFeed === 'function') _loadTeamFeed();
         alert('✏️ 공지가 수정되었습니다.');
