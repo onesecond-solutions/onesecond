@@ -591,7 +591,8 @@ html, body {
   body.mobile-sidebar-open .b {
     position: fixed;
     top: var(--header-a1);
-    left: 0;
+    /* .main 좌측 자리 정합 — ▶ 꼭지와 같은 기준 (max-width 1280px 가운데 정렬 정합) */
+    left: calc(max(0px, (100vw - 1280px) / 2));
     width: 220px;
     height: calc(100dvh - var(--header-a1));
     z-index: 220;
