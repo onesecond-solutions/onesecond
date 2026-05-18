@@ -1658,18 +1658,23 @@ body {
       <!-- ────── OTP 6자리 인증 (로그인 + 가입 공용, 2026-05-18 신설) ────── -->
       <div class="auth-step-page" id="page-otp-verify">
         <span class="auth-friendly-emoji">📧</span>
-        <h2 class="auth-page-title">인증 코드 입력</h2>
+        <h2 class="auth-page-title">이메일로 인증 코드를 보냈어요</h2>
         <p class="auth-page-sub">
-          <strong id="otp-target-email">example@email.com</strong>으로<br>
-          6자리 인증 코드를 보냈습니다.
+          📬 <strong id="otp-target-email">example@email.com</strong><br><br>
+          위 <strong style="color:var(--color-brand);">이메일 메일함</strong>을 확인해 주세요.<br>
+          6자리 인증 코드가 도착해 있습니다.
         </p>
+
+        <div style="background:#FFF8E1; border-left:3px solid #F4B400; padding:10px 14px; margin:16px 0; border-radius:6px; font-size:13px; color:#5F4B00;">
+          ⚠️ <strong>휴대폰 문자가 아닙니다.</strong> 가입하신 이메일 메일함(스팸함 포함)을 확인해 주세요.
+        </div>
 
         <div class="auth-err-box" id="otpErrBox"></div>
 
         <div class="auth-form-group" style="margin-top:20px;">
-          <label class="auth-label" for="f-otp-code">인증 코드 (6자리)</label>
+          <label class="auth-label" for="f-otp-code">이메일에 적힌 6자리 코드</label>
           <input class="auth-input" type="text" id="f-otp-code"
-                 placeholder="123456"
+                 placeholder="이메일에서 확인한 6자리"
                  autocomplete="one-time-code"
                  inputmode="numeric"
                  maxlength="6"
@@ -1679,8 +1684,8 @@ body {
         </div>
 
         <p style="font-size:13px; color:var(--color-text-tertiary); margin-top:16px; text-align:center;">
-          코드가 도착하지 않았나요?<br>
-          메일함(스팸함 포함)을 확인하거나 아래 [재전송]을 눌러주세요.
+          📨 메일이 도착하지 않았나요?<br>
+          스팸함(정크 메일함)도 함께 확인해 주세요.
         </p>
 
         <div style="text-align:center; margin-top:12px;">
