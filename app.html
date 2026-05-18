@@ -1535,7 +1535,8 @@ html, body {
 .b-pulltab {
   display: flex; /* 2026-05-19: 모바일·데스크탑 통일 = 글로벌 표시 */
   position: fixed;
-  top: 50%;
+  /* B영역 정중앙 = (header_height + 100vh) / 2 (헤더 아래 자리 가운데) */
+  top: calc(var(--header-a1) + (100vh - var(--header-a1)) / 2);
   left: 0;
   transform: translateY(-50%);
   z-index: 230;
@@ -3179,6 +3180,9 @@ document.addEventListener('click', function(e) {
   if (hamburger1 && hamburger1.contains(e.target)) return;
   if (hamburger2 && hamburger2.contains(e.target)) return;
   if (hamburger3 && hamburger3.contains(e.target)) return;
+  /* 2026-05-19 정정: ▶ 꼭지 클릭 = 본 외부 핸들러 통과 차단 (toggleMobileSidebar 가동 후 즉시 닫힘 격차 해소) */
+  var pulltab = document.querySelector('.b-pulltab');
+  if (pulltab && pulltab.contains(e.target)) return;
   document.body.classList.remove('mobile-sidebar-open');
 });
 document.addEventListener('click', function (e) {
