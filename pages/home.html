@@ -547,13 +547,14 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  min-height: 240px;
+  padding: 0;
+  min-height: 320px;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-slow), border-color var(--transition-slow), box-shadow var(--transition-slow);
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .home-cards-card:hover,
@@ -562,6 +563,34 @@
   border-color: var(--brand-300);
   box-shadow: var(--shadow-lg);
   outline: none;
+}
+
+/* 2026-05-18: 카드 본진 이미지 미리보기 (사용자 어리둥절 격차 해소) */
+.home-cards-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-surface-2, #F5F1EB);
+  background-size: cover;
+  background-position: top center;
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+  flex-shrink: 0;
+}
+.home-cards-preview.is-placeholder::after {
+  content: '미리보기 준비 중';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.875em;
+  color: var(--color-text-tertiary);
+  font-weight: 600;
+}
+.home-cards-body {
+  padding: var(--space-6);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .home-cards-kicker {
@@ -717,9 +746,13 @@
          onclick="window.switchMenu &amp;&amp; window.switchMenu('board')"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.switchMenu &amp;&amp; window.switchMenu('board');}"
          aria-label="현장의 소리로 이동">
-      <div class="home-cards-kicker">FIELD Q&amp;A</div>
-      <h4 class="home-cards-title">카톡방에 흩어진 자료들, 질문들을 한공간에 <span class="accent">쏘옥</span></h4>
-      <p class="home-cards-desc">상품·인수·공지 질문을 스마트하게 정리한 게시판과 네비게이션을 제공합니다.</p>
+      <div class="home-cards-preview is-placeholder" id="home-card-preview-board"
+           style="background-image: url('/assets/screenshots/menu-board.png');"></div>
+      <div class="home-cards-body">
+        <div class="home-cards-kicker">FIELD Q&amp;A</div>
+        <h4 class="home-cards-title">카톡방에 흩어진 자료들, 질문들을 한공간에 <span class="accent">쏘옥</span></h4>
+        <p class="home-cards-desc">상품·인수·공지 질문을 스마트하게 정리한 게시판과 네비게이션을 제공합니다.</p>
+      </div>
     </div>
 
     <div class="home-cards-card" role="button" tabindex="0"
@@ -727,9 +760,13 @@
          onclick="window.switchMenu &amp;&amp; window.switchMenu('quick')"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.switchMenu &amp;&amp; window.switchMenu('quick');}"
          aria-label="빠른 실행으로 이동">
-      <div class="home-cards-kicker">QUICK MENU</div>
-      <h4 class="home-cards-title">긴박한 순간, 허둥대지 마세요. 바로 <span class="accent">딸깍</span></h4>
-      <p class="home-cards-desc">BMI·보험연령·녹취 스크립트·전산장애 신고처럼 통화 중 필요한 기능을 빠르게 꺼내 씁니다.</p>
+      <div class="home-cards-preview is-placeholder" id="home-card-preview-quick"
+           style="background-image: url('/assets/screenshots/menu-quick.png');"></div>
+      <div class="home-cards-body">
+        <div class="home-cards-kicker">QUICK MENU</div>
+        <h4 class="home-cards-title">긴박한 순간, 허둥대지 마세요. 바로 <span class="accent">딸깍</span></h4>
+        <p class="home-cards-desc">BMI·보험연령·녹취 스크립트·전산장애 신고처럼 통화 중 필요한 기능을 빠르게 꺼내 씁니다.</p>
+      </div>
     </div>
 
     <div class="home-cards-card" role="button" tabindex="0"
@@ -737,13 +774,33 @@
          onclick="window.switchMenu &amp;&amp; window.switchMenu('myspace')"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.switchMenu &amp;&amp; window.switchMenu('myspace');}"
          aria-label="MY SPACE로 이동">
-      <div class="home-cards-kicker">MY SPACE</div>
-      <h4 class="home-cards-title">나만의 멘트를 작성하고, 사용해보세요. 내 입에 <span class="accent">착</span></h4>
-      <p class="home-cards-desc">고민했던 순간의 멘트, 한 줄 핵심 멘트가 먼저 보이게 정리해두세요.</p>
+      <div class="home-cards-preview is-placeholder" id="home-card-preview-myspace"
+           style="background-image: url('/assets/screenshots/menu-myspace.png');"></div>
+      <div class="home-cards-body">
+        <div class="home-cards-kicker">MY SPACE</div>
+        <h4 class="home-cards-title">나만의 멘트를 작성하고, 사용해보세요. 내 입에 <span class="accent">착</span></h4>
+        <p class="home-cards-desc">고민했던 순간의 멘트, 한 줄 핵심 멘트가 먼저 보이게 정리해두세요.</p>
+      </div>
     </div>
 
   </div>
 </section>
+
+<!-- 2026-05-18: 카드 미리보기 이미지 로드 본진 — 이미지 박힌 자리 자동 placeholder 제거 -->
+<script>
+(function () {
+  document.querySelectorAll('.home-cards-preview').forEach(function (el) {
+    var style = el.style.backgroundImage || '';
+    if (!style || style === 'none') return;
+    var match = style.match(/url\(["']?([^"')]+)["']?\)/);
+    if (!match) return;
+    var img = new Image();
+    img.onload = function () { el.classList.remove('is-placeholder'); };
+    img.onerror = function () { /* 이미지 박지 X = is-placeholder 유지 */ };
+    img.src = match[1];
+  });
+})();
+</script>
 
 
 <!-- ════════════════════════════════════════════════════════════
