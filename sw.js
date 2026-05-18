@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v98-20260519-landing-as-index-purge-duplicates';
+const CACHE_NAME = 'onesecond-v99-20260519-home-action-pattern-pulltab';
 const CACHE_URLS = [
   '/',
   '/app.html',

@@ -251,41 +251,42 @@
   body.notice-room-fullscreen .app { padding-top: 0; }
 }
 
-/* 2026-05-17 정정: 모바일 슬라이드 사이드바 — 모바일(≤768px) 전용 (데스크탑은 dropdown 분기) */
+/* 2026-05-19 정정: 모바일·데스크탑 통일 — 슬라이드 폭 220px + 브라운 그라데이션 정합 */
 @media (max-width: 768px) {
   body.mobile-sidebar-open .b {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column;
     position: fixed;
     top: 0; left: 0;
-    width: 78%;
-    max-width: 320px;
+    width: 220px;
     height: 100dvh;
     z-index: 200;
-    background: var(--color-bg, #FAF8F5);
-    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(180deg, #A0522D 0%, #8B4423 100%);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
     overflow-y: auto;
-    padding: 16px;
+    padding: 16px 8px;
     animation: sidebarSlideIn 200ms ease-out;
   }
-  /* 2026-05-17 정정 — 모바일 슬라이드 안 메뉴 활성화 (default .b .menu { display:none } override 본진) */
+  /* 2026-05-19 정정 — 모바일 슬라이드 안 메뉴 활성화 (default .b .menu { display:none } override 본진) */
   body.mobile-sidebar-open .b .menu {
     display: flex !important;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
+    gap: var(--space-1);
+    margin-top: 0;
   }
   body.mobile-sidebar-open .b .menu .menu-item {
     text-align: left;
     padding: 12px 14px;
-    border-radius: 8px;
-    font-size: 1em;
+    border-radius: var(--radius-sm);
+    font-size: 0.9375em;
     cursor: pointer;
+    color: rgba(255, 255, 255, 0.92);
     transition: background 120ms;
   }
   body.mobile-sidebar-open .b .menu .menu-item:hover,
   body.mobile-sidebar-open .b .menu .menu-item.active {
-    background: var(--brand-50, #FDF4EF);
-    color: var(--brand-700, #66331A);
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
   }
   body.mobile-sidebar-open::before {
     content: '';
@@ -523,11 +524,11 @@ html, body {
 /* 2026-04-29 푸터 셸 최하단 정정: viewport-lock(.app overflow:hidden + .d 내부 스크롤) →
    body 스크롤 + A1/B/C sticky 패턴. .main min-height로 짧은 페이지에서도 푸터 화면 아래 자연 배치. */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
-/* 2026-05-17 갱신: B영역 박힘 (좁은 햄버거 자리 60px) + D메인 + C우측 = 3컬럼 박음 (max-width 1280px 정합) */
+/* 2026-05-19 갱신: B영역 28px 가는 세로 + D메인 + C우측 = 3컬럼 (옛 햄버거 → ▶ 꼭지) */
 .main {
   flex: 1;
   display: grid;
-  grid-template-columns: 60px 1fr var(--rightbar-width);
+  grid-template-columns: 28px 1fr var(--rightbar-width);
   min-height: calc(100vh - var(--header-a1));
   max-width: 1280px;
   margin: 0 auto;
@@ -538,17 +539,19 @@ html, body {
 /* 본진 박은 자리: 햄버거 박힌 자리 그대로 + 클릭 박은 자리 = 햄버거 박힌 자리 박힌 자리 바로 아래 박힘 자리 dropdown 박음 */
 /* 옛 박은 자리 박지 X: 모바일 슬라이드 사이드바 박힘 자리 (좌측 풀 박힘 자리) — 데스크탑 정합 박지 X */
 .b {
-  background: var(--color-surface-2);
-  border-right: 1px solid var(--color-border);
-  padding: 12px 8px;
+  background: linear-gradient(180deg, #A0522D 0%, #8B4423 100%);
+  border-right: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: sticky;
   top: var(--header-a1);
   align-self: start;
-  max-height: calc(100vh - var(--header-a1));
+  height: calc(100vh - var(--header-a1));
   z-index: 40;
+  width: 28px;
+  transition: width 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* 평상시 + 펼침 = 메뉴 박힌 자리 본진 = 햄버거 박힘 자리 박힘 자리만 박음 (60px 박힌 자리 유지) */
 .b .menu, .b .pro, .b .menu-cap-title, .b .menu-cap-divider {
@@ -582,25 +585,38 @@ html, body {
 }
 .b-hamburger:hover .b-hamburger-label { color: var(--brand-700, #66331A); }
 
-/* 2026-05-17 정정: 데스크탑 햄버거 dropdown — 데스크탑(≥769px) 전용 (모바일은 슬라이드 사이드바 분기) */
+/* 2026-05-19 정정: 데스크탑·모바일 통일 우측 슬라이드 본진 (옛 dropdown 폐기)
+   닫힘 = B영역 28px 가는 세로 + ▶ 꼭지만 / 열림 = 220px 슬라이드 + 메뉴 9개 표시 */
 @media (min-width: 769px) {
+  body.mobile-sidebar-open .b {
+    position: fixed;
+    top: var(--header-a1);
+    left: 0;
+    width: 220px;
+    height: calc(100dvh - var(--header-a1));
+    z-index: 220;
+    background: linear-gradient(180deg, #A0522D 0%, #8B4423 100%);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+    padding: 16px 8px;
+    align-items: stretch;
+  }
   body.mobile-sidebar-open .b .menu {
     display: flex !important;
     flex-direction: column;
     gap: var(--space-1);
-    position: fixed;
-    top: calc(var(--header-a1) + 56px);  /* A1 높이 + 햄버거 높이 = 햄버거 바로 아래 */
-    left: calc(max(0px, (100vw - 1280px) / 2) + 8px);  /* 햄버거 좌측 라인 정합 (.main max-width 1280px 가운데 정렬 + .b padding-left 8px) */
-    width: 240px;
-    background: #FFFFFF;
-    padding: 8px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
-    z-index: 210;
-    max-height: calc(100dvh - var(--header-a1) - 80px);
+    position: static;
+    top: auto;
+    left: auto;
+    width: 100%;
+    background: transparent;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: auto;
+    max-height: none;
     overflow-y: auto;
-    animation: dropdownFadeIn 140ms ease-out;
+    animation: dropdownFadeIn 180ms ease-out;
   }
   body.mobile-sidebar-open .b .menu .menu-item {
     text-align: left;
@@ -608,13 +624,16 @@ html, body {
     border-radius: var(--radius-sm);
     font-size: 0.9375em;
     cursor: pointer;
+    color: rgba(255, 255, 255, 0.92);
     transition: background 120ms;
   }
   body.mobile-sidebar-open .b .menu .menu-item:hover,
   body.mobile-sidebar-open .b .menu .menu-item.active {
-    background: var(--brand-50, #FDF4EF);
-    color: var(--brand-700, #66331A);
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
   }
+  /* 옛 B영역 햄버거 hide (▶ 꼭지로 통일) */
+  .b-hamburger { display: none !important; }
 }
 @keyframes dropdownFadeIn {
   from { opacity: 0; transform: translateY(-4px); }
@@ -1514,12 +1533,12 @@ html, body {
    ▸ 터치 영역 44px+ 확보 (메모리 accessibility_low_vision)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .b-pulltab {
-  display: none;
+  display: flex; /* 2026-05-19: 모바일·데스크탑 통일 = 글로벌 표시 */
   position: fixed;
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  z-index: 220;
+  z-index: 230;
   width: 28px;
   height: 64px;
   background: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
@@ -1556,18 +1575,15 @@ html, body {
   background: linear-gradient(135deg, #8B4423 0%, #A0522D 100%);
 }
 @media (max-width: 768px) {
-  .b-pulltab { display: flex; }
   /* 옛 모바일 헤더 햄버거 + B영역 안 햄버거 모두 hide */
   .mobile-header-hamburger,
   .b-hamburger { display: none !important; }
 }
 /* 슬라이드 열림 시 = ▶ → ◀ (꼭지가 닫기 버튼으로 변환) + 위치 슬라이드 폭만큼 이동 */
 body.mobile-sidebar-open .b-pulltab::before { content: '◀'; }
-@media (max-width: 768px) {
-  body.mobile-sidebar-open .b-pulltab {
-    /* 옛 모바일 슬라이드 폭만큼 이동 — .b 본인 폭 정합 */
-    transform: translateY(-50%) translateX(var(--sidebar-width, 180px));
-  }
+/* 2026-05-19 통일: 슬라이드 폭 220px 모바일·데스크탑 정합 */
+body.mobile-sidebar-open .b-pulltab {
+  transform: translateY(-50%) translateX(220px);
 }
 
 /* 2026-05-19 풀스크린 환영 자리 = 본인 결재로 통째 폐기 (랜딩과 정체성 카피 중복)
