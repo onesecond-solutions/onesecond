@@ -221,8 +221,46 @@
     window.location.href = 'index.html';
   }
 
+  // ── 10-bis. OAuth 콜백 처리 (2026-05-18 Google OAuth 본진 추가) ──────────
+  //   Supabase OAuth 본진 = 인증 성공 후 redirect_to URL에 토큰 URL fragment 박힘
+  //   예: app.html#access_token=...&refresh_token=...&token_type=bearer&expires_in=3600
+  //   → fragment 파싱해서 localStorage 박음 + URL 정리
+  function _handleOAuthCallback() {
+    var hash = window.location.hash || '';
+    if (hash.indexOf('access_token=') === -1) return;
+
+    try {
+      var params = new URLSearchParams(hash.substring(1));  // '#' 제거
+      var accessToken = params.get('access_token');
+      var refreshToken = params.get('refresh_token') || '';
+      if (!accessToken) return;
+
+      // 토큰 페이로드에서 사용자 ID + 이메일 추출
+      var payload = JSON.parse(atob(accessToken.split('.')[1]));
+      var userObj = {
+        id: payload.sub,
+        email: payload.email || '',
+        user_metadata: payload.user_metadata || {}
+      };
+
+      localStorage.setItem('os_token', accessToken);
+      localStorage.setItem('os_refresh_token', refreshToken);
+      localStorage.setItem('os_user', JSON.stringify(userObj));
+      sessionStorage.setItem('os_token', accessToken);
+      sessionStorage.setItem('os_user', JSON.stringify(userObj));
+
+      // URL fragment 정리 (history 깔끔하게)
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    } catch (e) {
+      console.error('[oauth callback parse error]', e);
+    }
+  }
+
   // ── 11. 앱 진입 시 인증 체크 + 초기화 ───────────────────────────────────
   async function init() {
+    /* 2026-05-18: OAuth 콜백 본진 = URL fragment 토큰 처리 (Google 로그인 진입 자리) */
+    _handleOAuthCallback();
+
     var token  = window.db.getToken();
     var userId = resolveUserId();
 
