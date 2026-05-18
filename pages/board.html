@@ -4328,7 +4328,9 @@
 
 
 <!-- ── 글쓰기 팝업 오버레이 (별 트랙 #58, navigation 탭 본진) ── -->
-<div class="write-overlay" id="write-overlay" onclick="if(event.target===this) window.closeWriteOverlay()">
+<div class="write-overlay" id="write-overlay"
+     onmousedown="window._mdOv_wo=event.target"
+     onclick="if(event.target===this && window._mdOv_wo===this) window.closeWriteOverlay()">
   <div class="write-overlay-modal" role="dialog" aria-labelledby="write-overlay-title" aria-modal="true">
     <div class="write-overlay-header">
       <h2 class="write-overlay-title" id="write-overlay-title">지금 어떤 질문인가요?</h2>
@@ -4764,7 +4766,9 @@
 </div>
 
 <!-- ── 첨부파일 미리보기 모달 (이미지/PDF/비디오/오디오/Office) ── -->
-<div class="preview-modal" id="preview-modal" onclick="if(event.target===this)window.closePreview()">
+<div class="preview-modal" id="preview-modal"
+     onmousedown="window._mdOv_pm=event.target"
+     onclick="if(event.target===this && window._mdOv_pm===this) window.closePreview()">
   <div class="preview-content">
     <div class="preview-header">
       <div class="preview-title" id="preview-title">미리보기</div>
@@ -6938,7 +6942,9 @@ window.showDdalkkakSaveOverlay = function() {
   var ex = document.getElementById('ddalkkak-save-overlay');
   if (ex) ex.remove();
   var html =
-    '<div class="ddalkkak-save-overlay" id="ddalkkak-save-overlay" onclick="if(event.target===this) window.closeDdalkkakSaveOverlay()">' +
+    '<div class="ddalkkak-save-overlay" id="ddalkkak-save-overlay"' +
+      ' onmousedown="window._mdOv_ddso=event.target"' +
+      ' onclick="if(event.target===this && window._mdOv_ddso===this) window.closeDdalkkakSaveOverlay()">' +
       '<div class="ddalkkak-save-modal">' +
         '<div class="ddalkkak-save-icon">💾</div>' +
         '<div class="ddalkkak-save-title">저장 완료</div>' +

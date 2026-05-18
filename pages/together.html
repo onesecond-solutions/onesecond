@@ -1002,7 +1002,8 @@
 
   <!-- ⑥ 글쓰기 오버레이 (실장님 공지 스타일 이식, 2026-05-12 박음) -->
   <div class="tg-write-overlay" id="together-write-overlay"
-       onclick="if(event.target===this) window.togetherCloseWrite()">
+       onmousedown="window._mdOv_tw=event.target"
+       onclick="if(event.target===this && window._mdOv_tw===this) window.togetherCloseWrite()">
     <div class="tg-write-modal" role="dialog" aria-labelledby="together-write-title" aria-modal="true">
       <div class="tg-write-header">
         <h2 class="tg-write-title" id="together-write-title">🤝 함께해요 — 새 글 작성</h2>

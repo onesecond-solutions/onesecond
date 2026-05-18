@@ -3153,7 +3153,9 @@ document.addEventListener('click', function(e) {
 </div>
 
 <!-- 2026-05-17 박음: 이번 달 운영 일정 오버레이 (C영역 카드 클릭 박힘 자리) -->
-<div class="cal-overlay" id="cal-overlay" onclick="if(event.target===this) window.closeCalendarOverlay()">
+<div class="cal-overlay" id="cal-overlay"
+     onmousedown="window._mdOv_co=event.target"
+     onclick="if(event.target===this && window._mdOv_co===this) window.closeCalendarOverlay()">
   <div class="cal-overlay-panel">
     <div class="cal-overlay-header">
       <h2>📅 이번 달 운영 일정 · 4건</h2>
