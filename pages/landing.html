@@ -38,7 +38,7 @@
   --gradient-brand: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
   --shadow-soft: 0 8px 32px rgba(160, 82, 45, 0.12);
   --shadow-strong: 0 16px 48px rgba(160, 82, 45, 0.20);
-  --font-sans: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  --font-sans: 'Pretendard', 'DM Sans', 'Noto Sans KR', sans-serif;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -123,9 +123,11 @@ body {
   transform: translateY(0);
 }
 
-/* 카피 스타일 */
+/* 카피 스타일 — 2026-05-19 화면별 차등 (토스 풀스크린 본진 정합) */
+
+/* 기본 = 화면 3·5 (헤드라인 + 다른 요소) */
 .lp-headline {
-  font-size: clamp(28px, 5vw, 44px);
+  font-size: clamp(32px, 5.5vw, 56px);
   font-weight: 700;
   line-height: 1.35;
   letter-spacing: -0.03em;
@@ -136,12 +138,23 @@ body {
 }
 .lp-sub {
   margin-top: 24px;
-  font-size: clamp(16px, 2vw, 19px);
+  font-size: clamp(17px, 2.2vw, 21px);
   color: var(--color-text-secondary);
   line-height: 1.7;
 }
+
+/* 단독 카피 화면 (1·2·4) override — 풀스크린 임팩트 */
+#lp-scene-1 .lp-quote,
+#lp-scene-2 .lp-headline,
+#lp-scene-4 .lp-headline {
+  font-size: clamp(36px, 6.5vw, 72px);
+  letter-spacing: -0.035em;
+  line-height: 1.3;
+}
+
 .lp-quote {
-  font-size: clamp(26px, 4.5vw, 40px);
+  /* 기본값 = 단독 카피 화면에서 override되므로 본 값은 fallback */
+  font-size: clamp(32px, 5.5vw, 56px);
   font-weight: 600;
   line-height: 1.4;
   color: var(--color-text-primary);
@@ -150,18 +163,20 @@ body {
 .lp-quote::before {
   content: '"';
   display: block;
-  font-size: 0.6em;
+  font-size: 0.45em;
   color: var(--color-brand);
   line-height: 1;
   margin-bottom: 12px;
+  opacity: 0.7;
 }
 .lp-quote::after {
   content: '"';
   display: block;
-  font-size: 0.6em;
+  font-size: 0.45em;
   color: var(--color-brand);
   line-height: 1;
   margin-top: 12px;
+  opacity: 0.7;
 }
 
 /* 화면 3 — 멈춤 순간 리스트 */
