@@ -524,11 +524,11 @@ html, body {
 /* 2026-04-29 푸터 셸 최하단 정정: viewport-lock(.app overflow:hidden + .d 내부 스크롤) →
    body 스크롤 + A1/B/C sticky 패턴. .main min-height로 짧은 페이지에서도 푸터 화면 아래 자연 배치. */
 .app { min-height: 100vh; display: flex; flex-direction: column; }
-/* 2026-05-19 갱신: B영역 28px 가는 세로 + D메인 + C우측 = 3컬럼 (옛 햄버거 → ▶ 꼭지) */
+/* 2026-05-19 갱신: B영역 12px 가는 세로 + D메인 + C우측 = 3컬럼 (옛 햄버거 → ▶ 꼭지) */
 .main {
   flex: 1;
   display: grid;
-  grid-template-columns: 28px 1fr var(--rightbar-width);
+  grid-template-columns: 12px 1fr var(--rightbar-width);
   min-height: calc(100vh - var(--header-a1));
   max-width: 1280px;
   margin: 0 auto;
@@ -550,7 +550,7 @@ html, body {
   align-self: start;
   height: calc(100vh - var(--header-a1));
   z-index: 40;
-  width: 28px;
+  width: 12px;
   transition: width 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* 평상시 + 펼침 = 메뉴 박힌 자리 본진 = 햄버거 박힘 자리 박힘 자리만 박음 (60px 박힌 자리 유지) */
@@ -1537,26 +1537,35 @@ html, body {
   position: fixed;
   /* B영역 정중앙 = (header_height + 100vh) / 2 (헤더 아래 자리 가운데) */
   top: calc(var(--header-a1) + (100vh - var(--header-a1)) / 2);
-  left: 0;
+  /* 세로바 우측 끝에 박힘 (left = .main 좌측 + 세로바 폭) — max-width 1280px 가운데 정렬 정합 */
+  left: calc(max(0px, (100vw - 1280px) / 2) + 12px);
   transform: translateY(-50%);
   z-index: 230;
-  width: 28px;
-  height: 64px;
+  width: 18px;
+  height: 48px;
   background: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
   color: #fff;
   border: none;
-  border-radius: 0 14px 14px 0;
-  font-size: 16px;
+  border-radius: 0 10px 10px 0;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 4px 0 16px rgba(160, 82, 45, 0.28);
+  box-shadow: 2px 0 10px rgba(160, 82, 45, 0.28);
   font-family: inherit;
   padding: 0;
   align-items: center;
   justify-content: center;
   letter-spacing: 0;
   line-height: 1;
-  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+              left 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.24s;
+}
+/* hit 영역 보강 — 시각 18x48 + 터치 44x60 (메모리 accessibility_low_vision 정합) */
+.b-pulltab::after {
+  content: '';
+  position: absolute;
+  inset: -8px -14px;
 }
 .b-pulltab::before {
   content: '▶';
@@ -1580,11 +1589,12 @@ html, body {
   .mobile-header-hamburger,
   .b-hamburger { display: none !important; }
 }
-/* 슬라이드 열림 시 = ▶ → ◀ (꼭지가 닫기 버튼으로 변환) + 위치 슬라이드 폭만큼 이동 */
+/* 슬라이드 열림 시 = ▶ → ◀ (꼭지가 닫기 버튼으로 변환) + 위치 슬라이드 우측 끝 이동 */
 body.mobile-sidebar-open .b-pulltab::before { content: '◀'; }
-/* 2026-05-19 통일: 슬라이드 폭 220px 모바일·데스크탑 정합 */
+/* 2026-05-19 통일: 슬라이드 폭 220px 모바일·데스크탑 정합 — ▶ 꼭지 = 슬라이드 우측 끝에 박힘 */
 body.mobile-sidebar-open .b-pulltab {
-  transform: translateY(-50%) translateX(220px);
+  left: calc(max(0px, (100vw - 1280px) / 2) + 220px);
+  transform: translateY(-50%);
 }
 
 /* 2026-05-19 풀스크린 환영 자리 = 본인 결재로 통째 폐기 (랜딩과 정체성 카피 중복)
