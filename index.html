@@ -1469,42 +1469,9 @@ body {
           <div class="auth-form-err" id="e-email-login">올바른 이메일을 입력해 주세요.</div>
         </div>
 
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-pw-login">비밀번호</label>
-          <div class="auth-pw-wrap">
-            <input class="auth-input" type="password" id="f-pw-login" placeholder="비밀번호 입력" autocomplete="current-password">
-            <button class="auth-pw-toggle" type="button" id="pw-toggle-login-btn" onclick="togglePw('f-pw-login','pw-toggle-login-btn')">보기</button>
-          </div>
-          <div class="auth-form-err" id="e-pw-login">비밀번호를 입력해 주세요.</div>
-        </div>
-
-        <div style="text-align:right; margin-top:12px;">
-          <button class="auth-link" type="button" onclick="showForgotInline()">비밀번호를 잊으셨나요?</button>
-        </div>
-      </div>
-
-      <!-- ────── 비밀번호 찾기 ────── -->
-      <div class="auth-step-page" id="page-forgot">
-        <span class="auth-friendly-emoji">🔑</span>
-        <h2 class="auth-page-title">비밀번호 찾기</h2>
-        <p class="auth-page-sub">가입 시 등록한 이메일로 재설정 링크를 보내드릴게요</p>
-
-        <div class="auth-err-box" id="forgotErrBox"></div>
-
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-forgot-email">이메일</label>
-          <input class="auth-input" type="email" id="f-forgot-email" placeholder="example@email.com" autocomplete="email">
-          <div class="auth-form-err" id="e-forgot-email">올바른 이메일을 입력해 주세요.</div>
-        </div>
-      </div>
-
-      <!-- 비밀번호 찾기 성공 -->
-      <div class="auth-step-page" id="page-forgot-success">
-        <div class="auth-success" style="text-align:center; padding:32px 0;">
-          <span class="auth-friendly-emoji">📧</span>
-          <h2 class="auth-page-title" style="text-align:center;">메일 발송 완료</h2>
-          <div class="auth-page-sub" id="forgotSuccessDesc" style="text-align:center;"></div>
-        </div>
+        <p style="font-size:13px; color:var(--color-text-tertiary); margin-top:12px; text-align:center;">
+          비밀번호 없이 이메일 인증 코드로 안전하게 로그인합니다.
+        </p>
       </div>
 
       <!-- ────── 가입 Step 1 — 소속 선택 ────── -->
@@ -1574,27 +1541,12 @@ body {
               <label class="auth-label" for="f-email">이메일</label>
               <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); checkInsurerDomain();">
               <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
+              <p style="font-size:12px; color:var(--color-text-tertiary); margin-top:6px;">
+                이 이메일로 인증 코드가 발송됩니다.
+              </p>
             </div>
 
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-pw">비밀번호</label>
-              <div class="auth-pw-wrap">
-                <input class="auth-input" type="password" id="f-pw" placeholder="영문+숫자 8자 이상" maxlength="30" oninput="clearFieldError('f-pw','e-pw')">
-                <button class="auth-pw-toggle" type="button" id="reg-pw-toggle" onclick="togglePw('f-pw','reg-pw-toggle')">보기</button>
-              </div>
-              <div class="auth-form-err" id="e-pw">영문+숫자 8자 이상 입력해 주세요.</div>
-            </div>
-
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-pw2">비밀번호 확인</label>
-              <div class="auth-pw-wrap">
-                <input class="auth-input" type="password" id="f-pw2" placeholder="비밀번호 재입력" maxlength="30" oninput="clearFieldError('f-pw2','e-pw2')">
-                <button class="auth-pw-toggle" type="button" id="reg-pw2-toggle" onclick="togglePw('f-pw2','reg-pw2-toggle')">보기</button>
-              </div>
-              <div class="auth-form-err" id="e-pw2">비밀번호가 일치하지 않습니다.</div>
-            </div>
-
-            <div class="form-divider" style="font-weight:700; color:var(--color-brand);">📋 소속 정보 <span style="font-weight:400; color:var(--color-text-tertiary); font-size:0.85em;">— 정확히 입력 박아 주세요</span></div>
+            <div class="form-divider" style="font-weight:700; color:var(--color-brand);">📋 소속 정보 <span style="font-weight:400; color:var(--color-text-tertiary); font-size:0.85em;">— 정확히 입력해 주세요</span></div>
 
             <!-- 보험사 분기 -->
             <div class="insurer-fields" id="insurer-fields">
@@ -1700,6 +1652,39 @@ body {
             ⏳ <strong>매니저 승인 대기 중입니다.</strong><br>
             보험사 임직원 가입은 매니저 승인 후 사용이 활성화됩니다. 승인 결과는 가입한 이메일로 안내됩니다.
           </div>
+        </div>
+      </div>
+
+      <!-- ────── OTP 6자리 인증 (로그인 + 가입 공용, 2026-05-18 신설) ────── -->
+      <div class="auth-step-page" id="page-otp-verify">
+        <span class="auth-friendly-emoji">📧</span>
+        <h2 class="auth-page-title">인증 코드 입력</h2>
+        <p class="auth-page-sub">
+          <strong id="otp-target-email">example@email.com</strong>으로<br>
+          6자리 인증 코드를 보냈습니다.
+        </p>
+
+        <div class="auth-err-box" id="otpErrBox"></div>
+
+        <div class="auth-form-group" style="margin-top:20px;">
+          <label class="auth-label" for="f-otp-code">인증 코드 (6자리)</label>
+          <input class="auth-input" type="text" id="f-otp-code"
+                 placeholder="123456"
+                 autocomplete="one-time-code"
+                 inputmode="numeric"
+                 maxlength="6"
+                 style="font-size:24px; letter-spacing:8px; text-align:center; font-weight:700;"
+                 oninput="this.value=this.value.replace(/[^0-9]/g,''); document.getElementById('e-otp-code').classList.remove('on');">
+          <div class="auth-form-err" id="e-otp-code">6자리 숫자를 입력해 주세요.</div>
+        </div>
+
+        <p style="font-size:13px; color:var(--color-text-tertiary); margin-top:16px; text-align:center;">
+          코드가 도착하지 않았나요?<br>
+          메일함(스팸함 포함)을 확인하거나 아래 [재전송]을 눌러주세요.
+        </p>
+
+        <div style="text-align:center; margin-top:12px;">
+          <button class="auth-link" type="button" id="otpResendBtn" onclick="resendOtp()">인증 코드 재전송</button>
         </div>
       </div>
 
@@ -1923,7 +1908,7 @@ function _showStep(step) {
   if (crossLnk) crossLnk.style.display = 'block';
 
   if (step === 'login') {
-    if (ctaTxt)   ctaTxt.textContent = '로그인';
+    if (ctaTxt)   ctaTxt.textContent = '✉️ 인증 코드 받기';
     if (ctaBtn)   ctaBtn.onclick = function() { doLogin(); };
     if (crossTxt) crossTxt.textContent = '처음 오셨나요?';
     if (crossBtn) { crossBtn.textContent = '회원가입하기 →'; crossBtn.onclick = function() { window.switchAuthSection('signup'); }; }
@@ -1932,19 +1917,15 @@ function _showStep(step) {
       if (el) el.focus();
     }, 80);
   }
-  else if (step === 'forgot') {
-    if (ctaTxt)   ctaTxt.textContent = '재설정 링크 보내기';
-    if (ctaBtn)   ctaBtn.onclick = function() { doForgot(); };
-    if (back)     { back.hidden = false; back.onclick = function() { _showStep('login'); }; }
-    if (crossLnk) crossLnk.style.display = 'none';
-    setTimeout(function() {
-      var el = document.getElementById('f-forgot-email');
-      if (el) el.focus();
-    }, 80);
-  }
-  else if (step === 'forgot-success') {
-    if (ctaTxt) ctaTxt.textContent = '로그인으로 돌아가기';
-    if (ctaBtn) ctaBtn.onclick = function() { _showStep('login'); };
+  else if (step === 'otp-verify') {
+    if (ctaTxt) ctaTxt.textContent = '인증 확인';
+    if (ctaBtn) ctaBtn.onclick = function() { verifyOtp(); };
+    if (back) {
+      back.hidden = false;
+      back.onclick = function() {
+        _showStep(_otpMode === 'signup' ? 'signup-3' : 'login');
+      };
+    }
     if (crossLnk) crossLnk.style.display = 'none';
   }
   else if (step === 'signup-1') {
@@ -1965,7 +1946,7 @@ function _showStep(step) {
     }, 80);
   }
   else if (step === 'signup-3') {
-    if (ctaTxt)   ctaTxt.textContent = '🎉 무료회원 가입하기';
+    if (ctaTxt)   ctaTxt.textContent = '✉️ 인증 코드 받기';
     if (ctaBtn)   ctaBtn.onclick = function() { doSubmit(); };
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-2'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
@@ -2017,12 +1998,12 @@ document.addEventListener('keydown', function (e) {
   if (e.key === 'Enter') {
     var ae = document.activeElement;
     if (!ae) return;
-    if (_authCurrentStep === 'login' && (ae.id === 'f-email-login' || ae.id === 'f-pw-login')) {
+    if (_authCurrentStep === 'login' && ae.id === 'f-email-login') {
       e.preventDefault();
       doLogin();
-    } else if (_authCurrentStep === 'forgot' && ae.id === 'f-forgot-email') {
+    } else if (_authCurrentStep === 'otp-verify' && ae.id === 'f-otp-code') {
       e.preventDefault();
-      doForgot();
+      verifyOtp();
     }
   }
 });
@@ -2030,8 +2011,10 @@ document.addEventListener('keydown', function (e) {
 (function () {
   var overlay = document.getElementById('authOverlay');
   if (!overlay) return;
+  /* 2026-05-18 드래그 이탈 격차 정정 정합 (commit 0a39e6a 패턴) — input/textarea 안 드래그가 외부로 빠져나가도 모달 닫히지 X */
+  overlay.addEventListener('mousedown', function (e) { window._mdOv_auth = e.target; });
   overlay.addEventListener('click', function (e) {
-    if (e.target === overlay) closeAuthModal();
+    if (e.target === overlay && window._mdOv_auth === overlay) closeAuthModal();
   });
 })();
 
@@ -2067,21 +2050,22 @@ function clearFieldError(inputId, errorId) {
 // ============================================================================
 //  로그인 (login.html doLogin/doForgot 흡수)
 // ============================================================================
-function showForgotInline() { _showStep('forgot'); }
-function hideForgotInline() { _showStep('login'); }
-
 function validateLogin() {
   var ok = true;
   var email = document.getElementById('f-email-login');
-  var pw = document.getElementById('f-pw-login');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
     email.classList.add('err'); document.getElementById('e-email-login').classList.add('on'); ok = false;
   } else { email.classList.remove('err'); document.getElementById('e-email-login').classList.remove('on'); }
-  if (!pw.value.trim()) {
-    pw.classList.add('err'); document.getElementById('e-pw-login').classList.add('on'); ok = false;
-  } else { pw.classList.remove('err'); document.getElementById('e-pw-login').classList.remove('on'); }
   return ok;
 }
+
+/* 2026-05-18 OTP 전환: 비밀번호 본진 폐기 → 이메일 6자리 OTP 본진
+   - 로그인 = /auth/v1/otp (create_user=false) → /auth/v1/verify (type=email)
+   - 가입 = /auth/v1/otp (create_user=true + data 메타) → /auth/v1/verify (type=email)
+   - verify 후 access_token 받음 → localStorage 보관 → app.html redirect */
+var _otpMode = '';            // 'login' or 'signup'
+var _otpEmail = '';           // OTP 요청한 이메일 (재전송 + verify 시 사용)
+var _otpSignupData = null;    // 가입 시 메타데이터 보관 (재전송 시 동일 data 다시 보내야)
 
 async function doLogin() {
   var errBox = document.getElementById('loginErrBox');
@@ -2102,66 +2086,65 @@ async function doLogin() {
   }
 
   var email = document.getElementById('f-email-login').value.trim();
-  var pw    = document.getElementById('f-pw-login').value;
 
   try {
-    var res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ email: email, password: pw })
+      body: JSON.stringify({
+        email: email,
+        create_user: false   /* 로그인 = 미가입 시 에러 */
+      })
     });
-    var data = await res.json();
 
-    if (res.ok && data.access_token) {
-      localStorage.setItem('os_token', data.access_token);
-      localStorage.setItem('os_refresh_token', data.refresh_token);
-      localStorage.setItem('os_user', JSON.stringify(data.user));
-      sessionStorage.setItem('os_token', data.access_token);
-      sessionStorage.setItem('os_user', JSON.stringify(data.user));
-
-      // 성공 화면 (1200ms 후 redirect)
+    if (res.ok) {
+      _otpMode = 'login';
+      _otpEmail = email;
+      _otpSignupData = null;
       _resetBtn();
-      _showStep('login-success');
-
-      setTimeout(function () {
-        var _r = new URLSearchParams(window.location.search).get('redirect');
-        // home_v2가 pages/ 안에 있으므로 ../app.html (5/15 후 root 이전 시 'app.html'로 변경)
-        var appUrl = '../app.html';
-        window.location.href = _r ? appUrl + '?redirect=' + encodeURIComponent(_r) : appUrl;
-      }, 1200);
+      _showStep('otp-verify');
+      var targetEl = document.getElementById('otp-target-email');
+      if (targetEl) targetEl.textContent = email;
+      setTimeout(function() {
+        var codeEl = document.getElementById('f-otp-code');
+        if (codeEl) { codeEl.value = ''; codeEl.focus(); }
+      }, 100);
     } else {
-      var errMsg = data.error_description || data.msg || data.error || '';
-      if (errMsg.indexOf('Email not confirmed') !== -1) {
-        errBox.textContent = '이메일 인증이 완료되지 않았습니다. 가입 시 받으신 인증 메일을 확인해 주세요.';
-      } else if (errMsg.indexOf('Invalid login credentials') !== -1 || errMsg.indexOf('invalid_grant') !== -1) {
-        errBox.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.';
-      } else if (errMsg.indexOf('Too many requests') !== -1 || res.status === 429) {
+      var data = {};
+      try { data = await res.json(); } catch (e) {}
+      var msg = (data.error_description || data.msg || data.error || '').toLowerCase();
+      if (msg.indexOf('signups not allowed') !== -1 || msg.indexOf('user not found') !== -1 || msg.indexOf('not found') !== -1) {
+        errBox.textContent = '가입되지 않은 이메일입니다. 아래에서 회원가입을 진행해 주세요.';
+      } else if (msg.indexOf('too many requests') !== -1 || res.status === 429) {
         errBox.textContent = '잠시 후 다시 시도해 주세요. (요청이 너무 많습니다)';
+      } else if (res.status === 400) {
+        errBox.textContent = '가입되지 않은 이메일이거나 잘못된 형식입니다.';
       } else {
-        errBox.textContent = '로그인 중 오류가 발생했습니다. 다시 시도해 주세요.';
+        errBox.textContent = '인증 코드 발송 중 오류가 발생했습니다. (' + res.status + ')';
       }
       errBox.classList.add('on');
       _resetBtn();
     }
   } catch (e) {
-    console.error('[login error]', e);
+    console.error('[login otp error]', e);
     errBox.textContent = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.';
     errBox.classList.add('on');
     _resetBtn();
   }
 }
 
-async function doForgot() {
-  var errBox = document.getElementById('forgotErrBox');
+/* 가입 + 로그인 공용 OTP 6자리 검증 */
+async function verifyOtp() {
+  var errBox = document.getElementById('otpErrBox');
   errBox.classList.remove('on');
-  var emailEl = document.getElementById('f-forgot-email');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
-    emailEl.classList.add('err');
-    document.getElementById('e-forgot-email').classList.add('on');
+  var codeEl = document.getElementById('f-otp-code');
+  var code = (codeEl.value || '').trim();
+  if (!/^\d{6}$/.test(code)) {
+    document.getElementById('e-otp-code').classList.add('on');
+    codeEl.focus();
     return;
   }
-  emailEl.classList.remove('err');
-  document.getElementById('e-forgot-email').classList.remove('on');
+  document.getElementById('e-otp-code').classList.remove('on');
 
   var btn  = document.getElementById('authMainCta');
   var txt  = document.getElementById('authMainCtaTxt');
@@ -2177,33 +2160,101 @@ async function doForgot() {
   }
 
   try {
-    var res = await fetch(SUPABASE_URL + '/auth/v1/recover', {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ email: emailEl.value.trim() })
+      body: JSON.stringify({
+        email: _otpEmail,
+        token: code,
+        type: 'email'
+      })
     });
-    if (res.ok) {
+    var data = await res.json();
+
+    if (res.ok && data.access_token) {
+      localStorage.setItem('os_token', data.access_token);
+      localStorage.setItem('os_refresh_token', data.refresh_token);
+      localStorage.setItem('os_user', JSON.stringify(data.user));
+      sessionStorage.setItem('os_token', data.access_token);
+      sessionStorage.setItem('os_user', JSON.stringify(data.user));
+
       _resetBtn();
-      var desc = document.getElementById('forgotSuccessDesc');
-      if (desc) desc.innerHTML = '<strong>' + escapeText(emailEl.value.trim()) + '</strong> 으로<br>비밀번호 재설정 링크를 보내드렸습니다.<br><br>메일함을 확인해 주세요.<br><span style="font-size:12px;color:var(--color-text-tertiary);">스팸함도 꼭 확인해 주세요.</span>';
-      _showStep('forgot-success');
+
+      if (_otpMode === 'signup') {
+        var descEl = document.getElementById('signup-success-desc');
+        var pendingNoticeEl = document.getElementById('pending-notice');
+        var site = (_otpSignupData && _otpSignupData.site) || 'ga';
+        if (descEl) {
+          descEl.innerHTML = '<strong>' + escapeText(_otpEmail) + '</strong><br>가입이 완료됐습니다!<br>잠시 후 메인 화면으로 이동합니다 😊';
+        }
+        if (pendingNoticeEl) {
+          pendingNoticeEl.style.display = (site === 'insurer') ? 'block' : 'none';
+        }
+        _showStep('signup-success');
+        setTimeout(function () {
+          window.location.href = 'app.html';
+        }, 1800);
+      } else {
+        _showStep('login-success');
+        setTimeout(function () {
+          var _r = new URLSearchParams(window.location.search).get('redirect');
+          var appUrl = 'app.html';
+          window.location.href = _r ? appUrl + '?redirect=' + encodeURIComponent(_r) : appUrl;
+        }, 1200);
+      }
     } else {
-      var data = {};
-      try { data = await res.json(); } catch (e) {}
-      var msg = data.error_description || data.msg || data.error || '';
-      if (msg.indexOf('Too many requests') !== -1 || res.status === 429) {
+      var msg = (data.error_description || data.msg || data.error || '').toLowerCase();
+      if (msg.indexOf('expired') !== -1 || msg.indexOf('invalid') !== -1 || res.status === 401 || res.status === 403) {
+        errBox.textContent = '인증 코드가 일치하지 않거나 만료됐습니다. [재전송]으로 새 코드를 받아주세요.';
+      } else if (res.status === 429) {
         errBox.textContent = '잠시 후 다시 시도해 주세요. (요청이 너무 많습니다)';
       } else {
-        errBox.textContent = '재설정 메일 발송 중 오류가 발생했습니다.';
+        errBox.textContent = '인증 중 오류가 발생했습니다. (' + res.status + ')';
       }
       errBox.classList.add('on');
       _resetBtn();
+      codeEl.focus();
+      codeEl.select();
     }
   } catch (e) {
-    console.error('[forgot error]', e);
+    console.error('[verify otp error]', e);
     errBox.textContent = '네트워크 오류가 발생했습니다.';
     errBox.classList.add('on');
     _resetBtn();
+  }
+}
+
+/* 인증 코드 재전송 (가입 + 로그인 공용) */
+async function resendOtp() {
+  var btn = document.getElementById('otpResendBtn');
+  if (!btn || !_otpEmail) return;
+  var oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '발송 중…';
+
+  try {
+    var body = { email: _otpEmail, create_user: (_otpMode === 'signup') };
+    if (_otpMode === 'signup' && _otpSignupData && _otpSignupData.data) {
+      body.data = _otpSignupData.data;
+    }
+    var res = await fetch(SUPABASE_URL + '/auth/v1/otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      btn.textContent = '✅ 재전송 완료';
+      setTimeout(function () { btn.textContent = oldText; btn.disabled = false; }, 3000);
+    } else if (res.status === 429) {
+      btn.textContent = '잠시 후 다시 시도 (요청 한도)';
+      setTimeout(function () { btn.textContent = oldText; btn.disabled = false; }, 5000);
+    } else {
+      btn.textContent = '재전송 실패';
+      setTimeout(function () { btn.textContent = oldText; btn.disabled = false; }, 3000);
+    }
+  } catch (e) {
+    btn.textContent = '네트워크 오류';
+    setTimeout(function () { btn.textContent = oldText; btn.disabled = false; }, 3000);
   }
 }
 
@@ -2586,14 +2637,6 @@ function validateSignup() {
     }
   }
 
-  var pw  = document.getElementById('f-pw');
-  var pw2 = document.getElementById('f-pw2');
-  if (!pw.value || pw.value.length < 8 || !/[a-zA-Z]/.test(pw.value) || !/[0-9]/.test(pw.value)) {
-    pw.classList.add('err'); document.getElementById('e-pw').classList.add('on'); ok = false;
-  } else { pw.classList.remove('err'); document.getElementById('e-pw').classList.remove('on'); }
-  if (pw2.value !== pw.value) {
-    pw2.classList.add('err'); document.getElementById('e-pw2').classList.add('on'); ok = false;
-  } else { pw2.classList.remove('err'); document.getElementById('e-pw2').classList.remove('on'); }
   if (!document.getElementById('f-consent').checked) {
     document.getElementById('e-consent').classList.add('on'); ok = false;
   } else { document.getElementById('e-consent').classList.remove('on'); }
@@ -2620,7 +2663,6 @@ async function doSubmit() {
   }
 
   var email = document.getElementById('f-email').value.trim();
-  var pw    = document.getElementById('f-pw').value;
   var site  = window.gSignupSite;
   var gradeShort = document.getElementById('f-role').value;
   var roleKey = mapToRoleKey(site, gradeShort);
@@ -2670,34 +2712,50 @@ async function doSubmit() {
     statusValue = 'active';
   }
 
+  /* 2026-05-18 OTP 전환: /auth/v1/signup (비밀번호) → /auth/v1/otp (create_user=true + data 메타)
+     verify 후 access_token 받음 → app.html redirect (verifyOtp 함수에서 처리) */
+  var signupData = {
+    name:    document.getElementById('f-name').value.trim(),
+    phone:   document.getElementById('f-phone').value.trim(),
+    company: companyName,
+    branch:  branchName,
+    role:    roleKey,
+    team:    teamName,
+    insurer_id:  insurerId,
+    branch_id:   branchId,
+    team_id:     teamId,
+    status:      statusValue
+  };
+
   try {
-    var authRes = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+    var authRes = await fetch(SUPABASE_URL + '/auth/v1/otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
       body: JSON.stringify({
         email: email,
-        password: pw,
-        data: {
-          name:    document.getElementById('f-name').value.trim(),
-          phone:   document.getElementById('f-phone').value.trim(),
-          company: companyName,
-          branch:  branchName,
-          role:    roleKey,
-          team:    teamName,
-          insurer_id:  insurerId,
-          branch_id:   branchId,
-          team_id:     teamId,
-          status:      statusValue
-        }
+        create_user: true,
+        data: signupData
       })
     });
-    var authData = await authRes.json();
-    console.log('[signup success raw]', { ok: authRes.ok, status: authRes.status, authData: authData });
 
-    if (!authRes.ok) {
-      var msg = authData.msg || authData.error_description || authData.error || '';
-      console.error('[signup error]', { status: authRes.status, statusText: authRes.statusText, authData: authData });
-      if (msg.indexOf('already registered') !== -1 || msg.indexOf('already been registered') !== -1 || msg.indexOf('User already registered') !== -1) {
+    if (authRes.ok) {
+      _otpMode = 'signup';
+      _otpEmail = email;
+      _otpSignupData = { site: site, data: signupData };
+      _resetBtn();
+      _showStep('otp-verify');
+      var targetEl = document.getElementById('otp-target-email');
+      if (targetEl) targetEl.textContent = email;
+      setTimeout(function () {
+        var codeEl = document.getElementById('f-otp-code');
+        if (codeEl) { codeEl.value = ''; codeEl.focus(); }
+      }, 100);
+    } else {
+      var authData = {};
+      try { authData = await authRes.json(); } catch (e) {}
+      var msg = (authData.error_description || authData.msg || authData.error || '').toLowerCase();
+      console.error('[signup otp error]', { status: authRes.status, authData: authData });
+      if (msg.indexOf('already registered') !== -1 || msg.indexOf('already been registered') !== -1 || msg.indexOf('user already') !== -1) {
         errBox.innerHTML = '이미 가입된 이메일입니다. 위 로그인 영역에서 로그인해 주세요.';
       } else if (msg.indexOf('rate') !== -1 || msg.indexOf('limit') !== -1 || authRes.status === 429) {
         errBox.textContent = '이메일 발송 한도를 초과했습니다. 1시간 후 다시 시도해 주세요.';
@@ -2706,51 +2764,9 @@ async function doSubmit() {
       }
       errBox.classList.add('on');
       _resetBtn();
-      return;
     }
-
-    var userId =
-         (authData.user && authData.user.id)
-      || (authData.identities && authData.identities[0] && authData.identities[0].user_id)
-      || (authData.user && authData.user.identities && authData.user.identities[0] && authData.user.identities[0].user_id)
-      || null;
-
-    if (!userId) {
-      console.warn('[signup] userId 확보 실패', authData);
-      errBox.textContent = '가입 처리가 일시적으로 지연됐습니다. 잠시 후 다시 시도해 주세요.';
-      errBox.classList.add('on');
-      _resetBtn();
-      return;
-    }
-
-    // 가입 성공 화면
-    var descEl = document.getElementById('signup-success-desc');
-    var pendingNoticeEl = document.getElementById('pending-notice');
-    var emailConfirmed = !!(authData.user && authData.user.email_confirmed_at);
-    if (descEl) {
-      var html;
-      if (emailConfirmed) {
-        html = '<strong>' + escapeText(email) + '</strong><br>가입이 완료됐습니다!<br>위 로그인 영역에서 바로 시작해 보세요 😊';
-      } else {
-        html = '📧 <strong>' + escapeText(email) + '</strong><br>이 이메일로 인증 링크를 발송했습니다.<br><br><strong style="color:var(--color-brand);">메일함(스팸함 포함)을 확인하고<br>링크를 눌러 인증을 완료하세요.</strong><br><br><span style="font-size:12px;color:var(--color-text-tertiary);">인증 완료 후 위 로그인 영역에서 시작하실 수 있습니다.</span>';
-      }
-      descEl.innerHTML = html;
-    }
-    if (pendingNoticeEl) {
-      pendingNoticeEl.style.display = (site === 'insurer') ? 'block' : 'none';
-    }
-    _resetBtn();
-    _showStep('signup-success');
-
-    // 인증 메일 안내 강제 표시 (모달 안 description 묻힐 가능성 회피, 사고 #49 처방)
-    if (!emailConfirmed) {
-      setTimeout(function () {
-        alert('📧 인증 메일을 발송했습니다.\n\n' + email + '\n메일함(스팸함 포함)을 확인하시고\n링크를 눌러 인증을 완료해 주세요.\n\n인증 완료 후 위 로그인 영역에서 로그인할 수 있습니다.');
-      }, 200);
-    }
-
   } catch (e) {
-    console.error('[signup network error]', e);
+    console.error('[signup otp network error]', e);
     errBox.textContent = '네트워크 오류가 발생했습니다.';
     errBox.classList.add('on');
     _resetBtn();
