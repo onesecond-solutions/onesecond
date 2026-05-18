@@ -636,6 +636,85 @@
   .home-cards-title { font-size: 1.25em; }
 }
 
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   2026-05-18 홈 환영 + 완성도 진행 바 — 매 로그인 시 노출 (작은 자리)
+   ▸ 결정 MD: docs/decisions/2026-05-18_login_after_welcome_menu_decision.md
+   ▸ 위치: home-intro-header 위쪽 (메인 슬로건 위 작은 인사 자리)
+   ▸ % 변경: 채팅으로 요청 → home.html JS 상수 _OS_PROGRESS_PERCENT 수정
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.home-welcome-bar {
+  margin: 0 auto var(--space-3);
+  padding: 14px 30px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(160, 82, 45, 0.04) 0%, rgba(196, 115, 58, 0.06) 100%);
+  border: 1px solid rgba(160, 82, 45, 0.10);
+  border-radius: var(--radius-md);
+}
+.home-welcome-bar-greeting {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+.home-welcome-bar-name {
+  color: var(--color-brand, #A0522D);
+}
+.home-welcome-bar-progress {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.home-welcome-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.75em;
+  color: var(--color-text-secondary);
+}
+.home-welcome-bar-label-text { font-weight: 500; }
+.home-welcome-bar-percent {
+  font-weight: 700;
+  color: var(--color-brand, #A0522D);
+  font-size: 1.05em;
+}
+.home-welcome-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(160, 82, 45, 0.10);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.home-welcome-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #A0522D 0%, #C4733A 100%);
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 0;
+}
+.home-welcome-bar-hint {
+  font-size: 0.72em;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+@media (max-width: 768px) {
+  .home-welcome-bar {
+    padding: 12px 20px;
+    gap: 10px;
+  }
+  .home-welcome-bar-greeting { font-size: 0.875em; }
+  .home-welcome-bar-hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-welcome-bar-fill { transition: none; }
+}
+
 </style>
 
 
@@ -645,6 +724,72 @@
 
 <!-- 페이지 배너 슬롯 (app_settings에서 주입) -->
 <div id="page-banner-slot" style="display:none;flex-shrink:0;"></div>
+
+<!-- 2026-05-18 홈 환영 + 완성도 진행 바 (매 로그인 시 노출)
+     ▸ 결정 MD: docs/decisions/2026-05-18_login_after_welcome_menu_decision.md
+     ▸ 사용자 이름은 AppState에서 주입 (localStorage fallback) -->
+<div class="home-welcome-bar" id="home-welcome-bar" role="region" aria-label="원세컨드 완성도">
+  <div class="home-welcome-bar-greeting">
+    안녕하세요 <span class="home-welcome-bar-name" id="home-welcome-name">팀장님</span>
+  </div>
+  <div class="home-welcome-bar-progress">
+    <div class="home-welcome-bar-label">
+      <span class="home-welcome-bar-label-text">원세컨드 완성도</span>
+      <span class="home-welcome-bar-percent" id="home-welcome-percent">20%</span>
+    </div>
+    <div class="home-welcome-bar-track" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
+      <div class="home-welcome-bar-fill" id="home-welcome-fill" style="width: 0%;"></div>
+    </div>
+  </div>
+  <div class="home-welcome-bar-hint">여러분이 쓰실수록 함께 완성</div>
+</div>
+
+<script>
+(function () {
+  // 진행 바 % 수동 조정 자리 (채팅으로 % 변경 요청 시 본 상수만 수정)
+  var _OS_PROGRESS_PERCENT = 20;
+
+  function applyProgress() {
+    var fill = document.getElementById('home-welcome-fill');
+    var pctText = document.getElementById('home-welcome-percent');
+    var track = fill && fill.parentElement;
+    if (fill) {
+      // 다음 frame에서 width 적용 → 차오름 애니메이션
+      requestAnimationFrame(function () {
+        fill.style.width = _OS_PROGRESS_PERCENT + '%';
+      });
+    }
+    if (pctText) pctText.textContent = _OS_PROGRESS_PERCENT + '%';
+    if (track) track.setAttribute('aria-valuenow', String(_OS_PROGRESS_PERCENT));
+  }
+
+  function applyName() {
+    try {
+      var s = window.AppState;
+      var name = (s && s.name) ? s.name : '';
+      if (!name) {
+        // localStorage fallback
+        var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+        var u = JSON.parse(raw);
+        name = (u && (u.user_metadata && u.user_metadata.name)) || u.name || '';
+      }
+      var el = document.getElementById('home-welcome-name');
+      if (el && name) el.textContent = name + ' 팀장님';
+    } catch (e) { /* noop */ }
+  }
+
+  // AppState 준비됐으면 즉시, 아직이면 이벤트 대기
+  if (window.AppState && window.AppState.ready) {
+    applyName();
+  } else {
+    document.addEventListener('appstate:ready', applyName);
+    // fallback — 이벤트 누락 환경 대비 짧은 지연 후 시도
+    setTimeout(applyName, 600);
+  }
+
+  applyProgress();
+})();
+</script>
 
 
 <!-- 1. 상단 3단 카피 (index.html B영역 IN ACTION 이식)

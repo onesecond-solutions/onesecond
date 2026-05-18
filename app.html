@@ -1505,6 +1505,231 @@ html, body {
   body.notice-room-fullscreen .tab-bar { display: flex !important; }
 }
 @media(min-width:768px) { .tab-bar { display: none; } }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   2026-05-18 B영역 ▶ 꼭지 슬라이드 메뉴 (모바일 햄버거 교체)
+   ▸ 결정 MD: docs/decisions/2026-05-18_login_after_welcome_menu_decision.md
+   ▸ 모바일에서만 적용 (데스크탑 B영역 그대로 유지 — 회귀 위험 최소)
+   ▸ 화면 좌측 세로선 + 정중앙 ▶ 꼭지 + 클릭 = 옛 toggleMobileSidebar 재사용
+   ▸ 터치 영역 44px+ 확보 (메모리 accessibility_low_vision)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.b-pulltab {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 220;
+  width: 28px;
+  height: 64px;
+  background: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
+  color: #fff;
+  border: none;
+  border-radius: 0 14px 14px 0;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 4px 0 16px rgba(160, 82, 45, 0.28);
+  font-family: inherit;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+  line-height: 1;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s;
+}
+.b-pulltab::before {
+  content: '▶';
+  display: block;
+  line-height: 1;
+}
+/* 터치 영역 보강 — 시각 폭 28px이지만 hit target 44px+ 확보 */
+.b-pulltab::after {
+  content: '';
+  position: absolute;
+  inset: -8px -16px;
+}
+.b-pulltab:hover {
+  box-shadow: 6px 0 20px rgba(160, 82, 45, 0.36);
+}
+.b-pulltab:active {
+  background: linear-gradient(135deg, #8B4423 0%, #A0522D 100%);
+}
+@media (max-width: 768px) {
+  .b-pulltab { display: flex; }
+  /* 옛 모바일 헤더 햄버거 + B영역 안 햄버거 모두 hide */
+  .mobile-header-hamburger,
+  .b-hamburger { display: none !important; }
+}
+/* 슬라이드 열림 시 = ▶ → ◀ (꼭지가 닫기 버튼으로 변환) + 위치 슬라이드 폭만큼 이동 */
+body.mobile-sidebar-open .b-pulltab::before { content: '◀'; }
+@media (max-width: 768px) {
+  body.mobile-sidebar-open .b-pulltab {
+    /* 옛 모바일 슬라이드 폭만큼 이동 — .b 본인 폭 정합 */
+    transform: translateY(-50%) translateX(var(--sidebar-width, 180px));
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   2026-05-18 가입 직후 1회 풀스크린 환영 화면
+   ▸ users.onboarding_seen = false 일 때만 표시 (또는 localStorage fallback)
+   ▸ 닫기 = [함께 시작하기] / 건너뛰기 / ESC 키 — 셋 다 onboarding_seen 갱신
+   ▸ 캡처 미리보기 공간 = 16:9 placeholder (이미지는 별도 채움)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(135deg, #FAFAF7 0%, #F6ECE0 100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 32px 24px;
+  opacity: 0;
+  transition: opacity 0.32s ease-out;
+}
+.welcome-overlay.is-open { display: flex; opacity: 1; }
+.welcome-overlay-card {
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.welcome-skip {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-family: inherit;
+}
+.welcome-skip:hover { background: rgba(0,0,0,0.04); color: var(--color-text-secondary, #6B7280); }
+.welcome-greeting {
+  font-size: clamp(24px, 4.5vw, 36px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary, #1F2937);
+  margin: 0;
+}
+.welcome-greeting-name {
+  color: var(--color-brand, #A0522D);
+}
+.welcome-divider {
+  width: 48px;
+  height: 2px;
+  background: var(--color-border, #E5E7EB);
+  margin: 0 auto;
+  border-radius: 2px;
+}
+.welcome-body-text {
+  font-size: clamp(15px, 2vw, 17px);
+  color: var(--color-text-secondary, #6B7280);
+  line-height: 1.7;
+  margin: 0;
+}
+.welcome-body-text strong {
+  color: var(--color-brand, #A0522D);
+  font-weight: 700;
+}
+.welcome-progress-wrap {
+  margin: 8px 0;
+}
+.welcome-progress-bar {
+  width: 100%;
+  max-width: 360px;
+  height: 14px;
+  background: rgba(160, 82, 45, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+.welcome-progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #A0522D 0%, #C4733A 100%);
+  border-radius: 999px;
+  transition: width 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.welcome-overlay.is-open .welcome-progress-fill { width: 20%; }
+.welcome-progress-label {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-brand, #A0522D);
+  letter-spacing: 0.02em;
+}
+/* 캡처 미리보기 — 사용자 다음 행동 안내 */
+.welcome-preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E5E7EB);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(160, 82, 45, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+.welcome-preview.is-placeholder::after {
+  content: '여러분이 다음에 만날 화면';
+  font-size: 14px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.welcome-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  box-shadow: 0 8px 24px rgba(160, 82, 45, 0.32);
+  transition: transform 0.18s, box-shadow 0.18s;
+  min-height: 52px;
+  align-self: center;
+}
+.welcome-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(160, 82, 45, 0.40);
+}
+.welcome-cta:active { transform: translateY(0); }
+
+@media (max-width: 640px) {
+  .welcome-overlay { padding: 24px 16px; }
+  .welcome-overlay-card { gap: 18px; }
+  .welcome-progress-bar { max-width: 100%; }
+  .welcome-cta { width: 100%; max-width: 320px; }
+  .welcome-skip { top: 12px; right: 12px; font-size: 13px; padding: 8px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-overlay { transition: none; }
+  .welcome-progress-fill { transition: none; }
+  .welcome-cta { transition: none; }
+}
 </style>
 </head>
 
@@ -3302,6 +3527,179 @@ document.addEventListener('keydown', function(e) {
     if (ov && ov.classList.contains('is-open')) window.closeCalendarOverlay();
   }
 });
+</script>
+
+<!-- 2026-05-18 B영역 ▶ 꼭지 슬라이드 메뉴 (모바일 햄버거 교체) -->
+<button type="button" class="b-pulltab" id="b-pulltab"
+        onclick="window.toggleMobileSidebar && window.toggleMobileSidebar()"
+        aria-label="메뉴 열기/닫기"
+        aria-controls="b-sidebar"></button>
+
+<!-- 2026-05-18 ▶ 꼭지 ESC 닫기 + 옛 toggleMobileSidebar 호환 -->
+<script>
+(function () {
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!document.body.classList.contains('mobile-sidebar-open')) return;
+    // 환영 풀스크린이 열려 있으면 본 자리 양보 (풀스크린 ESC 핸들러 우선)
+    var welcomeOpen = document.querySelector('.welcome-overlay.is-open');
+    if (welcomeOpen) return;
+    if (window.toggleMobileSidebar) window.toggleMobileSidebar();
+  });
+})();
+</script>
+
+<!-- 2026-05-18 가입 직후 1회 풀스크린 환영 화면 -->
+<div class="welcome-overlay" id="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcome-greeting">
+  <button type="button" class="welcome-skip" id="welcome-skip" aria-label="환영 화면 건너뛰기">건너뛰기</button>
+  <div class="welcome-overlay-card">
+    <h1 class="welcome-greeting" id="welcome-greeting">
+      <span class="welcome-greeting-name" id="welcome-name">팀장님</span>,<br>반갑습니다.
+    </h1>
+    <div class="welcome-divider" aria-hidden="true"></div>
+    <p class="welcome-body-text">
+      지금 보시는 원세컨드는<br>
+      제가 보여드리고 싶은 모습의 <strong>20%</strong>입니다.
+    </p>
+    <div class="welcome-progress-wrap">
+      <div class="welcome-progress-bar" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" aria-label="원세컨드 완성도">
+        <div class="welcome-progress-fill"></div>
+      </div>
+      <div class="welcome-progress-label">원세컨드 완성도 20%</div>
+    </div>
+    <!-- 캡처 미리보기 공간 (16:9 placeholder, 이미지는 별도 채움) -->
+    <div class="welcome-preview is-placeholder" id="welcome-preview-img"
+         style="background-image: url('/assets/images/welcome/welcome-preview.png');"
+         role="img" aria-label="다음에 만날 화면 미리보기"></div>
+    <p class="welcome-body-text">
+      나머지 <strong>80%</strong>는<br>
+      여러분과 함께 만들어 갑니다.
+    </p>
+    <button type="button" class="welcome-cta" id="welcome-cta">함께 시작하기</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+//  2026-05-18 가입 직후 풀스크린 환영 화면 — 1회 노출
+//  ▸ 표시 조건: users.onboarding_seen = false (또는 localStorage 'os_onboarding_seen' 없음)
+//  ▸ 닫기 3채널: [함께 시작하기] / [건너뛰기] / ESC 키 — 모두 같은 갱신
+//  ▸ Supabase 컬럼 미존재 환경 대비 fallback = localStorage
+// ════════════════════════════════════════════════════════════════════════════
+(function () {
+  function openWelcome() {
+    var ov = document.getElementById('welcome-overlay');
+    if (!ov) return;
+    ov.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    // 이미지 로드 시 placeholder 자동 제거 (5/10 home 카드 패턴 재사용)
+    var prev = document.getElementById('welcome-preview-img');
+    if (prev) {
+      var style = prev.style.backgroundImage || '';
+      var match = style.match(/url\(["']?([^"')]+)["']?\)/);
+      if (match) {
+        var img = new Image();
+        img.onload = function () { prev.classList.remove('is-placeholder'); };
+        img.onerror = function () { /* placeholder 유지 */ };
+        img.src = match[1];
+      }
+    }
+  }
+
+  function closeWelcome() {
+    var ov = document.getElementById('welcome-overlay');
+    if (!ov) return;
+    ov.classList.remove('is-open');
+    document.body.style.overflow = '';
+    // 1회 표시 — 다시 안 보이도록 갱신
+    try { localStorage.setItem('os_onboarding_seen', '1'); } catch (e) {}
+    // Supabase 갱신 (컬럼 있으면 성공, 없으면 무시 — 안전 fallback)
+    try {
+      var s = window.AppState;
+      if (s && s.userId && window.fetch && window.SUPABASE_URL && window.SUPABASE_KEY) {
+        var token = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+        fetch(window.SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(s.userId), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': window.SUPABASE_KEY,
+            'Authorization': 'Bearer ' + token,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ onboarding_seen: true })
+        }).catch(function () { /* 컬럼 미존재 환경 — localStorage fallback 유효 */ });
+      }
+    } catch (e) { /* noop */ }
+  }
+
+  // Supabase onboarding_seen 조회 (컬럼 미존재 환경에서는 undefined 반환)
+  function fetchOnboardingSeen(userId) {
+    return new Promise(function (resolve) {
+      try {
+        if (!window.fetch || !window.SUPABASE_URL || !window.SUPABASE_KEY) {
+          resolve(undefined); return;
+        }
+        var token = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+        fetch(window.SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userId) + '&select=onboarding_seen', {
+          headers: {
+            'apikey': window.SUPABASE_KEY,
+            'Authorization': 'Bearer ' + token
+          }
+        })
+        .then(function (res) {
+          if (!res.ok) { resolve(undefined); return null; } // 컬럼 미존재 = 400 → undefined
+          return res.json();
+        })
+        .then(function (data) {
+          if (!data) return;
+          resolve(data && data[0] ? data[0].onboarding_seen : undefined);
+        })
+        .catch(function () { resolve(undefined); });
+      } catch (e) { resolve(undefined); }
+    });
+  }
+
+  function shouldShowWelcome(dbValue) {
+    // 우선순위 1 — Supabase 값 (cross-device 정합, SQL 실행 후 가동)
+    if (dbValue === true) return false;
+    // 우선순위 2 — localStorage fallback (컬럼 미존재 / 단일 디바이스 환경)
+    try {
+      if (localStorage.getItem('os_onboarding_seen') === '1') return false;
+    } catch (e) {}
+    return true;
+  }
+
+  document.addEventListener('appstate:ready', function () {
+    var s = window.AppState || {};
+    if (!s.userId) return; // 미로그인 — 본 자리 안 보냄
+
+    // 이름 주입
+    var nameEl = document.getElementById('welcome-name');
+    if (nameEl && s.name) {
+      nameEl.textContent = s.name + ' 팀장님';
+    }
+
+    // DB 값 조회 후 표시 조건 점검 (비동기)
+    fetchOnboardingSeen(s.userId).then(function (dbValue) {
+      if (shouldShowWelcome(dbValue)) {
+        // 초기 페인트 끝난 후 진입 (FOUC 회피)
+        setTimeout(openWelcome, 280);
+      }
+    });
+  });
+
+  // CTA / 건너뛰기 / ESC 닫기
+  document.addEventListener('click', function (e) {
+    if (e.target && (e.target.id === 'welcome-cta' || e.target.id === 'welcome-skip')) {
+      closeWelcome();
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var ov = document.getElementById('welcome-overlay');
+    if (ov && ov.classList.contains('is-open')) closeWelcome();
+  });
+})();
 </script>
 
 </body>
