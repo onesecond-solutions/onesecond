@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v97-20260519-landing-cta-trust-copy';
+const CACHE_NAME = 'onesecond-v98-20260519-landing-as-index-purge-duplicates';
 const CACHE_URLS = [
   '/',
   '/app.html',

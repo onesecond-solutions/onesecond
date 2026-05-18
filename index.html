@@ -33,21 +33,23 @@
 <meta name="apple-mobile-web-app-title" content="원세컨드" />
 <link rel="apple-touch-icon" href="/assets/icon-192.png" />
 
-<!-- 2026-05-18 로그인 전 5컷 진입 분기 (landing.html로 자동 이동)
-     ▸ 비로그인 + ?auth 파라미터 없음 + 같은 세션 첫 진입 → landing.html
-     ▸ 한 번 본 자리는 같은 세션 안 다시 안 보냄 (sessionStorage)
-     ▸ 가입/로그인 직접 진입자(?auth=signup/login)는 그대로 통합 모달
-     ▸ landing.html [원세컨드 시작하기] → index.html?auth=signup 정합 -->
+<!-- 2026-05-19 진입 분기 (본인 결재 본진)
+     ▸ 로그인 박힌 사용자 → app.html 자동 진입 (즐겨찾기 흐름 정합)
+     ▸ 비로그인 + ?auth 파라미터 없음 → 항상 landing.html (5컷 첫 화면 본진)
+     ▸ ?auth=signup/login 직접 진입자 → 통합 모달 자리 그대로
+     ▸ landing.html [원세컨드 시작하기] → index.html?auth=signup
+     ▸ landing.html [로그인] → index.html?auth=login -->
 <script>
 (function () {
   try {
     var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-    if (hasToken) return; // 이미 로그인 — 본 자리는 별도 후속 분기에서 처리
+    if (hasToken) {
+      window.location.replace('/app.html'); // 로그인 박힌 자리 자동 진입
+      return;
+    }
     var hasAuthParam = window.location.search.indexOf('auth=') !== -1;
     if (hasAuthParam) return; // 가입/로그인 직접 진입자
-    var landingSeen = sessionStorage.getItem('os_landing_seen');
-    if (landingSeen) return; // 같은 세션 안 이미 본 자리
-    sessionStorage.setItem('os_landing_seen', '1');
+    // 비로그인 + ?auth 없음 = 항상 랜딩 (옛 sessionStorage 본진 제거)
     window.location.replace('/pages/landing.html');
   } catch (e) { /* noop */ }
 })();
