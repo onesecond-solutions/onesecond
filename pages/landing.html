@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>원세컨드 — 보험 현장 흐름 체계</title>
+<meta name="description" content="설계사가 상담 중 멈추지 않게 하는 흐름 도구. 17년 보험 현장의 통찰." />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="원세컨드" />
+<meta property="og:title" content="원세컨드 — 보험 현장 흐름 체계" />
+<meta property="og:description" content="설계사가 상담 중 멈추지 않게 하는 흐름 도구." />
+<meta property="og:image" content="https://onesecond.solutions/assets/og-preview.png" />
+<meta property="og:url" content="https://onesecond.solutions/pages/landing.html" />
+<meta property="og:locale" content="ko_KR" />
+
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#A0522D" />
+<link rel="apple-touch-icon" href="/assets/icon-192.png" />
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+<style>
+:root {
+  --color-brand: #A0522D;
+  --color-brand-light: #C4733A;
+  --color-accent: #D4845A;
+  --color-bg: #FAFAF7;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-border: #E5E7EB;
+  --gradient-brand: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
+  --shadow-soft: 0 8px 32px rgba(160, 82, 45, 0.12);
+  --shadow-strong: 0 16px 48px rgba(160, 82, 45, 0.20);
+  --font-sans: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  word-break: keep-all;
+}
+
+/* ── 상단 고정 헤더 (작은 자리) ────────────────────────────── */
+.lp-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: rgba(250, 250, 247, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+.lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-brand);
+  letter-spacing: -0.02em;
+}
+.lp-brand-mark {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--gradient-brand);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+.lp-login-link {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  transition: background 0.18s;
+}
+.lp-login-link:hover { background: rgba(160, 82, 45, 0.08); color: var(--color-brand); }
+
+/* ── 5컷 섹션 공통 ────────────────────────────────────────── */
+.lp-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  position: relative;
+}
+.lp-content {
+  max-width: 720px;
+  width: 100%;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.9s ease-out, transform 0.9s ease-out;
+}
+.lp-content.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 카피 스타일 */
+.lp-headline {
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+.lp-headline-accent {
+  color: var(--color-brand);
+}
+.lp-sub {
+  margin-top: 24px;
+  font-size: clamp(16px, 2vw, 19px);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+.lp-quote {
+  font-size: clamp(26px, 4.5vw, 40px);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+  font-style: normal;
+}
+.lp-quote::before {
+  content: '"';
+  display: block;
+  font-size: 0.6em;
+  color: var(--color-brand);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.lp-quote::after {
+  content: '"';
+  display: block;
+  font-size: 0.6em;
+  color: var(--color-brand);
+  line-height: 1;
+  margin-top: 12px;
+}
+
+/* 화면 3 — 멈춤 순간 리스트 */
+.lp-pain-list {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+.lp-pain-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: clamp(15px, 2vw, 17px);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.lp-pain-bullet {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  flex-shrink: 0;
+}
+
+/* 화면 5 — CTA */
+.lp-cta-section {
+  background: var(--gradient-brand);
+  color: #fff;
+}
+.lp-cta-section .lp-headline,
+.lp-cta-section .lp-sub {
+  color: #fff;
+}
+.lp-cta-section .lp-sub {
+  color: rgba(255,255,255,0.88);
+}
+.lp-cta-btn {
+  display: inline-block;
+  margin-top: 40px;
+  padding: 18px 48px;
+  background: #fff;
+  color: var(--color-brand);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-height: 56px;
+  min-width: 240px;
+}
+.lp-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.24);
+}
+.lp-cta-btn:active {
+  transform: translateY(0);
+}
+.lp-cta-secondary {
+  display: block;
+  margin-top: 24px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.78);
+  text-decoration: none;
+}
+.lp-cta-secondary:hover { color: #fff; text-decoration: underline; }
+
+/* 스크롤 안내 화살표 (화면 1만) */
+.lp-scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: lp-bounce 2s ease-in-out infinite;
+}
+.lp-scroll-hint-arrow {
+  width: 24px; height: 24px;
+  border-right: 2px solid var(--color-text-tertiary);
+  border-bottom: 2px solid var(--color-text-tertiary);
+  transform: rotate(45deg);
+}
+@keyframes lp-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ── 모바일 ───────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lp-header { padding: 12px 16px; }
+  .lp-brand { font-size: 16px; }
+  .lp-brand-mark { width: 28px; height: 28px; font-size: 14px; }
+  .lp-section { padding: 60px 20px; }
+  .lp-pain-list { gap: 12px; }
+  .lp-pain-item { padding: 14px 18px; }
+  .lp-cta-btn {
+    padding: 16px 36px;
+    font-size: 16px;
+    width: 100%;
+    max-width: 320px;
+  }
+  .lp-scroll-hint { bottom: 24px; }
+}
+
+/* 모션 감소 환경 */
+@media (prefers-reduced-motion: reduce) {
+  .lp-content {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .lp-scroll-hint { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* 푸터 (작은 자리) */
+.lp-footer {
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+.lp-footer a { color: var(--color-text-tertiary); text-decoration: none; margin: 0 8px; }
+.lp-footer a:hover { color: var(--color-brand); }
+</style>
+</head>
+<body>
+
+<!-- 상단 헤더 (작은 자리, 로그인 링크) -->
+<header class="lp-header">
+  <a href="/" class="lp-brand" aria-label="원세컨드 홈">
+    <span class="lp-brand-mark">1s</span>
+    <span>원세컨드</span>
+  </a>
+  <a href="/index.html?auth=login" class="lp-login-link">로그인</a>
+</header>
+
+<!-- 화면 1 — 질문 -->
+<section class="lp-section" id="lp-scene-1" aria-label="1단계">
+  <div class="lp-content">
+    <h1 class="lp-quote">
+      진짜 보험설계사를 위한<br>
+      <span class="lp-headline-accent">통합형 솔루션은</span> 없을까?
+    </h1>
+  </div>
+  <div class="lp-scroll-hint" aria-hidden="true">
+    <span>스크롤</span>
+    <span class="lp-scroll-hint-arrow"></span>
+  </div>
+</section>
+
+<!-- 화면 2 — 시작 -->
+<section class="lp-section" id="lp-scene-2" aria-label="2단계">
+  <div class="lp-content">
+    <h2 class="lp-headline">
+      원세컨드는<br>
+      이 질문에서<br>
+      <span class="lp-headline-accent">시작했습니다.</span>
+    </h2>
+  </div>
+</section>
+
+<!-- 화면 3 — 멈춤 순간 -->
+<section class="lp-section" id="lp-scene-3" aria-label="3단계">
+  <div class="lp-content">
+    <h2 class="lp-headline">
+      17년 보험 현장에서 본<br>
+      설계사들의 진짜 <span class="lp-headline-accent">멈춤 순간들</span>
+    </h2>
+    <div class="lp-pain-list" role="list">
+      <div class="lp-pain-item" role="listitem">
+        <span class="lp-pain-bullet" aria-hidden="true"></span>
+        <span>상담 중 막힘 — 고객 앞에서 답이 안 떠오를 때</span>
+      </div>
+      <div class="lp-pain-item" role="listitem">
+        <span class="lp-pain-bullet" aria-hidden="true"></span>
+        <span>카톡 정보 휘발 — 지난주 받은 자료가 어디 있었지?</span>
+      </div>
+      <div class="lp-pain-item" role="listitem">
+        <span class="lp-pain-bullet" aria-hidden="true"></span>
+        <span>보험사 기준 변경 — 어제와 오늘이 다른 인수 기준</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 화면 4 — 약속 -->
+<section class="lp-section" id="lp-scene-4" aria-label="4단계">
+  <div class="lp-content">
+    <h2 class="lp-headline">
+      이제 <span class="lp-headline-accent">멈추지 마세요.</span>
+    </h2>
+    <p class="lp-sub">
+      원세컨드는 당신이<br>
+      상담 중 멈추는 순간을 없앱니다.
+    </p>
+  </div>
+</section>
+
+<!-- 화면 5 — CTA -->
+<section class="lp-section lp-cta-section" id="lp-scene-5" aria-label="5단계 — 시작">
+  <div class="lp-content">
+    <h2 class="lp-headline">
+      보험 현장 흐름 체계
+    </h2>
+    <p class="lp-sub">
+      지금 1분이면 시작할 수 있습니다.
+    </p>
+    <a href="/index.html?auth=signup" class="lp-cta-btn" role="button">
+      원세컨드 시작하기
+    </a>
+    <a href="/index.html?auth=login" class="lp-cta-secondary">
+      이미 회원이신가요? 로그인
+    </a>
+  </div>
+</section>
+
+<!-- 푸터 -->
+<footer class="lp-footer">
+  <div>© 2026 원세컨드 · onesecond.solutions</div>
+  <div style="margin-top: 8px;">
+    <a href="/index.html?auth=login">로그인</a>
+    ·
+    <a href="/index.html?auth=signup">가입</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  // 이미 로그인한 사용자가 이 자리 직접 들어오면 home으로 자동 이동
+  var token = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if (token) {
+    window.location.replace('/app.html');
+    return;
+  }
+
+  // 스크롤 페이드 인 — Intersection Observer
+  var sections = document.querySelectorAll('.lp-content');
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, {
+      threshold: 0.25,
+      rootMargin: '0px 0px -10% 0px'
+    });
+    sections.forEach(function (el) { observer.observe(el); });
+  } else {
+    // 미지원 환경 — 즉시 표시
+    sections.forEach(function (el) { el.classList.add('is-visible'); });
+  }
+
+  // 첫 화면은 진입 즉시 표시 (스크롤 전이라도)
+  var first = document.querySelector('#lp-scene-1 .lp-content');
+  if (first) {
+    setTimeout(function () { first.classList.add('is-visible'); }, 160);
+  }
+})();
+</script>
+
+</body>
+</html>

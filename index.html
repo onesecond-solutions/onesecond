@@ -32,6 +32,27 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="원세컨드" />
 <link rel="apple-touch-icon" href="/assets/icon-192.png" />
+
+<!-- 2026-05-18 로그인 전 5컷 진입 분기 (landing.html로 자동 이동)
+     ▸ 비로그인 + ?auth 파라미터 없음 + 같은 세션 첫 진입 → landing.html
+     ▸ 한 번 본 자리는 같은 세션 안 다시 안 보냄 (sessionStorage)
+     ▸ 가입/로그인 직접 진입자(?auth=signup/login)는 그대로 통합 모달
+     ▸ landing.html [원세컨드 시작하기] → index.html?auth=signup 정합 -->
+<script>
+(function () {
+  try {
+    var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+    if (hasToken) return; // 이미 로그인 — 본 자리는 별도 후속 분기에서 처리
+    var hasAuthParam = window.location.search.indexOf('auth=') !== -1;
+    if (hasAuthParam) return; // 가입/로그인 직접 진입자
+    var landingSeen = sessionStorage.getItem('os_landing_seen');
+    if (landingSeen) return; // 같은 세션 안 이미 본 자리
+    sessionStorage.setItem('os_landing_seen', '1');
+    window.location.replace('/pages/landing.html');
+  } catch (e) { /* noop */ }
+})();
+</script>
+
 <!--
 ================================================================================
   pages/home_v2.html — 단독 HTML 원칙 (app.html / app.js / tokens.css 의존 0)
