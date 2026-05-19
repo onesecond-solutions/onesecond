@@ -858,19 +858,13 @@ html, body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  position: relative;  /* 2026-05-17 박음: D영역 iframe overlay 박은 자리 정합 */
-  transition: padding-left 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
 }
 .d > * { flex-shrink: 0; width: 100%; }
 
-/* 2026-05-19 정정: 슬라이드 열림 시 D영역 자동 우측 밀어냄 (콘텐츠 가려짐 격차 해소)
-   ▸ Chrome AI 검수 FAIL 보고 정합: 슬라이드 220px이 콘텐츠 좌측 216px 덮음
-   ▸ 데스크탑(769+)만 적용 — 모바일은 화면 자리 자리 자리 침범 본진 유지 */
-@media (min-width: 769px) {
-  body.mobile-sidebar-open .d {
-    padding-left: 220px;
-  }
-}
+/* 2026-05-19 정정 (rev): 사이드바 = 오버레이 동작. 본문(D영역)은 사이드바 펼침/접힘과 무관하게 자기 자리 유지.
+   본인 결재 = 본문 그대로, 사이드바가 위에 겹쳐서 떠야 함.
+   옛 adf567e (D영역 padding-left:220px 우측 밀어내기) = 의도와 반대였음 → 제거 */
 
 /* 2026-05-17 박음: 메뉴 hover = D영역 통째 박힘 자리 = 페이지 미리보기 박힘 */
 /* 2026-05-17 갱신: z-index 100 → 175 박음 (body.mobile-sidebar-open::before backdrop z-index 150 박힌 자리 위, B영역 200 박힌 자리 아래) */
