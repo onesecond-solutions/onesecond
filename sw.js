@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v115-20260519-board-guide-text-update';
+const CACHE_NAME = 'onesecond-v116-20260519-nav-v2-4cards-restore';
 const CACHE_URLS = [
   '/',
   '/app.html',

@@ -5940,11 +5940,12 @@ window.expandNavV2 = function(qId) {
 };
 
 /* 2026-05-17 박음: 네비게이션방2 질문하기 = 네비게이션방 글쓰기 폼 재사용 + INSERT target=nav_questions */
+/* 2026-05-19 정정 (rev): ea1a0c1 commit이 4 카드 UI 폐기 박은 자리 = 팀장님 의도와 반대.
+   본 의도 = 8일 전 박은 4 카드(공지/인수/상품/기타) 그대로 노출 = navigation 구버전 글쓰기 폼 정합.
+   카드 클릭 시 mode가 navigation으로 덮어씌워지는 격차 = _navWriteContext flag로 해소 */
 window.openNavV2WriteModal = function() {
-  /* 2026-05-17 정정 2차: openWriteOverlay 박은 자리 = 4 카드 UI 박힘 → 사용자 카드 클릭 시 mode 또 덮어씀 격차
-     해소 = openManagerNoticeOverlay 호출 (cards skip + notice form 직접 active) + mode 재박음 본진 */
-  window.openManagerNoticeOverlay();
-  _noticeWriteMode = 'nav_v2';  /* submitNoticeForm에서 nav_questions INSERT 분기 */
+  window._navWriteContext = 'nav_v2';   /* selectWriteCategory가 mode 박을 때 본 flag 확인 */
+  window.openWriteOverlay();             /* 4 카드 노출 */
 };
 
 /* 2026-05-17 박음: 네비게이션방2 답변 인라인 폼 — 모든 사용자 + insurer_* 자동 매핑 */
