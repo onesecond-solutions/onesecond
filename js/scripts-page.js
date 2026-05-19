@@ -290,6 +290,30 @@ async function loadUserInfo() {
       document.getElementById('edit-company').value = u.company || '';
       document.getElementById('edit-branch').value = u.branch || '';
       document.getElementById('edit-team').value = u.team || '';
+      // 2026-05-19: 직책 표시 (read-only) + 변경 요청 모달 메시지 예시 채움
+      var roleDisp = document.getElementById('edit-role-display');
+      if (roleDisp) roleDisp.value = roleLabel || u.role || '직책 정보 없음';
+      var exName  = document.getElementById('role-change-example-name');
+      var exEmail = document.getElementById('role-change-example-email');
+      var exRole  = document.getElementById('role-change-example-role');
+      if (exName)  exName.textContent  = u.name || '홍길동';
+      if (exEmail) exEmail.textContent = u.email || 'example@email.com';
+      if (exRole)  exRole.textContent  = roleLabel || u.role || '현재 직책';
+      var mailto = document.getElementById('role-change-mailto');
+      if (mailto) {
+        var subject = encodeURIComponent('[원세컨드] 직책 변경 요청');
+        var body = encodeURIComponent(
+          '원세컨드 직책 변경 요청드립니다.\n\n' +
+          '이름: ' + (u.name || '') + '\n' +
+          '이메일: ' + (u.email || '') + '\n' +
+          '회사: ' + (u.company || '') + '\n' +
+          '지점/팀: ' + (u.branch || '') + ' / ' + (u.team || '') + '\n' +
+          '현재 직책: ' + (roleLabel || u.role || '') + '\n' +
+          '희망 직책: (예: 실장 / 지점장 등)\n' +
+          '사유: '
+        );
+        mailto.href = 'mailto:bylts0428@gmail.com?subject=' + subject + '&body=' + body;
+      }
       // 전역 저장
       window._userId = authUser.id;
       window._userToken = token;

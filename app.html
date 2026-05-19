@@ -1896,6 +1896,17 @@ body.mobile-sidebar-open .b-pulltab {
         <div><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">지점(센터)명</div><input id="edit-branch" type="text" placeholder="더원지점" class="input"></div>
         <div><div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">팀명</div><input id="edit-team" type="text" placeholder="4팀" class="input"></div>
       </div>
+      <!-- 2026-05-19: 직책 표시 + 변경 요청 (사이트 안정 전 = admin 직접 처리) -->
+      <div style="margin-bottom:13px;">
+        <div style="font-size:0.75em;font-weight:var(--fw-bold);color:var(--color-text-primary);margin-bottom:5px;">
+          직책 <span style="font-size:0.85em;color:var(--color-text-tertiary);">(변경 불가)</span>
+        </div>
+        <input id="edit-role-display" type="text" disabled class="input" placeholder="—">
+        <div style="margin-top:6px;font-size:0.72em;color:var(--color-text-secondary);">
+          직책 변경이 필요하신가요?
+          <a href="javascript:void(0)" onclick="openRoleChangeRequest()" style="color:var(--color-brand);font-weight:600;text-decoration:none;margin-left:4px;">관리자에게 요청 →</a>
+        </div>
+      </div>
     </div>
     <div style="padding:4px 22px 20px;display:flex;gap:var(--space-2);flex-wrap:wrap;">
       <button onclick="window.Auth.logout()" class="btn btn-ghost" style="flex:0 0 auto;height:38px;">로그아웃</button>
@@ -1905,6 +1916,40 @@ body.mobile-sidebar-open .b-pulltab {
   </div>
 </div>
 <style>#edit-overlay.active { display:flex!important; }</style>
+
+<!-- 2026-05-19: 직책 변경 요청 안내 모달 (사이트 안정 전 = admin 직접 처리) -->
+<div id="role-change-overlay"
+     style="display:none;position:fixed;inset:0;background:var(--color-overlay);z-index:310;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:var(--color-surface);border-radius:var(--radius-lg);width:100%;max-width:380px;box-shadow:var(--shadow-xl);overflow:hidden;margin:var(--space-4);">
+    <div style="background:var(--color-brand);padding:var(--space-4) var(--space-5);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:0.9375em;font-weight:var(--fw-black);color:#fff;">직책 변경 요청</div>
+      <button onclick="closeRoleChangeRequest()" style="width:28px;height:28px;border-radius:var(--radius-full);background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;font-size:1em;">✕</button>
+    </div>
+    <div style="padding:var(--space-4) 22px;">
+      <div style="font-size:0.8em;color:var(--color-text-secondary);line-height:1.6;margin-bottom:var(--space-4);">
+        사이트 안정화 전까지는 <strong>관리자가 직접 처리</strong>합니다.<br>
+        아래 경로로 변경 요청을 보내주세요.
+      </div>
+      <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:var(--space-3);font-size:0.75em;color:var(--color-text-secondary);line-height:1.7;">
+        <strong style="color:var(--color-text-primary);">메시지 예시</strong><br>
+        "<span id="role-change-example-name">홍길동</span> /
+        <span id="role-change-example-email">example@email.com</span> /
+        <span id="role-change-example-role">현재 직책</span> →
+        <span style="color:var(--color-brand);font-weight:600;">희망 직책</span> 변경 요청"
+      </div>
+      <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener"
+         class="btn btn-primary" style="width:100%;height:42px;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;text-decoration:none;">
+        💬 카카오 오픈채팅 열기
+      </a>
+      <a id="role-change-mailto"
+         href="mailto:bylts0428@gmail.com?subject=%5B%EC%9B%90%EC%84%B8%EC%BB%A8%EB%93%9C%5D%20%EC%A7%81%EC%B1%85%20%EB%B3%80%EA%B2%BD%20%EC%9A%94%EC%B2%AD"
+         class="btn btn-ghost" style="width:100%;height:42px;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;">
+        ✉️ 이메일 보내기 (bylts0428@gmail.com)
+      </a>
+    </div>
+  </div>
+</div>
+<style>#role-change-overlay.active { display:flex!important; }</style>
 
 
 <!-- ── 공통 파일 로드 ── -->
@@ -3114,6 +3159,12 @@ window.openEditProfile     = openEditProfile;
 window.closeEditProfile    = closeEditProfile;
 window.saveProfile         = saveProfile;
 window.sendPasswordReset   = sendPasswordReset;
+window.openRoleChangeRequest = function() {
+  document.getElementById('role-change-overlay').classList.add('active');
+};
+window.closeRoleChangeRequest = function() {
+  document.getElementById('role-change-overlay').classList.remove('active');
+};
 window.loadPricing         = loadPricing;
 window.calcInsAge          = calcInsAge;
 window.calcBMI             = calcBMI;
