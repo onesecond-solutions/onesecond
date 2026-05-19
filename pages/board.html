@@ -5517,27 +5517,52 @@ async function _loadTeamFeed() {
 
 /* 2026-05-17 박음: team_feed 자료 사이드바 카운트 본진 — attachments JSON 집계 + 확장자 분류 */
 function _updateTeamFeedAssetCounts(notices) {
-  var photoCount = 0, fileCount = 0, linkCount = 0;
+  /* 2026-05-19 정정: 카운트만 박던 자리 → 실제 자료 cache까지 채움.
+     openAssetOverlay가 _noticeAssetCache[kind] 박은 items 읽어서 그리드/리스트 박는 자리.
+     옛 격차 = cache 박지 X → 모달 클릭 시 "아직 ~없어요" 빈 자리 표시 격차 해소 */
+  var photos = [], files = [], links = [];
   notices.forEach(function(n) {
     if (!n.attachments) return;
     try {
       var att = typeof n.attachments === 'string' ? JSON.parse(n.attachments) : n.attachments;
       if (!Array.isArray(att)) return;
       att.forEach(function(a) {
-        var name = ((a && (a.name || a.url || '')) + '').toLowerCase();
-        if (/\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm|m4v)$/i.test(name)) photoCount++;
-        else if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|hwp|txt)$/i.test(name)) fileCount++;
-        else if (/^https?:\/\//i.test(name)) linkCount++;
-        else fileCount++;  /* 분류 안 되는 자리 = 파일 박음 */
+        if (!a) return;
+        var rawName = (a.name || a.url || '');
+        var name = rawName.toLowerCase();
+        var item = {
+          name: a.name || rawName || '(이름 없음)',
+          url:  a.url  || '',
+          size: a.size || 0,
+          post_id: n.id
+        };
+        if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name)) {
+          photos.push(item);
+        } else if (/\.(mp4|mov|webm|m4v)$/i.test(name)) {
+          item.video = true;
+          photos.push(item);
+        } else if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|hwp|txt)$/i.test(name)) {
+          files.push(item);
+        } else if (/^https?:\/\//i.test(name) && !a.size) {
+          links.push(item);
+        } else {
+          files.push(item);  /* 분류 안 되는 자리 = 파일 박음 */
+        }
       });
     } catch (e) { /* JSON parse 실패 = skip */ }
   });
+  /* 카운트 DOM */
   var photoEl = document.getElementById('team-feed-asset-photos-count');
   var fileEl  = document.getElementById('team-feed-asset-files-count');
   var linkEl  = document.getElementById('team-feed-asset-links-count');
-  if (photoEl) photoEl.textContent = photoCount + '건';
-  if (fileEl)  fileEl.textContent  = fileCount  + '건';
-  if (linkEl)  linkEl.textContent  = linkCount  + '건';
+  if (photoEl) photoEl.textContent = photos.length + '건';
+  if (fileEl)  fileEl.textContent  = files.length  + '건';
+  if (linkEl)  linkEl.textContent  = links.length  + '건';
+  /* cache 박음 = openAssetOverlay(line 7265~) 정합 본진 */
+  if (!window._noticeAssetCache) window._noticeAssetCache = {};
+  window._noticeAssetCache.photos = photos;
+  window._noticeAssetCache.files  = files;
+  window._noticeAssetCache.links  = links;
 }
 
 function _renderTeamFeedList() {
