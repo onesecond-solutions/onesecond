@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v105-20260519-sidebar-overlay-revert';
+const CACHE_NAME = 'onesecond-v106-20260519-grid-column-fix';
 const CACHE_URLS = [
   '/',
   '/app.html',
