@@ -2968,16 +2968,26 @@ async function fetchSearchPreview(q) {
     var scopeOr = 'or(' + scopeArr.join(',') + ')';
     var postsUrl = window.SUPABASE_URL + '/rest/v1/posts?and=(' + textOr + ',' + scopeOr + ')&select=id,title,content,category,insurer_target&limit=10';
 
-    var [sr, pr, qr] = await Promise.all([
+    /* 2026-05-19 추가: team_notices(4팀 단체방2) + nav_questions(네비게이션방2) fetch — 본인 team_id 한정
+       (멀티 테넌트 본진 = 9cb9a64 commit 정합) */
+    var tnFilter = 'or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)' + (meTeamId ? '&team_id=eq.' + meTeamId : '');
+    var tnUrl = window.SUPABASE_URL + '/rest/v1/team_notices?' + tnFilter + '&select=id,title,content,notice_type,team_id&order=created_at.desc&limit=5';
+    var nqFilter = 'or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)' + (meTeamId ? '&team_id=eq.' + meTeamId : '');
+    var nqUrl = window.SUPABASE_URL + '/rest/v1/nav_questions?' + nqFilter + '&select=id,title,content,question_type,team_id&order=last_activity_at.desc&limit=5';
+
+    var [sr, pr, qr, tr, nr] = await Promise.all([
       fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage&limit=4', { headers: h }),
       fetch(postsUrl, { headers: h }),
-      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3', { headers: h })
+      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=3', { headers: h }),
+      fetch(tnUrl, { headers: h }),
+      fetch(nqUrl, { headers: h })
     ]);
-    var [scripts, posts, quicks] = await Promise.all([
+    var [scripts, posts, quicks, teamNotices, navQuestions] = await Promise.all([
       sr.ok ? sr.json() : [], pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : []
+      qr.ok ? qr.json() : [],
+      tr.ok ? tr.json() : [], nr.ok ? nr.json() : []
     ]);
-    var total = scripts.length + posts.length + quicks.length;
+    var total = scripts.length + posts.length + quicks.length + teamNotices.length + navQuestions.length;
     if (total === 0) { dd.innerHTML = '<div class="search-empty">🔍 \'' + q + '\' 검색 결과가 없습니다.</div>'; return; }
     var html = '';
     if (scripts.length) {
@@ -3009,6 +3019,29 @@ async function fetchSearchPreview(q) {
           + '<span class="search-result-badge badge-quick">업무자료</span></div>';
       });
     }
+    /* 2026-05-19 추가: 4팀 단체방2 + 네비게이션방2 결과 섹션 */
+    if (teamNotices.length) {
+      html += '<div class="search-section-label">📋 4팀 단체방2</div>';
+      teamNotices.forEach(function (tn) {
+        var snippet = (tn.content || '').replace(/<[^>]+>/g, '').slice(0, 40);
+        html += '<div class="search-result-item" onclick="switchMenu(\'board\');setTimeout(function(){if(window.switchBoard)window.switchBoard(\'team_feed\');},300);closeSearchDropdown();">'
+          + '<span class="search-result-icon">📋</span>'
+          + '<div class="search-result-body"><div class="search-result-title">' + (tn.title || '').replace(/</g,'&lt;') + '</div>'
+          + (snippet ? '<div class="search-result-desc">' + snippet.replace(/</g,'&lt;') + '</div>' : '') + '</div>'
+          + '<span class="search-result-badge badge-post">4팀 단체방2</span></div>';
+      });
+    }
+    if (navQuestions.length) {
+      html += '<div class="search-section-label">🧭 네비게이션방2</div>';
+      navQuestions.forEach(function (nq) {
+        var snippet = (nq.content || '').replace(/<[^>]+>/g, '').slice(0, 40);
+        html += '<div class="search-result-item" onclick="switchMenu(\'board\');setTimeout(function(){if(window.switchBoard)window.switchBoard(\'nav_v2\');},300);closeSearchDropdown();">'
+          + '<span class="search-result-icon">🧭</span>'
+          + '<div class="search-result-body"><div class="search-result-title">' + (nq.title || '').replace(/</g,'&lt;') + '</div>'
+          + (snippet ? '<div class="search-result-desc">' + snippet.replace(/</g,'&lt;') + '</div>' : '') + '</div>'
+          + '<span class="search-result-badge badge-post">네비게이션방2</span></div>';
+      });
+    }
     html += '<div class="search-footer" onclick="doSearch(\'' + q.replace(/'/g,"\\'") + '\')">전체 결과 보기 →</div>';
     dd.innerHTML = html;
   } catch (e) {
@@ -3030,20 +3063,37 @@ async function doSearch(q) {
     var enc = encodeURIComponent(q);
     var token = window.db.getToken();
     var h = { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token };
-    var [sr, pr, qr] = await Promise.all([
+
+    /* 2026-05-19 추가: 본인 team_id lookup (멀티 테넌트 본진 = 9cb9a64 commit 정합) */
+    var s2 = window.AppState || {};
+    var meTeamId2 = null;
+    if (s2.userId) {
+      try {
+        var meRes2 = await fetch(window.SUPABASE_URL + '/rest/v1/users?id=eq.' + s2.userId + '&select=team_id', { headers: h });
+        var meRows2 = meRes2.ok ? await meRes2.json() : [];
+        meTeamId2 = (meRows2[0] && meRows2[0].team_id) || null;
+      } catch (e) { /* skip */ }
+    }
+    var tnFilter2 = 'or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)' + (meTeamId2 ? '&team_id=eq.' + meTeamId2 : '');
+    var nqFilter2 = 'or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)' + (meTeamId2 ? '&team_id=eq.' + meTeamId2 : '');
+
+    var [sr, pr, qr, tr, nr] = await Promise.all([
       fetch(window.SUPABASE_URL + '/rest/v1/scripts?or=(title.ilike.*' + enc + '*,script_text.ilike.*' + enc + '*,highlight_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,title,highlight_text,stage,type&limit=20', { headers: h }),
       fetch(window.SUPABASE_URL + '/rest/v1/posts?or=(title.ilike.*' + enc + '*,content.ilike.*' + enc + '*)&select=id,title,content,category&limit=20', { headers: h }),
-      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10', { headers: h })
+      fetch(window.SUPABASE_URL + '/rest/v1/quick_contents?or=(tab_title.ilike.*' + enc + '*,search_text.ilike.*' + enc + '*)&is_active=eq.true&select=id,tab_title,tab_key&limit=10', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/team_notices?' + tnFilter2 + '&select=id,title,content,notice_type,team_id&order=created_at.desc&limit=20', { headers: h }),
+      fetch(window.SUPABASE_URL + '/rest/v1/nav_questions?' + nqFilter2 + '&select=id,title,content,question_type,team_id&order=last_activity_at.desc&limit=20', { headers: h })
     ]);
-    var [scripts, posts, quicks] = await Promise.all([
+    var [scripts, posts, quicks, teamNotices, navQuestions] = await Promise.all([
       sr.ok ? sr.json() : [], pr.ok ? pr.json() : [],
-      qr.ok ? qr.json() : []
+      qr.ok ? qr.json() : [],
+      tr.ok ? tr.json() : [], nr.ok ? nr.json() : []
     ]);
-    var total = scripts.length + posts.length + quicks.length;
+    var total = scripts.length + posts.length + quicks.length + teamNotices.length + navQuestions.length;
     var html = '<div class="search-result-page">'
       + '<div class="search-result-page-header"><div>'
       + '<div class="search-result-page-title">🔍 &nbsp;"' + q + '" 검색 결과</div>'
-      + '<div class="search-result-page-sub">총 ' + total + '건 — 스크립트 ' + scripts.length + '건 · 현장의 소리 ' + posts.length + '건 · 업무자료 ' + quicks.length + '건</div>'
+      + '<div class="search-result-page-sub">총 ' + total + '건 — 스크립트 ' + scripts.length + '건 · 현장의 소리 ' + posts.length + '건 · 업무자료 ' + quicks.length + '건 · 4팀 단체방2 ' + teamNotices.length + '건 · 네비게이션방2 ' + navQuestions.length + '건</div>'
       + '</div><button class="search-result-page-close" onclick="switchMenu(\'home\')">✕ 닫기</button></div>';
     if (total === 0) html += '<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:0.9em;">검색 결과가 없습니다.</div>';
     if (scripts.length) {
@@ -3069,6 +3119,25 @@ async function doSearch(q) {
       quicks.forEach(function (qk) {
         html += '<div class="search-card" onclick="openQuickOverlay(\'' + qk.tab_title.replace(/'/g,"\\'") + '\')">'
           + '<div class="search-card-top"><span class="search-result-badge badge-quick">업무자료</span><span class="search-card-title">' + qk.tab_title + '</span></div></div>';
+      });
+    }
+    /* 2026-05-19 추가: 4팀 단체방2 + 네비게이션방2 결과 (본인 team_id 한정) */
+    if (teamNotices.length) {
+      html += '<div class="search-group-title">📋 4팀 단체방2 (' + teamNotices.length + '건)</div>';
+      teamNotices.forEach(function (tn) {
+        var desc = (tn.content || '').replace(/<[^>]+>/g, '').slice(0, 80);
+        html += '<div class="search-card" onclick="switchMenu(\'board\');setTimeout(function(){if(window.switchBoard)window.switchBoard(\'team_feed\');},300);">'
+          + '<div class="search-card-top"><span class="search-result-badge badge-post">4팀 단체방2</span><span class="search-card-title">' + (tn.title || '').replace(/</g,'&lt;') + '</span></div>'
+          + (desc ? '<div class="search-card-body">' + desc.replace(/</g,'&lt;') + '</div>' : '') + '</div>';
+      });
+    }
+    if (navQuestions.length) {
+      html += '<div class="search-group-title">🧭 네비게이션방2 (' + navQuestions.length + '건)</div>';
+      navQuestions.forEach(function (nq) {
+        var desc = (nq.content || '').replace(/<[^>]+>/g, '').slice(0, 80);
+        html += '<div class="search-card" onclick="switchMenu(\'board\');setTimeout(function(){if(window.switchBoard)window.switchBoard(\'nav_v2\');},300);">'
+          + '<div class="search-card-top"><span class="search-result-badge badge-post">네비게이션방2</span><span class="search-card-title">' + (nq.title || '').replace(/</g,'&lt;') + '</span></div>'
+          + (desc ? '<div class="search-card-body">' + desc.replace(/</g,'&lt;') + '</div>' : '') + '</div>';
       });
     }
     html += '</div>';
