@@ -9619,9 +9619,12 @@ window.submitNoticeForm = async function() {
       '기타':'etc'
     };
     var ntype = noticeTypeMap[noticeType] || 'etc';
-    /* 2026-05-17 정정: admin 박은 자리 fallback = 4팀 UUID (시연 본진 정합, AppState.teamId 박지 X 박힌 자리 해소) */
-    var teamId_tf = s.teamId || (role === 'admin' ? '5fccd362-9ee3-4165-8960-7cb0b7ec72fa' : null);
-    if (!teamId_tf) { alert('팀 정보가 박지 않아 공지 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
+    /* 2026-05-19 정정: 실장/지점장도 4팀 UUID fallback 박음 (team_id NULL 사용자 글쓰기 차단 격차 해소)
+       D+1 후 본진 = users.team_id 채우는 마이그레이션 박음 */
+    var TEAM4_UUID = '5fccd362-9ee3-4165-8960-7cb0b7ec72fa';
+    var fallbackRoles = ['admin','ga_branch_manager','ga_manager'];
+    var teamId_tf = s.teamId || (fallbackRoles.indexOf(role) !== -1 ? TEAM4_UUID : null);
+    if (!teamId_tf) { alert('팀 정보가 등록되지 않아 공지 작성이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
     /* 2026-05-17 박음: 수정 모드 분기 = PATCH (INSERT 대신) + 신 첨부 업로드 박음 */
     if (_editMode && _editPostId) {
       var submitBtn_ed = document.querySelector('#write-form-notice .wfn-btn-primary');
@@ -9773,8 +9776,11 @@ window.submitNoticeForm = async function() {
     };
     var qtype = qTypeMap[noticeType] || 'etc';
     /* 2026-05-17 정정: admin 박은 자리 fallback = 4팀 UUID (시연 본진 정합) */
-    var teamId_q = s.teamId || (role === 'admin' ? '5fccd362-9ee3-4165-8960-7cb0b7ec72fa' : null);
-    if (!teamId_q) { alert('팀 정보가 박지 않아 질문 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
+    /* 2026-05-19 정정: 실장/지점장도 4팀 UUID fallback 박음 (team_id NULL 사용자 글쓰기 차단 격차 해소) */
+    var TEAM4_UUID_Q = '5fccd362-9ee3-4165-8960-7cb0b7ec72fa';
+    var fallbackRoles_Q = ['admin','ga_branch_manager','ga_manager'];
+    var teamId_q = s.teamId || (fallbackRoles_Q.indexOf(role) !== -1 ? TEAM4_UUID_Q : null);
+    if (!teamId_q) { alert('팀 정보가 등록되지 않아 질문 작성이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
     var submitBtn_q = document.querySelector('#write-form-notice .wfn-btn-primary');
     if (submitBtn_q) { submitBtn_q.disabled = true; submitBtn_q.textContent = _editMode ? '수정 중...' : '등록 중...'; }
     try {
