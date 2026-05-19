@@ -5139,7 +5139,17 @@ function _boot() {
   /* (1) role 기반 5 탭 즉시 판정 + defaultBoard 결정 (동기, DB fetch 무관) */
   var defaultBoard = _applyTabVisibilityByRole();
 
-  /* (2) org 정보 분기 → _switchBoard(qna) 호출 → 콘텐츠 로딩 시작 */
+  /* 2026-05-19 추가: home.html "들어가기" 클릭 = sessionStorage('os_board_initial_tab')로 진입 탭 지정.
+     본 자리에서 우선 적용 후 자리 비움 (1회용). 없으면 role 기본값 그대로. */
+  try {
+    var initialTab = sessionStorage.getItem('os_board_initial_tab');
+    if (initialTab) {
+      defaultBoard = initialTab;
+      sessionStorage.removeItem('os_board_initial_tab');
+    }
+  } catch (e) {}
+
+  /* (2) org 정보 분기 → _switchBoard(defaultBoard) 호출 → 콘텐츠 로딩 시작 */
   var _afterOrg = function() {
     _switchBoard(defaultBoard);
     _bindOverlayClose();
