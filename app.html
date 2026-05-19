@@ -3107,7 +3107,45 @@ function setFontScale(scale) {
 })();
 
 // ── ⑧ 내 정보 수정 모달 ──────────────────────────────────────────────────
-function openEditProfile() { document.getElementById('edit-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
+function openEditProfile() {
+  /* 2026-05-19 정정: AppState 직접 사용 = 모든 페이지에서 정합.
+     옛 의존(scripts-page.js loadUserInfo) 박혀 있지 X — 어디서도 로드 안 됨. */
+  var s = window.AppState || {};
+  var byId = function(id) { return document.getElementById(id); };
+  if (byId('edit-name'))    byId('edit-name').value    = s.name    || '';
+  if (byId('edit-phone'))   byId('edit-phone').value   = s.phone   || '';
+  if (byId('edit-email'))   byId('edit-email').value   = s.email   || '';
+  if (byId('edit-company')) byId('edit-company').value = s.company || '';
+  if (byId('edit-branch'))  byId('edit-branch').value  = s.branch  || '';
+  if (byId('edit-team'))    byId('edit-team').value    = s.team    || '';
+
+  /* 직책 표시 + 변경 요청 모달 메시지 예시 */
+  var roleLabel = (window.ROLE_LABEL && window.ROLE_LABEL[s.role]) || s.role || '직책 정보 없음';
+  if (byId('edit-role-display')) byId('edit-role-display').value = roleLabel;
+  if (byId('role-change-example-name'))  byId('role-change-example-name').textContent  = s.name || '홍길동';
+  if (byId('role-change-example-email')) byId('role-change-example-email').textContent = s.email || 'example@email.com';
+  if (byId('role-change-example-role'))  byId('role-change-example-role').textContent  = roleLabel;
+
+  /* mailto 본문 자동 채움 */
+  var mailto = byId('role-change-mailto');
+  if (mailto) {
+    var subject = encodeURIComponent('[원세컨드] 직책 변경 요청');
+    var body = encodeURIComponent(
+      '원세컨드 직책 변경 요청드립니다.\n\n' +
+      '이름: ' + (s.name || '') + '\n' +
+      '이메일: ' + (s.email || '') + '\n' +
+      '회사: ' + (s.company || '') + '\n' +
+      '지점/팀: ' + (s.branch || '') + ' / ' + (s.team || '') + '\n' +
+      '현재 직책: ' + roleLabel + '\n' +
+      '희망 직책: (예: 실장 / 지점장 등)\n' +
+      '사유: '
+    );
+    mailto.href = 'mailto:bylts0428@gmail.com?subject=' + subject + '&body=' + body;
+  }
+
+  document.getElementById('edit-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
 function closeEditProfile() { document.getElementById('edit-overlay').classList.remove('active'); document.body.style.overflow = ''; }
 
 async function saveProfile() {
