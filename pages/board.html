@@ -708,9 +708,15 @@
   border-radius: var(--radius-md, 12px);
   padding: 1em;
   background: var(--color-surface-2);
-  transition: border-color .15s;
+  transition: border-color .15s, background-color .15s;
 }
 .attach-zone:hover { border-color: var(--color-brand, #A0522D); }
+/* 2026-05-19 추가: 드래그&드롭 진입 시 강조 시각 */
+.attach-zone.is-drag-over {
+  border-color: var(--color-brand, #A0522D);
+  border-style: solid;
+  background: rgba(160, 82, 45, 0.08);
+}
 .attach-trigger {
   display: flex; align-items: center; gap: 8px;
   cursor: pointer;
@@ -4279,7 +4285,7 @@
                 <label class="attach-trigger" for="attach-file-input">
                   <div class="attach-trigger-icon">📎</div>
                   <div class="attach-trigger-text">
-                    <strong>파일 첨부하기</strong>
+                    <strong>파일 첨부하기 (또는 끌어다 놓기)</strong>
                     <span class="attach-trigger-sub">이미지(JPG·PNG·GIF), PDF, 엑셀(XLS·XLSX) · 파일당 최대 5MB</span>
                   </div>
                 </label>
@@ -9686,6 +9692,79 @@ window.onAttachFileChange = function(input) {
   _renderAttachPreview();
   input.value = '';
 };
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   2026-05-19 추가: 첨부 영역 드래그&드롭 (.attach-zone 5개 통합 위임)
+   ▸ 이벤트 위임 = 동적 글쓰기 폼 진입 시에도 무관
+   ▸ document level dragover/drop preventDefault = 페이지 밖 드롭 시 브라우저
+     기본 동작(파일 열기로 페이지 이탈) 차단
+   ▸ drop 시 zone 안 <input type="file">에 files 박고 change 이벤트 dispatch
+     = 기존 onchange 핸들러(onAttachFileChange 등) 그대로 가동
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+(function () {
+  if (window._attachDndBound) return;
+  window._attachDndBound = true;
+
+  /* 페이지 밖 드롭 시 브라우저 파일 열기 동작 차단 */
+  ['dragover', 'drop'].forEach(function (evt) {
+    document.addEventListener(evt, function (e) {
+      if (!e.target.closest('.attach-zone')) {
+        e.preventDefault();
+      }
+    }, false);
+  });
+
+  document.addEventListener('dragenter', function (e) {
+    var zone = e.target.closest('.attach-zone');
+    if (!zone) return;
+    e.preventDefault();
+    zone.classList.add('is-drag-over');
+  });
+
+  document.addEventListener('dragover', function (e) {
+    var zone = e.target.closest('.attach-zone');
+    if (!zone) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+  });
+
+  document.addEventListener('dragleave', function (e) {
+    var zone = e.target.closest('.attach-zone');
+    if (!zone) return;
+    /* 자식 요소 위로 옮겨갈 때 dragleave가 가동되는 격차 회피
+       — relatedTarget이 zone 밖일 때만 강조 해제 */
+    if (!zone.contains(e.relatedTarget)) {
+      zone.classList.remove('is-drag-over');
+    }
+  });
+
+  document.addEventListener('drop', function (e) {
+    var zone = e.target.closest('.attach-zone');
+    if (!zone) return;
+    e.preventDefault();
+    zone.classList.remove('is-drag-over');
+
+    var input = zone.querySelector('input[type="file"]');
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (!input || !files || !files.length) return;
+
+    /* DataTransfer로 input.files 채운 후 change 이벤트 dispatch
+       = 기존 onchange 핸들러(onAttachFileChange 등)가 그대로 가동 */
+    try {
+      var dt = new DataTransfer();
+      Array.from(files).forEach(function (f) { dt.items.add(f); });
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (err) {
+      /* 옛 브라우저 fallback — onAttachFileChange 직접 호출 (메인 zone 한정) */
+      if (zone.id === 'attach-zone' && typeof window.onAttachFileChange === 'function') {
+        window.onAttachFileChange({ files: files, value: '' });
+      } else {
+        console.warn('[attach dnd] DataTransfer 미지원 + 비메인 zone =', zone.id, err);
+      }
+    }
+  });
+})();
 
 function _renderAttachPreview() {
   var list = document.getElementById('attach-preview-list');
