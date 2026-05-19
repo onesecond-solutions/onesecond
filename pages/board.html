@@ -2384,6 +2384,41 @@
 }
 .nav-v2-actions .nav-v2-delete-btn:hover { background: #FECACA; }
 
+/* 2026-05-19 추가: 게시판 검색 입력창 (team_feed + nav_v2 공통) */
+.board-search-wrap {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  flex: 0 1 280px;
+  min-width: 0;
+}
+.board-search-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border, #E5E7EB);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  font-size: 0.8125em;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.board-search-input:focus {
+  border-color: var(--color-brand, #A0522D);
+  box-shadow: 0 0 0 2px rgba(160, 82, 45, 0.12);
+}
+@media (max-width: 768px) {
+  .board-search-wrap {
+    flex: 1 1 100%;
+    margin-left: 0;
+    margin-top: 6px;
+    order: 99;
+  }
+  .board-search-input { height: 30px; font-size: 0.75em; }
+}
+
 @media (max-width: 768px) {
   .team-feed-shell {
     height: calc(100vh - 160px);
@@ -4037,6 +4072,11 @@
               <main class="team-feed-main">
                 <div class="team-feed-header" id="team-feed-header">
                   <span class="team-feed-title" id="team-feed-title">전체 공지</span>
+                  <div class="board-search-wrap">
+                    <input type="text" class="board-search-input" id="team-feed-search"
+                           placeholder="🔍 제목·내용 검색"
+                           oninput="window.filterTeamFeedSearch(this.value)">
+                  </div>
                   <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
                     <button type="button" class="team-feed-write-btn" id="team-feed-write-btn"
                             onclick="window.mobileBtnFirstTap(this, window.openTeamFeedWriteModal)" style="display:none;">+ 새 공지</button>
@@ -4105,6 +4145,11 @@
               <main class="nav-v2-main">
                 <div class="nav-v2-header">
                   <span class="nav-v2-title" id="nav-v2-title">전체 질문</span>
+                  <div class="board-search-wrap">
+                    <input type="text" class="board-search-input" id="nav-v2-search"
+                           placeholder="🔍 제목·내용 검색"
+                           oninput="window.filterNavV2Search(this.value)">
+                  </div>
                   <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
                     <button type="button" class="nav-v2-write-btn"
                             onclick="window.mobileBtnFirstTap(this, window.openNavV2WriteModal)">✏️ 질문하기</button>
@@ -5436,6 +5481,7 @@ var TEAM_FEED_CATEGORIES = {
 
 var _teamFeedAll = [];
 var _teamFeedCat = 'all';
+var _teamFeedSearch = '';  /* 2026-05-19 추가: 검색어 (제목·내용 매치) */
 
 async function _loadTeamFeed() {
   var list = document.getElementById('team-feed-list');
@@ -5502,6 +5548,16 @@ function _renderTeamFeedList() {
   var filtered = (_teamFeedCat === 'all')
     ? _teamFeedAll
     : _teamFeedAll.filter(function(n) { return n.notice_type === _teamFeedCat; });
+
+  /* 2026-05-19 추가: 검색어 필터 (제목·내용 부분 일치, 대소문자 무관) */
+  if (_teamFeedSearch) {
+    var kw = _teamFeedSearch.toLowerCase();
+    filtered = filtered.filter(function(n) {
+      var t = (n.title   || '').toLowerCase();
+      var c = (n.content || '').toLowerCase();
+      return t.indexOf(kw) !== -1 || c.indexOf(kw) !== -1;
+    });
+  }
 
   if (title) {
     if (_teamFeedCat === 'all') {
@@ -5797,6 +5853,7 @@ var INSURER_LABEL_COLORS = {
 };
 
 var _navV2All = [];
+var _navV2Search = '';  /* 2026-05-19 추가: 검색어 (제목·내용 매치) */
 var _navV2AnswersByQ = {};
 var _navV2Cat = 'all';
 var _navV2ExpandedQ = {};
@@ -5852,6 +5909,16 @@ function _renderNavV2List() {
   var filtered = (_navV2Cat === 'all')
     ? _navV2All
     : _navV2All.filter(function(q) { return q.question_type === _navV2Cat; });
+
+  /* 2026-05-19 추가: 검색어 필터 (제목·내용 부분 일치, 대소문자 무관) */
+  if (_navV2Search) {
+    var navKw = _navV2Search.toLowerCase();
+    filtered = filtered.filter(function(q) {
+      var t = (q.title   || '').toLowerCase();
+      var c = (q.content || '').toLowerCase();
+      return t.indexOf(navKw) !== -1 || c.indexOf(navKw) !== -1;
+    });
+  }
 
   if (title) {
     if (_navV2Cat === 'all') {
@@ -6003,6 +6070,16 @@ window.editNavV2Question = async function(qId) {
     console.error('[editNavV2Question] 실패:', e);
     alert('수정 진입 실패: ' + (e.message || e));
   }
+};
+
+/* 2026-05-19 추가: 검색 필터 함수 (team_feed + nav_v2) */
+window.filterTeamFeedSearch = function(kw) {
+  _teamFeedSearch = (kw || '').trim();
+  _renderTeamFeedList();
+};
+window.filterNavV2Search = function(kw) {
+  _navV2Search = (kw || '').trim();
+  _renderNavV2List();
 };
 
 window.deleteNavV2Question = async function(qId) {
