@@ -2359,6 +2359,31 @@
 }
 .tfd-actions .tfd-delete-btn:hover { background: #FECACA; }
 
+/* 2026-05-19 추가: nav_v2 카드 안 수정/삭제 버튼 (team_feed 톤 정합) */
+.nav-v2-actions {
+  display: flex; gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-border);
+}
+.nav-v2-actions button {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 0;
+  font-size: 0.75em; font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.nav-v2-actions .nav-v2-edit-btn {
+  background: var(--brand-100, #F8DCC4);
+  color: var(--brand-700, #66331A);
+}
+.nav-v2-actions .nav-v2-edit-btn:hover { background: var(--brand-200, #F0C29A); }
+.nav-v2-actions .nav-v2-delete-btn {
+  background: #FEE2E2; color: #991B1B;
+}
+.nav-v2-actions .nav-v2-delete-btn:hover { background: #FECACA; }
+
 @media (max-width: 768px) {
   .team-feed-shell {
     height: calc(100vh - 160px);
@@ -5910,6 +5935,16 @@ function _renderNavV2List() {
       answersSection = '<div class="nav-v2-no-answers">아직 답변이 없습니다. ' + replyTriggerHtml + '</div>';
     }
 
+    /* 2026-05-19 추가: 수정/삭제 버튼 (작성자 본인 또는 admin만 노출) */
+    var s2 = window.AppState || {};
+    var canEditQ = (q.author_id === s2.userId) || (s2.role === 'admin');
+    var actionsHtml = canEditQ
+      ? '<div class="nav-v2-actions">' +
+          '<button type="button" class="nav-v2-edit-btn" onclick="event.stopPropagation(); window.editNavV2Question(\'' + q.id + '\')">✏️ 수정</button>' +
+          '<button type="button" class="nav-v2-delete-btn" onclick="event.stopPropagation(); window.deleteNavV2Question(\'' + q.id + '\')">🗑️ 삭제</button>' +
+        '</div>'
+      : '';
+
     /* 카드 헤더 클릭 = 답변 폼 박음 (cursor:pointer + onclick) */
     return '<div class="nav-v2-card' + (isLatest ? ' is-latest' : '') + '" data-type="' + q.question_type + '" data-q-id="' + q.id + '"' +
            ' style="border-left:3px solid ' + cat.text + ';' + (isLatest ? 'background:' + cat.bg : '') + '">' +
@@ -5922,9 +5957,70 @@ function _renderNavV2List() {
            (titleEsc ? '<div class="nav-v2-card-title" style="cursor:pointer" onclick="window.openNavV2ReplyModal(\'' + q.id + '\', \'' + teamIdAttr + '\')">' + titleEsc + '</div>' : '') +
            '<div class="nav-v2-card-content">' + contentEsc + '</div>' +
            answersSection +
+           actionsHtml +
            '</div>';
   }).join('');
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   2026-05-19 추가: nav_v2 수정 / 삭제 (team_feed 동일 패턴)
+   ▸ 작성자(author_id == AppState.userId) + admin만 가동
+   ▸ 수정 = openNavV2WriteModal 진입 + prefill + _editMode 박음 + submitNoticeForm에서 PATCH 분기
+   ▸ 삭제 = hard delete (team_feed 본진 정합)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+window.editNavV2Question = async function(qId) {
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+  try {
+    var res = await window.db.fetch('/rest/v1/nav_questions?id=eq.' + encodeURIComponent(qId) + '&select=title,content,question_type');
+    var rows = res.ok ? await res.json() : [];
+    if (!rows || !rows[0]) { alert('질문을 찾을 수 없습니다.'); return; }
+    var q = rows[0];
+
+    /* nav_v2 4 카드 글쓰기 폼 진입 (공지 카드 선택 = '공지' 폼) */
+    window.openNavV2WriteModal();
+    setTimeout(function() {
+      /* '공지' 카드 자동 클릭 = 공지 폼 활성 (선택 안 하면 prefill 박을 자리 없음) */
+      window.selectWriteCategory('공지');
+      _noticeWriteMode = 'nav_v2';  /* selectWriteCategory가 'navigation'으로 박은 자리 다시 nav_v2 */
+      setTimeout(function() {
+        var titleEl = document.getElementById('notice-title');
+        var contentEl = document.getElementById('notice-content');
+        var typeEl = document.getElementById('notice-type');
+        if (titleEl) titleEl.value = q.title || '';
+        if (contentEl) contentEl.value = q.content || '';
+        /* nav_questions.question_type = notice/underwriting/product/etc → 한글 옵션 매핑 */
+        var qTypeReverse = {
+          notice: '운영', underwriting: '인수', product: '상품', etc: '기타'
+        };
+        if (typeEl) typeEl.value = qTypeReverse[q.question_type] || '기타';
+        _editMode = true;
+        _editPostId = qId;
+        var submitBtn = document.querySelector('#write-form-notice .wfn-btn-primary');
+        if (submitBtn) submitBtn.textContent = '수정하기';
+      }, 100);
+    }, 100);
+  } catch (e) {
+    console.error('[editNavV2Question] 실패:', e);
+    alert('수정 진입 실패: ' + (e.message || e));
+  }
+};
+
+window.deleteNavV2Question = async function(qId) {
+  if (!confirm('정말 삭제하시겠어요? 되돌릴 수 없습니다.\n(답변도 함께 삭제될 수 있습니다)')) return;
+  if (!window.db || !window.db.fetch) { alert('DB 연결 부재'); return; }
+  try {
+    var res = await window.db.fetch('/rest/v1/nav_questions?id=eq.' + encodeURIComponent(qId), {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    if (!res.ok) throw new Error('DELETE ' + res.status);
+    if (typeof _loadNavV2 === 'function') _loadNavV2();
+    alert('🗑️ 질문이 삭제되었습니다.');
+  } catch (e) {
+    console.error('[deleteNavV2Question] 실패:', e);
+    alert('삭제 실패: ' + (e.message || e));
+  }
+};
 
 window.filterNavV2 = function(cat) {
   _navV2Cat = cat;
@@ -9603,31 +9699,52 @@ window.submitNoticeForm = async function() {
     var teamId_q = s.teamId || (role === 'admin' ? '5fccd362-9ee3-4165-8960-7cb0b7ec72fa' : null);
     if (!teamId_q) { alert('팀 정보가 박지 않아 질문 등록이 어렵습니다. 관리자에게 문의 부탁드립니다.'); return; }
     var submitBtn_q = document.querySelector('#write-form-notice .wfn-btn-primary');
-    if (submitBtn_q) { submitBtn_q.disabled = true; submitBtn_q.textContent = '등록 중...'; }
+    if (submitBtn_q) { submitBtn_q.disabled = true; submitBtn_q.textContent = _editMode ? '수정 중...' : '등록 중...'; }
     try {
-      var qBody = {
-        team_id: teamId_q,
-        author_id: s.userId || '',
-        question_type: qtype,
-        title: title,
-        content: rawContent,
-        /* 2026-05-17 정정: last_activity_at 박음 (NULL이면 SELECT order DESC 끝에 박혀 안 보임 격차) */
-        last_activity_at: new Date().toISOString()
-      };
-      var qRes = await window.db.fetch('/rest/v1/nav_questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-        body: JSON.stringify(qBody)
-      });
-      if (!qRes.ok) throw new Error('nav_questions INSERT ' + qRes.status);
-      window.closeWriteOverlay();
-      if (typeof _loadNavV2 === 'function') _loadNavV2();
-      alert('네비게이션방2 질문이 등록되었습니다.');
+      /* 2026-05-19 추가: _editMode 박힌 자리 = PATCH 분기 (team_feed 동일 패턴) */
+      if (_editMode && _editPostId) {
+        var patchBody = {
+          question_type: qtype,
+          title: title,
+          content: rawContent,
+          last_activity_at: new Date().toISOString()
+        };
+        var pRes = await window.db.fetch('/rest/v1/nav_questions?id=eq.' + encodeURIComponent(_editPostId), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(patchBody)
+        });
+        if (!pRes.ok) throw new Error('nav_questions PATCH ' + pRes.status);
+        window.closeWriteOverlay();
+        if (typeof _loadNavV2 === 'function') _loadNavV2();
+        alert('✏️ 질문이 수정되었습니다.');
+      } else {
+        var qBody = {
+          team_id: teamId_q,
+          author_id: s.userId || '',
+          question_type: qtype,
+          title: title,
+          content: rawContent,
+          /* 2026-05-17 정정: last_activity_at 박음 (NULL이면 SELECT order DESC 끝에 박혀 안 보임 격차) */
+          last_activity_at: new Date().toISOString()
+        };
+        var qRes = await window.db.fetch('/rest/v1/nav_questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(qBody)
+        });
+        if (!qRes.ok) throw new Error('nav_questions INSERT ' + qRes.status);
+        window.closeWriteOverlay();
+        if (typeof _loadNavV2 === 'function') _loadNavV2();
+        alert('네비게이션방2 질문이 등록되었습니다.');
+      }
     } catch (e) {
-      console.error('[nav_v2] INSERT 실패:', e);
-      alert('질문 등록 실패: ' + (e.message || e));
+      console.error('[nav_v2] ' + (_editMode ? 'PATCH' : 'INSERT') + ' 실패:', e);
+      alert('처리 실패: ' + (e.message || e));
     } finally {
       if (submitBtn_q) { submitBtn_q.disabled = false; submitBtn_q.textContent = '등록하기'; }
+      _editMode = false;
+      _editPostId = null;
       _noticeWriteMode = 'navigation';  /* mode reset */
     }
     return;
