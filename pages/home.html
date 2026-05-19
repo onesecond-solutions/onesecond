@@ -1042,23 +1042,23 @@
      옛 자리(home-a2-preview / home-hex-wrap 6각 / home-cards-section) 통째 폐기 -->
 <div class="home-today-wrap">
 
-  <!-- ── 오늘 본인이 박을 본진 (큰 카드, 실장님 공지방 최근 글) ── -->
+  <!-- ── 오늘 본인이 박을 본진 (큰 카드, 4팀 단체방2 최근 글) ── -->
   <div class="home-today-card" id="home-today-card">
     <div class="home-today-label">
       <span aria-hidden="true">🎯</span>
-      <span>오늘 본인이 박을 본진</span>
+      <span>오늘 할 일</span>
     </div>
     <div class="home-today-title">
-      <span class="home-today-title-icon" aria-hidden="true">💬</span>
-      <span>실장님 공지방</span>
+      <span class="home-today-title-icon" aria-hidden="true">📋</span>
+      <span>4팀 단체방2</span>
     </div>
     <div class="home-today-meta" id="home-today-meta">새 글 불러오는 중...</div>
     <div class="home-today-list" id="home-today-list">
       <div class="home-today-list-empty">잠시만 기다려 주세요.</div>
     </div>
     <button type="button" class="home-today-cta"
-            onclick="window.switchMenu &amp;&amp; window.switchMenu('board')"
-            aria-label="실장님 공지방으로 이동">
+            onclick="window.homeGoToTeamFeed &amp;&amp; window.homeGoToTeamFeed()"
+            aria-label="4팀 단체방2로 이동">
       <span>들어가기</span>
       <span aria-hidden="true">→</span>
     </button>
@@ -1074,7 +1074,7 @@
            aria-label="스크립트로 이동">
         <div class="home-side-card-icon" aria-hidden="true">📜</div>
         <h4 class="home-side-card-title">스크립트</h4>
-        <p class="home-side-card-desc">17년 현장 멘트 모음<br>462건 박혀 있습니다</p>
+        <p class="home-side-card-desc">17년 현장 멘트 모음<br>462건 모여 있습니다</p>
         <span class="home-side-card-cta">보기 →</span>
       </div>
 
@@ -1104,14 +1104,14 @@
   <div class="home-activity" id="home-activity">
     <span class="home-activity-icon" aria-hidden="true">📈</span>
     <div class="home-activity-stats">
-      <span class="home-activity-stat"><strong>이번 주</strong>실장님 공지방 — 자료 준비 중</span>
+      <span class="home-activity-stat"><strong>이번 주</strong>4팀 단체방2 — 자료 준비 중</span>
     </div>
     <span class="home-activity-hint">활동 통계는 곧 안내드립니다 👉</span>
   </div>
 
 </div>
 
-<!-- 2026-05-19 실장님 공지방 최근 3건 Supabase fetch -->
+<!-- 2026-05-19 정정: 4팀 단체방2(team_notices) 최근 3건 Supabase fetch -->
 <script>
 (function () {
   'use strict';
@@ -1136,24 +1136,36 @@
     });
   }
 
+  /* CTA + 목록 클릭 = board 진입 + team_feed 탭 자동 활성화 */
+  window.homeGoToTeamFeed = function () {
+    try { sessionStorage.setItem('os_board_initial_tab', 'team_feed'); } catch (e) {}
+    if (window.switchMenu) window.switchMenu('board');
+    /* board 가동 후 탭 활성화 (300ms 안전 여유) */
+    setTimeout(function () {
+      if (typeof window.switchBoard === 'function') {
+        window.switchBoard('team_feed');
+      }
+    }, 300);
+  };
+
   function renderTodayList(items) {
     var listEl = document.getElementById('home-today-list');
     var metaEl = document.getElementById('home-today-meta');
     if (!listEl) return;
 
     if (!items || items.length === 0) {
-      listEl.innerHTML = '<div class="home-today-list-empty">아직 새 글이 없습니다.<br>들어가서 본인이 첫 글을 박아보세요.</div>';
+      listEl.innerHTML = '<div class="home-today-list-empty">아직 새 글이 없습니다.<br>들어가서 첫 공지를 작성해 보세요.</div>';
       if (metaEl) metaEl.textContent = '새 글 없음';
       return;
     }
 
-    if (metaEl) metaEl.textContent = '새 글 ' + items.length + '건 박혀 있습니다';
+    if (metaEl) metaEl.textContent = '새 글 ' + items.length + '건 있습니다';
 
     var html = items.slice(0, 3).map(function (it) {
       var title = escapeHtml(it.title || it.content || '제목 없음').slice(0, 60);
       var when = escapeHtml(timeAgo(it.created_at));
       return '<div class="home-today-list-item" '
-           + 'onclick="window.switchMenu &amp;&amp; window.switchMenu(\'board\')" '
+           + 'onclick="window.homeGoToTeamFeed &amp;&amp; window.homeGoToTeamFeed()" '
            + 'role="button" tabindex="0">'
            + '<span class="home-today-list-bullet" aria-hidden="true"></span>'
            + '<span class="home-today-list-title">' + title + '</span>'
@@ -1169,10 +1181,12 @@
       return;
     }
     var token = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+    /* 본인 소속 team_id 한정 (없으면 전체 최근 3건 fallback) */
+    var teamId = (window.AppState && window.AppState.team_id) || '';
     var url = window.SUPABASE_URL
-            + '/rest/v1/posts'
-            + '?select=id,title,content,created_at'
-            + '&board_type=eq.qna'
+            + '/rest/v1/team_notices'
+            + '?select=id,team_id,notice_type,title,content,created_at'
+            + (teamId ? '&team_id=eq.' + encodeURIComponent(teamId) : '')
             + '&order=created_at.desc'
             + '&limit=3';
     fetch(url, {
@@ -1186,7 +1200,7 @@
     .catch(function () { renderTodayList(null); });
   }
 
-  // AppState ready 후 fetch (token 정합)
+  // AppState ready 후 fetch (token + team_id 정합)
   if (window.AppState && window.AppState.ready) {
     loadTodayList();
   } else {
