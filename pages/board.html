@@ -4704,13 +4704,13 @@
             <label class="wfn-field">
               <span class="wfn-label">확인하고 싶은 범위 <em>*</em></span>
               <select id="etc-audience" required>
-                <option value="team_internal" selected>팀 내부</option>
+                <option value="team_internal">팀 내부</option>
                 <option value="branch">지점</option>
-                <option value="navigation_all">전체 네비게이션방</option>
+                <option value="navigation_all" selected>전체 네비게이션방</option>
                 <option value="insurer_specific">특정 보험사</option>
                 <option value="admin_only">운영진만</option>
               </select>
-              <span class="wfn-hint">기본값 = "팀 내부" (초기 운영 사고 방지 정책)</span>
+              <span class="wfn-hint">기본값 = "전체 네비게이션방"</span>
             </label>
             <label class="wfn-field">
               <span class="wfn-label">누가 답해주길 원하세요? <span class="wfn-optional">(선택)</span></span>
@@ -4778,13 +4778,13 @@
             <label class="wfn-field">
               <span class="wfn-label">공지 범위 <em>*</em></span>
               <select id="notice-audience" required>
-                <option value="team_internal" selected>팀 내부</option>
+                <option value="team_internal">팀 내부</option>
                 <option value="branch">지점</option>
-                <option value="navigation_all">전체 네비게이션방</option>
+                <option value="navigation_all" selected>전체 네비게이션방</option>
                 <option value="insurer_specific">특정 보험사</option>
                 <option value="admin_only">운영진만</option>
               </select>
-              <span class="wfn-hint">기본값 = "팀 내부" (초기 운영 사고 방지 정책)</span>
+              <span class="wfn-hint">기본값 = "전체 네비게이션방"</span>
             </label>
           </div>
         </div>
@@ -8928,7 +8928,8 @@ window.selectWriteCategory = function(category) {
     if (typeEl)     typeEl.value     = '운영';
     if (titleEl)    titleEl.value    = '';
     if (contentEl)  contentEl.value  = '';
-    if (audienceEl) audienceEl.value = 'team_internal';
+    /* 2026-05-19 정정: nav_v2 본진 = 기본값 '전체 네비게이션방' (팀장님 결재) */
+    if (audienceEl) audienceEl.value = 'navigation_all';
     /* navigation 모드 — team_internal + insurer_specific 옵션 다시 표시 (smart_board hide 격차 회피) + 안내 박스 hide + 취소 버튼 라벨 복귀 */
     if (audienceEl) {
       var teamOptNav    = audienceEl.querySelector('option[value="team_internal"]');
@@ -9008,7 +9009,8 @@ window.selectWriteCategory = function(category) {
       if (el) el.value = '';
     });
     var audienceEl2 = document.getElementById('etc-audience');
-    if (audienceEl2) audienceEl2.value = 'team_internal';
+    /* 2026-05-19 정정: nav_v2 기타 폼 = 기본값 '전체 네비게이션방' (팀장님 결재) */
+    if (audienceEl2) audienceEl2.value = 'navigation_all';
     var headerTitle4 = document.getElementById('write-overlay-title');
     if (headerTitle4) headerTitle4.textContent = '❓ 기타 질문 작성';
     var firstFocus3 = document.getElementById('etc-question-type');
