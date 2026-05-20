@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v128-20260520-hanwha-kyobo-nonce-urls';
+const CACHE_NAME = 'onesecond-v129-20260520-insurer-add-4-missing';
 const CACHE_URLS = [
   '/',
   '/app.html',
