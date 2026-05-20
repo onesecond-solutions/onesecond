@@ -90,8 +90,31 @@ body {
   font-weight: 700;
   font-size: 16px;
 }
-/* 2026-05-19 우측 상단 [로그인] = 브라운 그라데이션 강조 (옛 가입자 진입 본진) */
+/* 2026-05-20 우측 상단 헤더 액션 = [로그인 텍스트 톤다운] + [가입하기 브라운 강조]
+   (4팀 오픈 D-day, 신규 가입자 진입로 헤더 노출 = 표준 SaaS CTA 패턴) */
+.lp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .lp-login-link {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  letter-spacing: -0.01em;
+  transition: color 0.18s, background 0.18s;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+.lp-login-link:hover {
+  color: var(--color-text-primary);
+  background: rgba(0, 0, 0, 0.04);
+}
+.lp-signup-link {
   font-size: 15px;
   font-weight: 700;
   color: #fff;
@@ -106,15 +129,17 @@ body {
   display: inline-flex;
   align-items: center;
 }
-.lp-login-link:hover {
+.lp-signup-link:hover {
   color: #fff;
   background: linear-gradient(135deg, #8B4423 0%, #A0522D 100%);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(160, 82, 45, 0.32);
 }
-.lp-login-link:active { transform: translateY(0); }
+.lp-signup-link:active { transform: translateY(0); }
 @media (max-width: 640px) {
-  .lp-login-link { font-size: 14px; padding: 9px 18px; }
+  .lp-login-link { font-size: 14px; padding: 9px 10px; }
+  .lp-signup-link { font-size: 14px; padding: 9px 18px; }
+  .lp-header-actions { gap: 4px; }
 }
 
 /* ── 5컷 섹션 공통 ────────────────────────────────────────── */
@@ -460,13 +485,16 @@ body {
 </head>
 <body>
 
-<!-- 상단 헤더 (작은 자리, 로그인 링크) -->
+<!-- 상단 헤더 (로고 + 로그인 + 가입하기) -->
 <header class="lp-header">
   <a href="/" class="lp-brand" aria-label="원세컨드 홈">
     <span class="lp-brand-mark">1s</span>
     <span>원세컨드</span>
   </a>
-  <a href="/index.html?auth=login" class="lp-login-link">로그인</a>
+  <div class="lp-header-actions">
+    <a href="/index.html?auth=login" class="lp-login-link">로그인</a>
+    <a href="/index.html?auth=signup" class="lp-signup-link">가입하기</a>
+  </div>
 </header>
 
 <!-- 화면 1 — 질문 -->
