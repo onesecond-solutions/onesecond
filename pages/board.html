@@ -7113,8 +7113,9 @@ function _renderNoticeMessages(msgs, meId, meName) {
   }).join('');
 }
 
-/* 자산 패널 (2026-05-14 본진 4 정밀: 카운트만 표시, 클릭 시 오버레이) */
-var _noticeAssetCache = { photos: [], files: [], links: [] };
+/* 자산 패널 (2026-05-14: 카운트만 표시, 클릭 시 오버레이)
+   2026-05-20 정정: 로컬 var → window._noticeAssetCache 통일 (team_feed 자리에서 박은 cache와 scope 정합) */
+if (!window._noticeAssetCache) window._noticeAssetCache = { photos: [], files: [], links: [] };
 
 function _renderNoticeAssets(posts) {
   var photoCnt = document.getElementById('notice-asset-photos-count');
@@ -7140,8 +7141,8 @@ function _renderNoticeAssets(posts) {
     } catch (e) {}
   });
 
-  /* 캐시 (오버레이 박을 박은 박은 박은) */
-  _noticeAssetCache = { photos: photos, files: files, links: links };
+  /* 캐시 갱신 (2026-05-20 정정: window 자리 통일) */
+  window._noticeAssetCache = { photos: photos, files: files, links: links };
 
   /* 카운트만 갱신 (텍스트 한 줄) */
   if (photoCnt) photoCnt.textContent = photos.length + '건';
@@ -7289,7 +7290,8 @@ document.addEventListener('click', function(e) {
 /* 자산 오버레이 열기 (2026-05-14 본진 4 정밀) */
 window.openAssetOverlay = function(kind){
   var titles = { photos: '📸 사진·동영상', files: '📎 파일', links: '🔗 링크' };
-  var items = (_noticeAssetCache && _noticeAssetCache[kind]) || [];
+  /* 2026-05-20 정정: window 자리 읽음 (team_feed + 옛 자리 통일 cache) */
+  var items = (window._noticeAssetCache && window._noticeAssetCache[kind]) || [];
   var titleEl = document.getElementById('notice-asset-overlay-title');
   var bodyEl  = document.getElementById('notice-asset-overlay-body');
   var box     = document.getElementById('notice-asset-overlay');
