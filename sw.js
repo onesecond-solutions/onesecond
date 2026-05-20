@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v130-20260520-board-old-tabs-faded';
+const CACHE_NAME = 'onesecond-v131-20260520-team-feed-attach-badge-and-image-modal';
 const CACHE_URLS = [
   '/',
   '/app.html',
