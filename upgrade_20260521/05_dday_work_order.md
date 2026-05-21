@@ -277,34 +277,61 @@ grep -rn "8B6F47\|A0522D\|8B4423\|160,82,45\|--color-brand\|--brand-" pages/ css
 
 ---
 
-## §8. 결재 박은 자리 (작업 진입 전)
+## §8. 결재 박힘 (2026-05-21 저녁 통째 A안 결재 박힘)
 
-본 작업지시서 박은 자리 본인 박을 자리 결재:
+| # | 항목 | 결재 |
+|---|---|---|
+| ① | Phase 순서 | ✅ **A안 — Phase A → B → C 순차 박을 자리** |
+| ② | cherry-pick | ✅ **A안 — commit 단위** (`git cherry-pick 7a834d6 bf4262c`) |
+| ③ | DB 마이그레이션 | ✅ **A안 — D-day 새벽 Chrome AI 의뢰** (notifications + newsletters 460건 INSERT) |
+| ④ | Netlify | ✅ **A안 — feature 브랜치 + PR + Netlify deploy preview 검증 후 main merge** |
+| ⑤ | 회귀 대응 | ✅ **A안 — 핫픽스(작은 자리) / rollback(큰 자리) 분기** |
 
-### 결재 ① — Phase A·B·C 순서 박는 자리
+### 결재 ① 본진 (Phase 순차)
 
-A안 (추천): Phase A → B → C 순차 박을 자리
-B안: A 박은 후 B·C 통째 박을 자리
+```
+새벽 6:00~10:00  Phase A (~4시간)  토큰 + theme.js + app.html 골격
+정오~오후 5:00   Phase B (~5시간)  페이지 6개 + 알림 시스템
+저녁 6:00~8:00   Phase C (~2시간)  staging 검증 + 라이브 전환
+저녁 8:00        마감 + 인계 노트 박음
+```
 
-### 결재 ② — feat 브랜치 cherry-pick 방식
+### 결재 ② 본진 (cherry-pick)
 
-A안 (추천): commit 단위 cherry-pick (`git cherry-pick 7a834d6 bf4262c`)
-B안: 파일 단위 복사 (브랜치 박지 X 박을 자리)
+```bash
+git checkout -b feat/design-v2-dday main
+git cherry-pick 7a834d6   # Phase A 알림 시스템 (js/notifications.js + DB 마이그레이션)
+git cherry-pick bf4262c   # Phase B 검색 페이지 (pages/search.html)
+```
 
-### 결재 ③ — DB 마이그레이션 박을 자리
+### 결재 ③ 본진 (DB 마이그레이션)
 
-A안 (추천): D-day 새벽 Chrome AI 의뢰서 박음 (notifications + newsletters 460건 INSERT)
-B안: D-day 작업 전 별도 세션 박음
+D-day 새벽 6:00~7:00 박을 자리:
+- notifications 테이블 + RLS 4 + 트리거 = `docs/migrations/2026-05-21_notifications_setup.sql`
+- newsletters 460건 INSERT = `work folder/pdf_newsletter/csv/newsletters_insert.sql` (14.66 MB chunk 10개)
+- search_newsletters_grouped RPC = `work folder/pdf_newsletter/migrations/02_search_rpc.sql`
 
-### 결재 ④ — Netlify staging 사용
+⚠️ **사전 점검:** work folder/ 박혀 있는 PC = D-day 진입 자리. 집 PC 박을 자리 (본 세션 2026-05-21 집 PC 확인 박힘).
 
-A안 (추천): Netlify deploy preview 박은 자리 검증 후 main merge
-B안: 로컬 검증 후 바로 라이브 전환
+### 결재 ④ 본진 (Netlify)
 
-### 결재 ⑤ — 회귀 발견 시 대응
+```bash
+git push origin feat/design-v2-dday
+# GitHub에서 PR 박음
+# → Netlify 자동 deploy preview URL 박힘 (예: https://deploy-preview-N--onesecond.netlify.app)
+# → Chrome AI 박은 자리 검증
+# → 본진 정합 시 main merge
+```
 
-A안 (추천): 핫픽스 (작은 자리) / rollback (큰 자리)
-B안: 통째 rollback + 화요일 재진입
+⚠️ **사전 점검:** 본 저장소 Netlify 박혀 있는지 + deploy preview 박혀 있는지 D-day 박기 전 확인 박을 자리.
+
+### 결재 ⑤ 본진 (회귀 대응)
+
+| 회귀 본진 | 대응 |
+|---|---|
+| 작은 자리 (1~2 파일 격차) | 즉시 `git commit -m "fix: ..."` → push → 라이브 박힘 |
+| 큰 자리 (3+ 파일 / 기능 본진 박지 X) | `git revert <commit>` → 이전 자리 복원 → 화요일 재진입 |
+| critical (라이브 진입 박지 X) | 즉시 rollback + Chrome AI 진단 + 별도 본진 박음 |
 
 ---
 
