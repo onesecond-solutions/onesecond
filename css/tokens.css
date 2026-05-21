@@ -1,316 +1,576 @@
 /**
- * css/tokens.css — 원세컨드 디자인 토큰 v2
+ * css/tokens.css
+ * 원세컨드 디자인 토큰 — CSS 변수 전역 선언
  *
- * 디자인 시스템: 인디고 강조 + 무채색 골격 + 다크/라이트 양쪽 동등
+ * ▸ 모든 파일은 이 변수만 참조. 하드코딩 색상·radius·폰트 금지
+ * ▸ 변수 변경 시 전체 자동 반영
+ * ▸ 실제 스타일 규칙 작성 금지 (변수 선언 전용)
  *
- * ▸ 모든 파일은 본 변수만 참조. 하드코딩 색상/radius/폰트 금지
- * ▸ 별칭 사용 금지 (--color-brand 같은 중간 변수 없음)
- * ▸ 다크 = 기본, 라이트 = data-theme="light" 시 적용
- * ▸ 적용: app.html / pages/*.html / index.html / login.html / home_v2.html
- *
- * Pretendard 단독 (CDN 자동 로드):
- *   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
- *
- * 참조: upgrade_20260521/04_tokens_v2_spec.md, navi_new.html
+ * 적용 대상: app.html / pages/*.html / index.html / login.html
  */
 
-/* ─────────────────────────────────────────────────────────────────────
-   다크 모드 (기본)
-   data-theme 미지정 시에도 다크 적용
-───────────────────────────────────────────────────────────────────── */
-:root,
-:root[data-theme="dark"] {
+/* ── Google Fonts 로드 ──────────────────────────────────────────────────────
+   app.html <head>에서 아래 순서로 로드:
+   1. DM Sans     (영문 본문)
+   2. JetBrains Mono (코드·수치)
+   3. Pretendard  (한글 본문)
 
-  /* ── 표면 (60-30-10) ─────────────────────────────────────────────── */
-  --bg:        #0B0C0E;   /* 배경 60% — 거의-검정, 순검정 금지 */
-  --s1:        #141518;   /* 표면1 카드 30% */
-  --s2:        #1C1D21;   /* 표면2 강조 패널 */
-  --sh:        #222328;   /* hover */
-  --bd:        #26272B;   /* 테두리 (선이 꼭 필요할 때만) */
+   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+   <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+────────────────────────────────────────────────────────────────────────────── */
 
-  /* ── 텍스트 ──────────────────────────────────────────────────────── */
-  --tp:        #F4F4F5;   /* 주 — 순백 금지, 살짝 그레이 */
-  --ts:        #A1A1AA;   /* 보조 — 설명·라벨 */
-  --tf:        #6B6D72;   /* 흐림 — 비활성·힌트 */
-  --bodytx:    #D4D4D8;   /* 본문 */
-
-  /* ── 강조 (인디고 10%) ───────────────────────────────────────────── */
-  --ac:        #6366F1;   /* 강조 = 인디고 */
-  --ach:       #7C7FF2;   /* 강조 hover */
-
-  /* ── 카테고리 (게시판 border-left) ───────────────────────────────── */
-  --t-uw:      #22D3EE;   /* 인수 = cyan */
-  --t-product: #6366F1;   /* 상품 = 인디고 */
-  --t-event:   #E879F9;   /* 이벤트/기타 = magenta */
-  --t-notice:  #F59E0B;   /* 공지사항 = amber */
-
-  /* ── 상태 ────────────────────────────────────────────────────────── */
-  --ok:        #22C55E;   /* 성공 */
-  --warn:      #F59E0B;   /* 경고 */
-  --err:       #EF4444;   /* 오류 */
-  --info:      #6366F1;   /* 정보 = 강조 통일 */
-
-  /* ── 그림자 ──────────────────────────────────────────────────────── */
-  --sh-sm:     0 1px 2px rgba(0, 0, 0, 0.4);
-  --sh-md:     0 4px 12px rgba(0, 0, 0, 0.3);
-  --sh-lg:     0 10px 30px rgba(0, 0, 0, 0.3);
-  --sh-fab:    0 8px 24px rgba(99, 102, 241, 0.4);  /* FAB 인디고 */
-
-  /* ── 오버레이 ────────────────────────────────────────────────────── */
-  --overlay:       rgba(8, 9, 11, 0.7);     /* 모달 dim */
-  --overlay-dark:  rgba(8, 9, 11, 0.92);    /* 라이트박스 dim */
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   라이트 모드 (사용자 선택)
-───────────────────────────────────────────────────────────────────── */
-:root[data-theme="light"] {
-
-  --bg:        #FBFBFC;   /* 순백 아닌 미세 쿨화이트 */
-  --s1:        #FFFFFF;
-  --s2:        #F4F4F6;
-  --sh:        #EEEEF1;
-  --bd:        #E4E4E7;
-
-  --tp:        #18181B;   /* 거의-검정 */
-  --ts:        #52525B;
-  --tf:        #A1A1AA;
-  --bodytx:    #3F3F46;
-
-  --ac:        #6366F1;   /* 인디고 동일 */
-  --ach:       #7C7FF2;
-
-  --t-uw:      #0891B2;   /* 짙은 cyan */
-  --t-product: #6366F1;
-  --t-event:   #C026D3;   /* 짙은 magenta */
-  --t-notice:  #D97706;   /* 짙은 amber */
-
-  --ok:        #16A34A;
-  --warn:      #D97706;
-  --err:       #DC2626;
-  --info:      #6366F1;
-
-  --sh-sm:     0 1px 2px rgba(0, 0, 0, 0.05);
-  --sh-md:     0 4px 12px rgba(0, 0, 0, 0.08);
-  --sh-lg:     0 10px 30px rgba(0, 0, 0, 0.12);
-  --sh-fab:    0 8px 24px rgba(99, 102, 241, 0.25);
-
-  --overlay:       rgba(255, 255, 255, 0.7);
-  --overlay-dark:  rgba(0, 0, 0, 0.5);
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   타이포그래피 (다크·라이트 공통)
-───────────────────────────────────────────────────────────────────── */
 :root {
 
-  /* ── 서체 ────────────────────────────────────────────────────────── */
-  --ff:        'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --ff-mono:   'JetBrains Mono', 'D2 Coding', monospace;
+  /* ── 색상 ─────────────────────────────────────────────────────────────── */
 
-  /* ── 크기 (16px 기준 1.25 계단) ─────────────────────────────────── */
-  --fs-display: 1.75rem;    /* 28px — 페이지 대표 타이틀 (드물게) */
-  --fs-h1:      1.375rem;   /* 22px — 페이지 제목 */
-  --fs-h2:      1.125rem;   /* 18px — 섹션 헤더 */
-  --fs-body:    1rem;       /* 16px — 본문 기준 */
-  --fs-sm:      0.875rem;   /* 14px — 카드 설명·보조 */
-  --fs-label:   0.8125rem;  /* 13px — 라벨·메타 */
-  --fs-caption: 0.6875rem;  /* 11px — 뱃지·태그 */
+  /* 브랜드 */
+  --color-brand:        #A0522D;  /* 주색 — 사이드바·헤더·버튼 기준색 (웜 테라코타 브라운) */
+  --color-brand-light:  #C4733A;  /* 주색 hover / 강조 배경 */
+  --color-accent:       #D4845A;  /* 강조 — 탭 언더라인·뱃지·아이콘 포인트 */
 
-  /* ── 무게 ────────────────────────────────────────────────────────── */
-  --fw-normal:    400;
-  --fw-semibold:  600;   /* 강조 */
-  --fw-bold:      700;   /* 제목 */
-  --fw-black:     800;   /* 디스플레이 */
+  /* 배경 — 2026-04-27 shell v1: 시안 design_test/board/v1-full.html 기반 뉴트럴 팔레트 */
+  --color-bg:           #FFFFFF;  /* 전체 앱 배경 — 시안 v1 순백 */
+  --color-surface:      #FFFFFF;  /* 카드·패널·모달 표면 */
+  --color-surface-2:    #F6F7F9;  /* 2단계 배경 — 시안 v1 라이트 그레이 */
 
-  /* ── 줄높이·자간 ────────────────────────────────────────────────── */
-  --lh-body:    1.6;     /* 본문 (한글은 넉넉히) */
-  --lh-heading: 1.3;     /* 제목 */
-  --lh-tight:   1.2;     /* 캡션 */
-  --ls-heading: -0.01em; /* 제목만 살짝 좁게 */
+  /* 구분선 */
+  --color-border:       #E5E7EB;  /* 구분선·테두리 — 시안 v1 뉴트럴 그레이 */
+
+  /* 텍스트 */
+  --color-text-primary:   #1F2937;  /* 주요 텍스트 — 시안 v1 다크 그레이 */
+  --color-text-secondary: #6B7280;  /* 보조 텍스트 — 시안 v1 미디엄 그레이 */
+  --color-text-tertiary:  #9CA3AF;  /* 비활성·힌트·플레이스홀더 — 시안 v1 라이트 그레이 */
+
+  /* 헤더 그라데이션 (사용 시 background에 직접 기재) */
+  --gradient-header: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
+
+  /* 상태 색상 — 2026-04-27 토큰 정합: 어두운 톤 → Tailwind 밝은 톤 (시안 admin/home/index 일치) */
+  --color-success:      #10B981;  /* 성공·가능 */
+  --color-danger:       #EF4444;  /* 오류·불가 */
+  --color-warning:      #F59E0B;  /* 경고·조건부 */
+  --color-info:         #3B82F6;  /* 정보·스크립트 뱃지 */
+
+  /* 오버레이 */
+  --color-overlay:      rgba(26, 16, 8, 0.72);   /* 모달 배경 딤 */
+  --color-overlay-dark: rgba(26, 16, 8, 0.85);   /* 강조 딤 */
+
+  /* 사이드바 전용 */
+  --color-sidebar-bg:     #A0522D;  /* B영역 배경 기준 (그라데이션 시작점) */
+  --color-sidebar-text:   rgba(255, 255, 255, 0.85);
+  --color-sidebar-active: rgba(255, 255, 255, 0.18);
+  --color-sidebar-hover:  rgba(255, 255, 255, 0.10);
+
+
+  /* ── 폰트 ─────────────────────────────────────────────────────────────── */
+
+  --font-sans: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* 폰트 사이즈 (em 단위 — px 고정 금지)
+     기준: content-area font-size = 19px (중)
+     소 = 18px / 중 = 19px / 대 = 20px */
+  --text-tab:   0.895em;  /* 탭버튼 (≈17px) */
+  --text-body:  0.842em;  /* 본문    (≈16px) */
+  --text-label: 0.790em;  /* 라벨    (≈15px) */
+  --text-xs:    0.684em;  /* 매우 작음 (≈13px) */
+  --text-title: 1.263em;  /* 페이지 타이틀 (≈24px) */
+  --text-h2:    1.000em;  /* 섹션 헤더 (=19px) */
+
+  /* 폰트 굵기 */
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-black:    900;
+
+
+  /* ── Border-radius ────────────────────────────────────────────────────── */
+
+  --radius-xs:   6px;     /* 뱃지·태그·작은 칩 */
+  --radius-sm:   8px;     /* 버튼·입력창·작은 카드 */
+  --radius-md:   12px;    /* 카드·패널·드롭다운 */
+  --radius-lg:   16px;    /* 모달·시트·큰 카드 */
+  --radius-xl:   20px;    /* 사이드바·전체 컨테이너 */
+  --radius-full: 9999px;  /* 알림·토글·완전 원형 */
+
+
+  /* ── 간격 (spacing) ───────────────────────────────────────────────────── */
+
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+
+
+  /* ── 레이아웃 ─────────────────────────────────────────────────────────── */
+
+  --sidebar-width:   180px;   /* B영역 폭 — 2026-04-27 shell v1: 220→180 (시안) */
+  --rightbar-width:  220px;   /* C영역 폭 */
+  --header-a1:       64px;    /* A1 높이 — 2026-04-27 shell v1: 80→64 (시안 슬림) */
+  --header-a2:       70px;    /* A2 높이 (영역 제거됨, 변수 미사용) */
+
+
+  /* ── 그림자 ───────────────────────────────────────────────────────────── */
+
+  /* 2026-04-27 토큰 정합: 브라운 톤 → 차콜 톤 (시안 8개 일치). --shadow-xl은 보존 */
+  --shadow-sm:  0 2px 6px rgba(17, 24, 39, 0.06);
+  --shadow-md:  0 4px 14px rgba(17, 24, 39, 0.08);
+  --shadow-lg:  0 8px 28px rgba(17, 24, 39, 0.12);
+  --shadow-xl:  0 24px 60px rgba(0, 0, 0, 0.28);
+
+
+  /* ── 전환 효과 ────────────────────────────────────────────────────────── */
+
+  --transition-fast:   0.12s ease;
+  --transition-normal: 0.18s ease;
+  --transition-slow:   0.28s ease;
+
+
+  /* ── 폰트 스케일 (app.html font-ctrl이 주입) ─────────────────────────── */
+  /* content-area의 실제 font-size는 js/app.html이 직접 px로 주입
+     이 변수는 pages/*.html 독립 로드 시 fallback용 */
+  --page-scale: 1;
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     2026-04-27 토큰 정합 — 9 시안 :root 통합 (PR feat/tokens-consolidation)
+     기존 토큰은 절대 보존. 아래는 신규 추가만.
+     기준 문서: docs/sessions/2026-04-27_gap_analysis.md
+  ═══════════════════════════════════════════════════════════════════ */
+
+  /* ── Neutral 스케일 (10단계) ─────────────────────────────────────── */
+  --neutral-50:  #FAFBFC;
+  --neutral-100: #F4F5F7;
+  --neutral-200: #E5E7EB;
+  --neutral-300: #D1D5DB;
+  --neutral-400: #9CA3AF;
+  --neutral-500: #6B7280;
+  --neutral-600: #4B5563;
+  --neutral-700: #374151;
+  --neutral-800: #1F2937;
+  --neutral-900: #111827;
+
+  /* ── Brand 스케일 (10단계) — 기존 --color-brand/-light는 별칭 보존 ── */
+  --brand-50:  #FDF4EF;
+  --brand-100: #F9E3D2;
+  --brand-200: #F0C19A;
+  --brand-300: #DE9B66;
+  --brand-400: #C4733A;  /* = --color-brand-light */
+  --brand-500: #A0522D;  /* = --color-brand */
+  --brand-600: #824220;
+  --brand-700: #66331A;
+  --brand-800: #4A2610;
+  --brand-900: #2E1808;
+
+  /* ── Accent 스케일 (7단계) — 기존 --color-accent는 별칭 보존 ── */
+  --accent-50:  #FEF3EA;
+  --accent-100: #FCDFC7;
+  --accent-200: #F8B583;
+  --accent-300: #EA9664;
+  --accent-400: #D4845A;  /* = --color-accent */
+  --accent-500: #B46940;
+  --accent-600: #945130;
+
+  /* ── Surface / Border / Text 보조 ───────────────────────────────── */
+  --color-surface-3:        #F5F5F2;
+  --color-border-strong:    #D1D5DB;  /* = --neutral-300 */
+  --color-text-placeholder: #9CA3AF;  /* = --color-text-tertiary */
+  --color-text-inverse:     #FFFFFF;
+
+  /* ── 상태 배경 (status-bg 4종) ──────────────────────────────────── */
+  --color-success-bg: #ECFDF5;
+  --color-danger-bg:  #FEF2F2;
+  --color-warning-bg: #FFFBEB;
+  --color-info-bg:    #EFF6FF;
+
+  /* ── Gradient 프리셋 (mesh는 home/index 페이지 스코프로 처리) ──────── */
+  --gradient-brand:      linear-gradient(135deg, var(--brand-500) 0%, var(--accent-400) 100%);
+  --gradient-brand-soft: linear-gradient(135deg, var(--brand-50) 0%, var(--accent-50) 100%);
+  --gradient-sunset:     linear-gradient(135deg, #F8B583 0%, #D4845A 50%, #A0522D 100%);
+  --gradient-fade-b:     linear-gradient(180deg, transparent 0%, var(--brand-50) 100%);
+
+  /* ── Elevation 차콜 (5단계) ─────────────────────────────────────── */
+  --elevation-1: 0 1px 2px rgba(17, 24, 39, 0.04), 0 1px 3px rgba(17, 24, 39, 0.05);
+  --elevation-2: 0 4px 6px -1px rgba(17, 24, 39, 0.06), 0 2px 4px -2px rgba(17, 24, 39, 0.04);
+  --elevation-3: 0 10px 15px -3px rgba(17, 24, 39, 0.08), 0 4px 6px -4px rgba(17, 24, 39, 0.04);
+  --elevation-4: 0 20px 25px -5px rgba(17, 24, 39, 0.10), 0 8px 10px -6px rgba(17, 24, 39, 0.04);
+  --elevation-5: 0 25px 50px -12px rgba(17, 24, 39, 0.18);
+
+  /* ── Elevation Warm + Glow (hero·active 요소 강조용) ──────────────── */
+  --elevation-warm-2: 0 4px 14px -4px rgba(160, 82, 45, 0.14), 0 2px 6px -2px rgba(160, 82, 45, 0.08);
+  --elevation-warm-3: 0 12px 24px -6px rgba(160, 82, 45, 0.18), 0 4px 10px -4px rgba(160, 82, 45, 0.10);
+  --elevation-warm-4: 0 24px 40px -8px rgba(160, 82, 45, 0.22), 0 8px 16px -6px rgba(160, 82, 45, 0.12);
+  --elevation-glow:   0 0 0 4px rgba(212, 132, 90, 0.12), 0 8px 22px -6px rgba(212, 132, 90, 0.28);
+
+  /* ── Ring (포커스·활성) ─────────────────────────────────────────── */
+  --ring-brand:  0 0 0 4px rgba(160, 82, 45, 0.14);
+  --ring-accent: 0 0 0 4px rgba(212, 132, 90, 0.18);
+
+  /* ── Shadow 특수 (admin Make.com 사이드바 전용) ──────────────────── */
+  --shadow-rail: 4px 0 16px rgba(26, 26, 26, 0.06);
+  --shadow-menu: 6px 0 16px rgba(26, 26, 26, 0.04);
+
+  /* ── Leading (line-height, 6단계) ──────────────────────────────── */
+  --leading-none:    1;
+  --leading-tight:   1.15;
+  --leading-snug:    1.3;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.7;
+  --leading-loose:   2;
+
+  /* ── Tracking (letter-spacing, 6단계) ──────────────────────────── */
+  --tracking-tightest: -0.06em;
+  --tracking-tight:    -0.025em;
+  --tracking-normal:    0;
+  --tracking-wide:      0.025em;
+  --tracking-wider:     0.05em;
+  --tracking-widest:    0.1em;
+
+  /* ── Ease (cubic-bezier 4종 — 기존 --transition-*과 공존) ────────── */
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* ── Duration (4단계 — 기존 --transition-*과 별개) ───────────────── */
+  --duration-fast:   120ms;
+  --duration-normal: 240ms;
+  --duration-slow:   400ms;
+  --duration-slower: 600ms;
+
+  /* ── Space 확장 (소수 단위 + 7~40) — 기존 --space-1~10 보존 ───────── */
+  --space-0-5:  2px;
+  --space-1-5:  6px;
+  --space-2-5: 10px;
+  --space-3-5: 14px;
+  --space-7:   28px;
+  --space-9:   36px;
+  --space-12:  48px;
+  --space-14:  56px;
+  --space-16:  64px;
+  --space-20:  80px;
+  --space-24:  96px;
+  --space-32: 128px;
+  --space-40: 160px;
+
+  /* ── Page Layout 간격 토큰 (2026-04-30 신설 — myspace 기준값으로 추출, 페이지별 :root에서 재정의 가능) */
+  --pg-header-bottom:  var(--space-4);  /* pg-header-block → 다음 블록 사이 (16px) */
+  --pg-tab-bottom:     var(--space-4);  /* pg-tab-block → 콘텐츠 블록 사이 (16px) */
+  --pg-content-gap:    var(--space-4);  /* 안내 박스 → 리스트/그리드 사이 (16px) */
+  --pg-item-gap:       var(--space-4);  /* 그리드 아이템 / 리스트 행 간격 (16px) */
+  --pg-side-padding:   6px;             /* D 영역 .pg-outer 좌우 padding */
+
+  /* ── Radius 확장 (기존 --radius-xs/sm/md/lg/xl/full 보존) ──────────── */
+  --radius:     8px;     /* 시안 default — 본체 --radius-sm과 동일 값, 시안 호환 별칭 */
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+
+  /* ── Z-index ───────────────────────────────────────────────────── */
+  --z-dropdown: 10;
+  --z-sticky:   20;
+  --z-overlay:  30;
+  --z-tooltip:  70;
+
+  /* ── Layout 확장 ───────────────────────────────────────────────── */
+  --nav-h:    72px;             /* index v1 랜딩 — 프리미엄 네비 높이 */
+  --header-h: var(--header-a1); /* 시안 v2 chrome 호환 별칭 (= 64px) */
+
+  /* ══════════════════════════════════════════════════════════════════
+     Admin Dark Theme (2026-04-30 풀 스케일 admin v2 — Phase B-2 정착)
+     - admin_v2.html 전용 스코프. 다른 페이지는 이 토큰을 참조하지 않음.
+     - 4종 톤 토글은 body[data-admin-tone="warm|slate|navy"]로 override.
+       (black은 :root 기본값이므로 별도 절 불필요)
+     - 기본값: (다) 블랙·그레이 — Phase B 라이브 비교 후 팀장님 확정 (2026-04-30).
+     - 4종 토글은 영구 운영 기능 (외부 시연 컨텍스트별 톤 전환 자유도).
+     ════════════════════════════════════════════════════════════════ */
+  --admin-bg:              #0A0A0A;
+  --admin-surface:         #1A1A1A;
+  --admin-surface-2:       #141414;
+  --admin-surface-elev:    #1F1F1F;
+
+  --admin-text-primary:    #F5F5F7;
+  --admin-text-secondary:  #A1A1AA;
+  --admin-text-tertiary:   #71717A;
+  --admin-text-pending:    #8C8C95;  /* B영역 pending 메뉴 전용 — primary 대비 30~40% 명도 차이, opacity 미사용 */
+  --admin-text-label:      #98989F;  /* B영역 그룹 라벨 전용 — menu-bg #1A1A1A 대비 ~6:1 (AA+) */
+
+  --admin-border:          #2E2E2E;
+  --admin-border-strong:   #404040;
+
+  --admin-rail-bg:         linear-gradient(180deg, var(--brand-700) 0%, var(--brand-500) 100%);
+  --admin-menu-bg:         var(--admin-surface);
+
+  --admin-info-bg:         rgba(59, 130, 246, 0.18);
+  --admin-success-bg:      rgba(16, 185, 129, 0.18);
+  --admin-warning-bg:      rgba(245, 158, 11, 0.18);
+  --admin-danger-bg:       rgba(239, 68, 68, 0.18);
+
+  /* 뱃지 텍스트 — 다크 4종 기준 밝은 색 (Tailwind 300) — light에서 override */
+  --admin-info-text:       #93C5FD;
+  --admin-success-text:    #6EE7B7;
+  --admin-warning-text:    #FCD34D;
+  --admin-danger-text:     #FCA5A5;
+
+  --admin-shadow-rail:     4px 0 20px rgba(0, 0, 0, 0.45);
+  --admin-shadow-menu:     6px 0 16px rgba(0, 0, 0, 0.32);
+  --admin-shadow-panel:    0 4px 14px rgba(0, 0, 0, 0.35);
+  --admin-shadow-elev:     0 12px 32px rgba(0, 0, 0, 0.50);
+
+  /* 차트 grid line — D-5 별 트랙 B-1 (2026-05-05) */
+  /* 다크 4종(warm/slate/black/navy) 기본값 상속, light는 분기에서 override */
+  --admin-chart-grid:      rgba(255, 255, 255, 0.10);
+
+  /* D-9 settings 섹션 신규 토큰 5종 (2026-05-05 Q-5 (a) 채택) */
+  /* 다크 4종 black 기본 + warm/slate/navy 분기에서 override */
+  --admin-set-bg:          #161616;                                                       /* set-row 배경 */
+  --admin-set-border:      var(--admin-border);                                           /* set-row 테두리 */
+  --admin-frame-bg:        var(--admin-surface);                                          /* 미리보기 프레임 배경 */
+  --admin-pv-tag-bg:       rgba(245, 158, 11, 0.20);                                      /* 실시간 태그 배경 (warning 강화) */
+  --admin-bn-banner-bg:    linear-gradient(135deg, var(--brand-700), var(--brand-500));   /* 배너 fallback (rail 정합 brown) */
+
 }
 
-/* ─────────────────────────────────────────────────────────────────────
-   폰트 컨트롤러 (4단계, 본문 영역만)
-   사용자 메뉴 토글 → JS가 :root에 data-fontsize 속성 적용
-───────────────────────────────────────────────────────────────────── */
-:root                     { --fscale: 1; }
-:root[data-fontsize="90"]  { --fscale: 0.9; }
-:root[data-fontsize="100"] { --fscale: 1; }
-:root[data-fontsize="110"] { --fscale: 1.1; }
-:root[data-fontsize="125"] { --fscale: 1.25; }
+/* ══════════════════════════════════════════════════════════════════════════
+   Admin Tone — 라이트 (5번째 영구 토글, 2026-04-30 Phase B-2 보완)
+   - 설계 원칙: 눈 편의·가독성 우선 (미관 < 시력 부담 ↓)
+   - 콘트라스트 명확 (살짝 부드러운 화이트 #FCFCFC + 거의 검정 #0A0A0A)
+   - 그림자 약하게 (시야 분산 ↓)
+   - rail 브라운 그라데이션은 모든 톤 공통 (--admin-rail-bg 무변경)
+   ════════════════════════════════════════════════════════════════════════ */
+body[data-admin-tone="light"] {
+  --admin-bg:           #FCFCFC;     /* 살짝 부드러운 화이트, 순백 자극 완화 */
+  --admin-surface:      #FFFFFF;
+  --admin-surface-2:    #F5F5F5;
+  --admin-surface-elev: #FFFFFF;
 
-/* ─────────────────────────────────────────────────────────────────────
-   둥근 모서리 (다크·라이트 공통)
-───────────────────────────────────────────────────────────────────── */
-:root {
-  --r-sm:      5px;      /* 작은 칩·뱃지 */
-  --r-md:      9px;      /* 버튼·input */
-  --r-lg:      12px;     /* 카드·패널 */
-  --r-xl:      16px;     /* 모달 */
-  --r-pill:    999px;    /* pill 버튼 */
+  --admin-text-primary:   #0A0A0A;   /* 거의 검정 — 가독성 최대 */
+  --admin-text-secondary: #404040;
+  --admin-text-tertiary:  #737373;
+  --admin-text-pending:   #6B6B6B;   /* light bg #FCFCFC 대비 ~5.2:1 (AA 통과) */
+  --admin-text-label:     #5A5A5A;   /* B영역 그룹 라벨 전용 — bg #FFFFFF 대비 ~7:1 (AAA) */
+
+  --admin-border:        #E5E5E5;
+  --admin-border-strong: #D4D4D4;
+
+  /* light 명시 menu-bg — :root의 var(--admin-surface) lazy eval 안전망 */
+  --admin-menu-bg:      #FFFFFF;
+
+  /* light 상태 배경 — Tailwind 100 톤 (rgba 18% 옅어서 light bg 위 무대비 회피) */
+  --admin-info-bg:      #DBEAFE;
+  --admin-success-bg:   #D1FAE5;
+  --admin-warning-bg:   #FEF3C7;
+  --admin-danger-bg:    #FEE2E2;
+
+  /* light 뱃지 텍스트 — Tailwind 700~800 진한 톤 (각각 5:1+ AA 통과) */
+  --admin-info-text:    #1D4ED8;
+  --admin-success-text: #047857;
+  --admin-warning-text: #92400E;
+  --admin-danger-text:  #B91C1C;
+
+  --admin-shadow-rail:  4px 0 12px rgba(0, 0, 0, 0.04);
+  --admin-shadow-menu:  6px 0 12px rgba(0, 0, 0, 0.04);
+  --admin-shadow-panel: 0 2px 8px  rgba(0, 0, 0, 0.06);
+  --admin-shadow-elev:  0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* 차트 grid line — D-5 별 트랙 B-1 light 분기 (2026-05-05) */
+  /* light bg #FCFCFC 위 가시성 — 다크 rgba 흰색은 무대비, 검정 8% 톤 */
+  --admin-chart-grid:   rgba(0, 0, 0, 0.08);
+
+  /* D-9 settings 섹션 신규 토큰 5종 — light override (Q-5 (a)) */
+  --admin-set-bg:       #F8F8F8;                                                       /* light bg #FCFCFC 대비 살짝 그레이 */
+  --admin-set-border:   var(--admin-border);                                           /* light: #E5E5E5 */
+  --admin-frame-bg:     #FFFFFF;                                                       /* 미리보기 프레임 — 순백 */
+  --admin-pv-tag-bg:    #FEF3C7;                                                       /* light warning bg 정합 */
+  --admin-bn-banner-bg: linear-gradient(135deg, var(--brand-600), var(--brand-400));   /* light brand 정합 */
 }
 
-/* ─────────────────────────────────────────────────────────────────────
-   간격 (8px 그리드)
-───────────────────────────────────────────────────────────────────── */
-:root {
-  --sp-1:      4px;
-  --sp-2:      8px;
-  --sp-3:      12px;
-  --sp-4:      16px;
-  --sp-5:      20px;
-  --sp-6:      24px;
-  --sp-7:      32px;
-  --sp-8:      40px;
-  --sp-9:      48px;
-  --sp-10:     64px;
+
+/* ── 글로벌 리셋 & 기본값 ────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* ─────────────────────────────────────────────────────────────────────
-   트랜지션 (다크·라이트 공통)
-───────────────────────────────────────────────────────────────────── */
-:root {
-  --tr-fast:   0.15s ease;
-  --tr-mid:    0.2s ease;
-  --tr-slow:   0.3s ease;
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   전역 본문 기본값 (선택사항 — body 직접 적용)
-───────────────────────────────────────────────────────────────────── */
-html {
-  font-size: calc(100% * var(--fscale, 1));
-}
-
-body {
-  font-family: var(--ff);
-  font-size: var(--fs-body);
-  font-weight: var(--fw-normal);
-  line-height: var(--lh-body);
-  color: var(--tp);
-  background: var(--bg);
+html, body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: 16px;           /* content-area 외부 기준 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─────────────────────────────────────────────────────────────────────
-   스크롤바 (Webkit)
-───────────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+
+/* ── 공통 유틸리티 ───────────────────────────────────────────────────────── */
+
+/* 뱃지 공통 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-label);
+  font-weight: var(--fw-bold);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  line-height: 1.6;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--bd);
-  border-radius: var(--r-sm);
+
+.badge-script       { background: #E8F4FD; color: var(--color-info); }
+.badge-post         { background: #E8FDE8; color: var(--color-success); }
+.badge-quick        { background: #FAEEDA; color: var(--color-warning); }
+.badge-disease      { background: #FDE8E8; color: var(--color-danger); }
+.badge-notice       { background: #FDE8E8; color: var(--color-danger); }
+.badge-product      { background: #E8F4FD; color: #1A5C7A; }
+.badge-underwriting { background: #E8FDE8; color: var(--color-success); }
+.badge-pro          { background: var(--color-accent); color: #fff; }
+
+/* 카드 공통 */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--ts);
+
+/* 페이지 헤더 공통 (각 pages/*.html 상단 배너) */
+.page-header {
+  background: var(--gradient-header);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-::-webkit-scrollbar-track {
+.page-header-title {
+  font-size: 1.5em;
+  font-weight: var(--fw-black);
+  color: #fff;
+}
+.page-header-sub {
+  font-size: var(--text-body);
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: var(--space-1);
+}
+.page-header-icon {
+  font-size: 2.8em;
+  opacity: 0.15;
+}
+
+/* 섹션 타이틀 공통 */
+.section-title {
+  font-size: var(--text-body);
+  font-weight: var(--fw-black);
+  color: var(--color-accent);
+  letter-spacing: 0.3px;
+  margin: var(--space-4) 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* 탭 언더라인 공통 */
+.tab-underline {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+.tab-underline-btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-tab);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
   background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  margin-bottom: -1px;
+}
+.tab-underline-btn:hover { color: var(--color-brand); }
+.tab-underline-btn.active {
+  color: var(--color-brand);
+  border-bottom-color: var(--color-accent);
+  font-weight: var(--fw-bold);
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   하위 호환 별칭 (옛 변수 → 새 변수 매핑)
-   ─────────────────────────────────────────────────────────────────────
-   기존 페이지 2,000곳+ 변수 참조 호환을 위해 추가.
-   각 페이지를 새 변수로 마이그레이션 완료 후 본 섹션 통째 제거 예정.
-   다크/라이트 양쪽 자동 적용 (var() 참조이므로).
-   ═════════════════════════════════════════════════════════════════════ */
-:root,
-:root[data-theme="dark"],
-:root[data-theme="light"] {
+/* 버튼 공통 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--text-body);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--color-brand);
+  color: #fff;
+  border-color: var(--color-brand);
+}
+.btn-primary:hover { background: var(--color-brand-light); border-color: var(--color-brand-light); }
 
-  /* ── 색상 ────────────────────────────────────────────────────────── */
-  --color-brand:          var(--ac);
-  --color-brand-light:    var(--ach);
-  --color-accent:         var(--ac);
-  --color-accent-dark:    var(--ach);
-  --color-bg:             var(--bg);
-  --color-surface:        var(--s1);
-  --color-surface-2:      var(--s2);
-  --color-surface-3:      var(--sh);
-  --color-border:         var(--bd);
-  --color-text-primary:   var(--tp);
-  --color-text-secondary: var(--ts);
-  --color-text-tertiary:  var(--tf);
-  --color-danger:         var(--err);
-  --color-danger-bg:      rgba(239, 68, 68, 0.1);
-  --color-success:        var(--ok);
-  --color-warning:        var(--warn);
-  --color-info:           var(--info);
-  --color-overlay:        var(--overlay);
+.btn-secondary {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+.btn-secondary:hover { background: var(--color-border); }
 
-  /* ── 인디고 스케일 (옛 brand-50~700) ─────────────────────────────── */
-  --brand-50:   rgba(99, 102, 241, 0.05);
-  --brand-100:  rgba(99, 102, 241, 0.10);
-  --brand-200:  rgba(99, 102, 241, 0.20);
-  --brand-300:  rgba(99, 102, 241, 0.30);
-  --brand-400:  rgba(99, 102, 241, 0.40);
-  --brand-500:  var(--ac);
-  --brand-600:  var(--ach);
-  --brand-700:  #4F46E5;
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+.btn-ghost:hover { background: var(--color-surface-2); }
 
-  /* ── 브라운 잔존 (자동 인디고 전환) ──────────────────────────────── */
-  --brown-main: var(--ac);
-  --brown-dark: var(--ach);
-  --brown-pale: rgba(99, 102, 241, 0.10);
+/* 입력창 공통 */
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-body);
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(212, 132, 90, 0.14);
+}
+.input::placeholder { color: var(--color-text-tertiary); }
+.input:disabled {
+  background: var(--color-surface-2);
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
 
-  /* ── 중성 ────────────────────────────────────────────────────────── */
-  --neutral-100: var(--bg);
-  --neutral-200: var(--s2);
-  --neutral-600: var(--ts);
-  --neutral-700: var(--tp);
-  --neutral-800: var(--tp);
-
-  /* ── 폰트 ────────────────────────────────────────────────────────── */
-  --font-sans:  var(--ff);
-  --font-mono:  var(--ff-mono);
-  --text-body:  var(--fs-body);
-  --text-label: var(--fs-label);
-  --text-tab:   var(--fs-sm);
-  --text-xs:    var(--fs-caption);
-  --text:       var(--fs-body);
-
-  /* ── 그라데이션 (브라운 → 인디고) ─────────────────────────────────── */
-  --gradient-brand:  linear-gradient(135deg, var(--ac) 0%, var(--ach) 100%);
-  --gradient-header: linear-gradient(135deg, var(--ac) 0%, var(--ach) 100%);
-
-  /* ── 그림자 ──────────────────────────────────────────────────────── */
-  --shadow-sm: var(--sh-sm);
-  --shadow-md: var(--sh-md);
-  --shadow-lg: var(--sh-lg);
-  --shadow-xl: var(--sh-lg);
-
-  /* ── 둥근 모서리 ────────────────────────────────────────────────── */
-  --radius:      var(--r-md);
-  --radius-xs:   3px;
-  --radius-sm:   var(--r-sm);
-  --radius-md:   var(--r-md);
-  --radius-lg:   var(--r-lg);
-  --radius-xl:   var(--r-xl);
-  --radius-pill: var(--r-pill);
-  --radius-full: 999px;
-
-  /* ── 간격 ────────────────────────────────────────────────────────── */
-  --space-1:  var(--sp-1);
-  --space-2:  var(--sp-2);
-  --space-3:  var(--sp-3);
-  --space-4:  var(--sp-4);
-  --space-5:  var(--sp-5);
-  --space-6:  var(--sp-6);
-  --space-8:  var(--sp-7);
-  --space-10: var(--sp-9);
-
-  /* ── 트랜지션 ────────────────────────────────────────────────────── */
-  --transition-fast:   var(--tr-fast);
-  --transition-normal: var(--tr-mid);
-  --transition-slow:   var(--tr-slow);
-
-  /* ── 기타 ────────────────────────────────────────────────────────── */
-  --accent:      var(--ac);
-  --line:        var(--bd);
-  --ring-accent: 0 0 0 3px rgba(99, 102, 241, 0.2);
+/* 스핀·로딩 placeholder */
+.loading-placeholder {
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-body);
 }
