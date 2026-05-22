@@ -480,88 +480,30 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 <div class="askmodal" id="askmodal" onclick="if(event.target===this)closeAsk()">
   <div class="askbox">
     <div class="askhead">
-      <div class="asktitle" id="askTitle">지금 어떤 질문인가요?</div>
+      <div class="asktitle">새 글 쓰기</div>
       <button class="askx" onclick="closeAsk()">&#10005;</button>
     </div>
 
-    <!-- 0단계: 카테고리 선택 -->
-    <div class="askstep" id="step-pick">
-      <div class="catlist">
-        <div class="catcard" onclick="goForm('notice')"><div class="catbody"><div class="cathd">공지사항</div><div class="catdesc">팀에 전달할 운영·긴급·상품·인수·교육·일정 안내</div></div></div>
-        <div class="catcard" onclick="goForm('uw')"><div class="catbody"><div class="cathd">인수 같음</div><div class="catdesc">환자 상태·병력 기반 보험사 인수 가능 여부 질문</div></div></div>
-        <div class="catcard" onclick="goForm('product')"><div class="catbody"><div class="cathd">상품 같음</div><div class="catdesc">상품군·건강체·보장내용 등 상품 질문</div></div></div>
-        <div class="catcard" onclick="goForm('etc')"><div class="catbody"><div class="cathd">기타 잘 모르겠음</div><div class="catdesc">녹취·서류·전산·민원·고객응대 등 현장 운영 질문</div></div></div>
+    <!-- 단체방 글쓰기 폼 -->
+    <div class="askstep on" id="step-write">
+      <div class="frow">
+        <div class="fld"><label>카테고리 <span class="req">*</span></label><select id="tcCategory"><option value="공지">공지</option><option value="전달사항">전달사항</option><option value="팀 질문">팀 질문</option><option value="자료 공유">자료 공유</option></select></div>
+        <div class="fld"><label>공지 범위 <span class="req">*</span></label><select id="tcScope"><option selected>4팀 단체방</option><option>지점</option><option>전체</option></select></div>
       </div>
+      <div class="fld"><label>제목 <span class="req">*</span></label><input type="text" id="tcTitle" placeholder="제목을 입력하세요" maxlength="100"></div>
+      <div class="fld"><label>내용 <span class="req">*</span></label><textarea id="tcContent" placeholder="전달하고 싶은 내용을 작성해 주세요."></textarea></div>
     </div>
 
-    <!-- 공지사항 폼 -->
-    <div class="askstep" id="step-notice">
-      <div class="frow">
-        <div class="fld"><label>공지 유형 <span class="req">*</span></label><select><option>운영 공지</option><option>긴급 공지</option><option>상품 공지</option><option>인수 공지</option><option>교육 안내</option><option>이벤트/일정</option><option>기타</option></select></div>
-        <div class="fld"><label>공지 범위 <span class="req">*</span></label><select><option>팀 내부</option><option>지점</option><option selected>전체 네비게이션방</option><option>특정 보험사</option><option>운영진만</option></select><div class="fhint">기본값 = "전체 네비게이션방"</div></div>
-      </div>
-      <div class="fld"><label>공지 제목 <span class="req">*</span></label><input type="text" placeholder="공지 제목을 입력하세요"></div>
-      <div class="fld"><label>공지 내용 <span class="req">*</span></label><textarea placeholder="전달하고 싶은 내용을 작성해 주세요."></textarea></div>
-    </div>
-
-    <!-- 인수 질문 폼 -->
-    <div class="askstep" id="step-uw">
-      <div class="warnbar">&#9888; 개인정보(이름 / 전화번호 / 주민번호)는 입력하지 마세요.</div>
-      <div class="frow">
-        <div class="fld"><label>제목 <span class="opt">(선택, 비우면 자동 생성)</span></label><input type="text" placeholder="예: 60대 여성 갑상선 결절 인수 가능?"></div>
-        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
-      </div>
-      <div class="frow">
-        <div class="fld"><label>연령 <span class="req">*</span></label><input type="text" placeholder=""></div>
-        <div class="fld"><label>성별 <span class="req">*</span></label><select><option>선택</option><option>남</option><option>여</option></select></div>
-      </div>
-      <div class="fld"><label>직업</label><input type="text" placeholder="예: 사무직 / 운전직 / 농업"></div>
-      <div class="fld"><label>병력 <span class="req">*</span></label><input type="text" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨"></div>
-      <div class="frow">
-        <div class="fld"><label>진단시기</label><input type="text" placeholder="예: 2025년 3월"></div>
-        <div class="fld"><label>약복용 유무</label><select><option>선택</option><option>복용 중</option><option>복용 안 함</option><option>모름</option></select></div>
-      </div>
-      <div class="fld"><label>현재 상태</label><input type="text" placeholder="예: 추적관찰 중 / 수술 완료"></div>
-      <div class="fld"><label>기타 적고 싶은 내용</label><textarea placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
-    </div>
-
-    <!-- 상품 질문 폼 -->
-    <div class="askstep" id="step-product">
-      <div class="infobar">실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.</div>
-      <div class="frow">
-        <div class="fld"><label>상품군 <span class="req">*</span></label><select><option>선택</option><option>실손</option><option>암</option><option>2대·3대</option><option>간병</option><option>치매</option><option>운전자</option><option>치아</option><option>종신</option><option>정기</option><option>화재</option><option>기타</option></select></div>
-        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
-      </div>
-      <div class="frow">
-        <div class="fld"><label>건강체</label><select><option>선택</option><option>초강제형(10년고지형)</option><option>초경증(10년고지형)</option><option>기타</option></select></div>
-        <div class="fld"><label>확인하고 싶은 내용</label><select><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
-      </div>
-      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
-      <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
-    </div>
-
-    <!-- 기타 질문 폼 -->
-    <div class="askstep" id="step-etc">
-      <div class="infobar">실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.</div>
-      <div class="frow">
-        <div class="fld"><label>질문 유형 <span class="req">*</span></label><select><option>선택</option><option>녹취</option><option>서류</option><option>전산</option><option>청약</option><option>계약변경</option><option>민원</option><option>고객응대</option><option>지급/보상</option><option>기타</option></select></div>
-        <div class="fld"><label>확인하고 싶은 범위 <span class="req">*</span></label><select><option>팀 내부</option><option>지점</option><option selected>전체 네비게이션방</option><option>특정 보험사</option><option>운영진만</option></select><div class="fhint">기본값 = "전체 네비게이션방"</div></div>
-      </div>
-      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 청약 중 전산 오류 발생 어떻게 처리?"></div>
-      <div class="fld"><label>누가 답해주길 원하세요? <span class="opt">(선택)</span></label><input type="text" placeholder="예: 운영진 / 관리자 / 현장 설계사 / 팀장"></div>
-      <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 상황인지 편하게 작성해 주세요."></textarea></div>
-    </div>
-
-    <!-- 첨부 (폼 공통) -->
-    <div class="askfile" id="askFile">
+    <!-- 첨부 -->
+    <div class="askfile on" id="askFile">
       <div class="afhd">첨부파일 <span class="opt">(선택 · 최대 10개 · 파일당 10MB)</span></div>
       <div class="afdrop"><div><div class="afmain">파일 첨부하기</div><div class="aftypes">JPG · PNG · GIF · PDF · XLS · XLSX · DOC · DOCX · HWP · MP4 · MOV · WEBM · MP3 · WAV</div></div></div>
     </div>
 
-    <!-- 푸터 (폼에서만) -->
-    <div class="askfoot" id="askFoot">
-      <button class="askback" onclick="backToPick()">&#8592; 카테고리 다시 선택</button>
-      <button class="asksubmit" onclick="submitAsk()">등록하기</button>
+    <!-- 푸터 -->
+    <div class="askfoot on" id="askFoot">
+      <button class="askback" onclick="closeAsk()">취소</button>
+      <button class="asksubmit" onclick="submitTeamPost()">등록하기</button>
     </div>
   </div>
 </div>
@@ -795,7 +737,16 @@ document.addEventListener('keydown',function(e){
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('sl').classList.toggle('on',t==='light');document.getElementById('sd').classList.toggle('on',t==='dark');}
 // 질문하기 모달
 var askForms={notice:{t:'공지사항 작성'},uw:{t:'인수 질문 작성'},product:{t:'상품 질문 작성'},etc:{t:'기타 질문 작성'}};
-function openAsk(){document.getElementById('askmodal').classList.add('open');backToPick();}
+function openAsk(){document.getElementById('askmodal').classList.add('open');var t=document.getElementById('tcTitle');if(t)t.value='';var c=document.getElementById('tcContent');if(c)c.value='';}
+function submitTeamPost(){
+  var cat=document.getElementById('tcCategory').value;
+  var title=document.getElementById('tcTitle').value.trim();
+  var content=document.getElementById('tcContent').value.trim();
+  if(!title){alert('제목을 입력하세요');return;}
+  if(!content){alert('내용을 입력하세요');return;}
+  alert('[등록되었습니다]\n\n카테고리: '+cat+'\n제목: '+title+'\n\n(현재는 시안 자료 — 실제 DB 저장은 추후 적용)');
+  closeAsk();
+}
 function closeAsk(){document.getElementById('askmodal').classList.remove('open');}
 function showStep(id){document.querySelectorAll('.askstep').forEach(function(s){s.classList.remove('on');});document.getElementById('step-'+id).classList.add('on');}
 function backToPick(){showStep('pick');document.getElementById('askTitle').innerHTML='지금 어떤 질문인가요?';document.getElementById('askFile').classList.remove('on');document.getElementById('askFoot').classList.remove('on');}
