@@ -7,6 +7,8 @@
 
 ## 🗓️ 최신 세션 요약 (시간 역순)
 
+- `docs/sessions/2026-05-22_1816.md` — **2026-05-22 저녁 (navi_new.html 통째 인지 정정 + 갈아엎기 방향 결재 + 현장의 소리 페이지 카피 진입)**
+
 - `docs/sessions/2026-05-22_1612.md` — **2026-05-22 오후 (시연 후 7단계 배포 흐름 정립 + 첫 적용 검증 + 디자인 v2 Phase A 진입 + PG 심사 자료 보존)**
 
 - `docs/sessions/2026-05-14_2003.md` — **2026-05-14 저녁 (5/18 D-3 통합 헤더 박음 + 카카오임 채팅 본진 해소 + 풍선 클릭 풀폼 전환 — ~17 commit + DB 변경 4건)** ⭐⭐⭐ 통합 헤더(PC 옛 .a1 + 모바일 신 헤더 분기 — ☰ 햄버거 + 🕐 로고 + 🔍 검색창 + 🔔 알림 + [카] 사용자 dropdown) / 본인 풍선 클릭 → 풀폼 진입(수정+삭제, openEditNoticePost) `adeea0d` / 글쓰기 _editMode reset 격차 `4282653` / 검색바 본진 4건 (자동 펼침 + 칩 덮음 + ✕ 닫기 + iOS Safari) / 단톡방 햄버거 ☰ 추가 `f4a0b1b` / 카카오임(bylts@kakao.com) 4팀 단체방 215건 채팅 본진 해소 — DB 격차: public.users.team_id(1팀→4팀) + auth.users.raw_user_meta_data(JWT 갱신) 두 자리 정합 / vulcanlife@naver.com 4팀 박음(팀장님 직접) / app_settings.ops_calendar=true(운영 일정 표시) / .tab-bar(하단 갈색 톤 7건 메뉴) display:none(햄버거 진입로 통합) / Chrome AI 진단 4회 의뢰 + 라이브 검증 병행. 라이브 검증 = 카카오임 채팅/우측 일정/A1 한 줄/검색 input 시각/사용자 dropdown 모두 PASS. 미해결 = 단톡방(board.html) 햄버거 클릭 박지 X 격차(별 본진, Chrome 진단 권장) + 전수 team_id 점검 + 4팀 실장 3명 vs DB 2건. 본 세션 박은 교훈 5건: (1) CSS specificity cascade 격차 = body .a1 박음 (2) JS 함수 partial 안 박힘 = app.html 전역 박을 자리 (3) Supabase JWT vs RLS = public.users + auth.users 두 자리 정합 (4) iOS Safari font-size:16px + -webkit-text-fill-color 명시 (5) z-index 정합 103>102>101>100. 직전: 2026-05-14 오후(15:49) 5/18 D-4 카톡 톤 모바일 본진 + 카톡 전파 + RLS 통째 박음 (18 commit).
