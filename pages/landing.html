@@ -84,11 +84,8 @@ body {
 .lp-brand-mark {
   width: 32px; height: 32px;
   border-radius: 8px;
-  background: var(--gradient-brand);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 16px;
+  object-fit: cover;
+  display: block;
 }
 /* 2026-05-20 우측 상단 헤더 액션 = [로그인 텍스트 톤다운] + [가입하기 브라운 강조]
    (4팀 오픈 D-day, 신규 가입자 진입로 헤더 노출 = 표준 SaaS CTA 패턴) */
@@ -503,7 +500,7 @@ body {
 <!-- 상단 헤더 (로고 + 로그인 + 가입하기) -->
 <header class="lp-header">
   <a href="/" class="lp-brand" aria-label="원세컨드 홈">
-    <span class="lp-brand-mark">1s</span>
+    <img src="../assets/images/logo/logo03.jpg" alt="원세컨드" class="lp-brand-mark">
     <span>원세컨드</span>
   </a>
   <div class="lp-header-actions">
