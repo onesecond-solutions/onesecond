@@ -90,6 +90,96 @@ WHERE au.email = 'bylts0428@gmail.com';
 
 ---
 
+## 🚨 배포 프로세스 절대 규칙 — 시연 후 (2026-05-22 신설)
+
+> **교훈 (2026-05-21 사고):** Code가 검증 단계 건너뛰고 main에 직접 push → 라이브에 검증 없이 반영됨 → 즉시 revert로 복원. 사용자 영향 0이었지만 본질 격차.
+>
+> **재발 방지:** 시연 후 (2026-05-20+) 실제 사용자가 생긴 시점부터 검증 단계 의무. Code의 모든 라이브 반영은 반드시 7단계 흐름 통과.
+
+### 시연 전 vs 시연 후
+
+| | 시연 전 | 시연 후 (2026-05-20+) |
+|---|---|---|
+| 사용자 | 팀장님만 | 4팀 + 확장 |
+| 흐름 | Code 작업 → main push → 라이브 → 팀장님 검증 | **Code 작업 → PR + Deploy Preview → 검수 → 머지 → 라이브** |
+| 회귀 위험 | 팀장님만 영향 | 실제 사용자 영향 = 안 됨 |
+
+### 채택 패턴 = GitHub Flow + Deploy Preview
+
+마지막 결재가 사람 손(팀장님 머지 버튼)에 있어서 시스템 강제 차단 없이 안전.
+
+### 7단계 흐름 (반드시 통과)
+
+```
+[1] Code가 feature 브랜치 생성 (예: feat/... / fix/... / docs/... / chore/...)
+[2] Code가 코드 작성·commit·push (feature 브랜치)
+    └─ 자동 → [3]
+[3] Netlify가 Deploy Preview URL 자동 생성
+    예: deploy-preview-15--splendorous-bavarois.netlify.app
+[4] Code가 GitHub에 PR 생성
+    └─ PR 본문에 Deploy Preview URL 자동 첨부 (Netlify bot)
+[5] Code가 Chrome AI에 의뢰서 ② 전달 (검수 + 팀장님 안내 + 머지 안내)
+    └─ Chrome AI가 Deploy Preview URL 검수
+    └─ 팀장님이 직접 클릭해서 눈 검수
+    └─ 팀장님 결재: A(통과) / B(회귀) / C(보류)
+[6] A안 결재 시 → 팀장님이 GitHub PR 페이지에서 "Merge pull request" 클릭
+    └─ 자동 → [7]
+[7] main 자동 갱신 → GitHub Pages 자동 배포 → onesecond.solutions 라이브 반영
+    └─ Netlify staging URL(splendorous-bavarois-...)도 동시 갱신 (main 미러)
+```
+
+### 세 가지 URL 자리 구분
+
+| 자리 | URL | 역할 | 누가 보는가 |
+|---|---|---|---|
+| Deploy Preview | `deploy-preview-N--splendorous-bavarois.netlify.app` | PR 검수용 (PR마다 자동) | Chrome AI + 팀장님 |
+| Main 미러 | `splendorous-bavarois-818e3a.netlify.app` | main 머지 후 미러 (참고) | Chrome AI (머지 후 확인) |
+| 라이브 | `onesecond.solutions` | GitHub Pages, 실제 사용자 자리 | 실제 사용자 |
+
+### Code 역할 vs 팀장님 역할
+
+| 단계 | Code | 팀장님 |
+|---|---|---|
+| [1] feature 브랜치 생성 | ✅ 직접 | — |
+| [2] 코드 작성·commit·push | ✅ 직접 | — |
+| [3] Deploy Preview 생성 | (자동) | — |
+| [4] PR 생성 | ✅ 직접 | — |
+| [5] Chrome 의뢰서 전달 | ✅ 직접 | ✅ 눈 검수 + 결재 |
+| [6] 머지 결재 | — | ✅ **사람 손 = 마지막 결재** |
+| [7] 라이브 반영 | (자동) | — |
+
+### Netlify 설정 (2026-05-22 Chrome AI 확인)
+
+- **Production branch:** `main`
+- **Branch deploys:** "Deploy only the production branch" (main만 staging URL에 미러)
+- **Deploy previews:** "Any pull request against your production branch" (PR마다 자동 생성)
+
+### 절대 금지
+
+- ❌ **Code의 main 브랜치 직접 push 금지** (PR 없이)
+  - 2026-05-21 사고 본질. 절대 재발 금지.
+  - 예외: 본 흐름 자체를 정정하는 PR로 팀장님 결재 받은 경우만 (본 섹션 신설 PR 같은)
+- ❌ Deploy Preview 검수 없이 머지 진행 금지
+- ❌ Chrome 검수 결과만 보고 머지 결정 (팀장님 눈 검수 없이) 금지
+- ❌ "긴급 핫픽스"라며 [5] 건너뜀 — 핫픽스도 같은 흐름 통과
+
+### Code 자기 점검 체크리스트 (머지 직전 자동 점검)
+
+- [ ] feature 브랜치에서 작업했는가?
+- [ ] PR 생성했는가?
+- [ ] Deploy Preview URL 자동 생성됐는가?
+- [ ] Chrome AI에 의뢰서 ② 전달했는가?
+- [ ] 팀장님께 검수용 URL + 결재 요청 안내했는가?
+- [ ] 팀장님이 "A안 통과" 결재했는가? (없으면 머지 진행 안 함)
+
+→ 6개 중 하나라도 ❌면 머지 진행 안 함. 빠진 단계 진입.
+
+### Chrome AI 의뢰서 ② 템플릿
+
+매 PR마다 Code가 § 1 채워넣어 사용. 본 PR(2026-05-22)이 첫 적용 → 흐름 검증 후 템플릿 자리(별도 파일 또는 본 문서 부록) 확정 예정.
+
+---
+
 ## 🤝 Claude 3역할 협업 체계
 
 이 프로젝트는 Claude 3개 인스턴스가 역할을 나눠 협업한다.
