@@ -1,0 +1,134 @@
+/**
+ * css/tokens-v2.css
+ * 원세컨드 디자인 토큰 v2 — 랜딩(index.html) 라이트 모드 적용
+ *
+ * 결재 (2026-05-23):
+ * - 색상 = v2 spec (인디고 + 무채색 + 라이트/다크 두 모드)
+ * - 폰트 사이즈 = 현재 그대로 (em 단위 — 노안 정합 + 사용자 익숙도)
+ * - 그림자·radius = v2 spec
+ * - 기존 css/tokens.css는 그대로 — 다른 페이지(app.html 등) 영향 0
+ *
+ * 적용 순서:
+ * - 1단계 (지금): 랜딩(index.html) = data-theme="light"
+ * - 2단계 (월요일 D-day): app.html + pages/*.html = data-theme="dark"
+ */
+
+/* ── 색상 — 다크 모드 (로그인 후 기본, 월요일 적용) ─────────────────────── */
+:root[data-theme="dark"] {
+  --bg:        #0B0C0E;
+  --s1:        #141518;
+  --s2:        #1C1D21;
+  --sh:        #222328;
+  --bd:        #26272B;
+
+  --tp:        #F4F4F5;
+  --ts:        #A1A1AA;
+  --tf:        #6B6D72;
+  --bodytx:    #D4D4D8;
+
+  --ac:        #6366F1;
+  --ach:       #7C7FF2;
+
+  --t-uw:      #22D3EE;
+  --t-product: #6366F1;
+  --t-event:   #E879F9;
+
+  --ok:        #22C55E;
+  --warn:      #F59E0B;
+  --err:       #EF4444;
+  --info:      #6366F1;
+
+  --sh-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --sh-md: 0 4px 12px rgba(0,0,0,0.3);
+  --sh-lg: 0 10px 30px rgba(0,0,0,0.3);
+  --sh-fab: 0 8px 24px rgba(99,102,241,0.4);
+}
+
+/* ── 색상 — 라이트 모드 (랜딩 기본, 지금 적용) ──────────────────────────── */
+:root[data-theme="light"] {
+  --bg:        #FBFBFC;
+  --s1:        #FFFFFF;
+  --s2:        #F4F4F6;
+  --sh:        #EEEEF1;
+  --bd:        #E4E4E7;
+
+  --tp:        #18181B;
+  --ts:        #52525B;
+  --tf:        #A1A1AA;
+  --bodytx:    #3F3F46;
+
+  --ac:        #6366F1;
+  --ach:       #7C7FF2;
+
+  --t-uw:      #0891B2;
+  --t-product: #6366F1;
+  --t-event:   #C026D3;
+
+  --ok:        #16A34A;
+  --warn:      #D97706;
+  --err:       #DC2626;
+  --info:      #6366F1;
+
+  --sh-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --sh-md: 0 4px 12px rgba(0,0,0,0.08);
+  --sh-lg: 0 10px 30px rgba(0,0,0,0.12);
+  --sh-fab: 0 8px 24px rgba(99,102,241,0.25);
+}
+
+/* ── 폰트 사이즈 — 현재 css/tokens.css 자료 그대로 (em 단위) ───────────── */
+/*    기준: content-area font-size = 19px (중) */
+/*    소 = 18px / 중 = 19px / 대 = 20px       */
+:root {
+  --text-tab:   0.895em;
+  --text-body:  0.842em;
+  --text-label: 0.790em;
+  --text-xs:    0.684em;
+  --text-title: 1.263em;
+  --text-h2:    1.000em;
+}
+
+/* ── 폰트 (서체) ───────────────────────────────────────────────────────── */
+:root {
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  --font-mono: 'JetBrains Mono', 'D2 Coding', monospace;
+}
+
+/* ── 폰트 굵기 ─────────────────────────────────────────────────────────── */
+:root {
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-black:    800;
+}
+
+/* ── 행간·자간 ─────────────────────────────────────────────────────────── */
+:root {
+  --lh-body: 1.6;
+  --lh-heading: 1.3;
+  --lh-tight: 1.2;
+  --ls-heading: -0.01em;
+}
+
+/* ── Border-radius ────────────────────────────────────────────────────── */
+:root {
+  --r-sm:   5px;
+  --r-md:   9px;
+  --r-lg:   12px;
+  --r-xl:   16px;
+  --r-pill: 999px;
+
+  /* 기존 호환 별칭 */
+  --radius-xs:   5px;
+  --radius-sm:   9px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   16px;
+  --radius-full: 999px;
+}
+
+/* ── 폰트 크기 컨트롤러 (4단계 — 노안 정합) ────────────────────────────── */
+[data-fontsize="90"]  { --fscale: 0.9; }
+[data-fontsize="100"] { --fscale: 1; }
+[data-fontsize="110"] { --fscale: 1.1; }
+[data-fontsize="125"] { --fscale: 1.25; }
