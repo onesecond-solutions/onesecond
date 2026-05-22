@@ -363,16 +363,16 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
           <div class="lhead"><span class="cnt">전체 질문 <b>10건</b></span><div class="lacts"><button class="lbtn2" onclick="toggleLocalSearch()" aria-label="이 방 검색">&#8981;</button><button class="lbtn2 bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button><button class="newb" onclick="openAsk()">질문하기</button></div></div>
           <div class="lsearch" id="lsearch"><span class="lsi">&#8981;</span><input id="lsinput" type="text" placeholder="이 방에서 검색 (네비게이션방)" oninput="filterLocal(this.value)"><button class="lsx" onclick="closeLocalSearch()">&#10005;</button></div>
           <div class="list" id="qlist">
-            <div class="item on" onclick="showViewer()" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">70년 남 사무직 뇌경색/부정맥/고혈압 순환계 기왕증 보장</div><div class="id">5월 15일 16:28 · 답변 2</div></div>
-            <div class="item" onclick="showViewer()" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">암보험 매월 생활비 받는 상품</div><div class="id">5월 12일 14:47 · 답변 1</div></div>
-            <div class="item" onclick="showViewer()" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">14세 미성년 3.10.5(10) 간편</div><div class="id">5월 15일 16:10 · 답변 1</div></div>
-            <div class="item" onclick="showViewer()" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">전산 지연 시 청약서 제출 방법</div><div class="id">5월 14일 16:40 · 답변 1</div></div>
-            <div class="item" onclick="showViewer()" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">암치료비 선지급 보험사</div><div class="id">5월 12일 14:31 · 답변 3</div></div>
-            <div class="item" onclick="showViewer()" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">5세대 실손 단독 가입 가능 원수사</div><div class="id">5월 15일 11:33 · 답변 3</div></div>
-            <div class="item moreitem" onclick="showViewer()" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">녹취 보관 기간 규정 문의</div><div class="id">5월 13일 11:20 · 답변 1</div></div>
-            <div class="item moreitem" onclick="showViewer()" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">탈모보험 포함 상품</div><div class="id">5월 11일 10:38 · 답변 2</div></div>
-            <div class="item moreitem" onclick="showViewer()" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">68세 남 협심증 / 신장결석 / 종수술+간호간병</div><div class="id">5월 15일 11:09 · 답변 1</div></div>
-            <div class="item moreitem" onclick="showViewer()" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">민원 접수 시 대응 매뉴얼</div><div class="id">5월 11일 14:50 · 답변 1</div></div>
+            <div class="item on" onclick="showPost(0)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">70년 남 사무직 뇌경색/부정맥/고혈압 순환계 기왕증 보장</div><div class="id">5월 15일 16:28 · 답변 3</div></div>
+            <div class="item" onclick="showPost(1)" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">암보험 매월 생활비 받는 상품</div><div class="id">5월 12일 14:47 · 답변 3</div></div>
+            <div class="item" onclick="showPost(2)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">14세 미성년 3.10.5(10) 간편</div><div class="id">5월 15일 16:10 · 답변 1</div></div>
+            <div class="item" onclick="showPost(3)" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">전산 지연 시 청약서 제출 방법</div><div class="id">5월 14일 16:40 · 답변 1</div></div>
+            <div class="item" onclick="showPost(4)" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">암치료비 선지급 보험사</div><div class="id">5월 12일 14:31 · 답변 2</div></div>
+            <div class="item" onclick="showPost(5)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">5세대 실손 단독 가입 가능 원수사</div><div class="id">5월 15일 11:33 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(6)" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">녹취 보관 기간 규정 문의</div><div class="id">5월 13일 11:20 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(7)" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">탈모보험 포함 상품</div><div class="id">5월 11일 10:38 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(8)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">68세 남 협심증 / 신장결석 / 종수술+간호간병</div><div class="id">5월 15일 11:09 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(9)" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">민원 접수 시 대응 매뉴얼</div><div class="id">5월 11일 14:50 · 답변 1</div></div>
             <button class="morebtn" id="morebtn" onclick="showMore()">더 보기 (4건)</button>
           </div>
         </div>
@@ -694,6 +694,88 @@ function filterLocal(q){
   });
   var mb=document.getElementById('morebtn');if(mb)mb.style.display=ql===''?'':'none';
   document.querySelector('.lhead .cnt').innerHTML=ql===''?'전체 질문 <b>10건</b>':'검색 결과 <b>'+n+'건</b>';
+}
+var posts = [
+  {badge:'인수 같음', tc:'t-uw', title:'70년 남 사무직 뇌경색/부정맥/고혈압 순환계 기왕증 보장', meta:'5월 15일 16:28 · 답변 3 · 첨부 3',
+    body:'안녕하세요. 도와주세요~ 700814-1 사무직.<br>뇌경색 혈전용해치료한지 3년넘었고.<br>부정맥 전극도자절제술한지 3년넘었어요.<br>고혈압복용중이구요.<br>순환계질환 주요치료비를 넣었을때(혈전용해치료, 혈전제거, 수술, 중환자실) 기왕증도 모두 보장 가능한 회사가 있을까요?',
+    answers:[
+      {who:'한화손보 답변', text:'한화손보 간편 2대치료비. 진단문구 없어서 기왕증 가능합니다.'},
+      {who:'라이나손보 답변', text:'라이나손보 가능합니다.'},
+      {who:'현대해상 답변', text:'현대해상 : 3333플랜 가능합니다.'}
+    ]},
+  {badge:'상품 같음', tc:'t-product', title:'암보험 매월 생활비 받는 상품', meta:'5월 12일 14:47 · 답변 3 · 첨부 0',
+    body:'안녕하세요? 암보험 매월생활비로 받을수있는 보험상품 추천부탁드려요',
+    answers:[
+      {who:'라이나손보 답변', text:'라이나손보 355 가능합니다.'},
+      {who:'현대해상 답변', text:'현대해상 70% 선지급 됩니다. 지급사유별 5백만원 한도입니다.'},
+      {who:'메리츠 답변', text:'예약만 하셔도 암통치, 비통치 50% 선지급 가능합니다.'}
+    ]},
+  {badge:'인수 같음', tc:'t-uw', title:'14세 미성년 3.10.5(10) 간편', meta:'5월 15일 16:10 · 답변 1 · 첨부 0',
+    body:'안녕하세요. 14세 미성년 / 3.10.5(10) 간편 가입한 회사 있을까요?',
+    answers:[
+      {who:'메리츠 답변', text:'더가벼운 355간편. 5세부터 가능합니다.'}
+    ]},
+  {badge:'기타', tc:'t-event', title:'전산 지연 시 청약서 제출 방법', meta:'5월 14일 16:40 · 답변 1 · 첨부 0',
+    body:'전산 지연으로 청약서 등록이 안 될 때 제출 방법 안내 부탁드립니다.',
+    answers:[
+      {who:'운영팀 답변', text:'전산 지연 시 수기 청약서 작성 후 익일 등록 가능합니다.'}
+    ]},
+  {badge:'상품 같음', tc:'t-product', title:'암치료비 선지급 보험사', meta:'5월 12일 14:31 · 답변 2 · 첨부 0',
+    body:'안녕하세요? 암치료비 선지급되는 보험사 안내부탁드려요',
+    answers:[
+      {who:'라이나손보 답변', text:'라이나손보 70% 최대 700만원 선지급됩니다.'},
+      {who:'삼성화재 답변', text:'치료 행위별 보험금의 50% / 치료 행위별 500만원 한도 입니다.'}
+    ]},
+  {badge:'인수 같음', tc:'t-uw', title:'5세대 실손 단독 가입 가능 원수사', meta:'5월 15일 11:33 · 답변 1 · 첨부 0',
+    body:'안녕하세요 원수사 지점장님 매니져님. 5세대 실손 현재 단독으로 가입 가능한 원수사 있을까요?',
+    answers:[
+      {who:'한화손보 답변', text:'한화손보 5세대 실손 5/6 14:00부터 판매 개시했습니다. 종합보험 상해사망 1억으로 방진 없이 실비 가입 가능. 다만 61세 이상은 종합연계 무관 방진입니다.'}
+    ]},
+  {badge:'기타', tc:'t-event', title:'녹취 보관 기간 규정 문의', meta:'5월 13일 11:20 · 답변 1 · 첨부 0',
+    body:'고객 녹취 자료 보관 기간 규정 문의드립니다.',
+    answers:[
+      {who:'운영팀 답변', text:'녹취 자료는 최소 5년 보관이 원칙이며, 분쟁 가능성 있는 건은 10년 권장합니다.'}
+    ]},
+  {badge:'상품 같음', tc:'t-product', title:'탈모보험 포함 상품', meta:'5월 11일 10:38 · 답변 0 · 첨부 0',
+    body:'안녕하세요. 혹시 판매되는 상품중에 탈모보험도 포함되는 상품있을까요?',
+    answers:[
+      {who:'운영팀 답변', text:'현재 탈모보험 단독상품은 없고, 일부 종합보험 특약으로 가능합니다. 보험사별 확인 필요.'}
+    ]},
+  {badge:'인수 같음', tc:'t-uw', title:'68세 남 협심증 / 신장결석 / 종수술+간호간병', meta:'5월 15일 11:09 · 답변 1 · 첨부 0',
+    body:'68세 남자. 2년전 협심증진단, 1년전 신장결석제거. 종수술이랑 간호간병통합서비스 들어갈 수 있는 회사 있을까요?',
+    answers:[
+      {who:'라이나생명 답변', text:'라이나생명 제한 없습니다.'}
+    ]},
+  {badge:'기타', tc:'t-event', title:'민원 접수 시 대응 매뉴얼', meta:'5월 11일 14:50 · 답변 1 · 첨부 0',
+    body:'민원 접수 시 1차 대응 매뉴얼 공유 부탁드립니다.',
+    answers:[
+      {who:'운영팀 답변', text:'1차 대응 = 24시간 내 연락 + 사실관계 확인 + 처리방안 안내. 자세한 매뉴얼은 운영팀 공유 폴더 참고.'}
+    ]}
+];
+function showPost(idx){
+  var p = posts[idx];
+  if(!p) return;
+  var v = document.querySelector('.viewer');
+  if(!v) return;
+  var ansHtml = p.answers.map(function(a){
+    return '<div class="answer"><div class="who">'+a.who+'</div>'+a.text+'</div>';
+  }).join('');
+  v.querySelector('.vbadge').textContent = p.badge;
+  v.querySelector('.vbadge').style.color = 'var(--'+p.tc+')';
+  v.querySelector('.vbadge').style.borderLeftColor = 'var(--'+p.tc+')';
+  v.querySelector('.vttl').textContent = p.title;
+  v.querySelector('.vmeta').textContent = p.meta;
+  var body = v.querySelector('.vbody');
+  var atts = body.querySelector('.atts');
+  var attsHtml = atts ? atts.outerHTML : '';
+  body.innerHTML = p.body + ansHtml + attsHtml;
+  // 좌측 on 클래스 정정
+  document.querySelectorAll('.list .item').forEach(function(el,i){
+    el.classList.toggle('on', i===idx);
+  });
+  // 모바일에서만 우측 자리 표시
+  var s = document.getElementById('split');
+  if(window.innerWidth<=1024) s.classList.add('show-viewer');
 }
 function showViewer(){var s=document.getElementById('split');if(window.innerWidth<=1024)s.classList.add('show-viewer');}
 function backToList(){document.getElementById('split').classList.remove('show-viewer');}
