@@ -314,6 +314,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 @media (max-width:640px){.mys-grid{grid-template-columns:1fr}}
 
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
+/* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (v-home 한정 자체 스크롤 영역) */
+#v-home{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
 .home-greeting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:linear-gradient(90deg,var(--s1),transparent);border:1px solid var(--bd);border-radius:12px;margin-bottom:14px}
 .home-greeting-name{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
 .home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
