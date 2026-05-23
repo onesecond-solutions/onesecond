@@ -375,7 +375,28 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">고지혈증·동맥경화증 (혈관 건강 자료)</div><div class="mys-meta">5월 15일 저장 · 즐겨찾기</div></div>
       </div>
      </div>
-     <div class="wrap view" id="v-scripts"><div class="ttl">스크립트</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-scripts">
+      <div class="ttl">스크립트 <span class="ac">· 보험 상담 화법</span></div>
+      <div class="sub">통화 중 1초 안에 꺼낼 수 있는 화법 자료.</div>
+      <div class="chips">
+        <div class="chip on" onclick="filterScripts(this,'전체')">전체</div>
+        <div class="chip" onclick="filterScripts(this,'상품')">상품</div>
+        <div class="chip" onclick="filterScripts(this,'인수')">인수</div>
+        <div class="chip" onclick="filterScripts(this,'응대')">응대</div>
+        <div class="chip" onclick="filterScripts(this,'거절극복')">거절극복</div>
+      </div>
+      <div class="mys-grid" id="scriptsGrid">
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">암보험 매월 생활비 받는 상품 안내 화법</div><div class="mys-meta">5월 15일 · 사용 24회</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">5세대 실손 단독 가입 안내 화법</div><div class="mys-meta">5월 14일 · 사용 18회</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">치매보험 핵심 화법 (40~50대)</div><div class="mys-meta">5월 13일 · 사용 12회</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">70년 남 사무직 기왕증 인수 거절 응대</div><div class="mys-meta">5월 15일 · 사용 9회</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">협심증 기왕증 인수 가능 회사 안내</div><div class="mys-meta">5월 14일 · 사용 7회</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">응대</span><div class="mys-ttl">보험금 청구 절차 안내 (사고 직후)</div><div class="mys-meta">5월 15일 · 사용 15회</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">응대</span><div class="mys-ttl">가입 후 30일 무료 해약 안내</div><div class="mys-meta">5월 12일 · 사용 6회</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">거절극복</span><div class="mys-ttl">"보험료 비싸다" 응대 화법</div><div class="mys-meta">5월 15일 · 사용 21회</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">거절극복</span><div class="mys-ttl">"이미 가입했다" 응대 화법</div><div class="mys-meta">5월 14일 · 사용 17회</div></div>
+      </div>
+     </div>
      <div class="wrap view" id="v-quick"><div class="ttl">Quick 메뉴</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view" id="v-together"><div class="ttl">함께해요</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view" id="v-news"><div class="ttl">보험이슈</div><div class="sub">준비 중입니다.</div></div>
@@ -721,6 +742,7 @@ function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');
 function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}}
 function filterMys(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#mysGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var labels={team:'4팀 단체방',voice:'네비게이션방',smart:'스마트 게시판',branch:'지점 게시판'};if(key!=='voice'){toast(labels[key]+' 자료 준비 중입니다.');}}
+function filterScripts(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#scriptsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
