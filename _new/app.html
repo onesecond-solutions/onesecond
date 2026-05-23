@@ -418,7 +418,28 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">단축키</span><div class="mys-ttl">Esc — 모달/오버레이 닫기</div><div class="mys-meta">단축키 자료</div></div>
       </div>
      </div>
-     <div class="wrap view" id="v-together"><div class="ttl">함께해요</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-together">
+      <div class="ttl">함께해요 <span class="ac">· 원세컨드 커뮤니티</span></div>
+      <div class="sub">건의 / 버그 신고 / 자유 자료를 함께 나눕니다.</div>
+      <div class="chips">
+        <div class="chip on" onclick="filterTogether(this,'전체')">전체</div>
+        <div class="chip" onclick="filterTogether(this,'건의')">건의</div>
+        <div class="chip" onclick="filterTogether(this,'버그신고')">버그신고</div>
+        <div class="chip" onclick="filterTogether(this,'자유')">자유</div>
+        <div class="chip" onclick="filterTogether(this,'공지')">공지</div>
+      </div>
+      <div class="mys-grid" id="togetherGrid">
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">공지</span><div class="mys-ttl">원세컨드 5월 정기 업그레이드 안내</div><div class="mys-meta">5월 15일 · 운영팀</div></div>
+        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">건의</span><div class="mys-ttl">스크립트 페이지에 즐겨찾기 자리 추가 부탁드립니다</div><div class="mys-meta">5월 15일 · 한재성 실장 · 추천 12</div></div>
+        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">건의</span><div class="mys-ttl">단체방 새 글 작성 모달 카테고리 자료 정정 요청</div><div class="mys-meta">5월 14일 · 김민수 · 추천 7</div></div>
+        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">건의</span><div class="mys-ttl">MY SPACE 정렬 자료에 "사용 자주" 추가 부탁드립니다</div><div class="mys-meta">5월 13일 · 이서연 · 추천 5</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">버그신고</span><div class="mys-ttl">네비방 검색 시 빈 결과 자료 안내 자리가 잘립니다</div><div class="mys-meta">5월 15일 · 박지훈 · 처리 중</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">버그신고</span><div class="mys-ttl">모바일 사이드바 X 버튼 자리 정정 부탁드립니다</div><div class="mys-meta">5월 14일 · 송미정 · 처리 중</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">자유</span><div class="mys-ttl">시청팀 5/15 회식 후기 - 분위기 너무 좋았어요</div><div class="mys-meta">5월 15일 · 한재성 실장 · 답 8</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">자유</span><div class="mys-ttl">실손 5세대 출시 후 시장 반응 어떠신가요?</div><div class="mys-meta">5월 14일 · 정수민 · 답 12</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">자유</span><div class="mys-ttl">5월 보험 시장 트렌드 자료 공유드립니다</div><div class="mys-meta">5월 13일 · 최영진 · 답 6</div></div>
+      </div>
+     </div>
      <div class="wrap view" id="v-news"><div class="ttl">보험이슈</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view" id="v-team"><div class="ttl">팀원관리</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view on" id="v-voice">
@@ -764,6 +785,7 @@ function filterMys(el,cat){var chips=el.parentElement.querySelectorAll('.chip');
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var labels={team:'4팀 단체방',voice:'네비게이션방',smart:'스마트 게시판',branch:'지점 게시판'};if(key!=='voice'){toast(labels[key]+' 자료 준비 중입니다.');}}
 function filterScripts(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#scriptsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function filterQuick(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#quickGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+function filterTogether(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#togetherGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
