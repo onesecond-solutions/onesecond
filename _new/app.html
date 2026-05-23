@@ -301,6 +301,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 
 .view{display:none}
 .view.on{display:block}
+.mys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+.mys-card{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--tc,var(--ac));border-radius:8px;padding:14px;cursor:pointer;transition:transform .15s,border-color .15s}
+.mys-card:hover{transform:translateY(-2px);border-color:var(--ac)}
+.mys-badge{display:inline-block;font-size:0.7em;font-weight:700;padding:2px 8px;border-radius:9999px;background:var(--s2);color:var(--tc,var(--ac));margin-bottom:8px}
+.mys-ttl{font-size:0.95em;font-weight:700;color:var(--tp);line-height:1.4;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mys-meta{font-size:0.75em;color:var(--ts);padding-top:8px;border-top:1px solid var(--bd)}
+@media (max-width:1024px){.mys-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.mys-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -345,7 +353,28 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     </header>
     <div class="body">
      <div class="wrap view" id="v-home"><div class="ttl">홈</div><div class="sub">준비 중입니다.</div></div>
-     <div class="wrap view" id="v-myspace"><div class="ttl">MY SPACE</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-myspace">
+      <div class="ttl">MY SPACE <span class="ac">· 내가 저장한 자료들</span></div>
+      <div class="sub">딸깍으로 저장한 자료를 한 곳에 모아 봅니다.</div>
+      <div class="chips">
+        <div class="chip on" onclick="filterMys(this,'전체')">전체</div>
+        <div class="chip" onclick="filterMys(this,'자료')">자료</div>
+        <div class="chip" onclick="filterMys(this,'스크립트')">스크립트</div>
+        <div class="chip" onclick="filterMys(this,'메모')">메모</div>
+        <div class="chip" onclick="filterMys(this,'즐겨찾기')">즐겨찾기</div>
+      </div>
+      <div class="mys-grid" id="mysGrid">
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">자료</span><div class="mys-ttl">5세대 실손 비교표</div><div class="mys-meta">5월 15일 저장 · PDF</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">자료</span><div class="mys-ttl">한화손보 간편 2대치료비 자료</div><div class="mys-meta">5월 14일 저장 · 이미지</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">자료</span><div class="mys-ttl">DB 간병인일당 20만 가입금액 축소 (5/25 이후)</div><div class="mys-meta">5월 14일 저장 · 공지</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">스크립트</span><div class="mys-ttl">70년 남 사무직 인수 거절 응대 스크립트</div><div class="mys-meta">5월 15일 저장 · 화법</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">스크립트</span><div class="mys-ttl">암보험 매월 생활비 상품 상담 스크립트</div><div class="mys-meta">5월 12일 저장 · 화법</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">메모</span><div class="mys-ttl">시청팀 5/15 회식 안내 메모</div><div class="mys-meta">5월 15일 저장 · 메모</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">메모</span><div class="mys-ttl">흥국화재 결제 방법 메모</div><div class="mys-meta">5월 14일 저장 · 메모</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">금감원 지급여력비율 (보험사 건전성)</div><div class="mys-meta">5월 15일 저장 · 즐겨찾기</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">고지혈증·동맥경화증 (혈관 건강 자료)</div><div class="mys-meta">5월 15일 저장 · 즐겨찾기</div></div>
+      </div>
+     </div>
      <div class="wrap view" id="v-scripts"><div class="ttl">스크립트</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view" id="v-quick"><div class="ttl">Quick 메뉴</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view" id="v-together"><div class="ttl">함께해요</div><div class="sub">준비 중입니다.</div></div>
@@ -690,6 +719,7 @@ function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.c
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}}
+function filterMys(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#mysGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
