@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script src="/js/auth-guard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- 2026-05-14 캐시 본진 — GitHub Pages max-age=600 격차 해소 (Code 5/18 D-4 본진) -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -1745,6 +1746,10 @@ body.mobile-sidebar-open .b-pulltab {
         </div>
         <iframe class="d-preview-overlay-iframe" id="d-preview-overlay-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
       </div>
+      <!-- 2026-05-23 신설: SPA 전환 Phase 1 — 현장의 소리 4 view container.
+           URL 진입: /app.html#field-voice/{team|voice|smart|branch}
+           hash 자료 없으면 빈 자리 (기존 메뉴 흐름 그대로 가동). -->
+      <main id="app-view"></main>
     </div>
 
     <!-- C: 우측 패널 -->
@@ -3593,6 +3598,28 @@ document.addEventListener('keydown', function(e) {
 <!-- 2026-05-19 풀스크린 환영 자리 = 본인 결재로 통째 폐기
      사유: 랜딩 5컷에서 정체성 카피 충분히 노출 → 가입 후 또 정체성 = 중복
      옛 자리 HTML/CSS/JS 통째 삭제. SQL은 보존(필요 시 재사용 자료) -->
+
+<!-- 2026-05-23 신설: SPA 전환 Phase 1 — 현장의 소리 4 view 통합.
+     pages/voice.html (네비방) + pages/team_chat.html (단체방) +
+     스마트 게시판 + 지점 게시판 = app.html 단일 모듈로 통합.
+     Phase 1 = mock 자료. Phase 2(다음 단계)에서 실제 본문 + CSS + JS 흡수. -->
+<script src="/js/spa-router.js"></script>
+<script src="/js/modules/field-voice.module.js"></script>
+<script>
+(function(){
+  window.appRouter = new SpaRouter({
+    'field-voice/team':   function () { return FieldVoiceModule.render('team'); },
+    'field-voice/voice':  function () { return FieldVoiceModule.render('voice'); },
+    'field-voice/smart':  function () { return FieldVoiceModule.render('smart'); },
+    'field-voice/branch': function () { return FieldVoiceModule.render('branch'); }
+  });
+  /* hash 자료가 #field-voice/* 자리 진입 시 자동 render. 첫 진입 시 hash 없으면
+     기존 메뉴 흐름 그대로 가동(#app-view 빈 자리). start() 호출 안 함. */
+  if (location.hash && location.hash.indexOf('#field-voice/') === 0) {
+    window.appRouter.render();
+  }
+})();
+</script>
 
 </body>
 </html>
