@@ -352,11 +352,11 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="tab">지점 게시판</div>
       </div>
       <div class="chips">
-        <div class="chip on">전체</div>
-        <div class="chip">공지</div>
-        <div class="chip">전달사항</div>
-        <div class="chip">팀 질문</div>
-        <div class="chip">자료 공유</div>
+        <div class="chip on" onclick="filterChip(this,'전체')">전체</div>
+        <div class="chip" onclick="filterChip(this,'공지')">공지</div>
+        <div class="chip" onclick="filterChip(this,'전달사항')">전달사항</div>
+        <div class="chip" onclick="filterChip(this,'팀 질문')">팀 질문</div>
+        <div class="chip" onclick="filterChip(this,'자료 공유')">자료 공유</div>
       </div>
       <div class="split" id="split">
         <div class="col list-col">
@@ -621,6 +621,7 @@ function closeCard(){document.getElementById('cm').classList.remove('open');}
 var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
+function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
