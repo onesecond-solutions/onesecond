@@ -397,7 +397,27 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">거절극복</span><div class="mys-ttl">"이미 가입했다" 응대 화법</div><div class="mys-meta">5월 14일 · 사용 17회</div></div>
       </div>
      </div>
-     <div class="wrap view" id="v-quick"><div class="ttl">Quick 메뉴</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-quick">
+      <div class="ttl">Quick 메뉴 <span class="ac">· 빠른 실행</span></div>
+      <div class="sub">자주 쓰는 기능을 한 번에 꺼냅니다.</div>
+      <div class="chips">
+        <div class="chip on" onclick="filterQuick(this,'전체')">전체</div>
+        <div class="chip" onclick="filterQuick(this,'자주쓰기')">자주쓰기</div>
+        <div class="chip" onclick="filterQuick(this,'즐겨찾기')">즐겨찾기</div>
+        <div class="chip" onclick="filterQuick(this,'단축키')">단축키</div>
+      </div>
+      <div class="mys-grid" id="quickGrid">
+        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">새 질문 작성 (네비게이션방)</div><div class="mys-meta">오늘 사용 5회</div></div>
+        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">스크립트 검색</div><div class="mys-meta">오늘 사용 8회</div></div>
+        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">MY SPACE 자료 검색</div><div class="mys-meta">오늘 사용 4회</div></div>
+        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">단체방 새 글 작성</div><div class="mys-meta">오늘 사용 2회</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">70년 남 사무직 인수 거절 응대 스크립트</div><div class="mys-meta">즐겨찾기 등록 5/15</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">5세대 실손 비교표 자료</div><div class="mys-meta">즐겨찾기 등록 5/14</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">DB 간병인일당 축소 공지</div><div class="mys-meta">즐겨찾기 등록 5/14</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">단축키</span><div class="mys-ttl">Ctrl + K — 전역 검색 자료</div><div class="mys-meta">단축키 자료</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">단축키</span><div class="mys-ttl">Esc — 모달/오버레이 닫기</div><div class="mys-meta">단축키 자료</div></div>
+      </div>
+     </div>
      <div class="wrap view" id="v-together"><div class="ttl">함께해요</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view" id="v-news"><div class="ttl">보험이슈</div><div class="sub">준비 중입니다.</div></div>
      <div class="wrap view" id="v-team"><div class="ttl">팀원관리</div><div class="sub">준비 중입니다.</div></div>
@@ -743,6 +763,7 @@ function showView(key){var views=document.querySelectorAll('.body .view');for(va
 function filterMys(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#mysGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var labels={team:'4팀 단체방',voice:'네비게이션방',smart:'스마트 게시판',branch:'지점 게시판'};if(key!=='voice'){toast(labels[key]+' 자료 준비 중입니다.');}}
 function filterScripts(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#scriptsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+function filterQuick(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#quickGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
