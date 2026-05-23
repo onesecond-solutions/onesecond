@@ -312,6 +312,67 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .mys-meta{font-size:0.75em;color:var(--ts);padding-top:8px;border-top:1px solid var(--bd)}
 @media (max-width:1024px){.mys-grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.mys-grid{grid-template-columns:1fr}}
+
+/* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
+/* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (v-home 한정 자체 스크롤 영역) */
+#v-home{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
+.home-greeting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:linear-gradient(90deg,var(--s1),transparent);border:1px solid var(--bd);border-radius:12px;margin-bottom:14px}
+.home-greeting-name{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
+.home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
+@media (max-width:640px){.home-greeting{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 14px}}
+
+.os-galaxy-banner{--mx:0px;--my:0px;width:100%;min-height:280px;position:relative;overflow:hidden;isolation:isolate;border-radius:24px;border:1px solid color-mix(in srgb,var(--bd) 82%,var(--ac));background:radial-gradient(circle at 18% 20%,color-mix(in srgb,var(--ach) 28%,transparent),transparent 28%),radial-gradient(circle at 86% 16%,color-mix(in srgb,var(--ac) 34%,transparent),transparent 30%),radial-gradient(circle at 60% 95%,color-mix(in srgb,var(--ach) 20%,transparent),transparent 36%),linear-gradient(135deg,#05060A 0%,var(--bg) 42%,#111225 100%);box-shadow:0 20px 56px color-mix(in srgb,var(--ac) 28%,transparent),inset 0 1px 0 rgba(255,255,255,.08);padding:clamp(20px,3vw,36px);display:grid;grid-template-columns:minmax(0,1.04fr) minmax(280px,.96fr);gap:clamp(16px,3vw,32px);align-items:center;margin-bottom:18px}
+.os-galaxy-banner::before{content:"";position:absolute;inset:-18%;z-index:-3;background-image:radial-gradient(circle,rgba(255,255,255,.92) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(255,255,255,.48) 0 1px,transparent 1.3px),radial-gradient(circle,color-mix(in srgb,var(--ach) 68%,white) 0 1px,transparent 1.5px);background-size:78px 78px,128px 128px,176px 176px;background-position:0 0,24px 34px,60px 18px;opacity:.38;transform:translate3d(calc(var(--mx) * .16),calc(var(--my) * .16),0);animation:starDrift 58s linear infinite;will-change:transform}
+.os-galaxy-banner::after{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(115deg,transparent 0 24%,rgba(255,255,255,.07) 38%,transparent 52%),radial-gradient(ellipse at 70% 52%,rgba(255,255,255,.08),transparent 44%);transform:translate3d(calc(var(--mx) * -.08),calc(var(--my) * -.08),0);pointer-events:none;will-change:transform}
+@keyframes starDrift{from{background-position:0 0,24px 34px,60px 18px}to{background-position:-78px 42px,-104px 80px,-116px 68px}}
+.os-galaxy-banner .orbit-ring{position:absolute;right:-130px;top:50%;width:480px;height:480px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ac) 28%,transparent);transform:translate3d(calc(var(--mx) * -.22),calc(-50% + (var(--my) * -.22)),0) rotate(-18deg);z-index:-1;will-change:transform}
+.os-galaxy-banner .orbit-ring::before,.os-galaxy-banner .orbit-ring::after{content:"";position:absolute;border-radius:999px;border:1px solid color-mix(in srgb,var(--ach) 20%,transparent);inset:54px}
+.os-galaxy-banner .orbit-ring::after{inset:116px;border-color:color-mix(in srgb,var(--bd) 50%,transparent)}
+.os-copy{position:relative;z-index:2;min-width:0;transform:translate3d(calc(var(--mx) * .04),calc(var(--my) * .04),0);will-change:transform}
+.os-kicker{display:inline-flex;align-items:center;gap:9px;max-width:100%;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:color-mix(in srgb,var(--ach) 72%,white);backdrop-filter:blur(14px);font-size:clamp(11px,1.3vw,13px);font-weight:900;margin-bottom:14px;white-space:nowrap}
+.os-galaxy-banner .signal{width:8px;height:8px;border-radius:999px;background:var(--ok);box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 18%,transparent),0 0 20px color-mix(in srgb,var(--ok) 55%,transparent);flex:0 0 auto}
+.os-headline{max-width:580px;font-size:clamp(26px,4vw,46px);line-height:1.08;letter-spacing:-.06em;font-weight:980;color:#fff;margin-bottom:14px}
+.os-headline .gradient{display:inline-block;background:linear-gradient(90deg,#fff 0%,color-mix(in srgb,var(--ach) 72%,white) 42%,color-mix(in srgb,var(--ac) 70%,white) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 10px 24px color-mix(in srgb,var(--ac) 20%,transparent))}
+.os-message{max-width:560px;color:rgba(244,244,245,.78);font-size:clamp(13px,1.5vw,16px);line-height:1.7;word-break:keep-all;margin-bottom:18px}
+.os-message b{color:#fff;font-weight:900}
+.os-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.os-action{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:14px;padding:0 16px;border:1px solid rgba(255,255,255,.13);color:#fff;background:rgba(255,255,255,.08);backdrop-filter:blur(14px);font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.os-action.primary{border-color:color-mix(in srgb,var(--ac) 76%,white);background:linear-gradient(135deg,var(--ac),var(--ach));box-shadow:0 12px 26px color-mix(in srgb,var(--ac) 35%,transparent)}
+.os-action:hover{transform:translateY(-1px)}
+.os-constellation{position:relative;z-index:2;min-height:220px;display:grid;place-items:center;transform:translate3d(calc(var(--mx) * -.10),calc(var(--my) * -.10),0);will-change:transform}
+.core-card{width:min(100%,360px);position:relative;border-radius:24px;padding:16px;background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.07));border:1px solid rgba(255,255,255,.16);box-shadow:0 20px 50px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(18px)}
+.core-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.core-brand{display:flex;align-items:center;gap:10px;min-width:0;color:#fff;font-weight:950}
+.core-mark{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ac),var(--ach));box-shadow:0 10px 24px color-mix(in srgb,var(--ac) 42%,transparent);font-size:18px}
+.core-live{font-size:11px;color:color-mix(in srgb,var(--ok) 80%,white);font-weight:950}
+.mission-line{border-radius:16px;padding:13px 14px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.78);line-height:1.6;font-size:12px;margin-bottom:11px}
+.mission-line strong{display:block;color:#fff;font-size:15px;margin-bottom:4px}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tool-pill{min-height:66px;border-radius:16px;padding:11px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);color:#fff;display:flex;flex-direction:column;justify-content:space-between}
+.tool-pill small{color:rgba(255,255,255,.55);font-size:10px;font-weight:800}
+.tool-pill b{font-size:13px;letter-spacing:-.02em}
+.os-galaxy-banner .satellite{position:absolute;display:flex;align-items:center;gap:8px;min-height:34px;padding:0 11px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);color:#fff;backdrop-filter:blur(14px);font-size:11px;font-weight:900;box-shadow:0 12px 22px rgba(0,0,0,.20);white-space:nowrap}
+.os-galaxy-banner .satellite.one{left:-40px;top:18px}
+.os-galaxy-banner .satellite.two{right:-20px;top:84px}
+.os-galaxy-banner .satellite.three{left:26px;bottom:-18px}
+.sat-dot{width:6px;height:6px;border-radius:999px;background:var(--ach);box-shadow:0 0 14px var(--ach)}
+@media(max-width:860px){.os-galaxy-banner{grid-template-columns:1fr;border-radius:20px;min-height:auto}.os-headline{font-size:clamp(26px,7vw,38px)}.os-galaxy-banner .orbit-ring{right:-220px;width:420px;height:420px}}
+@media(max-width:520px){.os-galaxy-banner{padding:20px;border-radius:18px}.os-kicker{white-space:normal}.os-actions{width:100%}.os-action{flex:1 1 100%;justify-content:center}.tool-grid{grid-template-columns:1fr}.os-galaxy-banner .satellite{position:static;margin-top:8px;display:inline-flex}.core-card{padding:13px;border-radius:20px}.os-constellation{display:block;min-height:auto}}
+@media (prefers-reduced-motion: reduce){.os-galaxy-banner::before{animation:none}.os-galaxy-banner::before,.os-galaxy-banner::after,.os-galaxy-banner .orbit-ring,.os-copy,.os-constellation{transform:none}}
+
+.home-widget{margin-bottom:18px}
+.home-widget-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.home-widget-ttl{font-size:1.05em;font-weight:900;color:var(--tp);letter-spacing:-.02em}
+.home-widget-more{font-size:0.8em;color:var(--ts);cursor:pointer}
+.home-widget-more:hover{color:var(--ac)}
+.home-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media (max-width:860px){.home-row-2{grid-template-columns:1fr}}
+.home-quick-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.home-quick-btn{min-height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;cursor:pointer;color:var(--tp);font-size:0.85em;font-weight:700;transition:transform .15s,border-color .15s}
+.home-quick-btn:hover{transform:translateY(-2px);border-color:var(--ac)}
+.home-quick-ic{font-size:1.6em}
+@media (max-width:860px){.home-quick-grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:520px){.home-quick-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -323,11 +384,11 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       <button class="hamb" onclick="document.getElementById('app').classList.toggle('collapsed')">&#9776;</button>
       <button class="mclose" onclick="toggleMSide()" aria-label="메뉴 닫기">&#10005;</button>
     </div>
-    <div class="nav" onclick="showView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
+    <div class="nav on" onclick="showView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
     <div class="nav" onclick="showView('myspace')"><span class="ic">&#9672;</span><span class="lbl">MY SPACE</span></div>
     <div class="nav" onclick="showView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav" onclick="showView('quick')"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
-    <div class="nav on" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
+    <div class="nav" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
@@ -355,7 +416,107 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       </div>
     </header>
     <div class="body">
-     <div class="wrap view" id="v-home"><div class="ttl">홈</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view on" id="v-home">
+      <div class="home-greeting">
+        <div class="home-greeting-name" id="homeGreetName">임태성 팀장님 안녕하세요~</div>
+        <div class="home-greeting-msg" id="homeGreetMsg">오늘 하루도 화이팅입니다 ☕</div>
+      </div>
+
+      <section class="os-galaxy-banner" aria-label="원세컨드 홈 히어로 배너">
+        <div class="orbit-ring" aria-hidden="true"></div>
+        <div class="os-copy">
+          <div class="os-kicker"><span class="signal"></span> 보험 업무 OS · onesecond</div>
+          <h1 class="os-headline">보험 통합 솔루션<br><span class="gradient">원세컨드</span></h1>
+          <p class="os-message"><b>MY SPACE, 스크립트, Quick 도구, 현장의 소리</b>를 하나의 흐름으로 연결해 오늘 해야 할 일을 가장 짧은 경로로 꺼내 쓰게 만드는 개인 업무 허브입니다.</p>
+          <div class="os-actions">
+            <button class="os-action primary" onclick="showView('quick')">⚡ 1초 실행 시작</button>
+          </div>
+        </div>
+        <div class="os-constellation" aria-hidden="true">
+          <div class="core-card">
+            <div class="core-top">
+              <div class="core-brand"><span class="core-mark">1</span></div>
+              <div class="core-live">LIVE SYSTEM</div>
+            </div>
+            <div class="mission-line">
+              <strong>개인 업무 허브</strong>
+              흩어진 자료와 반복 업무를 한 화면에서 실행합니다.
+            </div>
+            <div class="tool-grid">
+              <div class="tool-pill"><small>MY SPACE</small><b>내 자료 정리</b></div>
+              <div class="tool-pill"><small>SCRIPTS</small><b>상담 멘트 호출</b></div>
+              <div class="tool-pill"><small>QUICK</small><b>BMI · 보험연령</b></div>
+              <div class="tool-pill"><small>FIELD VOICE</small><b>현장 지식 연결</b></div>
+            </div>
+            <div class="satellite one"><span class="sat-dot"></span> 반복 질문 감소</div>
+            <div class="satellite two"><span class="sat-dot"></span> 1초 실행 도구</div>
+            <div class="satellite three"><span class="sat-dot"></span> 보험 통합 솔루션</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="home-row-2">
+        <div class="home-widget">
+          <div class="home-widget-head">
+            <div class="home-widget-ttl">최근 사용한 자료</div>
+            <div class="home-widget-more" onclick="showView('myspace')">MY SPACE →</div>
+          </div>
+          <div class="mys-grid" style="grid-template-columns:1fr">
+            <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('myspace')"><span class="mys-badge">자료</span><div class="mys-ttl">5세대 실손 비교표</div><div class="mys-meta">5월 15일 저장 · PDF</div></div>
+            <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('myspace')"><span class="mys-badge">자료</span><div class="mys-ttl">한화손보 간편 2대치료비</div><div class="mys-meta">5월 14일 저장 · 이미지</div></div>
+            <div class="mys-card" style="--tc:var(--t-event)" onclick="showView('myspace')"><span class="mys-badge">메모</span><div class="mys-ttl">흥국화재 결제 방법 메모</div><div class="mys-meta">5월 14일 저장 · 메모</div></div>
+          </div>
+        </div>
+        <div class="home-widget">
+          <div class="home-widget-head">
+            <div class="home-widget-ttl">최근 사용한 스크립트</div>
+            <div class="home-widget-more" onclick="showView('scripts')">스크립트 →</div>
+          </div>
+          <div class="mys-grid" style="grid-template-columns:1fr">
+            <div class="mys-card" style="--tc:var(--t-product)" onclick="showView('scripts')"><span class="mys-badge">상품</span><div class="mys-ttl">암보험 매월 생활비 안내 화법</div><div class="mys-meta">5월 15일 · 사용 24회</div></div>
+            <div class="mys-card" style="--tc:var(--t-event)" onclick="showView('scripts')"><span class="mys-badge">거절극복</span><div class="mys-ttl">"보험료 비싸다" 응대 화법</div><div class="mys-meta">5월 15일 · 사용 21회</div></div>
+            <div class="mys-card" style="--tc:var(--t-product)" onclick="showView('scripts')"><span class="mys-badge">상품</span><div class="mys-ttl">5세대 실손 단독 가입 안내</div><div class="mys-meta">5월 14일 · 사용 18회</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="home-widget">
+        <div class="home-widget-head">
+          <div class="home-widget-ttl">Quick 실행 도구</div>
+          <div class="home-widget-more" onclick="showView('quick')">전체 →</div>
+        </div>
+        <div class="home-quick-grid">
+          <div class="home-quick-btn" onclick="showView('quick')"><div class="home-quick-ic">⚖️</div><div>BMI</div></div>
+          <div class="home-quick-btn" onclick="showView('quick')"><div class="home-quick-ic">📅</div><div>보험연령</div></div>
+          <div class="home-quick-btn" onclick="showView('quick')"><div class="home-quick-ic">🎙️</div><div>녹취</div></div>
+          <div class="home-quick-btn" onclick="showView('quick')"><div class="home-quick-ic">📷</div><div>OCR</div></div>
+          <div class="home-quick-btn" onclick="showView('quick')"><div class="home-quick-ic">🗂️</div><div>카드 만들기</div></div>
+        </div>
+      </div>
+
+      <div class="home-row-2">
+        <div class="home-widget">
+          <div class="home-widget-head">
+            <div class="home-widget-ttl">현장의 소리</div>
+            <div class="home-widget-more" onclick="showView('voice')">전체 →</div>
+          </div>
+          <div class="mys-grid" style="grid-template-columns:1fr">
+            <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('voice')"><span class="mys-badge">인수</span><div class="mys-ttl">70년 남 사무직 순환계 기왕증 보장</div><div class="mys-meta">5월 15일 16:28 · 답변 3</div></div>
+            <div class="mys-card" style="--tc:var(--t-product)" onclick="showView('voice')"><span class="mys-badge">상품</span><div class="mys-ttl">암보험 매월 생활비 받는 상품</div><div class="mys-meta">5월 12일 14:47 · 답변 3</div></div>
+            <div class="mys-card" style="--tc:var(--t-event)" onclick="showView('voice')"><span class="mys-badge">기타</span><div class="mys-ttl">전산 지연 시 청약서 제출 방법</div><div class="mys-meta">5월 14일 16:40 · 답변 1</div></div>
+          </div>
+        </div>
+        <div class="home-widget">
+          <div class="home-widget-head">
+            <div class="home-widget-ttl">보험이슈</div>
+            <div class="home-widget-more" onclick="showView('news')">전체 →</div>
+          </div>
+          <div class="mys-grid" style="grid-template-columns:1fr">
+            <div class="mys-card mys-news-card" style="--tc:var(--ac)" onclick="showView('news')"><span class="mys-badge">정책브리핑</span><div class="mys-ttl">금융위·질병청·공정위 정책 자동 수집</div><div class="mys-meta">매일 7시 KST · Supabase 자동 갱신</div></div>
+          </div>
+        </div>
+      </div>
+     </div>
      <div class="wrap view" id="v-myspace">
       <div class="ttl">MY SPACE <span class="ac">· 내가 저장한 자료들</span></div>
       <div class="sub">딸깍으로 저장한 자료를 한 곳에 모아 봅니다.</div>
@@ -478,7 +639,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="mys-card" style="--tc:var(--ts)"><span class="mys-badge">휴직</span><div class="mys-ttl">윤성호</div><div class="mys-meta">시청팀 · 출산휴가 · 7월 복귀 예정</div></div>
       </div>
      </div>
-     <div class="wrap view on" id="v-voice">
+     <div class="wrap view" id="v-voice">
       <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
       <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
       <div class="tabs">
@@ -1016,6 +1177,30 @@ function closeProfile(){document.getElementById('profmodal').classList.remove('o
 function saveProfile(){closeProfile();toast('내 정보가 저장되었습니다');}
 function setFont(p){document.documentElement.style.setProperty('--fscale',p/100);[90,100,110,125].forEach(function(n){document.getElementById('f'+n).classList.toggle('on',n===p);});}
 document.addEventListener('keydown',function(e){if(!document.getElementById('lb').classList.contains('open'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowRight')navi(1);if(e.key==='ArrowLeft')navi(-1);});
+
+function updateHomeGreeting(){
+  var h=new Date().getHours();var msg;
+  if(h<12)msg='모닝 커피 한잔으로 오늘 하루도 화이팅입니다 ☕';
+  else if(h<17)msg='점심은 맛있게 드셨어요? 오후 업무도 가볍게 이어가볼까요?';
+  else msg='오늘 하루는 어떠셨어요? 마음에 드는 하루였기를 바랍니다.';
+  var el=document.getElementById('homeGreetMsg');if(el)el.textContent=msg;
+}
+updateHomeGreeting();
+
+(function(){
+  var banner=document.querySelector('.os-galaxy-banner');if(!banner)return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  banner.addEventListener('pointermove',function(e){
+    var rect=banner.getBoundingClientRect();
+    var x=((e.clientX-rect.left)/rect.width-0.5)*22;
+    var y=((e.clientY-rect.top)/rect.height-0.5)*22;
+    banner.style.setProperty('--mx',x+'px');
+    banner.style.setProperty('--my',y+'px');
+  });
+  banner.addEventListener('pointerleave',function(){
+    banner.style.setProperty('--mx','0px');banner.style.setProperty('--my','0px');
+  });
+})();
 </script>
 </body>
 </html>
