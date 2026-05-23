@@ -1,0 +1,40 @@
+# 원세컨드 보험이슈 자동 카드 — 매일 7시 KST 자동 자료
+# 자료 흐름: korea.kr RSS 3곳 → Node 스크립트 → Supabase issues 테이블
+# 자료 자료: docs/architecture/issues_ddl_2026-05-23.md
+# 스크립트: scripts/issues/fetch-rss.mjs
+
+name: Issues Daily Fetch
+
+on:
+  schedule:
+    # 매일 22:00 UTC = 매일 07:00 KST (한국 시간)
+    - cron: '0 22 * * *'
+  # 수동 실행 자료 (팀장님이 자료 자료 테스트 가능)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    name: Fetch RSS and Insert to Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Fetch RSS and insert to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: npm run fetch-issues
