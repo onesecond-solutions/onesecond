@@ -31,6 +31,13 @@
   var LANDING = '/pages/landing.html';
 
   try {
+    /* 2026-05-23 추가: ?dev=1 우회 자료 — 본인 작업 자리 + Chrome AI 검수 진입용.
+       공사중 흐름 임시 자리. 공사중 해제 시 본 우회 자료도 같이 제거. */
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('dev') === '1') {
+      return;
+    }
+
     var script = document.currentScript;
     var requireAdmin = script && script.getAttribute('data-require') === 'admin';
 
