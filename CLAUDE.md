@@ -118,15 +118,46 @@ WHERE au.email = 'bylts0428@gmail.com';
     예: deploy-preview-15--splendorous-bavarois.netlify.app
 [4] Code가 GitHub에 PR 생성
     └─ PR 본문에 Deploy Preview URL 자동 첨부 (Netlify bot)
-[5] Code가 Chrome AI에 의뢰서 ② 전달 (검수 + 팀장님 안내 + 머지 안내)
-    └─ Chrome AI가 Deploy Preview URL 검수
+[5] Code 1차 검수 + 팀장님 눈 검수 (2026-05-23 흐름 정정 — 토큰 절약)
+    ├─ Code 1차 검수 자체 자료 (필수)
+    │   ├─ curl로 Deploy Preview HTTP 200/404 직접 확인
+    │   ├─ 코드 정적 분석 (diff 자료 통째)
+    │   ├─ 라이브 함수와 본 PR 함수 정합 비교
+    │   └─ 콘솔 에러 잠재 자리 (try/catch 누락 등) 점검
+    ├─ 본질 위험 자료(아래 표) 발견 시만 Chrome AI 의뢰
     └─ 팀장님이 직접 클릭해서 눈 검수
     └─ 팀장님 결재: A(통과) / B(회귀) / C(보류)
-[6] A안 결재 시 → 팀장님이 GitHub PR 페이지에서 "Merge pull request" 클릭
+[6] A안 결재 시 → Code 또는 팀장님이 머지 진입
     └─ 자동 → [7]
 [7] main 자동 갱신 → GitHub Pages 자동 배포 → onesecond.solutions 라이브 반영
     └─ Netlify staging URL(splendorous-bavarois-...)도 동시 갱신 (main 미러)
 ```
+
+### Chrome AI 의뢰 자리 한정 (2026-05-23 신설 — 토큰 절약)
+
+> **본질 신호 (2026-05-23):** "매 PR Chrome AI 의뢰 = 토큰 빨리 소진 = 코드 작업에도 영향 미칠까봐 걱정"
+> → Chrome AI 의뢰는 **본질 위험 자료만**. 시각 UI / 단순 mock 자료는 Code 1차 + 팀장님 눈 검수 정합.
+
+| 자료 | Chrome AI 의뢰 자리? | 사유 |
+|---|---|---|
+| 시각 UI (배너 효과 / 반응형 / 다크 토글 / 색감) | ❌ 팀장님 본인 눈 검수 정합 | 시각 자료 = 사람 눈이 본질 |
+| 단순 mock 자료 추가 / 텍스트 변경 / 라벨 정정 | ❌ Code 자체 검수 | 위험도 0 |
+| Read-only fetch (라이브 데이터 조회) | 🟡 Code 1차 + 의문 시 의뢰 | 읽기만 = 위험도 낮음 |
+| Write fetch (CRUD — Create/Update/Delete) | 🟡 Code 1차 + 의문 시 의뢰 | 사용자 자료 변경 자리 |
+| Supabase RLS / 보안 / 인증 흐름 | ✅ Chrome AI 의뢰 필수 | 보안 격차 = 본질 위험 |
+| 본질 로직 (라우터 / state 자료 / 결제) | ✅ Chrome AI 의뢰 필수 | 사용자 흐름 본질 |
+| 라이브 자리 영구 갈아끼움 (라이브 전환 시점) | ✅ Chrome AI 의뢰 필수 | 사용자 영향 직접 자리 |
+
+### Code 1차 검수 체크리스트 (Chrome AI 의뢰 전 자체 점검)
+
+- [ ] `curl -sI {DeployPreviewURL}/{변경한 파일}` → HTTP 200 OK 확인
+- [ ] `git diff --stat` 자료가 본 PR 본질에 정합
+- [ ] 추가 함수가 라이브 동일 함수와 fetch URL / 헤더 / 메서드 정합
+- [ ] 새 view / 컴포넌트가 다른 view 격리 (회귀 자리 0)
+- [ ] 빈 상태 / 에러 / 미로그인 UX 3종 분기 자료 들어 있음
+- [ ] XSS 방지 (innerHTML 자료에 사용자 입력 직접 자리 금지 또는 escape)
+
+→ 위 6개 자체 점검 후, 본질 위험 자료(위 표 ✅ 자리)면 Chrome AI 의뢰. 아니면 팀장님께 직접 검수 안내.
 
 ### 세 가지 URL 자리 구분
 
@@ -160,23 +191,26 @@ WHERE au.email = 'bylts0428@gmail.com';
   - 2026-05-21 사고 본질. 절대 재발 금지.
   - 예외: 본 흐름 자체를 정정하는 PR로 팀장님 결재 받은 경우만 (본 섹션 신설 PR 같은)
 - ❌ Deploy Preview 검수 없이 머지 진행 금지
-- ❌ Chrome 검수 결과만 보고 머지 결정 (팀장님 눈 검수 없이) 금지
+- ❌ Code 1차 검수 + 팀장님 눈 검수 둘 다 건너뜀 금지
 - ❌ "긴급 핫픽스"라며 [5] 건너뜀 — 핫픽스도 같은 흐름 통과
+- ❌ 시각 UI / 단순 mock 자료에 Chrome AI 의뢰 (토큰 자리 본질 격차)
+- ❌ 본질 위험 자료 (보안 / RLS / 결제 / 라이브 영구 변경)에 Chrome AI 의뢰 생략
 
 ### Code 자기 점검 체크리스트 (머지 직전 자동 점검)
 
 - [ ] feature 브랜치에서 작업했는가?
 - [ ] PR 생성했는가?
 - [ ] Deploy Preview URL 자동 생성됐는가?
-- [ ] Chrome AI에 의뢰서 ② 전달했는가?
+- [ ] Code 1차 검수 6항목 통과했는가? (위 "Code 1차 검수 체크리스트" 자리)
+- [ ] 본질 위험 자료 발견 시 Chrome AI 의뢰했는가? (위 "Chrome AI 의뢰 자리 한정" 표 ✅ 자리)
 - [ ] 팀장님께 검수용 URL + 결재 요청 안내했는가?
 - [ ] 팀장님이 "A안 통과" 결재했는가? (없으면 머지 진행 안 함)
 
-→ 6개 중 하나라도 ❌면 머지 진행 안 함. 빠진 단계 진입.
+→ 7개 중 하나라도 ❌면 머지 진행 안 함. 빠진 단계 진입.
 
 ### Chrome AI 의뢰서 ② 템플릿
 
-매 PR마다 Code가 § 1 채워넣어 사용. 본 PR(2026-05-22)이 첫 적용 → 흐름 검증 후 템플릿 자리(별도 파일 또는 본 문서 부록) 확정 예정.
+매 PR마다 박지 말고, **본질 위험 자료(위 표 ✅ 자리)에 한정**해서 사용. 본 PR(2026-05-22)이 첫 적용 → 5/23 흐름 정정 = 매 PR 의뢰 X / 본질 위험 자리만 의뢰. 템플릿 자리(별도 파일 또는 본 문서 부록) 확정 예정.
 
 ---
 
