@@ -384,10 +384,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
       <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
       <div class="tabs">
-        <div class="tab">4팀 단체방</div>
-        <div class="tab on">네비게이션방</div>
-        <div class="tab">스마트 게시판</div>
-        <div class="tab">지점 게시판</div>
+        <div class="tab" onclick="showTab(this,'team')">4팀 단체방</div>
+        <div class="tab on" onclick="showTab(this,'voice')">네비게이션방</div>
+        <div class="tab" onclick="showTab(this,'smart')">스마트 게시판</div>
+        <div class="tab" onclick="showTab(this,'branch')">지점 게시판</div>
       </div>
       <div class="chips">
         <div class="chip on" onclick="filterChip(this,'전체')">전체</div>
@@ -720,6 +720,7 @@ function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}}
 function filterMys(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#mysGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var labels={team:'4팀 단체방',voice:'네비게이션방',smart:'스마트 게시판',branch:'지점 게시판'};if(key!=='voice'){toast(labels[key]+' 자료 준비 중입니다.');}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
