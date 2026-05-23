@@ -299,6 +299,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
   .askfoot{position:sticky;bottom:0;background:var(--s1);}
 }
 
+.view{display:none}
+.view.on{display:block}
 </style>
 </head>
 <body>
@@ -310,14 +312,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       <button class="hamb" onclick="document.getElementById('app').classList.toggle('collapsed')">&#9776;</button>
       <button class="mclose" onclick="toggleMSide()" aria-label="메뉴 닫기">&#10005;</button>
     </div>
-    <div class="nav"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
-    <div class="nav on"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
-    <div class="nav"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
-    <div class="nav"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
-    <div class="nav"><span class="ic">&#9672;</span><span class="lbl">MY SPACE</span></div>
-    <div class="nav"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
-    <div class="nav"><span class="ic">&#9776;</span><span class="lbl">보험뉴스</span></div>
-    <div class="nav"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
+    <div class="nav" onclick="showView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
+    <div class="nav" onclick="showView('myspace')"><span class="ic">&#9672;</span><span class="lbl">MY SPACE</span></div>
+    <div class="nav" onclick="showView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
+    <div class="nav" onclick="showView('quick')"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
+    <div class="nav on" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
+    <div class="nav" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
+    <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험뉴스</span></div>
+    <div class="nav" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
   </nav>
   <div class="main">
     <header class="head">
@@ -342,7 +344,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       </div>
     </header>
     <div class="body">
-     <div class="wrap">
+     <div class="wrap view" id="v-home"><div class="ttl">홈</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-myspace"><div class="ttl">MY SPACE</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-scripts"><div class="ttl">스크립트</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-quick"><div class="ttl">Quick 메뉴</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-together"><div class="ttl">함께해요</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-news"><div class="ttl">보험뉴스</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-team"><div class="ttl">팀원관리</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view on" id="v-voice">
       <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
       <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
       <div class="tabs">
@@ -680,6 +689,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험뉴스',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
