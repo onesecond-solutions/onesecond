@@ -301,6 +301,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 
 .view{display:none}
 .view.on{display:block}
+.mys-news-empty{grid-column:1/-1;padding:32px 16px;text-align:center;color:var(--ts);font-size:0.9em}
+.mys-news-summary{font-size:0.78em;color:var(--ts);line-height:1.55;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mys-news-card{cursor:pointer}
 .mys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
 .mys-card{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--tc,var(--ac));border-radius:8px;padding:14px;cursor:pointer;transition:transform .15s,border-color .15s}
 .mys-card:hover{transform:translateY(-2px);border-color:var(--ac)}
@@ -441,25 +444,16 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       </div>
      </div>
      <div class="wrap view" id="v-news">
-      <div class="ttl">보험이슈 <span class="ac">· 최신 보험 자료</span></div>
-      <div class="sub">현장에서 본질 자리에 영향을 주는 최신 자료.</div>
+      <div class="ttl">보험이슈 <span class="ac">· 정책브리핑 자동 자료</span></div>
+      <div class="sub">매일 아침 7시, 금융위 · 질병청 · 공정위 자료를 자동으로 모읍니다.</div>
       <div class="chips">
         <div class="chip on" onclick="filterNews(this,'전체')">전체</div>
-        <div class="chip" onclick="filterNews(this,'상품')">상품</div>
-        <div class="chip" onclick="filterNews(this,'인수')">인수</div>
-        <div class="chip" onclick="filterNews(this,'규정')">규정</div>
-        <div class="chip" onclick="filterNews(this,'시장')">시장</div>
+        <div class="chip" onclick="filterNews(this,'금융위')">금융위</div>
+        <div class="chip" onclick="filterNews(this,'질병청')">질병청</div>
+        <div class="chip" onclick="filterNews(this,'공정위')">공정위</div>
       </div>
       <div class="mys-grid" id="newsGrid">
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">DB 간병인일당 20만 가입금액 축소 (5/25 시행)</div><div class="mys-meta">5월 15일 · 보험매일</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">5세대 실손 단독 가입 가능 보험사 정리</div><div class="mys-meta">5월 14일 · 한국보험신문</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">치매보험 트렌드 - 40대 가입 증가</div><div class="mys-meta">5월 13일 · 보험저널</div></div>
-        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">기왕증 인수 가이드 5월 갱신 자료</div><div class="mys-meta">5월 14일 · 인수실무</div></div>
-        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">간편 2대치료비 회사별 인수 자료 정리</div><div class="mys-meta">5월 13일 · 인수실무</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">규정</span><div class="mys-ttl">금감원 5월 행정지도 - 청약서 자료 정정</div><div class="mys-meta">5월 15일 · 금감원</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">규정</span><div class="mys-ttl">민원 처리 절차 갱신 가이드 (6월 시행)</div><div class="mys-meta">5월 14일 · 금감원</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">시장</span><div class="mys-ttl">5월 보험 시장 동향 - 손보 청약 증가</div><div class="mys-meta">5월 15일 · 보험연구원</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">시장</span><div class="mys-ttl">GA 채널 성장세 - 5월 매출 자료 정리</div><div class="mys-meta">5월 13일 · 보험저널</div></div>
+        <div class="mys-news-empty" id="newsLoading">자료 자료 자료... ⏳</div>
       </div>
      </div>
      <div class="wrap view" id="v-team">
@@ -822,7 +816,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}}
+function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();}
 function filterMys(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#mysGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 var voiceTabData = {
   voice: {title:'네비게이션방', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
@@ -861,7 +855,15 @@ function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[
 function filterScripts(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#scriptsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function filterQuick(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#quickGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function filterTogether(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#togetherGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function filterNews(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#newsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+var SUPABASE_URL='https://pdnwgzneooyygfejrvbg.supabase.co';
+var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
+var newsCache=null;
+var newsLoaded=false;
+function srcColor(s){var m={'금융위':'--t-product','질병청':'--ok','공정위':'--t-event'};return m[s]||'--ac';}
+function formatNewsDate(d){if(!d)return '';var t=new Date(d);if(isNaN(t.getTime()))return '';return (t.getMonth()+1)+'월 '+t.getDate()+'일';}
+function renderNewsCards(rows){var g=document.getElementById('newsGrid');if(!g)return;if(!rows||rows.length===0){g.innerHTML='<div class="mys-news-empty">자료 자료 자료 없음.</div>';return;}g.innerHTML=rows.map(function(r){var color=srcColor(r.source);var date=formatNewsDate(r.pub_date);var summary=(r.summary||'').replace(/</g,'&lt;');var title=(r.title||'').replace(/</g,'&lt;');return '<a class="mys-card mys-news-card" href="'+(r.url||'#')+'" target="_blank" rel="noopener" style="--tc:var('+color+');text-decoration:none;color:inherit;display:block"><span class="mys-badge">'+r.source+'</span><div class="mys-ttl">'+title+'</div><div class="mys-news-summary">'+summary+'</div><div class="mys-meta">'+date+' · '+(r.category||'')+'</div></a>';}).join('');}
+function fetchNews(){if(newsLoaded){renderNewsCards(newsCache);return;}var g=document.getElementById('newsGrid');if(g)g.innerHTML='<div class="mys-news-empty">자료 자료 자료... ⏳</div>';var url=SUPABASE_URL+'/rest/v1/issues?select=*&order=pub_date.desc.nullslast&limit=30';fetch(url,{headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(rows){newsCache=rows;newsLoaded=true;renderNewsCards(rows);}).catch(function(err){console.error('보험이슈 자료 진입 격차:',err);if(g)g.innerHTML='<div class="mys-news-empty">자료 진입 격차. 잠시 후 다시 시도해주세요.</div>';});}
+function filterNews(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');if(!newsCache)return;if(cat==='전체'){renderNewsCards(newsCache);}else{var filtered=newsCache.filter(function(r){return r.source===cat;});renderNewsCards(filtered);}}
 function filterTeam(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#teamGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
