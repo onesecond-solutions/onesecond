@@ -1277,13 +1277,31 @@ updateHomeGreeting();
   });
 })();
 
-/* === Auth 초기화 (js/db.js + js/auth.js 로드 후) === */
+/* === Auth 초기화 (js/db.js + js/auth.js 로드 후) ===
+ * hotfix (2026-05-23):
+ *   window.Auth.init() 자체 호출 시 토큰 없을 때 index.html로 redirect 발생.
+ *   Deploy Preview / main 미러 도메인 = 라이브와 별도 localStorage = 토큰 자체 없음 → 진입 즉시 redirect 격차.
+ *   안전한 자체 init 함수로 갈아끼움 — 토큰 있을 때만 AppState 세팅 + loadUser.
+ *   토큰 없으면 아무것도 안 함 (미로그인 상태 그대로, 글쓰기/MY SPACE 등 fetch 자리에서 안내).
+ */
 (function(){
-  function tryInitAuth(){
-    if(window.Auth&&window.Auth.init){try{window.Auth.init();}catch(e){}}
+  function tryInitAuthSafe(){
+    if(!window.db||!window.Auth)return;
+    var token=window.db.getToken&&window.db.getToken();
+    if(!token)return;
+    try{
+      var raw=localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}';
+      var parsed=JSON.parse(raw);
+      var uid=parsed.id||parsed.sub||(parsed.user&&(parsed.user.id||parsed.user.sub))||null;
+      if(uid&&window.AppState){
+        window.AppState.userId=uid;
+        window.AppState.token=token;
+        if(window.Auth.loadUser)window.Auth.loadUser();
+      }
+    }catch(e){}
   }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',tryInitAuth);}
-  else{tryInitAuth();}
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',tryInitAuthSafe);}
+  else{tryInitAuthSafe();}
 })();
 
 /* === MY SPACE 라이브 자료 fetch === */
