@@ -1304,7 +1304,7 @@ body {
 </head>
 <body>
 
-<!-- 2026-05-23: 토요일 작업 시 공사중 overlay (URL ?dev=1 우회) -->
+<!-- 2026-05-23: 공사중 overlay + 3 이메일 화이트리스트 (bylts0428@gmail.com / bylts@naver.com / bylts@kakao.com) -->
 <div id="maintenance-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0B0C0E;color:#F4F4F5;font-family:'Pretendard',sans-serif;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;">
   <div style="font-size:64px;margin-bottom:24px;">🛠️</div>
   <h1 style="font-size:2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.02em;">사이트 점검 중</h1>
@@ -1312,12 +1312,25 @@ body {
   <p style="font-size:0.875rem;color:#6B6D72;margin-top:24px;">— 원세컨드 운영팀 —</p>
 </div>
 <script>
+/* 공통: 3 이메일 화이트리스트 + overlay 띄움 함수 (doLogin/doSubmit/signInWithGoogle에서 사용) */
+window.OS_ALLOWED_EMAILS = ['bylts0428@gmail.com', 'bylts@naver.com', 'bylts@kakao.com'];
+window.osIsAllowedEmail = function(email) {
+  return window.OS_ALLOWED_EMAILS.indexOf((email || '').toLowerCase().trim()) !== -1;
+};
+window.osShowMaintenance = function() {
+  var ov = document.getElementById('maintenance-overlay');
+  if (ov) ov.style.display = 'flex';
+  document.documentElement.style.overflow = 'hidden';
+};
 (function(){
   var params = new URLSearchParams(window.location.search);
-  if(params.get('dev') !== '1'){
-    var ov = document.getElementById('maintenance-overlay');
-    if(ov) ov.style.display = 'flex';
-    document.documentElement.style.overflow = 'hidden';
+  var dev = params.get('dev') === '1';
+  var auth = params.get('auth');
+  var inAuthFlow = auth === 'login' || auth === 'signup';
+  /* ?dev=1 우회 또는 인증 흐름(?auth=login/signup) 진입 시 overlay 안 띄움.
+     인증 흐름에서는 doLogin/doSubmit가 이메일 검증 후 차단. */
+  if (!dev && !inAuthFlow) {
+    window.osShowMaintenance();
   }
 })();
 </script>
@@ -2126,6 +2139,13 @@ async function doLogin() {
 
   var email = document.getElementById('f-email-login').value.trim();
 
+  /* 2026-05-23: 3 이메일 화이트리스트 — 외 이메일 로그인 시도 → 공사중 차단 */
+  if (!window.osIsAllowedEmail(email)) {
+    _resetBtn();
+    window.osShowMaintenance();
+    return;
+  }
+
   try {
     var res = await fetch(SUPABASE_URL + '/auth/v1/otp', {
       method: 'POST',
@@ -2302,11 +2322,8 @@ async function resendOtp() {
    - app.html 진입 시 js/auth.js의 _handleOAuthCallback이 fragment 파싱 + localStorage 박음
    - 사용자 동일 이메일 정합 매칭 = Supabase Dashboard "Allow manual linking" ON 박혀 있어야 함 */
 function signInWithGoogle() {
-  var redirectTo = window.location.origin + '/app.html';
-  var url = SUPABASE_URL + '/auth/v1/authorize'
-          + '?provider=google'
-          + '&redirect_to=' + encodeURIComponent(redirectTo);
-  window.location.href = url;
+  /* 2026-05-23: 공사중 흐름 — Google 로그인은 사전 이메일 확인 불가 → 무조건 차단 */
+  window.osShowMaintenance();
 }
 
 // ============================================================================
@@ -2696,6 +2713,10 @@ function validateSignup() {
 }
 
 async function doSubmit() {
+  /* 2026-05-23: 공사중 흐름 — 가입 무조건 차단 (신규 사용자 진입로 폐쇄) */
+  window.osShowMaintenance();
+  return;
+
   if (!validateSignup()) return;
 
   var btn  = document.getElementById('authMainCta');
