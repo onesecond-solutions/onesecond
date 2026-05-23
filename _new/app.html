@@ -6,6 +6,8 @@
 <title>원세컨드 시안 — 딸깍(저장·복사·카드)</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="/js/db.js"></script>
+<script src="/js/auth.js"></script>
 <style>
 :root[data-theme="dark"]{--bg:#0B0C0E;--s1:#141518;--s2:#1C1D21;--sh:#222328;--bd:#26272B;--tp:#F4F4F5;--ts:#A1A1AA;--tf:#6B6D72;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#D4D4D8;--t-uw:#22D3EE;--t-product:#6366F1;--t-event:#E879F9;--ok:#22C55E;}
 :root[data-theme="light"]{--bg:#FBFBFC;--s1:#FFFFFF;--s2:#F4F4F6;--sh:#EEEEF1;--bd:#E4E4E7;--tp:#18181B;--ts:#52525B;--tf:#A1A1AA;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#3F3F46;--t-uw:#0891B2;--t-product:#6366F1;--t-event:#C026D3;--ok:#16A34A;}
@@ -528,15 +530,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="chip" onclick="filterMys(this,'즐겨찾기')">즐겨찾기</div>
       </div>
       <div class="mys-grid" id="mysGrid">
-        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">자료</span><div class="mys-ttl">5세대 실손 비교표</div><div class="mys-meta">5월 15일 저장 · PDF</div></div>
-        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">자료</span><div class="mys-ttl">한화손보 간편 2대치료비 자료</div><div class="mys-meta">5월 14일 저장 · 이미지</div></div>
-        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">자료</span><div class="mys-ttl">DB 간병인일당 20만 가입금액 축소 (5/25 이후)</div><div class="mys-meta">5월 14일 저장 · 공지</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">스크립트</span><div class="mys-ttl">70년 남 사무직 인수 거절 응대 스크립트</div><div class="mys-meta">5월 15일 저장 · 화법</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">스크립트</span><div class="mys-ttl">암보험 매월 생활비 상품 상담 스크립트</div><div class="mys-meta">5월 12일 저장 · 화법</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">메모</span><div class="mys-ttl">시청팀 5/15 회식 안내 메모</div><div class="mys-meta">5월 15일 저장 · 메모</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">메모</span><div class="mys-ttl">흥국화재 결제 방법 메모</div><div class="mys-meta">5월 14일 저장 · 메모</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">금감원 지급여력비율 (보험사 건전성)</div><div class="mys-meta">5월 15일 저장 · 즐겨찾기</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">고지혈증·동맥경화증 (혈관 건강 자료)</div><div class="mys-meta">5월 15일 저장 · 즐겨찾기</div></div>
+        <div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div>
       </div>
      </div>
      <div class="wrap view" id="v-scripts">
@@ -977,8 +971,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();}
-function filterMys(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#mysGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();}
 var voiceTabData = {
   voice: {title:'네비게이션방', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
   team: {title:'4팀 단체방', sub:'4팀 내부 공지와 실무 공유 자리.', chips:['전체','공지','전달사항','팀 질문','자료 공유'], cnt:10,
@@ -1201,6 +1194,102 @@ updateHomeGreeting();
     banner.style.setProperty('--mx','0px');banner.style.setProperty('--my','0px');
   });
 })();
+
+/* === Auth 초기화 (js/db.js + js/auth.js 로드 후) === */
+(function(){
+  function tryInitAuth(){
+    if(window.Auth&&window.Auth.init){try{window.Auth.init();}catch(e){}}
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',tryInitAuth);}
+  else{tryInitAuth();}
+})();
+
+/* === MY SPACE 라이브 자료 fetch === */
+window._myspaceCache=null;
+window._myspaceLoaded=false;
+
+function fmtMysDate(iso){
+  if(!iso)return '';
+  var d=new Date(iso);if(isNaN(d.getTime()))return '';
+  return (d.getMonth()+1)+'월 '+d.getDate()+'일 저장';
+}
+
+async function loadMyspace(force){
+  if(window._myspaceLoaded&&!force)return;
+  var grid=document.getElementById('mysGrid');if(!grid)return;
+  if(!window.db||!window.db.getToken){
+    grid.innerHTML='<div class="mys-news-empty">자료 모듈 로드 실패. 새로고침 부탁드립니다.</div>';
+    return;
+  }
+  var token=window.db.getToken();
+  var userId=window.AppState&&window.AppState.userId;
+  if(!token||!userId){
+    grid.innerHTML='<div class="mys-news-empty">로그인이 필요합니다. 우상단 사용자 메뉴 확인 부탁드립니다.</div>';
+    return;
+  }
+  grid.innerHTML='<div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div>';
+  try{
+    var headers={'apikey':window.db.key,'Authorization':'Bearer '+token};
+    var scrUrl=window.db.url('/rest/v1/scripts?owner_id=eq.'+userId+'&is_active=eq.true&order=created_at.desc&limit=50');
+    var libUrl=window.db.url('/rest/v1/library?owner_id=eq.'+userId+'&order=created_at.desc&limit=50');
+    var results=await Promise.all([
+      fetch(scrUrl,{headers:headers}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
+      fetch(libUrl,{headers:headers}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
+    ]);
+    var scripts=results[0]||[];
+    var library=results[1]||[];
+    var items=[];
+    for(var i=0;i<scripts.length;i++){
+      var s=scripts[i];
+      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,title:s.title,id:s.id});
+    }
+    for(var j=0;j<library.length;j++){
+      var l=library[j];
+      var badge=(l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url)?'메모':'자료';
+      items.push({_type:'library',_badge:badge,_date:l.created_at,title:l.title,id:l.id});
+    }
+    items.sort(function(a,b){return (b._date||'').localeCompare(a._date||'');});
+    window._myspaceCache=items;
+    window._myspaceLoaded=true;
+    renderMyspace(items);
+  }catch(e){
+    grid.innerHTML='<div class="mys-news-empty">불러오기 실패. 새로고침 부탁드립니다.</div>';
+  }
+}
+
+function renderMyspace(items){
+  var grid=document.getElementById('mysGrid');if(!grid)return;
+  if(!items||items.length===0){
+    grid.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>라이브 사이트에서 스크립트나 자료를 저장해보세요.</div>';
+    return;
+  }
+  var colorMap={'자료':'var(--t-uw)','스크립트':'var(--t-product)','메모':'var(--t-event)','즐겨찾기':'var(--ok)'};
+  var html='';
+  for(var i=0;i<items.length;i++){
+    var it=items[i];
+    var tc=colorMap[it._badge]||'var(--ac)';
+    var dt=fmtMysDate(it._date);
+    var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html+='<div class="mys-card" data-badge="'+it._badge+'" style="--tc:'+tc+'">'+
+      '<span class="mys-badge">'+it._badge+'</span>'+
+      '<div class="mys-ttl">'+title+'</div>'+
+      '<div class="mys-meta">'+dt+'</div>'+
+    '</div>';
+  }
+  grid.innerHTML=html;
+}
+
+/* filterMys 갱신 — 동적 자료 정합 (data-badge 자료 자리) */
+function filterMys(el,cat){
+  var chips=el.parentElement.querySelectorAll('.chip');
+  for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
+  el.classList.add('on');
+  var cards=document.querySelectorAll('#mysGrid .mys-card');
+  for(var j=0;j<cards.length;j++){
+    var c=cards[j].getAttribute('data-badge')||'';
+    cards[j].style.display=(cat==='전체'||c===cat)?'':'none';
+  }
+}
 </script>
 </body>
 </html>
