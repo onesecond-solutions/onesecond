@@ -440,8 +440,50 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">자유</span><div class="mys-ttl">5월 보험 시장 트렌드 자료 공유드립니다</div><div class="mys-meta">5월 13일 · 최영진 · 답 6</div></div>
       </div>
      </div>
-     <div class="wrap view" id="v-news"><div class="ttl">보험이슈</div><div class="sub">준비 중입니다.</div></div>
-     <div class="wrap view" id="v-team"><div class="ttl">팀원관리</div><div class="sub">준비 중입니다.</div></div>
+     <div class="wrap view" id="v-news">
+      <div class="ttl">보험이슈 <span class="ac">· 최신 보험 자료</span></div>
+      <div class="sub">현장에서 본질 자리에 영향을 주는 최신 자료.</div>
+      <div class="chips">
+        <div class="chip on" onclick="filterNews(this,'전체')">전체</div>
+        <div class="chip" onclick="filterNews(this,'상품')">상품</div>
+        <div class="chip" onclick="filterNews(this,'인수')">인수</div>
+        <div class="chip" onclick="filterNews(this,'규정')">규정</div>
+        <div class="chip" onclick="filterNews(this,'시장')">시장</div>
+      </div>
+      <div class="mys-grid" id="newsGrid">
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">DB 간병인일당 20만 가입금액 축소 (5/25 시행)</div><div class="mys-meta">5월 15일 · 보험매일</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">5세대 실손 단독 가입 가능 보험사 정리</div><div class="mys-meta">5월 14일 · 한국보험신문</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">치매보험 트렌드 - 40대 가입 증가</div><div class="mys-meta">5월 13일 · 보험저널</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">기왕증 인수 가이드 5월 갱신 자료</div><div class="mys-meta">5월 14일 · 인수실무</div></div>
+        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">간편 2대치료비 회사별 인수 자료 정리</div><div class="mys-meta">5월 13일 · 인수실무</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">규정</span><div class="mys-ttl">금감원 5월 행정지도 - 청약서 자료 정정</div><div class="mys-meta">5월 15일 · 금감원</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">규정</span><div class="mys-ttl">민원 처리 절차 갱신 가이드 (6월 시행)</div><div class="mys-meta">5월 14일 · 금감원</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">시장</span><div class="mys-ttl">5월 보험 시장 동향 - 손보 청약 증가</div><div class="mys-meta">5월 15일 · 보험연구원</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">시장</span><div class="mys-ttl">GA 채널 성장세 - 5월 매출 자료 정리</div><div class="mys-meta">5월 13일 · 보험저널</div></div>
+      </div>
+     </div>
+     <div class="wrap view" id="v-team">
+      <div class="ttl">팀원관리 <span class="ac">· 시청팀</span></div>
+      <div class="sub">팀원 자료와 직급을 한 자리에 모음.</div>
+      <div class="chips">
+        <div class="chip on" onclick="filterTeam(this,'전체')">전체</div>
+        <div class="chip" onclick="filterTeam(this,'매니저')">매니저</div>
+        <div class="chip" onclick="filterTeam(this,'설계사')">설계사</div>
+        <div class="chip" onclick="filterTeam(this,'신입')">신입</div>
+        <div class="chip" onclick="filterTeam(this,'휴직')">휴직</div>
+      </div>
+      <div class="mys-grid" id="teamGrid">
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">매니저</span><div class="mys-ttl">한재성 실장</div><div class="mys-meta">시청팀 · 2018년 입사 · 010-1234-5678</div></div>
+        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">매니저</span><div class="mys-ttl">송미정 매니저</div><div class="mys-meta">시청팀 · 2020년 입사 · 휴무 5/15</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">김민수</div><div class="mys-meta">시청팀 · 2021년 입사 · 5월 8건</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">이서연</div><div class="mys-meta">시청팀 · 2022년 입사 · 5월 6건</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">박지훈</div><div class="mys-meta">시청팀 · 2022년 입사 · 5월 5건</div></div>
+        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">정수민</div><div class="mys-meta">시청팀 · 2023년 입사 · 5월 4건</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">신입</span><div class="mys-ttl">최영진</div><div class="mys-meta">시청팀 · 2026년 4월 입사 · 교육 중</div></div>
+        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">신입</span><div class="mys-ttl">강혜린</div><div class="mys-meta">시청팀 · 2026년 5월 입사 · 교육 중</div></div>
+        <div class="mys-card" style="--tc:var(--ts)"><span class="mys-badge">휴직</span><div class="mys-ttl">윤성호</div><div class="mys-meta">시청팀 · 출산휴가 · 7월 복귀 예정</div></div>
+      </div>
+     </div>
      <div class="wrap view on" id="v-voice">
       <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
       <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
@@ -786,6 +828,8 @@ function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(
 function filterScripts(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#scriptsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function filterQuick(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#quickGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function filterTogether(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#togetherGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+function filterNews(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#newsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+function filterTeam(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#teamGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
