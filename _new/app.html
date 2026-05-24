@@ -716,29 +716,91 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       <div class="ttl">Quick 메뉴 <span class="ac">· 빠른 실행</span></div>
       <div class="sub">긴박한 순간, 자주 쓰는 자료를 한 곳에서</div>
 
-      <!-- 탭바 (V1 7 탭 자체 정합) -->
-      <div class="qck-tab-bar" id="qck-tab-bar">
-        <button class="qck-tab-btn on" onclick="selectQuickMainV2(this,'가입설계 / 선심사 동의 녹취 스크립트')">가입설계 / 선심사 동의 녹취 스크립트</button>
-        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'회사별 BMI 심사기준')">회사별 BMI 심사기준</button>
-        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'보험연령표')">보험연령표</button>
-        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'보험회사 결제정보')">보험회사 결제정보</button>
-        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'미러링 전 녹취 스크립트')">미러링 전 녹취 스크립트</button>
-        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'원전산 설계 바로가기')">원전산 설계 바로가기</button>
-        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'보험회사 (모니터링) 연락처')">보험회사 (모니터링) 연락처</button>
+      <!-- 칩 메뉴 5개 -->
+      <div class="chips" id="quick-chips">
+        <div class="chip on" onclick="filterQuickV2(this,'전체')">전체</div>
+        <div class="chip" onclick="filterQuickV2(this,'녹취')">녹취·스크립트</div>
+        <div class="chip" onclick="filterQuickV2(this,'기준')">기준·정보</div>
+        <div class="chip" onclick="filterQuickV2(this,'바로가기')">바로가기·연락처</div>
+        <div class="chip" onclick="filterQuickV2(this,'실행도구')">실행도구</div>
       </div>
 
-      <!-- 콘텐츠 자체 -->
-      <div class="qck-content-shell">
-        <div class="qck-content-head">
-          <div class="qck-content-head-title" id="qck-content-title">가입설계 / 선심사 동의 녹취 스크립트</div>
+      <!-- 카드 그리드 (11 카드) -->
+      <div class="mys-grid" id="quickGrid">
+        <!-- 녹취·스크립트 (인디고) -->
+        <div class="mys-card" data-cat="녹취" style="--tc:var(--ac)" onclick="openQuickContentV2('가입설계 / 선심사 동의 녹취 스크립트')">
+          <span class="mys-badge">녹취·스크립트</span>
+          <div class="mys-ttl">가입설계 / 선심사 동의 녹취 스크립트</div>
+          <div class="mys-meta">DB 자료 자체</div>
+        </div>
+        <div class="mys-card" data-cat="녹취" style="--tc:var(--ac)" onclick="openQuickContentV2('미러링 전 녹취 스크립트')">
+          <span class="mys-badge">녹취·스크립트</span>
+          <div class="mys-ttl">미러링 전 녹취 스크립트</div>
+          <div class="mys-meta">메리츠 / 흥국 자체</div>
+        </div>
+
+        <!-- 기준·정보 (노랑) -->
+        <div class="mys-card" data-cat="기준" style="--tc:var(--warn)" onclick="openQuickContentV2('회사별 BMI 심사기준')">
+          <span class="mys-badge">기준·정보</span>
+          <div class="mys-ttl">회사별 BMI 심사기준</div>
+          <div class="mys-meta">12개 회사 자체</div>
+        </div>
+        <div class="mys-card" data-cat="기준" style="--tc:var(--warn)" onclick="openQuickContentV2('보험연령표')">
+          <span class="mys-badge">기준·정보</span>
+          <div class="mys-ttl">보험연령표</div>
+          <div class="mys-meta">2026년 기준 자체</div>
+        </div>
+        <div class="mys-card" data-cat="기준" style="--tc:var(--warn)" onclick="openQuickContentV2('보험회사 결제정보')">
+          <span class="mys-badge">기준·정보</span>
+          <div class="mys-ttl">보험회사 결제정보</div>
+          <div class="mys-meta">초회/계속분/이체일 자체</div>
+        </div>
+
+        <!-- 바로가기·연락처 (보라) -->
+        <div class="mys-card" data-cat="바로가기" style="--tc:#A78BFA" onclick="openQuickContentV2('원전산 설계 바로가기')">
+          <span class="mys-badge">바로가기·연락처</span>
+          <div class="mys-ttl">원전산 설계 바로가기</div>
+          <div class="mys-meta">손해/생명 31개사 자체</div>
+        </div>
+        <div class="mys-card" data-cat="바로가기" style="--tc:#A78BFA" onclick="openQuickContentV2('보험회사 (모니터링) 연락처')">
+          <span class="mys-badge">바로가기·연락처</span>
+          <div class="mys-ttl">보험회사 (모니터링) 연락처</div>
+          <div class="mys-meta">고객센터/인콜/팩스 자체</div>
+        </div>
+
+        <!-- 실행도구 (청록, 플레이스홀더) -->
+        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('BMI계산기')">
+          <span class="mys-badge">실행도구</span>
+          <div class="mys-ttl">BMI계산기</div>
+          <div class="mys-meta">준비 중 자체</div>
+        </div>
+        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('보험연령계산기')">
+          <span class="mys-badge">실행도구</span>
+          <div class="mys-ttl">보험연령계산기</div>
+          <div class="mys-meta">준비 중 자체</div>
+        </div>
+        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('변환기')">
+          <span class="mys-badge">실행도구</span>
+          <div class="mys-ttl">변환기</div>
+          <div class="mys-meta">녹취 변환 + PNG→JPG 자체</div>
+        </div>
+        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('카드만들기')">
+          <span class="mys-badge">실행도구</span>
+          <div class="mys-ttl">카드만들기</div>
+          <div class="mys-meta">준비 중 자체</div>
+        </div>
+      </div>
+
+      <!-- 콘텐츠 슬롯 (DB 콘텐츠 카드 클릭 시 표시 자체) -->
+      <div class="qck-content-shell" id="qck-content-shell" style="display:none;margin-top:14px;">
+        <div class="qck-content-head" style="display:flex;align-items:center;gap:10px;">
+          <button class="qck-back-btn" onclick="closeQuickContentV2()" style="background:transparent;border:1px solid var(--bd);color:var(--ts);font-size:0.82em;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;">← 뒤로</button>
+          <div class="qck-content-head-title" id="qck-content-title"></div>
         </div>
         <div class="qck-content-slot" id="qck-content-slot">
           <div class="qck-loading">불러오는 중...</div>
         </div>
       </div>
-
-      <!-- 푸터 자체 -->
-      <div class="qck-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
      </div>
      <div class="wrap view" id="v-together">
       <div class="ttl">함께해요 <span class="ac">· 원세컨드 커뮤니티</span></div>
@@ -1189,51 +1251,85 @@ function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();}
 
-/* ── V2 사이드바 Quick 메뉴 (v-quick) — V1 자체 이식 ── */
+/* ── V2 사이드바 Quick 메뉴 (v-quick) — 카드 그리드 자체 ── */
 window._qckCache = window._qckCache || {};
+window._qckLoaded = false;
 
 async function loadQuickV2(){
-  var slot = document.getElementById('qck-content-slot');
-  if(!slot) return;
-  if(slot.dataset.loaded === 'true') return;
+  if(window._qckLoaded) return;
 
   var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-  if(!hasToken){
-    slot.innerHTML = '<div class="qck-loading">로그인 후 가동</div>';
-    return;
-  }
-  if(!window.db){
-    slot.innerHTML = '<div class="qck-loading">DB 모듈 로딩 중</div>';
-    return;
-  }
+  if(!hasToken || !window.db) return;
 
   try{
     var res = await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html');
-    if(!res.ok) throw new Error('fetch 실패: ' + res.status);
+    if(!res.ok) return;
     var data = await res.json();
     data.forEach(function(row){
       if(row.tab_title && row.content_html) window._qckCache[row.tab_title] = row.content_html;
     });
-    var defaultKey = '가입설계 / 선심사 동의 녹취 스크립트';
-    slot.innerHTML = window._qckCache[defaultKey] || '<div class="qck-loading">준비 중입니다.</div>';
-    slot.dataset.loaded = 'true';
-  }catch(e){
-    slot.innerHTML = '<div class="qck-loading" style="color:var(--err);">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
-  }
+    window._qckLoaded = true;
+  }catch(e){}
 }
 window.loadQuickV2 = loadQuickV2;
 
-function selectQuickMainV2(btn, title){
-  document.querySelectorAll('#qck-tab-bar .qck-tab-btn').forEach(function(b){ b.classList.remove('on'); });
-  btn.classList.add('on');
+/* 칩 필터 (5 카테고리 자체) */
+function filterQuickV2(chip, cat){
+  document.querySelectorAll('#quick-chips .chip').forEach(function(c){ c.classList.remove('on'); });
+  chip.classList.add('on');
+  document.querySelectorAll('#quickGrid .mys-card').forEach(function(card){
+    if(cat === '전체' || card.dataset.cat === cat){
+      card.style.display = '';
+    }else{
+      card.style.display = 'none';
+    }
+  });
+  closeQuickContentV2();
+}
+window.filterQuickV2 = filterQuickV2;
+
+/* DB 콘텐츠 카드 클릭 = 콘텐츠 영역 표시 + 그리드 숨김 자체 */
+function openQuickContentV2(title){
+  var shell = document.getElementById('qck-content-shell');
+  var grid = document.getElementById('quickGrid');
+  var chips = document.getElementById('quick-chips');
   var titleEl = document.getElementById('qck-content-title');
   var slot = document.getElementById('qck-content-slot');
+  if(!shell || !slot) return;
+
   if(titleEl) titleEl.textContent = title;
-  if(slot){
-    slot.innerHTML = window._qckCache[title] || '<div class="qck-loading">준비 중입니다.</div>';
+  shell.style.display = '';
+  if(grid) grid.style.display = 'none';
+  if(chips) chips.style.display = 'none';
+
+  if(window._qckCache[title]){
+    slot.innerHTML = window._qckCache[title];
+    return;
   }
+
+  slot.innerHTML = '<div class="qck-loading">불러오는 중...</div>';
+  loadQuickV2().then(function(){
+    slot.innerHTML = window._qckCache[title] || '<div class="qck-loading">준비 중입니다.</div>';
+  });
 }
-window.selectQuickMainV2 = selectQuickMainV2;
+window.openQuickContentV2 = openQuickContentV2;
+
+/* 뒤로 = 콘텐츠 영역 숨김 + 그리드 표시 자체 */
+function closeQuickContentV2(){
+  var shell = document.getElementById('qck-content-shell');
+  var grid = document.getElementById('quickGrid');
+  var chips = document.getElementById('quick-chips');
+  if(shell) shell.style.display = 'none';
+  if(grid) grid.style.display = '';
+  if(chips) chips.style.display = '';
+}
+window.closeQuickContentV2 = closeQuickContentV2;
+
+/* 실행도구 = 플레이스홀더 자체 */
+function openQuickToolV2(name){
+  alert(name + ' — 준비 중입니다.');
+}
+window.openQuickToolV2 = openQuickToolV2;
 var voiceTabData = {
   voice: {title:'네비게이션방', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
   team: {title:'4팀 단체방', sub:'4팀 내부 공지와 실무 공유 자리.', chips:['전체','공지','전달사항','팀 질문','자료 공유'], cnt:10,
