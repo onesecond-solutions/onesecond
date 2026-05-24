@@ -1892,7 +1892,8 @@ async function openQuickOverlay(key){
   }
 
   try{
-    var res = await window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,tab_key,content_html&limit=1');
+    // is_active 필터 제거 (회사 row = 4그룹 안 숨김 + 본문 가동 자료 정합, 2026-05-24)
+    var res = await window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&select=tab_title,tab_key,content_html&limit=1');
     if(!res.ok) throw new Error('fetch 실패: ' + res.status);
     var data = await res.json();
     if(data && data[0] && data[0].content_html){
