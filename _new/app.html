@@ -1606,14 +1606,17 @@ function mountQuickOverlay(){
     +         '<div class="qov-group" data-group="recording_script">'
     +           '<div class="qov-group-title">녹취·스크립트</div>'
     +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
+    +           '<div class="qov-group-content" data-content-for="recording_script"></div>'
     +         '</div>'
     +         '<div class="qov-group" data-group="info">'
     +           '<div class="qov-group-title">기준·정보</div>'
     +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
+    +           '<div class="qov-group-content" data-content-for="info"></div>'
     +         '</div>'
     +         '<div class="qov-group" data-group="shortcuts">'
     +           '<div class="qov-group-title">바로가기·연락처</div>'
     +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
+    +           '<div class="qov-group-content" data-content-for="shortcuts"></div>'
     +         '</div>'
     +         '<div class="qov-group" data-group="search">'
     +           '<div class="qov-group-title">검색·조회</div>'
@@ -1690,7 +1693,7 @@ async function loadQuickOverlayItems(){
         slot.innerHTML = buckets[gKey].map(function(item){
           var icon = QUICK_ITEM_ICONS[item.tab_key] || '📄';
           var safe = String(item.tab_title).replace(/'/g, '&#39;');
-          return '<button type="button" class="qov-item" onclick="openQuickItem(\'' + safe + '\')">'
+          return '<button type="button" class="qov-item" onclick="openQuickOverlay(\'' + safe + '\')">'
             + '<span class="qov-item-icon">' + icon + '</span>'
             + '<span>' + item.tab_title + '</span>'
             + '</button>';
@@ -1780,11 +1783,105 @@ function handleQuickOverlayClick(e){
 }
 window.handleQuickOverlayClick = handleQuickOverlayClick;
 
-// ── 1차 단순화: 항목 클릭 = 안내 alert (다음 단계 = 콘텐츠 동적 펼침) ──
-function openQuickItem(tabTitle){
-  alert('"' + tabTitle + '" 콘텐츠 — 다음 단계 이식 자리');
+// ── 콘텐츠 펼침 흐름 (V1 openQuickOverlay 통째 이식) ──
+window.overlayContent = window.overlayContent || {};
+
+function closeAllGroupContent(){
+  document.querySelectorAll('.qov-group-content').forEach(function(el){
+    el.classList.remove('active');
+    el.innerHTML = '';
+    el.dataset.tabTitle = '';
+  });
+  document.querySelectorAll('.qov-item.active').forEach(function(b){ b.classList.remove('active'); });
 }
-window.openQuickItem = openQuickItem;
+window.closeAllGroupContent = closeAllGroupContent;
+
+function activateItemBtn(groupKey, tabTitle){
+  if(!groupKey) return;
+  var groupEl = document.querySelector('.qov-group[data-group="' + groupKey + '"]');
+  if(!groupEl) return;
+  groupEl.querySelectorAll('.qov-item').forEach(function(btn){
+    if(btn.textContent && btn.textContent.indexOf(tabTitle) !== -1){
+      btn.classList.add('active');
+    }
+  });
+}
+
+async function openQuickOverlay(key){
+  mountQuickOverlay();
+  loadQuickOverlayItems();
+
+  var tabKey = window._qovTabKeyMap && window._qovTabKeyMap[key];
+  var groupKey = tabKey ? QUICK_GROUP_MAP[tabKey] : null;
+
+  // 같은 항목 재클릭 = 토글 닫기
+  if(groupKey){
+    var existing = document.querySelector('.qov-group-content[data-content-for="' + groupKey + '"]');
+    if(existing && existing.classList.contains('active') && existing.dataset.tabTitle === key){
+      closeAllGroupContent();
+      return;
+    }
+  }
+
+  closeAllGroupContent();
+
+  var target = groupKey
+    ? document.querySelector('.qov-group-content[data-content-for="' + groupKey + '"]')
+    : null;
+  if(!target) return;
+
+  target.innerHTML = '<div class="qov-group-loading">불러오는 중...</div>';
+  target.classList.add('active');
+  target.dataset.tabTitle = key;
+
+  // 캐시 점검
+  if(window.overlayContent[key]){
+    target.innerHTML = window.overlayContent[key];
+    activateItemBtn(groupKey, key);
+    return;
+  }
+
+  // 토큰 사전 점검 (Deploy Preview 정합)
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if(!hasToken){
+    target.innerHTML = '<div class="qov-group-loading">로그인 후 가동</div>';
+    return;
+  }
+
+  if(!window.db){
+    target.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
+    return;
+  }
+
+  try{
+    var res = await window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,tab_key,content_html&limit=1');
+    if(!res.ok) throw new Error('fetch 실패: ' + res.status);
+    var data = await res.json();
+    if(data && data[0] && data[0].content_html){
+      window.overlayContent[key] = data[0].content_html;
+      // tab_key 보강 (캐시 매핑 자료)
+      if(!groupKey && data[0].tab_key){
+        var altGroup = QUICK_GROUP_MAP[data[0].tab_key];
+        if(altGroup){
+          window._qovTabKeyMap[key] = data[0].tab_key;
+          target = document.querySelector('.qov-group-content[data-content-for="' + altGroup + '"]');
+          if(target){
+            target.classList.add('active');
+            target.dataset.tabTitle = key;
+            groupKey = altGroup;
+          }
+        }
+      }
+      if(target) target.innerHTML = data[0].content_html;
+      activateItemBtn(groupKey, key);
+    } else {
+      target.innerHTML = '<div class="qov-group-loading">준비 중입니다.</div>';
+    }
+  } catch(e){
+    target.innerHTML = '<div class="qov-group-loading" style="color:var(--err);">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+  }
+}
+window.openQuickOverlay = openQuickOverlay;
 
 // ── ESC 닫기 ──
 document.addEventListener('keydown', function(e){
