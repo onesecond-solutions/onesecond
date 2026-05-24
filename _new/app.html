@@ -458,12 +458,13 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
 @media (max-width:640px){.home-greeting{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 14px}}
 /* 3층: [오늘의 업무] placeholder (2026-05-24 Phase 1 신설) */
-.home-today{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:14px}
-.home-today-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.home-today{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.home-today-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .home-today-ttl{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
 .home-today-sub{font-size:0.75em;color:var(--ts);font-weight:500}
-.home-today-body{padding:6px 0}
-.home-today-empty{font-size:0.85em;color:var(--ts);font-style:italic;text-align:center;padding:18px 12px;background:var(--s2);border-radius:8px;border:1px dashed var(--bd)}
+.home-today-body{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:6px 0}
+.home-today-body .home-widget{margin-bottom:0}
+@media (max-width:860px){.home-today-body{grid-template-columns:1fr}}
 @media (max-width:640px){.home-today{padding:12px 14px}}
 
 .os-galaxy-banner{--mx:0px;--my:0px;width:100%;min-height:280px;position:relative;overflow:hidden;isolation:isolate;border-radius:24px;border:1px solid color-mix(in srgb,var(--bd) 82%,var(--ac));background:radial-gradient(circle at 18% 20%,color-mix(in srgb,var(--ach) 28%,transparent),transparent 28%),radial-gradient(circle at 86% 16%,color-mix(in srgb,var(--ac) 34%,transparent),transparent 30%),radial-gradient(circle at 60% 95%,color-mix(in srgb,var(--ach) 20%,transparent),transparent 36%),linear-gradient(135deg,#05060A 0%,var(--bg) 42%,#111225 100%);box-shadow:0 20px 56px color-mix(in srgb,var(--ac) 28%,transparent),inset 0 1px 0 rgba(255,255,255,.08);padding:clamp(20px,3vw,36px);display:grid;grid-template-columns:minmax(0,1.04fr) minmax(280px,.96fr);gap:clamp(16px,3vw,32px);align-items:center;margin-bottom:18px}
@@ -563,7 +564,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     <div class="body">
      <div class="wrap view on" id="v-home">
       <div class="home-greeting">
-        <div class="home-greeting-name" id="homeGreetName">임태성 팀장님 안녕하세요~</div>
+        <div class="home-greeting-name" id="homeGreetName">안녕하세요~ 임태성 팀장님!</div>
         <div class="home-greeting-msg" id="homeGreetMsg">오늘 하루도 화이팅입니다 ☕</div>
       </div>
 
@@ -600,38 +601,34 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         </div>
       </section>
 
-      <!-- 3층: [오늘의 업무] placeholder (2026-05-24 Phase 1 신설) -->
+      <!-- 3층: 오늘의 업무 (상위 컨테이너 — 자료/스크립트 흡수, 2026-05-25 Phase 1.5) -->
       <div class="home-today">
         <div class="home-today-head">
-          <div class="home-today-ttl">📋 오늘의 업무</div>
-          <div class="home-today-sub">곧 이 자리에 오늘 할 일이 자동 정리됩니다</div>
+          <div class="home-today-ttl">오늘의 업무</div>
+          <div class="home-today-sub">오늘 이어서 해야 할 일을 한 곳에 모았습니다</div>
         </div>
         <div class="home-today-body">
-          <div class="home-today-empty">준비 중 — 일정 / 알림 / 미답변 질문이 한눈에 들어옵니다</div>
-        </div>
-      </div>
-
-      <div class="home-row-2">
-        <div class="home-widget">
-          <div class="home-widget-head">
-            <div class="home-widget-ttl">최근 사용한 자료</div>
-            <div class="home-widget-more" onclick="showView('myspace')">MY SPACE →</div>
+          <div class="home-widget">
+            <div class="home-widget-head">
+              <div class="home-widget-ttl">최근 사용한 자료</div>
+              <div class="home-widget-more" onclick="showView('myspace')">전체보기-&gt;</div>
+            </div>
+            <div class="mys-grid" id="homeRecentDocs" style="grid-template-columns:1fr">
+              <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('myspace')"><span class="mys-badge">자료</span><div class="mys-ttl">5세대 실손 비교표</div><div class="mys-meta">5월 15일 저장 · PDF</div></div>
+              <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('myspace')"><span class="mys-badge">자료</span><div class="mys-ttl">한화손보 간편 2대치료비</div><div class="mys-meta">5월 14일 저장 · 이미지</div></div>
+              <div class="mys-card" style="--tc:var(--t-event)" onclick="showView('myspace')"><span class="mys-badge">메모</span><div class="mys-ttl">흥국화재 결제 방법 메모</div><div class="mys-meta">5월 14일 저장 · 메모</div></div>
+            </div>
           </div>
-          <div class="mys-grid" style="grid-template-columns:1fr">
-            <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('myspace')"><span class="mys-badge">자료</span><div class="mys-ttl">5세대 실손 비교표</div><div class="mys-meta">5월 15일 저장 · PDF</div></div>
-            <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('myspace')"><span class="mys-badge">자료</span><div class="mys-ttl">한화손보 간편 2대치료비</div><div class="mys-meta">5월 14일 저장 · 이미지</div></div>
-            <div class="mys-card" style="--tc:var(--t-event)" onclick="showView('myspace')"><span class="mys-badge">메모</span><div class="mys-ttl">흥국화재 결제 방법 메모</div><div class="mys-meta">5월 14일 저장 · 메모</div></div>
-          </div>
-        </div>
-        <div class="home-widget">
-          <div class="home-widget-head">
-            <div class="home-widget-ttl">최근 사용한 스크립트</div>
-            <div class="home-widget-more" onclick="showView('scripts')">스크립트 →</div>
-          </div>
-          <div class="mys-grid" style="grid-template-columns:1fr">
-            <div class="mys-card" style="--tc:var(--t-product)" onclick="showView('scripts')"><span class="mys-badge">상품</span><div class="mys-ttl">암보험 매월 생활비 안내 화법</div><div class="mys-meta">5월 15일 · 사용 24회</div></div>
-            <div class="mys-card" style="--tc:var(--t-event)" onclick="showView('scripts')"><span class="mys-badge">거절극복</span><div class="mys-ttl">"보험료 비싸다" 응대 화법</div><div class="mys-meta">5월 15일 · 사용 21회</div></div>
-            <div class="mys-card" style="--tc:var(--t-product)" onclick="showView('scripts')"><span class="mys-badge">상품</span><div class="mys-ttl">5세대 실손 단독 가입 안내</div><div class="mys-meta">5월 14일 · 사용 18회</div></div>
+          <div class="home-widget">
+            <div class="home-widget-head">
+              <div class="home-widget-ttl">최근 사용한 스크립트</div>
+              <div class="home-widget-more" onclick="showView('scripts')">전체보기-&gt;</div>
+            </div>
+            <div class="mys-grid" id="homeRecentScripts" style="grid-template-columns:1fr">
+              <div class="mys-card" style="--tc:var(--t-product)" onclick="showView('scripts')"><span class="mys-badge">상품</span><div class="mys-ttl">암보험 매월 생활비 안내 화법</div><div class="mys-meta">5월 15일 · 사용 24회</div></div>
+              <div class="mys-card" style="--tc:var(--t-event)" onclick="showView('scripts')"><span class="mys-badge">거절극복</span><div class="mys-ttl">"보험료 비싸다" 응대 화법</div><div class="mys-meta">5월 15일 · 사용 21회</div></div>
+              <div class="mys-card" style="--tc:var(--t-product)" onclick="showView('scripts')"><span class="mys-badge">상품</span><div class="mys-ttl">5세대 실손 단독 가입 안내</div><div class="mys-meta">5월 14일 · 사용 18회</div></div>
+            </div>
           </div>
         </div>
       </div>
@@ -654,7 +651,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="home-widget">
           <div class="home-widget-head">
             <div class="home-widget-ttl">현장의 소리</div>
-            <div class="home-widget-more" onclick="showView('voice')">전체 →</div>
+            <div class="home-widget-more" onclick="showView('voice')">전체보기-&gt;</div>
           </div>
           <div class="mys-grid" style="grid-template-columns:1fr">
             <div class="mys-card" style="--tc:var(--t-uw)" onclick="showView('voice')"><span class="mys-badge">인수</span><div class="mys-ttl">70년 남 사무직 순환계 기왕증 보장</div><div class="mys-meta">5월 15일 16:28 · 답변 3</div></div>
@@ -665,7 +662,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="home-widget">
           <div class="home-widget-head">
             <div class="home-widget-ttl">보험이슈</div>
-            <div class="home-widget-more" onclick="showView('news')">전체 →</div>
+            <div class="home-widget-more" onclick="showView('news')">전체보기-&gt;</div>
           </div>
           <div class="mys-grid" style="grid-template-columns:1fr">
             <div class="mys-card mys-news-card" style="--tc:var(--ac)" onclick="showView('news')"><span class="mys-badge">정책브리핑</span><div class="mys-ttl">금융위·질병청·공정위 정책 자동 수집</div><div class="mys-meta">매일 7시 KST · Supabase 자동 갱신</div></div>
