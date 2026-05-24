@@ -369,6 +369,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .home-greeting-name{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
 .home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
 @media (max-width:640px){.home-greeting{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 14px}}
+/* 3층: [오늘의 업무] placeholder (2026-05-24 Phase 1 신설) */
+.home-today{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.home-today-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.home-today-ttl{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
+.home-today-sub{font-size:0.75em;color:var(--ts);font-weight:500}
+.home-today-body{padding:6px 0}
+.home-today-empty{font-size:0.85em;color:var(--ts);font-style:italic;text-align:center;padding:18px 12px;background:var(--s2);border-radius:8px;border:1px dashed var(--bd)}
+@media (max-width:640px){.home-today{padding:12px 14px}}
 
 .os-galaxy-banner{--mx:0px;--my:0px;width:100%;min-height:280px;position:relative;overflow:hidden;isolation:isolate;border-radius:24px;border:1px solid color-mix(in srgb,var(--bd) 82%,var(--ac));background:radial-gradient(circle at 18% 20%,color-mix(in srgb,var(--ach) 28%,transparent),transparent 28%),radial-gradient(circle at 86% 16%,color-mix(in srgb,var(--ac) 34%,transparent),transparent 30%),radial-gradient(circle at 60% 95%,color-mix(in srgb,var(--ach) 20%,transparent),transparent 36%),linear-gradient(135deg,#05060A 0%,var(--bg) 42%,#111225 100%);box-shadow:0 20px 56px color-mix(in srgb,var(--ac) 28%,transparent),inset 0 1px 0 rgba(255,255,255,.08);padding:clamp(20px,3vw,36px);display:grid;grid-template-columns:minmax(0,1.04fr) minmax(280px,.96fr);gap:clamp(16px,3vw,32px);align-items:center;margin-bottom:18px}
 .os-galaxy-banner::before{content:"";position:absolute;inset:-18%;z-index:-3;background-image:radial-gradient(circle,rgba(255,255,255,.92) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(255,255,255,.48) 0 1px,transparent 1.3px),radial-gradient(circle,color-mix(in srgb,var(--ach) 68%,white) 0 1px,transparent 1.5px);background-size:78px 78px,128px 128px,176px 176px;background-position:0 0,24px 34px,60px 18px;opacity:.38;transform:translate3d(calc(var(--mx) * .16),calc(var(--my) * .16),0);animation:starDrift 58s linear infinite;will-change:transform}
@@ -503,6 +511,17 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
           </div>
         </div>
       </section>
+
+      <!-- 3층: [오늘의 업무] placeholder (2026-05-24 Phase 1 신설) -->
+      <div class="home-today">
+        <div class="home-today-head">
+          <div class="home-today-ttl">📋 오늘의 업무</div>
+          <div class="home-today-sub">곧 이 자리에 오늘 할 일이 자동 정리됩니다</div>
+        </div>
+        <div class="home-today-body">
+          <div class="home-today-empty">준비 중 — 일정 / 알림 / 미답변 질문이 한눈에 들어옵니다</div>
+        </div>
+      </div>
 
       <div class="home-row-2">
         <div class="home-widget">
