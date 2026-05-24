@@ -1656,17 +1656,7 @@ async function loadQuickOverlayItems(){
   if(!groups.recording_script) return;
   if(groups.recording_script.dataset.loaded === 'true') return;
 
-  // 토큰 사전 점검 — 토큰 없을 시 fetch 안 함 (db.js 자동 alert 회피)
-  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-  if(!hasToken){
-    Object.keys(groups).forEach(function(gKey){
-      var slot = groups[gKey];
-      if(slot) slot.innerHTML = '<div class="qov-group-loading">로그인 후 가동 (Deploy Preview = 토큰 없음)</div>';
-    });
-    return;
-  }
-
-  if(!window.db){
+  if(!window.db || !window.db.fetchPublic){
     Object.keys(groups).forEach(function(gKey){
       var slot = groups[gKey];
       if(slot) slot.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
@@ -1674,7 +1664,8 @@ async function loadQuickOverlayItems(){
     return;
   }
   try{
-    var res = await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
+    // anon 키 자체 가동 (로그인 X 사용자도 정합) = window.db.fetchPublic 자체
+    var res = await window.db.fetchPublic('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
     if(!res.ok) throw new Error('fetch 실패: ' + res.status);
     var data = await res.json();
     data.forEach(function(item){ window._qovTabKeyMap[item.tab_title] = item.tab_key; });
@@ -1841,20 +1832,14 @@ async function openQuickOverlay(key){
     return;
   }
 
-  // 토큰 사전 점검 (Deploy Preview 정합)
-  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-  if(!hasToken){
-    target.innerHTML = '<div class="qov-group-loading">로그인 후 가동</div>';
-    return;
-  }
-
-  if(!window.db){
+  if(!window.db || !window.db.fetchPublic){
     target.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
     return;
   }
 
   try{
-    var res = await window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,tab_key,content_html&limit=1');
+    // anon 키 자체 가동 (로그인 X 사용자도 정합)
+    var res = await window.db.fetchPublic('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,tab_key,content_html&limit=1');
     if(!res.ok) throw new Error('fetch 실패: ' + res.status);
     var data = await res.json();
     if(data && data[0] && data[0].content_html){
