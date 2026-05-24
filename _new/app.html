@@ -1652,10 +1652,21 @@ async function loadQuickOverlayItems(){
   };
   if(!groups.recording_script) return;
   if(groups.recording_script.dataset.loaded === 'true') return;
+
+  // 토큰 사전 점검 — 토큰 없을 시 fetch 안 함 (db.js 자동 alert 회피)
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if(!hasToken){
+    Object.keys(groups).forEach(function(gKey){
+      var slot = groups[gKey];
+      if(slot) slot.innerHTML = '<div class="qov-group-loading">로그인 후 가동 (Deploy Preview = 토큰 없음)</div>';
+    });
+    return;
+  }
+
   if(!window.db){
     Object.keys(groups).forEach(function(gKey){
       var slot = groups[gKey];
-      if(slot) slot.innerHTML = '<div class="qov-group-loading">로그인 필요</div>';
+      if(slot) slot.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
     });
     return;
   }
