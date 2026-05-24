@@ -1863,31 +1863,30 @@ async function openQuickOverlay(key){
   var target = groupKey
     ? document.querySelector('.qov-group-content[data-content-for="' + groupKey + '"]')
     : null;
-  if(!target) return;
 
-  target.innerHTML = '<div class="qov-group-loading">불러오는 중...</div>';
-  target.classList.add('active');
-  target.dataset.tabTitle = key;
+  // target 있을 때만 로딩 표시 + 캐시 점검 (target 없으면 fetch 후 tab_key 보강 흐름에서 재할당)
+  if(target){
+    target.innerHTML = '<div class="qov-group-loading">불러오는 중...</div>';
+    target.classList.add('active');
+    target.dataset.tabTitle = key;
+    enterContentMode(groupKey);
 
-  // 내용 보기 모드 진입 (선택 그룹 100% + 다른 그룹 숨김)
-  enterContentMode(groupKey);
-
-  // 캐시 점검
-  if(window.overlayContent[key]){
-    target.innerHTML = window.overlayContent[key];
-    activateItemBtn(groupKey, key);
-    return;
+    if(window.overlayContent[key]){
+      target.innerHTML = window.overlayContent[key];
+      activateItemBtn(groupKey, key);
+      return;
+    }
   }
 
   // 토큰 사전 점검 (Deploy Preview 정합)
   var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
   if(!hasToken){
-    target.innerHTML = '<div class="qov-group-loading">로그인 후 가동</div>';
+    if(target) target.innerHTML = '<div class="qov-group-loading">로그인 후 가동</div>';
     return;
   }
 
   if(!window.db){
-    target.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
+    if(target) target.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
     return;
   }
 
@@ -1914,10 +1913,10 @@ async function openQuickOverlay(key){
       if(target) target.innerHTML = data[0].content_html;
       activateItemBtn(groupKey, key);
     } else {
-      target.innerHTML = '<div class="qov-group-loading">준비 중입니다.</div>';
+      if(target) target.innerHTML = '<div class="qov-group-loading">준비 중입니다.</div>';
     }
   } catch(e){
-    target.innerHTML = '<div class="qov-group-loading" style="color:var(--err);">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+    if(target) target.innerHTML = '<div class="qov-group-loading" style="color:var(--err);">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
   }
 }
 window.openQuickOverlay = openQuickOverlay;
