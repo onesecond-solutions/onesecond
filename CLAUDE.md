@@ -123,6 +123,49 @@ WHERE au.email = 'bylts0428@gmail.com';
 
 ---
 
+## 🚨 Netlify Preview 운용 원칙 (2026-05-24 신설 — 크레딧 75% 격차 자료)
+
+> **교훈 (2026-05-24 사고):** 4 PR 통째 진입 (#36 → #37 → #38 → #39) = 작은 수정마다 Deploy Preview 생성 → Netlify 크레딧 75% 격차 도달.
+
+### 운영 원칙 6건 (영구 본질)
+
+1. **Netlify Deploy Preview = 최종 검수용만 가동** — 작업 중 화면 확인 X
+2. **일반 UI 수정 = 로컬 또는 GitHub Pages/main 미러 기준 확인** — Preview 자료 진입 0건
+3. **PR 생성 전 최대한 로컬 확인 우선** — 코드 갈아끼움 즉시 push 흐름 금지
+4. **작은 수정마다 PR/Preview 생성 금지** — 한 작업 단위 마감 후 진입
+5. **UI 수정 = 한 작업 단위 묶음 PR** — 여러 수정 통째 한 PR
+6. **외부 공유 / PG 심사 / 최종 검수만 Netlify Preview 가동** — 그 외 자리 X
+
+### PR 생성 전 자체 점검 자료 (강제)
+
+본인 자체 자체 질문:
+
+> **"본 작업 = Deploy Preview 필요 수준입니까?"**
+> - **YES** → PR 생성 + Preview 가동
+> - **NO** → 로컬 검수 계속 + 다음 작업 묶음 진입
+
+### 로컬 검수 자료
+
+| 자료 | 가동 |
+|---|---|
+| `python -m http.server 8000` 또는 `npx serve _new` | `localhost:8000/_new/app.html` 진입 |
+| 화면 자체 확인 + 코드 갈아끼움 반복 | Netlify 크레딧 0 |
+| 본질 UI 마감 후 = 한 묶음 PR | Deploy Preview 1회만 가동 |
+
+### main 미러 (보조 자료)
+
+- `splendorous-bavarois-818e3a.netlify.app` = main 빌드 자동 가동 (Production 자체)
+- main 머지 후 자동 갱신 = Deploy Preview와 별 자체
+- 최종 머지 후 검수 자체 자체 가동
+
+### 절대 금지
+
+- ❌ 작은 수정마다 push + PR 자동 진입
+- ❌ Deploy Preview 의존 = 로컬 점검 자체 0건
+- ❌ Netlify 크레딧 자료 점검 없이 통째 진입
+
+---
+
 ## 🚨 배포 프로세스 절대 규칙 — 시연 후 (2026-05-22 신설)
 
 > **교훈 (2026-05-21 사고):** Code가 검증 단계 건너뛰고 main에 직접 push → 라이브에 검증 없이 반영됨 → 즉시 revert로 복원. 사용자 영향 0이었지만 본질 격차.
