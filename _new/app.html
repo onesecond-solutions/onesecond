@@ -1344,11 +1344,109 @@ function openQuickToolV2(name){
 }
 window.openQuickToolV2 = openQuickToolV2;
 
-/* 결제정보 카드 우측 상단 "⚡ 딸깍" 복사 자체 */
-function copyPaymentCardV2(btn){
+/* ⚡ 딸깍 = 원세컨드 공용 액션 허브 (스킬: .claude/skills/ddalggak/SKILL.md) */
+
+// 콘텐츠 유형별 메뉴 (공통 3건 + 추가 자체)
+var DDALGGAK_COMMON = [
+  { action:'mySpace',  label:'📁 MY SPACE 저장' },
+  { action:'copy',     label:'📋 복사' },
+  { action:'makeCard', label:'🪪 카드 만들기' }
+];
+var DDALGGAK_MENUS = {
+  payment:   DDALGGAK_COMMON.concat([{ action:'counsel',          label:'💬 상담용 문구 생성' }]),
+  contact:   DDALGGAK_COMMON.concat([{ action:'contactCopy',      label:'☎ 상담용 연락처 문구' }]),
+  news:      DDALGGAK_COMMON.concat([{ action:'newsSummary',      label:'📰 기사 요약' }]),
+  recording: DDALGGAK_COMMON.concat([{ action:'recordingSummary', label:'🎙 상담요약' }]),
+  script:    DDALGGAK_COMMON.concat([{ action:'scriptFull',       label:'📋 전체 스크립트 복사' }]),
+  general:   DDALGGAK_COMMON.slice()
+};
+
+// 팝오버 표시
+function showDdalggakMenu(btn, contentType){
+  closeDdalggakMenu();
+  if(!btn) return;
+  var items = DDALGGAK_MENUS[contentType] || DDALGGAK_MENUS.general;
+  var pop = document.createElement('div');
+  pop.id = 'ddalggak-pop';
+  pop.style.cssText = 'position:absolute;background:var(--s1);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);padding:6px;min-width:180px;z-index:99999;display:flex;flex-direction:column;gap:2px;';
+  items.forEach(function(it){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = 'background:transparent;border:none;padding:8px 12px;border-radius:6px;color:var(--tp);font-size:0.82em;font-weight:600;font-family:inherit;text-align:left;cursor:pointer;transition:background 0.1s;';
+    b.textContent = it.label;
+    b.onmouseover = function(){ b.style.background = 'var(--s2)'; };
+    b.onmouseout  = function(){ b.style.background = 'transparent'; };
+    b.onclick = function(e){
+      e.stopPropagation();
+      ddalggakAction(it.action, btn);
+      closeDdalggakMenu();
+    };
+    pop.appendChild(b);
+  });
+  document.body.appendChild(pop);
+  // 위치 = 버튼 바로 아래
+  var rect = btn.getBoundingClientRect();
+  var popW = 200;
+  var left = rect.right - popW + window.scrollX;
+  if(left < 8) left = 8;
+  pop.style.top  = (rect.bottom + 6 + window.scrollY) + 'px';
+  pop.style.left = left + 'px';
+  // 외부 클릭 = 닫기
+  setTimeout(function(){ document.addEventListener('click', closeDdalggakMenu, { once:true }); }, 0);
+}
+window.showDdalggakMenu = showDdalggakMenu;
+
+function closeDdalggakMenu(){
+  var p = document.getElementById('ddalggak-pop');
+  if(p) p.remove();
+}
+window.closeDdalggakMenu = closeDdalggakMenu;
+
+// ESC 자체 닫기
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeDdalggakMenu();
+});
+
+// 메뉴 항목 핸들러
+function ddalggakAction(action, btn){
+  switch(action){
+    case 'copy':
+      ddalggakCopy(btn);
+      break;
+    case 'mySpace':
+      alert('MY SPACE 저장 — 준비 중입니다.');
+      break;
+    case 'makeCard':
+      alert('카드 만들기 — 준비 중입니다.');
+      break;
+    case 'counsel':
+      alert('상담용 문구 생성 — 준비 중입니다.');
+      break;
+    case 'contactCopy':
+      alert('상담용 연락처 문구 — 준비 중입니다.');
+      break;
+    case 'newsSummary':
+      alert('기사 요약 — 준비 중입니다.');
+      break;
+    case 'recordingSummary':
+      alert('상담요약 — 준비 중입니다.');
+      break;
+    case 'scriptFull':
+      alert('전체 스크립트 복사 — 준비 중입니다.');
+      break;
+    default:
+      alert(action + ' — 준비 중입니다.');
+  }
+}
+window.ddalggakAction = ddalggakAction;
+
+// 복사 = 실제 가동 자체 (직전 copyPaymentCardV2 자체 자체)
+function ddalggakCopy(btn){
   var card = btn.closest('.pay-card');
-  if(!card) return;
-  // 버튼 자체 자체 본문 자체 자체 X = clone 자체 자체 자체 자체 자체 자체
+  if(!card){
+    alert('복사할 콘텐츠를 찾지 못했습니다.');
+    return;
+  }
   var clone = card.cloneNode(true);
   var btnClone = clone.querySelector('.pay-copy-btn');
   if(btnClone) btnClone.remove();
@@ -1357,10 +1455,9 @@ function copyPaymentCardV2(btn){
     navigator.clipboard.writeText(text).then(function(){
       alert('복사 완료. 카카오톡에 붙여넣기 하세요.');
     }).catch(function(){
-      alert('복사 자체 자체 X. 수동 복사 부탁드립니다.');
+      alert('복사 실패. 수동 복사 부탁드립니다.');
     });
   }else{
-    // fallback (구형 브라우저 자체)
     var ta = document.createElement('textarea');
     ta.value = text;
     document.body.appendChild(ta);
@@ -1369,10 +1466,18 @@ function copyPaymentCardV2(btn){
       document.execCommand('copy');
       alert('복사 완료. 카카오톡에 붙여넣기 하세요.');
     }catch(e){
-      alert('복사 자체 자체 X. 수동 복사 부탁드립니다.');
+      alert('복사 실패. 수동 복사 부탁드립니다.');
     }
     document.body.removeChild(ta);
   }
+}
+
+// 후방 호환 자체 (직전 onclick="copyPaymentCardV2(this)" 자체 자체 = 결제정보 자체 자체 자체 정합)
+function copyPaymentCardV2(btn){
+  // 직전 즉시 복사 자체 → 메뉴형 자체 자체 위임 (contentType 추정 = 카드 자체 자체 자체)
+  // 본 자리 = 결제정보/연락처 자체 자체 자체 자체 = 본인 자체 자체 자체 = REPLACE SQL 자체 자체 자체 = 본 함수 자체 자체 호출 자체 자체 자체 X.
+  // 다만 일부 캐시 자체 자체 = 잔존 가능 자체 자체 자체 = 본 함수 자체 자체 = showDdalggakMenu 자체 자체 자체 위임.
+  showDdalggakMenu(btn, 'general');
 }
 window.copyPaymentCardV2 = copyPaymentCardV2;
 var voiceTabData = {
