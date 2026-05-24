@@ -399,6 +399,20 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 @media (max-width:1024px){.mys-grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.mys-grid{grid-template-columns:1fr}}
 
+/* === V2 사이드바 Quick 메뉴 (v-quick) — V1 자체 이식 + V2 토큰 자체 === */
+.qck-tab-bar{display:flex;flex-wrap:wrap;gap:0;background:var(--s1);border:1px solid var(--bd);border-radius:10px;overflow-x:auto;margin-top:14px}
+.qck-tab-btn{padding:11px 16px;border:none;background:transparent;font-size:0.875em;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;color:var(--ts);border-bottom:3px solid transparent;flex-shrink:0}
+.qck-tab-btn:hover{color:var(--tp)}
+.qck-tab-btn.on{font-weight:800;color:var(--ac);border-bottom-color:var(--ac)}
+.qck-content-shell{background:var(--s1);border:1px solid var(--bd);border-radius:10px;overflow:hidden;margin-top:14px}
+.qck-content-head{padding:12px 16px;background:var(--s2);border-bottom:1px solid var(--bd)}
+.qck-content-head-title{font-size:0.9em;font-weight:800;color:var(--tp)}
+.qck-content-slot{padding:20px;min-height:300px;overflow-x:hidden;overflow-wrap:anywhere;word-break:break-word;color:var(--tp)}
+.qck-content-slot *{max-width:100%;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box}
+.qck-content-slot table{width:100%!important;table-layout:auto}
+.qck-loading{padding:40px;text-align:center;color:var(--tf);font-size:0.85em}
+.qck-bottom-bar{background:var(--s2);color:var(--ts);text-align:center;font-size:0.82em;font-weight:700;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-top:14px}
+
 /* === MY SPACE 글쓰기 자리 === */
 .mys-write-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9999px;background:var(--ac);color:#fff;border:none;cursor:pointer;font-size:0.82em;font-weight:800;margin-left:auto;transition:transform .15s,background .15s}
 .mys-write-btn:hover{transform:translateY(-1px);background:var(--ach)}
@@ -700,24 +714,31 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
      </div>
      <div class="wrap view" id="v-quick">
       <div class="ttl">Quick 메뉴 <span class="ac">· 빠른 실행</span></div>
-      <div class="sub">자주 쓰는 기능을 한 번에 꺼냅니다.</div>
-      <div class="chips">
-        <div class="chip on" onclick="filterQuick(this,'전체')">전체</div>
-        <div class="chip" onclick="filterQuick(this,'자주쓰기')">자주쓰기</div>
-        <div class="chip" onclick="filterQuick(this,'즐겨찾기')">즐겨찾기</div>
-        <div class="chip" onclick="filterQuick(this,'단축키')">단축키</div>
+      <div class="sub">긴박한 순간, 자주 쓰는 자료를 한 곳에서</div>
+
+      <!-- 탭바 (V1 7 탭 자체 정합) -->
+      <div class="qck-tab-bar" id="qck-tab-bar">
+        <button class="qck-tab-btn on" onclick="selectQuickMainV2(this,'가입설계 / 선심사 동의 녹취 스크립트')">가입설계 / 선심사 동의 녹취 스크립트</button>
+        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'회사별 BMI 심사기준')">회사별 BMI 심사기준</button>
+        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'보험연령표')">보험연령표</button>
+        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'보험회사 결제정보')">보험회사 결제정보</button>
+        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'미러링 전 녹취 스크립트')">미러링 전 녹취 스크립트</button>
+        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'원전산 설계 바로가기')">원전산 설계 바로가기</button>
+        <button class="qck-tab-btn" onclick="selectQuickMainV2(this,'보험회사 (모니터링) 연락처')">보험회사 (모니터링) 연락처</button>
       </div>
-      <div class="mys-grid" id="quickGrid">
-        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">새 질문 작성 (네비게이션방)</div><div class="mys-meta">오늘 사용 5회</div></div>
-        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">스크립트 검색</div><div class="mys-meta">오늘 사용 8회</div></div>
-        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">MY SPACE 자료 검색</div><div class="mys-meta">오늘 사용 4회</div></div>
-        <div class="mys-card" style="--tc:var(--ac)"><span class="mys-badge">자주쓰기</span><div class="mys-ttl">단체방 새 글 작성</div><div class="mys-meta">오늘 사용 2회</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">70년 남 사무직 인수 거절 응대 스크립트</div><div class="mys-meta">즐겨찾기 등록 5/15</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">5세대 실손 비교표 자료</div><div class="mys-meta">즐겨찾기 등록 5/14</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">즐겨찾기</span><div class="mys-ttl">DB 간병인일당 축소 공지</div><div class="mys-meta">즐겨찾기 등록 5/14</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">단축키</span><div class="mys-ttl">Ctrl + K — 전역 검색 자료</div><div class="mys-meta">단축키 자료</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">단축키</span><div class="mys-ttl">Esc — 모달/오버레이 닫기</div><div class="mys-meta">단축키 자료</div></div>
+
+      <!-- 콘텐츠 자체 -->
+      <div class="qck-content-shell">
+        <div class="qck-content-head">
+          <div class="qck-content-head-title" id="qck-content-title">가입설계 / 선심사 동의 녹취 스크립트</div>
+        </div>
+        <div class="qck-content-slot" id="qck-content-slot">
+          <div class="qck-loading">불러오는 중...</div>
+        </div>
       </div>
+
+      <!-- 푸터 자체 -->
+      <div class="qck-bottom-bar">- 지금 멈추지 마세요. 한 문장이 전체 흐름을 바꿉니다 -</div>
      </div>
      <div class="wrap view" id="v-together">
       <div class="ttl">함께해요 <span class="ac">· 원세컨드 커뮤니티</span></div>
@@ -1166,7 +1187,53 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();}
+function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();}
+
+/* ── V2 사이드바 Quick 메뉴 (v-quick) — V1 자체 이식 ── */
+window._qckCache = window._qckCache || {};
+
+async function loadQuickV2(){
+  var slot = document.getElementById('qck-content-slot');
+  if(!slot) return;
+  if(slot.dataset.loaded === 'true') return;
+
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if(!hasToken){
+    slot.innerHTML = '<div class="qck-loading">로그인 후 가동</div>';
+    return;
+  }
+  if(!window.db){
+    slot.innerHTML = '<div class="qck-loading">DB 모듈 로딩 중</div>';
+    return;
+  }
+
+  try{
+    var res = await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&order=sort_order.asc&select=tab_title,content_html');
+    if(!res.ok) throw new Error('fetch 실패: ' + res.status);
+    var data = await res.json();
+    data.forEach(function(row){
+      if(row.tab_title && row.content_html) window._qckCache[row.tab_title] = row.content_html;
+    });
+    var defaultKey = '가입설계 / 선심사 동의 녹취 스크립트';
+    slot.innerHTML = window._qckCache[defaultKey] || '<div class="qck-loading">준비 중입니다.</div>';
+    slot.dataset.loaded = 'true';
+  }catch(e){
+    slot.innerHTML = '<div class="qck-loading" style="color:var(--err);">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+  }
+}
+window.loadQuickV2 = loadQuickV2;
+
+function selectQuickMainV2(btn, title){
+  document.querySelectorAll('#qck-tab-bar .qck-tab-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  var titleEl = document.getElementById('qck-content-title');
+  var slot = document.getElementById('qck-content-slot');
+  if(titleEl) titleEl.textContent = title;
+  if(slot){
+    slot.innerHTML = window._qckCache[title] || '<div class="qck-loading">준비 중입니다.</div>';
+  }
+}
+window.selectQuickMainV2 = selectQuickMainV2;
 var voiceTabData = {
   voice: {title:'네비게이션방', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
   team: {title:'4팀 단체방', sub:'4팀 내부 공지와 실무 공유 자리.', chips:['전체','공지','전달사항','팀 질문','자료 공유'], cnt:10,
