@@ -1346,26 +1346,18 @@ window.openQuickToolV2 = openQuickToolV2;
 
 /* ⚡ 딸깍 = 원세컨드 공용 액션 허브 (스킬: .claude/skills/ddalggak/SKILL.md) */
 
-// 콘텐츠 유형별 메뉴 (공통 3건 + 추가 자체)
-var DDALGGAK_COMMON = [
+// 메뉴 = 정확히 3개 (모든 콘텐츠 동일, 콘텐츠별 분기 X)
+var DDALGGAK_MENU = [
   { action:'mySpace',  label:'📁 MY SPACE 저장' },
   { action:'copy',     label:'📋 복사' },
   { action:'makeCard', label:'🪪 카드 만들기' }
 ];
-var DDALGGAK_MENUS = {
-  payment:   DDALGGAK_COMMON.concat([{ action:'counsel',          label:'💬 상담용 문구 생성' }]),
-  contact:   DDALGGAK_COMMON.concat([{ action:'contactCopy',      label:'☎ 상담용 연락처 문구' }]),
-  news:      DDALGGAK_COMMON.concat([{ action:'newsSummary',      label:'📰 기사 요약' }]),
-  recording: DDALGGAK_COMMON.concat([{ action:'recordingSummary', label:'🎙 상담요약' }]),
-  script:    DDALGGAK_COMMON.concat([{ action:'scriptFull',       label:'📋 전체 스크립트 복사' }]),
-  general:   DDALGGAK_COMMON.slice()
-};
 
-// 팝오버 표시
-function showDdalggakMenu(btn, contentType){
+// 팝오버 표시 (contentType 인자 자체 자체 자체 자체 자체 — 후방 호환 자체 유지)
+function showDdalggakMenu(btn, _contentType){
   closeDdalggakMenu();
   if(!btn) return;
-  var items = DDALGGAK_MENUS[contentType] || DDALGGAK_MENUS.general;
+  var items = DDALGGAK_MENU;
   var pop = document.createElement('div');
   pop.id = 'ddalggak-pop';
   pop.style.cssText = 'position:absolute;background:var(--s1);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);padding:6px;min-width:180px;z-index:99999;display:flex;flex-direction:column;gap:2px;';
@@ -1407,7 +1399,7 @@ document.addEventListener('keydown', function(e){
   if(e.key === 'Escape') closeDdalggakMenu();
 });
 
-// 메뉴 항목 핸들러
+// 메뉴 항목 핸들러 (3건만)
 function ddalggakAction(action, btn){
   switch(action){
     case 'copy':
@@ -1417,22 +1409,7 @@ function ddalggakAction(action, btn){
       alert('MY SPACE 저장 — 준비 중입니다.');
       break;
     case 'makeCard':
-      alert('카드 만들기 — 준비 중입니다.');
-      break;
-    case 'counsel':
-      alert('상담용 문구 생성 — 준비 중입니다.');
-      break;
-    case 'contactCopy':
-      alert('상담용 연락처 문구 — 준비 중입니다.');
-      break;
-    case 'newsSummary':
-      alert('기사 요약 — 준비 중입니다.');
-      break;
-    case 'recordingSummary':
-      alert('상담요약 — 준비 중입니다.');
-      break;
-    case 'scriptFull':
-      alert('전체 스크립트 복사 — 준비 중입니다.');
+      openMakeCardModal(btn);
       break;
     default:
       alert(action + ' — 준비 중입니다.');
@@ -1472,14 +1449,211 @@ function ddalggakCopy(btn){
   }
 }
 
-// 후방 호환 자체 (직전 onclick="copyPaymentCardV2(this)" 자체 자체 = 결제정보 자체 자체 자체 정합)
+// 후방 호환 자체 (직전 onclick="copyPaymentCardV2(this)" 잔존 대비)
 function copyPaymentCardV2(btn){
-  // 직전 즉시 복사 자체 → 메뉴형 자체 자체 위임 (contentType 추정 = 카드 자체 자체 자체)
-  // 본 자리 = 결제정보/연락처 자체 자체 자체 자체 = 본인 자체 자체 자체 = REPLACE SQL 자체 자체 자체 = 본 함수 자체 자체 호출 자체 자체 자체 X.
-  // 다만 일부 캐시 자체 자체 = 잔존 가능 자체 자체 자체 = 본 함수 자체 자체 = showDdalggakMenu 자체 자체 자체 위임.
-  showDdalggakMenu(btn, 'general');
+  showDdalggakMenu(btn);
 }
 window.copyPaymentCardV2 = copyPaymentCardV2;
+
+/* ─────────────────────────────────────────────────────────────
+   카드 만들기 모달 (MVP — Settings 페이지 신설 X / localStorage 자체)
+───────────────────────────────────────────────────────────── */
+
+var SIG_KEY = 'os_ddalggak_signature';
+var _mcSourceCard = null;
+var _mcNoticeOn = false;
+
+function getDdalggakSignature(){
+  try{
+    var raw = localStorage.getItem(SIG_KEY);
+    if(!raw) return null;
+    var obj = JSON.parse(raw);
+    if(!obj || !obj.name || !obj.phone) return null;
+    return obj;
+  }catch(e){ return null; }
+}
+
+function openMakeCardModal(btn){
+  var card = btn.closest('.pay-card');
+  if(!card){ alert('카드 본문을 찾지 못했습니다.'); return; }
+  _mcSourceCard = card;
+  _mcNoticeOn = false;
+
+  // 본문 자체 추출 (딸깍 버튼 제외)
+  var clone = card.cloneNode(true);
+  var btnClone = clone.querySelector('.pay-copy-btn');
+  if(btnClone) btnClone.remove();
+  var body = (clone.innerText || clone.textContent || '').trim().replace(/\n{3,}/g, '\n\n');
+
+  // 모달 생성
+  closeMakeCardModal();
+  var overlay = document.createElement('div');
+  overlay.id = 'mc-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = function(e){ if(e.target === overlay) closeMakeCardModal(); };
+
+  var sig = getDdalggakSignature();
+  var sigText = sig ? (sig.name + ' | ' + sig.phone) : '이름 | 전화번호';
+
+  overlay.innerHTML = '' +
+    '<div class="mc-modal" style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:880px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--bd);background:var(--s2);">' +
+        '<div style="font-size:1em;font-weight:800;color:var(--tp);">🪪 카드 만들기</div>' +
+        '<button onclick="closeMakeCardModal()" style="background:transparent;border:none;color:var(--ts);font-size:1.2em;cursor:pointer;padding:4px 8px;">×</button>' +
+      '</div>' +
+      '<div style="flex:1;overflow-y:auto;padding:16px;">' +
+        // Settings 영역 (이름/전번 자체 없을 때만 표시)
+        (sig ? '' : '' +
+          '<div id="mc-sig-section" style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px;">' +
+            '<div style="font-size:0.85em;font-weight:700;color:var(--tp);margin-bottom:8px;">이름과 전화번호를 1회 등록하세요</div>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+              '<input id="mc-sig-name" placeholder="이름 (예: 임태성)" style="flex:1;min-width:140px;padding:8px 10px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;color:var(--tp);font-size:0.85em;font-family:inherit;">' +
+              '<input id="mc-sig-phone" placeholder="010-1234-5678" style="flex:1;min-width:140px;padding:8px 10px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;color:var(--tp);font-size:0.85em;font-family:inherit;">' +
+              '<button onclick="saveSignature()" style="padding:8px 16px;background:var(--ac);border:none;border-radius:8px;color:#fff;font-size:0.85em;font-weight:700;cursor:pointer;font-family:inherit;">저장</button>' +
+            '</div>' +
+          '</div>'
+        ) +
+        // 상단 토글
+        '<div style="display:flex;gap:6px;margin-bottom:14px;">' +
+          '<button id="mc-toggle-on" onclick="setNoticeMode(true)" style="flex:1;padding:9px 14px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--ts);font-size:0.85em;font-weight:700;cursor:pointer;font-family:inherit;">안내문 추가</button>' +
+          '<button id="mc-toggle-off" onclick="setNoticeMode(false)" style="flex:1;padding:9px 14px;background:var(--ac);border:1px solid var(--ac);border-radius:8px;color:#fff;font-size:0.85em;font-weight:700;cursor:pointer;font-family:inherit;">추가 안함</button>' +
+        '</div>' +
+        // 2분할
+        '<div class="mc-split" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
+          // 좌측 입력
+          '<div id="mc-left" style="display:none;">' +
+            '<div style="font-size:0.78em;font-weight:700;color:var(--ts);margin-bottom:6px;">상담용 안내문</div>' +
+            '<textarea id="mc-notice-input" oninput="updateCardPreview()" placeholder="상담용 안내문을 입력하세요. 예: 고객님 상황에 맞춰 안내드립니다." style="width:100%;min-height:200px;padding:12px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:10px;color:var(--tp);font-size:0.85em;font-family:inherit;line-height:1.55;resize:vertical;box-sizing:border-box;"></textarea>' +
+          '</div>' +
+          // 우측 미리보기
+          '<div id="mc-right" style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;grid-column:1 / -1;">' +
+            '<div style="font-size:0.78em;font-weight:700;color:var(--ts);margin-bottom:8px;">미리보기</div>' +
+            '<div id="mc-preview-body" style="font-size:0.82em;color:var(--tp);line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;padding:10px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;"></div>' +
+            '<div id="mc-preview-notice" style="display:none;margin-top:8px;font-size:0.82em;color:var(--tp);line-height:1.55;white-space:pre-wrap;padding:10px;background:rgba(99,102,241,0.08);border-left:3px solid var(--ac);border-radius:6px;"></div>' +
+            '<div id="mc-preview-sig" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);text-align:right;font-size:0.82em;font-weight:700;color:var(--ac);">' + sigText + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--bd);background:var(--s2);">' +
+        '<button onclick="closeMakeCardModal()" style="padding:9px 16px;background:transparent;border:1px solid var(--bd);border-radius:8px;color:var(--ts);font-size:0.85em;font-weight:700;cursor:pointer;font-family:inherit;">취소</button>' +
+        '<button onclick="finalizeMakeCard()" style="padding:9px 18px;background:var(--ac);border:none;border-radius:8px;color:#fff;font-size:0.85em;font-weight:800;cursor:pointer;font-family:inherit;">카드 만들기</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  // 본문 자체 표시
+  var preview = document.getElementById('mc-preview-body');
+  if(preview) preview.textContent = body;
+}
+window.openMakeCardModal = openMakeCardModal;
+
+function closeMakeCardModal(){
+  var o = document.getElementById('mc-overlay');
+  if(o) o.remove();
+  _mcSourceCard = null;
+  _mcNoticeOn = false;
+}
+window.closeMakeCardModal = closeMakeCardModal;
+
+function setNoticeMode(on){
+  _mcNoticeOn = !!on;
+  var left = document.getElementById('mc-left');
+  var split = document.querySelector('.mc-split');
+  var notice = document.getElementById('mc-preview-notice');
+  var btnOn = document.getElementById('mc-toggle-on');
+  var btnOff = document.getElementById('mc-toggle-off');
+  var right = document.getElementById('mc-right');
+
+  if(on){
+    if(left){ left.style.display = ''; }
+    if(split){ split.style.gridTemplateColumns = '1fr 1fr'; }
+    if(right){ right.style.gridColumn = ''; }
+    if(btnOn){ btnOn.style.background = 'var(--ac)'; btnOn.style.borderColor = 'var(--ac)'; btnOn.style.color = '#fff'; }
+    if(btnOff){ btnOff.style.background = 'var(--s2)'; btnOff.style.borderColor = 'var(--bd)'; btnOff.style.color = 'var(--ts)'; }
+    updateCardPreview();
+  }else{
+    if(left){ left.style.display = 'none'; }
+    if(split){ split.style.gridTemplateColumns = '1fr'; }
+    if(right){ right.style.gridColumn = '1 / -1'; }
+    if(notice){ notice.style.display = 'none'; notice.textContent = ''; }
+    if(btnOn){ btnOn.style.background = 'var(--s2)'; btnOn.style.borderColor = 'var(--bd)'; btnOn.style.color = 'var(--ts)'; }
+    if(btnOff){ btnOff.style.background = 'var(--ac)'; btnOff.style.borderColor = 'var(--ac)'; btnOff.style.color = '#fff'; }
+  }
+}
+window.setNoticeMode = setNoticeMode;
+
+function updateCardPreview(){
+  var input = document.getElementById('mc-notice-input');
+  var notice = document.getElementById('mc-preview-notice');
+  if(!input || !notice) return;
+  var text = (input.value || '').trim();
+  if(_mcNoticeOn && text){
+    notice.style.display = '';
+    notice.textContent = text;
+  }else{
+    notice.style.display = 'none';
+    notice.textContent = '';
+  }
+}
+window.updateCardPreview = updateCardPreview;
+
+function saveSignature(){
+  var n = document.getElementById('mc-sig-name');
+  var p = document.getElementById('mc-sig-phone');
+  if(!n || !p) return;
+  var name = (n.value || '').trim();
+  var phone = (p.value || '').trim();
+  if(!name || !phone){ alert('이름과 전화번호를 모두 입력해주세요.'); return; }
+  try{
+    localStorage.setItem(SIG_KEY, JSON.stringify({ name: name, phone: phone }));
+  }catch(e){ alert('저장 실패. 다시 시도해주세요.'); return; }
+
+  var sec = document.getElementById('mc-sig-section');
+  if(sec) sec.style.display = 'none';
+  var sig = document.getElementById('mc-preview-sig');
+  if(sig) sig.textContent = name + ' | ' + phone;
+}
+window.saveSignature = saveSignature;
+
+function finalizeMakeCard(){
+  var body = document.getElementById('mc-preview-body');
+  var notice = document.getElementById('mc-preview-notice');
+  var sig = document.getElementById('mc-preview-sig');
+  if(!body || !sig){ alert('미리보기를 찾지 못했습니다.'); return; }
+
+  var parts = [];
+  parts.push((body.textContent || '').trim());
+  if(_mcNoticeOn && notice && notice.style.display !== 'none'){
+    var n = (notice.textContent || '').trim();
+    if(n) parts.push(n);
+  }
+  parts.push((sig.textContent || '').trim());
+  var finalText = parts.join('\n\n');
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(finalText).then(function(){
+      alert('복사 완료. 카카오톡에 붙여넣기 하세요.');
+      closeMakeCardModal();
+    }).catch(function(){
+      alert('복사 실패. 수동 복사 부탁드립니다.');
+    });
+  }else{
+    var ta = document.createElement('textarea');
+    ta.value = finalText;
+    document.body.appendChild(ta);
+    ta.select();
+    try{
+      document.execCommand('copy');
+      alert('복사 완료. 카카오톡에 붙여넣기 하세요.');
+      closeMakeCardModal();
+    }catch(e){
+      alert('복사 실패. 수동 복사 부탁드립니다.');
+    }
+    document.body.removeChild(ta);
+  }
+}
+window.finalizeMakeCard = finalizeMakeCard;
 var voiceTabData = {
   voice: {title:'네비게이션방', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
   team: {title:'4팀 단체방', sub:'4팀 내부 공지와 실무 공유 자리.', chips:['전체','공지','전달사항','팀 질문','자료 공유'], cnt:10,
