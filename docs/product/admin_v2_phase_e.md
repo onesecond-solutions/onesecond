@@ -2,14 +2,14 @@
 
 > **MD 파일 박음:** 2026-05-12 (Code D 트랙, Step E-1 박음 후 사후 정식화)
 > **출처 정정 (2026-05-12):** 본 spec MD는 **Code 재구성 산출물**입니다. Claude AI 인계 spec 본문은 **부재** — 직전 세션(2026-05-12_1602) 인계는 "Step E-2~E-5 새 세션 진입 대기" 한 줄까지였고, c426542 commit body의 "Claude AI 작성, 2026-05-11" 단언은 부정확.
-> **재구성 출처:** c426542 commit body + `docs/migrations/2026-05-11_phase_e_menu_settings_by_role.sql` 헤더 + `docs/sessions/2026-05-12_1602.md` + 본 세션 Step E-1 검증 결과 4건
+> **재구성 출처:** c426542 commit body + `docs/architecture/migrations/2026-05-11_phase_e_menu_settings_by_role.sql` 헤더 + `docs/sessions/2026-05-12_1602.md` + 본 세션 Step E-1 검증 결과 4건
 > **메인 트랙:** admin_v2 Phase E (운영 토글 8종 = Phase A 완료 후 별 트랙)
 > **선행 종료:** Phase 1.5 (5/10) + Phase A 운영 토글 8종 (5/12, 20 commit) + Phase 1 9역할 마이그레이션 (검증 0건 잔존)
 > **본 작업지시서 본질:** admin이 사이드바 메뉴 가시성을 9 role × 8 menu 매트릭스로 직접 제어 + 사용자 실제 화면 미러링.
 > **분량 추정:** Step E-1 ~30분 (완료) / Step E-2~E-5 ~4h (대기)
 > **진실 원천:**
 > - DB: `pdnwgzneooyygfejrvbg` (신버전, onesecond-v1-restore-0420)
-> - 마이그레이션 SQL: `docs/migrations/2026-05-11_phase_e_menu_settings_by_role.sql` (182줄, 박힘 c426542)
+> - 마이그레이션 SQL: `docs/architecture/migrations/2026-05-11_phase_e_menu_settings_by_role.sql` (182줄, 박힘 c426542)
 > - 박힘 commit: `c426542` (Step E-1 SQL 박음) → `d05b046` (CLAUDE.md 정합 정정)
 
 ---
@@ -168,7 +168,7 @@ D 트랙(본 spec MD 파일 박음) 완결 후:
 
 - Phase A 박힘 본진: `docs/sessions/2026-05-12_1602.md` (~20 commit 본질)
 - 9역할 체계: `docs/role_system.md` + CLAUDE.md § role 체계
-- 마이그레이션 SQL 본문: `docs/migrations/2026-05-11_phase_e_menu_settings_by_role.sql`
+- 마이그레이션 SQL 본문: `docs/architecture/migrations/2026-05-11_phase_e_menu_settings_by_role.sql`
 - 디자인 정체성: admin_v2 = `--admin-*` 토큰 prefix (5종 톤 영구 토글)
 - 메모리 정합 키:
   - [[project_role_bypass_policy]] — admin 화면설정 무시 정책

@@ -11,8 +11,8 @@
 |---|---|
 | `claude_code/_docs/supabase_dumps/*.csv` | 4/20 구버전 스냅샷 (CLAUDE.md 명시) |
 | 구버전 Supabase `qursjteiovcylqiepmlo` | 4/24 사고 후 폐기. 신버전 `pdnwgzneooyygfejrvbg` 유일 진실 원천 |
-| `docs/deprecated/*` (6 파일) | 폐기 헤더 박힌 문서들 (00_MASTER / supabase_schema / phase1_definition_20260507 / 4탭 visibility / index_together / 4/19 evening) |
-| `docs/specs/v2_insurer_admission_phase1_v1.md` | v2가 본진 (v1은 폐기 헤더 박힘) |
+| `docs/archive/_deprecated/*` (6 파일) | 폐기 헤더 박힌 문서들 (00_MASTER / supabase_schema / phase1_definition_20260507 / 4탭 visibility / index_together / 4/19 evening) |
+| `docs/archive/_deprecated/v2_insurer_admission_phase1_v1.md` | v2가 본진 (v1은 폐기 헤더 박힘) |
 | `claude_code/_archive/admin_v1_20260430.html` | 1969줄 백업 (admin_v2 풀이 본진) |
 | `claude_code/_instructions/*` (10 파일, 4/19~25) | 옛 작업지시서 — 3단계 archive 통일 예정 |
 | `claude_code/_context/*` (3 파일) | 4/19 옛 컨텍스트 — 3단계 archive 통일 예정 |
@@ -114,7 +114,7 @@
 - "활성 vs 폐기" 구분 모호한 채로 작업 진입
 - 핵심 철학 4종 노출 안 된 채로 세부 작업 진입
 
-→ 발견 즉시 응급 안정화 진입 (`docs/core/AI_COLLABORATION_STRATEGY.md` § 5 처방 정합)
+→ 발견 즉시 응급 안정화 진입 (`docs/strategy/ai_collaboration.md` § 5 처방 정합)
 
 ---
 

@@ -107,7 +107,7 @@
 | 옛 컨셉 | 현 진실 원천 |
 |---|---|
 | **Glide 노코드 개발** (드롭다운/Components/Navigation 등) | 폐기 — **Vanilla HTML/CSS/JS + Supabase**로 전환 완료 |
-| **17개 핵심 테이블 기반 구조** (옛 spec) | 현 spec = `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄, 42건 결정) |
+| **17개 핵심 테이블 기반 구조** (옛 spec) | 현 spec = `docs/product/v2_insurer_admission_phase1.md` (~750줄, 42건 결정) |
 | **OneSecond v1.x → v2.0 → v3.0 로드맵** | 폐기 — 두 제품 모델 (`onesecond.solutions` free + `pro.onesecond.solutions` 유료) |
 | **Smart Service Platform 사업** 명칭 | 사용 X — **T-Solutions**(법인) / **onesecond**(첫 제품) 구조 |
 | **"김비서" 브리핑 컨셉** | 사용 X — 외부 답변 시 위 § 핵심 답변만 사용 |

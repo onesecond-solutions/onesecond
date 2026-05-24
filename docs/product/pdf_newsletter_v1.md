@@ -480,8 +480,8 @@ $$;
 
 ## 📚 참고 자료
 
-- `docs/core/onesecond_master_strategy_v1_20260510.md` — §11 검색 진입장벽 + §9 운영 효율
-- `docs/specs/auto_hub_promotion_v1_spec.md` — 자동 허브 이식 시스템 (본 spec과 통합)
+- `docs/strategy/master_strategy_v1.md` — §11 검색 진입장벽 + §9 운영 효율
+- `docs/product/auto_hub_v1.md` — 자동 허브 이식 시스템 (본 spec과 통합)
 - `docs/sessions/_INDEX.md` — 5/15 시드 462건 박은 자리
 - 5/12 인계 노트 — Drive 1,564 파일 매칭 결과 (별 트랙 잔존)
 

@@ -5,7 +5,7 @@
 > **위치:** AI 3 인스턴스(Claude Code / Claude AI / Claude in Chrome) 매 세션 진입 시 필독
 > **부착 경로:** CLAUDE.md 절대 프로토콜 0번 + `_INDEX.md` 헤드 박스 + `/session-start` 패키지 § [0]
 > **상태:** 본 문서 ↔ 메모·문서·코드 충돌 시 **본 문서 우선** (브랜드 정체성·영업 본질 한정)
-> **시스템 본질 진실 원천:** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (양면 진실 원천)
+> **시스템 본질 진실 원천:** `docs/strategy/os_definition_v2.md` (양면 진실 원천)
 
 ---
 
@@ -588,5 +588,5 @@
 **END OF DOCUMENT**
 
 > 본 v1은 onesecond 사업 본질·영업 본질의 **영구 진실 원천**입니다.
-> 시스템 본질 진실 원천(`docs/core/onesecond_os_definition_v2_2026-05-07.md`)과 양면 진실 원천 = 어느 쪽도 단독 진실 X.
+> 시스템 본질 진실 원천(`docs/strategy/os_definition_v2.md`)과 양면 진실 원천 = 어느 쪽도 단독 진실 X.
 > 본 문서는 AI 3 인스턴스(Claude Code / Claude AI / Claude in Chrome) 매 세션 진입 시 필독.

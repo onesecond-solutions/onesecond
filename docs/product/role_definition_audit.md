@@ -155,7 +155,7 @@ if (board === 'insurer' && !['admin', 'insurer'].includes(s.role)) {
 
 ### 2.3 ⚠️ 신규 발견 — `pricing.html` 라인 225 자체 ROLE_LABEL 중복 정의
 
-`docs/specs/admin_v2_phase_d_pre.md` § 3.3 라인 159~160에서 다음과 같이 명시했었음:
+`docs/archive/2026-05/admin_v2/phase_d_pre.md` § 3.3 라인 159~160에서 다음과 같이 명시했었음:
 
 | 위치 | 현재 | 변경 (Step A) |
 |---|---|---|

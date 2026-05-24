@@ -50,7 +50,7 @@
 | 3 | **Quick 메뉴 = 긴급 실행도구** | 일반 메뉴 X / 부가 기능 X |
 | 4 | **고정 프레임 구조 = 앱 셸** | 다중 페이지 X / iframe·include 동적 frame X |
 
-상세는 `docs/core/AI_COLLABORATION_STRATEGY.md` § 2 참조.
+상세는 `docs/strategy/ai_collaboration.md` § 2 참조.
 
 ---
 
@@ -71,7 +71,7 @@
 
 기능 추가 < **컨텍스트 안정화**. AI가 활성 철학을 잃지 않게 만드는 응급 안정화가 우선.
 
-상세는 `docs/core/AI_COLLABORATION_STRATEGY.md` § 1 참조.
+상세는 `docs/strategy/ai_collaboration.md` § 1 참조.
 
 ---
 

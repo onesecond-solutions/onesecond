@@ -562,9 +562,9 @@ await supabase
 
 ## 📚 참고 자료
 
-- `docs/core/onesecond_master_strategy_v1_20260510.md` — §3 4 layer / §11 검색 진입장벽 / §12 KPI 4종 / §13 결재 / §14 회귀 신호
-- `docs/core/onesecond_os_definition_v2_2026-05-07.md` — §16 듀얼 채널 본진
-- `docs/specs/v2_insurer_admission_phase1_v2.md` — 보험사 입점 spec
+- `docs/strategy/master_strategy_v1.md` — §3 4 layer / §11 검색 진입장벽 / §12 KPI 4종 / §13 결재 / §14 회귀 신호
+- `docs/strategy/os_definition_v2.md` — §16 듀얼 채널 본진
+- `docs/product/v2_insurer_admission_phase1.md` — 보험사 입점 spec
 - `docs/sessions/_INDEX.md` — 현재 본진 위치
 
 ---

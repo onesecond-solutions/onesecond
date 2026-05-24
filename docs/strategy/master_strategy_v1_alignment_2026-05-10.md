@@ -1,7 +1,7 @@
 # 마스터 전략 v1 ↔ 진실 원천 정합 검증 보고서
 
 > **일시:** 2026-05-10 (마스터 전략 신설 직후)
-> **본문:** `docs/core/onesecond_master_strategy_v1_20260510.md` (507줄)
+> **본문:** `docs/strategy/master_strategy_v1.md` (507줄)
 > **목적:** 마스터 전략 §13 결재 박힘 4건 ↔ 현 spec/코드/메모리 정합 검증 + 새벽 결재 박스 박음
 > **작성:** Claude Code 자체 박음 (라이브 코드 변경 0, 검증 보고서 본진)
 
@@ -72,8 +72,8 @@ admin only + source_type IN ('navigation_distilled', 'seed')
 ### 박음 본진 (새벽 결재 후, 사고 위험 0)
 
 **박음 영역:**
-- `docs/specs/v2_insurer_admission_phase1_v2.md` § 6-2 정책 3 박힘 = 일방향 자동 저장 패턴 갱신
-- `docs/specs/v2_insurer_admission_phase1_v2.md` § 1-1 [B. Q&A 트랙] 다이어그램 박음 = 일방향 자동 저장 흐름
+- `docs/product/v2_insurer_admission_phase1.md` § 6-2 정책 3 박힘 = 일방향 자동 저장 패턴 갱신
+- `docs/product/v2_insurer_admission_phase1.md` § 1-1 [B. Q&A 트랙] 다이어그램 박음 = 일방향 자동 저장 흐름
 - v0/v1 분기 박힘 = 일방향 박힘 정합으로 박음 (v0 = 모든 row 노출 → 일방향 저장 / v1 = insurer_target 매칭 → 일방향 분기)
 
 **라이브 영향:** 0 (spec 문서 갱신만).
@@ -98,7 +98,7 @@ admin only + source_type IN ('navigation_distilled', 'seed')
 |---|---|---|
 | **board_type ENUM** (DB) | `manager_notice` 박힘 | 그대로 박음 (DB 변경 0) |
 | **BOARD_LABEL** (board.html L1172) | "매니저 공지" 박힘 | "실장님 공지" 박음 |
-| **spec § 2-1** (`docs/specs/v2_insurer_admission_phase1_v2.md`) | "매니저 공지" 박힘 | "실장님 공지" 박음 |
+| **spec § 2-1** (`docs/product/v2_insurer_admission_phase1.md`) | "매니저 공지" 박힘 | "실장님 공지" 박음 |
 | **admin_v2 D-1/D-2** (`pages/admin_v2.html`) | "매니저 공지" 박힘 | "실장님 공지" 박음 |
 | **_INDEX.md / _INDEX_1~4_*.md** | "매니저 공지" 박힘 (다수) | "실장님 공지" 일괄 박음 |
 | **메모리** | 미박힘 (대부분 한글 호칭 박힘) | grep 후 박음 |

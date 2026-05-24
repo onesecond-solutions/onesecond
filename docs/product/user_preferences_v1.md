@@ -4,7 +4,7 @@ status: 결재 박힘 (2026-05-14 야간)
 phase: 5/18 4팀 오픈 후 본진 진입 (Phase 1 ~3h)
 owner: 팀장님 본진 + Claude Code 실행
 related:
-  - docs/core/onesecond_master_strategy_v1_20260510.md (§15 정체성 본진)
+  - docs/strategy/master_strategy_v1.md (§15 정체성 본진)
   - memory/accessibility_low_vision.md (노안 격차 본진)
   - public.user_preferences (DB 신설)
   - css/tokens.css (CSS 변수 본인 박힐 자리)

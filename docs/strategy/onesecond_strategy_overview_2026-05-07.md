@@ -9,8 +9,8 @@
 
 > **🎯 본질 한 줄:** 흐름은 지점 단위로 닫고, 지식은 허브로 선별 승격한다.
 >
-> **현행 진실 원천 (Phase 1):** `docs/specs/v2_insurer_admission_phase1_v2.md` (~750줄, 2026-05-08 commit `bdc5c19`, 42건 결정 통합)
-> **OS 정의 진실 원천:** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄)
+> **현행 진실 원천 (Phase 1):** `docs/product/v2_insurer_admission_phase1.md` (~750줄, 2026-05-08 commit `bdc5c19`, 42건 결정 통합)
+> **OS 정의 진실 원천:** `docs/strategy/os_definition_v2.md` (540줄)
 > **9역할 진실 원천:** `docs/role_system.md`
 > **본 문서 ↔ spec v2 충돌 시:** spec v2 우선 (작성 시점 더 최신).
 >
@@ -33,7 +33,7 @@
 
 ### 1-0. 본질 한 줄 + 핵심 문장 TOP 3 (2026-05-08 spec v2 § 0 박힘) ⭐
 
-`docs/specs/v2_insurer_admission_phase1_v2.md` § 0-1 / 0-2 (commit `bdc5c19`):
+`docs/product/v2_insurer_admission_phase1.md` § 0-1 / 0-2 (commit `bdc5c19`):
 
 > **본질 한 줄:** 흐름은 지점 단위로 닫고, 지식은 허브로 선별 승격한다.
 >
@@ -44,7 +44,7 @@
 
 ### 1-0-bis. OS 정의 v2 (2026-05-07 박힘)
 
-`docs/core/onesecond_os_definition_v2_2026-05-07.md`:
+`docs/strategy/os_definition_v2.md`:
 
 > 원세컨드 = **보험 상담 흐름 운영체제 (Counseling Flow OS)** — 설계사가 상담 중 멈추지 않게 하는 흐름 OS. CRM·SaaS·게시판 X.
 
@@ -151,7 +151,7 @@ README.md 본문 (라인 21~26) — "4축 구조" 헤딩 + 5개 항목:
 >
 > 진실 원천: README.md (5/8 commit `bdc5c19` 갱신).
 
-00_MASTER.md § 6 본문 (라인 212~244, **00_MASTER.md는 5/7 폐기 → `docs/deprecated/`**):
+00_MASTER.md § 6 본문 (라인 212~244, **00_MASTER.md는 5/7 폐기 → `docs/archive/_deprecated/`**):
 
 ### 2-1. 축 1 — 설계사 구독
 
@@ -229,7 +229,7 @@ docs/role_system.md § 7 (라인 138~143):
 
 ### 2-7. PG 결제 인프라 상태 (2026-05-05 메모)
 
-`docs/operations/2026-05-05_pg_payment_setup.md` (라인 19~21):
+`docs/architecture/operations/2026-05-05_pg_payment_setup.md` (라인 19~21):
 
 > - 통신판매업 신고를 시도했으나 **"구매안전서비스 이용 확인증"** 누락으로 막힘
 > - 확인증 = 에스크로 가입 증명서 (선지급식 통신판매업 필수)
@@ -241,7 +241,7 @@ docs/role_system.md § 7 (라인 138~143):
 - /docs/role_system.md (라인 138~143)
 - /docs/decisions/2026-05-02_insurer_paid_strategy.md (전체)
 - /pricing.html (라인 141), /pages/pricing-content.html (라인 171)
-- /docs/operations/2026-05-05_pg_payment_setup.md (라인 19~21)
+- /docs/architecture/operations/2026-05-05_pg_payment_setup.md (라인 19~21)
 
 ---
 
@@ -408,7 +408,7 @@ CLAUDE.md (라인 165):
 ## 5. 게시판 전략 (2026-05-08 spec v2 신설로 전면 재작성)
 
 > **🚨 본 § 5 v1 사양 (4탭 — hub/team/branch/insurer) 폐기됨.**
-> **현행 진실 원천:** `docs/specs/v2_insurer_admission_phase1_v2.md` § 1~§ 8 (commit `bdc5c19`, 5/8 작성)
+> **현행 진실 원천:** `docs/product/v2_insurer_admission_phase1.md` § 1~§ 8 (commit `bdc5c19`, 5/8 작성)
 > **재작성 사유:** v2.0 원수사 입점 모델 Phase 1 메인 트랙 전환 (5/7) → 게시판·회원가입·보험사 페이지 전면 재정의.
 
 ### 5-1. 게시판 7종 board_type ENUM (spec v2 § 2) ⭐
@@ -555,7 +555,7 @@ CLAUDE.md (라인 165):
 
 ### 5-13. v1.5 자료 자산화 본 트랙 (4팀 vault Phase 1)
 
-`docs/specs/2026-05-05_team4_vault_phase1.md` (455줄, 5/12 이후 진입 / 결정 8건 + 11개 카테고리 확정 ⏸ 결재 대기) — 4팀 비밀의 공간 (40명 전용) 디자인 정체성: 다크 카카오 톤(`--team4-bg #1A1410` / `--team4-accent #C8753A`).
+`docs/product/team4_vault_phase1.md` (455줄, 5/12 이후 진입 / 결정 8건 + 11개 카테고리 확정 ⏸ 결재 대기) — 4팀 비밀의 공간 (40명 전용) 디자인 정체성: 다크 카카오 톤(`--team4-bg #1A1410` / `--team4-accent #C8753A`).
 
 ### 5-14. 카톡 구조 운영 흐름 흡수 트랙 (2026-05-09 본질 재정의)
 
@@ -592,13 +592,13 @@ CLAUDE.md (라인 165):
 - 메모리 [`kakao_migration_strategy.md`] (4/26 작성 보류 명문화) — 본 § 5-14 본질 재정의 정합 갱신 별 트랙
 
 ### [출처]
-- **현행 진실 원천:** `docs/specs/v2_insurer_admission_phase1_v2.md` (§ 1~§ 8, ~750줄, commit `bdc5c19`)
-- `docs/core/onesecond_os_definition_v2_2026-05-07.md` (OS 정의 v2)
+- **현행 진실 원천:** `docs/product/v2_insurer_admission_phase1.md` (§ 1~§ 8, ~750줄, commit `bdc5c19`)
+- `docs/strategy/os_definition_v2.md` (OS 정의 v2)
 - `docs/role_system.md` (9역할 진실 원천)
 - `docs/decisions/2026-05-02_insurer_paid_strategy.md` (NH 원수사 유료화)
-- `docs/specs/2026-05-05_team4_vault_phase1.md` (4팀 vault Phase 1)
+- `docs/product/team4_vault_phase1.md` (4팀 vault Phase 1)
 - `docs/sessions/_INDEX.md` (미해결 #26 카톡 보류)
-- **폐기 v1 사양 (이력 보존):** `docs/specs/v2_insurer_admission_phase1_v1.md` (829줄, 5/7 작성, 폐기 헤더)
+- **폐기 v1 사양 (이력 보존):** `docs/archive/_deprecated/v2_insurer_admission_phase1_v1.md` (829줄, 5/7 작성, 폐기 헤더)
 
 ---
 
@@ -618,7 +618,7 @@ CLAUDE.md (라인 165):
 
 ### 6-2. 사용자 페이지 색 비율 (5/4 디자인 메모리 #16 정합)
 
-`docs/specs/2026-05-05_index_hero_headline_c_plus.md` (라인 49~52):
+`docs/product/index_hero_headline.md` (라인 49~52):
 
 > 5/4 디자인 메모리 정합 (메모리 #16):
 > - 사용자 페이지=밝은 브라운·아이보리 80%
@@ -786,7 +786,7 @@ C영역 v1.1 5배너:
 
 ### [출처]
 - /docs/sessions/_INDEX.md (라인 15, 323~331)
-- /docs/specs/2026-05-05_index_hero_headline_c_plus.md (라인 49~52)
+- /docs/product/index_hero_headline.md (라인 49~52)
 - /claude_code/design_test/README.md (전체)
 - /claude_code/_context/00_MASTER.md (라인 86~166, 286~318)
 - /CLAUDE.md (라인 100~107)
@@ -1064,13 +1064,13 @@ CLAUDE.md (라인 207~210):
 - **00_MASTER.md § 5-1**: 6 role 표기
 - **README.md "권한 구조"**: 동일 6 role 표기
 - **현재 진실 원천:** `docs/role_system.md` (9 role)
-- **해소 처리 (5/8):** `00_MASTER.md` → `docs/deprecated/` 이전 (5/7 commit `7f7ed8a`) + README.md 5/8 commit `bdc5c19` Step 0-tris로 9역할 표 + 무료/유료/화면설정 매트릭스 박음.
+- **해소 처리 (5/8):** `00_MASTER.md` → `docs/archive/_deprecated/` 이전 (5/7 commit `7f7ed8a`) + README.md 5/8 commit `bdc5c19` Step 0-tris로 9역할 표 + 무료/유료/화면설정 매트릭스 박음.
 
 ### #2. Supabase 프로젝트 ID 불일치 → ✅ 해소
 
 - **00_MASTER.md § 3-1**: `qursjteiovcylqiepmlo` (구버전 폐기)
 - **CLAUDE.md**: `pdnwgzneooyygfejrvbg` (신버전 = 유일 진실 원천)
-- **해소 처리 (5/7):** `00_MASTER.md` → `docs/deprecated/` 이전. CLAUDE.md 단독 진실 원천.
+- **해소 처리 (5/7):** `00_MASTER.md` → `docs/archive/_deprecated/` 이전. CLAUDE.md 단독 진실 원천.
 
 ### #3. 관리자 예외 원칙 — admin만 vs admin+branch_manager → ✅ 해소
 
@@ -1108,7 +1108,7 @@ CLAUDE.md (라인 207~210):
 ### #9. 00_MASTER.md "다음 검토 권장" 잔존 → ✅ 해소
 
 - **이전:** "최종 수정: 2026-04-20 / 다음 검토 권장: DB 재설계 완료 후"
-- **해소 처리 (5/7):** `00_MASTER.md` → `docs/deprecated/` 이전. MASTER 역할은 OS 정의 v2(`docs/core/onesecond_os_definition_v2_2026-05-07.md`)로 이전.
+- **해소 처리 (5/7):** `00_MASTER.md` → `docs/archive/_deprecated/` 이전. MASTER 역할은 OS 정의 v2(`docs/strategy/os_definition_v2.md`)로 이전.
 
 ---
 

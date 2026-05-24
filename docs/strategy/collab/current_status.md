@@ -77,8 +77,8 @@
 - 영역 상세: `docs/sessions/_INDEX_1~4_*.md` (Phase 1 / admin_v2 / 별 트랙 / 세션 로그)
 - 본 세션 인계: `docs/sessions/2026-05-10_0042.md` (5/10 새벽 마감)
 - 4팀 자산화 archive: `docs/sessions/2026-05-10_0037_kakao_migration_chat_archive.md`
-- 현행 spec: `docs/specs/v2_insurer_admission_phase1_v2.md` (1288줄, 42건 결정 + § 7-4 Step 2-bis 누적 + § 9-1-bis Phase 1.5 흡수)
-- AI 협업 영구 진실: `docs/core/AI_COLLABORATION_STRATEGY.md`
+- 현행 spec: `docs/product/v2_insurer_admission_phase1.md` (1288줄, 42건 결정 + § 7-4 Step 2-bis 누적 + § 9-1-bis Phase 1.5 흡수)
+- AI 협업 영구 진실: `docs/strategy/ai_collaboration.md`
 
 ---
 

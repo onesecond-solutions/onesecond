@@ -1,9 +1,9 @@
 # v2.0 원수사 입점 모델 — Phase 1 통합 spec (v2)
 
-> **spec명:** `docs/specs/v2_insurer_admission_phase1_v2.md`
+> **spec명:** `docs/product/v2_insurer_admission_phase1.md`
 > **작성일:** 2026-05-08
-> **이전 버전:** `docs/specs/v2_insurer_admission_phase1_v1.md` (폐기 헤더 박힘, 829줄, 2026-05-07 작성)
-> **진실 원천 (OS 정의):** `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄)
+> **이전 버전:** `docs/archive/_deprecated/v2_insurer_admission_phase1_v1.md` (폐기 헤더 박힘, 829줄, 2026-05-07 작성)
+> **진실 원천 (OS 정의):** `docs/strategy/os_definition_v2.md` (540줄)
 > **진실 원천 (정합 통합):** `docs/strategy/onesecond_strategy_overview_2026-05-07.md` (940줄, 정합 16건 명시)
 > **9역할 진실 원천:** `docs/role_system.md`
 > **상태:** v2 재작성 완료. 본 spec ↔ 진실 원천 충돌 시 **본 spec 우선** (작성 시점 더 최신).
@@ -50,12 +50,12 @@
 
 | 진실 원천 | 본 spec 처리 |
 |---|---|
-| `docs/core/onesecond_os_definition_v2_2026-05-07.md` | OS 정의 (보험 상담 흐름 운영체제) 그대로 인용 |
+| `docs/strategy/os_definition_v2.md` | OS 정의 (보험 상담 흐름 운영체제) 그대로 인용 |
 | `docs/strategy/onesecond_strategy_overview_2026-05-07.md` | § ⚠️ 정합 9건 + 미반영 7건 = 16건 본 spec에서 해소 |
 | `docs/role_system.md` | 9역할 RBAC 그대로 인용 |
 | `CLAUDE.md` | 절대 프로토콜 + DB 작업 규칙 그대로 정합 |
 
-폐기 처리 완료 (이미 `docs/deprecated/` 이전):
+폐기 처리 완료 (이미 `docs/archive/_deprecated/` 이전):
 - `claude_code/_context/00_MASTER.md` (5/7 commit `7f7ed8a`, MASTER 역할 → OS 정의 v2로 이전)
 - 4탭(hub/team/branch/insurer) 구조 → 본 spec 7종 `board_type`으로 재정의
 
@@ -1170,7 +1170,7 @@ $$;
 
 | Step | 단계 | 세션 | 비고 |
 |---|---|---|---|
-| **0-bis** | spec v2 재작성 (본 진입) | 0.5 (3~4시간) | docs/specs/v2_insurer_admission_phase1_v2.md 신설 + v1 폐기 헤더 |
+| **0-bis** | spec v2 재작성 (본 진입) | 0.5 (3~4시간) | docs/product/v2_insurer_admission_phase1.md 신설 + v1 폐기 헤더 |
 | **0-tris** | README.md 9 role 갱신 + 4축→5축 + 4팀 40명 표기 정리 | 0.3 | strategy_overview § ⚠️ #1 + #5 + #7 + #8 정합 처리 (보강 3 분리) |
 | 2-bis | DB 보강 마이그레이션 (branches/teams/IEB + 컬럼 + RLS) | **1.0+** | Step A·B·C·D 분할 (보강 4 정합, 0.5 세션으로 되돌리지 말 것) |
 | **5** | ~~보험사 회원가입 폼 (4중 방어 + 직급→9역할 매핑) — index.html 인라인~~ → **재정의: home_v2 통합 (Phase 1.5 즉시 흡수)** | ~~1.0~~ → **2.5세션** | ~~(b) 일반 폼 첫 단계 분기~~ → **5/9 저녁 결정 변경: index.html → home_v2.html 가입/로그인 통합. Step 5-A/5-B/5-C 박힌 코드(434줄) 100% 재사용 + 위치 이전. 세부는 Phase 1.5 작업지시서 (별도 신설) 참조** |
@@ -1293,7 +1293,7 @@ $$;
 
 ## 10-5. Storage RLS 전수 sweep
 
-- 작업지시서: `docs/specs/storage_rls_full_sweep_workorder.md` (4 Step 분할)
+- 작업지시서: `docs/archive/2026-05/storage_rls_full_sweep_workorder.md` (4 Step 분할)
 - 5/11 슬롯 진입 권장 (~0.6세션)
 
 ## 10-6. 사이트 분리 모델
@@ -1305,7 +1305,7 @@ $$;
 ## 10-7. 보험뉴스 자동 증식 / 4팀 vault Phase 1
 
 - Phase 1 종료 후 진입
-- `docs/specs/2026-05-05_team4_vault_phase1.md` (455줄, 5/12 이후 진입)
+- `docs/product/team4_vault_phase1.md` (455줄, 5/12 이후 진입)
 
 ## 10-8. 무료 회원 저장 공간 정책 후속 4건
 
@@ -1387,6 +1387,6 @@ $$;
 
 > 본 spec은 v2.0 원수사 입점 모델 Phase 1의 통합 명세서입니다.
 > 본 spec과 충돌하는 기존 문서·코드는 모두 본 spec 우선
-> (진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md` + `docs/role_system.md`).
+> (진실 원천: `docs/strategy/os_definition_v2.md` + `docs/role_system.md`).
 > Phase 1 본격 진입은 본 spec 승인 + Step 2-bis 의뢰서 발송 후.
 > 추가 GPT 조율 차단 (4/28 사고 패턴 정합).

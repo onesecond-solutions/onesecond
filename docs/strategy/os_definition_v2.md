@@ -421,7 +421,7 @@ Layer 5. 흐름 저장          [CRM] ← 결과로 등장 (시작점 X)
 
 # PART C — Phase 1 spec 정합 매트릭스
 
-> 본 PART는 본 v2 OS 정의 ↔ Phase 1 spec(`docs/specs/v2_insurer_admission_phase1_v1.md` 829줄)의 정합성을 검증합니다.
+> 본 PART는 본 v2 OS 정의 ↔ Phase 1 spec(`docs/archive/_deprecated/v2_insurer_admission_phase1_v1.md` 829줄)의 정합성을 검증합니다.
 
 ---
 
@@ -536,5 +536,5 @@ Layer 5. 흐름 저장          [CRM] ← 결과로 등장 (시작점 X)
 **END OF DOCUMENT**
 
 > 본 v2는 v1을 대체하는 진실 원천입니다.
-> Phase 1 spec(`docs/specs/v2_insurer_admission_phase1_v1.md` 829줄) 그대로 사용 가능.
+> Phase 1 spec(`docs/archive/_deprecated/v2_insurer_admission_phase1_v1.md` 829줄) 그대로 사용 가능.
 > 게시판 수정 작업 진입 차단 0.
