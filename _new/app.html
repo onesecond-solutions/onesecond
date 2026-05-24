@@ -159,6 +159,15 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qov-content{margin-top:10px;}
 .qov-group-content{display:none;padding:14px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;margin-top:10px;font-size:0.8125rem;color:var(--tp);}
 .qov-group-content.active{display:block;}
+/* 내용 보기 모드 (2026-05-24 신설) — 선택 그룹 100% + 다른 그룹 숨김 + 본문 넓게 */
+.qov-modal.content-mode .qov-groups{grid-template-columns:1fr !important;}
+.qov-modal.content-mode .qov-group:not(.active-group){display:none;}
+.qov-modal.content-mode .qov-group.active-group .qov-group-items{display:none;}
+.qov-modal.content-mode .qov-group.active-group .qov-group-title{display:none;}
+.qov-modal.content-mode .qov-group-content{font-size:0.9375rem;line-height:1.7;}
+.qov-back-btn{display:none;background:transparent;border:1px solid var(--bd);color:var(--ts);font-size:0.8125rem;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all 0.15s ease;align-items:center;gap:4px;}
+.qov-back-btn:hover{background:var(--s2);color:var(--tp);}
+.qov-modal.content-mode .qov-back-btn{display:inline-flex;}
 .qov-footer{padding:12px 20px;border-top:1px solid var(--bd);background:var(--s2);display:flex;justify-content:flex-end;flex-shrink:0;}
 .qov-footer-btn{padding:8px 16px;background:transparent;border:1px solid var(--bd);border-radius:8px;color:var(--ts);font-size:0.8125rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.15s ease;}
 .qov-footer-btn:hover{background:var(--s1);color:var(--tp);}
@@ -1598,6 +1607,7 @@ function mountQuickOverlay(){
       '<div class="qov-backdrop" id="quickOverlay" onclick="handleQuickOverlayClick(event)">'
     +   '<div class="qov-modal" role="dialog" aria-modal="true" aria-labelledby="qov-title">'
     +     '<div class="qov-header">'
+    +       '<button type="button" class="qov-back-btn" onclick="exitContentMode()" aria-label="메뉴로 돌아가기">← 뒤로</button>'
     +       '<div class="qov-header-title" id="qov-title">⚡ 빠른 실행</div>'
     +       '<button type="button" class="qov-close" onclick="closeQuick()" aria-label="닫기">✕</button>'
     +     '</div>'
@@ -1691,10 +1701,9 @@ async function loadQuickOverlayItems(){
         slot.innerHTML = '<div class="qov-group-loading">항목 없음</div>';
       }else{
         slot.innerHTML = buckets[gKey].map(function(item){
-          var icon = QUICK_ITEM_ICONS[item.tab_key] || '📄';
           var safe = String(item.tab_title).replace(/'/g, '&#39;');
+          // 이모지 제거 (2026-05-24): 검색·조회 🔍 + 헤더 ⚡만 유지, 항목 아이콘 제거
           return '<button type="button" class="qov-item" onclick="openQuickOverlay(\'' + safe + '\')">'
-            + '<span class="qov-item-icon">' + icon + '</span>'
             + '<span>' + item.tab_title + '</span>'
             + '</button>';
         }).join('');
@@ -1727,6 +1736,8 @@ function quickSearchOpen(engine){
   var grp = document.querySelector('.qov-group[data-group="search"]');
   if(!grp) return;
   grp.classList.add('search-active');
+  // 검색 클릭 = 내용 보기 모드 진입 (검색·조회 그룹만 100%)
+  enterContentMode('search');
   var input = document.getElementById('qov-search-input');
   if(input){
     input.value = '';
@@ -1807,6 +1818,30 @@ function activateItemBtn(groupKey, tabTitle){
   });
 }
 
+// ── 내용 보기 모드 진입 / 나가기 (2026-05-24 신설) ──
+// 본질: 본문 넓게 보기 — 선택 그룹 100% + 다른 그룹 숨김
+function enterContentMode(groupKey){
+  var modal = document.querySelector('.qov-modal');
+  if(!modal || !groupKey) return;
+  modal.querySelectorAll('.qov-group').forEach(function(g){ g.classList.remove('active-group'); });
+  var sel = modal.querySelector('.qov-group[data-group="' + groupKey + '"]');
+  if(sel) sel.classList.add('active-group');
+  modal.classList.add('content-mode');
+}
+window.enterContentMode = enterContentMode;
+
+function exitContentMode(){
+  var modal = document.querySelector('.qov-modal');
+  if(!modal) return;
+  modal.classList.remove('content-mode');
+  modal.querySelectorAll('.qov-group').forEach(function(g){ g.classList.remove('active-group'); });
+  closeAllGroupContent();
+  // 검색 자체 초기화 (검색 모드 자체)
+  var searchGrp = modal.querySelector('.qov-group[data-group="search"]');
+  if(searchGrp) searchGrp.classList.remove('search-active');
+}
+window.exitContentMode = exitContentMode;
+
 async function openQuickOverlay(key){
   mountQuickOverlay();
   loadQuickOverlayItems();
@@ -1833,6 +1868,9 @@ async function openQuickOverlay(key){
   target.innerHTML = '<div class="qov-group-loading">불러오는 중...</div>';
   target.classList.add('active');
   target.dataset.tabTitle = key;
+
+  // 내용 보기 모드 진입 (선택 그룹 100% + 다른 그룹 숨김)
+  enterContentMode(groupKey);
 
   // 캐시 점검
   if(window.overlayContent[key]){
