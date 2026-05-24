@@ -123,6 +123,50 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .fab .fic{font-size:1.125rem;}
 .fab .flbl{font-size:0.75rem;font-weight:700;}
 .fab:hover{background:var(--ach);}
+
+/* ═════════════════════════════════════════════════════════
+   QUICK OVERLAY (딸깍 클릭 시 4그룹 펼침, 2026-05-24 V1→V2 이식)
+   V1 .qov-* 패턴 통째 + V2 토큰(--ac/--sh-md/--bd/--s1/--s2) 정합
+═════════════════════════════════════════════════════════ */
+.qov-backdrop{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:flex;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(4px);padding:16px;animation:qovFadeIn 0.2s ease;}
+@keyframes qovFadeIn{from{opacity:0}to{opacity:1}}
+.qov-modal{background:var(--s1);border:1px solid var(--bd);border-radius:16px;width:100%;max-width:800px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow:hidden;animation:qovSlideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes qovSlideUp{from{opacity:0;transform:translateY(20px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.qov-header{background:var(--s2);border-bottom:1px solid var(--bd);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.qov-header-title{font-size:0.9375rem;font-weight:800;color:var(--tp);}
+.qov-close{width:28px;height:28px;border-radius:999px;background:transparent;border:1px solid var(--bd);color:var(--ts);cursor:pointer;font-size:0.875rem;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all 0.15s ease;}
+.qov-close:hover{background:var(--s2);color:var(--tp);}
+.qov-body{flex:1;overflow-y:auto;padding:20px;min-height:0;}
+.qov-groups{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.qov-group{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px;}
+.qov-group-title{font-size:0.6875rem;font-weight:800;color:var(--ts);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;}
+.qov-group-items{display:flex;flex-direction:column;gap:6px;}
+.qov-group-loading{font-size:0.8125rem;color:var(--tf);font-style:italic;padding:6px 0;}
+.qov-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;color:var(--tp);font-size:0.8125rem;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;width:100%;transition:all 0.15s ease;}
+.qov-item:hover{background:var(--sh);border-color:var(--ac);color:var(--ac);}
+.qov-item.active{background:var(--ac);border-color:var(--ac);color:#fff;}
+.qov-item-icon{font-size:0.9375rem;flex-shrink:0;}
+.qov-search-panel{display:none;margin-top:10px;flex-direction:column;gap:8px;}
+.qov-group[data-group="search"].search-active .qov-group-items{display:none;}
+.qov-group[data-group="search"].search-active .qov-search-panel{display:flex;}
+.qov-search-input{width:100%;padding:10px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;color:var(--tp);font-size:0.875rem;font-family:inherit;outline:none;}
+.qov-search-input:focus{border-color:var(--ac);}
+.qov-search-actions{display:flex;gap:8px;}
+.qov-search-btn{flex:1;padding:8px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:8px;color:var(--tp);font-size:0.8125rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.15s ease;}
+.qov-search-btn:hover{background:var(--sh);}
+.qov-search-btn-primary{background:var(--ac);border-color:var(--ac);color:#fff;}
+.qov-search-btn-primary:hover{background:var(--ach);}
+.qov-content{margin-top:10px;}
+.qov-group-content{display:none;padding:14px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;margin-top:10px;font-size:0.8125rem;color:var(--tp);}
+.qov-group-content.active{display:block;}
+.qov-footer{padding:12px 20px;border-top:1px solid var(--bd);background:var(--s2);display:flex;justify-content:flex-end;flex-shrink:0;}
+.qov-footer-btn{padding:8px 16px;background:transparent;border:1px solid var(--bd);border-radius:8px;color:var(--ts);font-size:0.8125rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.15s ease;}
+.qov-footer-btn:hover{background:var(--s1);color:var(--tp);}
+@media (max-width:640px){
+  .qov-backdrop{padding:0;align-items:flex-end;}
+  .qov-modal{max-width:none;max-height:90vh;border-radius:16px 16px 0 0;}
+  .qov-groups{grid-template-columns:1fr;}
+}
 .lb{position:fixed;inset:0;background:rgba(8,9,11,0.92);display:none;flex-direction:column;z-index:100;}
 .lb.open{display:flex;}
 .lbtop{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0;}
@@ -369,6 +413,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .home-greeting-name{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
 .home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
 @media (max-width:640px){.home-greeting{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 14px}}
+/* 3층: [오늘의 업무] placeholder (2026-05-24 Phase 1 신설) */
+.home-today{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.home-today-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.home-today-ttl{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
+.home-today-sub{font-size:0.75em;color:var(--ts);font-weight:500}
+.home-today-body{padding:6px 0}
+.home-today-empty{font-size:0.85em;color:var(--ts);font-style:italic;text-align:center;padding:18px 12px;background:var(--s2);border-radius:8px;border:1px dashed var(--bd)}
+@media (max-width:640px){.home-today{padding:12px 14px}}
 
 .os-galaxy-banner{--mx:0px;--my:0px;width:100%;min-height:280px;position:relative;overflow:hidden;isolation:isolate;border-radius:24px;border:1px solid color-mix(in srgb,var(--bd) 82%,var(--ac));background:radial-gradient(circle at 18% 20%,color-mix(in srgb,var(--ach) 28%,transparent),transparent 28%),radial-gradient(circle at 86% 16%,color-mix(in srgb,var(--ac) 34%,transparent),transparent 30%),radial-gradient(circle at 60% 95%,color-mix(in srgb,var(--ach) 20%,transparent),transparent 36%),linear-gradient(135deg,#05060A 0%,var(--bg) 42%,#111225 100%);box-shadow:0 20px 56px color-mix(in srgb,var(--ac) 28%,transparent),inset 0 1px 0 rgba(255,255,255,.08);padding:clamp(20px,3vw,36px);display:grid;grid-template-columns:minmax(0,1.04fr) minmax(280px,.96fr);gap:clamp(16px,3vw,32px);align-items:center;margin-bottom:18px}
 .os-galaxy-banner::before{content:"";position:absolute;inset:-18%;z-index:-3;background-image:radial-gradient(circle,rgba(255,255,255,.92) 0 1px,transparent 1.4px),radial-gradient(circle,rgba(255,255,255,.48) 0 1px,transparent 1.3px),radial-gradient(circle,color-mix(in srgb,var(--ach) 68%,white) 0 1px,transparent 1.5px);background-size:78px 78px,128px 128px,176px 176px;background-position:0 0,24px 34px,60px 18px;opacity:.38;transform:translate3d(calc(var(--mx) * .16),calc(var(--my) * .16),0);animation:starDrift 58s linear infinite;will-change:transform}
@@ -503,6 +555,17 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
           </div>
         </div>
       </section>
+
+      <!-- 3층: [오늘의 업무] placeholder (2026-05-24 Phase 1 신설) -->
+      <div class="home-today">
+        <div class="home-today-head">
+          <div class="home-today-ttl">📋 오늘의 업무</div>
+          <div class="home-today-sub">곧 이 자리에 오늘 할 일이 자동 정리됩니다</div>
+        </div>
+        <div class="home-today-body">
+          <div class="home-today-empty">준비 중 — 일정 / 알림 / 미답변 질문이 한눈에 들어옵니다</div>
+        </div>
+      </div>
 
       <div class="home-row-2">
         <div class="home-widget">
@@ -776,7 +839,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     </div>
   </div>
 </div>
-<button class="fab"><span class="fic">&#9889;</span><span class="flbl">딸깍</span></button>
+<button class="fab" onclick="openQuickLauncher()" aria-label="빠른 실행 열기"><span class="fic">&#9889;</span><span class="flbl">딸깍</span></button>
 
 <div class="lb" id="lb">
   <div class="lbtop">
@@ -1504,6 +1567,326 @@ function filterMys(el,cat){
     cards[j].style.display=(cat==='전체'||c===cat)?'':'none';
   }
 }
+
+/* ═════════════════════════════════════════════════════════
+   QUICK OVERLAY (딸깍 클릭 시 4그룹 펼침)
+   V1 app.html mountQuickOverlay + loadQuickOverlayItems + 검색 흐름 통째 이식
+   2026-05-24 V1→V2 1차 이식 (openQuickOverlay key별 콘텐츠 = 다음 단계)
+═════════════════════════════════════════════════════════ */
+
+// ── 4그룹 매핑 (V1 라이브 DB quick_contents 정합) ──
+var QUICK_GROUP_MAP = {
+  recording_script: 'recording_script',
+  mirror_script:    'recording_script',
+  bmi_standard:     'info',
+  insurance_age:    'info',
+  payment_info:     'info',
+  system_links:     'shortcuts',
+  contact_info:     'shortcuts'
+};
+var QUICK_ITEM_ICONS = {
+  recording_script:'📝', mirror_script:'🎙️',
+  bmi_standard:'📊', insurance_age:'📅', payment_info:'💳',
+  system_links:'🔗', contact_info:'📞'
+};
+window._qovTabKeyMap = window._qovTabKeyMap || {};
+
+// ── 오버레이 동적 신설 ──
+function mountQuickOverlay(){
+  if(document.getElementById('quickOverlay')) return;
+  var html =
+      '<div class="qov-backdrop" id="quickOverlay" onclick="handleQuickOverlayClick(event)">'
+    +   '<div class="qov-modal" role="dialog" aria-modal="true" aria-labelledby="qov-title">'
+    +     '<div class="qov-header">'
+    +       '<div class="qov-header-title" id="qov-title">⚡ 빠른 실행</div>'
+    +       '<button type="button" class="qov-close" onclick="closeQuick()" aria-label="닫기">✕</button>'
+    +     '</div>'
+    +     '<div class="qov-body">'
+    +       '<div class="qov-groups" id="qov-groups">'
+    +         '<div class="qov-group" data-group="recording_script">'
+    +           '<div class="qov-group-title">녹취·스크립트</div>'
+    +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
+    +           '<div class="qov-group-content" data-content-for="recording_script"></div>'
+    +         '</div>'
+    +         '<div class="qov-group" data-group="info">'
+    +           '<div class="qov-group-title">기준·정보</div>'
+    +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
+    +           '<div class="qov-group-content" data-content-for="info"></div>'
+    +         '</div>'
+    +         '<div class="qov-group" data-group="shortcuts">'
+    +           '<div class="qov-group-title">바로가기·연락처</div>'
+    +           '<div class="qov-group-items"><div class="qov-group-loading">불러오는 중...</div></div>'
+    +           '<div class="qov-group-content" data-content-for="shortcuts"></div>'
+    +         '</div>'
+    +         '<div class="qov-group" data-group="search">'
+    +           '<div class="qov-group-title">검색·조회</div>'
+    +           '<div class="qov-group-items">'
+    +             '<button type="button" class="qov-item" onclick="quickSearchOpen(\'naver\')"><span class="qov-item-icon">🔍</span><span>네이버 검색</span></button>'
+    +             '<button type="button" class="qov-item" onclick="quickSearchOpen(\'google\')"><span class="qov-item-icon">🔍</span><span>구글 검색</span></button>'
+    +             '<button type="button" class="qov-item" onclick="quickSearchOpen(\'daum\')"><span class="qov-item-icon">🔍</span><span>다음 검색</span></button>'
+    +           '</div>'
+    +           '<div class="qov-search-panel">'
+    +             '<input type="text" id="qov-search-input" class="qov-search-input" placeholder="검색어를 입력하세요" oncompositionstart="_qovIMEComposing=true" oncompositionend="_qovIMEComposing=false" onkeydown="quickSearchKeydown(event)" />'
+    +             '<div class="qov-search-actions">'
+    +               '<button type="button" class="qov-search-btn" onclick="quickSearchBack()">← 뒤로</button>'
+    +               '<button type="button" class="qov-search-btn qov-search-btn-primary" onclick="quickSearchSubmit()">검색하기</button>'
+    +             '</div>'
+    +           '</div>'
+    +         '</div>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="qov-footer">'
+    +       '<button type="button" class="qov-footer-btn" onclick="closeQuick()">닫기</button>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+  var holder = document.createElement('div');
+  holder.innerHTML = html;
+  document.body.appendChild(holder.firstChild);
+}
+window.mountQuickOverlay = mountQuickOverlay;
+
+// ── DB fetch (Supabase quick_contents) ──
+async function loadQuickOverlayItems(){
+  var groups = {
+    recording_script: document.querySelector('.qov-group[data-group="recording_script"] .qov-group-items'),
+    info:             document.querySelector('.qov-group[data-group="info"] .qov-group-items'),
+    shortcuts:        document.querySelector('.qov-group[data-group="shortcuts"] .qov-group-items')
+  };
+  if(!groups.recording_script) return;
+  if(groups.recording_script.dataset.loaded === 'true') return;
+
+  // 토큰 사전 점검 — 토큰 없을 시 fetch 안 함 (db.js 자동 alert 회피)
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if(!hasToken){
+    Object.keys(groups).forEach(function(gKey){
+      var slot = groups[gKey];
+      if(slot) slot.innerHTML = '<div class="qov-group-loading">로그인 후 가동 (Deploy Preview = 토큰 없음)</div>';
+    });
+    return;
+  }
+
+  if(!window.db){
+    Object.keys(groups).forEach(function(gKey){
+      var slot = groups[gKey];
+      if(slot) slot.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
+    });
+    return;
+  }
+  try{
+    var res = await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,tab_key&order=sort_order');
+    if(!res.ok) throw new Error('fetch 실패: ' + res.status);
+    var data = await res.json();
+    data.forEach(function(item){ window._qovTabKeyMap[item.tab_title] = item.tab_key; });
+    var buckets = { recording_script:[], info:[], shortcuts:[] };
+    data.forEach(function(item){
+      var gKey = QUICK_GROUP_MAP[item.tab_key];
+      if(!gKey || !buckets[gKey]) return;
+      buckets[gKey].push(item);
+    });
+    Object.keys(buckets).forEach(function(gKey){
+      var slot = groups[gKey];
+      if(!slot) return;
+      if(buckets[gKey].length === 0){
+        slot.innerHTML = '<div class="qov-group-loading">항목 없음</div>';
+      }else{
+        slot.innerHTML = buckets[gKey].map(function(item){
+          var icon = QUICK_ITEM_ICONS[item.tab_key] || '📄';
+          var safe = String(item.tab_title).replace(/'/g, '&#39;');
+          return '<button type="button" class="qov-item" onclick="openQuickOverlay(\'' + safe + '\')">'
+            + '<span class="qov-item-icon">' + icon + '</span>'
+            + '<span>' + item.tab_title + '</span>'
+            + '</button>';
+        }).join('');
+      }
+      slot.dataset.loaded = 'true';
+    });
+  }catch(e){
+    Object.keys(groups).forEach(function(gKey){
+      var slot = groups[gKey];
+      if(slot && slot.dataset.loaded !== 'true'){
+        slot.innerHTML = '<div class="qov-group-loading" style="color:var(--err);">불러오기 실패</div>';
+      }
+    });
+  }
+}
+window.loadQuickOverlayItems = loadQuickOverlayItems;
+
+// ── 검색 흐름 (네이버/구글/다음 외부 새 탭 + IME) ──
+var QUICK_SEARCH_URLS = {
+  naver:  'https://search.naver.com/search.naver?query=',
+  google: 'https://www.google.com/search?q=',
+  daum:   'https://search.daum.net/search?q='
+};
+var QUICK_SEARCH_LABELS = { naver:'네이버', google:'구글', daum:'다음' };
+var _qovSearchEngine = null;
+window._qovIMEComposing = false;
+
+function quickSearchOpen(engine){
+  _qovSearchEngine = engine;
+  var grp = document.querySelector('.qov-group[data-group="search"]');
+  if(!grp) return;
+  grp.classList.add('search-active');
+  var input = document.getElementById('qov-search-input');
+  if(input){
+    input.value = '';
+    input.placeholder = (QUICK_SEARCH_LABELS[engine] || '') + ' 검색어를 입력하세요';
+    setTimeout(function(){ input.focus(); }, 0);
+  }
+}
+window.quickSearchOpen = quickSearchOpen;
+
+function quickSearchBack(){
+  var grp = document.querySelector('.qov-group[data-group="search"]');
+  if(!grp) return;
+  grp.classList.remove('search-active');
+  _qovSearchEngine = null;
+}
+window.quickSearchBack = quickSearchBack;
+
+function quickSearchSubmit(){
+  var input = document.getElementById('qov-search-input');
+  if(!input || !_qovSearchEngine) return;
+  var q = (input.value || '').trim();
+  if(!q){ input.focus(); return; }
+  var url = QUICK_SEARCH_URLS[_qovSearchEngine] + encodeURIComponent(q);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  closeQuick();
+}
+window.quickSearchSubmit = quickSearchSubmit;
+
+function quickSearchKeydown(e){
+  if(e.key === 'Enter' && !window._qovIMEComposing){
+    e.preventDefault();
+    quickSearchSubmit();
+  }
+}
+window.quickSearchKeydown = quickSearchKeydown;
+
+// ── 진입 / 닫기 ──
+function openQuickLauncher(){
+  mountQuickOverlay();
+  loadQuickOverlayItems();
+}
+window.openQuickLauncher = openQuickLauncher;
+
+function closeQuick(){
+  var ov = document.getElementById('quickOverlay');
+  if(ov) ov.remove();
+  var grp = document.querySelector('.qov-group[data-group="search"]');
+  if(grp) grp.classList.remove('search-active');
+}
+window.closeQuick = closeQuick;
+
+function handleQuickOverlayClick(e){
+  if(e.target && e.target.id === 'quickOverlay') closeQuick();
+}
+window.handleQuickOverlayClick = handleQuickOverlayClick;
+
+// ── 콘텐츠 펼침 흐름 (V1 openQuickOverlay 통째 이식) ──
+window.overlayContent = window.overlayContent || {};
+
+function closeAllGroupContent(){
+  document.querySelectorAll('.qov-group-content').forEach(function(el){
+    el.classList.remove('active');
+    el.innerHTML = '';
+    el.dataset.tabTitle = '';
+  });
+  document.querySelectorAll('.qov-item.active').forEach(function(b){ b.classList.remove('active'); });
+}
+window.closeAllGroupContent = closeAllGroupContent;
+
+function activateItemBtn(groupKey, tabTitle){
+  if(!groupKey) return;
+  var groupEl = document.querySelector('.qov-group[data-group="' + groupKey + '"]');
+  if(!groupEl) return;
+  groupEl.querySelectorAll('.qov-item').forEach(function(btn){
+    if(btn.textContent && btn.textContent.indexOf(tabTitle) !== -1){
+      btn.classList.add('active');
+    }
+  });
+}
+
+async function openQuickOverlay(key){
+  mountQuickOverlay();
+  loadQuickOverlayItems();
+
+  var tabKey = window._qovTabKeyMap && window._qovTabKeyMap[key];
+  var groupKey = tabKey ? QUICK_GROUP_MAP[tabKey] : null;
+
+  // 같은 항목 재클릭 = 토글 닫기
+  if(groupKey){
+    var existing = document.querySelector('.qov-group-content[data-content-for="' + groupKey + '"]');
+    if(existing && existing.classList.contains('active') && existing.dataset.tabTitle === key){
+      closeAllGroupContent();
+      return;
+    }
+  }
+
+  closeAllGroupContent();
+
+  var target = groupKey
+    ? document.querySelector('.qov-group-content[data-content-for="' + groupKey + '"]')
+    : null;
+  if(!target) return;
+
+  target.innerHTML = '<div class="qov-group-loading">불러오는 중...</div>';
+  target.classList.add('active');
+  target.dataset.tabTitle = key;
+
+  // 캐시 점검
+  if(window.overlayContent[key]){
+    target.innerHTML = window.overlayContent[key];
+    activateItemBtn(groupKey, key);
+    return;
+  }
+
+  // 토큰 사전 점검 (Deploy Preview 정합)
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if(!hasToken){
+    target.innerHTML = '<div class="qov-group-loading">로그인 후 가동</div>';
+    return;
+  }
+
+  if(!window.db){
+    target.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
+    return;
+  }
+
+  try{
+    var res = await window.db.fetch('/rest/v1/quick_contents?tab_title=eq.' + encodeURIComponent(key) + '&is_active=eq.true&select=tab_title,tab_key,content_html&limit=1');
+    if(!res.ok) throw new Error('fetch 실패: ' + res.status);
+    var data = await res.json();
+    if(data && data[0] && data[0].content_html){
+      window.overlayContent[key] = data[0].content_html;
+      // tab_key 보강 (캐시 매핑 자료)
+      if(!groupKey && data[0].tab_key){
+        var altGroup = QUICK_GROUP_MAP[data[0].tab_key];
+        if(altGroup){
+          window._qovTabKeyMap[key] = data[0].tab_key;
+          target = document.querySelector('.qov-group-content[data-content-for="' + altGroup + '"]');
+          if(target){
+            target.classList.add('active');
+            target.dataset.tabTitle = key;
+            groupKey = altGroup;
+          }
+        }
+      }
+      if(target) target.innerHTML = data[0].content_html;
+      activateItemBtn(groupKey, key);
+    } else {
+      target.innerHTML = '<div class="qov-group-loading">준비 중입니다.</div>';
+    }
+  } catch(e){
+    target.innerHTML = '<div class="qov-group-loading" style="color:var(--err);">콘텐츠를 불러오지 못했습니다.<br>새로고침 해주세요.</div>';
+  }
+}
+window.openQuickOverlay = openQuickOverlay;
+
+// ── ESC 닫기 ──
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && document.getElementById('quickOverlay')) closeQuick();
+});
 </script>
 </body>
 </html>
