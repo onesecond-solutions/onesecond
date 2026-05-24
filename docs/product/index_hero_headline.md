@@ -264,4 +264,4 @@ C-1=(a), C-2=(a), C-3=(a), C-4=(b), C-5=(a), C-6=(a)
 **작성**: 2026-05-05 새벽
 **채택안**: C+ 안 (Pre-Hero 100vh + "2025년 어느 날" 헤드라인)
 **팀장님 최종 승인**: ⏸ 결정 6건 확정 후 진행
-**저장 위치 권장**: `docs/specs/2026-05-05_index_hero_headline_c_plus.md`
+**저장 위치 권장**: `docs/product/index_hero_headline.md`

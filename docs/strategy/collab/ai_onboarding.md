@@ -9,8 +9,8 @@
 
 | # | 파일 | 분량 | 역할 |
 |---|---|---|---|
-| **0** | **`docs/core/onesecond_master_strategy_v1_20260510.md`** ⭐⭐⭐ | 507줄 | **영업·사업 본질 (모든 결정 기준, 매 세션 첫 진입 강제)** |
-| **0'** | **`docs/core/onesecond_os_definition_v2_2026-05-07.md`** ⭐⭐ | 540줄 | **시스템 본질 (OS 정의, 양면 진실 원천)** |
+| **0** | **`docs/strategy/master_strategy_v1.md`** ⭐⭐⭐ | 507줄 | **영업·사업 본질 (모든 결정 기준, 매 세션 첫 진입 강제)** |
+| **0'** | **`docs/strategy/os_definition_v2.md`** ⭐⭐ | 540줄 | **시스템 본질 (OS 정의, 양면 진실 원천)** |
 | 1 | `CLAUDE.md` (root) | ~200줄 | 절대 프로토콜 (DB 규칙·9역할·세션 시작 보고) |
 | 2 | `docs/00_CURRENT_DIRECTION.md` ⭐ | ~50줄 | 현재 활성 방향 + 핵심 철학 4종 |
 | 3 | `docs/01_DO_NOT_DO.md` ⭐ | ~100줄 | 절대 금지 (이거 위반하면 큰 사고) |
@@ -64,8 +64,8 @@
 | 작업 spec | `docs/specs/v2_*.md` | 활성 작업지시서 |
 | DB raw | `docs/architecture/db_*.md` | DB·Chrome 의뢰서 |
 | 결정 이력 | `docs/decisions/` | 결정 문서 누적 |
-| 영구 진실 | `docs/core/AI_COLLABORATION_STRATEGY.md` + OS 정의 | 본 PC 영구 진실 원천 |
-| ⛔ 절대 X | `docs/deprecated/` + `claude_code/_*` | 옛 raw, 절대 참조 금지 |
+| 영구 진실 | `docs/strategy/ai_collaboration.md` + OS 정의 | 본 PC 영구 진실 원천 |
+| ⛔ 절대 X | `docs/archive/_deprecated/` + `claude_code/_*` | 옛 raw, 절대 참조 금지 |
 
 ---
 

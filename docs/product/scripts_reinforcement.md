@@ -135,8 +135,8 @@ sort_order     = 999
 ## 5. 산출물 위치
 
 ```
-docs/specs/scripts_reinforcement_2026-04-25_spec.md   ← 본 문서
-docs/migrations/2026-05-03_scripts_reinforcement/
+docs/product/scripts_reinforcement.md   ← 본 문서
+docs/architecture/migrations/2026-05-03_scripts_reinforcement/
   ├─ _TEMPLATE.sql                  ← SQL 템플릿 (구조만)
   ├─ baseline_scripts_20260503.json ← 적용 전 백업 (Group A 종료 시 생성)
   ├─ step1_search_optimization.sql  ← (3-3 단계에서 작성)

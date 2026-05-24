@@ -1,26 +1,59 @@
 # 원세컨드 프로젝트 — Claude Code 컨텍스트
 
-## 🚨 세션 시작 절대 프로토콜 (다른 모든 규칙보다 우선)
+## 🚨 START PROTOCOL — 세션 시작 절대 프로토콜 (다른 모든 규칙보다 우선)
 
 > **교훈 (2026-04-28 사례):** AI가 메모리만 보고 추정으로 작업 시작 → design_test 시안 승격 트랙(진짜 큰 그림) 놓침 → 6시간의 sweep + admin 작업 일부가 무효화됨.
 >
-> **재발 방지:** 모든 작업 요청 진입 시 마스터 전략 + `docs/sessions/_INDEX.md` 먼저 읽고 큰 그림 정합성 검증.
+> **교훈 (2026-05-24 정정):** sessions/_INDEX.md만 보고 진입 = 본질 격차. 현재 상태 판단 = **strategy + decisions + work_orders + product 통째 점검 후만**.
+>
+> **재발 방지:** 모든 작업 요청 진입 시 START PROTOCOL 6단계 통째 점검 + 오늘 작업 브리핑 5항목 통째 보고 + 팀장님 승인 받은 후 작업 시작.
 
 팀장님이 작업 요청을 보내면 **무조건 다음 순서**:
 
-0. **`docs/core/onesecond_master_strategy_v1_20260510.md` 통째 읽기** ⭐⭐⭐ (영구 본질·매 세션 첫 진입 강제·영업/사업 본질 진실 원천)
-   - 양면 진실 원천: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (시스템 본질)
-   - 본 문서 § 14 회귀 신호 발견 시 작업 중단·즉시 보고
-1. 작업 시작 전에 **`docs/sessions/_INDEX.md` 먼저 읽기** (없으면 `docs/sessions/` 폴더에서 가장 최근 MD 자동 검색)
-2. 진행 중인 **메인 트랙·미해결 이슈·결정 대기 항목** 파악
-3. 팀장님 요청이 그 트랙과 정합인지 검증
-4. 불일치 발견 시 **즉시 보고**:
-   > "_INDEX.md에 따르면 [X 트랙]이 진행 중인데, 오늘 요청하신 [Y 작업]은 다른 방향으로 보입니다. 의도가 맞는지 확인 부탁드립니다."
-5. 정합 확인되면 작업 진행
+### START PROTOCOL 6단계 (통째 점검 강제)
+
+| # | 자리 | 본질 |
+|---|---|---|
+| 1 | `docs/strategy/master_strategy_v1.md` ⭐⭐⭐ | 프로젝트 정체성 + 장기 방향 + §14 회귀 신호 |
+| 2 | **최근 중요 `docs/decisions/`** | 본질 결재 자리 (단순 시간순 X / 본인 중요 결정 판단) |
+| 3 | `docs/sessions/_INDEX.md` | 큰 그림 압축본 (메인 트랙 + 시급 우선순위) |
+| 4 | `docs/work_orders/` 안 active 자료 | 현재 해야 하는 것 (최근 갱신 자리 우선) |
+| 5 | `docs/product/` 안 active 사양 | 현재 만들고 있는 것 (최근 갱신 자리 우선) |
+| 6 | 최근 `docs/sessions/` 1~3개 | 직전 진행 흐름 (Log 자리, 보조) |
+
+### 오늘 작업 브리핑 5항목 (통째 보고 강제)
+
+```
+[오늘 작업 브리핑]
+
+* 현재 진행 중 트랙:
+* 어제 완료 사항:
+* 미완료 작업:
+* 오늘 우선순위 1~3:
+* 주의사항 + 충돌 가능성:
+```
+
+### 우선순위 산출 방식 (가중치 고정 금지)
+
+4 자리 통째 종합 판단:
+- `strategy/` = 회귀 신호 / 본질 변경 점검
+- `decisions/` = 최근 중요 결재 본질 + 결재 자리 확정
+- `work_orders/` = active 자료 + 최근 갱신 자리
+- `product/` = active 사양 + 최근 갱신 자리
+
+→ 4 자리 통째 종합 판단 후 1~3 추천 + 사유 명시. 특정 자리 가중치 고정 X.
+
+### 승인 자리 (강제)
+
+브리핑 보고 후 **팀장님 결재 받기 전 작업 진입 금지**.
 
 ⚠️ **예외 없음.** 작은 작업 요청도 동일.
-⚠️ "이 작업 어떻게 진행하면 좋을까?" 같은 추정 요청도 마스터 전략 + `_INDEX.md` 먼저 읽고 답변.
-⚠️ 정합성 검증 없이 작업 시작은 **큰 그림 놓치는 원인**.
+⚠️ "이 작업 어떻게 진행하면 좋을까?" 같은 추정 요청도 START PROTOCOL 6단계 통째 점검 후 답변.
+⚠️ START PROTOCOL 거치지 않고 작업 시작은 **큰 그림 놓치는 원인**.
+⚠️ **sessions만 읽고 작업 시작 금지** — 현재 상태 판단 = strategy / decisions / work_orders / product 통째 기준.
+⚠️ **최근 세션 몇 개만 보고 전체 방향 판단 금지** — 큰 그림 = strategy + decisions.
+
+→ 상세 안내: `docs/README.md` + `docs/strategy/ai_collaboration.md`
 
 ---
 
@@ -234,25 +267,37 @@ WHERE au.email = 'bylts0428@gmail.com';
 - /session-end 슬래시 커맨드로 세션 변경사항을 docs/sessions/ 에 자동 누적한다.
 - 이 누적된 기록이 다음 세션 Claude AI의 출발점이 된다.
 
-## 🚀 매 세션 시작 시 보고 절차 (필수)
+## 🚀 매 세션 시작 시 보고 절차 (필수, START PROTOCOL 정합)
 
-세션이 시작되면 팀장님이 별도 요청하지 않아도 다음 정보를 먼저 보고하라.
+세션이 시작되면 팀장님이 별도 요청하지 않아도 START PROTOCOL 6단계 통째 점검 + 오늘 작업 브리핑 5항목 통째 보고.
 
 ### 보고 형식
 
-📊 원세컨드 현재 상태 보고
+```
+📊 원세컨드 START PROTOCOL 통째 점검 완료
 
-1. 최신 커밋: {git log -1 --pretty=format:"%h %s (%ar)"}
-2. 현재 브랜치: {git branch --show-current}
-3. 미커밋 변경: {git status --short — 있으면 목록, 없으면 "깨끗함"}
-4. 가장 최근 세션 요약: {ls -t docs/sessions/*.md 2>/dev/null | head -1 의 파일명, 없으면 "없음"}
-5. 오늘 작업 시작 준비 완료. 어떤 작업부터 진행할까요?
+[환경]
+- 최신 커밋: {git log -1 --pretty=format:"%h %s (%ar)"}
+- 현재 브랜치: {git branch --show-current}
+- 미커밋 변경: {git status --short — 있으면 목록, 없으면 "깨끗함"}
+
+[오늘 작업 브리핑]
+* 현재 진행 중 트랙:
+* 어제 완료 사항:
+* 미완료 작업:
+* 오늘 우선순위 1~3:
+* 주의사항 + 충돌 가능성:
+
+→ 브리핑 결재 받은 후 작업 시작합니다.
+```
 
 ### 보고 시점
 
-- 팀장님이 첫 메시지를 보내면 응답 시작 직전에 위 보고를 먼저 출력
+- 팀장님이 첫 메시지를 보내면 응답 시작 직전에 위 보고 통째 출력
 - 단순 인사("안녕")든 작업 요청이든 무관하게 항상 보고
-- 보고 후 팀장님 요청에 대한 답변 진행
+- 보고 후 팀장님 결재 받은 후 작업 진입 (승인 전 작업 진입 금지)
+
+→ 상세 흐름: `/session-start` 슬래시 커맨드 또는 `docs/README.md` § START PROTOCOL
 
 ## 🛡️ 작업 원칙
 
@@ -304,7 +349,16 @@ WHERE au.email = 'bylts0428@gmail.com';
 
 - 작업 디렉토리: C:\limtaesung\github\onesecond
 - 슬래시 커맨드: .claude/commands/
-- 세션 요약 아카이브: docs/sessions/
+- **docs 진입 안내:** `docs/README.md` (7폴더 운영체계 + START PROTOCOL 통째)
+- **마스터 전략 (영구 본질):** `docs/strategy/master_strategy_v1.md` ⭐⭐⭐
+- **OS 정의 (시스템 본질):** `docs/strategy/os_definition_v2.md`
+- **AI 협업 표준:** `docs/strategy/ai_collaboration.md`
+- 세션 인계 노트 (Log): `docs/sessions/` + `_INDEX.md`
+- 현재 해야 하는 것: `docs/work_orders/`
+- 현재 만들고 있는 것: `docs/product/`
+- 중요 의사결정: `docs/decisions/`
+- 시스템 아키텍처: `docs/architecture/`
+- 마감 자료: `docs/archive/`
 - 디자인 토큰: css/tokens.css
 - Supabase 프로젝트 ID (신버전·유일 진실): `pdnwgzneooyygfejrvbg` (프로젝트명: `onesecond-v1-restore-0420`)
 - Supabase 프로젝트 ID (구버전·폐기): `qursjteiovcylqiepmlo` — 2026-04-22~23 데이터 소실. **절대 참조 금지**

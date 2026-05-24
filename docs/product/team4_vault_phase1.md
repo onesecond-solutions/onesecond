@@ -452,4 +452,4 @@ CREATE POLICY "team4_manager_insert" ON team4_vault_posts
 **작성**: 2026-05-05 새벽
 **컨셉**: "카톡방을 옮겨왔다는 느낌" + Lab(실험실)
 **팀장님 최종 승인**: ⏸ 결정 8건 + 11개 카테고리 확정 후 진행
-**저장 위치 권장**: `docs/specs/2026-05-05_team4_vault_phase1.md`
+**저장 위치 권장**: `docs/product/team4_vault_phase1.md`

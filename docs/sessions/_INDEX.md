@@ -1,8 +1,8 @@
 ﻿# 세션 인덱스 — 큰 그림 압축본
 
 > **🎯 원세컨드 본질 (양면 진실 원천 — 매 세션 통째 필독):**
-> - **영업·사업 본질** ⭐⭐⭐ (모든 결정 기준): `docs/core/onesecond_master_strategy_v1_20260510.md` ⭐ NEW (5/10, 507줄, 14섹션)
-> - **시스템 본질**: `docs/core/onesecond_os_definition_v2_2026-05-07.md` (540줄)
+> - **영업·사업 본질** ⭐⭐⭐ (모든 결정 기준): `docs/strategy/master_strategy_v1.md` ⭐ (5/10, 507줄, 14섹션)
+> - **시스템 본질**: `docs/strategy/os_definition_v2.md` (540줄)
 > - **한 줄:** 보험업 운영 흐름 네트워크 + 보험 검색 인프라 + 반복 질문 감소 시스템
 > - **0순위 정체성:** 중립 독립 SaaS (특정 보험사·GA 종속 X)
 >
@@ -172,7 +172,7 @@
 - `docs/role_system.md` — 9개 role 체계
 - `docs/work_order_template.md` — 작업지시서 표준 템플릿
 - `docs/specs/v2_insurer_admission_phase1_v2.md` — Phase 1 본 spec (~750줄, 42건 결정 통합) ⭐
-- `docs/core/onesecond_os_definition_v2_2026-05-07.md` — OS 정의 v2 (540줄)
+- `docs/strategy/os_definition_v2.md` — OS 정의 v2 (540줄)
 
 ---
 

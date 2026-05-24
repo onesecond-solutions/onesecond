@@ -493,9 +493,9 @@
 
 ## 진실 원천 정합
 
-- OS v2 정체성 (`docs/core/onesecond_os_definition_v2_2026-05-07.md`) §1·§7·§9·§10·§17
-- 마스터 전략 v1 (`docs/core/onesecond_master_strategy_v1_20260510.md`) 14섹션
-- 메인 트랙 2 게시판 본진 spec (`docs/specs/v2_insurer_admission_phase1_v2.md`)
+- OS v2 정체성 (`docs/strategy/os_definition_v2.md`) §1·§7·§9·§10·§17
+- 마스터 전략 v1 (`docs/strategy/master_strategy_v1.md`) 14섹션
+- 메인 트랙 2 게시판 본진 spec (`docs/product/v2_insurer_admission_phase1.md`)
 - 메모리상 "실장님 공지방 시나리오 C" + "단톡방 mockup v2-notice-room"
 
 ## 본 문서 한 줄

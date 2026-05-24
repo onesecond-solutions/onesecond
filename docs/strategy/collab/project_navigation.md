@@ -9,8 +9,8 @@
 
 | 상황 | 파일 |
 |---|---|
-| **영업·사업 본질 (모든 결정 기준)** ⭐⭐⭐ | **`docs/core/onesecond_master_strategy_v1_20260510.md`** ⭐ NEW (5/10) |
-| **시스템 본질 (OS 정의, 양면 진실 원천)** ⭐⭐ | **`docs/core/onesecond_os_definition_v2_2026-05-07.md`** ⭐ |
+| **영업·사업 본질 (모든 결정 기준)** ⭐⭐⭐ | **`docs/strategy/master_strategy_v1.md`** ⭐ NEW (5/10) |
+| **시스템 본질 (OS 정의, 양면 진실 원천)** ⭐⭐ | **`docs/strategy/os_definition_v2.md`** ⭐ |
 | 오늘 뭐 하나 / 어디까지 진행됐나 | **`docs/02_CURRENT_STATUS.md`** ⭐ |
 | 활성 방향 / 핵심 철학 / 일정 | **`docs/00_CURRENT_DIRECTION.md`** ⭐ |
 | 어떤 게 폐기됐는지 / 절대 하지 말 것 | **`docs/01_DO_NOT_DO.md`** ⭐ |
@@ -45,12 +45,12 @@
 | `docs/specs/` | 작업지시서 (Phase 1 v2 spec 등) |
 | `docs/architecture/` | DB·인증·라우팅 raw 캡처 + Chrome 의뢰서 |
 | `docs/decisions/` | 결정 문서 누적 (PITR / 안전장치 등) |
-| `docs/core/` | OS 정의 + AI 협업 전략 (영구 진실 원천) |
+| `docs/strategy/` | OS 정의 + AI 협업 전략 (영구 진실 원천) |
 | `docs/strategy/` | 전략 통합 (5/7 1163줄) |
 | `docs/product/` | 콘텐츠 정책 |
-| `docs/operations/` | 운영·체크리스트 |
-| `docs/migrations/` | 마이그레이션 SQL 이력 |
-| `docs/deprecated/` ⛔ | **절대 참조 금지 (폐기된 옛 문서)** |
+| `docs/architecture/operations/` | 운영·체크리스트 |
+| `docs/architecture/migrations/` | 마이그레이션 SQL 이력 |
+| `docs/archive/_deprecated/` ⛔ | **절대 참조 금지 (폐기된 옛 문서)** |
 
 ---
 
