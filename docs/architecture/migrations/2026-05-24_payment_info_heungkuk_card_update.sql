@@ -307,7 +307,6 @@ SET content_html = $HTML$
 $HTML$
 WHERE tab_title = '보험회사 결제정보'
   AND tab_key = 'payment_info';
-  AND tab_key = 'payment_info';
 
 COMMIT;
 
