@@ -1302,8 +1302,21 @@ function openQuickContentV2(title){
   if(grid) grid.style.display = 'none';
   if(chips) chips.style.display = 'none';
 
+  // 캐시 자체 자체 자체 = 즉시 표시
   if(window._qckCache[title]){
     slot.innerHTML = window._qckCache[title];
+    return;
+  }
+
+  // 토큰 사전 점검 (비로그인 자체 자체 = 의도된 안내)
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if(!hasToken){
+    slot.innerHTML = '<div class="qck-loading">로그인 후 가동</div>';
+    return;
+  }
+
+  if(!window.db){
+    slot.innerHTML = '<div class="qck-loading">DB 모듈 로딩 중</div>';
     return;
   }
 
