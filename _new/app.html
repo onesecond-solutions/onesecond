@@ -519,6 +519,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .home-quick-ic{font-size:1.6em}
 @media (max-width:860px){.home-quick-grid{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:520px){.home-quick-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* 홈 카드 hover + 스켈레톤 (2026-05-25 라이브 fetch) */
+.home-today .mys-card{cursor:pointer;transition:transform .15s,border-color .15s}
+.home-today .mys-card:hover{transform:translateY(-2px);border-color:var(--ac)}
+.mys-card.skel{background:linear-gradient(90deg,var(--s2),var(--s1),var(--s2));background-size:200% 100%;animation:skelPulse 1.4s ease-in-out infinite;min-height:78px;border-color:transparent;cursor:default}
+.mys-card.skel:hover{transform:none;border-color:transparent}
+.mys-card.skel .mys-badge,.mys-card.skel .mys-ttl,.mys-card.skel .mys-meta{visibility:hidden}
+@keyframes skelPulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 </style>
 </head>
 <body>
@@ -1246,7 +1254,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();}
+function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();}
 
 /* ── V2 사이드바 Quick 메뉴 (v-quick) — 카드 그리드 자체 ── */
 window._qckCache = window._qckCache || {};
@@ -1968,6 +1976,140 @@ updateHomeGreeting();
   else{tryInitAuthSafe();}
 })();
 
+/* === 홈 라이브 fetch (recent docs + scripts, 2026-05-25) ===
+ * 5상태 흐름:
+ *   1. 미로그인 → mock 유지 (fetch 가동 X)
+ *   2. 0건 → mock 유지 (사용 권장 자리)
+ *   3. 로딩 → 스켈레톤 펄스 카드 3건
+ *   4. 성공 (1~3건) → 실데이터 갈아끼움
+ *   5. 실패 → mock + console.error
+ * 클릭 자체 자체 = updateLastUsed(table, id) 가동 → DB last_used_at PATCH
+ */
+window._homeRecentLoaded=false;
+window._homeMockDocsHtml=null;
+window._homeMockScriptsHtml=null;
+
+function fmtHomeDate(iso){
+  if(!iso)return '';
+  var d=new Date(iso);if(isNaN(d.getTime()))return '';
+  return (d.getMonth()+1)+'월 '+d.getDate()+'일';
+}
+function escHomeHtml(s){return String(s||'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+
+async function updateLastUsed(table,id){
+  if(!window.db||!window.AppState||!window.AppState.userId)return;
+  var token=window.db.getToken&&window.db.getToken();
+  if(!token||!id)return;
+  try{
+    await fetch(window.db.url('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id)),{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},
+      body:JSON.stringify({last_used_at:new Date().toISOString()})
+    });
+  }catch(e){console.error('[updateLastUsed]',e);}
+}
+
+function showHomeSkeleton(){
+  var d=document.getElementById('homeRecentDocs');
+  var s=document.getElementById('homeRecentScripts');
+  var html='<div class="mys-card skel"></div><div class="mys-card skel"></div><div class="mys-card skel"></div>';
+  if(d)d.innerHTML=html;
+  if(s)s.innerHTML=html;
+}
+
+function restoreHomeMock(type){
+  if(type==='docs'){
+    var d=document.getElementById('homeRecentDocs');
+    if(d&&window._homeMockDocsHtml)d.innerHTML=window._homeMockDocsHtml;
+  }else{
+    var s=document.getElementById('homeRecentScripts');
+    if(s&&window._homeMockScriptsHtml)s.innerHTML=window._homeMockScriptsHtml;
+  }
+}
+
+function renderHomeDocs(libs){
+  var el=document.getElementById('homeRecentDocs');if(!el)return;
+  var html='';
+  for(var i=0;i<libs.length;i++){
+    var it=libs[i];
+    var isNote=it.memo_text&&!it.file_url&&!it.image_url&&!it.link_url;
+    var badge=isNote?'메모':'자료';
+    var tc=isNote?'var(--t-event)':'var(--t-uw)';
+    html+='<div class="mys-card" style="--tc:'+tc+'" onclick="openHomeRecent(\'library\',\''+it.id+'\')">'+
+      '<span class="mys-badge">'+badge+'</span>'+
+      '<div class="mys-ttl">'+escHomeHtml(it.title||'제목 없음')+'</div>'+
+      '<div class="mys-meta">'+fmtHomeDate(it.last_used_at)+' 사용</div>'+
+    '</div>';
+  }
+  el.innerHTML=html;
+}
+
+function renderHomeScripts(scripts){
+  var el=document.getElementById('homeRecentScripts');if(!el)return;
+  var html='';
+  for(var i=0;i<scripts.length;i++){
+    var it=scripts[i];
+    html+='<div class="mys-card" style="--tc:var(--t-product)" onclick="openHomeRecent(\'scripts\',\''+it.id+'\')">'+
+      '<span class="mys-badge">스크립트</span>'+
+      '<div class="mys-ttl">'+escHomeHtml(it.title||'제목 없음')+'</div>'+
+      '<div class="mys-meta">'+fmtHomeDate(it.last_used_at)+' 사용</div>'+
+    '</div>';
+  }
+  el.innerHTML=html;
+}
+
+function openHomeRecent(table,id){
+  updateLastUsed(table,id);
+  showView(table==='scripts'?'scripts':'myspace');
+}
+
+async function loadHomeRecent(force){
+  if(window._homeRecentLoaded&&!force)return;
+  if(!window.db||!window.db.getToken)return;  // db 모듈 미로드 = mock 유지
+  var token=window.db.getToken();
+  var userId=window.AppState&&window.AppState.userId;
+  if(!token||!userId)return;  // 미로그인 = mock 유지 (상태 1)
+  showHomeSkeleton();  // 로딩 (상태 3)
+  try{
+    var headers={'apikey':window.db.key,'Authorization':'Bearer '+token};
+    var libUrl=window.db.url('/rest/v1/library?owner_id=eq.'+userId+'&order=last_used_at.desc&limit=3');
+    var scrUrl=window.db.url('/rest/v1/scripts?owner_id=eq.'+userId+'&is_active=eq.true&order=last_used_at.desc&limit=3');
+    var results=await Promise.all([
+      fetch(libUrl,{headers:headers}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}),
+      fetch(scrUrl,{headers:headers}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})
+    ]);
+    var libs=results[0];
+    var scripts=results[1];
+    // 자료 (library)
+    if(libs===null){console.error('[loadHomeRecent] library fetch fail');restoreHomeMock('docs');}
+    else if(libs.length>0)renderHomeDocs(libs);  // 성공 (상태 4)
+    else restoreHomeMock('docs');  // 0건 = mock 유지 (상태 2)
+    // 스크립트
+    if(scripts===null){console.error('[loadHomeRecent] scripts fetch fail');restoreHomeMock('scripts');}
+    else if(scripts.length>0)renderHomeScripts(scripts);
+    else restoreHomeMock('scripts');
+    window._homeRecentLoaded=true;
+  }catch(e){
+    console.error('[loadHomeRecent]',e);
+    restoreHomeMock('docs');
+    restoreHomeMock('scripts');
+  }
+}
+
+// 페이지 로드 시 mock HTML 자체 자체 자체 = restoreHomeMock 진입 가동 자체
+(function(){
+  function captureHomeMock(){
+    var d=document.getElementById('homeRecentDocs');
+    var s=document.getElementById('homeRecentScripts');
+    if(d)window._homeMockDocsHtml=d.innerHTML;
+    if(s)window._homeMockScriptsHtml=s.innerHTML;
+    // 로그인 자체 자체 자체 자체 자체 = loadHomeRecent 첫 진입 가동 (홈 = 기본 view)
+    if(typeof loadHomeRecent==='function')setTimeout(function(){loadHomeRecent();},120);
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',captureHomeMock);}
+  else{captureHomeMock();}
+})();
+
 /* === MY SPACE 라이브 자료 fetch === */
 window._myspaceCache=null;
 window._myspaceLoaded=false;
@@ -2035,7 +2177,8 @@ function renderMyspace(items){
     var dt=fmtMysDate(it._date);
     var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var delType=it._type==='script'?'script':'library';
-    html+='<div class="mys-card" data-badge="'+it._badge+'" style="--tc:'+tc+'">'+
+    var tableName=(it._type==='script')?'scripts':'library';
+    html+='<div class="mys-card" data-badge="'+it._badge+'" style="--tc:'+tc+';cursor:pointer" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\')">'+
       '<button class="mys-card-del" title="삭제" onclick="event.stopPropagation();deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">&#10005;</button>'+
       '<span class="mys-badge">'+it._badge+'</span>'+
       '<div class="mys-ttl">'+title+'</div>'+
