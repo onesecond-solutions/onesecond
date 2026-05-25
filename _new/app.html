@@ -410,6 +410,30 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-content-slot{padding:20px;min-height:300px;overflow-x:hidden;overflow-wrap:anywhere;word-break:break-word;color:var(--tp)}
 .qck-content-slot *{max-width:100%;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box}
 .qck-content-slot table{width:100%!important;table-layout:auto}
+
+/* Quick 도구 공통 레이아웃 (BMI / 보험연령 / 변환기 재사용, 2026-05-25) */
+.qck-tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.qck-tool-grid{grid-template-columns:1fr}}
+.qck-tool-pane{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.qck-tool-pane h4{font-size:0.85em;font-weight:800;color:var(--ts);margin:0;letter-spacing:-.02em;text-transform:uppercase}
+.qck-tool-input-row{display:flex;flex-direction:column;gap:6px}
+.qck-tool-input-row > label{font-size:0.78em;color:var(--ts);font-weight:600}
+.qck-tool-input-row input[type="text"],
+.qck-tool-input-row input[type="number"],
+.qck-tool-input-row input[type="date"]{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:9px 11px;font-size:0.9em;color:var(--tp);outline:none;font-family:inherit}
+.qck-tool-input-row input:focus{border-color:var(--ac)}
+.qck-tool-radio{display:flex;gap:14px}
+.qck-tool-radio label{display:inline-flex;align-items:center;gap:6px;font-size:0.9em;color:var(--tp);cursor:pointer}
+.qck-tool-fire{margin-top:6px;padding:11px 16px;background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:9px;color:#fff;font-size:0.95em;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .15s,box-shadow .15s;font-family:inherit}
+.qck-tool-fire:hover{transform:translateY(-1px);box-shadow:0 8px 18px color-mix(in srgb,var(--ac) 30%,transparent)}
+.qck-tool-empty{font-size:0.85em;color:var(--ts);font-style:italic;text-align:center;padding:36px 12px;border:1px dashed var(--bd);border-radius:8px}
+.qck-tool-bmi-num{font-size:2.6em;font-weight:900;color:var(--tp);letter-spacing:-.04em;line-height:1}
+.qck-tool-bmi-tag{display:inline-block;padding:5px 12px;border-radius:6px;font-size:0.9em;font-weight:800;color:#fff;margin-top:10px}
+.qck-tool-bmi-msg{margin-top:12px;font-size:0.9em;color:var(--ts);line-height:1.5}
+.qck-tool-bmi-input-summary{margin-top:14px;padding-top:12px;border-top:1px solid var(--bd);font-size:0.8em;color:var(--ts);line-height:1.6}
+.qck-tool-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.qck-tool-act-btn{flex:1 1 auto;padding:9px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;font-size:0.82em;font-weight:700;color:var(--tp);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:border-color .15s,background .15s;min-width:90px;font-family:inherit}
+.qck-tool-act-btn:hover{border-color:var(--ac);background:var(--s1)}
 .qck-loading{padding:40px;text-align:center;color:var(--tf);font-size:0.85em}
 .qck-bottom-bar{background:var(--s2);color:var(--ts);text-align:center;font-size:0.82em;font-weight:700;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-top:14px}
 
@@ -1379,9 +1403,154 @@ window.closeQuickContentV2 = closeQuickContentV2;
 
 /* 실행도구 = 플레이스홀더 자체 */
 function openQuickToolV2(name){
+  if(name === 'BMI계산기'){
+    // 직전 openQuickContentV2 자체 자체 자체 자체 = qck-content-shell 표시 + 카드 그리드 숨김
+    var shell = document.getElementById('qck-content-shell');
+    var grid = document.getElementById('quickGrid');
+    var chips = document.getElementById('quick-chips');
+    var titleEl = document.getElementById('qck-content-title');
+    var slot = document.getElementById('qck-content-slot');
+    if(!shell || !slot) return;
+    if(titleEl) titleEl.textContent = 'BMI 계산기';
+    shell.style.display = '';
+    if(grid) grid.style.display = 'none';
+    if(chips) chips.style.display = 'none';
+    renderBmiTool();
+    setTimeout(function(){ shell.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+    return;
+  }
   alert(name + ' — 준비 중입니다.');
 }
 window.openQuickToolV2 = openQuickToolV2;
+
+/* === BMI 계산기 (Phase B 1순위) === */
+window._bmiResult = null;
+
+function renderBmiTool(){
+  var slot = document.getElementById('qck-content-slot');
+  if(!slot) return;
+  slot.innerHTML =
+    '<div class="qck-tool-grid">' +
+      '<div class="qck-tool-pane qck-tool-input">' +
+        '<h4>입력</h4>' +
+        '<div class="qck-tool-input-row"><label>이름 (선택)</label><input type="text" id="bmiName" placeholder="고객 이름 — 저장 시 자체 자체 자체 자체 자체"></div>' +
+        '<div class="qck-tool-input-row"><label>성별</label><div class="qck-tool-radio">' +
+          '<label><input type="radio" name="bmiGender" value="M" checked>남</label>' +
+          '<label><input type="radio" name="bmiGender" value="F">여</label>' +
+        '</div></div>' +
+        '<div class="qck-tool-input-row"><label>키 (cm)</label><input type="number" id="bmiHeight" placeholder="170" min="50" max="250" inputmode="decimal"></div>' +
+        '<div class="qck-tool-input-row"><label>몸무게 (kg)</label><input type="number" id="bmiWeight" placeholder="65" min="20" max="250" inputmode="decimal"></div>' +
+        '<button class="qck-tool-fire" onclick="bmiCompute()">⚡ 딸깍</button>' +
+      '</div>' +
+      '<div class="qck-tool-pane qck-tool-result">' +
+        '<h4>결과</h4>' +
+        '<div id="bmiResult"><div class="qck-tool-empty">키 / 몸무게 입력 후 ⚡ 딸깍 클릭</div></div>' +
+      '</div>' +
+    '</div>';
+  window._bmiResult = null;
+  // Enter 자체 = ⚡ 딸깍 가동
+  ['bmiHeight','bmiWeight','bmiName'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('keydown', function(e){ if(e.key === 'Enter') bmiCompute(); });
+  });
+}
+
+function bmiCompute(){
+  var h = parseFloat(document.getElementById('bmiHeight').value);
+  var w = parseFloat(document.getElementById('bmiWeight').value);
+  var name = (document.getElementById('bmiName').value || '').trim();
+  var genderEl = document.querySelector('input[name="bmiGender"]:checked');
+  var gender = genderEl ? genderEl.value : 'M';
+  if(!h || h < 50 || h > 250){ alert('키를 정확히 입력해 주세요 (50~250cm).'); return; }
+  if(!w || w < 20 || w > 250){ alert('몸무게를 정확히 입력해 주세요 (20~250kg).'); return; }
+  var bmi = w / Math.pow(h/100, 2);
+  var bmiR = Math.round(bmi*10)/10;
+  // 한국 비만학회 기준
+  var tag, color, msg;
+  if(bmi < 18.5){ tag='저체중'; color='#3B82F6'; msg='일반 심사 가능'; }
+  else if(bmi < 23){ tag='정상'; color='#10B981'; msg='일반 심사 가능'; }
+  else if(bmi < 25){ tag='과체중'; color='#F59E0B'; msg='일부 보험사 심사 가능'; }
+  else if(bmi < 30){ tag='비만'; color='#EF4444'; msg='일부 보험사 심사 확인 필요'; }
+  else { tag='고도비만'; color='#991B1B'; msg='가입 제한 가능성 높음'; }
+  window._bmiResult = { name:name, gender:gender, h:h, w:w, bmi:bmiR, tag:tag, msg:msg };
+  var resultEl = document.getElementById('bmiResult');
+  if(!resultEl) return;
+  var genderTxt = gender === 'F' ? '여' : '남';
+  var nameTxt = name ? (name + '님') : '고객';
+  resultEl.innerHTML =
+    '<div class="qck-tool-bmi-num">' + bmiR.toFixed(1) + '</div>' +
+    '<div class="qck-tool-bmi-tag" style="background:'+color+'">' + tag + '</div>' +
+    '<div class="qck-tool-bmi-msg">' + msg + '</div>' +
+    '<div class="qck-tool-bmi-input-summary">' + escHomeHtml(nameTxt) + ' · ' + genderTxt + ' · 키 ' + h + 'cm · 몸무게 ' + w + 'kg</div>' +
+    '<div class="qck-tool-actions">' +
+      '<button class="qck-tool-act-btn" onclick="bmiAction(\'copy\')">📋 복사</button>' +
+      '<button class="qck-tool-act-btn" onclick="bmiAction(\'mySpace\')">📁 MY SPACE 저장</button>' +
+      '<button class="qck-tool-act-btn" onclick="bmiAction(\'makeCard\')">🪪 카드 만들기</button>' +
+    '</div>';
+}
+window.bmiCompute = bmiCompute;
+
+function bmiFormatText(){
+  var r = window._bmiResult; if(!r) return '';
+  var nameLine = r.name ? (r.name + '님 BMI 계산 결과') : 'BMI 계산 결과';
+  var genderTxt = r.gender === 'F' ? '여' : '남';
+  return nameLine + '\n\n' +
+    'BMI ' + r.bmi.toFixed(1) + ' (' + r.tag + ')\n' +
+    '성별 ' + genderTxt + ' · 키 ' + r.h + 'cm · 몸무게 ' + r.w + 'kg\n' +
+    r.msg;
+}
+
+function bmiAction(action){
+  var r = window._bmiResult;
+  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 계산해 주세요.'); return; }
+  if(action === 'copy'){
+    var txt = bmiFormatText();
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        if(typeof toast === 'function') toast('복사 완료'); else alert('복사 완료');
+      }).catch(function(){ alert('복사 실패. 텍스트를 직접 복사해 주세요:\n\n' + txt); });
+    } else { alert(txt); }
+  } else if(action === 'mySpace'){
+    bmiSaveToMyspace();
+  } else if(action === 'makeCard'){
+    alert('카드 만들기는 Phase B 5순위 결재 자리입니다. (BMI/보험연령/변환기 마감 후 재논의)');
+  }
+}
+window.bmiAction = bmiAction;
+
+async function bmiSaveToMyspace(){
+  var r = window._bmiResult; if(!r) return;
+  if(!window.db || !window.AppState || !window.AppState.userId){
+    alert('로그인이 필요합니다.'); return;
+  }
+  var token = window.db.getToken && window.db.getToken();
+  if(!token){ alert('로그인이 필요합니다.'); return; }
+  var title = 'BMI 계산 — ' + (r.name || '고객');
+  var memo = bmiFormatText();
+  try{
+    var res = await fetch(window.db.url('/rest/v1/library'), {
+      method: 'POST',
+      headers: {
+        'Content-Type':'application/json',
+        'apikey':window.db.key,
+        'Authorization':'Bearer '+token,
+        'Prefer':'return=minimal'
+      },
+      body: JSON.stringify({
+        title: title,
+        description: 'BMI ' + r.bmi.toFixed(1) + ' (' + r.tag + ')',
+        memo_text: memo,
+        owner_id: window.AppState.userId
+      })
+    });
+    if(res.ok || res.status === 201){
+      if(typeof toast === 'function') toast('MY SPACE에 저장됐습니다.'); else alert('MY SPACE에 저장됐습니다.');
+    } else {
+      var err = await res.json().catch(function(){ return {}; });
+      alert('저장 실패: ' + (err.message || res.status));
+    }
+  } catch(e){ console.error('[bmiSaveToMyspace]', e); alert('네트워크 오류가 발생했습니다.'); }
+}
 
 /* ⚡ 딸깍 = 원세컨드 공용 액션 허브 (스킬: .claude/skills/ddalggak/SKILL.md) */
 
