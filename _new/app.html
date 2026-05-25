@@ -434,6 +434,23 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-tool-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .qck-tool-act-btn{flex:1 1 auto;padding:9px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;font-size:0.82em;font-weight:700;color:var(--tp);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:border-color .15s,background .15s;min-width:90px;font-family:inherit}
 .qck-tool-act-btn:hover{border-color:var(--ac);background:var(--s1)}
+
+/* PNG → JPG 변환기 자체 자체 */
+.qck-conv-drop{border:2px dashed var(--bd);border-radius:10px;padding:32px 16px;text-align:center;color:var(--ts);cursor:pointer;transition:border-color .15s,background .15s}
+.qck-conv-drop:hover,.qck-conv-drop.drag{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 6%,transparent)}
+.qck-conv-drop-icon{font-size:2.2em;margin-bottom:8px}
+.qck-conv-drop-text{font-size:0.85em;font-weight:600}
+.qck-conv-drop-hint{font-size:0.72em;color:var(--ts);margin-top:4px}
+.qck-conv-file-info{margin-top:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;font-size:0.82em;color:var(--tp);display:flex;align-items:center;justify-content:space-between;gap:8px;word-break:break-all}
+.qck-conv-file-info-clear{background:transparent;border:none;color:var(--ts);font-size:1.1em;cursor:pointer;padding:0 4px;flex:0 0 auto}
+.qck-conv-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.qck-conv-box{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px;text-align:center}
+.qck-conv-box-label{font-size:0.72em;color:var(--ts);font-weight:700;margin-bottom:6px}
+.qck-conv-box-format{font-size:1.3em;font-weight:900;color:var(--tp);letter-spacing:-.02em}
+.qck-conv-box-size{font-size:0.85em;color:var(--ts);margin-top:4px}
+.qck-conv-box.after .qck-conv-box-format{color:var(--ac)}
+.qck-conv-arrow{font-size:1.3em;color:var(--ts);font-weight:700}
+.qck-conv-reduction{margin-top:14px;text-align:center;padding:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--ok) 18%,var(--bg)),var(--bg));border:1px solid var(--ok);border-radius:8px;font-size:1.1em;font-weight:900;color:var(--ok);letter-spacing:-.02em}
 .qck-loading{padding:40px;text-align:center;color:var(--tf);font-size:0.85em}
 .qck-bottom-bar{background:var(--s2);color:var(--ts);text-align:center;font-size:0.82em;font-weight:700;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-top:14px}
 
@@ -1427,6 +1444,10 @@ function openQuickToolV2(name){
     activateTool('보험연령 계산기', renderInsuranceAgeTool);
     return;
   }
+  if(name === '변환기'){
+    activateTool('PNG → JPG 변환기', renderConverterTool);
+    return;
+  }
   alert(name + ' — 준비 중입니다.');
 }
 window.openQuickToolV2 = openQuickToolV2;
@@ -1739,6 +1760,165 @@ async function insAgeSaveToMyspace(){
     }
   } catch(e){ console.error('[insAgeSaveToMyspace]', e); alert('네트워크 오류가 발생했습니다.'); }
 }
+
+/* === PNG → JPG 변환기 (Phase B 3순위) === */
+window._convFile = null;
+window._convResult = null;
+var QCK_CONV_QUALITY = 0.85;
+
+function renderConverterTool(){
+  var slot = document.getElementById('qck-content-slot');
+  if(!slot) return;
+  slot.innerHTML =
+    '<div class="qck-tool-grid">' +
+      '<div class="qck-tool-pane">' +
+        '<h4>입력</h4>' +
+        '<div class="qck-conv-drop" id="qckConvDrop" onclick="document.getElementById(\'qckConvFile\').click()">' +
+          '<div class="qck-conv-drop-icon">🖼️</div>' +
+          '<div class="qck-conv-drop-text">PNG 파일 선택</div>' +
+          '<div class="qck-conv-drop-hint">클릭 또는 드래그&드롭</div>' +
+        '</div>' +
+        '<input type="file" id="qckConvFile" accept="image/png" style="display:none" onchange="convFileSelect(this.files[0])">' +
+        '<div id="qckConvFileInfo"></div>' +
+        '<button class="qck-tool-fire" onclick="convCompute()">⚡ 딸깍</button>' +
+        '<div style="font-size:0.72em;color:var(--ts);line-height:1.5;margin-top:6px;padding:8px 10px;background:var(--bg);border-radius:6px;">' +
+          '<b style="color:var(--tp)">변환 자체:</b><br>' +
+          '브라우저 자체 자체 (Canvas API) · JPG 품질 ' + QCK_CONV_QUALITY + ' · 외부 서버 가동 0' +
+        '</div>' +
+      '</div>' +
+      '<div class="qck-tool-pane">' +
+        '<h4>결과</h4>' +
+        '<div id="qckConvResult"><div class="qck-tool-empty">PNG 파일 선택 후 ⚡ 딸깍 클릭</div></div>' +
+      '</div>' +
+    '</div>';
+  window._convFile = null;
+  window._convResult = null;
+  // 드래그&드롭 자체
+  var drop = document.getElementById('qckConvDrop');
+  if(drop){
+    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', function(){ drop.classList.remove('drag'); });
+    drop.addEventListener('drop', function(e){
+      e.preventDefault();
+      drop.classList.remove('drag');
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(f) convFileSelect(f);
+    });
+  }
+}
+
+function fmtFileSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function convFileSelect(file){
+  if(!file) return;
+  if(!file.type.match(/png/i) && !file.name.match(/\.png$/i)){
+    alert('PNG 파일만 가동 자체. 다른 형식은 별 자체 자체 자체.');
+    return;
+  }
+  window._convFile = file;
+  var info = document.getElementById('qckConvFileInfo');
+  if(info){
+    info.innerHTML = '<div class="qck-conv-file-info"><span>📄 ' + escHomeHtml(file.name) + ' · ' + fmtFileSize(file.size) + '</span><button class="qck-conv-file-info-clear" onclick="convFileClear()" title="삭제">✕</button></div>';
+  }
+}
+window.convFileSelect = convFileSelect;
+
+function convFileClear(){
+  window._convFile = null;
+  var info = document.getElementById('qckConvFileInfo');
+  if(info) info.innerHTML = '';
+  var fileEl = document.getElementById('qckConvFile');
+  if(fileEl) fileEl.value = '';
+}
+window.convFileClear = convFileClear;
+
+function convCompute(){
+  var file = window._convFile;
+  if(!file){ alert('PNG 파일을 먼저 선택해 주세요.'); return; }
+  var resultEl = document.getElementById('qckConvResult');
+  if(resultEl) resultEl.innerHTML = '<div class="qck-tool-empty">변환 중...</div>';
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      var ctx = canvas.getContext('2d');
+      // PNG 투명 영역 = JPG 가동 시 검정 자체 자체 자체 자체 자체 → 흰색 배경 자체 자체
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(function(blob){
+        if(!blob){
+          if(resultEl) resultEl.innerHTML = '<div class="qck-tool-empty" style="color:var(--err)">변환 실패. 다시 시도해 주세요.</div>';
+          return;
+        }
+        var origSize = file.size;
+        var newSize = blob.size;
+        var reduction = origSize > 0 ? Math.round((1 - newSize/origSize) * 100) : 0;
+        var url = URL.createObjectURL(blob);
+        var newName = file.name.replace(/\.png$/i, '.jpg');
+        if(newName === file.name) newName = file.name + '.jpg';
+        window._convResult = {
+          blob: blob, url: url, origName: file.name, newName: newName,
+          origSize: origSize, newSize: newSize, reduction: reduction,
+          width: canvas.width, height: canvas.height
+        };
+        renderConvResult();
+      }, 'image/jpeg', QCK_CONV_QUALITY);
+    };
+    img.onerror = function(){
+      if(resultEl) resultEl.innerHTML = '<div class="qck-tool-empty" style="color:var(--err)">이미지 자체 가동 실패. 정상 PNG 파일 자체 점검.</div>';
+    };
+    img.src = e.target.result;
+  };
+  reader.onerror = function(){
+    if(resultEl) resultEl.innerHTML = '<div class="qck-tool-empty" style="color:var(--err)">파일 자체 가동 실패.</div>';
+  };
+  reader.readAsDataURL(file);
+}
+window.convCompute = convCompute;
+
+function renderConvResult(){
+  var r = window._convResult;
+  var el = document.getElementById('qckConvResult');
+  if(!r || !el) return;
+  var reductionTxt = r.reduction > 0 ? (r.reduction + '% 감소') : (r.reduction < 0 ? (Math.abs(r.reduction) + '% 증가') : '동일');
+  var reductionColor = r.reduction > 0 ? 'var(--ok)' : 'var(--ts)';
+  el.innerHTML =
+    '<div class="qck-conv-compare">' +
+      '<div class="qck-conv-box"><div class="qck-conv-box-label">원본</div><div class="qck-conv-box-format">PNG</div><div class="qck-conv-box-size">' + fmtFileSize(r.origSize) + '</div></div>' +
+      '<div class="qck-conv-arrow">→</div>' +
+      '<div class="qck-conv-box after"><div class="qck-conv-box-label">변환 완료</div><div class="qck-conv-box-format">JPG</div><div class="qck-conv-box-size">' + fmtFileSize(r.newSize) + '</div></div>' +
+    '</div>' +
+    '<div class="qck-conv-reduction" style="color:'+reductionColor+';border-color:'+reductionColor+';">' + reductionTxt + '</div>' +
+    '<div class="qck-tool-bmi-input-summary">' + escHomeHtml(r.newName) + ' · ' + r.width + ' × ' + r.height + 'px · 품질 ' + QCK_CONV_QUALITY + '</div>' +
+    '<div class="qck-tool-actions">' +
+      '<button class="qck-tool-act-btn" onclick="convAction(\'download\')">💾 다운로드</button>' +
+      '<button class="qck-tool-act-btn" onclick="convAction(\'mySpace\')">📁 MY SPACE 저장</button>' +
+    '</div>';
+}
+
+function convAction(action){
+  var r = window._convResult;
+  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 변환해 주세요.'); return; }
+  if(action === 'download'){
+    var a = document.createElement('a');
+    a.href = r.url;
+    a.download = r.newName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else if(action === 'mySpace'){
+    alert('MY SPACE 저장은 준비 중입니다. (Supabase Storage 자체 별 PR 진입 자체)');
+  }
+}
+window.convAction = convAction;
 
 /* ⚡ 딸깍 = 원세컨드 공용 액션 허브 (스킬: .claude/skills/ddalggak/SKILL.md) */
 
