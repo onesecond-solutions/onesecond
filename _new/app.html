@@ -2333,9 +2333,26 @@ function renderConverterTool(){
         '<div id="qckConvFileInfo"></div>' +
         '<button class="qck-tool-fire" onclick="convCompute()">⚡ 딸깍</button>' +
       '</div>' +
-      '<div class="qck-tool-pane">' +
+      '<div class="qck-tool-pane" style="position:relative;">' +
         '<h4>결과</h4>' +
         '<div id="qckConvResult"><div class="qck-tool-empty">PNG 파일 선택 후 ⚡ 딸깍 클릭</div></div>' +
+        '<div class="qck-mc-fab-wrap">' +
+          '<button id="qckConvFab" class="qck-mc-fab" onclick="event.stopPropagation();convShowActionMenu()" disabled aria-label="액션 메뉴">⚡</button>' +
+          '<div id="qckConvActionMenu" class="qck-mc-action-menu">' +
+            '<button class="qck-mc-action-item" onclick="convAction(\'download\')">' +
+              '<span class="qck-mc-action-item-title">다운로드 저장</span>' +
+              '<span class="qck-mc-action-item-desc">JPG 파일 저장</span>' +
+            '</button>' +
+            '<button class="qck-mc-action-item" onclick="convAction(\'copy\')">' +
+              '<span class="qck-mc-action-item-title">복사</span>' +
+              '<span class="qck-mc-action-item-desc">클립보드로 바로 붙여넣기</span>' +
+            '</button>' +
+            '<button class="qck-mc-action-item" onclick="convAction(\'makeCard\')">' +
+              '<span class="qck-mc-action-item-title">카드 만들기</span>' +
+              '<span class="qck-mc-action-item-desc">변환 이미지로 카드</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   window._convFile = null;
@@ -2444,15 +2461,29 @@ function renderConvResult(){
       '<div class="qck-conv-box after"><div class="qck-conv-box-label">변환 완료</div><div class="qck-conv-box-format">JPG</div><div class="qck-conv-box-size">' + fmtFileSize(r.newSize) + '</div></div>' +
     '</div>' +
     '<div class="qck-conv-reduction" style="color:'+reductionColor+';border-color:'+reductionColor+';">' + reductionTxt + '</div>' +
-    '<div class="qck-tool-bmi-input-summary">' + escHomeHtml(r.newName) + ' · ' + r.width + ' × ' + r.height + 'px · 품질 ' + QCK_CONV_QUALITY + '</div>' +
-    '<div class="qck-tool-actions">' +
-      '<button class="qck-tool-act-btn" onclick="convAction(\'download\')">💾 다운로드</button>' +
-      '<button class="qck-tool-act-btn" onclick="convAction(\'mySpace\')">📁 MY SPACE 저장</button>' +
-    '</div>';
+    '<div class="qck-tool-bmi-input-summary">' + escHomeHtml(r.newName) + ' · ' + r.width + ' × ' + r.height + 'px · 품질 ' + QCK_CONV_QUALITY + '</div>';
+  // 우하단 FAB 활성
+  var fab = document.getElementById('qckConvFab');
+  if(fab) fab.disabled = false;
 }
+
+function convShowActionMenu(){
+  var menu = document.getElementById('qckConvActionMenu');
+  if(!menu) return;
+  if(menu.classList.contains('show')) convCloseActionMenu();
+  else menu.classList.add('show');
+}
+window.convShowActionMenu = convShowActionMenu;
+
+function convCloseActionMenu(){
+  var menu = document.getElementById('qckConvActionMenu');
+  if(menu) menu.classList.remove('show');
+}
+window.convCloseActionMenu = convCloseActionMenu;
 
 function convAction(action){
   var r = window._convResult;
+  convCloseActionMenu();
   if(!r){ alert('먼저 ⚡ 딸깍을 눌러 변환해 주세요.'); return; }
   if(action === 'download'){
     var a = document.createElement('a');
@@ -2461,8 +2492,25 @@ function convAction(action){
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  } else if(action === 'mySpace'){
-    alert('MY SPACE 저장은 준비 중입니다.');
+  } else if(action === 'copy'){
+    if(navigator.clipboard && window.ClipboardItem && r.blob){
+      navigator.clipboard.write([new ClipboardItem({'image/jpeg': r.blob})]).then(function(){
+        alert('변환 이미지를 클립보드에 복사했습니다.');
+      }).catch(function(){
+        var a = document.createElement('a');
+        a.href = r.url;
+        a.download = r.newName;
+        a.click();
+      });
+    } else {
+      alert('본 브라우저는 이미지 복사를 지원하지 않습니다. 다운로드로 저장해 주세요.');
+    }
+  } else if(action === 'makeCard'){
+    openMakeCardModal({
+      imageDataUrl: r.url,
+      contentType: 'general',
+      title: '카드 만들기 · 이미지'
+    });
   }
 }
 window.convAction = convAction;
