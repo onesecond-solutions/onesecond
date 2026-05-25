@@ -484,9 +484,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-mc-card-body-empty{color:#6B7280;font-style:italic}
 .qck-mc-card-notice{margin-top:10px;font-size:0.76em;color:#E5E7EB;line-height:1.5;padding:8px 10px;background:rgba(99,102,241,0.10);border-left:3px solid var(--ac);border-radius:0 6px 6px 0;white-space:pre-wrap;word-break:break-word}
 .qck-mc-card-sig{margin-top:12px;padding-top:10px;border-top:1px solid rgba(203,213,225,0.18);text-align:center;font-size:0.78em;font-weight:600;color:#CBD5E1}
-.qck-mc-fab{position:absolute;right:18px;bottom:18px;width:48px;height:48px;border-radius:50%;background:var(--ac);border:none;color:#fff;font-size:1.25em;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(99,102,241,0.4);z-index:3;transition:transform .15s,background .15s;font-family:inherit;line-height:1}
-.qck-mc-fab:hover:not(:disabled){transform:translateY(-2px);background:var(--ach)}
-.qck-mc-fab:disabled{opacity:0.35;cursor:not-allowed;background:var(--ts)}
+.qck-mc-fab{position:absolute;right:18px;bottom:18px;background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:7px;padding:5px 10px;color:#fff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:transform .15s;z-index:3;line-height:1}
+.qck-mc-fab:hover:not(:disabled){transform:translateY(-1px)}
+.qck-mc-fab:disabled{opacity:0.35;cursor:not-allowed}
 .qck-mc-action-menu{position:absolute;right:18px;bottom:78px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:6px;min-width:200px;box-shadow:0 12px 36px rgba(0,0,0,0.45);z-index:4;display:none;flex-direction:column;gap:2px}
 .qck-mc-action-menu.show{display:flex}
 .qck-mc-action-item{padding:10px 14px;background:transparent;border:none;border-radius:8px;color:var(--tp);text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:2px;transition:background .15s}
@@ -1571,7 +1571,7 @@ function renderMakeCardTool(){
         '</div>' +
         '<div id="mcError" class="qck-mc-error" style="display:none;"></div>' +
         '<div id="mcLoading" class="qck-mc-loading" style="display:none;">파일 처리 중...</div>' +
-        '<button id="mcFireBtn" class="qck-voice-fire-mini" onclick="mcFire()" style="align-self:flex-end;margin-top:6px;">⚡ 딸깍</button>' +
+        '<button id="mcFireBtn" class="qck-tool-fire" onclick="mcFire()">⚡ 딸깍</button>' +
       '</div>' +
       '<div class="qck-tool-pane">' +
         '<h4>카드 미리보기</h4>' +
