@@ -1403,20 +1403,28 @@ window.closeQuickContentV2 = closeQuickContentV2;
 
 /* 실행도구 = 플레이스홀더 자체 */
 function openQuickToolV2(name){
-  if(name === 'BMI계산기'){
-    // 직전 openQuickContentV2 자체 자체 자체 자체 = qck-content-shell 표시 + 카드 그리드 숨김
-    var shell = document.getElementById('qck-content-shell');
-    var grid = document.getElementById('quickGrid');
-    var chips = document.getElementById('quick-chips');
-    var titleEl = document.getElementById('qck-content-title');
-    var slot = document.getElementById('qck-content-slot');
-    if(!shell || !slot) return;
-    if(titleEl) titleEl.textContent = 'BMI 계산기';
+  var shell = document.getElementById('qck-content-shell');
+  var grid = document.getElementById('quickGrid');
+  var chips = document.getElementById('quick-chips');
+  var titleEl = document.getElementById('qck-content-title');
+  var slot = document.getElementById('qck-content-slot');
+  if(!shell || !slot) return;
+
+  function activateTool(title, renderFn){
+    if(titleEl) titleEl.textContent = title;
     shell.style.display = '';
     if(grid) grid.style.display = 'none';
     if(chips) chips.style.display = 'none';
-    renderBmiTool();
+    renderFn();
     setTimeout(function(){ shell.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+  }
+
+  if(name === 'BMI계산기'){
+    activateTool('BMI 계산기', renderBmiTool);
+    return;
+  }
+  if(name === '보험연령계산기'){
+    activateTool('보험연령 계산기', renderInsuranceAgeTool);
     return;
   }
   alert(name + ' — 준비 중입니다.');
@@ -1550,6 +1558,186 @@ async function bmiSaveToMyspace(){
       alert('저장 실패: ' + (err.message || res.status));
     }
   } catch(e){ console.error('[bmiSaveToMyspace]', e); alert('네트워크 오류가 발생했습니다.'); }
+}
+
+/* === 보험연령 계산기 (Phase B 2순위) === */
+window._insAgeResult = null;
+
+function renderInsuranceAgeTool(){
+  var slot = document.getElementById('qck-content-slot');
+  if(!slot) return;
+  slot.innerHTML =
+    '<div class="qck-tool-grid">' +
+      '<div class="qck-tool-pane qck-tool-input">' +
+        '<h4>입력</h4>' +
+        '<div class="qck-tool-input-row"><label>이름 (선택)</label><input type="text" id="insAgeName" placeholder="고객 이름 — 저장 시 사용"></div>' +
+        '<div class="qck-tool-input-row"><label>생년월일</label><input type="date" id="insAgeBirth" max="' + new Date().toISOString().slice(0,10) + '"></div>' +
+        '<button class="qck-tool-fire" onclick="insAgeCompute()">⚡ 딸깍</button>' +
+        '<div style="font-size:0.72em;color:var(--ts);line-height:1.5;margin-top:6px;padding:8px 10px;background:var(--bg);border-radius:6px;">' +
+          '<b style="color:var(--tp)">보험연령 자체:</b><br>' +
+          '만 나이 기준 + 다음 생일까지 6개월 미만이면 +1' +
+        '</div>' +
+      '</div>' +
+      '<div class="qck-tool-pane qck-tool-result">' +
+        '<h4>결과</h4>' +
+        '<div id="insAgeResult"><div class="qck-tool-empty">생년월일 입력 후 ⚡ 딸깍 클릭</div></div>' +
+      '</div>' +
+    '</div>';
+  window._insAgeResult = null;
+  // Enter 자체 = ⚡ 딸깍 가동
+  ['insAgeName','insAgeBirth'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('keydown', function(e){ if(e.key === 'Enter') insAgeCompute(); });
+  });
+}
+
+function calcInsuranceAge(birthStr, refDate){
+  var b = new Date(birthStr + 'T00:00:00');
+  var r = new Date(refDate);
+  r.setHours(0,0,0,0);
+  if(isNaN(b.getTime())) return null;
+
+  // 만 나이
+  var age = r.getFullYear() - b.getFullYear();
+  if(r.getMonth() < b.getMonth() || (r.getMonth() === b.getMonth() && r.getDate() < b.getDate())){
+    age--;
+  }
+
+  // 다음 생일 (오늘 이후 첫 생일)
+  var nextBday = new Date(r.getFullYear(), b.getMonth(), b.getDate());
+  if(nextBday <= r){
+    nextBday = new Date(r.getFullYear() + 1, b.getMonth(), b.getDate());
+  }
+
+  // 다음 보험연령 변경일 = 다음 생일 - 6개월
+  var nextAgeChange = new Date(nextBday);
+  nextAgeChange.setMonth(nextAgeChange.getMonth() - 6);
+
+  // 보험연령 = 만 나이 + (오늘 >= 다음 변경일 ? 1 : 0)
+  var insAge = age + (r >= nextAgeChange ? 1 : 0);
+
+  // 변경일이 이미 지났다면 = 다음 변경일 = 다음다음 생일 - 6개월
+  if(r >= nextAgeChange){
+    nextAgeChange = new Date(nextBday);
+    nextAgeChange.setMonth(nextAgeChange.getMonth() + 6); // = 다음다음 생일 - 6개월
+  }
+
+  return { age: age, insAge: insAge, nextChange: nextAgeChange };
+}
+
+function fmtYMD(d){
+  if(!d) return '';
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var dd = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + dd;
+}
+
+function insAgeCompute(){
+  var birth = document.getElementById('insAgeBirth').value;
+  var name = (document.getElementById('insAgeName').value || '').trim();
+  if(!birth){ alert('생년월일을 입력해 주세요.'); return; }
+  var today = new Date();
+  var result = calcInsuranceAge(birth, today);
+  if(!result){ alert('생년월일이 올바르지 않습니다.'); return; }
+  window._insAgeResult = {
+    name: name,
+    birth: birth,
+    refDate: fmtYMD(today),
+    age: result.age,
+    insAge: result.insAge,
+    nextChange: fmtYMD(result.nextChange)
+  };
+  var el = document.getElementById('insAgeResult');
+  if(!el) return;
+  var nameTxt = name ? (name + '님') : '고객';
+  el.innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:14px;">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+        '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:0.72em;color:var(--ts);font-weight:600;margin-bottom:4px;">만 나이</div>' +
+          '<div style="font-size:1.8em;font-weight:900;color:var(--tp);letter-spacing:-.04em;">' + result.age + '<span style="font-size:0.55em;color:var(--ts);font-weight:700;">세</span></div>' +
+        '</div>' +
+        '<div style="background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 16%,var(--bg)),var(--bg));border:1px solid var(--ac);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:0.72em;color:var(--ac);font-weight:700;margin-bottom:4px;">보험연령</div>' +
+          '<div style="font-size:1.8em;font-weight:900;color:var(--ac);letter-spacing:-.04em;">' + result.insAge + '<span style="font-size:0.55em;font-weight:700;">세</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;font-size:0.85em;color:var(--tp);">' +
+        '<div style="font-size:0.72em;color:var(--ts);font-weight:600;margin-bottom:4px;">다음 보험연령 변경일</div>' +
+        '<div style="font-weight:800;letter-spacing:-.02em;">' + fmtYMD(result.nextChange) + '</div>' +
+      '</div>' +
+      '<div class="qck-tool-bmi-input-summary">' + escHomeHtml(nameTxt) + ' · 생년월일 ' + birth + '</div>' +
+    '</div>' +
+    '<div class="qck-tool-actions">' +
+      '<button class="qck-tool-act-btn" onclick="insAgeAction(\'copy\')">📋 복사</button>' +
+      '<button class="qck-tool-act-btn" onclick="insAgeAction(\'mySpace\')">📁 MY SPACE 저장</button>' +
+      '<button class="qck-tool-act-btn" onclick="insAgeAction(\'makeCard\')">🪪 카드 만들기</button>' +
+    '</div>';
+}
+window.insAgeCompute = insAgeCompute;
+
+function insAgeFormatText(){
+  var r = window._insAgeResult; if(!r) return '';
+  var nameLine = r.name ? (r.name + '님 보험연령 계산 결과') : '보험연령 계산 결과';
+  return nameLine + '\n\n' +
+    '생년월일 ' + r.birth + '\n' +
+    '기준일 ' + r.refDate + '\n\n' +
+    '만 나이 ' + r.age + '세\n' +
+    '보험연령 ' + r.insAge + '세\n' +
+    '다음 보험연령 변경일 ' + r.nextChange;
+}
+
+function insAgeAction(action){
+  var r = window._insAgeResult;
+  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 계산해 주세요.'); return; }
+  if(action === 'copy'){
+    var txt = insAgeFormatText();
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        if(typeof toast === 'function') toast('복사 완료'); else alert('복사 완료');
+      }).catch(function(){ alert('복사 실패. 텍스트를 직접 복사해 주세요:\n\n' + txt); });
+    } else { alert(txt); }
+  } else if(action === 'mySpace'){
+    insAgeSaveToMyspace();
+  } else if(action === 'makeCard'){
+    alert('카드 만들기는 Phase B 5순위 결재 자리입니다. (BMI/보험연령/변환기 마감 후 재논의)');
+  }
+}
+window.insAgeAction = insAgeAction;
+
+async function insAgeSaveToMyspace(){
+  var r = window._insAgeResult; if(!r) return;
+  if(!window.db || !window.AppState || !window.AppState.userId){
+    alert('로그인이 필요합니다.'); return;
+  }
+  var token = window.db.getToken && window.db.getToken();
+  if(!token){ alert('로그인이 필요합니다.'); return; }
+  var title = '보험연령 계산 — ' + (r.name || '고객');
+  var memo = insAgeFormatText();
+  try{
+    var res = await fetch(window.db.url('/rest/v1/library'), {
+      method: 'POST',
+      headers: {
+        'Content-Type':'application/json',
+        'apikey':window.db.key,
+        'Authorization':'Bearer '+token,
+        'Prefer':'return=minimal'
+      },
+      body: JSON.stringify({
+        title: title,
+        description: '만 ' + r.age + '세 · 보험연령 ' + r.insAge + '세',
+        memo_text: memo,
+        owner_id: window.AppState.userId
+      })
+    });
+    if(res.ok || res.status === 201){
+      if(typeof toast === 'function') toast('MY SPACE에 저장됐습니다.'); else alert('MY SPACE에 저장됐습니다.');
+    } else {
+      var err = await res.json().catch(function(){ return {}; });
+      alert('저장 실패: ' + (err.message || res.status));
+    }
+  } catch(e){ console.error('[insAgeSaveToMyspace]', e); alert('네트워크 오류가 발생했습니다.'); }
 }
 
 /* ⚡ 딸깍 = 원세컨드 공용 액션 허브 (스킬: .claude/skills/ddalggak/SKILL.md) */
