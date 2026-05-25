@@ -484,10 +484,11 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-mc-card-body-empty{color:#6B7280;font-style:italic}
 .qck-mc-card-notice{margin-top:10px;font-size:0.76em;color:#E5E7EB;line-height:1.5;padding:8px 10px;background:rgba(99,102,241,0.10);border-left:3px solid var(--ac);border-radius:0 6px 6px 0;white-space:pre-wrap;word-break:break-word}
 .qck-mc-card-sig{margin-top:12px;padding-top:10px;border-top:1px solid rgba(203,213,225,0.18);text-align:center;font-size:0.78em;font-weight:600;color:#CBD5E1}
-.qck-mc-fab{position:absolute;right:18px;bottom:18px;background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:7px;padding:5px 10px;color:#fff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:transform .15s;z-index:3;line-height:1}
+.qck-mc-fab-wrap{position:absolute;right:18px;bottom:18px;z-index:3}
+.qck-mc-fab{background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:7px;padding:5px 10px;color:#fff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:transform .15s;line-height:1}
 .qck-mc-fab:hover:not(:disabled){transform:translateY(-1px)}
 .qck-mc-fab:disabled{opacity:0.35;cursor:not-allowed}
-.qck-mc-action-menu{position:absolute;right:18px;bottom:50px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:6px;min-width:200px;box-shadow:0 12px 36px rgba(0,0,0,0.45);z-index:4;display:none;flex-direction:column;gap:2px}
+.qck-mc-action-menu{position:absolute;bottom:100%;right:0;margin-bottom:6px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:6px;min-width:200px;box-shadow:0 12px 36px rgba(0,0,0,0.45);z-index:4;display:none;flex-direction:column;gap:2px}
 .qck-mc-action-menu.show{display:flex}
 .qck-mc-action-item{padding:10px 14px;background:transparent;border:none;border-radius:8px;color:var(--tp);text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:2px;transition:background .15s}
 .qck-mc-action-item:hover{background:var(--s2)}
@@ -1582,20 +1583,22 @@ function renderMakeCardTool(){
             '<div id="mcPreviewNotice" class="qck-mc-card-notice" style="display:none;"></div>' +
             '<div id="mcPreviewSig" class="qck-mc-card-sig" style="display:none;"></div>' +
           '</div>' +
-          '<button id="mcFab" class="qck-mc-fab" onclick="event.stopPropagation();mcShowActionMenu()" aria-label="액션 메뉴">⚡</button>' +
-          '<div id="mcActionMenu" class="qck-mc-action-menu">' +
-            '<button class="qck-mc-action-item" onclick="mcAction(\'save\')">' +
-              '<span class="qck-mc-action-item-title">MY SPACE 저장</span>' +
-              '<span class="qck-mc-action-item-desc">내 자료에 담기</span>' +
-            '</button>' +
-            '<button class="qck-mc-action-item" onclick="mcAction(\'download\')">' +
-              '<span class="qck-mc-action-item-title">다운로드</span>' +
-              '<span class="qck-mc-action-item-desc">카드 이미지 파일 저장</span>' +
-            '</button>' +
-            '<button class="qck-mc-action-item" onclick="mcAction(\'copy\')">' +
-              '<span class="qck-mc-action-item-title">복사</span>' +
-              '<span class="qck-mc-action-item-desc">클립보드로 바로 붙여넣기</span>' +
-            '</button>' +
+          '<div class="qck-mc-fab-wrap">' +
+            '<button id="mcFab" class="qck-mc-fab" onclick="event.stopPropagation();mcShowActionMenu()" aria-label="액션 메뉴">⚡</button>' +
+            '<div id="mcActionMenu" class="qck-mc-action-menu">' +
+              '<button class="qck-mc-action-item" onclick="mcAction(\'save\')">' +
+                '<span class="qck-mc-action-item-title">MY SPACE 저장</span>' +
+                '<span class="qck-mc-action-item-desc">내 자료에 담기</span>' +
+              '</button>' +
+              '<button class="qck-mc-action-item" onclick="mcAction(\'download\')">' +
+                '<span class="qck-mc-action-item-title">다운로드</span>' +
+                '<span class="qck-mc-action-item-desc">카드 이미지 파일 저장</span>' +
+              '</button>' +
+              '<button class="qck-mc-action-item" onclick="mcAction(\'copy\')">' +
+                '<span class="qck-mc-action-item-title">복사</span>' +
+                '<span class="qck-mc-action-item-desc">클립보드로 바로 붙여넣기</span>' +
+              '</button>' +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
