@@ -2123,6 +2123,9 @@ var CARD_TYPE_COLORS = {
   issue:   '#6366F1',   // 보험이슈 = 인디고
   cancer:  '#5DCAA5',   // 암정보 = 그린
   warning: '#E24B4A',   // 주의사항 = 레드
+  bmi:     '#10B981',   // BMI 계산 = 그린 (건강 본질)
+  insAge:  '#6366F1',   // 보험연령 = 인디고 (브랜드 색)
+  voice:   '#A78BFA',   // 콜 스크립트 = 보라 (음성/대화 본질)
   general: '#6366F1'    // 기본 = 인디고
 };
 
@@ -2248,18 +2251,37 @@ function getDdalggakSignature(){
   }catch(e){ return null; }
 }
 
-function openMakeCardModal(btn, contentType){
-  var card = btn.closest('.pay-card');
-  if(!card){ alert('카드 본문을 찾지 못했습니다.'); return; }
-  _mcSourceCard = card;
+/* openMakeCardModal — 카드 만들기 모달 진입 (2026-05-25 리팩토링)
+ * 시그니처: openMakeCardModal(source, contentType)
+ *   source = HTMLElement (.pay-card 안 버튼, 기존 호출 호환) 또는 String (텍스트 본문 직접 전달)
+ *   contentType = 'payment' / 'contact' / 'bmi' / 'insAge' / 'voice' / 'general' 등
+ * 본인 자체 = .pay-card DOM 의존 제거 = Quick 도구 결과 텍스트 직접 전달 가능
+ */
+function openMakeCardModal(source, contentType){
+  var body;
+  var sourceCard = null;
+  if(typeof source === 'string'){
+    body = (source || '').trim().replace(/\n{3,}/g, '\n\n');
+  } else if(source && typeof source.closest === 'function'){
+    var card = source.closest('.pay-card');
+    if(card){
+      sourceCard = card;
+      var clone = card.cloneNode(true);
+      var btnClone = clone.querySelector('.pay-copy-btn');
+      if(btnClone) btnClone.remove();
+      body = (clone.innerText || clone.textContent || '').trim().replace(/\n{3,}/g, '\n\n');
+    } else {
+      body = (source.innerText || source.textContent || '').trim();
+    }
+  } else {
+    alert('카드 본문을 찾지 못했습니다.');
+    return;
+  }
+  if(!body){ alert('카드에 표시할 내용이 비어 있습니다.'); return; }
+
+  _mcSourceCard = sourceCard;
   _mcNoticeOn = false;
   var accentColor = CARD_TYPE_COLORS[contentType || 'general'] || CARD_TYPE_COLORS.general;
-
-  // 본문 자체 추출 (딸깍 버튼 제외)
-  var clone = card.cloneNode(true);
-  var btnClone = clone.querySelector('.pay-copy-btn');
-  if(btnClone) btnClone.remove();
-  var body = (clone.innerText || clone.textContent || '').trim().replace(/\n{3,}/g, '\n\n');
 
   // 모달 생성
   closeMakeCardModal();
