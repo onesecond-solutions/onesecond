@@ -414,19 +414,19 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 /* Quick 도구 공통 레이아웃 (BMI / 보험연령 / 변환기 / 콜스크립트 / 카드만들기 — 디자인 v2 토큰, 2026-05-25) */
 .qck-tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:860px){.qck-tool-grid{grid-template-columns:1fr;gap:14px}}
-.qck-tool-pane{background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.18)}
+.qck-tool-pane{background:var(--s1);border:0.5px solid var(--bd);border-left:4px solid var(--ac);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.18)}
 .qck-tool-pane h4{font-size:0.75rem;font-weight:700;color:var(--tf);margin:0 0 2px;letter-spacing:0.04em;text-transform:uppercase}
 .qck-tool-input-row{display:flex;flex-direction:column;gap:7px}
 .qck-tool-input-row > label{font-size:0.78em;color:var(--ts);font-weight:600;letter-spacing:-.01em}
 .qck-tool-input-row input[type="text"],
 .qck-tool-input-row input[type="number"],
-.qck-tool-input-row input[type="date"]{background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;padding:11px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;transition:border-color .18s,background .18s,box-shadow .18s;line-height:1.4}
+.qck-tool-input-row input[type="date"]{background:var(--s2);border:0.5px solid var(--bd);border-left:3px solid var(--ac);border-radius:10px;padding:11px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;transition:border-color .18s,background .18s,box-shadow .18s;line-height:1.4}
 .qck-tool-input-row input[type="text"]::placeholder,
 .qck-tool-input-row input[type="number"]::placeholder,
 .qck-tool-input-row input[type="date"]::placeholder{color:var(--tf)}
 .qck-tool-input-row input[type="text"]:hover,
 .qck-tool-input-row input[type="number"]:hover,
-.qck-tool-input-row input[type="date"]:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-tool-input-row input[type="date"]:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd));border-left-color:var(--ac)}
 .qck-tool-input-row input[type="text"]:focus,
 .qck-tool-input-row input[type="number"]:focus,
 .qck-tool-input-row input[type="date"]:focus{border-color:var(--ac);background:var(--bg);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
@@ -500,9 +500,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-mc-file-info{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap}
 .qck-mc-file-clear{background:transparent;border:none;color:var(--ts);font-size:1.1em;cursor:pointer;padding:0 6px;font-family:inherit;border-radius:6px;transition:color .15s,background .15s}
 .qck-mc-file-clear:hover{color:var(--err);background:color-mix(in srgb,var(--err) 10%,transparent)}
-.qck-mc-textarea{width:100%;background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;padding:12px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;resize:vertical;min-height:90px;box-sizing:border-box;line-height:1.55;transition:border-color .18s,background .18s,box-shadow .18s}
+.qck-mc-textarea{width:100%;background:var(--s2);border:0.5px solid var(--bd);border-left:3px solid var(--ac);border-radius:10px;padding:12px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;resize:vertical;min-height:90px;box-sizing:border-box;line-height:1.55;transition:border-color .18s,background .18s,box-shadow .18s}
 .qck-mc-textarea::placeholder{color:var(--tf)}
-.qck-mc-textarea:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-mc-textarea:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd));border-left-color:var(--ac)}
 .qck-mc-textarea:focus{border-color:var(--ac);background:var(--bg);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
 .qck-mc-toggle-row{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;user-select:none;background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;transition:border-color .18s,background .18s}
 .qck-mc-toggle-row:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
@@ -511,9 +511,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-mc-toggle-label{font-size:0.875rem;color:var(--tp);font-weight:600}
 .qck-mc-sig-row{display:none;flex-direction:column;gap:10px;margin-top:6px}
 .qck-mc-sig-row.show{display:flex}
-.qck-mc-sig-row input{background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;padding:11px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;transition:border-color .18s,background .18s,box-shadow .18s}
+.qck-mc-sig-row input{background:var(--s2);border:0.5px solid var(--bd);border-left:3px solid var(--ac);border-radius:10px;padding:11px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;transition:border-color .18s,background .18s,box-shadow .18s}
 .qck-mc-sig-row input::placeholder{color:var(--tf)}
-.qck-mc-sig-row input:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-mc-sig-row input:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd));border-left-color:var(--ac)}
 .qck-mc-sig-row input:focus{border-color:var(--ac);background:var(--bg);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
 .qck-mc-error{margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--err) 10%,var(--s2));border:0.5px solid var(--err);border-radius:10px;color:var(--err);font-size:0.8em;line-height:1.5}
 .qck-mc-loading{margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--ac) 10%,var(--s2));border:0.5px solid var(--ac);border-radius:10px;color:var(--ac);font-size:0.82em;text-align:center}
