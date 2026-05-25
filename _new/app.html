@@ -2251,19 +2251,39 @@ function getDdalggakSignature(){
   }catch(e){ return null; }
 }
 
-/* openMakeCardModal — 카드 만들기 모달 진입 (2026-05-25 리팩토링)
- * 시그니처: openMakeCardModal(source, contentType)
- *   source = HTMLElement (.pay-card 안 버튼, 기존 호출 호환) 또는 String (텍스트 본문 직접 전달)
- *   contentType = 'payment' / 'contact' / 'bmi' / 'insAge' / 'voice' / 'general' 등
- * 본인 자체 = .pay-card DOM 의존 제거 = Quick 도구 결과 텍스트 직접 전달 가능
+/* openMakeCardModal — 공용 카드 만들기 모달 (단일 진실 원천, 2026-05-25 PR A.5)
+ *
+ * 본질: 사이트 전체 모든 콘텐츠가 호출하는 단 하나의 공용 모듈.
+ *       BMI / 보험연령 / 콜 스크립트 / 결제정보 / 연락처 / Quick 카드 만들기 + 미래 모든 자리.
+ *       이 모듈 한 번 수정 = 전체 자동 반영.
+ *
+ * 시그니처 (객체 인자, 권장):
+ *   openMakeCardModal({
+ *     text: '본문 텍스트',          // 필수 (또는 source)
+ *     contentType: 'bmi',           // 색상/분기 키 (CARD_TYPE_COLORS 참조)
+ *     title: 'BMI 계산 결과',       // 카드 모달 헤더 (선택, 기본 '🪪 카드 만들기')
+ *     // 미래 확장 자리: colorPalette, template, allowEdit 자체
+ *   })
+ *
+ * 호환 시그니처 (직전 호출 자동 정합):
+ *   openMakeCardModal(HTMLElement, contentType)  → .pay-card 본문 자동 추출
+ *   openMakeCardModal(string, contentType)       → 텍스트 직접 사용
  */
-function openMakeCardModal(source, contentType){
+function openMakeCardModal(arg1, arg2){
+  var opts;
+  if(arg1 && typeof arg1 === 'object' && !arg1.nodeType && (arg1.text !== undefined || arg1.source !== undefined)){
+    opts = arg1;
+  } else {
+    opts = { source: arg1, contentType: arg2 };
+  }
   var body;
   var sourceCard = null;
-  if(typeof source === 'string'){
-    body = (source || '').trim().replace(/\n{3,}/g, '\n\n');
-  } else if(source && typeof source.closest === 'function'){
-    var card = source.closest('.pay-card');
+  if(typeof opts.text === 'string'){
+    body = opts.text.trim().replace(/\n{3,}/g, '\n\n');
+  } else if(typeof opts.source === 'string'){
+    body = opts.source.trim().replace(/\n{3,}/g, '\n\n');
+  } else if(opts.source && typeof opts.source.closest === 'function'){
+    var card = opts.source.closest('.pay-card');
     if(card){
       sourceCard = card;
       var clone = card.cloneNode(true);
@@ -2271,7 +2291,7 @@ function openMakeCardModal(source, contentType){
       if(btnClone) btnClone.remove();
       body = (clone.innerText || clone.textContent || '').trim().replace(/\n{3,}/g, '\n\n');
     } else {
-      body = (source.innerText || source.textContent || '').trim();
+      body = (opts.source.innerText || opts.source.textContent || '').trim();
     }
   } else {
     alert('카드 본문을 찾지 못했습니다.');
@@ -2279,9 +2299,11 @@ function openMakeCardModal(source, contentType){
   }
   if(!body){ alert('카드에 표시할 내용이 비어 있습니다.'); return; }
 
+  var contentType = opts.contentType || 'general';
+  var modalTitle = opts.title || '🪪 카드 만들기';
   _mcSourceCard = sourceCard;
   _mcNoticeOn = false;
-  var accentColor = CARD_TYPE_COLORS[contentType || 'general'] || CARD_TYPE_COLORS.general;
+  var accentColor = CARD_TYPE_COLORS[contentType] || CARD_TYPE_COLORS.general;
 
   // 모달 생성
   closeMakeCardModal();
@@ -2297,7 +2319,7 @@ function openMakeCardModal(source, contentType){
   overlay.innerHTML = '' +
     '<div class="mc-modal" style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:880px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--bd);background:var(--s2);">' +
-        '<div style="font-size:1em;font-weight:800;color:var(--tp);">🪪 카드 만들기</div>' +
+        '<div style="font-size:1em;font-weight:800;color:var(--tp);">' + modalTitle + '</div>' +
         '<button onclick="closeMakeCardModal()" style="background:transparent;border:none;color:var(--ts);font-size:1.2em;cursor:pointer;padding:4px 8px;">×</button>' +
       '</div>' +
       '<div style="flex:1;overflow-y:auto;padding:16px;">' +
