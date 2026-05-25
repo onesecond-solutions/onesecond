@@ -553,14 +553,15 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
 /* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (view별 자체 스크롤 영역) */
-/* v-voice는 .tabs + .split 구조 = .split 자체 스크롤 유지 = 예외 */
+/* 2026-05-25 정정: v-voice 누락 격차 자료. 본 view 통째 정합 */
 #v-home,
 #v-myspace,
 #v-scripts,
 #v-quick,
 #v-together,
 #v-news,
-#v-team{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
+#v-team,
+#v-voice{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
 .home-greeting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:linear-gradient(90deg,var(--s1),transparent);border:1px solid var(--bd);border-radius:12px;margin-bottom:14px}
 .home-greeting-name{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
 .home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
