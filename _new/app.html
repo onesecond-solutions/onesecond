@@ -451,6 +451,15 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-conv-box.after .qck-conv-box-format{color:var(--ac)}
 .qck-conv-arrow{font-size:1.3em;color:var(--ts);font-weight:700}
 .qck-conv-reduction{margin-top:14px;text-align:center;padding:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--ok) 18%,var(--bg)),var(--bg));border:1px solid var(--ok);border-radius:8px;font-size:1.1em;font-weight:900;color:var(--ok);letter-spacing:-.02em}
+
+/* 녹취록 만들기 도구 */
+.qck-voice-preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.qck-voice-fire-mini{background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:7px;padding:5px 10px;color:#fff;font-size:0.75em;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:transform .15s}
+.qck-voice-fire-mini:hover{transform:translateY(-1px)}
+.qck-voice-preview-body{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px;min-height:240px;max-height:340px;overflow-y:auto;font-size:0.85em;line-height:1.6;color:var(--tp);white-space:pre-wrap;word-break:break-word}
+.qck-voice-mock-notice{background:color-mix(in srgb,var(--warn) 12%,var(--bg));border:1px solid var(--warn);border-radius:7px;padding:10px 12px;margin-bottom:10px;font-size:0.78em;color:var(--tp);line-height:1.55}
+.qck-voice-mock-notice b{color:var(--warn);font-weight:800}
+.qck-voice-empty{font-size:0.85em;color:var(--ts);font-style:italic;text-align:center;padding:50px 16px}
 .qck-loading{padding:40px;text-align:center;color:var(--tf);font-size:0.85em}
 .qck-bottom-bar{background:var(--s2);color:var(--ts);text-align:center;font-size:0.82em;font-weight:700;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-top:14px}
 
@@ -861,13 +870,18 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('변환기')">
           <span class="mys-badge">실행도구</span>
-          <div class="mys-ttl">변환기</div>
-          <div class="mys-meta">녹취 변환 + PNG→JPG 자체</div>
+          <div class="mys-ttl">이미지 변환</div>
+          <div class="mys-meta">PNG → JPG</div>
+        </div>
+        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('녹취록만들기')">
+          <span class="mys-badge">실행도구</span>
+          <div class="mys-ttl">녹취록 만들기</div>
+          <div class="mys-meta">음성 파일을 글로 변환</div>
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('카드만들기')">
           <span class="mys-badge">실행도구</span>
-          <div class="mys-ttl">카드만들기</div>
-          <div class="mys-meta">준비 중 자체</div>
+          <div class="mys-ttl">카드 만들기</div>
+          <div class="mys-meta">텍스트를 카드 이미지로</div>
         </div>
       </div>
 
@@ -1445,7 +1459,11 @@ function openQuickToolV2(name){
     return;
   }
   if(name === '변환기'){
-    activateTool('PNG → JPG 변환기', renderConverterTool);
+    activateTool('이미지 변환 (PNG → JPG)', renderConverterTool);
+    return;
+  }
+  if(name === '녹취록만들기'){
+    activateTool('녹취록 만들기', renderVoiceTool);
     return;
   }
   alert(name + ' — 준비 중입니다.');
@@ -1946,10 +1964,148 @@ function convAction(action){
     a.click();
     document.body.removeChild(a);
   } else if(action === 'mySpace'){
-    alert('MY SPACE 저장은 준비 중입니다. (Supabase Storage 자체 별 PR 진입 자체)');
+    alert('MY SPACE 저장은 준비 중입니다.');
   }
 }
 window.convAction = convAction;
+
+/* === 녹취록 만들기 (Phase B 4순위 — UI 설계) === */
+window._voiceFile = null;
+window._voiceResult = null;
+
+// 샘플 녹취록 (UI 흐름 체험용)
+var VOICE_MOCK_TEXT = '# 상담 녹취록\n\n' +
+  '## 고객 정보\n' +
+  '- 1980년생, 남\n' +
+  '- 직업: 사무직\n\n' +
+  '## 상담 내용\n\n' +
+  '**고객:** 실손보험 가입하려고 하는데, 가능한가요?\n\n' +
+  '**설계사:** 네, 가능합니다. 현재 가입하신 보험이 있으신가요?\n\n' +
+  '**고객:** 10년 전에 가입한 게 있는데, 4세대로 갈아타려고요.\n\n' +
+  '**설계사:** 4세대 실손은 자기부담금이 있어서 보험료가 낮은 대신 본인 부담이 발생합니다.\n현재 병력 확인 후 안내드릴 수 있도록 잠시만 기다려 주세요.\n\n' +
+  '## 다음 안내\n' +
+  '- 5세대 실손 비교표 전달 예정\n' +
+  '- 인수 가능 회사 안내';
+
+function renderVoiceTool(){
+  var slot = document.getElementById('qck-content-slot');
+  if(!slot) return;
+  slot.innerHTML =
+    '<div class="qck-tool-grid">' +
+      '<div class="qck-tool-pane">' +
+        '<h4>음성 파일 선택</h4>' +
+        '<div class="qck-conv-drop" id="qckVoiceDrop" onclick="document.getElementById(\'qckVoiceFile\').click()">' +
+          '<div class="qck-conv-drop-icon">🎙️</div>' +
+          '<div class="qck-conv-drop-text">파일을 끌어놓거나 선택하세요</div>' +
+          '<div class="qck-conv-drop-hint">지원 파일 · MP3 · M4A · WAV</div>' +
+        '</div>' +
+        '<input type="file" id="qckVoiceFile" accept=".mp3,.m4a,.wav,audio/mpeg,audio/mp4,audio/wav,audio/x-m4a" style="display:none" onchange="voiceFileSelect(this.files[0])">' +
+        '<div id="qckVoiceFileInfo"></div>' +
+        '<button class="qck-tool-fire" onclick="voiceFire()">⚡ 딸깍</button>' +
+      '</div>' +
+      '<div class="qck-tool-pane">' +
+        '<div class="qck-voice-preview-head">' +
+          '<h4 style="margin:0">녹취록</h4>' +
+          '<button class="qck-voice-fire-mini" onclick="voiceFire()">⚡ 딸깍</button>' +
+        '</div>' +
+        '<div class="qck-voice-mock-notice">' +
+          '<b>안내</b> · 음성 내용을 글로 바꾸는 기능을 준비하고 있습니다. 현재는 화면 예시를 먼저 확인할 수 있습니다.' +
+        '</div>' +
+        '<div class="qck-voice-preview-body" id="voiceResult"><div class="qck-voice-empty">음성 파일 선택 후 ⚡ 딸깍을 눌러 화면 예시를 확인하세요</div></div>' +
+      '</div>' +
+    '</div>';
+  window._voiceFile = null;
+  window._voiceResult = null;
+  // 끌어놓기 가동
+  var drop = document.getElementById('qckVoiceDrop');
+  if(drop){
+    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', function(){ drop.classList.remove('drag'); });
+    drop.addEventListener('drop', function(e){
+      e.preventDefault();
+      drop.classList.remove('drag');
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(f) voiceFileSelect(f);
+    });
+  }
+}
+
+function voiceFileSelect(file){
+  if(!file) return;
+  var name = (file.name || '').toLowerCase();
+  var okType = /\.(mp3|m4a|wav)$/i.test(name) || /audio/.test(file.type || '');
+  if(!okType){ alert('MP3 · M4A · WAV 형식의 음성 파일만 가능합니다.'); return; }
+  window._voiceFile = file;
+  var info = document.getElementById('qckVoiceFileInfo');
+  if(info){
+    info.innerHTML = '<div class="qck-conv-file-info"><span>🎵 ' + escHomeHtml(file.name) + ' · ' + fmtFileSize(file.size) + '</span><button class="qck-conv-file-info-clear" onclick="voiceFileClear()" title="삭제">✕</button></div>';
+  }
+}
+window.voiceFileSelect = voiceFileSelect;
+
+function voiceFileClear(){
+  window._voiceFile = null;
+  var info = document.getElementById('qckVoiceFileInfo');
+  if(info) info.innerHTML = '';
+  var fileEl = document.getElementById('qckVoiceFile');
+  if(fileEl) fileEl.value = '';
+}
+window.voiceFileClear = voiceFileClear;
+
+function voiceFire(){
+  if(!window._voiceFile){ alert('먼저 음성 파일을 선택해 주세요.'); return; }
+  var resultEl = document.getElementById('voiceResult');
+  if(!resultEl) return;
+  // 화면 예시 표시 (실제 변환 가동 = 별 PR 자리)
+  window._voiceResult = {
+    fileName: window._voiceFile.name,
+    text: VOICE_MOCK_TEXT
+  };
+  resultEl.textContent = VOICE_MOCK_TEXT;
+  // 액션 영역 추가
+  var actionsId = 'voiceActions';
+  var existing = document.getElementById(actionsId);
+  if(existing) existing.remove();
+  var actions = document.createElement('div');
+  actions.id = actionsId;
+  actions.className = 'qck-tool-actions';
+  actions.style.marginTop = '14px';
+  actions.innerHTML =
+    '<button class="qck-tool-act-btn" onclick="voiceAction(\'copy\')">📋 복사</button>' +
+    '<button class="qck-tool-act-btn" onclick="voiceAction(\'mySpace\')">📁 MY SPACE 저장</button>' +
+    '<button class="qck-tool-act-btn" onclick="voiceAction(\'makeCard\')">🪪 카드 만들기</button>' +
+    '<button class="qck-tool-act-btn" onclick="voiceAction(\'saveText\')">📝 글 파일 저장</button>';
+  resultEl.parentElement.appendChild(actions);
+}
+window.voiceFire = voiceFire;
+
+function voiceAction(action){
+  var r = window._voiceResult;
+  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 녹취록을 만들어 주세요.'); return; }
+  if(action === 'copy'){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(r.text).then(function(){
+        if(typeof toast === 'function') toast('복사 완료'); else alert('복사 완료');
+      }).catch(function(){ alert('복사 실패. 텍스트를 직접 복사해 주세요:\n\n' + r.text); });
+    } else { alert(r.text); }
+  } else if(action === 'mySpace'){
+    alert('MY SPACE 저장은 준비 중입니다.');
+  } else if(action === 'makeCard'){
+    alert('카드 만들기는 다음 단계에서 연결됩니다.');
+  } else if(action === 'saveText'){
+    var blob = new Blob([r.text], {type:'text/plain;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var fname = (r.fileName || 'voice').replace(/\.[^.]+$/, '') + '_녹취록.txt';
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+}
+window.voiceAction = voiceAction;
 
 /* ⚡ 딸깍 = 원세컨드 공용 액션 허브 (스킬: .claude/skills/ddalggak/SKILL.md) */
 
