@@ -452,7 +452,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-conv-arrow{font-size:1.3em;color:var(--ts);font-weight:700}
 .qck-conv-reduction{margin-top:14px;text-align:center;padding:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--ok) 18%,var(--bg)),var(--bg));border:1px solid var(--ok);border-radius:8px;font-size:1.1em;font-weight:900;color:var(--ok);letter-spacing:-.02em}
 
-/* 녹취록 만들기 도구 */
+/* 콜 스크립트 작성 도구 */
 .qck-voice-preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .qck-voice-fire-mini{background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:7px;padding:5px 10px;color:#fff;font-size:0.75em;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:transform .15s}
 .qck-voice-fire-mini:hover{transform:translateY(-1px)}
@@ -873,10 +873,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
           <div class="mys-ttl">이미지 변환</div>
           <div class="mys-meta">PNG → JPG</div>
         </div>
-        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('녹취록만들기')">
+        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('콜스크립트작성')">
           <span class="mys-badge">실행도구</span>
-          <div class="mys-ttl">녹취록 만들기</div>
-          <div class="mys-meta">음성 파일을 글로 변환</div>
+          <div class="mys-ttl">콜 스크립트 작성</div>
+          <div class="mys-meta">상담콜을 콜스크립트로 변환</div>
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('카드만들기')">
           <span class="mys-badge">실행도구</span>
@@ -1462,8 +1462,8 @@ function openQuickToolV2(name){
     activateTool('이미지 변환 (PNG → JPG)', renderConverterTool);
     return;
   }
-  if(name === '녹취록만들기'){
-    activateTool('녹취록 만들기', renderVoiceTool);
+  if(name === '콜스크립트작성'){
+    activateTool('콜 스크립트 작성', renderVoiceTool);
     return;
   }
   alert(name + ' — 준비 중입니다.');
@@ -1969,16 +1969,16 @@ function convAction(action){
 }
 window.convAction = convAction;
 
-/* === 녹취록 만들기 (Phase B 4순위 — UI 설계) === */
+/* === 콜 스크립트 작성 (Phase B 4순위 — UI 설계) === */
 window._voiceFile = null;
 window._voiceResult = null;
 
-// 샘플 녹취록 (UI 흐름 체험용)
-var VOICE_MOCK_TEXT = '# 상담 녹취록\n\n' +
+// 샘플 콜 스크립트 (UI 흐름 체험용)
+var VOICE_MOCK_TEXT = '# 상담콜 스크립트\n\n' +
   '## 고객 정보\n' +
   '- 1980년생, 남\n' +
   '- 직업: 사무직\n\n' +
-  '## 상담 내용\n\n' +
+  '## 통화 내용\n\n' +
   '**고객:** 실손보험 가입하려고 하는데, 가능한가요?\n\n' +
   '**설계사:** 네, 가능합니다. 현재 가입하신 보험이 있으신가요?\n\n' +
   '**고객:** 10년 전에 가입한 게 있는데, 4세대로 갈아타려고요.\n\n' +
@@ -2005,13 +2005,13 @@ function renderVoiceTool(){
       '</div>' +
       '<div class="qck-tool-pane">' +
         '<div class="qck-voice-preview-head">' +
-          '<h4 style="margin:0">녹취록</h4>' +
+          '<h4 style="margin:0">콜 스크립트</h4>' +
           '<button class="qck-voice-fire-mini" onclick="voiceFire()">⚡ 딸깍</button>' +
         '</div>' +
         '<div class="qck-voice-mock-notice">' +
-          '<b>안내</b> · 음성 내용을 글로 바꾸는 기능을 준비하고 있습니다. 현재는 화면 예시를 먼저 확인할 수 있습니다.' +
+          '<b>안내</b> · 상담콜을 콜 스크립트로 변환하는 기능을 준비하고 있습니다. 현재는 화면 예시를 먼저 확인할 수 있습니다.' +
         '</div>' +
-        '<div class="qck-voice-preview-body" id="voiceResult"><div class="qck-voice-empty">음성 파일 선택 후 ⚡ 딸깍을 눌러 화면 예시를 확인하세요</div></div>' +
+        '<div class="qck-voice-preview-body" id="voiceResult"><div class="qck-voice-empty">상담콜 파일 선택 후 ⚡ 딸깍을 눌러 화면 예시를 확인하세요</div></div>' +
       '</div>' +
     '</div>';
   window._voiceFile = null;
@@ -2034,7 +2034,7 @@ function voiceFileSelect(file){
   if(!file) return;
   var name = (file.name || '').toLowerCase();
   var okType = /\.(mp3|m4a|wav)$/i.test(name) || /audio/.test(file.type || '');
-  if(!okType){ alert('MP3 · M4A · WAV 형식의 음성 파일만 가능합니다.'); return; }
+  if(!okType){ alert('MP3 · M4A · WAV 형식의 상담콜 파일만 가능합니다.'); return; }
   window._voiceFile = file;
   var info = document.getElementById('qckVoiceFileInfo');
   if(info){
@@ -2053,7 +2053,7 @@ function voiceFileClear(){
 window.voiceFileClear = voiceFileClear;
 
 function voiceFire(){
-  if(!window._voiceFile){ alert('먼저 음성 파일을 선택해 주세요.'); return; }
+  if(!window._voiceFile){ alert('먼저 상담콜 파일을 선택해 주세요.'); return; }
   var resultEl = document.getElementById('voiceResult');
   if(!resultEl) return;
   // 화면 예시 표시 (실제 변환 가동 = 별 PR 자리)
@@ -2081,7 +2081,7 @@ window.voiceFire = voiceFire;
 
 function voiceAction(action){
   var r = window._voiceResult;
-  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 녹취록을 만들어 주세요.'); return; }
+  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 콜 스크립트를 작성해 주세요.'); return; }
   if(action === 'copy'){
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(r.text).then(function(){
@@ -2095,7 +2095,7 @@ function voiceAction(action){
   } else if(action === 'saveText'){
     var blob = new Blob([r.text], {type:'text/plain;charset=utf-8'});
     var url = URL.createObjectURL(blob);
-    var fname = (r.fileName || 'voice').replace(/\.[^.]+$/, '') + '_녹취록.txt';
+    var fname = (r.fileName || 'call').replace(/\.[^.]+$/, '') + '_콜스크립트.txt';
     var a = document.createElement('a');
     a.href = url;
     a.download = fname;
