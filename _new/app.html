@@ -463,6 +463,44 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-loading{padding:40px;text-align:center;color:var(--tf);font-size:0.85em}
 .qck-bottom-bar{background:var(--s2);color:var(--ts);text-align:center;font-size:0.82em;font-weight:700;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-top:14px}
 
+/* 카드 만들기 도구 (2026-05-25 재구성 — Quick 좌/우 + 우하단 FAB 액션 메뉴) */
+.qck-mc-preview-wrap{position:relative;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:480px;gap:12px}
+.qck-mc-preview-empty{font-size:0.88em;color:var(--ts);font-style:italic;text-align:center;padding:80px 20px;line-height:1.7;max-width:280px}
+.qck-mc-card{width:300px;max-width:100%;aspect-ratio:4/5;background:#0B1020;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;position:relative;overflow:hidden;border-left:5px solid var(--ac);box-shadow:0 8px 24px rgba(0,0,0,0.35);box-sizing:border-box}
+.qck-mc-card-body{flex:1;color:#E5E7EB;font-size:0.82em;line-height:1.55;white-space:pre-wrap;word-break:break-word;overflow:hidden;min-height:0}
+.qck-mc-card-body.with-image{display:flex;align-items:center;justify-content:center;padding:0}
+.qck-mc-card-body img{display:block;max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+.qck-mc-card-body-empty{color:#6B7280;font-style:italic}
+.qck-mc-card-notice{margin-top:10px;font-size:0.76em;color:#E5E7EB;line-height:1.5;padding:8px 10px;background:rgba(99,102,241,0.10);border-left:3px solid var(--ac);border-radius:0 6px 6px 0;white-space:pre-wrap;word-break:break-word}
+.qck-mc-card-sig{margin-top:12px;padding-top:10px;border-top:1px solid rgba(203,213,225,0.18);text-align:center;font-size:0.78em;font-weight:600;color:#CBD5E1}
+.qck-mc-fab{position:absolute;right:18px;bottom:18px;width:48px;height:48px;border-radius:50%;background:var(--ac);border:none;color:#fff;font-size:1.25em;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(99,102,241,0.4);z-index:3;transition:transform .15s,background .15s;font-family:inherit;line-height:1}
+.qck-mc-fab:hover:not(:disabled){transform:translateY(-2px);background:var(--ach)}
+.qck-mc-fab:disabled{opacity:0.35;cursor:not-allowed;background:var(--ts)}
+.qck-mc-action-menu{position:absolute;right:18px;bottom:78px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:6px;min-width:200px;box-shadow:0 12px 36px rgba(0,0,0,0.45);z-index:4;display:none;flex-direction:column;gap:2px}
+.qck-mc-action-menu.show{display:flex}
+.qck-mc-action-item{padding:10px 14px;background:transparent;border:none;border-radius:8px;color:var(--tp);text-align:left;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;gap:2px;transition:background .15s}
+.qck-mc-action-item:hover{background:var(--s2)}
+.qck-mc-action-item-title{font-weight:700;font-size:0.9em}
+.qck-mc-action-item-desc{font-size:0.76em;color:var(--ts)}
+.qck-mc-file-drop{border:2px dashed var(--bd);border-radius:8px;padding:18px 14px;text-align:center;color:var(--ts);cursor:pointer;font-size:0.85em;transition:border-color .15s,background .15s;line-height:1.5}
+.qck-mc-file-drop:hover,.qck-mc-file-drop.drag{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 6%,transparent)}
+.qck-mc-file-drop.has-file{border-style:solid;border-color:var(--ac);background:color-mix(in srgb,var(--ac) 4%,var(--bg));color:var(--tp)}
+.qck-mc-file-drop-icon{font-size:1.6em;margin-bottom:4px}
+.qck-mc-file-info{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap}
+.qck-mc-file-clear{background:transparent;border:none;color:var(--ts);font-size:1em;cursor:pointer;padding:0 4px;font-family:inherit}
+.qck-mc-file-clear:hover{color:#E24B4A}
+.qck-mc-textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:10px 11px;font-size:0.88em;color:var(--tp);outline:none;font-family:inherit;resize:vertical;min-height:80px;box-sizing:border-box;line-height:1.5}
+.qck-mc-textarea:focus{border-color:var(--ac)}
+.qck-mc-toggle-row{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;user-select:none}
+.qck-mc-toggle-row input[type="checkbox"]{margin:0;accent-color:var(--ac);width:16px;height:16px;cursor:pointer}
+.qck-mc-toggle-label{font-size:0.88em;color:var(--tp);font-weight:600}
+.qck-mc-sig-row{display:none;flex-direction:column;gap:8px;margin-top:4px}
+.qck-mc-sig-row.show{display:flex}
+.qck-mc-sig-row input{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:9px 11px;font-size:0.88em;color:var(--tp);outline:none;font-family:inherit}
+.qck-mc-sig-row input:focus{border-color:var(--ac)}
+.qck-mc-error{margin-top:10px;padding:9px 11px;background:rgba(226,75,74,0.10);border:1px solid #E24B4A;border-radius:7px;color:#E24B4A;font-size:0.8em;line-height:1.5}
+.qck-mc-loading{margin-top:10px;padding:9px 11px;background:rgba(99,102,241,0.10);border:1px solid var(--ac);border-radius:7px;color:var(--ac);font-size:0.82em;text-align:center}
+
 /* === MY SPACE 글쓰기 자리 === */
 .mys-write-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9999px;background:var(--ac);color:#fff;border:none;cursor:pointer;font-size:0.82em;font-weight:800;margin-left:auto;transition:transform .15s,background .15s}
 .mys-write-btn:hover{transform:translateY(-1px);background:var(--ach)}
@@ -1477,54 +1515,106 @@ function openQuickToolV2(name){
 }
 window.openQuickToolV2 = openQuickToolV2;
 
-/* Quick 메뉴 "카드 만들기" 카드 = 파일 첨부 → 카드 변환 흐름 (2026-05-25 정정)
- * 본질: 사용자가 본인 자료(이미지/텍스트/PDF) 첨부 → 카드 이미지 변환.
- * 텍스트 직접 입력은 결제정보/연락처 ⚡ 딸깍 자리에 이미 존재. 본 자리는 첨부 흐름만. */
+/* Quick 메뉴 "카드 만들기" — Quick 도구 좌/우 패턴 + 우하단 FAB (2026-05-25 재구성)
+ * 본질: 파일(이미지/텍스트/PDF) + 메모 + 이름·전화 중 1건 이상 → 실시간 미리보기 → 좌하단 큰 딸깍 또는 우하단 미니 FAB → 액션 메뉴 (저장/다운로드/복사). */
+
+var mcState = { fileName:'', fileType:'', fileDataUrl:'', fileText:'', text:'', sigOn:false, sigName:'', sigPhone:'' };
+
 function renderMakeCardTool(){
   var slot = document.getElementById('qck-content-slot');
   if(!slot) return;
+  mcState = { fileName:'', fileType:'', fileDataUrl:'', fileText:'', text:'', sigOn:false, sigName:'', sigPhone:'' };
   slot.innerHTML =
-    '<div id="qck-card-upload-wrap" style="max-width:640px;margin:0 auto;">' +
-      '<div style="background:color-mix(in srgb,var(--ac) 8%,var(--bg));border:1px solid color-mix(in srgb,var(--ac) 30%,var(--bd));border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:0.85em;color:var(--tp);line-height:1.55;">' +
-        '<b style="color:var(--ac)">안내</b> · 이미지(PNG/JPG) · 텍스트(TXT) · PDF 파일을 첨부하면 카드 이미지로 변환됩니다. 파일 크기 5MB 한정.' +
+    '<div class="qck-tool-grid">' +
+      '<div class="qck-tool-pane qck-tool-input">' +
+        '<h4>입력 · 자료 또는 텍스트 1건 이상</h4>' +
+        '<div class="qck-tool-input-row">' +
+          '<label>자료 첨부 (선택)</label>' +
+          '<label id="mcDrop" class="qck-mc-file-drop" for="mcFile">' +
+            '<div class="qck-mc-file-drop-icon">📎</div>' +
+            '<div>이미지 · 텍스트 · PDF 첨부 (선택)</div>' +
+            '<div style="font-size:0.78em;color:var(--ts);margin-top:2px;">PNG · JPG · TXT · PDF (최대 5MB)</div>' +
+            '<input type="file" id="mcFile" accept="image/png,image/jpeg,text/plain,application/pdf,.txt,.pdf" style="display:none;" onchange="mcOnFileChange(event)">' +
+          '</label>' +
+        '</div>' +
+        '<div class="qck-tool-input-row">' +
+          '<label>내용 / 메모 (선택)</label>' +
+          '<textarea id="mcText" class="qck-mc-textarea" placeholder="카드 본문 또는 자료 아래 안내문" oninput="mcOnTextInput()"></textarea>' +
+        '</div>' +
+        '<div class="qck-tool-input-row">' +
+          '<label class="qck-mc-toggle-row" style="margin:0;">' +
+            '<input type="checkbox" id="mcSigToggle" onchange="mcToggleSig(this.checked)">' +
+            '<span class="qck-mc-toggle-label">이름 · 연락처 추가 (선택)</span>' +
+          '</label>' +
+          '<div id="mcSigRow" class="qck-mc-sig-row">' +
+            '<input type="text" id="mcSigName" placeholder="이름 (예: 임태성)" oninput="mcOnSigInput()">' +
+            '<input type="text" id="mcSigPhone" placeholder="010-1234-5678" oninput="mcOnSigInput()">' +
+          '</div>' +
+        '</div>' +
+        '<div id="mcError" class="qck-mc-error" style="display:none;"></div>' +
+        '<div id="mcLoading" class="qck-mc-loading" style="display:none;">파일 처리 중...</div>' +
+        '<button id="mcFireBtn" class="qck-tool-fire" onclick="mcFire()" disabled style="opacity:0.4;cursor:not-allowed;">⚡ 딸깍</button>' +
       '</div>' +
-      '<label id="qck-card-drop" for="qck-card-file" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:36px 20px;background:var(--s1);border:2px dashed var(--bd);border-radius:14px;cursor:pointer;transition:border-color 0.18s,background 0.18s;">' +
-        '<div style="font-size:2.2em;line-height:1;">📎</div>' +
-        '<div style="font-size:1em;font-weight:700;color:var(--tp);">파일 선택 또는 여기로 끌어다 놓기</div>' +
-        '<div style="font-size:0.82em;color:var(--ts);">PNG · JPG · TXT · PDF (최대 5MB)</div>' +
-        '<input type="file" id="qck-card-file" accept="image/png,image/jpeg,text/plain,application/pdf,.txt,.pdf" style="display:none;" onchange="handleCardFileUpload(event)">' +
-      '</label>' +
-      '<div id="qck-card-error" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(226,75,74,0.10);border:1px solid #E24B4A;border-radius:8px;color:#E24B4A;font-size:0.85em;"></div>' +
-      '<div id="qck-card-loading" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(99,102,241,0.10);border:1px solid var(--ac);border-radius:8px;color:var(--ac);font-size:0.85em;text-align:center;">파일 처리 중...</div>' +
+      '<div class="qck-tool-pane">' +
+        '<h4>카드 미리보기</h4>' +
+        '<div class="qck-mc-preview-wrap" id="mcPreviewWrap">' +
+          '<div id="mcPreviewEmpty" class="qck-mc-preview-empty">파일 또는 텍스트를 입력하면<br>카드 미리보기가 표시됩니다</div>' +
+          '<div id="mcPreviewCard" class="qck-mc-card" style="display:none;">' +
+            '<div id="mcPreviewBody" class="qck-mc-card-body"></div>' +
+            '<div id="mcPreviewNotice" class="qck-mc-card-notice" style="display:none;"></div>' +
+            '<div id="mcPreviewSig" class="qck-mc-card-sig" style="display:none;"></div>' +
+          '</div>' +
+          '<button id="mcFab" class="qck-mc-fab" onclick="event.stopPropagation();mcShowActionMenu()" disabled aria-label="액션 메뉴">⚡</button>' +
+          '<div id="mcActionMenu" class="qck-mc-action-menu">' +
+            '<button class="qck-mc-action-item" onclick="mcAction(\'save\')">' +
+              '<span class="qck-mc-action-item-title">MY SPACE 저장</span>' +
+              '<span class="qck-mc-action-item-desc">내 자료에 담기</span>' +
+            '</button>' +
+            '<button class="qck-mc-action-item" onclick="mcAction(\'download\')">' +
+              '<span class="qck-mc-action-item-title">다운로드</span>' +
+              '<span class="qck-mc-action-item-desc">카드 이미지 파일 저장</span>' +
+            '</button>' +
+            '<button class="qck-mc-action-item" onclick="mcAction(\'copy\')">' +
+              '<span class="qck-mc-action-item-title">복사</span>' +
+              '<span class="qck-mc-action-item-desc">클립보드로 바로 붙여넣기</span>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
     '</div>';
-  // 드래그&드롭 가동
-  var drop = document.getElementById('qck-card-drop');
+  var drop = document.getElementById('mcDrop');
   if(drop){
-    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.style.borderColor = 'var(--ac)'; drop.style.background = 'color-mix(in srgb,var(--ac) 6%,var(--s1))'; });
-    drop.addEventListener('dragleave', function(e){ e.preventDefault(); drop.style.borderColor = 'var(--bd)'; drop.style.background = 'var(--s1)'; });
+    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('drag'); });
+    drop.addEventListener('dragleave', function(e){ e.preventDefault(); drop.classList.remove('drag'); });
     drop.addEventListener('drop', function(e){
       e.preventDefault();
-      drop.style.borderColor = 'var(--bd)';
-      drop.style.background = 'var(--s1)';
+      drop.classList.remove('drag');
       var files = e.dataTransfer && e.dataTransfer.files;
-      if(files && files.length){ processCardFile(files[0]); }
+      if(files && files.length){ mcHandleFile(files[0]); }
     });
   }
+  document.addEventListener('click', mcOnDocClick);
 }
 window.renderMakeCardTool = renderMakeCardTool;
 
-/* 파일 입력 onchange 진입점 */
-function handleCardFileUpload(event){
+function mcOnDocClick(e){
+  var menu = document.getElementById('mcActionMenu');
+  var fab = document.getElementById('mcFab');
+  if(!menu || !menu.classList.contains('show')) return;
+  if(menu.contains(e.target) || (fab && fab.contains(e.target))) return;
+  mcCloseActionMenu();
+}
+
+function mcOnFileChange(event){
   var file = event && event.target && event.target.files && event.target.files[0];
   if(!file) return;
-  processCardFile(file);
+  mcHandleFile(file);
 }
-window.handleCardFileUpload = handleCardFileUpload;
+window.mcOnFileChange = mcOnFileChange;
 
-/* 파일 처리 본체 — 5MB 검증 + 유형 분기 (이미지/텍스트/PDF) */
-function processCardFile(file){
-  var errEl = document.getElementById('qck-card-error');
-  var loadEl = document.getElementById('qck-card-loading');
+function mcHandleFile(file){
+  var errEl = document.getElementById('mcError');
+  var loadEl = document.getElementById('mcLoading');
   var showError = function(msg){
     if(errEl){ errEl.style.display = ''; errEl.textContent = '⚠️ ' + msg; }
     if(loadEl){ loadEl.style.display = 'none'; }
@@ -1533,80 +1623,291 @@ function processCardFile(file){
     if(loadEl){ loadEl.style.display = on ? '' : 'none'; }
     if(errEl){ errEl.style.display = 'none'; }
   };
-
-  // 5MB 검증
   var MAX_SIZE = 5 * 1024 * 1024;
   if(file.size > MAX_SIZE){
     showError('파일 크기가 5MB를 초과합니다 (' + (file.size / 1024 / 1024).toFixed(2) + 'MB)');
     return;
   }
-
   var name = (file.name || '').toLowerCase();
   var type = file.type || '';
-
   showLoading(true);
-
-  // 이미지 (PNG/JPG)
   if(type === 'image/png' || type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(name)){
     var reader = new FileReader();
     reader.onload = function(e){
       showLoading(false);
-      openMakeCardModal({
-        mode: 'inline',
-        targetEl: 'qck-content-slot',
-        imageDataUrl: e.target.result,
-        contentType: 'general',
-        title: '카드 만들기 · 이미지'
-      });
+      mcState.fileName = file.name;
+      mcState.fileType = 'image';
+      mcState.fileDataUrl = e.target.result;
+      mcState.fileText = '';
+      mcUpdateFileUI();
+      mcUpdatePreview();
     };
     reader.onerror = function(){ showError('이미지 읽기 실패. 다시 시도해주세요.'); };
     reader.readAsDataURL(file);
     return;
   }
-
-  // 텍스트 (TXT)
   if(type === 'text/plain' || /\.txt$/i.test(name)){
     var reader2 = new FileReader();
     reader2.onload = function(e){
       showLoading(false);
       var text = (e.target.result || '').toString().trim();
       if(!text){ showError('텍스트 파일이 비어 있습니다.'); return; }
-      openMakeCardModal({
-        mode: 'inline',
-        targetEl: 'qck-content-slot',
-        text: text,
-        contentType: 'general',
-        title: '카드 만들기 · 텍스트'
-      });
+      mcState.fileName = file.name;
+      mcState.fileType = 'text';
+      mcState.fileDataUrl = '';
+      mcState.fileText = text;
+      mcUpdateFileUI();
+      mcUpdatePreview();
     };
     reader2.onerror = function(){ showError('텍스트 읽기 실패. 다시 시도해주세요.'); };
     reader2.readAsText(file, 'UTF-8');
     return;
   }
-
-  // PDF
   if(type === 'application/pdf' || /\.pdf$/i.test(name)){
     extractPdfText(file).then(function(text){
       showLoading(false);
       var trimmed = (text || '').trim();
       if(!trimmed){ showError('PDF에서 텍스트를 추출하지 못했습니다 (스캔 이미지 PDF는 지원하지 않습니다).'); return; }
-      openMakeCardModal({
-        mode: 'inline',
-        targetEl: 'qck-content-slot',
-        text: trimmed,
-        contentType: 'general',
-        title: '카드 만들기 · PDF'
-      });
+      mcState.fileName = file.name;
+      mcState.fileType = 'pdf';
+      mcState.fileDataUrl = '';
+      mcState.fileText = trimmed;
+      mcUpdateFileUI();
+      mcUpdatePreview();
     }).catch(function(err){
       console.error('[card] PDF 처리 실패:', err);
       showError('PDF 처리 실패. 파일이 손상되었거나 보호된 PDF일 수 있습니다.');
     });
     return;
   }
-
   showError('지원하지 않는 파일 형식입니다. PNG · JPG · TXT · PDF 만 첨부 가능합니다.');
 }
-window.processCardFile = processCardFile;
+window.mcHandleFile = mcHandleFile;
+
+function mcUpdateFileUI(){
+  var drop = document.getElementById('mcDrop');
+  if(!drop) return;
+  if(mcState.fileName){
+    drop.classList.add('has-file');
+    drop.innerHTML =
+      '<div class="qck-mc-file-info">' +
+        '<span>📎 ' + mcEscapeHtml(mcState.fileName) + '</span>' +
+        '<button class="qck-mc-file-clear" onclick="event.preventDefault();event.stopPropagation();mcClearFile()" title="첨부 해제">×</button>' +
+      '</div>' +
+      '<input type="file" id="mcFile" accept="image/png,image/jpeg,text/plain,application/pdf,.txt,.pdf" style="display:none;" onchange="mcOnFileChange(event)">';
+  }
+}
+window.mcUpdateFileUI = mcUpdateFileUI;
+
+function mcClearFile(){
+  mcState.fileName = '';
+  mcState.fileType = '';
+  mcState.fileDataUrl = '';
+  mcState.fileText = '';
+  var drop = document.getElementById('mcDrop');
+  if(drop){
+    drop.classList.remove('has-file');
+    drop.innerHTML =
+      '<div class="qck-mc-file-drop-icon">📎</div>' +
+      '<div>이미지 · 텍스트 · PDF 첨부 (선택)</div>' +
+      '<div style="font-size:0.78em;color:var(--ts);margin-top:2px;">PNG · JPG · TXT · PDF (최대 5MB)</div>' +
+      '<input type="file" id="mcFile" accept="image/png,image/jpeg,text/plain,application/pdf,.txt,.pdf" style="display:none;" onchange="mcOnFileChange(event)">';
+  }
+  mcUpdatePreview();
+}
+window.mcClearFile = mcClearFile;
+
+function mcOnTextInput(){
+  var el = document.getElementById('mcText');
+  mcState.text = el ? (el.value || '') : '';
+  mcUpdatePreview();
+}
+window.mcOnTextInput = mcOnTextInput;
+
+function mcToggleSig(on){
+  mcState.sigOn = !!on;
+  var row = document.getElementById('mcSigRow');
+  if(row) row.classList.toggle('show', !!on);
+  mcUpdatePreview();
+}
+window.mcToggleSig = mcToggleSig;
+
+function mcOnSigInput(){
+  var n = document.getElementById('mcSigName');
+  var p = document.getElementById('mcSigPhone');
+  mcState.sigName = n ? (n.value || '').trim() : '';
+  mcState.sigPhone = p ? (p.value || '').trim() : '';
+  mcUpdatePreview();
+}
+window.mcOnSigInput = mcOnSigInput;
+
+function mcUpdatePreview(){
+  var empty = document.getElementById('mcPreviewEmpty');
+  var card = document.getElementById('mcPreviewCard');
+  var body = document.getElementById('mcPreviewBody');
+  var notice = document.getElementById('mcPreviewNotice');
+  var sig = document.getElementById('mcPreviewSig');
+  var fire = document.getElementById('mcFireBtn');
+  var fab = document.getElementById('mcFab');
+  if(!empty || !card || !body || !notice || !sig || !fire || !fab) return;
+
+  var hasFile = !!(mcState.fileDataUrl || mcState.fileText);
+  var hasText = !!(mcState.text || '').trim();
+  var hasSig = mcState.sigOn && (mcState.sigName || mcState.sigPhone);
+  var active = hasFile || hasText || hasSig;
+
+  fire.disabled = !active;
+  fire.style.opacity = active ? '' : '0.4';
+  fire.style.cursor = active ? 'pointer' : 'not-allowed';
+  fab.disabled = !active;
+
+  if(!active){
+    empty.style.display = '';
+    card.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  card.style.display = 'flex';
+
+  body.classList.remove('with-image');
+  body.innerHTML = '';
+  if(mcState.fileType === 'image' && mcState.fileDataUrl){
+    body.classList.add('with-image');
+    var img = document.createElement('img');
+    img.src = mcState.fileDataUrl;
+    img.alt = '첨부 이미지';
+    body.appendChild(img);
+  } else if(mcState.fileType === 'text' || mcState.fileType === 'pdf'){
+    body.textContent = trimForCard(mcState.fileText || '');
+  } else if(hasText){
+    body.textContent = trimForCard((mcState.text || '').trim());
+  }
+
+  if(hasFile && (mcState.text || '').trim()){
+    notice.style.display = '';
+    notice.textContent = (mcState.text || '').trim();
+  } else {
+    notice.style.display = 'none';
+    notice.textContent = '';
+  }
+
+  if(hasSig){
+    sig.style.display = '';
+    var sigText = '';
+    if(mcState.sigName && mcState.sigPhone) sigText = mcState.sigName + ' | ' + mcState.sigPhone;
+    else if(mcState.sigName) sigText = mcState.sigName;
+    else sigText = mcState.sigPhone;
+    sig.textContent = sigText;
+  } else {
+    sig.style.display = 'none';
+    sig.textContent = '';
+  }
+}
+window.mcUpdatePreview = mcUpdatePreview;
+
+function mcFire(){ mcShowActionMenu(); }
+window.mcFire = mcFire;
+
+function mcShowActionMenu(){
+  var menu = document.getElementById('mcActionMenu');
+  if(!menu) return;
+  if(menu.classList.contains('show')) mcCloseActionMenu();
+  else menu.classList.add('show');
+}
+window.mcShowActionMenu = mcShowActionMenu;
+
+function mcCloseActionMenu(){
+  var menu = document.getElementById('mcActionMenu');
+  if(menu) menu.classList.remove('show');
+}
+window.mcCloseActionMenu = mcCloseActionMenu;
+
+function mcAction(action){
+  mcCloseActionMenu();
+  if(action === 'save') mcSaveToMySpace();
+  else if(action === 'download') mcDownload();
+  else if(action === 'copy') mcCopy();
+}
+window.mcAction = mcAction;
+
+function mcCaptureCard(){
+  var card = document.getElementById('mcPreviewCard');
+  if(!card) return Promise.reject(new Error('카드 미리보기 영역을 찾지 못했습니다.'));
+  return loadHtml2Canvas().then(function(){
+    return window.html2canvas(card, { backgroundColor:'#0B1020', scale:2, useCORS:true });
+  });
+}
+
+function mcDownload(){
+  mcCaptureCard().then(function(canvas){
+    var url = canvas.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'card_' + Date.now() + '.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }).catch(function(err){
+    console.error('[card] 다운로드 실패:', err);
+    alert('카드 이미지 변환 실패. 다시 시도해주세요.');
+  });
+}
+
+function mcCopy(){
+  mcCaptureCard().then(function(canvas){
+    canvas.toBlob(function(blob){
+      if(!blob){ alert('카드 변환 실패.'); return; }
+      if(navigator.clipboard && window.ClipboardItem){
+        navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function(){
+          alert('카드를 클립보드에 복사했습니다.');
+        }).catch(function(){
+          mcFallbackDownload(blob);
+        });
+      } else {
+        mcFallbackDownload(blob);
+      }
+    });
+  }).catch(function(err){
+    console.error('[card] 복사 실패:', err);
+    alert('카드 복사 실패. 다시 시도해주세요.');
+  });
+}
+
+function mcFallbackDownload(blob){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'card_' + Date.now() + '.png';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function mcSaveToMySpace(){
+  if(!window.currentUser){
+    alert('로그인 후 사용 가능합니다.');
+    return;
+  }
+  // 본 단계는 mock — 다음 단계 별 PR에서 Storage 업로드 + library INSERT 가동
+  alert('MY SPACE 저장은 다음 단계에서 가동됩니다. 현재는 다운로드 또는 복사로 저장해주세요.');
+}
+
+var _h2cLoading = null;
+function loadHtml2Canvas(){
+  if(window.html2canvas) return Promise.resolve(window.html2canvas);
+  if(_h2cLoading) return _h2cLoading;
+  _h2cLoading = new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = function(){ resolve(window.html2canvas); };
+    s.onerror = function(){ reject(new Error('html2canvas 로드 실패')); };
+    document.head.appendChild(s);
+  });
+  return _h2cLoading;
+}
+
+function mcEscapeHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
 /* PDF.js 동적 로드 (Mozilla 공식 CDN, 외부 API 호출 0) */
 var _pdfJsLoading = null;
