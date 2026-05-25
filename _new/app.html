@@ -411,22 +411,33 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-content-slot *{max-width:100%;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box}
 .qck-content-slot table{width:100%!important;table-layout:auto}
 
-/* Quick 도구 공통 레이아웃 (BMI / 보험연령 / 변환기 재사용, 2026-05-25) */
-.qck-tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:860px){.qck-tool-grid{grid-template-columns:1fr}}
-.qck-tool-pane{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
-.qck-tool-pane h4{font-size:0.85em;font-weight:800;color:var(--ts);margin:0;letter-spacing:-.02em;text-transform:uppercase}
-.qck-tool-input-row{display:flex;flex-direction:column;gap:6px}
-.qck-tool-input-row > label{font-size:0.78em;color:var(--ts);font-weight:600}
+/* Quick 도구 공통 레이아웃 (BMI / 보험연령 / 변환기 / 콜스크립트 / 카드만들기 — 디자인 v2 토큰, 2026-05-25) */
+.qck-tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:860px){.qck-tool-grid{grid-template-columns:1fr;gap:14px}}
+.qck-tool-pane{background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.18)}
+.qck-tool-pane h4{font-size:0.75rem;font-weight:700;color:var(--tf);margin:0 0 2px;letter-spacing:0.04em;text-transform:uppercase}
+.qck-tool-input-row{display:flex;flex-direction:column;gap:7px}
+.qck-tool-input-row > label{font-size:0.78em;color:var(--ts);font-weight:600;letter-spacing:-.01em}
 .qck-tool-input-row input[type="text"],
 .qck-tool-input-row input[type="number"],
-.qck-tool-input-row input[type="date"]{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:9px 11px;font-size:0.9em;color:var(--tp);outline:none;font-family:inherit}
-.qck-tool-input-row input:focus{border-color:var(--ac)}
-.qck-tool-radio{display:flex;gap:14px}
-.qck-tool-radio label{display:inline-flex;align-items:center;gap:6px;font-size:0.9em;color:var(--tp);cursor:pointer}
-.qck-tool-fire{margin-top:6px;padding:11px 16px;background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:9px;color:#fff;font-size:0.95em;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .15s,box-shadow .15s;font-family:inherit}
-.qck-tool-fire:hover{transform:translateY(-1px);box-shadow:0 8px 18px color-mix(in srgb,var(--ac) 30%,transparent)}
-.qck-tool-empty{font-size:0.85em;color:var(--ts);font-style:italic;text-align:center;padding:36px 12px;border:1px dashed var(--bd);border-radius:8px}
+.qck-tool-input-row input[type="date"]{background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;padding:11px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;transition:border-color .18s,background .18s,box-shadow .18s;line-height:1.4}
+.qck-tool-input-row input[type="text"]::placeholder,
+.qck-tool-input-row input[type="number"]::placeholder,
+.qck-tool-input-row input[type="date"]::placeholder{color:var(--tf)}
+.qck-tool-input-row input[type="text"]:hover,
+.qck-tool-input-row input[type="number"]:hover,
+.qck-tool-input-row input[type="date"]:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-tool-input-row input[type="text"]:focus,
+.qck-tool-input-row input[type="number"]:focus,
+.qck-tool-input-row input[type="date"]:focus{border-color:var(--ac);background:var(--bg);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
+.qck-tool-radio{display:flex;gap:8px;flex-wrap:wrap}
+.qck-tool-radio label{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;font-size:0.875rem;color:var(--tp);cursor:pointer;background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;transition:border-color .18s,background .18s;font-weight:500}
+.qck-tool-radio label:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-tool-radio label:has(input:checked){border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,var(--s2));color:var(--tp)}
+.qck-tool-radio input[type="radio"]{accent-color:var(--ac);margin:0;cursor:pointer}
+.qck-tool-fire{margin-top:8px;padding:13px 18px;background:linear-gradient(135deg,var(--ac),var(--ach));border:0.5px solid var(--ac);border-radius:11px;color:#fff;font-size:0.95em;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .15s,box-shadow .15s;font-family:inherit;box-shadow:0 4px 12px color-mix(in srgb,var(--ac) 25%,transparent)}
+.qck-tool-fire:hover{transform:translateY(-1px);box-shadow:0 8px 20px color-mix(in srgb,var(--ac) 35%,transparent)}
+.qck-tool-empty{font-size:0.875rem;color:var(--ts);font-style:italic;text-align:center;padding:48px 16px;border:0.5px dashed var(--bd);border-radius:12px;background:color-mix(in srgb,var(--ac) 3%,var(--s2))}
 .qck-tool-bmi-num{font-size:2.6em;font-weight:900;color:var(--tp);letter-spacing:-.04em;line-height:1}
 .qck-tool-bmi-tag{display:inline-block;padding:5px 12px;border-radius:6px;font-size:0.9em;font-weight:800;color:#fff;margin-top:10px}
 .qck-tool-bmi-msg{margin-top:12px;font-size:0.9em;color:var(--ts);line-height:1.5}
@@ -463,9 +474,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-loading{padding:40px;text-align:center;color:var(--tf);font-size:0.85em}
 .qck-bottom-bar{background:var(--s2);color:var(--ts);text-align:center;font-size:0.82em;font-weight:700;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-top:14px}
 
-/* 카드 만들기 도구 (2026-05-25 재구성 — Quick 좌/우 + 우하단 FAB 액션 메뉴) */
-.qck-mc-preview-wrap{position:relative;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:480px;gap:12px}
-.qck-mc-preview-empty{font-size:0.88em;color:var(--ts);font-style:italic;text-align:center;padding:80px 20px;line-height:1.7;max-width:280px}
+/* 카드 만들기 도구 (2026-05-25 재구성 — 디자인 v2 토큰 정합) */
+.qck-mc-preview-wrap{position:relative;background:var(--s2);border:0.5px solid var(--bd);border-radius:12px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:480px;gap:14px;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac) 3%,transparent)}
+.qck-mc-preview-empty{font-size:0.875rem;color:var(--ts);font-style:italic;text-align:center;padding:80px 20px;line-height:1.7;max-width:280px}
 .qck-mc-card{width:300px;max-width:100%;aspect-ratio:4/5;background:#0B1020;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;position:relative;overflow:hidden;border-left:5px solid var(--ac);box-shadow:0 8px 24px rgba(0,0,0,0.35);box-sizing:border-box}
 .qck-mc-card-body{flex:1;color:#E5E7EB;font-size:0.82em;line-height:1.55;white-space:pre-wrap;word-break:break-word;overflow:hidden;min-height:0}
 .qck-mc-card-body.with-image{display:flex;align-items:center;justify-content:center;padding:0}
@@ -482,24 +493,30 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .qck-mc-action-item:hover{background:var(--s2)}
 .qck-mc-action-item-title{font-weight:700;font-size:0.9em}
 .qck-mc-action-item-desc{font-size:0.76em;color:var(--ts)}
-.qck-mc-file-drop{border:2px dashed var(--bd);border-radius:8px;padding:18px 14px;text-align:center;color:var(--ts);cursor:pointer;font-size:0.85em;transition:border-color .15s,background .15s;line-height:1.5}
-.qck-mc-file-drop:hover,.qck-mc-file-drop.drag{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 6%,transparent)}
-.qck-mc-file-drop.has-file{border-style:solid;border-color:var(--ac);background:color-mix(in srgb,var(--ac) 4%,var(--bg));color:var(--tp)}
-.qck-mc-file-drop-icon{font-size:1.6em;margin-bottom:4px}
+.qck-mc-file-drop{border:1px dashed var(--bd);border-radius:10px;padding:22px 16px;text-align:center;color:var(--ts);cursor:pointer;font-size:0.875rem;transition:border-color .18s,background .18s;line-height:1.5;background:var(--s2)}
+.qck-mc-file-drop:hover,.qck-mc-file-drop.drag{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 6%,var(--s2));color:var(--tp)}
+.qck-mc-file-drop.has-file{border-style:solid;border-color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,var(--s2));color:var(--tp)}
+.qck-mc-file-drop-icon{font-size:1.6em;margin-bottom:6px}
 .qck-mc-file-info{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap}
-.qck-mc-file-clear{background:transparent;border:none;color:var(--ts);font-size:1em;cursor:pointer;padding:0 4px;font-family:inherit}
-.qck-mc-file-clear:hover{color:#E24B4A}
-.qck-mc-textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:10px 11px;font-size:0.88em;color:var(--tp);outline:none;font-family:inherit;resize:vertical;min-height:80px;box-sizing:border-box;line-height:1.5}
-.qck-mc-textarea:focus{border-color:var(--ac)}
-.qck-mc-toggle-row{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;user-select:none}
+.qck-mc-file-clear{background:transparent;border:none;color:var(--ts);font-size:1.1em;cursor:pointer;padding:0 6px;font-family:inherit;border-radius:6px;transition:color .15s,background .15s}
+.qck-mc-file-clear:hover{color:var(--err);background:color-mix(in srgb,var(--err) 10%,transparent)}
+.qck-mc-textarea{width:100%;background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;padding:12px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;resize:vertical;min-height:90px;box-sizing:border-box;line-height:1.55;transition:border-color .18s,background .18s,box-shadow .18s}
+.qck-mc-textarea::placeholder{color:var(--tf)}
+.qck-mc-textarea:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-mc-textarea:focus{border-color:var(--ac);background:var(--bg);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
+.qck-mc-toggle-row{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;user-select:none;background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;transition:border-color .18s,background .18s}
+.qck-mc-toggle-row:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-mc-toggle-row:has(input:checked){border-color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,var(--s2))}
 .qck-mc-toggle-row input[type="checkbox"]{margin:0;accent-color:var(--ac);width:16px;height:16px;cursor:pointer}
-.qck-mc-toggle-label{font-size:0.88em;color:var(--tp);font-weight:600}
-.qck-mc-sig-row{display:none;flex-direction:column;gap:8px;margin-top:4px}
+.qck-mc-toggle-label{font-size:0.875rem;color:var(--tp);font-weight:600}
+.qck-mc-sig-row{display:none;flex-direction:column;gap:10px;margin-top:6px}
 .qck-mc-sig-row.show{display:flex}
-.qck-mc-sig-row input{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:9px 11px;font-size:0.88em;color:var(--tp);outline:none;font-family:inherit}
-.qck-mc-sig-row input:focus{border-color:var(--ac)}
-.qck-mc-error{margin-top:10px;padding:9px 11px;background:rgba(226,75,74,0.10);border:1px solid #E24B4A;border-radius:7px;color:#E24B4A;font-size:0.8em;line-height:1.5}
-.qck-mc-loading{margin-top:10px;padding:9px 11px;background:rgba(99,102,241,0.10);border:1px solid var(--ac);border-radius:7px;color:var(--ac);font-size:0.82em;text-align:center}
+.qck-mc-sig-row input{background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;padding:11px 14px;font-size:0.875rem;color:var(--tp);outline:none;font-family:inherit;transition:border-color .18s,background .18s,box-shadow .18s}
+.qck-mc-sig-row input::placeholder{color:var(--tf)}
+.qck-mc-sig-row input:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
+.qck-mc-sig-row input:focus{border-color:var(--ac);background:var(--bg);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
+.qck-mc-error{margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--err) 10%,var(--s2));border:0.5px solid var(--err);border-radius:10px;color:var(--err);font-size:0.8em;line-height:1.5}
+.qck-mc-loading{margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--ac) 10%,var(--s2));border:0.5px solid var(--ac);border-radius:10px;color:var(--ac);font-size:0.82em;text-align:center}
 
 /* === MY SPACE 글쓰기 자리 === */
 .mys-write-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9999px;background:var(--ac);color:#fff;border:none;cursor:pointer;font-size:0.82em;font-weight:800;margin-left:auto;transition:transform .15s,background .15s}
