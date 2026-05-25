@@ -1477,17 +1477,177 @@ function openQuickToolV2(name){
 }
 window.openQuickToolV2 = openQuickToolV2;
 
-/* Quick 메뉴 "카드 만들기" 카드 = 공용 모듈 인라인 호출 (Phase B 5순위 PR G) */
+/* Quick 메뉴 "카드 만들기" 카드 = 파일 첨부 → 카드 변환 흐름 (2026-05-25 정정)
+ * 본질: 사용자가 본인 자료(이미지/텍스트/PDF) 첨부 → 카드 이미지 변환.
+ * 텍스트 직접 입력은 결제정보/연락처 ⚡ 딸깍 자리에 이미 존재. 본 자리는 첨부 흐름만. */
 function renderMakeCardTool(){
-  openMakeCardModal({
-    mode: 'inline',
-    targetEl: 'qck-content-slot',
-    text: '',
-    contentType: 'general',
-    title: '카드 만들기'
-  });
+  var slot = document.getElementById('qck-content-slot');
+  if(!slot) return;
+  slot.innerHTML =
+    '<div id="qck-card-upload-wrap" style="max-width:640px;margin:0 auto;">' +
+      '<div style="background:color-mix(in srgb,var(--ac) 8%,var(--bg));border:1px solid color-mix(in srgb,var(--ac) 30%,var(--bd));border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:0.85em;color:var(--tp);line-height:1.55;">' +
+        '<b style="color:var(--ac)">안내</b> · 이미지(PNG/JPG) · 텍스트(TXT) · PDF 파일을 첨부하면 카드 이미지로 변환됩니다. 파일 크기 5MB 한정.' +
+      '</div>' +
+      '<label id="qck-card-drop" for="qck-card-file" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:36px 20px;background:var(--s1);border:2px dashed var(--bd);border-radius:14px;cursor:pointer;transition:border-color 0.18s,background 0.18s;">' +
+        '<div style="font-size:2.2em;line-height:1;">📎</div>' +
+        '<div style="font-size:1em;font-weight:700;color:var(--tp);">파일 선택 또는 여기로 끌어다 놓기</div>' +
+        '<div style="font-size:0.82em;color:var(--ts);">PNG · JPG · TXT · PDF (최대 5MB)</div>' +
+        '<input type="file" id="qck-card-file" accept="image/png,image/jpeg,text/plain,application/pdf,.txt,.pdf" style="display:none;" onchange="handleCardFileUpload(event)">' +
+      '</label>' +
+      '<div id="qck-card-error" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(226,75,74,0.10);border:1px solid #E24B4A;border-radius:8px;color:#E24B4A;font-size:0.85em;"></div>' +
+      '<div id="qck-card-loading" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(99,102,241,0.10);border:1px solid var(--ac);border-radius:8px;color:var(--ac);font-size:0.85em;text-align:center;">파일 처리 중...</div>' +
+    '</div>';
+  // 드래그&드롭 가동
+  var drop = document.getElementById('qck-card-drop');
+  if(drop){
+    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.style.borderColor = 'var(--ac)'; drop.style.background = 'color-mix(in srgb,var(--ac) 6%,var(--s1))'; });
+    drop.addEventListener('dragleave', function(e){ e.preventDefault(); drop.style.borderColor = 'var(--bd)'; drop.style.background = 'var(--s1)'; });
+    drop.addEventListener('drop', function(e){
+      e.preventDefault();
+      drop.style.borderColor = 'var(--bd)';
+      drop.style.background = 'var(--s1)';
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if(files && files.length){ processCardFile(files[0]); }
+    });
+  }
 }
 window.renderMakeCardTool = renderMakeCardTool;
+
+/* 파일 입력 onchange 진입점 */
+function handleCardFileUpload(event){
+  var file = event && event.target && event.target.files && event.target.files[0];
+  if(!file) return;
+  processCardFile(file);
+}
+window.handleCardFileUpload = handleCardFileUpload;
+
+/* 파일 처리 본체 — 5MB 검증 + 유형 분기 (이미지/텍스트/PDF) */
+function processCardFile(file){
+  var errEl = document.getElementById('qck-card-error');
+  var loadEl = document.getElementById('qck-card-loading');
+  var showError = function(msg){
+    if(errEl){ errEl.style.display = ''; errEl.textContent = '⚠️ ' + msg; }
+    if(loadEl){ loadEl.style.display = 'none'; }
+  };
+  var showLoading = function(on){
+    if(loadEl){ loadEl.style.display = on ? '' : 'none'; }
+    if(errEl){ errEl.style.display = 'none'; }
+  };
+
+  // 5MB 검증
+  var MAX_SIZE = 5 * 1024 * 1024;
+  if(file.size > MAX_SIZE){
+    showError('파일 크기가 5MB를 초과합니다 (' + (file.size / 1024 / 1024).toFixed(2) + 'MB)');
+    return;
+  }
+
+  var name = (file.name || '').toLowerCase();
+  var type = file.type || '';
+
+  showLoading(true);
+
+  // 이미지 (PNG/JPG)
+  if(type === 'image/png' || type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(name)){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      showLoading(false);
+      openMakeCardModal({
+        mode: 'inline',
+        targetEl: 'qck-content-slot',
+        imageDataUrl: e.target.result,
+        contentType: 'general',
+        title: '카드 만들기 · 이미지'
+      });
+    };
+    reader.onerror = function(){ showError('이미지 읽기 실패. 다시 시도해주세요.'); };
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  // 텍스트 (TXT)
+  if(type === 'text/plain' || /\.txt$/i.test(name)){
+    var reader2 = new FileReader();
+    reader2.onload = function(e){
+      showLoading(false);
+      var text = (e.target.result || '').toString().trim();
+      if(!text){ showError('텍스트 파일이 비어 있습니다.'); return; }
+      openMakeCardModal({
+        mode: 'inline',
+        targetEl: 'qck-content-slot',
+        text: text,
+        contentType: 'general',
+        title: '카드 만들기 · 텍스트'
+      });
+    };
+    reader2.onerror = function(){ showError('텍스트 읽기 실패. 다시 시도해주세요.'); };
+    reader2.readAsText(file, 'UTF-8');
+    return;
+  }
+
+  // PDF
+  if(type === 'application/pdf' || /\.pdf$/i.test(name)){
+    extractPdfText(file).then(function(text){
+      showLoading(false);
+      var trimmed = (text || '').trim();
+      if(!trimmed){ showError('PDF에서 텍스트를 추출하지 못했습니다 (스캔 이미지 PDF는 지원하지 않습니다).'); return; }
+      openMakeCardModal({
+        mode: 'inline',
+        targetEl: 'qck-content-slot',
+        text: trimmed,
+        contentType: 'general',
+        title: '카드 만들기 · PDF'
+      });
+    }).catch(function(err){
+      console.error('[card] PDF 처리 실패:', err);
+      showError('PDF 처리 실패. 파일이 손상되었거나 보호된 PDF일 수 있습니다.');
+    });
+    return;
+  }
+
+  showError('지원하지 않는 파일 형식입니다. PNG · JPG · TXT · PDF 만 첨부 가능합니다.');
+}
+window.processCardFile = processCardFile;
+
+/* PDF.js 동적 로드 (Mozilla 공식 CDN, 외부 API 호출 0) */
+var _pdfJsLoading = null;
+function loadPdfJs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(_pdfJsLoading) return _pdfJsLoading;
+  _pdfJsLoading = new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = function(){
+      if(!window.pdfjsLib){ reject(new Error('pdfjsLib not found')); return; }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    s.onerror = function(){ reject(new Error('PDF.js CDN 로드 실패')); };
+    document.head.appendChild(s);
+  });
+  return _pdfJsLoading;
+}
+
+/* PDF 텍스트 추출 (첫 3페이지 한정) */
+function extractPdfText(file){
+  return loadPdfJs().then(function(pdfjs){
+    return file.arrayBuffer().then(function(buf){
+      return pdfjs.getDocument({data: buf}).promise;
+    }).then(function(pdf){
+      var maxPages = Math.min(pdf.numPages, 3);
+      var pagePromises = [];
+      for(var i=1; i<=maxPages; i++){
+        pagePromises.push(pdf.getPage(i).then(function(page){
+          return page.getTextContent().then(function(content){
+            return content.items.map(function(it){ return it.str; }).join(' ');
+          });
+        }));
+      }
+      return Promise.all(pagePromises).then(function(texts){
+        return texts.join('\n\n').replace(/\s+/g, ' ').trim();
+      });
+    });
+  });
+}
 
 /* === BMI 계산기 (Phase B 1순위) === */
 window._bmiResult = null;
@@ -2320,13 +2480,14 @@ function getDdalggakSignature(){
  */
 function openMakeCardModal(arg1, arg2){
   var opts;
-  if(arg1 && typeof arg1 === 'object' && !arg1.nodeType && (arg1.text !== undefined || arg1.source !== undefined || arg1.mode !== undefined)){
+  if(arg1 && typeof arg1 === 'object' && !arg1.nodeType && (arg1.text !== undefined || arg1.source !== undefined || arg1.mode !== undefined || arg1.imageDataUrl !== undefined)){
     opts = arg1;
   } else {
     opts = { source: arg1, contentType: arg2 };
   }
   var body = '';
   var sourceCard = null;
+  var imageDataUrl = opts.imageDataUrl || '';
   if(typeof opts.text === 'string'){
     body = opts.text.trim().replace(/\n{3,}/g, '\n\n');
   } else if(typeof opts.source === 'string'){
@@ -2342,17 +2503,17 @@ function openMakeCardModal(arg1, arg2){
     } else {
       body = (opts.source.innerText || opts.source.textContent || '').trim();
     }
-  } else if(opts.mode !== 'inline'){
+  } else if(opts.mode !== 'inline' && !imageDataUrl){
     alert('카드 본문을 찾지 못했습니다.');
     return;
   }
-  // 모달 = 본문 비어있으면 차단 / 인라인 = 빈 카드로 진입 가능 (팀장님 직접 입력)
-  if(opts.mode !== 'inline' && !body){
+  // 모달 = 본문 또는 이미지 둘 다 비어있으면 차단 / 인라인 = 빈 카드로 진입 가능
+  if(opts.mode !== 'inline' && !body && !imageDataUrl){
     alert('카드에 표시할 내용이 비어 있습니다.'); return;
   }
 
-  // 카드 본문 길이 제한 (4:5 카드 자체 표시 가능 자수)
-  body = trimForCard(body);
+  // 카드 본문 길이 제한 (4:5 카드 표시 가능 글자수)
+  if(body) body = trimForCard(body);
 
   var contentType = opts.contentType || 'general';
   var modalTitle = opts.title || '🪪 카드 만들기';
@@ -2361,9 +2522,9 @@ function openMakeCardModal(arg1, arg2){
   var accentColor = CARD_TYPE_COLORS[contentType] || CARD_TYPE_COLORS.general;
 
   if(opts.mode === 'inline'){
-    renderMakeCardInline(opts.targetEl || 'qck-content-slot', body, contentType, modalTitle, accentColor);
+    renderMakeCardInline(opts.targetEl || 'qck-content-slot', body, contentType, modalTitle, accentColor, imageDataUrl);
   } else {
-    renderMakeCardOverlay(body, contentType, modalTitle, accentColor);
+    renderMakeCardOverlay(body, contentType, modalTitle, accentColor, imageDataUrl);
   }
 }
 window.openMakeCardModal = openMakeCardModal;
@@ -2405,7 +2566,7 @@ function _buildMakeCardCoreHTML(accentColor){
 }
 
 /* 모달 가동 = overlay + mc-modal (결제정보/연락처 등 콘텐츠 → ⚡ 딸깍 호출 자리) */
-function renderMakeCardOverlay(body, contentType, modalTitle, accentColor){
+function renderMakeCardOverlay(body, contentType, modalTitle, accentColor, imageDataUrl){
   closeMakeCardModal();
   var overlay = document.createElement('div');
   overlay.id = 'mc-overlay';
@@ -2426,33 +2587,41 @@ function renderMakeCardOverlay(body, contentType, modalTitle, accentColor){
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
-  var preview = document.getElementById('mc-preview-body');
-  if(preview) preview.textContent = body;
+  _applyPreviewContent(body, imageDataUrl);
 }
 
 /* 인라인 가동 = qck-content-slot 안 (Quick 메뉴 "카드 만들기" 카드 진입 자리) */
-function renderMakeCardInline(targetElOrId, body, contentType, modalTitle, accentColor){
+function renderMakeCardInline(targetElOrId, body, contentType, modalTitle, accentColor, imageDataUrl){
   var slot = typeof targetElOrId === 'string' ? document.getElementById(targetElOrId) : targetElOrId;
   if(!slot){ alert('카드 만들기 영역을 찾지 못했습니다.'); return; }
-  // 빈 카드 진입 시 = 사용자 직접 텍스트 입력 가능 (contenteditable 가동)
-  var isEmpty = !body;
   slot.innerHTML =
-    (isEmpty ? '<div style="background:color-mix(in srgb,var(--ac) 8%,var(--bg));border:1px solid color-mix(in srgb,var(--ac) 30%,var(--bd));border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:0.78em;color:var(--tp);line-height:1.55;"><b style="color:var(--ac)">안내</b> · 우측 카드 영역을 직접 클릭해서 본문을 입력하세요. 안내문은 별 영역으로 추가 가능합니다.</div>' : '') +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+      '<div style="font-size:1em;font-weight:800;color:var(--tp);">' + modalTitle + '</div>' +
+      '<button onclick="renderMakeCardTool()" style="padding:6px 12px;background:transparent;border:1px solid var(--bd);border-radius:8px;color:var(--ts);font-size:0.8em;cursor:pointer;font-family:inherit;">← 다른 파일</button>' +
+    '</div>' +
     _buildMakeCardCoreHTML(accentColor) +
     '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--bd);">' +
       '<button onclick="finalizeMakeCard()" style="padding:10px 22px;background:var(--ac);border:none;border-radius:8px;color:#fff;font-size:0.9em;font-weight:800;cursor:pointer;font-family:inherit;">카드 만들기</button>' +
     '</div>';
+  _applyPreviewContent(body, imageDataUrl);
+}
+
+/* 카드 미리보기 본문 채움 (텍스트 또는 이미지) */
+function _applyPreviewContent(body, imageDataUrl){
   var preview = document.getElementById('mc-preview-body');
-  if(preview){
-    preview.textContent = body;
-    if(isEmpty){
-      preview.setAttribute('contenteditable', 'true');
-      preview.style.outline = 'none';
-      preview.style.minHeight = '120px';
-      preview.setAttribute('data-placeholder', '여기를 클릭해서 본문을 입력하세요...');
-      preview.style.color = '#9CA3AF';
-      preview.addEventListener('focus', function(){ if(preview.textContent === '') preview.style.color = '#E5E7EB'; });
-    }
+  if(!preview) return;
+  if(imageDataUrl){
+    preview.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = imageDataUrl;
+    img.alt = '첨부 이미지';
+    img.style.cssText = 'display:block;max-width:100%;max-height:100%;width:auto;height:auto;margin:0 auto;object-fit:contain;';
+    preview.appendChild(img);
+    preview.style.display = 'flex';
+    preview.style.alignItems = 'center';
+    preview.style.justifyContent = 'center';
+  } else {
+    preview.textContent = body || '';
   }
 }
 
