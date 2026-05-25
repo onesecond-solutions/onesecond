@@ -296,40 +296,25 @@ body {
 }
 .lp-cta-secondary:hover { color: #fff; text-decoration: underline; }
 
-/* 딸깍 버튼 (앙증맞은 축소 자료 — team_chat.html .fab 디자인 축소) */
+/* 딸깍 버튼 (6번 디자인 정합 — Quick 결제정보/연락처 카드 우상단 자료) */
 .lp-ddak {
   position: absolute;
   bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #6366F1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  background: transparent;
+  color: #6366F1;
+  font-size: 20px;
+  padding: 8px 12px;
   border: none;
+  cursor: pointer;
   line-height: 1;
   font-family: inherit;
   animation: lp-bounce 2s ease-in-out infinite;
-  transition: transform .15s ease, box-shadow .15s ease;
+  transition: transform .15s ease, opacity .15s ease;
 }
 .lp-ddak:hover {
-  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
-}
-.lp-ddak .ddak-ic {
-  font-size: 14px;
-}
-.lp-ddak .ddak-lbl {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  opacity: 0.75;
 }
 @keyframes lp-bounce {
   0%, 100% { transform: translateX(-50%) translateY(0); }
@@ -518,7 +503,7 @@ body {
     </h1>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(2)">
-    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
+    ⚡
   </button>
 </section>
 
@@ -532,7 +517,7 @@ body {
     </h2>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(3)">
-    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
+    ⚡
   </button>
 </section>
 
@@ -559,7 +544,7 @@ body {
     </div>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(4)">
-    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
+    ⚡
   </button>
 </section>
 
@@ -575,7 +560,7 @@ body {
     </p>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(5)">
-    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
+    ⚡
   </button>
 </section>
 
