@@ -158,60 +158,61 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 
     <div class="price-grid">
 
-      <!-- 무료 플랜 -->
-      <div class="price-card">
-        <div class="price-badge">무료 플랜</div>
-        <div class="price-amount">0<span>원 / 월</span></div>
-        <div class="price-trial">가입 즉시 영구 무료</div>
-        <div class="price-role-note">매니저(실장) · 지점장(센터장)은<br>무료 플랜에서도 글쓰기 가능</div>
+      <!-- FREE -->
+      <div class="price-card" data-plan-id="free">
+        <div class="price-badge">FREE</div>
+        <div class="price-amount">0<span>원</span></div>
+        <div class="price-trial">영구 무료 · 정보 제공</div>
+        <div class="price-role-note">교육 자료·정보는 모든 사용자에게<br>동일하게 무료로 제공됩니다.</div>
         <ul class="price-features">
-          <li>스크립트 전체 열람</li>
-          <li>게시판 전체 열람</li>
+          <li>교육 자료 전체 무료 열람</li>
+          <li>모든 정보 콘텐츠 접근</li>
+          <li>스크립트·게시판 열람</li>
           <li>모바일 최적화</li>
-          <li class="disabled">스크립트 작성 (설계사 제한)</li>
-          <li class="disabled">게시판 질문 작성 (설계사 제한)</li>
         </ul>
-        <button class="price-cta" id="free-cta" onclick="window.location.href='home.html'">홈으로 돌아가기</button>
+        <button class="price-cta" id="free-cta" onclick="handleFreeCta()">시작하기</button>
       </div>
 
-      <!-- 유료 플랜 -->
-      <div class="price-card featured">
-        <div class="price-badge hot">유료 플랜 · 추천</div>
+      <!-- PLUS (featured) -->
+      <div class="price-card featured" data-plan-id="plus">
+        <div class="price-badge hot">PLUS · 추천</div>
         <div class="price-amount">9,900<span>원 / 월</span></div>
-        <div class="price-trial">첫 30일 완전 무료 체험</div>
-        <div class="price-role-note">설계사·팀장도 글쓰기까지<br>모든 기능을 사용할 수 있어요</div>
+        <div class="price-trial">FREE 전부 포함 + 생산성 기능</div>
+        <div class="price-role-note">카드 만들기·문서 변환·녹취 변환 등<br>실무 생산성 도구를 제공합니다.</div>
         <ul class="price-features">
-          <li>스크립트 전체 열람 + 작성</li>
-          <li>게시판 질문 · 답변 작성</li>
-          <li>신규 스크립트 · 기능 우선 업데이트</li>
-          <li>AI 반론 대응 멘트 생성</li>
+          <li><strong>FREE의 모든 기능</strong></li>
+          <li>자료 카드 만들기</li>
+          <li>문서 변환기 (이미지·PDF)</li>
+          <li>녹취 변환기</li>
           <li>언제든 해지 가능</li>
         </ul>
-        <button class="price-cta" id="pro-cta" onclick="handleProCta()">30일 무료로 시작하기</button>
+        <button class="price-cta" id="plus-cta" onclick="handlePaidCta('plus')">PLUS 시작하기</button>
       </div>
 
-      <!-- B2B 제휴 -->
-      <div class="price-card b2b">
-        <div class="price-badge b2b-badge">B2B 제휴</div>
-        <div class="price-amount b2b-amount">맞춤 협의</div>
-        <div class="price-trial b2b-trial">보험사 · GA · 교육기관 전용</div>
-        <div class="price-role-note b2b-note">규모와 목적에 맞는<br>전용 플랜으로 협의드립니다</div>
-        <ul class="price-features b2b-features">
-          <li>조직 전용 게시판 운영</li>
-          <li>데이터 자산화 지원</li>
-          <li>파일럿 1~3개월 무료 제공</li>
-          <li>맞춤 기능 협의 가능</li>
+      <!-- PRO -->
+      <div class="price-card" data-plan-id="pro">
+        <div class="price-badge">PRO</div>
+        <div class="price-amount">19,900<span>원 / 월</span></div>
+        <div class="price-trial">PLUS 전부 포함 + CRM</div>
+        <div class="price-role-note">고객 관리(CRM)·이력 관리 기능을<br>추가로 제공합니다 (향후 기획 중).</div>
+        <ul class="price-features">
+          <li><strong>PLUS의 모든 기능</strong></li>
+          <li>고객 관리 (CRM)</li>
+          <li>이력 관리</li>
           <li>전담 운영 지원</li>
+          <li>언제든 해지 가능</li>
         </ul>
-        <a class="price-cta b2b-cta" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 제휴 문의하기</a>
+        <button class="price-cta" id="pro-cta" onclick="handlePaidCta('pro')">PRO 시작하기</button>
       </div>
 
     </div>
 
     <div class="pricing-note">
+      · 표시 금액은 부가가치세(VAT) 포함 금액입니다<br>
+      · 정보(교육 자료)는 세 단계 모두 동일하게 무료로 제공됩니다 — 정보를 잘라 팔지 않습니다<br>
+      · 누적형: 윗 단계는 아랫 단계의 모든 기능을 포함합니다<br>
       · 유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다<br>
-      · 매니저(실장) · 지점장은 무료 플랜에서도 영구 무료로 모든 기능을 이용할 수 있습니다<br>
-      · B2B 제휴 문의는 카카오 오픈채팅으로 연락 주시면 빠르게 안내드립니다
+      · 자세한 환불 기준은 <a href="/refund.html" style="color:var(--accent);font-weight:700;">환불·취소 정책</a>을 참고해 주세요
     </div>
   </div>
 </div>
@@ -308,13 +309,39 @@ function renderSidebarUpgrade(plan, role) {
   if (isFreeRole || plan === 'pro') {
     wrap.innerHTML = `<div class="pro-badge">✅ PRO 이용 중</div>`;
   } else {
-    wrap.innerHTML = `<button class="upgrade-btn" onclick="document.querySelector('.price-card.featured').scrollIntoView({behavior:'smooth'})">⚡ PRO로 업그레이드</button>`;
+    wrap.innerHTML = `<button class="upgrade-btn" onclick="document.querySelector('.price-card.featured').scrollIntoView({behavior:'smooth'})">⚡ PLUS로 업그레이드</button>`;
   }
 }
 
-function handleProCta() {
-  alert('유료 플랜 결제 기능은 곧 오픈됩니다!\n지금은 카카오 오픈채팅으로 문의해 주세요 😊');
+/* ─────────────────────────────────────────────────────────────
+   요금제 데이터 구조 — 단일 진실의 원천
+   약관·환불정책·결제 게이트웨이 모두 본 구조의 값과 일치해야 함.
+   가격 변경 시 본 자료 1곳만 수정 (하드코딩 산개 금지).
+   ───────────────────────────────────────────────────────────── */
+window.OS_PLANS = {
+  free: { id: 'free', name: 'FREE',  price: 0,      currency: 'KRW', period: 'month' },
+  plus: { id: 'plus', name: 'PLUS',  price: 9900,   currency: 'KRW', period: 'month' },
+  pro:  { id: 'pro',  name: 'PRO',   price: 19900,  currency: 'KRW', period: 'month' }
+};
+
+function handleFreeCta() {
+  /* FREE = 기존 회원가입 흐름. 로그인 = 홈 / 비로그인 = 가입 모달 */
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if (hasToken) { window.location.href = 'home.html'; return; }
+  window.location.href = '/index.html?auth=signup';
 }
+
+function handlePaidCta(planId) {
+  /* PLUS / PRO = 결제 게이트웨이 진입 지점.
+     실결제(포트원 KCP) 연동 = 별 트랙. 본 함수 = 임시 안내.
+     향후 포트원 연동 시 본 함수 안에서 window.IMP.request_pay(...) 호출. */
+  var plan = window.OS_PLANS[planId];
+  if (!plan) { alert('알 수 없는 플랜입니다.'); return; }
+  alert(plan.name + ' (' + plan.price.toLocaleString() + '원/월) 결제 기능은 곧 오픈됩니다.\n지금은 카카오 오픈채팅으로 문의해 주세요 😊');
+}
+
+/* 하위 호환: 옛 handleProCta 호출 자리 = PLUS 결제로 연결 (featured = PLUS) */
+function handleProCta() { handlePaidCta('plus'); }
 
 function toggleUserDropdown(event) {
   if (event) event.stopPropagation();
