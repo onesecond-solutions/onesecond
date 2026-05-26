@@ -136,4 +136,16 @@
     check: checkAndGuard,
     clear: clearAllAuthStorage
   };
+
+  /* ─────────────────────────────────────────────────────────────
+     모달 안 차단 함수 (js/auth-modal.js 자체 자체 자체 호출용)
+     · doLogin / doSubmit / signInWithGoogle → osShowMaintenance() 호출
+     · landing.html / index.html / 정책 페이지 모두 자체 자체 자체 정합
+     ───────────────────────────────────────────────────────────── */
+  window.OS_ALLOWED_EMAILS = ALLOWED_EMAILS;
+  window.osIsAllowedEmail = isAllowedEmail;
+  window.osShowMaintenance = function () {
+    if (!MAINTENANCE_MODE) return;
+    alert('현재 원세컨드는 4팀 비공개 시범 운영 중입니다.\n공식 출시 후 가입·로그인 가능합니다.');
+  };
 })();
