@@ -19,7 +19,7 @@
 <meta property="og:locale" content="ko_KR" />
 
 <link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#A0522D" />
+<meta name="theme-color" content="#6366F1" />
 <link rel="apple-touch-icon" href="/assets/icon-192.png" />
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
@@ -27,18 +27,19 @@
 
 <style>
 :root {
-  --color-brand: #A0522D;
-  --color-brand-light: #C4733A;
-  --color-accent: #D4845A;
-  --color-bg: #FAFAF7;
-  --color-surface: #FFFFFF;
-  --color-text-primary: #1F2937;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary: #9CA3AF;
-  --color-border: #E5E7EB;
-  --gradient-brand: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
-  --shadow-soft: 0 8px 32px rgba(160, 82, 45, 0.12);
-  --shadow-strong: 0 16px 48px rgba(160, 82, 45, 0.20);
+  /* v2 인디고 톤 — tokens-v2.css 정합 (2026-05-26) */
+  --color-brand: #6366F1;        /* v2 --ac (인디고) */
+  --color-brand-light: #7C7FF2;  /* v2 --ach */
+  --color-accent: #6366F1;       /* v2 --ac */
+  --color-bg: #FBFBFC;           /* v2 light --bg */
+  --color-surface: #FFFFFF;      /* v2 light --s1 */
+  --color-text-primary: #18181B;   /* v2 light --tp */
+  --color-text-secondary: #52525B; /* v2 light --ts */
+  --color-text-tertiary: #A1A1AA;  /* v2 light --tf */
+  --color-border: #E4E4E7;       /* v2 light --bd */
+  --gradient-brand: linear-gradient(135deg, #6366F1 0%, #7C7FF2 100%);
+  --shadow-soft: 0 8px 32px rgba(99, 102, 241, 0.12);
+  --shadow-strong: 0 16px 48px rgba(99, 102, 241, 0.20);
   --font-sans: 'Pretendard', 'DM Sans', 'Noto Sans KR', sans-serif;
   --radius-sm: 8px;
   --radius-md: 16px;
@@ -118,10 +119,10 @@ body {
   color: #fff;
   text-decoration: none;
   padding: 10px 22px;
-  background: linear-gradient(135deg, #A0522D 0%, #C4733A 100%);
+  background: var(--gradient-brand);
   border-radius: var(--radius-pill);
   letter-spacing: -0.01em;
-  box-shadow: 0 4px 12px rgba(160, 82, 45, 0.24);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.24);
   transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
   min-height: 40px;
   display: inline-flex;
@@ -129,9 +130,9 @@ body {
 }
 .lp-signup-link:hover {
   color: #fff;
-  background: linear-gradient(135deg, #8B4423 0%, #A0522D 100%);
+  background: linear-gradient(135deg, #4F52D9 0%, #6366F1 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(160, 82, 45, 0.32);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.32);
 }
 .lp-signup-link:active { transform: translateY(0); }
 @media (max-width: 640px) {
@@ -431,7 +432,7 @@ body {
   line-height: 1.5;
 }
 .footer-link:hover {
-  color: #DE9B66;
+  color: #7C7FF2;
 }
 .footer-biz {
   font-size: 11px;
@@ -455,7 +456,7 @@ body {
   transition: color 0.18s ease;
 }
 .footer-biz a:hover {
-  color: #DE9B66;
+  color: #7C7FF2;
 }
 .footer-bottom {
   border-top: 1px solid #1F2937;
