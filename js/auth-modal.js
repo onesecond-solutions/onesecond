@@ -474,11 +474,37 @@ async function verifyOtp() {
     var data = await res.json();
 
     if (res.ok && data.access_token) {
+      /* 2026-05-27: public.users role/name/plan을 os_user에 박아 넣음.
+         maintenance-guard.js (head 최상단 가동, AppState 박히기 전)가
+         localStorage os_user.role === 'admin' 만으로 admin 통과 판정.
+         fetch 실패해도 인증 흐름은 중단 X (auth.js loadUser가 후속 갱신). */
+      var userObj = data.user || {};
+      try {
+        var profRes = await fetch(
+          SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userObj.id)
+          + '&select=role,name,plan',
+          {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + data.access_token
+            }
+          }
+        );
+        if (profRes.ok) {
+          var rows = await profRes.json();
+          if (rows && rows[0]) {
+            userObj.role = rows[0].role || '';
+            userObj.name = rows[0].name || '';
+            userObj.plan = rows[0].plan || 'free';
+          }
+        }
+      } catch (_e) { /* role 박지 못해도 인증은 계속 진행 */ }
+
       localStorage.setItem('os_token', data.access_token);
       localStorage.setItem('os_refresh_token', data.refresh_token);
-      localStorage.setItem('os_user', JSON.stringify(data.user));
+      localStorage.setItem('os_user', JSON.stringify(userObj));
       sessionStorage.setItem('os_token', data.access_token);
-      sessionStorage.setItem('os_user', JSON.stringify(data.user));
+      sessionStorage.setItem('os_user', JSON.stringify(userObj));
 
       _resetBtn();
 
