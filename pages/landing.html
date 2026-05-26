@@ -40,6 +40,7 @@
   --color-text-secondary: #52525B; /* v2 light --ts */
   --color-text-tertiary: #A1A1AA;  /* v2 light --tf */
   --color-border: #E4E4E7;       /* v2 light --bd */
+  --color-surface-2: #F4F4F5;    /* v2 light --s2 (로그인 박스 자체 자체) */
   --gradient-brand: linear-gradient(135deg, #6366F1 0%, #7C7FF2 100%);
   --shadow-soft: 0 8px 32px rgba(99, 102, 241, 0.12);
   --shadow-strong: 0 16px 48px rgba(99, 102, 241, 0.20);
@@ -294,10 +295,15 @@ body {
 }
 .lp-cta-secondary {
   display: block;
-  margin-top: 24px;
+  margin: 24px auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   font-size: 14px;
+  font-family: inherit;
   color: rgba(255,255,255,0.78);
   text-decoration: none;
+  cursor: pointer;
 }
 .lp-cta-secondary:hover { color: #fff; text-decoration: underline; }
 
