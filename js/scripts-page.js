@@ -53,7 +53,7 @@ function buttonLabel(name) {
 }
 
 function goToMyScriptWriter() {
-  window.location.href = 'myspace.html';
+  window.location.href = '/pages/myspace.html';
 }
 
 function selectMain(name) {
@@ -271,14 +271,14 @@ function handleTokenExpired() {
   localStorage.removeItem('os_user');
   sessionStorage.removeItem('os_token');
   sessionStorage.removeItem('os_user');
-  window.location.href = 'login.html';
+  window.location.href = '/login.html';
 }
 
 
 async function loadUserInfo() {
   const token = getToken();
   const authUser = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
-  if (!token || !authUser.id) { window.location.href = 'login.html'; return; }
+  if (!token || !authUser.id) { window.location.href = '/login.html'; return; }
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${authUser.id}&select=name,role,phone,email,company,branch,team`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
@@ -418,7 +418,7 @@ function doLogout() {
   localStorage.removeItem('os_user');
   sessionStorage.removeItem('os_token');
   sessionStorage.removeItem('os_user');
-  window.location.href = 'index.html';
+  window.location.href = '/index.html';
 }
 
 // ── 스크립트 클릭 로그 ──

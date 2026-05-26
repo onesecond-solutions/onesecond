@@ -88,7 +88,7 @@
     localStorage.removeItem('os_user');
     sessionStorage.removeItem('os_token');
     sessionStorage.removeItem('os_user');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
   }
 
   // ── 5. 인증 포함 fetch (핵심 API) ────────────────────────────────────────
