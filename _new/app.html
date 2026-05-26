@@ -870,7 +870,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
           카드 클릭 시 script_text 노출
      ───────────────────────────────────────────── -->
      <div class="auth-overlay" id="scriptDetailOverlay" hidden onclick="if(event.target===this)closeScriptDetail()">
-       <div class="auth-modal" role="dialog" aria-modal="true" style="max-width:720px;">
+       <!-- 2026-05-27 핫픽스: display:flex + max-height 자료 필수.
+            옛 .auth-modal = display:block + overflow:hidden = 자식 flex:1 + overflow-y:auto 가동 X = 본문 스크롤 격차. -->
+       <div class="auth-modal" role="dialog" aria-modal="true" style="max-width:720px; max-height:90vh; display:flex; flex-direction:column;">
          <div class="auth-page-header">
            <button class="auth-page-close" type="button" onclick="closeScriptDetail()" aria-label="닫기">✕</button>
          </div>
