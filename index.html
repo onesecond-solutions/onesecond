@@ -596,39 +596,9 @@ body {
 </head>
 <body>
 
-<!-- 2026-05-23: 공사중 overlay + 3 이메일 화이트리스트 (bylts0428@gmail.com / bylts@naver.com / bylts@kakao.com) -->
-<div id="maintenance-overlay" style="display:none;position:fixed;inset:0;z-index:2147483647;background:#0B0C0E;color:#F4F4F5;font-family:'Pretendard',sans-serif;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;">
-  <div style="font-size:64px;margin-bottom:24px;">🛠️</div>
-  <h1 style="font-size:2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.02em;">사이트 점검 중</h1>
-  <p style="font-size:1rem;color:#A1A1AA;line-height:1.6;max-width:480px;margin-bottom:8px;">더 나은 서비스를 위해 잠시 점검 중입니다.<br>곧 돌아오겠습니다.</p>
-  <p style="font-size:0.875rem;color:#6B6D72;margin-top:24px;">— 원세컨드 운영팀 —</p>
-</div>
-<script>
-/* 공통: 3 이메일 화이트리스트 + overlay 띄움 함수 (doLogin/doSubmit/signInWithGoogle에서 사용) */
-window.OS_ALLOWED_EMAILS = ['bylts0428@gmail.com', 'bylts@naver.com', 'bylts@kakao.com'];
-window.osIsAllowedEmail = function(email) {
-  return window.OS_ALLOWED_EMAILS.indexOf((email || '').toLowerCase().trim()) !== -1;
-};
-window.osShowMaintenance = function() {
-  /* 인증 모달 자리(auth-overlay) 닫기 — z-index 동일 시 DOM 뒤 자리가 위 = 모달 잔존 격차 방지 */
-  var authOverlay = document.getElementById('authOverlay');
-  if (authOverlay) authOverlay.setAttribute('hidden', '');
-  var ov = document.getElementById('maintenance-overlay');
-  if (ov) ov.style.display = 'flex';
-  document.documentElement.style.overflow = 'hidden';
-};
-(function(){
-  var params = new URLSearchParams(window.location.search);
-  var dev = params.get('dev') === '1';
-  var auth = params.get('auth');
-  var inAuthFlow = auth === 'login' || auth === 'signup';
-  /* ?dev=1 우회 또는 인증 흐름(?auth=login/signup) 진입 시 overlay 안 띄움.
-     인증 흐름에서는 doLogin/doSubmit가 이메일 검증 후 차단. */
-  if (!dev && !inAuthFlow) {
-    window.osShowMaintenance();
-  }
-})();
-</script>
+<!-- 2026-05-27: 자체 overlay + 이메일 화이트리스트 통째 폐지.
+     공사중 차단 흐름 = js/maintenance-guard.js 단일 진실 (head 최상단 로드).
+     비로그인 + 일반 로그인 사용자 모두 maintenance.html redirect. admin은 ?dev=1 진입. -->
 
 <header class="topbar">
   <div class="topbar-inner">

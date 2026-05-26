@@ -1,67 +1,69 @@
 /**
  * js/maintenance-guard.js
- * 유지보수 모드 가드 (2026-05-26 신설)
+ * 유지보수 모드 가드 (2026-05-27 통째 재작성 — 이메일 화이트리스트 폐지)
  *
  * 본질:
- *   - MAINTENANCE_MODE = true 자료 = 화이트리스트 외 모든 로그인 사용자 차단
- *   - 화이트리스트 X = 모든 인증 자료 (localStorage / sessionStorage / sb-* / remember-me) 제거 + /maintenance.html redirect
- *   - 토큰 0건 = 비로그인 = 그대로 통과 (공개 페이지 정상 가동)
- *   - 화이트리스트 O = 통과
+ *   - MAINTENANCE_MODE = true 자료 = role === 'admin' 외 모든 진입 차단 (비로그인 포함)
+ *   - 판정 단일 기준 = public.users.role === 'admin' (시스템 권한)
+ *   - 이메일 화이트리스트 / 테스트 계정 예외 흐름 통째 폐지
+ *   - PG 심사 5 페이지 (pricing / about / terms / privacy / refund) = 공개 유지
+ *
+ * 흐름:
+ *   1. ?dev=1 자리 = 가드 통과 (admin 본인 진입 자리)
+ *   2. PUBLIC_PATHS = 가드 통과 (PG 심사용 + maintenance 본인)
+ *   3. role === 'admin' = 통과 (localStorage os_user 안 role)
+ *   4. 그 외 = 모든 인증 자료 제거 후 /maintenance.html redirect
  *
  * 적용:
- *   - 모든 진입 .html `<head>` 최상단에 `<script src="/js/maintenance-guard.js"></script>` 1줄 추가
- *   - maintenance.html 자체에는 적용 X (직접 접근 가능)
+ *   - 모든 진입 .html `<head>` 최상단에 `<script src="/js/maintenance-guard.js"></script>` 1줄
+ *   - maintenance.html 자체에는 적용 X (loop 방지)
  *
  * 해제:
- *   - 본 파일 line 24 `MAINTENANCE_MODE = false` 변경 + redeploy
- *   - 해제 즉시 정상 가동 (회원 데이터 / DB 변경 0건)
+ *   - 본 파일 line 28 `MAINTENANCE_MODE = false` 변경 + 재배포
  *
- * 우회 (본인 검수용):
- *   - URL에 `?dev=1` 자료 = 가드 우회 (가드 통과)
+ * 우회 (admin 본인 진입 자리):
+ *   - URL에 `?dev=1` 추가 = 가드 통과
  *
  * 격차 차단:
  *   - bfcache (뒤로가기) 재진입 시 = pageshow 이벤트 = 가드 재가동
- *   - 화이트리스트 X 사용자 = 다음 페이지 진입 즉시 signOut + redirect
+ *   - 비로그인 사용자도 차단 (옛 흐름과 분리)
  */
 (function () {
   'use strict';
 
   var MAINTENANCE_MODE = true;
-  var ALLOWED_EMAILS = [
-    'bylts0428@gmail.com',
-    'bylts@naver.com',
-    'bylts@kakao.com'
-  ];
   var MAINTENANCE_PAGE = '/maintenance.html';
 
-  function isAllowedEmail(email) {
-    return ALLOWED_EMAILS.indexOf((email || '').toLowerCase().trim()) !== -1;
+  /* PG 심사용 공개 페이지 + maintenance 본인 = 가드 통과 */
+  var PUBLIC_PATHS = [
+    '/maintenance.html',
+    '/pricing.html',
+    '/about.html',
+    '/terms.html',
+    '/privacy.html',
+    '/refund.html'
+  ];
+
+  function isPublicPath(pathname) {
+    var p = (pathname || '').toLowerCase();
+    for (var i = 0; i < PUBLIC_PATHS.length; i++) {
+      if (p === PUBLIC_PATHS[i] || p === PUBLIC_PATHS[i].toLowerCase()) return true;
+    }
+    return false;
   }
 
-  function getCurrentEmail() {
+  function getCurrentRole() {
     try {
       var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
       var u = JSON.parse(raw);
-      return u.email || (u.user && u.user.email) || '';
+      return (u.role || (u.user && u.user.role) || '').toString();
     } catch (e) {
       return '';
     }
   }
 
-  function hasAnyToken() {
-    if (localStorage.getItem('os_token') || sessionStorage.getItem('os_token')) return true;
-    if (localStorage.getItem('os_user') || sessionStorage.getItem('os_user')) return true;
-    try {
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
-        if (k && (k.indexOf('sb-') === 0 || k.indexOf('supabase') !== -1)) return true;
-      }
-      for (var j = 0; j < sessionStorage.length; j++) {
-        var k2 = sessionStorage.key(j);
-        if (k2 && (k2.indexOf('sb-') === 0 || k2.indexOf('supabase') !== -1)) return true;
-      }
-    } catch (e) {}
-    return false;
+  function isAdminRole() {
+    return getCurrentRole() === 'admin';
   }
 
   function clearAllAuthStorage() {
@@ -108,18 +110,19 @@
   function checkAndGuard() {
     if (!MAINTENANCE_MODE) return;
 
+    /* 1. ?dev=1 자리 = admin 본인 진입 자리 */
     try {
       var params = new URLSearchParams(window.location.search);
       if (params.get('dev') === '1') return;
     } catch (e) {}
 
-    if (window.location.pathname.indexOf('/maintenance.html') !== -1) return;
+    /* 2. PG 심사용 공개 페이지 + maintenance 본인 = 통과 */
+    if (isPublicPath(window.location.pathname)) return;
 
-    if (!hasAnyToken()) return;
+    /* 3. role === 'admin' = 통과 */
+    if (isAdminRole()) return;
 
-    var email = getCurrentEmail();
-    if (isAllowedEmail(email)) return;
-
+    /* 4. 그 외 = 모든 인증 자료 제거 후 maintenance.html redirect */
     clearAllAuthStorage();
     window.location.replace(MAINTENANCE_PAGE);
   }
@@ -132,20 +135,19 @@
 
   window.OS_MAINTENANCE = {
     mode: MAINTENANCE_MODE,
-    allowed: ALLOWED_EMAILS,
+    publicPaths: PUBLIC_PATHS,
     check: checkAndGuard,
     clear: clearAllAuthStorage
   };
 
   /* ─────────────────────────────────────────────────────────────
-     모달 안 차단 함수 (js/auth-modal.js 자체 자체 자체 호출용)
-     · doLogin / doSubmit / signInWithGoogle → osShowMaintenance() 호출
-     · landing.html / index.html / 정책 페이지 모두 자체 자체 자체 정합
+     모달 안 차단 함수 (auth-modal.js doLogin / doSubmit / signInWithGoogle 호출)
+     · 로그인 / 가입 / Google 시도 시 즉시 maintenance.html redirect
+     · 이메일 검사 흐름 폐지 — 모든 진입은 본 함수가 차단
      ───────────────────────────────────────────────────────────── */
-  window.OS_ALLOWED_EMAILS = ALLOWED_EMAILS;
-  window.osIsAllowedEmail = isAllowedEmail;
   window.osShowMaintenance = function () {
     if (!MAINTENANCE_MODE) return;
-    alert('현재 원세컨드는 4팀 비공개 시범 운영 중입니다.\n공식 출시 후 가입·로그인 가능합니다.');
+    try { clearAllAuthStorage(); } catch (e) {}
+    window.location.replace(MAINTENANCE_PAGE);
   };
 })();

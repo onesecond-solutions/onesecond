@@ -378,11 +378,15 @@ async function doLogin() {
 
   var email = document.getElementById('f-email-login').value.trim();
 
-  /* 2026-05-23: 3 이메일 화이트리스트 — 외 이메일 로그인 시도 → 공사중 차단 */
-  if (!window.osIsAllowedEmail(email)) {
-    _resetBtn();
-    window.osShowMaintenance();
-    return;
+  /* 2026-05-27: 이메일 화이트리스트 폐지 — 공사중 모드 ON 시 로그인 시도 무조건 차단.
+     admin은 ?dev=1 진입 후 정상 흐름으로 로그인. (Google / doSubmit과 동일 흐름) */
+  if (window.OS_MAINTENANCE && window.OS_MAINTENANCE.mode === true) {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('dev') !== '1') {
+      _resetBtn();
+      window.osShowMaintenance();
+      return;
+    }
   }
 
   try {
@@ -470,11 +474,37 @@ async function verifyOtp() {
     var data = await res.json();
 
     if (res.ok && data.access_token) {
+      /* 2026-05-27: public.users role/name/plan을 os_user에 박아 넣음.
+         maintenance-guard.js (head 최상단 가동, AppState 박히기 전)가
+         localStorage os_user.role === 'admin' 만으로 admin 통과 판정.
+         fetch 실패해도 인증 흐름은 중단 X (auth.js loadUser가 후속 갱신). */
+      var userObj = data.user || {};
+      try {
+        var profRes = await fetch(
+          SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userObj.id)
+          + '&select=role,name,plan',
+          {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + data.access_token
+            }
+          }
+        );
+        if (profRes.ok) {
+          var rows = await profRes.json();
+          if (rows && rows[0]) {
+            userObj.role = rows[0].role || '';
+            userObj.name = rows[0].name || '';
+            userObj.plan = rows[0].plan || 'free';
+          }
+        }
+      } catch (_e) { /* role 박지 못해도 인증은 계속 진행 */ }
+
       localStorage.setItem('os_token', data.access_token);
       localStorage.setItem('os_refresh_token', data.refresh_token);
-      localStorage.setItem('os_user', JSON.stringify(data.user));
+      localStorage.setItem('os_user', JSON.stringify(userObj));
       sessionStorage.setItem('os_token', data.access_token);
-      sessionStorage.setItem('os_user', JSON.stringify(data.user));
+      sessionStorage.setItem('os_user', JSON.stringify(userObj));
 
       _resetBtn();
 

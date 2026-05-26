@@ -234,11 +234,19 @@ async function refreshToken() {
     });
     if (!res.ok) return null;
     const data = await res.json();
+    /* 2026-05-27: refresh 후 public.users role 박음 (admin 통과 정합).
+       db.js mergeUserProfile 호출 — 못 박혀도 인증 흐름은 계속. */
+    let userObj = data.user || {};
+    try {
+      if (window.db && typeof window.db.mergeUserProfile === 'function') {
+        userObj = await window.db.mergeUserProfile(userObj, data.access_token);
+      }
+    } catch (_e) {}
     localStorage.setItem('os_token', data.access_token);
     localStorage.setItem('os_refresh_token', data.refresh_token);
-    localStorage.setItem('os_user', JSON.stringify(data.user));
+    localStorage.setItem('os_user', JSON.stringify(userObj));
     sessionStorage.setItem('os_token', data.access_token);
-    sessionStorage.setItem('os_user', JSON.stringify(data.user));
+    sessionStorage.setItem('os_user', JSON.stringify(userObj));
     window._userToken = data.access_token;
     return data.access_token;
   } catch(e) { return null; }

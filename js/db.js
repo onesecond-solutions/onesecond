@@ -27,6 +27,34 @@
     return localStorage.getItem('os_refresh_token') || null;
   }
 
+  /* 2026-05-27: public.users 프로필을 auth user 객체에 합쳐서 반환.
+     maintenance-guard.js (head 최상단 가동)가 localStorage os_user.role === 'admin'만으로
+     admin 통과 판정. Supabase auth user에는 role 없으므로 본 헬퍼로 보강.
+     fetch 실패 시 원본 userObj 그대로 반환 (인증 흐름 중단 X). */
+  async function mergeUserProfile(userObj, accessToken) {
+    if (!userObj || !userObj.id || !accessToken) return userObj || {};
+    try {
+      var res = await fetch(
+        SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userObj.id)
+        + '&select=role,name,plan',
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + accessToken
+          }
+        }
+      );
+      if (!res.ok) return userObj;
+      var rows = await res.json();
+      if (rows && rows[0]) {
+        userObj.role = rows[0].role || '';
+        userObj.name = rows[0].name || '';
+        userObj.plan = rows[0].plan || 'free';
+      }
+    } catch (_e) { /* 무시: 원본 그대로 */ }
+    return userObj;
+  }
+
   // ── 3. 토큰 갱신 ─────────────────────────────────────────────────────────
   async function refreshToken() {
     var refreshTk = getRefreshToken();
@@ -39,11 +67,13 @@
       });
       if (!res.ok) return null;
       var data = await res.json();
+      /* 2026-05-27: data.user에 role 박아서 박음 (admin 통과 격차 해소) */
+      var userObj = await mergeUserProfile(data.user || {}, data.access_token);
       localStorage.setItem('os_token', data.access_token);
       localStorage.setItem('os_refresh_token', data.refresh_token);
-      localStorage.setItem('os_user', JSON.stringify(data.user));
+      localStorage.setItem('os_user', JSON.stringify(userObj));
       sessionStorage.setItem('os_token', data.access_token);
-      sessionStorage.setItem('os_user', JSON.stringify(data.user));
+      sessionStorage.setItem('os_user', JSON.stringify(userObj));
       return data.access_token;
     } catch (e) {
       return null;
@@ -112,11 +142,12 @@
 
   // ── 8. 공개 API: window.db ────────────────────────────────────────────────
   window.db = {
-    fetch: dbFetch,           // 인증 포함 fetch (일반 사용)
-    fetchPublic: dbFetchPublic, // 인증 없는 fetch (공개 데이터)
-    url: dbUrl,               // 전체 URL 조합 헬퍼
-    key: SUPABASE_KEY,        // apikey (직접 헤더 구성 필요 시)
-    getToken: getToken        // 현재 토큰 반환
+    fetch: dbFetch,                       // 인증 포함 fetch (일반 사용)
+    fetchPublic: dbFetchPublic,           // 인증 없는 fetch (공개 데이터)
+    url: dbUrl,                           // 전체 URL 조합 헬퍼
+    key: SUPABASE_KEY,                    // apikey (직접 헤더 구성 필요 시)
+    getToken: getToken,                   // 현재 토큰 반환
+    mergeUserProfile: mergeUserProfile    // auth user에 public.users role/name/plan 합침
   };
 
   // ── 9. 하위 호환: 기존 app.html 코드가 참조하는 전역 변수 유지 ────────────

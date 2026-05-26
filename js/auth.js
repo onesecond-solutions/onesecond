@@ -233,7 +233,7 @@
   //   Supabase OAuth 본진 = 인증 성공 후 redirect_to URL에 토큰 URL fragment 박힘
   //   예: app.html#access_token=...&refresh_token=...&token_type=bearer&expires_in=3600
   //   → fragment 파싱해서 localStorage 박음 + URL 정리
-  function _handleOAuthCallback() {
+  async function _handleOAuthCallback() {
     var hash = window.location.hash || '';
     if (hash.indexOf('access_token=') === -1) return;
 
@@ -251,6 +251,14 @@
         user_metadata: payload.user_metadata || {}
       };
 
+      /* 2026-05-27: OAuth 콜백도 public.users role/name/plan 박음 (maintenance-guard admin 통과 정합).
+         async 흐름이라 await 위해 함수 자체를 async로 박음 (호출자도 await 처리). */
+      try {
+        if (window.db && typeof window.db.mergeUserProfile === 'function') {
+          userObj = await window.db.mergeUserProfile(userObj, accessToken);
+        }
+      } catch (_e) { /* role 박지 못해도 인증은 계속 */ }
+
       localStorage.setItem('os_token', accessToken);
       localStorage.setItem('os_refresh_token', refreshToken);
       localStorage.setItem('os_user', JSON.stringify(userObj));
@@ -266,8 +274,9 @@
 
   // ── 11. 앱 진입 시 인증 체크 + 초기화 ───────────────────────────────────
   async function init() {
-    /* 2026-05-18: OAuth 콜백 본진 = URL fragment 토큰 처리 (Google 로그인 진입 자리) */
-    _handleOAuthCallback();
+    /* 2026-05-18: OAuth 콜백 본진 = URL fragment 토큰 처리 (Google 로그인 진입 자리)
+       2026-05-27: public.users role 박는 fetch가 안에 박혀 await 처리 */
+    await _handleOAuthCallback();
 
     var token  = window.db.getToken();
     var userId = resolveUserId();
@@ -298,11 +307,18 @@
       }).catch(function () { return null; });
 
       if (newToken && newToken.access_token) {
+        /* 2026-05-27: refresh 후에도 public.users role 박음 (admin 통과 정합) */
+        var refreshedUser = newToken.user || {};
+        try {
+          if (window.db && typeof window.db.mergeUserProfile === 'function') {
+            refreshedUser = await window.db.mergeUserProfile(refreshedUser, newToken.access_token);
+          }
+        } catch (_e) {}
         localStorage.setItem('os_token', newToken.access_token);
         localStorage.setItem('os_refresh_token', newToken.refresh_token);
-        localStorage.setItem('os_user', JSON.stringify(newToken.user));
+        localStorage.setItem('os_user', JSON.stringify(refreshedUser));
         sessionStorage.setItem('os_token', newToken.access_token);
-        sessionStorage.setItem('os_user', JSON.stringify(newToken.user));
+        sessionStorage.setItem('os_user', JSON.stringify(refreshedUser));
         window.AppState.token = newToken.access_token;
         window._userToken     = newToken.access_token;
       } else {
