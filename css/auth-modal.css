@@ -632,27 +632,34 @@
 }
 
 /* Step 1 — 큰 site 카드 (한 손 박음) */
+/* 소속 선택 = 좌우 2 카드 grid + 색 구분 (2026-05-26 단계 3) */
+.auth-site-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 .auth-site-card-v2 {
   width: 100%;
-  display: flex; align-items: center; gap: 16px;
-  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 24px 16px;
   background: var(--color-surface);
   border: 2px solid var(--color-border);
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.15s ease;
-  margin-bottom: 12px;
-  text-align: left;
   font-family: inherit;
 }
-.auth-site-card-v2:hover { border-color: var(--color-brand); background: var(--brand-50); }
-.auth-site-card-v2:focus { outline: 3px solid var(--brand-50); outline-offset: 0; }
-.auth-site-card-v2.is-active { border-color: var(--color-brand); background: var(--brand-50); }
+.auth-site-card-v2:focus { outline: 3px solid rgba(99, 102, 241, 0.2); outline-offset: 0; }
 .auth-site-card-v2 .icon {
   font-size: 32px; flex-shrink: 0;
   width: 56px; height: 56px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--brand-50);
   border-radius: 14px;
 }
 .auth-site-card-v2 .info { flex: 1; min-width: 0; }
@@ -666,10 +673,33 @@
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
-.auth-site-card-v2 .arrow {
-  font-size: 22px;
-  color: var(--color-text-tertiary);
-  flex-shrink: 0;
+.auth-site-card-v2 .arrow { display: none; }
+
+/* GA = 인디고 */
+.auth-site-card-v2[data-site="ga"] .icon {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366F1;
+}
+.auth-site-card-v2[data-site="ga"]:hover,
+.auth-site-card-v2[data-site="ga"].is-active {
+  border-color: #6366F1;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* 보험사 = 초록 (시각 격차로 두 갈래 명확 구분) */
+.auth-site-card-v2[data-site="insurer"] .icon {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+}
+.auth-site-card-v2[data-site="insurer"]:hover,
+.auth-site-card-v2[data-site="insurer"].is-active {
+  border-color: #10B981;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+/* 모바일 = 세로 (반응형) */
+@media (max-width: 600px) {
+  .auth-site-grid { grid-template-columns: 1fr; }
 }
 
 /* Step별 화면 — 한 화면 한 본진 */

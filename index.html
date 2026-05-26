@@ -822,23 +822,23 @@ window.osShowMaintenance = function() {
         <h2 class="auth-page-title">처음이시군요</h2>
         <p class="auth-page-sub">어떤 소속이신지 알려주세요</p>
 
-        <button class="auth-site-card-v2" type="button" id="site-card-ga" onclick="selectSite('ga'); window.authNextSignup();">
-          <div class="icon">👥</div>
-          <div class="info">
-            <div class="title">GA 설계사 · 매니저</div>
-            <div class="desc">법인보험대리점 / 지점·팀 소속</div>
-          </div>
-          <div class="arrow">→</div>
-        </button>
+        <div class="auth-site-grid">
+          <button class="auth-site-card-v2" type="button" id="site-card-ga" data-site="ga" onclick="selectSite('ga'); window.authNextSignup();">
+            <div class="icon">👥</div>
+            <div class="info">
+              <div class="title">GA 설계사 · 매니저</div>
+              <div class="desc">법인보험대리점 / 지점·팀 소속</div>
+            </div>
+          </button>
 
-        <button class="auth-site-card-v2" type="button" id="site-card-insurer" onclick="selectSite('insurer'); window.authNextSignup();">
-          <div class="icon">🏢</div>
-          <div class="info">
-            <div class="title">보험사 임직원</div>
-            <div class="desc">31개 손·생명 보험사 직원</div>
-          </div>
-          <div class="arrow">→</div>
-        </button>
+          <button class="auth-site-card-v2" type="button" id="site-card-insurer" data-site="insurer" onclick="selectSite('insurer'); window.authNextSignup();">
+            <div class="icon">🏢</div>
+            <div class="info">
+              <div class="title">보험사 임직원</div>
+              <div class="desc">31개 손·생명 보험사 직원</div>
+            </div>
+          </button>
+        </div>
       </div>
 
       <!-- ────── 가입 Step 2 — 정보 입력 ────── -->
