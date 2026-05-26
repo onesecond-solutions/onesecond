@@ -524,13 +524,16 @@ async function verifyOtp() {
         }
         _showStep('signup-success');
         setTimeout(function () {
-          window.location.href = 'app.html';
+          /* 2026-05-27 핫픽스: 상대 경로 격차 정정.
+             /pages/landing.html에서 OTP 인증 시 → /pages/app.html 404 격차.
+             절대 경로 / 자료로 정정 (어느 페이지에서 가동해도 /app.html 정합). */
+          window.location.href = '/app.html';
         }, 1800);
       } else {
         _showStep('login-success');
         setTimeout(function () {
           var _r = new URLSearchParams(window.location.search).get('redirect');
-          var appUrl = 'app.html';
+          var appUrl = '/app.html';
           window.location.href = _r ? appUrl + '?redirect=' + encodeURIComponent(_r) : appUrl;
         }, 1200);
       }

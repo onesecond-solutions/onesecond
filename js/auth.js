@@ -68,7 +68,7 @@
     localStorage.removeItem('selected_menu');
     sessionStorage.removeItem('os_token');
     sessionStorage.removeItem('os_user');
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
   }
 
   // ── 5. 무료 혜택 / 매니저 이상 판별 헬퍼 (D-pre G-2·결정 C 정합) ─────────
@@ -222,11 +222,11 @@
     try {
       var _r = new URLSearchParams(window.location.search).get('redirect');
       if (_r) {
-        window.location.href = 'login.html?redirect=' + encodeURIComponent(_r);
+        window.location.href = '/login.html?redirect=' + encodeURIComponent(_r);
         return;
       }
     } catch (e) { /* URLSearchParams 미지원 환경 무시 */ }
-    window.location.href = 'index.html';
+    window.location.href = '/index.html';
   }
 
   // ── 10-bis. OAuth 콜백 처리 (2026-05-18 Google OAuth 본진 추가) ──────────
