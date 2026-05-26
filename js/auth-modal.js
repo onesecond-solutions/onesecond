@@ -378,11 +378,15 @@ async function doLogin() {
 
   var email = document.getElementById('f-email-login').value.trim();
 
-  /* 2026-05-23: 3 이메일 화이트리스트 — 외 이메일 로그인 시도 → 공사중 차단 */
-  if (!window.osIsAllowedEmail(email)) {
-    _resetBtn();
-    window.osShowMaintenance();
-    return;
+  /* 2026-05-27: 이메일 화이트리스트 폐지 — 공사중 모드 ON 시 로그인 시도 무조건 차단.
+     admin은 ?dev=1 진입 후 정상 흐름으로 로그인. (Google / doSubmit과 동일 흐름) */
+  if (window.OS_MAINTENANCE && window.OS_MAINTENANCE.mode === true) {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('dev') !== '1') {
+      _resetBtn();
+      window.osShowMaintenance();
+      return;
+    }
   }
 
   try {
