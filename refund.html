@@ -303,30 +303,31 @@ body {
 
       <div class="footer-col">
         <div class="footer-col-title">서비스</div>
-        <a class="footer-link" href="index.html#hero">서비스 소개</a>
-        <a class="footer-link" href="index.html#pillars">6가지 기둥</a>
-        <a class="footer-link" href="index.html#target">사용 대상</a>
-        <a class="footer-link" href="index.html#signup">가입하기</a>
+        <a class="footer-link" href="/pages/landing.html#lp-scene-1">서비스 소개</a>
+        <a class="footer-link" href="/index.html?auth=signup">가입하기</a>
+        <a class="footer-link" href="/index.html?auth=login">로그인</a>
       </div>
 
       <div class="footer-col">
         <div class="footer-col-title">지원</div>
         <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">💬 카카오 오픈채팅</a>
         <a class="footer-link" href="mailto:bylts0428@gmail.com">✉️ 이메일 문의</a>
-        <a class="footer-link" href="terms.html">이용약관</a>
-        <a class="footer-link" href="privacy.html">개인정보처리방침</a>
+        <a class="footer-link" href="tel:050-6890-9104">📞 050-6890-9104</a>
+        <a class="footer-link" href="/terms.html">이용약관</a>
+        <a class="footer-link" href="/privacy.html" style="font-weight:700;color:var(--neutral-800);">개인정보처리방침</a>
+        <a class="footer-link" href="/refund.html">환불·취소 정책</a>
       </div>
 
       <div class="footer-col">
         <div class="footer-col-title">사업자 정보</div>
         <div class="footer-biz">
-          <p class="row"><strong>상호</strong>티솔루션(T-Solutions)</p>
+          <p class="row"><strong>상호</strong>티솔루션 (T-Solutions)</p>
           <p class="row"><strong>대표자</strong>임태성</p>
           <p class="row"><strong>사업자등록번호</strong>604-10-68738</p>
-          <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라프라자)</p>
-          <p class="row"><strong>개인정보보호책임자</strong>임태성</p>
-          <p class="row"><strong>통신판매업 신고</strong>준비 중</p>
-          <p class="row"><strong>이메일</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a></p>
+          <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라동, 청라프라자)</p>
+          <p class="row"><strong>개인정보보호책임자</strong>임태성 / bylts0428@gmail.com</p>
+          <p class="row"><strong>통신판매업 신고</strong>진행 중</p>
+          <p class="row"><strong>고객센터</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a> / 050-6890-9104</p>
         </div>
       </div>
 
@@ -341,10 +342,14 @@ body {
 
 <script>
 function closeOrFallback() {
+  /* 진입 출처 보존: history 있으면 뒤로 / 직접 진입 = 랜딩 fallback */
+  if (window.history && window.history.length > 1) {
+    window.history.back();
+    return;
+  }
   window.close();
-  // window.close()는 스크립트가 직접 연 창이 아니면 차단됨 → 살아있으면 메인으로 fallback
   setTimeout(function () {
-    if (!window.closed) location.href = 'index.html';
+    if (!window.closed) location.href = '/pages/landing.html';
   }, 100);
 }
 </script>

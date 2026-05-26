@@ -240,11 +240,11 @@ const ROLE_LABEL = {
   insurer_staff:          '원수사 스텝'
 };
 
+/* PG 심사 = 공개 페이지 정합. 로그인 자체 자체 통과 (비로그인 = 3카드 표시) */
 const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
 const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
-if (!_initToken || !_initAuth.id) { window.location.href = 'login.html'; }
-window._userToken = _initToken;
-window._userId = _initAuth.id;
+window._userToken = _initToken || null;
+window._userId = _initAuth.id || null;
 window._userPlan = 'free';
 
 async function loadUserInfo() {
