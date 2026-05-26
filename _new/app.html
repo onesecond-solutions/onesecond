@@ -3256,12 +3256,15 @@ async function loadScriptsView(){
     chipsEl.innerHTML = chipsHtml;
   }
   if(window._scriptsLoaded) return;
-  /* Supabase 실 fetch — 1회만 (전체 자료 캐시) */
+  /* Supabase 실 fetch — 1회만 (전체 자료 캐시).
+     2026-05-27 핫픽스: scripts 테이블 RLS = 로그인 사용자만 SELECT 허용.
+     anon key → [] 빈 배열 격차. localStorage os_token (로그인 토큰)으로 가동. */
   var gridEl = document.getElementById('scriptsGrid');
   if(!gridEl) return;
   try{
     var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text';
-    var res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }});
+    var authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('os_token')) || SUPABASE_ANON_KEY;
+    var res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authToken }});
     if(!res.ok){ gridEl.innerHTML = '<div class="mys-news-empty">자료를 불러올 수 없습니다. (HTTP '+res.status+')</div>'; return; }
     var data = await res.json();
     window._scriptsCache = data || [];
