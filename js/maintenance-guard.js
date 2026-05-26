@@ -1,22 +1,22 @@
 /**
  * js/maintenance-guard.js
- * 유지보수 모드 가드 (2026-05-27 최종 정책 — 화이트리스트 4 계정)
+ * 유지보수 모드 가드 (2026-05-27 최종본 — 화이트리스트 3 계정 / reviewer 폐지)
  *
  * 본질:
- *   - MAINTENANCE_MODE = true 자료 = 화이트리스트 4 계정 외 모든 진입 차단 (비로그인 포함)
+ *   - MAINTENANCE_MODE = true 자료 = 화이트리스트 3 계정 외 모든 진입 차단 (비로그인 포함)
  *   - 판정 단일 기준 = localStorage os_user.email ∈ OS_WHITELIST_EMAILS
- *   - PG 심사 + landing 6 페이지 = 공개 유지
+ *   - 공개 페이지 6건 = 누구나 접근 (landing + PG 5 페이지) + 진입 라우터 + maintenance
  *   - ?dev=1 우회 자료 폐지 (최종 정책 명시)
- *   - role='reviewer' 신설 X (현 admin 권한 체계 그대로)
+ *   - role='reviewer' / reviewer 화이트리스트 / 심사자 전용 흐름 자체 폐지
+ *   - 심사자 = 공개 페이지만 확인. 별도 계정 X.
  *
- * 허용 계정 (공사중 우회 4 계정):
+ * 허용 계정 (공사중 우회 3 계정):
  *   1. bylts0428@gmail.com — admin (role='admin')
- *   2. bylts@naver.com — 일반 (내부 테스트)
- *   3. bylts@kakao.com — 일반 (내부 테스트)
- *   4. reviewer@onesecond.solutions — 일반 (KCP 심사자)
+ *   2. bylts@naver.com — 내부 운영
+ *   3. bylts@kakao.com — 내부 운영
  *
  * 흐름:
- *   1. PUBLIC_PATHS 진입 = 통과 (landing + PG 5 페이지 + maintenance)
+ *   1. PUBLIC_PATHS 진입 = 통과 (진입 라우터 + landing + PG 5 페이지 + maintenance)
  *   2. localStorage os_user.email ∈ OS_WHITELIST_EMAILS = 통과
  *   3. 그 외 = 모든 인증 자료 제거 후 /maintenance.html redirect
  *
@@ -29,12 +29,12 @@
   var MAINTENANCE_MODE = true;
   var MAINTENANCE_PAGE = '/maintenance.html';
 
-  /* 화이트리스트 4 계정 — auth-modal.js / auth.js에서 동일 자료 참조 (window.OS_WHITELIST_EMAILS) */
+  /* 화이트리스트 3 계정 — auth-modal.js / auth.js에서 동일 자료 참조 (window.OS_WHITELIST_EMAILS).
+     reviewer 자료 통째 폐지 (2026-05-27 최종 정책). */
   var WHITELIST_EMAILS = [
     'bylts0428@gmail.com',
     'bylts@naver.com',
-    'bylts@kakao.com',
-    'reviewer@onesecond.solutions'
+    'bylts@kakao.com'
   ];
 
   /* 공개 페이지 = 진입 라우터 + landing + PG 심사 5 페이지 + maintenance 본인
