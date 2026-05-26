@@ -51,7 +51,13 @@
       var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
       var user = {};
       try { user = JSON.parse(raw); } catch (e) {}
-      if (!user || user.role !== 'admin') {
+      /* 2026-05-26 격차 정정: Supabase auth user 객체에는 role 컬럼이 없어
+         admin도 차단되던 격차. admin-config.js 단일 진실(window.osIsAdmin)로
+         role + 이메일 화이트리스트 둘 중 하나로 통과. */
+      var ok = (typeof window.osIsAdmin === 'function')
+        ? window.osIsAdmin(user)
+        : (user && user.role === 'admin');
+      if (!ok) {
         window.location.replace(LANDING);
         return;
       }

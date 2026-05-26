@@ -92,7 +92,15 @@
   }
 
   // ── 7. Admin 판단 ─────────────────────────────────────────────────────────
+  // 2026-05-26: admin-config.js 단일 진실(window.osIsAdmin) 위임.
+  // role 컬럼 또는 이메일 화이트리스트 어느 한쪽으로 통과.
   function isAdmin() {
+    if (typeof window.osIsAdmin === 'function') {
+      return window.osIsAdmin({
+        role:  window.AppState.role,
+        email: window.AppState.email
+      });
+    }
     return window.AppState.role === 'admin';
   }
 

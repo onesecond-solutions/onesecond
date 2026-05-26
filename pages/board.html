@@ -1,4 +1,5 @@
 <script src="/js/maintenance-guard.js"></script>
+<script src="/js/admin-config.js"></script>
 <script src="/js/auth-guard.js"></script>
 <script>
 (function(){
@@ -8451,12 +8452,15 @@ window.openDetail = async function(postId) {
     }
   }
 
-  /* 수정/삭제 버튼 노출 여부 (매니저 이상 = 관리자급 권한) */
+  /* 수정/삭제 버튼 노출 (1순위 admin / 2순위 작성자 본인 / 3순위 매니저 이상)
+     2026-05-26 격차 정정: 변수명 isAdmin이 실제로는 isFreeTier(5종) 결과였음.
+     admin 단일 진실 함수로 변수명·우선순위 정합. 결과 셋합은 동일(매니저 5종 통과). */
   var s = window.AppState || {};
-  var isAuthor = post.author_id && s.userId && String(post.author_id) === String(s.userId);
-  var isAdmin  = !!(window.Auth && window.Auth.isFreeTier(s.role));
+  var isAuthor   = post.author_id && s.userId && String(post.author_id) === String(s.userId);
+  var isAdmin    = !!(window.Auth && window.Auth.isAdmin());
+  var isMgrPlus  = !!(window.Auth && window.Auth.isFreeTier(s.role));
   var actionBar = document.getElementById('detail-action-bar');
-  if (actionBar) actionBar.style.display = (isAuthor || isAdmin) ? 'flex' : 'none';
+  if (actionBar) actionBar.style.display = (isAdmin || isAuthor || isMgrPlus) ? 'flex' : 'none';
 
   /* 첨부파일 렌더링 */
   var attachArea = document.getElementById('detail-attachments');
