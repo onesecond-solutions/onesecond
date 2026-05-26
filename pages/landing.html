@@ -100,22 +100,28 @@ body {
   align-items: center;
   gap: 8px;
 }
+/* 2026-05-26 정정: 가입하기 인디고 fill과 무게감 정합 → 인디고 outline + pill */
 .lp-login-link {
   font-size: 15px;
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: var(--color-brand);
+  background: transparent;
+  border: 1px solid var(--color-brand);
   text-decoration: none;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
+  padding: 9px 21px;
+  border-radius: var(--radius-pill);
   letter-spacing: -0.01em;
-  transition: color 0.18s, background 0.18s;
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
   min-height: 40px;
   display: inline-flex;
   align-items: center;
+  cursor: pointer;
+  font-family: inherit;
 }
 .lp-login-link:hover {
-  color: var(--color-text-primary);
-  background: rgba(0, 0, 0, 0.04);
+  color: #fff;
+  background: var(--color-brand);
+  border-color: var(--color-brand);
 }
 .lp-signup-link {
   font-size: 15px;
@@ -140,7 +146,7 @@ body {
 }
 .lp-signup-link:active { transform: translateY(0); }
 @media (max-width: 640px) {
-  .lp-login-link { font-size: 14px; padding: 9px 10px; }
+  .lp-login-link { font-size: 14px; padding: 8px 17px; }
   .lp-signup-link { font-size: 14px; padding: 9px 18px; }
   .lp-header-actions { gap: 4px; }
 }
@@ -596,7 +602,7 @@ body {
     </p>
     <button type="button" class="lp-cta-btn" onclick="openAuthModal('signup')">
       원세컨드 시작하기
-    </a>
+    </button>
     <button type="button" class="lp-cta-secondary" onclick="openAuthModal('login')">
       이미 회원이신가요? 로그인
     </button>
