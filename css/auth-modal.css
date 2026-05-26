@@ -675,7 +675,10 @@
 }
 .auth-site-card-v2 .arrow { display: none; }
 
-/* GA = 인디고 */
+/* GA = 인디고 (좌측 strip 색 구분) */
+.auth-site-card-v2[data-site="ga"] {
+  border-left: 4px solid #6366F1;
+}
 .auth-site-card-v2[data-site="ga"] .icon {
   background: rgba(99, 102, 241, 0.12);
   color: #6366F1;
@@ -686,7 +689,10 @@
   background: rgba(99, 102, 241, 0.06);
 }
 
-/* 보험사 = 초록 (시각 격차로 두 갈래 명확 구분) */
+/* 보험사 = 초록 (좌측 strip 색 구분, 시각 격차로 두 갈래 명확) */
+.auth-site-card-v2[data-site="insurer"] {
+  border-left: 4px solid #10B981;
+}
 .auth-site-card-v2[data-site="insurer"] .icon {
   background: rgba(16, 185, 129, 0.12);
   color: #10B981;
@@ -706,7 +712,7 @@
 .auth-step-page { display: none; }
 .auth-step-page.is-active { display: block; }
 
-/* 로그인 방식 2영역 분리 (2026-05-26 단계 4) */
+/* 로그인 방식 2영역 분리 (2026-05-26 단계 4) + 좌측 strip 색 구분 */
 .auth-login-method {
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
@@ -714,6 +720,8 @@
   padding: 16px 14px;
   margin-bottom: 12px;
 }
+.auth-login-method--google { border-left: 4px solid #6366F1; }
+.auth-login-method--email  { border-left: 4px solid #10B981; }
 .auth-login-method-label {
   font-size: 11px;
   font-weight: 800;
