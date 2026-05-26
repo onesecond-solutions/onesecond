@@ -378,11 +378,15 @@ async function doLogin() {
 
   var email = document.getElementById('f-email-login').value.trim();
 
-  /* 2026-05-27: 이메일 화이트리스트 폐지 — 공사중 모드 ON 시 로그인 시도 무조건 차단.
-     admin은 ?dev=1 진입 후 정상 흐름으로 로그인. (Google / doSubmit과 동일 흐름) */
+  /* 2026-05-27 최종 정책: 4 화이트리스트만 OTP 발송 허용.
+     - bylts0428@gmail.com / bylts@naver.com / bylts@kakao.com / reviewer@onesecond.solutions
+     - 그 외 = maintenance.html (Google / doSubmit과 동일 차단)
+     화이트리스트 자료 = window.OS_WHITELIST_EMAILS (maintenance-guard.js 단일 진실) */
   if (window.OS_MAINTENANCE && window.OS_MAINTENANCE.mode === true) {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('dev') !== '1') {
+    var allowed = (typeof window.osIsWhitelistedEmail === 'function')
+      ? window.osIsWhitelistedEmail(email)
+      : false;
+    if (!allowed) {
       _resetBtn();
       window.osShowMaintenance();
       return;
