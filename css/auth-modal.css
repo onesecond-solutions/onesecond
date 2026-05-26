@@ -515,6 +515,9 @@
   font-family: inherit;
   transition: background 0.15s ease;
 }
+/* 2026-05-27 정정: .auth-page-back[hidden] 시 ✕가 좌측에 배치되던 격차 정정.
+   margin-left: auto = back 유무와 무관하게 ✕는 항상 우측 상단 고정. */
+.auth-page-close { margin-left: auto; }
 .auth-page-back:hover, .auth-page-close:hover { background: rgba(0,0,0,0.05); }
 .auth-page-back[hidden], .auth-page-close[hidden] { display: none; }
 
