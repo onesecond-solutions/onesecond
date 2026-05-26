@@ -297,26 +297,35 @@ body {
 }
 .lp-cta-secondary:hover { color: #fff; text-decoration: underline; }
 
-/* 딸깍 버튼 (6번 디자인 정합 — Quick 결제정보/연락처 카드 우상단 자료) */
+/* 딸깍 버튼 (1번 디자인 정합 — .pay-copy-btn / .mys-card-ddalggak 같은 모양: ⚡ + "딸깍" 텍스트 함께, 얇은 border + 작은 둥근 모서리) */
 .lp-ddak {
   position: absolute;
   bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   color: #6366F1;
-  font-size: 20px;
-  padding: 8px 12px;
-  border: none;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
   cursor: pointer;
-  line-height: 1;
   font-family: inherit;
   animation: lp-bounce 2s ease-in-out infinite;
-  transition: transform .15s ease, opacity .15s ease;
+  transition: transform .15s ease, opacity .15s ease, background .15s ease, border-color .15s ease;
 }
 .lp-ddak:hover {
-  opacity: 0.75;
+  opacity: 1;
+  background: rgba(99,102,241,0.08);
+  border-color: #6366F1;
 }
+.lp-ddak .ddak-ic { font-size: 16px; line-height: 1; }
+.lp-ddak .ddak-lbl { font-size: 14px; line-height: 1; }
 @keyframes lp-bounce {
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50%      { transform: translateX(-50%) translateY(6px); }
@@ -504,7 +513,7 @@ body {
     </h1>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(2)">
-    ⚡
+    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
   </button>
 </section>
 
@@ -518,7 +527,7 @@ body {
     </h2>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(3)">
-    ⚡
+    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
   </button>
 </section>
 
@@ -545,7 +554,7 @@ body {
     </div>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(4)">
-    ⚡
+    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
   </button>
 </section>
 
@@ -561,7 +570,7 @@ body {
     </p>
   </div>
   <button class="lp-ddak" type="button" aria-label="다음으로" onclick="scrollToScene(5)">
-    ⚡
+    <span class="ddak-ic">⚡</span><span class="ddak-lbl">딸깍</span>
   </button>
 </section>
 
