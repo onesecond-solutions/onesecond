@@ -853,24 +853,28 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
      <div class="wrap view" id="v-scripts">
       <div class="ttl">스크립트 <span class="ac">· 보험 상담 화법</span></div>
       <div class="sub">통화 중 1초 안에 꺼낼 수 있는 화법 자료.</div>
-      <div class="chips">
-        <div class="chip on" onclick="filterScripts(this,'전체')">전체</div>
-        <div class="chip" onclick="filterScripts(this,'상품')">상품</div>
-        <div class="chip" onclick="filterScripts(this,'인수')">인수</div>
-        <div class="chip" onclick="filterScripts(this,'응대')">응대</div>
-        <div class="chip" onclick="filterScripts(this,'거절극복')">거절극복</div>
+      <!-- 2026-05-27: mock 자료 통째 폐지. v1 10 stage 카테고리 + Supabase 실 fetch 흐름. -->
+      <div class="chips" id="scriptsChips">
+        <!-- JS loadScriptsView() 가동 시 동적 자료 -->
       </div>
       <div class="mys-grid" id="scriptsGrid">
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">암보험 매월 생활비 받는 상품 안내 화법</div><div class="mys-meta">5월 15일 · 사용 24회</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">5세대 실손 단독 가입 안내 화법</div><div class="mys-meta">5월 14일 · 사용 18회</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">상품</span><div class="mys-ttl">치매보험 핵심 화법 (40~50대)</div><div class="mys-meta">5월 13일 · 사용 12회</div></div>
-        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">70년 남 사무직 기왕증 인수 거절 응대</div><div class="mys-meta">5월 15일 · 사용 9회</div></div>
-        <div class="mys-card" style="--tc:var(--t-uw)"><span class="mys-badge">인수</span><div class="mys-ttl">협심증 기왕증 인수 가능 회사 안내</div><div class="mys-meta">5월 14일 · 사용 7회</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">응대</span><div class="mys-ttl">보험금 청구 절차 안내 (사고 직후)</div><div class="mys-meta">5월 15일 · 사용 15회</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">응대</span><div class="mys-ttl">가입 후 30일 무료 해약 안내</div><div class="mys-meta">5월 12일 · 사용 6회</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">거절극복</span><div class="mys-ttl">"보험료 비싸다" 응대 화법</div><div class="mys-meta">5월 15일 · 사용 21회</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">거절극복</span><div class="mys-ttl">"이미 가입했다" 응대 화법</div><div class="mys-meta">5월 14일 · 사용 17회</div></div>
+        <div class="mys-news-empty" id="scriptsLoading">불러오는 중... ⏳</div>
       </div>
+     </div>
+
+     <!-- ─────────────────────────────────────────────
+          스크립트 본문 모달 (2026-05-27 신설)
+          카드 클릭 시 script_text 노출
+     ───────────────────────────────────────────── -->
+     <div class="auth-overlay" id="scriptDetailOverlay" hidden onclick="if(event.target===this)closeScriptDetail()">
+       <div class="auth-modal" role="dialog" aria-modal="true" style="max-width:720px;">
+         <div class="auth-page-header">
+           <button class="auth-page-close" type="button" onclick="closeScriptDetail()" aria-label="닫기">✕</button>
+         </div>
+         <div class="auth-page-body" id="scriptDetailBody" style="padding:0 24px 32px;">
+           <!-- JS openScriptDetail(id) 가동 시 동적 자료 -->
+         </div>
+       </div>
      </div>
      <div class="wrap view" id="v-quick">
       <div class="ttl">Quick 메뉴 <span class="ac">· 빠른 실행</span></div>
@@ -1414,7 +1418,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();}
+function showView(key){var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();}
 
 /* ── V2 사이드바 Quick 메뉴 (v-quick) — 카드 그리드 자체 ── */
 window._qckCache = window._qckCache || {};
@@ -3218,7 +3222,122 @@ var voiceTabData = {
 };
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+d.cnt+'건</b>';if(d.posts){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;if(d.posts.length>0)showTabPost(key,0);}}
 function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title)+'<div class="answer"><div class="who">자료 자료</div>'+d.title+' 자료입니다. 상세 자료는 다음 단계에서 정정 자리.</div>';document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
-function filterScripts(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#scriptsGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+/* ─────────────────────────────────────────────
+   스크립트 view — v1 10 stage + Supabase 실 fetch (2026-05-27)
+   - mock 자료 통째 폐지
+   - chips = '전체' + 10 stage (v1 GROUPS 정합)
+   - 카드 = title + highlight_text + stage badge
+   - 카드 클릭 = openScriptDetail(id) 모달 노출
+───────────────────────────────────────────── */
+var SCRIPTS_GROUPS = [
+  { icon: '📞', label: '도입 인사',    stage: 'opening' },
+  { icon: '💬', label: '도입 반론',    stage: 'opening_rejection' },
+  { icon: '🔥', label: '필요성 ①',    stage: 'need_emphasis' },
+  { icon: '🔎', label: '상황 확인',    stage: 'situation_check' },
+  { icon: '📊', label: '보장 분석',    stage: 'analysis' },
+  { icon: '📦', label: '상품 설명',    stage: 'product' },
+  { icon: '🔥', label: '필요성 ②',    stage: 'need_emphasis_2' },
+  { icon: '✅', label: '클로징',       stage: 'closing' },
+  { icon: '⚡', label: '반론 대응',    stage: 'objection' },
+  { icon: '🔚', label: '2차 클로징',  stage: 'closing_second' }
+];
+window._scriptsCache = null;
+window._scriptsLoaded = false;
+window._scriptsActiveStage = '전체';
+
+async function loadScriptsView(){
+  /* chips 자료 동적 자료 (첫 가동 시 1회) */
+  var chipsEl = document.getElementById('scriptsChips');
+  if(chipsEl && !chipsEl.children.length){
+    var chipsHtml = '<div class="chip on" onclick="filterScriptsByStage(this,\'전체\')">전체</div>';
+    SCRIPTS_GROUPS.forEach(function(g){
+      chipsHtml += '<div class="chip" onclick="filterScriptsByStage(this,\''+g.stage+'\')">'+g.icon+' '+g.label+'</div>';
+    });
+    chipsEl.innerHTML = chipsHtml;
+  }
+  if(window._scriptsLoaded) return;
+  /* Supabase 실 fetch — 1회만 (전체 자료 캐시) */
+  var gridEl = document.getElementById('scriptsGrid');
+  if(!gridEl) return;
+  try{
+    var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text';
+    var res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }});
+    if(!res.ok){ gridEl.innerHTML = '<div class="mys-news-empty">자료를 불러올 수 없습니다. (HTTP '+res.status+')</div>'; return; }
+    var data = await res.json();
+    window._scriptsCache = data || [];
+    window._scriptsLoaded = true;
+    renderScriptsCards(window._scriptsActiveStage);
+  }catch(e){
+    gridEl.innerHTML = '<div class="mys-news-empty">네트워크 격차 — 잠시 후 다시 시도해 주세요.</div>';
+    console.error('[loadScriptsView]', e);
+  }
+}
+
+function renderScriptsCards(stageKey){
+  var gridEl = document.getElementById('scriptsGrid');
+  if(!gridEl || !window._scriptsCache) return;
+  var filtered = (stageKey === '전체')
+    ? window._scriptsCache
+    : window._scriptsCache.filter(function(s){ return s.stage === stageKey; });
+  if(!filtered.length){
+    gridEl.innerHTML = '<div class="mys-news-empty">해당 분류의 스크립트가 아직 없습니다.</div>';
+    return;
+  }
+  function stageLabel(stg){
+    for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].label;
+    return stg || '';
+  }
+  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function trimText(s, n){ s = (s||'').replace(/<[^>]+>/g,'').trim(); return s.length > n ? s.substring(0,n) + '…' : s; }
+  var html = filtered.map(function(s){
+    var label = escapeHtml(stageLabel(s.stage));
+    var title = escapeHtml(s.title || '제목 없음');
+    var summary = escapeHtml(trimText(s.highlight_text || s.script_text || '', 80));
+    return '<div class="mys-card" style="--tc:var(--ac)" onclick="openScriptDetail('+s.id+')">'
+         + '<span class="mys-badge">'+label+'</span>'
+         + '<div class="mys-ttl">'+title+'</div>'
+         + (summary ? '<div class="mys-meta">'+summary+'</div>' : '')
+         + '</div>';
+  }).join('');
+  gridEl.innerHTML = html;
+}
+
+function filterScriptsByStage(el, stageKey){
+  var chips = el.parentElement.querySelectorAll('.chip');
+  for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
+  el.classList.add('on');
+  window._scriptsActiveStage = stageKey;
+  renderScriptsCards(stageKey);
+}
+
+function openScriptDetail(id){
+  if(!window._scriptsCache) return;
+  var sc = null;
+  for(var i=0;i<window._scriptsCache.length;i++){ if(window._scriptsCache[i].id === id){ sc = window._scriptsCache[i]; break; } }
+  if(!sc) return;
+  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function stageLabel(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].label; return stg || ''; }
+  var bodyEl = document.getElementById('scriptDetailBody');
+  var label = escapeHtml(stageLabel(sc.stage));
+  var title = escapeHtml(sc.title || '제목 없음');
+  var highlight = escapeHtml(sc.highlight_text || '');
+  /* script_text는 v1 DB에 HTML 자료로 저장됨 (border 등). 그대로 노출. */
+  var bodyHtml = sc.script_text || '<p>본문이 없습니다.</p>';
+  bodyEl.innerHTML = '<div style="display:inline-block;padding:4px 10px;background:var(--ac);color:#fff;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:12px;">'+label+'</div>'
+                   + '<h2 style="font-size:20px;font-weight:800;margin:0 0 8px;color:var(--text);">'+title+'</h2>'
+                   + (highlight ? '<p style="color:var(--text-sub);margin:0 0 20px;font-size:14px;line-height:1.6;">'+highlight+'</p>' : '')
+                   + '<div style="border-top:1px solid var(--line);padding-top:16px;color:var(--text);line-height:1.7;font-size:14px;">'+bodyHtml+'</div>';
+  document.getElementById('scriptDetailOverlay').removeAttribute('hidden');
+  document.documentElement.style.overflow = 'hidden';
+}
+
+function closeScriptDetail(){
+  document.getElementById('scriptDetailOverlay').setAttribute('hidden','');
+  document.documentElement.style.overflow = '';
+}
+
+/* 옛 mock 기반 filterScripts 자료 통째 폐지 (위 filterScriptsByStage가 대체). 외부 onclick 호환용 stub만 유지. */
+function filterScripts(el, cat){ /* 폐지됨 — filterScriptsByStage 사용 */ }
 function filterQuick(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#quickGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function filterTogether(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#togetherGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 var SUPABASE_URL='https://pdnwgzneooyygfejrvbg.supabase.co';
