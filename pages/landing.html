@@ -9,6 +9,9 @@
 <meta http-equiv="Expires" content="0" />
 <title>원세컨드 — 보험 현장 흐름 체계</title>
 <meta name="description" content="설계사가 상담 중 멈추지 않게 하는 흐름 도구. 17년 보험 현장의 통찰." />
+<!-- 2026-05-26 모달 자체 자체 (index.html 자체 자체 = 단계 2-A/2-B 자체 자체 자체) -->
+<link rel="stylesheet" href="/css/auth-modal.css">
+<script src="/js/auth-modal.js" defer></script>
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="원세컨드" />
@@ -500,8 +503,8 @@ body {
     <span>원세컨드</span>
   </a>
   <div class="lp-header-actions">
-    <a href="/index.html?auth=login" class="lp-login-link">로그인</a>
-    <a href="/index.html?auth=signup" class="lp-signup-link">가입하기</a>
+    <button type="button" class="lp-login-link" onclick="openAuthModal('login')">로그인</button>
+    <button type="button" class="lp-signup-link" onclick="openAuthModal('signup')">가입하기</button>
   </div>
 </header>
 
@@ -585,12 +588,12 @@ body {
       현직 17년 보험설계사가 만든<br>
       <strong style="color: #fff; font-weight: 700;">1초 실행 도구</strong>
     </p>
-    <a href="/index.html?auth=signup" class="lp-cta-btn" role="button">
+    <button type="button" class="lp-cta-btn" onclick="openAuthModal('signup')">
       원세컨드 시작하기
     </a>
-    <a href="/index.html?auth=login" class="lp-cta-secondary">
+    <button type="button" class="lp-cta-secondary" onclick="openAuthModal('login')">
       이미 회원이신가요? 로그인
-    </a>
+    </button>
   </div>
 </section>
 
@@ -614,8 +617,8 @@ body {
       <div class="footer-col">
         <div class="footer-col-title">서비스</div>
         <a class="footer-link" href="/about.html">서비스 소개</a>
-        <a class="footer-link" href="/index.html?auth=signup">가입하기</a>
-        <a class="footer-link" href="/index.html?auth=login">로그인</a>
+        <a class="footer-link" href="javascript:void(0)" onclick="openAuthModal('signup')">가입하기</a>
+        <a class="footer-link" href="javascript:void(0)" onclick="openAuthModal('login')">로그인</a>
       </div>
 
       <!-- 컬럼 3: 지원 -->
@@ -650,6 +653,287 @@ body {
     </div>
   </div>
 </footer>
+<div class="auth-overlay" id="authOverlay" hidden>
+  <div class="auth-modal is-v2" role="dialog" aria-modal="true">
+
+    <!-- 헤더 -->
+    <div class="auth-page-header">
+      <button class="auth-page-back" id="authBackBtn" type="button" hidden onclick="window.authPrev()" aria-label="뒤로">←</button>
+      <div class="auth-step-progress" id="authProgress" hidden>
+        <span class="is-active"></span><span></span><span></span>
+      </div>
+      <button class="auth-page-close" type="button" onclick="closeAuthModal()" aria-label="닫기">✕</button>
+    </div>
+
+    <!-- 본문 (스크롤 영역) -->
+    <div class="auth-page-body" id="authBody">
+
+      <!-- ────── 로그인 (1 step) ────── -->
+      <div class="auth-step-page is-active" id="page-login">
+        <span class="auth-friendly-emoji">👋</span>
+        <h2 class="auth-page-title">안녕하세요</h2>
+        <p class="auth-page-sub">원세컨드에 다시 오신 것을 환영해요</p>
+
+        <div class="auth-err-box" id="loginErrBox"></div>
+
+        <button class="auth-google-btn" type="button" onclick="signInWithGoogle()" aria-label="Google로 로그인">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+          </svg>
+          Google로 시작하기
+        </button>
+
+        <div class="auth-or-divider">또는 이메일로</div>
+
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-email-login">이메일</label>
+          <input class="auth-input" type="email" id="f-email-login" placeholder="example@email.com" autocomplete="email">
+          <div class="auth-form-err" id="e-email-login">올바른 이메일을 입력해 주세요.</div>
+        </div>
+
+        <p style="font-size:13px; color:var(--color-text-tertiary); margin-top:12px; text-align:center;">
+          비밀번호 없이 이메일 인증 코드로 안전하게 로그인합니다.
+        </p>
+      </div>
+
+      <!-- ────── 가입 Step 1 — 소속 선택 ────── -->
+      <div class="auth-step-page" id="page-signup-1">
+        <span class="auth-friendly-emoji">🎉</span>
+        <h2 class="auth-page-title">처음이시군요</h2>
+        <p class="auth-page-sub">어떤 소속이신지 알려주세요</p>
+
+        <button class="auth-site-card-v2" type="button" id="site-card-ga" onclick="selectSite('ga'); window.authNextSignup();">
+          <div class="icon">👥</div>
+          <div class="info">
+            <div class="title">GA 설계사 · 매니저</div>
+            <div class="desc">법인보험대리점 / 지점·팀 소속</div>
+          </div>
+          <div class="arrow">→</div>
+        </button>
+
+        <button class="auth-site-card-v2" type="button" id="site-card-insurer" onclick="selectSite('insurer'); window.authNextSignup();">
+          <div class="icon">🏢</div>
+          <div class="info">
+            <div class="title">보험사 임직원</div>
+            <div class="desc">31개 손·생명 보험사 직원</div>
+          </div>
+          <div class="arrow">→</div>
+        </button>
+      </div>
+
+      <!-- ────── 가입 Step 2 — 정보 입력 ────── -->
+      <div class="auth-step-page" id="page-signup-2">
+        <h2 class="auth-page-title">정보를 입력해 주세요</h2>
+        <p class="auth-page-sub">정확한 정보일수록 매니저 매핑이 정확합니다</p>
+
+        <div class="auth-err-box" id="signupErrBox"></div>
+
+        <form id="reg-form" novalidate>
+          <div class="signup-form-body" id="signup-form-body">
+
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-name">이름</label>
+              <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
+              <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
+            </div>
+
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-role">직급</label>
+              <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
+                <option value="">선택해 주세요</option>
+                <option value="branch_manager">지점장 / 센터장</option>
+                <option value="manager">매니저 / 실장</option>
+                <option value="member">설계사 / 팀장</option>
+                <option value="staff">스텝 / 총무</option>
+              </select>
+              <div class="auth-form-err" id="e-role">직급을 선택해 주세요.</div>
+            </div>
+
+            <div class="role-hint" id="roleHint">
+              💡 <span id="roleHintText"></span>
+            </div>
+
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-phone">핸드폰</label>
+              <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
+              <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
+            </div>
+
+            <div class="auth-form-group">
+              <label class="auth-label" for="f-email">이메일</label>
+              <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); checkInsurerDomain();">
+              <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
+              <p style="font-size:12px; color:var(--color-text-tertiary); margin-top:6px;">
+                이 이메일로 인증 코드가 발송됩니다.
+              </p>
+            </div>
+
+            <div class="form-divider" style="font-weight:700; color:var(--color-brand);">📋 소속 정보 <span style="font-weight:400; color:var(--color-text-tertiary); font-size:0.85em;">— 정확히 입력해 주세요</span></div>
+
+            <!-- 보험사 분기 -->
+            <div class="insurer-fields" id="insurer-fields">
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-insurer">보험사</label>
+                <select class="auth-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
+                  <option value="">불러오는 중…</option>
+                </select>
+                <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
+              </div>
+              <div class="domain-guide" id="domain-guide" style="display:none;">
+                💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다.
+              </div>
+              <div class="signup-info-box is-emphasis">
+                <p><span class="emphasis-icon">🛡️</span><strong>소속 보험사를 <span class="emphasis-key">정확히</span> 선택해 주세요</strong></p>
+                <p>보험사 임직원 가입은 <strong>4중 방어</strong>를 거칩니다.</p>
+                <p class="signup-info-sub">이메일 도메인 검증 → 이메일 인증 → 가입 후 <strong>매니저 승인 대기</strong> → 승인 후 사용 시작.</p>
+              </div>
+            </div>
+
+            <!-- GA 분기 -->
+            <div class="ga-fields" id="ga-fields">
+              <div class="signup-info-box is-emphasis">
+                <p><span class="emphasis-icon">⚠️</span><strong>소속 정보를 <span class="emphasis-key">정확히</span> 입력해 주세요</strong></p>
+                <p>회사·지점·팀이 정확해야 <strong>지점 게시판</strong>과 <strong>팀 게시판</strong>이 활성화됩니다.</p>
+                <p class="signup-info-sub">💡 목록에 없으면 "기타 입력"으로 직접 입력 — 매니저 승인 시 매핑됩니다.</p>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-company-select">회사명</label>
+                <select class="auth-select" id="f-company-select" onchange="onGaCompanyChange()">
+                  <option value="AZ금융">AZ금융</option>
+                  <option value="__other__">기타 입력</option>
+                </select>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-company-text">회사명 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-company-text" placeholder="소속 회사명" maxlength="50" disabled style="opacity:0.5;">
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-branch-select">지점 / 센터</label>
+                <select class="auth-select" id="f-branch-select" onchange="onGaBranchChange()">
+                  <option value="">불러오는 중…</option>
+                </select>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-branch-text">지점명 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-branch-text" placeholder="지점/센터명" maxlength="50" disabled style="opacity:0.5;">
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-team-select">팀</label>
+                <select class="auth-select" id="f-team-select" onchange="onGaTeamChange()">
+                  <option value="">선택 안 함</option>
+                </select>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-team-text">팀명 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-team-text" placeholder="팀명" maxlength="30" disabled style="opacity:0.5;">
+              </div>
+            </div>
+
+          </div><!-- /.signup-form-body -->
+        </form>
+      </div>
+
+      <!-- ────── 가입 Step 3 — 약관 + 가입 ────── -->
+      <div class="auth-step-page" id="page-signup-3">
+        <span class="auth-friendly-emoji">🙌</span>
+        <h2 class="auth-page-title">거의 다 왔어요</h2>
+        <p class="auth-page-sub">약관 동의 후 가입이 완료됩니다</p>
+
+        <div class="form-check" style="padding:14px 0;">
+          <input type="checkbox" id="f-consent" onchange="clearFieldError('f-consent','e-consent')">
+          <label for="f-consent" style="margin-left:8px;">
+            <strong style="color:var(--color-text-primary);">(필수)</strong>
+            <a href="../terms.html" target="_blank" rel="noopener">이용약관</a> 및
+            <a href="../privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다
+          </label>
+        </div>
+        <div class="auth-form-err" id="e-consent">동의가 필요합니다.</div>
+
+        <div class="form-check" style="padding:14px 0;">
+          <input type="checkbox" id="agree2">
+          <label for="agree2" style="margin-left:8px;">(선택) 마케팅 정보 수신에 동의합니다</label>
+        </div>
+      </div>
+
+      <!-- 로그인 성공 -->
+      <div class="auth-step-page" id="page-login-success">
+        <div class="auth-success" style="text-align:center; padding:32px 0;">
+          <span class="auth-friendly-emoji">✅</span>
+          <h2 class="auth-page-title" style="text-align:center;">로그인 성공!</h2>
+          <p class="auth-page-sub" style="text-align:center;">잠시 후 메인 화면으로 이동합니다.</p>
+        </div>
+      </div>
+
+      <!-- 가입 성공 -->
+      <div class="auth-step-page" id="page-signup-success">
+        <div class="auth-success" style="text-align:center; padding:24px 0;">
+          <span class="auth-friendly-emoji">🎉</span>
+          <h2 class="auth-page-title" style="text-align:center;">가입 완료!</h2>
+          <div class="auth-page-sub" id="signup-success-desc" style="text-align:center;"></div>
+          <div class="pending-notice" id="pending-notice" style="margin-top:16px;">
+            ⏳ <strong>매니저 승인 대기 중입니다.</strong><br>
+            보험사 임직원 가입은 매니저 승인 후 사용이 활성화됩니다. 승인 결과는 가입한 이메일로 안내됩니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- ────── OTP 6자리 인증 (로그인 + 가입 공용, 2026-05-18 신설) ────── -->
+      <div class="auth-step-page" id="page-otp-verify">
+        <span class="auth-friendly-emoji">📧</span>
+        <h2 class="auth-page-title">이메일로 인증 코드를 보냈어요</h2>
+        <p class="auth-page-sub">
+          📬 <strong id="otp-target-email">example@email.com</strong><br><br>
+          위 <strong style="color:var(--color-brand);">이메일 메일함</strong>을 확인해 주세요.<br>
+          6자리 인증 코드가 도착해 있습니다.
+        </p>
+
+        <div style="background:#FFF8E1; border-left:3px solid #F4B400; padding:10px 14px; margin:16px 0; border-radius:6px; font-size:13px; color:#5F4B00;">
+          ⚠️ <strong>휴대폰 문자가 아닙니다.</strong> 가입하신 이메일 메일함(스팸함 포함)을 확인해 주세요.
+        </div>
+
+        <div class="auth-err-box" id="otpErrBox"></div>
+
+        <div class="auth-form-group" style="margin-top:20px;">
+          <label class="auth-label" for="f-otp-code">이메일에 적힌 6자리 코드</label>
+          <input class="auth-input" type="text" id="f-otp-code"
+                 placeholder="이메일에서 확인한 6자리"
+                 autocomplete="one-time-code"
+                 inputmode="numeric"
+                 maxlength="6"
+                 style="font-size:24px; letter-spacing:8px; text-align:center; font-weight:700;"
+                 oninput="this.value=this.value.replace(/[^0-9]/g,''); document.getElementById('e-otp-code').classList.remove('on');">
+          <div class="auth-form-err" id="e-otp-code">6자리 숫자를 입력해 주세요.</div>
+        </div>
+
+        <p style="font-size:13px; color:var(--color-text-tertiary); margin-top:16px; text-align:center;">
+          📨 메일이 도착하지 않았나요?<br>
+          스팸함(정크 메일함)도 함께 확인해 주세요.
+        </p>
+
+        <div style="text-align:center; margin-top:12px;">
+          <button class="auth-link" type="button" id="otpResendBtn" onclick="resendOtp()">인증 코드 재전송</button>
+        </div>
+      </div>
+
+    </div><!-- /.auth-page-body -->
+
+    <!-- 하단 sticky CTA -->
+    <div class="auth-cta-area" id="authCtaArea">
+      <button class="auth-btn" id="authMainCta" type="button">
+        <span id="authMainCtaTxt">로그인</span>
+        <span class="auth-spinner" id="authMainCtaSpinner" aria-hidden="true"></span>
+      </button>
+      <div class="auth-cross-link" id="authCrossLink">
+        <span id="authCrossLinkText">처음 오셨나요?</span>
+        <button class="auth-link auth-link-strong" type="button" id="authCrossLinkBtn" onclick="window.switchAuthSection('signup')">회원가입하기 →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script>
 (function () {
