@@ -574,6 +574,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #v-news,
 #v-team,
 #v-voice{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
+/* 2026-05-27 v-scripts 스크롤 격차 정정: .view.on { display:block } 자료가 .wrap의 flex 깨뜨림.
+   v-scripts는 카드 100개+ 동적 fetch라 부모 영역 넘어가 스크롤 필수. on 시 flex 강제 + min-height:0. */
+#v-scripts.on{display:flex;flex-direction:column;min-height:0;height:100%}
 .home-greeting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:linear-gradient(90deg,var(--s1),transparent);border:1px solid var(--bd);border-radius:12px;margin-bottom:14px}
 .home-greeting-name{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
 .home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
