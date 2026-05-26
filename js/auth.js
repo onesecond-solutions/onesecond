@@ -251,13 +251,30 @@
         user_metadata: payload.user_metadata || {}
       };
 
-      /* 2026-05-27: OAuth 콜백도 public.users role/name/plan 박음 (maintenance-guard admin 통과 정합).
-         async 흐름이라 await 위해 함수 자체를 async로 박음 (호출자도 await 처리). */
+      /* 2026-05-27 최종 정책: Google OAuth 콜백 자리에서 4 화이트리스트 검사.
+         - 클릭 시점에는 이메일 X = Google 인증 후 콜백에서만 검사 가능
+         - 화이트리스트 X = 모든 인증 자료 제거 + maintenance.html redirect */
+      if (window.OS_MAINTENANCE && window.OS_MAINTENANCE.mode === true) {
+        var allowed = (typeof window.osIsWhitelistedEmail === 'function')
+          ? window.osIsWhitelistedEmail(userObj.email)
+          : false;
+        if (!allowed) {
+          // URL fragment 먼저 정리 (다음 진입 시 잔존 X)
+          try { history.replaceState(null, '', window.location.pathname); } catch (_e) {}
+          if (window.OS_MAINTENANCE && typeof window.OS_MAINTENANCE.clear === 'function') {
+            window.OS_MAINTENANCE.clear();
+          }
+          window.location.replace('/maintenance.html');
+          return;
+        }
+      }
+
+      /* 2026-05-27: 화이트리스트 통과 후 public.users role/name/plan 박음 (admin 정합) */
       try {
         if (window.db && typeof window.db.mergeUserProfile === 'function') {
           userObj = await window.db.mergeUserProfile(userObj, accessToken);
         }
-      } catch (_e) { /* role 박지 못해도 인증은 계속 */ }
+      } catch (_e) { /* role 안 박혀도 인증은 계속 */ }
 
       localStorage.setItem('os_token', accessToken);
       localStorage.setItem('os_refresh_token', refreshToken);

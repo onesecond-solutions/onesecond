@@ -1,32 +1,27 @@
 /**
  * js/maintenance-guard.js
- * 유지보수 모드 가드 (2026-05-27 통째 재작성 — 이메일 화이트리스트 폐지)
+ * 유지보수 모드 가드 (2026-05-27 최종본 — 화이트리스트 3 계정 / reviewer 폐지)
  *
  * 본질:
- *   - MAINTENANCE_MODE = true 자료 = role === 'admin' 외 모든 진입 차단 (비로그인 포함)
- *   - 판정 단일 기준 = public.users.role === 'admin' (시스템 권한)
- *   - 이메일 화이트리스트 / 테스트 계정 예외 흐름 통째 폐지
- *   - PG 심사 5 페이지 (pricing / about / terms / privacy / refund) = 공개 유지
+ *   - MAINTENANCE_MODE = true 자료 = 화이트리스트 3 계정 외 모든 진입 차단 (비로그인 포함)
+ *   - 판정 단일 기준 = localStorage os_user.email ∈ OS_WHITELIST_EMAILS
+ *   - 공개 페이지 6건 = 누구나 접근 (landing + PG 5 페이지) + 진입 라우터 + maintenance
+ *   - ?dev=1 우회 자료 폐지 (최종 정책 명시)
+ *   - role='reviewer' / reviewer 화이트리스트 / 심사자 전용 흐름 자체 폐지
+ *   - 심사자 = 공개 페이지만 확인. 별도 계정 X.
+ *
+ * 허용 계정 (공사중 우회 3 계정):
+ *   1. bylts0428@gmail.com — admin (role='admin')
+ *   2. bylts@naver.com — 내부 운영
+ *   3. bylts@kakao.com — 내부 운영
  *
  * 흐름:
- *   1. ?dev=1 자리 = 가드 통과 (admin 본인 진입 자리)
- *   2. PUBLIC_PATHS = 가드 통과 (PG 심사용 + maintenance 본인)
- *   3. role === 'admin' = 통과 (localStorage os_user 안 role)
- *   4. 그 외 = 모든 인증 자료 제거 후 /maintenance.html redirect
- *
- * 적용:
- *   - 모든 진입 .html `<head>` 최상단에 `<script src="/js/maintenance-guard.js"></script>` 1줄
- *   - maintenance.html 자체에는 적용 X (loop 방지)
+ *   1. PUBLIC_PATHS 진입 = 통과 (진입 라우터 + landing + PG 5 페이지 + maintenance)
+ *   2. localStorage os_user.email ∈ OS_WHITELIST_EMAILS = 통과
+ *   3. 그 외 = 모든 인증 자료 제거 후 /maintenance.html redirect
  *
  * 해제:
  *   - 본 파일 line 28 `MAINTENANCE_MODE = false` 변경 + 재배포
- *
- * 우회 (admin 본인 진입 자리):
- *   - URL에 `?dev=1` 추가 = 가드 통과
- *
- * 격차 차단:
- *   - bfcache (뒤로가기) 재진입 시 = pageshow 이벤트 = 가드 재가동
- *   - 비로그인 사용자도 차단 (옛 흐름과 분리)
  */
 (function () {
   'use strict';
@@ -34,9 +29,23 @@
   var MAINTENANCE_MODE = true;
   var MAINTENANCE_PAGE = '/maintenance.html';
 
-  /* PG 심사용 공개 페이지 + maintenance 본인 = 가드 통과 */
+  /* 화이트리스트 3 계정 — auth-modal.js / auth.js에서 동일 자료 참조 (window.OS_WHITELIST_EMAILS).
+     reviewer 자료 통째 폐지 (2026-05-27 최종 정책). */
+  var WHITELIST_EMAILS = [
+    'bylts0428@gmail.com',
+    'bylts@naver.com',
+    'bylts@kakao.com'
+  ];
+
+  /* 공개 페이지 = 진입 라우터 + landing + PG 심사 5 페이지 + maintenance 본인
+     - /index.html = 진입 라우터 (비로그인이면 자동 landing redirect)
+     - / (루트) = GitHub Pages가 index.html 자동 서빙 = pathname '/' 자료
+     - 본 자리 차단 시 = 사용자가 도메인 진입 자체 차단 = landing 진입 불가 격차 */
   var PUBLIC_PATHS = [
+    '/',
+    '/index.html',
     '/maintenance.html',
+    '/pages/landing.html',
     '/pricing.html',
     '/about.html',
     '/terms.html',
@@ -44,26 +53,26 @@
     '/refund.html'
   ];
 
+  function isWhitelistedEmail(email) {
+    return WHITELIST_EMAILS.indexOf((email || '').toLowerCase().trim()) !== -1;
+  }
+
   function isPublicPath(pathname) {
     var p = (pathname || '').toLowerCase();
     for (var i = 0; i < PUBLIC_PATHS.length; i++) {
-      if (p === PUBLIC_PATHS[i] || p === PUBLIC_PATHS[i].toLowerCase()) return true;
+      if (p === PUBLIC_PATHS[i].toLowerCase()) return true;
     }
     return false;
   }
 
-  function getCurrentRole() {
+  function getCurrentEmail() {
     try {
       var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
       var u = JSON.parse(raw);
-      return (u.role || (u.user && u.user.role) || '').toString();
+      return u.email || (u.user && u.user.email) || '';
     } catch (e) {
       return '';
     }
-  }
-
-  function isAdminRole() {
-    return getCurrentRole() === 'admin';
   }
 
   function clearAllAuthStorage() {
@@ -110,19 +119,13 @@
   function checkAndGuard() {
     if (!MAINTENANCE_MODE) return;
 
-    /* 1. ?dev=1 자리 = admin 본인 진입 자리 */
-    try {
-      var params = new URLSearchParams(window.location.search);
-      if (params.get('dev') === '1') return;
-    } catch (e) {}
-
-    /* 2. PG 심사용 공개 페이지 + maintenance 본인 = 통과 */
+    /* 1. 공개 페이지 = 통과 (landing + PG 5 페이지 + maintenance) */
     if (isPublicPath(window.location.pathname)) return;
 
-    /* 3. role === 'admin' = 통과 */
-    if (isAdminRole()) return;
+    /* 2. 화이트리스트 4 계정 = 통과 */
+    if (isWhitelistedEmail(getCurrentEmail())) return;
 
-    /* 4. 그 외 = 모든 인증 자료 제거 후 maintenance.html redirect */
+    /* 3. 그 외 = 모든 인증 자료 제거 후 maintenance.html redirect */
     clearAllAuthStorage();
     window.location.replace(MAINTENANCE_PAGE);
   }
@@ -133,17 +136,20 @@
     if (event.persisted) checkAndGuard();
   });
 
+  /* 다른 파일이 참조하는 단일 진실 자료 */
+  window.OS_WHITELIST_EMAILS = WHITELIST_EMAILS;
+  window.osIsWhitelistedEmail = isWhitelistedEmail;
   window.OS_MAINTENANCE = {
     mode: MAINTENANCE_MODE,
+    whitelist: WHITELIST_EMAILS,
     publicPaths: PUBLIC_PATHS,
     check: checkAndGuard,
     clear: clearAllAuthStorage
   };
 
   /* ─────────────────────────────────────────────────────────────
-     모달 안 차단 함수 (auth-modal.js doLogin / doSubmit / signInWithGoogle 호출)
+     모달 안 차단 함수 (auth-modal.js doLogin / signInWithGoogle / doSubmit 호출)
      · 로그인 / 가입 / Google 시도 시 즉시 maintenance.html redirect
-     · 이메일 검사 흐름 폐지 — 모든 진입은 본 함수가 차단
      ───────────────────────────────────────────────────────────── */
   window.osShowMaintenance = function () {
     if (!MAINTENANCE_MODE) return;
