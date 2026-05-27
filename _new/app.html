@@ -711,23 +711,25 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .script-card.active .script-card-full{
   display:flex;
   flex-direction:column;
-  flex:1;
+  flex:1 1 auto;
   min-height:0;
+  /* 명시적 max-height = 카드 max-height - 헤더 영역 (padding + badge + ttl + margin) */
+  max-height:calc(min(520px, 100vh - 220px) - 110px);
   overflow-y:auto;
   overflow-x:hidden;
   margin-top:8px;
-  padding-right:6px;
-  /* Firefox 호환 */
+  padding-right:8px;
+  /* Firefox 호환 — 얇은 스크롤바 */
   scrollbar-width:thin;
   scrollbar-color:var(--ts) transparent;
   /* 본문 줄바꿈 보강 */
   word-break:keep-all;
   overflow-wrap:anywhere;
 }
-.script-card.active .script-card-full::-webkit-scrollbar{width:8px}
+.script-card.active .script-card-full::-webkit-scrollbar{width:4px}
 .script-card.active .script-card-full::-webkit-scrollbar-track{background:transparent}
-.script-card.active .script-card-full::-webkit-scrollbar-thumb{background:var(--ts);border-radius:4px;border:1px solid transparent;background-clip:padding-box}
-.script-card.active .script-card-full::-webkit-scrollbar-thumb:hover{background:var(--tp);background-clip:padding-box}
+.script-card.active .script-card-full::-webkit-scrollbar-thumb{background:var(--ts);border-radius:2px}
+.script-card.active .script-card-full::-webkit-scrollbar-thumb:hover{background:var(--tp)}
 .script-card.active .script-card-close{display:block}
 
 /* 위치 분기 = inset 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (translateX 자체 X)
