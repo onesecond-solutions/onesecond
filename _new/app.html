@@ -667,6 +667,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .script-flow-title{font-size:1rem;font-weight:700;color:var(--tp);letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;padding-right:12px}
 .script-flow-close{background:none;border:0;font-size:1.4rem;color:var(--ts);cursor:pointer;padding:4px 12px;border-radius:6px;flex-shrink:0;line-height:1}
 .script-flow-close:hover{background:var(--s2);color:var(--tp)}
+.script-flow-back{background:none;border:0;font-size:0.9rem;color:var(--ts);cursor:pointer;padding:6px 12px;border-radius:6px;flex-shrink:0;font-weight:600;line-height:1}
+.script-flow-back:hover{background:var(--s2);color:var(--tp)}
 .script-flow-wrap{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0;overflow:hidden}
 .script-card-list{display:flex;flex-direction:column;gap:8px;padding:16px;overflow-y:auto;border-right:1px solid var(--bd);background:var(--s1)}
 .script-card-lead{background:var(--s2);border-left:3px solid var(--ac);border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:8px;font-size:0.78rem;color:var(--ts);line-height:1.55}
@@ -923,6 +925,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
      ───────────────────────────────────────────── -->
      <div class="script-flow-overlay" id="scriptDetailOverlay" role="dialog" aria-modal="true">
        <div class="script-flow-header">
+         <button class="script-flow-back" type="button" onclick="closeScriptDetail()" aria-label="뒤로">← 뒤로</button>
          <div class="script-flow-title" id="scriptDetailTitle">스크립트</div>
          <button class="script-flow-close" type="button" onclick="closeScriptDetail()" aria-label="닫기">✕</button>
        </div>
@@ -3415,6 +3418,8 @@ function openScriptDetail(id){
   }
   document.getElementById('scriptDetailOverlay').setAttribute('data-open','1');
   document.documentElement.style.overflow = 'hidden';
+  /* 뒤로 가기 자료 = 브라우저 history 스택에 진입 자체 자체 자체 자체 자체 (브라우저 ← / 모바일 뒤로가기 자체 자체) */
+  try { history.pushState({ scriptDetail: id }, '', ''); } catch(e){}
 }
 
 function renderScriptDetailFlow(sc, parsed){
@@ -3479,12 +3484,35 @@ function renderScriptDetailEmpty(sc){
 }
 
 function closeScriptDetail(){
-  document.getElementById('scriptDetailOverlay').removeAttribute('data-open');
+  /* ✕ / [← 뒤로] / ESC 자체 자체 = history.back() → popstate 자체 _closeScriptDetailInternal 가동 */
+  if(history.state && history.state.scriptDetail){
+    history.back();
+  } else {
+    _closeScriptDetailInternal();
+  }
+}
+
+function _closeScriptDetailInternal(){
+  var ov = document.getElementById('scriptDetailOverlay');
+  if(ov) ov.removeAttribute('data-open');
   document.documentElement.style.overflow = '';
   window._activeScript = null;
   window._activeCards = null;
   window._activeCardIdx = 0;
 }
+
+/* 브라우저 뒤로 가기 자료 = popstate 자체 → 자체 자체 자체 자체 자체 닫기 */
+window.addEventListener('popstate', function(){
+  var ov = document.getElementById('scriptDetailOverlay');
+  if(ov && ov.getAttribute('data-open') === '1') _closeScriptDetailInternal();
+});
+
+/* ESC 키 자료 = 풀스크린 자체 자체 자체 자체 자체 닫기 */
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape' && e.key !== 'Esc') return;
+  var ov = document.getElementById('scriptDetailOverlay');
+  if(ov && ov.getAttribute('data-open') === '1') closeScriptDetail();
+});
 
 /* 옛 mock 기반 filterScripts 자료 통째 폐지 (위 filterScriptsByStage가 대체). 외부 onclick 호환용 stub만 유지. */
 function filterScripts(el, cat){ /* 폐지됨 — filterScriptsByStage 사용 */ }
