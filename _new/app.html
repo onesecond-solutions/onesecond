@@ -657,26 +657,65 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 @keyframes skelPulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
 /* ─────────────────────────────────────────────
-   스크립트 카드 그리드 + 오버레이 확장 (2026-05-27 정정)
-   - Quick 메뉴와 동일한 4열 grid (가로 스크롤 폐기)
-   - 카드 클릭 시 인접 카드 위치 유지 + position:absolute 오버레이
+   스크립트 카드 그리드 + 본인 자리 확장 (2026-05-27 정정)
+   - Quick 메뉴 동일 4열 grid
+   - cell wrapper 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체
+   - 카드 = cell 자체 자체 자체 absolute(inset:0)
+   - 클릭 = 본인 자리에서 width/height 자체 자체 (translateX 자체 X = 슬라이드 격차 정정)
    - 위치 분기 (idx % 4):
-     · col 1 (pos-c1) = 우측 + 하단 확장
-     · col 2 / col 3 (pos-c2 / pos-c3) = 좌우 + 하단 (translateX -50%)
-     · col 4 (pos-c4) = 좌측 + 하단
-   - 모바일 = 1열 grid + active 자체 자체 자체 (정적 확장)
+     · col 1 (pos-c1) = 좌상 자체 자체 자체 자체 → 우측 + 하단 확장
+     · col 2,3 (pos-c2,c3) = 자체 자체 자체 자체 자체 자체 자체 자체 → 좌우 + 하단 (좌측 자체 자체 자체)
+     · col 4 (pos-c4) = 우상 자체 자체 자체 자체 → 좌측 + 하단 확장
+   - 본문 스크롤 = .script-card-full overflow-y:auto + flex:1 + min-height:0
+   - 선택 상태 = background + border + border-left-width 미세 강조 (토큰 자체 자체)
 ───────────────────────────────────────────── */
 .scripts-cards-wrap{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:8px 4px 24px;align-items:start;min-height:200px}
-.script-card{position:relative;min-height:180px;background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--tc,var(--ac));border-radius:8px;padding:14px;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,border-color .15s,box-shadow .15s;min-width:0}
-.script-card:hover{transform:translateY(-2px);border-color:var(--tc,var(--ac))}
-.script-card-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;font-size:0.7rem;font-weight:700;color:var(--tc,var(--ac));background:color-mix(in srgb,var(--tc,var(--ac)) 12%,transparent);white-space:nowrap;align-self:flex-start;margin-bottom:8px}
-.script-card-ttl{font-size:0.92rem;font-weight:800;color:var(--tp);margin-bottom:8px;letter-spacing:-.02em;line-height:1.35}
-.script-card-summary{flex:1;font-size:0.82rem;color:var(--ts);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
 
-/* active 카드 = 오버레이 확장 (position:absolute) */
-.script-card.active{position:absolute !important;z-index:20;width:auto;height:auto;min-width:280px;max-width:min(540px,calc(100vw - 48px));max-height:min(520px,calc(100vh - 220px));box-shadow:0 12px 36px rgba(0,0,0,0.22);cursor:default;transform:none !important}
+.script-card-cell{position:relative;min-height:200px}
+
+.script-card{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:var(--s1);
+  border:1px solid var(--bd);
+  border-left:3px solid var(--tc,var(--ac));
+  border-radius:8px;
+  padding:14px;
+  cursor:pointer;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:width .22s ease, height .22s ease, max-width .22s ease, max-height .22s ease, background .22s ease, border-color .22s ease, border-left-width .22s ease, box-shadow .22s ease;
+}
+.script-card:hover{border-color:var(--tc,var(--ac))}
+.script-card-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;font-size:0.7rem;font-weight:700;color:var(--tc,var(--ac));background:color-mix(in srgb,var(--tc,var(--ac)) 12%,transparent);white-space:nowrap;align-self:flex-start;margin-bottom:8px;flex-shrink:0;transition:background .22s ease}
+.script-card-ttl{font-size:0.92rem;font-weight:800;color:var(--tp);margin-bottom:8px;letter-spacing:-.02em;line-height:1.35;flex-shrink:0}
+.script-card-summary{flex:1;font-size:0.82rem;color:var(--ts);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;min-height:0}
+
+/* active 카드 = 본인 자리 확장 (inset 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체) */
+.script-card.active{
+  z-index:20;
+  width:auto;
+  height:auto;
+  min-width:100%;
+  min-height:100%;
+  max-width:min(540px, calc(100vw - 48px));
+  max-height:min(520px, calc(100vh - 220px));
+  box-shadow:0 10px 32px rgba(0,0,0,0.18);
+  cursor:default;
+  /* 선택 상태 미세 강조 = 디자인 토큰 자체 자체 + color-mix 자체 자체 자체 */
+  background:color-mix(in srgb, var(--s1) 92%, var(--tc) 6%);
+  border-color:color-mix(in srgb, var(--bd) 40%, var(--tc) 60%);
+  border-left-width:4px;
+}
+.script-card.active .script-card-badge{background:color-mix(in srgb, var(--tc,var(--ac)) 20%, transparent)}
+.script-card.active .script-card-summary{display:none}
+.script-card.active .script-card-full{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;margin-top:4px}
+.script-card.active .script-card-close{display:block}
+
+/* 위치 분기 = inset 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (translateX 자체 X) */
+.script-card.active.pos-c1{right:auto !important; bottom:auto !important}                       /* 1열: 좌상 자체 자체 → 우+하 확장 */
+.script-card.active.pos-c4{left:auto !important;  bottom:auto !important}                       /* 4열: 우상 자체 자체 → 좌+하 확장 */
 .script-card.active.pos-c2,
-.script-card.active.pos-c3{transform:translateX(-50%) !important}
+.script-card.active.pos-c3{bottom:auto !important; right:auto !important; left:-50% !important; min-width:200%}  /* 2/3열: 본인 자리 자체 자체 자체 + 좌측 자체 자체 자체 + 우측 자체 자체 자체 = 좌우 + 하단 */
 .script-card.active .script-card-summary{display:none}
 .script-card.active .script-card-full{display:flex;flex-direction:column;flex:1;overflow-y:auto;min-height:0}
 .script-card.active .script-card-close{display:block}
@@ -3399,7 +3438,8 @@ function renderScriptsCards(stage){
     var sections = parseScriptSections(s.script_text);
     var summary = extractCardSummary(sections, s.highlight_text);
     var isEmpty = !sections || !sections.length;
-    html += '<div class="script-card" data-idx="'+i+'" data-total="'+filtered.length+'" data-id="'+s.id+'" data-tc="'+groupColor+'" style="--tc:'+groupColor+'" onclick="onCardClick(this, event)">'
+    html += '<div class="script-card-cell" data-idx="'+i+'">'
+          + '<div class="script-card" data-idx="'+i+'" data-total="'+filtered.length+'" data-id="'+s.id+'" data-tc="'+groupColor+'" style="--tc:'+groupColor+'" onclick="onCardClick(this, event)">'
           + '<button class="script-card-close" type="button" onclick="event.stopPropagation();deactivateCard()" aria-label="닫기">✕</button>'
           + '<span class="script-card-badge">'+_scEscape(groupLabel)+'</span>'
           + '<div class="script-card-ttl">'+_scEscape(s.title || '제목 없음')+'</div>';
@@ -3409,7 +3449,7 @@ function renderScriptsCards(stage){
       html += '<div class="script-card-summary">'+_scEscape(summary)+'</div>'
             + '<div class="script-card-full">'+renderCardAccordion(sections)+'</div>';
     }
-    html += '</div>';
+    html += '</div></div>';
   }
   wrap.innerHTML = html;
   wrap.classList.remove('has-active');
@@ -3456,56 +3496,14 @@ function onCardClick(card, e){
 function activateCard(card, idx, total){
   var wrap = document.getElementById('scriptsCardsWrap');
   if(!wrap) return;
-
-  /* 옛 active + 인라인 자체 자체 자체 자체 자체 (--tc 자체 자체 자체 data-tc 자체 자체) */
+  /* 옛 active 자체 자체 자체 자체 자체 자체 자체 자체. CSS only 자체 자체 자체 자체 자체 (idx % 4 → pos-cN) */
   var allCards = wrap.querySelectorAll('.script-card');
   for(var i=0;i<allCards.length;i++){
     allCards[i].classList.remove('active','pos-c1','pos-c2','pos-c3','pos-c4');
-    allCards[i].removeAttribute('style');
-    var prevTc = allCards[i].getAttribute('data-tc');
-    if(prevTc) allCards[i].style.setProperty('--tc', prevTc);
   }
-
-  var isMobile = window.innerWidth <= 767;
-
-  if(isMobile){
-    /* 모바일 = 정적 확장 (position:relative + 100% width). 위치 자체 자체 자체 자체 X */
-    card.classList.add('active');
-  } else {
-    /* 데스크탑 = 본인 grid 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 + position:absolute 자체 자체 자체 */
-    var col = idx % 4;  /* 0=1열 / 1=2열 / 2=3열 / 3=4열 */
-    var wrapRect = wrap.getBoundingClientRect();
-    var cardRect = card.getBoundingClientRect();
-    var padTop = parseFloat(getComputedStyle(wrap).paddingTop) || 0;
-    var padLeft = parseFloat(getComputedStyle(wrap).paddingLeft) || 0;
-    var padRight = parseFloat(getComputedStyle(wrap).paddingRight) || 0;
-    var top = cardRect.top - wrapRect.top - padTop;
-    var left = cardRect.left - wrapRect.left - padLeft;
-    var right = wrapRect.right - cardRect.right - padRight;
-    var width = cardRect.width;
-
-    card.style.top = top + 'px';
-
-    if(col === 0){
-      /* 1열 = 좌측 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (우측 + 하단 확장) */
-      card.style.left = left + 'px';
-      card.classList.add('pos-c1');
-    } else if(col === 3){
-      /* 4열 = 우측 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (좌측 + 하단 확장) */
-      card.style.right = right + 'px';
-      card.classList.add('pos-c4');
-    } else {
-      /* 2~3열 = 중앙 자체 자체 자체 자체 자체 자체 자체 자체 (좌우 + 하단 확장, translateX(-50%)) */
-      var cardCenter = left + width / 2;
-      card.style.left = cardCenter + 'px';
-      card.classList.add(col === 1 ? 'pos-c2' : 'pos-c3');
-    }
-    /* --tc 인라인 자체 자체 자체 자체 자체 자체 (removeAttribute 자체 자체 자체 자체 자체 자체) */
-    var tc = card.getAttribute('data-tc');
-    if(tc) card.style.setProperty('--tc', tc);
-    card.classList.add('active');
-  }
-
+  /* 위치 분기 = CSS only (idx % 4 → 1열/2열/3열/4열). JS 자체 자체 자체 자체 자체 X (cell wrapper 자체 자체 자체 자체) */
+  var col = idx % 4;
+  card.classList.add('active', 'pos-c' + (col + 1));
   wrap.classList.add('has-active');
   try { history.pushState({ scriptCardActive: card.getAttribute('data-id') }, '', ''); } catch(err){}
 }
@@ -3517,9 +3515,6 @@ function deactivateCard(silent){
   var cards = wrap.querySelectorAll('.script-card');
   for(var i=0;i<cards.length;i++){
     cards[i].classList.remove('active','pos-c1','pos-c2','pos-c3','pos-c4');
-    cards[i].removeAttribute('style');
-    var tc = cards[i].getAttribute('data-tc');
-    if(tc) cards[i].style.setProperty('--tc', tc);
   }
   wrap.classList.remove('has-active');
   if(!silent && hasActive && history.state && history.state.scriptCardActive){
