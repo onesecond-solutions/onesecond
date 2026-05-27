@@ -655,6 +655,58 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .home-recent-card.skel:hover{transform:none;border-color:transparent}
 .home-recent-card.skel .home-recent-card-row1,.home-recent-card.skel .home-recent-card-meta{visibility:hidden}
 @keyframes skelPulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+/* ─────────────────────────────────────────────
+   스크립트 본문 풀스크린 flow (2026-05-27 신설)
+   좌 = 카드 흐름 (40%) / 우 = 활성 카드 (60%)
+   모바일 = 상하 분할 (chips 가로 스크롤 + 하단 풀)
+───────────────────────────────────────────── */
+.script-flow-overlay{position:fixed;inset:0;z-index:9999;background:var(--b1);display:none}
+.script-flow-overlay[data-open="1"]{display:flex;flex-direction:column}
+.script-flow-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--s1);flex-shrink:0}
+.script-flow-title{font-size:1rem;font-weight:700;color:var(--tp);letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;padding-right:12px}
+.script-flow-close{background:none;border:0;font-size:1.4rem;color:var(--ts);cursor:pointer;padding:4px 12px;border-radius:6px;flex-shrink:0;line-height:1}
+.script-flow-close:hover{background:var(--s2);color:var(--tp)}
+.script-flow-wrap{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0;overflow:hidden}
+.script-card-list{display:flex;flex-direction:column;gap:8px;padding:16px;overflow-y:auto;border-right:1px solid var(--bd);background:var(--s1)}
+.script-card-lead{background:var(--s2);border-left:3px solid var(--ac);border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:8px;font-size:0.78rem;color:var(--ts);line-height:1.55}
+.script-card-item{display:flex;flex-direction:column;gap:4px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .15s}
+.script-card-item:hover{border-color:var(--ac);transform:translateX(2px)}
+.script-card-item.on{background:var(--ac);border-color:var(--ac)}
+.script-card-item.on .script-card-item-num,.script-card-item.on .script-card-item-sub{color:rgba(255,255,255,0.85)}
+.script-card-item.on .script-card-item-ttl{color:#fff}
+.script-card-item-num{font-size:0.72rem;font-weight:700;color:var(--ac);letter-spacing:-.02em}
+.script-card-item-ttl{font-size:0.85rem;font-weight:700;color:var(--tp);line-height:1.4}
+.script-card-item-sub{font-size:0.72rem;color:var(--ts);line-height:1.4}
+.script-flow-nav{display:flex;gap:8px;margin-top:8px;padding-top:12px;border-top:1px solid var(--bd)}
+.script-flow-nav button{flex:1;padding:8px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tp);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .15s}
+.script-flow-nav button:hover:not(:disabled){background:var(--ac);color:#fff;border-color:var(--ac)}
+.script-flow-nav button:disabled{opacity:0.4;cursor:not-allowed}
+
+.script-active-card{padding:32px 36px;overflow-y:auto;background:var(--b1)}
+.script-active-card-chip{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--ac);color:#fff;font-size:0.75rem;font-weight:700;margin-bottom:14px}
+.script-active-card-ttl{font-size:1.2rem;font-weight:800;color:var(--tp);margin:0 0 6px;letter-spacing:-.02em}
+.script-active-card-sub{font-size:0.85rem;color:var(--ts);margin:0 0 20px;line-height:1.6}
+.script-active-card-main{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:10px;padding:20px;font-size:1rem;font-weight:700;color:var(--tp);line-height:1.85;margin-bottom:16px;letter-spacing:-.01em}
+.script-active-card-extra{padding:4px 4px 0;font-size:0.9rem;color:var(--tp);line-height:1.75;margin-bottom:20px}
+.script-active-card-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 8px 8px 0;padding:12px 14px;font-size:0.82rem;font-weight:700;color:#7A4400;line-height:1.55}
+[data-theme="dark"] .script-active-card-coach{background:rgba(200,146,59,0.15);color:#E0B774}
+
+.script-empty-state{padding:60px 24px;text-align:center;color:var(--ts);grid-column:1/-1;align-self:center;justify-self:center}
+.script-empty-state-icon{font-size:2.5rem;margin-bottom:14px;opacity:0.4}
+.script-empty-state-ttl{font-size:1.05rem;font-weight:700;color:var(--tp);margin-bottom:6px;letter-spacing:-.02em}
+.script-empty-state-sub{font-size:0.85rem;color:var(--ts);line-height:1.6}
+
+@media (max-width:767px){
+  .script-flow-header{padding:12px 16px}
+  .script-flow-wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .script-card-list{flex-direction:row;overflow-x:auto;overflow-y:visible;border-right:0;border-bottom:1px solid var(--bd);padding:12px 16px;gap:8px;flex-shrink:0}
+  .script-card-lead{display:none}
+  .script-card-item{min-width:170px;flex-shrink:0}
+  .script-flow-nav{display:none}
+  .script-active-card{padding:20px 18px}
+  .script-active-card-main{padding:16px;font-size:0.95rem;line-height:1.75}
+}
 </style>
 </head>
 <body>
@@ -866,19 +918,16 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
      </div>
 
      <!-- ─────────────────────────────────────────────
-          스크립트 본문 모달 (2026-05-27 신설)
-          카드 클릭 시 script_text 노출
+          스크립트 본문 풀스크린 flow (2026-05-27 갈아끼움)
+          좌 = 카드 흐름 / 우 = 활성 카드 1장 (모바일 = 상하 분할)
      ───────────────────────────────────────────── -->
-     <div class="auth-overlay" id="scriptDetailOverlay" hidden onclick="if(event.target===this)closeScriptDetail()">
-       <!-- 2026-05-27 핫픽스: display:flex + max-height 자료 필수.
-            옛 .auth-modal = display:block + overflow:hidden = 자식 flex:1 + overflow-y:auto 가동 X = 본문 스크롤 격차. -->
-       <div class="auth-modal" role="dialog" aria-modal="true" style="max-width:720px; max-height:90vh; display:flex; flex-direction:column;">
-         <div class="auth-page-header">
-           <button class="auth-page-close" type="button" onclick="closeScriptDetail()" aria-label="닫기">✕</button>
-         </div>
-         <div class="auth-page-body" id="scriptDetailBody" style="padding:0 24px 32px;">
-           <!-- JS openScriptDetail(id) 가동 시 동적 자료 -->
-         </div>
+     <div class="script-flow-overlay" id="scriptDetailOverlay" role="dialog" aria-modal="true">
+       <div class="script-flow-header">
+         <div class="script-flow-title" id="scriptDetailTitle">스크립트</div>
+         <button class="script-flow-close" type="button" onclick="closeScriptDetail()" aria-label="닫기">✕</button>
+       </div>
+       <div class="script-flow-wrap" id="scriptDetailWrap">
+         <!-- JS openScriptDetail(id) 가동 시 동적 자료 -->
        </div>
      </div>
      <div class="wrap view" id="v-quick">
@@ -3318,30 +3367,123 @@ function filterScriptsByStage(el, stageKey){
   renderScriptsCards(stageKey);
 }
 
+/* 2026-05-27 갈아끼움: HTML script_text → 카드 배열 자료 변환 + 풀스크린 flow 가동 */
+function parseScriptCards(html){
+  if(!html || html.length < 200) return null;
+  var wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  var boxes = wrap.querySelectorAll('div[style*="border:1.5px solid #DCDCDC"]');
+  if(!boxes.length) return null;
+  var cards = [];
+  for(var i=0;i<boxes.length;i++){
+    var box = boxes[i];
+    var titleEl = box.querySelector('div[style*="color:#185FA5"]');
+    var subEl = box.querySelector('div[style*="font-weight:600"]');
+    var mainEl = box.querySelector('div[style*="font-size:15px"]');
+    var subBodyEl = box.querySelector('div[style*="border-top"]');
+    var coachEl = box.querySelector('div[style*="background:#FFF3DC"]');
+    cards.push({
+      title: titleEl ? titleEl.textContent.trim() : '',
+      subtitle: subEl ? subEl.textContent.trim() : '',
+      main: mainEl ? mainEl.innerHTML : '',
+      sub: subBodyEl ? subBodyEl.innerHTML : '',
+      coach: coachEl ? coachEl.textContent.trim() : ''
+    });
+  }
+  var leadEl = wrap.querySelector('div[style*="border-left:4px solid"]');
+  return { lead: leadEl ? leadEl.innerHTML : '', cards: cards };
+}
+
+function _scEscape(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _scStageLabel(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].label; return stg || ''; }
+
 function openScriptDetail(id){
   if(!window._scriptsCache) return;
   var sc = null;
   for(var i=0;i<window._scriptsCache.length;i++){ if(window._scriptsCache[i].id === id){ sc = window._scriptsCache[i]; break; } }
   if(!sc) return;
-  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function stageLabel(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].label; return stg || ''; }
-  var bodyEl = document.getElementById('scriptDetailBody');
-  var label = escapeHtml(stageLabel(sc.stage));
-  var title = escapeHtml(sc.title || '제목 없음');
-  var highlight = escapeHtml(sc.highlight_text || '');
-  /* script_text는 v1 DB에 HTML 자료로 저장됨 (border 등). 그대로 노출. */
-  var bodyHtml = sc.script_text || '<p>본문이 없습니다.</p>';
-  bodyEl.innerHTML = '<div style="display:inline-block;padding:4px 10px;background:var(--ac);color:#fff;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:12px;">'+label+'</div>'
-                   + '<h2 style="font-size:20px;font-weight:800;margin:0 0 8px;color:var(--text);">'+title+'</h2>'
-                   + (highlight ? '<p style="color:var(--text-sub);margin:0 0 20px;font-size:14px;line-height:1.6;">'+highlight+'</p>' : '')
-                   + '<div style="border-top:1px solid var(--line);padding-top:16px;color:var(--text);line-height:1.7;font-size:14px;">'+bodyHtml+'</div>';
-  document.getElementById('scriptDetailOverlay').removeAttribute('hidden');
+  document.getElementById('scriptDetailTitle').textContent = sc.title || '스크립트';
+  var parsed = parseScriptCards(sc.script_text);
+  window._activeScript = sc;
+  if(!parsed || !parsed.cards.length){
+    renderScriptDetailEmpty(sc);
+  } else {
+    window._activeCards = parsed.cards;
+    window._activeLead = parsed.lead;
+    window._activeCardIdx = 0;
+    renderScriptDetailFlow(sc, parsed);
+  }
+  document.getElementById('scriptDetailOverlay').setAttribute('data-open','1');
   document.documentElement.style.overflow = 'hidden';
 }
 
+function renderScriptDetailFlow(sc, parsed){
+  var leadHtml = parsed.lead ? '<div class="script-card-lead">'+parsed.lead+'</div>' : '';
+  var listHtml = '';
+  for(var i=0;i<parsed.cards.length;i++){
+    var c = parsed.cards[i];
+    listHtml += '<div class="script-card-item'+(i===0?' on':'')+'" data-idx="'+i+'" onclick="setActiveCard('+i+')">'
+              + '<div class="script-card-item-num">카드 '+(i+1)+' / '+parsed.cards.length+'</div>'
+              + '<div class="script-card-item-ttl">'+_scEscape(c.title)+'</div>'
+              + (c.subtitle ? '<div class="script-card-item-sub">'+_scEscape(c.subtitle)+'</div>' : '')
+              + '</div>';
+  }
+  var navHtml = '<div class="script-flow-nav">'
+              + '<button type="button" id="scriptFlowPrev" onclick="setActiveCard(window._activeCardIdx - 1)">← 이전</button>'
+              + '<button type="button" id="scriptFlowNext" onclick="setActiveCard(window._activeCardIdx + 1)">다음 →</button>'
+              + '</div>';
+  document.getElementById('scriptDetailWrap').innerHTML =
+    '<div class="script-card-list">'+leadHtml+listHtml+navHtml+'</div>'
+  + '<div class="script-active-card" id="scriptActiveCardPanel"></div>';
+  renderActiveCardPanel();
+}
+
+function renderActiveCardPanel(){
+  var sc = window._activeScript;
+  var cards = window._activeCards;
+  var idx = window._activeCardIdx;
+  if(!cards || !cards[idx]) return;
+  var c = cards[idx];
+  var html = '<div class="script-active-card-chip">'+_scEscape(_scStageLabel(sc.stage))+' · 카드 '+(idx+1)+' / '+cards.length+'</div>'
+           + '<h2 class="script-active-card-ttl">'+_scEscape(c.title)+'</h2>'
+           + (c.subtitle ? '<p class="script-active-card-sub">'+_scEscape(c.subtitle)+'</p>' : '')
+           + (c.main ? '<div class="script-active-card-main">'+c.main+'</div>' : '')
+           + (c.sub ? '<div class="script-active-card-extra">'+c.sub+'</div>' : '')
+           + (c.coach ? '<div class="script-active-card-coach">⚡ '+_scEscape(c.coach.replace(/^⚡\s*/,''))+'</div>' : '');
+  document.getElementById('scriptActiveCardPanel').innerHTML = html;
+  var items = document.querySelectorAll('.script-card-item');
+  for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i === idx);
+  var prev = document.getElementById('scriptFlowPrev');
+  var next = document.getElementById('scriptFlowNext');
+  if(prev) prev.disabled = (idx <= 0);
+  if(next) next.disabled = (idx >= cards.length - 1);
+  if(items[idx] && items[idx].scrollIntoView) items[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  var panel = document.getElementById('scriptActiveCardPanel');
+  if(panel) panel.scrollTop = 0;
+}
+
+function setActiveCard(idx){
+  if(!window._activeCards) return;
+  if(idx < 0 || idx >= window._activeCards.length) return;
+  window._activeCardIdx = idx;
+  renderActiveCardPanel();
+}
+
+function renderScriptDetailEmpty(sc){
+  document.getElementById('scriptDetailWrap').innerHTML =
+    '<div class="script-empty-state">'
+  + '<div class="script-empty-state-icon">📝</div>'
+  + '<div class="script-empty-state-ttl">'+_scEscape(sc.title || '스크립트')+'</div>'
+  + '<div class="script-empty-state-sub">본문 자료 준비 중입니다.<br>('+_scEscape(_scStageLabel(sc.stage))+')</div>'
+  + '</div>';
+}
+
 function closeScriptDetail(){
-  document.getElementById('scriptDetailOverlay').setAttribute('hidden','');
+  document.getElementById('scriptDetailOverlay').removeAttribute('data-open');
   document.documentElement.style.overflow = '';
+  window._activeScript = null;
+  window._activeCards = null;
+  window._activeCardIdx = 0;
 }
 
 /* 옛 mock 기반 filterScripts 자료 통째 폐지 (위 filterScriptsByStage가 대체). 외부 onclick 호환용 stub만 유지. */
