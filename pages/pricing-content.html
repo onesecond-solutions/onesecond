@@ -74,10 +74,6 @@
   border: 2px solid #3b2416;
   box-shadow: 0 4px 20px rgba(61,43,31,0.12);
 }
-.price-card.b2b {
-  background: linear-gradient(160deg, #3b2416, #4a2f1f);
-  border: none;
-}
 .card-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -88,8 +84,8 @@
   align-self: flex-start;
 }
 .badge-free { background: #f5ede4; color: #6b4226; }
-.badge-pro { background: #c8753a; color: white; }
-.badge-b2b { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); }
+.badge-plus { background: #c8753a; color: white; }
+.badge-pro  { background: #3b2416; color: white; }
 .card-price {
   font-size: 2.25em;
   font-weight: 900;
@@ -98,9 +94,7 @@
   margin-bottom: 2px;
 }
 .card-price span { font-size: 0.9375em; font-weight: 400; color: #9a7a62; }
-.b2b .card-price { color: white; font-size: 1.625em; letter-spacing: -0.5px; }
 .card-trial { font-size: 0.8125em; color: #c8753a; font-weight: 700; margin-bottom: 14px; }
-.b2b .card-trial { color: rgba(255,255,255,0.7); }
 .card-note {
   font-size: 0.75em;
   color: #9a7a62;
@@ -109,10 +103,6 @@
   padding: 9px 12px;
   margin-bottom: 20px;
   line-height: 1.7;
-}
-.b2b .card-note {
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.75);
 }
 .card-features {
   list-style: none;
@@ -132,8 +122,6 @@
 .card-features li::before { content: "✓"; color: #c8753a; font-weight: 700; flex-shrink: 0; }
 .card-features li.no { color: #c0b0a8; text-decoration: line-through; }
 .card-features li.no::before { content: "✕"; color: #ddd; }
-.b2b .card-features li { color: rgba(255,255,255,0.8); border-bottom-color: rgba(255,255,255,0.1); }
-.b2b .card-features li::before { color: #e8906a; }
 .card-btn {
   width: 100%;
   padding: 13px;
@@ -151,9 +139,9 @@
 }
 .btn-accent { background: #c8753a; color: white; }
 .btn-accent:hover { background: #b5642e; }
+.btn-dark { background: #3b2416; color: white; }
+.btn-dark:hover { background: #4a2f1f; }
 .btn-muted { background: #f5ede4; color: #6b4226; cursor: default; }
-.btn-white { background: white; color: #3b2416; }
-.btn-white:hover { background: #f5ede4; }
 .pricing-notes {
   margin-top: 28px;
   text-align: center;
@@ -164,6 +152,26 @@
   line-height: 2.2;
 }
 .pricing-notes p::before { content: "· "; }
+.pricing-b2b-note {
+  margin-top: 24px;
+  text-align: center;
+  padding: 16px 20px;
+  background: #f5ede4;
+  border-radius: 10px;
+  font-size: 0.8125em;
+  color: #6b4226;
+  line-height: 1.6;
+}
+.pricing-b2b-note a {
+  color: #c8753a;
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 6px;
+}
+.pricing-b2b-note a:hover { text-decoration: underline; }
+@media (max-width: 767px) {
+  .pricing-grid { grid-template-columns: 1fr; }
+}
 </style>
 
 <div class="pricing-wrap">
@@ -181,6 +189,7 @@
 
   <div class="pricing-grid">
 
+    <!-- FREE -->
     <div class="price-card">
       <div class="card-badge badge-free">무료 플랜</div>
       <div class="card-price">0<span>원 / 월</span></div>
@@ -193,11 +202,12 @@
         <li class="no">스크립트 작성 (설계사 제한)</li>
         <li class="no">게시판 질문 작성 (설계사 제한)</li>
       </ul>
-      <button class="card-btn btn-accent" onclick="switchMenu('home')">홈으로 돌아가기</button>
+      <button class="card-btn btn-accent" onclick="handleFreeCta()">홈으로 돌아가기</button>
     </div>
 
+    <!-- PLUS (featured) -->
     <div class="price-card featured">
-      <div class="card-badge badge-pro">유료 플랜 · 추천</div>
+      <div class="card-badge badge-plus">유료 플랜 · 추천</div>
       <div class="card-price">9,900<span>원 / 월</span></div>
       <div class="card-trial">첫 30일 완전 무료 체험</div>
       <div class="card-note">설계사·팀장도 글쓰기까지<br>모든 기능을 사용할 수 있어요</div>
@@ -208,22 +218,23 @@
         <li>보험 뉴스 멘트 활용</li>
         <li>언제든 해지 가능</li>
       </ul>
-      <button class="card-btn btn-muted" id="pr-pro-btn">✅ 이용 중</button>
+      <button class="card-btn btn-accent" id="plus-cta" onclick="handlePaidCta('plus')">PLUS 시작하기</button>
     </div>
 
-    <div class="price-card b2b">
-      <div class="card-badge badge-b2b">B2B 제휴</div>
-      <div class="card-price">맞춤 협의</div>
-      <div class="card-trial">보험사 · GA · 교육기관 전용</div>
-      <div class="card-note">규모와 목적에 맞는<br>전용 플랜으로 협의드립니다</div>
+    <!-- PRO -->
+    <div class="price-card">
+      <div class="card-badge badge-pro">프로 플랜</div>
+      <div class="card-price">19,900<span>원 / 월</span></div>
+      <div class="card-trial">PLUS 자료 통째 + 우선 지원</div>
+      <div class="card-note">팀 단위 운영과<br>고급 자료가 필요한 분께</div>
       <ul class="card-features">
-        <li>조직 전용 게시판 운영</li>
-        <li>데이터 자산화 지원</li>
-        <li>파일럿 1~3개월 무료 제공</li>
-        <li>맞춤 기능 협의 가능</li>
-        <li>전담 운영 지원</li>
+        <li>PLUS 자료 통째 포함</li>
+        <li>우선 고객 지원</li>
+        <li>고급 자료 · API 우선 진입</li>
+        <li>관리자 자료 강화</li>
+        <li>언제든 해지 가능</li>
       </ul>
-      <a class="card-btn btn-white" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 제휴 문의하기</a>
+      <button class="card-btn btn-dark" id="pro-cta" onclick="handlePaidCta('pro')">PRO 시작하기</button>
     </div>
 
   </div>
@@ -231,15 +242,25 @@
   <div class="pricing-notes">
     <p>유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다</p>
     <p>매니저(실장) · 지점장(센터장)은 무료 플랜에서도 영구 무료로 모든 기능을 이용할 수 있습니다</p>
-    <p>B2B 제휴 문의는 카카오 오픈채팅으로 연락 주시면 빠르게 안내드립니다</p>
+  </div>
+
+  <!-- B2B 카드 제거 (PR #126) — 하단 한 줄 안내로 정합. 상호계약 = 별 트랙. -->
+  <div class="pricing-b2b-note">
+    💬 기업·단체 도입 문의는 카카오 오픈채팅으로
+    <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">상호계약 문의하기</a>
   </div>
 </div>
 
 <script>
+/* ★ 본 파일은 app.html loadPricing()이 fetch + innerHTML로 로드.
+   HTML5 spec = innerHTML로 들어간 <script>는 가동 X.
+   pr-plan-name 자료 IIFE는 자료상 가동 안 됨 = 별 트랙 정정 자리.
+   결제 흐름 본질은 app.html 전역 window.handlePaidCta + window.handleFreeCta 자료. */
 (function() {
   const role = window._userRole || '';
   const planName = document.getElementById('pr-plan-name');
   const planBadge = document.getElementById('pr-plan-badge');
+  if (!planName || !planBadge) return;
 
   if ([
     'ga_branch_manager', 'ga_manager',
