@@ -708,14 +708,27 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 }
 .script-card.active .script-card-badge{background:color-mix(in srgb, var(--tc,var(--ac)) 20%, transparent)}
 .script-card.active .script-card-summary{display:none}
-.script-card.active .script-card-full{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;margin-top:4px}
+.script-card.active .script-card-full{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  margin-top:8px;
+  padding-right:4px;
+}
+.script-card.active .script-card-full::-webkit-scrollbar{width:6px}
+.script-card.active .script-card-full::-webkit-scrollbar-track{background:transparent}
+.script-card.active .script-card-full::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+.script-card.active .script-card-full::-webkit-scrollbar-thumb:hover{background:var(--ts)}
 .script-card.active .script-card-close{display:block}
 
-/* 위치 분기 = inset 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (translateX 자체 X) */
-.script-card.active.pos-c1{right:auto !important; bottom:auto !important}                       /* 1열: 좌상 자체 자체 → 우+하 확장 */
-.script-card.active.pos-c4{left:auto !important;  bottom:auto !important}                       /* 4열: 우상 자체 자체 → 좌+하 확장 */
+/* 위치 분기 = inset 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (translateX 자체 X)
+   실제 left/right/minWidth = JS 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (cell width 자체 자체 자체 자체 자체) */
+.script-card.active.pos-c1{right:auto !important; bottom:auto !important}                       /* 1열: 좌+위 자체 자체 → 우+하 확장 */
+.script-card.active.pos-c4{left:auto !important; bottom:auto !important}                        /* 4열: 우+위 자체 자체 → 좌+하 확장 */
 .script-card.active.pos-c2,
-.script-card.active.pos-c3{bottom:auto !important; right:auto !important; left:-50% !important; min-width:200%}  /* 2/3열: 본인 자리 자체 자체 자체 + 좌측 자체 자체 자체 + 우측 자체 자체 자체 = 좌우 + 하단 */
+.script-card.active.pos-c3{right:auto !important; bottom:auto !important}                      /* 2/3열: 위 자체 자체 → 좌우+하 확장 */
 .script-card.active .script-card-summary{display:none}
 .script-card.active .script-card-full{display:flex;flex-direction:column;flex:1;overflow-y:auto;min-height:0}
 .script-card.active .script-card-close{display:block}
@@ -3496,14 +3509,48 @@ function onCardClick(card, e){
 function activateCard(card, idx, total){
   var wrap = document.getElementById('scriptsCardsWrap');
   if(!wrap) return;
-  /* 옛 active 자체 자체 자체 자체 자체 자체 자체 자체. CSS only 자체 자체 자체 자체 자체 (idx % 4 → pos-cN) */
+  /* 옛 active + 인라인 자체 자체 자체 자체 자체 자체 자체 자체 자체 */
   var allCards = wrap.querySelectorAll('.script-card');
   for(var i=0;i<allCards.length;i++){
     allCards[i].classList.remove('active','pos-c1','pos-c2','pos-c3','pos-c4');
+    allCards[i].style.left = '';
+    allCards[i].style.right = '';
+    allCards[i].style.minWidth = '';
   }
-  /* 위치 분기 = CSS only (idx % 4 → 1열/2열/3열/4열). JS 자체 자체 자체 자체 자체 X (cell wrapper 자체 자체 자체 자체) */
-  var col = idx % 4;
-  card.classList.add('active', 'pos-c' + (col + 1));
+
+  var isMobile = window.innerWidth <= 767;
+  if(isMobile){
+    /* 모바일 = 정적 확장 (1열 grid, 위치 자체 자체 자체 자체 자체 자체 자체 자체) */
+    card.classList.add('active');
+  } else {
+    var col = idx % 4;
+    card.classList.add('active', 'pos-c' + (col + 1));
+
+    /* cell width 기반 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 */
+    var cell = card.parentElement;
+    var cellWidth = cell.getBoundingClientRect().width;
+    var gap = 12;
+    var maxAllowed = Math.min(540, window.innerWidth - 48);
+    var expandWidth = Math.min(maxAllowed, cellWidth * 2 + gap);  /* 2 cell + gap 자체 자체 자체 자체 자체 자체 자체 자체 */
+
+    if(col === 0){
+      /* 1열: 본인 좌측 자체 자체 자체 + 우측으로 자체 자체 자체 자체 자체 */
+      card.style.left = '0';
+      card.style.right = 'auto';
+      card.style.minWidth = expandWidth + 'px';
+    } else if(col === 3){
+      /* 4열: 본인 우측 자체 자체 자체 + 좌측으로 자체 자체 자체 자체 자체 */
+      card.style.left = 'auto';
+      card.style.right = '0';
+      card.style.minWidth = expandWidth + 'px';
+    } else {
+      /* 2/3열: 본인 자리 중심 + 좌우로 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (좌측 0.5 cell + 우측 0.5 cell) */
+      var halfShift = (cellWidth + gap) / 2;
+      card.style.left = '-' + halfShift + 'px';
+      card.style.right = 'auto';
+      card.style.minWidth = expandWidth + 'px';
+    }
+  }
   wrap.classList.add('has-active');
   try { history.pushState({ scriptCardActive: card.getAttribute('data-id') }, '', ''); } catch(err){}
 }
@@ -3515,6 +3562,9 @@ function deactivateCard(silent){
   var cards = wrap.querySelectorAll('.script-card');
   for(var i=0;i<cards.length;i++){
     cards[i].classList.remove('active','pos-c1','pos-c2','pos-c3','pos-c4');
+    cards[i].style.left = '';
+    cards[i].style.right = '';
+    cards[i].style.minWidth = '';
   }
   wrap.classList.remove('has-active');
   if(!silent && hasActive && history.state && history.state.scriptCardActive){
