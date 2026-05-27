@@ -657,57 +657,60 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 @keyframes skelPulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
 
 /* ─────────────────────────────────────────────
-   스크립트 본문 풀스크린 flow (2026-05-27 신설)
-   좌 = 카드 흐름 (40%) / 우 = 활성 카드 (60%)
-   모바일 = 상하 분할 (chips 가로 스크롤 + 하단 풀)
+   스크립트 카드 그리드 + 오버레이 확장 (2026-05-27 갈아끼움)
+   가로 정렬 + 카드 클릭 시 위치 분기 오버레이 확장
+   - 1번 = 우측 + 하단 (pos-left)
+   - 중앙 = 좌우 + 하단 (pos-center)
+   - 마지막 = 좌측 + 하단 (pos-right)
+   - max-width / max-height 자료 + body 안 자체 스크롤
 ───────────────────────────────────────────── */
-.script-flow-overlay{position:fixed;inset:0;z-index:9999;background:var(--b1);display:none}
-.script-flow-overlay[data-open="1"]{display:flex;flex-direction:column}
-.script-flow-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--s1);flex-shrink:0}
-.script-flow-title{font-size:1rem;font-weight:700;color:var(--tp);letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;padding-right:12px}
-.script-flow-close{background:none;border:0;font-size:1.4rem;color:var(--ts);cursor:pointer;padding:4px 12px;border-radius:6px;flex-shrink:0;line-height:1}
-.script-flow-close:hover{background:var(--s2);color:var(--tp)}
-.script-flow-back{background:none;border:0;font-size:0.9rem;color:var(--ts);cursor:pointer;padding:6px 12px;border-radius:6px;flex-shrink:0;font-weight:600;line-height:1}
-.script-flow-back:hover{background:var(--s2);color:var(--tp)}
-.script-flow-wrap{flex:1;display:grid;grid-template-columns:38% 62%;min-height:0;overflow:hidden}
-.script-card-list{display:flex;flex-direction:column;gap:8px;padding:16px;overflow-y:auto;border-right:1px solid var(--bd);background:var(--s1)}
-.script-card-lead{background:var(--s2);border-left:3px solid var(--ac);border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:8px;font-size:0.78rem;color:var(--ts);line-height:1.55}
-.script-card-item{display:flex;flex-direction:column;gap:4px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .15s}
-.script-card-item:hover{border-color:var(--ac);transform:translateX(2px)}
-.script-card-item.on{background:var(--ac);border-color:var(--ac)}
-.script-card-item.on .script-card-item-num,.script-card-item.on .script-card-item-sub{color:rgba(255,255,255,0.85)}
-.script-card-item.on .script-card-item-ttl{color:#fff}
-.script-card-item-num{font-size:0.72rem;font-weight:700;color:var(--ac);letter-spacing:-.02em}
-.script-card-item-ttl{font-size:0.85rem;font-weight:700;color:var(--tp);line-height:1.4}
-.script-card-item-sub{font-size:0.72rem;color:var(--ts);line-height:1.4}
-.script-flow-nav{display:flex;gap:8px;margin-top:8px;padding-top:12px;border-top:1px solid var(--bd)}
-.script-flow-nav button{flex:1;padding:8px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tp);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .15s}
-.script-flow-nav button:hover:not(:disabled){background:var(--ac);color:#fff;border-color:var(--ac)}
-.script-flow-nav button:disabled{opacity:0.4;cursor:not-allowed}
+.scripts-cards-wrap{position:relative;display:flex;gap:12px;flex-wrap:nowrap;overflow-x:auto;overflow-y:visible;padding:8px 4px 24px;align-items:flex-start;scroll-snap-type:x proximity;min-height:300px}
+.scripts-cards-wrap.has-active{overflow-x:hidden}
+.script-card{position:relative;flex:0 0 auto;width:200px;min-height:280px;background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--tc,var(--ac));border-radius:8px;padding:14px;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,border-color .15s,box-shadow .15s;scroll-snap-align:start}
+.script-card:hover{transform:translateY(-2px);border-color:var(--tc,var(--ac))}
+.script-card-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;font-size:0.7rem;font-weight:700;color:var(--tc,var(--ac));background:color-mix(in srgb,var(--tc,var(--ac)) 12%,transparent);white-space:nowrap;align-self:flex-start;margin-bottom:8px}
+.script-card-ttl{font-size:0.92rem;font-weight:800;color:var(--tp);margin-bottom:8px;letter-spacing:-.02em;line-height:1.35}
+.script-card-summary{flex:1;font-size:0.82rem;color:var(--ts);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical}
 
-.script-active-card{padding:32px 36px;overflow-y:auto;background:var(--b1)}
-.script-active-card-chip{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--ac);color:#fff;font-size:0.75rem;font-weight:700;margin-bottom:14px}
-.script-active-card-ttl{font-size:1.2rem;font-weight:800;color:var(--tp);margin:0 0 6px;letter-spacing:-.02em}
-.script-active-card-sub{font-size:0.85rem;color:var(--ts);margin:0 0 20px;line-height:1.6}
-.script-active-card-main{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:10px;padding:20px;font-size:1rem;font-weight:700;color:var(--tp);line-height:1.85;margin-bottom:16px;letter-spacing:-.01em}
-.script-active-card-extra{padding:4px 4px 0;font-size:0.9rem;color:var(--tp);line-height:1.75;margin-bottom:20px}
-.script-active-card-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 8px 8px 0;padding:12px 14px;font-size:0.82rem;font-weight:700;color:#7A4400;line-height:1.55}
-[data-theme="dark"] .script-active-card-coach{background:rgba(200,146,59,0.15);color:#E0B774}
+/* active 카드 = 오버레이 확장 */
+.script-card.active{position:absolute;z-index:20;top:0;width:auto;height:auto;min-width:200px;min-height:280px;max-width:min(540px,calc(100vw - 48px));max-height:min(540px,calc(100vh - 220px));box-shadow:0 12px 36px rgba(0,0,0,0.22);cursor:default;transform:none}
+.script-card.active.pos-left{left:0}
+.script-card.active.pos-right{right:0}
+.script-card.active.pos-center{left:50%;transform:translateX(-50%)}
+.script-card.active .script-card-summary{display:none}
+.script-card.active .script-card-full{display:flex;flex-direction:column;flex:1;overflow-y:auto;min-height:0}
+.script-card.active .script-card-close{display:block}
+.script-card-full{display:none;margin-top:4px}
+.script-card-close{display:none;position:absolute;top:8px;right:10px;background:none;border:0;font-size:1.1rem;color:var(--ts);cursor:pointer;padding:4px 10px;border-radius:6px;line-height:1;font-weight:600;z-index:2}
+.script-card-close:hover{background:var(--s2);color:var(--tp)}
 
-.script-empty-state{padding:60px 24px;text-align:center;color:var(--ts);grid-column:1/-1;align-self:center;justify-self:center}
-.script-empty-state-icon{font-size:2.5rem;margin-bottom:14px;opacity:0.4}
-.script-empty-state-ttl{font-size:1.05rem;font-weight:700;color:var(--tp);margin-bottom:6px;letter-spacing:-.02em}
-.script-empty-state-sub{font-size:0.85rem;color:var(--ts);line-height:1.6}
+/* accordion (active 카드 안) */
+.script-acc-item{border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;background:var(--s2);overflow:hidden}
+.script-acc-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;gap:8px}
+.script-acc-head:hover{background:color-mix(in srgb,var(--tc,var(--ac)) 6%,transparent)}
+.script-acc-num{font-size:0.7rem;font-weight:700;color:var(--tc,var(--ac));flex-shrink:0}
+.script-acc-ttl{flex:1;font-size:0.85rem;font-weight:700;color:var(--tp);line-height:1.4;min-width:0}
+.script-acc-arrow{font-size:0.75rem;color:var(--ts);flex-shrink:0;transition:transform .2s}
+.script-acc-item.open .script-acc-arrow{transform:rotate(180deg)}
+.script-acc-body{padding:0 12px 12px;font-size:0.85rem;color:var(--tp);line-height:1.7;display:none}
+.script-acc-item.open .script-acc-body{display:block}
+.script-acc-main{font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.7}
+.script-acc-sub{color:var(--ts);font-weight:500;margin-bottom:8px;line-height:1.65}
+.script-acc-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 6px 6px 0;padding:8px 10px;font-size:0.78rem;font-weight:700;color:#7A4400;line-height:1.5;margin-top:6px}
+[data-theme="dark"] .script-acc-coach{background:rgba(200,146,59,0.15);color:#E0B774}
+
+/* 미완 자료 안내 */
+.script-card-empty-ttl{font-size:0.92rem;font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.35}
+.script-card-empty-msg{flex:1;font-size:0.82rem;color:var(--ts);line-height:1.55}
+
+/* 빈 상태 (chip 0건) */
+.scripts-cards-empty{padding:48px 16px;text-align:center;color:var(--ts);width:100%}
 
 @media (max-width:767px){
-  .script-flow-header{padding:12px 16px}
-  .script-flow-wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr}
-  .script-card-list{flex-direction:row;overflow-x:auto;overflow-y:visible;border-right:0;border-bottom:1px solid var(--bd);padding:12px 16px;gap:8px;flex-shrink:0}
-  .script-card-lead{display:none}
-  .script-card-item{min-width:170px;flex-shrink:0}
-  .script-flow-nav{display:none}
-  .script-active-card{padding:20px 18px}
-  .script-active-card-main{padding:16px;font-size:0.95rem;line-height:1.75}
+  .script-card{width:160px;min-height:240px;padding:12px}
+  .script-card-ttl{font-size:0.88rem}
+  .script-card-summary{font-size:0.78rem;-webkit-line-clamp:5}
+  .script-card.active{max-width:calc(100vw - 24px);max-height:calc(100vh - 160px)}
 }
 </style>
 </head>
@@ -909,29 +912,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
      </div>
      <div class="wrap view" id="v-scripts">
       <div class="ttl">스크립트 <span class="ac">· 보험 상담 화법</span></div>
-      <div class="sub">통화 중 1초 안에 꺼낼 수 있는 화법 자료.</div>
-      <!-- 2026-05-27: mock 자료 통째 폐지. v1 10 stage 카테고리 + Supabase 실 fetch 흐름. -->
+      <div class="sub">통화 중 1초 안에 꺼낼 수 있는 화법 카드.</div>
+      <!-- 2026-05-27 갈아끼움: 풀스크린 모달 폐기 → 가로 정렬 + 오버레이 확장 카드 그리드 -->
       <div class="chips" id="scriptsChips">
         <!-- JS loadScriptsView() 가동 시 동적 자료 -->
       </div>
-      <div class="mys-grid" id="scriptsGrid">
-        <div class="mys-news-empty" id="scriptsLoading">불러오는 중... ⏳</div>
+      <div class="scripts-cards-wrap" id="scriptsCardsWrap">
+        <div class="scripts-cards-empty" id="scriptsLoading">불러오는 중...</div>
       </div>
-     </div>
-
-     <!-- ─────────────────────────────────────────────
-          스크립트 본문 풀스크린 flow (2026-05-27 갈아끼움)
-          좌 = 카드 흐름 / 우 = 활성 카드 1장 (모바일 = 상하 분할)
-     ───────────────────────────────────────────── -->
-     <div class="script-flow-overlay" id="scriptDetailOverlay" role="dialog" aria-modal="true">
-       <div class="script-flow-header">
-         <button class="script-flow-back" type="button" onclick="closeScriptDetail()" aria-label="뒤로">← 뒤로</button>
-         <div class="script-flow-title" id="scriptDetailTitle">스크립트</div>
-         <button class="script-flow-close" type="button" onclick="closeScriptDetail()" aria-label="닫기">✕</button>
-       </div>
-       <div class="script-flow-wrap" id="scriptDetailWrap">
-         <!-- JS openScriptDetail(id) 가동 시 동적 자료 -->
-       </div>
      </div>
      <div class="wrap view" id="v-quick">
       <div class="ttl">Quick 메뉴 <span class="ac">· 빠른 실행</span></div>
@@ -3280,104 +3268,88 @@ var voiceTabData = {
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+d.cnt+'건</b>';if(d.posts){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;if(d.posts.length>0)showTabPost(key,0);}}
 function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title)+'<div class="answer"><div class="who">자료 자료</div>'+d.title+' 자료입니다. 상세 자료는 다음 단계에서 정정 자리.</div>';document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
 /* ─────────────────────────────────────────────
-   스크립트 view — v1 10 stage + Supabase 실 fetch (2026-05-27)
-   - mock 자료 통째 폐지
-   - chips = '전체' + 10 stage (v1 GROUPS 정합)
-   - 카드 = title + highlight_text + stage badge
-   - 카드 클릭 = openScriptDetail(id) 모달 노출
+   스크립트 view — v1 10 stage + 가로 정렬 + 오버레이 확장 (2026-05-27 갈아끼움)
+   - 풀스크린 모달 통째 폐기 → 가로 정렬 카드 + 오버레이 확장
+   - chips = 10 stage (이모지 제거)
+   - 3색 군집 (open 인디고 / mid 블루 / close 주황)
+   - 카드 = title + 핵심 1줄 / 활성 = accordion (sections)
+   - 닫기 = ✕ / ESC / 외부 클릭 / 뒤로 가기
 ───────────────────────────────────────────── */
 var SCRIPTS_GROUPS = [
-  { icon: '📞', label: '도입 인사',    stage: 'opening' },
-  { icon: '💬', label: '도입 반론',    stage: 'opening_rejection' },
-  { icon: '🔥', label: '필요성 ①',    stage: 'need_emphasis' },
-  { icon: '🔎', label: '상황 확인',    stage: 'situation_check' },
-  { icon: '📊', label: '보장 분석',    stage: 'analysis' },
-  { icon: '📦', label: '상품 설명',    stage: 'product' },
-  { icon: '🔥', label: '필요성 ②',    stage: 'need_emphasis_2' },
-  { icon: '✅', label: '클로징',       stage: 'closing' },
-  { icon: '⚡', label: '반론 대응',    stage: 'objection' },
-  { icon: '🔚', label: '2차 클로징',  stage: 'closing_second' }
+  { label: '도입 인사',   stage: 'opening',           group: 'open' },
+  { label: '도입 반론',   stage: 'opening_rejection', group: 'open' },
+  { label: '필요성 ①',    stage: 'need_emphasis',     group: 'mid' },
+  { label: '상황 확인',   stage: 'situation_check',   group: 'mid' },
+  { label: '보장 분석',   stage: 'analysis',          group: 'mid' },
+  { label: '상품 설명',   stage: 'product',           group: 'mid' },
+  { label: '필요성 ②',    stage: 'need_emphasis_2',   group: 'mid' },
+  { label: '클로징',      stage: 'closing',           group: 'close' },
+  { label: '반론 대응',   stage: 'objection',         group: 'close' },
+  { label: '2차 클로징', stage: 'closing_second',    group: 'close' }
 ];
+var SCRIPT_GROUP_COLORS = {
+  open:  '#6366F1',  /* 인디고 (--ac) */
+  mid:   '#4F8DDA',  /* 블루 */
+  close: '#E89A3C'   /* 주황 */
+};
 window._scriptsCache = null;
 window._scriptsLoaded = false;
-window._scriptsActiveStage = '전체';
+window._scriptsActiveStage = 'opening';
 
 async function loadScriptsView(){
-  /* chips 자료 동적 자료 (첫 가동 시 1회) */
   var chipsEl = document.getElementById('scriptsChips');
-  if(chipsEl && !chipsEl.children.length){
-    var chipsHtml = '<div class="chip on" onclick="filterScriptsByStage(this,\'전체\')">전체</div>';
-    SCRIPTS_GROUPS.forEach(function(g){
-      chipsHtml += '<div class="chip" onclick="filterScriptsByStage(this,\''+g.stage+'\')">'+g.icon+' '+g.label+'</div>';
-    });
-    chipsEl.innerHTML = chipsHtml;
+  var wrap = document.getElementById('scriptsCardsWrap');
+  if(chipsEl && !chipsEl.children.length) renderScriptsChips(chipsEl);
+  if(window._scriptsLoaded){
+    renderScriptsCards(window._scriptsActiveStage);
+    return;
   }
-  if(window._scriptsLoaded) return;
-  /* Supabase 실 fetch — 1회만 (전체 자료 캐시).
-     2026-05-27 핫픽스: scripts 테이블 RLS = 로그인 사용자만 SELECT 허용.
-     anon key → [] 빈 배열 격차. localStorage os_token (로그인 토큰)으로 가동. */
-  var gridEl = document.getElementById('scriptsGrid');
-  if(!gridEl) return;
+  if(!wrap) return;
+  /* Supabase 실 fetch — 1회만 (전체 자료 캐시). RLS = 로그인 토큰 필수. */
   try{
     var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text';
     var authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('os_token')) || SUPABASE_ANON_KEY;
     var res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authToken }});
-    if(!res.ok){ gridEl.innerHTML = '<div class="mys-news-empty">자료를 불러올 수 없습니다. (HTTP '+res.status+')</div>'; return; }
-    var data = await res.json();
-    window._scriptsCache = data || [];
+    if(!res.ok){ wrap.innerHTML = '<div class="scripts-cards-empty">자료를 불러올 수 없습니다. (HTTP '+res.status+')</div>'; return; }
+    window._scriptsCache = (await res.json()) || [];
     window._scriptsLoaded = true;
     renderScriptsCards(window._scriptsActiveStage);
   }catch(e){
-    gridEl.innerHTML = '<div class="mys-news-empty">네트워크 격차 — 잠시 후 다시 시도해 주세요.</div>';
     console.error('[loadScriptsView]', e);
+    wrap.innerHTML = '<div class="scripts-cards-empty">네트워크 격차 — 잠시 후 다시 시도해 주세요.</div>';
   }
 }
 
-function renderScriptsCards(stageKey){
-  var gridEl = document.getElementById('scriptsGrid');
-  if(!gridEl || !window._scriptsCache) return;
-  var filtered = (stageKey === '전체')
-    ? window._scriptsCache
-    : window._scriptsCache.filter(function(s){ return s.stage === stageKey; });
-  if(!filtered.length){
-    gridEl.innerHTML = '<div class="mys-news-empty">해당 분류의 스크립트가 아직 없습니다.</div>';
-    return;
+function renderScriptsChips(chipsEl){
+  var html = '';
+  for(var i=0;i<SCRIPTS_GROUPS.length;i++){
+    var g = SCRIPTS_GROUPS[i];
+    var on = (g.stage === window._scriptsActiveStage) ? ' on' : '';
+    html += '<div class="chip'+on+'" onclick="filterScriptsByStage(this,\''+g.stage+'\')">'+g.label+'</div>';
   }
-  function stageLabel(stg){
-    for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].label;
-    return stg || '';
-  }
-  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function trimText(s, n){ s = (s||'').replace(/<[^>]+>/g,'').trim(); return s.length > n ? s.substring(0,n) + '…' : s; }
-  var html = filtered.map(function(s){
-    var label = escapeHtml(stageLabel(s.stage));
-    var title = escapeHtml(s.title || '제목 없음');
-    var summary = escapeHtml(trimText(s.highlight_text || s.script_text || '', 80));
-    return '<div class="mys-card" style="--tc:var(--ac)" onclick="openScriptDetail('+s.id+')">'
-         + '<span class="mys-badge">'+label+'</span>'
-         + '<div class="mys-ttl">'+title+'</div>'
-         + (summary ? '<div class="mys-meta">'+summary+'</div>' : '')
-         + '</div>';
-  }).join('');
-  gridEl.innerHTML = html;
+  chipsEl.innerHTML = html;
 }
 
-function filterScriptsByStage(el, stageKey){
+function filterScriptsByStage(el, stage){
   var chips = el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
   el.classList.add('on');
-  window._scriptsActiveStage = stageKey;
-  renderScriptsCards(stageKey);
+  window._scriptsActiveStage = stage;
+  deactivateCard(true);
+  renderScriptsCards(stage);
 }
 
-/* 2026-05-27 갈아끼움: HTML script_text → 카드 배열 자료 변환 + 풀스크린 flow 가동 */
-function parseScriptCards(html){
+function _scEscape(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _scStageLabel(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].label; return stg || ''; }
+function _scStageGroup(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].group; return 'mid'; }
+
+function parseScriptSections(html){
   if(!html || html.length < 200) return null;
   var wrap = document.createElement('div');
   wrap.innerHTML = html;
   var boxes = wrap.querySelectorAll('div[style*="border:1.5px solid #DCDCDC"]');
   if(!boxes.length) return null;
-  var cards = [];
+  var sections = [];
   for(var i=0;i<boxes.length;i++){
     var box = boxes[i];
     var titleEl = box.querySelector('div[style*="color:#185FA5"]');
@@ -3385,134 +3357,149 @@ function parseScriptCards(html){
     var mainEl = box.querySelector('div[style*="font-size:15px"]');
     var subBodyEl = box.querySelector('div[style*="border-top"]');
     var coachEl = box.querySelector('div[style*="background:#FFF3DC"]');
-    cards.push({
+    sections.push({
       title: titleEl ? titleEl.textContent.trim() : '',
       subtitle: subEl ? subEl.textContent.trim() : '',
-      main: mainEl ? mainEl.innerHTML : '',
+      mainText: mainEl ? mainEl.textContent.trim().replace(/\s+/g,' ') : '',
+      mainHtml: mainEl ? mainEl.innerHTML : '',
       sub: subBodyEl ? subBodyEl.innerHTML : '',
-      coach: coachEl ? coachEl.textContent.trim() : ''
+      coach: coachEl ? coachEl.textContent.trim().replace(/^⚡\s*/,'') : ''
     });
   }
-  var leadEl = wrap.querySelector('div[style*="border-left:4px solid"]');
-  return { lead: leadEl ? leadEl.innerHTML : '', cards: cards };
+  return sections;
 }
 
-function _scEscape(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function _scStageLabel(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].label; return stg || ''; }
-
-function openScriptDetail(id){
-  if(!window._scriptsCache) return;
-  var sc = null;
-  for(var i=0;i<window._scriptsCache.length;i++){ if(window._scriptsCache[i].id === id){ sc = window._scriptsCache[i]; break; } }
-  if(!sc) return;
-  document.getElementById('scriptDetailTitle').textContent = sc.title || '스크립트';
-  var parsed = parseScriptCards(sc.script_text);
-  window._activeScript = sc;
-  if(!parsed || !parsed.cards.length){
-    renderScriptDetailEmpty(sc);
-  } else {
-    window._activeCards = parsed.cards;
-    window._activeLead = parsed.lead;
-    window._activeCardIdx = 0;
-    renderScriptDetailFlow(sc, parsed);
+function extractCardSummary(sections, fallback){
+  if(sections && sections.length){
+    var first = sections[0];
+    if(first.mainText) return first.mainText.length > 160 ? first.mainText.substring(0,160) + '…' : first.mainText;
+    if(first.subtitle) return first.subtitle;
   }
-  document.getElementById('scriptDetailOverlay').setAttribute('data-open','1');
-  document.documentElement.style.overflow = 'hidden';
-  /* 뒤로 가기 자료 = 브라우저 history 스택에 진입 자체 자체 자체 자체 자체 (브라우저 ← / 모바일 뒤로가기 자체 자체) */
-  try { history.pushState({ scriptDetail: id }, '', ''); } catch(e){}
+  return (fallback || '').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().substring(0,160);
 }
 
-function renderScriptDetailFlow(sc, parsed){
-  var leadHtml = parsed.lead ? '<div class="script-card-lead">'+parsed.lead+'</div>' : '';
-  var listHtml = '';
-  for(var i=0;i<parsed.cards.length;i++){
-    var c = parsed.cards[i];
-    listHtml += '<div class="script-card-item'+(i===0?' on':'')+'" data-idx="'+i+'" onclick="setActiveCard('+i+')">'
-              + '<div class="script-card-item-num">카드 '+(i+1)+' / '+parsed.cards.length+'</div>'
-              + '<div class="script-card-item-ttl">'+_scEscape(c.title)+'</div>'
-              + (c.subtitle ? '<div class="script-card-item-sub">'+_scEscape(c.subtitle)+'</div>' : '')
-              + '</div>';
+function renderScriptsCards(stage){
+  var wrap = document.getElementById('scriptsCardsWrap');
+  if(!wrap || !window._scriptsCache) return;
+  var filtered = window._scriptsCache.filter(function(s){ return s.stage === stage; });
+  if(!filtered.length){
+    wrap.innerHTML = '<div class="scripts-cards-empty">해당 분류의 스크립트가 아직 없습니다.</div>';
+    wrap.classList.remove('has-active');
+    return;
   }
-  var navHtml = '<div class="script-flow-nav">'
-              + '<button type="button" id="scriptFlowPrev" onclick="setActiveCard(window._activeCardIdx - 1)">← 이전</button>'
-              + '<button type="button" id="scriptFlowNext" onclick="setActiveCard(window._activeCardIdx + 1)">다음 →</button>'
-              + '</div>';
-  document.getElementById('scriptDetailWrap').innerHTML =
-    '<div class="script-card-list">'+leadHtml+listHtml+navHtml+'</div>'
-  + '<div class="script-active-card" id="scriptActiveCardPanel"></div>';
-  renderActiveCardPanel();
+  var groupKey = _scStageGroup(stage);
+  var groupColor = SCRIPT_GROUP_COLORS[groupKey];
+  var groupLabel = _scStageLabel(stage);
+  var html = '';
+  for(var i=0;i<filtered.length;i++){
+    var s = filtered[i];
+    var sections = parseScriptSections(s.script_text);
+    var summary = extractCardSummary(sections, s.highlight_text);
+    var isEmpty = !sections || !sections.length;
+    html += '<div class="script-card" data-idx="'+i+'" data-total="'+filtered.length+'" data-id="'+s.id+'" style="--tc:'+groupColor+'" onclick="onCardClick(this, event)">'
+          + '<button class="script-card-close" type="button" onclick="event.stopPropagation();deactivateCard()" aria-label="닫기">✕</button>'
+          + '<span class="script-card-badge">'+_scEscape(groupLabel)+'</span>'
+          + '<div class="script-card-ttl">'+_scEscape(s.title || '제목 없음')+'</div>';
+    if(isEmpty){
+      html += '<div class="script-card-empty-msg">본문 자료 준비 중입니다.</div>';
+    } else {
+      html += '<div class="script-card-summary">'+_scEscape(summary)+'</div>'
+            + '<div class="script-card-full">'+renderCardAccordion(sections)+'</div>';
+    }
+    html += '</div>';
+  }
+  wrap.innerHTML = html;
+  wrap.classList.remove('has-active');
 }
 
-function renderActiveCardPanel(){
-  var sc = window._activeScript;
-  var cards = window._activeCards;
-  var idx = window._activeCardIdx;
-  if(!cards || !cards[idx]) return;
-  var c = cards[idx];
-  var html = '<div class="script-active-card-chip">'+_scEscape(_scStageLabel(sc.stage))+' · 카드 '+(idx+1)+' / '+cards.length+'</div>'
-           + '<h2 class="script-active-card-ttl">'+_scEscape(c.title)+'</h2>'
-           + (c.subtitle ? '<p class="script-active-card-sub">'+_scEscape(c.subtitle)+'</p>' : '')
-           + (c.main ? '<div class="script-active-card-main">'+c.main+'</div>' : '')
-           + (c.sub ? '<div class="script-active-card-extra">'+c.sub+'</div>' : '')
-           + (c.coach ? '<div class="script-active-card-coach">⚡ '+_scEscape(c.coach.replace(/^⚡\s*/,''))+'</div>' : '');
-  document.getElementById('scriptActiveCardPanel').innerHTML = html;
-  var items = document.querySelectorAll('.script-card-item');
-  for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i === idx);
-  var prev = document.getElementById('scriptFlowPrev');
-  var next = document.getElementById('scriptFlowNext');
-  if(prev) prev.disabled = (idx <= 0);
-  if(next) next.disabled = (idx >= cards.length - 1);
-  if(items[idx] && items[idx].scrollIntoView) items[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  var panel = document.getElementById('scriptActiveCardPanel');
-  if(panel) panel.scrollTop = 0;
+function renderCardAccordion(sections){
+  var html = '';
+  for(var i=0;i<sections.length;i++){
+    var sec = sections[i];
+    var opened = (i === 0) ? ' open' : '';
+    html += '<div class="script-acc-item'+opened+'">'
+          + '<div class="script-acc-head" onclick="toggleAcc(this, event)">'
+          + '<span class="script-acc-num">'+(i+1)+'</span>'
+          + '<div class="script-acc-ttl">'+_scEscape(sec.title)+'</div>'
+          + '<span class="script-acc-arrow">▼</span>'
+          + '</div>'
+          + '<div class="script-acc-body">'
+          + (sec.subtitle ? '<div class="script-acc-sub" style="margin-bottom:8px">'+_scEscape(sec.subtitle)+'</div>' : '')
+          + (sec.mainHtml ? '<div class="script-acc-main">'+sec.mainHtml+'</div>' : '')
+          + (sec.sub ? '<div class="script-acc-sub">'+sec.sub+'</div>' : '')
+          + (sec.coach ? '<div class="script-acc-coach">⚡ '+_scEscape(sec.coach)+'</div>' : '')
+          + '</div>'
+          + '</div>';
+  }
+  return html;
 }
 
-function setActiveCard(idx){
-  if(!window._activeCards) return;
-  if(idx < 0 || idx >= window._activeCards.length) return;
-  window._activeCardIdx = idx;
-  renderActiveCardPanel();
+function toggleAcc(el, e){
+  if(e) e.stopPropagation();
+  var item = el.parentElement;
+  item.classList.toggle('open');
+  var arrow = el.querySelector('.script-acc-arrow');
+  if(arrow) arrow.textContent = item.classList.contains('open') ? '▲' : '▼';
 }
 
-function renderScriptDetailEmpty(sc){
-  document.getElementById('scriptDetailWrap').innerHTML =
-    '<div class="script-empty-state">'
-  + '<div class="script-empty-state-icon">📝</div>'
-  + '<div class="script-empty-state-ttl">'+_scEscape(sc.title || '스크립트')+'</div>'
-  + '<div class="script-empty-state-sub">본문 자료 준비 중입니다.<br>('+_scEscape(_scStageLabel(sc.stage))+')</div>'
-  + '</div>';
+function onCardClick(card, e){
+  if(card.classList.contains('active')) return;
+  if(e && e.target && e.target.closest && e.target.closest('.script-acc-head')) return;
+  var idx = parseInt(card.getAttribute('data-idx'), 10);
+  var total = parseInt(card.getAttribute('data-total'), 10);
+  activateCard(card, idx, total);
 }
 
-function closeScriptDetail(){
-  /* ✕ / [← 뒤로] / ESC 자체 자체 = history.back() → popstate 자체 _closeScriptDetailInternal 가동 */
-  if(history.state && history.state.scriptDetail){
-    history.back();
-  } else {
-    _closeScriptDetailInternal();
+function activateCard(card, idx, total){
+  var wrap = document.getElementById('scriptsCardsWrap');
+  if(!wrap) return;
+  var cards = wrap.querySelectorAll('.script-card');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('active','pos-left','pos-right','pos-center');
+  var pos = (idx === 0) ? 'pos-left' : (idx === total - 1) ? 'pos-right' : 'pos-center';
+  card.classList.add('active', pos);
+  wrap.classList.add('has-active');
+  try { history.pushState({ scriptCardActive: card.getAttribute('data-id') }, '', ''); } catch(err){}
+}
+
+function deactivateCard(silent){
+  var wrap = document.getElementById('scriptsCardsWrap');
+  if(!wrap) return;
+  var hasActive = wrap.classList.contains('has-active');
+  var cards = wrap.querySelectorAll('.script-card');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('active','pos-left','pos-right','pos-center');
+  wrap.classList.remove('has-active');
+  if(!silent && hasActive && history.state && history.state.scriptCardActive){
+    try { history.back(); } catch(err){}
   }
 }
 
-function _closeScriptDetailInternal(){
-  var ov = document.getElementById('scriptDetailOverlay');
-  if(ov) ov.removeAttribute('data-open');
-  document.documentElement.style.overflow = '';
-  window._activeScript = null;
-  window._activeCards = null;
-  window._activeCardIdx = 0;
-}
-
-/* 브라우저 뒤로 가기 자료 = popstate 자체 → 자체 자체 자체 자체 자체 닫기 */
+/* 브라우저 뒤로 가기 → 닫기 */
 window.addEventListener('popstate', function(){
-  var ov = document.getElementById('scriptDetailOverlay');
-  if(ov && ov.getAttribute('data-open') === '1') _closeScriptDetailInternal();
+  var wrap = document.getElementById('scriptsCardsWrap');
+  if(wrap && wrap.classList.contains('has-active')) deactivateCard(true);
 });
 
-/* ESC 키 자료 = 풀스크린 자체 자체 자체 자체 자체 닫기 */
+/* ESC 키 → 닫기 */
 document.addEventListener('keydown', function(e){
   if(e.key !== 'Escape' && e.key !== 'Esc') return;
-  var ov = document.getElementById('scriptDetailOverlay');
-  if(ov && ov.getAttribute('data-open') === '1') closeScriptDetail();
+  var wrap = document.getElementById('scriptsCardsWrap');
+  if(wrap && wrap.classList.contains('has-active')) deactivateCard();
 });
+
+/* 외부 클릭 → 닫기 (active 카드 / chip 클릭은 제외) */
+document.addEventListener('click', function(e){
+  var wrap = document.getElementById('scriptsCardsWrap');
+  if(!wrap || !wrap.classList.contains('has-active')) return;
+  if(e.target.closest && e.target.closest('.script-card.active')) return;
+  if(e.target.closest && e.target.closest('#scriptsChips')) return;
+  if(!e.target.closest || !e.target.closest('#v-scripts')) return;
+  deactivateCard();
+});
+
+/* 옛 호출 호환 stub (옛 코드에서 openScriptDetail 자체 자체 자체 호출 자체 자체 자체) */
+function openScriptDetail(){}
+function closeScriptDetail(){ deactivateCard(); }
+function setActiveCard(){}
 
 /* 옛 mock 기반 filterScripts 자료 통째 폐지 (위 filterScriptsByStage가 대체). 외부 onclick 호환용 stub만 유지. */
 function filterScripts(el, cat){ /* 폐지됨 — filterScriptsByStage 사용 */ }
