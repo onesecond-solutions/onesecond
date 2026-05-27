@@ -574,9 +574,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #v-news,
 #v-team,
 #v-voice{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
-/* 2026-05-27 v-scripts 스크롤 격차 정정: .view.on { display:block } 자료가 .wrap의 flex 깨뜨림.
-   v-scripts는 카드 100개+ 동적 fetch라 부모 영역 넘어가 스크롤 필수. on 시 flex 강제 + min-height:0. */
-#v-scripts.on{display:flex;flex-direction:column;min-height:0;height:100%}
+/* 2026-05-27 v-scripts 스크롤 격차 정정 (PR #125):
+   - on 시 flex 강제 + min-height:0 + 페이지 세로 스크롤 (카드 16개+ grid 전체 보기) */
+#v-scripts.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden}
 .home-greeting{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:linear-gradient(90deg,var(--s1),transparent);border:1px solid var(--bd);border-radius:12px;margin-bottom:14px}
 .home-greeting-name{font-size:0.95em;font-weight:800;color:var(--tp);letter-spacing:-.01em}
 .home-greeting-msg{font-size:0.85em;color:var(--ts);font-weight:500}
@@ -709,12 +709,13 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .script-card.active .script-card-badge{background:color-mix(in srgb, var(--tc,var(--ac)) 20%, transparent)}
 .script-card.active .script-card-summary{display:none}
 .script-card.active .script-card-full{
-  display:flex;
-  flex-direction:column;
+  /* PR #125: display:flex → block 변경. accordion-item이 flex 자식이 되면 펼친 body 높이가
+     부모 레이아웃에 반영 안 됨 (clipping). block 흐름에서 자식 높이 자연 반영. */
+  display:block;
   flex:1 1 auto;
   min-height:0;
-  /* 명시적 max-height = 카드 max-height - 헤더 영역 (padding + badge + ttl + margin) */
-  max-height:calc(min(520px, 100vh - 220px) - 110px);
+  /* PR #125: 명시적 max-height 폐기. 부모 .script-card.active의 max-height + flex:1 흐름이
+     자동으로 자식 영역을 제한 → overflow-y:auto가 정확히 가동. */
   overflow-y:auto;
   overflow-x:hidden;
   margin-top:8px;
