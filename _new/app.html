@@ -714,13 +714,20 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
   flex:1;
   min-height:0;
   overflow-y:auto;
+  overflow-x:hidden;
   margin-top:8px;
-  padding-right:4px;
+  padding-right:6px;
+  /* Firefox 호환 */
+  scrollbar-width:thin;
+  scrollbar-color:var(--ts) transparent;
+  /* 본문 줄바꿈 보강 */
+  word-break:keep-all;
+  overflow-wrap:anywhere;
 }
-.script-card.active .script-card-full::-webkit-scrollbar{width:6px}
+.script-card.active .script-card-full::-webkit-scrollbar{width:8px}
 .script-card.active .script-card-full::-webkit-scrollbar-track{background:transparent}
-.script-card.active .script-card-full::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
-.script-card.active .script-card-full::-webkit-scrollbar-thumb:hover{background:var(--ts)}
+.script-card.active .script-card-full::-webkit-scrollbar-thumb{background:var(--ts);border-radius:4px;border:1px solid transparent;background-clip:padding-box}
+.script-card.active .script-card-full::-webkit-scrollbar-thumb:hover{background:var(--tp);background-clip:padding-box}
 .script-card.active .script-card-close{display:block}
 
 /* 위치 분기 = inset 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 (translateX 자체 X)
@@ -746,9 +753,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .script-acc-item.open .script-acc-arrow{transform:rotate(180deg)}
 .script-acc-body{padding:0 12px 12px;font-size:0.85rem;color:var(--tp);line-height:1.7;display:none}
 .script-acc-item.open .script-acc-body{display:block}
-.script-acc-main{font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.7}
-.script-acc-sub{color:var(--ts);font-weight:500;margin-bottom:8px;line-height:1.65}
-.script-acc-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 6px 6px 0;padding:8px 10px;font-size:0.78rem;font-weight:700;color:#7A4400;line-height:1.5;margin-top:6px}
+.script-acc-main{font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
+.script-acc-sub{color:var(--ts);font-weight:500;margin-bottom:8px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+.script-acc-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 6px 6px 0;padding:8px 10px;font-size:0.78rem;font-weight:700;color:#7A4400;line-height:1.5;margin-top:6px;word-break:keep-all;overflow-wrap:anywhere}
 [data-theme="dark"] .script-acc-coach{background:rgba(200,146,59,0.15);color:#E0B774}
 
 /* 미완 자료 안내 */
