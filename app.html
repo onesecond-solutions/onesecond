@@ -810,14 +810,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="menu" id="m">
           <div class="mi"><span>임태성 · 4팀 팀장</span></div>
           <div class="mdiv"></div>
-          <div class="mi"><span>MY SPACE</span></div>
+          <div class="mi" onclick="showView('myspace')"><span>MY SPACE</span></div>
           <div class="mi" onclick="openProfile()"><span>개인정보 수정</span></div>
           <div class="mdiv"></div>
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">화면 모드</div><div class="seg"><span onclick="setTheme('light')" id="sl">라이트</span><span class="on" onclick="setTheme('dark')" id="sd">다크</span></div></div>
           <div class="mdiv"></div>
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">글자 크기</div><div class="seg"><span onclick="setFont(90)" id="f90">90</span><span class="on" onclick="setFont(100)" id="f100">100</span><span onclick="setFont(110)" id="f110">110</span><span onclick="setFont(125)" id="f125">125</span></div></div>
           <div class="mdiv"></div>
-          <div class="mi"><span>로그아웃</span></div>
+          <div class="mi" onclick="window.Auth.logout()"><span>로그아웃</span></div>
         </div>
       </div>
     </header>
