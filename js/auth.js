@@ -165,6 +165,18 @@
       window.AppState.team    = u.team    || '';
       window.AppState.ready   = true;
 
+      /* 2026-05-28: os_user 동기화 — DB select 전 필드 통째 머지.
+         (격차: loadUser가 AppState만 갱신하고 os_user 자체 자체 자체 X →
+          새로고침마다 os_user.phone 등 유실 → 결제 시 customer.phoneNumber 빈 값.)
+         정합: DB 자료 우선 + 기존 os_user 자료 (id/email/aud 등 auth 자료) 보존. */
+      try {
+        var _raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+        var _existing = JSON.parse(_raw);
+        var _merged = Object.assign({}, _existing, u);  // DB select 결과 (name/role/phone/email/company/branch/team/plan) 우선
+        localStorage.setItem('os_user', JSON.stringify(_merged));
+        sessionStorage.setItem('os_user', JSON.stringify(_merged));
+      } catch (_e) { /* 무시: AppState 갱신은 이미 완료 */ }
+
       // 접속 로그 (세션당 1회)
       if (!sessionStorage.getItem('_loginLogged')) {
         sessionStorage.setItem('_loginLogged', '1');
