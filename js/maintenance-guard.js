@@ -1,19 +1,23 @@
 /**
  * js/maintenance-guard.js
- * 유지보수 모드 가드 (2026-05-27 최종본 — 화이트리스트 3 계정 / reviewer 폐지)
+ * 유지보수 모드 가드 (2026-05-28 갱신 — 화이트리스트 4 계정 / kcp.review 심사용 한정)
  *
  * 본질:
- *   - MAINTENANCE_MODE = true 자료 = 화이트리스트 3 계정 외 모든 진입 차단 (비로그인 포함)
+ *   - MAINTENANCE_MODE = true 자료 = 화이트리스트 4 계정 외 모든 진입 차단 (비로그인 포함)
  *   - 판정 단일 기준 = localStorage os_user.email ∈ OS_WHITELIST_EMAILS
  *   - 공개 페이지 6건 = 누구나 접근 (landing + PG 5 페이지) + 진입 라우터 + maintenance
  *   - ?dev=1 우회 자료 폐지 (최종 정책 명시)
- *   - role='reviewer' / reviewer 화이트리스트 / 심사자 전용 흐름 자체 폐지
- *   - 심사자 = 공개 페이지만 확인. 별도 계정 X.
  *
- * 허용 계정 (공사중 우회 3 계정):
+ * 정책 갱신 (2026-05-28):
+ *   - PR #110 (reviewer 폐지) → kcp.review 심사용 한정 갱신
+ *   - 근거: KG이니시스 심사 담당자 문자(5/28) — "테스트 로그인 계정 전달 필수" 공식 요구
+ *   - kcp.review = 심사 전용. 비밀번호 로그인 (prompt) — 코드 평문 X
+ *
+ * 허용 계정 (공사중 우회 4 계정):
  *   1. bylts0428@gmail.com — admin (role='admin')
  *   2. bylts@naver.com — 내부 운영
  *   3. bylts@kakao.com — 내부 운영
+ *   4. kcp.review@onesecond.solutions — KG이니시스 심사 전용 (비밀번호 로그인)
  *
  * 흐름:
  *   1. PUBLIC_PATHS 진입 = 통과 (진입 라우터 + landing + PG 5 페이지 + maintenance)
@@ -29,12 +33,13 @@
   var MAINTENANCE_MODE = true;
   var MAINTENANCE_PAGE = '/maintenance.html';
 
-  /* 화이트리스트 3 계정 — auth-modal.js / auth.js에서 동일 자료 참조 (window.OS_WHITELIST_EMAILS).
-     reviewer 자료 통째 폐지 (2026-05-27 최종 정책). */
+  /* 화이트리스트 4 계정 — auth-modal.js / auth.js에서 동일 자료 참조 (window.OS_WHITELIST_EMAILS).
+     2026-05-28: kcp.review 심사용 한정 추가 (PR #110 갱신, KG이니시스 공식 요구). */
   var WHITELIST_EMAILS = [
     'bylts0428@gmail.com',
     'bylts@naver.com',
-    'bylts@kakao.com'
+    'bylts@kakao.com',
+    'kcp.review@onesecond.solutions'
   ];
 
   /* 공개 페이지 = 진입 라우터 + landing + PG 심사 5 페이지 + maintenance 본인

@@ -378,10 +378,12 @@ async function doLogin() {
 
   var email = document.getElementById('f-email-login').value.trim();
 
-  /* 2026-05-27 최종 정책: 4 화이트리스트만 OTP 발송 허용.
-     - bylts0428@gmail.com / bylts@naver.com / bylts@kakao.com / reviewer@onesecond.solutions
+  /* 2026-05-28 최종 정책: 4 화이트리스트만 OTP / 비밀번호 로그인 허용.
+     - bylts0428@gmail.com / bylts@naver.com / bylts@kakao.com → OTP 발송
+     - kcp.review@onesecond.solutions → 비밀번호 로그인 (prompt, 심사용 한정)
      - 그 외 = maintenance.html (Google / doSubmit과 동일 차단)
-     화이트리스트 자료 = window.OS_WHITELIST_EMAILS (maintenance-guard.js 단일 진실) */
+     화이트리스트 자료 = window.OS_WHITELIST_EMAILS (maintenance-guard.js 단일 진실).
+     PR #110 갱신 (2026-05-28) — KG이니시스 심사 담당자 공식 요구 정합. */
   if (window.OS_MAINTENANCE && window.OS_MAINTENANCE.mode === true) {
     var allowed = (typeof window.osIsWhitelistedEmail === 'function')
       ? window.osIsWhitelistedEmail(email)
@@ -391,6 +393,44 @@ async function doLogin() {
       window.osShowMaintenance();
       return;
     }
+  }
+
+  /* 2026-05-28: kcp.review 한정 비밀번호 로그인 (KG이니시스 심사용).
+     - 심사자는 OTP 수신 불가 → 비밀번호 로그인 단독.
+     - 비밀번호 = prompt 입력 (코드 평문 X).
+     - 다른 화이트리스트 3 계정 = 기존 OTP 흐름 그대로. */
+  if (email === 'kcp.review@onesecond.solutions') {
+    _resetBtn();
+    var password = prompt('심사 전용 계정 — 비밀번호 입력:');
+    if (!password) return;
+    try {
+      var pwRes = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      if (!pwRes.ok) {
+        var pwErr = {};
+        try { pwErr = await pwRes.json(); } catch (_e) {}
+        alert('로그인 실패: ' + (pwErr.error_description || pwErr.msg || pwRes.status));
+        return;
+      }
+      var pwData = await pwRes.json();
+      var userObj = pwData.user || {};
+      if (window.db && typeof window.db.mergeUserProfile === 'function') {
+        try { userObj = await window.db.mergeUserProfile(userObj, pwData.access_token); } catch (_e) {}
+      }
+      localStorage.setItem('os_token', pwData.access_token);
+      localStorage.setItem('os_refresh_token', pwData.refresh_token);
+      localStorage.setItem('os_user', JSON.stringify(userObj));
+      sessionStorage.setItem('os_token', pwData.access_token);
+      sessionStorage.setItem('os_user', JSON.stringify(userObj));
+      window.location.href = '/app.html';
+    } catch (e) {
+      console.error('[kcp.review login]', e);
+      alert('로그인 오류: ' + (e && e.message ? e.message : '알 수 없는 오류'));
+    }
+    return;
   }
 
   try {
