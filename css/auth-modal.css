@@ -549,6 +549,35 @@
   .auth-page-body { padding: 32px 32px 24px; }
 }
 
+/* 2026-05-28: 회사명 typeahead 드롭다운 (.ga-fields 자체 자체 자체) */
+.ta-wrap { position: relative; }
+.ta-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid var(--neutral-200, #E5E7EB);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.12);
+  z-index: 100;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.ta-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--neutral-800, #1F2937);
+  cursor: pointer;
+  border-bottom: 1px solid var(--neutral-200, #E5E7EB);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.ta-item:last-child { border-bottom: none; }
+.ta-item:hover {
+  background: var(--accent-50, #EEEFFF);
+  color: var(--brand-500, #6366F1);
+}
+
 .auth-page-title {
   font-size: 24px; font-weight: 800;
   margin: 4px 0 8px;

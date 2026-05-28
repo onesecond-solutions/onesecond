@@ -920,7 +920,68 @@ function _toggleOtherInput(selectId, textId) {
   txt.style.opacity = isOther ? '1' : '0.5';
   if (!isOther) txt.value = '';
 }
-function onGaCompanyChange() { _toggleOtherInput('f-company-select', 'f-company-text'); }
+/* 2026-05-28: 회사명 typeahead (companies 마스터 search_text ILIKE 검색).
+   GA 분기 단일 input + 후보 드롭다운. select 듀얼 폐기. */
+var _companyTaTimer = null;
+var _companyTaController = null;
+
+function onCompanyTaInput() {
+  var input = document.getElementById('f-company-text');
+  var list = document.getElementById('company-ta-list');
+  if (!input || !list) return;
+  var q = (input.value || '').trim();
+
+  if (_companyTaTimer) clearTimeout(_companyTaTimer);
+  if (q.length < 2) {
+    list.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  _companyTaTimer = setTimeout(function () { _companyTaFetch(q); }, 200);
+}
+
+async function _companyTaFetch(q) {
+  if (_companyTaController) { try { _companyTaController.abort(); } catch (e) {} }
+  _companyTaController = new AbortController();
+  var list = document.getElementById('company-ta-list');
+  if (!list) return;
+  try {
+    var url = SUPABASE_URL + '/rest/v1/companies?select=name'
+      + '&search_text=ilike.*' + encodeURIComponent(q) + '*'
+      + '&order=agent_count.desc.nullslast&limit=10';
+    var res = await fetch(url, {
+      headers: { apikey: SUPABASE_KEY },
+      signal: _companyTaController.signal
+    });
+    if (!res.ok) { list.style.display = 'none'; return; }
+    var rows = await res.json();
+    if (!rows || rows.length === 0) { list.style.display = 'none'; return; }
+    var html = rows.map(function (r) {
+      var safe = String(r.name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      return '<div class="ta-item" onmousedown="onCompanyTaPick(this)" data-name="' + safe + '">' + safe + '</div>';
+    }).join('');
+    list.innerHTML = html;
+    list.style.display = 'block';
+  } catch (e) {
+    if (e && e.name !== 'AbortError') console.error('[company ta]', e);
+  }
+}
+
+function onCompanyTaPick(el) {
+  var name = el && el.getAttribute('data-name') || '';
+  var input = document.getElementById('f-company-text');
+  if (input) input.value = name;
+  var list = document.getElementById('company-ta-list');
+  if (list) list.style.display = 'none';
+}
+
+function onCompanyTaBlur() {
+  /* 200ms 후 드롭다운 닫기 (클릭 시간 확보 — onmousedown이 먼저 가동) */
+  setTimeout(function () {
+    var list = document.getElementById('company-ta-list');
+    if (list) list.style.display = 'none';
+  }, 200);
+}
 function onGaBranchChange()  {
   _toggleOtherInput('f-branch-select', 'f-branch-text');
   var sel = document.getElementById('f-branch-select');
@@ -1091,12 +1152,9 @@ async function doSubmit() {
     } else {
       teamName = (document.getElementById('f-team-text').value || '').trim();
     }
-    var compSel = document.getElementById('f-company-select');
-    if (compSel.value && compSel.value !== '__other__') {
-      companyName = compSel.value;
-    } else {
-      companyName = (document.getElementById('f-company-text').value || '').trim();
-    }
+    /* 2026-05-28: select 듀얼 폐기 → 단일 input + typeahead.
+       마스터에 없는 자유 입력도 그대로 저장 (작업지시서 정합). */
+    companyName = (document.getElementById('f-company-text').value || '').trim();
     statusValue = 'active';
   }
 
