@@ -1,279 +1,248 @@
+<!-- ────────────────────────────────────────────────────────────
+  pages/pricing-content.html — SPA 안 [요금제] 본문 자료
+
+  본질:
+   · app.html이 innerHTML fetch → 본 파일의 <script> / <style> 자체 자체 가동.
+   · 결제 함수 (handleFreeCta / handlePaidCta) = app.html 전역 자료 호출 (window.*).
+   · 디자인 = v2 SPA 다크 톤 (--ac / --bg / --s1 / --tp / --bd 자체 자체).
+   · 외부 pricing.html (라이트 인디고) ↔ SPA 다크 인디고 = 의도된 차이 (SPA 다크 배경 정합).
+   · 2026-05-28: v1 브라운 톤 통째 폐기 + v2 다크 톤 통째 재작성.
+──────────────────────────────────────────────────────────── -->
+
 <style>
-.pricing-wrap {
-  max-width: 960px;
+.pr-wrap {
+  max-width: 1100px;
   margin: 0 auto;
   padding: 40px 24px 60px;
-  font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
 }
-.pricing-eyebrow {
-  text-align: center;
-  font-size: 0.75em;
-  font-weight: 700;
-  color: #c8753a;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+.pr-header { text-align: center; margin-bottom: 40px; }
+.pr-eyebrow {
+  display: inline-block;
+  background: rgba(99,102,241,0.12);
+  color: var(--ac);
+  font-size: 0.75em; font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  letter-spacing: 0.08em;
+}
+.pr-title {
+  font-size: 1.75em; font-weight: 900;
+  color: var(--tp);
+  letter-spacing: -0.025em;
   margin-bottom: 10px;
 }
-.pricing-title {
-  text-align: center;
-  font-size: 1.75em;
-  font-weight: 900;
-  color: #3b2416;
-  letter-spacing: -0.8px;
-  margin-bottom: 8px;
+.pr-sub {
+  font-size: 0.95em;
+  color: var(--ts);
+  line-height: 1.6;
 }
-.pricing-sub {
-  text-align: center;
-  font-size: 0.875em;
-  color: #9a7a62;
-  margin-bottom: 32px;
-}
-.current-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(90deg, #3b2416, #4a2f1f);
-  border-radius: 14px;
-  padding: 16px 24px;
+
+.pr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
   margin-bottom: 28px;
 }
-.current-banner-left .label {
-  font-size: 0.6875em;
-  color: rgba(255,255,255,0.6);
-  font-weight: 600;
-  margin-bottom: 4px;
+@media (max-width: 960px) {
+  .pr-grid { grid-template-columns: 1fr; gap: 16px; }
 }
-.current-banner-left .plan-name {
-  font-size: 1em;
-  font-weight: 800;
-  color: #fff;
-}
-.current-banner-badge {
-  padding: 7px 18px;
-  background: #c8753a;
-  color: white;
-  border-radius: 20px;
-  font-size: 0.8125em;
-  font-weight: 700;
-}
-.pricing-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 20px;
-  align-items: stretch;
-}
-.price-card {
-  background: white;
-  border: 1.5px solid #e6dfd7;
-  border-radius: 18px;
+
+.pr-card {
+  background: var(--s1);
+  border: 1px solid var(--bd);
+  border-radius: 16px;
   padding: 28px 24px;
   display: flex;
   flex-direction: column;
+  transition: all 0.2s ease;
 }
-.price-card.featured {
-  border: 2px solid #3b2416;
-  box-shadow: 0 4px 20px rgba(61,43,31,0.12);
+.pr-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--ac);
 }
-.card-badge {
+.pr-card.featured {
+  border: 2px solid var(--ac);
+  background: var(--s2);
+  position: relative;
+}
+
+.pr-badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.6875em;
-  font-weight: 700;
-  margin-bottom: 18px;
+  background: var(--sh);
+  color: var(--ts);
+  font-size: 0.7em; font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
   align-self: flex-start;
+  letter-spacing: 0.04em;
 }
-.badge-free { background: #f5ede4; color: #6b4226; }
-.badge-plus { background: #c8753a; color: white; }
-.badge-pro  { background: #3b2416; color: white; }
-.card-price {
-  font-size: 2.25em;
-  font-weight: 900;
-  color: #3b2416;
-  letter-spacing: -1.5px;
-  margin-bottom: 2px;
+.pr-badge.hot {
+  background: var(--ac);
+  color: #fff;
 }
-.card-price span { font-size: 0.9375em; font-weight: 400; color: #9a7a62; }
-.card-trial { font-size: 0.8125em; color: #c8753a; font-weight: 700; margin-bottom: 14px; }
-.card-note {
-  font-size: 0.75em;
-  color: #9a7a62;
-  background: #f5ede4;
-  border-radius: 8px;
-  padding: 9px 12px;
-  margin-bottom: 20px;
+
+.pr-amount {
+  font-size: 2em; font-weight: 900;
+  color: var(--tp);
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+.pr-amount span {
+  font-size: 0.5em; font-weight: 600;
+  color: var(--ts);
+  letter-spacing: -0.01em;
+}
+
+.pr-trial {
+  font-size: 0.85em; font-weight: 700;
+  color: var(--ac);
+  margin-bottom: 12px;
+}
+
+.pr-note {
+  font-size: 0.8em;
+  color: var(--ts);
+  background: rgba(99,102,241,0.08);
+  border-radius: 10px;
+  padding: 11px 13px;
+  margin-bottom: 18px;
   line-height: 1.7;
 }
-.card-features {
+
+.pr-features {
   list-style: none;
-  margin-bottom: 24px;
+  padding: 0;
+  margin-bottom: 22px;
   flex: 1;
 }
-.card-features li {
-  font-size: 0.8125em;
-  color: #5a3e2b;
-  padding: 8px 0;
-  border-bottom: 1px solid #f5ede4;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.card-features li:last-child { border-bottom: none; }
-.card-features li::before { content: "✓"; color: #c8753a; font-weight: 700; flex-shrink: 0; }
-.card-features li.no { color: #c0b0a8; text-decoration: line-through; }
-.card-features li.no::before { content: "✕"; color: #ddd; }
-.card-btn {
-  width: 100%;
-  padding: 13px;
-  border-radius: 10px;
+.pr-features li {
   font-size: 0.875em;
+  color: var(--bodytx, var(--tp));
+  padding: 8px 0 8px 22px;
+  position: relative;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--bd);
+}
+.pr-features li:last-child { border-bottom: none; }
+.pr-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 2px; top: 8px;
+  color: var(--ac);
+  font-weight: 800;
+}
+.pr-features li strong {
+  color: var(--tp);
   font-weight: 700;
+}
+
+.pr-cta {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--bd);
+  background: transparent;
+  color: var(--tp);
+  font-size: 0.95em; font-weight: 700;
   font-family: inherit;
   cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: -0.01em;
+}
+.pr-cta:hover {
+  background: var(--sh);
+  border-color: var(--ac);
+}
+.pr-card.featured .pr-cta {
+  background: var(--ac);
+  color: #fff;
   border: none;
-  transition: all 0.2s;
+}
+.pr-card.featured .pr-cta:hover {
+  background: var(--ach);
+}
+
+.pr-info {
+  font-size: 0.8em;
+  color: var(--ts);
+  line-height: 1.9;
   text-align: center;
-  display: block;
-  text-decoration: none;
-  box-sizing: border-box;
+  padding: 18px 14px;
+  border-top: 1px solid var(--bd);
 }
-.btn-accent { background: #c8753a; color: white; }
-.btn-accent:hover { background: #b5642e; }
-.btn-dark { background: #3b2416; color: white; }
-.btn-dark:hover { background: #4a2f1f; }
-.btn-muted { background: #f5ede4; color: #6b4226; cursor: default; }
-.pricing-notes {
-  margin-top: 28px;
-  text-align: center;
-}
-.pricing-notes p {
-  font-size: 0.75em;
-  color: #b0907a;
-  line-height: 2.2;
-}
-.pricing-notes p::before { content: "· "; }
-.pricing-b2b-note {
-  margin-top: 24px;
-  text-align: center;
-  padding: 16px 20px;
-  background: #f5ede4;
-  border-radius: 10px;
-  font-size: 0.8125em;
-  color: #6b4226;
-  line-height: 1.6;
-}
-.pricing-b2b-note a {
-  color: #c8753a;
-  font-weight: 700;
-  text-decoration: none;
-  margin-left: 6px;
-}
-.pricing-b2b-note a:hover { text-decoration: underline; }
-@media (max-width: 767px) {
-  .pricing-grid { grid-template-columns: 1fr; }
-}
+.pr-info a { color: var(--ac); font-weight: 700; text-decoration: none; }
+.pr-info a:hover { text-decoration: underline; }
 </style>
 
-<div class="pricing-wrap">
-  <div class="pricing-eyebrow">PRICING</div>
-  <div class="pricing-title">함께 성장하는 요금제</div>
-  <div class="pricing-sub">지금 바로 시작하고, 필요할 때 업그레이드하세요</div>
+<div class="pr-wrap">
 
-  <div class="current-banner">
-    <div class="current-banner-left">
-      <div class="label">현재 이용 중인 플랜</div>
-      <div class="plan-name" id="pr-plan-name">확인 중...</div>
-    </div>
-    <div class="current-banner-badge" id="pr-plan-badge">-</div>
+  <div class="pr-header">
+    <div class="pr-eyebrow">PRICING</div>
+    <h2 class="pr-title">함께 성장하는 요금제</h2>
+    <p class="pr-sub">지금 바로 시작하고, 필요할 때 업그레이드하세요</p>
   </div>
 
-  <div class="pricing-grid">
+  <div class="pr-grid">
 
     <!-- FREE -->
-    <div class="price-card">
-      <div class="card-badge badge-free">무료 플랜</div>
-      <div class="card-price">0<span>원 / 월</span></div>
-      <div class="card-trial">가입 즉시 영구 무료</div>
-      <div class="card-note">매니저(실장) · 지점장(센터장)은<br>무료 플랜에서도 글쓰기 가능</div>
-      <ul class="card-features">
-        <li>스크립트 전체 열람</li>
-        <li>게시판 전체 열람</li>
+    <div class="pr-card" data-plan-id="free">
+      <div class="pr-badge">FREE</div>
+      <div class="pr-amount">0<span>원</span></div>
+      <div class="pr-trial">영구 무료 · 정보 제공</div>
+      <div class="pr-note">교육 자료·정보는 모든 사용자에게<br>동일하게 무료로 제공됩니다.</div>
+      <ul class="pr-features">
+        <li>교육 자료 전체 무료 열람</li>
+        <li>모든 정보 콘텐츠 접근</li>
+        <li>스크립트·게시판 열람</li>
         <li>모바일 최적화</li>
-        <li class="no">스크립트 작성 (설계사 제한)</li>
-        <li class="no">게시판 질문 작성 (설계사 제한)</li>
       </ul>
-      <button class="card-btn btn-accent" onclick="handleFreeCta()">홈으로 돌아가기</button>
+      <button class="pr-cta" onclick="handleFreeCta()">시작하기</button>
     </div>
 
     <!-- PLUS (featured) -->
-    <div class="price-card featured">
-      <div class="card-badge badge-plus">유료 플랜 · 추천</div>
-      <div class="card-price">9,900<span>원 / 월</span></div>
-      <div class="card-trial">첫 30일 완전 무료 체험</div>
-      <div class="card-note">설계사·팀장도 글쓰기까지<br>모든 기능을 사용할 수 있어요</div>
-      <ul class="card-features">
-        <li>스크립트 전체 열람 + 작성</li>
-        <li>게시판 질문 · 답변 작성</li>
-        <li>신규 스크립트 · 기능 우선 업데이트</li>
-        <li>보험 뉴스 멘트 활용</li>
+    <div class="pr-card featured" data-plan-id="plus">
+      <div class="pr-badge hot">PLUS · 추천</div>
+      <div class="pr-amount">9,900<span>원 / 월</span></div>
+      <div class="pr-trial">FREE 전부 포함 + 생산성 기능</div>
+      <div class="pr-note">카드 만들기·문서 변환·녹취 변환 등<br>실무 생산성 도구를 제공합니다.</div>
+      <ul class="pr-features">
+        <li><strong>FREE의 모든 기능</strong></li>
+        <li>자료 카드 만들기</li>
+        <li>문서 변환기 (이미지·PDF)</li>
+        <li>녹취 변환기</li>
         <li>언제든 해지 가능</li>
       </ul>
-      <button class="card-btn btn-accent" id="plus-cta" onclick="handlePaidCta('plus')">PLUS 시작하기</button>
+      <button class="pr-cta" onclick="handlePaidCta('plus')">PLUS 시작하기</button>
     </div>
 
     <!-- PRO -->
-    <div class="price-card">
-      <div class="card-badge badge-pro">프로 플랜</div>
-      <div class="card-price">19,900<span>원 / 월</span></div>
-      <div class="card-trial">PLUS 전부 포함 + CRM(준비 중)</div>
-      <div class="card-note">팀 단위 운영과<br>고급 자료가 필요한 분께</div>
-      <ul class="card-features">
+    <div class="pr-card" data-plan-id="pro">
+      <div class="pr-badge">PRO</div>
+      <div class="pr-amount">19,900<span>원 / 월</span></div>
+      <div class="pr-trial">PLUS 전부 포함 + CRM(준비 중)</div>
+      <div class="pr-note">고객 관리(CRM, 준비 중)·이력 관리 기능을<br>추가로 제공합니다 (향후 기획 중).</div>
+      <ul class="pr-features">
         <li><strong>PLUS의 모든 기능</strong></li>
         <li>고객 관리 (CRM, 준비 중)</li>
-        <li>우선 고객 지원</li>
-        <li>고급 자료 · API 우선 진입</li>
-        <li>관리자 자료 강화</li>
+        <li>이력 관리</li>
+        <li>전담 운영 지원</li>
         <li>언제든 해지 가능</li>
       </ul>
-      <button class="card-btn btn-dark" id="pro-cta" onclick="handlePaidCta('pro')">PRO 시작하기</button>
+      <button class="pr-cta" onclick="handlePaidCta('pro')">PRO 시작하기</button>
     </div>
 
   </div>
 
-  <div class="pricing-notes">
-    <p>유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다</p>
-    <p>매니저(실장) · 지점장(센터장)은 무료 플랜에서도 영구 무료로 모든 기능을 이용할 수 있습니다</p>
+  <div class="pr-info">
+    · 표시 금액은 부가가치세(VAT) 포함 금액입니다<br>
+    · 정보(교육 자료)는 세 단계 모두 동일하게 무료로 제공됩니다 — 정보를 잘라 팔지 않습니다<br>
+    · 누적형: 윗 단계는 아랫 단계의 모든 기능을 포함합니다<br>
+    · 유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다<br>
+    · 자세한 환불 기준은 <a href="/refund.html" target="_blank" rel="noopener">환불·취소 정책</a>을 참고해 주세요
   </div>
 
-  <!-- B2B 카드 제거 (PR #126) — 하단 한 줄 안내로 정합. 상호계약 = 별 트랙. -->
-  <div class="pricing-b2b-note">
-    💬 기업·단체 도입 문의는 카카오 오픈채팅으로
-    <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">상호계약 문의하기</a>
-  </div>
 </div>
-
-<script>
-/* ★ 본 파일은 app.html loadPricing()이 fetch + innerHTML로 로드.
-   HTML5 spec = innerHTML로 들어간 <script>는 가동 X.
-   pr-plan-name 자료 IIFE는 자료상 가동 안 됨 = 별 트랙 정정 자리.
-   결제 흐름 본질은 app.html 전역 window.handlePaidCta + window.handleFreeCta 자료. */
-(function() {
-  const role = window._userRole || '';
-  const planName = document.getElementById('pr-plan-name');
-  const planBadge = document.getElementById('pr-plan-badge');
-  if (!planName || !planBadge) return;
-
-  if ([
-    'ga_branch_manager', 'ga_manager',
-    'insurer_branch_manager', 'insurer_manager'
-  ].includes(role)) {
-    planName.textContent = '매니저 / 지점장 영구 무료';
-    planBadge.textContent = '영구 무료';
-    planBadge.style.background = '#5a8a5a';
-  } else {
-    planName.textContent = '유료 플랜 (PRO)';
-    planBadge.textContent = 'PRO';
-  }
-})();
-</script>
-<script src="../js/font-scale.js"></script>
