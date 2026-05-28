@@ -237,8 +237,10 @@ function _showStep(step) {
     }, 80);
   }
   else if (step === 'signup-3') {
-    if (ctaTxt)   ctaTxt.textContent = '✉️ 인증 코드 받기';
-    if (ctaBtn)   ctaBtn.onclick = function() { doSubmit(); };
+    /* 2026-05-28: site 분기 — GA = 이메일 OTP / 보험사 = 카카오 승인 요청 (signup API + 임시 비번) */
+    var _isInsurer = window.gSignupSite === 'insurer';
+    if (ctaTxt)   ctaTxt.textContent = _isInsurer ? '💬 카카오톡 승인 요청' : '✉️ 인증 코드 받기';
+    if (ctaBtn)   ctaBtn.onclick = _isInsurer ? function() { doInsurerKakaoSignup(); } : function() { doSubmit(); };
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-2'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(3); }
@@ -830,6 +832,9 @@ window.loadTeamsByBranch = loadTeamsByBranch;
 
 window.gSignupSite = null;
 
+/* 보험사 분기 카카오 승인 요청 — _showStep('signup-3') onclick에서 호출 */
+window.doInsurerKakaoSignup = function() { return doInsurerKakaoSignup(); };
+
 function selectSite(site) {
   window.gSignupSite = site;
   var cardGa      = document.getElementById('site-card-ga');
@@ -1103,8 +1108,98 @@ function validateSignup() {
   return ok;
 }
 
+/* 2026-05-28: 보험사 분기 카카오 승인 요청 흐름.
+   - GA: doSubmit() = 이메일 OTP (기존 흐름, 공사중 자체 자체 차단 중)
+   - 보험사: doInsurerKakaoSignup() = signup API + 임시 비밀번호 + 카톡 새 창
+     · status='pending'으로 계정 생성 → 운영자가 admin에서 active로 갈아끼움
+     · 임시 비번 = crypto.randomUUID() (사용자가 직접 로그인 안 함)
+     · 비밀번호 재설정 = 운영자 승인 후 안내 (또는 비번 찾기) */
+async function doInsurerKakaoSignup() {
+  if (!validateSignup()) return;
+
+  var btn    = document.getElementById('authMainCta');
+  var txt    = document.getElementById('authMainCtaTxt');
+  var spin   = document.getElementById('authMainCtaSpinner');
+  var errBox = document.getElementById('signupErrBox');
+
+  btn.disabled = true;
+  if (txt)  txt.style.opacity = '0';
+  if (spin) spin.style.display = 'block';
+
+  function _resetBtn() {
+    btn.disabled = false;
+    if (txt)  txt.style.opacity = '';
+    if (spin) spin.style.display = 'none';
+  }
+
+  var email = document.getElementById('f-email').value.trim();
+  var insSel = document.getElementById('f-insurer');
+  var insurerId = insSel.value || '';
+  var companyName = insSel.selectedIndex >= 0 ? insSel.options[insSel.selectedIndex].textContent : '';
+
+  if (!insurerId) {
+    errBox.textContent = '보험사를 선택해 주세요.';
+    errBox.classList.add('on');
+    _resetBtn();
+    return;
+  }
+
+  var gradeShort = document.getElementById('f-role').value;
+  var roleKey = mapToRoleKey('insurer', gradeShort);
+
+  /* 임시 비밀번호 자동 생성 (16자, 사용자가 직접 입력·기억 X) */
+  var tempPw = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random())).replace(/-/g, '').slice(0, 16) + 'A1!';
+
+  var signupData = {
+    name:    document.getElementById('f-name').value.trim(),
+    phone:   document.getElementById('f-phone').value.trim(),
+    company: companyName,
+    branch:  '',
+    role:    roleKey,
+    team:    '',
+    insurer_id: insurerId,
+    branch_id:  '',
+    team_id:    '',
+    status:     'pending'
+  };
+
+  try {
+    var authRes = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        email: email,
+        password: tempPw,
+        data: signupData
+      })
+    });
+
+    if (authRes.ok) {
+      /* 카톡 새 창 + 가입 완료 화면 (pending-notice 자동 노출) */
+      window.open('https://open.kakao.com/o/svu80Moi', '_blank', 'noopener');
+      _resetBtn();
+      _showStep('signup-success');
+      var descEl = document.getElementById('signup-success-desc');
+      if (descEl) descEl.textContent = email + ' — 가입 신청 접수';
+      var pendingEl = document.getElementById('pending-notice');
+      if (pendingEl) pendingEl.style.display = 'block';
+    } else {
+      var errTxt = '';
+      try { var j = await authRes.json(); errTxt = j.msg || j.message || j.error_description || ''; } catch (e) {}
+      errBox.textContent = '가입 신청 중 오류 (' + authRes.status + '): ' + errTxt;
+      errBox.classList.add('on');
+      _resetBtn();
+    }
+  } catch (e) {
+    errBox.textContent = '네트워크 오류: ' + (e && e.message ? e.message : e);
+    errBox.classList.add('on');
+    _resetBtn();
+  }
+}
+
 async function doSubmit() {
-  /* 2026-05-23: 공사중 흐름 — 가입 무조건 차단 (신규 사용자 진입로 폐쇄) */
+  /* 2026-05-23: 공사중 흐름 — 가입 무조건 차단 (신규 사용자 진입로 폐쇄)
+     2026-05-28: 보험사 분기는 doInsurerKakaoSignup() 호출 — 본 함수는 GA 전용 (현재 차단). */
   window.osShowMaintenance();
   return;
 
