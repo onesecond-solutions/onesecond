@@ -817,7 +817,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
           <div class="mdiv"></div>
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">글자 크기</div><div class="seg"><span onclick="setFont(90)" id="f90">90</span><span class="on" onclick="setFont(100)" id="f100">100</span><span onclick="setFont(110)" id="f110">110</span><span onclick="setFont(125)" id="f125">125</span></div></div>
           <div class="mdiv"></div>
-          <div class="mi" onclick="window.Auth.logout()"><span>로그아웃</span></div>
+          <div class="mi" onclick="confirmLogout()"><span>로그아웃</span></div>
         </div>
       </div>
     </header>
@@ -1389,9 +1389,26 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       <div class="profask">직책 변경이 필요하신가요? <span class="profask-link">관리자에게 요청 &#8594;</span></div>
     </div>
     <div class="askfoot on profoot">
-      <button class="askback">로그아웃</button>
+      <button class="askback" onclick="confirmLogout()">로그아웃</button>
       <button class="askback">비밀번호 변경</button>
       <button class="asksubmit" onclick="saveProfile()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로그아웃 확인 모달 (2026-05-28) -->
+<div class="askmodal" id="logoutConfirmModal" onclick="if(event.target===this)closeLogoutConfirm()">
+  <div class="askbox" style="max-width:400px;">
+    <div class="askhead">
+      <div class="asktitle">로그아웃 하시겠습니까?</div>
+      <button class="askx" onclick="closeLogoutConfirm()">&#10005;</button>
+    </div>
+    <div class="askstep on">
+      <p style="text-align:center;padding:24px 16px;color:var(--ts);line-height:1.6;font-size:0.9375rem;">오늘도 원세컨드를 이용해주셔서 감사합니다.</p>
+    </div>
+    <div class="askfoot on">
+      <button class="askback" onclick="closeLogoutConfirm()">취소</button>
+      <button class="asksubmit" onclick="doLogoutConfirmed()">로그아웃</button>
     </div>
   </div>
 </div>
@@ -3851,7 +3868,7 @@ var defaultPanel='';
 document.addEventListener('DOMContentLoaded',function(){defaultPanel=document.getElementById('sobody').innerHTML;});
 document.addEventListener('keydown',function(e){
   if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openSearch();}
-  if(e.key==='Escape'){closeSearch();closeAsk();closeProfile();closeMyspaceWrite();}
+  if(e.key==='Escape'){closeSearch();closeAsk();closeProfile();closeMyspaceWrite();closeLogoutConfirm();}
 });
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('sl').classList.toggle('on',t==='light');document.getElementById('sd').classList.toggle('on',t==='dark');}
 // 질문하기 모달
@@ -3901,6 +3918,28 @@ function _fillProfileForm(u){
   set('prof-role', roleLabel);
 }
 function closeProfile(){document.getElementById('profmodal').classList.remove('open');}
+
+/* 로그아웃 확인 모달 (2026-05-28) — 사용자 메뉴 / 프로필 모달에서 진입 */
+function confirmLogout(){
+  /* 사용자 메뉴 + 프로필 모달 닫기 (열려 있을 시) */
+  var m = document.getElementById('m');
+  var prof = document.getElementById('profmodal');
+  if (m) m.classList.remove('open');
+  if (prof) prof.classList.remove('open');
+  var modal = document.getElementById('logoutConfirmModal');
+  if (modal) modal.classList.add('open');
+}
+function closeLogoutConfirm(){
+  var modal = document.getElementById('logoutConfirmModal');
+  if (modal) modal.classList.remove('open');
+}
+function doLogoutConfirmed(){
+  closeLogoutConfirm();
+  if (window.Auth && typeof window.Auth.logout === 'function') window.Auth.logout();
+}
+window.confirmLogout = confirmLogout;
+window.closeLogoutConfirm = closeLogoutConfirm;
+window.doLogoutConfirmed = doLogoutConfirmed;
 async function saveProfile(){
   var get = function(id){ var el = document.getElementById(id); return (el && el.value || '').trim(); };
   var payload = {
