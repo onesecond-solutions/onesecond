@@ -3947,9 +3947,15 @@ async function saveProfile(){
       var roleLabel = (window.Auth && window.Auth.getRoleLabel) ? window.Auth.getRoleLabel(u.role) : '';
       miFirst.textContent = u.name + (roleLabel ? ' · ' + roleLabel : '');
     }
-    /* A영역 사용자 버튼 이름 갱신 */
+    /* A영역 사용자 버튼 이름 + 아바타 첫 글자 갱신 */
     var acctNm = document.querySelector('.acctbtn .nm');
     if (acctNm) acctNm.innerHTML = u.name + ' &#9662;';
+    var acctAv = document.querySelector('.acctbtn .av');
+    if (acctAv) acctAv.textContent = (u.name || '?').charAt(0);
+
+    /* 홈 인사말 이름 갱신 (#homeGreetName) */
+    var homeName = document.getElementById('homeGreetName');
+    if (homeName) homeName.textContent = '안녕하세요~ ' + u.name + '님!';
 
     closeProfile();
     toast('저장됐습니다');
