@@ -279,13 +279,56 @@ window.authNextSignup = function() {
   _showStep('signup-2');
 };
 
-window.authNextSignup3 = function() {
-  // Step 2 → Step 3 진입 (사전 폼 검증 박음)
-  if (typeof _validateSignupStep2 === 'function') {
-    if (!_validateSignupStep2()) return;
-  }
+window.authNextSignup3 = function () {
+  /* 2026-05-28 PR-OTP: signup-2 → signup-3 진입 시 사전 폼 검증 강제.
+     consent 검사는 signup-3 자리(validateSignup) — 본 함수는 그 외만 점검. */
+  if (!_validateSignupStep2Inline()) return;
   _showStep('signup-3');
 };
+
+function _validateSignupStep2Inline() {
+  var ok = true;
+  var errBox = document.getElementById('signupErrBox');
+  errBox.classList.remove('on');
+
+  if (!window.gSignupSite) {
+    errBox.textContent = '상단 카드에서 보험사 임직원 또는 GA 중 하나를 선택해 주세요.';
+    errBox.classList.add('on');
+    return false;
+  }
+  ['f-name','f-phone'].forEach(function (id) {
+    var el = document.getElementById(id);
+    var er = document.getElementById('e-' + id.split('-')[1]);
+    if (!el.value.trim()) { el.classList.add('err'); er.classList.add('on'); ok = false; }
+    else                  { el.classList.remove('err'); er.classList.remove('on'); }
+  });
+  var role = document.getElementById('f-role');
+  if (!role.value) { role.classList.add('err'); document.getElementById('e-role').classList.add('on'); ok = false; }
+  else             { role.classList.remove('err'); document.getElementById('e-role').classList.remove('on'); }
+  var email = document.getElementById('f-email');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    email.classList.add('err');
+    var er2 = document.getElementById('e-email');
+    er2.textContent = '올바른 이메일을 입력해 주세요.';
+    er2.classList.add('on'); ok = false;
+  } else { email.classList.remove('err'); document.getElementById('e-email').classList.remove('on'); }
+
+  if (window.gSignupSite === 'insurer') {
+    var ins = document.getElementById('f-insurer');
+    if (!ins.value) {
+      ins.classList.add('err'); document.getElementById('e-insurer').classList.add('on'); ok = false;
+    } else {
+      ins.classList.remove('err'); document.getElementById('e-insurer').classList.remove('on');
+    }
+    if (!window.gInsurerOtpVerified) {
+      errBox.textContent = '이메일 인증을 먼저 통과해 주세요. ([인증 코드 받기] → 코드 입력 → [확인])';
+      errBox.classList.add('on');
+      ok = false;
+    }
+  }
+
+  return ok;
+}
 
 window.switchAuthSection = function(target) {
   if (target === 'signup') _showStep('signup-1');
@@ -849,57 +892,98 @@ function selectSite(site) {
   window.gSignupSite = site;
   var cardGa      = document.getElementById('site-card-ga');
   var cardInsurer = document.getElementById('site-card-insurer');
-  if (cardGa)      cardGa.classList.toggle('is-active',      site === 'ga');
-  if (cardInsurer) cardInsurer.classList.toggle('is-active', site === 'insurer');
-  if (cardGa)      cardGa.setAttribute('aria-checked',      site === 'ga');
-  if (cardInsurer) cardInsurer.setAttribute('aria-checked', site === 'insurer');
+  /* 2026-05-29 PR-OTP-v2: 전체 본문 try/catch 안전망.
+     본 함수 안 어느 자료가 throw 해도 함수 중단 X → onclick 다음 줄 window.authNextSignup() 호출 통과.
+     PR #155 = try/catch 미적용 → 한 자료 격차 시 카드 클릭 통째 먹통 → 재발 방지. */
+  try {
+    if (cardGa)      cardGa.classList.toggle('is-active',      site === 'ga');
+    if (cardInsurer) cardInsurer.classList.toggle('is-active', site === 'insurer');
+    if (cardGa)      cardGa.setAttribute('aria-checked',      site === 'ga');
+    if (cardInsurer) cardInsurer.setAttribute('aria-checked', site === 'insurer');
 
-  var formBody = document.getElementById('signup-form-body');
-  var insurerFields = document.getElementById('insurer-fields');
-  var gaFields = document.getElementById('ga-fields');
-  if (formBody) formBody.classList.add('is-open');
-  if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
-  if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
+    var formBody = document.getElementById('signup-form-body');
+    var insurerFields = document.getElementById('insurer-fields');
+    var gaFields = document.getElementById('ga-fields');
+    if (formBody) formBody.classList.add('is-open');
+    if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
+    if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
 
-  /* 2026-05-28: 배지 텍스트 + 직급 옵션 + 이메일 안내 동적 분기.
-     mapToRoleKey가 site + '_' + value 자동 매핑 → 옵션 value 그대로 가도 정합. */
-  var badge = document.querySelector('#page-signup-2 .auth-page-badge');
-  if (badge) {
-    badge.textContent = site === 'insurer' ? '보험사 임직원 전용' : '보험 설계사·매니저 전용';
-  }
-  var emailHint = document.getElementById('f-email-hint');
-  if (emailHint) {
-    emailHint.textContent = site === 'insurer'
-      ? '소속 보험사 공식 이메일 도메인(@meritzfire.com 등)으로 입력해 주세요. 도메인 일치 확인 후 운영자가 승인합니다.'
-      : '이 이메일로 인증 코드가 발송됩니다.';
-  }
-  var roleSel = document.getElementById('f-role');
-  if (roleSel) {
-    if (site === 'insurer') {
-      roleSel.innerHTML =
-        '<option value="">선택해 주세요</option>' +
-        '<option value="branch_manager">원수사 지점장</option>' +
-        '<option value="manager">원수사 매니저</option>';
-    } else {
-      roleSel.innerHTML =
-        '<option value="">선택해 주세요</option>' +
-        '<option value="branch_manager">지점장 / 센터장</option>' +
-        '<option value="manager">매니저 / 실장</option>' +
-        '<option value="member">설계사 / 팀장</option>' +
-        '<option value="staff">스텝 / 총무</option>';
+    /* DOM 재배치 — 보험사 분기 한정 입력폼 순서 정정 */
+    try {
+      var formDivider = document.getElementById('form-divider-affiliation');
+      if (formBody && insurerFields) {
+        if (site === 'insurer') {
+          formBody.insertBefore(insurerFields, formBody.firstChild);
+          if (formDivider) formDivider.style.display = 'none';
+        } else {
+          if (formDivider && formDivider.parentNode === formBody) {
+            formBody.insertBefore(insurerFields, formDivider.nextSibling);
+            formDivider.style.display = '';
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[selectSite DOM 재배치 격차]', e);
     }
-  }
 
-  onRoleChange();
-
-  // site 선택 후 이름 input 자동 포커스 (UX — 진입 직후 site-picker 카드에 포커스 박혀있을 때만)
-  setTimeout(function () {
-    var nameEl = document.getElementById('f-name');
-    var active = document.activeElement;
-    if (nameEl && active && active.classList && active.classList.contains('site-card')) {
-      nameEl.focus();
+    /* OTP 인라인 박스 노출 + 상태 리셋 */
+    try {
+      var otpBox = document.getElementById('otp-inline-box');
+      if (otpBox) otpBox.style.display = (site === 'insurer') ? 'block' : 'none';
+      if (typeof resetInsurerOtp === 'function') resetInsurerOtp();
+    } catch (e) {
+      console.error('[selectSite OTP 리셋 격차]', e);
     }
-  }, 80);
+
+    /* 배지 + 부제 + 이메일 안내 + 직급 옵션 동적 분기 */
+    var badge = document.querySelector('#page-signup-2 .auth-page-badge');
+    if (badge) {
+      badge.textContent = site === 'insurer' ? '보험사 임직원 전용' : '보험 설계사·매니저 전용';
+    }
+    /* 2026-05-29 PR-OTP-v2: 부제도 site 분기에 따라 갈아끼움 (배지/부제 정합) */
+    var sub = document.querySelector('#page-signup-2 .auth-page-sub');
+    if (sub) {
+      sub.textContent = site === 'insurer'
+        ? '보험사 임직원 가입 — 소속 보험사 운영자 승인 후 사용이 활성화됩니다'
+        : '보험 설계사·매니저 가입 — 정확한 정보일수록 매니저 매핑이 정확합니다';
+    }
+    var emailHint = document.getElementById('f-email-hint');
+    if (emailHint) {
+      emailHint.textContent = site === 'insurer'
+        ? '소속 보험사 공식 이메일로 입력 후 [인증 코드 받기]를 눌러 주세요. 운영자가 직접 승인합니다.'
+        : '이 이메일로 인증 코드가 발송됩니다.';
+    }
+    var roleSel = document.getElementById('f-role');
+    if (roleSel) {
+      if (site === 'insurer') {
+        roleSel.innerHTML =
+          '<option value="">선택해 주세요</option>' +
+          '<option value="branch_manager">원수사 지점장</option>' +
+          '<option value="manager">원수사 매니저</option>';
+      } else {
+        roleSel.innerHTML =
+          '<option value="">선택해 주세요</option>' +
+          '<option value="branch_manager">지점장 / 센터장</option>' +
+          '<option value="manager">매니저 / 실장</option>' +
+          '<option value="member">설계사 / 팀장</option>' +
+          '<option value="staff">스텝 / 총무</option>';
+      }
+    }
+
+    onRoleChange();
+
+    /* site 선택 후 이름 input 자동 포커스 — 진입 직후 site-picker 카드에 포커스 있을 때만 */
+    setTimeout(function () {
+      var nameEl = document.getElementById('f-name');
+      var active = document.activeElement;
+      if (nameEl && active && active.classList && active.classList.contains('site-card')) {
+        nameEl.focus();
+      }
+    }, 80);
+  } catch (e) {
+    /* 최후 안전망 — 본 함수 어느 자료 격차 시에도 onclick 다음 줄 authNextSignup() 호출 통과 보장 */
+    console.error('[selectSite 전체 격차 — 안전망 발동]', e);
+  }
 }
 
 function onInsurerChange() {
@@ -923,27 +1007,7 @@ function onInsurerChange() {
   } else {
     if (guide) guide.style.display = 'none';
   }
-  checkInsurerDomain();
-}
-
-function checkInsurerDomain() {
-  if (window.gSignupSite !== 'insurer') return;
-  var sel = document.getElementById('f-insurer');
-  var emailEl = document.getElementById('f-email');
-  if (!sel || !emailEl) return;
-  var opt = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
-  var slug = opt ? (opt.getAttribute('data-slug') || '') : '';
-  var email = (emailEl.value || '').trim().toLowerCase();
-  var domain = INSURER_DOMAINS[slug];
-  if (!slug || !domain || !email) return;
-  if (!email.endsWith(domain.toLowerCase())) {
-    emailEl.classList.add('err');
-    var er = document.getElementById('e-email');
-    if (er) {
-      er.textContent = '이메일이 ' + domain + ' 도메인이어야 합니다.';
-      er.classList.add('on');
-    }
-  }
+  /* 2026-05-28 PR-OTP: 도메인 자동검증 폐기 — 운영자 눈 확인 + OTP 인증만 가동 */
 }
 
 function _toggleOtherInput(selectId, textId) {
@@ -1090,30 +1154,18 @@ function validateSignup() {
     er2.classList.add('on'); ok = false;
   } else { email.classList.remove('err'); document.getElementById('e-email').classList.remove('on'); }
 
-  // 4중 방어 #1: 보험사 분기 도메인 화이트리스트
+  // 보험사 분기 (2026-05-28 정정: 도메인 자동검증 폐기, 운영자 눈 확인. OTP verified 검사로 단순화)
   if (window.gSignupSite === 'insurer') {
     var ins = document.getElementById('f-insurer');
     if (!ins.value) {
       ins.classList.add('err'); document.getElementById('e-insurer').classList.add('on'); ok = false;
     } else {
       ins.classList.remove('err'); document.getElementById('e-insurer').classList.remove('on');
-      var insOpt = ins.selectedIndex >= 0 ? ins.options[ins.selectedIndex] : null;
-      var insSlug = insOpt ? (insOpt.getAttribute('data-slug') || '') : '';
-      var expectedDomain = INSURER_DOMAINS[insSlug];
-      if (expectedDomain) {
-        var emailVal = (email.value || '').trim().toLowerCase();
-        if (!emailVal.endsWith(expectedDomain.toLowerCase())) {
-          email.classList.add('err');
-          var er3 = document.getElementById('e-email');
-          er3.textContent = '이메일이 ' + expectedDomain + ' 도메인이어야 합니다.';
-          er3.classList.add('on'); ok = false;
-        }
-      } else {
-        // 미확인 도메인 (db-life / im-life / kb-life) 일시 차단
-        errBox.textContent = '선택하신 보험사는 도메인 확인이 진행 중입니다. admin 확인 후 가입이 활성화됩니다.';
-        errBox.classList.add('on');
-        ok = false;
-      }
+    }
+    if (!window.gInsurerOtpVerified) {
+      errBox.textContent = '이메일 인증을 먼저 통과해 주세요. ([인증 코드 받기] → 코드 입력 → [확인])';
+      errBox.classList.add('on');
+      ok = false;
     }
   }
 
@@ -1124,49 +1176,200 @@ function validateSignup() {
   return ok;
 }
 
-/* 2026-05-28: 보험사 분기 카카오 승인 요청 흐름.
-   - GA: doSubmit() = 이메일 OTP (기존 흐름, 공사중 자체 자체 차단 중)
-   - 보험사: doInsurerKakaoSignup() = signup API + 임시 비밀번호 + 카톡 새 창
-     · status='pending'으로 계정 생성 → 운영자가 admin에서 active로 갈아끼움
-     · 임시 비번 = crypto.randomUUID() (사용자가 직접 로그인 안 함)
-     · 비밀번호 재설정 = 운영자 승인 후 안내 (또는 비번 찾기) */
-async function doInsurerKakaoSignup() {
+/* 2026-05-28 PR-OTP: 보험사 분기 가입 흐름 통합 정정.
+   - 기존: signup-3 카톡 버튼 = /auth/v1/signup (password) 호출 → auth.users row 신규 생성
+   - 정정: 가입 자체는 OTP가 책임 (sendInsurerOtp + verifyInsurerOtp + updateInsurerProfile).
+     본 함수는 약관 동의 후 마지막 자리 — 카톡 새 창 열기 + signup-success 화면 진입만.
+   - signup API 호출 X (이미 verifyInsurerOtp 시점에 auth.users row + 입력값 update_user 마감) */
+function doInsurerKakaoSignup() {
   if (!validateSignup()) return;
 
-  var btn    = document.getElementById('authMainCta');
-  var txt    = document.getElementById('authMainCtaTxt');
-  var spin   = document.getElementById('authMainCtaSpinner');
-  var errBox = document.getElementById('signupErrBox');
-
-  btn.disabled = true;
-  if (txt)  txt.style.opacity = '0';
-  if (spin) spin.style.display = 'block';
-
-  function _resetBtn() {
-    btn.disabled = false;
-    if (txt)  txt.style.opacity = '';
-    if (spin) spin.style.display = 'none';
-  }
-
   var email = document.getElementById('f-email').value.trim();
-  var insSel = document.getElementById('f-insurer');
-  var insurerId = insSel.value || '';
-  var companyName = insSel.selectedIndex >= 0 ? insSel.options[insSel.selectedIndex].textContent : '';
 
-  if (!insurerId) {
-    errBox.textContent = '보험사를 선택해 주세요.';
+  /* 카톡 새 창 + 가입 완료 화면 (pending-notice 자동 노출) */
+  window.open('https://open.kakao.com/o/svu80Moi', '_blank', 'noopener');
+  _showStep('signup-success');
+  var descEl = document.getElementById('signup-success-desc');
+  if (descEl) descEl.textContent = email + ' — 운영자 승인 대기';
+  var pendingEl = document.getElementById('pending-notice');
+  if (pendingEl) pendingEl.style.display = 'block';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   2026-05-28 PR-OTP: 보험사 분기 한정 이메일 OTP 인라인 인증
+   ────────────────────────────────────────────────────────────────
+   흐름:
+   1. 사용자 이메일 입력 → [인증 코드 받기] 클릭
+   2. sendInsurerOtp() = /auth/v1/otp create_user=true, data={status:'pending'} (최소 메타)
+      → auth.users row 즉시 생성 (이메일만, 입력값 동봉 X)
+      → 사용자 메일함에 6자리 코드 발송
+   3. 사용자 코드 입력 → [확인] 클릭
+   4. verifyInsurerOtp() = /auth/v1/verify type=email → access_token 수신
+      → updateInsurerProfile(access_token) = /auth/v1/user PUT { data: 입력값 }
+      → user_metadata에 이름·핸드폰·보험사·role 한 번에 기록
+   5. window.gInsurerOtpVerified = true → validateSignup 통과 → [다음] 활성
+   6. 사용자 약관 동의 → [💬 카카오톡 승인 요청] = doInsurerKakaoSignup (카톡 + signup-success만)
+
+   §4 중립 원칙 정합:
+   - 미인증 단계 (sendInsurerOtp ~ verifyInsurerOtp 통과 전) = data 메타 = status:'pending'만
+   - 통과 후 = updateInsurerProfile로 입력값 user_metadata 기록
+   - 발송만 받고 코드 미입력 row = 개인정보 잔존 0 (expires_at 자동 만료 정합)
+   ════════════════════════════════════════════════════════════════ */
+
+window.onInsurerEmailInput = function () {
+  if (window.gSignupSite !== 'insurer') return;
+  if (window.gInsurerOtpVerified || window.gInsurerOtpSent) {
+    resetInsurerOtp();
+  }
+};
+window.sendInsurerOtp    = function () { return sendInsurerOtp();    };
+window.verifyInsurerOtp  = function () { return verifyInsurerOtp();  };
+window.resetInsurerOtp   = function () { return resetInsurerOtp();   };
+
+async function sendInsurerOtp() {
+  var emailEl = document.getElementById('f-email');
+  var btn     = document.getElementById('btnSendInsurerOtp');
+  var btnTxt  = document.getElementById('btnSendInsurerOtpTxt');
+  var errBox  = document.getElementById('signupErrBox');
+  errBox.classList.remove('on');
+
+  var email = (emailEl.value || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errBox.textContent = '먼저 올바른 이메일을 입력해 주세요.';
     errBox.classList.add('on');
-    _resetBtn();
+    emailEl.focus();
     return;
   }
 
+  btn.disabled = true;
+  if (btnTxt) btnTxt.textContent = '발송 중…';
+
+  try {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        email: email,
+        create_user: true,
+        data: { status: 'pending' }   /* 미인증 단계 — 최소 메타만 동봉 (§4 중립 정합) */
+      })
+    });
+
+    if (res.ok) {
+      window.gInsurerOtpSent     = true;
+      window.gInsurerOtpEmail    = email;
+      window.gInsurerOtpVerified = false;
+      document.getElementById('otp-send-area').style.display = 'none';
+      document.getElementById('otp-verify-area').style.display = 'block';
+      var sentTo = document.getElementById('otp-sent-to');
+      if (sentTo) sentTo.textContent = email;
+      var codeEl = document.getElementById('f-insurer-otp-code');
+      if (codeEl) { codeEl.value = ''; setTimeout(function () { codeEl.focus(); }, 80); }
+    } else {
+      var errTxt = '';
+      try { var j = await res.json(); errTxt = j.msg || j.message || j.error_description || ''; } catch (e) {}
+      errBox.textContent = '인증 코드 발송 실패 (' + res.status + '): ' + errTxt;
+      errBox.classList.add('on');
+    }
+  } catch (e) {
+    errBox.textContent = '네트워크 오류: ' + (e && e.message ? e.message : e);
+    errBox.classList.add('on');
+  } finally {
+    btn.disabled = false;
+    if (btnTxt) btnTxt.textContent = '✉️ 이메일 인증 코드 받기';
+  }
+}
+
+async function verifyInsurerOtp() {
+  var codeEl = document.getElementById('f-insurer-otp-code');
+  var btn    = document.getElementById('btnVerifyInsurerOtp');
+  var errBox = document.getElementById('signupErrBox');
+  var errFld = document.getElementById('e-insurer-otp');
+  var okMsg  = document.getElementById('otp-verified-msg');
+  errBox.classList.remove('on');
+  errFld.classList.remove('on');
+
+  var code = (codeEl.value || '').trim();
+  if (!/^\d{6}$/.test(code)) {
+    errFld.textContent = '6자리 숫자 코드를 입력해 주세요.';
+    errFld.classList.add('on');
+    codeEl.focus();
+    return;
+  }
+  if (!window.gInsurerOtpSent || !window.gInsurerOtpEmail) {
+    errBox.textContent = '먼저 [인증 코드 받기]를 눌러 주세요.';
+    errBox.classList.add('on');
+    return;
+  }
+
+  btn.disabled = true;
+  var oldTxt = btn.textContent;
+  btn.textContent = '확인 중…';
+
+  try {
+    var res = await fetch(SUPABASE_URL + '/auth/v1/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        type:  'email',
+        email: window.gInsurerOtpEmail,
+        token: code
+      })
+    });
+
+    if (!res.ok) {
+      var errTxt = '';
+      try { var j = await res.json(); errTxt = j.msg || j.message || j.error_description || ''; } catch (e) {}
+      errFld.textContent = '코드가 일치하지 않거나 만료되었습니다. (' + res.status + ') ' + errTxt;
+      errFld.classList.add('on');
+      codeEl.focus();
+      btn.disabled = false;
+      btn.textContent = oldTxt;
+      return;
+    }
+
+    var data = await res.json();
+    var accessToken = data && data.access_token;
+    if (!accessToken) {
+      errFld.textContent = '인증 응답에 토큰이 없습니다 — 다시 시도해 주세요.';
+      errFld.classList.add('on');
+      btn.disabled = false;
+      btn.textContent = oldTxt;
+      return;
+    }
+
+    /* verify 통과 → 입력값 user_metadata 기록 (조건 정합: 본 자리부터 입력값 동봉) */
+    var updateOk = await updateInsurerProfile(accessToken);
+    if (!updateOk) {
+      errBox.textContent = '프로필 갱신 실패 — 잠시 후 다시 시도해 주세요.';
+      errBox.classList.add('on');
+      btn.disabled = false;
+      btn.textContent = oldTxt;
+      return;
+    }
+
+    window.gInsurerOtpVerified = true;
+    if (okMsg) okMsg.style.display = 'block';
+    btn.textContent = '통과';
+    if (codeEl) codeEl.disabled = true;
+    /* btn.disabled = true 유지 (통과 후 재클릭 차단) */
+  } catch (e) {
+    errBox.textContent = '네트워크 오류: ' + (e && e.message ? e.message : e);
+    errBox.classList.add('on');
+    btn.disabled = false;
+    btn.textContent = oldTxt;
+  }
+}
+
+async function updateInsurerProfile(accessToken) {
+  /* verify 통과 후 입력값 user_metadata 한 번에 PUT — 이름·핸드폰·보험사·role */
+  var insSel = document.getElementById('f-insurer');
+  var insurerId = insSel ? insSel.value : '';
+  var companyName = insSel && insSel.selectedIndex >= 0 ? insSel.options[insSel.selectedIndex].textContent : '';
   var gradeShort = document.getElementById('f-role').value;
   var roleKey = mapToRoleKey('insurer', gradeShort);
 
-  /* 임시 비밀번호 자동 생성 (16자, 사용자가 직접 입력·기억 X) */
-  var tempPw = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random())).replace(/-/g, '').slice(0, 16) + 'A1!';
-
-  var signupData = {
+  var meta = {
     name:    document.getElementById('f-name').value.trim(),
     phone:   document.getElementById('f-phone').value.trim(),
     company: companyName,
@@ -1180,37 +1383,39 @@ async function doInsurerKakaoSignup() {
   };
 
   try {
-    var authRes = await fetch(SUPABASE_URL + '/auth/v1/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({
-        email: email,
-        password: tempPw,
-        data: signupData
-      })
+    var res = await fetch(SUPABASE_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':         SUPABASE_KEY,
+        'Authorization': 'Bearer ' + accessToken
+      },
+      body: JSON.stringify({ data: meta })
     });
-
-    if (authRes.ok) {
-      /* 카톡 새 창 + 가입 완료 화면 (pending-notice 자동 노출) */
-      window.open('https://open.kakao.com/o/svu80Moi', '_blank', 'noopener');
-      _resetBtn();
-      _showStep('signup-success');
-      var descEl = document.getElementById('signup-success-desc');
-      if (descEl) descEl.textContent = email + ' — 가입 신청 접수';
-      var pendingEl = document.getElementById('pending-notice');
-      if (pendingEl) pendingEl.style.display = 'block';
-    } else {
-      var errTxt = '';
-      try { var j = await authRes.json(); errTxt = j.msg || j.message || j.error_description || ''; } catch (e) {}
-      errBox.textContent = '가입 신청 중 오류 (' + authRes.status + '): ' + errTxt;
-      errBox.classList.add('on');
-      _resetBtn();
-    }
+    return res.ok;
   } catch (e) {
-    errBox.textContent = '네트워크 오류: ' + (e && e.message ? e.message : e);
-    errBox.classList.add('on');
-    _resetBtn();
+    return false;
   }
+}
+
+function resetInsurerOtp() {
+  window.gInsurerOtpVerified = false;
+  window.gInsurerOtpSent     = false;
+  window.gInsurerOtpEmail    = '';
+
+  var sendArea   = document.getElementById('otp-send-area');
+  var verifyArea = document.getElementById('otp-verify-area');
+  var okMsg      = document.getElementById('otp-verified-msg');
+  var errFld     = document.getElementById('e-insurer-otp');
+  var codeEl     = document.getElementById('f-insurer-otp-code');
+  var verifyBtn  = document.getElementById('btnVerifyInsurerOtp');
+
+  if (sendArea)   sendArea.style.display   = 'block';
+  if (verifyArea) verifyArea.style.display = 'none';
+  if (okMsg)      okMsg.style.display      = 'none';
+  if (errFld)     errFld.classList.remove('on');
+  if (codeEl)     { codeEl.value = ''; codeEl.disabled = false; }
+  if (verifyBtn)  { verifyBtn.disabled = false; verifyBtn.textContent = '확인'; }
 }
 
 async function doSubmit() {
