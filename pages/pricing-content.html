@@ -176,6 +176,24 @@
 }
 .pr-info a { color: var(--ac); font-weight: 700; text-decoration: none; }
 .pr-info a:hover { text-decoration: underline; }
+
+/* 2026-05-28: 미니 푸터 (#v-pricing 자체 자체 자체) — PG 심사 정합 */
+.pr-foot {
+  margin-top: 32px;
+  padding: 20px 16px;
+  border-top: 1px solid var(--bd);
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--ts);
+  line-height: 1.8;
+}
+.pr-foot-row { margin-bottom: 8px; }
+.pr-foot-links a {
+  color: var(--ts);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.pr-foot-links a:hover { color: var(--ac); }
 </style>
 
 <div class="pr-wrap">
@@ -243,6 +261,18 @@
     · 누적형: 윗 단계는 아랫 단계의 모든 기능을 포함합니다<br>
     · 유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다<br>
     · 자세한 환불 기준은 <a href="/refund.html" target="_blank" rel="noopener">환불·취소 정책</a>을 참고해 주세요
+  </div>
+
+  <div class="pr-foot">
+    <div class="pr-foot-row">
+      원세컨드 © 2026 · 티솔루션 · 사업자등록번호 604-10-68738
+    </div>
+    <div class="pr-foot-links">
+      <a href="/terms.html" target="_blank" rel="noopener">이용약관</a> ·
+      <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a> ·
+      <a href="/refund.html" target="_blank" rel="noopener">환불·취소 정책</a> ·
+      <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">💬 카카오 오픈채팅</a>
+    </div>
   </div>
 
 </div>
