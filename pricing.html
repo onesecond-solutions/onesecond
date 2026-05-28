@@ -433,13 +433,16 @@ function handleFreeCta() {
   window.location.href = '/index.html?auth=signup';
 }
 
-function _getUserEmailForPayment() {
-  /* 2026-05-28: localStorage os_user.email 자료 (기존 패턴 정합) */
+function _getUserForPayment() {
+  /* 2026-05-28: localStorage os_user 자료 (기존 패턴 정합) */
   try {
     var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
     var u = JSON.parse(raw);
-    return (u.email || '').trim();
-  } catch (e) { return ''; }
+    return {
+      email: (u.email || '').trim(),
+      phone: (u.phone || '').trim()
+    };
+  } catch (e) { return { email: '', phone: '' }; }
 }
 
 function handlePaidCta(planId) {
@@ -452,17 +455,29 @@ function handlePaidCta(planId) {
     return;
   }
 
-  /* 2026-05-28: 이니시스 V2 customer.email 필수 자료 정정.
+  /* 2026-05-28: 이니시스 V2 customer.email + customer.phoneNumber 필수 자료.
      - email 없음/빈 값 → 로그인 유도
-     - email 있으나 비정상 (@ 미포함) → 결제 차단 + 재로그인 안내 */
-  var email = _getUserEmailForPayment();
-  if (!email) {
+     - email 있으나 비정상 (@ 미포함) → 결제 차단 + 재로그인 안내
+     - phone 없음/빈 값 → "내 정보 수정"에서 등록 안내
+     - phone 형식 비정상 (010 미시작 또는 자릿수 부족) → 결제 차단 */
+  var u = _getUserForPayment();
+  if (!u.email) {
     alert('로그인이 필요합니다. 로그인 후 이용해 주세요.');
     window.location.href = '/index.html?auth=login';
     return;
   }
-  if (email.indexOf('@') === -1) {
+  if (u.email.indexOf('@') === -1) {
     alert('이메일 정보를 확인할 수 없습니다. 다시 로그인해 주세요.');
+    return;
+  }
+  if (!u.phone) {
+    alert('휴대폰 번호 정보를 확인할 수 없습니다.\n내 정보 수정에서 휴대폰 번호를 등록해 주세요.');
+    return;
+  }
+  /* 하이픈 제거 후 정합 검사 (010 시작 + 10~11자리) */
+  var phoneDigits = u.phone.replace(/[^0-9]/g, '');
+  if (phoneDigits.indexOf('010') !== 0 || phoneDigits.length < 10 || phoneDigits.length > 11) {
+    alert('휴대폰 번호 형식이 올바르지 않습니다.\n내 정보 수정에서 010-XXXX-XXXX 형식으로 등록해 주세요.');
     return;
   }
 
@@ -475,7 +490,7 @@ function handlePaidCta(planId) {
     totalAmount: plan.price,
     currency: 'CURRENCY_KRW',
     payMethod: 'CARD',
-    customer: { email: email }
+    customer: { email: u.email, phoneNumber: phoneDigits }
   }).then(function (response) {
     if (response && response.code !== undefined) {
       console.error('[portone] 결제 실패:', response);

@@ -36,7 +36,7 @@
     try {
       var res = await fetch(
         SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userObj.id)
-        + '&select=role,name,plan',
+        + '&select=role,name,plan,phone',
         {
           headers: {
             'apikey': SUPABASE_KEY,
@@ -47,9 +47,10 @@
       if (!res.ok) return userObj;
       var rows = await res.json();
       if (rows && rows[0]) {
-        userObj.role = rows[0].role || '';
-        userObj.name = rows[0].name || '';
-        userObj.plan = rows[0].plan || 'free';
+        userObj.role  = rows[0].role  || '';
+        userObj.name  = rows[0].name  || '';
+        userObj.plan  = rows[0].plan  || 'free';
+        userObj.phone = rows[0].phone || '';
       }
     } catch (_e) { /* 무시: 원본 그대로 */ }
     return userObj;
