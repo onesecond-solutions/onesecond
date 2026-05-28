@@ -747,8 +747,9 @@ body {
 
       <!-- ────── 가입 Step 2 — 정보 입력 ────── -->
       <div class="auth-step-page" id="page-signup-2">
+        <div class="auth-page-badge">보험 설계사·매니저 전용</div>
         <h2 class="auth-page-title">정보를 입력해 주세요</h2>
-        <p class="auth-page-sub">정확한 정보일수록 매니저 매핑이 정확합니다</p>
+        <p class="auth-page-sub">보험 설계사·매니저 가입 — 정확한 정보일수록 매니저 매핑이 정확합니다</p>
 
         <div class="auth-err-box" id="signupErrBox"></div>
 
@@ -820,16 +821,18 @@ body {
                 <p>회사·지점·팀이 정확해야 <strong>지점 게시판</strong>과 <strong>팀 게시판</strong>이 활성화됩니다.</p>
                 <p class="signup-info-sub">💡 목록에 없으면 "기타 입력"으로 직접 입력 — 매니저 승인 시 매핑됩니다.</p>
               </div>
+              <!-- 2026-05-28: 회사명 typeahead (companies 마스터 105개 + aliases 검색).
+                   목록에 없으면 자유 입력 허용 (마스터에 없는 소형 대리점 대비).
+                   PR #146 누락 정정 — landing.html 동시 적용. -->
               <div class="auth-form-group">
-                <label class="auth-label" for="f-company-select">회사명</label>
-                <select class="auth-select" id="f-company-select" onchange="onGaCompanyChange()">
-                  <option value="AZ금융">AZ금융</option>
-                  <option value="__other__">기타 입력</option>
-                </select>
-              </div>
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-company-text">회사명 (직접 입력)</label>
-                <input class="auth-input" type="text" id="f-company-text" placeholder="소속 회사명" maxlength="50" disabled style="opacity:0.5;">
+                <label class="auth-label" for="f-company-text">회사명</label>
+                <div class="ta-wrap" style="position:relative;">
+                  <input class="auth-input" type="text" id="f-company-text"
+                         placeholder="회사명 입력 (2글자 이상)" maxlength="50"
+                         autocomplete="off"
+                         oninput="onCompanyTaInput()" onblur="onCompanyTaBlur()">
+                  <div class="ta-list" id="company-ta-list" style="display:none;"></div>
+                </div>
               </div>
               <div class="auth-form-group">
                 <label class="auth-label" for="f-branch-select">지점 / 센터</label>
