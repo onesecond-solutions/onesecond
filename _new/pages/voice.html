@@ -2,13 +2,6 @@
 <html lang="ko" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<script src="/js/maintenance-guard.js"></script>
-<script>
-/* 2026-05-23 SPA 전환: 본 자료는 /app.html#field-voice/team로 즉시 redirect.
-   Phase 2(다음 단계)에서 본 파일의 실제 본문 + CSS + JS는
-   /js/modules/field-voice.module.js로 흡수 진입. 현재는 자료 보존 자리. */
-window.location.replace('/app.html#field-voice/team');
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>원세컨드 시안 — 딸깍(저장·복사·카드)</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -114,10 +107,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .athumb img{width:100%;height:100%;object-fit:cover;}
 .athumb:hover{border-color:var(--ac);}
 .athumb .nm{position:absolute;bottom:0;left:0;right:0;font-size:0.5625rem;background:rgba(0,0,0,0.6);color:#fff;padding:2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fab{position:fixed;right:26px;bottom:30px;width:54px;height:54px;border-radius:16px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;cursor:pointer;box-shadow:0 8px 24px rgba(99,102,241,0.4);border:none;z-index:5;line-height:1;}
-.fab .fic{font-size:1.125rem;}
-.fab .flbl{font-size:0.75rem;font-weight:700;}
-.fab:hover{background:var(--ach);}
+.fab{position:fixed;right:26px;bottom:30px;background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:7px;padding:5px 10px;color:#fff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:transform .15s;z-index:5;line-height:1;}
+.fab .fic{font-size:0.95em;}
+.fab .flbl{font-size:0.95em;font-weight:800;}
+.fab:hover{transform:translateY(-1px);}
 .lb{position:fixed;inset:0;background:rgba(8,9,11,0.92);display:none;flex-direction:column;z-index:100;}
 .lb.open{display:flex;}
 .lbtop{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0;}
@@ -130,8 +123,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .lbbtn{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#F4F4F5;font-size:1.0625rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .lbbtn:hover{background:var(--ac);}
 .lbpage{font-size:0.875rem;color:#F4F4F5;min-width:48px;text-align:center;}
-.ttak{height:42px;padding:0 16px;border-radius:21px;background:var(--ac);border:none;color:#fff;font-size:0.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;}
-.ttak:hover{background:var(--ach);}
+.ttak{background:linear-gradient(135deg,var(--ac),var(--ach));border:1px solid var(--ac);border-radius:7px;padding:5px 10px;color:#fff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:transform .15s;line-height:1;}
+.ttak:hover{transform:translateY(-1px);}
 .ttakwrap{position:relative;}
 .ttakmenu{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);width:200px;background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;padding:7px;display:none;box-shadow:0 10px 30px rgba(0,0,0,0.4);}
 .ttakmenu.open{display:block;}
@@ -189,7 +182,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
   .acctbtn .nm{display:none;}
   .lbbar{gap:6px;flex-wrap:wrap;}
   .lbbtn{width:38px;height:38px;font-size:0.9375rem;}
-  .ttak{padding:0 12px;font-size:0.8125rem;}
+  .ttak{padding:4px 9px;font-size:0.72rem;}
   .cardbox{max-width:100%;}
   .head{gap:8px;padding:0 12px;}
   .search{max-width:none;flex:1;min-width:0;overflow:hidden;}
@@ -208,7 +201,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
   .split.show-viewer .fab{bottom:16px;}
   .list-col .lhead{border-bottom:none;}
   .list-col .lhead .cnt{display:block;}
-  .fab{bottom:78px;right:16px;width:48px;height:48px;}
+  .fab{bottom:78px;right:16px;}
   .ttl{font-size:1.0625rem;}
   .sub{font-size:0.75rem;margin-bottom:10px;}
   .tabs{margin-bottom:8px;}
@@ -350,36 +343,36 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     </header>
     <div class="body">
      <div class="wrap">
-      <div class="ttl">단체방 <span class="ac">· 팀 공지 & 전달사항</span></div>
-      <div class="sub">팀장 공지와 팀원 전달사항을 한 곳에서 확인하세요.</div>
+      <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
+      <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
       <div class="tabs">
-        <div class="tab on">단체방</div>
-        <div class="tab">네비게이션방</div>
+        <div class="tab">4팀 단체방</div>
+        <div class="tab on">네비게이션방</div>
         <div class="tab">스마트 게시판</div>
         <div class="tab">지점 게시판</div>
       </div>
       <div class="chips">
-        <div class="chip on">전체</div>
-        <div class="chip">공지</div>
-        <div class="chip">전달사항</div>
-        <div class="chip">팀 질문</div>
-        <div class="chip">자료 공유</div>
+        <div class="chip on" onclick="filterChip(this,'전체')">전체</div>
+        <div class="chip" onclick="filterChip(this,'공지사항')">공지사항</div>
+        <div class="chip" onclick="filterChip(this,'인수 같음')">인수 같음</div>
+        <div class="chip" onclick="filterChip(this,'상품 같음')">상품 같음</div>
+        <div class="chip" onclick="filterChip(this,'기타')">기타</div>
       </div>
       <div class="split" id="split">
         <div class="col list-col">
-          <div class="lhead"><span class="cnt">전체 글 <b>10건</b></span><div class="lacts"><button class="lbtn2" onclick="toggleLocalSearch()" aria-label="이 방 검색">&#8981;</button><button class="lbtn2 bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button><button class="newb" onclick="openAsk()">글쓰기</button></div></div>
-          <div class="lsearch" id="lsearch"><span class="lsi">&#8981;</span><input id="lsinput" type="text" placeholder="이 방에서 검색 (단체방)" oninput="filterLocal(this.value)"><button class="lsx" onclick="closeLocalSearch()">&#10005;</button></div>
+          <div class="lhead"><span class="cnt">전체 질문 <b>10건</b></span><div class="lacts"><button class="lbtn2" onclick="toggleLocalSearch()" aria-label="이 방 검색">&#8981;</button><button class="lbtn2 bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button><button class="newb" onclick="openAsk()">질문하기</button></div></div>
+          <div class="lsearch" id="lsearch"><span class="lsi">&#8981;</span><input id="lsinput" type="text" placeholder="이 방에서 검색 (네비게이션방)" oninput="filterLocal(this.value)"><button class="lsx" onclick="closeLocalSearch()">&#10005;</button></div>
           <div class="list" id="qlist">
-            <div class="item on" onclick="showPost(0)" style="--tc:var(--t-event)"><span class="badge">공지</span><div class="it">시청팀 회식 안내 (5/15 금요일, 서울고깃집)</div><div class="id">5월 15일 17:10 · 한재성 실장</div></div>
-            <div class="item" onclick="showPost(1)" style="--tc:var(--ok)"><span class="badge">자료 공유</span><div class="it">금감원 지급여력비율 (보험사 건전성 체크)</div><div class="id">5월 15일 09:51 · 한재성 실장</div></div>
-            <div class="item" onclick="showPost(2)" style="--tc:var(--ok)"><span class="badge">자료 공유</span><div class="it">고지혈증·동맥경화증 (혈관 건강, 고객 발송용)</div><div class="id">5월 15일 09:50 · 한재성 실장</div></div>
-            <div class="item" onclick="showPost(3)" style="--tc:var(--t-event)"><span class="badge">공지</span><div class="it">DB손보 송미정 매니저 휴무 (대직 공지)</div><div class="id">5월 15일 09:23 · 한재성 실장</div></div>
-            <div class="item" onclick="showPost(4)" style="--tc:var(--t-event)"><span class="badge">공지</span><div class="it">흥국화재 결제 방법</div><div class="id">5월 14일 19:27 · 한재성 실장</div></div>
-            <div class="item" onclick="showPost(5)" style="--tc:var(--t-product)"><span class="badge">전달사항</span><div class="it">🚨 DB 간병인일당 20만 가입금액 축소 (5/25 이후)</div><div class="id">5월 14일 18:48 · 한재성 실장</div></div>
-            <div class="item moreitem" onclick="showPost(6)" style="--tc:var(--t-product)"><span class="badge">전달사항</span><div class="it">한화손보 간병인 사용일당 (자료 정정 안내)</div><div class="id">5월 14일 11:07 · 한재성 실장</div></div>
-            <div class="item moreitem" onclick="showPost(7)" style="--tc:var(--t-event)"><span class="badge">공지</span><div class="it">5/14 무더위 + 열콜로 식혀버리기 (격려)</div><div class="id">5월 14일 11:00 · 한재성 실장</div></div>
-            <div class="item moreitem" onclick="showPost(8)" style="--tc:var(--ok)"><span class="badge">자료 공유</span><div class="it">5/14 신한라이프 에즈 더원 시청 교안</div><div class="id">5월 14일 10:56 · 한재성 실장</div></div>
-            <div class="item moreitem" onclick="showPost(9)" style="--tc:var(--ok)"><span class="badge">자료 공유</span><div class="it">한화생명 5월 교안 (금일 교육자료)</div><div class="id">5월 13일 17:41 · 한재성 실장</div></div>
+            <div class="item on" onclick="showPost(0)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">70년 남 사무직 뇌경색/부정맥/고혈압 순환계 기왕증 보장</div><div class="id">5월 15일 16:28 · 답변 3</div></div>
+            <div class="item" onclick="showPost(1)" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">암보험 매월 생활비 받는 상품</div><div class="id">5월 12일 14:47 · 답변 3</div></div>
+            <div class="item" onclick="showPost(2)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">14세 미성년 3.10.5(10) 간편</div><div class="id">5월 15일 16:10 · 답변 1</div></div>
+            <div class="item" onclick="showPost(3)" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">전산 지연 시 청약서 제출 방법</div><div class="id">5월 14일 16:40 · 답변 1</div></div>
+            <div class="item" onclick="showPost(4)" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">암치료비 선지급 보험사</div><div class="id">5월 12일 14:31 · 답변 2</div></div>
+            <div class="item" onclick="showPost(5)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">5세대 실손 단독 가입 가능 원수사</div><div class="id">5월 15일 11:33 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(6)" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">녹취 보관 기간 규정 문의</div><div class="id">5월 13일 11:20 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(7)" style="--tc:var(--t-product)"><span class="badge">상품 같음</span><div class="it">탈모보험 포함 상품</div><div class="id">5월 11일 10:38 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(8)" style="--tc:var(--t-uw)"><span class="badge">인수 같음</span><div class="it">68세 남 협심증 / 신장결석 / 종수술+간호간병</div><div class="id">5월 15일 11:09 · 답변 1</div></div>
+            <div class="item moreitem" onclick="showPost(9)" style="--tc:var(--t-event)"><span class="badge">기타</span><div class="it">민원 접수 시 대응 매뉴얼</div><div class="id">5월 11일 14:50 · 답변 1</div></div>
             <button class="morebtn" id="morebtn" onclick="showMore()">더 보기 (4건)</button>
           </div>
         </div>
@@ -487,30 +480,88 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 <div class="askmodal" id="askmodal" onclick="if(event.target===this)closeAsk()">
   <div class="askbox">
     <div class="askhead">
-      <div class="asktitle">새 글 쓰기</div>
+      <div class="asktitle" id="askTitle">지금 어떤 질문인가요?</div>
       <button class="askx" onclick="closeAsk()">&#10005;</button>
     </div>
 
-    <!-- 단체방 글쓰기 폼 -->
-    <div class="askstep on" id="step-write">
-      <div class="frow">
-        <div class="fld"><label>카테고리 <span class="req">*</span></label><select id="tcCategory"><option value="공지">공지</option><option value="전달사항">전달사항</option><option value="팀 질문">팀 질문</option><option value="자료 공유">자료 공유</option></select></div>
-        <div class="fld"><label>공지 범위 <span class="req">*</span></label><select id="tcScope"><option selected>4팀 단체방</option><option>지점</option><option>전체</option></select></div>
+    <!-- 0단계: 카테고리 선택 -->
+    <div class="askstep" id="step-pick">
+      <div class="catlist">
+        <div class="catcard" onclick="goForm('notice')"><div class="catbody"><div class="cathd">공지사항</div><div class="catdesc">팀에 전달할 운영·긴급·상품·인수·교육·일정 안내</div></div></div>
+        <div class="catcard" onclick="goForm('uw')"><div class="catbody"><div class="cathd">인수 같음</div><div class="catdesc">환자 상태·병력 기반 보험사 인수 가능 여부 질문</div></div></div>
+        <div class="catcard" onclick="goForm('product')"><div class="catbody"><div class="cathd">상품 같음</div><div class="catdesc">상품군·건강체·보장내용 등 상품 질문</div></div></div>
+        <div class="catcard" onclick="goForm('etc')"><div class="catbody"><div class="cathd">기타 잘 모르겠음</div><div class="catdesc">녹취·서류·전산·민원·고객응대 등 현장 운영 질문</div></div></div>
       </div>
-      <div class="fld"><label>제목 <span class="req">*</span></label><input type="text" id="tcTitle" placeholder="제목을 입력하세요" maxlength="100"></div>
-      <div class="fld"><label>내용 <span class="req">*</span></label><textarea id="tcContent" placeholder="전달하고 싶은 내용을 작성해 주세요."></textarea></div>
     </div>
 
-    <!-- 첨부 -->
-    <div class="askfile on" id="askFile">
+    <!-- 공지사항 폼 -->
+    <div class="askstep" id="step-notice">
+      <div class="frow">
+        <div class="fld"><label>공지 유형 <span class="req">*</span></label><select><option>운영 공지</option><option>긴급 공지</option><option>상품 공지</option><option>인수 공지</option><option>교육 안내</option><option>이벤트/일정</option><option>기타</option></select></div>
+        <div class="fld"><label>공지 범위 <span class="req">*</span></label><select><option>팀 내부</option><option>지점</option><option selected>전체 네비게이션방</option><option>특정 보험사</option><option>운영진만</option></select><div class="fhint">기본값 = "전체 네비게이션방"</div></div>
+      </div>
+      <div class="fld"><label>공지 제목 <span class="req">*</span></label><input type="text" placeholder="공지 제목을 입력하세요"></div>
+      <div class="fld"><label>공지 내용 <span class="req">*</span></label><textarea placeholder="전달하고 싶은 내용을 작성해 주세요."></textarea></div>
+    </div>
+
+    <!-- 인수 질문 폼 -->
+    <div class="askstep" id="step-uw">
+      <div class="warnbar">&#9888; 개인정보(이름 / 전화번호 / 주민번호)는 입력하지 마세요.</div>
+      <div class="frow">
+        <div class="fld"><label>제목 <span class="opt">(선택, 비우면 자동 생성)</span></label><input type="text" placeholder="예: 60대 여성 갑상선 결절 인수 가능?"></div>
+        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fld"><label>연령 <span class="req">*</span></label><input type="text" placeholder=""></div>
+        <div class="fld"><label>성별 <span class="req">*</span></label><select><option>선택</option><option>남</option><option>여</option></select></div>
+      </div>
+      <div class="fld"><label>직업</label><input type="text" placeholder="예: 사무직 / 운전직 / 농업"></div>
+      <div class="fld"><label>병력 <span class="req">*</span></label><input type="text" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨"></div>
+      <div class="frow">
+        <div class="fld"><label>진단시기</label><input type="text" placeholder="예: 2025년 3월"></div>
+        <div class="fld"><label>약복용 유무</label><select><option>선택</option><option>복용 중</option><option>복용 안 함</option><option>모름</option></select></div>
+      </div>
+      <div class="fld"><label>현재 상태</label><input type="text" placeholder="예: 추적관찰 중 / 수술 완료"></div>
+      <div class="fld"><label>기타 적고 싶은 내용</label><textarea placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
+    </div>
+
+    <!-- 상품 질문 폼 -->
+    <div class="askstep" id="step-product">
+      <div class="infobar">실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.</div>
+      <div class="frow">
+        <div class="fld"><label>상품군 <span class="req">*</span></label><select><option>선택</option><option>실손</option><option>암</option><option>2대·3대</option><option>간병</option><option>치매</option><option>운전자</option><option>치아</option><option>종신</option><option>정기</option><option>화재</option><option>기타</option></select></div>
+        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fld"><label>건강체</label><select><option>선택</option><option>초강제형(10년고지형)</option><option>초경증(10년고지형)</option><option>기타</option></select></div>
+        <div class="fld"><label>확인하고 싶은 내용</label><select><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
+      </div>
+      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
+      <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
+    </div>
+
+    <!-- 기타 질문 폼 -->
+    <div class="askstep" id="step-etc">
+      <div class="infobar">실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.</div>
+      <div class="frow">
+        <div class="fld"><label>질문 유형 <span class="req">*</span></label><select><option>선택</option><option>녹취</option><option>서류</option><option>전산</option><option>청약</option><option>계약변경</option><option>민원</option><option>고객응대</option><option>지급/보상</option><option>기타</option></select></div>
+        <div class="fld"><label>확인하고 싶은 범위 <span class="req">*</span></label><select><option>팀 내부</option><option>지점</option><option selected>전체 네비게이션방</option><option>특정 보험사</option><option>운영진만</option></select><div class="fhint">기본값 = "전체 네비게이션방"</div></div>
+      </div>
+      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 청약 중 전산 오류 발생 어떻게 처리?"></div>
+      <div class="fld"><label>누가 답해주길 원하세요? <span class="opt">(선택)</span></label><input type="text" placeholder="예: 운영진 / 관리자 / 현장 설계사 / 팀장"></div>
+      <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 상황인지 편하게 작성해 주세요."></textarea></div>
+    </div>
+
+    <!-- 첨부 (폼 공통) -->
+    <div class="askfile" id="askFile">
       <div class="afhd">첨부파일 <span class="opt">(선택 · 최대 10개 · 파일당 10MB)</span></div>
       <div class="afdrop"><div><div class="afmain">파일 첨부하기</div><div class="aftypes">JPG · PNG · GIF · PDF · XLS · XLSX · DOC · DOCX · HWP · MP4 · MOV · WEBM · MP3 · WAV</div></div></div>
     </div>
 
-    <!-- 푸터 -->
-    <div class="askfoot on" id="askFoot">
-      <button class="askback" onclick="closeAsk()">취소</button>
-      <button class="asksubmit" onclick="submitTeamPost()">등록하기</button>
+    <!-- 푸터 (폼에서만) -->
+    <div class="askfoot" id="askFoot">
+      <button class="askback" onclick="backToPick()">&#8592; 카테고리 다시 선택</button>
+      <button class="asksubmit" onclick="submitAsk()">등록하기</button>
     </div>
   </div>
 </div>
@@ -628,6 +679,7 @@ function closeCard(){document.getElementById('cm').classList.remove('open');}
 var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
+function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
@@ -645,36 +697,61 @@ function filterLocal(q){
   document.querySelector('.lhead .cnt').innerHTML=ql===''?'전체 질문 <b>10건</b>':'검색 결과 <b>'+n+'건</b>';
 }
 var posts = [
-  {badge:'공지', tc:'t-event', title:'시청팀 회식 안내 (5/15 금요일, 서울고깃집)', meta:'5월 15일 17:10 · 한재성 실장',
-    body:'금일 시청팀 회식 하는날 !!!<br>금요일이니,, 마감 끝까지 잘 챙기구 6시 10분부터 이동하는걸로 해요 !!!<br><br>장소는 회사 뒷편 서울고깃집 = 김치찌개집<br>다들 아시죠?',
-    answers:[]},
-  {badge:'자료 공유', tc:'ok', title:'금감원 지급여력비율 (보험사 건전성 체크)', meta:'5월 15일 09:51 · 한재성 실장',
-    body:'위 내용은 금감원에서 발표된 지급 여력 비율입니다.<br>지급여력비율은 쉽게 말해 "보험사가 보험금을 제때 줄 돈이 얼마나 있나?"를 보여주는 성적표입니다.<br>"우리 회사는 나라에서 권고하는 기준보다 훨씬 탄력 있습니다!"라고 객관적인 수치로 보여드리면, 고객님의 불안감이 확신으로 바뀝니다.<br><br>또한 비율이 뚝 떨어진 회사는 자본을 아끼려고 잘 팔리던 보장성 상품을 없애거나 환급률을 조정하기도 해요. 우리가 고객님께 안정적으로 좋은 상품을 오래 권하려면, 회사의 체력이 튼튼한지 미리 체크하는 게 필수입니다.<br><br>보험은 한 번 가입하면 10년, 20년 이상 가는 초장기 약속이잖아요. 회사가 튼튼해야 나중에 고객님께 원망 들을 일이 없고, 우리도 당당하게 추천할 수 있습니다.<br>건전성 체크는 고객을 향한 최고의 에티켓이자 우리 전문성의 상징입니다.',
-    answers:[]},
-  {badge:'자료 공유', tc:'ok', title:'고지혈증·동맥경화증 (혈관 건강, 고객 발송용)', meta:'5월 15일 09:50 · 한재성 실장',
-    body:'고객님, 좋은 아침입니다.<br><br>건강은 어느 날 갑자기 무너지는 것이 아니라, 작은 신호를 놓칠 때 조용히 흔들리기 시작합니다.<br><br>고지혈증과 동맥경화증은 혈관을 좁아지게 하고, 심장과 뇌로 가는 혈액 흐름을 방해해 협심증, 심근경색, 뇌경색, 뇌출혈 같은 큰 질환으로 이어질 수 있습니다.<br><br>그래서 평소의 식습관, 운동, 정기검진이 무엇보다 중요합니다.<br>보험도 마찬가지입니다. 건강할 때 미리 준비해야, 예상치 못한 질병 앞에서도 치료와 회복에 집중할 수 있습니다.<br><br>오늘도 내 몸의 작은 신호를 살피는 하루 되시고, 고객님의 건강과 평안이 오래도록 지켜지길 바랍니다.',
-    answers:[]},
-  {badge:'공지', tc:'t-event', title:'DB손보 송미정 매니저 휴무 (대직 공지)', meta:'5월 15일 09:23 · 한재성 실장',
-    body:'DB손보 송미정 매니저 오늘 휴무셔서 대직자 공지드립니다!<br><br>- 정지윤M 010-4862-3707<br>- 고명선M 010-7715-5470',
-    answers:[]},
-  {badge:'공지', tc:'t-event', title:'흥국화재 결제 방법', meta:'5월 14일 19:27 · 한재성 실장',
-    body:'흥국화재 결제 방법입니다.',
-    answers:[]},
-  {badge:'전달사항', tc:'t-product', title:'🚨 DB 간병인일당 20만 가입금액 축소 (5/25 이후)', meta:'5월 14일 18:48 · 한재성 실장',
-    body:'🚨 DB 간병인일당 2️⃣0️⃣만 가입금액 축소 🚨<br><br>📍전상품 + 5/25 이후 축소<br><br>✔️ 가정의 달 5월에는 간병인 플랜 👍<br><br>✔️ 타사는 안 되는 20만 플랜<br>    👉 간병인 + 수술비 / 순환계 플랜 추천 ‼️<br><br>💚 DB패스 담보 가입 시 최저P 상관없이 💚<br><br>🚨 가입금액 축소 전 간병 20만 필수 체크 🚨<br><br>오전에 말씀드린 내용이 현실이 되었네요,,,<br>일부 지점 판매하려 했던 내용이 아닌 디비손보 전체 마감으로 진행 해야합니다.<br>꼭 챙겨주세요.',
-    answers:[]},
-  {badge:'전달사항', tc:'t-product', title:'한화손보 간병인 사용일당 (자료 정정 안내)', meta:'5월 14일 11:07 · 한재성 실장',
-    body:'위 자료 참고하면서<br>손보-한화손보 간병인 사용일당 한화손보 프리미엄플랜<br>-70세까지 20/6/7<br>-80세까지 15/5/7<br><br>가능합니다.<br>자료에 잘못표기되어 수정 안내드립니다.',
-    answers:[]},
-  {badge:'공지', tc:'t-event', title:'5/14 무더위 + 열콜로 식혀버리기 (격려)', meta:'5월 14일 11:00 · 한재성 실장',
-    body:'오늘 하루도 무더위속 열기를 열콜로 식혀버리는 하루 만들어 봅시다^^',
-    answers:[]},
-  {badge:'자료 공유', tc:'ok', title:'5/14 신한라이프 에즈 더원 시청 교안', meta:'5월 14일 10:56 · 한재성 실장',
-    body:'금일 교육자료입니다.',
-    answers:[]},
-  {badge:'자료 공유', tc:'ok', title:'한화생명 5월 교안 (금일 교육자료)', meta:'5월 13일 17:41 · 한재성 실장',
-    body:'금일 교육자료입니다.',
-    answers:[]}
+  {badge:'인수 같음', tc:'t-uw', title:'70년 남 사무직 뇌경색/부정맥/고혈압 순환계 기왕증 보장', meta:'5월 15일 16:28 · 답변 3 · 첨부 3',
+    body:'안녕하세요. 도와주세요~ 700814-1 사무직.<br>뇌경색 혈전용해치료한지 3년넘었고.<br>부정맥 전극도자절제술한지 3년넘었어요.<br>고혈압복용중이구요.<br>순환계질환 주요치료비를 넣었을때(혈전용해치료, 혈전제거, 수술, 중환자실) 기왕증도 모두 보장 가능한 회사가 있을까요?',
+    answers:[
+      {who:'한화손보 답변', text:'한화손보 간편 2대치료비. 진단문구 없어서 기왕증 가능합니다.'},
+      {who:'라이나손보 답변', text:'라이나손보 가능합니다.'},
+      {who:'현대해상 답변', text:'현대해상 : 3333플랜 가능합니다.'}
+    ]},
+  {badge:'상품 같음', tc:'t-product', title:'암보험 매월 생활비 받는 상품', meta:'5월 12일 14:47 · 답변 3 · 첨부 0',
+    body:'안녕하세요? 암보험 매월생활비로 받을수있는 보험상품 추천부탁드려요',
+    answers:[
+      {who:'라이나손보 답변', text:'라이나손보 355 가능합니다.'},
+      {who:'현대해상 답변', text:'현대해상 70% 선지급 됩니다. 지급사유별 5백만원 한도입니다.'},
+      {who:'메리츠 답변', text:'예약만 하셔도 암통치, 비통치 50% 선지급 가능합니다.'}
+    ]},
+  {badge:'인수 같음', tc:'t-uw', title:'14세 미성년 3.10.5(10) 간편', meta:'5월 15일 16:10 · 답변 1 · 첨부 0',
+    body:'안녕하세요. 14세 미성년 / 3.10.5(10) 간편 가입한 회사 있을까요?',
+    answers:[
+      {who:'메리츠 답변', text:'더가벼운 355간편. 5세부터 가능합니다.'}
+    ]},
+  {badge:'기타', tc:'t-event', title:'전산 지연 시 청약서 제출 방법', meta:'5월 14일 16:40 · 답변 1 · 첨부 0',
+    body:'전산 지연으로 청약서 등록이 안 될 때 제출 방법 안내 부탁드립니다.',
+    answers:[
+      {who:'운영팀 답변', text:'전산 지연 시 수기 청약서 작성 후 익일 등록 가능합니다.'}
+    ]},
+  {badge:'상품 같음', tc:'t-product', title:'암치료비 선지급 보험사', meta:'5월 12일 14:31 · 답변 2 · 첨부 0',
+    body:'안녕하세요? 암치료비 선지급되는 보험사 안내부탁드려요',
+    answers:[
+      {who:'라이나손보 답변', text:'라이나손보 70% 최대 700만원 선지급됩니다.'},
+      {who:'삼성화재 답변', text:'치료 행위별 보험금의 50% / 치료 행위별 500만원 한도 입니다.'}
+    ]},
+  {badge:'인수 같음', tc:'t-uw', title:'5세대 실손 단독 가입 가능 원수사', meta:'5월 15일 11:33 · 답변 1 · 첨부 0',
+    body:'안녕하세요 원수사 지점장님 매니져님. 5세대 실손 현재 단독으로 가입 가능한 원수사 있을까요?',
+    answers:[
+      {who:'한화손보 답변', text:'한화손보 5세대 실손 5/6 14:00부터 판매 개시했습니다. 종합보험 상해사망 1억으로 방진 없이 실비 가입 가능. 다만 61세 이상은 종합연계 무관 방진입니다.'}
+    ]},
+  {badge:'기타', tc:'t-event', title:'녹취 보관 기간 규정 문의', meta:'5월 13일 11:20 · 답변 1 · 첨부 0',
+    body:'고객 녹취 자료 보관 기간 규정 문의드립니다.',
+    answers:[
+      {who:'운영팀 답변', text:'녹취 자료는 최소 5년 보관이 원칙이며, 분쟁 가능성 있는 건은 10년 권장합니다.'}
+    ]},
+  {badge:'상품 같음', tc:'t-product', title:'탈모보험 포함 상품', meta:'5월 11일 10:38 · 답변 0 · 첨부 0',
+    body:'안녕하세요. 혹시 판매되는 상품중에 탈모보험도 포함되는 상품있을까요?',
+    answers:[
+      {who:'운영팀 답변', text:'현재 탈모보험 단독상품은 없고, 일부 종합보험 특약으로 가능합니다. 보험사별 확인 필요.'}
+    ]},
+  {badge:'인수 같음', tc:'t-uw', title:'68세 남 협심증 / 신장결석 / 종수술+간호간병', meta:'5월 15일 11:09 · 답변 1 · 첨부 0',
+    body:'68세 남자. 2년전 협심증진단, 1년전 신장결석제거. 종수술이랑 간호간병통합서비스 들어갈 수 있는 회사 있을까요?',
+    answers:[
+      {who:'라이나생명 답변', text:'라이나생명 제한 없습니다.'}
+    ]},
+  {badge:'기타', tc:'t-event', title:'민원 접수 시 대응 매뉴얼', meta:'5월 11일 14:50 · 답변 1 · 첨부 0',
+    body:'민원 접수 시 1차 대응 매뉴얼 공유 부탁드립니다.',
+    answers:[
+      {who:'운영팀 답변', text:'1차 대응 = 24시간 내 연락 + 사실관계 확인 + 처리방안 안내. 자세한 매뉴얼은 운영팀 공유 폴더 참고.'}
+    ]}
 ];
 function showPost(idx){
   var p = posts[idx];
@@ -703,7 +780,6 @@ function showPost(idx){
 }
 function showViewer(){var s=document.getElementById('split');if(window.innerWidth<=1024)s.classList.add('show-viewer');}
 function backToList(){document.getElementById('split').classList.remove('show-viewer');}
-window.addEventListener('DOMContentLoaded', function(){ if(typeof showPost === 'function') showPost(0); });
 function toggleMSide(){document.getElementById('app').classList.toggle('msidebar');}
 var searchData=[
 {tag:'허브',color:'#22C55E',title:'5세대 실손 주계약 4세대 대비 변화',meta:'상품 DB'},
@@ -744,16 +820,7 @@ document.addEventListener('keydown',function(e){
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('sl').classList.toggle('on',t==='light');document.getElementById('sd').classList.toggle('on',t==='dark');}
 // 질문하기 모달
 var askForms={notice:{t:'공지사항 작성'},uw:{t:'인수 질문 작성'},product:{t:'상품 질문 작성'},etc:{t:'기타 질문 작성'}};
-function openAsk(){document.getElementById('askmodal').classList.add('open');var t=document.getElementById('tcTitle');if(t)t.value='';var c=document.getElementById('tcContent');if(c)c.value='';}
-function submitTeamPost(){
-  var cat=document.getElementById('tcCategory').value;
-  var title=document.getElementById('tcTitle').value.trim();
-  var content=document.getElementById('tcContent').value.trim();
-  if(!title){alert('제목을 입력하세요');return;}
-  if(!content){alert('내용을 입력하세요');return;}
-  alert('[등록되었습니다]\n\n카테고리: '+cat+'\n제목: '+title+'\n\n(현재는 시안 자료 — 실제 DB 저장은 추후 적용)');
-  closeAsk();
-}
+function openAsk(){document.getElementById('askmodal').classList.add('open');backToPick();}
 function closeAsk(){document.getElementById('askmodal').classList.remove('open');}
 function showStep(id){document.querySelectorAll('.askstep').forEach(function(s){s.classList.remove('on');});document.getElementById('step-'+id).classList.add('on');}
 function backToPick(){showStep('pick');document.getElementById('askTitle').innerHTML='지금 어떤 질문인가요?';document.getElementById('askFile').classList.remove('on');document.getElementById('askFoot').classList.remove('on');}
