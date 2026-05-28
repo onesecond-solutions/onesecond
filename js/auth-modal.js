@@ -846,6 +846,29 @@ function selectSite(site) {
   if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
   if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
 
+  /* 2026-05-28: 배지 텍스트 + 직급 옵션 동적 분기 (보험사 2개 / GA 4개).
+     mapToRoleKey가 site + '_' + value 자동 매핑 → 옵션 value 그대로 가도 정합. */
+  var badge = document.querySelector('#page-signup-2 .auth-page-badge');
+  if (badge) {
+    badge.textContent = site === 'insurer' ? '보험사 임직원 전용' : '보험 설계사·매니저 전용';
+  }
+  var roleSel = document.getElementById('f-role');
+  if (roleSel) {
+    if (site === 'insurer') {
+      roleSel.innerHTML =
+        '<option value="">선택해 주세요</option>' +
+        '<option value="branch_manager">원수사 지점장</option>' +
+        '<option value="manager">원수사 매니저</option>';
+    } else {
+      roleSel.innerHTML =
+        '<option value="">선택해 주세요</option>' +
+        '<option value="branch_manager">지점장 / 센터장</option>' +
+        '<option value="manager">매니저 / 실장</option>' +
+        '<option value="member">설계사 / 팀장</option>' +
+        '<option value="staff">스텝 / 총무</option>';
+    }
+  }
+
   onRoleChange();
 
   // site 선택 후 이름 input 자동 포커스 (UX — 진입 직후 site-picker 카드에 포커스 박혀있을 때만)
