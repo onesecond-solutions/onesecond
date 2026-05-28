@@ -834,25 +834,15 @@ body {
                   <div class="ta-list" id="company-ta-list" style="display:none;"></div>
                 </div>
               </div>
+              <!-- 2026-05-28: 지점/팀 select+text 듀얼 폐기 → 단일 input.
+                   매니저 승인 시 admin 콘솔에서 branch_id/team_id 매핑. -->
               <div class="auth-form-group">
-                <label class="auth-label" for="f-branch-select">지점 / 센터</label>
-                <select class="auth-select" id="f-branch-select" onchange="onGaBranchChange()">
-                  <option value="">불러오는 중…</option>
-                </select>
-              </div>
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-branch-text">지점명 (직접 입력)</label>
-                <input class="auth-input" type="text" id="f-branch-text" placeholder="지점/센터명" maxlength="50" disabled style="opacity:0.5;">
-              </div>
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-team-select">팀</label>
-                <select class="auth-select" id="f-team-select" onchange="onGaTeamChange()">
-                  <option value="">선택 안 함</option>
-                </select>
+                <label class="auth-label" for="f-branch-text">지점/센터명 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-branch-text" placeholder="예: 더원지점" maxlength="50">
               </div>
               <div class="auth-form-group">
                 <label class="auth-label" for="f-team-text">팀명 (직접 입력)</label>
-                <input class="auth-input" type="text" id="f-team-text" placeholder="팀명" maxlength="30" disabled style="opacity:0.5;">
+                <input class="auth-input" type="text" id="f-team-text" placeholder="예: 4팀" maxlength="30">
               </div>
             </div>
 

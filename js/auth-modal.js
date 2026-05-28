@@ -694,17 +694,8 @@ async function loadSignupSelects() {
     var insRes = await fetch(SUPABASE_URL + '/rest/v1/insurers?is_active=eq.true&select=id,slug,name,type&order=type,name', { headers: headers });
     var insurers = insRes.ok ? await insRes.json() : [];
     populateInsurerSelect(insurers);
-
-    var brRes = await fetch(SUPABASE_URL + '/rest/v1/branches?ga_org_name=eq.' + encodeURIComponent('AZ금융') + '&is_active=eq.true&select=id,name&order=name', { headers: headers });
-    var branches = brRes.ok ? await brRes.json() : [];
-    populateBranchSelect(branches);
-
-    var initBranchId = branches.length > 0 ? branches[0].id : '';
-    if (initBranchId) {
-      await loadTeamsByBranch(initBranchId);
-    } else {
-      clearTeamSelect();
-    }
+    /* 2026-05-28: GA 분기 지점/팀 select 듀얼 폐기 → 단일 input.
+       branches/teams fetch + populateBranchSelect + loadTeamsByBranch 호출 제거. */
   } catch (e) {
     console.error('[loadSignupSelects 실패]', e);
     _signupSelectsLoaded = false;
@@ -1137,24 +1128,13 @@ async function doSubmit() {
       return;
     }
   } else {
-    // GA 분기 — 시드 매핑 또는 free text
-    var bSel = document.getElementById('f-branch-select');
-    var tSel = document.getElementById('f-team-select');
-    if (bSel.value && bSel.value !== '__other__') {
-      branchId = bSel.value;
-      branchName = bSel.options[bSel.selectedIndex].getAttribute('data-name') || '';
-    } else {
-      branchName = (document.getElementById('f-branch-text').value || '').trim();
-    }
-    if (tSel.value && tSel.value !== '__other__') {
-      teamId = tSel.value;
-      teamName = tSel.options[tSel.selectedIndex].getAttribute('data-name') || '';
-    } else {
-      teamName = (document.getElementById('f-team-text').value || '').trim();
-    }
-    /* 2026-05-28: select 듀얼 폐기 → 단일 input + typeahead.
-       마스터에 없는 자유 입력도 그대로 저장 (작업지시서 정합). */
+    /* 2026-05-28: GA 분기 — 지점/팀 select 듀얼 폐기 → 단일 input.
+       매니저 승인 시 admin 콘솔에서 branch_id/team_id 매핑 (가입 시 NULL).
+       회사명 typeahead 자료 (PR #146) 정합 — 단일 input 값 그대로 저장. */
     companyName = (document.getElementById('f-company-text').value || '').trim();
+    branchName  = (document.getElementById('f-branch-text').value  || '').trim();
+    teamName    = (document.getElementById('f-team-text').value    || '').trim();
+    /* branchId / teamId = NULL (드롭다운 폐기, 매핑은 admin 승인 자체) */
     statusValue = 'active';
   }
 
