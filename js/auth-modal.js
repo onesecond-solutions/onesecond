@@ -892,78 +892,98 @@ function selectSite(site) {
   window.gSignupSite = site;
   var cardGa      = document.getElementById('site-card-ga');
   var cardInsurer = document.getElementById('site-card-insurer');
-  if (cardGa)      cardGa.classList.toggle('is-active',      site === 'ga');
-  if (cardInsurer) cardInsurer.classList.toggle('is-active', site === 'insurer');
-  if (cardGa)      cardGa.setAttribute('aria-checked',      site === 'ga');
-  if (cardInsurer) cardInsurer.setAttribute('aria-checked', site === 'insurer');
+  /* 2026-05-29 PR-OTP-v2: 전체 본문 try/catch 안전망.
+     본 함수 안 어느 자료가 throw 해도 함수 중단 X → onclick 다음 줄 window.authNextSignup() 호출 통과.
+     PR #155 = try/catch 미적용 → 한 자료 격차 시 카드 클릭 통째 먹통 → 재발 방지. */
+  try {
+    if (cardGa)      cardGa.classList.toggle('is-active',      site === 'ga');
+    if (cardInsurer) cardInsurer.classList.toggle('is-active', site === 'insurer');
+    if (cardGa)      cardGa.setAttribute('aria-checked',      site === 'ga');
+    if (cardInsurer) cardInsurer.setAttribute('aria-checked', site === 'insurer');
 
-  var formBody = document.getElementById('signup-form-body');
-  var insurerFields = document.getElementById('insurer-fields');
-  var gaFields = document.getElementById('ga-fields');
-  if (formBody) formBody.classList.add('is-open');
-  if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
-  if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
+    var formBody = document.getElementById('signup-form-body');
+    var insurerFields = document.getElementById('insurer-fields');
+    var gaFields = document.getElementById('ga-fields');
+    if (formBody) formBody.classList.add('is-open');
+    if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
+    if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
 
-  /* 2026-05-28 PR-OTP: 보험사 분기 한정 입력폼 순서 정정.
-     site='insurer' 시 = #insurer-fields(보험사 select + 안내)를 form-body 맨 위로 이동.
-     site='ga' 시 = #form-divider-affiliation 직후 원자리로 복원. */
-  var formDivider = document.getElementById('form-divider-affiliation');
-  if (formBody && insurerFields) {
-    if (site === 'insurer') {
-      formBody.insertBefore(insurerFields, formBody.firstChild);
-      if (formDivider) formDivider.style.display = 'none';
-    } else {
-      if (formDivider && formDivider.parentNode === formBody) {
-        formBody.insertBefore(insurerFields, formDivider.nextSibling);
-        formDivider.style.display = '';
+    /* DOM 재배치 — 보험사 분기 한정 입력폼 순서 정정 */
+    try {
+      var formDivider = document.getElementById('form-divider-affiliation');
+      if (formBody && insurerFields) {
+        if (site === 'insurer') {
+          formBody.insertBefore(insurerFields, formBody.firstChild);
+          if (formDivider) formDivider.style.display = 'none';
+        } else {
+          if (formDivider && formDivider.parentNode === formBody) {
+            formBody.insertBefore(insurerFields, formDivider.nextSibling);
+            formDivider.style.display = '';
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[selectSite DOM 재배치 격차]', e);
+    }
+
+    /* OTP 인라인 박스 노출 + 상태 리셋 */
+    try {
+      var otpBox = document.getElementById('otp-inline-box');
+      if (otpBox) otpBox.style.display = (site === 'insurer') ? 'block' : 'none';
+      if (typeof resetInsurerOtp === 'function') resetInsurerOtp();
+    } catch (e) {
+      console.error('[selectSite OTP 리셋 격차]', e);
+    }
+
+    /* 배지 + 부제 + 이메일 안내 + 직급 옵션 동적 분기 */
+    var badge = document.querySelector('#page-signup-2 .auth-page-badge');
+    if (badge) {
+      badge.textContent = site === 'insurer' ? '보험사 임직원 전용' : '보험 설계사·매니저 전용';
+    }
+    /* 2026-05-29 PR-OTP-v2: 부제도 site 분기에 따라 갈아끼움 (배지/부제 정합) */
+    var sub = document.querySelector('#page-signup-2 .auth-page-sub');
+    if (sub) {
+      sub.textContent = site === 'insurer'
+        ? '보험사 임직원 가입 — 소속 보험사 운영자 승인 후 사용이 활성화됩니다'
+        : '보험 설계사·매니저 가입 — 정확한 정보일수록 매니저 매핑이 정확합니다';
+    }
+    var emailHint = document.getElementById('f-email-hint');
+    if (emailHint) {
+      emailHint.textContent = site === 'insurer'
+        ? '소속 보험사 공식 이메일로 입력 후 [인증 코드 받기]를 눌러 주세요. 운영자가 직접 승인합니다.'
+        : '이 이메일로 인증 코드가 발송됩니다.';
+    }
+    var roleSel = document.getElementById('f-role');
+    if (roleSel) {
+      if (site === 'insurer') {
+        roleSel.innerHTML =
+          '<option value="">선택해 주세요</option>' +
+          '<option value="branch_manager">원수사 지점장</option>' +
+          '<option value="manager">원수사 매니저</option>';
+      } else {
+        roleSel.innerHTML =
+          '<option value="">선택해 주세요</option>' +
+          '<option value="branch_manager">지점장 / 센터장</option>' +
+          '<option value="manager">매니저 / 실장</option>' +
+          '<option value="member">설계사 / 팀장</option>' +
+          '<option value="staff">스텝 / 총무</option>';
       }
     }
-  }
 
-  /* 2026-05-28 PR-OTP: 보험사 분기 한정 OTP 인라인 박스 노출 + 상태 리셋 */
-  var otpBox = document.getElementById('otp-inline-box');
-  if (otpBox) otpBox.style.display = (site === 'insurer') ? 'block' : 'none';
-  resetInsurerOtp();
+    onRoleChange();
 
-  /* 2026-05-28: 배지 텍스트 + 직급 옵션 + 이메일 안내 동적 분기.
-     mapToRoleKey가 site + '_' + value 자동 매핑 → 옵션 value 그대로 가도 정합. */
-  var badge = document.querySelector('#page-signup-2 .auth-page-badge');
-  if (badge) {
-    badge.textContent = site === 'insurer' ? '보험사 임직원 전용' : '보험 설계사·매니저 전용';
+    /* site 선택 후 이름 input 자동 포커스 — 진입 직후 site-picker 카드에 포커스 있을 때만 */
+    setTimeout(function () {
+      var nameEl = document.getElementById('f-name');
+      var active = document.activeElement;
+      if (nameEl && active && active.classList && active.classList.contains('site-card')) {
+        nameEl.focus();
+      }
+    }, 80);
+  } catch (e) {
+    /* 최후 안전망 — 본 함수 어느 자료 격차 시에도 onclick 다음 줄 authNextSignup() 호출 통과 보장 */
+    console.error('[selectSite 전체 격차 — 안전망 발동]', e);
   }
-  var emailHint = document.getElementById('f-email-hint');
-  if (emailHint) {
-    emailHint.textContent = site === 'insurer'
-      ? '소속 보험사 공식 이메일로 입력 후 [인증 코드 받기]를 눌러 주세요. 운영자가 직접 승인합니다.'
-      : '이 이메일로 인증 코드가 발송됩니다.';
-  }
-  var roleSel = document.getElementById('f-role');
-  if (roleSel) {
-    if (site === 'insurer') {
-      roleSel.innerHTML =
-        '<option value="">선택해 주세요</option>' +
-        '<option value="branch_manager">원수사 지점장</option>' +
-        '<option value="manager">원수사 매니저</option>';
-    } else {
-      roleSel.innerHTML =
-        '<option value="">선택해 주세요</option>' +
-        '<option value="branch_manager">지점장 / 센터장</option>' +
-        '<option value="manager">매니저 / 실장</option>' +
-        '<option value="member">설계사 / 팀장</option>' +
-        '<option value="staff">스텝 / 총무</option>';
-    }
-  }
-
-  onRoleChange();
-
-  // site 선택 후 이름 input 자동 포커스 (UX — 진입 직후 site-picker 카드에 포커스 박혀있을 때만)
-  setTimeout(function () {
-    var nameEl = document.getElementById('f-name');
-    var active = document.activeElement;
-    if (nameEl && active && active.classList && active.classList.contains('site-card')) {
-      nameEl.focus();
-    }
-  }, 80);
 }
 
 function onInsurerChange() {
