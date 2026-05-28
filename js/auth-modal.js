@@ -953,6 +953,16 @@ function selectSite(site) {
         ? '소속 보험사 공식 이메일로 입력 후 [인증 코드 받기]를 눌러 주세요. 운영자가 직접 승인합니다.'
         : '이 이메일로 인증 코드가 발송됩니다.';
     }
+    /* 2026-05-29: 이메일 placeholder도 site 분기 동적 갈아끼움 (보험사 한정) */
+    var emailInput = document.getElementById('f-email');
+    if (emailInput) {
+      emailInput.setAttribute(
+        'placeholder',
+        site === 'insurer'
+          ? '소속 보험사 공식 이메일 등록 후 인증'
+          : 'example@email.com'
+      );
+    }
     var roleSel = document.getElementById('f-role');
     if (roleSel) {
       if (site === 'insurer') {
