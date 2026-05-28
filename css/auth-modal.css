@@ -551,13 +551,14 @@
 
 /* 2026-05-28: 가입 정보입력 화면 상단 배지 (보험 설계사·매니저 전용 강조).
    가로 띠 sticky — .auth-page-body 스크롤 시 상단 고정.
-   margin-top 음수 = padding-top(24px/32px) 보상 — sticky 시 배지 위쪽 틈 0. */
+   top 음수 = sticky 고정 지점을 padding-top(24px/32px) 위로 끌어올림 → 위쪽 틈 0.
+   margin 음수 = 좌우 padding 영역까지 전폭 띠 확장 (layout). */
 .auth-page-badge {
   position: sticky;
-  top: 0;
+  top: -24px;                   /* PC: padding-top 24px 위로 sticky 고정 */
   z-index: 10;
   display: block;
-  margin: -24px -20px 16px;     /* PC: padding-top 24px 보상 */
+  margin: -24px -20px 16px;
   padding: 14px 20px;
   background: var(--color-surface, #FFFFFF);
   border-bottom: 1px solid var(--neutral-200, #E5E7EB);
@@ -569,7 +570,8 @@
 }
 @media (min-width: 768px) {
   .auth-page-badge {
-    margin: -32px -32px 16px;   /* PC 768+: padding-top 32px 보상 */
+    top: -32px;                 /* PC 768+: padding-top 32px 위로 sticky 고정 */
+    margin: -32px -32px 16px;
     padding: 16px 32px;
   }
 }
