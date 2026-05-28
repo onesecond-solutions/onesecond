@@ -240,7 +240,17 @@ function _showStep(step) {
     /* 2026-05-28: site 분기 — GA = 이메일 OTP / 보험사 = 카카오 승인 요청 (signup API + 임시 비번) */
     var _isInsurer = window.gSignupSite === 'insurer';
     if (ctaTxt)   ctaTxt.textContent = _isInsurer ? '💬 카카오톡 승인 요청' : '✉️ 인증 코드 받기';
-    if (ctaBtn)   ctaBtn.onclick = _isInsurer ? function() { doInsurerKakaoSignup(); } : function() { doSubmit(); };
+    if (ctaBtn) {
+      ctaBtn.onclick = _isInsurer ? function() { doInsurerKakaoSignup(); } : function() { doSubmit(); };
+      /* 카카오 노란색 (#FEE500 + 검정 텍스트) — 보험사 분기만 적용, GA는 원복 */
+      if (_isInsurer) {
+        ctaBtn.style.background = '#FEE500';
+        ctaBtn.style.color = '#000';
+      } else {
+        ctaBtn.style.background = '';
+        ctaBtn.style.color = '';
+      }
+    }
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-2'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(3); }
@@ -851,11 +861,17 @@ function selectSite(site) {
   if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
   if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
 
-  /* 2026-05-28: 배지 텍스트 + 직급 옵션 동적 분기 (보험사 2개 / GA 4개).
+  /* 2026-05-28: 배지 텍스트 + 직급 옵션 + 이메일 안내 동적 분기.
      mapToRoleKey가 site + '_' + value 자동 매핑 → 옵션 value 그대로 가도 정합. */
   var badge = document.querySelector('#page-signup-2 .auth-page-badge');
   if (badge) {
     badge.textContent = site === 'insurer' ? '보험사 임직원 전용' : '보험 설계사·매니저 전용';
+  }
+  var emailHint = document.getElementById('f-email-hint');
+  if (emailHint) {
+    emailHint.textContent = site === 'insurer'
+      ? '소속 보험사 공식 이메일 도메인(@meritzfire.com 등)으로 입력해 주세요. 도메인 일치 확인 후 운영자가 승인합니다.'
+      : '이 이메일로 인증 코드가 발송됩니다.';
   }
   var roleSel = document.getElementById('f-role');
   if (roleSel) {
