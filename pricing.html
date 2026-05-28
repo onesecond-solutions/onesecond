@@ -8,154 +8,291 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>원세컨드 | 요금제</title>
-<!-- 2026-05-26 포트원 V2 SDK — KCP 심사용 테스트모드 결제창 -->
+<title>요금제 — 원세컨드</title>
+
+<!-- 2026-05-27 PR #126: 포트원 V2 SDK — 결제창 호출 자료 (KCP 심사 정합) -->
 <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 :root {
-  --brown-dark:#3d2b1f; --brown-mid:#6b4226; --brown-light:#a0724a;
-  --brown-pale:#f5ede4; --cream:#fdf8f3; --accent:#c8753a;
-  --text-dark:#1a1008; --text-mid:#5a3e2b; --text-light:#9a7a62;
-  --white:#ffffff; --sidebar-w:230px; --line:#e8d8cc;
+  /* v2 인디고 톤 (2026-05-28 단계 — terms/privacy/refund/about 정합) */
+  --brand-500:#6366F1; --brand-600:#4F52D9;
+  --accent-50:#EEEFFF; --accent-400:#7C7FF2;
+  --neutral-100:#F4F5F7; --neutral-200:#E5E7EB;
+  --neutral-400:#9CA3AF; --neutral-500:#6B7280;
+  --neutral-600:#4B5563; --neutral-700:#374151; --neutral-800:#1F2937;
+  --gradient-brand: linear-gradient(135deg, #6366F1 0%, #7C7FF2 100%);
+  --gradient-soft: linear-gradient(135deg, #F8F9FF 0%, #EEEFFF 100%);
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
-
-/* 상단바 */
-.topbar{height:52px;flex-shrink:0;background:var(--brown-dark);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08);}
-.topbar-logo{font-size:15px;font-weight:900;color:#fff;letter-spacing:-0.4px;cursor:pointer;}
-.topbar-logo span{color:var(--accent);}
-.topbar-right{display:flex;align-items:center;gap:12px;}
-.user-dropdown-wrap{position:relative;}
-.topbar-user{font-size:12px;color:rgba(255,255,255,.85);padding:4px 8px;border-radius:6px;cursor:pointer;transition:background .15s;}
-.topbar-user:hover{background:rgba(255,255,255,.1);}
-.user-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:10px;min-width:150px;box-shadow:0 8px 24px rgba(61,43,31,.22);border:1px solid #e0d0c0;overflow:hidden;z-index:200;}
-.user-dropdown.open{display:block;}
-.user-dropdown-item{padding:11px 16px;font-size:13px;color:#3d2b1f;cursor:pointer;font-weight:600;transition:background .15s;}
-.user-dropdown-item:hover{background:#f5ede4;}
-.user-dropdown-item+.user-dropdown-item{border-top:1px solid #f0e6dc;}
-
-/* 레이아웃 */
-.layout{flex:1;display:flex;overflow:hidden;}
-
-/* 사이드바 */
-.sidebar{width:var(--sidebar-w);flex-shrink:0;background:#6F4428;display:flex;flex-direction:column;padding:12px 0;overflow-y:auto;}
-.nav-item{padding:11px 18px;font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;border-left:3px solid transparent;}
-.nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);}
-.nav-item.active{background:rgba(200,117,58,.15);color:var(--accent);border-left-color:var(--accent);}
-.sidebar-bottom{margin-top:auto;padding:12px 12px 4px;}
-.upgrade-btn{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:linear-gradient(135deg,#c8753a,#a05a28);border:none;color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;}
-.upgrade-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
-.pro-badge{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border-radius:10px;background:rgba(200,117,58,.12);border:1px solid rgba(200,117,58,.3);color:var(--accent);font-size:13px;font-weight:700;}
-
-/* 메인 */
-.main{flex:1;overflow-y:auto;padding:32px 40px;}
-
-/* 요금제 헤더 */
-.pricing-header{text-align:center;margin-bottom:40px;}
-.pricing-eyebrow{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
-.pricing-title{font-size:28px;font-weight:900;color:var(--brown-dark);letter-spacing:-0.5px;margin-bottom:8px;}
-.pricing-sub{font-size:14px;color:var(--text-light);}
-
-/* 현재 플랜 배너 */
-.current-plan-banner{background:linear-gradient(90deg,#3d2b1f,#6b4226);border-radius:12px;padding:14px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.current-plan-label{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:2px;}
-.current-plan-value{font-size:14px;font-weight:800;color:#fff;}
-.current-plan-badge{padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;}
-.current-plan-badge.free{background:rgba(255,255,255,.15);color:#fff;}
-.current-plan-badge.pro{background:var(--accent);color:#fff;}
-
-/* 요금제 카드 그리드 */
-.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;max-width:960px;margin:0 auto;}
-.price-card{background:#fff;border:1.5px solid rgba(168,114,74,.2);border-radius:18px;padding:28px 24px;box-shadow:0 4px 20px rgba(61,43,31,.06);transition:all .25s;display:flex;flex-direction:column;}
-.price-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(61,43,31,.12);}
-.price-card.featured{border:2px solid var(--brown-dark);box-shadow:0 8px 28px rgba(61,43,31,.14);}
-.price-card.b2b{border:2px solid var(--accent);background:linear-gradient(145deg,#3d2b1f,#6b4226);}
-.price-badge{display:inline-block;padding:4px 12px;background:var(--brown-pale);color:var(--brown-mid);border-radius:99px;font-size:11px;font-weight:700;margin-bottom:16px;}
-.price-badge.hot{background:var(--accent);color:#fff;}
-.price-badge.b2b-badge{background:rgba(200,117,58,.25);color:#f5c89a;}
-.price-amount{font-size:32px;font-weight:900;color:var(--brown-dark);letter-spacing:-1px;margin-bottom:4px;}
-.price-amount span{font-size:14px;font-weight:400;color:var(--text-light);}
-.price-amount.b2b-amount{color:#fff;font-size:24px;}
-.price-trial{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:14px;}
-.price-trial.b2b-trial{color:#f5c89a;}
-.price-role-note{font-size:12px;color:var(--text-light);background:var(--brown-pale);border-radius:8px;padding:9px 11px;margin-bottom:16px;line-height:1.7;}
-.price-role-note.b2b-note{background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);}
-.price-features{list-style:none;margin-bottom:20px;flex:1;}
-.price-features li{font-size:13px;color:var(--text-mid);padding:7px 0;border-bottom:1px solid var(--brown-pale);display:flex;align-items:center;gap:7px;}
-.price-features li::before{content:"✓";color:var(--accent);font-weight:700;flex-shrink:0;}
-.price-features li.disabled{color:var(--text-light);text-decoration:line-through;}
-.price-features li.disabled::before{content:"✕";color:#ccc;}
-.price-features.b2b-features li{color:rgba(255,255,255,.85);border-bottom-color:rgba(255,255,255,.1);}
-.price-features.b2b-features li::before{color:#f5c89a;}
-.price-cta{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;margin-top:auto;}
-.price-cta:hover{background:#b5642e;transform:translateY(-1px);}
-.price-cta.current{background:#e0d0c0;color:var(--text-light);cursor:default;}
-.price-cta.current:hover{transform:none;background:#e0d0c0;}
-.price-cta.b2b-cta{background:#fff;color:#3d2b1f;text-decoration:none;display:block;text-align:center;}
-.price-cta.b2b-cta:hover{background:#f5ede4;}
-
-/* 안내 */
-.pricing-note{max-width:960px;margin:24px auto 0;text-align:center;font-size:12px;color:var(--text-light);line-height:1.8;}
-
-/* 푸터 */
-.site-footer{width:100%;background:var(--brown-dark);color:rgba(255,255,255,.92);padding:12px 18px;flex-shrink:0;}
-.footer-inner{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;}
-.footer-brand{font-size:13px;font-weight:900;color:#fff;}
-.footer-brand span{color:var(--accent);}
-.footer-copy{font-size:11px;color:rgba(255,255,255,.6);}
-.footer-kakao{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:8px;background:#FEE500;color:#2B1E14;text-decoration:none;font-size:12px;font-weight:900;}
-
-@media(max-width:768px){
-  .sidebar{display:none;}
-  .main{padding:20px 16px;}
-  .price-grid{grid-template-columns:1fr;}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
+  background: var(--gradient-soft);
+  color: var(--neutral-800);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* ── 상단 nav (terms 패턴 정합) ── */
+.nav {
+  background: #FFFFFF;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand-500) 40%, transparent);
+  padding: 16px 32px;
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-mark { height: 32px; width: auto; display: block; flex-shrink: 0; }
+.logo-text { font-weight: 800; font-size: 18px; color: var(--neutral-800); letter-spacing: -0.02em; }
+@media(max-width:880px){ .logo-text { display: none; } }
+
+/* ── 메인 영역 ── */
+.main {
+  flex: 1;
+  padding: 56px 24px;
+}
+.pricing-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── 헤더 ── */
+.pricing-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.pricing-eyebrow {
+  display: inline-block;
+  background: var(--accent-50);
+  color: var(--brand-500);
+  font-size: 12px; font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+  letter-spacing: 0.08em;
+}
+.pricing-title {
+  font-size: 32px; font-weight: 900;
+  color: var(--neutral-800);
+  letter-spacing: -0.025em;
+  margin-bottom: 12px;
+}
+.pricing-sub {
+  font-size: 16px;
+  color: var(--neutral-500);
+  line-height: 1.6;
+}
+
+/* ── 카드 그리드 ── */
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+@media (max-width: 960px) {
+  .price-grid { grid-template-columns: 1fr; gap: 20px; }
+}
+
+.price-card {
+  background: #fff;
+  border: 1px solid var(--neutral-200);
+  border-radius: 20px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.06);
+}
+.price-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(99,102,241,0.12);
+}
+.price-card.featured {
+  border: 2px solid var(--brand-500);
+  box-shadow: 0 8px 24px rgba(99,102,241,0.18);
+  position: relative;
+}
+
+.price-badge {
+  display: inline-block;
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  font-size: 12px; font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+  align-self: flex-start;
+  letter-spacing: 0.04em;
+}
+.price-badge.hot {
+  background: var(--gradient-brand);
+  color: #fff;
+}
+
+.price-amount {
+  font-size: 36px; font-weight: 900;
+  color: var(--neutral-800);
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+.price-amount span {
+  font-size: 16px; font-weight: 600;
+  color: var(--neutral-500);
+  letter-spacing: -0.01em;
+}
+
+.price-trial {
+  font-size: 14px; font-weight: 700;
+  color: var(--brand-500);
+  margin-bottom: 14px;
+}
+
+.price-role-note {
+  font-size: 13px;
+  color: var(--neutral-600);
+  background: var(--accent-50);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  line-height: 1.7;
+}
+
+.price-features {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 24px;
+  flex: 1;
+}
+.price-features li {
+  font-size: 14px;
+  color: var(--neutral-700);
+  padding: 9px 0 9px 24px;
+  position: relative;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--neutral-200);
+}
+.price-features li:last-child { border-bottom: none; }
+.price-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 4px; top: 9px;
+  color: var(--brand-500);
+  font-weight: 800;
+}
+.price-features li strong {
+  color: var(--neutral-800);
+  font-weight: 700;
+}
+
+.price-cta {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--neutral-200);
+  background: #fff;
+  color: var(--neutral-800);
+  font-size: 15px; font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: -0.01em;
+}
+.price-cta:hover {
+  background: var(--neutral-100);
+  border-color: var(--neutral-500);
+}
+.price-card.featured .price-cta {
+  background: var(--gradient-brand);
+  color: #fff;
+  border: none;
+}
+.price-card.featured .price-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99,102,241,0.3);
+}
+.price-cta.current {
+  background: var(--neutral-100);
+  color: var(--neutral-500);
+  cursor: default;
+}
+
+/* ── 안내 ── */
+.pricing-note {
+  font-size: 13px;
+  color: var(--neutral-500);
+  line-height: 1.9;
+  text-align: center;
+  padding: 20px 16px;
+  border-top: 1px solid var(--neutral-200);
+}
+.pricing-note a { color: var(--brand-500); font-weight: 700; text-decoration: none; }
+.pricing-note a:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .main { padding: 40px 16px; }
+  .pricing-title { font-size: 26px; }
+  .price-card { padding: 28px 24px; }
+  .price-amount { font-size: 32px; }
+}
+
+/* ── FOOTER 라이트 톤 4컬럼 (terms.html 정합) ── */
+.footer {
+  background: var(--color-surface-2, #F6F7F9);
+  border-top: 1px solid color-mix(in srgb, var(--brand-500) 40%, transparent);
+  padding: 48px 32px 32px;
+  color: var(--neutral-800);
+  margin-top: 48px;
+}
+.footer-inner { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+.footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.6fr; gap: 40px; }
+.footer-col { display: flex; flex-direction: column; gap: 12px; }
+.footer-col-title { font-size: 14px; font-weight: 700; color: var(--neutral-800); letter-spacing: -0.025em; margin-bottom: 4px; }
+.footer-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.footer-brand-logo { height: 32px; width: auto; display: block; flex-shrink: 0; }
+.footer-brand-name { font-size: 18px; font-weight: 900; color: var(--neutral-800); letter-spacing: -0.025em; }
+.footer-brand-tagline { font-size: 12px; color: var(--neutral-500); line-height: 1.55; margin: 0; }
+.footer-link { font-size: 14px; color: var(--neutral-500); text-decoration: none; transition: color 0.15s; }
+.footer-link:hover { color: var(--brand-500); }
+.footer-biz { font-size: 12px; color: var(--neutral-600); line-height: 1.7; }
+.footer-biz .row { margin: 0; }
+.footer-biz .row strong { color: var(--neutral-700); font-weight: 700; margin-right: 4px; }
+.footer-biz a { color: inherit; text-decoration: none; transition: color 0.15s; }
+.footer-biz a:hover { color: var(--brand-500); }
+.footer-bottom { border-top: 1px solid var(--neutral-200); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.footer-copy { font-size: 12px; color: var(--neutral-400); }
+.footer-sns { display: flex; gap: 12px; }
+@media (max-width: 1024px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
+@media (max-width: 768px)  { .footer-grid { grid-template-columns: 1fr; gap: 28px; } .footer { padding: 40px 20px 24px; } }
 </style>
 </head>
+
 <body>
-
-<div class="topbar">
-  <div class="topbar-logo" onclick="window.location.href='home.html'">원세컨드 <span>1s</span></div>
-  <div class="topbar-right">
-    <a href="https://open.kakao.com/o/svu80Moi" target="_blank"
-      style="height:26px;padding:0 12px;border-radius:6px;background:rgba(255,100,100,0.18);border:1px solid rgba(255,100,100,0.35);color:#ffaaaa;font-size:11px;font-weight:700;display:flex;align-items:center;text-decoration:none;white-space:nowrap;">⚠️ 전산장애신고</a>
-    <div class="user-dropdown-wrap">
-      <div class="topbar-user" id="topbar-user" onclick="toggleUserDropdown(event)">-</div>
-      <div class="user-dropdown" id="user-dropdown">
-        <div class="user-dropdown-item" onclick="doLogout()">🚪 로그아웃</div>
-      </div>
-    </div>
+<nav class="nav">
+  <div class="nav-inner">
+    <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="logo-mark">
+    <div class="logo-text">원세컨드</div>
   </div>
-</div>
+</nav>
 
-<div class="layout">
-  <div class="sidebar">
-    <div class="nav-item" onclick="window.location.href='home.html'">🏠 홈</div>
-    <div class="nav-item" onclick="window.location.href='board.html'">📋 게시판</div>
-    <div class="nav-item" onclick="window.location.href='myspace.html'">⭐ MY SPACE</div>
-    <div class="nav-item" onclick="alert('보험뉴스는 곧 오픈됩니다! 조금만 기다려 주세요 😊')">📰 보험뉴스</div>
-    <div class="nav-item" onclick="window.location.href='quick-menu.html'">⚡ Quick 메뉴</div>
-    <div class="sidebar-bottom">
-      <div id="sidebar-upgrade-wrap"></div>
-    </div>
-  </div>
+<main class="main">
+  <div class="pricing-container">
 
-  <div class="main">
     <div class="pricing-header">
       <div class="pricing-eyebrow">PRICING</div>
-      <div class="pricing-title">함께 성장하는 요금제</div>
-      <div class="pricing-sub">지금 바로 시작하고, 필요할 때 업그레이드하세요</div>
-    </div>
-
-    <!-- 현재 플랜 배너 -->
-    <div class="current-plan-banner" id="current-plan-banner" style="display:none;">
-      <div>
-        <div class="current-plan-label">현재 이용 중인 플랜</div>
-        <div class="current-plan-value" id="current-plan-value">-</div>
-      </div>
-      <div class="current-plan-badge" id="current-plan-badge">-</div>
+      <h1 class="pricing-title">함께 성장하는 요금제</h1>
+      <p class="pricing-sub">지금 바로 시작하고, 필요할 때 업그레이드하세요</p>
     </div>
 
     <div class="price-grid">
@@ -214,111 +351,69 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
       · 정보(교육 자료)는 세 단계 모두 동일하게 무료로 제공됩니다 — 정보를 잘라 팔지 않습니다<br>
       · 누적형: 윗 단계는 아랫 단계의 모든 기능을 포함합니다<br>
       · 유료 플랜은 월 단위 구독이며 언제든 해지 가능합니다<br>
-      · 자세한 환불 기준은 <a href="/refund.html" style="color:var(--accent);font-weight:700;">환불·취소 정책</a>을 참고해 주세요
+      · 자세한 환불 기준은 <a href="/refund.html">환불·취소 정책</a>을 참고해 주세요
     </div>
-  </div>
-</div>
 
-<footer class="site-footer">
+  </div>
+</main>
+
+<footer class="footer">
   <div class="footer-inner">
-    <div class="footer-brand">원세컨드 <span>1s</span></div>
-    <div class="footer-copy">© 2026 onesecond. All rights reserved.</div>
-    <a class="footer-kakao" href="https://open.kakao.com/o/svu80Moi" target="_blank">💬 카카오 오픈채팅 문의</a>
+    <div class="footer-grid">
+
+      <div class="footer-col">
+        <div class="footer-brand">
+          <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="footer-brand-logo">
+          <span class="footer-brand-name">원세컨드</span>
+        </div>
+        <p class="footer-brand-tagline">통화 중 멈추는 순간, 1초 안에 꺼내 쓰는 상담 도구</p>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">서비스</div>
+        <a class="footer-link" href="/about.html">서비스 소개</a>
+        <a class="footer-link" href="/index.html?auth=signup">가입하기</a>
+        <a class="footer-link" href="/index.html?auth=login">로그인</a>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">지원</div>
+        <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">💬 카카오 오픈채팅</a>
+        <a class="footer-link" href="mailto:bylts0428@gmail.com">✉️ 이메일 문의</a>
+        <a class="footer-link" href="tel:050-6890-9104">📞 050-6890-9104</a>
+        <a class="footer-link" href="/terms.html">이용약관</a>
+        <a class="footer-link" href="/privacy.html" style="font-weight:700;color:var(--neutral-800);">개인정보처리방침</a>
+        <a class="footer-link" href="/refund.html">환불·취소 정책</a>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">사업자 정보</div>
+        <div class="footer-biz">
+          <p class="row"><strong>상호</strong>티솔루션 (T-Solutions)</p>
+          <p class="row"><strong>대표자</strong>임태성</p>
+          <p class="row"><strong>사업자등록번호</strong>604-10-68738</p>
+          <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라동, 청라프라자)</p>
+          <p class="row"><strong>개인정보보호책임자</strong>임태성 / bylts0428@gmail.com</p>
+          <p class="row"><strong>통신판매업 신고</strong>진행 중</p>
+          <p class="row"><strong>고객센터</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a> / 050-6890-9104</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 onesecond. All rights reserved.</div>
+      <div class="footer-sns"><!-- SNS·외부 링크 자리 (추후 추가) --></div>
+    </div>
   </div>
 </footer>
 
 <script>
-const SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
-const ROLE_LABEL = {
-  admin:                  '어드민',
-  ga_branch_manager:      'GA 지점장',
-  ga_manager:             'GA 실장',
-  ga_member:              'GA 설계사',
-  ga_staff:               'GA 스텝',
-  insurer_branch_manager: '원수사 지점장',
-  insurer_manager:        '원수사 매니저',
-  insurer_member:         '원수사 직원',
-  insurer_staff:          '원수사 스텝'
-};
-
-/* PG 심사 = 공개 페이지 정합. 로그인 자체 자체 통과 (비로그인 = 3카드 표시) */
-const _initToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-const _initAuth = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}');
-window._userToken = _initToken || null;
-window._userId = _initAuth.id || null;
-window._userPlan = 'free';
-
-async function loadUserInfo() {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${window._userId}&select=name,role,email,plan`, {
-      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${window._userToken}`}
-    });
-    const data = await res.json();
-    if (data && data[0]) {
-      const u = data[0];
-      window._userPlan = u.plan || 'free';
-      window._userRole = u.role;
-      const roleLabel = ROLE_LABEL[u.role] || '';
-      document.getElementById('topbar-user').innerHTML = `${u.name} ${roleLabel} <span style="color:rgba(255,255,255,.55);font-size:11px;">(${u.email})</span> ▾`;
-
-      // 현재 플랜 배너
-      const banner = document.getElementById('current-plan-banner');
-      const planValue = document.getElementById('current-plan-value');
-      const planBadge = document.getElementById('current-plan-badge');
-      banner.style.display = 'flex';
-
-      const isPro = u.plan === 'pro';
-      const isFreeRole = [
-        'ga_branch_manager', 'ga_manager',
-        'insurer_branch_manager', 'insurer_manager'
-      ].includes(u.role);
-
-      if (isFreeRole) {
-        planValue.textContent = '매니저/지점장 영구 무료';
-        planBadge.textContent = '영구 무료';
-        planBadge.className = 'current-plan-badge pro';
-      } else if (isPro) {
-        planValue.textContent = '유료 플랜 이용 중';
-        planBadge.textContent = 'PRO';
-        planBadge.className = 'current-plan-badge pro';
-      } else {
-        planValue.textContent = '무료 플랜 이용 중';
-        planBadge.textContent = 'FREE';
-        planBadge.className = 'current-plan-badge free';
-      }
-
-      // CTA 버튼 상태
-      const proCta = document.getElementById('pro-cta');
-      if (isPro || isFreeRole) {
-        proCta.textContent = '✅ 이용 중';
-        proCta.className = 'price-cta current';
-      }
-
-      // 사이드바 업그레이드 버튼
-      renderSidebarUpgrade(u.plan, u.role);
-    }
-  } catch(e) { console.error(e); }
-}
-
-function renderSidebarUpgrade(plan, role) {
-  const wrap = document.getElementById('sidebar-upgrade-wrap');
-  if (!wrap) return;
-  const isFreeRole = [
-    'ga_branch_manager', 'ga_manager',
-    'insurer_branch_manager', 'insurer_manager'
-  ].includes(role);
-  if (isFreeRole || plan === 'pro') {
-    wrap.innerHTML = `<div class="pro-badge">✅ PRO 이용 중</div>`;
-  } else {
-    wrap.innerHTML = `<button class="upgrade-btn" onclick="document.querySelector('.price-card.featured').scrollIntoView({behavior:'smooth'})">⚡ PLUS로 업그레이드</button>`;
-  }
-}
-
 /* ─────────────────────────────────────────────────────────────
-   요금제 데이터 구조 — 단일 진실의 원천
-   약관·환불정책·결제 게이트웨이 모두 본 구조의 값과 일치해야 함.
-   가격 변경 시 본 자료 1곳만 수정 (하드코딩 산개 금지).
+   결제 자료 — 포트원 V2 (KCP 심사용 테스트모드) — PR #126 보존
+   ★ 가격 변경 시 본 자료 1곳만 수정 (하드코딩 산개 금지)
+   ★ Store ID + 채널 키 = 클라이언트 노출 가능 (포트원 공식 패턴)
+   ★ API 시크릿 (서버 키) = 절대 본 파일에 박지 말 것 (서버 전용)
    ───────────────────────────────────────────────────────────── */
 window.OS_PLANS = {
   free: { id: 'free', name: 'FREE',  price: 0,      currency: 'KRW', period: 'month' },
@@ -326,30 +421,20 @@ window.OS_PLANS = {
   pro:  { id: 'pro',  name: 'PRO',   price: 19900,  currency: 'KRW', period: 'month' }
 };
 
-/* ─────────────────────────────────────────────────────────────
-   결제 설정 — 포트원 V2 (KCP 심사용 테스트모드)
-   ★ 팀장님 직접 입력 자리 (포트원 콘솔 admin.portone.io → 채널 관리)
-   ★ 본 두 값 = 클라이언트 노출 가능 (포트원 공식 패턴 정합)
-   ★ API 시크릿 (서버 키) = 절대 본 파일에 박지 말 것 (서버 전용)
-   ───────────────────────────────────────────────────────────── */
 window.OS_PAYMENT = {
-  /* Store ID = 'store-...' 형식 (포트원 콘솔 상점아이디) */
   storeId: 'store-41e93948-a67a-4ae0-abc5-1c95266ee12b',
-
-  /* 채널 키 = 'channel-key-...' 형식 (KG이니시스 테스트 채널 키) */
   channelKey: 'channel-key-d1ae4232-ed84-4c6e-8ca3-de8cd758e8a8'
 };
 
 function handleFreeCta() {
-  /* FREE = 기존 회원가입 흐름. 로그인 = 홈 / 비로그인 = 가입 모달 */
+  /* FREE = 로그인 자체 = 홈 / 비로그인 = 가입 모달 */
   var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-  if (hasToken) { window.location.href = 'home.html'; return; }
+  if (hasToken) { window.location.href = '/app.html'; return; }
   window.location.href = '/index.html?auth=signup';
 }
 
 function handlePaidCta(planId) {
-  /* PLUS / PRO = 포트원 V2 결제창 호출 (테스트모드, KCP 심사용).
-     실결제 X / 테스트모드만. 서버 검증 = 본 PR 범위 밖 (별 트랙). */
+  /* PLUS / PRO = 포트원 V2 결제창 호출 (테스트모드, KCP 심사용) */
   var plan = window.OS_PLANS[planId];
   if (!plan) { alert('알 수 없는 플랜입니다.'); return; }
 
@@ -359,11 +444,6 @@ function handlePaidCta(planId) {
   }
 
   var cfg = window.OS_PAYMENT;
-  if (!cfg || cfg.storeId.indexOf('여기에') !== -1 || cfg.channelKey.indexOf('여기에') !== -1) {
-    alert('결제 설정 미완료 (Store ID / 채널 키 미입력).\n관리자에게 문의 부탁드립니다.');
-    return;
-  }
-
   window.PortOne.requestPayment({
     storeId: cfg.storeId,
     channelKey: cfg.channelKey,
@@ -388,23 +468,7 @@ function handlePaidCta(planId) {
 
 /* 하위 호환: 옛 handleProCta 호출 자리 = PLUS 결제로 연결 (featured = PLUS) */
 function handleProCta() { handlePaidCta('plus'); }
-
-function toggleUserDropdown(event) {
-  if (event) event.stopPropagation();
-  document.getElementById('user-dropdown').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  const wrap = document.querySelector('.user-dropdown-wrap');
-  if (wrap && !wrap.contains(e.target)) document.getElementById('user-dropdown').classList.remove('open');
-});
-
-function doLogout() {
-  localStorage.removeItem('os_token'); localStorage.removeItem('os_refresh_token'); localStorage.removeItem('os_user');
-  sessionStorage.removeItem('os_token'); sessionStorage.removeItem('os_user');
-  window.location.href = 'index.html';
-}
-
-loadUserInfo();
 </script>
+
 </body>
 </html>
