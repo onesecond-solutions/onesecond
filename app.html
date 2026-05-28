@@ -1530,7 +1530,7 @@ window.handlePaidCta = function(planId){
   window.PortOne.requestPayment({
     storeId: cfg.storeId,
     channelKey: cfg.channelKey,
-    paymentId: 'payment-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)),
+    paymentId: 'os' + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Date.now().toString(36) + Math.random().toString(36).slice(2, 10)),
     orderName: '원세컨드 ' + plan.name,
     totalAmount: plan.price,
     currency: 'CURRENCY_KRW',
