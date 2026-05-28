@@ -1494,14 +1494,14 @@ window.handlePaidCta = function(planId){
     return;
   }
 
-  /* 2026-05-28: 이니시스 V2 customer.email + customer.phoneNumber 필수 자료.
-     SPA = 이미 로그인 상태이지만 안전 분기 정합 (db.js mergeUserProfile 정정 자료 정합) */
-  var _email = '', _phone = '';
+  /* 2026-05-28: 이니시스 V2 customer.fullName + email + phoneNumber 3 필수 자료 */
+  var _email = '', _phone = '', _name = '';
   try {
     var _raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
     var _u = JSON.parse(_raw);
     _email = (_u.email || '').trim();
     _phone = (_u.phone || '').trim();
+    _name  = (_u.name  || '').trim();
   } catch (e) {}
   if (!_email) {
     alert('로그인이 필요합니다. 로그인 후 이용해 주세요.');
@@ -1521,6 +1521,10 @@ window.handlePaidCta = function(planId){
     alert('휴대폰 번호 형식이 올바르지 않습니다.\n내 정보 수정에서 010-XXXX-XXXX 형식으로 등록해 주세요.');
     return;
   }
+  if (!_name) {
+    alert('이름 정보를 확인할 수 없습니다.\n내 정보 수정에서 이름을 등록해 주세요.');
+    return;
+  }
 
   var cfg = window.OS_PAYMENT;
   window.PortOne.requestPayment({
@@ -1531,7 +1535,7 @@ window.handlePaidCta = function(planId){
     totalAmount: plan.price,
     currency: 'CURRENCY_KRW',
     payMethod: 'CARD',
-    customer: { email: _email, phoneNumber: _phoneDigits }
+    customer: { fullName: _name, email: _email, phoneNumber: _phoneDigits }
   }).then(function(response){
     if(response && response.code !== undefined){
       console.error('[portone] 결제 실패:', response);
