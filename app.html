@@ -1377,15 +1377,15 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     </div>
     <div class="askstep on">
       <div class="infobar">지점·팀 게시판 공유 안내 — 팀원들과 같은 게시판을 사용하려면 회사명 / 지점(센터)명 / 팀명을 팀원과 동일하게 입력해 주세요.</div>
-      <div class="fld"><label>이름 <span class="req">*</span></label><input type="text" value="임태성"></div>
-      <div class="fld"><label>핸드폰 번호</label><input type="text" value="010-9294-9104"></div>
-      <div class="fld"><label>이메일</label><input type="text" value="bylts0428@gmail.com"></div>
-      <div class="fld"><label>회사명</label><input type="text" value="원세컨드"></div>
+      <div class="fld"><label>이름 <span class="req">*</span></label><input type="text" id="prof-name" placeholder="이름"></div>
+      <div class="fld"><label>핸드폰 번호</label><input type="text" id="prof-phone" placeholder="010-0000-0000"></div>
+      <div class="fld"><label>이메일</label><input type="text" id="prof-email" readonly style="background:var(--sh);color:var(--ts);cursor:not-allowed"></div>
+      <div class="fld"><label>회사명</label><input type="text" id="prof-company" placeholder="회사명"></div>
       <div class="frow">
-        <div class="fld"><label>지점(센터)명</label><input type="text" value="더원지점"></div>
-        <div class="fld"><label>팀명</label><input type="text" value="4팀"></div>
+        <div class="fld"><label>지점(센터)명</label><input type="text" id="prof-branch" placeholder="지점명"></div>
+        <div class="fld"><label>팀명</label><input type="text" id="prof-team" placeholder="팀명"></div>
       </div>
-      <div class="fld"><label>직책</label><input type="text" value="팀장"></div>
+      <div class="fld"><label>직책</label><input type="text" id="prof-role" readonly style="background:var(--sh);color:var(--ts);cursor:not-allowed"></div>
       <div class="profask">직책 변경이 필요하신가요? <span class="profask-link">관리자에게 요청 &#8594;</span></div>
     </div>
     <div class="askfoot on profoot">
@@ -3862,9 +3862,102 @@ function showStep(id){document.querySelectorAll('.askstep').forEach(function(s){
 function backToPick(){showStep('pick');document.getElementById('askTitle').innerHTML='지금 어떤 질문인가요?';document.getElementById('askFile').classList.remove('on');document.getElementById('askFoot').classList.remove('on');}
 function goForm(cat){showStep(cat);document.getElementById('askTitle').innerHTML=askForms[cat].t;document.getElementById('askFile').classList.add('on');document.getElementById('askFoot').classList.add('on');}
 function submitAsk(){closeAsk();toast('질문이 등록되었습니다');}
-function openProfile(){document.getElementById('m').classList.remove('open');document.getElementById('profmodal').classList.add('open');}
+async function openProfile(){
+  document.getElementById('m').classList.remove('open');
+  /* 1) localStorage os_user에서 즉시 채움 (빠른 표시) */
+  var u = {};
+  try {
+    var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+    u = JSON.parse(raw);
+  } catch (e) {}
+  _fillProfileForm(u);
+  document.getElementById('profmodal').classList.add('open');
+
+  /* 2) DB fetch로 최신 자료 갱신 (phone/company/branch/team 자료) */
+  if (!u.id || !window.db || !window.db.fetch) return;
+  try {
+    var res = await window.db.fetch(
+      '/rest/v1/users?id=eq.' + encodeURIComponent(u.id)
+      + '&select=name,phone,email,company,branch,team,role'
+    );
+    if (!res || !res.ok) return;
+    var rows = await res.json();
+    if (rows && rows[0]) {
+      var fresh = Object.assign({}, u, rows[0]);
+      _fillProfileForm(fresh);
+    }
+  } catch (e) { console.error('openProfile fetch:', e); }
+}
+function _fillProfileForm(u){
+  var set = function(id, v){ var el = document.getElementById(id); if (el) el.value = v || ''; };
+  set('prof-name', u.name);
+  set('prof-phone', u.phone);
+  set('prof-email', u.email);
+  set('prof-company', u.company);
+  set('prof-branch', u.branch);
+  set('prof-team', u.team);
+  /* 직책 = role 자체 자체 표시 (readonly). window.Auth.getRoleLabel 자료 정합 */
+  var roleLabel = (window.Auth && window.Auth.getRoleLabel) ? window.Auth.getRoleLabel(u.role) : (u.role || '');
+  set('prof-role', roleLabel);
+}
 function closeProfile(){document.getElementById('profmodal').classList.remove('open');}
-function saveProfile(){closeProfile();toast('내 정보가 저장되었습니다');}
+async function saveProfile(){
+  var get = function(id){ var el = document.getElementById(id); return (el && el.value || '').trim(); };
+  var payload = {
+    name:    get('prof-name'),
+    phone:   get('prof-phone'),
+    company: get('prof-company'),
+    branch:  get('prof-branch'),
+    team:    get('prof-team')
+  };
+  if (!payload.name) { toast('이름을 입력해 주세요'); return; }
+
+  try {
+    var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+    var u = JSON.parse(raw);
+    if (!u || !u.id) { toast('로그인이 필요합니다'); return; }
+    if (!window.db || !window.db.fetch) { toast('네트워크 모듈 로드 실패'); return; }
+
+    /* PATCH /rest/v1/users?id=eq.{userId} — 5 필드 통째 UPDATE
+       (직책 role = readonly, 변경 X / 이메일 = auth 자료, 변경 X) */
+    var res = await window.db.fetch(
+      '/rest/v1/users?id=eq.' + encodeURIComponent(u.id),
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+      }
+    );
+    if (!res || !res.ok) {
+      var msg = '저장 실패';
+      if (res && res.status === 401) msg += ' (인증 만료 — 다시 로그인)';
+      if (res && res.status === 403) msg += ' (권한 없음 — RLS 정책 확인)';
+      toast(msg);
+      return;
+    }
+
+    /* localStorage os_user 갱신 (5 필드 통째 병합) */
+    Object.assign(u, payload);
+    localStorage.setItem('os_user', JSON.stringify(u));
+    sessionStorage.setItem('os_user', JSON.stringify(u));
+
+    /* 사용자 메뉴 상단 이름 + 직책 표시 갱신 */
+    var miFirst = document.querySelector('#m .mi:first-child span');
+    if (miFirst) {
+      var roleLabel = (window.Auth && window.Auth.getRoleLabel) ? window.Auth.getRoleLabel(u.role) : '';
+      miFirst.textContent = u.name + (roleLabel ? ' · ' + roleLabel : '');
+    }
+    /* A영역 사용자 버튼 이름 갱신 */
+    var acctNm = document.querySelector('.acctbtn .nm');
+    if (acctNm) acctNm.innerHTML = u.name + ' &#9662;';
+
+    closeProfile();
+    toast('저장됐습니다');
+  } catch (e) {
+    console.error('saveProfile:', e);
+    toast('저장 중 오류 발생');
+  }
+}
 function setFont(p){document.documentElement.style.setProperty('--fscale',p/100);[90,100,110,125].forEach(function(n){document.getElementById('f'+n).classList.toggle('on',n===p);});}
 document.addEventListener('keydown',function(e){if(!document.getElementById('lb').classList.contains('open'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowRight')navi(1);if(e.key==='ArrowLeft')navi(-1);});
 
