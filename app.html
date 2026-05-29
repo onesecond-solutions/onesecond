@@ -416,6 +416,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .myspace-detail-act:hover{border-color:var(--ac);color:var(--ac)}
 .myspace-detail-act-secondary{color:var(--ts)}
 @media (max-width:520px){.myspace-detail-actions{justify-content:stretch}.myspace-detail-act{flex:1;min-width:0}}
+/* 2026-05-29 PR #170: 보험사 소식지 상세 영역 (Phase 1 mock) */
+.nl-detail{background:var(--s2);border:1px solid var(--bd);border-left:3px solid var(--t-product);border-radius:8px;padding:14px;margin-top:10px}
+.nl-detail p{margin:4px 0;font-size:0.9em;color:var(--tp);line-height:1.55}
+.nl-detail p b{color:var(--ac)}
+.nl-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.nl-act{padding:8px 14px;border:1px solid var(--bd);background:var(--s2);border-radius:8px;color:var(--ts);font-size:0.85em;font-weight:600;cursor:not-allowed;opacity:0.65;transition:opacity 0.15s}
+.nl-act:hover{opacity:0.85}
+.nl-note{color:var(--ts);font-size:0.78em;margin-top:14px;padding-top:10px;border-top:1px dashed var(--bd)}
 
 /* === V2 사이드바 Quick 메뉴 (v-quick) — V1 자체 이식 + V2 토큰 자체 === */
 .qck-tab-bar{display:flex;flex-wrap:wrap;gap:0;background:var(--s1);border:1px solid var(--bd);border-radius:10px;overflow-x:auto;margin-top:14px}
@@ -3547,8 +3555,13 @@ var voiceTabData = {
       {badge:'자료 공유', tc:'ok', title:'고지혈증·동맥경화증 자료 (혈관 건강 자료)', meta:'5월 15일 09:50 · 한재성 실장'},
       {badge:'자료 공유', tc:'ok', title:'신한라이프 에즈 더원 5월 교안 자료', meta:'5월 14일 10:56 · 한재성 실장'}
     ]},
-  smart: {title:'스마트 게시판', sub:'검색 가능한 자료를 정제해 모은 자리.', chips:['전체','자주 묻는 질문','상품 자료','인수 자료','민원 자료'], cnt:5,
+  smart: {title:'스마트 게시판', sub:'검색 가능한 자료를 정제해 모은 자리.', chips:['전체','보험사 소식지','상품 자료','인수 자료','자주 묻는 질문','민원 자료'], cnt:10,
     posts:[
+      {badge:'보험사 소식지', tc:'t-product', title:'2025년 10월 ABL생명 GA소식지', meta:'2025-10 · ABL생명 (생명) · PDF 첨부', body:'<div class="nl-detail"><p><b>📎 PDF 첨부 자료 (Phase 1 mock)</b></p><p>보험사: ABL생명 (생명보험)</p><p>등록일: 2025-10</p><p>파일: ABL생명 GA소식지 2510.pdf · 12p · 28,254자</p></div><div class="nl-actions"><button disabled class="nl-act" title="Phase 2 연결 예정">📄 PDF 열기</button><button disabled class="nl-act" title="Phase 2 연결 예정">⬇️ 다운로드</button><button disabled class="nl-act" title="Phase 2 연결 예정">📁 MY SPACE 저장</button><button disabled class="nl-act" title="Phase 2 연결 예정">🪪 카드 만들기</button></div><p class="nl-note">⚠️ 실 자료 연결 = Phase 2 (newsletters 테이블 + Storage)</p>'},
+      {badge:'보험사 소식지', tc:'t-product', title:'2025년 10월 신한라이프 GA소식지', meta:'2025-10 · 신한라이프 (생명) · PDF 첨부', body:'<div class="nl-detail"><p><b>📎 PDF 첨부 자료 (Phase 1 mock)</b></p><p>보험사: 신한라이프 (생명보험)</p><p>등록일: 2025-10</p><p>파일: 신한라이프 GA소식지 2510.pdf · 26p · 20,751자</p></div><div class="nl-actions"><button disabled class="nl-act" title="Phase 2 연결 예정">📄 PDF 열기</button><button disabled class="nl-act" title="Phase 2 연결 예정">⬇️ 다운로드</button><button disabled class="nl-act" title="Phase 2 연결 예정">📁 MY SPACE 저장</button><button disabled class="nl-act" title="Phase 2 연결 예정">🪪 카드 만들기</button></div><p class="nl-note">⚠️ 실 자료 연결 = Phase 2 (newsletters 테이블 + Storage)</p>'},
+      {badge:'보험사 소식지', tc:'t-product', title:'2025년 10월 메리츠화재 GA소식지', meta:'2025-10 · 메리츠화재 (손해) · PDF 첨부', body:'<div class="nl-detail"><p><b>📎 PDF 첨부 자료 (Phase 1 mock)</b></p><p>보험사: 메리츠화재 (손해보험)</p><p>등록일: 2025-10</p><p>파일: 메리츠화재 GA소식지 2510.pdf</p></div><div class="nl-actions"><button disabled class="nl-act" title="Phase 2 연결 예정">📄 PDF 열기</button><button disabled class="nl-act" title="Phase 2 연결 예정">⬇️ 다운로드</button><button disabled class="nl-act" title="Phase 2 연결 예정">📁 MY SPACE 저장</button><button disabled class="nl-act" title="Phase 2 연결 예정">🪪 카드 만들기</button></div><p class="nl-note">⚠️ 실 자료 연결 = Phase 2 (newsletters 테이블 + Storage)</p>'},
+      {badge:'보험사 소식지', tc:'t-product', title:'2025년 10월 삼성생명 GA소식지', meta:'2025-10 · 삼성생명 (생명) · PDF 첨부', body:'<div class="nl-detail"><p><b>📎 PDF 첨부 자료 (Phase 1 mock)</b></p><p>보험사: 삼성생명 (생명보험)</p><p>등록일: 2025-10</p><p>파일: 삼성생명 GA소식지 2510.pdf · 20p · 13,665자</p></div><div class="nl-actions"><button disabled class="nl-act" title="Phase 2 연결 예정">📄 PDF 열기</button><button disabled class="nl-act" title="Phase 2 연결 예정">⬇️ 다운로드</button><button disabled class="nl-act" title="Phase 2 연결 예정">📁 MY SPACE 저장</button><button disabled class="nl-act" title="Phase 2 연결 예정">🪪 카드 만들기</button></div><p class="nl-note">⚠️ 실 자료 연결 = Phase 2 (newsletters 테이블 + Storage)</p>'},
+      {badge:'보험사 소식지', tc:'t-product', title:'2025년 10월 흥국생명 소식지', meta:'2025-10 · 흥국생명 (생명) · PDF 첨부', body:'<div class="nl-detail"><p><b>📎 PDF 첨부 자료 (Phase 1 mock)</b></p><p>보험사: 흥국생명 (생명보험)</p><p>등록일: 2025-10</p><p>파일: 흥국생명 소식지 2510.pdf</p></div><div class="nl-actions"><button disabled class="nl-act" title="Phase 2 연결 예정">📄 PDF 열기</button><button disabled class="nl-act" title="Phase 2 연결 예정">⬇️ 다운로드</button><button disabled class="nl-act" title="Phase 2 연결 예정">📁 MY SPACE 저장</button><button disabled class="nl-act" title="Phase 2 연결 예정">🪪 카드 만들기</button></div><p class="nl-note">⚠️ 실 자료 연결 = Phase 2 (newsletters 테이블 + Storage)</p>'},
       {badge:'자주 묻는 질문', tc:'t-uw', title:'간편 2대치료비 가입 가능 보험사 정리', meta:'5월 14일 · 조회 152'},
       {badge:'상품 자료', tc:'t-product', title:'5세대 실손 단독 가입 가능 보험사', meta:'5월 14일 · 조회 98'},
       {badge:'인수 자료', tc:'t-uw', title:'기왕증 인수 가이드 5월 갱신', meta:'5월 13일 · 조회 76'},
