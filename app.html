@@ -682,6 +682,11 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .home-recent-card.skel:hover{transform:none;border-color:transparent}
 .home-recent-card.skel .home-recent-card-row1,.home-recent-card.skel .home-recent-card-meta{visibility:hidden}
 @keyframes skelPulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+/* 홈 최근사용 위젯 상태 카드 (데이터 없음 / 권한 없음 / 조회 실패) — 빈 박스 금지 */
+.home-recent-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;padding:20px 14px;min-height:54px;border:1px dashed var(--bd);border-radius:9px;background:var(--s1);color:var(--ts);font-size:0.9em;line-height:1.5}
+.home-recent-state .hrs-ic{font-size:1.35em;opacity:.65;margin-bottom:1px}
+.home-recent-state .hrs-sub{font-size:0.82em;color:var(--ts);opacity:.85}
+.home-recent-state.err{border-style:solid;border-color:color-mix(in srgb,var(--warn,#e08600) 45%,var(--bd));color:var(--tp)}
 
 /* ─────────────────────────────────────────────
    스크립트 카드 그리드 + 본인 자리 확장 (2026-05-27 정정)
@@ -4298,21 +4303,26 @@ else _updateAccountHeader();
   else{tryInitAuthSafe();}
 })();
 
-/* === 홈 라이브 fetch (4층 자료/스크립트 + 6층 현장의 소리/보험이슈, 2026-05-25) ===
- * 5상태 흐름:
- *   1. 미로그인 → 4층 mock 유지 / 6층 anon fetch 가동 (전역 자료)
- *   2. 0건 → mock 유지 (사용 권장 자리)
- *   3. 로딩 → 스켈레톤 펄스 카드 3건
- *   4. 성공 → 실데이터 갈아끼움
- *   5. 실패 → mock + console.error
- * 4층 클릭 = updateLastUsed(table, id) 가동 → DB last_used_at PATCH
+/* === 홈 라이브 fetch (4층 자료/스크립트 + 6층 현장의 소리/보험이슈) ===
+ * 2026-05-30 재작성: mock 폴백 폐기 + 상태 명시 분리 (빈 박스 금지).
+ * 모든 경로가 실데이터 카드 또는 상태 카드(없음/권한없음/실패)로 끝난다.
+ *   1. 로딩 → 스켈레톤 펄스 카드
+ *   2. 성공(>0건) → 실데이터 카드로 교체
+ *   3. 0건 → "최근 사용 기록이 없습니다" 상태 카드
+ *   4. 미로그인/권한없음 → "로그인 후 표시됩니다" 상태 카드 (4층 개인 자료만)
+ *   5. 실패(HTTP 에러/네트워크) → "불러오지 못했습니다" 상태 카드 + console.error
+ * 4층 클릭 = updateLastUsed/logScriptUsage 가동
  * 6층 = 전역 자료 (anon 토큰 = 미로그인도 가동)
+ *
+ * 진단 로그: window.HOME_DEBUG=true 일 때만 console.log 출력 (다음 PR 정리 용이).
+ *   라이브 콘솔에서 `HOME_DEBUG=true` 후 새로고침 → 위젯별 상태/쿼리/건수 확인.
+ *   실패 추적용 console.error 는 플래그와 무관하게 항상 출력.
  */
 window._homeRecentLoaded=false;
-window._homeMockDocsHtml=null;
-window._homeMockScriptsHtml=null;
-window._homeMockVoiceHtml=null;
-window._homeMockNewsHtml=null;
+/* 진단 PR(2026-05-30) 동안만 true — 라이브 콘솔에서 위젯별 상태/건수 즉시 확인용.
+ * 원인 확정 후 다음 PR에서 false 전환 또는 _hlog 호출 제거 예정. */
+window.HOME_DEBUG=(window.HOME_DEBUG!==undefined)?window.HOME_DEBUG:true;
+function _hlog(){ if(window.HOME_DEBUG&&window.console&&console.log){ console.log.apply(console,['[home]'].concat([].slice.call(arguments))); } }
 
 function fmtHomeDate(iso){
   if(!iso)return '';
@@ -4360,10 +4370,28 @@ function showHomeSkeleton(){
   var news=document.getElementById('homeRecentNews');if(news)news.innerHTML=html3;  // 보험이슈 3건
 }
 
-function restoreHomeMock(type){
-  var map={docs:['homeRecentDocs','_homeMockDocsHtml'],scripts:['homeRecentScripts','_homeMockScriptsHtml'],voice:['homeRecentVoice','_homeMockVoiceHtml'],news:['homeRecentNews','_homeMockNewsHtml']};
-  var conf=map[type];if(!conf)return;
-  var el=document.getElementById(conf[0]);if(el&&window[conf[1]])el.innerHTML=window[conf[1]];
+/* 상태 카드 — 빈 박스 대신 데이터없음/권한없음/실패를 화면에서 구분 표시.
+ * kind: 'empty' | 'auth' | 'error' */
+var HOME_STATE_EL={docs:'homeRecentDocs',scripts:'homeRecentScripts',voice:'homeRecentVoice',news:'homeRecentNews'};
+var HOME_EMPTY_MSG={
+  docs:   ['아직 저장한 자료가 없습니다','MY SPACE에서 첫 자료를 저장해보세요'],
+  scripts:['아직 사용한 스크립트가 없습니다','스크립트를 열면 여기에 기록됩니다'],
+  voice:  ['아직 등록된 글이 없습니다','현장의 소리에서 첫 글을 남겨보세요'],
+  news:   ['표시할 보험이슈가 없습니다','']
+};
+function homeState(type,kind){
+  var elId=HOME_STATE_EL[type];if(!elId)return;
+  var el=document.getElementById(elId);if(!el)return;
+  var ic,main,sub='',cls='';
+  if(kind==='auth'){ ic='&#128274;'; main='로그인 후 표시됩니다'; sub='우상단 사용자 메뉴에서 로그인 해주세요'; }
+  else if(kind==='error'){ ic='&#9888;&#65039;'; main='불러오지 못했습니다'; sub='잠시 후 새로고침 해주세요'; cls=' err'; }
+  else { var m=HOME_EMPTY_MSG[type]||['기록이 없습니다','']; ic='&#128229;'; main=m[0]; sub=m[1]; }
+  el.innerHTML='<div class="home-recent-state'+cls+'">'+
+    '<span class="hrs-ic" aria-hidden="true">'+ic+'</span>'+
+    '<span>'+main+'</span>'+
+    (sub?'<span class="hrs-sub">'+sub+'</span>':'')+
+  '</div>';
+  _hlog('state',type,kind);
 }
 
 function renderHomeDocs(libs){
@@ -4438,6 +4466,24 @@ function openHomeRecent(table,id){
   showView(table==='scripts'?'scripts':'myspace');
 }
 
+/* 진단 fetch 헬퍼 — HTTP status/건수 로깅 + 실패 구분.
+ * 성공 → 파싱된 배열 반환 / 실패(HTTP 에러·네트워크·파싱) → {__err:true} 반환. */
+function _homeFetch(label,url,headers){
+  _hlog('fetch',label,url);
+  return fetch(url,{headers:headers}).then(function(r){
+    if(!r.ok){
+      return r.text().then(function(t){
+        console.error('[home] '+label+' HTTP '+r.status,(t||'').slice(0,300));
+        return {__err:true};
+      },function(){console.error('[home] '+label+' HTTP '+r.status);return {__err:true};});
+    }
+    return r.json().then(function(j){
+      _hlog(label,'rows=',(j&&j.length!=null)?j.length:'?');
+      return j;
+    },function(e){console.error('[home] '+label+' parse',e&&e.message);return {__err:true};});
+  }).catch(function(e){console.error('[home] '+label+' network',e&&e.message);return {__err:true};});
+}
+
 async function loadHomeRecent(force){
   if(window._homeRecentLoaded&&!force)return;
   showHomeSkeleton();  // 로딩 (4 영역 통째)
@@ -4445,66 +4491,64 @@ async function loadHomeRecent(force){
   // 4층: 로그인 사용자만 fetch (개인 자료)
   var token=window.db&&window.db.getToken&&window.db.getToken();
   var userId=(typeof _getOwnerId==='function')?_getOwnerId():(window.AppState&&window.AppState.userId);
+  _hlog('loadHomeRecent start','userId=',userId||'(none)','token=',token?'yes':'no');
   if(token&&userId){
     var hdrAuth={'apikey':window.db.key,'Authorization':'Bearer '+token};
     var libUrl=window.db.url('/rest/v1/library?owner_id=eq.'+userId+'&order=last_used_at.desc&limit=3');
     var scrUrl=window.db.url('/rest/v1/script_usage?user_id=eq.'+encodeURIComponent(userId)+'&select=used_at,script_id,scripts(id,title,stage)&order=used_at.desc&limit=20');
-    jobs.push(fetch(libUrl,{headers:hdrAuth}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(libs){
-      if(libs===null){console.error('[loadHomeRecent] library fetch fail');restoreHomeMock('docs');}
-      else if(libs.length>0)renderHomeDocs(libs);
-      else restoreHomeMock('docs');
+    jobs.push(_homeFetch('library',libUrl,hdrAuth).then(function(libs){
+      if(libs&&libs.__err){homeState('docs','error');return;}
+      if(libs&&libs.length>0)renderHomeDocs(libs);
+      else homeState('docs','empty');
     }));
-    jobs.push(fetch(scrUrl,{headers:hdrAuth}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(rows){
-      if(rows===null){console.error('[loadHomeRecent] script_usage fetch fail');restoreHomeMock('scripts');return;}
+    jobs.push(_homeFetch('script_usage',scrUrl,hdrAuth).then(function(rows){
+      if(rows&&rows.__err){homeState('scripts','error');return;}
       var seen={},uniq=[];
-      for(var i=0;i<rows.length;i++){
+      for(var i=0;i<(rows?rows.length:0);i++){
         var r=rows[i];
         if(!r.scripts||seen[r.script_id])continue;
         seen[r.script_id]=1;
         uniq.push({id:r.scripts.id,title:r.scripts.title,stage:r.scripts.stage,used_at:r.used_at});
         if(uniq.length>=3)break;
       }
+      _hlog('script_usage uniq=',uniq.length);
       if(uniq.length>0)renderHomeScripts(uniq);
-      else restoreHomeMock('scripts');
+      else homeState('scripts','empty');
     }));
   }else{
-    // 미로그인 = 4층 mock 자체 복원
-    restoreHomeMock('docs');restoreHomeMock('scripts');
+    // 미로그인/권한없음 = 4층 개인 자료 표시 불가 → 상태 카드
+    homeState('docs','auth');homeState('scripts','auth');
   }
   // 6층: anon 토큰 fetch (전역 자료, 미로그인도 가동)
   if(typeof SUPABASE_URL==='string'&&typeof SUPABASE_ANON_KEY==='string'){
     var hdrAnon={'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Accept':'application/json'};
     var voiceUrl=SUPABASE_URL+'/rest/v1/posts?select=*&order=created_at.desc&limit=3';
     var newsUrl=SUPABASE_URL+'/rest/v1/issues?select=*&order=pub_date.desc.nullslast&limit=3';
-    jobs.push(fetch(voiceUrl,{headers:hdrAnon}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(rows){
-      if(rows===null){console.error('[loadHomeRecent] posts fetch fail');restoreHomeMock('voice');}
-      else if(rows.length>0)renderHomeVoice(rows);
-      else restoreHomeMock('voice');  // 0건 = mock 유지
+    jobs.push(_homeFetch('posts',voiceUrl,hdrAnon).then(function(rows){
+      if(rows&&rows.__err){homeState('voice','error');return;}
+      if(rows&&rows.length>0)renderHomeVoice(rows);
+      else homeState('voice','empty');
     }));
-    jobs.push(fetch(newsUrl,{headers:hdrAnon}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(rows){
-      if(rows===null){console.error('[loadHomeRecent] issues fetch fail');restoreHomeMock('news');}
-      else if(rows.length>0)renderHomeNews(rows);
-      else restoreHomeMock('news');
+    jobs.push(_homeFetch('issues',newsUrl,hdrAnon).then(function(rows){
+      if(rows&&rows.__err){homeState('news','error');return;}
+      if(rows&&rows.length>0)renderHomeNews(rows);
+      else homeState('news','empty');
     }));
   }else{
-    restoreHomeMock('voice');restoreHomeMock('news');
+    console.error('[home] SUPABASE_URL/ANON_KEY 미정의 → 6층 fetch 불가');
+    homeState('voice','error');homeState('news','error');
   }
   await Promise.all(jobs);
   window._homeRecentLoaded=true;
+  _hlog('loadHomeRecent done');
 }
 
-// 페이지 로드 시 mock HTML 자체 저장 + 첫 fetch 가동 (홈 = 기본 view)
+// 페이지 로드 시 첫 fetch 가동 (홈 = 기본 view). 정적 샘플 카드는
+// showHomeSkeleton → 실데이터/상태카드로 무조건 교체되어 빈 박스로 남지 않음.
 (function(){
-  function captureHomeMock(){
-    ['homeRecentDocs','homeRecentScripts','homeRecentVoice','homeRecentNews'].forEach(function(id){
-      var el=document.getElementById(id);if(!el)return;
-      var key='_homeMock'+id.replace('homeRecent','')+'Html';
-      window[key]=el.innerHTML;
-    });
-    if(typeof loadHomeRecent==='function')setTimeout(function(){loadHomeRecent();},120);
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',captureHomeMock);}
-  else{captureHomeMock();}
+  function kickHome(){ if(typeof loadHomeRecent==='function')setTimeout(function(){loadHomeRecent();},120); }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',kickHome);}
+  else{kickHome();}
 })();
 
 /* === MY SPACE 라이브 자료 fetch === */
