@@ -1184,8 +1184,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
       <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
       <div class="tabs">
-        <div class="tab" onclick="showTab(this,'team')">4팀 단체방</div>
-        <div class="tab on" onclick="showTab(this,'voice')">네비게이션방</div>
+        <div class="tab" onclick="showTab(this,'team')">단체방</div>
+        <div class="tab on" onclick="showTab(this,'voice')">보험 Q&amp;A</div>
         <div class="tab" onclick="showTab(this,'smart')">스마트 게시판</div>
         <div class="tab" onclick="showTab(this,'branch')">지점 게시판</div>
       </div>
@@ -3533,8 +3533,8 @@ function finalizeMakeCardFallbackText(){
   }
 }
 var voiceTabData = {
-  voice: {title:'네비게이션방', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
-  team: {title:'4팀 단체방', sub:'4팀 내부 공지와 실무 공유 자리.', chips:['전체','공지','전달사항','팀 질문','자료 공유'], cnt:10,
+  voice: {title:'보험 Q&A', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
+  team: {title:'단체방', sub:'단체방 공지와 실무 공유 자리.', chips:['전체','공지','전달사항','팀 질문','자료 공유'], cnt:10,
     posts:[
       {badge:'공지', tc:'t-event', title:'시청팀 5/15 회식 안내 (서울고깃집 19시)', meta:'5월 15일 17:10 · 한재성 실장'},
       {badge:'공지', tc:'t-event', title:'DB손보 송미정 매니저 휴무 (대직 공지)', meta:'5월 15일 09:23 · 한재성 실장'},
