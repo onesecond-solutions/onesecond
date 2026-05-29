@@ -400,6 +400,22 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .mys-meta{font-size:0.75em;color:var(--ts);padding-top:8px;border-top:1px solid var(--bd)}
 @media (max-width:1024px){.mys-grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.mys-grid{grid-template-columns:1fr}}
+/* 2026-05-29 PR #164: MY SPACE 상세 모달 */
+.myspace-detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px}
+.myspace-detail-overlay.open{display:flex}
+.myspace-detail-box{background:var(--s1);border:1px solid var(--bd);border-radius:14px;max-width:560px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.35)}
+.myspace-detail-head{padding:16px 18px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)}
+.myspace-detail-head .mys-badge{margin-bottom:0;flex-shrink:0}
+.myspace-detail-title{flex:1;font-weight:700;font-size:1.02em;color:var(--tp);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.myspace-detail-close{background:transparent;border:0;color:var(--ts);font-size:1.1em;cursor:pointer;padding:4px 10px;border-radius:6px;line-height:1}
+.myspace-detail-close:hover{background:var(--s2);color:var(--tp)}
+.myspace-detail-meta{padding:10px 18px 6px;font-size:0.76em;color:var(--ts)}
+.myspace-detail-body{padding:8px 18px 16px;flex:1;overflow-y:auto;white-space:pre-wrap;line-height:1.65;font-size:0.93em;color:var(--tp);min-height:120px}
+.myspace-detail-actions{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--bd);justify-content:flex-end;flex-wrap:wrap;background:var(--s2)}
+.myspace-detail-act{background:var(--s1);border:1px solid var(--bd);color:var(--tp);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:0.86em;font-weight:600;transition:border-color .15s,background .15s,color .15s}
+.myspace-detail-act:hover{border-color:var(--ac);color:var(--ac)}
+.myspace-detail-act-secondary{color:var(--ts)}
+@media (max-width:520px){.myspace-detail-actions{justify-content:stretch}.myspace-detail-act{flex:1;min-width:0}}
 
 /* === V2 사이드바 Quick 메뉴 (v-quick) — V1 자체 이식 + V2 토큰 자체 === */
 .qck-tab-bar{display:flex;flex-wrap:wrap;gap:0;background:var(--s1);border:1px solid var(--bd);border-radius:10px;overflow-x:auto;margin-top:14px}
@@ -978,6 +994,23 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       </div>
       <div class="mys-grid" id="mysGrid">
         <div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div>
+      </div>
+      <!-- 2026-05-29: MY SPACE 상세 보기 모달 (PR #164) -->
+      <div class="myspace-detail-overlay" id="myspaceDetailModal" onclick="if(event.target===this)closeMyspaceDetail()">
+        <div class="myspace-detail-box" role="dialog" aria-modal="true">
+          <div class="myspace-detail-head">
+            <span class="mys-badge" id="mysDetailBadge">자료</span>
+            <div class="myspace-detail-title" id="mysDetailTitle">제목</div>
+            <button class="myspace-detail-close" onclick="closeMyspaceDetail()" aria-label="닫기">&#10005;</button>
+          </div>
+          <div class="myspace-detail-meta" id="mysDetailDate"></div>
+          <div class="myspace-detail-body" id="mysDetailBody"></div>
+          <div class="myspace-detail-actions">
+            <button class="myspace-detail-act" onclick="mysDetailCopy()">📋 복사</button>
+            <button class="myspace-detail-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button>
+            <button class="myspace-detail-act myspace-detail-act-secondary" onclick="closeMyspaceDetail()">닫기</button>
+          </div>
+        </div>
       </div>
      </div>
      <div class="wrap view" id="v-scripts">
@@ -4400,7 +4433,7 @@ function renderMyspace(items){
     var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var delType=it._type==='script'?'script':'library';
     var tableName=(it._type==='script')?'scripts':'library';
-    html+='<div class="mys-card" data-badge="'+it._badge+'" data-item-id="'+it.id+'" style="--tc:'+tc+';cursor:pointer" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\')">'+
+    html+='<div class="mys-card" data-badge="'+it._badge+'" data-item-id="'+it.id+'" style="--tc:'+tc+';cursor:pointer" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');openMyspaceDetail(\''+it.id+'\',\''+it._type+'\')">'+
       '<button class="mys-card-del" title="삭제" onclick="event.stopPropagation();deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">&#10005;</button>'+
       '<button class="mys-card-ddalggak" title="⚡ 딸깍" onclick="event.stopPropagation();showDdalggakMenu(this,\'mySpace\')">⚡</button>'+
       '<span class="mys-badge">'+it._badge+'</span>'+
@@ -4410,6 +4443,76 @@ function renderMyspace(items){
   }
   grid.innerHTML=html;
 }
+
+/* === MY SPACE 상세 보기 모달 (2026-05-29 PR #164) === */
+function openMyspaceDetail(itemId, type){
+  if(!window._myspaceCache) return;
+  var item = null;
+  for(var i=0; i<window._myspaceCache.length; i++){
+    var it = window._myspaceCache[i];
+    if(it._type === type && String(it.id) === String(itemId)){ item = it; break; }
+  }
+  if(!item) return;
+  var m = document.getElementById('myspaceDetailModal'); if(!m) return;
+  var titleEl = document.getElementById('mysDetailTitle');
+  var badgeEl = document.getElementById('mysDetailBadge');
+  var dateEl = document.getElementById('mysDetailDate');
+  var bodyEl = document.getElementById('mysDetailBody');
+  if(titleEl) titleEl.textContent = item.title || '제목 없음';
+  if(badgeEl) badgeEl.textContent = item._badge || '';
+  if(dateEl) dateEl.textContent = (typeof fmtMysDate === 'function' ? fmtMysDate(item._date) : (item._date || ''));
+  var bodyText = '';
+  if(item._type === 'script'){
+    bodyText = item.script_text || '';
+  } else if(item._badge === '메모'){
+    bodyText = item.memo_text || '';
+  } else {
+    var parts = [];
+    if(item.description) parts.push(item.description);
+    if(item.memo_text) parts.push(item.memo_text);
+    bodyText = parts.join('\n\n');
+  }
+  if(bodyEl) bodyEl.textContent = bodyText || '(본문이 없습니다)';
+  window._mysDetailCurrent = { id: itemId, type: type, title: item.title || '', body: bodyText };
+  m.classList.add('open');
+}
+window.openMyspaceDetail = openMyspaceDetail;
+
+function closeMyspaceDetail(){
+  var m = document.getElementById('myspaceDetailModal');
+  if(m) m.classList.remove('open');
+  window._mysDetailCurrent = null;
+}
+window.closeMyspaceDetail = closeMyspaceDetail;
+
+function mysDetailCopy(){
+  var c = window._mysDetailCurrent; if(!c) return;
+  var text = (c.title ? c.title + '\n\n' : '') + (c.body || '');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      if(typeof toast === 'function') toast('복사 완료'); else alert('복사 완료');
+    }).catch(function(){ alert('복사 실패. 텍스트를 직접 복사해 주세요:\n\n' + text); });
+  } else {
+    alert('복사 실패. 텍스트:\n\n' + text);
+  }
+}
+window.mysDetailCopy = mysDetailCopy;
+
+function mysDetailMakeCard(){
+  var c = window._mysDetailCurrent; if(!c) return;
+  if(typeof openMakeCardModal !== 'function'){ alert('카드 만들기 모듈 로드 실패'); return; }
+  var fullText = (c.title ? c.title + '\n\n' : '') + (c.body || '');
+  var trimmed = (typeof trimForCard === 'function') ? trimForCard(fullText, 300) : fullText.substring(0, 300);
+  openMakeCardModal({ text: trimmed, contentType: 'mySpace', title: '내 자료 → 카드 만들기' });
+}
+window.mysDetailMakeCard = mysDetailMakeCard;
+
+/* ESC 닫기 */
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  var m = document.getElementById('myspaceDetailModal');
+  if(m && m.classList.contains('open')) closeMyspaceDetail();
+});
 
 /* === MY SPACE 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(){
