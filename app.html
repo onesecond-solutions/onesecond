@@ -1063,7 +1063,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('콜스크립트작성')">
           <span class="mys-badge">실행도구</span>
-          <div class="mys-ttl">콜 스크립트 작성</div>
+          <div class="mys-ttl">콜 스크립트 변환</div>
           <div class="mys-meta">상담콜을 콜스크립트로 변환</div>
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('카드만들기')">
@@ -1824,7 +1824,7 @@ function openQuickToolV2(name){
     return;
   }
   if(name === '콜스크립트작성'){
-    activateTool('콜 스크립트 작성', renderVoiceTool);
+    activateTool('콜 스크립트 변환', renderVoiceTool);
     return;
   }
   if(name === '카드만들기'){
@@ -2952,7 +2952,7 @@ window.voiceFire = voiceFire;
 
 function voiceAction(action){
   var r = window._voiceResult;
-  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 콜 스크립트를 작성해 주세요.'); return; }
+  if(!r){ alert('먼저 ⚡ 딸깍을 눌러 콜 스크립트로 변환해 주세요.'); return; }
   if(action === 'copy'){
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(r.text).then(function(){
