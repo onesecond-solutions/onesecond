@@ -825,9 +825,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
       <div class="sp"></div>
       <button class="hbtn bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button>
       <div class="acct">
-        <button class="acctbtn" onclick="document.getElementById('m').classList.toggle('open')"><div class="av">임</div><span class="nm">임태성 &#9662;</span></button>
+        <button class="acctbtn" onclick="document.getElementById('m').classList.toggle('open')"><div class="av"></div><span class="nm">&#9662;</span></button>
         <div class="menu" id="m">
-          <div class="mi"><span>임태성 · 4팀 팀장</span></div>
+          <div class="mi"><span></span></div>
           <div class="mdiv"></div>
           <div class="mi" onclick="showView('myspace')"><span>MY SPACE</span></div>
           <div class="mi" onclick="openProfile()"><span>개인정보 수정</span></div>
@@ -843,7 +843,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     <div class="body">
      <div class="wrap view on" id="v-home">
       <div class="home-greeting">
-        <div class="home-greeting-name" id="homeGreetName">안녕하세요~ 임태성 팀장님!</div>
+        <div class="home-greeting-name" id="homeGreetName"></div>
         <div class="home-greeting-msg" id="homeGreetMsg">오늘 하루도 화이팅입니다 ☕</div>
       </div>
 
@@ -4105,21 +4105,8 @@ async function saveProfile(){
     localStorage.setItem('os_user', JSON.stringify(u));
     sessionStorage.setItem('os_user', JSON.stringify(u));
 
-    /* 사용자 메뉴 상단 이름 + 직책 표시 갱신 */
-    var miFirst = document.querySelector('#m .mi:first-child span');
-    if (miFirst) {
-      var roleLabel = (window.Auth && window.Auth.getRoleLabel) ? window.Auth.getRoleLabel(u.role) : '';
-      miFirst.textContent = u.name + (roleLabel ? ' · ' + roleLabel : '');
-    }
-    /* A영역 사용자 버튼 이름 + 아바타 첫 글자 갱신 */
-    var acctNm = document.querySelector('.acctbtn .nm');
-    if (acctNm) acctNm.innerHTML = u.name + ' &#9662;';
-    var acctAv = document.querySelector('.acctbtn .av');
-    if (acctAv) acctAv.textContent = (u.name || '?').charAt(0);
-
-    /* 홈 인사말 이름 갱신 (#homeGreetName) */
-    var homeName = document.getElementById('homeGreetName');
-    if (homeName) homeName.textContent = '안녕하세요~ ' + u.name + '님!';
+    /* 헤더 / 사용자 메뉴 / 홈 인사말 / 아바타 통째 갱신 (_updateAccountHeader, PR #166) */
+    if (typeof _updateAccountHeader === 'function') _updateAccountHeader();
 
     closeProfile();
     toast('저장됐습니다');
@@ -4170,6 +4157,35 @@ function _getOwnerId(){
 }
 window._getOwnerId = _getOwnerId;
 
+/* === 헤더 자동 갱신 헬퍼 (2026-05-29 PR #166) ===
+ * 헤더 / 사용자 메뉴 / 홈 인사말 / 아바타 = localStorage.os_user.name 기준 통째 갱신.
+ * 정적 하드코딩 폐지 + 단일 진실 자료.
+ */
+function _updateAccountHeader(){
+  var u = {};
+  try {
+    var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+    u = JSON.parse(raw);
+  } catch(e){ return; }
+  if(!u || !u.name) return;
+  var roleLabel = (window.Auth && window.Auth.getRoleLabel) ? window.Auth.getRoleLabel(u.role) : '';
+  /* 1) A영역 우상단 사용자 버튼 (이름 + 아바타 첫 글자) */
+  var acctNm = document.querySelector('.acctbtn .nm');
+  if(acctNm) acctNm.innerHTML = u.name + ' &#9662;';
+  var acctAv = document.querySelector('.acctbtn .av');
+  if(acctAv) acctAv.textContent = (u.name || '?').charAt(0);
+  /* 2) 사용자 메뉴 첫 줄 (이름 · 직책) */
+  var miFirst = document.querySelector('#m .mi:first-child span');
+  if(miFirst) miFirst.textContent = u.name + (roleLabel ? ' · ' + roleLabel : '');
+  /* 3) 홈 인사말 */
+  var homeName = document.getElementById('homeGreetName');
+  if(homeName) homeName.textContent = '안녕하세요~ ' + u.name + '님!';
+}
+window._updateAccountHeader = _updateAccountHeader;
+/* 페이지 로드 시 즉시 1회 호출 */
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _updateAccountHeader);
+else _updateAccountHeader();
+
 /* === Auth 초기화 (js/db.js + js/auth.js 로드 후) ===
  * hotfix (2026-05-23):
  *   window.Auth.init() 자체 호출 시 토큰 없을 때 index.html로 redirect 발생.
@@ -4190,6 +4206,7 @@ window._getOwnerId = _getOwnerId;
         window.AppState.userId=uid;
         window.AppState.token=token;
         if(window.Auth.loadUser)window.Auth.loadUser();
+        if(typeof _updateAccountHeader==='function') _updateAccountHeader();
       }
     }catch(e){}
   }
