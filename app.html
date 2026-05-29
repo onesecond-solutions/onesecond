@@ -2,6 +2,10 @@
 <html lang="ko" data-theme="dark">
 <head>
 <meta charset="UTF-8">
+<!-- 2026-05-30: app.html 캐시 무효화 (role 게이팅 옛 JS 캐시 방지 — 강력새로고침 의존 제거) -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <script src="/js/maintenance-guard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>원세컨드 시안 — 딸깍(저장·복사·카드)</title>
@@ -837,6 +841,18 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 </head>
 <body>
 <div class="app" id="app">
+<script>
+/* 2026-05-30: role 클래스 첫 페인트 전 즉시 부착 (사이드 메뉴 파싱 전) — FOUC/깜빡임 제거.
+ * insurer_* → is-insurer (3개만) / admin → is-admin (전체+자료실). 늦은 applyRoleClass는 재부착 안전망. */
+(function(){
+  try {
+    var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+    var r = (JSON.parse(raw).role) || '';
+    var a = document.getElementById('app');
+    if(a){ if(r === 'admin') a.classList.add('is-admin'); else if(r.indexOf('insurer_') === 0) a.classList.add('is-insurer'); }
+  } catch(e){}
+})();
+</script>
   <nav class="side">
     <div class="top">
       <div class="logo" onclick="document.getElementById('app').classList.toggle('collapsed')"><img src="/assets/images/logo/logo03.jpg" alt="원세컨드" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
@@ -1896,6 +1912,10 @@ function showView(key,options){options=options||{};if(key==='insurer-vault'&&typ
     try { qs = new URLSearchParams(window.location.search); } catch(e){ qs = null; }
     var initView = (qs && qs.get('view')) || 'home';
     if(VALID_VIEWS.indexOf(initView) === -1) initView = 'home';
+    /* 2026-05-30: view 쿼리 명시가 없으면 insurer_* 기본 진입 view = insurer-vault */
+    if(!(qs && qs.get('view'))){
+      try { var _r = (JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').role) || ''; if(_r.indexOf('insurer_') === 0) initView = 'insurer-vault'; } catch(e){}
+    }
     if(window.history && window.history.replaceState){
       try { window.history.replaceState({ view: initView }, '', '?view=' + initView); } catch(err){}
     }
