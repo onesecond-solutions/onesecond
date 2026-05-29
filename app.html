@@ -3797,6 +3797,9 @@ function activateCard(card, idx, total){
   }
   wrap.classList.add('has-active');
   try { history.pushState({ scriptCardActive: card.getAttribute('data-id') }, '', ''); } catch(err){}
+  /* 2026-05-29 PR #169: scripts.last_used_at 갱신 (홈 4층 최근 사용 정합) */
+  var scriptId = card.getAttribute('data-id');
+  if(scriptId && typeof updateLastUsed === 'function') updateLastUsed('scripts', scriptId);
 }
 
 function deactivateCard(silent){
