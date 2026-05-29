@@ -4404,7 +4404,10 @@ function renderHomeDocs(libs){
     var tc=isNote?'var(--t-event)':'var(--t-uw)';
     var fileType=isNote?'메모':(it.file_url?'파일':(it.image_url?'이미지':(it.link_url?'링크':'자료')));
     var meta=fmtHomeDate(it.created_at)+' 저장 · '+fileType;
-    html+='<div class="home-recent-card" style="--tc:'+tc+'" onclick="openHomeRecent(\'library\',\''+it.id+'\')">'+
+    var hasId=(it.id!=null&&it.id!=='');
+    if(!hasId) console.warn('[home] 자료 카드 id 없음 — 클릭 비활성:',it.title);
+    var attr=hasId?(' onclick="openHomeRecent(\'library\',\''+it.id+'\')" style="--tc:'+tc+'"'):(' style="--tc:'+tc+';cursor:default" aria-disabled="true"');
+    html+='<div class="home-recent-card"'+attr+'>'+
       '<div class="home-recent-card-row1"><span class="home-recent-card-badge">'+badge+'</span><div class="home-recent-card-title">'+escHomeHtml(it.title||'제목 없음')+'</div></div>'+
       '<div class="home-recent-card-meta">'+meta+'</div>'+
     '</div>';
@@ -4417,7 +4420,10 @@ function renderHomeScripts(scripts){
   var html='';
   for(var i=0;i<scripts.length;i++){
     var it=scripts[i];
-    html+='<div class="home-recent-card" style="--tc:var(--t-product)" onclick="openHomeRecent(\'scripts\',\''+it.id+'\')">'+
+    var hasId=(it.id!=null&&it.id!=='');
+    if(!hasId) console.warn('[home] 스크립트 카드 id 없음 — 클릭 비활성:',it.title);
+    var attr=hasId?(' onclick="openHomeRecent(\'scripts\',\''+it.id+'\')" style="--tc:var(--t-product)"'):' style="--tc:var(--t-product);cursor:default" aria-disabled="true"';
+    html+='<div class="home-recent-card"'+attr+'>'+
       '<div class="home-recent-card-row1"><span class="home-recent-card-badge">스크립트</span><div class="home-recent-card-title">'+escHomeHtml(it.title||'제목 없음')+'</div></div>'+
       '<div class="home-recent-card-meta">'+fmtHomeDate(it.used_at)+' 사용</div>'+
     '</div>';
@@ -4460,11 +4466,61 @@ function renderHomeNews(rows){
   el.innerHTML=html;
 }
 
+/* 홈 = 대시보드. 카드 클릭 = 원세컨드 내부 원본 위치로 딥링크 (단순 페이지 이동 X). */
 function openHomeRecent(table,id){
-  if(table==='scripts'){ if(typeof logScriptUsage==='function') logScriptUsage(id,'view'); }
-  else updateLastUsed(table,id);   // library(자료)=owner_id 개인 → 기존 유지
-  showView(table==='scripts'?'scripts':'myspace');
+  if(id==null||id===''||id==='undefined'||id==='null'){
+    console.warn('[home] 원본 id 없음 — 이동 취소:',table,id);
+    return;
+  }
+  if(table==='scripts'){
+    if(typeof logScriptUsage==='function') logScriptUsage(id,'view');
+    showView('scripts');
+    openScriptById(id);
+  }else{
+    updateLastUsed('library',id);   // library(자료)=owner_id 개인 → 기존 유지
+    showView('myspace');
+    openLibraryById(id);
+  }
 }
+window.openHomeRecent=openHomeRecent;
+
+/* 홈 → 스크립트 딥링크: 캐시 보장 → 해당 stage 활성화 → 카드 확장·강조·스크롤. */
+async function openScriptById(scriptId){
+  try{ if(typeof loadScriptsView==='function') await loadScriptsView(); }
+  catch(e){ console.error('[home] loadScriptsView',e); }
+  var cache=window._scriptsCache||[],target=null;
+  for(var i=0;i<cache.length;i++){ if(String(cache[i].id)===String(scriptId)){ target=cache[i]; break; } }
+  if(!target){ console.warn('[home] 스크립트 원본 미발견:',scriptId); return; }
+  window._scriptsActiveStage=target.stage;
+  var chipsEl=document.getElementById('scriptsChips');
+  if(chipsEl&&typeof renderScriptsChips==='function') renderScriptsChips(chipsEl);
+  if(typeof renderScriptsCards==='function') renderScriptsCards(target.stage);
+  // 렌더 직후 DOM 존재 + v-scripts visible 상태에서 활성화 (위치 계산에 width 필요)
+  requestAnimationFrame(function(){
+    var wrap=document.getElementById('scriptsCardsWrap');
+    if(!wrap){ console.warn('[home] scriptsCardsWrap 없음'); return; }
+    var cards=wrap.querySelectorAll('.script-card'),card=null;
+    for(var j=0;j<cards.length;j++){ if(String(cards[j].getAttribute('data-id'))===String(scriptId)){ card=cards[j]; break; } }
+    if(!card){ console.warn('[home] 스크립트 카드 DOM 미발견:',scriptId); return; }
+    var idx=parseInt(card.getAttribute('data-idx'),10);
+    var total=parseInt(card.getAttribute('data-total'),10);
+    if(typeof activateCard==='function') activateCard(card,idx,total);
+    try{ card.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ card.scrollIntoView(); }
+  });
+}
+window.openScriptById=openScriptById;
+
+/* 홈 → MY SPACE 자료 딥링크: 캐시 보장 → 상세 모달. */
+async function openLibraryById(libId){
+  try{ if(typeof loadMyspace==='function') await loadMyspace(); }
+  catch(e){ console.error('[home] loadMyspace',e); }
+  var cache=window._myspaceCache||[],found=false;
+  for(var i=0;i<cache.length;i++){ if(cache[i]._type==='library'&&String(cache[i].id)===String(libId)){ found=true; break; } }
+  if(!found){ console.warn('[home] 자료 원본 미발견:',libId); return; }
+  if(typeof openMyspaceDetail==='function') openMyspaceDetail(libId,'library');
+  else console.warn('[home] openMyspaceDetail 함수 없음');
+}
+window.openLibraryById=openLibraryById;
 
 /* 진단 fetch 헬퍼 — HTTP status/건수 로깅 + 실패 구분.
  * 성공 → 파싱된 배열 반환 / 실패(HTTP 에러·네트워크·파싱) → {__err:true} 반환. */
