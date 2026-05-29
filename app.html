@@ -1783,6 +1783,21 @@ window.applyRoleClass = applyRoleClass;
 applyRoleClass();
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyRoleClass);
 
+/* 2026-05-30: loadUser 완료(appstate:ready) 후 role UI 재구성 — 로그인 직후 새로고침 없이 적용.
+ * 격차: loadUser가 public.users role을 늦게 채우고 appstate:ready를 발화하나,
+ *       app.html에 listener가 없어 UI가 안 갱신됨 → 로그인 직후 일반 메뉴 유지. */
+document.addEventListener('appstate:ready', function(){
+  try {
+    if(typeof applyRoleClass === 'function') applyRoleClass();
+    var r = _getOsUserRole();
+    if(r.indexOf('insurer_') === 0){
+      var cur = (window.history.state && window.history.state.view) || null;
+      var allowed = ['insurer-vault','voice','together'];  // insurer 허용 view
+      if(allowed.indexOf(cur) === -1 && typeof showView === 'function') showView('insurer-vault');
+    }
+  } catch(e){}
+});
+
 /* 2026-05-30 단계 2: 원수사 자료실 view UI (저장/조회 DB 연동은 단계 3 확정 후) */
 function _getOsUserCompany(){
   try { var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'; var u = JSON.parse(raw); return (u && u.company) || ''; }
