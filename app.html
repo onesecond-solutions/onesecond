@@ -796,7 +796,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     <div class="nav" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
-    <div class="nav" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
+    <div class="nav" id="nav-team" style="display:none" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
     <div class="nav" id="nav-admin" style="display:none" onclick="window.location.href='/pages/admin.html'"><span class="ic">&#9881;</span><span class="lbl">관리자</span></div>
   </nav>
@@ -1591,6 +1591,30 @@ window.setFontScale = function(scale){ document.documentElement.style.setPropert
   var tries = 0;
   var pollId = setInterval(function(){
     if(isAdmin()){ applyAdminMenu(); clearInterval(pollId); return; }
+    if(++tries > 30) clearInterval(pollId);
+  }, 100);
+})();
+
+/* 2026-05-29: 팀원관리 메뉴 노출 = 매니저 이상 자료 (allowedRoles 5종) */
+(function(){
+  var allowedRoles = ['admin', 'ga_branch_manager', 'ga_manager', 'insurer_branch_manager', 'insurer_manager'];
+  function isManagerOrAbove(){
+    try {
+      var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
+      var u = JSON.parse(raw);
+      return u && allowedRoles.indexOf(u.role) !== -1;
+    } catch(e){ return false; }
+  }
+  function applyTeamMenu(){
+    var el = document.getElementById('nav-team');
+    if(el && isManagerOrAbove()) el.style.display = '';
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyTeamMenu);
+  else applyTeamMenu();
+  /* os_user 지연 로드 대비 100ms polling 3초 */
+  var tries = 0;
+  var pollId = setInterval(function(){
+    if(isManagerOrAbove()){ applyTeamMenu(); clearInterval(pollId); return; }
     if(++tries > 30) clearInterval(pollId);
   }, 100);
 })();
