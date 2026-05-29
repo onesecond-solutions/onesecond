@@ -454,9 +454,11 @@ async function doLogin() {
      - 심사자는 OTP 수신 불가 → 비밀번호 로그인 단독.
      - 비밀번호 = prompt 입력 (코드 평문 X).
      - 다른 화이트리스트 3 계정 = 기존 OTP 흐름 그대로. */
-  if (email === 'kcp.review@onesecond.solutions') {
+  /* 2026-05-30 임시(검수용): test@meritz 2계정도 비번 로그인 허용 — 원수사 자료실 단계 1 검수 후 제거 예정 */
+  var PW_LOGIN_EMAILS = ['kcp.review@onesecond.solutions', 'test@meritz.co.kr', 'test.meritz@meritz.co.kr'];
+  if (PW_LOGIN_EMAILS.indexOf(email) !== -1) {
     _resetBtn();
-    var password = prompt('심사 전용 계정 — 비밀번호 입력:');
+    var password = prompt('비밀번호 입력:');
     if (!password) return;
     try {
       var pwRes = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
