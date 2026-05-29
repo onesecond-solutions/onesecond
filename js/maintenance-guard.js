@@ -39,7 +39,10 @@
     'bylts0428@gmail.com',
     'bylts@naver.com',
     'bylts@kakao.com',
-    'kcp.review@onesecond.solutions'
+    'kcp.review@onesecond.solutions',
+    /* 2026-05-30 임시(검수용) — 원수사 자료실 단계 1 검수 후 제거 예정 */
+    'test@meritz.co.kr',
+    'test.meritz@meritz.co.kr'
   ];
 
   /* 공개 페이지 = 진입 라우터 + landing + PG 심사 5 페이지 + maintenance 본인
