@@ -3880,7 +3880,7 @@ function activateCard(card, idx, total){
   try { history.pushState({ scriptCardActive: card.getAttribute('data-id') }, '', ''); } catch(err){}
   /* 2026-05-29 PR #169: scripts.last_used_at 갱신 (홈 4층 최근 사용 정합) */
   var scriptId = card.getAttribute('data-id');
-  if(scriptId && typeof updateLastUsed === 'function') updateLastUsed('scripts', scriptId);
+  if(scriptId && typeof logScriptUsage === 'function') logScriptUsage(scriptId, 'view');
 }
 
 function deactivateCard(silent){
@@ -4334,6 +4334,23 @@ async function updateLastUsed(table,id){
   }catch(e){console.error('[updateLastUsed]',e);}
 }
 
+/* 2026-05-29 (가)안: 사용자별 스크립트 사용 이력 누적 (insert).
+ * scripts.last_used_at(전역 컬럼) 미사용 — script_usage.user_id 기준.
+ * 홈 최근사용 + 향후 팀/지점 인기·추천·통계 기준 테이블. */
+async function logScriptUsage(scriptId, actionType){
+  if(!window.db||!window.AppState||!window.AppState.userId)return;
+  var token=window.db.getToken&&window.db.getToken();
+  if(!token||!scriptId)return;
+  try{
+    await fetch(window.db.url('/rest/v1/script_usage'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},
+      body:JSON.stringify({user_id:window.AppState.userId, script_id:Number(scriptId), action_type:actionType||'view'})
+    });
+  }catch(e){console.error('[logScriptUsage]',e);}
+}
+window.logScriptUsage=logScriptUsage;
+
 function showHomeSkeleton(){
   var html3='<div class="home-recent-card skel"></div><div class="home-recent-card skel"></div><div class="home-recent-card skel"></div>';
   var html1='<div class="home-recent-card skel"></div>';
@@ -4374,7 +4391,7 @@ function renderHomeScripts(scripts){
     var it=scripts[i];
     html+='<div class="home-recent-card" style="--tc:var(--t-product)" onclick="openHomeRecent(\'scripts\',\''+it.id+'\')">'+
       '<div class="home-recent-card-row1"><span class="home-recent-card-badge">스크립트</span><div class="home-recent-card-title">'+escHomeHtml(it.title||'제목 없음')+'</div></div>'+
-      '<div class="home-recent-card-meta">'+fmtHomeDate(it.created_at)+' 저장</div>'+
+      '<div class="home-recent-card-meta">'+fmtHomeDate(it.used_at)+' 사용</div>'+
     '</div>';
   }
   el.innerHTML=html;
@@ -4416,7 +4433,8 @@ function renderHomeNews(rows){
 }
 
 function openHomeRecent(table,id){
-  updateLastUsed(table,id);
+  if(table==='scripts'){ if(typeof logScriptUsage==='function') logScriptUsage(id,'view'); }
+  else updateLastUsed(table,id);   // library(자료)=owner_id 개인 → 기존 유지
   showView(table==='scripts'?'scripts':'myspace');
 }
 
@@ -4430,15 +4448,23 @@ async function loadHomeRecent(force){
   if(token&&userId){
     var hdrAuth={'apikey':window.db.key,'Authorization':'Bearer '+token};
     var libUrl=window.db.url('/rest/v1/library?owner_id=eq.'+userId+'&order=last_used_at.desc&limit=3');
-    var scrUrl=window.db.url('/rest/v1/scripts?owner_id=eq.'+userId+'&is_active=eq.true&order=last_used_at.desc&limit=3');
+    var scrUrl=window.db.url('/rest/v1/script_usage?user_id=eq.'+encodeURIComponent(userId)+'&select=used_at,script_id,scripts(id,title,stage)&order=used_at.desc&limit=20');
     jobs.push(fetch(libUrl,{headers:hdrAuth}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(libs){
       if(libs===null){console.error('[loadHomeRecent] library fetch fail');restoreHomeMock('docs');}
       else if(libs.length>0)renderHomeDocs(libs);
       else restoreHomeMock('docs');
     }));
-    jobs.push(fetch(scrUrl,{headers:hdrAuth}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(scr){
-      if(scr===null){console.error('[loadHomeRecent] scripts fetch fail');restoreHomeMock('scripts');}
-      else if(scr.length>0)renderHomeScripts(scr);
+    jobs.push(fetch(scrUrl,{headers:hdrAuth}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}).then(function(rows){
+      if(rows===null){console.error('[loadHomeRecent] script_usage fetch fail');restoreHomeMock('scripts');return;}
+      var seen={},uniq=[];
+      for(var i=0;i<rows.length;i++){
+        var r=rows[i];
+        if(!r.scripts||seen[r.script_id])continue;
+        seen[r.script_id]=1;
+        uniq.push({id:r.scripts.id,title:r.scripts.title,stage:r.scripts.stage,used_at:r.used_at});
+        if(uniq.length>=3)break;
+      }
+      if(uniq.length>0)renderHomeScripts(uniq);
       else restoreHomeMock('scripts');
     }));
   }else{
