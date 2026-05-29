@@ -4921,6 +4921,7 @@ async function openQuickOverlay(key){
   if(vQuick && vQuick.classList.contains('on')){
     if(typeof window.openQuickContentV2 === 'function'){
       window.openQuickContentV2(key);
+      closeQuick();
       return;
     }
   }
