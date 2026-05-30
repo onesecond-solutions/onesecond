@@ -160,10 +160,14 @@
 }
 
 /* 2026-05-30: placeholder 위계 — 입력값(primary) > 라벨(secondary) > placeholder(연함). */
-/* 2026-05-30: --color-text-placeholder가 landing/index :root에 미정의 → 무효(진함) 격차.
-   정의된 --color-text-tertiary로 fallback (landing #A1A1AA / index #9CA3AF, 입력값 대비 흐림). 하드코딩 0. */
+/* 2026-05-30: placeholder 흐림 — ID selector(최고 specificity)로 덮는 규칙까지 강제 + 변수 fallback.
+   --color-text-placeholder 미정의 시 --color-text-tertiary(landing #A1A1AA / index #9CA3AF). 하드코딩 0. */
+#f-email-login::placeholder,
+#f-name::placeholder,
+#f-phone::placeholder,
+#f-email::placeholder,
 .auth-input::placeholder,
-.auth-select::placeholder { color: var(--color-text-placeholder, var(--color-text-tertiary)); opacity: 1; }
+.auth-select::placeholder,
 .auth-section input::placeholder,
 .auth-section textarea::placeholder { color: var(--color-text-placeholder, var(--color-text-tertiary)); opacity: 1; }
 
