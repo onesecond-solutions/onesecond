@@ -1,5 +1,9 @@
 # Supabase 신버전 DB 스키마 전수 — 2026-05-01 (Phase D-pre 항목 1)
 
+> ⚠️ **시점 스냅샷 (2026-05-01) — 현행 아님 / 이력 보존용 (2026-05-31 표기).**
+> 본 문서는 admin_v2 D-pre 진입 당시 DB 구조 기록이다. 이후 DB가 9역할 + 지점·팀 체계(`branches` / `teams` / `insurer_employee_branches`) + `users` 컬럼(`status` / `insurer_id` / `branch_id`) + `script_usage` 등으로 크게 확장됐다.
+> **현행 DB 구조 = 신버전 Dashboard(`pdnwgzneooyygfejrvbg`) 직접 SELECT 또는 최신 세션 노트(예: `docs/sessions/2026-05-30_2013.md` 실측) 기준.** 본 문서를 현행 진단 근거로 사용 금지.
+
 > **신버전 프로젝트:** `pdnwgzneooyygfejrvbg` (`onesecond-v1-restore-0420`)
 > **수집 시각:** 2026-05-01 (Phase D-pre 항목 1, 팀장님 SQL Editor 직접 실행)
 > **수집 범위:** information_schema.tables / columns + pg_policies + public.users.role 분포
