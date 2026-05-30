@@ -1807,14 +1807,54 @@ function ivInit(){
   var company = _getOsUserCompany() || '우리 회사';
   var ttl = document.getElementById('iv-company-ttl'); if(ttl) ttl.textContent = company;
   var fc = document.getElementById('iv-f-company'); if(fc) fc.value = company;
-  /* 목록 fetch = 단계 3 DB 확정 후 연결. 현재는 빈 상태(HTML 기본) 유지 — mock 0. */
+  loadInsurerVault();   /* PR-B1: posts board_type=insurer fetch (RLS 자동 필터) */
 }
 window.ivInit = ivInit;
+
+/* === PR-B1 (2026-05-30): 보험사 자료실 읽기 — posts board_type='insurer' fetch ===
+ * RLS(posts_select_insurer_employee)가 담당 지점/통합토글/전사를 자동 필터. 토큰만 필요. */
+window._ivCache = null;
+function ivEsc(s){ return String(s||'').replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+function ivFmtDate(iso){ if(!iso)return ''; var d=new Date(iso); if(isNaN(d.getTime()))return ''; return (d.getMonth()+1)+'월 '+d.getDate()+'일'; }
+function ivStateCard(main, sub){ return '<div class="mys-news-empty">'+ivEsc(main)+(sub?'<br>'+ivEsc(sub):'')+'</div>'; }
+function ivRender(rows, filterType){
+  var grid = document.getElementById('iv-grid'); if(!grid) return;
+  var list = (filterType && filterType !== '전체') ? rows.filter(function(r){ return r.category === filterType; }) : rows;
+  if(!list.length){ grid.innerHTML = ivStateCard('아직 등록된 자료가 없습니다',''); return; }
+  var colorByCat = {'소식지':'var(--t-product)','상품 자료':'var(--t-uw)','인수 자료':'var(--t-event)','FAQ':'var(--ok)'};
+  var html = '';
+  for(var i=0;i<list.length;i++){
+    var r = list[i];
+    var cat = r.category || '자료';
+    var tc = colorByCat[cat] || 'var(--ac)';
+    html += '<div class="mys-card" style="--tc:'+tc+'">'
+      + '<span class="mys-badge">'+ivEsc(cat)+'</span>'
+      + '<div class="mys-ttl">'+ivEsc(r.title || '제목 없음')+'</div>'
+      + '<div class="mys-meta">'+ivFmtDate(r.created_at)+(r.author_name ? ' · '+ivEsc(r.author_name) : '')+'</div>'
+      + '</div>';
+  }
+  grid.innerHTML = html;
+}
+async function loadInsurerVault(){
+  var grid = document.getElementById('iv-grid'); if(!grid) return;
+  var token = window.db && window.db.getToken && window.db.getToken();
+  if(!token){ grid.innerHTML = ivStateCard('로그인 후 표시됩니다',''); return; }
+  grid.innerHTML = ivStateCard('불러오는 중…','');
+  try{
+    var url = window.db.url('/rest/v1/posts?board_type=eq.insurer&order=created_at.desc&select=id,category,title,content,attachments,branch_id,author_name,created_at');
+    var res = await fetch(url, { headers: { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token } });
+    if(!res.ok){ console.error('[insurer-vault] HTTP', res.status); grid.innerHTML = ivStateCard('불러오지 못했습니다','잠시 후 새로고침 해주세요'); return; }
+    window._ivCache = (await res.json()) || [];
+    var on = document.querySelector('#iv-chips .chip.on');
+    ivRender(window._ivCache, on ? on.textContent.trim() : '전체');
+  }catch(e){ console.error('[insurer-vault]', e); grid.innerHTML = ivStateCard('불러오지 못했습니다','잠시 후 새로고침 해주세요'); }
+}
+window.loadInsurerVault = loadInsurerVault;
 function ivFilter(el, type){
   var chips = el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
   el.classList.add('on');
-  /* 실제 type 필터 = 단계 3 데이터 연동 후. 현재 빈 상태 유지. */
+  if(window._ivCache) ivRender(window._ivCache, type);  /* PR-B1: category 필터 (캐시 기반) */
 }
 window.ivFilter = ivFilter;
 function ivOpenWrite(){
