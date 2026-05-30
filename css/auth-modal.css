@@ -160,11 +160,12 @@
 }
 
 /* 2026-05-30: placeholder 위계 — 입력값(primary) > 라벨(secondary) > placeholder(연함). */
+/* 2026-05-30: --color-text-placeholder가 landing/index :root에 미정의 → 무효(진함) 격차.
+   정의된 --color-text-tertiary로 fallback (landing #A1A1AA / index #9CA3AF, 입력값 대비 흐림). 하드코딩 0. */
 .auth-input::placeholder,
-.auth-select::placeholder { color: var(--color-text-placeholder); opacity: 1; }
-/* 2026-05-30 모달 내부 전역 — .auth-input 외 input/textarea 누락 방지 */
+.auth-select::placeholder { color: var(--color-text-placeholder, var(--color-text-tertiary)); opacity: 1; }
 .auth-section input::placeholder,
-.auth-section textarea::placeholder { color: var(--color-text-placeholder); opacity: 1; }
+.auth-section textarea::placeholder { color: var(--color-text-placeholder, var(--color-text-tertiary)); opacity: 1; }
 
 /* 2026-05-30: 보험사 임직원 담당 지점 멀티 선택 (branches) */
 .insurer-branch-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
