@@ -385,6 +385,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .fld input,.fld select,.fld textarea{background:var(--s2);border:0.5px solid var(--bd);border-radius:9px;padding:10px 12px;color:var(--tp);font-size:0.875rem;outline:none;font-family:inherit;}
 .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--ac);}
 .fld input::placeholder,.fld textarea::placeholder{color:var(--tf);}
+/* 2026-05-30 전역 placeholder 통일 — ::placeholder 규칙 없던 input(iv-fld·동적 등) 누락 방지. 입력값(--tp)보다 한 단계 흐림(--tf). */
+input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .fld textarea{min-height:96px;resize:vertical;line-height:1.6;}
 .fld select{cursor:pointer;}
 .fhint{font-size:0.6875rem;color:var(--tf);margin-top:5px;}

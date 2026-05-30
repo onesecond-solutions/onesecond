@@ -162,6 +162,9 @@
 /* 2026-05-30: placeholder 위계 — 입력값(primary) > 라벨(secondary) > placeholder(연함). */
 .auth-input::placeholder,
 .auth-select::placeholder { color: var(--color-text-placeholder); opacity: 1; }
+/* 2026-05-30 모달 내부 전역 — .auth-input 외 input/textarea 누락 방지 */
+.auth-section input::placeholder,
+.auth-section textarea::placeholder { color: var(--color-text-placeholder); opacity: 1; }
 
 /* 2026-05-30: 보험사 임직원 담당 지점 멀티 선택 (branches) */
 .insurer-branch-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
