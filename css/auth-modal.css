@@ -169,7 +169,11 @@
 .auth-input::placeholder,
 .auth-select::placeholder,
 .auth-section input::placeholder,
-.auth-section textarea::placeholder { color: var(--color-text-placeholder, var(--color-text-tertiary)); opacity: 1; }
+.auth-section textarea::placeholder {
+  color: var(--color-text-placeholder, var(--color-text-tertiary));
+  -webkit-text-fill-color: var(--color-text-placeholder, var(--color-text-tertiary));  /* .auth-page-body .auth-input의 -webkit-text-fill-color(입력값 진함)가 placeholder까지 덮던 격차 정정 — placeholder 전용 명시 */
+  opacity: 1;
+}
 
 /* 2026-05-30: 보험사 임직원 담당 지점 멀티 선택 (branches) */
 .insurer-branch-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
