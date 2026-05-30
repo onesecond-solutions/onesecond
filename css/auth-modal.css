@@ -159,6 +159,11 @@
   box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
 }
 
+/* 2026-05-30: placeholder 위계 공통 — 입력값(primary) > 라벨(secondary) > placeholder(연함).
+   기존 placeholder 규칙 부재 → 브라우저 기본(진함) 노출되던 격차 정정. */
+.auth-input::placeholder,
+.auth-select::placeholder { color: var(--color-text-placeholder); opacity: 1; }
+
 .auth-pw-wrap { position: relative; }
 .auth-pw-toggle {
   position: absolute;
