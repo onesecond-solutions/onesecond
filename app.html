@@ -1818,9 +1818,42 @@ function ivCloseWrite(){
   var m = document.getElementById('ivWriteModal'); if(m) m.style.display = 'none';
 }
 window.ivCloseWrite = ivCloseWrite;
-function ivSubmit(){
-  /* 단계 3 DB+RLS 확정 후 실제 insert 연결 예정. 현재는 안내만 — 가짜 저장 방지(mock 금지). */
-  alert('자료 저장은 다음 단계(DB 연결) 후 활성화됩니다. 지금은 화면 구조 검수용입니다.');
+/* PR-B2 (2026-05-30): 보험사 자료 등록 — posts(board_type='insurer') insert.
+ * MVP: 전사(branch_id=null) + 텍스트(제목/내용/유형). RLS posts_insert_insurer 활용.
+ * visibility(공개여부)/첨부(Storage)는 후속 분리. */
+async function ivSubmit(){
+  var token = window.db && window.db.getToken && window.db.getToken();
+  var u = {};
+  try { u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e){}
+  if(!token || !u.insurer_id){ alert('소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
+  var typeEl = document.querySelector('input[name="iv-type"]:checked');
+  var category = typeEl ? typeEl.value : '소식지';
+  var title = (document.getElementById('iv-f-title').value || '').trim();
+  var content = (document.getElementById('iv-f-body').value || '').trim();
+  if(!title){ alert('제목을 입력해 주세요.'); return; }
+  var body = {
+    board_type: 'insurer',
+    insurer_id: u.insurer_id,
+    branch_id:  null,            /* MVP 전사 공지 */
+    category:   category,
+    title:      title,
+    content:    content,
+    author_id:  u.id || '',
+    author_name: u.name || ''
+  };
+  try {
+    var res = await fetch(window.db.url('/rest/v1/posts'), {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'apikey':window.db.key, 'Authorization':'Bearer '+token, 'Prefer':'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){ var t=''; try{ t=await res.text(); }catch(_e){} console.error('[ivSubmit] HTTP', res.status, (t||'').slice(0,200)); alert('자료 등록 실패 ('+res.status+'). 잠시 후 다시 시도해 주세요.'); return; }
+    ivCloseWrite();
+    document.getElementById('iv-f-title').value = '';
+    document.getElementById('iv-f-body').value = '';
+    if(typeof loadInsurerVault === 'function') loadInsurerVault();  /* 재fetch → 즉시 노출 */
+    if(typeof toast === 'function') toast('자료가 등록되었습니다');
+  } catch(e){ console.error('[ivSubmit]', e); alert('자료 등록 오류. 잠시 후 다시 시도해 주세요.'); }
 }
 window.ivSubmit = ivSubmit;
 
