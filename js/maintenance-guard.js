@@ -30,7 +30,7 @@
 (function () {
   'use strict';
 
-  var MAINTENANCE_MODE = true;
+  var MAINTENANCE_MODE = false;  /* 2026-05-30: 해제 (원수사 외부 사용자 0 + GA 개방). 문제 시 true로 즉시 재차단. */
   var MAINTENANCE_PAGE = '/maintenance.html';
 
   /* 화이트리스트 4 계정 — auth-modal.js / auth.js에서 동일 자료 참조 (window.OS_WHITELIST_EMAILS).
