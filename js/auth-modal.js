@@ -320,6 +320,13 @@ function _validateSignupStep2Inline() {
     } else {
       ins.classList.remove('err'); document.getElementById('e-insurer').classList.remove('on');
     }
+    /* 2026-05-30: 담당 지점 필수 (보험사 임직원) */
+    var insBr = document.getElementById('f-insurer-branch');
+    if (insBr && !insBr.value.trim()) {
+      insBr.classList.add('err'); document.getElementById('e-insurer-branch').classList.add('on'); ok = false;
+    } else if (insBr) {
+      insBr.classList.remove('err'); document.getElementById('e-insurer-branch').classList.remove('on');
+    }
     if (!window.gInsurerOtpVerified) {
       errBox.textContent = '이메일 인증을 먼저 통과해 주세요. ([인증 코드 받기] → 코드 입력 → [확인])';
       errBox.classList.add('on');
@@ -1174,6 +1181,13 @@ function validateSignup() {
     } else {
       ins.classList.remove('err'); document.getElementById('e-insurer').classList.remove('on');
     }
+    /* 2026-05-30: 담당 지점 필수 (보험사 임직원) */
+    var insBr = document.getElementById('f-insurer-branch');
+    if (insBr && !insBr.value.trim()) {
+      insBr.classList.add('err'); document.getElementById('e-insurer-branch').classList.add('on'); ok = false;
+    } else if (insBr) {
+      insBr.classList.remove('err'); document.getElementById('e-insurer-branch').classList.remove('on');
+    }
     if (!window.gInsurerOtpVerified) {
       errBox.textContent = '이메일 인증을 먼저 통과해 주세요. ([인증 코드 받기] → 코드 입력 → [확인])';
       errBox.classList.add('on');
@@ -1380,12 +1394,14 @@ async function updateInsurerProfile(accessToken) {
   var companyName = insSel && insSel.selectedIndex >= 0 ? insSel.options[insSel.selectedIndex].textContent : '';
   var gradeShort = document.getElementById('f-role').value;
   var roleKey = mapToRoleKey('insurer', gradeShort);
+  var insBranchEl = document.getElementById('f-insurer-branch');
+  var insBranch = insBranchEl ? insBranchEl.value.trim() : '';
 
   var meta = {
     name:    document.getElementById('f-name').value.trim(),
     phone:   document.getElementById('f-phone').value.trim(),
     company: companyName,
-    branch:  '',
+    branch:  insBranch,
     role:    roleKey,
     team:    '',
     insurer_id: insurerId,

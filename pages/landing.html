@@ -838,6 +838,11 @@ body {
                 </select>
                 <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
               </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="f-insurer-branch">담당 지점 (직접 입력)</label>
+                <input class="auth-input" type="text" id="f-insurer-branch" placeholder="예: 강남지점" maxlength="50" oninput="clearFieldError('f-insurer-branch','e-insurer-branch')">
+                <div class="auth-form-err" id="e-insurer-branch">담당 지점을 입력해 주세요.</div>
+              </div>
               <div class="domain-guide" id="domain-guide" style="display:none;">
                 💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다.
               </div>
