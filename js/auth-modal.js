@@ -321,7 +321,7 @@ function _validateSignupStep2Inline() {
       ins.classList.remove('err'); document.getElementById('e-insurer').classList.remove('on');
     }
     /* 2026-05-30: 담당 지점 1개 이상 필수 */
-    if (_collectInsurerBranchIds().length === 0) {
+    if (_collectInsurerBranchNames().length === 0) {
       document.getElementById('e-insurer-branch').classList.add('on'); ok = false;
     } else {
       document.getElementById('e-insurer-branch').classList.remove('on');
@@ -757,10 +757,7 @@ async function loadSignupSelects() {
     var insRes = await fetch(SUPABASE_URL + '/rest/v1/insurers?is_active=eq.true&select=id,slug,name,type&order=type,name', { headers: headers });
     var insurers = insRes.ok ? await insRes.json() : [];
     populateInsurerSelect(insurers);
-    /* 2026-05-30: 보험사 임직원 담당 지점 = branches 선택 (가입 희망 → admin 승인 시 insurer_employee_branches 매핑) */
-    var brRes = await fetch(SUPABASE_URL + '/rest/v1/branches?is_active=eq.true&select=id,name,ga_org_name&order=ga_org_name,name', { headers: headers });
-    var branches = brRes.ok ? await brRes.json() : [];
-    populateBranchSelects(branches);
+    /* 2026-05-30 B안: 담당 지점 = input 자유 입력 → branches fetch 불필요 (admin 승인 시 매핑) */
     /* 2026-05-28: GA 분기 지점/팀 select 듀얼 폐기 → 단일 input.
        branches/teams fetch + populateBranchSelect + loadTeamsByBranch 호출 제거. */
   } catch (e) {
@@ -818,37 +815,24 @@ function populateInsurerSelect(insurers) {
   }
 }
 
-/* 2026-05-30: 보험사 임직원 담당 지점 멀티 선택 (branches → 가입 희망, admin 승인 시 매핑) */
-function _escBr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function _branchOptionsHtml(branches){
-  var html = '<option value="">지점 선택</option>';
-  for (var i = 0; i < branches.length; i++) {
-    html += '<option value="' + branches[i].id + '">' + _escBr(branches[i].name) + ' (' + _escBr(branches[i].ga_org_name || '') + ')</option>';
-  }
-  return html;
-}
-function populateBranchSelects(branches){
-  window._branchOptHtml = _branchOptionsHtml(branches || []);
-  var sels = document.querySelectorAll('.insurer-branch-sel');
-  for (var i = 0; i < sels.length; i++) sels[i].innerHTML = window._branchOptHtml;
-}
+/* 2026-05-30 B안: 보험사 임직원 담당 지점 = input 자유 입력 (멀티, branch_id는 admin 승인 시 매핑) */
 window.addInsurerBranchRow = function(){
   var rows = document.getElementById('insurer-branch-rows');
   if (!rows) return;
   var row = document.createElement('div');
   row.className = 'insurer-branch-row';
-  row.innerHTML = '<select class="auth-select insurer-branch-sel">' + (window._branchOptHtml || '<option value="">지점 선택</option>') + '</select>'
+  row.innerHTML = '<input class="auth-input insurer-branch-inp" type="text" placeholder="담당 지점 입력" maxlength="50">'
     + '<button type="button" class="auth-branch-del" onclick="this.parentElement.remove()" aria-label="담당 지점 삭제">&#10005;</button>';
   rows.appendChild(row);
 };
-function _collectInsurerBranchIds(){
-  var sels = document.querySelectorAll('.insurer-branch-sel');
-  var ids = [], seen = {};
-  for (var i = 0; i < sels.length; i++){
-    var v = sels[i].value;
-    if (v && !seen[v]) { seen[v] = 1; ids.push(v); }
+function _collectInsurerBranchNames(){
+  var inps = document.querySelectorAll('.insurer-branch-inp');
+  var names = [], seen = {};
+  for (var i = 0; i < inps.length; i++){
+    var v = (inps[i].value || '').trim();
+    if (v && !seen[v]) { seen[v] = 1; names.push(v); }
   }
-  return ids;
+  return names;
 }
 
 function populateBranchSelect(branches) {
@@ -1218,7 +1202,7 @@ function validateSignup() {
       ins.classList.remove('err'); document.getElementById('e-insurer').classList.remove('on');
     }
     /* 2026-05-30: 담당 지점 1개 이상 필수 */
-    if (_collectInsurerBranchIds().length === 0) {
+    if (_collectInsurerBranchNames().length === 0) {
       document.getElementById('e-insurer-branch').classList.add('on'); ok = false;
     } else {
       document.getElementById('e-insurer-branch').classList.remove('on');
@@ -1441,7 +1425,7 @@ async function updateInsurerProfile(accessToken) {
     branch_id:  '',
     team_id:    '',
     status:     'pending',
-    desired_branch_ids: _collectInsurerBranchIds()  /* 희망 담당 지점 — admin 승인 시 insurer_employee_branches 매핑 */
+    desired_branch_names: _collectInsurerBranchNames()  /* 희망 담당 지점명(자유 입력) — admin 승인 시 branches 매핑 */
   };
 
   try {
