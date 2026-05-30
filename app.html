@@ -1925,6 +1925,8 @@ function showView(key,options){options=options||{};if(key==='insurer-vault'&&typ
     var explicit = qs && qs.get('view');
     var role = getBootRole();
     var view = (explicit && VALID_VIEWS.indexOf(explicit) !== -1) ? explicit : firstViewFor(role);
+    /* insurer_*는 일반 view(home/myspace 등) 접근 불가 — 허용 외(explicit=home 포함)면 자료실 강제 */
+    if(role.indexOf('insurer_') === 0 && ['insurer-vault','voice','together'].indexOf(view) === -1) view = 'insurer-vault';
     /* insurer-vault 권한 가드 (insurer 또는 admin 아니면 home) */
     if(view === 'insurer-vault' && !(role === 'admin' || role.indexOf('insurer_') === 0)) view = 'home';
     if(typeof applyRoleClass === 'function') applyRoleClass();
