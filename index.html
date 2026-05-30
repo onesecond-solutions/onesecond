@@ -910,6 +910,16 @@ body {
                 </select>
                 <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
               </div>
+              <div class="auth-form-group" id="insurer-branches-group">
+                <label class="auth-label">담당 지점 <span class="req">*</span></label>
+                <div id="insurer-branch-rows">
+                  <div class="insurer-branch-row">
+                    <select class="auth-select insurer-branch-sel" onchange="clearFieldError('insurer-branches-group','e-insurer-branch')"><option value="">지점 선택</option></select>
+                  </div>
+                </div>
+                <button type="button" class="auth-add-branch" onclick="addInsurerBranchRow()">+ 담당 지점 추가</button>
+                <div class="auth-form-err" id="e-insurer-branch">담당 지점을 1개 이상 선택해 주세요.</div>
+              </div>
               <div class="domain-guide" id="domain-guide" style="display:none;">
                 💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다.
               </div>

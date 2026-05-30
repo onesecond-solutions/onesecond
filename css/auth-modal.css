@@ -159,6 +159,18 @@
   box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
 }
 
+/* 2026-05-30: placeholder 위계 — 입력값(primary) > 라벨(secondary) > placeholder(연함). */
+.auth-input::placeholder,
+.auth-select::placeholder { color: var(--color-text-placeholder); opacity: 1; }
+
+/* 2026-05-30: 보험사 임직원 담당 지점 멀티 선택 (branches) */
+.insurer-branch-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.insurer-branch-row .insurer-branch-sel { flex: 1; }
+.auth-branch-del { flex: 0 0 auto; width: 34px; height: 38px; border: 1px solid var(--color-border); border-radius: var(--radius); background: white; color: var(--color-text-tertiary); cursor: pointer; font-family: inherit; }
+.auth-branch-del:hover { color: var(--color-danger); border-color: var(--color-danger); }
+.auth-add-branch { margin-top: 2px; background: none; border: 0; color: var(--color-brand); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 4px 0; }
+.auth-add-branch:hover { text-decoration: underline; }
+
 .auth-pw-wrap { position: relative; }
 .auth-pw-toggle {
   position: absolute;
