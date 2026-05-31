@@ -125,6 +125,30 @@
     .ac-brand b, .ac-brand span, .ac-nav-item .lbl, .ac-nav-group-label{display:none;}
     .ac-grid.cols-2{grid-template-columns:1fr;}
   }
+
+  /* 가입 승인 */
+  .ac-approval-card{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;}
+  .ac-btn-primary{background:var(--ac);color:#fff;border-color:var(--ac);}
+  .ac-btn-primary:hover{background:var(--ach);color:#fff;}
+  .ac-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;
+    align-items:center;justify-content:center;padding:16px;z-index:9500;}
+  .ac-modal-overlay.on{display:flex;}
+  .ac-modal{width:100%;max-width:440px;background:var(--s1);border:1px solid var(--bd);
+    border-radius:var(--radius);padding:22px;max-height:88vh;overflow-y:auto;}
+  .ac-modal h3{font-size:17px;font-weight:800;margin-bottom:4px;}
+  .ac-modal-sub{font-size:13px;color:var(--ts);margin-bottom:16px;}
+  .ac-branch-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bd);
+    border-radius:var(--radius-sm);cursor:pointer;margin-bottom:8px;}
+  .ac-branch-opt.checked{border-color:var(--ac);background:rgba(99,102,241,0.08);}
+  .ac-branch-opt input{width:16px;height:16px;accent-color:var(--ac);}
+  .ac-modal-err{display:none;color:var(--err);font-size:13px;margin:8px 0;}
+  .ac-modal-err.on{display:block;}
+  .ac-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+  .ac-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--tp);color:var(--bg);font-size:14px;font-weight:600;padding:12px 22px;
+    border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9600;}
+  .ac-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 
 <div id="ac-root" data-theme="dark">
@@ -219,7 +243,12 @@
       </section>
 
       <!-- 나머지 view 골격 (데이터 연결 예정) -->
-      <section class="ac-view" data-view="approvals"><div class="ac-card ac-card-empty">가입 승인 — admin-approvals 로직 이식 예정</div></section>
+      <section class="ac-view" data-view="approvals">
+        <div class="ac-section-head"><i data-lucide="user-check"></i>
+          <h2>가입 승인</h2><span class="ac-section-sub" id="ac-appr-count">— 대기</span></div>
+        <p style="font-size:13px;color:var(--ts);margin-bottom:14px;">승인하면 계정이 활성화되고, 지점 매핑으로 자료실 글쓰기 권한이 부여됩니다.</p>
+        <div id="ac-approvals-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </section>
       <section class="ac-view" data-view="users"><div class="ac-card ac-card-empty">사용자 — fetchUsers 재사용 예정</div></section>
       <section class="ac-view" data-view="branches"><div class="ac-card ac-card-empty">지점 — branches×users 집계 예정</div></section>
       <section class="ac-view" data-view="posts"><div class="ac-card ac-card-empty">게시글 — fetchBoard 재사용 예정</div></section>
@@ -231,6 +260,23 @@
       <section class="ac-view" data-view="logs"><div class="ac-card ac-card-empty">로그 — activity_logs 재사용 예정</div></section>
     </div>
   </main>
+
+  <!-- 가입 승인 모달 -->
+  <div class="ac-modal-overlay" id="ac-modal-overlay">
+    <div class="ac-modal">
+      <h3>가입 승인</h3>
+      <div class="ac-modal-sub" id="ac-modal-sub"></div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">담당 지점 배정</div>
+      <div style="font-size:12px;color:var(--tf);margin-bottom:10px;">하나 이상 선택. 첫 번째가 대표 지점이 됩니다.</div>
+      <div id="ac-branch-list"></div>
+      <div class="ac-modal-err" id="ac-modal-err"></div>
+      <div class="ac-modal-actions">
+        <button class="ac-btn" id="ac-modal-cancel">취소</button>
+        <button class="ac-btn ac-btn-primary" id="ac-modal-confirm">승인 확정</button>
+      </div>
+    </div>
+  </div>
+  <div class="ac-toast" id="ac-toast"></div>
 </div>
 
 <script>
@@ -253,6 +299,7 @@
     var t = document.getElementById('ac-view-title');
     if(t && VIEW_TITLES[key]) t.textContent = VIEW_TITLES[key];
     if(key==='dashboard' && window.acLoadDashboard) window.acLoadDashboard();
+    if(key==='approvals' && window.acLoadApprovals) window.acLoadApprovals();
     if(window.lucide) window.lucide.createIcons();
   };
 
@@ -267,9 +314,12 @@
     try{ localStorage.setItem('ac_theme', cur); }catch(e){}
   };
 
-  // 안전장치: ESC → 서비스 복귀
+  // 안전장치: ESC → 모달 열려 있으면 모달만 닫고, 아니면 서비스 복귀
   document.addEventListener('keydown', function(e){
-    if(e.key==='Escape') window.acGoService();
+    if(e.key!=='Escape') return;
+    var mo=document.getElementById('ac-modal-overlay');
+    if(mo && mo.classList.contains('on')){ acCloseApproval(); return; }
+    window.acGoService();
   });
 
   // ════════════════════════════════════════════════════════════════════
@@ -362,6 +412,86 @@
       (rows || '<div class="ac-card-empty">지점 없음</div>');
   }
 
+  // ── 가입 승인 (admin-approvals 흡수 + approve_user/assign_branch 로깅) ──
+  var _appr = { pending:[], branches:[], sel:null };
+  function _fmtDate(iso){ if(!iso) return ''; var d=new Date(iso); if(isNaN(d.getTime())) return '';
+    var p=function(n){return (n<10?'0':'')+n;};
+    return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes()); }
+  var _toastTimer=null;
+  function acToast(msg,isErr){ var el=document.getElementById('ac-toast'); if(!el) return;
+    el.textContent=msg; el.className='ac-toast on'+(isErr?' err':'');
+    clearTimeout(_toastTimer); _toastTimer=setTimeout(function(){ el.className='ac-toast'; },2600); }
+
+  window.acLoadApprovals = async function(){
+    var area=document.getElementById('ac-approvals-list'); if(!area) return;
+    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    _appr.branches = await _rows('branches?select=id,name,ga_org_name&order=name.asc');
+    var rows = await _rows('users?status=eq.pending&role=like.insurer_*&select=id,name,company,role,email,created_at&order=created_at.asc');
+    _appr.pending = rows;
+    var cnt=document.getElementById('ac-appr-count'); if(cnt) cnt.textContent=rows.length+'건 대기';
+    if(!rows.length){ area.innerHTML='<div class="ac-card-empty">대기 중인 가입 신청이 없습니다</div>'; return; }
+    var RL=(window.ROLE_LABEL||{});
+    area.innerHTML=rows.map(function(u){
+      return '<div class="ac-approval-card"><div>'+
+        '<div style="font-weight:700;">'+esc(u.name||'(이름 없음)')+' <span class="ac-badge medium">'+esc(RL[u.role]||u.role||'')+'</span></div>'+
+        '<div style="font-size:13px;color:var(--ts);margin-top:4px;">'+esc(u.company||'-')+' · '+esc(u.email||'')+'</div>'+
+        '<div style="font-size:12px;color:var(--tf);margin-top:3px;">신청 '+esc(_fmtDate(u.created_at))+'</div></div>'+
+        '<button class="ac-btn ac-btn-primary" data-appr="'+esc(u.id)+'">승인</button></div>';
+    }).join('');
+    area.querySelectorAll('[data-appr]').forEach(function(b){
+      b.addEventListener('click',function(){ acOpenApproval(b.getAttribute('data-appr')); });
+    });
+  };
+
+  window.acOpenApproval = function(uid){
+    var u=_appr.pending.find(function(x){ return String(x.id)===String(uid); }); if(!u) return;
+    _appr.sel=u;
+    var RL=(window.ROLE_LABEL||{});
+    document.getElementById('ac-modal-sub').innerHTML='<b>'+esc(u.name||'')+'</b> · '+esc(u.company||'')+' · '+esc(RL[u.role]||u.role||'');
+    var bl=document.getElementById('ac-branch-list');
+    if(!_appr.branches.length){ bl.innerHTML='<div style="font-size:13px;color:var(--tf);">등록된 지점이 없습니다. 먼저 지점을 등록해 주세요.</div>'; }
+    else{
+      bl.innerHTML=_appr.branches.map(function(b){
+        return '<label class="ac-branch-opt"><input type="checkbox" value="'+esc(b.id)+'">'+
+          '<span><b>'+esc(b.name)+'</b> <span style="color:var(--ts);font-size:12px;">'+esc(b.ga_org_name||'')+'</span></span></label>';
+      }).join('');
+      bl.querySelectorAll('.ac-branch-opt input').forEach(function(cb){
+        cb.addEventListener('change',function(){ cb.closest('.ac-branch-opt').classList.toggle('checked',cb.checked); });
+      });
+    }
+    var err=document.getElementById('ac-modal-err'); err.className='ac-modal-err';
+    var cf=document.getElementById('ac-modal-confirm'); cf.disabled=false; cf.textContent='승인 확정';
+    document.getElementById('ac-modal-overlay').classList.add('on');
+  };
+  function acCloseApproval(){ document.getElementById('ac-modal-overlay').classList.remove('on'); _appr.sel=null; }
+
+  async function acConfirmApproval(){
+    var u=_appr.sel; if(!u) return;
+    var ids=Array.prototype.slice.call(document.querySelectorAll('#ac-branch-list input:checked')).map(function(c){return c.value;});
+    var err=document.getElementById('ac-modal-err');
+    if(!ids.length){ err.textContent='담당 지점을 하나 이상 선택해 주세요.'; err.className='ac-modal-err on'; return; }
+    var btn=document.getElementById('ac-modal-confirm'); btn.disabled=true; btn.textContent='승인 중…';
+    try{
+      var res=await window.db.fetch('/rest/v1/rpc/approve_insurer_user',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ p_user_id:u.id, p_branch_ids:ids })
+      });
+      if(!res.ok){ var m='승인 실패 ('+res.status+')';
+        try{ var j=await res.json(); if(j&&(j.message||j.hint)) m=j.message||j.hint; }catch(e){}
+        err.textContent=m; err.className='ac-modal-err on'; btn.disabled=false; btn.textContent='승인 확정'; return; }
+      // 운영 액션 로깅 (1차 카탈로그: approve_user + assign_branch)
+      if(window.db.logActivity){
+        window.db.logActivity('approve_user','user',u.id,'high',{ role:u.role, branch_ids:ids });
+        window.db.logActivity('assign_branch','branch',ids[0],'medium',{ user_id:u.id, branch_ids:ids });
+      }
+      _appr.pending=_appr.pending.filter(function(x){ return x.id!==u.id; });
+      acCloseApproval();
+      window.acLoadApprovals();
+      if(window.acLoadDashboard) window.acLoadDashboard();
+      acToast((u.name||'')+' 승인 완료');
+    }catch(e){ err.textContent='네트워크 오류'; err.className='ac-modal-err on'; btn.disabled=false; btn.textContent='승인 확정'; }
+  }
+
   window.acLoadDashboard = async function(){
     var [pending, unassigned, stale] = await Promise.all([
       _count('users?status=eq.pending&role=in.('+INSURER_ROLES+')&select=id'),
@@ -398,6 +528,9 @@
     var saved = localStorage.getItem('ac_theme');
     if(saved){ var r=document.getElementById('ac-root'); if(r) r.setAttribute('data-theme', saved); }
   }catch(e){}
+  var _mc=document.getElementById('ac-modal-cancel'); if(_mc) _mc.addEventListener('click',acCloseApproval);
+  var _mf=document.getElementById('ac-modal-confirm'); if(_mf) _mf.addEventListener('click',acConfirmApproval);
+  var _mo=document.getElementById('ac-modal-overlay'); if(_mo) _mo.addEventListener('click',function(e){ if(e.target===_mo) acCloseApproval(); });
   if(window.lucide) window.lucide.createIcons();
   if(window.acLoadDashboard) window.acLoadDashboard();
 })();
