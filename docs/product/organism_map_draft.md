@@ -44,6 +44,16 @@
 operation(운영) · urgent(긴급) · product(상품) · underwriting(인수) · education(교육) · event(일정) · etc(기타)
 → 작성 폼·단체방·지점게시판 칩 전부 이 7유형으로 통일. (옛 화면 칩 공지/전달사항/팀질문/자료공유 폐기)
 
+## 지점 게시판 — 더원지점 특수성 (2026-05-31 팀장님 사전 고지)
+- **작성자 = 지점장(ga_branch_manager)뿐 아니라 스텝(ga_staff) 공지도 포함 가능.**
+- 이유: **더원지점은 허브게시판이 없어서**, 지점 게시판이 그 역할 일부까지 떠안는 설계. 팀장님이 지점 게시판까지 염두에 둔 계획.
+- ⚠️ **이건 더원지점 기준. 타 지점은 상황 다를 수 있음 → 가정 금지** (중립 독립 SaaS 정합 [[ai_collaboration_priority]]).
+
+### 연결된 함의 (안 꼬이게 — 작업 진입 전 점검)
+1. **RLS 격차**: 현재 `team_notices` INSERT 정책 = `is_admin() OR role IN(ga_manager, ga_branch_manager)` → **스텝(ga_staff) 제외.** 스텝이 지점 게시판에 쓰려면 **RLS INSERT 정책에 ga_staff 추가** 필요 (DB 변경 = 승인 흐름).
+2. **진입점 격차**: 매니저룸 nav = GA限(실장·지점장·admin) → **스텝 진입 불가.** 스텝 작성 진입점은 매니저룸이 아닐 수 있음(지점 게시판 직접 / 별도 진입) → 정의 필요.
+3. 허브게시판(auto_hub) 구축 시 지점 게시판 역할 재조정 가능 (지금은 전환기 = 현실 반영).
+
 ## DB 파이프라인 = 이미 결재된 스펙 (재정의 금지)
 - **[[auto_hub_v1]]** (`docs/product/auto_hub_v1.md`) — 현장의 소리 → 허브 승급 → 원세컨화 → FTS+pgvector 검색. 2026-05-16 7건 결재.
 - **[[pdf_newsletter_v1]]** (`docs/product/pdf_newsletter_v1.md`) — 462 PDF 소식지 OCR → 구조화. 2026-05-16 결재.
