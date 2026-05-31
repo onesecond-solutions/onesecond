@@ -252,6 +252,7 @@
     });
     var t = document.getElementById('ac-view-title');
     if(t && VIEW_TITLES[key]) t.textContent = VIEW_TITLES[key];
+    if(key==='dashboard' && window.acLoadDashboard) window.acLoadDashboard();
     if(window.lucide) window.lucide.createIcons();
   };
 
@@ -271,11 +272,133 @@
     if(e.key==='Escape') window.acGoService();
   });
 
+  // ════════════════════════════════════════════════════════════════════
+  //  대시보드 데이터 연결 (신버전 pdnwgzneooyygfejrvbg, db.js 경유)
+  //  · 활성 = status=active 기준 (last_seen_at 미집계 회피)
+  //  · 집계 가능 항목만 실데이터 / 운영 액션 로깅 확대는 후속
+  // ════════════════════════════════════════════════════════════════════
+  var INSURER_ROLES = 'insurer_branch_manager,insurer_manager,insurer_member,insurer_staff';
+  var EVENT_LABEL = { login:'로그인', script_view:'스크립트 조회' };
+
+  function _isoAgo(ms){ return new Date(Date.now()-ms).toISOString(); }
+  function _kstMidnightISO(){
+    var k = new Date(Date.now()+9*3600000);
+    return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).toISOString();
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function _rel(iso){ if(!iso) return '-'; var m=(Date.now()-new Date(iso).getTime())/60000;
+    if(m<1) return '방금'; if(m<60) return Math.floor(m)+'분 전'; if(m<1440) return Math.floor(m/60)+'시간 전'; return Math.floor(m/1440)+'일 전'; }
+
+  async function _count(q){
+    try{ var r=await window.db.fetch('/rest/v1/'+q,{headers:{'Prefer':'count=exact'}});
+      return parseInt((r.headers.get('Content-Range')||'0-0/0').split('/')[1],10)||0; }
+    catch(e){ return null; }
+  }
+  async function _rows(q){
+    try{ var r=await window.db.fetch('/rest/v1/'+q); return r.ok ? await r.json() : []; }
+    catch(e){ return []; }
+  }
+
+  function _task(tag,cls,label,value,unit,view,btn){
+    return '<div class="ac-task"><div class="ac-task-meta">'+
+      '<span class="ac-badge '+cls+'">'+tag+'</span>'+
+      '<div class="ac-task-label">'+label+'</div>'+
+      '<div class="ac-task-value">'+(value==null?'—':value)+unit+'</div></div>'+
+      '<button class="ac-btn" onclick="acSwitchView(\''+view+'\')">'+esc(btn)+'</button></div>';
+  }
+  function renderTaskQueue(p,u,s){
+    var el=document.getElementById('ac-task-queue'); if(!el) return;
+    el.innerHTML =
+      _task(p>0?'CRITICAL':'NORMAL', p>0?'critical':'normal', '승인 대기', p, '건', 'approvals', '승인하러 가기')+
+      _task(u>0?'HIGH':'NORMAL', u>0?'high':'normal', '지점 미배정', u, '명', 'users', '사용자 관리')+
+      _task(s>0?'CRITICAL':'NORMAL', s>0?'critical':'normal', '장기 미처리(24h+)', s, '건', 'approvals', '확인');
+  }
+  function renderRisk(p,u,s){
+    var el=document.getElementById('ac-risk-alerts'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    var items=[];
+    if(s>0) items.push(['critical','CRITICAL','24시간 초과 미처리 승인 '+s+'건']);
+    if(u>0) items.push(['high','HIGH','지점 미배정 사용자 '+u+'명']);
+    if(p>0) items.push(['medium','MEDIUM','승인 대기 '+p+'건']);
+    if(!items.length){ el.innerHTML='<div class="ac-card-empty">현재 위험 신호 없음</div>'; return; }
+    el.innerHTML=items.map(function(i){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;">'+
+        '<span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
+    }).join('');
+  }
+  function renderActivity(logs){
+    var el=document.getElementById('ac-recent-activity'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    if(!logs || !logs.length){ el.innerHTML='<div class="ac-card-empty">최근 활동 없음</div>'; return; }
+    el.innerHTML=logs.map(function(l){
+      var label=EVENT_LABEL[l.event_type]||l.event_type||'활동';
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);">'+
+        '<span>'+esc(label)+(l.target_type?' · '+esc(l.target_type):'')+'</span>'+
+        '<span style="color:var(--tf);font-size:12px;">'+_rel(l.created_at)+'</span></div>';
+    }).join('');
+  }
+  function _stat(l,v){ return '<div><div style="font-size:12px;color:var(--tf);">'+l+'</div>'+
+    '<div style="font-size:20px;font-weight:800;">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
+  function renderService(total,active,nt,posts,scripts,lib){
+    var el=document.getElementById('ac-service-overview'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'+
+      _stat('총 사용자',total)+_stat('활성',active)+_stat('오늘 신규',nt)+
+      _stat('게시글',posts)+_stat('스크립트',scripts)+_stat('자료',lib)+'</div>';
+  }
+  function renderBranches(branches,users,unassigned){
+    var el=document.getElementById('ac-branch-overview'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    var cnt={}; (users||[]).forEach(function(u){ if(u.branch_id) cnt[u.branch_id]=(cnt[u.branch_id]||0)+1; });
+    var rows=(branches||[]).map(function(b){
+      var n=cnt[b.id]||0;
+      var badge=(n===0)?' <span class="ac-badge high">인원 0</span>':'';
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);">'+
+        '<span>'+esc(b.name)+' <span style="color:var(--tf);font-size:12px;">'+esc(b.ga_org_name||'')+'</span></span>'+
+        '<span>'+n+'명'+badge+'</span></div>';
+    }).join('');
+    el.innerHTML='<div style="margin-bottom:8px;color:var(--tf);font-size:12px;">전체 '+
+      (branches?branches.length:0)+'개 지점 · 미배정 '+(unassigned==null?'—':unassigned)+'명</div>'+
+      (rows || '<div class="ac-card-empty">지점 없음</div>');
+  }
+
+  window.acLoadDashboard = async function(){
+    var [pending, unassigned, stale] = await Promise.all([
+      _count('users?status=eq.pending&role=in.('+INSURER_ROLES+')&select=id'),
+      _count('users?status=eq.active&branch_id=is.null&select=id'),
+      _count('users?status=eq.pending&created_at=lt.'+_isoAgo(86400000)+'&select=id')
+    ]);
+    renderTaskQueue(pending, unassigned, stale);
+    renderRisk(pending, unassigned, stale);
+    var nb=document.getElementById('ac-nav-badge-approvals');
+    if(nb){ nb.textContent=pending||0; nb.style.display=(pending>0)?'inline-flex':'none'; }
+
+    var [total, active, newToday, posts, scripts, lib] = await Promise.all([
+      _count('users?select=id'),
+      _count('users?status=eq.active&select=id'),
+      _count('users?created_at=gte.'+_kstMidnightISO()+'&select=id'),
+      _count('posts?select=id'),
+      _count('scripts?select=id'),
+      _count('library?select=id')
+    ]);
+    renderService(total, active, newToday, posts, scripts, lib);
+
+    renderActivity(await _rows('activity_logs?select=id,user_id,event_type,target_type,created_at&order=created_at.desc&limit=8'));
+
+    var [branches, ubranch] = await Promise.all([
+      _rows('branches?select=id,name,ga_org_name,is_active'),
+      _rows('users?select=branch_id&status=eq.active')
+    ]);
+    renderBranches(branches, ubranch, unassigned);
+    if(window.lucide) window.lucide.createIcons();
+  };
+
   // 초기화
   try{
     var saved = localStorage.getItem('ac_theme');
     if(saved){ var r=document.getElementById('ac-root'); if(r) r.setAttribute('data-theme', saved); }
   }catch(e){}
   if(window.lucide) window.lucide.createIcons();
+  if(window.acLoadDashboard) window.acLoadDashboard();
 })();
 </script>
