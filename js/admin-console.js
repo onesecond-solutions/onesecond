@@ -56,12 +56,14 @@
     try{ localStorage.setItem('ac_theme', cur); }catch(e){}
   };
 
-  // 안전장치: ESC → 모달 열려 있으면 모달만 닫고, 아니면 서비스 복귀
+  // 안전장치: ESC → 모달 열려 있으면 모달만 닫음.
+  // 별도 페이지(ac-root)에서만 서비스 복귀까지. SPA(app.html)에선 모달만 닫고
+  // 페이지 이탈 안 함 (SPA 자체 ESC 핸들러가 검색/모달 등 처리).
   document.addEventListener('keydown', function(e){
     if(e.key!=='Escape') return;
     var mo=document.getElementById('ac-modal-overlay');
     if(mo && mo.classList.contains('on')){ acCloseApproval(); return; }
-    window.acGoService();
+    if(document.getElementById('ac-root')) window.acGoService();
   });
 
   // ════════════════════════════════════════════════════════════════════
@@ -397,16 +399,88 @@
   };
 
   // 초기화
-  try{
-    var saved = localStorage.getItem('ac_theme');
-    if(saved){ var r=document.getElementById('ac-root'); if(r) r.setAttribute('data-theme', saved); }
-  }catch(e){}
-  var _mc=document.getElementById('ac-modal-cancel'); if(_mc) _mc.addEventListener('click',acCloseApproval);
-  var _mf=document.getElementById('ac-modal-confirm'); if(_mf) _mf.addEventListener('click',acConfirmApproval);
-  var _mo=document.getElementById('ac-modal-overlay'); if(_mo) _mo.addEventListener('click',function(e){ if(e.target===_mo) acCloseApproval(); });
-  if(window.lucide) window.lucide.createIcons();
-  // 딥링크 ?view= 초기 진입 (admin-approvals 리다이렉트 등) / 없으면 대시보드
-  var _qv=null; try{ _qv=new URLSearchParams(location.search).get('view'); }catch(e){}
-  if(_qv && document.querySelector('.ac-nav-item[data-view="'+_qv+'"]')){ window.acSwitchView(_qv); }
-  else if(window.acLoadDashboard){ window.acLoadDashboard(); }
+  // ── 별도 페이지(admin-console.html) 전용 초기화 — #ac-root 있을 때만 ──
+  if(document.getElementById('ac-root')){
+    try{
+      var saved = localStorage.getItem('ac_theme');
+      if(saved){ var r=document.getElementById('ac-root'); if(r) r.setAttribute('data-theme', saved); }
+    }catch(e){}
+    var _mc=document.getElementById('ac-modal-cancel'); if(_mc) _mc.addEventListener('click',acCloseApproval);
+    var _mf=document.getElementById('ac-modal-confirm'); if(_mf) _mf.addEventListener('click',acConfirmApproval);
+    var _mo=document.getElementById('ac-modal-overlay'); if(_mo) _mo.addEventListener('click',function(e){ if(e.target===_mo) acCloseApproval(); });
+    if(window.lucide) window.lucide.createIcons();
+    // 딥링크 ?view= 초기 진입 (admin-approvals 리다이렉트 등) / 없으면 대시보드
+    var _qv=null; try{ _qv=new URLSearchParams(location.search).get('view'); }catch(e){}
+    if(_qv && document.querySelector('.ac-nav-item[data-view="'+_qv+'"]')){ window.acSwitchView(_qv); }
+    else if(window.acLoadDashboard){ window.acLoadDashboard(); }
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  SPA 흡수 (app.html #v-admin) — 2단 탭/칩 라우터 (2026-05-31 Phase 2)
+  //  · 탭 = 그룹(대시보드/운영/콘텐츠/시스템/로그) · 칩 = 항목
+  //  · 데이터 로딩(acLoad*)·승인 모달은 위 standalone 로직 그대로 재사용
+  // ════════════════════════════════════════════════════════════════════
+  var AC_GROUPS = {
+    dashboard:{}, logs:{},
+    ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점']] },
+    content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
+    system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
+  };
+  var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs',
+    approvals:'ops', users:'ops', branches:'ops',
+    posts:'content', comments:'content', library:'content',
+    menu:'system', notice:'system', settings:'system' };
+  var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
+    branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary' };
+  var AC_TAB_ORDER = ['dashboard','ops','content','system','logs'];
+
+  function _acSpaRoot(){ return document.getElementById('v-admin'); }
+
+  // 섹션 표시 + 탭/칩 동기화 + 데이터 로드 + URL 갱신 (단일 소스)
+  window.acGoSec = function(sec){
+    var root=_acSpaRoot(); if(!root) return;
+    sec = sec || 'dashboard';
+    var group = AC_SEC_GROUP[sec] || 'dashboard';
+    var g = AC_GROUPS[group];
+    // 탭 활성 (그룹 순서 기준)
+    var tabs = root.querySelectorAll('#ac-tabs .tab');
+    var gi = AC_TAB_ORDER.indexOf(group);
+    for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('on', i===gi);
+    // 칩 렌더 (그룹에 항목 있을 때만 — 없으면 비움 → :empty 숨김)
+    var chips = document.getElementById('ac-chips');
+    if(chips){
+      if(g && g.secs){
+        chips.innerHTML = g.secs.map(function(s){
+          return '<div class="chip'+(s[0]===sec?' on':'')+'" data-sec="'+s[0]+'" onclick="acGoSec(\''+s[0]+'\')">'+s[1]+'</div>';
+        }).join('');
+      } else { chips.innerHTML=''; }
+    }
+    // 섹션 표시
+    root.querySelectorAll('.ac-sec').forEach(function(s){ s.classList.toggle('on', s.getAttribute('data-sec')===sec); });
+    // 데이터 로드 (해당 섹션 로더 있으면)
+    var fn = AC_LOAD[sec]; if(fn && typeof window[fn]==='function') window[fn]();
+    // URL 갱신 (딥링크/새로고침/뒤로가기 정합)
+    try{ if(window.history && window.history.replaceState) window.history.replaceState({view:'admin'}, '', '?view=admin&sec='+encodeURIComponent(sec)); }catch(e){}
+    if(window.lucide) window.lucide.createIcons();
+  };
+
+  // 탭 클릭 → 그룹의 첫 섹션으로 (single 탭은 탭키=섹션키)
+  window.acTab = function(group){
+    var g = AC_GROUPS[group];
+    var first = (g && g.secs) ? g.secs[0][0] : group;
+    window.acGoSec(first);
+  };
+
+  // SPA 진입점 (app.html showView('admin') → _acLazy → 여기) — sec 딥링크 반영
+  window.acInitAdmin = function(sec){
+    var root=_acSpaRoot(); if(!root) return;
+    if(!window._acWired){
+      var c=document.getElementById('ac-modal-cancel'); if(c) c.addEventListener('click',acCloseApproval);
+      var f=document.getElementById('ac-modal-confirm'); if(f) f.addEventListener('click',acConfirmApproval);
+      var o=document.getElementById('ac-modal-overlay'); if(o) o.addEventListener('click',function(e){ if(e.target===o) acCloseApproval(); });
+      window._acWired = true;
+    }
+    if(window.lucide) window.lucide.createIcons();
+    window.acGoSec((sec && AC_SEC_GROUP[sec]) ? sec : 'dashboard');
+  };
 })();

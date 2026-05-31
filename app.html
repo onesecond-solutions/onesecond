@@ -840,6 +840,80 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
   .script-card.active{position:relative !important;width:auto;max-width:100%;max-height:none;transform:none !important;left:auto !important;right:auto !important;top:auto !important;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
   .script-card.active .script-card-full{max-height:60vh}
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   운영센터(어드민) — SPA D영역 흡수 컴포넌트 (#v-admin · 2026-05-31 Phase 2)
+   · 셸은 SPA 그대로(.side/.head/.body/.tabs/.chips), 본문만 어드민 콘텐츠
+   · 토큰은 app.html v2 인디고 그대로 사용(값 동일) + radius/shadow만 보강
+   ════════════════════════════════════════════════════════════════════ */
+#v-admin{ --radius-sm:8px; --radius:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.18); }
+:root[data-theme="light"] #v-admin{ --shadow:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.04); }
+#app:not(.is-admin) #v-admin{ display:none !important; }              /* 비-admin UI 가드(belt) */
+#v-admin .ac-sec{ display:none; }
+#v-admin .ac-sec.on{ display:block; }
+#v-admin #ac-chips:empty{ display:none; }                            /* 칩 없는 탭(대시보드/로그) */
+#v-admin .ac-section{ margin-bottom:28px; }
+#v-admin .ac-section-head{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+#v-admin .ac-section-head svg,#v-admin .ac-section-head i{ width:19px; height:19px; color:var(--ac); }
+#v-admin .ac-section-head h2{ font-size:15px; font-weight:800; letter-spacing:-.2px; }
+#v-admin .ac-section-sub{ font-size:12px; color:var(--tf); margin-left:4px; }
+#v-admin .ac-grid{ display:grid; gap:16px; }
+#v-admin .ac-grid.cols-2{ grid-template-columns:1fr 1fr; }
+#v-admin .ac-card-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+#v-admin .ac-card{ background:var(--s1); border:1px solid var(--bd); border-radius:14px; padding:18px; box-shadow:var(--shadow); }
+#v-admin .ac-card-empty{ display:flex; flex-direction:column; align-items:center; gap:9px; color:var(--tf); padding:34px 0; font-size:13px; text-align:center; }
+#v-admin .ac-card-empty svg,#v-admin .ac-card-empty i{ width:26px; height:26px; opacity:.45; }
+#v-admin .ac-badge{ display:inline-flex; align-items:center; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:.3px; }
+#v-admin .ac-badge.critical{ background:rgba(239,68,68,.16); color:var(--err); }
+#v-admin .ac-badge.high{ background:rgba(245,158,11,.16); color:var(--warn); }
+#v-admin .ac-badge.medium{ background:rgba(99,102,241,.16); color:var(--ach); }
+#v-admin .ac-badge.normal{ background:var(--s2); color:var(--ts); }
+#v-admin .ac-badge.r-admin{ background:rgba(167,139,250,.16); color:#A78BFA; }
+#v-admin .ac-badge.r-ga{ background:rgba(96,165,250,.16); color:#60A5FA; }
+#v-admin .ac-badge.r-insurer{ background:rgba(52,211,153,.16); color:#34D399; }
+#v-admin .ac-badge.st-active{ background:rgba(34,197,94,.16); color:var(--ok); }
+#v-admin .ac-badge.st-pending{ background:rgba(245,158,11,.16); color:var(--warn); }
+#v-admin .ac-task{ display:flex; align-items:center; gap:14px; background:var(--s1); border:1px solid var(--bd); border-left:3px solid var(--ac); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); }
+#v-admin .ac-task.critical{ border-left-color:var(--err); }
+#v-admin .ac-task.high{ border-left-color:var(--warn); }
+#v-admin .ac-task.medium{ border-left-color:var(--ach); }
+#v-admin .ac-task.normal{ border-left-color:var(--bd); }
+#v-admin .ac-task-meta{ flex:1; }
+#v-admin .ac-task-label{ font-size:13px; color:var(--ts); font-weight:600; margin-top:6px; }
+#v-admin .ac-task-value{ font-size:28px; font-weight:800; line-height:1.1; letter-spacing:-.5px; }
+#v-admin .ac-task .ac-btn{ flex-shrink:0; }
+#v-admin .ac-stat{ background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:13px 14px; }
+#v-admin .ac-stat-label{ font-size:12px; color:var(--tf); margin-bottom:5px; }
+#v-admin .ac-stat-value{ font-size:22px; font-weight:800; letter-spacing:-.5px; }
+#v-admin .ac-risk-row{ display:flex; align-items:center; gap:11px; padding:11px 14px; border:1px solid var(--bd); border-radius:10px; margin-bottom:8px; background:var(--s2); }
+#v-admin .ac-risk-row:last-child{ margin-bottom:0; }
+#v-admin .ac-entity{ background:var(--s1); border:1px solid var(--bd); border-left:3px solid var(--ac); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); }
+#v-admin .ac-entity.r-admin{ border-left-color:#A78BFA; }
+#v-admin .ac-entity.r-ga{ border-left-color:#60A5FA; }
+#v-admin .ac-entity.r-insurer{ border-left-color:#34D399; }
+#v-admin .ac-entity-name{ font-size:15px; font-weight:700; margin-top:9px; letter-spacing:-.2px; }
+#v-admin .ac-entity-meta{ font-size:13px; color:var(--ts); margin-top:5px; }
+#v-admin .ac-entity-sub{ font-size:12px; color:var(--tf); margin-top:4px; }
+#v-admin .ac-btn{ display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:8px; border:1px solid var(--bd); background:var(--s2); color:var(--tp); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+#v-admin .ac-btn:hover{ border-color:var(--ac); color:var(--ac); }
+#v-admin .ac-btn-primary{ background:var(--ac); color:#fff; border-color:var(--ac); }
+#v-admin .ac-btn-primary:hover{ background:var(--ach); color:#fff; }
+#v-admin .ac-approval-card{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--s1); border:1px solid var(--bd); border-left:3px solid var(--ac); border-radius:12px; padding:16px 18px; margin-bottom:10px; box-shadow:var(--shadow); }
+#v-admin .ac-modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; padding:16px; z-index:9500; }
+#v-admin .ac-modal-overlay.on{ display:flex; }
+#v-admin .ac-modal{ width:100%; max-width:440px; background:var(--s1); border:1px solid var(--bd); border-radius:12px; padding:22px; max-height:88vh; overflow-y:auto; }
+#v-admin .ac-modal h3{ font-size:17px; font-weight:800; margin-bottom:4px; }
+#v-admin .ac-modal-sub{ font-size:13px; color:var(--ts); margin-bottom:16px; }
+#v-admin .ac-branch-opt{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--bd); border-radius:8px; cursor:pointer; margin-bottom:8px; }
+#v-admin .ac-branch-opt.checked{ border-color:var(--ac); background:rgba(99,102,241,.08); }
+#v-admin .ac-branch-opt input{ width:16px; height:16px; accent-color:var(--ac); }
+#v-admin .ac-modal-err{ display:none; color:var(--err); font-size:13px; margin:8px 0; }
+#v-admin .ac-modal-err.on{ display:block; }
+#v-admin .ac-modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
+#v-admin .ac-toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--tp); color:var(--bg); font-size:14px; font-weight:600; padding:12px 22px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; z-index:9600; }
+#v-admin .ac-toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+@media (max-width:600px){ #v-admin .ac-grid.cols-2,#v-admin .ac-card-grid{ grid-template-columns:1fr; } }
 </style>
 
 <!-- 2026-05-28: 포트원 V2 SDK (어제 PR #126 결제 자료 v1 → v2 이식) -->
@@ -876,7 +950,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav" id="nav-team" style="display:none" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
-    <div class="nav" id="nav-admin" style="display:none" onclick="window.location.href='/pages/admin-console.html?t='+Date.now()"><span class="ic">&#9881;</span><span class="lbl">어드민</span></div>
+    <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span></div>
   </nav>
   <div class="main">
     <header class="head">
@@ -1293,6 +1367,112 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <div class="wrap view" id="v-pricing">
       <div style="padding:40px;text-align:center;color:var(--ts)">로딩 중...</div>
      </div>
+     <!-- ════ 운영센터(어드민) — SPA D영역 흡수 (#v-admin · 2단 탭/칩) ════ -->
+     <div class="wrap view" id="v-admin">
+      <div class="ttl">운영센터 <span class="ac">· admin</span></div>
+      <div class="sub">플랫폼 운영 · 업무 처리 센터</div>
+      <div class="tabs" id="ac-tabs">
+        <div class="tab on" onclick="acTab('dashboard')">대시보드</div>
+        <div class="tab" onclick="acTab('ops')">운영</div>
+        <div class="tab" onclick="acTab('content')">콘텐츠</div>
+        <div class="tab" onclick="acTab('system')">시스템</div>
+        <div class="tab" onclick="acTab('logs')">로그</div>
+      </div>
+      <div class="chips" id="ac-chips"></div>
+
+      <!-- 대시보드 -->
+      <div class="ac-sec on" data-sec="dashboard">
+        <div class="ac-section">
+          <div class="ac-section-head"><i data-lucide="clipboard-list"></i>
+            <h2>오늘 해야 할 일</h2><span class="ac-section-sub">Task Queue</span></div>
+          <div class="ac-grid cols-2" id="ac-task-queue"><div class="ac-card ac-card-empty">불러오는 중…</div></div>
+        </div>
+        <div class="ac-section">
+          <div class="ac-section-head"><i data-lucide="shield-alert"></i>
+            <h2>운영 위험 신호</h2><span class="ac-section-sub">Risk Alerts</span></div>
+          <div class="ac-card ac-card-empty" id="ac-risk-alerts">불러오는 중…</div>
+        </div>
+        <div class="ac-section">
+          <div class="ac-section-head"><i data-lucide="clock"></i>
+            <h2>최근 활동</h2><span class="ac-section-sub">Recent Activity</span></div>
+          <div class="ac-card ac-card-empty" id="ac-recent-activity">불러오는 중…</div>
+        </div>
+        <div class="ac-grid cols-2">
+          <div class="ac-section">
+            <div class="ac-section-head"><i data-lucide="building-2"></i>
+              <h2>지점 현황</h2><span class="ac-section-sub">Branch Overview</span></div>
+            <div class="ac-card ac-card-empty" id="ac-branch-overview">불러오는 중…</div>
+          </div>
+          <div class="ac-section">
+            <div class="ac-section-head"><i data-lucide="bar-chart-3"></i>
+              <h2>운영 현황</h2><span class="ac-section-sub">Service Overview</span></div>
+            <div class="ac-card ac-card-empty" id="ac-service-overview">불러오는 중…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 운영: 가입 승인 -->
+      <div class="ac-sec" data-sec="approvals">
+        <div class="ac-section-head"><i data-lucide="user-check"></i>
+          <h2>가입 승인</h2><span class="ac-section-sub" id="ac-appr-count">— 대기</span></div>
+        <p style="font-size:13px;color:var(--ts);margin-bottom:14px;">승인하면 계정이 활성화되고, 지점 매핑으로 자료실 글쓰기 권한이 부여됩니다.</p>
+        <div id="ac-approvals-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+      <!-- 운영: 사용자 -->
+      <div class="ac-sec" data-sec="users">
+        <div class="ac-section-head"><i data-lucide="users"></i><h2>사용자</h2><span class="ac-section-sub" id="ac-users-count">—</span></div>
+        <div class="chips" id="ac-users-chips"></div>
+        <div class="ac-card-grid" id="ac-users-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+      <!-- 운영: 지점 -->
+      <div class="ac-sec" data-sec="branches">
+        <div class="ac-section-head"><i data-lucide="building-2"></i><h2>지점</h2><span class="ac-section-sub" id="ac-branches-count">—</span></div>
+        <div class="ac-card-grid" id="ac-branches-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+
+      <!-- 콘텐츠: 게시글 -->
+      <div class="ac-sec" data-sec="posts">
+        <div class="ac-section-head"><i data-lucide="file-text"></i><h2>게시글</h2><span class="ac-section-sub" id="ac-posts-count">—</span></div>
+        <div class="ac-card-grid" id="ac-posts-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+      <!-- 콘텐츠: 댓글 -->
+      <div class="ac-sec" data-sec="comments">
+        <div class="ac-section-head"><i data-lucide="message-square"></i><h2>댓글</h2><span class="ac-section-sub" id="ac-comments-count">—</span></div>
+        <div class="ac-card-grid" id="ac-comments-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+      <!-- 콘텐츠: 자료실 -->
+      <div class="ac-sec" data-sec="library">
+        <div class="ac-section-head"><i data-lucide="folder-kanban"></i><h2>자료실</h2><span class="ac-section-sub" id="ac-library-count">—</span></div>
+        <div class="chips" id="ac-library-chips"></div>
+        <div class="ac-card-grid" id="ac-library-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+
+      <!-- 시스템 (예정 골격) -->
+      <div class="ac-sec" data-sec="menu"><div class="ac-card ac-card-empty">메뉴 — menu_settings_by_role 연결 예정</div></div>
+      <div class="ac-sec" data-sec="notice"><div class="ac-card ac-card-empty">공지·배너 — app_settings 연결 예정</div></div>
+      <div class="ac-sec" data-sec="settings"><div class="ac-card ac-card-empty">설정 — app_settings 토글 재사용 예정</div></div>
+
+      <!-- 로그 (예정 골격) -->
+      <div class="ac-sec" data-sec="logs"><div class="ac-card ac-card-empty">로그 — activity_logs 재사용 예정</div></div>
+
+      <!-- 가입 승인 모달 (admin-console 흡수) -->
+      <div class="ac-modal-overlay" id="ac-modal-overlay">
+        <div class="ac-modal">
+          <h3>가입 승인</h3>
+          <div class="ac-modal-sub" id="ac-modal-sub"></div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px;">담당 지점 배정</div>
+          <div style="font-size:12px;color:var(--tf);margin-bottom:10px;">하나 이상 선택. 첫 번째가 대표 지점이 됩니다.</div>
+          <div id="ac-branch-list"></div>
+          <div class="ac-modal-err" id="ac-modal-err"></div>
+          <div class="ac-modal-actions">
+            <button class="ac-btn" id="ac-modal-cancel">취소</button>
+            <button class="ac-btn ac-btn-primary" id="ac-modal-confirm">승인 확정</button>
+          </div>
+        </div>
+      </div>
+      <div class="ac-toast" id="ac-toast"></div>
+     </div>
+
      <div class="wrap view" id="v-voice">
       <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
       <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
@@ -1734,6 +1914,24 @@ function _canSeeVault(){
   return r === 'admin' || r.indexOf('insurer_') === 0;
 }
 window._canSeeVault = _canSeeVault;
+/* 운영센터(어드민) view 게이팅 — admin 전용 (2026-05-31 SPA 흡수) */
+function _canSeeAdmin(){ return _getOsUserRole() === 'admin'; }
+window._canSeeAdmin = _canSeeAdmin;
+/* 어드민 콘솔 지연 로드: lucide 아이콘 → js/admin-console.js → 콜백 (admin 진입 시 1회) */
+function _acLazy(cb){
+  if(window._acLoaded){ if(cb) cb(); return; }
+  function _loadAdminJs(){
+    var s=document.createElement('script'); s.src='/js/admin-console.js';
+    s.onload=function(){ window._acLoaded=true; if(cb) cb(); };
+    s.onerror=function(){ console.error('admin-console.js 로드 실패'); };
+    document.body.appendChild(s);
+  }
+  if(window.lucide){ _loadAdminJs(); return; }
+  var l=document.createElement('script'); l.src='https://unpkg.com/lucide@latest';
+  l.onload=_loadAdminJs; l.onerror=_loadAdminJs;  /* lucide 실패해도 콘솔은 진입(아이콘만 빈자리) */
+  document.body.appendChild(l);
+}
+window._acLazy = _acLazy;
 function applyRoleClass(){
   var app = document.getElementById('app'); if(!app) return;
   var r = _getOsUserRole();
@@ -1944,11 +2142,11 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리',pricing:'요금제','insurer-vault':'보험사 자료실'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivInit==='function')ivInit();if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivInit==='function')ivInit();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
-  var VALID_VIEWS = ['home','myspace','scripts','quick','voice','together','news','team','pricing','insurer-vault'];
+  var VALID_VIEWS = ['home','myspace','scripts','quick','voice','together','news','team','pricing','insurer-vault','admin'];
   /* 2026-05-30 초기화 통합: role 확정 후 첫 view 1회 렌더 (FOUC 제거).
    * role 즉시 있으면 바로, 없으면 appstate:ready(loadUser 완료) 대기 + fallback. */
   function getBootRole(){ try { var r = (JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').role) || ''; return (r && r !== 'authenticated') ? r : ''; } catch(e){ return ''; } }  /* 'authenticated'=Supabase auth 기본 role(미확정) → loadUser가 public.users role 채울 때까지 대기 */
