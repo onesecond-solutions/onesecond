@@ -2292,8 +2292,19 @@ async function doDownload(){
   document.getElementById('tm').classList.remove('open');
   try{
     var resp=await fetch(imgs[cur]); var blob=await resp.blob();
+    var fname=(names[cur]||'image');
+    /* 저장 위치·파일명 선택 창(다른 이름으로 저장). Chrome/Edge 지원 → fallback 일반 다운로드 */
+    if(window.showSaveFilePicker){
+      try{
+        var ext=((blob.type.split('/')[1])||'png').replace('jpeg','jpg');
+        var suggested=/\.\w+$/.test(fname)?fname:(fname+'.'+ext);
+        var handle=await window.showSaveFilePicker({ suggestedName:suggested });
+        var w=await handle.createWritable(); await w.write(blob); await w.close();
+        toast('저장됨'); return;
+      }catch(e){ if(e&&e.name==='AbortError') return; /* 사용자가 취소 = 조용히 */ }
+    }
     var url=URL.createObjectURL(blob);
-    var a=document.createElement('a'); a.href=url; a.download=(names[cur]||'image');
+    var a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url); toast('이미지 저장됨');
   }catch(e){ toast('저장 실패 — 브라우저가 막았습니다'); }
