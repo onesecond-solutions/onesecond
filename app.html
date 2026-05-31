@@ -1401,8 +1401,14 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
       </div>
       <div class="lhead"><span class="cnt">우리 회사 자료 <b id="iv-cnt">0건</b></span></div>
-      <div class="mys-grid" id="iv-grid">
-        <div class="mys-news-empty">아직 등록된 자료가 없습니다.<br>+ 자료 등록으로 첫 자료를 올려보세요.</div>
+      <div class="split" id="iv-split">
+        <div class="col list-col">
+          <div class="list" id="iv-list"><div class="mys-news-empty">불러오는 중…</div></div>
+        </div>
+        <div class="col viewer-col">
+          <button class="backbtn" onclick="ivBackToList()">&#8249; 목록으로</button>
+          <div class="viewer" id="iv-viewer"><div class="mys-news-empty">왼쪽에서 자료를 선택하세요.</div></div>
+        </div>
       </div>
       </div><!-- /iv-saved -->
      </div>
@@ -1429,7 +1435,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           </div>
           <div class="iv-fld"><label>제목</label><input type="text" id="iv-f-title" placeholder="자료 제목을 입력하세요"></div>
           <div class="iv-fld"><label>내용</label><textarea id="iv-f-body" rows="5" placeholder="자료 내용을 입력하세요"></textarea></div>
-          <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개)</label><input type="file" id="iv-f-file" multiple></div>
+          <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개)</label><input type="file" id="iv-f-file" multiple onchange="ivPreviewFiles(this)"><div id="iv-f-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>
           <div class="iv-fld"><label>공개 범위</label>
             <div class="iv-types">
               <label class="iv-type"><input type="radio" name="iv-visibility" value="비공개" checked> 비공개 (내부 초안)</label>
@@ -2059,26 +2065,77 @@ window._ivCache = null;
 function ivEsc(s){ return String(s||'').replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
 function ivFmtDate(iso){ if(!iso)return ''; var d=new Date(iso); if(isNaN(d.getTime()))return ''; return (d.getMonth()+1)+'월 '+d.getDate()+'일'; }
 function ivStateCard(main, sub){ return '<div class="mys-news-empty">'+ivEsc(main)+(sub?'<br>'+ivEsc(sub):'')+'</div>'; }
+var IV_CAT_COLOR = {'긴급(마감)':'var(--t-event)','공지':'var(--t-uw)','소식지':'var(--t-product)','상품':'var(--t-uw)','인수':'var(--t-event)','기타':'var(--ts)'};
 function ivRender(rows, filterType){
-  var grid = document.getElementById('iv-grid'); if(!grid) return;
+  var listEl = document.getElementById('iv-list'); if(!listEl) return;
   var list = (filterType && filterType !== '전체') ? rows.filter(function(r){ return r.category === filterType; }) : rows;
-  if(!list.length){ grid.innerHTML = ivStateCard('아직 등록된 자료가 없습니다',''); return; }
-  var colorByCat = {'소식지':'var(--t-product)','상품 자료':'var(--t-uw)','인수 자료':'var(--t-event)','FAQ':'var(--ok)'};
-  var html = '';
-  for(var i=0;i<list.length;i++){
-    var r = list[i];
-    var cat = r.category || '자료';
-    var tc = colorByCat[cat] || 'var(--ac)';
-    html += '<div class="mys-card" style="--tc:'+tc+'">'
-      + '<span class="mys-badge">'+ivEsc(cat)+'</span>'
-      + '<div class="mys-ttl">'+ivEsc(r.title || '제목 없음')+'</div>'
-      + '<div class="mys-meta">'+ivFmtDate(r.created_at)+(r.author_name ? ' · '+ivEsc(r.author_name) : '')+'</div>'
-      + '</div>';
+  window._ivFiltered = list;
+  var cnt = document.getElementById('iv-cnt'); if(cnt) cnt.textContent = list.length + '건';
+  if(!list.length){
+    listEl.innerHTML = '<div class="mys-news-empty">아직 등록된 자료가 없습니다.</div>';
+    var vv = document.getElementById('iv-viewer'); if(vv) vv.innerHTML = '<div class="mys-news-empty">등록된 자료가 없습니다.</div>';
+    return;
   }
-  grid.innerHTML = html;
+  listEl.innerHTML = list.map(function(r,i){
+    var cat = r.category || '자료'; var tc = IV_CAT_COLOR[cat] || 'var(--ac)';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="ivOpenDetail('+i+')" style="--tc:'+tc+'">'
+      + '<span class="badge">'+ivEsc(cat)+'</span>'
+      + '<div class="it">'+ivEsc(r.title || '제목 없음')+'</div>'
+      + '<div class="id">'+ivFmtDate(r.created_at)+(r.author_name ? ' · '+ivEsc(r.author_name) : '')+'</div></div>';
+  }).join('');
+  ivOpenDetail(0, true);  /* 최신(맨 위) 자동 표시. 모바일은 목록 유지 */
 }
+function ivOpenDetail(idx, keepList){
+  var list = window._ivFiltered || []; var r = list[idx]; if(!r) return;
+  var v = document.getElementById('iv-viewer'); if(!v) return;
+  var cat = r.category || '자료';
+  var atts = '';
+  if(r.attachments && r.attachments.length){
+    atts = '<div class="atts"><div class="alabel">첨부 '+r.attachments.length+'</div><div class="athumbs">'
+      + r.attachments.map(function(a){ var nm = (a && (a.name || a.url)) || a || '첨부'; return '<div class="att-file" style="padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82em;color:var(--ts)">&#128206; '+ivEsc(String(nm).split('/').pop())+'</div>'; }).join('')+'</div></div>';
+  }
+  v.innerHTML = '<span class="vbadge">'+ivEsc(cat)+'</span>'
+    + '<div class="vttl">'+ivEsc(r.title || '제목 없음')+'</div>'
+    + '<div class="vmeta">'+ivFmtDate(r.created_at)+(r.author_name ? ' · '+ivEsc(r.author_name) : '')+'</div>'
+    + '<div class="vbody">'+ivEsc(r.content || '').replace(/\n/g,'<br>')+atts+'</div>';
+  var items = document.querySelectorAll('#iv-list .item');
+  for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
+  if(!keepList && window.innerWidth <= 1024){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.add('show-viewer'); }
+}
+function ivBackToList(){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.remove('show-viewer'); }
+window.ivOpenDetail = ivOpenDetail; window.ivBackToList = ivBackToList;
+/* 자료 등록 폼 — 첨부 파일 미리보기(이미지 썸네일 / 그 외 파일명) */
+function ivPreviewFiles(input){
+  var box = document.getElementById('iv-f-preview'); if(!box) return;
+  box.innerHTML = '';
+  var files = (input && input.files) || [];
+  for(var i=0;i<files.length;i++){
+    (function(f){
+      var isImg = /^image\//.test(f.type || '');
+      var cell = document.createElement('div');
+      cell.style.cssText = 'border:1px solid var(--bd);border-radius:9px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;font-size:0.68em;color:var(--ts);text-align:center';
+      if(isImg){
+        var img = document.createElement('img');
+        img.style.cssText = 'width:70px;height:54px;object-fit:cover;border-radius:6px';
+        try{ img.src = URL.createObjectURL(f); }catch(e){}
+        cell.appendChild(img);
+      } else {
+        var ic = document.createElement('div');
+        ic.style.cssText = 'width:70px;height:54px;display:flex;align-items:center;justify-content:center;font-size:1.6em';
+        ic.textContent = '📄';
+        cell.appendChild(ic);
+      }
+      var nm = document.createElement('div');
+      nm.style.cssText = 'width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      nm.textContent = f.name; nm.title = f.name;
+      cell.appendChild(nm);
+      box.appendChild(cell);
+    })(files[i]);
+  }
+}
+window.ivPreviewFiles = ivPreviewFiles;
 async function loadInsurerVault(){
-  var grid = document.getElementById('iv-grid'); if(!grid) return;
+  var grid = document.getElementById('iv-list'); if(!grid) return;
   var token = window.db && window.db.getToken && window.db.getToken();
   if(!token){ grid.innerHTML = ivStateCard('로그인 후 표시됩니다',''); return; }
   grid.innerHTML = ivStateCard('불러오는 중…','');
@@ -2100,6 +2157,8 @@ function ivFilter(el, type){
 }
 window.ivFilter = ivFilter;
 async function ivOpenWrite(){
+  var _pv=document.getElementById('iv-f-preview'); if(_pv) _pv.innerHTML='';
+  var _ff=document.getElementById('iv-f-file'); if(_ff) _ff.value='';
   var role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var isAdmin = (role === 'admin');
   var compFld = document.getElementById('iv-company-fld');
