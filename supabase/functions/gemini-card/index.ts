@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
     }
 
     return json({
-      brand: String(card.brand || "원세컨드 자료"),
+      brand: String(card.brand || ""),
       name: String(card.name || "핵심 요약"),
       rows: card.rows.slice(0, 6).map((r: { k?: unknown; v?: unknown; big?: unknown }) => ({
         k: String(r.k ?? ""),

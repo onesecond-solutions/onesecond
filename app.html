@@ -272,7 +272,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .thecard .crow .k{color:var(--ts);}
 .thecard .crow .v{color:var(--tp);font-weight:700;}
 .thecard .crow .v.big{color:var(--ac);font-size:1.0rem;}
-.thecard .cfoot{background:var(--s2);padding:0 18px 14px;font-size:0.625rem;color:var(--tf);}
+.thecard .csig{background:var(--s2);padding:10px 18px 6px;font-size:0.75rem;color:var(--tp);font-weight:700;border-top:0.5px solid var(--bd);}
+.thecard .cfoot{background:var(--s2);padding:4px 18px 14px;font-size:0.625rem;color:var(--tf);}
 .cardacts{display:flex;gap:8px;margin-top:14px;}
 .cardacts button{flex:1;height:38px;border-radius:9px;border:0.5px solid var(--bd);background:transparent;color:var(--tp);font-size:0.8125rem;font-weight:600;cursor:pointer;}
 .cardacts button.prim{background:var(--ac);border-color:var(--ac);color:#fff;}
@@ -2320,9 +2321,11 @@ var cards=[
 ];
 /* Gemini 카드 결과(window._genCard) 또는 데모(cards[cur]) 렌더. _genCard = 동적 데이터라 escape. */
 function _escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function renderCard(){var c=window._genCard||cards[cur];if(!c){document.getElementById('thecard').innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ts);">카드 내용을 불러오지 못했습니다.</div>';return;}var E=window._genCard?_escHtml:function(x){return x==null?'':x;};document.querySelector('#cm .ch span').innerHTML='카드 만들기 — 「'+_escHtml(names[cur])+'」';var h='<div class="ctop"><div class="cbrand">'+E(c.brand)+'</div><div class="cname">'+E(c.name)+'</div></div><div class="cbody">';
+function renderCard(){var c=window._genCard||cards[cur];if(!c){document.getElementById('thecard').innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ts);">카드 내용을 불러오지 못했습니다.</div>';return;}var E=window._genCard?_escHtml:function(x){return x==null?'':x;};document.querySelector('#cm .ch span').innerHTML='카드 만들기 — 「'+_escHtml(names[cur])+'」';var b=E(c.brand);var h='<div class="ctop">'+(b?'<div class="cbrand">'+b+'</div>':'')+'<div class="cname">'+E(c.name)+'</div></div><div class="cbody">';
 c.rows.forEach(function(r){h+='<div class="crow"><span class="k">'+E(r[0])+'</span><span class="v'+(r[2]?' big':'')+'">'+E(r[1])+'</span></div>';});
-h+='</div><div class="cfoot">※ 원세컨드 · 상담 참고용 · 보장은 약관 기준</div>';
+var _me={};try{_me=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');}catch(e){}
+var _sig=(_me.name||_me.phone)?'<div class="csig">'+_escHtml(_me.name||'')+((_me.name&&_me.phone)?' · ':'')+_escHtml(_me.phone||'')+'</div>':'';
+h+='</div>'+_sig+'<div class="cfoot">※ 상담 참고용 · 보장은 약관 기준</div>';
 document.getElementById('thecard').innerHTML=h;}
 /* 라이트박스 딸깍 "카드 만들기" → 현재 이미지(imgs[cur])를 gemini-card 함수에 보내 핵심 카드 생성.
  * 키는 Edge Function secret에만 존재(앱 코드 0). 로딩/에러 모두 사람이 읽는 안내로 처리. */
@@ -2354,7 +2357,7 @@ async function openCard(){
     renderCard();
   }catch(e){ console.error('[gemini-card] 호출 실패',e); _cardErr('카드 생성 중 오류가 발생했습니다.'); }
 }
-function copyCardText(){var c=window._genCard||cards[cur];if(!c){toast('복사할 카드가 없습니다');return;}var lines=[c.brand,String(c.name).replace(/<br>/g,' ')];c.rows.forEach(function(r){lines.push(r[0]+': '+r[1]);});lines.push('※ 원세컨드 · 상담 참고용');var txt=lines.join('\n');if(copyTextFallback(txt)){toast('카드 텍스트 복사됨 — 톡에 붙여넣기');}else{toast('복사 실패 — 브라우저가 막았습니다');}}
+function copyCardText(){var c=window._genCard||cards[cur];if(!c){toast('복사할 카드가 없습니다');return;}var lines=[];if(c.brand)lines.push(c.brand);lines.push(String(c.name).replace(/<br>/g,' '));c.rows.forEach(function(r){lines.push(r[0]+': '+r[1]);});var _m={};try{_m=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');}catch(e){}if(_m.name||_m.phone)lines.push((_m.name||'')+((_m.name&&_m.phone)?' · ':'')+(_m.phone||''));lines.push('※ 상담 참고용');var txt=lines.join('\n');if(copyTextFallback(txt)){toast('카드 텍스트 복사됨 — 톡에 붙여넣기');}else{toast('복사 실패 — 브라우저가 막았습니다');}}
 async function renderCardCanvas(){
   var el=document.getElementById('thecard');
   return await html2canvas(el,{scale:2,backgroundColor:null,logging:false});
