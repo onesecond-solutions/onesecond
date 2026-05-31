@@ -4012,7 +4012,7 @@ function finalizeMakeCardFallbackText(){
 }
 var voiceTabData = {
   voice: {title:'보험 Q&A', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:10},
-  team: {title:'단체방', sub:'단체방 공지와 실무 공유 자리.', chips:['전체','공지','전달사항','팀 질문','자료 공유'], cnt:10,
+  team: {title:'단체방', sub:'실장 공지가 모이는 곳 (작성은 매니저룸에서).', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:10,
     posts:[
       {badge:'공지', tc:'t-event', title:'시청팀 5/15 회식 안내 (서울고깃집 19시)', meta:'5월 15일 17:10 · 한재성 실장'},
       {badge:'공지', tc:'t-event', title:'DB손보 송미정 매니저 휴무 (대직 공지)', meta:'5월 15일 09:23 · 한재성 실장'},
@@ -4042,7 +4042,7 @@ var voiceTabData = {
       {badge:'기타', tc:'t-uw', title:'시청팀 자리 정정 안내 (책상 자리 정리)', meta:'5월 12일 · 한재성 실장'}
     ]}
 };
-function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;if(d.posts.length>0)showTabPost(key,0);}if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();}
+function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;if(d.posts.length>0)showTabPost(key,0);}if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();if(key==='team'&&typeof loadTeamNotices==='function')loadTeamNotices();}
 
 /* 2026-05-29 PR #171: 스마트 게시판 보험사 소식지 read-only fetch */
 async function loadSmartNewsletters(){
@@ -4116,7 +4116,38 @@ async function loadSmartNewsletters(){
   }
 }
 window.loadSmartNewsletters = loadSmartNewsletters;
-function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title)+'<div class="answer"><div class="who">자료 자료</div>'+d.title+' 자료입니다. 상세 자료는 다음 단계에서 정정 자리.</div>';document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
+function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=p.real?(p.body||p.title):((p.body||p.title)+'<div class="answer"><div class="who">자료 자료</div>'+d.title+' 자료입니다. 상세 자료는 다음 단계에서 정정 자리.</div>');document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
+
+/* 현장의 소리 · 단체방 = team_notices 실데이터 + 7유형 정합 (2026-05-31, 매니저룸 작성 폼과 쓰기↔보여주기 맞춤)
+ * · read-only. scope=team_internal. RLS SELECT = 같은 team_id OR admin */
+var _ntType={operation:['운영','t-uw'],urgent:['긴급','t-event'],product:['상품','t-product'],underwriting:['인수','t-uw'],education:['교육','ok'],event:['일정','t-event'],etc:['기타','ts']};
+async function loadTeamNotices(){
+  var token=localStorage.getItem('os_token')||sessionStorage.getItem('os_token');
+  if(!token||!window.db||!window.db.fetch) return;
+  var list=document.getElementById('qlist');
+  try{
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.team_internal&deleted_at=is.null&select=notice_type,title,content,created_at,author_id&order=created_at.desc&limit=50');
+    if(!res.ok) return;
+    var rows=await res.json();
+    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
+    var nameMap={};
+    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,name'); if(ur.ok){ (await ur.json()).forEach(function(u){ nameMap[u.id]=u.name; }); } }catch(e){} }
+    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    var posts=rows.map(function(r){
+      var t=_ntType[r.notice_type]||['기타','ts'];
+      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
+      var who=nameMap[r.author_id]||'';
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,esc(who)].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>'), real:true};
+    });
+    voiceTabData.team.posts=posts;
+    var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
+    if(!list) return;
+    if(!posts.length){ list.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">아직 등록된 공지가 없습니다.<br>매니저룸에서 공지를 작성해보세요.</div>'; return; }
+    list.innerHTML=posts.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\'team\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>'; }).join('');
+    showTabPost('team',0);
+  }catch(e){}
+}
+window.loadTeamNotices=loadTeamNotices;
 /* ─────────────────────────────────────────────
    스크립트 view — v1 10 stage + 가로 정렬 + 오버레이 확장 (2026-05-27 갈아끼움)
    - 풀스크린 모달 통째 폐기 → 가로 정렬 카드 + 오버레이 확장
