@@ -123,12 +123,12 @@
     var el=document.getElementById('ac-risk-alerts'); if(!el) return;
     el.classList.remove('ac-card-empty');
     var items=[];
-    if(s>0) items.push(['critical','CRITICAL','24시간 초과 미처리 승인 '+s+'건']);
-    if(u>0) items.push(['high','HIGH','지점 미배정 사용자 '+u+'명']);
-    if(p>0) items.push(['medium','MEDIUM','승인 대기 '+p+'건']);
+    if(s>0) items.push(['critical','CRITICAL','24시간 초과 미처리 승인 '+s+'건','approvals']);
+    if(u>0) items.push(['high','HIGH','지점 미배정 사용자 '+u+'명','users']);
+    if(p>0) items.push(['medium','MEDIUM','승인 대기 '+p+'건','approvals']);
     if(!items.length){ el.innerHTML='<div class="ac-card-empty"><i data-lucide="shield-check"></i>현재 위험 신호 없음</div>'; return; }
     el.innerHTML=items.map(function(i){
-      return '<div class="ac-risk-row"><span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
+      return '<div class="ac-risk-row ac-clk" onclick="acGoSec(\''+i[3]+'\')"><span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
     }).join('');
   }
   function _hhmm(iso){ var t=new Date(iso); if(isNaN(t.getTime())) return '--:--';
@@ -157,14 +157,16 @@
         '<span>'+sentence+'</span></div>';
     }).join('');
   }
-  function _stat(l,v){ return '<div class="ac-stat"><div class="ac-stat-label">'+l+'</div>'+
-    '<div class="ac-stat-value">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
+  function _stat(l,v,sec){
+    var attr = sec ? 'class="ac-stat ac-clk" onclick="acGoSec(\''+sec+'\')"' : 'class="ac-stat"';
+    return '<div '+attr+'><div class="ac-stat-label">'+l+'</div>'+
+      '<div class="ac-stat-value">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
   function renderService(total,active,nt,posts,scripts,lib){
     var el=document.getElementById('ac-service-overview'); if(!el) return;
     el.classList.remove('ac-card-empty');
     el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'+
-      _stat('총 사용자',total)+_stat('활성',active)+_stat('오늘 신규',nt)+
-      _stat('게시글',posts)+_stat('스크립트',scripts)+_stat('자료',lib)+'</div>';
+      _stat('총 사용자',total,'users')+_stat('활성',active,'users')+_stat('오늘 신규',nt,'users')+
+      _stat('게시글',posts,'posts')+_stat('스크립트',scripts,'library')+_stat('자료',lib,'library')+'</div>';
   }
   function renderBranches(branches,users,unassigned){
     var el=document.getElementById('ac-branch-overview'); if(!el) return;
@@ -173,7 +175,7 @@
     var rows=(branches||[]).map(function(b){
       var n=cnt[b.id]||0;
       var badge=(n===0)?' <span class="ac-badge high">인원 0</span>':'';
-      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);">'+
+      return '<div class="ac-brow" onclick="acGoSec(\'branches\')" style="display:flex;justify-content:space-between;padding:7px 8px;border-bottom:1px solid var(--bd);">'+
         '<span>'+esc(b.name)+' <span style="color:var(--tf);font-size:12px;">'+esc(b.ga_org_name||'')+'</span></span>'+
         '<span>'+n+'명'+badge+'</span></div>';
     }).join('');

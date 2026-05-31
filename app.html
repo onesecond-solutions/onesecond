@@ -928,7 +928,15 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 @keyframes acSkel{ 0%{ background-position:100% 0 } 100%{ background-position:-100% 0 } }
 /* ── 사이드바 어드민 미처리 가입승인 배지 ── */
 .side .nav .nav-badge{ margin-left:auto; background:var(--err); color:#fff; font-size:0.62rem; font-weight:800; min-width:17px; height:17px; border-radius:9px; align-items:center; justify-content:center; padding:0 5px; line-height:1; }
-@media (prefers-reduced-motion: reduce){ #v-admin .ac-skel{ animation:none } #v-admin .ac-task:hover,#v-admin .ac-approval-card:hover{ transform:none } }
+/* ── 대시보드 드릴다운 클릭 어포던스 (운영현황·위험신호·지점행) ── */
+#v-admin .ac-clk{ cursor:pointer; }
+#v-admin .ac-stat.ac-clk{ transition:border-color .15s ease,transform .15s ease; }
+#v-admin .ac-stat.ac-clk:hover{ border-color:var(--ac); transform:translateY(-1px); }
+#v-admin .ac-risk-row.ac-clk{ transition:border-color .15s ease; }
+#v-admin .ac-risk-row.ac-clk:hover{ border-color:var(--ac); }
+#v-admin .ac-brow{ cursor:pointer; transition:background .12s ease; border-radius:6px; }
+#v-admin .ac-brow:hover{ background:var(--s2); }
+@media (prefers-reduced-motion: reduce){ #v-admin .ac-skel{ animation:none } #v-admin .ac-task:hover,#v-admin .ac-approval-card:hover,#v-admin .ac-stat.ac-clk:hover{ transform:none } }
 </style>
 
 <!-- 2026-05-28: 포트원 V2 SDK (어제 PR #126 결제 자료 v1 → v2 이식) -->
