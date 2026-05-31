@@ -291,7 +291,9 @@
     </nav>
     <div class="ac-nav-foot">
       <div class="ac-nav-item" onclick="acGoService()">
-        <i data-lucide="log-out"></i><span class="lbl">어드민 종료</span></div>
+        <i data-lucide="arrow-left"></i><span class="lbl">서비스로</span></div>
+      <div class="ac-nav-item" onclick="acLogout()">
+        <i data-lucide="log-out"></i><span class="lbl">로그아웃</span></div>
     </div>
   </aside>
 
@@ -432,6 +434,13 @@
 
   // 모바일 사이드바 토글 (햄버거·백드롭)
   window.acToggleSidebar = function(){ var r=document.getElementById('ac-root'); if(r) r.classList.toggle('msidebar'); };
+
+  // 로그아웃 (세션 종료 — app.html과 동일하게 Auth.logout)
+  window.acLogout = function(){
+    if(!confirm('로그아웃 하시겠습니까?')) return;
+    if(window.Auth && typeof window.Auth.logout === 'function'){ window.Auth.logout(); }
+    else { try{ localStorage.clear(); sessionStorage.clear(); }catch(e){} window.location.href='/pages/landing.html'; }
+  };
 
   // 테마 토글
   window.acToggleTheme = function(){
