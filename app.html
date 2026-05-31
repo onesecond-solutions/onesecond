@@ -1415,7 +1415,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <button class="iv-write-close" onclick="ivCloseWrite()" aria-label="닫기">&#10005;</button>
         </div>
         <div class="iv-write-body">
-          <div class="iv-fld"><label>회사</label><input type="text" id="iv-f-company" readonly></div>
+          <div class="iv-fld" id="iv-company-fld"><label>회사</label><input type="text" id="iv-f-company" readonly></div>
+          <div class="iv-fld" id="iv-insurer-fld" style="display:none"><label>보험사 선택 <span style="color:var(--ac)">· admin 대리 작성</span></label><select id="iv-f-insurer" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);font-size:0.9em"></select></div>
           <div class="iv-fld"><label>유형</label>
             <div class="iv-types">
               <label class="iv-type"><input type="radio" name="iv-type" value="긴급(마감)" checked> 긴급(마감)</label>
@@ -2098,8 +2099,30 @@ function ivFilter(el, type){
   if(window._ivCache) ivRender(window._ivCache, type);  /* PR-B1: category 필터 (캐시 기반) */
 }
 window.ivFilter = ivFilter;
-function ivOpenWrite(){
-  var fc = document.getElementById('iv-f-company'); if(fc) fc.value = _getOsUserCompany() || '우리 회사';
+async function ivOpenWrite(){
+  var role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
+  var isAdmin = (role === 'admin');
+  var compFld = document.getElementById('iv-company-fld');
+  var insFld  = document.getElementById('iv-insurer-fld');
+  var insSel  = document.getElementById('iv-f-insurer');
+  if(isAdmin){
+    /* admin 대리 작성: 회사 input 숨기고 보험사 선택 노출 + 목록 1회 로드 */
+    if(compFld) compFld.style.display = 'none';
+    if(insFld)  insFld.style.display = '';
+    if(insSel && !insSel.dataset.loaded && window.db && window.db.fetch){
+      try{
+        var r = await window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=id,name,type&order=type,name');
+        if(r.ok){ var list = await r.json();
+          insSel.innerHTML = (list||[]).map(function(x){ return '<option value="'+x.id+'">'+((x.name||'')+(x.type?(' ('+x.type+')'):''))+'</option>'; }).join('');
+          insSel.dataset.loaded = '1';
+        }
+      }catch(e){}
+    }
+  } else {
+    if(compFld) compFld.style.display = '';
+    if(insFld)  insFld.style.display = 'none';
+    var fc = document.getElementById('iv-f-company'); if(fc) fc.value = _getOsUserCompany() || '우리 회사';
+  }
   var m = document.getElementById('ivWriteModal'); if(m) m.style.display = 'flex';
 }
 window.ivOpenWrite = ivOpenWrite;
@@ -2114,7 +2137,11 @@ async function ivSubmit(){
   var token = window.db && window.db.getToken && window.db.getToken();
   var u = {};
   try { u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e){}
-  if(!token || !u.insurer_id){ alert('소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
+  if(!token){ alert('로그인이 필요합니다.'); return; }
+  var _role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
+  var _isAdmin = (_role === 'admin');
+  var insurerId = _isAdmin ? (((document.getElementById('iv-f-insurer')||{}).value)||'') : u.insurer_id;
+  if(!insurerId){ alert(_isAdmin ? '보험사를 선택해 주세요.' : '소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
   var typeEl = document.querySelector('input[name="iv-type"]:checked');
   var category = typeEl ? typeEl.value : '소식지';
   var title = (document.getElementById('iv-f-title').value || '').trim();
@@ -2122,7 +2149,7 @@ async function ivSubmit(){
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   var body = {
     board_type: 'insurer',
-    insurer_id: u.insurer_id,
+    insurer_id: insurerId,
     branch_id:  null,            /* MVP 전사 공지 */
     category:   category,
     title:      title,
