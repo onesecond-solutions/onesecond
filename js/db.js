@@ -142,13 +142,23 @@
   }
 
   // ── 7-b. 운영 액션 로깅 (운영센터 admin-console — activity_logs) ──────────
+  // event_type → severity 자동 매핑 (수동 입력 금지 — 설계서 §12-2)
+  var EVENT_SEVERITY = {
+    approve_user: 'high', assign_branch: 'medium', suspend_user: 'high', activate_user: 'high',
+    change_role: 'high', create_notice: 'normal', update_notice: 'normal', update_setting: 'high',
+    hide_post: 'medium', delete_post: 'high', delete_comment: 'medium', update_menu: 'medium',
+    create_branch: 'high', update_branch: 'medium', delete_branch: 'high',
+    login: 'normal', login_admin: 'high'
+  };
+
   /**
-   * window.db.logActivity(event_type, target_type, target_id, severity, metadata)
+   * window.db.logActivity(event_type, target_type, target_id, metadata)
    * 운영 액션 성공 직후 호출. 로깅 실패해도 원 액션에 영향 주지 않음(catch 무시).
+   * severity = EVENT_SEVERITY[event_type] 자동 부여 (수동 입력 금지, 설계서 §12-2).
    * metadata = id 계열만 저장 (표시용 이름 금지 — 이름 변경 시 과거 로그 무결성).
    * 카탈로그: docs/product/admin-console-operating-model.md §5
    */
-  async function logActivity(event_type, target_type, target_id, severity, metadata) {
+  async function logActivity(event_type, target_type, target_id, metadata) {
     try {
       var uid = (window.AppState && window.AppState.userId) || null;
       await dbFetch('/rest/v1/activity_logs', {
@@ -159,7 +169,7 @@
           event_type: event_type,
           target_type: target_type || null,
           target_id: (target_id != null) ? String(target_id) : null,
-          severity: severity || 'normal',
+          severity: EVENT_SEVERITY[event_type] || 'normal',
           metadata: metadata || null
         })
       });

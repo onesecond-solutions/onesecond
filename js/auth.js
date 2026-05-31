@@ -184,7 +184,7 @@
         var _isAdmin = false;
         try { _isAdmin = (JSON.parse(localStorage.getItem('os_user') || '{}').role === 'admin'); } catch (_e) {}
         if (window.db && window.db.logActivity) {
-          window.db.logActivity(_isAdmin ? 'login_admin' : 'login', null, null, _isAdmin ? 'high' : 'normal', null);
+          window.db.logActivity(_isAdmin ? 'login_admin' : 'login', null, null, null);
         }
       }
 

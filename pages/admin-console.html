@@ -481,8 +481,8 @@
         err.textContent=m; err.className='ac-modal-err on'; btn.disabled=false; btn.textContent='승인 확정'; return; }
       // 운영 액션 로깅 (1차 카탈로그: approve_user + assign_branch)
       if(window.db.logActivity){
-        window.db.logActivity('approve_user','user',u.id,'high',{ role:u.role, branch_ids:ids });
-        window.db.logActivity('assign_branch','branch',ids[0],'medium',{ user_id:u.id, branch_ids:ids });
+        window.db.logActivity('approve_user','user',u.id,{ role:u.role, branch_ids:ids });
+        window.db.logActivity('assign_branch','branch',ids[0],{ user_id:u.id, branch_ids:ids });
       }
       _appr.pending=_appr.pending.filter(function(x){ return x.id!==u.id; });
       acCloseApproval();

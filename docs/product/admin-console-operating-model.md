@@ -198,3 +198,35 @@ logActivity(event_type, target_type, target_id, severity, metadata)
 - **2차**: 게시글 · 댓글 · 자료실
 - **3차**: 메뉴 · 공지·배너 · 설정 · 로그
 - **보류**: 통계(RPC 선행) · 신고(post_reports 신설) · 결제(데이터 없음)
+
+---
+
+## 12. 구현 고정 사항 (2026-05-31 보강)
+
+### 12-1. event_type 네이밍 규칙
+- **`동사_대상`** 형식 고정 (approve_user / create_branch / update_notice …)
+- 규칙 유지 → 운영 피드 변환기가 단순해짐
+
+### 12-2. severity 자동 부여 (수동 입력 금지)
+- 시그니처 = `logActivity(event_type, target_type, target_id, metadata)` — **severity 인자 제거**
+- severity = `EVENT_SEVERITY[event_type]` 내부 매핑으로 자동 부여 (db.js)
+- 이유: approve_user를 normal로 잘못 넣는 사고 방지
+
+### 12-3. metadata actor_name 금지 (재확인)
+- id 계열만 (before_role / after_role / branch_id). 이름은 표시 시 users JOIN으로 변환.
+
+### 12-4. 운영 피드 조회 기준
+- 대시보드 운영 피드 = **최근 50건** 조회 후 severity(critical>high>medium>normal) 정렬
+- (대안: 최근 24시간 필터) — 6개월 전 로그는 불필요
+
+### 12-5. Risk Alerts 임계치 (구현자 공통 기준)
+| 신호 | 조건 | severity |
+|---|---|---|
+| 승인 대기 장기 | pending AND created_at 24h 초과 ≥1 | critical |
+| 지점 미배정 | status=active AND branch_id IS NULL ≥1 | high |
+| 신규 가입 정체 | 최근 24h 신규 0건 | medium |
+| 인원 0 지점 | 인원 0명 지점 존재 | medium |
+
+### 12-6. 구현 우선순위 (MVP)
+1. 운영 피드 변환 계층 → 2. Task Queue → 3. Risk Alerts → 4. Branch Overview → 5. Service Overview
+- 2차 이벤트(댓글 삭제·게시글 숨김 로깅 등)는 지금 하지 않음 — 핵심은 "지금 처리할 일" 가시화
