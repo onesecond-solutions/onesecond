@@ -186,7 +186,7 @@
   function _rgrp(r){ return r==='admin' ? 'admin' : ((r && r.indexOf('insurer_')===0) ? 'insurer' : 'ga'); }
   window.acLoadUsers = async function(){
     var area=document.getElementById('ac-users-list'); if(!area) return;
-    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
     _usersAll = await _rows('users?select=id,name,email,role,company,status,created_at&order=created_at.desc&limit=300');
     var cnt=document.getElementById('ac-users-count'); if(cnt) cnt.textContent=_usersAll.length+'명';
     renderUserChips(); renderUserCards();
@@ -220,7 +220,7 @@
   // ── 지점 view (지점 카드 + 소속 인원) ──
   window.acLoadBranches = async function(){
     var area=document.getElementById('ac-branches-list'); if(!area) return;
-    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
     var bs=await _rows('branches?select=id,name,ga_org_name,is_active&order=name.asc');
     var us=await _rows('users?select=branch_id&status=eq.active');
     var cnt={}; us.forEach(function(u){ if(u.branch_id) cnt[u.branch_id]=(cnt[u.branch_id]||0)+1; });
@@ -240,7 +240,7 @@
     manager_notice:'공지', manager_lounge:'매니저 라운지', archive_legacy:'아카이브' };
   window.acLoadPosts = async function(){
     var area=document.getElementById('ac-posts-list'); if(!area) return;
-    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
     var rows=await _rows('posts?select=id,title,board_type,created_at&order=created_at.desc&limit=100');
     var c=document.getElementById('ac-posts-count'); if(c) c.textContent=rows.length+'건';
     if(!rows.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="file-text"></i>게시글 없음</div>'; if(window.lucide) window.lucide.createIcons(); return; }
@@ -253,7 +253,7 @@
   // 댓글: 본문 컬럼 미확인 → 최소 구성(후속 본문 보강)
   window.acLoadComments = async function(){
     var area=document.getElementById('ac-comments-list'); if(!area) return;
-    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
     var rows=await _rows('comments?select=id,created_at&order=created_at.desc&limit=100');
     var c=document.getElementById('ac-comments-count'); if(c) c.textContent=rows.length+'건';
     if(!rows.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="message-square"></i>댓글 없음</div>'; if(window.lucide) window.lucide.createIcons(); return; }
@@ -273,7 +273,7 @@
   }
   async function loadLibList(){
     var area=document.getElementById('ac-library-list'); if(!area) return;
-    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
     var rows, label;
     if(_libFilter==='scripts'){ rows=await _rows('scripts?select=id,title,stage,created_at&order=created_at.desc&limit=100'); label='스크립트'; }
     else { rows=await _rows('library?select=id,title,created_at&order=created_at.desc&limit=100'); label='자료'; }
@@ -299,7 +299,7 @@
 
   window.acLoadApprovals = async function(){
     var area=document.getElementById('ac-approvals-list'); if(!area) return;
-    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
     _appr.branches = await _rows('branches?select=id,name,ga_org_name&order=name.asc');
     var rows = await _rows('users?status=eq.pending&role=like.insurer_*&select=id,name,company,role,email,created_at&order=created_at.asc');
     _appr.pending = rows;
@@ -363,6 +363,7 @@
       acCloseApproval();
       window.acLoadApprovals();
       if(window.acLoadDashboard) window.acLoadDashboard();
+      if(window._refreshAdminBadge) window._refreshAdminBadge();  /* 승인 후 사이드바 배지 즉시 갱신 */
       acToast((u.name||'')+' 승인 완료');
     }catch(e){ err.textContent='네트워크 오류'; err.className='ac-modal-err on'; btn.disabled=false; btn.textContent='승인 확정'; }
   }
@@ -377,6 +378,7 @@
     renderRisk(pending, unassigned, stale);
     var nb=document.getElementById('ac-nav-badge-approvals');
     if(nb){ nb.textContent=pending||0; nb.style.display=(pending>0)?'inline-flex':'none'; }
+    if(window._refreshAdminBadge) window._refreshAdminBadge(pending);  /* SPA 사이드바 배지 동기화 */
 
     var [total, active, newToday, posts, scripts, lib] = await Promise.all([
       _count('users?select=id'),

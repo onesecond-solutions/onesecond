@@ -914,6 +914,20 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 #v-admin .ac-toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--tp); color:var(--bg); font-size:14px; font-weight:600; padding:12px 22px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; z-index:9600; }
 #v-admin .ac-toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
 @media (max-width:600px){ #v-admin .ac-grid.cols-2,#v-admin .ac-card-grid{ grid-template-columns:1fr; } }
+/* ── 디자인 회복: hover lift · 전환 · 포커스 링 (SPA home-recent-card 패턴) ── */
+#v-admin .ac-task,#v-admin .ac-entity,#v-admin .ac-approval-card{ transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease; }
+#v-admin .ac-entity:hover{ border-color:var(--ac); }
+#v-admin .ac-task:hover,#v-admin .ac-approval-card:hover{ transform:translateY(-1px); border-color:var(--ac); }
+#v-admin .ac-btn{ transition:border-color .15s ease,color .15s ease,background .15s ease; }
+#v-admin .tabs .tab,#v-admin .chips .chip{ transition:color .15s ease,background .15s ease,border-color .15s ease; }
+#v-admin .ac-btn:focus-visible,#v-admin .chips .chip:focus-visible{ outline:2px solid var(--ac); outline-offset:2px; }
+/* ── 로딩 스켈레톤 (SPA skelPulse 패턴) ── */
+#v-admin .ac-skel-wrap{ display:flex; flex-direction:column; gap:8px; }
+#v-admin .ac-skel{ height:46px; border-radius:10px; background:linear-gradient(90deg,var(--s2),var(--s1),var(--s2)); background-size:200% 100%; animation:acSkel 1.4s ease-in-out infinite; }
+@keyframes acSkel{ 0%{ background-position:100% 0 } 100%{ background-position:-100% 0 } }
+/* ── 사이드바 어드민 미처리 가입승인 배지 ── */
+.side .nav .nav-badge{ margin-left:auto; background:var(--err); color:#fff; font-size:0.62rem; font-weight:800; min-width:17px; height:17px; border-radius:9px; align-items:center; justify-content:center; padding:0 5px; line-height:1; }
+@media (prefers-reduced-motion: reduce){ #v-admin .ac-skel{ animation:none } #v-admin .ac-task:hover,#v-admin .ac-approval-card:hover{ transform:none } }
 </style>
 
 <!-- 2026-05-28: 포트원 V2 SDK (어제 PR #126 결제 자료 v1 → v2 이식) -->
@@ -950,7 +964,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav" id="nav-team" style="display:none" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
-    <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span></div>
+    <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
   </nav>
   <div class="main">
     <header class="head">
@@ -1917,6 +1931,16 @@ window._canSeeVault = _canSeeVault;
 /* 운영센터(어드민) view 게이팅 — admin 전용 (2026-05-31 SPA 흡수) */
 function _canSeeAdmin(){ return _getOsUserRole() === 'admin'; }
 window._canSeeAdmin = _canSeeAdmin;
+/* 어드민 사이드바 미처리 가입승인 배지 (진입 유도) — admin 전용. count 주면 그대로, 없으면 직접 조회 */
+window._refreshAdminBadge = function(count){
+  var b = document.getElementById('nav-admin-badge'); if(!b) return;
+  function paint(n){ n = n || 0; b.textContent = (n > 99 ? '99+' : n); b.style.display = (n > 0) ? 'inline-flex' : 'none'; }
+  if(typeof count === 'number'){ paint(count); return; }
+  if(_getOsUserRole() !== 'admin' || !window.db || !window.db.fetch) return;
+  window.db.fetch('/rest/v1/users?status=eq.pending&role=like.insurer_*&select=id', { headers:{ 'Prefer':'count=exact' } })
+    .then(function(r){ var n = parseInt((r.headers.get('Content-Range') || '0-0/0').split('/')[1], 10) || 0; paint(n); })
+    .catch(function(){});
+};
 /* 어드민 콘솔 지연 로드: lucide 아이콘 → js/admin-console.js → 콜백 (admin 진입 시 1회) */
 function _acLazy(cb){
   if(window._acLoaded){ if(cb) cb(); return; }
@@ -1941,6 +1965,7 @@ function applyRoleClass(){
   /* nav 노출 (nav-admin/nav-team polling 폐기 → role 확정 시 일괄) */
   var na = document.getElementById('nav-admin');
   if(na) na.style.display = (r === 'admin') ? '' : 'none';
+  if(r === 'admin' && window._refreshAdminBadge) window._refreshAdminBadge();
   var nt = document.getElementById('nav-team');
   var mgr = ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
   if(nt) nt.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
