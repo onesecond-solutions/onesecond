@@ -15,7 +15,8 @@
 
   // 라우터
   window.acSwitchView = function(key){
-    var root = document.getElementById('ac-root'); if(!root) return;
+    var root = document.getElementById('ac-root');
+    if(!root){ if(window.acGoSec) window.acGoSec(key); return; }  /* SPA(app.html #v-admin): 2단 탭/칩 라우터로 위임 */
     root.querySelectorAll('.ac-view').forEach(function(v){
       v.classList.toggle('active', v.getAttribute('data-view')===key);
     });
