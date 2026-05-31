@@ -109,6 +109,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
   .mys-toolbar .chip{flex-shrink:0;padding:8px 14px;font-size:0.85rem;min-height:36px;display:inline-flex;align-items:center}
 }
 .split{flex:1;min-height:0;display:grid;grid-template-columns:330px 1fr;gap:16px;overflow:hidden;padding-bottom:18px;}
+/* 자료실 split 사이즈 정합 — 현장의 소리와 동일(부모 flex 컬럼 체인 복원) */
+#v-insurer-vault.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+#iv-saved{flex:1;min-height:0;display:flex;flex-direction:column;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .list-col .lhead{flex-shrink:0;}
 .list{overflow-y:auto;flex:1;min-height:0;}
@@ -2157,9 +2160,8 @@ async function loadInsurerVault(){
   if(!token){ grid.innerHTML = ivStateCard('로그인 후 표시됩니다',''); return; }
   grid.innerHTML = ivStateCard('불러오는 중…','');
   try{
-    var url = window.db.url('/rest/v1/posts?board_type=eq.insurer&order=created_at.desc&select=id,category,title,content,attachments,branch_id,author_name,created_at');
-    var res = await fetch(url, { headers: { 'apikey': window.db.key, 'Authorization': 'Bearer ' + token } });
-    if(!res.ok){ console.error('[insurer-vault] HTTP', res.status); grid.innerHTML = ivStateCard('불러오지 못했습니다','잠시 후 새로고침 해주세요'); return; }
+    var res = await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&order=created_at.desc&select=id,category,title,content,attachments,branch_id,author_name,created_at');
+    if(!res.ok){ var _et=''; try{ _et=await res.text(); }catch(_e){} console.error('[insurer-vault] HTTP', res.status, _et); grid.innerHTML = ivStateCard('불러오지 못했습니다 ('+res.status+')','잠시 후 새로고침 해주세요'); return; }
     window._ivCache = (await res.json()) || [];
     var on = document.querySelector('#iv-chips .chip.on');
     ivRender(window._ivCache, on ? on.textContent.trim() : '전체');
@@ -2254,9 +2256,9 @@ async function ivSubmit(){
     author_name: u.name || ''
   };
   try {
-    var res = await fetch(window.db.url('/rest/v1/posts'), {
+    var res = await window.db.fetch('/rest/v1/posts', {
       method: 'POST',
-      headers: { 'Content-Type':'application/json', 'apikey':window.db.key, 'Authorization':'Bearer '+token, 'Prefer':'return=minimal' },
+      headers: { 'Content-Type':'application/json', 'Prefer':'return=minimal' },
       body: JSON.stringify(body)
     });
     if(!res.ok){ var t=''; try{ t=await res.text(); }catch(_e){} console.error('[ivSubmit] HTTP', res.status, (t||'').slice(0,200)); alert('자료 등록 실패 ('+res.status+'). 잠시 후 다시 시도해 주세요.'); return; }
