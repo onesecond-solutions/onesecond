@@ -1140,9 +1140,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <div class="wrap view" id="v-myspace">
       <div class="ttl">MY SPACE <span class="ac">· 내가 저장한 자료들</span></div>
       <div class="sub">딸깍으로 저장한 자료를 한 곳에 모아 봅니다.</div>
-      <div class="tabs" id="mys-tabs">
-        <div class="tab on" onclick="mysTab(this,'today')">오늘의 할 일</div>
-        <div class="tab" onclick="mysTab(this,'saved')">내 저장고</div>
+      <div class="mys-toolbar" style="margin-bottom:14px">
+        <div class="tabs" id="mys-tabs" style="margin-bottom:0;flex:1">
+          <div class="tab on" onclick="mysTab(this,'today')">오늘의 할 일</div>
+          <div class="tab" onclick="mysTab(this,'saved')">내 저장고</div>
+        </div>
+        <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
       </div>
       <div id="mys-today"></div>
       <div id="mys-saved" style="display:none">
@@ -1154,7 +1157,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
           <div class="chip" onclick="filterMys(this,'즐겨찾기')">즐겨찾기</div>
         </div>
-        <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
       </div>
       <div class="mys-grid" id="mysGrid">
         <div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div>
@@ -1323,9 +1325,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <div class="wrap view" id="v-team">
       <div class="ttl">매니저룸 <span class="ac" id="mr-scope">· 팀 관리</span></div>
       <div class="sub" id="mr-sub">실장·지점장 전용 — 팀원 현황과 관리</div>
-      <div class="tabs" id="mr-tabs">
-        <div class="tab on" onclick="mrTabMain(this,'today')">오늘의 할 일</div>
-        <div class="tab" onclick="mrTabMain(this,'manage')">매니저</div>
+      <div class="mys-toolbar" style="margin-bottom:14px">
+        <div class="tabs" id="mr-tabs" style="margin-bottom:0;flex:1">
+          <div class="tab on" onclick="mrTabMain(this,'today')">오늘의 할 일</div>
+          <div class="tab" onclick="mrTabMain(this,'manage')">매니저</div>
+        </div>
+        <button class="mys-write-btn" onclick="mrOpenWrite()">+ 공지 작성</button>
       </div>
       <div id="mr-today"></div>
       <div id="mr-main" style="display:none">
@@ -1375,9 +1380,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <div class="wrap view" id="v-insurer-vault">
       <div class="ttl"><span id="iv-company-ttl">보험사</span> 자료실 <span class="ac">· 원수사 전용</span></div>
       <div class="sub iv-notice">&#128274; 등록한 자료는 현재 원수사 내부에서만 보입니다 (설계사 비노출).</div>
-      <div class="tabs" id="iv-tabs">
-        <div class="tab on" onclick="ivTab(this,'today')">오늘의 할 일</div>
-        <div class="tab" onclick="ivTab(this,'manage')">자료 관리</div>
+      <div class="mys-toolbar" style="margin-bottom:14px">
+        <div class="tabs" id="iv-tabs" style="margin-bottom:0;flex:1">
+          <div class="tab on" onclick="ivTab(this,'today')">오늘의 할 일</div>
+          <div class="tab" onclick="ivTab(this,'manage')">자료 관리</div>
+        </div>
+        <button class="mys-write-btn" onclick="ivOpenWrite()">+ 자료 등록</button>
       </div>
       <div id="iv-today"></div>
       <div id="iv-saved" style="display:none">
@@ -1389,7 +1397,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="chip" onclick="ivFilter(this,'인수 자료')">인수 자료</div>
           <div class="chip" onclick="ivFilter(this,'FAQ')">FAQ</div>
         </div>
-        <button class="iv-write-btn" onclick="ivOpenWrite()">+ 자료 등록</button>
       </div>
       <div class="lhead"><span class="cnt">우리 회사 자료 <b id="iv-cnt">0건</b></span></div>
       <div class="mys-grid" id="iv-grid">
@@ -4556,12 +4563,12 @@ function mrRender(view){
     if(scope) scope.textContent='· 지점장 (지점 게시판)';
     if(sub) sub.textContent='지점 게시판 공지 작성 + 지점 전체 감독.';
     window._mrScope='branch_internal';
-    if(acts) acts.innerHTML='<button class="iv-write-btn" onclick="mrOpenWrite()">+ 지점 공지 작성</button><span class="chip" style="opacity:.45;cursor:default">지점 현황 (예정)</span><span class="chip" style="opacity:.45;cursor:default">퇴사자 내보내기 (예정)</span>';
+    if(acts) acts.innerHTML='<span class="chip" style="opacity:.45;cursor:default">지점 현황 (예정)</span><span class="chip" style="opacity:.45;cursor:default">퇴사자 내보내기 (예정)</span>';
   }else{
     if(scope) scope.textContent='· 실장 (단체방)';
     if(sub) sub.textContent='단체방 공지 작성 + 내 팀원 현황.';
     window._mrScope='team_internal';
-    if(acts) acts.innerHTML='<button class="iv-write-btn" onclick="mrOpenWrite()">+ 공지 작성</button><span class="chip" style="opacity:.45;cursor:default">서브팀 관리 (예정)</span><span class="chip" style="opacity:.45;cursor:default">팀원 초대 (예정)</span>';
+    if(acts) acts.innerHTML='<span class="chip" style="opacity:.45;cursor:default">서브팀 관리 (예정)</span><span class="chip" style="opacity:.45;cursor:default">팀원 초대 (예정)</span>';
   }
   mrLoadMembers(view);
 }
@@ -4596,6 +4603,9 @@ window.loadManagerRoom=loadManagerRoom; window.mrPreview=mrPreview;
  * · 첨부 파일 업로드(스토리지)는 다음 단계 — 현재 attachments=[] */
 window._mrScope=window._mrScope||'team_internal';
 function mrOpenWrite(){
+  /* 역할 기반 scope (탭 무관 항상 정합): 지점장=지점게시판 / 그외=단체방. admin은 미리보기 선택 유지 */
+  var _r=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+  if(_r!=='admin') window._mrScope=(_r==='ga_branch_manager')?'branch_internal':'team_internal';
   var t=document.getElementById('mr-write-title');
   if(t) t.textContent=(window._mrScope==='branch_internal')?'지점 게시판 공지 작성':'단체방 공지 작성';
   var err=document.getElementById('mr-write-err'); if(err) err.style.display='none';
