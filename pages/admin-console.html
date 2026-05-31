@@ -1,0 +1,566 @@
+<!-- ════════════════════════════════════════════════════════════════════════
+  pages/admin-console.html — 원세컨드 운영센터(Admin) 재설계 셸 (v2.2)
+  ──────────────────────────────────────────────────────────────────────────
+  · 설계: 운영센터 = 업무 처리 센터 (통계센터 X)
+  · UI: 이모지 X / Lucide SVG / 배지 상태 / 테이블 중심 (v2.2)
+  · 토큰: v2 인디고 (--ac:#6366F1) · 다크/라이트
+  · 데이터: admin_v2.js 의 검증된 fetch 로직 단계 이식 (현재 셸 골격만)
+  · 진입: 개발 중 직접 URL / 완성 후 admin_v2.html 자리로 승격 (stub 전환)
+  · 이탈 경로 ≥2: 상단 "서비스로" · 좌측 하단 "관리자 종료" · 로고 클릭 + ESC
+═══════════════════════════════════════════════════════════════════════════ -->
+<script src="/js/maintenance-guard.js"></script>
+<script src="/js/admin-config.js"></script>
+<script src="/js/auth-guard.js" data-require="admin"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+  #ac-root{
+    /* v2 인디고 토큰 — 다크 기본 */
+    --bg:#0B0C0E; --s1:#141518; --s2:#1C1D21; --sh:#222328; --bd:#26272B;
+    --tp:#F4F4F5; --ts:#A1A1AA; --tf:#6B6D72;
+    --ac:#6366F1; --ach:#7C7FF2;
+    --ok:#22C55E; --warn:#F59E0B; --err:#EF4444;
+    --radius-sm:8px; --radius:12px;
+    position:fixed; inset:0; z-index:9000; overflow:hidden;
+    display:flex; background:var(--bg); color:var(--tp);
+    font-family:'Pretendard',-apple-system,sans-serif; font-size:14px;
+  }
+  #ac-root[data-theme="light"]{
+    --bg:#FBFBFC; --s1:#FFFFFF; --s2:#F4F4F6; --sh:#EEEEF1; --bd:#E4E4E7;
+    --tp:#18181B; --ts:#52525B; --tf:#A1A1AA;
+    --ok:#16A34A; --warn:#F59E0B; --err:#DC2626;
+  }
+  #ac-root *{box-sizing:border-box; margin:0; padding:0;}
+  #ac-root svg{width:18px; height:18px; stroke-width:2;}
+
+  /* ── 좌측 사이드바 ── */
+  .ac-sidebar{
+    width:240px; flex-shrink:0; background:var(--s1); border-right:1px solid var(--bd);
+    display:flex; flex-direction:column; height:100%;
+  }
+  .ac-brand{
+    display:flex; align-items:center; gap:10px; padding:18px 18px 16px;
+    cursor:pointer; border-bottom:1px solid var(--bd);
+  }
+  .ac-brand svg{width:22px; height:22px; color:var(--ac);}
+  .ac-brand b{font-size:15px; font-weight:800; letter-spacing:-0.2px;}
+  .ac-brand span{font-size:11px; color:var(--tf);}
+  .ac-nav{flex:1; overflow-y:auto; padding:12px 10px;}
+  .ac-nav-group-label{
+    font-size:11px; font-weight:700; color:var(--tf); text-transform:uppercase;
+    letter-spacing:0.4px; padding:14px 10px 6px;
+  }
+  .ac-nav-item{
+    display:flex; align-items:center; gap:10px; padding:9px 10px;
+    border-radius:var(--radius-sm); color:var(--ts); cursor:pointer;
+    font-weight:600; user-select:none; position:relative;
+  }
+  .ac-nav-item:hover{background:var(--s2); color:var(--tp);}
+  .ac-nav-item.active{background:var(--ac); color:#fff;}
+  .ac-nav-item .ac-nav-badge{
+    margin-left:auto; background:var(--err); color:#fff; font-size:10px; font-weight:800;
+    min-width:18px; height:18px; border-radius:9px; display:none;
+    align-items:center; justify-content:center; padding:0 5px;
+  }
+  .ac-nav-foot{padding:10px; border-top:1px solid var(--bd);}
+  .ac-nav-foot .ac-nav-item{color:var(--err);}
+  .ac-nav-foot .ac-nav-item:hover{background:rgba(239,68,68,0.1);}
+
+  /* ── 메인 ── */
+  .ac-main{flex:1; display:flex; flex-direction:column; height:100%; min-width:0;}
+  .ac-header{
+    display:flex; align-items:center; gap:12px; padding:0 22px; height:56px;
+    flex-shrink:0; border-bottom:1px solid var(--bd); background:var(--s1);
+  }
+  .ac-header h1{font-size:16px; font-weight:800;}
+  .ac-header .ac-spacer{flex:1;}
+  .ac-btn{
+    display:inline-flex; align-items:center; gap:7px; padding:8px 14px;
+    border-radius:var(--radius-sm); border:1px solid var(--bd); background:var(--s2);
+    color:var(--tp); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .ac-btn:hover{border-color:var(--ac); color:var(--ac);}
+  .ac-btn-icon{padding:8px; background:transparent;}
+  .ac-body{flex:1; overflow-y:auto; padding:24px;}
+
+  /* ── view ── */
+  .ac-view{display:none;}
+  .ac-view.active{display:block;}
+  .ac-section{margin-bottom:28px;}
+  .ac-section-head{display:flex; align-items:center; gap:8px; margin-bottom:12px;}
+  .ac-section-head svg{width:18px; height:18px; color:var(--ac);}
+  .ac-section-head h2{font-size:14px; font-weight:800;}
+  .ac-section-head .ac-section-sub{font-size:12px; color:var(--tf); margin-left:4px;}
+
+  /* 카드 그리드 */
+  .ac-grid{display:grid; gap:14px;}
+  .ac-grid.cols-2{grid-template-columns:1fr 1fr;}
+  .ac-card{
+    background:var(--s1); border:1px solid var(--bd); border-radius:var(--radius);
+    padding:16px;
+  }
+  .ac-card-empty{color:var(--tf); font-size:13px; text-align:center; padding:28px 0;}
+
+  /* 배지 */
+  .ac-badge{
+    display:inline-flex; align-items:center; padding:2px 9px; border-radius:999px;
+    font-size:11px; font-weight:800; letter-spacing:0.3px;
+  }
+  .ac-badge.critical{background:rgba(239,68,68,0.16); color:var(--err);}
+  .ac-badge.high{background:rgba(245,158,11,0.16); color:var(--warn);}
+  .ac-badge.medium{background:rgba(99,102,241,0.16); color:var(--ach);}
+  .ac-badge.normal{background:var(--s2); color:var(--ts);}
+
+  /* 행동 KPI 카드 (배지 + 라벨 + 수치 + 바로가기) */
+  .ac-task{
+    display:flex; align-items:center; gap:14px; background:var(--s1);
+    border:1px solid var(--bd); border-radius:var(--radius); padding:14px 16px;
+  }
+  .ac-task .ac-task-meta{flex:1;}
+  .ac-task .ac-task-label{font-size:13px; color:var(--ts); font-weight:600; margin-top:6px;}
+  .ac-task .ac-task-value{font-size:26px; font-weight:800; line-height:1.1;}
+
+  @media (max-width:860px){
+    .ac-sidebar{width:64px;}
+    .ac-brand b, .ac-brand span, .ac-nav-item .lbl, .ac-nav-group-label{display:none;}
+    .ac-grid.cols-2{grid-template-columns:1fr;}
+  }
+
+  /* 가입 승인 */
+  .ac-approval-card{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;}
+  .ac-btn-primary{background:var(--ac);color:#fff;border-color:var(--ac);}
+  .ac-btn-primary:hover{background:var(--ach);color:#fff;}
+  .ac-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;
+    align-items:center;justify-content:center;padding:16px;z-index:9500;}
+  .ac-modal-overlay.on{display:flex;}
+  .ac-modal{width:100%;max-width:440px;background:var(--s1);border:1px solid var(--bd);
+    border-radius:var(--radius);padding:22px;max-height:88vh;overflow-y:auto;}
+  .ac-modal h3{font-size:17px;font-weight:800;margin-bottom:4px;}
+  .ac-modal-sub{font-size:13px;color:var(--ts);margin-bottom:16px;}
+  .ac-branch-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bd);
+    border-radius:var(--radius-sm);cursor:pointer;margin-bottom:8px;}
+  .ac-branch-opt.checked{border-color:var(--ac);background:rgba(99,102,241,0.08);}
+  .ac-branch-opt input{width:16px;height:16px;accent-color:var(--ac);}
+  .ac-modal-err{display:none;color:var(--err);font-size:13px;margin:8px 0;}
+  .ac-modal-err.on{display:block;}
+  .ac-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+  .ac-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--tp);color:var(--bg);font-size:14px;font-weight:600;padding:12px 22px;
+    border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9600;}
+  .ac-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+
+<div id="ac-root" data-theme="dark">
+  <!-- 좌측 사이드바 -->
+  <aside class="ac-sidebar">
+    <div class="ac-brand" onclick="acGoService()" title="원세컨드 홈으로">
+      <i data-lucide="layout-dashboard"></i>
+      <div><b>운영센터</b><br><span>onesecond admin</span></div>
+    </div>
+    <nav class="ac-nav">
+      <div class="ac-nav-item active" data-view="dashboard" onclick="acSwitchView('dashboard')">
+        <i data-lucide="layout-dashboard"></i><span class="lbl">대시보드</span></div>
+
+      <div class="ac-nav-group-label">운영</div>
+      <div class="ac-nav-item" data-view="approvals" onclick="acSwitchView('approvals')">
+        <i data-lucide="user-check"></i><span class="lbl">가입 승인</span>
+        <span class="ac-nav-badge" id="ac-nav-badge-approvals">0</span></div>
+      <div class="ac-nav-item" data-view="users" onclick="acSwitchView('users')">
+        <i data-lucide="users"></i><span class="lbl">사용자</span></div>
+      <div class="ac-nav-item" data-view="branches" onclick="acSwitchView('branches')">
+        <i data-lucide="building-2"></i><span class="lbl">지점</span></div>
+
+      <div class="ac-nav-group-label">콘텐츠</div>
+      <div class="ac-nav-item" data-view="posts" onclick="acSwitchView('posts')">
+        <i data-lucide="file-text"></i><span class="lbl">게시글</span></div>
+      <div class="ac-nav-item" data-view="comments" onclick="acSwitchView('comments')">
+        <i data-lucide="message-square"></i><span class="lbl">댓글</span></div>
+      <div class="ac-nav-item" data-view="library" onclick="acSwitchView('library')">
+        <i data-lucide="folder"></i><span class="lbl">자료실</span></div>
+
+      <div class="ac-nav-group-label">시스템</div>
+      <div class="ac-nav-item" data-view="menu" onclick="acSwitchView('menu')">
+        <i data-lucide="menu"></i><span class="lbl">메뉴</span></div>
+      <div class="ac-nav-item" data-view="notice" onclick="acSwitchView('notice')">
+        <i data-lucide="megaphone"></i><span class="lbl">공지·배너</span></div>
+      <div class="ac-nav-item" data-view="settings" onclick="acSwitchView('settings')">
+        <i data-lucide="settings"></i><span class="lbl">설정</span></div>
+
+      <div class="ac-nav-group-label">로그·통계</div>
+      <div class="ac-nav-item" data-view="logs" onclick="acSwitchView('logs')">
+        <i data-lucide="scroll-text"></i><span class="lbl">로그</span></div>
+    </nav>
+    <div class="ac-nav-foot">
+      <div class="ac-nav-item" onclick="acGoService()">
+        <i data-lucide="log-out"></i><span class="lbl">관리자 종료</span></div>
+    </div>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="ac-main">
+    <header class="ac-header">
+      <h1 id="ac-view-title">대시보드</h1>
+      <div class="ac-spacer"></div>
+      <button class="ac-btn ac-btn-icon" onclick="acToggleTheme()" title="테마 전환">
+        <i data-lucide="sun-moon"></i></button>
+      <button class="ac-btn" onclick="acGoService()">
+        <i data-lucide="arrow-left"></i>서비스로 돌아가기</button>
+    </header>
+
+    <div class="ac-body">
+      <!-- 대시보드 -->
+      <section class="ac-view active" data-view="dashboard">
+        <div class="ac-section">
+          <div class="ac-section-head"><i data-lucide="clipboard-list"></i>
+            <h2>오늘 해야 할 일</h2><span class="ac-section-sub">Task Queue</span></div>
+          <div class="ac-grid cols-2" id="ac-task-queue">
+            <div class="ac-card ac-card-empty">데이터 연결 예정</div>
+          </div>
+        </div>
+        <div class="ac-section">
+          <div class="ac-section-head"><i data-lucide="shield-alert"></i>
+            <h2>운영 위험 신호</h2><span class="ac-section-sub">Risk Alerts</span></div>
+          <div class="ac-card ac-card-empty" id="ac-risk-alerts">데이터 연결 예정</div>
+        </div>
+        <div class="ac-section">
+          <div class="ac-section-head"><i data-lucide="clock"></i>
+            <h2>최근 활동</h2><span class="ac-section-sub">Recent Activity</span></div>
+          <div class="ac-card ac-card-empty" id="ac-recent-activity">데이터 연결 예정</div>
+        </div>
+        <div class="ac-grid cols-2">
+          <div class="ac-section">
+            <div class="ac-section-head"><i data-lucide="building-2"></i>
+              <h2>지점 현황</h2><span class="ac-section-sub">Branch Overview</span></div>
+            <div class="ac-card ac-card-empty" id="ac-branch-overview">데이터 연결 예정</div>
+          </div>
+          <div class="ac-section">
+            <div class="ac-section-head"><i data-lucide="bar-chart-3"></i>
+              <h2>운영 현황</h2><span class="ac-section-sub">Service Overview</span></div>
+            <div class="ac-card ac-card-empty" id="ac-service-overview">데이터 연결 예정</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 나머지 view 골격 (데이터 연결 예정) -->
+      <section class="ac-view" data-view="approvals">
+        <div class="ac-section-head"><i data-lucide="user-check"></i>
+          <h2>가입 승인</h2><span class="ac-section-sub" id="ac-appr-count">— 대기</span></div>
+        <p style="font-size:13px;color:var(--ts);margin-bottom:14px;">승인하면 계정이 활성화되고, 지점 매핑으로 자료실 글쓰기 권한이 부여됩니다.</p>
+        <div id="ac-approvals-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </section>
+      <section class="ac-view" data-view="users"><div class="ac-card ac-card-empty">사용자 — fetchUsers 재사용 예정</div></section>
+      <section class="ac-view" data-view="branches"><div class="ac-card ac-card-empty">지점 — branches×users 집계 예정</div></section>
+      <section class="ac-view" data-view="posts"><div class="ac-card ac-card-empty">게시글 — fetchBoard 재사용 예정</div></section>
+      <section class="ac-view" data-view="comments"><div class="ac-card ac-card-empty">댓글 — comments fetch 예정</div></section>
+      <section class="ac-view" data-view="library"><div class="ac-card ac-card-empty">자료실 — scripts·library 재사용 예정</div></section>
+      <section class="ac-view" data-view="menu"><div class="ac-card ac-card-empty">메뉴 — menu_settings_by_role 예정</div></section>
+      <section class="ac-view" data-view="notice"><div class="ac-card ac-card-empty">공지·배너 — app_settings 예정</div></section>
+      <section class="ac-view" data-view="settings"><div class="ac-card ac-card-empty">설정 — app_settings 토글 재사용 예정</div></section>
+      <section class="ac-view" data-view="logs"><div class="ac-card ac-card-empty">로그 — activity_logs 재사용 예정</div></section>
+    </div>
+  </main>
+
+  <!-- 가입 승인 모달 -->
+  <div class="ac-modal-overlay" id="ac-modal-overlay">
+    <div class="ac-modal">
+      <h3>가입 승인</h3>
+      <div class="ac-modal-sub" id="ac-modal-sub"></div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">담당 지점 배정</div>
+      <div style="font-size:12px;color:var(--tf);margin-bottom:10px;">하나 이상 선택. 첫 번째가 대표 지점이 됩니다.</div>
+      <div id="ac-branch-list"></div>
+      <div class="ac-modal-err" id="ac-modal-err"></div>
+      <div class="ac-modal-actions">
+        <button class="ac-btn" id="ac-modal-cancel">취소</button>
+        <button class="ac-btn ac-btn-primary" id="ac-modal-confirm">승인 확정</button>
+      </div>
+    </div>
+  </div>
+  <div class="ac-toast" id="ac-toast"></div>
+</div>
+
+<script>
+(function(){
+  var VIEW_TITLES = {
+    dashboard:'대시보드', approvals:'가입 승인', users:'사용자', branches:'지점',
+    posts:'게시글', comments:'댓글', library:'자료실',
+    menu:'메뉴', notice:'공지·배너', settings:'설정', logs:'로그'
+  };
+
+  // 라우터
+  window.acSwitchView = function(key){
+    var root = document.getElementById('ac-root'); if(!root) return;
+    root.querySelectorAll('.ac-view').forEach(function(v){
+      v.classList.toggle('active', v.getAttribute('data-view')===key);
+    });
+    root.querySelectorAll('.ac-nav-item[data-view]').forEach(function(n){
+      n.classList.toggle('active', n.getAttribute('data-view')===key);
+    });
+    var t = document.getElementById('ac-view-title');
+    if(t && VIEW_TITLES[key]) t.textContent = VIEW_TITLES[key];
+    if(key==='dashboard' && window.acLoadDashboard) window.acLoadDashboard();
+    if(key==='approvals' && window.acLoadApprovals) window.acLoadApprovals();
+    if(window.lucide) window.lucide.createIcons();
+  };
+
+  // 이탈 경로 (로고·상단 버튼·관리자 종료·ESC 공통)
+  window.acGoService = function(){ window.location.href = '/app.html'; };
+
+  // 테마 토글
+  window.acToggleTheme = function(){
+    var root = document.getElementById('ac-root'); if(!root) return;
+    var cur = root.getAttribute('data-theme')==='light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', cur);
+    try{ localStorage.setItem('ac_theme', cur); }catch(e){}
+  };
+
+  // 안전장치: ESC → 모달 열려 있으면 모달만 닫고, 아니면 서비스 복귀
+  document.addEventListener('keydown', function(e){
+    if(e.key!=='Escape') return;
+    var mo=document.getElementById('ac-modal-overlay');
+    if(mo && mo.classList.contains('on')){ acCloseApproval(); return; }
+    window.acGoService();
+  });
+
+  // ════════════════════════════════════════════════════════════════════
+  //  대시보드 데이터 연결 (신버전 pdnwgzneooyygfejrvbg, db.js 경유)
+  //  · 활성 = status=active 기준 (last_seen_at 미집계 회피)
+  //  · 집계 가능 항목만 실데이터 / 운영 액션 로깅 확대는 후속
+  // ════════════════════════════════════════════════════════════════════
+  var INSURER_ROLES = 'insurer_branch_manager,insurer_manager,insurer_member,insurer_staff';
+  // 운영 피드 문장 변환 카탈로그 (raw event_type 노출 금지 — 설계서 §5/§8)
+  var EVENT_FEED = {
+    approve_user:'가입을 승인했습니다', assign_branch:'지점에 배정했습니다',
+    suspend_user:'사용자를 정지했습니다', activate_user:'정지를 해제했습니다',
+    change_role:'권한을 변경했습니다', create_notice:'공지를 등록했습니다',
+    update_notice:'공지를 수정했습니다', update_setting:'시스템 설정을 변경했습니다',
+    hide_post:'게시글을 숨김 처리했습니다', delete_post:'게시글을 삭제했습니다',
+    delete_comment:'댓글을 삭제했습니다', update_menu:'메뉴 설정을 변경했습니다',
+    create_branch:'지점을 생성했습니다', update_branch:'지점 정보를 수정했습니다',
+    delete_branch:'지점을 삭제했습니다', login:'로그인했습니다',
+    script_view:'스크립트를 조회했습니다'
+  };
+
+  function _isoAgo(ms){ return new Date(Date.now()-ms).toISOString(); }
+  function _kstMidnightISO(){
+    var k = new Date(Date.now()+9*3600000);
+    return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).toISOString();
+  }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function _rel(iso){ if(!iso) return '-'; var m=(Date.now()-new Date(iso).getTime())/60000;
+    if(m<1) return '방금'; if(m<60) return Math.floor(m)+'분 전'; if(m<1440) return Math.floor(m/60)+'시간 전'; return Math.floor(m/1440)+'일 전'; }
+
+  async function _count(q){
+    try{ var r=await window.db.fetch('/rest/v1/'+q,{headers:{'Prefer':'count=exact'}});
+      return parseInt((r.headers.get('Content-Range')||'0-0/0').split('/')[1],10)||0; }
+    catch(e){ return null; }
+  }
+  async function _rows(q){
+    try{ var r=await window.db.fetch('/rest/v1/'+q); return r.ok ? await r.json() : []; }
+    catch(e){ return []; }
+  }
+
+  function _task(tag,cls,label,value,unit,view,btn){
+    return '<div class="ac-task"><div class="ac-task-meta">'+
+      '<span class="ac-badge '+cls+'">'+tag+'</span>'+
+      '<div class="ac-task-label">'+label+'</div>'+
+      '<div class="ac-task-value">'+(value==null?'—':value)+unit+'</div></div>'+
+      '<button class="ac-btn" onclick="acSwitchView(\''+view+'\')">'+esc(btn)+'</button></div>';
+  }
+  function renderTaskQueue(p,u,s){
+    var el=document.getElementById('ac-task-queue'); if(!el) return;
+    el.innerHTML =
+      _task(p>0?'CRITICAL':'NORMAL', p>0?'critical':'normal', '승인 대기', p, '건', 'approvals', '승인하러 가기')+
+      _task(u>0?'HIGH':'NORMAL', u>0?'high':'normal', '지점 미배정', u, '명', 'users', '사용자 관리')+
+      _task(s>0?'CRITICAL':'NORMAL', s>0?'critical':'normal', '장기 미처리(24h+)', s, '건', 'approvals', '확인');
+  }
+  function renderRisk(p,u,s){
+    var el=document.getElementById('ac-risk-alerts'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    var items=[];
+    if(s>0) items.push(['critical','CRITICAL','24시간 초과 미처리 승인 '+s+'건']);
+    if(u>0) items.push(['high','HIGH','지점 미배정 사용자 '+u+'명']);
+    if(p>0) items.push(['medium','MEDIUM','승인 대기 '+p+'건']);
+    if(!items.length){ el.innerHTML='<div class="ac-card-empty">현재 위험 신호 없음</div>'; return; }
+    el.innerHTML=items.map(function(i){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;">'+
+        '<span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
+    }).join('');
+  }
+  function _hhmm(iso){ var t=new Date(iso); if(isNaN(t.getTime())) return '--:--';
+    var h=t.getHours(), m=t.getMinutes(); return (h<10?'0':'')+h+':'+(m<10?'0':'')+m; }
+  // 운영 피드 = 시각 + severity 배지 + 변환 문장 (actor는 user_id→name JOIN)
+  async function renderActivity(logs){
+    var el=document.getElementById('ac-recent-activity'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    if(!logs || !logs.length){ el.innerHTML='<div class="ac-card-empty">최근 활동 없음</div>'; return; }
+    // actor 이름 일괄 조회 (id-only 로그 → 표시 시 변환)
+    var ids=[]; logs.forEach(function(l){ if(l.user_id && ids.indexOf(l.user_id)<0) ids.push(l.user_id); });
+    var nameMap={};
+    if(ids.length){
+      var us=await _rows('users?id=in.('+ids.join(',')+')&select=id,name');
+      us.forEach(function(u){ nameMap[u.id]=u.name; });
+    }
+    el.innerHTML=logs.map(function(l){
+      var sev=l.severity||'normal';
+      var actor=esc(nameMap[l.user_id]||'사용자');
+      var phrase=EVENT_FEED[l.event_type];
+      var sentence = (l.event_type==='login_admin') ? '관리자가 로그인했습니다'
+        : (phrase ? (actor+'님이 '+phrase) : esc(l.event_type||'활동'));
+      return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);">'+
+        '<span style="color:var(--tf);font-size:12px;min-width:40px;">'+_hhmm(l.created_at)+'</span>'+
+        '<span class="ac-badge '+sev+'">'+sev.toUpperCase()+'</span>'+
+        '<span>'+sentence+'</span></div>';
+    }).join('');
+  }
+  function _stat(l,v){ return '<div><div style="font-size:12px;color:var(--tf);">'+l+'</div>'+
+    '<div style="font-size:20px;font-weight:800;">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
+  function renderService(total,active,nt,posts,scripts,lib){
+    var el=document.getElementById('ac-service-overview'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'+
+      _stat('총 사용자',total)+_stat('활성',active)+_stat('오늘 신규',nt)+
+      _stat('게시글',posts)+_stat('스크립트',scripts)+_stat('자료',lib)+'</div>';
+  }
+  function renderBranches(branches,users,unassigned){
+    var el=document.getElementById('ac-branch-overview'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    var cnt={}; (users||[]).forEach(function(u){ if(u.branch_id) cnt[u.branch_id]=(cnt[u.branch_id]||0)+1; });
+    var rows=(branches||[]).map(function(b){
+      var n=cnt[b.id]||0;
+      var badge=(n===0)?' <span class="ac-badge high">인원 0</span>':'';
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);">'+
+        '<span>'+esc(b.name)+' <span style="color:var(--tf);font-size:12px;">'+esc(b.ga_org_name||'')+'</span></span>'+
+        '<span>'+n+'명'+badge+'</span></div>';
+    }).join('');
+    el.innerHTML='<div style="margin-bottom:8px;color:var(--tf);font-size:12px;">전체 '+
+      (branches?branches.length:0)+'개 지점 · 미배정 '+(unassigned==null?'—':unassigned)+'명</div>'+
+      (rows || '<div class="ac-card-empty">지점 없음</div>');
+  }
+
+  // ── 가입 승인 (admin-approvals 흡수 + approve_user/assign_branch 로깅) ──
+  var _appr = { pending:[], branches:[], sel:null };
+  function _fmtDate(iso){ if(!iso) return ''; var d=new Date(iso); if(isNaN(d.getTime())) return '';
+    var p=function(n){return (n<10?'0':'')+n;};
+    return d.getFullYear()+'.'+p(d.getMonth()+1)+'.'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes()); }
+  var _toastTimer=null;
+  function acToast(msg,isErr){ var el=document.getElementById('ac-toast'); if(!el) return;
+    el.textContent=msg; el.className='ac-toast on'+(isErr?' err':'');
+    clearTimeout(_toastTimer); _toastTimer=setTimeout(function(){ el.className='ac-toast'; },2600); }
+
+  window.acLoadApprovals = async function(){
+    var area=document.getElementById('ac-approvals-list'); if(!area) return;
+    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    _appr.branches = await _rows('branches?select=id,name,ga_org_name&order=name.asc');
+    var rows = await _rows('users?status=eq.pending&role=like.insurer_*&select=id,name,company,role,email,created_at&order=created_at.asc');
+    _appr.pending = rows;
+    var cnt=document.getElementById('ac-appr-count'); if(cnt) cnt.textContent=rows.length+'건 대기';
+    if(!rows.length){ area.innerHTML='<div class="ac-card-empty">대기 중인 가입 신청이 없습니다</div>'; return; }
+    var RL=(window.ROLE_LABEL||{});
+    area.innerHTML=rows.map(function(u){
+      return '<div class="ac-approval-card"><div>'+
+        '<div style="font-weight:700;">'+esc(u.name||'(이름 없음)')+' <span class="ac-badge medium">'+esc(RL[u.role]||u.role||'')+'</span></div>'+
+        '<div style="font-size:13px;color:var(--ts);margin-top:4px;">'+esc(u.company||'-')+' · '+esc(u.email||'')+'</div>'+
+        '<div style="font-size:12px;color:var(--tf);margin-top:3px;">신청 '+esc(_fmtDate(u.created_at))+'</div></div>'+
+        '<button class="ac-btn ac-btn-primary" data-appr="'+esc(u.id)+'">승인</button></div>';
+    }).join('');
+    area.querySelectorAll('[data-appr]').forEach(function(b){
+      b.addEventListener('click',function(){ acOpenApproval(b.getAttribute('data-appr')); });
+    });
+  };
+
+  window.acOpenApproval = function(uid){
+    var u=_appr.pending.find(function(x){ return String(x.id)===String(uid); }); if(!u) return;
+    _appr.sel=u;
+    var RL=(window.ROLE_LABEL||{});
+    document.getElementById('ac-modal-sub').innerHTML='<b>'+esc(u.name||'')+'</b> · '+esc(u.company||'')+' · '+esc(RL[u.role]||u.role||'');
+    var bl=document.getElementById('ac-branch-list');
+    if(!_appr.branches.length){ bl.innerHTML='<div style="font-size:13px;color:var(--tf);">등록된 지점이 없습니다. 먼저 지점을 등록해 주세요.</div>'; }
+    else{
+      bl.innerHTML=_appr.branches.map(function(b){
+        return '<label class="ac-branch-opt"><input type="checkbox" value="'+esc(b.id)+'">'+
+          '<span><b>'+esc(b.name)+'</b> <span style="color:var(--ts);font-size:12px;">'+esc(b.ga_org_name||'')+'</span></span></label>';
+      }).join('');
+      bl.querySelectorAll('.ac-branch-opt input').forEach(function(cb){
+        cb.addEventListener('change',function(){ cb.closest('.ac-branch-opt').classList.toggle('checked',cb.checked); });
+      });
+    }
+    var err=document.getElementById('ac-modal-err'); err.className='ac-modal-err';
+    var cf=document.getElementById('ac-modal-confirm'); cf.disabled=false; cf.textContent='승인 확정';
+    document.getElementById('ac-modal-overlay').classList.add('on');
+  };
+  function acCloseApproval(){ document.getElementById('ac-modal-overlay').classList.remove('on'); _appr.sel=null; }
+
+  async function acConfirmApproval(){
+    var u=_appr.sel; if(!u) return;
+    var ids=Array.prototype.slice.call(document.querySelectorAll('#ac-branch-list input:checked')).map(function(c){return c.value;});
+    var err=document.getElementById('ac-modal-err');
+    if(!ids.length){ err.textContent='담당 지점을 하나 이상 선택해 주세요.'; err.className='ac-modal-err on'; return; }
+    var btn=document.getElementById('ac-modal-confirm'); btn.disabled=true; btn.textContent='승인 중…';
+    try{
+      var res=await window.db.fetch('/rest/v1/rpc/approve_insurer_user',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ p_user_id:u.id, p_branch_ids:ids })
+      });
+      if(!res.ok){ var m='승인 실패 ('+res.status+')';
+        try{ var j=await res.json(); if(j&&(j.message||j.hint)) m=j.message||j.hint; }catch(e){}
+        err.textContent=m; err.className='ac-modal-err on'; btn.disabled=false; btn.textContent='승인 확정'; return; }
+      // 운영 액션 로깅 (1차 카탈로그: approve_user + assign_branch)
+      if(window.db.logActivity){
+        window.db.logActivity('approve_user','user',u.id,{ role:u.role, branch_ids:ids });
+        window.db.logActivity('assign_branch','branch',ids[0],{ user_id:u.id, branch_ids:ids });
+      }
+      _appr.pending=_appr.pending.filter(function(x){ return x.id!==u.id; });
+      acCloseApproval();
+      window.acLoadApprovals();
+      if(window.acLoadDashboard) window.acLoadDashboard();
+      acToast((u.name||'')+' 승인 완료');
+    }catch(e){ err.textContent='네트워크 오류'; err.className='ac-modal-err on'; btn.disabled=false; btn.textContent='승인 확정'; }
+  }
+
+  window.acLoadDashboard = async function(){
+    var [pending, unassigned, stale] = await Promise.all([
+      _count('users?status=eq.pending&role=in.('+INSURER_ROLES+')&select=id'),
+      _count('users?status=eq.active&branch_id=is.null&select=id'),
+      _count('users?status=eq.pending&created_at=lt.'+_isoAgo(86400000)+'&select=id')
+    ]);
+    renderTaskQueue(pending, unassigned, stale);
+    renderRisk(pending, unassigned, stale);
+    var nb=document.getElementById('ac-nav-badge-approvals');
+    if(nb){ nb.textContent=pending||0; nb.style.display=(pending>0)?'inline-flex':'none'; }
+
+    var [total, active, newToday, posts, scripts, lib] = await Promise.all([
+      _count('users?select=id'),
+      _count('users?status=eq.active&select=id'),
+      _count('users?created_at=gte.'+_kstMidnightISO()+'&select=id'),
+      _count('posts?select=id'),
+      _count('scripts?select=id'),
+      _count('library?select=id')
+    ]);
+    renderService(total, active, newToday, posts, scripts, lib);
+
+    await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=12'));
+
+    var [branches, ubranch] = await Promise.all([
+      _rows('branches?select=id,name,ga_org_name,is_active'),
+      _rows('users?select=branch_id&status=eq.active')
+    ]);
+    renderBranches(branches, ubranch, unassigned);
+    if(window.lucide) window.lucide.createIcons();
+  };
+
+  // 초기화
+  try{
+    var saved = localStorage.getItem('ac_theme');
+    if(saved){ var r=document.getElementById('ac-root'); if(r) r.setAttribute('data-theme', saved); }
+  }catch(e){}
+  var _mc=document.getElementById('ac-modal-cancel'); if(_mc) _mc.addEventListener('click',acCloseApproval);
+  var _mf=document.getElementById('ac-modal-confirm'); if(_mf) _mf.addEventListener('click',acConfirmApproval);
+  var _mo=document.getElementById('ac-modal-overlay'); if(_mo) _mo.addEventListener('click',function(e){ if(e.target===_mo) acCloseApproval(); });
+  if(window.lucide) window.lucide.createIcons();
+  // 딥링크 ?view= 초기 진입 (admin-approvals 리다이렉트 등) / 없으면 대시보드
+  var _qv=null; try{ _qv=new URLSearchParams(location.search).get('view'); }catch(e){}
+  if(_qv && document.querySelector('.ac-nav-item[data-view="'+_qv+'"]')){ window.acSwitchView(_qv); }
+  else if(window.acLoadDashboard){ window.acLoadDashboard(); }
+})();
+</script>
