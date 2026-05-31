@@ -1731,36 +1731,36 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="askstep" id="step-uw">
       <div class="warnbar">&#9888; 개인정보(이름 / 전화번호 / 주민번호)는 입력하지 마세요.</div>
       <div class="frow">
-        <div class="fld"><label>제목 <span class="opt">(선택, 비우면 자동 생성)</span></label><input type="text" id="uw-title" placeholder="예: 60대 여성 갑상선 결절 인수 가능?"></div>
-        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="uw-scope"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
+        <div class="fld"><label>제목 <span class="opt">(선택, 비우면 자동 생성)</span></label><input type="text" placeholder="예: 60대 여성 갑상선 결절 인수 가능?"></div>
+        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
       </div>
       <div class="frow">
-        <div class="fld"><label>연령 <span class="req">*</span></label><input type="text" id="uw-age" placeholder=""></div>
-        <div class="fld"><label>성별 <span class="req">*</span></label><select id="uw-gender"><option>선택</option><option>남</option><option>여</option></select></div>
+        <div class="fld"><label>연령 <span class="req">*</span></label><input type="text" placeholder=""></div>
+        <div class="fld"><label>성별 <span class="req">*</span></label><select><option>선택</option><option>남</option><option>여</option></select></div>
       </div>
-      <div class="fld"><label>직업</label><input type="text" id="uw-job" placeholder="예: 사무직 / 운전직 / 농업"></div>
-      <div class="fld"><label>병력 <span class="req">*</span></label><input type="text" id="uw-disease" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨"></div>
+      <div class="fld"><label>직업</label><input type="text" placeholder="예: 사무직 / 운전직 / 농업"></div>
+      <div class="fld"><label>병력 <span class="req">*</span></label><input type="text" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨"></div>
       <div class="frow">
-        <div class="fld"><label>진단시기</label><input type="text" id="uw-diag" placeholder="예: 2025년 3월"></div>
-        <div class="fld"><label>약복용 유무</label><select id="uw-med"><option>선택</option><option>복용 중</option><option>복용 안 함</option><option>모름</option></select></div>
+        <div class="fld"><label>진단시기</label><input type="text" placeholder="예: 2025년 3월"></div>
+        <div class="fld"><label>약복용 유무</label><select><option>선택</option><option>복용 중</option><option>복용 안 함</option><option>모름</option></select></div>
       </div>
-      <div class="fld"><label>현재 상태</label><input type="text" id="uw-status" placeholder="예: 추적관찰 중 / 수술 완료"></div>
-      <div class="fld"><label>기타 적고 싶은 내용</label><textarea id="uw-etc" placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
+      <div class="fld"><label>현재 상태</label><input type="text" placeholder="예: 추적관찰 중 / 수술 완료"></div>
+      <div class="fld"><label>기타 적고 싶은 내용</label><textarea placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
     </div>
 
     <!-- 상품 질문 폼 -->
     <div class="askstep" id="step-product">
       <div class="infobar">실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.</div>
       <div class="frow">
-        <div class="fld"><label>상품군 <span class="req">*</span></label><select id="prod-cat"><option>선택</option><option>실손</option><option>암</option><option>2대·3대</option><option>간병</option><option>치매</option><option>운전자</option><option>치아</option><option>종신</option><option>정기</option><option>화재</option><option>기타</option></select></div>
-        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="prod-scope"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
+        <div class="fld"><label>상품군 <span class="req">*</span></label><select><option>선택</option><option>실손</option><option>암</option><option>2대·3대</option><option>간병</option><option>치매</option><option>운전자</option><option>치아</option><option>종신</option><option>정기</option><option>화재</option><option>기타</option></select></div>
+        <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
       </div>
       <div class="frow">
-        <div class="fld"><label>건강체</label><select id="prod-health"><option>선택</option><option>초강제형(10년고지형)</option><option>초경증(10년고지형)</option><option>기타</option></select></div>
-        <div class="fld"><label>확인하고 싶은 내용</label><select id="prod-confirm"><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
+        <div class="fld"><label>건강체</label><select><option>선택</option><option>초강제형(10년고지형)</option><option>초경증(10년고지형)</option><option>기타</option></select></div>
+        <div class="fld"><label>확인하고 싶은 내용</label><select><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
       </div>
-      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" id="prod-title" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
-      <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="prod-body" placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
+      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
+      <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
     </div>
 
     <!-- 기타 질문 폼 -->
@@ -4981,66 +4981,8 @@ function openAsk(){document.getElementById('askmodal').classList.add('open');bac
 function closeAsk(){document.getElementById('askmodal').classList.remove('open');}
 function showStep(id){document.querySelectorAll('.askstep').forEach(function(s){s.classList.remove('on');});document.getElementById('step-'+id).classList.add('on');}
 function backToPick(){showStep('pick');document.getElementById('askTitle').innerHTML='지금 어떤 질문인가요?';document.getElementById('askFile').classList.remove('on');document.getElementById('askFoot').classList.remove('on');}
-function goForm(cat){window._askCat=cat;showStep(cat);document.getElementById('askTitle').innerHTML=askForms[cat].t;document.getElementById('askFile').classList.add('on');document.getElementById('askFoot').classList.add('on');}
-/* 보험Q&A 질문 등록 — posts INSERT (Step 1, 2026-06-01). 인수/상품만 실저장(기타/공지 후속).
- * 폼 디테일 → posts 컬럼(question_type/insurer_target/patient_*/product_category), 전용 컬럼 없는 값은 content에 합침.
- * mrSubmitNotice 패턴 정합(os_user→branch_id, db.fetch 401 자동갱신, return=minimal). */
-async function submitAsk(){
-  var cat=window._askCat||'';
-  if(cat!=='uw'&&cat!=='product'){ closeAsk(); toast('질문이 등록되었습니다'); return; } /* 기타/공지 = 후속 단계 */
-  if(!window.db||!window.db.fetch){ alert('로그인 후 작성할 수 있습니다.'); return; }
-  var g=function(id){ var el=document.getElementById(id); return el?String(el.value||'').trim():''; };
-  var scopeMap={'전체 (손·생보)':'전체','전체 손해보험':'손보전체','전체 생명보험':'생보전체','회사 지정':'회사지정'};
-  var qtype, title, content, extra=[];
-  var product_category=null, patient_age=null, patient_gender=null, disease_name=null, diagnosis_timing=null, current_status=null;
-  var insurerTargetRaw;
-  if(cat==='uw'){
-    qtype='인수'; insurerTargetRaw=g('uw-scope');
-    var age=g('uw-age'), gender=g('uw-gender'), job=g('uw-job'), disease=g('uw-disease'), diag=g('uw-diag'), med=g('uw-med'), status=g('uw-status'), etc=g('uw-etc');
-    if(!age){ alert('연령을 입력해 주세요.'); return; }
-    if(!gender||gender==='선택'){ alert('성별을 선택해 주세요.'); return; }
-    if(!disease){ alert('병력을 입력해 주세요.'); return; }
-    var an=parseInt(((age.match(/\d+/)||[])[0]),10); if(!isNaN(an)) patient_age=an;
-    patient_gender=gender; disease_name=disease;
-    if(diag) diagnosis_timing=diag;
-    if(status) current_status=status;
-    if(job) extra.push('직업: '+job);
-    if(med&&med!=='선택') extra.push('약복용: '+med);
-    if(etc) extra.push(etc);
-    title=g('uw-title')||((age?age:'')+(gender!=='선택'?(' '+gender):'')+' '+disease+' 인수 가능?').replace(/\s+/g,' ').trim();
-  } else {
-    qtype='상품'; insurerTargetRaw=g('prod-scope');
-    var pcat=g('prod-cat'), health=g('prod-health'), confirm=g('prod-confirm'), ptitle=g('prod-title'), pbody=g('prod-body');
-    if(!pcat||pcat==='선택'){ alert('상품군을 선택해 주세요.'); return; }
-    if(!ptitle){ alert('질문 제목을 입력해 주세요.'); return; }
-    if(!pbody){ alert('질문 내용을 입력해 주세요.'); return; }
-    product_category=pcat;
-    if(health&&health!=='선택') extra.push('건강체: '+health);
-    if(confirm&&confirm!=='선택') extra.push('확인: '+confirm);
-    extra.push(pbody);
-    title=ptitle;
-  }
-  content=extra.join('\n');
-  var insurer_target=scopeMap[insurerTargetRaw]||'전체';
-  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
-  var branchId=u.branch_id||null;
-  if(branchId==null && u.id){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select=branch_id'); if(r.ok){ var j=await r.json(); if(j&&j[0]) branchId=j[0].branch_id||null; } }catch(e){} }
-  var row={ board_type:'navigation', question_type:qtype, insurer_target:insurer_target, title:title, content:content, status:'published', author_id:u.id||null, author_name:u.name||null };
-  if(branchId) row.branch_id=branchId;
-  if(patient_age!=null) row.patient_age=patient_age;
-  if(patient_gender) row.patient_gender=patient_gender;
-  if(disease_name) row.disease_name=disease_name;
-  if(diagnosis_timing) row.diagnosis_timing=diagnosis_timing;
-  if(current_status) row.current_status=current_status;
-  if(product_category) row.product_category=product_category;
-  var btn=document.querySelector('#askFoot .asksubmit'); if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
-  try{
-    var res=await window.db.fetch('/rest/v1/posts',{ method:'POST', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(row) });
-    if(!res.ok){ var m='등록 실패 ('+res.status+')'; try{ var ej=await res.json(); if(ej&&(ej.message||ej.hint)) m=ej.message||ej.hint; }catch(e){} alert(m); if(btn){ btn.disabled=false; btn.textContent='등록하기'; } return; }
-    if(btn){ btn.disabled=false; btn.textContent='등록하기'; }
-    closeAsk(); toast('질문이 등록되었습니다');
-  }catch(e){ console.error('[submitAsk]',e); alert('등록 중 오류가 발생했습니다.'); if(btn){ btn.disabled=false; btn.textContent='등록하기'; } }
-}
+function goForm(cat){showStep(cat);document.getElementById('askTitle').innerHTML=askForms[cat].t;document.getElementById('askFile').classList.add('on');document.getElementById('askFoot').classList.add('on');}
+function submitAsk(){closeAsk();toast('질문이 등록되었습니다');}
 async function openProfile(){
   document.getElementById('m').classList.remove('open');
   /* 1) localStorage os_user에서 즉시 채움 (빠른 표시) */
