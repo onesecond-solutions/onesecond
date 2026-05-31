@@ -200,6 +200,28 @@
   .ac-card-empty{ display:flex; flex-direction:column; align-items:center; gap:9px; color:var(--tf);
     padding:34px 0; font-size:13px; }
   .ac-card-empty svg{ width:26px; height:26px; opacity:.45; }
+
+  /* ════ 칩 필터 + 카드 그리드 + entity 카드 (11~21 언어) ════ */
+  .ac-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .ac-chip{ padding:7px 14px; border-radius:999px; border:1px solid var(--bd); background:var(--s1);
+    color:var(--ts); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .ac-chip:hover{ color:var(--tp); }
+  .ac-chip.active{ background:var(--ac); color:#fff; border-color:var(--ac); }
+  .ac-card-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+  .ac-entity{ background:var(--s1); border:1px solid var(--bd); border-left:3px solid var(--ac);
+    border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); }
+  .ac-entity.r-admin{ border-left-color:#A78BFA; }
+  .ac-entity.r-ga{ border-left-color:#60A5FA; }
+  .ac-entity.r-insurer{ border-left-color:#34D399; }
+  .ac-entity-name{ font-size:15px; font-weight:700; margin-top:9px; letter-spacing:-.2px; }
+  .ac-entity-meta{ font-size:13px; color:var(--ts); margin-top:5px; }
+  .ac-entity-sub{ font-size:12px; color:var(--tf); margin-top:4px; }
+  .ac-badge.r-admin{ background:rgba(167,139,250,.16); color:#A78BFA; }
+  .ac-badge.r-ga{ background:rgba(96,165,250,.16); color:#60A5FA; }
+  .ac-badge.r-insurer{ background:rgba(52,211,153,.16); color:#34D399; }
+  .ac-badge.st-active{ background:rgba(34,197,94,.16); color:var(--ok); }
+  .ac-badge.st-pending{ background:rgba(245,158,11,.16); color:var(--warn); }
+  @media (max-width:600px){ .ac-card-grid{ grid-template-columns:1fr; } }
 </style>
 
 <div id="ac-root" data-theme="dark">
@@ -300,8 +322,15 @@
         <p style="font-size:13px;color:var(--ts);margin-bottom:14px;">승인하면 계정이 활성화되고, 지점 매핑으로 자료실 글쓰기 권한이 부여됩니다.</p>
         <div id="ac-approvals-list"><div class="ac-card-empty">불러오는 중…</div></div>
       </section>
-      <section class="ac-view" data-view="users"><div class="ac-card ac-card-empty">사용자 — fetchUsers 재사용 예정</div></section>
-      <section class="ac-view" data-view="branches"><div class="ac-card ac-card-empty">지점 — branches×users 집계 예정</div></section>
+      <section class="ac-view" data-view="users">
+        <div class="ac-section-head"><i data-lucide="users"></i><h2>사용자</h2><span class="ac-section-sub" id="ac-users-count">—</span></div>
+        <div class="ac-chips" id="ac-users-chips"></div>
+        <div class="ac-card-grid" id="ac-users-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </section>
+      <section class="ac-view" data-view="branches">
+        <div class="ac-section-head"><i data-lucide="building-2"></i><h2>지점</h2><span class="ac-section-sub" id="ac-branches-count">—</span></div>
+        <div class="ac-card-grid" id="ac-branches-list"><div class="ac-card-empty">불러오는 중…</div></div>
+      </section>
       <section class="ac-view" data-view="posts"><div class="ac-card ac-card-empty">게시글 — fetchBoard 재사용 예정</div></section>
       <section class="ac-view" data-view="comments"><div class="ac-card ac-card-empty">댓글 — comments fetch 예정</div></section>
       <section class="ac-view" data-view="library"><div class="ac-card ac-card-empty">자료실 — scripts·library 재사용 예정</div></section>
@@ -351,6 +380,8 @@
     if(t && VIEW_TITLES[key]) t.textContent = VIEW_TITLES[key];
     if(key==='dashboard' && window.acLoadDashboard) window.acLoadDashboard();
     if(key==='approvals' && window.acLoadApprovals) window.acLoadApprovals();
+    if(key==='users' && window.acLoadUsers) window.acLoadUsers();
+    if(key==='branches' && window.acLoadBranches) window.acLoadBranches();
     if(window.lucide) window.lucide.createIcons();
   };
 
@@ -487,6 +518,60 @@
       (branches?branches.length:0)+'개 지점 · 미배정 '+(unassigned==null?'—':unassigned)+'명</div>'+
       (rows || '<div class="ac-card-empty">지점 없음</div>');
   }
+
+  // ── 사용자 view (role 배지 + 칩 필터 + 카드 그리드) ──
+  var _usersAll=[], _usersFilter='all';
+  function _rgrp(r){ return r==='admin' ? 'admin' : ((r && r.indexOf('insurer_')===0) ? 'insurer' : 'ga'); }
+  window.acLoadUsers = async function(){
+    var area=document.getElementById('ac-users-list'); if(!area) return;
+    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    _usersAll = await _rows('users?select=id,name,email,role,company,status,created_at&order=created_at.desc&limit=300');
+    var cnt=document.getElementById('ac-users-count'); if(cnt) cnt.textContent=_usersAll.length+'명';
+    renderUserChips(); renderUserCards();
+  };
+  function renderUserChips(){
+    var el=document.getElementById('ac-users-chips'); if(!el) return;
+    var defs=[['all','전체'],['admin','어드민'],['ga','GA'],['insurer','원수사'],['pending','승인대기']];
+    el.innerHTML=defs.map(function(d){ return '<button class="ac-chip'+(_usersFilter===d[0]?' active':'')+'" data-uf="'+d[0]+'">'+d[1]+'</button>'; }).join('');
+    el.querySelectorAll('[data-uf]').forEach(function(b){ b.addEventListener('click',function(){ _usersFilter=b.getAttribute('data-uf'); renderUserChips(); renderUserCards(); }); });
+  }
+  function renderUserCards(){
+    var area=document.getElementById('ac-users-list'); if(!area) return;
+    var RL=window.ROLE_LABEL||{};
+    var list=_usersAll.filter(function(u){
+      if(_usersFilter==='all') return true;
+      if(_usersFilter==='pending') return u.status==='pending';
+      return _rgrp(u.role)===_usersFilter;
+    });
+    if(!list.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="users"></i>해당 사용자가 없습니다</div>'; if(window.lucide) window.lucide.createIcons(); return; }
+    area.innerHTML=list.map(function(u){
+      var g=_rgrp(u.role); var st=(u.status==='pending')?'pending':'active';
+      return '<div class="ac-entity r-'+g+'">'+
+        '<span class="ac-badge r-'+g+'">'+esc(RL[u.role]||u.role||'')+'</span> '+
+        '<span class="ac-badge st-'+st+'">'+(st==='pending'?'승인대기':'활성')+'</span>'+
+        '<div class="ac-entity-name">'+esc(u.name||'(이름 없음)')+'</div>'+
+        '<div class="ac-entity-meta">'+esc(u.company||'-')+' · '+esc(u.email||'')+'</div>'+
+        '<div class="ac-entity-sub">가입 '+esc(_fmtDate(u.created_at))+'</div></div>';
+    }).join('');
+  }
+
+  // ── 지점 view (지점 카드 + 소속 인원) ──
+  window.acLoadBranches = async function(){
+    var area=document.getElementById('ac-branches-list'); if(!area) return;
+    area.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    var bs=await _rows('branches?select=id,name,ga_org_name,is_active&order=name.asc');
+    var us=await _rows('users?select=branch_id&status=eq.active');
+    var cnt={}; us.forEach(function(u){ if(u.branch_id) cnt[u.branch_id]=(cnt[u.branch_id]||0)+1; });
+    var c=document.getElementById('ac-branches-count'); if(c) c.textContent=bs.length+'개';
+    if(!bs.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="building-2"></i>등록된 지점이 없습니다</div>'; if(window.lucide) window.lucide.createIcons(); return; }
+    area.innerHTML=bs.map(function(b){
+      var n=cnt[b.id]||0; var zero=(n===0)?' <span class="ac-badge high">인원 0</span>':'';
+      return '<div class="ac-entity">'+
+        '<span class="ac-badge medium">'+esc(b.ga_org_name||'GA')+'</span>'+zero+
+        '<div class="ac-entity-name">'+esc(b.name)+'</div>'+
+        '<div class="ac-entity-meta">소속 인원 '+n+'명</div></div>';
+    }).join('');
+  };
 
   // ── 가입 승인 (admin-approvals 흡수 + approve_user/assign_branch 로깅) ──
   var _appr = { pending:[], branches:[], sel:null };
