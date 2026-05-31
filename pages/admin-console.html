@@ -558,6 +558,9 @@
   var _mf=document.getElementById('ac-modal-confirm'); if(_mf) _mf.addEventListener('click',acConfirmApproval);
   var _mo=document.getElementById('ac-modal-overlay'); if(_mo) _mo.addEventListener('click',function(e){ if(e.target===_mo) acCloseApproval(); });
   if(window.lucide) window.lucide.createIcons();
-  if(window.acLoadDashboard) window.acLoadDashboard();
+  // 딥링크 ?view= 초기 진입 (admin-approvals 리다이렉트 등) / 없으면 대시보드
+  var _qv=null; try{ _qv=new URLSearchParams(location.search).get('view'); }catch(e){}
+  if(_qv && document.querySelector('.ac-nav-item[data-view="'+_qv+'"]')){ window.acSwitchView(_qv); }
+  else if(window.acLoadDashboard){ window.acLoadDashboard(); }
 })();
 </script>
