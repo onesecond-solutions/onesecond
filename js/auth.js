@@ -178,19 +178,14 @@
         sessionStorage.setItem('os_user', JSON.stringify(_merged));
       } catch (_e) { /* 무시: AppState 갱신은 이미 완료 */ }
 
-      // 접속 로그 (세션당 1회)
+      // 접속 로그 (세션당 1회) — logActivity 헬퍼 통일 + admin 분기(감사)
       if (!sessionStorage.getItem('_loginLogged')) {
         sessionStorage.setItem('_loginLogged', '1');
-        window.db.fetch('/rest/v1/activity_logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            user_id:     window.AppState.userId,
-            event_type:  'login',
-            target_type: null,
-            target_id:   null
-          })
-        }).catch(function () {});
+        var _isAdmin = false;
+        try { _isAdmin = (JSON.parse(localStorage.getItem('os_user') || '{}').role === 'admin'); } catch (_e) {}
+        if (window.db && window.db.logActivity) {
+          window.db.logActivity(_isAdmin ? 'login_admin' : 'login', null, null, _isAdmin ? 'high' : 'normal', null);
+        }
       }
 
       // CustomEvent: AppState 준비 완료 알림
