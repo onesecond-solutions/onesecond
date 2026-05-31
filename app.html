@@ -971,7 +971,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="nav ins-show" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav ins-show" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
-    <div class="nav" id="nav-team" style="display:none" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
+    <div class="nav" id="nav-team" style="display:none" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">매니저룸</span></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
     <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
   </nav>
@@ -1312,26 +1312,19 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="mys-news-empty" id="newsLoading">자료 자료 자료... ⏳</div>
       </div>
      </div>
+     <!-- 매니저룸 (팀원관리 재편 · 2026-05-31 첫 조각) — 실장/지점장 role별 D영역 -->
      <div class="wrap view" id="v-team">
-      <div class="ttl">팀원관리 <span class="ac">· 시청팀</span></div>
-      <div class="sub">팀원 자료와 직급을 한 자리에 모음.</div>
-      <div class="chips">
-        <div class="chip on" onclick="filterTeam(this,'전체')">전체</div>
-        <div class="chip" onclick="filterTeam(this,'매니저')">매니저</div>
-        <div class="chip" onclick="filterTeam(this,'설계사')">설계사</div>
-        <div class="chip" onclick="filterTeam(this,'신입')">신입</div>
-        <div class="chip" onclick="filterTeam(this,'휴직')">휴직</div>
+      <div class="ttl">매니저룸 <span class="ac" id="mr-scope">· 팀 관리</span></div>
+      <div class="sub" id="mr-sub">실장·지점장 전용 — 팀원 현황과 관리</div>
+      <!-- admin 전용: 실장/지점장 화면을 눈으로 미리보기 -->
+      <div class="tabs" id="mr-preview" style="display:none">
+        <div class="tab on" onclick="mrPreview(this,'manager')">실장 화면</div>
+        <div class="tab" onclick="mrPreview(this,'branch')">지점장 화면</div>
       </div>
-      <div class="mys-grid" id="teamGrid">
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">매니저</span><div class="mys-ttl">한재성 실장</div><div class="mys-meta">시청팀 · 2018년 입사 · 010-1234-5678</div></div>
-        <div class="mys-card" style="--tc:var(--t-event)"><span class="mys-badge">매니저</span><div class="mys-ttl">송미정 매니저</div><div class="mys-meta">시청팀 · 2020년 입사 · 휴무 5/15</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">김민수</div><div class="mys-meta">시청팀 · 2021년 입사 · 5월 8건</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">이서연</div><div class="mys-meta">시청팀 · 2022년 입사 · 5월 6건</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">박지훈</div><div class="mys-meta">시청팀 · 2022년 입사 · 5월 5건</div></div>
-        <div class="mys-card" style="--tc:var(--t-product)"><span class="mys-badge">설계사</span><div class="mys-ttl">정수민</div><div class="mys-meta">시청팀 · 2023년 입사 · 5월 4건</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">신입</span><div class="mys-ttl">최영진</div><div class="mys-meta">시청팀 · 2026년 4월 입사 · 교육 중</div></div>
-        <div class="mys-card" style="--tc:var(--ok)"><span class="mys-badge">신입</span><div class="mys-ttl">강혜린</div><div class="mys-meta">시청팀 · 2026년 5월 입사 · 교육 중</div></div>
-        <div class="mys-card" style="--tc:var(--ts)"><span class="mys-badge">휴직</span><div class="mys-ttl">윤성호</div><div class="mys-meta">시청팀 · 출산휴가 · 7월 복귀 예정</div></div>
+      <div class="chips" id="mr-actions"></div>
+      <div class="lhead"><span class="cnt" id="mr-cnt">팀원 —</span></div>
+      <div class="mys-grid" id="mr-grid">
+        <div class="mys-news-empty">불러오는 중…</div>
       </div>
      </div>
      <!-- 2026-05-30 단계 2: 원수사 자료실 view UI (insurer_* + admin 전용) -->
@@ -1976,7 +1969,7 @@ function applyRoleClass(){
   if(na) na.style.display = (r === 'admin') ? '' : 'none';
   if(r === 'admin' && window._refreshAdminBadge) window._refreshAdminBadge();
   var nt = document.getElementById('nav-team');
-  var mgr = ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'];
+  var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저룸 = GA 실장·지점장·admin (2026-05-31) */
   if(nt) nt.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
 }
 window.applyRoleClass = applyRoleClass;
@@ -2176,7 +2169,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'팀원관리',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivInit==='function')ivInit();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivInit==='function')ivInit();if(key==='team'&&typeof loadManagerRoom==='function')loadManagerRoom();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -4389,6 +4382,61 @@ function renderNewsCards(rows){var g=document.getElementById('newsGrid');if(!g)r
 function fetchNews(){if(newsLoaded){renderNewsCards(newsCache);return;}var g=document.getElementById('newsGrid');if(g)g.innerHTML='<div class="mys-news-empty">자료 자료 자료... ⏳</div>';var url=SUPABASE_URL+'/rest/v1/issues?select=*&order=pub_date.desc.nullslast&limit=30';fetch(url,{headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(rows){newsCache=rows;newsLoaded=true;renderNewsCards(rows);}).catch(function(err){console.error('보험이슈 자료 진입 격차:',err);if(g)g.innerHTML='<div class="mys-news-empty">자료 진입 격차. 잠시 후 다시 시도해주세요.</div>';});}
 function filterNews(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');if(!newsCache)return;if(cat==='전체'){renderNewsCards(newsCache);}else{var filtered=newsCache.filter(function(r){return r.source===cat;});renderNewsCards(filtered);}}
 function filterTeam(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#teamGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+
+/* ── 매니저룸 (팀원관리 재편) — 실장/지점장 role별 D영역 · 2026-05-31 첫 조각 ──
+ * · 데이터 = 실제 public.users (RLS가 role별 가시 범위 스코프) / read-only (mock 폐기)
+ * · admin = 실장/지점장 화면을 눈으로 미리보기 전환
+ * · 관리 기능(초대/서브팀/퇴사자)은 placeholder = 다음 단계 (docs/product/sub_team_v1_2.md) */
+var _mrBadge={ga_branch_manager:'지점장',ga_manager:'실장',ga_member:'설계사',ga_staff:'스텝',admin:'어드민'};
+function loadManagerRoom(){
+  var role=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+  var isAdmin=(role==='admin');
+  var pv=document.getElementById('mr-preview'); if(pv) pv.style.display=isAdmin?'flex':'none';
+  var view=isAdmin?(window._mrPreview||'manager'):(role==='ga_branch_manager'?'branch':'manager');
+  mrRender(view);
+}
+function mrPreview(el,v){
+  var tabs=el.parentElement.querySelectorAll('.tab');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  el.classList.add('on'); window._mrPreview=v; mrRender(v);
+}
+function mrRender(view){
+  var scope=document.getElementById('mr-scope'),sub=document.getElementById('mr-sub'),acts=document.getElementById('mr-actions');
+  if(view==='branch'){
+    if(scope) scope.textContent='· 지점장 (지점 전체)';
+    if(sub) sub.textContent='지점 전체 팀·인원을 감독합니다 (감독 기능 예정).';
+    if(acts) acts.innerHTML='<span class="chip" style="opacity:.45;cursor:default">지점 현황 (예정)</span><span class="chip" style="opacity:.45;cursor:default">퇴사자 내보내기 (예정)</span>';
+  }else{
+    if(scope) scope.textContent='· 실장 (내 팀)';
+    if(sub) sub.textContent='내 팀원 현황 + 서브팀 관리 (관리 기능 예정).';
+    if(acts) acts.innerHTML='<span class="chip" style="opacity:.45;cursor:default">+ 팀원 초대 (예정)</span><span class="chip" style="opacity:.45;cursor:default">서브팀 관리 (예정)</span>';
+  }
+  mrLoadMembers(view);
+}
+async function mrLoadMembers(view){
+  var grid=document.getElementById('mr-grid'); if(!grid) return;
+  grid.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  var token=localStorage.getItem('os_token')||sessionStorage.getItem('os_token');
+  if(!token||!window.db||!window.db.fetch){ grid.innerHTML='<div class="mys-news-empty">로그인 후 표시됩니다.</div>'; return; }
+  try{
+    var res=await window.db.fetch('/rest/v1/users?role=like.ga_*&select=id,name,role,company,team,status&order=role.asc&limit=200');
+    if(!res.ok){ grid.innerHTML='<div class="mys-news-empty">불러오지 못했습니다 ('+res.status+').</div>'; return; }
+    var rows=await res.json();
+    var cnt=document.getElementById('mr-cnt'); if(cnt) cnt.textContent='팀원 '+rows.length+'명';
+    if(!rows.length){ grid.innerHTML='<div class="mys-news-empty">표시할 팀원이 없습니다.</div>'; return; }
+    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    var RL=window.ROLE_LABEL||{};
+    grid.innerHTML=rows.map(function(u){
+      var badge=_mrBadge[u.role]||RL[u.role]||u.role||'팀원';
+      var tc=(u.role==='ga_branch_manager'||u.role==='ga_manager')?'var(--t-event)':(u.status==='pending'?'var(--ok)':'var(--t-product)');
+      var meta=[esc(u.company||''),esc(u.team||''),(u.status==='pending'?'승인대기':'')].filter(Boolean).join(' · ');
+      return '<div class="mys-card" style="--tc:'+tc+'"><span class="mys-badge">'+esc(badge)+'</span>'+
+        '<div class="mys-ttl">'+esc(u.name||'(이름 없음)')+'</div>'+
+        '<div class="mys-meta">'+(meta||'-')+'</div></div>';
+    }).join('');
+  }catch(e){ grid.innerHTML='<div class="mys-news-empty">오류가 발생했습니다.</div>'; }
+}
+window.loadManagerRoom=loadManagerRoom; window.mrPreview=mrPreview;
 function toggleLocalSearch(){var b=document.getElementById('lsearch');b.classList.toggle('open');if(b.classList.contains('open')){setTimeout(function(){document.getElementById('lsinput').focus();},50);}else{closeLocalSearch();}}
 function closeLocalSearch(){document.getElementById('lsearch').classList.remove('open');document.getElementById('lsinput').value='';filterLocal('');}
 function filterLocal(q){
