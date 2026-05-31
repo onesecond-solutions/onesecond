@@ -244,13 +244,18 @@
   window.acLoadPosts = async function(){
     var area=document.getElementById('ac-posts-list'); if(!area) return;
     area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
-    var rows=await _rows('posts?select=id,title,board_type,created_at&order=created_at.desc&limit=100');
+    var rows=await _rows('posts?select=id,title,board_type,created_at,is_hidden&order=created_at.desc&limit=100');
     var c=document.getElementById('ac-posts-count'); if(c) c.textContent=rows.length+'건';
     if(!rows.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="file-text"></i>게시글 없음</div>'; if(window.lucide) window.lucide.createIcons(); return; }
     area.innerHTML=rows.map(function(p){
-      return '<div class="ac-entity"><span class="ac-badge medium">'+esc(BOARD_LABEL[p.board_type]||p.board_type||'')+'</span>'+
+      var hid=p.is_hidden?' <span class="ac-badge high">숨김</span>':'';
+      return '<div class="ac-entity"><span class="ac-badge medium">'+esc(BOARD_LABEL[p.board_type]||p.board_type||'')+'</span>'+hid+
         '<div class="ac-entity-name">'+esc(p.title||'(제목 없음)')+'</div>'+
-        '<div class="ac-entity-sub">'+esc(_fmtDate(p.created_at))+'</div></div>';
+        '<div class="ac-entity-sub">'+esc(_fmtDate(p.created_at))+'</div>'+
+        '<div style="display:flex;gap:8px;margin-top:10px">'+
+          '<button class="ac-btn" onclick="acHidePost(\''+esc(p.id)+'\','+(p.is_hidden?'false':'true')+')">'+(p.is_hidden?'숨김 해제':'숨기기')+'</button>'+
+          '<button class="ac-btn" style="border-color:var(--err);color:var(--err)" onclick="acDeletePost(\''+esc(p.id)+'\')">삭제</button>'+
+        '</div></div>';
     }).join('');
   };
   // 댓글: 본문 컬럼 미확인 → 최소 구성(후속 본문 보강)
@@ -263,9 +268,45 @@
     area.innerHTML=rows.map(function(cm){
       return '<div class="ac-entity"><span class="ac-badge normal">댓글</span>'+
         '<div class="ac-entity-meta">댓글 #'+esc(cm.id)+'</div>'+
-        '<div class="ac-entity-sub">'+esc(_fmtDate(cm.created_at))+'</div></div>';
+        '<div class="ac-entity-sub">'+esc(_fmtDate(cm.created_at))+'</div>'+
+        '<div style="margin-top:10px"><button class="ac-btn" style="border-color:var(--err);color:var(--err)" onclick="acDeleteComment(\''+esc(cm.id)+'\')">삭제</button></div></div>';
     }).join('');
   };
+  // ── 긴급 모더레이션 (admin 슈퍼유저) — 게시글 숨김/삭제 · 댓글 삭제 (2026-05-31 P1)
+  //    admin_v2.js handleHidePost/handleDeletePost 패턴 이식. RLS가 admin PATCH/DELETE 허용 전제.
+  //    403이면 posts/comments RLS에 is_admin() 정책 보강 필요(SQL 별도). 운영 액션 로깅.
+  window.acHidePost = async function(id, hide){
+    try{
+      var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{
+        method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({is_hidden:hide}) });
+      if(!res.ok){ acToast('숨김 처리 실패 ('+res.status+')',true); return; }
+      if(window.db.logActivity) window.db.logActivity(hide?'hide_post':'unhide_post','post',id,{});
+      acToast(hide?'게시글을 숨겼습니다':'숨김을 해제했습니다');
+      if(window.acLoadPosts) window.acLoadPosts();
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+  window.acDeletePost = async function(id){
+    if(!confirm('게시글을 삭제하시겠습니까?\n(되돌릴 수 없습니다)')) return;
+    try{
+      var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      if(!res.ok){ acToast('삭제 실패 ('+res.status+')',true); return; }
+      if(window.db.logActivity) window.db.logActivity('delete_post','post',id,{});
+      acToast('게시글을 삭제했습니다');
+      if(window.acLoadPosts) window.acLoadPosts();
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+  window.acDeleteComment = async function(id){
+    if(!confirm('댓글을 삭제하시겠습니까?\n(되돌릴 수 없습니다)')) return;
+    try{
+      var res=await window.db.fetch('/rest/v1/comments?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      if(!res.ok){ acToast('삭제 실패 ('+res.status+')',true); return; }
+      if(window.db.logActivity) window.db.logActivity('delete_comment','comment',id,{});
+      acToast('댓글을 삭제했습니다');
+      if(window.acLoadComments) window.acLoadComments();
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+
   var _libFilter='library';
   window.acLoadLibrary = function(){ renderLibChips(); loadLibList(); };
   function renderLibChips(){
