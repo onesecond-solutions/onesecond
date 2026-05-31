@@ -1392,10 +1392,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="iv-bar">
         <div class="chips" id="iv-chips">
           <div class="chip on" onclick="ivFilter(this,'전체')">전체</div>
+          <div class="chip" onclick="ivFilter(this,'긴급(마감)')">긴급(마감)</div>
+          <div class="chip" onclick="ivFilter(this,'공지')">공지</div>
           <div class="chip" onclick="ivFilter(this,'소식지')">소식지</div>
-          <div class="chip" onclick="ivFilter(this,'상품 자료')">상품 자료</div>
-          <div class="chip" onclick="ivFilter(this,'인수 자료')">인수 자료</div>
-          <div class="chip" onclick="ivFilter(this,'FAQ')">FAQ</div>
+          <div class="chip" onclick="ivFilter(this,'상품')">상품</div>
+          <div class="chip" onclick="ivFilter(this,'인수')">인수</div>
+          <div class="chip" onclick="ivFilter(this,'기타')">기타</div>
         </div>
       </div>
       <div class="lhead"><span class="cnt">우리 회사 자료 <b id="iv-cnt">0건</b></span></div>
@@ -1416,15 +1418,17 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="iv-fld"><label>회사</label><input type="text" id="iv-f-company" readonly></div>
           <div class="iv-fld"><label>유형</label>
             <div class="iv-types">
-              <label class="iv-type"><input type="radio" name="iv-type" value="소식지" checked> 소식지</label>
-              <label class="iv-type"><input type="radio" name="iv-type" value="상품 자료"> 상품 자료</label>
-              <label class="iv-type"><input type="radio" name="iv-type" value="인수 자료"> 인수 자료</label>
-              <label class="iv-type"><input type="radio" name="iv-type" value="FAQ"> FAQ</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="긴급(마감)" checked> 긴급(마감)</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="공지"> 공지</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="소식지"> 소식지</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="상품"> 상품</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="인수"> 인수</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="기타"> 기타</label>
             </div>
           </div>
           <div class="iv-fld"><label>제목</label><input type="text" id="iv-f-title" placeholder="자료 제목을 입력하세요"></div>
           <div class="iv-fld"><label>내용</label><textarea id="iv-f-body" rows="5" placeholder="자료 내용을 입력하세요"></textarea></div>
-          <div class="iv-fld"><label>첨부 (PDF/이미지)</label><input type="file" id="iv-f-file" accept=".pdf,image/*"></div>
+          <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개)</label><input type="file" id="iv-f-file" multiple></div>
           <div class="iv-fld"><label>공개 범위</label>
             <div class="iv-types">
               <label class="iv-type"><input type="radio" name="iv-visibility" value="비공개" checked> 비공개 (내부 초안)</label>
