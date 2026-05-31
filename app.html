@@ -1140,6 +1140,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <div class="wrap view" id="v-myspace">
       <div class="ttl">MY SPACE <span class="ac">· 내가 저장한 자료들</span></div>
       <div class="sub">딸깍으로 저장한 자료를 한 곳에 모아 봅니다.</div>
+      <div class="tabs" id="mys-tabs">
+        <div class="tab on" onclick="mysTab(this,'today')">오늘의 할 일</div>
+        <div class="tab" onclick="mysTab(this,'saved')">내 저장고</div>
+      </div>
+      <div id="mys-today"></div>
+      <div id="mys-saved" style="display:none">
       <div class="mys-toolbar">
         <div class="chips">
           <div class="chip on" onclick="filterMys(this,'전체')">전체</div>
@@ -1153,6 +1159,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="mys-grid" id="mysGrid">
         <div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div>
       </div>
+      </div><!-- /mys-saved -->
       <!-- 2026-05-29: MY SPACE 상세 보기 모달 (PR #164) -->
       <div class="myspace-detail-overlay" id="myspaceDetailModal" onclick="if(event.target===this)closeMyspaceDetail()">
         <div class="myspace-detail-box" role="dialog" aria-modal="true">
@@ -1316,6 +1323,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <div class="wrap view" id="v-team">
       <div class="ttl">매니저룸 <span class="ac" id="mr-scope">· 팀 관리</span></div>
       <div class="sub" id="mr-sub">실장·지점장 전용 — 팀원 현황과 관리</div>
+      <div class="tabs" id="mr-tabs">
+        <div class="tab on" onclick="mrTabMain(this,'today')">오늘의 할 일</div>
+        <div class="tab" onclick="mrTabMain(this,'manage')">매니저</div>
+      </div>
+      <div id="mr-today"></div>
+      <div id="mr-main" style="display:none">
       <!-- admin 전용: 실장/지점장 화면을 눈으로 미리보기 -->
       <div class="tabs" id="mr-preview" style="display:none">
         <div class="tab on" onclick="mrPreview(this,'manager')">실장 화면</div>
@@ -1327,6 +1340,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="mys-news-empty">불러오는 중…</div>
       </div>
 
+      </div><!-- /mr-main -->
       <!-- 공지 작성 모달 (보험사 자료실 등록 폼 패턴 재사용 · 7유형) -->
       <div class="iv-overlay" id="mrWriteModal" style="display:none">
        <div class="iv-write-modal" role="dialog" aria-modal="true" aria-labelledby="mr-write-title">
@@ -1361,6 +1375,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <div class="wrap view" id="v-insurer-vault">
       <div class="ttl"><span id="iv-company-ttl">보험사</span> 자료실 <span class="ac">· 원수사 전용</span></div>
       <div class="sub iv-notice">&#128274; 등록한 자료는 현재 원수사 내부에서만 보입니다 (설계사 비노출).</div>
+      <div class="tabs" id="iv-tabs">
+        <div class="tab on" onclick="ivTab(this,'today')">오늘의 할 일</div>
+        <div class="tab" onclick="ivTab(this,'manage')">자료 관리</div>
+      </div>
+      <div id="iv-today"></div>
+      <div id="iv-saved" style="display:none">
       <div class="iv-bar">
         <div class="chips" id="iv-chips">
           <div class="chip on" onclick="ivFilter(this,'전체')">전체</div>
@@ -1375,6 +1395,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="mys-grid" id="iv-grid">
         <div class="mys-news-empty">아직 등록된 자료가 없습니다.<br>+ 자료 등록으로 첫 자료를 올려보세요.</div>
       </div>
+      </div><!-- /iv-saved -->
      </div>
 
      <!-- 단계 2: 자료 등록 모달 (저장 연결은 단계 3 DB 확정 후) -->
@@ -2199,7 +2220,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof loadMyspace==='function')loadMyspace();if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivInit==='function')ivInit();if(key==='team'&&typeof loadManagerRoom==='function')loadManagerRoom();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'today');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -4150,6 +4171,72 @@ async function _loadNoticeFeed(scope, tabKey){
 function loadTeamNotices(){ return _loadNoticeFeed('team_internal','team'); }
 function loadBranchFeed(){ return _loadNoticeFeed('branch_internal','branch'); }
 window.loadTeamNotices=loadTeamNotices; window.loadBranchFeed=loadBranchFeed;
+
+/* ════ 오늘의 할 일 엔진 (2026-05-31) — 롤/페이지별 digest (MY SPACE·보험사 자료실·매니저룸 첫 탭 공용)
+ * 카드 = 채널 + 카운트 + 전체보기 딥링크. 실데이터 + 정직 placeholder.
+ * 미열람/미답변/우리회사질문 등은 읽음·답변·인큐베이션 DB(다음 단계) → '곧 연결'(가짜 숫자 X). ════ */
+async function _ttCount(q){ try{ if(!window.db||!window.db.fetch) return null; var r=await window.db.fetch('/rest/v1/'+q,{headers:{'Prefer':'count=exact'}}); if(!r.ok) return null; return parseInt((r.headers.get('Content-Range')||'0-0/0').split('/')[1],10)||0; }catch(e){ return null; } }
+function _ttKstMidnightISO(){ var k=new Date(Date.now()+9*3600000); return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).toISOString(); }
+function _goVoiceTab(key){ if(typeof showView!=='function') return; showView('voice'); setTimeout(function(){ var tabs=document.querySelectorAll('#v-voice .tabs .tab'); var map={team:0,voice:1,smart:2,branch:3}; var i=map[key]; if(tabs[i]) tabs[i].click(); },70); }
+window._goVoiceTab=_goVoiceTab;
+function _ttCard(o){
+  var val=(o.value==null)?'<span style="color:var(--tf);font-size:0.5em;font-weight:600">곧 연결</span>':(o.value+(o.unit||''));
+  var more=o.go?'<div class="home-widget-more" style="cursor:pointer" onclick="'+o.go+'">전체보기 →</div>':'';
+  return '<div class="home-widget"><div class="home-widget-head"><div class="home-widget-ttl">'+o.label+'</div>'+more+'</div>'+
+    '<div style="font-size:1.7em;font-weight:800;color:var(--tp);line-height:1.1">'+val+'</div>'+
+    (o.hint?'<div style="font-size:0.78em;color:var(--ts);margin-top:3px">'+o.hint+'</div>':'')+'</div>';
+}
+async function renderTodayTodo(ctx, mountEl){
+  if(!mountEl) return;
+  if(!window.db||!window.db.fetch){ mountEl.innerHTML='<div class="mys-news-empty">로그인 후 표시됩니다.</div>'; return; }
+  mountEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  var since=_ttKstMidnightISO();
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var cards=[];
+  if(ctx==='myspace'){
+    var nt=await _ttCount("team_notices?scope=eq.team_internal&deleted_at=is.null&created_at=gte."+since+"&select=id");
+    var qa=await _ttCount("posts?board_type=eq.qna&select=id");
+    cards.push(_ttCard({label:'실장 공지 (오늘)', value:nt, unit:'건', hint:'단체방 오늘 공지', go:"_goVoiceTab('team')"}));
+    cards.push(_ttCard({label:'보험 Q&A', value:qa, unit:'건', hint:'내 질문 답변 (전체는 현장의 소리)', go:"_goVoiceTab('voice')"}));
+    cards.push(_ttCard({label:'원수사 공지', value:null, hint:'다음 단계 연결 예정'}));
+  } else if(ctx==='vault'){
+    var lib=await _ttCount("library?select=id");
+    cards.push(_ttCard({label:'우리 회사로 온 질문', value:null, hint:'인큐베이션 — 다음 단계'}));
+    cards.push(_ttCard({label:'우리 회사 자료', value:lib, unit:'건', hint:'등록한 자료'}));
+  } else if(ctx==='manager'){
+    var qa2=await _ttCount("posts?board_type=eq.qna&select=id");
+    var mine=u.id?await _ttCount("team_notices?author_id=eq."+encodeURIComponent(u.id)+"&deleted_at=is.null&select=id"):null;
+    cards.push(_ttCard({label:'미답변 팀원 질문', value:null, hint:'답변 추적 — 다음 단계'}));
+    cards.push(_ttCard({label:'새 보험 Q&A', value:qa2, unit:'건', hint:'현장 질문·답변', go:"_goVoiceTab('voice')"}));
+    cards.push(_ttCard({label:'내 공지', value:mine, unit:'건', hint:'내가 쓴 단체방 공지'}));
+  }
+  mountEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'+cards.join('')+'</div>';
+}
+window.renderTodayTodo=renderTodayTodo;
+function mysTab(el,key){
+  var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
+  var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved');
+  if(key==='saved'){ if(today) today.style.display='none'; if(saved) saved.style.display=''; if(typeof loadMyspace==='function') loadMyspace(); }
+  else { if(saved) saved.style.display='none'; if(today){ today.style.display=''; renderTodayTodo('myspace', today); } }
+}
+window.mysTab=mysTab;
+function ivTab(el,key){
+  var tabs=document.querySelectorAll('#iv-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  if(el) el.classList.add('on'); else { var f=document.querySelector('#iv-tabs .tab'); if(f) f.classList.add('on'); }
+  var today=document.getElementById('iv-today'), saved=document.getElementById('iv-saved');
+  if(key==='manage'){ if(today) today.style.display='none'; if(saved) saved.style.display=''; if(typeof ivInit==='function') ivInit(); }
+  else { if(saved) saved.style.display='none'; if(today){ today.style.display=''; renderTodayTodo('vault', today); } }
+}
+window.ivTab=ivTab;
+function mrTabMain(el,key){
+  var tabs=document.querySelectorAll('#mr-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  if(el) el.classList.add('on'); else { var f=document.querySelector('#mr-tabs .tab'); if(f) f.classList.add('on'); }
+  var today=document.getElementById('mr-today'), main=document.getElementById('mr-main');
+  if(key==='manage'){ if(today) today.style.display='none'; if(main) main.style.display=''; if(typeof loadManagerRoom==='function') loadManagerRoom(); }
+  else { if(main) main.style.display='none'; if(today){ today.style.display=''; renderTodayTodo('manager', today); } }
+}
+window.mrTabMain=mrTabMain;
 /* ─────────────────────────────────────────────
    스크립트 view — v1 10 stage + 가로 정렬 + 오버레이 확장 (2026-05-27 갈아끼움)
    - 풀스크린 모달 통째 폐기 → 가로 정렬 카드 + 오버레이 확장
