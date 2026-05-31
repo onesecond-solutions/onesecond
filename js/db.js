@@ -141,6 +141,31 @@
     return SUPABASE_URL + (path || '');
   }
 
+  // ── 7-b. 운영 액션 로깅 (운영센터 admin-console — activity_logs) ──────────
+  /**
+   * window.db.logActivity(event_type, target_type, target_id, severity, metadata)
+   * 운영 액션 성공 직후 호출. 로깅 실패해도 원 액션에 영향 주지 않음(catch 무시).
+   * metadata = id 계열만 저장 (표시용 이름 금지 — 이름 변경 시 과거 로그 무결성).
+   * 카탈로그: docs/product/admin-console-operating-model.md §5
+   */
+  async function logActivity(event_type, target_type, target_id, severity, metadata) {
+    try {
+      var uid = (window.AppState && window.AppState.userId) || null;
+      await dbFetch('/rest/v1/activity_logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          user_id: uid,
+          event_type: event_type,
+          target_type: target_type || null,
+          target_id: (target_id != null) ? String(target_id) : null,
+          severity: severity || 'normal',
+          metadata: metadata || null
+        })
+      });
+    } catch (e) { /* 로깅 실패가 운영 액션을 막지 않음 */ }
+  }
+
   // ── 8. 공개 API: window.db ────────────────────────────────────────────────
   window.db = {
     fetch: dbFetch,                       // 인증 포함 fetch (일반 사용)
@@ -148,7 +173,8 @@
     url: dbUrl,                           // 전체 URL 조합 헬퍼
     key: SUPABASE_KEY,                    // apikey (직접 헤더 구성 필요 시)
     getToken: getToken,                   // 현재 토큰 반환
-    mergeUserProfile: mergeUserProfile    // auth user에 public.users role/name/plan 합침
+    mergeUserProfile: mergeUserProfile,   // auth user에 public.users role/name/plan 합침
+    logActivity: logActivity              // 운영 액션 로깅 (activity_logs, 운영센터)
   };
 
   // ── 9. 하위 호환: 기존 app.html 코드가 참조하는 전역 변수 유지 ────────────
