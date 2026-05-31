@@ -328,7 +328,18 @@
   //  · 집계 가능 항목만 실데이터 / 운영 액션 로깅 확대는 후속
   // ════════════════════════════════════════════════════════════════════
   var INSURER_ROLES = 'insurer_branch_manager,insurer_manager,insurer_member,insurer_staff';
-  var EVENT_LABEL = { login:'로그인', script_view:'스크립트 조회' };
+  // 운영 피드 문장 변환 카탈로그 (raw event_type 노출 금지 — 설계서 §5/§8)
+  var EVENT_FEED = {
+    approve_user:'가입을 승인했습니다', assign_branch:'지점에 배정했습니다',
+    suspend_user:'사용자를 정지했습니다', activate_user:'정지를 해제했습니다',
+    change_role:'권한을 변경했습니다', create_notice:'공지를 등록했습니다',
+    update_notice:'공지를 수정했습니다', update_setting:'시스템 설정을 변경했습니다',
+    hide_post:'게시글을 숨김 처리했습니다', delete_post:'게시글을 삭제했습니다',
+    delete_comment:'댓글을 삭제했습니다', update_menu:'메뉴 설정을 변경했습니다',
+    create_branch:'지점을 생성했습니다', update_branch:'지점 정보를 수정했습니다',
+    delete_branch:'지점을 삭제했습니다', login:'로그인했습니다',
+    script_view:'스크립트를 조회했습니다'
+  };
 
   function _isoAgo(ms){ return new Date(Date.now()-ms).toISOString(); }
   function _kstMidnightISO(){
@@ -376,15 +387,30 @@
         '<span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
     }).join('');
   }
-  function renderActivity(logs){
+  function _hhmm(iso){ var t=new Date(iso); if(isNaN(t.getTime())) return '--:--';
+    var h=t.getHours(), m=t.getMinutes(); return (h<10?'0':'')+h+':'+(m<10?'0':'')+m; }
+  // 운영 피드 = 시각 + severity 배지 + 변환 문장 (actor는 user_id→name JOIN)
+  async function renderActivity(logs){
     var el=document.getElementById('ac-recent-activity'); if(!el) return;
     el.classList.remove('ac-card-empty');
     if(!logs || !logs.length){ el.innerHTML='<div class="ac-card-empty">최근 활동 없음</div>'; return; }
+    // actor 이름 일괄 조회 (id-only 로그 → 표시 시 변환)
+    var ids=[]; logs.forEach(function(l){ if(l.user_id && ids.indexOf(l.user_id)<0) ids.push(l.user_id); });
+    var nameMap={};
+    if(ids.length){
+      var us=await _rows('users?id=in.('+ids.join(',')+')&select=id,name');
+      us.forEach(function(u){ nameMap[u.id]=u.name; });
+    }
     el.innerHTML=logs.map(function(l){
-      var label=EVENT_LABEL[l.event_type]||l.event_type||'활동';
-      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);">'+
-        '<span>'+esc(label)+(l.target_type?' · '+esc(l.target_type):'')+'</span>'+
-        '<span style="color:var(--tf);font-size:12px;">'+_rel(l.created_at)+'</span></div>';
+      var sev=l.severity||'normal';
+      var actor=esc(nameMap[l.user_id]||'사용자');
+      var phrase=EVENT_FEED[l.event_type];
+      var sentence = (l.event_type==='login_admin') ? '관리자가 로그인했습니다'
+        : (phrase ? (actor+'님이 '+phrase) : esc(l.event_type||'활동'));
+      return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);">'+
+        '<span style="color:var(--tf);font-size:12px;min-width:40px;">'+_hhmm(l.created_at)+'</span>'+
+        '<span class="ac-badge '+sev+'">'+sev.toUpperCase()+'</span>'+
+        '<span>'+sentence+'</span></div>';
     }).join('');
   }
   function _stat(l,v){ return '<div><div style="font-size:12px;color:var(--tf);">'+l+'</div>'+
@@ -513,7 +539,7 @@
     ]);
     renderService(total, active, newToday, posts, scripts, lib);
 
-    renderActivity(await _rows('activity_logs?select=id,user_id,event_type,target_type,created_at&order=created_at.desc&limit=8'));
+    await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=12'));
 
     var [branches, ubranch] = await Promise.all([
       _rows('branches?select=id,name,ga_org_name,is_active'),
