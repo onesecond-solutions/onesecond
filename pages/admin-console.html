@@ -129,10 +129,22 @@
   .ac-task .ac-task-label{font-size:13px; color:var(--ts); font-weight:600; margin-top:6px;}
   .ac-task .ac-task-value{font-size:26px; font-weight:800; line-height:1.1;}
 
-  @media (max-width:860px){
-    .ac-sidebar{width:64px;}
-    .ac-brand b, .ac-brand span, .ac-nav-item .lbl, .ac-nav-group-label{display:none;}
-    .ac-grid.cols-2{grid-template-columns:1fr;}
+  .ac-hamb{ display:none; }
+  .ac-mback{ display:none; }
+  /* 모바일/태블릿 — 사이드바 슬라이드 + 햄버거 (app.html 패턴 정합) */
+  @media (max-width:1024px){
+    .ac-sidebar{ position:fixed; left:0; top:0; bottom:0; z-index:9400;
+      transform:translateX(-100%); transition:transform .22s ease; }
+    #ac-root.msidebar .ac-sidebar{ transform:translateX(0); box-shadow:0 0 40px rgba(0,0,0,.5); }
+    .ac-mback{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9390; }
+    #ac-root.msidebar .ac-mback{ display:block; }
+    .ac-hamb{ display:inline-flex; }
+    .ac-header{ padding:0 14px; }
+    .ac-header h1{ font-size:15px; }
+    .ac-body{ padding:18px 16px; }
+    .ac-grid.cols-2{ grid-template-columns:1fr; }
+    .ac-card-grid{ grid-template-columns:1fr; }
+    .ac-task .ac-task-value{ font-size:24px; }
   }
 
   /* 가입 승인 */
@@ -284,6 +296,7 @@
   <!-- 메인 -->
   <main class="ac-main">
     <header class="ac-header">
+      <button class="ac-btn ac-btn-icon ac-hamb" onclick="acToggleSidebar()" title="메뉴"><i data-lucide="menu"></i></button>
       <h1 id="ac-view-title">대시보드</h1>
       <div class="ac-spacer"></div>
       <button class="ac-btn ac-btn-icon" onclick="acToggleTheme()" title="테마 전환">
@@ -362,6 +375,8 @@
     </div>
   </main>
 
+  <div class="ac-mback" onclick="acToggleSidebar()"></div>
+
   <!-- 가입 승인 모달 -->
   <div class="ac-modal-overlay" id="ac-modal-overlay">
     <div class="ac-modal">
@@ -406,11 +421,15 @@
     if(key==='posts' && window.acLoadPosts) window.acLoadPosts();
     if(key==='comments' && window.acLoadComments) window.acLoadComments();
     if(key==='library' && window.acLoadLibrary) window.acLoadLibrary();
+    var _r=document.getElementById('ac-root'); if(_r) _r.classList.remove('msidebar'); // 모바일 nav 닫기
     if(window.lucide) window.lucide.createIcons();
   };
 
   // 이탈 경로 (로고·상단 버튼·관리자 종료·ESC 공통)
   window.acGoService = function(){ window.location.href = '/app.html'; };
+
+  // 모바일 사이드바 토글 (햄버거·백드롭)
+  window.acToggleSidebar = function(){ var r=document.getElementById('ac-root'); if(r) r.classList.toggle('msidebar'); };
 
   // 테마 토글
   window.acToggleTheme = function(){
