@@ -2318,12 +2318,42 @@ var cards=[
 {brand:"5세대 실손 · 비급여 특약",name:"5세대 비급여 특약<br>핵심 비교",rows:[["비급여 특약1 (중증)","연간 5천만 한도"],["비급여 특약2 (비중증)","연간 1천만"],["통원","일당 20만 / 입원 회당 300만"],["자기부담","최대 50% · 5만"]]},
 {brand:"5세대 실손 · 주계약",name:"5세대 주계약<br>4세대 대비 변화",rows:[["보장 한도","연간 5천만 (동일)"],["임신·출산","면책 → 급여보장 신설",true],["통원 자기부담","건보 본인부담률 반영"],["적용 시점","26년 5월부터 시행"]]}
 ];
-function renderCard(){var c=cards[cur];document.querySelector('#cm .ch span').innerHTML='카드 만들기 — 「'+names[cur]+'」';var h='<div class="ctop"><div class="cbrand">'+c.brand+'</div><div class="cname">'+c.name+'</div></div><div class="cbody">';
-c.rows.forEach(function(r){h+='<div class="crow"><span class="k">'+r[0]+'</span><span class="v'+(r[2]?' big':'')+'">'+r[1]+'</span></div>';});
+/* Gemini 카드 결과(window._genCard) 또는 데모(cards[cur]) 렌더. _genCard = 동적 데이터라 escape. */
+function _escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function renderCard(){var c=window._genCard||cards[cur];if(!c){document.getElementById('thecard').innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ts);">카드 내용을 불러오지 못했습니다.</div>';return;}var E=window._genCard?_escHtml:function(x){return x==null?'':x;};document.querySelector('#cm .ch span').innerHTML='카드 만들기 — 「'+_escHtml(names[cur])+'」';var h='<div class="ctop"><div class="cbrand">'+E(c.brand)+'</div><div class="cname">'+E(c.name)+'</div></div><div class="cbody">';
+c.rows.forEach(function(r){h+='<div class="crow"><span class="k">'+E(r[0])+'</span><span class="v'+(r[2]?' big':'')+'">'+E(r[1])+'</span></div>';});
 h+='</div><div class="cfoot">※ 원세컨드 · 상담 참고용 · 보장은 약관 기준</div>';
 document.getElementById('thecard').innerHTML=h;}
-function openCard(){document.getElementById('tm').classList.remove('open');renderCard();document.getElementById('cm').classList.add('open');}
-function copyCardText(){var c=cards[cur];var lines=[c.brand,c.name.replace(/<br>/g,' ')];c.rows.forEach(function(r){lines.push(r[0]+': '+r[1]);});lines.push('※ 원세컨드 · 상담 참고용');var txt=lines.join('\n');if(copyTextFallback(txt)){toast('카드 텍스트 복사됨 — 톡에 붙여넣기');}else{toast('복사 실패 — 브라우저가 막았습니다');}}
+/* 라이트박스 딸깍 "카드 만들기" → 현재 이미지(imgs[cur])를 gemini-card 함수에 보내 핵심 카드 생성.
+ * 키는 Edge Function secret에만 존재(앱 코드 0). 로딩/에러 모두 사람이 읽는 안내로 처리. */
+async function openCard(){
+  document.getElementById('tm').classList.remove('open');
+  window._genCard=null;
+  var span=document.querySelector('#cm .ch span');
+  var card=document.getElementById('thecard');
+  if(span) span.textContent='카드 만들기 — 분석 중…';
+  if(card) card.innerHTML='<div style="padding:48px 20px;text-align:center;color:var(--ts);font-size:0.9em;line-height:1.6;">🔍 이미지에서 핵심 내용을 뽑는 중입니다…<br><span style="font-size:0.82em;opacity:0.65;">잠시만 기다려 주세요</span></div>';
+  document.getElementById('cm').classList.add('open');
+  var imageUrl=imgs[cur];
+  if(!imageUrl||!/^https?:\/\//.test(imageUrl)){
+    if(card) card.innerHTML='<div style="padding:48px 20px;text-align:center;color:var(--ts);">이 이미지는 카드로 만들 수 없습니다.</div>';
+    return;
+  }
+  function _cardErr(msg){if(card) card.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ts);line-height:1.6;">'+_escHtml(msg)+'<br><br><button onclick="openCard()" style="padding:8px 18px;background:var(--ac);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">다시 시도</button></div>';}
+  try{
+    var token=window.db&&window.db.getToken&&window.db.getToken();
+    var res=await fetch(window.db.url('/functions/v1/gemini-card'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+(token||window.db.key)},
+      body:JSON.stringify({imageUrl:imageUrl})
+    });
+    var data=await res.json().catch(function(){return {};});
+    if(!res.ok||!data||!Array.isArray(data.rows)){ _cardErr((data&&data.error)||'카드를 만들지 못했습니다.'); return; }
+    window._genCard={brand:data.brand,name:data.name,rows:data.rows.map(function(r){return [r.k,r.v,!!r.big];})};
+    renderCard();
+  }catch(e){ console.error('[gemini-card] 호출 실패',e); _cardErr('카드 생성 중 오류가 발생했습니다.'); }
+}
+function copyCardText(){var c=window._genCard||cards[cur];if(!c){toast('복사할 카드가 없습니다');return;}var lines=[c.brand,String(c.name).replace(/<br>/g,' ')];c.rows.forEach(function(r){lines.push(r[0]+': '+r[1]);});lines.push('※ 원세컨드 · 상담 참고용');var txt=lines.join('\n');if(copyTextFallback(txt)){toast('카드 텍스트 복사됨 — 톡에 붙여넣기');}else{toast('복사 실패 — 브라우저가 막았습니다');}}
 async function renderCardCanvas(){
   var el=document.getElementById('thecard');
   return await html2canvas(el,{scale:2,backgroundColor:null,logging:false});
