@@ -2341,10 +2341,11 @@ async function openCard(){
   }
   function _cardErr(msg){if(card) card.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ts);line-height:1.6;">'+_escHtml(msg)+'<br><br><button onclick="openCard()" style="padding:8px 18px;background:var(--ac);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">다시 시도</button></div>';}
   try{
-    var token=window.db&&window.db.getToken&&window.db.getToken();
-    var res=await fetch(window.db.url('/functions/v1/gemini-card'),{
+    /* window.db.fetch = apikey+Authorization 자동 주입 + 401 시 토큰 갱신 후 1회 재시도.
+     * raw fetch면 세션 만료 시 자동 갱신을 못 타 막힘(크롬 검증자 진단). */
+    var res=await window.db.fetch('/functions/v1/gemini-card',{
       method:'POST',
-      headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+(token||window.db.key)},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({imageUrl:imageUrl})
     });
     var data=await res.json().catch(function(){return {};});
@@ -5384,9 +5385,9 @@ window.openLibraryById=openLibraryById;
 
 /* 진단 fetch 헬퍼 — HTTP status/건수 로깅 + 실패 구분.
  * 성공 → 파싱된 배열 반환 / 실패(HTTP 에러·네트워크·파싱) → {__err:true} 반환. */
-function _homeFetch(label,url,headers){
-  _hlog('fetch',label,url);
-  return fetch(url,{headers:headers}).then(function(r){
+function _homeFetch(label,path){
+  _hlog('fetch',label,path);
+  return window.db.fetch(path).then(function(r){  /* db.fetch = 401 시 토큰 갱신 후 1회 재시도(크롬 검증자 진단: 만료 401 자동 갱신) */
     if(!r.ok){
       return r.text().then(function(t){
         console.error('[home] '+label+' HTTP '+r.status,(t||'').slice(0,300));
@@ -5409,15 +5410,14 @@ async function loadHomeRecent(force){
   var userId=(typeof _getOwnerId==='function')?_getOwnerId():(window.AppState&&window.AppState.userId);
   _hlog('loadHomeRecent start','userId=',userId||'(none)','token=',token?'yes':'no');
   if(token&&userId){
-    var hdrAuth={'apikey':window.db.key,'Authorization':'Bearer '+token};
-    var libUrl=window.db.url('/rest/v1/library?owner_id=eq.'+userId+'&order=last_used_at.desc&limit=3');
-    var scrUrl=window.db.url('/rest/v1/script_usage?user_id=eq.'+encodeURIComponent(userId)+'&select=used_at,script_id,scripts(id,title,stage)&order=used_at.desc&limit=20');
-    jobs.push(_homeFetch('library',libUrl,hdrAuth).then(function(libs){
+    var libPath='/rest/v1/library?owner_id=eq.'+userId+'&order=last_used_at.desc&limit=3';
+    var scrPath='/rest/v1/script_usage?user_id=eq.'+encodeURIComponent(userId)+'&select=used_at,script_id,scripts(id,title,stage)&order=used_at.desc&limit=20';
+    jobs.push(_homeFetch('library',libPath).then(function(libs){
       if(libs&&libs.__err){homeState('docs','error');return;}
       if(libs&&libs.length>0)renderHomeDocs(libs);
       else homeState('docs','empty');
     }));
-    jobs.push(_homeFetch('script_usage',scrUrl,hdrAuth).then(function(rows){
+    jobs.push(_homeFetch('script_usage',scrPath).then(function(rows){
       if(rows&&rows.__err){homeState('scripts','error');return;}
       var seen={},uniq=[];
       for(var i=0;i<(rows?rows.length:0);i++){
