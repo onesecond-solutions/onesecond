@@ -183,6 +183,23 @@
   .ac-stat{ background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:13px 14px; }
   .ac-stat .ac-stat-label{ font-size:12px; color:var(--tf); margin-bottom:5px; }
   .ac-stat .ac-stat-value{ font-size:22px; font-weight:800; letter-spacing:-.5px; }
+
+  /* 행동 KPI = 위험도별 strip 색 (운영 의미 + 11~21 strip) */
+  .ac-task.critical{ border-left-color:var(--err); }
+  .ac-task.high{ border-left-color:var(--warn); }
+  .ac-task.medium{ border-left-color:var(--ach); }
+  .ac-task.normal{ border-left-color:var(--bd); }
+  .ac-task .ac-btn{ flex-shrink:0; }
+
+  /* 위험 신호 행 = 카드 리듬 */
+  .ac-risk-row{ display:flex; align-items:center; gap:11px; padding:11px 14px; border:1px solid var(--bd);
+    border-radius:10px; margin-bottom:8px; background:var(--s2); }
+  .ac-risk-row:last-child{ margin-bottom:0; }
+
+  /* 빈 상태 또렷하게 */
+  .ac-card-empty{ display:flex; flex-direction:column; align-items:center; gap:9px; color:var(--tf);
+    padding:34px 0; font-size:13px; }
+  .ac-card-empty svg{ width:26px; height:26px; opacity:.45; }
 </style>
 
 <div id="ac-root" data-theme="dark">
@@ -395,7 +412,7 @@
   }
 
   function _task(tag,cls,label,value,unit,view,btn){
-    return '<div class="ac-task"><div class="ac-task-meta">'+
+    return '<div class="ac-task '+cls+'"><div class="ac-task-meta">'+
       '<span class="ac-badge '+cls+'">'+tag+'</span>'+
       '<div class="ac-task-label">'+label+'</div>'+
       '<div class="ac-task-value">'+(value==null?'—':value)+unit+'</div></div>'+
@@ -415,10 +432,9 @@
     if(s>0) items.push(['critical','CRITICAL','24시간 초과 미처리 승인 '+s+'건']);
     if(u>0) items.push(['high','HIGH','지점 미배정 사용자 '+u+'명']);
     if(p>0) items.push(['medium','MEDIUM','승인 대기 '+p+'건']);
-    if(!items.length){ el.innerHTML='<div class="ac-card-empty">현재 위험 신호 없음</div>'; return; }
+    if(!items.length){ el.innerHTML='<div class="ac-card-empty"><i data-lucide="shield-check"></i>현재 위험 신호 없음</div>'; return; }
     el.innerHTML=items.map(function(i){
-      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;">'+
-        '<span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
+      return '<div class="ac-risk-row"><span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
     }).join('');
   }
   function _hhmm(iso){ var t=new Date(iso); if(isNaN(t.getTime())) return '--:--';
@@ -427,7 +443,7 @@
   async function renderActivity(logs){
     var el=document.getElementById('ac-recent-activity'); if(!el) return;
     el.classList.remove('ac-card-empty');
-    if(!logs || !logs.length){ el.innerHTML='<div class="ac-card-empty">최근 활동 없음</div>'; return; }
+    if(!logs || !logs.length){ el.innerHTML='<div class="ac-card-empty"><i data-lucide="clock"></i>최근 활동 없음</div>'; return; }
     // actor 이름 일괄 조회 (id-only 로그 → 표시 시 변환)
     var ids=[]; logs.forEach(function(l){ if(l.user_id && ids.indexOf(l.user_id)<0) ids.push(l.user_id); });
     var nameMap={};
