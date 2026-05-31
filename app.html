@@ -2161,7 +2161,7 @@ async function loadInsurerVault(){
   grid.innerHTML = ivStateCard('불러오는 중…','');
   try{
     var res = await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&order=created_at.desc&select=id,category,title,content,attachments,branch_id,author_name,created_at');
-    if(!res.ok){ var _et=''; try{ _et=await res.text(); }catch(_e){} console.error('[insurer-vault] HTTP', res.status, _et); grid.innerHTML = ivStateCard('불러오지 못했습니다 ('+res.status+')','잠시 후 새로고침 해주세요'); return; }
+    if(!res.ok){ var _et=''; try{ _et=await res.text(); }catch(_e){} console.error('[insurer-vault] HTTP', res.status, _et); grid.innerHTML = ivStateCard('불러오지 못했습니다 ('+res.status+')', (_et||'').slice(0,180) || '잠시 후 새로고침 해주세요'); return; }
     window._ivCache = (await res.json()) || [];
     var on = document.querySelector('#iv-chips .chip.on');
     ivRender(window._ivCache, on ? on.textContent.trim() : '전체');
@@ -2261,7 +2261,7 @@ async function ivSubmit(){
       headers: { 'Content-Type':'application/json', 'Prefer':'return=minimal' },
       body: JSON.stringify(body)
     });
-    if(!res.ok){ var t=''; try{ t=await res.text(); }catch(_e){} console.error('[ivSubmit] HTTP', res.status, (t||'').slice(0,200)); alert('자료 등록 실패 ('+res.status+'). 잠시 후 다시 시도해 주세요.'); return; }
+    if(!res.ok){ var t=''; try{ t=await res.text(); }catch(_e){} console.error('[ivSubmit] HTTP', res.status, (t||'').slice(0,200)); alert('자료 등록 실패 ('+res.status+')\n'+(t||'').slice(0,180)); return; }
     ivCloseWrite();
     document.getElementById('iv-f-title').value = '';
     document.getElementById('iv-f-body').value = '';
