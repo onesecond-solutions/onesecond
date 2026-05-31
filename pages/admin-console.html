@@ -291,7 +291,7 @@
     </nav>
     <div class="ac-nav-foot">
       <div class="ac-nav-item" onclick="acGoService()">
-        <i data-lucide="log-out"></i><span class="lbl">관리자 종료</span></div>
+        <i data-lucide="log-out"></i><span class="lbl">어드민 종료</span></div>
     </div>
   </aside>
 
@@ -531,7 +531,7 @@
       var sev=l.severity||'normal';
       var actor=esc(nameMap[l.user_id]||'사용자');
       var phrase=EVENT_FEED[l.event_type];
-      var sentence = (l.event_type==='login_admin') ? '관리자가 로그인했습니다'
+      var sentence = (l.event_type==='login_admin') ? '어드민이 로그인했습니다'
         : (phrase ? (actor+'님이 '+phrase) : esc(l.event_type||'활동'));
       return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);">'+
         '<span style="color:var(--tf);font-size:12px;min-width:40px;">'+_hhmm(l.created_at)+'</span>'+
