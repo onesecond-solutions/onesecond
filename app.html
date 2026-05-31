@@ -2091,9 +2091,19 @@ function ivOpenDetail(idx, keepList){
   var cat = r.category || '자료';
   var atts = '';
   if(r.attachments && r.attachments.length){
-    atts = '<div class="atts"><div class="alabel">첨부 '+r.attachments.length+'</div><div class="athumbs">'
-      + r.attachments.map(function(a){ var nm = (a && (a.name || a.url)) || a || '첨부'; return '<div class="att-file" style="padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82em;color:var(--ts)">&#128206; '+ivEsc(String(nm).split('/').pop())+'</div>'; }).join('')+'</div></div>';
-  }
+    var imgList=[], imgNames=[];
+    var thumbs = r.attachments.map(function(a){
+      var url=(a&&a.url)||''; var nm=(a&&a.name)||url||'첨부';
+      var isImg = /^image\//.test((a&&a.type)||'') || /\.(png|jpe?g|gif|webp|bmp)$/i.test(url||nm);
+      if(isImg && url){
+        var li = imgList.length; imgList.push(url); imgNames.push(nm);
+        return '<div class="athumb" onclick="ivOpenLb('+li+')"><img src="'+ivEsc(url)+'" alt=""></div>';
+      }
+      return '<a class="att-file" href="'+ivEsc(url)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82em;color:var(--ts);text-decoration:none">&#128206; '+ivEsc(String(nm).split('/').pop())+'</a>';
+    }).join('');
+    window._ivImgs = imgList; window._ivImgNames = imgNames;
+    atts = '<div class="atts"><div class="alabel">첨부 '+r.attachments.length+' · 이미지 클릭 = 큰 화면 + 딸깍</div><div class="athumbs">'+thumbs+'</div></div>';
+  } else { window._ivImgs=[]; window._ivImgNames=[]; }
   v.innerHTML = '<span class="vbadge">'+ivEsc(cat)+'</span>'
     + '<div class="vttl">'+ivEsc(r.title || '제목 없음')+'</div>'
     + '<div class="vmeta">'+ivFmtDate(r.created_at)+(r.author_name ? ' · '+ivEsc(r.author_name) : '')+'</div>'
@@ -2103,7 +2113,14 @@ function ivOpenDetail(idx, keepList){
   if(!keepList && window.innerWidth <= 1024){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.add('show-viewer'); }
 }
 function ivBackToList(){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.remove('show-viewer'); }
-window.ivOpenDetail = ivOpenDetail; window.ivBackToList = ivBackToList;
+/* 첨부 이미지 라이트박스 — 현장의 소리 openLb(확대/회전/넘김)+딸깍(저장/복사/카드) 재사용.
+ * 전역 imgs/names를 현재 자료 이미지로 교체 후 openLb 호출. */
+function ivOpenLb(i){
+  if(!window._ivImgs || !window._ivImgs.length) return;
+  window.imgs = window._ivImgs; window.names = window._ivImgNames || [];
+  if(typeof openLb === 'function') openLb(i);
+}
+window.ivOpenDetail = ivOpenDetail; window.ivBackToList = ivBackToList; window.ivOpenLb = ivOpenLb;
 /* 자료 등록 폼 — 첨부 파일 미리보기(이미지 썸네일 / 그 외 파일명) */
 function ivPreviewFiles(input){
   var box = document.getElementById('iv-f-preview'); if(!box) return;
@@ -2206,6 +2223,25 @@ async function ivSubmit(){
   var title = (document.getElementById('iv-f-title').value || '').trim();
   var content = (document.getElementById('iv-f-body').value || '').trim();
   if(!title){ alert('제목을 입력해 주세요.'); return; }
+  /* 첨부 파일 → onesecond_banner/vault 업로드 → URL 수집 (실패 파일은 건너뜀) */
+  var attachments = [];
+  var _files = ((document.getElementById('iv-f-file')||{}).files) || [];
+  var _sb = document.querySelector('#ivWriteModal .iv-write-submit');
+  if(_files.length && _sb){ _sb.disabled = true; _sb.textContent = '업로드 중…'; }
+  for(var _i=0; _i<_files.length; _i++){
+    var _f = _files[_i];
+    var _ext = ((_f.name||'').split('.').pop()||'').toLowerCase();
+    var _path = 'vault/' + Date.now() + '_' + _i + (_ext ? ('.'+_ext) : '');
+    try{
+      var _up = await fetch(window.db.url('/storage/v1/object/onesecond_banner/' + _path), {
+        method:'POST',
+        headers:{ 'apikey':window.db.key, 'Authorization':'Bearer '+token, 'Content-Type':(_f.type||'application/octet-stream'), 'x-upsert':'true' },
+        body:_f });
+      if(_up.ok){ attachments.push({ url: window.db.url('/storage/v1/object/public/onesecond_banner/'+_path), name:_f.name, type:(_f.type||'') }); }
+      else { console.error('[ivSubmit] 첨부 업로드 실패', _up.status, _f.name); }
+    }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _e); }
+  }
+  if(_sb){ _sb.disabled = false; _sb.textContent = '자료 등록'; }
   var body = {
     board_type: 'insurer',
     insurer_id: insurerId,
@@ -2213,6 +2249,7 @@ async function ivSubmit(){
     category:   category,
     title:      title,
     content:    content,
+    attachments: attachments,
     author_id:  u.id || '',
     author_name: u.name || ''
   };
