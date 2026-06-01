@@ -636,6 +636,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-qna-radio{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm,8px);background:var(--s1);color:var(--tp);font-size:0.9em;font-weight:600;cursor:pointer}
 .mys-qna-radio:has(input:checked){border-color:var(--ac);color:var(--ac);background:var(--s2)}
 .mys-qna-radio input{accent-color:var(--ac)}
+.post-acts{margin-top:18px;padding-top:14px;border-top:0.5px solid var(--bd);display:flex;gap:8px;flex-wrap:wrap}
+.post-act{font-size:0.8125rem;font-weight:700;padding:7px 14px;border-radius:var(--radius-sm,8px);border:1px solid var(--bd);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit}
+.post-act:hover{border-color:var(--ac);color:var(--ac)}
+.post-act-del{color:var(--err);border-color:transparent;background:rgba(239,68,68,0.08)}
+.post-act-del:hover{background:rgba(239,68,68,0.15);border-color:var(--err);color:var(--err)}
 
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
 /* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (view별 자체 스크롤 영역) */
@@ -2171,7 +2176,7 @@ function ivOpenDetail(idx, keepList){
   v.innerHTML = '<span class="vbadge">'+ivEsc(cat)+'</span>'
     + '<div class="vttl">'+ivEsc(r.title || '제목 없음')+'</div>'
     + '<div class="vmeta">'+ivFmtDate(r.created_at)+(ivAuthor(r) ? ' · '+ivAuthor(r) : '')+'</div>'
-    + '<div class="vbody">'+ivEsc(r.content || '').replace(/\n/g,'<br>')+atts+'</div>';
+    + '<div class="vbody">'+ivEsc(r.content || '').replace(/\n/g,'<br>')+atts+ivManageActions(r)+'</div>';
   var items = document.querySelectorAll('#iv-list .item');
   for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth <= 1024){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.add('show-viewer'); }
@@ -2235,6 +2240,25 @@ async function loadInsurerVault(){
   }catch(e){ console.error('[insurer-vault]', e); grid.innerHTML = ivStateCard('불러오지 못했습니다','잠시 후 새로고침 해주세요'); }
 }
 window.loadInsurerVault = loadInsurerVault;
+/* 자료실 작성자 본인(+admin) 삭제 — 하드 DELETE (posts엔 deleted_at 컨벤션 없음, RLS "author or admin delete posts" 사용) */
+function ivManageActions(r){
+  if(!r||!r.id) return '';
+  var role=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+  var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
+  var can=(role==='admin')||(me&&r.author_id&&String(r.author_id)===String(me));
+  if(!can) return '';
+  return '<div class="post-acts"><button class="post-act post-act-del" onclick="ivDeletePost(\''+r.id+'\')">삭제</button></div>';
+}
+async function ivDeletePost(id){
+  if(!confirm('이 자료를 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{ method:'DELETE', headers:{'Prefer':'return=minimal'} });
+    if(res.ok||res.status===204){ if(typeof toast==='function')toast('삭제했습니다'); if(typeof loadInsurerVault==='function')loadInsurerVault(); }
+    else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[ivDeletePost]', res.status, t); alert('삭제 실패 ('+res.status+')'); }
+  }catch(e){ console.error('[ivDeletePost]', e); alert('삭제 중 오류가 발생했습니다.'); }
+}
+window.ivManageActions=ivManageActions; window.ivDeletePost=ivDeletePost;
 function ivFilter(el, type){
   var chips = el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
@@ -4334,19 +4358,23 @@ async function _loadNoticeFeed(scope, tabKey){
   if(!token||!window.db||!window.db.fetch) return;
   var list=document.getElementById('qlist');
   try{
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=notice_type,title,content,created_at,author_id&order=created_at.desc&limit=50');
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id&order=created_at.desc&limit=50');
     if(!res.ok) return;
     var rows=await res.json();
     var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
     var nameMap={};
     if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,name,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ nameMap[u.id]={name:u.name,role:u.role}; }); } }catch(e){} }
     var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    var _meId=(typeof _getOwnerId==='function')?_getOwnerId():null;
+    var _meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
     var posts=rows.map(function(r){
       var t=_ntType[r.notice_type]||['기타','ts'];
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
       var au=nameMap[r.author_id]; var who='';
       if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>'), real:true};
+      var _canMng=_meAdmin||(_meId&&r.author_id&&String(r.author_id)===String(_meId));
+      var _acts=_canMng?('<div class="post-acts"><button class="post-act post-act-del" onclick="voiceDeleteNotice(\''+r.id+'\',\''+tabKey+'\')">삭제</button></div>'):'';
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_acts, real:true};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
@@ -4359,6 +4387,17 @@ async function _loadNoticeFeed(scope, tabKey){
 function loadTeamNotices(){ return _loadNoticeFeed('team_internal','team'); }
 function loadBranchFeed(){ return _loadNoticeFeed('branch_internal','branch'); }
 window.loadTeamNotices=loadTeamNotices; window.loadBranchFeed=loadBranchFeed;
+/* 작성자 본인(+admin) 글 삭제 — 소프트(deleted_at), 피드 deleted_at=is.null 필터로 즉시 숨김. RLS team_notices_update/delete가 author=auth.uid() 허용 */
+async function voiceDeleteNotice(id, tabKey){
+  if(!confirm('이 글을 삭제할까요? 목록에서 사라집니다.')) return;
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({deleted_at:new Date().toISOString()}) });
+    if(res.ok){ if(typeof toast==='function')toast('삭제했습니다'); if(tabKey==='branch'){ loadBranchFeed(); } else { loadTeamNotices(); } }
+    else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[voiceDeleteNotice]', res.status, t); alert('삭제 실패 ('+res.status+')'); }
+  }catch(e){ console.error('[voiceDeleteNotice]', e); alert('삭제 중 오류가 발생했습니다.'); }
+}
+window.voiceDeleteNotice=voiceDeleteNotice;
 
 /* ════ 오늘의 할 일 엔진 (2026-05-31) — 롤/페이지별 digest (MY SPACE·보험사 자료실·매니저룸 첫 탭 공용)
  * 카드 = 채널 + 카운트 + 전체보기 딥링크. 실데이터 + 정직 placeholder.
