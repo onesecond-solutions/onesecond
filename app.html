@@ -4437,6 +4437,9 @@ function voiceEditNotice(id, tabKey){
   var d=voiceTabData[tabKey];
   var p=((d&&d.posts)||[]).filter(function(x){return String(x._id)===String(id);})[0];
   if(!p){ alert('글 정보를 찾지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return; }
+  /* mrWriteModal이 v-team(매니저룸 view) 안에 있어, 다른 화면에선 부모가 display:none → 안 보임.
+     body 직속으로 옮겨야 어느 view에서든 뜸. */
+  var _mw=document.getElementById('mrWriteModal'); if(_mw && _mw.parentElement!==document.body) document.body.appendChild(_mw);
   if(typeof mrOpenWrite==='function') mrOpenWrite();
   var t=document.getElementById('mr-f-title'); if(t)t.value=p._rtitle||'';
   var b=document.getElementById('mr-f-body'); if(b)b.value=p._rcontent||'';
