@@ -2119,6 +2119,13 @@ function ivEsc(s){ return String(s||'').replace(/[&<>"]/g,function(c){return ({'
 function ivFmtDate(iso){ if(!iso)return ''; var d=new Date(iso); if(isNaN(d.getTime()))return ''; return (d.getMonth()+1)+'월 '+d.getDate()+'일'; }
 function ivStateCard(main, sub){ return '<div class="mys-news-empty">'+ivEsc(main)+(sub?'<br>'+ivEsc(sub):'')+'</div>'; }
 var IV_CAT_COLOR = {'긴급(마감)':'var(--t-event)','공지':'var(--t-uw)','소식지':'var(--t-product)','상품':'var(--t-uw)','인수':'var(--t-event)','시책/프로모션':'var(--warn)','기타':'var(--ts)'};
+function ivAuthor(r){
+  if(!r||!r.author_name) return '';
+  var nm=ivEsc(r.author_name);
+  var rl=(window._ivRoleMap&&r.author_id&&window._ivRoleMap[r.author_id])||'';
+  var lbl=(rl&&window.ROLE_LABEL&&window.ROLE_LABEL[rl])||'';
+  return nm+(lbl?' '+lbl:'');
+}
 function ivRender(rows, filterType){
   var listEl = document.getElementById('iv-list'); if(!listEl) return;
   var list = (filterType && filterType !== '전체') ? rows.filter(function(r){ return r.category === filterType; }) : rows;
@@ -2134,7 +2141,7 @@ function ivRender(rows, filterType){
     return '<div class="item'+(i===0?' on':'')+'" onclick="ivOpenDetail('+i+')" style="--tc:'+tc+'">'
       + '<span class="badge">'+ivEsc(cat)+'</span>'
       + '<div class="it">'+ivEsc(r.title || '제목 없음')+'</div>'
-      + '<div class="id">'+ivFmtDate(r.created_at)+(r.author_name ? ' · '+ivEsc(r.author_name) : '')+'</div></div>';
+      + '<div class="id">'+ivFmtDate(r.created_at)+(ivAuthor(r) ? ' · '+ivAuthor(r) : '')+'</div></div>';
   }).join('');
   ivOpenDetail(0, true);  /* 최신(맨 위) 자동 표시. 모바일은 목록 유지 */
 }
@@ -2162,7 +2169,7 @@ function ivOpenDetail(idx, keepList){
   } else { window._ivImgs=[]; window._ivImgNames=[]; }
   v.innerHTML = '<span class="vbadge">'+ivEsc(cat)+'</span>'
     + '<div class="vttl">'+ivEsc(r.title || '제목 없음')+'</div>'
-    + '<div class="vmeta">'+ivFmtDate(r.created_at)+(r.author_name ? ' · '+ivEsc(r.author_name) : '')+'</div>'
+    + '<div class="vmeta">'+ivFmtDate(r.created_at)+(ivAuthor(r) ? ' · '+ivAuthor(r) : '')+'</div>'
     + '<div class="vbody">'+ivEsc(r.content || '').replace(/\n/g,'<br>')+atts+'</div>';
   var items = document.querySelectorAll('#iv-list .item');
   for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
@@ -2213,9 +2220,15 @@ async function loadInsurerVault(){
   if(!token){ grid.innerHTML = ivStateCard('로그인 후 표시됩니다',''); return; }
   grid.innerHTML = ivStateCard('불러오는 중…','');
   try{
-    var res = await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&order=created_at.desc&select=id,category,title,content,attachments,branch_id,author_name,created_at');
+    var res = await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&order=created_at.desc&select=id,category,title,content,attachments,branch_id,author_id,author_name,created_at');
     if(!res.ok){ var _et=''; try{ _et=await res.text(); }catch(_e){} console.error('[insurer-vault] HTTP', res.status, _et); grid.innerHTML = ivStateCard('불러오지 못했습니다 ('+res.status+')', '잠시 후 새로고침 해주세요'); return; }
     window._ivCache = (await res.json()) || [];
+    /* 작성자 직함 = author_id → role 조회 (이름 직함 표시, 단체방/지점게시판과 동일 기준) */
+    try{
+      var _aids=[]; window._ivCache.forEach(function(p){ if(p.author_id && _aids.indexOf(p.author_id)<0) _aids.push(p.author_id); });
+      window._ivRoleMap = window._ivRoleMap || {};
+      if(_aids.length){ var _rr=await window.db.fetch('/rest/v1/users?id=in.('+_aids.join(',')+')&select=id,role'); if(_rr.ok){ (await _rr.json()).forEach(function(u){ window._ivRoleMap[u.id]=u.role; }); } }
+    }catch(_e){ console.error('[insurer-vault] role map', _e); }
     var on = document.querySelector('#iv-chips .chip.on');
     ivRender(window._ivCache, on ? on.textContent.trim() : '전체');
   }catch(e){ console.error('[insurer-vault]', e); grid.innerHTML = ivStateCard('불러오지 못했습니다','잠시 후 새로고침 해주세요'); }
