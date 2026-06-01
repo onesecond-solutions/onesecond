@@ -641,6 +641,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .post-act:hover{border-color:var(--ac);color:var(--ac)}
 .post-act-del{color:var(--err);border-color:transparent;background:rgba(239,68,68,0.08)}
 .post-act-del:hover{background:rgba(239,68,68,0.15);border-color:var(--err);color:var(--err)}
+.nt-atts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.nt-att-thumb{width:96px;height:96px;border-radius:9px;overflow:hidden;border:0.5px solid var(--bd);background:var(--s2);display:block}
+.nt-att-thumb img{width:100%;height:100%;object-fit:cover}
+.nt-att-file{font-size:0.8125rem;color:var(--ac);padding:7px 12px;border:1px solid var(--bd);border-radius:8px;text-decoration:none;display:inline-block}
 
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
 /* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (view별 자체 스크롤 영역) */
@@ -4380,7 +4384,7 @@ async function _loadNoticeFeed(scope, tabKey){
   if(!token||!window.db||!window.db.fetch) return;
   var list=document.getElementById('qlist');
   try{
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id&order=created_at.desc&limit=50');
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments&order=created_at.desc&limit=50');
     if(!res.ok) return;
     var rows=await res.json();
     var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
@@ -4396,7 +4400,10 @@ async function _loadNoticeFeed(scope, tabKey){
       if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
       var _canMng=_meAdmin||(_meId&&r.author_id&&String(r.author_id)===String(_meId));
       var _acts=_canMng?('<div class="post-acts"><button class="post-act" onclick="voiceEditNotice(\''+r.id+'\',\''+tabKey+'\')">수정</button><button class="post-act post-act-del" onclick="voiceDeleteNotice(\''+r.id+'\',\''+tabKey+'\')">삭제</button></div>'):'';
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_acts, real:true};
+      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
+      var _attHtml='';
+      if(_att.length){ _attHtml='<div class="nt-atts">'+_att.map(function(a){ var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return ''; var u2=esc(url); return /\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url)?('<a class="nt-att-thumb" href="'+u2+'" target="_blank" rel="noopener"><img src="'+u2+'" alt="" loading="lazy"></a>'):('<a class="nt-att-file" href="'+u2+'" target="_blank" rel="noopener">📎 '+esc(String(url).split('/').pop().split('?')[0])+'</a>'); }).join('')+'</div>'; }
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
