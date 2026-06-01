@@ -448,72 +448,16 @@ function _getUserForPayment() {
 }
 
 function handlePaidCta(planId) {
-  /* PLUS / PRO = 포트원 V2 빌링키 발급창 호출 (테스트모드, KCP 심사용)
-     2026-05-28: 일반결제 → 정기결제(빌링) 단독 전환.
-     매월 자동 청구 = 서버 별 트랙 (subscriptions 테이블 + cron + 포트원 REST). */
-  var plan = window.OS_PLANS[planId];
-  if (!plan) { alert('알 수 없는 플랜입니다.'); return; }
-
-  if (!window.PortOne || !window.PortOne.requestIssueBillingKey) {
-    alert('결제 SDK 로드 실패. 페이지를 새로고침 해주세요.');
+  /* B안 (2026-06-01): 외부 요금제 페이지는 결제를 직접 처리하지 않는다 = 마케팅 퍼널.
+     실제 정기결제(빌링키 발급 + 구독 저장)는 로그인된 인앱(app.html 요금제)에서 통제.
+     - 로그인 상태  → 앱 인앱 요금제(?view=pricing)로 이동
+     - 비로그인 상태 → 로그인 화면으로 이동 (로그인 후 요금제로 복귀 의도) */
+  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+  if (hasToken) {
+    window.location.href = '/app.html?view=pricing';
     return;
   }
-
-  /* 분기 4건 (이니시스 customer 3필드 + 로그인) */
-  var u = _getUserForPayment();
-  if (!u.email || !u.id) {
-    alert('로그인이 필요합니다. 로그인 후 이용해 주세요.');
-    window.location.href = '/index.html?auth=login';
-    return;
-  }
-  if (u.email.indexOf('@') === -1) {
-    alert('이메일 정보를 확인할 수 없습니다. 다시 로그인해 주세요.');
-    return;
-  }
-  if (!u.phone) {
-    alert('휴대폰 번호 정보를 확인할 수 없습니다.\n내 정보 수정에서 휴대폰 번호를 등록해 주세요.');
-    return;
-  }
-  var phoneDigits = u.phone.replace(/[^0-9]/g, '');
-  if (phoneDigits.indexOf('010') !== 0 || phoneDigits.length < 10 || phoneDigits.length > 11) {
-    alert('휴대폰 번호 형식이 올바르지 않습니다.\n내 정보 수정에서 010-XXXX-XXXX 형식으로 등록해 주세요.');
-    return;
-  }
-  if (!u.name) {
-    alert('이름 정보를 확인할 수 없습니다.\n내 정보 수정에서 이름을 등록해 주세요.');
-    return;
-  }
-
-  /* paymentId / issueId / customerId 공용 패턴 = 'os' + UUID hex (34자, 이니시스 oid 1~40 정합) */
-  function _genId() {
-    return 'os' + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
-  }
-
-  var cfg = window.OS_PAYMENT;
-  window.PortOne.requestIssueBillingKey({
-    storeId: cfg.storeId,
-    channelKey: cfg.channelKey,
-    billingKeyMethod: 'CARD',
-    issueId: _genId(),
-    issueName: '원세컨드 ' + plan.name + ' 정기결제',
-    customer: {
-      customerId: 'os' + u.id.replace(/-/g, ''),
-      fullName: u.name,
-      email: u.email,
-      phoneNumber: phoneDigits
-    }
-  }).then(function (response) {
-    if (response && response.code !== undefined) {
-      console.error('[portone] 빌링키 발급 실패:', response);
-      alert('빌링키 발급 실패: ' + (response.message || response.code));
-      return;
-    }
-    console.log('[portone] 빌링키 발급 응답:', response);
-    alert('빌링키 발급 정합 (테스트모드 = 실청구 안 됨).\n\n빌링키 ID: ' + (response && response.billingKey) + '\n플랜: 원세컨드 ' + plan.name + '\n월 청구: ' + plan.price.toLocaleString() + '원');
-  }).catch(function (err) {
-    console.error('[portone] 빌링키 발급 오류:', err);
-    alert('빌링키 발급 중 오류: ' + (err && err.message ? err.message : '알 수 없는 오류'));
-  });
+  window.location.href = '/index.html?auth=login&next=pricing';
 }
 
 /* 하위 호환: 옛 handleProCta 호출 자리 = PLUS 결제로 연결 (featured = PLUS) */

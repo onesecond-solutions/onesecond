@@ -1971,7 +1971,28 @@ window.handlePaidCta = function(planId){
       return;
     }
     console.log('[portone] 빌링키 발급 응답:', response);
-    alert('빌링키 발급 정합 (테스트모드 = 실청구 안 됨).\n\n빌링키 ID: ' + (response && response.billingKey) + '\n플랜: 원세컨드 ' + plan.name + '\n월 청구: ' + plan.price.toLocaleString() + '원');
+    /* 조각 1 (2026-06-01): 빌링키 = subscriptions 저장.
+       user_id(=auth.uid())·next_billing_at(+1개월)·status('active')는 DB 기본값 = 서버가 결정(위변조 불가).
+       프론트는 plan_id·billing_key만 전송. 재발급 시 active 누적은 서버 청구 함수가 최신만 청구하며 정리. */
+    if(!window.db || !window.db.fetch){
+      alert('빌링키는 발급됐으나 저장 모듈이 로드되지 않아 구독 등록에 실패했습니다.\n새로고침 후 다시 시도하거나 관리자에게 문의해 주세요.');
+      return;
+    }
+    window.db.fetch('/rest/v1/subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ plan_id: planId, billing_key: response.billingKey })
+    }).then(function(saveRes){
+      if(saveRes.ok){
+        alert('구독 신청이 완료되었습니다 (테스트모드 = 실청구 안 됨).\n\n플랜: 원세컨드 ' + plan.name + '\n월 청구: ' + plan.price.toLocaleString() + '원\n매월 자동으로 결제됩니다.');
+      } else {
+        console.error('[billing] 구독 저장 실패 HTTP', saveRes.status);
+        alert('빌링키는 발급됐으나 구독 저장에 실패했습니다 (HTTP ' + saveRes.status + ').\n다시 시도하거나 관리자에게 문의해 주세요.');
+      }
+    }).catch(function(saveErr){
+      console.error('[billing] 구독 저장 오류:', saveErr);
+      alert('빌링키는 발급됐으나 구독 저장 중 오류가 발생했습니다.\n다시 시도하거나 관리자에게 문의해 주세요.');
+    });
   }).catch(function(err){
     console.error('[portone] 빌링키 발급 오류:', err);
     alert('빌링키 발급 중 오류: ' + (err && err.message ? err.message : '알 수 없는 오류'));
