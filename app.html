@@ -48,13 +48,14 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .iv-write-btn{flex:0 0 auto;background:var(--ac);color:#fff;border:none;border-radius:9999px;padding:8px 16px;font-size:0.85rem;font-weight:800;cursor:pointer;}
 .iv-write-btn:hover{background:var(--ach);}
 .iv-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
-.iv-write-modal{max-width:520px;width:100%;max-height:90vh;overflow-y:auto;background:var(--s1);border:1px solid var(--bd);border-radius:14px;}
+.iv-write-modal{max-width:760px;width:100%;max-height:90vh;overflow-y:auto;background:var(--s1);border:1px solid var(--bd);border-radius:14px;}
 .iv-write-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--bd);font-size:1.05rem;font-weight:800;color:var(--tp);}
 .iv-write-close{background:transparent;border:none;color:var(--ts);font-size:1rem;cursor:pointer;}
 .iv-write-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;}
 .iv-fld{display:flex;flex-direction:column;gap:6px;}
 .iv-fld label{font-size:0.82rem;font-weight:700;color:var(--ts);}
 .iv-fld input[type=text],.iv-fld textarea{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:9px 11px;color:var(--tp);font-family:inherit;font-size:0.92rem;}
+.iv-fld textarea{min-height:180px;resize:vertical;line-height:1.6;}
 .iv-fld input[readonly]{background:var(--sh);color:var(--ts);cursor:not-allowed;}
 .iv-types{display:flex;flex-wrap:wrap;gap:12px;}
 .iv-type{display:inline-flex;align-items:center;gap:5px;font-size:0.88rem;color:var(--tp);cursor:pointer;}
@@ -396,7 +397,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .fld input::placeholder,.fld textarea::placeholder{color:var(--tf);}
 /* 2026-05-30 전역 placeholder 통일 — ::placeholder 규칙 없던 input(iv-fld·동적 등) 누락 방지. 입력값(--tp)보다 한 단계 흐림(--tf). */
 input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
-.fld textarea{min-height:96px;resize:vertical;line-height:1.6;}
+.fld textarea{min-height:180px;resize:vertical;line-height:1.6;}
 .fld select{cursor:pointer;}
 .fhint{font-size:0.6875rem;color:var(--tf);margin-top:5px;}
 .warnbar{background:rgba(245,158,11,0.12);border:0.5px solid rgba(245,158,11,0.4);color:#F59E0B;font-size:0.8125rem;font-weight:600;padding:11px 14px;border-radius:9px;margin-bottom:16px;}
@@ -620,7 +621,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-write-label{font-size:0.78em;font-weight:700;color:var(--ts);letter-spacing:-.01em}
 .mys-write-input,.mys-write-textarea{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);color:var(--tp);font-size:0.9em;font-family:inherit;outline:none;transition:border-color .15s}
 .mys-write-input:focus,.mys-write-textarea:focus{border-color:var(--ac)}
-.mys-write-textarea{resize:vertical;min-height:110px;line-height:1.55}
+.mys-write-textarea{resize:vertical;min-height:180px;line-height:1.55}
 .mys-write-hint{font-size:0.72em;color:var(--tf);margin-top:2px}
 .mys-write-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--bd);background:var(--s2)}
 .mys-write-cancel{padding:9px 18px;border-radius:9px;background:transparent;border:1px solid var(--bd);color:var(--ts);font-size:0.85em;font-weight:700;cursor:pointer}
@@ -1376,6 +1377,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           </div>
           <div class="iv-fld"><label>제목</label><input type="text" id="mr-f-title" placeholder="공지 제목을 입력하세요"></div>
           <div class="iv-fld"><label>내용</label><textarea id="mr-f-body" rows="6" placeholder="공지 내용을 입력하세요"></textarea></div>
+          <div class="iv-fld"><label>키워드</label><input type="text" id="mr-f-keywords" placeholder="예: 마감, 시책, 교육일정 (쉼표로 구분)"><div style="font-size:0.75rem;color:var(--tf);margin-top:2px">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
           <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개 · 선택)</label><input type="file" id="mr-f-file" multiple></div>
           <div id="mr-write-err" style="display:none;color:var(--err);font-size:0.8125rem;margin-top:4px"></div>
         </div>
@@ -1443,6 +1445,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           </div>
           <div class="iv-fld"><label>제목</label><input type="text" id="iv-f-title" placeholder="자료 제목을 입력하세요"></div>
           <div class="iv-fld"><label>내용</label><textarea id="iv-f-body" rows="5" placeholder="자료 내용을 입력하세요"></textarea></div>
+          <div class="iv-fld"><label>키워드</label><input type="text" id="iv-f-keywords" placeholder="예: 실손, 5세대, 비교표 (쉼표로 구분)"><div style="font-size:0.75rem;color:var(--tf);margin-top:2px">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
           <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개)</label><input type="file" id="iv-f-file" multiple onchange="ivPreviewFiles(this)"><div id="iv-f-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>
           <div class="iv-fld"><label>공개 범위</label>
             <div class="iv-types">
@@ -1727,6 +1730,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       <div class="fld"><label>공지 제목 <span class="req">*</span></label><input type="text" placeholder="공지 제목을 입력하세요"></div>
       <div class="fld"><label>공지 내용 <span class="req">*</span></label><textarea placeholder="전달하고 싶은 내용을 작성해 주세요."></textarea></div>
+      <div class="fld"><label>키워드</label><input type="text" placeholder="쉼표로 구분 (예: 마감, 시책, 교육)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
     </div>
 
     <!-- 인수 질문 폼 -->
@@ -1748,6 +1752,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       <div class="fld"><label>현재 상태</label><input type="text" placeholder="예: 추적관찰 중 / 수술 완료"></div>
       <div class="fld"><label>기타 적고 싶은 내용</label><textarea placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
+      <div class="fld"><label>키워드</label><input type="text" placeholder="쉼표로 구분 (예: 갑상선, 고혈압, 인수)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
     </div>
 
     <!-- 상품 질문 폼 -->
@@ -1763,6 +1768,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
       <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
+      <div class="fld"><label>키워드</label><input type="text" placeholder="쉼표로 구분 (예: 실손, 특약, 비교)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
     </div>
 
     <!-- 기타 질문 폼 -->
@@ -1775,6 +1781,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 청약 중 전산 오류 발생 어떻게 처리?"></div>
       <div class="fld"><label>누가 답해주길 원하세요? <span class="opt">(선택)</span></label><input type="text" placeholder="예: 운영진 / 관리자 / 현장 설계사 / 팀장"></div>
       <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 상황인지 편하게 작성해 주세요."></textarea></div>
+      <div class="fld"><label>키워드</label><input type="text" placeholder="쉼표로 구분 (예: 녹취, 전산, 민원)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
     </div>
 
     <!-- 첨부 (폼 공통) -->
@@ -1864,6 +1871,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <label class="mys-write-label">메모 (선택)</label>
           <textarea class="mys-write-textarea" id="mysWriteLibMemo" placeholder="추가 메모가 있다면 적어주세요." maxlength="500"></textarea>
         </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">키워드</label>
+          <input type="text" class="mys-write-input" id="mysWriteLibKeywords" placeholder="예: 실손, 5세대, 비교표 (쉼표로 구분)" maxlength="200" />
+          <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
+        </div>
         <div class="mys-write-hint">⚠️ 파일/이미지 업로드는 다음 자리에서 진입 예정.</div>
       </div>
       <div class="mys-write-pane" id="mysWritePaneScript">
@@ -1878,6 +1890,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="mys-write-row">
           <label class="mys-write-label">핵심 멘트 <span style="color:#EF4444">*</span></label>
           <input type="text" class="mys-write-input" id="mysWriteScrHighlight" placeholder="가장 중요한 한 문장" maxlength="200" />
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">키워드</label>
+          <input type="text" class="mys-write-input" id="mysWriteScrKeywords" placeholder="예: 암보험, 생활비, 클로징 (쉼표로 구분)" maxlength="200" />
+          <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
         </div>
       </div>
     </div>
@@ -2261,6 +2278,7 @@ async function ivSubmit(){
   var category = typeEl ? typeEl.value : '소식지';
   var title = (document.getElementById('iv-f-title').value || '').trim();
   var content = (document.getElementById('iv-f-body').value || '').trim();
+  var keywords = ((document.getElementById('iv-f-keywords')||{}).value || '').split(',').map(function(s){return s.trim();}).filter(Boolean);
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   /* 첨부 파일 → onesecond_banner/vault 업로드 → URL 수집 (실패 파일은 건너뜀) */
   var attachments = [];
@@ -2288,6 +2306,7 @@ async function ivSubmit(){
     category:   category,
     title:      title,
     content:    content,
+    keywords:   keywords,
     attachments: attachments,
     author_id:  u.id || '',
     author_name: u.name || ''
@@ -4854,7 +4873,8 @@ async function mrSubmitNotice(){
         if(r.ok){ var j=await r.json(); if(j&&j[0]){ teamId=j[0].team_id||null; branchId=j[0].branch_id||null; } } }catch(e){}
     }
     var scope=(window._mrScope==='branch_internal')?'branch_internal':'team_internal';
-    var row={ notice_type:type, title:title, content:content, scope:scope, author_id:u.id||null, attachments:[] };
+    var keywords=((document.getElementById('mr-f-keywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    var row={ notice_type:type, title:title, content:content, scope:scope, author_id:u.id||null, keywords:keywords, attachments:[] };
     if(scope==='branch_internal') row.branch_id=branchId; else row.team_id=teamId;
     var res=await window.db.fetch('/rest/v1/team_notices',{ method:'POST',
       headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(row) });
@@ -5693,7 +5713,7 @@ function switchMyspaceTab(tab){
   if(scrPane)scrPane.classList.toggle('on',tab==='script');
 }
 function clearMyspaceWriteForm(){
-  var ids=['mysWriteLibTitle','mysWriteLibDesc','mysWriteLibLink','mysWriteLibMemo','mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight'];
+  var ids=['mysWriteLibTitle','mysWriteLibDesc','mysWriteLibLink','mysWriteLibMemo','mysWriteLibKeywords','mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords'];
   for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value='';}
   switchMyspaceTab('library');
 }
@@ -5710,11 +5730,12 @@ async function saveMyspaceWrite(){
     var desc=(document.getElementById('mysWriteLibDesc').value||'').trim();
     var link=(document.getElementById('mysWriteLibLink').value||'').trim();
     var memo=(document.getElementById('mysWriteLibMemo').value||'').trim();
+    var libKw=((document.getElementById('mysWriteLibKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
     if(!title){alert('제목을 입력해 주세요.');return;}
     if(!desc){alert('설명을 입력해 주세요.');return;}
     btn.disabled=true;btn.textContent='저장 중...';
     try{
-      var body={title:title,description:desc,owner_id:userId,link_url:link||null,memo_text:memo||null,file_url:null,image_url:null};
+      var body={title:title,description:desc,owner_id:userId,link_url:link||null,memo_text:memo||null,file_url:null,image_url:null,keywords:libKw};
       var res=await fetch(window.db.url('/rest/v1/library'),{method:'POST',headers:headers,body:JSON.stringify(body)});
       if(res.ok||res.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
@@ -5730,12 +5751,13 @@ async function saveMyspaceWrite(){
     var stitle=(document.getElementById('mysWriteScrTitle').value||'').trim();
     var stext=(document.getElementById('mysWriteScrText').value||'').trim();
     var shilite=(document.getElementById('mysWriteScrHighlight').value||'').trim();
+    var scrKw=((document.getElementById('mysWriteScrKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
     if(!stitle){alert('제목을 입력해 주세요.');return;}
     if(!stext){alert('스크립트 내용을 입력해 주세요.');return;}
     if(!shilite){alert('핵심 멘트를 입력해 주세요.');return;}
     btn.disabled=true;btn.textContent='저장 중...';
     try{
-      var sbody={title:stitle,script_text:stext,highlight_text:shilite,owner_id:userId,scope:'personal',is_active:true};
+      var sbody={title:stitle,script_text:stext,highlight_text:shilite,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw};
       var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
       if(sres.ok||sres.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
