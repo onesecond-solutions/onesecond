@@ -4384,7 +4384,7 @@ async function _loadNoticeFeed(scope, tabKey){
   if(!token||!window.db||!window.db.fetch) return;
   var list=document.getElementById('qlist');
   try{
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments&order=created_at.desc&limit=50');
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden&order=created_at.desc&limit=50');
     if(!res.ok) return;
     var rows=await res.json();
     var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
@@ -4393,17 +4393,19 @@ async function _loadNoticeFeed(scope, tabKey){
     var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
     var _meId=(typeof _getOwnerId==='function')?_getOwnerId():null;
     var _meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
-    var posts=rows.map(function(r){
+    var posts=(_meAdmin?rows:rows.filter(function(r){return !r.is_hidden;})).map(function(r){
       var t=_ntType[r.notice_type]||['기타','ts'];
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
       var au=nameMap[r.author_id]; var who='';
       if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
       var _canMng=_meAdmin||(_meId&&r.author_id&&String(r.author_id)===String(_meId));
-      var _acts=_canMng?('<div class="post-acts"><button class="post-act" onclick="voiceEditNotice(\''+r.id+'\',\''+tabKey+'\')">수정</button><button class="post-act post-act-del" onclick="voiceDeleteNotice(\''+r.id+'\',\''+tabKey+'\')">삭제</button></div>'):'';
+      var _editDel=_canMng?('<button class="post-act" onclick="voiceEditNotice(\''+r.id+'\',\''+tabKey+'\')">수정</button><button class="post-act post-act-del" onclick="voiceDeleteNotice(\''+r.id+'\',\''+tabKey+'\')">삭제</button>'):'';
+      var _hideBtn=_meAdmin?('<button class="post-act" onclick="voiceToggleHide(\''+r.id+'\',\''+tabKey+'\','+(r.is_hidden?'false':'true')+')">'+(r.is_hidden?'숨김 해제':'숨김')+'</button>'):'';
+      var _acts=(_editDel||_hideBtn)?('<div class="post-acts">'+_editDel+_hideBtn+'</div>'):'';
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _attHtml='';
       if(_att.length){ _attHtml='<div class="nt-atts">'+_att.map(function(a){ var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return ''; var u2=esc(url); return /\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url)?('<a class="nt-att-thumb" href="'+u2+'" target="_blank" rel="noopener"><img src="'+u2+'" alt="" loading="lazy"></a>'):('<a class="nt-att-file" href="'+u2+'" target="_blank" rel="noopener">📎 '+esc(String(url).split('/').pop().split('?')[0])+'</a>'); }).join('')+'</div>'; }
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true};
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
@@ -4447,6 +4449,17 @@ async function voiceEditNotice(id, tabKey){
   }catch(e){ console.error('[voiceEditNotice]',e); alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
 }
 window.voiceEditNotice=voiceEditNotice;
+/* admin 전용 숨김/숨김 해제 — is_hidden PATCH. 일반 사용자에겐 숨김 글이 목록에서 제외됨(_loadNoticeFeed 필터) */
+async function voiceToggleHide(id, tabKey, hide){
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  var on=(hide===true||hide==='true');
+  try{
+    var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({is_hidden:on}) });
+    if(res.ok){ if(typeof toast==='function')toast(on?'숨겼습니다':'숨김 해제했습니다'); if(tabKey==='branch'){ loadBranchFeed(); } else { loadTeamNotices(); } }
+    else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[voiceToggleHide]', res.status, t); alert('숨김 처리 실패 ('+res.status+')'); }
+  }catch(e){ console.error('[voiceToggleHide]', e); alert('숨김 처리 중 오류가 발생했습니다.'); }
+}
+window.voiceToggleHide=voiceToggleHide;
 
 /* ════ 오늘의 할 일 엔진 (2026-05-31) — 롤/페이지별 digest (MY SPACE·보험사 자료실·매니저룸 첫 탭 공용)
  * 카드 = 채널 + 카운트 + 전체보기 딥링크. 실데이터 + 정직 placeholder.
