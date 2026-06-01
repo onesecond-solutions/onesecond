@@ -616,7 +616,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-write-tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);background:var(--s2)}
 .mys-write-tab{flex:1;padding:14px 16px;text-align:center;font-size:0.9em;font-weight:700;color:var(--ts);background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
 .mys-write-tab.on{color:var(--ac);border-bottom-color:var(--ac);background:var(--s1)}
-.mys-write-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.mys-write-body{padding:20px 22px;display:grid}
 .mys-write-row{display:flex;flex-direction:column;gap:6px}
 .mys-write-label{font-size:0.78em;font-weight:700;color:var(--ts);letter-spacing:-.01em}
 .mys-write-input,.mys-write-textarea{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);color:var(--tp);font-size:0.9em;font-family:inherit;outline:none;transition:border-color .15s}
@@ -628,8 +628,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-write-save{padding:9px 18px;border-radius:9px;background:var(--ac);border:1px solid var(--ac);color:#fff;font-size:0.85em;font-weight:800;cursor:pointer}
 .mys-write-save:hover{background:var(--ach)}
 .mys-write-save:disabled{opacity:0.5;cursor:not-allowed}
-.mys-write-pane{display:none}
-.mys-write-pane.on{display:flex;flex-direction:column;gap:14px}
+/* 자료/스크립트 pane을 같은 grid 칸에 겹쳐 쌓아 모달 높이를 항상 큰 쪽(자료) 기준으로 고정.
+   탭 전환은 display 대신 visibility로 → 탭 바꿔도 높이 안 변함. */
+.mys-write-pane{grid-area:1 / 1;display:flex;flex-direction:column;gap:14px;visibility:hidden}
+.mys-write-pane.on{visibility:visible}
 
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
 /* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (view별 자체 스크롤 영역) */
