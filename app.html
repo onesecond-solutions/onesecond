@@ -1963,6 +1963,8 @@ window.handlePaidCta = function(planId){
        displayAmount = 표시 전용(실제 청구 아님). 실제 청구는 서버 charge-subscriptions. */
     displayAmount: plan.price,
     currency: 'KRW',
+    /* 2026-06-01: 모바일 빌링키 발급 필수 — 정기결제 주기(월 1회). 데스크탑 영향 없음. */
+    offerPeriod: { interval: '1m' },
     customer: {
       customerId: 'os' + _id.replace(/-/g, ''),
       fullName: _name,
