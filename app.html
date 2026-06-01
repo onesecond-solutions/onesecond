@@ -645,6 +645,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .nt-att-thumb{width:96px;height:96px;border-radius:9px;overflow:hidden;border:0.5px solid var(--bd);background:var(--s2);display:block}
 .nt-att-thumb img{width:100%;height:100%;object-fit:cover}
 .nt-att-file{font-size:0.8125rem;color:var(--ac);padding:7px 12px;border:1px solid var(--bd);border-radius:8px;text-decoration:none;display:inline-block}
+.mr-edit-atts{display:flex;flex-wrap:wrap;gap:8px}
+.mr-att-item{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:0.5px solid var(--bd);background:var(--s2);display:flex;align-items:center;justify-content:center}
+.mr-att-item img{width:100%;height:100%;object-fit:cover}
+.mr-att-file{font-size:0.6rem;color:var(--ts);padding:4px;text-align:center;word-break:break-all;line-height:1.2}
+.mr-att-x{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,0.6);color:#fff;font-size:0.7rem;cursor:pointer;line-height:1;padding:0}
 
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
 /* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (view별 자체 스크롤 영역) */
@@ -1358,6 +1363,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="iv-fld"><label>제목</label><input type="text" id="mr-f-title" placeholder="공지 제목을 입력하세요"></div>
           <div class="iv-fld"><label>내용</label><textarea id="mr-f-body" rows="6" placeholder="공지 내용을 입력하세요"></textarea></div>
           <div class="iv-fld"><label>키워드</label><input type="text" id="mr-f-keywords" placeholder="예: 마감, 시책, 교육일정 (쉼표로 구분)"><div style="font-size:0.75rem;color:var(--tf);margin-top:2px">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
+          <div class="iv-fld" id="mr-edit-atts-fld" style="display:none"><label>현재 첨부 (X 눌러 삭제)</label><div id="mr-edit-atts" class="mr-edit-atts"></div></div>
           <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개 · 선택)</label><input type="file" id="mr-f-file" multiple></div>
           <div id="mr-write-err" style="display:none;color:var(--err);font-size:0.8125rem;margin-top:4px"></div>
         </div>
@@ -4405,7 +4411,7 @@ async function _loadNoticeFeed(scope, tabKey){
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _attHtml='';
       if(_att.length){ _attHtml='<div class="nt-atts">'+_att.map(function(a){ var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return ''; var u2=esc(url); return /\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url)?('<a class="nt-att-thumb" href="'+u2+'" target="_blank" rel="noopener"><img src="'+u2+'" alt="" loading="lazy"></a>'):('<a class="nt-att-file" href="'+u2+'" target="_blank" rel="noopener">📎 '+esc(String(url).split('/').pop().split('?')[0])+'</a>'); }).join('')+'</div>'; }
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true, _id:r.id, _ntype:r.notice_type, _rtitle:(r.title||''), _rcontent:(r.content||''), _rkw:(r.keywords||[])};
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true, _id:r.id, _ntype:r.notice_type, _rtitle:(r.title||''), _rcontent:(r.content||''), _rkw:(r.keywords||[]), _attachments:_att};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
@@ -4445,6 +4451,7 @@ function voiceEditNotice(id, tabKey){
   var b=document.getElementById('mr-f-body'); if(b)b.value=p._rcontent||'';
   var k=document.getElementById('mr-f-keywords'); if(k)k.value=((p._rkw||[]).join(', '));
   var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(p._ntype||'operation')+'"]'); if(rt)rt.checked=true;
+  window._mrEditAtts=(p._attachments||[]).slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts();
   window._mrEditId=id;
   var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정';
   var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정';
@@ -4461,6 +4468,23 @@ async function voiceToggleHide(id, tabKey, hide){
   }catch(e){ console.error('[voiceToggleHide]', e); alert('숨김 처리 중 오류가 발생했습니다.'); }
 }
 window.voiceToggleHide=voiceToggleHide;
+/* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
+function renderMrEditAtts(){
+  var wrap=document.getElementById('mr-edit-atts'); var fld=document.getElementById('mr-edit-atts-fld');
+  if(!wrap) return;
+  var arr=window._mrEditAtts||[];
+  if(!arr.length){ if(fld)fld.style.display='none'; wrap.innerHTML=''; return; }
+  if(fld)fld.style.display='';
+  wrap.innerHTML=arr.map(function(a,i){
+    var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||'');
+    var u2=String(url).replace(/"/g,'&quot;');
+    var nm=(String(url).split('/').pop().split('?')[0]).replace(/[&<>]/g,'');
+    var inner=/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url)?('<img src="'+u2+'" alt="">'):('<span class="mr-att-file">📎 '+nm+'</span>');
+    return '<div class="mr-att-item">'+inner+'<button type="button" class="mr-att-x" onclick="mrRemoveAtt('+i+')" title="삭제">✕</button></div>';
+  }).join('');
+}
+function mrRemoveAtt(i){ if(!window._mrEditAtts) return; window._mrEditAtts.splice(i,1); renderMrEditAtts(); }
+window.renderMrEditAtts=renderMrEditAtts; window.mrRemoveAtt=mrRemoveAtt;
 
 /* ════ 오늘의 할 일 엔진 (2026-05-31) — 롤/페이지별 digest (MY SPACE·보험사 자료실·매니저룸 첫 탭 공용)
  * 카드 = 채널 + 카운트 + 전체보기 딥링크. 실데이터 + 정직 placeholder.
@@ -4895,6 +4919,7 @@ function mrOpenWrite(){
   var ti=document.getElementById('mr-f-title'); if(ti) ti.value='';
   var bd=document.getElementById('mr-f-body'); if(bd) bd.value='';
   var fl=document.getElementById('mr-f-file'); if(fl) fl.value='';
+  window._mrEditAtts=[]; if(typeof renderMrEditAtts==='function')renderMrEditAtts();
   var m=document.getElementById('mrWriteModal'); if(m) m.style.display='flex';
 }
 function mrCloseWrite(){ var m=document.getElementById('mrWriteModal'); if(m) m.style.display='none'; window._mrEditId=null; var sb=document.getElementById('mr-write-submit'); if(sb) sb.textContent='공지 등록'; var wt=document.getElementById('mr-write-title'); if(wt) wt.textContent=(window._mrScope==='branch_internal')?'지점 게시판 공지 작성':'단체방 공지 작성'; }
@@ -4920,7 +4945,7 @@ async function mrSubmitNotice(){
     var keywords=((document.getElementById('mr-f-keywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
     var _eid=window._mrEditId;
     var row;
-    if(_eid){ row={ notice_type:type, title:title, content:content, keywords:keywords }; }
+    if(_eid){ row={ notice_type:type, title:title, content:content, keywords:keywords, attachments:(window._mrEditAtts||[]) }; }
     else { row={ notice_type:type, title:title, content:content, scope:scope, author_id:u.id||null, keywords:keywords, attachments:[] };
       if(scope==='branch_internal') row.branch_id=branchId; else row.team_id=teamId; }
     var res=await window.db.fetch('/rest/v1/team_notices'+(_eid?('?id=eq.'+encodeURIComponent(_eid)):''),{ method:(_eid?'PATCH':'POST'),
