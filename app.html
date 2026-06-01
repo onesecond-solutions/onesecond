@@ -1959,6 +1959,10 @@ window.handlePaidCta = function(planId){
     billingKeyMethod: 'CARD',
     issueId: _issueId,
     issueName: '원세컨드 ' + plan.name + ' 정기결제',
+    /* 2026-06-01: KG이니시스 심사 — 빌링키 발급창에 정기결제 금액 표시.
+       displayAmount = 표시 전용(실제 청구 아님). 실제 청구는 서버 charge-subscriptions. */
+    displayAmount: plan.price,
+    currency: 'KRW',
     customer: {
       customerId: 'os' + _id.replace(/-/g, ''),
       fullName: _name,
