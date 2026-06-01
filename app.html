@@ -1894,8 +1894,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
    → 부모(app.html) 전역에 함수 정의 + 자식 onclick에서 호출.
    ───────────────────────────────────────────────────────────── */
 window.OS_PAYMENT = {
+  /* 2026-06-01: KG이니시스 실연동 채널로 전환 (MID MOI7985785). 테스트키 폐기. */
   storeId: 'store-41e93948-a67a-4ae0-abc5-1c95266ee12b',
-  channelKey: 'channel-key-d1ae4232-ed84-4c6e-8ca3-de8cd758e8a8'
+  channelKey: 'channel-key-ce197f9e-ade6-47b4-9b8e-ac721dd156c4'
 };
 
 window.OS_PLANS = {
@@ -1984,7 +1985,7 @@ window.handlePaidCta = function(planId){
       body: JSON.stringify({ plan_id: planId, billing_key: response.billingKey })
     }).then(function(saveRes){
       if(saveRes.ok){
-        alert('구독 신청이 완료되었습니다 (테스트모드 = 실청구 안 됨).\n\n플랜: 원세컨드 ' + plan.name + '\n월 청구: ' + plan.price.toLocaleString() + '원\n매월 자동으로 결제됩니다.');
+        alert('구독 신청이 완료되었습니다.\n\n플랜: 원세컨드 ' + plan.name + '\n월 ' + plan.price.toLocaleString() + '원\n등록하신 카드로 매월 자동 결제됩니다.');
       } else {
         console.error('[billing] 구독 저장 실패 HTTP', saveRes.status);
         alert('빌링키는 발급됐으나 구독 저장에 실패했습니다 (HTTP ' + saveRes.status + ').\n다시 시도하거나 관리자에게 문의해 주세요.');
