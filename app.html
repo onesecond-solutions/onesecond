@@ -4384,7 +4384,7 @@ async function _loadNoticeFeed(scope, tabKey){
   if(!token||!window.db||!window.db.fetch) return;
   var list=document.getElementById('qlist');
   try{
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden&order=created_at.desc&limit=50');
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords&order=created_at.desc&limit=50');
     if(!res.ok) return;
     var rows=await res.json();
     var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
@@ -4405,7 +4405,7 @@ async function _loadNoticeFeed(scope, tabKey){
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _attHtml='';
       if(_att.length){ _attHtml='<div class="nt-atts">'+_att.map(function(a){ var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return ''; var u2=esc(url); return /\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url)?('<a class="nt-att-thumb" href="'+u2+'" target="_blank" rel="noopener"><img src="'+u2+'" alt="" loading="lazy"></a>'):('<a class="nt-att-file" href="'+u2+'" target="_blank" rel="noopener">📎 '+esc(String(url).split('/').pop().split('?')[0])+'</a>'); }).join('')+'</div>'; }
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true};
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true, _id:r.id, _ntype:r.notice_type, _rtitle:(r.title||''), _rcontent:(r.content||''), _rkw:(r.keywords||[])};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
@@ -4432,21 +4432,19 @@ async function voiceDeleteNotice(id, tabKey){
 }
 window.voiceDeleteNotice=voiceDeleteNotice;
 /* 작성자 본인(+admin) 글 수정 — 작성 폼 prefill 후 PATCH(편집 모드). RLS team_notices_update 허용 */
-async function voiceEditNotice(id, tabKey){
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
-  try{
-    var r=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=id,notice_type,title,content,keywords');
-    if(!r.ok){ alert('불러오기 실패 ('+r.status+')'); return; }
-    var n=(await r.json())[0]; if(!n){ alert('글을 찾지 못했습니다.'); return; }
-    if(typeof mrOpenWrite==='function') mrOpenWrite();
-    var t=document.getElementById('mr-f-title'); if(t)t.value=n.title||'';
-    var b=document.getElementById('mr-f-body'); if(b)b.value=n.content||'';
-    var k=document.getElementById('mr-f-keywords'); if(k)k.value=((n.keywords||[]).join(', '));
-    var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(n.notice_type||'operation')+'"]'); if(rt)rt.checked=true;
-    window._mrEditId=id;
-    var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정';
-    var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정';
-  }catch(e){ console.error('[voiceEditNotice]',e); alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
+function voiceEditNotice(id, tabKey){
+  /* GET 없이 — 이미 피드에 로드된 원본 데이터로 prefill (네트워크 호출 0, 모달 즉시 오픈) */
+  var d=voiceTabData[tabKey];
+  var p=((d&&d.posts)||[]).filter(function(x){return String(x._id)===String(id);})[0];
+  if(!p){ alert('글 정보를 찾지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return; }
+  if(typeof mrOpenWrite==='function') mrOpenWrite();
+  var t=document.getElementById('mr-f-title'); if(t)t.value=p._rtitle||'';
+  var b=document.getElementById('mr-f-body'); if(b)b.value=p._rcontent||'';
+  var k=document.getElementById('mr-f-keywords'); if(k)k.value=((p._rkw||[]).join(', '));
+  var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(p._ntype||'operation')+'"]'); if(rt)rt.checked=true;
+  window._mrEditId=id;
+  var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정';
+  var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정';
 }
 window.voiceEditNotice=voiceEditNotice;
 /* admin 전용 숨김/숨김 해제 — is_hidden PATCH. 일반 사용자에겐 숨김 글이 목록에서 제외됨(_loadNoticeFeed 필터) */
