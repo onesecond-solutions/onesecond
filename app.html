@@ -4418,11 +4418,13 @@ function loadBranchFeed(){ return _loadNoticeFeed('branch_internal','branch'); }
 window.loadTeamNotices=loadTeamNotices; window.loadBranchFeed=loadBranchFeed;
 /* 작성자 본인(+admin) 글 삭제 — 소프트(deleted_at), 피드 deleted_at=is.null 필터로 즉시 숨김. RLS team_notices_update/delete가 author=auth.uid() 허용 */
 async function voiceDeleteNotice(id, tabKey){
-  if(!confirm('이 글을 삭제할까요? 목록에서 사라집니다.')) return;
+  if(!confirm('이 글을 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   try{
-    var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({deleted_at:new Date().toISOString()}) });
-    if(res.ok){ if(typeof toast==='function')toast('삭제했습니다'); if(tabKey==='branch'){ loadBranchFeed(); } else { loadTeamNotices(); } }
+    /* 하드 DELETE — soft delete(deleted_at UPDATE)가 RLS WITH CHECK에 막혀(403/42501),
+       DELETE 정책(is_admin() OR author_id=auth.uid(), WITH CHECK 없음)으로 우회. 자료실과 동일 방식. */
+    var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'DELETE', headers:{'Prefer':'return=minimal'} });
+    if(res.ok||res.status===204){ if(typeof toast==='function')toast('삭제했습니다'); if(tabKey==='branch'){ loadBranchFeed(); } else { loadTeamNotices(); } }
     else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[voiceDeleteNotice]', res.status, t); alert('삭제 실패 ('+res.status+')'); }
   }catch(e){ console.error('[voiceDeleteNotice]', e); alert('삭제 중 오류가 발생했습니다.'); }
 }
