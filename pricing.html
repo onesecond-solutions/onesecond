@@ -430,7 +430,8 @@ function handleFreeCta() {
   /* FREE = 로그인 자체 = 홈 / 비로그인 = 가입 모달 */
   var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
   if (hasToken) { window.location.href = '/app.html'; return; }
-  window.location.href = '/index.html?auth=signup';
+  /* 비로그인 → 새 landing 위에서 가입 모달 (옛 index 배경 회피, 2026-06-01) */
+  window.location.href = '/pages/landing.html?auth=signup';
 }
 
 function _getUserForPayment() {
@@ -457,7 +458,8 @@ function handlePaidCta(planId) {
     window.location.href = '/app.html?view=pricing';
     return;
   }
-  window.location.href = '/index.html?auth=login&next=pricing';
+  /* 비로그인 → 새 landing 위에서 로그인 모달 (옛 index 배경 회피, 2026-06-01) */
+  window.location.href = '/pages/landing.html?auth=login';
 }
 
 /* 하위 호환: 옛 handleProCta 호출 자리 = PLUS 결제로 연결 (featured = PLUS) */
