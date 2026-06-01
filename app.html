@@ -2247,8 +2247,24 @@ function ivManageActions(r){
   var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
   var can=(role==='admin')||(me&&r.author_id&&String(r.author_id)===String(me));
   if(!can) return '';
-  return '<div class="post-acts"><button class="post-act post-act-del" onclick="ivDeletePost(\''+r.id+'\')">삭제</button></div>';
+  return '<div class="post-acts"><button class="post-act" onclick="ivEditPost(\''+r.id+'\')">수정</button><button class="post-act post-act-del" onclick="ivDeletePost(\''+r.id+'\')">삭제</button></div>';
 }
+async function ivEditPost(id){
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var r=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=id,category,title,content,keywords');
+    if(!r.ok){ alert('불러오기 실패 ('+r.status+')'); return; }
+    var p=(await r.json())[0]; if(!p){ alert('글을 찾지 못했습니다.'); return; }
+    if(typeof ivOpenWrite==='function') ivOpenWrite();
+    var t=document.getElementById('iv-f-title'); if(t)t.value=p.title||'';
+    var b=document.getElementById('iv-f-body'); if(b)b.value=p.content||'';
+    var k=document.getElementById('iv-f-keywords'); if(k)k.value=((p.keywords||[]).join(', '));
+    var rt=document.querySelector('#ivWriteModal input[name="iv-type"][value="'+(p.category||'공지')+'"]'); if(rt)rt.checked=true;
+    window._ivEditId=id;
+    var sb=document.querySelector('#ivWriteModal .iv-write-submit'); if(sb)sb.textContent='자료 수정';
+  }catch(e){ console.error('[ivEditPost]',e); alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
+}
+window.ivEditPost=ivEditPost;
 async function ivDeletePost(id){
   if(!confirm('이 자료를 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
@@ -2297,6 +2313,8 @@ async function ivOpenWrite(){
 window.ivOpenWrite = ivOpenWrite;
 function ivCloseWrite(){
   var m = document.getElementById('ivWriteModal'); if(m) m.style.display = 'none';
+  window._ivEditId=null;
+  var sb=document.querySelector('#ivWriteModal .iv-write-submit'); if(sb) sb.textContent='자료 등록';
 }
 window.ivCloseWrite = ivCloseWrite;
 /* PR-B2 (2026-05-30): 보험사 자료 등록 — posts(board_type='insurer') insert.
@@ -2310,7 +2328,7 @@ async function ivSubmit(){
   var _role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var _isAdmin = (_role === 'admin');
   var insurerId = _isAdmin ? (((document.getElementById('iv-f-insurer')||{}).value)||'') : u.insurer_id;
-  if(!insurerId){ alert(_isAdmin ? '보험사를 선택해 주세요.' : '소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
+  if(!window._ivEditId && !insurerId){ alert(_isAdmin ? '보험사를 선택해 주세요.' : '소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
   var typeEl = document.querySelector('input[name="iv-type"]:checked');
   var category = typeEl ? typeEl.value : '소식지';
   var title = (document.getElementById('iv-f-title').value || '').trim();
@@ -2336,30 +2354,34 @@ async function ivSubmit(){
     }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _e); }
   }
   if(_sb){ _sb.disabled = false; _sb.textContent = '자료 등록'; }
-  var body = {
-    board_type: 'insurer',
-    insurer_id: insurerId,
-    branch_id:  null,            /* MVP 전사 공지 */
-    category:   category,
-    title:      title,
-    content:    content,
-    keywords:   keywords,
-    attachments: attachments,
-    author_id:  u.id || '',
-    author_name: u.name || ''
-  };
+  var _eid = window._ivEditId;
+  var body = _eid
+    ? { category:category, title:title, content:content, keywords:keywords }   /* 편집 = attachments 보존(제외), 첨부 수정은 별 PR */
+    : {
+        board_type: 'insurer',
+        insurer_id: insurerId,
+        branch_id:  null,            /* MVP 전사 공지 */
+        category:   category,
+        title:      title,
+        content:    content,
+        keywords:   keywords,
+        attachments: attachments,
+        author_id:  u.id || '',
+        author_name: u.name || ''
+      };
   try {
-    var res = await window.db.fetch('/rest/v1/posts', {
-      method: 'POST',
+    var res = await window.db.fetch('/rest/v1/posts'+(_eid?('?id=eq.'+encodeURIComponent(_eid)):''), {
+      method: _eid ? 'PATCH' : 'POST',
       headers: { 'Content-Type':'application/json', 'Prefer':'return=minimal' },
       body: JSON.stringify(body)
     });
     if(!res.ok){ var t=''; try{ t=await res.text(); }catch(_e){} console.error('[ivSubmit] HTTP', res.status, (t||'').slice(0,200)); alert('자료 등록 실패 ('+res.status+'). 잠시 후 다시 시도해 주세요.'); return; }
+    var _wasIvEdit=!!window._ivEditId;
     ivCloseWrite();
     document.getElementById('iv-f-title').value = '';
     document.getElementById('iv-f-body').value = '';
     if(typeof loadInsurerVault === 'function') loadInsurerVault();  /* 재fetch → 즉시 노출 */
-    if(typeof toast === 'function') toast('자료가 등록되었습니다');
+    if(typeof toast === 'function') toast(_wasIvEdit?'자료가 수정되었습니다':'자료가 등록되었습니다');
   } catch(e){ console.error('[ivSubmit]', e); alert('자료 등록 오류. 잠시 후 다시 시도해 주세요.'); }
 }
 window.ivSubmit = ivSubmit;
@@ -4373,7 +4395,7 @@ async function _loadNoticeFeed(scope, tabKey){
       var au=nameMap[r.author_id]; var who='';
       if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
       var _canMng=_meAdmin||(_meId&&r.author_id&&String(r.author_id)===String(_meId));
-      var _acts=_canMng?('<div class="post-acts"><button class="post-act post-act-del" onclick="voiceDeleteNotice(\''+r.id+'\',\''+tabKey+'\')">삭제</button></div>'):'';
+      var _acts=_canMng?('<div class="post-acts"><button class="post-act" onclick="voiceEditNotice(\''+r.id+'\',\''+tabKey+'\')">수정</button><button class="post-act post-act-del" onclick="voiceDeleteNotice(\''+r.id+'\',\''+tabKey+'\')">삭제</button></div>'):'';
       return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_acts, real:true};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
@@ -4398,6 +4420,24 @@ async function voiceDeleteNotice(id, tabKey){
   }catch(e){ console.error('[voiceDeleteNotice]', e); alert('삭제 중 오류가 발생했습니다.'); }
 }
 window.voiceDeleteNotice=voiceDeleteNotice;
+/* 작성자 본인(+admin) 글 수정 — 작성 폼 prefill 후 PATCH(편집 모드). RLS team_notices_update 허용 */
+async function voiceEditNotice(id, tabKey){
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var r=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=id,notice_type,title,content,keywords');
+    if(!r.ok){ alert('불러오기 실패 ('+r.status+')'); return; }
+    var n=(await r.json())[0]; if(!n){ alert('글을 찾지 못했습니다.'); return; }
+    if(typeof mrOpenWrite==='function') mrOpenWrite();
+    var t=document.getElementById('mr-f-title'); if(t)t.value=n.title||'';
+    var b=document.getElementById('mr-f-body'); if(b)b.value=n.content||'';
+    var k=document.getElementById('mr-f-keywords'); if(k)k.value=((n.keywords||[]).join(', '));
+    var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(n.notice_type||'operation')+'"]'); if(rt)rt.checked=true;
+    window._mrEditId=id;
+    var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정';
+    var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정';
+  }catch(e){ console.error('[voiceEditNotice]',e); alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
+}
+window.voiceEditNotice=voiceEditNotice;
 
 /* ════ 오늘의 할 일 엔진 (2026-05-31) — 롤/페이지별 digest (MY SPACE·보험사 자료실·매니저룸 첫 탭 공용)
  * 카드 = 채널 + 카운트 + 전체보기 딥링크. 실데이터 + 정직 placeholder.
@@ -4834,7 +4874,7 @@ function mrOpenWrite(){
   var fl=document.getElementById('mr-f-file'); if(fl) fl.value='';
   var m=document.getElementById('mrWriteModal'); if(m) m.style.display='flex';
 }
-function mrCloseWrite(){ var m=document.getElementById('mrWriteModal'); if(m) m.style.display='none'; }
+function mrCloseWrite(){ var m=document.getElementById('mrWriteModal'); if(m) m.style.display='none'; window._mrEditId=null; var sb=document.getElementById('mr-write-submit'); if(sb) sb.textContent='공지 등록'; var wt=document.getElementById('mr-write-title'); if(wt) wt.textContent=(window._mrScope==='branch_internal')?'지점 게시판 공지 작성':'단체방 공지 작성'; }
 async function mrSubmitNotice(){
   var err=document.getElementById('mr-write-err');
   var title=((document.getElementById('mr-f-title')||{}).value||'').trim();
@@ -4855,15 +4895,20 @@ async function mrSubmitNotice(){
     }
     var scope=(window._mrScope==='branch_internal')?'branch_internal':'team_internal';
     var keywords=((document.getElementById('mr-f-keywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-    var row={ notice_type:type, title:title, content:content, scope:scope, author_id:u.id||null, keywords:keywords, attachments:[] };
-    if(scope==='branch_internal') row.branch_id=branchId; else row.team_id=teamId;
-    var res=await window.db.fetch('/rest/v1/team_notices',{ method:'POST',
+    var _eid=window._mrEditId;
+    var row;
+    if(_eid){ row={ notice_type:type, title:title, content:content, keywords:keywords }; }
+    else { row={ notice_type:type, title:title, content:content, scope:scope, author_id:u.id||null, keywords:keywords, attachments:[] };
+      if(scope==='branch_internal') row.branch_id=branchId; else row.team_id=teamId; }
+    var res=await window.db.fetch('/rest/v1/team_notices'+(_eid?('?id=eq.'+encodeURIComponent(_eid)):''),{ method:(_eid?'PATCH':'POST'),
       headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(row) });
     if(!res.ok){ var m='등록 실패 ('+res.status+')';
       try{ var ej=await res.json(); if(ej&&(ej.message||ej.hint)) m=ej.message||ej.hint; }catch(e){}
       showErr(m); if(btn){ btn.disabled=false; btn.textContent='공지 등록'; } return; }
+    var _wasEdit=!!window._mrEditId;
     mrCloseWrite();
-    if(typeof toast==='function') toast('공지가 등록되었습니다');
+    if(typeof toast==='function') toast(_wasEdit?'공지가 수정되었습니다':'공지가 등록되었습니다');
+    if(_wasEdit){ var _vv=document.getElementById('v-voice'); if(_vv&&_vv.classList.contains('on')){ var _at=document.querySelector('#v-voice .tabs .tab.on'); if(_at){ var _mm=(_at.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/); if(_mm&&typeof showTab==='function') showTab(_at,_mm[1]); } } }
     if(btn){ btn.disabled=false; btn.textContent='공지 등록'; }
   }catch(e){ showErr('네트워크 오류가 발생했습니다.'); if(btn){ btn.disabled=false; btn.textContent='공지 등록'; } }
 }
