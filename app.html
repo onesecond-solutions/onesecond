@@ -1405,6 +1405,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="chip" onclick="ivFilter(this,'소식지')">소식지</div>
         <div class="chip" onclick="ivFilter(this,'상품')">상품</div>
         <div class="chip" onclick="ivFilter(this,'인수')">인수</div>
+        <div class="chip" onclick="ivFilter(this,'시책/프로모션')">시책/프로모션</div>
         <div class="chip" onclick="ivFilter(this,'기타')">기타</div>
       </div>
       <div class="split" id="iv-split">
@@ -1436,6 +1437,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
               <label class="iv-type"><input type="radio" name="iv-type" value="소식지"> 소식지</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="상품"> 상품</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="인수"> 인수</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="시책/프로모션"> 시책/프로모션</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="기타"> 기타</label>
             </div>
           </div>
@@ -2100,7 +2102,7 @@ window._ivCache = null;
 function ivEsc(s){ return String(s||'').replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
 function ivFmtDate(iso){ if(!iso)return ''; var d=new Date(iso); if(isNaN(d.getTime()))return ''; return (d.getMonth()+1)+'월 '+d.getDate()+'일'; }
 function ivStateCard(main, sub){ return '<div class="mys-news-empty">'+ivEsc(main)+(sub?'<br>'+ivEsc(sub):'')+'</div>'; }
-var IV_CAT_COLOR = {'긴급(마감)':'var(--t-event)','공지':'var(--t-uw)','소식지':'var(--t-product)','상품':'var(--t-uw)','인수':'var(--t-event)','기타':'var(--ts)'};
+var IV_CAT_COLOR = {'긴급(마감)':'var(--t-event)','공지':'var(--t-uw)','소식지':'var(--t-product)','상품':'var(--t-uw)','인수':'var(--t-event)','시책/프로모션':'var(--warn)','기타':'var(--ts)'};
 function ivRender(rows, filterType){
   var listEl = document.getElementById('iv-list'); if(!listEl) return;
   var list = (filterType && filterType !== '전체') ? rows.filter(function(r){ return r.category === filterType; }) : rows;
