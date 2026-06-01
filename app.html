@@ -632,6 +632,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
    탭 전환은 display 대신 visibility로 → 탭 바꿔도 높이 안 변함. */
 .mys-write-pane{grid-area:1 / 1;display:flex;flex-direction:column;gap:14px;visibility:hidden}
 .mys-write-pane.on{visibility:visible}
+.mys-qna-type{display:flex;gap:10px}
+.mys-qna-radio{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm,8px);background:var(--s1);color:var(--tp);font-size:0.9em;font-weight:600;cursor:pointer}
+.mys-qna-radio:has(input:checked){border-color:var(--ac);color:var(--ac);background:var(--s2)}
+.mys-qna-radio input{accent-color:var(--ac)}
 
 /* === 홈 D영역 — 업무 복귀 허브 (인사 + 배너 + 4 위젯) === */
 /* SPA 셸 정합 — .wrap{overflow:hidden} 덮어쓰기 (view별 자체 스크롤 영역) */
@@ -1848,15 +1852,36 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 <div class="askmodal" id="myspaceWriteModal" onclick="if(event.target===this)closeMyspaceWrite()">
   <div class="askbox">
     <div class="askhead">
-      <div class="asktitle">새 자료 저장</div>
+      <div class="asktitle">MY SPACE에 저장</div>
       <button class="askx" onclick="closeMyspaceWrite()">&#10005;</button>
     </div>
     <div class="mys-write-tabs">
-      <button class="mys-write-tab on" data-tab="library" onclick="switchMyspaceTab('library')">자료</button>
-      <button class="mys-write-tab" data-tab="script" onclick="switchMyspaceTab('script')">스크립트</button>
+      <button class="mys-write-tab on" data-tab="script" onclick="switchMyspaceTab('script')">스크립트</button>
+      <button class="mys-write-tab" data-tab="library" onclick="switchMyspaceTab('library')">자료</button>
+      <button class="mys-write-tab" data-tab="group" onclick="switchMyspaceTab('group')">단체방</button>
+      <button class="mys-write-tab" data-tab="qna" onclick="switchMyspaceTab('qna')">보험 Q&amp;A</button>
     </div>
     <div class="mys-write-body">
-      <div class="mys-write-pane on" id="mysWritePaneLibrary">
+      <div class="mys-write-pane on" id="mysWritePaneScript" data-pane="script">
+        <div class="mys-write-row">
+          <label class="mys-write-label">제목 <span style="color:#EF4444">*</span></label>
+          <input type="text" class="mys-write-input" id="mysWriteScrTitle" placeholder="예: 암보험 매월 생활비 안내 화법" maxlength="100" />
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">스크립트 내용 <span style="color:#EF4444">*</span></label>
+          <textarea class="mys-write-textarea" id="mysWriteScrText" placeholder="상담 시 사용할 화법을 통째 작성." maxlength="2000"></textarea>
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">핵심 멘트 <span style="color:#EF4444">*</span></label>
+          <input type="text" class="mys-write-input" id="mysWriteScrHighlight" placeholder="가장 중요한 한 문장" maxlength="200" />
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">키워드</label>
+          <input type="text" class="mys-write-input" id="mysWriteScrKeywords" placeholder="예: 암보험, 생활비, 클로징 (쉼표로 구분)" maxlength="200" />
+          <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
+        </div>
+      </div>
+      <div class="mys-write-pane" id="mysWritePaneLibrary" data-pane="library">
         <div class="mys-write-row">
           <label class="mys-write-label">제목 <span style="color:#EF4444">*</span></label>
           <input type="text" class="mys-write-input" id="mysWriteLibTitle" placeholder="예: 5세대 실손 비교표" maxlength="100" />
@@ -1880,22 +1905,40 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="mys-write-hint">⚠️ 파일/이미지 업로드는 다음 자리에서 진입 예정.</div>
       </div>
-      <div class="mys-write-pane" id="mysWritePaneScript">
+      <div class="mys-write-pane" id="mysWritePaneGroup" data-pane="group">
         <div class="mys-write-row">
           <label class="mys-write-label">제목 <span style="color:#EF4444">*</span></label>
-          <input type="text" class="mys-write-input" id="mysWriteScrTitle" placeholder="예: 암보험 매월 생활비 안내 화법" maxlength="100" />
+          <input type="text" class="mys-write-input" id="mysWriteGrpTitle" placeholder="예: 이번 주 우리 팀 공유 사항" maxlength="100" />
         </div>
         <div class="mys-write-row">
-          <label class="mys-write-label">스크립트 내용 <span style="color:#EF4444">*</span></label>
-          <textarea class="mys-write-textarea" id="mysWriteScrText" placeholder="상담 시 사용할 화법을 통째 작성." maxlength="2000"></textarea>
-        </div>
-        <div class="mys-write-row">
-          <label class="mys-write-label">핵심 멘트 <span style="color:#EF4444">*</span></label>
-          <input type="text" class="mys-write-input" id="mysWriteScrHighlight" placeholder="가장 중요한 한 문장" maxlength="200" />
+          <label class="mys-write-label">내용 <span style="color:#EF4444">*</span></label>
+          <textarea class="mys-write-textarea" id="mysWriteGrpBody" placeholder="단체방에 공유할 내용을 적어주세요." maxlength="2000"></textarea>
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">키워드</label>
-          <input type="text" class="mys-write-input" id="mysWriteScrKeywords" placeholder="예: 암보험, 생활비, 클로징 (쉼표로 구분)" maxlength="200" />
+          <input type="text" class="mys-write-input" id="mysWriteGrpKeywords" placeholder="예: 공유, 일정, 안내 (쉼표로 구분)" maxlength="200" />
+          <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
+        </div>
+      </div>
+      <div class="mys-write-pane" id="mysWritePaneQna" data-pane="qna">
+        <div class="mys-write-row">
+          <label class="mys-write-label">질문 유형 <span style="color:#EF4444">*</span></label>
+          <div class="mys-qna-type">
+            <label class="mys-qna-radio"><input type="radio" name="mysQnaType" value="인수" checked /> 인수</label>
+            <label class="mys-qna-radio"><input type="radio" name="mysQnaType" value="상품" /> 상품</label>
+          </div>
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">제목 <span style="color:#EF4444">*</span></label>
+          <input type="text" class="mys-write-input" id="mysWriteQnaTitle" placeholder="예: 고혈압 약 복용 중 암보험 인수 가능 여부" maxlength="100" />
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">내용 <span style="color:#EF4444">*</span></label>
+          <textarea class="mys-write-textarea" id="mysWriteQnaBody" placeholder="연령·성별·병력·진단 시기 등 상황을 적어주세요." maxlength="2000"></textarea>
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">키워드</label>
+          <input type="text" class="mys-write-input" id="mysWriteQnaKeywords" placeholder="예: 고혈압, 암보험, 인수 (쉼표로 구분)" maxlength="200" />
           <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
         </div>
       </div>
@@ -5696,8 +5739,9 @@ document.addEventListener('keydown', function(e){
 /* === MY SPACE 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
+  switchMyspaceTab('script');
   m.classList.add('open');
-  setTimeout(function(){var el=document.getElementById('mysWriteLibTitle');if(el)el.focus();},80);
+  setTimeout(function(){var el=document.getElementById('mysWriteScrTitle');if(el)el.focus();},80);
 }
 function closeMyspaceWrite(){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
@@ -5706,22 +5750,26 @@ function closeMyspaceWrite(){
 function switchMyspaceTab(tab){
   var tabs=document.querySelectorAll('.mys-write-tab');
   for(var i=0;i<tabs.length;i++){
-    if(tabs[i].getAttribute('data-tab')===tab)tabs[i].classList.add('on');
-    else tabs[i].classList.remove('on');
+    tabs[i].classList.toggle('on',tabs[i].getAttribute('data-tab')===tab);
   }
-  var libPane=document.getElementById('mysWritePaneLibrary');
-  var scrPane=document.getElementById('mysWritePaneScript');
-  if(libPane)libPane.classList.toggle('on',tab==='library');
-  if(scrPane)scrPane.classList.toggle('on',tab==='script');
+  var panes=document.querySelectorAll('.mys-write-pane');
+  for(var j=0;j<panes.length;j++){
+    panes[j].classList.toggle('on',panes[j].getAttribute('data-pane')===tab);
+  }
 }
 function clearMyspaceWriteForm(){
-  var ids=['mysWriteLibTitle','mysWriteLibDesc','mysWriteLibLink','mysWriteLibMemo','mysWriteLibKeywords','mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords'];
+  var ids=['mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords','mysWriteLibTitle','mysWriteLibDesc','mysWriteLibLink','mysWriteLibMemo','mysWriteLibKeywords','mysWriteGrpTitle','mysWriteGrpBody','mysWriteGrpKeywords','mysWriteQnaTitle','mysWriteQnaBody','mysWriteQnaKeywords'];
   for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value='';}
-  switchMyspaceTab('library');
+  var qt=document.querySelector('input[name="mysQnaType"][value="인수"]');if(qt)qt.checked=true;
+  switchMyspaceTab('script');
 }
 async function saveMyspaceWrite(){
   var activeTab=document.querySelector('.mys-write-tab.on');
-  var tab=activeTab?activeTab.getAttribute('data-tab'):'library';
+  var tab=activeTab?activeTab.getAttribute('data-tab'):'script';
+  if(tab==='group'||tab==='qna'){
+    if(typeof toast==='function')toast('곧 저장까지 연결할게요 😊');
+    return;
+  }
   var btn=document.getElementById('mysWriteSaveBtn');
   if(!window.db||!window.AppState||!window.AppState.userId){alert('로그인 정보를 가져오지 못했습니다.');return;}
   var token=window.db.getToken();if(!token){alert('로그인이 필요합니다.');return;}
