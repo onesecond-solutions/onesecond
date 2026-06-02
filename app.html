@@ -4996,11 +4996,12 @@ async function _ttCalBody(){
   var yest=new Date(td); yest.setDate(yest.getDate()-1);
   var tom=new Date(td); tom.setDate(tom.getDate()+1);
   var from=_f(yest), today=_f(td), to=_f(tom), rows=[];
-  try{ var res=await window.db.fetch('/rest/v1/calendar_events?event_date=gte.'+from+'&event_date=lte.'+to+'&order=event_date.asc&select=id,event_date,title,source_type'); if(res.ok){ rows=await res.json(); if(!Array.isArray(rows)) rows=[]; } }catch(e){}
+  try{ var res=await window.db.fetch('/rest/v1/calendar_events?event_date=gte.'+from+'&event_date=lte.'+to+'&order=event_date.asc&select=id,event_date,event_time,title,source_type'); if(res.ok){ rows=await res.json(); if(!Array.isArray(rows)) rows=[]; } }catch(e){}
   if(!rows.length) return '<div class="tt-card-hint" style="margin-top:6px">전일·당일·내일 예정 일정이 없습니다.</div>';
+  rows.sort(function(a,b){ if(a.event_date!==b.event_date) return a.event_date<b.event_date?-1:1; var ta=a.event_time||'99:99', tb=b.event_time||'99:99'; return ta<tb?-1:(ta>tb?1:0); });
   return '<div class="tt-cal-list">'+rows.map(function(r){
       var s=CAL_SRC[r.source_type]||CAL_SRC.personal;
-      var dd=(r.event_date||'').slice(5).replace('-','/');
+      var dd=(r.event_date||'').slice(5).replace('-','/')+(r.event_time?(' '+String(r.event_time).slice(0,5)):'');
       var tag=r.event_date===today?'오늘':(r.event_date===from?'어제':'내일');
       return '<div class="tt-cal-row"><span class="tt-cal-ic" style="color:'+s.color+'">'+calIcon(r.source_type)+'</span><span class="tt-cal-dt">'+tag+' '+dd+'</span><span class="tt-cal-tt">'+_calEsc(r.title)+'</span></div>';
     }).join('')+'</div>';
@@ -7050,7 +7051,7 @@ async function loadCal(p){
   if(!window.db||!window.db.fetch){ if(listEl)listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500&select=id,event_date,title,description,event_type,source_type,insurer_id,author_id');
+    var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     st.rows=rows;
     renderCalMonths(p);      /* 좌: 월별 누적(최신 월 상단) */
@@ -7065,6 +7066,7 @@ function renderCalGridMonth(p){
   var y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10);
   var rows=(st.rows||[]).filter(function(r){ return (r.event_date||'').slice(0,7)===ym; });
   var byDay={}; rows.forEach(function(r){ (byDay[r.event_date]=byDay[r.event_date]||[]).push(r); });
+  Object.keys(byDay).forEach(function(d){ byDay[d].sort(function(a,b){ var ta=a.event_time||'99:99', tb=b.event_time||'99:99'; return ta<tb?-1:(ta>tb?1:0); }); });
   var gridEl=document.getElementById(p+'-cal-grid'); if(gridEl) gridEl.innerHTML=renderCalGrid(p,byDay,y,m-1);
 }
 window.renderCalGridMonth=renderCalGridMonth;
@@ -7078,7 +7080,7 @@ function renderCalGrid(p,byDay,y,m){
   for(var d=1;d<=days;d++){
     var ds=y+'-'+_calPad(m+1)+'-'+_calPad(d), evs=byDay[ds]||[];
     var off=(new Date(y,m,d).getDay()===0)||(CAL_HOLIDAYS.indexOf(ds)>=0);  /* 일요일 또는 공휴일(휴무) = 빨강 */
-    var evHtml=evs.slice(0,3).map(function(e){ var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color; return '<div class="cal-ev" style="border-left-color:'+c+'" title="'+_calEsc(e.title)+'">'+_calEsc(e.title)+'</div>'; }).join('');
+    var evHtml=evs.slice(0,3).map(function(e){ var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color; var tm=e.event_time?(String(e.event_time).slice(0,5)+' '):''; return '<div class="cal-ev" style="border-left-color:'+c+'" title="'+_calEsc(tm+e.title)+'">'+_calEsc(tm+e.title)+'</div>'; }).join('');
     if(evs.length>3) evHtml+='<div class="cal-more">+'+(evs.length-3)+'</div>';
     cells+='<div class="cal-cell'+(ds===today?' today':'')+(ds===sel?' sel':'')+'" onclick="calPickDay(\''+p+'\',\''+ds+'\')"><span class="cal-d'+(off?' cal-off':'')+'">'+d+'</span><div class="cal-evs">'+evHtml+'</div></div>';
   }
@@ -7093,6 +7095,7 @@ window.calPickDay=calPickDay;
 function calEvtHtml(p,r,me){
   var s=CAL_SRC[r.source_type]||CAL_SRC.personal;
   var dd=r.event_date?r.event_date.slice(5).replace('-','/'):'';
+  if(r.event_time) dd+=' '+String(r.event_time).slice(0,5);
   var mine=(me&&String(r.author_id)===String(me));  /* 본인 작성이면 출처 무관 수정·삭제 (RLS도 author 기준) */
   var actBtn=function(fn,label){ return '<button onclick="'+fn+'" style="background:none;border:none;color:var(--tf);cursor:pointer;font-size:12px;font-family:inherit;padding:0">'+label+'</button>'; };
   var acts=mine?('<span style="margin-left:auto;display:inline-flex;gap:10px">'+actBtn('openCalEdit(\''+p+'\',\''+r.id+'\')','수정')+actBtn('delCalEvent(\''+p+'\',\''+r.id+'\')','삭제')+'</span>'):'';
@@ -7110,7 +7113,7 @@ function renderCalMonths(p){
   var keys=Object.keys(groups).sort().reverse();
   var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
   el.innerHTML=keys.map(function(k){
-    var evs=groups[k].slice().sort(function(a,b){ return (a.event_date<b.event_date)?-1:((a.event_date>b.event_date)?1:0); });
+    var evs=groups[k].slice().sort(function(a,b){ if(a.event_date!==b.event_date) return a.event_date<b.event_date?-1:1; var ta=a.event_time||'99:99', tb=b.event_time||'99:99'; return ta<tb?-1:(ta>tb?1:0); });
     var y=k.slice(0,4), m=parseInt(k.slice(5,7),10);
     return '<div class="cal-month-sec"><div class="cal-month-hd" onclick="calShowMonth(\''+p+'\',\''+k+'\')">'+y+'년 '+m+'월</div>'
       + evs.map(function(r){ return calEvtHtml(p,r,me); }).join('') + '</div>';
@@ -7141,6 +7144,7 @@ async function openCalAdd(p){
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bd)"><b style="color:var(--tp)">일정 추가</b><button onclick="closeCalAdd()" style="background:none;border:none;color:var(--ts);font-size:18px;cursor:pointer">&#10005;</button></div>'
     +'<div style="padding:14px 16px;display:flex;flex-direction:column;gap:9px">'
     +'<label style="'+lab+'">날짜</label><input type="date" id="calf-date" value="'+d+'" style="'+fin+'">'
+    +'<label style="'+lab+'">시간 <span style="color:var(--tf);font-weight:400">(선택)</span></label><input type="time" id="calf-time" style="'+fin+'">'
     +'<label style="'+lab+'">제목</label><input type="text" id="calf-title" maxlength="100" placeholder="예: 고객 미팅 / 마감 일정" style="'+fin+'">'
     +'<label style="'+lab+'">설명 <span style="color:var(--tf);font-weight:400">(선택)</span></label><textarea id="calf-desc" maxlength="500" style="'+fin+';min-height:80px;resize:vertical"></textarea>'
     +scopeHtml+brHtml
@@ -7179,7 +7183,8 @@ async function saveCalEvent(p){
   if(scope==='team'){ src='manager'; aud='team_internal'; teamId=await _uField('team_id'); if(!teamId){ alert('소속 팀 정보가 없어 팀 공유를 할 수 없습니다.'); return; } }
   else if(scope==='branch'){ src='branch'; aud='branch_internal'; branchId=await _uField('branch_id'); if(!branchId){ alert('소속 지점 정보가 없어 지점 공유를 할 수 없습니다.'); return; } }
   else if(scope==='insurer'){ src='insurer'; aud='insurer_internal'; branchId=((document.getElementById('calf-branch')||{}).value)||''; if(!branchId){ alert('담당 지점을 선택해 주세요.'); return; } }
-  var body={ event_date:date, title:title, description:desc||null, event_type:'operation', source_type:src, audience_target:aud, team_id:teamId, branch_id:branchId, author_id:(u.id||null) };
+  var etime=((document.getElementById('calf-time')||{}).value)||null;
+  var body={ event_date:date, event_time:etime, title:title, description:desc||null, event_type:'operation', source_type:src, audience_target:aud, team_id:teamId, branch_id:branchId, author_id:(u.id||null) };
   try{
     var res=await window.db.fetch('/rest/v1/calendar_events',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
     if(res.ok||res.status===201){ closeCalAdd(); var st=_cst(p); st.ym=date.slice(0,7); st.sel=null; loadCal(p); if(typeof toast==='function') toast(scope==='personal'?'일정이 추가됐습니다!':'일정이 공유됐습니다!'); }
@@ -7212,6 +7217,7 @@ function openCalEdit(p,id){
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bd)"><b style="color:var(--tp)">일정 수정</b><button onclick="closeCalAdd()" style="background:none;border:none;color:var(--ts);font-size:18px;cursor:pointer">&#10005;</button></div>'
     +'<div style="padding:14px 16px;display:flex;flex-direction:column;gap:9px">'
     +'<label style="'+lab+'">날짜</label><input type="date" id="calf-date" value="'+(r.event_date||'')+'" style="'+fin+'">'
+    +'<label style="'+lab+'">시간 <span style="color:var(--tf);font-weight:400">(선택)</span></label><input type="time" id="calf-time" value="'+(r.event_time?String(r.event_time).slice(0,5):'')+'" style="'+fin+'">'
     +'<label style="'+lab+'">제목</label><input type="text" id="calf-title" maxlength="100" value="'+_calEsc(r.title||'')+'" style="'+fin+'">'
     +'<label style="'+lab+'">설명 <span style="color:var(--tf);font-weight:400">(선택)</span></label><textarea id="calf-desc" maxlength="500" style="'+fin+';min-height:80px;resize:vertical">'+_calEsc(r.description||'')+'</textarea>'
     +'<button onclick="updateCalEvent(\''+p+'\',\''+id+'\')" style="margin-top:4px;padding:11px;border:none;border-radius:9px;background:var(--ac);color:#fff;font-weight:700;cursor:pointer;font-family:inherit">수정 저장</button>'
@@ -7226,7 +7232,8 @@ async function updateCalEvent(p,id){
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
-  var body={ event_date:date, title:title, description:desc||null };
+  var etime=((document.getElementById('calf-time')||{}).value)||null;
+  var body={ event_date:date, event_time:etime, title:title, description:desc||null };
   try{
     var res=await window.db.fetch('/rest/v1/calendar_events?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
     if(res.ok||res.status===204){ closeCalAdd(); var st=_cst(p); st.ym=date.slice(0,7); loadCal(p); if(typeof toast==='function') toast('일정이 수정됐습니다!'); }
