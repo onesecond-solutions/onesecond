@@ -1366,7 +1366,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="mys-toolbar" style="margin-bottom:14px">
         <div class="tabs" id="mr-tabs" style="margin-bottom:0;flex:1">
           <div class="tab on" onclick="mrTabMain(this,'today')">오늘의 할 일</div>
-          <div class="tab" onclick="mrTabMain(this,'manage')">전체</div>
+          <div class="tab" onclick="mrTabMain(this,'office')">오피스</div>
+          <div class="tab" onclick="mrTabMain(this,'team')">단체방</div>
+          <div class="tab" onclick="mrTabMain(this,'qna')">보험 Q&amp;A</div>
+          <div class="tab" onclick="mrTabMain(this,'members')">팀원관리</div>
         </div>
         <button class="mys-write-btn" onclick="mrOpenWrite()">+ 공지 작성</button>
       </div>
@@ -1384,6 +1387,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
 
       </div><!-- /mr-main -->
+      <!-- 2단계에서 MY SPACE 게시판 데이터 연결 (오피스/단체방/보험Q&A) -->
+      <div id="mr-office" style="display:none"><div class="mys-news-empty">오피스 — 다음 단계에서 자료 게시판 연결 예정</div></div>
+      <div id="mr-team" style="display:none"><div class="mys-news-empty">단체방 — 다음 단계에서 게시판 연결 예정</div></div>
+      <div id="mr-qna" style="display:none"><div class="mys-news-empty">보험 Q&A — 다음 단계에서 게시판 연결 예정</div></div>
       <!-- 공지 작성 모달 (보험사 자료실 등록 폼 패턴 재사용 · 7유형) -->
       <div class="iv-overlay" id="mrWriteModal" style="display:none">
        <div class="iv-write-modal" role="dialog" aria-modal="true" aria-labelledby="mr-write-title">
@@ -4838,9 +4845,13 @@ window.ivTab=ivTab;
 function mrTabMain(el,key){
   var tabs=document.querySelectorAll('#mr-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mr-tabs .tab'); if(f) f.classList.add('on'); }
-  var today=document.getElementById('mr-today'), main=document.getElementById('mr-main');
-  if(key==='manage'){ if(today) today.style.display='none'; if(main) main.style.display=''; if(typeof loadManagerRoom==='function') loadManagerRoom(); }
-  else { if(main) main.style.display='none'; if(today){ today.style.display=''; renderTodayTodo('manager', today); } }
+  var today=document.getElementById('mr-today'), main=document.getElementById('mr-main'), office=document.getElementById('mr-office'), team=document.getElementById('mr-team'), qna=document.getElementById('mr-qna');
+  [today,main,office,team,qna].forEach(function(e){ if(e) e.style.display='none'; });
+  if(key==='members'){ if(main) main.style.display=''; if(typeof loadManagerRoom==='function') loadManagerRoom(); }
+  else if(key==='office'){ if(office) office.style.display=''; }
+  else if(key==='team'){ if(team) team.style.display=''; }
+  else if(key==='qna'){ if(qna) qna.style.display=''; }
+  else { if(today){ today.style.display=''; renderTodayTodo('manager', today); } }
 }
 window.mrTabMain=mrTabMain;
 /* ─────────────────────────────────────────────
