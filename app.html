@@ -6821,11 +6821,14 @@ async function _saveMyspaceQna(){
   }
   var content=lines.join('\n').trim();
   var keywords=(V(kwId)||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  /* qna 질문은 본인 지점 범위로 노출(RLS posts_insert_qna_member: branch_id=my_branch_id) → branch_id 세팅 필수 */
+  var branchId=u.branch_id||null;
+  if(branchId==null && u.id){ try{ var _br=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select=branch_id'); if(_br.ok){ var _bj=await _br.json(); if(_bj&&_bj[0]) branchId=_bj[0].branch_id||null; } }catch(e){} }
   btn.disabled=true; btn.textContent='저장 중...';
   try{
     var atts=await _mysUploadAtts('mysWriteQnaFile','qna',token);
     if(atts===null){ btn.disabled=false; btn.textContent='저장하기'; return; }
-    var body={ board_type:'qna', title:title, content:content, question_type:qtype, insurer_target:insurerTarget, keywords:keywords, attachments:atts, author_id:(u.id||''), author_name:(u.name||'') };
+    var body={ board_type:'qna', title:title, content:content, question_type:qtype, insurer_target:insurerTarget, keywords:keywords, attachments:atts, author_id:(u.id||''), author_name:(u.name||''), branch_id:branchId };
     var res=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
     if(res.ok||res.status===201){
       clearMyspaceWriteForm(); closeMyspaceWrite();
