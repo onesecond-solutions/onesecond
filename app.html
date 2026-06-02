@@ -112,7 +112,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .split{flex:1;min-height:0;display:grid;grid-template-columns:330px 1fr;gap:16px;overflow:hidden;padding-bottom:18px;}
 /* 자료실 split 사이즈 정합 — 현장의 소리와 동일(부모 flex 컬럼 체인 복원) */
 #v-insurer-vault.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-#iv-saved{flex:1;min-height:0;display:flex;flex-direction:column;}
+#iv-saved,#iv-today{flex:1;min-height:0;display:flex;flex-direction:column;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .list-col .lhead{flex-shrink:0;}
 .list{overflow-y:auto;flex:1;min-height:0;}
@@ -1385,9 +1385,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <button class="mys-write-btn" id="iv-write-btn" onclick="ivOpenWrite()" style="display:none">+ 자료 등록</button>
       </div>
       <div id="iv-today">
-        <div class="tabs" id="iv-qna-subtabs" style="margin-bottom:12px">
-          <div class="tab on" onclick="vaultQnaSub(this,'today')">TODAY</div>
-          <div class="tab" onclick="vaultQnaSub(this,'all')">전체보기</div>
+        <div class="chips" id="iv-qna-subtabs">
+          <div class="chip on" onclick="vaultQnaSub(this,'today')">TODAY</div>
+          <div class="chip" onclick="vaultQnaSub(this,'all')">전체보기</div>
         </div>
         <div class="split" id="iv-qna-split">
           <div class="col list-col">
@@ -2274,7 +2274,7 @@ window.renderIvEditAtts=renderIvEditAtts; window.ivRemoveAtt=ivRemoveAtt;
 window._vaultQnaCache=null; window._vaultQnaMode='today';
 function _vaultIsTodayKst(iso){ if(!iso) return false; var d=new Date(iso); if(isNaN(d.getTime())) return false; var k=new Date(Date.now()+9*3600000), dk=new Date(d.getTime()+9*3600000); return k.getUTCFullYear()===dk.getUTCFullYear()&&k.getUTCMonth()===dk.getUTCMonth()&&k.getUTCDate()===dk.getUTCDate(); }
 function vaultQnaSub(el, mode){
-  var tabs=document.querySelectorAll('#iv-qna-subtabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  var subs=document.querySelectorAll('#iv-qna-subtabs .chip'); for(var i=0;i<subs.length;i++) subs[i].classList.remove('on');
   if(el) el.classList.add('on');
   window._vaultQnaMode=(mode==='all')?'all':'today';
   vaultQnaRender();
@@ -2286,7 +2286,9 @@ async function loadVaultQna(){
   if(!token){ listEl.innerHTML=ivStateCard('로그인 후 표시됩니다',''); return; }
   if(!window._vaultQnaCache) listEl.innerHTML=ivStateCard('불러오는 중…','');
   try{
-    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type,insurer_target');
+    /* 소식지 제외 — 소식지(자료)가 예전부터 board_type=qna에 제목 '…소식지'로 섞여 저장됨.
+       보험 Q&A는 질문만 보여야 하므로 제목에 '소식지' 들어간 건 제외(근본은 데이터 정리, 후속). */
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type,insurer_target');
     if(!res.ok){ var _t=''; try{_t=await res.text();}catch(e){} console.error('[vaultQna] HTTP', res.status, _t); listEl.innerHTML=ivStateCard('불러오지 못했습니다 ('+res.status+')','잠시 후 새로고침 해주세요'); return; }
     window._vaultQnaCache=(await res.json())||[];
     vaultQnaRender();
