@@ -2365,8 +2365,8 @@ window.loadPricing = function(){
     .catch(function(){ v.innerHTML = '<div style="padding:40px;text-align:center;color:var(--ts)"><h2>요금제</h2><p>페이지를 불러오지 못했습니다.</p></div>'; });
 };
 
-/* 2026-05-28: v1 → v2 전환 stub (검색 / 프로필 / 폰트 자료 이식 = 별 트랙 PR로 분리) */
-window.openSearch = function(){ alert('검색 기능은 다음 자리에서 정합 예정.'); };
+/* 2026-05-28: v1 → v2 전환 stub (프로필 / 폰트 자료 이식 = 별 트랙 PR로 분리)
+ * 2026-06-03: 검색 stub 해제 — 잠든 openSearch 모달(출처별 그룹 결과) 활성화. 검색 트랙 진입 */
 window.openEditProfile = function(){ alert('내 정보 수정은 다음 자리에서 정합 예정.'); };
 window.setFontScale = function(scale){ document.documentElement.style.setProperty('--fscale', scale || 1); try { localStorage.setItem('os_font_scale', scale); } catch(e){} };
 
