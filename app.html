@@ -1558,12 +1558,14 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="sub iv-notice">&#128274; 등록한 자료는 현재 원수사 내부에서만 보입니다 (설계사 비노출).</div>
       <div class="mys-toolbar" style="margin-bottom:14px">
         <div class="tabs" id="iv-tabs" style="margin-bottom:0;flex:1">
-          <div class="tab on" onclick="ivTab(this,'today')">보험 Q&amp;A</div>
+          <div class="tab on" onclick="ivTab(this,'todo')">오늘의 할 일</div>
+          <div class="tab" onclick="ivTab(this,'today')">보험 Q&amp;A</div>
           <div class="tab" onclick="ivTab(this,'manage')">오피스</div>
         </div>
         <button class="mys-write-btn" id="iv-write-btn" onclick="ivWriteGate()" style="display:none">+ 글쓰기</button>
       </div>
-      <div id="iv-today">
+      <div id="iv-todo"></div>
+      <div id="iv-today" style="display:none">
         <div class="chips" id="iv-qna-subtabs">
           <div class="chip on" onclick="vaultQnaSub(this,'today')">TODAY</div>
           <div class="chip" onclick="vaultQnaSub(this,'all')">전체보기</div>
@@ -2985,7 +2987,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'today');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -4966,9 +4968,18 @@ async function renderTodayTodo(ctx, mountEl){
     mountEl.innerHTML='<div class="tt-grid">'+tcards.join('')+'</div>';
     return;
   } else if(ctx==='vault'){
+    /* MY SPACE와 동일 — 가로 1줄 4카드 + 캘린더 3일 요약 */
+    var calBodyV=await _ttCalBody();
     var lib=await _ttCount("library?select=id");
-    cards.push(_ttCard({label:'우리 회사로 온 질문', value:null, hint:'인큐베이션 — 다음 단계'}));
-    cards.push(_ttCard({label:'우리 회사 자료', value:lib, unit:'건', hint:'등록한 자료'}));
+    function _numV(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5em;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5em"> 건</span>'))+'</div>'; }
+    var vcards=[
+      _ttScriptCard({color:'var(--ac)',   badge:'캘린더',          title:'전일·당일·내일', body:calBodyV, go:'_goVaultCalendar()'}),
+      _ttScriptCard({color:'var(--warn)', badge:'우리 회사로 온 질문', title:'담당 지점 질문', body:'<div class="tt-card-hint" style="margin-top:6px">인큐베이션 — 다음 단계</div>'}),
+      _ttScriptCard({color:'var(--t-uw)', badge:'우리 회사 자료',     title:'등록한 자료',    body:_numV(lib)+'<div class="tt-card-hint">자료실 오피스</div>'}),
+      _ttScriptCard({color:'var(--ok)',   badge:'보험 Q&A',         title:'현장 질문·답변',  body:'<div class="tt-card-hint" style="margin-top:6px">자료실 보험 Q&A 탭</div>'})
+    ];
+    mountEl.innerHTML='<div class="tt-grid">'+vcards.join('')+'</div>';
+    return;
   } else if(ctx==='manager'){
     /* MY SPACE와 동일 — 가로 1줄 4카드(스크립트 카드 스타일) + 캘린더 3일 요약 */
     var calBodyM=await _ttCalBody();
@@ -5027,6 +5038,12 @@ function _goMrCalendar(){
   var cc=document.querySelector('#mr-office .chip[onclick*="calOpen"]'); if(cc&&typeof calOpen==='function') calOpen(cc,'mr');
 }
 window._goMrCalendar=_goMrCalendar;
+function _goVaultCalendar(){
+  if(typeof showView==='function') showView('insurer-vault');
+  var ot=document.querySelector('#iv-tabs .tab[onclick*="manage"]'); if(ot&&typeof ivTab==='function') ivTab(ot,'manage');
+  var cc=document.querySelector('#iv-saved .chip[onclick*="calOpen"]'); if(cc&&typeof calOpen==='function') calOpen(cc,'iv');
+}
+window._goVaultCalendar=_goVaultCalendar;
 function mysTab(el,key){
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
@@ -5041,10 +5058,12 @@ window.mysTab=mysTab;
 function ivTab(el,key){
   var tabs=document.querySelectorAll('#iv-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#iv-tabs .tab'); if(f) f.classList.add('on'); }
-  var today=document.getElementById('iv-today'), saved=document.getElementById('iv-saved');
+  var todo=document.getElementById('iv-todo'), today=document.getElementById('iv-today'), saved=document.getElementById('iv-saved');
   var wbtn=document.getElementById('iv-write-btn');
-  if(key==='manage'){ if(today) today.style.display='none'; if(saved) saved.style.display=''; if(wbtn) wbtn.style.display=''; if(typeof ivInit==='function') ivInit(); }
-  else { if(saved) saved.style.display='none'; if(wbtn) wbtn.style.display='none'; if(today){ today.style.display=''; if(typeof loadVaultQna==='function') loadVaultQna(); } }
+  if(todo) todo.style.display='none'; if(today) today.style.display='none'; if(saved) saved.style.display='none';
+  if(key==='manage'){ if(saved) saved.style.display=''; if(wbtn) wbtn.style.display=''; if(typeof ivInit==='function') ivInit(); }
+  else if(key==='todo'){ if(wbtn) wbtn.style.display='none'; if(todo){ todo.style.display=''; if(typeof renderTodayTodo==='function') renderTodayTodo('vault', todo); } }
+  else { if(wbtn) wbtn.style.display='none'; if(today){ today.style.display=''; if(typeof loadVaultQna==='function') loadVaultQna(); } }
 }
 window.ivTab=ivTab;
 function mrTabMain(el,key){
