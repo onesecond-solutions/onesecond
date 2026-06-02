@@ -1921,13 +1921,16 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     </div>
     <div class="mys-write-body">
       <div class="mys-write-pane on" id="mysWritePaneScript" data-pane="script">
-        <div class="mys-write-row">
-          <label class="mys-write-label">단계별 선택 <span style="color:#EF4444">*</span></label>
-          <select class="mys-write-input" id="mysWriteScrStage"><option value="">단계를 선택하세요</option></select>
+        <div class="mys-write-row" style="flex-direction:row;gap:12px;align-items:flex-end">
+          <div style="flex:0 0 140px;min-width:0;display:flex;flex-direction:column;gap:6px">
+            <label class="mys-write-label">단계별 선택 <span style="color:#EF4444">*</span></label>
+            <select class="mys-write-input" id="mysWriteScrStage"><option value="">단계 선택</option></select>
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+            <label class="mys-write-label">제목 <span style="color:#EF4444">*</span></label>
+            <input type="text" class="mys-write-input" id="mysWriteScrTitle" placeholder="예: 암보험 매월 생활비 안내 화법" maxlength="100" />
+          </div>
         </div>
-        <div class="mys-write-row">
-          <label class="mys-write-label">제목 <span style="color:#EF4444">*</span></label>
-          <input type="text" class="mys-write-input" id="mysWriteScrTitle" placeholder="예: 암보험 매월 생활비 안내 화법" maxlength="100" />
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">스크립트 내용 <span style="color:#EF4444">*</span></label>
@@ -6152,7 +6155,7 @@ function openMyspaceWrite(){
   /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
   var _ss=document.getElementById('mysWriteScrStage');
   if(_ss && !_ss.dataset.loaded && typeof SCRIPTS_GROUPS!=='undefined'){
-    _ss.innerHTML='<option value="">단계를 선택하세요</option>'+SCRIPTS_GROUPS.map(function(g,i){ return '<option value="'+g.stage+'">'+(i+1)+'. '+g.label+'</option>'; }).join('');
+    _ss.innerHTML='<option value="">단계 선택</option>'+SCRIPTS_GROUPS.map(function(g,i){ return '<option value="'+g.stage+'">'+(i+1)+'. '+g.label+'</option>'; }).join('');
     _ss.dataset.loaded='1';
   }
   switchMyspaceTab('script');
