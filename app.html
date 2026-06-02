@@ -1469,10 +1469,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      <!-- 파일 용량 초과 안내 팝업 (공용) -->
      <div class="diet-overlay" id="dietPopup" style="display:none" onclick="if(event.target===this)closeDietPopup()">
       <div class="diet-box" role="dialog" aria-modal="true">
-        <div class="diet-emoji">🍃</div>
+        <div class="diet-emoji">🧙</div>
         <div class="diet-title">다이어트가 필요한 상황이네요</div>
-        <div class="diet-msg" id="dietMsg">파일이 5MB를 넘어요. 조금 가볍게 줄여서 올려주세요.</div>
-        <button class="diet-btn" onclick="closeDietPopup()">확인</button>
+        <div class="diet-msg" id="dietMsg">파일이 5MB를 넘어요. 딸깍 한 번이면 가볍게 줄일 수 있어요.</div>
+        <button class="diet-btn" onclick="dietToImageConvert()">⚡ 딸깍</button>
       </div>
      </div>
 
@@ -6180,7 +6180,13 @@ function switchMyspaceTab(tab){
 var FILE_MAX_BYTES=5*1024*1024;
 function showDietPopup(msg){ var m=document.getElementById('dietPopup'); if(!m) return; if(msg){ var e=document.getElementById('dietMsg'); if(e) e.textContent=msg; } m.style.display='flex'; }
 function closeDietPopup(){ var m=document.getElementById('dietPopup'); if(m) m.style.display='none'; }
-window.showDietPopup=showDietPopup; window.closeDietPopup=closeDietPopup;
+/* 딸깍 → Quick 메뉴 이미지 변환 도구로 이동 (홈 이미지변환 버튼과 동일 진입) */
+function dietToImageConvert(){
+  closeDietPopup();
+  if(typeof showView==='function') showView('quick');
+  if(typeof openQuickToolV2==='function') setTimeout(function(){ openQuickToolV2('변환기'); }, 80);
+}
+window.showDietPopup=showDietPopup; window.closeDietPopup=closeDietPopup; window.dietToImageConvert=dietToImageConvert;
 /* FileList에서 5MB 초과 파일 검사 — 있으면 팝업 띄우고 true 반환 */
 function fileTooLarge(files){
   for(var i=0;i<(files?files.length:0);i++){
