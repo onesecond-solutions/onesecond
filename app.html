@@ -2018,6 +2018,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="mys-qna-type">
             <label class="mys-qna-radio"><input type="radio" name="mysQnaType" value="인수" checked onchange="mysQnaSwitch('인수')" /> 인수</label>
             <label class="mys-qna-radio"><input type="radio" name="mysQnaType" value="상품" onchange="mysQnaSwitch('상품')" /> 상품</label>
+            <label class="mys-qna-radio"><input type="radio" name="mysQnaType" value="기타" onchange="mysQnaSwitch('기타')" /> 기타 잘 모르겠음</label>
           </div>
         </div>
         <!-- 인수 질문 폼 (현장의 소리 질문하기 이식) -->
@@ -2055,6 +2056,18 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" id="mysQnaPrdTitle" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
           <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaPrdBody" placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
           <div class="fld"><label>키워드</label><input type="text" id="mysQnaPrdKeywords" placeholder="쉼표로 구분 (예: 실손, 특약, 비교)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
+        </div>
+        <!-- 기타 질문 폼 -->
+        <div id="mysQnaEtc" style="display:none">
+          <div class="infobar">실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.</div>
+          <div class="frow">
+            <div class="fld"><label>질문 유형 <span class="req">*</span></label><select id="mysQnaEtcType"><option>선택</option><option>녹취</option><option>서류</option><option>전산</option><option>청약</option><option>계약변경</option><option>민원</option><option>고객응대</option><option>지급/보상</option><option>기타</option></select></div>
+            <div class="fld"><label>확인하고 싶은 범위 <span class="req">*</span></label><select id="mysQnaEtcScope"><option>팀 내부</option><option>지점</option><option selected>전체 공유</option><option>특정 보험사</option><option>운영진만</option></select><div class="fhint">기본값 = "전체 공유"</div></div>
+          </div>
+          <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" id="mysQnaEtcTitle" placeholder="예: 청약 중 전산 오류 발생 어떻게 처리?"></div>
+          <div class="fld"><label>누가 답해주길 원하세요? <span class="opt">(선택)</span></label><input type="text" id="mysQnaEtcWho" placeholder="예: 운영진 / 관리자 / 현장 설계사 / 팀장"></div>
+          <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaEtcBody" placeholder="어떤 상황인지 편하게 작성해 주세요."></textarea></div>
+          <div class="fld"><label>키워드</label><input type="text" id="mysQnaEtcKeywords" placeholder="쉼표로 구분 (예: 녹취, 전산, 민원)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
         </div>
       </div>
     </div>
@@ -6332,9 +6345,10 @@ function mysWriteFilePreview(input, previewId){
 window.mysWriteFilePreview=mysWriteFilePreview;
 /* 보험 Q&A 탭 — 질문유형(인수/상품)에 따라 폼 전환 (현장의 소리 질문하기 이식) */
 function mysQnaSwitch(type){
-  var uw=document.getElementById('mysQnaUw'), pd=document.getElementById('mysQnaProduct');
-  if(uw) uw.style.display=(type==='상품')?'none':'';
+  var uw=document.getElementById('mysQnaUw'), pd=document.getElementById('mysQnaProduct'), etc=document.getElementById('mysQnaEtc');
+  if(uw) uw.style.display=(type==='인수')?'':'none';
   if(pd) pd.style.display=(type==='상품')?'':'none';
+  if(etc) etc.style.display=(type==='기타')?'':'none';
 }
 window.mysQnaSwitch=mysQnaSwitch;
 function clearMyspaceWriteForm(){
