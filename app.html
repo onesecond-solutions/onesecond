@@ -4970,11 +4970,19 @@ async function renderTodayTodo(ctx, mountEl){
     cards.push(_ttCard({label:'우리 회사로 온 질문', value:null, hint:'인큐베이션 — 다음 단계'}));
     cards.push(_ttCard({label:'우리 회사 자료', value:lib, unit:'건', hint:'등록한 자료'}));
   } else if(ctx==='manager'){
+    /* MY SPACE와 동일 — 가로 1줄 4카드(스크립트 카드 스타일) + 캘린더 3일 요약 */
+    var calBodyM=await _ttCalBody();
     var qa2=await _ttCount("posts?board_type=eq.qna&select=id");
     var mine=u.id?await _ttCount("team_notices?author_id=eq."+encodeURIComponent(u.id)+"&deleted_at=is.null&select=id"):null;
-    cards.push(_ttCard({label:'미답변 팀원 질문', value:null, hint:'답변 추적 — 다음 단계'}));
-    cards.push(_ttCard({label:'새 보험 Q&A', value:qa2, unit:'건', hint:'현장 질문·답변', go:"_goVoiceTab('voice')"}));
-    cards.push(_ttCard({label:'내 공지', value:mine, unit:'건', hint:'내가 쓴 단체방 공지'}));
+    function _numM(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5em;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5em"> 건</span>'))+'</div>'; }
+    var mcards=[
+      _ttScriptCard({color:'var(--ac)',   badge:'캘린더',     title:'전일·당일·내일', body:calBodyM, go:'_goMrCalendar()'}),
+      _ttScriptCard({color:'var(--warn)', badge:'미답변 질문', title:'팀원 질문',      body:'<div class="tt-card-hint" style="margin-top:6px">답변 추적 — 다음 단계</div>'}),
+      _ttScriptCard({color:'var(--t-uw)', badge:'보험 Q&A',   title:'새 질문·답변',   body:_numM(qa2)+'<div class="tt-card-hint">현장의 소리 연결</div>', go:"_goVoiceTab('voice')"}),
+      _ttScriptCard({color:'var(--ok)',   badge:'내 공지',     title:'내가 쓴 단체방',  body:_numM(mine)+'<div class="tt-card-hint">단체방 공지</div>'})
+    ];
+    mountEl.innerHTML='<div class="tt-grid">'+mcards.join('')+'</div>';
+    return;
   }
   mountEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'+cards.join('')+'</div>';
 }
@@ -5013,6 +5021,12 @@ function _goMysCalendar(){
   var cc=document.querySelector('#mys-saved .chip[onclick*="calOpen"]'); if(cc&&typeof calOpen==='function') calOpen(cc,'mys');
 }
 window._goMysCalendar=_goMysCalendar;
+function _goMrCalendar(){
+  if(typeof showView==='function') showView('team');
+  var ot=document.querySelector('#mr-tabs .tab[onclick*="office"]'); if(ot&&typeof mrTabMain==='function') mrTabMain(ot,'office');
+  var cc=document.querySelector('#mr-office .chip[onclick*="calOpen"]'); if(cc&&typeof calOpen==='function') calOpen(cc,'mr');
+}
+window._goMrCalendar=_goMrCalendar;
 function mysTab(el,key){
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
