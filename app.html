@@ -455,6 +455,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-cell.today{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
 .cal-cell.sel{background:var(--sh)}
 .cal-d{font-size:12px;color:var(--tp);font-weight:600;line-height:1}
+.cal-dow .cal-sun{color:var(--err)}
+.cal-d.cal-off{color:var(--err)}
 .cal-dots{display:flex;flex-wrap:wrap;gap:2px}
 .cal-dot{width:6px;height:6px;border-radius:50%}
 .cal-evt{display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:7px;background:var(--s1)}
@@ -7012,6 +7014,8 @@ var CAL_SRC={
   personal:{ label:'내 일정', color:'var(--t-event)', icon:'M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.8 1-5.8L3.5 9.7l5.9-.9Z' }
 };
 var CAL_HOST={ mys:'mys-split', mr:'mr-office-split', iv:'iv-split' };  /* prefix별 자료 split id */
+/* 휴무(빨간날) = 대한민국 2026 법정 공휴일 (양력+음력 확정분, 대체공휴일 포함). 매년 갱신 필요(음력 변동) */
+var CAL_HOLIDAYS=['2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02','2026-05-05','2026-05-24','2026-05-25','2026-06-06','2026-08-15','2026-09-24','2026-09-25','2026-09-26','2026-10-03','2026-10-09','2026-12-25'];
 window._calSt=window._calSt||{};
 function _cst(p){ return (window._calSt[p]=window._calSt[p]||{ym:null,rows:[],sel:null}); }
 function calIcon(src){ var s=CAL_SRC[src]||CAL_SRC.personal; return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+s.icon+'"/></svg>'; }
@@ -7064,13 +7068,14 @@ function calShowMonth(p,k){ var st=_cst(p); st.ym=k; st.sel=null; renderCalGridM
 window.calShowMonth=calShowMonth;
 function renderCalGrid(p,byDay,y,m){
   var st=_cst(p), first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), today=_calToday(), sel=st.sel;
-  var dow=['일','월','화','수','목','금','토'].map(function(d){return '<span>'+d+'</span>';}).join('');
+  var dow=['일','월','화','수','목','금','토'].map(function(d,idx){return '<span'+(idx===0?' class="cal-sun"':'')+'>'+d+'</span>';}).join('');
   var cells='';
   for(var i=0;i<first;i++) cells+='<div class="cal-cell empty"></div>';
   for(var d=1;d<=days;d++){
     var ds=y+'-'+_calPad(m+1)+'-'+_calPad(d), evs=byDay[ds]||[];
+    var off=(new Date(y,m,d).getDay()===0)||(CAL_HOLIDAYS.indexOf(ds)>=0);  /* 일요일 또는 공휴일(휴무) = 빨강 */
     var dots=evs.slice(0,4).map(function(e){ return '<i class="cal-dot" style="background:'+((CAL_SRC[e.source_type]||CAL_SRC.personal).color)+'"></i>'; }).join('');
-    cells+='<div class="cal-cell'+(ds===today?' today':'')+(ds===sel?' sel':'')+'" onclick="calPickDay(\''+p+'\',\''+ds+'\')"><span class="cal-d">'+d+'</span><div class="cal-dots">'+dots+'</div></div>';
+    cells+='<div class="cal-cell'+(ds===today?' today':'')+(ds===sel?' sel':'')+'" onclick="calPickDay(\''+p+'\',\''+ds+'\')"><span class="cal-d'+(off?' cal-off':'')+'">'+d+'</span><div class="cal-dots">'+dots+'</div></div>';
   }
   return '<div class="cal-dow">'+dow+'</div><div class="cal-cells">'+cells+'</div>';
 }
