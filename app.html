@@ -5631,9 +5631,12 @@ function _updateAccountHeader(){
   /* 2) 사용자 메뉴 첫 줄 (이름 · 직책) */
   var miFirst = document.querySelector('#m .mi:first-child span');
   if(miFirst) miFirst.textContent = u.name + (roleLabel ? ' · ' + roleLabel : '');
-  /* 3) 홈 인사말 */
+  /* 3) 홈 인사말 — "{이름} {직함}님, 안녕하세요~" (이름=직함 중복 시 직함 생략) */
   var homeName = document.getElementById('homeGreetName');
-  if(homeName) homeName.textContent = '안녕하세요~ ' + u.name + '님!';
+  if(homeName){
+    var _dept = (roleLabel && roleLabel !== u.name) ? ' ' + roleLabel : '';
+    homeName.textContent = u.name + _dept + '님, 안녕하세요~';
+  }
 }
 window._updateAccountHeader = _updateAccountHeader;
 /* 페이지 로드 시 즉시 1회 호출 */
