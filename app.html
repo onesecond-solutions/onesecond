@@ -2069,12 +2069,13 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <label class="mys-qna-radio"><input type="radio" name="mysQnaType" value="기타" onchange="mysQnaSwitch('기타')" /> 기타 잘 모르겠음</label>
           </div>
         </div>
+        <datalist id="mysInsurerList"></datalist>
         <!-- 인수 질문 폼 (현장의 소리 질문하기 이식) -->
         <div id="mysQnaUw">
           <div class="warnbar">&#9888; 개인정보(이름 / 전화번호 / 주민번호)는 입력하지 마세요.</div>
           <div class="frow">
             <div class="fld"><label>제목 <span class="opt">(선택, 비우면 자동 생성)</span></label><input type="text" id="mysQnaUwTitle" placeholder="예: 60대 여성 갑상선 결절 인수 가능?"></div>
-            <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="mysQnaUwInsurer"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
+            <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="mysQnaUwInsurer" onchange="mysQnaCompanyToggle(this,'mysQnaUwCompany')"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select><input list="mysInsurerList" id="mysQnaUwCompany" class="mys-write-input" placeholder="원수사명 입력 (자동완성)" style="display:none;margin-top:6px" autocomplete="off"></div>
           </div>
           <div class="frow">
             <div class="fld"><label>연령 <span class="req">*</span></label><input type="text" id="mysQnaUwAge" placeholder=""></div>
@@ -2095,7 +2096,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="infobar">실시간 운영 질문용입니다 — 교육·학습 게시판이 아닙니다.</div>
           <div class="frow">
             <div class="fld"><label>상품군 <span class="req">*</span></label><select id="mysQnaPrdGroup"><option>선택</option><option>실손</option><option>암</option><option>2대·3대</option><option>간병</option><option>치매</option><option>운전자</option><option>치아</option><option>종신</option><option>정기</option><option>화재</option><option>기타</option></select></div>
-            <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="mysQnaPrdInsurer"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select></div>
+            <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="mysQnaPrdInsurer" onchange="mysQnaCompanyToggle(this,'mysQnaPrdCompany')"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select><input list="mysInsurerList" id="mysQnaPrdCompany" class="mys-write-input" placeholder="원수사명 입력 (자동완성)" style="display:none;margin-top:6px" autocomplete="off"></div>
           </div>
           <div class="frow">
             <div class="fld"><label>건강체</label><select id="mysQnaPrdHealth"><option>선택</option><option>초강제형(10년고지형)</option><option>초경증(10년고지형)</option><option>기타</option></select></div>
@@ -6598,6 +6599,23 @@ function mysQnaSwitch(type){
   if(etc) etc.style.display=(type==='기타')?'':'none';
 }
 window.mysQnaSwitch=mysQnaSwitch;
+/* 보험사 범위 '회사 지정' → 회사명 입력란(원수사 자동완성) 표시. 해당 회사로만 질문 전달용 값 */
+function mysQnaCompanyToggle(sel, inputId){
+  var inp=document.getElementById(inputId);
+  var on=(sel&&sel.value==='회사 지정');
+  if(inp){ inp.style.display=on?'':'none'; if(!on) inp.value=''; }
+  if(on && typeof loadMysInsurerList==='function') loadMysInsurerList();
+}
+window.mysQnaCompanyToggle=mysQnaCompanyToggle;
+async function loadMysInsurerList(){
+  var dl=document.getElementById('mysInsurerList'); if(!dl||dl.dataset.loaded) return;
+  try{
+    if(!window.db||!window.db.fetch) return;
+    var res=await window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=name&order=name');
+    if(res&&res.ok){ var rows=await res.json(); dl.innerHTML=(rows||[]).map(function(x){ return '<option value="'+String(x.name||'').replace(/"/g,'&quot;')+'">'; }).join(''); dl.dataset.loaded='1'; }
+  }catch(e){ console.error('[insurerList]', e); }
+}
+window.loadMysInsurerList=loadMysInsurerList;
 function clearMyspaceWriteForm(){
   var ids=['mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords','mysWriteLibTitle','mysWriteLibDesc','mysWriteLibLink','mysWriteLibMemo','mysWriteLibKeywords','mysWriteGrpTitle','mysWriteGrpBody','mysWriteGrpKeywords','mysWriteQnaTitle','mysWriteQnaBody','mysWriteQnaKeywords'];
   for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value='';}
