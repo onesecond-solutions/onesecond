@@ -4424,7 +4424,8 @@ function renderMakeCardOverlay(body, contentType, modalTitle, accentColor, image
   var overlay = document.createElement('div');
   overlay.id = 'mc-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.onclick = function(e){ if(e.target === overlay) closeMakeCardModal(); };
+  overlay.onmousedown = function(e){ _ovDown(e, overlay); };
+  overlay.onclick = function(e){ _ovClick(e, overlay, closeMakeCardModal); };
   overlay.innerHTML = '' +
     '<div class="mc-modal" style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:880px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--bd);background:var(--s2);">' +
@@ -5163,9 +5164,14 @@ document.addEventListener('keydown', function(e){
 });
 
 /* 외부 클릭 → 닫기 (active 카드 / chip 클릭은 제외) */
+var _scDownInActive = false;
+document.addEventListener('mousedown', function(e){
+  _scDownInActive = !!(e.target.closest && e.target.closest('.script-card.active'));
+});
 document.addEventListener('click', function(e){
   var wrap = document.getElementById('scriptsCardsWrap');
   if(!wrap || !wrap.classList.contains('has-active')) return;
+  if(_scDownInActive){ _scDownInActive=false; return; }  /* 카드 안에서 시작한 드래그 선택이 밖에서 끝나도 닫지 않음 */
   if(e.target.closest && e.target.closest('.script-card.active')) return;
   if(e.target.closest && e.target.closest('#scriptsChips')) return;
   if(!e.target.closest || !e.target.closest('#v-scripts')) return;
@@ -6885,7 +6891,7 @@ window._qovTabKeyMap = window._qovTabKeyMap || {};
 function mountQuickOverlay(){
   if(document.getElementById('quickOverlay')) return;
   var html =
-      '<div class="qov-backdrop" id="quickOverlay" onclick="handleQuickOverlayClick(event)">'
+      '<div class="qov-backdrop" id="quickOverlay" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeQuick)">'
     +   '<div class="qov-modal" role="dialog" aria-modal="true" aria-labelledby="qov-title">'
     +     '<div class="qov-header">'
     +       '<button type="button" class="qov-back-btn" onclick="exitContentMode()" aria-label="메뉴로 돌아가기">← 뒤로</button>'
