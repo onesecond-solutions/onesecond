@@ -1432,6 +1432,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="iv-fld"><label>제목</label><input type="text" id="iv-f-title" placeholder="자료 제목을 입력하세요"></div>
           <div class="iv-fld"><label>내용</label><textarea id="iv-f-body" rows="5" placeholder="자료 내용을 입력하세요"></textarea></div>
           <div class="iv-fld"><label>키워드</label><input type="text" id="iv-f-keywords" placeholder="예: 실손, 5세대, 비교표 (쉼표로 구분)"><div style="font-size:0.75rem;color:var(--tf);margin-top:2px">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
+          <div class="iv-fld" id="iv-edit-atts-fld" style="display:none"><label>현재 첨부 (X 눌러 삭제)</label><div id="iv-edit-atts" class="mr-edit-atts"></div></div>
           <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개)</label><input type="file" id="iv-f-file" multiple onchange="ivPreviewFiles(this)"><div id="iv-f-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>
           <div class="iv-fld"><label>공개 범위</label>
             <div class="iv-types">
@@ -2230,6 +2231,24 @@ function ivPreviewFiles(input){
   }
 }
 window.ivPreviewFiles = ivPreviewFiles;
+/* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._ivEditAtts 상태, 저장 시 남은 첨부 + 새 업로드 합쳐 반영). 단체방 패턴과 동일 */
+function renderIvEditAtts(){
+  var wrap=document.getElementById('iv-edit-atts'); var fld=document.getElementById('iv-edit-atts-fld');
+  if(!wrap) return;
+  var arr=window._ivEditAtts||[];
+  if(!arr.length){ if(fld)fld.style.display='none'; wrap.innerHTML=''; return; }
+  if(fld)fld.style.display='';
+  wrap.innerHTML=arr.map(function(a,i){
+    var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||'');
+    var u2=String(url).replace(/"/g,'&quot;');
+    var nm=(String((a&&a.name)||url).split('/').pop().split('?')[0]).replace(/[&<>]/g,'');
+    var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
+    var inner=isImg?('<img src="'+u2+'" alt="">'):('<span class="mr-att-file">📎 '+nm+'</span>');
+    return '<div class="mr-att-item">'+inner+'<button type="button" class="mr-att-x" onclick="ivRemoveAtt('+i+')" title="삭제">✕</button></div>';
+  }).join('');
+}
+function ivRemoveAtt(i){ if(!window._ivEditAtts) return; window._ivEditAtts.splice(i,1); renderIvEditAtts(); }
+window.renderIvEditAtts=renderIvEditAtts; window.ivRemoveAtt=ivRemoveAtt;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
   var token = window.db && window.db.getToken && window.db.getToken();
@@ -2262,7 +2281,7 @@ function ivManageActions(r){
 async function ivEditPost(id){
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   try{
-    var r=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=id,category,title,content,keywords');
+    var r=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=id,category,title,content,keywords,attachments');
     if(!r.ok){ alert('불러오기 실패 ('+r.status+')'); return; }
     var p=(await r.json())[0]; if(!p){ alert('글을 찾지 못했습니다.'); return; }
     if(typeof ivOpenWrite==='function') ivOpenWrite();
@@ -2270,6 +2289,9 @@ async function ivEditPost(id){
     var b=document.getElementById('iv-f-body'); if(b)b.value=p.content||'';
     var k=document.getElementById('iv-f-keywords'); if(k)k.value=((p.keywords||[]).join(', '));
     var rt=document.querySelector('#ivWriteModal input[name="iv-type"][value="'+(p.category||'공지')+'"]'); if(rt)rt.checked=true;
+    /* 기존 첨부 로드 — 문자열로 직렬화된 경우 배열 파싱 (ivOpenDetail과 동일 가드) */
+    var _ea=p.attachments; if(typeof _ea==='string'){ try{ _ea=JSON.parse(_ea); }catch(e){ _ea=[]; } } if(!Array.isArray(_ea)) _ea=[];
+    window._ivEditAtts=_ea.slice(); if(typeof renderIvEditAtts==='function')renderIvEditAtts();
     window._ivEditId=id;
     var sb=document.querySelector('#ivWriteModal .iv-write-submit'); if(sb)sb.textContent='자료 수정';
   }catch(e){ console.error('[ivEditPost]',e); alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
@@ -2295,6 +2317,7 @@ window.ivFilter = ivFilter;
 async function ivOpenWrite(){
   var _pv=document.getElementById('iv-f-preview'); if(_pv) _pv.innerHTML='';
   var _ff=document.getElementById('iv-f-file'); if(_ff) _ff.value='';
+  window._ivEditAtts=[]; if(typeof renderIvEditAtts==='function')renderIvEditAtts();  /* 새 작성 = 기존첨부 영역 숨김. 편집은 ivEditPost가 이 뒤에 채움 */
   var role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var isAdmin = (role === 'admin');
   var compFld = document.getElementById('iv-company-fld');
@@ -2323,7 +2346,7 @@ async function ivOpenWrite(){
 window.ivOpenWrite = ivOpenWrite;
 function ivCloseWrite(){
   var m = document.getElementById('ivWriteModal'); if(m) m.style.display = 'none';
-  window._ivEditId=null;
+  window._ivEditId=null; window._ivEditAtts=[];
   var sb=document.querySelector('#ivWriteModal .iv-write-submit'); if(sb) sb.textContent='자료 등록';
 }
 window.ivCloseWrite = ivCloseWrite;
@@ -2363,10 +2386,10 @@ async function ivSubmit(){
       else { console.error('[ivSubmit] 첨부 업로드 실패', _up.status, _f.name); }
     }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _e); }
   }
-  if(_sb){ _sb.disabled = false; _sb.textContent = '자료 등록'; }
+  if(_sb){ _sb.disabled = false; _sb.textContent = window._ivEditId?'자료 수정':'자료 등록'; }
   var _eid = window._ivEditId;
   var body = _eid
-    ? { category:category, title:title, content:content, keywords:keywords }   /* 편집 = attachments 보존(제외), 첨부 수정은 별 PR */
+    ? { category:category, title:title, content:content, keywords:keywords, attachments:(window._ivEditAtts||[]).concat(attachments) }   /* 편집 = 남은 기존 첨부 + 새로 업로드한 파일 */
     : {
         board_type: 'insurer',
         insurer_id: insurerId,
