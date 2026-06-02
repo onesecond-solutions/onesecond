@@ -1929,12 +1929,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <button class="mys-write-tab" data-tab="group" onclick="switchMyspaceTab('group')">단체방</button>
       <button class="mys-write-tab" data-tab="qna" onclick="switchMyspaceTab('qna')">보험 Q&amp;A</button>
     </div>
+    <div id="mysWriteDraftBanner" style="display:none;margin:0 0 12px;background:var(--s2);border:1px solid var(--ac);border-radius:9px;padding:9px 12px;font-size:0.82em;color:var(--tp);align-items:center;justify-content:space-between;gap:8px">
+      <span>✍️ 작성하던 내용을 불러왔어요. 이어서 작성하세요.</span>
+      <button type="button" onclick="clearDraftAndForm()" style="background:transparent;border:1px solid var(--bd);border-radius:7px;padding:4px 10px;font-size:0.92em;color:var(--ts);cursor:pointer;white-space:nowrap">새로 쓰기</button>
+    </div>
     <div class="mys-write-body">
       <div class="mys-write-pane on" id="mysWritePaneScript" data-pane="script">
-        <div id="mysScrDraftBanner" style="display:none;background:var(--s2);border:1px solid var(--ac);border-radius:9px;padding:10px 12px;font-size:0.82em;color:var(--tp);align-items:center;justify-content:space-between;gap:8px">
-          <span>✍️ 작성하던 내용을 불러왔어요. 이어서 작성하세요.</span>
-          <button type="button" onclick="clearScriptDraftAndForm()" style="background:transparent;border:1px solid var(--bd);border-radius:7px;padding:4px 10px;font-size:0.92em;color:var(--ts);cursor:pointer;white-space:nowrap">새로 쓰기</button>
-        </div>
         <div class="mys-write-row" style="flex-direction:row;gap:12px;align-items:flex-end">
           <div style="flex:0 0 140px;min-width:0;display:flex;flex-direction:column;gap:6px">
             <label class="mys-write-label">단계별 선택 <span style="color:#EF4444">*</span></label>
@@ -1960,7 +1960,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">파일 첨부</label>
-          <input type="file" class="mys-write-input" id="mysWriteScrFile" multiple onchange="mysScrPreviewFiles(this)" style="padding:8px" />
+          <input type="file" class="mys-write-input" id="mysWriteScrFile" multiple onchange="mysWriteFilePreview(this,'mysWriteScrFilePreview')" style="padding:8px" />
           <div id="mysWriteScrFilePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
         </div>
       </div>
@@ -1986,7 +1986,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <input type="text" class="mys-write-input" id="mysWriteLibKeywords" placeholder="예: 실손, 5세대, 비교표 (쉼표로 구분)" maxlength="200" />
           <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
         </div>
-        <div class="mys-write-hint">⚠️ 파일/이미지 업로드는 다음 자리에서 진입 예정.</div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">파일 첨부</label>
+          <input type="file" class="mys-write-input" id="mysWriteLibFile" multiple onchange="mysWriteFilePreview(this,'mysWriteLibFilePreview')" style="padding:8px" />
+          <div id="mysWriteLibFilePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+        </div>
       </div>
       <div class="mys-write-pane" id="mysWritePaneGroup" data-pane="group">
         <div class="mys-write-row">
@@ -1995,12 +1999,17 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">내용 <span style="color:#EF4444">*</span></label>
-          <textarea class="mys-write-textarea" id="mysWriteGrpBody" placeholder="단체방에 공유할 내용을 적어주세요." maxlength="2000"></textarea>
+          <textarea class="mys-write-textarea" id="mysWriteGrpBody" placeholder="단체방에 공유할 내용을 적어주세요." maxlength="2000" style="min-height:340px"></textarea>
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">키워드</label>
           <input type="text" class="mys-write-input" id="mysWriteGrpKeywords" placeholder="예: 공유, 일정, 안내 (쉼표로 구분)" maxlength="200" />
           <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">파일 첨부</label>
+          <input type="file" class="mys-write-input" id="mysWriteGrpFile" multiple onchange="mysWriteFilePreview(this,'mysWriteGrpFilePreview')" style="padding:8px" />
+          <div id="mysWriteGrpFilePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
         </div>
       </div>
       <div class="mys-write-pane" id="mysWritePaneQna" data-pane="qna">
@@ -6174,7 +6183,7 @@ function openMyspaceWrite(){
     _ss.dataset.loaded='1';
   }
   switchMyspaceTab('script');
-  if(typeof loadScriptDraft==='function') loadScriptDraft();  /* 임시저장 있으면 이어서 작성 복원 */
+  if(typeof loadActiveDraft==='function') loadActiveDraft();  /* 임시저장 있으면 그 탭으로 이어서 작성 복원 */
   m.classList.add('open');
   setTimeout(function(){var el=document.getElementById('mysWriteScrTitle');if(el)el.focus();},80);
 }
@@ -6198,7 +6207,7 @@ function showDietPopup(msg){ var m=document.getElementById('dietPopup'); if(!m) 
 function closeDietPopup(){ var m=document.getElementById('dietPopup'); if(m) m.style.display='none'; }
 /* 딸깍 → Quick 메뉴 이미지 변환 도구로 이동 (홈 이미지변환 버튼과 동일 진입) */
 function dietToImageConvert(){
-  if(typeof saveScriptDraft==='function') saveScriptDraft();  /* 떠나기 전 자동 임시저장 */
+  if(typeof saveActiveDraft==='function') saveActiveDraft();  /* 떠나기 전 자동 임시저장(활성 탭) */
   try{ sessionStorage.setItem('mys_script_from_write','1'); }catch(e){}  /* 출처 표시 — 변환 후 글쓰기 복귀용 */
   closeDietPopup();
   if(typeof closeMyspaceWrite==='function') closeMyspaceWrite();  /* 글쓰기 오버레이 닫기 */
@@ -6215,46 +6224,50 @@ function closeConvertDonePopup(){ var m=document.getElementById('convertDonePopu
 function convertBackToWrite(){
   closeConvertDonePopup();
   if(typeof openMyspaceWrite==='function') openMyspaceWrite();  /* 글쓰기 재오픈 + 임시저장 복원 */
-  /* 변환 결과 파일을 첨부칸에 자동 주입(DataTransfer) + 미리보기 */
+  if(window._convTargetTab && typeof switchMyspaceTab==='function') switchMyspaceTab(window._convTargetTab);  /* 출처 탭으로 */
+  /* 변환 결과 파일을 출처 첨부칸에 자동 주입(DataTransfer) + 미리보기 */
   try{
     var r=window._convResult;
+    var inputId=window._convTargetInput||'mysWriteScrFile';
     if(r&&r.blob){
       var file=new File([r.blob], r.newName||'converted.jpg', {type:(r.blob.type||'image/jpeg')});
       var dt=new DataTransfer(); dt.items.add(file);
-      var input=document.getElementById('mysWriteScrFile');
-      if(input){ input.files=dt.files; if(typeof mysScrPreviewFiles==='function') mysScrPreviewFiles(input); }
+      var input=document.getElementById(inputId);
+      if(input){ input.files=dt.files; if(typeof mysWriteFilePreview==='function') mysWriteFilePreview(input, inputId+'Preview'); }
     }
   }catch(e){ console.error('[convertBackToWrite]', e); }
   try{ sessionStorage.removeItem('mys_script_from_write'); }catch(e){}
 }
 window.showConvertDonePopup=showConvertDonePopup; window.closeConvertDonePopup=closeConvertDonePopup; window.convertBackToWrite=convertBackToWrite;
 /* 스크립트 글쓰기 자동 임시저장 — 떠날 때 보존, 다시 열면 복원(텍스트만, 파일은 재첨부) */
-function saveScriptDraft(){
+/* 임시저장 = 현재 활성 탭(스크립트/자료/단체방 등)의 텍스트 필드 전체 보존. 파일·라디오 제외 */
+function saveActiveDraft(){
   try{
-    var g=function(id){ var el=document.getElementById(id); return el?(el.value||''):''; };
-    var d={stage:g('mysWriteScrStage'),title:g('mysWriteScrTitle'),text:g('mysWriteScrText'),highlight:g('mysWriteScrHighlight'),keywords:g('mysWriteScrKeywords')};
-    if(!d.stage&&!d.title&&!d.text&&!d.highlight&&!d.keywords) return;
-    localStorage.setItem('mys_script_draft', JSON.stringify(d));
+    var pane=document.querySelector('#myspaceWriteModal .mys-write-pane.on'); if(!pane) return;
+    var vals={}, has=false;
+    pane.querySelectorAll('input,textarea,select').forEach(function(el){ if(!el.id||el.type==='file'||el.type==='radio') return; vals[el.id]=el.value; if(el.value) has=true; });
+    if(!has) return;
+    localStorage.setItem('mys_write_draft', JSON.stringify({tab:pane.getAttribute('data-pane'), vals:vals}));
   }catch(e){}
 }
-function loadScriptDraft(){
+function loadActiveDraft(){
   try{
-    var raw=localStorage.getItem('mys_script_draft'); if(!raw) return false;
-    var d=JSON.parse(raw); if(!d) return false;
-    var s=function(id,v){ var el=document.getElementById(id); if(el) el.value=v||''; };
-    s('mysWriteScrStage',d.stage); s('mysWriteScrTitle',d.title); s('mysWriteScrText',d.text); s('mysWriteScrHighlight',d.highlight); s('mysWriteScrKeywords',d.keywords);
-    var b=document.getElementById('mysScrDraftBanner'); if(b) b.style.display='flex';
+    var raw=localStorage.getItem('mys_write_draft'); if(!raw) return false;
+    var d=JSON.parse(raw); if(!d||!d.vals) return false;
+    if(d.tab && typeof switchMyspaceTab==='function') switchMyspaceTab(d.tab);
+    Object.keys(d.vals).forEach(function(id){ var el=document.getElementById(id); if(el) el.value=d.vals[id]; });
+    var b=document.getElementById('mysWriteDraftBanner'); if(b) b.style.display='flex';
     return true;
   }catch(e){ return false; }
 }
-function clearScriptDraft(){ try{ localStorage.removeItem('mys_script_draft'); }catch(e){} var b=document.getElementById('mysScrDraftBanner'); if(b) b.style.display='none'; }
-function clearScriptDraftAndForm(){
-  clearScriptDraft();
-  ['mysWriteScrStage','mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-  var _scp=document.getElementById('mysWriteScrFilePreview'); if(_scp)_scp.innerHTML='';
-  var _scf=document.getElementById('mysWriteScrFile'); if(_scf)_scf.value='';
+function clearActiveDraft(){ try{ localStorage.removeItem('mys_write_draft'); }catch(e){} var b=document.getElementById('mysWriteDraftBanner'); if(b) b.style.display='none'; }
+function clearDraftAndForm(){
+  clearActiveDraft();
+  var pane=document.querySelector('#myspaceWriteModal .mys-write-pane.on'); if(!pane) return;
+  pane.querySelectorAll('input,textarea,select').forEach(function(el){ if(el.type!=='radio') el.value=''; });
+  pane.querySelectorAll('[id$="FilePreview"]').forEach(function(el){ el.innerHTML=''; });
 }
-window.saveScriptDraft=saveScriptDraft; window.loadScriptDraft=loadScriptDraft; window.clearScriptDraft=clearScriptDraft; window.clearScriptDraftAndForm=clearScriptDraftAndForm;
+window.saveActiveDraft=saveActiveDraft; window.loadActiveDraft=loadActiveDraft; window.clearActiveDraft=clearActiveDraft; window.clearDraftAndForm=clearDraftAndForm;
 window.showDietPopup=showDietPopup; window.closeDietPopup=closeDietPopup; window.dietToImageConvert=dietToImageConvert;
 /* FileList에서 5MB 초과 파일 검사 — 있으면 팝업 띄우고 true 반환 */
 function fileTooLarge(files){
@@ -6268,14 +6281,19 @@ function fileTooLarge(files){
 }
 window.fileTooLarge=fileTooLarge;
 /* 스크립트 탭 파일 첨부 미리보기 (이미지 썸네일 / 그 외 파일명) */
-function mysScrPreviewFiles(input){
-  var box=document.getElementById('mysWriteScrFilePreview'); if(!box) return;
+function mysWriteFilePreview(input, previewId){
+  var box=document.getElementById(previewId); if(!box) return;
   box.innerHTML='';
   var files=(input&&input.files)||[];
-  /* 5MB 초과 PNG 원본 = 변환 도구 자동 로드용 보관(메모리) */
+  /* 5MB 초과 PNG/JPG 원본 = 변환 도구 자동 로드용 보관(메모리) */
   window._pendingConvertFile=null;
   for(var k=0;k<files.length;k++){ if(files[k].size>FILE_MAX_BYTES){ var _nm=files[k].name||''; if(/png|jpe?g/i.test(files[k].type||'')||/\.(png|jpe?g)$/i.test(_nm)) window._pendingConvertFile=files[k]; break; } }
-  if(fileTooLarge(files)){ input.value=''; return; }  /* 5MB 초과 → 다이어트 팝업 + 선택 취소 */
+  if(fileTooLarge(files)){
+    /* 5MB 초과 → 다이어트 팝업 + 선택 취소. 출처(첨부칸·탭) 기록 → 변환 후 복귀 자동 첨부 */
+    window._convTargetInput=input.id;
+    var _op=document.querySelector('#myspaceWriteModal .mys-write-pane.on'); window._convTargetTab=_op?_op.getAttribute('data-pane'):'script';
+    input.value=''; return;
+  }
   for(var i=0;i<files.length;i++){
     (function(f){
       var isImg=/^image\//.test(f.type||'');
@@ -6288,14 +6306,16 @@ function mysScrPreviewFiles(input){
     })(files[i]);
   }
 }
-window.mysScrPreviewFiles=mysScrPreviewFiles;
+window.mysWriteFilePreview=mysWriteFilePreview;
 function clearMyspaceWriteForm(){
   var ids=['mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords','mysWriteLibTitle','mysWriteLibDesc','mysWriteLibLink','mysWriteLibMemo','mysWriteLibKeywords','mysWriteGrpTitle','mysWriteGrpBody','mysWriteGrpKeywords','mysWriteQnaTitle','mysWriteQnaBody','mysWriteQnaKeywords'];
   for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value='';}
   var _scf=document.getElementById('mysWriteScrFile'); if(_scf)_scf.value='';
   var _scp=document.getElementById('mysWriteScrFilePreview'); if(_scp)_scp.innerHTML='';
   var _scs=document.getElementById('mysWriteScrStage'); if(_scs)_scs.value='';
-  if(typeof clearScriptDraft==='function') clearScriptDraft();  /* 저장/초기화 시 임시저장 삭제 */
+  if(typeof clearActiveDraft==='function') clearActiveDraft();  /* 저장/초기화 시 임시저장 삭제 */
+  ['mysWriteLibFile','mysWriteGrpFile'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+  ['mysWriteLibFilePreview','mysWriteGrpFilePreview'].forEach(function(id){ var el=document.getElementById(id); if(el)el.innerHTML=''; });
   var qt=document.querySelector('input[name="mysQnaType"][value="인수"]');if(qt)qt.checked=true;
   switchMyspaceTab('script');
 }
