@@ -469,6 +469,13 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-gridhead{justify-content:center;gap:10px}
 .cal-month-sec{margin-bottom:16px}
 .cal-month-hd{font-size:14px;font-weight:800;color:var(--tp);padding:7px 4px;border-bottom:2px solid var(--ac);margin-bottom:9px;cursor:pointer;position:sticky;top:0;background:var(--bg);z-index:1}
+/* 오늘의 할 일 — 캘린더 3일 요약 카드 */
+.tt-cal-list{display:flex;flex-direction:column;gap:7px;margin-top:6px}
+.tt-cal-row{display:flex;align-items:center;gap:8px;font-size:0.85em;min-width:0}
+.tt-cal-ic{flex-shrink:0;display:inline-flex;align-items:center}
+.tt-cal-ic svg{width:15px;height:15px}
+.tt-cal-dt{font-weight:800;color:var(--tp);flex-shrink:0}
+.tt-cal-tt{color:var(--bodytx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mys-news-summary{font-size:0.78em;color:var(--ts);line-height:1.55;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mys-news-card{cursor:pointer}
 .mys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
@@ -4891,6 +4898,8 @@ async function renderTodayTodo(ctx, mountEl){
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var cards=[];
   if(ctx==='myspace'){
+    /* 카드 1 — 캘린더 전일·당일·내일 3일 요약 (지금 작업 의도) */
+    cards.push(await _ttCalCard());
     var nt=await _ttCount("team_notices?scope=eq.team_internal&deleted_at=is.null&created_at=gte."+since+"&select=id");
     var qa=await _ttCount("posts?board_type=eq.qna&select=id");
     cards.push(_ttCard({label:'실장 공지 (오늘)', value:nt, unit:'건', hint:'단체방 오늘 공지', go:"_goVoiceTab('team')"}));
@@ -4907,9 +4916,34 @@ async function renderTodayTodo(ctx, mountEl){
     cards.push(_ttCard({label:'새 보험 Q&A', value:qa2, unit:'건', hint:'현장 질문·답변', go:"_goVoiceTab('voice')"}));
     cards.push(_ttCard({label:'내 공지', value:mine, unit:'건', hint:'내가 쓴 단체방 공지'}));
   }
-  mountEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'+cards.join('')+'</div>';
+  var _ttCols=(ctx==='myspace')?'1fr':'repeat(auto-fit,minmax(180px,1fr))';
+  mountEl.innerHTML='<div style="display:grid;grid-template-columns:'+_ttCols+';gap:12px">'+cards.join('')+'</div>';
 }
 window.renderTodayTodo=renderTodayTodo;
+/* 캘린더 전일·당일·내일 3일 요약 카드 (오늘의 할 일 1열 4카드 중 1번) */
+async function _ttCalCard(){
+  var d=new Date(), td=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  function _f(x){ return x.getFullYear()+'-'+_calPad(x.getMonth()+1)+'-'+_calPad(x.getDate()); }
+  var yest=new Date(td); yest.setDate(yest.getDate()-1);
+  var tom=new Date(td); tom.setDate(tom.getDate()+1);
+  var from=_f(yest), today=_f(td), to=_f(tom), rows=[];
+  try{ var res=await window.db.fetch('/rest/v1/calendar_events?event_date=gte.'+from+'&event_date=lte.'+to+'&order=event_date.asc&select=id,event_date,title,source_type'); if(res.ok){ rows=await res.json(); if(!Array.isArray(rows)) rows=[]; } }catch(e){}
+  var body = rows.length ? '<div class="tt-cal-list">'+rows.map(function(r){
+      var s=CAL_SRC[r.source_type]||CAL_SRC.personal;
+      var dd=(r.event_date||'').slice(5).replace('-','/');
+      var tag=r.event_date===today?'오늘':(r.event_date===from?'어제':'내일');
+      return '<div class="tt-cal-row"><span class="tt-cal-ic" style="color:'+s.color+'">'+calIcon(r.source_type)+'</span><span class="tt-cal-dt">'+tag+' '+dd+'</span><span class="tt-cal-tt">'+_calEsc(r.title)+'</span></div>';
+    }).join('')+'</div>'
+    : '<div style="color:var(--tf);font-size:0.82em;margin-top:4px">전일·당일·내일 예정 일정이 없습니다.</div>';
+  return '<div class="home-widget"><div class="home-widget-head"><div class="home-widget-ttl">캘린더 · 전일·당일·내일</div><div class="home-widget-more" style="cursor:pointer" onclick="_goMysCalendar()">전체보기 →</div></div>'+body+'</div>';
+}
+window._ttCalCard=_ttCalCard;
+function _goMysCalendar(){
+  if(typeof showView==='function') showView('myspace');
+  var ot=document.querySelector('#mys-tabs .tab[onclick*="saved"]'); if(ot&&typeof mysTab==='function') mysTab(ot,'saved');
+  var cc=document.querySelector('#mys-saved .chip[onclick*="mysOfficeCal"]'); if(cc&&typeof mysOfficeCal==='function') mysOfficeCal(cc);
+}
+window._goMysCalendar=_goMysCalendar;
 function mysTab(el,key){
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
