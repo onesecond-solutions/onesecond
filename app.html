@@ -1922,6 +1922,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="mys-write-body">
       <div class="mys-write-pane on" id="mysWritePaneScript" data-pane="script">
         <div class="mys-write-row">
+          <label class="mys-write-label">단계별 선택 <span style="color:#EF4444">*</span></label>
+          <select class="mys-write-input" id="mysWriteScrStage"><option value="">단계를 선택하세요</option></select>
+        </div>
+        <div class="mys-write-row">
           <label class="mys-write-label">제목 <span style="color:#EF4444">*</span></label>
           <input type="text" class="mys-write-input" id="mysWriteScrTitle" placeholder="예: 암보험 매월 생활비 안내 화법" maxlength="100" />
         </div>
@@ -6145,6 +6149,12 @@ document.addEventListener('keydown', function(e){
 /* === MY SPACE 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
+  /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
+  var _ss=document.getElementById('mysWriteScrStage');
+  if(_ss && !_ss.dataset.loaded && typeof SCRIPTS_GROUPS!=='undefined'){
+    _ss.innerHTML='<option value="">단계를 선택하세요</option>'+SCRIPTS_GROUPS.map(function(g,i){ return '<option value="'+g.stage+'">'+(i+1)+'. '+g.label+'</option>'; }).join('');
+    _ss.dataset.loaded='1';
+  }
   switchMyspaceTab('script');
   m.classList.add('open');
   setTimeout(function(){var el=document.getElementById('mysWriteScrTitle');if(el)el.focus();},80);
@@ -6203,6 +6213,7 @@ function clearMyspaceWriteForm(){
   for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value='';}
   var _scf=document.getElementById('mysWriteScrFile'); if(_scf)_scf.value='';
   var _scp=document.getElementById('mysWriteScrFilePreview'); if(_scp)_scp.innerHTML='';
+  var _scs=document.getElementById('mysWriteScrStage'); if(_scs)_scs.value='';
   var qt=document.querySelector('input[name="mysQnaType"][value="인수"]');if(qt)qt.checked=true;
   switchMyspaceTab('script');
 }
@@ -6241,10 +6252,12 @@ async function saveMyspaceWrite(){
     }catch(e){alert('네트워크 오류가 발생했습니다.');}
     finally{btn.disabled=false;btn.textContent='저장하기';}
   }else{
+    var sstage=((document.getElementById('mysWriteScrStage')||{}).value||'').trim();
     var stitle=(document.getElementById('mysWriteScrTitle').value||'').trim();
     var stext=(document.getElementById('mysWriteScrText').value||'').trim();
     var shilite=(document.getElementById('mysWriteScrHighlight').value||'').trim();
     var scrKw=((document.getElementById('mysWriteScrKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    if(!sstage){alert('단계를 선택해 주세요.');return;}
     if(!stitle){alert('제목을 입력해 주세요.');return;}
     if(!stext){alert('스크립트 내용을 입력해 주세요.');return;}
     if(!shilite){alert('핵심 멘트를 입력해 주세요.');return;}
@@ -6263,7 +6276,7 @@ async function saveMyspaceWrite(){
           else console.error('[scriptWrite] 첨부 업로드 실패', _sup.status, _sf.name);
         }catch(_e){ console.error('[scriptWrite] 첨부 업로드 오류', _e); }
       }
-      var sbody={title:stitle,script_text:stext,highlight_text:shilite,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw,attachments:sAtts};
+      var sbody={title:stitle,script_text:stext,highlight_text:shilite,stage:sstage,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw,attachments:sAtts};
       var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
       if(sres.ok||sres.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
