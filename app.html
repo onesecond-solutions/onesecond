@@ -6626,15 +6626,21 @@ function clearMyspaceWriteForm(){
   ['mysWriteLibFile','mysWriteGrpFile','mysWriteQnaFile'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
   ['mysWriteLibFilePreview','mysWriteGrpFilePreview','mysWriteQnaFilePreview'].forEach(function(id){ var el=document.getElementById(id); if(el)el.innerHTML=''; });
   var qt=document.querySelector('input[name="mysQnaType"][value="인수"]');if(qt)qt.checked=true;
+  /* 보험Q&A 구조화 폼(인수/상품/기타) 입력값 초기화 + 회사 지정 입력란 숨김 + 인수 폼으로 복귀 */
+  var _qp=document.getElementById('mysWritePaneQna');
+  if(_qp){
+    _qp.querySelectorAll('input[type=text],textarea').forEach(function(el){el.value='';});
+    _qp.querySelectorAll('select').forEach(function(s){ var di=0; for(var k=0;k<s.options.length;k++){ if(s.options[k].defaultSelected){di=k;break;} } s.selectedIndex=di; });
+    ['mysQnaUwCompany','mysQnaPrdCompany'].forEach(function(id){ var c=document.getElementById(id); if(c){ c.style.display='none'; c.value=''; } });
+  }
+  if(typeof mysQnaSwitch==='function') mysQnaSwitch('인수');
   switchMyspaceTab('script');
 }
 async function saveMyspaceWrite(){
   var activeTab=document.querySelector('.mys-write-tab.on');
   var tab=activeTab?activeTab.getAttribute('data-tab'):'script';
-  if(tab==='group'||tab==='qna'){
-    if(typeof toast==='function')toast('곧 저장까지 연결할게요 😊');
-    return;
-  }
+  if(tab==='group'){ return _saveMyspaceGroup(); }
+  if(tab==='qna'){ return _saveMyspaceQna(); }
   var btn=document.getElementById('mysWriteSaveBtn');
   if(!window.db||!window.AppState||!window.AppState.userId){alert('로그인 정보를 가져오지 못했습니다.');return;}
   var token=window.db.getToken();if(!token){alert('로그인이 필요합니다.');return;}
@@ -6701,6 +6707,126 @@ async function saveMyspaceWrite(){
     finally{btn.disabled=false;btn.textContent='저장하기';}
   }
 }
+/* 단체방·보험Q&A 첨부 업로드 공용 — onesecond_banner/{subdir} 업로드 후 URL 수집 (실패 파일은 건너뜀, 5MB 초과 시 null=중단) */
+async function _mysUploadAtts(inputId, subdir, token){
+  var atts=[]; var files=((document.getElementById(inputId)||{}).files)||[];
+  if(typeof fileTooLarge==='function' && fileTooLarge(files)) return null;
+  for(var i=0;i<files.length;i++){
+    var f=files[i]; var ext=((f.name||'').split('.').pop()||'').toLowerCase();
+    var path=subdir+'/'+Date.now()+'_'+i+(ext?('.'+ext):'');
+    try{
+      var up=await fetch(window.db.url('/storage/v1/object/onesecond_banner/'+path),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(f.type||'application/octet-stream'),'x-upsert':'true'},body:f});
+      if(up.ok) atts.push({url:window.db.url('/storage/v1/object/public/onesecond_banner/'+path),name:f.name,type:(f.type||'')});
+      else console.error('['+subdir+'Write] 첨부 업로드 실패', up.status, f.name);
+    }catch(e){ console.error('['+subdir+'Write] 첨부 업로드 오류', e); }
+  }
+  return atts;
+}
+/* 단체방 글쓰기 → team_notices INSERT (scope=team_internal). mrSubmitNotice 검증 컬럼 정합 */
+async function _saveMyspaceGroup(){
+  var btn=document.getElementById('mysWriteSaveBtn');
+  if(!window.db||!window.db.fetch){ alert('로그인 후 작성할 수 있습니다.'); return; }
+  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var title=((document.getElementById('mysWriteGrpTitle')||{}).value||'').trim();
+  var content=((document.getElementById('mysWriteGrpBody')||{}).value||'').trim();
+  var keywords=((document.getElementById('mysWriteGrpKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  if(!title){ alert('제목을 입력해 주세요.'); return; }
+  if(!content){ alert('내용을 입력해 주세요.'); return; }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var teamId=u.team_id||null;
+  if(teamId==null && u.id){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select=team_id'); if(r.ok){ var j=await r.json(); if(j&&j[0]) teamId=j[0].team_id||null; } }catch(e){} }
+  btn.disabled=true; btn.textContent='저장 중...';
+  try{
+    var atts=await _mysUploadAtts('mysWriteGrpFile','team',token);
+    if(atts===null){ btn.disabled=false; btn.textContent='저장하기'; return; }
+    var row={ notice_type:'operation', title:title, content:content, scope:'team_internal', author_id:(u.id||null), team_id:teamId, keywords:keywords, attachments:atts };
+    var res=await window.db.fetch('/rest/v1/team_notices',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(row)});
+    if(res.ok||res.status===201){
+      clearMyspaceWriteForm(); closeMyspaceWrite();
+      window._mrTeamCache=null;
+      if(typeof loadMysTeam==='function') loadMysTeam();
+      if(typeof loadMrTeam==='function') loadMrTeam();
+      if(typeof loadTeamNotices==='function') loadTeamNotices();
+      if(typeof toast==='function') toast('단체방에 공유됐습니다!');
+    } else { var err=await res.json().catch(function(){return{};}); alert('저장 실패: '+(err.message||res.status)); }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+  finally{ btn.disabled=false; btn.textContent='저장하기'; }
+}
+/* 보험Q&A 글쓰기 → posts INSERT (board_type=qna). ivSubmit 검증 컬럼 정합 + 전용 컬럼 없는 폼값은 content 조합 */
+async function _saveMyspaceQna(){
+  var btn=document.getElementById('mysWriteSaveBtn');
+  if(!window.db||!window.db.fetch){ alert('로그인 후 작성할 수 있습니다.'); return; }
+  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var typeEl=document.querySelector('input[name="mysQnaType"]:checked');
+  var qtype=typeEl?typeEl.value:'인수';
+  var V=function(id){ return ((document.getElementById(id)||{}).value||'').trim(); };
+  var insurerTarget=null, title='', lines=[], kwId='';
+  function rangeVal(selId, compId){ var sv=V(selId); if(sv==='회사 지정'){ var cv=V(compId); return cv||sv; } return sv; }
+  function pushLine(label, val){ if(val) lines.push('['+label+'] '+val); }
+  if(qtype==='인수'){
+    var ins=rangeVal('mysQnaUwInsurer','mysQnaUwCompany');
+    var age=V('mysQnaUwAge'), gender=V('mysQnaUwGender'), history=V('mysQnaUwHistory');
+    if(gender==='선택') gender='';
+    if(!age){ alert('연령을 입력해 주세요.'); return; }
+    if(!gender){ alert('성별을 선택해 주세요.'); return; }
+    if(!history){ alert('병력을 입력해 주세요.'); return; }
+    insurerTarget=ins||null;
+    title=V('mysQnaUwTitle')||('['+(age)+' '+gender+'] '+history+' 인수 문의');
+    pushLine('보험사 범위', ins); pushLine('연령', age); pushLine('성별', gender);
+    pushLine('직업', V('mysQnaUwJob')); pushLine('병력', history);
+    var med=V('mysQnaUwMed'); if(med==='선택') med='';
+    pushLine('진단시기', V('mysQnaUwDiag')); pushLine('약복용', med); pushLine('현재 상태', V('mysQnaUwStatus'));
+    var etc=V('mysQnaUwEtc'); if(etc) lines.push('', etc);
+    kwId='mysQnaUwKeywords';
+  } else if(qtype==='상품'){
+    var pg=V('mysQnaPrdGroup'); if(pg==='선택') pg='';
+    var pins=rangeVal('mysQnaPrdInsurer','mysQnaPrdCompany');
+    var ptitle=V('mysQnaPrdTitle'), pbody=V('mysQnaPrdBody');
+    if(!pg){ alert('상품군을 선택해 주세요.'); return; }
+    if(!ptitle){ alert('질문 제목을 입력해 주세요.'); return; }
+    if(!pbody){ alert('질문 내용을 입력해 주세요.'); return; }
+    insurerTarget=pins||null;
+    title=ptitle;
+    pushLine('상품군', pg); pushLine('보험사 범위', pins);
+    var ph=V('mysQnaPrdHealth'); if(ph==='선택') ph='';
+    var pc=V('mysQnaPrdConfirm'); if(pc==='선택') pc='';
+    pushLine('건강체', ph); pushLine('확인 내용', pc);
+    lines.push('', pbody);
+    kwId='mysQnaPrdKeywords';
+  } else { /* 기타 */
+    var et=V('mysQnaEtcType'); if(et==='선택') et='';
+    var escope=V('mysQnaEtcScope');
+    var etitle=V('mysQnaEtcTitle'), ebody=V('mysQnaEtcBody');
+    if(!et){ alert('질문 유형을 선택해 주세요.'); return; }
+    if(!escope){ alert('확인하고 싶은 범위를 선택해 주세요.'); return; }
+    if(!etitle){ alert('질문 제목을 입력해 주세요.'); return; }
+    if(!ebody){ alert('질문 내용을 입력해 주세요.'); return; }
+    title=etitle;
+    pushLine('질문 유형', et); pushLine('확인 범위', escope); pushLine('답변 희망', V('mysQnaEtcWho'));
+    lines.push('', ebody);
+    kwId='mysQnaEtcKeywords';
+  }
+  var content=lines.join('\n').trim();
+  var keywords=(V(kwId)||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  btn.disabled=true; btn.textContent='저장 중...';
+  try{
+    var atts=await _mysUploadAtts('mysWriteQnaFile','qna',token);
+    if(atts===null){ btn.disabled=false; btn.textContent='저장하기'; return; }
+    var body={ board_type:'qna', title:title, content:content, question_type:qtype, insurer_target:insurerTarget, keywords:keywords, attachments:atts, author_id:(u.id||''), author_name:(u.name||'') };
+    var res=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(res.ok||res.status===201){
+      clearMyspaceWriteForm(); closeMyspaceWrite();
+      window._mysQnaCache=null; window._mrQnaCache=null;
+      if(typeof loadMysQna==='function') loadMysQna();
+      if(typeof loadMrQna==='function') loadMrQna();
+      if(typeof loadVaultQna==='function') loadVaultQna();
+      if(typeof toast==='function') toast('보험 Q&A에 등록됐습니다!');
+    } else { var err=await res.json().catch(function(){return{};}); alert('저장 실패: '+(err.message||res.status)); }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+  finally{ btn.disabled=false; btn.textContent='저장하기'; }
+}
+window._saveMyspaceGroup=_saveMyspaceGroup; window._saveMyspaceQna=_saveMyspaceQna;
 async function deleteMyspaceItem(id,type){
   if(!confirm('이 항목을 삭제하시겠습니까?'))return;
   if(!window.db||!window.db.getToken)return;
