@@ -111,8 +111,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 }
 .split{flex:1;min-height:0;display:grid;grid-template-columns:330px 1fr;gap:16px;overflow:hidden;padding-bottom:18px;}
 /* 자료실 split 사이즈 정합 — 현장의 소리와 동일(부모 flex 컬럼 체인 복원) */
-#v-insurer-vault.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-#iv-saved,#iv-today{flex:1;min-height:0;display:flex;flex-direction:column;}
+#v-insurer-vault.on,#v-myspace.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+#iv-saved,#iv-today,#mys-saved{flex:1;min-height:0;display:flex;flex-direction:column;}
+#mys-today{flex:1;min-height:0;overflow-y:auto;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .list-col .lhead{flex-shrink:0;}
 .list{overflow-y:auto;flex:1;min-height:0;}
@@ -1161,8 +1162,14 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="chip" onclick="filterMys(this,'즐겨찾기')">즐겨찾기</div>
         </div>
       </div>
-      <div class="mys-grid" id="mysGrid">
-        <div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div>
+      <div class="split" id="mys-split">
+        <div class="col list-col">
+          <div class="list" id="mysList"><div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div></div>
+        </div>
+        <div class="col viewer-col">
+          <button class="backbtn" onclick="mysBackToList()">&#8249; 목록으로</button>
+          <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
+        </div>
       </div>
       </div><!-- /mys-saved -->
       <!-- 2026-05-29: MY SPACE 상세 보기 모달 (PR #164) -->
@@ -5790,7 +5797,7 @@ function fmtMysDate(iso){
 
 async function loadMyspace(force){
   if(window._myspaceLoaded&&!force)return;
-  var grid=document.getElementById('mysGrid');if(!grid)return;
+  var grid=document.getElementById('mysList');if(!grid)return;
   if(!window.db||!window.db.getToken){
     grid.innerHTML='<div class="mys-news-empty">자료 모듈 로드 실패. 새로고침 부탁드립니다.</div>';
     return;
@@ -5831,31 +5838,51 @@ async function loadMyspace(force){
   }
 }
 
+/* 오피스 = 게시판 형태(목록+뷰어 split). 카드 그리드 → 좌측 목록 + 우측 뷰어 */
+var MYS_COLOR={'자료':'var(--t-uw)','스크립트':'var(--t-product)','메모':'var(--t-event)','즐겨찾기':'var(--ok)'};
 function renderMyspace(items){
-  var grid=document.getElementById('mysGrid');if(!grid)return;
+  var listEl=document.getElementById('mysList');if(!listEl)return;
+  window._mysFiltered=items||[];
+  var vv=document.getElementById('mysViewer');
   if(!items||items.length===0){
-    grid.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>+ 글쓰기 버튼으로 첫 항목을 작성해보세요.<br><button class="mys-write-empty-cta" onclick="openMyspaceWrite()">+ 첫 항목 작성</button></div>';
+    listEl.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>+ 글쓰기 버튼으로 첫 항목을 작성해보세요.<br><button class="mys-write-empty-cta" onclick="openMyspaceWrite()">+ 첫 항목 작성</button></div>';
+    if(vv) vv.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>';
     return;
   }
-  var colorMap={'자료':'var(--t-uw)','스크립트':'var(--t-product)','메모':'var(--t-event)','즐겨찾기':'var(--ok)'};
-  var html='';
-  for(var i=0;i<items.length;i++){
-    var it=items[i];
-    var tc=colorMap[it._badge]||'var(--ac)';
+  listEl.innerHTML=items.map(function(it,i){
+    var tc=MYS_COLOR[it._badge]||'var(--ac)';
     var dt=fmtMysDate(it._date);
     var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    var delType=it._type==='script'?'script':'library';
     var tableName=(it._type==='script')?'scripts':'library';
-    html+='<div class="mys-card" data-badge="'+it._badge+'" data-item-id="'+it.id+'" style="--tc:'+tc+';cursor:pointer" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');openMyspaceDetail(\''+it.id+'\',\''+it._type+'\')">'+
-      '<button class="mys-card-del" title="삭제" onclick="event.stopPropagation();deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">&#10005;</button>'+
-      '<button class="mys-card-ddalggak" title="⚡ 딸깍" onclick="event.stopPropagation();showDdalggakMenu(this,\'mySpace\')">⚡</button>'+
-      '<span class="mys-badge">'+it._badge+'</span>'+
-      '<div class="mys-ttl">'+title+'</div>'+
-      '<div class="mys-meta">'+dt+'</div>'+
-    '</div>';
-  }
-  grid.innerHTML=html;
+    return '<div class="item'+(i===0?' on':'')+'" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
+      +'<span class="badge">'+it._badge+'</span>'
+      +'<div class="it">'+title+'</div>'
+      +'<div class="id">'+dt+'</div></div>';
+  }).join('');
+  mysOpenItem(0, true);
 }
+function mysOpenItem(idx, keepList){
+  var list=window._mysFiltered||[]; var it=list[idx]; if(!it) return;
+  var v=document.getElementById('mysViewer'); if(!v) return;
+  var bodyText='';
+  if(it._type==='script'){ bodyText=it.script_text||''; }
+  else if(it._badge==='메모'){ bodyText=it.memo_text||''; }
+  else { var parts=[]; if(it.description)parts.push(it.description); if(it.memo_text)parts.push(it.memo_text); bodyText=parts.join('\n\n'); }
+  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var delType=it._type==='script'?'script':'library';
+  var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):(it._date||'');
+  v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'
+    +'<div class="vttl">'+esc(it.title||'제목 없음')+'</div>'
+    +'<div class="vmeta">'+esc(dt)+'</div>'
+    +'<div class="vbody">'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+'</div>'
+    +'<div class="post-acts"><button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
+  var items=document.querySelectorAll('#mysList .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
+  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
+}
+window.mysOpenItem=mysOpenItem;
+function mysBackToList(){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.remove('show-viewer'); }
+window.mysBackToList=mysBackToList;
 
 /* === MY SPACE 상세 보기 모달 (2026-05-29 PR #164) === */
 function openMyspaceDetail(itemId, type){
@@ -6031,12 +6058,11 @@ function filterMys(el,cat){
   var chips=el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
   el.classList.add('on');
-  var cards=document.querySelectorAll('#mysGrid .mys-card');
-  for(var j=0;j<cards.length;j++){
-    var c=cards[j].getAttribute('data-badge')||'';
-    cards[j].style.display=(cat==='전체'||c===cat)?'':'none';
-  }
+  var items=window._myspaceCache||[];
+  var f=(cat==='전체')?items:items.filter(function(it){ return (it._badge||'')===cat; });
+  renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
 }
+window.filterMys=filterMys;
 
 /* ═════════════════════════════════════════════════════════
    QUICK OVERLAY (딸깍 클릭 시 4그룹 펼침)
