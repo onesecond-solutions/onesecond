@@ -1921,6 +1921,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     </div>
     <div class="mys-write-body">
       <div class="mys-write-pane on" id="mysWritePaneScript" data-pane="script">
+        <div id="mysScrDraftBanner" style="display:none;background:var(--s2);border:1px solid var(--ac);border-radius:9px;padding:10px 12px;font-size:0.82em;color:var(--tp);align-items:center;justify-content:space-between;gap:8px">
+          <span>✍️ 작성하던 내용을 불러왔어요. 이어서 작성하세요.</span>
+          <button type="button" onclick="clearScriptDraftAndForm()" style="background:transparent;border:1px solid var(--bd);border-radius:7px;padding:4px 10px;font-size:0.92em;color:var(--ts);cursor:pointer;white-space:nowrap">새로 쓰기</button>
+        </div>
         <div class="mys-write-row" style="flex-direction:row;gap:12px;align-items:flex-end">
           <div style="flex:0 0 140px;min-width:0;display:flex;flex-direction:column;gap:6px">
             <label class="mys-write-label">단계별 선택 <span style="color:#EF4444">*</span></label>
@@ -6159,6 +6163,7 @@ function openMyspaceWrite(){
     _ss.dataset.loaded='1';
   }
   switchMyspaceTab('script');
+  if(typeof loadScriptDraft==='function') loadScriptDraft();  /* 임시저장 있으면 이어서 작성 복원 */
   m.classList.add('open');
   setTimeout(function(){var el=document.getElementById('mysWriteScrTitle');if(el)el.focus();},80);
 }
@@ -6182,10 +6187,39 @@ function showDietPopup(msg){ var m=document.getElementById('dietPopup'); if(!m) 
 function closeDietPopup(){ var m=document.getElementById('dietPopup'); if(m) m.style.display='none'; }
 /* 딸깍 → Quick 메뉴 이미지 변환 도구로 이동 (홈 이미지변환 버튼과 동일 진입) */
 function dietToImageConvert(){
+  if(typeof saveScriptDraft==='function') saveScriptDraft();  /* 떠나기 전 자동 임시저장 */
   closeDietPopup();
+  if(typeof closeMyspaceWrite==='function') closeMyspaceWrite();  /* 글쓰기 오버레이 닫기 */
   if(typeof showView==='function') showView('quick');
   if(typeof openQuickToolV2==='function') setTimeout(function(){ openQuickToolV2('변환기'); }, 80);
 }
+/* 스크립트 글쓰기 자동 임시저장 — 떠날 때 보존, 다시 열면 복원(텍스트만, 파일은 재첨부) */
+function saveScriptDraft(){
+  try{
+    var g=function(id){ var el=document.getElementById(id); return el?(el.value||''):''; };
+    var d={stage:g('mysWriteScrStage'),title:g('mysWriteScrTitle'),text:g('mysWriteScrText'),highlight:g('mysWriteScrHighlight'),keywords:g('mysWriteScrKeywords')};
+    if(!d.stage&&!d.title&&!d.text&&!d.highlight&&!d.keywords) return;
+    localStorage.setItem('mys_script_draft', JSON.stringify(d));
+  }catch(e){}
+}
+function loadScriptDraft(){
+  try{
+    var raw=localStorage.getItem('mys_script_draft'); if(!raw) return false;
+    var d=JSON.parse(raw); if(!d) return false;
+    var s=function(id,v){ var el=document.getElementById(id); if(el) el.value=v||''; };
+    s('mysWriteScrStage',d.stage); s('mysWriteScrTitle',d.title); s('mysWriteScrText',d.text); s('mysWriteScrHighlight',d.highlight); s('mysWriteScrKeywords',d.keywords);
+    var b=document.getElementById('mysScrDraftBanner'); if(b) b.style.display='flex';
+    return true;
+  }catch(e){ return false; }
+}
+function clearScriptDraft(){ try{ localStorage.removeItem('mys_script_draft'); }catch(e){} var b=document.getElementById('mysScrDraftBanner'); if(b) b.style.display='none'; }
+function clearScriptDraftAndForm(){
+  clearScriptDraft();
+  ['mysWriteScrStage','mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var _scp=document.getElementById('mysWriteScrFilePreview'); if(_scp)_scp.innerHTML='';
+  var _scf=document.getElementById('mysWriteScrFile'); if(_scf)_scf.value='';
+}
+window.saveScriptDraft=saveScriptDraft; window.loadScriptDraft=loadScriptDraft; window.clearScriptDraft=clearScriptDraft; window.clearScriptDraftAndForm=clearScriptDraftAndForm;
 window.showDietPopup=showDietPopup; window.closeDietPopup=closeDietPopup; window.dietToImageConvert=dietToImageConvert;
 /* FileList에서 5MB 초과 파일 검사 — 있으면 팝업 띄우고 true 반환 */
 function fileTooLarge(files){
@@ -6223,6 +6257,7 @@ function clearMyspaceWriteForm(){
   var _scf=document.getElementById('mysWriteScrFile'); if(_scf)_scf.value='';
   var _scp=document.getElementById('mysWriteScrFilePreview'); if(_scp)_scp.innerHTML='';
   var _scs=document.getElementById('mysWriteScrStage'); if(_scs)_scs.value='';
+  if(typeof clearScriptDraft==='function') clearScriptDraft();  /* 저장/초기화 시 임시저장 삭제 */
   var qt=document.querySelector('input[name="mysQnaType"][value="인수"]');if(qt)qt.checked=true;
   switchMyspaceTab('script');
 }
