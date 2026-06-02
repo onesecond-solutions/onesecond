@@ -1476,6 +1476,16 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
      </div>
 
+     <!-- 변환 성공 → 글쓰기로 돌아가 자동 첨부 -->
+     <div class="diet-overlay" id="convertDonePopup" style="display:none">
+      <div class="diet-box" role="dialog" aria-modal="true">
+        <div class="diet-emoji">🧙</div>
+        <div class="diet-title">다이어트에 성공하셨군요 ^^</div>
+        <div class="diet-msg">가벼워진 파일을 글쓰기에 바로 첨부할게요.</div>
+        <button class="diet-btn" onclick="convertBackToWrite()">⚡ 글쓰기로 돌아가기</button>
+      </div>
+     </div>
+
      <div class="iv-overlay" id="ivGateModal" style="display:none">
       <div class="iv-write-modal" role="dialog" aria-modal="true" style="max-width:440px">
         <div class="iv-write-head">
@@ -3901,6 +3911,8 @@ function renderConvResult(){
   // 우하단 FAB 활성
   var fab = document.getElementById('qckConvFab');
   if(fab) fab.disabled = false;
+  /* 스크립트 글쓰기에서 딸깍으로 왔으면 → 성공 팝업(글쓰기로 돌아가 자동 첨부) */
+  try{ if(sessionStorage.getItem('mys_script_from_write')&&typeof showConvertDonePopup==='function') showConvertDonePopup(); }catch(e){}
 }
 
 function convShowActionMenu(){
@@ -6188,11 +6200,31 @@ function closeDietPopup(){ var m=document.getElementById('dietPopup'); if(m) m.s
 /* 딸깍 → Quick 메뉴 이미지 변환 도구로 이동 (홈 이미지변환 버튼과 동일 진입) */
 function dietToImageConvert(){
   if(typeof saveScriptDraft==='function') saveScriptDraft();  /* 떠나기 전 자동 임시저장 */
+  try{ sessionStorage.setItem('mys_script_from_write','1'); }catch(e){}  /* 출처 표시 — 변환 후 글쓰기 복귀용 */
   closeDietPopup();
   if(typeof closeMyspaceWrite==='function') closeMyspaceWrite();  /* 글쓰기 오버레이 닫기 */
   if(typeof showView==='function') showView('quick');
   if(typeof openQuickToolV2==='function') setTimeout(function(){ openQuickToolV2('변환기'); }, 80);
 }
+/* 변환 성공 팝업 + 글쓰기로 돌아가 변환 파일 자동 첨부 */
+function showConvertDonePopup(){ var m=document.getElementById('convertDonePopup'); if(m) m.style.display='flex'; }
+function closeConvertDonePopup(){ var m=document.getElementById('convertDonePopup'); if(m) m.style.display='none'; }
+function convertBackToWrite(){
+  closeConvertDonePopup();
+  if(typeof openMyspaceWrite==='function') openMyspaceWrite();  /* 글쓰기 재오픈 + 임시저장 복원 */
+  /* 변환 결과 파일을 첨부칸에 자동 주입(DataTransfer) + 미리보기 */
+  try{
+    var r=window._convResult;
+    if(r&&r.blob){
+      var file=new File([r.blob], r.newName||'converted.jpg', {type:(r.blob.type||'image/jpeg')});
+      var dt=new DataTransfer(); dt.items.add(file);
+      var input=document.getElementById('mysWriteScrFile');
+      if(input){ input.files=dt.files; if(typeof mysScrPreviewFiles==='function') mysScrPreviewFiles(input); }
+    }
+  }catch(e){ console.error('[convertBackToWrite]', e); }
+  try{ sessionStorage.removeItem('mys_script_from_write'); }catch(e){}
+}
+window.showConvertDonePopup=showConvertDonePopup; window.closeConvertDonePopup=closeConvertDonePopup; window.convertBackToWrite=convertBackToWrite;
 /* 스크립트 글쓰기 자동 임시저장 — 떠날 때 보존, 다시 열면 복원(텍스트만, 파일은 재첨부) */
 function saveScriptDraft(){
   try{
