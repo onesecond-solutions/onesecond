@@ -999,7 +999,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="nav" onclick="showView('myspace')"><span class="ic">&#9672;</span><span class="lbl">MY SPACE</span></div>
     <div class="nav" onclick="showView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav" onclick="showView('quick')"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
-    <div class="nav ins-show" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
+    <div class="nav" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav ins-show" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav" id="nav-team" style="display:none" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">매니저룸</span></div>
@@ -1379,12 +1379,26 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="sub iv-notice">&#128274; 등록한 자료는 현재 원수사 내부에서만 보입니다 (설계사 비노출).</div>
       <div class="mys-toolbar" style="margin-bottom:14px">
         <div class="tabs" id="iv-tabs" style="margin-bottom:0;flex:1">
-          <div class="tab on" onclick="ivTab(this,'today')">오늘의 할 일</div>
+          <div class="tab on" onclick="ivTab(this,'today')">보험 Q&amp;A</div>
           <div class="tab" onclick="ivTab(this,'manage')">오피스</div>
         </div>
-        <button class="mys-write-btn" onclick="ivOpenWrite()">+ 자료 등록</button>
+        <button class="mys-write-btn" id="iv-write-btn" onclick="ivOpenWrite()" style="display:none">+ 자료 등록</button>
       </div>
-      <div id="iv-today"></div>
+      <div id="iv-today">
+        <div class="tabs" id="iv-qna-subtabs" style="margin-bottom:12px">
+          <div class="tab on" onclick="vaultQnaSub(this,'today')">TODAY</div>
+          <div class="tab" onclick="vaultQnaSub(this,'all')">전체보기</div>
+        </div>
+        <div class="split" id="iv-qna-split">
+          <div class="col list-col">
+            <div class="list" id="iv-qna-list"><div class="mys-news-empty">불러오는 중…</div></div>
+          </div>
+          <div class="col viewer-col">
+            <button class="backbtn" onclick="vaultQnaBack()">&#8249; 목록으로</button>
+            <div class="viewer" id="iv-qna-viewer"><div class="mys-news-empty">왼쪽에서 질문을 선택하세요.</div></div>
+          </div>
+        </div>
+      </div>
       <div id="iv-saved" style="display:none">
       <div class="chips" id="iv-chips">
         <div class="chip on" onclick="ivFilter(this,'전체')">전체</div>
@@ -2254,6 +2268,76 @@ function renderIvEditAtts(){
 }
 function ivRemoveAtt(i){ if(!window._ivEditAtts) return; window._ivEditAtts.splice(i,1); renderIvEditAtts(); }
 window.renderIvEditAtts=renderIvEditAtts; window.ivRemoveAtt=ivRemoveAtt;
+/* ════ 보험 Q&A (보험사 자료실 첫 탭) — 원수사 임직원이 우리 회사로 온 질문을 보는 자리.
+ * 현장의 소리 '보험 Q&A'를 원수사 페이지로 떼어 넣음. 하위 서브탭 TODAY(오늘)/전체보기(누적·최신순).
+ * 데이터 = posts board_type='qna' (RLS가 노출 범위 결정). 첨부 딸깍 = ivOpenLb 재사용. read-only(답변 기능은 다음 단계). ════ */
+window._vaultQnaCache=null; window._vaultQnaMode='today';
+function _vaultIsTodayKst(iso){ if(!iso) return false; var d=new Date(iso); if(isNaN(d.getTime())) return false; var k=new Date(Date.now()+9*3600000), dk=new Date(d.getTime()+9*3600000); return k.getUTCFullYear()===dk.getUTCFullYear()&&k.getUTCMonth()===dk.getUTCMonth()&&k.getUTCDate()===dk.getUTCDate(); }
+function vaultQnaSub(el, mode){
+  var tabs=document.querySelectorAll('#iv-qna-subtabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  if(el) el.classList.add('on');
+  window._vaultQnaMode=(mode==='all')?'all':'today';
+  vaultQnaRender();
+}
+window.vaultQnaSub=vaultQnaSub;
+async function loadVaultQna(){
+  var listEl=document.getElementById('iv-qna-list'); if(!listEl) return;
+  var token=window.db&&window.db.getToken&&window.db.getToken();
+  if(!token){ listEl.innerHTML=ivStateCard('로그인 후 표시됩니다',''); return; }
+  if(!window._vaultQnaCache) listEl.innerHTML=ivStateCard('불러오는 중…','');
+  try{
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type,insurer_target');
+    if(!res.ok){ var _t=''; try{_t=await res.text();}catch(e){} console.error('[vaultQna] HTTP', res.status, _t); listEl.innerHTML=ivStateCard('불러오지 못했습니다 ('+res.status+')','잠시 후 새로고침 해주세요'); return; }
+    window._vaultQnaCache=(await res.json())||[];
+    vaultQnaRender();
+  }catch(e){ console.error('[vaultQna]', e); listEl.innerHTML=ivStateCard('불러오지 못했습니다','잠시 후 새로고침 해주세요'); }
+}
+window.loadVaultQna=loadVaultQna;
+function vaultQnaRender(){
+  var listEl=document.getElementById('iv-qna-list'); if(!listEl) return;
+  var rows=window._vaultQnaCache||[];
+  var list=(window._vaultQnaMode==='today')?rows.filter(function(r){ return _vaultIsTodayKst(r.created_at); }):rows;
+  window._vaultQnaFiltered=list;
+  if(!list.length){
+    listEl.innerHTML='<div class="mys-news-empty">'+(window._vaultQnaMode==='today'?'오늘 들어온 질문이 없습니다.':'아직 들어온 질문이 없습니다.')+'</div>';
+    var vv=document.getElementById('iv-qna-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">질문이 없습니다.</div>';
+    return;
+  }
+  listEl.innerHTML=list.map(function(r,i){
+    var qt=r.question_type||'질문';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="vaultQnaOpen('+i+')" style="--tc:var(--t-uw)">'
+      +'<span class="badge">'+ivEsc(qt)+'</span>'
+      +'<div class="it">'+ivEsc(r.title||'제목 없음')+'</div>'
+      +'<div class="id">'+ivFmtDate(r.created_at)+(r.author_name?(' · '+ivEsc(r.author_name)):'')+'</div></div>';
+  }).join('');
+  vaultQnaOpen(0, true);
+}
+window.vaultQnaRender=vaultQnaRender;
+function vaultQnaOpen(idx, keepList){
+  var list=window._vaultQnaFiltered||[]; var r=list[idx]; if(!r) return;
+  if(typeof r.attachments==='string'){ try{ r.attachments=JSON.parse(r.attachments); }catch(e){ r.attachments=[]; } } if(!Array.isArray(r.attachments)) r.attachments=[];
+  var v=document.getElementById('iv-qna-viewer'); if(!v) return;
+  var atts='', imgList=[], imgNames=[];
+  if(r.attachments.length){
+    var thumbs=r.attachments.map(function(a){
+      var url=(a&&a.url)||''; var nm=(a&&a.name)||url||'첨부';
+      var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)$/i.test(url||nm);
+      if(isImg&&url){ var li=imgList.length; imgList.push(url); imgNames.push(nm); return '<div class="athumb" onclick="ivOpenLb('+li+')"><img src="'+ivEsc(url)+'" alt=""></div>'; }
+      return '<a class="att-file" href="'+ivEsc(url)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82em;color:var(--ts);text-decoration:none">&#128206; '+ivEsc(String(nm).split('/').pop())+'</a>';
+    }).join('');
+    window._ivImgs=imgList; window._ivImgNames=imgNames;
+    atts='<div class="atts"><div class="alabel">첨부 '+r.attachments.length+' · 이미지 클릭 = 큰 화면 + 딸깍</div><div class="athumbs">'+thumbs+'</div></div>';
+  } else { window._ivImgs=[]; window._ivImgNames=[]; }
+  v.innerHTML='<span class="vbadge">'+ivEsc(r.question_type||'질문')+'</span>'
+    +'<div class="vttl">'+ivEsc(r.title||'제목 없음')+'</div>'
+    +'<div class="vmeta">'+ivFmtDate(r.created_at)+(r.author_name?(' · '+ivEsc(r.author_name)):'')+'</div>'
+    +'<div class="vbody">'+ivEsc(r.content||'').replace(/\n/g,'<br>')+atts+'</div>';
+  var items=document.querySelectorAll('#iv-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
+  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('iv-qna-split'); if(sp) sp.classList.add('show-viewer'); }
+}
+window.vaultQnaOpen=vaultQnaOpen;
+function vaultQnaBack(){ var sp=document.getElementById('iv-qna-split'); if(sp) sp.classList.remove('show-viewer'); }
+window.vaultQnaBack=vaultQnaBack;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
   var token = window.db && window.db.getToken && window.db.getToken();
@@ -4573,8 +4657,9 @@ function ivTab(el,key){
   var tabs=document.querySelectorAll('#iv-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#iv-tabs .tab'); if(f) f.classList.add('on'); }
   var today=document.getElementById('iv-today'), saved=document.getElementById('iv-saved');
-  if(key==='manage'){ if(today) today.style.display='none'; if(saved) saved.style.display=''; if(typeof ivInit==='function') ivInit(); }
-  else { if(saved) saved.style.display='none'; if(today){ today.style.display=''; renderTodayTodo('vault', today); } }
+  var wbtn=document.getElementById('iv-write-btn');
+  if(key==='manage'){ if(today) today.style.display='none'; if(saved) saved.style.display=''; if(wbtn) wbtn.style.display=''; if(typeof ivInit==='function') ivInit(); }
+  else { if(saved) saved.style.display='none'; if(wbtn) wbtn.style.display='none'; if(today){ today.style.display=''; if(typeof loadVaultQna==='function') loadVaultQna(); } }
 }
 window.ivTab=ivTab;
 function mrTabMain(el,key){
