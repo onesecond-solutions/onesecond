@@ -2074,7 +2074,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div id="mysQnaUw">
           <div class="warnbar">&#9888; 개인정보(이름 / 전화번호 / 주민번호)는 입력하지 마세요.</div>
           <div class="frow">
-            <div class="fld"><label>제목 <span class="opt">(선택, 비우면 자동 생성)</span></label><input type="text" id="mysQnaUwTitle" placeholder="예: 60대 여성 갑상선 결절 인수 가능?"></div>
+            <div class="fld"><label>제목 <span class="req">*</span></label><input type="text" id="mysQnaUwTitle" placeholder="예: 60대 여성 갑상선 결절 인수 가능?"></div>
             <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="mysQnaUwInsurer" onchange="mysQnaCompanyToggle(this,'mysQnaUwCompany')"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select><input list="mysInsurerList" id="mysQnaUwCompany" class="mys-write-input" placeholder="원수사명 입력 (자동완성)" style="display:none;margin-top:6px" autocomplete="off"></div>
           </div>
           <div class="frow">
@@ -2089,7 +2089,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           </div>
           <div class="fld"><label>현재 상태 <span class="req">*</span></label><input type="text" id="mysQnaUwStatus" placeholder="예: 추적관찰 중 / 수술 완료"></div>
           <div class="fld"><label>기타 적고 싶은 내용 <span class="opt">(선택)</span></label><textarea id="mysQnaUwEtc" placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
-          <div class="fld"><label>키워드</label><input type="text" id="mysQnaUwKeywords" placeholder="쉼표로 구분 (예: 갑상선, 고혈압, 인수)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
+          <div class="fld"><label>키워드 <span class="req">*</span></label><input type="text" id="mysQnaUwKeywords" placeholder="쉼표로 구분 (예: 갑상선, 고혈압, 인수)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
         </div>
         <!-- 상품 질문 폼 -->
         <div id="mysQnaProduct" style="display:none">
@@ -2099,12 +2099,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <div class="fld"><label>보험사 범위 <span class="req">*</span></label><select id="mysQnaPrdInsurer" onchange="mysQnaCompanyToggle(this,'mysQnaPrdCompany')"><option>전체 (손·생보)</option><option>전체 손해보험</option><option>전체 생명보험</option><option>회사 지정</option></select><input list="mysInsurerList" id="mysQnaPrdCompany" class="mys-write-input" placeholder="원수사명 입력 (자동완성)" style="display:none;margin-top:6px" autocomplete="off"></div>
           </div>
           <div class="frow">
-            <div class="fld"><label>건강체</label><select id="mysQnaPrdHealth"><option>선택</option><option>초강제형(10년고지형)</option><option>초경증(10년고지형)</option><option>기타</option></select></div>
-            <div class="fld"><label>확인하고 싶은 내용</label><select id="mysQnaPrdConfirm"><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
+            <div class="fld"><label>건강체 <span class="req">*</span></label><select id="mysQnaPrdHealth"><option>선택</option><option>초강제형(10년고지형)</option><option>초경증(10년고지형)</option><option>기타</option></select></div>
+            <div class="fld"><label>확인하고 싶은 내용 <span class="req">*</span></label><select id="mysQnaPrdConfirm"><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
           </div>
           <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" id="mysQnaPrdTitle" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
           <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaPrdBody" placeholder="어떤 부분이 헷갈리셨나요?" style="min-height:300px"></textarea></div>
-          <div class="fld"><label>키워드</label><input type="text" id="mysQnaPrdKeywords" placeholder="쉼표로 구분 (예: 실손, 특약, 비교)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
+          <div class="fld"><label>키워드 <span class="req">*</span></label><input type="text" id="mysQnaPrdKeywords" placeholder="쉼표로 구분 (예: 실손, 특약, 비교)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
         </div>
         <!-- 기타 질문 폼 -->
         <div id="mysQnaEtc" style="display:none">
@@ -2114,9 +2114,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <div class="fld"><label>확인하고 싶은 범위 <span class="req">*</span></label><select id="mysQnaEtcScope"><option>팀 내부</option><option>지점</option><option selected>전체 공유</option><option>특정 보험사</option><option>운영진만</option></select><div class="fhint">기본값 = "전체 공유"</div></div>
           </div>
           <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" id="mysQnaEtcTitle" placeholder="예: 청약 중 전산 오류 발생 어떻게 처리?"></div>
-          <div class="fld"><label>누가 답해주길 원하세요? <span class="opt">(선택)</span></label><input type="text" id="mysQnaEtcWho" placeholder="예: 운영진 / 관리자 / 현장 설계사 / 팀장"></div>
+          <div class="fld"><label>누가 답해주길 원하세요? <span class="req">*</span></label><input type="text" id="mysQnaEtcWho" placeholder="예: 운영진 / 관리자 / 현장 설계사 / 팀장"></div>
           <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaEtcBody" placeholder="어떤 상황인지 편하게 작성해 주세요." style="min-height:300px"></textarea></div>
-          <div class="fld"><label>키워드</label><input type="text" id="mysQnaEtcKeywords" placeholder="쉼표로 구분 (예: 녹취, 전산, 민원)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
+          <div class="fld"><label>키워드 <span class="req">*</span></label><input type="text" id="mysQnaEtcKeywords" placeholder="쉼표로 구분 (예: 녹취, 전산, 민원)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
         </div>
         <!-- 첨부 (인수/상품/기타 공통) -->
         <div class="fld"><label>파일 첨부 <span class="opt">(선택)</span></label><input type="file" id="mysWriteQnaFile" multiple onchange="mysWriteFilePreview(this,'mysWriteQnaFilePreview')" style="padding:8px"><div id="mysWriteQnaFilePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>
@@ -6792,25 +6792,31 @@ async function _saveMyspaceQna(){
     if(!diag){ alert('진단시기를 입력해 주세요.'); return; }
     if(!med){ alert('약복용 유무를 선택해 주세요.'); return; }
     if(!status){ alert('현재 상태를 입력해 주세요.'); return; }
+    var uwTitle=V('mysQnaUwTitle');
+    if(!uwTitle){ alert('제목을 입력해 주세요.'); return; }
     insurerTarget=ins||null;
-    title=V('mysQnaUwTitle')||('['+age+' '+gender+'] '+history+' 인수 문의');
+    title=uwTitle;
     pushLine('보험사 범위', ins); pushLine('연령', age); pushLine('성별', gender);
     pushLine('직업', job); pushLine('병력', history);
     pushLine('진단시기', diag); pushLine('약복용', med); pushLine('현재 상태', status);
     var etc=V('mysQnaUwEtc'); if(etc) lines.push('', etc);
     kwId='mysQnaUwKeywords';
   } else if(qtype==='상품'){
+    var pSel=V('mysQnaPrdInsurer'), pComp=V('mysQnaPrdCompany');
     var pg=V('mysQnaPrdGroup'); if(pg==='선택') pg='';
     var pins=rangeVal('mysQnaPrdInsurer','mysQnaPrdCompany');
+    var ph=V('mysQnaPrdHealth'); if(ph==='선택') ph='';
+    var pc=V('mysQnaPrdConfirm'); if(pc==='선택') pc='';
     var ptitle=V('mysQnaPrdTitle'), pbody=V('mysQnaPrdBody');
     if(!pg){ alert('상품군을 선택해 주세요.'); return; }
+    if(pSel==='회사 지정' && !pComp){ alert('보험사명을 입력해 주세요.'); return; }
+    if(!ph){ alert('건강체를 선택해 주세요.'); return; }
+    if(!pc){ alert('확인하고 싶은 내용을 선택해 주세요.'); return; }
     if(!ptitle){ alert('질문 제목을 입력해 주세요.'); return; }
     if(!pbody){ alert('질문 내용을 입력해 주세요.'); return; }
     insurerTarget=pins||null;
     title=ptitle;
     pushLine('상품군', pg); pushLine('보험사 범위', pins);
-    var ph=V('mysQnaPrdHealth'); if(ph==='선택') ph='';
-    var pc=V('mysQnaPrdConfirm'); if(pc==='선택') pc='';
     pushLine('건강체', ph); pushLine('확인 내용', pc);
     lines.push('', pbody);
     kwId='mysQnaPrdKeywords';
@@ -6821,14 +6827,17 @@ async function _saveMyspaceQna(){
     if(!et){ alert('질문 유형을 선택해 주세요.'); return; }
     if(!escope){ alert('확인하고 싶은 범위를 선택해 주세요.'); return; }
     if(!etitle){ alert('질문 제목을 입력해 주세요.'); return; }
+    var ewho=V('mysQnaEtcWho');
+    if(!ewho){ alert('답변을 원하는 대상을 입력해 주세요.'); return; }
     if(!ebody){ alert('질문 내용을 입력해 주세요.'); return; }
     title=etitle;
-    pushLine('질문 유형', et); pushLine('확인 범위', escope); pushLine('답변 희망', V('mysQnaEtcWho'));
+    pushLine('질문 유형', et); pushLine('확인 범위', escope); pushLine('답변 희망', ewho);
     lines.push('', ebody);
     kwId='mysQnaEtcKeywords';
   }
   var content=lines.join('\n').trim();
   var keywords=(V(kwId)||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  if(!keywords.length){ alert('키워드를 입력해 주세요.'); return; }
   /* qna 질문은 본인 지점 범위로 노출(RLS posts_insert_qna_member: branch_id=my_branch_id) → branch_id 세팅 필수 */
   var branchId=u.branch_id||null;
   if(branchId==null && u.id){ try{ var _br=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select=branch_id'); if(_br.ok){ var _bj=await _br.json(); if(_bj&&_bj[0]) branchId=_bj[0].branch_id||null; } }catch(e){} }
