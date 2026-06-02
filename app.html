@@ -476,6 +476,19 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .tt-cal-ic svg{width:15px;height:15px}
 .tt-cal-dt{font-weight:800;color:var(--tp);flex-shrink:0}
 .tt-cal-tt{color:var(--bodytx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 오늘의 할 일 — 가로 1줄 4카드 (스크립트 카드 스타일) */
+.tt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tt-card{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:8px;padding:14px;display:flex;flex-direction:column;min-height:150px}
+.tt-card-click{cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease}
+.tt-card-click:hover{border-color:var(--ac);box-shadow:0 4px 14px rgba(0,0,0,.10)}
+.tt-card-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;font-size:0.7rem;font-weight:700;white-space:nowrap;align-self:flex-start;margin-bottom:8px}
+.tt-card-ttl{font-size:0.92rem;font-weight:800;color:var(--tp);margin-bottom:8px;letter-spacing:-.02em;line-height:1.35}
+.tt-card-body{flex:1;font-size:0.82rem;color:var(--ts);line-height:1.5;min-height:0}
+.tt-card-num{font-size:1.7em;font-weight:800;color:var(--tp);line-height:1.1}
+.tt-card-hint{font-size:0.78rem;color:var(--ts);margin-top:3px}
+.tt-card-more{margin-top:10px;font-size:0.78rem;color:var(--ac);font-weight:600}
+@media (max-width:900px){ .tt-grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .tt-grid{grid-template-columns:1fr} }
 .mys-news-summary{font-size:0.78em;color:var(--ts);line-height:1.55;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mys-news-card{cursor:pointer}
 .mys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
@@ -4898,13 +4911,19 @@ async function renderTodayTodo(ctx, mountEl){
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var cards=[];
   if(ctx==='myspace'){
-    /* 카드 1 — 캘린더 전일·당일·내일 3일 요약 (지금 작업 의도) */
-    cards.push(await _ttCalCard());
+    /* 가로 1줄 4카드 — 스크립트 카드 스타일(좌측 strip + 배지 + 본문) */
+    var calBody=await _ttCalBody();
     var nt=await _ttCount("team_notices?scope=eq.team_internal&deleted_at=is.null&created_at=gte."+since+"&select=id");
     var qa=await _ttCount("posts?board_type=eq.qna&select=id");
-    cards.push(_ttCard({label:'실장 공지 (오늘)', value:nt, unit:'건', hint:'단체방 오늘 공지', go:"_goVoiceTab('team')"}));
-    cards.push(_ttCard({label:'보험 Q&A', value:qa, unit:'건', hint:'내 질문 답변 (전체는 현장의 소리)', go:"_goVoiceTab('voice')"}));
-    cards.push(_ttCard({label:'원수사 공지', value:null, hint:'다음 단계 연결 예정'}));
+    function _num(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5em;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5em"> 건</span>'))+'</div>'; }
+    var tcards=[
+      _ttScriptCard({color:'var(--ac)',   badge:'캘린더',     title:'전일·당일·내일', body:calBody, go:'_goMysCalendar()'}),
+      _ttScriptCard({color:'var(--ok)',   badge:'실장 공지',  title:'오늘 단체방',   body:_num(nt)+'<div class="tt-card-hint">단체방 오늘 공지</div>', go:"_goVoiceTab('team')"}),
+      _ttScriptCard({color:'var(--t-uw)', badge:'보험 Q&A',   title:'내 질문·답변',  body:_num(qa)+'<div class="tt-card-hint">현장의 소리 연결</div>', go:"_goVoiceTab('voice')"}),
+      _ttScriptCard({color:'var(--warn)', badge:'원수사 공지', title:'우리 회사',     body:'<div class="tt-card-hint" style="margin-top:6px">다음 단계 연결 예정</div>'})
+    ];
+    mountEl.innerHTML='<div class="tt-grid">'+tcards.join('')+'</div>';
+    return;
   } else if(ctx==='vault'){
     var lib=await _ttCount("library?select=id");
     cards.push(_ttCard({label:'우리 회사로 온 질문', value:null, hint:'인큐베이션 — 다음 단계'}));
@@ -4916,28 +4935,36 @@ async function renderTodayTodo(ctx, mountEl){
     cards.push(_ttCard({label:'새 보험 Q&A', value:qa2, unit:'건', hint:'현장 질문·답변', go:"_goVoiceTab('voice')"}));
     cards.push(_ttCard({label:'내 공지', value:mine, unit:'건', hint:'내가 쓴 단체방 공지'}));
   }
-  var _ttCols=(ctx==='myspace')?'1fr':'repeat(auto-fit,minmax(180px,1fr))';
-  mountEl.innerHTML='<div style="display:grid;grid-template-columns:'+_ttCols+';gap:12px">'+cards.join('')+'</div>';
+  mountEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'+cards.join('')+'</div>';
 }
 window.renderTodayTodo=renderTodayTodo;
-/* 캘린더 전일·당일·내일 3일 요약 카드 (오늘의 할 일 1열 4카드 중 1번) */
-async function _ttCalCard(){
+/* 스크립트 카드 스타일 카드 (좌측 strip + 배지 + 제목 + 본문) */
+function _ttScriptCard(o){
+  var col=o.color||'var(--ac)';
+  return '<div class="tt-card'+(o.go?' tt-card-click':'')+'" style="border-left-color:'+col+'"'+(o.go?' onclick="'+o.go+'"':'')+'>'
+    +'<div class="tt-card-badge" style="color:'+col+';background:color-mix(in srgb,'+col+' 13%,transparent)">'+o.badge+'</div>'
+    +'<div class="tt-card-ttl">'+o.title+'</div>'
+    +'<div class="tt-card-body">'+o.body+'</div>'
+    +(o.go?'<div class="tt-card-more">전체보기 →</div>':'')+'</div>';
+}
+window._ttScriptCard=_ttScriptCard;
+/* 캘린더 전일·당일·내일 3일 요약 본문 (카드 body용) */
+async function _ttCalBody(){
   var d=new Date(), td=new Date(d.getFullYear(),d.getMonth(),d.getDate());
   function _f(x){ return x.getFullYear()+'-'+_calPad(x.getMonth()+1)+'-'+_calPad(x.getDate()); }
   var yest=new Date(td); yest.setDate(yest.getDate()-1);
   var tom=new Date(td); tom.setDate(tom.getDate()+1);
   var from=_f(yest), today=_f(td), to=_f(tom), rows=[];
   try{ var res=await window.db.fetch('/rest/v1/calendar_events?event_date=gte.'+from+'&event_date=lte.'+to+'&order=event_date.asc&select=id,event_date,title,source_type'); if(res.ok){ rows=await res.json(); if(!Array.isArray(rows)) rows=[]; } }catch(e){}
-  var body = rows.length ? '<div class="tt-cal-list">'+rows.map(function(r){
+  if(!rows.length) return '<div class="tt-card-hint" style="margin-top:6px">전일·당일·내일 예정 일정이 없습니다.</div>';
+  return '<div class="tt-cal-list">'+rows.map(function(r){
       var s=CAL_SRC[r.source_type]||CAL_SRC.personal;
       var dd=(r.event_date||'').slice(5).replace('-','/');
       var tag=r.event_date===today?'오늘':(r.event_date===from?'어제':'내일');
       return '<div class="tt-cal-row"><span class="tt-cal-ic" style="color:'+s.color+'">'+calIcon(r.source_type)+'</span><span class="tt-cal-dt">'+tag+' '+dd+'</span><span class="tt-cal-tt">'+_calEsc(r.title)+'</span></div>';
-    }).join('')+'</div>'
-    : '<div style="color:var(--tf);font-size:0.82em;margin-top:4px">전일·당일·내일 예정 일정이 없습니다.</div>';
-  return '<div class="home-widget"><div class="home-widget-head"><div class="home-widget-ttl">캘린더 · 전일·당일·내일</div><div class="home-widget-more" style="cursor:pointer" onclick="_goMysCalendar()">전체보기 →</div></div>'+body+'</div>';
+    }).join('')+'</div>';
 }
-window._ttCalCard=_ttCalCard;
+window._ttCalBody=_ttCalBody;
 function _goMysCalendar(){
   if(typeof showView==='function') showView('myspace');
   var ot=document.querySelector('#mys-tabs .tab[onclick*="saved"]'); if(ot&&typeof mysTab==='function') mysTab(ot,'saved');
