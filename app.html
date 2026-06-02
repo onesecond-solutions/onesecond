@@ -2365,8 +2365,8 @@ window.loadPricing = function(){
     .catch(function(){ v.innerHTML = '<div style="padding:40px;text-align:center;color:var(--ts)"><h2>요금제</h2><p>페이지를 불러오지 못했습니다.</p></div>'; });
 };
 
-/* 2026-05-28: v1 → v2 전환 stub (검색 / 프로필 / 폰트 자료 이식 = 별 트랙 PR로 분리) */
-window.openSearch = function(){ alert('검색 기능은 다음 자리에서 정합 예정.'); };
+/* 2026-05-28: v1 → v2 전환 stub (프로필 / 폰트 자료 이식 = 별 트랙 PR로 분리)
+ * 2026-06-03: 검색 stub 해제 — 실데이터 통합 검색 활성(doSearch 재작성). 검색 트랙 본진 */
 window.openEditProfile = function(){ alert('내 정보 수정은 다음 자리에서 정합 예정.'); };
 window.setFontScale = function(scale){ document.documentElement.style.setProperty('--fscale', scale || 1); try { localStorage.setItem('os_font_scale', scale); } catch(e){} };
 
@@ -5594,36 +5594,53 @@ function showPost(idx){
 function showViewer(){var s=document.getElementById('split');if(window.innerWidth<=1024)s.classList.add('show-viewer');}
 function backToList(){document.getElementById('split').classList.remove('show-viewer');}
 function toggleMSide(){document.getElementById('app').classList.toggle('msidebar');}
-var searchData=[
-{tag:'허브',color:'#22C55E',title:'5세대 실손 주계약 4세대 대비 변화',meta:'상품 DB'},
-{tag:'네비방',color:'#22D3EE',title:'5세대 실손 단독 가입 가능한 원수사',meta:'5/16'},
-{tag:'스마트게시판',color:'#6366F1',title:'2026년 5월 한화손보 소식지',meta:'소식지'},
-{tag:'단체방',color:'#F59E0B',title:'[한화생명] 갑상선암 수술 1억 플랜',meta:'5/19'},
-{tag:'허브',color:'#22C55E',title:'갑상선 결절 인수기준 보험사별 정리',meta:'인수 DB'},
-{tag:'네비방',color:'#22D3EE',title:'당뇨 약 복용자 실손 가입 가능 여부',meta:'5/13'},
-{tag:'스마트게시판',color:'#6366F1',title:'2026년 5월 메리츠화재 소식지',meta:'소식지'},
-{tag:'단체방',color:'#F59E0B',title:'메리츠 인수기준 변경 5/20 적용',meta:'5/18'}
-];
+/* 통합 검색 = 실데이터 7그룹(RLS 자동 필터). mock 폐기 2026-06-03 */
+var _searchTimer=null, _searchSeq=0;
+function _sEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function _sFmtDate(s){ if(!s) return ''; var p=String(s).slice(0,10).split('-'); return p.length===3?(parseInt(p[1],10)+'/'+parseInt(p[2],10)):''; }
+function _searchGo(view){ closeSearch(); if(typeof showView==='function') showView(view); }
+window._searchGo=_searchGo;
 function openSearch(){if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
 function closeSearch(){document.getElementById('so').classList.remove('open');}
 function fill(q){document.getElementById('sinput').value=q;doSearch(q);document.getElementById('sinput').focus();}
 function doSearch(q){
-  var body=document.getElementById('sobody');
-  if(!q||q.trim()===''){ body.innerHTML=defaultPanel; return; }
-  var ql=q.toLowerCase();
-  var hits=searchData.filter(function(d){return d.title.toLowerCase().includes(ql)||d.tag.includes(q);});
-  if(hits.length===0){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">검색 결과가 없습니다</div>'; return; }
-  var byTag={};
-  hits.forEach(function(h){ (byTag[h.tag]=byTag[h.tag]||[]).push(h); });
-  var html='';
-  Object.keys(byTag).forEach(function(tag){
-    html+='<div class="sogroup">'+tag+' ('+byTag[tag].length+')</div>';
-    byTag[tag].forEach(function(h){
-      html+='<div class="sores" onclick="closeSearch()"><span class="stag" style="--tcolor:'+h.color+'">'+h.tag+'</span><span class="sttl">'+h.title+'</span><span class="smeta">'+h.meta+'</span></div>';
-    });
-  });
+  var body=document.getElementById('sobody'); if(!body) return;
+  if(!q||!q.trim()){ if(_searchTimer) clearTimeout(_searchTimer); _searchSeq++; body.innerHTML=defaultPanel; return; }
+  if(_searchTimer) clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(function(){ _runSearch(q.trim()); }, 250);  /* 디바운스 — 타이핑마다 과다 호출 방지 */
+}
+window.doSearch=doSearch;
+/* 실데이터 통합 검색 — 7그룹 각 테이블 ILIKE fetch(db.fetch=RLS 자동 필터) → 출처 그룹 렌더 */
+async function _runSearch(q){
+  var body=document.getElementById('sobody'); if(!body) return;
+  var seq=++_searchSeq;
+  body.innerHTML='<div class="sogroup">검색 중…</div>';
+  if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
+  var enc=encodeURIComponent('*'+q+'*'), SIK=encodeURIComponent('*소식지*');
+  var groups=[
+    {label:'보험Q&A',     color:'#22D3EE', view:'voice',         path:'posts?board_type=eq.qna&title=not.ilike.'+SIK+'&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,created_at&order=created_at.desc&limit=6', t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.created_at);}},
+    {label:'소식지',      color:'#6366F1', view:'voice',         path:'posts?board_type=eq.qna&title=ilike.'+SIK+'&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,created_at&order=created_at.desc&limit=6',     t:function(r){return r.title;}, m:function(){return '소식지';}},
+    {label:'자료실',      color:'#F59E0B', view:'insurer-vault', path:'posts?board_type=eq.insurer&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,category,created_at&order=created_at.desc&limit=6',                        t:function(r){return r.title;}, m:function(r){return r.category||_sFmtDate(r.created_at);}},
+    {label:'현장의 소리', color:'#22C55E', view:'voice',         path:'team_notices?deleted_at=is.null&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,created_at&order=created_at.desc&limit=6',                          t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.created_at);}},
+    {label:'스크립트',    color:'#E879F9', view:'scripts',       path:'scripts?or=(title.ilike.'+enc+',script_text.ilike.'+enc+',highlight_text.ilike.'+enc+')&select=id,title,stage&limit=6',                                            t:function(r){return r.title;}, m:function(r){return r.stage||'스크립트';}},
+    {label:'MY SPACE 자료', color:'#A1A1AA', view:'myspace',     path:'library?or=(title.ilike.'+enc+',description.ilike.'+enc+',memo_text.ilike.'+enc+')&select=id,title&limit=6',                                                      t:function(r){return r.title;}, m:function(){return '내 자료';}},
+    {label:'캘린더',      color:'#818CF8', view:'myspace',       path:'calendar_events?or=(title.ilike.'+enc+',description.ilike.'+enc+')&select=id,title,event_date&order=event_date.desc&limit=6',                                       t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.event_date);}}
+  ];
+  var results=await Promise.all(groups.map(function(g){ return window.db.fetch('/rest/v1/'+g.path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}); }));
+  if(seq!==_searchSeq) return;  /* 더 새 검색이 들어왔으면 폐기(stale) */
+  var html='', total=0;
+  for(var gi=0; gi<groups.length; gi++){
+    var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)||!rows.length) continue;
+    total+=rows.length;
+    html+='<div class="sogroup">'+g.label+' ('+rows.length+')</div>';
+    for(var ri=0; ri<rows.length; ri++){ var r=rows[ri];
+      html+='<div class="sores" onclick="_searchGo(\''+g.view+'\')"><span class="stag" style="--tcolor:'+g.color+'">'+g.label+'</span><span class="sttl">'+_sEsc(g.t(r))+'</span><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
+    }
+  }
+  if(!total) html='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">검색 결과가 없습니다</div>';
   body.innerHTML=html;
 }
+window._runSearch=_runSearch;
 var defaultPanel='';
 document.addEventListener('DOMContentLoaded',function(){defaultPanel=document.getElementById('sobody').innerHTML;});
 document.addEventListener('keydown',function(e){
