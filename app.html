@@ -4482,18 +4482,7 @@ async function loadSmartNewsletters(){
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
       var who=''; if(r.author_name){ var rl=(roleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[r.author_id]])||''; who=esc(r.author_name)+(rl?' '+rl:''); }
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
-      var _imgs=[], _imgNames=[]; var _attHtml='';
-      if(_att.length){
-        var _cells=_att.map(function(a){
-          var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return '';
-          var u2=esc(url);
-          var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
-          if(isImg){ var li=_imgs.length; _imgs.push(url); _imgNames.push((a&&a.name)||String(url).split('/').pop().split('?')[0]); return '<div class="nt-att-thumb" onclick="voiceOpenLb('+li+')" style="cursor:pointer"><img src="'+u2+'" alt="" loading="lazy"></div>'; }
-          return '<a class="nt-att-file" href="'+u2+'" target="_blank" rel="noopener">📎 '+esc(String(url).split('/').pop().split('?')[0])+'</a>';
-        }).join('');
-        var _hint=_imgs.length?'<div style="font-size:0.72rem;color:var(--tf);margin-top:6px">이미지 클릭 = 큰 화면 + 딸깍</div>':'';
-        _attHtml='<div class="nt-atts">'+_cells+'</div>'+_hint;
-      }
+      var _ah=_voiceAttsHtml(_att); var _attHtml=_ah.html, _imgs=_ah.imgs, _imgNames=_ah.names;
       var _hidTag=(_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':'';
       return {badge:cat, tc:tc, title:esc(r.title||'(제목 없음)')+_hidTag, meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml, real:true, _id:r.id, _imgs:_imgs, _imgNames:_imgNames, _attachments:_att};
     });
@@ -4544,19 +4533,7 @@ async function _loadNoticeFeed(scope, tabKey){
       var _hideBtn=_meAdmin?('<button class="post-act" onclick="voiceToggleHide(\''+r.id+'\',\''+tabKey+'\','+(r.is_hidden?'false':'true')+')">'+(r.is_hidden?'숨김 해제':'숨김')+'</button>'):'';
       var _acts=(_editDel||_hideBtn)?('<div class="post-acts">'+_editDel+_hideBtn+'</div>'):'';
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
-      var _imgs=[], _imgNames=[];   /* 이미지 첨부 → 라이트박스(openLb)+딸깍 (자료실 ivOpenLb 패턴) */
-      var _attHtml='';
-      if(_att.length){
-        var _cells=_att.map(function(a){
-          var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return '';
-          var u2=esc(url);
-          var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
-          if(isImg){ var li=_imgs.length; _imgs.push(url); _imgNames.push((a&&a.name)||String(url).split('/').pop().split('?')[0]); return '<div class="nt-att-thumb" onclick="voiceOpenLb('+li+')" style="cursor:pointer"><img src="'+u2+'" alt="" loading="lazy"></div>'; }
-          return '<a class="nt-att-file" href="'+u2+'" target="_blank" rel="noopener">📎 '+esc(String(url).split('/').pop().split('?')[0])+'</a>';
-        }).join('');
-        var _hint=_imgs.length?'<div style="font-size:0.72rem;color:var(--tf);margin-top:6px">이미지 클릭 = 큰 화면 + 딸깍</div>':'';
-        _attHtml='<div class="nt-atts">'+_cells+'</div>'+_hint;
-      }
+      var _ah=_voiceAttsHtml(_att); var _attHtml=_ah.html, _imgs=_ah.imgs, _imgNames=_ah.names;
       return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true, _id:r.id, _ntype:r.notice_type, _rtitle:(r.title||''), _rcontent:(r.content||''), _rkw:(r.keywords||[]), _attachments:_att, _imgs:_imgs, _imgNames:_imgNames};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
@@ -4622,6 +4599,23 @@ function voiceOpenLb(i){
   if(typeof openLb==='function') openLb(i);
 }
 window.voiceOpenLb=voiceOpenLb;
+/* 게시판 첨부 렌더 통일 — 보험사 자료실(.atts) 방식: 구분선 + '첨부 N' 헤더 + 정렬 썸네일.
+ * 단체방/지점/스마트게시판 공용. 이미지 클릭 = voiceOpenLb(showTabPost가 글별 _voiceImgs 세팅). returns {html,imgs,names}. */
+function _voiceAttsHtml(att){
+  var imgs=[], names=[];
+  if(!Array.isArray(att)||!att.length) return {html:'', imgs:imgs, names:names};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var cells=att.map(function(a){
+    var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return '';
+    var u2=esc(url);
+    var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
+    if(isImg){ var li=imgs.length; imgs.push(url); names.push((a&&a.name)||String(url).split('/').pop().split('?')[0]); return '<div class="athumb" onclick="voiceOpenLb('+li+')"><img src="'+u2+'" alt=""></div>'; }
+    return '<a class="att-file" href="'+u2+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82em;color:var(--ts);text-decoration:none">&#128206; '+esc(String(url).split('/').pop().split('?')[0])+'</a>';
+  }).join('');
+  var html='<div class="atts"><div class="alabel">첨부 '+att.length+' · 이미지 클릭 = 큰 화면 + 딸깍</div><div class="athumbs">'+cells+'</div></div>';
+  return {html:html, imgs:imgs, names:names};
+}
+window._voiceAttsHtml=_voiceAttsHtml;
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
 function renderMrEditAtts(){
   var wrap=document.getElementById('mr-edit-atts'); var fld=document.getElementById('mr-edit-atts-fld');
