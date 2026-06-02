@@ -5618,13 +5618,13 @@ async function _runSearch(q){
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
   var enc=encodeURIComponent('*'+q+'*'), SIK=encodeURIComponent('*소식지*');
   var groups=[
-    {label:'보험Q&A',     color:'#22D3EE', view:'voice',         path:'posts?board_type=eq.qna&title=not.ilike.'+SIK+'&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,created_at&order=created_at.desc&limit=100', t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.created_at);}},
-    {label:'소식지',      color:'#6366F1', view:'voice',         path:'newsletters?or=(title.ilike.'+enc+',company.ilike.'+enc+',full_text.ilike.'+enc+')&select=id,title,company,publish_year,publish_month&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=100', t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}},
-    {label:'자료실',      color:'#F59E0B', view:'insurer-vault', path:'posts?board_type=eq.insurer&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,category,created_at&order=created_at.desc&limit=100',                        t:function(r){return r.title;}, m:function(r){return r.category||_sFmtDate(r.created_at);}},
-    {label:'현장의 소리', color:'#22C55E', view:'voice',         path:'team_notices?deleted_at=is.null&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,created_at&order=created_at.desc&limit=100',                          t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.created_at);}},
-    {label:'스크립트',    color:'#E879F9', view:'scripts',       path:'scripts?or=(title.ilike.'+enc+',script_text.ilike.'+enc+',highlight_text.ilike.'+enc+')&select=id,title,stage&limit=100',                                            t:function(r){return r.title;}, m:function(r){return r.stage||'스크립트';}},
-    {label:'MY SPACE 자료', color:'#A1A1AA', view:'myspace',     path:'library?or=(title.ilike.'+enc+',description.ilike.'+enc+',memo_text.ilike.'+enc+')&select=id,title&limit=100',                                                      t:function(r){return r.title;}, m:function(){return '내 자료';}},
-    {label:'캘린더',      color:'#818CF8', view:'myspace',       path:'calendar_events?or=(title.ilike.'+enc+',description.ilike.'+enc+')&select=id,title,event_date&order=event_date.desc&limit=100',                                       t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.event_date);}}
+    {label:'보험Q&A',     color:'#22D3EE', table:'posts',          path:'posts?board_type=eq.qna&title=not.ilike.'+SIK+'&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,created_at&order=created_at.desc&limit=100', t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.created_at);}},
+    {label:'소식지',      color:'#6366F1', table:'newsletters',    path:'newsletters?or=(title.ilike.'+enc+',company.ilike.'+enc+',full_text.ilike.'+enc+')&select=id,title,company,publish_year,publish_month&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=100', t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}},
+    {label:'자료실',      color:'#F59E0B', table:'posts',          path:'posts?board_type=eq.insurer&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,category,created_at&order=created_at.desc&limit=100',                        t:function(r){return r.title;}, m:function(r){return r.category||_sFmtDate(r.created_at);}},
+    {label:'현장의 소리', color:'#22C55E', table:'team_notices',   path:'team_notices?deleted_at=is.null&or=(title.ilike.'+enc+',content.ilike.'+enc+')&select=id,title,created_at&order=created_at.desc&limit=100',                          t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.created_at);}},
+    {label:'스크립트',    color:'#E879F9', table:'scripts',        path:'scripts?or=(title.ilike.'+enc+',script_text.ilike.'+enc+',highlight_text.ilike.'+enc+')&select=id,title,stage&limit=100',                                            t:function(r){return r.title;}, m:function(r){return r.stage||'스크립트';}},
+    {label:'MY SPACE 자료', color:'#A1A1AA', table:'library',      path:'library?or=(title.ilike.'+enc+',description.ilike.'+enc+',memo_text.ilike.'+enc+')&select=id,title&limit=100',                                                      t:function(r){return r.title;}, m:function(){return '내 자료';}},
+    {label:'캘린더',      color:'#818CF8', table:'calendar_events', path:'calendar_events?or=(title.ilike.'+enc+',description.ilike.'+enc+')&select=id,title,event_date&order=event_date.desc&limit=100',                                       t:function(r){return r.title;}, m:function(r){return _sFmtDate(r.event_date);}}
   ];
   var results=await Promise.all(groups.map(function(g){ return window.db.fetch('/rest/v1/'+g.path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}); }));
   if(seq!==_searchSeq) return;  /* 더 새 검색이 들어왔으면 폐기(stale) */
@@ -5634,13 +5634,41 @@ async function _runSearch(q){
     total+=rows.length;
     html+='<div class="sogroup">'+g.label+' ('+(rows.length>=100?'100+':rows.length)+')</div>';
     for(var ri=0; ri<rows.length; ri++){ var r=rows[ri];
-      html+='<div class="sores" onclick="_searchGo(\''+g.view+'\')"><span class="stag" style="--tcolor:'+g.color+'">'+g.label+'</span><span class="sttl">'+_sEsc(g.t(r))+'</span><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
+      html+='<div class="sores" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+g.color+'">'+g.label+'</span><span class="sttl">'+_sEsc(g.t(r))+'</span><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
     }
   }
   if(!total) html='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">검색 결과가 없습니다</div>';
   body.innerHTML=html;
 }
 window._runSearch=_runSearch;
+/* 검색 결과 클릭 → 해당 항목 본문을 모달로 표시 (테이블별 본문 컬럼 매핑) */
+async function _searchOpen(table, id){
+  if(!window.db||!window.db.fetch) return;
+  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date' };
+  var sel=selMap[table]||'title';
+  try{
+    var res=await window.db.fetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id)+'&select='+sel);
+    var rows=res.ok?await res.json():[]; var r=rows[0];
+    if(!r){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); return; }
+    var title=(r.company?r.company+' · ':'')+(r.title||'(제목 없음)');
+    var meta = r.publish_year?(r.publish_year+'.'+(r.publish_month||'')) : (r.stage||r.category||(r.event_date?String(r.event_date).slice(0,10):(r.created_at?_sFmtDate(r.created_at):'')));
+    var bodyTxt = r.full_text||r.content||r.script_text||r.description||r.memo_text||'(내용 없음)';
+    if(r.highlight_text) bodyTxt=r.highlight_text+'\n\n'+bodyTxt;
+    if(r.link_url) bodyTxt=bodyTxt+'\n\n'+r.link_url;
+    _closeSearchDetail();
+    var ov=document.createElement('div'); ov.id='searchDetailModal';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99995;display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.onmousedown=function(e){ _ovDown(e,ov); }; ov.onclick=function(e){ _ovClick(e,ov,_closeSearchDetail); };
+    ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--bd)"><div><div style="font-weight:800;color:var(--tp);font-size:1.02em;line-height:1.4">'+_sEsc(title)+'</div>'+(meta?'<div style="font-size:0.78em;color:var(--ts);margin-top:4px">'+_sEsc(meta)+'</div>':'')+'</div><button onclick="_closeSearchDetail()" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;flex-shrink:0">&#10005;</button></div>'
+      +'<div style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9em;line-height:1.65">'+_sEsc(bodyTxt)+'</div>'
+      +'</div>';
+    document.body.appendChild(ov);
+  }catch(e){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); }
+}
+window._searchOpen=_searchOpen;
+function _closeSearchDetail(){ var m=document.getElementById('searchDetailModal'); if(m) m.remove(); }
+window._closeSearchDetail=_closeSearchDetail;
 var defaultPanel='';
 document.addEventListener('DOMContentLoaded',function(){defaultPanel=document.getElementById('sobody').innerHTML;});
 document.addEventListener('keydown',function(e){
