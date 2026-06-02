@@ -112,7 +112,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .split{flex:1;min-height:0;display:grid;grid-template-columns:330px 1fr;gap:16px;overflow:hidden;padding-bottom:18px;}
 /* 자료실 split 사이즈 정합 — 현장의 소리와 동일(부모 flex 컬럼 체인 복원) */
 #v-insurer-vault.on,#v-myspace.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-#iv-saved,#iv-today,#mys-saved{flex:1;min-height:0;display:flex;flex-direction:column;}
+#iv-saved,#iv-today,#mys-saved,#mys-team{flex:1;min-height:0;display:flex;flex-direction:column;}
 #mys-today{flex:1;min-height:0;overflow-y:auto;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .list-col .lhead{flex-shrink:0;}
@@ -1148,6 +1148,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="tabs" id="mys-tabs" style="margin-bottom:0;flex:1">
           <div class="tab on" onclick="mysTab(this,'today')">오늘의 할 일</div>
           <div class="tab" onclick="mysTab(this,'saved')">오피스</div>
+          <div class="tab" onclick="mysTab(this,'team')">단체방</div>
         </div>
         <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
       </div>
@@ -1172,6 +1173,20 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
       </div>
       </div><!-- /mys-saved -->
+      <div id="mys-team" style="display:none">
+      <div class="mys-toolbar"><div class="chips" id="mys-team-subtabs">
+        <div class="chip on" onclick="mysTeamSub(this,'today')">TODAY</div>
+        <div class="chip" onclick="mysTeamSub(this,'all')">전체보기</div>
+        <div class="chip" onclick="mysTeamSub(this,'mine')">MINE</div>
+      </div></div>
+      <div class="split" id="mys-team-split">
+        <div class="col list-col"><div class="list" id="mys-team-list"><div class="mys-news-empty">불러오는 중…</div></div></div>
+        <div class="col viewer-col">
+          <button class="backbtn" onclick="mysTeamBack()">&#8249; 목록으로</button>
+          <div class="viewer" id="mys-team-viewer"><div class="mys-news-empty">왼쪽에서 공지를 선택하세요.</div></div>
+        </div>
+      </div>
+      </div><!-- /mys-team -->
       <!-- 2026-05-29: MY SPACE 상세 보기 모달 (PR #164) -->
       <div class="myspace-detail-overlay" id="myspaceDetailModal" onclick="if(event.target===this)closeMyspaceDetail()">
         <div class="myspace-detail-box" role="dialog" aria-modal="true">
@@ -4698,9 +4713,11 @@ window.renderTodayTodo=renderTodayTodo;
 function mysTab(el,key){
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
-  var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved');
-  if(key==='saved'){ if(today) today.style.display='none'; if(saved) saved.style.display=''; if(typeof loadMyspace==='function') loadMyspace(); }
-  else { if(saved) saved.style.display='none'; if(today){ today.style.display=''; renderTodayTodo('myspace', today); } }
+  var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved'), team=document.getElementById('mys-team');
+  if(today) today.style.display='none'; if(saved) saved.style.display='none'; if(team) team.style.display='none';
+  if(key==='saved'){ if(saved) saved.style.display=''; if(typeof loadMyspace==='function') loadMyspace(); }
+  else if(key==='team'){ if(team) team.style.display=''; if(typeof loadMysTeam==='function') loadMysTeam(); }
+  else { if(today){ today.style.display=''; renderTodayTodo('myspace', today); } }
 }
 window.mysTab=mysTab;
 function ivTab(el,key){
@@ -5883,6 +5900,72 @@ function mysOpenItem(idx, keepList){
 window.mysOpenItem=mysOpenItem;
 function mysBackToList(){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysBackToList=mysBackToList;
+/* ════ MY SPACE 단체방 탭 — 현장의 소리 단체방(team_notices)을 내 책상에서. 하위 TODAY/전체보기/MINE ════ */
+window._mysTeamCache=null; window._mysTeamMode='today';
+function _mysIsTodayKst(iso){ if(!iso)return false; var d=new Date(iso); if(isNaN(d.getTime()))return false; var k=new Date(Date.now()+9*3600000),dk=new Date(d.getTime()+9*3600000); return k.getUTCFullYear()===dk.getUTCFullYear()&&k.getUTCMonth()===dk.getUTCMonth()&&k.getUTCDate()===dk.getUTCDate(); }
+async function loadMysTeam(){
+  var listEl=document.getElementById('mys-team-list'); if(!listEl) return;
+  var token=window.db&&window.db.getToken&&window.db.getToken();
+  if(!token){ listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  if(!window._mysTeamCache) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  try{
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.team_internal&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden&order=created_at.desc&limit=100');
+    if(!res.ok){ listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다 ('+res.status+')</div>'; return; }
+    var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
+    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
+    var nameMap={};
+    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,name,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ nameMap[u.id]={name:u.name,role:u.role}; }); } }catch(e){} }
+    var _meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
+    window._mysTeamCache=(_meAdmin?rows:rows.filter(function(r){return !r.is_hidden;})).map(function(r){
+      var t=_ntType[r.notice_type]||['기타','ts'];
+      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
+      var au=nameMap[r.author_id]; var who=''; if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
+      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
+      var _ah=_voiceAttsHtml(_att);
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), bodyHtml:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
+    });
+    renderMysTeam();
+  }catch(e){ console.error('[mysTeam]', e); listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+window.loadMysTeam=loadMysTeam;
+function mysTeamSub(el, mode){
+  var subs=document.querySelectorAll('#mys-team-subtabs .chip'); for(var i=0;i<subs.length;i++) subs[i].classList.remove('on');
+  if(el) el.classList.add('on');
+  window._mysTeamMode=mode;
+  renderMysTeam();
+}
+window.mysTeamSub=mysTeamSub;
+function renderMysTeam(){
+  var listEl=document.getElementById('mys-team-list'); if(!listEl) return;
+  var rows=window._mysTeamCache||[];
+  var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
+  var mode=window._mysTeamMode||'today';
+  var list = (mode==='today')? rows.filter(function(r){return _mysIsTodayKst(r.created_at);})
+           : (mode==='mine')? rows.filter(function(r){return me&&r.author_id&&String(r.author_id)===String(me);})
+           : rows;
+  window._mysTeamFiltered=list;
+  if(!list.length){
+    listEl.innerHTML='<div class="mys-news-empty">'+(mode==='today'?'오늘 올라온 공지가 없습니다.':mode==='mine'?'내가 쓴 공지가 없습니다.':'공지가 없습니다.')+'</div>';
+    var vv=document.getElementById('mys-team-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">공지가 없습니다.</div>'; return;
+  }
+  listEl.innerHTML=list.map(function(p,i){
+    return '<div class="item'+(i===0?' on':'')+'" onclick="mysTeamOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
+  }).join('');
+  mysTeamOpen(0, true);
+}
+window.renderMysTeam=renderMysTeam;
+function mysTeamOpen(idx, keepList){
+  var list=window._mysTeamFiltered||[]; var p=list[idx]; if(!p) return;
+  var v=document.getElementById('mys-team-viewer'); if(!v) return;
+  window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>';
+  var items=document.querySelectorAll('#mys-team-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
+  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-team-split'); if(sp) sp.classList.add('show-viewer'); }
+}
+window.mysTeamOpen=mysTeamOpen;
+function mysTeamBack(){ var sp=document.getElementById('mys-team-split'); if(sp) sp.classList.remove('show-viewer'); }
+window.mysTeamBack=mysTeamBack;
 
 /* === MY SPACE 상세 보기 모달 (2026-05-29 PR #164) === */
 function openMyspaceDetail(itemId, type){
