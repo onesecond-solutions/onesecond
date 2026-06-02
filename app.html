@@ -466,6 +466,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-evt-title{font-size:13px;color:var(--bodytx);margin-top:2px;word-break:break-word}
 .cal-evt-desc{font-size:12px;color:var(--ts);margin-top:3px;white-space:pre-wrap;word-break:break-word}
 .cal-evt-del{margin-left:auto;background:none;border:none;color:var(--tf);cursor:pointer;font-size:12px;font-family:inherit}
+.cal-gridhead{justify-content:center;gap:10px}
+.cal-month-sec{margin-bottom:16px}
+.cal-month-hd{font-size:14px;font-weight:800;color:var(--tp);padding:7px 4px;border-bottom:2px solid var(--ac);margin-bottom:9px;cursor:pointer;position:sticky;top:0;background:var(--bg);z-index:1}
 .mys-news-summary{font-size:0.78em;color:var(--ts);line-height:1.55;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mys-news-card{cursor:pointer}
 .mys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
@@ -1208,15 +1211,15 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div id="mys-office-cal" style="display:none">
         <div class="split" id="mys-cal-split">
           <div class="col list-col">
-            <div class="cal-head">
-              <button class="cal-navbtn" onclick="calNav(-1)" aria-label="이전 달">&#8249;</button>
-              <span class="cal-ym" id="cal-ym">불러오는 중…</span>
-              <button class="cal-navbtn" onclick="calNav(1)" aria-label="다음 달">&#8250;</button>
-              <button class="cal-add" onclick="openCalAdd()">+ 내 일정</button>
-            </div>
+            <div class="cal-head"><button class="cal-add" onclick="openCalAdd()">+ 내 일정</button></div>
             <div class="list" id="cal-list"><div class="mys-news-empty">불러오는 중…</div></div>
           </div>
           <div class="col viewer-col">
+            <div class="cal-head cal-gridhead">
+              <button class="cal-navbtn" onclick="calNav(-1)" aria-label="이전 달">&#8249;</button>
+              <span class="cal-ym" id="cal-ym">불러오는 중…</span>
+              <button class="cal-navbtn" onclick="calNav(1)" aria-label="다음 달">&#8250;</button>
+            </div>
             <div id="cal-grid" class="cal-grid-wrap"></div>
           </div>
         </div>
@@ -6927,28 +6930,35 @@ function calNav(delta){
   var ym=window._calYM||_calToday().slice(0,7);
   var y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10)-1+delta;
   var d=new Date(y,m,1); window._calYM=d.getFullYear()+'-'+_calPad(d.getMonth()+1);
-  window._calSelDay=null; loadCalendar();
+  window._calSelDay=null; renderCalGridMonth();
 }
 window.calNav=calNav;
 async function loadCalendar(){
   if(!window._calYM) window._calYM=_calToday().slice(0,7);
-  var ym=window._calYM;
-  var ymEl=document.getElementById('cal-ym'); if(ymEl) ymEl.textContent=ym.slice(0,4)+'년 '+parseInt(ym.slice(5,7),10)+'월';
-  var listEl=document.getElementById('cal-list'), gridEl=document.getElementById('cal-grid');
+  var listEl=document.getElementById('cal-list');
   if(!window.db||!window.db.fetch){ if(listEl)listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
-  var y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10);
-  var first=ym+'-01', last=ym+'-'+_calPad(new Date(y,m,0).getDate());
   if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var res=await window.db.fetch('/rest/v1/calendar_events?event_date=gte.'+first+'&event_date=lte.'+last+'&order=event_date.asc&select=id,event_date,title,description,event_type,source_type,insurer_id,author_id');
+    var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500&select=id,event_date,title,description,event_type,source_type,insurer_id,author_id');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     window._calRows=rows;
-    var byDay={}; rows.forEach(function(r){ (byDay[r.event_date]=byDay[r.event_date]||[]).push(r); });
-    if(gridEl) gridEl.innerHTML=renderCalGrid(byDay,y,m-1);
-    renderCalList(window._calSelDay?rows.filter(function(r){return r.event_date===window._calSelDay;}):rows);
+    renderCalMonths(rows);   /* 좌: 월별 누적(최신 월 상단) */
+    renderCalGridMonth();    /* 우: 현재 보는 월 그리드 */
   }catch(e){ if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; console.error('[calendar]',e); }
 }
 window.loadCalendar=loadCalendar;
+/* 우측 그리드 = window._calYM 월만 (좌측 월 클릭·◀▶로 변경) */
+function renderCalGridMonth(){
+  var ym=window._calYM||_calToday().slice(0,7);
+  var ymEl=document.getElementById('cal-ym'); if(ymEl) ymEl.textContent=ym.slice(0,4)+'년 '+parseInt(ym.slice(5,7),10)+'월';
+  var y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10);
+  var rows=(window._calRows||[]).filter(function(r){ return (r.event_date||'').slice(0,7)===ym; });
+  var byDay={}; rows.forEach(function(r){ (byDay[r.event_date]=byDay[r.event_date]||[]).push(r); });
+  var gridEl=document.getElementById('cal-grid'); if(gridEl) gridEl.innerHTML=renderCalGrid(byDay,y,m-1);
+}
+window.renderCalGridMonth=renderCalGridMonth;
+function calShowMonth(k){ window._calYM=k; window._calSelDay=null; renderCalGridMonth(); }
+window.calShowMonth=calShowMonth;
 function renderCalGrid(byDay,y,m){
   var first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate(), today=_calToday(), sel=window._calSelDay;
   var dow=['일','월','화','수','목','금','토'].map(function(d){return '<span>'+d+'</span>';}).join('');
@@ -6963,27 +6973,34 @@ function renderCalGrid(byDay,y,m){
 }
 function calPickDay(ds){
   window._calSelDay=(window._calSelDay===ds)?null:ds;
-  var rows=window._calRows||[];
-  renderCalList(window._calSelDay?rows.filter(function(r){return r.event_date===window._calSelDay;}):rows);
-  var ym=window._calYM, y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10);
-  var byDay={}; rows.forEach(function(r){ (byDay[r.event_date]=byDay[r.event_date]||[]).push(r); });
-  var gridEl=document.getElementById('cal-grid'); if(gridEl) gridEl.innerHTML=renderCalGrid(byDay,y,m-1);
+  renderCalGridMonth();   /* 그리드 그날 강조만 (좌측 누적 목록은 유지) */
 }
 window.calPickDay=calPickDay;
-function renderCalList(rows){
+/* 한 일정 카드 HTML */
+function calEvtHtml(r,me){
+  var s=CAL_SRC[r.source_type]||CAL_SRC.personal;
+  var dd=r.event_date?r.event_date.slice(5).replace('-','/'):'';
+  var del=(r.source_type==='personal'&&me&&String(r.author_id)===String(me))?'<button class="cal-evt-del" onclick="delCalEvent(\''+r.id+'\')">삭제</button>':'';
+  return '<div class="cal-evt"><div class="cal-evt-ic" style="background:'+s.color+'">'+calIcon(r.source_type)+'</div>'
+    +'<div class="cal-evt-bd"><div class="cal-evt-top"><span class="cal-evt-date">'+dd+'</span><span class="cal-evt-src">'+s.label+'</span>'+del+'</div>'
+    +'<div class="cal-evt-title">'+_calEsc(r.title)+'</div>'
+    +(r.description?'<div class="cal-evt-desc">'+_calEsc(r.description)+'</div>':'')+'</div></div>';
+}
+/* 좌측 = 월별 섹션 누적(최신 월 상단). 월 헤더 클릭 → 우측 그리드 해당 월 */
+function renderCalMonths(rows){
   var el=document.getElementById('cal-list'); if(!el) return;
-  if(!rows.length){ el.innerHTML='<div class="mys-news-empty">이 달 일정이 없습니다.<br>+ 내 일정으로 추가해보세요.</div>'; return; }
+  if(!rows.length){ el.innerHTML='<div class="mys-news-empty">아직 일정이 없습니다.<br>+ 내 일정으로 추가해보세요.</div>'; return; }
+  var groups={}; rows.forEach(function(r){ var k=(r.event_date||'').slice(0,7); if(!k) return; (groups[k]=groups[k]||[]).push(r); });
+  var keys=Object.keys(groups).sort().reverse();
   var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
-  el.innerHTML=rows.map(function(r){
-    var s=CAL_SRC[r.source_type]||CAL_SRC.personal;
-    var dd=r.event_date?r.event_date.slice(5).replace('-','/'):'';
-    var del=(r.source_type==='personal'&&me&&String(r.author_id)===String(me))?'<button class="cal-evt-del" onclick="delCalEvent(\''+r.id+'\')">삭제</button>':'';
-    return '<div class="cal-evt"><div class="cal-evt-ic" style="background:'+s.color+'">'+calIcon(r.source_type)+'</div>'
-      +'<div class="cal-evt-bd"><div class="cal-evt-top"><span class="cal-evt-date">'+dd+'</span><span class="cal-evt-src">'+s.label+'</span>'+del+'</div>'
-      +'<div class="cal-evt-title">'+_calEsc(r.title)+'</div>'
-      +(r.description?'<div class="cal-evt-desc">'+_calEsc(r.description)+'</div>':'')+'</div></div>';
+  el.innerHTML=keys.map(function(k){
+    var evs=groups[k].slice().sort(function(a,b){ return (a.event_date<b.event_date)?-1:((a.event_date>b.event_date)?1:0); });
+    var y=k.slice(0,4), m=parseInt(k.slice(5,7),10);
+    return '<div class="cal-month-sec"><div class="cal-month-hd" onclick="calShowMonth(\''+k+'\')">'+y+'년 '+m+'월</div>'
+      + evs.map(function(r){ return calEvtHtml(r,me); }).join('') + '</div>';
   }).join('');
 }
+window.renderCalMonths=renderCalMonths;
 function openCalAdd(){
   closeCalAdd();
   var d=window._calSelDay||_calToday();
