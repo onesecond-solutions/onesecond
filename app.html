@@ -1209,7 +1209,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       </div><!-- /mys-qna -->
       <!-- 2026-05-29: MY SPACE 상세 보기 모달 (PR #164) -->
-      <div class="myspace-detail-overlay" id="myspaceDetailModal" onclick="if(event.target===this)closeMyspaceDetail()">
+      <div class="myspace-detail-overlay" id="myspaceDetailModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeMyspaceDetail)">
         <div class="myspace-detail-box" role="dialog" aria-modal="true">
           <div class="myspace-detail-head">
             <span class="mys-badge" id="mysDetailBadge">자료</span>
@@ -1515,7 +1515,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 
      <!-- 글쓰기 게이트: 공식/비공식 선택 (비공식 → 유형 '기타' 강제) -->
      <!-- 파일 용량 초과 안내 팝업 (공용) -->
-     <div class="diet-overlay" id="dietPopup" style="display:none" onclick="if(event.target===this)closeDietPopup()">
+     <div class="diet-overlay" id="dietPopup" style="display:none" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeDietPopup)">
       <div class="diet-box" role="dialog" aria-modal="true">
         <div class="diet-emoji">🧙</div>
         <div class="diet-title">다이어트가 필요한 상황이네요</div>
@@ -1761,7 +1761,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
   </div>
 </div>
 <div class="mback" onclick="toggleMSide()"></div>
-<div class="so" id="so" onclick="if(event.target===this)closeSearch()">
+<div class="so" id="so" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeSearch)">
   <div class="sobox">
     <div class="soinput">
       <span class="si">&#8981;</span>
@@ -1827,7 +1827,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 <div class="toast" id="toast"></div>
 
 <!-- 질문하기 모달 -->
-<div class="askmodal" id="askmodal" onclick="if(event.target===this)closeAsk()">
+<div class="askmodal" id="askmodal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeAsk)">
   <div class="askbox">
     <div class="askhead">
       <div class="asktitle" id="askTitle">지금 어떤 질문인가요?</div>
@@ -1921,7 +1921,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 </div>
 
 <!-- 개인정보 수정 모달 -->
-<div class="askmodal" id="profmodal" onclick="if(event.target===this)closeProfile()">
+<div class="askmodal" id="profmodal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeProfile)">
   <div class="askbox">
     <div class="askhead">
       <div class="asktitle">내 정보 수정</div>
@@ -1949,7 +1949,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 </div>
 
 <!-- 로그아웃 확인 모달 (2026-05-28) -->
-<div class="askmodal" id="logoutConfirmModal" onclick="if(event.target===this)closeLogoutConfirm()">
+<div class="askmodal" id="logoutConfirmModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeLogoutConfirm)">
   <div class="askbox" style="max-width:400px;">
     <div class="askhead">
       <div class="asktitle">로그아웃 하시겠습니까?</div>
@@ -1965,7 +1965,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
   </div>
 </div>
 
-<div class="askmodal" id="myspaceWriteModal" onclick="if(event.target===this)closeMyspaceWrite()">
+<div class="askmodal" id="myspaceWriteModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeMyspaceWrite)">
   <div class="askbox">
     <div class="askhead">
       <div class="asktitle">MY SPACE에 저장</div>
@@ -6456,6 +6456,12 @@ document.addEventListener('keydown', function(e){
   var m = document.getElementById('myspaceDetailModal');
   if(m && m.classList.contains('open')) closeMyspaceDetail();
 });
+
+/* 오버레이(backdrop) 닫기 가드 — mousedown·click이 모두 배경에서 일어난 진짜 배경 클릭일 때만 닫음.
+   (입력칸 안에서 시작한 드래그 선택이 배경에서 끝나도 닫히던 "창 이탈" 버그 방지) */
+function _ovDown(ev, el){ el.__downSelf = (ev.target === el); }
+function _ovClick(ev, el, fn){ if(ev.target === el && el.__downSelf){ el.__downSelf = false; if(typeof fn==='function') fn(); } else { el.__downSelf = false; } }
+window._ovDown=_ovDown; window._ovClick=_ovClick;
 
 /* === MY SPACE 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(){
