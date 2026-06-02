@@ -1186,11 +1186,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       <div id="mys-today"></div>
       <div id="mys-saved" style="display:none">
-      <div class="mys-toolbar"><div class="chips" id="mys-office-subtabs">
-        <div class="chip on" onclick="mysOfficeSub(this,'docs')">자료</div>
-        <div class="chip" onclick="mysOfficeSub(this,'cal')">캘린더</div>
-      </div></div>
-      <div id="mys-office-docs">
       <div class="mys-toolbar">
         <div class="chips">
           <div class="chip on" onclick="filterMys(this,'전체')">전체</div>
@@ -1198,6 +1193,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="chip" onclick="filterMys(this,'스크립트')">스크립트</div>
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
           <div class="chip" onclick="filterMys(this,'즐겨찾기')">즐겨찾기</div>
+          <div class="chip" onclick="mysOfficeCal(this)">캘린더</div>
         </div>
       </div>
       <div class="split" id="mys-split">
@@ -1209,7 +1205,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
         </div>
       </div>
-      </div><!-- /mys-office-docs -->
       <div id="mys-office-cal" style="display:none">
         <div class="split" id="mys-cal-split">
           <div class="col list-col">
@@ -6920,14 +6915,14 @@ function calIcon(src){ var s=CAL_SRC[src]||CAL_SRC.personal; return '<svg viewBo
 function _calPad(n){ return (n<10?'0':'')+n; }
 function _calToday(){ var d=new Date(); return d.getFullYear()+'-'+_calPad(d.getMonth()+1)+'-'+_calPad(d.getDate()); }
 function _calEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
-function mysOfficeSub(el,key){
-  var subs=document.querySelectorAll('#mys-office-subtabs .chip'); for(var i=0;i<subs.length;i++) subs[i].classList.remove('on');
+/* 오피스 칩 '캘린더' 선택 — 자료 split 숨김 + 캘린더 뷰 표시 (필터칩 클릭 시 filterMys가 원복) */
+function mysOfficeCal(el){
+  var chips=el.parentElement.querySelectorAll('.chip'); for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
   if(el) el.classList.add('on');
-  var docs=document.getElementById('mys-office-docs'), cal=document.getElementById('mys-office-cal');
-  if(key==='cal'){ if(docs)docs.style.display='none'; if(cal)cal.style.display=''; loadCalendar(); }
-  else { if(cal)cal.style.display='none'; if(docs)docs.style.display=''; }
+  var sp=document.getElementById('mys-split'), cal=document.getElementById('mys-office-cal');
+  if(sp) sp.style.display='none'; if(cal) cal.style.display=''; loadCalendar();
 }
-window.mysOfficeSub=mysOfficeSub;
+window.mysOfficeCal=mysOfficeCal;
 function calNav(delta){
   var ym=window._calYM||_calToday().slice(0,7);
   var y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10)-1+delta;
@@ -7057,6 +7052,9 @@ function filterMys(el,cat){
   var chips=el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
   el.classList.add('on');
+  /* 캘린더 칩에서 자료 필터칩으로 복귀 시 — 캘린더 숨김 + 자료 split 복원 */
+  var _sp=document.getElementById('mys-split'), _cal=document.getElementById('mys-office-cal');
+  if(_cal) _cal.style.display='none'; if(_sp) _sp.style.display='';
   var items=window._myspaceCache||[];
   var f=(cat==='전체')?items:items.filter(function(it){ return (it._badge||'')===cat; });
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
