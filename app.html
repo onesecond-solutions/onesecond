@@ -1911,7 +1911,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">스크립트 내용 <span style="color:#EF4444">*</span></label>
-          <textarea class="mys-write-textarea" id="mysWriteScrText" placeholder="상담 시 사용할 화법을 통째 작성." maxlength="2000"></textarea>
+          <textarea class="mys-write-textarea" id="mysWriteScrText" placeholder="상담 시 사용할 화법을 통째 작성." maxlength="2000" style="min-height:340px"></textarea>
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">핵심 멘트 <span style="color:#EF4444">*</span></label>
@@ -1921,6 +1921,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <label class="mys-write-label">키워드</label>
           <input type="text" class="mys-write-input" id="mysWriteScrKeywords" placeholder="예: 암보험, 생활비, 클로징 (쉼표로 구분)" maxlength="200" />
           <div class="mys-write-hint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div>
+        </div>
+        <div class="mys-write-row">
+          <label class="mys-write-label">파일 첨부</label>
+          <input type="file" class="mys-write-input" id="mysWriteScrFile" multiple onchange="mysScrPreviewFiles(this)" style="padding:8px" />
+          <div id="mysWriteScrFilePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
         </div>
       </div>
       <div class="mys-write-pane" id="mysWritePaneLibrary" data-pane="library">
@@ -5855,7 +5860,7 @@ async function loadMyspace(force){
     var items=[];
     for(var i=0;i<scripts.length;i++){
       var s=scripts[i];
-      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,title:s.title,script_text:s.script_text,id:s.id});
+      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments});
     }
     for(var j=0;j<library.length;j++){
       var l=library[j];
@@ -5905,10 +5910,13 @@ function mysOpenItem(idx, keepList){
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var delType=it._type==='script'?'script':'library';
   var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):(it._date||'');
+  /* 스크립트 첨부 → 자료실/게시판과 동일 .atts + 딸깍 */
+  var attHtml='', _ia=it.attachments; if(typeof _ia==='string'){ try{ _ia=JSON.parse(_ia); }catch(e){ _ia=[]; } } if(!Array.isArray(_ia)) _ia=[];
+  if(_ia.length){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
   v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'
     +'<div class="vttl">'+esc(it.title||'제목 없음')+'</div>'
     +'<div class="vmeta">'+esc(dt)+'</div>'
-    +'<div class="vbody">'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+'</div>'
+    +'<div class="vbody">'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div>'
     +'<div class="post-acts"><button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
   var items=document.querySelectorAll('#mysList .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
@@ -6139,9 +6147,29 @@ function switchMyspaceTab(tab){
     panes[j].classList.toggle('on',panes[j].getAttribute('data-pane')===tab);
   }
 }
+/* 스크립트 탭 파일 첨부 미리보기 (이미지 썸네일 / 그 외 파일명) */
+function mysScrPreviewFiles(input){
+  var box=document.getElementById('mysWriteScrFilePreview'); if(!box) return;
+  box.innerHTML='';
+  var files=(input&&input.files)||[];
+  for(var i=0;i<files.length;i++){
+    (function(f){
+      var isImg=/^image\//.test(f.type||'');
+      var cell=document.createElement('div');
+      cell.style.cssText='border:1px solid var(--bd);border-radius:9px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;font-size:0.68em;color:var(--ts);text-align:center';
+      if(isImg){ var img=document.createElement('img'); img.style.cssText='width:70px;height:54px;object-fit:cover;border-radius:6px'; try{ img.src=URL.createObjectURL(f); }catch(e){} cell.appendChild(img); }
+      else { var ic=document.createElement('div'); ic.style.cssText='width:70px;height:54px;display:flex;align-items:center;justify-content:center;font-size:1.6em'; ic.textContent='📄'; cell.appendChild(ic); }
+      var nm=document.createElement('div'); nm.style.cssText='width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'; nm.textContent=f.name; nm.title=f.name; cell.appendChild(nm);
+      box.appendChild(cell);
+    })(files[i]);
+  }
+}
+window.mysScrPreviewFiles=mysScrPreviewFiles;
 function clearMyspaceWriteForm(){
   var ids=['mysWriteScrTitle','mysWriteScrText','mysWriteScrHighlight','mysWriteScrKeywords','mysWriteLibTitle','mysWriteLibDesc','mysWriteLibLink','mysWriteLibMemo','mysWriteLibKeywords','mysWriteGrpTitle','mysWriteGrpBody','mysWriteGrpKeywords','mysWriteQnaTitle','mysWriteQnaBody','mysWriteQnaKeywords'];
   for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value='';}
+  var _scf=document.getElementById('mysWriteScrFile'); if(_scf)_scf.value='';
+  var _scp=document.getElementById('mysWriteScrFilePreview'); if(_scp)_scp.innerHTML='';
   var qt=document.querySelector('input[name="mysQnaType"][value="인수"]');if(qt)qt.checked=true;
   switchMyspaceTab('script');
 }
@@ -6189,7 +6217,19 @@ async function saveMyspaceWrite(){
     if(!shilite){alert('핵심 멘트를 입력해 주세요.');return;}
     btn.disabled=true;btn.textContent='저장 중...';
     try{
-      var sbody={title:stitle,script_text:stext,highlight_text:shilite,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw};
+      /* 파일 첨부 → onesecond_banner/script 업로드 → URL 수집 (실패 파일은 건너뜀) */
+      var _sFiles=((document.getElementById('mysWriteScrFile')||{}).files)||[];
+      var sAtts=[];
+      for(var _si=0;_si<_sFiles.length;_si++){
+        var _sf=_sFiles[_si]; var _sext=((_sf.name||'').split('.').pop()||'').toLowerCase();
+        var _spath='script/'+Date.now()+'_'+_si+(_sext?('.'+_sext):'');
+        try{
+          var _sup=await fetch(window.db.url('/storage/v1/object/onesecond_banner/'+_spath),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(_sf.type||'application/octet-stream'),'x-upsert':'true'},body:_sf});
+          if(_sup.ok) sAtts.push({url:window.db.url('/storage/v1/object/public/onesecond_banner/'+_spath),name:_sf.name,type:(_sf.type||'')});
+          else console.error('[scriptWrite] 첨부 업로드 실패', _sup.status, _sf.name);
+        }catch(_e){ console.error('[scriptWrite] 첨부 업로드 오류', _e); }
+      }
+      var sbody={title:stitle,script_text:stext,highlight_text:shilite,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw,attachments:sAtts};
       var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
       if(sres.ok||sres.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
