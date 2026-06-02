@@ -49,6 +49,12 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .iv-write-btn:hover{background:var(--ach);}
 .iv-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
 .iv-write-modal{max-width:760px;width:100%;max-height:90vh;overflow-y:auto;background:var(--s1);border:1px solid var(--bd);border-radius:14px;}
+.diet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;}
+.diet-box{max-width:360px;width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:28px 24px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25);}
+.diet-emoji{font-size:2.4rem;margin-bottom:10px;line-height:1;}
+.diet-title{font-size:1.05rem;font-weight:800;color:var(--tp);margin-bottom:8px;}
+.diet-msg{font-size:0.85rem;color:var(--ts);line-height:1.6;margin-bottom:20px;}
+.diet-btn{padding:10px 28px;border-radius:9px;border:none;background:var(--ac);color:#fff;font-weight:700;font-size:0.9em;cursor:pointer;}
 .iv-write-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--bd);font-size:1.05rem;font-weight:800;color:var(--tp);}
 .iv-write-close{background:transparent;border:none;color:var(--ts);font-size:1rem;cursor:pointer;}
 .iv-write-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;}
@@ -1460,6 +1466,16 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      </div>
 
      <!-- 글쓰기 게이트: 공식/비공식 선택 (비공식 → 유형 '기타' 강제) -->
+     <!-- 파일 용량 초과 안내 팝업 (공용) -->
+     <div class="diet-overlay" id="dietPopup" style="display:none" onclick="if(event.target===this)closeDietPopup()">
+      <div class="diet-box" role="dialog" aria-modal="true">
+        <div class="diet-emoji">🍃</div>
+        <div class="diet-title">다이어트가 필요한 상황이네요</div>
+        <div class="diet-msg" id="dietMsg">파일이 5MB를 넘어요. 조금 가볍게 줄여서 올려주세요.</div>
+        <button class="diet-btn" onclick="closeDietPopup()">확인</button>
+      </div>
+     </div>
+
      <div class="iv-overlay" id="ivGateModal" style="display:none">
       <div class="iv-write-modal" role="dialog" aria-modal="true" style="max-width:440px">
         <div class="iv-write-head">
@@ -6147,11 +6163,28 @@ function switchMyspaceTab(tab){
     panes[j].classList.toggle('on',panes[j].getAttribute('data-pane')===tab);
   }
 }
+/* 파일 용량 초과 안내 팝업 (공용) */
+var FILE_MAX_BYTES=5*1024*1024;
+function showDietPopup(msg){ var m=document.getElementById('dietPopup'); if(!m) return; if(msg){ var e=document.getElementById('dietMsg'); if(e) e.textContent=msg; } m.style.display='flex'; }
+function closeDietPopup(){ var m=document.getElementById('dietPopup'); if(m) m.style.display='none'; }
+window.showDietPopup=showDietPopup; window.closeDietPopup=closeDietPopup;
+/* FileList에서 5MB 초과 파일 검사 — 있으면 팝업 띄우고 true 반환 */
+function fileTooLarge(files){
+  for(var i=0;i<(files?files.length:0);i++){
+    if(files[i].size>FILE_MAX_BYTES){
+      showDietPopup('"'+files[i].name+'" 파일이 5MB를 넘어요 ('+(files[i].size/1024/1024).toFixed(1)+'MB).\n조금 가볍게 줄여서 올려주세요.');
+      return true;
+    }
+  }
+  return false;
+}
+window.fileTooLarge=fileTooLarge;
 /* 스크립트 탭 파일 첨부 미리보기 (이미지 썸네일 / 그 외 파일명) */
 function mysScrPreviewFiles(input){
   var box=document.getElementById('mysWriteScrFilePreview'); if(!box) return;
   box.innerHTML='';
   var files=(input&&input.files)||[];
+  if(fileTooLarge(files)){ input.value=''; return; }  /* 5MB 초과 → 다이어트 팝업 + 선택 취소 */
   for(var i=0;i<files.length;i++){
     (function(f){
       var isImg=/^image\//.test(f.type||'');
@@ -6219,6 +6252,7 @@ async function saveMyspaceWrite(){
     try{
       /* 파일 첨부 → onesecond_banner/script 업로드 → URL 수집 (실패 파일은 건너뜀) */
       var _sFiles=((document.getElementById('mysWriteScrFile')||{}).files)||[];
+      if(fileTooLarge(_sFiles)){ btn.disabled=false; btn.textContent='저장하기'; return; }  /* 안전망: 5MB 초과 차단 */
       var sAtts=[];
       for(var _si=0;_si<_sFiles.length;_si++){
         var _sf=_sFiles[_si]; var _sext=((_sf.name||'').split('.').pop()||'').toLowerCase();
