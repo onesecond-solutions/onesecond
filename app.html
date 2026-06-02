@@ -6204,7 +6204,11 @@ function dietToImageConvert(){
   closeDietPopup();
   if(typeof closeMyspaceWrite==='function') closeMyspaceWrite();  /* 글쓰기 오버레이 닫기 */
   if(typeof showView==='function') showView('quick');
-  if(typeof openQuickToolV2==='function') setTimeout(function(){ openQuickToolV2('변환기'); }, 80);
+  if(typeof openQuickToolV2==='function') setTimeout(function(){
+    openQuickToolV2('변환기');
+    /* 용량 초과 원본(PNG)을 변환 도구에 자동 로드 — 사용자는 ⚡ 딸깍만 누르면 변환 */
+    if(window._pendingConvertFile && typeof convFileSelect==='function'){ setTimeout(function(){ convFileSelect(window._pendingConvertFile); }, 200); }
+  }, 80);
 }
 /* 변환 성공 팝업 + 글쓰기로 돌아가 변환 파일 자동 첨부 */
 function showConvertDonePopup(){ var m=document.getElementById('convertDonePopup'); if(m) m.style.display='flex'; }
@@ -6269,6 +6273,9 @@ function mysScrPreviewFiles(input){
   var box=document.getElementById('mysWriteScrFilePreview'); if(!box) return;
   box.innerHTML='';
   var files=(input&&input.files)||[];
+  /* 5MB 초과 PNG 원본 = 변환 도구 자동 로드용 보관(메모리) */
+  window._pendingConvertFile=null;
+  for(var k=0;k<files.length;k++){ if(files[k].size>FILE_MAX_BYTES){ var _nm=files[k].name||''; if(/png/i.test(files[k].type||'')||/\.png$/i.test(_nm)) window._pendingConvertFile=files[k]; break; } }
   if(fileTooLarge(files)){ input.value=''; return; }  /* 5MB 초과 → 다이어트 팝업 + 선택 취소 */
   for(var i=0;i<files.length;i++){
     (function(f){
