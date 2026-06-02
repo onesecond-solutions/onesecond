@@ -2288,6 +2288,12 @@ function renderIvEditAtts(){
 }
 function ivRemoveAtt(i){ if(!window._ivEditAtts) return; window._ivEditAtts.splice(i,1); renderIvEditAtts(); }
 window.renderIvEditAtts=renderIvEditAtts; window.ivRemoveAtt=ivRemoveAtt;
+/* posts(자료실/스마트게시판) 수정·삭제·숨김 후 두 화면 모두 갱신 — 같은 posts라 일관 유지 */
+function _ivReloadBoards(){
+  if(typeof loadInsurerVault==='function') loadInsurerVault();
+  window._smartNlLoaded=false; if(typeof loadSmartNewsletters==='function') loadSmartNewsletters();
+}
+window._ivReloadBoards=_ivReloadBoards;
 /* ════ 보험 Q&A (보험사 자료실 첫 탭) — 원수사 임직원이 우리 회사로 온 질문을 보는 자리.
  * 현장의 소리 '보험 Q&A'를 원수사 페이지로 떼어 넣음. 하위 서브탭 TODAY(오늘)/전체보기(누적·최신순).
  * 데이터 = posts board_type='qna' (RLS가 노출 범위 결정). 첨부 딸깍 = ivOpenLb 재사용. read-only(답변 기능은 다음 단계). ════ */
@@ -2398,7 +2404,7 @@ async function ivToggleHide(id, hide){
   var on=(hide===true||hide==='true');
   try{
     var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({is_hidden:on}) });
-    if(res.ok||res.status===204){ if(typeof toast==='function')toast(on?'숨겼습니다':'숨김 해제했습니다'); if(typeof loadInsurerVault==='function')loadInsurerVault(); }
+    if(res.ok||res.status===204){ if(typeof toast==='function')toast(on?'숨겼습니다':'숨김 해제했습니다'); if(typeof _ivReloadBoards==='function')_ivReloadBoards(); }
     else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[ivToggleHide]', res.status, t); alert('숨김 처리 실패 ('+res.status+')'); }
   }catch(e){ console.error('[ivToggleHide]', e); alert('숨김 처리 중 오류가 발생했습니다.'); }
 }
@@ -2427,7 +2433,7 @@ async function ivDeletePost(id){
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   try{
     var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{ method:'DELETE', headers:{'Prefer':'return=minimal'} });
-    if(res.ok||res.status===204){ if(typeof toast==='function')toast('삭제했습니다'); if(typeof loadInsurerVault==='function')loadInsurerVault(); }
+    if(res.ok||res.status===204){ if(typeof toast==='function')toast('삭제했습니다'); if(typeof _ivReloadBoards==='function')_ivReloadBoards(); }
     else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[ivDeletePost]', res.status, t); alert('삭제 실패 ('+res.status+')'); }
   }catch(e){ console.error('[ivDeletePost]', e); alert('삭제 중 오류가 발생했습니다.'); }
 }
@@ -2440,6 +2446,8 @@ function ivFilter(el, type){
 }
 window.ivFilter = ivFilter;
 async function ivOpenWrite(forceEtc){
+  /* 모달이 v-insurer-vault 안에 있어 다른 view(스마트게시판=voice)에선 부모 display:none → 안 뜸. body 직속으로 이동 */
+  var _mw=document.getElementById('ivWriteModal'); if(_mw && _mw.parentElement!==document.body) document.body.appendChild(_mw);
   var _pv=document.getElementById('iv-f-preview'); if(_pv) _pv.innerHTML='';
   var _ff=document.getElementById('iv-f-file'); if(_ff) _ff.value='';
   window._ivEditAtts=[]; if(typeof renderIvEditAtts==='function')renderIvEditAtts();  /* 새 작성 = 기존첨부 영역 숨김. 편집은 ivEditPost가 이 뒤에 채움 */
@@ -2552,7 +2560,7 @@ async function ivSubmit(){
     ivCloseWrite();
     document.getElementById('iv-f-title').value = '';
     document.getElementById('iv-f-body').value = '';
-    if(typeof loadInsurerVault === 'function') loadInsurerVault();  /* 재fetch → 즉시 노출 */
+    if(typeof _ivReloadBoards === 'function') _ivReloadBoards();  /* 자료실+스마트게시판 동시 갱신 */
     if(typeof toast === 'function') toast(_wasIvEdit?'자료가 수정되었습니다':'자료가 등록되었습니다');
   } catch(e){ console.error('[ivSubmit]', e); alert('자료 등록 오류. 잠시 후 다시 시도해 주세요.'); }
 }
@@ -4483,8 +4491,13 @@ async function loadSmartNewsletters(){
       var who=''; if(r.author_name){ var rl=(roleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[r.author_id]])||''; who=esc(r.author_name)+(rl?' '+rl:''); }
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att); var _attHtml=_ah.html, _imgs=_ah.imgs, _imgNames=_ah.names;
+      var _meId=(typeof _getOwnerId==='function')?_getOwnerId():null;
+      var _canMng=_meAdmin||(_meId&&r.author_id&&String(r.author_id)===String(_meId));
+      var _editDel=_canMng?('<button class="post-act" onclick="ivEditPost(\''+r.id+'\')">수정</button><button class="post-act post-act-del" onclick="ivDeletePost(\''+r.id+'\')">삭제</button>'):'';
+      var _hideBtn=_meAdmin?('<button class="post-act" onclick="ivToggleHide(\''+r.id+'\','+(r.is_hidden?'false':'true')+')">'+(r.is_hidden?'숨김 해제':'숨김')+'</button>'):'';
+      var _acts=(_editDel||_hideBtn)?('<div class="post-acts">'+_editDel+_hideBtn+'</div>'):'';
       var _hidTag=(_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72em;font-weight:700">[숨김]</span>':'';
-      return {badge:cat, tc:tc, title:esc(r.title||'(제목 없음)')+_hidTag, meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml, real:true, _id:r.id, _imgs:_imgs, _imgNames:_imgNames, _attachments:_att};
+      return {badge:cat, tc:tc, title:esc(r.title||'(제목 없음)')+_hidTag, meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true, _id:r.id, _imgs:_imgs, _imgNames:_imgNames, _attachments:_att};
     });
     if(voiceTabData.smart){ voiceTabData.smart.posts=posts; voiceTabData.smart.cnt=posts.length; }
     window._smartNlLoaded=true;
