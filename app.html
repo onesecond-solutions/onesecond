@@ -2081,14 +2081,14 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <div class="fld"><label>연령 <span class="req">*</span></label><input type="text" id="mysQnaUwAge" placeholder=""></div>
             <div class="fld"><label>성별 <span class="req">*</span></label><select id="mysQnaUwGender"><option>선택</option><option>남</option><option>여</option></select></div>
           </div>
-          <div class="fld"><label>직업</label><input type="text" id="mysQnaUwJob" placeholder="예: 사무직 / 운전직 / 농업"></div>
+          <div class="fld"><label>직업 <span class="req">*</span></label><input type="text" id="mysQnaUwJob" placeholder="예: 사무직 / 운전직 / 농업"></div>
           <div class="fld"><label>병력 <span class="req">*</span></label><input type="text" id="mysQnaUwHistory" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨"></div>
           <div class="frow">
-            <div class="fld"><label>진단시기</label><input type="text" id="mysQnaUwDiag" placeholder="예: 2025년 3월"></div>
-            <div class="fld"><label>약복용 유무</label><select id="mysQnaUwMed"><option>선택</option><option>복용 중</option><option>복용 안 함</option><option>모름</option></select></div>
+            <div class="fld"><label>진단시기 <span class="req">*</span></label><input type="text" id="mysQnaUwDiag" placeholder="예: 2025년 3월"></div>
+            <div class="fld"><label>약복용 유무 <span class="req">*</span></label><select id="mysQnaUwMed"><option>선택</option><option>복용 중</option><option>복용 안 함</option><option>모름</option></select></div>
           </div>
-          <div class="fld"><label>현재 상태</label><input type="text" id="mysQnaUwStatus" placeholder="예: 추적관찰 중 / 수술 완료"></div>
-          <div class="fld"><label>기타 적고 싶은 내용</label><textarea id="mysQnaUwEtc" placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
+          <div class="fld"><label>현재 상태 <span class="req">*</span></label><input type="text" id="mysQnaUwStatus" placeholder="예: 추적관찰 중 / 수술 완료"></div>
+          <div class="fld"><label>기타 적고 싶은 내용 <span class="opt">(선택)</span></label><textarea id="mysQnaUwEtc" placeholder="추가 정보가 있으면 자유롭게 작성해 주세요."></textarea></div>
           <div class="fld"><label>키워드</label><input type="text" id="mysQnaUwKeywords" placeholder="쉼표로 구분 (예: 갑상선, 고혈압, 인수)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
         </div>
         <!-- 상품 질문 폼 -->
@@ -6777,18 +6777,26 @@ async function _saveMyspaceQna(){
   function rangeVal(selId, compId){ var sv=V(selId); if(sv==='회사 지정'){ var cv=V(compId); return cv||sv; } return sv; }
   function pushLine(label, val){ if(val) lines.push('['+label+'] '+val); }
   if(qtype==='인수'){
+    var uwSel=V('mysQnaUwInsurer'), uwComp=V('mysQnaUwCompany');
     var ins=rangeVal('mysQnaUwInsurer','mysQnaUwCompany');
-    var age=V('mysQnaUwAge'), gender=V('mysQnaUwGender'), history=V('mysQnaUwHistory');
+    var age=V('mysQnaUwAge'), gender=V('mysQnaUwGender'), job=V('mysQnaUwJob'), history=V('mysQnaUwHistory');
+    var diag=V('mysQnaUwDiag'), med=V('mysQnaUwMed'), status=V('mysQnaUwStatus');
     if(gender==='선택') gender='';
+    if(med==='선택') med='';
+    /* 기타 적고 싶은 내용만 선택 — 나머지 전부 필수 */
+    if(uwSel==='회사 지정' && !uwComp){ alert('보험사명을 입력해 주세요.'); return; }
     if(!age){ alert('연령을 입력해 주세요.'); return; }
     if(!gender){ alert('성별을 선택해 주세요.'); return; }
+    if(!job){ alert('직업을 입력해 주세요.'); return; }
     if(!history){ alert('병력을 입력해 주세요.'); return; }
+    if(!diag){ alert('진단시기를 입력해 주세요.'); return; }
+    if(!med){ alert('약복용 유무를 선택해 주세요.'); return; }
+    if(!status){ alert('현재 상태를 입력해 주세요.'); return; }
     insurerTarget=ins||null;
-    title=V('mysQnaUwTitle')||('['+(age)+' '+gender+'] '+history+' 인수 문의');
+    title=V('mysQnaUwTitle')||('['+age+' '+gender+'] '+history+' 인수 문의');
     pushLine('보험사 범위', ins); pushLine('연령', age); pushLine('성별', gender);
-    pushLine('직업', V('mysQnaUwJob')); pushLine('병력', history);
-    var med=V('mysQnaUwMed'); if(med==='선택') med='';
-    pushLine('진단시기', V('mysQnaUwDiag')); pushLine('약복용', med); pushLine('현재 상태', V('mysQnaUwStatus'));
+    pushLine('직업', job); pushLine('병력', history);
+    pushLine('진단시기', diag); pushLine('약복용', med); pushLine('현재 상태', status);
     var etc=V('mysQnaUwEtc'); if(etc) lines.push('', etc);
     kwId='mysQnaUwKeywords';
   } else if(qtype==='상품'){
