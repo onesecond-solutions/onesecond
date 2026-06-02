@@ -2054,7 +2054,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <div class="fld"><label>확인하고 싶은 내용</label><select id="mysQnaPrdConfirm"><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
           </div>
           <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" id="mysQnaPrdTitle" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
-          <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaPrdBody" placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
+          <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaPrdBody" placeholder="어떤 부분이 헷갈리셨나요?" style="min-height:300px"></textarea></div>
           <div class="fld"><label>키워드</label><input type="text" id="mysQnaPrdKeywords" placeholder="쉼표로 구분 (예: 실손, 특약, 비교)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
         </div>
         <!-- 기타 질문 폼 -->
@@ -2066,9 +2066,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           </div>
           <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" id="mysQnaEtcTitle" placeholder="예: 청약 중 전산 오류 발생 어떻게 처리?"></div>
           <div class="fld"><label>누가 답해주길 원하세요? <span class="opt">(선택)</span></label><input type="text" id="mysQnaEtcWho" placeholder="예: 운영진 / 관리자 / 현장 설계사 / 팀장"></div>
-          <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaEtcBody" placeholder="어떤 상황인지 편하게 작성해 주세요."></textarea></div>
+          <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea id="mysQnaEtcBody" placeholder="어떤 상황인지 편하게 작성해 주세요." style="min-height:300px"></textarea></div>
           <div class="fld"><label>키워드</label><input type="text" id="mysQnaEtcKeywords" placeholder="쉼표로 구분 (예: 녹취, 전산, 민원)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
         </div>
+        <!-- 첨부 (인수/상품/기타 공통) -->
+        <div class="fld"><label>파일 첨부 <span class="opt">(선택)</span></label><input type="file" id="mysWriteQnaFile" multiple onchange="mysWriteFilePreview(this,'mysWriteQnaFilePreview')" style="padding:8px"><div id="mysWriteQnaFilePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>
       </div>
     </div>
     <div class="mys-write-actions">
@@ -6358,8 +6360,8 @@ function clearMyspaceWriteForm(){
   var _scp=document.getElementById('mysWriteScrFilePreview'); if(_scp)_scp.innerHTML='';
   var _scs=document.getElementById('mysWriteScrStage'); if(_scs)_scs.value='';
   if(typeof clearActiveDraft==='function') clearActiveDraft();  /* 저장/초기화 시 임시저장 삭제 */
-  ['mysWriteLibFile','mysWriteGrpFile'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
-  ['mysWriteLibFilePreview','mysWriteGrpFilePreview'].forEach(function(id){ var el=document.getElementById(id); if(el)el.innerHTML=''; });
+  ['mysWriteLibFile','mysWriteGrpFile','mysWriteQnaFile'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+  ['mysWriteLibFilePreview','mysWriteGrpFilePreview','mysWriteQnaFilePreview'].forEach(function(id){ var el=document.getElementById(id); if(el)el.innerHTML=''; });
   var qt=document.querySelector('input[name="mysQnaType"][value="인수"]');if(qt)qt.checked=true;
   switchMyspaceTab('script');
 }
