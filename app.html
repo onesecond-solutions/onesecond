@@ -820,12 +820,32 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 
 .os-banner-carousel{position:relative;margin-bottom:18px}
 .os-banner-carousel .os-galaxy-banner{margin-bottom:0}
-.os-banner-slide{display:none}
-.os-banner-slide.on{display:block}
-.os-banner-img{width:100%;height:auto;display:block;border-radius:24px;border:1px solid color-mix(in srgb,var(--bd) 82%,var(--ac));box-shadow:0 20px 56px color-mix(in srgb,var(--ac) 20%,transparent)}
-.os-banner-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
-.os-bdot{width:9px;height:9px;border-radius:999px;border:none;background:color-mix(in srgb,var(--tf) 45%,transparent);cursor:pointer;padding:0;transition:width .2s,background .2s}
-.os-bdot.on{background:var(--ac);width:22px}
+/* 우측 끝 번호 1·2·3·4 — 클릭 시 오버레이 */
+.os-banner-nums{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;align-items:flex-end;gap:7px;z-index:6}
+.os-banner-collapse{margin-top:6px;padding:5px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.13);color:#fff;font-size:10px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px);white-space:nowrap;transition:background .18s}
+.os-banner-collapse:hover{background:rgba(255,255,255,.28)}
+.os-bnum{width:30px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.13);color:#fff;font-size:13px;font-weight:900;line-height:1;cursor:pointer;padding:0;backdrop-filter:blur(10px);transition:background .18s,transform .18s}
+.os-bnum:hover{background:rgba(255,255,255,.28);transform:translateY(-1px)}
+.os-bnum.on{background:var(--ac);border-color:transparent}
+/* 오버레이 (큰 화면) */
+.os-banner-ov{position:fixed;inset:0;background:rgba(2,3,8,.84);display:none;align-items:center;justify-content:center;z-index:9999;padding:clamp(16px,4vw,48px);backdrop-filter:blur(4px)}
+.os-banner-ov.on{display:flex}
+.os-banner-ov img{max-width:96vw;max-height:92vh;width:auto;height:auto;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.os-banner-ov-x{position:absolute;top:18px;right:22px;width:42px;height:42px;border-radius:999px;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer;backdrop-filter:blur(8px)}
+.os-banner-ov-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:999px;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:26px;line-height:1;cursor:pointer;backdrop-filter:blur(8px)}
+.os-banner-ov-nav.prev{left:18px}
+.os-banner-ov-nav.next{right:18px}
+/* 배너 접힘 → 떠받친 미니 캐릭터 + S.O.S */
+.os-banner-mini{display:none;flex-direction:column;align-items:center;gap:6px;padding:14px 10px 12px;margin-bottom:18px;background:var(--s1);border:1px dashed var(--bd);border-radius:16px}
+.os-banner-mini.on{display:flex}
+.os-banner-mini .bn-guy{animation:bnStrain .9s ease-in-out infinite;transform-origin:center bottom}
+@keyframes bnStrain{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(2px) scaleY(.97)}}
+.os-banner-mini .bn-sweat{animation:bnSweat 1.5s ease-in infinite;opacity:0}
+@keyframes bnSweat{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(9px)}}
+.os-banner-mini .bn-txt{font-size:12px;color:var(--tf);font-weight:600}
+.os-banner-sos{padding:6px 16px;border-radius:999px;border:1px solid var(--ac);background:color-mix(in srgb,var(--ac) 16%,transparent);color:var(--ac);font-weight:900;font-size:12px;letter-spacing:.08em;cursor:pointer;animation:bnBlink 1.1s ease-in-out infinite;transition:background .18s,color .18s}
+.os-banner-sos:hover{background:var(--ac);color:#fff;animation:none}
+@keyframes bnBlink{0%,100%{opacity:1}50%{opacity:.55}}
 .os-galaxy-banner{--mx:0px;--my:0px;width:100%;min-height:280px;position:relative;overflow:hidden;isolation:isolate;border-radius:24px;border:1px solid color-mix(in srgb,var(--bd) 82%,var(--ac));background:radial-gradient(circle at 18% 20%,color-mix(in srgb,var(--ach) 28%,transparent),transparent 28%),radial-gradient(circle at 86% 16%,color-mix(in srgb,var(--ac) 34%,transparent),transparent 30%),radial-gradient(circle at 60% 95%,color-mix(in srgb,var(--ach) 20%,transparent),transparent 36%),linear-gradient(135deg,#05060A 0%,var(--bg) 42%,#111225 100%);box-shadow:0 20px 56px color-mix(in srgb,var(--ac) 28%,transparent),inset 0 1px 0 rgba(255,255,255,.08);padding:clamp(20px,3vw,36px);display:grid;grid-template-columns:minmax(0,1.04fr) minmax(280px,.96fr);gap:clamp(16px,3vw,32px);align-items:center;margin-bottom:18px}
 .os-galaxy-banner::before{content:"";position:absolute;inset:-18%;z-index:-3;background-image:url('/assets/images/home_banner/stars.svg');background-size:cover;background-position:center;background-repeat:no-repeat;opacity:.55;transform:translate3d(calc(var(--mx) * .16),calc(var(--my) * .16),0);animation:starDrift 58s linear infinite;will-change:transform}
 .os-galaxy-banner::after{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(115deg,transparent 0 24%,rgba(255,255,255,.07) 38%,transparent 52%),radial-gradient(ellipse at 70% 52%,rgba(255,255,255,.08),transparent 44%);transform:translate3d(calc(var(--mx) * -.08),calc(var(--my) * -.08),0);pointer-events:none;will-change:transform}
@@ -1216,15 +1236,33 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
       </section>
       </div>
-      <div class="os-banner-slide"><img class="os-banner-img" src="/assets/images/home_banner/org01.jpg" alt="원세컨드 유기체 조직도 1" loading="lazy"></div>
-      <div class="os-banner-slide"><img class="os-banner-img" src="/assets/images/home_banner/org02.jpg" alt="원세컨드 유기체 조직도 2" loading="lazy"></div>
-      <div class="os-banner-slide"><img class="os-banner-img" src="/assets/images/home_banner/org03.jpg" alt="원세컨드 홈 화면 미리보기" loading="lazy"></div>
-      <div class="os-banner-dots">
-        <button class="os-bdot on" type="button" aria-label="배너 1: 원세컨드 소개" onclick="osBannerGo(0,this)"></button>
-        <button class="os-bdot" type="button" aria-label="배너 2: 유기체 조직도" onclick="osBannerGo(1,this)"></button>
-        <button class="os-bdot" type="button" aria-label="배너 3: 유기체 조직도" onclick="osBannerGo(2,this)"></button>
-        <button class="os-bdot" type="button" aria-label="배너 4: 홈 화면 미리보기" onclick="osBannerGo(3,this)"></button>
+      <div class="os-banner-nums">
+        <button class="os-bnum on" type="button" aria-label="배너 1: 현재 화면" onclick="osBannerOpen(0,this)">1</button>
+        <button class="os-bnum" type="button" aria-label="배너 2: 유기체 조직도" onclick="osBannerOpen(1,this)">2</button>
+        <button class="os-bnum" type="button" aria-label="배너 3: 유기체 조직도" onclick="osBannerOpen(2,this)">3</button>
+        <button class="os-bnum" type="button" aria-label="배너 4: 홈 화면 미리보기" onclick="osBannerOpen(3,this)">4</button>
+        <button class="os-banner-collapse" type="button" aria-label="배너 화면 닫기" onclick="osBannerCollapse()">✕ 닫기</button>
       </div>
+      </div>
+      <div class="os-banner-mini" id="osBannerMini">
+        <svg class="bn-guy" width="56" height="58" viewBox="0 0 56 58" fill="none" aria-hidden="true">
+          <rect x="7" y="2" width="42" height="7" rx="2" fill="#94A3B8"/>
+          <path d="M21 27 L14 12" stroke="#F59E0B" stroke-width="5" stroke-linecap="round"/>
+          <path d="M35 27 L42 12" stroke="#F59E0B" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="28" cy="21" r="8" fill="#FCD34D"/>
+          <rect x="23" y="28" width="10" height="16" rx="5" fill="#3B82F6"/>
+          <path d="M25 43 L20 56" stroke="#1E40AF" stroke-width="5" stroke-linecap="round"/>
+          <path d="M31 43 L36 56" stroke="#1E40AF" stroke-width="5" stroke-linecap="round"/>
+          <circle class="bn-sweat" cx="39" cy="19" r="2.4" fill="#38BDF8"/>
+        </svg>
+        <span class="bn-txt">배너를 힘껏 받치고 있어요…</span>
+        <button class="os-banner-sos" type="button" onclick="osBannerExpand()">S.O.S</button>
+      </div>
+      <div class="os-banner-ov" id="osBannerOv" onclick="osBannerOvClose(event)">
+        <button class="os-banner-ov-x" type="button" aria-label="닫기" onclick="osBannerOvClose(event)">✕</button>
+        <button class="os-banner-ov-nav prev" type="button" aria-label="이전" onclick="osBannerOvStep(-1,event)">‹</button>
+        <img id="osBannerOvImg" src="" alt="원세컨드 배너 확대 보기">
+        <button class="os-banner-ov-nav next" type="button" aria-label="다음" onclick="osBannerOvStep(1,event)">›</button>
       </div>
 
       <!-- 3층: 오늘의 업무 (상위 컨테이너 — 자료/스크립트 흡수, 2026-05-25 Phase 1.5) -->
@@ -6308,15 +6346,45 @@ updateHomeGreeting();
   });
 })();
 
-/* 홈 배너 캐러셀 — 수동 전환(점 클릭), 자동 롤링 없음 (2026-06-03) */
-function osBannerGo(n, el){
-  var c=document.getElementById('osBannerCarousel'); if(!c) return;
-  var slides=c.querySelectorAll('.os-banner-slide');
-  var dots=c.querySelectorAll('.os-bdot');
-  for(var i=0;i<slides.length;i++) slides[i].classList.toggle('on', i===n);
-  for(var j=0;j<dots.length;j++) dots[j].classList.toggle('on', j===n);
+/* 홈 배너 — 우측 번호 1~4 클릭 시 오버레이(큰 화면). 1번=현재 갤럭시 배너(인라인). 자동 롤링 없음 (2026-06-03) */
+var _osBImgs=[null,'/assets/images/home_banner/org01.jpg','/assets/images/home_banner/org02.jpg','/assets/images/home_banner/org03.jpg'];
+var _osBIdx=0;
+function osBannerOpen(n, el){
+  var nums=document.querySelectorAll('#osBannerCarousel .os-bnum');
+  for(var j=0;j<nums.length;j++) nums[j].classList.toggle('on', j===n);
+  _osBIdx=n;
+  if(n===0){ osBannerOvClose(); return; }  /* 1번 = 현재 갤럭시 배너(인라인) */
+  var ov=document.getElementById('osBannerOv'), im=document.getElementById('osBannerOvImg');
+  if(!ov||!im) return;
+  im.src=_osBImgs[n]; ov.classList.add('on');
 }
-window.osBannerGo=osBannerGo;
+function osBannerOvStep(d, e){
+  if(e){ e.stopPropagation(); }
+  var n=_osBIdx+d; if(n<1) n=3; if(n>3) n=1;
+  osBannerOpen(n);
+}
+function osBannerOvClose(e){
+  if(e&&e.target&&e.target.id!=='osBannerOv'&&!(e.target.classList&&e.target.classList.contains('os-banner-ov-x'))) return;
+  var ov=document.getElementById('osBannerOv'); if(ov) ov.classList.remove('on');
+  var nums=document.querySelectorAll('#osBannerCarousel .os-bnum');
+  for(var j=0;j<nums.length;j++) nums[j].classList.toggle('on', j===0);
+  _osBIdx=0;
+}
+function osBannerCollapse(){
+  var c=document.getElementById('osBannerCarousel'), m=document.getElementById('osBannerMini');
+  if(c) c.style.display='none';
+  if(m) m.classList.add('on');
+}
+function osBannerExpand(){
+  var c=document.getElementById('osBannerCarousel'), m=document.getElementById('osBannerMini');
+  if(c) c.style.display='';
+  if(m) m.classList.remove('on');
+}
+window.osBannerOpen=osBannerOpen;
+window.osBannerOvStep=osBannerOvStep;
+window.osBannerOvClose=osBannerOvClose;
+window.osBannerCollapse=osBannerCollapse;
+window.osBannerExpand=osBannerExpand;
 
 /* === 공용 owner id 헬퍼 (2026-05-29 PR #165) ===
  * 진단 격차 (PR #163 회귀): SPA 라우팅 IIFE가 auth 초기화 IIFE보다 먼저 가동 →
