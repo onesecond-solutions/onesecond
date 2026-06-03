@@ -847,6 +847,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 #v-pricing{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
 /* v-voice = 좌(목록)/우(내용) split 고정 높이 — 페이지 전체 스크롤 X, 각 컬럼 내부 스크롤 (끝없이 늘어남 방지) */
 #v-voice.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0}
+/* 함께해요 = 표준 split 게시판(좌 목록/우 뷰어) — v-voice와 동일 flex 높이 */
+#v-together.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0}
 /* 2026-05-27 v-scripts 스크롤 격차 정정 (PR #125):
    - on 시 flex 강제 + min-height:0 + 페이지 세로 스크롤 (카드 16개+ grid 전체 보기) */
 #v-scripts.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;overflow-x:hidden}
@@ -1577,16 +1579,43 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
      </div>
      <div class="wrap view" id="v-together">
       <div class="ttl">함께해요 <span class="ac">· 원세컨드 커뮤니티</span></div>
-      <div class="sub">건의 / 버그 신고 / 자유 자료를 함께 나눕니다.</div>
-      <div class="chips">
-        <div class="chip on" onclick="filterTogether(this,'전체')">전체</div>
-        <div class="chip" onclick="filterTogether(this,'건의')">건의</div>
-        <div class="chip" onclick="filterTogether(this,'버그신고')">버그신고</div>
-        <div class="chip" onclick="filterTogether(this,'자유')">자유</div>
-        <div class="chip" onclick="filterTogether(this,'공지')">공지</div>
+      <div class="sub">자유롭게 나누는 우리 커뮤니티 게시판입니다.</div>
+      <div class="mys-toolbar">
+        <div class="chips" id="tg-chips" style="flex:1;margin-bottom:0">
+          <div class="chip on" onclick="togetherFilter(this,'전체')">전체</div>
+          <div class="chip" onclick="togetherFilter(this,'자유')">자유</div>
+          <div class="chip" onclick="togetherFilter(this,'정보공유')">정보공유</div>
+          <div class="chip" onclick="togetherFilter(this,'모임·스터디')">모임·스터디</div>
+          <div class="chip" onclick="togetherFilter(this,'자랑·후기')">자랑·후기</div>
+          <div class="chip" onclick="togetherFilter(this,'기타')">기타</div>
+        </div>
+        <button class="mys-write-btn" onclick="openTogetherWrite()">+ 글쓰기</button>
       </div>
-      <div class="mys-grid" id="togetherGrid">
-        <div class="mys-news-empty">함께해요 게시판을 준비하고 있어요. 곧 열립니다 😊</div>
+      <div class="split" id="tg-split">
+        <div class="col list-col">
+          <div class="list" id="tg-list"><div class="mys-news-empty">불러오는 중…</div></div>
+        </div>
+        <div class="col viewer-col">
+          <button class="backbtn" onclick="togetherBack()">&#8249; 목록으로</button>
+          <div class="viewer" id="tg-viewer"><div class="mys-news-empty">왼쪽에서 글을 선택하세요.</div></div>
+        </div>
+      </div>
+     </div>
+
+     <!-- 함께해요 글쓰기 모달 -->
+     <div class="iv-overlay" id="tgWriteModal" style="display:none" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeTogetherWrite)">
+      <div class="iv-write-modal" role="dialog" aria-modal="true">
+        <div class="iv-write-head"><span>함께해요 글쓰기</span><button class="iv-write-close" onclick="closeTogetherWrite()" aria-label="닫기">&#10005;</button></div>
+        <div class="iv-write-body">
+          <div class="iv-fld"><label>분류</label>
+            <select id="tg-f-cat" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);font-size:0.9em">
+              <option>자유</option><option>정보공유</option><option>모임·스터디</option><option>자랑·후기</option><option>기타</option>
+            </select></div>
+          <div class="iv-fld"><label>제목</label><input type="text" id="tg-f-title" class="mys-write-input" maxlength="120" placeholder="제목"></div>
+          <div class="iv-fld"><label>내용</label><textarea id="tg-f-content" class="mys-write-textarea" maxlength="4000" placeholder="내용을 입력하세요"></textarea></div>
+          <div class="iv-fld"><label>첨부 (선택)</label><input type="file" id="tg-f-file" multiple></div>
+          <button class="iv-write-submit" id="tgSaveBtn" onclick="saveTogether()">등록하기</button>
+        </div>
       </div>
      </div>
      <div class="wrap view" id="v-news">
@@ -3279,7 +3308,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -5879,7 +5908,93 @@ function setActiveCard(){}
 /* 옛 mock 기반 filterScripts 자료 통째 폐지 (위 filterScriptsByStage가 대체). 외부 onclick 호환용 stub만 유지. */
 function filterScripts(el, cat){ /* 폐지됨 — filterScriptsByStage 사용 */ }
 function filterQuick(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#quickGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function filterTogether(el,cat){var chips=el.parentElement.querySelectorAll('.chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var cards=document.querySelectorAll('#togetherGrid .mys-card');for(var j=0;j<cards.length;j++){var b=cards[j].querySelector('.mys-badge');var c=b?b.textContent.trim():'';cards[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
+/* ════ 함께해요 = 원세컨드 커뮤니티 게시판 (posts board_type='community') — 표준 split 레이아웃 ════
+ * 작성=로그인 전원, 작성자=이름+소속(users.role), 삭제=본인/admin. RLS 정책 신버전 실행 필요. */
+window._tgCache=null; window._tgLoaded=false; window._tgFiltered=null; window._tgCat='전체'; window._tgRoleMap={};
+function _tgEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function _tgDate(iso){ var d=new Date(iso); return isNaN(d.getTime())?'':((d.getMonth()+1)+'월 '+d.getDate()+'일'); }
+function _tgWho(r){ var rl=(window._tgRoleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[window._tgRoleMap[r.author_id]])||''; return r.author_name?(_tgEsc(r.author_name)+(rl?' · '+rl:'')):''; }
+async function loadTogether(force){
+  var listEl=document.getElementById('tg-list'); if(!listEl) return;
+  var token=window.db&&window.db.getToken&&window.db.getToken();
+  if(!token){ listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  if(!window._tgCache||force){
+    if(!window._tgCache) listEl.innerHTML='<div class="mys-news-empty">불러오는 중… ⏳</div>';
+    try{
+      var res=await window.db.fetch('/rest/v1/posts?board_type=eq.community&order=created_at.desc&limit=100&select=id,title,content,category,author_id,author_name,created_at,attachments,is_hidden');
+      if(!res.ok){ listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다 ('+res.status+')</div>'; return; }
+      var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
+      var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
+      var roleMap={};
+      if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ roleMap[u.id]=u.role; }); } }catch(e){} }
+      window._tgRoleMap=roleMap; window._tgCache=rows; window._tgLoaded=true;
+    }catch(e){ console.error('[together]',e); listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; return; }
+  }
+  renderTogether();
+}
+function togetherFilter(el,cat){ var chips=el.parentElement.querySelectorAll('.chip'); for(var i=0;i<chips.length;i++) chips[i].classList.remove('on'); el.classList.add('on'); window._tgCat=cat; renderTogether(); }
+function renderTogether(){
+  var listEl=document.getElementById('tg-list'); if(!listEl) return;
+  var rows=window._tgCache||[];
+  var meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
+  var base=meAdmin?rows:rows.filter(function(r){return !r.is_hidden;});
+  var cat=window._tgCat||'전체';
+  var list=(cat==='전체')?base:base.filter(function(r){return (r.category||'')===cat;});
+  window._tgFiltered=list;
+  var vv=document.getElementById('tg-viewer');
+  if(!list.length){ listEl.innerHTML='<div class="mys-news-empty">아직 글이 없습니다.<br>+ 글쓰기로 첫 글을 남겨보세요.</div>'; if(vv) vv.innerHTML='<div class="mys-news-empty">글이 없습니다.</div>'; return; }
+  listEl.innerHTML=list.map(function(r,i){
+    var c=_tgEsc(r.category||'자유'); var who=_tgWho(r);
+    return '<div class="item'+(i===0?' on':'')+'" onclick="togetherOpen('+i+')" style="--tc:var(--ac)"><span class="badge">'+c+'</span><div class="it">'+_tgEsc(r.title||'제목 없음')+'</div><div class="id">'+_tgDate(r.created_at)+(who?' · '+who:'')+'</div></div>';
+  }).join('');
+  togetherOpen(0,true);
+}
+function togetherOpen(idx,keepList){
+  var list=window._tgFiltered||[]; var r=list[idx]; if(!r) return;
+  var v=document.getElementById('tg-viewer'); if(!v) return;
+  var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
+  var _ah=(typeof _voiceAttsHtml==='function')?_voiceAttsHtml(_att):{html:'',imgs:[],names:[]};
+  window._voiceImgs=_ah.imgs||[]; window._voiceImgNames=_ah.names||[];
+  var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
+  var meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
+  var canDel=(me&&String(me)===String(r.author_id))||meAdmin;
+  var delBtn=canDel?('<div class="post-acts"><button class="post-act post-act-del" onclick="deleteTogether('+JSON.stringify(r.id)+')">삭제</button></div>'):'';
+  v.innerHTML='<span class="vbadge">'+_tgEsc(r.category||'자유')+'</span><div class="vttl">'+_tgEsc(r.title||'제목 없음')+'</div><div class="vmeta">'+_tgDate(r.created_at)+(_tgWho(r)?' · '+_tgWho(r):'')+'</div><div class="vbody">'+_tgEsc(r.content||'').replace(/\n/g,'<br>')+_ah.html+'</div>'+delBtn;
+  var items=document.querySelectorAll('#tg-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on',i===idx);
+  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.add('show-viewer'); }
+}
+function togetherBack(){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.remove('show-viewer'); }
+function openTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(!m) return; document.body.appendChild(m); m.style.display='flex'; var t=document.getElementById('tg-f-title'); setTimeout(function(){ if(t) t.focus(); },60); }
+function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; }
+async function saveTogether(){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var cat=((document.getElementById('tg-f-cat')||{}).value||'자유');
+  var title=((document.getElementById('tg-f-title')||{}).value||'').trim();
+  var content=((document.getElementById('tg-f-content')||{}).value||'').trim();
+  if(!title){ alert('제목을 입력해 주세요.'); return; }
+  if(!content){ alert('내용을 입력해 주세요.'); return; }
+  var btn=document.getElementById('tgSaveBtn'); if(btn){ btn.disabled=true; btn.textContent='저장 중…'; }
+  try{
+    var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('tg-f-file','together',token); if(a===null){ if(btn){btn.disabled=false;btn.textContent='등록하기';} return; } atts=a||[]; }
+    var body={board_type:'community', category:cat, title:title, content:content, author_id:(u.id||window.AppState.userId||''), author_name:(u.name||''), attachments:atts};
+    var res=await fetch(window.db.url('/rest/v1/posts'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(res.ok||res.status===201){ closeTogetherWrite(); var tt=document.getElementById('tg-f-title'); if(tt)tt.value=''; var tc=document.getElementById('tg-f-content'); if(tc)tc.value=''; var tf=document.getElementById('tg-f-file'); if(tf)tf.value=''; window._tgLoaded=false; loadTogether(true); if(typeof toast==='function') toast('함께해요에 등록됐어요!'); }
+    else { var err=await res.json().catch(function(){return{};}); alert('등록 실패: '+(err.message||res.status)); }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='등록하기'; } }
+}
+async function deleteTogether(id){
+  if(!confirm('이 글을 삭제하시겠습니까?')) return;
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
+    if(res.ok||res.status===204){ window._tgLoaded=false; loadTogether(true); if(typeof toast==='function') toast('삭제 완료'); }
+    else { alert('삭제 실패: '+res.status); }
+  }catch(e){ alert('삭제 중 오류가 발생했습니다.'); }
+}
+window.loadTogether=loadTogether; window.togetherFilter=togetherFilter; window.renderTogether=renderTogether; window.togetherOpen=togetherOpen; window.togetherBack=togetherBack; window.openTogetherWrite=openTogetherWrite; window.closeTogetherWrite=closeTogetherWrite; window.saveTogether=saveTogether; window.deleteTogether=deleteTogether;
 var SUPABASE_URL='https://pdnwgzneooyygfejrvbg.supabase.co';
 var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
 var newsCache=null;
