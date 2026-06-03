@@ -5030,7 +5030,7 @@ async function renderTodayTodo(ctx, mountEl){
     /* 가로 1줄 4카드 — 스크립트 카드 스타일(좌측 strip + 배지 + 본문) */
     var calBody=await _ttCalBody();
     var nt=await _ttCount("team_notices?scope=eq.team_internal&deleted_at=is.null&created_at=gte."+since+"&select=id");
-    var qa=await _ttCount("posts?board_type=eq.qna&select=id");
+    var qa=await _ttCount("posts?board_type=eq.qna&title=not.ilike.*소식지*&select=id");
     function _num(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5em;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5em"> 건</span>'))+'</div>'; }
     var tcards=[
       _ttScriptCard({color:'var(--ac)',   badge:'캘린더',     title:'전일·당일·내일', body:calBody, go:'_goMysCalendar()'}),
@@ -5056,7 +5056,7 @@ async function renderTodayTodo(ctx, mountEl){
   } else if(ctx==='manager'){
     /* MY SPACE와 동일 — 가로 1줄 4카드(스크립트 카드 스타일) + 캘린더 3일 요약 */
     var calBodyM=await _ttCalBody();
-    var qa2=await _ttCount("posts?board_type=eq.qna&select=id");
+    var qa2=await _ttCount("posts?board_type=eq.qna&title=not.ilike.*소식지*&select=id");
     var mine=u.id?await _ttCount("team_notices?author_id=eq."+encodeURIComponent(u.id)+"&deleted_at=is.null&select=id"):null;
     function _numM(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5em;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5em"> 건</span>'))+'</div>'; }
     var mcards=[
