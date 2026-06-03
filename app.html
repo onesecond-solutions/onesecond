@@ -2483,6 +2483,9 @@ function applyRoleClass(){
   var nt = document.getElementById('nav-team');
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저룸 = GA 실장·지점장·admin (2026-05-31) */
   if(nt) nt.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
+  /* 통합 검색 = admin 전용 (퀄리티 완성 전 비공개, §5 인큐베이션) */
+  var sb = document.querySelector('.head .search');
+  if(sb) sb.style.display = (r === 'admin') ? '' : 'none';
 }
 window.applyRoleClass = applyRoleClass;
 /* 인라인 게이팅(첫 페인트)이 is-insurer/is-admin 1차 부착. nav 노출·재확정은 bootView(role 확정)에서 1회 — 즉시/DOMContentLoaded 중복 호출 폐기. */
@@ -5826,7 +5829,7 @@ var OS_NAV_INDEX=[
   {label:'요금제', kw:'가격 결제 구독 멤버십 plus pro free', view:'pricing'}
 ];
 window._searchGo=_searchGo;
-function openSearch(){if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
+function openSearch(){if(_getOsUserRole()!=='admin')return;/* 검색 admin 전용 (Ctrl+K 우회 차단) */ if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
 function closeSearch(){document.getElementById('so').classList.remove('open');}
 function fill(q){document.getElementById('sinput').value=q;doSearch(q);document.getElementById('sinput').focus();}
 /* 검색 기본 화면 — 실제 데이터 현황(각 테이블 건수) 표시 (mock 폐기) */
