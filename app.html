@@ -1471,6 +1471,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div id="mr-today"></div>
       <div id="mr-main" style="display:none">
       <!-- 팀원관리 = 게시판 좌우 레이아웃 골격 (좌: 조직 트리 / 우: 팀원). 카드 연결은 다음 단계 -->
+      <div class="tabs" id="mr-mem-sub" style="margin-bottom:12px">
+        <div class="tab on" onclick="mrMemSub(this,'manager')">실장</div>
+        <div class="tab" onclick="mrMemSub(this,'branch')">지점장</div>
+      </div>
       <div class="split" id="mr-members-split">
         <div class="col list-col">
           <div class="list" id="mr-org-list"><div class="mys-news-empty">조직(지점장 · 팀 · 실장)이 여기에 표시됩니다.</div></div>
@@ -5091,6 +5095,20 @@ function mrTabMain(el,key){
   else { if(today){ today.style.display=''; renderTodayTodo('manager', today); } }
 }
 window.mrTabMain=mrTabMain;
+/* 팀원관리 하위 탭 — 실장/지점장 관점 전환 (골격: 활성 토글 + 안내, 카드 연결은 다음 단계) */
+function mrMemSub(el,key){
+  var tabs=document.querySelectorAll('#mr-mem-sub .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  if(el) el.classList.add('on');
+  var org=document.getElementById('mr-org-list'), view=document.getElementById('mr-members-viewer');
+  if(key==='branch'){
+    if(org) org.innerHTML='<div class="mys-news-empty">지점장 관점 — 지점 전체(팀 목록)가 여기에 표시됩니다.</div>';
+    if(view) view.innerHTML='<div class="mys-news-empty">왼쪽에서 팀을 선택하면 해당 팀 구성원이 표시됩니다.</div>';
+  } else {
+    if(org) org.innerHTML='<div class="mys-news-empty">실장 관점 — 내 팀(실장 · 팀원)이 여기에 표시됩니다.</div>';
+    if(view) view.innerHTML='<div class="mys-news-empty">왼쪽에서 실장/팀원을 선택하면 상세가 표시됩니다.</div>';
+  }
+}
+window.mrMemSub=mrMemSub;
 /* ─────────────────────────────────────────────
    스크립트 view — v1 10 stage + 가로 정렬 + 오버레이 확장 (2026-05-27 갈아끼움)
    - 풀스크린 모달 통째 폐기 → 가로 정렬 카드 + 오버레이 확장
