@@ -427,6 +427,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .ai-ans-src{font-size:0.6875rem;color:var(--ac);flex-shrink:0;font-weight:600;}
 .ai-ans-co-d{font-size:0.8125rem;color:var(--ts);line-height:1.6;white-space:pre-wrap;word-break:break-word;}
 .ai-ans-foot{font-size:0.6875rem;color:var(--tf);text-align:center;padding:6px;}
+.nl-mi{display:block;width:100%;text-align:left;padding:11px 14px;background:none;border:none;border-bottom:0.5px solid var(--bd);color:var(--tp);font-size:0.85rem;cursor:pointer;}
+.nl-mi:last-child{border-bottom:none;}
+.nl-mi:hover{background:var(--s2);}
 .sochip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;margin:4px;border-radius:8px;background:var(--s2);font-size:0.75rem;color:var(--ts);cursor:pointer;}
 .sochip:hover{background:var(--sh);}
 
@@ -5910,18 +5913,57 @@ async function _searchOpen(table, id){
     if(r.highlight_text) bodyTxt=r.highlight_text+'\n\n'+bodyTxt;
     if(r.link_url) bodyTxt=bodyTxt+'\n\n'+r.link_url;
     _closeSearchDetail();
+    var isPdf=(table==='newsletters' && !!r.source_pdf_url);
+    window._nlCur = isPdf ? { url:r.source_pdf_url, text:(r.full_text||''), name:(r.title||'소식지')+'.pdf' } : null;
+    var maxW = isPdf ? '940px' : '680px';
+    var actionBar = isPdf
+      ? '<div style="padding:10px 18px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center"><button onclick="_nlDdalggak(this)" style="padding:7px 13px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:0.8125rem;font-weight:700;cursor:pointer">&#9889; 딸깍</button><a href="'+_sEsc(r.source_pdf_url)+'" target="_blank" rel="noopener" style="font-size:0.78em;color:var(--ts);text-decoration:none">새 탭에서 열기 &#8599;</a></div>'
+      : (r.source_pdf_url?'<div style="padding:12px 18px 0"><a href="'+_sEsc(r.source_pdf_url)+'" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원문 PDF 보기 (표·사진 포함)</a></div>':'');
+    var bodyInner = isPdf
+      ? '<iframe src="'+_sEsc(r.source_pdf_url)+'" style="flex:1;width:100%;border:0;background:#fff;min-height:62vh" title="소식지 원문 미리보기"></iframe>'
+      : '<div style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9em;line-height:1.65">'+_sEsc(bodyTxt)+'</div>';
     var ov=document.createElement('div'); ov.id='searchDetailModal';
     ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99995;display:flex;align-items:center;justify-content:center;padding:20px';
     ov.onmousedown=function(e){ _ovDown(e,ov); }; ov.onclick=function(e){ _ovClick(e,ov,_closeSearchDetail); };
-    ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">'
+    ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:'+maxW+';max-height:88vh;display:flex;flex-direction:column;overflow:hidden">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--bd)"><div><div style="font-weight:800;color:var(--tp);font-size:1.02em;line-height:1.4">'+_sEsc(title)+'</div>'+(meta?'<div style="font-size:0.78em;color:var(--ts);margin-top:4px">'+_sEsc(meta)+'</div>':'')+'</div><button onclick="_closeSearchDetail()" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;flex-shrink:0">&#10005;</button></div>'
-      +(r.source_pdf_url?'<div style="padding:12px 18px 0"><a href="'+_sEsc(r.source_pdf_url)+'" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원문 PDF 보기 (표·사진 포함)</a></div>':'')
-      +'<div style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9em;line-height:1.65">'+_sEsc(bodyTxt)+'</div>'
+      +actionBar
+      +bodyInner
       +'</div>';
     document.body.appendChild(ov);
   }catch(e){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); }
 }
 window._searchOpen=_searchOpen;
+/* 소식지(PDF) 딸깍 — 미리보기 모달 안 다운로드/MY SPACE/복사 (카드 만들기는 PDF 미지원이라 제외) */
+function _nlCloseMenu(){ var m=document.getElementById('nlMenu'); if(m) m.remove(); document.removeEventListener('click',_nlOut,true); }
+function _nlOut(e){ var m=document.getElementById('nlMenu'); if(m&&!m.contains(e.target)) _nlCloseMenu(); }
+function _nlDdalggak(btn){
+  _nlCloseMenu();
+  var rect=btn.getBoundingClientRect();
+  var m=document.createElement('div'); m.id='nlMenu';
+  m.style.cssText='position:fixed;top:'+(rect.bottom+4)+'px;left:'+rect.left+'px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:99997;overflow:hidden;min-width:170px';
+  m.innerHTML='<button class="nl-mi" onclick="_nlAct(\'download\')">&#128229; 다운로드 저장</button><button class="nl-mi" onclick="_nlAct(\'myspace\')">&#128193; MY SPACE 저장</button><button class="nl-mi" onclick="_nlAct(\'copy\')">&#128203; 본문 복사</button>';
+  document.body.appendChild(m);
+  setTimeout(function(){ document.addEventListener('click',_nlOut,true); },0);
+}
+window._nlDdalggak=_nlDdalggak;
+async function _nlAct(action){
+  _nlCloseMenu();
+  var c=window._nlCur||{}; var T=(typeof toast==='function')?toast:function(){};
+  if(action==='copy'){ try{ await navigator.clipboard.writeText(c.text||''); T('본문을 복사했습니다'); }catch(e){ T('복사하지 못했습니다'); } }
+  else if(action==='myspace'){ T('MY SPACE 저장은 준비 중입니다'); }
+  else if(action==='download'){
+    if(!c.url){ return; }
+    try{
+      if(window.showSaveFilePicker){
+        var resp=await fetch(c.url); var blob=await resp.blob();
+        var h=await window.showSaveFilePicker({ suggestedName:c.name||'소식지.pdf', types:[{description:'PDF',accept:{'application/pdf':['.pdf']}}] });
+        var w=await h.createWritable(); await w.write(blob); await w.close(); T('저장했습니다');
+      } else { window.open(c.url,'_blank'); }
+    }catch(e){ if(e&&e.name==='AbortError') return; window.open(c.url,'_blank'); }
+  }
+}
+window._nlAct=_nlAct;
 function _closeSearchDetail(){ var m=document.getElementById('searchDetailModal'); if(m) m.remove(); }
 window._closeSearchDetail=_closeSearchDetail;
 var defaultPanel='';
