@@ -273,6 +273,44 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .cmp-cell:empty:before{content:attr(data-ph);color:#9CA3AF}
 .cmp-price{text-align:center;font-variant-numeric:tabular-nums;font-weight:700;color:#4338CA}
 .cmp-rowhead{background:#F3F4F6;font-weight:800;color:#1A1A2E}
+/* 표지·footer */
+.cmp-hd{margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #6366F1}
+.cmp-hd-ttl{font-size:1.1rem;font-weight:800;color:#1A1A2E}
+.cmp-hd-sub{font-size:0.78em;color:#6B7280;margin-top:3px}
+.cmp-ft{margin-top:14px;padding-top:10px;border-top:1px solid #E5E7EB;font-size:0.76em;color:#6B7280;text-align:right}
+/* 추천 배너 */
+.cmp-rec{margin:0 0 12px;padding:10px 14px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;font-size:0.9em;font-weight:700;color:#059669}
+.cmp-rec b{font-weight:800;color:#047857}
+.cmp-rec-col{background:#ECFDF5;font-weight:800}
+.cmp-rec-row td>.cmp-cell{background:#ECFDF5;font-weight:800}
+/* 월차액 히어로 */
+.cmp-hero{margin:0 0 12px;padding:16px;border-radius:12px;text-align:center}
+.cmp-hero-lbl{font-size:0.8em;font-weight:700;opacity:.85}
+.cmp-hero-num{font-size:1.5rem;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.cmp-hero-sub{font-size:0.82em;margin-top:3px;opacity:.9}
+.cmp-hero-save{background:#ECFDF5;color:#059669}
+.cmp-hero-up{background:#FEF2F2;color:#DC2626}
+.cmp-hero-neutral{background:#F3F4F6;color:#6B7280}
+/* 전→후 한 줄 */
+.cmp-ba{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.cmp-ba-lbl{font-size:0.78em;color:#6B7280;font-weight:700}
+.cmp-ba-amt{font-size:0.95em;font-weight:700;color:#1A1A2E;font-variant-numeric:tabular-nums}
+.cmp-ba-after{color:#4338CA}
+.cmp-ba-arrow{color:#6366F1;font-weight:800}
+/* 보장 변화 배지 */
+.cmp-st{display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.78em;font-weight:800}
+.cmp-st-up{background:#ECFDF5;color:#059669}
+.cmp-st-new{background:#EEF2FF;color:#4338CA}
+.cmp-st-keep{background:#F3F4F6;color:#6B7280}
+.cmp-st-cut{background:#FEF2F2;color:#DC2626}
+/* 입력: 추천 별 / 상태 셀렉트 / 고정 헤더 / 액션2 */
+.cmp-th-act2,.cmp-td-act2{width:64px;text-align:center;border:none!important;background:transparent;white-space:nowrap}
+.cmp-star{border:none;background:transparent;color:var(--bd);cursor:pointer;font-size:1rem;padding:0 2px}
+.cmp-star.on{color:#F59E0B}
+.cmp-st-td{padding:4px}
+.cmp-st-sel{width:100%;border:1px solid var(--bd);border-radius:7px;background:var(--s1);color:var(--tp);font-size:0.78em;padding:5px 4px;font-family:inherit}
+.cmp-in-head-fx{padding:8px 10px;font-weight:700;font-size:0.82em;color:var(--ts);text-align:center}
+.cmp-hint{font-size:0.72em;color:var(--tf)}
 .cmp-th-act,.cmp-td-act{width:34px;text-align:center;border:none!important;background:transparent}
 .cmp-x{border:none;background:transparent;color:#fff;cursor:pointer;font-size:1rem;padding:0 4px;opacity:.85}
 .cmp-trash{border:none;background:transparent;cursor:pointer;font-size:0.95rem;padding:4px}
@@ -3575,6 +3613,13 @@ function _cmpEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){re
 function _cmpComma(v){ var n=String(v==null?'':v).replace(/[^\d]/g,''); return n?Number(n).toLocaleString('ko-KR'):''; }
 function _cmpNum(v){ return Number(String(v==null?'':v).replace(/[^\d]/g,''))||0; }
 function _cmpCaretEnd(el){ try{ var r=document.createRange(); r.selectNodeContents(el); r.collapse(false); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
+/* 표지(헤더)·설계사 footer·작성일 — 제안서 톤. 설계사 정보=로그인 os_user 자동(저장 X) */
+function _cmpAgent(){ var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){} return {name:u.name||'', phone:u.phone||''}; }
+function _cmpToday(){ var d=new Date(); return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'; }
+function _cmpHeaderHtml(title, cust){ return '<div class="cmp-hd"><div class="cmp-hd-ttl">'+_cmpEsc(title)+'</div><div class="cmp-hd-sub">'+(cust?(_cmpEsc(cust)+' 님  ·  '):'')+_cmpToday()+'</div></div>'; }
+function _cmpFooterHtml(){ var a=_cmpAgent(); var t=[a.name,a.phone].filter(Boolean).join('  ·  '); return t?('<div class="cmp-ft">담당 설계사  '+_cmpEsc(t)+'</div>'):''; }
+window._cmpCoCust=''; var _cmpRecIdx=-1;
+var CMP_RM_STATUS={'강화':'cmp-st-up','유지':'cmp-st-keep','신규':'cmp-st-new','정리':'cmp-st-cut'};
 
 var _cmpMode='company';
 var _cmpOrient='portrait';
@@ -3622,21 +3667,24 @@ function cmpRenderCompany(prevVals){
   var head='<tr>'+cmpCols.map(function(c,ci){
     return '<th><div class="cmp-h"><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">'+_cmpEsc(c.label)+'</div>'
       +'<button class="cmp-x2" title="열 삭제" onclick="cmpDelCol('+ci+')">×</button></div></th>';
-  }).join('')+'<th class="cmp-th-act"></th></tr>';
+  }).join('')+'<th class="cmp-th-act2"></th></tr>';
+  if(_cmpRecIdx>=vals.length) _cmpRecIdx=-1;
   var body=vals.map(function(row,ri){
     return '<tr>'+cmpCols.map(function(c,ci){
       var v=row[ci]||'';
       var cls='cmp-in-cell'+(c.price?' cmp-price':'');
       var extra=c.price?' oninput="cmpFmtPrice(this)" data-ph="0"':' oninput="cmpSync()" data-ph="입력"';
       return '<td><div class="'+cls+'" contenteditable="true"'+extra+'>'+_cmpEsc(v)+'</div></td>';
-    }).join('')+'<td class="cmp-td-act"><button class="cmp-trash" title="행 삭제" onclick="cmpDelRow('+ri+')">🗑️</button></td></tr>';
+    }).join('')+'<td class="cmp-td-act2"><button class="cmp-star'+(_cmpRecIdx===ri?' on':'')+'" title="추천 회사 지정" onclick="cmpSetRec('+ri+')">★</button><button class="cmp-trash" title="행 삭제" onclick="cmpDelRow('+ri+')">🗑️</button></td></tr>';
   }).join('');
   b.innerHTML=
-    '<div class="cmp-toolbar"><button class="cmp-add" onclick="cmpAddCol()">+ 항목(열) 추가</button></div>'
+    '<div class="cmp-in-card"><div class="cmp-in-row"><span>고객명</span><div class="cmp-in-cell cmp-bd" id="cmpCoCust" contenteditable="true" data-ph="고객 이름(선택)" oninput="window._cmpCoCust=this.textContent;cmpSync()">'+_cmpEsc(window._cmpCoCust||'')+'</div></div></div>'
+    +'<div class="cmp-toolbar"><button class="cmp-add" onclick="cmpAddCol()">+ 항목(열) 추가</button></div>'
     +'<table class="cmp-in-table"><thead>'+head+'</thead><tbody id="cmpCompanyBody">'+body+'</tbody></table>'
-    +'<div class="cmp-toolbar"><button class="cmp-add" onclick="cmpAddRow()">+ 회사(행) 추가</button></div>';
+    +'<div class="cmp-toolbar"><button class="cmp-add" onclick="cmpAddRow()">+ 회사(행) 추가</button> <span class="cmp-hint">★ 추천 지정 (미지정 시 최저 보험료 자동)</span></div>';
   cmpSync();
 }
+function cmpSetRec(i){ _cmpReadHeads(); var v=_cmpReadCompany(); _cmpRecIdx=(_cmpRecIdx===i)?-1:i; cmpRenderCompany(v); }
 function _cmpReadHeads(){
   var hs=document.querySelectorAll('#cmpBuilder thead .cmp-in-head');
   for(var i=0;i<hs.length&&i<cmpCols.length;i++){ var t=hs[i].textContent.trim(); cmpCols[i].label=t||cmpCols[i].label; }
@@ -3655,7 +3703,7 @@ function cmpFmtPrice(el){ el.textContent=_cmpComma(el.textContent); _cmpCaretEnd
 /* ── 빌더 ② 리모델링 — 좌 입력 / 우 미리보기 ── */
 function cmpRenderRemodel(prev){
   var b=document.getElementById('cmpBuilder'); if(!b) return;
-  var rows=(prev&&prev.rows)||[['','',''],['','','']];
+  var rows=(prev&&prev.rows)||[['','','',''],['','','','']];
   b.innerHTML=
     '<div class="cmp-in-card"><div class="cmp-in-lbl">고객 정보 (이미지에만 표시·저장 안 함)</div>'
       +'<div class="cmp-in-row"><span>이름</span><div class="cmp-in-cell cmp-bd" id="cmpRmName" contenteditable="true" data-ph="이름" oninput="cmpSync()">'+_cmpEsc((prev&&prev.name)||'')+'</div>'
@@ -3668,23 +3716,28 @@ function cmpRenderRemodel(prev){
         +'<th><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">항목</div></th>'
         +'<th><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">리모델링 전</div></th>'
         +'<th><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">리모델링 후</div></th>'
+        +'<th><div class="cmp-in-head-fx">변화</div></th>'
         +'<th class="cmp-th-act"></th></tr></thead>'
       +'<tbody id="cmpRmBody">'+_cmpRmRows(rows)+'</tbody></table>'
       +'<div class="cmp-toolbar"><button class="cmp-add" onclick="cmpRmAddRow()">+ 항목(행) 추가</button></div></div>';
   cmpSync();
 }
 function _cmpRmRows(vals){
+  var opts=['','강화','유지','신규','정리'];
   return vals.map(function(r,ri){
+    var st=r[3]||'';
+    var sel='<select class="cmp-st-sel" onchange="cmpSync()">'+opts.map(function(o){return '<option value="'+o+'"'+(o===st?' selected':'')+'>'+(o||'선택')+'</option>';}).join('')+'</select>';
     return '<tr><td><div class="cmp-in-cell" contenteditable="true" data-ph="항목" oninput="cmpSync()">'+_cmpEsc(r[0]||'')+'</div></td>'
       +'<td><div class="cmp-in-cell" contenteditable="true" data-ph="전" oninput="cmpSync()">'+_cmpEsc(r[1]||'')+'</div></td>'
       +'<td><div class="cmp-in-cell" contenteditable="true" data-ph="후" oninput="cmpSync()">'+_cmpEsc(r[2]||'')+'</div></td>'
+      +'<td class="cmp-st-td">'+sel+'</td>'
       +'<td class="cmp-td-act"><button class="cmp-trash" title="행 삭제" onclick="cmpRmDelRow('+ri+')">🗑️</button></td></tr>';
   }).join('');
 }
-function _cmpRmRead(){ var v=[]; var trs=document.querySelectorAll('#cmpRmBody tr'); for(var i=0;i<trs.length;i++){ var c=trs[i].querySelectorAll('.cmp-in-cell'); v.push([c[0]?c[0].textContent:'',c[1]?c[1].textContent:'',c[2]?c[2].textContent:'']); } return v; }
+function _cmpRmRead(){ var v=[]; var trs=document.querySelectorAll('#cmpRmBody tr'); for(var i=0;i<trs.length;i++){ var c=trs[i].querySelectorAll('.cmp-in-cell'); var sel=trs[i].querySelector('.cmp-st-sel'); v.push([c[0]?c[0].textContent:'',c[1]?c[1].textContent:'',c[2]?c[2].textContent:'', sel?sel.value:'']); } return v; }
 function _cmpRmHeads(){ var hs=document.querySelectorAll('#cmpBuilder .cmp-in-table thead .cmp-in-head'); return [hs[0]?hs[0].textContent.trim():'항목', hs[1]?hs[1].textContent.trim():'리모델링 전', hs[2]?hs[2].textContent.trim():'리모델링 후']; }
 function _cmpRmState(){ var t=function(id){var e=document.getElementById(id);return e?e.textContent:'';}; return {name:t('cmpRmName'),birth:t('cmpRmBirth'),before:t('cmpRmBefore'),after:t('cmpRmAfter'),rows:_cmpRmRead()}; }
-function cmpRmAddRow(){ var s=_cmpRmState(); s.rows.push(['','','']); cmpRenderRemodel(s); }
+function cmpRmAddRow(){ var s=_cmpRmState(); s.rows.push(['','','','']); cmpRenderRemodel(s); }
 function cmpRmDelRow(i){ var s=_cmpRmState(); if(s.rows.length<=1){ alert('최소 1행은 남겨야 합니다.'); return; } s.rows.splice(i,1); cmpRenderRemodel(s); }
 function cmpFmtRm(el){ el.textContent=_cmpComma(el.textContent); _cmpCaretEnd(el); cmpSync(); }
 
@@ -3693,37 +3746,44 @@ function cmpSync(){
   var cap=document.getElementById('cmpCapture'); if(!cap) return;
   if(_cmpMode==='company'){
     _cmpReadHeads(); var vals=_cmpReadCompany();
+    /* 추천 회사: 수동 지정(_cmpRecIdx) 우선, 없으면 최저 보험료 자동 */
+    var pIdx=-1; for(var pp=0;pp<cmpCols.length;pp++){ if(cmpCols[pp].price){ pIdx=pp; break; } }
+    var recIdx=_cmpRecIdx, recAuto=false;
+    if(recIdx<0 && pIdx>=0){ var lo=-1,lov=Infinity; for(var ri2=0;ri2<vals.length;ri2++){ var pvn=_cmpNum(vals[ri2][pIdx]); if(pvn>0&&pvn<lov){lov=pvn;lo=ri2;} } if(lo>=0){ recIdx=lo; recAuto=true; } }
+    var recHtml='';
+    if(recIdx>=0 && vals[recIdx]){ var rn=(vals[recIdx][0]||'').trim(); var rp=pIdx>=0?(vals[recIdx][pIdx]||'').trim():''; if(rn||rp){ recHtml='<div class="cmp-rec">✅ '+(recAuto?'최저 보험료':'추천')+'  <b>'+_cmpEsc(rn||'-')+'</b>'+(rp?('  ·  월 '+_cmpEsc(rp)+'원'):'')+'</div>'; } }
+    var tableHtml;
     if(_cmpOrient==='portrait'){
-      /* 세로보기 = 전치(헤더 행 없음). 회사명은 '회사' 행에 이미 표시되므로 구분·회사N 헤더 텍스트 제거 */
-      var body=cmpCols.map(function(c,ci){ return '<tr><td><div class="cmp-cell cmp-rowhead">'+_cmpEsc(c.label||'')+'</div></td>'+vals.map(function(row){ var v=row[ci]||''; return '<td><div class="cmp-cell'+(c.price?' cmp-price':'')+'">'+_cmpEsc(v)+'</div></td>'; }).join('')+'</tr>'; }).join('');
-      cap.innerHTML='<div class="cmp-sheet-ttl">보험료 비교표</div><table class="cmp-table"><tbody>'+body+'</tbody></table>';
+      /* 세로보기 = 전치(헤더 행 없음). 회사명은 '회사' 행에 표시 */
+      var bodyP=cmpCols.map(function(c,ci){ return '<tr><td><div class="cmp-cell cmp-rowhead">'+_cmpEsc(c.label||'')+'</div></td>'+vals.map(function(row,ri3){ var v=row[ci]||''; return '<td><div class="cmp-cell'+(c.price?' cmp-price':'')+(ri3===recIdx?' cmp-rec-col':'')+'">'+_cmpEsc(v)+'</div></td>'; }).join('')+'</tr>'; }).join('');
+      tableHtml='<table class="cmp-table"><tbody>'+bodyP+'</tbody></table>';
     } else {
       /* 가로보기 = 입력과 동일: 회사 행, 항목 열 */
-      var head='<tr>'+cmpCols.map(function(c){ return '<th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(c.label||'')+'</div></th>'; }).join('')+'</tr>';
-      var body=vals.map(function(row){ return '<tr>'+cmpCols.map(function(c,ci){ var v=row[ci]||''; return '<td><div class="cmp-cell'+(c.price?' cmp-price':'')+'">'+_cmpEsc(v)+'</div></td>'; }).join('')+'</tr>'; }).join('');
-      cap.innerHTML='<div class="cmp-sheet-ttl">보험료 비교표</div><table class="cmp-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+      var headL='<tr>'+cmpCols.map(function(c){ return '<th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(c.label||'')+'</div></th>'; }).join('')+'</tr>';
+      var bodyL=vals.map(function(row,ri4){ return '<tr'+(ri4===recIdx?' class="cmp-rec-row"':'')+'>'+cmpCols.map(function(c,ci){ var v=row[ci]||''; return '<td><div class="cmp-cell'+(c.price?' cmp-price':'')+'">'+_cmpEsc(v)+'</div></td>'; }).join('')+'</tr>'; }).join('');
+      tableHtml='<table class="cmp-table"><thead>'+headL+'</thead><tbody>'+bodyL+'</tbody></table>';
     }
+    cap.innerHTML=_cmpHeaderHtml('보험료 비교표', window._cmpCoCust)+recHtml+tableHtml+_cmpFooterHtml();
   } else {
     var s=_cmpRmState(); var hd=_cmpRmHeads();
     var before=_cmpNum(s.before), after=_cmpNum(s.after);
-    var diffHtml='<div class="cmp-rm-diff">금액 입력 시 월 차액이 표시됩니다.</div>';
+    /* B. 월 차액 히어로 */
+    var heroHtml='<div class="cmp-hero cmp-hero-neutral"><div class="cmp-hero-lbl">월 보험료 변화</div><div class="cmp-hero-num">금액을 입력하세요</div></div>';
     if(before||after){ var diff=after-before, yr=Math.abs(diff)*12;
-      if(diff<0) diffHtml='<div class="cmp-rm-diff cmp-save">▼ 월 '+_cmpComma(Math.abs(diff))+'원 절감  ·  연 '+_cmpComma(yr)+'원 절감</div>';
-      else if(diff>0) diffHtml='<div class="cmp-rm-diff cmp-up">▲ 월 '+_cmpComma(diff)+'원 증가  ·  연 '+_cmpComma(yr)+'원 증가</div>';
-      else diffHtml='<div class="cmp-rm-diff cmp-eq">— 월 보험료 동일</div>';
+      if(diff<0) heroHtml='<div class="cmp-hero cmp-hero-save"><div class="cmp-hero-lbl">월 보험료 절감</div><div class="cmp-hero-num">▼ '+_cmpComma(Math.abs(diff))+'원</div><div class="cmp-hero-sub">연 '+_cmpComma(yr)+'원 절감</div></div>';
+      else if(diff>0) heroHtml='<div class="cmp-hero cmp-hero-up"><div class="cmp-hero-lbl">월 보험료 증가</div><div class="cmp-hero-num">▲ '+_cmpComma(diff)+'원</div><div class="cmp-hero-sub">연 '+_cmpComma(yr)+'원 증가</div></div>';
+      else heroHtml='<div class="cmp-hero cmp-hero-neutral"><div class="cmp-hero-lbl">월 보험료</div><div class="cmp-hero-num">동일</div></div>';
     }
-    var custHtml=(s.name||s.birth)?('<div class="cmp-rm-cust"><span>고객</span> '+_cmpEsc(s.name||'')+(s.birth?(' &nbsp;<span>생년월일</span> '+_cmpEsc(s.birth)):'')+'</div>'):'';
-    var rowsHtml=s.rows.map(function(r){ return '<tr><td><div class="cmp-cell">'+_cmpEsc(r[0]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[1]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[2]||'')+'</div></td></tr>'; }).join('');
+    var baHtml='<div class="cmp-rm-card"><div class="cmp-ba"><span class="cmp-ba-lbl">전</span><span class="cmp-ba-amt">'+_cmpComma(s.before)+'원</span><span class="cmp-ba-arrow">→</span><span class="cmp-ba-lbl">후</span><span class="cmp-ba-amt cmp-ba-after">'+_cmpComma(s.after)+'원</span></div></div>';
+    /* C. 가입현황 + 보장 변화 마킹 */
+    var rowsHtml=s.rows.map(function(r){ var st=r[3]||''; var stHtml=st?('<span class="cmp-st '+(CMP_RM_STATUS[st]||'')+'">'+_cmpEsc(st)+'</span>'):''; return '<tr><td><div class="cmp-cell">'+_cmpEsc(r[0]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[1]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[2]||'')+'</div></td><td><div class="cmp-cell" style="text-align:center">'+stHtml+'</div></td></tr>'; }).join('');
     cap.innerHTML=
-      '<div class="cmp-sheet-ttl">리모델링 전·후</div>'+custHtml
-      +'<div class="cmp-rm-card"><div class="cmp-rm-card-ttl">월 보험료</div>'
-        +'<div class="cmp-rm-row"><span class="cmp-rm-lbl">리모델링 전</span><div class="cmp-cell cmp-price cmp-rm-amt">'+_cmpComma(s.before)+'</div><span class="cmp-rm-won">원</span></div>'
-        +'<div class="cmp-rm-row"><span class="cmp-rm-lbl">리모델링 후</span><div class="cmp-cell cmp-price cmp-rm-amt">'+_cmpComma(s.after)+'</div><span class="cmp-rm-won">원</span></div>'
-        +diffHtml
-      +'</div>'
+      _cmpHeaderHtml('리모델링 전·후', (s.name||'')+(s.birth?(' ('+s.birth+')'):''))
+      +heroHtml+baHtml
       +'<div class="cmp-rm-card"><div class="cmp-rm-card-ttl">가입현황 (전·후)</div>'
-        +'<table class="cmp-table"><thead><tr><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[0])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[1])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[2])+'</div></th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
-      +'</div>';
+        +'<table class="cmp-table"><thead><tr><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[0])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[1])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[2])+'</div></th><th><div class="cmp-cell cmp-head-cell">변화</div></th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
+      +'</div>'
+      +_cmpFooterHtml();
   }
 }
 
@@ -3745,7 +3805,7 @@ function cmpExport(mode){
     });
   }).catch(function(err){ console.error('[compare]',err); alert('이미지 변환 실패. 다시 시도해주세요.'); });
 }
-window.renderCompareTool=renderCompareTool; window.cmpSetMode=cmpSetMode; window.cmpOrient=cmpOrient; window.cmpSync=cmpSync;
+window.renderCompareTool=renderCompareTool; window.cmpSetMode=cmpSetMode; window.cmpOrient=cmpOrient; window.cmpSync=cmpSync; window.cmpSetRec=cmpSetRec;
 window.cmpAddRow=cmpAddRow; window.cmpDelRow=cmpDelRow; window.cmpAddCol=cmpAddCol; window.cmpDelCol=cmpDelCol; window.cmpFmtPrice=cmpFmtPrice;
 window.cmpRmAddRow=cmpRmAddRow; window.cmpRmDelRow=cmpRmDelRow; window.cmpFmtRm=cmpFmtRm; window.cmpExport=cmpExport;
 
