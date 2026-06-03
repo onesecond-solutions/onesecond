@@ -2002,7 +2002,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       <div class="split" id="split">
         <div class="col list-col">
-          <div class="lhead"><span class="cnt">전체 질문 <b>10건</b></span><div class="lacts"><button class="lbtn2" onclick="toggleLocalSearch()" aria-label="이 방 검색">&#8981;</button><button class="lbtn2 bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button><button class="newb" onclick="openAsk()">질문하기</button></div></div>
+          <div class="lhead"><span class="cnt">전체 질문 <b>10건</b></span><div class="lacts"><button class="lbtn2" onclick="toggleLocalSearch()" aria-label="이 방 검색">&#8981;</button><button class="lbtn2 bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button><button class="newb" onclick="openAsk()" style="display:none">질문하기</button></div></div>
           <div class="lsearch" id="lsearch"><span class="lsi">&#8981;</span><input id="lsinput" type="text" placeholder="이 방에서 검색 (네비게이션방)" oninput="filterLocal(this.value)"><button class="lsx" onclick="closeLocalSearch()">&#10005;</button></div>
           <div class="list" id="qlist">
             <div class="qlist-empty" style="padding:34px 20px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.7">아직 등록된 질문이 없어요.<br>MY SPACE에서 질문하면 여기에 모입니다.</div>
