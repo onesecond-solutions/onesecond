@@ -13,7 +13,7 @@
 // 실패 (4xx/5xx):  { error }
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const MAX_DOCS = 25;          // 본문 검색 상한
+const MAX_DOCS = 12;          // 본문 검색 상한 (응답 잘림 방지 위해 축소)
 const EXCERPT_RADIUS = 700;   // 키워드 주변 발췌 반경(자)
 const MAX_EXCERPTS_PER_DOC = 2;
 let CACHED_MODEL = "";
@@ -150,21 +150,27 @@ Deno.serve(async (req) => {
           role: "user",
           parts: [{ text: `질문: "${query}"\n\n아래는 보험사 소식지 발췌들이다. 이 발췌에 근거해서만 회사별로 정리해줘.\n\n${context}` }],
         }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 4096 },
+        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 8192 },
       }),
     });
     if (!gemRes.ok) {
       const errText = await gemRes.text().catch(() => "");
       console.error("[search-answer] Gemini HTTP", gemRes.status, "model=", model, errText.slice(0, 300));
       if (gemRes.status === 404) CACHED_MODEL = "";
-      return json({ error: "AI 정리에 실패했습니다. 잠시 후 다시 시도해 주세요." }, 502);
+      return json({ error: "AI 정리에 실패했습니다. 잠시 후 다시 시도해 주세요.", _debug: { stage: "gemini_http", status: gemRes.status, model, body: errText.slice(0, 200) } }, 502);
     }
     const data = await gemRes.json();
-    const text = (data?.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join("");
+    const cand = data?.candidates?.[0];
+    const finishReason = cand?.finishReason || "";
+    const text = (cand?.content?.parts || []).map((p: { text?: string }) => p.text || "").join("").trim();
+    if (!text) {
+      console.error("[search-answer] 빈 응답", finishReason, JSON.stringify(data).slice(0, 300));
+      return json({ error: "AI 응답이 비었습니다. 잠시 후 다시 시도해 주세요.", _debug: { stage: "empty", finishReason, model, raw: JSON.stringify(data).slice(0, 250) } }, 502);
+    }
     let result;
     try { result = JSON.parse(text); } catch (_e) {
-      console.error("[search-answer] JSON 파싱 실패", text.slice(0, 300));
-      return json({ error: "AI 정리 결과를 해석하지 못했습니다." }, 502);
+      console.error("[search-answer] JSON 파싱 실패", finishReason, text.slice(0, 300));
+      return json({ error: "AI 정리 결과를 해석하지 못했습니다.", _debug: { stage: "parse", finishReason, model, textLen: text.length, head: text.slice(0, 120), tail: text.slice(-120) } }, 502);
     }
     return json({
       found: !!result.found,
