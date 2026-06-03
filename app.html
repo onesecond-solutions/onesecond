@@ -1470,17 +1470,15 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       <div id="mr-today"></div>
       <div id="mr-main" style="display:none">
-      <!-- admin 전용: 실장/지점장 화면을 눈으로 미리보기 -->
-      <div class="tabs" id="mr-preview" style="display:none">
-        <div class="tab on" onclick="mrPreview(this,'manager')">실장 화면</div>
-        <div class="tab" onclick="mrPreview(this,'branch')">지점장 화면</div>
+      <!-- 팀원관리 = 게시판 좌우 레이아웃 골격 (좌: 조직 트리 / 우: 팀원). 카드 연결은 다음 단계 -->
+      <div class="split" id="mr-members-split">
+        <div class="col list-col">
+          <div class="list" id="mr-org-list"><div class="mys-news-empty">조직(지점장 · 팀 · 실장)이 여기에 표시됩니다.</div></div>
+        </div>
+        <div class="col viewer-col">
+          <div class="viewer" id="mr-members-viewer"><div class="mys-news-empty">왼쪽에서 팀 또는 실장을 선택하면 팀원이 표시됩니다.</div></div>
+        </div>
       </div>
-      <div class="chips" id="mr-actions"></div>
-      <div class="lhead"><span class="cnt" id="mr-cnt">팀원 —</span></div>
-      <div class="mys-grid" id="mr-grid">
-        <div class="mys-news-empty">불러오는 중…</div>
-      </div>
-
       </div><!-- /mr-main -->
       <!-- 2단계에서 MY SPACE 게시판 데이터 연결 (오피스/단체방/보험Q&A) -->
       <div id="mr-office" style="display:none">
@@ -5086,7 +5084,7 @@ function mrTabMain(el,key){
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mr-tabs .tab'); if(f) f.classList.add('on'); }
   var today=document.getElementById('mr-today'), main=document.getElementById('mr-main'), office=document.getElementById('mr-office'), team=document.getElementById('mr-team'), qna=document.getElementById('mr-qna');
   [today,main,office,team,qna].forEach(function(e){ if(e) e.style.display='none'; });
-  if(key==='members'){ if(main) main.style.display=''; if(typeof loadManagerRoom==='function') loadManagerRoom(); }
+  if(key==='members'){ if(main) main.style.display=''; }  /* 게시판 레이아웃 골격 — 카드 연결은 다음 단계 */
   else if(key==='office'){ if(office) office.style.display=''; if(typeof loadMrOffice==='function') loadMrOffice(); }
   else if(key==='team'){ if(team) team.style.display=''; if(typeof loadMrTeam==='function') loadMrTeam(); }
   else if(key==='qna'){ if(qna) qna.style.display=''; if(typeof loadMrQna==='function') loadMrQna(); }
