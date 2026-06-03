@@ -122,6 +122,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #mys-today,#mr-today,#mr-main{flex:1;min-height:0;overflow-y:auto;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .list-col .lhead{flex-shrink:0;}
+.bm-card{width:330px;max-width:100%;background:var(--s1);border:0.5px solid var(--bd);border-left:3px solid var(--ac);border-radius:12px;padding:16px;margin-bottom:16px;flex-shrink:0;}
+.bm-card .bm-role{font-size:0.6875rem;color:var(--ac);font-weight:800;}
+.bm-card .bm-name{font-size:1.05rem;font-weight:800;color:var(--tp);margin-top:2px;}
+.bm-card .bm-meta{font-size:0.8125rem;color:var(--ts);margin-top:4px;}
 .list{overflow-y:auto;flex:1;min-height:0;}
 .moreitem{display:none;}
 .list.expanded .moreitem{display:block;}
@@ -1475,6 +1479,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="tab on" onclick="mrMemSub(this,'manager')">실장</div>
         <div class="tab" onclick="mrMemSub(this,'branch')">지점장</div>
       </div>
+      <div id="mr-branch-card" style="display:none"></div>
       <div class="split" id="mr-members-split">
         <div class="col list-col">
           <div class="list" id="mr-org-list"><div class="mys-news-empty">조직(지점장 · 팀 · 실장)이 여기에 표시됩니다.</div></div>
@@ -5099,16 +5104,33 @@ window.mrTabMain=mrTabMain;
 function mrMemSub(el,key){
   var tabs=document.querySelectorAll('#mr-mem-sub .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on');
+  var card=document.getElementById('mr-branch-card');
   var org=document.getElementById('mr-org-list'), view=document.getElementById('mr-members-viewer');
   if(key==='branch'){
-    if(org) org.innerHTML='<div class="mys-news-empty">지점장 관점 — 지점 전체(팀 목록)가 여기에 표시됩니다.</div>';
+    if(card){ card.style.display=''; loadBranchCard(); }
+    if(org) org.innerHTML='<div class="mys-news-empty">지점 전체(팀 목록)가 여기에 표시됩니다.</div>';
     if(view) view.innerHTML='<div class="mys-news-empty">왼쪽에서 팀을 선택하면 해당 팀 구성원이 표시됩니다.</div>';
   } else {
+    if(card) card.style.display='none';
     if(org) org.innerHTML='<div class="mys-news-empty">실장 관점 — 내 팀(실장 · 팀원)이 여기에 표시됩니다.</div>';
     if(view) view.innerHTML='<div class="mys-news-empty">왼쪽에서 실장/팀원을 선택하면 상세가 표시됩니다.</div>';
   }
 }
 window.mrMemSub=mrMemSub;
+/* 지점장 카드 — 좌측 list-col 너비(330px), split 위 단독. (지점장 탭 진입 시 로드) */
+async function loadBranchCard(){
+  var el=document.getElementById('mr-branch-card'); if(!el) return;
+  el.innerHTML='<div class="bm-card"><div class="bm-role">지점장</div><div class="bm-name">불러오는 중…</div></div>';
+  try{
+    if(!window.db||!window.db.fetch){ el.innerHTML=''; return; }
+    var res=await window.db.fetch('/rest/v1/users?role=eq.ga_branch_manager&select=id,name,company&order=name&limit=1');
+    var rows=res.ok?await res.json():[];
+    if(!rows.length){ el.innerHTML='<div class="bm-card"><div class="bm-role">지점장</div><div class="bm-name">미지정</div></div>'; return; }
+    var u=rows[0];
+    el.innerHTML='<div class="bm-card"><div class="bm-role">지점장</div><div class="bm-name">'+_sEsc(u.name||'')+'</div><div class="bm-meta">'+_sEsc(u.company||'')+'</div></div>';
+  }catch(e){ el.innerHTML=''; }
+}
+window.loadBranchCard=loadBranchCard;
 /* ─────────────────────────────────────────────
    스크립트 view — v1 10 stage + 가로 정렬 + 오버레이 확장 (2026-05-27 갈아끼움)
    - 풀스크린 모달 통째 폐기 → 가로 정렬 카드 + 오버레이 확장
