@@ -5839,7 +5839,7 @@ async function _searchStats(){
   if(_statCache){ el.innerHTML=_statCache; return; }
   if(!window.db||!window.db.fetch){ el.innerHTML='<span class="sostat-load">로그인 후 표시됩니다</span>'; return; }
   var SIK=encodeURIComponent('*소식지*');
-  var defs=[['소식지','newsletters?select=id&limit=1'],['네비게이션방','posts?board_type=eq.navigation&select=id&limit=1'],['보험 Q&A','posts?board_type=eq.qna&title=not.ilike.'+SIK+'&select=id&limit=1'],['현장의 소리','team_notices?deleted_at=is.null&select=id&limit=1'],['스크립트','scripts?select=id&limit=1'],['캘린더','calendar_events?select=id&limit=1']];
+  var defs=[['소식지','newsletters?select=id&limit=1'],['보험 Q&A','posts?board_type=eq.qna&title=not.ilike.'+SIK+'&select=id&limit=1'],['현장의 소리','team_notices?deleted_at=is.null&select=id&limit=1'],['스크립트','scripts?select=id&limit=1'],['캘린더','calendar_events?select=id&limit=1']];
   var counts=await Promise.all(defs.map(function(d){ return _ttCount(d[1]); }));
   var parts=[]; for(var i=0;i<defs.length;i++){ if(counts[i]!=null&&counts[i]>0) parts.push('<span class="sostat-i"><b>'+counts[i].toLocaleString()+'</b>'+defs[i][0]+'</span>'); }
   _statCache=parts.join(''); el.innerHTML=_statCache||'<span class="sostat-load">표시할 데이터가 없습니다</span>';
@@ -5862,7 +5862,6 @@ async function _runSearch(q){
   var SIK=encodeURIComponent('*소식지*');
   var groups=[
     {label:'보험Q&A',     color:'#22D3EE', table:'posts',           base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
-    {label:'네비게이션방', color:'#10B981', table:'posts',           base:'board_type=eq.navigation',               cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
     {label:'소식지',      color:'#6366F1', table:'newsletters',     base:'',                                       cols:['title','company','full_text'],          select:'id,title,company,full_text,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                      t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}},
     {label:'현장의 소리', color:'#22C55E', table:'team_notices',    base:'deleted_at=is.null',                     cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
     {label:'스크립트',    color:'#E879F9', table:'scripts',         base:'',                                       cols:['title','script_text','highlight_text'], select:'id,title,script_text,highlight_text,stage',            order:'',                                                        body:function(r){return (r.highlight_text?r.highlight_text+' ':'')+(r.script_text||'');}, m:function(r){return r.stage||'스크립트';}},
@@ -5951,6 +5950,7 @@ window._aiAnswer=_aiAnswer;
 /* 검색 결과 클릭 → 해당 항목 본문을 모달로 표시 (테이블별 본문 컬럼 매핑) */
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
+  var _qt=_sTokens(((document.getElementById('sinput')||{}).value||'').trim());  /* 현재 검색어 → 본문 하이라이트용 */
   var selMap={ newsletters:'title,company,full_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date' };
   var sel=selMap[table]||'title';
   try{
@@ -5971,7 +5971,7 @@ async function _searchOpen(table, id){
       : (r.source_pdf_url?'<div style="padding:12px 18px 0"><a href="'+_sEsc(r.source_pdf_url)+'" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원문 PDF 보기 (표·사진 포함)</a></div>':'');
     var bodyInner = isPdf
       ? '<iframe src="'+_sEsc(r.source_pdf_url)+'" style="flex:1;width:100%;border:0;background:#fff;min-height:62vh" title="소식지 원문 미리보기"></iframe>'
-      : '<div style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9em;line-height:1.65">'+_sEsc(bodyTxt)+'</div>';
+      : '<div id="_sdBody" style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9em;line-height:1.65">'+_sMark(bodyTxt,_qt)+'</div>';
     var ov=document.createElement('div'); ov.id='searchDetailModal';
     ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99995;display:flex;align-items:center;justify-content:center;padding:20px';
     ov.onmousedown=function(e){ _ovDown(e,ov); }; ov.onclick=function(e){ _ovClick(e,ov,_closeSearchDetail); };
@@ -5981,6 +5981,7 @@ async function _searchOpen(table, id){
       +bodyInner
       +'</div>';
     document.body.appendChild(ov);
+    if(!isPdf){ var _fh=ov.querySelector('mark.shi'); if(_fh) setTimeout(function(){ try{ _fh.scrollIntoView({block:'center'}); }catch(e){} }, 30); }  /* 첫 매칭으로 스크롤 */
   }catch(e){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); }
 }
 window._searchOpen=_searchOpen;
