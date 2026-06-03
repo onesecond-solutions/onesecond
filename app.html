@@ -246,6 +246,48 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .qna-reply-ta{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--s2);color:var(--tp);font-size:0.9em;font-family:inherit;resize:vertical;outline:none;}
 .qna-reply-ta:focus{border-color:var(--ac);}
 .qna-reply-btn{align-self:flex-end;}
+/* ── 보험료 비교표 빌더 (Quick 실행도구) — UI는 토큰, 출력 시트(.cmp-sheet)는 고정 라이트 팔레트(이미지 가독성, 카드 만들기 출력 팔레트와 동일 예외) ── */
+.cmp-wrap{display:flex;flex-direction:column;gap:14px}
+.cmp-guard{font-size:0.8125rem;line-height:1.5;color:var(--tp);background:var(--s2);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-sm,8px);padding:10px 12px}
+.cmp-modes{display:flex;gap:8px}
+.cmp-mode-btn{flex:1;padding:10px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:9px;font-weight:700;font-size:0.9em;cursor:pointer;font-family:inherit}
+.cmp-mode-btn.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cmp-toolbar{display:flex;justify-content:flex-end;gap:8px;margin:8px 0}
+.cmp-add{padding:7px 14px;border:1px dashed var(--ac);background:transparent;color:var(--ac);border-radius:9px;font-weight:700;font-size:0.82em;cursor:pointer;font-family:inherit}
+.cmp-actions{display:flex;gap:8px;flex-wrap:wrap}
+.cmp-act{flex:1;min-width:140px;padding:12px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:10px;font-weight:800;font-size:0.9em;cursor:pointer;font-family:inherit}
+.cmp-act-primary{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cmp-lock{text-align:center;padding:48px 20px;color:var(--ts)}
+.cmp-lock-ic{font-size:2rem;margin-bottom:10px}
+.cmp-lock-t{font-size:1rem;font-weight:800;color:var(--tp);margin-bottom:4px}
+.cmp-lock-s{font-size:0.85em}
+.cmp-sheet{background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;padding:18px;color:#1A1A2E}
+.cmp-sheet-ttl{font-size:1.05rem;font-weight:800;color:#1A1A2E;margin-bottom:12px}
+.cmp-table{width:100%;border-collapse:collapse}
+.cmp-table th,.cmp-table td{border:1px solid #E5E7EB;padding:0;vertical-align:middle}
+.cmp-table thead th{background:#6366F1}
+.cmp-h{display:flex;align-items:center}
+.cmp-head-cell{color:#FFFFFF;font-weight:800;font-size:0.85em;padding:9px 10px;min-width:56px;outline:none;flex:1}
+.cmp-cell{padding:9px 10px;font-size:0.88em;color:#1A1A2E;outline:none;min-height:1em;min-width:56px}
+.cmp-cell:empty:before{content:attr(data-ph);color:#9CA3AF}
+.cmp-price{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:#4338CA}
+.cmp-th-act,.cmp-td-act{width:34px;text-align:center;border:none!important;background:transparent}
+.cmp-x{border:none;background:transparent;color:#fff;cursor:pointer;font-size:1rem;padding:0 4px;opacity:.85}
+.cmp-trash{border:none;background:transparent;cursor:pointer;font-size:0.95rem;padding:4px}
+.cmp-rm-cust{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.82em;color:#6B7280;margin-bottom:12px}
+.cmp-rm-cust .cmp-cust-cell{border:1px solid #E5E7EB;border-radius:6px;min-width:70px;color:#1A1A2E;padding:5px 8px}
+.cmp-rm-card{border:1px solid #E5E7EB;border-radius:10px;padding:14px;margin-bottom:12px}
+.cmp-rm-card-ttl{font-weight:800;font-size:0.92em;color:#1A1A2E;margin-bottom:10px}
+.cmp-rm-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cmp-rm-lbl{width:84px;font-size:0.85em;color:#6B7280}
+.cmp-rm-amt{flex:1;border:1px solid #E5E7EB;border-radius:8px;text-align:right}
+.cmp-rm-won{font-size:0.82em;color:#6B7280}
+.cmp-rm-diff{margin-top:6px;padding:10px;border-radius:8px;font-weight:800;font-size:0.92em;text-align:center;background:#F3F4F6;color:#6B7280}
+.cmp-rm-diff.cmp-save{background:#ECFDF5;color:#059669}
+.cmp-rm-diff.cmp-up{background:#FEF2F2;color:#DC2626}
+.cmp-rm-diff.cmp-eq{background:#F3F4F6;color:#6B7280}
+.cmp-exporting .cmp-noexport{display:none!important}
+.cmp-exporting .cmp-cell:empty:before{content:''!important}
 @media (max-width:1024px){
   .os-memo-fab{right:16px;bottom:134px;width:48px;height:48px;}
   .split.show-viewer .os-memo-fab{bottom:72px;}
@@ -1563,6 +1605,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <span class="mys-badge">실행도구</span>
           <div class="mys-ttl">카드 만들기</div>
           <div class="mys-meta">텍스트를 카드 이미지로</div>
+        </div>
+        <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('보험료비교표')">
+          <span class="mys-badge">실행도구</span>
+          <div class="mys-ttl">보험료 비교표</div>
+          <div class="mys-meta">회사별·리모델링 비교 이미지</div>
         </div>
       </div>
 
@@ -3474,9 +3521,165 @@ function openQuickToolV2(name){
     activateTool('카드 만들기', renderMakeCardTool);
     return;
   }
+  if(name === '보험료비교표'){
+    activateTool('보험료 비교표', renderCompareTool);
+    return;
+  }
   alert(name + ' — 준비 중입니다.');
 }
 window.openQuickToolV2 = openQuickToolV2;
+
+/* ════════════════════════════════════════════════════════════════
+ * Quick 실행도구 — 보험료 비교표 빌더 (2026-06-04)
+ * 정체성 가드: Supabase 저장 0(세션 메모리만, 새로고침 시 소멸) / 자동견적 아님(설계사 직접 입력) /
+ *   고객 이름·생년월일은 만든 이미지에만, 어디에도 저장 X (입력 상단 고지문).
+ * 이미지 출력 = 카드 만들기 html2canvas 패턴 재사용(loadHtml2Canvas / mcFallbackDownload).
+ * 요금제 게이트 = CMP_LOCK_PLUS 단일 플래그 한 곳(_cmpLocked)에서만 판정.
+ * ════════════════════════════════════════════════════════════════ */
+var CMP_LOCK_PLUS = false;   /* 기본 = 전체 사용 가능(잠금 off). true 한 줄로 PLUS 잠금 전환. 판정은 _cmpLocked 한 곳만. */
+function _cmpLocked(){
+  if(!CMP_LOCK_PLUS) return false;
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var plan=(u.plan||'free').toLowerCase(), role=(u.role||'');
+  return !(plan==='plus'||plan==='pro'||role==='admin');
+}
+function _cmpEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function _cmpComma(v){ var n=String(v==null?'':v).replace(/[^\d]/g,''); return n?Number(n).toLocaleString('ko-KR'):''; }
+function _cmpNum(v){ return Number(String(v==null?'':v).replace(/[^\d]/g,''))||0; }
+function _cmpCaretEnd(el){ try{ var r=document.createRange(); r.selectNodeContents(el); r.collapse(false); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
+
+var _cmpMode='company';
+var cmpCols=[{label:'회사',price:false},{label:'상품',price:false},{label:'납입·보장',price:false},{label:'보험료',price:true}];
+
+function renderCompareTool(){
+  var slot=document.getElementById('qck-content-slot'); if(!slot) return;
+  if(_cmpLocked()){
+    slot.innerHTML='<div class="cmp-lock"><div class="cmp-lock-ic">🔒</div><div class="cmp-lock-t">PLUS 전용 기능입니다</div><div class="cmp-lock-s">요금제 업그레이드 후 사용할 수 있어요.</div></div>';
+    return;
+  }
+  /* 모드 전환 시 회사별 컬럼 기본값 복원 (세션 메모리만) */
+  if(_cmpMode==='company' && !cmpCols.length){ cmpCols=[{label:'회사',price:false},{label:'상품',price:false},{label:'납입·보장',price:false},{label:'보험료',price:true}]; }
+  slot.innerHTML=
+    '<div class="cmp-wrap">'
+    +'<div class="cmp-guard">🔒 입력값은 이 기기에만 잠깐 남고 <b>어디에도 저장되지 않습니다</b> (새로고침하면 사라져요). 고객 이름·생년월일은 만든 이미지에만 들어갑니다.</div>'
+    +'<div class="cmp-modes">'
+      +'<button class="cmp-mode-btn'+(_cmpMode==='company'?' on':'')+'" onclick="cmpSetMode(\'company\')">회사별 비교표</button>'
+      +'<button class="cmp-mode-btn'+(_cmpMode==='remodel'?' on':'')+'" onclick="cmpSetMode(\'remodel\')">리모델링 전·후</button>'
+    +'</div>'
+    +'<div id="cmpBuilder"></div>'
+    +'<div class="cmp-actions">'
+      +'<button class="cmp-act" onclick="cmpExport(\'download\')">🖼️ 이미지 저장</button>'
+      +'<button class="cmp-act cmp-act-primary" onclick="cmpExport(\'copy\')">📋 이미지 복사 (카톡 붙여넣기)</button>'
+    +'</div>'
+    +'</div>';
+  if(_cmpMode==='company') cmpRenderCompany(); else cmpRenderRemodel();
+}
+function cmpSetMode(m){ _cmpMode=(m==='remodel')?'remodel':'company'; renderCompareTool(); }
+
+/* ── 빌더 ① 회사별 비교표 (행=회사, 열=항목 / 보험료 열만 숫자+콤마) ── */
+function cmpRenderCompany(prevVals){
+  var b=document.getElementById('cmpBuilder'); if(!b) return;
+  var vals=prevVals || [ cmpCols.map(function(){return '';}), cmpCols.map(function(){return '';}) ];
+  var head='<tr>'+cmpCols.map(function(c,ci){
+    return '<th><div class="cmp-h"><div class="cmp-cell cmp-head-cell" contenteditable="true" data-ph="항목명">'+_cmpEsc(c.label)+'</div>'
+      +'<button class="cmp-x cmp-noexport" title="열 삭제" onclick="cmpDelCol('+ci+')">×</button></div></th>';
+  }).join('')+'<th class="cmp-noexport cmp-th-act"></th></tr>';
+  var body=vals.map(function(row,ri){
+    return '<tr>'+cmpCols.map(function(c,ci){
+      var v=row[ci]||'';
+      var cls='cmp-cell'+(c.price?' cmp-price':'');
+      var extra=c.price?' oninput="cmpFmtPrice(this)" data-ph="0"':' data-ph=""';
+      return '<td><div class="'+cls+'" contenteditable="true"'+extra+'>'+_cmpEsc(v)+'</div></td>';
+    }).join('')+'<td class="cmp-noexport cmp-td-act"><button class="cmp-trash" title="행 삭제" onclick="cmpDelRow('+ri+')">🗑️</button></td></tr>';
+  }).join('');
+  b.innerHTML=
+    '<div class="cmp-toolbar cmp-noexport"><button class="cmp-add" onclick="cmpAddCol()">+ 항목(열) 추가</button></div>'
+    +'<div id="cmpCapture" class="cmp-sheet"><div class="cmp-sheet-ttl">보험료 비교표</div>'
+    +'<table class="cmp-table"><thead>'+head+'</thead><tbody id="cmpCompanyBody">'+body+'</tbody></table></div>'
+    +'<div class="cmp-toolbar cmp-noexport"><button class="cmp-add" onclick="cmpAddRow()">+ 회사(행) 추가</button></div>';
+}
+function _cmpReadHeads(){
+  var hs=document.querySelectorAll('#cmpBuilder thead .cmp-head-cell');
+  for(var i=0;i<hs.length&&i<cmpCols.length;i++){ var t=hs[i].textContent.trim(); cmpCols[i].label=t||cmpCols[i].label; }
+}
+function _cmpReadCompany(){
+  var vals=[]; var trs=document.querySelectorAll('#cmpCompanyBody tr');
+  for(var i=0;i<trs.length;i++){ var cells=trs[i].querySelectorAll('.cmp-cell'); var row=[]; for(var j=0;j<cells.length;j++) row.push(cells[j].textContent); vals.push(row); }
+  return vals;
+}
+function cmpAddRow(){ _cmpReadHeads(); var v=_cmpReadCompany(); v.push(cmpCols.map(function(){return '';})); cmpRenderCompany(v); }
+function cmpDelRow(i){ _cmpReadHeads(); var v=_cmpReadCompany(); if(v.length<=1){ alert('최소 1행(회사 1개)은 남겨야 합니다.'); return; } v.splice(i,1); cmpRenderCompany(v); }
+function cmpAddCol(){ _cmpReadHeads(); var v=_cmpReadCompany(); cmpCols.push({label:'새 항목',price:false}); v=v.map(function(r){ r.push(''); return r; }); cmpRenderCompany(v); }
+function cmpDelCol(i){ _cmpReadHeads(); if(cmpCols.length<=1){ alert('최소 1열은 남겨야 합니다.'); return; } var v=_cmpReadCompany(); cmpCols.splice(i,1); v=v.map(function(r){ r.splice(i,1); return r; }); cmpRenderCompany(v); }
+function cmpFmtPrice(el){ el.textContent=_cmpComma(el.textContent); _cmpCaretEnd(el); }
+
+/* ── 빌더 ② 리모델링 전·후 (고객정보=이미지 전용 / 월 차액 자동 + 연 환산 / 전후 가입현황) ── */
+function cmpRenderRemodel(){
+  var b=document.getElementById('cmpBuilder'); if(!b) return;
+  b.innerHTML=
+    '<div id="cmpCapture" class="cmp-sheet">'
+      +'<div class="cmp-rm-cust"><span>고객</span><div class="cmp-cell cmp-cust-cell" contenteditable="true" data-ph="이름"></div>'
+        +'<span>생년월일</span><div class="cmp-cell cmp-cust-cell" contenteditable="true" data-ph="YYMMDD"></div></div>'
+      +'<div class="cmp-rm-card"><div class="cmp-rm-card-ttl">월 보험료</div>'
+        +'<div class="cmp-rm-row"><span class="cmp-rm-lbl">리모델링 전</span><div class="cmp-cell cmp-price cmp-rm-amt" contenteditable="true" data-ph="0" oninput="cmpRmCalc(this)"></div><span class="cmp-rm-won">원</span></div>'
+        +'<div class="cmp-rm-row"><span class="cmp-rm-lbl">리모델링 후</span><div class="cmp-cell cmp-price cmp-rm-amt" contenteditable="true" data-ph="0" oninput="cmpRmCalc(this)"></div><span class="cmp-rm-won">원</span></div>'
+        +'<div class="cmp-rm-diff" id="cmpRmDiff">금액을 입력하면 월 차액이 계산됩니다.</div>'
+      +'</div>'
+      +'<div class="cmp-rm-card"><div class="cmp-rm-card-ttl">가입현황 (전·후)</div>'
+        +'<table class="cmp-table"><thead><tr>'
+          +'<th><div class="cmp-cell cmp-head-cell" contenteditable="true" data-ph="항목명">항목</div></th>'
+          +'<th><div class="cmp-cell cmp-head-cell" contenteditable="true" data-ph="항목명">리모델링 전</div></th>'
+          +'<th><div class="cmp-cell cmp-head-cell" contenteditable="true" data-ph="항목명">리모델링 후</div></th>'
+          +'<th class="cmp-noexport cmp-th-act"></th></tr></thead>'
+        +'<tbody id="cmpRmBody">'+_cmpRmRows([['','',''],['','','']])+'</tbody></table>'
+      +'</div>'
+    +'</div>'
+    +'<div class="cmp-toolbar cmp-noexport"><button class="cmp-add" onclick="cmpRmAddRow()">+ 항목(행) 추가</button></div>';
+}
+function _cmpRmRows(vals){
+  return vals.map(function(r,ri){
+    return '<tr><td><div class="cmp-cell" contenteditable="true" data-ph="항목">'+_cmpEsc(r[0]||'')+'</div></td>'
+      +'<td><div class="cmp-cell" contenteditable="true" data-ph="전">'+_cmpEsc(r[1]||'')+'</div></td>'
+      +'<td><div class="cmp-cell" contenteditable="true" data-ph="후">'+_cmpEsc(r[2]||'')+'</div></td>'
+      +'<td class="cmp-noexport cmp-td-act"><button class="cmp-trash" title="행 삭제" onclick="cmpRmDelRow('+ri+')">🗑️</button></td></tr>';
+  }).join('');
+}
+function _cmpRmRead(){ var v=[]; var trs=document.querySelectorAll('#cmpRmBody tr'); for(var i=0;i<trs.length;i++){ var c=trs[i].querySelectorAll('.cmp-cell'); v.push([c[0]?c[0].textContent:'',c[1]?c[1].textContent:'',c[2]?c[2].textContent:'']); } return v; }
+function cmpRmAddRow(){ var v=_cmpRmRead(); v.push(['','','']); var el=document.getElementById('cmpRmBody'); if(el) el.innerHTML=_cmpRmRows(v); }
+function cmpRmDelRow(i){ var v=_cmpRmRead(); if(v.length<=1){ alert('최소 1행은 남겨야 합니다.'); return; } v.splice(i,1); var el=document.getElementById('cmpRmBody'); if(el) el.innerHTML=_cmpRmRows(v); }
+function cmpRmCalc(el){
+  if(el){ el.textContent=_cmpComma(el.textContent); _cmpCaretEnd(el); }
+  var amts=document.querySelectorAll('#cmpCapture .cmp-rm-amt');
+  var before=amts[0]?_cmpNum(amts[0].textContent):0, after=amts[1]?_cmpNum(amts[1].textContent):0;
+  var d=document.getElementById('cmpRmDiff'); if(!d) return;
+  if(!before && !after){ d.className='cmp-rm-diff'; d.textContent='금액을 입력하면 월 차액이 계산됩니다.'; return; }
+  var diff=after-before, yr=Math.abs(diff)*12;
+  if(diff<0){ d.className='cmp-rm-diff cmp-save'; d.textContent='▼ 월 '+_cmpComma(Math.abs(diff))+'원 절감  ·  연 '+_cmpComma(yr)+'원 절감'; }
+  else if(diff>0){ d.className='cmp-rm-diff cmp-up'; d.textContent='▲ 월 '+_cmpComma(diff)+'원 증가  ·  연 '+_cmpComma(yr)+'원 증가'; }
+  else { d.className='cmp-rm-diff cmp-eq'; d.textContent='— 월 보험료 동일'; }
+}
+
+/* ── 이미지 출력 (카드 만들기 html2canvas 패턴 재사용) ── */
+function _cmpCapture(){
+  var el=document.getElementById('cmpCapture'); if(!el) return Promise.reject(new Error('미리보기 영역을 찾지 못했습니다.'));
+  el.classList.add('cmp-exporting');
+  return loadHtml2Canvas().then(function(){ return window.html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#FFFFFF'}); })
+    .then(function(c){ el.classList.remove('cmp-exporting'); return c; })
+    .catch(function(e){ el.classList.remove('cmp-exporting'); throw e; });
+}
+function cmpExport(mode){
+  _cmpCapture().then(function(canvas){
+    if(mode==='download'){ var a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='비교표_'+Date.now()+'.png'; document.body.appendChild(a); a.click(); a.remove(); return; }
+    canvas.toBlob(function(blob){
+      if(!blob){ alert('이미지 변환 실패.'); return; }
+      if(navigator.clipboard && window.ClipboardItem){ navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(function(){ if(typeof toast==='function') toast('이미지를 복사했어요! 카톡에 붙여넣기 하세요.'); }).catch(function(){ mcFallbackDownload(blob); }); }
+      else { mcFallbackDownload(blob); }
+    });
+  }).catch(function(err){ console.error('[compare]',err); alert('이미지 변환 실패. 다시 시도해주세요.'); });
+}
+window.renderCompareTool=renderCompareTool; window.cmpSetMode=cmpSetMode;
+window.cmpAddRow=cmpAddRow; window.cmpDelRow=cmpDelRow; window.cmpAddCol=cmpAddCol; window.cmpDelCol=cmpDelCol; window.cmpFmtPrice=cmpFmtPrice;
+window.cmpRmAddRow=cmpRmAddRow; window.cmpRmDelRow=cmpRmDelRow; window.cmpRmCalc=cmpRmCalc; window.cmpExport=cmpExport;
 
 /* Quick 메뉴 "카드 만들기" — Quick 도구 좌/우 패턴 + 우하단 FAB (2026-05-25 재구성)
  * 본질: 파일(이미지/텍스트/PDF) + 메모 + 이름·전화 중 1건 이상 → 실시간 미리보기 → 좌하단 큰 딸깍 또는 우하단 미니 FAB → 액션 메뉴 (저장/다운로드/복사). */
