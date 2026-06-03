@@ -144,6 +144,15 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .org-mem{padding:8px 10px;border:0.5px solid var(--bd);border-radius:8px;margin-bottom:5px;font-size:0.8125rem;color:var(--tp);display:flex;align-items:center;gap:8px;}
 .org-mem-role{font-size:0.6875rem;color:var(--ac);font-weight:700;margin-left:auto;}
 .org-mem-empty{font-size:0.75rem;color:var(--tf);padding:4px 0;}
+.org-team{display:flex;align-items:stretch;gap:6px;}
+.org-team-main{flex:1;min-width:0;}
+.org-team-act{display:flex;flex-direction:column;justify-content:center;gap:4px;flex-shrink:0;}
+.org-team-act button{background:none;border:0.5px solid var(--bd);border-radius:6px;color:var(--ts);font-size:0.8rem;padding:3px 7px;cursor:pointer;line-height:1;}
+.org-team-act button:hover{border-color:var(--ac);color:var(--ac);}
+.org-mem{display:flex;align-items:center;gap:8px;}
+.org-mem-info{flex:1;min-width:0;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.org-out{flex-shrink:0;background:none;border:0.5px solid var(--bd);border-radius:6px;color:var(--tf);font-size:0.6875rem;padding:4px 8px;cursor:pointer;}
+.org-out:hover{border-color:var(--warn,#F59E0B);color:var(--warn,#F59E0B);}
 .org-mem{cursor:pointer;}
 .org-mem:hover{border-color:var(--ac);}
 .md-f{margin-bottom:10px;}
@@ -5187,9 +5196,10 @@ async function loadBranchOrg(){
     teams.forEach(function(t){
       var mem=users.filter(function(u){return u.team_id===t.id;});
       var mgrs=mem.filter(function(u){return u.role==='ga_manager';}).map(function(u){return u.name;});
-      html+='<div class="org-team" onclick="mrSelectTeam(\''+t.id+'\',this)"><div class="org-team-nm">'+_sEsc(t.name||'')+'</div><div class="org-team-meta">실장: '+_sEsc(mgrs.join(', ')||'미지정')+' · 구성원 '+mem.length+'명</div></div>';
+      html+='<div class="org-team"><div class="org-team-main" onclick="mrSelectTeam(\''+t.id+'\',this)"><div class="org-team-nm">'+_sEsc(t.name||'')+'</div><div class="org-team-meta">실장: '+_sEsc(mgrs.join(', ')||'미지정')+' · 구성원 '+mem.length+'명</div></div>'
+        +'<div class="org-team-act"><button title="이름 수정" onclick="event.stopPropagation();mrEditTeam(\''+t.id+'\')">&#9998;</button><button title="삭제" onclick="event.stopPropagation();mrDeleteTeam(\''+t.id+'\')">&#128465;</button></div></div>';
     });
-    html+='<div class="org-add" onclick="mrInvite(\'manager\')">+ 실장 추가(초대)</div>';
+    html+='<div class="org-add" onclick="mrAddTeam()">+ 실 추가</div>';
     org.innerHTML=html||'<div class="mys-news-empty">팀이 없습니다.</div>';
   }catch(e){ org.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
@@ -5211,11 +5221,34 @@ function mrSelectTeam(teamId,el){
 window.mrSelectTeam=mrSelectTeam;
 function _orgGroup(label,arr){
   var RL=window.ROLE_LABEL||{};
-  var items=arr.map(function(u){ return '<div class="org-mem" onclick="openMemberDetail(\''+u.id+'\')">'+_sEsc(u.name||'')+'<span class="org-mem-role">'+_sEsc(RL[u.role]||'')+'</span></div>'; }).join('')||'<div class="org-mem-empty">없음</div>';
+  var items=arr.map(function(u){ return '<div class="org-mem"><span class="org-mem-info" onclick="openMemberDetail(\''+u.id+'\')">'+_sEsc(u.name||'')+'<span class="org-mem-role">'+_sEsc(RL[u.role]||'')+'</span></span><button class="org-out" title="이 실에서 내보내기" onclick="event.stopPropagation();mrRemoveMember(\''+u.id+'\')">내보내기</button></div>'; }).join('')||'<div class="org-mem-empty">없음</div>';
   return '<div class="org-grp"><div class="org-grp-h" onclick="this.parentNode.classList.toggle(\'fold\')"><span class="org-grp-arrow">&#9662;</span>'+label+'</div><div class="org-grp-body">'+items+'</div></div>';
 }
 function mrInvite(kind){ if(typeof toast==='function') toast('초대(추가) 기능은 다음 단계에서 연결됩니다'); }
 window.mrInvite=mrInvite;
+/* ── 지점장 실(팀) 관리 — 추가/수정/삭제 + 팀원 내보내기 (prompt/confirm 대신 모달) ── */
+var _MR_BID='306edf6a-15db-4b69-a6b9-dae74b08cd33';  /* TODO: 로그인 지점으로 동적화 */
+function _orgFindTeam(id){ var a=window._mrTeams||[]; for(var i=0;i<a.length;i++) if(a[i].id===id) return a[i]; return null; }
+function _orgFindUser(id){ var a=window._mrUsers||[]; for(var i=0;i<a.length;i++) if(a[i].id===id) return a[i]; return null; }
+function _orgModalClose(){ var m=document.getElementById('orgModal'); if(m) m.remove(); }
+function _orgModal(inner){ _orgModalClose(); var m=document.createElement('div'); m.id='orgModal'; m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99996;display:flex;align-items:center;justify-content:center;padding:20px'; m.onclick=function(e){ if(e.target===m) m.remove(); }; m.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:18px;width:100%;max-width:360px">'+inner+'</div>'; document.body.appendChild(m); return m; }
+function _orgPrompt(title, def, onOk){
+  _orgModal('<div style="font-weight:800;color:var(--tp);margin-bottom:12px">'+_sEsc(title)+'</div><input id="orgModalIn" value="'+_sEsc(def||'')+'" maxlength="40" style="width:100%;padding:9px 10px;border:0.5px solid var(--bd);border-radius:8px;background:var(--s2);color:var(--tp);box-sizing:border-box;margin-bottom:12px"><div style="display:flex;gap:8px;justify-content:flex-end"><button onclick="_orgModalClose()" style="padding:8px 14px;background:none;border:0.5px solid var(--bd);border-radius:8px;color:var(--ts);cursor:pointer">취소</button><button id="orgModalOk" style="padding:8px 14px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">저장</button></div>');
+  var inp=document.getElementById('orgModalIn'); if(inp) inp.focus();
+  var ok=document.getElementById('orgModalOk'); ok.onclick=function(){ var v=(inp.value||'').trim(); if(!v) return; _orgModalClose(); onOk(v); };
+  if(inp) inp.onkeydown=function(e){ if(e.key==='Enter') ok.click(); };
+}
+function _orgConfirm(msg, onOk){
+  _orgModal('<div style="color:var(--tp);line-height:1.6;margin-bottom:14px">'+_sEsc(msg)+'</div><div style="display:flex;gap:8px;justify-content:flex-end"><button onclick="_orgModalClose()" style="padding:8px 14px;background:none;border:0.5px solid var(--bd);border-radius:8px;color:var(--ts);cursor:pointer">취소</button><button id="orgModalOk" style="padding:8px 14px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">확인</button></div>');
+  document.getElementById('orgModalOk').onclick=function(){ _orgModalClose(); onOk(); };
+}
+function _orgAlert(msg){ _orgModal('<div style="color:var(--tp);line-height:1.6;margin-bottom:14px">'+_sEsc(msg)+'</div><div style="display:flex;justify-content:flex-end"><button onclick="_orgModalClose()" style="padding:8px 14px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">확인</button></div>'); }
+function _orgAfter(r,msg){ if(r&&(r.ok||r.status===201||r.status===204)){ if(typeof toast==='function')toast(msg); if(typeof loadBranchOrg==='function') loadBranchOrg(); } else { if(typeof toast==='function')toast('권한이 없거나 처리에 실패했습니다'); } }
+function mrAddTeam(){ _orgPrompt('새 실(팀) 이름', '', async function(name){ try{ var r=await window.db.fetch('/rest/v1/teams',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({name:name,branch_id:_MR_BID,is_active:true})}); _orgAfter(r,'실을 추가했습니다'); }catch(e){ if(typeof toast==='function')toast('추가 실패'); } }); }
+function mrEditTeam(id){ var t=_orgFindTeam(id); _orgPrompt('실(팀) 이름 수정', t?t.name:'', async function(name){ try{ var r=await window.db.fetch('/rest/v1/teams?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({name:name})}); _orgAfter(r,'수정했습니다'); }catch(e){ if(typeof toast==='function')toast('수정 실패'); } }); }
+function mrDeleteTeam(id){ var t=_orgFindTeam(id); var cnt=(window._mrUsers||[]).filter(function(u){return u.team_id===id;}).length; if(cnt>0){ _orgAlert('"'+(t?t.name:'')+'"에 구성원 '+cnt+'명이 있습니다.\n먼저 모두 내보낸 뒤 삭제하세요.'); return; } _orgConfirm('"'+(t?t.name:'')+'" 실을 삭제할까요?', async function(){ try{ var r=await window.db.fetch('/rest/v1/teams?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}}); _orgAfter(r,'삭제했습니다'); }catch(e){ if(typeof toast==='function')toast('삭제 실패'); } }); }
+function mrRemoveMember(id){ var u=_orgFindUser(id); _orgConfirm('"'+(u?u.name:'')+'"님을 이 실에서 내보낼까요? (소속 해제)', async function(){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({team_id:null})}); _orgAfter(r,'내보냈습니다'); }catch(e){ if(typeof toast==='function')toast('처리 실패'); } }); }
+window.mrAddTeam=mrAddTeam; window.mrEditTeam=mrEditTeam; window.mrDeleteTeam=mrDeleteTeam; window.mrRemoveMember=mrRemoveMember; window._orgModalClose=_orgModalClose;
 /* 팀원 카드 클릭 → 상세(개인정보·회사·지점·팀·가입일) + 관리자 수정 */
 function _mdField(label,id,val){ return '<div class="md-f"><label>'+label+'</label><input id="'+id+'" value="'+_sEsc(val||'')+'"></div>'; }
 function _mdSelect(label,id,opts){ return '<div class="md-f"><label>'+label+'</label><select id="'+id+'"><option value="">미지정</option>'+opts+'</select></div>'; }
