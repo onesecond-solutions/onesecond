@@ -1583,11 +1583,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="mys-toolbar">
         <div class="chips" id="tg-chips" style="flex:1;margin-bottom:0">
           <div class="chip on" onclick="togetherFilter(this,'전체')">전체</div>
-          <div class="chip" onclick="togetherFilter(this,'자유')">자유</div>
-          <div class="chip" onclick="togetherFilter(this,'정보공유')">정보공유</div>
-          <div class="chip" onclick="togetherFilter(this,'모임·스터디')">모임·스터디</div>
-          <div class="chip" onclick="togetherFilter(this,'자랑·후기')">자랑·후기</div>
-          <div class="chip" onclick="togetherFilter(this,'기타')">기타</div>
+          <div class="chip" onclick="togetherFilter(this,'공지')">공지</div>
+          <div class="chip" onclick="togetherFilter(this,'전산 이상 신고')">전산 이상 신고</div>
         </div>
         <button class="mys-write-btn" onclick="openTogetherWrite()">+ 글쓰기</button>
       </div>
@@ -1609,7 +1606,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="iv-write-body">
           <div class="iv-fld"><label>분류</label>
             <select id="tg-f-cat" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);font-size:0.9em">
-              <option>자유</option><option>정보공유</option><option>모임·스터디</option><option>자랑·후기</option><option>기타</option>
+              <option>전산 이상 신고</option>
             </select></div>
           <div class="iv-fld"><label>제목</label><input type="text" id="tg-f-title" class="mys-write-input" maxlength="120" placeholder="제목"></div>
           <div class="iv-fld"><label>내용</label><textarea id="tg-f-content" class="mys-write-textarea" maxlength="4000" placeholder="내용을 입력하세요"></textarea></div>
@@ -5964,13 +5961,15 @@ function togetherOpen(idx,keepList){
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.add('show-viewer'); }
 }
 function togetherBack(){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.remove('show-viewer'); }
-function openTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(!m) return; document.body.appendChild(m); m.style.display='flex'; var t=document.getElementById('tg-f-title'); setTimeout(function(){ if(t) t.focus(); },60); }
+function openTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(!m) return; var sel=document.getElementById('tg-f-cat'); if(sel){ var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin'; sel.innerHTML=(admin?'<option>공지</option>':'')+'<option>전산 이상 신고</option>'; } document.body.appendChild(m); m.style.display='flex'; var t=document.getElementById('tg-f-title'); setTimeout(function(){ if(t) t.focus(); },60); }
 function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; }
 async function saveTogether(){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
-  var cat=((document.getElementById('tg-f-cat')||{}).value||'자유');
+  var cat=((document.getElementById('tg-f-cat')||{}).value||'전산 이상 신고');
+  var isAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
+  if(cat==='공지' && !isAdmin){ alert('공지는 운영자만 작성할 수 있습니다.'); return; }
   var title=((document.getElementById('tg-f-title')||{}).value||'').trim();
   var content=((document.getElementById('tg-f-content')||{}).value||'').trim();
   if(!title){ alert('제목을 입력해 주세요.'); return; }
