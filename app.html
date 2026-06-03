@@ -257,6 +257,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .cmp-actions{display:flex;gap:8px;flex-wrap:wrap}
 .cmp-act{flex:1;min-width:140px;padding:12px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:10px;font-weight:800;font-size:0.9em;cursor:pointer;font-family:inherit}
 .cmp-act-primary{background:var(--ac);color:#fff;border-color:var(--ac)}
+.cmp-act-hint{display:flex;align-items:center;justify-content:center;background:var(--s2);color:var(--ts);border-style:dashed;cursor:default;font-weight:700}
 .cmp-lock{text-align:center;padding:48px 20px;color:var(--ts)}
 .cmp-lock-ic{font-size:2rem;margin-bottom:10px}
 .cmp-lock-t{font-size:1rem;font-weight:800;color:var(--tp);margin-bottom:4px}
@@ -3655,7 +3656,6 @@ function renderCompareTool(){
     +'<div class="cmp-guard">🔒 입력값은 이 기기에만 잠깐 남고 <b>어디에도 저장되지 않습니다</b> (새로고침하면 사라져요). 고객 이름·생년월일은 만든 이미지에만 들어갑니다.</div>'
     +'<div class="cmp-modes">'
       +'<button class="cmp-mode-btn'+(_cmpMode==='company'?' on':'')+'" onclick="cmpSetMode(\'company\')">회사별 비교표</button>'
-      +'<button class="cmp-mode-btn'+(_cmpMode==='remodel'?' on':'')+'" onclick="cmpSetMode(\'remodel\')">신규 제안용</button>'
       +'<button class="cmp-mode-btn'+(_cmpMode==='rebuild'?' on':'')+'" onclick="cmpSetMode(\'rebuild\')">리모델링 비교</button>'
     +'</div>'
     +'<div class="cmp-split">'
@@ -3670,7 +3670,7 @@ function renderCompareTool(){
       +'</div>'
     +'</div>'
     +'<div class="cmp-actions">'
-      +'<button class="cmp-act" onclick="cmpExport(\'download\')">🖼️ 이미지 저장</button>'
+      +'<div class="cmp-act cmp-act-hint">✍️ 직접 입력해서 사용하세요</div>'
       +'<button class="cmp-act cmp-act-primary" onclick="cmpExport(\'copy\')">📋 이미지 복사 (카톡 붙여넣기)</button>'
     +'</div>'
     +'</div>';
