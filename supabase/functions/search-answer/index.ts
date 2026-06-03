@@ -73,34 +73,36 @@ function buildExcerpt(text: string, terms: string[]): string {
 const RESULT_SCHEMA = {
   type: "OBJECT",
   properties: {
-    found: { type: "BOOLEAN", description: "관련 내용이 소식지에 있었는지" },
-    summary: { type: "STRING", description: "질문에 대한 1~2문장 요약(회사 통틀어)" },
+    found: { type: "BOOLEAN", description: "소식지 발췌에 관련 회사 내용이 있었는지" },
+    term: { type: "STRING", description: "질문의 핵심 보험 용어 (정규화, 예: 비급여치료비)" },
+    definition: { type: "STRING", description: "그 용어의 정의 1~2문장 (일반 보험지식, 소식지에 없어도 됨, 객관적 사실만)" },
+    why: { type: "STRING", description: "현장에서 왜 중요/필요한지 1~2문장 (일반 보험지식)" },
+    summary: { type: "STRING", description: "회사별 통틀어 1문장 요약" },
     companies: {
       type: "ARRAY",
-      description: "회사별 정리. 소식지 원문에 근거가 있는 회사만.",
+      description: "회사별 정리. 제공된 소식지 발췌에 근거가 있는 회사만.",
       items: {
         type: "OBJECT",
         properties: {
           company: { type: "STRING", description: "보험사명" },
           period: { type: "STRING", description: "출처 소식지 연월 (예: 2026.3)" },
-          detail: { type: "STRING", description: "해당 질문에 대한 보장/내용 정리(원문 근거, 수치·조건 그대로)" },
           source_id: { type: "STRING", description: "근거 소식지 id" },
+          points: { type: "ARRAY", items: { type: "STRING" }, description: "핵심 2~3개 (소식지 근거, 수치·조건 원문 그대로, 각 한 줄)" },
         },
-        required: ["company", "detail", "source_id"],
+        required: ["company", "points", "source_id"],
       },
     },
   },
-  required: ["found", "summary", "companies"],
+  required: ["found", "definition", "summary", "companies"],
 };
 
 const SYSTEM_PROMPT = [
-  "너는 보험 소식지 자료만 근거로 답하는 검색 도우미다.",
-  "사용자 질문에 대해, 제공된 소식지 발췌들에서 회사별로 핵심 내용을 정리한다.",
-  "🔒 절대 규칙: 제공된 발췌에 실제로 있는 내용만 쓴다. 없는 수치·조건·보장은 절대 지어내지 않는다.",
-  "발췌에 질문과 관련된 내용이 없는 회사는 결과에서 제외한다. 하나도 없으면 found=false.",
-  "보장 금액·비율·조건·특약명은 원문 표기를 그대로 옮긴다(요약하되 수치는 변형 금지).",
-  "각 회사 항목에는 반드시 출처 소식지의 id(source_id)와 연월(period)을 넣는다.",
-  "한국어로, 상담사가 한눈에 비교할 수 있게 각 회사 2~3줄 이내로 간결하게. 관련 깊은 회사 위주로.",
+  "너는 보험 현장 검색 도우미다. 사용자 질문에 '정의 → 필요성 → 회사별 비교'로 답한다.",
+  "definition·why = 그 용어의 일반 보험지식으로 간결·객관적으로 작성한다(소식지 발췌에 없어도 됨). 단 법규·수치 단정은 피하고 일반 설명 수준으로.",
+  "🔒 companies(회사별) 절대 규칙: 제공된 소식지 발췌에 실제로 있는 내용만 쓴다. 없는 수치·조건·보장은 절대 지어내지 않는다.",
+  "발췌에 질문 관련 내용이 없는 회사는 제외한다. 회사가 하나도 없으면 found=false (definition·why는 그래도 채운다).",
+  "회사별 points = 핵심 2~3개, 보장 금액·비율·조건·특약명은 원문 표기 그대로(변형 금지), 각 한 줄.",
+  "각 회사 source_id·period 필수. 한국어로 간결하게.",
 ].join(" ");
 
 Deno.serve(async (req) => {
@@ -161,7 +163,7 @@ Deno.serve(async (req) => {
           role: "user",
           parts: [{ text: `질문: "${query}"\n\n아래는 보험사 소식지 발췌들이다. 이 발췌에 근거해서만 회사별로 정리해줘.\n\n${context}` }],
         }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } },
+        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 6144, thinkingConfig: { thinkingBudget: 0 } },
       }),
     });
     if (!gemRes.ok) {
@@ -185,10 +187,12 @@ Deno.serve(async (req) => {
     }
     return json({
       found: !!result.found,
+      term: String(result.term || ""),
+      definition: String(result.definition || ""),
+      why: String(result.why || ""),
       summary: String(result.summary || ""),
       companies: Array.isArray(result.companies) ? result.companies : [],
       used: top.length,
-      _debug: dbg,
     });
   } catch (e) {
     console.error("[search-answer] 호출 오류", e);
