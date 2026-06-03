@@ -272,6 +272,17 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .cmp-cell:empty:before{content:attr(data-ph);color:#9CA3AF}
 .cmp-price{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:#4338CA}
 .cmp-rowhead{background:#F3F4F6;font-weight:800;color:#1A1A2E}
+/* 세로보기 카드 스타일 (심플·인디고 액센트) */
+.cmp-cards{display:flex;flex-direction:column;gap:12px}
+.cmp-card{border:1px solid #E5E7EB;border-radius:14px;padding:14px 16px;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.cmp-card-co{font-size:1rem;font-weight:800;color:#1A1A2E;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #6366F1}
+.cmp-card-rows{display:flex;flex-direction:column;gap:7px}
+.cmp-card-row{display:flex;justify-content:space-between;gap:12px;font-size:0.88em}
+.cmp-card-k{color:#6B7280;font-weight:600;flex:0 0 auto}
+.cmp-card-v{color:#1A1A2E;text-align:right;font-weight:600}
+.cmp-card-price{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:10px 12px;background:#EEF2FF;border-radius:10px}
+.cmp-card-price-k{font-size:0.82em;font-weight:700;color:#4338CA}
+.cmp-card-price-v{font-size:1.05rem;font-weight:800;color:#4338CA}
 .cmp-th-act,.cmp-td-act{width:34px;text-align:center;border:none!important;background:transparent}
 .cmp-x{border:none;background:transparent;color:#fff;cursor:pointer;font-size:1rem;padding:0 4px;opacity:.85}
 .cmp-trash{border:none;background:transparent;cursor:pointer;font-size:0.95rem;padding:4px}
@@ -3691,17 +3702,24 @@ function cmpFmtRm(el){ el.textContent=_cmpComma(el.textContent); _cmpCaretEnd(el
 function cmpSync(){
   var cap=document.getElementById('cmpCapture'); if(!cap) return;
   if(_cmpMode==='company'){
-    _cmpReadHeads(); var vals=_cmpReadCompany(); var head, body;
+    _cmpReadHeads(); var vals=_cmpReadCompany();
     if(_cmpOrient==='portrait'){
-      /* 세로보기 = 전치: 항목(회사/상품/납입보장/보험료) 세로(행), 회사1·회사2 가로(열)로 비교 */
-      head='<tr><th><div class="cmp-cell cmp-head-cell">구분</div></th>'+vals.map(function(_r,ri){ return '<th><div class="cmp-cell cmp-head-cell">회사'+(ri+1)+'</div></th>'; }).join('')+'</tr>';
-      body=cmpCols.map(function(c,ci){ return '<tr><td><div class="cmp-cell cmp-rowhead">'+_cmpEsc(c.label||'')+'</div></td>'+vals.map(function(row){ var v=row[ci]||''; return '<td><div class="cmp-cell'+(c.price?' cmp-price':'')+'">'+_cmpEsc(v)+'</div></td>'; }).join('')+'</tr>'; }).join('');
+      /* 세로보기 = 카드 스타일: 회사별 카드(첫 열=이름 제목 / 나머지 항목 라벨·값 / 보험료 강조). 구분·회사N 헤더 없음 */
+      var pIdx=-1; for(var pi=0;pi<cmpCols.length;pi++){ if(cmpCols[pi].price){ pIdx=pi; break; } }
+      var cards=vals.map(function(row,ri){
+        var name=((row[0]||'').trim())||('회사 '+(ri+1));
+        var rws='';
+        for(var ci=1;ci<cmpCols.length;ci++){ if(ci===pIdx) continue; var v=(row[ci]||'').trim(); rws+='<div class="cmp-card-row"><span class="cmp-card-k">'+_cmpEsc(cmpCols[ci].label||'')+'</span><span class="cmp-card-v">'+(v?_cmpEsc(v):'-')+'</span></div>'; }
+        var ph=''; if(pIdx>=0){ var pv=(row[pIdx]||'').trim(); ph='<div class="cmp-card-price"><span class="cmp-card-price-k">'+_cmpEsc(cmpCols[pIdx].label||'보험료')+'</span><span class="cmp-card-price-v">'+(pv?(_cmpEsc(pv)+'원'):'-')+'</span></div>'; }
+        return '<div class="cmp-card"><div class="cmp-card-co">'+_cmpEsc(name)+'</div>'+(rws?'<div class="cmp-card-rows">'+rws+'</div>':'')+ph+'</div>';
+      }).join('');
+      cap.innerHTML='<div class="cmp-sheet-ttl">보험료 비교표</div><div class="cmp-cards">'+cards+'</div>';
     } else {
       /* 가로보기 = 입력과 동일: 회사 행, 항목 열 */
-      head='<tr>'+cmpCols.map(function(c){ return '<th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(c.label||'')+'</div></th>'; }).join('')+'</tr>';
-      body=vals.map(function(row){ return '<tr>'+cmpCols.map(function(c,ci){ var v=row[ci]||''; return '<td><div class="cmp-cell'+(c.price?' cmp-price':'')+'">'+_cmpEsc(v)+'</div></td>'; }).join('')+'</tr>'; }).join('');
+      var head='<tr>'+cmpCols.map(function(c){ return '<th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(c.label||'')+'</div></th>'; }).join('')+'</tr>';
+      var body=vals.map(function(row){ return '<tr>'+cmpCols.map(function(c,ci){ var v=row[ci]||''; return '<td><div class="cmp-cell'+(c.price?' cmp-price':'')+'">'+_cmpEsc(v)+'</div></td>'; }).join('')+'</tr>'; }).join('');
+      cap.innerHTML='<div class="cmp-sheet-ttl">보험료 비교표</div><table class="cmp-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
     }
-    cap.innerHTML='<div class="cmp-sheet-ttl">보험료 비교표</div><table class="cmp-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
   } else {
     var s=_cmpRmState(); var hd=_cmpRmHeads();
     var before=_cmpNum(s.before), after=_cmpNum(s.after);
