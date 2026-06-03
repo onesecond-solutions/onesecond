@@ -121,17 +121,19 @@ Deno.serve(async (req) => {
 
   // 1) 관련 소식지 본문 검색 (service_role, RLS 우회, 읽기 전용)
   let docs: Array<{ id: string; company: string; publish_year: number; publish_month: number; title: string; full_text: string }> = [];
+  let dbgPath = "", dbgErr = "";
   try {
     const orFilter = terms.length <= 1
       ? `or=(full_text.ilike.${encodeURIComponent("*" + (terms[0] || "") + "*")},title.ilike.${encodeURIComponent("*" + (terms[0] || "") + "*")})`
       : `and=(${terms.map((t) => `or(full_text.ilike.${encodeURIComponent("*" + t + "*")},title.ilike.${encodeURIComponent("*" + t + "*")})`).join(",")})`;
-    const url = `${sbUrl}/rest/v1/newsletters?${orFilter}&select=id,company,publish_year,publish_month,title,full_text&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=${MAX_DOCS}`;
-    const r = await fetch(url, { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` } });
+    dbgPath = `/rest/v1/newsletters?${orFilter}&select=id,company,publish_year,publish_month,title,full_text&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=${MAX_DOCS}`;
+    const r = await fetch(`${sbUrl}${dbgPath}`, { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` } });
     if (r.ok) docs = await r.json();
-    else console.error("[search-answer] newsletters 조회 실패", r.status, await r.text().catch(() => ""));
-  } catch (e) { console.error("[search-answer] 조회 오류", e); }
+    else { dbgErr = `${r.status}:${(await r.text().catch(() => "")).slice(0, 150)}`; console.error("[search-answer] newsletters 조회 실패", dbgErr); }
+  } catch (e) { dbgErr = String(e); console.error("[search-answer] 조회 오류", e); }
 
-  if (!docs.length) return json({ found: false, summary: "관련 소식지를 찾지 못했습니다.", companies: [], used: 0 });
+  const dbg = { terms, docCount: docs.length, path: dbgPath, err: dbgErr, titles: docs.slice(0, 5).map((d) => d.title) };
+  if (!docs.length) return json({ found: false, summary: "관련 소식지를 찾지 못했습니다.", companies: [], used: 0, _debug: dbg });
 
   // 2) 발췌 구성(토큰 절약)
   const context = docs.map((d) =>
@@ -177,6 +179,7 @@ Deno.serve(async (req) => {
       summary: String(result.summary || ""),
       companies: Array.isArray(result.companies) ? result.companies : [],
       used: docs.length,
+      _debug: dbg,
     });
   } catch (e) {
     console.error("[search-answer] 호출 오류", e);
