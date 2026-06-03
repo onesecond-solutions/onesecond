@@ -13,8 +13,8 @@
 // 실패 (4xx/5xx):  { error }
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const FETCH_LIMIT = 15;       // 본문 검색 후보 수
-const USE_DOCS = 8;           // 관련도 상위 N건만 Gemini 전달(속도·정확도)
+const FETCH_LIMIT = 50;       // 본문 검색 후보 수 (더보기 대비)
+const DEFAULT_DOCS = 8;       // 1차 표시 회사 수 (더보기로 확장, body.limit로 조절)
 const EXCERPT_RADIUS = 450;   // 키워드 주변 발췌 반경(자)
 const MAX_EXCERPTS_PER_DOC = 1;
 let CACHED_MODEL = "";
@@ -117,8 +117,8 @@ Deno.serve(async (req) => {
     return json({ error: "검색 설정이 아직 준비되지 않았습니다." }, 500);
   }
 
-  let query = "";
-  try { const b = await req.json(); query = String((b && b.query) || "").trim(); }
+  let query = ""; let useDocs = DEFAULT_DOCS;
+  try { const b = await req.json(); query = String((b && b.query) || "").trim(); useDocs = Math.min(Math.max(parseInt(String((b && b.limit) || DEFAULT_DOCS), 10) || DEFAULT_DOCS, 1), 30); }
   catch (_e) { return json({ error: "요청 형식이 올바르지 않습니다." }, 400); }
   if (query.length < 2) return json({ error: "검색어를 2자 이상 입력해 주세요." }, 400);
 
@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
   const relScore = (d: { full_text?: string }) =>
     terms.reduce((s, t) => s + (String(d.full_text || "").toLowerCase().split(t.toLowerCase()).length - 1), 0);
   docs.sort((a, b) => relScore(b) - relScore(a));
-  const top = docs.slice(0, USE_DOCS);
+  const top = docs.slice(0, useDocs);
 
   // 2) 발췌 구성(토큰 절약)
   const context = top.map((d) =>
@@ -193,6 +193,7 @@ Deno.serve(async (req) => {
       summary: String(result.summary || ""),
       companies: Array.isArray(result.companies) ? result.companies : [],
       used: top.length,
+      candidates: docs.length,  /* 검색된 후보 총수(더보기 판단용) */
     });
   } catch (e) {
     console.error("[search-answer] 호출 오류", e);

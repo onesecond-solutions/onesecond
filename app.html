@@ -436,6 +436,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .ai-ans-src{font-size:0.6875rem;color:var(--ac);flex-shrink:0;font-weight:600;}
 .ai-ans-co-d{font-size:0.8125rem;color:var(--ts);line-height:1.6;white-space:pre-wrap;word-break:break-word;}
 .ai-ans-foot{font-size:0.6875rem;color:var(--tf);text-align:center;padding:6px;}
+.ai-more{text-align:center;padding:6px 0 4px;}
+.ai-more-btn{padding:8px 16px;background:none;border:0.5px solid var(--ac);border-radius:8px;color:var(--ac);font-size:0.8125rem;font-weight:700;cursor:pointer;}
+.ai-more-btn:hover{background:var(--s2);}
 .ai-def{background:var(--s2);border:0.5px solid var(--bd);border-radius:10px;padding:12px 13px;margin-bottom:10px;}
 .ai-def-h{font-size:0.9rem;font-weight:800;color:var(--tp);margin-bottom:6px;}
 .ai-def-b{font-size:0.8125rem;color:var(--ts);line-height:1.6;margin-bottom:4px;}
@@ -5963,15 +5966,16 @@ async function _runSearch(q){
 }
 window._runSearch=_runSearch;
 /* AI 검색 답변 — search-answer 함수 호출 → 회사별 정리 카드 렌더 */
-async function _aiAnswer(){
+async function _aiAnswer(limit){
+  limit=limit||8;
   var box=document.getElementById('aiAnsBox'); if(!box) return;
   var q=((document.getElementById('sinput')||{}).value||'').trim();
   if(q.length<2){ box.innerHTML='<div class="ai-ans-err">검색어를 2자 이상 입력해 주세요</div>'; return; }
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="ai-ans-err">로그인 후 이용할 수 있습니다</div>'; return; }
   var btn=document.querySelector('.ai-ans-btn'); if(btn){ btn.disabled=true; }
-  box.innerHTML='<div class="ai-ans-load">✨ AI가 소식지에서 회사별로 정리 중… (몇 초 걸려요)</div>';
+  box.innerHTML='<div class="ai-ans-load">✨ AI가 소식지에서 회사별로 정리 중'+(limit>8?' (더 많은 회사 분석 중…)':'… (몇 초 걸려요)')+'</div>';
   try{
-    var res=await window.db.fetch('/functions/v1/search-answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});
+    var res=await window.db.fetch('/functions/v1/search-answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,limit:limit})});
     var j=await res.json().catch(function(){return {};});
     if(btn){ btn.disabled=false; }
     if(!res.ok||j.error){ box.innerHTML='<div class="ai-ans-err">'+_sEsc(j.error||'AI 정리에 실패했습니다')+'</div>'; return; }
@@ -6001,6 +6005,10 @@ async function _aiAnswer(){
       html+='<div class="ai-ans-foot">소식지에 회사별 근거는 없어 일반 설명만 보여드립니다.</div>';
     }
     if(comps.length) html+='<div class="ai-ans-foot">소식지 '+(j.used||0)+'건 분석 · 카드를 누르면 원문(표·사진)을 볼 수 있어요</div>';
+    /* 더보기 — 후보가 현재 표시보다 많고 아직 확장 안 했을 때 */
+    if((j.candidates||0) > (j.used||0) && limit<=8){
+      html+='<div class="ai-more"><button class="ai-more-btn" onclick="_aiAnswer(30)">더보기 — 관련 소식지 '+(j.candidates||0)+'건 더 분석</button></div>';
+    }
     html+='</div>';
     box.innerHTML=html;
   }catch(e){ if(btn){ btn.disabled=false; } box.innerHTML='<div class="ai-ans-err">AI 검색 중 오류가 발생했습니다</div>'; }
