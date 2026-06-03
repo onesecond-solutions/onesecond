@@ -38,6 +38,8 @@ async function pickModel(apiKey: string): Promise<string> {
         (m.supportedGenerationMethods || []).includes("generateContent"));
       const bad = /(embedding|aqa|tts|audio|imagen|image-generation|learnlm)/i;
       const chosen =
+        usable.find((m: { name: string }) => /flash/i.test(m.name) && /2\.0/.test(m.name) && !bad.test(m.name)) ||
+        usable.find((m: { name: string }) => /flash/i.test(m.name) && !/2\.5|thinking/i.test(m.name) && !bad.test(m.name)) ||
         usable.find((m: { name: string }) => /flash/i.test(m.name) && !bad.test(m.name)) ||
         usable.find((m: { name: string }) => /gemini/i.test(m.name) && !bad.test(m.name)) ||
         usable[0];
@@ -159,7 +161,7 @@ Deno.serve(async (req) => {
           role: "user",
           parts: [{ text: `질문: "${query}"\n\n아래는 보험사 소식지 발췌들이다. 이 발췌에 근거해서만 회사별로 정리해줘.\n\n${context}` }],
         }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 4096 },
+        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } },
       }),
     });
     if (!gemRes.ok) {
