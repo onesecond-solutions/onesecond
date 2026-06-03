@@ -6956,8 +6956,9 @@ function mysOpenItem(idx, keepList){
   var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
   var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
   var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):'';
+  var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');  /* 메모는 제목 개념 없음 — 날짜+포스트잇 카드만 */
   v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'
-    +'<div class="vttl">'+esc(it.title||'제목 없음')+'</div>'
+    +_ttlHtml
     +'<div class="vmeta">'+esc(dt)+'</div>'
     +'<div class="vbody"'+_bodyStyle+'>'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div>'
     +'<div class="post-acts">'+_editBtn+'<button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
@@ -8027,8 +8028,9 @@ function mysEditStart(){
   if(isMemo&&typeof OS_MEMO_COLORS!=='undefined'){
     swHtml='<div class="os-memo-colors" id="mysEditColors" style="padding:10px 0 4px">'+Object.keys(OS_MEMO_COLORS).map(function(k){ return '<button class="os-memo-sw'+(k===colorKey?' on':'')+'" data-color="'+k+'" style="background:'+OS_MEMO_COLORS[k]+'" onclick="mysEditColor(\''+k+'\')" aria-label="'+k+'"></button>'; }).join('')+'</div>';
   }
+  var _titleInput=isMemo?'':('<input id="mysEditTitle" class="mys-write-input" style="margin-bottom:8px" value="'+esc(it.title||'')+'" placeholder="제목" maxlength="120" />');  /* 메모는 제목칸 없음 — 첫 줄로 자동 보관 */
   v.innerHTML='<div class="vttl" style="margin-bottom:10px">'+(isMemo?'메모 수정':'자료 수정')+'</div>'
-    +'<input id="mysEditTitle" class="mys-write-input" style="margin-bottom:8px" value="'+esc(it.title||'')+'" placeholder="제목" maxlength="120" />'
+    +_titleInput
     +'<textarea id="mysEditText" class="mys-write-textarea" placeholder="내용" maxlength="2000">'+esc(curText)+'</textarea>'
     +swHtml
     +'<div class="post-acts"><button class="post-act" onclick="mysEditSave()">💾 저장</button><button class="post-act" onclick="mysEditCancel()">취소</button></div>';
