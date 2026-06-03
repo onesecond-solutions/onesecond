@@ -260,6 +260,18 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .cmp-act-hint{display:flex;align-items:center;justify-content:center;background:var(--s2);color:var(--ts);border-style:dashed;cursor:default;font-weight:700}
 /* 함께해요 공지 SVG 아이콘 (이모지 대체) */
 .tg-notice-ic{width:1.05em;height:1.05em;vertical-align:-2px;margin-right:5px;color:var(--ac)}
+/* 인앱 알림 — 벨 카운트 / 드롭다운 / nav 신규 배지 */
+.notif-wrap{position:relative;display:inline-flex}
+.notif-count{position:absolute;top:-3px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#EF4444;color:#fff;font-size:0.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:none}
+.notif-pop{position:absolute;top:calc(100% + 8px);right:0;width:264px;max-width:84vw;background:var(--s1);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.3);z-index:300;overflow:hidden}
+.notif-pop-hd{padding:11px 14px;font-size:0.8rem;font-weight:800;color:var(--tp);border-bottom:1px solid var(--bd)}
+.notif-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px 14px;background:transparent;border:none;border-bottom:1px solid var(--bd);cursor:pointer;font-family:inherit;font-size:0.85rem;color:var(--tp);text-align:left}
+.notif-row:last-child{border-bottom:none}
+.notif-row:hover{background:var(--s2)}
+.notif-row-n{font-size:0.72rem;font-weight:800;color:var(--tf);white-space:nowrap}
+.notif-row-n.on{color:#EF4444}
+.notif-empty{padding:18px 14px;text-align:center;color:var(--tf);font-size:0.8rem}
+.nav-badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#EF4444;color:#fff;font-size:0.6rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex:0 0 auto}
 .cmp-lock{text-align:center;padding:48px 20px;color:var(--ts)}
 .cmp-lock-ic{font-size:2rem;margin-bottom:10px}
 .cmp-lock-t{font-size:1rem;font-weight:800;color:var(--tp);margin-bottom:4px}
@@ -1362,7 +1374,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="sp"></div>
       <div class="search" onclick="openSearch()"><span class="sicon">&#8981;</span><span class="stext">스크립트, 게시글, 업무자료로 검색…</span><span class="kbd">검색</span></div>
       <div class="sp"></div>
-      <button class="hbtn bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button>
+      <div class="notif-wrap">
+        <button class="hbtn bell" id="notifBell" onclick="notifBellToggle()" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot" id="notifDot" style="display:none"></span><span class="notif-count" id="notifCount" style="display:none">0</span></button>
+        <div class="notif-pop" id="notifPop" style="display:none"></div>
+      </div>
       <div class="acct">
         <button class="acctbtn" onclick="document.getElementById('m').classList.toggle('open')"><div class="av"></div><span class="nm">&#9662;</span></button>
         <div class="menu" id="m">
@@ -3083,6 +3098,67 @@ async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&windo
 async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
 async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
 window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCloseEdit=qnaCloseEdit; window.qnaSaveEdit=qnaSaveEdit; window.teamEditNotice=teamEditNotice; window.teamDeleteNotice=teamDeleteNotice;
+
+/* ════════════════════════════════════════════════════════════════
+ * 인앱 알림 — 신규글 읽음 추적 (Phase 1, 2026-06-04)
+ * 기준 = localStorage(사용자별 영역 마지막 읽은 시각). DB 불필요·즉시 동작.
+ * 대상 영역 = 현장의 소리(단체방·보험Q&A·스마트) + 보험사 자료실(자료·보험Q&A). 함께해요·보험이슈 제외.
+ * 표시 = 헤더 벨 숫자/점 + 드롭다운 + 사이드바 nav 신규 배지. 영역 진입 시 읽음 처리. 60초 폴링.
+ * Phase 2(크로스기기 DB동기화·실시간)·Phase 3(웹푸시)는 추후(서버 조작 필요).
+ * 전부 try/catch — 실패해도 화면 무해.
+ * ════════════════════════════════════════════════════════════════ */
+var NOTIF_FEEDS=[
+  {key:'voice', label:'현장의 소리', view:'voice', srcs:[
+    {p:'/rest/v1/team_notices?scope=eq.team_internal&deleted_at=is.null', t:'created_at'},
+    {p:'/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*', t:'created_at'},
+    {p:'/rest/v1/posts?board_type=eq.insurer', t:'created_at'}
+  ]},
+  {key:'vault', label:'보험사 자료실', view:'insurer-vault', srcs:[
+    {p:'/rest/v1/posts?board_type=eq.insurer', t:'created_at'},
+    {p:'/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*', t:'created_at'}
+  ]}
+];
+var NOTIF_VIEWMAP={voice:'voice','insurer-vault':'vault'};
+window._notifPer={}; window._notifTotal=0; window._notifBusy=false;
+function _notifUid(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return u.id||''; }catch(e){ return ''; } }
+function _notifReads(){ try{ return JSON.parse(localStorage.getItem('os_lastread_'+(_notifUid()||'anon'))||'{}'); }catch(e){ return {}; } }
+function _notifSaveReads(o){ try{ localStorage.setItem('os_lastread_'+(_notifUid()||'anon'), JSON.stringify(o)); }catch(e){} }
+function _notifNav(label){ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++){ var l=navs[i].querySelector('.lbl'); if(l&&l.textContent.trim()===label) return navs[i]; } return null; }
+function _notifSince(p,t,sinceIso){ try{ var url=p+'&'+t+'=gt.'+encodeURIComponent(sinceIso)+'&select=id&limit=1'; return window.db.fetch(url,{headers:{'Prefer':'count=exact'}}).then(function(r){ if(!r.ok) return 0; var cr=(r.headers&&r.headers.get&&r.headers.get('content-range'))||''; var m=cr.match(/\/(\d+)$/); return m?Number(m[1]):0; }).catch(function(){ return 0; }); }catch(e){ return Promise.resolve(0); } }
+async function notifRefresh(){
+  try{
+    if(window._notifBusy) return;
+    if(!window.db||!window.db.fetch||!window.db.getToken||!window.db.getToken()) return;
+    window._notifBusy=true;
+    var reads=_notifReads(), nowIso=new Date().toISOString(), changed=false, total=0, per={};
+    for(var fi=0; fi<NOTIF_FEEDS.length; fi++){
+      var feed=NOTIF_FEEDS[fi];
+      if(!_notifNav(feed.label)){ per[feed.key]=0; continue; }   /* 권한상 메뉴 없으면 스킵 */
+      var since=reads[feed.key];
+      if(!since){ reads[feed.key]=nowIso; changed=true; per[feed.key]=0; continue; }  /* 첫 진입 = 지금부터 기준(과거 폭탄 방지) */
+      var cnt=0;
+      for(var si=0; si<feed.srcs.length; si++){ try{ cnt += await _notifSince(feed.srcs[si].p, feed.srcs[si].t, since); }catch(e){} }
+      per[feed.key]=cnt; total+=cnt;
+    }
+    if(changed) _notifSaveReads(reads);
+    window._notifPer=per; window._notifTotal=total;
+    _notifRenderBell(total); _notifRenderNavBadges(per);
+  }catch(e){ /* 무해 */ }
+  finally{ window._notifBusy=false; }
+}
+function _notifRenderBell(total){ var dot=document.getElementById('notifDot'), c=document.getElementById('notifCount'); if(c){ c.textContent=total>99?'99+':String(total); c.style.display=total>0?'':'none'; } if(dot) dot.style.display=total>0?'':'none'; }
+function _notifRenderNavBadges(per){ for(var i=0;i<NOTIF_FEEDS.length;i++){ var f=NOTIF_FEEDS[i]; var nav=_notifNav(f.label); if(!nav) continue; var b=nav.querySelector('.nav-badge'); var n=per[f.key]||0; if(n>0){ if(!b){ b=document.createElement('span'); b.className='nav-badge'; nav.appendChild(b); } b.textContent=n>99?'99+':String(n); b.style.display=''; } else if(b){ b.style.display='none'; } } }
+function notifBellToggle(){ var pop=document.getElementById('notifPop'); if(!pop) return; if(pop.style.display!=='none'){ pop.style.display='none'; return; } var per=window._notifPer||{}, total=window._notifTotal||0; var rows=NOTIF_FEEDS.filter(function(f){return _notifNav(f.label);}).map(function(f){ var n=per[f.key]||0; return '<button class="notif-row" onclick="notifGo(\''+f.key+'\',\''+f.view+'\')"><span>'+f.label+'</span><span class="notif-row-n'+(n>0?' on':'')+'">'+(n>0?('신규 '+n+'개'):'새 글 없음')+'</span></button>'; }).join(''); pop.innerHTML='<div class="notif-pop-hd">알림'+(total>0?(' · 신규 '+total+'개'):'')+'</div>'+(rows||'<div class="notif-empty">표시할 영역이 없습니다.</div>'); pop.style.display=''; }
+function notifGo(key,view){ var pop=document.getElementById('notifPop'); if(pop) pop.style.display='none'; if(typeof showView==='function') showView(view); _notifMark(key); }
+function _notifMark(key){ try{ var r=_notifReads(); r[key]=new Date().toISOString(); _notifSaveReads(r); setTimeout(notifRefresh,400); }catch(e){} }
+function _notifOnView(viewKey){ var fk=NOTIF_VIEWMAP[viewKey]; if(fk) _notifMark(fk); }
+window.notifBellToggle=notifBellToggle; window.notifGo=notifGo; window.notifRefresh=notifRefresh; window._notifOnView=_notifOnView;
+(function(){
+  function _ni(){ setTimeout(function(){ try{ notifRefresh(); }catch(e){} }, 1800); try{ setInterval(function(){ try{ notifRefresh(); }catch(e){} }, 60000); }catch(e){} }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _ni); else _ni();
+  try{ document.addEventListener('appstate:ready', function(){ setTimeout(function(){ try{ notifRefresh(); }catch(e){} },600); }); }catch(e){}
+  document.addEventListener('click', function(e){ try{ var pop=document.getElementById('notifPop'), bell=document.getElementById('notifBell'); if(pop&&pop.style.display!=='none'&&!pop.contains(e.target)&&bell&&!bell.contains(e.target)) pop.style.display='none'; }catch(_e){} });
+})();
 window.vaultQnaBack=vaultQnaBack;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
@@ -3477,7 +3553,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
