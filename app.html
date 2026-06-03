@@ -6724,25 +6724,21 @@ async function loadHomeRecent(force){
     // 미로그인/권한없음 = 4층 개인 자료 표시 불가 → 상태 카드
     homeState('docs','auth');homeState('scripts','auth');
   }
-  // 6층: anon 토큰 fetch (전역 자료, 미로그인도 가동)
-  if(typeof SUPABASE_URL==='string'&&typeof SUPABASE_ANON_KEY==='string'){
-    var hdrAnon={'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Accept':'application/json'};
-    var voiceUrl=SUPABASE_URL+'/rest/v1/posts?select=*&order=created_at.desc&limit=3';
-    var newsUrl=SUPABASE_URL+'/rest/v1/issues?select=*&order=pub_date.desc.nullslast&limit=3';
-    jobs.push(_homeFetch('posts',voiceUrl,hdrAnon).then(function(rows){
-      if(rows&&rows.__err){homeState('voice','error');return;}
-      if(rows&&rows.length>0)renderHomeVoice(rows);
-      else homeState('voice','empty');
-    }));
-    jobs.push(_homeFetch('issues',newsUrl,hdrAnon).then(function(rows){
-      if(rows&&rows.__err){homeState('news','error');return;}
-      if(rows&&rows.length>0)renderHomeNews(rows);
-      else homeState('news','empty');
-    }));
-  }else{
-    console.error('[home] SUPABASE_URL/ANON_KEY 미정의 → 6층 fetch 불가');
-    homeState('voice','error');homeState('news','error');
-  }
+  // 6층: 전역 자료(posts/issues). _homeFetch→db.fetch가 내부에서 SUPABASE_URL을 붙이므로
+  // 반드시 '/rest/v1/...' 상대 경로만 넘긴다 (library/script_usage와 동일 패턴).
+  // 전체 URL을 넘기면 SUPABASE_URL이 두 번 결합돼 ...supabase.cohttps//...supabase.co 로 깨진다.
+  var voicePath='/rest/v1/posts?select=*&order=created_at.desc&limit=3';
+  var newsPath='/rest/v1/issues?select=*&order=pub_date.desc.nullslast&limit=3';
+  jobs.push(_homeFetch('posts',voicePath).then(function(rows){
+    if(rows&&rows.__err){homeState('voice','error');return;}
+    if(rows&&rows.length>0)renderHomeVoice(rows);
+    else homeState('voice','empty');
+  }));
+  jobs.push(_homeFetch('issues',newsPath).then(function(rows){
+    if(rows&&rows.__err){homeState('news','error');return;}
+    if(rows&&rows.length>0)renderHomeNews(rows);
+    else homeState('news','empty');
+  }));
   await Promise.all(jobs);
   window._homeRecentLoaded=true;
   _hlog('loadHomeRecent done');
