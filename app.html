@@ -5218,6 +5218,8 @@ async function loadManagerOrg(){
     window._mrTeams=teams; window._mrUsers=users;
     var tname={}; teams.forEach(function(t){ tname[t.id]=t.name; });
     var mgrs=users.filter(function(u){return u.role==='ga_manager';});
+    /* 기본 가나다순 + 현재 팀 상황상 한재성 실장 상단 고정(임시) */
+    mgrs.sort(function(a,b){ var an=a.name||'', bn=b.name||''; if(an==='한재성'&&bn!=='한재성') return -1; if(bn==='한재성'&&an!=='한재성') return 1; return an.localeCompare(bn,'ko'); });
     var html='';
     mgrs.forEach(function(m){
       var memCnt=users.filter(function(u){return u.team_id===m.team_id;}).length;
