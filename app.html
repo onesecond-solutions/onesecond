@@ -1556,7 +1556,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('콜스크립트작성')">
           <span class="mys-badge">실행도구</span>
-          <div class="mys-ttl">녹취,스크립트 변환</div>
+          <div class="mys-ttl">녹취·스크립트 변환</div>
           <div class="mys-meta">상담콜을 녹취·스크립트로 변환</div>
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('카드만들기')">
@@ -3467,7 +3467,7 @@ function openQuickToolV2(name){
     return;
   }
   if(name === '콜스크립트작성'){
-    activateTool('녹취,스크립트 변환', renderVoiceTool);
+    activateTool('녹취·스크립트 변환', renderVoiceTool);
     return;
   }
   if(name === '카드만들기'){
@@ -4507,13 +4507,13 @@ function renderVoiceTool(){
       '</div>' +
       '<div class="qck-tool-pane">' +
         '<div class="qck-voice-preview-head">' +
-          '<h4 style="margin:0">콜 스크립트</h4>' +
+          '<h4 style="margin:0">녹취·스크립트</h4>' +
           '<button class="qck-voice-fire-mini" onclick="voiceFire()">⚡ 딸깍</button>' +
         '</div>' +
         '<div class="qck-voice-mock-notice">' +
-          '<b>안내</b> · 상담콜을 콜 스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊' +
+          '<b>안내</b> · 상담콜을 녹취·스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊' +
         '</div>' +
-        '<div class="qck-voice-preview-body" id="voiceResult"><div class="qck-voice-empty">상담콜을 콜 스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div></div>' +
+        '<div class="qck-voice-preview-body" id="voiceResult"><div class="qck-voice-empty">상담콜을 녹취·스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div></div>' +
       '</div>' +
     '</div>';
   window._voiceFile = null;
@@ -4561,7 +4561,7 @@ function voiceFire(){
   window._voiceResult = null;
   var existing = document.getElementById('voiceActions');
   if(existing) existing.remove();
-  resultEl.innerHTML = '<div class="qck-voice-empty">상담콜을 콜 스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div>';
+  resultEl.innerHTML = '<div class="qck-voice-empty">상담콜을 녹취·스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div>';
 }
 window.voiceFire = voiceFire;
 
