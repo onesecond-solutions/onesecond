@@ -206,6 +206,34 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .fab .fic{font-size:1.125rem;}
 .fab .flbl{font-size:0.75rem;font-weight:700;}
 .fab:hover{background:var(--ach);}
+/* === 빠른 메모(포스트잇) — 우하단 딸깍 위 플로팅. 화면 어디서나 메모 → MY SPACE 메모 저장.
+   포스트잇 파스텔 = 도메인 특화 색상(스크립트 stage 팔레트와 동일 예외, tokens 비대상) === */
+.os-memo-fab{position:fixed;right:31px;bottom:96px;width:44px;height:44px;border-radius:12px 12px 12px 4px;background:#FFE067;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 6px 18px rgba(0,0,0,0.22);z-index:5;transform:rotate(-4deg);transition:transform .15s,box-shadow .15s;}
+.os-memo-fab:hover{transform:rotate(0deg) translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.28);}
+.os-memo-fab:active{transform:rotate(0deg) scale(0.94);}
+.os-memo-pop{position:fixed;right:26px;bottom:150px;width:288px;max-width:calc(100vw - 36px);background:#FFF7C9;border-radius:14px 14px 14px 6px;box-shadow:0 18px 48px rgba(0,0,0,0.32);z-index:120;display:none;flex-direction:column;overflow:hidden;transform-origin:bottom right;}
+.os-memo-pop.on{display:flex;animation:memoPop .16s ease-out;}
+@keyframes memoPop{from{opacity:0;transform:translateY(8px) scale(.96);}to{opacity:1;transform:none;}}
+.os-memo-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 4px;}
+.os-memo-head .t{font-size:0.9375rem;font-weight:800;color:#5A4A00;display:flex;align-items:center;gap:6px;}
+.os-memo-x{border:none;background:transparent;cursor:pointer;font-size:1.125rem;line-height:1;color:#7A6A20;padding:6px;border-radius:8px;}
+.os-memo-x:hover{background:rgba(0,0,0,0.08);}
+.os-memo-ta{margin:0 12px;border:none;background:transparent;resize:none;min-height:118px;font-family:inherit;font-size:1rem;line-height:1.5;color:#3A3320;outline:none;}
+.os-memo-ta::placeholder{color:#A8975A;}
+.os-memo-colors{display:flex;gap:8px;padding:6px 12px 2px;}
+.os-memo-sw{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid rgba(0,0,0,0.12);padding:0;}
+.os-memo-sw.on{border-color:#3A3320;box-shadow:0 0 0 2px #fff inset;}
+.os-memo-foot{display:flex;align-items:center;gap:8px;padding:8px 12px 12px;}
+.os-memo-save{flex:1;height:44px;border:none;border-radius:10px;background:#3A3320;color:#FFE067;font-weight:800;font-size:0.9375rem;cursor:pointer;font-family:inherit;}
+.os-memo-save:hover{background:#241F12;}
+.os-memo-save:disabled{opacity:.5;cursor:not-allowed;}
+.os-memo-hint{font-size:0.6875rem;color:#8A7A3A;white-space:nowrap;}
+@media (max-width:1024px){
+  .os-memo-fab{right:16px;bottom:134px;width:48px;height:48px;}
+  .split.show-viewer .os-memo-fab{bottom:72px;}
+  .os-memo-pop{right:16px;bottom:190px;}
+  .split.show-viewer .os-memo-pop{bottom:128px;}
+}
 
 /* ═════════════════════════════════════════════════════════
    QUICK OVERLAY (딸깍 클릭 시 4그룹 펼침, 2026-05-24 V1→V2 이식)
@@ -2012,6 +2040,26 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
   </div>
 </div>
 <button class="fab" onclick="openQuickLauncher()" aria-label="빠른 실행 열기"><span class="fic">&#9889;</span><span class="flbl">딸깍</span></button>
+<!-- 빠른 메모(포스트잇) — 딸깍 위. 화면 어디서나 메모 → MY SPACE 메모 -->
+<button class="os-memo-fab" onclick="toggleQuickMemo()" aria-label="빠른 메모" title="빠른 메모">&#128221;</button>
+<div class="os-memo-pop" id="osMemoPop" role="dialog" aria-label="빠른 메모 작성">
+  <div class="os-memo-head">
+    <span class="t">&#128221; 빠른 메모</span>
+    <button class="os-memo-x" onclick="closeQuickMemo()" aria-label="닫기">&times;</button>
+  </div>
+  <textarea class="os-memo-ta" id="osMemoText" placeholder="떠오른 메모를 딸깍 적어두세요." maxlength="2000"></textarea>
+  <div class="os-memo-colors" id="osMemoColors">
+    <button class="os-memo-sw on" data-color="yellow" style="background:#FFF7C9" onclick="selectMemoColor('yellow')" aria-label="노랑"></button>
+    <button class="os-memo-sw" data-color="pink" style="background:#FFD9E6" onclick="selectMemoColor('pink')" aria-label="핑크"></button>
+    <button class="os-memo-sw" data-color="mint" style="background:#CFF3E2" onclick="selectMemoColor('mint')" aria-label="민트"></button>
+    <button class="os-memo-sw" data-color="blue" style="background:#D4E8FF" onclick="selectMemoColor('blue')" aria-label="블루"></button>
+    <button class="os-memo-sw" data-color="purple" style="background:#E7DBFF" onclick="selectMemoColor('purple')" aria-label="보라"></button>
+  </div>
+  <div class="os-memo-foot">
+    <button class="os-memo-save" id="osMemoSaveBtn" onclick="saveQuickMemo()">MY SPACE 메모로 저장</button>
+    <span class="os-memo-hint">Ctrl+Enter</span>
+  </div>
+</div>
 
 <div class="lb" id="lb">
   <div class="lbtop">
@@ -6376,6 +6424,69 @@ window.osBannerOvStep=osBannerOvStep;
 window.osBannerOvClose=osBannerOvClose;
 window.osBannerCollapse=osBannerCollapse;
 window.osBannerExpand=osBannerExpand;
+
+/* === 빠른 메모(포스트잇) — 화면 어디서나 메모 → MY SPACE 메모(library) 저장 ===
+ * 저장 바디 = MY SPACE 글쓰기(saveMyspaceWrite library 탭)와 동일 컬럼 미러링(추측 INSERT 금지).
+ * 색상 = 스키마 변경 없이 keywords 센티넬('메모색:<key>')로 보존. 임시저장 = localStorage. */
+var OS_MEMO_COLORS={yellow:'#FFF7C9',pink:'#FFD9E6',mint:'#CFF3E2',blue:'#D4E8FF',purple:'#E7DBFF'};
+var _osMemoColor='yellow';
+function openQuickMemo(){
+  var pop=document.getElementById('osMemoPop'); if(!pop) return;
+  pop.classList.add('on');
+  var ta=document.getElementById('osMemoText');
+  try{ var d=localStorage.getItem('os_quickmemo_draft'); if(ta&&d&&!ta.value) ta.value=d; }catch(e){}
+  var c='yellow'; try{ c=localStorage.getItem('os_quickmemo_color')||'yellow'; }catch(e){}
+  selectMemoColor(c);
+  setTimeout(function(){ if(ta) ta.focus(); },60);
+}
+function closeQuickMemo(){ var pop=document.getElementById('osMemoPop'); if(pop) pop.classList.remove('on'); }
+function toggleQuickMemo(){ var pop=document.getElementById('osMemoPop'); if(pop&&pop.classList.contains('on')) closeQuickMemo(); else openQuickMemo(); }
+function selectMemoColor(key){
+  if(!OS_MEMO_COLORS[key]) key='yellow';
+  _osMemoColor=key;
+  var pop=document.getElementById('osMemoPop'); if(pop) pop.style.background=OS_MEMO_COLORS[key];
+  var sws=document.querySelectorAll('#osMemoColors .os-memo-sw');
+  for(var i=0;i<sws.length;i++){ sws[i].classList.toggle('on', sws[i].getAttribute('data-color')===key); }
+  try{ localStorage.setItem('os_quickmemo_color',key); }catch(e){}
+}
+function _osMemoDraftSave(){ try{ var ta=document.getElementById('osMemoText'); if(ta) localStorage.setItem('os_quickmemo_draft',ta.value); }catch(e){} }
+async function saveQuickMemo(){
+  var ta=document.getElementById('osMemoText'), btn=document.getElementById('osMemoSaveBtn');
+  var text=((ta&&ta.value)||'').trim();
+  if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var firstLine=text.split('\n')[0].trim();
+  var title=firstLine?(firstLine.length>24?firstLine.slice(0,24)+'…':firstLine):'빠른 메모';
+  var desc=text.length>200?text.slice(0,200):text;
+  if(btn){ btn.disabled=true; btn.textContent='저장 중…'; }
+  try{
+    var body={title:title, description:desc, owner_id:window.AppState.userId, link_url:null, memo_text:text, file_url:null, image_url:null, keywords:['메모색:'+_osMemoColor]};
+    var res=await fetch(window.db.url('/rest/v1/library'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(res.ok||res.status===201){
+      try{ localStorage.removeItem('os_quickmemo_draft'); }catch(e){}
+      if(ta) ta.value='';
+      closeQuickMemo();
+      window._myspaceLoaded=false; window._homeRecentLoaded=false;
+      var mv=document.getElementById('v-myspace'); if(mv&&mv.classList.contains('on')&&typeof loadMyspace==='function') loadMyspace(true);
+      var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&typeof loadHomeRecent==='function') loadHomeRecent(true);
+      if(typeof toast==='function') toast('MY SPACE 메모에 저장됐어요! 📝');
+    }else{
+      var err=await res.json().catch(function(){return{};});
+      alert('저장 실패: '+(err.message||res.status));
+    }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='MY SPACE 메모로 저장'; } }
+}
+window.openQuickMemo=openQuickMemo; window.closeQuickMemo=closeQuickMemo; window.toggleQuickMemo=toggleQuickMemo;
+window.selectMemoColor=selectMemoColor; window.saveQuickMemo=saveQuickMemo;
+/* 단축키: 메모 열렸을 때 Ctrl/⌘+Enter 저장 / Esc 닫기. 입력 시 자동 임시저장. */
+document.addEventListener('keydown',function(e){
+  var pop=document.getElementById('osMemoPop'); if(!pop||!pop.classList.contains('on')) return;
+  if(e.key==='Escape'){ closeQuickMemo(); }
+  else if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); saveQuickMemo(); }
+});
+document.addEventListener('input',function(e){ if(e.target&&e.target.id==='osMemoText') _osMemoDraftSave(); });
 
 /* === 공용 owner id 헬퍼 (2026-05-29 PR #165) ===
  * 진단 격차 (PR #163 회귀): SPA 라우팅 IIFE가 auth 초기화 IIFE보다 먼저 가동 →
