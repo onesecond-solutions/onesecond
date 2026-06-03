@@ -5035,7 +5035,7 @@ async function renderTodayTodo(ctx, mountEl){
     var tcards=[
       _ttScriptCard({color:'var(--ac)',   badge:'캘린더',     title:'전일·당일·내일', body:calBody, go:'_goMysCalendar()'}),
       _ttScriptCard({color:'var(--ok)',   badge:'실장 공지',  title:'오늘 단체방',   body:_num(nt)+'<div class="tt-card-hint">단체방 오늘 공지</div>', go:"_goVoiceTab('team')"}),
-      _ttScriptCard({color:'var(--t-uw)', badge:'보험 Q&A',   title:'내 질문·답변',  body:_num(qa)+'<div class="tt-card-hint">현장의 소리 연결</div>', go:"_goVoiceTab('voice')"}),
+      _ttScriptCard({color:'var(--t-uw)', badge:'보험 Q&A',   title:'내 질문·답변',  body:_num(qa)+'<div class="tt-card-hint">보험 Q&amp;A 탭으로</div>', go:"_goMysQna()"}),
       _ttScriptCard({color:'var(--warn)', badge:'원수사 공지', title:'우리 회사',     body:'<div class="tt-card-hint" style="margin-top:6px">다음 단계 연결 예정</div>'})
     ];
     mountEl.innerHTML='<div class="tt-grid">'+tcards.join('')+'</div>';
@@ -5105,6 +5105,13 @@ function _goMysCalendar(){
   var cc=document.querySelector('#mys-saved .chip[onclick*="calOpen"]'); if(cc&&typeof calOpen==='function') calOpen(cc,'mys');
 }
 window._goMysCalendar=_goMysCalendar;
+function _goMysQna(){
+  if(typeof showView==='function') showView('myspace');
+  window._mysQnaMode='all';
+  var qt=document.querySelector('#mys-tabs .tab[onclick*="qna"]');
+  if(qt&&typeof mysTab==='function') mysTab(qt,'qna');
+}
+window._goMysQna=_goMysQna;
 function _goMrCalendar(){
   if(typeof showView==='function') showView('team');
   var ot=document.querySelector('#mr-tabs .tab[onclick*="office"]'); if(ot&&typeof mrTabMain==='function') mrTabMain(ot,'office');
