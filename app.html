@@ -378,6 +378,11 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .sores .ssnip{font-size:0.6875rem;color:var(--tf);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
 .sores .smeta{font-size:0.6875rem;color:var(--tf);margin-left:auto;flex-shrink:0;margin-top:2px;}
 .sores mark.shi{background:rgba(99,102,241,.22);color:inherit;border-radius:3px;padding:0 2px;font-weight:700;}
+.sostat{display:flex;flex-wrap:wrap;gap:8px;padding:4px 10px 10px;}
+.sostat-i{font-size:0.8125rem;color:var(--ts);background:var(--s2);border:0.5px solid var(--bd);border-radius:9px;padding:7px 11px;}
+.sostat-i b{color:var(--ac);font-weight:800;margin-right:4px;}
+.sostat-load{font-size:0.8125rem;color:var(--tf);padding:6px 10px;}
+.sohint{font-size:0.75rem;color:var(--tf);line-height:1.55;padding:6px 10px 10px;}
 .ai-ans-bar{padding:10px 12px 8px;}
 .ai-ans-btn{width:100%;padding:11px;border:none;border-radius:10px;background:var(--ac);color:#fff;font-weight:700;font-size:0.85rem;cursor:pointer;}
 .ai-ans-btn:hover{background:var(--ach);}
@@ -1895,18 +1900,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <button class="sox" onclick="closeSearch()" title="닫기 (ESC)">&#10005;</button>
     </div>
     <div class="sobody" id="sobody">
-      <div class="sogroup">최근 검색</div>
-      <div style="padding:0 8px;">
-        <span class="sochip" onclick="fill('5세대 실손')">5세대 실손</span>
-        <span class="sochip" onclick="fill('갑상선 결절 인수')">갑상선 결절 인수</span>
-        <span class="sochip" onclick="fill('당뇨 실손')">당뇨 실손</span>
-      </div>
-      <div class="sogroup">자주 찾는 인수기준</div>
-      <div style="padding:0 8px;">
-        <span class="sochip" onclick="fill('고혈압')">고혈압 인수</span>
-        <span class="sochip" onclick="fill('갑상선')">갑상선 인수</span>
-        <span class="sochip" onclick="fill('B형간염')">B형간염 인수</span>
-      </div>
+      <div class="sogroup">검색 가능한 데이터</div>
+      <div class="sostat" id="sostat"><span class="sostat-load">현황 불러오는 중…</span></div>
+      <div class="sohint">상품·인수기준·질병명·회사명을 입력하면 위 데이터에서 한 번에 찾습니다.<br>✨ 원세컨드 AI 검색을 누르면 회사별로 정리해 드려요.</div>
     </div>
   </div>
 </div>
@@ -5657,9 +5653,22 @@ window._searchGo=_searchGo;
 function openSearch(){if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
 function closeSearch(){document.getElementById('so').classList.remove('open');}
 function fill(q){document.getElementById('sinput').value=q;doSearch(q);document.getElementById('sinput').focus();}
+/* 검색 기본 화면 — 실제 데이터 현황(각 테이블 건수) 표시 (mock 폐기) */
+var _statCache='';
+async function _searchStats(){
+  var el=document.getElementById('sostat'); if(!el) return;
+  if(_statCache){ el.innerHTML=_statCache; return; }
+  if(!window.db||!window.db.fetch){ el.innerHTML='<span class="sostat-load">로그인 후 표시됩니다</span>'; return; }
+  var SIK=encodeURIComponent('*소식지*');
+  var defs=[['소식지','newsletters?select=id&limit=1'],['보험 Q&A','posts?board_type=eq.qna&title=not.ilike.'+SIK+'&select=id&limit=1'],['자료실','posts?board_type=eq.insurer&select=id&limit=1'],['현장의 소리','team_notices?deleted_at=is.null&select=id&limit=1'],['스크립트','scripts?select=id&limit=1'],['캘린더','calendar_events?select=id&limit=1']];
+  var counts=await Promise.all(defs.map(function(d){ return _ttCount(d[1]); }));
+  var parts=[]; for(var i=0;i<defs.length;i++){ if(counts[i]!=null&&counts[i]>0) parts.push('<span class="sostat-i"><b>'+counts[i].toLocaleString()+'</b>'+defs[i][0]+'</span>'); }
+  _statCache=parts.join(''); el.innerHTML=_statCache||'<span class="sostat-load">표시할 데이터가 없습니다</span>';
+}
+window._searchStats=_searchStats;
 function doSearch(q){
   var body=document.getElementById('sobody'); if(!body) return;
-  if(!q||!q.trim()){ if(_searchTimer) clearTimeout(_searchTimer); _searchSeq++; body.innerHTML=defaultPanel; return; }
+  if(!q||!q.trim()){ if(_searchTimer) clearTimeout(_searchTimer); _searchSeq++; body.innerHTML=defaultPanel; _searchStats(); return; }
   if(_searchTimer) clearTimeout(_searchTimer);
   _searchTimer=setTimeout(function(){ _runSearch(q.trim()); }, 250);  /* 디바운스 — 타이핑마다 과다 호출 방지 */
 }
