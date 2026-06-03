@@ -297,6 +297,24 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .cmp-ba-amt{font-size:0.95em;font-weight:700;color:#1A1A2E;font-variant-numeric:tabular-nums}
 .cmp-ba-after{color:#4338CA}
 .cmp-ba-arrow{color:#6366F1;font-weight:800}
+/* 리모델링 비교 — 핵심 3배지 */
+.cmp-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 12px}
+.cmp-bdg{padding:5px 11px;border-radius:999px;font-size:0.78em;font-weight:800}
+.cmp-bdg-save{background:#ECFDF5;color:#059669}
+.cmp-bdg-up{background:#FEF2F2;color:#DC2626}
+.cmp-bdg-keep{background:#F3F4F6;color:#6B7280}
+.cmp-bdg-up2{background:#ECFDF5;color:#047857}
+.cmp-bdg-cut{background:#FEF3C7;color:#92400E}
+/* 리모델링 비교 — 전→후 양쪽 카드 */
+.cmp-two{display:flex;align-items:stretch;gap:8px;margin:0 0 12px}
+.cmp-two-col{flex:1;border:1px solid #E5E7EB;border-radius:10px;padding:12px;text-align:center;background:#FAFAFB}
+.cmp-two-after{border-color:#C7D2FE;background:#EEF2FF}
+.cmp-two-lbl{font-size:0.78em;font-weight:700;color:#6B7280;margin-bottom:4px}
+.cmp-two-after .cmp-two-lbl{color:#4338CA}
+.cmp-two-amt{font-size:1.15rem;font-weight:800;color:#1A1A2E;font-variant-numeric:tabular-nums}
+.cmp-two-after .cmp-two-amt{color:#4338CA}
+.cmp-two-amt span{font-size:0.7em;font-weight:600;margin-left:1px}
+.cmp-two-arrow{display:flex;align-items:center;color:#6366F1;font-weight:800;font-size:1.1rem}
 /* 보장 변화 배지 */
 .cmp-st{display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.78em;font-weight:800}
 .cmp-st-up{background:#ECFDF5;color:#059669}
@@ -3638,6 +3656,7 @@ function renderCompareTool(){
     +'<div class="cmp-modes">'
       +'<button class="cmp-mode-btn'+(_cmpMode==='company'?' on':'')+'" onclick="cmpSetMode(\'company\')">회사별 비교표</button>'
       +'<button class="cmp-mode-btn'+(_cmpMode==='remodel'?' on':'')+'" onclick="cmpSetMode(\'remodel\')">신규 제안용</button>'
+      +'<button class="cmp-mode-btn'+(_cmpMode==='rebuild'?' on':'')+'" onclick="cmpSetMode(\'rebuild\')">리모델링 비교</button>'
     +'</div>'
     +'<div class="cmp-split">'
       +'<div class="cmp-left"><div class="cmp-pane-lbl">✏️ 입력</div><div id="cmpBuilder"></div></div>'
@@ -3657,7 +3676,7 @@ function renderCompareTool(){
     +'</div>';
   if(_cmpMode==='company') cmpRenderCompany(); else cmpRenderRemodel();
 }
-function cmpSetMode(m){ _cmpMode=(m==='remodel')?'remodel':'company'; renderCompareTool(); }
+function cmpSetMode(m){ _cmpMode=(m==='remodel')?'remodel':(m==='rebuild')?'rebuild':'company'; renderCompareTool(); }
 function cmpOrient(o){ _cmpOrient=(o==='landscape')?'landscape':'portrait'; var f=document.getElementById('cmpPreviewFrame'); if(f) f.className='cmp-preview-frame '+(_cmpOrient==='landscape'?'cmp-landscape':'cmp-portrait'); var bs=document.querySelectorAll('.cmp-orient button'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on',(bs[i].getAttribute('data-o')||'')===_cmpOrient); cmpSync(); }
 
 /* ── 빌더 ① 회사별 — 좌 입력(editable, 토큰) / 우 미리보기(read-only, 시트) ── */
@@ -3704,17 +3723,18 @@ function cmpFmtPrice(el){ el.textContent=_cmpComma(el.textContent); _cmpCaretEnd
 function cmpRenderRemodel(prev){
   var b=document.getElementById('cmpBuilder'); if(!b) return;
   var rows=(prev&&prev.rows)||[['','','',''],['','','','']];
+  var prevLbl=(_cmpMode==='rebuild')?'현재':'리모델링 전';
   b.innerHTML=
     '<div class="cmp-in-card"><div class="cmp-in-lbl">고객 정보 (이미지에만 표시·저장 안 함)</div>'
       +'<div class="cmp-in-row"><span>이름</span><div class="cmp-in-cell cmp-bd" id="cmpRmName" contenteditable="true" data-ph="이름" oninput="cmpSync()">'+_cmpEsc((prev&&prev.name)||'')+'</div>'
         +'<span>생년월일</span><div class="cmp-in-cell cmp-bd" id="cmpRmBirth" contenteditable="true" data-ph="YYMMDD" oninput="cmpSync()">'+_cmpEsc((prev&&prev.birth)||'')+'</div></div></div>'
     +'<div class="cmp-in-card"><div class="cmp-in-lbl">월 보험료</div>'
-      +'<div class="cmp-in-row"><span class="cmp-rm-lbl">리모델링 전</span><div class="cmp-in-cell cmp-bd cmp-price" id="cmpRmBefore" contenteditable="true" data-ph="0" oninput="cmpFmtRm(this)">'+_cmpEsc((prev&&prev.before)||'')+'</div><span>원</span></div>'
+      +'<div class="cmp-in-row"><span class="cmp-rm-lbl">'+prevLbl+'</span><div class="cmp-in-cell cmp-bd cmp-price" id="cmpRmBefore" contenteditable="true" data-ph="0" oninput="cmpFmtRm(this)">'+_cmpEsc((prev&&prev.before)||'')+'</div><span>원</span></div>'
       +'<div class="cmp-in-row"><span class="cmp-rm-lbl">리모델링 후</span><div class="cmp-in-cell cmp-bd cmp-price" id="cmpRmAfter" contenteditable="true" data-ph="0" oninput="cmpFmtRm(this)">'+_cmpEsc((prev&&prev.after)||'')+'</div><span>원</span></div></div>'
-    +'<div class="cmp-in-card"><div class="cmp-in-lbl">가입현황 (전·후)</div>'
+    +'<div class="cmp-in-card"><div class="cmp-in-lbl">가입현황 ('+(_cmpMode==='rebuild'?'현재·후':'전·후')+')</div>'
       +'<table class="cmp-in-table"><thead><tr>'
         +'<th><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">항목</div></th>'
-        +'<th><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">리모델링 전</div></th>'
+        +'<th><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">'+prevLbl+'</div></th>'
         +'<th><div class="cmp-in-head" contenteditable="true" data-ph="항목명" oninput="cmpSync()">리모델링 후</div></th>'
         +'<th><div class="cmp-in-head-fx">변화</div></th>'
         +'<th class="cmp-th-act"></th></tr></thead>'
@@ -3774,16 +3794,27 @@ function cmpSync(){
       else if(diff>0) heroHtml='<div class="cmp-hero cmp-hero-up"><div class="cmp-hero-lbl">월 보험료 증가</div><div class="cmp-hero-num">▲ '+_cmpComma(diff)+'원</div><div class="cmp-hero-sub">연 '+_cmpComma(yr)+'원 증가</div></div>';
       else heroHtml='<div class="cmp-hero cmp-hero-neutral"><div class="cmp-hero-lbl">월 보험료</div><div class="cmp-hero-num">동일</div></div>';
     }
-    var baHtml='<div class="cmp-rm-card"><div class="cmp-ba"><span class="cmp-ba-lbl">전</span><span class="cmp-ba-amt">'+_cmpComma(s.before)+'원</span><span class="cmp-ba-arrow">→</span><span class="cmp-ba-lbl">후</span><span class="cmp-ba-amt cmp-ba-after">'+_cmpComma(s.after)+'원</span></div></div>';
-    /* C. 가입현황 + 보장 변화 마킹 */
+    var isRb=(_cmpMode==='rebuild');
+    /* C. 가입현황 + 보장 변화 마킹 (공용) */
     var rowsHtml=s.rows.map(function(r){ var st=r[3]||''; var stHtml=st?('<span class="cmp-st '+(CMP_RM_STATUS[st]||'')+'">'+_cmpEsc(st)+'</span>'):''; return '<tr><td><div class="cmp-cell">'+_cmpEsc(r[0]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[1]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[2]||'')+'</div></td><td><div class="cmp-cell" style="text-align:center">'+stHtml+'</div></td></tr>'; }).join('');
-    cap.innerHTML=
-      _cmpHeaderHtml('신규 제안용', (s.name||'')+(s.birth?(' ('+s.birth+')'):''))
-      +heroHtml+baHtml
-      +'<div class="cmp-rm-card"><div class="cmp-rm-card-ttl">가입현황 (전·후)</div>'
-        +'<table class="cmp-table"><thead><tr><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[0])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[1])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[2])+'</div></th><th><div class="cmp-cell cmp-head-cell">변화</div></th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
-      +'</div>'
-      +_cmpFooterHtml();
+    var custLine=(s.name||'')+(s.birth?(' ('+s.birth+')'):'');
+    var tableHtml='<div class="cmp-rm-card"><div class="cmp-rm-card-ttl">가입현황 ('+(isRb?'현재·후':'전·후')+')</div>'
+        +'<table class="cmp-table"><thead><tr><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[0])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[1])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[2])+'</div></th><th><div class="cmp-cell cmp-head-cell">변화</div></th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div>';
+    if(isRb){
+      /* 리모델링 비교 = 히어로 + 핵심 3배지 + 전→후 양쪽 카드 + 상세표 (안1+안2) */
+      var bd=[];
+      if(before||after){ if(after<before) bd.push('<span class="cmp-bdg cmp-bdg-save">보험료 ▼ 절감</span>'); else if(after>before) bd.push('<span class="cmp-bdg cmp-bdg-up">보험료 ▲ 증가</span>'); else bd.push('<span class="cmp-bdg cmp-bdg-keep">보험료 유지</span>'); }
+      var hasUp=false,hasCut=false; for(var bi=0;bi<s.rows.length;bi++){ var stt=s.rows[bi][3]; if(stt==='강화'||stt==='신규')hasUp=true; if(stt==='정리')hasCut=true; }
+      if(hasUp) bd.push('<span class="cmp-bdg cmp-bdg-up2">보장 ↑ 강화·신규</span>');
+      if(hasCut) bd.push('<span class="cmp-bdg cmp-bdg-cut">군더더기 정리</span>');
+      var badges=bd.length?('<div class="cmp-badges">'+bd.join('')+'</div>'):'';
+      var twoHtml='<div class="cmp-two"><div class="cmp-two-col"><div class="cmp-two-lbl">현재</div><div class="cmp-two-amt">'+_cmpComma(s.before)+'<span>원</span></div></div><div class="cmp-two-arrow">→</div><div class="cmp-two-col cmp-two-after"><div class="cmp-two-lbl">리모델링 후</div><div class="cmp-two-amt">'+_cmpComma(s.after)+'<span>원</span></div></div></div>';
+      cap.innerHTML=_cmpHeaderHtml('리모델링 보험료 비교', custLine)+heroHtml+badges+twoHtml+tableHtml+_cmpFooterHtml();
+    } else {
+      /* 신규 제안용 (기존) */
+      var baHtml='<div class="cmp-rm-card"><div class="cmp-ba"><span class="cmp-ba-lbl">전</span><span class="cmp-ba-amt">'+_cmpComma(s.before)+'원</span><span class="cmp-ba-arrow">→</span><span class="cmp-ba-lbl">후</span><span class="cmp-ba-amt cmp-ba-after">'+_cmpComma(s.after)+'원</span></div></div>';
+      cap.innerHTML=_cmpHeaderHtml('신규 제안용', custLine)+heroHtml+baHtml+tableHtml+_cmpFooterHtml();
+    }
   }
 }
 
