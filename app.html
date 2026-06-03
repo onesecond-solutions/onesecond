@@ -5804,6 +5804,19 @@ function _sMark(text, terms){
   return esc.replace(re,'<mark class="shi">$1</mark>');   /* 단일 pass — 삽입 태그 재매칭 방지 */
 }
 function _searchGo(view){ closeSearch(); if(typeof showView==='function') showView(view); }
+/* 원세컨드 메뉴 인덱스 — 키워드로 메뉴 바로 이동 (어드민 제외 = 대전제). Quick 도구는 quick_contents에서 동적 */
+var OS_NAV_INDEX=[
+  {label:'홈', kw:'home 대시보드 메인', view:'home'},
+  {label:'MY SPACE', kw:'마이스페이스 내 자료함 메모 즐겨찾기', view:'myspace'},
+  {label:'스크립트', kw:'콜 멘트 화법 상담 단계 script', view:'scripts'},
+  {label:'Quick 메뉴', kw:'퀵 빠른 도구 계산 검색', view:'quick'},
+  {label:'현장의 소리', kw:'단체방 지점 게시판 보험 질문 qna 소리', view:'voice'},
+  {label:'함께해요', kw:'together 함께', view:'together'},
+  {label:'보험이슈', kw:'뉴스 news 이슈', view:'news'},
+  {label:'보험사 자료실', kw:'자료실 보험사 소식지', view:'insurer-vault'},
+  {label:'매니저룸', kw:'팀원관리 실장 지점장 조직 오피스', view:'team'},
+  {label:'요금제', kw:'가격 결제 구독 멤버십 plus pro free', view:'pricing'}
+];
 window._searchGo=_searchGo;
 function openSearch(){if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
 function closeSearch(){document.getElementById('so').classList.remove('open');}
@@ -5815,7 +5828,7 @@ async function _searchStats(){
   if(_statCache){ el.innerHTML=_statCache; return; }
   if(!window.db||!window.db.fetch){ el.innerHTML='<span class="sostat-load">로그인 후 표시됩니다</span>'; return; }
   var SIK=encodeURIComponent('*소식지*');
-  var defs=[['소식지','newsletters?select=id&limit=1'],['보험 Q&A','posts?board_type=eq.qna&title=not.ilike.'+SIK+'&select=id&limit=1'],['현장의 소리','team_notices?deleted_at=is.null&select=id&limit=1'],['스크립트','scripts?select=id&limit=1'],['캘린더','calendar_events?select=id&limit=1']];
+  var defs=[['소식지','newsletters?select=id&limit=1'],['네비게이션방','posts?board_type=eq.navigation&select=id&limit=1'],['보험 Q&A','posts?board_type=eq.qna&title=not.ilike.'+SIK+'&select=id&limit=1'],['현장의 소리','team_notices?deleted_at=is.null&select=id&limit=1'],['스크립트','scripts?select=id&limit=1'],['캘린더','calendar_events?select=id&limit=1']];
   var counts=await Promise.all(defs.map(function(d){ return _ttCount(d[1]); }));
   var parts=[]; for(var i=0;i<defs.length;i++){ if(counts[i]!=null&&counts[i]>0) parts.push('<span class="sostat-i"><b>'+counts[i].toLocaleString()+'</b>'+defs[i][0]+'</span>'); }
   _statCache=parts.join(''); el.innerHTML=_statCache||'<span class="sostat-load">표시할 데이터가 없습니다</span>';
@@ -5838,6 +5851,7 @@ async function _runSearch(q){
   var SIK=encodeURIComponent('*소식지*');
   var groups=[
     {label:'보험Q&A',     color:'#22D3EE', table:'posts',           base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
+    {label:'네비게이션방', color:'#10B981', table:'posts',           base:'board_type=eq.navigation',               cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
     {label:'소식지',      color:'#6366F1', table:'newsletters',     base:'',                                       cols:['title','company','full_text'],          select:'id,title,company,full_text,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                      t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}},
     {label:'현장의 소리', color:'#22C55E', table:'team_notices',    base:'deleted_at=is.null',                     cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
     {label:'스크립트',    color:'#E879F9', table:'scripts',         base:'',                                       cols:['title','script_text','highlight_text'], select:'id,title,script_text,highlight_text,stage',            order:'',                                                        body:function(r){return (r.highlight_text?r.highlight_text+' ':'')+(r.script_text||'');}, m:function(r){return r.stage||'스크립트';}},
@@ -5848,7 +5862,18 @@ async function _runSearch(q){
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
   }));
   if(seq!==_searchSeq) return;  /* 더 새 검색이 들어왔으면 폐기(stale) */
+  /* 원세컨드 메뉴(정적) + Quick 도구(quick_contents) — 키워드로 메뉴 이동 (어드민 제외) */
+  var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); });
+  var qcHits=[];
+  try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
+  if(seq!==_searchSeq) return;
   var html='', total=0;
+  var menuItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
+  if(menuItems.length){
+    html+='<div class="sogroup">원세컨드 메뉴·도구 ('+menuItems.length+')</div>';
+    menuItems.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#6366F1">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
+    total+=menuItems.length;
+  }
   for(var gi=0; gi<groups.length; gi++){
     var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)||!rows.length) continue;
     var titleOf=g.t||function(r){return r.title;};
