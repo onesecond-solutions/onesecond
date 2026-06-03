@@ -378,6 +378,21 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .sores .ssnip{font-size:0.6875rem;color:var(--tf);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
 .sores .smeta{font-size:0.6875rem;color:var(--tf);margin-left:auto;flex-shrink:0;margin-top:2px;}
 .sores mark.shi{background:rgba(99,102,241,.22);color:inherit;border-radius:3px;padding:0 2px;font-weight:700;}
+.ai-ans-bar{padding:10px 12px 8px;}
+.ai-ans-btn{width:100%;padding:11px;border:none;border-radius:10px;background:var(--ac);color:#fff;font-weight:700;font-size:0.85rem;cursor:pointer;}
+.ai-ans-btn:hover{background:var(--ach);}
+.ai-ans-btn:disabled{opacity:.6;cursor:default;}
+.ai-ans-hint{font-size:0.6875rem;color:var(--tf);text-align:center;margin-top:5px;}
+.ai-ans-load,.ai-ans-err{padding:14px;text-align:center;color:var(--tf);font-size:0.8125rem;}
+.ai-ans{padding:2px 12px 10px;}
+.ai-ans-sum{font-size:0.875rem;color:var(--tp);font-weight:600;line-height:1.55;padding:11px;background:var(--s2);border-radius:10px;margin-bottom:8px;}
+.ai-ans-co{padding:10px 11px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;cursor:pointer;}
+.ai-ans-co:hover{background:var(--s2);}
+.ai-ans-co-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px;}
+.ai-ans-co-h b{font-size:0.875rem;color:var(--tp);}
+.ai-ans-src{font-size:0.6875rem;color:var(--ac);flex-shrink:0;font-weight:600;}
+.ai-ans-co-d{font-size:0.8125rem;color:var(--ts);line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.ai-ans-foot{font-size:0.6875rem;color:var(--tf);text-align:center;padding:6px;}
 .sochip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;margin:4px;border-radius:8px;background:var(--s2);font-size:0.75rem;color:var(--ts);cursor:pointer;}
 .sochip:hover{background:var(--sh);}
 
@@ -5684,10 +5699,40 @@ async function _runSearch(q){
       html+='<div class="sores" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+g.color+'">'+g.label+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
     }
   }
-  if(!total) html='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">검색 결과가 없습니다</div>';
-  body.innerHTML=html;
+  if(!total) html='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">키워드 결과가 없습니다 — 위 ✨ AI 정리를 눌러보세요</div>';
+  /* AI 회사별 정리 바를 맨 위에 (소식지 본문 기반, Gemini 합성) */
+  var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ AI로 회사별 정리·비교</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
+  body.innerHTML=aiBar+html;
 }
 window._runSearch=_runSearch;
+/* AI 검색 답변 — search-answer 함수 호출 → 회사별 정리 카드 렌더 */
+async function _aiAnswer(){
+  var box=document.getElementById('aiAnsBox'); if(!box) return;
+  var q=((document.getElementById('sinput')||{}).value||'').trim();
+  if(q.length<2){ box.innerHTML='<div class="ai-ans-err">검색어를 2자 이상 입력해 주세요</div>'; return; }
+  if(!window.db||!window.db.fetch){ box.innerHTML='<div class="ai-ans-err">로그인 후 이용할 수 있습니다</div>'; return; }
+  var btn=document.querySelector('.ai-ans-btn'); if(btn){ btn.disabled=true; }
+  box.innerHTML='<div class="ai-ans-load">✨ AI가 소식지에서 회사별로 정리 중… (몇 초 걸려요)</div>';
+  try{
+    var res=await window.db.fetch('/functions/v1/search-answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});
+    var j=await res.json().catch(function(){return {};});
+    if(btn){ btn.disabled=false; }
+    if(!res.ok||j.error){ box.innerHTML='<div class="ai-ans-err">'+_sEsc(j.error||'AI 정리에 실패했습니다')+'</div>'; return; }
+    if(!j.found||!Array.isArray(j.companies)||!j.companies.length){ box.innerHTML='<div class="ai-ans-err">소식지에서 "'+_sEsc(q)+'" 관련 내용을 찾지 못했습니다</div>'; return; }
+    var terms=_sTokens(q);
+    var html='<div class="ai-ans">';
+    if(j.summary) html+='<div class="ai-ans-sum">✨ '+_sMark(j.summary,terms)+'</div>';
+    j.companies.forEach(function(c){
+      var src=(c.company?_sEsc(c.company):'')+(c.period?' '+_sEsc(c.period):'')+' 소식지';
+      html+='<div class="ai-ans-co" onclick="_searchOpen(\'newsletters\',\''+_sEsc(String(c.source_id||''))+'\')">'
+        +'<div class="ai-ans-co-h"><b>'+_sEsc(c.company||'')+'</b><span class="ai-ans-src">근거: '+src+'</span></div>'
+        +'<div class="ai-ans-co-d">'+_sMark(c.detail||'',terms)+'</div></div>';
+    });
+    html+='<div class="ai-ans-foot">소식지 '+(j.used||0)+'건에서 정리 · 카드를 누르면 원문을 볼 수 있어요</div></div>';
+    box.innerHTML=html;
+  }catch(e){ if(btn){ btn.disabled=false; } box.innerHTML='<div class="ai-ans-err">AI 검색 중 오류가 발생했습니다</div>'; }
+}
+window._aiAnswer=_aiAnswer;
 /* 검색 결과 클릭 → 해당 항목 본문을 모달로 표시 (테이블별 본문 컬럼 매핑) */
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
