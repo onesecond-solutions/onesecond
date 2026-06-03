@@ -1346,7 +1346,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('보험연령계산기')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div><div>보험연령</div><div class="home-quick-sub">가입 기준 나이 계산</div></div>
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('변환기')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div><div>이미지 변환</div><div class="home-quick-sub">이미지/PDF/JPG 변환</div></div>
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('카드만들기')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1"></rect><rect x="3" y="14" width="9" height="7" rx="1"></rect><rect x="16" y="14" width="5" height="7" rx="1"></rect></svg></div><div>카드 만들기</div><div class="home-quick-sub">공지·자료 카드 제작</div></div>
-          <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('콜스크립트작성')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div><div>콜 스크립트 변환</div><div class="home-quick-sub">상담 멘트 정리</div></div>
+          <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('콜스크립트작성')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div><div>녹취·스크립트 변환</div><div class="home-quick-sub">상담 멘트 정리</div></div>
         </div>
       </div>
 
@@ -1556,7 +1556,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('콜스크립트작성')">
           <span class="mys-badge">실행도구</span>
-          <div class="mys-ttl">녹취,스크립트 변환</div>
+          <div class="mys-ttl">녹취·스크립트 변환</div>
           <div class="mys-meta">상담콜을 녹취·스크립트로 변환</div>
         </div>
         <div class="mys-card" data-cat="실행도구" style="--tc:#34D399" onclick="openQuickToolV2('카드만들기')">
@@ -3467,7 +3467,7 @@ function openQuickToolV2(name){
     return;
   }
   if(name === '콜스크립트작성'){
-    activateTool('녹취,스크립트 변환', renderVoiceTool);
+    activateTool('녹취·스크립트 변환', renderVoiceTool);
     return;
   }
   if(name === '카드만들기'){
@@ -4507,13 +4507,13 @@ function renderVoiceTool(){
       '</div>' +
       '<div class="qck-tool-pane">' +
         '<div class="qck-voice-preview-head">' +
-          '<h4 style="margin:0">콜 스크립트</h4>' +
+          '<h4 style="margin:0">녹취·스크립트</h4>' +
           '<button class="qck-voice-fire-mini" onclick="voiceFire()">⚡ 딸깍</button>' +
         '</div>' +
         '<div class="qck-voice-mock-notice">' +
-          '<b>안내</b> · 상담콜을 콜 스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊' +
+          '<b>안내</b> · 상담콜을 녹취·스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊' +
         '</div>' +
-        '<div class="qck-voice-preview-body" id="voiceResult"><div class="qck-voice-empty">상담콜을 콜 스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div></div>' +
+        '<div class="qck-voice-preview-body" id="voiceResult"><div class="qck-voice-empty">상담콜을 녹취·스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div></div>' +
       '</div>' +
     '</div>';
   window._voiceFile = null;
@@ -4561,7 +4561,7 @@ function voiceFire(){
   window._voiceResult = null;
   var existing = document.getElementById('voiceActions');
   if(existing) existing.remove();
-  resultEl.innerHTML = '<div class="qck-voice-empty">상담콜을 콜 스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div>';
+  resultEl.innerHTML = '<div class="qck-voice-empty">상담콜을 녹취·스크립트로 바꿔주는 기능을 준비하고 있어요. 곧 열립니다 😊</div>';
 }
 window.voiceFire = voiceFire;
 
