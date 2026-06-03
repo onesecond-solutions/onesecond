@@ -5898,7 +5898,7 @@ window._aiAnswer=_aiAnswer;
 /* 검색 결과 클릭 → 해당 항목 본문을 모달로 표시 (테이블별 본문 컬럼 매핑) */
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
-  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date' };
+  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date' };
   var sel=selMap[table]||'title';
   try{
     var res=await window.db.fetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id)+'&select='+sel);
@@ -5915,6 +5915,7 @@ async function _searchOpen(table, id){
     ov.onmousedown=function(e){ _ovDown(e,ov); }; ov.onclick=function(e){ _ovClick(e,ov,_closeSearchDetail); };
     ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">'
       +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--bd)"><div><div style="font-weight:800;color:var(--tp);font-size:1.02em;line-height:1.4">'+_sEsc(title)+'</div>'+(meta?'<div style="font-size:0.78em;color:var(--ts);margin-top:4px">'+_sEsc(meta)+'</div>':'')+'</div><button onclick="_closeSearchDetail()" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;flex-shrink:0">&#10005;</button></div>'
+      +(r.source_pdf_url?'<div style="padding:12px 18px 0"><a href="'+_sEsc(r.source_pdf_url)+'" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원문 PDF 보기 (표·사진 포함)</a></div>':'')
       +'<div style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9em;line-height:1.65">'+_sEsc(bodyTxt)+'</div>'
       +'</div>';
     document.body.appendChild(ov);
