@@ -1966,6 +1966,18 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 
      <!-- 글쓰기 게이트: 공식/비공식 선택 (비공식 → 유형 '기타' 강제) -->
      <!-- 파일 용량 초과 안내 팝업 (공용) -->
+     <!-- 보험 Q&A 질문 수정 모달 (작성자 본인·admin) -->
+     <div class="iv-overlay" id="qnaEditModal" style="display:none" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,qnaCloseEdit)">
+      <div class="iv-write-modal" role="dialog" aria-modal="true">
+        <div class="iv-write-head"><span>질문 수정</span><button class="iv-write-close" onclick="qnaCloseEdit()" aria-label="닫기">&#10005;</button></div>
+        <div class="iv-write-body">
+          <div class="iv-fld"><label>제목</label><input type="text" id="qnaEditTitle" class="mys-write-input" maxlength="200"></div>
+          <div class="iv-fld"><label>내용</label><textarea id="qnaEditContent" class="mys-write-textarea" maxlength="4000"></textarea></div>
+          <button class="iv-write-submit" onclick="qnaSaveEdit()">수정 저장</button>
+        </div>
+      </div>
+     </div>
+
      <div class="diet-overlay" id="dietPopup" style="display:none" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeDietPopup)">
       <div class="diet-box" role="dialog" aria-modal="true">
         <div class="diet-emoji">🧙</div>
@@ -2998,7 +3010,7 @@ function vaultQnaOpen(idx, keepList){
   v.innerHTML='<span class="vbadge">'+ivEsc(r.question_type||'질문')+'</span>'
     +'<div class="vttl">'+ivEsc(r.title||'제목 없음')+'</div>'
     +'<div class="vmeta">'+ivFmtDate(r.created_at)+' · 비공개'+'</div>'
-    +'<div class="vbody">'+ivEsc(r.content||'').replace(/\n/g,'<br>')+atts+'</div>'+qnaThreadHtml(r.id,'iv');
+    +'<div class="vbody">'+ivEsc(r.content||'').replace(/\n/g,'<br>')+atts+'</div>'+_postActs('qna',r.id,r.author_id,'iv')+qnaThreadHtml(r.id,'iv');
   if(typeof loadQnaComments==='function') loadQnaComments(r.id,'iv');
   var items=document.querySelectorAll('#iv-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('iv-qna-split'); if(sp) sp.classList.add('show-viewer'); }
@@ -3053,6 +3065,22 @@ async function submitQnaComment(postId, px){
   finally{ if(btn){ btn.disabled=false; btn.textContent='답변 등록'; } }
 }
 window.qnaThreadHtml=qnaThreadHtml; window.loadQnaComments=loadQnaComments; window.submitQnaComment=submitQnaComment;
+
+/* ════ 단체방·보험 Q&A 글 수정·삭제 (작성자 본인 + admin) — 화면 공용 ════
+ * Q&A(posts qna)=인라인 모달(제목·내용) / 단체방(team_notices)=기존 mrWriteModal 재사용. */
+function _canEditPost(authorId){ var me=(typeof _getOwnerId==='function')?_getOwnerId():null; var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin'; return !!(admin||(me&&authorId&&String(me)===String(authorId))); }
+function _postActs(kind, id, authorId, ctx){ if(!_canEditPost(authorId)) return ''; var ed=(kind==='qna')?'qnaEditPost':'teamEditNotice', dl=(kind==='qna')?'qnaDeletePost':'teamDeleteNotice'; return '<div class="post-acts"><button class="post-act" onclick="'+ed+'(\''+id+'\',\''+ctx+'\')">✏️ 수정</button><button class="post-act post-act-del" onclick="'+dl+'(\''+id+'\',\''+ctx+'\')">삭제</button></div>'; }
+/* 보험 Q&A (posts qna) */
+var _qnaEditId=null,_qnaEditCtx=null;
+function _qnaReload(ctx){ window._mysQnaCache=null; window._mrQnaCache=null; window._vaultQnaCache=null; var f=({voice:'loadVoiceQna',mys:'loadMysQna',mr:'loadMrQna',iv:'loadVaultQna'})[ctx]; if(f&&typeof window[f]==='function') window[f](); }
+async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠습니까? (등록된 답변도 함께 삭제됩니다)')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ _qnaReload(ctx); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
+async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
+function qnaCloseEdit(){ var m=document.getElementById('qnaEditModal'); if(m) m.style.display='none'; _qnaEditId=null; }
+async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } var title=((document.getElementById('qnaEditTitle')||{}).value||'').trim(), content=((document.getElementById('qnaEditContent')||{}).value||'').trim(); if(!title){ alert('제목을 입력해 주세요.'); return; } if(!content){ alert('내용을 입력해 주세요.'); return; } var ctx=_qnaEditCtx; try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(_qnaEditId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({title:title,content:content})}); if(res.ok||res.status===204){ qnaCloseEdit(); _qnaReload(ctx); if(typeof toast==='function') toast('수정됐어요!'); } else { var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); } }catch(e){ alert('네트워크 오류가 발생했습니다.'); } }
+/* 단체방 (team_notices) — MY SPACE·매니저룸 */
+async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
+async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
+window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCloseEdit=qnaCloseEdit; window.qnaSaveEdit=qnaSaveEdit; window.teamEditNotice=teamEditNotice; window.teamDeleteNotice=teamDeleteNotice;
 window.vaultQnaBack=vaultQnaBack;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
@@ -5531,7 +5559,7 @@ async function loadSmartNewsletters(){
   }catch(e){ console.error('[smartBoard]', e); }
 }
 window.loadSmartNewsletters = loadSmartNewsletters;
-function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];window._voiceImgs=p._imgs||[];window._voiceImgNames=p._imgNames||[];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title)+((key==='voice'&&p._id)?qnaThreadHtml(p._id,'voice'):'');if(key==='voice'&&p._id&&typeof loadQnaComments==='function')loadQnaComments(p._id,'voice');document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
+function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];window._voiceImgs=p._imgs||[];window._voiceImgNames=p._imgNames||[];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title)+((key==='voice'&&p._id)?(_postActs('qna',p._id,p._authorId,'voice')+qnaThreadHtml(p._id,'voice')):'');if(key==='voice'&&p._id&&typeof loadQnaComments==='function')loadQnaComments(p._id,'voice');document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
 function showTabEmpty(d){
   var list=document.getElementById('qlist');
   if(list)list.innerHTML='<div class="qlist-empty" style="padding:34px 20px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.7">'+((d&&d.empty)||'아직 등록된 자료가 없어요.')+'</div>';
@@ -5604,7 +5632,7 @@ async function loadVoiceQna(){
       var who='비공개';  /* 질문자 익명 — 비공개 표시 */
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att);
-      return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, real:true, _id:r.id, _imgs:_ah.imgs, _imgNames:_ah.names, _attachments:_att};
+      return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, real:true, _id:r.id, _authorId:r.author_id, _imgs:_ah.imgs, _imgNames:_ah.names, _attachments:_att};
     });
     if(voiceTabData.voice){ voiceTabData.voice.posts=posts; voiceTabData.voice.cnt=posts.length; }
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
@@ -6536,7 +6564,7 @@ async function mrSubmitNotice(){
     var _wasEdit=!!window._mrEditId;
     mrCloseWrite();
     if(typeof toast==='function') toast(_wasEdit?'공지가 수정되었습니다':'공지가 등록되었습니다');
-    if(_wasEdit){ var _vv=document.getElementById('v-voice'); if(_vv&&_vv.classList.contains('on')){ var _at=document.querySelector('#v-voice .tabs .tab.on'); if(_at){ var _mm=(_at.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/); if(_mm&&typeof showTab==='function') showTab(_at,_mm[1]); } } }
+    if(_wasEdit){ var _vv=document.getElementById('v-voice'); if(_vv&&_vv.classList.contains('on')){ var _at=document.querySelector('#v-voice .tabs .tab.on'); if(_at){ var _mm=(_at.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/); if(_mm&&typeof showTab==='function') showTab(_at,_mm[1]); } } window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); }
     if(btn){ btn.disabled=false; btn.textContent='공지 등록'; }
   }catch(e){ showErr('네트워크 오류가 발생했습니다.'); if(btn){ btn.disabled=false; btn.textContent='공지 등록'; } }
 }
@@ -7682,7 +7710,7 @@ function mysTeamOpen(idx, keepList){
   var list=window._mysTeamFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mys-team-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>';
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('team',p._id,p.author_id,'mys');
   var items=document.querySelectorAll('#mys-team-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-team-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -7747,7 +7775,7 @@ function mrTeamOpen(idx, keepList){
   var list=window._mrTeamFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mr-team-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>';
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('team',p._id,p.author_id,'mr');
   var items=document.querySelectorAll('#mr-team-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mr-team-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -7811,7 +7839,7 @@ function mrQnaOpen(idx, keepList){
   var list=window._mrQnaFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mr-qna-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+qnaThreadHtml(p._id,'mr');
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('qna',p._id,p.author_id,'mr')+qnaThreadHtml(p._id,'mr');
   if(typeof loadQnaComments==='function') loadQnaComments(p._id,'mr');
   var items=document.querySelectorAll('#mr-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mr-qna-split'); if(sp) sp.classList.add('show-viewer'); }
@@ -7949,7 +7977,7 @@ function mysQnaOpen(idx, keepList){
   var list=window._mysQnaFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mys-qna-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+qnaThreadHtml(p._id,'mys');
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('qna',p._id,p.author_id,'mys')+qnaThreadHtml(p._id,'mys');
   if(typeof loadQnaComments==='function') loadQnaComments(p._id,'mys');
   var items=document.querySelectorAll('#mys-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-qna-split'); if(sp) sp.classList.add('show-viewer'); }
