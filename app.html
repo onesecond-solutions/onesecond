@@ -5182,7 +5182,19 @@ function mrTabMain(el,key){
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mr-tabs .tab'); if(f) f.classList.add('on'); }
   var today=document.getElementById('mr-today'), main=document.getElementById('mr-main'), office=document.getElementById('mr-office'), team=document.getElementById('mr-team'), qna=document.getElementById('mr-qna');
   [today,main,office,team,qna].forEach(function(e){ if(e) e.style.display='none'; });
-  if(key==='members'){ if(main) main.style.display=''; }  /* 게시판 레이아웃 골격 — 카드 연결은 다음 단계 */
+  if(key==='members'){ if(main) main.style.display='';
+    /* role별 기본 페이지 자동 (2026-06-03): 실장→실장 페이지(지점장 탭 숨김) / admin·지점장→지점장 페이지 */
+    var _r=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+    var _brTab=document.querySelector('#mr-mem-sub .tab[onclick*="branch"]');
+    var _mgTab=document.querySelector('#mr-mem-sub .tab[onclick*="manager"]');
+    if(_r==='ga_manager'){
+      if(_brTab) _brTab.style.display='none';   /* 실장은 지점장 탭 숨김 (지점 전체 관리 권한 없음) */
+      if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager');
+    } else {
+      if(_brTab) _brTab.style.display='';        /* admin·지점장: 지점장 탭 노출 */
+      if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch');
+    }
+  }
   else if(key==='office'){ if(office) office.style.display=''; if(typeof loadMrOffice==='function') loadMrOffice(); }
   else if(key==='team'){ if(team) team.style.display=''; if(typeof loadMrTeam==='function') loadMrTeam(); }
   else if(key==='qna'){ if(qna) qna.style.display=''; if(typeof loadMrQna==='function') loadMrQna(); }
