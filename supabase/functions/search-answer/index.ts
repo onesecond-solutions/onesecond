@@ -13,9 +13,10 @@
 // 실패 (4xx/5xx):  { error }
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const MAX_DOCS = 12;          // 본문 검색 상한 (응답 잘림 방지 위해 축소)
-const EXCERPT_RADIUS = 700;   // 키워드 주변 발췌 반경(자)
-const MAX_EXCERPTS_PER_DOC = 2;
+const FETCH_LIMIT = 15;       // 본문 검색 후보 수
+const USE_DOCS = 8;           // 관련도 상위 N건만 Gemini 전달(속도·정확도)
+const EXCERPT_RADIUS = 450;   // 키워드 주변 발췌 반경(자)
+const MAX_EXCERPTS_PER_DOC = 1;
 let CACHED_MODEL = "";
 
 const CORS = {
@@ -97,7 +98,7 @@ const SYSTEM_PROMPT = [
   "발췌에 질문과 관련된 내용이 없는 회사는 결과에서 제외한다. 하나도 없으면 found=false.",
   "보장 금액·비율·조건·특약명은 원문 표기를 그대로 옮긴다(요약하되 수치는 변형 금지).",
   "각 회사 항목에는 반드시 출처 소식지의 id(source_id)와 연월(period)을 넣는다.",
-  "한국어로, 상담사가 한눈에 비교할 수 있게 간결하게.",
+  "한국어로, 상담사가 한눈에 비교할 수 있게 각 회사 2~3줄 이내로 간결하게. 관련 깊은 회사 위주로.",
 ].join(" ");
 
 Deno.serve(async (req) => {
@@ -126,7 +127,7 @@ Deno.serve(async (req) => {
     const orFilter = terms.length <= 1
       ? `or=(full_text.ilike.${encodeURIComponent("*" + (terms[0] || "") + "*")},title.ilike.${encodeURIComponent("*" + (terms[0] || "") + "*")})`
       : `and=(${terms.map((t) => `or(full_text.ilike.${encodeURIComponent("*" + t + "*")},title.ilike.${encodeURIComponent("*" + t + "*")})`).join(",")})`;
-    dbgPath = `/rest/v1/newsletters?${orFilter}&select=id,company,publish_year,publish_month,title,full_text&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=${MAX_DOCS}`;
+    dbgPath = `/rest/v1/newsletters?${orFilter}&select=id,company,publish_year,publish_month,title,full_text&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=${FETCH_LIMIT}`;
     const r = await fetch(`${sbUrl}${dbgPath}`, { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` } });
     if (r.ok) docs = await r.json();
     else { dbgErr = `${r.status}:${(await r.text().catch(() => "")).slice(0, 150)}`; console.error("[search-answer] newsletters 조회 실패", dbgErr); }
@@ -135,8 +136,14 @@ Deno.serve(async (req) => {
   const dbg = { terms, docCount: docs.length, path: dbgPath, err: dbgErr, titles: docs.slice(0, 5).map((d) => d.title) };
   if (!docs.length) return json({ found: false, summary: "관련 소식지를 찾지 못했습니다.", companies: [], used: 0, _debug: dbg });
 
+  // 관련도(키워드 등장 횟수) 상위 N건만 사용 → 흔한 단어 편향 완화 + 속도
+  const relScore = (d: { full_text?: string }) =>
+    terms.reduce((s, t) => s + (String(d.full_text || "").toLowerCase().split(t.toLowerCase()).length - 1), 0);
+  docs.sort((a, b) => relScore(b) - relScore(a));
+  const top = docs.slice(0, USE_DOCS);
+
   // 2) 발췌 구성(토큰 절약)
-  const context = docs.map((d) =>
+  const context = top.map((d) =>
     `[id:${d.id} | ${d.company || "회사미상"} | ${d.publish_year || "?"}.${d.publish_month || "?"}]\n${buildExcerpt(d.full_text || "", terms)}`
   ).join("\n\n---\n\n");
 
@@ -152,7 +159,7 @@ Deno.serve(async (req) => {
           role: "user",
           parts: [{ text: `질문: "${query}"\n\n아래는 보험사 소식지 발췌들이다. 이 발췌에 근거해서만 회사별로 정리해줘.\n\n${context}` }],
         }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 8192 },
+        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 4096 },
       }),
     });
     if (!gemRes.ok) {
@@ -178,7 +185,7 @@ Deno.serve(async (req) => {
       found: !!result.found,
       summary: String(result.summary || ""),
       companies: Array.isArray(result.companies) ? result.companies : [],
-      used: docs.length,
+      used: top.length,
       _debug: dbg,
     });
   } catch (e) {
