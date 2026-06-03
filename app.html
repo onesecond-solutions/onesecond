@@ -234,6 +234,18 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 body.iv-hide-fab .fab{display:none;}
 body.iv-hide-fab .os-memo-fab{bottom:30px;}
 @media (max-width:1024px){ body.iv-hide-fab .os-memo-fab{bottom:78px;} }
+/* 보험 Q&A 답글(답변) 스레드 — 4곳 뷰어 공용 */
+.qna-thread{margin-top:16px;border-top:1px solid var(--bd);padding-top:14px;}
+.qna-cmt-cnt{font-size:0.8125rem;font-weight:800;color:var(--tp);margin-bottom:10px;}
+.qna-cmt-empty{font-size:0.8125rem;color:var(--tf);padding:6px 0 12px;}
+.qna-cmt{padding:10px 12px;background:var(--s2);border-radius:10px;margin-bottom:8px;border-left:3px solid var(--ac);}
+.qna-cmt-who{font-size:0.8125rem;font-weight:800;color:var(--ac);margin-bottom:4px;}
+.qna-cmt-body{font-size:0.875rem;color:var(--tp);line-height:1.6;}
+.qna-cmt-date{font-size:0.6875rem;color:var(--tf);margin-top:5px;}
+.qna-reply{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+.qna-reply-ta{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--s2);color:var(--tp);font-size:0.9em;font-family:inherit;resize:vertical;outline:none;}
+.qna-reply-ta:focus{border-color:var(--ac);}
+.qna-reply-btn{align-self:flex-end;}
 @media (max-width:1024px){
   .os-memo-fab{right:16px;bottom:134px;width:48px;height:48px;}
   .split.show-viewer .os-memo-fab{bottom:72px;}
@@ -2795,7 +2807,7 @@ function vaultQnaRender(){
     return '<div class="item'+(i===0?' on':'')+'" onclick="vaultQnaOpen('+i+')" style="--tc:var(--t-uw)">'
       +'<span class="badge">'+ivEsc(qt)+'</span>'
       +'<div class="it">'+ivEsc(r.title||'제목 없음')+'</div>'
-      +'<div class="id">'+ivFmtDate(r.created_at)+(r.author_name?(' · '+ivEsc(r.author_name)):'')+'</div></div>';
+      +'<div class="id">'+ivFmtDate(r.created_at)+' · 비공개'+'</div></div>';
   }).join('');
   vaultQnaOpen(0, true);
 }
@@ -2817,13 +2829,62 @@ function vaultQnaOpen(idx, keepList){
   } else { window._ivImgs=[]; window._ivImgNames=[]; }
   v.innerHTML='<span class="vbadge">'+ivEsc(r.question_type||'질문')+'</span>'
     +'<div class="vttl">'+ivEsc(r.title||'제목 없음')+'</div>'
-    +'<div class="vmeta">'+ivFmtDate(r.created_at)+(r.author_name?(' · '+ivEsc(r.author_name)):'')+'</div>'
-    +'<div class="vbody">'+ivEsc(r.content||'').replace(/\n/g,'<br>')+atts+'</div>';
+    +'<div class="vmeta">'+ivFmtDate(r.created_at)+' · 비공개'+'</div>'
+    +'<div class="vbody">'+ivEsc(r.content||'').replace(/\n/g,'<br>')+atts+'</div>'+qnaThreadHtml(r.id,'iv');
+  if(typeof loadQnaComments==='function') loadQnaComments(r.id,'iv');
   var items=document.querySelectorAll('#iv-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('iv-qna-split'); if(sp) sp.classList.add('show-viewer'); }
 }
 window.vaultQnaOpen=vaultQnaOpen;
 function vaultQnaBack(){ var sp=document.getElementById('iv-qna-split'); if(sp) sp.classList.remove('show-viewer'); }
+/* ════ 보험 Q&A 답글(comments) — 4곳 뷰어 공용 ════
+ * 질문자는 비공개, 답변자는 이름+소속(users.role) 표시. comments={post_id,content,author_id,author_name,created_at}.
+ * 엘리먼트 id는 영역 prefix로 분리(iv/mys/mr/voice) — 같은 글 id가 여러 뷰에 떠도 충돌 없음. */
+function qnaThreadHtml(postId, px){
+  var cid=px+'-qcm-'+postId, tid=px+'-qra-'+postId;
+  return '<div class="qna-thread">'
+    +'<div class="qna-cmts" id="'+cid+'"><div class="qna-cmt-empty">답변 불러오는 중…</div></div>'
+    +'<div class="qna-reply"><textarea class="qna-reply-ta" id="'+tid+'" placeholder="답변을 남겨보세요 (작성자 이름·소속이 함께 표시됩니다)" maxlength="2000"></textarea>'
+    +'<button class="post-act qna-reply-btn" onclick="submitQnaComment('+postId+',\''+px+'\')">답변 등록</button></div>'
+    +'</div>';
+}
+async function loadQnaComments(postId, px){
+  var box=document.getElementById(px+'-qcm-'+postId); if(!box) return;
+  if(!window.db||!window.db.fetch){ box.innerHTML=''; return; }
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  try{
+    var res=await window.db.fetch('/rest/v1/comments?post_id=eq.'+encodeURIComponent(postId)+'&order=created_at.asc&select=id,content,author_id,author_name,created_at');
+    if(!res.ok){ box.innerHTML='<div class="qna-cmt-empty">답변을 불러오지 못했습니다 ('+res.status+')</div>'; return; }
+    var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
+    var ids=[]; rows.forEach(function(c){ if(c.author_id&&ids.indexOf(c.author_id)<0) ids.push(c.author_id); });
+    var roleMap={};
+    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ roleMap[u.id]=u.role; }); } }catch(e){} }
+    if(!rows.length){ box.innerHTML='<div class="qna-cmt-empty">아직 답변이 없습니다. 첫 답변을 남겨보세요.</div>'; return; }
+    box.innerHTML='<div class="qna-cmt-cnt">답변 '+rows.length+'</div>'+rows.map(function(c){
+      var rl=(roleMap[c.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[c.author_id]])||'';
+      var who=esc(c.author_name||'(이름 없음)')+(rl?' · '+rl:'');
+      var d=new Date(c.created_at); var dt=isNaN(d.getTime())?'':((d.getMonth()+1)+'월 '+d.getDate()+'일');
+      return '<div class="qna-cmt"><div class="qna-cmt-who">'+who+'</div><div class="qna-cmt-body">'+esc(c.content||'').replace(/\n/g,'<br>')+'</div><div class="qna-cmt-date">'+dt+'</div></div>';
+    }).join('');
+  }catch(e){ console.error('[qnaComments]',e); box.innerHTML='<div class="qna-cmt-empty">답변을 불러오지 못했습니다.</div>'; }
+}
+async function submitQnaComment(postId, px){
+  var ta=document.getElementById(px+'-qra-'+postId); var text=((ta&&ta.value)||'').trim();
+  if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('답변 내용을 적어주세요.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 답변할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var btn=ta&&ta.parentElement?ta.parentElement.querySelector('.qna-reply-btn'):null;
+  if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
+  try{
+    var body={post_id:Number(postId), content:text, author_id:(u.id||window.AppState.userId||''), author_name:(u.name||'')};
+    var res=await fetch(window.db.url('/rest/v1/comments'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(res.ok||res.status===201){ if(ta) ta.value=''; loadQnaComments(postId, px); if(typeof toast==='function') toast('답변이 등록됐어요!'); }
+    else { var err=await res.json().catch(function(){return{};}); alert('답변 등록 실패: '+(err.message||res.status)); }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='답변 등록'; } }
+}
+window.qnaThreadHtml=qnaThreadHtml; window.loadQnaComments=loadQnaComments; window.submitQnaComment=submitQnaComment;
 window.vaultQnaBack=vaultQnaBack;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
@@ -5004,7 +5065,7 @@ async function loadSmartNewsletters(){
     var posts=(_meAdmin?rows:rows.filter(function(r){return !r.is_hidden;})).map(function(r){
       var cat=r.category||'기타'; var tc=SMART_TC[cat]||'ts';
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var who=''; if(r.author_name){ var rl=(roleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[r.author_id]])||''; who=esc(r.author_name)+(rl?' '+rl:''); }
+      var who='비공개';  /* 질문자 익명 — 비공개 표시 */
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att); var _attHtml=_ah.html, _imgs=_ah.imgs, _imgNames=_ah.names;
       var _meId=(typeof _getOwnerId==='function')?_getOwnerId():null;
@@ -5022,7 +5083,7 @@ async function loadSmartNewsletters(){
   }catch(e){ console.error('[smartBoard]', e); }
 }
 window.loadSmartNewsletters = loadSmartNewsletters;
-function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];window._voiceImgs=p._imgs||[];window._voiceImgNames=p._imgNames||[];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title);document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
+function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];window._voiceImgs=p._imgs||[];window._voiceImgNames=p._imgNames||[];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title)+((key==='voice'&&p._id)?qnaThreadHtml(p._id,'voice'):'');if(key==='voice'&&p._id&&typeof loadQnaComments==='function')loadQnaComments(p._id,'voice');document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
 function showTabEmpty(d){
   var list=document.getElementById('qlist');
   if(list)list.innerHTML='<div class="qlist-empty" style="padding:34px 20px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.7">'+((d&&d.empty)||'아직 등록된 자료가 없어요.')+'</div>';
@@ -5092,7 +5153,7 @@ async function loadVoiceQna(){
     var posts=rows.map(function(r){
       var cat=r.question_type||'질문';
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var who=''; if(r.author_name){ var rl=(roleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[r.author_id]])||''; who=esc(r.author_name)+(rl?' '+rl:''); }
+      var who='비공개';  /* 질문자 익명 — 비공개 표시 */
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att);
       return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, real:true, _id:r.id, _imgs:_ah.imgs, _imgNames:_ah.names, _attachments:_att};
@@ -7175,7 +7236,7 @@ async function loadMrQna(){
     window._mrQnaCache=rows.map(function(r){
       var cat=r.question_type||'질문';
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var who=''; if(r.author_name){ var rl=(roleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[r.author_id]])||''; who=esc(r.author_name)+(rl?' '+rl:''); }
+      var who='비공개';  /* 질문자 익명 — 비공개 표시 */
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att);
       return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), bodyHtml:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
@@ -7214,7 +7275,8 @@ function mrQnaOpen(idx, keepList){
   var list=window._mrQnaFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mr-qna-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>';
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+qnaThreadHtml(p._id,'mr');
+  if(typeof loadQnaComments==='function') loadQnaComments(p._id,'mr');
   var items=document.querySelectorAll('#mr-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mr-qna-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -7312,7 +7374,7 @@ async function loadMysQna(){
     window._mysQnaCache=rows.map(function(r){
       var cat=r.question_type||'질문';
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var who=''; if(r.author_name){ var rl=(roleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[r.author_id]])||''; who=esc(r.author_name)+(rl?' '+rl:''); }
+      var who='비공개';  /* 질문자 익명 — 비공개 표시 */
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att);
       return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), bodyHtml:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
@@ -7351,7 +7413,8 @@ function mysQnaOpen(idx, keepList){
   var list=window._mysQnaFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mys-qna-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>';
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+qnaThreadHtml(p._id,'mys');
+  if(typeof loadQnaComments==='function') loadQnaComments(p._id,'mys');
   var items=document.querySelectorAll('#mys-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-qna-split'); if(sp) sp.classList.add('show-viewer'); }
 }
