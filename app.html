@@ -360,8 +360,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 
 .kbd{margin-left:auto;font-size:0.625rem;color:var(--tf);border:0.5px solid var(--bd);border-radius:5px;padding:2px 6px;}
 @media (max-width:1024px){ .kbd{display:none;} }
-.so{position:fixed;inset:0;background:rgba(8,9,11,0.6);display:none;z-index:120;padding:16px;}
-.so.open{display:flex;align-items:center;justify-content:center;}
+.so{position:fixed;inset:0;background:rgba(8,9,11,0.6);display:none;z-index:120;padding-top:8vh;}
+.so.open{display:block;}
 .sobox{max-width:640px;margin:0 auto;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-height:80vh;display:flex;flex-direction:column;}
 .soinput{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:0.5px solid var(--bd);flex-shrink:0;}
 .soinput .si{font-size:1.125rem;color:var(--ts);}
@@ -1088,6 +1088,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
   <div class="main">
     <header class="head">
       <button class="mmenu" onclick="toggleMSide()">☰</button>
+      <div class="sp"></div>
       <div class="search" onclick="openSearch()"><span class="sicon">&#8981;</span><span class="stext">스크립트, 게시글, 업무자료로 검색…</span><span class="kbd">검색</span></div>
       <div class="sp"></div>
       <button class="hbtn bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button>
