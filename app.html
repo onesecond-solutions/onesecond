@@ -144,6 +144,13 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .org-mem{padding:8px 10px;border:0.5px solid var(--bd);border-radius:8px;margin-bottom:5px;font-size:0.8125rem;color:var(--tp);display:flex;align-items:center;gap:8px;}
 .org-mem-role{font-size:0.6875rem;color:var(--ac);font-weight:700;margin-left:auto;}
 .org-mem-empty{font-size:0.75rem;color:var(--tf);padding:4px 0;}
+.org-mem{cursor:pointer;}
+.org-mem:hover{border-color:var(--ac);}
+.md-f{margin-bottom:10px;}
+.md-f label,.md-ro label{display:block;font-size:0.75rem;color:var(--ts);margin-bottom:4px;font-weight:600;}
+.md-f input,.md-f select{width:100%;padding:9px 10px;border:0.5px solid var(--bd);border-radius:8px;background:var(--s2);color:var(--tp);font-size:0.875rem;box-sizing:border-box;}
+.md-ro{margin-bottom:10px;}
+.md-ro div{font-size:0.875rem;color:var(--tp);padding:3px 0;}
 .list{overflow-y:auto;flex:1;min-height:0;}
 .moreitem{display:none;}
 .list.expanded .moreitem{display:block;}
@@ -5190,11 +5197,54 @@ function mrSelectTeam(teamId,el){
 window.mrSelectTeam=mrSelectTeam;
 function _orgGroup(label,arr){
   var RL=window.ROLE_LABEL||{};
-  var items=arr.map(function(u){ return '<div class="org-mem">'+_sEsc(u.name||'')+'<span class="org-mem-role">'+_sEsc(RL[u.role]||'')+'</span></div>'; }).join('')||'<div class="org-mem-empty">없음</div>';
+  var items=arr.map(function(u){ return '<div class="org-mem" onclick="openMemberDetail(\''+u.id+'\')">'+_sEsc(u.name||'')+'<span class="org-mem-role">'+_sEsc(RL[u.role]||'')+'</span></div>'; }).join('')||'<div class="org-mem-empty">없음</div>';
   return '<div class="org-grp"><div class="org-grp-h" onclick="this.parentNode.classList.toggle(\'fold\')"><span class="org-grp-arrow">&#9662;</span>'+label+'</div><div class="org-grp-body">'+items+'</div></div>';
 }
 function mrInvite(kind){ if(typeof toast==='function') toast('초대(추가) 기능은 다음 단계에서 연결됩니다'); }
 window.mrInvite=mrInvite;
+/* 팀원 카드 클릭 → 상세(개인정보·회사·지점·팀·가입일) + 관리자 수정 */
+function _mdField(label,id,val){ return '<div class="md-f"><label>'+label+'</label><input id="'+id+'" value="'+_sEsc(val||'')+'"></div>'; }
+function _mdSelect(label,id,opts){ return '<div class="md-f"><label>'+label+'</label><select id="'+id+'"><option value="">미지정</option>'+opts+'</select></div>'; }
+async function openMemberDetail(uid){
+  if(!window.db||!window.db.fetch) return;
+  try{
+    var ur=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(uid)+'&select=id,name,phone,email,company,role,branch_id,team_id,created_at&limit=1');
+    var u=(ur.ok?await ur.json():[])[0]; if(!u){ if(typeof toast==='function')toast('정보를 불러오지 못했습니다'); return; }
+    var br=await window.db.fetch('/rest/v1/branches?select=id,name&order=name'); var branches=br.ok?await br.json():[];
+    var tm=await window.db.fetch('/rest/v1/teams?select=id,name&order=name'); var teams=tm.ok?await tm.json():[];
+    var RL=window.ROLE_LABEL||{};
+    var brOpt=branches.map(function(b){return '<option value="'+b.id+'"'+(b.id===u.branch_id?' selected':'')+'>'+_sEsc(b.name)+'</option>';}).join('');
+    var tmOpt=teams.map(function(t){return '<option value="'+t.id+'"'+(t.id===u.team_id?' selected':'')+'>'+_sEsc(t.name)+'</option>';}).join('');
+    var old=document.getElementById('memberDetailModal'); if(old) old.remove();
+    var m=document.createElement('div'); m.id='memberDetailModal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99996;display:flex;align-items:center;justify-content:center;padding:20px';
+    m.onclick=function(e){ if(e.target===m) m.remove(); };
+    m.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:460px;max-height:88vh;overflow:auto;padding:20px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-weight:800;font-size:1.05em;color:var(--tp)">팀원 정보</div><button onclick="var x=document.getElementById(\'memberDetailModal\');if(x)x.remove();" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer">&#10005;</button></div>'
+      +_mdField('이름','md-name',u.name)
+      +_mdField('연락처','md-phone',u.phone)
+      +_mdField('이메일','md-email',u.email)
+      +_mdField('회사명','md-company',u.company)
+      +_mdSelect('지점명','md-branch',brOpt)
+      +_mdSelect('팀명','md-team',tmOpt)
+      +'<div class="md-ro"><label>직급</label><div>'+_sEsc(RL[u.role]||u.role||'')+'</div></div>'
+      +'<div class="md-ro"><label>가입일자</label><div>'+_sEsc(String(u.created_at||'').slice(0,10))+'</div></div>'
+      +'<button onclick="saveMemberDetail(\''+u.id+'\')" style="width:100%;margin-top:12px;padding:11px;border:none;border-radius:10px;background:var(--ac);color:#fff;font-weight:700;cursor:pointer">저장</button>'
+      +'</div>';
+    document.body.appendChild(m);
+  }catch(e){ if(typeof toast==='function')toast('오류가 발생했습니다'); }
+}
+window.openMemberDetail=openMemberDetail;
+async function saveMemberDetail(uid){
+  var g=function(id){var el=document.getElementById(id);return el?el.value:'';};
+  var body={ name:g('md-name'), phone:g('md-phone'), email:g('md-email'), company:g('md-company'), branch_id:g('md-branch')||null, team_id:g('md-team')||null };
+  try{
+    var res=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(uid),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(res.ok||res.status===204){ if(typeof toast==='function')toast('저장했습니다'); var m=document.getElementById('memberDetailModal'); if(m)m.remove(); if(typeof loadBranchOrg==='function') loadBranchOrg(); }
+    else { if(typeof toast==='function')toast('저장 권한이 없거나 실패했습니다'); }
+  }catch(e){ if(typeof toast==='function')toast('저장에 실패했습니다'); }
+}
+window.saveMemberDetail=saveMemberDetail;
 /* ─────────────────────────────────────────────
    스크립트 view — v1 10 stage + 가로 정렬 + 오버레이 확장 (2026-05-27 갈아끼움)
    - 풀스크린 모달 통째 폐기 → 가로 정렬 카드 + 오버레이 확장
