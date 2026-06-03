@@ -360,8 +360,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 
 .kbd{margin-left:auto;font-size:0.625rem;color:var(--tf);border:0.5px solid var(--bd);border-radius:5px;padding:2px 6px;}
 @media (max-width:1024px){ .kbd{display:none;} }
-.so{position:fixed;inset:0;background:rgba(8,9,11,0.6);display:none;z-index:120;padding-top:8vh;}
-.so.open{display:block;}
+.so{position:fixed;inset:0;background:rgba(8,9,11,0.6);display:none;z-index:120;padding:16px;}
+.so.open{display:flex;align-items:center;justify-content:center;}
 .sobox{max-width:640px;margin:0 auto;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-height:80vh;display:flex;flex-direction:column;}
 .soinput{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:0.5px solid var(--bd);flex-shrink:0;}
 .soinput .si{font-size:1.125rem;color:var(--ts);}
@@ -1088,7 +1088,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
   <div class="main">
     <header class="head">
       <button class="mmenu" onclick="toggleMSide()">☰</button>
-      <div class="search" onclick="openSearch()"><span class="sicon">&#8981;</span><span class="stext">스크립트, 게시글, 업무자료로 검색…</span><span class="kbd">Ctrl K</span></div>
+      <div class="search" onclick="openSearch()"><span class="sicon">&#8981;</span><span class="stext">스크립트, 게시글, 업무자료로 검색…</span><span class="kbd">검색</span></div>
       <div class="sp"></div>
       <button class="hbtn bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button>
       <div class="acct">
@@ -1891,7 +1891,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="soinput">
       <span class="si">&#8981;</span>
       <input id="sinput" placeholder="상품·인수기준·질병명으로 검색" oninput="doSearch(this.value)" autocomplete="off">
-      <button class="sox" onclick="closeSearch()">ESC</button>
+      <button class="sox" onclick="closeSearch()" title="닫기 (ESC)">&#10005;</button>
     </div>
     <div class="sobody" id="sobody">
       <div class="sogroup">최근 검색</div>
@@ -5701,7 +5701,7 @@ async function _runSearch(q){
   }
   if(!total) html='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">키워드 결과가 없습니다 — 위 ✨ AI 정리를 눌러보세요</div>';
   /* AI 회사별 정리 바를 맨 위에 (소식지 본문 기반, Gemini 합성) */
-  var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ AI로 회사별 정리·비교</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
+  var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
   body.innerHTML=aiBar+html;
 }
 window._runSearch=_runSearch;
