@@ -1749,6 +1749,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="chip" onclick="ivFilter(this,'인수')">인수</div>
         <div class="chip" onclick="ivFilter(this,'시책/프로모션')">시책/프로모션</div>
         <div class="chip" onclick="ivFilter(this,'기타')">기타</div>
+        <div class="chip" onclick="ivMemoChip(this)">메모</div>
         <div class="chip" onclick="calOpen(this,'iv')">캘린더</div>
       </div>
       <div class="split" id="iv-split">
@@ -2900,6 +2901,59 @@ function ivFilter(el, type){
   if(window._ivCache) ivRender(window._ivCache, type);  /* PR-B1: category 필터 (캐시 기반) */
 }
 window.ivFilter = ivFilter;
+/* ════ 보험사 자료실 '메모' 칩 — 개인 메모(library, owner 전용)를 iv-split에 표시. MY SPACE 메모와 동일 본인 메모 ════
+ * 원수사 게시글(iv-list posts)과 섞이지 않음 — 별 캐시/필터/open(_ivMemoFiltered/ivMemoOpen). 작성은 우하단 📝. */
+window._ivMemoCache=null; window._ivMemoLoaded=false; window._ivMemoFiltered=null;
+function ivMemoChip(el){
+  var chips=el.parentElement.querySelectorAll('.chip'); for(var i=0;i<chips.length;i++) chips[i].classList.remove('on'); el.classList.add('on');
+  if(typeof calBackToDocs==='function') calBackToDocs('iv');  /* 캘린더였으면 iv-split 복원 */
+  loadIvMemo();
+}
+async function loadIvMemo(force){
+  var listEl=document.getElementById('iv-list'); if(!listEl) return;
+  var vv=document.getElementById('iv-viewer');
+  var token=window.db&&window.db.getToken&&window.db.getToken();
+  var userId=(typeof _getOwnerId==='function')?_getOwnerId():(window.AppState&&window.AppState.userId);
+  if(!token||!userId){ listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; if(vv) vv.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  if(!window._ivMemoCache||force){
+    listEl.innerHTML='<div class="mys-news-empty">불러오는 중… ⏳</div>';
+    try{
+      var res=await fetch(window.db.url('/rest/v1/library?owner_id=eq.'+encodeURIComponent(userId)+'&order=created_at.desc&limit=100'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
+      var rows=res.ok?(await res.json()):[]; if(!Array.isArray(rows)) rows=[];
+      window._ivMemoCache=rows.filter(function(l){ return l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url; }).map(function(l){ return {_type:'library',_badge:'메모',_date:l.created_at,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id,keywords:l.keywords}; });
+      window._ivMemoLoaded=true;
+    }catch(e){ listEl.innerHTML='<div class="mys-news-empty">불러오기 실패.</div>'; return; }
+  }
+  ivMemoRender(window._ivMemoCache);
+}
+function ivMemoRender(items){
+  var listEl=document.getElementById('iv-list'); if(!listEl) return;
+  window._ivMemoFiltered=items||[];
+  var vv=document.getElementById('iv-viewer');
+  if(!items||!items.length){ listEl.innerHTML='<div class="mys-news-empty">아직 저장된 메모가 없습니다.<br>우하단 📝 빠른 메모로 적어보세요.</div>'; if(vv) vv.innerHTML='<div class="mys-news-empty">메모가 없습니다.</div>'; return; }
+  listEl.innerHTML=items.map(function(it,i){
+    var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):'';
+    var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var dot=(typeof OS_MEMO_COLORS!=='undefined')?'<span class="mys-cdot" style="background:'+OS_MEMO_COLORS[_memoColorKey(it.keywords)]+'"></span>':'';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="ivMemoOpen('+i+')" style="--tc:var(--t-event)"><span class="badge">메모</span>'+dot+'<div class="it">'+title+'</div><div class="id">'+dt+'</div></div>';
+  }).join('');
+  ivMemoOpen(0,true);
+}
+function ivMemoOpen(idx, keepList){
+  var list=window._ivMemoFiltered||[]; var it=list[idx]; if(!it) return;
+  var v=document.getElementById('iv-viewer'); if(!v) return;
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var bodyText=it.memo_text||'';
+  var memoColorKey=(typeof OS_MEMO_COLORS!=='undefined')?_memoColorKey(it.keywords):null;
+  window._mysDetailCurrent={id:it.id, type:'library', title:it.title||'', body:bodyText, idx:idx, _item:it, color:memoColorKey, ctx:'iv'};
+  var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):'';
+  var _memoHex=(typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
+  var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
+  v.innerHTML='<span class="vbadge">메모</span><div class="vmeta">'+esc(dt)+'</div><div class="vbody"'+_bodyStyle+'>'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+'</div><div class="post-acts"><button class="post-act" onclick="mysEditStart()">✏️ 수정</button><button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\'library\')">삭제</button></div>';
+  var items=document.querySelectorAll('#iv-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
+  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.add('show-viewer'); }
+}
+window.ivMemoChip=ivMemoChip; window.loadIvMemo=loadIvMemo; window.ivMemoRender=ivMemoRender; window.ivMemoOpen=ivMemoOpen;
 async function ivOpenWrite(forceEtc){
   /* 모달이 v-insurer-vault 안에 있어 다른 view(스마트게시판=voice)에선 부모 display:none → 안 뜸. body 직속으로 이동 */
   var _mw=document.getElementById('ivWriteModal'); if(_mw && _mw.parentElement!==document.body) document.body.appendChild(_mw);
@@ -6946,7 +7000,7 @@ function mysOpenItem(idx, keepList){
   else { var parts=[]; if(it.description)parts.push(it.description); if(it.memo_text)parts.push(it.memo_text); bodyText=parts.join('\n\n'); }
   var isMemo=it._badge==='메모';
   var memoColorKey=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?_memoColorKey(it.keywords):null;
-  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText, idx:idx, _item:it, color:memoColorKey};
+  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText, idx:idx, _item:it, color:memoColorKey, ctx:'mys'};
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var delType=it._type==='script'?'script':'library';
   var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):(it._date||'');
@@ -7180,7 +7234,7 @@ async function loadMrOffice(force){
     var results=await Promise.all([fetch(scrUrl,{headers:headers}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),fetch(libUrl,{headers:headers}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})]);
     var scripts=results[0]||[], library=results[1]||[]; var items=[];
     for(var i=0;i<scripts.length;i++){ var s=scripts[i]; items.push({_type:'script',_badge:'스크립트',_date:s.created_at,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments}); }
-    for(var j=0;j<library.length;j++){ var l=library[j]; var badge=(l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url)?'메모':'자료'; items.push({_type:'library',_badge:badge,_date:l.created_at,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id}); }
+    for(var j=0;j<library.length;j++){ var l=library[j]; var badge=(l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url)?'메모':'자료'; items.push({_type:'library',_badge:badge,_date:l.created_at,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id,keywords:l.keywords}); }
     items.sort(function(a,b){return (b._date||'').localeCompare(a._date||'');});
     window._mrOfficeCache=items; window._mrOfficeLoaded=true; renderMrOffice(items);
   }catch(e){ grid.innerHTML='<div class="mys-news-empty">불러오기 실패.</div>'; }
@@ -7195,7 +7249,8 @@ function renderMrOffice(items){
     var tc=MYS_COLOR[it._badge]||'var(--ac)'; var dt=fmtMysDate(it._date);
     var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var tableName=(it._type==='script')?'scripts':'library';
-    return '<div class="item'+(i===0?' on':'')+'" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mrOfficeOpen('+i+')" style="--tc:'+tc+'"><span class="badge">'+it._badge+'</span><div class="it">'+title+'</div><div class="id">'+dt+'</div></div>';
+    var dot=(it._badge==='메모'&&typeof OS_MEMO_COLORS!=='undefined')?'<span class="mys-cdot" style="background:'+OS_MEMO_COLORS[_memoColorKey(it.keywords)]+'"></span>':'';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mrOfficeOpen('+i+')" style="--tc:'+tc+'"><span class="badge">'+it._badge+'</span>'+dot+'<div class="it">'+title+'</div><div class="id">'+dt+'</div></div>';
   }).join('');
   mrOfficeOpen(0, true);
 }
@@ -7207,13 +7262,19 @@ function mrOfficeOpen(idx, keepList){
   if(it._type==='script'){ bodyText=it.script_text||''; }
   else if(it._badge==='메모'){ bodyText=it.memo_text||''; }
   else { var parts=[]; if(it.description)parts.push(it.description); if(it.memo_text)parts.push(it.memo_text); bodyText=parts.join('\n\n'); }
-  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText};
+  var isMemo=it._badge==='메모';
+  var memoColorKey=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?_memoColorKey(it.keywords):null;
+  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText, idx:idx, _item:it, color:memoColorKey, ctx:'mr'};
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var delType=it._type==='script'?'script':'library';
   var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):(it._date||'');
   var attHtml='', _ia=it.attachments; if(typeof _ia==='string'){ try{ _ia=JSON.parse(_ia); }catch(e){ _ia=[]; } } if(!Array.isArray(_ia)) _ia=[];
   if(_ia.length){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
-  v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span><div class="vttl">'+esc(it.title||'제목 없음')+'</div><div class="vmeta">'+esc(dt)+'</div><div class="vbody">'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div><div class="post-acts"><button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
+  var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
+  var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
+  var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');
+  var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):'';
+  v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'+_ttlHtml+'<div class="vmeta">'+esc(dt)+'</div><div class="vbody"'+_bodyStyle+'>'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div><div class="post-acts">'+_editBtn+'<button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
   var items=document.querySelectorAll('#mr-office-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mr-office-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -7998,7 +8059,11 @@ async function deleteMyspaceItem(id,type){
   try{
     var res=await fetch(window.db.url(url),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     if(res.ok||res.status===204){
-      window._myspaceLoaded=false;loadMyspace(true); if(typeof loadMrOffice==='function'){ window._mrOfficeLoaded=false; loadMrOffice(true); }
+      window._myspaceLoaded=false; window._mrOfficeLoaded=false; window._ivMemoLoaded=false;
+      var _dx=(window._mysDetailCurrent&&window._mysDetailCurrent.ctx)||'mys';
+      if(_dx==='mr'&&typeof loadMrOffice==='function') loadMrOffice(true);
+      else if(_dx==='iv'&&typeof loadIvMemo==='function') loadIvMemo(true);
+      else if(typeof loadMyspace==='function') loadMyspace(true);
       if(typeof toast==='function')toast('삭제 완료');
     }else{alert('삭제 실패: '+res.status);}
   }catch(e){alert('삭제 중 오류가 발생했습니다.');}
@@ -8013,12 +8078,20 @@ function _memoColorKey(keywords){
   return 'yellow';
 }
 window._mysEditColor='yellow';
+/* 메모 상세/수정 컨텍스트 — MY SPACE(mys)·매니저룸 오피스(mr)·보험사 자료실 메모(iv) 공용.
+ * 각 open 함수가 _mysDetailCurrent.ctx 지정 → 수정/취소/재로드가 해당 영역으로 라우팅. */
+var MEMO_CTX={
+  mys:{viewer:'mysViewer',         reopen:function(i){ if(typeof mysOpenItem==='function') mysOpenItem(i,true); },   reload:function(){ window._myspaceLoaded=false;  if(typeof loadMyspace==='function')  return loadMyspace(true); }},
+  mr: {viewer:'mr-office-viewer',  reopen:function(i){ if(typeof mrOfficeOpen==='function') mrOfficeOpen(i,true); }, reload:function(){ window._mrOfficeLoaded=false; if(typeof loadMrOffice==='function') return loadMrOffice(true); }},
+  iv: {viewer:'iv-viewer',         reopen:function(i){ if(typeof ivMemoOpen==='function') ivMemoOpen(i,true); },     reload:function(){ window._ivMemoLoaded=false;   if(typeof loadIvMemo==='function')   return loadIvMemo(true); }}
+};
+function _memoCtx(){ var c=window._mysDetailCurrent; var k=(c&&c.ctx&&MEMO_CTX[c.ctx])?c.ctx:'mys'; return MEMO_CTX[k]; }
 function mysEditColor(k){ if(typeof OS_MEMO_COLORS==='undefined'||!OS_MEMO_COLORS[k])return; window._mysEditColor=k; var sws=document.querySelectorAll('#mysEditColors .os-memo-sw'); for(var i=0;i<sws.length;i++) sws[i].classList.toggle('on', sws[i].getAttribute('data-color')===k); }
-function mysEditCancel(){ var c=window._mysDetailCurrent; if(c&&typeof c.idx==='number') mysOpenItem(c.idx, true); }
+function mysEditCancel(){ var c=window._mysDetailCurrent; if(c&&typeof c.idx==='number') _memoCtx().reopen(c.idx); }
 function mysEditStart(){
   var c=window._mysDetailCurrent; if(!c||!c._item) return; var it=c._item;
   if(it._type!=='library') return;  /* 스크립트 수정은 글쓰기 폼(차후) — 여기선 library(메모/자료)만 */
-  var v=document.getElementById('mysViewer'); if(!v) return;
+  var v=document.getElementById(_memoCtx().viewer); if(!v) return;
   var isMemo=it._badge==='메모';
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];});};
   var curText=isMemo?(it.memo_text||''):(it.description||'');
@@ -8050,8 +8123,8 @@ async function mysEditSave(){
   try{
     var res=await fetch(window.db.url('/rest/v1/library?id=eq.'+encodeURIComponent(it.id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
     if(res.ok||res.status===204){
-      window._myspaceLoaded=false; window._homeRecentLoaded=false;
-      await loadMyspace(true);
+      window._myspaceLoaded=false; window._mrOfficeLoaded=false; window._ivMemoLoaded=false; window._homeRecentLoaded=false;
+      await _memoCtx().reload();
       if(typeof toast==='function') toast('수정됐어요!');
     }else{ var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); }
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
