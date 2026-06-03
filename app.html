@@ -228,6 +228,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .os-memo-save:hover{background:#241F12;}
 .os-memo-save:disabled{opacity:.5;cursor:not-allowed;}
 .os-memo-hint{font-size:0.6875rem;color:#8A7A3A;white-space:nowrap;}
+/* MY SPACE 메모 카드 색상 점 (저장된 포스트잇 색 표시) */
+.mys-cdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:6px;vertical-align:middle;border:1px solid rgba(0,0,0,0.15);}
 @media (max-width:1024px){
   .os-memo-fab{right:16px;bottom:134px;width:48px;height:48px;}
   .split.show-viewer .os-memo-fab{bottom:72px;}
@@ -6900,7 +6902,7 @@ async function loadMyspace(force){
     for(var j=0;j<library.length;j++){
       var l=library[j];
       var badge=(l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url)?'메모':'자료';
-      items.push({_type:'library',_badge:badge,_date:l.created_at,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id});
+      items.push({_type:'library',_badge:badge,_date:l.created_at,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id,keywords:l.keywords});
     }
     items.sort(function(a,b){return (b._date||'').localeCompare(a._date||'');});
     window._myspaceCache=items;
@@ -6927,8 +6929,9 @@ function renderMyspace(items){
     var dt=fmtMysDate(it._date);
     var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var tableName=(it._type==='script')?'scripts':'library';
+    var dot=(it._badge==='메모'&&typeof OS_MEMO_COLORS!=='undefined')?'<span class="mys-cdot" style="background:'+OS_MEMO_COLORS[_memoColorKey(it.keywords)]+'"></span>':'';
     return '<div class="item'+(i===0?' on':'')+'" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
-      +'<span class="badge">'+it._badge+'</span>'
+      +'<span class="badge">'+it._badge+'</span>'+dot
       +'<div class="it">'+title+'</div>'
       +'<div class="id">'+dt+'</div></div>';
   }).join('');
@@ -6941,18 +6944,23 @@ function mysOpenItem(idx, keepList){
   if(it._type==='script'){ bodyText=it.script_text||''; }
   else if(it._badge==='메모'){ bodyText=it.memo_text||''; }
   else { var parts=[]; if(it.description)parts.push(it.description); if(it.memo_text)parts.push(it.memo_text); bodyText=parts.join('\n\n'); }
-  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText};
+  var isMemo=it._badge==='메모';
+  var memoColorKey=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?_memoColorKey(it.keywords):null;
+  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText, idx:idx, _item:it, color:memoColorKey};
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var delType=it._type==='script'?'script':'library';
   var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):(it._date||'');
   /* 스크립트 첨부 → 자료실/게시판과 동일 .atts + 딸깍 */
   var attHtml='', _ia=it.attachments; if(typeof _ia==='string'){ try{ _ia=JSON.parse(_ia); }catch(e){ _ia=[]; } } if(!Array.isArray(_ia)) _ia=[];
   if(_ia.length){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
+  var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
+  var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
+  var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):'';
   v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'
     +'<div class="vttl">'+esc(it.title||'제목 없음')+'</div>'
     +'<div class="vmeta">'+esc(dt)+'</div>'
-    +'<div class="vbody">'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div>'
-    +'<div class="post-acts"><button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
+    +'<div class="vbody"'+_bodyStyle+'>'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div>'
+    +'<div class="post-acts">'+_editBtn+'<button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
   var items=document.querySelectorAll('#mysList .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -7994,6 +8002,59 @@ async function deleteMyspaceItem(id,type){
     }else{alert('삭제 실패: '+res.status);}
   }catch(e){alert('삭제 중 오류가 발생했습니다.');}
 }
+
+/* === MY SPACE 메모/자료 인라인 수정 (library PATCH). 메모는 색상도 수정 ===
+ * keywords 센티넬('메모색:<key>')에서 색 복원. 저장 컬럼 = library 검증 컬럼만 부분 PATCH. */
+function _memoColorKey(keywords){
+  if(Array.isArray(keywords)){
+    for(var i=0;i<keywords.length;i++){ var k=String(keywords[i]||''); if(k.indexOf('메모색:')===0){ var key=k.slice(4); if(typeof OS_MEMO_COLORS!=='undefined'&&OS_MEMO_COLORS[key]) return key; } }
+  }
+  return 'yellow';
+}
+window._mysEditColor='yellow';
+function mysEditColor(k){ if(typeof OS_MEMO_COLORS==='undefined'||!OS_MEMO_COLORS[k])return; window._mysEditColor=k; var sws=document.querySelectorAll('#mysEditColors .os-memo-sw'); for(var i=0;i<sws.length;i++) sws[i].classList.toggle('on', sws[i].getAttribute('data-color')===k); }
+function mysEditCancel(){ var c=window._mysDetailCurrent; if(c&&typeof c.idx==='number') mysOpenItem(c.idx, true); }
+function mysEditStart(){
+  var c=window._mysDetailCurrent; if(!c||!c._item) return; var it=c._item;
+  if(it._type!=='library') return;  /* 스크립트 수정은 글쓰기 폼(차후) — 여기선 library(메모/자료)만 */
+  var v=document.getElementById('mysViewer'); if(!v) return;
+  var isMemo=it._badge==='메모';
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];});};
+  var curText=isMemo?(it.memo_text||''):(it.description||'');
+  var colorKey=isMemo?_memoColorKey(it.keywords):'yellow';
+  window._mysEditColor=colorKey;
+  var swHtml='';
+  if(isMemo&&typeof OS_MEMO_COLORS!=='undefined'){
+    swHtml='<div class="os-memo-colors" id="mysEditColors" style="padding:10px 0 4px">'+Object.keys(OS_MEMO_COLORS).map(function(k){ return '<button class="os-memo-sw'+(k===colorKey?' on':'')+'" data-color="'+k+'" style="background:'+OS_MEMO_COLORS[k]+'" onclick="mysEditColor(\''+k+'\')" aria-label="'+k+'"></button>'; }).join('')+'</div>';
+  }
+  v.innerHTML='<div class="vttl" style="margin-bottom:10px">'+(isMemo?'메모 수정':'자료 수정')+'</div>'
+    +'<input id="mysEditTitle" class="mys-write-input" style="margin-bottom:8px" value="'+esc(it.title||'')+'" placeholder="제목" maxlength="120" />'
+    +'<textarea id="mysEditText" class="mys-write-textarea" placeholder="내용" maxlength="2000">'+esc(curText)+'</textarea>'
+    +swHtml
+    +'<div class="post-acts"><button class="post-act" onclick="mysEditSave()">💾 저장</button><button class="post-act" onclick="mysEditCancel()">취소</button></div>';
+  setTimeout(function(){var t=document.getElementById('mysEditText'); if(t) t.focus();},40);
+}
+async function mysEditSave(){
+  var c=window._mysDetailCurrent; if(!c||!c._item) return; var it=c._item;
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var titleEl=document.getElementById('mysEditTitle'), textEl=document.getElementById('mysEditText');
+  var title=((titleEl&&titleEl.value)||'').trim(), text=((textEl&&textEl.value)||'').trim();
+  var isMemo=it._badge==='메모';
+  if(!text){ if(textEl) textEl.focus(); if(typeof toast==='function') toast('내용을 입력해 주세요.'); return; }
+  if(!title){ var fl=text.split('\n')[0].trim(); title=fl?(fl.length>24?fl.slice(0,24)+'…':fl):(isMemo?'빠른 메모':'제목 없음'); }
+  var body=isMemo
+    ? {title:title, description:(text.length>200?text.slice(0,200):text), memo_text:text, keywords:['메모색:'+(window._mysEditColor||'yellow')]}
+    : {title:title, description:text};
+  try{
+    var res=await fetch(window.db.url('/rest/v1/library?id=eq.'+encodeURIComponent(it.id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(res.ok||res.status===204){
+      window._myspaceLoaded=false; window._homeRecentLoaded=false;
+      await loadMyspace(true);
+      if(typeof toast==='function') toast('수정됐어요!');
+    }else{ var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+}
+window.mysEditStart=mysEditStart; window.mysEditColor=mysEditColor; window.mysEditCancel=mysEditCancel; window.mysEditSave=mysEditSave;
 
 /* filterMys 갱신 — 동적 자료 정합 (data-badge 자료 자리) */
 function filterMys(el,cat){
