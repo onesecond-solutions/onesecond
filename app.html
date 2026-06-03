@@ -1343,8 +1343,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div><!-- /mys-team -->
       <div id="mys-qna" style="display:none">
       <div class="mys-toolbar"><div class="chips" id="mys-qna-subtabs">
-        <div class="chip on" onclick="mysQnaSub(this,'today')">TODAY</div>
-        <div class="chip" onclick="mysQnaSub(this,'all')">전체보기</div>
+        <div class="chip" onclick="mysQnaSub(this,'today')">TODAY</div>
+        <div class="chip on" onclick="mysQnaSub(this,'all')">전체보기</div>
         <div class="chip" onclick="mysQnaSub(this,'mine')">MINE</div>
       </div></div>
       <div class="split" id="mys-qna-split">
@@ -1587,8 +1587,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div><!-- /mr-team -->
       <div id="mr-qna" style="display:none">
       <div class="mys-toolbar"><div class="chips" id="mr-qna-subtabs">
-        <div class="chip on" onclick="mrQnaSub(this,'today')">TODAY</div>
-        <div class="chip" onclick="mrQnaSub(this,'all')">전체보기</div>
+        <div class="chip" onclick="mrQnaSub(this,'today')">TODAY</div>
+        <div class="chip on" onclick="mrQnaSub(this,'all')">전체보기</div>
         <div class="chip" onclick="mrQnaSub(this,'mine')">MINE</div>
       </div></div>
       <div class="split" id="mr-qna-split">
@@ -1646,8 +1646,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div id="iv-todo"></div>
       <div id="iv-today" style="display:none">
         <div class="chips" id="iv-qna-subtabs">
-          <div class="chip on" onclick="vaultQnaSub(this,'today')">TODAY</div>
-          <div class="chip" onclick="vaultQnaSub(this,'all')">전체보기</div>
+          <div class="chip" onclick="vaultQnaSub(this,'today')">TODAY</div>
+          <div class="chip on" onclick="vaultQnaSub(this,'all')">전체보기</div>
         </div>
         <div class="split" id="iv-qna-split">
           <div class="col list-col">
@@ -2651,7 +2651,7 @@ window._ivReloadBoards=_ivReloadBoards;
 /* ════ 보험 Q&A (보험사 자료실 첫 탭) — 원수사 임직원이 우리 회사로 온 질문을 보는 자리.
  * 현장의 소리 '보험 Q&A'를 원수사 페이지로 떼어 넣음. 하위 서브탭 TODAY(오늘)/전체보기(누적·최신순).
  * 데이터 = posts board_type='qna' (RLS가 노출 범위 결정). 첨부 딸깍 = ivOpenLb 재사용. read-only(답변 기능은 다음 단계). ════ */
-window._vaultQnaCache=null; window._vaultQnaMode='today';
+window._vaultQnaCache=null; window._vaultQnaMode='all';
 function _vaultIsTodayKst(iso){ if(!iso) return false; var d=new Date(iso); if(isNaN(d.getTime())) return false; var k=new Date(Date.now()+9*3600000), dk=new Date(d.getTime()+9*3600000); return k.getUTCFullYear()===dk.getUTCFullYear()&&k.getUTCMonth()===dk.getUTCMonth()&&k.getUTCDate()===dk.getUTCDate(); }
 function vaultQnaSub(el, mode){
   var subs=document.querySelectorAll('#iv-qna-subtabs .chip'); for(var i=0;i<subs.length;i++) subs[i].classList.remove('on');
@@ -4823,7 +4823,7 @@ var voiceTabData = {
   smart: {title:'스마트 게시판', sub:'모든 보험회사 자료가 한데 모이는 곳.', chips:['전체','긴급(마감)','공지','소식지','상품','인수','시책/프로모션','기타'], cnt:0, posts:[], empty:'아직 모인 자료가 없어요.'},
   branch: {title:'지점 게시판', sub:'지점장 공지가 모이는 곳 (작성은 매니저룸 지점장 화면에서).', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>매니저룸 지점장 화면에서 작성하면 여기에 모입니다.'}
 };
-function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){if(d.posts.length>0){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;showTabPost(key,0);}else{showTabEmpty(d);}}if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();if(key==='team'&&typeof loadTeamNotices==='function')loadTeamNotices();if(key==='branch'&&typeof loadBranchFeed==='function')loadBranchFeed();}
+function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){if(d.posts.length>0){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;showTabPost(key,0);}else{showTabEmpty(d);}}if(key==='voice'&&typeof loadVoiceQna==='function')loadVoiceQna();if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();if(key==='team'&&typeof loadTeamNotices==='function')loadTeamNotices();if(key==='branch'&&typeof loadBranchFeed==='function')loadBranchFeed();}
 
 /* 스마트 게시판 = 모든 보험회사 자료가 한데 모이는 통합 모임 (posts board_type='insurer' 전체).
  * 보험사 자료실 = 회사별(RLS 필터) 입구·원본 / 스마트 게시판 = 회사 구분 없이 전체 모임(read-only).
@@ -4917,6 +4917,37 @@ async function _loadNoticeFeed(scope, tabKey){
 }
 function loadTeamNotices(){ return _loadNoticeFeed('team_internal','team'); }
 function loadBranchFeed(){ return _loadNoticeFeed('branch_internal','branch'); }
+/* 현장의 소리 · 보험Q&A = posts(board_type=qna) 실데이터 (2026-06-03 연결 누락 정정).
+ * MY SPACE/자료실/매니저룸과 동일 소스. read-only. 소식지 제외. */
+async function loadVoiceQna(){
+  var token=window.db&&window.db.getToken&&window.db.getToken();
+  var list=document.getElementById('qlist');
+  if(!token) return;
+  try{
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type');
+    if(!res.ok) return;
+    var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
+    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
+    var roleMap={};
+    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ roleMap[u.id]=u.role; }); } }catch(e){} }
+    var posts=rows.map(function(r){
+      var cat=r.question_type||'질문';
+      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
+      var who=''; if(r.author_name){ var rl=(roleMap[r.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[r.author_id]])||''; who=esc(r.author_name)+(rl?' '+rl:''); }
+      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
+      var _ah=_voiceAttsHtml(_att);
+      return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, real:true, _id:r.id, _imgs:_ah.imgs, _imgNames:_ah.names, _attachments:_att};
+    });
+    if(voiceTabData.voice){ voiceTabData.voice.posts=posts; voiceTabData.voice.cnt=posts.length; }
+    var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
+    if(!list) return;
+    if(!posts.length){ showTabEmpty(voiceTabData.voice); return; }
+    list.innerHTML=posts.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\'voice\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>'; }).join('');
+    showTabPost('voice',0);
+  }catch(e){ console.error('[voiceQna]', e); }
+}
+window.loadVoiceQna=loadVoiceQna;
 window.loadTeamNotices=loadTeamNotices; window.loadBranchFeed=loadBranchFeed;
 /* 작성자 본인(+admin) 글 삭제 — 소프트(deleted_at), 피드 deleted_at=is.null 필터로 즉시 숨김. RLS team_notices_update/delete가 author=auth.uid() 허용 */
 async function voiceDeleteNotice(id, tabKey){
@@ -6851,7 +6882,7 @@ window.mrTeamOpen=mrTeamOpen;
 function mrTeamBack(){ var sp=document.getElementById('mr-team-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mrTeamBack=mrTeamBack;
 /* ════ 매니저룸 보험Q&A — MY SPACE 보험Q&A(posts qna) 복제. MY SPACE 무변(회귀0) ════ */
-window._mrQnaCache=null; window._mrQnaMode='today';
+window._mrQnaCache=null; window._mrQnaMode='all';
 async function loadMrQna(){
   var listEl=document.getElementById('mr-qna-list'); if(!listEl) return;
   var token=window.db&&window.db.getToken&&window.db.getToken();
@@ -6981,7 +7012,7 @@ function mrOfficeFilter(el,cat){
 window.mrOfficeFilter=mrOfficeFilter;
 /* ════ MY SPACE 보험 Q&A 탭 — 현장의 소리/자료실 보험Q&A(posts qna)를 내 책상에서. 하위 TODAY/전체보기/MINE.
  * 소식지 제외(qna 혼재). MINE = 내가 쓴 질문(author_id=나). read-only(질문 작성 입구는 별도). ════ */
-window._mysQnaCache=null; window._mysQnaMode='today';
+window._mysQnaCache=null; window._mysQnaMode='all';
 async function loadMysQna(){
   var listEl=document.getElementById('mys-qna-list'); if(!listEl) return;
   var token=window.db&&window.db.getToken&&window.db.getToken();
