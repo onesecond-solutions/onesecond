@@ -36,17 +36,17 @@ async function pickModel(apiKey: string): Promise<string> {
       const j = await r.json();
       const usable = (j.models || []).filter((m: { supportedGenerationMethods?: string[] }) =>
         (m.supportedGenerationMethods || []).includes("generateContent"));
-      const bad = /(embedding|aqa|tts|audio|imagen|image-generation|learnlm)/i;
+      const bad = /(embedding|aqa|tts|audio|imagen|image-generation|learnlm|vision|1\.0|1\.5|2\.0)/i;  // 은퇴/부적합 모델 회피
       const chosen =
-        usable.find((m: { name: string }) => /flash/i.test(m.name) && /2\.0/.test(m.name) && !bad.test(m.name)) ||
-        usable.find((m: { name: string }) => /flash/i.test(m.name) && !/2\.5|thinking/i.test(m.name) && !bad.test(m.name)) ||
+        usable.find((m: { name: string }) => /2\.5-flash/i.test(m.name) && !/lite|thinking|preview/i.test(m.name) && !bad.test(m.name)) ||
+        usable.find((m: { name: string }) => /2\.5-flash/i.test(m.name) && !bad.test(m.name)) ||
         usable.find((m: { name: string }) => /flash/i.test(m.name) && !bad.test(m.name)) ||
         usable.find((m: { name: string }) => /gemini/i.test(m.name) && !bad.test(m.name)) ||
         usable[0];
       if (chosen) { CACHED_MODEL = String(chosen.name).replace(/^models\//, ""); return CACHED_MODEL; }
     }
   } catch (e) { console.error("[search-answer] ListModels 오류", e); }
-  return "gemini-1.5-flash";
+  return "gemini-2.5-flash";
 }
 
 // full_text 에서 질문어 주변 구절만 발췌(토큰 절약)
@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
           role: "user",
           parts: [{ text: `질문: "${query}"\n\n아래는 보험사 소식지 발췌들이다. 이 발췌에 근거해서만 회사별로 정리해줘.\n\n${context}` }],
         }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 4096 },
+        generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: RESULT_SCHEMA, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } },
       }),
     });
     if (!gemRes.ok) {
