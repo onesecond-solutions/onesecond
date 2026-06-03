@@ -39,8 +39,10 @@ async function pickModel(apiKey: string): Promise<string> {
       const usable = (j.models || []).filter((m: { supportedGenerationMethods?: string[] }) =>
         (m.supportedGenerationMethods || []).includes("generateContent")
       );
-      const bad = /(embedding|aqa|tts|audio|imagen|image-generation|learnlm)/i;
+      const bad = /(embedding|aqa|tts|audio|imagen|image-generation|learnlm|vision|1\.0|1\.5|2\.0)/i;  // 은퇴/부적합 회피
       const chosen =
+        usable.find((m: { name: string }) => /2\.5-flash/i.test(m.name) && !/lite|thinking|preview/i.test(m.name) && !bad.test(m.name)) ||
+        usable.find((m: { name: string }) => /2\.5-flash/i.test(m.name) && !bad.test(m.name)) ||
         usable.find((m: { name: string }) => /flash/i.test(m.name) && !bad.test(m.name)) ||
         usable.find((m: { name: string }) => /gemini/i.test(m.name) && !bad.test(m.name)) ||
         usable[0];
@@ -54,7 +56,7 @@ async function pickModel(apiKey: string): Promise<string> {
   } catch (e) {
     console.error("[ocr-extract] ListModels 오류", e);
   }
-  return "gemini-1.5-flash"; // 최후 fallback
+  return "gemini-2.5-flash"; // 최후 fallback (현행 모델)
 }
 
 const SYSTEM_PROMPT = [
@@ -138,7 +140,8 @@ Deno.serve(async (req) => {
         generationConfig: {
           temperature: 0,
           responseMimeType: "text/plain",
-          maxOutputTokens: 8192, // 한 번에 추출 상한 (긴 문서는 배치 측에서 재요청/분할)
+          maxOutputTokens: 16384, // OCR 전체 텍스트(길다) — 잘림 방지
+          thinkingConfig: { thinkingBudget: 0 }, // 2.5-flash thinking off (속도·잘림 방지)
         },
       }),
     });
