@@ -3637,7 +3637,7 @@ function renderCompareTool(){
     +'<div class="cmp-guard">🔒 입력값은 이 기기에만 잠깐 남고 <b>어디에도 저장되지 않습니다</b> (새로고침하면 사라져요). 고객 이름·생년월일은 만든 이미지에만 들어갑니다.</div>'
     +'<div class="cmp-modes">'
       +'<button class="cmp-mode-btn'+(_cmpMode==='company'?' on':'')+'" onclick="cmpSetMode(\'company\')">회사별 비교표</button>'
-      +'<button class="cmp-mode-btn'+(_cmpMode==='remodel'?' on':'')+'" onclick="cmpSetMode(\'remodel\')">리모델링 전·후</button>'
+      +'<button class="cmp-mode-btn'+(_cmpMode==='remodel'?' on':'')+'" onclick="cmpSetMode(\'remodel\')">신규 제안용</button>'
     +'</div>'
     +'<div class="cmp-split">'
       +'<div class="cmp-left"><div class="cmp-pane-lbl">✏️ 입력</div><div id="cmpBuilder"></div></div>'
@@ -3778,7 +3778,7 @@ function cmpSync(){
     /* C. 가입현황 + 보장 변화 마킹 */
     var rowsHtml=s.rows.map(function(r){ var st=r[3]||''; var stHtml=st?('<span class="cmp-st '+(CMP_RM_STATUS[st]||'')+'">'+_cmpEsc(st)+'</span>'):''; return '<tr><td><div class="cmp-cell">'+_cmpEsc(r[0]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[1]||'')+'</div></td><td><div class="cmp-cell">'+_cmpEsc(r[2]||'')+'</div></td><td><div class="cmp-cell" style="text-align:center">'+stHtml+'</div></td></tr>'; }).join('');
     cap.innerHTML=
-      _cmpHeaderHtml('리모델링 전·후', (s.name||'')+(s.birth?(' ('+s.birth+')'):''))
+      _cmpHeaderHtml('신규 제안용', (s.name||'')+(s.birth?(' ('+s.birth+')'):''))
       +heroHtml+baHtml
       +'<div class="cmp-rm-card"><div class="cmp-rm-card-ttl">가입현황 (전·후)</div>'
         +'<table class="cmp-table"><thead><tr><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[0])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[1])+'</div></th><th><div class="cmp-cell cmp-head-cell">'+_cmpEsc(hd[2])+'</div></th><th><div class="cmp-cell cmp-head-cell">변화</div></th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'
