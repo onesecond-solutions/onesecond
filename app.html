@@ -5158,9 +5158,8 @@ function mrMemSub(el,key){
     if(card){ card.style.display=''; loadBranchCard(); }
     if(typeof loadBranchOrg==='function') loadBranchOrg();
   } else {
-    if(card) card.style.display='none';
-    if(org) org.innerHTML='<div class="mys-news-empty">실장 관점 — 내 팀(실장 · 팀원)이 여기에 표시됩니다.</div>';
-    if(view) view.innerHTML='<div class="mys-news-empty">왼쪽에서 실장/팀원을 선택하면 상세가 표시됩니다.</div>';
+    if(card) card.style.display='none';  /* 실장 관점 = 지점장 카드 숨김 */
+    if(typeof loadManagerOrg==='function') loadManagerOrg();
   }
 }
 window.mrMemSub=mrMemSub;
@@ -5204,6 +5203,31 @@ async function loadBranchOrg(){
   }catch(e){ org.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
 window.loadBranchOrg=loadBranchOrg;
+/* 실장 관점 — 지점장 카드 없이 좌측=실장 카드, 우측=팀원(mrSelectTeam 재사용) */
+async function loadManagerOrg(){
+  var org=document.getElementById('mr-org-list'), view=document.getElementById('mr-members-viewer');
+  if(!org) return;
+  org.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  if(view) view.innerHTML='<div class="mys-news-empty">왼쪽에서 실장을 선택하면 팀원이 표시됩니다.</div>';
+  if(!window.db||!window.db.fetch){ org.innerHTML='<div class="mys-news-empty">로그인 후 이용할 수 있습니다</div>'; return; }
+  var bId=_MR_BID;
+  try{
+    var tr=await window.db.fetch('/rest/v1/teams?branch_id=eq.'+bId+'&is_active=eq.true&select=id,name');
+    var ur=await window.db.fetch('/rest/v1/users?branch_id=eq.'+bId+'&role=like.ga_*&select=id,name,role,team_id');
+    var teams=tr.ok?await tr.json():[]; var users=ur.ok?await ur.json():[];
+    window._mrTeams=teams; window._mrUsers=users;
+    var tname={}; teams.forEach(function(t){ tname[t.id]=t.name; });
+    var mgrs=users.filter(function(u){return u.role==='ga_manager';});
+    var html='';
+    mgrs.forEach(function(m){
+      var memCnt=users.filter(function(u){return u.team_id===m.team_id;}).length;
+      html+='<div class="org-team"><div class="org-team-main" onclick="mrSelectTeam(\''+m.team_id+'\',this)"><div class="org-team-nm">'+_sEsc(m.name||'')+' 실장</div><div class="org-team-meta">'+_sEsc(tname[m.team_id]||'팀 미지정')+' · 구성원 '+memCnt+'명</div></div></div>';
+    });
+    html+='<div class="org-add" onclick="mrInvite(\'manager\')">+ 실장 추가(초대)</div>';
+    org.innerHTML=html||'<div class="mys-news-empty">실장이 없습니다.</div>';
+  }catch(e){ org.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+window.loadManagerOrg=loadManagerOrg;
 function mrSelectTeam(teamId,el){
   var items=document.querySelectorAll('#mr-org-list .org-team'); for(var i=0;i<items.length;i++) items[i].classList.remove('on');
   if(el) el.classList.add('on');
