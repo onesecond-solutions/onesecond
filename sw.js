@@ -6,7 +6,7 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v131-20260520-team-feed-attach-badge-and-image-modal';
+const CACHE_NAME = 'onesecond-v132-20260604-webpush';
 const CACHE_URLS = [
   '/',
   '/app.html',
@@ -69,6 +69,36 @@ self.addEventListener('fetch', (event) => {
     }).catch(() => {
       /* 네트워크 실패 시 캐시 폴백 박음 */
       return caches.match(req).then((r) => r || caches.match('/'));
+    })
+  );
+});
+
+/* ── 웹 푸시 (Phase 3, 2026-06-04) ──
+ * push 수신 → 알림 표시 / 알림 클릭 → 해당 화면 열기. fetch 가로채기 없음(위 캐시 로직과 독립). */
+self.addEventListener('push', (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; }
+  catch (e) { try { d = { body: event.data ? event.data.text() : '' }; } catch (_e) {} }
+  const title = d.title || '원세컨드 새 글';
+  const opts = {
+    body: d.body || '',
+    icon: '/assets/icon-192.png',
+    badge: '/assets/icon-192.png',
+    tag: d.tag || undefined,
+    data: { url: d.url || '/app.html' }
+  };
+  event.waitUntil(self.registration.showNotification(title, opts));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/app.html';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].url.indexOf(target) > -1 && 'focus' in list[i]) return list[i].focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
     })
   );
 });
