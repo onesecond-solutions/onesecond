@@ -1858,7 +1858,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="tab" onclick="mrTabMain(this,'qna')">보험 Q&amp;A</div>
           <div class="tab" onclick="mrTabMain(this,'members')">팀원관리</div>
         </div>
-        <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
+        <button class="mys-write-btn" onclick="openMyspaceWrite('team')">+ 글쓰기</button>
       </div>
       <div id="mr-today"></div>
       <div id="mr-main" style="display:none">
@@ -2518,7 +2518,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 <div class="askmodal" id="myspaceWriteModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeMyspaceWrite)">
   <div class="askbox">
     <div class="askhead">
-      <div class="asktitle">MY SPACE에 저장</div>
+      <div class="asktitle" id="mysWriteTitle">MY SPACE에 저장</div>
       <button class="askx" onclick="closeMyspaceWrite()">&#10005;</button>
     </div>
     <div class="mys-write-tabs">
@@ -8290,8 +8290,9 @@ function _ovClick(ev, el, fn){ if(ev.target === el && el.__downSelf){ el.__downS
 window._ovDown=_ovDown; window._ovClick=_ovClick;
 
 /* === MY SPACE 글쓰기 모달 + Create/Delete === */
-function openMyspaceWrite(){
+function openMyspaceWrite(ctx){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
+  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=(ctx==='team')?'매니저룸 글쓰기':'MY SPACE에 저장';
   /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
   var _ss=document.getElementById('mysWriteScrStage');
   if(_ss && !_ss.dataset.loaded && typeof SCRIPTS_GROUPS!=='undefined'){
