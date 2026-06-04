@@ -1433,6 +1433,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="sp"></div>
       <div class="search" onclick="openSearch()"><span class="sicon">&#8981;</span><span class="stext">스크립트, 게시글, 업무자료로 검색…</span><span class="kbd">검색</span></div>
       <div class="sp"></div>
+      <button class="hbtn" id="reportBtn" onclick="showView('together'); openTogetherWrite('전산 이상 신고')" aria-label="전산 이상 신고" title="전산 이상 신고"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></button>
       <div class="notif-wrap">
         <button class="hbtn bell" id="notifBell" onclick="notifBellToggle()" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot" id="notifDot" style="display:none"></span><span class="notif-count" id="notifCount" style="display:none">0</span></button>
         <div class="notif-pop" id="notifPop" style="display:none"></div>
@@ -6638,7 +6639,7 @@ function togetherOpen(idx,keepList){
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.add('show-viewer'); }
 }
 function togetherBack(){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.remove('show-viewer'); }
-function openTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(!m) return; var sel=document.getElementById('tg-f-cat'); if(sel){ var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin'; sel.innerHTML=(admin?'<option>공지</option>':'')+'<option>전산 이상 신고</option><option>사용후기</option>'; } document.body.appendChild(m); m.style.display='flex'; var t=document.getElementById('tg-f-title'); setTimeout(function(){ if(t) t.focus(); },60); }
+function openTogetherWrite(preCat){ var m=document.getElementById('tgWriteModal'); if(!m) return; var sel=document.getElementById('tg-f-cat'); if(sel){ var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin'; sel.innerHTML=(admin?'<option>공지</option>':'')+'<option>전산 이상 신고</option><option>사용후기</option>'; if(preCat){ try{ sel.value=preCat; }catch(e){} } } document.body.appendChild(m); m.style.display='flex'; var t=document.getElementById('tg-f-title'); setTimeout(function(){ if(t) t.focus(); },60); }
 function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; }
 async function saveTogether(){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
