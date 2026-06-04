@@ -111,7 +111,16 @@
     var res = await fetch(SUPABASE_URL + path, options);
 
     if (res.status === 401) {
-      try { console.warn('[DB 401 DIAG] path=', path, '| hadToken=', !!getToken(), '| hadRefresh=', !!getRefreshToken()); } catch (e) {}
+      /* 2026-06-04: 토큰이 아예 없을 때(부팅/OAuth 콜백 진행 중)는 '만료'가 아니라 '아직 미인증'.
+         이 경우 handleTokenExpired(클리어+세션만료 알림+/index 리다이렉트)를 호출하면
+         Google OAuth 콜백이 토큰 저장 전에 튕겨나가 무한 루프 → 401 응답만 반환하고 끝낸다.
+         OAuth 콜백 진행 중(URL #access_token 잔존)도 동일 보호. */
+      var _hadToken = !!getToken();
+      var _oauthInProgress = false;
+      try { _oauthInProgress = /access_token=/.test((window.location && window.location.hash) || ''); } catch (e) {}
+      if (!_hadToken || _oauthInProgress) {
+        return res;
+      }
       var newToken = await refreshToken();
       if (!newToken) {
         handleTokenExpired();
