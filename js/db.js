@@ -111,6 +111,7 @@
     var res = await fetch(SUPABASE_URL + path, options);
 
     if (res.status === 401) {
+      try { console.warn('[DB 401 DIAG] path=', path, '| hadToken=', !!getToken(), '| hadRefresh=', !!getRefreshToken()); } catch (e) {}
       var newToken = await refreshToken();
       if (!newToken) {
         handleTokenExpired();
