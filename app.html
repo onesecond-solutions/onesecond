@@ -276,6 +276,23 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .notif-push-stat::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--color-success);display:inline-block}
 .notif-push-off{padding:5px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--s1);color:var(--tf);font-family:inherit;font-size:0.72rem;font-weight:700;cursor:pointer;white-space:nowrap}
 .notif-push-off:hover{color:#EF4444;border-color:#EF4444}
+/* 로그인 환영 팝업 — 베타 출시 + 알림 받기 안내 (v2 토큰) */
+.os-welcome-ov{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10060;display:none;align-items:center;justify-content:center;padding:16px}
+.os-welcome-ov.on{display:flex}
+.os-welcome{max-width:420px;width:100%;max-height:92vh;overflow-y:auto;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);box-shadow:var(--shadow-xl);position:relative}
+.os-welcome-x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:none;background:var(--s2);border-radius:var(--radius-full);color:var(--ts);font-size:1rem;cursor:pointer;line-height:1}
+.os-welcome-x:hover{filter:brightness(0.95)}
+.os-welcome-bd{padding:26px 24px 22px}
+.os-welcome-tag{display:inline-block;font-size:0.7rem;font-weight:800;color:var(--ac);background:var(--s2);padding:3px 10px;border-radius:var(--radius-full);margin-bottom:10px}
+.os-welcome h3{margin:0 0 6px;font-size:1.15rem;font-weight:800;color:var(--tp)}
+.os-welcome p{margin:0 0 14px;font-size:0.85rem;line-height:1.55;color:var(--ts)}
+.os-welcome-img{width:100%;border:1px solid var(--bd);border-radius:var(--radius-md);overflow:hidden;margin-bottom:16px;background:var(--s2)}
+.os-welcome-img img{width:100%;display:block}
+.os-welcome-cta{display:block;width:100%;padding:13px;background:var(--ac);color:#fff;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:0.92rem;font-weight:800;cursor:pointer;margin-bottom:10px}
+.os-welcome-cta:hover{filter:brightness(0.96)}
+.os-welcome-sub{display:flex;gap:8px}
+.os-welcome-sub button{flex:1;padding:10px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);font-family:inherit;font-size:0.82rem;font-weight:700;color:var(--ts);cursor:pointer}
+.os-welcome-sub button:hover{background:var(--s2)}
 .nav-badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#EF4444;color:#fff;font-size:0.6rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex:0 0 auto}
 .cmp-lock{text-align:center;padding:48px 20px;color:var(--ts)}
 .cmp-lock-ic{font-size:2rem;margin-bottom:10px}
@@ -3225,6 +3242,14 @@ window.notifBellToggle=notifBellToggle; window.notifGo=notifGo; window.notifRefr
   try{ document.addEventListener('appstate:ready', function(){ setTimeout(function(){ try{ notifRefresh(); }catch(e){} },600); }); }catch(e){}
   document.addEventListener('click', function(e){ try{ var pop=document.getElementById('notifPop'), bell=document.getElementById('notifBell'); if(pop&&pop.style.display!=='none'&&!pop.contains(e.target)&&bell&&!bell.contains(e.target)) pop.style.display='none'; }catch(_e){} });
 })();
+/* ════ 로그인 환영 팝업 — 베타 출시 + 알림 받기 안내 (사용자별 1회, 전부 try/catch) ════ */
+function _osWelcomeKey(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return 'os_welcome_notif_'+(u.id||'anon'); }catch(e){ return 'os_welcome_notif_anon'; } }
+function osWelcomeClose(){ try{ localStorage.setItem(_osWelcomeKey(),'1'); }catch(e){} var ov=document.getElementById('osWelcomeOv'); if(ov) ov.classList.remove('on'); }
+function osWelcomeEnable(){ try{ if(typeof notifEnablePush==='function') notifEnablePush(); }catch(e){} osWelcomeClose(); }
+function osWelcomeMore(){ osWelcomeClose(); try{ if(typeof showView==='function') showView('together'); }catch(e){} }
+function _osWelcomeMaybeShow(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); if(!u||!u.id) return; if(localStorage.getItem(_osWelcomeKey())==='1') return; var ov=document.getElementById('osWelcomeOv'); if(!ov) return; ov.classList.add('on'); }catch(e){} }
+window.osWelcomeClose=osWelcomeClose; window.osWelcomeEnable=osWelcomeEnable; window.osWelcomeMore=osWelcomeMore;
+(function(){ try{ document.addEventListener('appstate:ready', function(){ setTimeout(function(){ try{ _osWelcomeMaybeShow(); }catch(e){} }, 900); }); }catch(e){} })();
 window.vaultQnaBack=vaultQnaBack;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
@@ -9276,5 +9301,22 @@ document.addEventListener('keydown', function(e){
   if(e.key === 'Escape' && document.getElementById('quickOverlay')) closeQuick();
 });
 </script>
+<!-- 로그인 환영 팝업 — 베타 출시 + 알림 받기 안내 (사용자별 1회) -->
+<div class="os-welcome-ov" id="osWelcomeOv">
+  <div class="os-welcome" role="dialog" aria-modal="true" aria-label="원세컨드 안내">
+    <button class="os-welcome-x" onclick="osWelcomeClose()" aria-label="닫기">&#10005;</button>
+    <div class="os-welcome-bd">
+      <span class="os-welcome-tag">원세컨드 베타 오픈</span>
+      <h3>새 글 알림, 켜고 시작하세요</h3>
+      <p>6월 4일부터 파일럿 운영을 시작합니다. 새 글이 올라오면 휴대폰·PC로 바로 알림을 받을 수 있어요. 원세컨드 화면을 켜두지 않아도 도착합니다.</p>
+      <div class="os-welcome-img"><img src="/assets/notif-guide-bell.jpg" alt="알림 받기 설정 화면" loading="lazy"></div>
+      <button class="os-welcome-cta" onclick="osWelcomeEnable()">알림 받기 켜기</button>
+      <div class="os-welcome-sub">
+        <button onclick="osWelcomeMore()">자세히 보기</button>
+        <button onclick="osWelcomeClose()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
