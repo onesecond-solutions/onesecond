@@ -61,11 +61,13 @@ create table if not exists public.knowledge_entries (
   tags                   text[],
   source_type            text,            -- 'newsletter' | 'chat_log' | 'navigation' | 'post' | 'admin_note' (확장)
   source_id              text,            -- 출처 원본 id (newsletter_id / kakao msg / post id 등) — 환각 검증 근거
-  source_title           text,
-  source_company         text,            -- 원문 표기 회사명
+  source_title           text,            -- 보조메타
+  source_company         text,            -- 보조메타: 원문 표기 회사명
   canonical_company_name text,            -- 정규화 회사명
-  source_page            int,             -- 페이지(있으면)
+  source_date            text,            -- 보조메타: 발행/작성 시점 (예 '2026-01', 카톡 타임스탬프)
+  source_page            int,             -- 보조메타: 페이지(있으면, full_text 추출은 null)
   run_id                 uuid,            -- 어느 런에서 생성
+  run_item_id            bigint references public.knowledge_extract_run_items(run_item_id),  -- 어느 항목에서 생성 (추적)
   model_name             text,
   confidence             text,            -- 'high' | 'med' | 'low'
   status                 text not null default 'ai_draft',  -- 'ai_draft' | 'review' | 'published' | 'archived'
@@ -95,4 +97,5 @@ create index if not exists idx_kerrors_run   on public.knowledge_extract_errors 
 create index if not exists idx_kerrors_item  on public.knowledge_extract_errors (run_item_id);
 create index if not exists idx_kentries_type_title on public.knowledge_entries (type, lower(title));  -- 중복방지
 create index if not exists idx_kentries_run   on public.knowledge_entries (run_id);
+create index if not exists idx_kentries_item  on public.knowledge_entries (run_item_id);
 create index if not exists idx_kentries_source on public.knowledge_entries (source_type, source_id);

@@ -63,7 +63,7 @@ const SYSTEM = [
   "terms=용어+정의 / products=상품명+핵심 / insurers=발행사 특징 / scenarios=실무 안내·절차. 근거 없으면 빈 배열.",
 ].join("\n");
 
-interface NL { id: string; company: string | null; title: string | null; source_filename: string | null; full_text: string | null; text_quality: string | null; }
+interface NL { id: string; company: string | null; title: string | null; source_filename: string | null; full_text: string | null; text_quality: string | null; publish_year: number | null; publish_month: number | null; }
 type Stage = "fetch" | "prompt_build" | "gemini_call" | "json_parse" | "validation" | "insert";
 
 Deno.serve(async (req: Request) => {
@@ -84,11 +84,11 @@ Deno.serve(async (req: Request) => {
 
   let rows: NL[] = [];
   if (sourceKind === "ids") {
-    const { data } = await supabase.from("newsletters").select("id, company, title, source_filename, full_text, text_quality").in("id", payload.ids!);
+    const { data } = await supabase.from("newsletters").select("id, company, title, source_filename, full_text, text_quality, publish_year, publish_month").in("id", payload.ids!);
     rows = (data as NL[]) || [];
   } else {
     const lim = Math.min(payload.limit ?? 30, 30);
-    const { data } = await supabase.from("newsletters").select("id, company, title, source_filename, full_text, text_quality").not("full_text", "is", null).order("char_length", { ascending: false }).limit(lim);
+    const { data } = await supabase.from("newsletters").select("id, company, title, source_filename, full_text, text_quality, publish_year, publish_month").not("full_text", "is", null).order("char_length", { ascending: false }).limit(lim);
     rows = (data as NL[]) || [];
   }
 
@@ -128,6 +128,7 @@ Deno.serve(async (req: Request) => {
       if (!body.trim()) { failStage = "fetch"; itemStatus = "fail"; await logErr(nl, runItemId, "fetch", "empty_body", false, 0); fail++; throw new Error("__handled__"); }
       geminiChars += body.length;
       const conf = nl.text_quality === "텍스트" ? "high" : (nl.text_quality === "이미지" ? "low" : "med");
+      const sourceDate = (nl.publish_year && nl.publish_month) ? `${nl.publish_year}-${String(nl.publish_month).padStart(2, "0")}` : null;
 
       stage = "prompt_build";
       const prompt = `[발행사: ${canon(nl.company || "")}] [제목: ${nl.title || ""}]\n\n${body}`;
@@ -160,8 +161,8 @@ Deno.serve(async (req: Request) => {
           const { error: insErr } = await supabase.from("knowledge_entries").insert({
             type, title, body: (it.body || "").slice(0, 4000), category: type === "insurer" ? "보험사" : null,
             source_type: "newsletter", source_id: nl.id, source_title: nl.title, source_company: nl.company,
-            canonical_company_name: canon(nl.company || ""), source_page: null,
-            run_id: runId, model_name: model, confidence: conf, status: "ai_draft", created_by: "ai",
+            canonical_company_name: canon(nl.company || ""), source_date: sourceDate, source_page: null,
+            run_id: runId, run_item_id: runItemId, model_name: model, confidence: conf, status: "ai_draft", created_by: "ai",
           });
           if (insErr) { await logErr(nl, runItemId, "insert", insErr.message, true, body.length); continue; }
           entriesCreated++; itemEntries++;
