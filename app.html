@@ -3099,7 +3099,7 @@ window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCl
 
 /* ════════════════════════════════════════════════════════════════
  * 인앱 알림 — 신규글 읽음 추적 (Phase 1, 2026-06-04)
- * 기준 = localStorage(사용자별 영역 마지막 읽은 시각). DB 불필요·즉시 동작.
+ * 기준 = board_reads DB(크로스기기) + localStorage 폴백. Phase 2 전환(2026-06-04).
  * 대상 영역 = 현장의 소리(단체방·보험Q&A·스마트) + 보험사 자료실(자료·보험Q&A). 함께해요·보험이슈 제외.
  * 표시 = 헤더 벨 숫자/점 + 드롭다운 + 사이드바 nav 신규 배지. 영역 진입 시 읽음 처리. 60초 폴링.
  * Phase 2(크로스기기 DB동기화·실시간)·Phase 3(웹푸시)는 추후(서버 조작 필요).
@@ -3121,6 +3121,27 @@ window._notifPer={}; window._notifTotal=0; window._notifBusy=false;
 function _notifUid(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return u.id||''; }catch(e){ return ''; } }
 function _notifReads(){ try{ return JSON.parse(localStorage.getItem('os_lastread_'+(_notifUid()||'anon'))||'{}'); }catch(e){ return {}; } }
 function _notifSaveReads(o){ try{ localStorage.setItem('os_lastread_'+(_notifUid()||'anon'), JSON.stringify(o)); }catch(e){} }
+/* Phase 2 — board_reads DB 동기화 (크로스기기). 테이블 없거나 실패 시 _notifDbReady=false로 떨어뜨려 localStorage 폴백(=Phase 1). */
+window._notifDbReady=true;
+async function _notifPullDbReads(){
+  try{
+    if(!window._notifDbReady) return;
+    var uid=_notifUid(); if(!uid||!window.db||!window.db.fetch) return;
+    var r=await window.db.fetch('/rest/v1/board_reads?select=board_key,last_read_at&user_id=eq.'+encodeURIComponent(uid));
+    if(!r||!r.ok){ if(r&&(r.status===404||r.status===400)) window._notifDbReady=false; return; }
+    var rows=await r.json(); if(!Array.isArray(rows)) return;
+    var local=_notifReads(), changed=false;
+    for(var i=0;i<rows.length;i++){ var k=rows[i].board_key, ts=rows[i].last_read_at; if(!k||!ts) continue; if(!local[k] || new Date(ts)>new Date(local[k])){ local[k]=ts; changed=true; } }  /* 더 늦은 읽음시각 우선 */
+    if(changed) _notifSaveReads(local);
+  }catch(e){ /* 무해 */ }
+}
+function _notifPushDbRead(key,iso){
+  try{
+    if(!window._notifDbReady) return;
+    var uid=_notifUid(); if(!uid||!window.db||!window.db.fetch) return;
+    window.db.fetch('/rest/v1/board_reads',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({user_id:uid,board_key:key,last_read_at:iso})}).then(function(r){ if(r&&(r.status===404||r.status===400)) window._notifDbReady=false; }).catch(function(){});
+  }catch(e){ /* 무해 */ }
+}
 function _notifNav(label){ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++){ var l=navs[i].querySelector('.lbl'); if(l&&l.textContent.trim()===label) return navs[i]; } return null; }
 function _notifSince(p,t,sinceIso){ try{ var url=p+'&'+t+'=gt.'+encodeURIComponent(sinceIso)+'&select=id&limit=1'; return window.db.fetch(url,{headers:{'Prefer':'count=exact'}}).then(function(r){ if(!r.ok) return 0; var cr=(r.headers&&r.headers.get&&r.headers.get('content-range'))||''; var m=cr.match(/\/(\d+)$/); return m?Number(m[1]):0; }).catch(function(){ return 0; }); }catch(e){ return Promise.resolve(0); } }
 async function notifRefresh(){
@@ -3128,12 +3149,13 @@ async function notifRefresh(){
     if(window._notifBusy) return;
     if(!window.db||!window.db.fetch||!window.db.getToken||!window.db.getToken()) return;
     window._notifBusy=true;
+    await _notifPullDbReads();
     var reads=_notifReads(), nowIso=new Date().toISOString(), changed=false, total=0, per={};
     for(var fi=0; fi<NOTIF_FEEDS.length; fi++){
       var feed=NOTIF_FEEDS[fi];
       if(!_notifNav(feed.label)){ per[feed.key]=0; continue; }   /* 권한상 메뉴 없으면 스킵 */
       var since=reads[feed.key];
-      if(!since){ reads[feed.key]=nowIso; changed=true; per[feed.key]=0; continue; }  /* 첫 진입 = 지금부터 기준(과거 폭탄 방지) */
+      if(!since){ reads[feed.key]=nowIso; changed=true; _notifPushDbRead(feed.key,nowIso); per[feed.key]=0; continue; }  /* 첫 진입 = 지금부터 기준(과거 폭탄 방지) + DB 기록 */
       var cnt=0;
       for(var si=0; si<feed.srcs.length; si++){ try{ cnt += await _notifSince(feed.srcs[si].p, feed.srcs[si].t, since); }catch(e){} }
       per[feed.key]=cnt; total+=cnt;
@@ -3148,7 +3170,7 @@ function _notifRenderBell(total){ var dot=document.getElementById('notifDot'), c
 function _notifRenderNavBadges(per){ for(var i=0;i<NOTIF_FEEDS.length;i++){ var f=NOTIF_FEEDS[i]; var nav=_notifNav(f.label); if(!nav) continue; var b=nav.querySelector('.nav-badge'); var n=per[f.key]||0; if(n>0){ if(!b){ b=document.createElement('span'); b.className='nav-badge'; nav.appendChild(b); } b.textContent=n>99?'99+':String(n); b.style.display=''; } else if(b){ b.style.display='none'; } } }
 function notifBellToggle(){ var pop=document.getElementById('notifPop'); if(!pop) return; if(pop.style.display!=='none'){ pop.style.display='none'; return; } var per=window._notifPer||{}, total=window._notifTotal||0; var rows=NOTIF_FEEDS.filter(function(f){return _notifNav(f.label);}).map(function(f){ var n=per[f.key]||0; return '<button class="notif-row" onclick="notifGo(\''+f.key+'\',\''+f.view+'\')"><span>'+f.label+'</span><span class="notif-row-n'+(n>0?' on':'')+'">'+(n>0?('신규 '+n+'개'):'새 글 없음')+'</span></button>'; }).join(''); pop.innerHTML='<div class="notif-pop-hd">알림'+(total>0?(' · 신규 '+total+'개'):'')+'</div>'+(rows||'<div class="notif-empty">표시할 영역이 없습니다.</div>'); pop.style.display=''; }
 function notifGo(key,view){ var pop=document.getElementById('notifPop'); if(pop) pop.style.display='none'; if(typeof showView==='function') showView(view); _notifMark(key); }
-function _notifMark(key){ try{ var r=_notifReads(); r[key]=new Date().toISOString(); _notifSaveReads(r); setTimeout(notifRefresh,400); }catch(e){} }
+function _notifMark(key){ try{ var iso=new Date().toISOString(); var r=_notifReads(); r[key]=iso; _notifSaveReads(r); _notifPushDbRead(key,iso); setTimeout(notifRefresh,400); }catch(e){} }
 function _notifOnView(viewKey){ var fk=NOTIF_VIEWMAP[viewKey]; if(fk) _notifMark(fk); }
 window.notifBellToggle=notifBellToggle; window.notifGo=notifGo; window.notifRefresh=notifRefresh; window._notifOnView=_notifOnView;
 (function(){
