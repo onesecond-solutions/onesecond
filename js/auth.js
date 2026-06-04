@@ -278,21 +278,25 @@
         }
       }
 
-      /* 2026-05-27: 화이트리스트 통과 후 public.users role/name/plan 박음 (admin 정합) */
-      try {
-        if (window.db && typeof window.db.mergeUserProfile === 'function') {
-          userObj = await window.db.mergeUserProfile(userObj, accessToken);
-        }
-      } catch (_e) { /* role 안 박혀도 인증은 계속 */ }
-
+      /* 2026-06-04 레이스 수정: 토큰+기본 사용자를 role fetch(async) 전에 즉시 저장.
+         이전엔 mergeUserProfile await 후 저장 → 그 사이 loadHomeRecent가 토큰 없이 호출 → 401 "세션 만료". */
       localStorage.setItem('os_token', accessToken);
       localStorage.setItem('os_refresh_token', refreshToken);
       localStorage.setItem('os_user', JSON.stringify(userObj));
       sessionStorage.setItem('os_token', accessToken);
       sessionStorage.setItem('os_user', JSON.stringify(userObj));
 
-      // URL fragment 정리 (history 깔끔하게)
-      history.replaceState(null, '', window.location.pathname + window.location.search);
+      // URL fragment 즉시 정리 (토큰 저장 직후 — 잔존 fragment로 인한 재처리 방지)
+      try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_e) {}
+
+      /* role/name/plan 보강 (실패해도 인증은 유지) — 보강 후 os_user 갱신 */
+      try {
+        if (window.db && typeof window.db.mergeUserProfile === 'function') {
+          userObj = await window.db.mergeUserProfile(userObj, accessToken);
+          localStorage.setItem('os_user', JSON.stringify(userObj));
+          sessionStorage.setItem('os_user', JSON.stringify(userObj));
+        }
+      } catch (_e) { /* role 안 박혀도 인증은 계속 */ }
     } catch (e) {
       console.error('[oauth callback parse error]', e);
     }
