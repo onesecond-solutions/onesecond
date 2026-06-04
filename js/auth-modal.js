@@ -701,8 +701,13 @@ async function resendOtp() {
    - app.html 진입 시 js/auth.js의 _handleOAuthCallback이 fragment 파싱 + localStorage 박음
    - 사용자 동일 이메일 정합 매칭 = Supabase Dashboard "Allow manual linking" ON 박혀 있어야 함 */
 function signInWithGoogle() {
-  /* 2026-05-23: 공사중 흐름 — Google 로그인은 사전 이메일 확인 불가 → 무조건 차단 */
-  window.osShowMaintenance();
+  /* 2026-06-04: 개방 복구 — 공사중 스텁 해제, OAuth 리다이렉트 원본 복원.
+     콜백 파싱 = js/auth.js _handleOAuthCallback (app.html 진입 시). */
+  var redirectTo = window.location.origin + '/app.html';
+  var url = SUPABASE_URL + '/auth/v1/authorize'
+          + '?provider=google'
+          + '&redirect_to=' + encodeURIComponent(redirectTo);
+  window.location.href = url;
 }
 
 // ============================================================================
@@ -1465,11 +1470,7 @@ function resetInsurerOtp() {
 }
 
 async function doSubmit() {
-  /* 2026-05-23: 공사중 흐름 — 가입 무조건 차단 (신규 사용자 진입로 폐쇄)
-     2026-05-28: 보험사 분기는 doInsurerKakaoSignup() 호출 — 본 함수는 GA 전용 (현재 차단). */
-  window.osShowMaintenance();
-  return;
-
+  /* 2026-06-04: 개방 복구 — 공사중 가입 차단(osShowMaintenance+return) 제거. GA 가입 로직 부활. */
   if (!validateSignup()) return;
 
   var btn  = document.getElementById('authMainCta');
