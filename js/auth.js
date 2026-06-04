@@ -243,6 +243,8 @@
   //   → fragment 파싱해서 localStorage 박음 + URL 정리
   async function _handleOAuthCallback() {
     var hash = window.location.hash || '';
+    var _s = window.location.search || '';
+    try { if (hash.indexOf('access_token=') > -1 || _s.indexOf('code=') > -1) { alert('[OAUTH 진단]\n' + (hash.indexOf('access_token=') > -1 ? '→ IMPLICIT (#access_token) 방식\n' : '') + (_s.indexOf('code=') > -1 ? '→ PKCE (?code) 방식\n' : '') + 'hash: ' + hash.slice(0, 45) + '\nsearch: ' + _s.slice(0, 45)); } } catch (e) {}
     if (hash.indexOf('access_token=') === -1) return;
 
     try {
