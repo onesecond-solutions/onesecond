@@ -976,6 +976,13 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-write-input,.mys-write-textarea{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);color:var(--tp);font-size:0.9em;font-family:inherit;outline:none;transition:border-color .15s}
 .mys-write-input:focus,.mys-write-textarea:focus{border-color:var(--ac)}
 .mys-write-textarea{resize:vertical;min-height:180px;line-height:1.55}
+/* 글쓰기 삽입 도구막대 (오른쪽 세로) — Phase 1 */
+.mys-editor{display:flex;gap:8px;align-items:stretch}
+.mys-editor>.mys-write-textarea{flex:1;min-width:0}
+.mys-editor-tools{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+.mys-tool-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);cursor:pointer;padding:0}
+.mys-tool-btn:hover{border-color:var(--ac);color:var(--ac)}
+.mys-tool-btn svg{width:18px;height:18px}
 .mys-write-hint{font-size:0.72em;color:var(--tf);margin-top:2px}
 .mys-write-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--bd);background:var(--s2)}
 .mys-write-cancel{padding:9px 18px;border-radius:9px;background:transparent;border:1px solid var(--bd);color:var(--ts);font-size:0.85em;font-weight:700;cursor:pointer}
@@ -2560,7 +2567,14 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">내용 <span style="color:#EF4444">*</span></label>
-          <textarea class="mys-write-textarea" id="mysWriteGrpBody" placeholder="단체방에 공유할 내용을 적어주세요." maxlength="2000" style="min-height:460px"></textarea>
+          <div class="mys-editor">
+            <textarea class="mys-write-textarea" id="mysWriteGrpBody" placeholder="단체방에 공유할 내용을 적어주세요." maxlength="2000" style="min-height:460px"></textarea>
+            <div class="mys-editor-tools">
+              <button type="button" class="mys-tool-btn" title="이미지 삽입" onclick="mysEditorTool('image','mysWriteGrpFile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>
+              <button type="button" class="mys-tool-btn" title="표 삽입" onclick="mysEditorTool('table')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></button>
+              <button type="button" class="mys-tool-btn" title="캘린더 삽입" onclick="mysEditorTool('calendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></button>
+            </div>
+          </div>
         </div>
         <div class="mys-write-row">
           <label class="mys-write-label">키워드</label>
@@ -8339,6 +8353,15 @@ function fileTooLarge(files){
 }
 window.fileTooLarge=fileTooLarge;
 /* 스크립트 탭 파일 첨부 미리보기 (이미지 썸네일 / 그 외 파일명) */
+/* 글쓰기 삽입 도구막대 — 이미지=기존 첨부 트리거 / 표·캘린더=다음 단계 */
+function mysEditorTool(kind, fileId){
+  try{
+    if(kind==='image'){ var el=document.getElementById(fileId); if(el) el.click(); return; }
+    if(kind==='table'){ alert('표 삽입은 다음 단계에서 추가됩니다.'); return; }
+    if(kind==='calendar'){ alert('캘린더 삽입은 다음 단계에서 추가됩니다.'); return; }
+  }catch(e){}
+}
+window.mysEditorTool=mysEditorTool;
 function mysWriteFilePreview(input, previewId){
   var box=document.getElementById(previewId); if(!box) return;
   box.innerHTML='';
