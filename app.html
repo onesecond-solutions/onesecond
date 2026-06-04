@@ -258,8 +258,6 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .cmp-act{flex:1;min-width:140px;padding:12px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:10px;font-weight:800;font-size:0.9em;cursor:pointer;font-family:inherit}
 .cmp-act-primary{background:var(--ac);color:#fff;border-color:var(--ac)}
 .cmp-act-hint{display:flex;align-items:center;justify-content:center;background:var(--s2);color:var(--ts);border-style:dashed;cursor:default;font-weight:700}
-/* 함께해요 공지 SVG 아이콘 (이모지 대체) */
-.tg-notice-ic{width:1.05em;height:1.05em;vertical-align:-2px;margin-right:5px;color:var(--ac)}
 /* 인앱 알림 — 벨 카운트 / 드롭다운 / nav 신규 배지 */
 .notif-wrap{position:relative;display:inline-flex}
 .notif-count{position:absolute;top:-3px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#EF4444;color:#fff;font-size:0.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:none}
@@ -6484,8 +6482,7 @@ function togetherOpen(idx,keepList){
   var meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
   var canDel=(me&&String(me)===String(r.author_id))||meAdmin;
   var delBtn=canDel?('<div class="post-acts"><button class="post-act post-act-del" onclick="deleteTogether('+JSON.stringify(r.id)+')">삭제</button></div>'):'';
-  var _ntIcon=(r.category==='공지')?'<svg class="tg-notice-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>':'';
-  v.innerHTML='<span class="vbadge">'+_tgEsc(r.category||'자유')+'</span><div class="vttl">'+_ntIcon+_tgEsc(r.title||'제목 없음')+'</div><div class="vmeta">'+_tgDate(r.created_at)+(_tgWho(r)?' · '+_tgWho(r):'')+'</div><div class="vbody">'+_tgEsc(r.content||'').replace(/\n/g,'<br>')+_ah.html+'</div>'+delBtn;
+  v.innerHTML='<span class="vbadge">'+_tgEsc(r.category||'자유')+'</span><div class="vttl">'+_tgEsc(r.title||'제목 없음')+'</div><div class="vmeta">'+_tgDate(r.created_at)+(_tgWho(r)?' · '+_tgWho(r):'')+'</div><div class="vbody">'+_tgEsc(r.content||'').replace(/\n/g,'<br>')+_ah.html+'</div>'+delBtn;
   var items=document.querySelectorAll('#tg-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on',i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.add('show-viewer'); }
 }
