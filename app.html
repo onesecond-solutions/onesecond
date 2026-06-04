@@ -3308,6 +3308,8 @@ function osWelcomeMore(){ osWelcomeClose(); try{ if(typeof showView==='function'
 function _osWelcomeMaybeShow(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); if(!u||!u.id) return; if(localStorage.getItem(_osWelcomeKey())==='1') return; var ov=document.getElementById('osWelcomeOv'); if(!ov) return; ov.classList.add('on'); }catch(e){} }
 window.osWelcomeClose=osWelcomeClose; window.osWelcomeEnable=osWelcomeEnable; window.osWelcomeMore=osWelcomeMore;
 (function(){ try{ document.addEventListener('appstate:ready', function(){ setTimeout(function(){ try{ _osWelcomeMaybeShow(); }catch(e){} }, 900); }); }catch(e){} })();
+/* 2026-06-04: 로그인 완료(토큰 확정) 시 홈 강제 재로드 — 부팅 중 토큰 없이 그려진 "로그인 후 표시됩니다" placeholder 해소 */
+(function(){ try{ document.addEventListener('appstate:ready', function(){ try{ window._homeRecentLoaded=false; var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&typeof loadHomeRecent==='function') loadHomeRecent(true); }catch(e){} }); }catch(e){} })();
 window.vaultQnaBack=vaultQnaBack;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
@@ -7763,7 +7765,9 @@ async function loadHomeRecent(force){
     else homeState('news','empty');
   }));
   await Promise.all(jobs);
-  window._homeRecentLoaded=true;
+  /* 2026-06-04: 토큰 없을 때(부팅/OAuth 콜백 직전 등) 'auth' placeholder를 그렸으면 loaded 캐시하지 않음
+     → 로그인 완료 후 재호출 시 실제 데이터 로드 (이전엔 무조건 true라 "로그인 후 표시됩니다" 박힘). */
+  window._homeRecentLoaded=!!(token&&userId);
   _hlog('loadHomeRecent done');
 }
 
