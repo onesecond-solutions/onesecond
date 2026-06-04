@@ -98,7 +98,7 @@ Deno.serve(async (req: Request) => {
     console.error(`[extract-knowledge][${stage}]`, nl.id, msg);
     try {
       await supabase.from("knowledge_extract_errors").insert({
-        run_id: runId, run_item_id: runItemId, newsletter_id: nl.id, file_name: nl.source_filename || nl.title,
+        run_id: runId, run_item_id: runItemId, source_type: "newsletter", source_id: nl.id, file_name: nl.source_filename || nl.title,
         insurance_company: canon(nl.company || ""), stage, error_message: String(msg).slice(0, 500),
         retryable, input_text_length: inputLen, model_name: model,
       });
@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
     const inputLen = (nl.full_text || "").length;
     // run_item 생성 (newsletter별 처리 상태)
     const { data: itemRow } = await supabase.from("knowledge_extract_run_items").insert({
-      run_id: runId, newsletter_id: nl.id, file_name: nl.source_filename || nl.title, company: canon(nl.company || ""),
+      run_id: runId, source_type: "newsletter", source_id: nl.id, file_name: nl.source_filename || nl.title, company: canon(nl.company || ""),
       status: "processing", input_text_length: inputLen,
     }).select("run_item_id").single();
     const runItemId: number | null = itemRow?.run_item_id ?? null;

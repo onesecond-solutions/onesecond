@@ -22,7 +22,8 @@ create table if not exists public.knowledge_extract_runs (
 create table if not exists public.knowledge_extract_run_items (
   run_item_id       bigserial primary key,
   run_id            uuid not null references public.knowledge_extract_runs(run_id),
-  newsletter_id     text not null,
+  source_type       text not null default 'newsletter',  -- newsletter|chat_log|navigation|post|admin_note
+  source_id         text not null,                       -- 원본 id (newsletter_id 등)
   file_name         text,
   company           text,           -- canonical
   status            text,           -- 'processing' | 'success' | 'fail'
@@ -38,7 +39,8 @@ create table if not exists public.knowledge_extract_errors (
   error_id          bigserial primary key,
   run_id            uuid,                 -- 런 식별
   run_item_id       bigint references public.knowledge_extract_run_items(run_item_id),  -- 항목 식별
-  newsletter_id     text,                 -- (1)
+  source_type       text,                 -- (1a) newsletter|chat_log|navigation|post|admin_note
+  source_id         text,                 -- (1b) 원본 id (구 newsletter_id)
   file_name         text,                 -- (2)
   insurance_company text,                 -- (3) canonical
   stage             text,                 -- (4) fetch|prompt_build|gemini_call|json_parse|validation|insert
