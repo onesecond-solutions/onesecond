@@ -30,7 +30,7 @@
 (function () {
   'use strict';
 
-  var MAINTENANCE_MODE = true;  /* 2026-05-31: 재발동 (v1→v2 대개편 — 화이트리스트 외 전원 차단·강제 로그아웃). 해제 시 false. */
+  var MAINTENANCE_MODE = false;  /* 2026-06-04: 해제 — 4팀·일반 사용자 개방 (알림·글쓰기 도구막대 등 라이브 반영 완료). 재발동 시 true. */
   var MAINTENANCE_PAGE = '/maintenance.html';
 
   /* 화이트리스트 4 계정 — auth-modal.js / auth.js에서 동일 자료 참조 (window.OS_WHITELIST_EMAILS).
