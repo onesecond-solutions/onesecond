@@ -75,11 +75,24 @@ Deno.serve(async (req: Request) => {
   if (!apiKey) return json({ error: "missing_gemini_key" }, 500);
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  let payload: { ids?: string[]; sample?: boolean; limit?: number; preflight?: boolean } = {};
+  try { payload = await req.json(); } catch (_e) { /* */ }
+
+  // ── preflight: 대상 테이블 존재 확인 (없으면 Gemini 호출 0회로 즉시 중단) ──
+  {
+    const { error: pf } = await supabase.from("knowledge_extract_runs").select("run_id").limit(1);
+    if (pf) return json({ error: "tables_missing", detail: pf.message }, 400);
+  }
+  // payload.preflight=true → Gemini 호출 없이 점검만(테이블 OK + 채굴 대상 건수)
+  if (payload.preflight) {
+    const { count, error: nlErr } = await supabase.from("newsletters").select("id", { count: "exact", head: true }).not("full_text", "is", null);
+    if (nlErr) return json({ error: "newsletter_probe_failed", detail: nlErr.message }, 500);
+    return json({ ok: true, preflight: true, tables_ok: true, newsletters_available: count });
+  }
+
   const model = await pickModel(apiKey);
   const runId = crypto.randomUUID();
-
-  let payload: { ids?: string[]; sample?: boolean; limit?: number } = {};
-  try { payload = await req.json(); } catch (_e) { /* */ }
   const sourceKind = payload.ids && payload.ids.length ? "ids" : "sample";
 
   let rows: NL[] = [];
@@ -92,7 +105,8 @@ Deno.serve(async (req: Request) => {
     rows = (data as NL[]) || [];
   }
 
-  await supabase.from("knowledge_extract_runs").insert({ run_id: runId, model, source: sourceKind, requested: rows.length, status: "running" }).then(() => {}, () => {});
+  const { error: runInsErr } = await supabase.from("knowledge_extract_runs").insert({ run_id: runId, model, source: sourceKind, requested: rows.length, status: "running" });
+  if (runInsErr) return json({ error: "run_insert_failed", detail: runInsErr.message }, 500);
 
   async function logErr(nl: NL, runItemId: number | null, stage: Stage, msg: string, retryable: boolean, inputLen: number) {
     console.error(`[extract-knowledge][${stage}]`, nl.id, msg);
@@ -136,7 +150,7 @@ Deno.serve(async (req: Request) => {
       stage = "gemini_call";
       const gemRes = await fetch(`${API_BASE}/models/${model}:generateContent?key=${apiKey}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: SCHEMA } }),
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: SCHEMA, thinkingConfig: { thinkingBudget: 0 } } }),
       });
       if (!gemRes.ok) { failStage = "gemini_call"; itemStatus = "fail"; await logErr(nl, runItemId, "gemini_call", "http_" + gemRes.status, gemRes.status >= 500 || gemRes.status === 429, body.length); fail++; throw new Error("__handled__"); }
 
