@@ -126,11 +126,12 @@ Deno.serve(async (req: Request) => {
   let processed = 0, success = 0, fail = 0, entriesCreated = 0;
   let termCnt = 0, productCnt = 0, insurerCnt = 0, scenarioCnt = 0, geminiChars = 0;
   const samples: unknown[] = [];
+  const failures: Array<{ id: string; reason: string }> = [];  // 실패 로그 (조건 4)
 
   for (const nl of rows) {
     processed++;
     const body = (nl.full_text || "").slice(0, MAX_CHARS);
-    if (!body.trim()) { fail++; continue; }
+    if (!body.trim()) { console.error("[extract-knowledge] empty_body", nl.id); failures.push({ id: nl.id, reason: "empty_body" }); fail++; continue; }
     geminiChars += body.length;
     const conf = nl.text_quality === "텍스트" ? "high" : (nl.text_quality === "이미지" ? "low" : "med");
     try {
@@ -142,10 +143,12 @@ Deno.serve(async (req: Request) => {
           generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: EXTRACT_SCHEMA },
         }),
       });
-      if (!gemRes.ok) { fail++; continue; }
+      if (!gemRes.ok) { console.error("[extract-knowledge] gemini_http", nl.id, gemRes.status); failures.push({ id: nl.id, reason: "gemini_" + gemRes.status }); fail++; continue; }
       const gj = await gemRes.json();
       const txt = gj?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-      const ex = JSON.parse(txt);
+      let ex: { terms?: []; products?: []; insurers?: []; scenarios?: [] };
+      try { ex = JSON.parse(txt); }
+      catch (pe) { console.error("[extract-knowledge] json_parse", nl.id, pe); failures.push({ id: nl.id, reason: "json_parse" }); fail++; continue; }
       success++;
 
       const buckets: Array<[string, Array<{ title: string; body: string }>]> = [
@@ -173,7 +176,7 @@ Deno.serve(async (req: Request) => {
           if (samples.length < 5) samples.push({ type, title, body: (it.body || "").slice(0, 200), source_ref: nl.id });
         }
       }
-    } catch (_e) { fail++; }
+    } catch (e) { console.error("[extract-knowledge] error", nl.id, e); failures.push({ id: nl.id, reason: String((e as Error)?.message || e).slice(0, 200) }); fail++; }
   }
 
   const elapsedMs = Date.now() - t0;
@@ -184,6 +187,6 @@ Deno.serve(async (req: Request) => {
     processed, success, fail, entries_created: entriesCreated,
     terms: termCnt, products: productCnt, insurers: insurerCnt, scenarios: scenarioCnt,
     elapsed_ms: elapsedMs, gemini_input_chars: geminiChars, est_input_tokens: estInputTokens,
-    samples,
+    samples, failures,
   });
 });
