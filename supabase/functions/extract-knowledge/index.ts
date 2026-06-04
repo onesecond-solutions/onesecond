@@ -1,30 +1,26 @@
 // supabase/functions/extract-knowledge/index.ts
 //
-// 보험 지식 엔진 v0 — 소식지 샘플 채굴 (관리자/서버 전용).
+// 보험 지식 엔진 v0 — 소식지 샘플 채굴 (관리자/서버 전용). 측정이 목적.
 // newsletters.full_text → Gemini 추출{용어/상품/보험사/시나리오} → knowledge_entries(ai_draft).
-// 측정이 목적: 성공/실패/비용/시간 + 실패 원인을 knowledge_extract_runs / _errors 에 구조화 기록.
+// 추적: run → run_item(newsletter별) → errors / entries (run_id·run_item_id).
 //
-// 보안: x-cron-secret 일치 시만 동작 / service_role 은 함수 내부만(클라 노출 0).
-// 환각방지: "본문에 실제 있는 내용만" + source_ref=newsletter.id.
+// 보안: x-cron-secret 일치 시만 / service_role 함수 내부만(클라 노출 0).
+// 환각방지: "본문에 실제 있는 내용만" + source_id=newsletter.id.
 // 멱등/중복방지: (type, lower title) 존재 시 skip.
-//
 // 입력: { "ids":[...] } 또는 { "sample":true, "limit":30 }
-// secret: CRON_SECRET, GEMINI_API_KEY (+ SUPABASE_URL/SERVICE_ROLE_KEY 자동주입)
+// secret: CRON_SECRET, GEMINI_API_KEY (+ SUPABASE_URL/SERVICE_ROLE_KEY 자동)
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const MAX_CHARS = 30000;
 let CACHED_MODEL = "";
-
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-cron-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-function json(b: unknown, s = 200): Response {
-  return new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
-}
+const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 
 const CANON: Record<string, string> = {
   "메트라이프생명": "메트라이프", "메트라이프": "메트라이프",
@@ -42,13 +38,9 @@ async function pickModel(apiKey: string): Promise<string> {
     const r = await fetch(`${API_BASE}/models?key=${apiKey}`);
     if (r.ok) {
       const j = await r.json();
-      const usable = (j.models || []).filter((m: { supportedGenerationMethods?: string[] }) =>
-        (m.supportedGenerationMethods || []).includes("generateContent"));
+      const usable = (j.models || []).filter((m: { supportedGenerationMethods?: string[] }) => (m.supportedGenerationMethods || []).includes("generateContent"));
       const bad = /(vision|embedding|aqa|image|tts|audio|thinking|learnlm)/i;
-      const chosen =
-        usable.find((m: { name: string }) => /flash/i.test(m.name) && !bad.test(m.name)) ||
-        usable.find((m: { name: string }) => /flash/i.test(m.name)) ||
-        usable.find((m: { name: string }) => /gemini/i.test(m.name) && !bad.test(m.name)) || usable[0];
+      const chosen = usable.find((m: { name: string }) => /flash/i.test(m.name) && !bad.test(m.name)) || usable.find((m: { name: string }) => /flash/i.test(m.name)) || usable.find((m: { name: string }) => /gemini/i.test(m.name) && !bad.test(m.name)) || usable[0];
       if (chosen) { CACHED_MODEL = String(chosen.name).replace(/^models\//, ""); return CACHED_MODEL; }
     }
   } catch (_e) { /* */ }
@@ -90,27 +82,23 @@ Deno.serve(async (req: Request) => {
   try { payload = await req.json(); } catch (_e) { /* */ }
   const sourceKind = payload.ids && payload.ids.length ? "ids" : "sample";
 
-  // 대상 (읽기)
   let rows: NL[] = [];
   if (sourceKind === "ids") {
     const { data } = await supabase.from("newsletters").select("id, company, title, source_filename, full_text, text_quality").in("id", payload.ids!);
     rows = (data as NL[]) || [];
   } else {
     const lim = Math.min(payload.limit ?? 30, 30);
-    const { data } = await supabase.from("newsletters").select("id, company, title, source_filename, full_text, text_quality")
-      .not("full_text", "is", null).order("char_length", { ascending: false }).limit(lim);
+    const { data } = await supabase.from("newsletters").select("id, company, title, source_filename, full_text, text_quality").not("full_text", "is", null).order("char_length", { ascending: false }).limit(lim);
     rows = (data as NL[]) || [];
   }
 
-  // run 시작 기록
   await supabase.from("knowledge_extract_runs").insert({ run_id: runId, model, source: sourceKind, requested: rows.length, status: "running" }).then(() => {}, () => {});
 
-  // 실패 로그 (조건 10필드)
-  async function logErr(nl: NL, stage: Stage, msg: string, retryable: boolean, inputLen: number) {
+  async function logErr(nl: NL, runItemId: number | null, stage: Stage, msg: string, retryable: boolean, inputLen: number) {
     console.error(`[extract-knowledge][${stage}]`, nl.id, msg);
     try {
       await supabase.from("knowledge_extract_errors").insert({
-        run_id: runId, newsletter_id: nl.id, file_name: nl.source_filename || nl.title,
+        run_id: runId, run_item_id: runItemId, newsletter_id: nl.id, file_name: nl.source_filename || nl.title,
         insurance_company: canon(nl.company || ""), stage, error_message: String(msg).slice(0, 500),
         retryable, input_text_length: inputLen, model_name: model,
       });
@@ -124,10 +112,20 @@ Deno.serve(async (req: Request) => {
 
   for (const nl of rows) {
     processed++;
+    const itemStart = Date.now();
+    const inputLen = (nl.full_text || "").length;
+    // run_item 생성 (newsletter별 처리 상태)
+    const { data: itemRow } = await supabase.from("knowledge_extract_run_items").insert({
+      run_id: runId, newsletter_id: nl.id, file_name: nl.source_filename || nl.title, company: canon(nl.company || ""),
+      status: "processing", input_text_length: inputLen,
+    }).select("run_item_id").single();
+    const runItemId: number | null = itemRow?.run_item_id ?? null;
+
     let stage: Stage = "fetch";
+    let itemEntries = 0, itemStatus = "success", failStage: string | null = null;
     try {
       const body = (nl.full_text || "").slice(0, MAX_CHARS);
-      if (!body.trim()) { await logErr(nl, "fetch", "empty_body", false, 0); fail++; continue; }
+      if (!body.trim()) { failStage = "fetch"; itemStatus = "fail"; await logErr(nl, runItemId, "fetch", "empty_body", false, 0); fail++; throw new Error("__handled__"); }
       geminiChars += body.length;
       const conf = nl.text_quality === "텍스트" ? "high" : (nl.text_quality === "이미지" ? "low" : "med");
 
@@ -137,54 +135,51 @@ Deno.serve(async (req: Request) => {
       stage = "gemini_call";
       const gemRes = await fetch(`${API_BASE}/models/${model}:generateContent?key=${apiKey}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM }] },
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: SCHEMA },
-        }),
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM }] }, contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: SCHEMA } }),
       });
-      if (!gemRes.ok) { await logErr(nl, "gemini_call", "http_" + gemRes.status, gemRes.status >= 500 || gemRes.status === 429, body.length); fail++; continue; }
+      if (!gemRes.ok) { failStage = "gemini_call"; itemStatus = "fail"; await logErr(nl, runItemId, "gemini_call", "http_" + gemRes.status, gemRes.status >= 500 || gemRes.status === 429, body.length); fail++; throw new Error("__handled__"); }
 
       stage = "json_parse";
       const gj = await gemRes.json();
       const txt = gj?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
       let ex: { terms?: { title: string; body: string }[]; products?: { title: string; body: string }[]; insurers?: { title: string; body: string }[]; scenarios?: { title: string; body: string }[] };
-      try { ex = JSON.parse(txt); } catch (pe) { await logErr(nl, "json_parse", String(pe), true, body.length); fail++; continue; }
+      try { ex = JSON.parse(txt); } catch (pe) { failStage = "json_parse"; itemStatus = "fail"; await logErr(nl, runItemId, "json_parse", String(pe), true, body.length); fail++; throw new Error("__handled__"); }
 
       stage = "validation";
-      if (!ex || typeof ex !== "object") { await logErr(nl, "validation", "not_object", true, body.length); fail++; continue; }
+      if (!ex || typeof ex !== "object") { failStage = "validation"; itemStatus = "fail"; await logErr(nl, runItemId, "validation", "not_object", true, body.length); fail++; throw new Error("__handled__"); }
       success++;
 
       stage = "insert";
-      const buckets: Array<[string, { title: string; body: string }[]]> = [
-        ["term", ex.terms || []], ["product", ex.products || []], ["insurer", ex.insurers || []], ["scenario", ex.scenarios || []],
-      ];
+      const buckets: Array<[string, { title: string; body: string }[]]> = [["term", ex.terms || []], ["product", ex.products || []], ["insurer", ex.insurers || []], ["scenario", ex.scenarios || []]];
       for (const [type, items] of buckets) {
         for (const it of items) {
           const title = (it.title || "").trim();
           if (!title) continue;
-          const { data: dup } = await supabase.from("knowledge_entries").select("id").eq("type", type).ilike("title", title).limit(1);
-          if (dup && dup.length) continue;  // 중복방지
+          const { data: dup } = await supabase.from("knowledge_entries").select("entry_id").eq("type", type).ilike("title", title).limit(1);
+          if (dup && dup.length) continue;
           const { error: insErr } = await supabase.from("knowledge_entries").insert({
             type, title, body: (it.body || "").slice(0, 4000), category: type === "insurer" ? "보험사" : null,
-            source_type: "newsletter", source_ref: nl.id, run_id: runId, status: "ai_draft", confidence: conf, created_by: "extract-knowledge",
+            source_type: "newsletter", source_id: nl.id, source_title: nl.title, source_company: nl.company,
+            canonical_company_name: canon(nl.company || ""), source_page: null,
+            run_id: runId, model_name: model, confidence: conf, status: "ai_draft", created_by: "ai",
           });
-          if (insErr) { await logErr(nl, "insert", insErr.message, true, body.length); continue; }
-          entriesCreated++;
+          if (insErr) { await logErr(nl, runItemId, "insert", insErr.message, true, body.length); continue; }
+          entriesCreated++; itemEntries++;
           if (type === "term") termCnt++; else if (type === "product") productCnt++; else if (type === "insurer") insurerCnt++; else scenarioCnt++;
-          if (samples.length < 5) samples.push({ type, title, body: (it.body || "").slice(0, 200), source_ref: nl.id });
+          if (samples.length < 5) samples.push({ type, title, body: (it.body || "").slice(0, 200), source_id: nl.id });
         }
       }
     } catch (e) {
-      await logErr(nl, stage, String((e as Error)?.message || e), true, (nl.full_text || "").length);
-      fail++;
+      if (String((e as Error)?.message) !== "__handled__") { failStage = stage; itemStatus = "fail"; await logErr(nl, runItemId, stage, String((e as Error)?.message || e), true, inputLen); fail++; }
+    }
+    // run_item 종료 갱신
+    if (runItemId != null) {
+      await supabase.from("knowledge_extract_run_items").update({ status: itemStatus, fail_stage: failStage, entries_count: itemEntries, elapsed_ms: Date.now() - itemStart }).eq("run_item_id", runItemId).then(() => {}, () => {});
     }
   }
 
   const elapsedMs = Date.now() - t0;
   const estInputTokens = Math.round(geminiChars / 4);
-
-  // run 종료 기록
   await supabase.from("knowledge_extract_runs").update({
     finished_at: new Date().toISOString(), processed, success, fail, entries_created: entriesCreated,
     terms: termCnt, products: productCnt, insurers: insurerCnt, scenarios: scenarioCnt,
@@ -192,10 +187,8 @@ Deno.serve(async (req: Request) => {
   }).eq("run_id", runId).then(() => {}, () => {});
 
   return json({
-    ok: true, run_id: runId, model,
-    processed, success, fail, entries_created: entriesCreated,
+    ok: true, run_id: runId, model, processed, success, fail, entries_created: entriesCreated,
     terms: termCnt, products: productCnt, insurers: insurerCnt, scenarios: scenarioCnt,
-    elapsed_ms: elapsedMs, gemini_input_chars: geminiChars, est_input_tokens: estInputTokens,
-    samples,
+    elapsed_ms: elapsedMs, gemini_input_chars: geminiChars, est_input_tokens: estInputTokens, samples,
   });
 });
