@@ -983,7 +983,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-tool-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);cursor:pointer;padding:0}
 .mys-tool-btn:hover{border-color:var(--ac);color:var(--ac)}
 .mys-tool-btn svg{width:18px;height:18px}
-.mys-tool-btn[title="캘린더 삽입"]{display:none}  /* 캘린더 미완 — Phase 3에서 이 줄 제거 */
 /* 표 빌더 */
 .tbl-ov{z-index:10080}
 .tbl-builder-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
@@ -998,6 +997,22 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .tbl-builder-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .tbl-builder-actions button{padding:10px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:0.85rem;font-weight:800;cursor:pointer;border:1px solid var(--bd);background:var(--s1);color:var(--ts)}
 .tbl-builder-actions button.primary{background:var(--ac);color:#fff;border-color:var(--ac)}
+/* 캘린더 빌더 */
+.cal-ov{z-index:10080}
+.cal-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px}
+.cal-nav button{width:32px;height:32px;border:1px solid var(--bd);background:var(--s2);border-radius:var(--radius-sm);color:var(--ts);cursor:pointer;font-size:1rem}
+.cal-nav button:hover{border-color:var(--ac);color:var(--ac)}
+.cal-nav .cal-ym{font-size:0.95rem;font-weight:800;color:var(--tp);min-width:120px;text-align:center}
+.cal-edit{border-collapse:collapse;width:100%}
+.cal-edit th{padding:6px 0;font-size:0.78rem;font-weight:700;color:var(--ts)}
+.cal-edit th.cal-sun,.cal-edit td.cal-sun{color:#dc2626}
+.cal-edit th.cal-sat,.cal-edit td.cal-sat{color:#2563eb}
+.cal-edit td{text-align:center;height:40px;width:14.28%}
+.cal-edit td.cal-day{cursor:pointer;border-radius:var(--radius-sm);font-size:0.85rem;color:var(--tp)}
+.cal-edit td.cal-day:hover{background:var(--s2)}
+.cal-edit td.cal-day.cal-sel{background:var(--ac);color:#fff;font-weight:800}
+.cal-memo{width:100%;margin-top:12px;padding:9px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s2);color:var(--tp);font-family:inherit;font-size:0.85rem;resize:vertical;min-height:60px;outline:none}
+.cal-hint{font-size:0.76rem;color:var(--tf);margin-top:6px}
 .mys-write-hint{font-size:0.72em;color:var(--tf);margin-top:2px}
 .mys-write-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--bd);background:var(--s2)}
 .mys-write-cancel{padding:9px 18px;border-radius:9px;background:transparent;border:1px solid var(--bd);color:var(--ts);font-size:0.85em;font-weight:700;cursor:pointer}
@@ -8409,7 +8424,7 @@ function mysEditorTool(kind, fileId){
     var fid=fileId || _activeWriteFileId();
     if(kind==='image'){ var el=document.getElementById(fid); if(el) el.click(); return; }
     if(kind==='table'){ tblBuilderOpen(fid); return; }
-    if(kind==='calendar'){ alert('캘린더 삽입은 다음 단계에서 추가됩니다.'); return; }
+    if(kind==='calendar'){ calBuilderOpen(fid); return; }
   }catch(e){}
 }
 window.mysEditorTool=mysEditorTool;
@@ -8464,6 +8479,81 @@ async function tblInsert(){
 }
 window.tblBuilderOpen=tblBuilderOpen; window.tblBuilderClose=tblBuilderClose; window.tblRender=tblRender;
 window.tblAddRow=tblAddRow; window.tblDelRow=tblDelRow; window.tblAddCol=tblAddCol; window.tblDelCol=tblDelCol; window.tblInsert=tblInsert; window._tblSet=_tblSet;
+
+/* ── 캘린더 빌더 (월 달력 → 날짜 표시 + 일정 메모 → html2canvas 이미지 → 첨부 주입) ── */
+window._calYM={y:0,m:0}; window._calSel={}; window._calTargetFile=null;
+var CAL_WD=['일','월','화','수','목','금','토'];
+function calBuilderOpen(fileId){
+  window._calTargetFile=fileId||null;
+  var now=new Date(); window._calYM={y:now.getFullYear(), m:now.getMonth()}; window._calSel={};
+  var memo=document.getElementById('calMemo'); if(memo) memo.value='';
+  calRender();
+  var o=document.getElementById('calBuilderOv'); if(o) o.style.display='flex';
+}
+function calBuilderClose(){ var o=document.getElementById('calBuilderOv'); if(o) o.style.display='none'; }
+function calNav(d){ var y=window._calYM.y, m=window._calYM.m+d; if(m<0){m=11;y--;} if(m>11){m=0;y++;} window._calYM={y:y,m:m}; calRender(); }
+function calToggle(d){ var k=window._calYM.y+'-'+(window._calYM.m+1)+'-'+d; if(window._calSel[k]) delete window._calSel[k]; else window._calSel[k]=true; calRender(); }
+function calRender(){
+  var wrap=document.getElementById('calGridWrap'); if(!wrap) return;
+  var y=window._calYM.y, m=window._calYM.m;
+  var lbl=document.getElementById('calYMLabel'); if(lbl) lbl.textContent=y+'년 '+(m+1)+'월';
+  var first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+  var h='<table class="cal-edit"><thead><tr>';
+  for(var i=0;i<7;i++) h+='<th class="'+(i===0?'cal-sun':(i===6?'cal-sat':''))+'">'+CAL_WD[i]+'</th>';
+  h+='</tr></thead><tbody><tr>';
+  for(var b=0;b<first;b++) h+='<td></td>';
+  var c=first;
+  for(var d=1;d<=days;d++){
+    if(c===7){ h+='</tr><tr>'; c=0; }
+    var k=y+'-'+(m+1)+'-'+d, sel=window._calSel[k]?' cal-sel':'';
+    h+='<td class="cal-day'+sel+(c===0?' cal-sun':(c===6?' cal-sat':''))+'" onclick="calToggle('+d+')">'+d+'</td>';
+    c++;
+  }
+  while(c<7 && c!==0){ h+='<td></td>'; c++; }
+  h+='</tr></tbody></table>'; wrap.innerHTML=h;
+}
+async function calInsert(){
+  try{
+    if(!window._calTargetFile){ alert('삽입할 위치를 찾지 못했습니다. 글쓰기 폼에서 다시 시도해 주세요.'); return; }
+    var y=window._calYM.y, m=window._calYM.m, sel=window._calSel||{};
+    var memo=((document.getElementById('calMemo')||{}).value||'');
+    var first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+    var host=document.createElement('div');
+    host.style.cssText='position:fixed;left:-99999px;top:0;background:#FFFFFF;padding:20px;width:360px;font-family:-apple-system,BlinkMacSystemFont,\'Malgun Gothic\',sans-serif;';
+    var html='<div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:14px;text-align:center">'+y+'년 '+(m+1)+'월</div>';
+    html+='<table style="border-collapse:collapse;width:100%;font-size:13px"><thead><tr>';
+    for(var i=0;i<7;i++){ var hc=(i===0?'#dc2626':(i===6?'#2563eb':'#6b7280')); html+='<th style="padding:6px 0;font-weight:700;color:'+hc+'">'+CAL_WD[i]+'</th>'; }
+    html+='</tr></thead><tbody><tr>';
+    for(var b=0;b<first;b++) html+='<td></td>';
+    var c=first;
+    for(var d=1;d<=days;d++){
+      if(c===7){ html+='</tr><tr>'; c=0; }
+      var k=y+'-'+(m+1)+'-'+d, isSel=!!sel[k];
+      var dcol=(c===0?'#dc2626':(c===6?'#2563eb':'#111827'));
+      var inner=isSel
+        ? '<span style="display:inline-block;width:26px;height:26px;line-height:26px;background:#6366f1;color:#fff;border-radius:50%;font-weight:800">'+d+'</span>'
+        : '<span style="color:'+dcol+'">'+d+'</span>';
+      html+='<td style="text-align:center;padding:5px 0;height:32px">'+inner+'</td>';
+      c++;
+    }
+    while(c<7 && c!==0){ html+='<td></td>'; c++; }
+    html+='</tr></tbody></table>';
+    if(String(memo).trim()) html+='<div style="margin-top:14px;padding-top:11px;border-top:1px solid #e5e7eb;font-size:13px;color:#374151;line-height:1.5;white-space:pre-wrap">'+_tblEsc(memo)+'</div>';
+    host.innerHTML=html;
+    document.body.appendChild(host);
+    var h2c=await loadHtml2Canvas();
+    var canvas=await h2c(host,{scale:2,backgroundColor:'#FFFFFF',logging:false});
+    document.body.removeChild(host);
+    canvas.toBlob(function(blob){
+      if(!blob){ alert('캘린더 이미지 생성에 실패했습니다.'); return; }
+      var file=new File([blob],'캘린더_'+Date.now()+'.png',{type:'image/png'});
+      var ok=_injectFileToInput(window._calTargetFile, file);
+      calBuilderClose();
+      if(ok && !document.getElementById(window._calTargetFile+'Preview')) alert('캘린더를 첨부했습니다. 글 등록 시 함께 저장됩니다.');
+    },'image/png');
+  }catch(e){ try{ alert('캘린더 삽입 중 문제가 발생했습니다.'); }catch(_e){} }
+}
+window.calBuilderOpen=calBuilderOpen; window.calBuilderClose=calBuilderClose; window.calNav=calNav; window.calToggle=calToggle; window.calInsert=calInsert;
 function mysWriteFilePreview(input, previewId){
   var box=document.getElementById(previewId); if(!box) return;
   box.innerHTML='';
@@ -9459,6 +9549,26 @@ document.addEventListener('keydown', function(e){
       <div class="tbl-builder-actions">
         <button type="button" onclick="tblBuilderClose()">취소</button>
         <button type="button" class="primary" onclick="tblInsert()">표 삽입</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 캘린더 빌더 모달 (글쓰기 도구막대) -->
+<div class="iv-overlay cal-ov" id="calBuilderOv" style="display:none">
+  <div class="iv-write-modal" style="max-width:420px;width:100%">
+    <div class="iv-write-head"><span>캘린더 삽입</span><button class="iv-write-close" onclick="calBuilderClose()" aria-label="닫기">&#10005;</button></div>
+    <div style="padding:18px 20px">
+      <div class="cal-nav">
+        <button type="button" onclick="calNav(-1)" aria-label="이전 달">&#8249;</button>
+        <span class="cal-ym" id="calYMLabel"></span>
+        <button type="button" onclick="calNav(1)" aria-label="다음 달">&#8250;</button>
+      </div>
+      <div id="calGridWrap"></div>
+      <div class="cal-hint">날짜를 클릭하면 표시됩니다. 일정 메모는 달력 아래에 함께 들어갑니다.</div>
+      <textarea class="cal-memo" id="calMemo" placeholder="일정 메모 (선택) — 예: 14일 신상품 교육, 20일 마감"></textarea>
+      <div class="tbl-builder-actions">
+        <button type="button" onclick="calBuilderClose()">취소</button>
+        <button type="button" class="primary" onclick="calInsert()">캘린더 삽입</button>
       </div>
     </div>
   </div>
