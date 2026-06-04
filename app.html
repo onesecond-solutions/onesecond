@@ -269,6 +269,9 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .notif-row-n{font-size:0.72rem;font-weight:800;color:var(--tf);white-space:nowrap}
 .notif-row-n.on{color:#EF4444}
 .notif-empty{padding:18px 14px;text-align:center;color:var(--tf);font-size:0.8rem}
+.notif-push-btn{display:block;width:100%;padding:11px 14px;background:var(--s2);border:none;border-top:1px solid var(--bd);cursor:pointer;font-family:inherit;font-size:0.8rem;font-weight:800;color:var(--ac);text-align:center}
+.notif-push-btn:hover{filter:brightness(0.97)}
+.notif-push-btn.on{color:var(--tf);cursor:default}
 .nav-badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#EF4444;color:#fff;font-size:0.6rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex:0 0 auto}
 .cmp-lock{text-align:center;padding:48px 20px;color:var(--ts)}
 .cmp-lock-ic{font-size:2rem;margin-bottom:10px}
@@ -3146,11 +3149,30 @@ async function notifRefresh(){
 }
 function _notifRenderBell(total){ var dot=document.getElementById('notifDot'), c=document.getElementById('notifCount'); if(c){ c.textContent=total>99?'99+':String(total); c.style.display=total>0?'':'none'; } if(dot) dot.style.display=total>0?'':'none'; }
 function _notifRenderNavBadges(per){ for(var i=0;i<NOTIF_FEEDS.length;i++){ var f=NOTIF_FEEDS[i]; var nav=_notifNav(f.label); if(!nav) continue; var b=nav.querySelector('.nav-badge'); var n=per[f.key]||0; if(n>0){ if(!b){ b=document.createElement('span'); b.className='nav-badge'; nav.appendChild(b); } b.textContent=n>99?'99+':String(n); b.style.display=''; } else if(b){ b.style.display='none'; } } }
-function notifBellToggle(){ var pop=document.getElementById('notifPop'); if(!pop) return; if(pop.style.display!=='none'){ pop.style.display='none'; return; } var per=window._notifPer||{}, total=window._notifTotal||0; var rows=NOTIF_FEEDS.filter(function(f){return _notifNav(f.label);}).map(function(f){ var n=per[f.key]||0; return '<button class="notif-row" onclick="notifGo(\''+f.key+'\',\''+f.view+'\')"><span>'+f.label+'</span><span class="notif-row-n'+(n>0?' on':'')+'">'+(n>0?('신규 '+n+'개'):'새 글 없음')+'</span></button>'; }).join(''); pop.innerHTML='<div class="notif-pop-hd">알림'+(total>0?(' · 신규 '+total+'개'):'')+'</div>'+(rows||'<div class="notif-empty">표시할 영역이 없습니다.</div>'); pop.style.display=''; }
+function notifBellToggle(){ var pop=document.getElementById('notifPop'); if(!pop) return; if(pop.style.display!=='none'){ pop.style.display='none'; return; } var per=window._notifPer||{}, total=window._notifTotal||0; var rows=NOTIF_FEEDS.filter(function(f){return _notifNav(f.label);}).map(function(f){ var n=per[f.key]||0; return '<button class="notif-row" onclick="notifGo(\''+f.key+'\',\''+f.view+'\')"><span>'+f.label+'</span><span class="notif-row-n'+(n>0?' on':'')+'">'+(n>0?('신규 '+n+'개'):'새 글 없음')+'</span></button>'; }).join(''); var _pp=(typeof Notification!=='undefined')?Notification.permission:'default'; var pushBtn=(('PushManager' in window)&&('serviceWorker' in navigator))?('<button class="notif-push-btn" onclick="notifEnablePush()">'+(_pp==='granted'?'푸시 알림 다시 등록':'이 기기에서 푸시 알림 받기')+'</button>'):''; pop.innerHTML='<div class="notif-pop-hd">알림'+(total>0?(' · 신규 '+total+'개'):'')+'</div>'+(rows||'<div class="notif-empty">표시할 영역이 없습니다.</div>')+pushBtn; pop.style.display=''; }
 function notifGo(key,view){ var pop=document.getElementById('notifPop'); if(pop) pop.style.display='none'; if(typeof showView==='function') showView(view); _notifMark(key); }
 function _notifMark(key){ try{ var r=_notifReads(); r[key]=new Date().toISOString(); _notifSaveReads(r); setTimeout(notifRefresh,400); }catch(e){} }
 function _notifOnView(viewKey){ var fk=NOTIF_VIEWMAP[viewKey]; if(fk) _notifMark(fk); }
-window.notifBellToggle=notifBellToggle; window.notifGo=notifGo; window.notifRefresh=notifRefresh; window._notifOnView=_notifOnView;
+/* Phase 3 — 웹푸시 구독 (이 기기). 발송은 send-push Edge Function. */
+var NOTIF_VAPID_PUBLIC='BGKzheThBmjNvKisxIb5VmI56waoxFV6oFjh2RAus_kYByleefGmUIq-puo9qVdBW19erWgLNhdFEPNjIS5ygF0';
+function _vapidKey(b64){ var pad='='.repeat((4-b64.length%4)%4); var base=(b64+pad).replace(/-/g,'+').replace(/_/g,'/'); var raw=atob(base); var arr=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++){ arr[i]=raw.charCodeAt(i); } return arr; }
+async function notifEnablePush(){
+  try{
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)){ alert('이 브라우저는 푸시 알림을 지원하지 않습니다.'); return; }
+    var uid=_notifUid(); if(!uid){ alert('로그인 후 이용해 주세요.'); return; }
+    var reg=await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready;
+    var perm=await Notification.requestPermission();
+    if(perm!=='granted'){ alert('알림 권한이 허용되지 않았습니다. 브라우저 주소창 옆 설정에서 알림을 허용해 주세요.'); return; }
+    var sub=await reg.pushManager.getSubscription();
+    if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:_vapidKey(NOTIF_VAPID_PUBLIC)}); }
+    var j=sub.toJSON()||{}; var keys=j.keys||{};
+    if(!j.endpoint||!keys.p256dh||!keys.auth){ alert('구독 정보 생성에 실패했습니다. 다시 시도해 주세요.'); return; }
+    var r=await window.db.fetch('/rest/v1/push_subscriptions?on_conflict=endpoint',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({user_id:uid,endpoint:j.endpoint,p256dh:keys.p256dh,auth:keys.auth})});
+    if(r&&(r.ok||r.status===201||r.status===200)){ alert('푸시 알림이 켜졌습니다. 새 글이 올라오면 이 기기로 알려드릴게요.'); var pop=document.getElementById('notifPop'); if(pop) pop.style.display='none'; }
+    else{ alert('구독 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.'); }
+  }catch(e){ try{ alert('푸시 알림 설정 중 문제가 발생했습니다.'); }catch(_e){} }
+}
+window.notifBellToggle=notifBellToggle; window.notifGo=notifGo; window.notifRefresh=notifRefresh; window._notifOnView=_notifOnView; window.notifEnablePush=notifEnablePush;
 (function(){
   function _ni(){ setTimeout(function(){ try{ notifRefresh(); }catch(e){} }, 1800); try{ setInterval(function(){ try{ notifRefresh(); }catch(e){} }, 60000); }catch(e){} }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _ni); else _ni();
