@@ -106,7 +106,12 @@
     options = options || {};
     options.headers = options.headers || {};
     options.headers['apikey'] = SUPABASE_KEY;
-    options.headers['Authorization'] = 'Bearer ' + (getToken() || '');
+    /* 2026-06-04: 토큰 없으면 빈 Bearer를 보내지 않는다 → anon(apikey)만 전송.
+       빈 'Bearer ' 는 Supabase가 401(PGRST301 Empty JWT)로 거부 → 비로그인 홈 콘솔 빨간 에러.
+       토큰 없을 땐 헤더 자체를 생략 = anon 조회(공개 데이터 노출 / 보호 데이터는 빈 결과). */
+    var _authTk = getToken();
+    if (_authTk) { options.headers['Authorization'] = 'Bearer ' + _authTk; }
+    else { try { delete options.headers['Authorization']; } catch (e) { options.headers['Authorization'] = undefined; } }
 
     var res = await fetch(SUPABASE_URL + path, options);
 
