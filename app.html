@@ -983,6 +983,20 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-tool-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);color:var(--ts);cursor:pointer;padding:0}
 .mys-tool-btn:hover{border-color:var(--ac);color:var(--ac)}
 .mys-tool-btn svg{width:18px;height:18px}
+/* 표 빌더 */
+.tbl-ov{z-index:10080}
+.tbl-builder-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.tbl-builder-bar button{padding:7px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);font-family:inherit;font-size:0.82rem;font-weight:700;color:var(--ts);cursor:pointer}
+.tbl-builder-bar button:hover{border-color:var(--ac);color:var(--ac)}
+.tbl-builder-bar label{font-size:0.8rem;color:var(--ts);display:inline-flex;align-items:center;gap:5px;margin-left:4px;cursor:pointer}
+.tbl-edit{border-collapse:collapse}
+.tbl-edit td{border:1px solid var(--bd);padding:0}
+.tbl-edit-in{width:120px;padding:8px 10px;border:none;background:var(--s1);color:var(--tp);font-family:inherit;font-size:0.85rem;outline:none}
+.tbl-edit-in:focus{background:var(--s2)}
+.tbl-edit-in.tbl-edit-h{font-weight:700;background:var(--s2)}
+.tbl-builder-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.tbl-builder-actions button{padding:10px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:0.85rem;font-weight:800;cursor:pointer;border:1px solid var(--bd);background:var(--s1);color:var(--ts)}
+.tbl-builder-actions button.primary{background:var(--ac);color:#fff;border-color:var(--ac)}
 .mys-write-hint{font-size:0.72em;color:var(--tf);margin-top:2px}
 .mys-write-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--bd);background:var(--s2)}
 .mys-write-cancel{padding:9px 18px;border-radius:9px;background:transparent;border:1px solid var(--bd);color:var(--ts);font-size:0.85em;font-weight:700;cursor:pointer}
@@ -1932,7 +1946,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="iv-fld"><label>내용</label><div class="mys-editor"><textarea id="mr-f-body" rows="6" placeholder="공지 내용을 입력하세요"></textarea><div class="mys-editor-tools"><button type="button" class="mys-tool-btn" title="이미지 삽입" onclick="mysEditorTool('image','mr-f-file')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button><button type="button" class="mys-tool-btn" title="표 삽입" onclick="mysEditorTool('table')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></button><button type="button" class="mys-tool-btn" title="캘린더 삽입" onclick="mysEditorTool('calendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></button></div></div></div>
           <div class="iv-fld"><label>키워드</label><input type="text" id="mr-f-keywords" placeholder="예: 마감, 시책, 교육일정 (쉼표로 구분)"><div style="font-size:0.75rem;color:var(--tf);margin-top:2px">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
           <div class="iv-fld" id="mr-edit-atts-fld" style="display:none"><label>현재 첨부 (X 눌러 삭제)</label><div id="mr-edit-atts" class="mr-edit-atts"></div></div>
-          <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개 · 선택)</label><input type="file" id="mr-f-file" multiple></div>
+          <div class="iv-fld"><label>첨부 (모든 파일 형식 · 여러 개 · 선택)</label><input type="file" id="mr-f-file" multiple onchange="mysWriteFilePreview(this,'mr-f-filePreview')"><div id="mr-f-filePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>
           <div id="mr-write-err" style="display:none;color:var(--err);font-size:0.8125rem;margin-top:4px"></div>
         </div>
         <div class="iv-write-foot">
@@ -8367,15 +8381,88 @@ function fileTooLarge(files){
 }
 window.fileTooLarge=fileTooLarge;
 /* 스크립트 탭 파일 첨부 미리보기 (이미지 썸네일 / 그 외 파일명) */
-/* 글쓰기 삽입 도구막대 — 이미지=기존 첨부 트리거 / 표·캘린더=다음 단계 */
+/* 글쓰기 삽입 도구막대 — 이미지=파일첨부 트리거 / 표=빌더→이미지 주입 / 캘린더=다음 단계
+ * 표·캘린더는 html2canvas로 이미지화 후 기존 첨부 흐름에 주입 → 저장·뷰어 코드 무변경. */
+function _activeWriteFileId(){
+  try{
+    var mr=document.getElementById('mrWriteModal'); if(mr && mr.style.display==='flex') return 'mr-f-file';
+    var pane=document.querySelector('.mys-write-pane.on');
+    if(pane){ if(pane.id==='mysWritePaneScript') return 'mysWriteScrFile'; if(pane.id==='mysWritePaneGroup') return 'mysWriteGrpFile'; if(pane.id==='mysWritePaneLibrary') return 'mysWriteLibFile'; }
+  }catch(e){}
+  return null;
+}
+function _injectFileToInput(fileId, file){
+  try{
+    var input=document.getElementById(fileId); if(!input||!file) return false;
+    var dt=new DataTransfer();
+    if(input.files){ for(var i=0;i<input.files.length;i++) dt.items.add(input.files[i]); }
+    dt.items.add(file);
+    input.files=dt.files;
+    var pv=document.getElementById(fileId+'Preview');
+    if(pv && typeof mysWriteFilePreview==='function') mysWriteFilePreview(input, fileId+'Preview');
+    return true;
+  }catch(e){ return false; }
+}
 function mysEditorTool(kind, fileId){
   try{
-    if(kind==='image'){ var el=document.getElementById(fileId); if(el) el.click(); return; }
-    if(kind==='table'){ alert('표 삽입은 다음 단계에서 추가됩니다.'); return; }
+    var fid=fileId || _activeWriteFileId();
+    if(kind==='image'){ var el=document.getElementById(fid); if(el) el.click(); return; }
+    if(kind==='table'){ tblBuilderOpen(fid); return; }
     if(kind==='calendar'){ alert('캘린더 삽입은 다음 단계에서 추가됩니다.'); return; }
   }catch(e){}
 }
 window.mysEditorTool=mysEditorTool;
+
+/* ── 표 빌더 (셀/행/열 추가·삭제 → html2canvas 이미지 → 첨부 주입) ── */
+window._tblData=[['','',''],['','',''],['','','']];
+window._tblTargetFile=null;
+function _tblEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function tblBuilderOpen(fileId){
+  window._tblTargetFile=fileId||null;
+  window._tblData=[['','',''],['','',''],['','','']];
+  var hc=document.getElementById('tblHeader'); if(hc) hc.checked=true;
+  tblRender();
+  var o=document.getElementById('tblBuilderOv'); if(o) o.style.display='flex';
+}
+function tblBuilderClose(){ var o=document.getElementById('tblBuilderOv'); if(o) o.style.display='none'; }
+function _tblSet(r,c,v){ try{ window._tblData[r][c]=v; }catch(e){} }
+function tblRender(){
+  var wrap=document.getElementById('tblGridWrap'); if(!wrap) return;
+  var hdr=(document.getElementById('tblHeader')||{}).checked;
+  var d=window._tblData, h='<table class="tbl-edit"><tbody>';
+  for(var r=0;r<d.length;r++){ h+='<tr>'; for(var c=0;c<d[r].length;c++){ var hd=(hdr&&r===0)?' tbl-edit-h':''; h+='<td><input class="tbl-edit-in'+hd+'" value="'+_tblEsc(d[r][c])+'" oninput="_tblSet('+r+','+c+',this.value)"></td>'; } h+='</tr>'; }
+  h+='</tbody></table>'; wrap.innerHTML=h;
+}
+function tblAddRow(){ var cols=(window._tblData[0]||['']).length; var row=[]; for(var i=0;i<cols;i++) row.push(''); window._tblData.push(row); tblRender(); }
+function tblDelRow(){ if(window._tblData.length>1) window._tblData.pop(); tblRender(); }
+function tblAddCol(){ for(var r=0;r<window._tblData.length;r++) window._tblData[r].push(''); tblRender(); }
+function tblDelCol(){ if((window._tblData[0]||['']).length>1){ for(var r=0;r<window._tblData.length;r++) window._tblData[r].pop(); } tblRender(); }
+async function tblInsert(){
+  try{
+    if(!window._tblTargetFile){ alert('삽입할 위치를 찾지 못했습니다. 글쓰기 폼에서 다시 시도해 주세요.'); return; }
+    var d=window._tblData, hdr=(document.getElementById('tblHeader')||{}).checked;
+    var empty=d.every(function(row){ return row.every(function(c){ return !String(c||'').trim(); }); });
+    if(empty){ alert('표 내용을 입력해 주세요.'); return; }
+    var host=document.createElement('div');
+    host.style.cssText='position:fixed;left:-99999px;top:0;background:#FFFFFF;padding:16px;';
+    var th='<table style="border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,\'Malgun Gothic\',sans-serif;font-size:14px;color:#111827"><tbody>';
+    for(var r=0;r<d.length;r++){ th+='<tr>'; for(var c=0;c<d[r].length;c++){ var isH=(hdr&&r===0); var tag=isH?'th':'td'; var st='border:1px solid #cbd5e1;padding:9px 14px;text-align:center;white-space:nowrap;'+(isH?'background:#f1f5f9;font-weight:700;':''); th+='<'+tag+' style="'+st+'">'+_tblEsc(d[r][c])+'</'+tag+'>'; } th+='</tr>'; }
+    th+='</tbody></table>'; host.innerHTML=th;
+    document.body.appendChild(host);
+    var h2c=await loadHtml2Canvas();
+    var canvas=await h2c(host.firstChild,{scale:2,backgroundColor:'#FFFFFF',logging:false});
+    document.body.removeChild(host);
+    canvas.toBlob(function(blob){
+      if(!blob){ alert('표 이미지 생성에 실패했습니다.'); return; }
+      var file=new File([blob],'표_'+Date.now()+'.png',{type:'image/png'});
+      var ok=_injectFileToInput(window._tblTargetFile, file);
+      tblBuilderClose();
+      if(ok && !document.getElementById(window._tblTargetFile+'Preview')) alert('표를 첨부했습니다. 글 등록 시 함께 저장됩니다.');
+    },'image/png');
+  }catch(e){ try{ alert('표 삽입 중 문제가 발생했습니다.'); }catch(_e){} }
+}
+window.tblBuilderOpen=tblBuilderOpen; window.tblBuilderClose=tblBuilderClose; window.tblRender=tblRender;
+window.tblAddRow=tblAddRow; window.tblDelRow=tblDelRow; window.tblAddCol=tblAddCol; window.tblDelCol=tblDelCol; window.tblInsert=tblInsert; window._tblSet=_tblSet;
 function mysWriteFilePreview(input, previewId){
   var box=document.getElementById(previewId); if(!box) return;
   box.innerHTML='';
@@ -9351,6 +9438,26 @@ document.addEventListener('keydown', function(e){
       <div class="os-welcome-sub">
         <button onclick="osWelcomeMore()">자세히 보기</button>
         <button onclick="osWelcomeClose()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 표 빌더 모달 (글쓰기 도구막대) -->
+<div class="iv-overlay tbl-ov" id="tblBuilderOv" style="display:none">
+  <div class="iv-write-modal" style="max-width:680px;width:100%">
+    <div class="iv-write-head"><span>표 만들기</span><button class="iv-write-close" onclick="tblBuilderClose()" aria-label="닫기">&#10005;</button></div>
+    <div style="padding:18px 20px">
+      <div class="tbl-builder-bar">
+        <button type="button" onclick="tblAddRow()">+ 행</button>
+        <button type="button" onclick="tblDelRow()">− 행</button>
+        <button type="button" onclick="tblAddCol()">+ 열</button>
+        <button type="button" onclick="tblDelCol()">− 열</button>
+        <label><input type="checkbox" id="tblHeader" checked onchange="tblRender()"> 첫 줄을 머리글로</label>
+      </div>
+      <div id="tblGridWrap" style="overflow:auto;max-height:50vh"></div>
+      <div class="tbl-builder-actions">
+        <button type="button" onclick="tblBuilderClose()">취소</button>
+        <button type="button" class="primary" onclick="tblInsert()">표 삽입</button>
       </div>
     </div>
   </div>
