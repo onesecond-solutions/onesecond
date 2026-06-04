@@ -243,8 +243,42 @@
   //   → fragment 파싱해서 localStorage 박음 + URL 정리
   async function _handleOAuthCallback() {
     var hash = window.location.hash || '';
-    var _s = window.location.search || '';
-    try { if (hash.indexOf('access_token=') > -1 || _s.indexOf('code=') > -1) { alert('[OAUTH 진단]\n' + (hash.indexOf('access_token=') > -1 ? '→ IMPLICIT (#access_token) 방식\n' : '') + (_s.indexOf('code=') > -1 ? '→ PKCE (?code) 방식\n' : '') + 'hash: ' + hash.slice(0, 45) + '\nsearch: ' + _s.slice(0, 45)); } } catch (e) {}
+
+    /* 2026-06-04: PKCE 콜백 — ?code 를 code_verifier 로 토큰 교환 (signInWithGoogle이 PKCE로 시작). */
+    var _code = null;
+    try { _code = new URLSearchParams(window.location.search || '').get('code'); } catch (e) {}
+    if (_code && hash.indexOf('access_token=') === -1) {
+      var _verifier = '';
+      try { _verifier = localStorage.getItem('os_pkce_verifier') || sessionStorage.getItem('os_pkce_verifier') || ''; } catch (e) {}
+      if (!_verifier) return;  /* 우리가 시작한 PKCE 아님 → 무시 */
+      try {
+        var pres = await fetch(window.db.url('/auth/v1/token?grant_type=pkce'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': window.db.key },
+          body: JSON.stringify({ auth_code: _code, code_verifier: _verifier })
+        });
+        if (!pres.ok) { console.error('[pkce exchange]', pres.status); return; }
+        var pdata = await pres.json();
+        var pUser = pdata.user || {};
+        var pUserObj = { id: pUser.id, email: pUser.email || '', user_metadata: pUser.user_metadata || {} };
+        localStorage.setItem('os_token', pdata.access_token);
+        localStorage.setItem('os_refresh_token', pdata.refresh_token || '');
+        localStorage.setItem('os_user', JSON.stringify(pUserObj));
+        sessionStorage.setItem('os_token', pdata.access_token);
+        sessionStorage.setItem('os_user', JSON.stringify(pUserObj));
+        try { localStorage.removeItem('os_pkce_verifier'); sessionStorage.removeItem('os_pkce_verifier'); } catch (e) {}
+        try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+        try {
+          if (window.db && typeof window.db.mergeUserProfile === 'function') {
+            pUserObj = await window.db.mergeUserProfile(pUserObj, pdata.access_token);
+            localStorage.setItem('os_user', JSON.stringify(pUserObj));
+            sessionStorage.setItem('os_user', JSON.stringify(pUserObj));
+          }
+        } catch (_e) {}
+      } catch (e) { console.error('[pkce exchange err]', e); }
+      return;
+    }
+
     if (hash.indexOf('access_token=') === -1) return;
 
     try {

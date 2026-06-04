@@ -700,14 +700,37 @@ async function resendOtp() {
    - Supabase Authorize 엔드포인트 진입 → Google OAuth 박힘 → 인증 후 redirect_to URL fragment 토큰 박힘
    - app.html 진입 시 js/auth.js의 _handleOAuthCallback이 fragment 파싱 + localStorage 박음
    - 사용자 동일 이메일 정합 매칭 = Supabase Dashboard "Allow manual linking" ON 박혀 있어야 함 */
-function signInWithGoogle() {
-  /* 2026-06-04: 개방 복구 — 공사중 스텁 해제, OAuth 리다이렉트 원본 복원.
-     콜백 파싱 = js/auth.js _handleOAuthCallback (app.html 진입 시). */
-  var redirectTo = window.location.origin + '/app.html';
-  var url = SUPABASE_URL + '/auth/v1/authorize'
-          + '?provider=google'
-          + '&redirect_to=' + encodeURIComponent(redirectTo);
-  window.location.href = url;
+function _pkceVerifier() {
+  var arr = new Uint8Array(64);
+  (window.crypto || window.msCrypto).getRandomValues(arr);
+  var cs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~', s = '';
+  for (var i = 0; i < arr.length; i++) s += cs[arr[i] % cs.length];
+  return s;
+}
+async function _pkceChallenge(verifier) {
+  var data = new TextEncoder().encode(verifier);
+  var digest = await window.crypto.subtle.digest('SHA-256', data);
+  var bytes = new Uint8Array(digest), bin = '';
+  for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function signInWithGoogle() {
+  /* 2026-06-04: PKCE 강제 — code_challenge 전송 → Supabase가 ?code 반환 → app.html에서
+     code_verifier로 교환(js/auth.js _handleOAuthCallback). implicit(#access_token) 폴백 유지. */
+  try {
+    var verifier = _pkceVerifier();
+    try { localStorage.setItem('os_pkce_verifier', verifier); sessionStorage.setItem('os_pkce_verifier', verifier); } catch (e) {}
+    var challenge = await _pkceChallenge(verifier);
+    var redirectTo = window.location.origin + '/app.html';
+    var url = SUPABASE_URL + '/auth/v1/authorize'
+            + '?provider=google'
+            + '&code_challenge=' + encodeURIComponent(challenge)
+            + '&code_challenge_method=S256'
+            + '&redirect_to=' + encodeURIComponent(redirectTo);
+    window.location.href = url;
+  } catch (e) {
+    alert('Google 로그인 시작 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+  }
 }
 
 // ============================================================================
