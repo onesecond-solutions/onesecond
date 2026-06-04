@@ -243,7 +243,6 @@
   //   → fragment 파싱해서 localStorage 박음 + URL 정리
   async function _handleOAuthCallback() {
     var hash = window.location.hash || '';
-    try { console.log('[OAUTH DIAG] hash=', hash, '| search=', window.location.search, '| hasAccessToken=', hash.indexOf('access_token=') !== -1, '| hasCode=', (window.location.search || '').indexOf('code=') !== -1, '| hasRefresh=', hash.indexOf('refresh_token=') !== -1); } catch (e) {}
     if (hash.indexOf('access_token=') === -1) return;
 
     try {
