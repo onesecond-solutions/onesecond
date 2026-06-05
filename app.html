@@ -3228,6 +3228,8 @@ window.notifBellToggle=notifBellToggle; window.notifGo=notifGo; window.notifRefr
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _ni); else _ni();
   try{ document.addEventListener('appstate:ready', function(){ setTimeout(function(){ try{ notifRefresh(); }catch(e){} },600); }); }catch(e){}
   document.addEventListener('click', function(e){ try{ var pop=document.getElementById('notifPop'), bell=document.getElementById('notifBell'); if(pop&&pop.style.display!=='none'&&!pop.contains(e.target)&&bell&&!bell.contains(e.target)) pop.style.display='none'; }catch(_e){} });
+  /* 계정 드롭다운(#m) 바깥 클릭 닫힘 — 토글버튼·메뉴항목(.acct 내부)은 유지 (2026-06-05) */
+  document.addEventListener('click', function(e){ try{ var m=document.getElementById('m'); if(m&&m.classList.contains('open')){ var inAcct=e.target&&e.target.closest&&e.target.closest('.acct'); if(!inAcct) m.classList.remove('open'); } }catch(_e){} });
 })();
 /* ════ 로그인 환영 팝업 — 베타 출시 + 알림 받기 안내 (사용자별 1회, 전부 try/catch) ════ */
 function _osWelcomeKey(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return 'os_welcome_notif_'+(u.id||'anon'); }catch(e){ return 'os_welcome_notif_anon'; } }
