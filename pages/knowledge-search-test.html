@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="data:,">  <!-- favicon 404 억제 (작업9) -->
-<title>지식엔진 검색 v1.1 (admin 검증)</title>
+<title>지식엔진 검색 v1.2 (admin 검증)</title>
 <link rel="stylesheet" href="/css/tokens-v2.css">
 <style>
   /* tokens-v2.css 변수만 사용 (하드코딩 색상 금지) */
@@ -44,6 +44,7 @@
   .b-scenario{color:var(--t-event);background:color-mix(in srgb,var(--t-event) 14%,transparent)}
   .b-insurer{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
   .b-internal{color:var(--warn);background:color-mix(in srgb,var(--warn) 18%,transparent);border:1px solid var(--warn)}
+  .b-syn{color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,transparent)}
   .card-body{color:var(--bodytx);font-size:.86rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
   .card-foot{margin-top:7px;color:var(--tf);font-size:.68rem;display:flex;gap:8px;flex-wrap:wrap}
   .disc{margin-top:8px;padding-top:7px;border-top:1px dashed var(--bd);color:var(--tf);font-size:.68rem;line-height:1.45}
@@ -80,7 +81,7 @@
 <body>
 <div class="wrap">
   <div class="topbar">
-    <h1>🔎 지식엔진 검색 <span style="font-size:.62rem;color:var(--tf);font-weight:400">v1.1 · admin 검증 · 비공개</span></h1>
+    <h1>🔎 지식엔진 검색 <span style="font-size:.62rem;color:var(--tf);font-weight:400">v1.2 · admin 검증 · 비공개</span></h1>
     <button class="iconbtn" id="modeBtn" title="사용자/기술검증 전환">기술검증(4컬럼)</button>
     <button class="iconbtn" id="themeBtn" title="다크/라이트">◐</button>
   </div>
@@ -121,6 +122,7 @@
   var LOADED = false;
   var MODE = 'user';   // 'user' | 'tech'
   var _seq = 0;
+  var _curWords = [];  // 현재 검색 원어(확장 배지 계산용)
   var $ = function(id){ return document.getElementById(id); };
   var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
   var norm = function(s){ return String(s==null?'':s).trim().toLowerCase(); };
@@ -181,12 +183,26 @@
   }
   function isInternal(e){ return (e.source_type==='onesecond_internal') || (e.category==='보험사별 기준'); }
 
+  // 이 항목이 어떤 동의어(확장)로 매치됐는지 — 직접 매치가 있으면 빈 배열(확장 배지 불필요)
+  function expansionHits(e, words){
+    var hits = [];
+    words.forEach(function(w){
+      var variants = expand(w);
+      var direct = variants.some(function(v){ return !v.syn && matchTier(e, v.t)>0; });
+      if(direct) return;
+      variants.forEach(function(v){ if(v.syn && matchTier(e, v.t)>0 && hits.indexOf(v.t)<0) hits.push(v.t); });
+    });
+    return hits;
+  }
+
   function cardHtml(e, hlTerms){
     var tm = {term:['용어','b-term'],product:['상품','b-product'],scenario:['시나리오','b-scenario'],insurer:['보험사','b-insurer']}[e.type] || ['',''];
     var badges = '';
     if(isInternal(e)) badges += '<span class="b b-internal">원세컨드 정리자료</span>';
     if(e.canonical_company_name) badges += '<span class="b b-co">'+esc(e.canonical_company_name)+'</span>';
     if(tm[0]) badges += '<span class="b '+tm[1]+'">'+tm[0]+'</span>';
+    var exp = _curWords.length ? expansionHits(e, _curWords) : [];
+    if(exp.length) badges += '<span class="b b-syn">유사어 '+esc(exp.join('·'))+'</span>';
     var body = hlTerms ? snippet(e.body, hlTerms) : esc(String(e.body||'').slice(0,260));
     var foot = [];
     if(e.source_title) foot.push('출처: '+esc(String(e.source_title).slice(0,40)));
@@ -305,6 +321,7 @@
     if(!LOADED) return;
     var raw = ($('q').value||'').trim();
     var words = norm(raw).split(/\s+/).filter(Boolean);
+    _curWords = words;  // 확장 배지 계산용
     var hlTerms = words.length ? allTerms(words) : null;
     var t0 = performance.now();
     var shortcuts = pick(CACHE.filter(isSc), words, raw);
