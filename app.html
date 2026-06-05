@@ -1601,6 +1601,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="tab" onclick="mysTab(this,'saved')">오피스</div>
           <div class="tab" onclick="mysTab(this,'team')">단체방</div>
           <div class="tab" onclick="mysTab(this,'qna')">보험 Q&amp;A</div>
+          <div class="tab" onclick="mysTab(this,'members')" style="display:none">팀원관리</div>
         </div>
         <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
       </div>
@@ -1670,6 +1671,23 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
       </div>
       </div><!-- /mys-qna -->
+      <!-- 팀원관리 (매니저룸 → MY SPACE 이전, 2026-06-05 통합 1단계). mgr 역할만 탭 노출, 실제 방어는 RLS. id는 mr-* 유지(함수 재사용) -->
+      <div id="mr-main" style="display:none">
+      <!-- 팀원관리 = 게시판 좌우 레이아웃 골격 (좌: 조직 트리 / 우: 팀원). 카드 연결은 다음 단계 -->
+      <div class="tabs" id="mr-mem-sub" style="margin-bottom:12px">
+        <div class="tab on" onclick="mrMemSub(this,'manager')">실장</div>
+        <div class="tab" onclick="mrMemSub(this,'branch')">지점장</div>
+      </div>
+      <div id="mr-branch-card" style="display:none"></div>
+      <div class="split" id="mr-members-split">
+        <div class="col list-col">
+          <div class="list" id="mr-org-list"><div class="mys-news-empty">조직(지점장 · 팀 · 실장)이 여기에 표시됩니다.</div></div>
+        </div>
+        <div class="col viewer-col">
+          <div class="viewer" id="mr-members-viewer"><div class="mys-news-empty">왼쪽에서 팀 또는 실장을 선택하면 팀원이 표시됩니다.</div></div>
+        </div>
+      </div>
+      </div><!-- /mr-main -->
       <!-- 2026-05-29: MY SPACE 상세 보기 모달 (PR #164) -->
       <div class="myspace-detail-overlay" id="myspaceDetailModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeMyspaceDetail)">
         <div class="myspace-detail-box" role="dialog" aria-modal="true">
@@ -1861,27 +1879,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="tab" onclick="mrTabMain(this,'office')">오피스</div>
           <div class="tab" onclick="mrTabMain(this,'team')">단체방</div>
           <div class="tab" onclick="mrTabMain(this,'qna')">보험 Q&amp;A</div>
-          <div class="tab" onclick="mrTabMain(this,'members')">팀원관리</div>
         </div>
         <button class="mys-write-btn" onclick="openMyspaceWrite('team')">+ 글쓰기</button>
       </div>
       <div id="mr-today"></div>
-      <div id="mr-main" style="display:none">
-      <!-- 팀원관리 = 게시판 좌우 레이아웃 골격 (좌: 조직 트리 / 우: 팀원). 카드 연결은 다음 단계 -->
-      <div class="tabs" id="mr-mem-sub" style="margin-bottom:12px">
-        <div class="tab on" onclick="mrMemSub(this,'manager')">실장</div>
-        <div class="tab" onclick="mrMemSub(this,'branch')">지점장</div>
-      </div>
-      <div id="mr-branch-card" style="display:none"></div>
-      <div class="split" id="mr-members-split">
-        <div class="col list-col">
-          <div class="list" id="mr-org-list"><div class="mys-news-empty">조직(지점장 · 팀 · 실장)이 여기에 표시됩니다.</div></div>
-        </div>
-        <div class="col viewer-col">
-          <div class="viewer" id="mr-members-viewer"><div class="mys-news-empty">왼쪽에서 팀 또는 실장을 선택하면 팀원이 표시됩니다.</div></div>
-        </div>
-      </div>
-      </div><!-- /mr-main -->
+      <!-- 팀원관리(mr-main) → MY SPACE로 이전 (2026-06-05 통합 1단계). 매니저룸은 2단계에서 제거 예정 -->
       <!-- 2단계에서 MY SPACE 게시판 데이터 연결 (오피스/단체방/보험Q&A) -->
       <div id="mr-office" style="display:none">
       <div class="mys-toolbar"><div class="chips">
@@ -2894,6 +2896,9 @@ function applyRoleClass(){
   var nt = document.getElementById('nav-team');
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저룸 = GA 실장·지점장·admin (2026-05-31) */
   if(nt) nt.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
+  /* 팀원관리 탭(매니저룸 → MY SPACE 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
+  var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
+  if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
   /* 통합 검색 = admin 전용 (퀄리티 완성 전 비공개, §5 인큐베이션) */
   var sb = document.querySelector('.head .search');
   if(sb) sb.style.display = (r === 'admin') ? '' : 'none';
@@ -6087,11 +6092,19 @@ window._goVaultCalendar=_goVaultCalendar;
 function mysTab(el,key){
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
-  var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved'), team=document.getElementById('mys-team'), qna=document.getElementById('mys-qna');
-  if(today) today.style.display='none'; if(saved) saved.style.display='none'; if(team) team.style.display='none'; if(qna) qna.style.display='none';
+  var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved'), team=document.getElementById('mys-team'), qna=document.getElementById('mys-qna'), mem=document.getElementById('mr-main');
+  if(today) today.style.display='none'; if(saved) saved.style.display='none'; if(team) team.style.display='none'; if(qna) qna.style.display='none'; if(mem) mem.style.display='none';
   if(key==='saved'){ if(saved) saved.style.display=''; if(typeof loadMyspace==='function') loadMyspace(); }
   else if(key==='team'){ if(team) team.style.display=''; if(typeof loadMysTeam==='function') loadMysTeam(); }
   else if(key==='qna'){ if(qna) qna.style.display=''; if(typeof loadMysQna==='function') loadMysQna(); }
+  else if(key==='members'){ if(mem){ mem.style.display='';
+    /* role별 기본 페이지 자동: 실장→실장 페이지(지점장 탭 숨김) / admin·지점장→지점장 페이지 (매니저룸 mrTabMain 'members'에서 이전) */
+    var _r=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+    var _brTab=document.querySelector('#mr-mem-sub .tab[onclick*="branch"]');
+    var _mgTab=document.querySelector('#mr-mem-sub .tab[onclick*="manager"]');
+    if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
+    else { if(_brTab) _brTab.style.display=''; if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch'); }
+  } }
   else { if(today){ today.style.display=''; renderTodayTodo('myspace', today); } }
 }
 window.mysTab=mysTab;
