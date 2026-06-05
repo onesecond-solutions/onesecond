@@ -1084,6 +1084,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .os-bnum{width:30px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.13);color:#fff;font-size:13px;font-weight:900;line-height:1;cursor:pointer;padding:0;backdrop-filter:blur(10px);transition:background .18s,transform .18s}
 .os-bnum:hover{background:rgba(255,255,255,.28);transform:translateY(-1px)}
 .os-bnum.on{background:var(--ac);border-color:transparent}
+/* 배너 번호 2·3·4 + ✕닫기 = admin 전용. 일반 사용자(비-admin)는 1번 기능만 유지하되 숫자·박스 비노출(클릭 영역만 잔존). (2026-06-05) */
+#app:not(.is-admin) .os-banner-nums .os-bnum-admin,
+#app:not(.is-admin) .os-banner-nums .os-banner-collapse{display:none}
+#app:not(.is-admin) .os-banner-nums .os-bnum:not(.os-bnum-admin){background:transparent;border-color:transparent;color:transparent;box-shadow:none;backdrop-filter:none}
+#app:not(.is-admin) .os-banner-nums .os-bnum:not(.os-bnum-admin):hover{background:transparent;transform:none}
 /* 오버레이 (큰 화면) */
 .os-banner-ov{position:fixed;inset:0;background:rgba(2,3,8,.84);display:none;align-items:center;justify-content:center;z-index:9999;padding:clamp(16px,4vw,48px);backdrop-filter:blur(4px)}
 .os-banner-ov.on{display:flex}
@@ -1498,9 +1503,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       <div class="os-banner-nums">
         <button class="os-bnum on" type="button" aria-label="배너 1: 현재 화면" onclick="osBannerOpen(0,this)">1</button>
-        <button class="os-bnum" type="button" aria-label="배너 2: 유기체 조직도" onclick="osBannerOpen(1,this)">2</button>
-        <button class="os-bnum" type="button" aria-label="배너 3: 유기체 조직도" onclick="osBannerOpen(2,this)">3</button>
-        <button class="os-bnum" type="button" aria-label="배너 4: 홈 화면 미리보기" onclick="osBannerOpen(3,this)">4</button>
+        <button class="os-bnum os-bnum-admin" type="button" aria-label="배너 2: 유기체 조직도" onclick="osBannerOpen(1,this)">2</button>
+        <button class="os-bnum os-bnum-admin" type="button" aria-label="배너 3: 유기체 조직도" onclick="osBannerOpen(2,this)">3</button>
+        <button class="os-bnum os-bnum-admin" type="button" aria-label="배너 4: 홈 화면 미리보기" onclick="osBannerOpen(3,this)">4</button>
         <button class="os-banner-collapse" type="button" aria-label="배너 화면 닫기" onclick="osBannerCollapse()">✕ 닫기</button>
       </div>
       </div>
