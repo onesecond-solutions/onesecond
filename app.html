@@ -117,9 +117,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 }
 .split{flex:1;min-height:0;display:grid;grid-template-columns:330px 1fr;gap:16px;overflow:hidden;padding-bottom:18px;}
 /* 자료실 split 사이즈 정합 — 현장의 소리와 동일(부모 flex 컬럼 체인 복원) */
-#v-insurer-vault.on,#v-myspace.on,#v-team.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+#v-insurer-vault.on,#v-myspace.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
 #iv-saved,#iv-today,#mys-saved,#mys-team,#mys-qna,#mr-team,#mr-office,#mr-qna{flex:1;min-height:0;display:flex;flex-direction:column;}
-#mys-today,#mr-today,#mr-main{flex:1;min-height:0;overflow-y:auto;}
+#mys-today,#mr-main{flex:1;min-height:0;overflow-y:auto;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .list-col .lhead{flex-shrink:0;}
 .bm-card{width:330px;max-width:100%;background:var(--s1);border:0.5px solid var(--bd);border-left:3px solid var(--ac);border-radius:12px;padding:16px;margin-bottom:16px;flex-shrink:0;}
@@ -1051,7 +1051,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 #v-quick,
 #v-together,
 #v-news,
-#v-team,
 #v-admin,
 #v-pricing{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
 /* v-voice = 좌(목록)/우(내용) split 고정 높이 — 페이지 전체 스크롤 X, 각 컬럼 내부 스크롤 (끝없이 늘어남 방지) */
@@ -1428,7 +1427,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="nav" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav ins-show" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
-    <div class="nav" id="nav-team" style="display:none" onclick="showView('team')"><span class="ic">&#8862;</span><span class="lbl">매니저룸</span></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
     <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
   </nav>
@@ -1870,83 +1868,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
      </div>
      <!-- 매니저룸 (팀원관리 재편 · 2026-05-31 첫 조각) — 실장/지점장 role별 D영역 -->
-     <div class="wrap view" id="v-team">
-      <div class="ttl">매니저룸 <span class="ac" id="mr-scope">· 팀 관리</span></div>
-      <div class="sub" id="mr-sub">실장·지점장 전용 — 팀원 현황과 관리</div>
-      <div class="mys-toolbar" style="margin-bottom:14px">
-        <div class="tabs" id="mr-tabs" style="margin-bottom:0;flex:1">
-          <div class="tab on" onclick="mrTabMain(this,'today')">오늘의 할 일</div>
-          <div class="tab" onclick="mrTabMain(this,'office')">오피스</div>
-          <div class="tab" onclick="mrTabMain(this,'team')">단체방</div>
-          <div class="tab" onclick="mrTabMain(this,'qna')">보험 Q&amp;A</div>
-        </div>
-        <button class="mys-write-btn" onclick="openMyspaceWrite('team')">+ 글쓰기</button>
-      </div>
-      <div id="mr-today"></div>
-      <!-- 팀원관리(mr-main) → MY SPACE로 이전 (2026-06-05 통합 1단계). 매니저룸은 2단계에서 제거 예정 -->
-      <!-- 2단계에서 MY SPACE 게시판 데이터 연결 (오피스/단체방/보험Q&A) -->
-      <div id="mr-office" style="display:none">
-      <div class="mys-toolbar"><div class="chips">
-        <div class="chip on" onclick="mrOfficeFilter(this,'전체')">전체</div>
-        <div class="chip" onclick="mrOfficeFilter(this,'자료')">자료</div>
-        <div class="chip" onclick="mrOfficeFilter(this,'스크립트')">스크립트</div>
-        <div class="chip" onclick="mrOfficeFilter(this,'메모')">메모</div>
-        <div class="chip" onclick="mrOfficeFilter(this,'즐겨찾기')">즐겨찾기</div>
-        <div class="chip" onclick="calOpen(this,'mr')">캘린더</div>
-      </div></div>
-      <div class="split" id="mr-office-split">
-        <div class="col list-col"><div class="list" id="mr-office-list"><div class="mys-news-empty">불러오는 중…</div></div></div>
-        <div class="col viewer-col">
-          <button class="backbtn" onclick="mrOfficeBack()">&#8249; 목록으로</button>
-          <div class="viewer" id="mr-office-viewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
-        </div>
-      </div>
-      <div id="mr-cal-area" style="display:none">
-        <div class="split">
-          <div class="col list-col">
-            <div class="cal-head"><button class="cal-add" onclick="openCalAdd('mr')">+ 내 일정</button></div>
-            <div class="list" id="mr-cal-list"><div class="mys-news-empty">불러오는 중…</div></div>
-          </div>
-          <div class="col viewer-col">
-            <div class="cal-head cal-gridhead">
-              <button class="cal-navbtn" onclick="calNav('mr',-1)" aria-label="이전 달">&#8249;</button>
-              <span class="cal-ym" id="mr-cal-ym">불러오는 중…</span>
-              <button class="cal-navbtn" onclick="calNav('mr',1)" aria-label="다음 달">&#8250;</button>
-            </div>
-            <div id="mr-cal-grid" class="cal-grid-wrap"></div>
-          </div>
-        </div>
-      </div><!-- /mr-cal-area -->
-      </div><!-- /mr-office -->
-      <div id="mr-team" style="display:none">
-      <div class="mys-toolbar"><div class="chips" id="mr-team-subtabs">
-        <div class="chip on" onclick="mrTeamSub(this,'today')">TODAY</div>
-        <div class="chip" onclick="mrTeamSub(this,'all')">전체보기</div>
-        <div class="chip" onclick="mrTeamSub(this,'mine')">MINE</div>
-      </div></div>
-      <div class="split" id="mr-team-split">
-        <div class="col list-col"><div class="list" id="mr-team-list"><div class="mys-news-empty">불러오는 중…</div></div></div>
-        <div class="col viewer-col">
-          <button class="backbtn" onclick="mrTeamBack()">&#8249; 목록으로</button>
-          <div class="viewer" id="mr-team-viewer"><div class="mys-news-empty">왼쪽에서 공지를 선택하세요.</div></div>
-        </div>
-      </div>
-      </div><!-- /mr-team -->
-      <div id="mr-qna" style="display:none">
-      <div class="mys-toolbar"><div class="chips" id="mr-qna-subtabs">
-        <div class="chip" onclick="mrQnaSub(this,'today')">TODAY</div>
-        <div class="chip on" onclick="mrQnaSub(this,'all')">전체보기</div>
-        <div class="chip" onclick="mrQnaSub(this,'mine')">MINE</div>
-      </div></div>
-      <div class="split" id="mr-qna-split">
-        <div class="col list-col"><div class="list" id="mr-qna-list"><div class="mys-news-empty">불러오는 중…</div></div></div>
-        <div class="col viewer-col">
-          <button class="backbtn" onclick="mrQnaBack()">&#8249; 목록으로</button>
-          <div class="viewer" id="mr-qna-viewer"><div class="mys-news-empty">왼쪽에서 질문을 선택하세요.</div></div>
-        </div>
-      </div>
-      </div><!-- /mr-qna -->
-      <!-- 공지 작성 모달 (보험사 자료실 등록 폼 패턴 재사용 · 7유형) -->
+     <!-- 단체방 공지 작성/수정 모달 (매니저룸 제거 후 독립 유지 — MY SPACE 단체방 글쓰기·수정 공유, 2026-06-05 통합 2단계). 보험사 자료실 등록 폼 패턴 재사용 · 7유형 -->
       <div class="iv-overlay" id="mrWriteModal" style="display:none">
        <div class="iv-write-modal" role="dialog" aria-modal="true" aria-labelledby="mr-write-title">
         <div class="iv-write-head">
@@ -1977,7 +1899,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
        </div>
       </div>
-     </div>
      <!-- 2026-05-30 단계 2: 원수사 자료실 view UI (insurer_* + admin 전용) -->
      <div class="wrap view" id="v-insurer-vault">
       <div class="ttl"><span id="iv-company-ttl">보험사</span> 자료실 <span class="ac">· 원수사 전용</span></div>
@@ -2889,13 +2810,11 @@ function applyRoleClass(){
   app.classList.remove('is-insurer','is-admin');
   if(r === 'admin') app.classList.add('is-admin');
   else if(r.indexOf('insurer_') === 0) app.classList.add('is-insurer');
-  /* nav 노출 (nav-admin/nav-team polling 폐기 → role 확정 시 일괄) */
+  /* nav 노출 (nav-admin polling 폐기 → role 확정 시 일괄) */
   var na = document.getElementById('nav-admin');
   if(na) na.style.display = (r === 'admin') ? '' : 'none';
   if(r === 'admin' && window._refreshAdminBadge) window._refreshAdminBadge();
-  var nt = document.getElementById('nav-team');
-  var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저룸 = GA 실장·지점장·admin (2026-05-31) */
-  if(nt) nt.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
+  var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
   /* 팀원관리 탭(매니저룸 → MY SPACE 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
@@ -3714,7 +3633,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',team:'매니저룸',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='team'&&typeof mrTabMain==='function')mrTabMain(null,'today');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → MY SPACE로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -6018,20 +5937,6 @@ async function renderTodayTodo(ctx, mountEl){
     ];
     mountEl.innerHTML='<div class="tt-grid">'+vcards.join('')+'</div>';
     return;
-  } else if(ctx==='manager'){
-    /* MY SPACE와 동일 — 가로 1줄 4카드(스크립트 카드 스타일) + 캘린더 3일 요약 */
-    var calBodyM=await _ttCalBody();
-    var qa2=await _ttCount("posts?board_type=eq.qna&title=not.ilike.*소식지*&select=id");
-    var mine=u.id?await _ttCount("team_notices?author_id=eq."+encodeURIComponent(u.id)+"&deleted_at=is.null&select=id"):null;
-    function _numM(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5em;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5em"> 건</span>'))+'</div>'; }
-    var mcards=[
-      _ttScriptCard({color:'var(--ac)',   badge:'캘린더',     title:'전일·당일·내일', body:calBodyM, go:'_goMrCalendar()'}),
-      _ttScriptCard({color:'var(--warn)', badge:'미답변 질문', title:'팀원 질문',      body:'<div class="tt-card-hint" style="margin-top:6px">답변 추적 — 다음 단계</div>'}),
-      _ttScriptCard({color:'var(--t-uw)', badge:'보험 Q&A',   title:'새 질문·답변',   body:_numM(qa2)+'<div class="tt-card-hint">현장의 소리 연결</div>', go:"_goVoiceTab('voice')"}),
-      _ttScriptCard({color:'var(--ok)',   badge:'내 공지',     title:'내가 쓴 단체방',  body:_numM(mine)+'<div class="tt-card-hint">단체방 공지</div>'})
-    ];
-    mountEl.innerHTML='<div class="tt-grid">'+mcards.join('')+'</div>';
-    return;
   }
   mountEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">'+cards.join('')+'</div>';
 }
@@ -6077,12 +5982,6 @@ function _goMysQna(){
   if(qt&&typeof mysTab==='function') mysTab(qt,'qna');
 }
 window._goMysQna=_goMysQna;
-function _goMrCalendar(){
-  if(typeof showView==='function') showView('team');
-  var ot=document.querySelector('#mr-tabs .tab[onclick*="office"]'); if(ot&&typeof mrTabMain==='function') mrTabMain(ot,'office');
-  var cc=document.querySelector('#mr-office .chip[onclick*="calOpen"]'); if(cc&&typeof calOpen==='function') calOpen(cc,'mr');
-}
-window._goMrCalendar=_goMrCalendar;
 function _goVaultCalendar(){
   if(typeof showView==='function') showView('insurer-vault');
   var ot=document.querySelector('#iv-tabs .tab[onclick*="manage"]'); if(ot&&typeof ivTab==='function') ivTab(ot,'manage');
@@ -6119,30 +6018,6 @@ function ivTab(el,key){
   else { if(wbtn) wbtn.style.display='none'; if(today){ today.style.display=''; if(typeof loadVaultQna==='function') loadVaultQna(); } }
 }
 window.ivTab=ivTab;
-function mrTabMain(el,key){
-  var tabs=document.querySelectorAll('#mr-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
-  if(el) el.classList.add('on'); else { var f=document.querySelector('#mr-tabs .tab'); if(f) f.classList.add('on'); }
-  var today=document.getElementById('mr-today'), main=document.getElementById('mr-main'), office=document.getElementById('mr-office'), team=document.getElementById('mr-team'), qna=document.getElementById('mr-qna');
-  [today,main,office,team,qna].forEach(function(e){ if(e) e.style.display='none'; });
-  if(key==='members'){ if(main) main.style.display='';
-    /* role별 기본 페이지 자동 (2026-06-03): 실장→실장 페이지(지점장 탭 숨김) / admin·지점장→지점장 페이지 */
-    var _r=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
-    var _brTab=document.querySelector('#mr-mem-sub .tab[onclick*="branch"]');
-    var _mgTab=document.querySelector('#mr-mem-sub .tab[onclick*="manager"]');
-    if(_r==='ga_manager'){
-      if(_brTab) _brTab.style.display='none';   /* 실장은 지점장 탭 숨김 (지점 전체 관리 권한 없음) */
-      if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager');
-    } else {
-      if(_brTab) _brTab.style.display='';        /* admin·지점장: 지점장 탭 노출 */
-      if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch');
-    }
-  }
-  else if(key==='office'){ if(office) office.style.display=''; if(typeof loadMrOffice==='function') loadMrOffice(); }
-  else if(key==='team'){ if(team) team.style.display=''; if(typeof loadMrTeam==='function') loadMrTeam(); }
-  else if(key==='qna'){ if(qna) qna.style.display=''; if(typeof loadMrQna==='function') loadMrQna(); }
-  else { if(today){ today.style.display=''; renderTodayTodo('manager', today); } }
-}
-window.mrTabMain=mrTabMain;
 /* 팀원관리 하위 탭 — 실장/지점장 관점 전환 (골격: 활성 토글 + 안내, 카드 연결은 다음 단계) */
 function mrMemSub(el,key){
   var tabs=document.querySelectorAll('#mr-mem-sub .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
@@ -6967,7 +6842,6 @@ var OS_NAV_INDEX=[
   {label:'함께해요', kw:'together 함께', view:'together'},
   {label:'보험이슈', kw:'뉴스 news 이슈', view:'news'},
   {label:'보험사 자료실', kw:'자료실 보험사 소식지', view:'insurer-vault'},
-  {label:'매니저룸', kw:'팀원관리 실장 지점장 조직 오피스', view:'team'},
   {label:'요금제', kw:'가격 결제 구독 멤버십 plus pro free', view:'pricing'}
 ];
 window._searchGo=_searchGo;
@@ -7966,208 +7840,8 @@ function mysTeamOpen(idx, keepList){
 window.mysTeamOpen=mysTeamOpen;
 function mysTeamBack(){ var sp=document.getElementById('mys-team-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysTeamBack=mysTeamBack;
-/* ════ 매니저룸 단체방 — MY SPACE 단체방(team_notices) 복제. MY SPACE 무변(회귀0) ════ */
-window._mrTeamCache=null; window._mrTeamMode='today';
-async function loadMrTeam(){
-  var listEl=document.getElementById('mr-team-list'); if(!listEl) return;
-  var token=window.db&&window.db.getToken&&window.db.getToken();
-  if(!token){ listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
-  if(!window._mrTeamCache) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
-  try{
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.team_internal&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden&order=created_at.desc&limit=100');
-    if(!res.ok){ listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다 ('+res.status+')</div>'; return; }
-    var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
-    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
-    var nameMap={};
-    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,name,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ nameMap[u.id]={name:u.name,role:u.role}; }); } }catch(e){} }
-    var _meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
-    window._mrTeamCache=(_meAdmin?rows:rows.filter(function(r){return !r.is_hidden;})).map(function(r){
-      var t=_ntType[r.notice_type]||['기타','ts'];
-      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var au=nameMap[r.author_id]; var who=''; if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
-      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
-      var _ah=_voiceAttsHtml(_att);
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), bodyHtml:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
-    });
-    renderMrTeam();
-  }catch(e){ console.error('[mrTeam]', e); listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
-}
-window.loadMrTeam=loadMrTeam;
-function mrTeamSub(el, mode){
-  var subs=document.querySelectorAll('#mr-team-subtabs .chip'); for(var i=0;i<subs.length;i++) subs[i].classList.remove('on');
-  if(el) el.classList.add('on');
-  window._mrTeamMode=mode;
-  renderMrTeam();
-}
-window.mrTeamSub=mrTeamSub;
-function renderMrTeam(){
-  var listEl=document.getElementById('mr-team-list'); if(!listEl) return;
-  var rows=window._mrTeamCache||[];
-  var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
-  var mode=window._mrTeamMode||'today';
-  var list = (mode==='today')? rows.filter(function(r){return _mysIsTodayKst(r.created_at);})
-           : (mode==='mine')? rows.filter(function(r){return me&&r.author_id&&String(r.author_id)===String(me);})
-           : rows;
-  window._mrTeamFiltered=list;
-  if(!list.length){
-    listEl.innerHTML='<div class="mys-news-empty">'+(mode==='today'?'오늘 올라온 공지가 없습니다.':mode==='mine'?'내가 쓴 공지가 없습니다.':'공지가 없습니다.')+'</div>';
-    var vv=document.getElementById('mr-team-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">공지가 없습니다.</div>'; return;
-  }
-  listEl.innerHTML=list.map(function(p,i){
-    return '<div class="item'+(i===0?' on':'')+'" onclick="mrTeamOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
-  }).join('');
-  mrTeamOpen(0, true);
-}
-window.renderMrTeam=renderMrTeam;
-function mrTeamOpen(idx, keepList){
-  var list=window._mrTeamFiltered||[]; var p=list[idx]; if(!p) return;
-  var v=document.getElementById('mr-team-viewer'); if(!v) return;
-  window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('team',p._id,p.author_id,'mr');
-  var items=document.querySelectorAll('#mr-team-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
-  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mr-team-split'); if(sp) sp.classList.add('show-viewer'); }
-}
-window.mrTeamOpen=mrTeamOpen;
-function mrTeamBack(){ var sp=document.getElementById('mr-team-split'); if(sp) sp.classList.remove('show-viewer'); }
-window.mrTeamBack=mrTeamBack;
-/* ════ 매니저룸 보험Q&A — MY SPACE 보험Q&A(posts qna) 복제. MY SPACE 무변(회귀0) ════ */
-window._mrQnaCache=null; window._mrQnaMode='all';
-async function loadMrQna(){
-  var listEl=document.getElementById('mr-qna-list'); if(!listEl) return;
-  var token=window.db&&window.db.getToken&&window.db.getToken();
-  if(!token){ listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
-  if(!window._mrQnaCache) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
-  try{
-    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type');
-    if(!res.ok){ listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다 ('+res.status+')</div>'; return; }
-    var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
-    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
-    var roleMap={};
-    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ roleMap[u.id]=u.role; }); } }catch(e){} }
-    window._mrQnaCache=rows.map(function(r){
-      var cat=r.question_type||'질문';
-      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var who='비공개';  /* 질문자 익명 — 비공개 표시 */
-      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
-      var _ah=_voiceAttsHtml(_att);
-      return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), bodyHtml:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
-    });
-    renderMrQna();
-  }catch(e){ console.error('[mrQna]', e); listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
-}
-window.loadMrQna=loadMrQna;
-function mrQnaSub(el, mode){
-  var subs=document.querySelectorAll('#mr-qna-subtabs .chip'); for(var i=0;i<subs.length;i++) subs[i].classList.remove('on');
-  if(el) el.classList.add('on');
-  window._mrQnaMode=mode;
-  renderMrQna();
-}
-window.mrQnaSub=mrQnaSub;
-function renderMrQna(){
-  var listEl=document.getElementById('mr-qna-list'); if(!listEl) return;
-  var rows=window._mrQnaCache||[];
-  var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
-  var mode=window._mrQnaMode||'today';
-  var list = (mode==='today')? rows.filter(function(r){return _mysIsTodayKst(r.created_at);})
-           : (mode==='mine')? rows.filter(function(r){return me&&r.author_id&&String(r.author_id)===String(me);})
-           : rows;
-  window._mrQnaFiltered=list;
-  if(!list.length){
-    listEl.innerHTML='<div class="mys-news-empty">'+(mode==='today'?'오늘 들어온 질문이 없습니다.':mode==='mine'?'내가 쓴 질문이 없습니다.':'아직 들어온 질문이 없습니다.')+'</div>';
-    var vv=document.getElementById('mr-qna-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">질문이 없습니다.</div>'; return;
-  }
-  listEl.innerHTML=list.map(function(p,i){
-    return '<div class="item'+(i===0?' on':'')+'" onclick="mrQnaOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
-  }).join('');
-  mrQnaOpen(0, true);
-}
-window.renderMrQna=renderMrQna;
-function mrQnaOpen(idx, keepList){
-  var list=window._mrQnaFiltered||[]; var p=list[idx]; if(!p) return;
-  var v=document.getElementById('mr-qna-viewer'); if(!v) return;
-  window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('qna',p._id,p.author_id,'mr')+qnaThreadHtml(p._id,'mr');
-  if(typeof loadQnaComments==='function') loadQnaComments(p._id,'mr');
-  var items=document.querySelectorAll('#mr-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
-  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mr-qna-split'); if(sp) sp.classList.add('show-viewer'); }
-}
-window.mrQnaOpen=mrQnaOpen;
-function mrQnaBack(){ var sp=document.getElementById('mr-qna-split'); if(sp) sp.classList.remove('show-viewer'); }
-window.mrQnaBack=mrQnaBack;
-/* ════ 매니저룸 오피스 — MY SPACE 오피스(개인 자료 scripts/library) 복제. MY SPACE 무변(회귀0) ════ */
-window._mrOfficeCache=null; window._mrOfficeLoaded=false;
-async function loadMrOffice(force){
-  if(window._mrOfficeLoaded&&!force)return;
-  var grid=document.getElementById('mr-office-list');if(!grid)return;
-  if(!window.db||!window.db.getToken){ grid.innerHTML='<div class="mys-news-empty">자료 모듈 로드 실패. 새로고침 부탁드립니다.</div>'; return; }
-  var token=window.db.getToken();
-  var userId=(typeof _getOwnerId==='function')?_getOwnerId():(window.AppState&&window.AppState.userId);
-  if(!token||!userId){ grid.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
-  grid.innerHTML='<div class="mys-news-empty">불러오는 중... ⏳</div>';
-  try{
-    var headers={'apikey':window.db.key,'Authorization':'Bearer '+token};
-    var scrUrl=window.db.url('/rest/v1/scripts?owner_id=eq.'+userId+'&is_active=eq.true&order=created_at.desc&limit=50');
-    var libUrl=window.db.url('/rest/v1/library?owner_id=eq.'+userId+'&order=created_at.desc&limit=50');
-    var results=await Promise.all([fetch(scrUrl,{headers:headers}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),fetch(libUrl,{headers:headers}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})]);
-    var scripts=results[0]||[], library=results[1]||[]; var items=[];
-    for(var i=0;i<scripts.length;i++){ var s=scripts[i]; items.push({_type:'script',_badge:'스크립트',_date:s.created_at,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments}); }
-    for(var j=0;j<library.length;j++){ var l=library[j]; var badge=(l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url)?'메모':'자료'; items.push({_type:'library',_badge:badge,_date:l.created_at,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id,keywords:l.keywords}); }
-    items.sort(function(a,b){return (b._date||'').localeCompare(a._date||'');});
-    window._mrOfficeCache=items; window._mrOfficeLoaded=true; renderMrOffice(items);
-  }catch(e){ grid.innerHTML='<div class="mys-news-empty">불러오기 실패.</div>'; }
-}
-window.loadMrOffice=loadMrOffice;
-function renderMrOffice(items){
-  var listEl=document.getElementById('mr-office-list');if(!listEl)return;
-  window._mrOfficeFiltered=items||[];
-  var vv=document.getElementById('mr-office-viewer');
-  if(!items||items.length===0){ listEl.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.</div>'; if(vv)vv.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>'; return; }
-  listEl.innerHTML=items.map(function(it,i){
-    var tc=MYS_COLOR[it._badge]||'var(--ac)'; var dt=fmtMysDate(it._date);
-    var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    var tableName=(it._type==='script')?'scripts':'library';
-    var dot=(it._badge==='메모'&&typeof OS_MEMO_COLORS!=='undefined')?'<span class="mys-cdot" style="background:'+OS_MEMO_COLORS[_memoColorKey(it.keywords)]+'"></span>':'';
-    return '<div class="item'+(i===0?' on':'')+'" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mrOfficeOpen('+i+')" style="--tc:'+tc+'"><span class="badge">'+it._badge+'</span>'+dot+'<div class="it">'+title+'</div><div class="id">'+dt+'</div></div>';
-  }).join('');
-  mrOfficeOpen(0, true);
-}
-window.renderMrOffice=renderMrOffice;
-function mrOfficeOpen(idx, keepList){
-  var list=window._mrOfficeFiltered||[]; var it=list[idx]; if(!it) return;
-  var v=document.getElementById('mr-office-viewer'); if(!v) return;
-  var bodyText='';
-  if(it._type==='script'){ bodyText=it.script_text||''; }
-  else if(it._badge==='메모'){ bodyText=it.memo_text||''; }
-  else { var parts=[]; if(it.description)parts.push(it.description); if(it.memo_text)parts.push(it.memo_text); bodyText=parts.join('\n\n'); }
-  var isMemo=it._badge==='메모';
-  var memoColorKey=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?_memoColorKey(it.keywords):null;
-  window._mysDetailCurrent={id:it.id, type:it._type, title:it.title||'', body:bodyText, idx:idx, _item:it, color:memoColorKey, ctx:'mr'};
-  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-  var delType=it._type==='script'?'script':'library';
-  var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):(it._date||'');
-  var attHtml='', _ia=it.attachments; if(typeof _ia==='string'){ try{ _ia=JSON.parse(_ia); }catch(e){ _ia=[]; } } if(!Array.isArray(_ia)) _ia=[];
-  if(_ia.length){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
-  var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
-  var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
-  var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');
-  var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):'';
-  v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'+_ttlHtml+'<div class="vmeta">'+esc(dt)+'</div><div class="vbody"'+_bodyStyle+'>'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div><div class="post-acts">'+_editBtn+'<button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
-  var items=document.querySelectorAll('#mr-office-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
-  if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mr-office-split'); if(sp) sp.classList.add('show-viewer'); }
-}
-window.mrOfficeOpen=mrOfficeOpen;
-function mrOfficeBack(){ var sp=document.getElementById('mr-office-split'); if(sp) sp.classList.remove('show-viewer'); }
-window.mrOfficeBack=mrOfficeBack;
-function mrOfficeFilter(el,cat){
-  var chips=el.parentElement.querySelectorAll('.chip'); for(var i=0;i<chips.length;i++)chips[i].classList.remove('on'); el.classList.add('on');
-  if(typeof calBackToDocs==='function') calBackToDocs('mr');  /* 캘린더 칩 → 자료 필터칩 복귀 */
-  var items=window._mrOfficeCache||[];
-  var f=(cat==='전체')?items:items.filter(function(it){ return (it._badge||'')===cat; });
-  renderMrOffice(f);
-}
-window.mrOfficeFilter=mrOfficeFilter;
+/* 매니저룸 단체방·보험Q&A 로더 제거 — MY SPACE로 일원화 (2026-06-05 통합 2단계). 단체방 글쓰기/수정은 공유 모달(mrWriteModal) 유지 */
+/* 매니저룸 오피스 로더 제거 — MY SPACE 오피스로 일원화 (2026-06-05 통합 2단계) */
 /* ════ MY SPACE 보험 Q&A 탭 — 현장의 소리/자료실 보험Q&A(posts qna)를 내 책상에서. 하위 TODAY/전체보기/MINE.
  * 소식지 제외(qna 혼재). MINE = 내가 쓴 질문(author_id=나). read-only(질문 작성 입구는 별도). ════ */
 window._mysQnaCache=null; window._mysQnaMode='all';
