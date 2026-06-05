@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>지식엔진 검색 검증 (admin 테스트)</title>
+<style>
+  :root{ --bg:#0b0c10; --s1:#15171d; --s2:#1d2027; --bd:#2a2e37; --tp:#eef0f4; --ts:#aeb4c0; --tf:#6b7280;
+         --ac:#818cf8; --ok:#34d399; --warn:#fbbf24; --term:#60a5fa; --product:#34d399; --scenario:#f472b6; --insurer:#fbbf24; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tp);font-family:'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;font-size:14px;line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:1.25rem;margin:0 0 4px}
+  .sub{color:var(--tf);font-size:0.8rem;margin-bottom:18px}
+  .sub b{color:var(--ts)}
+  .searchbar{display:flex;gap:8px;margin-bottom:12px}
+  .searchbar input{flex:1;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--tp);padding:12px 14px;font-size:1rem;outline:none}
+  .searchbar input:focus{border-color:var(--ac)}
+  .searchbar button{background:var(--ac);border:none;border-radius:10px;color:#fff;font-weight:700;padding:0 20px;cursor:pointer}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+  .chip{background:var(--s1);border:1px solid var(--bd);border-radius:999px;color:var(--ts);padding:5px 12px;font-size:0.8rem;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--ac);color:var(--tp)}
+  .meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--tf);font-size:0.78rem;margin-bottom:16px;padding:10px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:10px}
+  .meta b{color:var(--ts)}
+  .groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .group{background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .group-head{padding:10px 14px;font-weight:800;font-size:0.85rem;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
+  .group.term .group-head{color:var(--term)} .group.product .group-head{color:var(--product)}
+  .group.scenario .group-head{color:var(--scenario)} .group.insurer .group-head{color:var(--insurer)}
+  .group-cnt{font-size:0.72rem;color:var(--tf);font-weight:600}
+  .cards{padding:8px;display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto}
+  .card{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:10px 11px}
+  .card-ttl{font-weight:700;font-size:0.92rem;margin-bottom:3px}
+  .card-co{display:inline-block;font-size:0.68rem;color:var(--ts);background:rgba(129,140,248,.14);border-radius:5px;padding:1px 7px;margin-bottom:5px}
+  .card-body{color:var(--ts);font-size:0.82rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .card-foot{margin-top:6px;color:var(--tf);font-size:0.68rem;display:flex;gap:8px;flex-wrap:wrap}
+  .conf-high{color:var(--ok)} .conf-med{color:var(--warn)} .conf-low{color:var(--tf)}
+  mark{background:rgba(251,191,36,.32);color:#fff;border-radius:3px;padding:0 1px}
+  .empty{color:var(--tf);padding:30px 14px;text-align:center}
+  .err{color:#f87171;background:rgba(248,113,113,.1);border:1px solid #f87171;border-radius:10px;padding:14px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔎 지식엔진 검색 검증 <span style="font-size:.7rem;color:var(--tf);font-weight:400">admin 테스트 · 비공개</span></h1>
+  <div class="sub">대상: <b>knowledge_entries</b> (신버전 pdnwgzneooyygfejrvbg) · 전체 적재분을 불러와 클라이언트 검색. 검색 필드: 제목·본문·카테고리·회사명·출처제목.</div>
+
+  <div class="searchbar">
+    <input id="q" type="text" placeholder="검색어 (예: BMI, 암, 납입면제, 치매)  — 띄어쓰기 = 모두 포함(AND)" autocomplete="off">
+    <button id="goBtn">검색</button>
+  </div>
+  <div class="chips" id="quickChips"></div>
+
+  <div class="meta" id="meta">불러오는 중…</div>
+  <div id="errBox"></div>
+  <div class="groups" id="groups"></div>
+</div>
+
+<script src="/js/db.js"></script>
+<script>
+(function(){
+  var TYPES = [
+    {key:'term',     label:'용어',     cls:'term'},
+    {key:'product',  label:'상품',     cls:'product'},
+    {key:'scenario', label:'시나리오', cls:'scenario'},
+    {key:'insurer',  label:'보험사',   cls:'insurer'}
+  ];
+  var QUICK = ['BMI','암','유사암','치매','납입면제','심사','인수','현대해상','농협생명','메트라이프'];
+  var CACHE = [];        // 전체 entries
+  var LOADED = false;
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+
+  // 검색어 하이라이트 (본문 일부 발췌)
+  function snippet(text, terms){
+    var t = String(text||'');
+    if(!t) return '';
+    var lower = t.toLowerCase(), pos = -1;
+    for(var i=0;i<terms.length;i++){ var p = lower.indexOf(terms[i]); if(p>=0 && (pos<0||p<pos)) pos=p; }
+    var start = pos>80 ? pos-60 : 0;
+    var frag = t.slice(start, start+260);
+    if(start>0) frag = '…'+frag;
+    if(start+260 < t.length) frag = frag+'…';
+    var html = esc(frag);
+    terms.forEach(function(term){
+      if(!term) return;
+      var re = new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+      html = html.replace(re, '<mark>$1</mark>');
+    });
+    return html;
+  }
+
+  function confCls(c){ return c==='high'?'conf-high':(c==='low'?'conf-low':'conf-med'); }
+
+  function render(terms){
+    var groupsEl = $('groups');
+    var base = CACHE;
+    var matched;
+    if(!terms.length){ matched = base; }
+    else {
+      matched = base.filter(function(r){
+        var hay = ((r.title||'')+' '+(r.body||'')+' '+(r.category||'')+' '+(r.canonical_company_name||'')+' '+(r.source_title||'')).toLowerCase();
+        return terms.every(function(t){ return hay.indexOf(t)>=0; });
+      });
+    }
+    // 그룹별
+    var html = '';
+    var totalShown = 0;
+    TYPES.forEach(function(tp){
+      var rows = matched.filter(function(r){ return (r.type||'')===tp.key; });
+      totalShown += rows.length;
+      html += '<div class="group '+tp.cls+'"><div class="group-head"><span>'+tp.label+'</span><span class="group-cnt">'+rows.length+'건</span></div><div class="cards">';
+      if(!rows.length){ html += '<div class="empty">해당 없음</div>'; }
+      else {
+        rows.slice(0,100).forEach(function(r){
+          var co = r.canonical_company_name ? '<span class="card-co">'+esc(r.canonical_company_name)+'</span>' : '';
+          var body = terms.length ? snippet(r.body, terms) : esc(String(r.body||'').slice(0,260));
+          var foot = [];
+          if(r.source_title) foot.push('출처: '+esc(String(r.source_title).slice(0,40)));
+          if(r.source_date) foot.push(esc(r.source_date));
+          if(r.confidence) foot.push('<span class="'+confCls(r.confidence)+'">'+esc(r.confidence)+'</span>');
+          if(r.status) foot.push(esc(r.status));
+          html += '<div class="card"><div class="card-ttl">'+esc(r.title||'(제목 없음)')+'</div>'+co+
+                  '<div class="card-body">'+(body||'<span style="color:var(--tf)">(본문 없음)</span>')+'</div>'+
+                  '<div class="card-foot">'+foot.join(' · ')+'</div></div>';
+        });
+      }
+      html += '</div></div>';
+    });
+    groupsEl.innerHTML = html;
+    return { matched: matched.length, shown: totalShown };
+  }
+
+  function doSearch(){
+    if(!LOADED) return;
+    var raw = ($('q').value||'').trim();
+    var terms = raw.toLowerCase().split(/\s+/).filter(Boolean);
+    var t0 = performance.now();
+    var r = render(terms);
+    var ms = (performance.now()-t0).toFixed(1);
+    $('meta').innerHTML = '검색어: <b>'+(raw?esc(raw):'(전체)')+'</b> · 결과 <b>'+r.matched+'</b>건 · 필터 '+ms+'ms · 전체 적재 <b>'+CACHE.length+'</b>건';
+  }
+
+  function distSummary(){
+    var byType = {}, byCo = {};
+    CACHE.forEach(function(r){ byType[r.type]=(byType[r.type]||0)+1; if(r.canonical_company_name) byCo[r.canonical_company_name]=(byCo[r.canonical_company_name]||0)+1; });
+    var typeStr = TYPES.map(function(tp){ return tp.label+' '+(byType[tp.key]||0); }).join(' · ');
+    var coCount = Object.keys(byCo).length;
+    return '전체 <b>'+CACHE.length+'</b>건 · '+typeStr+' · 회사 <b>'+coCount+'</b>종';
+  }
+
+  async function load(){
+    try{
+      if(!window.db || !window.db.getToken || !window.db.getToken()){
+        $('meta').innerHTML='';
+        $('errBox').innerHTML='<div class="err">로그인 토큰이 없습니다. 같은 브라우저에서 <b>app.html에 admin으로 로그인</b>한 뒤 이 페이지를 여세요. (knowledge_entries = admin RLS 전용)</div>';
+        return;
+      }
+      var t0 = performance.now();
+      var res = await window.db.fetch('/rest/v1/knowledge_entries?select=*&order=type.asc,canonical_company_name.asc&limit=2000');
+      var fetchMs = (performance.now()-t0).toFixed(0);
+      if(!res.ok){
+        var detail=''; try{ detail=JSON.stringify(await res.json()); }catch(e){}
+        $('meta').innerHTML='';
+        $('errBox').innerHTML='<div class="err">불러오기 실패 (HTTP '+res.status+'). admin 권한/RLS를 확인하세요.<br><small>'+esc(detail)+'</small></div>';
+        return;
+      }
+      CACHE = await res.json(); if(!Array.isArray(CACHE)) CACHE=[];
+      LOADED = true;
+      $('meta').innerHTML = distSummary() + ' · 적재 fetch '+fetchMs+'ms';
+      render([]);
+    }catch(e){
+      $('errBox').innerHTML='<div class="err">오류: '+esc(String(e&&e.message||e))+'</div>';
+    }
+  }
+
+  // 빠른 검증 검색어 칩
+  $('quickChips').innerHTML = QUICK.map(function(w){ return '<span class="chip" data-w="'+esc(w)+'">'+esc(w)+'</span>'; }).join('');
+  $('quickChips').addEventListener('click', function(e){ var c=e.target.closest('.chip'); if(!c) return; $('q').value=c.getAttribute('data-w'); doSearch(); });
+  $('goBtn').addEventListener('click', doSearch);
+  $('q').addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(); });
+  $('q').addEventListener('input', function(){ if(LOADED) doSearch(); });
+
+  load();
+})();
+</script>
+</body>
+</html>
