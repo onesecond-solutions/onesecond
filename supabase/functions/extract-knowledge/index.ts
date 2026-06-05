@@ -22,15 +22,50 @@ const CORS = {
 };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 
+// 표준 회사명 별칭(정확 일치). newsletters.company 실측(2026-06-05, 64종) 기반.
 const CANON: Record<string, string> = {
+  // ── 생명/라이프 ──
+  "동양생명": "동양생명", "하나생명": "하나생명",
+  "농협생명": "농협생명", "NH농협생명": "농협생명",
+  "한화생명": "한화생명", "삼성생명": "삼성생명", "흥국생명": "흥국생명",
+  "라이나생명": "라이나생명", "라이나": "라이나생명",
+  "교보생명": "교보생명", "교보": "교보생명",
+  "KB라이프": "KB라이프", "KB라이프생명": "KB라이프", "KB라이프소식지": "KB라이프",
+  "미래에셋생명": "미래에셋생명", "미래에셋": "미래에셋생명", "미애에셋생명": "미래에셋생명",
+  "DB생명": "DB생명", "KDB생명": "DB생명", "KDB": "DB생명", "KDB생명※": "DB생명",
+  "푸본현대생명": "푸본현대생명", "신한라이프": "신한라이프",
   "메트라이프생명": "메트라이프", "메트라이프": "메트라이프",
-  "AIG손해보험": "AIG손보", "AIG손보": "AIG손보",
-  "KB라이프생명": "KB라이프", "KB라이프": "KB라이프",
-  "iM라이프생명": "iM라이프", "iM라이프": "iM라이프", "IM라이프": "iM라이프",
-  "DB생명": "DB생명", "KDB생명": "DB생명", "ABL생명": "ABL생명",
-  "동양생명": "동양생명", "라이나생명": "라이나생명", "미래에셋생명": "미래에셋생명", "메리츠화재": "메리츠화재",
+  "ABL생명": "ABL생명", "ABL": "ABL생명",
+  "iM라이프": "iM라이프", "IM라이프": "iM라이프", "iM라이프생명": "iM라이프",
+  "아이엠": "iM라이프", "아이엠생명": "iM라이프", "IM": "iM라이프", "iM": "iM라이프",
+  "처브라이프": "처브라이프", "IBK연금보험": "IBK연금보험",
+  // ── 손보/화재/해상 ──
+  "한화손보": "한화손보", "흥국화재": "흥국화재",
+  "DB손보": "DB손보", "삼성화재": "삼성화재", "하나손보": "하나손보", "롯데손보": "롯데손보",
+  "메리츠화재": "메리츠화재", "메리츠": "메리츠화재",
+  "라이나손보": "라이나손보", "현대해상": "현대해상",
+  "KB손보": "KB손보", "농협손보": "농협손보", "NH농협손보": "농협손보",
+  "AIG손보": "AIG손보", "AIG손해보험": "AIG손보",
+  "MG손보": "MG손보", "MG손해보험": "MG손보",
+  // ── 비회사 마커 ──
+  "미상": "미상", "소식지": "미상",
 };
-const canon = (c: string) => CANON[(c || "").trim()] || (c || "").trim();
+// 부분일치 needle — 오염형(파일명·접두·접미)이 회사명을 '포함'하는 경우. 긴 것 우선.
+const CANON_SUBSTR: Array<[string, string]> = [
+  ["미래에셋생명", "미래에셋생명"], ["MG손해보험", "MG손보"], ["KB라이프", "KB라이프"],
+  ["KDB생명", "DB생명"], ["농협손보", "농협손보"], ["현대해상", "현대해상"],
+  ["흥국화재", "흥국화재"], ["KB손보", "KB손보"], ["메리츠", "메리츠화재"],
+];
+// 회사명 정규화: 정확 별칭 → 부분일치 → 폴백(확장자·구분자 제거 첫 토큰, 한글 아니면 미상).
+function canon(c: string): string {
+  const s = (c || "").trim();
+  if (!s) return "미상";
+  if (CANON[s]) return CANON[s];
+  for (const [needle, name] of CANON_SUBSTR) { if (s.includes(needle)) return name; }
+  let t = s.replace(/\.(pdf|hwp|docx?|xlsx?|pptx?)$/i, "").trim();
+  t = t.split(/[_/]/)[0].trim();
+  return /[가-힣]/.test(t) ? t : "미상";
+}
 
 async function pickModel(apiKey: string): Promise<string> {
   if (CACHED_MODEL) return CACHED_MODEL;
