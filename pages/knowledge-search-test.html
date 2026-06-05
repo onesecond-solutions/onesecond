@@ -1,186 +1,339 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>지식엔진 검색 검증 (admin 테스트)</title>
+<title>지식엔진 검색 v1 (admin 검증)</title>
+<link rel="stylesheet" href="/css/tokens-v2.css">
 <style>
-  :root{ --bg:#0b0c10; --s1:#15171d; --s2:#1d2027; --bd:#2a2e37; --tp:#eef0f4; --ts:#aeb4c0; --tf:#6b7280;
-         --ac:#818cf8; --ok:#34d399; --warn:#fbbf24; --term:#60a5fa; --product:#34d399; --scenario:#f472b6; --insurer:#fbbf24; }
+  /* tokens-v2.css 변수만 사용 (하드코딩 색상 금지) */
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--tp);font-family:'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;font-size:14px;line-height:1.5}
-  .wrap{max-width:1100px;margin:0 auto;padding:24px 18px 60px}
-  h1{font-size:1.25rem;margin:0 0 4px}
-  .sub{color:var(--tf);font-size:0.8rem;margin-bottom:18px}
+  body{margin:0;background:var(--bg);color:var(--tp);font-family:var(--font-sans);font-size:15px;line-height:var(--lh-body)}
+  .wrap{max-width:760px;margin:0 auto;padding:22px 16px 80px}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  h1{font-size:1.2rem;margin:0;font-weight:var(--fw-black);flex:1}
+  .iconbtn{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-md);color:var(--ts);padding:6px 11px;font-size:.78rem;cursor:pointer;font-weight:var(--fw-semibold)}
+  .iconbtn:hover{border-color:var(--ac);color:var(--tp)}
+  .iconbtn.on{background:var(--ac);border-color:var(--ac);color:#fff}
+  .sub{color:var(--tf);font-size:.76rem;margin-bottom:16px}
   .sub b{color:var(--ts)}
-  .searchbar{display:flex;gap:8px;margin-bottom:12px}
-  .searchbar input{flex:1;background:var(--s1);border:1px solid var(--bd);border-radius:10px;color:var(--tp);padding:12px 14px;font-size:1rem;outline:none}
+  .searchbar{display:flex;gap:8px;margin-bottom:11px}
+  .searchbar input{flex:1;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);color:var(--tp);padding:13px 15px;font-size:1.02rem;outline:none}
   .searchbar input:focus{border-color:var(--ac)}
-  .searchbar button{background:var(--ac);border:none;border-radius:10px;color:#fff;font-weight:700;padding:0 20px;cursor:pointer}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
-  .chip{background:var(--s1);border:1px solid var(--bd);border-radius:999px;color:var(--ts);padding:5px 12px;font-size:0.8rem;cursor:pointer;transition:.15s}
+  .searchbar button{background:var(--ac);border:none;border-radius:var(--r-lg);color:#fff;font-weight:var(--fw-bold);padding:0 20px;cursor:pointer}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .chip{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-pill);color:var(--ts);padding:5px 12px;font-size:.78rem;cursor:pointer}
   .chip:hover{border-color:var(--ac);color:var(--tp)}
-  .meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--tf);font-size:0.78rem;margin-bottom:16px;padding:10px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:10px}
+  .meta{color:var(--tf);font-size:.74rem;margin-bottom:14px;padding:9px 13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-md)}
   .meta b{color:var(--ts)}
-  .groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-  .group{background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-  .group-head{padding:10px 14px;font-weight:800;font-size:0.85rem;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
-  .group.term .group-head{color:var(--term)} .group.product .group-head{color:var(--product)}
-  .group.scenario .group-head{color:var(--scenario)} .group.insurer .group-head{color:var(--insurer)}
-  .group-cnt{font-size:0.72rem;color:var(--tf);font-weight:600}
-  .cards{padding:8px;display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto}
-  .card{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:10px 11px}
-  .card-ttl{font-weight:700;font-size:0.92rem;margin-bottom:3px}
-  .card-co{display:inline-block;font-size:0.68rem;color:var(--ts);background:rgba(129,140,248,.14);border-radius:5px;padding:1px 7px;margin-bottom:5px}
-  .card-body{color:var(--ts);font-size:0.82rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-  .card-foot{margin-top:6px;color:var(--tf);font-size:0.68rem;display:flex;gap:8px;flex-wrap:wrap}
-  .conf-high{color:var(--ok)} .conf-med{color:var(--warn)} .conf-low{color:var(--tf)}
-  mark{background:rgba(251,191,36,.32);color:#fff;border-radius:3px;padding:0 1px}
-  .empty{color:var(--tf);padding:30px 14px;text-align:center}
-  .err{color:#f87171;background:rgba(248,113,113,.1);border:1px solid #f87171;border-radius:10px;padding:14px;margin-top:14px}
+  .err{color:var(--err);background:color-mix(in srgb,var(--err) 12%,transparent);border:1px solid var(--err);border-radius:var(--r-md);padding:13px;margin-top:12px;font-size:.85rem}
+
+  /* ── 사용자 모드: 세로 단일 컬럼 5단 ── */
+  .sec{margin-bottom:18px}
+  .sec-h{font-size:.82rem;font-weight:var(--fw-black);color:var(--ts);margin:0 0 8px;display:flex;align-items:center;gap:6px}
+  .sec-h .cnt{color:var(--tf);font-weight:var(--fw-semibold);font-size:.72rem}
+  .card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);padding:12px 13px;margin-bottom:8px}
+  .card-ttl{font-weight:var(--fw-bold);font-size:.98rem;margin-bottom:4px;line-height:var(--lh-heading)}
+  .badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+  .b{display:inline-block;font-size:.66rem;border-radius:var(--r-sm);padding:1px 7px;font-weight:var(--fw-semibold)}
+  .b-co{color:var(--tp);background:color-mix(in srgb,var(--ac) 16%,transparent)}
+  .b-term{color:var(--t-uw);background:color-mix(in srgb,var(--t-uw) 14%,transparent)}
+  .b-product{color:var(--t-product);background:color-mix(in srgb,var(--t-product) 16%,transparent)}
+  .b-scenario{color:var(--t-event);background:color-mix(in srgb,var(--t-event) 14%,transparent)}
+  .b-insurer{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+  .b-internal{color:var(--warn);background:color-mix(in srgb,var(--warn) 18%,transparent);border:1px solid var(--warn)}
+  .card-body{color:var(--bodytx);font-size:.86rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .card-foot{margin-top:7px;color:var(--tf);font-size:.68rem;display:flex;gap:8px;flex-wrap:wrap}
+  .disc{margin-top:8px;padding-top:7px;border-top:1px dashed var(--bd);color:var(--tf);font-size:.68rem;line-height:1.45}
+  mark{background:color-mix(in srgb,var(--warn) 36%,transparent);color:var(--tp);border-radius:3px;padding:0 1px}
+
+  /* 핵심요약 강조 */
+  .summary .card{border-color:var(--ac);box-shadow:var(--sh-md)}
+  .summary .sec-h{color:var(--ac)}
+  /* 바로가기 카드 */
+  .shortcut-card{background:color-mix(in srgb,var(--ac) 10%,var(--s1));border:1px solid var(--ac);border-radius:var(--r-lg);padding:13px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+  .shortcut-card .sc-ic{font-size:1.4rem}
+  .shortcut-card .sc-t{flex:1;font-weight:var(--fw-bold)}
+  .shortcut-card a{background:var(--ac);color:#fff;text-decoration:none;border-radius:var(--r-md);padding:7px 13px;font-size:.8rem;font-weight:var(--fw-bold);white-space:nowrap}
+
+  /* ── 기술검증 모드: 4컬럼(기존 보존) ── */
+  .tech-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .tg{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column}
+  .tg-h{padding:9px 12px;font-weight:var(--fw-black);font-size:.82rem;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between}
+  .tg.term .tg-h{color:var(--t-uw)} .tg.product .tg-h{color:var(--t-product)}
+  .tg.scenario .tg-h{color:var(--t-event)} .tg.insurer .tg-h{color:var(--warn)}
+  .tg-cards{padding:7px;display:flex;flex-direction:column;gap:7px;max-height:520px;overflow-y:auto}
+  .empty{color:var(--tf);padding:24px 12px;text-align:center;font-size:.82rem}
+  @media(max-width:600px){ .wrap{padding:16px 12px 70px} h1{font-size:1.05rem} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>🔎 지식엔진 검색 검증 <span style="font-size:.7rem;color:var(--tf);font-weight:400">admin 테스트 · 비공개</span></h1>
-  <div class="sub">대상: <b>knowledge_entries</b> (신버전 pdnwgzneooyygfejrvbg) · 전체 적재분을 불러와 클라이언트 검색. 검색 필드: 제목·본문·카테고리·회사명·출처제목.</div>
+  <div class="topbar">
+    <h1>🔎 지식엔진 검색 <span style="font-size:.62rem;color:var(--tf);font-weight:400">v1 · admin 검증 · 비공개</span></h1>
+    <button class="iconbtn" id="modeBtn" title="사용자/기술검증 전환">기술검증(4컬럼)</button>
+    <button class="iconbtn" id="themeBtn" title="다크/라이트">◐</button>
+  </div>
+  <div class="sub">대상 <b>knowledge_entries</b> (신버전 pdnwgzneooyygfejrvbg) · 전건 클라이언트 검색(검색어 서버 전송·저장 없음) · 랭킹+동의어 확장</div>
 
   <div class="searchbar">
-    <input id="q" type="text" placeholder="검색어 (예: BMI, 암, 납입면제, 치매)  — 띄어쓰기 = 모두 포함(AND)" autocomplete="off">
+    <input id="q" type="text" placeholder="검색 (예: 유사암, BMI, 암보장개시일, 삼성화재 BMI)" autocomplete="off">
     <button id="goBtn">검색</button>
   </div>
   <div class="chips" id="quickChips"></div>
 
   <div class="meta" id="meta">불러오는 중…</div>
   <div id="errBox"></div>
-  <div class="groups" id="groups"></div>
+  <div id="results"></div>
 </div>
 
 <script src="/js/db.js"></script>
 <script>
 (function(){
+  "use strict";
+  // ── 랭킹 가중치 (조정은 여기 1곳) ──
+  var TIER = { titleExact:5, titlePartial:4, catCompany:3, body:2 };
+  var TIER_SCORE = { 5:1000, 4:400, 3:250, 2:100, 1:40, 0:0 };
+  // 동의어 확장 매치는 직접 매치보다 '한 단계' 낮은 tier 적용 (tier-1)
+
   var TYPES = [
     {key:'term',     label:'용어',     cls:'term'},
-    {key:'product',  label:'상품',     cls:'product'},
-    {key:'scenario', label:'시나리오', cls:'scenario'},
+    {key:'product',  label:'관련 상품', cls:'product'},
+    {key:'scenario', label:'실무 포인트', cls:'scenario'},
     {key:'insurer',  label:'보험사',   cls:'insurer'}
   ];
-  var QUICK = ['BMI','암','유사암','치매','납입면제','심사','인수','현대해상','농협생명','메트라이프'];
-  var CACHE = [];        // 전체 entries
+  var QUICK = ['유사암','암','BMI','암보장개시일','납입면제','치매','심사','인수','삼성화재 BMI','현대해상'];
+
+  var CACHE = [];      // 전체 entries
+  var SYN = {};        // lowercased word → [group members lowercased]
   var LOADED = false;
+  var MODE = 'user';   // 'user' | 'tech'
   var $ = function(id){ return document.getElementById(id); };
   var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
 
-  // 검색어 하이라이트 (본문 일부 발췌)
-  function snippet(text, terms){
-    var t = String(text||'');
-    if(!t) return '';
-    var lower = t.toLowerCase(), pos = -1;
-    for(var i=0;i<terms.length;i++){ var p = lower.indexOf(terms[i]); if(p>=0 && (pos<0||p<pos)) pos=p; }
-    var start = pos>80 ? pos-60 : 0;
-    var frag = t.slice(start, start+260);
-    if(start>0) frag = '…'+frag;
-    if(start+260 < t.length) frag = frag+'…';
-    var html = esc(frag);
-    terms.forEach(function(term){
-      if(!term) return;
-      var re = new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
-      html = html.replace(re, '<mark>$1</mark>');
+  // ── 동의어 그룹 구성 (양방향) ──
+  function buildSyn(rows){
+    SYN = {};
+    var groups = [];
+    (rows||[]).forEach(function(r){
+      var members = [r.term].concat(r.synonyms||[]).map(function(s){return String(s||'').trim().toLowerCase();}).filter(Boolean);
+      if(!members.length) return;
+      var hit = null;
+      for(var i=0;i<groups.length;i++){ if(members.some(function(m){return groups[i].indexOf(m)>=0;})){ hit=groups[i]; break; } }
+      if(hit){ members.forEach(function(m){ if(hit.indexOf(m)<0) hit.push(m); }); }
+      else groups.push(members.slice());
     });
+    groups.forEach(function(g){ g.forEach(function(m){ SYN[m]=g; }); });
+  }
+  // 검색어 1단어 → 변형 목록 [{t, syn}]  (원어 syn=false, 동의어 syn=true)
+  function expand(word){
+    var w = word.toLowerCase();
+    var g = SYN[w];
+    if(!g) return [{t:w, syn:false}];
+    return g.map(function(m){ return {t:m, syn:(m!==w)}; });
+  }
+
+  // ── 매치 tier (단어 1개 vs 항목) ──
+  function matchTier(e, term){
+    var title = String(e.title||'').toLowerCase().trim();
+    if(title===term) return TIER.titleExact;
+    if(title.indexOf(term)>=0) return TIER.titlePartial;
+    var cat = (String(e.category||'')+' '+String(e.canonical_company_name||'')+' '+String(e.source_company||'')).toLowerCase();
+    if(cat.indexOf(term)>=0) return TIER.catCompany;
+    var body = (String(e.body||'')+' '+(Array.isArray(e.tags)?e.tags.join(' '):'')).toLowerCase();
+    if(body.indexOf(term)>=0) return TIER.body;
+    return 0;
+  }
+
+  // ── 항목 점수 (검색어 전체 AND, 동의어 확장) ──
+  function scoreEntry(e, words, raw){
+    if(!words.length) return 1; // 전체 보기
+    var total = 0;
+    for(var i=0;i<words.length;i++){
+      var variants = expand(words[i]);
+      var best = 0;
+      for(var v=0; v<variants.length; v++){
+        var t = matchTier(e, variants[v].t);
+        if(variants[v].syn && t>0) t = t-1;  // 동의어는 한 단계 낮게
+        if(t>best) best = t;
+      }
+      if(best===0) return 0;                 // AND: 한 단어라도 매치 0이면 탈락
+      total += TIER_SCORE[best];
+    }
+    // 제목 전체 정확 일치 보너스
+    if(String(e.title||'').toLowerCase().trim()===String(raw||'').toLowerCase().trim()) total += TIER_SCORE[5];
+    return total;
+  }
+
+  function dateNum(d){ return Number(String(d||'').replace(/[^0-9]/g,'')) || 0; }
+
+  // ── 키워드 중심 스니펫 (첫 매치 ±60자) ──
+  function snippet(text, terms){
+    var t = String(text||''); if(!t) return '';
+    var lower = t.toLowerCase(), pos = -1;
+    terms.forEach(function(term){ var p = lower.indexOf(term); if(p>=0 && (pos<0||p<pos)) pos=p; });
+    if(pos<0){ var head = t.slice(0,120); return esc(head)+(t.length>120?'…':''); }
+    var start = Math.max(0, pos-60);
+    var end = Math.min(t.length, pos+ (terms[0]?terms[0].length:0) +60);
+    var frag = t.slice(start, end);
+    var html = (start>0?'…':'') + esc(frag) + (end<t.length?'…':'');
+    terms.forEach(function(term){ if(!term) return; var re=new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); html=html.replace(re,'<mark>$1</mark>'); });
     return html;
   }
 
-  function confCls(c){ return c==='high'?'conf-high':(c==='low'?'conf-low':'conf-med'); }
+  // 검색어 + 동의어 전부 (하이라이트·스니펫용)
+  function allTerms(words){
+    var out = [];
+    words.forEach(function(w){ expand(w).forEach(function(v){ if(out.indexOf(v.t)<0) out.push(v.t); }); });
+    return out;
+  }
 
-  function render(terms){
-    var groupsEl = $('groups');
-    var base = CACHE;
-    var matched;
-    if(!terms.length){ matched = base; }
-    else {
-      matched = base.filter(function(r){
-        var hay = ((r.title||'')+' '+(r.body||'')+' '+(r.category||'')+' '+(r.canonical_company_name||'')+' '+(r.source_title||'')).toLowerCase();
-        return terms.every(function(t){ return hay.indexOf(t)>=0; });
-      });
-    }
-    // 그룹별
+  function isInternal(e){ return (e.source_type==='onesecond_internal') || (e.category==='보험사별 기준'); }
+
+  // ── 카드 렌더 ──
+  function cardHtml(e, hlTerms){
+    var typeMeta = {term:['용어','b-term'],product:['상품','b-product'],scenario:['시나리오','b-scenario'],insurer:['보험사','b-insurer']}[e.type] || ['',''];
+    var badges = '';
+    if(isInternal(e)) badges += '<span class="b b-internal">원세컨드 정리자료</span>';
+    if(e.canonical_company_name) badges += '<span class="b b-co">'+esc(e.canonical_company_name)+'</span>';
+    if(typeMeta[0]) badges += '<span class="b '+typeMeta[1]+'">'+typeMeta[0]+'</span>';
+    var body = hlTerms ? snippet(e.body, hlTerms) : esc(String(e.body||'').slice(0,260));
+    var foot = [];
+    if(e.source_title) foot.push('출처: '+esc(String(e.source_title).slice(0,40)));
+    if(e.source_date) foot.push(esc(e.source_date));
+    if(e.confidence) foot.push(esc(e.confidence));
+    if(e.status) foot.push(esc(e.status));
+    var bjLink = (isInternal(e) && e.link_url) ? '<div style="margin-top:7px"><a href="'+esc(e.link_url)+'" target="_blank" rel="noopener" style="color:var(--ac);font-size:.78rem;font-weight:var(--fw-bold);text-decoration:none">전체 비교 보기 →</a></div>' : '';
+    var disc = e.disclaimer ? '<div class="disc">⚠ '+esc(e.disclaimer)+'</div>' : '';
+    return '<div class="card"><div class="card-ttl">'+esc(e.title||'(제목 없음)')+'</div>'+
+           (badges?'<div class="badges">'+badges+'</div>':'')+
+           '<div class="card-body">'+(body||'<span style="color:var(--tf)">(본문 없음)</span>')+'</div>'+
+           (foot.length?'<div class="card-foot">'+foot.join(' · ')+'</div>':'')+ bjLink + disc +'</div>';
+  }
+
+  function secHtml(title, cls, rows, hlTerms){
+    if(!rows.length) return '';
+    return '<div class="sec '+(cls||'')+'"><div class="sec-h">'+esc(title)+' <span class="cnt">'+rows.length+'</span></div>'+
+           rows.map(function(e){ return cardHtml(e, hlTerms); }).join('')+'</div>';
+  }
+
+  // ── 사용자 모드 렌더 (세로단: 바로가기 → 핵심요약 → 상품 → 보험사별기준 → 실무 → 용어 → 원문) ──
+  // 보험사별 기준(내부 정리자료)은 일반 랭킹 풀과 분리되어 별도 섹션으로만 노출.
+  function renderUser(shortcuts, general, bj, hlTerms){
     var html = '';
-    var totalShown = 0;
+    // 0) 바로가기 (entry_type='shortcut') — 핵심요약보다 위
+    if(shortcuts.length){
+      html += '<div class="sec">'+shortcuts.map(function(e){
+        var link = e.link_url ? '<a href="'+esc(e.link_url)+'" target="_blank" rel="noopener">바로가기 →</a>' : '';
+        return '<div class="shortcut-card"><span class="sc-ic">⚡</span><span class="sc-t">'+esc(e.title||'')+'</span>'+link+'</div>';
+      }).join('')+'</div>';
+    }
+    // 1) 핵심요약 = 일반 풀 최상위 1건 (규칙 기반 승격, AI 생성 아님)
+    var summary = general[0] || null;
+    if(summary){ html += '<div class="sec summary"><div class="sec-h">핵심요약</div>'+cardHtml(summary, hlTerms)+'</div>'; }
+    var skipId = summary ? summary.entry_id : null;
+    var gw = general.filter(function(e){ return e.entry_id!==skipId; });
+    // 2) 관련 상품
+    html += secHtml('관련 상품', '', gw.filter(function(e){return e.type==='product';}), hlTerms);
+    // 3) 보험사별 기준 (관련 상품 다음, 실무 포인트 앞) — 배지+면책+바로가기는 카드 내부
+    html += secHtml('보험사별 기준', '', bj, hlTerms);
+    // 4) 실무 포인트
+    html += secHtml('실무 포인트', '', gw.filter(function(e){return e.type==='scenario';}), hlTerms);
+    // 5) 용어
+    html += secHtml('용어', '', gw.filter(function(e){return e.type==='term';}), hlTerms);
+    // 6) 원문 보기 (출처)
+    var srcMap = {};
+    general.concat(bj).forEach(function(e){ var k=(e.source_title||e.source_id||''); if(k && !srcMap[k]) srcMap[k]={title:e.source_title||k, date:e.source_date, id:e.source_id, link:e.link_url}; });
+    var srcs = Object.keys(srcMap).map(function(k){return srcMap[k];});
+    if(srcs.length){
+      html += '<div class="sec"><div class="sec-h">원문 보기 <span class="cnt">'+srcs.length+'</span></div>'+
+        srcs.map(function(s){ var link=s.link?' · <a href="'+esc(s.link)+'" target="_blank" rel="noopener" style="color:var(--ac)">열기</a>':''; return '<div class="card"><div class="card-ttl" style="font-size:.86rem">'+esc(s.title)+'</div><div class="card-foot">'+[s.date,s.id].filter(Boolean).map(esc).join(' · ')+link+'</div></div>'; }).join('')+'</div>';
+    }
+    if(!html) html = '<div class="empty">검색 결과가 없습니다.</div>';
+    $('results').innerHTML = html;
+  }
+
+  // ── 기술검증 모드 (4컬럼 — 기존 보존, 랭킹 무관 단순 분류) ──
+  function renderTech(matched, hlTerms){
+    var html = '<div class="tech-groups">';
     TYPES.forEach(function(tp){
-      var rows = matched.filter(function(r){ return (r.type||'')===tp.key; });
-      totalShown += rows.length;
-      html += '<div class="group '+tp.cls+'"><div class="group-head"><span>'+tp.label+'</span><span class="group-cnt">'+rows.length+'건</span></div><div class="cards">';
-      if(!rows.length){ html += '<div class="empty">해당 없음</div>'; }
-      else {
-        rows.slice(0,100).forEach(function(r){
-          var co = r.canonical_company_name ? '<span class="card-co">'+esc(r.canonical_company_name)+'</span>' : '';
-          var body = terms.length ? snippet(r.body, terms) : esc(String(r.body||'').slice(0,260));
-          var foot = [];
-          if(r.source_title) foot.push('출처: '+esc(String(r.source_title).slice(0,40)));
-          if(r.source_date) foot.push(esc(r.source_date));
-          if(r.confidence) foot.push('<span class="'+confCls(r.confidence)+'">'+esc(r.confidence)+'</span>');
-          if(r.status) foot.push(esc(r.status));
-          html += '<div class="card"><div class="card-ttl">'+esc(r.title||'(제목 없음)')+'</div>'+co+
-                  '<div class="card-body">'+(body||'<span style="color:var(--tf)">(본문 없음)</span>')+'</div>'+
-                  '<div class="card-foot">'+foot.join(' · ')+'</div></div>';
-        });
-      }
+      var rows = matched.filter(function(e){ return (e.type||'')===tp.key; });
+      html += '<div class="tg '+tp.cls+'"><div class="tg-h"><span>'+tp.label+'</span><span>'+rows.length+'</span></div><div class="tg-cards">';
+      html += rows.length ? rows.map(function(e){ return cardHtml(e, hlTerms); }).join('') : '<div class="empty">해당 없음</div>';
       html += '</div></div>';
     });
-    groupsEl.innerHTML = html;
-    return { matched: matched.length, shown: totalShown };
+    html += '</div>';
+    $('results').innerHTML = html;
   }
+
+  function pick(pool, words, raw){
+    var a = [];
+    pool.forEach(function(e){ var s = scoreEntry(e, words, raw); if(s>0) a.push({e:e, s:s}); });
+    a.sort(function(x,y){ return y.s-x.s || dateNum(y.e.source_date)-dateNum(x.e.source_date); });
+    return a.map(function(x){ return x.e; });
+  }
+  var isBj = function(e){ return e.category==='보험사별 기준' && e.entry_type!=='shortcut'; };
+  var isSc = function(e){ return e.entry_type==='shortcut'; };
 
   function doSearch(){
     if(!LOADED) return;
     var raw = ($('q').value||'').trim();
-    var terms = raw.toLowerCase().split(/\s+/).filter(Boolean);
+    var words = raw.toLowerCase().split(/\s+/).filter(Boolean);
+    var hlTerms = words.length ? allTerms(words) : null;
     var t0 = performance.now();
-    var r = render(terms);
+    // 랭킹 풀 분리: 일반 / 보험사별기준(내부) / 바로가기
+    var shortcuts = pick(CACHE.filter(isSc), words, raw);
+    var bj        = pick(CACHE.filter(isBj), words, raw);
+    var general   = pick(CACHE.filter(function(e){ return !isBj(e) && !isSc(e); }), words, raw);
+    var total = shortcuts.length + bj.length + general.length;
+    if(MODE==='user') renderUser(shortcuts, general, bj, hlTerms);
+    else renderTech(pick(CACHE, words, raw), hlTerms);  // 기술검증=전체 type별(분리 없음)
     var ms = (performance.now()-t0).toFixed(1);
-    $('meta').innerHTML = '검색어: <b>'+(raw?esc(raw):'(전체)')+'</b> · 결과 <b>'+r.matched+'</b>건 · 필터 '+ms+'ms · 전체 적재 <b>'+CACHE.length+'</b>건';
+    $('meta').innerHTML = '검색어 <b>'+(raw?esc(raw):'(전체)')+'</b> · 결과 <b>'+total+'</b>건 · '+ms+'ms · 모드 '+(MODE==='user'?'사용자':'기술검증')+' · 동의어 '+Object.keys(SYN).length+'어';
   }
 
   function distSummary(){
-    var byType = {}, byCo = {};
+    var byType={}, byCo={};
     CACHE.forEach(function(r){ byType[r.type]=(byType[r.type]||0)+1; if(r.canonical_company_name) byCo[r.canonical_company_name]=(byCo[r.canonical_company_name]||0)+1; });
-    var typeStr = TYPES.map(function(tp){ return tp.label+' '+(byType[tp.key]||0); }).join(' · ');
-    var coCount = Object.keys(byCo).length;
-    return '전체 <b>'+CACHE.length+'</b>건 · '+typeStr+' · 회사 <b>'+coCount+'</b>종';
+    return '전체 <b>'+CACHE.length+'</b>건 · 용어 '+(byType.term||0)+' 상품 '+(byType.product||0)+' 시나리오 '+(byType.scenario||0)+' 보험사 '+(byType.insurer||0)+' · 회사 <b>'+Object.keys(byCo).length+'</b>종 · 동의어 '+Object.keys(SYN).length+'어';
   }
 
   async function load(){
     try{
       if(!window.db || !window.db.getToken || !window.db.getToken()){
         $('meta').innerHTML='';
-        $('errBox').innerHTML='<div class="err">로그인 토큰이 없습니다. 같은 브라우저에서 <b>app.html에 admin으로 로그인</b>한 뒤 이 페이지를 여세요. (knowledge_entries = admin RLS 전용)</div>';
+        $('errBox').innerHTML='<div class="err">로그인 토큰이 없습니다. 같은 브라우저에서 <b>app.html에 admin으로 로그인</b> 후 이 페이지를 여세요. (knowledge_entries = admin RLS 전용)</div>';
         return;
       }
-      var t0 = performance.now();
+      // 동의어 (테이블 없으면 graceful)
+      try{
+        var sres = await window.db.fetch('/rest/v1/knowledge_synonyms?select=term,synonyms&limit=500');
+        if(sres.ok){ var srows = await sres.json(); if(Array.isArray(srows)) buildSyn(srows); }
+      }catch(_e){ /* 테이블 미생성 = 동의어 0, 정상 동작 */ }
+      // 지식 항목
       var res = await window.db.fetch('/rest/v1/knowledge_entries?select=*&order=type.asc,canonical_company_name.asc&limit=2000');
-      var fetchMs = (performance.now()-t0).toFixed(0);
       if(!res.ok){
-        var detail=''; try{ detail=JSON.stringify(await res.json()); }catch(e){}
+        var d=''; try{ d=JSON.stringify(await res.json()); }catch(e){}
         $('meta').innerHTML='';
-        $('errBox').innerHTML='<div class="err">불러오기 실패 (HTTP '+res.status+'). admin 권한/RLS를 확인하세요.<br><small>'+esc(detail)+'</small></div>';
+        $('errBox').innerHTML='<div class="err">불러오기 실패 (HTTP '+res.status+'). admin 권한/RLS 확인.<br><small>'+esc(d)+'</small></div>';
         return;
       }
       CACHE = await res.json(); if(!Array.isArray(CACHE)) CACHE=[];
       LOADED = true;
-      $('meta').innerHTML = distSummary() + ' · 적재 fetch '+fetchMs+'ms';
-      render([]);
-    }catch(e){
-      $('errBox').innerHTML='<div class="err">오류: '+esc(String(e&&e.message||e))+'</div>';
-    }
+      $('meta').innerHTML = distSummary();
+      doSearch();
+    }catch(e){ $('errBox').innerHTML='<div class="err">오류: '+esc(String(e&&e.message||e))+'</div>'; }
   }
 
-  // 빠른 검증 검색어 칩
+  // 이벤트
   $('quickChips').innerHTML = QUICK.map(function(w){ return '<span class="chip" data-w="'+esc(w)+'">'+esc(w)+'</span>'; }).join('');
   $('quickChips').addEventListener('click', function(e){ var c=e.target.closest('.chip'); if(!c) return; $('q').value=c.getAttribute('data-w'); doSearch(); });
   $('goBtn').addEventListener('click', doSearch);
   $('q').addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(); });
   $('q').addEventListener('input', function(){ if(LOADED) doSearch(); });
+  $('modeBtn').addEventListener('click', function(){ MODE = (MODE==='user'?'tech':'user'); this.textContent = (MODE==='user'?'기술검증(4컬럼)':'사용자 모드'); this.classList.toggle('on', MODE==='tech'); doSearch(); });
+  $('themeBtn').addEventListener('click', function(){ var h=document.documentElement; h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark'); });
 
   load();
 })();

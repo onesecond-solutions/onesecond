@@ -1,0 +1,20 @@
+-- 🟠 데이터 변경 (UPDATE, 옵션) — ⚠️ 실행 금지. 별도 승인 후.
+-- 지식엔진 검색 v1 · 작업 6-2 — source_type 구분값 백필
+--
+-- 목적: 내부 정리자료(onesecond_internal)와 소식지 발췌를 source_type으로 구분.
+--
+-- 현재 상태:
+--   · 소식지 발췌 기존 72건 = source_type 'newsletter' (extract-knowledge 함수가 적재하는 값)
+--   · BMI 내부 정리자료 = source_type 'onesecond_internal' (BMI 적재 SQL에서 설정)
+--   → 이미 구분되어 있음. 일반 검색에서 보험사별 기준은 category 기준으로 풀 분리됨.
+--
+-- ── 옵션 A (권장): 변경 없음 ──
+--   newsletter / onesecond_internal 로 이미 구분됨 → 별도 백필 불필요.
+--
+-- ── 옵션 B (명시 라벨을 원할 때만): 소식지 적재분 재라벨 ──
+--   ⚠️ 주의: extract-knowledge 함수는 신규 채굴 시에도 source_type='newsletter'로 적재한다.
+--   재라벨하면 기존분과 신규 채굴분의 표기가 갈리므로, 재채굴 정책과 함께 결정할 것.
+--
+-- update public.knowledge_entries
+--   set source_type = 'insurer_newsletter', updated_at = now()
+--   where source_type = 'newsletter';
