@@ -6340,7 +6340,8 @@ async function loadScriptsView(){
   if(!wrap) return;
   /* Supabase 실 fetch — 1회만 (전체 자료 캐시). RLS = 로그인 토큰 필수. */
   try{
-    var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text';
+    /* scope=global 만 노출 = 공용 정제 스크립트 한정. 개인/매니저룸 personal 스크립트 누수 차단 (2026-06-05) */
+    var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&scope=eq.global&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text';
     var authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('os_token')) || SUPABASE_ANON_KEY;
     var res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authToken }});
     if(!res.ok){ wrap.innerHTML = '<div class="scripts-cards-empty">자료를 불러올 수 없습니다. (HTTP '+res.status+')</div>'; return; }
