@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:,">  <!-- favicon 404 억제 (작업9) -->
 <title>지식엔진 검색 v1 (admin 검증)</title>
 <link rel="stylesheet" href="/css/tokens-v2.css">
 <style>
@@ -29,7 +30,7 @@
   .meta b{color:var(--ts)}
   .err{color:var(--err);background:color-mix(in srgb,var(--err) 12%,transparent);border:1px solid var(--err);border-radius:var(--r-md);padding:13px;margin-top:12px;font-size:.85rem}
 
-  /* ── 사용자 모드: 세로 단일 컬럼 5단 ── */
+  /* ── 사용자 모드: 세로 단일 컬럼 ── */
   .sec{margin-bottom:18px}
   .sec-h{font-size:.82rem;font-weight:var(--fw-black);color:var(--ts);margin:0 0 8px;display:flex;align-items:center;gap:6px}
   .sec-h .cnt{color:var(--tf);font-weight:var(--fw-semibold);font-size:.72rem}
@@ -47,10 +48,18 @@
   .card-foot{margin-top:7px;color:var(--tf);font-size:.68rem;display:flex;gap:8px;flex-wrap:wrap}
   .disc{margin-top:8px;padding-top:7px;border-top:1px dashed var(--bd);color:var(--tf);font-size:.68rem;line-height:1.45}
   mark{background:color-mix(in srgb,var(--warn) 36%,transparent);color:var(--tp);border-radius:3px;padding:0 1px}
+  .morebtn{margin-top:2px}
 
-  /* 핵심요약 강조 */
+  /* 핵심요약 (정답/집계) */
   .summary .card{border-color:var(--ac);box-shadow:var(--sh-md)}
   .summary .sec-h{color:var(--ac)}
+  .agg-ttl{font-weight:var(--fw-bold);font-size:1rem;margin-bottom:9px}
+  .agg-ttl b{color:var(--ac)}
+  .agg-cats{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px}
+  .agg-cat{cursor:pointer;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r-md);padding:5px 11px;font-size:.8rem}
+  .agg-cat:hover{border-color:var(--ac)}
+  .agg-cat b{color:var(--ac)}
+  .agg-chips{display:flex;flex-wrap:wrap;gap:6px}
   /* 바로가기 카드 */
   .shortcut-card{background:color-mix(in srgb,var(--ac) 10%,var(--s1));border:1px solid var(--ac);border-radius:var(--r-lg);padding:13px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
   .shortcut-card .sc-ic{font-size:1.4rem}
@@ -95,7 +104,8 @@
   // ── 랭킹 가중치 (조정은 여기 1곳) ──
   var TIER = { titleExact:5, titlePartial:4, catCompany:3, body:2 };
   var TIER_SCORE = { 5:1000, 4:400, 3:250, 2:100, 1:40, 0:0 };
-  // 동의어 확장 매치는 직접 매치보다 '한 단계' 낮은 tier 적용 (tier-1)
+  // 동의어 확장 매치는 직접 매치보다 '한 단계' 낮은 tier (tier-1)
+  var SECTION_LIMIT = 5;  // 작업8: 섹션 기본 노출 건수
 
   var TYPES = [
     {key:'term',     label:'용어',     cls:'term'},
@@ -103,21 +113,23 @@
     {key:'scenario', label:'실무 포인트', cls:'scenario'},
     {key:'insurer',  label:'보험사',   cls:'insurer'}
   ];
-  var QUICK = ['유사암','암','BMI','암보장개시일','납입면제','치매','심사','인수','삼성화재 BMI','현대해상'];
+  // 작업11: 후보 검색어 (로드 시 결과 0건 칩은 자동 제외)
+  var QUICK = ['유사암','암','BMI','암보장개시일','납입면제','치매','심사','인수','삼성화재 BMI','현대해상','뇌심','방진'];
 
   var CACHE = [];      // 전체 entries
-  var SYN = {};        // lowercased word → [group members lowercased]
+  var SYN = {};        // lowercased word → [group members]
   var LOADED = false;
   var MODE = 'user';   // 'user' | 'tech'
+  var _seq = 0;
   var $ = function(id){ return document.getElementById(id); };
   var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+  var norm = function(s){ return String(s==null?'':s).trim().toLowerCase(); };
 
-  // ── 동의어 그룹 구성 (양방향) ──
+  // ── 동의어 그룹 (양방향) ──
   function buildSyn(rows){
-    SYN = {};
-    var groups = [];
+    SYN = {}; var groups = [];
     (rows||[]).forEach(function(r){
-      var members = [r.term].concat(r.synonyms||[]).map(function(s){return String(s||'').trim().toLowerCase();}).filter(Boolean);
+      var members = [r.term].concat(r.synonyms||[]).map(norm).filter(Boolean);
       if(!members.length) return;
       var hit = null;
       for(var i=0;i<groups.length;i++){ if(members.some(function(m){return groups[i].indexOf(m)>=0;})){ hit=groups[i]; break; } }
@@ -126,78 +138,55 @@
     });
     groups.forEach(function(g){ g.forEach(function(m){ SYN[m]=g; }); });
   }
-  // 검색어 1단어 → 변형 목록 [{t, syn}]  (원어 syn=false, 동의어 syn=true)
-  function expand(word){
-    var w = word.toLowerCase();
-    var g = SYN[w];
-    if(!g) return [{t:w, syn:false}];
-    return g.map(function(m){ return {t:m, syn:(m!==w)}; });
-  }
+  function expand(word){ var w=norm(word); var g=SYN[w]; if(!g) return [{t:w,syn:false}]; return g.map(function(m){return {t:m,syn:(m!==w)};}); }
+  function allTerms(words){ var out=[]; words.forEach(function(w){ expand(w).forEach(function(v){ if(out.indexOf(v.t)<0) out.push(v.t); }); }); return out; }
 
-  // ── 매치 tier (단어 1개 vs 항목) ──
+  // ── 매치 tier ──
   function matchTier(e, term){
-    var title = String(e.title||'').toLowerCase().trim();
+    var title = norm(e.title);
     if(title===term) return TIER.titleExact;
     if(title.indexOf(term)>=0) return TIER.titlePartial;
-    var cat = (String(e.category||'')+' '+String(e.canonical_company_name||'')+' '+String(e.source_company||'')).toLowerCase();
+    var cat = norm((e.category||'')+' '+(e.canonical_company_name||'')+' '+(e.source_company||''));
     if(cat.indexOf(term)>=0) return TIER.catCompany;
-    var body = (String(e.body||'')+' '+(Array.isArray(e.tags)?e.tags.join(' '):'')).toLowerCase();
+    var body = norm((e.body||'')+' '+(Array.isArray(e.tags)?e.tags.join(' '):''));
     if(body.indexOf(term)>=0) return TIER.body;
     return 0;
   }
-
-  // ── 항목 점수 (검색어 전체 AND, 동의어 확장) ──
   function scoreEntry(e, words, raw){
-    if(!words.length) return 1; // 전체 보기
+    if(!words.length) return 1;
     var total = 0;
     for(var i=0;i<words.length;i++){
-      var variants = expand(words[i]);
-      var best = 0;
-      for(var v=0; v<variants.length; v++){
-        var t = matchTier(e, variants[v].t);
-        if(variants[v].syn && t>0) t = t-1;  // 동의어는 한 단계 낮게
-        if(t>best) best = t;
-      }
-      if(best===0) return 0;                 // AND: 한 단어라도 매치 0이면 탈락
+      var variants = expand(words[i]); var best = 0;
+      for(var v=0; v<variants.length; v++){ var t = matchTier(e, variants[v].t); if(variants[v].syn && t>0) t = t-1; if(t>best) best = t; }
+      if(best===0) return 0;
       total += TIER_SCORE[best];
     }
-    // 제목 전체 정확 일치 보너스
-    if(String(e.title||'').toLowerCase().trim()===String(raw||'').toLowerCase().trim()) total += TIER_SCORE[5];
+    if(norm(e.title)===norm(raw)) total += TIER_SCORE[5];  // 제목 전체 정확 일치 보너스
     return total;
   }
-
   function dateNum(d){ return Number(String(d||'').replace(/[^0-9]/g,'')) || 0; }
 
-  // ── 키워드 중심 스니펫 (첫 매치 ±60자) ──
+  // ── 스니펫 (첫 매치 ±60자) ──
   function snippet(text, terms){
     var t = String(text||''); if(!t) return '';
-    var lower = t.toLowerCase(), pos = -1;
+    var lower = norm(t), pos = -1;
     terms.forEach(function(term){ var p = lower.indexOf(term); if(p>=0 && (pos<0||p<pos)) pos=p; });
-    if(pos<0){ var head = t.slice(0,120); return esc(head)+(t.length>120?'…':''); }
+    if(pos<0){ return esc(t.slice(0,120))+(t.length>120?'…':''); }
     var start = Math.max(0, pos-60);
-    var end = Math.min(t.length, pos+ (terms[0]?terms[0].length:0) +60);
+    var end = Math.min(t.length, pos + (terms[0]?terms[0].length:0) + 60);
     var frag = t.slice(start, end);
     var html = (start>0?'…':'') + esc(frag) + (end<t.length?'…':'');
     terms.forEach(function(term){ if(!term) return; var re=new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); html=html.replace(re,'<mark>$1</mark>'); });
     return html;
   }
-
-  // 검색어 + 동의어 전부 (하이라이트·스니펫용)
-  function allTerms(words){
-    var out = [];
-    words.forEach(function(w){ expand(w).forEach(function(v){ if(out.indexOf(v.t)<0) out.push(v.t); }); });
-    return out;
-  }
-
   function isInternal(e){ return (e.source_type==='onesecond_internal') || (e.category==='보험사별 기준'); }
 
-  // ── 카드 렌더 ──
   function cardHtml(e, hlTerms){
-    var typeMeta = {term:['용어','b-term'],product:['상품','b-product'],scenario:['시나리오','b-scenario'],insurer:['보험사','b-insurer']}[e.type] || ['',''];
+    var tm = {term:['용어','b-term'],product:['상품','b-product'],scenario:['시나리오','b-scenario'],insurer:['보험사','b-insurer']}[e.type] || ['',''];
     var badges = '';
     if(isInternal(e)) badges += '<span class="b b-internal">원세컨드 정리자료</span>';
     if(e.canonical_company_name) badges += '<span class="b b-co">'+esc(e.canonical_company_name)+'</span>';
-    if(typeMeta[0]) badges += '<span class="b '+typeMeta[1]+'">'+typeMeta[0]+'</span>';
+    if(tm[0]) badges += '<span class="b '+tm[1]+'">'+tm[0]+'</span>';
     var body = hlTerms ? snippet(e.body, hlTerms) : esc(String(e.body||'').slice(0,260));
     var foot = [];
     if(e.source_title) foot.push('출처: '+esc(String(e.source_title).slice(0,40)));
@@ -212,49 +201,85 @@
            (foot.length?'<div class="card-foot">'+foot.join(' · ')+'</div>':'')+ bjLink + disc +'</div>';
   }
 
-  function secHtml(title, cls, rows, hlTerms){
+  // ── 섹션 (상위 5건 + 더보기) ──
+  function listMore(cardsArr){
+    if(!cardsArr.length) return '';
+    var first = cardsArr.slice(0, SECTION_LIMIT), more = cardsArr.slice(SECTION_LIMIT);
+    var html = first.join('');
+    if(more.length){
+      var id = 'more_'+(++_seq);
+      html += '<div id="'+id+'" style="display:none">'+more.join('')+'</div>';
+      html += '<button class="iconbtn morebtn" data-more="'+id+'" data-n="'+more.length+'">더보기 ('+more.length+')</button>';
+    }
+    return html;
+  }
+  function secHtml(title, id, rows, hlTerms){
     if(!rows.length) return '';
-    return '<div class="sec '+(cls||'')+'"><div class="sec-h">'+esc(title)+' <span class="cnt">'+rows.length+'</span></div>'+
-           rows.map(function(e){ return cardHtml(e, hlTerms); }).join('')+'</div>';
+    return '<div class="sec" id="'+id+'"><div class="sec-h">'+esc(title)+' <span class="cnt">'+rows.length+'</span></div>'+
+           listMore(rows.map(function(e){ return cardHtml(e, hlTerms); }))+'</div>';
   }
 
-  // ── 사용자 모드 렌더 (세로단: 바로가기 → 핵심요약 → 상품 → 보험사별기준 → 실무 → 용어 → 원문) ──
-  // 보험사별 기준(내부 정리자료)은 일반 랭킹 풀과 분리되어 별도 섹션으로만 노출.
-  function renderUser(shortcuts, general, bj, hlTerms){
+  // ── 작업7: 집계 박스 ──
+  function aggBox(raw, general, bj){
+    var byType = {product:0, term:0, scenario:0, insurer:0};
+    general.forEach(function(e){ if(byType[e.type]!=null) byType[e.type]++; });
+    var n = general.length + bj.length;
+    var cats = [['상품','product','sec-product'],['용어','term','sec-term'],['실무','scenario','sec-scenario'],['보험사','insurer','sec-insurer']];
+    var catHtml = cats.filter(function(c){return byType[c[1]]>0;}).map(function(c){
+      return '<span class="agg-cat" data-scroll="'+c[2]+'">'+c[0]+' <b>'+byType[c[1]]+'</b></span>';
+    }).join('');
+    if(bj.length) catHtml += '<span class="agg-cat" data-scroll="sec-bj">보험사별 기준 <b>'+bj.length+'</b></span>';
+    // 키워드 칩 = matched tags 빈도 상위 (tags 부재 시 생략)
+    var freq = {};
+    general.concat(bj).forEach(function(e){ (Array.isArray(e.tags)?e.tags:[]).forEach(function(t){ t=String(t||'').trim(); if(t) freq[t]=(freq[t]||0)+1; }); });
+    var top = Object.keys(freq).sort(function(a,b){return freq[b]-freq[a];}).slice(0,6);
+    var chips = top.length ? '<div class="agg-chips">'+top.map(function(t){return '<span class="chip agg-kw" data-kw="'+esc(t)+'">'+esc(t)+' ('+freq[t]+')</span>';}).join('')+'</div>' : '';
+    return '<div class="sec summary"><div class="sec-h">핵심요약</div><div class="card">'+
+           '<div class="agg-ttl">"'+esc(raw)+'" 관련 자료 <b>'+n+'</b>건</div>'+
+           (catHtml?'<div class="agg-cats">'+catHtml+'</div>':'')+ chips +'</div></div>';
+  }
+
+  // ── 사용자 모드 렌더 ──
+  function renderUser(shortcuts, general, bj, hlTerms, raw, exact){
     var html = '';
-    // 0) 바로가기 (entry_type='shortcut') — 핵심요약보다 위
+    // 0) 바로가기
     if(shortcuts.length){
       html += '<div class="sec">'+shortcuts.map(function(e){
         var link = e.link_url ? '<a href="'+esc(e.link_url)+'" target="_blank" rel="noopener">바로가기 →</a>' : '';
         return '<div class="shortcut-card"><span class="sc-ic">⚡</span><span class="sc-t">'+esc(e.title||'')+'</span>'+link+'</div>';
       }).join('')+'</div>';
     }
-    // 1) 핵심요약 = 일반 풀 최상위 1건 (규칙 기반 승격, AI 생성 아님)
-    var summary = general[0] || null;
-    if(summary){ html += '<div class="sec summary"><div class="sec-h">핵심요약</div>'+cardHtml(summary, hlTerms)+'</div>'; }
+    // 1) 핵심요약 — 정답 박스(제목 정확 1위) / 집계 박스(그 외) / 숨김(전체보기)
+    var summary = null;
+    if(raw){
+      if(exact && general[0]){ summary = general[0]; html += '<div class="sec summary"><div class="sec-h">핵심요약</div>'+cardHtml(summary, hlTerms)+'</div>'; }
+      else { html += aggBox(raw, general, bj); }
+    }
     var skipId = summary ? summary.entry_id : null;
     var gw = general.filter(function(e){ return e.entry_id!==skipId; });
     // 2) 관련 상품
-    html += secHtml('관련 상품', '', gw.filter(function(e){return e.type==='product';}), hlTerms);
-    // 3) 보험사별 기준 (관련 상품 다음, 실무 포인트 앞) — 배지+면책+바로가기는 카드 내부
-    html += secHtml('보험사별 기준', '', bj, hlTerms);
+    html += secHtml('관련 상품', 'sec-product', gw.filter(function(e){return e.type==='product';}), hlTerms);
+    // 3) 보험사별 기준 (관련 상품 다음, 실무 앞)
+    html += secHtml('보험사별 기준', 'sec-bj', bj, hlTerms);
     // 4) 실무 포인트
-    html += secHtml('실무 포인트', '', gw.filter(function(e){return e.type==='scenario';}), hlTerms);
+    html += secHtml('실무 포인트', 'sec-scenario', gw.filter(function(e){return e.type==='scenario';}), hlTerms);
     // 5) 용어
-    html += secHtml('용어', '', gw.filter(function(e){return e.type==='term';}), hlTerms);
-    // 6) 원문 보기 (출처)
+    html += secHtml('용어', 'sec-term', gw.filter(function(e){return e.type==='term';}), hlTerms);
+    // 6) 보험사 정보 (insurer 타입 일반 지식 — 집계 박스 '보험사' 스크롤 타깃)
+    html += secHtml('보험사 정보', 'sec-insurer', gw.filter(function(e){return e.type==='insurer';}), hlTerms);
+    // 7) 원문 보기
     var srcMap = {};
     general.concat(bj).forEach(function(e){ var k=(e.source_title||e.source_id||''); if(k && !srcMap[k]) srcMap[k]={title:e.source_title||k, date:e.source_date, id:e.source_id, link:e.link_url}; });
     var srcs = Object.keys(srcMap).map(function(k){return srcMap[k];});
     if(srcs.length){
-      html += '<div class="sec"><div class="sec-h">원문 보기 <span class="cnt">'+srcs.length+'</span></div>'+
-        srcs.map(function(s){ var link=s.link?' · <a href="'+esc(s.link)+'" target="_blank" rel="noopener" style="color:var(--ac)">열기</a>':''; return '<div class="card"><div class="card-ttl" style="font-size:.86rem">'+esc(s.title)+'</div><div class="card-foot">'+[s.date,s.id].filter(Boolean).map(esc).join(' · ')+link+'</div></div>'; }).join('')+'</div>';
+      var srcCards = srcs.map(function(s){ var link=s.link?' · <a href="'+esc(s.link)+'" target="_blank" rel="noopener" style="color:var(--ac)">열기</a>':''; return '<div class="card"><div class="card-ttl" style="font-size:.86rem">'+esc(s.title)+'</div><div class="card-foot">'+[s.date,s.id].filter(Boolean).map(esc).join(' · ')+link+'</div></div>'; });
+      html += '<div class="sec" id="sec-src"><div class="sec-h">원문 보기 <span class="cnt">'+srcs.length+'</span></div>'+listMore(srcCards)+'</div>';
     }
     if(!html) html = '<div class="empty">검색 결과가 없습니다.</div>';
     $('results').innerHTML = html;
   }
 
-  // ── 기술검증 모드 (4컬럼 — 기존 보존, 랭킹 무관 단순 분류) ──
+  // ── 기술검증 모드 (4컬럼) ──
   function renderTech(matched, hlTerms){
     var html = '<div class="tech-groups">';
     TYPES.forEach(function(tp){
@@ -279,18 +304,19 @@
   function doSearch(){
     if(!LOADED) return;
     var raw = ($('q').value||'').trim();
-    var words = raw.toLowerCase().split(/\s+/).filter(Boolean);
+    var words = norm(raw).split(/\s+/).filter(Boolean);
     var hlTerms = words.length ? allTerms(words) : null;
     var t0 = performance.now();
-    // 랭킹 풀 분리: 일반 / 보험사별기준(내부) / 바로가기
     var shortcuts = pick(CACHE.filter(isSc), words, raw);
     var bj        = pick(CACHE.filter(isBj), words, raw);
     var general   = pick(CACHE.filter(function(e){ return !isBj(e) && !isSc(e); }), words, raw);
     var total = shortcuts.length + bj.length + general.length;
-    if(MODE==='user') renderUser(shortcuts, general, bj, hlTerms);
-    else renderTech(pick(CACHE, words, raw), hlTerms);  // 기술검증=전체 type별(분리 없음)
+    // 작업7: 정답/집계 분기 — 랭킹 1위(general[0])가 제목 정확 일치인가
+    var exact = !!general[0] && raw && ( norm(general[0].title)===norm(raw) || words.indexOf(norm(general[0].title))>=0 );
+    if(MODE==='user') renderUser(shortcuts, general, bj, hlTerms, raw, exact);
+    else renderTech(pick(CACHE, words, raw), hlTerms);
     var ms = (performance.now()-t0).toFixed(1);
-    $('meta').innerHTML = '검색어 <b>'+(raw?esc(raw):'(전체)')+'</b> · 결과 <b>'+total+'</b>건 · '+ms+'ms · 모드 '+(MODE==='user'?'사용자':'기술검증')+' · 동의어 '+Object.keys(SYN).length+'어';
+    $('meta').innerHTML = '검색어 <b>'+(raw?esc(raw):'(전체)')+'</b> · 결과 <b>'+total+'</b>건 · '+ms+'ms · 모드 '+(MODE==='user'?'사용자':'기술검증')+' · 동의어 '+Object.keys(SYN).length+'어 · 핵심요약 '+(!raw?'없음':(exact?'정답':'집계'));
   }
 
   function distSummary(){
@@ -298,6 +324,9 @@
     CACHE.forEach(function(r){ byType[r.type]=(byType[r.type]||0)+1; if(r.canonical_company_name) byCo[r.canonical_company_name]=(byCo[r.canonical_company_name]||0)+1; });
     return '전체 <b>'+CACHE.length+'</b>건 · 용어 '+(byType.term||0)+' 상품 '+(byType.product||0)+' 시나리오 '+(byType.scenario||0)+' 보험사 '+(byType.insurer||0)+' · 회사 <b>'+Object.keys(byCo).length+'</b>종 · 동의어 '+Object.keys(SYN).length+'어';
   }
+  // 작업11: 결과 1건 이상 나오는 칩만 노출
+  function hasResults(raw){ var w=norm(raw).split(/\s+/).filter(Boolean); return CACHE.some(function(e){ return scoreEntry(e, w, raw)>0; }); }
+  function renderQuickChips(){ var vis = QUICK.filter(hasResults); $('quickChips').innerHTML = vis.map(function(w){ return '<span class="chip" data-w="'+esc(w)+'">'+esc(w)+'</span>'; }).join(''); }
 
   async function load(){
     try{
@@ -306,34 +335,33 @@
         $('errBox').innerHTML='<div class="err">로그인 토큰이 없습니다. 같은 브라우저에서 <b>app.html에 admin으로 로그인</b> 후 이 페이지를 여세요. (knowledge_entries = admin RLS 전용)</div>';
         return;
       }
-      // 동의어 (테이블 없으면 graceful)
-      try{
-        var sres = await window.db.fetch('/rest/v1/knowledge_synonyms?select=term,synonyms&limit=500');
-        if(sres.ok){ var srows = await sres.json(); if(Array.isArray(srows)) buildSyn(srows); }
-      }catch(_e){ /* 테이블 미생성 = 동의어 0, 정상 동작 */ }
-      // 지식 항목
+      try{ var sres = await window.db.fetch('/rest/v1/knowledge_synonyms?select=term,synonyms&limit=500'); if(sres.ok){ var srows = await sres.json(); if(Array.isArray(srows)) buildSyn(srows); } }catch(_e){ /* 테이블 미생성 = 동의어 0 */ }
       var res = await window.db.fetch('/rest/v1/knowledge_entries?select=*&order=type.asc,canonical_company_name.asc&limit=2000');
-      if(!res.ok){
-        var d=''; try{ d=JSON.stringify(await res.json()); }catch(e){}
-        $('meta').innerHTML='';
-        $('errBox').innerHTML='<div class="err">불러오기 실패 (HTTP '+res.status+'). admin 권한/RLS 확인.<br><small>'+esc(d)+'</small></div>';
-        return;
-      }
+      if(!res.ok){ var d=''; try{ d=JSON.stringify(await res.json()); }catch(e){} $('meta').innerHTML=''; $('errBox').innerHTML='<div class="err">불러오기 실패 (HTTP '+res.status+'). admin 권한/RLS 확인.<br><small>'+esc(d)+'</small></div>'; return; }
       CACHE = await res.json(); if(!Array.isArray(CACHE)) CACHE=[];
       LOADED = true;
       $('meta').innerHTML = distSummary();
+      renderQuickChips();
       doSearch();
     }catch(e){ $('errBox').innerHTML='<div class="err">오류: '+esc(String(e&&e.message||e))+'</div>'; }
   }
 
   // 이벤트
-  $('quickChips').innerHTML = QUICK.map(function(w){ return '<span class="chip" data-w="'+esc(w)+'">'+esc(w)+'</span>'; }).join('');
   $('quickChips').addEventListener('click', function(e){ var c=e.target.closest('.chip'); if(!c) return; $('q').value=c.getAttribute('data-w'); doSearch(); });
   $('goBtn').addEventListener('click', doSearch);
   $('q').addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(); });
   $('q').addEventListener('input', function(){ if(LOADED) doSearch(); });
   $('modeBtn').addEventListener('click', function(){ MODE = (MODE==='user'?'tech':'user'); this.textContent = (MODE==='user'?'기술검증(4컬럼)':'사용자 모드'); this.classList.toggle('on', MODE==='tech'); doSearch(); });
   $('themeBtn').addEventListener('click', function(){ var h=document.documentElement; h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark'); });
+  // 결과 영역 위임: 더보기 / 집계 카테고리 스크롤 / 집계 키워드 재검색
+  $('results').addEventListener('click', function(e){
+    var mb = e.target.closest('.morebtn');
+    if(mb){ var box=$(mb.getAttribute('data-more')); if(box){ var open=box.style.display!=='none'; box.style.display=open?'none':''; mb.textContent= open?('더보기 ('+mb.getAttribute('data-n')+')'):'접기'; } return; }
+    var cat = e.target.closest('.agg-cat');
+    if(cat){ var sec=$(cat.getAttribute('data-scroll')); if(sec) sec.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+    var kw = e.target.closest('.agg-kw');
+    if(kw){ $('q').value=kw.getAttribute('data-kw'); doSearch(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  });
 
   load();
 })();
