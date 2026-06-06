@@ -956,7 +956,11 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .qck-mc-sig-row input:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd));border-left-color:var(--ac)}
 .qck-mc-sig-row input:focus{border-color:var(--ac);background:var(--bg);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 18%,transparent)}
 .qck-mc-error{margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--err) 10%,var(--s2));border:0.5px solid var(--err);border-radius:10px;color:var(--err);font-size:0.8em;line-height:1.5}
-.qck-mc-loading{margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--ac) 10%,var(--s2));border:0.5px solid var(--ac);border-radius:10px;color:var(--ac);font-size:0.82em;text-align:center}
+.qck-mc-loading{margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--ac) 10%,var(--s2));border:0.5px solid var(--ac);border-radius:10px;color:var(--ac);font-size:0.82em;display:flex;align-items:center;justify-content:center;gap:8px}
+.mc-wave{display:inline-flex;gap:5px}
+.mc-wave i{width:7px;height:7px;border-radius:50%;background:var(--ac);animation:cardDotWave 1.1s ease-in-out infinite}
+.mc-wave i:nth-child(2){animation-delay:.15s}
+.mc-wave i:nth-child(3){animation-delay:.3s}
 
 /* === MY SPACE 글쓰기 자리 === */
 .mys-write-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9999px;background:var(--ac);color:#fff;border:none;cursor:pointer;font-size:0.82em;font-weight:800;margin-left:auto;transition:transform .15s,background .15s}
@@ -4113,7 +4117,7 @@ function renderMakeCardTool(){
         '<div class="mc-priv-notice">⚠️ AI 처리를 위해 입력 내용이 외부로 전송됩니다. 고객 실명·주민번호 등 식별정보는 입력하지 마세요.</div>' +
         '<div id="mcError" class="qck-mc-error" style="display:none;"></div>' +
         '<button id="mcRetryBtn" class="qck-tool-fire" style="display:none;margin-top:8px;" onclick="mcGenerateV2()">다시 시도</button>' +
-        '<div id="mcLoading" class="qck-mc-loading" style="display:none;">AI 카드 만드는 중...</div>' +
+        '<div id="mcLoading" class="qck-mc-loading" style="display:none;"><span class="mc-wave"><i></i><i></i><i></i></span><span>AI 카드 만드는 중...</span></div>' +
         '<button id="mcFireBtn" class="qck-tool-fire" onclick="mcFire()">⚡ AI 카드 만들기</button>' +
       '</div>' +
       '<div class="qck-tool-pane">' +
