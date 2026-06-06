@@ -45,7 +45,7 @@ values
 ('term','연장정기보험','보험료 납입을 중단하고 해약환급금을 재원으로 보장금액은 그대로 두되 보험기간을 줄여 정기보험 형태로 유지하는 제도.','유지',array['연장정기보험','납입중단유지'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
 ('term','자동대출납입','보험료를 내지 못할 때 해약환급금 범위 안에서 자동으로 약관대출을 받아 보험료를 대신 내 계약을 유지하는 제도.','유지',array['자동대출납입','APL'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
 ('term','납입유예','보험료를 정해진 기일에 내지 못해도 일정 기간 계약의 효력을 유지해 주는 유예 기간.','유지',array['납입유예','유예기간'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
-('term','언더라이팅','보험사가 청약을 심사해 인수 여부와 조건을 결정하는 과정. 인수심사·계약심사라고도 한다.','인수',array['언더라이팅','인수심사','계약심사'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
+('term','언더라이팅','보험사가 청약을 심사해 인수 여부와 조건을 결정하는 과정. 인수심사라고도 한다.','인수',array['언더라이팅','인수심사'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
 ('term','표준체','건강상태 등이 보험사 기준에 부합해 추가 조건 없이 표준 보험료로 가입하는 피보험자.','인수',array['표준체'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
 ('term','표준미달체','건강상태 등이 표준에 못 미쳐 보험료 할증·부담보 등 조건이 붙어 가입하는 피보험자.','인수',array['표준미달체','할증','부담보'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
 ('term','할증','위험이 표준보다 높을 때 보험료를 표준보다 더 올려 받는 것.','인수',array['할증','보험료할증'],'official_glossary','fss_finedic','금융감독원 금융용어사전','ai_draft','high','admin'),
