@@ -469,12 +469,12 @@
   var AC_GROUPS = {
     dashboard:{}, logs:{},
     ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점']] },
-    content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
+    content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실'],['knowledge','지식엔진']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
   };
   var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs',
     approvals:'ops', users:'ops', branches:'ops',
-    posts:'content', comments:'content', library:'content',
+    posts:'content', comments:'content', library:'content', knowledge:'content',
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
     branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary' };
