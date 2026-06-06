@@ -87,7 +87,7 @@ function footerEls(d: any, p: ReturnType<typeof palette>) {
   if (name || phone) {
     out.push(el({ display: "flex", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${p.line}`, fontSize: 14, fontWeight: 700, color: p.title }, [name, phone].filter(Boolean).join(" | ")));
   }
-  out.push(el({ display: "flex", marginTop: 6, fontSize: 11, color: p.sub }, "※ 상담 참고용 · 보장은 약관 기준"));
+  out.push(el({ display: "flex", marginTop: 6, fontSize: 11, color: p.sub }, "상담 참고용 · 보장은 약관 기준"));
   return out;
 }
 function lineEls(d: any, p: ReturnType<typeof palette>) {
