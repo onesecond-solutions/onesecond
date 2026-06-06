@@ -4439,7 +4439,7 @@ async function mcGenerateV2(){
     var r1 = await window.db.fetch('/functions/v1/quick-card', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
     var d1 = await r1.json().catch(function(){ return {}; });
     // 버그2: 추출 못함(422 또는 빈 lines) = 카드 미생성 + 명확 안내 (폴백 빈 카드 금지)
-    if(r1.status===422 || (r1.ok && (!d1.rows || !d1.rows.length))){
+    if(r1.status===422 || (r1.ok && (!d1.rows || !d1.rows.length) && (!d1.lines || !d1.lines.length))){
       mcShowErrV2('내용을 추출하지 못했습니다. 이미지 화질을 확인하거나, 핵심을 텍스트로 입력해 주세요.');
       return;
     }
