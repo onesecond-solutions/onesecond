@@ -354,7 +354,7 @@
         return;
       }
       try{ var sres = await window.db.fetch('/rest/v1/knowledge_synonyms?select=term,synonyms&limit=500'); if(sres.ok){ var srows = await sres.json(); if(Array.isArray(srows)) buildSyn(srows); } }catch(_e){ /* 테이블 미생성 = 동의어 0 */ }
-      var res = await window.db.fetch('/rest/v1/knowledge_entries?select=*&order=type.asc,canonical_company_name.asc&limit=2000');
+      var res = await window.db.fetch('/rest/v1/knowledge_entries?select=*&status=neq.discarded&order=type.asc,canonical_company_name.asc&limit=2000');
       if(!res.ok){ var d=''; try{ d=JSON.stringify(await res.json()); }catch(e){} $('meta').innerHTML=''; $('errBox').innerHTML='<div class="err">불러오기 실패 (HTTP '+res.status+'). admin 권한/RLS 확인.<br><small>'+esc(d)+'</small></div>'; return; }
       CACHE = await res.json(); if(!Array.isArray(CACHE)) CACHE=[];
       LOADED = true;

@@ -180,6 +180,18 @@
   </div>
 </div>
 
+<!-- 일괄 승인 확인 모달 (window.confirm 미표시 환경 회피 · 확인 클릭 전 DB 변경 0) -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <h3>일괄 승인 확인</h3>
+    <p id="confirmMsg"></p>
+    <div class="modal-acts">
+      <button class="cancel" onclick="KV.closeConfirm()">취소</button>
+      <button class="confirm" onclick="KV.okConfirm()">확인</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/db.js"></script>
 <script>
 window.KV = (function(){
@@ -326,7 +338,7 @@ window.KV = (function(){
       return '<div class="mdi'+(i===state.cur?' on':'')+'" onclick="KV.selectEntry('+i+')">'+
         (canSel?'<input type="checkbox" class="chk" '+(state.selected[id]?'checked':'')+' onclick="event.stopPropagation();KV.toggleSel('+id+',this.checked)">':'')+
         '<span class="mdi-dot '+esc(e.status)+'"></span>'+
-        '<span class="mdi-num">'+pad3(i+1)+'</span>'+
+        '<span class="mdi-num">'+pad3(state.entries.length - i)+'</span>'+
         '<span class="mdi-ttl">'+esc(e.title||'(제목 없음)')+'</span>'+
       '</div>';
     }).join('');
@@ -352,7 +364,7 @@ window.KV = (function(){
     var syns = synonymsOf(e.title);
     var html='';
     html+='<button class="backbtn" onclick="KV.backToList()">← 목록</button>';
-    html+='<div class="d-num">'+pad3(state.cur+1)+'</div>';
+    html+='<div class="d-num">'+pad3(state.entries.length - state.cur)+'</div>';
     html+='<div class="d-ttl">'+esc(e.title||'(제목 없음)')+'</div>';
     html+='<div class="badges">'+
       '<span class="b b-type">'+esc(e.type||'-')+'</span>'+
@@ -397,9 +409,13 @@ window.KV = (function(){
   }
   function bulkApprove(){
     var ids=selectedIds(); if(!ids.length) return;
-    if(!window.confirm(ids.length+'건을 승인합니다. 진행할까요?')) return;
-    patchStatus(ids,'approved',null,true);
+    openConfirm(ids.length+'건을 승인합니다. 진행할까요?', function(){ patchStatus(ids,'approved',null,true); });
   }
+  // 커스텀 확인 모달 — window.confirm 미표시 환경 회피. DB UPDATE는 [확인] 콜백 안에서만 실행.
+  var _confirmCb=null;
+  function openConfirm(msg, cb){ _confirmCb=cb; $('confirmMsg').textContent=msg; $('confirmModal').classList.add('show'); }
+  function closeConfirm(){ $('confirmModal').classList.remove('show'); _confirmCb=null; }
+  function okConfirm(){ var cb=_confirmCb; closeConfirm(); if(typeof cb==='function') cb(); }
 
   // ── 단건 액션 (판정 후 자동 다음) ──
   function approveOne(id){ patchStatus([id],'approved',null,false); }
@@ -444,7 +460,8 @@ window.KV = (function(){
   function init(){
     $('themeBtn').addEventListener('click', toggleTheme);
     $('reasonModal').addEventListener('click', function(e){ if(e.target===$('reasonModal')) closeReason(); });
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeReason(); });
+    $('confirmModal').addEventListener('click', function(e){ if(e.target===$('confirmModal')) closeConfirm(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeReason(); closeConfirm(); } });
     if(guard()) switchTab('log');
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
@@ -453,7 +470,8 @@ window.KV = (function(){
     switchTab:switchTab, setFilter:setFilter, toggleLog:toggleLog,
     selectEntry:selectEntry, backToList:backToList,
     toggleSel:toggleSel, toggleAll:toggleAll, bulkApprove:bulkApprove, approveOne:approveOne,
-    askReason:askReason, onReasonInput:onReasonInput, closeReason:closeReason, confirmReason:confirmReason
+    askReason:askReason, onReasonInput:onReasonInput, closeReason:closeReason, confirmReason:confirmReason,
+    closeConfirm:closeConfirm, okConfirm:okConfirm
   };
 })();
 </script>
