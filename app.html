@@ -4116,7 +4116,6 @@ function renderMakeCardTool(){
         '</div>' +
         '<div class="mc-priv-notice">⚠️ AI 처리를 위해 입력 내용이 외부로 전송됩니다. 고객 실명·주민번호 등 식별정보는 입력하지 마세요.</div>' +
         '<div id="mcError" class="qck-mc-error" style="display:none;"></div>' +
-        '<div id="mcDbg" style="display:none;margin-top:8px;padding:8px 10px;background:#1a1a2e;border:1px solid #4f46e5;border-radius:8px;color:#a5b4fc;font-size:0.72em;line-height:1.5;font-family:monospace">[진단 모드]</div>' +
         '<button id="mcRetryBtn" class="qck-tool-fire" style="display:none;margin-top:8px;" onclick="mcGenerateV2()">다시 시도</button>' +
         '<div id="mcLoading" class="qck-mc-loading" style="display:none;"><span class="mc-wave"><i></i><i></i><i></i></span><span>AI 카드 만드는 중...</span></div>' +
         '<button id="mcFireBtn" class="qck-tool-fire" onclick="mcFire()">⚡ AI 카드 만들기</button>' +
@@ -4159,8 +4158,7 @@ function renderMakeCardTool(){
       e.preventDefault();
       drop.classList.remove('drag');
       var files = e.dataTransfer && e.dataTransfer.files;
-      if(files && files.length){ mcDbg('드롭 발생 · '+files[0].name+' / type='+(files[0].type||'(빈값)')); mcHandleFile(files[0]); }
-      else { mcDbg('드롭 발생 · 파일 없음'); }
+      if(files && files.length){ mcHandleFile(files[0]); }
     });
   }
   document.addEventListener('click', mcOnDocClick);
@@ -4176,11 +4174,9 @@ function mcOnDocClick(e){
   mcCloseActionMenu();
 }
 
-function mcDbg(s){ try{ var e=document.getElementById('mcDbg'); if(e){ e.style.display=''; e.innerHTML += '<div>· '+s+'</div>'; } }catch(_){ } }
 function mcOnFileChange(event){
   var file = event && event.target && event.target.files && event.target.files[0];
-  if(!file){ mcDbg('onchange 발생 · file 없음'); return; }
-  mcDbg('onchange 발생 · '+file.name+' / type='+(file.type||'(빈값)')+' / '+Math.round(file.size/1024)+'KB');
+  if(!file) return;
   mcHandleFile(file);
 }
 window.mcOnFileChange = mcOnFileChange;
@@ -4203,7 +4199,6 @@ function mcHandleFile(file){
   }
   var name = (file.name || '').toLowerCase();
   var type = file.type || '';
-  mcDbg('mcHandleFile 진입 · name='+name+' type='+(type||'(빈값)'));
 
   function asImage(){
     var reader = new FileReader();
@@ -4214,10 +4209,9 @@ function mcHandleFile(file){
       mcState.fileDataUrl = e.target.result;
       mcState.fileText = '';
       mcUpdateFileUI();
-      mcDbg('이미지 처리 완료 · 칩 표시됨');
       mcUpdatePreview();
     };
-    reader.onerror = function(){ mcDbg('이미지 onerror'); showError('이미지 읽기 실패. 다시 시도해주세요.'); };
+    reader.onerror = function(){ showError('이미지 읽기 실패. 다시 시도해주세요.'); };
     reader.readAsDataURL(file);
   }
   function asText(){
@@ -4255,24 +4249,22 @@ function mcHandleFile(file){
 
   showLoading(true);
   // 1) MIME 또는 확장자로 판별
-  if(type === 'image/png' || type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(name)){ mcDbg('이미지 분기(MIME/확장자)'); asImage(); return; }
+  if(type === 'image/png' || type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(name)){ asImage(); return; }
   if(type === 'text/plain' || /\.txt$/i.test(name)){ asText(); return; }
   if(type === 'application/pdf' || /\.pdf$/i.test(name)){ asPdf(); return; }
 
   // 2) MIME·확장자 모두 불명(일부 브라우저가 file.type을 빈값으로 줌) → 첫 바이트(매직넘버)로 판별
-  mcDbg('형식 불명 · 바이트 판별 시작');
   var sniff = new FileReader();
   sniff.onload = function(ev){
     var b = new Uint8Array(ev.target.result || new ArrayBuffer(0));
     var isPng  = b.length >= 4 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47; // \x89PNG
     var isJpeg = b.length >= 3 && b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF;                  // JPEG SOI
     var isPdf  = b.length >= 4 && b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46; // %PDF
-    mcDbg('바이트 판별 · png='+isPng+' jpeg='+isJpeg+' pdf='+isPdf);
     if(isPng || isJpeg){ asImage(); return; }
     if(isPdf){ asPdf(); return; }
     asText(); // 그 외 = 텍스트로 시도(비었으면 asText 내부에서 안내)
   };
-  sniff.onerror = function(){ mcDbg('바이트 판별 onerror'); showError('파일을 읽지 못했습니다. 다시 시도해 주세요.'); };
+  sniff.onerror = function(){ showError('파일을 읽지 못했습니다. 다시 시도해 주세요.'); };
   sniff.readAsArrayBuffer(file.slice(0, 16));
 }
 window.mcHandleFile = mcHandleFile;
