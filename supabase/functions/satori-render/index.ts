@@ -93,7 +93,7 @@ function footerEls(d: any, p: ReturnType<typeof palette>) {
 function lineEls(d: any, p: ReturnType<typeof palette>) {
   return (d.lines || []).slice(0, 6).map((ln: string) =>
     el({ display: "flex", marginBottom: 9, fontSize: 15, color: p.body }, [
-      el({ color: p.accent, fontWeight: 700, marginRight: 8 }, "✓"),
+      el({ color: p.accent, fontWeight: 700, marginRight: 8 }, "·"),
       el({ display: "flex", flex: 1 }, String(ln)),
     ])
   );

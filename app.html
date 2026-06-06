@@ -4090,7 +4090,7 @@ function renderMakeCardTool(){
         '</div>' +
         '<div class="qck-tool-input-row">' +
           '<label>내용 / 메모 (선택)</label>' +
-          '<textarea id="mcText" class="qck-mc-textarea" placeholder="카드 본문 또는 자료 아래 안내문" oninput="mcOnTextInput()"></textarea>' +
+          '<textarea id="mcText" class="qck-mc-textarea" placeholder="카드에 들어갈 내용·안내문 (이름·연락처는 아래 칸에 입력하세요)" oninput="mcOnTextInput()"></textarea>' +
         '</div>' +
         '<div class="qck-tool-input-row">' +
           '<label class="qck-mc-toggle-row" style="margin:0;">' +
@@ -4411,11 +4411,17 @@ async function mcGenerateV2(){
     if(hasImage){
       var parts = mcState.fileDataUrl.split(',');
       payload.imageBase64 = parts[1] || '';
+      if(!payload.imageBase64){ mcShowErrV2('이미지를 읽지 못했습니다. 다시 첨부해 주세요.'); return; }  // 버그1: 이미지 실패 무음 금지
       var m = /data:(image\/[a-z]+)/i.exec(parts[0]||''); payload.imageMime = m ? m[1] : 'image/png';
       if(text) payload.text = text;
     } else { payload.text = text; }
     var r1 = await window.db.fetch('/functions/v1/quick-card', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-    var d1 = await r1.json();
+    var d1 = await r1.json().catch(function(){ return {}; });
+    // 버그2: 추출 못함(422 또는 빈 lines) = 카드 미생성 + 명확 안내 (폴백 빈 카드 금지)
+    if(r1.status===422 || (r1.ok && (!d1.lines || !d1.lines.length))){
+      mcShowErrV2('내용을 추출하지 못했습니다. 이미지 화질을 확인하거나, 핵심을 텍스트로 입력해 주세요.');
+      return;
+    }
     if(!r1.ok) throw new Error((d1 && d1.error) || ('추출 실패 ('+r1.status+')'));
     if(mcState.sigOn && (mcState.sigName||mcState.sigPhone)) d1.footer = { name:mcState.sigName, phone:mcState.sigPhone };
     d1.theme = mcState.theme || 'A';
