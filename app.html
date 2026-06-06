@@ -4102,14 +4102,6 @@ function renderMakeCardTool(){
             '<input type="text" id="mcSigPhone" placeholder="010-1234-5678" oninput="mcOnSigInput()">' +
           '</div>' +
         '</div>' +
-        '<div class="qck-tool-input-row">' +
-          '<label>카드 디자인</label>' +
-          '<div class="mc-theme-pick" id="mcThemePick">' +
-            '<button type="button" class="mc-theme on" data-th="A" onclick="mcSelectTheme(\'A\')">미니멀</button>' +
-            '<button type="button" class="mc-theme" data-th="B" onclick="mcSelectTheme(\'B\')">그라데이션</button>' +
-            '<button type="button" class="mc-theme" data-th="C" onclick="mcSelectTheme(\'C\')">다크</button>' +
-          '</div>' +
-        '</div>' +
         '<div class="mc-priv-notice">⚠️ AI 처리를 위해 입력 내용이 외부로 전송됩니다. 고객 실명·주민번호 등 식별정보는 입력하지 마세요.</div>' +
         '<div id="mcError" class="qck-mc-error" style="display:none;"></div>' +
         '<div id="mcLoading" class="qck-mc-loading" style="display:none;">AI 카드 만드는 중...</div>' +
@@ -4305,7 +4297,7 @@ function mcOnSigInput(){
 }
 window.mcOnSigInput = mcOnSigInput;
 
-function mcUpdatePreview(){
+function mcUpdatePreview(){ return;  /* v2 전용 — 입력 실시간 직접 카드 비활성(생성 버튼으로만 카드 표시) */
   var empty = document.getElementById('mcPreviewEmpty');
   var card = document.getElementById('mcPreviewCard');
   var body = document.getElementById('mcPreviewBody');
@@ -4435,9 +4427,8 @@ async function mcGenerateV2(){
     mcBumpGate();
   }catch(err){
     console.error('[card v2]', err);
-    mcShowErrV2('AI 카드 생성 실패: '+(err.message||err)+' — 직접 카드로 전환합니다.');
+    mcShowErrV2('AI 카드 생성 실패: '+(err.message||err)+' 잠시 후 다시 시도해 주세요.');
     mcState.v2Blob = null;
-    mcFallbackV1();  // 보완f: html2canvas 직접 카드 폴백
   }finally{ mcSetLoadingV2(false); }
 }
 window.mcGenerateV2 = mcGenerateV2;
