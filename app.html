@@ -7027,14 +7027,23 @@ async function _runSearch(q){
   var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); });
   var qcHits=[];
   try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
+  /* 용어 사전 합류 — search_knowledge RPC(SECURITY DEFINER): approved+term 하드필터·동의어 확장·정확일치를 서버에서. knowledge_entries 테이블 RLS는 admin 잠금 유지. 실패해도 기존 5그룹 검색엔 영향 0 */
+  var kTerms=[];
+  try{ var kr=await window.db.fetch('/rest/v1/rpc/search_knowledge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p_q:q})}); if(kr.ok){ var kj=await kr.json(); if(Array.isArray(kj)) kTerms=kj; } }catch(e){}
   if(seq!==_searchSeq) return;
   var html='', total=0;
+  /* 용어 카드 버킷 — 정확 일치는 최상단(사전식 정답 우선), 부분 일치는 "용어" 그룹. 클릭 상세는 _kTermMap 보유 데이터로(추가 조회 0 = admin RLS 우회 불필요) */
+  window._kTermMap={}; var kExact=[], kPartial=[];
+  (Array.isArray(kTerms)?kTerms:[]).forEach(function(t){ if(!t||t.entry_id==null) return; window._kTermMap[t.entry_id]=t; (t.is_exact?kExact:kPartial).push(t); });
+  function _termRow(t){ var snip=_sSnippet(t.body,terms,160); var snipHtml=snip?'<span class="ssnip">'+_sMark(snip,terms)+'</span>':''; return '<div class="sores" onclick="_searchOpenTerm(\''+t.entry_id+'\')"><span class="stag" style="--tcolor:var(--warn)">용어</span><div class="sbody"><span class="sttl">'+_sMark(t.title,terms)+'</span>'+snipHtml+'</div><span class="smeta">'+_sEsc(t.category||'용어')+'</span></div>'; }
+  if(kExact.length){ html+='<div class="sogroup">용어 · 정확 일치 ('+kExact.length+')</div>'; kExact.forEach(function(t){ html+=_termRow(t); }); total+=kExact.length; }
   var menuItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
   if(menuItems.length){
     html+='<div class="sogroup">원세컨드 메뉴·도구 ('+menuItems.length+')</div>';
     menuItems.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#6366F1">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
     total+=menuItems.length;
   }
+  if(kPartial.length){ html+='<div class="sogroup">용어 ('+kPartial.length+')</div>'; kPartial.forEach(function(t){ html+=_termRow(t); }); total+=kPartial.length; }
   for(var gi=0; gi<groups.length; gi++){
     var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)||!rows.length) continue;
     var titleOf=g.t||function(r){return r.title;};
@@ -7141,6 +7150,22 @@ async function _searchOpen(table, id){
   }catch(e){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); }
 }
 window._searchOpen=_searchOpen;
+/* 용어 카드 상세 — search_knowledge RPC가 준 데이터(_kTermMap)로 라이트박스. 추가 fetch 0 = knowledge_entries admin RLS 우회 불필요. 검색 모달 헬퍼(_ovDown/_ovClick/_closeSearchDetail) 재사용 */
+function _searchOpenTerm(id){
+  var t=window._kTermMap&&window._kTermMap[id]; if(!t){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); return; }
+  var _qt=_sTokens(((document.getElementById('sinput')||{}).value||'').trim());
+  _closeSearchDetail();
+  var meta=(t.category||'용어')+(Array.isArray(t.tags)&&t.tags.length?' · '+t.tags.join(', '):'');
+  var ov=document.createElement('div'); ov.id='searchDetailModal';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99995;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onmousedown=function(e){ _ovDown(e,ov); }; ov.onclick=function(e){ _ovClick(e,ov,_closeSearchDetail); };
+  ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">'
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--bd)"><div><span style="display:inline-block;font-size:0.66em;font-weight:800;color:#fff;background:var(--warn);padding:2px 8px;border-radius:var(--radius-sm);margin-bottom:6px">용어</span><div style="font-weight:800;color:var(--tp);font-size:1.05em;line-height:1.4">'+_sMark(String(t.title||''),_qt)+'</div>'+(meta?'<div style="font-size:0.78em;color:var(--ts);margin-top:4px">'+_sEsc(meta)+'</div>':'')+'</div><button onclick="_closeSearchDetail()" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;flex-shrink:0">&#10005;</button></div>'
+    +'<div style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9em;line-height:1.7">'+_sMark(String(t.body||'(내용 없음)'),_qt)+'</div>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+window._searchOpenTerm=_searchOpenTerm;
 /* 소식지(PDF) 딸깍 — 미리보기 모달 안 다운로드/MY SPACE/복사 (카드 만들기는 PDF 미지원이라 제외) */
 function _nlCloseMenu(){ var m=document.getElementById('nlMenu'); if(m) m.remove(); document.removeEventListener('click',_nlOut,true); }
 function _nlOut(e){ var m=document.getElementById('nlMenu'); if(m&&!m.contains(e.target)) _nlCloseMenu(); }
