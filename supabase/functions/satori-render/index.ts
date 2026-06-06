@@ -27,13 +27,31 @@ function json(body: unknown, status = 200): Response {
 }
 
 // ── 폰트 (Noto Sans KR · 한글 subset woff). warm 인스턴스 캐시 ──
+// cold start 시 CDN 연결 리셋(os error 104) 대비: 폴백 CDN(jsdelivr→unpkg) + 각 2회 재시도.
 let FONTS: Array<{ name: string; data: ArrayBuffer; weight: number; style: string }> | null = null;
+async function fetchFont(file: string): Promise<ArrayBuffer> {
+  const urls = [
+    `https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-kr@5.0.18/files/${file}`,
+    `https://unpkg.com/@fontsource/noto-sans-kr@5.0.18/files/${file}`,
+  ];
+  let lastErr: unknown = null;
+  for (const url of urls) {
+    for (let i = 0; i < 2; i++) {
+      try {
+        const r = await fetch(url);
+        if (r.ok) return await r.arrayBuffer();
+        lastErr = new Error(`HTTP ${r.status}`);
+      } catch (e) { lastErr = e; }
+      await new Promise((res) => setTimeout(res, 150 * (i + 1)));
+    }
+  }
+  throw new Error(`폰트 로드 실패(${file}): ${(lastErr as Error)?.message || String(lastErr)}`);
+}
 async function loadFonts() {
   if (FONTS) return FONTS;
-  const base = "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-kr@5.0.18/files";
   const [reg, bold] = await Promise.all([
-    fetch(`${base}/noto-sans-kr-korean-400-normal.woff`).then((r) => r.arrayBuffer()),
-    fetch(`${base}/noto-sans-kr-korean-700-normal.woff`).then((r) => r.arrayBuffer()),
+    fetchFont("noto-sans-kr-korean-400-normal.woff"),
+    fetchFont("noto-sans-kr-korean-700-normal.woff"),
   ]);
   FONTS = [
     { name: "Noto", data: reg, weight: 400, style: "normal" },
