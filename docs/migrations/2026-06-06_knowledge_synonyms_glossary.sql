@@ -9,7 +9,7 @@ insert into public.knowledge_synonyms (term, synonyms) values
 ('고지의무',     array['계약전알릴의무']),
 ('통지의무',     array['계약후알릴의무']),
 ('실효',         array['효력상실']),
-('언더라이팅',   array['인수심사','계약심사']),
+('언더라이팅',   array['인수심사']),
 ('CI보험',       array['중대질병보험']),
 ('실손의료보험', array['실손보험','실비보험']),
 ('약관대출',     array['보험계약대출']);
