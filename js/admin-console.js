@@ -467,18 +467,18 @@
   //  · 데이터 로딩(acLoad*)·승인 모달은 위 standalone 로직 그대로 재사용
   // ════════════════════════════════════════════════════════════════════
   var AC_GROUPS = {
-    dashboard:{}, logs:{},
+    dashboard:{}, logs:{}, knowledge:{},
     ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점']] },
-    content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실'],['knowledge','지식엔진']] },
+    content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
   };
-  var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs',
+  var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs', knowledge:'knowledge',
     approvals:'ops', users:'ops', branches:'ops',
-    posts:'content', comments:'content', library:'content', knowledge:'content',
+    posts:'content', comments:'content', library:'content',
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
     branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary' };
-  var AC_TAB_ORDER = ['dashboard','ops','content','system','logs'];
+  var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','system','logs'];
 
   function _acSpaRoot(){ return document.getElementById('v-admin'); }
 
