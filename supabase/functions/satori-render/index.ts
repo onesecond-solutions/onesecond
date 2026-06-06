@@ -7,8 +7,9 @@
 //   카드 필드 추가 시 buildCard 한 곳만 수정.
 //
 // 입력 (POST JSON):
-//   { title: string, tag?: string, lines?: string[], notice?: string,
+//   { title: string, brand?: string, rows?: {k,v,big?}[], lines?: string[], notice?: string,
 //     footer?: { name?: string, phone?: string }, theme?: 'A'|'B'|'C' }
+//   rows = 항목:값 표(딸깍 카드 룩, 우선). lines = 구버전 불릿(하위호환 폴백).
 // 출력 (200): image/png (binary)
 // 실패 (4xx/5xx JSON): { error: string }
 //
@@ -70,9 +71,27 @@ async function ensureWasm() {
 
 // ── 테마 팔레트 (스타일만 분기, 데이터 동일) ──
 function palette(theme?: string) {
-  if (theme === "B") return { mode: "gradient", bg: "#ffffff", headFrom: "#4f46e5", headTo: "#7c3aed", title: "#0f172a", body: "#334155", accent: "#7c3aed", sub: "#9aa5b4", line: "#eef2f7" };
-  if (theme === "C") return { mode: "dark", bg: "#0f1629", headFrom: "", headTo: "", title: "#f8fafc", body: "#cbd5e1", accent: "#60a5fa", sub: "#64748b", line: "#1f2a44" };
-  return { mode: "bar", bg: "#ffffff", headFrom: "", headTo: "", title: "#0f172a", body: "#334155", accent: "#2563eb", sub: "#9aa5b4", line: "#eef2f7" };
+  // C: 다크 본문 + 인디고 솔리드 헤더
+  if (theme === "C") return {
+    headType: "solid", headColor: "#4f46e5", headFrom: "", headTo: "",
+    headText: "#ffffff", headSub: "rgba(255,255,255,0.85)",
+    bg: "#0f1629", k: "#94a3b8", v: "#f8fafc", accent: "#8b9cff",
+    line: "#1f2a44", sig: "#e2e8f0", foot: "#64748b", border: "#1f2a44",
+  };
+  // B: 그라데이션 헤더 + 흰 본문
+  if (theme === "B") return {
+    headType: "gradient", headColor: "", headFrom: "#4f46e5", headTo: "#7c3aed",
+    headText: "#ffffff", headSub: "rgba(255,255,255,0.85)",
+    bg: "#ffffff", k: "#52525b", v: "#18181b", accent: "#6d28d9",
+    line: "#eef2f7", sig: "#27272a", foot: "#9ca3af", border: "#ececed",
+  };
+  // A(기본): 인디고 솔리드 헤더 + 흰 본문 (딸깍 룩)
+  return {
+    headType: "solid", headColor: "#6366f1", headFrom: "", headTo: "",
+    headText: "#ffffff", headSub: "rgba(255,255,255,0.82)",
+    bg: "#ffffff", k: "#52525b", v: "#18181b", accent: "#6366f1",
+    line: "#e4e4e7", sig: "#27272a", foot: "#9ca3af", border: "#ececed",
+  };
 }
 
 // satori element 헬퍼 (JSX 없이 객체 트리)
@@ -85,51 +104,56 @@ function footerEls(d: any, p: ReturnType<typeof palette>) {
   const out: El[] = [];
   const name = d.footer?.name, phone = d.footer?.phone;
   if (name || phone) {
-    out.push(el({ display: "flex", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${p.line}`, fontSize: 14, fontWeight: 700, color: p.title }, [name, phone].filter(Boolean).join(" | ")));
+    out.push(el({ display: "flex", marginTop: 14, paddingTop: 12, borderTop: `1px solid ${p.line}`, fontSize: 14, fontWeight: 700, color: p.sig }, [name, phone].filter(Boolean).join(" · ")));
   }
-  out.push(el({ display: "flex", marginTop: 6, fontSize: 11, color: p.sub }, "상담 참고용 · 보장은 약관 기준"));
+  out.push(el({ display: "flex", marginTop: 6, fontSize: 11, color: p.foot }, "※ 상담 참고용 · 보장은 약관 기준"));
   return out;
 }
+// rows[{k,v,big}] → 항목:값 표 (딸깍 카드 룩). big = 강조색·큰 글씨.
+function rowsEls(d: any, p: ReturnType<typeof palette>) {
+  const rows = (Array.isArray(d.rows) ? d.rows : []).slice(0, 6);
+  return rows.map((r: any, i: number) =>
+    el({
+      display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
+      padding: "10px 0",
+      borderBottom: i < rows.length - 1 ? `1px solid ${p.line}` : "0px solid rgba(0,0,0,0)",
+    }, [
+      el({ display: "flex", fontSize: 14, color: p.k }, String(r.k || "")),
+      el({ display: "flex", fontSize: r.big ? 19 : 15, fontWeight: 700, color: r.big ? p.accent : p.v, marginLeft: 12 }, String(r.v || "")),
+    ])
+  );
+}
+// 하위호환: rows 없고 lines만 오면 불릿 나열.
 function lineEls(d: any, p: ReturnType<typeof palette>) {
   return (d.lines || []).slice(0, 6).map((ln: string) =>
-    el({ display: "flex", marginBottom: 9, fontSize: 15, color: p.body }, [
+    el({ display: "flex", marginBottom: 9, fontSize: 15, color: p.v }, [
       el({ color: p.accent, fontWeight: 700, marginRight: 8 }, "·"),
       el({ display: "flex", flex: 1 }, String(ln)),
     ])
   );
 }
+function bodyEls(d: any, p: ReturnType<typeof palette>) {
+  return (Array.isArray(d.rows) && d.rows.length) ? rowsEls(d, p) : lineEls(d, p);
+}
 
-// 카드 element (theme만 분기)
+// 카드 element — 컬러 헤더(brand+title) + 본문(rows/lines) + 서명/푸터. theme로 색만 분기.
 function buildCard(d: any): El {
   const p = palette(d.theme);
-  const tag = d.tag ? String(d.tag) : "";
+  const brand = String(d.brand || d.tag || "");
   const title = String(d.title || "");
 
-  if (p.mode === "gradient") {
-    // B: 상단 그라데이션 헤더(tag/title) + 흰 본문(lines/footer)
-    const head: El[] = [];
-    if (tag) head.push(el({ display: "flex", fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)" }, tag));
-    head.push(el({ display: "flex", fontSize: 23, fontWeight: 700, color: "#ffffff", marginTop: 5 }, title));
-    return el({ display: "flex", flexDirection: "column", width: 360, background: p.bg, borderRadius: 18, overflow: "hidden" }, [
-      el({ display: "flex", flexDirection: "column", padding: "22px", backgroundImage: `linear-gradient(135deg, ${p.headFrom}, ${p.headTo})` }, head),
-      el({ display: "flex", flexDirection: "column", padding: "20px 22px" }, [...lineEls(d, p), ...footerEls(d, p)]),
-    ]);
-  }
+  const head: El[] = [];
+  if (brand) head.push(el({ display: "flex", fontSize: 13, fontWeight: 600, color: p.headSub, marginBottom: 4 }, brand));
+  head.push(el({ display: "flex", fontSize: 21, fontWeight: 700, color: p.headText, lineHeight: 1.3 }, title));
 
-  // A(bar) / C(dark) 공통 = 단일 컬럼. A는 좌측 바.
-  const colInner: El[] = [];
-  if (tag) colInner.push(el({ display: "flex", fontSize: 13, fontWeight: 700, color: p.accent, marginBottom: 6 }, tag));
-  colInner.push(el({ display: "flex", fontSize: 24, fontWeight: 700, color: p.title, marginBottom: 14 }, title));
-  colInner.push(...lineEls(d, p), ...footerEls(d, p));
+  const headStyle: Record<string, unknown> = { display: "flex", flexDirection: "column", padding: "18px 20px" };
+  if (p.headType === "gradient") headStyle.backgroundImage = `linear-gradient(135deg, ${p.headFrom}, ${p.headTo})`;
+  else headStyle.background = p.headColor;
 
-  if (p.mode === "bar") {
-    return el({ display: "flex", width: 360, background: p.bg, borderRadius: 18, overflow: "hidden" }, [
-      el({ display: "flex", width: 6, background: p.accent }, ""),
-      el({ display: "flex", flexDirection: "column", flex: 1, padding: "24px 22px" }, colInner),
-    ]);
-  }
-  // C dark
-  return el({ display: "flex", flexDirection: "column", width: 360, background: p.bg, borderRadius: 18, padding: "24px 22px", border: `1px solid ${p.line}` }, colInner);
+  return el({ display: "flex", flexDirection: "column", width: 360, background: p.bg, borderRadius: 16, overflow: "hidden", border: `1px solid ${p.border}` }, [
+    el(headStyle, head),
+    el({ display: "flex", flexDirection: "column", padding: "8px 20px 20px" }, [...bodyEls(d, p), ...footerEls(d, p)]),
+  ]);
 }
 
 Deno.serve(async (req: Request) => {

@@ -1,13 +1,13 @@
 // supabase/functions/quick-card/index.ts
 //
 // Quick 카드 v2 추출 — 입력(텍스트/이미지) → Gemini → 카드 데이터 JSON.
-// C1(satori-render) 입력과 정합: { title, tag, lines[], notice }.
+// C1(satori-render) 입력과 정합: { title, brand, rows[{k,v,big}], notice }.
 //
 // 원칙: 숫자·금액·기간·비율은 입력 원문 그대로(환각 금지) / 고객 식별정보 카드 금지.
 // 키(GEMINI_API_KEY)는 Supabase secret 에서만. 앱 코드/레포 평문 0.
 //
 // 입력 (POST JSON): { text?: string, imageUrl?: string }  (둘 중 하나 이상)
-// 출력 (200 JSON): { title, tag, lines: string[], notice }
+// 출력 (200 JSON): { title, brand, rows: {k,v,big}[], notice }
 // 실패 (4xx/5xx JSON): { error: string }
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -48,18 +48,31 @@ const QC_SCHEMA = {
   type: "OBJECT",
   properties: {
     title: { type: "STRING", description: "카드 제목 = 주제 한 줄(12자 내외)" },
-    tag: { type: "STRING", description: "분류 한 줄(예: 건강보험 · 암 보장). 없으면 빈 문자열" },
-    lines: { type: "ARRAY", description: "핵심 포인트 3~5개, 각 25자 내외", items: { type: "STRING" } },
+    brand: { type: "STRING", description: "보험사명 또는 분류 부제 한 줄(예: 삼성생명 / 건강보험 · 암 보장). 없으면 빈 문자열" },
+    rows: {
+      type: "ARRAY",
+      description: "핵심을 '항목:값' 표로 3~5행. k=항목명(8자 내외), v=값(숫자·금액·기간 등 원문 그대로), big=가장 중요한 1~2개 행만 true",
+      items: {
+        type: "OBJECT",
+        properties: {
+          k: { type: "STRING", description: "항목명 (예: 암 진단비)" },
+          v: { type: "STRING", description: "값 (예: 5,000만원)" },
+          big: { type: "BOOLEAN", description: "강조 행이면 true (1~2개만)" },
+        },
+        required: ["k", "v"],
+      },
+    },
     notice: { type: "STRING", description: "주의·안내 1줄. 없으면 빈 문자열" },
   },
-  required: ["title", "lines"],
+  required: ["title", "rows"],
 };
 
 const SYSTEM_PROMPT = [
   "너는 보험 상담사가 고객에게 보낼 '핵심 요약 카드'를 만든다.",
   "이미지가 첨부되면 이미지 내용을 먼저 읽고 우선 분석한다(텍스트 메모는 보조 설명일 뿐이다).",
-  "입력에서 핵심만 뽑아 title(주제 한 줄), tag(분류, 없으면 빈 문자열), lines(핵심 3~5줄), notice(주의 1줄, 없으면 빈 문자열)로 정리한다.",
-  "입력에서 보험 관련 핵심을 찾지 못하면 lines 를 빈 배열([])로 둔다. '정보 없음'·'요약 없음' 같은 문구를 지어내 lines 에 넣지 않는다.",
+  "입력에서 핵심만 뽑아 title(주제 한 줄), brand(보험사명 또는 분류 부제, 없으면 빈 문자열), rows(항목:값 표 3~5행), notice(주의 1줄, 없으면 빈 문자열)로 정리한다.",
+  "rows 의 각 행은 k(항목명, 8자 내외)와 v(값)로 구성한다. 가장 중요한 1~2개 행만 big=true 로 표시한다.",
+  "입력에서 보험 관련 핵심을 찾지 못하면 rows 를 빈 배열([])로 둔다. '정보 없음'·'요약 없음' 같은 행을 지어내 rows 에 넣지 않는다.",
   "숫자·금액·기간·비율은 입력 원문 그대로 쓴다. 절대 지어내지 않는다(환각 금지).",
   "입력에 없는 보장·수치를 추가하지 않는다.",
   "고객 실명·주민번호 등 개인 식별정보는 카드에 넣지 않는다.",
@@ -124,13 +137,19 @@ Deno.serve(async (req: Request) => {
     let data: any;
     try { data = JSON.parse(raw); } catch { return json({ error: "추출 결과를 해석하지 못했습니다." }, 502); }
 
+    const rows = Array.isArray(data.rows)
+      ? data.rows
+          .map((r: any) => ({ k: String(r?.k || "").trim(), v: String(r?.v || "").trim(), big: !!r?.big }))
+          .filter((r: { k: string; v: string }) => r.k || r.v)
+          .slice(0, 6)
+      : [];
     const out = {
       title: String(data.title || "").trim(),
-      tag: String(data.tag || "").trim(),
-      lines: Array.isArray(data.lines) ? data.lines.map((x: unknown) => String(x).trim()).filter(Boolean).slice(0, 6) : [],
+      brand: String(data.brand || "").trim(),
+      rows,
       notice: String(data.notice || "").trim(),
     };
-    if (!out.title || !out.lines.length) return json({ error: "카드로 만들 핵심을 찾지 못했습니다. 내용을 더 자세히 입력해 주세요." }, 422);
+    if (!out.title || !out.rows.length) return json({ error: "카드로 만들 핵심을 찾지 못했습니다. 내용을 더 자세히 입력해 주세요." }, 422);
     return json(out);
   } catch (e) {
     console.error("[quick-card] 처리 오류", e);
