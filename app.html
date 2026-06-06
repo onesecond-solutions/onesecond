@@ -1380,6 +1380,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 #v-admin .ac-btn{ transition:border-color .15s ease,color .15s ease,background .15s ease; }
 #v-admin .tabs .tab,#v-admin .chips .chip{ transition:color .15s ease,background .15s ease,border-color .15s ease; }
 #v-admin .ac-btn:focus-visible,#v-admin .chips .chip:focus-visible{ outline:2px solid var(--ac); outline-offset:2px; }
+#v-admin .kn-card{ transition:border-color .15s ease,box-shadow .15s ease; }
+#v-admin .kn-card.open{ border-color:var(--ac); box-shadow:0 0 0 1px var(--ac) inset; }
+#v-admin .kn-card .kn-chev{ transition:transform .18s ease; color:var(--tf); }
+#v-admin .kn-card.open .kn-chev{ transform:rotate(180deg); color:var(--ac); }
 /* ── 로딩 스켈레톤 (SPA skelPulse 패턴) ── */
 #v-admin .ac-skel-wrap{ display:flex; flex-direction:column; gap:8px; }
 #v-admin .ac-skel{ height:46px; border-radius:10px; background:linear-gradient(90deg,var(--s2),var(--s1),var(--s2)); background-size:200% 100%; animation:acSkel 1.4s ease-in-out infinite; }
@@ -2145,18 +2149,21 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="chips" id="ac-library-chips"></div>
         <div class="ac-card-grid" id="ac-library-list"><div class="ac-card-empty">불러오는 중…</div></div>
       </div>
-      <!-- 지식엔진 (별도 최상위 탭 · admin 도구 링크 — 직접 URL 페이지로 진입) -->
+      <!-- 지식엔진 (별도 최상위 탭 · 카드 클릭 = 카드 아래 iframe 인라인 펼침. 정식 SPA 내장은 Phase 3 백로그) -->
       <div class="ac-sec" data-sec="knowledge">
         <div class="ac-section-head"><i data-lucide="brain-circuit"></i><h2>지식엔진</h2><span class="ac-section-sub">Knowledge Engine · admin 도구</span></div>
         <div class="ac-grid cols-2">
-          <a class="ac-card" href="/pages/knowledge-vault.html" style="text-decoration:none;color:inherit;display:block;">
-            <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i data-lucide="library-big"></i> 지식창고</div>
+          <div class="ac-card kn-card" data-kn="vault" onclick="acKnToggle('vault',this)" style="cursor:pointer;">
+            <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i data-lucide="library-big"></i> 지식창고 <i data-lucide="chevron-down" class="kn-chev" style="margin-left:auto;width:16px;height:16px;"></i></div>
             <div style="font-size:12px;color:var(--ts);">학습일지 + 검수 큐 (ai_draft 승인·보류·폐기)</div>
-          </a>
-          <a class="ac-card" href="/pages/knowledge-search-test.html" style="text-decoration:none;color:inherit;display:block;">
-            <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i data-lucide="search"></i> 지식엔진 검색 <span style="font-size:11px;color:var(--tf);font-weight:400;">(테스트)</span></div>
+          </div>
+          <div class="ac-card kn-card" data-kn="search" onclick="acKnToggle('search',this)" style="cursor:pointer;">
+            <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i data-lucide="search"></i> 지식엔진 검색 <span style="font-size:11px;color:var(--tf);font-weight:400;">(테스트)</span> <i data-lucide="chevron-down" class="kn-chev" style="margin-left:auto;width:16px;height:16px;"></i></div>
             <div style="font-size:12px;color:var(--ts);">검색 v1.2 · admin 검증</div>
-          </a>
+          </div>
+        </div>
+        <div id="kn-embed" style="display:none;margin-top:14px;">
+          <iframe id="kn-frame" title="지식엔진" style="width:100%;height:75vh;border:1px solid var(--bd);border-radius:12px;background:var(--bg);"></iframe>
         </div>
       </div>
 

@@ -517,6 +517,28 @@
     window.acGoSec(first);
   };
 
+  // 지식엔진 카드 = 카드 아래 iframe 인라인 토글 (페이지 이동 X). 정식 SPA 내장은 Phase 3 백로그.
+  window.acKnToggle = function(which, el){
+    var embed = document.getElementById('kn-embed');
+    var frame = document.getElementById('kn-frame');
+    if(!embed || !frame || !el) return;
+    var cards = document.querySelectorAll('#v-admin .kn-card');
+    var url = which==='search' ? '/pages/knowledge-search-test.html' : '/pages/knowledge-vault.html';
+    // 열린 카드 다시 클릭 = 접기
+    if(el.classList.contains('open')){
+      el.classList.remove('open');
+      embed.style.display='none';
+      frame.src='about:blank';   // iframe 정지
+      return;
+    }
+    // 다른 카드 닫고 해당 카드 펼침
+    for(var i=0;i<cards.length;i++) cards[i].classList.remove('open');
+    el.classList.add('open');
+    frame.src = url;
+    embed.style.display='';
+    if(embed.scrollIntoView) embed.scrollIntoView({behavior:'smooth', block:'nearest'});
+  };
+
   // SPA 진입점 (app.html showView('admin') → _acLazy → 여기) — sec 딥링크 반영
   window.acInitAdmin = function(sec){
     var root=_acSpaRoot(); if(!root) return;
