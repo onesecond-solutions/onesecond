@@ -83,15 +83,24 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) { console.error("[quick-card] GEMINI_API_KEY 미설정"); return json({ error: "카드 생성 설정이 아직 준비되지 않았습니다." }, 500); }
 
-  let text = "", imageUrl = "";
-  try { const b = await req.json(); text = String(b?.text || "").trim(); imageUrl = String(b?.imageUrl || "").trim(); }
-  catch { return json({ error: "요청 형식이 올바르지 않습니다." }, 400); }
-  if (!text && !imageUrl) return json({ error: "텍스트 또는 이미지를 입력해 주세요." }, 400);
+  let text = "", imageUrl = "", imageBase64 = "", imageMime = "image/png";
+  try {
+    const b = await req.json();
+    text = String(b?.text || "").trim();
+    imageUrl = String(b?.imageUrl || "").trim();
+    imageBase64 = String(b?.imageBase64 || "").trim();   // 로컬 업로드 이미지(무저장 — 공개 URL 없이 base64 직접)
+    imageMime = String(b?.imageMime || "image/png").trim();
+  } catch { return json({ error: "요청 형식이 올바르지 않습니다." }, 400); }
+  if (!text && !imageUrl && !imageBase64) return json({ error: "텍스트 또는 이미지를 입력해 주세요." }, 400);
   if (imageUrl && !/^https?:\/\//.test(imageUrl)) return json({ error: "이미지 주소를 확인할 수 없습니다." }, 400);
+  if (imageBase64 && !/^image\//.test(imageMime)) return json({ error: "이미지 형식을 확인할 수 없습니다." }, 400);
+  if (imageBase64 && imageBase64.length > MAX_IMAGE_BYTES * 1.4) return json({ error: "이미지가 너무 큽니다." }, 413); // base64 ~= 4/3
 
   const parts: unknown[] = [{ text: "다음 내용에서 카드용 핵심을 JSON으로 뽑아줘." }];
   if (text) parts.push({ text });
-  if (imageUrl) {
+  if (imageBase64) {
+    parts.push({ inlineData: { mimeType: imageMime, data: imageBase64 } });
+  } else if (imageUrl) {
     try { parts.push({ inlineData: await imageToInline(imageUrl) }); }
     catch (e) { return json({ error: (e as Error)?.message || "이미지 처리 실패" }, 502); }
   }
