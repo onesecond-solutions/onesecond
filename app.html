@@ -4204,27 +4204,23 @@ function mcHandleFile(file){
   var name = (file.name || '').toLowerCase();
   var type = file.type || '';
   mcDbg('mcHandleFile 진입 · name='+name+' type='+(type||'(빈값)'));
-  showLoading(true);
-  if(type === 'image/png' || type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(name)){
-    mcDbg('이미지 분기 진입 · FileReader 시작');
+
+  function asImage(){
     var reader = new FileReader();
     reader.onload = function(e){
-      mcDbg('FileReader onload · dataURL '+((e.target.result||'').length)+'자');
       showLoading(false);
       mcState.fileName = file.name;
       mcState.fileType = 'image';
       mcState.fileDataUrl = e.target.result;
       mcState.fileText = '';
       mcUpdateFileUI();
-      mcDbg('mcUpdateFileUI 완료 · 칩 표시됨');
+      mcDbg('이미지 처리 완료 · 칩 표시됨');
       mcUpdatePreview();
     };
-    reader.onerror = function(){ mcDbg('FileReader onerror'); showError('이미지 읽기 실패. 다시 시도해주세요.'); };
+    reader.onerror = function(){ mcDbg('이미지 onerror'); showError('이미지 읽기 실패. 다시 시도해주세요.'); };
     reader.readAsDataURL(file);
-    return;
   }
-  mcDbg('이미지 분기 미진입 · 다른 형식으로 처리');
-  if(type === 'text/plain' || /\.txt$/i.test(name)){
+  function asText(){
     var reader2 = new FileReader();
     reader2.onload = function(e){
       showLoading(false);
@@ -4239,9 +4235,8 @@ function mcHandleFile(file){
     };
     reader2.onerror = function(){ showError('텍스트 읽기 실패. 다시 시도해주세요.'); };
     reader2.readAsText(file, 'UTF-8');
-    return;
   }
-  if(type === 'application/pdf' || /\.pdf$/i.test(name)){
+  function asPdf(){
     extractPdfText(file).then(function(text){
       showLoading(false);
       var trimmed = (text || '').trim();
@@ -4256,9 +4251,29 @@ function mcHandleFile(file){
       console.error('[card] PDF 처리 실패:', err);
       showError('PDF 처리 실패. 파일이 손상되었거나 보호된 PDF일 수 있습니다.');
     });
-    return;
   }
-  showError('지원하지 않는 파일 형식입니다. PNG · JPG · TXT · PDF 만 첨부 가능합니다.');
+
+  showLoading(true);
+  // 1) MIME 또는 확장자로 판별
+  if(type === 'image/png' || type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(name)){ mcDbg('이미지 분기(MIME/확장자)'); asImage(); return; }
+  if(type === 'text/plain' || /\.txt$/i.test(name)){ asText(); return; }
+  if(type === 'application/pdf' || /\.pdf$/i.test(name)){ asPdf(); return; }
+
+  // 2) MIME·확장자 모두 불명(일부 브라우저가 file.type을 빈값으로 줌) → 첫 바이트(매직넘버)로 판별
+  mcDbg('형식 불명 · 바이트 판별 시작');
+  var sniff = new FileReader();
+  sniff.onload = function(ev){
+    var b = new Uint8Array(ev.target.result || new ArrayBuffer(0));
+    var isPng  = b.length >= 4 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47; // \x89PNG
+    var isJpeg = b.length >= 3 && b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF;                  // JPEG SOI
+    var isPdf  = b.length >= 4 && b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46; // %PDF
+    mcDbg('바이트 판별 · png='+isPng+' jpeg='+isJpeg+' pdf='+isPdf);
+    if(isPng || isJpeg){ asImage(); return; }
+    if(isPdf){ asPdf(); return; }
+    asText(); // 그 외 = 텍스트로 시도(비었으면 asText 내부에서 안내)
+  };
+  sniff.onerror = function(){ mcDbg('바이트 판별 onerror'); showError('파일을 읽지 못했습니다. 다시 시도해 주세요.'); };
+  sniff.readAsArrayBuffer(file.slice(0, 16));
 }
 window.mcHandleFile = mcHandleFile;
 
