@@ -4102,8 +4102,17 @@ function renderMakeCardTool(){
             '<input type="text" id="mcSigPhone" placeholder="010-1234-5678" oninput="mcOnSigInput()">' +
           '</div>' +
         '</div>' +
+        '<div class="qck-tool-input-row">' +
+          '<label>카드 디자인</label>' +
+          '<div class="mc-theme-pick" id="mcThemePick">' +
+            '<button type="button" class="mc-theme on" data-th="A" onclick="mcSelectTheme(\'A\')">미니멀</button>' +
+            '<button type="button" class="mc-theme" data-th="B" onclick="mcSelectTheme(\'B\')">그라데이션</button>' +
+            '<button type="button" class="mc-theme" data-th="C" onclick="mcSelectTheme(\'C\')">다크</button>' +
+          '</div>' +
+        '</div>' +
         '<div class="mc-priv-notice">⚠️ AI 처리를 위해 입력 내용이 외부로 전송됩니다. 고객 실명·주민번호 등 식별정보는 입력하지 마세요.</div>' +
         '<div id="mcError" class="qck-mc-error" style="display:none;"></div>' +
+        '<button id="mcRetryBtn" class="qck-tool-fire" style="display:none;margin-top:8px;" onclick="mcGenerateV2()">다시 시도</button>' +
         '<div id="mcLoading" class="qck-mc-loading" style="display:none;">AI 카드 만드는 중...</div>' +
         '<button id="mcFireBtn" class="qck-tool-fire" onclick="mcFire()">⚡ AI 카드 만들기</button>' +
       '</div>' +
@@ -4389,7 +4398,7 @@ function mcCheckGate(){
 function mcBumpGate(){ var n=parseInt(localStorage.getItem(_cardGateKey())||'0',10); try{ localStorage.setItem(_cardGateKey(), String(n+1)); }catch(e){} }
 
 function mcShowErrV2(msg){ var e=document.getElementById('mcError'); if(e){ e.style.display=''; e.textContent='⚠️ '+msg; } }
-function mcClearErrV2(){ var e=document.getElementById('mcError'); if(e) e.style.display='none'; }
+function mcClearErrV2(){ var e=document.getElementById('mcError'); if(e) e.style.display='none'; var rb=document.getElementById('mcRetryBtn'); if(rb) rb.style.display='none'; }
 function mcSetLoadingV2(on){ var l=document.getElementById('mcLoading'); if(l) l.style.display=on?'':'none'; var b=document.getElementById('mcFireBtn'); if(b) b.disabled=on; if(on) mcClearErrV2(); }
 
 async function mcGenerateV2(){
@@ -4428,6 +4437,7 @@ async function mcGenerateV2(){
   }catch(err){
     console.error('[card v2]', err);
     mcShowErrV2('AI 카드 생성 실패: '+(err.message||err)+' 잠시 후 다시 시도해 주세요.');
+    var rb=document.getElementById('mcRetryBtn'); if(rb) rb.style.display='';
     mcState.v2Blob = null;
   }finally{ mcSetLoadingV2(false); }
 }
