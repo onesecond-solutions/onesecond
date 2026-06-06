@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:,">
+<title>지식창고 (admin) · 학습일지 + 검수 큐</title>
+<link rel="stylesheet" href="/css/tokens-v2.css">
+<style>
+  /* tokens-v2.css 변수만 사용 (도메인 stage 팔레트 외 하드코딩 색상 금지) */
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tp);font-family:var(--font-sans);font-size:15px;line-height:var(--lh-body)}
+  .wrap{max-width:880px;margin:0 auto;padding:22px 16px 90px}
+  .topbar{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  h1{font-size:1.2rem;margin:0;font-weight:var(--fw-black);flex:1}
+  h1 .ver{font-size:.6rem;color:var(--tf);font-weight:400;margin-left:4px}
+  .iconbtn{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-md);color:var(--ts);padding:6px 11px;font-size:.78rem;cursor:pointer;font-weight:var(--fw-semibold)}
+  .iconbtn:hover{border-color:var(--ac);color:var(--tp)}
+  .sub{color:var(--tf);font-size:.76rem;margin-bottom:16px}
+  .sub b{color:var(--ts)}
+
+  /* 탭 */
+  .tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--bd)}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--tf);padding:9px 14px;font-size:.9rem;cursor:pointer;font-weight:var(--fw-semibold);font-family:inherit}
+  .tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+
+  /* 필터칩 */
+  .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .fchip{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-pill);color:var(--ts);padding:5px 13px;font-size:.78rem;cursor:pointer;font-family:inherit}
+  .fchip:hover{border-color:var(--ac);color:var(--tp)}
+  .fchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+
+  /* 일괄 바 */
+  .bulkbar{display:none;align-items:center;gap:10px;margin-bottom:12px;padding:9px 13px;background:color-mix(in srgb,var(--ac) 10%,var(--s1));border:1px solid var(--ac);border-radius:var(--r-md);font-size:.82rem}
+  .bulkbar.show{display:flex}
+  .bulkbar b{color:var(--ac)}
+  .bulkbar button{margin-left:auto;background:var(--ac);border:none;border-radius:var(--r-md);color:#fff;font-weight:var(--fw-bold);padding:7px 14px;cursor:pointer;font-family:inherit}
+
+  .meta{color:var(--tf);font-size:.74rem;margin-bottom:12px}
+  .err{color:var(--err);background:color-mix(in srgb,var(--err) 12%,transparent);border:1px solid var(--err);border-radius:var(--r-md);padding:13px;margin-top:12px;font-size:.85rem}
+  .empty{color:var(--tf);padding:40px 16px;text-align:center;font-size:.9rem;line-height:1.6}
+  .empty .big{font-size:1.6rem;margin-bottom:8px}
+
+  /* 카드 */
+  .card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);padding:13px 14px;margin-bottom:9px}
+  .card-top{display:flex;align-items:flex-start;gap:10px}
+  .card-top .chk{margin-top:3px}
+  .card-main{flex:1;min-width:0}
+  .card-ttl{font-weight:var(--fw-bold);font-size:.98rem;margin-bottom:5px;line-height:var(--lh-heading)}
+  .badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+  .b{display:inline-block;font-size:.66rem;border-radius:var(--r-sm);padding:1px 7px;font-weight:var(--fw-semibold)}
+  .b-type{color:var(--tp);background:color-mix(in srgb,var(--ac) 16%,transparent)}
+  .b-src{color:var(--ts);background:var(--s2)}
+  .b-st-ai_draft{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+  .b-st-approved{color:var(--ok,#3ba55d);background:color-mix(in srgb,var(--ok,#3ba55d) 16%,transparent)}
+  .b-st-hold{color:var(--tf);background:var(--s2);border:1px solid var(--bd)}
+  .b-st-discarded{color:var(--err);background:color-mix(in srgb,var(--err) 12%,transparent)}
+  .card-body{color:var(--bodytx);font-size:.85rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:4.6em;overflow:hidden}
+  .card-foot{margin-top:7px;color:var(--tf);font-size:.68rem;display:flex;gap:10px;flex-wrap:wrap}
+  .acts{display:flex;gap:6px;margin-top:9px}
+  .actbtn{border:1px solid var(--bd);background:var(--s2);border-radius:var(--r-md);padding:5px 12px;font-size:.78rem;cursor:pointer;font-weight:var(--fw-semibold);color:var(--ts);font-family:inherit}
+  .actbtn.ok:hover{border-color:var(--ok,#3ba55d);color:var(--ok,#3ba55d)}
+  .actbtn.hold:hover{border-color:var(--warn);color:var(--warn)}
+  .actbtn.del:hover{border-color:var(--err);color:var(--err)}
+
+  /* 학습일지 상세 */
+  .log-row{cursor:pointer}
+  .log-detail{margin-top:9px;padding-top:9px;border-top:1px dashed var(--bd);font-size:.8rem;color:var(--ts);display:none}
+  .log-detail.show{display:block}
+  .log-detail h4{margin:10px 0 4px;font-size:.74rem;color:var(--tf);font-weight:var(--fw-semibold)}
+  .log-detail pre{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-sm);padding:8px;overflow-x:auto;font-size:.72rem;white-space:pre-wrap;word-break:break-word;margin:0}
+
+  /* 사유 모달 */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:center;justify-content:center;padding:18px}
+  .modal-bg.show{display:flex}
+  .modal{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);padding:18px;max-width:420px;width:100%}
+  .modal h3{margin:0 0 4px;font-size:1rem}
+  .modal p{margin:0 0 12px;color:var(--tf);font-size:.8rem}
+  .modal textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-md);color:var(--tp);padding:10px;font-size:.88rem;font-family:inherit;resize:vertical;min-height:62px;outline:none}
+  .modal textarea:focus{border-color:var(--ac)}
+  .modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .modal-acts button{border-radius:var(--r-md);padding:8px 15px;font-size:.85rem;cursor:pointer;font-weight:var(--fw-bold);font-family:inherit;border:1px solid var(--bd)}
+  .modal-acts .cancel{background:var(--s2);color:var(--ts)}
+  .modal-acts .confirm{background:var(--ac);color:#fff;border-color:var(--ac)}
+  .modal-acts .confirm:disabled{opacity:.45;cursor:not-allowed}
+
+  /* admin 가드 */
+  .guard{display:none;text-align:center;padding:80px 20px;color:var(--tf)}
+  .guard.show{display:block}
+  @media(max-width:600px){ .wrap{padding:16px 12px 80px} h1{font-size:1.05rem} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>📚 지식창고 <span class="ver">v0.1 · admin · 비공개</span></h1>
+    <button class="iconbtn" id="themeBtn" title="다크/라이트">◐</button>
+  </div>
+  <div class="sub">대상 <b>knowledge_logs</b> + <b>knowledge_entries</b> (신버전 pdnwgzneooyygfejrvbg) · 야간 자동 학습(Phase 3) 선행 인프라</div>
+
+  <div id="guard" class="guard">
+    <div style="font-size:1.6rem;margin-bottom:8px">🔒</div>
+    관리자 전용 화면입니다.<br>admin 계정으로 로그인 후 이용해주세요.
+  </div>
+
+  <div id="main" style="display:none">
+    <div class="tabs">
+      <button class="tab on" id="tabLog" onclick="KV.switchTab('log')">학습일지</button>
+      <button class="tab" id="tabQueue" onclick="KV.switchTab('queue')">검수 큐</button>
+    </div>
+
+    <!-- 검수 큐 필터 -->
+    <div class="filters" id="filters" style="display:none">
+      <button class="fchip" data-f="all" onclick="KV.setFilter('all')">전체</button>
+      <button class="fchip on" data-f="ai_draft" onclick="KV.setFilter('ai_draft')">ai_draft</button>
+      <button class="fchip" data-f="approved" onclick="KV.setFilter('approved')">approved</button>
+      <button class="fchip" data-f="hold" onclick="KV.setFilter('hold')">hold</button>
+      <button class="fchip" data-f="discarded" onclick="KV.setFilter('discarded')">discarded</button>
+    </div>
+
+    <div class="bulkbar" id="bulkbar">
+      <b id="bulkCount">0</b>건 선택됨
+      <button onclick="KV.bulkApprove()">선택 일괄 승인</button>
+    </div>
+
+    <div class="meta" id="meta">불러오는 중...</div>
+    <div id="errBox"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<!-- 사유 입력 모달 (보류/폐기 시 필수) -->
+<div class="modal-bg" id="reasonModal">
+  <div class="modal">
+    <h3 id="reasonTitle">사유 입력</h3>
+    <p id="reasonDesc">보류/폐기 사유를 1줄 이상 입력해주세요. (필수)</p>
+    <textarea id="reasonText" placeholder="사유를 입력하세요" oninput="KV.onReasonInput()"></textarea>
+    <div class="modal-acts">
+      <button class="cancel" onclick="KV.closeReason()">취소</button>
+      <button class="confirm" id="reasonConfirm" disabled onclick="KV.confirmReason()">확인</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/db.js"></script>
+<script>
+window.KV = (function(){
+  "use strict";
+
+  var ENGINE_VERSION = 'knowledge-vault-v0.1';
+  var STATUS_LABEL = { ai_draft:'AI 초안', approved:'승인', hold:'보류', discarded:'폐기' };
+
+  var state = {
+    tab: 'log',
+    filter: 'ai_draft',
+    logs: [],
+    entries: [],
+    selected: {},            // entry_id -> true
+    pending: null            // {id, status} 사유 모달 대기
+  };
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function fmt(ts){ if(!ts) return '-'; try{ return new Date(ts).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return String(ts); } }
+  function adminUser(){ try{ return JSON.parse(localStorage.getItem('os_user')||'{}'); }catch(e){ return {}; } }
+
+  function showError(msg){ $('errBox').innerHTML = '<div class="err">⚠️ ' + esc(msg) + '</div>'; }
+  function clearError(){ $('errBox').innerHTML = ''; }
+
+  // ── admin 가드 ──
+  function guard(){
+    var u = adminUser();
+    if(u && u.role === 'admin'){
+      $('main').style.display = '';
+      $('guard').classList.remove('show');
+      return true;
+    }
+    $('guard').classList.add('show');
+    $('main').style.display = 'none';
+    return false;
+  }
+
+  // ── 탭 전환 ──
+  function switchTab(tab){
+    state.tab = tab;
+    $('tabLog').classList.toggle('on', tab==='log');
+    $('tabQueue').classList.toggle('on', tab==='queue');
+    $('filters').style.display = tab==='queue' ? 'flex' : 'none';
+    updateBulkBar();
+    if(tab==='log') loadLogs(); else loadEntries();
+  }
+
+  // ── 학습일지 ──
+  function loadLogs(){
+    clearError();
+    $('meta').textContent = '학습일지 불러오는 중...';
+    $('list').innerHTML = '';
+    window.db.fetch('/rest/v1/knowledge_logs?select=*&order=run_at.desc&limit=100')
+      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function(rows){
+        state.logs = Array.isArray(rows) ? rows : [];
+        renderLogs();
+      })
+      .catch(function(err){ console.error('[vault] logs:', err); showError('학습일지 조회 실패: ' + err.message + ' (admin 권한/로그인 확인)'); $('meta').textContent=''; });
+  }
+
+  function renderLogs(){
+    if(!state.logs.length){
+      $('meta').textContent = '';
+      $('list').innerHTML = '<div class="empty"><div class="big">🌙</div>야간 학습 가동 전입니다.<br>Phase 3에서 자동 학습이 가동되면 이 자리에 작업 일지가 쌓입니다.</div>';
+      return;
+    }
+    $('meta').innerHTML = '학습일지 <b>' + state.logs.length + '</b>건';
+    var html = state.logs.map(function(lg){
+      return '<div class="card log-row" onclick="KV.toggleLog(' + lg.id + ')">' +
+        '<div class="card-ttl">' + esc(fmt(lg.run_at)) + ' · ' + esc(lg.run_type||'manual') + (lg.engine_version?(' · ' + esc(lg.engine_version)):'') + '</div>' +
+        '<div class="badges">' +
+          '<span class="b b-type">추출 ' + (lg.extracted_count==null?'-':lg.extracted_count) + '건</span>' +
+          '<span class="b b-st-' + esc(lg.status||'ai_draft') + '">' + esc(STATUS_LABEL[lg.status]||lg.status||'ai_draft') + '</span>' +
+          '<span class="b b-src">' + esc(lg.author||'ai') + '</span>' +
+        '</div>' +
+        (lg.handover_note ? '<div class="card-body">' + esc(lg.handover_note) + '</div>' : '') +
+        '<div class="log-detail" id="logd' + lg.id + '">' + logDetailHtml(lg) + '</div>' +
+      '</div>';
+    }).join('');
+    $('list').innerHTML = html;
+  }
+
+  function logDetailHtml(lg){
+    var parts = [];
+    function jblock(label, val){
+      if(val==null || (typeof val==='object' && !Object.keys(val).length)) return;
+      parts.push('<h4>' + esc(label) + '</h4><pre>' + esc(typeof val==='string'?val:JSON.stringify(val,null,2)) + '</pre>');
+    }
+    jblock('처리 파일 (source_files)', lg.source_files);
+    jblock('카테고리 분포', lg.category_breakdown);
+    jblock('신규 용어 후보', lg.new_terms);
+    jblock('중복 처리 메모', lg.dedup_notes);
+    jblock('품질 이슈', lg.quality_issues);
+    jblock('검토 필요', lg.review_needed);
+    if(lg.handover_note) jblock('인계 노트', lg.handover_note);
+    return parts.join('') || '<div style="color:var(--tf);font-size:.74rem">추가 상세 없음</div>';
+  }
+
+  function toggleLog(id){
+    var el = $('logd' + id);
+    if(el) el.classList.toggle('show');
+  }
+
+  // ── 검수 큐 ──
+  function setFilter(f){
+    state.filter = f;
+    var chips = document.querySelectorAll('#filters .fchip');
+    for(var i=0;i<chips.length;i++){ chips[i].classList.toggle('on', chips[i].getAttribute('data-f')===f); }
+    state.selected = {};
+    loadEntries();
+  }
+
+  function loadEntries(){
+    clearError();
+    $('meta').textContent = '검수 큐 불러오는 중...';
+    $('list').innerHTML = '';
+    var q;
+    if(state.filter === 'all') q = 'status=in.(ai_draft,approved,hold)';          // soft delete(discarded) 기본 제외
+    else q = 'status=eq.' + state.filter;
+    var url = '/rest/v1/knowledge_entries?select=entry_id,type,title,body,category,source_type,source_id,source_company,canonical_company_name,confidence,status,reviewed_at,review_note,created_at&' + q + '&order=created_at.desc&limit=300';
+    window.db.fetch(url)
+      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(function(rows){
+        state.entries = Array.isArray(rows) ? rows : [];
+        renderEntries();
+      })
+      .catch(function(err){ console.error('[vault] entries:', err); showError('검수 큐 조회 실패: ' + err.message + ' (admin 권한/로그인 확인)'); $('meta').textContent=''; });
+  }
+
+  function renderEntries(){
+    updateBulkBar();
+    if(!state.entries.length){
+      $('meta').textContent = '';
+      var msg = state.filter==='ai_draft'
+        ? '<div class="empty"><div class="big">✅</div>검수 대기(ai_draft) 항목이 없습니다.<br>야간 학습이 가동되면 이 자리에 초안이 쌓입니다.</div>'
+        : '<div class="empty">해당 상태(' + esc(state.filter) + ') 항목이 없습니다.</div>';
+      $('list').innerHTML = msg;
+      return;
+    }
+    $('meta').innerHTML = esc(state.filter) + ' <b>' + state.entries.length + '</b>건';
+    var canAct = state.filter !== 'discarded';
+    var html = state.entries.map(function(e){
+      var id = e.entry_id;
+      var co = e.canonical_company_name || e.source_company || '';
+      return '<div class="card">' +
+        '<div class="card-top">' +
+          (canAct ? '<input type="checkbox" class="chk" ' + (state.selected[id]?'checked':'') + ' onchange="KV.toggleSel(' + id + ',this.checked)">' : '') +
+          '<div class="card-main">' +
+            '<div class="card-ttl">' + esc(e.title||'(제목 없음)') + '</div>' +
+            '<div class="badges">' +
+              '<span class="b b-type">' + esc(e.type||'-') + '</span>' +
+              (e.category?('<span class="b b-src">' + esc(e.category) + '</span>'):'') +
+              (co?('<span class="b b-src">' + esc(co) + '</span>'):'') +
+              '<span class="b b-st-' + esc(e.status) + '">' + esc(STATUS_LABEL[e.status]||e.status) + '</span>' +
+              (e.confidence?('<span class="b b-src">conf:' + esc(e.confidence) + '</span>'):'') +
+            '</div>' +
+            (e.body?('<div class="card-body">' + esc(e.body) + '</div>'):'') +
+            '<div class="card-foot">' +
+              '<span>출처 ' + esc(e.source_type||'-') + (e.source_id?(' #' + esc(e.source_id)):'') + '</span>' +
+              (e.reviewed_at?('<span>검수 ' + esc(fmt(e.reviewed_at)) + '</span>'):'') +
+              (e.review_note?('<span>사유: ' + esc(e.review_note) + '</span>'):'') +
+            '</div>' +
+            (canAct ? actsHtml(id, e.status) : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    $('list').innerHTML = html;
+  }
+
+  function actsHtml(id, status){
+    return '<div class="acts">' +
+      (status==='approved'?'':'<button class="actbtn ok" onclick="KV.approveOne(' + id + ')">승인</button>') +
+      (status==='hold'?'':'<button class="actbtn hold" onclick="KV.askReason(' + id + ',\'hold\')">보류</button>') +
+      '<button class="actbtn del" onclick="KV.askReason(' + id + ',\'discarded\')">폐기</button>' +
+    '</div>';
+  }
+
+  // ── 선택 / 일괄 ──
+  function toggleSel(id, on){
+    if(on) state.selected[id] = true; else delete state.selected[id];
+    updateBulkBar();
+  }
+  function selectedIds(){ return Object.keys(state.selected).map(Number); }
+  function updateBulkBar(){
+    if(state.tab !== 'queue' || state.filter === 'discarded'){ $('bulkbar').classList.remove('show'); return; }
+    var n = selectedIds().length;
+    $('bulkCount').textContent = n;
+    $('bulkbar').classList.toggle('show', n > 0);
+  }
+
+  function bulkApprove(){
+    var ids = selectedIds();
+    if(!ids.length) return;
+    if(!window.confirm(ids.length + '건을 승인합니다. 진행할까요?')) return;
+    patchStatus(ids, 'approved', null);
+  }
+
+  // ── 단건 액션 ──
+  function approveOne(id){ patchStatus([id], 'approved', null); }
+
+  function askReason(id, status){
+    state.pending = { id: id, status: status };
+    $('reasonTitle').textContent = (status==='hold'?'보류':'폐기') + ' 사유';
+    $('reasonDesc').textContent = (status==='hold'?'보류':'폐기') + ' 사유를 1줄 이상 입력해주세요. (필수)';
+    $('reasonText').value = '';
+    $('reasonConfirm').disabled = true;
+    $('reasonModal').classList.add('show');
+    setTimeout(function(){ $('reasonText').focus(); }, 30);
+  }
+  function onReasonInput(){ $('reasonConfirm').disabled = !$('reasonText').value.trim(); }
+  function closeReason(){ $('reasonModal').classList.remove('show'); state.pending = null; }
+  function confirmReason(){
+    var note = $('reasonText').value.trim();
+    if(!note || !state.pending) return;
+    var p = state.pending;
+    closeReason();
+    patchStatus([p.id], p.status, note);
+  }
+
+  // ── status UPDATE (PATCH, is_admin RLS 경유) ──
+  function patchStatus(ids, status, note){
+    var u = adminUser();
+    var body = { status: status, reviewed_at: new Date().toISOString(), reviewed_by: u.id || null };
+    if(note != null) body.review_note = note;
+    var filter = ids.length === 1 ? 'entry_id=eq.' + ids[0] : 'entry_id=in.(' + ids.join(',') + ')';
+    $('meta').textContent = '반영 중...';
+    window.db.fetch('/rest/v1/knowledge_entries?' + filter, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(body)
+    })
+    .then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      state.selected = {};
+      loadEntries();   // 재조회 = 현재 필터 기준 갱신
+    })
+    .catch(function(err){ console.error('[vault] patch:', err); showError('상태 반영 실패: ' + err.message); loadEntries(); });
+  }
+
+  // ── 테마 ──
+  function toggleTheme(){
+    var root = document.documentElement;
+    root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+  }
+
+  // ── init ──
+  function init(){
+    $('themeBtn').addEventListener('click', toggleTheme);
+    $('reasonModal').addEventListener('click', function(e){ if(e.target === $('reasonModal')) closeReason(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeReason(); });
+    if(guard()) switchTab('log');
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+  return {
+    switchTab: switchTab, setFilter: setFilter, toggleLog: toggleLog,
+    toggleSel: toggleSel, bulkApprove: bulkApprove, approveOne: approveOne,
+    askReason: askReason, onReasonInput: onReasonInput, closeReason: closeReason, confirmReason: confirmReason
+  };
+})();
+</script>
+</body>
+</html>
