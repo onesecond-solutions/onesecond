@@ -11,7 +11,8 @@
   /* tokens-v2.css 변수만 사용 (도메인 stage 팔레트 외 하드코딩 색상 금지) */
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--tp);font-family:var(--font-sans);font-size:15px;line-height:var(--lh-body)}
-  .wrap{max-width:880px;margin:0 auto;padding:22px 16px 90px}
+  .wrap{max-width:980px;margin:0 auto;padding:22px 16px 90px}
+  .backlink{display:inline-block;margin-bottom:13px;color:var(--ts);text-decoration:none;font-size:.82rem;font-weight:var(--fw-semibold)}
   .topbar{display:flex;align-items:center;gap:10px;margin-bottom:4px}
   h1{font-size:1.2rem;margin:0;font-weight:var(--fw-black);flex:1}
   h1 .ver{font-size:.6rem;color:var(--tf);font-weight:400;margin-left:4px}
@@ -26,29 +27,26 @@
   .tab.on{color:var(--ac);border-bottom-color:var(--ac)}
 
   /* 필터칩 */
-  .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
   .fchip{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-pill);color:var(--ts);padding:5px 13px;font-size:.78rem;cursor:pointer;font-family:inherit}
   .fchip:hover{border-color:var(--ac);color:var(--tp)}
   .fchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
 
-  /* 일괄 바 */
-  .bulkbar{display:none;align-items:center;gap:10px;margin-bottom:12px;padding:9px 13px;background:color-mix(in srgb,var(--ac) 10%,var(--s1));border:1px solid var(--ac);border-radius:var(--r-md);font-size:.82rem}
-  .bulkbar.show{display:flex}
-  .bulkbar b{color:var(--ac)}
-  .bulkbar button{margin-left:auto;background:var(--ac);border:none;border-radius:var(--r-md);color:#fff;font-weight:var(--fw-bold);padding:7px 14px;cursor:pointer;font-family:inherit}
+  /* 검수 큐 상단바 (전체 선택 + 전건 승인) */
+  .qbar{display:none;align-items:center;gap:12px;margin-bottom:12px;padding:9px 13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-md);font-size:.82rem;flex-wrap:wrap}
+  .qbar.show{display:flex}
+  .qbar label{display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--ts)}
+  .qbar .cnt{color:var(--ac);font-weight:var(--fw-bold)}
+  .qbar .approve{margin-left:auto;background:var(--ac);border:none;border-radius:var(--r-md);color:#fff;font-weight:var(--fw-bold);padding:7px 14px;cursor:pointer;font-family:inherit;font-size:.82rem}
+  .qbar .approve:disabled{opacity:.4;cursor:not-allowed}
 
   .meta{color:var(--tf);font-size:.74rem;margin-bottom:12px}
   .err{color:var(--err);background:color-mix(in srgb,var(--err) 12%,transparent);border:1px solid var(--err);border-radius:var(--r-md);padding:13px;margin-top:12px;font-size:.85rem}
   .empty{color:var(--tf);padding:40px 16px;text-align:center;font-size:.9rem;line-height:1.6}
   .empty .big{font-size:1.6rem;margin-bottom:8px}
 
-  /* 카드 */
-  .card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);padding:13px 14px;margin-bottom:9px}
-  .card-top{display:flex;align-items:flex-start;gap:10px}
-  .card-top .chk{margin-top:3px}
-  .card-main{flex:1;min-width:0}
-  .card-ttl{font-weight:var(--fw-bold);font-size:.98rem;margin-bottom:5px;line-height:var(--lh-heading)}
-  .badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+  /* 공통 배지 */
+  .badges{display:flex;flex-wrap:wrap;gap:5px}
   .b{display:inline-block;font-size:.66rem;border-radius:var(--r-sm);padding:1px 7px;font-weight:var(--fw-semibold)}
   .b-type{color:var(--tp);background:color-mix(in srgb,var(--ac) 16%,transparent)}
   .b-src{color:var(--ts);background:var(--s2)}
@@ -56,15 +54,43 @@
   .b-st-approved{color:var(--ok,#3ba55d);background:color-mix(in srgb,var(--ok,#3ba55d) 16%,transparent)}
   .b-st-hold{color:var(--tf);background:var(--s2);border:1px solid var(--bd)}
   .b-st-discarded{color:var(--err);background:color-mix(in srgb,var(--err) 12%,transparent)}
-  .card-body{color:var(--bodytx);font-size:.85rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:4.6em;overflow:hidden}
-  .card-foot{margin-top:7px;color:var(--tf);font-size:.68rem;display:flex;gap:10px;flex-wrap:wrap}
-  .acts{display:flex;gap:6px;margin-top:9px}
-  .actbtn{border:1px solid var(--bd);background:var(--s2);border-radius:var(--r-md);padding:5px 12px;font-size:.78rem;cursor:pointer;font-weight:var(--fw-semibold);color:var(--ts);font-family:inherit}
-  .actbtn.ok:hover{border-color:var(--ok,#3ba55d);color:var(--ok,#3ba55d)}
-  .actbtn.hold:hover{border-color:var(--warn);color:var(--warn)}
-  .actbtn.del:hover{border-color:var(--err);color:var(--err)}
 
-  /* 학습일지 상세 */
+  /* ── 마스터-디테일 (검수 큐) ── */
+  .md{display:flex;gap:14px;align-items:flex-start}
+  .md-list{width:310px;flex-shrink:0;display:flex;flex-direction:column;gap:5px;max-height:72vh;overflow-y:auto}
+  .mdi{display:flex;align-items:center;gap:9px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-md);padding:9px 11px;cursor:pointer}
+  .mdi:hover{border-color:var(--ac)}
+  .mdi.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,var(--s1))}
+  .mdi .chk{flex-shrink:0;margin:0}
+  .mdi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--tf)}
+  .mdi-dot.ai_draft{background:var(--warn)} .mdi-dot.approved{background:var(--ok,#3ba55d)}
+  .mdi-dot.hold{background:var(--tf)} .mdi-dot.discarded{background:var(--err)}
+  .mdi-num{font-size:.72rem;font-weight:var(--fw-black);color:var(--tf);font-variant-numeric:tabular-nums;flex-shrink:0}
+  .mdi-ttl{flex:1;font-size:.87rem;font-weight:var(--fw-semibold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .md-detail{flex:1;min-width:0;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);padding:18px 20px;min-height:320px}
+  .backbtn{display:none;margin-bottom:12px;color:var(--ts);background:none;border:none;font-size:.85rem;cursor:pointer;font-family:inherit;font-weight:var(--fw-semibold)}
+  .d-empty{color:var(--tf);text-align:center;padding:70px 16px;font-size:.88rem}
+  .d-num{font-size:.74rem;font-weight:var(--fw-black);color:var(--ac);font-variant-numeric:tabular-nums}
+  .d-ttl{font-size:1.18rem;font-weight:var(--fw-black);margin:3px 0 10px;line-height:var(--lh-heading)}
+  .d-acts{display:flex;gap:7px;margin:14px 0}
+  .d-acts button{flex:1;border:1px solid var(--bd);background:var(--s2);border-radius:var(--r-md);padding:10px;font-size:.86rem;cursor:pointer;font-weight:var(--fw-bold);color:var(--ts);font-family:inherit}
+  .d-acts .ok:hover{border-color:var(--ok,#3ba55d);color:var(--ok,#3ba55d)}
+  .d-acts .hold:hover{border-color:var(--warn);color:var(--warn)}
+  .d-acts .del:hover{border-color:var(--err);color:var(--err)}
+  .d-body{font-size:.9rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);margin:10px 0;padding:13px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r-md)}
+  .d-sec{margin-top:13px;font-size:.82rem}
+  .d-sec .lbl{color:var(--tf);font-size:.72rem;font-weight:var(--fw-semibold);margin-bottom:4px}
+  .d-tags{display:flex;flex-wrap:wrap;gap:5px}
+  .d-tag{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r-pill);padding:2px 10px;font-size:.74rem;color:var(--ts)}
+  .d-tag.syn{color:var(--ac);border-color:var(--ac)}
+  .d-foot{margin-top:13px;padding-top:10px;border-top:1px dashed var(--bd);color:var(--tf);font-size:.72rem;line-height:1.5}
+
+  /* ── 학습일지 (세로 카드) ── */
+  .card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-lg);padding:13px 14px;margin-bottom:9px}
+  .card-ttl{font-weight:var(--fw-bold);font-size:.98rem;margin-bottom:5px;line-height:var(--lh-heading)}
+  .card .badges{margin-bottom:6px}
+  .card-body{color:var(--bodytx);font-size:.85rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
   .log-row{cursor:pointer}
   .log-detail{margin-top:9px;padding-top:9px;border-top:1px dashed var(--bd);font-size:.8rem;color:var(--ts);display:none}
   .log-detail.show{display:block}
@@ -88,14 +114,22 @@
   /* admin 가드 */
   .guard{display:none;text-align:center;padding:80px 20px;color:var(--tf)}
   .guard.show{display:block}
-  @media(max-width:600px){ .wrap{padding:16px 12px 80px} h1{font-size:1.05rem} }
+  @media(max-width:720px){
+    .wrap{padding:16px 12px 80px}
+    h1{font-size:1.05rem}
+    .md-list{width:100%}
+    .md-detail{display:none}
+    .md.show-detail .md-list{display:none}
+    .md.show-detail .md-detail{display:block}
+    .md.show-detail .backbtn{display:inline-block}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a href="/app.html?view=admin&sec=knowledge" style="display:inline-block;margin-bottom:13px;color:var(--ts);text-decoration:none;font-size:.82rem;font-weight:var(--fw-semibold);">← 운영센터로 돌아가기</a>
+  <a href="/app.html?view=admin&sec=knowledge" class="backlink">← 운영센터로 돌아가기</a>
   <div class="topbar">
-    <h1>📚 지식창고 <span class="ver">v0.1 · admin · 비공개</span></h1>
+    <h1>📚 지식창고 <span class="ver">v0.2 · admin · 비공개</span></h1>
     <button class="iconbtn" id="themeBtn" title="다크/라이트">◐</button>
   </div>
   <div class="sub">대상 <b>knowledge_logs</b> + <b>knowledge_entries</b> (신버전 pdnwgzneooyygfejrvbg) · 야간 자동 학습(Phase 3) 선행 인프라</div>
@@ -120,9 +154,11 @@
       <button class="fchip" data-f="discarded" onclick="KV.setFilter('discarded')">discarded</button>
     </div>
 
-    <div class="bulkbar" id="bulkbar">
-      <b id="bulkCount">0</b>건 선택됨
-      <button onclick="KV.bulkApprove()">선택 일괄 승인</button>
+    <!-- 검수 큐 상단바: 전체 선택 + 현재 필터 전건 승인 -->
+    <div class="qbar" id="qbar">
+      <label><input type="checkbox" id="selAll" onclick="KV.toggleAll(this.checked)"> 전체 선택</label>
+      <span class="cnt"><b id="selCount">0</b>건 선택</span>
+      <button class="approve" id="bulkBtn" onclick="KV.bulkApprove()" disabled>선택 전건 승인</button>
     </div>
 
     <div class="meta" id="meta">불러오는 중...</div>
@@ -149,7 +185,7 @@
 window.KV = (function(){
   "use strict";
 
-  var ENGINE_VERSION = 'knowledge-vault-v0.1';
+  var ENGINE_VERSION = 'knowledge-vault-v0.2';
   var STATUS_LABEL = { ai_draft:'AI 초안', approved:'승인', hold:'보류', discarded:'폐기' };
 
   var state = {
@@ -157,12 +193,15 @@ window.KV = (function(){
     filter: 'ai_draft',
     logs: [],
     entries: [],
+    cur: 0,                  // 검수 큐 선택 인덱스
     selected: {},            // entry_id -> true
+    syn: {},                 // lowercased term/synonym -> [그룹 전체]
     pending: null            // {id, status} 사유 모달 대기
   };
 
   function $(id){ return document.getElementById(id); }
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function pad3(n){ return ('000'+n).slice(-3); }
   function fmt(ts){ if(!ts) return '-'; try{ return new Date(ts).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return String(ts); } }
   function adminUser(){ try{ return JSON.parse(localStorage.getItem('os_user')||'{}'); }catch(e){ return {}; } }
 
@@ -172,14 +211,8 @@ window.KV = (function(){
   // ── admin 가드 ──
   function guard(){
     var u = adminUser();
-    if(u && u.role === 'admin'){
-      $('main').style.display = '';
-      $('guard').classList.remove('show');
-      return true;
-    }
-    $('guard').classList.add('show');
-    $('main').style.display = 'none';
-    return false;
+    if(u && u.role === 'admin'){ $('main').style.display=''; $('guard').classList.remove('show'); return true; }
+    $('guard').classList.add('show'); $('main').style.display='none'; return false;
   }
 
   // ── 탭 전환 ──
@@ -188,223 +221,239 @@ window.KV = (function(){
     $('tabLog').classList.toggle('on', tab==='log');
     $('tabQueue').classList.toggle('on', tab==='queue');
     $('filters').style.display = tab==='queue' ? 'flex' : 'none';
-    updateBulkBar();
+    if(tab!=='queue') $('qbar').classList.remove('show');
     if(tab==='log') loadLogs(); else loadEntries();
   }
 
-  // ── 학습일지 ──
+  // ════ 학습일지 ════
   function loadLogs(){
-    clearError();
-    $('meta').textContent = '학습일지 불러오는 중...';
-    $('list').innerHTML = '';
+    clearError(); $('meta').textContent='학습일지 불러오는 중...'; $('list').innerHTML='';
     window.db.fetch('/rest/v1/knowledge_logs?select=*&order=run_at.desc&limit=100')
-      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-      .then(function(rows){
-        state.logs = Array.isArray(rows) ? rows : [];
-        renderLogs();
-      })
-      .catch(function(err){ console.error('[vault] logs:', err); showError('학습일지 조회 실패: ' + err.message + ' (admin 권한/로그인 확인)'); $('meta').textContent=''; });
+      .then(function(res){ if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
+      .then(function(rows){ state.logs = Array.isArray(rows)?rows:[]; renderLogs(); })
+      .catch(function(err){ console.error('[vault] logs:',err); showError('학습일지 조회 실패: '+err.message+' (admin 권한/로그인 확인)'); $('meta').textContent=''; });
   }
-
   function renderLogs(){
     if(!state.logs.length){
-      $('meta').textContent = '';
-      $('list').innerHTML = '<div class="empty"><div class="big">🌙</div>야간 학습 가동 전입니다.<br>Phase 3에서 자동 학습이 가동되면 이 자리에 작업 일지가 쌓입니다.</div>';
+      $('meta').textContent='';
+      $('list').innerHTML='<div class="empty"><div class="big">🌙</div>야간 학습 가동 전입니다.<br>Phase 3에서 자동 학습이 가동되면 이 자리에 작업 일지가 쌓입니다.</div>';
       return;
     }
-    $('meta').innerHTML = '학습일지 <b>' + state.logs.length + '</b>건';
-    var html = state.logs.map(function(lg){
-      return '<div class="card log-row" onclick="KV.toggleLog(' + lg.id + ')">' +
-        '<div class="card-ttl">' + esc(fmt(lg.run_at)) + ' · ' + esc(lg.run_type||'manual') + (lg.engine_version?(' · ' + esc(lg.engine_version)):'') + '</div>' +
-        '<div class="badges">' +
-          '<span class="b b-type">추출 ' + (lg.extracted_count==null?'-':lg.extracted_count) + '건</span>' +
-          '<span class="b b-st-' + esc(lg.status||'ai_draft') + '">' + esc(STATUS_LABEL[lg.status]||lg.status||'ai_draft') + '</span>' +
-          '<span class="b b-src">' + esc(lg.author||'ai') + '</span>' +
-        '</div>' +
-        (lg.handover_note ? '<div class="card-body">' + esc(lg.handover_note) + '</div>' : '') +
-        '<div class="log-detail" id="logd' + lg.id + '">' + logDetailHtml(lg) + '</div>' +
+    $('meta').innerHTML='학습일지 <b>'+state.logs.length+'</b>건';
+    $('list').innerHTML = state.logs.map(function(lg){
+      return '<div class="card log-row" onclick="KV.toggleLog('+lg.id+')">'+
+        '<div class="card-ttl">'+esc(fmt(lg.run_at))+' · '+esc(lg.run_type||'manual')+(lg.engine_version?(' · '+esc(lg.engine_version)):'')+'</div>'+
+        '<div class="badges">'+
+          '<span class="b b-type">추출 '+(lg.extracted_count==null?'-':lg.extracted_count)+'건</span>'+
+          '<span class="b b-st-'+esc(lg.status||'ai_draft')+'">'+esc(STATUS_LABEL[lg.status]||lg.status||'ai_draft')+'</span>'+
+          '<span class="b b-src">'+esc(lg.author||'ai')+'</span>'+
+        '</div>'+
+        (lg.handover_note?'<div class="card-body">'+esc(lg.handover_note)+'</div>':'')+
+        '<div class="log-detail" id="logd'+lg.id+'">'+logDetailHtml(lg)+'</div>'+
       '</div>';
     }).join('');
-    $('list').innerHTML = html;
   }
-
   function logDetailHtml(lg){
-    var parts = [];
-    function jblock(label, val){
-      if(val==null || (typeof val==='object' && !Object.keys(val).length)) return;
-      parts.push('<h4>' + esc(label) + '</h4><pre>' + esc(typeof val==='string'?val:JSON.stringify(val,null,2)) + '</pre>');
-    }
-    jblock('처리 파일 (source_files)', lg.source_files);
-    jblock('카테고리 분포', lg.category_breakdown);
-    jblock('신규 용어 후보', lg.new_terms);
-    jblock('중복 처리 메모', lg.dedup_notes);
-    jblock('품질 이슈', lg.quality_issues);
-    jblock('검토 필요', lg.review_needed);
-    if(lg.handover_note) jblock('인계 노트', lg.handover_note);
-    return parts.join('') || '<div style="color:var(--tf);font-size:.74rem">추가 상세 없음</div>';
+    var parts=[];
+    function jb(label,val){ if(val==null||(typeof val==='object'&&!Object.keys(val).length))return; parts.push('<h4>'+esc(label)+'</h4><pre>'+esc(typeof val==='string'?val:JSON.stringify(val,null,2))+'</pre>'); }
+    jb('처리 파일 (source_files)',lg.source_files); jb('카테고리 분포',lg.category_breakdown);
+    jb('신규 용어 후보',lg.new_terms); jb('중복 처리 메모',lg.dedup_notes);
+    jb('품질 이슈',lg.quality_issues); jb('검토 필요',lg.review_needed);
+    if(lg.handover_note) jb('인계 노트',lg.handover_note);
+    return parts.join('')||'<div style="color:var(--tf);font-size:.74rem">추가 상세 없음</div>';
   }
+  function toggleLog(id){ var el=$('logd'+id); if(el) el.classList.toggle('show'); }
 
-  function toggleLog(id){
-    var el = $('logd' + id);
-    if(el) el.classList.toggle('show');
-  }
-
-  // ── 검수 큐 ──
+  // ════ 검수 큐 (마스터-디테일) ════
   function setFilter(f){
-    state.filter = f;
-    var chips = document.querySelectorAll('#filters .fchip');
-    for(var i=0;i<chips.length;i++){ chips[i].classList.toggle('on', chips[i].getAttribute('data-f')===f); }
-    state.selected = {};
+    state.filter=f;
+    var chips=document.querySelectorAll('#filters .fchip');
+    for(var i=0;i<chips.length;i++) chips[i].classList.toggle('on', chips[i].getAttribute('data-f')===f);
+    state.selected={}; state.cur=0;
     loadEntries();
   }
 
-  function loadEntries(){
-    clearError();
-    $('meta').textContent = '검수 큐 불러오는 중...';
-    $('list').innerHTML = '';
-    var q;
-    if(state.filter === 'all') q = 'status=in.(ai_draft,approved,hold)';          // soft delete(discarded) 기본 제외
-    else q = 'status=eq.' + state.filter;
-    var url = '/rest/v1/knowledge_entries?select=entry_id,type,title,body,category,source_type,source_id,source_company,canonical_company_name,confidence,status,reviewed_at,review_note,created_at&' + q + '&order=created_at.desc&limit=300';
-    window.db.fetch(url)
-      .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-      .then(function(rows){
-        state.entries = Array.isArray(rows) ? rows : [];
-        renderEntries();
-      })
-      .catch(function(err){ console.error('[vault] entries:', err); showError('검수 큐 조회 실패: ' + err.message + ' (admin 권한/로그인 확인)'); $('meta').textContent=''; });
+  function loadEntries(keepCur){
+    clearError(); $('meta').textContent='검수 큐 불러오는 중...';
+    if(!keepCur){ state.cur=0; }
+    var q = state.filter==='all' ? 'status=in.(ai_draft,approved,hold)' : 'status=eq.'+state.filter;  // discarded는 전용 필터만
+    var url='/rest/v1/knowledge_entries?select=entry_id,type,title,body,category,tags,source_type,source_id,source_title,source_company,canonical_company_name,confidence,status,reviewed_at,review_note,created_at&'+q+'&order=created_at.desc&limit=300';
+    // 동의어 맵 + 엔트리 병렬
+    Promise.all([
+      window.db.fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }),
+      window.db.fetch('/rest/v1/knowledge_synonyms?select=term,synonyms&limit=500').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; })
+    ]).then(function(res){
+      state.entries = Array.isArray(res[0])?res[0]:[];
+      buildSyn(Array.isArray(res[1])?res[1]:[]);
+      renderQueue();
+    }).catch(function(err){ console.error('[vault] entries:',err); showError('검수 큐 조회 실패: '+err.message+' (admin 권한/로그인 확인)'); $('meta').textContent=''; $('qbar').classList.remove('show'); });
   }
 
-  function renderEntries(){
-    updateBulkBar();
+  function buildSyn(rows){
+    state.syn={};
+    rows.forEach(function(r){
+      var all=[r.term].concat(Array.isArray(r.synonyms)?r.synonyms:[]).filter(Boolean);
+      all.forEach(function(t){ state.syn[String(t).toLowerCase()]=all; });
+    });
+  }
+  function synonymsOf(title){
+    var g=state.syn[String(title||'').toLowerCase()];
+    if(!g) return [];
+    return g.filter(function(t){ return String(t).toLowerCase()!==String(title||'').toLowerCase(); });
+  }
+
+  function renderQueue(){
     if(!state.entries.length){
-      $('meta').textContent = '';
-      var msg = state.filter==='ai_draft'
+      $('meta').textContent=''; $('qbar').classList.remove('show');
+      $('list').innerHTML = state.filter==='ai_draft'
         ? '<div class="empty"><div class="big">✅</div>검수 대기(ai_draft) 항목이 없습니다.<br>야간 학습이 가동되면 이 자리에 초안이 쌓입니다.</div>'
-        : '<div class="empty">해당 상태(' + esc(state.filter) + ') 항목이 없습니다.</div>';
-      $('list').innerHTML = msg;
+        : '<div class="empty">해당 상태('+esc(state.filter)+') 항목이 없습니다.</div>';
       return;
     }
-    $('meta').innerHTML = esc(state.filter) + ' <b>' + state.entries.length + '</b>건';
-    var canAct = state.filter !== 'discarded';
-    var html = state.entries.map(function(e){
-      var id = e.entry_id;
-      var co = e.canonical_company_name || e.source_company || '';
-      return '<div class="card">' +
-        '<div class="card-top">' +
-          (canAct ? '<input type="checkbox" class="chk" ' + (state.selected[id]?'checked':'') + ' onchange="KV.toggleSel(' + id + ',this.checked)">' : '') +
-          '<div class="card-main">' +
-            '<div class="card-ttl">' + esc(e.title||'(제목 없음)') + '</div>' +
-            '<div class="badges">' +
-              '<span class="b b-type">' + esc(e.type||'-') + '</span>' +
-              (e.category?('<span class="b b-src">' + esc(e.category) + '</span>'):'') +
-              (co?('<span class="b b-src">' + esc(co) + '</span>'):'') +
-              '<span class="b b-st-' + esc(e.status) + '">' + esc(STATUS_LABEL[e.status]||e.status) + '</span>' +
-              (e.confidence?('<span class="b b-src">conf:' + esc(e.confidence) + '</span>'):'') +
-            '</div>' +
-            (e.body?('<div class="card-body">' + esc(e.body) + '</div>'):'') +
-            '<div class="card-foot">' +
-              '<span>출처 ' + esc(e.source_type||'-') + (e.source_id?(' #' + esc(e.source_id)):'') + '</span>' +
-              (e.reviewed_at?('<span>검수 ' + esc(fmt(e.reviewed_at)) + '</span>'):'') +
-              (e.review_note?('<span>사유: ' + esc(e.review_note) + '</span>'):'') +
-            '</div>' +
-            (canAct ? actsHtml(id, e.status) : '') +
-          '</div>' +
-        '</div>' +
+    $('meta').innerHTML = esc(state.filter)+' <b>'+state.entries.length+'</b>건';
+    $('qbar').classList.toggle('show', state.filter!=='discarded');
+    $('list').innerHTML = '<div class="md" id="md"><div class="md-list" id="mdList"></div><div class="md-detail" id="mdDetail"></div></div>';
+    renderList();
+    if(state.cur>=state.entries.length) state.cur=state.entries.length-1;
+    selectEntry(state.cur, true);
+    syncSelAll();
+  }
+
+  function renderList(){
+    var canSel = state.filter!=='discarded';
+    $('mdList').innerHTML = state.entries.map(function(e,i){
+      var id=e.entry_id;
+      return '<div class="mdi'+(i===state.cur?' on':'')+'" onclick="KV.selectEntry('+i+')">'+
+        (canSel?'<input type="checkbox" class="chk" '+(state.selected[id]?'checked':'')+' onclick="event.stopPropagation();KV.toggleSel('+id+',this.checked)">':'')+
+        '<span class="mdi-dot '+esc(e.status)+'"></span>'+
+        '<span class="mdi-num">'+pad3(i+1)+'</span>'+
+        '<span class="mdi-ttl">'+esc(e.title||'(제목 없음)')+'</span>'+
       '</div>';
     }).join('');
-    $('list').innerHTML = html;
   }
 
-  function actsHtml(id, status){
-    return '<div class="acts">' +
-      (status==='approved'?'':'<button class="actbtn ok" onclick="KV.approveOne(' + id + ')">승인</button>') +
-      (status==='hold'?'':'<button class="actbtn hold" onclick="KV.askReason(' + id + ',\'hold\')">보류</button>') +
-      '<button class="actbtn del" onclick="KV.askReason(' + id + ',\'discarded\')">폐기</button>' +
+  function selectEntry(i, noScroll){
+    if(i<0||i>=state.entries.length){ return; }
+    state.cur=i;
+    var items=$('mdList')?$('mdList').children:[];
+    for(var k=0;k<items.length;k++) items[k].classList.toggle('on', k===i);
+    if(!noScroll && items[i] && items[i].scrollIntoView) items[i].scrollIntoView({block:'nearest'});
+    renderDetail(state.entries[i]);
+    var md=$('md'); if(md) md.classList.add('show-detail');  // 모바일: 상세로 전환
+  }
+  function backToList(){ var md=$('md'); if(md) md.classList.remove('show-detail'); }
+
+  function renderDetail(e){
+    var el=$('mdDetail'); if(!el) return;
+    if(!e){ el.innerHTML='<div class="d-empty">항목을 선택하세요.</div>'; return; }
+    var canAct = e.status!=='discarded';
+    var co = e.canonical_company_name||e.source_company||'';
+    var tags = Array.isArray(e.tags)?e.tags:[];
+    var syns = synonymsOf(e.title);
+    var html='';
+    html+='<button class="backbtn" onclick="KV.backToList()">← 목록</button>';
+    html+='<div class="d-num">'+pad3(state.cur+1)+'</div>';
+    html+='<div class="d-ttl">'+esc(e.title||'(제목 없음)')+'</div>';
+    html+='<div class="badges">'+
+      '<span class="b b-type">'+esc(e.type||'-')+'</span>'+
+      (e.category?('<span class="b b-src">'+esc(e.category)+'</span>'):'')+
+      (co?('<span class="b b-src">'+esc(co)+'</span>'):'')+
+      '<span class="b b-st-'+esc(e.status)+'">'+esc(STATUS_LABEL[e.status]||e.status)+'</span>'+
+      (e.confidence?('<span class="b b-src">conf:'+esc(e.confidence)+'</span>'):'')+
     '</div>';
+    if(canAct){
+      html+='<div class="d-acts">'+
+        (e.status==='approved'?'':'<button class="ok" onclick="KV.approveOne('+e.entry_id+')">승인</button>')+
+        (e.status==='hold'?'':'<button class="hold" onclick="KV.askReason('+e.entry_id+',\'hold\')">보류</button>')+
+        '<button class="del" onclick="KV.askReason('+e.entry_id+',\'discarded\')">폐기</button>'+
+      '</div>';
+    }
+    html+='<div class="d-sec"><div class="lbl">본문</div><div class="d-body">'+esc(e.body||'(본문 없음)')+'</div></div>';
+    if(tags.length){
+      html+='<div class="d-sec"><div class="lbl">태그</div><div class="d-tags">'+tags.map(function(t){return '<span class="d-tag">'+esc(t)+'</span>';}).join('')+'</div></div>';
+    }
+    if(syns.length){
+      html+='<div class="d-sec"><div class="lbl">동의어</div><div class="d-tags">'+syns.map(function(t){return '<span class="d-tag syn">'+esc(t)+'</span>';}).join('')+'</div></div>';
+    }
+    html+='<div class="d-foot">출처 '+esc(e.source_type||'-')+(e.source_id?(' #'+esc(e.source_id)):'')+(e.source_title?(' · '+esc(e.source_title)):'')+
+      (e.reviewed_at?('<br>검수 '+esc(fmt(e.reviewed_at))):'')+(e.review_note?(' · 사유: '+esc(e.review_note)):'')+'</div>';
+    el.innerHTML=html;
   }
 
-  // ── 선택 / 일괄 ──
-  function toggleSel(id, on){
-    if(on) state.selected[id] = true; else delete state.selected[id];
-    updateBulkBar();
-  }
+  // ── 선택 / 전건 ──
+  function toggleSel(id,on){ if(on) state.selected[id]=true; else delete state.selected[id]; syncSelAll(); renderList(); }
   function selectedIds(){ return Object.keys(state.selected).map(Number); }
-  function updateBulkBar(){
-    if(state.tab !== 'queue' || state.filter === 'discarded'){ $('bulkbar').classList.remove('show'); return; }
-    var n = selectedIds().length;
-    $('bulkCount').textContent = n;
-    $('bulkbar').classList.toggle('show', n > 0);
+  function toggleAll(on){
+    state.selected={};
+    if(on) state.entries.forEach(function(e){ if(e.status!=='discarded') state.selected[e.entry_id]=true; });
+    renderList(); syncSelAll();
   }
-
+  function syncSelAll(){
+    var n=selectedIds().length;
+    $('selCount').textContent=n;
+    $('bulkBtn').disabled = n===0;
+    var selectable = state.entries.filter(function(e){return e.status!=='discarded';}).length;
+    var sa=$('selAll'); if(sa) sa.checked = selectable>0 && n>=selectable;
+  }
   function bulkApprove(){
-    var ids = selectedIds();
-    if(!ids.length) return;
-    if(!window.confirm(ids.length + '건을 승인합니다. 진행할까요?')) return;
-    patchStatus(ids, 'approved', null);
+    var ids=selectedIds(); if(!ids.length) return;
+    if(!window.confirm(ids.length+'건을 승인합니다. 진행할까요?')) return;
+    patchStatus(ids,'approved',null,true);
   }
 
-  // ── 단건 액션 ──
-  function approveOne(id){ patchStatus([id], 'approved', null); }
-
-  function askReason(id, status){
-    state.pending = { id: id, status: status };
-    $('reasonTitle').textContent = (status==='hold'?'보류':'폐기') + ' 사유';
-    $('reasonDesc').textContent = (status==='hold'?'보류':'폐기') + ' 사유를 1줄 이상 입력해주세요. (필수)';
-    $('reasonText').value = '';
-    $('reasonConfirm').disabled = true;
+  // ── 단건 액션 (판정 후 자동 다음) ──
+  function approveOne(id){ patchStatus([id],'approved',null,false); }
+  function askReason(id,status){
+    state.pending={id:id,status:status};
+    $('reasonTitle').textContent=(status==='hold'?'보류':'폐기')+' 사유';
+    $('reasonDesc').textContent=(status==='hold'?'보류':'폐기')+' 사유를 1줄 이상 입력해주세요. (필수)';
+    $('reasonText').value=''; $('reasonConfirm').disabled=true;
     $('reasonModal').classList.add('show');
-    setTimeout(function(){ $('reasonText').focus(); }, 30);
+    setTimeout(function(){ $('reasonText').focus(); },30);
   }
   function onReasonInput(){ $('reasonConfirm').disabled = !$('reasonText').value.trim(); }
-  function closeReason(){ $('reasonModal').classList.remove('show'); state.pending = null; }
+  function closeReason(){ $('reasonModal').classList.remove('show'); state.pending=null; }
   function confirmReason(){
-    var note = $('reasonText').value.trim();
-    if(!note || !state.pending) return;
-    var p = state.pending;
-    closeReason();
-    patchStatus([p.id], p.status, note);
+    var note=$('reasonText').value.trim(); if(!note||!state.pending) return;
+    var p=state.pending; closeReason();
+    patchStatus([p.id],p.status,note,false);
   }
 
   // ── status UPDATE (PATCH, is_admin RLS 경유) ──
-  function patchStatus(ids, status, note){
-    var u = adminUser();
-    var body = { status: status, reviewed_at: new Date().toISOString(), reviewed_by: u.id || null };
-    if(note != null) body.review_note = note;
-    var filter = ids.length === 1 ? 'entry_id=eq.' + ids[0] : 'entry_id=in.(' + ids.join(',') + ')';
-    $('meta').textContent = '반영 중...';
-    window.db.fetch('/rest/v1/knowledge_entries?' + filter, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify(body)
-    })
-    .then(function(res){
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      state.selected = {};
-      loadEntries();   // 재조회 = 현재 필터 기준 갱신
-    })
-    .catch(function(err){ console.error('[vault] patch:', err); showError('상태 반영 실패: ' + err.message); loadEntries(); });
+  function patchStatus(ids,status,note,isBulk){
+    var u=adminUser();
+    var body={ status:status, reviewed_at:new Date().toISOString(), reviewed_by:u.id||null };
+    if(note!=null) body.review_note=note;
+    var filter = ids.length===1 ? 'entry_id=eq.'+ids[0] : 'entry_id=in.('+ids.join(',')+')';
+    $('meta').textContent='반영 중...';
+    var keepIdx = state.cur;   // 판정 후 같은 인덱스 유지 = 자동 다음
+    window.db.fetch('/rest/v1/knowledge_entries?'+filter,{
+      method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(body)
+    }).then(function(res){
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      state.selected={};
+      if(isBulk) state.cur=0; else state.cur=keepIdx;   // 단건은 같은 자리(=다음 항목), 일괄은 처음
+      loadEntries(true);
+    }).catch(function(err){ console.error('[vault] patch:',err); showError('상태 반영 실패: '+err.message); loadEntries(true); });
   }
 
   // ── 테마 ──
-  function toggleTheme(){
-    var root = document.documentElement;
-    root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
-  }
+  function toggleTheme(){ var r=document.documentElement; r.setAttribute('data-theme', r.getAttribute('data-theme')==='dark'?'light':'dark'); }
 
   // ── init ──
   function init(){
     $('themeBtn').addEventListener('click', toggleTheme);
-    $('reasonModal').addEventListener('click', function(e){ if(e.target === $('reasonModal')) closeReason(); });
+    $('reasonModal').addEventListener('click', function(e){ if(e.target===$('reasonModal')) closeReason(); });
     document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeReason(); });
     if(guard()) switchTab('log');
   }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 
   return {
-    switchTab: switchTab, setFilter: setFilter, toggleLog: toggleLog,
-    toggleSel: toggleSel, bulkApprove: bulkApprove, approveOne: approveOne,
-    askReason: askReason, onReasonInput: onReasonInput, closeReason: closeReason, confirmReason: confirmReason
+    switchTab:switchTab, setFilter:setFilter, toggleLog:toggleLog,
+    selectEntry:selectEntry, backToList:backToList,
+    toggleSel:toggleSel, toggleAll:toggleAll, bulkApprove:bulkApprove, approveOne:approveOne,
+    askReason:askReason, onReasonInput:onReasonInput, closeReason:closeReason, confirmReason:confirmReason
   };
 })();
 </script>
