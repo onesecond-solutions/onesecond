@@ -106,7 +106,7 @@ function footerEls(d: any, p: ReturnType<typeof palette>) {
   if (name || phone) {
     out.push(el({ display: "flex", marginTop: 14, paddingTop: 12, borderTop: `1px solid ${p.line}`, fontSize: 14, fontWeight: 700, color: p.sig }, [name, phone].filter(Boolean).join(" · ")));
   }
-  out.push(el({ display: "flex", marginTop: 6, fontSize: 11, color: p.foot }, "※ 상담 참고용 · 보장은 약관 기준"));
+  out.push(el({ display: "flex", marginTop: 6, fontSize: 11, color: p.foot }, "상담 참고용 · 보장은 약관 기준"));
   return out;
 }
 // rows[{k,v,big}] → 항목:값 표 (딸깍 카드 룩). big = 강조색·큰 글씨.
