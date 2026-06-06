@@ -4116,6 +4116,7 @@ function renderMakeCardTool(){
         '</div>' +
         '<div class="mc-priv-notice">⚠️ AI 처리를 위해 입력 내용이 외부로 전송됩니다. 고객 실명·주민번호 등 식별정보는 입력하지 마세요.</div>' +
         '<div id="mcError" class="qck-mc-error" style="display:none;"></div>' +
+        '<div id="mcDbg" style="display:none;margin-top:8px;padding:8px 10px;background:#1a1a2e;border:1px solid #4f46e5;border-radius:8px;color:#a5b4fc;font-size:0.72em;line-height:1.5;font-family:monospace">[진단 모드]</div>' +
         '<button id="mcRetryBtn" class="qck-tool-fire" style="display:none;margin-top:8px;" onclick="mcGenerateV2()">다시 시도</button>' +
         '<div id="mcLoading" class="qck-mc-loading" style="display:none;"><span class="mc-wave"><i></i><i></i><i></i></span><span>AI 카드 만드는 중...</span></div>' +
         '<button id="mcFireBtn" class="qck-tool-fire" onclick="mcFire()">⚡ AI 카드 만들기</button>' +
@@ -4158,7 +4159,8 @@ function renderMakeCardTool(){
       e.preventDefault();
       drop.classList.remove('drag');
       var files = e.dataTransfer && e.dataTransfer.files;
-      if(files && files.length){ mcHandleFile(files[0]); }
+      if(files && files.length){ mcDbg('드롭 발생 · '+files[0].name+' / type='+(files[0].type||'(빈값)')); mcHandleFile(files[0]); }
+      else { mcDbg('드롭 발생 · 파일 없음'); }
     });
   }
   document.addEventListener('click', mcOnDocClick);
@@ -4174,9 +4176,11 @@ function mcOnDocClick(e){
   mcCloseActionMenu();
 }
 
+function mcDbg(s){ try{ var e=document.getElementById('mcDbg'); if(e){ e.style.display=''; e.innerHTML += '<div>· '+s+'</div>'; } }catch(_){ } }
 function mcOnFileChange(event){
   var file = event && event.target && event.target.files && event.target.files[0];
-  if(!file) return;
+  if(!file){ mcDbg('onchange 발생 · file 없음'); return; }
+  mcDbg('onchange 발생 · '+file.name+' / type='+(file.type||'(빈값)')+' / '+Math.round(file.size/1024)+'KB');
   mcHandleFile(file);
 }
 window.mcOnFileChange = mcOnFileChange;
@@ -4199,22 +4203,27 @@ function mcHandleFile(file){
   }
   var name = (file.name || '').toLowerCase();
   var type = file.type || '';
+  mcDbg('mcHandleFile 진입 · name='+name+' type='+(type||'(빈값)'));
   showLoading(true);
   if(type === 'image/png' || type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(name)){
+    mcDbg('이미지 분기 진입 · FileReader 시작');
     var reader = new FileReader();
     reader.onload = function(e){
+      mcDbg('FileReader onload · dataURL '+((e.target.result||'').length)+'자');
       showLoading(false);
       mcState.fileName = file.name;
       mcState.fileType = 'image';
       mcState.fileDataUrl = e.target.result;
       mcState.fileText = '';
       mcUpdateFileUI();
+      mcDbg('mcUpdateFileUI 완료 · 칩 표시됨');
       mcUpdatePreview();
     };
-    reader.onerror = function(){ showError('이미지 읽기 실패. 다시 시도해주세요.'); };
+    reader.onerror = function(){ mcDbg('FileReader onerror'); showError('이미지 읽기 실패. 다시 시도해주세요.'); };
     reader.readAsDataURL(file);
     return;
   }
+  mcDbg('이미지 분기 미진입 · 다른 형식으로 처리');
   if(type === 'text/plain' || /\.txt$/i.test(name)){
     var reader2 = new FileReader();
     reader2.onload = function(e){
