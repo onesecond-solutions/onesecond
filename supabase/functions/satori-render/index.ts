@@ -76,21 +76,21 @@ function palette(theme?: string) {
     headType: "solid", headColor: "#4f46e5", headFrom: "", headTo: "",
     headText: "#ffffff", headSub: "rgba(255,255,255,0.85)",
     bg: "#0f1629", k: "#94a3b8", v: "#f8fafc", accent: "#8b9cff",
-    line: "#1f2a44", sig: "#e2e8f0", foot: "#64748b", border: "#1f2a44",
+    line: "#1f2a44", sig: "#e2e8f0", foot: "#64748b", border: "#1f2a44", field: "#070b16",
   };
   // B: 그라데이션 헤더 + 흰 본문
   if (theme === "B") return {
     headType: "gradient", headColor: "", headFrom: "#4f46e5", headTo: "#7c3aed",
     headText: "#ffffff", headSub: "rgba(255,255,255,0.85)",
     bg: "#ffffff", k: "#52525b", v: "#18181b", accent: "#6d28d9",
-    line: "#eef2f7", sig: "#27272a", foot: "#9ca3af", border: "#ececed",
+    line: "#eef2f7", sig: "#27272a", foot: "#9ca3af", border: "#ececed", field: "#eef2f7",
   };
   // A(기본): 인디고 솔리드 헤더 + 흰 본문 (딸깍 룩)
   return {
     headType: "solid", headColor: "#6366f1", headFrom: "", headTo: "",
     headText: "#ffffff", headSub: "rgba(255,255,255,0.82)",
     bg: "#ffffff", k: "#52525b", v: "#18181b", accent: "#6366f1",
-    line: "#e4e4e7", sig: "#27272a", foot: "#9ca3af", border: "#ececed",
+    line: "#e4e4e7", sig: "#27272a", foot: "#9ca3af", border: "#ececed", field: "#f1f5f9",
   };
 }
 
@@ -150,10 +150,13 @@ function buildCard(d: any): El {
   if (p.headType === "gradient") headStyle.backgroundImage = `linear-gradient(135deg, ${p.headFrom}, ${p.headTo})`;
   else headStyle.background = p.headColor;
 
-  return el({ display: "flex", flexDirection: "column", width: 360, background: p.bg, borderRadius: 16, overflow: "hidden", border: `1px solid ${p.border}` }, [
+  const card = el({ display: "flex", flexDirection: "column", width: 360, background: p.bg, borderRadius: 16, overflow: "hidden", border: `1px solid ${p.border}` }, [
     el(headStyle, head),
     el({ display: "flex", flexDirection: "column", padding: "8px 20px 20px" }, [...bodyEls(d, p), ...footerEls(d, p)]),
   ]);
+  // 외곽 불투명 여백(field): 둥근 모서리 바깥이 투명 → 어두운 배경서 검게 보이는 문제 차단.
+  // 사각 래퍼가 PNG 전체를 채워 투명 영역 0 + 네 모서리 라운드 전부 노출.
+  return el({ display: "flex", padding: 16, background: p.field }, [card]);
 }
 
 Deno.serve(async (req: Request) => {
