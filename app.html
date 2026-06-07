@@ -9636,9 +9636,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   </div>
   <div class="os-sheet-chips">
     <button class="os-chip on" data-chip="mine" type="button">마이 스크립트</button>
-    <button class="os-chip" data-chip="rscript" type="button">추천 스크립트</button>
-    <button class="os-chip" data-chip="rchat" type="button">추천 채팅</button>
-    <button class="os-chip" data-chip="rdoc" type="button">추천 자료</button>
+    <button class="os-chip" data-chip="rscript" type="button">공유 스크립트</button>
+    <button class="os-chip" data-chip="rchat" type="button">공유 채팅</button>
+    <button class="os-chip" data-chip="rdoc" type="button">공유 자료</button>
   </div>
   <div class="os-sheet-body" id="osSheetBody"><div class="os-empty">불러오는 중…</div></div>
 </div>
@@ -9685,8 +9685,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     render(chip);
   }
   function render(chip){
-    if(chip==='rscript'){ updateCnt(0); body.innerHTML='<div class="os-empty">추천 스크립트는 곧 채워집니다 ✍️<br>운영진이 엄선한 단계별 화법이 여기에 모여요.</div>'; return; }
-    if(chip==='rdoc'){ updateCnt(0); body.innerHTML='<div class="os-empty">추천 자료는 곧 채워집니다 📎<br>현장에서 자주 쓰는 자료가 여기에 모여요.</div>'; return; }
+    if(chip==='rscript'){ updateCnt(0); body.innerHTML='<div class="os-empty">공유 스크립트는 곧 채워집니다 ✍️<br>실장·지점장이 공유한 단계별 화법이 여기에 모여요.</div>'; return; }
+    if(chip==='rdoc'){ updateCnt(0); body.innerHTML='<div class="os-empty">공유 자료는 곧 채워집니다 📎<br>현장에서 자주 쓰는 자료가 여기에 모여요.</div>'; return; }
     if(chip==='mine'){ return renderMine(); }
     if(chip==='rchat'){ return renderChat(); }
   }
@@ -9712,7 +9712,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(!window.db||!window.db.fetch){ updateCnt(0); body.innerHTML='<div class="os-empty">로그인 후 표시됩니다.</div>'; return; }
     if(loaded.rchat){ return paintChat(cache.rchat||[]); }
     body.innerHTML='<div class="os-empty">불러오는 중…</div>';
-    var kwq=encodeURIComponent('{'+CHAT_KW+'}');
+    var kwq=encodeURIComponent('{"'+CHAT_KW+'"}');  /* 콜론(유형:채팅) 포함 → 배열 원소 큰따옴표로 감싸야 PostgREST cs 파싱 정상 */
     window.db.fetch('/rest/v1/scripts?scope=eq.global&is_active=eq.true&keywords=cs.'+kwq+'&order=created_at.desc&select=id,title,script_text')
       .then(function(r){ return r.ok?r.json():[]; })
       .then(function(rows){ cache.rchat=rows||[]; loaded.rchat=true; paintChat(cache.rchat); })
@@ -9720,7 +9720,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   }
   function paintChat(rows){
     updateCnt(rows.length);
-    if(!rows.length){ body.innerHTML='<div class="os-empty">추천 채팅이 곧 채워집니다 💬<br>상황별 대안 화법이 여기에 모여요.</div>'; return; }
+    if(!rows.length){ body.innerHTML='<div class="os-empty">공유 채팅이 곧 채워집니다 💬<br>실장·지점장이 공유한 상황별 대안 화법이 여기에 모여요.</div>'; return; }
     var h=''; for(var i=0;i<rows.length;i++){ var s=rows[i]; var alts=decodeChatScript(s.script_text);
       h+='<div class="os-sit" data-idx="'+i+'"><div class="os-sit-head"><span class="t">'+esc(s.title||'(상황)')+'</span><span class="b">'+alts.length+'</span><span class="ar">▾</span></div><div class="os-sit-alts">';
       for(var j=0;j<alts.length;j++){ if(alts[j].label) h+='<div class="os-alt-label">'+esc(alts[j].label)+'</div>'; h+='<div class="os-bubble" data-copy="'+esc(alts[j].text)+'"><span class="cp">탭 복사</span>'+esc(alts[j].text)+'</div>'; }
