@@ -244,6 +244,27 @@
   async function _handleOAuthCallback() {
     var hash = window.location.hash || '';
 
+    /* 2026-06-07: OAuth 에러 표면화 — Supabase가 redirect_to에 ?error=/#error= 를 붙여 되돌리는 경우
+       (대표 사례: 어드민 동일 이메일 충돌 = 이메일 OTP identity + Google identity, "Allow manual linking" OFF).
+       이전엔 error 미처리 → 토큰 못 받고 조용히 로그인 페이지로 되돌아 "원인 모를 에러"로 보였음.
+       여기서 실제 error_code/description 를 콘솔에 남겨(근본 확정용) + 사용자에게 이메일 코드 로그인 유도. */
+    try {
+      var _q = new URLSearchParams(window.location.search || '');
+      var _h = new URLSearchParams(hash.substring(1));
+      var _err = _q.get('error') || _h.get('error');
+      if (_err) {
+        var _ed = _q.get('error_description') || _h.get('error_description') || '';
+        var _ec = _q.get('error_code') || _h.get('error_code') || '';
+        console.error('[oauth error]', _err, _ec, _ed);
+        try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+        /* access_denied = 사용자가 Google 동의 취소 → 안내 없이 조용히 로그인 페이지로. 그 외(충돌 등)만 안내. */
+        if (_err !== 'access_denied') {
+          alert('Google 로그인에 실패했습니다.\n\n이 이메일이 \'이메일 코드 로그인\'으로 이미 가입돼 있으면 Google 연결이 막힐 수 있어요.\n로그인 화면에서 이메일 코드 로그인을 이용해 주세요.');
+        }
+        return;  /* 토큰 없음 → init()이 로그인 페이지로 처리 */
+      }
+    } catch (e) { /* 파싱 실패 무시 */ }
+
     /* 2026-06-04: PKCE 콜백 — ?code 를 code_verifier 로 토큰 교환 (signInWithGoogle이 PKCE로 시작). */
     var _code = null;
     try { _code = new URLSearchParams(window.location.search || '').get('code'); } catch (e) {}
