@@ -7989,7 +7989,7 @@ function mysOpenItem(idx, keepList){
   if(_ia.length){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
   var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
   var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
-  var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):'';
+  var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):('<button class="post-act" onclick="scrEditOpen('+JSON.stringify(it.id)+')">✏️ 수정</button>');
   var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');  /* 메모는 제목 개념 없음 — 날짜+포스트잇 카드만 */
   v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'
     +_ttlHtml
@@ -8214,9 +8214,9 @@ function _ovClick(ev, el, fn){ if(ev.target === el && el.__downSelf){ el.__downS
 window._ovDown=_ovDown; window._ovClick=_ovClick;
 
 /* === MY SPACE 글쓰기 모달 + Create/Delete === */
-function openMyspaceWrite(ctx){
+function openMyspaceWrite(ctx, edit){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
-  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=(ctx==='team')?'매니저룸 글쓰기':'MY SPACE에 저장';
+  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'스크립트 수정'):((ctx==='team')?'매니저룸 글쓰기':'MY SPACE에 저장');
   /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
   var _ss=document.getElementById('mysWriteScrStage');
   if(_ss && !_ss.dataset.loaded && typeof SCRIPTS_GROUPS!=='undefined'){
@@ -8225,13 +8225,92 @@ function openMyspaceWrite(ctx){
   }
   switchMyspaceTab('script');
   if(typeof _scrApplyChatPerm==='function') _scrApplyChatPerm();  /* 채팅 토글 권한 노출 (mgr만), 기본 콜 */
-  if(typeof loadActiveDraft==='function') loadActiveDraft();  /* 임시저장 있으면 그 탭으로 이어서 작성 복원 */
+  window._mysWriteEdit = edit || null;
+  if(edit){ _mysPrefillEdit(edit); }   /* 편집 모드 = 기존 글 prefill (임시저장 복원 건너뜀) */
+  else if(typeof loadActiveDraft==='function') loadActiveDraft();  /* 작성 모드 = 임시저장 복원 */
   m.classList.add('open');
-  setTimeout(function(){var el=document.getElementById('mysWriteScrTitle');if(el)el.focus();},80);
+  setTimeout(function(){var el=document.getElementById(edit&&edit.type==='chat'?'scrChatSit':'mysWriteScrTitle');if(el)el.focus();},80);
 }
+/* 편집 모드 prefill — 스크립트(콜) / 채팅(상황+대안 복원) */
+function _mysPrefillEdit(edit){
+  var r=edit.row||{};
+  if(edit.type==='chat'){
+    if(typeof scrSetType==='function') scrSetType('chat');
+    var sit=document.getElementById('scrChatSit'); if(sit) sit.value=r.title||'';
+    var kw=document.getElementById('scrChatKeywords'); if(kw) kw.value=((r.keywords||[]).filter(function(k){return k!=='유형:채팅';})).join(', ');
+    var alts=(window.OSChatScript&&window.OSChatScript.decode)?window.OSChatScript.decode(r.script_text||''):[];
+    var w=document.getElementById('scrChatAlts');
+    if(w){ w.innerHTML=''; for(var i=0;i<alts.length;i++){ scrAddAlt(); var bs=w.querySelectorAll('.scr-alt-block'); var b=bs[bs.length-1]; if(b){ var lab=b.querySelector('.scr-alt-label'), txt=b.querySelector('.scr-alt-text'); if(lab)lab.value=alts[i].label||''; if(txt)txt.value=alts[i].text||''; } } if(!alts.length) scrAddAlt(); }
+  } else {
+    if(typeof scrSetType==='function') scrSetType('call');
+    var st=document.getElementById('mysWriteScrStage'); if(st) st.value=r.stage||'';
+    var ti=document.getElementById('mysWriteScrTitle'); if(ti) ti.value=r.title||'';
+    var tx=document.getElementById('mysWriteScrText'); if(tx) tx.value=r.script_text||'';
+    var hi=document.getElementById('mysWriteScrHighlight'); if(hi) hi.value=r.highlight_text||'';
+    var k2=document.getElementById('mysWriteScrKeywords'); if(k2) k2.value=(r.keywords||[]).join(', ');
+  }
+}
+window._mysPrefillEdit=_mysPrefillEdit;
+/* 스크립트/채팅 편집 진입 — id로 fetch 후 편집 모드 오픈 (본인 글) */
+async function scrEditOpen(id){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,stage,script_text,highlight_text,keywords,scope'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
+    if(!res.ok){ alert('불러오기 실패 ('+res.status+')'); return; }
+    var rows=await res.json(); var r=rows&&rows[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
+    var isChat=(r.keywords||[]).indexOf('유형:채팅')!==-1;
+    openMyspaceWrite(null, {type:isChat?'chat':'script', id:r.id, row:r});
+  }catch(e){ alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
+}
+window.scrEditOpen=scrEditOpen;
+/* 편집 저장 — scripts PATCH (스크립트 콜 / 채팅). RLS scripts_update_own = owner 본인 */
+async function _saveMyspaceEdit(){
+  var e=window._mysWriteEdit; if(!e) return;
+  var btn=document.getElementById('mysWriteSaveBtn');
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var headers={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
+  var body;
+  if(e.type==='chat'){
+    var sit=((document.getElementById('scrChatSit')||{}).value||'').trim();
+    var alts=(typeof scrCollectAlts==='function')?scrCollectAlts():[];
+    var kwExtra=((document.getElementById('scrChatKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    if(!sit){ alert('상황(제목)을 입력해 주세요.'); return; }
+    if(!alts.length){ alert('대안 화법을 1개 이상 입력해 주세요.'); return; }
+    var enc=(window.OSChatScript&&window.OSChatScript.encode)?window.OSChatScript.encode(alts):'';
+    body={title:sit, script_text:enc, highlight_text:(alts[0].text||'').slice(0,200), keywords:[(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅'].concat(kwExtra)};
+  } else {
+    var sstage=((document.getElementById('mysWriteScrStage')||{}).value||'').trim();
+    var stitle=((document.getElementById('mysWriteScrTitle')||{}).value||'').trim();
+    var stext=((document.getElementById('mysWriteScrText')||{}).value||'').trim();
+    var shi=((document.getElementById('mysWriteScrHighlight')||{}).value||'').trim();
+    var skw=((document.getElementById('mysWriteScrKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    if(!sstage){ alert('단계를 선택해 주세요.'); return; }
+    if(!stitle){ alert('제목을 입력해 주세요.'); return; }
+    if(!stext){ alert('스크립트 내용을 입력해 주세요.'); return; }
+    if(!shi){ alert('핵심 멘트를 입력해 주세요.'); return; }
+    body={title:stitle, script_text:stext, highlight_text:shi, stage:sstage, keywords:skw};
+  }
+  btn.disabled=true; btn.textContent='저장 중...';
+  try{
+    var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(e.id)),{method:'PATCH',headers:headers,body:JSON.stringify(body)});
+    if(res.ok||res.status===204){
+      window._mysWriteEdit=null;
+      if(typeof clearMyspaceWriteForm==='function') clearMyspaceWriteForm();
+      if(typeof _scrResetChat==='function') _scrResetChat();
+      closeMyspaceWrite();
+      window._myspaceLoaded=false; if(typeof loadMyspace==='function') loadMyspace(true);
+      window._scriptsLoaded=false;
+      try{ if(window.OSSheet){ window.OSSheet.reloadMine&&window.OSSheet.reloadMine(); window.OSSheet.reloadChat&&window.OSSheet.reloadChat(); } }catch(_e){}
+      if(typeof toast==='function') toast('수정됐어요!');
+    }else{ var er=await res.json().catch(function(){return{};}); alert('수정 실패: '+(er.message||res.status)); }
+  }catch(e2){ alert('네트워크 오류가 발생했습니다.'); }
+  finally{ btn.disabled=false; btn.textContent='저장하기'; }
+}
+window._saveMyspaceEdit=_saveMyspaceEdit;
 function closeMyspaceWrite(){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
   m.classList.remove('open');
+  window._mysWriteEdit=null;  /* 편집 모드 해제 */
   /* 첨부 파일은 임시저장(localStorage) 대상이 아님 → 닫을 때 비움 (재진입 시 잔존 방지). 텍스트 draft는 유지 */
   ['mysWriteScrFile','mysWriteLibFile','mysWriteGrpFile','mysWriteQnaFile'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
   ['mysWriteScrFilePreview','mysWriteLibFilePreview','mysWriteGrpFilePreview','mysWriteQnaFilePreview'].forEach(function(id){ var el=document.getElementById(id); if(el)el.innerHTML=''; });
@@ -8567,6 +8646,7 @@ function clearMyspaceWriteForm(){
   switchMyspaceTab('script');
 }
 async function saveMyspaceWrite(){
+  if(window._mysWriteEdit){ return _saveMyspaceEdit(); }   /* 편집 모드 = PATCH (스크립트/채팅) */
   var activeTab=document.querySelector('.mys-write-tab.on');
   var tab=activeTab?activeTab.getAttribute('data-tab'):'script';
   if(tab==='group'){ return _saveMyspaceGroup(); }
@@ -9626,6 +9706,12 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .scr-alt-block .scr-alt-text{width:100%;min-height:84px;}
 .scr-alt-del{position:absolute;top:8px;right:8px;font-size:.7rem;color:var(--ts);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;cursor:pointer;}
 .mys-write-altadd{font-size:.82rem;font-weight:600;color:var(--ac);background:transparent;border:1px dashed var(--ac);border-radius:8px;padding:8px 14px;cursor:pointer;width:100%;margin-top:4px;}
+/* 바텀시트 카드 ✎ 수정 버튼 (마이 스크립트·마이 채팅) */
+.os-card{position:relative;}
+.os-card-edit{position:absolute;top:7px;right:9px;background:transparent;border:1px solid var(--bd);border-radius:6px;color:var(--ts);font-size:.78rem;line-height:1;padding:3px 7px;cursor:pointer;z-index:2;}
+.os-card-edit:hover{border-color:var(--ac);color:var(--ac);}
+.os-sit-edit{flex:0 0 auto;background:transparent;border:1px solid var(--bd);border-radius:6px;color:var(--ts);font-size:.78rem;line-height:1;padding:3px 7px;cursor:pointer;}
+.os-sit-edit:hover{border-color:var(--ac);color:var(--ac);}
 </style>
 <div id="osSheet" class="os-sheet" role="region" aria-label="스크립트 시트">
   <div class="os-sheet-handle" id="osSheetHandle">
@@ -9706,9 +9792,10 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     updateCnt(rows.length);
     if(!rows.length){ body.innerHTML='<div class="os-empty">아직 내 스크립트가 없어요.<br>MY SPACE 글쓰기로 첫 스크립트를 만들어보세요.</div>'; return; }
     var h=''; for(var i=0;i<rows.length;i++){ var s=rows[i];
-      h+='<div class="os-card" data-copy="'+esc(s.highlight_text||s.title)+'">'+(s.stage?'<span class="stg">'+esc(stageLabel(s.stage))+'</span>':'')+'<div class="t">'+esc(s.title||'(제목 없음)')+'</div>'+(s.highlight_text?'<div class="h">'+esc(s.highlight_text)+'</div>':'')+'</div>'; }
+      h+='<div class="os-card" data-copy="'+esc(s.highlight_text||s.title)+'"><button class="os-card-edit" data-eid="'+s.id+'" title="수정">✎</button>'+(s.stage?'<span class="stg">'+esc(stageLabel(s.stage))+'</span>':'')+'<div class="t">'+esc(s.title||'(제목 없음)')+'</div>'+(s.highlight_text?'<div class="h">'+esc(s.highlight_text)+'</div>':'')+'</div>'; }
     body.innerHTML=h;
     body.querySelectorAll('.os-card').forEach(function(c){ c.addEventListener('click', function(){ copyText(c.getAttribute('data-copy')||''); }); });
+    body.querySelectorAll('.os-card-edit').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(typeof scrEditOpen==='function') scrEditOpen(b.getAttribute('data-eid')); }); });
   }
   function renderChat(){
     if(!window.db||!window.db.fetch){ updateCnt(0); body.innerHTML='<div class="os-empty">로그인 후 표시됩니다.</div>'; return; }
@@ -9724,26 +9811,28 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   /* 마이 채팅 = 본인이 작성한 채팅(owner_id 본인 + 유형:채팅). 채팅 작성 가능자에게만 칩 노출(applyChatChip). */
   function renderMyChat(){
     if(!window.db||!window.db.fetch||!tok()){ updateCnt(0); body.innerHTML='<div class="os-empty">로그인 후 내 채팅이 표시됩니다.</div>'; return; }
-    if(loaded.mychat){ return paintChat(cache.mychat||[], _myChatEmpty()); }
+    if(loaded.mychat){ return paintChat(cache.mychat||[], _myChatEmpty(), true); }
     body.innerHTML='<div class="os-empty">불러오는 중…</div>';
     var u=uid(); if(!u){ body.innerHTML='<div class="os-empty">로그인 후 표시됩니다.</div>'; return; }
     var kwq=encodeURIComponent('{"'+CHAT_KW+'"}');
     window.db.fetch('/rest/v1/scripts?owner_id=eq.'+encodeURIComponent(u)+'&is_active=eq.true&keywords=cs.'+kwq+'&order=created_at.desc&select=id,title,script_text')
       .then(function(r){ return r.ok?r.json():[]; })
-      .then(function(rows){ cache.mychat=rows||[]; loaded.mychat=true; paintChat(cache.mychat, _myChatEmpty()); })
+      .then(function(rows){ cache.mychat=rows||[]; loaded.mychat=true; paintChat(cache.mychat, _myChatEmpty(), true); })
       .catch(function(){ body.innerHTML='<div class="os-empty">불러오지 못했습니다.</div>'; });
   }
-  function paintChat(rows, emptyHtml){
+  function paintChat(rows, emptyHtml, editable){
     updateCnt(rows.length);
     if(!rows.length){ body.innerHTML=emptyHtml||'<div class="os-empty">공유 채팅이 곧 채워집니다 💬<br>실장·지점장이 공유한 상황별 대안 화법이 여기에 모여요.</div>'; return; }
     var h=''; for(var i=0;i<rows.length;i++){ var s=rows[i]; var alts=decodeChatScript(s.script_text);
-      h+='<div class="os-sit" data-idx="'+i+'"><div class="os-sit-head"><span class="t">'+esc(s.title||'(상황)')+'</span><span class="b">'+alts.length+'</span><span class="ar">▾</span></div><div class="os-sit-alts">';
+      var eb=editable?'<button class="os-sit-edit" data-eid="'+s.id+'" title="수정">✎</button>':'';
+      h+='<div class="os-sit" data-idx="'+i+'"><div class="os-sit-head"><span class="t">'+esc(s.title||'(상황)')+'</span><span class="b">'+alts.length+'</span>'+eb+'<span class="ar">▾</span></div><div class="os-sit-alts">';
       for(var j=0;j<alts.length;j++){ if(alts[j].label) h+='<div class="os-alt-label">'+esc(alts[j].label)+'</div>'; h+='<div class="os-bubble" data-copy="'+esc(alts[j].text)+'"><span class="cp">탭 복사</span>'+esc(alts[j].text)+'</div>'; }
       h+='</div></div>';
     }
     body.innerHTML=h;
     body.querySelectorAll('.os-sit-head').forEach(function(hd){ hd.addEventListener('click', function(){ hd.parentElement.classList.toggle('open'); }); });
     body.querySelectorAll('.os-bubble').forEach(function(b){ b.addEventListener('click', function(){ copyText(b.getAttribute('data-copy')||''); }); });
+    body.querySelectorAll('.os-sit-edit').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); if(typeof scrEditOpen==='function') scrEditOpen(b.getAttribute('data-eid')); }); });
   }
 
   /* 칩 전환: 접혀 있으면 중간으로 펼침 */
