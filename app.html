@@ -6476,11 +6476,17 @@ function _scStageLabel(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS
 function _scStageGroup(stg){ for(var i=0;i<SCRIPTS_GROUPS.length;i++) if(SCRIPTS_GROUPS[i].stage === stg) return SCRIPTS_GROUPS[i].group; return 'mid'; }
 
 function parseScriptSections(html){
-  if(!html || html.length < 200) return null;
+  if(!html) return null;
   var wrap = document.createElement('div');
   wrap.innerHTML = html;
   var boxes = wrap.querySelectorAll('div[style*="border:1.5px solid #DCDCDC"]');
-  if(!boxes.length) return null;
+  if(!boxes.length){
+    /* 폴백(2026-06-08): 표준 박스 구조가 아닌 script_text(자유형식·마이/채팅 등)도 본문으로 렌더.
+       textContent만 추출 → escape + 줄바꿈 보존(XSS·깨진 HTML 차단). 진짜 빈값이면 null → "본문 준비 중". */
+    var _txt = (wrap.textContent || '').trim();
+    if(!_txt) return null;
+    return [{ title:'내용', subtitle:'', mainText:_txt.replace(/\s+/g,' ').slice(0,400), mainHtml:_scEscape(_txt).replace(/\n/g,'<br>'), sub:'', coach:'' }];
+  }
   var sections = [];
   for(var i=0;i<boxes.length;i++){
     var box = boxes[i];
