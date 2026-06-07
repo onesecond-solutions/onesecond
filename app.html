@@ -1275,6 +1275,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .script-card-full{display:none;margin-top:4px}
 .script-card-close{display:none;position:absolute;top:8px;right:10px;background:none;border:0;font-size:1.1rem;color:var(--ts);cursor:pointer;padding:4px 10px;border-radius:6px;line-height:1;font-weight:600;z-index:2}
 .script-card-close:hover{background:var(--s2);color:var(--tp)}
+.script-card-edit{position:absolute;top:8px;right:40px;background:transparent;border:1px solid var(--bd);border-radius:6px;color:var(--ts);font-size:.78rem;line-height:1;padding:3px 7px;cursor:pointer;z-index:2}
+.script-card-edit:hover{border-color:var(--ac);color:var(--ac)}
 
 /* accordion (active 카드 안) */
 .script-acc-item{border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;background:var(--s2);overflow:hidden}
@@ -6439,7 +6441,7 @@ async function loadScriptsView(){
   /* Supabase 실 fetch — 1회만 (전체 자료 캐시). RLS = 로그인 토큰 필수. */
   try{
     /* scope=global 만 노출 = 공용 정제 스크립트 한정. 개인(personal)·채팅(stage=chat)·매니저룸 누수 차단 (2026-06-07, #421 계승) */
-    var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&scope=eq.global&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text';
+    var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&scope=eq.global&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text,owner_id';
     var authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('os_token')) || SUPABASE_ANON_KEY;
     var res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authToken }});
     if(!res.ok){ wrap.innerHTML = '<div class="scripts-cards-empty">자료를 불러올 수 없습니다. (HTTP '+res.status+')</div>'; return; }
@@ -6528,15 +6530,18 @@ function renderScriptsCards(stage){
   var groupKey = _scStageGroup(stage);
   var groupColor = SCRIPT_GROUP_COLORS[groupKey];
   var groupLabel = _scStageLabel(stage);
+  var _myUid=(typeof _getOwnerId==='function')?_getOwnerId():((window.AppState&&window.AppState.userId)||null);
   var html = '';
   for(var i=0;i<filtered.length;i++){
     var s = filtered[i];
     var sections = parseScriptSections(s.script_text);
     var summary = extractCardSummary(sections, s.highlight_text);
     var isEmpty = !sections || !sections.length;
+    var _ownEd = (_myUid && s.owner_id && String(s.owner_id)===String(_myUid)) ? '<button class="script-card-edit" type="button" onclick="event.stopPropagation();scrEditOpen('+JSON.stringify(s.id)+')" title="수정">✎</button>' : '';
     html += '<div class="script-card-cell" data-idx="'+i+'">'
           + '<div class="script-card" data-idx="'+i+'" data-total="'+filtered.length+'" data-id="'+s.id+'" data-tc="'+groupColor+'" style="--tc:'+groupColor+'" onclick="onCardClick(this, event)">'
           + '<button class="script-card-close" type="button" onclick="event.stopPropagation();deactivateCard()" aria-label="닫기">✕</button>'
+          + _ownEd
           + '<span class="script-card-badge">'+_scEscape(groupLabel)+'</span>'
           + '<div class="script-card-ttl">'+_scEscape(s.title || '제목 없음')+'</div>';
     if(isEmpty){
@@ -6744,14 +6749,22 @@ function togetherOpen(idx,keepList){
   var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
   var meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
   var canDel=(me&&String(me)===String(r.author_id))||meAdmin;
-  var delBtn=canDel?('<div class="post-acts"><button class="post-act post-act-del" onclick="deleteTogether('+JSON.stringify(r.id)+')">삭제</button></div>'):'';
+  var delBtn=canDel?('<div class="post-acts"><button class="post-act" onclick="tgEditOpen('+JSON.stringify(r.id)+')">✏️ 수정</button><button class="post-act post-act-del" onclick="deleteTogether('+JSON.stringify(r.id)+')">삭제</button></div>'):'';
   v.innerHTML='<span class="vbadge">'+_tgEsc(r.category||'자유')+'</span><div class="vttl">'+_tgEsc(r.title||'제목 없음')+'</div><div class="vmeta">'+_tgDate(r.created_at)+(_tgWho(r)?' · '+_tgWho(r):'')+'</div><div class="vbody">'+_tgEsc(r.content||'').replace(/\n/g,'<br>')+_ah.html+'</div>'+delBtn;
   var items=document.querySelectorAll('#tg-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on',i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.add('show-viewer'); }
 }
 function togetherBack(){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.remove('show-viewer'); }
-function openTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(!m) return; var sel=document.getElementById('tg-f-cat'); if(sel){ var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin'; sel.innerHTML=(admin?'<option>공지</option>':'')+'<option>전산 이상 신고</option><option>사용후기</option>'; } document.body.appendChild(m); m.style.display='flex'; var t=document.getElementById('tg-f-title'); setTimeout(function(){ if(t) t.focus(); },60); }
-function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; var tf=document.getElementById('tg-f-file'); if(tf) tf.value=''; var tp=document.getElementById('tg-f-filePreview'); if(tp) tp.innerHTML=''; }
+function openTogetherWrite(edit){ var m=document.getElementById('tgWriteModal'); if(!m) return; var sel=document.getElementById('tg-f-cat'); if(sel){ var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin'; sel.innerHTML=(admin?'<option>공지</option>':'')+'<option>전산 이상 신고</option><option>사용후기</option>'; }
+  window._tgEdit = edit||null;
+  var ti=document.getElementById('tg-f-title'), co=document.getElementById('tg-f-content');
+  if(edit&&edit.row){ if(sel&&edit.row.category){ sel.value=edit.row.category; } if(ti) ti.value=edit.row.title||''; if(co) co.value=edit.row.content||''; }
+  else { if(ti) ti.value=''; if(co) co.value=''; }
+  document.body.appendChild(m); m.style.display='flex'; setTimeout(function(){ if(ti) ti.focus(); },60); }
+/* 함께해요 글 편집 진입 — 캐시에서 row 찾아 편집 모드 오픈 (본인+admin) */
+function tgEditOpen(id){ var rows=window._tgCache||[]; var r=null; for(var i=0;i<rows.length;i++){ if(String(rows[i].id)===String(id)){ r=rows[i]; break; } } if(!r){ alert('항목을 찾을 수 없습니다.'); return; } openTogetherWrite({id:id, row:r}); }
+window.tgEditOpen=tgEditOpen;
+function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; window._tgEdit=null; var tf=document.getElementById('tg-f-file'); if(tf) tf.value=''; var tp=document.getElementById('tg-f-filePreview'); if(tp) tp.innerHTML=''; }
 async function saveTogether(){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
@@ -6763,6 +6776,16 @@ async function saveTogether(){
   var content=((document.getElementById('tg-f-content')||{}).value||'').trim();
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   if(!content){ alert('내용을 입력해 주세요.'); return; }
+  if(window._tgEdit){  /* 편집 모드 = posts PATCH (텍스트·카테고리만, 첨부 무변) */
+    var ebtn=document.getElementById('tgSaveBtn'); if(ebtn){ ebtn.disabled=true; ebtn.textContent='저장 중…'; }
+    try{
+      var pres=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(window._tgEdit.id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({category:cat,title:title,content:content})});
+      if(pres.ok||pres.status===204){ window._tgEdit=null; closeTogetherWrite(); window._tgLoaded=false; loadTogether(true); if(typeof toast==='function') toast('수정됐어요!'); }
+      else { var perr=await pres.json().catch(function(){return{};}); alert('수정 실패: '+(perr.message||pres.status)); }
+    }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+    finally{ if(ebtn){ ebtn.disabled=false; ebtn.textContent='등록하기'; } }
+    return;
+  }
   var btn=document.getElementById('tgSaveBtn'); if(btn){ btn.disabled=true; btn.textContent='저장 중…'; }
   try{
     var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('tg-f-file','together',token); if(a===null){ if(btn){btn.disabled=false;btn.textContent='등록하기';} return; } atts=a||[]; }
