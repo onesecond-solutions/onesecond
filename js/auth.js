@@ -422,6 +422,7 @@
   window.Auth = {
     init:             init,
     loadUser:         loadUser,
+    handleOAuthCallback: _handleOAuthCallback,  /* 2026-06-07: app.html 부팅에서 OAuth 콜백(?code/#access_token) 직접 처리용 — init 미호출 격차 보완 */
     saveUser:         saveUser,
     isPro:            isPro,
     isAdmin:          isAdmin,
