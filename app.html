@@ -1864,7 +1864,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             </select></div>
           <div class="iv-fld"><label>제목</label><input type="text" id="tg-f-title" class="mys-write-input" maxlength="120" placeholder="제목"></div>
           <div class="iv-fld"><label>내용</label><textarea id="tg-f-content" class="mys-write-textarea" maxlength="4000" placeholder="내용을 입력하세요"></textarea></div>
-          <div class="iv-fld"><label>첨부 (선택)</label><input type="file" id="tg-f-file" multiple></div>
+          <div class="iv-fld"><label>첨부 (선택)</label><input type="file" id="tg-f-file" multiple onchange="mysWriteFilePreview(this,'tg-f-filePreview')"><div id="tg-f-filePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>
           <button class="iv-write-submit" id="tgSaveBtn" onclick="saveTogether()">등록하기</button>
         </div>
       </div>
@@ -2989,10 +2989,10 @@ function ivPreviewFiles(input){
   box.innerHTML = '';
   var files = (input && input.files) || [];
   for(var i=0;i<files.length;i++){
-    (function(f){
+    (function(f,idx){
       var isImg = /^image\//.test(f.type || '');
       var cell = document.createElement('div');
-      cell.style.cssText = 'border:1px solid var(--bd);border-radius:9px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;font-size:0.68em;color:var(--ts);text-align:center';
+      cell.style.cssText = 'position:relative;border:1px solid var(--bd);border-radius:9px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;font-size:0.68em;color:var(--ts);text-align:center';
       if(isImg){
         var img = document.createElement('img');
         img.style.cssText = 'width:70px;height:54px;object-fit:cover;border-radius:6px';
@@ -3008,11 +3008,23 @@ function ivPreviewFiles(input){
       nm.style.cssText = 'width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
       nm.textContent = f.name; nm.title = f.name;
       cell.appendChild(nm);
+      var del=document.createElement('button'); del.type='button'; del.setAttribute('aria-label','첨부 삭제'); del.textContent='✕';
+      del.style.cssText='position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;border:none;background:var(--ac);color:#fff;font-size:0.66rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.25)';
+      del.onclick=function(){ ivFileRemove(idx); };
+      cell.appendChild(del);
       box.appendChild(cell);
-    })(files[i]);
+    })(files[i], i);
   }
 }
 window.ivPreviewFiles = ivPreviewFiles;
+/* 자료실 첨부 개별 삭제 — DataTransfer 재구성 후 미리보기 갱신 */
+function ivFileRemove(idx){
+  var input=document.getElementById('iv-f-file'); if(!input) return;
+  try{ var dt=new DataTransfer(); var fs=input.files||[]; for(var i=0;i<fs.length;i++){ if(i!==idx) dt.items.add(fs[i]); } input.files=dt.files; }
+  catch(e){ input.value=''; }
+  ivPreviewFiles(input);
+}
+window.ivFileRemove=ivFileRemove;
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._ivEditAtts 상태, 저장 시 남은 첨부 + 새 업로드 합쳐 반영). 단체방 패턴과 동일 */
 function renderIvEditAtts(){
   var wrap=document.getElementById('iv-edit-atts'); var fld=document.getElementById('iv-edit-atts-fld');
@@ -6732,7 +6744,7 @@ function togetherOpen(idx,keepList){
 }
 function togetherBack(){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.remove('show-viewer'); }
 function openTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(!m) return; var sel=document.getElementById('tg-f-cat'); if(sel){ var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin'; sel.innerHTML=(admin?'<option>공지</option>':'')+'<option>전산 이상 신고</option><option>사용후기</option>'; } document.body.appendChild(m); m.style.display='flex'; var t=document.getElementById('tg-f-title'); setTimeout(function(){ if(t) t.focus(); },60); }
-function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; }
+function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; var tf=document.getElementById('tg-f-file'); if(tf) tf.value=''; var tp=document.getElementById('tg-f-filePreview'); if(tp) tp.innerHTML=''; }
 async function saveTogether(){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
@@ -6847,6 +6859,7 @@ function mrOpenWrite(){
   var ti=document.getElementById('mr-f-title'); if(ti) ti.value='';
   var bd=document.getElementById('mr-f-body'); if(bd) bd.value='';
   var fl=document.getElementById('mr-f-file'); if(fl) fl.value='';
+  var flp=document.getElementById('mr-f-filePreview'); if(flp) flp.innerHTML='';  /* 미리보기 잔상 제거 (재진입 시) */
   window._mrEditAtts=[]; if(typeof renderMrEditAtts==='function')renderMrEditAtts();
   var m=document.getElementById('mrWriteModal'); if(m) m.style.display='flex';
 }
