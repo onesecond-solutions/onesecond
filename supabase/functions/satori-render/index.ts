@@ -170,9 +170,9 @@ Deno.serve(async (req: Request) => {
 
   try {
     const fonts = await loadFonts();
-    const svg = await satori(buildCard(d) as unknown as Parameters<typeof satori>[0], { width: 360, fonts });
+    const svg = await satori(buildCard(d) as unknown as Parameters<typeof satori>[0], { width: 392, fonts }); // 카드 360 + field 여백 16*2
     await ensureWasm();
-    const resvg = new Resvg(svg, { fitTo: { mode: "width", value: 720 } }); // 2x 고해상도
+    const resvg = new Resvg(svg, { fitTo: { mode: "width", value: 784 } }); // 2x 고해상도 (392*2)
     const png = resvg.render().asPng();
     return new Response(png, { headers: { ...CORS, "Content-Type": "image/png" } });
   } catch (e) {
