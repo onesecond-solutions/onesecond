@@ -8212,6 +8212,9 @@ function openMyspaceWrite(ctx){
 function closeMyspaceWrite(){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
   m.classList.remove('open');
+  /* 첨부 파일은 임시저장(localStorage) 대상이 아님 → 닫을 때 비움 (재진입 시 잔존 방지). 텍스트 draft는 유지 */
+  ['mysWriteScrFile','mysWriteLibFile','mysWriteGrpFile','mysWriteQnaFile'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+  ['mysWriteScrFilePreview','mysWriteLibFilePreview','mysWriteGrpFilePreview','mysWriteQnaFilePreview'].forEach(function(id){ var el=document.getElementById(id); if(el)el.innerHTML=''; });
 }
 function switchMyspaceTab(tab){
   var tabs=document.querySelectorAll('.mys-write-tab');
@@ -8474,18 +8477,30 @@ function mysWriteFilePreview(input, previewId){
     input.value=''; return;
   }
   for(var i=0;i<files.length;i++){
-    (function(f){
+    (function(f,idx){
       var isImg=/^image\//.test(f.type||'');
       var cell=document.createElement('div');
-      cell.style.cssText='border:1px solid var(--bd);border-radius:9px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;font-size:0.68em;color:var(--ts);text-align:center';
+      cell.style.cssText='position:relative;border:1px solid var(--bd);border-radius:9px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;width:84px;font-size:0.68em;color:var(--ts);text-align:center';
       if(isImg){ var img=document.createElement('img'); img.style.cssText='width:70px;height:54px;object-fit:cover;border-radius:6px'; try{ img.src=URL.createObjectURL(f); }catch(e){} cell.appendChild(img); }
       else { var ic=document.createElement('div'); ic.style.cssText='width:70px;height:54px;display:flex;align-items:center;justify-content:center;font-size:1.6em'; ic.textContent='📄'; cell.appendChild(ic); }
       var nm=document.createElement('div'); nm.style.cssText='width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'; nm.textContent=f.name; nm.title=f.name; cell.appendChild(nm);
+      var del=document.createElement('button'); del.type='button'; del.setAttribute('aria-label','첨부 삭제'); del.textContent='✕';
+      del.style.cssText='position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;border:none;background:var(--ac);color:#fff;font-size:0.66rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.25)';
+      del.onclick=function(){ mysWriteFileRemove(input.id, idx, previewId); };
+      cell.appendChild(del);
       box.appendChild(cell);
-    })(files[i]);
+    })(files[i], i);
   }
 }
 window.mysWriteFilePreview=mysWriteFilePreview;
+/* 첨부 개별 삭제 — file input은 일부만 직접 제거 불가 → DataTransfer로 재구성 후 미리보기 갱신 */
+function mysWriteFileRemove(inputId, idx, previewId){
+  var input=document.getElementById(inputId); if(!input) return;
+  try{ var dt=new DataTransfer(); var fs=input.files||[]; for(var i=0;i<fs.length;i++){ if(i!==idx) dt.items.add(fs[i]); } input.files=dt.files; }
+  catch(e){ input.value=''; }  /* DataTransfer 미지원 폴백: 전체 비움 */
+  mysWriteFilePreview(input, previewId);
+}
+window.mysWriteFileRemove=mysWriteFileRemove;
 /* 보험 Q&A 탭 — 질문유형(인수/상품)에 따라 폼 전환 (현장의 소리 질문하기 이식) */
 function mysQnaSwitch(type){
   var uw=document.getElementById('mysQnaUw'), pd=document.getElementById('mysQnaProduct'), etc=document.getElementById('mysQnaEtc');
