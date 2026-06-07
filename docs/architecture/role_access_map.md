@@ -21,8 +21,9 @@ date: 2026-06-07
 | 태그 | 의미 |
 |---|---|
 | `[실측 6/3]` | `health_check_2026-06-03.md`가 신버전 DB에서 직접 실측한 사실 (pg_policies / relrowsecurity) |
-| `[코드 기준]` | 본 세션에 repo 코드·SQL 파일에서 직접 확인 (app.html / js/*.js / *.sql, 파일:라인 명기) |
-| `[미확인]` | 코드·문서 어디서도 확정 못함 (SQL 파일 미발견 / RPC 내부 / DB 트리거 등) → **크롬 실측 필요** |
+| `[실측 6/7]` | 크롬이 2026-06-07 라이브·DB에서 직접 실측 (§2 미확인 해소 / §5 계정 검증 합류분) |
+| `[코드 기준]` | repo 코드·SQL 파일에서 직접 확인 (app.html / js/*.js / *.sql, 파일:라인 명기) |
+| `[미확인]` | 코드·문서 어디서도 확정 못함 (SQL 파일 미발견 / RPC 내부 등) → **크롬 후속 필요** |
 
 > 🚨 본 문서는 DB를 직접 조회하지 않았다. `[실측 6/3]`은 6/3 시점 health_check의 실측을 인용한 것이며,
 > 6/3 이후 변동분과 `[미확인]` 항목의 실측 확정은 **크롬 영역**이다. 추측을 `[실측]`으로 표기한 곳은 0건이다.
@@ -140,19 +141,19 @@ role 판별: `_getOsUserRole()` `app.html:2803` (localStorage `os_user.role`) / 
 | posts_admin_insert | INSERT | `is_admin()` | `[코드 기준]` migrations/2026-05-31_admin_vault_insert_rls.sql:17 |
 | posts_admin_update | UPDATE | `is_admin()` | `[코드 기준]` migrations/2026-05-31_admin_moderation_rls.sql:21 |
 | posts_admin_delete | DELETE | `is_admin()` | `[코드 기준]` migrations/2026-05-31_admin_moderation_rls.sql:28 |
-| (posts 전체 21정책) | — | board_type×role 정교 (qna=같은지점 / manager_notice=같은팀 / insurer=같은 원수사 insurer_id / hub=admin) | `[실측 6/3]` health_check §2 (실측 21정책, repo엔 위 5개만 파일로 존재) |
+| (posts 전체) | — | board_type×role 정교 (qna=같은지점 / manager_notice=같은팀 / insurer=같은 원수사 insurer_id / community=무제한 / hub=admin) | `[실측 6/7]` 크롬 **12정책** (health_check 6/3는 21로 실측 — §2-3 하단 주 참조) |
 
-> 🚨 posts는 `[실측 6/3]` 기준 **21정책**이나, repo SQL 파일엔 위 5개만 존재. 나머지(insurer/manager_notice/manager_lounge/community 등 board_type별 INSERT·작성자 UPDATE/DELETE)는 **SQL 파일 미발견** → §6 차이 후보 #6, 크롬 실측 필요.
+> 🚨 **posts 정책 수:** 크롬 6/7 실측 **12정책**(community 무제한 포함). health_check 6/3는 **21정책**으로 실측 → 차이(21→12)는 통폐합/재정의 또는 6/3 과대계상 가능. 본 문서는 최신 실측(6/7) 12를 현행으로 본다. repo SQL 파일엔 위 5개만 존재 → 나머지 7개 역보존 대상 = §6 차이 후보 #6.
 
 #### users
 | 정책 | 명령 | 조건 | 출처 |
 |---|---|---|---|
 | (본인) | SELECT | 본인 row | `[실측 6/3]` health_check §2 (6정책) |
 | users_select_insurer_manager | SELECT | 원수사 매니저의 직원 조회 | `[실측 6/3]` health_check §3 |
-| users_select_team_manager | SELECT | `get_my_role()='ga_manager' AND team_id=my_team_id()` | `[실측 6/3]` health_check:68-71 (DB 적용 완료, **SQL 파일 미발견**) |
-| users_select_branch_manager | SELECT | `get_my_role()='ga_branch_manager' AND branch_id=my_branch_id()` | `[실측 6/3]` health_check:72-74 (DB 적용 완료, **SQL 파일 미발견**) |
+| users_select_team_manager | SELECT | `get_my_role()='ga_manager' AND team_id=my_team_id()` | `[실측 6/7]` 크롬 (DB 실재 확인, SQL 파일 미보존) |
+| users_select_branch_manager | SELECT | `get_my_role()='ga_branch_manager' AND branch_id=my_branch_id()` | `[실측 6/7]` 크롬 (DB 실재 확인, SQL 파일 미보존) |
 
-> 🚨 처방 B 2정책은 health_check가 "DB 적용 완료"라 기술하나 **repo에 마이그레이션 SQL 파일이 없다**. 향후 DB 재구성 시 유실 위험 → §6 차이 후보 #8.
+> ✅ **처방 B 2정책 실재 확정 (크롬 6/7).** DB에 실재함을 실측 확인. 단 **repo에 마이그레이션 SQL 파일은 여전히 없음** → DB 재구성 시 유실 위험 = §6 차이 후보 #8 유지(역보존 대상).
 
 #### team_notices
 | 정책 | 명령 | 조건 | 출처 |
@@ -217,12 +218,16 @@ role 판별: `_getOsUserRole()` `app.html:2803` (localStorage `os_user.role`) / 
 | activity_logs | 6정책 — 본인+매니저(팀)+지점장(지점) | `[실측 6/3]` health_check §2 |
 | notifications | 1~3정책 | `[실측 6/3]` health_check §2 |
 
-#### board_reads / push_subscriptions / posts(community) — 미확인
+#### board_reads / push_subscriptions / posts(community) — 크롬 실측 해소 (2026-06-07)
 | 테이블 | 상태 | 출처 |
 |---|---|---|
-| board_reads | RLS ON·정책 SQL 미발견 (2026-06-04 알림 Phase2 신설) | `[미확인]` — 세션노트 2026-06-04_1201만 기술 |
-| push_subscriptions | RLS ON·정책 SQL 미발견 (2026-06-04 알림 Phase3 신설) | `[미확인]` — 세션노트만 기술 |
-| posts (board_type='community') | 함께해요 게시판 RLS 3정책 추가(2026-06-04)·정책 SQL 미발견 | `[미확인]` — 세션노트 2026-06-04_0458만 기술 |
+| board_reads | RLS ON·**3정책** 실재 확인 | `[실측 6/7]` 크롬 |
+| push_subscriptions | RLS ON·**1정책** 실재 확인 | `[실측 6/7]` 크롬 |
+| posts (전체) | **12정책** 실재 (board_type='community' 무제한 포함) | `[실측 6/7]` 크롬 |
+
+> 🚨 **posts 정책 수 정정:** health_check 6/3는 posts **21정책**으로 실측했으나, 크롬 6/7 실측은 **12정책**.
+> 차이(21→12)는 정책 통폐합/재정의 또는 6/3 과대계상 가능 — 본 문서는 **최신 실측(6/7) 12정책**을 현행으로 본다.
+> repo SQL 파일엔 여전히 5개만 존재(§2-3 posts) → 나머지 7개 역보존 대상은 §6 차이 후보 #6 유지.
 
 ### 2-4. role별 CRUD 요약 (패턴)
 
@@ -270,7 +275,7 @@ role 판별: `_getOsUserRole()` `app.html:2803` (localStorage `os_user.role`) / 
 - `mergeUserProfile()` `js/auth.js:34-57` — `/rest/v1/users?id=eq.{uid}&select=role,name,plan,phone`
 - `loadUser()` `js/auth.js:119-201` — `select=name,role,phone,email,company,branch,team,plan,insurer_id`
 
-`[미확인]` **user_metadata → public.users INSERT/UPSERT를 수행하는 클라이언트 코드가 없다.** → DB 트리거(`handle_new_user` 류) 또는 `approve_insurer_user` RPC가 담당하는 것으로 추정되나 **SQL 파일 미발견**. 동기화 정확한 시점(가입 직후/첫 로그인/승인 시) 미확정 → 크롬/DB 실측 필요.
+`[실측 6/7]` **동기화 주체 = `handle_new_user` 트리거 확정 (크롬 6/7).** 클라이언트는 public.users에서 읽기만 하고, **가입 시 `handle_new_user` 트리거가 user_metadata를 public.users로 동기화**한다. 트리거는 **`branch_id`/`team_id`를 metadata 기반으로 기록** — 따라서 가입 폼이 `branch_id`/`team_id`를 metadata에 미전달하면 트리거가 **NULL을 기록**한다 (§4 조용한 제외의 근본 원인, organization_policy §5 참조).
 
 ### 3-4. 괴리 발생 가능 지점
 
@@ -333,26 +338,29 @@ role 판별: `_getOsUserRole()` `app.html:2803` (localStorage `os_user.role`) / 
 
 ---
 
-## §5. 실제 계정 검증표 (빈 틀 — 크롬 기입)
+## §5. 실제 계정 검증표 (크롬 2026-06-07 실측 합류)
 
-> `[미확인]` 아래 "실제 노출" 컬럼은 **크롬 라이브 검증 결과가 합류할 자리**. 코드는 틀과 "설계상 노출"만 채운다.
+> "실제 노출"·"실측 소견" 컬럼 = 크롬 라이브 검증 결과. `[실측 6/7]` 표기. 미검증분은 `_`.
 > 마스킹 표준: 이메일 `by***@gmail.com` / 이름 "AZ 본부장 계정" 식. 실명·이메일 원문 금지.
 
 현재 사용자 분포(CLAUDE.md 기준): admin 1 / ga_manager 2 / ga_member 5 / insurer_branch_manager 1 / insurer_member 1 = 10명.
 
-| 계정(마스킹) | role | 설계상 노출(§1·§2 기준) | 실제 노출(크롬 기입) | 차이 |
+| 계정(마스킹) | role | 설계상 노출(§1·§2 기준) | 실측 소견 (크롬 6/7) | 차이 |
 |---|---|---|---|---|
 | (admin 본 계정) | admin | 전 메뉴 + 어드민 + 통합검색 | _ | _ |
-| (ga_manager #1) | ga_manager | 홈~요금제 + 팀원관리 탭 / 내 팀 users·공지·네비방 | _ | _ |
-| (ga_manager #2) | ga_manager | 〃 | _ | _ |
+| (ga_manager #1·#2) | ga_manager | 홈~요금제 + 팀원관리 탭 / 내 팀 범위 | _ | _ |
 | (ga_member #1~#5) | ga_member | 홈~요금제 (팀원관리 X) / 내 팀 범위 | _ | _ |
-| (insurer_branch_manager) | insurer_branch_manager | 자료실 + 함께해요 / posts insurer(insurer_id) | _ | _ |
-| (insurer_member) | insurer_member | 자료실 + 함께해요 | _ | _ |
-| (에즈금융/직할팀/마케팅본부 계정) | (해당 role) | **team_id/branch_id NULL 시 매니저룸·팀공지·네비방 빈 화면 예측** | _ | _ |
+| (insurer_member) | insurer_member | 자료실 + 함께해요 | **현장의 소리 메뉴 노출됨**(display:flex) `[실측 6/7]` | ⚠️ 차이 #1 확정 → fix PR #464 |
+| (메리츠 테스트 #1·#2) | insurer 계열 | 자료실 + 함께해요 / posts insurer(insurer_id) | **GA 더원지점 branch_id(`306edf6a…`) 보유** `[실측 6/7]` | ⚠️ 신규 의심 #10 (org_policy §3 위반) |
+| (dod*** 계정) | (GA 계열) | team_id·branch_id 정합 기대 | **team_id 有 · branch_id 無 모순** `[실측 6/7]` | ⚠️ 신규 의심 #11 |
+| (비로그인 `?view=voice`) | — | (게이트 없음) | **화면 렌더됨(데이터 0건)** `[실측 6/7]` | ⚠️ 차이 #1에 포함 → fix PR #464 |
 
-**크롬 검증 권장 확인 쿼리(읽기 전용, 크롬 영역):**
-- `users?select=email,role,company,branch,team,branch_id,team_id,insurer_id,status` → 모델 밖 값(branch_id/team_id NULL) 보유 계정 식별
-- 각 계정 로그인 → 사이드바 실제 메뉴 / 매니저룸 화면 / 현장의소리 메뉴 노출 여부 대조
+> 📌 위 외 계정(admin·ga 다수)의 행별 사이드바·매니저룸 실측은 미진행(`_`). team_id/branch_id NULL 보유
+> 계정 식별 쿼리(아래)는 크롬 후속 진행 대상.
+
+**크롬 후속 확인 쿼리(읽기 전용, 크롬 영역):**
+- `users?select=email,role,company,branch,team,branch_id,team_id,insurer_id,status` → 모델 밖 값(branch_id/team_id NULL) 보유 계정 전수 식별
+- 각 계정 로그인 → 사이드바 실제 메뉴 / 매니저룸 화면 / 현장의소리 노출 대조
 
 ---
 
@@ -360,27 +368,29 @@ role 판별: `_getOsUserRole()` `app.html:2803` (localStorage `os_user.role`) / 
 
 > §1(프론트) ↔ §2(RLS) ↔ §3(부여 경로) 간 불일치 의심 항목. 위험도(상/중/하) + 확인 방법.
 
-| # | 차이 후보 | 위험도 | 성격 | 확인 방법 |
+| # | 차이 후보 | 위험도 | 판정 (6/7) | 확인 방법 / 처방 |
 |---|---|---|---|---|
-| 1 | **현장의 소리 3중 불일치** — insurer_*는 메뉴 비노출(`app.html:1441` ins-show 없음)인데 CSS 주석(`:39`)·bootView(`:3688`)는 voice 허용. URL `?view=voice`로는 진입 가능 | 상 | 의도 미정합 + 화면 우회 | 크롬: insurer 계정으로 ① 사이드바에 현장의소리 보이는지 ② `?view=voice` 진입되는지. 팀장님 결재: insurer가 voice 봐야 하나? |
-| 2 | **GA 가입 branch_id/team_id NULL** → 매니저룸·팀공지·네비방·지점게시판 전부 조용한 제외(빈 화면). 현 ga_member 5·ga_manager 2 중 NULL 보유분 영향 | 상 | 기능 결손 (유출 X) | 크롬: `users` NULL 보유 계정 수 / 해당 계정 매니저룸·네비방 빈 화면 확인. admin 매핑 절차 필요 |
-| 3 | **user_metadata→public.users 동기화 주체 미확인** — 클라 코드 없음, DB 트리거/RPC 추정 | 중 | 무결성 불확실 | 크롬/DB: `handle_new_user` 트리거 존재·내용 / `approve_insurer_user` 정의 확인 |
-| 4 | **매니저룸 하드코딩 branch_id**(더원지점, `app.html:6223,6291`) — 타 지점 지점장/실장은 본인 지점 대신 더원지점만/빈 화면 | 중 | 기능 결손 (확장 차단) | 코드 TODO 동적화 필요. 크롬: 비더원 ga_branch_manager 계정으로 매니저룸 확인 |
-| 5 | **팀원관리 탭 JS 숨김만**(`app.html:2853`) — DOM 조작 시 탭 노출 가능 (데이터는 users RLS 방어) | 중 | 화면 우회 (유출 X) | 크롬: ga_member 계정으로 팀원관리 탭 강제 노출 후 데이터 안 새는지 |
-| 6 | **posts 21정책 중 16개 SQL 파일 미발견** — repo엔 5개만 (insurer/manager_notice/community 등 미보유) | 중 | 문서·소스 괴리 | 크롬/DB: pg_policies로 posts 전 정책 덤프 → repo에 역으로 보존 |
-| 7 | **health_check A축 표 stale** — "매니저룸" 별도 메뉴 표기, 현재는 MY SPACE 팀원관리 탭으로 흡수(`team` view 폐지 `:3671`) | 하 | 문서 정합 | 본 문서 §1 매트릭스가 현행. health_check는 6/3 시점으로 보존 |
-| 8 | **users 처방 B 2정책 SQL 파일 부재** — DB 적용됐으나 repo에 마이그레이션 없음 → 재구성 시 유실 위험 | 중 | 소스 부재 | repo에 마이그레이션 SQL 역작성(별도 결재) + 크롬: 정책 실재 확인 |
-| 9 | **board_reads / push_subscriptions / posts(community) 정책 SQL 미발견** — RLS ON만 확인, 상세 미확인 | 중 | 미검증 | 크롬/DB: 3테이블 pg_policies 덤프 |
+| 1 | **현장의 소리 3중 불일치** — insurer 계열 메뉴 노출(실측)·`?view=voice` 진입 가능. CSS 주석·bootView도 voice 허용 | 상 | ✅ **차이 확정** (크롬 6/7 실측: insurer voice 노출 + 비로그인 진입) → **fix [PR #464](https://github.com/onesecond-solutions/onesecond/pull/464)** | 머지 후 크롬 재검증 (insurer 미노출·차단 / ga·admin 회귀 0) |
+| 2 | **가입 branch_id/team_id NULL** → 매니저룸·팀공지·네비방·지점게시판 조용한 제외(빈 화면) | 상 | ✅ **근본원인 규명** (크롬 6/7): 가입 폼이 branch_id/team_id를 metadata 미전달 → `handle_new_user` 트리거 NULL 기록 (§3-3) | **처방 = organization_policy §5** (조직 선택지 전환 + 11건 백필, v2 이후 별도 결재) |
+| 3 | **동기화 주체** | 중 | ✅ **확정** (크롬 6/7): `handle_new_user` 트리거, branch_id/team_id metadata 기반 (§3-3) | 해소. RPC `approve_insurer_user` 내부는 §10 후속 |
+| 4 | **매니저룸 하드코딩 branch_id**(더원지점, `app.html:6223,6291`) — 타 지점 지점장/실장 빈 화면 | 중 | `[코드 기준]` 유지 (코드 사실, 실측 무관) | 코드 TODO 동적화 (별도 결재). 크롬: 비더원 ga_branch_manager 거동 |
+| 5 | **팀원관리 탭 JS 숨김만**(`app.html:2853`) — DOM 조작 시 탭 노출 (데이터는 users RLS 방어) | 중 | 미검증 | 크롬: ga_member로 탭 강제 노출 후 데이터 안 새는지 |
+| 6 | **posts 정책 일부 SQL 파일 미발견** — 실측 12정책(6/7) 중 repo엔 5개만 | 중 | 부분 해소 (실측 12정책, §2) — 나머지 7개 역보존 대상 | 크롬/DB: posts 전 정책 덤프 → repo 역보존 |
+| 7 | **health_check A축 표 stale** — 매니저룸 별도 메뉴 표기, 현재는 MY SPACE 팀원관리 탭 흡수 | 하 | 본 문서 §1이 현행 | health_check는 6/3 시점 보존 |
+| 8 | **users 처방 B 2정책 SQL 파일 부재** | 중 | 실재 확정 (크롬 6/7, §2) — repo SQL 여전히 부재 | repo에 마이그레이션 역작성 (별도 결재) |
+| 9 | **board_reads / push_subscriptions / posts(community) 정책** | 중 | ✅ **실측 해소** (크롬 6/7: board_reads 3 / push_subscriptions 1 / posts community 무제한, §2) | — |
+| **10** | **메리츠 테스트 계정 2건 GA 지점 branch_id 보유** (`306edf6a…` 더원지점) — insurer가 GA 지점에 매핑 | 중 | ⚠️ **신규 의심** (크롬 6/7) — 테스트 계정이라 무해하나 **실보험사 입점 전 `approve_insurer_user` 부여 로직 점검 필수** | organization_policy §3 (GA 지점 매핑 금지) |
+| **11** | **dod*** 계정 team_id 有 · branch_id 無 모순** — 팀은 있는데 지점이 없음 | 중 | ⚠️ **신규 의심** (크롬 6/7) — 조직 계층(지점→팀) 역전 데이터 | 크롬: 해당 계정 매니저룸/공지 거동 + 백필 검토 (org_policy §4) |
 
-**위험도 상 = 2건** (#1 현장의소리 불일치, #2 GA NULL 조용한 제외).
+**위험도 상 = 2건** (#1 확정·fix PR #464 / #2 근본원인 규명·org_policy §5 처방 예약).
 
-### 크롬 검증 필요 항목 목록 (§5 합류용)
-1. `users` 전수 SELECT → branch_id/team_id NULL·비표준 보유 계정 식별 (#2)
-2. insurer 계정 사이드바 현장의소리 노출 + `?view=voice` 진입 여부 (#1)
-3. `handle_new_user` 트리거 / `approve_insurer_user` RPC 정의 (#3)
+### 크롬 후속 검증 필요 항목 (잔여)
+1. `users` 전수 SELECT → branch_id/team_id NULL·비표준 보유 계정 **전수 식별** (#2 영향 범위)
+2. fix PR #464 머지 후: insurer 미노출·`?view=voice` 차단 / ga·admin 회귀 0 (#1 재검증)
+3. `approve_insurer_user` RPC 정의 — 메리츠 계정 branch_id 부여 경위 (#10)
 4. 비더원 ga_branch_manager 매니저룸 거동 (#4)
-5. posts 전 정책 / board_reads / push_subscriptions / posts(community) pg_policies 덤프 (#6·#9)
-6. users 처방 B 2정책 실재 확인 (#8)
+5. posts 전 정책 덤프 → repo 역보존 (#6) / users 처방 B 마이그레이션 역작성 (#8)
+6. dod*** 계정 거동 + 백필 검토 (#11)
 
 ---
 
