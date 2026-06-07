@@ -9636,6 +9636,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   </div>
   <div class="os-sheet-chips">
     <button class="os-chip on" data-chip="mine" type="button">마이 스크립트</button>
+    <button class="os-chip" data-chip="mychat" type="button" style="display:none">마이 채팅</button>
     <button class="os-chip" data-chip="rscript" type="button">공유 스크립트</button>
     <button class="os-chip" data-chip="rchat" type="button">공유 채팅</button>
     <button class="os-chip" data-chip="rdoc" type="button">공유 자료</button>
@@ -9688,6 +9689,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(chip==='rscript'){ updateCnt(0); body.innerHTML='<div class="os-empty">공유 스크립트는 곧 채워집니다 ✍️<br>실장·지점장이 공유한 단계별 화법이 여기에 모여요.</div>'; return; }
     if(chip==='rdoc'){ updateCnt(0); body.innerHTML='<div class="os-empty">공유 자료는 곧 채워집니다 📎<br>현장에서 자주 쓰는 자료가 여기에 모여요.</div>'; return; }
     if(chip==='mine'){ return renderMine(); }
+    if(chip==='mychat'){ return renderMyChat(); }
     if(chip==='rchat'){ return renderChat(); }
   }
   function renderMine(){
@@ -9718,9 +9720,22 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       .then(function(rows){ cache.rchat=rows||[]; loaded.rchat=true; paintChat(cache.rchat); })
       .catch(function(){ body.innerHTML='<div class="os-empty">불러오지 못했습니다.</div>'; });
   }
-  function paintChat(rows){
+  function _myChatEmpty(){ return '<div class="os-empty">아직 내 채팅이 없어요.<br>MY SPACE 글쓰기 → 스크립트 탭 → [채팅]으로 만들어보세요.</div>'; }
+  /* 마이 채팅 = 본인이 작성한 채팅(owner_id 본인 + 유형:채팅). 채팅 작성 가능자에게만 칩 노출(applyChatChip). */
+  function renderMyChat(){
+    if(!window.db||!window.db.fetch||!tok()){ updateCnt(0); body.innerHTML='<div class="os-empty">로그인 후 내 채팅이 표시됩니다.</div>'; return; }
+    if(loaded.mychat){ return paintChat(cache.mychat||[], _myChatEmpty()); }
+    body.innerHTML='<div class="os-empty">불러오는 중…</div>';
+    var u=uid(); if(!u){ body.innerHTML='<div class="os-empty">로그인 후 표시됩니다.</div>'; return; }
+    var kwq=encodeURIComponent('{"'+CHAT_KW+'"}');
+    window.db.fetch('/rest/v1/scripts?owner_id=eq.'+encodeURIComponent(u)+'&is_active=eq.true&keywords=cs.'+kwq+'&order=created_at.desc&select=id,title,script_text')
+      .then(function(r){ return r.ok?r.json():[]; })
+      .then(function(rows){ cache.mychat=rows||[]; loaded.mychat=true; paintChat(cache.mychat, _myChatEmpty()); })
+      .catch(function(){ body.innerHTML='<div class="os-empty">불러오지 못했습니다.</div>'; });
+  }
+  function paintChat(rows, emptyHtml){
     updateCnt(rows.length);
-    if(!rows.length){ body.innerHTML='<div class="os-empty">공유 채팅이 곧 채워집니다 💬<br>실장·지점장이 공유한 상황별 대안 화법이 여기에 모여요.</div>'; return; }
+    if(!rows.length){ body.innerHTML=emptyHtml||'<div class="os-empty">공유 채팅이 곧 채워집니다 💬<br>실장·지점장이 공유한 상황별 대안 화법이 여기에 모여요.</div>'; return; }
     var h=''; for(var i=0;i<rows.length;i++){ var s=rows[i]; var alts=decodeChatScript(s.script_text);
       h+='<div class="os-sit" data-idx="'+i+'"><div class="os-sit-head"><span class="t">'+esc(s.title||'(상황)')+'</span><span class="b">'+alts.length+'</span><span class="ar">▾</span></div><div class="os-sit-alts">';
       for(var j=0;j<alts.length;j++){ if(alts[j].label) h+='<div class="os-alt-label">'+esc(alts[j].label)+'</div>'; h+='<div class="os-bubble" data-copy="'+esc(alts[j].text)+'"><span class="cp">탭 복사</span>'+esc(alts[j].text)+'</div>'; }
@@ -9749,8 +9764,10 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   handle.addEventListener('pointerup', endDrag);
   handle.addEventListener('pointercancel', endDrag);
 
+  /* 마이 채팅 칩 = 채팅 작성 가능자(admin·실장·지점장)에게만 노출 */
+  function applyChatChip(){ var c=sheet.querySelector('.os-chip[data-chip="mychat"]'); if(!c) return; var r=''; try{ r=(typeof _getOsUserRole==='function')?_getOsUserRole():''; }catch(e){} c.style.display=(['admin','ga_branch_manager','ga_manager'].indexOf(r)!==-1)?'':'none'; }
   window.OSSheet={
-    reloadChat:function(){ loaded.rchat=false; var on=sheet.querySelector('.os-chip.on'); if(on&&on.getAttribute('data-chip')==='rchat') renderChat(); },
+    reloadChat:function(){ loaded.rchat=false; loaded.mychat=false; var on=sheet.querySelector('.os-chip.on'); var k=on&&on.getAttribute('data-chip'); if(k==='rchat') renderChat(); else if(k==='mychat') renderMyChat(); },
     reloadMine:function(){ loaded.mine=false; var on=sheet.querySelector('.os-chip.on'); if(on&&on.getAttribute('data-chip')==='mine') renderMine(); }
   };
   /* 첫 방문 1회 끌어올림 유도 — 살짝 들었다 내림 (localStorage, 이후 미표시) */
@@ -9761,9 +9778,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     sheet.style.height='120px';
     setTimeout(function(){ sheet.style.height=''; setTimeout(function(){ sheet.style.transition=''; }, 600); }, 700);
   }
-  function boot(){ setActiveChip('mine'); setTimeout(firstHint, 900); }
+  function boot(){ applyChatChip(); setActiveChip('mine'); setTimeout(firstHint, 900); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  document.addEventListener('appstate:ready', function(){ loaded.mine=false; var on=sheet.querySelector('.os-chip.on'); if(on&&on.getAttribute('data-chip')==='mine') renderMine(); });
+  document.addEventListener('appstate:ready', function(){ applyChatChip(); loaded.mine=false; loaded.mychat=false; var on=sheet.querySelector('.os-chip.on'); if(on&&on.getAttribute('data-chip')==='mine') renderMine(); });
 })();
 </script>
 </body>
