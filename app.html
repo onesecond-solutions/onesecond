@@ -7523,8 +7523,18 @@ else _updateAccountHeader();
  *   토큰 없으면 아무것도 안 함 (미로그인 상태 그대로, 글쓰기/MY SPACE 등 fetch 자리에서 안내).
  */
 (function(){
-  function tryInitAuthSafe(){
+  async function tryInitAuthSafe(){
     if(!window.db||!window.Auth)return;
+    /* 2026-06-07: OAuth 콜백(?code PKCE / #access_token implicit / ?error) 진입 시 토큰 교환을 먼저 수행.
+       그동안 _handleOAuthCallback이 Auth.init() 안에서만 호출됐는데, 부팅은 init을 안 부르고 loadUser만 불러
+       → Google 로그인 콜백이 교환되지 못해 토큰 미생성(드롭다운 먹통·"로그인 후 표시됩니다")이던 격차 수정.
+       콜백 파라미터가 있을 때만 동작 → 일반 진입은 기존과 동일(회귀 0). */
+    try{
+      var _qs=new URLSearchParams(location.search||'');
+      var _hash=location.hash||'';
+      var _hasCb=!!(_qs.get('code')||_qs.get('error')||_hash.indexOf('access_token=')!==-1||_hash.indexOf('error=')!==-1);
+      if(_hasCb&&window.Auth.handleOAuthCallback){ await window.Auth.handleOAuthCallback(); }
+    }catch(e){}
     var token=window.db.getToken&&window.db.getToken();
     if(!token)return;
     try{
