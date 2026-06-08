@@ -5890,9 +5890,9 @@ function finalizeMakeCardFallbackText(){
 }
 var voiceTabData = {
   voice: {title:'보험 Q&A', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:0, posts:[], empty:'아직 등록된 질문이 없어요.<br>MY SPACE에서 질문하면 여기에 모입니다.'},
-  team: {title:'단체방', sub:'실장 공지가 모이는 곳 (작성은 매니저룸에서).', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>매니저룸에서 작성하면 여기에 모입니다.'},
+  team: {title:'단체방', sub:'실장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>MY SPACE 단체방 글쓰기로 작성하면 여기에 모입니다.'},
   smart: {title:'스마트 게시판', sub:'모든 보험회사 자료가 한데 모이는 곳.', chips:['전체','긴급(마감)','공지','소식지','상품','인수','시책/프로모션','기타'], cnt:0, posts:[], empty:'아직 모인 자료가 없어요.'},
-  branch: {title:'지점 게시판', sub:'지점장 공지가 모이는 곳 (작성은 매니저룸 지점장 화면에서).', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>매니저룸 지점장 화면에서 작성하면 여기에 모입니다.'}
+  branch: {title:'지점 게시판', sub:'지점장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>MY SPACE 단체방 글쓰기로 작성하면 여기에 모입니다.'}
 };
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){if(d.posts.length>0){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;showTabPost(key,0);}else{showTabEmpty(d);}}if(key==='voice'&&typeof loadVoiceQna==='function')loadVoiceQna();if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();if(key==='team'&&typeof loadTeamNotices==='function')loadTeamNotices();if(key==='branch'&&typeof loadBranchFeed==='function')loadBranchFeed();}
 
@@ -5981,7 +5981,7 @@ async function _loadNoticeFeed(scope, tabKey){
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
     if(!list) return;
-    if(!posts.length){ list.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">아직 등록된 공지가 없습니다.<br>매니저룸에서 작성해보세요.</div>'; return; }
+    if(!posts.length){ list.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">아직 등록된 공지가 없습니다.<br>MY SPACE 단체방 글쓰기로 작성해보세요.</div>'; return; }
     list.innerHTML=posts.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+tabKey+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>'; }).join('');
     showTabPost(tabKey,0);
   }catch(e){}
@@ -8385,6 +8385,16 @@ function closeMyspaceWrite(){
   ['mysWriteScrFilePreview','mysWriteLibFilePreview','mysWriteGrpFilePreview','mysWriteQnaFilePreview'].forEach(function(id){ var el=document.getElementById(id); if(el)el.innerHTML=''; });
 }
 function switchMyspaceTab(tab){
+  /* 단체방 = 매니저(실장/지점장)·admin은 7유형+지점장 scope 완비된 rich 폼(mrWriteModal)으로 라우팅.
+     일반 멤버는 통일 simple 폼 유지 (2026-06-08, 매니저룸 통합 후 매니저 입력폼 복구). */
+  if(tab==='group'){
+    var _gr=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+    if((_gr==='admin'||_gr==='ga_manager'||_gr==='ga_branch_manager') && typeof mrOpenWrite==='function'){
+      if(typeof closeMyspaceWrite==='function') closeMyspaceWrite();
+      mrOpenWrite();
+      return;
+    }
+  }
   var tabs=document.querySelectorAll('.mys-write-tab');
   for(var i=0;i<tabs.length;i++){
     tabs[i].classList.toggle('on',tabs[i].getAttribute('data-tab')===tab);
