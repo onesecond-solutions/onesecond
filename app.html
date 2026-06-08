@@ -1179,7 +1179,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .split .list,.split .viewer{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 /* ── 홈 4컬럼 (2026-06-08): 공지/MY SPACE/도구/소식 ───────────────────────── */
 /* 검색기 들어올 폭 감안 — 중앙으로 모으기(max-width + auto) */
-.home-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:start;margin:48px auto 0;max-width:720px}
+.home-cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;align-items:start;margin:48px auto 0;max-width:920px}
 .home-col{padding:2px 14px;display:flex;flex-direction:column;text-align:center}
 .home-col-head{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
 .home-col-cnt{font-size:0.72em;font-weight:800;color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--s1));padding:1px 9px;border-radius:999px;white-space:nowrap}
@@ -1192,9 +1192,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 /* 안내문구 = 전체 중앙 1개. 흐린 기울임체. 어느 컬럼이든 호버하면 사라짐 */
 .home-portal-hint{text-align:center;font-style:italic;color:var(--ts);opacity:.6;font-size:0.86em;margin-top:14px;transition:opacity .18s}
 .home-portal:has(.home-col:hover) .home-portal-hint{opacity:0}
-.home-menu-item{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--tp);font-size:0.95em;font-weight:600;line-height:1.35;transition:background .12s,color .12s}
+.home-menu-item{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 8px;border-radius:var(--radius-sm);cursor:pointer;color:var(--tp);font-size:0.92em;font-weight:600;line-height:1.3;transition:background .12s,color .12s}
 .home-menu-item:hover{color:var(--ac)}
-.home-menu-item .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-menu-item .nm{min-width:0;word-break:keep-all}
 .home-menu-cnt{font-size:0.82em;font-weight:700;color:var(--ts);white-space:nowrap}
 .home-menu-cnt:empty{display:none}
 .home-menu-item:hover .home-menu-cnt{color:var(--ac)}
@@ -1578,7 +1578,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <button class="os-banner-ov-nav next" type="button" aria-label="다음" onclick="osBannerOvStep(1,event)">›</button>
       </div>
 
-      <!-- 홈 4컬럼 텍스트 포털 (2026-06-09): 공지 / MY SPACE / 도구 / 보험이슈 — 호버 발견형. 안내문구 1개(전체 중앙). -->
+      <!-- 홈 5카테고리 텍스트 포털 (2026-06-09): 공지 / MY SPACE / 스크립트 / 도구 / 소식·정보 — 호버 발견형. 안내문구 1개(전체 중앙). 사이드바(세로)↔홈(가로) 교차 정합. -->
       <div class="home-portal">
       <div class="home-cols">
         <!-- ① 공지 = 현장의 소리 4개 게시판 -->
@@ -1586,10 +1586,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="home-col-head"><span class="os-sec-title">공지</span></div>
           <div class="home-col-body">
             <div class="home-menu">
-              <div class="home-menu-item" onclick="_goVoiceTab('team')"><span class="nm">단체방</span><span class="home-menu-cnt" id="hcMTeam"></span></div>
-              <div class="home-menu-item" onclick="_goVoiceTab('voice')"><span class="nm">보험 Q&amp;A</span><span class="home-menu-cnt" id="hcMQna"></span></div>
-              <div class="home-menu-item" onclick="_goVoiceTab('smart')"><span class="nm">스마트 게시판</span><span class="home-menu-cnt" id="hcMSmart"></span></div>
-              <div class="home-menu-item" onclick="_goVoiceTab('branch')"><span class="nm">지점 게시판</span><span class="home-menu-cnt" id="hcMBranch"></span></div>
+              <div class="home-menu-item" onclick="_goVoiceTab('team')"><span class="nm">단체방</span></div>
+              <div class="home-menu-item" onclick="_goVoiceTab('voice')"><span class="nm">보험 Q&amp;A</span></div>
+              <div class="home-menu-item" onclick="_goVoiceTab('smart')"><span class="nm">스마트 게시판</span></div>
+              <div class="home-menu-item" onclick="_goVoiceTab('branch')"><span class="nm">지점 게시판</span></div>
             </div>
           </div>
         </div>
@@ -1598,12 +1598,24 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="home-col-head"><span class="os-sec-title">MY SPACE</span></div>
           <div class="home-col-body">
             <div class="home-menu">
-              <div class="home-menu-item" onclick="_goMysTab('today')"><span class="nm">오늘의 할 일</span><span class="home-menu-cnt" id="hcMToday"></span></div>
-              <div class="home-menu-item" onclick="_goMysTab('saved')"><span class="nm">오피스</span><span class="home-menu-cnt" id="hcMSaved"></span></div>
+              <div class="home-menu-item" onclick="_goMysTab('today')"><span class="nm">오늘의 할 일</span></div>
+              <div class="home-menu-item" onclick="_goMysTab('saved')"><span class="nm">오피스</span></div>
             </div>
           </div>
         </div>
-        <!-- ③ 도구 -->
+        <!-- ③ 스크립트 = 스크립트 페이지 + Quick 녹취 콘텐츠 2종 + 녹취 변환 도구 -->
+        <div class="home-col">
+          <div class="home-col-head"><span class="os-sec-title">스크립트</span></div>
+          <div class="home-col-body">
+            <div class="home-menu">
+              <div class="home-menu-item" onclick="showView('scripts')"><span class="nm">스크립트 페이지</span></div>
+              <div class="home-menu-item" onclick="_goQuickItem('recording_script')"><span class="nm">가입설계·선심사 동의 녹취</span></div>
+              <div class="home-menu-item" onclick="_goQuickItem('mirror_script')"><span class="nm">미러링 전 녹취</span></div>
+              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('콜스크립트작성')"><span class="nm">녹취·스크립트 변환</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- ④ 도구 = 제작·계산 도구 -->
         <div class="home-col">
           <div class="home-col-head"><span class="os-sec-title">도구</span></div>
           <div class="home-col-body">
@@ -1611,17 +1623,21 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
               <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('변환기')"><span class="nm">이미지 변환</span></div>
               <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('보험료비교표')"><span class="nm">보험료 비교표</span></div>
               <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('카드만들기')"><span class="nm">카드 만들기</span></div>
-              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('콜스크립트작성')"><span class="nm">녹취·스크립트 변환</span></div>
               <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('BMI계산기')"><span class="nm">BMI 계산기</span></div>
+              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('보험연령계산기')"><span class="nm">보험연령 계산기</span></div>
             </div>
           </div>
         </div>
-        <!-- ④ 보험이슈 (하위 메뉴 없음 = 단독) -->
+        <!-- ⑤ 소식·정보 = 보험이슈 + Quick 정보·연락 콘텐츠 + 함께해요 -->
         <div class="home-col">
-          <div class="home-col-head"><span class="os-sec-title">보험이슈</span></div>
+          <div class="home-col-head"><span class="os-sec-title">소식·정보</span></div>
           <div class="home-col-body">
             <div class="home-menu">
-              <div class="home-menu-item" onclick="showView('news')"><span class="nm">보험이슈 보기</span><span class="home-menu-cnt" id="hcMNews"></span></div>
+              <div class="home-menu-item" onclick="showView('news')"><span class="nm">보험이슈</span></div>
+              <div class="home-menu-item" onclick="_goQuickItem('contact_info')"><span class="nm">연락처</span></div>
+              <div class="home-menu-item" onclick="_goQuickItem('system_links')"><span class="nm">바로가기</span></div>
+              <div class="home-menu-item" onclick="_goQuickItem('payment_info')"><span class="nm">결제·납입 안내</span></div>
+              <div class="home-menu-item" onclick="showView('together')"><span class="nm">함께해요</span></div>
             </div>
           </div>
         </div>
@@ -6152,6 +6168,19 @@ function _goVoiceTab(key){ if(typeof showView!=='function') return; showView('vo
 /* 홈 텍스트 포털 → MY SPACE 탭 라우팅 (2026-06-09, _goVoiceTab 대칭) */
 function _goMysTab(key){ if(typeof showView!=='function') return; showView('myspace'); setTimeout(function(){ var map={today:0,saved:1,team:2,qna:3}; var tabs=document.querySelectorAll('#mys-tabs .tab'); var t=tabs[map[key]]; if(t&&typeof mysTab==='function') mysTab(t,key); },70); }
 window._goMysTab=_goMysTab;
+/* 홈 → Quick 오버레이 특정 항목 직접 열기 (2026-06-09). tab_key(코드 상수)로 호출 →
+   오버레이 띄우고 → 런타임 _qovTabKeyMap에서 tab_key→tab_title 역참조 → openQuickOverlay. DB 추측 없음. */
+function _goQuickItem(tabKey){
+  if(typeof openQuickLauncher==='function') openQuickLauncher(); /* 오버레이 표시 + 항목 비동기 로드 */
+  var tries=0;
+  (function poll(){
+    var map=window._qovTabKeyMap||{}, title=null;
+    for(var t in map){ if(map[t]===tabKey){ title=t; break; } }
+    if(title && typeof openQuickOverlay==='function'){ openQuickOverlay(title); return; }
+    if(tries++<25) setTimeout(poll,80); /* 최대 ~2s: DB fetch 완료까지 대기 */
+  })();
+}
+window._goQuickItem=_goQuickItem;
 window._goVoiceTab=_goVoiceTab;
 function _ttCard(o){
   var val=(o.value==null)?'<span style="color:var(--tf);font-size:0.5em;font-weight:600">곧 연결</span>':(o.value+(o.unit||''));
