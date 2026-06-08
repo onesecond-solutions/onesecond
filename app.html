@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <!-- 2026-05-30: app.html 캐시 무효화 (role 게이팅 옛 JS 캐시 방지 — 강력새로고침 의존 제거) -->
@@ -1415,7 +1415,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 </head>
 <body>
-<div class="app" id="app">
+<div class="app collapsed" id="app">
 <script>
 /* 2026-05-30: role 클래스 첫 페인트 전 즉시 부착 (사이드 메뉴 파싱 전) — FOUC/깜빡임 제거.
  * insurer_* → is-insurer (3개만) / admin → is-admin (전체+자료실). 늦은 applyRoleClass는 재부착 안전망. */
@@ -1465,7 +1465,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="mi" onclick="showView('myspace')"><span>MY SPACE</span></div>
           <div class="mi" onclick="openProfile()"><span>개인정보 수정</span></div>
           <div class="mdiv"></div>
-          <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">화면 모드</div><div class="seg"><span onclick="setTheme('light')" id="sl">라이트</span><span class="on" onclick="setTheme('dark')" id="sd">다크</span></div></div>
+          <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">화면 모드</div><div class="seg"><span class="on" onclick="setTheme('light')" id="sl">라이트</span><span onclick="setTheme('dark')" id="sd">다크</span></div></div>
           <div class="mdiv"></div>
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">글자 크기</div><div class="seg"><span onclick="setFont(90)" id="f90">90</span><span class="on" onclick="setFont(100)" id="f100">100</span><span onclick="setFont(110)" id="f110">110</span><span onclick="setFont(125)" id="f125">125</span></div></div>
           <div class="mdiv"></div>
