@@ -6079,6 +6079,12 @@ function _voiceAttsHtml(att){
   if(!Array.isArray(att)||!att.length) return {html:'', imgs:imgs, names:names};
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   var cells=att.map(function(a){
+    /* 신규 private 첨부(소식지 등): {name,bucket,path} + url 없음 → 클릭 시점 signed URL 생성 (2026-06-08).
+       기존 public 첨부는 url(또는 file_url) 보유 → 아래 분기 미진입 = 회귀 0. */
+    if(a && typeof a==='object' && !a.url && !a.file_url && a.bucket && a.path && a.bucket!=='onesecond' && a.bucket!=='onesecond_banner'){
+      var _pfn=(a.name)||String(a.path).split('/').pop();
+      return '<a class="att-file" href="#" data-bucket="'+esc(a.bucket)+'" data-path="'+esc(a.path)+'" data-name="'+esc(_pfn)+'" onclick="return _openSignedAtt(event,this)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82em;color:var(--ts);text-decoration:none">&#128206; '+esc(_pfn)+'</a>';
+    }
     var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||''); if(!url) return '';
     var u2=esc(url);
     var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
@@ -6089,6 +6095,30 @@ function _voiceAttsHtml(att){
   return {html:html, imgs:imgs, names:names};
 }
 window._voiceAttsHtml=_voiceAttsHtml;
+
+/* private 첨부 클릭 시점 서명 URL 생성 (2026-06-08) — newsletters 등 비공개 버킷.
+   로그인 토큰으로 Storage sign 호출(만료 1시간). 권한 없으면 401 → 안내. */
+async function _openSignedAtt(e, el){
+  if(e&&e.preventDefault)e.preventDefault();
+  try{
+    var bucket=el.getAttribute('data-bucket'), path=el.getAttribute('data-path');
+    if(!bucket||!path) return false;
+    var token=(typeof localStorage!=='undefined'&&localStorage.getItem('os_token'))||(typeof sessionStorage!=='undefined'&&sessionStorage.getItem('os_token'))||'';
+    if(!token){ alert('로그인 후 이용해 주세요.'); return false; }
+    var encPath=String(path).split('/').map(encodeURIComponent).join('/');
+    var res=await fetch(window.db.url('/storage/v1/object/sign/'+encodeURIComponent(bucket)+'/'+encPath),{
+      method:'POST',
+      headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({expiresIn:3600})
+    });
+    if(!res.ok){ alert(res.status===401||res.status===403?'이 첨부를 열 권한이 없습니다.':'첨부를 여는 데 실패했습니다. (HTTP '+res.status+')'); return false; }
+    var j=await res.json(); var signed=j.signedURL||j.signedUrl||'';
+    if(!signed){ alert('첨부 URL 생성에 실패했습니다.'); return false; }
+    window.open(window.db.url(signed), '_blank', 'noopener');
+  }catch(err){ console.error('[_openSignedAtt]',err); alert('첨부를 열지 못했습니다.'); }
+  return false;
+}
+window._openSignedAtt=_openSignedAtt;
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
 function renderMrEditAtts(){
   var wrap=document.getElementById('mr-edit-atts'); var fld=document.getElementById('mr-edit-atts-fld');
