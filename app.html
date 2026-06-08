@@ -1178,8 +1178,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .home-recent-card:not(.skel),.tt-card,.mys-card,.script-card,.bm-card{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 .split .list,.split .viewer{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 /* ── 홈 4컬럼 (2026-06-08): 공지/MY SPACE/도구/소식 ───────────────────────── */
-.home-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start;margin-top:4px}
-.home-col{padding:14px;display:flex;flex-direction:column}
+.home-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:stretch;margin-top:4px}
+.home-col{padding:2px 22px;display:flex;flex-direction:column}
+/* 컬럼 사이 세로 구분선 3개 (카드 박스 없이 배경 위 텍스트) */
+.home-col+.home-col{border-left:1px solid var(--bd)}
 .home-col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .home-col-cnt{font-size:0.72em;font-weight:800;color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--s1));padding:1px 9px;border-radius:999px;white-space:nowrap}
 .home-col-body{display:grid;gap:8px;flex:1;min-height:0}
@@ -1187,15 +1189,14 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 /* 홈 텍스트 포털 메뉴 (2026-06-09) — 텍스트 중심 디렉터리 */
 .home-menu{display:flex;flex-direction:column;gap:2px}
 .home-menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--tp);font-size:0.95em;font-weight:600;line-height:1.35;transition:background .12s,color .12s}
-.home-menu-item+.home-menu-item{border-top:1px solid color-mix(in srgb,var(--bd) 60%,transparent)}
-.home-menu-item:hover{background:color-mix(in srgb,var(--ac) 8%,transparent);color:var(--ac)}
+.home-menu-item:hover{color:var(--ac)}
 .home-menu-item .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .home-menu-cnt{font-size:0.82em;font-weight:700;color:var(--ts);white-space:nowrap}
 .home-menu-cnt:empty{display:none}
 .home-menu-item:hover .home-menu-cnt{color:var(--ac)}
 .home-col .home-quick-grid{grid-template-columns:1fr;gap:8px}
-@media(max-width:1100px){.home-cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.home-cols{grid-template-columns:1fr}}
+@media(max-width:1100px){.home-cols{grid-template-columns:repeat(2,minmax(0,1fr))}.home-col:nth-child(odd){border-left:none}}
+@media(max-width:640px){.home-cols{grid-template-columns:1fr}.home-col{border-left:none;padding:6px 6px}.home-col+.home-col{border-top:1px solid var(--bd);padding-top:14px}}
 .home-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
 @media (max-width:860px){.home-row-2{grid-template-columns:1fr}}
 .home-quick-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
@@ -1574,7 +1575,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <!-- 홈 4컬럼 텍스트 포털 (2026-06-09): 공지 / MY SPACE / 도구 / 보험이슈 — 텍스트 중심 메뉴 디렉터리. 글 수(home-menu-cnt)는 추후. -->
       <div class="home-cols">
         <!-- ① 공지 = 현장의 소리 4개 게시판 -->
-        <div class="os-card os-card--accent home-col">
+        <div class="home-col">
           <div class="home-col-head"><span class="os-sec-title">공지</span></div>
           <div class="home-col-body">
             <div class="home-menu">
@@ -1587,7 +1588,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="home-col-foot"><span class="os-more" onclick="showView('voice')">전체보기 →</span></div>
         </div>
         <!-- ② MY SPACE -->
-        <div class="os-card os-card--accent home-col">
+        <div class="home-col">
           <div class="home-col-head"><span class="os-sec-title">MY SPACE</span></div>
           <div class="home-col-body">
             <div class="home-menu">
@@ -1598,7 +1599,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="home-col-foot"><span class="os-more" onclick="showView('myspace')">전체보기 →</span></div>
         </div>
         <!-- ③ 도구 -->
-        <div class="os-card os-card--accent home-col">
+        <div class="home-col">
           <div class="home-col-head"><span class="os-sec-title">도구</span></div>
           <div class="home-col-body">
             <div class="home-menu">
@@ -1612,7 +1613,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="home-col-foot"><span class="os-more" onclick="showView('quick')">전체보기 →</span></div>
         </div>
         <!-- ④ 보험이슈 (하위 메뉴 없음 = 단독) -->
-        <div class="os-card os-card--accent home-col">
+        <div class="home-col">
           <div class="home-col-head"><span class="os-sec-title">보험이슈</span></div>
           <div class="home-col-body">
             <div class="home-menu">
