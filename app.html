@@ -1180,8 +1180,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 /* ── 홈 4컬럼 (2026-06-08): 공지/MY SPACE/도구/소식 ───────────────────────── */
 /* 검색기 들어올 폭 감안 — 중앙으로 모으기(max-width + auto) */
 .home-cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;align-items:start;margin:48px auto 0;max-width:920px}
-.home-col{padding:2px 14px;display:flex;flex-direction:column;text-align:center}
-.home-col-head{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
+.home-col{padding:2px 14px;display:flex;flex-direction:column;text-align:left}
+.home-col-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin-bottom:12px}
 .home-col-cnt{font-size:0.72em;font-weight:800;color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--s1));padding:1px 9px;border-radius:999px;white-space:nowrap}
 .home-col-body{display:grid;gap:8px;flex:1;min-height:0}
 .home-col-foot{margin-top:12px;text-align:right}
@@ -1192,7 +1192,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 /* 안내문구 = 전체 중앙 1개. 흐린 기울임체. 어느 컬럼이든 호버하면 사라짐 */
 .home-portal-hint{text-align:center;font-style:italic;color:var(--ts);opacity:.6;font-size:0.86em;margin-top:14px;transition:opacity .18s}
 .home-portal:has(.home-col:hover) .home-portal-hint{opacity:0}
-.home-menu-item{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 8px;border-radius:var(--radius-sm);cursor:pointer;color:var(--tp);font-size:0.92em;font-weight:600;line-height:1.3;transition:background .12s,color .12s}
+.home-menu-item{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:10px 8px;border-radius:var(--radius-sm);cursor:pointer;color:var(--tp);font-size:0.92em;font-weight:600;line-height:1.3;transition:background .12s,color .12s}
 .home-menu-item:hover{color:var(--ac)}
 .home-menu-item .nm{min-width:0;word-break:keep-all}
 .home-menu-cnt{font-size:0.82em;font-weight:700;color:var(--ts);white-space:nowrap}
