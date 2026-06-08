@@ -6441,7 +6441,7 @@ async function loadScriptsView(){
   /* Supabase 실 fetch — 1회만 (전체 자료 캐시). RLS = 로그인 토큰 필수. */
   try{
     /* scope=global 만 노출 = 공용 정제 스크립트 한정. 개인(personal)·채팅(stage=chat)·매니저룸 누수 차단 (2026-06-07, #421 계승) */
-    var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&scope=eq.global&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text,owner_id';
+    var url = SUPABASE_URL + '/rest/v1/scripts?is_active=eq.true&scope=eq.global&is_sample=eq.false&order=stage.asc,sort_order.asc&select=id,title,stage,top_category,highlight_text,script_text,owner_id';
     var authToken = (typeof localStorage !== 'undefined' && localStorage.getItem('os_token')) || SUPABASE_ANON_KEY;
     var res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + authToken }});
     if(!res.ok){ wrap.innerHTML = '<div class="scripts-cards-empty">자료를 불러올 수 없습니다. (HTTP '+res.status+')</div>'; return; }
@@ -7121,7 +7121,7 @@ async function _runSearch(q){
     {label:'보험Q&A',     color:'#22D3EE', table:'posts',           base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
     {label:'소식지',      color:'#6366F1', table:'newsletters',     base:'',                                       cols:['title','company','full_text'],          select:'id,title,company,full_text,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                      t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}},
     {label:'현장의 소리', color:'#22C55E', table:'team_notices',    base:'deleted_at=is.null',                     cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
-    {label:'스크립트',    color:'#E879F9', table:'scripts',         base:'',                                       cols:['title','script_text','highlight_text'], select:'id,title,script_text,highlight_text,stage',            order:'',                                                        body:function(r){return (r.highlight_text?r.highlight_text+' ':'')+(r.script_text||'');}, m:function(r){return r.stage||'스크립트';}},
+    {label:'스크립트',    color:'#E879F9', table:'scripts',         base:'is_active=eq.true&scope=eq.global&is_sample=eq.false',                                       cols:['title','script_text','highlight_text'], select:'id,title,script_text,highlight_text,stage',            order:'',                                                        body:function(r){return (r.highlight_text?r.highlight_text+' ':'')+(r.script_text||'');}, m:function(r){return r.stage||'스크립트';}},
     {label:'캘린더',      color:'#818CF8', table:'calendar_events', base:'',                                       cols:['title','description'],                  select:'id,title,description,event_date',                      order:'event_date.desc',                                         body:function(r){return r.description;},                                    m:function(r){return _sFmtDate(r.event_date);}}
   ];
   var results=await Promise.all(groups.map(function(g){
@@ -9825,7 +9825,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(loaded.rchat){ return paintChat(cache.rchat||[]); }
     body.innerHTML='<div class="os-empty">불러오는 중…</div>';
     var kwq=encodeURIComponent('{"'+CHAT_KW+'"}');  /* 콜론(유형:채팅) 포함 → 배열 원소 큰따옴표로 감싸야 PostgREST cs 파싱 정상 */
-    window.db.fetch('/rest/v1/scripts?scope=eq.global&is_active=eq.true&keywords=cs.'+kwq+'&order=created_at.desc&select=id,title,script_text')
+    window.db.fetch('/rest/v1/scripts?scope=eq.global&is_active=eq.true&is_sample=eq.false&keywords=cs.'+kwq+'&order=created_at.desc&select=id,title,script_text')
       .then(function(r){ return r.ok?r.json():[]; })
       .then(function(rows){ cache.rchat=rows||[]; loaded.rchat=true; paintChat(cache.rchat); })
       .catch(function(){ body.innerHTML='<div class="os-empty">불러오지 못했습니다.</div>'; });
