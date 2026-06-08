@@ -1177,6 +1177,16 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 /* §2 깊이 부여 — 기존 카드·split 패널 밍밍함 해소 (떠 보이게) */
 .home-recent-card:not(.skel),.tt-card,.mys-card,.script-card,.bm-card{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 .split .list,.split .viewer{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
+/* ── 홈 4컬럼 (2026-06-08): 공지/MY SPACE/도구/소식 ───────────────────────── */
+.home-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start;margin-top:4px}
+.home-col{padding:14px;display:flex;flex-direction:column}
+.home-col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.home-col-cnt{font-size:0.72em;font-weight:800;color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--s1));padding:1px 9px;border-radius:999px;white-space:nowrap}
+.home-col-body{display:grid;gap:8px;flex:1;min-height:0}
+.home-col-foot{margin-top:12px;text-align:right}
+.home-col .home-quick-grid{grid-template-columns:1fr;gap:8px}
+@media(max-width:1100px){.home-cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.home-cols{grid-template-columns:1fr}}
 .home-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
 @media (max-width:860px){.home-row-2{grid-template-columns:1fr}}
 .home-quick-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
@@ -1552,74 +1562,36 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <button class="os-banner-ov-nav next" type="button" aria-label="다음" onclick="osBannerOvStep(1,event)">›</button>
       </div>
 
-      <!-- 3층: 오늘의 업무 (상위 컨테이너 — 자료/스크립트 흡수, 2026-05-25 Phase 1.5) -->
-      <div class="home-today">
-        <div class="home-today-head">
-          <div class="home-today-ttl">오늘의 업무</div>
-          <div class="home-today-sub">오늘 이어서 해야 할 일을 한 곳에 모았습니다</div>
+      <!-- 홈 4컬럼 (2026-06-08): 공지 / MY SPACE / 도구 / 소식 — 실 DB COUNT -->
+      <div class="home-cols">
+        <div class="os-card os-card--accent home-col">
+          <div class="home-col-head"><span class="os-sec-title">공지</span><span class="home-col-cnt" id="hcCntNotice">·</span></div>
+          <div class="home-col-body" id="hcNotice"><div class="home-recent-card skel"></div><div class="home-recent-card skel"></div></div>
+          <div class="home-col-foot"><span class="os-more" onclick="showView('together')">전체보기 →</span></div>
         </div>
-        <div class="home-today-body">
-          <div class="home-widget">
-            <div class="home-widget-head">
-              <div class="home-widget-ttl">최근 사용한 자료</div>
-              <div class="home-widget-more" onclick="showView('myspace')">전체보기-&gt;</div>
-            </div>
-            <div id="homeRecentDocs" style="display:grid;gap:8px">
-              <div class="home-recent-card skel"></div>
-              <div class="home-recent-card skel"></div>
-              <div class="home-recent-card skel"></div>
-            </div>
-          </div>
-          <div class="home-widget">
-            <div class="home-widget-head">
-              <div class="home-widget-ttl">최근 사용한 스크립트</div>
-              <div class="home-widget-more" onclick="showView('scripts')">전체보기-&gt;</div>
-            </div>
-            <div id="homeRecentScripts" style="display:grid;gap:8px">
-              <div class="home-recent-card skel"></div>
-              <div class="home-recent-card skel"></div>
-              <div class="home-recent-card skel"></div>
-            </div>
-          </div>
+        <div class="os-card os-card--accent home-col">
+          <div class="home-col-head"><span class="os-sec-title">MY SPACE</span><span class="home-col-cnt" id="hcCntDocs">·</span></div>
+          <div class="home-col-body" id="homeRecentDocs"><div class="home-recent-card skel"></div><div class="home-recent-card skel"></div></div>
+          <div class="home-col-foot"><span class="os-more" onclick="showView('myspace')">전체보기 →</span></div>
         </div>
-      </div>
+        <div class="os-card os-card--accent home-col">
+          <div class="home-col-head"><span class="os-sec-title">도구</span><span class="home-col-cnt" id="hcCntTools">·</span></div>
+          <div class="home-col-body">
 
-      <div class="home-widget">
-        <div class="home-widget-head">
-          <div class="home-widget-ttl">Quick 실행 도구</div>
-          <div class="home-widget-more" onclick="showView('quick')">전체보기-&gt;</div>
-        </div>
-        <div class="home-quick-grid">
+          <div class="home-quick-grid">
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('변환기')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div><div>이미지 변환</div><div class="home-quick-sub">이미지/PDF/JPG 변환</div></div>
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('보험료비교표')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><div>보험료 비교표</div><div class="home-quick-sub">회사별·리모델링 비교</div></div>
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('카드만들기')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1"></rect><rect x="3" y="14" width="9" height="7" rx="1"></rect><rect x="16" y="14" width="5" height="7" rx="1"></rect></svg></div><div>카드 만들기</div><div class="home-quick-sub">공지·자료 카드 제작</div></div>
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('콜스크립트작성')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div><div>녹취·스크립트 변환</div><div class="home-quick-sub">상담 멘트 정리</div></div>
           <div class="home-quick-btn" onclick="showView('quick'); openQuickToolV2('BMI계산기')"><div class="home-quick-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><div>BMI</div><div class="home-quick-sub">체질량지수 빠른 계산</div></div>
         </div>
-      </div>
-
-      <div class="home-row-2">
-        <div class="home-widget">
-          <div class="home-widget-head">
-            <div class="home-widget-ttl">현장의 소리</div>
-            <div class="home-widget-more" onclick="showView('voice')">전체보기-&gt;</div>
           </div>
-          <div id="homeRecentVoice" style="display:grid;gap:8px">
-            <div class="home-recent-card skel"></div>
-            <div class="home-recent-card skel"></div>
-            <div class="home-recent-card skel"></div>
-          </div>
+          <div class="home-col-foot"><span class="os-more" onclick="showView('quick')">전체보기 →</span></div>
         </div>
-        <div class="home-widget">
-          <div class="home-widget-head">
-            <div class="home-widget-ttl">보험이슈</div>
-            <div class="home-widget-more" onclick="showView('news')">전체보기-&gt;</div>
-          </div>
-          <div id="homeRecentNews" style="display:grid;gap:8px">
-            <div class="home-recent-card skel"></div>
-            <div class="home-recent-card skel"></div>
-            <div class="home-recent-card skel"></div>
-          </div>
+        <div class="os-card os-card--accent home-col">
+          <div class="home-col-head"><span class="os-sec-title">소식</span><span class="home-col-cnt" id="hcCntNews">·</span></div>
+          <div class="home-col-body" id="hcNews"><div class="home-recent-card skel"></div><div class="home-recent-card skel"></div></div>
+          <div class="home-col-foot"><span class="os-more" onclick="showView('insurer-vault')">전체보기 →</span></div>
         </div>
       </div>
      </div>
@@ -7830,6 +7802,42 @@ function renderHomeNews(rows){
   el.innerHTML=html;
 }
 
+/* 홈 4컬럼 카운트·공지·소식 로더 (2026-06-08) — 실 DB COUNT(count=exact), mock 0 */
+function _hcSetCnt(id,n){ var el=document.getElementById(id); if(el) el.textContent=(typeof n==='number'?n.toLocaleString():'·'); }
+function _hcLoadList(elId,path,mapFn){
+  var el=document.getElementById(elId); if(!el) return;
+  if(!window.db||!window.db.fetch){ el.innerHTML='<div class="home-recent-card" style="cursor:default"><div class="home-recent-card-meta">로그인 후 표시됩니다</div></div>'; return; }
+  window.db.fetch('/rest/v1/'+path).then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
+    if(!Array.isArray(rows)||!rows.length){ el.innerHTML='<div class="home-recent-card" style="cursor:default"><div class="home-recent-card-meta">표시할 항목이 없습니다</div></div>'; return; }
+    var html='';
+    rows.forEach(function(r){ var o=mapFn(r);
+      html+='<div class="home-recent-card" style="--tc:'+o.tc+'" onclick="'+o.go+'">'+
+        '<div class="home-recent-card-row1"><span class="home-recent-card-badge">'+escHomeHtml(o.badge)+'</span><div class="home-recent-card-title">'+escHomeHtml(o.title)+'</div></div>'+
+        '<div class="home-recent-card-meta">'+escHomeHtml(o.meta)+'</div></div>';
+    });
+    el.innerHTML=html;
+  }).catch(function(){ el.innerHTML='<div class="home-recent-card" style="cursor:default"><div class="home-recent-card-meta">불러오지 못했습니다</div></div>'; });
+}
+function loadHome4(){
+  try{
+    var uid=(window.AppState&&window.AppState.userId)||null;
+    /* 카운트 — #485 노출조건 정합(노출 대상만): scripts는 is_active·is_sample이나 본 4컬럼엔 scripts 없음 */
+    if(typeof _ttCount==='function'){
+      _ttCount('posts?board_type=eq.community&select=id').then(function(n){ _hcSetCnt('hcCntNotice',n); });
+      if(uid) _ttCount('library?owner_id=eq.'+encodeURIComponent(uid)+'&select=id').then(function(n){ _hcSetCnt('hcCntDocs',n); });
+      _ttCount('quick_contents?is_active=eq.true&select=id').then(function(n){ _hcSetCnt('hcCntTools',n); });
+      _ttCount('newsletters?select=id').then(function(n){ _hcSetCnt('hcCntNews',n); });
+    }
+    /* 공지 = 함께해요(community) 최근 3 */
+    _hcLoadList('hcNotice','posts?board_type=eq.community&order=created_at.desc&limit=3&select=id,title,created_at', function(r){
+      return {title:r.title||'(제목 없음)', meta:fmtHomeDate(r.created_at), badge:'공지', tc:'var(--err)', go:"showView('together')"}; });
+    /* 소식 = 소식지(newsletters) 최근 3 */
+    _hcLoadList('hcNews','newsletters?order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=3&select=id,title,company,publish_year,publish_month', function(r){
+      return {title:(r.company?r.company+' · ':'')+(r.title||'소식지'), meta:(r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지'), badge:'소식지', tc:'var(--t-uw)', go:"showView('insurer-vault')"}; });
+  }catch(e){ console.error('[loadHome4]',e); }
+}
+window.loadHome4=loadHome4;
+
 /* 홈 = 대시보드. 카드 클릭 = 원세컨드 내부 원본 위치로 딥링크 (단순 페이지 이동 X). */
 function openHomeRecent(table,id){
   if(id==null||id===''||id==='undefined'||id==='null'){
@@ -7905,6 +7913,7 @@ function _homeFetch(label,path){
 }
 
 async function loadHomeRecent(force){
+  if(typeof loadHome4==='function')loadHome4();
   if(window._homeRecentLoaded&&!force)return;
   showHomeSkeleton();  // 로딩 (4 영역 통째)
   var jobs=[];
