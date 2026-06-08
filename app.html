@@ -1178,8 +1178,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .home-recent-card:not(.skel),.tt-card,.mys-card,.script-card,.bm-card{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 .split .list,.split .viewer{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 /* ── 홈 4컬럼 (2026-06-08): 공지/MY SPACE/도구/소식 ───────────────────────── */
-.home-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:stretch;margin-top:32px}
-.home-col{padding:2px 22px;display:flex;flex-direction:column}
+/* 검색기 들어올 폭 감안 — 중앙으로 모으기(max-width + auto) */
+.home-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;align-items:stretch;margin:32px auto 0;max-width:720px}
+.home-col{padding:2px 14px;display:flex;flex-direction:column}
 /* 컬럼 사이 세로 구분선 3개 (카드 박스 없이 배경 위 텍스트) */
 .home-col+.home-col{border-left:1px solid var(--bd)}
 .home-col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
