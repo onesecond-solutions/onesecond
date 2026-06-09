@@ -761,6 +761,15 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-gridhead{justify-content:center;gap:10px}
 .cal-month-sec{margin-bottom:16px}
 .cal-month-hd{font-size:14px;font-weight:800;color:var(--tp);padding:7px 4px;border-bottom:2px solid var(--ac);margin-bottom:9px;cursor:pointer;position:sticky;top:0;background:var(--bg);z-index:1}
+/* 다이어리 (2026-06-09): 캘린더(메인) + 오늘 할일(옆 패널) 통합 */
+.diary-wrap{display:flex;gap:16px;align-items:flex-start}
+.diary-cal-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.diary-todo-side{width:300px;flex-shrink:0}
+.diary-side-ttl{font-size:0.92rem;font-weight:800;color:var(--tp);margin-bottom:10px;letter-spacing:-.02em}
+.diary-todo-side .tt-grid{grid-template-columns:1fr}
+.diary-todo-side .tt-card{min-height:0}
+@media (max-width:900px){ .diary-wrap{flex-direction:column} .diary-todo-side{width:100%} .diary-todo-side .tt-grid{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .diary-todo-side .tt-grid{grid-template-columns:1fr} }
 /* 오늘의 할 일 — 캘린더 3일 요약 카드 */
 .tt-cal-list{display:flex;flex-direction:column;gap:7px;margin-top:6px}
 .tt-cal-row{display:flex;align-items:center;gap:8px;font-size:0.85em;min-width:0}
@@ -1650,7 +1659,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="sub">딸깍으로 저장한 자료를 한 곳에 모아 봅니다.</div>
       <div class="mys-toolbar" style="margin-bottom:14px">
         <div class="tabs" id="mys-tabs" style="margin-bottom:0;flex:1">
-          <div class="tab on" onclick="mysTab(this,'today')">오늘의 할 일</div>
+          <div class="tab on" onclick="mysTab(this,'today')">다이어리</div>
           <div class="tab" onclick="mysTab(this,'saved')">마이 스페이스</div>
           <div class="tab" onclick="mysTab(this,'team')">단체방</div>
           <div class="tab" onclick="mysTab(this,'qna')">보험 Q&amp;A</div>
@@ -1658,7 +1667,32 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
       </div>
-      <div id="mys-today"></div>
+      <div id="mys-today">
+       <div class="diary-wrap">
+        <div class="diary-cal-main">
+         <div id="mys-cal-area">
+          <div class="split">
+           <div class="col list-col">
+             <div class="cal-head"><button class="cal-add" onclick="openCalAdd('mys')">+ 내 일정</button></div>
+             <div class="list" id="mys-cal-list"><div class="mys-news-empty">불러오는 중…</div></div>
+           </div>
+           <div class="col viewer-col">
+             <div class="cal-head cal-gridhead">
+               <button class="cal-navbtn" onclick="calNav('mys',-1)" aria-label="이전 달">&#8249;</button>
+               <span class="cal-ym" id="mys-cal-ym">불러오는 중…</span>
+               <button class="cal-navbtn" onclick="calNav('mys',1)" aria-label="다음 달">&#8250;</button>
+             </div>
+             <div id="mys-cal-grid" class="cal-grid-wrap"></div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="diary-todo-side">
+          <div class="diary-side-ttl">오늘 할 일</div>
+          <div id="mys-todo-panel"></div>
+        </div>
+       </div>
+      </div>
       <div id="mys-saved" style="display:none">
       <div class="mys-toolbar">
         <div class="chips">
@@ -1667,7 +1701,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="chip" onclick="filterMys(this,'스크립트')">스크립트</div>
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
           <div class="chip" onclick="filterMys(this,'즐겨찾기')">즐겨찾기</div>
-          <div class="chip" onclick="calOpen(this,'mys')">캘린더</div>
         </div>
       </div>
       <div class="split" id="mys-split">
@@ -1679,22 +1712,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
         </div>
       </div>
-      <div id="mys-cal-area" style="display:none">
-        <div class="split">
-          <div class="col list-col">
-            <div class="cal-head"><button class="cal-add" onclick="openCalAdd('mys')">+ 내 일정</button></div>
-            <div class="list" id="mys-cal-list"><div class="mys-news-empty">불러오는 중…</div></div>
-          </div>
-          <div class="col viewer-col">
-            <div class="cal-head cal-gridhead">
-              <button class="cal-navbtn" onclick="calNav('mys',-1)" aria-label="이전 달">&#8249;</button>
-              <span class="cal-ym" id="mys-cal-ym">불러오는 중…</span>
-              <button class="cal-navbtn" onclick="calNav('mys',1)" aria-label="다음 달">&#8250;</button>
-            </div>
-            <div id="mys-cal-grid" class="cal-grid-wrap"></div>
-          </div>
-        </div>
-      </div><!-- /mys-cal-area -->
       </div><!-- /mys-saved -->
       <div id="mys-team" style="display:none">
       <div class="mys-toolbar"><div class="chips" id="mys-team-subtabs">
@@ -6257,8 +6274,7 @@ async function _ttCalBody(){
 window._ttCalBody=_ttCalBody;
 function _goMysCalendar(){
   if(typeof showView==='function') showView('myspace');
-  var ot=document.querySelector('#mys-tabs .tab[onclick*="saved"]'); if(ot&&typeof mysTab==='function') mysTab(ot,'saved');
-  var cc=document.querySelector('#mys-saved .chip[onclick*="calOpen"]'); if(cc&&typeof calOpen==='function') calOpen(cc,'mys');
+  var ot=document.querySelector('#mys-tabs .tab[onclick*="today"]'); if(ot&&typeof mysTab==='function') mysTab(ot,'today');
 }
 window._goMysCalendar=_goMysCalendar;
 function _goMysQna(){
@@ -6300,7 +6316,7 @@ function mysTab(el,key){
     if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
     else { if(_brTab) _brTab.style.display=''; if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch'); }
   } }
-  else { if(today){ today.style.display=''; renderTodayTodo('myspace', today); } }
+  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); var _tp=document.getElementById('mys-todo-panel'); if(_tp&&typeof renderTodayTodo==='function') renderTodayTodo('myspace', _tp); } }
 }
 window.mysTab=mysTab;
 function ivTab(el,key){
@@ -9378,7 +9394,6 @@ function filterMys(el,cat){
   var chips=el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
   el.classList.add('on');
-  if(typeof calBackToDocs==='function') calBackToDocs('mys');  /* 캘린더 칩 → 자료 필터칩 복귀 시 캘린더 숨김+split 복원 */
   var items=window._myspaceCache||[];
   var f=(cat==='전체')?items:items.filter(function(it){ return (it._badge||'')===cat; });
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
