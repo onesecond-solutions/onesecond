@@ -770,18 +770,25 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-gridhead{justify-content:center;gap:10px}
 .cal-month-sec{margin-bottom:16px}
 .cal-month-hd{font-size:14px;font-weight:800;color:var(--tp);padding:7px 4px;border-bottom:2px solid var(--ac);margin-bottom:9px;cursor:pointer;position:sticky;top:0;background:var(--bg);z-index:1}
-/* 라이브러리 공통 업무 대시보드 (2026-06-09): 좌/중앙=탭 콘텐츠 + 우측=공통 sticky D 패널.
-   .mys-workspace 가 바운드(flex:1) → D 패널은 스크롤해도 항상 보임. 탭 콘텐츠만 내부 스크롤. */
-.mys-workspace{flex:1;min-height:0;display:flex;gap:18px;overflow:hidden;padding-bottom:18px}
-.mys-main-col{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
-.mys-dpanel{width:330px;flex-shrink:0;min-height:0;overflow-y:auto;display:flex;flex-direction:column;border-left:1px solid var(--bd);padding-left:18px}
+/* 라이브러리 (2026-06-10 정정): D 고정 해제 — A+B+D 가 한 화면처럼 함께 스크롤(#511 sticky 정정).
+   #v-myspace 자체가 단일 세로 스크롤 컨테이너 → D 패널은 콘텐츠와 함께 자연스럽게 스크롤.
+   .main padding-bottom(--os-sheet-offset)로 바텀시트 하단 가림 방지는 그대로 유지.
+   스코프 = 라이브러리 한정. 전 게시판 공용 .split/.col/.list/.viewer 본체는 불변. */
+#v-myspace{overflow-y:auto}
+.mys-workspace{display:flex;gap:18px;align-items:flex-start;padding-bottom:18px}
+.mys-main-col{flex:1;min-width:0;display:flex;flex-direction:column}
+.mys-dpanel{width:330px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--bd);padding-left:18px}
 .dpanel-ttl{font-size:0.9rem;font-weight:800;color:var(--tp);margin-bottom:12px;letter-spacing:-.02em;flex-shrink:0}
 .mys-dpanel .tt-grid{grid-template-columns:1fr}
 .mys-dpanel .tt-card{min-height:0}
+/* 안쪽 게시판 split: 라이브러리 안에서는 내부 스크롤 끄고 자연 높이로 흐름 (스코프 한정) */
+#v-myspace .split{flex:none;overflow:visible;align-items:start}
+#v-myspace .col{overflow:visible}
+#v-myspace .list,#v-myspace .viewer{flex:none;overflow:visible}
 @media (max-width:900px){
-  .mys-workspace{flex-direction:column;overflow-y:auto}
-  .mys-main-col{flex:none;min-height:360px}
-  .mys-dpanel{width:100%;border-left:0;border-top:1px solid var(--bd);padding-left:0;padding-top:14px;overflow:visible}
+  .mys-workspace{flex-direction:column}
+  .mys-main-col{flex:none}
+  .mys-dpanel{width:100%;border-left:0;border-top:1px solid var(--bd);padding-left:0;padding-top:14px}
   .mys-dpanel .tt-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:560px){ .mys-dpanel .tt-grid{grid-template-columns:1fr} }
