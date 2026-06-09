@@ -774,7 +774,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
    #v-myspace 자체가 단일 세로 스크롤 컨테이너 → D 패널은 콘텐츠와 함께 자연스럽게 스크롤.
    .main padding-bottom(--os-sheet-offset)로 바텀시트 하단 가림 방지는 그대로 유지.
    스코프 = 라이브러리 한정. 전 게시판 공용 .split/.col/.list/.viewer 본체는 불변. */
-#v-myspace{overflow-y:auto}
+#v-myspace.on{overflow-y:auto}
 .mys-workspace{display:flex;gap:18px;align-items:flex-start;padding-bottom:18px}
 .mys-main-col{flex:1;min-width:0;display:flex;flex-direction:column}
 .mys-dpanel{width:330px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--bd);padding-left:18px}
@@ -1775,7 +1775,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
       </div><!-- /mr-main -->
       </div><!-- /mys-main-col -->
-      <aside class="mys-dpanel">
+      <aside class="mys-dpanel" id="mys-dpanel">
         <div class="dpanel-ttl">업무 대시보드</div>
         <div id="mys-dboard"></div>
       </aside>
@@ -6326,9 +6326,10 @@ function mysTab(el,key){
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
   var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved'), team=document.getElementById('mys-team'), qna=document.getElementById('mys-qna'), mem=document.getElementById('mr-main');
+  var dpanel=document.getElementById('mys-dpanel');
   if(today) today.style.display='none'; if(saved) saved.style.display='none'; if(team) team.style.display='none'; if(qna) qna.style.display='none'; if(mem) mem.style.display='none';
-  /* 공통 D 대시보드 1회 렌더 — 모든 탭에서 우측 고정 유지 (2026-06-09) */
-  var _db=document.getElementById('mys-dboard'); if(_db && !window._mysDboardLoaded && typeof renderTodayTodo==='function'){ window._mysDboardLoaded=true; renderTodayTodo('myspace', _db); }
+  /* 업무 대시보드(D) = 다이어리 탭에서만 표시 (2026-06-10). 기본 숨김 → 다이어리 진입 시에만 노출 + 1회 렌더. */
+  if(dpanel) dpanel.style.display='none';
   if(key==='saved'){ if(saved) saved.style.display=''; if(typeof loadMyspace==='function') loadMyspace(); }
   else if(key==='team'){ if(team) team.style.display=''; if(typeof loadMysTeam==='function') loadMysTeam(); }
   else if(key==='qna'){ if(qna) qna.style.display=''; if(typeof loadMysQna==='function') loadMysQna(); }
@@ -6340,7 +6341,10 @@ function mysTab(el,key){
     if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
     else { if(_brTab) _brTab.style.display=''; if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch'); }
   } }
-  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); } }
+  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); }
+    if(dpanel){ dpanel.style.display='';
+      var _db=document.getElementById('mys-dboard'); if(_db && !window._mysDboardLoaded && typeof renderTodayTodo==='function'){ window._mysDboardLoaded=true; renderTodayTodo('myspace', _db); }
+    } }
 }
 window.mysTab=mysTab;
 function ivTab(el,key){
