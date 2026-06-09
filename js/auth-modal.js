@@ -51,9 +51,9 @@ var previewData = {
   },
   myspace: {
     type: 'image',
-    alt: 'MY SPACE 페이지 미리보기',
+    alt: '라이브러리 페이지 미리보기',
     src: PREVIEW_BASE + 'myspace.jpg',
-    fallback: 'MY SPACE 미리보기 이미지는 assets/images/preview/myspace.jpg 경로에 있어야 합니다.',
+    fallback: '라이브러리 미리보기 이미지는 assets/images/preview/myspace.jpg 경로에 있어야 합니다.',
     href: PAGES_BASE + 'myspace.html'
   },
   together: {

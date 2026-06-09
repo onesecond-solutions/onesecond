@@ -314,7 +314,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     <div class="nav on"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
-    <div class="nav"><span class="ic">&#9672;</span><span class="lbl">MY SPACE</span></div>
+    <div class="nav"><span class="ic">&#9672;</span><span class="lbl">라이브러리</span></div>
     <div class="nav"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav"><span class="ic">&#9776;</span><span class="lbl">보험뉴스</span></div>
     <div class="nav"><span class="ic">&#8862;</span><span class="lbl">팀원관리</span></div>
@@ -330,7 +330,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
         <div class="menu" id="m">
           <div class="mi"><span>임태성 · 4팀 팀장</span></div>
           <div class="mdiv"></div>
-          <div class="mi"><span>MY SPACE</span></div>
+          <div class="mi"><span>라이브러리</span></div>
           <div class="mi" onclick="openProfile()"><span>개인정보 수정</span></div>
           <div class="mdiv"></div>
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">화면 모드</div><div class="seg"><span onclick="setTheme('light')" id="sl">라이트</span><span class="on" onclick="setTheme('dark')" id="sd">다크</span></div></div>
@@ -453,7 +453,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     <div class="ttakwrap">
       <button class="ttak" onclick="document.getElementById('tm').classList.toggle('open')">&#9889; 딸깍</button>
       <div class="ttakmenu" id="tm">
-        <div class="tmi" onclick="doSave()"><span>MY SPACE 저장<small>나의 자료에 담기</small></span></div>
+        <div class="tmi" onclick="doSave()"><span>라이브러리에 저장<small>나의 자료에 담기</small></span></div>
         <div class="tmi" onclick="doCopy()"><span>복사<small>톡에 바로 붙여넣기</small></span></div>
         <div class="tmi" onclick="openCard()"><span>카드 만들기<small id="cardsub">지금 자료: 5세대 보험료표</small></span></div>
       </div>
@@ -468,7 +468,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
     <div class="cardacts">
       <button onclick="copyCardImage()">이미지 복사</button>
       <button onclick="saveCardImage()">이미지 저장</button>
-      <button class="prim" onclick="toast('MY SPACE에 카드 저장됨')">MY SPACE 저장</button>
+      <button class="prim" onclick="toast('라이브러리에 카드 저장됨')">라이브러리에 저장</button>
     </div>
     <div style="text-align:center;margin-top:8px;"><span onclick="copyCardText()" style="font-size:0.75rem;color:var(--ts);cursor:pointer;text-decoration:underline;">텍스트로 복사</span></div>
   </div>
@@ -547,7 +547,7 @@ function closeLb(){document.getElementById('lb').classList.remove('open');docume
 function zoom(d){sc=Math.max(0.5,Math.min(3,sc+d*0.25));render();}
 function rot(){rt=(rt+90)%360;render();}
 function navi(d){cur=(cur+d+imgs.length)%imgs.length;sc=1;rt=0;render();syncMenu();}
-function doSave(){document.getElementById('tm').classList.remove('open');toast('MY SPACE 「나의 자료」에 저장됨');}
+function doSave(){document.getElementById('tm').classList.remove('open');toast('라이브러리 「나의 자료」에 저장됨');}
 function copyTextFallback(txt){
   try{
     var ta=document.createElement('textarea');
