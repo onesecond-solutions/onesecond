@@ -72,7 +72,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .nav.on{background:var(--s2);color:var(--ac);font-weight:600;}
 .app.collapsed .nav{justify-content:center;padding:9px 0;}
 .app.collapsed .nav .lbl{display:none;}
-.main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100vh;overflow:hidden;}
+.main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100vh;overflow:hidden;padding-bottom:calc(var(--os-sheet-offset, 46px) + env(safe-area-inset-bottom));transition:padding-bottom .28s cubic-bezier(.34,1.4,.64,1);}
 .head{height:54px;flex-shrink:0;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:16px;padding:0 18px;}
 .search{flex:1;max-width:560px;height:34px;background:var(--s2);border:0.5px solid var(--bd);border-radius:9px;display:flex;align-items:center;padding:0 12px;gap:8px;color:var(--tf);font-size:0.8125rem;overflow:hidden;}
 .search .stext{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -9960,8 +9960,11 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       toggleBtn=document.getElementById('osSheetToggle');
   if(!sheet) return;
   function updateArrow(s){ if(!toggleBtn) return; toggleBtn.textContent=(s==='collapsed')?'▲':((s==='open')?'▼':'▲▼'); }
-  function applySnap(s){ sheet.classList.remove('snap-mid','snap-open'); if(s==='mid')sheet.classList.add('snap-mid'); else if(s==='open')sheet.classList.add('snap-open'); sheet.dataset.snap=s; updateArrow(s); }
+  /* 콘텐츠가 닫힌/열린 시트 높이만큼 하단 여백 확보 → 시트가 콘텐츠를 가리지 않음. .main padding-bottom = --os-sheet-offset */
+  function syncSheetOffset(){ var snap=sheet.dataset.snap, h; if(snap==='mid') h=Math.round(window.innerHeight*0.42); else if(snap==='open') h=Math.round(window.innerHeight*0.84); else if(snap==='free') h=Math.round(sheet.getBoundingClientRect().height); else h=46; document.documentElement.style.setProperty('--os-sheet-offset', h+'px'); }
+  function applySnap(s){ sheet.classList.remove('snap-mid','snap-open'); if(s==='mid')sheet.classList.add('snap-mid'); else if(s==='open')sheet.classList.add('snap-open'); sheet.dataset.snap=s; updateArrow(s); syncSheetOffset(); }
   applySnap('collapsed');
+  window.addEventListener('resize', syncSheetOffset);
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fallbackCopy(t){ try{ var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(window.toast)toast('복사됐어요'); }catch(e){} }
   function copyText(t){ if(!t) return; try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ if(window.toast)toast('복사됐어요'); }).catch(function(){fallbackCopy(t);}); } else fallbackCopy(t); }catch(e){fallbackCopy(t);} }
@@ -10053,7 +10056,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   function endDrag(){ if(!drag) return; sheet.classList.remove('os-dragging'); var nh=sheet.getBoundingClientRect().height; var wasMoved=drag.moved; drag=null;
     if(!wasMoved){ sheet.style.height=''; cycleSnap(); return; }
     if(isMobile()){ sheet.style.height=''; var r=nh/window.innerHeight; applySnap(r<0.18?'collapsed':(r<0.62?'mid':'open')); }
-    else { if(nh<70){ sheet.style.height=''; applySnap('collapsed'); } else { sheet.classList.remove('snap-mid','snap-open'); sheet.dataset.snap='free'; updateArrow('free'); } }
+    else { if(nh<70){ sheet.style.height=''; applySnap('collapsed'); } else { sheet.classList.remove('snap-mid','snap-open'); sheet.dataset.snap='free'; updateArrow('free'); syncSheetOffset(); } }
   }
   handle.addEventListener('pointerup', endDrag);
   handle.addEventListener('pointercancel', endDrag);
