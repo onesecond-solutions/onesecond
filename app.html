@@ -121,7 +121,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 /* 자료실 split 사이즈 정합 — 현장의 소리와 동일(부모 flex 컬럼 체인 복원) */
 #v-insurer-vault.on,#v-myspace.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
 #iv-saved,#iv-today,#mys-saved,#mys-team,#mys-qna,#mr-team,#mr-office,#mr-qna{flex:1;min-height:0;display:flex;flex-direction:column;}
-#mys-today,#mr-main{flex:1;min-height:0;overflow-y:auto;}
+#mys-today{flex:1;min-height:0;display:flex;flex-direction:column;}
+#mr-main{flex:1;min-height:0;overflow-y:auto;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .list-col .lhead{flex-shrink:0;}
 .bm-card{width:330px;max-width:100%;background:var(--s1);border:0.5px solid var(--bd);border-left:3px solid var(--ac);border-radius:12px;padding:16px;margin-bottom:16px;flex-shrink:0;}
@@ -767,15 +768,21 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-gridhead{justify-content:center;gap:10px}
 .cal-month-sec{margin-bottom:16px}
 .cal-month-hd{font-size:14px;font-weight:800;color:var(--tp);padding:7px 4px;border-bottom:2px solid var(--ac);margin-bottom:9px;cursor:pointer;position:sticky;top:0;background:var(--bg);z-index:1}
-/* 다이어리 (2026-06-09): 캘린더(메인) + 오늘 할일(옆 패널) 통합 */
-.diary-wrap{display:flex;gap:16px;align-items:flex-start}
-.diary-cal-main{flex:1;min-width:0;display:flex;flex-direction:column}
-.diary-todo-side{width:300px;flex-shrink:0}
-.diary-side-ttl{font-size:0.92rem;font-weight:800;color:var(--tp);margin-bottom:10px;letter-spacing:-.02em}
-.diary-todo-side .tt-grid{grid-template-columns:1fr}
-.diary-todo-side .tt-card{min-height:0}
-@media (max-width:900px){ .diary-wrap{flex-direction:column} .diary-todo-side{width:100%} .diary-todo-side .tt-grid{grid-template-columns:repeat(2,1fr)} }
-@media (max-width:560px){ .diary-todo-side .tt-grid{grid-template-columns:1fr} }
+/* 라이브러리 공통 업무 대시보드 (2026-06-09): 좌/중앙=탭 콘텐츠 + 우측=공통 sticky D 패널.
+   .mys-workspace 가 바운드(flex:1) → D 패널은 스크롤해도 항상 보임. 탭 콘텐츠만 내부 스크롤. */
+.mys-workspace{flex:1;min-height:0;display:flex;gap:18px;overflow:hidden;padding-bottom:18px}
+.mys-main-col{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.mys-dpanel{width:330px;flex-shrink:0;min-height:0;overflow-y:auto;display:flex;flex-direction:column;border-left:1px solid var(--bd);padding-left:18px}
+.dpanel-ttl{font-size:0.9rem;font-weight:800;color:var(--tp);margin-bottom:12px;letter-spacing:-.02em;flex-shrink:0}
+.mys-dpanel .tt-grid{grid-template-columns:1fr}
+.mys-dpanel .tt-card{min-height:0}
+@media (max-width:900px){
+  .mys-workspace{flex-direction:column;overflow-y:auto}
+  .mys-main-col{flex:none;min-height:360px}
+  .mys-dpanel{width:100%;border-left:0;border-top:1px solid var(--bd);padding-left:0;padding-top:14px;overflow:visible}
+  .mys-dpanel .tt-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){ .mys-dpanel .tt-grid{grid-template-columns:1fr} }
 /* 오늘의 할 일 — 캘린더 3일 요약 카드 */
 .tt-cal-list{display:flex;flex-direction:column;gap:7px;margin-top:6px}
 .tt-cal-row{display:flex;align-items:center;gap:8px;font-size:0.85em;min-width:0}
@@ -1673,29 +1680,23 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
       </div>
+      <div class="mys-workspace">
+      <div class="mys-main-col">
       <div id="mys-today">
-       <div class="diary-wrap">
-        <div class="diary-cal-main">
-         <div id="mys-cal-area">
-          <div class="split">
-           <div class="col list-col">
-             <div class="cal-head"><button class="cal-add" onclick="openCalAdd('mys')">+ 내 일정</button></div>
-             <div class="list" id="mys-cal-list"><div class="mys-news-empty">불러오는 중…</div></div>
-           </div>
-           <div class="col viewer-col">
-             <div class="cal-head cal-gridhead">
-               <button class="cal-navbtn" onclick="calNav('mys',-1)" aria-label="이전 달">&#8249;</button>
-               <span class="cal-ym" id="mys-cal-ym">불러오는 중…</span>
-               <button class="cal-navbtn" onclick="calNav('mys',1)" aria-label="다음 달">&#8250;</button>
-             </div>
-             <div id="mys-cal-grid" class="cal-grid-wrap"></div>
-           </div>
-          </div>
+       <div id="mys-cal-area">
+        <div class="split">
+         <div class="col list-col">
+           <div class="cal-head"><button class="cal-add" onclick="openCalAdd('mys')">+ 내 일정</button></div>
+           <div class="list" id="mys-cal-list"><div class="mys-news-empty">불러오는 중…</div></div>
          </div>
-        </div>
-        <div class="diary-todo-side">
-          <div class="diary-side-ttl">오늘 할 일</div>
-          <div id="mys-todo-panel"></div>
+         <div class="col viewer-col">
+           <div class="cal-head cal-gridhead">
+             <button class="cal-navbtn" onclick="calNav('mys',-1)" aria-label="이전 달">&#8249;</button>
+             <span class="cal-ym" id="mys-cal-ym">불러오는 중…</span>
+             <button class="cal-navbtn" onclick="calNav('mys',1)" aria-label="다음 달">&#8250;</button>
+           </div>
+           <div id="mys-cal-grid" class="cal-grid-wrap"></div>
+         </div>
         </div>
        </div>
       </div>
@@ -1764,6 +1765,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
       </div>
       </div><!-- /mr-main -->
+      </div><!-- /mys-main-col -->
+      <aside class="mys-dpanel">
+        <div class="dpanel-ttl">업무 대시보드</div>
+        <div id="mys-dboard"></div>
+      </aside>
+      </div><!-- /mys-workspace -->
       <!-- 2026-05-29: 라이브러리 상세 보기 모달 (PR #164) -->
       <div class="myspace-detail-overlay" id="myspaceDetailModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeMyspaceDetail)">
         <div class="myspace-detail-box" role="dialog" aria-modal="true">
@@ -6311,6 +6318,8 @@ function mysTab(el,key){
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
   var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved'), team=document.getElementById('mys-team'), qna=document.getElementById('mys-qna'), mem=document.getElementById('mr-main');
   if(today) today.style.display='none'; if(saved) saved.style.display='none'; if(team) team.style.display='none'; if(qna) qna.style.display='none'; if(mem) mem.style.display='none';
+  /* 공통 D 대시보드 1회 렌더 — 모든 탭에서 우측 고정 유지 (2026-06-09) */
+  var _db=document.getElementById('mys-dboard'); if(_db && !window._mysDboardLoaded && typeof renderTodayTodo==='function'){ window._mysDboardLoaded=true; renderTodayTodo('myspace', _db); }
   if(key==='saved'){ if(saved) saved.style.display=''; if(typeof loadMyspace==='function') loadMyspace(); }
   else if(key==='team'){ if(team) team.style.display=''; if(typeof loadMysTeam==='function') loadMysTeam(); }
   else if(key==='qna'){ if(qna) qna.style.display=''; if(typeof loadMysQna==='function') loadMysQna(); }
@@ -6322,7 +6331,7 @@ function mysTab(el,key){
     if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
     else { if(_brTab) _brTab.style.display=''; if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch'); }
   } }
-  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); var _tp=document.getElementById('mys-todo-panel'); if(_tp&&typeof renderTodayTodo==='function') renderTodayTodo('myspace', _tp); } }
+  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); } }
 }
 window.mysTab=mysTab;
 function ivTab(el,key){
