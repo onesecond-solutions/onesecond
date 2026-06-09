@@ -185,6 +185,12 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .lsearch input::placeholder{color:var(--tf);}
 .lsearch .lsx{background:transparent;border:none;color:var(--tf);font-size:0.75rem;cursor:pointer;flex-shrink:0;}
 .item{padding:12px 14px 12px 16px;border-bottom:0.5px solid var(--bd);cursor:pointer;border-left:3px solid var(--tc);}
+/* 좌측 카드 재정렬(Phase B): 드래그 + ▲▼. 재정렬 칩에서만 노출 */
+.item.mys-reord-on{position:relative;padding-right:44px;cursor:grab}
+.item.mys-reord-on:active{cursor:grabbing}
+.mys-reord{position:absolute;top:50%;right:8px;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px}
+.mys-reord-btn{width:26px;height:20px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:5px;font-size:10px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.mys-reord-btn:hover{border-color:var(--ac);color:var(--ac)}
 .item:hover{background:var(--s2);}
 .item.on{background:var(--s2);}
 .item .badge{font-size:0.625rem;color:var(--tc);font-weight:700;margin-bottom:4px;display:inline-block;}
@@ -8078,12 +8084,12 @@ async function loadMyspace(force){
     var items=[];
     for(var i=0;i<scripts.length;i++){
       var s=scripts[i];
-      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments});
+      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,_sort:s.sort_order,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments});
     }
     for(var j=0;j<library.length;j++){
       var l=library[j];
       var badge=(l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url)?'메모':'자료';
-      items.push({_type:'library',_badge:badge,_date:l.created_at,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id,keywords:l.keywords});
+      items.push({_type:'library',_badge:badge,_date:l.created_at,_sort:l.sort_order,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id,keywords:l.keywords});
     }
     items.sort(function(a,b){return (b._date||'').localeCompare(a._date||'');});
     window._myspaceCache=items;
@@ -8111,10 +8117,13 @@ function renderMyspace(items){
     var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var tableName=(it._type==='script')?'scripts':'library';
     var dot=(it._badge==='메모'&&typeof OS_MEMO_COLORS!=='undefined')?'<span class="mys-cdot" style="background:'+OS_MEMO_COLORS[_memoColorKey(it.keywords)]+'"></span>':'';
-    return '<div class="item'+(i===0?' on':'')+'" onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
+    var _ro=window._mysReorder;
+    var _drag=_ro?(' draggable="true" ondragstart="mysDragStart(event,'+i+')" ondragover="mysDragOver(event)" ondrop="mysDrop(event,'+i+')" ondragend="mysDragEnd(event)"'):'';
+    var _roc=_ro?('<div class="mys-reord"><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',-1)" aria-label="위로">&#9650;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',1)" aria-label="아래로">&#9660;</button></div>'):'';
+    return '<div class="item'+(i===0?' on':'')+(_ro?' mys-reord-on':'')+'"'+_drag+' onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
       +'<span class="badge">'+it._badge+'</span>'+dot
       +'<div class="it">'+title+'</div>'
-      +'<div class="id">'+dt+'</div></div>';
+      +'<div class="id">'+dt+'</div>'+_roc+'</div>';
   }).join('');
   mysOpenItem(0, true);
 }
@@ -8149,6 +8158,42 @@ function mysOpenItem(idx, keepList){
 window.mysOpenItem=mysOpenItem;
 function mysBackToList(){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysBackToList=mysBackToList;
+/* ════ 라이브러리 마이 스페이스 좌측 카드 재정렬 (Phase B, 2026-06-09) ════
+ * 칩별(자료·스크립트·메모) owner 기준 sort_order 영속. PC 드래그 / 모바일 ▲▼. 좌 카드 이동 = 선택 유지(우 내용 동반). */
+function mysMove(i,dir){
+  var l=window._mysFiltered||[]; var j=i+dir; if(j<0||j>=l.length) return;
+  var moved=l[i]; l[i]=l[j]; l[j]=moved;
+  renderMyspace(l);
+  var ni=l.indexOf(moved); if(ni>=0&&typeof mysOpenItem==='function') mysOpenItem(ni,true);
+  mysPersistOrder(l);
+}
+window.mysMove=mysMove;
+function mysDragStart(e,i){ window._mysDrag=i; try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',String(i)); }catch(_){} }
+function mysDragOver(e){ if(e&&e.preventDefault) e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(_){} }
+function mysDrop(e,i){
+  if(e&&e.preventDefault) e.preventDefault();
+  var from=window._mysDrag; window._mysDrag=null;
+  if(from==null||from===i) return;
+  var l=window._mysFiltered||[]; if(from<0||from>=l.length) return;
+  var moved=l.splice(from,1)[0]; l.splice(i,0,moved);
+  renderMyspace(l);
+  var ni=l.indexOf(moved); if(ni>=0&&typeof mysOpenItem==='function') mysOpenItem(ni,true);
+  mysPersistOrder(l);
+}
+function mysDragEnd(e){ window._mysDrag=null; }
+window.mysDragStart=mysDragStart; window.mysDragOver=mysDragOver; window.mysDrop=mysDrop; window.mysDragEnd=mysDragEnd;
+/* 현재 칩 항목 순서를 sort_order 0..n 재할당 + PATCH (단일 테이블) + 캐시 동기화 */
+async function mysPersistOrder(list){
+  list=list||window._mysFiltered||[]; if(!list.length||!window.db||!window.db.fetch) return;
+  var table=(list[0]._type==='script')?'scripts':'library';
+  var cache=window._myspaceCache||[];
+  for(var n=0;n<list.length;n++){
+    var it=list[n]; if(it._sort===n) continue; it._sort=n;
+    for(var k=0;k<cache.length;k++){ if(cache[k].id===it.id&&cache[k]._type===it._type){ cache[k]._sort=n; break; } }
+    try{ await window.db.fetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(it.id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({sort_order:n})}); }catch(_){}
+  }
+}
+window.mysPersistOrder=mysPersistOrder;
 /* ════ 라이브러리 단체방 탭 — 현장의 소리 단체방(team_notices)을 내 책상에서. 하위 TODAY/전체보기/MINE ════ */
 window._mysTeamCache=null; window._mysTeamMode='today';
 function _mysIsTodayKst(iso){ if(!iso)return false; var d=new Date(iso); if(isNaN(d.getTime()))return false; var k=new Date(Date.now()+9*3600000),dk=new Date(d.getTime()+9*3600000); return k.getUTCFullYear()===dk.getUTCFullYear()&&k.getUTCMonth()===dk.getUTCMonth()&&k.getUTCDate()===dk.getUTCDate(); }
@@ -9394,8 +9439,12 @@ function filterMys(el,cat){
   var chips=el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
   el.classList.add('on');
+  window._mysCat=cat;
+  /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
+  window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
-  var f=(cat==='전체')?items:items.filter(function(it){ return (it._badge||'')===cat; });
+  var f=(cat==='전체')?items.slice():items.filter(function(it){ return (it._badge||'')===cat; });
+  if(window._mysReorder){ f.sort(function(a,b){ var sa=(a._sort==null)?Infinity:a._sort, sb=(b._sort==null)?Infinity:b._sort; if(sa!==sb) return sa-sb; return (b._date||'').localeCompare(a._date||''); }); }
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
 }
 window.filterMys=filterMys;
