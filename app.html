@@ -186,10 +186,12 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .lsearch input::placeholder{color:var(--tf);}
 .lsearch .lsx{background:transparent;border:none;color:var(--tf);font-size:0.75rem;cursor:pointer;flex-shrink:0;}
 .item{padding:12px 14px 12px 16px;border-bottom:0.5px solid var(--bd);cursor:pointer;border-left:3px solid var(--tc);}
-/* 좌측 카드 재정렬(Phase B): 드래그 + ▲▼. 재정렬 칩에서만 노출 */
-.item.mys-reord-on{position:relative;padding-right:44px;cursor:grab}
-.item.mys-reord-on:active{cursor:grabbing}
+/* 좌측 카드 재정렬(Phase B): 그립 드래그 + ▲▼. 재정렬 칩에서만 노출. 카드 본문 텍스트 선택 가능 */
+.item.mys-reord-on{position:relative;padding-right:44px;-webkit-user-select:text;user-select:text}
 .mys-reord{position:absolute;top:50%;right:8px;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px}
+.mys-reord-grip{width:26px;height:20px;border:1px solid var(--bd);background:var(--s1);color:var(--ts);border-radius:5px;font-size:12px;line-height:1;cursor:grab;padding:0;display:flex;align-items:center;justify-content:center}
+.mys-reord-grip:active{cursor:grabbing}
+.mys-reord-grip:hover{border-color:var(--ac);color:var(--ac)}
 .mys-reord-btn{width:26px;height:20px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:5px;font-size:10px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
 .mys-reord-btn:hover{border-color:var(--ac);color:var(--ac)}
 .item:hover{background:var(--s2);}
@@ -8127,8 +8129,9 @@ function renderMyspace(items){
     var tableName=(it._type==='script')?'scripts':'library';
     var dot=(it._badge==='메모'&&typeof OS_MEMO_COLORS!=='undefined')?'<span class="mys-cdot" style="background:'+OS_MEMO_COLORS[_memoColorKey(it.keywords)]+'"></span>':'';
     var _ro=window._mysReorder;
-    var _drag=_ro?(' draggable="true" ondragstart="mysDragStart(event,'+i+')" ondragover="mysDragOver(event)" ondrop="mysDrop(event,'+i+')" ondragend="mysDragEnd(event)"'):'';
-    var _roc=_ro?('<div class="mys-reord"><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',-1)" aria-label="위로">&#9650;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',1)" aria-label="아래로">&#9660;</button></div>'):'';
+    /* 드래그는 그립 핸들에만 — 카드 본문은 텍스트 선택·복사 가능(2026-06-09 회귀 수정). 카드는 드롭 대상만. */
+    var _drag=_ro?(' ondragover="mysDragOver(event)" ondrop="mysDrop(event,'+i+')"'):'';
+    var _roc=_ro?('<div class="mys-reord"><button class="mys-reord-grip" draggable="true" ondragstart="mysDragStart(event,'+i+')" ondragend="mysDragEnd(event)" title="드래그로 이동" aria-label="드래그 이동">&#10303;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',-1)" aria-label="위로">&#9650;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',1)" aria-label="아래로">&#9660;</button></div>'):'';
     return '<div class="item'+(i===0?' on':'')+(_ro?' mys-reord-on':'')+'"'+_drag+' onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
       +'<span class="badge">'+it._badge+'</span>'+dot
       +'<div class="it">'+title+'</div>'
