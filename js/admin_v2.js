@@ -1640,7 +1640,7 @@
       { key: 'home',     label: '🏠 홈' },
       { key: 'scripts',  label: '📋 스크립트' },
       { key: 'board',    label: '💬 게시판' },
-      { key: 'myspace',  label: '🗂️ MY SPACE' },
+      { key: 'myspace',  label: '🗂️ 라이브러리' },
       { key: 'news',     label: '📰 보험뉴스' },
       { key: 'quick',    label: '⚡ Quick 메뉴' },
       { key: 'together', label: '🤝 함께해요' }
