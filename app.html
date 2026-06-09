@@ -9372,14 +9372,20 @@ async function deleteMyspaceItem(id,type){
   var token=window.db.getToken();if(!token){alert('로그인이 필요합니다.');return;}
   var url=type==='script'?'/rest/v1/scripts?id=eq.'+encodeURIComponent(id):'/rest/v1/library?id=eq.'+encodeURIComponent(id);
   try{
-    var res=await fetch(window.db.url(url),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
-    if(res.ok||res.status===204){
+    /* return=representation → 삭제된 행 반환. RLS 차단 등 0행 삭제(조용한 실패)를 표면화 */
+    var res=await fetch(window.db.url(url),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=representation'}});
+    var _rows=null; try{ _rows=await res.json(); }catch(e){}
+    var _ok=(res.ok||res.status===204);
+    var _zeroRows=(Array.isArray(_rows)&&_rows.length===0);  /* representation으로 0행 확인된 경우만 */
+    if(_ok&&!_zeroRows){
       window._myspaceLoaded=false; window._mrOfficeLoaded=false; window._ivMemoLoaded=false;
       var _dx=(window._mysDetailCurrent&&window._mysDetailCurrent.ctx)||'mys';
       if(_dx==='mr'&&typeof loadMrOffice==='function') loadMrOffice(true);
       else if(_dx==='iv'&&typeof loadIvMemo==='function') loadIvMemo(true);
       else if(typeof loadMyspace==='function') loadMyspace(true);
       if(typeof toast==='function')toast('삭제 완료');
+    }else if(_ok&&_zeroRows){
+      alert('삭제되지 않았습니다. 본인 항목인지·삭제 권한을 확인해 주세요.');  /* 0행 = RLS 차단 등 */
     }else{alert('삭제 실패: '+res.status);}
   }catch(e){alert('삭제 중 오류가 발생했습니다.');}
 }
