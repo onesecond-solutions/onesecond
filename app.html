@@ -108,7 +108,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .chip{padding:5px 12px;font-size:0.75rem;border-radius:7px;background:var(--s1);border:0.5px solid var(--bd);color:var(--ts);cursor:pointer;}
 .chip.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600;}
 
-/* MY SPACE 전용 toolbar — chips + 글쓰기 버튼 분리 */
+/* 라이브러리 전용 toolbar — chips + 글쓰기 버튼 분리 */
 .mys-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-shrink:0;}
 .mys-toolbar > .chips{margin-bottom:0;flex:1;min-width:0}
 @media (max-width:640px){
@@ -208,7 +208,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .fab .fic{font-size:1.125rem;}
 .fab .flbl{font-size:0.75rem;font-weight:700;}
 .fab:hover{background:var(--ach);}
-/* === 빠른 메모(포스트잇) — 우하단 딸깍 위 플로팅. 화면 어디서나 메모 → MY SPACE 메모 저장.
+/* === 빠른 메모(포스트잇) — 우하단 딸깍 위 플로팅. 화면 어디서나 메모 → 라이브러리 메모 저장.
    포스트잇 파스텔 = 도메인 특화 색상(스크립트 stage 팔레트와 동일 예외, tokens 비대상) === */
 .os-memo-fab{position:fixed;right:31px;bottom:96px;width:44px;height:44px;border-radius:12px 12px 12px 4px;background:#FFE067;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 6px 18px rgba(0,0,0,0.22);z-index:95;transform:rotate(-4deg);transition:transform .15s,box-shadow .15s;}
 .os-memo-fab:hover{transform:rotate(0deg) translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.28);}
@@ -230,7 +230,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .os-memo-save:hover{background:#241F12;}
 .os-memo-save:disabled{opacity:.5;cursor:not-allowed;}
 .os-memo-hint{font-size:0.6875rem;color:#8A7A3A;white-space:nowrap;}
-/* MY SPACE 메모 카드 색상 점 (저장된 포스트잇 색 표시) */
+/* 라이브러리 메모 카드 색상 점 (저장된 포스트잇 색 표시) */
 .mys-cdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:6px;vertical-align:middle;border:1px solid rgba(0,0,0,0.15);}
 /* 보험사 자료실 = 딸깍이(⚡) 불필요 → 숨김. 빠른 메모(📝)는 유지하고 코너로 내림 */
 body.iv-hide-fab .fab{display:none;}
@@ -727,7 +727,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .view{display:none}
 .view.on{display:block}
 .mys-news-empty{grid-column:1/-1;padding:32px 16px;text-align:center;color:var(--ts);font-size:0.9em}
-/* ── 캘린더 (MY SPACE > 오피스 > 캘린더) ── */
+/* ── 캘린더 (라이브러리 > 오피스 > 캘린더) ── */
 .cal-head{display:flex;align-items:center;gap:8px;padding:4px 2px 12px;flex-wrap:wrap}
 .cal-navbtn{width:34px;height:34px;border:1px solid var(--bd);background:var(--s1);border-radius:8px;color:var(--tp);font-size:18px;font-weight:700;cursor:pointer;line-height:1}
 .cal-ym{font-weight:800;font-size:15px;color:var(--tp);min-width:92px;text-align:center}
@@ -791,7 +791,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-meta{font-size:0.75em;color:var(--ts);padding-top:8px;border-top:1px solid var(--bd)}
 @media (max-width:1024px){.mys-grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.mys-grid{grid-template-columns:1fr}}
-/* 2026-05-29 PR #164: MY SPACE 상세 모달 */
+/* 2026-05-29 PR #164: 라이브러리 상세 모달 */
 .myspace-detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px}
 .myspace-detail-overlay.open{display:flex}
 .myspace-detail-box{background:var(--s1);border:1px solid var(--bd);border-radius:14px;max-width:560px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.35)}
@@ -962,7 +962,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mc-wave i:nth-child(2){animation-delay:.15s}
 .mc-wave i:nth-child(3){animation-delay:.3s}
 
-/* === MY SPACE 글쓰기 자리 === */
+/* === 라이브러리 글쓰기 자리 === */
 .mys-write-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9999px;background:var(--ac);color:#fff;border:none;cursor:pointer;font-size:0.82em;font-weight:800;margin-left:auto;transition:transform .15s,background .15s}
 .mys-write-btn:hover{transform:translateY(-1px);background:var(--ach)}
 @media (max-width:640px){.mys-write-btn{margin-left:0;width:100%;justify-content:center;margin-top:0;padding:10px 14px}}
@@ -1177,7 +1177,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 /* §2 깊이 부여 — 기존 카드·split 패널 밍밍함 해소 (떠 보이게) */
 .home-recent-card:not(.skel),.tt-card,.mys-card,.script-card,.bm-card{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 .split .list,.split .viewer{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
-/* ── 홈 4컬럼 (2026-06-08): 공지/MY SPACE/도구/소식 ───────────────────────── */
+/* ── 홈 4컬럼 (2026-06-08): 공지/라이브러리/도구/소식 ───────────────────────── */
 /* 검색기 들어올 폭 감안 — 중앙으로 모으기(max-width + auto) */
 .home-cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;align-items:start;margin:48px auto 0;max-width:920px}
 .home-col{padding:2px 14px;display:flex;flex-direction:column;text-align:left}
@@ -1479,7 +1479,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     </div>
     <div class="nav ins-show" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
     <div class="nav on" onclick="showView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
-    <div class="nav" onclick="showView('myspace')"><span class="ic">&#9672;</span><span class="lbl">MY SPACE</span></div>
+    <div class="nav" onclick="showView('myspace')"><span class="ic">&#9672;</span><span class="lbl">라이브러리</span></div>
     <div class="nav" onclick="showView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav" onclick="showView('quick')"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
     <div class="nav" id="nav-voice" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
@@ -1504,7 +1504,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="menu" id="m">
           <div class="mi"><span></span></div>
           <div class="mdiv"></div>
-          <div class="mi" onclick="showView('myspace')"><span>MY SPACE</span></div>
+          <div class="mi" onclick="showView('myspace')"><span>라이브러리</span></div>
           <div class="mi" onclick="openProfile()"><span>개인정보 수정</span></div>
           <div class="mdiv"></div>
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">화면 모드</div><div class="seg"><span class="on" onclick="setTheme('light')" id="sl">라이트</span><span onclick="setTheme('dark')" id="sd">다크</span></div></div>
@@ -1530,7 +1530,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="os-copy">
           <div class="os-kicker"><span class="signal"></span> 보험 업무 OS · onesecond</div>
           <h1 class="os-headline">보험 통합 솔루션<br><span class="gradient">원세컨드</span></h1>
-          <p class="os-message"><b>MY SPACE, 스크립트, Quick 도구, 현장의 소리</b>를 하나의 흐름으로 연결해 오늘 해야 할 일을 가장 짧은 경로로 꺼내 쓰게 만드는 개인 업무 허브입니다.</p>
+          <p class="os-message"><b>라이브러리, 스크립트, Quick 도구, 현장의 소리</b>를 하나의 흐름으로 연결해 오늘 해야 할 일을 가장 짧은 경로로 꺼내 쓰게 만드는 개인 업무 허브입니다.</p>
           <div class="os-actions">
             <button class="os-action primary" onclick="showView('quick')">⚡ 1초 실행 시작</button>
           </div>
@@ -1546,7 +1546,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
               흩어진 자료와 반복 업무를 한 화면에서 실행합니다.
             </div>
             <div class="tool-grid">
-              <div class="tool-pill"><small>MY SPACE</small><b>내 자료 정리</b></div>
+              <div class="tool-pill"><small>라이브러리</small><b>내 자료 정리</b></div>
               <div class="tool-pill"><small>SCRIPTS</small><b>상담 멘트 호출</b></div>
               <div class="tool-pill"><small>QUICK</small><b>BMI · 보험연령</b></div>
               <div class="tool-pill"><small>FIELD VOICE</small><b>현장 지식 연결</b></div>
@@ -1578,7 +1578,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <button class="os-banner-ov-nav next" type="button" aria-label="다음" onclick="osBannerOvStep(1,event)">›</button>
       </div>
 
-      <!-- 홈 5카테고리 텍스트 포털 (2026-06-09): 공지 / MY SPACE / 스크립트 / 도구 / 소식·정보 — 호버 발견형. 안내문구 1개(전체 중앙). 사이드바(세로)↔홈(가로) 교차 정합. -->
+      <!-- 홈 5카테고리 텍스트 포털 (2026-06-09): 공지 / 라이브러리 / 스크립트 / 도구 / 소식·정보 — 호버 발견형. 안내문구 1개(전체 중앙). 사이드바(세로)↔홈(가로) 교차 정합. -->
       <div class="home-portal">
       <div class="home-cols">
         <!-- ① 공지 = 현장의 소리 4개 게시판 -->
@@ -1593,13 +1593,13 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             </div>
           </div>
         </div>
-        <!-- ② MY SPACE -->
+        <!-- ② 라이브러리 -->
         <div class="home-col">
-          <div class="home-col-head"><span class="os-sec-title">MY SPACE</span></div>
+          <div class="home-col-head"><span class="os-sec-title">라이브러리</span></div>
           <div class="home-col-body">
             <div class="home-menu">
               <div class="home-menu-item" onclick="_goMysTab('today')"><span class="nm">오늘의 할 일</span></div>
-              <div class="home-menu-item" onclick="_goMysTab('saved')"><span class="nm">오피스</span></div>
+              <div class="home-menu-item" onclick="_goMysTab('saved')"><span class="nm">마이 스페이스</span></div>
             </div>
           </div>
         </div>
@@ -1646,12 +1646,12 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
      </div>
      <div class="wrap view" id="v-myspace">
-      <div class="ttl">MY SPACE <span class="ac">· 내가 저장한 자료들</span></div>
+      <div class="ttl">라이브러리 <span class="ac">· 내가 저장한 자료들</span></div>
       <div class="sub">딸깍으로 저장한 자료를 한 곳에 모아 봅니다.</div>
       <div class="mys-toolbar" style="margin-bottom:14px">
         <div class="tabs" id="mys-tabs" style="margin-bottom:0;flex:1">
           <div class="tab on" onclick="mysTab(this,'today')">오늘의 할 일</div>
-          <div class="tab" onclick="mysTab(this,'saved')">오피스</div>
+          <div class="tab" onclick="mysTab(this,'saved')">마이 스페이스</div>
           <div class="tab" onclick="mysTab(this,'team')">단체방</div>
           <div class="tab" onclick="mysTab(this,'qna')">보험 Q&amp;A</div>
           <div class="tab" onclick="mysTab(this,'members')" style="display:none">팀원관리</div>
@@ -1724,7 +1724,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
       </div>
       </div><!-- /mys-qna -->
-      <!-- 팀원관리 (매니저룸 → MY SPACE 이전, 2026-06-05 통합 1단계). mgr 역할만 탭 노출, 실제 방어는 RLS. id는 mr-* 유지(함수 재사용) -->
+      <!-- 팀원관리 (매니저룸 → 라이브러리 이전, 2026-06-05 통합 1단계). mgr 역할만 탭 노출, 실제 방어는 RLS. id는 mr-* 유지(함수 재사용) -->
       <div id="mr-main" style="display:none">
       <!-- 팀원관리 = 게시판 좌우 레이아웃 골격 (좌: 조직 트리 / 우: 팀원). 카드 연결은 다음 단계 -->
       <div class="tabs" id="mr-mem-sub" style="margin-bottom:12px">
@@ -1741,7 +1741,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
       </div>
       </div><!-- /mr-main -->
-      <!-- 2026-05-29: MY SPACE 상세 보기 모달 (PR #164) -->
+      <!-- 2026-05-29: 라이브러리 상세 보기 모달 (PR #164) -->
       <div class="myspace-detail-overlay" id="myspaceDetailModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeMyspaceDetail)">
         <div class="myspace-detail-box" role="dialog" aria-modal="true">
           <div class="myspace-detail-head">
@@ -1923,7 +1923,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       </div>
      </div>
      <!-- 매니저룸 (팀원관리 재편 · 2026-05-31 첫 조각) — 실장/지점장 role별 D영역 -->
-     <!-- 단체방 공지 작성/수정 모달 (매니저룸 제거 후 독립 유지 — MY SPACE 단체방 글쓰기·수정 공유, 2026-06-05 통합 2단계). 보험사 자료실 등록 폼 패턴 재사용 · 7유형 -->
+     <!-- 단체방 공지 작성/수정 모달 (매니저룸 제거 후 독립 유지 — 라이브러리 단체방 글쓰기·수정 공유, 2026-06-05 통합 2단계). 보험사 자료실 등록 폼 패턴 재사용 · 7유형 -->
       <div class="iv-overlay" id="mrWriteModal" style="display:none">
        <div class="iv-write-modal" role="dialog" aria-modal="true" aria-labelledby="mr-write-title">
         <div class="iv-write-head">
@@ -2262,7 +2262,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="lhead"><span class="cnt">전체 질문 <b>10건</b></span><div class="lacts"><button class="lbtn2" onclick="toggleLocalSearch()" aria-label="이 방 검색">&#8981;</button><button class="lbtn2 bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button><button class="newb" onclick="openAsk()" style="display:none">질문하기</button></div></div>
           <div class="lsearch" id="lsearch"><span class="lsi">&#8981;</span><input id="lsinput" type="text" placeholder="이 방에서 검색 (네비게이션방)" oninput="filterLocal(this.value)"><button class="lsx" onclick="closeLocalSearch()">&#10005;</button></div>
           <div class="list" id="qlist">
-            <div class="qlist-empty" style="padding:34px 20px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.7">아직 등록된 질문이 없어요.<br>MY SPACE에서 질문하면 여기에 모입니다.</div>
+            <div class="qlist-empty" style="padding:34px 20px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.7">아직 등록된 질문이 없어요.<br>라이브러리에서 질문하면 여기에 모입니다.</div>
           </div>
         </div>
         <div class="col viewer-col">
@@ -2316,7 +2316,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
   </div>
 </div>
 <button class="fab" onclick="openQuickLauncher()" aria-label="빠른 실행 열기"><span class="fic">&#9889;</span><span class="flbl">딸깍</span></button>
-<!-- 빠른 메모(포스트잇) — 딸깍 위. 화면 어디서나 메모 → MY SPACE 메모 -->
+<!-- 빠른 메모(포스트잇) — 딸깍 위. 화면 어디서나 메모 → 라이브러리 메모 -->
 <button class="os-memo-fab" onclick="toggleQuickMemo()" aria-label="빠른 메모" title="빠른 메모">&#128221;</button>
 <div class="os-memo-pop" id="osMemoPop" role="dialog" aria-label="빠른 메모 작성">
   <div class="os-memo-head">
@@ -2332,7 +2332,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <button class="os-memo-sw" data-color="purple" style="background:#E7DBFF" onclick="selectMemoColor('purple')" aria-label="보라"></button>
   </div>
   <div class="os-memo-foot">
-    <button class="os-memo-save" id="osMemoSaveBtn" onclick="saveQuickMemo()">MY SPACE 메모로 저장</button>
+    <button class="os-memo-save" id="osMemoSaveBtn" onclick="saveQuickMemo()">라이브러리 메모로 저장</button>
     <span class="os-memo-hint">Ctrl+Enter</span>
   </div>
 </div>
@@ -2354,7 +2354,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <button class="ttak" onclick="document.getElementById('tm').classList.toggle('open')">&#9889; 딸깍</button>
       <div class="ttakmenu" id="tm">
         <div class="tmi" onclick="doDownload()"><span>다운로드 저장</span></div>
-        <div class="tmi" onclick="doSave()"><span>MY SPACE 저장</span></div>
+        <div class="tmi" onclick="doSave()"><span>라이브러리에 저장</span></div>
         <div class="tmi" onclick="doCopy()"><span>복사</span></div>
         <div class="tmi" onclick="openCard()"><span>카드 만들기</span></div>
       </div>
@@ -2369,7 +2369,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="cardacts">
       <button onclick="copyCardImage()">이미지 복사</button>
       <button onclick="saveCardImage()">이미지 저장</button>
-      <button class="prim" onclick="toast('MY SPACE에 카드 저장됨')">MY SPACE 저장</button>
+      <button class="prim" onclick="toast('라이브러리에 카드 저장됨')">라이브러리에 저장</button>
     </div>
     <div style="text-align:center;margin-top:8px;"><span onclick="copyCardText()" style="font-size:0.75rem;color:var(--ts);cursor:pointer;text-decoration:underline;">텍스트로 복사</span></div>
   </div>
@@ -2519,7 +2519,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 <div class="askmodal" id="myspaceWriteModal" onmousedown="_ovDown(event,this)" onclick="_ovClick(event,this,closeMyspaceWrite)">
   <div class="askbox">
     <div class="askhead">
-      <div class="asktitle" id="mysWriteTitle">MY SPACE에 저장</div>
+      <div class="asktitle" id="mysWriteTitle">라이브러리에 저장</div>
       <button class="askx" onclick="closeMyspaceWrite()">&#10005;</button>
     </div>
     <div class="mys-write-tabs">
@@ -2921,7 +2921,7 @@ function applyRoleClass(){
   var nv = document.getElementById('nav-voice');
   if(nv) nv.style.display = _canSeeVoice() ? '' : 'none';
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
-  /* 팀원관리 탭(매니저룸 → MY SPACE 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
+  /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
   /* 통합 검색 = admin 전용 (퀄리티 완성 전 비공개, §5 인큐베이션) */
@@ -3221,7 +3221,7 @@ async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠
 async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
 function qnaCloseEdit(){ var m=document.getElementById('qnaEditModal'); if(m) m.style.display='none'; _qnaEditId=null; }
 async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } var title=((document.getElementById('qnaEditTitle')||{}).value||'').trim(), content=((document.getElementById('qnaEditContent')||{}).value||'').trim(); if(!title){ alert('제목을 입력해 주세요.'); return; } if(!content){ alert('내용을 입력해 주세요.'); return; } var ctx=_qnaEditCtx; try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(_qnaEditId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({title:title,content:content})}); if(res.ok||res.status===204){ qnaCloseEdit(); _qnaReload(ctx); if(typeof toast==='function') toast('수정됐어요!'); } else { var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); } }catch(e){ alert('네트워크 오류가 발생했습니다.'); } }
-/* 단체방 (team_notices) — MY SPACE·매니저룸 */
+/* 단체방 (team_notices) — 라이브러리·매니저룸 */
 async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
 async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
 window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCloseEdit=qnaCloseEdit; window.qnaSaveEdit=qnaSaveEdit; window.teamEditNotice=teamEditNotice; window.teamDeleteNotice=teamDeleteNotice;
@@ -3440,7 +3440,7 @@ function ivFilter(el, type){
   if(window._ivCache) ivRender(window._ivCache, type);  /* PR-B1: category 필터 (캐시 기반) */
 }
 window.ivFilter = ivFilter;
-/* ════ 보험사 자료실 '메모' 칩 — 개인 메모(library, owner 전용)를 iv-split에 표시. MY SPACE 메모와 동일 본인 메모 ════
+/* ════ 보험사 자료실 '메모' 칩 — 개인 메모(library, owner 전용)를 iv-split에 표시. 라이브러리 메모와 동일 본인 메모 ════
  * 원수사 게시글(iv-list posts)과 섞이지 않음 — 별 캐시/필터/open(_ivMemoFiltered/ivMemoOpen). 작성은 우하단 📝. */
 window._ivMemoCache=null; window._ivMemoLoaded=false; window._ivMemoFiltered=null;
 function ivMemoChip(el){
@@ -3645,7 +3645,7 @@ async function doDownload(){
     URL.revokeObjectURL(url); toast('이미지 저장됨');
   }catch(e){ toast('저장 실패 — 브라우저가 막았습니다'); }
 }
-function doSave(){document.getElementById('tm').classList.remove('open');toast('MY SPACE 「나의 자료」에 저장됨');}
+function doSave(){document.getElementById('tm').classList.remove('open');toast('라이브러리 「나의 자료」에 저장됨');}
 function copyTextFallback(txt){
   try{
     var ta=document.createElement('textarea');
@@ -3753,7 +3753,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → MY SPACE로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'MY SPACE',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -4219,7 +4219,7 @@ function renderMakeCardTool(){
             '<button id="mcFab" class="qck-mc-fab" onclick="event.stopPropagation();mcShowActionMenu()" aria-label="액션 메뉴">⚡</button>' +
             '<div id="mcActionMenu" class="qck-mc-action-menu">' +
               '<button class="qck-mc-action-item" onclick="mcAction(\'save\')">' +
-                '<span class="qck-mc-action-item-title">MY SPACE 저장</span>' +
+                '<span class="qck-mc-action-item-title">라이브러리에 저장</span>' +
                 '<span class="qck-mc-action-item-desc">내 자료에 담기</span>' +
               '</button>' +
               '<button class="qck-mc-action-item" onclick="mcAction(\'download\')">' +
@@ -4651,7 +4651,7 @@ function mcSaveToMySpace(){
     return;
   }
   // 본 단계는 mock — 다음 단계 별 PR에서 Storage 업로드 + library INSERT 가동
-  alert('MY SPACE 저장은 다음 단계에서 가동됩니다. 현재는 다운로드 또는 복사로 저장해주세요.');
+  alert('라이브러리에 저장은 다음 단계에서 가동됩니다. 현재는 다운로드 또는 복사로 저장해주세요.');
 }
 
 var _h2cLoading = null;
@@ -4774,7 +4774,7 @@ function bmiCompute(){
     '<div class="qck-tool-bmi-input-summary">' + escHomeHtml(nameTxt) + ' · ' + genderTxt + ' · 키 ' + h + 'cm · 몸무게 ' + w + 'kg</div>' +
     '<div class="qck-tool-actions">' +
       '<button class="qck-tool-act-btn" onclick="bmiAction(\'copy\')">📋 복사</button>' +
-      '<button class="qck-tool-act-btn" onclick="bmiAction(\'mySpace\')">📁 MY SPACE 저장</button>' +
+      '<button class="qck-tool-act-btn" onclick="bmiAction(\'mySpace\')">📁 라이브러리에 저장</button>' +
       '<button class="qck-tool-act-btn" onclick="bmiAction(\'makeCard\')">🪪 카드 만들기</button>' +
     '</div>';
 }
@@ -4834,7 +4834,7 @@ async function bmiSaveToMyspace(){
       })
     });
     if(res.ok || res.status === 201){
-      if(typeof toast === 'function') toast('MY SPACE에 저장됐습니다.'); else alert('MY SPACE에 저장됐습니다.');
+      if(typeof toast === 'function') toast('라이브러리에 저장됐습니다.'); else alert('라이브러리에 저장됐습니다.');
     } else {
       var err = await res.json().catch(function(){ return {}; });
       alert('저장 실패: ' + (err.message || res.status));
@@ -4984,7 +4984,7 @@ function insAgeCompute(){
     '</div>' +
     '<div class="qck-tool-actions">' +
       '<button class="qck-tool-act-btn" onclick="insAgeAction(\'copy\')">📋 복사</button>' +
-      '<button class="qck-tool-act-btn" onclick="insAgeAction(\'mySpace\')">📁 MY SPACE 저장</button>' +
+      '<button class="qck-tool-act-btn" onclick="insAgeAction(\'mySpace\')">📁 라이브러리에 저장</button>' +
       '<button class="qck-tool-act-btn" onclick="insAgeAction(\'makeCard\')">🪪 카드 만들기</button>' +
     '</div>';
 }
@@ -5045,7 +5045,7 @@ async function insAgeSaveToMyspace(){
       })
     });
     if(res.ok || res.status === 201){
-      if(typeof toast === 'function') toast('MY SPACE에 저장됐습니다.'); else alert('MY SPACE에 저장됐습니다.');
+      if(typeof toast === 'function') toast('라이브러리에 저장됐습니다.'); else alert('라이브러리에 저장됐습니다.');
     } else {
       var err = await res.json().catch(function(){ return {}; });
       alert('저장 실패: ' + (err.message || res.status));
@@ -5417,7 +5417,7 @@ window.voiceFire = voiceFire;
 
 // 메뉴 = 정확히 3개 (모든 콘텐츠 동일, 콘텐츠별 분기 X)
 var DDALGGAK_MENU = [
-  { action:'mySpace',  label:'📁 MY SPACE 저장' },
+  { action:'mySpace',  label:'📁 라이브러리에 저장' },
   { action:'copy',     label:'📋 복사' },
   { action:'makeCard', label:'🪪 카드 만들기' }
 ];
@@ -5432,7 +5432,7 @@ var CARD_TYPE_COLORS = {
   bmi:     '#10B981',   // BMI 계산 = 그린 (건강 본질)
   insAge:  '#6366F1',   // 보험연령 = 인디고 (브랜드 색)
   voice:   '#A78BFA',   // 콜 스크립트 = 보라 (음성/대화 본질)
-  mySpace: '#22C55E',   // MY SPACE 자료 = 그린 (보관/내 자료 본질)
+  mySpace: '#22C55E',   // 라이브러리 자료 = 그린 (보관/내 자료 본질)
   general: '#6366F1'    // 기본 = 인디고
 };
 
@@ -5450,7 +5450,7 @@ function showDdalggakMenu(btn, contentType){
   closeDdalggakMenu();
   if(!btn) return;
   btn.dataset.contentType = contentType || 'general';
-  // mySpace = 이미 저장된 자료 = 'MY SPACE 저장' 제외 (복사 / 카드 만들기 2건)
+  // mySpace = 이미 저장된 자료 = '라이브러리에 저장' 제외 (복사 / 카드 만들기 2건)
   var items = (contentType === 'mySpace')
     ? DDALGGAK_MENU.filter(function(m){ return m.action !== 'mySpace'; })
     : DDALGGAK_MENU;
@@ -5502,12 +5502,12 @@ function ddalggakAction(action, btn){
       ddalggakCopy(btn);
       break;
     case 'mySpace':
-      alert('MY SPACE 저장 — 준비 중입니다.');
+      alert('라이브러리에 저장 — 준비 중입니다.');
       break;
     case 'makeCard':
       var ct = (btn && btn.dataset && btn.dataset.contentType) || 'general';
       if(ct === 'mySpace'){
-        // MY SPACE 카드 = 캐시 자료 자체 fetch + 본문 자체 자체 자체
+        // 라이브러리 카드 = 캐시 자료 자체 fetch + 본문 자체 자체 자체
         var card = btn.closest('.mys-card');
         if(!card){ alert('자료 카드를 찾지 못했습니다.'); return; }
         var itemId = card.getAttribute('data-item-id');
@@ -5911,10 +5911,10 @@ function finalizeMakeCardFallbackText(){
   }
 }
 var voiceTabData = {
-  voice: {title:'보험 Q&A', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:0, posts:[], empty:'아직 등록된 질문이 없어요.<br>MY SPACE에서 질문하면 여기에 모입니다.'},
-  team: {title:'단체방', sub:'실장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>MY SPACE 단체방 글쓰기로 작성하면 여기에 모입니다.'},
+  voice: {title:'보험 Q&A', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:0, posts:[], empty:'아직 등록된 질문이 없어요.<br>라이브러리에서 질문하면 여기에 모입니다.'},
+  team: {title:'단체방', sub:'실장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>라이브러리 단체방 글쓰기로 작성하면 여기에 모입니다.'},
   smart: {title:'스마트 게시판', sub:'모든 보험회사 자료가 한데 모이는 곳.', chips:['전체','긴급(마감)','공지','소식지','상품','인수','시책/프로모션','기타'], cnt:0, posts:[], empty:'아직 모인 자료가 없어요.'},
-  branch: {title:'지점 게시판', sub:'지점장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>MY SPACE 단체방 글쓰기로 작성하면 여기에 모입니다.'}
+  branch: {title:'지점 게시판', sub:'지점장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>라이브러리 단체방 글쓰기로 작성하면 여기에 모입니다.'}
 };
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){if(d.posts.length>0){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;showTabPost(key,0);}else{showTabEmpty(d);}}if(key==='voice'&&typeof loadVoiceQna==='function')loadVoiceQna();if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();if(key==='team'&&typeof loadTeamNotices==='function')loadTeamNotices();if(key==='branch'&&typeof loadBranchFeed==='function')loadBranchFeed();}
 
@@ -6003,7 +6003,7 @@ async function _loadNoticeFeed(scope, tabKey){
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
     if(!list) return;
-    if(!posts.length){ list.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">아직 등록된 공지가 없습니다.<br>MY SPACE 단체방 글쓰기로 작성해보세요.</div>'; return; }
+    if(!posts.length){ list.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">아직 등록된 공지가 없습니다.<br>라이브러리 단체방 글쓰기로 작성해보세요.</div>'; return; }
     list.innerHTML=posts.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+tabKey+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>'; }).join('');
     showTabPost(tabKey,0);
   }catch(e){}
@@ -6011,7 +6011,7 @@ async function _loadNoticeFeed(scope, tabKey){
 function loadTeamNotices(){ return _loadNoticeFeed('team_internal','team'); }
 function loadBranchFeed(){ return _loadNoticeFeed('branch_internal','branch'); }
 /* 현장의 소리 · 보험Q&A = posts(board_type=qna) 실데이터 (2026-06-03 연결 누락 정정).
- * MY SPACE/자료실/매니저룸과 동일 소스. read-only. 소식지 제외. */
+ * 라이브러리/자료실/매니저룸과 동일 소스. read-only. 소식지 제외. */
 async function loadVoiceQna(){
   var token=window.db&&window.db.getToken&&window.db.getToken();
   var list=document.getElementById('qlist');
@@ -6159,13 +6159,13 @@ function renderMrEditAtts(){
 function mrRemoveAtt(i){ if(!window._mrEditAtts) return; window._mrEditAtts.splice(i,1); renderMrEditAtts(); }
 window.renderMrEditAtts=renderMrEditAtts; window.mrRemoveAtt=mrRemoveAtt;
 
-/* ════ 오늘의 할 일 엔진 (2026-05-31) — 롤/페이지별 digest (MY SPACE·보험사 자료실·매니저룸 첫 탭 공용)
+/* ════ 오늘의 할 일 엔진 (2026-05-31) — 롤/페이지별 digest (라이브러리·보험사 자료실·매니저룸 첫 탭 공용)
  * 카드 = 채널 + 카운트 + 전체보기 딥링크. 실데이터 + 정직 placeholder.
  * 미열람/미답변/우리회사질문 등은 읽음·답변·인큐베이션 DB(다음 단계) → '곧 연결'(가짜 숫자 X). ════ */
 async function _ttCount(q){ try{ if(!window.db||!window.db.fetch) return null; var r=await window.db.fetch('/rest/v1/'+q,{headers:{'Prefer':'count=exact'}}); if(!r.ok) return null; return parseInt((r.headers.get('Content-Range')||'0-0/0').split('/')[1],10)||0; }catch(e){ return null; } }
 function _ttKstMidnightISO(){ var k=new Date(Date.now()+9*3600000); return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).toISOString(); }
 function _goVoiceTab(key){ if(typeof showView!=='function') return; showView('voice'); setTimeout(function(){ var tabs=document.querySelectorAll('#v-voice .tabs .tab'); var map={team:0,voice:1,smart:2,branch:3}; var i=map[key]; if(tabs[i]) tabs[i].click(); },70); }
-/* 홈 텍스트 포털 → MY SPACE 탭 라우팅 (2026-06-09, _goVoiceTab 대칭) */
+/* 홈 텍스트 포털 → 라이브러리 탭 라우팅 (2026-06-09, _goVoiceTab 대칭) */
 function _goMysTab(key){ if(typeof showView!=='function') return; showView('myspace'); setTimeout(function(){ var map={today:0,saved:1,team:2,qna:3}; var tabs=document.querySelectorAll('#mys-tabs .tab'); var t=tabs[map[key]]; if(t&&typeof mysTab==='function') mysTab(t,key); },70); }
 window._goMysTab=_goMysTab;
 /* 홈 → Quick 오버레이 특정 항목 직접 열기 (2026-06-09). tab_key(코드 상수)로 호출 →
@@ -6211,7 +6211,7 @@ async function renderTodayTodo(ctx, mountEl){
     mountEl.innerHTML='<div class="tt-grid">'+tcards.join('')+'</div>';
     return;
   } else if(ctx==='vault'){
-    /* MY SPACE와 동일 — 가로 1줄 4카드 + 캘린더 3일 요약 */
+    /* 라이브러리와 동일 — 가로 1줄 4카드 + 캘린더 3일 요약 */
     var calBodyV=await _ttCalBody();
     var lib=await _ttCount("library?select=id");
     function _numV(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5em;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5em"> 건</span>'))+'</div>'; }
@@ -7160,7 +7160,7 @@ function _searchGo(view){ closeSearch(); if(typeof showView==='function') showVi
 /* 원세컨드 메뉴 인덱스 — 키워드로 메뉴 바로 이동 (어드민 제외 = 대전제). Quick 도구는 quick_contents에서 동적 */
 var OS_NAV_INDEX=[
   {label:'홈', kw:'home 대시보드 메인', view:'home'},
-  {label:'MY SPACE', kw:'마이스페이스 내 자료함 메모 즐겨찾기', view:'myspace'},
+  {label:'라이브러리', kw:'마이스페이스 내 자료함 메모 즐겨찾기', view:'myspace'},
   {label:'스크립트', kw:'콜 멘트 화법 상담 단계 script', view:'scripts'},
   {label:'Quick 메뉴', kw:'퀵 빠른 도구 계산 검색', view:'quick'},
   {label:'현장의 소리', kw:'단체방 지점 게시판 보험 질문 qna 소리', view:'voice'},
@@ -7331,7 +7331,7 @@ async function _searchOpen(table, id){
   }catch(e){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); }
 }
 window._searchOpen=_searchOpen;
-/* 소식지(PDF) 딸깍 — 미리보기 모달 안 다운로드/MY SPACE/복사 (카드 만들기는 PDF 미지원이라 제외) */
+/* 소식지(PDF) 딸깍 — 미리보기 모달 안 다운로드/라이브러리/복사 (카드 만들기는 PDF 미지원이라 제외) */
 function _nlCloseMenu(){ var m=document.getElementById('nlMenu'); if(m) m.remove(); document.removeEventListener('click',_nlOut,true); }
 function _nlOut(e){ var m=document.getElementById('nlMenu'); if(m&&!m.contains(e.target)) _nlCloseMenu(); }
 function _nlDdalggak(btn){
@@ -7339,7 +7339,7 @@ function _nlDdalggak(btn){
   var rect=btn.getBoundingClientRect();
   var m=document.createElement('div'); m.id='nlMenu';
   m.style.cssText='position:fixed;top:'+(rect.bottom+4)+'px;left:'+rect.left+'px;background:var(--s1);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:99997;overflow:hidden;min-width:170px';
-  m.innerHTML='<button class="nl-mi" onclick="_nlAct(\'download\')">&#128229; 다운로드 저장</button><button class="nl-mi" onclick="_nlAct(\'myspace\')">&#128193; MY SPACE 저장</button><button class="nl-mi" onclick="_nlAct(\'copy\')">&#128203; 본문 복사</button>';
+  m.innerHTML='<button class="nl-mi" onclick="_nlAct(\'download\')">&#128229; 다운로드 저장</button><button class="nl-mi" onclick="_nlAct(\'myspace\')">&#128193; 라이브러리에 저장</button><button class="nl-mi" onclick="_nlAct(\'copy\')">&#128203; 본문 복사</button>';
   document.body.appendChild(m);
   setTimeout(function(){ document.addEventListener('click',_nlOut,true); },0);
 }
@@ -7348,7 +7348,7 @@ async function _nlAct(action){
   _nlCloseMenu();
   var c=window._nlCur||{}; var T=(typeof toast==='function')?toast:function(){};
   if(action==='copy'){ try{ await navigator.clipboard.writeText(c.text||''); T('본문을 복사했습니다'); }catch(e){ T('복사하지 못했습니다'); } }
-  else if(action==='myspace'){ T('MY SPACE 저장은 준비 중입니다'); }
+  else if(action==='myspace'){ T('라이브러리에 저장은 준비 중입니다'); }
   else if(action==='download'){
     if(!c.url){ return; }
     try{
@@ -7556,8 +7556,8 @@ window.osBannerOvClose=osBannerOvClose;
 window.osBannerCollapse=osBannerCollapse;
 window.osBannerExpand=osBannerExpand;
 
-/* === 빠른 메모(포스트잇) — 화면 어디서나 메모 → MY SPACE 메모(library) 저장 ===
- * 저장 바디 = MY SPACE 글쓰기(saveMyspaceWrite library 탭)와 동일 컬럼 미러링(추측 INSERT 금지).
+/* === 빠른 메모(포스트잇) — 화면 어디서나 메모 → 라이브러리 메모(library) 저장 ===
+ * 저장 바디 = 라이브러리 글쓰기(saveMyspaceWrite library 탭)와 동일 컬럼 미러링(추측 INSERT 금지).
  * 색상 = 스키마 변경 없이 keywords 센티넬('메모색:<key>')로 보존. 임시저장 = localStorage. */
 var OS_MEMO_COLORS={yellow:'#FFF7C9',pink:'#FFD9E6',mint:'#CFF3E2',blue:'#D4E8FF',purple:'#E7DBFF'};
 var _osMemoColor='yellow';
@@ -7601,13 +7601,13 @@ async function saveQuickMemo(){
       window._myspaceLoaded=false; window._homeRecentLoaded=false;
       var mv=document.getElementById('v-myspace'); if(mv&&mv.classList.contains('on')&&typeof loadMyspace==='function') loadMyspace(true);
       var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&typeof loadHomeRecent==='function') loadHomeRecent(true);
-      if(typeof toast==='function') toast('MY SPACE 메모에 저장됐어요! 📝');
+      if(typeof toast==='function') toast('라이브러리 메모에 저장됐어요! 📝');
     }else{
       var err=await res.json().catch(function(){return{};});
       alert('저장 실패: '+(err.message||res.status));
     }
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
-  finally{ if(btn){ btn.disabled=false; btn.textContent='MY SPACE 메모로 저장'; } }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='라이브러리 메모로 저장'; } }
 }
 window.openQuickMemo=openQuickMemo; window.closeQuickMemo=closeQuickMemo; window.toggleQuickMemo=toggleQuickMemo;
 window.selectMemoColor=selectMemoColor; window.saveQuickMemo=saveQuickMemo;
@@ -7671,7 +7671,7 @@ else _updateAccountHeader();
  *   window.Auth.init() 자체 호출 시 토큰 없을 때 index.html로 redirect 발생.
  *   Deploy Preview / main 미러 도메인 = 라이브와 별도 localStorage = 토큰 자체 없음 → 진입 즉시 redirect 격차.
  *   안전한 자체 init 함수로 갈아끼움 — 토큰 있을 때만 AppState 세팅 + loadUser.
- *   토큰 없으면 아무것도 안 함 (미로그인 상태 그대로, 글쓰기/MY SPACE 등 fetch 자리에서 안내).
+ *   토큰 없으면 아무것도 안 함 (미로그인 상태 그대로, 글쓰기/라이브러리 등 fetch 자리에서 안내).
  */
 (function(){
   async function tryInitAuthSafe(){
@@ -7776,7 +7776,7 @@ function showHomeSkeleton(){
  * kind: 'empty' | 'auth' | 'error' */
 var HOME_STATE_EL={docs:'homeRecentDocs',scripts:'homeRecentScripts',voice:'homeRecentVoice',news:'homeRecentNews'};
 var HOME_EMPTY_MSG={
-  docs:   ['아직 저장한 자료가 없습니다','MY SPACE에서 첫 자료를 저장해보세요'],
+  docs:   ['아직 저장한 자료가 없습니다','라이브러리에서 첫 자료를 저장해보세요'],
   scripts:['아직 사용한 스크립트가 없습니다','스크립트를 열면 여기에 기록됩니다'],
   voice:  ['아직 등록된 글이 없습니다','현장의 소리에서 첫 글을 남겨보세요'],
   news:   ['표시할 보험이슈가 없습니다','']
@@ -7935,7 +7935,7 @@ async function openScriptById(scriptId){
 }
 window.openScriptById=openScriptById;
 
-/* 홈 → MY SPACE 자료 딥링크: 캐시 보장 → 상세 모달. */
+/* 홈 → 라이브러리 자료 딥링크: 캐시 보장 → 상세 모달. */
 async function openLibraryById(libId){
   try{ if(typeof loadMyspace==='function') await loadMyspace(); }
   catch(e){ console.error('[home] loadMyspace',e); }
@@ -8025,7 +8025,7 @@ async function loadHomeRecent(force){
 // 2026-05-30 초기화 통합: 홈 첫 fetch는 bootView → showView('home') → loadHomeRecent로 일원화.
 // (별도 kick 폐기 — home 진입 시에만 실행, insurer 진입 시 불필요 fetch 방지)
 
-/* === MY SPACE 라이브 자료 fetch === */
+/* === 라이브러리 라이브 자료 fetch === */
 window._myspaceCache=null;
 window._myspaceLoaded=false;
 
@@ -8133,7 +8133,7 @@ function mysOpenItem(idx, keepList){
 window.mysOpenItem=mysOpenItem;
 function mysBackToList(){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysBackToList=mysBackToList;
-/* ════ MY SPACE 단체방 탭 — 현장의 소리 단체방(team_notices)을 내 책상에서. 하위 TODAY/전체보기/MINE ════ */
+/* ════ 라이브러리 단체방 탭 — 현장의 소리 단체방(team_notices)을 내 책상에서. 하위 TODAY/전체보기/MINE ════ */
 window._mysTeamCache=null; window._mysTeamMode='today';
 function _mysIsTodayKst(iso){ if(!iso)return false; var d=new Date(iso); if(isNaN(d.getTime()))return false; var k=new Date(Date.now()+9*3600000),dk=new Date(d.getTime()+9*3600000); return k.getUTCFullYear()===dk.getUTCFullYear()&&k.getUTCMonth()===dk.getUTCMonth()&&k.getUTCDate()===dk.getUTCDate(); }
 async function loadMysTeam(){
@@ -8199,9 +8199,9 @@ function mysTeamOpen(idx, keepList){
 window.mysTeamOpen=mysTeamOpen;
 function mysTeamBack(){ var sp=document.getElementById('mys-team-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysTeamBack=mysTeamBack;
-/* 매니저룸 단체방·보험Q&A 로더 제거 — MY SPACE로 일원화 (2026-06-05 통합 2단계). 단체방 글쓰기/수정은 공유 모달(mrWriteModal) 유지 */
-/* 매니저룸 오피스 로더 제거 — MY SPACE 오피스로 일원화 (2026-06-05 통합 2단계) */
-/* ════ MY SPACE 보험 Q&A 탭 — 현장의 소리/자료실 보험Q&A(posts qna)를 내 책상에서. 하위 TODAY/전체보기/MINE.
+/* 매니저룸 단체방·보험Q&A 로더 제거 — 라이브러리로 일원화 (2026-06-05 통합 2단계). 단체방 글쓰기/수정은 공유 모달(mrWriteModal) 유지 */
+/* 매니저룸 오피스 로더 제거 — 라이브러리 오피스로 일원화 (2026-06-05 통합 2단계) */
+/* ════ 라이브러리 보험 Q&A 탭 — 현장의 소리/자료실 보험Q&A(posts qna)를 내 책상에서. 하위 TODAY/전체보기/MINE.
  * 소식지 제외(qna 혼재). MINE = 내가 쓴 질문(author_id=나). read-only(질문 작성 입구는 별도). ════ */
 window._mysQnaCache=null; window._mysQnaMode='all';
 async function loadMysQna(){
@@ -8268,7 +8268,7 @@ window.mysQnaOpen=mysQnaOpen;
 function mysQnaBack(){ var sp=document.getElementById('mys-qna-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysQnaBack=mysQnaBack;
 
-/* === MY SPACE 상세 보기 모달 (2026-05-29 PR #164) === */
+/* === 라이브러리 상세 보기 모달 (2026-05-29 PR #164) === */
 function openMyspaceDetail(itemId, type){
   if(!window._myspaceCache) return;
   var item = null;
@@ -8344,10 +8344,10 @@ function _ovDown(ev, el){ el.__downSelf = (ev.target === el); }
 function _ovClick(ev, el, fn){ if(ev.target === el && el.__downSelf){ el.__downSelf = false; if(typeof fn==='function') fn(); } else { el.__downSelf = false; } }
 window._ovDown=_ovDown; window._ovClick=_ovClick;
 
-/* === MY SPACE 글쓰기 모달 + Create/Delete === */
+/* === 라이브러리 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(ctx, edit){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
-  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'스크립트 수정'):((ctx==='team')?'매니저룸 글쓰기':'MY SPACE에 저장');
+  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'스크립트 수정'):((ctx==='team')?'매니저룸 글쓰기':'라이브러리에 저장');
   /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
   var _ss=document.getElementById('mysWriteScrStage');
   if(_ss && !_ss.dataset.loaded && typeof SCRIPTS_GROUPS!=='undefined'){
@@ -9063,7 +9063,7 @@ async function _saveMyspaceQna(){
   finally{ btn.disabled=false; btn.textContent='저장하기'; }
 }
 window._saveMyspaceGroup=_saveMyspaceGroup; window._saveMyspaceQna=_saveMyspaceQna;
-/* ════ 캘린더 (MY SPACE·매니저룸·보험사 자료실 오피스 공용, prefix=mys/mr/iv) — calendar_events 출처 4종 동시노출 ════ */
+/* ════ 캘린더 (라이브러리·매니저룸·보험사 자료실 오피스 공용, prefix=mys/mr/iv) — calendar_events 출처 4종 동시노출 ════ */
 var CAL_SRC={
   insurer: { label:'원수사', color:'var(--ac)',      icon:'M4 21V4h10v17M14 21V10h6v11M7 8h2M7 12h2M7 16h2' },
   manager: { label:'실장',   color:'var(--ok)',       icon:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 21a7 7 0 0 1 14 0' },
@@ -9311,7 +9311,7 @@ async function deleteMyspaceItem(id,type){
   }catch(e){alert('삭제 중 오류가 발생했습니다.');}
 }
 
-/* === MY SPACE 메모/자료 인라인 수정 (library PATCH). 메모는 색상도 수정 ===
+/* === 라이브러리 메모/자료 인라인 수정 (library PATCH). 메모는 색상도 수정 ===
  * keywords 센티넬('메모색:<key>')에서 색 복원. 저장 컬럼 = library 검증 컬럼만 부분 PATCH. */
 function _memoColorKey(keywords){
   if(Array.isArray(keywords)){
@@ -9320,7 +9320,7 @@ function _memoColorKey(keywords){
   return 'yellow';
 }
 window._mysEditColor='yellow';
-/* 메모 상세/수정 컨텍스트 — MY SPACE(mys)·매니저룸 오피스(mr)·보험사 자료실 메모(iv) 공용.
+/* 메모 상세/수정 컨텍스트 — 라이브러리(mys)·매니저룸 오피스(mr)·보험사 자료실 메모(iv) 공용.
  * 각 open 함수가 _mysDetailCurrent.ctx 지정 → 수정/취소/재로드가 해당 영역으로 라우팅. */
 var MEMO_CTX={
   mys:{viewer:'mysViewer',         reopen:function(i){ if(typeof mysOpenItem==='function') mysOpenItem(i,true); },   reload:function(){ window._myspaceLoaded=false;  if(typeof loadMyspace==='function')  return loadMyspace(true); }},
@@ -9931,7 +9931,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   }
   function paintMine(rows){
     updateCnt(rows.length);
-    if(!rows.length){ body.innerHTML='<div class="os-empty">아직 내 스크립트가 없어요.<br>MY SPACE 글쓰기로 첫 스크립트를 만들어보세요.</div>'; return; }
+    if(!rows.length){ body.innerHTML='<div class="os-empty">아직 내 스크립트가 없어요.<br>라이브러리 글쓰기로 첫 스크립트를 만들어보세요.</div>'; return; }
     var h=''; for(var i=0;i<rows.length;i++){ var s=rows[i];
       h+='<div class="os-card" data-copy="'+esc(s.highlight_text||s.title)+'"><button class="os-card-edit" data-eid="'+s.id+'" title="수정">✎</button>'+(s.stage?'<span class="stg">'+esc(stageLabel(s.stage))+'</span>':'')+'<div class="t">'+esc(s.title||'(제목 없음)')+'</div>'+(s.highlight_text?'<div class="h">'+esc(s.highlight_text)+'</div>':'')+'</div>'; }
     body.innerHTML=h;
@@ -9948,7 +9948,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       .then(function(rows){ cache.rchat=rows||[]; loaded.rchat=true; paintChat(cache.rchat); })
       .catch(function(){ body.innerHTML='<div class="os-empty">불러오지 못했습니다.</div>'; });
   }
-  function _myChatEmpty(){ return '<div class="os-empty">아직 내 채팅이 없어요.<br>MY SPACE 글쓰기 → 스크립트 탭 → [채팅]으로 만들어보세요.</div>'; }
+  function _myChatEmpty(){ return '<div class="os-empty">아직 내 채팅이 없어요.<br>라이브러리 글쓰기 → 스크립트 탭 → [채팅]으로 만들어보세요.</div>'; }
   /* 마이 채팅 = 본인이 작성한 채팅(owner_id 본인 + 유형:채팅). 채팅 작성 가능자에게만 칩 노출(applyChatChip). */
   function renderMyChat(){
     if(!window.db||!window.db.fetch||!tok()){ updateCnt(0); body.innerHTML='<div class="os-empty">로그인 후 내 채팅이 표시됩니다.</div>'; return; }
