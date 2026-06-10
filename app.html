@@ -9732,8 +9732,11 @@ async function _mvUploadOneFile(file, folderId, owner, token){
   try{
     var fid=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+(new Date().getTime())+'-'+Math.floor(Math.random()*1e6));
     var dot=file.name.lastIndexOf('.'); var ext=(dot>0)?file.name.slice(dot+1).toLowerCase():'';
-    var safe=file.name.replace(/[^\w.\-가-힣]+/g,'_').slice(0,120) || 'file';
-    var pathInner=owner+'/'+(folderId||'root')+'/'+fid+'_'+safe;
+    /* Storage 키는 ASCII만 허용(비ASCII=400 InvalidKey, 2026-06-10 라이브 확정). 키=uuid+ASCII슬러그+확장자, 한글 원본명은 original_name(DB)에만 보존 */
+    var asciiBase=(dot>0?file.name.slice(0,dot):file.name).replace(/[^A-Za-z0-9._-]+/g,'').slice(0,80);
+    var asciiExt=ext.replace(/[^A-Za-z0-9]+/g,'');
+    var keyName=fid+(asciiBase?('_'+asciiBase):'')+(asciiExt?('.'+asciiExt):'');
+    var pathInner=owner+'/'+(folderId||'root')+'/'+keyName;
     var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(pathInner)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(file.type||'application/octet-stream'),'x-upsert':'true'},body:file});
     if(!up.ok){ var rs=up.status; return {ok:false, reason:(rs===413?'용량 초과':('업로드 실패 '+rs))}; }
     var ins=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({id:fid,owner_id:owner,folder_id:folderId,original_name:file.name,storage_path:pathInner,mime_type:(file.type||''),ext:ext,file_size:file.size,source:'picker',status:'pending',search_text:file.name})});
