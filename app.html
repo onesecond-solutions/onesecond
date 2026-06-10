@@ -786,6 +786,18 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .dia-save{flex:1;border:0;background:var(--ac);color:#fff;border-radius:var(--radius-sm);padding:10px;font-weight:700;cursor:pointer;font-family:inherit}
 .dia-del{border:1px solid var(--err);background:transparent;color:var(--err);border-radius:var(--radius-sm);padding:10px 14px;cursor:pointer;font-family:inherit}
 @media(max-width:760px){ .dia-dash{grid-template-columns:1fr} .dia-cal-body{flex-direction:column} .dia-panel.open{width:100%;border-left:0;border-top:1px solid var(--bd);padding-left:0;padding-top:12px} }
+/* 다이어리 인앱 알람 트레이(우상단 누적 팝업) */
+.dia-alarm-tray{position:fixed;top:70px;right:18px;z-index:10050;display:flex;flex-direction:column;gap:10px;max-width:320px}
+.dia-alarm-card{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-md);box-shadow:var(--elevation-3);padding:12px 14px;animation:diaAlarmIn .2s ease}
+@keyframes diaAlarmIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+.dia-alarm-ic{font-size:1.3em;line-height:1}
+.dia-alarm-bd{flex:1;min-width:0}
+.dia-alarm-t{font-size:0.88em;font-weight:700;color:var(--tp);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dia-alarm-m{font-size:0.76em;color:var(--ts)}
+.dia-alarm-acts{display:flex;align-items:center;gap:6px;flex:none}
+.dia-alarm-go{border:1px solid var(--ac);background:transparent;color:var(--ac);border-radius:var(--radius-sm);padding:4px 10px;font-size:0.78em;cursor:pointer;font-family:inherit}
+.dia-alarm-go:hover{background:color-mix(in srgb,var(--ac) 12%,transparent)}
+.dia-alarm-x{border:0;background:transparent;color:var(--ts);cursor:pointer;font-size:0.9em}
 .cal-cell.empty{border:none;background:transparent;cursor:default}
 .cal-cell.today{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
 .cal-cell.sel{background:var(--sh)}
@@ -9596,6 +9608,7 @@ function loadDiaryDash(){
   if(!window.db||!window.db.fetch) return;
   _diaCount('/rest/v1/team_notices?deleted_at=is.null').then(function(n){ _diaSetCnt('dia-cnt-notice', n); });
   _diaCount('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*').then(function(n){ _diaSetCnt('dia-cnt-qna', n); });
+  if(typeof diaAlarmStart==='function') diaAlarmStart();  /* 인앱 알람 폴링 시작(앱 세션 유지) */
 }
 window.loadDiaryDash=loadDiaryDash;
 function diaDashGo(which){
@@ -9669,6 +9682,59 @@ async function diaryDeleteEvent(id){
   }catch(e){ alert('삭제 중 오류가 발생했습니다.'); }
 }
 window.diaryDeleteEvent=diaryDeleteEvent;
+
+/* ═══ 다이어리 인앱 알람 firing (1단계): 60초 폴링 → reminders 시각 도달 시 팝업 누적 + 클릭 일정이동 + localStorage 중복방지 ═══ */
+function _diaLoadFired(){ try{ return JSON.parse(localStorage.getItem('os_dia_alarm_fired')||'{}')||{}; }catch(e){ return {}; } }
+function _diaSaveFired(){ try{ localStorage.setItem('os_dia_alarm_fired', JSON.stringify(window._diaAlarmFired||{})); }catch(e){} }
+function diaAlarmStart(){
+  if(window._diaAlarmTimer) return;
+  window._diaAlarmFired=window._diaAlarmFired||_diaLoadFired();
+  diaAlarmTick();
+  window._diaAlarmTimer=setInterval(diaAlarmTick, 60000);
+}
+window.diaAlarmStart=diaAlarmStart;
+async function diaAlarmTick(){
+  var me=_diaOwnerId(); if(!me||!window.db||!window.db.fetch) return;
+  var d0=new Date(); d0.setDate(d0.getDate()-1); var from=d0.getFullYear()+'-'+_calPad(d0.getMonth()+1)+'-'+_calPad(d0.getDate());
+  var d2=new Date(); d2.setDate(d2.getDate()+8); var to=d2.getFullYear()+'-'+_calPad(d2.getMonth()+1)+'-'+_calPad(d2.getDate());
+  try{
+    var res=await window.db.fetch('/rest/v1/calendar_events?author_id=eq.'+encodeURIComponent(me)+'&event_date=gte.'+from+'&event_date=lte.'+to+'&select=id,event_date,event_time,title,reminders');
+    if(!res.ok) return; var rows=await res.json(); if(!Array.isArray(rows)) return;
+    var now=new Date();
+    rows.forEach(function(r){
+      if(!r.event_time||!Array.isArray(r.reminders)||!r.reminders.length) return;
+      var evt=new Date(r.event_date+'T'+String(r.event_time).slice(0,5)+':00');
+      if(isNaN(evt.getTime())) return;
+      r.reminders.forEach(function(min){
+        var fireAt=new Date(evt.getTime()-min*60000);
+        if(now>=fireAt && now<new Date(evt.getTime()+5*60000)){
+          var key=r.id+':'+min+':'+r.event_date;
+          if(window._diaAlarmFired[key]) return;
+          window._diaAlarmFired[key]=1; _diaSaveFired();
+          _diaAlarmFire(r, min);
+        }
+      });
+    });
+  }catch(e){}
+}
+function _diaAlarmFire(r, min){
+  var tray=document.getElementById('dia-alarm-tray');
+  if(!tray){ tray=document.createElement('div'); tray.id='dia-alarm-tray'; tray.className='dia-alarm-tray'; document.body.appendChild(tray); }
+  var tm=String(r.event_time||'').slice(0,5);
+  var when=(min===0?'지금':(min===1440?'내일 일정':(min+'분 후 일정')));
+  var card=document.createElement('div'); card.className='dia-alarm-card';
+  card.innerHTML='<div class="dia-alarm-ic">🔔</div><div class="dia-alarm-bd"><div class="dia-alarm-t">'+_calEsc(r.title)+'</div><div class="dia-alarm-m">'+_calEsc(tm)+' · '+when+'</div></div><div class="dia-alarm-acts"><button class="dia-alarm-go" type="button">보기</button><button class="dia-alarm-x" type="button" aria-label="닫기">✕</button></div>';
+  card.querySelector('.dia-alarm-go').onclick=function(){ _diaAlarmGo(r.id, r.event_date); card.remove(); };
+  card.querySelector('.dia-alarm-x').onclick=function(){ card.remove(); };
+  tray.appendChild(card);
+  if(typeof toast==='function') toast('🔔 '+r.title+' ('+tm+')');
+  setTimeout(function(){ if(card.parentElement) card.remove(); }, 45000);  /* 45초 후 자동 닫힘(누적 정리) */
+}
+function _diaAlarmGo(id, date){
+  if(typeof showView==='function') showView('myspace');
+  var t=document.querySelector('#mys-tabs .tab[onclick*="today"]'); if(t&&typeof mysTab==='function') mysTab(t,'today');
+  setTimeout(function(){ var st=_cst('mys'); if(date) st.ym=date.slice(0,7); if(typeof renderCalGridMonth==='function') renderCalGridMonth('mys'); if(typeof openDiaryPanel==='function') openDiaryPanel(null, id); }, 220);
+}
 
 async function deleteMyspaceItem(id,type){
   if(!confirm('이 항목을 삭제하시겠습니까?'))return;
