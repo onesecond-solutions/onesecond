@@ -877,6 +877,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mvfile-thumb-ph{position:absolute}
 .mvfile-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .15s}
 .mvfile-thumb.on{opacity:1}
+.mvfile-pdfthumb{object-fit:contain;background:#fff}
 /* 미리보기 */
 /* 작업8 후속: 통일 프레임 — viewer=고정 프레임(헤더 고정+stage 내부 스크롤), 본문 자동맞춤·튀어나옴 0 */
 .mys-vault-preview-col .viewer{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
@@ -9738,6 +9739,13 @@ function _mvDate(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d.getTime()))
 /* 작업11: 그리드 ↔ 리스트 뷰 (개인 localStorage 기억, 기본 그리드). 두 뷰 동일 미리보기·CRUD·§4 */
 /* 작업: 윈도우 탐색기 모델 — 중앙 = 상위이동 + 하위폴더(더블클릭 진입) + 파일. 이미지=썸네일. 용량=그리드 숨김/리스트 끝 */
 function _mvIsImg(f){ var mt=(f.mime_type||'').toLowerCase(),ex=(f.ext||'').toLowerCase(); return /^image\//.test(mt)||/(png|jpe?g|gif|webp|bmp|svg|avif)$/.test(ex); }
+function _mvIsPdf(f){ return (f.mime_type||'').toLowerCase()==='application/pdf'||(f.ext||'').toLowerCase()==='pdf'; }
+/* 원칙 8a: 타입 분기는 '썸네일 렌더' 한 곳에서만. 카드 wrapper·click·data·menu는 전 타입 공통 */
+function _mvFileThumbHtml(f){ var fid=f.id;
+  if(_mvIsImg(f)) return '<div class="mvfile-ic mvfile-thumb-wrap"><span class="mvfile-thumb-ph">🖼️</span><img class="mvfile-thumb" data-fid="'+fid+'" alt=""></div>';
+  if(_mvIsPdf(f)) return '<div class="mvfile-ic mvfile-thumb-wrap"><span class="mvfile-thumb-ph">📄</span><img class="mvfile-thumb mvfile-pdfthumb" data-fid="'+fid+'" alt=""></div>';
+  return '<div class="mvfile-ic">'+mysVaultIcon(f)+'</div>';
+}
 function mysVaultRenderFiles(){
   var box=document.getElementById('mys-vault-files'); if(!box) return;
   var rows=window._mvFiles||[];
@@ -9766,23 +9774,44 @@ function mysVaultRenderFiles(){
     if(list){
       html+='<div class="mvrow" onclick="mysVaultPreview(\''+fid+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvEsc(f.original_name)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·삭제">⋮</button></div>';
     } else {
-      var ic=_mvIsImg(f)?('<div class="mvfile-ic mvfile-thumb-wrap"><span class="mvfile-thumb-ph">🖼️</span><img class="mvfile-thumb" data-fid="'+fid+'" alt=""></div>'):('<div class="mvfile-ic">'+mysVaultIcon(f)+'</div>');
-      html+='<div class="mvfile" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·삭제">⋮</button>'+ic+'<div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div></div>';
+      /* 원칙 7: 파일 카드 = 타입 무관 단일 컴포넌트. onclick·data·menu 전 타입 동일, 타입 분기는 _mvFileThumbHtml(썸네일)만 */
+      html+='<div class="mvfile" data-fid="'+fid+'" data-mime="'+_mvEsc(f.mime_type||'')+'" data-ext="'+_mvEsc(f.ext||'')+'" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·삭제">⋮</button>'+_mvFileThumbHtml(f)+'<div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div></div>';
     }
   });
   box.innerHTML=html;
   _mvLoadThumbs();
+  _mvLoadPdfThumbs();
 }
 window.mysVaultRenderFiles=mysVaultRenderFiles;
-/* 그리드 이미지 썸네일 — lazy 서명(렌더 후 채움) */
+/* 그리드 이미지 썸네일 — lazy 서명(렌더 후 채움). PDF 썸네일은 _mvLoadPdfThumbs 별도 처리 */
 function _mvLoadThumbs(){
-  var imgs=document.querySelectorAll('#mys-vault-files img.mvfile-thumb[data-fid]');
+  var imgs=document.querySelectorAll('#mys-vault-files img.mvfile-thumb[data-fid]:not(.mvfile-pdfthumb)');
   var token=_mvToken(); if(!token||!imgs.length) return;
   for(var i=0;i<imgs.length;i++){ (function(el){
     var fid=el.getAttribute('data-fid'); el.removeAttribute('data-fid');
     var f=(window._mvFiles||[]).filter(function(x){return x.id===fid;})[0]; if(!f) return;
     _mvSignedUrl(f,token).then(function(s){ if(s){ el.onload=function(){ el.classList.add('on'); }; el.src=s; } }).catch(function(){});
   })(imgs[i]); }
+}
+/* Phase B: PDF 첫 페이지 썸네일 — lazy(서명→fetch→pdf.js 1p→canvas→dataURL). 실패=📄 아이콘 유지 */
+function _mvLoadPdfThumbs(){
+  var els=document.querySelectorAll('#mys-vault-files img.mvfile-pdfthumb[data-fid]');
+  var token=_mvToken(); if(!token||!els.length) return;
+  loadPdfJs().then(function(pdfjs){
+    for(var i=0;i<els.length;i++){ (function(el){
+      var fid=el.getAttribute('data-fid'); el.removeAttribute('data-fid');
+      var f=(window._mvFiles||[]).filter(function(x){return x.id===fid;})[0]; if(!f) return;
+      _mvSignedUrl(f,token).then(function(s){ return s?fetch(s):null; })
+        .then(function(r){ return r?r.arrayBuffer():null; })
+        .then(function(buf){ return buf?pdfjs.getDocument({data:buf}).promise:null; })
+        .then(function(doc){ return doc?doc.getPage(1):null; })
+        .then(function(page){ if(!page) return;
+          var v0=page.getViewport({scale:1}); var sc=Math.min(160/v0.width,160/v0.height)||0.3; var vp=page.getViewport({scale:sc});
+          var cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+          return page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise.then(function(){ el.onload=function(){ el.classList.add('on'); }; el.src=cv.toDataURL('image/png'); });
+        }).catch(function(){});
+    })(els[i]); }
+  }).catch(function(){});
 }
 function _mvViewSyncBtns(){ var g=document.getElementById('mv-view-grid'), l=document.getElementById('mv-view-list'); if(g) g.classList.toggle('on', window._mvView!=='list'); if(l) l.classList.toggle('on', window._mvView==='list'); }
 function mysVaultSetView(v){
