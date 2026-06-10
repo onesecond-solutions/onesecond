@@ -868,6 +868,15 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mvrow-menu{flex:none;border:0;background:transparent;color:var(--ts);opacity:0.5;cursor:pointer;padding:0 4px;font-size:1.05em;line-height:1}
 .mvrow:hover .mvrow-menu{opacity:1}
 @media (max-width:560px){ .mvrow-dt{display:none} }
+/* 탐색기: 폴더 카드 · 상위이동 · 이미지 썸네일 */
+.mvfolder{cursor:pointer}
+.mvfolder-ic{color:#EAB308}
+.mvnav{cursor:pointer;opacity:0.8}
+.mvnav:hover{opacity:1}
+.mvfile-thumb-wrap{position:relative;width:100%;height:52px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:6px;background:var(--s2)}
+.mvfile-thumb-ph{position:absolute}
+.mvfile-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .15s}
+.mvfile-thumb.on{opacity:1}
 /* 미리보기 */
 /* 작업8 후속: 통일 프레임 — viewer=고정 프레임(헤더 고정+stage 내부 스크롤), 본문 자동맞춤·튀어나옴 0 */
 .mys-vault-preview-col .viewer{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
@@ -9697,6 +9706,7 @@ async function mysVaultLoadFolders(){
     var html=mysVaultTreeHtml(rows);
     if(!rows.length){ html+='<button class="mvf-cta" onclick="mysVaultCreateFolder()">+ 첫 폴더 만들기</button>'; }
     box.innerHTML=html;
+    if(typeof mysVaultRenderFiles==='function') mysVaultRenderFiles();  /* 폴더 변경→중앙(하위폴더) 동기화 */
   }catch(e){ console.error('[mysVault] folders',e); box.innerHTML='<div class="mys-news-empty">폴더를 불러오지 못했습니다.</div>'; }
 }
 window.mysVaultLoadFolders=mysVaultLoadFolders;
@@ -9726,23 +9736,54 @@ async function mysVaultLoadFiles(fid){
 window.mysVaultLoadFiles=mysVaultLoadFiles;
 function _mvDate(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d.getTime())) return ''; var p=function(n){return(n<10?'0':'')+n;}; return (d.getFullYear()%100)+'.'+p(d.getMonth()+1)+'.'+p(d.getDate()); }
 /* 작업11: 그리드 ↔ 리스트 뷰 (개인 localStorage 기억, 기본 그리드). 두 뷰 동일 미리보기·CRUD·§4 */
+/* 작업: 윈도우 탐색기 모델 — 중앙 = 상위이동 + 하위폴더(더블클릭 진입) + 파일. 이미지=썸네일. 용량=그리드 숨김/리스트 끝 */
+function _mvIsImg(f){ var mt=(f.mime_type||'').toLowerCase(),ex=(f.ext||'').toLowerCase(); return /^image\//.test(mt)||/(png|jpe?g|gif|webp|bmp|svg|avif)$/.test(ex); }
 function mysVaultRenderFiles(){
   var box=document.getElementById('mys-vault-files'); if(!box) return;
   var rows=window._mvFiles||[];
+  var cur=window._mvCurFolder||null;
+  var allF=window._mvFolders||[];
+  var subs=allF.filter(function(f){ return (f.parent_id||null)===cur; });
+  var curFolder=allF.filter(function(f){return f.id===cur;})[0];
+  var parentArg=(curFolder&&curFolder.parent_id)?("'"+curFolder.parent_id+"'"):'null';
   var list=(window._mvView==='list');
   box.classList.toggle('mvlist', list);
-  if(!rows.length){ box.innerHTML='<div class="mv-empty"><div class="mv-empty-ic">📂</div><div class="mv-empty-t">아직 저장한 자료가 없습니다</div><div class="mv-empty-s">파일·폴더를 올려보세요</div></div>'; return; }
-  if(list){
-    box.innerHTML=rows.map(function(f){
-      return '<div class="mvrow" onclick="mysVaultPreview(\''+f.id+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvEsc(f.original_name)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+f.id+'\')" title="이름 변경·삭제">⋮</button></div>';
-    }).join('');
-  } else {
-    box.innerHTML=rows.map(function(f){
-      return '<div class="mvfile" onclick="mysVaultPreview(\''+f.id+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+f.id+'\')" title="이름 변경·삭제">⋮</button><div class="mvfile-ic">'+mysVaultIcon(f)+'</div><div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div><div class="mvfile-sz">'+mysVaultSize(f.file_size)+'</div></div>';
-    }).join('');
+  if(!cur && !subs.length && !rows.length){ box.innerHTML='<div class="mv-empty"><div class="mv-empty-ic">📂</div><div class="mv-empty-t">아직 저장한 자료가 없습니다</div><div class="mv-empty-s">파일·폴더를 올려보세요</div></div>'; return; }
+  var html='';
+  if(cur){
+    html += list
+      ? '<div class="mvrow mvnav" onclick="mysVaultSelectFolder('+parentArg+')"><span class="mvrow-ic">⬆️</span><span class="mvrow-nm">상위 폴더</span></div>'
+      : '<div class="mvfile mvnav" onclick="mysVaultSelectFolder('+parentArg+')" title="상위 폴더로"><div class="mvfile-ic">⬆️</div><div class="mvfile-nm">상위 폴더</div></div>';
   }
+  subs.forEach(function(fo){ var fid=fo.id;
+    if(list){
+      html+='<div class="mvrow mvfolder" ondblclick="mysVaultSelectFolder(\''+fid+'\')" title="더블클릭으로 열기"><span class="mvrow-ic">📁</span><span class="mvrow-nm">'+_mvEsc(fo.name)+'</span><span class="mvrow-ext">폴더</span><span class="mvrow-dt"></span><span class="mvrow-sz"></span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'folder\',\''+fid+'\')" title="이름 변경·삭제">⋮</button></div>';
+    } else {
+      html+='<div class="mvfile mvfolder" ondblclick="mysVaultSelectFolder(\''+fid+'\')" title="더블클릭으로 열기"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'folder\',\''+fid+'\')" title="이름 변경·삭제">⋮</button><div class="mvfile-ic mvfolder-ic">📁</div><div class="mvfile-nm">'+_mvEsc(fo.name)+'</div></div>';
+    }
+  });
+  rows.forEach(function(f){ var fid=f.id;
+    if(list){
+      html+='<div class="mvrow" onclick="mysVaultPreview(\''+fid+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvEsc(f.original_name)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·삭제">⋮</button></div>';
+    } else {
+      var ic=_mvIsImg(f)?('<div class="mvfile-ic mvfile-thumb-wrap"><span class="mvfile-thumb-ph">🖼️</span><img class="mvfile-thumb" data-fid="'+fid+'" alt=""></div>'):('<div class="mvfile-ic">'+mysVaultIcon(f)+'</div>');
+      html+='<div class="mvfile" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·삭제">⋮</button>'+ic+'<div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div></div>';
+    }
+  });
+  box.innerHTML=html;
+  _mvLoadThumbs();
 }
 window.mysVaultRenderFiles=mysVaultRenderFiles;
+/* 그리드 이미지 썸네일 — lazy 서명(렌더 후 채움) */
+function _mvLoadThumbs(){
+  var imgs=document.querySelectorAll('#mys-vault-files img.mvfile-thumb[data-fid]');
+  var token=_mvToken(); if(!token||!imgs.length) return;
+  for(var i=0;i<imgs.length;i++){ (function(el){
+    var fid=el.getAttribute('data-fid'); el.removeAttribute('data-fid');
+    var f=(window._mvFiles||[]).filter(function(x){return x.id===fid;})[0]; if(!f) return;
+    _mvSignedUrl(f,token).then(function(s){ if(s){ el.onload=function(){ el.classList.add('on'); }; el.src=s; } }).catch(function(){});
+  })(imgs[i]); }
+}
 function _mvViewSyncBtns(){ var g=document.getElementById('mv-view-grid'), l=document.getElementById('mv-view-list'); if(g) g.classList.toggle('on', window._mvView!=='list'); if(l) l.classList.toggle('on', window._mvView==='list'); }
 function mysVaultSetView(v){
   window._mvView=(v==='list')?'list':'grid';
