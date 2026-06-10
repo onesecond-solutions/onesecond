@@ -6311,7 +6311,7 @@ async function _openSignedAtt(e, el){
     if(!res.ok){ alert(res.status===401||res.status===403?'이 첨부를 열 권한이 없습니다.':'첨부를 여는 데 실패했습니다. (HTTP '+res.status+')'); return false; }
     var j=await res.json(); var signed=j.signedURL||j.signedUrl||'';
     if(!signed){ alert('첨부 URL 생성에 실패했습니다.'); return false; }
-    window.open(window.db.url(signed), '_blank', 'noopener');
+    window.open((typeof _mvSignedFull==='function'?_mvSignedFull(signed):window.db.url(signed)), '_blank', 'noopener');
   }catch(err){ console.error('[_openSignedAtt]',err); alert('첨부를 열지 못했습니다.'); }
   return false;
 }
@@ -9880,10 +9880,19 @@ function _mvLoadScript(src){ return new Promise(function(res,rej){ var s=documen
 function _mvLoadMammoth(){ return window.mammoth?Promise.resolve(window.mammoth):_mvLoadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js').then(function(){return window.mammoth;}); }
 function _mvLoadXLSX(){ return window.XLSX?Promise.resolve(window.XLSX):_mvLoadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js').then(function(){return window.XLSX;}); }
 function _mvLoadJSZip(){ return window.JSZip?Promise.resolve(window.JSZip):_mvLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js').then(function(){return window.JSZip;}); }
+/* Supabase sign 응답 signedURL = '/object/sign/...'(/storage/v1 없음) → 풀 URL 정확 조합. (2026-06-10 라이브 확정: window.db.url(raw)는 /storage/v1 누락 → requested path is invalid) */
+function _mvSignedFull(raw){
+  if(!raw) return null;
+  if(/^https?:\/\//.test(raw)) return raw;
+  if(raw.indexOf('/storage/v1')===0) return window.db.url(raw);
+  if(raw.charAt(0)==='/') return (window.SUPABASE_URL||'')+'/storage/v1'+raw;
+  return (window.SUPABASE_URL||'')+'/storage/v1/'+raw;
+}
+window._mvSignedFull=_mvSignedFull;
 async function _mvSignedUrl(f, token){
   var res=await fetch(window.db.url('/storage/v1/object/sign/myspace/'+_mvEncPath(f.storage_path)),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token},body:JSON.stringify({expiresIn:3600})});
   if(!res.ok) return null;
-  var j=await res.json(); var s=j.signedURL||j.signedUrl||''; if(s&&s.charAt(0)==='/') s=window.db.url(s); return s||null;
+  var j=await res.json(); return _mvSignedFull(j.signedURL||j.signedUrl||'');
 }
 function _mvViewerHead(f, signed){
   return '<div class="mvprev-head"><span class="mvprev-nm" title="'+_mvEsc(f.original_name)+'">'+_mvEsc(f.original_name)+'</span>'
