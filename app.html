@@ -17,6 +17,8 @@
 <style>
 :root[data-theme="dark"]{--bg:#0B0C0E;--s1:#141518;--s2:#1C1D21;--sh:#222328;--bd:#26272B;--tp:#F4F4F5;--ts:#A1A1AA;--tf:#6B6D72;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#D4D4D8;--t-uw:#22D3EE;--t-product:#6366F1;--t-event:#E879F9;--ok:#22C55E;--warn:#F59E0B;--err:#EF4444;}
 :root[data-theme="light"]{--bg:#F4F4F6;--s1:#FFFFFF;--s2:#F4F4F6;--sh:#EEEEF1;--bd:#E4E4E7;--tp:#18181B;--ts:#52525B;--tf:#71717A;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#3F3F46;--t-uw:#0891B2;--t-product:#6366F1;--t-event:#C026D3;--ok:#16A34A;--warn:#F59E0B;--err:#DC2626;}
+/* 작업9: radius 토큰 전역 정의 (app.html에 tokens.css 미링크 → 미정의로 직각 렌더되던 것 봉합). B안 넉넉히 · 토큰만(개별 하드코딩 금지) */
+:root{--radius-xs:8px;--radius-sm:11px;--radius-md:13px;--radius-lg:18px;--radius-xl:18px;--radius-full:9999px;--radius:11px;}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard',sans-serif;}
 body{background:var(--bg);color:var(--tp);font-size:0.9375rem;line-height:1.6;height:100vh;overflow:hidden;}
 html{height:100%;font-size:calc(100% * var(--fscale, 1));}
