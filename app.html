@@ -805,8 +805,18 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mvf-item{display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:var(--radius-sm);font-size:0.85em;color:var(--tf);cursor:pointer}
 .mvf-item:hover{background:var(--bg)}
 .mvf-item.on{background:var(--ac);color:#fff}
-.mvf-sub{margin-left:auto;border:0;background:transparent;color:inherit;opacity:0.6;cursor:pointer;font-size:1em;line-height:1;padding:0 4px}
+.mvf-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mvf-actions{display:inline-flex;align-items:center;gap:1px;flex:none}
+.mvf-sub{border:0;background:transparent;color:inherit;opacity:0.55;cursor:pointer;font-size:1em;line-height:1;padding:0 4px}
 .mvf-sub:hover{opacity:1}
+.mvf-menu-btn{border:0;background:transparent;color:inherit;opacity:0.55;cursor:pointer;font-size:1.05em;line-height:1;padding:0 4px}
+.mvf-menu-btn:hover{opacity:1}
+.mvfile-menu{position:absolute;top:2px;right:2px;border:0;background:transparent;color:var(--ts);opacity:0.5;cursor:pointer;font-size:1.05em;line-height:1;padding:2px 5px}
+.mvfile-menu:hover{opacity:1}
+.mv-ctxmenu{position:fixed;z-index:9999;min-width:140px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);box-shadow:var(--elevation-3);padding:5px;flex-direction:column;gap:2px}
+.mv-ctxmenu button{border:0;background:transparent;text-align:left;padding:8px 12px;border-radius:var(--radius-sm);font-size:0.85em;color:var(--tf);cursor:pointer}
+.mv-ctxmenu button:hover{background:var(--sh)}
+.mv-ctxmenu .mv-ctx-del{color:var(--err)}
 .mys-vault-dropzone{border:1.5px dashed var(--bd);border-radius:var(--radius-sm);padding:16px 8px;text-align:center;font-size:0.8em;color:var(--ts);cursor:pointer}
 .mys-vault-dropzone.mvdz-ready{border-color:var(--ac)}
 .mys-vault-dropzone.mvdz-over{border-color:var(--ac);background:var(--bg)}
@@ -1781,6 +1791,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="col viewer-col">
           <div class="viewer" id="mys-vault-preview"><div class="mys-news-empty">파일을 선택하면 미리보기가 표시됩니다.</div></div>
         </div>
+        <div id="mv-ctxmenu" class="mv-ctxmenu" style="display:none"></div>
       </div>
       </div><!-- /mys-saved -->
       <div id="mys-team" style="display:none">
@@ -9573,8 +9584,9 @@ function mysVaultTreeHtml(rows){
   function walk(pid,depth){
     return (byParent[pid]||[]).map(function(r){
       var on=(cur===r.id)?' on':''; var pad=8+depth*14;
-      return '<div class="mvf-item'+on+'" style="padding-left:'+pad+'px" onclick="mysVaultSelectFolder(\''+r.id+'\')">📁 '+_mvEsc(r.name)
-        +'<button class="mvf-sub" onclick="event.stopPropagation();mysVaultCreateFolder(\''+r.id+'\')" title="하위 폴더 추가">+</button></div>'+walk(r.id,depth+1);
+      return '<div class="mvf-item'+on+'" style="padding-left:'+pad+'px" onclick="mysVaultSelectFolder(\''+r.id+'\')">📁 <span class="mvf-nm">'+_mvEsc(r.name)+'</span>'
+        +'<span class="mvf-actions"><button class="mvf-sub" onclick="event.stopPropagation();mysVaultCreateFolder(\''+r.id+'\')" title="하위 폴더 추가">+</button>'
+        +'<button class="mvf-menu-btn" onclick="mvVaultMenu(event,\'folder\',\''+r.id+'\')" title="이름 변경·삭제">⋮</button></span></div>'+walk(r.id,depth+1);
     }).join('');
   }
   return html+walk('__root',0);
@@ -9613,7 +9625,7 @@ async function mysVaultLoadFiles(fid){
     window._mvFiles=rows;
     if(!rows.length){ box.innerHTML='<div class="mys-news-empty">이 폴더에 파일이 없습니다.<br>파일을 끌어다 놓거나 “+ 파일 올리기”.</div>'; return; }
     box.innerHTML=rows.map(function(f){
-      return '<div class="mvfile" onclick="mysVaultPreview(\''+f.id+'\')"><div class="mvfile-ic">'+mysVaultIcon(f)+'</div><div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div><div class="mvfile-sz">'+mysVaultSize(f.file_size)+'</div></div>';
+      return '<div class="mvfile" onclick="mysVaultPreview(\''+f.id+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+f.id+'\')" title="이름 변경·삭제">⋮</button><div class="mvfile-ic">'+mysVaultIcon(f)+'</div><div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div><div class="mvfile-sz">'+mysVaultSize(f.file_size)+'</div></div>';
     }).join('');
   }catch(e){ console.error('[mysVault] files',e); box.innerHTML='<div class="mys-news-empty">파일을 불러오지 못했습니다.</div>'; }
 }
@@ -9712,6 +9724,91 @@ async function mysVaultPreview(fid){
   }catch(e){ console.error('[mysVault] preview',e); box.innerHTML='<div class="mys-news-empty">미리보기 중 오류가 발생했습니다.</div>'; }
 }
 window.mysVaultPreview=mysVaultPreview;
+
+/* ── 자료함 CRUD: ⋮ 액션 메뉴 (이름 변경 / 삭제) ── */
+function mvVaultMenuEsc(ev){ if(ev.key==='Escape') mvVaultCloseMenu(); }
+function mvVaultCloseMenu(){
+  var m=document.getElementById('mv-ctxmenu');
+  if(m){ m.style.display='none'; m._open=false; m._id=null; m._type=null; }
+  document.removeEventListener('click',mvVaultCloseMenu);
+  document.removeEventListener('keydown',mvVaultMenuEsc);
+}
+function mvVaultMenu(e,type,id){
+  e.stopPropagation(); e.preventDefault();
+  var m=document.getElementById('mv-ctxmenu'); if(!m) return;
+  if(m._open&&m._id===id&&m._type===type){ mvVaultCloseMenu(); return; }
+  document.removeEventListener('click',mvVaultCloseMenu); document.removeEventListener('keydown',mvVaultMenuEsc);
+  m.innerHTML='<button type="button" onclick="mvVaultRename(\''+type+'\',\''+id+'\')">이름 변경</button>'
+    +'<button type="button" class="mv-ctx-del" onclick="mvVaultDelete(\''+type+'\',\''+id+'\')">삭제</button>';
+  m.style.display='flex';
+  var mw=150,mh=84;
+  m.style.left=Math.max(8,Math.min(e.clientX,window.innerWidth-mw-8))+'px';
+  m.style.top=Math.max(8,Math.min(e.clientY,window.innerHeight-mh-8))+'px';
+  m._open=true; m._id=id; m._type=type;
+  setTimeout(function(){ document.addEventListener('click',mvVaultCloseMenu); document.addEventListener('keydown',mvVaultMenuEsc); },0);
+}
+window.mvVaultMenu=mvVaultMenu; window.mvVaultCloseMenu=mvVaultCloseMenu;
+
+function _mvPatch(table,id,body,token,done){
+  fetch(window.db.url('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)})
+    .then(function(r){ if(r.ok||r.status===204){ done&&done(); } else { r.json().then(function(x){ alert('변경 실패: '+(x.message||r.status)); }).catch(function(){ alert('변경 실패: '+r.status); }); } })
+    .catch(function(e){ console.error('[mysVault] patch',e); alert('변경 중 오류가 발생했습니다.'); });
+}
+function mvVaultRename(type,id){
+  mvVaultCloseMenu();
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  if(type==='folder'){
+    var fo=(window._mvFolders||[]).filter(function(f){return f.id===id;})[0]||{};
+    var nn=prompt('폴더 이름 변경', fo.name||''); if(nn==null) return; nn=String(nn).trim(); if(!nn||nn===fo.name) return;
+    _mvPatch('myspace_folders',id,{name:nn,updated_at:new Date().toISOString()},token,function(){ mysVaultLoadFolders(); if(window._mvCurFolder===id){ var pe=document.getElementById('mys-vault-curpath'); if(pe) pe.textContent=nn; } if(typeof toast==='function') toast('폴더 이름을 변경했습니다.'); });
+  } else {
+    var fi=(window._mvFiles||[]).filter(function(f){return f.id===id;})[0]||{};
+    var cur=fi.original_name||'';
+    var nm=prompt('파일 이름 변경', cur); if(nm==null) return; nm=String(nm).trim(); if(!nm||nm===cur) return;
+    _mvPatch('myspace_files',id,{original_name:nm,updated_at:new Date().toISOString()},token,function(){ mysVaultLoadFiles(window._mvCurFolder); if(typeof toast==='function') toast('파일 이름을 변경했습니다.'); });
+  }
+}
+window.mvVaultRename=mvVaultRename;
+
+function _mvDescendantFolderIds(rootId){
+  var all=window._mvFolders||[], out=[rootId];
+  (function walk(pid){ all.forEach(function(f){ if(f.parent_id===pid){ out.push(f.id); walk(f.id); } }); })(rootId);
+  return out;
+}
+async function _mvDeleteStorageObj(path,token){
+  try{ var r=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(path)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); return r.ok; }
+  catch(e){ console.error('[mysVault] storage del',e); return false; }
+}
+async function mvVaultDelete(type,id){
+  mvVaultCloseMenu();
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  if(type==='file'){
+    var f=(window._mvFiles||[]).filter(function(x){return x.id===id;})[0]; if(!f) return;
+    if(!confirm('“'+(f.original_name||'이 파일')+'”을(를) 삭제할까요?\n실제 파일까지 삭제되며 되돌릴 수 없습니다.')) return;
+    await _mvDeleteStorageObj(f.storage_path,token);
+    var dr=await fetch(window.db.url('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'}});
+    if(dr.ok||dr.status===204){ var pv=document.getElementById('mys-vault-preview'); if(pv) pv.innerHTML='<div class="mys-news-empty">파일을 선택하면 미리보기가 표시됩니다.</div>'; mysVaultLoadFiles(window._mvCurFolder); if(typeof toast==='function') toast('파일을 삭제했습니다.'); }
+    else { alert('삭제 실패: '+dr.status); }
+    return;
+  }
+  /* folder */
+  var ids=_mvDescendantFolderIds(id);
+  var files=[];
+  try{
+    var q='/rest/v1/myspace_files?owner_id=eq.'+encodeURIComponent(owner)+'&deleted_at=is.null&folder_id=in.('+ids.map(encodeURIComponent).join(',')+')&select=id,storage_path';
+    var fr=await window.db.fetch(q); files=fr.ok?await fr.json():[];
+  }catch(e){ console.error('[mysVault] folder files',e); }
+  var subCnt=ids.length-1;
+  var msg='이 폴더를 삭제할까요?';
+  if(files.length||subCnt){ msg='이 폴더에 '+(subCnt?('하위 폴더 '+subCnt+'개, '):'')+'파일 '+files.length+'개가 있습니다.\n폴더와 그 안의 파일을 모두 삭제할까요? 되돌릴 수 없습니다.'; }
+  if(!confirm(msg)) return;
+  for(var i=0;i<files.length;i++){ await _mvDeleteStorageObj(files[i].storage_path,token); }
+  if(files.length){ await fetch(window.db.url('/rest/v1/myspace_files?id=in.('+files.map(function(x){return encodeURIComponent(x.id);}).join(',')+')'),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'}}); }
+  var fd=await fetch(window.db.url('/rest/v1/myspace_folders?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'}});
+  if(fd.ok||fd.status===204){ window._mvCurFolder=null; mysVaultLoadFolders(); mysVaultLoadFiles(null); var pe=document.getElementById('mys-vault-curpath'); if(pe) pe.textContent='전체'; if(typeof toast==='function') toast('폴더를 삭제했습니다.'); }
+  else { alert('폴더 삭제 실패: '+fd.status); }
+}
+window.mvVaultDelete=mvVaultDelete;
 
 /* ═════════════════════════════════════════════════════════
    QUICK OVERLAY (딸깍 클릭 시 4그룹 펼침)
