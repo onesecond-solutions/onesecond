@@ -786,6 +786,34 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .dia-save{flex:1;border:0;background:var(--ac);color:#fff;border-radius:var(--radius-sm);padding:10px;font-weight:700;cursor:pointer;font-family:inherit}
 .dia-del{border:1px solid var(--err);background:transparent;color:var(--err);border-radius:var(--radius-sm);padding:10px 14px;cursor:pointer;font-family:inherit}
 @media(max-width:760px){ .dia-dash{grid-template-columns:1fr} .dia-cal-body{flex-direction:column} .dia-panel.open{width:100%;border-left:0;border-top:1px solid var(--bd);padding-left:0;padding-top:12px} }
+/* 다이어리 2차: 주/일/목록 보기 */
+.dia-ev-item{display:flex;flex-direction:column;gap:1px;text-align:left;width:100%;border:0;border-left:3px solid var(--ac);border-radius:3px;background:var(--s2);color:var(--bodytx);padding:5px 7px;cursor:pointer;font-family:inherit}
+.dia-ev-item:hover{filter:brightness(1.05)}
+.dia-ev-tm{font-size:11px;font-weight:700;color:var(--ts)}
+.dia-ev-tt{font-size:12px;line-height:1.3;color:var(--tp);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dia-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;flex:1;min-width:0}
+.dia-wk-col{border:1px solid var(--bd);border-radius:8px;background:var(--s1);display:flex;flex-direction:column;min-height:160px;min-width:0;overflow:hidden}
+.dia-wk-col.today{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
+.dia-wk-head{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border-bottom:1px solid var(--bd)}
+.dia-wk-dow{font-size:11px;color:var(--ts);font-weight:700}
+.dia-wk-dnum{font-size:14px;color:var(--tp);font-weight:800;line-height:1}
+.dia-wk-evs{flex:1;display:flex;flex-direction:column;gap:3px;padding:4px}
+.dia-wk-add{border:0;border-top:1px dashed var(--bd);background:transparent;color:var(--tf);font-size:13px;cursor:pointer;padding:5px;font-family:inherit}
+.dia-wk-add:hover{color:var(--ac)}
+.dia-day{display:flex;flex-direction:column;gap:12px;flex:1;min-width:0}
+.dia-day-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dia-day-title{font-size:1.05em;font-weight:800;color:var(--tp)}
+.dia-day-add,.dia-ls-add{border:1px solid var(--ac);background:transparent;color:var(--ac);border-radius:var(--radius-sm);padding:7px 12px;font-size:0.82em;font-weight:700;cursor:pointer;font-family:inherit}
+.dia-day-list{display:flex;flex-direction:column;gap:7px}
+.dia-day-list .dia-ev-item{padding:10px 12px}
+.dia-day-list .dia-ev-tt{font-size:14px;white-space:normal}
+.dia-list{display:flex;flex-direction:column;gap:14px;flex:1;min-width:0}
+.dia-ls-grp{display:flex;flex-direction:column;gap:6px}
+.dia-ls-grp.past{opacity:.55}
+.dia-ls-date{display:flex;align-items:center;gap:8px;font-size:0.9em;font-weight:700;color:var(--tp);padding-bottom:3px;border-bottom:1px solid var(--bd)}
+.dia-ls-date.today{color:var(--ac)}
+.dia-ls-todaytag{font-size:0.72em;background:var(--ac);color:#fff;border-radius:10px;padding:1px 8px;font-weight:700}
+@media(max-width:760px){ .dia-week{gap:3px} .dia-wk-dow{font-size:10px} .dia-wk-evs{padding:2px} .dia-ev-tt{font-size:11px} }
 /* 다이어리 인앱 알람 트레이(우상단 누적 팝업) */
 .dia-alarm-tray{position:fixed;top:70px;right:18px;z-index:10050;display:flex;flex-direction:column;gap:10px;max-width:320px}
 .dia-alarm-card{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-md);box-shadow:var(--elevation-3);padding:12px 14px;animation:diaAlarmIn .2s ease}
@@ -9393,7 +9421,15 @@ window.calOpen=calOpen;
 function calBackToDocs(p){ var area=document.getElementById(p+'-cal-area'); if(area) area.style.display='none'; var sp=document.getElementById(CAL_HOST[p]); if(sp) sp.style.display=''; }
 window.calBackToDocs=calBackToDocs;
 function calNav(p,delta){
-  var st=_cst(p), ym=st.ym||_calToday().slice(0,7);
+  var st=_cst(p);
+  /* 다이어리 보기 전환: 주=±7일 / 일=±1일 / 목록=이동없음 */
+  if(p==='mys'&&window._diaView&&window._diaView!=='month'){
+    if(window._diaView==='list') return;
+    var step=(window._diaView==='week')?7:1;
+    var a=_diaParse(_diaAnchor()); a.setDate(a.getDate()+delta*step);
+    st.anchor=_diaFmt(a); st.ym=st.anchor.slice(0,7); st.sel=null; renderCalGridMonth(p); return;
+  }
+  var ym=st.ym||_calToday().slice(0,7);
   var y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10)-1+delta;
   var d=new Date(y,m,1); st.ym=d.getFullYear()+'-'+_calPad(d.getMonth()+1);
   st.sel=null; renderCalGridMonth(p);
@@ -9416,12 +9452,20 @@ window.loadCal=loadCal;
 /* 우측 그리드 = 해당 prefix의 보는 월만 (좌측 월 클릭·◀▶로 변경) */
 function renderCalGridMonth(p){
   var st=_cst(p), ym=st.ym||_calToday().slice(0,7);
-  var ymEl=document.getElementById(p+'-cal-ym'); if(ymEl) ymEl.textContent=ym.slice(0,4)+'년 '+parseInt(ym.slice(5,7),10)+'월';
+  var ymEl=document.getElementById(p+'-cal-ym'), gridEl=document.getElementById(p+'-cal-grid');
+  /* 다이어리(mys) 보기 전환: 월 외(주/일/목록)는 전용 렌더러 — mr/iv는 항상 월 그리드(공용 함수 불변) */
+  var view=(p==='mys'&&window._diaView)?window._diaView:'month';
+  if(view!=='month'){
+    if(ymEl) ymEl.textContent=_diaViewLabel(view);
+    if(gridEl) gridEl.innerHTML=_diaRenderView(view, st);
+    return;
+  }
+  if(ymEl) ymEl.textContent=ym.slice(0,4)+'년 '+parseInt(ym.slice(5,7),10)+'월';
   var y=parseInt(ym.slice(0,4),10), m=parseInt(ym.slice(5,7),10);
   var rows=(st.rows||[]).filter(function(r){ return (r.event_date||'').slice(0,7)===ym; });
   var byDay={}; rows.forEach(function(r){ (byDay[r.event_date]=byDay[r.event_date]||[]).push(r); });
   Object.keys(byDay).forEach(function(d){ byDay[d].sort(function(a,b){ var ta=a.event_time||'99:99', tb=b.event_time||'99:99'; return ta<tb?-1:(ta>tb?1:0); }); });
-  var gridEl=document.getElementById(p+'-cal-grid'); if(gridEl) gridEl.innerHTML=renderCalGrid(p,byDay,y,m-1);
+  if(gridEl) gridEl.innerHTML=renderCalGrid(p,byDay,y,m-1);
 }
 window.renderCalGridMonth=renderCalGridMonth;
 function calShowMonth(p,k){ var st=_cst(p); st.ym=k; st.sel=null; renderCalGridMonth(p); }
@@ -9617,10 +9661,73 @@ function diaDashGo(which){
   else if(which==='qna'){ if(typeof _goVoiceTab==='function') _goVoiceTab('voice'); else if(typeof showView==='function') showView('voice'); }
 }
 window.diaDashGo=diaDashGo;
-function calGoToday(p){ var st=_cst(p); st.ym=_calToday().slice(0,7); st.sel=_calToday(); renderCalGridMonth(p); }
+function calGoToday(p){ var st=_cst(p), t=_calToday(); st.ym=t.slice(0,7); st.sel=t; if(p==='mys') st.anchor=t; renderCalGridMonth(p); }
 window.calGoToday=calGoToday;
-function diaSetView(el,v){ var tabs=el.parentElement.querySelectorAll('.dia-vt'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(v==='month'){ el.classList.add('on'); } else { if(tabs[0]) tabs[0].classList.add('on'); if(typeof toast==='function') toast('주/일/목록 보기는 다음 업데이트에서 제공됩니다.'); } }
+/* ── 다이어리 2차: 보기 전환(월/주/일/목록) — mys 전용. mr/iv 공용 cal 함수 불변(p==='mys' 게이트) ── */
+function diaSetView(el,v){
+  var tabs=el.parentElement.querySelectorAll('.dia-vt'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
+  window._diaView=v||'month';
+  var st=_cst('mys'); if((v==='week'||v==='day')&&!st.anchor) st.anchor=st.sel||_calToday();
+  if(typeof diaryClosePanel==='function') diaryClosePanel();
+  renderCalGridMonth('mys');
+}
 window.diaSetView=diaSetView;
+/* 보기 전환 헬퍼 */
+function _diaParse(ds){ var p=(ds||_calToday()).split('-'); return new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10)); }
+function _diaFmt(dt){ return dt.getFullYear()+'-'+_calPad(dt.getMonth()+1)+'-'+_calPad(dt.getDate()); }
+function _diaAnchor(){ var st=_cst('mys'); if(!st.anchor) st.anchor=_calToday(); return st.anchor; }
+function _diaByTime(a,b){ var ta=a.event_time||'99:99', tb=b.event_time||'99:99'; return ta<tb?-1:(ta>tb?1:0); }
+var DIA_DOW=['일','월','화','수','목','금','토'];
+function _diaOff(ds,dow){ return dow===0 || CAL_HOLIDAYS.indexOf(ds)>=0; }
+function _diaEvItem(e){
+  var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color;
+  var tm=e.event_time?String(e.event_time).slice(0,5):'종일';
+  return '<button class="dia-ev-item" style="border-left-color:'+c+'" onclick="openDiaryPanel(null,\''+e.id+'\')" title="'+_calEsc((e.event_time?tm+' ':'')+e.title)+'"><span class="dia-ev-tm">'+_calEsc(tm)+'</span><span class="dia-ev-tt">'+_calEsc(e.title)+'</span></button>';
+}
+function _diaViewLabel(view){
+  if(view==='week'){ var a=_diaParse(_diaAnchor()); var sun=new Date(a); sun.setDate(a.getDate()-a.getDay()); var sat=new Date(sun); sat.setDate(sun.getDate()+6); return (sun.getMonth()+1)+'월 '+sun.getDate()+'일 – '+(sat.getMonth()+1)+'월 '+sat.getDate()+'일'; }
+  if(view==='day'){ var d=_diaParse(_diaAnchor()); return (d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DIA_DOW[d.getDay()]+')'; }
+  if(view==='list') return '전체 일정';
+  return '';
+}
+function _diaRenderView(view, st){ if(view==='week') return _diaWeekView(st); if(view==='day') return _diaDayView(st); if(view==='list') return _diaListView(st); return ''; }
+function _diaWeekView(st){
+  var a=_diaParse(_diaAnchor()); var sun=new Date(a); sun.setDate(a.getDate()-a.getDay()); var today=_calToday();
+  var byDay={}; (st.rows||[]).forEach(function(r){ if(!r.event_date) return; (byDay[r.event_date]=byDay[r.event_date]||[]).push(r); });
+  var cols='';
+  for(var i=0;i<7;i++){
+    var d=new Date(sun); d.setDate(sun.getDate()+i); var ds=_diaFmt(d);
+    var evs=(byDay[ds]||[]).slice().sort(_diaByTime);
+    var off=_diaOff(ds,d.getDay()), isToday=(ds===today);
+    cols+='<div class="dia-wk-col'+(isToday?' today':'')+'">'
+      +'<div class="dia-wk-head"><span class="dia-wk-dow'+(off?' cal-off':'')+'">'+DIA_DOW[d.getDay()]+'</span><span class="dia-wk-dnum'+(off?' cal-off':'')+'">'+d.getDate()+'</span></div>'
+      +'<div class="dia-wk-evs">'+(evs.length?evs.map(_diaEvItem).join(''):'')+'</div>'
+      +'<button class="dia-wk-add" onclick="openDiaryPanel(\''+ds+'\',null)" aria-label="'+ds+' 일정 추가">+</button>'
+      +'</div>';
+  }
+  return '<div class="dia-week">'+cols+'</div>';
+}
+function _diaDayView(st){
+  var ds=_diaAnchor(), d=_diaParse(ds);
+  var evs=(st.rows||[]).filter(function(r){ return r.event_date===ds; }).sort(_diaByTime);
+  var off=_diaOff(ds,d.getDay());
+  var head='<div class="dia-day-head"><span class="dia-day-title'+(off?' cal-off':'')+'">'+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DIA_DOW[d.getDay()]+')</span><button class="dia-day-add" onclick="openDiaryPanel(\''+ds+'\',null)">+ 일정 추가</button></div>';
+  var body=evs.length?('<div class="dia-day-list">'+evs.map(_diaEvItem).join('')+'</div>'):'<div class="mys-news-empty">이 날 일정이 없습니다.<br>+ 일정 추가로 만들어보세요.</div>';
+  return '<div class="dia-day">'+head+body+'</div>';
+}
+function _diaListView(st){
+  var rows=(st.rows||[]).filter(function(r){ return !!r.event_date; }).slice().sort(function(a,b){ if(a.event_date!==b.event_date) return a.event_date<b.event_date?-1:1; return _diaByTime(a,b); });
+  if(!rows.length) return '<div class="mys-news-empty">아직 일정이 없습니다.<br>날짜를 골라 + 추가해보세요.</div>';
+  var today=_calToday(); var groups={}; rows.forEach(function(r){ (groups[r.event_date]=groups[r.event_date]||[]).push(r); });
+  var keys=Object.keys(groups).sort();
+  var html=keys.map(function(k){
+    var d=_diaParse(k), off=_diaOff(k,d.getDay()), isToday=(k===today), past=(k<today);
+    return '<div class="dia-ls-grp'+(past?' past':'')+'">'
+      +'<div class="dia-ls-date'+(isToday?' today':'')+'"><span'+(off?' class="cal-off"':'')+'>'+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DIA_DOW[d.getDay()]+')</span>'+(isToday?'<span class="dia-ls-todaytag">오늘</span>':'')+'</div>'
+      +groups[k].map(_diaEvItem).join('')+'</div>';
+  }).join('');
+  return '<div class="dia-list">'+html+'</div>';
+}
 /* 알람 옵션(분): 정시0 / 10·30·60분전 / 전날1440 */
 var DIA_REMINDERS=[{v:0,t:'정시'},{v:10,t:'10분 전'},{v:30,t:'30분 전'},{v:60,t:'1시간 전'},{v:1440,t:'전날'}];
 function _diaRemHtml(sel){ sel=Array.isArray(sel)?sel:[]; return DIA_REMINDERS.map(function(o){ var on=sel.indexOf(o.v)>=0?' checked':''; return '<label class="dia-rem"><input type="checkbox" class="dia-rem-cb" value="'+o.v+'"'+on+'> '+o.t+'</label>'; }).join(''); }
