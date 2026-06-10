@@ -43,7 +43,7 @@ order by ordinal_position;
 -- ---- 🟠 STEP 1. myspace_folders (폴더 트리, 자기참조) ----
 create table if not exists public.myspace_folders (
   id          uuid primary key default gen_random_uuid(),
-  owner_id    uuid not null,
+  owner_id    text not null,   -- = window.AppState.userId (auth.uid()::text). library/scripts 정합
   parent_id   uuid references public.myspace_folders(id) on delete cascade,  -- null = 루트
   name        text not null,
   path        text,
@@ -60,7 +60,7 @@ create index if not exists idx_myspace_folders_parent on public.myspace_folders(
 -- ---- 🟠 STEP 2. myspace_files (파일 메타) ----
 create table if not exists public.myspace_files (
   id             uuid primary key default gen_random_uuid(),
-  owner_id       uuid not null,
+  owner_id       text not null,   -- = auth.uid()::text. library/scripts 정합
   folder_id      uuid references public.myspace_folders(id) on delete set null,  -- null = 루트
   original_name  text not null,            -- 원본 파일명만(PC 절대경로 저장 금지)
   storage_path   text not null,            -- myspace/{owner_id}/{folder_id}/{file_id}_{sanitized}
@@ -82,7 +82,7 @@ create index if not exists idx_myspace_files_folder on public.myspace_files(fold
 
 -- ---- 🟠 STEP 3. myspace_usage (사용량 골조, 숫자 미확정) ----
 create table if not exists public.myspace_usage (
-  owner_id     uuid primary key,
+  owner_id     text primary key,   -- = auth.uid()::text. library/scripts 정합
   quota_limit  bigint,                     -- NULL = 미확정 (요금제 후순위)
   used_bytes   bigint not null default 0,
   updated_at   timestamptz not null default now()
@@ -96,8 +96,9 @@ on conflict (id) do nothing;
 
 
 -- ============================================================
--- 🟠 STEP 4. RLS / 정책 — ※ 검수 후 적용 ※ (owner_id = auth.uid() 개인 격리)
+-- 🟠 STEP 4. RLS / 정책 — ※ 검수 후 적용 ※ (개인 격리: (auth.uid())::text = owner_id)
 -- 위 STEP 1~3 생성·검수 통과 후에만 실행. 적용 전엔 주석 유지 권장.
+-- 패턴 출처: scripts_delete_own_rls.sql ( (auth.uid())::text = owner_id ).
 -- ============================================================
 
 -- alter table public.myspace_folders enable row level security;
@@ -105,11 +106,11 @@ on conflict (id) do nothing;
 -- alter table public.myspace_usage   enable row level security;
 
 -- create policy myspace_folders_own on public.myspace_folders
---   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+--   for all using ((auth.uid())::text = owner_id) with check ((auth.uid())::text = owner_id);
 -- create policy myspace_files_own on public.myspace_files
---   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+--   for all using ((auth.uid())::text = owner_id) with check ((auth.uid())::text = owner_id);
 -- create policy myspace_usage_own on public.myspace_usage
---   for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+--   for all using ((auth.uid())::text = owner_id) with check ((auth.uid())::text = owner_id);
 
 -- Storage objects 격리 (경로 1번째 세그먼트 = owner_id):
 -- ※ 주의: storage.objects.name = 버킷 '내부' 경로라 버킷 접두('myspace/')는 빠진다.

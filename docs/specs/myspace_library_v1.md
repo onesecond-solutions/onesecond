@@ -63,8 +63,8 @@
 **`myspace_folders`** — 폴더 트리(자기참조)
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
-| id | uuid PK (gen_random_uuid) | |
-| owner_id | uuid not null | = auth.uid(), 개인 격리 |
+| id | uuid PK (gen_random_uuid) | 파일 보관함 비열거성(library bigint와 분기, 정당) |
+| owner_id | **text** not null | = auth.uid()::text (window.AppState.userId). library/scripts 정합 |
 | parent_id | uuid null (self FK) | null = 루트 |
 | name | text not null | |
 | path | text | 표시용 경로(예 `/영업자산/2026`) |
@@ -77,8 +77,8 @@
 **`myspace_files`** — 파일 메타
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
-| id | uuid PK | |
-| owner_id | uuid not null | 개인 격리 |
+| id | uuid PK | storage_path에 사용(비열거성) |
+| owner_id | **text** not null | = auth.uid()::text. library/scripts 정합 |
 | folder_id | uuid null (FK folders) | null = 루트 |
 | original_name | text not null | 원본 파일명만(PC 절대경로 저장 금지) |
 | storage_path | text not null | `myspace/{owner_id}/{folder_id}/{file_id}_{sanitized}` |
@@ -97,7 +97,7 @@
 **`myspace_usage`** — 사용량(숫자 미확정, 구조만)
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
-| owner_id | uuid PK | |
+| owner_id | **text** PK | = auth.uid()::text. library/scripts 정합 |
 | quota_limit | bigint null | **NULL = 미확정** (요금제 후순위) |
 | used_bytes | bigint default 0 | |
 | updated_at | timestamptz default now() | |
@@ -107,7 +107,7 @@
 - 원본 PC 경로 저장 금지(`original_name`만 메타로 보관).
 
 ### RLS / 보안 (검수 전 적용 금지)
-- 3 테이블 + Storage objects: **`owner_id = auth.uid()`** 격리(select/insert/update/delete).
+- 3 테이블 + Storage objects: **`(auth.uid())::text = owner_id`** 격리(select/insert/update/delete). 패턴 출처 = `scripts_delete_own_rls.sql`.
 - SECURITY DEFINER 함수 = P1 불필요(자기참조 트리는 owner 단일 격리라 재귀 RLS 회피 대상 아님).
 - **RLS·정책 적용은 대표님 검수 후.** DDL은 "생성"까지, 실행은 결재 후 직접.
 
