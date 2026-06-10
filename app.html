@@ -754,6 +754,38 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-evs{display:flex;flex-direction:column;gap:2px;overflow:hidden}
 .cal-ev{font-size:12px;line-height:1.35;padding:2px 5px;border-left:3px solid var(--ac);border-radius:3px;background:var(--s2);color:var(--bodytx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-more{font-size:11px;color:var(--ts);padding-left:2px}
+/* 다이어리 개편(2026-06-10): 대시보드 3카드 + 기능형 달력 + 슬라이드 패널 */
+.dia-dash{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.dia-card{display:flex;flex-direction:column;align-items:flex-start;gap:5px;background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-md);padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit}
+.dia-card:hover{border-color:var(--ac);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.dia-card-n{font-size:1.6em;font-weight:800;color:var(--tp);line-height:1}
+.dia-card-l{font-size:0.82em;color:var(--ts)}
+.dia-cal{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:14px 16px}
+.dia-cal-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.dia-cal-head .cal-ym{font-size:0.95em;font-weight:700;color:var(--tp);min-width:120px;text-align:center}
+.dia-today-btn{border:1px solid var(--bd);background:var(--s1);color:var(--tf);border-radius:var(--radius-sm);padding:5px 12px;font-size:0.82em;cursor:pointer;font-family:inherit}
+.dia-today-btn:hover{border-color:var(--ac);color:var(--ac)}
+.dia-view-tabs{margin-left:auto;display:inline-flex;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden}
+.dia-vt{border:0;background:var(--s1);color:var(--ts);padding:5px 12px;font-size:0.8em;cursor:pointer;font-family:inherit}
+.dia-vt.on{background:var(--ac);color:#fff}
+.dia-cal-body{display:flex;gap:14px;align-items:flex-start}
+.dia-cal-body .cal-grid-wrap{flex:1;min-width:0}
+.dia-panel{width:0;overflow:hidden;flex-shrink:0;transition:width .18s ease}
+.dia-panel.open{width:300px;border-left:1px solid var(--bd);padding-left:14px}
+.dia-panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.dia-panel-hd b{color:var(--tp);font-size:0.95em}
+.dia-panel-x{border:0;background:transparent;color:var(--ts);font-size:1.05em;cursor:pointer}
+.dia-panel-bd{display:flex;flex-direction:column;gap:7px}
+.dia-l{font-size:0.8em;font-weight:700;color:var(--tp)}
+.dia-opt{color:var(--tf);font-weight:400;font-size:0.92em}
+.dia-i{padding:8px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);font-family:inherit;font-size:0.86em}
+.dia-ta{min-height:64px;resize:vertical}
+.dia-rems{display:flex;flex-wrap:wrap;gap:8px}
+.dia-rem{display:inline-flex;align-items:center;gap:4px;font-size:0.8em;color:var(--tf);cursor:pointer}
+.dia-panel-ft{display:flex;gap:8px;margin-top:14px}
+.dia-save{flex:1;border:0;background:var(--ac);color:#fff;border-radius:var(--radius-sm);padding:10px;font-weight:700;cursor:pointer;font-family:inherit}
+.dia-del{border:1px solid var(--err);background:transparent;color:var(--err);border-radius:var(--radius-sm);padding:10px 14px;cursor:pointer;font-family:inherit}
+@media(max-width:760px){ .dia-dash{grid-template-columns:1fr} .dia-cal-body{flex-direction:column} .dia-panel.open{width:100%;border-left:0;border-top:1px solid var(--bd);padding-left:0;padding-top:12px} }
 .cal-cell.empty{border:none;background:transparent;cursor:default}
 .cal-cell.today{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
 .cal-cell.sel{background:var(--sh)}
@@ -1831,21 +1863,29 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div class="mys-workspace">
       <div class="mys-main-col">
       <div id="mys-today">
-       <div id="mys-cal-area">
-        <div class="split">
-         <div class="col list-col">
-           <div class="cal-head"><button class="cal-add" onclick="openCalAdd('mys')">+ 내 일정</button></div>
-           <div class="list" id="mys-cal-list"><div class="mys-news-empty">불러오는 중…</div></div>
+       <!-- 다이어리 개편(2026-06-10): 위→아래 세로 스택 = 대시보드 3카드 + 기능형 달력. 우측 D-패널은 mysTab에서 숨김 -->
+       <div class="dia-dash">
+         <button class="dia-card" type="button" onclick="diaDashGo('today')"><span class="dia-card-n" id="dia-cnt-today">–</span><span class="dia-card-l">오늘 일정</span></button>
+         <button class="dia-card" type="button" onclick="diaDashGo('notice')"><span class="dia-card-n" id="dia-cnt-notice">–</span><span class="dia-card-l">공지</span></button>
+         <button class="dia-card" type="button" onclick="diaDashGo('qna')"><span class="dia-card-n" id="dia-cnt-qna">–</span><span class="dia-card-l">답변 대기 Q&amp;A</span></button>
+       </div>
+       <div class="dia-cal">
+         <div class="dia-cal-head">
+           <button class="dia-today-btn" type="button" onclick="calGoToday('mys')">오늘</button>
+           <button class="cal-navbtn" type="button" onclick="calNav('mys',-1)" aria-label="이전 달">&#8249;</button>
+           <span class="cal-ym" id="mys-cal-ym">불러오는 중…</span>
+           <button class="cal-navbtn" type="button" onclick="calNav('mys',1)" aria-label="다음 달">&#8250;</button>
+           <span class="dia-view-tabs">
+             <button class="dia-vt on" type="button" onclick="diaSetView(this,'month')">월</button>
+             <button class="dia-vt" type="button" onclick="diaSetView(this,'week')">주</button>
+             <button class="dia-vt" type="button" onclick="diaSetView(this,'day')">일</button>
+             <button class="dia-vt" type="button" onclick="diaSetView(this,'list')">목록</button>
+           </span>
          </div>
-         <div class="col viewer-col">
-           <div class="cal-head cal-gridhead">
-             <button class="cal-navbtn" onclick="calNav('mys',-1)" aria-label="이전 달">&#8249;</button>
-             <span class="cal-ym" id="mys-cal-ym">불러오는 중…</span>
-             <button class="cal-navbtn" onclick="calNav('mys',1)" aria-label="다음 달">&#8250;</button>
-           </div>
+         <div class="dia-cal-body">
            <div id="mys-cal-grid" class="cal-grid-wrap"></div>
+           <aside class="dia-panel" id="dia-panel"></aside>
          </div>
-        </div>
        </div>
       </div>
       <div id="mys-saved" style="display:none">
@@ -6508,10 +6548,9 @@ function mysTab(el,key){
     if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
     else { if(_brTab) _brTab.style.display=''; if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch'); }
   } }
-  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); }
-    if(dpanel){ dpanel.style.display='';
-      var _db=document.getElementById('mys-dboard'); if(_db && !window._mysDboardLoaded && typeof renderTodayTodo==='function'){ window._mysDboardLoaded=true; renderTodayTodo('myspace', _db); }
-    } }
+  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); if(typeof loadDiaryDash==='function') loadDiaryDash(); }
+    /* 다이어리 개편: 우측 D-패널 → 상단 대시보드 3카드로 대체(숨김) */
+    if(dpanel){ dpanel.style.display='none'; } }
 }
 window.mysTab=mysTab;
 function ivTab(el,key){
@@ -9383,13 +9422,14 @@ function renderCalGrid(p,byDay,y,m){
   for(var d=1;d<=days;d++){
     var ds=y+'-'+_calPad(m+1)+'-'+_calPad(d), evs=byDay[ds]||[];
     var off=(new Date(y,m,d).getDay()===0)||(CAL_HOLIDAYS.indexOf(ds)>=0);  /* 일요일 또는 공휴일(휴무) = 빨강 */
-    var evHtml=evs.slice(0,3).map(function(e){ var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color; var tm=e.event_time?(String(e.event_time).slice(0,5)+' '):''; return '<div class="cal-ev" style="border-left-color:'+c+'" title="'+_calEsc(tm+e.title)+'">'+_calEsc(tm+e.title)+'</div>'; }).join('');
+    var evHtml=evs.slice(0,3).map(function(e){ var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color; var tm=e.event_time?(String(e.event_time).slice(0,5)+' '):''; var evClick=(p==='mys')?(' onclick="event.stopPropagation();openDiaryPanel(null,\''+e.id+'\')" style="border-left-color:'+c+';cursor:pointer"'):(' style="border-left-color:'+c+'"'); return '<div class="cal-ev"'+evClick+' title="'+_calEsc(tm+e.title)+'">'+_calEsc(tm+e.title)+'</div>'; }).join('');
     if(evs.length>3) evHtml+='<div class="cal-more">+'+(evs.length-3)+'</div>';
     cells+='<div class="cal-cell'+(ds===today?' today':'')+(ds===sel?' sel':'')+'" onclick="calPickDay(\''+p+'\',\''+ds+'\')"><span class="cal-d'+(off?' cal-off':'')+'">'+d+'</span><div class="cal-evs">'+evHtml+'</div></div>';
   }
   return '<div class="cal-dow">'+dow+'</div><div class="cal-cells">'+cells+'</div>';
 }
 function calPickDay(p,ds){
+  if(p==='mys'){ var s=_cst(p); s.sel=ds; renderCalGridMonth(p); openDiaryPanel(ds,null); return; }  /* 다이어리: 날짜 클릭→슬라이드 패널 즉시입력 */
   var st=_cst(p); st.sel=(st.sel===ds)?null:ds;
   renderCalGridMonth(p);   /* 그리드 그날 강조만 (좌측 누적 목록은 유지) */
 }
@@ -9544,6 +9584,92 @@ async function updateCalEvent(p,id){
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
 }
 window.updateCalEvent=updateCalEvent;
+
+/* ═══ 다이어리(mys) 개편: 대시보드 + 슬라이드 패널 즉시입력 + 알람 타이밍 저장(reminders). mr/iv 공용 함수 불변 ═══ */
+function _diaOwnerId(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return u.id||null; }catch(e){ return null; } }
+function _diaSetCnt(id,n){ var el=document.getElementById(id); if(el) el.textContent=n; }
+function _diaCount(url){ return window.db.fetch(url+'&select=id',{headers:{'Prefer':'count=exact','Range':'0-0'}}).then(function(r){ var cr=r.headers.get('content-range')||''; var n=parseInt((cr.split('/')[1]||'0'),10); return isNaN(n)?0:n; }).catch(function(){ return 0; }); }
+function loadDiaryDash(){
+  var today=_calToday();
+  var rows=(window._calSt&&window._calSt.mys&&window._calSt.mys.rows)||[];
+  _diaSetCnt('dia-cnt-today', rows.filter(function(r){ return (r.event_date||'')===today; }).length);
+  if(!window.db||!window.db.fetch) return;
+  _diaCount('/rest/v1/team_notices?deleted_at=is.null').then(function(n){ _diaSetCnt('dia-cnt-notice', n); });
+  _diaCount('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*').then(function(n){ _diaSetCnt('dia-cnt-qna', n); });
+}
+window.loadDiaryDash=loadDiaryDash;
+function diaDashGo(which){
+  if(which==='today'){ calGoToday('mys'); openDiaryPanel(_calToday(), null); }
+  else if(which==='notice'){ if(typeof _goVoiceTab==='function') _goVoiceTab('team'); else if(typeof showView==='function') showView('voice'); }
+  else if(which==='qna'){ if(typeof _goVoiceTab==='function') _goVoiceTab('voice'); else if(typeof showView==='function') showView('voice'); }
+}
+window.diaDashGo=diaDashGo;
+function calGoToday(p){ var st=_cst(p); st.ym=_calToday().slice(0,7); st.sel=_calToday(); renderCalGridMonth(p); }
+window.calGoToday=calGoToday;
+function diaSetView(el,v){ var tabs=el.parentElement.querySelectorAll('.dia-vt'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(v==='month'){ el.classList.add('on'); } else { if(tabs[0]) tabs[0].classList.add('on'); if(typeof toast==='function') toast('주/일/목록 보기는 다음 업데이트에서 제공됩니다.'); } }
+window.diaSetView=diaSetView;
+/* 알람 옵션(분): 정시0 / 10·30·60분전 / 전날1440 */
+var DIA_REMINDERS=[{v:0,t:'정시'},{v:10,t:'10분 전'},{v:30,t:'30분 전'},{v:60,t:'1시간 전'},{v:1440,t:'전날'}];
+function _diaRemHtml(sel){ sel=Array.isArray(sel)?sel:[]; return DIA_REMINDERS.map(function(o){ var on=sel.indexOf(o.v)>=0?' checked':''; return '<label class="dia-rem"><input type="checkbox" class="dia-rem-cb" value="'+o.v+'"'+on+'> '+o.t+'</label>'; }).join(''); }
+function _diaReadReminders(){ var cbs=document.querySelectorAll('#dia-panel .dia-rem-cb:checked'), out=[]; for(var i=0;i<cbs.length;i++){ var v=parseInt(cbs[i].value,10); if(!isNaN(v)) out.push(v); } return out; }
+function openDiaryPanel(ds, editId){
+  var panel=document.getElementById('dia-panel'); if(!panel) return;
+  window._diaEdit=editId||null;
+  var r=null;
+  if(editId){ var rows=(_cst('mys').rows)||[]; for(var i=0;i<rows.length;i++){ if(String(rows[i].id)===String(editId)){ r=rows[i]; break; } } }
+  var me=_diaOwnerId();
+  var canEdit=editId?(r&&String(r.author_id)===String(me)):true;
+  var date=editId?((r&&r.event_date)||ds||_calToday()):(ds||_calToday());
+  var time=(editId&&r&&r.event_time)?String(r.event_time).slice(0,5):'';
+  var title=(editId&&r)?(r.title||''):'';
+  var desc=(editId&&r)?(r.description||''):'';
+  var rems=(editId&&r&&Array.isArray(r.reminders))?r.reminders:[];
+  var ro=(editId&&!canEdit);
+  var dis=ro?' disabled':'';
+  panel.innerHTML='<div class="dia-panel-hd"><b>'+(editId?(ro?'일정':'일정 수정'):'새 일정')+'</b><button class="dia-panel-x" onclick="diaryClosePanel()" aria-label="닫기">&#10005;</button></div>'
+    +'<div class="dia-panel-bd">'
+    +'<label class="dia-l">날짜</label><input type="date" id="dia-date" value="'+date+'" class="dia-i"'+dis+'>'
+    +'<label class="dia-l">시간 <span class="dia-opt">(선택)</span></label><input type="time" id="dia-time" value="'+time+'" class="dia-i"'+dis+'>'
+    +'<label class="dia-l">제목</label><input type="text" id="dia-title" maxlength="100" placeholder="예: 고객 미팅" value="'+_calEsc(title)+'" class="dia-i"'+dis+'>'
+    +'<label class="dia-l">메모 <span class="dia-opt">(선택)</span></label><textarea id="dia-desc" maxlength="500" class="dia-i dia-ta"'+dis+'>'+_calEsc(desc)+'</textarea>'
+    +'<label class="dia-l">알람 <span class="dia-opt">(복수 · 기본 없음)</span></label><div class="dia-rems"'+(ro?' style="pointer-events:none;opacity:.6"':'')+'>'+_diaRemHtml(rems)+'</div>'
+    +'</div>'
+    +(ro?'':('<div class="dia-panel-ft">'+(editId?'<button class="dia-del" onclick="diaryDeleteEvent(\''+editId+'\')">삭제</button>':'')+'<button class="dia-save" onclick="diarySaveEvent()">'+(editId?'수정 저장':'저장')+'</button></div>'));
+  panel.classList.add('open');
+}
+window.openDiaryPanel=openDiaryPanel;
+function diaryClosePanel(){ var panel=document.getElementById('dia-panel'); if(panel){ panel.classList.remove('open'); panel.innerHTML=''; } window._diaEdit=null; }
+window.diaryClosePanel=diaryClosePanel;
+async function diarySaveEvent(){
+  var date=((document.getElementById('dia-date')||{}).value)||'';
+  var time=((document.getElementById('dia-time')||{}).value)||null;
+  var title=(((document.getElementById('dia-title')||{}).value)||'').trim();
+  var desc=(((document.getElementById('dia-desc')||{}).value)||'').trim();
+  var reminders=_diaReadReminders();
+  if(!date){ alert('날짜를 선택해 주세요.'); return; }
+  if(!title){ alert('제목을 입력해 주세요.'); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  var me=_diaOwnerId(), editId=window._diaEdit;
+  try{
+    var res;
+    if(editId){ res=await window.db.fetch('/rest/v1/calendar_events?id=eq.'+encodeURIComponent(editId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({event_date:date,event_time:time,title:title,description:desc||null,reminders:reminders})}); }
+    else { res=await window.db.fetch('/rest/v1/calendar_events',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({event_date:date,event_time:time,title:title,description:desc||null,event_type:'operation',source_type:'personal',audience_target:'personal',author_id:me,reminders:reminders})}); }
+    if(res.ok||res.status===201||res.status===204){ var st=_cst('mys'); st.ym=date.slice(0,7); diaryClosePanel(); loadCal('mys'); loadDiaryDash(); if(typeof toast==='function') toast(editId?'일정이 수정됐습니다!':'일정이 추가됐습니다!'); }
+    else { var e=await res.json().catch(function(){return{};}); alert('저장 실패: '+(e.message||res.status)); }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+}
+window.diarySaveEvent=diarySaveEvent;
+async function diaryDeleteEvent(id){
+  if(!confirm('이 일정을 삭제할까요?')) return;
+  if(!window.db||!window.db.fetch) return;
+  try{
+    var res=await window.db.fetch('/rest/v1/calendar_events?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    if(res.ok||res.status===204){ diaryClosePanel(); loadCal('mys'); loadDiaryDash(); if(typeof toast==='function') toast('삭제됐습니다.'); }
+    else alert('삭제 실패: '+res.status);
+  }catch(e){ alert('삭제 중 오류가 발생했습니다.'); }
+}
+window.diaryDeleteEvent=diaryDeleteEvent;
+
 async function deleteMyspaceItem(id,type){
   if(!confirm('이 항목을 삭제하시겠습니까?'))return;
   if(!window.db||!window.db.getToken)return;
