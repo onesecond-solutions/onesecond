@@ -885,9 +885,19 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mvprev-dl{font-size:0.8em;color:var(--ac);text-decoration:none;white-space:nowrap}
 .mvprev-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm);cursor:zoom-in}
 .mvprev-frame{flex:1;align-self:stretch;width:100%;min-height:320px;border:0;border-radius:var(--radius-sm)}
-.mv-stage-pdf{position:relative;padding:0;align-items:stretch;gap:0}
-.mv-pdf-zoom{position:absolute;top:10px;right:10px;z-index:3;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-sm);padding:4px 10px;font-size:0.78em;cursor:zoom-in;box-shadow:var(--elevation-2)}
-.mv-pdf-zoom:hover{border-color:var(--ac);color:var(--ac)}
+/* PDF 인라인 캔버스 = PNG와 동일(자동맞춤·호버 돋보기) */
+.mvprev-pdfcanvas{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;border-radius:var(--radius-sm);box-shadow:var(--elevation-1);background:#fff}
+/* PDF 확대 모달 */
+.mv-pdf-modal{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.85);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.mv-pdfm-close{position:absolute;top:16px;right:18px;z-index:2;border:0;background:rgba(255,255,255,0.14);color:#fff;width:38px;height:38px;border-radius:var(--radius-full);font-size:1.05em;cursor:pointer}
+.mv-pdfm-close:hover{background:rgba(255,255,255,0.26)}
+.mv-pdfm-canvas-wrap{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;padding:10px}
+.mv-pdfm-canvas-wrap canvas{max-width:100%;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.5);border-radius:4px}
+.mv-pdfm-bar{flex:none;display:flex;align-items:center;gap:4px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-full);padding:6px 10px;box-shadow:var(--elevation-4);margin-top:12px}
+.mv-pdfm-bar button{border:0;background:transparent;color:var(--tf);min-width:34px;height:34px;border-radius:var(--radius-full);font-size:1em;cursor:pointer;line-height:1}
+.mv-pdfm-bar button:hover{background:var(--sh);color:var(--tp)}
+.mv-pdfm-bar #mv-pdfm-pg{font-size:0.82em;color:var(--tf);min-width:56px;text-align:center}
+.mv-pdfm-ddak{padding:0 12px!important;font-size:0.82em!important;color:var(--ac)!important;font-weight:600}
 .mvprev-text{align-self:stretch;white-space:pre-wrap;word-break:break-all;font-size:0.8em;color:var(--tf);max-height:100%;overflow:auto;background:var(--bg);padding:10px;border-radius:var(--radius-sm)}
 /* ── 자료함 Viewer (다형식 즉시 열람) ── */
 .mvprev-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1898,6 +1908,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div id="mv-ctxmenu" class="mv-ctxmenu" style="display:none"></div>
         <!-- 폴더 삭제 강한 확인 모달 (비어있지 않을 때, 조용한 cascade 금지) -->
         <div id="mv-del-modal" class="mv-del-modal"><div class="mv-del-box"><div class="mv-del-title">폴더 삭제 확인</div><div class="mv-del-msg" id="mv-del-msg"></div><div class="mv-del-acts"><button type="button" class="mv-del-cancel" onclick="mvDelModalClose()">취소</button><button type="button" class="mv-del-confirm" id="mv-del-ok">모두 삭제</button></div></div></div>
+        <!-- PDF 확대 모달 (PNG 라이트박스 대응, 하단 둥근 컨트롤 — 네이티브 PDF.js 툴바 없음) -->
+        <div id="mv-pdf-modal" class="mv-pdf-modal"><button class="mv-pdfm-close" onclick="mvPdfModalClose()" aria-label="닫기">✕</button><div class="mv-pdfm-canvas-wrap"><canvas id="mv-pdfm-canvas"></canvas></div><div class="mv-pdfm-bar"><button onclick="mvPdfModalZoom(-1)" title="축소">−</button><button onclick="mvPdfModalZoom(1)" title="확대">＋</button><button onclick="mvPdfModalRotate()" title="회전">↻</button><button onclick="mvPdfModalPage(-1)" title="이전 페이지">◀</button><span id="mv-pdfm-pg">1 / 1</span><button onclick="mvPdfModalPage(1)" title="다음 페이지">▶</button><button class="mv-pdfm-ddak" onclick="mvPdfModalDdak()">⚡ 딸깍</button></div></div>
       </div>
       </div><!-- /mys-saved -->
       <div id="mys-team" style="display:none">
@@ -10098,14 +10110,50 @@ function mvVaultDdak(fid){
 window.mvVaultDdak=mvVaultDdak;
 function mvVaultLightbox(fid){ mvVaultDdak(fid); }
 window.mvVaultLightbox=mvVaultLightbox;
-/* PDF 크게 보기 = iframe 전체화면(이미지 라이트박스 대응). 미지원 시 새 창 폴백 */
-function mvPdfZoom(btn){
-  var fr=btn.parentElement&&btn.parentElement.querySelector('iframe'); if(!fr) return;
-  if(fr.requestFullscreen){ fr.requestFullscreen().catch(function(){ window.open(fr.src,'_blank','noopener'); }); }
-  else if(fr.webkitRequestFullscreen){ fr.webkitRequestFullscreen(); }
-  else { window.open(fr.src,'_blank','noopener'); }
+/* PDF 인라인 = pdf.js 1페이지 캔버스 렌더(PNG와 동일 프레임, 네이티브 툴바 없음) */
+function _mvPdfInlineRender(canvas, url){
+  if(!canvas) return;
+  loadPdfJs().then(function(pdfjs){
+    return fetch(url).then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){ return pdfjs.getDocument({data:buf}).promise; })
+      .then(function(doc){ return doc.getPage(1); })
+      .then(function(page){ var vp=page.getViewport({scale:1.6}); canvas.width=vp.width; canvas.height=vp.height; return page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise; });
+  }).catch(function(e){ console.error('[mvPdfInline]',e); var st=canvas&&canvas.parentElement; if(st) st.innerHTML='<div class="mys-news-empty">PDF 미리보기를 불러오지 못했습니다.</div>'; });
 }
-window.mvPdfZoom=mvPdfZoom;
+window._mvPdfInlineRender=_mvPdfInlineRender;
+/* PDF 확대 모달 = PNG 라이트박스 대응. 하단 둥근 컨트롤(−/+/회전/페이지/딸깍). 네이티브 PDF.js 툴바 없음 */
+function mvPdfModalOpen(fid){
+  var f=(window._mvFiles||[]).filter(function(x){return x.id===fid;})[0]; if(!f) return;
+  var m=document.getElementById('mv-pdf-modal'); if(!m) return;
+  window._mvPdfM={fid:fid, page:1, n:1, scale:1.3, rot:0, doc:null};
+  m.style.display='flex';
+  var pg=document.getElementById('mv-pdfm-pg'); if(pg) pg.textContent='불러오는 중…';
+  var token=_mvToken();
+  _mvSignedUrl(f,token)
+    .then(function(s){ return s?fetch(s):null; })
+    .then(function(r){ return r?r.arrayBuffer():null; })
+    .then(function(buf){ return buf?loadPdfJs().then(function(pdfjs){ return pdfjs.getDocument({data:buf}).promise; }):null; })
+    .then(function(doc){ if(!doc||!window._mvPdfM) return; window._mvPdfM.doc=doc; window._mvPdfM.n=doc.numPages; mvPdfModalRender(); })
+    .catch(function(e){ console.error('[mvPdfModal]',e); var p=document.getElementById('mv-pdfm-pg'); if(p) p.textContent='불러오기 실패'; });
+  document.addEventListener('keydown', _mvPdfModalKey);
+}
+function mvPdfModalRender(){
+  var s=window._mvPdfM; if(!s||!s.doc) return;
+  s.doc.getPage(s.page).then(function(page){
+    var vp=page.getViewport({scale:s.scale, rotation:s.rot});
+    var c=document.getElementById('mv-pdfm-canvas'); if(!c) return;
+    c.width=vp.width; c.height=vp.height;
+    page.render({canvasContext:c.getContext('2d'),viewport:vp});
+    var pg=document.getElementById('mv-pdfm-pg'); if(pg) pg.textContent=s.page+' / '+s.n;
+  });
+}
+function mvPdfModalZoom(d){ var s=window._mvPdfM; if(!s) return; s.scale=Math.min(4,Math.max(0.5,s.scale+d*0.25)); mvPdfModalRender(); }
+function mvPdfModalRotate(){ var s=window._mvPdfM; if(!s) return; s.rot=(s.rot+90)%360; mvPdfModalRender(); }
+function mvPdfModalPage(d){ var s=window._mvPdfM; if(!s) return; var np=Math.min(s.n,Math.max(1,s.page+d)); if(np===s.page) return; s.page=np; mvPdfModalRender(); }
+function mvPdfModalDdak(){ var s=window._mvPdfM; if(s) mvVaultDdak(s.fid); }
+function mvPdfModalClose(){ var m=document.getElementById('mv-pdf-modal'); if(m) m.style.display='none'; window._mvPdfM=null; document.removeEventListener('keydown', _mvPdfModalKey); }
+function _mvPdfModalKey(e){ if(e.key==='Escape') mvPdfModalClose(); else if(e.key==='ArrowRight') mvPdfModalPage(1); else if(e.key==='ArrowLeft') mvPdfModalPage(-1); }
+window.mvPdfModalOpen=mvPdfModalOpen; window.mvPdfModalRender=mvPdfModalRender; window.mvPdfModalZoom=mvPdfModalZoom; window.mvPdfModalRotate=mvPdfModalRotate; window.mvPdfModalPage=mvPdfModalPage; window.mvPdfModalDdak=mvPdfModalDdak; window.mvPdfModalClose=mvPdfModalClose;
 
 async function mysVaultPreview(fid){
   var box=document.getElementById('mys-vault-preview'); if(!box) return;
@@ -10130,7 +10178,7 @@ async function mysVaultPreview(fid){
     if(isImg){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><img class="mvprev-img" src="'+signed+'" alt="" onclick="mvVaultDdak(\''+f.id+'\')" onerror="mvViewerFallback(\''+f.id+'\')"></div>'; }
     else if(isVid){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><video class="mv-media" src="'+signed+'" controls preload="metadata"></video></div>'; }
     else if(isAud){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+signed+'" controls></audio></div>'; }
-    else if(isPdf){ /* iframe=navigation(다운로드 링크와 동일 방식) → fetch/CORS 의존 없이 네이티브 PDF 뷰어. 이미지 라이트박스에 대응=🔍 크게 보기(전체화면) */ box.innerHTML=head+'<div class="mv-stage mv-stage-pdf"><button class="mv-pdf-zoom" onclick="mvPdfZoom(this)" title="크게 보기(전체화면)">🔍 크게 보기</button><iframe class="mvprev-frame" src="'+signed+'" title="PDF 미리보기"></iframe></div>'; }
+    else if(isPdf){ /* PNG와 동일 UX: pdf.js로 1페이지 캔버스 렌더(네이티브 툴바 없음) + 호버 돋보기 + 클릭 확대 모달 */ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><canvas class="mvprev-pdfcanvas" onclick="mvPdfModalOpen(\''+f.id+'\')" title="클릭하면 크게 보기"><div class="mys-news-empty">PDF 불러오는 중…</div></canvas></div>'; _mvPdfInlineRender(box.querySelector('.mvprev-pdfcanvas'), signed); }
     else if(isCsv){ var tc=await fetch(signed); box.innerHTML=head+_mvCsvTable(await tc.text()); }
     else if(isTxt){ var tt=await fetch(signed); box.innerHTML=head+'<div class="mv-stage"><pre class="mvprev-text">'+_mvEsc((await tt.text()).slice(0,50000))+'</pre></div>'; }
     else if(isDocx){ box.innerHTML=head+'<div class="mv-stage"><div class="mys-news-empty">문서 변환 중…</div></div>'; var mm=await _mvLoadMammoth(); var ab=await (await fetch(signed)).arrayBuffer(); var r=await mm.convertToHtml({arrayBuffer:ab}); var st1=document.querySelector('#mys-vault-preview .mv-stage'); if(st1) st1.innerHTML='<div class="mv-doc">'+(r.value||'(내용 없음)')+'</div>'; }
