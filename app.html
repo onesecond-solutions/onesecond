@@ -852,9 +852,44 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-vault-preview-col .viewer{flex:1;min-height:300px}
 .mvprev-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--bd);font-size:0.86em;font-weight:600;color:var(--tf)}
 .mvprev-dl{font-size:0.8em;color:var(--ac);text-decoration:none;white-space:nowrap}
-.mvprev-img{max-width:100%;border-radius:var(--radius-sm)}
+.mvprev-img{max-width:100%;border-radius:var(--radius-sm);cursor:zoom-in}
 .mvprev-frame{width:100%;height:560px;border:0;border-radius:var(--radius-sm)}
 .mvprev-text{white-space:pre-wrap;word-break:break-all;font-size:0.8em;color:var(--tf);max-height:560px;overflow:auto;background:var(--bg);padding:10px;border-radius:var(--radius-sm)}
+/* ── 자료함 Viewer (다형식 즉시 열람) ── */
+.mvprev-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mvprev-acts{display:inline-flex;align-items:center;gap:8px;flex:none}
+.mvprev-ddak{border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-sm);padding:3px 9px;font-size:0.78em;cursor:pointer;font-family:inherit}
+.mvprev-ddak:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent)}
+.mv-stage{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:300px}
+.mv-media{max-width:100%;max-height:560px;border-radius:var(--radius-sm)}
+.mv-audio-stage{gap:14px;padding-top:30px}
+.mv-audio{width:100%}
+.mv-doc{align-self:stretch;max-height:580px;overflow:auto;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:18px;font-size:0.86em;line-height:1.6;color:var(--bodytx)}
+.mv-doc img{max-width:100%}
+.mv-table-wrap{align-self:stretch;max-height:580px;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-sm)}
+.mv-table,.mv-xlsx table{border-collapse:collapse;font-size:0.78em;width:100%}
+.mv-table th,.mv-table td,.mv-xlsx td,.mv-xlsx th{border:1px solid var(--bd);padding:4px 8px;text-align:left;white-space:nowrap}
+.mv-table th,.mv-xlsx tr:first-child td{background:var(--s2);font-weight:600;position:sticky;top:0}
+.mv-xlsx-tabs{align-self:stretch;font-size:0.76em;color:var(--ts);padding:4px 2px 8px}
+.mv-pdf{align-self:stretch;display:flex;flex-direction:column;gap:8px}
+.mv-pdf-bar{display:flex;align-items:center;justify-content:center;gap:14px;font-size:0.82em;color:var(--tf)}
+.mv-pdf-btn{border:1px solid var(--bd);background:var(--s1);color:var(--tf);border-radius:var(--radius-sm);width:28px;height:28px;cursor:pointer;font-size:1.1em;line-height:1}
+.mv-pdf-btn:hover{border-color:var(--ac);color:var(--ac)}
+.mv-pdf-canvas-wrap{overflow:auto;max-height:560px;text-align:center}
+.mv-pdf-canvas-wrap canvas{max-width:100%;box-shadow:var(--elevation-2);border-radius:4px}
+.mv-pptx{align-self:stretch;display:flex;flex-direction:column;gap:12px;max-height:580px;overflow:auto}
+.mv-slide{border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);padding:14px 16px}
+.mv-slide-no{font-size:0.72em;font-weight:600;color:var(--ac);margin-bottom:6px}
+.mv-slide-body{font-size:0.84em;color:var(--bodytx);line-height:1.5}
+.mv-slide-empty{color:var(--ts)}
+.mv-unsup{display:flex;flex-direction:column;align-items:center;gap:8px;padding:34px 16px;text-align:center}
+.mv-unsup-ic{width:56px;height:56px;border-radius:var(--radius-full);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:1.7em}
+.mv-unsup-nm{font-size:0.88em;font-weight:600;color:var(--tf);word-break:break-all}
+.mv-unsup-meta{font-size:0.76em;color:var(--ts)}
+.mv-unsup-msg{font-size:0.8em;color:var(--ts);margin-top:2px}
+.mv-unsup-dl{margin-top:8px}
+.mvprev-dl{font-size:0.8em;color:var(--ac);text-decoration:none;white-space:nowrap;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:3px 9px}
+.mvprev-dl:hover{border-color:var(--ac)}
 /* ⋮ 플로팅 메뉴 */
 .mv-ctxmenu{position:fixed;z-index:9999;min-width:140px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);box-shadow:var(--elevation-3);padding:5px;flex-direction:column;gap:2px}
 .mv-ctxmenu button{border:0;background:transparent;text-align:left;padding:8px 12px;border-radius:var(--radius-sm);font-size:0.85em;color:var(--tf);cursor:pointer}
@@ -9840,25 +9875,124 @@ async function _mvProcessUpload(items){
 }
 window._mvProcessUpload=_mvProcessUpload;
 
+/* ── 자료함 Viewer — 즉시 열람(보관 아님). 모든 가능 형식 우측 렌더. 깨진 아이콘·다운로드전용 금지 ── */
+function _mvLoadScript(src){ return new Promise(function(res,rej){ var s=document.createElement('script'); s.src=src; s.onload=function(){res();}; s.onerror=function(){rej(new Error('lib load fail: '+src));}; document.head.appendChild(s); }); }
+function _mvLoadMammoth(){ return window.mammoth?Promise.resolve(window.mammoth):_mvLoadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js').then(function(){return window.mammoth;}); }
+function _mvLoadXLSX(){ return window.XLSX?Promise.resolve(window.XLSX):_mvLoadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js').then(function(){return window.XLSX;}); }
+function _mvLoadJSZip(){ return window.JSZip?Promise.resolve(window.JSZip):_mvLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js').then(function(){return window.JSZip;}); }
+async function _mvSignedUrl(f, token){
+  var res=await fetch(window.db.url('/storage/v1/object/sign/myspace/'+_mvEncPath(f.storage_path)),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token},body:JSON.stringify({expiresIn:3600})});
+  if(!res.ok) return null;
+  var j=await res.json(); var s=j.signedURL||j.signedUrl||''; if(s&&s.charAt(0)==='/') s=window.db.url(s); return s||null;
+}
+function _mvViewerHead(f, signed){
+  return '<div class="mvprev-head"><span class="mvprev-nm" title="'+_mvEsc(f.original_name)+'">'+_mvEsc(f.original_name)+'</span>'
+    +'<span class="mvprev-acts"><button class="mvprev-ddak" onclick="mvVaultDdak(\''+f.id+'\')" title="딸깍">⚡ 딸깍</button>'
+    +'<a class="mvprev-dl" href="'+signed+'" download="'+_mvEsc(f.original_name)+'" target="_blank" rel="noopener">⬇ 다운로드</a></span></div>';
+}
+function _mvUnsupported(f, signed){
+  return '<div class="mv-stage"><div class="mv-unsup"><div class="mv-unsup-ic">'+mysVaultIcon(f)+'</div>'
+    +'<div class="mv-unsup-nm">'+_mvEsc(f.original_name)+'</div>'
+    +'<div class="mv-unsup-meta">'+_mvEsc((f.ext||'파일').toUpperCase())+' · '+mysVaultSize(f.file_size)+'</div>'
+    +'<div class="mv-unsup-msg">이 형식은 화면 미리보기를 지원하지 않습니다.</div>'
+    +'<a class="mvprev-dl mv-unsup-dl" href="'+signed+'" download="'+_mvEsc(f.original_name)+'" target="_blank" rel="noopener">⬇ 다운로드</a></div></div>';
+}
+function _mvCsvTable(text){
+  var lines=text.split(/\r?\n/).filter(function(l){return l.length;}).slice(0,1000);
+  var html='<div class="mv-stage"><div class="mv-table-wrap"><table class="mv-table">';
+  lines.forEach(function(l,i){ var cells=l.split(','); html+='<tr>'+cells.map(function(c){ var t=_mvEsc(c.replace(/^"|"$/g,'')); return i===0?('<th>'+t+'</th>'):('<td>'+t+'</td>'); }).join('')+'</tr>'; });
+  return html+'</table></div></div>';
+}
+function _mvXlsxHtml(XLSX, wb){
+  var names=wb.SheetNames||[]; var first=names[0]; if(!first) return '<div class="mv-stage"><div class="mys-news-empty">시트가 없습니다.</div></div>';
+  var tbl=XLSX.utils.sheet_to_html(wb.Sheets[first], {id:'mv-xlsx-tbl'});
+  var tabs=names.length>1?('<div class="mv-xlsx-tabs">시트: '+names.map(_mvEsc).join(' · ')+' (첫 시트 표시)</div>'):'';
+  return '<div class="mv-stage">'+tabs+'<div class="mv-table-wrap mv-xlsx">'+tbl+'</div></div>';
+}
+async function _mvPptxSlides(signed){
+  var JSZip=await _mvLoadJSZip();
+  var ab=await (await fetch(signed)).arrayBuffer();
+  var zip=await JSZip.loadAsync(ab);
+  var keys=Object.keys(zip.files).filter(function(k){ return /ppt\/slides\/slide\d+\.xml$/.test(k); })
+    .sort(function(a,b){ return (parseInt(a.replace(/\D/g,''),10)||0)-(parseInt(b.replace(/\D/g,''),10)||0); });
+  if(!keys.length) return '<div class="mv-stage"><div class="mys-news-empty">슬라이드를 읽지 못했습니다.</div></div>';
+  var out='<div class="mv-stage"><div class="mv-pptx">';
+  for(var i=0;i<keys.length;i++){
+    var xml=await zip.files[keys[i]].async('string');
+    var texts=(xml.match(/<a:t>[\s\S]*?<\/a:t>/g)||[]).map(function(t){ return _mvEsc(t.replace(/<\/?a:t>/g,'')); }).filter(Boolean);
+    out+='<div class="mv-slide"><div class="mv-slide-no">슬라이드 '+(i+1)+'</div><div class="mv-slide-body">'+(texts.length?texts.join('<br>'):'<span class="mv-slide-empty">(텍스트 없음)</span>')+'</div></div>';
+  }
+  return out+'</div></div>';
+}
+async function _mvRenderPdf(stage, url){
+  var pdfjs=await loadPdfJs();
+  var buf=await (await fetch(url)).arrayBuffer();
+  var doc=await pdfjs.getDocument({data:buf}).promise;
+  window._mvPdf={doc:doc, page:1, n:doc.numPages};
+  stage.innerHTML='<div class="mv-pdf"><div class="mv-pdf-bar"><button class="mv-pdf-btn" onclick="mvPdfNav(-1)" aria-label="이전">‹</button><span id="mv-pdf-pg">1 / '+doc.numPages+'</span><button class="mv-pdf-btn" onclick="mvPdfNav(1)" aria-label="다음">›</button></div><div class="mv-pdf-canvas-wrap"><canvas id="mv-pdf-canvas"></canvas></div></div>';
+  await _mvPdfDraw();
+}
+async function _mvPdfDraw(){
+  var s=window._mvPdf; if(!s) return; var page=await s.doc.getPage(s.page);
+  var vp=page.getViewport({scale:1.5}); var c=document.getElementById('mv-pdf-canvas'); if(!c) return;
+  c.width=vp.width; c.height=vp.height; await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+  var pg=document.getElementById('mv-pdf-pg'); if(pg) pg.textContent=s.page+' / '+s.n;
+}
+function mvPdfNav(d){ var s=window._mvPdf; if(!s) return; var np=Math.min(s.n,Math.max(1,s.page+d)); if(np===s.page) return; s.page=np; _mvPdfDraw(); }
+window.mvPdfNav=mvPdfNav;
+function mvViewerFallback(fid){
+  var f=(window._mvFiles||[]).filter(function(x){return x.id===fid;})[0]; if(!f) return;
+  var st=document.querySelector('#mys-vault-preview .mv-stage'); if(!st) return;
+  var token=_mvToken(); _mvSignedUrl(f,token).then(function(s){ st.outerHTML=_mvUnsupported(f, s||'#'); });
+}
+window.mvViewerFallback=mvViewerFallback;
+/* 이미지 딸깍 = 전역 라이트박스(4줄: 다운로드/MY SPACE/복사/카드만들기) 재사용 */
+function mvVaultDdak(fid){
+  var f=(window._mvFiles||[]).filter(function(x){return x.id===fid;})[0]; if(!f) return;
+  var ext=(f.ext||'').toLowerCase(), mt=(f.mime_type||'').toLowerCase();
+  var isImg=/^image\//.test(mt)||/(png|jpe?g|gif|webp|bmp|svg|avif)$/.test(ext);
+  var token=_mvToken();
+  _mvSignedUrl(f,token).then(function(s){
+    if(!s) return;
+    if(isImg && typeof openLb==='function'){ window.imgs=[s]; window.names=[f.original_name]; openLb(0); }
+    else { window.open(s,'_blank','noopener'); }  /* 비이미지 = 새 창 열람 */
+  });
+}
+window.mvVaultDdak=mvVaultDdak;
+function mvVaultLightbox(fid){ mvVaultDdak(fid); }
+window.mvVaultLightbox=mvVaultLightbox;
+
 async function mysVaultPreview(fid){
   var box=document.getElementById('mys-vault-preview'); if(!box) return;
   var f=(window._mvFiles||[]).filter(function(x){return x.id===fid;})[0]; if(!f) return;
   var token=_mvToken(); if(!token){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  window._mvPdf=null;
   box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var res=await fetch(window.db.url('/storage/v1/object/sign/myspace/'+_mvEncPath(f.storage_path)),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token},body:JSON.stringify({expiresIn:3600})});
-    if(!res.ok){ box.innerHTML='<div class="mys-news-empty">미리보기를 불러오지 못했습니다.</div>'; return; }
-    var j=await res.json(); var signed=j.signedURL||j.signedUrl||''; if(signed&&signed.charAt(0)==='/') signed=window.db.url(signed);
-    if(!signed){ box.innerHTML='<div class="mys-news-empty">미리보기 URL을 받지 못했습니다.</div>'; return; }
-    var mt=(f.mime_type||''),ext=(f.ext||'').toLowerCase();
-    var head='<div class="mvprev-head"><span>'+_mvEsc(f.original_name)+'</span><a class="mvprev-dl" href="'+signed+'" target="_blank" rel="noopener">다운로드</a></div>';
-    var body;
-    if(/^image\//.test(mt)||/(png|jpe?g|gif|webp|bmp|svg)$/.test(ext)){ body='<img class="mvprev-img" src="'+signed+'" alt="">'; }
-    else if(mt==='application/pdf'||ext==='pdf'){ body='<iframe class="mvprev-frame" src="'+signed+'"></iframe>'; }
-    else if(/^text\//.test(mt)||/(txt|md|csv|log|json)$/.test(ext)){ var t=await fetch(signed); var txt=t.ok?await t.text():''; body='<pre class="mvprev-text">'+_mvEsc(txt.slice(0,20000))+'</pre>'; }
-    else { body='<div class="mys-news-empty">이 형식은 미리보기를 지원하지 않습니다.<br><a href="'+signed+'" target="_blank" rel="noopener">새 창에서 열기</a></div>'; }
-    box.innerHTML=head+body;
-  }catch(e){ console.error('[mysVault] preview',e); box.innerHTML='<div class="mys-news-empty">미리보기 중 오류가 발생했습니다.</div>'; }
+    var signed=await _mvSignedUrl(f, token);
+    if(!signed){ box.innerHTML='<div class="mys-news-empty">미리보기를 불러오지 못했습니다.</div>'; return; }
+    var mt=(f.mime_type||'').toLowerCase(), ext=(f.ext||'').toLowerCase();
+    var head=_mvViewerHead(f, signed);
+    var isImg=/^image\//.test(mt)||/(png|jpe?g|gif|webp|bmp|svg|avif)$/.test(ext);
+    var isPdf=mt==='application/pdf'||ext==='pdf';
+    var isVid=/^video\//.test(mt)||/(mp4|webm|ogv|ogg|mov|m4v)$/.test(ext);
+    var isAud=/^audio\//.test(mt)||/(mp3|wav|m4a|aac|flac)$/.test(ext);
+    var isCsv=ext==='csv'||mt==='text/csv';
+    var isTxt=/^text\//.test(mt)||/(txt|md|markdown|log|json|csv)$/.test(ext);
+    var isDocx=ext==='docx'||mt.indexOf('wordprocessingml')>=0;
+    var isXlsx=/^(xlsx|xlsm|xls)$/.test(ext)||mt.indexOf('spreadsheetml')>=0||mt.indexOf('ms-excel')>=0;
+    var isPptx=ext==='pptx'||mt.indexOf('presentationml')>=0;
+    if(isImg){ box.innerHTML=head+'<div class="mv-stage"><img class="mvprev-img" src="'+signed+'" alt="" onclick="mvVaultDdak(\''+f.id+'\')" onerror="mvViewerFallback(\''+f.id+'\')"></div>'; }
+    else if(isVid){ box.innerHTML=head+'<div class="mv-stage"><video class="mv-media" src="'+signed+'" controls preload="metadata"></video></div>'; }
+    else if(isAud){ box.innerHTML=head+'<div class="mv-stage mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+signed+'" controls></audio></div>'; }
+    else if(isPdf){ box.innerHTML=head+'<div class="mv-stage" id="mv-pdf-stage"><div class="mys-news-empty">PDF 불러오는 중…</div></div>'; await _mvRenderPdf(document.getElementById('mv-pdf-stage'), signed); }
+    else if(isCsv){ var tc=await fetch(signed); box.innerHTML=head+_mvCsvTable(await tc.text()); }
+    else if(isTxt){ var tt=await fetch(signed); box.innerHTML=head+'<div class="mv-stage"><pre class="mvprev-text">'+_mvEsc((await tt.text()).slice(0,50000))+'</pre></div>'; }
+    else if(isDocx){ box.innerHTML=head+'<div class="mv-stage"><div class="mys-news-empty">문서 변환 중…</div></div>'; var mm=await _mvLoadMammoth(); var ab=await (await fetch(signed)).arrayBuffer(); var r=await mm.convertToHtml({arrayBuffer:ab}); var st1=document.querySelector('#mys-vault-preview .mv-stage'); if(st1) st1.innerHTML='<div class="mv-doc">'+(r.value||'(내용 없음)')+'</div>'; }
+    else if(isXlsx){ box.innerHTML=head+'<div class="mv-stage"><div class="mys-news-empty">시트 변환 중…</div></div>'; var XLSX=await _mvLoadXLSX(); var ab2=await (await fetch(signed)).arrayBuffer(); var wb=XLSX.read(ab2,{type:'array'}); box.innerHTML=head+_mvXlsxHtml(XLSX, wb); }
+    else if(isPptx){ box.innerHTML=head+'<div class="mv-stage"><div class="mys-news-empty">슬라이드 변환 중…</div></div>'; box.innerHTML=head+(await _mvPptxSlides(signed)); }
+    else { box.innerHTML=head+_mvUnsupported(f, signed); }
+  }catch(e){ console.error('[mysVault] preview',e); box.innerHTML=_mvViewerHead(f,'#')+_mvUnsupported(f, '#'); }
 }
 window.mysVaultPreview=mysVaultPreview;
 
