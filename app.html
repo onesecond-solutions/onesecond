@@ -1737,6 +1737,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="nav ins-show ga-hide" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
     <div class="nav on" onclick="showView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
     <div class="nav" onclick="showView('myspace')"><span class="ic">&#9672;</span><span class="lbl">라이브러리</span></div>
+    <div class="nav" onclick="showView('cospace')"><span class="ic">&#9783;</span><span class="lbl">공동 스페이스</span></div>
     <div class="nav" onclick="showView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav-divider"></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
@@ -4061,11 +4062,11 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',cospace:'공동 스페이스',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='cospace'&&typeof loadCospace==='function')loadCospace();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
-  var VALID_VIEWS = ['home','myspace','scripts','quick','voice','together','news','team','pricing','insurer-vault','admin'];
+  var VALID_VIEWS = ['home','myspace','cospace','scripts','quick','voice','together','news','team','pricing','insurer-vault','admin'];
   /* 2026-05-30 초기화 통합: role 확정 후 첫 view 1회 렌더 (FOUC 제거).
    * role 즉시 있으면 바로, 없으면 appstate:ready(loadUser 완료) 대기 + fallback. */
   function getBootRole(){ try { var r = (JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').role) || ''; return (r && r !== 'authenticated') ? r : ''; } catch(e){ return ''; } }  /* 'authenticated'=Supabase auth 기본 role(미확정) → loadUser가 public.users role 채울 때까지 대기 */
@@ -6350,6 +6351,154 @@ async function loadVoiceQna(){
 }
 window.loadVoiceQna=loadVoiceQna;
 window.loadTeamNotices=loadTeamNotices; window.loadBranchFeed=loadBranchFeed;
+
+/* ═══ 공동 스페이스 (Phase 2, 2026-06-11) — 추가형 JS 주입 뷰. 가상 방(room_type+scope_id). 기존 뷰 불변 ═══
+ * 방: 팀방(team)/지점방(branch)/보험사별 자료실(insurer)/보험Q&A(qna). 방 내부 탭: 공지/공유자료/공유스크립트/채팅.
+ * 이번 단계 = read 렌더(기존 데이터 표시). 방 쓰기 연결 = 안정화 후속. §4: 고객정보 금지(기존 데이터 그대로). */
+window._cospMe=null; window._cospRoom=null;
+function _cospEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function _cospDate(iso){ var d=new Date(iso); return isNaN(d.getTime())?'':((d.getMonth()+1)+'월 '+d.getDate()+'일'); }
+async function _cospLoadMe(){
+  var u={}; try{u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');}catch(e){}
+  var me={id:u.id||null, role:u.role||'', team_id:u.team_id||null, branch_id:u.branch_id||null};
+  if(me.id&&window.db&&window.db.fetch&&(!me.team_id||!me.branch_id||!me.role)){
+    try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(me.id)+'&select=team_id,branch_id,role'); if(r.ok){ var j=await r.json(); if(j&&j[0]){ me.team_id=me.team_id||j[0].team_id; me.branch_id=me.branch_id||j[0].branch_id; me.role=me.role||j[0].role; } } }catch(e){}
+  }
+  window._cospMe=me; return me;
+}
+function _cospEnsureView(){
+  var v=document.getElementById('v-cospace'); if(v) return v;
+  var body=document.querySelector('.body'); if(!body) return null;
+  v=document.createElement('div'); v.className='view'; v.id='v-cospace';
+  v.innerHTML='<div class="vhead" style="margin-bottom:12px"><h2 style="margin:0;font-size:1.15rem;color:var(--tp)">공동 스페이스</h2><p style="margin:4px 0 0;font-size:0.8rem;color:var(--ts)">팀·지점·보험사 자료를 한곳에서 (개인 자산은 라이브러리)</p></div>'
+    +'<div class="tabs" id="cosp-rooms" style="flex-wrap:wrap"></div>'
+    +'<div id="cosp-body" style="margin-top:14px"></div>';
+  body.appendChild(v);
+  return v;
+}
+async function loadCospace(){
+  var v=_cospEnsureView(); if(!v) return;
+  var views=document.querySelectorAll('.body .view'); for(var i=0;i<views.length;i++) views[i].classList.remove('on'); v.classList.add('on');
+  var me=await _cospLoadMe();
+  var rooms=[];
+  if(me.role==='admin'){ rooms.push({k:'team',label:'팀방'},{k:'branch',label:'지점방'}); }
+  else { if(me.team_id) rooms.push({k:'team',label:'팀방'}); if(me.branch_id) rooms.push({k:'branch',label:'지점방'}); }
+  rooms.push({k:'insurer',label:'보험사별 자료실'});
+  rooms.push({k:'qna',label:'보험Q&A'});
+  var rt=document.getElementById('cosp-rooms');
+  rt.innerHTML=rooms.map(function(r,i){ return '<div class="tab'+(i===0?' on':'')+'" onclick="cospRoom(this,\''+r.k+'\')">'+r.label+'</div>'; }).join('');
+  cospRoom(rt.querySelector('.tab'), rooms[0].k);
+}
+window.loadCospace=loadCospace;
+function cospRoom(el,k){
+  var tabs=document.querySelectorAll('#cosp-rooms .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
+  window._cospRoom=k;
+  var body=document.getElementById('cosp-body'); if(!body) return;
+  if(k==='qna') return cospRenderQna();
+  if(k==='insurer') return cospRenderInsurer();
+  body.innerHTML='<div class="tabs" id="cosp-sub" style="margin-bottom:10px">'
+    +'<div class="tab on" onclick="cospSub(this,\'notice\')">공지</div>'
+    +'<div class="tab" onclick="cospSub(this,\'material\')">공유 자료</div>'
+    +'<div class="tab" onclick="cospSub(this,\'script\')">공유 스크립트</div>'
+    +'<div class="tab" onclick="cospSub(this,\'chat\')">채팅</div>'
+    +'</div><div id="cosp-sub-body"><div class="mys-news-empty">불러오는 중…</div></div>';
+  cospSub(document.querySelector('#cosp-sub .tab'),'notice');
+}
+window.cospRoom=cospRoom;
+function _cospScope(){ return window._cospRoom==='branch'?{scope:'branch_internal',id:(window._cospMe||{}).branch_id}:{scope:'team_internal',id:(window._cospMe||{}).team_id}; }
+function cospSub(el,key){
+  var tabs=document.querySelectorAll('#cosp-sub .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
+  if(key==='notice') cospRenderNotices(false);
+  else if(key==='material') cospRenderNotices(true);
+  else if(key==='script') cospRenderScripts();
+  else if(key==='chat') cospRenderChat();
+}
+window.cospSub=cospSub;
+function _cospList(items){ return items.length?items.join(''):'<div class="mys-news-empty">아직 항목이 없습니다.</div>'; }
+function _cospCard(title, meta, body){
+  return '<div style="border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);padding:12px 14px;margin-bottom:8px">'
+    +'<div style="font-weight:700;color:var(--tp);font-size:0.9rem">'+title+'</div>'
+    +(meta?'<div style="font-size:0.74rem;color:var(--ts);margin-top:2px">'+meta+'</div>':'')
+    +(body?'<div style="font-size:0.82rem;color:var(--bodytx);margin-top:6px;white-space:pre-wrap">'+body+'</div>':'')+'</div>';
+}
+async function cospRenderNotices(materialsOnly){
+  var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  var s=_cospScope(); if(!s.id){ box.innerHTML='<div class="mys-news-empty">소속 '+(window._cospRoom==='branch'?'지점':'팀')+' 정보가 없습니다.</div>'; return; }
+  if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  try{
+    var col=window._cospRoom==='branch'?'branch_id':'team_id';
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+s.scope+'&'+col+'=eq.'+encodeURIComponent(s.id)+'&deleted_at=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,attachments,is_hidden');
+    var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
+    rows=rows.filter(function(r){ return !r.is_hidden; });
+    if(materialsOnly){ rows=rows.filter(function(r){ var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} return Array.isArray(a)&&a.length; }); }
+    var items=rows.map(function(r){
+      var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} if(!Array.isArray(a))a=[];
+      var att=a.length?('<div style="font-size:0.74rem;color:var(--ac);margin-top:6px">📎 첨부 '+a.length+'건</div>'):'';
+      return _cospCard(_cospEsc(r.title||'(제목 없음)'), _cospDate(r.created_at), _cospEsc(r.content||'').slice(0,200)+att);
+    });
+    box.innerHTML=_cospList(items);
+  }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+async function cospRenderScripts(){
+  var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  var s=_cospScope(); if(!s.id){ box.innerHTML='<div class="mys-news-empty">소속 정보가 없습니다.</div>'; return; }
+  try{
+    var res=await window.db.fetch('/rest/v1/scripts?room_type=eq.'+window._cospRoom+'&scope_id=eq.'+encodeURIComponent(s.id)+'&is_active=eq.true&order=created_at.desc&limit=50&select=id,title,highlight_text,stage');
+    var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
+    var items=rows.filter(function(r){return r.stage!=='chat';}).map(function(r){ return _cospCard(_cospEsc(r.title||'(제목 없음)'), '', _cospEsc(r.highlight_text||'')); });
+    box.innerHTML=items.length?_cospList(items):'<div class="mys-news-empty">이 방에 공유된 스크립트가 없습니다.<br><span style="font-size:0.8em">방 공유 쓰기는 다음 업데이트에서 연결됩니다.</span></div>';
+  }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+async function cospRenderChat(){
+  var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  var s=_cospScope(); if(!s.id){ box.innerHTML='<div class="mys-news-empty">소속 정보가 없습니다.</div>'; return; }
+  try{
+    var res=await window.db.fetch('/rest/v1/scripts?room_type=eq.'+window._cospRoom+'&scope_id=eq.'+encodeURIComponent(s.id)+'&stage=eq.chat&is_active=eq.true&order=created_at.desc&limit=50&select=id,title,script_text');
+    var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
+    var items=rows.map(function(r){ return _cospCard('💬 '+_cospEsc(r.title||'(제목 없음)'), '', ''); });
+    box.innerHTML=items.length?_cospList(items):'<div class="mys-news-empty">이 방 채팅이 없습니다.<br><span style="font-size:0.8em">방 공유 쓰기는 다음 업데이트에서 연결됩니다.</span></div>';
+  }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+async function cospRenderQna(){
+  var box=document.getElementById('cosp-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  try{
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=100&select=id,title,content,created_at,question_type');
+    var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
+    var items=rows.map(function(r){ return _cospCard(_cospEsc(r.title||'(제목 없음)'), [_cospDate(r.created_at),(r.question_type||'질문')].filter(Boolean).join(' · '), _cospEsc(r.content||'').slice(0,200)); });
+    box.innerHTML='<div style="font-size:0.78rem;color:var(--ts);margin-bottom:8px">현장 보험 Q&A (질문자 비공개)</div>'+_cospList(items);
+  }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+async function cospRenderInsurer(){
+  var box=document.getElementById('cosp-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  try{
+    var ir=await window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=id,name,type&order=type,name');
+    var ins=ir.ok?await ir.json():[]; if(!Array.isArray(ins)) ins=[];
+    if(!ins.length){ box.innerHTML='<div class="mys-news-empty">등록된 보험사가 없습니다.</div>'; return; }
+    var chips=ins.map(function(c,i){ return '<div class="tab'+(i===0?' on':'')+'" onclick="cospInsurerPick(this,\''+c.id+'\')">'+_cospEsc(c.name)+'</div>'; }).join('');
+    box.innerHTML='<div style="font-size:0.78rem;color:var(--ts);margin-bottom:8px">보험사별 자료실 — 수요 레이어(설계사 열람용). 회사 선택:</div>'
+      +'<div class="tabs" id="cosp-ins-tabs" style="flex-wrap:wrap;margin-bottom:10px">'+chips+'</div>'
+      +'<div id="cosp-ins-body"></div>';
+    cospInsurerPick(document.querySelector('#cosp-ins-tabs .tab'), ins[0].id);
+  }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+window.cospRenderInsurer=cospRenderInsurer;
+async function cospInsurerPick(el,insurerId){
+  var tabs=document.querySelectorAll('#cosp-ins-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
+  var box=document.getElementById('cosp-ins-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  try{
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&insurer_id=eq.'+encodeURIComponent(insurerId)+'&order=created_at.desc&limit=50&select=id,title,content,created_at,attachments');
+    var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
+    var items=rows.map(function(r){
+      var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} if(!Array.isArray(a))a=[];
+      var att=a.length?('<div style="font-size:0.74rem;color:var(--ac);margin-top:6px">📎 첨부 '+a.length+'건</div>'):'';
+      return _cospCard(_cospEsc(r.title||'(제목 없음)'), _cospDate(r.created_at), _cospEsc(r.content||'').slice(0,200)+att);
+    });
+    box.innerHTML=items.length?_cospList(items):'<div class="mys-news-empty">이 보험사 자료가 없습니다.</div>';
+  }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
+}
+window.cospInsurerPick=cospInsurerPick;
 /* 작성자 본인(+admin) 글 삭제 — 소프트(deleted_at), 피드 deleted_at=is.null 필터로 즉시 숨김. RLS team_notices_update/delete가 author=auth.uid() 허용 */
 async function voiceDeleteNotice(id, tabKey){
   if(!confirm('이 글을 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
