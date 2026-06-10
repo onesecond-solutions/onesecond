@@ -853,36 +853,53 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mvfile-ic{font-size:1.9em;line-height:1}
 .mvfile-nm{font-size:0.76em;color:var(--tf);word-break:break-all;line-height:1.25;max-height:2.5em;overflow:hidden}
 .mvfile-sz{font-size:0.7em;color:var(--ts)}
+/* 작업11: 보기 토글 + 리스트 뷰 */
+.mv-view-toggle{display:inline-flex;flex:none;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden}
+.mv-vt-btn{border:0;background:var(--s1);color:var(--ts);padding:3px 9px;font-size:0.9em;line-height:1;cursor:pointer}
+.mv-vt-btn.on{background:var(--ac);color:#fff}
+.mys-vault-files.mvlist{display:flex;flex-direction:column;gap:2px;align-content:start}
+.mvrow{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.8em}
+.mvrow:hover{background:var(--bg)}
+.mvrow-ic{flex:none;font-size:1.1em;line-height:1}
+.mvrow-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tf)}
+.mvrow-ext{flex:none;width:46px;color:var(--ts)}
+.mvrow-sz{flex:none;width:60px;text-align:right;color:var(--ts)}
+.mvrow-dt{flex:none;width:64px;text-align:right;color:var(--ts)}
+.mvrow-menu{flex:none;border:0;background:transparent;color:var(--ts);opacity:0.5;cursor:pointer;padding:0 4px;font-size:1.05em;line-height:1}
+.mvrow:hover .mvrow-menu{opacity:1}
+@media (max-width:560px){ .mvrow-dt{display:none} }
 /* 미리보기 */
-.mys-vault-preview-col .viewer{flex:1;min-height:0;overflow:auto}
-.mvprev-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--bd);font-size:0.86em;font-weight:600;color:var(--tf)}
+/* 작업8 후속: 통일 프레임 — viewer=고정 프레임(헤더 고정+stage 내부 스크롤), 본문 자동맞춤·튀어나옴 0 */
+.mys-vault-preview-col .viewer{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.mvprev-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--bd);font-size:0.86em;font-weight:600;color:var(--tf)}
 .mvprev-dl{font-size:0.8em;color:var(--ac);text-decoration:none;white-space:nowrap}
-.mvprev-img{max-width:100%;border-radius:var(--radius-sm);cursor:zoom-in}
-.mvprev-frame{width:100%;height:560px;border:0;border-radius:var(--radius-sm)}
-.mvprev-text{white-space:pre-wrap;word-break:break-all;font-size:0.8em;color:var(--tf);max-height:560px;overflow:auto;background:var(--bg);padding:10px;border-radius:var(--radius-sm)}
+.mvprev-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--radius-sm);cursor:zoom-in}
+.mvprev-frame{width:100%;height:100%;border:0;border-radius:var(--radius-sm)}
+.mvprev-text{align-self:stretch;white-space:pre-wrap;word-break:break-all;font-size:0.8em;color:var(--tf);max-height:100%;overflow:auto;background:var(--bg);padding:10px;border-radius:var(--radius-sm)}
 /* ── 자료함 Viewer (다형식 즉시 열람) ── */
 .mvprev-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mvprev-acts{display:inline-flex;align-items:center;gap:8px;flex:none}
 .mvprev-ddak{border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-sm);padding:3px 9px;font-size:0.78em;cursor:pointer;font-family:inherit}
 .mvprev-ddak:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent)}
-.mv-stage{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:300px}
-.mv-media{max-width:100%;max-height:560px;border-radius:var(--radius-sm)}
+.mv-stage{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px;gap:10px}
+.mv-stage.mv-stage--fit{justify-content:center}
+.mv-media{max-width:100%;max-height:100%;border-radius:var(--radius-sm)}
 .mv-audio-stage{gap:14px;padding-top:30px}
 .mv-audio{width:100%}
-.mv-doc{align-self:stretch;max-height:580px;overflow:auto;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:18px;font-size:0.86em;line-height:1.6;color:var(--bodytx)}
+.mv-doc{align-self:stretch;max-height:100%;overflow:auto;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:18px;font-size:0.86em;line-height:1.6;color:var(--bodytx)}
 .mv-doc img{max-width:100%}
-.mv-table-wrap{align-self:stretch;max-height:580px;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-sm)}
+.mv-table-wrap{align-self:stretch;max-height:100%;overflow:auto;border:1px solid var(--bd);border-radius:var(--radius-sm)}
 .mv-table,.mv-xlsx table{border-collapse:collapse;font-size:0.78em;width:100%}
 .mv-table th,.mv-table td,.mv-xlsx td,.mv-xlsx th{border:1px solid var(--bd);padding:4px 8px;text-align:left;white-space:nowrap}
 .mv-table th,.mv-xlsx tr:first-child td{background:var(--s2);font-weight:600;position:sticky;top:0}
 .mv-xlsx-tabs{align-self:stretch;font-size:0.76em;color:var(--ts);padding:4px 2px 8px}
-.mv-pdf{align-self:stretch;display:flex;flex-direction:column;gap:8px}
-.mv-pdf-bar{display:flex;align-items:center;justify-content:center;gap:14px;font-size:0.82em;color:var(--tf)}
+.mv-pdf{align-self:stretch;flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.mv-pdf-bar{flex:none;display:flex;align-items:center;justify-content:center;gap:14px;font-size:0.82em;color:var(--tf)}
 .mv-pdf-btn{border:1px solid var(--bd);background:var(--s1);color:var(--tf);border-radius:var(--radius-sm);width:28px;height:28px;cursor:pointer;font-size:1.1em;line-height:1}
 .mv-pdf-btn:hover{border-color:var(--ac);color:var(--ac)}
-.mv-pdf-canvas-wrap{overflow:auto;max-height:560px;text-align:center}
+.mv-pdf-canvas-wrap{flex:1;min-height:0;overflow:auto;text-align:center}
 .mv-pdf-canvas-wrap canvas{max-width:100%;box-shadow:var(--elevation-2);border-radius:4px}
-.mv-pptx{align-self:stretch;display:flex;flex-direction:column;gap:12px;max-height:580px;overflow:auto}
+.mv-pptx{align-self:stretch;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
 .mv-slide{border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);padding:14px 16px}
 .mv-slide-no{font-size:0.72em;font-weight:600;color:var(--ac);margin-bottom:6px}
 .mv-slide-body{font-size:0.84em;color:var(--bodytx);line-height:1.5}
@@ -1856,7 +1873,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <div class="mys-vault-dropzone" id="mys-vault-dropzone" onclick="mysVaultPickFiles()" ondragover="mysVaultDragOver(event)" ondragleave="mysVaultDragLeave(event)" ondrop="mysVaultDrop(event)">파일·폴더를 끌어다 놓기<br><span class="mvdz-sub">또는 클릭해서 파일 선택 · 폴더는 “+ 폴더”</span></div>
           </div>
           <div class="mys-vault-grid-col">
-            <div class="mvcol-head"><span class="mvcol-ttl mys-vault-curpath" id="mys-vault-curpath">전체</span><span class="mvcol-actions"><button class="mys-vault-uploadbtn" id="mys-vault-uploadbtn" onclick="mysVaultPickFiles()" disabled>+ 파일</button><button class="mys-vault-uploadbtn" id="mys-vault-folderbtn" onclick="mysVaultPickFolder()" disabled>+ 폴더</button></span><input type="file" id="mys-vault-fileinput" multiple style="display:none" onchange="mysVaultFileInputChange(event)"><input type="file" id="mys-vault-dirinput" webkitdirectory directory multiple style="display:none" onchange="mysVaultDirInputChange(event)"></div>
+            <div class="mvcol-head"><span class="mvcol-ttl mys-vault-curpath" id="mys-vault-curpath">전체</span><span class="mv-view-toggle"><button id="mv-view-grid" class="mv-vt-btn on" onclick="mysVaultSetView('grid')" title="그리드 보기" aria-label="그리드 보기">&#9638;</button><button id="mv-view-list" class="mv-vt-btn" onclick="mysVaultSetView('list')" title="리스트 보기" aria-label="리스트 보기">&#9776;</button></span><span class="mvcol-actions"><button class="mys-vault-uploadbtn" id="mys-vault-uploadbtn" onclick="mysVaultPickFiles()" disabled>+ 파일</button><button class="mys-vault-uploadbtn" id="mys-vault-folderbtn" onclick="mysVaultPickFolder()" disabled>+ 폴더</button></span><input type="file" id="mys-vault-fileinput" multiple style="display:none" onchange="mysVaultFileInputChange(event)"><input type="file" id="mys-vault-dirinput" webkitdirectory directory multiple style="display:none" onchange="mysVaultDirInputChange(event)"></div>
             <div id="mys-vault-progress" class="mys-vault-progress" style="display:none"></div>
             <div id="mys-vault-files" class="mys-vault-files"><div class="mys-news-empty">폴더를 선택하세요.</div></div>
           </div>
@@ -9648,6 +9665,8 @@ function mysVaultOpen(el){
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='flex';
   if(!_mvOwner()){ var fb=document.getElementById('mys-vault-folders'); if(fb) fb.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   if(window._mvCurFolder===undefined) window._mvCurFolder=null;
+  if(window._mvView===undefined){ try{ window._mvView=localStorage.getItem('os_mv_view')||'grid'; }catch(e){ window._mvView='grid'; } }
+  _mvViewSyncBtns();
   mysVaultLoadFolders();
   mysVaultLoadFiles(window._mvCurFolder);
 }
@@ -9696,18 +9715,42 @@ async function mysVaultLoadFiles(fid){
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var q='/rest/v1/myspace_files?owner_id=eq.'+encodeURIComponent(owner)+'&deleted_at=is.null&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id';
+    var q='/rest/v1/myspace_files?owner_id=eq.'+encodeURIComponent(owner)+'&deleted_at=is.null&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
     q += fid?('&folder_id=eq.'+encodeURIComponent(fid)):'&folder_id=is.null';
     var res=await window.db.fetch(q);
     var rows=res.ok?await res.json():[];
     window._mvFiles=rows;
-    if(!rows.length){ box.innerHTML='<div class="mv-empty"><div class="mv-empty-ic">📂</div><div class="mv-empty-t">아직 저장한 자료가 없습니다</div><div class="mv-empty-s">파일·폴더를 올려보세요</div></div>'; return; }
-    box.innerHTML=rows.map(function(f){
-      return '<div class="mvfile" onclick="mysVaultPreview(\''+f.id+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+f.id+'\')" title="이름 변경·삭제">⋮</button><div class="mvfile-ic">'+mysVaultIcon(f)+'</div><div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div><div class="mvfile-sz">'+mysVaultSize(f.file_size)+'</div></div>';
-    }).join('');
+    mysVaultRenderFiles();
   }catch(e){ console.error('[mysVault] files',e); box.innerHTML='<div class="mys-news-empty">파일을 불러오지 못했습니다.</div>'; }
 }
 window.mysVaultLoadFiles=mysVaultLoadFiles;
+function _mvDate(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d.getTime())) return ''; var p=function(n){return(n<10?'0':'')+n;}; return (d.getFullYear()%100)+'.'+p(d.getMonth()+1)+'.'+p(d.getDate()); }
+/* 작업11: 그리드 ↔ 리스트 뷰 (개인 localStorage 기억, 기본 그리드). 두 뷰 동일 미리보기·CRUD·§4 */
+function mysVaultRenderFiles(){
+  var box=document.getElementById('mys-vault-files'); if(!box) return;
+  var rows=window._mvFiles||[];
+  var list=(window._mvView==='list');
+  box.classList.toggle('mvlist', list);
+  if(!rows.length){ box.innerHTML='<div class="mv-empty"><div class="mv-empty-ic">📂</div><div class="mv-empty-t">아직 저장한 자료가 없습니다</div><div class="mv-empty-s">파일·폴더를 올려보세요</div></div>'; return; }
+  if(list){
+    box.innerHTML=rows.map(function(f){
+      return '<div class="mvrow" onclick="mysVaultPreview(\''+f.id+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvEsc(f.original_name)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+f.id+'\')" title="이름 변경·삭제">⋮</button></div>';
+    }).join('');
+  } else {
+    box.innerHTML=rows.map(function(f){
+      return '<div class="mvfile" onclick="mysVaultPreview(\''+f.id+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+f.id+'\')" title="이름 변경·삭제">⋮</button><div class="mvfile-ic">'+mysVaultIcon(f)+'</div><div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div><div class="mvfile-sz">'+mysVaultSize(f.file_size)+'</div></div>';
+    }).join('');
+  }
+}
+window.mysVaultRenderFiles=mysVaultRenderFiles;
+function _mvViewSyncBtns(){ var g=document.getElementById('mv-view-grid'), l=document.getElementById('mv-view-list'); if(g) g.classList.toggle('on', window._mvView!=='list'); if(l) l.classList.toggle('on', window._mvView==='list'); }
+function mysVaultSetView(v){
+  window._mvView=(v==='list')?'list':'grid';
+  try{ localStorage.setItem('os_mv_view', window._mvView); }catch(e){}
+  _mvViewSyncBtns();
+  mysVaultRenderFiles();
+}
+window.mysVaultSetView=mysVaultSetView;
 
 async function mysVaultCreateFolder(parentId){
   var owner=_mvOwner(), token=_mvToken();
@@ -9905,7 +9948,7 @@ function _mvViewerHead(f, signed){
     +'<a class="mvprev-dl" href="'+signed+'" download="'+_mvEsc(f.original_name)+'" target="_blank" rel="noopener">⬇ 다운로드</a></span></div>';
 }
 function _mvUnsupported(f, signed){
-  return '<div class="mv-stage"><div class="mv-unsup"><div class="mv-unsup-ic">'+mysVaultIcon(f)+'</div>'
+  return '<div class="mv-stage mv-stage--fit"><div class="mv-unsup"><div class="mv-unsup-ic">'+mysVaultIcon(f)+'</div>'
     +'<div class="mv-unsup-nm">'+_mvEsc(f.original_name)+'</div>'
     +'<div class="mv-unsup-meta">'+_mvEsc((f.ext||'파일').toUpperCase())+' · '+mysVaultSize(f.file_size)+'</div>'
     +'<div class="mv-unsup-msg">이 형식은 화면 미리보기를 지원하지 않습니다.</div>'
@@ -9996,9 +10039,9 @@ async function mysVaultPreview(fid){
     var isDocx=ext==='docx'||mt.indexOf('wordprocessingml')>=0;
     var isXlsx=/^(xlsx|xlsm|xls)$/.test(ext)||mt.indexOf('spreadsheetml')>=0||mt.indexOf('ms-excel')>=0;
     var isPptx=ext==='pptx'||mt.indexOf('presentationml')>=0;
-    if(isImg){ box.innerHTML=head+'<div class="mv-stage"><img class="mvprev-img" src="'+signed+'" alt="" onclick="mvVaultDdak(\''+f.id+'\')" onerror="mvViewerFallback(\''+f.id+'\')"></div>'; }
-    else if(isVid){ box.innerHTML=head+'<div class="mv-stage"><video class="mv-media" src="'+signed+'" controls preload="metadata"></video></div>'; }
-    else if(isAud){ box.innerHTML=head+'<div class="mv-stage mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+signed+'" controls></audio></div>'; }
+    if(isImg){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><img class="mvprev-img" src="'+signed+'" alt="" onclick="mvVaultDdak(\''+f.id+'\')" onerror="mvViewerFallback(\''+f.id+'\')"></div>'; }
+    else if(isVid){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><video class="mv-media" src="'+signed+'" controls preload="metadata"></video></div>'; }
+    else if(isAud){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+signed+'" controls></audio></div>'; }
     else if(isPdf){ box.innerHTML=head+'<div class="mv-stage" id="mv-pdf-stage"><div class="mys-news-empty">PDF 불러오는 중…</div></div>'; await _mvRenderPdf(document.getElementById('mv-pdf-stage'), signed); }
     else if(isCsv){ var tc=await fetch(signed); box.innerHTML=head+_mvCsvTable(await tc.text()); }
     else if(isTxt){ var tt=await fetch(signed); box.innerHTML=head+'<div class="mv-stage"><pre class="mvprev-text">'+_mvEsc((await tt.text()).slice(0,50000))+'</pre></div>'; }
