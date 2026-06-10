@@ -109,7 +109,7 @@
 ### RLS / 보안 (검수 전 적용 금지)
 - 3 테이블 + Storage objects: **`(auth.uid())::text = owner_id`** 격리(select/insert/update/delete). 패턴 출처 = `scripts_delete_own_rls.sql`.
 - SECURITY DEFINER 함수 = P1 불필요(자기참조 트리는 owner 단일 격리라 재귀 RLS 회피 대상 아님).
-- **RLS·정책 적용은 대표님 검수 후.** DDL은 "생성"까지, 실행은 결재 후 직접.
+- **RLS = 테이블 생성과 동시 즉시 적용** (2026-06-10 대표님 결재 — 최소 보안 기본값. RLS 없는 테이블은 anon API 노출이라 노출 창 0으로). 고도화(공유·티어)는 정책 확정 후 별 트랙.
 
 ### 결재 관문
 1. 대표님 신버전 확인 → 실측 SELECT 실행 → 결과 보고
