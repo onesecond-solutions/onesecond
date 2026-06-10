@@ -809,9 +809,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mvcol-ttl{font-size:0.88em;font-weight:600;color:var(--tf);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mys-vault-newfolder,.mys-vault-uploadbtn{border:1px solid var(--bd);background:var(--s1);color:var(--tf);border-radius:var(--radius-sm);padding:5px 10px;font-size:0.8em;cursor:pointer;white-space:nowrap}
 .mys-vault-newfolder{margin-left:auto}
-.mys-vault-uploadbtn{margin-left:auto}
+.mvcol-actions{margin-left:auto;display:inline-flex;gap:6px;flex:none}
 .mys-vault-newfolder:hover,.mys-vault-uploadbtn:hover:not(:disabled){border-color:var(--ac);color:var(--ac)}
 .mys-vault-uploadbtn:disabled{opacity:0.45;cursor:not-allowed}
+.mv-fail{color:var(--err)}
 /* 폴더 트리 */
 .mys-vault-folders{border:1px solid var(--bd);border-radius:var(--radius-sm);padding:6px;max-height:380px;overflow:auto;flex:1}
 .mvf-item{display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:var(--radius-sm);font-size:0.85em;color:var(--tf);cursor:pointer}
@@ -1805,10 +1806,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="mys-vault-tree">
             <div class="mvcol-head"><span class="mvcol-ttl">폴더</span><button class="mys-vault-newfolder" onclick="mysVaultCreateFolder()">+ 새 폴더</button></div>
             <div id="mys-vault-folders" class="mys-vault-folders"><div class="mys-news-empty">불러오는 중…</div></div>
-            <div class="mys-vault-dropzone" id="mys-vault-dropzone" onclick="mysVaultPickFiles()" ondragover="mysVaultDragOver(event)" ondragleave="mysVaultDragLeave(event)" ondrop="mysVaultDrop(event)">여기로 파일을 끌어다 놓기<br><span class="mvdz-sub">또는 클릭해서 선택</span></div>
+            <div class="mys-vault-dropzone" id="mys-vault-dropzone" onclick="mysVaultPickFiles()" ondragover="mysVaultDragOver(event)" ondragleave="mysVaultDragLeave(event)" ondrop="mysVaultDrop(event)">파일·폴더를 끌어다 놓기<br><span class="mvdz-sub">또는 클릭해서 파일 선택 · 폴더는 “+ 폴더”</span></div>
           </div>
           <div class="mys-vault-grid-col">
-            <div class="mvcol-head"><span class="mvcol-ttl mys-vault-curpath" id="mys-vault-curpath">전체</span><button class="mys-vault-uploadbtn" id="mys-vault-uploadbtn" onclick="mysVaultPickFiles()" disabled>+ 파일 올리기</button><input type="file" id="mys-vault-fileinput" multiple style="display:none" onchange="mysVaultFileInputChange(event)"></div>
+            <div class="mvcol-head"><span class="mvcol-ttl mys-vault-curpath" id="mys-vault-curpath">전체</span><span class="mvcol-actions"><button class="mys-vault-uploadbtn" id="mys-vault-uploadbtn" onclick="mysVaultPickFiles()" disabled>+ 파일</button><button class="mys-vault-uploadbtn" id="mys-vault-folderbtn" onclick="mysVaultPickFolder()" disabled>+ 폴더</button></span><input type="file" id="mys-vault-fileinput" multiple style="display:none" onchange="mysVaultFileInputChange(event)"><input type="file" id="mys-vault-dirinput" webkitdirectory directory multiple style="display:none" onchange="mysVaultDirInputChange(event)"></div>
             <div id="mys-vault-progress" class="mys-vault-progress" style="display:none"></div>
             <div id="mys-vault-files" class="mys-vault-files"><div class="mys-news-empty">폴더를 선택하세요.</div></div>
           </div>
@@ -9678,6 +9679,7 @@ function mysVaultConfirmToggle(){
   var ck=document.getElementById('mys-vault-confirm');
   window._mvConfirmed=!!(ck&&ck.checked);
   var btn=document.getElementById('mys-vault-uploadbtn'); if(btn) btn.disabled=!window._mvConfirmed;
+  var fbtn=document.getElementById('mys-vault-folderbtn'); if(fbtn) fbtn.disabled=!window._mvConfirmed;
   var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.toggle('mvdz-ready',window._mvConfirmed);
 }
 window.mysVaultConfirmToggle=mysVaultConfirmToggle;
@@ -9689,49 +9691,144 @@ window.mysVaultFileInputChange=mysVaultFileInputChange;
 
 function mysVaultDragOver(e){ e.preventDefault(); if(window._mvConfirmed){ var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.add('mvdz-over'); } }
 function mysVaultDragLeave(e){ var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.remove('mvdz-over'); }
-function mysVaultDrop(e){
+function _mvReadEntries(reader){
+  return new Promise(function(resolve){ var all=[];
+    function read(){ reader.readEntries(function(b){ if(!b.length){ resolve(all); } else { all=all.concat(Array.prototype.slice.call(b)); read(); } }, function(){ resolve(all); }); }
+    read();
+  });
+}
+async function _mvWalkEntry(entry, parentSegs, out){
+  if(!entry) return;
+  if(entry.isFile){
+    var f=await new Promise(function(r){ entry.file(function(file){ r(file); }, function(){ r(null); }); });
+    if(f) out.files.push({folderSegs:parentSegs, file:f});
+  } else if(entry.isDirectory){
+    var segs=parentSegs.concat(entry.name);
+    out.dirs.push(segs);                       /* 빈 폴더도 보존(2) */
+    var kids=await _mvReadEntries(entry.createReader());
+    for(var i=0;i<kids.length;i++){ await _mvWalkEntry(kids[i], segs, out); }
+  }
+}
+async function mysVaultDrop(e){
   e.preventDefault(); var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.remove('mvdz-over');
   if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
-  var dt=e.dataTransfer, files=[], hadDir=false;
+  var dt=e.dataTransfer;
   if(dt&&dt.items&&dt.items.length){
-    for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
-      var entry=it.webkitGetAsEntry&&it.webkitGetAsEntry();
-      if(entry&&entry.isDirectory){ hadDir=true; continue; }   /* 폴더 재귀=PR2 */
-      var f=it.getAsFile&&it.getAsFile(); if(f) files.push(f);
+    var entries=[];
+    for(var i=0;i<dt.items.length;i++){ var en=dt.items[i].webkitGetAsEntry&&dt.items[i].webkitGetAsEntry(); if(en) entries.push(en); }
+    if(entries.length){
+      var out={dirs:[],files:[]};
+      for(var j=0;j<entries.length;j++){ await _mvWalkEntry(entries[j], [], out); }
+      if(out.files.length||out.dirs.length){ _mvProcessUpload(out); return; }
     }
-  } else if(dt&&dt.files){ files=Array.prototype.slice.call(dt.files); }
-  if(hadDir&&typeof toast==='function') toast('폴더 통째 업로드는 다음 업데이트에서 지원됩니다. 파일만 올렸습니다.');
-  if(files.length) mysVaultUpload(files);
+    var ff=[]; for(var k=0;k<dt.items.length;k++){ var f=dt.items[k].getAsFile&&dt.items[k].getAsFile(); if(f) ff.push(f); }
+    if(ff.length) mysVaultUpload(ff);
+  } else if(dt&&dt.files){ mysVaultUpload(Array.prototype.slice.call(dt.files)); }
 }
 window.mysVaultDragOver=mysVaultDragOver; window.mysVaultDragLeave=mysVaultDragLeave; window.mysVaultDrop=mysVaultDrop;
 
-async function mysVaultUpload(fileList){
+/* 단일 파일 업로드 (Storage + DB row). 실패 사유 반환(부분 실패 처리용). */
+async function _mvUploadOneFile(file, folderId, owner, token){
+  try{
+    var fid=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+(new Date().getTime())+'-'+Math.floor(Math.random()*1e6));
+    var dot=file.name.lastIndexOf('.'); var ext=(dot>0)?file.name.slice(dot+1).toLowerCase():'';
+    var safe=file.name.replace(/[^\w.\-가-힣]+/g,'_').slice(0,120) || 'file';
+    var pathInner=owner+'/'+(folderId||'root')+'/'+fid+'_'+safe;
+    var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(pathInner)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(file.type||'application/octet-stream'),'x-upsert':'true'},body:file});
+    if(!up.ok){ var rs=up.status; return {ok:false, reason:(rs===413?'용량 초과':('업로드 실패 '+rs))}; }
+    var ins=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({id:fid,owner_id:owner,folder_id:folderId,original_name:file.name,storage_path:pathInner,mime_type:(file.type||''),ext:ext,file_size:file.size,source:'picker',status:'pending',search_text:file.name})});
+    if(ins.ok||ins.status===201) return {ok:true};
+    return {ok:false, reason:'DB 기록 실패 '+ins.status};
+  }catch(e){ console.error('[mysVault] uploadOne',e); return {ok:false, reason:'오류'}; }
+}
+/* 공통 업로드 루프 — 진행 표시 + 부분 실패(성공분 유지, 실패 목록 안내). 전체 롤백 안 함. */
+async function _mvDoUploads(entries, skipped){
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  var prog=document.getElementById('mys-vault-progress'); if(prog) prog.style.display='block';
+  var ok=0, fails=[];
+  for(var i=0;i<entries.length;i++){
+    var e=entries[i];
+    if(prog) prog.textContent='업로드 중… '+(i+1)+'/'+entries.length+' — '+e.file.name;
+    var r=await _mvUploadOneFile(e.file, e.folderId, owner, token);
+    if(r.ok) ok++; else fails.push(e.file.name+' ('+r.reason+')');
+  }
+  if(prog){
+    var html='완료: '+ok+'건'+(fails.length?(' · 실패 '+fails.length+'건'):'')+(skipped?(' · 폴더 생성 실패로 건너뜀 '+skipped+'건'):'');
+    if(fails.length){ html+='<br><span class="mv-fail">실패: '+_mvEsc(fails.slice(0,15).join(', '))+(fails.length>15?(' 외 '+(fails.length-15)+'건'):'')+'</span>'; }
+    prog.innerHTML=html;
+    if(!fails.length&&!skipped) setTimeout(function(){ if(prog) prog.style.display='none'; },2600);
+  }
+  mysVaultLoadFiles(window._mvCurFolder);
+  if(typeof toast==='function') toast(ok+'개 파일을 올렸습니다.'+(fails.length?(' ('+fails.length+'건 실패)'):''));
+}
+/* 평면 파일 업로드 (현재 폴더로). */
+function mysVaultUpload(fileList){
   var files=Array.prototype.slice.call(fileList||[]); if(!files.length) return;
   if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
-  var owner=_mvOwner(), token=_mvToken();
-  if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  if(!_mvOwner()||!_mvToken()){ alert('로그인이 필요합니다.'); return; }
   var folderId=window._mvCurFolder||null;
-  var prog=document.getElementById('mys-vault-progress'); if(prog) prog.style.display='block';
-  var ok=0, fail=0;
-  for(var i=0;i<files.length;i++){
-    var f=files[i];
-    if(prog) prog.textContent='업로드 중… '+(i+1)+'/'+files.length+' — '+f.name;
-    try{
-      var fid=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+(new Date().getTime())+'-'+i);
-      var dot=f.name.lastIndexOf('.'); var ext=(dot>0)?f.name.slice(dot+1).toLowerCase():'';
-      var safe=f.name.replace(/[^\w.\-가-힣]+/g,'_').slice(0,120) || 'file';
-      var pathInner=owner+'/'+(folderId||'root')+'/'+fid+'_'+safe;
-      var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(pathInner)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(f.type||'application/octet-stream'),'x-upsert':'true'},body:f});
-      if(!up.ok){ fail++; console.error('[mysVault] upload',up.status,await up.text().catch(function(){return'';})); continue; }
-      var ins=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({id:fid,owner_id:owner,folder_id:folderId,original_name:f.name,storage_path:pathInner,mime_type:(f.type||''),ext:ext,file_size:f.size,source:'picker',status:'pending',search_text:f.name})});
-      if(ins.ok||ins.status===201) ok++; else { fail++; console.error('[mysVault] insert',ins.status,await ins.text().catch(function(){return'';})); }
-    }catch(e){ fail++; console.error('[mysVault] upload loop',e); }
-  }
-  if(prog){ prog.textContent='완료: '+ok+'건'+(fail?(' / 실패 '+fail+'건'):''); setTimeout(function(){ if(prog) prog.style.display='none'; },2600); }
-  mysVaultLoadFiles(folderId);
-  if(typeof toast==='function') toast(ok+'개 파일을 올렸습니다.'+(fail?(' ('+fail+'건 실패)'):''));
+  _mvDoUploads(files.map(function(f){ return {file:f, folderId:folderId}; }), 0);
 }
 window.mysVaultUpload=mysVaultUpload;
+
+/* 폴더 picker (디렉터리 선택). webkitRelativePath로 계층 복원. */
+function mysVaultPickFolder(){ if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; } var inp=document.getElementById('mys-vault-dirinput'); if(inp) inp.click(); }
+window.mysVaultPickFolder=mysVaultPickFolder;
+function mysVaultDirInputChange(e){
+  var fs=Array.prototype.slice.call(e.target.files||[]);
+  var out={dirs:[],files:[]};
+  fs.forEach(function(f){ var rel=f.webkitRelativePath||f.name; var parts=rel.split('/'); out.files.push({folderSegs:parts.slice(0,-1), file:f}); });
+  e.target.value='';
+  if(out.files.length) _mvProcessUpload(out);
+}
+window.mysVaultDirInputChange=mysVaultDirInputChange;
+
+/* 같은 부모 안 중복 폴더명 → 자동 새 이름 "이름 (2)" (조용한 병합/덮어쓰기 금지). */
+function _mvUniqueName(parentId, name, used){
+  var key=parentId||'__root';
+  if(!used[key]){ used[key]={}; (window._mvFolders||[]).forEach(function(f){ if((f.parent_id||null)===(parentId||null)) used[key][f.name]=true; }); }
+  var base=name, n=name, i=2;
+  while(used[key][n]){ n=base+' ('+i+')'; i++; }
+  used[key][n]=true; return n;
+}
+/* 폴더 1개 생성(클라 uuid로 즉시 id 확보). 로컬 캐시 반영. 실패 시 null. */
+async function _mvCreateFolderRow(parentId, name, depth, owner, token){
+  try{
+    var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('fd'+(new Date().getTime())+'-'+Math.floor(Math.random()*1e6));
+    var res=await fetch(window.db.url('/rest/v1/myspace_folders'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({id:id,owner_id:owner,parent_id:parentId||null,name:name,depth:depth,sort_order:0})});
+    if(res.ok||res.status===201){ (window._mvFolders=window._mvFolders||[]).push({id:id,parent_id:parentId||null,name:name,depth:depth,sort_order:0}); return id; }
+    return null;
+  }catch(e){ console.error('[mysVault] createFolderRow',e); return null; }
+}
+/* 폴더 계층 보존 업로드: dirs 생성(부모 먼저) → 매핑 → 파일 업로드. 빈 폴더도 생성. */
+async function _mvProcessUpload(items){
+  if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  var base=window._mvCurFolder||null;
+  var baseDepth=0; if(base){ var bf=(window._mvFolders||[]).filter(function(f){return f.id===base;})[0]; baseDepth=bf?(bf.depth||0):0; }
+  /* 전체 폴더 경로 집합 = dirs + 파일 폴더경로의 모든 접두 */
+  var dirSet={};
+  (items.dirs||[]).forEach(function(segs){ if(segs.length) dirSet[segs.join('/')]=segs; });
+  (items.files||[]).forEach(function(it){ for(var k=1;k<=it.folderSegs.length;k++){ var p=it.folderSegs.slice(0,k); dirSet[p.join('/')]=p; } });
+  var dirPaths=Object.keys(dirSet).map(function(k){return dirSet[k];}).sort(function(a,b){return a.length-b.length;});
+  var prog=document.getElementById('mys-vault-progress'); if(prog){ prog.style.display='block'; prog.textContent='폴더 구조 만드는 중…'; }
+  var map={'':base}, depthMap={'':baseDepth}, used={};
+  for(var i=0;i<dirPaths.length;i++){
+    var segs=dirPaths[i]; var parentKey=segs.slice(0,-1).join('/'); var rawName=segs[segs.length-1];
+    var parentId=map[parentKey]; var pd=depthMap[parentKey]||0;
+    if(parentId===null && parentKey!==''){ map[segs.join('/')]=null; depthMap[segs.join('/')]=pd+1; continue; } /* 부모 실패 → 하위 스킵 */
+    var uname=_mvUniqueName(parentId, rawName, used);
+    var newId=await _mvCreateFolderRow(parentId, uname, pd+1, owner, token);
+    map[segs.join('/')]=newId; depthMap[segs.join('/')]=pd+1;
+  }
+  /* 파일 업로드 엔트리 — 폴더 생성 실패분 스킵 카운트 */
+  var entries=[], skipped=0;
+  (items.files||[]).forEach(function(it){ var key=it.folderSegs.join('/'); var fid=(key==='')?base:map[key]; if(fid===undefined) fid=base; if(fid===null && it.folderSegs.length){ skipped++; return; } entries.push({file:it.file, folderId:fid}); });
+  if(entries.length){ await _mvDoUploads(entries, skipped); }
+  else { if(prog){ prog.textContent='폴더 '+dirPaths.length+'개를 만들었습니다.'+(skipped?(' (파일 '+skipped+'건 건너뜀)'):''); setTimeout(function(){ if(prog) prog.style.display='none'; },2600); } if(typeof toast==='function') toast('폴더 '+dirPaths.length+'개를 만들었습니다.'); }
+  mysVaultLoadFolders();
+}
+window._mvProcessUpload=_mvProcessUpload;
 
 async function mysVaultPreview(fid){
   var box=document.getElementById('mys-vault-preview'); if(!box) return;
