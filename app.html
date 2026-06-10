@@ -801,9 +801,16 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-vault-confirm-lbl{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--tf);cursor:pointer;white-space:nowrap}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
-.mys-vault-tree{flex:2 1 0;min-width:0;display:flex;flex-direction:column;gap:10px}
-.mys-vault-grid-col{flex:3 1 0;min-width:0;display:flex;flex-direction:column;gap:10px}
-.mys-vault-preview-col{flex:5 1 0;min-width:0;display:flex;flex-direction:column;gap:10px}
+.mys-vault-tree{flex:2 1 0}
+.mys-vault-grid-col{flex:3 1 0}
+.mys-vault-preview-col{flex:5 1 0}
+/* 작업7 깊이: 3컬럼 카드화(플랫 톤 유지) */
+.mys-vault-cols > div{min-width:0;display:flex;flex-direction:column;gap:10px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+/* 빈 상태: 원형 아이콘 + 안내문 */
+.mv-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:30px 12px;text-align:center}
+.mv-empty-ic{width:48px;height:48px;border-radius:var(--radius-full);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:1.4em}
+.mv-empty-t{font-size:0.86em;font-weight:600;color:var(--tf)}
+.mv-empty-s{font-size:0.78em;color:var(--ts)}
 /* 컬럼 헤더 — 3컬럼 동일 상단선 */
 .mvcol-head{display:flex;align-items:center;gap:8px;min-height:34px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
 .mvcol-ttl{font-size:0.88em;font-weight:600;color:var(--tf);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -9654,7 +9661,7 @@ async function mysVaultLoadFiles(fid){
     var res=await window.db.fetch(q);
     var rows=res.ok?await res.json():[];
     window._mvFiles=rows;
-    if(!rows.length){ box.innerHTML='<div class="mys-news-empty">이 폴더에 파일이 없습니다.<br>파일을 끌어다 놓거나 “+ 파일 올리기”.</div>'; return; }
+    if(!rows.length){ box.innerHTML='<div class="mv-empty"><div class="mv-empty-ic">📂</div><div class="mv-empty-t">아직 저장한 자료가 없습니다</div><div class="mv-empty-s">파일·폴더를 올려보세요</div></div>'; return; }
     box.innerHTML=rows.map(function(f){
       return '<div class="mvfile" onclick="mysVaultPreview(\''+f.id+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+f.id+'\')" title="이름 변경·삭제">⋮</button><div class="mvfile-ic">'+mysVaultIcon(f)+'</div><div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div><div class="mvfile-sz">'+mysVaultSize(f.file_size)+'</div></div>';
     }).join('');
