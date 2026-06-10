@@ -9865,7 +9865,14 @@ function mysVaultUpload(fileList){
 window.mysVaultUpload=mysVaultUpload;
 
 /* 폴더 picker (디렉터리 선택). webkitRelativePath로 계층 복원. */
-function mysVaultPickFolder(){ if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; } var inp=document.getElementById('mys-vault-dirinput'); if(inp) inp.click(); }
+function mysVaultPickFolder(){
+  if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
+  var inp=document.getElementById('mys-vault-dirinput'); if(!inp) return;
+  /* 작업1 검증: HTML 속성만으론 디렉터리 모드 미적용 사례 → 클릭 직전 JS 프로퍼티로 확정(폴더 선택 대화상자 강제) */
+  try{ inp.webkitdirectory=true; inp.setAttribute('webkitdirectory',''); inp.setAttribute('directory',''); inp.setAttribute('mozdirectory',''); }catch(e){}
+  inp.value='';
+  inp.click();
+}
 window.mysVaultPickFolder=mysVaultPickFolder;
 function mysVaultDirInputChange(e){
   var fs=Array.prototype.slice.call(e.target.files||[]);
