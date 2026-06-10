@@ -40,6 +40,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #app.is-insurer .nav{display:none;}                     /* 원수사: 전부 숨김 */
 #app.is-insurer .nav.ins-show{display:flex;}            /* 그 중 3개(자료실·현장의소리·함께해요)만 */
 #app.is-admin #nav-insurer-vault{display:flex;}         /* admin: 전체 노출 유지 + 자료실 추가 */
+#app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} /* 단순화(2026-06-10): 일반(GA) 사용자만 숨김. admin·insurer는 기존 게이팅 유지 */
+.nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
 #app.role-ready #app-loading-shell{display:none;}
@@ -1371,7 +1373,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .split .list,.split .viewer{box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04)}
 /* ── 홈 4컬럼 (2026-06-08): 공지/라이브러리/도구/소식 ───────────────────────── */
 /* 검색기 들어올 폭 감안 — 중앙으로 모으기(max-width + auto) */
-.home-cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;align-items:start;margin:48px auto 0;max-width:920px}
+.home-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;align-items:start;margin:48px auto 0;max-width:620px}
 .home-col{padding:2px 14px;display:flex;flex-direction:column;text-align:left}
 .home-col-head{display:flex;align-items:center;justify-content:flex-start;gap:8px;margin-bottom:12px}
 .home-col-cnt{font-size:0.72em;font-weight:800;color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,var(--s1));padding:1px 9px;border-radius:999px;white-space:nowrap}
@@ -1669,16 +1671,19 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <button class="hamb" onclick="document.getElementById('app').classList.toggle('collapsed')">&#9776;</button>
       <button class="mclose" onclick="toggleMSide()" aria-label="메뉴 닫기">&#10005;</button>
     </div>
-    <div class="nav ins-show" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
+    <div class="nav ins-show ga-hide" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
     <div class="nav on" onclick="showView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
     <div class="nav" onclick="showView('myspace')"><span class="ic">&#9672;</span><span class="lbl">라이브러리</span></div>
     <div class="nav" onclick="showView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
-    <div class="nav" onclick="showView('quick')"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
-    <div class="nav" id="nav-voice" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
-    <div class="nav ins-show" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
-    <div class="nav" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
+    <div class="nav-divider"></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
-    <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
+    <div class="nav-divider"></div>
+    <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">관리자</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
+    <!-- 단순화(2026-06-10): 일반 사용자 사이드바 숨김 — Quick/현장의소리/함께해요/보험이슈 (감추기>만들기). 뷰·딥링크·admin 노출은 유지(ga-hide=GA만 숨김) -->
+    <div class="nav ga-hide" onclick="showView('quick')"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
+    <div class="nav ga-hide" id="nav-voice" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
+    <div class="nav ins-show ga-hide" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
+    <div class="nav ga-hide" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
   </nav>
   <div class="main">
     <header class="head">
@@ -1722,7 +1727,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="os-copy">
           <div class="os-kicker"><span class="signal"></span> 보험 업무 OS · onesecond</div>
           <h1 class="os-headline">보험 통합 솔루션<br><span class="gradient">원세컨드</span></h1>
-          <p class="os-message"><b>라이브러리, 스크립트, Quick 도구, 현장의 소리</b>를 하나의 흐름으로 연결해 오늘 해야 할 일을 가장 짧은 경로로 꺼내 쓰게 만드는 개인 업무 허브입니다.</p>
+          <p class="os-message"><b>라이브러리, 스크립트</b>를 하나의 흐름으로 연결해 오늘 해야 할 일을 가장 짧은 경로로 꺼내 쓰게 만드는 개인 업무 허브입니다.</p>
           <div class="os-actions">
             <button class="os-action primary" onclick="showView('quick')">⚡ 1초 실행 시작</button>
           </div>
@@ -1740,8 +1745,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <div class="tool-grid">
               <div class="tool-pill"><small>라이브러리</small><b>내 자료 정리</b></div>
               <div class="tool-pill"><small>SCRIPTS</small><b>상담 멘트 호출</b></div>
-              <div class="tool-pill"><small>QUICK</small><b>BMI · 보험연령</b></div>
-              <div class="tool-pill"><small>FIELD VOICE</small><b>현장 지식 연결</b></div>
             </div>
             <div class="satellite one"><span class="sat-dot"></span> 반복 질문 감소</div>
             <div class="satellite two"><span class="sat-dot"></span> 1초 실행 도구</div>
@@ -1770,7 +1773,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <button class="os-banner-ov-nav next" type="button" aria-label="다음" onclick="osBannerOvStep(1,event)">›</button>
       </div>
 
-      <!-- 홈 5카테고리 텍스트 포털 (2026-06-09): 공지 / 라이브러리 / 스크립트 / 도구 / 소식·정보 — 호버 발견형. 안내문구 1개(전체 중앙). 사이드바(세로)↔홈(가로) 교차 정합. -->
+      <!-- 홈 3카테고리 텍스트 포털 (2026-06-10 단순화): 공지 / 라이브러리 / 스크립트 — 호버 발견형. 도구·소식정보 제거(감추기>만들기). 사이드바(홈/라이브러리/스크립트) 정합. -->
       <div class="home-portal">
       <div class="home-cols">
         <!-- ① 공지 = 현장의 소리 4개 게시판 -->
@@ -1807,32 +1810,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             </div>
           </div>
         </div>
-        <!-- ④ 도구 = 제작·계산 도구 -->
-        <div class="home-col">
-          <div class="home-col-head"><span class="os-sec-title">도구</span></div>
-          <div class="home-col-body">
-            <div class="home-menu">
-              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('변환기')"><span class="nm">이미지 변환</span></div>
-              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('보험료비교표')"><span class="nm">보험료 비교표</span></div>
-              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('카드만들기')"><span class="nm">카드 만들기</span></div>
-              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('BMI계산기')"><span class="nm">BMI 계산기</span></div>
-              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('보험연령계산기')"><span class="nm">보험연령 계산기</span></div>
-            </div>
-          </div>
-        </div>
-        <!-- ⑤ 소식·정보 = 보험이슈 + Quick 정보·연락 콘텐츠 + 함께해요 -->
-        <div class="home-col">
-          <div class="home-col-head"><span class="os-sec-title">소식·정보</span></div>
-          <div class="home-col-body">
-            <div class="home-menu">
-              <div class="home-menu-item" onclick="showView('news')"><span class="nm">보험이슈</span></div>
-              <div class="home-menu-item" onclick="_goQuickItem('contact_info')"><span class="nm">연락처</span></div>
-              <div class="home-menu-item" onclick="_goQuickItem('system_links')"><span class="nm">바로가기</span></div>
-              <div class="home-menu-item" onclick="_goQuickItem('payment_info')"><span class="nm">결제·납입 안내</span></div>
-              <div class="home-menu-item" onclick="showView('together')"><span class="nm">함께해요</span></div>
-            </div>
-          </div>
-        </div>
+        <!-- ④ 도구 / ⑤ 소식·정보 = 단순화(2026-06-10)로 홈 포털에서 제거 (감추기>만들기). 도구·소식정보는 추후 검색기로 흡수 -->
       </div>
       <div class="home-portal-hint">해당 메뉴에 마우스를 올려보세요</div>
       </div>
