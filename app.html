@@ -845,6 +845,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-vault-progress{font-size:0.8em;color:var(--ac)}
 .mys-vault-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;align-content:start;flex:1;min-height:0;overflow:auto}
 .mv-drop-hot{outline:2px solid var(--ac);outline-offset:-2px;background:color-mix(in srgb,var(--ac) 8%,transparent)!important;border-radius:var(--radius-sm)}
+.mv-move-list{display:flex;flex-direction:column;gap:3px;max-height:340px;overflow:auto;margin-top:4px}
+.mv-move-dest{border:1px solid var(--bd);background:var(--s1);color:var(--tf);border-radius:var(--radius-sm);padding:8px 12px;font-size:0.84em;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mv-move-dest:hover{border-color:var(--ac);color:var(--ac);background:var(--bg)}
 .mys-vault-files:has(.mv-empty){align-content:center}
 .mys-vault-preview-col .viewer:has(>.mys-news-empty){display:flex;align-items:center;justify-content:center}
 .mvfile{position:relative;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;cursor:pointer;display:flex;flex-direction:column;gap:5px;align-items:center}
@@ -1909,6 +1912,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div id="mv-ctxmenu" class="mv-ctxmenu" style="display:none"></div>
         <!-- 폴더 삭제 강한 확인 모달 (비어있지 않을 때, 조용한 cascade 금지) -->
         <div id="mv-del-modal" class="mv-del-modal"><div class="mv-del-box"><div class="mv-del-title">폴더 삭제 확인</div><div class="mv-del-msg" id="mv-del-msg"></div><div class="mv-del-acts"><button type="button" class="mv-del-cancel" onclick="mvDelModalClose()">취소</button><button type="button" class="mv-del-confirm" id="mv-del-ok">모두 삭제</button></div></div></div>
+        <!-- 이동 대상 폴더 선택 모달 -->
+        <div id="mv-move-modal" class="mv-del-modal"><div class="mv-del-box"><div class="mv-del-title">이동할 위치 선택</div><div class="mv-move-list" id="mv-move-list"></div><div class="mv-del-acts"><button type="button" class="mv-del-cancel" onclick="mvMoveModalClose()">취소</button></div></div></div>
         <!-- PDF 확대 모달 (PNG 라이트박스 대응, 하단 둥근 컨트롤 — 네이티브 PDF.js 툴바 없음) -->
         <div id="mv-pdf-modal" class="mv-pdf-modal"><button class="mv-pdfm-close" onclick="mvPdfModalClose()" aria-label="닫기">✕</button><div class="mv-pdfm-canvas-wrap"><canvas id="mv-pdfm-canvas"></canvas></div><div class="mv-pdfm-bar"><button onclick="mvPdfModalZoom(-1)" title="축소">−</button><button onclick="mvPdfModalZoom(1)" title="확대">＋</button><button onclick="mvPdfModalRotate()" title="회전">↻</button><button onclick="mvPdfModalPage(-1)" title="이전 페이지">◀</button><span id="mv-pdfm-pg">1 / 1</span><button onclick="mvPdfModalPage(1)" title="다음 페이지">▶</button><button class="mv-pdfm-ddak" onclick="mvPdfModalDdak()">⚡ 딸깍</button></div></div>
       </div>
@@ -9705,7 +9710,7 @@ function mysVaultTreeHtml(rows){
   function walk(pid,depth){
     return (byParent[pid]||[]).map(function(r){
       var on=(cur===r.id)?' on':''; var pad=8+depth*14;
-      return '<div class="mvf-item'+on+'" style="padding-left:'+pad+'px" onclick="mysVaultSelectFolder(\''+r.id+'\')" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,\''+r.id+'\')">📁 <span class="mvf-nm">'+_mvEsc(r.name)+'</span>'
+      return '<div class="mvf-item'+on+'" style="padding-left:'+pad+'px" draggable="true" ondragstart="mvDragStart(event,\'folder\',\''+r.id+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'folder\',\''+r.id+'\');return false;" onclick="mysVaultSelectFolder(\''+r.id+'\')" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,\''+r.id+'\')">📁 <span class="mvf-nm">'+_mvEsc(r.name)+'</span>'
         +'<span class="mvf-actions"><button class="mvf-sub" onclick="event.stopPropagation();mysVaultCreateFolder(\''+r.id+'\')" title="하위 폴더 추가">+</button>'
         +'<button class="mvf-menu-btn" onclick="mvVaultMenu(event,\'folder\',\''+r.id+'\')" title="이름 변경·삭제">⋮</button></span></div>'+walk(r.id,depth+1);
     }).join('');
@@ -9781,17 +9786,17 @@ function mysVaultRenderFiles(){
   }
   subs.forEach(function(fo){ var fid=fo.id;
     if(list){
-      html+='<div class="mvrow mvfolder" ondblclick="mysVaultSelectFolder(\''+fid+'\')" title="더블클릭으로 열기 · 여기로 드롭하면 폴더 안에 저장" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,\''+fid+'\')"><span class="mvrow-ic">📁</span><span class="mvrow-nm">'+_mvEsc(fo.name)+'</span><span class="mvrow-ext">폴더</span><span class="mvrow-dt"></span><span class="mvrow-sz"></span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'folder\',\''+fid+'\')" title="이름 변경·삭제">⋮</button></div>';
+      html+='<div class="mvrow mvfolder" draggable="true" ondragstart="mvDragStart(event,\'folder\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'folder\',\''+fid+'\');return false;" ondblclick="mysVaultSelectFolder(\''+fid+'\')" title="더블클릭으로 열기 · 드롭하면 폴더 안에 저장 · 드래그로 이동" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,\''+fid+'\')"><span class="mvrow-ic">📁</span><span class="mvrow-nm">'+_mvEsc(fo.name)+'</span><span class="mvrow-ext">폴더</span><span class="mvrow-dt"></span><span class="mvrow-sz"></span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'folder\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button></div>';
     } else {
-      html+='<div class="mvfile mvfolder" ondblclick="mysVaultSelectFolder(\''+fid+'\')" title="더블클릭으로 열기 · 여기로 드롭하면 폴더 안에 저장" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'folder\',\''+fid+'\')" title="이름 변경·삭제">⋮</button><div class="mvfile-ic mvfolder-ic">📁</div><div class="mvfile-nm">'+_mvEsc(fo.name)+'</div></div>';
+      html+='<div class="mvfile mvfolder" draggable="true" ondragstart="mvDragStart(event,\'folder\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'folder\',\''+fid+'\');return false;" ondblclick="mysVaultSelectFolder(\''+fid+'\')" title="더블클릭으로 열기 · 드롭하면 폴더 안에 저장 · 드래그로 이동" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'folder\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button><div class="mvfile-ic mvfolder-ic">📁</div><div class="mvfile-nm">'+_mvEsc(fo.name)+'</div></div>';
     }
   });
   rows.forEach(function(f){ var fid=f.id;
     if(list){
-      html+='<div class="mvrow" onclick="mysVaultPreview(\''+fid+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvEsc(f.original_name)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·삭제">⋮</button></div>';
+      html+='<div class="mvrow" draggable="true" ondragstart="mvDragStart(event,\'file\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'file\',\''+fid+'\');return false;" onclick="mysVaultPreview(\''+fid+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvEsc(f.original_name)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button></div>';
     } else {
       /* 원칙 7: 파일 카드 = 타입 무관 단일 컴포넌트. onclick·data·menu 전 타입 동일, 타입 분기는 _mvFileThumbHtml(썸네일)만 */
-      html+='<div class="mvfile" data-fid="'+fid+'" data-mime="'+_mvEsc(f.mime_type||'')+'" data-ext="'+_mvEsc(f.ext||'')+'" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·삭제">⋮</button>'+_mvFileThumbHtml(f)+'<div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div></div>';
+      html+='<div class="mvfile" data-fid="'+fid+'" data-mime="'+_mvEsc(f.mime_type||'')+'" data-ext="'+_mvEsc(f.ext||'')+'" draggable="true" ondragstart="mvDragStart(event,\'file\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'file\',\''+fid+'\');return false;" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button>'+_mvFileThumbHtml(f)+'<div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div></div>';
     }
   });
   box.innerHTML=html;
@@ -9909,10 +9914,53 @@ function mvDragLeaveEl(e){ e.currentTarget.classList.remove('mv-drop-hot'); }
 window.mvDragOverEl=mvDragOverEl; window.mvDragLeaveEl=mvDragLeaveEl;
 async function mvDropOn(e, destFolderId){
   e.preventDefault(); e.stopPropagation(); _mvClearDropHover();
+  var dest=(destFolderId===undefined?null:destFolderId);
+  /* 내부 이동(Move) 우선 분기 */
+  var raw=''; try{ raw=e.dataTransfer.getData('text/x-mv'); }catch(err){}
+  var item=null; if(raw){ try{ item=JSON.parse(raw); }catch(err){} } if(!item) item=window._mvDragItem;
+  if(item&&item.id){ window._mvDragItem=null; return mvDoMove(item.type, item.id, dest); }
+  /* 외부 파일/폴더 업로드 */
   if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
-  await _mvHandleExternalDrop(e.dataTransfer, (destFolderId===undefined?null:destFolderId));
+  await _mvHandleExternalDrop(e.dataTransfer, dest);
 }
 window.mvDropOn=mvDropOn;
+/* 드래그 이동(Move) — Storage 객체는 그대로, DB folder_id/parent_id만 변경(가벼움). 파일 search_text=원본명 불변 */
+function mvDragStart(e,type,id){ try{ e.dataTransfer.setData('text/x-mv', JSON.stringify({type:type,id:id})); e.dataTransfer.effectAllowed='move'; }catch(err){} window._mvDragItem={type:type,id:id}; }
+function mvDragEnd(){ window._mvDragItem=null; _mvClearDropHover(); }
+window.mvDragStart=mvDragStart; window.mvDragEnd=mvDragEnd;
+async function mvDoMove(srcType, srcId, destFolderId){
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  destFolderId=destFolderId||null;
+  if(srcType==='folder'){
+    var desc=_mvDescendantFolderIds(srcId); /* 자신+하위 */
+    if(destFolderId && desc.indexOf(destFolderId)>=0){ alert('폴더를 자기 자신이나 하위 폴더로는 옮길 수 없습니다.'); return; }
+    var fo=(window._mvFolders||[]).filter(function(x){return x.id===srcId;})[0]||{};
+    if((fo.parent_id||null)===destFolderId) return;
+    if(!confirm('“'+(fo.name||'폴더')+'”을(를) '+_mvFolderPath(destFolderId)+'(으)로 이동할까요?')) return;
+    var r=await fetch(window.db.url('/rest/v1/myspace_folders?id=eq.'+encodeURIComponent(srcId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({parent_id:destFolderId,updated_at:new Date().toISOString()})});
+    if(r.ok||r.status===204){ if(fo) fo.parent_id=destFolderId; mysVaultLoadFolders(); if(typeof toast==='function') toast('폴더를 이동했습니다.'); }
+    else { alert('이동 실패: '+r.status); }
+  } else {
+    var f=(window._mvFiles||[]).filter(function(x){return x.id===srcId;})[0]||{};
+    if((f.folder_id||null)===destFolderId) return;
+    if(!confirm('“'+(f.original_name||'파일')+'”을(를) '+_mvFolderPath(destFolderId)+'(으)로 이동할까요?')) return;
+    var r2=await fetch(window.db.url('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(srcId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({folder_id:destFolderId,updated_at:new Date().toISOString()})});
+    if(r2.ok||r2.status===204){ var pv=document.getElementById('mys-vault-preview'); if(pv) pv.innerHTML='<div class="mys-news-empty">파일을 선택하면 미리보기가 표시됩니다.</div>'; mysVaultLoadFiles(window._mvCurFolder); mysVaultLoadFolders(); if(typeof toast==='function') toast('파일을 이동했습니다.'); }
+    else { alert('이동 실패: '+r2.status); }
+  }
+}
+window.mvDoMove=mvDoMove;
+/* 우클릭/⋮ 메뉴 '이동' → 대상 폴더 선택 모달 */
+function mvVaultMoveOpen(type,id){
+  mvVaultCloseMenu();
+  var m=document.getElementById('mv-move-modal'), lst=document.getElementById('mv-move-list'); if(!m||!lst) return;
+  var exclude={}; if(type==='folder'){ _mvDescendantFolderIds(id).forEach(function(x){ exclude[x]=true; }); }
+  var html='<button class="mv-move-dest" onclick="mvMoveModalClose();mvDoMove(\''+type+'\',\''+id+'\',null)">📁 전체 (루트)</button>';
+  (window._mvFolders||[]).forEach(function(f){ if(exclude[f.id]) return; html+='<button class="mv-move-dest" onclick="mvMoveModalClose();mvDoMove(\''+type+'\',\''+id+'\',\''+f.id+'\')">📁 '+_mvEsc(_mvFolderPath(f.id).replace(/^전체 > /,''))+'</button>'; });
+  lst.innerHTML=html; m.style.display='flex';
+}
+function mvMoveModalClose(){ var m=document.getElementById('mv-move-modal'); if(m) m.style.display='none'; }
+window.mvVaultMoveOpen=mvVaultMoveOpen; window.mvMoveModalClose=mvMoveModalClose;
 /* 좌측 드롭존 = 루트(전체) 타겟 */
 async function mysVaultDrop(e){ return mvDropOn(e, null); }
 window.mysVaultDragOver=mysVaultDragOver; window.mysVaultDragLeave=mysVaultDragLeave; window.mysVaultDrop=mysVaultDrop;
@@ -10219,6 +10267,7 @@ function mvVaultMenu(e,type,id){
   if(m._open&&m._id===id&&m._type===type){ mvVaultCloseMenu(); return; }
   document.removeEventListener('click',mvVaultCloseMenu); document.removeEventListener('keydown',mvVaultMenuEsc);
   m.innerHTML='<button type="button" onclick="mvVaultRename(\''+type+'\',\''+id+'\')">이름 변경</button>'
+    +'<button type="button" onclick="mvVaultMoveOpen(\''+type+'\',\''+id+'\')">이동</button>'
     +'<button type="button" class="mv-ctx-del" onclick="mvVaultDelete(\''+type+'\',\''+id+'\')">삭제</button>';
   m.style.display='flex';
   var mw=150,mh=84;
