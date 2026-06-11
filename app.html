@@ -6547,10 +6547,16 @@ async function cospRenderNotices(materialsOnly){
   var s=_cospScope();
   var _rs=(window._cospRoom==='branch'?'지점':'팀');
   if(!_adminAll && !s.id){
-    /* 소속 없음 — 어드민은 평상시 미열람 안내 + 사고 대응 버튼(레이아웃 정상 노출, 차단 아님) / 일반은 소속 안내 */
-    box.innerHTML='<div class="mys-news-empty">'+(_cospAdmin
-      ?('어드민은 평상시 '+_rs+' 공지를 열람하지 않습니다.<br><button class="osws-newbtn" style="margin-top:12px" onclick="cospAdminAll()">전체 '+_rs+' 공지 열람 (사고 대응)</button>')
-      :('소속 '+_rs+' 정보가 없습니다.'))+'</div>';
+    /* 소속 없음 — 어드민은 페이지 레이아웃(좌목록+우뷰어)은 정상 노출(페이지 검증 가능), 목록 영역에 평상시 미열람 안내+사고대응 버튼.
+       내용(사용자 글)만 안 보이고 화면 구조는 보임. 일반은 소속 안내. */
+    if(_cospAdmin){
+      box.innerHTML='<div class="split cosp-split" id="cosp-notice-split">'
+        +'<div class="col list-col"><div class="list"><div class="mys-news-empty" style="padding:22px 12px;line-height:1.6">어드민은 평상시 '+_rs+' 공지를 열람하지 않습니다.<br>(화면 구조는 검증용으로 표시됩니다)<br><button class="osws-newbtn" style="margin-top:12px" onclick="cospAdminAll()">전체 '+_rs+' 공지 열람 (사고 대응)</button></div></div></div>'
+        +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
+        +'<div class="viewer"><div class="mys-news-empty">선택된 공지가 없습니다.</div></div></div></div>';
+    } else {
+      box.innerHTML='<div class="mys-news-empty">소속 '+_rs+' 정보가 없습니다.</div>';
+    }
     return;
   }
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
