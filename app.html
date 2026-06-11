@@ -10456,7 +10456,7 @@ function filterMys(el,cat){
   /* 스크립트 칩 = 인라인 작업공간(글쓰기 카드 표시 + 2카드). 다른 칩 = 해제(공용 회귀 0) */
   var _scr=(cat==='스크립트'); var _nr=document.getElementById('mys-scr-newrow');
   if(_ms){ _ms.classList.toggle('scr-mode', _scr); }
-  if(_nr){ _nr.style.display=_scr?'':'none'; }
+  if(_nr){ _nr.style.display=_scr?'block':'none'; }  /* 'block' 명시 — display:''는 CSS display:none을 못 덮음 */
   /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
