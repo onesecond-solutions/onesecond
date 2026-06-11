@@ -570,6 +570,7 @@
   ];
   function _isGA(r){ return r.indexOf('ga_')===0; }
   function _isIns(r){ return r.indexOf('insurer_')===0; }
+  var _STD9 = {admin:1,ga_branch_manager:1,ga_manager:1,ga_member:1,ga_staff:1,insurer_branch_manager:1,insurer_manager:1,insurer_member:1,insurer_staff:1};
   // 영역: label + exp(정답 role_access_map §1-2)
   var AC_AREAS = [
     {key:'home',label:'홈',exp:function(r){return r==='admin'||_isGA(r);}},
@@ -578,7 +579,7 @@
     {key:'quick',label:'Quick',exp:function(r){return r==='admin'||_isGA(r);}},
     {key:'news',label:'보험이슈',exp:function(r){return r==='admin'||_isGA(r);}},
     {key:'voice',label:'현장의 소리',exp:function(r){return r==='admin'||_isGA(r);}},
-    {key:'together',label:'함께해요',exp:function(r){return true;}},
+    {key:'together',label:'함께해요',exp:function(r){return !!_STD9[r];}},  /* 표준 9 role만. 미분류=승인대기=전부 X */
     {key:'pricing',label:'요금제',exp:function(r){return r==='admin'||_isGA(r);}},
     {key:'insurer-vault',label:'보험사 자료실',exp:function(r){return r==='admin'||_isIns(r);}},
     {key:'admin',label:'어드민',exp:function(r){return r==='admin';}},
@@ -587,6 +588,7 @@
   ];
   // 실제 코드 게이팅 — _canSee* 직접 실행(role override) + CSS/applyRoleClass 규칙 (app.html:3258-3278 정합)
   function _gateActual(role, key){
+    if(!_STD9[role]) return false;  /* 미분류(승인 대기) = 전체 차단 — applyRoleClass is-pending 게이트 정합 */
     window._roleSimOverride = role;
     var isIns = role.indexOf('insurer_')===0, isAdmin = role==='admin', v;
     switch(key){
@@ -601,7 +603,7 @@
     window._roleSimOverride = null;  /* 복원 — 실사용 게이팅 영향 0 */
     return v;
   }
-  window._acVisAreaRow = false;  /* false=role행·영역열(기본) / true=영역행·role열(전환) */
+  window._acVisAreaRow = true;  /* 기본=영역행·role열(영역이 계속 늘어나므로 세로 확장). 전환 시 role행·영역열 */
   window.acVisOrient = function(){ window._acVisAreaRow = !window._acVisAreaRow; window.acLoadVisibility(); };
   window.acLoadVisibility = function(){
     var host = document.getElementById('ac-visibility-list'); if(!host) return;

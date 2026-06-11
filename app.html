@@ -964,6 +964,15 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-vis-detail .vd-bad{color:var(--err);font-weight:700}
 .ac-vis-table tr.rls-bad td{background:color-mix(in srgb,var(--err) 10%,transparent)}
 .ac-vis-table tr.rls-bad td.ac-vis-rolecell{color:var(--err)}
+/* 미분류(승인 대기) 게이트 — 전체 차단 오버레이 */
+.pending-gate{position:fixed;inset:0;background:var(--bg);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;text-align:center}
+.pending-gate.on{display:flex}
+.pending-gate-box{max-width:420px}
+.pending-gate-box .pg-ic{font-size:3rem;line-height:1;margin-bottom:10px}
+.pending-gate-box h2{font-size:1.3rem;font-weight:800;color:var(--tp);margin-bottom:10px}
+.pending-gate-box p{font-size:0.92rem;color:var(--ts);line-height:1.6;margin-bottom:22px}
+.pending-gate-box .pg-btn{background:var(--ac);color:#fff;border:none;border-radius:var(--radius-sm,9px);padding:11px 24px;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit}
+.pending-gate-box .pg-btn:hover{background:var(--ach,#7C7FF2)}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
@@ -3279,6 +3288,25 @@ function _canSeeVoice(){
   return r === 'admin' || r.indexOf('ga_') === 0;
 }
 window._canSeeVoice = _canSeeVoice;
+/* 표준 9 role 판별 — 미분류 가입자(9 role에 안 맞는 사람, 예: 민인환) = 승인 대기 게이팅 대상 */
+var _STD_ROLES = {admin:1, ga_branch_manager:1, ga_manager:1, ga_member:1, ga_staff:1, insurer_branch_manager:1, insurer_manager:1, insurer_member:1, insurer_staff:1};
+function _isStdRole(r){ return !!_STD_ROLES[r]; }
+window._isStdRole = _isStdRole;
+/* 미분류(승인 대기) 게이트 — 로그인했으나 표준 role 아님 → 전체 오버레이 차단. 어드민 승인(정식 role 부여) 후 해제 */
+function _renderPendingGate(show){
+  var g = document.getElementById('pendingGate');
+  if(show){
+    if(!g){
+      g = document.createElement('div'); g.id='pendingGate'; g.className='pending-gate on';
+      g.innerHTML = '<div class="pending-gate-box"><div class="pg-ic">⏳</div>'
+        +'<h2>가입 승인 대기 중입니다</h2>'
+        +'<p>계정의 소속·역할이 아직 확정되지 않았습니다.<br>어드민 승인 후 이용하실 수 있습니다.</p>'
+        +'<button class="pg-btn" onclick="(window.confirmLogout||function(){location.reload();})()">다른 계정으로 로그인</button></div>';
+      document.body.appendChild(g);
+    } else { g.classList.add('on'); }
+  } else if(g){ g.classList.remove('on'); }
+}
+window._renderPendingGate = _renderPendingGate;
 /* 어드민 사이드바 미처리 가입승인 배지 (진입 유도) — admin 전용. count 주면 그대로, 없으면 직접 조회 */
 window._refreshAdminBadge = function(count){
   var b = document.getElementById('nav-admin-badge'); if(!b) return;
@@ -3307,8 +3335,10 @@ window._acLazy = _acLazy;
 function applyRoleClass(){
   var app = document.getElementById('app'); if(!app) return;
   var r = _getOsUserRole();
-  app.classList.remove('is-insurer','is-admin');
-  if(r === 'admin') app.classList.add('is-admin');
+  app.classList.remove('is-insurer','is-admin','is-pending');
+  var _pending = (r !== '' && !_isStdRole(r));  /* 로그인했으나 표준 9 role 아님 = 미분류 = 승인 대기 */
+  if(_pending) app.classList.add('is-pending');
+  else if(r === 'admin') app.classList.add('is-admin');
   else if(r.indexOf('insurer_') === 0) app.classList.add('is-insurer');
   /* nav 노출 (nav-admin polling 폐기 → role 확정 시 일괄) */
   var na = document.getElementById('nav-admin');
@@ -3324,6 +3354,7 @@ function applyRoleClass(){
   /* 통합 검색 = admin 전용 (퀄리티 완성 전 비공개, §5 인큐베이션) */
   var sb = document.querySelector('.head .search');
   if(sb) sb.style.display = (r === 'admin') ? '' : 'none';
+  if(typeof _renderPendingGate === 'function') _renderPendingGate(_pending);  /* 미분류 = 승인 대기 게이트 표시/해제 */
 }
 window.applyRoleClass = applyRoleClass;
 /* 인라인 게이팅(첫 페인트)이 is-insurer/is-admin 1차 부착. nav 노출·재확정은 bootView(role 확정)에서 1회 — 즉시/DOMContentLoaded 중복 호출 폐기. */
