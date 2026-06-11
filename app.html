@@ -208,6 +208,24 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .vttl{font-size:1.25rem;font-weight:800;margin-bottom:6px;line-height:1.4;}
 .vmeta{font-size:0.75rem;color:var(--tf);margin-bottom:18px;}
 .vbody{font-size:0.875rem;color:var(--bodytx);line-height:1.85;}
+/* ═══ 공용 인라인 작업공간 셸 (Phase 0, 2026-06-11) — 우측 작업공간 view/create/edit. 노란 메모지 금지(create=accent / edit=warn) ═══ */
+.osws-newrow{text-align:center;padding:12px 0 6px;}
+.osws-newbtn{width:210px;height:44px;background:var(--ac);color:#fff;border:0;border-radius:var(--radius-md,10px);font-weight:700;font-size:0.9rem;cursor:pointer;}
+.osws-newbtn:hover{background:var(--ach);}
+.osws-panel{border:1px solid var(--bd);border-radius:var(--radius-md,10px);overflow:hidden;margin-top:4px;}
+.osws-panel.osws-create{border-color:var(--ac);}
+.osws-panel.osws-edit{border-color:var(--warn);}
+.osws-bar{height:4px;}
+.osws-panel.osws-create .osws-bar{background:var(--ac);}
+.osws-panel.osws-edit .osws-bar{background:var(--warn);}
+.osws-head{padding:10px 14px 0;}
+.osws-label{display:inline-block;font-size:0.72rem;font-weight:800;padding:3px 10px;border-radius:6px;color:#fff;}
+.osws-panel.osws-create .osws-label{background:var(--ac);}
+.osws-panel.osws-edit .osws-label{background:var(--warn);}
+.osws-form{padding:8px 14px 0;}
+.osws-acts{display:flex;gap:8px;padding:14px;}
+.osws-cancel{background:var(--s2);color:var(--tp);border:1px solid var(--bd);border-radius:8px;padding:0 18px;height:38px;cursor:pointer;font-weight:600;}
+.osws-tempcard{opacity:0.85;}
 .answer{margin-top:18px;background:var(--s2);border-radius:10px;padding:16px 18px;}
 .answer .who{font-size:0.75rem;color:var(--t-uw);font-weight:700;margin-bottom:8px;}
 .atts{margin-top:20px;border-top:0.5px solid var(--bd);padding-top:16px;}
@@ -2165,6 +2183,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="col viewer-col">
           <button class="backbtn" onclick="togetherBack()">&#8249; 목록으로</button>
+          <!-- Phase 0 파일럿: 인라인 작업공간 글쓰기 버튼(공존). 기존 필터줄 모달 버튼은 그대로 유지 — 화면 비교 후 일괄 제거 예정 -->
+          <div class="osws-newrow" id="tg-newrow"><button class="osws-newbtn" onclick="openTogetherInline()">+ 글쓰기 (인라인)</button></div>
           <div class="viewer" id="tg-viewer"><div class="mys-news-empty">왼쪽에서 글을 선택하세요.</div></div>
         </div>
       </div>
@@ -7382,7 +7402,7 @@ function togetherOpen(idx,keepList){
   var me=(typeof _getOwnerId==='function')?_getOwnerId():null;
   var meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
   var canDel=(me&&String(me)===String(r.author_id))||meAdmin;
-  var delBtn=canDel?('<div class="post-acts"><button class="post-act" onclick="tgEditOpen('+JSON.stringify(r.id)+')">✏️ 수정</button><button class="post-act post-act-del" onclick="deleteTogether('+JSON.stringify(r.id)+')">삭제</button></div>'):'';
+  var delBtn=canDel?('<div class="post-acts"><button class="post-act" onclick="tgEditInline('+JSON.stringify(r.id)+')">✏️ 수정</button><button class="post-act post-act-del" onclick="deleteTogether('+JSON.stringify(r.id)+')">삭제</button></div>'):'';
   v.innerHTML='<span class="vbadge">'+_tgEsc(r.category||'자유')+'</span><div class="vttl">'+_tgEsc(r.title||'제목 없음')+'</div><div class="vmeta">'+_tgDate(r.created_at)+(_tgWho(r)?' · '+_tgWho(r):'')+'</div><div class="vbody">'+_tgEsc(r.content||'').replace(/\n/g,'<br>')+_ah.html+'</div>'+delBtn;
   var items=document.querySelectorAll('#tg-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on',i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.add('show-viewer'); }
@@ -7397,6 +7417,81 @@ function openTogetherWrite(edit){ var m=document.getElementById('tgWriteModal');
 /* 함께해요 글 편집 진입 — 캐시에서 row 찾아 편집 모드 오픈 (본인+admin) */
 function tgEditOpen(id){ var rows=window._tgCache||[]; var r=null; for(var i=0;i<rows.length;i++){ if(String(rows[i].id)===String(id)){ r=rows[i]; break; } } if(!r){ alert('항목을 찾을 수 없습니다.'); return; } openTogetherWrite({id:id, row:r}); }
 window.tgEditOpen=tgEditOpen;
+
+/* ═══ 공용 인라인 작업공간 셸 (Phase 0, 2026-06-11) — 우측 작업공간에 create/edit 폼 인라인 렌더.
+ * 컬러바+상태라벨(작성 중/수정 중)+저장/취소. 노란 메모지 금지(create=accent/edit=warn). dia-panel 패턴 일반화.
+ * ★ 기존 모달(tgWriteModal·openTogetherWrite·saveTogether) 무수정 유지 — 인라인은 별도 id(tgi-f-*)로 공존. 화면 확인 후 일괄 제거 예정. ═══ */
+window.OSWS=window.OSWS||{
+  openForm:function(viewer, mode, formHtml, onSave, onCancel){
+    if(!viewer) return;
+    var lbl=(mode==='edit')?'수정 중':'작성 중';
+    viewer.innerHTML='<div class="osws-panel osws-'+mode+'">'
+      +'<div class="osws-bar"></div>'
+      +'<div class="osws-head"><span class="osws-label">'+lbl+'</span></div>'
+      +'<div class="osws-form">'+formHtml+'</div>'
+      +'<div class="osws-acts"><button class="iv-write-submit osws-save" type="button">저장</button><button class="osws-cancel" type="button">취소</button></div>'
+      +'</div>';
+    var sv=viewer.querySelector('.osws-save'); if(sv) sv.onclick=onSave;
+    var cc=viewer.querySelector('.osws-cancel'); if(cc) cc.onclick=onCancel;
+  }
+};
+/* 함께해요 인라인 글쓰기/수정 (Phase 0 파일럿 — 기존 모달과 공존, 별도 id tgi-f-*) */
+function openTogetherInline(edit){
+  var v=document.getElementById('tg-viewer'); if(!v) return;
+  window._tgiEdit=edit||null;
+  var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
+  var opts=(admin?'<option>공지</option>':'')+'<option>전산 이상 신고</option><option>사용후기</option>';
+  var formHtml=''
+    +'<div class="iv-fld"><label>분류</label><select id="tgi-f-cat" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);font-size:0.9em">'+opts+'</select></div>'
+    +'<div class="iv-fld"><label>제목</label><input type="text" id="tgi-f-title" class="mys-write-input" maxlength="120" placeholder="제목"></div>'
+    +'<div class="iv-fld"><label>내용</label><textarea id="tgi-f-content" class="mys-write-textarea" maxlength="4000" placeholder="내용을 입력하세요"></textarea></div>'
+    +'<div class="iv-fld"><label>첨부 (선택)</label><input type="file" id="tgi-f-file" multiple onchange="mysWriteFilePreview(this,\'tgi-f-filePreview\')"><div id="tgi-f-filePreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>';
+  var mode=(edit&&edit.row)?'edit':'create';
+  window.OSWS.openForm(v, mode, formHtml, saveTogetherInline, closeTogetherInline);
+  var sel=document.getElementById('tgi-f-cat'), ti=document.getElementById('tgi-f-title'), co=document.getElementById('tgi-f-content');
+  if(mode==='edit'){ if(sel&&edit.row.category){ sel.value=edit.row.category; } if(ti) ti.value=edit.row.title||''; if(co) co.value=edit.row.content||''; }
+  var nr=document.getElementById('tg-newrow'); if(nr) nr.style.display='none';
+  if(mode==='create'){
+    var list=document.getElementById('tg-list');
+    if(list){ var its=list.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.remove('on');
+      var tc=document.createElement('div'); tc.className='item on osws-tempcard'; tc.id='tg-tempcard';
+      tc.innerHTML='<span class="badge">작성 중</span><div class="it">새 글 작성 중…</div><div class="id">저장하면 목록에 추가됩니다</div>';
+      list.insertBefore(tc, list.firstChild);
+    }
+  }
+  if(window.innerWidth<=1024){ var sp=document.getElementById('tg-split'); if(sp) sp.classList.add('show-viewer'); }
+  setTimeout(function(){ if(ti) ti.focus(); },60);
+}
+function _tgInlineDone(){ window._tgiEdit=null; var tc=document.getElementById('tg-tempcard'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc); var nr=document.getElementById('tg-newrow'); if(nr) nr.style.display=''; window._tgLoaded=false; loadTogether(true); }
+function closeTogetherInline(){ window._tgiEdit=null; var tc=document.getElementById('tg-tempcard'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc); var nr=document.getElementById('tg-newrow'); if(nr) nr.style.display=''; renderTogether(); }
+function tgEditInline(id){ var rows=window._tgCache||[]; var r=null; for(var i=0;i<rows.length;i++){ if(String(rows[i].id)===String(id)){ r=rows[i]; break; } } if(!r){ alert('항목을 찾을 수 없습니다.'); return; } openTogetherInline({id:id, row:r}); }
+async function saveTogetherInline(){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var cat=((document.getElementById('tgi-f-cat')||{}).value||'전산 이상 신고');
+  var isAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
+  if(cat==='공지' && !isAdmin){ alert('공지는 운영자만 작성할 수 있습니다.'); return; }
+  var title=((document.getElementById('tgi-f-title')||{}).value||'').trim();
+  var content=((document.getElementById('tgi-f-content')||{}).value||'').trim();
+  if(!title){ alert('제목을 입력해 주세요.'); return; }
+  if(!content){ alert('내용을 입력해 주세요.'); return; }
+  var sv=document.querySelector('#tg-viewer .osws-save'); if(sv){ sv.disabled=true; sv.textContent='저장 중…'; }
+  try{
+    if(window._tgiEdit){
+      var pres=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(window._tgiEdit.id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({category:cat,title:title,content:content})});
+      if(pres.ok||pres.status===204){ _tgInlineDone(); if(typeof toast==='function') toast('수정됐어요!'); }
+      else { var perr=await pres.json().catch(function(){return{};}); alert('수정 실패: '+(perr.message||pres.status)); if(sv){sv.disabled=false;sv.textContent='저장';} }
+      return;
+    }
+    var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('tgi-f-file','together',token); if(a===null){ if(sv){sv.disabled=false;sv.textContent='저장';} return; } atts=a||[]; }
+    var body={board_type:'community', category:cat, title:title, content:content, author_id:(u.id||window.AppState.userId||''), author_name:(u.name||''), attachments:atts};
+    var res=await fetch(window.db.url('/rest/v1/posts'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    if(res.ok||res.status===201){ _tgInlineDone(); if(typeof toast==='function') toast('함께해요에 등록됐어요!'); }
+    else { var err=await res.json().catch(function(){return{};}); alert('등록 실패: '+(err.message||res.status)); if(sv){sv.disabled=false;sv.textContent='저장';} }
+  }catch(e){ alert('네트워크 오류가 발생했습니다.'); if(sv){sv.disabled=false;sv.textContent='저장';} }
+}
+window.openTogetherInline=openTogetherInline; window.saveTogetherInline=saveTogetherInline; window.closeTogetherInline=closeTogetherInline; window.tgEditInline=tgEditInline; window._tgInlineDone=_tgInlineDone;
 function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; window._tgEdit=null; var tf=document.getElementById('tg-f-file'); if(tf) tf.value=''; var tp=document.getElementById('tg-f-filePreview'); if(tp) tp.innerHTML=''; }
 async function saveTogether(){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
