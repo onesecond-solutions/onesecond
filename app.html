@@ -8818,7 +8818,9 @@ function renderMyspace(items){
   window._mysFiltered=items||[];
   var vv=document.getElementById('mysViewer');
   if(!items||items.length===0){
-    listEl.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>+ 글쓰기 버튼으로 첫 항목을 작성해보세요.<br><button class="mys-write-empty-cta" onclick="openMyspaceWrite()">+ 첫 항목 작성</button></div>';
+    /* 빈 상태 CTA = 현재 칩 정합. 스크립트 칩이면 인라인 작업공간, 그 외는 기존 모달 */
+    var _emptyCta=(window._mysCat==='스크립트')?'openScriptInline()':'openMyspaceWrite()';
+    listEl.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>+ 글쓰기 버튼으로 첫 항목을 작성해보세요.<br><button class="mys-write-empty-cta" onclick="'+_emptyCta+'">+ 첫 항목 작성</button></div>';
     if(vv) vv.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>';
     return;
   }
