@@ -320,22 +320,64 @@
   };
   window.acUserDetailClose=function(){ var ov=document.getElementById('ac-udetail-ov'); if(ov) ov.classList.remove('on'); };
 
-  // ── 지점 view (지점 카드 + 소속 인원) ──
+  // ── 지점 view — 테이블 + 행클릭 상세 + 활성토글/삭제(인원0) ──
+  var _brCache={ list:[], cnt:{} };
   window.acLoadBranches = async function(){
     var area=document.getElementById('ac-branches-list'); if(!area) return;
     area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
     var bs=await _rows('branches?select=id,name,ga_org_name,is_active&order=name.asc');
     var us=await _rows('users?select=branch_id&status=eq.active');
     var cnt={}; us.forEach(function(u){ if(u.branch_id) cnt[u.branch_id]=(cnt[u.branch_id]||0)+1; });
+    _brCache={ list:bs, cnt:cnt };
     var c=document.getElementById('ac-branches-count'); if(c) c.textContent=bs.length+'개';
     if(!bs.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="building-2"></i>등록된 지점이 없습니다</div>'; if(window.lucide) window.lucide.createIcons(); return; }
-    area.innerHTML=bs.map(function(b){
-      var n=cnt[b.id]||0; var zero=(n===0)?' <span class="ac-badge high">인원 0</span>':'';
-      return '<div class="ac-entity">'+
-        '<span class="ac-badge medium">'+esc(b.ga_org_name||'GA')+'</span>'+zero+
-        '<div class="ac-entity-name">'+esc(b.name)+'</div>'+
-        '<div class="ac-entity-meta">소속 인원 '+n+'명</div></div>';
+    var body=bs.map(function(b){
+      var n=cnt[b.id]||0;
+      var stBadge=(b.is_active===false)?'<span class="ac-badge high">비활성</span>':'<span class="ac-badge st-active">활성</span>';
+      var nCell=(n===0)?'<span style="color:var(--err);font-weight:700">0</span>':('<b>'+n+'</b>');
+      var toggleBtn='<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acBranchToggle(\''+esc(b.id)+'\','+(b.is_active===false?'true':'false')+')">'+(b.is_active===false?'활성화':'비활성')+'</button>';
+      var delBtn=(n===0)?' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="event.stopPropagation();acBranchDelete(\''+esc(b.id)+'\')">삭제</button>':'';
+      return '<tr class="ac-tr-clk" onclick="acBranchDetail(\''+esc(b.id)+'\')"><td class="ac-td-name">'+esc(b.name)+'</td><td class="ac-td-sub">'+esc(b.ga_org_name||'-')+'</td><td style="text-align:center">'+nCell+'</td><td>'+stBadge+'</td><td class="ac-td-acts">'+toggleBtn+delBtn+'</td></tr>';
     }).join('');
+    area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>지점명</th><th>GA 조직</th><th>인원</th><th>상태</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    if(window.lucide) window.lucide.createIcons();
+  };
+  window.acBranchDetail=function(id){
+    var L=_brCache.list||[], b=null; for(var i=0;i<L.length;i++){ if(String(L[i].id)===String(id)){ b=L[i]; break; } }
+    if(!b) return;
+    var n=_brCache.cnt[id]||0;
+    var ov=document.getElementById('ac-udetail-ov');
+    if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; document.body.appendChild(ov); }
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acUserDetailClose()">✕</button>'
+      +'<div class="ac-ud-title">'+esc(b.name)+'</div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">GA 조직</span><span class="ac-ud-v">'+esc(b.ga_org_name||'-')+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">소속 인원</span><span class="ac-ud-v">'+n+'명</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">상태</span><span class="ac-ud-v">'+(b.is_active===false?'비활성':'활성')+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">ID</span><span class="ac-ud-v">'+esc(b.id)+'</span></div></div>';
+    ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); };
+    ov.classList.add('on');
+  };
+  window.acBranchToggle=async function(id, activate){
+    try{
+      var res=await window.db.fetch('/rest/v1/branches?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({is_active:!!activate})});
+      if(!res.ok){ acToast((activate?'활성화':'비활성')+' 실패 ('+res.status+') — RLS 확인',true); return; }
+      if(window.db.logActivity) window.db.logActivity('update_branch','branch',id,{is_active:!!activate});
+      acToast(activate?'지점을 활성화했습니다':'지점을 비활성화했습니다');
+      window.acLoadBranches();
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+  window.acBranchDelete=async function(id){
+    var L=_brCache.list||[], b=null; for(var i=0;i<L.length;i++){ if(String(L[i].id)===String(id)){ b=L[i]; break; } }
+    var n=_brCache.cnt[id]||0;
+    if(n>0){ acToast('소속 인원이 있는 지점은 삭제할 수 없습니다',true); return; }
+    if(!confirm('"'+((b&&b.name)||'이 지점')+'"을(를) 삭제하시겠습니까?\n되돌릴 수 없습니다.')) return;
+    try{
+      var res=await window.db.fetch('/rest/v1/branches?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      if(!res.ok){ var m='삭제 실패 ('+res.status+')'; if(res.status===409) m+=' — 연관 데이터(FK)'; else if(res.status===403||res.status===401) m+=' — RLS 확인'; acToast(m,true); return; }
+      if(window.db.logActivity) window.db.logActivity('delete_branch','branch',id,{name:(b&&b.name)||''});
+      acToast('지점을 삭제했습니다');
+      window.acLoadBranches();
+    }catch(e){ acToast('네트워크 오류',true); }
   };
 
   // ── 콘텐츠 view (게시글 / 댓글 / 자료실) ──
