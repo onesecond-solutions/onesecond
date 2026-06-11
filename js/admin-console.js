@@ -241,23 +241,69 @@
   // ── 콘텐츠 view (게시글 / 댓글 / 자료실) ──
   var BOARD_LABEL={ qna:'스마트 게시판', insurer:'보험사', navigation:'네비방', hub:'허브',
     manager_notice:'공지', manager_lounge:'매니저 라운지', archive_legacy:'아카이브' };
-  window.acLoadPosts = async function(){
-    var area=document.getElementById('ac-posts-list'); if(!area) return;
-    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
-    var rows=await _rows('posts?select=id,title,board_type,created_at,is_hidden&order=created_at.desc&limit=100');
+  // 게시글 — 필터(게시판)·검색(제목·본문)·본문 미리보기·작성자·페이지네이션. 300건 캐시 후 클라이언트 필터
+  var _pState = { cache:null, filter:'all', q:'', page:0, per:20 };
+  window.acLoadPosts = async function(reload){
+    var list=document.getElementById('ac-posts-list'); if(!list) return;
+    _renderPostTools();
+    if(!_pState.cache || reload){
+      list.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+      _pState.cache = await _rows('posts?select=id,title,content,board_type,author_name,author_id,created_at,is_hidden&order=created_at.desc&limit=300');
+    }
+    _renderPostList();
+  };
+  function _renderPostTools(){
+    var t=document.getElementById('ac-posts-tools'); if(!t) return;
+    var boards=['all','qna','insurer','navigation','hub','manager_notice','manager_lounge','archive_legacy'];
+    var chips=boards.map(function(b){ var lbl=(b==='all'?'전체':(BOARD_LABEL[b]||b)); return '<button class="ac-chip'+(_pState.filter===b?' active':'')+'" onclick="acPostFilter(\''+b+'\')">'+lbl+'</button>'; }).join('');
+    t.innerHTML='<div class="ac-post-tools">'+chips+'<input class="ac-post-search" id="ac-post-q" placeholder="제목·본문 검색" value="'+esc(_pState.q)+'" oninput="acPostSearch(this.value)"></div>';
+  }
+  window.acPostFilter=function(b){ _pState.filter=b; _pState.page=0; _renderPostTools(); _renderPostList(); };
+  window.acPostSearch=function(v){ _pState.q=v; _pState.page=0; _renderPostList(); };  /* tools 재렌더 안 함 — 입력 포커스 유지 */
+  function _postFiltered(){
+    var rows=_pState.cache||[];
+    if(_pState.filter!=='all') rows=rows.filter(function(p){ return p.board_type===_pState.filter; });
+    var q=_pState.q.trim().toLowerCase();
+    if(q) rows=rows.filter(function(p){ return ((p.title||'')+' '+(p.content||'')).toLowerCase().indexOf(q)>=0; });
+    return rows;
+  }
+  function _renderPostList(){
+    var list=document.getElementById('ac-posts-list'); if(!list) return;
+    var rows=_postFiltered();
     var c=document.getElementById('ac-posts-count'); if(c) c.textContent=rows.length+'건';
-    if(!rows.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="file-text"></i>게시글 없음</div>'; if(window.lucide) window.lucide.createIcons(); return; }
-    area.innerHTML=rows.map(function(p){
+    if(!rows.length){ list.innerHTML='<div class="ac-card-empty"><i data-lucide="file-text"></i>해당 게시글이 없습니다</div>'; _renderPostPager(0); if(window.lucide) window.lucide.createIcons(); return; }
+    var per=_pState.per, pages=Math.ceil(rows.length/per), page=Math.min(_pState.page, pages-1); if(page<0) page=0;
+    _pState.page=page;
+    var slice=rows.slice(page*per, (page+1)*per);
+    list.innerHTML=slice.map(function(p){
       var hid=p.is_hidden?' <span class="ac-badge high">숨김</span>':'';
+      var who=p.author_name||(p.author_id?('ID '+String(p.author_id).slice(0,8)):'작성자 미상');
+      var body=esc(p.content||'').replace(/\n/g,'<br>');
       return '<div class="ac-entity"><span class="ac-badge medium">'+esc(BOARD_LABEL[p.board_type]||p.board_type||'')+'</span>'+hid+
         '<div class="ac-entity-name">'+esc(p.title||'(제목 없음)')+'</div>'+
-        '<div class="ac-entity-sub">'+esc(_fmtDate(p.created_at))+'</div>'+
+        '<div class="ac-post-meta">'+esc(who)+' · '+esc(_fmtDate(p.created_at))+'</div>'+
+        (p.content?'<div class="ac-post-body" id="pb-'+esc(p.id)+'">'+body+'</div><button class="ac-linkbtn" onclick="acPostToggleBody(\''+esc(p.id)+'\',this)">전체 보기</button>':'<div class="ac-post-meta" style="font-style:italic">본문 없음</div>')+
         '<div style="display:flex;gap:8px;margin-top:10px">'+
           '<button class="ac-btn" onclick="acHidePost(\''+esc(p.id)+'\','+(p.is_hidden?'false':'true')+')">'+(p.is_hidden?'숨김 해제':'숨기기')+'</button>'+
           '<button class="ac-btn" style="border-color:var(--err);color:var(--err)" onclick="acDeletePost(\''+esc(p.id)+'\')">삭제</button>'+
         '</div></div>';
     }).join('');
-  };
+    _renderPostPager(pages);
+    if(window.lucide) window.lucide.createIcons();
+  }
+  window.acPostToggleBody=function(id, btn){ var b=document.getElementById('pb-'+id); if(!b) return; var full=b.classList.toggle('full'); if(btn) btn.textContent=full?'접기':'전체 보기'; };
+  function _renderPostPager(pages){
+    var el=document.getElementById('ac-posts-pager'); if(!el) return;
+    if(pages<=1){ el.innerHTML=''; return; }
+    var p=_pState.page, html='<button class="ac-pager-btn" '+(p<=0?'disabled':'')+' onclick="acPostPage('+(p-1)+')">‹</button>';
+    for(var i=0;i<pages;i++){
+      if(i<2 || i>pages-3 || Math.abs(i-p)<=1){ html+='<button class="ac-pager-btn'+(i===p?' on':'')+'" onclick="acPostPage('+i+')">'+(i+1)+'</button>'; }
+      else if(i===2 || i===pages-3){ html+='<span style="padding:0 5px;color:var(--tf)">…</span>'; }
+    }
+    html+='<button class="ac-pager-btn" '+(p>=pages-1?'disabled':'')+' onclick="acPostPage('+(p+1)+')">›</button>';
+    el.innerHTML=html;
+  }
+  window.acPostPage=function(i){ _pState.page=i; _renderPostList(); };
   // 댓글: 본문 컬럼 미확인 → 최소 구성(후속 본문 보강)
   window.acLoadComments = async function(){
     var area=document.getElementById('ac-comments-list'); if(!area) return;
@@ -283,7 +329,7 @@
       if(!res.ok){ acToast('숨김 처리 실패 ('+res.status+')',true); return; }
       if(window.db.logActivity) window.db.logActivity(hide?'hide_post':'unhide_post','post',id,{});
       acToast(hide?'게시글을 숨겼습니다':'숨김을 해제했습니다');
-      if(window.acLoadPosts) window.acLoadPosts();
+      if(window.acLoadPosts) window.acLoadPosts(true);
     }catch(e){ acToast('네트워크 오류',true); }
   };
   window.acDeletePost = async function(id){
@@ -293,7 +339,7 @@
       if(!res.ok){ acToast('삭제 실패 ('+res.status+')',true); return; }
       if(window.db.logActivity) window.db.logActivity('delete_post','post',id,{});
       acToast('게시글을 삭제했습니다');
-      if(window.acLoadPosts) window.acLoadPosts();
+      if(window.acLoadPosts) window.acLoadPosts(true);
     }catch(e){ acToast('네트워크 오류',true); }
   };
   window.acDeleteComment = async function(id){
