@@ -232,14 +232,14 @@
         : (st==='suspended')?'<span class="ac-badge high">정지</span>'
         : '<span class="ac-badge st-active">활성</span>';
       var isStd = ROLE_KEYS.indexOf(u.role)>=0;
-      var sel='<select class="ac-user-role" onchange="acUserRole(\''+esc(u.id)+'\',this.value,\''+esc(u.role||'')+'\',this)">'
+      var sel='<select class="ac-user-role" onclick="event.stopPropagation()" onchange="acUserRole(\''+esc(u.id)+'\',this.value,\''+esc(u.role||'')+'\',this)">'
         +(isStd?'':'<option value="'+esc(u.role||'')+'" selected>미분류</option>')
         +ROLE_KEYS.map(function(rk){ return '<option value="'+rk+'"'+(rk===u.role?' selected':'')+'>'+esc(RL[rk]||rk)+'</option>'; }).join('')+'</select>';
       var suspBtn = (st==='suspended')
-        ? '<button class="ac-btn ac-btn-sm" onclick="acUserSuspend(\''+esc(u.id)+'\',false)">해제</button>'
-        : '<button class="ac-btn ac-btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="acUserSuspend(\''+esc(u.id)+'\',true)">정지</button>';
-      var delBtn = (u.role==='admin') ? '' : ' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="acUserDelete(\''+esc(u.id)+'\')">삭제</button>';  /* 어드민 계정은 삭제 버튼 숨김(보호) */
-      return '<tr><td class="ac-td-name">'+esc(u.name||'(이름 없음)')+'</td><td>'+sel+'</td><td>'+stBadge+'</td><td class="ac-td-sub">'+esc(u.company||'-')+'</td><td class="ac-td-sub">'+esc(u.email||'')+'</td><td class="ac-td-date">'+esc(_fmtDate(u.created_at))+'</td><td class="ac-td-acts">'+suspBtn+delBtn+'</td></tr>';
+        ? '<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acUserSuspend(\''+esc(u.id)+'\',false)">해제</button>'
+        : '<button class="ac-btn ac-btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="event.stopPropagation();acUserSuspend(\''+esc(u.id)+'\',true)">정지</button>';
+      var delBtn = (u.role==='admin') ? '' : ' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="event.stopPropagation();acUserDelete(\''+esc(u.id)+'\')">삭제</button>';  /* 어드민 계정은 삭제 버튼 숨김(보호) */
+      return '<tr class="ac-tr-clk" onclick="acUserDetail(\''+esc(u.id)+'\')"><td class="ac-td-name">'+esc(u.name||'(이름 없음)')+'</td><td>'+sel+'</td><td>'+stBadge+'</td><td class="ac-td-sub">'+esc(u.company||'-')+'</td><td class="ac-td-sub">'+esc(u.email||'')+'</td><td class="ac-td-date">'+esc(_fmtDate(u.created_at))+'</td><td class="ac-td-acts">'+suspBtn+delBtn+'</td></tr>';
     }).join('');
     area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>이름</th><th>권한</th><th>상태</th><th>소속</th><th>이메일</th><th>가입</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table></div>';
     _renderUserPager(pages);
@@ -290,6 +290,35 @@
       window.acLoadUsers(true);
     }catch(e){ acToast('네트워크 오류',true); }
   };
+  // 행 클릭 → 사용자 상세 (전체 컬럼 + 지점 이름 매핑). 모달
+  var _UFIELD={ name:'이름', role:'권한', status:'상태', email:'이메일', company:'소속/회사', phone:'전화', branch_id:'지점', team_id:'팀', created_at:'가입일', id:'ID' };
+  window.acUserDetail=async function(id){
+    var ov=document.getElementById('ac-udetail-ov');
+    if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); }; document.body.appendChild(ov); }
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acUserDetailClose()">✕</button><div id="ac-udetail-body"><div class="ac-card-empty">불러오는 중…</div></div></div>';
+    ov.classList.add('on');
+    var u=null; try{ var rs=await _rows('users?id=eq.'+encodeURIComponent(id)+'&select=*'); u=rs&&rs[0]; }catch(e){}
+    var body=document.getElementById('ac-udetail-body'); if(!body) return;
+    if(!u){ body.innerHTML='<div class="ac-card-empty">사용자를 찾을 수 없습니다.</div>'; return; }
+    var RL=window.ROLE_LABEL||{};
+    var brName=''; if(u.branch_id){ try{ var b=await _rows('branches?id=eq.'+encodeURIComponent(u.branch_id)+'&select=name,ga_org_name'); if(b&&b[0]) brName=(b[0].name||'')+(b[0].ga_org_name?(' ('+b[0].ga_org_name+')'):''); }catch(e){} }
+    function row(k,v){ return (v==null||v==='')?'':'<div class="ac-ud-row"><span class="ac-ud-k">'+esc(k)+'</span><span class="ac-ud-v">'+esc(String(v))+'</span></div>'; }
+    var h='<div class="ac-ud-title">'+esc(u.name||'(이름 없음)')+'</div>';
+    h+=row('권한',RL[u.role]||u.role||'미분류');
+    h+=row('상태',u.status==='suspended'?'정지':(u.status==='pending'?'승인대기':(u.status||'활성')));
+    h+=row('이메일',u.email);
+    h+=row('소속/회사',u.company);
+    h+=row('전화',u.phone);
+    h+=row('지점',brName||u.branch_id);
+    h+=row('팀',u.team_id);
+    h+=row('가입일',_fmtDate(u.created_at));
+    h+=row('ID',u.id);
+    // 위에 없는 기타 컬럼 자동 표시(민감 제외)
+    var shown={name:1,role:1,status:1,email:1,company:1,phone:1,branch_id:1,team_id:1,created_at:1,id:1,auth_user_id:1,updated_at:1};
+    Object.keys(u).forEach(function(k){ if(!shown[k] && u[k]!=null && u[k]!==''){ var v=(typeof u[k]==='object')?JSON.stringify(u[k]):u[k]; h+=row(_UFIELD[k]||k,v); } });
+    body.innerHTML=h;
+  };
+  window.acUserDetailClose=function(){ var ov=document.getElementById('ac-udetail-ov'); if(ov) ov.classList.remove('on'); };
 
   // ── 지점 view (지점 카드 + 소속 인원) ──
   window.acLoadBranches = async function(){

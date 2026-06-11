@@ -1007,6 +1007,17 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-td-sub{color:var(--ts);font-size:0.74rem}
 .ac-td-date{color:var(--tf);font-size:0.72rem}
 .ac-btn-sm{padding:3px 9px;font-size:0.74rem}
+.ac-tbl tr.ac-tr-clk{cursor:pointer}
+/* 사용자 상세 모달 */
+.ac-udetail-ov{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:300;padding:20px}
+.ac-udetail-ov.on{display:flex}
+.ac-udetail-box{position:relative;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg,18px);padding:24px;width:100%;max-width:420px;max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.ac-udetail-x{position:absolute;top:14px;right:14px;background:transparent;border:none;font-size:1.1rem;color:var(--ts);cursor:pointer}
+.ac-ud-title{font-size:1.2rem;font-weight:800;color:var(--tp);margin-bottom:14px}
+.ac-ud-row{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:0.85rem}
+.ac-ud-row:last-child{border-bottom:none}
+.ac-ud-k{flex:0 0 88px;color:var(--ts);font-size:0.78rem}
+.ac-ud-v{flex:1;color:var(--tp);word-break:break-all}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
