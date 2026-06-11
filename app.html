@@ -955,8 +955,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-vis-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:0.74rem;color:var(--ts)}
 .ac-vis-legend span{display:inline-flex;align-items:center;gap:5px}
 .ac-vis-legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+.ac-vis-main{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.ac-vis-main .ac-vis-wrap{flex:1 1 420px;min-width:0;margin-top:0}
 .ac-vis-detail{margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:var(--radius-md,13px);background:var(--s1);font-size:0.84rem;display:none}
 .ac-vis-detail.on{display:block}
+.ac-vis-main .ac-vis-detail{flex:0 0 300px;width:300px;margin-top:0;align-self:stretch;min-height:130px}
+.ac-vis-detail-ph{color:var(--tf);font-size:0.8rem;line-height:1.5}
 .ac-vis-detail .vd-bad{color:var(--err);font-weight:700}
 .ac-vis-table tr.rls-bad td{background:color-mix(in srgb,var(--err) 10%,transparent)}
 .ac-vis-table tr.rls-bad td.ac-vis-rolecell{color:var(--err)}
