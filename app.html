@@ -6413,7 +6413,7 @@ function _cospCard(title, meta, body){
 }
 async function cospRenderNotices(materialsOnly){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
-  var s=_cospScope(); if(!s.id){ box.innerHTML='<div class="mys-news-empty">소속 '+(window._cospRoom==='branch'?'지점':'팀')+' 정보가 없습니다.</div>'; return; }
+  var s=_cospScope(); if(!s.id){ var _rn=(window._cospRoom==='branch'?'지점방':'팀방'), _rs=(window._cospRoom==='branch'?'지점':'팀'); box.innerHTML='<div class="mys-news-empty">관리자 계정은 소속 '+_rs+'이 없어 '+_rn+' 콘텐츠가 표시되지 않습니다.<br>'+_rn+' 데이터는 실장·팀원 계정으로 확인하세요.</div>'; return; }
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   try{
     var col=window._cospRoom==='branch'?'branch_id':'team_id';
