@@ -470,17 +470,17 @@
     dashboard:{}, logs:{}, knowledge:{},
     ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점']] },
     content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
-    validation:{ secs:[['visibility','화면 가시성']] },
+    validation:{ secs:[['visibility','화면 가시성'],['rls','데이터 권한(RLS)']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
   };
   var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs', knowledge:'knowledge',
     approvals:'ops', users:'ops', branches:'ops',
     posts:'content', comments:'content', library:'content',
-    visibility:'validation',
+    visibility:'validation', rls:'validation',
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
     branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
-    visibility:'acLoadVisibility' };
+    visibility:'acLoadVisibility', rls:'acLoadRlsOverview' };
   var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','validation','system','logs'];
 
   function _acSpaRoot(){ return document.getElementById('v-admin'); }
@@ -637,5 +637,53 @@
     box.innerHTML='<b>'+rl+'</b> ('+role+') · <b>'+a.label+'</b><br>'
       +'정답(role_access_map): <b>'+(exp?'보여야 함':'숨겨야 함')+'</b> · 실제 코드 게이팅: <b>'+(act?'보임':'숨김')+'</b> → '
       +(ok?'<span style="color:var(--ok);font-weight:700">일치 ✓</span>':'<span class="vd-bad">불일치 ✕ — 게이팅 코드 수정 필요</span>');
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  //  데이터 권한 (RLS) — 테이블별 RLS 활성·정책 현황 (rls_overview RPC, 읽기 전용)
+  //  · OFF/정책없음 = 데이터 보호 공백 가능 → 즉시 발견. 실제 실행 검증(글쓰기 되나)은 다음 단계
+  // ════════════════════════════════════════════════════════════════════
+  // 보호 공백 시 강조할 핵심 테이블(오늘 트랙 정합)
+  var AC_RLS_KEY = ['team_notices','scripts','library','posts','users','myspace_folders','myspace_files'];
+  window.acLoadRlsOverview = function(){
+    var host = document.getElementById('ac-rls-list'); if(!host) return;
+    host.innerHTML = '<div class="ac-card-empty">조회 중…</div>';
+    if(!window.db || !window.db.fetch){ host.innerHTML = '<div class="ac-card-empty">로그인이 필요합니다.</div>'; return; }
+    window.db.fetch('/rest/v1/rpc/rls_overview', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' })
+      .then(function(r){
+        if(r.status===404){ host.innerHTML = '<div class="ac-card-empty">RLS 점검 함수(rls_overview)가 아직 설치되지 않았습니다.<br><code>docs/migrations/2026-06-12_rls_overview.sql</code> 을 Supabase에서 실행하면 표시됩니다.</div>'; return null; }
+        if(!r.ok){ host.innerHTML = '<div class="ac-card-empty">조회 실패 ('+r.status+') — 어드민 권한·함수 설치 확인</div>'; return null; }
+        return r.json();
+      })
+      .then(function(rows){
+        if(!rows) return;
+        if(!Array.isArray(rows)) rows = [];
+        var off=0, nopol=0;
+        // 핵심 테이블 먼저, 그 안에서 문제(off/정책없음) 우선
+        rows.sort(function(a,b){
+          var ka=AC_RLS_KEY.indexOf(a.table_name)>=0?0:1, kb=AC_RLS_KEY.indexOf(b.table_name)>=0?0:1;
+          if(ka!==kb) return ka-kb;
+          return a.table_name<b.table_name?-1:1;
+        });
+        var body = rows.map(function(t){
+          var bad = !t.rls_enabled;
+          var warn = t.rls_enabled && (t.policy_count===0);
+          if(bad) off++; if(warn) nopol++;
+          var key = AC_RLS_KEY.indexOf(t.table_name)>=0;
+          var uniq={}; (t.policies||[]).forEach(function(p){ uniq[p.cmd]=1; });
+          var cmdtxt = Object.keys(uniq).join(', ') || '—';
+          var st = bad ? '<span style="color:var(--err);font-weight:800">RLS OFF</span>'
+                 : warn ? '<span style="color:var(--warn);font-weight:700">정책 없음</span>'
+                 : '<span style="color:var(--ok);font-weight:700">ON</span>';
+          return '<tr class="'+((bad||warn)?'rls-bad':'')+'"><td class="ac-vis-rolecell">'+(key?'★ ':'')+t.table_name+'</td><td>'+st+'</td><td>'+(t.policy_count||0)+'</td><td style="text-align:left;padding:6px 10px;font-size:0.72rem;color:var(--ts)">'+cmdtxt+'</td></tr>';
+        }).join('');
+        var cnt = document.getElementById('ac-rls-count'); if(cnt) cnt.textContent = rows.length+'개 테이블 · OFF '+off+' · 정책없음 '+nopol;
+        host.innerHTML =
+          '<div class="ac-vis-toolbar"><span class="ac-vis-summary">테이블 '+rows.length+' · <span class="'+(off?'bad':'ok')+'">RLS OFF '+off+'</span> · <span class="'+(nopol?'bad':'ok')+'">정책 없음 '+nopol+'</span></span>'
+          +'<button class="ac-vis-rerun" onclick="acLoadRlsOverview()">다시 조회</button></div>'
+          +'<div class="ac-vis-wrap"><table class="ac-vis-table"><thead><tr><th class="ac-vis-rolehead">테이블 (★=핵심)</th><th>RLS</th><th>정책 수</th><th style="text-align:left;padding:8px 10px">동작(cmd)</th></tr></thead><tbody>'+body+'</tbody></table></div>'
+          +'<p style="font-size:0.74rem;color:var(--ts);margin-top:10px"><b style="color:var(--err)">RLS OFF</b>·<b style="color:var(--warn)">정책 없음</b> = 데이터 보호 공백 가능(검토 필요). 정책별 상세 조건(어떤 role·격리)과 실제 실행 검증(글쓰기 되나)은 다음 단계.</p>';
+      })
+      .catch(function(){ host.innerHTML = '<div class="ac-card-empty">조회 중 오류가 발생했습니다.</div>'; });
   };
 })();
