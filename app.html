@@ -933,6 +933,31 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mpb-ds{font-size:0.72rem;color:var(--ts)}
 .mys-pick-cancel{background:transparent;border:none;color:var(--ts);font-size:0.85rem;cursor:pointer;padding:6px 12px;font-family:inherit;border-radius:8px}
 .mys-pick-cancel:hover{color:var(--tp);background:var(--s2)}
+/* 권한 검증 — 화면 가시성 매트릭스 */
+.ac-vis-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ac-vis-summary{font-size:0.92rem;font-weight:700;color:var(--tp)}
+.ac-vis-summary .ok{color:var(--ok)} .ac-vis-summary .bad{color:var(--err)}
+.ac-vis-filter{display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--ts);cursor:pointer;user-select:none;border:1px solid var(--bd);border-radius:8px;padding:5px 10px}
+.ac-vis-rerun{margin-left:auto;background:var(--ac);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit}
+.ac-vis-wrap{overflow-x:auto;border:1px solid var(--bd);border-radius:var(--radius-md,13px)}
+table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
+.ac-vis-table th,.ac-vis-table td{border:1px solid var(--bd);padding:0;text-align:center}
+.ac-vis-table thead th{background:var(--s2);color:var(--tp);font-weight:700;padding:8px 6px;white-space:nowrap}
+.ac-vis-table th.ac-vis-rolehead{text-align:left;padding:8px 10px;position:sticky;left:0;z-index:2}
+.ac-vis-table td.ac-vis-rolecell{text-align:left;padding:7px 10px;background:var(--s1);font-weight:600;color:var(--tp);position:sticky;left:0;white-space:nowrap}
+.ac-vis-table td.ac-vis-rolecell .rc{font-size:0.68rem;color:var(--ts);font-weight:400;display:block}
+.ac-vis-cell{cursor:pointer;min-height:36px;display:flex;align-items:center;justify-content:center;font-size:0.85rem}
+.ac-vis-cell.ok-show{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.ac-vis-cell.ok-hide{background:var(--s2);color:var(--tf)}
+.ac-vis-cell.bad{background:color-mix(in srgb,var(--err) 24%,transparent);color:var(--err);font-weight:800}
+.ac-vis-cell:hover{outline:2px solid var(--ac);outline-offset:-2px}
+.ac-vis-table.hide-ok .ac-vis-cell.ok-show,.ac-vis-table.hide-ok .ac-vis-cell.ok-hide{opacity:0.16}
+.ac-vis-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:0.74rem;color:var(--ts)}
+.ac-vis-legend span{display:inline-flex;align-items:center;gap:5px}
+.ac-vis-legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
+.ac-vis-detail{margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:var(--radius-md,13px);background:var(--s1);font-size:0.84rem;display:none}
+.ac-vis-detail.on{display:block}
+.ac-vis-detail .vd-bad{color:var(--err);font-weight:700}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
@@ -2474,6 +2499,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="tab" onclick="acTab('ops')">운영</div>
         <div class="tab" onclick="acTab('content')">콘텐츠</div>
         <div class="tab" onclick="acTab('knowledge')">지식엔진</div>
+        <div class="tab" onclick="acTab('validation')">권한 검증</div>
         <div class="tab" onclick="acTab('system')">시스템</div>
         <div class="tab" onclick="acTab('logs')">로그</div>
       </div>
@@ -2508,6 +2534,14 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
             <div class="ac-card ac-card-empty" id="ac-service-overview">불러오는 중…</div>
           </div>
         </div>
+      </div>
+
+      <!-- 권한 검증: 화면 가시성 (9 role × 영역, 실제 게이팅 vs 정답) -->
+      <div class="ac-sec" data-sec="visibility">
+        <div class="ac-section-head"><i data-lucide="shield-check"></i>
+          <h2>화면 가시성 검증</h2><span class="ac-section-sub" id="ac-vis-count">—</span></div>
+        <p style="font-size:13px;color:var(--ts);margin-bottom:12px;">각 role이 <b>실제로 보는 영역(코드 게이팅)</b> vs <b>정답(role_access_map)</b> 비교. <span style="color:var(--err);font-weight:700">❌</span>=불일치(수정 필요). 셀 클릭=상세.</p>
+        <div id="ac-visibility-list"><div class="ac-card-empty">불러오는 중…</div></div>
       </div>
 
       <!-- 운영: 가입 승인 -->
@@ -3213,6 +3247,7 @@ window.setFontScale = function(scale){ document.documentElement.style.setPropert
 /* 2026-05-30 단계 1: 원수사 자료실 사이드 게이팅 — #app에 role 클래스 즉시 부착 (polling 금지).
  * insurer_* 4종 → is-insurer (3개만 노출) / admin → is-admin (전체 + 자료실) / ga_*·비로그인 → 클래스 없음(현행). */
 function _getOsUserRole(){
+  if(window._roleSimOverride!=null) return window._roleSimOverride;  /* 권한 검증 도구 — 9 role 시뮬레이션(어드민 콘솔) */
   try { var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'; var u = JSON.parse(raw); return (u && u.role) || ''; }
   catch(e){ return ''; }
 }
