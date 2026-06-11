@@ -1808,7 +1808,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
     <div class="nav-divider"></div>
     <div class="nav" onclick="showView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
     <div class="nav-divider"></div>
-    <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">관리자</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
+    <div class="nav" id="nav-admin" style="display:none" onclick="showView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
     <!-- 단순화(2026-06-10): 일반 사용자 사이드바 숨김 — Quick/현장의소리/함께해요/보험이슈 (감추기>만들기). 뷰·딥링크·admin 노출은 유지(ga-hide=GA만 숨김) -->
     <div class="nav ga-hide" onclick="showView('quick')"><span class="ic">&#9889;</span><span class="lbl">Quick 메뉴</span></div>
     <div class="nav ga-hide" id="nav-voice" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
@@ -2837,7 +2837,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="fld"><label>팀명</label><input type="text" id="prof-team" placeholder="팀명"></div>
       </div>
       <div class="fld"><label>직책</label><input type="text" id="prof-role" readonly style="background:var(--sh);color:var(--ts);cursor:not-allowed"></div>
-      <div class="profask">직책 변경이 필요하신가요? <span class="profask-link">관리자에게 요청 &#8594;</span></div>
+      <div class="profask">직책 변경이 필요하신가요? <span class="profask-link">어드민에게 요청 &#8594;</span></div>
     </div>
     <div class="askfoot on profoot">
       <button class="askback" onclick="confirmLogout()">로그아웃</button>
@@ -3169,7 +3169,7 @@ window.handlePaidCta = function(planId){
        user_id(=auth.uid())·next_billing_at(+1개월)·status('active')는 DB 기본값 = 서버가 결정(위변조 불가).
        프론트는 plan_id·billing_key만 전송. 재발급 시 active 누적은 서버 청구 함수가 최신만 청구하며 정리. */
     if(!window.db || !window.db.fetch){
-      alert('빌링키는 발급됐으나 저장 모듈이 로드되지 않아 구독 등록에 실패했습니다.\n새로고침 후 다시 시도하거나 관리자에게 문의해 주세요.');
+      alert('빌링키는 발급됐으나 저장 모듈이 로드되지 않아 구독 등록에 실패했습니다.\n새로고침 후 다시 시도하거나 어드민에게 문의해 주세요.');
       return;
     }
     window.db.fetch('/rest/v1/subscriptions', {
@@ -3181,11 +3181,11 @@ window.handlePaidCta = function(planId){
         alert('구독 신청이 완료되었습니다.\n\n플랜: 원세컨드 ' + plan.name + '\n월 ' + plan.price.toLocaleString() + '원\n등록하신 카드로 매월 자동 결제됩니다.');
       } else {
         console.error('[billing] 구독 저장 실패 HTTP', saveRes.status);
-        alert('빌링키는 발급됐으나 구독 저장에 실패했습니다 (HTTP ' + saveRes.status + ').\n다시 시도하거나 관리자에게 문의해 주세요.');
+        alert('빌링키는 발급됐으나 구독 저장에 실패했습니다 (HTTP ' + saveRes.status + ').\n다시 시도하거나 어드민에게 문의해 주세요.');
       }
     }).catch(function(saveErr){
       console.error('[billing] 구독 저장 오류:', saveErr);
-      alert('빌링키는 발급됐으나 구독 저장 중 오류가 발생했습니다.\n다시 시도하거나 관리자에게 문의해 주세요.');
+      alert('빌링키는 발급됐으나 구독 저장 중 오류가 발생했습니다.\n다시 시도하거나 어드민에게 문의해 주세요.');
     });
   }).catch(function(err){
     console.error('[portone] 빌링키 발급 오류:', err);
@@ -6507,14 +6507,14 @@ async function cospRenderNotices(materialsOnly){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   var _cospAdmin=!!(window._cospMe&&window._cospMe.role==='admin');
   /* 어드민(창시자)은 평상시 전 팀/지점 공지를 보지 않음(감시 X·대표 결정 2026-06-11). 사고 대응 시에만 명시적 토글(_cospAdminAll)로 전체 열람.
-     ※ 향후 관리자 콘솔이 정교화되면 이 사고 대응 열람을 콘솔 쪽으로 이전 예정. */
+     ※ 향후 어드민 콘솔이 정교화되면 이 사고 대응 열람을 콘솔 쪽으로 이전 예정. */
   var _adminAll=_cospAdmin && !!window._cospAdminAll;
   var s=_cospScope();
   var _rs=(window._cospRoom==='branch'?'지점':'팀');
   if(!_adminAll && !s.id){
     /* 소속 없음 — 어드민은 평상시 미열람 안내 + 사고 대응 버튼(레이아웃 정상 노출, 차단 아님) / 일반은 소속 안내 */
     box.innerHTML='<div class="mys-news-empty">'+(_cospAdmin
-      ?('관리자는 평상시 '+_rs+' 공지를 열람하지 않습니다.<br><button class="osws-newbtn" style="margin-top:12px" onclick="cospAdminAll()">전체 '+_rs+' 공지 열람 (사고 대응)</button>')
+      ?('어드민은 평상시 '+_rs+' 공지를 열람하지 않습니다.<br><button class="osws-newbtn" style="margin-top:12px" onclick="cospAdminAll()">전체 '+_rs+' 공지 열람 (사고 대응)</button>')
       :('소속 '+_rs+' 정보가 없습니다.'))+'</div>';
     return;
   }
@@ -6581,7 +6581,7 @@ function cospWrite(){
   window._cospWriting=true;  /* 저장 성공 후 팀방 목록 갱신 플래그 */
 }
 window.cospWrite=cospWrite;
-/* 어드민 사고 대응 — 전 팀/지점 공지 전체 열람 토글(평상시 OFF). 향후 관리자 콘솔로 이전 예정 */
+/* 어드민 사고 대응 — 전 팀/지점 공지 전체 열람 토글(평상시 OFF). 향후 어드민 콘솔로 이전 예정 */
 function cospAdminAll(on){ window._cospAdminAll=(on!==false); if(typeof cospRenderNotices==='function') cospRenderNotices(false); }
 window.cospAdminAll=cospAdminAll;
 async function cospRenderScripts(){
@@ -7091,7 +7091,7 @@ function mrEditTeam(id){ var t=_orgFindTeam(id); _orgPrompt('실(팀) 이름 수
 function mrDeleteTeam(id){ var t=_orgFindTeam(id); var cnt=(window._mrUsers||[]).filter(function(u){return u.team_id===id;}).length; if(cnt>0){ _orgAlert('"'+(t?t.name:'')+'"에 구성원 '+cnt+'명이 있습니다.\n먼저 모두 내보낸 뒤 삭제하세요.'); return; } _orgConfirm('"'+(t?t.name:'')+'" 실을 삭제할까요?', async function(){ try{ var r=await window.db.fetch('/rest/v1/teams?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}}); _orgAfter(r,'삭제했습니다'); }catch(e){ if(typeof toast==='function')toast('삭제 실패'); } }); }
 function mrRemoveMember(id){ var u=_orgFindUser(id); _orgConfirm('"'+(u?u.name:'')+'"님을 이 실에서 내보낼까요? (소속 해제)', async function(){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({team_id:null})}); _orgAfter(r,'내보냈습니다'); }catch(e){ if(typeof toast==='function')toast('처리 실패'); } }); }
 window.mrAddTeam=mrAddTeam; window.mrEditTeam=mrEditTeam; window.mrDeleteTeam=mrDeleteTeam; window.mrRemoveMember=mrRemoveMember; window._orgModalClose=_orgModalClose;
-/* 팀원 카드 클릭 → 상세(개인정보·회사·지점·팀·가입일) + 관리자 수정 */
+/* 팀원 카드 클릭 → 상세(개인정보·회사·지점·팀·가입일) + 어드민 수정 */
 function _mdField(label,id,val){ return '<div class="md-f"><label>'+label+'</label><input id="'+id+'" value="'+_sEsc(val||'')+'"></div>'; }
 function _mdSelect(label,id,opts){ return '<div class="md-f"><label>'+label+'</label><select id="'+id+'"><option value="">미지정</option>'+opts+'</select></div>'; }
 async function openMemberDetail(uid){
