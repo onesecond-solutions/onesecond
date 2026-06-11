@@ -225,7 +225,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .osws-form{padding:8px 14px 0;}
 .osws-acts{display:flex;gap:8px;padding:14px;}
 .osws-cancel{background:var(--s2);color:var(--tp);border:1px solid var(--bd);border-radius:8px;padding:0 18px;height:38px;cursor:pointer;font-weight:600;}
-.osws-tempcard{opacity:0.85;}
+.osws-tempcard{border:1.5px dashed var(--ac);min-height:46px;opacity:0.9;}
 .answer{margin-top:18px;background:var(--s2);border-radius:10px;padding:16px 18px;}
 .answer .who{font-size:0.75rem;color:var(--t-uw);font-weight:700;margin-bottom:8px;}
 .atts{margin-top:20px;border-top:0.5px solid var(--bd);padding-top:16px;}
@@ -2184,7 +2184,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         <div class="col viewer-col">
           <button class="backbtn" onclick="togetherBack()">&#8249; 목록으로</button>
           <!-- Phase 0 파일럿: 인라인 작업공간 글쓰기 버튼(공존). 기존 필터줄 모달 버튼은 그대로 유지 — 화면 비교 후 일괄 제거 예정 -->
-          <div class="osws-newrow" id="tg-newrow"><button class="osws-newbtn" onclick="openTogetherInline()">+ 글쓰기 (인라인)</button></div>
+          <div class="osws-newrow" id="tg-newrow"><button class="osws-newbtn" onclick="openTogetherInline()">+ 글쓰기</button></div>
           <div class="viewer" id="tg-viewer"><div class="mys-news-empty">왼쪽에서 글을 선택하세요.</div></div>
         </div>
       </div>
@@ -7455,7 +7455,7 @@ function openTogetherInline(edit){
     var list=document.getElementById('tg-list');
     if(list){ var its=list.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.remove('on');
       var tc=document.createElement('div'); tc.className='item on osws-tempcard'; tc.id='tg-tempcard';
-      tc.innerHTML='<span class="badge">작성 중</span><div class="it">새 글 작성 중…</div><div class="id">저장하면 목록에 추가됩니다</div>';
+      /* 설명성 문구 금지 — 좌측은 점선 자리표시만. 상태(작성/수정)는 우측 컬러바+라벨이 담당 */
       list.insertBefore(tc, list.firstChild);
     }
   }
