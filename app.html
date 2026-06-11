@@ -6420,11 +6420,16 @@ function _cospCard(title, meta, body){
  * 현장의 소리 #qlist/showTabPost는 무수정 → 회귀 0. cosp 자체 split·뱃지·첨부 라이트박스 동일). */
 async function cospRenderNotices(materialsOnly){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
-  var s=_cospScope(); if(!s.id){ var _rn=(window._cospRoom==='branch'?'지점방':'팀방'), _rs=(window._cospRoom==='branch'?'지점':'팀'); box.innerHTML='<div class="mys-news-empty">관리자 계정은 소속 '+_rs+'이 없어 '+_rn+' 콘텐츠가 표시되지 않습니다.<br>'+_rn+' 데이터는 실장·팀원 계정으로 확인하세요.</div>'; return; }
+  var _cospAdmin=!!(window._cospMe&&window._cospMe.role==='admin');
+  var s=_cospScope();
+  /* admin = 소속 팀/지점이 없어도 전 팀/지점 공지 전체 열람(감수용). 일반 사용자만 소속 정보 필요. */
+  if(!_cospAdmin && !s.id){ var _rs=(window._cospRoom==='branch'?'지점':'팀'); box.innerHTML='<div class="mys-news-empty">소속 '+_rs+' 정보가 없습니다.</div>'; return; }
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   try{
     var col=window._cospRoom==='branch'?'branch_id':'team_id';
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+s.scope+'&'+col+'=eq.'+encodeURIComponent(s.id)+'&deleted_at=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords');
+    var _q='/rest/v1/team_notices?scope=eq.'+s.scope+'&deleted_at=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords';
+    if(!_cospAdmin) _q+='&'+col+'=eq.'+encodeURIComponent(s.id);  /* admin=소속 필터 생략(전체 열람) / 일반=본인 소속만 */
+    var res=await window.db.fetch(_q);
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     rows=rows.filter(function(r){ return !r.is_hidden; });
     if(materialsOnly){ rows=rows.filter(function(r){ var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} return Array.isArray(a)&&a.length; }); }
@@ -6441,7 +6446,8 @@ async function cospRenderNotices(materialsOnly){
       return { badge:t[0], tc:t[1], rtitle:(r.title||'(제목 없음)'), meta:[_cospDate(r.created_at),who].filter(Boolean).join(' · '), bodyHtml:_cospEsc(r.content||'').replace(/\n/g,'<br>')+(ah.html||''), _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
     });
     if(!window._cospNotices.length){ box.innerHTML='<div class="mys-news-empty">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.')+'</div>'; return; }
-    box.innerHTML='<div class="split cosp-split" id="cosp-notice-split">'
+    box.innerHTML=(_cospAdmin?'<div style="font-size:0.74rem;color:var(--ts);margin-bottom:6px">관리자 열람 — 전 '+(window._cospRoom==='branch'?'지점':'팀')+' 공지</div>':'')
+      +'<div class="split cosp-split" id="cosp-notice-split">'
       +'<div class="col list-col"><div class="list" id="cosp-qlist"></div></div>'
       +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
       +'<div class="viewer" id="cosp-viewer"><span class="vbadge"></span><div class="vttl"></div><div class="vmeta"></div><div class="vbody"></div></div></div></div>';
