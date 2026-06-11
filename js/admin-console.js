@@ -565,7 +565,8 @@
     ['ga_branch_manager','지점장 · GA'], ['ga_manager','실장 · GA'],
     ['ga_member','설계사 · GA'], ['ga_staff','스텝 · GA'],
     ['insurer_branch_manager','지점장 · 원수사'], ['insurer_manager','매니저 · 원수사'],
-    ['insurer_member','직원 · 원수사'], ['insurer_staff','스텝 · 원수사']
+    ['insurer_member','직원 · 원수사'], ['insurer_staff','스텝 · 원수사'],
+    ['etc','기타 · 미분류']  /* 9 role에 안 맞는 가입자(예: 민인환). 현재 코드는 GA처럼 취급→GA 메뉴 노출이 ✕로 드러남 */
   ];
   function _isGA(r){ return r.indexOf('ga_')===0; }
   function _isIns(r){ return r.indexOf('insurer_')===0; }
@@ -600,31 +601,39 @@
     window._roleSimOverride = null;  /* 복원 — 실사용 게이팅 영향 0 */
     return v;
   }
+  window._acVisAreaRow = false;  /* false=role행·영역열(기본) / true=영역행·role열(전환) */
+  window.acVisOrient = function(){ window._acVisAreaRow = !window._acVisAreaRow; window.acLoadVisibility(); };
   window.acLoadVisibility = function(){
     var host = document.getElementById('ac-visibility-list'); if(!host) return;
     var bad = 0, total = 0;
-    var rows = AC_ROLES.map(function(rr){
-      var role = rr[0];
-      var cells = AC_AREAS.map(function(a){
-        var act = _gateActual(role, a.key), exp = a.exp(role), ok = (act===exp);
-        total++; if(!ok) bad++;
-        var cls = !ok ? 'bad' : (act ? 'ok-show' : 'ok-hide');
-        var sym = !ok ? '✕' : (act ? '✓' : '·');
-        return '<td><div class="ac-vis-cell '+cls+'" onclick="acVisDetail(\''+role+'\',\''+a.key+'\')" title="'+a.label+'">'+sym+'</div></td>';
-      }).join('');
-      return '<tr><td class="ac-vis-rolecell">'+rr[1]+'<span class="rc">'+role+'</span></td>'+cells+'</tr>';
-    }).join('');
-    var head = '<tr><th class="ac-vis-rolehead">role \\ 영역</th>'+AC_AREAS.map(function(a){return '<th>'+a.label+'</th>';}).join('')+'</tr>';
+    function cell(role, a){
+      var act = _gateActual(role, a.key), exp = a.exp(role), ok = (act===exp);
+      total++; if(!ok) bad++;
+      var cls = !ok ? 'bad' : (act ? 'ok-show' : 'ok-hide');
+      var sym = !ok ? '✕' : (act ? '✓' : '·');
+      return '<td><div class="ac-vis-cell '+cls+'" onclick="acVisDetail(\''+role+'\',\''+a.key+'\')" title="'+role+' · '+a.label+'">'+sym+'</div></td>';
+    }
+    var head, body;
+    if(!window._acVisAreaRow){
+      head = '<tr><th class="ac-vis-rolehead">role \\ 영역</th>'+AC_AREAS.map(function(a){return '<th>'+a.label+'</th>';}).join('')+'</tr>';
+      body = AC_ROLES.map(function(rr){ return '<tr><td class="ac-vis-rolecell">'+rr[1]+'<span class="rc">'+rr[0]+'</span></td>'+AC_AREAS.map(function(a){return cell(rr[0],a);}).join('')+'</tr>'; }).join('');
+    } else {
+      head = '<tr><th class="ac-vis-rolehead">영역 \\ role</th>'+AC_ROLES.map(function(rr){return '<th title="'+rr[0]+'">'+rr[1]+'</th>';}).join('')+'</tr>';
+      body = AC_AREAS.map(function(a){ return '<tr><td class="ac-vis-rolecell">'+a.label+'<span class="rc">'+a.key+'</span></td>'+AC_ROLES.map(function(rr){return cell(rr[0],a);}).join('')+'</tr>'; }).join('');
+    }
     var cnt = document.getElementById('ac-vis-count'); if(cnt) cnt.textContent = (bad===0?('정합 '+total+'/'+total):('불일치 '+bad+'건'));
     host.innerHTML =
       '<div class="ac-vis-toolbar">'
       +'<span class="ac-vis-summary">검사 '+total+'칸 · <span class="ok">일치 '+(total-bad)+'</span> · <span class="bad">불일치 '+bad+'</span></span>'
+      +'<button class="ac-vis-filter" onclick="acVisOrient()" style="background:transparent;cursor:pointer;font-family:inherit">⇄ 가로·세로 전환</button>'
       +'<label class="ac-vis-filter"><input type="checkbox" onchange="acVisToggleHideOk(this)"> 불일치(✕)만 강조</label>'
       +'<button class="ac-vis-rerun" onclick="acLoadVisibility()">다시 검사</button>'
       +'</div>'
-      +'<div class="ac-vis-wrap"><table class="ac-vis-table" id="ac-vis-tbl"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'
-      +'<div class="ac-vis-legend"><span><i style="background:color-mix(in srgb,var(--ok) 16%,transparent)"></i>✓ 보임(정상)</span><span><i style="background:var(--s2)"></i>· 숨김(정상)</span><span><i style="background:color-mix(in srgb,var(--err) 24%,transparent)"></i>✕ 불일치(수정 필요)</span></div>'
-      +'<div class="ac-vis-detail" id="ac-vis-detail"></div>';
+      +'<div class="ac-vis-main">'
+      +'<div class="ac-vis-wrap"><table class="ac-vis-table" id="ac-vis-tbl"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>'
+      +'<div class="ac-vis-detail on" id="ac-vis-detail"><div class="ac-vis-detail-ph">셀을 클릭하면 여기에 상세(정답 vs 실제)가 표시됩니다.</div></div>'
+      +'</div>'
+      +'<div class="ac-vis-legend"><span><i style="background:color-mix(in srgb,var(--ok) 16%,transparent)"></i>✓ 보임(정상)</span><span><i style="background:var(--s2)"></i>· 숨김(정상)</span><span><i style="background:color-mix(in srgb,var(--err) 24%,transparent)"></i>✕ 불일치(수정 필요)</span></div>';
   };
   window.acVisToggleHideOk = function(el){ var t=document.getElementById('ac-vis-tbl'); if(t) t.classList.toggle('hide-ok', el.checked); };
   window.acVisDetail = function(role, key){
