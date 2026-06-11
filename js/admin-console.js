@@ -304,20 +304,60 @@
     el.innerHTML=html;
   }
   window.acPostPage=function(i){ _pState.page=i; _renderPostList(); };
-  // 댓글: 본문 컬럼 미확인 → 최소 구성(후속 본문 보강)
-  window.acLoadComments = async function(){
-    var area=document.getElementById('ac-comments-list'); if(!area) return;
-    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
-    var rows=await _rows('comments?select=id,created_at&order=created_at.desc&limit=100');
+  // 댓글 — 본문·작성자·소속 게시글·검색·페이지네이션 (comments={post_id,content,author_id,author_name,created_at})
+  var _cState = { cache:null, q:'', page:0, per:20 };
+  window.acLoadComments = async function(reload){
+    var list=document.getElementById('ac-comments-list'); if(!list) return;
+    _renderCmtTools();
+    if(!_cState.cache || reload){
+      list.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+      var rows=await _rows('comments?select=id,post_id,content,author_id,author_name,created_at&order=created_at.desc&limit=200');
+      var ids=[]; rows.forEach(function(c){ if(c.post_id && ids.indexOf(c.post_id)<0) ids.push(c.post_id); });
+      var tmap={};
+      if(ids.length){ try{ var ps=await _rows('posts?id=in.('+ids.join(',')+')&select=id,title'); ps.forEach(function(p){ tmap[p.id]=p.title; }); }catch(e){} }
+      rows.forEach(function(c){ c._pt=tmap[c.post_id]||''; });
+      _cState.cache=rows;
+    }
+    _renderCmtList();
+  };
+  function _renderCmtTools(){
+    var t=document.getElementById('ac-comments-tools'); if(!t) return;
+    t.innerHTML='<div class="ac-post-tools"><input class="ac-post-search" id="ac-cmt-q" placeholder="본문·작성자 검색" value="'+esc(_cState.q)+'" oninput="acCmtSearch(this.value)"></div>';
+  }
+  window.acCmtSearch=function(v){ _cState.q=v; _cState.page=0; _renderCmtList(); };
+  function _cmtFiltered(){
+    var rows=_cState.cache||[]; var q=_cState.q.trim().toLowerCase();
+    if(q) rows=rows.filter(function(c){ return ((c.content||'')+' '+(c.author_name||'')).toLowerCase().indexOf(q)>=0; });
+    return rows;
+  }
+  function _renderCmtList(){
+    var list=document.getElementById('ac-comments-list'); if(!list) return;
+    var rows=_cmtFiltered();
     var c=document.getElementById('ac-comments-count'); if(c) c.textContent=rows.length+'건';
-    if(!rows.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="message-square"></i>댓글 없음</div>'; if(window.lucide) window.lucide.createIcons(); return; }
-    area.innerHTML=rows.map(function(cm){
+    if(!rows.length){ list.innerHTML='<div class="ac-card-empty"><i data-lucide="message-square"></i>해당 댓글이 없습니다</div>'; _renderCmtPager(0); if(window.lucide) window.lucide.createIcons(); return; }
+    var per=_cState.per, pages=Math.ceil(rows.length/per), page=Math.min(_cState.page,pages-1); if(page<0)page=0; _cState.page=page;
+    var slice=rows.slice(page*per,(page+1)*per);
+    list.innerHTML=slice.map(function(cm){
+      var who=cm.author_name||(cm.author_id?('ID '+String(cm.author_id).slice(0,8)):'작성자 미상');
+      var body=esc(cm.content||'(내용 없음)').replace(/\n/g,'<br>');
+      var pt=cm._pt?'<div class="ac-post-meta">↳ 소속글: '+esc(cm._pt)+'</div>':'';
       return '<div class="ac-entity"><span class="ac-badge normal">댓글</span>'+
-        '<div class="ac-entity-meta">댓글 #'+esc(cm.id)+'</div>'+
-        '<div class="ac-entity-sub">'+esc(_fmtDate(cm.created_at))+'</div>'+
+        '<div class="ac-post-meta">'+esc(who)+' · '+esc(_fmtDate(cm.created_at))+'</div>'+
+        '<div class="ac-post-body full">'+body+'</div>'+pt+
         '<div style="margin-top:10px"><button class="ac-btn" style="border-color:var(--err);color:var(--err)" onclick="acDeleteComment(\''+esc(cm.id)+'\')">삭제</button></div></div>';
     }).join('');
-  };
+    _renderCmtPager(pages);
+    if(window.lucide) window.lucide.createIcons();
+  }
+  function _renderCmtPager(pages){
+    var el=document.getElementById('ac-comments-pager'); if(!el) return;
+    if(pages<=1){ el.innerHTML=''; return; }
+    var p=_cState.page, html='<button class="ac-pager-btn" '+(p<=0?'disabled':'')+' onclick="acCmtPage('+(p-1)+')">‹</button>';
+    for(var i=0;i<pages;i++){ if(i<2||i>pages-3||Math.abs(i-p)<=1){ html+='<button class="ac-pager-btn'+(i===p?' on':'')+'" onclick="acCmtPage('+i+')">'+(i+1)+'</button>'; } else if(i===2||i===pages-3){ html+='<span style="padding:0 5px;color:var(--tf)">…</span>'; } }
+    html+='<button class="ac-pager-btn" '+(p>=pages-1?'disabled':'')+' onclick="acCmtPage('+(p+1)+')">›</button>';
+    el.innerHTML=html;
+  }
+  window.acCmtPage=function(i){ _cState.page=i; _renderCmtList(); };
   // ── 긴급 모더레이션 (admin 슈퍼유저) — 게시글 숨김/삭제 · 댓글 삭제 (2026-05-31 P1)
   //    admin_v2.js handleHidePost/handleDeletePost 패턴 이식. RLS가 admin PATCH/DELETE 허용 전제.
   //    403이면 posts/comments RLS에 is_admin() 정책 보강 필요(SQL 별도). 운영 액션 로깅.
@@ -349,7 +389,7 @@
       if(!res.ok){ acToast('삭제 실패 ('+res.status+')',true); return; }
       if(window.db.logActivity) window.db.logActivity('delete_comment','comment',id,{});
       acToast('댓글을 삭제했습니다');
-      if(window.acLoadComments) window.acLoadComments();
+      if(window.acLoadComments) window.acLoadComments(true);
     }catch(e){ acToast('네트워크 오류',true); }
   };
 
