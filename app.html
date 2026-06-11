@@ -209,9 +209,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .vmeta{font-size:0.75rem;color:var(--tf);margin-bottom:18px;}
 .vbody{font-size:0.875rem;color:var(--bodytx);line-height:1.85;}
 /* ═══ 공용 인라인 작업공간 셸 (Phase 0, 2026-06-11) — 우측 작업공간 view/create/edit. 노란 메모지 금지(create=accent / edit=warn) ═══ */
-.osws-newrow{text-align:center;padding:12px 0 6px;}
-.osws-newbtn{width:210px;height:44px;background:var(--ac);color:#fff;border:0;border-radius:var(--radius-md,10px);font-weight:700;font-size:0.9rem;cursor:pointer;}
-.osws-newbtn:hover{background:var(--ach);}
+/* 글쓰기 영역 = 전체폭 파란 바탕·흰 글씨 (콘텐츠 영역과 시각 분리). 아래 margin으로 콘텐츠와 경계 */
+.osws-newrow{background:var(--ac);border-radius:var(--radius-md,10px);margin-bottom:14px;overflow:hidden;}
+.osws-newbtn{width:100%;height:48px;background:transparent;color:#fff;border:0;font-weight:700;font-size:0.95rem;cursor:pointer;}
+.osws-newbtn:hover{background:rgba(255,255,255,0.12);}
 .osws-panel{border:1px solid var(--bd);border-radius:var(--radius-md,10px);overflow:hidden;margin-top:4px;}
 .osws-panel.osws-create{border-color:var(--ac);}
 .osws-panel.osws-edit{border-color:var(--warn);}
