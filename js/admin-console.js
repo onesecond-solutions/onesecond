@@ -588,13 +588,34 @@
     else { rows=await _rows('library?select=id,title,created_at&order=created_at.desc&limit=100'); label='자료'; }
     var c=document.getElementById('ac-library-count'); if(c) c.textContent=rows.length+'건';
     if(!rows.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="folder-kanban"></i>'+label+' 없음</div>'; if(window.lucide) window.lucide.createIcons(); return; }
-    area.innerHTML=rows.map(function(r){
-      var sub=(r.stage?('스테이지 '+esc(r.stage)+' · '):'')+esc(_fmtDate(r.created_at));
-      return '<div class="ac-entity"><span class="ac-badge medium">'+label+'</span>'+
-        '<div class="ac-entity-name">'+esc(r.title||'(제목 없음)')+'</div>'+
-        '<div class="ac-entity-sub">'+sub+'</div></div>';
+    var isScr=(_libFilter==='scripts');
+    var body=rows.map(function(r){
+      return '<tr class="ac-tr-clk" onclick="acLibDetail(\''+esc(r.id)+'\')"><td class="ac-td-name">'+esc(r.title||'(제목 없음)')+'</td>'+(isScr?'<td class="ac-td-sub">'+esc(r.stage||'-')+'</td>':'')+'<td class="ac-td-date">'+esc(_fmtDate(r.created_at))+'</td></tr>';
     }).join('');
+    area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>제목</th>'+(isScr?'<th>스테이지</th>':'')+'<th>날짜</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    if(window.lucide) window.lucide.createIcons();
   }
+  // 행 클릭 → 자료/스크립트 상세 (개별 select * + 본문). 공용 모달 재사용
+  window.acLibDetail=async function(id){
+    var isScr=(_libFilter==='scripts'), tbl=isScr?'scripts':'library';
+    var ov=document.getElementById('ac-udetail-ov');
+    if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; document.body.appendChild(ov); }
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acUserDetailClose()">✕</button><div id="ac-udetail-body"><div class="ac-card-empty">불러오는 중…</div></div></div>';
+    ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); };
+    ov.classList.add('on');
+    var r=null; try{ var rs=await _rows(tbl+'?id=eq.'+encodeURIComponent(id)+'&select=*'); r=rs&&rs[0]; }catch(e){}
+    var b=document.getElementById('ac-udetail-body'); if(!b) return;
+    if(!r){ b.innerHTML='<div class="ac-card-empty">찾을 수 없습니다.</div>'; return; }
+    function row(k,v){ return (v==null||v==='')?'':'<div class="ac-ud-row"><span class="ac-ud-k">'+esc(k)+'</span><span class="ac-ud-v">'+esc(String(v))+'</span></div>'; }
+    var bodyTxt=isScr?esc(r.script_text||'').replace(/\n/g,'<br>'):esc(r.memo_text||r.description||'').replace(/\n/g,'<br>');
+    var h='<div class="ac-ud-title">'+esc(r.title||'(제목 없음)')+'</div>';
+    if(isScr){ h+=row('스테이지',r.stage); }
+    else { h+=row('설명',r.description); h+=row('링크',r.link_url); h+=row('파일',r.file_url); }
+    h+=row('키워드',(r.keywords&&r.keywords.join)?r.keywords.join(', '):r.keywords);
+    h+=row('작성일',_fmtDate(r.created_at));
+    if(bodyTxt) h+='<div class="ac-pd-body">'+bodyTxt+'</div>';
+    b.innerHTML=h;
+  };
 
   // ── 가입 승인 (admin-approvals 흡수 + approve_user/assign_branch 로깅) ──
   var _appr = { pending:[], branches:[], sel:null };
