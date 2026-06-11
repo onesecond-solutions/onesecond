@@ -6515,7 +6515,7 @@ async function cospRenderInsurer(){
     });
     var _writeBtn=_meAdmin?'<button class="newb" onclick="cospInsurerWrite()">+ 자료 등록</button>':'';
     /* "회사별" 모아보기 버튼 = 전체 왼쪽·다른 색(accent). 누르면 회사명 헤더로 그룹 + 회사 순 정렬 */
-    var _byCo='<div class="chip" onclick="cospInsCat(this,\'회사별\')" style="border-color:var(--ac);color:var(--ac);font-weight:700">회사별</div>';
+    var _byCo='<div class="chip" onclick="cospInsCat(this,\'회사별\')" style="background:var(--t-event);border-color:var(--t-event);color:#fff;font-weight:700">회사별</div>';  /* 독립 분홍(항상) — 인라인이 .chip.on(파랑)보다 우선이라 선택돼도 분홍 유지·글자 흰색 명확 */
     var chipsHtml=_byCo+COSP_INS_CHIPS.map(function(c,i){ return '<div class="chip'+(i===0?' on':'')+'" onclick="cospInsCat(this,\''+c+'\')">'+c+'</div>'; }).join('');
     box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--ts)">보험사별 자료실 — 보험사 자료가 한데 모이는 곳</span>'+_writeBtn+'</div>'
       +'<div class="chips" id="cosp-ins-chips" style="margin-bottom:10px">'+chipsHtml+'</div>'
