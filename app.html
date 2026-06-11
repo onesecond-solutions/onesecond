@@ -919,6 +919,20 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-vault-notice.mvn-done{background:color-mix(in srgb,var(--ok) 9%,var(--s2));border-color:color-mix(in srgb,var(--ok) 32%,var(--bd))}
 .mys-vault-notice.mvn-done b{color:var(--ok)}
 .mys-vault-notice.mvn-done .mys-vault-confirm-lbl{background:var(--ok);box-shadow:0 2px 10px color-mix(in srgb,var(--ok) 38%,transparent)}
+/* 전체보기 빈 상태 종류 선택 팝업 */
+.mys-pick-ov{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;animation:mpfade .15s}
+@keyframes mpfade{from{opacity:0}to{opacity:1}}
+.mys-pick-box{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg,18px);padding:24px 22px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center}
+.mys-pick-ttl{font-size:1.15rem;font-weight:800;color:var(--tp);margin-bottom:6px}
+.mys-pick-sub{font-size:0.85rem;color:var(--ts);line-height:1.5;margin-bottom:18px}
+.mys-pick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mys-pick-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:16px 10px;background:var(--s2);border:1.5px solid var(--bd);border-radius:var(--radius-md,13px);cursor:pointer;transition:border-color .12s,background .12s,transform .08s;font-family:inherit}
+.mys-pick-btn:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,var(--s2))}
+.mys-pick-btn:active{transform:scale(0.97)}
+.mpb-nm{font-size:1rem;font-weight:800;color:var(--tp)}
+.mpb-ds{font-size:0.72rem;color:var(--ts)}
+.mys-pick-cancel{background:transparent;border:none;color:var(--ts);font-size:0.85rem;cursor:pointer;padding:6px 12px;font-family:inherit;border-radius:8px}
+.mys-pick-cancel:hover{color:var(--tp);background:var(--s2)}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
@@ -8823,8 +8837,8 @@ function renderMyspace(items){
   window._mysFiltered=items||[];
   var vv=document.getElementById('mysViewer');
   if(!items||items.length===0){
-    /* 빈 상태 CTA = 현재 칩 정합. 스크립트 칩=인라인, 전체보기=스크립트 칩 전환 후 인라인(우측 2단), 그 외(메모·자료)=기존 모달 */
-    var _emptyCta=(window._mysCat==='스크립트')?'openScriptInline()':((window._mysCat==='전체')?'mysEmptyScriptWrite()':'openMyspaceWrite()');
+    /* 빈 상태 CTA = 현재 칩 정합(옛 모달 미사용·입력 경험 통일). 스크립트=인라인, 메모=우측하단 빠른메모, 전체보기·기타=종류 선택 팝업 */
+    var _emptyCta=(window._mysCat==='스크립트')?'openScriptInline()':((window._mysCat==='메모')?'openQuickMemo()':'mysEmptyPick()');
     listEl.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>+ 글쓰기 버튼으로 첫 항목을 작성해보세요.<br><button class="mys-write-empty-cta" onclick="'+_emptyCta+'">+ 첫 항목 작성</button></div>';
     if(vv) vv.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>';
     return;
@@ -9215,8 +9229,36 @@ function closeScrInline(){
 window.closeScrInline=closeScrInline;
 function _scrReselectChip(){ var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<chips.length;i++){ if(chips[i].textContent.trim()==='스크립트'){ if(typeof filterMys==='function') filterMys(chips[i],'스크립트'); break; } } }
 /* 전체보기 빈 상태 첫 작성 = 스크립트 칩 전환(scr-mode 켜짐 → 우측 2단) 후 인라인 작성 폼 */
-function mysEmptyScriptWrite(){ if(typeof _scrReselectChip==='function') _scrReselectChip(); if(typeof openScriptInline==='function') openScriptInline(); }
-window.mysEmptyScriptWrite=mysEmptyScriptWrite;
+/* 전체보기 빈 상태 첫 작성 = 종류 선택 팝업(자료함/스크립트/메모/공유함) → 해당 메뉴 입력으로. 옛 모달 미사용 */
+function mysEmptyPick(){
+  if(document.getElementById('mysPickOv')) return;
+  var ov=document.createElement('div'); ov.id='mysPickOv'; ov.className='mys-pick-ov';
+  ov.onclick=function(e){ if(e.target===ov) mysPickClose(); };
+  ov.innerHTML='<div class="mys-pick-box" role="dialog" aria-label="무엇을 만들까요">'
+    +'<div class="mys-pick-ttl">무엇을 만들까요?</div>'
+    +'<div class="mys-pick-sub">고르시면 해당 메뉴 작성 화면으로 바로 이동합니다.</div>'
+    +'<div class="mys-pick-grid">'
+    +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'스크립트\')"><span class="mpb-nm">스크립트</span><span class="mpb-ds">상담 멘트·화법</span></button>'
+    +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'메모\')"><span class="mpb-nm">메모</span><span class="mpb-ds">간단 기록</span></button>'
+    +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'자료함\')"><span class="mpb-nm">자료함</span><span class="mpb-ds">파일 보관</span></button>'
+    +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'공유함\')"><span class="mpb-nm">공유함</span><span class="mpb-ds">함께 보기</span></button>'
+    +'</div>'
+    +'<button type="button" class="mys-pick-cancel" onclick="mysPickClose()">닫기</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+window.mysEmptyPick=mysEmptyPick;
+function mysPickClose(){ var o=document.getElementById('mysPickOv'); if(o&&o.parentNode) o.parentNode.removeChild(o); }
+window.mysPickClose=mysPickClose;
+function _mysPickChip(txt){ var cs=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<cs.length;i++){ if(cs[i].textContent.trim()===txt) return cs[i]; } return null; }
+function mysPickGo(kind){
+  mysPickClose();
+  if(kind==='스크립트'){ var c=_mysPickChip('스크립트'); if(c&&typeof filterMys==='function') filterMys(c,'스크립트'); if(typeof openScriptInline==='function') openScriptInline(); }
+  else if(kind==='메모'){ var c=_mysPickChip('메모'); if(c&&typeof filterMys==='function') filterMys(c,'메모'); if(typeof openQuickMemo==='function') openQuickMemo(); if(typeof toast==='function') toast('우측 아래 메모 입력창이 열렸어요.'); }
+  else if(kind==='자료함'){ var c=_mysPickChip('자료함'); if(c&&typeof mysVaultOpen==='function') mysVaultOpen(c); }
+  else if(kind==='공유함'){ var c=_mysPickChip('공유함'); if(c&&typeof mysShareboxOpen==='function') mysShareboxOpen(c); }
+}
+window.mysPickGo=mysPickGo;
 async function saveScrInline(){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
