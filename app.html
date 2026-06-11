@@ -6372,7 +6372,7 @@ async function loadCospace(){
   /* 라이브러리 상단 '공동 스페이스' 탭(구 단체방) 자리 = #mys-team 에 렌더. 별도 뷰 신설 아님 */
   var host=document.getElementById('mys-team'); if(!host) return;
   if(typeof _cospQnaRestore==='function') _cospQnaRestore();  /* 재진입 전 보험Q&A 보드 원위치 복귀(host 재생성 손실 방지) */
-  host.innerHTML='<div class="tabs" id="cosp-rooms" style="flex-wrap:wrap;margin-bottom:4px"></div><div id="cosp-body" style="margin-top:12px"></div>';
+  host.innerHTML='<div class="chips" id="cosp-rooms" style="flex-wrap:wrap;margin-bottom:4px"></div><div id="cosp-body" style="margin-top:12px"></div>';
   var me=await _cospLoadMe();
   var rooms=[];
   if(me.role==='admin'){ rooms.push({k:'team',label:'팀방'},{k:'branch',label:'지점방'}); }
@@ -6380,12 +6380,12 @@ async function loadCospace(){
   rooms.push({k:'insurer',label:'보험사별 자료실'});
   rooms.push({k:'qna',label:'보험Q&A'});
   var rt=document.getElementById('cosp-rooms');
-  rt.innerHTML=rooms.map(function(r,i){ return '<div class="tab'+(i===0?' on':'')+'" onclick="cospRoom(this,\''+r.k+'\')">'+r.label+'</div>'; }).join('');
-  cospRoom(rt.querySelector('.tab'), rooms[0].k);
+  rt.innerHTML=rooms.map(function(r,i){ return '<div class="chip'+(i===0?' on':'')+'" onclick="cospRoom(this,\''+r.k+'\')">'+r.label+'</div>'; }).join('');
+  cospRoom(rt.querySelector('.chip'), rooms[0].k);
 }
 window.loadCospace=loadCospace;
 function cospRoom(el,k){
-  var tabs=document.querySelectorAll('#cosp-rooms .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
+  var tabs=document.querySelectorAll('#cosp-rooms .chip'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
   window._cospRoom=k;
   var body=document.getElementById('cosp-body'); if(!body) return;
   _cospQnaRestore();  /* 방 전환 시 보험Q&A 보드가 cosp에 있으면 원위치 복귀(먼저 정리) */
@@ -6809,7 +6809,7 @@ function _goMysQna(){
   window._mysQnaMode='all';
   var teamTab=document.querySelector('#mys-tabs .tab[onclick*="team"]');
   if(teamTab&&typeof mysTab==='function') mysTab(teamTab,'team');  /* 공동 스페이스 진입(loadCospace) */
-  setTimeout(function(){ var qBtn=document.querySelector('#cosp-rooms .tab[onclick*="qna"]'); if(qBtn) qBtn.click(); }, 140);  /* 방 렌더 후 보험Q&A 방 클릭 */
+  setTimeout(function(){ var qBtn=document.querySelector('#cosp-rooms .chip[onclick*="qna"]'); if(qBtn) qBtn.click(); }, 140);  /* 방 렌더 후 보험Q&A 방 클릭 */
 }
 window._goMysQna=_goMysQna;
 /* 헤더 전산신고 버튼 → 함께해요 이동 + '전산 이상 신고' 필터 활성화 (2026-06-05) */
