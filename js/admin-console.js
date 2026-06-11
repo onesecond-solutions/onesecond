@@ -450,18 +450,34 @@
     if(!rows.length){ list.innerHTML='<div class="ac-card-empty"><i data-lucide="message-square"></i>해당 댓글이 없습니다</div>'; _renderCmtPager(0); if(window.lucide) window.lucide.createIcons(); return; }
     var per=_cState.per, pages=Math.ceil(rows.length/per), page=Math.min(_cState.page,pages-1); if(page<0)page=0; _cState.page=page;
     var slice=rows.slice(page*per,(page+1)*per);
-    list.innerHTML=slice.map(function(cm){
+    var bodyHtml=slice.map(function(cm){
       var who=cm.author_name||(cm.author_id?('ID '+String(cm.author_id).slice(0,8)):'작성자 미상');
-      var body=esc(cm.content||'(내용 없음)').replace(/\n/g,'<br>');
-      var pt=cm._pt?'<div class="ac-post-meta">↳ 소속글: '+esc(cm._pt)+'</div>':'';
-      return '<div class="ac-entity"><span class="ac-badge normal">댓글</span>'+
-        '<div class="ac-post-meta">'+esc(who)+' · '+esc(_fmtDate(cm.created_at))+'</div>'+
-        '<div class="ac-post-body full">'+body+'</div>'+pt+
-        '<div style="margin-top:10px"><button class="ac-btn" style="border-color:var(--err);color:var(--err)" onclick="acDeleteComment(\''+esc(cm.id)+'\')">삭제</button></div></div>';
+      var preview=esc((cm.content||'(내용 없음)').replace(/\s+/g,' ').slice(0,50));
+      var pt=cm._pt?esc(cm._pt):'-';
+      var delBtn='<button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="event.stopPropagation();acDeleteComment(\''+esc(cm.id)+'\')">삭제</button>';
+      return '<tr class="ac-tr-clk" onclick="acCmtDetail(\''+esc(cm.id)+'\')"><td class="ac-td-name">'+esc(who)+'</td><td class="ac-td-sub">'+preview+'</td><td class="ac-td-sub">'+pt+'</td><td class="ac-td-date">'+esc(_fmtDate(cm.created_at))+'</td><td class="ac-td-acts">'+delBtn+'</td></tr>';
     }).join('');
+    list.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>작성자</th><th>내용</th><th>소속글</th><th>날짜</th><th>관리</th></tr></thead><tbody>'+bodyHtml+'</tbody></table></div>';
     _renderCmtPager(pages);
     if(window.lucide) window.lucide.createIcons();
   }
+  // 행 클릭 → 댓글 상세(본문 전체). 공용 모달 재사용
+  window.acCmtDetail=function(id){
+    var cc=_cState.cache||[], cm=null; for(var i=0;i<cc.length;i++){ if(String(cc[i].id)===String(id)){ cm=cc[i]; break; } }
+    if(!cm) return;
+    var ov=document.getElementById('ac-udetail-ov');
+    if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; document.body.appendChild(ov); }
+    var who=cm.author_name||(cm.author_id?('ID '+String(cm.author_id).slice(0,8)):'작성자 미상');
+    var bodyTxt=esc(cm.content||'(내용 없음)').replace(/\n/g,'<br>');
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acUserDetailClose()">✕</button>'
+      +'<div class="ac-ud-title">댓글</div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">작성자</span><span class="ac-ud-v">'+esc(who)+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">소속글</span><span class="ac-ud-v">'+esc(cm._pt||'-')+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">작성일</span><span class="ac-ud-v">'+esc(_fmtDate(cm.created_at))+'</span></div>'
+      +'<div class="ac-pd-body">'+bodyTxt+'</div></div>';
+    ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); };
+    ov.classList.add('on');
+  };
   function _renderCmtPager(pages){
     var el=document.getElementById('ac-comments-pager'); if(!el) return;
     if(pages<=1){ el.innerHTML=''; return; }
