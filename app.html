@@ -6389,13 +6389,10 @@ function cospRoom(el,k){
   var body=document.getElementById('cosp-body'); if(!body) return;
   if(k==='qna') return _goMysQna();  /* IA 정정 #3: 보험Q&A = 기존 MY SPACE 보험Q&A 화면 그대로 재사용(축소판 폐기) */
   if(k==='insurer') return cospRenderInsurer();
-  body.innerHTML='<div class="tabs" id="cosp-sub" style="margin-bottom:10px">'
-    +'<div class="tab on" onclick="cospSub(this,\'notice\')">공지</div>'
-    +'<div class="tab" onclick="cospSub(this,\'material\')">공유 자료</div>'
-    +'<div class="tab" onclick="cospSub(this,\'script\')">공유 스크립트</div>'
-    +'<div class="tab" onclick="cospSub(this,\'chat\')">채팅</div>'
-    +'</div><div id="cosp-sub-body"><div class="mys-news-empty">불러오는 중…</div></div>';
-  cospSub(document.querySelector('#cosp-sub .tab'),'notice');
+  /* 방 내부 탭바(공지/공유자료/공유스크립트/채팅) 제거(2026-06-11) — 탭 UI만 삭제, 공지 내용 바로 표시.
+     공유자료/공유스크립트/채팅 렌더 함수(cospSub·cospRenderScripts·cospRenderChat)·데이터는 보존(코드·DB 유지). */
+  body.innerHTML='<div id="cosp-sub-body"><div class="mys-news-empty">불러오는 중…</div></div>';
+  cospRenderNotices(false);  /* 공지(좌카드+우상세) 바로 렌더 */
 }
 window.cospRoom=cospRoom;
 function _cospScope(){ return window._cospRoom==='branch'?{scope:'branch_internal',id:(window._cospMe||{}).branch_id}:{scope:'team_internal',id:(window._cospMe||{}).team_id}; }
