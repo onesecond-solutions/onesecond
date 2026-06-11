@@ -375,23 +375,36 @@
     var per=_pState.per, pages=Math.ceil(rows.length/per), page=Math.min(_pState.page, pages-1); if(page<0) page=0;
     _pState.page=page;
     var slice=rows.slice(page*per, (page+1)*per);
-    list.innerHTML=slice.map(function(p){
-      var hid=p.is_hidden?' <span class="ac-badge high">숨김</span>':'';
+    var bodyHtml=slice.map(function(p){
+      var hid=p.is_hidden?'<span class="ac-badge high">숨김</span>':'<span class="ac-badge st-active">표시</span>';
       var who=p.author_name||(p.author_id?('ID '+String(p.author_id).slice(0,8)):'작성자 미상');
-      var body=esc(p.content||'').replace(/\n/g,'<br>');
-      return '<div class="ac-entity"><span class="ac-badge medium">'+esc(BOARD_LABEL[p.board_type]||p.board_type||'')+'</span>'+hid+
-        '<div class="ac-entity-name">'+esc(p.title||'(제목 없음)')+'</div>'+
-        '<div class="ac-post-meta">'+esc(who)+' · '+esc(_fmtDate(p.created_at))+'</div>'+
-        (p.content?'<div class="ac-post-body" id="pb-'+esc(p.id)+'">'+body+'</div><button class="ac-linkbtn" onclick="acPostToggleBody(\''+esc(p.id)+'\',this)">전체 보기</button>':'<div class="ac-post-meta" style="font-style:italic">본문 없음</div>')+
-        '<div style="display:flex;gap:8px;margin-top:10px">'+
-          '<button class="ac-btn" onclick="acHidePost(\''+esc(p.id)+'\','+(p.is_hidden?'false':'true')+')">'+(p.is_hidden?'숨김 해제':'숨기기')+'</button>'+
-          '<button class="ac-btn" style="border-color:var(--err);color:var(--err)" onclick="acDeletePost(\''+esc(p.id)+'\')">삭제</button>'+
-        '</div></div>';
+      var hideBtn='<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acHidePost(\''+esc(p.id)+'\','+(p.is_hidden?'false':'true')+')">'+(p.is_hidden?'해제':'숨김')+'</button>';
+      var delBtn=' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="event.stopPropagation();acDeletePost(\''+esc(p.id)+'\')">삭제</button>';
+      return '<tr class="ac-tr-clk" onclick="acPostDetail(\''+esc(p.id)+'\')"><td class="ac-td-name">'+esc(p.title||'(제목 없음)')+'</td><td><span class="ac-badge medium">'+esc(BOARD_LABEL[p.board_type]||p.board_type||'')+'</span></td><td class="ac-td-sub">'+esc(who)+'</td><td class="ac-td-date">'+esc(_fmtDate(p.created_at))+'</td><td>'+hid+'</td><td class="ac-td-acts">'+hideBtn+delBtn+'</td></tr>';
     }).join('');
+    list.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>제목</th><th>게시판</th><th>작성자</th><th>날짜</th><th>상태</th><th>관리</th></tr></thead><tbody>'+bodyHtml+'</tbody></table></div>';
     _renderPostPager(pages);
     if(window.lucide) window.lucide.createIcons();
   }
-  window.acPostToggleBody=function(id, btn){ var b=document.getElementById('pb-'+id); if(!b) return; var full=b.classList.toggle('full'); if(btn) btn.textContent=full?'접기':'전체 보기'; };
+  // 행 클릭 → 게시글 상세(본문 전체). 공용 상세 모달(ac-udetail-ov) 재사용
+  window.acPostDetail=function(id){
+    var cc=_pState.cache||[], p=null; for(var i=0;i<cc.length;i++){ if(String(cc[i].id)===String(id)){ p=cc[i]; break; } }
+    if(!p) return;
+    var ov=document.getElementById('ac-udetail-ov');
+    if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; document.body.appendChild(ov); }
+    var who=p.author_name||(p.author_id?('ID '+String(p.author_id).slice(0,8)):'작성자 미상');
+    var board=BOARD_LABEL[p.board_type]||p.board_type||'';
+    var bodyTxt=esc(p.content||'(본문 없음)').replace(/\n/g,'<br>');
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acUserDetailClose()">✕</button>'
+      +'<div class="ac-ud-title">'+esc(p.title||'(제목 없음)')+'</div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">게시판</span><span class="ac-ud-v">'+esc(board)+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">작성자</span><span class="ac-ud-v">'+esc(who)+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">작성일</span><span class="ac-ud-v">'+esc(_fmtDate(p.created_at))+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">상태</span><span class="ac-ud-v">'+(p.is_hidden?'숨김':'표시')+'</span></div>'
+      +'<div class="ac-pd-body">'+bodyTxt+'</div></div>';
+    ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); };
+    ov.classList.add('on');
+  };
   function _renderPostPager(pages){
     var el=document.getElementById('ac-posts-pager'); if(!el) return;
     if(pages<=1){ el.innerHTML=''; return; }
