@@ -231,6 +231,25 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #tg-split .viewer-col{background:transparent;border:0;border-radius:0;overflow:visible;gap:12px;}
 #tg-viewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;}
 #tg-viewer .osws-panel{border:none;margin-top:0;}
+/* ═══ 공용 리치 에디터 osRich (Phase 1, 2026-06-11) — contenteditable + 툴바(서식·정렬·이미지 본문삽입·표). 외부 라이브러리 없음 ═══ */
+.osrich{border:1px solid var(--bd);border-radius:var(--radius-md,13px);overflow:hidden;background:var(--s1);}
+.osrich-tb{display:flex;flex-wrap:wrap;gap:2px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--bd);background:var(--s2);}
+.osrich-tb button{min-width:30px;height:30px;border:0;background:transparent;border-radius:6px;cursor:pointer;color:var(--tp);font-size:0.9rem;padding:0 6px;}
+.osrich-tb button:hover{background:var(--sh);}
+.osrich-tb .osrich-sep{width:1px;height:18px;background:var(--bd);margin:0 4px;}
+.osrich-tb input[type=color]{width:28px;height:28px;border:0;background:transparent;cursor:pointer;padding:0;}
+.osrich-body{min-height:320px;padding:12px 14px;outline:0;font-size:0.9rem;line-height:1.85;color:var(--bodytx);overflow-y:auto;}
+.osrich-body:empty::before{content:attr(data-ph);color:var(--tf);}
+.osrich-body img{max-width:100%;height:auto;border-radius:8px;margin:6px 0;display:block;}
+.osrich-body table{border-collapse:collapse;margin:8px 0;width:auto;}
+.osrich-body td,.osrich-body th{border:1px solid var(--bd);padding:6px 10px;min-width:48px;}
+/* 마이 스페이스 스크립트 인라인 작업공간 (Phase 1) — 스크립트 칩에서만 적용(scr-mode 가드). 글쓰기 카드 + 작업공간 카드 세로 2카드 */
+#mys-scr-newrow{display:none;}
+#mys-split.scr-mode .viewer-col{background:transparent;border:0;border-radius:0;overflow:visible;gap:12px;}
+#mys-split.scr-mode #mysViewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;}
+.scr-type-seg{display:flex;gap:6px;}
+.scr-type-seg button{flex:0 0 auto;padding:7px 16px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-sm,11px);cursor:pointer;font-weight:600;font-size:0.85rem;}
+.scr-type-seg button.on{background:var(--ac);border-color:var(--ac);color:#fff;}
 .answer{margin-top:18px;background:var(--s2);border-radius:10px;padding:16px 18px;}
 .answer .who{font-size:0.75rem;color:var(--t-uw);font-weight:700;margin-bottom:8px;}
 .atts{margin-top:20px;border-top:0.5px solid var(--bd);padding-top:16px;}
@@ -1958,6 +1977,8 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
         </div>
         <div class="col viewer-col">
           <button class="backbtn" onclick="mysBackToList()">&#8249; 목록으로</button>
+          <!-- 스크립트 칩 전용 인라인 글쓰기 카드(Phase 1, scr-mode에서만 표시). 우상단 모달 글쓰기 버튼은 공존 유지 -->
+          <div class="osws-newrow" id="mys-scr-newrow"><button class="osws-newbtn" onclick="openScriptInline()">+ 글쓰기</button></div>
           <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
         </div>
       </div>
@@ -7440,6 +7461,57 @@ window.OSWS=window.OSWS||{
     var cc=viewer.querySelector('.osws-cancel'); if(cc) cc.onclick=onCancel;
   }
 };
+/* ═══ 공용 리치 에디터 osRich (Phase 1) — contenteditable + 툴바(서식·정렬·이미지 본문삽입·표). 외부 라이브러리 없음.
+ * mount(hostId,html,opts) 렌더 / html() 본문 HTML 반환. 이미지=Storage 업로드 후 본문 <img>. 동시 1개 에디터 가정. ═══ */
+window.osRich=window.osRich||{
+  _id:null, _bucket:'onesecond_banner',
+  mount:function(hostId, html, opts){
+    opts=opts||{}; var host=document.getElementById(hostId); if(!host) return;
+    var bid=hostId+'-rb';
+    host.innerHTML='<div class="osrich">'
+      +'<div class="osrich-tb">'
+      +'<button type="button" title="굵게" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'bold\')"><b>B</b></button>'
+      +'<button type="button" title="기울임" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'italic\')"><i>I</i></button>'
+      +'<button type="button" title="밑줄" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'underline\')"><u>U</u></button>'
+      +'<input type="color" title="글자색" value="#6366F1" onchange="osRich.cmd(\'foreColor\',this.value)">'
+      +'<span class="osrich-sep"></span>'
+      +'<button type="button" title="왼쪽 정렬" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'justifyLeft\')">&#8676;</button>'
+      +'<button type="button" title="가운데 정렬" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'justifyCenter\')">&#8596;</button>'
+      +'<button type="button" title="오른쪽 정렬" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'justifyRight\')">&#8677;</button>'
+      +'<span class="osrich-sep"></span>'
+      +'<button type="button" title="이미지 본문 삽입" onclick="osRich.image()">&#128247;</button>'
+      +'<button type="button" title="표 삽입" onclick="osRich.table()">&#9638;</button>'
+      +'</div>'
+      +'<div class="osrich-body" id="'+bid+'" contenteditable="true" data-ph="'+_sEsc(opts.placeholder||'내용을 입력하세요')+'"></div>';
+    var b=document.getElementById(bid); if(b) b.innerHTML=html||'';
+    this._id=bid; this._bucket=opts.bucket||'onesecond_banner';
+  },
+  _body:function(){ return this._id?document.getElementById(this._id):null; },
+  cmd:function(c,v){ var b=this._body(); if(b) b.focus(); try{ document.execCommand(c,false,v||null); }catch(e){} },
+  html:function(){ var b=this._body(); return b?b.innerHTML:''; },
+  insert:function(h){ var b=this._body(); if(!b) return; b.focus(); try{ if(!document.execCommand('insertHTML',false,h)) b.innerHTML+=h; }catch(e){ b.innerHTML+=h; } },
+  table:function(){
+    var r=parseInt(prompt('행 수 (1~20)','3'),10), c=parseInt(prompt('열 수 (1~10)','3'),10);
+    if(!(r>=1&&r<=20&&c>=1&&c<=10)) return;
+    var h='<table>'; for(var i=0;i<r;i++){ h+='<tr>'; for(var j=0;j<c;j++) h+='<td>&nbsp;</td>'; h+='</tr>'; } h+='</table><p><br></p>';
+    this.insert(h);
+  },
+  image:function(){
+    var self=this; var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
+    inp.onchange=async function(){
+      var f=inp.files&&inp.files[0]; if(!f) return;
+      var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+      var ext=((f.name||'').split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'')||'png';
+      var path='scriptimg/'+Date.now()+'_'+(f.size||0)+'.'+ext;  /* ASCII 키 (한글 파일명 400 회피) */
+      try{
+        var up=await fetch(window.db.url('/storage/v1/object/'+self._bucket+'/'+path),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(f.type||'image/png'),'x-upsert':'true'},body:f});
+        if(up.ok){ self.insert('<img src="'+window.db.url('/storage/v1/object/public/'+self._bucket+'/'+path)+'" alt="">'); }
+        else { alert('이미지 업로드 실패 ('+up.status+')'); }
+      }catch(e){ alert('이미지 업로드 중 오류가 발생했습니다.'); }
+    };
+    inp.click();
+  }
+};
 /* 함께해요 인라인 글쓰기/수정 (Phase 0 파일럿 — 기존 모달과 공존, 별도 id tgi-f-*) */
 function openTogetherInline(edit){
   var v=document.getElementById('tg-viewer'); if(!v) return;
@@ -8685,6 +8757,7 @@ function fmtMysDate(iso){
 }
 
 async function loadMyspace(force){
+  if(typeof _scrModeOff==='function') _scrModeOff();  /* 마이 스페이스 진입 시 스크립트 인라인 모드 초기화(기본 전체 칩) */
   if(window._myspaceLoaded&&!force)return;
   var grid=document.getElementById('mysList');if(!grid)return;
   if(!window.db||!window.db.getToken){
@@ -8773,12 +8846,15 @@ function mysOpenItem(idx, keepList){
   if(_ia.length){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
   var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
   var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
-  var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):('<button class="post-act" onclick="scrEditOpen('+JSON.stringify(it.id)+')">✏️ 수정</button>');
+  var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):('<button class="post-act" onclick="scrEditInline('+JSON.stringify(it.id)+')">✏️ 수정</button>');
   var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');  /* 메모는 제목 개념 없음 — 날짜+포스트잇 카드만 */
+  /* 스크립트: 리치 HTML이면 그대로 렌더, 아니면(기존 plain/섹션) esc+개행 보존(회귀 0) */
+  var _isRichScr=(it._type==='script' && /<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(bodyText||''));
+  var _bodyInner=_isRichScr ? (bodyText||'') : ((esc(bodyText).replace(/\n/g,'<br>'))||'(본문이 없습니다)');
   v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'
     +_ttlHtml
     +'<div class="vmeta">'+esc(dt)+'</div>'
-    +'<div class="vbody"'+_bodyStyle+'>'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+attHtml+'</div>'
+    +'<div class="vbody"'+_bodyStyle+'>'+_bodyInner+attHtml+'</div>'
     +'<div class="post-acts">'+_editBtn+'<button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>';
   var items=document.querySelectorAll('#mysList .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
@@ -9083,6 +9159,91 @@ async function scrEditOpen(id){
   }catch(e){ alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
 }
 window.scrEditOpen=scrEditOpen;
+
+/* ═══ 마이 스페이스 스크립트 인라인 작업공간 (Phase 1, 2026-06-11) — 우측 2카드(글쓰기/작업공간) + osRich 리치텍스트.
+ * 콜/채팅 = 분류 태그만(둘 다 리치 자유). 단계·핵심멘트·대안화법 폐기. script_text=HTML 저장. 기존 모달(openMyspaceWrite)·수정 모달 공존. ═══ */
+function scrIlType(t){ window._scrIlType=t; var seg=document.getElementById('scr-il-seg'); if(seg){ var bs=seg.querySelectorAll('button'); if(bs[0]) bs[0].classList.toggle('on',t==='call'); if(bs[1]) bs[1].classList.toggle('on',t==='chat'); } }
+window.scrIlType=scrIlType;
+/* 스크립트 인라인 모드 해제 — 다른 칩(공유함)·탭 이동 시 글쓰기 카드 잔존 방지 */
+function _scrModeOff(){ var ms=document.getElementById('mys-split'); if(ms) ms.classList.remove('scr-mode'); var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none'; }
+window._scrModeOff=_scrModeOff;
+function openScriptInline(edit){
+  var v=document.getElementById('mysViewer'); if(!v) return;
+  window._scrInlineEdit=edit||null;
+  var type=(edit&&edit.type)?edit.type:'call';
+  window._scrIlType=type;
+  var formHtml=''
+    +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg" id="scr-il-seg"><button type="button" class="'+(type==='call'?'on':'')+'" onclick="scrIlType(\'call\')">콜스크립트</button><button type="button" class="'+(type==='chat'?'on':'')+'" onclick="scrIlType(\'chat\')">채팅 스크립트</button></div></div>'
+    +'<div class="iv-fld"><label>제목</label><input type="text" id="scr-il-title" class="mys-write-input" maxlength="100" placeholder="제목"></div>'
+    +'<div class="iv-fld"><label>내용</label><div id="scr-il-rich"></div></div>'
+    +'<div class="iv-fld"><label>키워드</label><input type="text" id="scr-il-kw" class="mys-write-input" maxlength="200" placeholder="예: 암보험, 클로징 (쉼표로 구분)"></div>'
+    +'<div class="iv-fld"><label>파일 첨부 (모든 파일)</label><input type="file" id="scr-il-file" multiple onchange="mysWriteFilePreview(this,\'scr-il-fp\')"><div id="scr-il-fp" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>';
+  window.OSWS.openForm(v, (edit?'edit':'create'), formHtml, saveScrInline, closeScrInline);
+  if(window.osRich&&window.osRich.mount) window.osRich.mount('scr-il-rich', (edit&&edit.html)||'', {placeholder:'스크립트 내용을 작성하세요 (이미지·표·서식·정렬)'});
+  if(edit){ var t=document.getElementById('scr-il-title'); if(t) t.value=edit.title||''; var k=document.getElementById('scr-il-kw'); if(k) k.value=edit.kw||''; }
+  var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none';
+  if(!edit){ var list=document.getElementById('mysList'); if(list){ var its=list.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.remove('on'); var tc=document.createElement('div'); tc.className='item on osws-tempcard'; tc.id='scr-il-temp'; list.insertBefore(tc, list.firstChild); } }
+  if(window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
+  setTimeout(function(){ var ti=document.getElementById('scr-il-title'); if(ti) ti.focus(); },60);
+}
+window.openScriptInline=openScriptInline;
+function closeScrInline(){
+  window._scrInlineEdit=null;
+  var tc=document.getElementById('scr-il-temp'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc);
+  var ms=document.getElementById('mys-split'); var nr=document.getElementById('mys-scr-newrow');
+  if(nr&&ms&&ms.classList.contains('scr-mode')) nr.style.display='';
+  renderMyspace(window._mysFiltered||[]);  /* view 복귀(첫 항목 보기) */
+}
+window.closeScrInline=closeScrInline;
+function _scrReselectChip(){ var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<chips.length;i++){ if(chips[i].textContent.trim()==='스크립트'){ if(typeof filterMys==='function') filterMys(chips[i],'스크립트'); break; } } }
+async function saveScrInline(){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var title=((document.getElementById('scr-il-title')||{}).value||'').trim();
+  var html=(window.osRich&&window.osRich.html)?(window.osRich.html()||'').trim():'';
+  if(!title){ alert('제목을 입력해 주세요.'); return; }
+  if(!html||html==='<br>'){ alert('내용을 입력해 주세요.'); return; }
+  var kw=((document.getElementById('scr-il-kw')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅';
+  if(window._scrIlType==='chat' && kw.indexOf(CHATKW)<0) kw.unshift(CHATKW);  /* 채팅 분류 태그 */
+  var sv=document.querySelector('#mysViewer .osws-save'); if(sv){ sv.disabled=true; sv.textContent='저장 중…'; }
+  var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('scr-il-file','script',token); if(a===null){ if(sv){sv.disabled=false;sv.textContent='저장';} return; } atts=a||[]; }
+  var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
+  var ed=window._scrInlineEdit;
+  try{
+    if(ed&&ed.id){
+      var body={title:title, script_text:html, keywords:kw}; if(atts.length) body.attachments=atts;
+      var pr=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(ed.id)),{method:'PATCH',headers:H,body:JSON.stringify(body)});
+      if(!(pr.ok||pr.status===204)){ var t1=''; try{t1=await pr.text();}catch(e){} console.error('[saveScrInline patch]',pr.status,t1); alert('수정 실패 ('+pr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
+    } else {
+      var body2={owner_id:(u.id||(window.AppState&&window.AppState.userId)||''), title:title, script_text:html, keywords:kw, attachments:atts, scope:'personal', is_active:true};
+      var rr=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:H,body:JSON.stringify(body2)});
+      if(!(rr.ok||rr.status===201)){ var t2=''; try{t2=await rr.text();}catch(e){} console.error('[saveScrInline post]',rr.status,t2); alert('등록 실패 ('+rr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
+    }
+    window._scrInlineEdit=null;
+    var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='';
+    if(typeof toast==='function') toast(ed?'수정됐어요!':'스크립트가 저장됐어요!');
+    if(typeof loadMyspace==='function'){ window._myspaceLoaded=false; loadMyspace(); }
+    setTimeout(_scrReselectChip, 250);  /* 목록 재로드 후 스크립트 칩 재선택 */
+  }catch(e){ console.error('[saveScrInline]',e); alert('저장 중 오류가 발생했습니다.'); if(sv){sv.disabled=false;sv.textContent='저장';} }
+}
+window.saveScrInline=saveScrInline;
+/* 스크립트 수정 = 인라인 edit (새 리치 HTML은 그대로, 기존 plain은 줄바꿈 보존 변환). mysOpenItem 수정버튼에서 호출 */
+async function scrEditInline(id){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,keywords'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
+    var r=((res.ok?await res.json():[])||[])[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
+    var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅';
+    var kws=r.keywords||[]; var isChat=kws.indexOf(CHATKW)!==-1;
+    var kw=kws.filter(function(k){return k!==CHATKW;}).join(', ');
+    var raw=r.script_text||'';
+    var isHtml=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(raw);
+    var html=isHtml?raw:_sEsc(raw).replace(/\n/g,'<br>');  /* 기존 plain/섹션 → 줄바꿈 보존(데이터 손실 0) */
+    openScriptInline({id:r.id, type:isChat?'chat':'call', title:r.title||'', html:html, kw:kw});
+  }catch(e){ alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
+}
+window.scrEditInline=scrEditInline;
 /* 편집 저장 — scripts PATCH (스크립트 콜 / 채팅). RLS scripts_update_own = owner 본인 */
 async function _saveMyspaceEdit(){
   var e=window._mysWriteEdit; if(!e) return;
@@ -10292,6 +10453,10 @@ function filterMys(el,cat){
   /* 자료함(폴더형) 칩이 아닌 다른 칩 = 평면 목록(mys-split) 복귀, 자료함 숨김 */
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='none';
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
+  /* 스크립트 칩 = 인라인 작업공간(글쓰기 카드 표시 + 2카드). 다른 칩 = 해제(공용 회귀 0) */
+  var _scr=(cat==='스크립트'); var _nr=document.getElementById('mys-scr-newrow');
+  if(_ms){ _ms.classList.toggle('scr-mode', _scr); }
+  if(_nr){ _nr.style.display=_scr?'':'none'; }
   /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
@@ -10308,6 +10473,7 @@ function mysShareboxOpen(el){
   for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
   el.classList.add('on');
   window._mysCat='공유함'; window._mysReorder=false;
+  if(typeof _scrModeOff==='function') _scrModeOff();
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='none';
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
   var listEl=document.getElementById('mysList');
@@ -10334,6 +10500,7 @@ function mysVaultIcon(f){ var mt=(f.mime_type||''),ext=(f.ext||'').toLowerCase()
   return '📎'; }
 
 function mysVaultOpen(el){
+  if(typeof _scrModeOff==='function') _scrModeOff();
   var chips=el.parentElement.querySelectorAll('.chip');
   for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
   el.classList.add('on');
