@@ -80,7 +80,7 @@
     change_role:'권한을 변경했습니다', create_notice:'공지를 등록했습니다',
     update_notice:'공지를 수정했습니다', update_setting:'시스템 설정을 변경했습니다',
     hide_post:'게시글을 숨김 처리했습니다', delete_post:'게시글을 삭제했습니다',
-    delete_comment:'댓글을 삭제했습니다', update_menu:'메뉴 설정을 변경했습니다',
+    delete_comment:'댓글을 삭제했습니다', delete_user:'사용자를 삭제했습니다', update_menu:'메뉴 설정을 변경했습니다',
     create_branch:'지점을 생성했습니다', update_branch:'지점 정보를 수정했습니다',
     delete_branch:'지점을 삭제했습니다', login:'로그인했습니다',
     script_view:'스크립트를 조회했습니다'
@@ -238,7 +238,8 @@
       var suspBtn = (st==='suspended')
         ? '<button class="ac-btn ac-btn-sm" onclick="acUserSuspend(\''+esc(u.id)+'\',false)">해제</button>'
         : '<button class="ac-btn ac-btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="acUserSuspend(\''+esc(u.id)+'\',true)">정지</button>';
-      return '<tr><td class="ac-td-name">'+esc(u.name||'(이름 없음)')+'</td><td>'+sel+'</td><td>'+stBadge+'</td><td class="ac-td-sub">'+esc(u.company||'-')+'</td><td class="ac-td-sub">'+esc(u.email||'')+'</td><td class="ac-td-date">'+esc(_fmtDate(u.created_at))+'</td><td>'+suspBtn+'</td></tr>';
+      var delBtn = (u.role==='admin') ? '' : ' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="acUserDelete(\''+esc(u.id)+'\')">삭제</button>';  /* 어드민 계정은 삭제 버튼 숨김(보호) */
+      return '<tr><td class="ac-td-name">'+esc(u.name||'(이름 없음)')+'</td><td>'+sel+'</td><td>'+stBadge+'</td><td class="ac-td-sub">'+esc(u.company||'-')+'</td><td class="ac-td-sub">'+esc(u.email||'')+'</td><td class="ac-td-date">'+esc(_fmtDate(u.created_at))+'</td><td class="ac-td-acts">'+suspBtn+delBtn+'</td></tr>';
     }).join('');
     area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>이름</th><th>권한</th><th>상태</th><th>소속</th><th>이메일</th><th>가입</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table></div>';
     _renderUserPager(pages);
@@ -273,6 +274,19 @@
       if(!res.ok){ acToast((suspend?'정지':'해제')+' 실패 ('+res.status+') — RLS 정책 확인', true); return; }
       if(window.db.logActivity) window.db.logActivity(suspend?'suspend_user':'activate_user','user',id,{});
       acToast(suspend?'사용자를 정지했습니다':'정지를 해제했습니다');
+      window.acLoadUsers(true);
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+  window.acUserDelete=async function(id){
+    var u=null; for(var i=0;i<_usersAll.length;i++){ if(_usersAll[i].id===id){ u=_usersAll[i]; break; } }
+    var nm=(u&&u.name)||'이 사용자';
+    if(u&&u.role==='admin'){ acToast('어드민 계정은 삭제할 수 없습니다',true); return; }
+    if(!confirm('"'+nm+'" 계정을 삭제하시겠습니까?\n\n되돌릴 수 없습니다. 이 사용자의 글·댓글 등 연관 데이터에 영향이 갈 수 있습니다.\n(로그인 인증(auth)은 별도로 남을 수 있어, 완전 삭제는 Supabase에서 확인이 필요합니다.)')) return;
+    try{
+      var res=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+      if(!res.ok){ var msg='삭제 실패 ('+res.status+')'; if(res.status===409) msg+=' — 연관 데이터(FK) 있음'; else if(res.status===403||res.status===401) msg+=' — RLS 정책 확인'; acToast(msg,true); return; }
+      if(window.db.logActivity) window.db.logActivity('delete_user','user',id,{name:nm});
+      acToast('계정을 삭제했습니다');
       window.acLoadUsers(true);
     }catch(e){ acToast('네트워크 오류',true); }
   };
