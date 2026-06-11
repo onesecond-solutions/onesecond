@@ -6529,8 +6529,13 @@ async function cospRenderNotices(materialsOnly){
       var ah=(typeof _voiceAttsHtml==='function')?_voiceAttsHtml(a):{html:'',imgs:[],names:[]};
       return { badge:t[0], tc:t[1], rtitle:(r.title||'(제목 없음)'), meta:[_cospDate(r.created_at),who].filter(Boolean).join(' · '), bodyHtml:_cospEsc(r.content||'').replace(/\n/g,'<br>')+(ah.html||''), _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
     });
-    if(!window._cospNotices.length){ box.innerHTML='<div class="mys-news-empty">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.')+'</div>'; return; }
+    /* 글쓰기 = 방 소속자 누구나(카톡 단톡방). 어드민(창시자)·공유자료 모드 제외. 핵심 권한은 작성이 아니라 가시성(소속 격리) */
+    var _me=window._cospMe||{};
+    var _canWrite=!materialsOnly && !_cospAdmin && (window._cospRoom==='branch'?!!_me.branch_id:!!_me.team_id);
+    var _writeBtn=_canWrite?'<div class="osws-newrow" style="margin-bottom:10px"><button class="osws-newbtn" onclick="cospWrite()">+ 글쓰기</button></div>':'';
+    if(!window._cospNotices.length){ box.innerHTML=_writeBtn+'<div class="mys-news-empty">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.'+(_canWrite?'<br>+ 글쓰기로 첫 공지를 작성해보세요.':''))+'</div>'; return; }
     box.innerHTML=(_cospAdmin?'<div style="font-size:0.74rem;color:var(--ts);margin-bottom:6px">관리자 열람 — 전 '+(window._cospRoom==='branch'?'지점':'팀')+' 공지</div>':'')
+      +_writeBtn
       +'<div class="split cosp-split" id="cosp-notice-split">'
       +'<div class="col list-col"><div class="list" id="cosp-qlist"></div></div>'
       +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
@@ -6554,6 +6559,18 @@ function cospShowNotice(idx){
 window.cospShowNotice=cospShowNotice;
 function cospNoticeBack(){ var sp=document.getElementById('cosp-notice-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.cospNoticeBack=cospNoticeBack;
+/* 공동 스페이스 팀방/지점방 글쓰기 = 기존 단체방 폼(mrWriteModal) 재사용. scope는 역할이 아니라 현재 방(_cospRoom) 기준으로 강제 */
+function cospWrite(){
+  if(typeof mrOpenWrite!=='function'){ if(typeof toast==='function') toast('작성 폼을 열 수 없습니다.'); return; }
+  var _mw=document.getElementById('mrWriteModal'); if(_mw && _mw.parentElement!==document.body) document.body.appendChild(_mw);  /* 어느 view에서든 뜨게 body 직속 */
+  window._mrEditId=null;  /* 신규 보장 */
+  mrOpenWrite();
+  /* mrOpenWrite가 역할 기준으로 _mrScope를 덮으므로(7715) 방 기준으로 재강제 + 제목 보정 */
+  window._mrScope=(window._cospRoom==='branch')?'branch_internal':'team_internal';
+  var wt=document.getElementById('mr-write-title'); if(wt) wt.textContent=(window._cospRoom==='branch')?'지점방 공지 작성':'팀방 공지 작성';
+  window._cospWriting=true;  /* 저장 성공 후 팀방 목록 갱신 플래그 */
+}
+window.cospWrite=cospWrite;
 async function cospRenderScripts(){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   var s=_cospScope(); if(!s.id){ box.innerHTML='<div class="mys-news-empty">소속 정보가 없습니다.</div>'; return; }
@@ -7723,7 +7740,7 @@ function mrOpenWrite(){
   window._mrEditAtts=[]; if(typeof renderMrEditAtts==='function')renderMrEditAtts();
   var m=document.getElementById('mrWriteModal'); if(m) m.style.display='flex';
 }
-function mrCloseWrite(){ var m=document.getElementById('mrWriteModal'); if(m) m.style.display='none'; window._mrEditId=null; var sb=document.getElementById('mr-write-submit'); if(sb) sb.textContent='공지 등록'; var wt=document.getElementById('mr-write-title'); if(wt) wt.textContent=(window._mrScope==='branch_internal')?'지점 게시판 공지 작성':'단체방 공지 작성'; }
+function mrCloseWrite(){ var m=document.getElementById('mrWriteModal'); if(m) m.style.display='none'; window._mrEditId=null; window._cospWriting=false; var sb=document.getElementById('mr-write-submit'); if(sb) sb.textContent='공지 등록'; var wt=document.getElementById('mr-write-title'); if(wt) wt.textContent=(window._mrScope==='branch_internal')?'지점 게시판 공지 작성':'단체방 공지 작성'; }
 async function mrSubmitNotice(){
   var err=document.getElementById('mr-write-err');
   var title=((document.getElementById('mr-f-title')||{}).value||'').trim();
@@ -7755,9 +7772,11 @@ async function mrSubmitNotice(){
       try{ var ej=await res.json(); if(ej&&(ej.message||ej.hint)) m=ej.message||ej.hint; }catch(e){}
       showErr(m); if(btn){ btn.disabled=false; btn.textContent='공지 등록'; } return; }
     var _wasEdit=!!window._mrEditId;
+    var _wasCosp=!!window._cospWriting;
     mrCloseWrite();
     if(typeof toast==='function') toast(_wasEdit?'공지가 수정되었습니다':'공지가 등록되었습니다');
     if(_wasEdit){ var _vv=document.getElementById('v-voice'); if(_vv&&_vv.classList.contains('on')){ var _at=document.querySelector('#v-voice .tabs .tab.on'); if(_at){ var _mm=(_at.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/); if(_mm&&typeof showTab==='function') showTab(_at,_mm[1]); } } window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); }
+    if(_wasCosp && typeof cospRenderNotices==='function'){ cospRenderNotices(false); }  /* 공동 스페이스 팀방/지점방 작성 후 목록 갱신 */
     if(btn){ btn.disabled=false; btn.textContent='공지 등록'; }
   }catch(e){ showErr('네트워크 오류가 발생했습니다.'); if(btn){ btn.disabled=false; btn.textContent='공지 등록'; } }
 }
