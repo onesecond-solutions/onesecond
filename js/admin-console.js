@@ -470,15 +470,18 @@
     dashboard:{}, logs:{}, knowledge:{},
     ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점']] },
     content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
+    validation:{ secs:[['visibility','화면 가시성']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
   };
   var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs', knowledge:'knowledge',
     approvals:'ops', users:'ops', branches:'ops',
     posts:'content', comments:'content', library:'content',
+    visibility:'validation',
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
-    branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary' };
-  var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','system','logs'];
+    branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
+    visibility:'acLoadVisibility' };
+  var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','validation','system','logs'];
 
   function _acSpaRoot(){ return document.getElementById('v-admin'); }
 
@@ -550,5 +553,89 @@
     }
     if(window.lucide) window.lucide.createIcons();
     window.acGoSec((sec && AC_SEC_GROUP[sec]) ? sec : 'dashboard');
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  //  권한 검증 — 화면 가시성 매트릭스 (9 role × 영역)
+  //  · 실제 코드 게이팅(_canSee* 직접 실행, role override) vs 정답(role_access_map §1-2)
+  //  · ✓ 보임(정상) / · 숨김(정상) / ✕ 불일치(수정 필요)
+  // ════════════════════════════════════════════════════════════════════
+  var AC_ROLES = [
+    ['admin','어드민'],
+    ['ga_branch_manager','지점장 · GA'], ['ga_manager','실장 · GA'],
+    ['ga_member','설계사 · GA'], ['ga_staff','스텝 · GA'],
+    ['insurer_branch_manager','지점장 · 원수사'], ['insurer_manager','매니저 · 원수사'],
+    ['insurer_member','직원 · 원수사'], ['insurer_staff','스텝 · 원수사']
+  ];
+  function _isGA(r){ return r.indexOf('ga_')===0; }
+  function _isIns(r){ return r.indexOf('insurer_')===0; }
+  // 영역: label + exp(정답 role_access_map §1-2)
+  var AC_AREAS = [
+    {key:'home',label:'홈',exp:function(r){return r==='admin'||_isGA(r);}},
+    {key:'myspace',label:'MY SPACE',exp:function(r){return r==='admin'||_isGA(r);}},
+    {key:'scripts',label:'스크립트',exp:function(r){return r==='admin'||_isGA(r);}},
+    {key:'quick',label:'Quick',exp:function(r){return r==='admin'||_isGA(r);}},
+    {key:'news',label:'보험이슈',exp:function(r){return r==='admin'||_isGA(r);}},
+    {key:'voice',label:'현장의 소리',exp:function(r){return r==='admin'||_isGA(r);}},
+    {key:'together',label:'함께해요',exp:function(r){return true;}},
+    {key:'pricing',label:'요금제',exp:function(r){return r==='admin'||_isGA(r);}},
+    {key:'insurer-vault',label:'보험사 자료실',exp:function(r){return r==='admin'||_isIns(r);}},
+    {key:'admin',label:'어드민',exp:function(r){return r==='admin';}},
+    {key:'search',label:'통합 검색',exp:function(r){return r==='admin';}},
+    {key:'teamMembers',label:'팀원관리',exp:function(r){return r==='admin'||r==='ga_branch_manager'||r==='ga_manager';}}
+  ];
+  // 실제 코드 게이팅 — _canSee* 직접 실행(role override) + CSS/applyRoleClass 규칙 (app.html:3258-3278 정합)
+  function _gateActual(role, key){
+    window._roleSimOverride = role;
+    var isIns = role.indexOf('insurer_')===0, isAdmin = role==='admin', v;
+    switch(key){
+      case 'voice': v = !!(window._canSeeVoice && window._canSeeVoice()); break;
+      case 'insurer-vault': v = !!(window._canSeeVault && window._canSeeVault()); break;
+      case 'admin': v = !!(window._canSeeAdmin && window._canSeeAdmin()); break;
+      case 'search': v = isAdmin; break;
+      case 'teamMembers': v = (role==='admin'||role==='ga_branch_manager'||role==='ga_manager'); break;
+      case 'together': v = true; break;
+      default: v = !isIns;  /* home/myspace/scripts/quick/news/pricing — CSS is-insurer 숨김 */
+    }
+    window._roleSimOverride = null;  /* 복원 — 실사용 게이팅 영향 0 */
+    return v;
+  }
+  window.acLoadVisibility = function(){
+    var host = document.getElementById('ac-visibility-list'); if(!host) return;
+    var bad = 0, total = 0;
+    var rows = AC_ROLES.map(function(rr){
+      var role = rr[0];
+      var cells = AC_AREAS.map(function(a){
+        var act = _gateActual(role, a.key), exp = a.exp(role), ok = (act===exp);
+        total++; if(!ok) bad++;
+        var cls = !ok ? 'bad' : (act ? 'ok-show' : 'ok-hide');
+        var sym = !ok ? '✕' : (act ? '✓' : '·');
+        return '<td><div class="ac-vis-cell '+cls+'" onclick="acVisDetail(\''+role+'\',\''+a.key+'\')" title="'+a.label+'">'+sym+'</div></td>';
+      }).join('');
+      return '<tr><td class="ac-vis-rolecell">'+rr[1]+'<span class="rc">'+role+'</span></td>'+cells+'</tr>';
+    }).join('');
+    var head = '<tr><th class="ac-vis-rolehead">role \\ 영역</th>'+AC_AREAS.map(function(a){return '<th>'+a.label+'</th>';}).join('')+'</tr>';
+    var cnt = document.getElementById('ac-vis-count'); if(cnt) cnt.textContent = (bad===0?('정합 '+total+'/'+total):('불일치 '+bad+'건'));
+    host.innerHTML =
+      '<div class="ac-vis-toolbar">'
+      +'<span class="ac-vis-summary">검사 '+total+'칸 · <span class="ok">일치 '+(total-bad)+'</span> · <span class="bad">불일치 '+bad+'</span></span>'
+      +'<label class="ac-vis-filter"><input type="checkbox" onchange="acVisToggleHideOk(this)"> 불일치(✕)만 강조</label>'
+      +'<button class="ac-vis-rerun" onclick="acLoadVisibility()">다시 검사</button>'
+      +'</div>'
+      +'<div class="ac-vis-wrap"><table class="ac-vis-table" id="ac-vis-tbl"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'
+      +'<div class="ac-vis-legend"><span><i style="background:color-mix(in srgb,var(--ok) 16%,transparent)"></i>✓ 보임(정상)</span><span><i style="background:var(--s2)"></i>· 숨김(정상)</span><span><i style="background:color-mix(in srgb,var(--err) 24%,transparent)"></i>✕ 불일치(수정 필요)</span></div>'
+      +'<div class="ac-vis-detail" id="ac-vis-detail"></div>';
+  };
+  window.acVisToggleHideOk = function(el){ var t=document.getElementById('ac-vis-tbl'); if(t) t.classList.toggle('hide-ok', el.checked); };
+  window.acVisDetail = function(role, key){
+    var a=null; for(var i=0;i<AC_AREAS.length;i++){ if(AC_AREAS[i].key===key){ a=AC_AREAS[i]; break; } }
+    if(!a) return;
+    var act=_gateActual(role,key), exp=a.exp(role), ok=(act===exp);
+    var box=document.getElementById('ac-vis-detail'); if(!box) return;
+    var rl=''; for(var j=0;j<AC_ROLES.length;j++){ if(AC_ROLES[j][0]===role){ rl=AC_ROLES[j][1]; break; } }
+    box.className='ac-vis-detail on';
+    box.innerHTML='<b>'+rl+'</b> ('+role+') · <b>'+a.label+'</b><br>'
+      +'정답(role_access_map): <b>'+(exp?'보여야 함':'숨겨야 함')+'</b> · 실제 코드 게이팅: <b>'+(act?'보임':'숨김')+'</b> → '
+      +(ok?'<span style="color:var(--ok);font-weight:700">일치 ✓</span>':'<span class="vd-bad">불일치 ✕ — 게이팅 코드 수정 필요</span>');
   };
 })();
