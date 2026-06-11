@@ -209,10 +209,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .vmeta{font-size:0.75rem;color:var(--tf);margin-bottom:18px;}
 .vbody{font-size:0.875rem;color:var(--bodytx);line-height:1.85;}
 /* ═══ 공용 인라인 작업공간 셸 (Phase 0, 2026-06-11) — 우측 작업공간 view/create/edit. 노란 메모지 금지(create=accent / edit=warn) ═══ */
-/* 글쓰기 영역 = 전체폭 파란 바탕·흰 글씨 (콘텐츠 영역과 시각 분리). 아래 margin으로 콘텐츠와 경계 */
-.osws-newrow{background:var(--ac);border-radius:var(--radius-md,10px);margin-bottom:14px;overflow:hidden;}
-.osws-newbtn{width:100%;height:48px;background:transparent;color:#fff;border:0;font-weight:700;font-size:0.95rem;cursor:pointer;}
-.osws-newbtn:hover{background:rgba(255,255,255,0.12);}
+/* OSWS 2카드 표준: 글쓰기 = 독립 카드1(흰·0.5테두리·radius-lg). 버튼은 카드 안 가로중앙 210×44(풀폭 금지) */
+.osws-newrow{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);padding:14px;text-align:center;}
+.osws-newbtn{width:210px;height:44px;background:var(--ac);color:#fff;border:0;border-radius:var(--radius-md,13px);font-weight:700;font-size:0.9rem;cursor:pointer;}
+.osws-newbtn:hover{background:var(--ach);}
 .osws-panel{border:1px solid var(--bd);border-radius:var(--radius-md,10px);overflow:hidden;margin-top:4px;}
 .osws-panel.osws-create{border-color:var(--ac);}
 .osws-panel.osws-edit{border-color:var(--warn);}
@@ -227,8 +227,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .osws-acts{display:flex;gap:8px;padding:14px;}
 .osws-cancel{background:var(--s2);color:var(--tp);border:1px solid var(--bd);border-radius:8px;padding:0 18px;height:38px;cursor:pointer;font-weight:600;}
 .osws-tempcard{border:1.5px dashed var(--ac);min-height:46px;opacity:0.9;}
-/* 함께해요: 글쓰기 영역(카드1·파랑) + 콘텐츠 영역(카드2·흰) = 위아래 세로 2카드 (osws-newrow margin-bottom 14px가 중간 간격) */
-#tg-viewer{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,10px);}
+/* 함께해요 우측 = 공통 부모(.col 흰 카드) 투명화 → 카드1(글쓰기)·카드2(뷰어) 독립 2카드 + gap 12px. 부모 내부 빈 흰 여백 0 */
+#tg-split .viewer-col{background:transparent;border:0;border-radius:0;overflow:visible;gap:12px;}
+#tg-viewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;}
 #tg-viewer .osws-panel{border:none;margin-top:0;}
 .answer{margin-top:18px;background:var(--s2);border-radius:10px;padding:16px 18px;}
 .answer .who{font-size:0.75rem;color:var(--t-uw);font-weight:700;margin-bottom:8px;}
