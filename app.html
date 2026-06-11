@@ -11333,14 +11333,10 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     <span class="cnt" id="osSheetCnt">0</span>
     <button class="os-sheet-x" id="osSheetToggle" type="button" aria-label="펼치기 접기">▲</button>
   </div>
-  <div class="os-sheet-chips">
-    <button class="os-chip on" data-chip="mine" type="button">마이 스크립트</button>
-    <button class="os-chip" data-chip="mychat" type="button" style="display:none">마이 채팅</button>
-    <button class="os-chip" data-chip="rscript" type="button">공유 스크립트</button>
-    <button class="os-chip" data-chip="rchat" type="button">공유 채팅</button>
-    <button class="os-chip" data-chip="rdoc" type="button">공유 자료</button>
-  </div>
-  <div class="os-sheet-body" id="osSheetBody"><div class="os-empty">불러오는 중…</div></div>
+  <!-- 칩 5종 제거(2026-06-11): 마이 스크립트·마이 채팅·공유 스크립트·공유 채팅·공유 자료 삭제 + scripts 자동 읽기 차단.
+       바텀시트 골격(핸들·body)은 유지(용도 변경 예정). 마이 스페이스 스크립트는 독립 fetch라 무영향. -->
+  <div class="os-sheet-chips"></div>
+  <div class="os-sheet-body" id="osSheetBody"><div class="os-empty">준비 중입니다.</div></div>
 </div>
 <script>
 (function(){
@@ -11483,9 +11479,10 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     sheet.style.height='120px';
     setTimeout(function(){ sheet.style.height=''; setTimeout(function(){ sheet.style.transition=''; }, 600); }, 700);
   }
-  function boot(){ applyChatChip(); setActiveChip('mine'); setTimeout(firstHint, 900); }
+  /* 칩 제거(2026-06-11): scripts 자동 읽기(renderMine 등) 호출 차단. 바텀시트 드래그·스냅·토글 골격은 유지(용도 변경 예정).
+     render 함수들은 정의만 남고 호출되지 않음. OSSheet.reload*는 활성 칩 없으면 no-op(가드 존재). */
+  function boot(){ /* no-op — 칩 렌더 트리거 제거 */ }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  document.addEventListener('appstate:ready', function(){ applyChatChip(); loaded.mine=false; loaded.mychat=false; var on=sheet.querySelector('.os-chip.on'); if(on&&on.getAttribute('data-chip')==='mine') renderMine(); });
 })();
 </script>
 </body>
