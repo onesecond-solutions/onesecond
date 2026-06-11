@@ -6504,18 +6504,28 @@ async function cospRenderInsurer(){
   }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
 window.cospRenderInsurer=cospRenderInsurer;
+/* 보험사별 자료실 = 게시판형 좌카드+우상세 (IA 정정 2026-06-11 #2: 오피스 게시판 형식 재사용).
+ * posts(board_type='insurer', insurer_id) 회사별 필터. 2a-① cospShowNotice 모델 재사용(insurer 방·team/branch 방 동시 비활성 = ID 충돌 0). */
 async function cospInsurerPick(el,insurerId){
   var tabs=document.querySelectorAll('#cosp-ins-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
   var box=document.getElementById('cosp-ins-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&insurer_id=eq.'+encodeURIComponent(insurerId)+'&order=created_at.desc&limit=50&select=id,title,content,created_at,attachments');
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&insurer_id=eq.'+encodeURIComponent(insurerId)+'&order=created_at.desc&limit=50&select=id,category,title,content,created_at,attachments,author_name,is_hidden');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
-    var items=rows.map(function(r){
+    rows=rows.filter(function(r){ return !r.is_hidden; });
+    window._cospNotices=rows.map(function(r){
       var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} if(!Array.isArray(a))a=[];
-      var att=a.length?('<div style="font-size:0.74rem;color:var(--ac);margin-top:6px">📎 첨부 '+a.length+'건</div>'):'';
-      return _cospCard(_cospEsc(r.title||'(제목 없음)'), _cospDate(r.created_at), _cospEsc(r.content||'').slice(0,200)+att);
+      var ah=(typeof _voiceAttsHtml==='function')?_voiceAttsHtml(a):{html:'',imgs:[],names:[]};
+      return { badge:(r.category||'자료'), tc:'t-uw', rtitle:(r.title||'(제목 없음)'), meta:[_cospDate(r.created_at),(r.author_name||'')].filter(Boolean).join(' · '), bodyHtml:_cospEsc(r.content||'').replace(/\n/g,'<br>')+(ah.html||''), _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
     });
-    box.innerHTML=items.length?_cospList(items):'<div class="mys-news-empty">이 보험사 자료가 없습니다.</div>';
+    if(!window._cospNotices.length){ box.innerHTML='<div class="mys-news-empty">이 보험사 자료가 없습니다.</div>'; return; }
+    box.innerHTML='<div class="split cosp-split" id="cosp-notice-split">'
+      +'<div class="col list-col"><div class="list" id="cosp-qlist"></div></div>'
+      +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
+      +'<div class="viewer" id="cosp-viewer"><span class="vbadge"></span><div class="vttl"></div><div class="vmeta"></div><div class="vbody"></div></div></div></div>';
+    var ql=document.getElementById('cosp-qlist');
+    ql.innerHTML=window._cospNotices.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="cospShowNotice('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+_cospEsc(p.badge)+'</span><div class="it">'+_cospEsc(p.rtitle)+'</div><div class="id">'+_cospEsc(p.meta)+'</div></div>'; }).join('');
+    cospShowNotice(0);
   }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
 window.cospInsurerPick=cospInsurerPick;
