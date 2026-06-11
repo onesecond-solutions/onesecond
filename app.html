@@ -997,6 +997,16 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-user-role{padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--s1);color:var(--tp);font-family:inherit;font-size:0.78rem;cursor:pointer}
 .ac-badge.st-active{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
 .ac-badge.st-pending{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+/* 어드민 공용 컴팩트 테이블 (일목요연 — 카드 대체) */
+.ac-tbl-wrap{overflow-x:auto;border:1px solid var(--bd);border-radius:var(--radius-md,13px)}
+.ac-tbl{width:100%;border-collapse:collapse;font-size:0.8rem}
+.ac-tbl th{text-align:left;padding:8px 10px;background:var(--s2);color:var(--ts);font-weight:700;font-size:0.72rem;white-space:nowrap}
+.ac-tbl td{padding:6px 10px;border-top:1px solid var(--bd);color:var(--tp);vertical-align:middle;white-space:nowrap}
+.ac-tbl tbody tr:hover td{background:var(--s2)}
+.ac-td-name{font-weight:600}
+.ac-td-sub{color:var(--ts);font-size:0.74rem}
+.ac-td-date{color:var(--tf);font-size:0.72rem}
+.ac-btn-sm{padding:3px 9px;font-size:0.74rem}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
@@ -2603,7 +2613,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="ac-section-head"><i data-lucide="users"></i><h2>사용자</h2><span class="ac-section-sub" id="ac-users-count">—</span></div>
         <div class="chips" id="ac-users-chips"></div>
         <div id="ac-users-search" style="margin-bottom:12px"></div>
-        <div class="ac-card-grid" id="ac-users-list"><div class="ac-card-empty">불러오는 중…</div></div>
+        <div id="ac-users-list"><div class="ac-card-empty">불러오는 중…</div></div>
         <div id="ac-users-pager" style="margin-top:14px;text-align:center"></div>
       </div>
       <!-- 운영: 지점 -->
