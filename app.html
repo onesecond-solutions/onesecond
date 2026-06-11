@@ -249,8 +249,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #mys-split.scr-mode #mysViewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;min-width:0;overflow:auto;}
 /* 넓은 표/이미지가 칸을 화면 밖으로 늘리지 못하게(min-width:0) — 글쓰기 버튼이 우측으로 밀려 잘리던 회귀 방지. 본문은 카드 안에서 가로스크롤 */
 #mys-split.scr-mode .osws-newrow{max-width:100%;box-sizing:border-box;}
-/* 보기 화면(저장된 스크립트 본문)의 큰 이미지가 카드 폭을 늘리지 못하게 — 카드 폭에 맞춰 축소(에디터 .osrich-body와 동일 규칙) */
-#mys-split.scr-mode #mysViewer img{max-width:100%;height:auto;}
+/* 보기 화면 본문의 큰 이미지가 카드 폭을 늘리지 못하게 — 카드 폭에 맞춰 축소(전체보기 포함 모든 마이스페이스 칩, 에디터 .osrich-body와 동일 규칙) */
+#mysViewer img{max-width:100%;height:auto;}
+/* 넓은 표/이미지가 그리드 칸을 화면 밖으로 밀어내지 못하게(전체보기 등 전 칩) */
+#v-myspace .viewer-col{min-width:0;}
 .scr-type-seg{display:flex;gap:6px;}
 .scr-type-seg button{flex:0 0 auto;padding:7px 16px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-sm,11px);cursor:pointer;font-weight:600;font-size:0.85rem;}
 .scr-type-seg button.on{background:var(--ac);border-color:var(--ac);color:#fff;}
@@ -1968,7 +1970,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <div id="mys-saved" style="display:none">
       <div class="mys-toolbar">
         <div class="chips">
-          <div class="chip on" onclick="filterMys(this,'전체')">전체</div>
+          <div class="chip on" onclick="filterMys(this,'전체')">전체보기</div>
           <div class="chip" onclick="mysVaultOpen(this)">자료함</div>
           <div class="chip" onclick="filterMys(this,'스크립트')">스크립트</div>
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
