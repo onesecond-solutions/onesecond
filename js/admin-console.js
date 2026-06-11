@@ -184,41 +184,102 @@
       (rows || '<div class="ac-card-empty">지점 없음</div>');
   }
 
-  // ── 사용자 view (role 배지 + 칩 필터 + 카드 그리드) ──
-  var _usersAll=[], _usersFilter='all';
+  // ── 사용자 view — 칩 필터 + 검색 + 페이지네이션 + 액션(권한 변경·정지/해제) ──
+  var _usersAll=[], _usersFilter='all', _uq='', _uPage=0;
+  var ROLE_KEYS=['admin','ga_branch_manager','ga_manager','ga_member','ga_staff','insurer_branch_manager','insurer_manager','insurer_member','insurer_staff'];
   function _rgrp(r){ return r==='admin' ? 'admin' : ((r && r.indexOf('insurer_')===0) ? 'insurer' : 'ga'); }
-  window.acLoadUsers = async function(){
+  window.acLoadUsers = async function(reload){
     var area=document.getElementById('ac-users-list'); if(!area) return;
-    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
-    _usersAll = await _rows('users?select=id,name,email,role,company,status,created_at&order=created_at.desc&limit=300');
-    var cnt=document.getElementById('ac-users-count'); if(cnt) cnt.textContent=_usersAll.length+'명';
-    renderUserChips(); renderUserCards();
+    renderUserChips(); renderUserSearch();
+    if(!_usersAll.length || reload){
+      area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+      _usersAll = await _rows('users?select=id,name,email,role,company,status,created_at&order=created_at.desc&limit=300');
+    }
+    renderUserCards();
   };
   function renderUserChips(){
     var el=document.getElementById('ac-users-chips'); if(!el) return;
     var defs=[['all','전체'],['admin','어드민'],['ga','GA'],['insurer','원수사'],['pending','승인대기']];
     el.innerHTML=defs.map(function(d){ return '<button class="ac-chip'+(_usersFilter===d[0]?' active':'')+'" data-uf="'+d[0]+'">'+d[1]+'</button>'; }).join('');
-    el.querySelectorAll('[data-uf]').forEach(function(b){ b.addEventListener('click',function(){ _usersFilter=b.getAttribute('data-uf'); renderUserChips(); renderUserCards(); }); });
+    el.querySelectorAll('[data-uf]').forEach(function(b){ b.addEventListener('click',function(){ _usersFilter=b.getAttribute('data-uf'); _uPage=0; renderUserChips(); renderUserCards(); }); });
   }
-  function renderUserCards(){
-    var area=document.getElementById('ac-users-list'); if(!area) return;
-    var RL=window.ROLE_LABEL||{};
+  function renderUserSearch(){
+    var el=document.getElementById('ac-users-search'); if(!el) return;
+    el.innerHTML='<input class="ac-post-search" placeholder="이름·이메일·회사 검색" value="'+esc(_uq)+'" oninput="acUserSearch(this.value)">';
+  }
+  window.acUserSearch=function(v){ _uq=v; _uPage=0; renderUserCards(); };
+  function _usersFiltered(){
     var list=_usersAll.filter(function(u){
       if(_usersFilter==='all') return true;
       if(_usersFilter==='pending') return u.status==='pending';
       return _rgrp(u.role)===_usersFilter;
     });
-    if(!list.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="users"></i>해당 사용자가 없습니다</div>'; if(window.lucide) window.lucide.createIcons(); return; }
-    area.innerHTML=list.map(function(u){
-      var g=_rgrp(u.role); var st=(u.status==='pending')?'pending':'active';
+    var q=_uq.trim().toLowerCase();
+    if(q) list=list.filter(function(u){ return ((u.name||'')+' '+(u.email||'')+' '+(u.company||'')).toLowerCase().indexOf(q)>=0; });
+    return list;
+  }
+  function renderUserCards(){
+    var area=document.getElementById('ac-users-list'); if(!area) return;
+    var RL=window.ROLE_LABEL||{};
+    var list=_usersFiltered();
+    var cnt=document.getElementById('ac-users-count'); if(cnt) cnt.textContent=list.length+'명';
+    if(!list.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="users"></i>해당 사용자가 없습니다</div>'; _renderUserPager(0); if(window.lucide) window.lucide.createIcons(); return; }
+    var per=20, pages=Math.ceil(list.length/per), page=Math.min(_uPage,pages-1); if(page<0)page=0; _uPage=page;
+    var slice=list.slice(page*per,(page+1)*per);
+    area.innerHTML=slice.map(function(u){
+      var g=_rgrp(u.role); var st=u.status||'active';
+      var stBadge = (st==='pending')?'<span class="ac-badge st-pending">승인대기</span>'
+        : (st==='suspended')?'<span class="ac-badge high">정지</span>'
+        : '<span class="ac-badge st-active">활성</span>';
+      var isStd = ROLE_KEYS.indexOf(u.role)>=0;
+      var sel='<select class="ac-user-role" onchange="acUserRole(\''+esc(u.id)+'\',this.value,\''+esc(u.role||'')+'\',this)">'
+        +(isStd?'':'<option value="'+esc(u.role||'')+'" selected>미분류'+(u.role?(' ('+esc(u.role)+')'):'')+'</option>')
+        +ROLE_KEYS.map(function(rk){ return '<option value="'+rk+'"'+(rk===u.role?' selected':'')+'>'+esc(RL[rk]||rk)+'</option>'; }).join('')+'</select>';
+      var suspBtn = (st==='suspended')
+        ? '<button class="ac-btn" onclick="acUserSuspend(\''+esc(u.id)+'\',false)">정지 해제</button>'
+        : '<button class="ac-btn" style="border-color:var(--warn);color:var(--warn)" onclick="acUserSuspend(\''+esc(u.id)+'\',true)">정지</button>';
       return '<div class="ac-entity r-'+g+'">'+
-        '<span class="ac-badge r-'+g+'">'+esc(RL[u.role]||u.role||'')+'</span> '+
-        '<span class="ac-badge st-'+st+'">'+(st==='pending'?'승인대기':'활성')+'</span>'+
+        '<span class="ac-badge r-'+g+'">'+esc(RL[u.role]||u.role||'미분류')+'</span> '+stBadge+
         '<div class="ac-entity-name">'+esc(u.name||'(이름 없음)')+'</div>'+
         '<div class="ac-entity-meta">'+esc(u.company||'-')+' · '+esc(u.email||'')+'</div>'+
-        '<div class="ac-entity-sub">가입 '+esc(_fmtDate(u.created_at))+'</div></div>';
+        '<div class="ac-entity-sub">가입 '+esc(_fmtDate(u.created_at))+'</div>'+
+        '<div class="ac-user-acts"><label>권한</label>'+sel+suspBtn+'</div></div>';
     }).join('');
+    _renderUserPager(pages);
+    if(window.lucide) window.lucide.createIcons();
   }
+  function _renderUserPager(pages){
+    var el=document.getElementById('ac-users-pager'); if(!el) return;
+    if(pages<=1){ el.innerHTML=''; return; }
+    var p=_uPage, html='<button class="ac-pager-btn" '+(p<=0?'disabled':'')+' onclick="acUserPage('+(p-1)+')">‹</button>';
+    for(var i=0;i<pages;i++){ if(i<2||i>pages-3||Math.abs(i-p)<=1){ html+='<button class="ac-pager-btn'+(i===p?' on':'')+'" onclick="acUserPage('+i+')">'+(i+1)+'</button>'; } else if(i===2||i===pages-3){ html+='<span style="padding:0 5px;color:var(--tf)">…</span>'; } }
+    html+='<button class="ac-pager-btn" '+(p>=pages-1?'disabled':'')+' onclick="acUserPage('+(p+1)+')">›</button>';
+    el.innerHTML=html;
+  }
+  window.acUserPage=function(i){ _uPage=i; renderUserCards(); };
+  // 액션 — 권한 변경(민감, 확인+로깅) / 정지·해제. users PATCH RLS가 is_admin 허용 전제, 403이면 정책 보강 필요
+  window.acUserRole=async function(id, newRole, oldRole, sel){
+    if(newRole===oldRole) return;
+    var RL=window.ROLE_LABEL||{};
+    if(!confirm('이 사용자의 권한을\n['+(RL[oldRole]||oldRole||'미분류')+'] → ['+(RL[newRole]||newRole)+']\n로 변경하시겠습니까? 권한이 즉시 바뀝니다.')){ if(sel) sel.value=oldRole; return; }
+    try{
+      var res=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({role:newRole})});
+      if(!res.ok){ acToast('권한 변경 실패 ('+res.status+') — RLS 정책 확인', true); if(sel) sel.value=oldRole; return; }
+      if(window.db.logActivity) window.db.logActivity('change_role','user',id,{from:oldRole,to:newRole});
+      acToast('권한을 변경했습니다');
+      window.acLoadUsers(true);
+    }catch(e){ acToast('네트워크 오류',true); if(sel) sel.value=oldRole; }
+  };
+  window.acUserSuspend=async function(id, suspend){
+    if(!confirm(suspend?'이 사용자를 정지하시겠습니까?\n로그인·이용이 차단됩니다.':'정지를 해제하시겠습니까?')) return;
+    try{
+      var res=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({status:suspend?'suspended':'active'})});
+      if(!res.ok){ acToast((suspend?'정지':'해제')+' 실패 ('+res.status+') — RLS 정책 확인', true); return; }
+      if(window.db.logActivity) window.db.logActivity(suspend?'suspend_user':'activate_user','user',id,{});
+      acToast(suspend?'사용자를 정지했습니다':'정지를 해제했습니다');
+      window.acLoadUsers(true);
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
 
   // ── 지점 view (지점 카드 + 소속 인원) ──
   window.acLoadBranches = async function(){
