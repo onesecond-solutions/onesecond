@@ -6458,6 +6458,7 @@ window.loadCospace=loadCospace;
 function cospRoom(el,k){
   var tabs=document.querySelectorAll('#cosp-rooms .chip'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
   window._cospRoom=k;
+  window._cospAdminAll=false;  /* 방 전환 시 어드민 사고 대응 모드 리셋(평상시 복귀) */
   var body=document.getElementById('cosp-body'); if(!body) return;
   _cospQnaRestore();  /* 방 전환 시 보험Q&A 보드가 cosp에 있으면 원위치 복귀(먼저 정리) */
   if(k==='qna') return _cospQnaShow(body);  /* 인플레이스: 최상단/방 탭 유지, 공동 스페이스 안에 기존 보험Q&A 화면 그대로 */
@@ -6505,14 +6506,23 @@ function _cospCard(title, meta, body){
 async function cospRenderNotices(materialsOnly){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   var _cospAdmin=!!(window._cospMe&&window._cospMe.role==='admin');
+  /* 어드민(창시자)은 평상시 전 팀/지점 공지를 보지 않음(감시 X·대표 결정 2026-06-11). 사고 대응 시에만 명시적 토글(_cospAdminAll)로 전체 열람.
+     ※ 향후 관리자 콘솔이 정교화되면 이 사고 대응 열람을 콘솔 쪽으로 이전 예정. */
+  var _adminAll=_cospAdmin && !!window._cospAdminAll;
   var s=_cospScope();
-  /* admin = 소속 팀/지점이 없어도 전 팀/지점 공지 전체 열람(감수용). 일반 사용자만 소속 정보 필요. */
-  if(!_cospAdmin && !s.id){ var _rs=(window._cospRoom==='branch'?'지점':'팀'); box.innerHTML='<div class="mys-news-empty">소속 '+_rs+' 정보가 없습니다.</div>'; return; }
+  var _rs=(window._cospRoom==='branch'?'지점':'팀');
+  if(!_adminAll && !s.id){
+    /* 소속 없음 — 어드민은 평상시 미열람 안내 + 사고 대응 버튼(레이아웃 정상 노출, 차단 아님) / 일반은 소속 안내 */
+    box.innerHTML='<div class="mys-news-empty">'+(_cospAdmin
+      ?('관리자는 평상시 '+_rs+' 공지를 열람하지 않습니다.<br><button class="osws-newbtn" style="margin-top:12px" onclick="cospAdminAll()">전체 '+_rs+' 공지 열람 (사고 대응)</button>')
+      :('소속 '+_rs+' 정보가 없습니다.'))+'</div>';
+    return;
+  }
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   try{
     var col=window._cospRoom==='branch'?'branch_id':'team_id';
     var _q='/rest/v1/team_notices?scope=eq.'+s.scope+'&deleted_at=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords';
-    if(!_cospAdmin) _q+='&'+col+'=eq.'+encodeURIComponent(s.id);  /* admin=소속 필터 생략(전체 열람) / 일반=본인 소속만 */
+    if(!_adminAll) _q+='&'+col+'=eq.'+encodeURIComponent(s.id);  /* 사고 대응 모드만 전체 열람 / 그 외(일반·평상시 어드민)는 본인 소속만 */
     var res=await window.db.fetch(_q);
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     rows=rows.filter(function(r){ return !r.is_hidden; });
@@ -6534,7 +6544,7 @@ async function cospRenderNotices(materialsOnly){
     var _canWrite=!materialsOnly && !_cospAdmin && (window._cospRoom==='branch'?!!_me.branch_id:!!_me.team_id);
     var _writeBtn=_canWrite?'<div class="osws-newrow" style="margin-bottom:10px"><button class="osws-newbtn" onclick="cospWrite()">+ 글쓰기</button></div>':'';
     if(!window._cospNotices.length){ box.innerHTML=_writeBtn+'<div class="mys-news-empty">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.'+(_canWrite?'<br>+ 글쓰기로 첫 공지를 작성해보세요.':''))+'</div>'; return; }
-    box.innerHTML=(_cospAdmin?'<div style="font-size:0.74rem;color:var(--ts);margin-bottom:6px">관리자 열람 — 전 '+(window._cospRoom==='branch'?'지점':'팀')+' 공지</div>':'')
+    box.innerHTML=(_adminAll?'<div style="font-size:0.74rem;color:var(--warn);margin-bottom:6px;font-weight:700">사고 대응 모드 — 전 '+_rs+' 공지 열람 중 <button onclick="cospAdminAll(false)" style="margin-left:6px;font-size:0.95em;background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--ts)">평상시로</button></div>':'')
       +_writeBtn
       +'<div class="split cosp-split" id="cosp-notice-split">'
       +'<div class="col list-col"><div class="list" id="cosp-qlist"></div></div>'
@@ -6571,6 +6581,9 @@ function cospWrite(){
   window._cospWriting=true;  /* 저장 성공 후 팀방 목록 갱신 플래그 */
 }
 window.cospWrite=cospWrite;
+/* 어드민 사고 대응 — 전 팀/지점 공지 전체 열람 토글(평상시 OFF). 향후 관리자 콘솔로 이전 예정 */
+function cospAdminAll(on){ window._cospAdminAll=(on!==false); if(typeof cospRenderNotices==='function') cospRenderNotices(false); }
+window.cospAdminAll=cospAdminAll;
 async function cospRenderScripts(){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   var s=_cospScope(); if(!s.id){ box.innerHTML='<div class="mys-news-empty">소속 정보가 없습니다.</div>'; return; }
