@@ -973,6 +973,18 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .pending-gate-box p{font-size:0.92rem;color:var(--ts);line-height:1.6;margin-bottom:22px}
 .pending-gate-box .pg-btn{background:var(--ac);color:#fff;border:none;border-radius:var(--radius-sm,9px);padding:11px 24px;font-size:0.92rem;font-weight:700;cursor:pointer;font-family:inherit}
 .pending-gate-box .pg-btn:hover{background:var(--ach,#7C7FF2)}
+/* 어드민 게시글 — 툴바·본문·페이저 */
+.ac-post-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.ac-post-search{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--s1);color:var(--tp);font-family:inherit;font-size:0.85rem}
+.ac-post-search:focus{outline:none;border-color:var(--ac)}
+.ac-post-meta{font-size:0.72rem;color:var(--ts);margin-top:4px}
+.ac-post-body{font-size:0.8rem;color:var(--bodytx);margin-top:8px;line-height:1.55;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ac-post-body.full{-webkit-line-clamp:unset;display:block;overflow:visible}
+.ac-linkbtn{background:transparent;border:none;color:var(--ac);font-size:0.74rem;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit}
+.ac-linkbtn:hover{text-decoration:underline}
+.ac-pager-btn{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;color:var(--tp);font-size:0.82rem;margin:0 2px}
+.ac-pager-btn:disabled{opacity:.4;cursor:default}
+.ac-pager-btn.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
@@ -2589,7 +2601,9 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 콘텐츠: 게시글 -->
       <div class="ac-sec" data-sec="posts">
         <div class="ac-section-head"><i data-lucide="file-text"></i><h2>게시글</h2><span class="ac-section-sub" id="ac-posts-count">—</span></div>
+        <div id="ac-posts-tools"></div>
         <div class="ac-card-grid" id="ac-posts-list"><div class="ac-card-empty">불러오는 중…</div></div>
+        <div id="ac-posts-pager" style="margin-top:14px;text-align:center"></div>
       </div>
       <!-- 콘텐츠: 댓글 -->
       <div class="ac-sec" data-sec="comments">
