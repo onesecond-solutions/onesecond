@@ -349,6 +349,12 @@
     if(!_pState.cache || reload){
       list.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
       _pState.cache = await _rows('posts?select=id,title,content,board_type,author_name,author_id,created_at,is_hidden&order=created_at.desc&limit=300');
+      /* 댓글수 집계 — comments.post_id 전체 로드 후 게시글별 카운트 (조회수는 기록 컬럼 부재로 별도 트랙) */
+      try{
+        var _cms=await _rows('comments?select=post_id&limit=3000');
+        var _cmap={}; _cms.forEach(function(c){ if(c.post_id) _cmap[c.post_id]=(_cmap[c.post_id]||0)+1; });
+        _pState.cache.forEach(function(p){ p._cmt=_cmap[p.id]||0; });
+      }catch(e){}
     }
     _renderPostList();
   };
@@ -380,9 +386,10 @@
       var who=p.author_name||(p.author_id?('ID '+String(p.author_id).slice(0,8)):'작성자 미상');
       var hideBtn='<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acHidePost(\''+esc(p.id)+'\','+(p.is_hidden?'false':'true')+')">'+(p.is_hidden?'해제':'숨김')+'</button>';
       var delBtn=' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="event.stopPropagation();acDeletePost(\''+esc(p.id)+'\')">삭제</button>';
-      return '<tr class="ac-tr-clk" onclick="acPostDetail(\''+esc(p.id)+'\')"><td class="ac-td-name">'+esc(p.title||'(제목 없음)')+'</td><td><span class="ac-badge medium">'+esc(BOARD_LABEL[p.board_type]||p.board_type||'')+'</span></td><td class="ac-td-sub">'+esc(who)+'</td><td class="ac-td-date">'+esc(_fmtDate(p.created_at))+'</td><td>'+hid+'</td><td class="ac-td-acts">'+hideBtn+delBtn+'</td></tr>';
+      var cmt=(p._cmt||0); var cmtCell=cmt>0?('<b>'+cmt+'</b>'):'<span style="color:var(--tf)">0</span>';
+      return '<tr class="ac-tr-clk" onclick="acPostDetail(\''+esc(p.id)+'\')"><td class="ac-td-name">'+esc(p.title||'(제목 없음)')+'</td><td><span class="ac-badge medium">'+esc(BOARD_LABEL[p.board_type]||p.board_type||'')+'</span></td><td class="ac-td-sub">'+esc(who)+'</td><td style="text-align:center">'+cmtCell+'</td><td class="ac-td-date">'+esc(_fmtDate(p.created_at))+'</td><td>'+hid+'</td><td class="ac-td-acts">'+hideBtn+delBtn+'</td></tr>';
     }).join('');
-    list.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>제목</th><th>게시판</th><th>작성자</th><th>날짜</th><th>상태</th><th>관리</th></tr></thead><tbody>'+bodyHtml+'</tbody></table></div>';
+    list.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>제목</th><th>게시판</th><th>작성자</th><th>댓글</th><th>날짜</th><th>상태</th><th>관리</th></tr></thead><tbody>'+bodyHtml+'</tbody></table></div>';
     _renderPostPager(pages);
     if(window.lucide) window.lucide.createIcons();
   }
@@ -401,6 +408,7 @@
       +'<div class="ac-ud-row"><span class="ac-ud-k">작성자</span><span class="ac-ud-v">'+esc(who)+'</span></div>'
       +'<div class="ac-ud-row"><span class="ac-ud-k">작성일</span><span class="ac-ud-v">'+esc(_fmtDate(p.created_at))+'</span></div>'
       +'<div class="ac-ud-row"><span class="ac-ud-k">상태</span><span class="ac-ud-v">'+(p.is_hidden?'숨김':'표시')+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">댓글</span><span class="ac-ud-v">'+(p._cmt||0)+'개</span></div>'
       +'<div class="ac-pd-body">'+bodyTxt+'</div></div>';
     ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); };
     ov.classList.add('on');
