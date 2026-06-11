@@ -6411,24 +6411,54 @@ function _cospCard(title, meta, body){
     +(meta?'<div style="font-size:0.74rem;color:var(--ts);margin-top:2px">'+meta+'</div>':'')
     +(body?'<div style="font-size:0.82rem;color:var(--bodytx);margin-top:6px;white-space:pre-wrap">'+body+'</div>':'')+'</div>';
 }
+/* 팀방/지점방 공지·공유자료 = 좌카드+우상세 (IA 정정 2026-06-11: _loadNoticeFeed 렌더류 재사용,
+ * 현장의 소리 #qlist/showTabPost는 무수정 → 회귀 0. cosp 자체 split·뱃지·첨부 라이트박스 동일). */
 async function cospRenderNotices(materialsOnly){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   var s=_cospScope(); if(!s.id){ var _rn=(window._cospRoom==='branch'?'지점방':'팀방'), _rs=(window._cospRoom==='branch'?'지점':'팀'); box.innerHTML='<div class="mys-news-empty">관리자 계정은 소속 '+_rs+'이 없어 '+_rn+' 콘텐츠가 표시되지 않습니다.<br>'+_rn+' 데이터는 실장·팀원 계정으로 확인하세요.</div>'; return; }
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   try{
     var col=window._cospRoom==='branch'?'branch_id':'team_id';
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+s.scope+'&'+col+'=eq.'+encodeURIComponent(s.id)+'&deleted_at=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,attachments,is_hidden');
+    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+s.scope+'&'+col+'=eq.'+encodeURIComponent(s.id)+'&deleted_at=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     rows=rows.filter(function(r){ return !r.is_hidden; });
     if(materialsOnly){ rows=rows.filter(function(r){ var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} return Array.isArray(a)&&a.length; }); }
-    var items=rows.map(function(r){
+    /* 작성자 이름·역할 매핑 (현장의 소리 단체방 피드와 동일 방식) */
+    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
+    var nameMap={};
+    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,name,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ nameMap[u.id]={name:u.name,role:u.role}; }); } }catch(e){} }
+    window._cospNotices=rows.map(function(r){
+      var t=_ntType[r.notice_type]||['기타','ts'];
+      var au=nameMap[r.author_id]; var who='';
+      if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=(au.name||'')+(rl?' '+rl:''); }
       var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} if(!Array.isArray(a))a=[];
-      var att=a.length?('<div style="font-size:0.74rem;color:var(--ac);margin-top:6px">📎 첨부 '+a.length+'건</div>'):'';
-      return _cospCard(_cospEsc(r.title||'(제목 없음)'), _cospDate(r.created_at), _cospEsc(r.content||'').slice(0,200)+att);
+      var ah=(typeof _voiceAttsHtml==='function')?_voiceAttsHtml(a):{html:'',imgs:[],names:[]};
+      return { badge:t[0], tc:t[1], rtitle:(r.title||'(제목 없음)'), meta:[_cospDate(r.created_at),who].filter(Boolean).join(' · '), bodyHtml:_cospEsc(r.content||'').replace(/\n/g,'<br>')+(ah.html||''), _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
     });
-    box.innerHTML=_cospList(items);
+    if(!window._cospNotices.length){ box.innerHTML='<div class="mys-news-empty">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.')+'</div>'; return; }
+    box.innerHTML='<div class="split cosp-split" id="cosp-notice-split">'
+      +'<div class="col list-col"><div class="list" id="cosp-qlist"></div></div>'
+      +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
+      +'<div class="viewer" id="cosp-viewer"><span class="vbadge"></span><div class="vttl"></div><div class="vmeta"></div><div class="vbody"></div></div></div></div>';
+    var ql=document.getElementById('cosp-qlist');
+    ql.innerHTML=window._cospNotices.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="cospShowNotice('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+_cospEsc(p.rtitle)+'</div><div class="id">'+_cospEsc(p.meta)+'</div></div>'; }).join('');
+    cospShowNotice(0);
   }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
+function cospShowNotice(idx){
+  var p=(window._cospNotices||[])[idx]; if(!p) return;
+  window._voiceImgs=p._imgs||[]; window._voiceImgNames=p._imgNames||[];  /* 첨부 이미지 라이트박스 = 기존 전역 인덱스 재사용 */
+  var v=document.getElementById('cosp-viewer'); if(!v) return;
+  var b=v.querySelector('.vbadge'); if(b){ b.textContent=p.badge; b.style.color='var(--'+p.tc+')'; b.style.borderLeftColor='var(--'+p.tc+')'; }
+  var t=v.querySelector('.vttl'); if(t) t.textContent=p.rtitle;
+  var m=v.querySelector('.vmeta'); if(m) m.textContent=p.meta;
+  var bd=v.querySelector('.vbody'); if(bd) bd.innerHTML=p.bodyHtml||'';
+  var ql=document.getElementById('cosp-qlist'); if(ql){ var its=ql.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.toggle('on',i===idx); }
+  var sp=document.getElementById('cosp-notice-split'); if(sp) sp.classList.add('show-viewer');  /* 모바일: 상세 표시 */
+}
+window.cospShowNotice=cospShowNotice;
+function cospNoticeBack(){ var sp=document.getElementById('cosp-notice-split'); if(sp) sp.classList.remove('show-viewer'); }
+window.cospNoticeBack=cospNoticeBack;
 async function cospRenderScripts(){
   var box=document.getElementById('cosp-sub-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   var s=_cospScope(); if(!s.id){ box.innerHTML='<div class="mys-news-empty">소속 정보가 없습니다.</div>'; return; }
