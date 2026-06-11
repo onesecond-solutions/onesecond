@@ -8818,8 +8818,8 @@ function renderMyspace(items){
   window._mysFiltered=items||[];
   var vv=document.getElementById('mysViewer');
   if(!items||items.length===0){
-    /* 빈 상태 CTA = 현재 칩 정합. 스크립트 칩이면 인라인 작업공간, 그 외는 기존 모달 */
-    var _emptyCta=(window._mysCat==='스크립트')?'openScriptInline()':'openMyspaceWrite()';
+    /* 빈 상태 CTA = 현재 칩 정합. 스크립트 칩=인라인, 전체보기=스크립트 칩 전환 후 인라인(우측 2단), 그 외(메모·자료)=기존 모달 */
+    var _emptyCta=(window._mysCat==='스크립트')?'openScriptInline()':((window._mysCat==='전체')?'mysEmptyScriptWrite()':'openMyspaceWrite()');
     listEl.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>+ 글쓰기 버튼으로 첫 항목을 작성해보세요.<br><button class="mys-write-empty-cta" onclick="'+_emptyCta+'">+ 첫 항목 작성</button></div>';
     if(vv) vv.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>';
     return;
@@ -9209,6 +9209,9 @@ function closeScrInline(){
 }
 window.closeScrInline=closeScrInline;
 function _scrReselectChip(){ var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<chips.length;i++){ if(chips[i].textContent.trim()==='스크립트'){ if(typeof filterMys==='function') filterMys(chips[i],'스크립트'); break; } } }
+/* 전체보기 빈 상태 첫 작성 = 스크립트 칩 전환(scr-mode 켜짐 → 우측 2단) 후 인라인 작성 폼 */
+function mysEmptyScriptWrite(){ if(typeof _scrReselectChip==='function') _scrReselectChip(); if(typeof openScriptInline==='function') openScriptInline(); }
+window.mysEmptyScriptWrite=mysEmptyScriptWrite;
 async function saveScrInline(){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
