@@ -8763,8 +8763,13 @@ function fmtMysDate(iso){
 }
 
 async function loadMyspace(force){
-  if(typeof _scrModeOff==='function') _scrModeOff();  /* 마이 스페이스 진입 시 스크립트 인라인 모드 초기화(기본 전체 칩) */
-  if(window._myspaceLoaded&&!force)return;
+  if(window._myspaceLoaded&&!force){
+    /* 재진입 — 마지막 칩 상태 복원(어정쩡한 불일치 방지). 스크립트 칩이면 작업공간(scr-mode+글쓰기) 재적용, 아니면 인라인 모드 초기화 */
+    if(window._mysCat==='스크립트' && typeof _scrReselectChip==='function'){ _scrReselectChip(); }
+    else if(typeof _scrModeOff==='function'){ _scrModeOff(); }
+    return;
+  }
+  if(typeof _scrModeOff==='function') _scrModeOff();  /* 첫 로드 = 스크립트 인라인 모드 초기화(기본 전체 칩) */
   var grid=document.getElementById('mysList');if(!grid)return;
   if(!window.db||!window.db.getToken){
     grid.innerHTML='<div class="mys-news-empty">자료 모듈 로드 실패. 새로고침 부탁드립니다.</div>';
