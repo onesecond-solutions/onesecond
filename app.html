@@ -9191,7 +9191,7 @@ function closeScrInline(){
   window._scrInlineEdit=null;
   var tc=document.getElementById('scr-il-temp'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc);
   var ms=document.getElementById('mys-split'); var nr=document.getElementById('mys-scr-newrow');
-  if(nr&&ms&&ms.classList.contains('scr-mode')) nr.style.display='';
+  if(nr&&ms&&ms.classList.contains('scr-mode')) nr.style.display='block';  /* 글쓰기 카드 복귀('block' 명시) */
   renderMyspace(window._mysFiltered||[]);  /* view 복귀(첫 항목 보기) */
 }
 window.closeScrInline=closeScrInline;
@@ -9221,10 +9221,10 @@ async function saveScrInline(){
       if(!(rr.ok||rr.status===201)){ var t2=''; try{t2=await rr.text();}catch(e){} console.error('[saveScrInline post]',rr.status,t2); alert('등록 실패 ('+rr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
     }
     window._scrInlineEdit=null;
-    var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='';
+    var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='block';  /* 글쓰기 카드 복귀('block' 명시) */
     if(typeof toast==='function') toast(ed?'수정됐어요!':'스크립트가 저장됐어요!');
-    if(typeof loadMyspace==='function'){ window._myspaceLoaded=false; loadMyspace(); }
-    setTimeout(_scrReselectChip, 250);  /* 목록 재로드 후 스크립트 칩 재선택 */
+    if(typeof loadMyspace==='function'){ window._myspaceLoaded=false; await loadMyspace(); }  /* 새 목록 반영 대기 */
+    _scrReselectChip();  /* 목록 재로드 후 스크립트 칩 재선택 → 작성 폼 닫고 첫 항목 보기 */
   }catch(e){ console.error('[saveScrInline]',e); alert('저장 중 오류가 발생했습니다.'); if(sv){sv.disabled=false;sv.textContent='저장';} }
 }
 window.saveScrInline=saveScrInline;
