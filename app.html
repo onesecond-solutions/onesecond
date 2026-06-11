@@ -1998,9 +1998,9 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
       <!-- 팀원관리 (매니저룸 → 라이브러리 이전, 2026-06-05 통합 1단계). mgr 역할만 탭 노출, 실제 방어는 RLS. id는 mr-* 유지(함수 재사용) -->
       <div id="mr-main" style="display:none">
       <!-- 팀원관리 = 게시판 좌우 레이아웃 골격 (좌: 조직 트리 / 우: 팀원). 카드 연결은 다음 단계 -->
-      <div class="tabs" id="mr-mem-sub" style="margin-bottom:12px">
-        <div class="tab on" onclick="mrMemSub(this,'manager')">실장</div>
-        <div class="tab" onclick="mrMemSub(this,'branch')">지점장</div>
+      <div class="chips" id="mr-mem-sub" style="margin-bottom:12px">
+        <div class="chip on" onclick="mrMemSub(this,'manager')">실장</div>
+        <div class="chip" onclick="mrMemSub(this,'branch')">지점장</div>
       </div>
       <div id="mr-branch-card" style="display:none"></div>
       <div class="split" id="mr-members-split">
@@ -6842,8 +6842,8 @@ function mysTab(el,key){
   else if(key==='members'){ if(mem){ mem.style.display='';
     /* role별 기본 페이지 자동: 실장→실장 페이지(지점장 탭 숨김) / admin·지점장→지점장 페이지 (매니저룸 mrTabMain 'members'에서 이전) */
     var _r=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
-    var _brTab=document.querySelector('#mr-mem-sub .tab[onclick*="branch"]');
-    var _mgTab=document.querySelector('#mr-mem-sub .tab[onclick*="manager"]');
+    var _brTab=document.querySelector('#mr-mem-sub .chip[onclick*="branch"]');
+    var _mgTab=document.querySelector('#mr-mem-sub .chip[onclick*="manager"]');
     if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
     else { if(_brTab) _brTab.style.display=''; if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch'); }
   } }
@@ -6865,7 +6865,7 @@ function ivTab(el,key){
 window.ivTab=ivTab;
 /* 팀원관리 하위 탭 — 실장/지점장 관점 전환 (골격: 활성 토글 + 안내, 카드 연결은 다음 단계) */
 function mrMemSub(el,key){
-  var tabs=document.querySelectorAll('#mr-mem-sub .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  var tabs=document.querySelectorAll('#mr-mem-sub .chip'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on');
   var card=document.getElementById('mr-branch-card');
   var org=document.getElementById('mr-org-list'), view=document.getElementById('mr-members-viewer');
