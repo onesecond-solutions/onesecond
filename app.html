@@ -3897,13 +3897,14 @@ async function ivSubmit(){
         board_type: 'insurer',
         insurer_id: insurerId,
         branch_id:  null,            /* MVP 전사 공지 */
+        author_type: (_isAdmin ? 'platform' : null),  /* 2b: admin 임시 작성 = 시스템(platform), 임태성 개인 admin 글과 구분 */
         category:   category,
         title:      title,
         content:    content,
         keywords:   keywords,
         attachments: attachments,
         author_id:  u.id || '',
-        author_name: u.name || ''
+        author_name: (_isAdmin ? '시스템' : (u.name || ''))  /* 2b: platform 글 작성자명 = '시스템'(임태성 개인 admin 미노출). author_id는 추적용 보존 */
       };
   try {
     var res = await window.db.fetch('/rest/v1/posts'+(_eid?('?id=eq.'+encodeURIComponent(_eid)):''), {
@@ -3917,6 +3918,10 @@ async function ivSubmit(){
     document.getElementById('iv-f-title').value = '';
     document.getElementById('iv-f-body').value = '';
     if(typeof _ivReloadBoards === 'function') _ivReloadBoards();  /* 자료실+스마트게시판 동시 갱신 */
+    /* 2b: cosp 보험사별 자료실이 현재 화면이면 그 회사탭도 갱신 (DOM 존재로 가드 → 평소 영향 0) */
+    if(typeof cospInsurerPick==='function' && window._cospRoom==='insurer' && window._cospInsurerId && document.getElementById('cosp-ins-body')){
+      cospInsurerPick(document.querySelector('#cosp-ins-tabs .tab.on'), window._cospInsurerId);
+    }
     if(typeof toast === 'function') toast(_wasIvEdit?'자료가 수정되었습니다':'자료가 등록되었습니다');
   } catch(e){ console.error('[ivSubmit]', e); alert('자료 등록 오류. 잠시 후 다시 시도해 주세요.'); }
 }
@@ -6488,16 +6493,28 @@ async function cospRenderInsurer(){
     var ins=ir.ok?await ir.json():[]; if(!Array.isArray(ins)) ins=[];
     if(!ins.length){ box.innerHTML='<div class="mys-news-empty">등록된 보험사가 없습니다.</div>'; return; }
     var chips=ins.map(function(c,i){ return '<div class="tab'+(i===0?' on':'')+'" onclick="cospInsurerPick(this,\''+c.id+'\')">'+_cospEsc(c.name)+'</div>'; }).join('');
-    box.innerHTML='<div style="font-size:0.78rem;color:var(--ts);margin-bottom:8px">보험사별 자료실 — 수요 레이어(설계사 열람용). 회사 선택:</div>'
+    var _isAdmin=!!(window._cospMe&&window._cospMe.role==='admin');
+    var _writeBtn=_isAdmin?'<button class="newb" onclick="cospInsurerWrite()">+ 자료 등록</button>':'';
+    box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:0.78rem;color:var(--ts)">보험사별 자료실 — 수요 레이어(설계사 열람용). 회사 선택:</span>'+_writeBtn+'</div>'
       +'<div class="tabs" id="cosp-ins-tabs" style="flex-wrap:wrap;margin-bottom:10px">'+chips+'</div>'
       +'<div id="cosp-ins-body"></div>';
     cospInsurerPick(document.querySelector('#cosp-ins-tabs .tab'), ins[0].id);
   }catch(e){ box.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
 window.cospRenderInsurer=cospRenderInsurer;
+/* admin 임시 작성(2b) — 기존 보험사 자료 등록 모달(ivOpenWrite/ivSubmit) 그대로 재사용 + 현재 회사 프리셋.
+ * author_type='platform'은 ivSubmit이 admin일 때 자동 세팅. 작성 후 cosp 회사탭 자동 갱신(ivSubmit 성공 훅). */
+async function cospInsurerWrite(){
+  if(!window._cospInsurerId){ if(typeof toast==='function')toast('회사를 먼저 선택하세요'); return; }
+  if(typeof ivOpenWrite!=='function'){ if(typeof toast==='function')toast('작성 폼을 열 수 없습니다'); return; }
+  await ivOpenWrite();
+  var sel=document.getElementById('iv-f-insurer'); if(sel) sel.value=window._cospInsurerId;  /* 현재 보고 있는 회사로 프리셋 */
+}
+window.cospInsurerWrite=cospInsurerWrite;
 /* 보험사별 자료실 = 게시판형 좌카드+우상세 (IA 정정 2026-06-11 #2: 오피스 게시판 형식 재사용).
  * posts(board_type='insurer', insurer_id) 회사별 필터. 2a-① cospShowNotice 모델 재사용(insurer 방·team/branch 방 동시 비활성 = ID 충돌 0). */
 async function cospInsurerPick(el,insurerId){
+  window._cospInsurerId=insurerId;  /* admin 작성폼 회사 프리셋용 (2b) */
   var tabs=document.querySelectorAll('#cosp-ins-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
   var box=document.getElementById('cosp-ins-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
