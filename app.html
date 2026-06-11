@@ -1886,7 +1886,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="tab on" onclick="mysTab(this,'today')">다이어리</div>
           <div class="tab" onclick="mysTab(this,'saved')">마이 스페이스</div>
           <div class="tab" onclick="mysTab(this,'team')">공동 스페이스</div>
-          <div class="tab" onclick="mysTab(this,'qna')">보험 Q&amp;A</div>
+          <!-- 보험 Q&A 최상단 탭 제거(2026-06-11) — 진입은 공동 스페이스 보험Q&A 방으로 일원화(#mys-qna 보드는 cosp-body로 이동 표시) -->
           <div class="tab" onclick="mysTab(this,'members')" style="display:none">팀원관리</div>
         </div>
         <button class="mys-write-btn" onclick="openMyspaceWrite()">+ 글쓰기</button>
@@ -6371,6 +6371,7 @@ async function _cospLoadMe(){
 async function loadCospace(){
   /* 라이브러리 상단 '공동 스페이스' 탭(구 단체방) 자리 = #mys-team 에 렌더. 별도 뷰 신설 아님 */
   var host=document.getElementById('mys-team'); if(!host) return;
+  if(typeof _cospQnaRestore==='function') _cospQnaRestore();  /* 재진입 전 보험Q&A 보드 원위치 복귀(host 재생성 손실 방지) */
   host.innerHTML='<div class="tabs" id="cosp-rooms" style="flex-wrap:wrap;margin-bottom:4px"></div><div id="cosp-body" style="margin-top:12px"></div>';
   var me=await _cospLoadMe();
   var rooms=[];
@@ -6387,7 +6388,8 @@ function cospRoom(el,k){
   var tabs=document.querySelectorAll('#cosp-rooms .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
   window._cospRoom=k;
   var body=document.getElementById('cosp-body'); if(!body) return;
-  if(k==='qna') return _goMysQna();  /* IA 정정 #3: 보험Q&A = 기존 MY SPACE 보험Q&A 화면 그대로 재사용(축소판 폐기) */
+  _cospQnaRestore();  /* 방 전환 시 보험Q&A 보드가 cosp에 있으면 원위치 복귀(먼저 정리) */
+  if(k==='qna') return _cospQnaShow(body);  /* 인플레이스: 최상단/방 탭 유지, 공동 스페이스 안에 기존 보험Q&A 화면 그대로 */
   if(k==='insurer') return cospRenderInsurer();
   /* 방 내부 탭바(공지/공유자료/공유스크립트/채팅) 제거(2026-06-11) — 탭 UI만 삭제, 공지 내용 바로 표시.
      공유자료/공유스크립트/채팅 렌더 함수(cospSub·cospRenderScripts·cospRenderChat)·데이터는 보존(코드·DB 유지). */
@@ -6395,6 +6397,22 @@ function cospRoom(el,k){
   cospRenderNotices(false);  /* 공지(좌카드+우상세) 바로 렌더 */
 }
 window.cospRoom=cospRoom;
+/* 보험Q&A 인플레이스 (2026-06-11) — 기존 보드(#mys-qna) 엘리먼트를 공동 스페이스 cosp-body로 이동·표시(같은 DOM=그대로).
+ * 방 떠날 때 _cospQnaRestore로 원위치 복귀(손실 0). 최상단 보험Q&A 탭 제거 후 보험Q&A 진입점 = 공동 스페이스 방. */
+function _cospQnaShow(body){
+  var q=document.getElementById('mys-qna'); if(!q){ if(body) body.innerHTML='<div class="mys-news-empty">보험Q&A를 불러올 수 없습니다.</div>'; return; }
+  if(!window._mysQnaHome) window._mysQnaHome=q.parentNode;  /* 원 부모 1회 기억 */
+  if(body){ body.innerHTML=''; body.appendChild(q); }
+  q.style.display='';
+  window._mysQnaMode='all';
+  if(typeof loadMysQna==='function') loadMysQna();
+}
+window._cospQnaShow=_cospQnaShow;
+function _cospQnaRestore(){
+  var q=document.getElementById('mys-qna'), home=window._mysQnaHome;
+  if(q && home && q.parentNode!==home){ q.style.display='none'; home.appendChild(q); }  /* cosp로 옮겨졌던 경우만 원위치 복귀 */
+}
+window._cospQnaRestore=_cospQnaRestore;
 function _cospScope(){ return window._cospRoom==='branch'?{scope:'branch_internal',id:(window._cospMe||{}).branch_id}:{scope:'team_internal',id:(window._cospMe||{}).team_id}; }
 function cospSub(el,key){
   var tabs=document.querySelectorAll('#cosp-sub .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
@@ -6786,10 +6804,12 @@ function _goMysCalendar(){
 }
 window._goMysCalendar=_goMysCalendar;
 function _goMysQna(){
+  /* 최상단 보험Q&A 탭 제거(2026-06-11) → 보험Q&A 진입 = 공동 스페이스 탭 + 보험Q&A 방 자동 선택 */
   if(typeof showView==='function') showView('myspace');
   window._mysQnaMode='all';
-  var qt=document.querySelector('#mys-tabs .tab[onclick*="qna"]');
-  if(qt&&typeof mysTab==='function') mysTab(qt,'qna');
+  var teamTab=document.querySelector('#mys-tabs .tab[onclick*="team"]');
+  if(teamTab&&typeof mysTab==='function') mysTab(teamTab,'team');  /* 공동 스페이스 진입(loadCospace) */
+  setTimeout(function(){ var qBtn=document.querySelector('#cosp-rooms .tab[onclick*="qna"]'); if(qBtn) qBtn.click(); }, 140);  /* 방 렌더 후 보험Q&A 방 클릭 */
 }
 window._goMysQna=_goMysQna;
 /* 헤더 전산신고 버튼 → 함께해요 이동 + '전산 이상 신고' 필터 활성화 (2026-06-05) */
