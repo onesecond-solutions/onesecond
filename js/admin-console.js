@@ -224,27 +224,23 @@
     var list=_usersFiltered();
     var cnt=document.getElementById('ac-users-count'); if(cnt) cnt.textContent=list.length+'명';
     if(!list.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="users"></i>해당 사용자가 없습니다</div>'; _renderUserPager(0); if(window.lucide) window.lucide.createIcons(); return; }
-    var per=20, pages=Math.ceil(list.length/per), page=Math.min(_uPage,pages-1); if(page<0)page=0; _uPage=page;
+    var per=50, pages=Math.ceil(list.length/per), page=Math.min(_uPage,pages-1); if(page<0)page=0; _uPage=page;
     var slice=list.slice(page*per,(page+1)*per);
-    area.innerHTML=slice.map(function(u){
-      var g=_rgrp(u.role); var st=u.status||'active';
+    var body=slice.map(function(u){
+      var st=u.status||'active';
       var stBadge = (st==='pending')?'<span class="ac-badge st-pending">승인대기</span>'
         : (st==='suspended')?'<span class="ac-badge high">정지</span>'
         : '<span class="ac-badge st-active">활성</span>';
       var isStd = ROLE_KEYS.indexOf(u.role)>=0;
       var sel='<select class="ac-user-role" onchange="acUserRole(\''+esc(u.id)+'\',this.value,\''+esc(u.role||'')+'\',this)">'
-        +(isStd?'':'<option value="'+esc(u.role||'')+'" selected>미분류'+(u.role?(' ('+esc(u.role)+')'):'')+'</option>')
+        +(isStd?'':'<option value="'+esc(u.role||'')+'" selected>미분류</option>')
         +ROLE_KEYS.map(function(rk){ return '<option value="'+rk+'"'+(rk===u.role?' selected':'')+'>'+esc(RL[rk]||rk)+'</option>'; }).join('')+'</select>';
       var suspBtn = (st==='suspended')
-        ? '<button class="ac-btn" onclick="acUserSuspend(\''+esc(u.id)+'\',false)">정지 해제</button>'
-        : '<button class="ac-btn" style="border-color:var(--warn);color:var(--warn)" onclick="acUserSuspend(\''+esc(u.id)+'\',true)">정지</button>';
-      return '<div class="ac-entity r-'+g+'">'+
-        '<span class="ac-badge r-'+g+'">'+esc(RL[u.role]||u.role||'미분류')+'</span> '+stBadge+
-        '<div class="ac-entity-name">'+esc(u.name||'(이름 없음)')+'</div>'+
-        '<div class="ac-entity-meta">'+esc(u.company||'-')+' · '+esc(u.email||'')+'</div>'+
-        '<div class="ac-entity-sub">가입 '+esc(_fmtDate(u.created_at))+'</div>'+
-        '<div class="ac-user-acts"><label>권한</label>'+sel+suspBtn+'</div></div>';
+        ? '<button class="ac-btn ac-btn-sm" onclick="acUserSuspend(\''+esc(u.id)+'\',false)">해제</button>'
+        : '<button class="ac-btn ac-btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="acUserSuspend(\''+esc(u.id)+'\',true)">정지</button>';
+      return '<tr><td class="ac-td-name">'+esc(u.name||'(이름 없음)')+'</td><td>'+sel+'</td><td>'+stBadge+'</td><td class="ac-td-sub">'+esc(u.company||'-')+'</td><td class="ac-td-sub">'+esc(u.email||'')+'</td><td class="ac-td-date">'+esc(_fmtDate(u.created_at))+'</td><td>'+suspBtn+'</td></tr>';
     }).join('');
+    area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>이름</th><th>권한</th><th>상태</th><th>소속</th><th>이메일</th><th>가입</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table></div>';
     _renderUserPager(pages);
     if(window.lucide) window.lucide.createIcons();
   }
