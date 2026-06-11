@@ -1926,7 +1926,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
           <div class="chip" onclick="mysVaultOpen(this)">자료함</div>
           <div class="chip" onclick="filterMys(this,'스크립트')">스크립트</div>
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
-          <div class="chip" onclick="filterMys(this,'즐겨찾기')">즐겨찾기</div>
+          <div class="chip" onclick="mysShareboxOpen(this)">공유함</div>
         </div>
       </div>
       <div class="split" id="mys-split">
@@ -7611,7 +7611,7 @@ function _searchGo(view){ closeSearch(); if(typeof showView==='function') showVi
 /* 원세컨드 메뉴 인덱스 — 키워드로 메뉴 바로 이동 (어드민 제외 = 대전제). Quick 도구는 quick_contents에서 동적 */
 var OS_NAV_INDEX=[
   {label:'홈', kw:'home 대시보드 메인', view:'home'},
-  {label:'라이브러리', kw:'마이스페이스 내 자료함 메모 즐겨찾기', view:'myspace'},
+  {label:'라이브러리', kw:'마이스페이스 내 자료함 메모 공유함', view:'myspace'},
   {label:'스크립트', kw:'콜 멘트 화법 상담 단계 script', view:'scripts'},
   {label:'Quick 메뉴', kw:'퀵 빠른 도구 계산 검색', view:'quick'},
   {label:'현장의 소리', kw:'단체방 지점 게시판 보험 질문 qna 소리', view:'voice'},
@@ -10102,6 +10102,21 @@ function filterMys(el,cat){
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
 }
 window.filterMys=filterMys;
+
+/* 공유함 (구 즐겨찾기 칩 자리 재사용, 2026-06-10 기획실장 작업지시서 — 골격: 라벨+의도된 빈 상태만).
+ * 즐겨찾기는 백킹 데이터 없는 placeholder였음(유실 0). 4탭 골격·공유 알맹이(CRUD)는 방 쓰기 연결 후 별도. */
+function mysShareboxOpen(el){
+  var chips=el.parentElement.querySelectorAll('.chip');
+  for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
+  el.classList.add('on');
+  window._mysCat='공유함'; window._mysReorder=false;
+  var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='none';
+  var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
+  var listEl=document.getElementById('mysList');
+  if(listEl) listEl.innerHTML='<div class="mys-news-empty">공유함은 준비 중입니다.<br>곧 다른 분과 자료·스크립트를 주고받을 수 있어요.</div>';
+  var vv=document.getElementById('mysViewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">공유 기능 준비 중입니다.</div>';
+}
+window.mysShareboxOpen=mysShareboxOpen;
 
 /* ═════════════════════════════════════════════════════════
    자료함 v1 (P1) — 폴더형 개인 보관함
