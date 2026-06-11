@@ -985,6 +985,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-pager-btn{background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:6px 11px;cursor:pointer;font-family:inherit;color:var(--tp);font-size:0.82rem;margin:0 2px}
 .ac-pager-btn:disabled{opacity:.4;cursor:default}
 .ac-pager-btn.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+/* 어드민 활동 로그 */
+.ac-log-wrap{border:1px solid var(--bd);border-radius:var(--radius-md,13px);overflow:hidden}
+.ac-log-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--bd);font-size:0.82rem}
+.ac-log-row:last-child{border-bottom:none}
+.ac-log-time{color:var(--tf);font-size:0.72rem;min-width:120px;flex:0 0 120px}
+.ac-log-msg{color:var(--tp)}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
@@ -2642,7 +2648,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <div class="ac-sec" data-sec="settings"><div class="ac-card ac-card-empty">설정 — app_settings 토글 재사용 예정</div></div>
 
       <!-- 로그 (예정 골격) -->
-      <div class="ac-sec" data-sec="logs"><div class="ac-card ac-card-empty">로그 — activity_logs 재사용 예정</div></div>
+      <div class="ac-sec" data-sec="logs">
+        <div class="ac-section-head"><i data-lucide="scroll-text"></i><h2>활동 로그</h2><span class="ac-section-sub" id="ac-logs-count">—</span></div>
+        <div id="ac-logs-tools"></div>
+        <div id="ac-logs-list"><div class="ac-card-empty">불러오는 중…</div></div>
+        <div id="ac-logs-pager" style="margin-top:14px;text-align:center"></div>
+      </div>
 
       <!-- 가입 승인 모달 (admin-console 흡수) -->
       <div class="ac-modal-overlay" id="ac-modal-overlay">

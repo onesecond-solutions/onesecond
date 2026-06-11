@@ -566,7 +566,7 @@
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
     branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
-    visibility:'acLoadVisibility', rls:'acLoadRlsOverview' };
+    visibility:'acLoadVisibility', rls:'acLoadRlsOverview', logs:'acLoadLogs' };
   var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','validation','system','logs'];
 
   function _acSpaRoot(){ return document.getElementById('v-admin'); }
@@ -783,4 +783,60 @@
       })
       .catch(function(){ host.innerHTML = '<div class="ac-card-empty">조회 중 오류가 발생했습니다.</div>'; });
   };
+
+  // ════ 활동 로그 — activity_logs 전체 + severity 필터 + 검색 + 페이지네이션 ════
+  var _lState = { cache:null, sev:'all', q:'', page:0, per:30 };
+  window.acLoadLogs = async function(reload){
+    var list=document.getElementById('ac-logs-list'); if(!list) return;
+    _renderLogTools();
+    if(!_lState.cache || reload){
+      list.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+      var rows=await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=300');
+      var ids=[]; rows.forEach(function(l){ if(l.user_id && ids.indexOf(l.user_id)<0) ids.push(l.user_id); });
+      var nm={}; if(ids.length){ try{ var us=await _rows('users?id=in.('+ids.join(',')+')&select=id,name'); us.forEach(function(u){ nm[u.id]=u.name; }); }catch(e){} }
+      rows.forEach(function(l){ l._actor=nm[l.user_id]||'사용자'; });
+      _lState.cache=rows;
+    }
+    _renderLogList();
+  };
+  function _renderLogTools(){
+    var t=document.getElementById('ac-logs-tools'); if(!t) return;
+    var sevs=[['all','전체'],['critical','CRITICAL'],['high','HIGH'],['normal','NORMAL']];
+    var chips=sevs.map(function(s){ return '<button class="ac-chip'+(_lState.sev===s[0]?' active':'')+'" onclick="acLogSev(\''+s[0]+'\')">'+s[1]+'</button>'; }).join('');
+    t.innerHTML='<div class="ac-post-tools">'+chips+'<input class="ac-post-search" placeholder="이벤트·사용자 검색" value="'+esc(_lState.q)+'" oninput="acLogSearch(this.value)"></div>';
+  }
+  window.acLogSev=function(s){ _lState.sev=s; _lState.page=0; _renderLogTools(); _renderLogList(); };
+  window.acLogSearch=function(v){ _lState.q=v; _lState.page=0; _renderLogList(); };
+  function _logFiltered(){
+    var rows=_lState.cache||[];
+    if(_lState.sev!=='all') rows=rows.filter(function(l){ return (l.severity||'normal')===_lState.sev; });
+    var q=_lState.q.trim().toLowerCase();
+    if(q) rows=rows.filter(function(l){ var ph=EVENT_FEED[l.event_type]||l.event_type||''; return (ph+' '+(l._actor||'')+' '+(l.event_type||'')).toLowerCase().indexOf(q)>=0; });
+    return rows;
+  }
+  function _renderLogList(){
+    var list=document.getElementById('ac-logs-list'); if(!list) return;
+    var rows=_logFiltered();
+    var c=document.getElementById('ac-logs-count'); if(c) c.textContent=rows.length+'건';
+    if(!rows.length){ list.innerHTML='<div class="ac-card-empty"><i data-lucide="scroll-text"></i>해당 로그가 없습니다</div>'; _renderLogPager(0); if(window.lucide) window.lucide.createIcons(); return; }
+    var per=_lState.per, pages=Math.ceil(rows.length/per), page=Math.min(_lState.page,pages-1); if(page<0)page=0; _lState.page=page;
+    var slice=rows.slice(page*per,(page+1)*per);
+    list.innerHTML='<div class="ac-log-wrap">'+slice.map(function(l){
+      var sev=l.severity||'normal';
+      var ph=EVENT_FEED[l.event_type];
+      var sentence=(l.event_type==='login_admin')?'어드민이 로그인했습니다':(ph?(esc(l._actor)+'님이 '+ph):esc(l.event_type||'활동'));
+      return '<div class="ac-log-row"><span class="ac-log-time">'+esc(_fmtDate(l.created_at))+'</span><span class="ac-badge '+sev+'">'+sev.toUpperCase()+'</span><span class="ac-log-msg">'+sentence+'</span></div>';
+    }).join('')+'</div>';
+    _renderLogPager(pages);
+    if(window.lucide) window.lucide.createIcons();
+  }
+  function _renderLogPager(pages){
+    var el=document.getElementById('ac-logs-pager'); if(!el) return;
+    if(pages<=1){ el.innerHTML=''; return; }
+    var p=_lState.page, html='<button class="ac-pager-btn" '+(p<=0?'disabled':'')+' onclick="acLogPage('+(p-1)+')">‹</button>';
+    for(var i=0;i<pages;i++){ if(i<2||i>pages-3||Math.abs(i-p)<=1){ html+='<button class="ac-pager-btn'+(i===p?' on':'')+'" onclick="acLogPage('+i+')">'+(i+1)+'</button>'; } else if(i===2||i===pages-3){ html+='<span style="padding:0 5px;color:var(--tf)">…</span>'; } }
+    html+='<button class="ac-pager-btn" '+(p>=pages-1?'disabled':'')+' onclick="acLogPage('+(p+1)+')">›</button>';
+    el.innerHTML=html;
+  }
+  window.acLogPage=function(i){ _lState.page=i; _renderLogList(); };
 })();
