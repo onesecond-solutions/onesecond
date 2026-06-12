@@ -456,6 +456,32 @@ function vRole() {
 }
 window.vRole = vRole;
 
+/* ════ typeahead 키보드 네비 (↑↓ 이동 · Enter 선택 · Esc 닫기) — 회사·지점·팀 공용, 2026-06-12 ════ */
+function _taSetActive(items, idx) {
+  for (var i = 0; i < items.length; i++) {
+    var on = (i === idx);
+    items[i].classList.toggle('active', on);
+    items[i].style.background = on ? 'var(--color-surface-2, rgba(0,0,0,0.06))' : '';
+  }
+  if (idx >= 0 && items[idx] && items[idx].scrollIntoView) items[idx].scrollIntoView({ block: 'nearest' });
+}
+function _taKeydown(e, listId, pick) {
+  var list = document.getElementById(listId);
+  if (!list || list.style.display === 'none') return;
+  var items = list.querySelectorAll('.ta-item');
+  if (!items.length) return;
+  var idx = -1;
+  for (var i = 0; i < items.length; i++) { if (items[i].classList.contains('active')) { idx = i; break; } }
+  var key = e.key;
+  if (key === 'ArrowDown')      { e.preventDefault(); _taSetActive(items, (idx + 1) % items.length); }
+  else if (key === 'ArrowUp')   { e.preventDefault(); _taSetActive(items, (idx <= 0 ? items.length - 1 : idx - 1)); }
+  else if (key === 'Enter')     { e.preventDefault(); pick(items[idx >= 0 ? idx : 0]); }   /* 하이라이트 or 최상단 후보 */
+  else if (key === 'Escape')    { list.style.display = 'none'; }
+}
+function onCompanyTaKeydown(e) { _taKeydown(e, 'company-ta-list', onCompanyTaPick); }
+function wzAcKeydown(e, field) { _taKeydown(e, 'ga-' + field + '-list', function (el) { wzAcPick(field, el); }); }
+window.onCompanyTaKeydown = onCompanyTaKeydown; window.wzAcKeydown = wzAcKeydown;
+
 window.authNextSignup3 = function () {
   /* 2026-05-28 PR-OTP: signup-2 → signup-3 진입 시 사전 폼 검증 강제.
      consent 검사는 signup-3 자리(validateSignup) — 본 함수는 그 외만 점검. */
