@@ -406,7 +406,7 @@ async function _wzAcFetch(field, q) {
     if (!rows || !rows.length) { list.style.display = 'none'; return; }
     list.innerHTML = rows.map(function (r) {
       var safe = String(r.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      return '<div class="ta-item" onmousedown="wzAcPick(\'' + field + '\', this)" data-id="' + String(r.id) + '" data-name="' + safe + '">' + safe + ' <span style="color:var(--color-text-tertiary)">(기존)</span></div>';
+      return '<div class="ta-item" onmousedown="wzAcPick(\'' + field + '\', this)" data-id="' + String(r.id).replace(/"/g, '') + '" data-name="' + safe + '">' + safe + ' <span style="color:var(--color-text-tertiary)">(기존)</span></div>';
     }).join('');
     list.style.display = 'block';
   } catch (e) { if (e && e.name !== 'AbortError') console.error('[wzAc ' + field + ']', e); }
@@ -1369,7 +1369,7 @@ async function _companyTaFetch(q) {
     if (!rows || rows.length === 0) { list.style.display = 'none'; return; }
     var html = rows.map(function (r) {
       var safe = String(r.name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      var idAttr = String(r.id == null ? '' : r.id);
+      var idAttr = String(r.id == null ? '' : r.id).replace(/"/g, '');
       return '<div class="ta-item" onmousedown="onCompanyTaPick(this)" data-id="' + idAttr + '" data-name="' + safe + '">' + safe + '</div>';
     }).join('');
     list.innerHTML = html;
@@ -1493,6 +1493,12 @@ function validateSignup() {
       errBox.classList.add('on');
       ok = false;
     }
+  }
+
+  /* P1(Chrome 검수): GA 최종 게이트 — 회사 미선택 제출 차단(스텝 우회·직접 doSubmit 방어). 서버 RLS와 별개 클라 방어. */
+  if (window.gSignupSite === 'ga') {
+    var _cid = document.getElementById('f-company-id');
+    if (!_cid || !_cid.value) { if (errBox) { errBox.textContent = '회사를 선택해 주세요.'; errBox.classList.add('on'); } ok = false; }
   }
 
   if (!document.getElementById('f-consent').checked) {
