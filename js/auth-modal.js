@@ -233,14 +233,26 @@ function _showStep(step) {
     if (crossBtn) { crossBtn.textContent = '로그인 →'; crossBtn.onclick = function() { window.switchAuthSection('login'); }; }
     if (progress) { progress.hidden = false; _setProgress(1); }
   }
-  else if (step === 'signup-2') {
+  else if (step === 'signup-identity') {
+    /* 2026-06-12 위저드 v2 — STEP 2 본인정보 (이름·전화·이메일) */
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
-    if (ctaBtn)   ctaBtn.onclick = function() { window.authNextSignup3(); };
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vIdentity()) _showStep('signup-2'); };
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-1'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(2); }
     setTimeout(function() {
       var el = document.getElementById('f-name');
+      if (el) el.focus();
+    }, 80);
+  }
+  else if (step === 'signup-2') {
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { window.authNextSignup3(); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-identity'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(3); }
+    setTimeout(function() {
+      var el = document.getElementById('f-role');
       if (el) el.focus();
     }, 80);
   }
@@ -283,9 +295,29 @@ window.authPrev = function() {
 };
 
 window.authNextSignup = function() {
-  // Step 1 카드 클릭 후 호출 — Step 2 진입
-  _showStep('signup-2');
+  // 소속 카드 클릭 후 — STEP 2(본인정보) 진입
+  _showStep('signup-identity');
 };
+
+/* 2026-06-12 위저드 v2 — STEP 2 본인정보 검증 (이름·전화·이메일) */
+function vIdentity() {
+  var ok = true;
+  var errBox = document.getElementById('signupIdErrBox');
+  if (errBox) errBox.classList.remove('on');
+  ['f-name','f-phone'].forEach(function (id) {
+    var el = document.getElementById(id);
+    var er = document.getElementById('e-' + id.split('-')[1]);
+    if (el && !el.value.trim()) { el.classList.add('err'); if (er) er.classList.add('on'); ok = false; }
+    else if (el) { el.classList.remove('err'); if (er) er.classList.remove('on'); }
+  });
+  var email = document.getElementById('f-email');
+  var erE = document.getElementById('e-email');
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+    email.classList.add('err'); if (erE) erE.classList.add('on'); ok = false;
+  } else if (email) { email.classList.remove('err'); if (erE) erE.classList.remove('on'); }
+  return ok;
+}
+window.vIdentity = vIdentity;
 
 window.authNextSignup3 = function () {
   /* 2026-05-28 PR-OTP: signup-2 → signup-3 진입 시 사전 폼 검증 강제.

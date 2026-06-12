@@ -759,22 +759,41 @@ body {
       </div>
 
       <!-- ────── 가입 Step 2 — 정보 입력 ────── -->
+      <!-- ────── 가입 STEP 2 — 본인 정보 (위저드 v2, 2026-06-12) ────── -->
+      <div class="auth-step-page" id="page-signup-identity">
+        <h2 class="auth-page-title">본인 정보를 알려주세요</h2>
+        <p class="auth-page-sub">가입과 인증에 사용됩니다</p>
+        <div class="auth-err-box" id="signupIdErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-name">이름</label>
+          <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
+          <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-phone">핸드폰</label>
+          <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
+          <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-email">이메일</label>
+          <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); onInsurerEmailInput();">
+          <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
+          <p id="f-email-hint" style="font-size:12px; color:var(--color-text-tertiary); margin-top:6px;">이 이메일로 인증 코드가 발송됩니다.</p>
+        </div>
+      </div>
+
+      <!-- ────── 가입 — 소속/직급 (GA: 직책·회사·지점·팀은 커밋2 후속서 분해 / 보험사: 기존 폼) ────── -->
       <div class="auth-step-page" id="page-signup-2">
-        <div class="auth-page-badge">보험 설계사·매니저 전용</div>
-        <h2 class="auth-page-title">정보를 입력해 주세요</h2>
-        <p class="auth-page-sub">보험 설계사·매니저 가입 — 정확한 정보일수록 매니저 매핑이 정확합니다</p>
+        <div class="auth-page-badge">소속 정보</div>
+        <h2 class="auth-page-title">소속을 알려주세요</h2>
+        <p class="auth-page-sub">정확한 정보일수록 매니저 매핑이 정확합니다</p>
 
         <div class="auth-err-box" id="signupErrBox"></div>
 
         <form id="reg-form" novalidate>
           <div class="signup-form-body" id="signup-form-body">
 
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-name">이름</label>
-              <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
-              <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
-            </div>
-
+            <!-- 본인정보(이름·전화·이메일) = STEP 2(page-signup-identity)로 이동 (2026-06-12) -->
             <div class="auth-form-group">
               <label class="auth-label" for="f-role">직급</label>
               <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
@@ -791,22 +810,8 @@ body {
               💡 <span id="roleHintText"></span>
             </div>
 
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-phone">핸드폰</label>
-              <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
-              <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
-            </div>
-
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-email">이메일</label>
-              <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); onInsurerEmailInput();">
-              <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
-              <p id="f-email-hint" style="font-size:12px; color:var(--color-text-tertiary); margin-top:6px;">
-                이 이메일로 인증 코드가 발송됩니다.
-              </p>
-            </div>
-
-            <!-- 보험사 분기 한정 — 이메일 OTP 인라인 인증 (2026-05-28 신설) -->
+            <!-- 핸드폰·이메일 = STEP 2(page-signup-identity)로 이동 (2026-06-12) -->
+            <!-- 보험사 분기 한정 — 이메일 OTP 인라인 인증 (f-email은 STEP 2에 있음, DOM 유지) -->
             <div class="otp-inline-box" id="otp-inline-box" style="display:none; margin-top:8px; padding:14px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2);">
               <div id="otp-send-area">
                 <button class="auth-btn auth-btn-outline" type="button" id="btnSendInsurerOtp" onclick="sendInsurerOtp()" style="width:100%;">
