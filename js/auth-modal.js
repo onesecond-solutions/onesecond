@@ -1802,7 +1802,9 @@ async function doSubmit() {
     teamId      = (document.getElementById('f-ga-team-id') ? (document.getElementById('f-ga-team-id').value || '') : '');
     newBranchName = branchId ? '' : branchName;   /* 미픽(자율입력) = 신규 지점명 */
     newTeamName   = teamId   ? '' : teamName;
-    statusValue = 'active';
+    /* 게이트: 기타 직책(분류 모호) = 승인 대기(pending) / 그 외 정상 완주 = 즉시 active.
+       ※ 완전한 게이트(미분류 role 보존 → #589 오버레이 + GA 승인 큐)는 PR-2(트리거)서 정합. */
+    statusValue = (gradeShort === 'etc') ? 'pending' : 'active';
   }
 
   /* 2026-05-18 OTP 전환: /auth/v1/signup (비밀번호) → /auth/v1/otp (create_user=true + data 메타)
