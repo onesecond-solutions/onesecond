@@ -269,11 +269,20 @@ function _showStep(step) {
   else if (step === 'signup-team') {
     /* 2026-06-12 위저드 v2 — STEP 5 팀 (GA, 선택) */
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
-    if (ctaBtn)   ctaBtn.onclick = function() { _showStep('signup-2'); };   /* 팀=선택, 검증 없음 */
+    if (ctaBtn)   ctaBtn.onclick = function() { _showStep('signup-role'); };   /* 팀=선택, 검증 없음 */
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-branch'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(5); }
     setTimeout(function() { var el = document.getElementById('f-ga-team'); if (el) el.focus(); }, 80);
+  }
+  else if (step === 'signup-role') {
+    /* 2026-06-12 위저드 v2 — STEP 6 직책 (GA) */
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vRole()) _showStep('signup-3'); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-team'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(6); }
+    setTimeout(function() { var el = document.getElementById('f-ga-role'); if (el) el.focus(); }, 80);
   }
   else if (step === 'signup-2') {
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
@@ -301,9 +310,9 @@ function _showStep(step) {
         ctaBtn.style.color = '';
       }
     }
-    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-2'); }; }
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-role' : 'signup-2'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
-    if (progress) { progress.hidden = false; _setProgress(3); }
+    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 7 : 3); }
   }
   else if (step === 'login-success' || step === 'signup-success') {
     if (ctaArea)  ctaArea.style.display = 'none';
@@ -436,6 +445,17 @@ function vBranch() {
 window.wzAcInput = wzAcInput; window.wzAcPick = wzAcPick; window.wzAcBlur = wzAcBlur;
 window.vBranch = vBranch; window._wzResetBranchTeam = _wzResetBranchTeam;
 
+/* STEP 6 직책 검증 (GA, 선택 필수). "기타"=게이트는 커밋3(submit 정합)서 처리 */
+function vRole() {
+  var sel = document.getElementById('f-ga-role');
+  var er = document.getElementById('e-ga-role');
+  var errBox = document.getElementById('signupRoleErrBox');
+  if (sel && sel.value) { if (er) er.classList.remove('on'); if (errBox) errBox.classList.remove('on'); return true; }
+  if (er) er.classList.add('on');
+  return false;
+}
+window.vRole = vRole;
+
 window.authNextSignup3 = function () {
   /* 2026-05-28 PR-OTP: signup-2 → signup-3 진입 시 사전 폼 검증 강제.
      consent 검사는 signup-3 자리(validateSignup) — 본 함수는 그 외만 점검. */
@@ -459,9 +479,12 @@ function _validateSignupStep2Inline() {
     if (!el.value.trim()) { el.classList.add('err'); er.classList.add('on'); ok = false; }
     else                  { el.classList.remove('err'); er.classList.remove('on'); }
   });
-  var role = document.getElementById('f-role');
-  if (!role.value) { role.classList.add('err'); document.getElementById('e-role').classList.add('on'); ok = false; }
-  else             { role.classList.remove('err'); document.getElementById('e-role').classList.remove('on'); }
+  var _roleId = (window.gSignupSite === 'ga') ? 'f-ga-role' : 'f-role';
+  var _roleErrId = (window.gSignupSite === 'ga') ? 'e-ga-role' : 'e-role';
+  var role = document.getElementById(_roleId);
+  var _roleErr = document.getElementById(_roleErrId);
+  if (role && !role.value) { role.classList.add('err'); if (_roleErr) _roleErr.classList.add('on'); ok = false; }
+  else if (role) { role.classList.remove('err'); if (_roleErr) _roleErr.classList.remove('on'); }
   var email = document.getElementById('f-email');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
     email.classList.add('err');
@@ -1409,9 +1432,12 @@ function validateSignup() {
     if (!el.value.trim()) { el.classList.add('err'); er.classList.add('on'); ok = false; }
     else                  { el.classList.remove('err'); er.classList.remove('on'); }
   });
-  var role = document.getElementById('f-role');
-  if (!role.value) { role.classList.add('err'); document.getElementById('e-role').classList.add('on'); ok = false; }
-  else             { role.classList.remove('err'); document.getElementById('e-role').classList.remove('on'); }
+  var _roleId = (window.gSignupSite === 'ga') ? 'f-ga-role' : 'f-role';
+  var _roleErrId = (window.gSignupSite === 'ga') ? 'e-ga-role' : 'e-role';
+  var role = document.getElementById(_roleId);
+  var _roleErr = document.getElementById(_roleErrId);
+  if (role && !role.value) { role.classList.add('err'); if (_roleErr) _roleErr.classList.add('on'); ok = false; }
+  else if (role) { role.classList.remove('err'); if (_roleErr) _roleErr.classList.remove('on'); }
   var email = document.getElementById('f-email');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
     email.classList.add('err');
@@ -1712,7 +1738,8 @@ async function doSubmit() {
 
   var email = document.getElementById('f-email').value.trim();
   var site  = window.gSignupSite;
-  var gradeShort = document.getElementById('f-role').value;
+  /* GA = 직책 STEP(f-ga-role) / 보험사 = signup-2(f-role) */
+  var gradeShort = (site === 'ga') ? ((document.getElementById('f-ga-role') || {}).value || '') : ((document.getElementById('f-role') || {}).value || '');
   var roleKey = mapToRoleKey(site, gradeShort);
 
   var insurerId = '';

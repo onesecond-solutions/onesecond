@@ -829,7 +829,26 @@ body {
         </div>
       </div>
 
-      <!-- ────── 가입 — 직급 (GA: 직책 STEP은 커밋2-4서 분해 / 보험사: 기존 폼) ────── -->
+      <!-- ────── 가입 STEP 6 — 직책 (GA, 위저드 v2) ────── -->
+      <div class="auth-step-page" id="page-signup-role">
+        <h2 class="auth-page-title">직책을 선택하세요</h2>
+        <p class="auth-page-sub">소속 내 직책을 선택해 주세요</p>
+        <div class="auth-err-box" id="signupRoleErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-ga-role">직책</label>
+          <select class="auth-select" id="f-ga-role" onchange="clearFieldError('f-ga-role','e-ga-role')">
+            <option value="">선택해 주세요</option>
+            <option value="member">팀장 (설계사)</option>
+            <option value="manager">실장 (매니저)</option>
+            <option value="branch_manager">지점장 (센터장)</option>
+            <option value="staff">스탭 (총무)</option>
+            <option value="etc">기타</option>
+          </select>
+          <div class="auth-form-err" id="e-ga-role">직책을 선택해 주세요.</div>
+        </div>
+      </div>
+
+      <!-- ────── 가입 — 보험사 소속/직급 (signup-2 = 보험사 전용 / GA는 위저드 STEP으로 분해 완료) ────── -->
       <div class="auth-step-page" id="page-signup-2">
         <div class="auth-page-badge">소속 정보</div>
         <h2 class="auth-page-title">소속을 알려주세요</h2>
