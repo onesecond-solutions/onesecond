@@ -239,7 +239,7 @@
         ? '<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acUserSuspend(\''+esc(u.id)+'\',false)">해제</button>'
         : '<button class="ac-btn ac-btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="event.stopPropagation();acUserSuspend(\''+esc(u.id)+'\',true)">정지</button>';
       var delBtn = (u.role==='admin') ? '' : ' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="event.stopPropagation();acUserDelete(\''+esc(u.id)+'\')">삭제</button>';  /* 어드민 계정은 삭제 버튼 숨김(보호) */
-      return '<tr class="ac-tr-clk" onclick="acUserDetail(\''+esc(u.id)+'\')"><td class="ac-td-name">'+esc(u.name||'(이름 없음)')+'</td><td>'+sel+'</td><td>'+stBadge+'</td><td class="ac-td-sub">'+esc(u.company||'-')+'</td><td class="ac-td-sub">'+esc(u.email||'')+'</td><td class="ac-td-date">'+esc(_fmtDate(u.created_at))+'</td><td class="ac-td-acts">'+suspBtn+delBtn+'</td></tr>';
+      return '<tr class="ac-tr-clk" onclick="acUserDetail(\''+esc(u.id)+'\')"><td class="ac-td-name">'+esc(u.name||'(이름 없음)')+'</td><td>'+sel+'</td><td>'+stBadge+'</td><td class="ac-td-sub">'+esc(u.company||'-')+'</td><td class="ac-td-sub">'+esc(u.email||'')+'</td><td class="ac-td-date">'+esc(_fmtDate(u.created_at))+'</td><td class="ac-td-acts">'+'<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acUserForm(\''+esc(u.id)+'\')">수정</button> '+suspBtn+delBtn+'</td></tr>';
     }).join('');
     area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>이름</th><th>권한</th><th>상태</th><th>소속</th><th>이메일</th><th>가입</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table></div>';
     _renderUserPager(pages);
@@ -337,7 +337,7 @@
       var nCell=(n===0)?'<span style="color:var(--err);font-weight:700">0</span>':('<b>'+n+'</b>');
       var toggleBtn='<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acBranchToggle(\''+esc(b.id)+'\','+(b.is_active===false?'true':'false')+')">'+(b.is_active===false?'활성화':'비활성')+'</button>';
       var delBtn=(n===0)?' <button class="ac-btn ac-btn-sm" style="border-color:var(--err);color:var(--err)" onclick="event.stopPropagation();acBranchDelete(\''+esc(b.id)+'\')">삭제</button>':'';
-      return '<tr class="ac-tr-clk" onclick="acBranchDetail(\''+esc(b.id)+'\')"><td class="ac-td-name">'+esc(b.name)+'</td><td class="ac-td-sub">'+esc(b.ga_org_name||'-')+'</td><td style="text-align:center">'+nCell+'</td><td>'+stBadge+'</td><td class="ac-td-acts">'+toggleBtn+delBtn+'</td></tr>';
+      return '<tr class="ac-tr-clk" onclick="acBranchDetail(\''+esc(b.id)+'\')"><td class="ac-td-name">'+esc(b.name)+'</td><td class="ac-td-sub">'+esc(b.ga_org_name||'-')+'</td><td style="text-align:center">'+nCell+'</td><td>'+stBadge+'</td><td class="ac-td-acts">'+'<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acBranchForm(\''+esc(b.id)+'\')">수정</button> '+toggleBtn+delBtn+'</td></tr>';
     }).join('');
     area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>지점명</th><th>GA 조직</th><th>인원</th><th>상태</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table></div>';
     if(window.lucide) window.lucide.createIcons();
@@ -1173,5 +1173,106 @@
       if(window.db.logActivity) window.db.logActivity('update_setting','app_settings',key,{});
       acToast('저장했습니다');
     }catch(e){ acToast('네트워크 오류',true); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  //  지점·사용자 입력폼 (2026-06-12) — STEP 3/4
+  //  · 지점: 추가(C)+수정(U). 삭제는 별도 가드 트랙.
+  //  · 사용자: 수정(U)만. 추가(C)=초대+회원가입 위저드 별도 트랙(유령계정 방지) → 추가 버튼 미노출.
+  //  · 컬럼: branches(name,ga_org_name,is_active) / users 프로필(name,phone,company,branch_id) — 코드 실측 기준.
+  //  · 하드코딩 0: placeholder에 특정 지점·보험사명 금지.
+  // ════════════════════════════════════════════════════════════════════
+  function _acFormOv(){
+    var ov=document.getElementById('ac-form-ov');
+    if(!ov){ ov=document.createElement('div'); ov.id='ac-form-ov'; ov.className='ac-udetail-ov'; ov.onclick=function(e){ if(e.target===ov) acFormClose(); }; document.body.appendChild(ov); }
+    return ov;
+  }
+  window.acFormClose=function(){ var ov=document.getElementById('ac-form-ov'); if(ov) ov.classList.remove('on'); };
+  function _field(id,label,val,opts){
+    opts=opts||{};
+    var req=opts.req?' <span class="ac-form-req">*</span>':'';
+    if(opts.select){
+      var o=opts.select.map(function(x){ return '<option value="'+esc(x.v)+'"'+(String(x.v)===String(val==null?'':val)?' selected':'')+'>'+esc(x.t)+'</option>'; }).join('');
+      return '<div class="ac-form-field"><label>'+esc(label)+req+'</label><select id="'+id+'">'+o+'</select></div>';
+    }
+    var ph=opts.ph?(' placeholder="'+esc(opts.ph)+'"'):'';
+    return '<div class="ac-form-field"><label>'+esc(label)+req+'</label><input id="'+id+'" value="'+esc(val==null?'':val)+'"'+ph+'></div>';
+  }
+
+  // ── 지점 추가/수정 ──
+  window.acBranchForm=function(id){
+    var isEdit=(id!=null), b=null;
+    if(isEdit){ var L=_brCache.list||[]; for(var i=0;i<L.length;i++){ if(String(L[i].id)===String(id)){ b=L[i]; break; } } if(!b){ acToast('지점을 찾을 수 없습니다',true); return; } }
+    var ov=_acFormOv();
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acFormClose()">✕</button>'
+      +'<div class="ac-ud-title">'+(isEdit?'지점 수정':'지점 추가')+'</div>'
+      +_field('bf-name','지점명',b?b.name:'',{req:true,ph:'지점 이름'})
+      +_field('bf-org','GA 조직',b?b.ga_org_name:'',{ph:'소속 GA 조직명'})
+      +(isEdit?_field('bf-active','활성 상태',(b.is_active===false?'false':'true'),{select:[{v:'true',t:'활성'},{v:'false',t:'비활성'}]}):'')
+      +'<div class="ac-form-err" id="bf-err"></div>'
+      +'<div class="ac-form-actions"><button class="ac-btn" onclick="acFormClose()">취소</button>'
+      +'<button class="ac-btn ac-btn-primary" onclick="acBranchSave('+(isEdit?("'"+esc(String(id))+"'"):'null')+')">'+(isEdit?'저장':'추가')+'</button></div></div>';
+    ov.classList.add('on');
+    var nm=document.getElementById('bf-name'); if(nm) nm.focus();
+  };
+  window.acBranchSave=async function(id){
+    var isEdit=(id!=null);
+    var name=((document.getElementById('bf-name')||{}).value||'').trim();
+    var org=((document.getElementById('bf-org')||{}).value||'').trim();
+    var err=document.getElementById('bf-err');
+    if(!name){ if(err) err.textContent='지점명을 입력해주세요.'; return; }
+    var payload={ name:name, ga_org_name:org||null };
+    try{
+      var res;
+      if(isEdit){
+        var actEl=document.getElementById('bf-active'); if(actEl) payload.is_active=(actEl.value==='true');
+        res=await window.db.fetch('/rest/v1/branches?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+      } else {
+        payload.is_active=true;
+        res=await window.db.fetch('/rest/v1/branches',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+      }
+      if(!res.ok){ var m='저장 실패 ('+res.status+')'; if(res.status===403||res.status===401) m+=' — branches RLS 확인'; else if(res.status===400) m+=' — 필수 컬럼/형식 확인'; if(err) err.textContent=m; return; }
+      if(window.db.logActivity) window.db.logActivity(isEdit?'update_branch':'create_branch','branch',id||name,{name:name});
+      acToast(isEdit?'지점을 수정했습니다':'지점을 추가했습니다');
+      acFormClose();
+      if(window.acLoadBranches) window.acLoadBranches();
+    }catch(e){ if(err) err.textContent='네트워크 오류'; }
+  };
+
+  // ── 사용자 수정 (Update only — 추가는 별도 트랙). 권한·상태·이메일은 여기서 변경 안 함(전용 컨트롤·auth 연결) ──
+  window.acUserForm=async function(id){
+    var ov=_acFormOv();
+    ov.innerHTML='<div class="ac-udetail-box"><div class="ac-card-empty">불러오는 중…</div></div>'; ov.classList.add('on');
+    var u=null; try{ var rs=await _rows('users?id=eq.'+encodeURIComponent(id)+'&select=id,name,phone,company,branch_id,role,email'); u=rs&&rs[0]; }catch(e){}
+    if(!u){ ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acFormClose()">✕</button><div class="ac-card-empty">사용자를 찾을 수 없습니다.</div></div>'; return; }
+    var brOpts=[{v:'',t:'(미지정)'}];
+    try{ var bs=await _rows('branches?select=id,name,ga_org_name&order=name.asc'); (bs||[]).forEach(function(b){ brOpts.push({v:b.id,t:(b.name||'')+(b.ga_org_name?(' · '+b.ga_org_name):'')}); }); }catch(e){}
+    var RL=window.ROLE_LABEL||{};
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acFormClose()">✕</button>'
+      +'<div class="ac-ud-title">사용자 수정</div>'
+      +'<p style="font-size:12px;color:var(--tf);margin:-6px 0 12px">'+esc(u.email||'')+' · '+esc(RL[u.role]||u.role||'미분류')+' <span style="color:var(--tf)">(권한·상태·이메일은 여기서 변경 안 함)</span></p>'
+      +_field('uf-name','이름',u.name,{req:true})
+      +_field('uf-phone','전화',u.phone,{ph:'연락처'})
+      +_field('uf-company','소속/회사',u.company,{ph:'소속 회사명'})
+      +_field('uf-branch','지점',u.branch_id,{select:brOpts})
+      +'<div class="ac-form-err" id="uf-err"></div>'
+      +'<div class="ac-form-actions"><button class="ac-btn" onclick="acFormClose()">취소</button>'
+      +'<button class="ac-btn ac-btn-primary" onclick="acUserSave(\''+esc(String(id))+'\')">저장</button></div></div>';
+    var nm=document.getElementById('uf-name'); if(nm) nm.focus();
+  };
+  window.acUserSave=async function(id){
+    var g=function(x){ var el=document.getElementById(x); return el?el.value:''; };
+    var name=(g('uf-name')||'').trim();
+    var err=document.getElementById('uf-err');
+    if(!name){ if(err) err.textContent='이름을 입력해주세요.'; return; }
+    var payload={ name:name, phone:(g('uf-phone')||'').trim()||null, company:(g('uf-company')||'').trim()||null, branch_id:g('uf-branch')||null };
+    try{
+      var res=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+      if(!res.ok){ var m='저장 실패 ('+res.status+')'; if(res.status===403||res.status===401) m+=' — users RLS 확인'; else if(res.status===400) m+=' — 형식 확인(지점)'; if(err) err.textContent=m; return; }
+      if(window.db.logActivity) window.db.logActivity('update_user_profile','user',id,{name:name});
+      acToast('사용자 정보를 수정했습니다');
+      acFormClose();
+      if(window.acLoadUsers) window.acLoadUsers(true);
+    }catch(e){ if(err) err.textContent='네트워크 오류'; }
   };
 })();
