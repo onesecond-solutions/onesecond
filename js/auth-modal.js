@@ -312,7 +312,7 @@ function _showStep(step) {
     }
     if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-role' : 'signup-2'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
-    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 7 : 3); }
+    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 7 : 4); }
   }
   else if (step === 'login-success' || step === 'signup-success') {
     if (ctaArea)  ctaArea.style.display = 'none';
@@ -321,11 +321,13 @@ function _showStep(step) {
 }
 
 function _setProgress(activeIdx) {
-  var dots = document.querySelectorAll('#authProgress span');
-  dots.forEach(function(d, i) {
-    if (i < activeIdx) d.classList.add('is-active');
-    else               d.classList.remove('is-active');
-  });
+  var prog = document.getElementById('authProgress');
+  if (!prog) return;
+  /* 위저드 v2: 트리별 총 단계 동적 생성 — GA 7(소속·본인·회사·지점·팀·직책·약관) / 보험사 4(소속·본인·소속폼·약관) */
+  var total = (window.gSignupSite === 'ga') ? 7 : 4;
+  var html = '';
+  for (var i = 1; i <= total; i++) html += '<span' + (i <= activeIdx ? ' class="is-active"' : '') + '></span>';
+  prog.innerHTML = html;
 }
 
 window.authPrev = function() {
