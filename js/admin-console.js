@@ -766,7 +766,8 @@
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
     branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
-    visibility:'acLoadVisibility', rls:'acLoadRlsOverview', logs:'acLoadLogs' };
+    visibility:'acLoadVisibility', rls:'acLoadRlsOverview', logs:'acLoadLogs',
+    menu:'acLoadMenu', notice:'acLoadNotice', settings:'acLoadSettings' };
   var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','validation','system','logs'];
 
   function _acSpaRoot(){ return document.getElementById('v-admin'); }
@@ -1039,4 +1040,138 @@
     el.innerHTML=html;
   }
   window.acLogPage=function(i){ _lState.page=i; _renderLogList(); };
+
+  // ════════════════════════════════════════════════════════════════════
+  //  시스템 — 메뉴(role 매트릭스) · 공지·배너 · 설정 (2026-06-12)
+  //  · 어드민 도구: app_settings / menu_settings_by_role 읽기·편집·저장(라운드트립)
+  //  · 라이브 SPA(app.html) 홈배너·사이드바 메뉴 소비처 배선은 별도 트랙(백로그).
+  //  · 가드1: 값 표기법(on/off vs true/false)은 키별 원형 보존 — 임의 통일 금지.
+  //  · 가드2: app_settings.menu_b(전역 메뉴)와 menu_settings_by_role(role 매트릭스)는 별개 — 섹션 분리.
+  // ════════════════════════════════════════════════════════════════════
+  var _SYS_NOTE='<div class="ac-sys-note">⚙️ 어드민 제어값입니다. 저장 시 즉시 반영되고 콘솔 재진입 시 유지됩니다. (라이브 홈/메뉴 화면 자동 반영은 추후 소비처 연결 트랙)</div>';
+  var MENU_KEY_LABELS={ menu_home:'홈', menu_scripts:'스크립트', menu_board:'게시판', menu_myspace:'MY SPACE', menu_news:'보험이슈', menu_quick:'Quick', menu_together:'함께해요', menu_team_mgmt:'팀원관리' };
+  var APP_SETTING_LABELS={
+    banner_text:'홈 배너 문구', banner_visible:'홈 배너 표시',
+    banner_img_home:'홈 배너 이미지', banner_img_board:'게시판 배너 이미지', banner_img_myspace:'MY SPACE 배너 이미지',
+    banner_img_news:'보험이슈 배너 이미지', banner_img_scripts:'스크립트 배너 이미지', banner_img_together:'함께해요 배너 이미지',
+    board_company:'보험사 게시판', board_hub:'허브 게시판', board_notice:'공지 게시판', board_qa_product:'상품 Q&A', board_qa_underwriting:'인수 Q&A',
+    board_tab_company:'보험사 탭', board_tab_hub:'허브 탭',
+    feature_quickaction:'빠른 실행 기능', gate_quick_a2:'Quick 게이트(A2)', gate_search_a2:'검색 게이트(A2)',
+    menu_home:'메뉴: 홈', menu_board:'메뉴: 게시판', menu_myspace:'메뉴: MY SPACE', menu_news:'메뉴: 보험이슈', menu_quick:'메뉴: Quick', menu_scripts:'메뉴: 스크립트', menu_together:'메뉴: 함께해요',
+    hub_public:'허브 공개', insurer_unified_view:'보험사 통합 뷰', manager_lounge_enabled:'매니저 라운지', ops_calendar:'운영 캘린더', qna_visible:'Q&A 노출', ops_console:'운영 콘솔'
+  };
+  var APP_GROUP_LABELS={
+    banner:'홈 배너', page_banner:'페이지별 배너 이미지',
+    board_visibility:'게시판 노출', board_tab:'게시판 탭', feature_gate:'기능 게이트', gate:'게이트(A2)',
+    operations:'운영', menu_b:'전역 메뉴 (구 시스템 · role 매트릭스와 별개)', '':'기타'
+  };
+  function _setIsBool(v){ return v==='true'||v==='false'||v==='on'||v==='off'; }
+  function _setOn(v){ return v==='true'||v==='on'; }
+  function _setWrite(oldVal,on){ if(oldVal==='on'||oldVal==='off') return on?'on':'off'; return on?'true':'false'; }  /* 가드1: 표기법 보존 */
+  function _nowIso(){ return new Date().toISOString(); }
+
+  // ── 메뉴 — role × menu_key 가시성 매트릭스 (menu_settings_by_role) ──
+  var _menuMatrix=null, _menuKeys=[];
+  var _MENU_ROLES=['admin','ga_branch_manager','ga_manager','ga_member','ga_staff','insurer_branch_manager','insurer_manager','insurer_member','insurer_staff'];
+  window.acLoadMenu = async function(){
+    var area=document.getElementById('ac-sec-menu-body'); if(!area) return;
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+    var rows=await _rows('menu_settings_by_role?select=role,menu_key,is_visible,display_order&order=display_order.asc,role.asc');
+    var m={}, ord={};
+    rows.forEach(function(r){ if(!m[r.role]) m[r.role]={}; m[r.role][r.menu_key]={v:r.is_visible===true}; if(ord[r.menu_key]==null) ord[r.menu_key]=(r.display_order==null?99:r.display_order); });
+    _menuKeys=Object.keys(ord).sort(function(a,b){ return ord[a]-ord[b]; });
+    _menuMatrix=m;
+    _renderMenuMatrix();
+  };
+  function _renderMenuMatrix(){
+    var area=document.getElementById('ac-sec-menu-body'); if(!area) return;
+    if(!_menuKeys.length){ area.innerHTML=_SYS_NOTE+'<div class="ac-card-empty">메뉴 설정 행이 없습니다.</div>'; return; }
+    var RL=window.ROLE_LABEL||{};
+    var head='<th>역할 \\ 메뉴</th>'+_menuKeys.map(function(k){ return '<th style="text-align:center">'+esc(MENU_KEY_LABELS[k]||k)+'</th>'; }).join('');
+    var body=_MENU_ROLES.map(function(role){
+      var cells=_menuKeys.map(function(k){
+        var cell=_menuMatrix[role]&&_menuMatrix[role][k];
+        if(!cell) return '<td style="text-align:center;color:var(--tf)">—</td>';
+        var on=cell.v;
+        return '<td style="text-align:center"><button class="ac-mtog'+(on?' on':'')+'" onclick="acMenuToggle(\''+role+'\',\''+k+'\','+(on?'false':'true')+',this)">'+(on?'✓':'·')+'</button></td>';
+      }).join('');
+      return '<tr><td class="ac-td-name" style="color:var(--tp)">'+esc(RL[role]||role)+'</td>'+cells+'</tr>';
+    }).join('');
+    area.innerHTML=_SYS_NOTE
+      +'<p style="font-size:12px;color:var(--ts);margin-bottom:10px">칸 클릭 = 즉시 저장. 9역할 × '+_menuKeys.length+'메뉴 · <b>menu_settings_by_role</b>.</p>'
+      +'<div class="ac-tbl-wrap"><table class="ac-tbl ac-mtx"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  }
+  window.acMenuToggle=async function(role,menuKey,toOn,btn){
+    var nv=(String(toOn)==='true');
+    try{
+      var res=await window.db.fetch('/rest/v1/menu_settings_by_role?role=eq.'+encodeURIComponent(role)+'&menu_key=eq.'+encodeURIComponent(menuKey),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({is_visible:nv,updated_at:_nowIso()})});
+      if(!res.ok){ acToast('저장 실패 ('+res.status+') — menu_settings_by_role RLS 확인',true); return; }
+      if(_menuMatrix[role]&&_menuMatrix[role][menuKey]) _menuMatrix[role][menuKey].v=nv;
+      if(btn){ btn.classList.toggle('on',nv); btn.textContent=nv?'✓':'·'; btn.setAttribute('onclick','acMenuToggle(\''+role+'\',\''+menuKey+'\','+(nv?'false':'true')+',this)'); }
+      if(window.db.logActivity) window.db.logActivity('update_menu_visibility','menu',role+'/'+menuKey,{is_visible:nv});
+      acToast('저장했습니다');
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+
+  // ── 공지·배너 — app_settings (banner + page_banner) ──
+  window.acLoadNotice = async function(){
+    var area=document.getElementById('ac-sec-notice-body'); if(!area) return;
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+    var rows=await _rows("app_settings?select=group_name,key,label,value&or=(group_name.eq.banner,group_name.eq.page_banner)&order=group_name.desc,key.asc");
+    area.innerHTML=_SYS_NOTE+_renderSettingRows(rows,{banner_visible:'bool'});  /* banner_text·banner_img_*=text(자동), banner_visible=bool */
+    if(window.lucide) window.lucide.createIcons();
+  };
+
+  // ── 설정 — app_settings (운영 토글群). menu_b(전역 메뉴)는 role 매트릭스와 별개로 별도 그룹 표시(가드2) ──
+  var _SETTINGS_GROUPS=['board_visibility','board_tab','feature_gate','gate','operations','menu_b'];
+  window.acLoadSettings = async function(){
+    var area=document.getElementById('ac-sec-settings-body'); if(!area) return;
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+    var orFilter='or=('+_SETTINGS_GROUPS.map(function(g){ return 'group_name.eq.'+g; }).join(',')+',key.eq.ops_console)';
+    var rows=await _rows("app_settings?select=group_name,key,label,value&"+orFilter+"&order=group_name.asc,key.asc");
+    area.innerHTML=_SYS_NOTE+_renderSettingRows(rows,{});  /* 전부 bool 자동 판별 */
+    if(window.lucide) window.lucide.createIcons();
+  };
+
+  // 공통 렌더 — group_name별 묶음, 키별 타입(bool 토글 / text 입력). typeHint로 강제 가능
+  function _renderSettingRows(rows, typeHint){
+    if(!rows||!rows.length) return '<div class="ac-card-empty">설정 항목이 없습니다.</div>';
+    var groups={}, order=[];
+    rows.forEach(function(r){ var g=r.group_name||''; if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(r); });
+    return order.map(function(g){
+      var inner=groups[g].map(function(r){
+        var lbl=APP_SETTING_LABELS[r.key]||r.label||r.key;
+        var t=typeHint[r.key]||(_setIsBool(r.value)?'bool':'text');
+        if(t==='bool'){
+          var on=_setOn(r.value);
+          return '<div class="ac-set-row"><span class="ac-set-lbl">'+esc(lbl)+'</span>'
+            +'<button class="ac-mtog'+(on?' on':'')+'" onclick="acSettingToggle(\''+esc(r.key)+'\',\''+esc(r.value)+'\','+(on?'false':'true')+',this)">'+(on?'ON':'OFF')+'</button></div>';
+        }
+        return '<div class="ac-set-row"><span class="ac-set-lbl">'+esc(lbl)+'</span>'
+          +'<span class="ac-set-edit"><input class="ac-set-input" id="set-in-'+esc(r.key)+'" value="'+esc(r.value==null?'':r.value)+'" placeholder="(비어 있음)">'
+          +'<button class="ac-btn ac-btn-sm" onclick="acSettingSaveText(\''+esc(r.key)+'\')">저장</button></span></div>';
+      }).join('');
+      return '<div class="ac-set-grp"><div class="ac-set-grp-h">'+esc(APP_GROUP_LABELS[g]||g)+'</div>'+inner+'</div>';
+    }).join('');
+  }
+  window.acSettingToggle=async function(key, oldVal, toOn, btn){
+    var nv=(String(toOn)==='true'), writeVal=_setWrite(oldVal,nv);
+    try{
+      var res=await window.db.fetch('/rest/v1/app_settings?key=eq.'+encodeURIComponent(key),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({value:writeVal,updated_at:_nowIso()})});
+      if(!res.ok){ acToast('저장 실패 ('+res.status+') — app_settings RLS 확인',true); return; }
+      if(btn){ btn.classList.toggle('on',nv); btn.textContent=nv?'ON':'OFF'; btn.setAttribute('onclick','acSettingToggle(\''+key+'\',\''+writeVal+'\','+(nv?'false':'true')+',this)'); }
+      if(window.db.logActivity) window.db.logActivity('update_setting','app_settings',key,{value:writeVal});
+      acToast('저장했습니다');
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+  window.acSettingSaveText=async function(key){
+    var inp=document.getElementById('set-in-'+key); if(!inp) return;
+    var val=inp.value;
+    try{
+      var res=await window.db.fetch('/rest/v1/app_settings?key=eq.'+encodeURIComponent(key),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({value:val,updated_at:_nowIso()})});
+      if(!res.ok){ acToast('저장 실패 ('+res.status+') — app_settings RLS 확인',true); return; }
+      if(window.db.logActivity) window.db.logActivity('update_setting','app_settings',key,{});
+      acToast('저장했습니다');
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
 })();
