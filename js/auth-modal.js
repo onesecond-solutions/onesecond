@@ -236,7 +236,7 @@ function _showStep(step) {
   else if (step === 'signup-identity') {
     /* 2026-06-12 위저드 v2 — STEP 2 본인정보 (이름·전화·이메일) */
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
-    if (ctaBtn)   ctaBtn.onclick = function() { if (vIdentity()) _showStep('signup-2'); };
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vIdentity()) _showStep(window.gSignupSite === 'ga' ? 'signup-company' : 'signup-2'); };
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-1'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(2); }
@@ -245,12 +245,24 @@ function _showStep(step) {
       if (el) el.focus();
     }, 80);
   }
-  else if (step === 'signup-2') {
+  else if (step === 'signup-company') {
+    /* 2026-06-12 위저드 v2 — STEP 3 회사 (GA) */
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
-    if (ctaBtn)   ctaBtn.onclick = function() { window.authNextSignup3(); };
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vCompany()) _showStep('signup-2'); };
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-identity'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(3); }
+    setTimeout(function() {
+      var el = document.getElementById('f-company-text');
+      if (el) el.focus();
+    }, 80);
+  }
+  else if (step === 'signup-2') {
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { window.authNextSignup3(); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-company' : 'signup-identity'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 4 : 3); }
     setTimeout(function() {
       var el = document.getElementById('f-role');
       if (el) el.focus();
@@ -318,6 +330,16 @@ function vIdentity() {
   return ok;
 }
 window.vIdentity = vIdentity;
+
+/* 2026-06-12 위저드 v2 — STEP 3 회사 검증 (회사 선택 필수, company_id 캡처) */
+function vCompany() {
+  var hid = document.getElementById('f-company-id');
+  var errBox = document.getElementById('signupCompanyErrBox');
+  if (hid && hid.value) { if (errBox) errBox.classList.remove('on'); return true; }
+  if (errBox) { errBox.textContent = '회사를 검색해 목록에서 선택해 주세요.'; errBox.classList.add('on'); }
+  return false;
+}
+window.vCompany = vCompany;
 
 window.authNextSignup3 = function () {
   /* 2026-05-28 PR-OTP: signup-2 → signup-3 진입 시 사전 폼 검증 강제.
