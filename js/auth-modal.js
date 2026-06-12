@@ -248,7 +248,7 @@ function _showStep(step) {
   else if (step === 'signup-company') {
     /* 2026-06-12 위저드 v2 — STEP 3 회사 (GA) */
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
-    if (ctaBtn)   ctaBtn.onclick = function() { if (vCompany()) _showStep('signup-2'); };
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vCompany()) _showStep('signup-branch'); };
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-identity'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(3); }
@@ -257,12 +257,30 @@ function _showStep(step) {
       if (el) el.focus();
     }, 80);
   }
+  else if (step === 'signup-branch') {
+    /* 2026-06-12 위저드 v2 — STEP 4 지점 (GA, 자율입력+자동완성) */
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vBranch()) _showStep('signup-team'); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-company'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(4); }
+    setTimeout(function() { var el = document.getElementById('f-ga-branch'); if (el) el.focus(); }, 80);
+  }
+  else if (step === 'signup-team') {
+    /* 2026-06-12 위저드 v2 — STEP 5 팀 (GA, 선택) */
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { _showStep('signup-2'); };   /* 팀=선택, 검증 없음 */
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-branch'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(5); }
+    setTimeout(function() { var el = document.getElementById('f-ga-team'); if (el) el.focus(); }, 80);
+  }
   else if (step === 'signup-2') {
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
     if (ctaBtn)   ctaBtn.onclick = function() { window.authNextSignup3(); };
-    if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-company' : 'signup-identity'); }; }
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-team' : 'signup-identity'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
-    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 4 : 3); }
+    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 6 : 3); }
     setTimeout(function() {
       var el = document.getElementById('f-role');
       if (el) el.focus();
@@ -340,6 +358,83 @@ function vCompany() {
   return false;
 }
 window.vCompany = vCompany;
+
+/* ════ 위저드 v2 — 지점·팀 autocomplete (자율입력+자동완성, 2026-06-12 커밋2-3) ════
+   픽=기존 id 매핑 / 자율입력(미픽)=신규명. branch 스코프=company_id, team 스코프=branch_id. 폰트 em 0. */
+var _wzAcTimer = null, _wzAcCtl = null;
+function _wzAcScope(field) {
+  if (field === 'branch') return (document.getElementById('f-company-id') || {}).value || '';
+  return (document.getElementById('f-ga-branch-id') || {}).value || '';   /* team: 기존 지점 선택 시에만 자동완성 */
+}
+function wzAcInput(field) {
+  var input = document.getElementById('f-ga-' + field);
+  var list  = document.getElementById('ga-' + field + '-list');
+  var hid   = document.getElementById('f-ga-' + field + '-id');
+  if (!input || !list) return;
+  if (hid) hid.value = '';                       /* 타이핑 = 기존 선택 해제(픽 시 재설정) */
+  var q = (input.value || '').trim();
+  if (_wzAcTimer) clearTimeout(_wzAcTimer);
+  if (q.length < 2) { list.style.display = 'none'; list.innerHTML = ''; return; }
+  _wzAcTimer = setTimeout(function () { _wzAcFetch(field, q); }, 200);
+}
+async function _wzAcFetch(field, q) {
+  if (_wzAcCtl) { try { _wzAcCtl.abort(); } catch (e) {} }
+  _wzAcCtl = new AbortController();
+  var list = document.getElementById('ga-' + field + '-list');
+  if (!list) return;
+  var scopeId = _wzAcScope(field);
+  if (!scopeId) { list.style.display = 'none'; return; }   /* 상위 미선택 = 자동완성 없이 자율입력만 */
+  var table = field === 'branch' ? 'branches' : 'teams';
+  var col   = field === 'branch' ? 'company_id' : 'branch_id';
+  var url = SUPABASE_URL + '/rest/v1/' + table + '?' + col + '=eq.' + encodeURIComponent(scopeId)
+    + '&name=ilike.*' + encodeURIComponent(q) + '*&is_active=eq.true&select=id,name&order=name&limit=8';
+  try {
+    var res = await fetch(url, { headers: { apikey: SUPABASE_KEY }, signal: _wzAcCtl.signal });
+    if (!res.ok) { list.style.display = 'none'; return; }
+    var rows = await res.json();
+    if (!rows || !rows.length) { list.style.display = 'none'; return; }
+    list.innerHTML = rows.map(function (r) {
+      var safe = String(r.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      return '<div class="ta-item" onmousedown="wzAcPick(\'' + field + '\', this)" data-id="' + String(r.id) + '" data-name="' + safe + '">' + safe + ' <span style="color:var(--color-text-tertiary)">(기존)</span></div>';
+    }).join('');
+    list.style.display = 'block';
+  } catch (e) { if (e && e.name !== 'AbortError') console.error('[wzAc ' + field + ']', e); }
+}
+function wzAcPick(field, el) {
+  var name = (el && el.getAttribute('data-name')) || '';
+  var id   = (el && el.getAttribute('data-id')) || '';
+  var input = document.getElementById('f-ga-' + field);
+  var hid   = document.getElementById('f-ga-' + field + '-id');
+  if (input) input.value = name;
+  if (hid) hid.value = id;                        /* 기존 선택 = id 매핑 */
+  var list = document.getElementById('ga-' + field + '-list');
+  if (list) list.style.display = 'none';
+  if (field === 'branch') _wzResetTeam();         /* 지점 바뀌면 팀 초기화 */
+}
+function wzAcBlur(field) {
+  setTimeout(function () { var l = document.getElementById('ga-' + field + '-list'); if (l) l.style.display = 'none'; }, 200);
+}
+function _wzResetTeam() {
+  var i = document.getElementById('f-ga-team'); if (i) i.value = '';
+  var h = document.getElementById('f-ga-team-id'); if (h) h.value = '';
+  var l = document.getElementById('ga-team-list'); if (l) { l.style.display = 'none'; l.innerHTML = ''; }
+}
+function _wzResetBranchTeam() {
+  var b = document.getElementById('f-ga-branch'); if (b) b.value = '';
+  var bh = document.getElementById('f-ga-branch-id'); if (bh) bh.value = '';
+  var bl = document.getElementById('ga-branch-list'); if (bl) { bl.style.display = 'none'; bl.innerHTML = ''; }
+  _wzResetTeam();
+}
+/* STEP 4 지점 검증 (입력 필수 — 기존 or 신규명) */
+function vBranch() {
+  var input = document.getElementById('f-ga-branch');
+  var errBox = document.getElementById('signupBranchErrBox');
+  if (input && input.value.trim()) { if (errBox) errBox.classList.remove('on'); return true; }
+  if (errBox) { errBox.textContent = '지점/센터명을 입력해 주세요.'; errBox.classList.add('on'); }
+  return false;
+}
+window.wzAcInput = wzAcInput; window.wzAcPick = wzAcPick; window.wzAcBlur = wzAcBlur;
+window.vBranch = vBranch; window._wzResetBranchTeam = _wzResetBranchTeam;
 
 window.authNextSignup3 = function () {
   /* 2026-05-28 PR-OTP: signup-2 → signup-3 진입 시 사전 폼 검증 강제.
@@ -1194,7 +1289,7 @@ function onCompanyTaInput() {
   var q = (input.value || '').trim();
   /* PR-1: 회사명을 다시 타이핑하면 이전 선택(company_id) 무효화 + 지점/팀 리셋(재선택 강제) */
   var _hid = document.getElementById('f-company-id');
-  if (_hid && _hid.value) { _hid.value = ''; _resetGaBranchTeam(); }
+  if (_hid && _hid.value) { _hid.value = ''; _wzResetBranchTeam(); }
 
   if (_companyTaTimer) clearTimeout(_companyTaTimer);
   if (q.length < 2) {
@@ -1242,7 +1337,7 @@ function onCompanyTaPick(el) {
   if (hid) hid.value = id;
   var list = document.getElementById('company-ta-list');
   if (list) list.style.display = 'none';
-  loadBranchesByCompany(id);   /* PR-1: 회사 → 그 회사 지점 목록 동적 로드 */
+  _wzResetBranchTeam();   /* 위저드 v2: 회사 바뀌면 지점/팀 autocomplete 초기화 */
 }
 
 function onCompanyTaBlur() {
@@ -1628,6 +1723,8 @@ async function doSubmit() {
   var companyId   = '';
   var branchName  = '';
   var teamName    = '';
+  var newBranchName = '';
+  var newTeamName   = '';
 
   if (site === 'insurer') {
     var insSel = document.getElementById('f-insurer');
@@ -1642,31 +1739,16 @@ async function doSubmit() {
       return;
     }
   } else {
-    /* 2026-06-12 PR-1: GA 분기 — 회사>지점>팀 ID 선택 위저드.
-       기존 조직 선택 = branch_id/team_id 전송(미배정 해소).
-       "기타 입력"(__other__)·미선택 = 텍스트 폴백 → branch_id/team_id NULL (PR-2까지 하위호환). */
+    /* 2026-06-12 위저드 v2 — GA 분기: 회사(선택)·지점/팀(자율입력+자동완성).
+       기존 픽 = branch_id/team_id 전송(현 트리거가 복사). 신규(자율입력) = new_*_name(PR-2 트리거가 생성, 그 전엔 NULL 하위호환). */
     companyName = (document.getElementById('f-company-text').value || '').trim();
     companyId   = (document.getElementById('f-company-id') ? (document.getElementById('f-company-id').value || '') : '');
-    var brSel = document.getElementById('f-branch-select');
-    var brVal = brSel ? brSel.value : '';
-    if (brVal && brVal !== '__other__') {
-      branchId = brVal;
-      var brOpt = brSel.options[brSel.selectedIndex];
-      branchName = ((brOpt && (brOpt.getAttribute('data-name') || brOpt.textContent)) || '').trim();
-    } else {
-      branchName = (document.getElementById('f-branch-text').value || '').trim();
-      branchId = '';
-    }
-    var tmSel = document.getElementById('f-team-select');
-    var tmVal = tmSel ? tmSel.value : '';
-    if (tmVal && tmVal !== '__other__') {
-      teamId = tmVal;
-      var tmOpt = tmSel.options[tmSel.selectedIndex];
-      teamName = ((tmOpt && (tmOpt.getAttribute('data-name') || tmOpt.textContent)) || '').trim();
-    } else {
-      teamName = (document.getElementById('f-team-text').value || '').trim();
-      teamId = '';
-    }
+    branchName  = (document.getElementById('f-ga-branch') ? (document.getElementById('f-ga-branch').value || '') : '').trim();
+    branchId    = (document.getElementById('f-ga-branch-id') ? (document.getElementById('f-ga-branch-id').value || '') : '');
+    teamName    = (document.getElementById('f-ga-team') ? (document.getElementById('f-ga-team').value || '') : '').trim();
+    teamId      = (document.getElementById('f-ga-team-id') ? (document.getElementById('f-ga-team-id').value || '') : '');
+    newBranchName = branchId ? '' : branchName;   /* 미픽(자율입력) = 신규 지점명 */
+    newTeamName   = teamId   ? '' : teamName;
     statusValue = 'active';
   }
 
@@ -1683,6 +1765,8 @@ async function doSubmit() {
     insurer_id:  insurerId,
     branch_id:   branchId,
     team_id:     teamId,
+    new_branch_name: newBranchName,
+    new_team_name:   newTeamName,
     status:      statusValue
   };
 
