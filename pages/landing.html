@@ -876,16 +876,24 @@ body {
                          oninput="onCompanyTaInput()" onblur="onCompanyTaBlur()">
                   <div class="ta-list" id="company-ta-list" style="display:none;"></div>
                 </div>
+                <input type="hidden" id="f-company-id" value="">
               </div>
-              <!-- 2026-05-28: 지점/팀 select+text 듀얼 폐기 → 단일 input.
-                   매니저 승인 시 admin 콘솔에서 branch_id/team_id 매핑. -->
+              <!-- 2026-06-12 PR-1: 회사 선택 → 지점/팀 기존 목록에서 선택(DB 동적 로드).
+                   기존 선택 = branch_id/team_id 채워 가입(미배정 해소).
+                   "기타 입력" = 목록에 없는 조직 → 텍스트(branch_id NULL, PR-2까지 하위호환). -->
               <div class="auth-form-group">
-                <label class="auth-label" for="f-branch-text">지점/센터명 (직접 입력)</label>
-                <input class="auth-input" type="text" id="f-branch-text" placeholder="예: 더원지점" maxlength="50">
+                <label class="auth-label" for="f-branch-select">지점/센터</label>
+                <select class="auth-input" id="f-branch-select" onchange="onGaBranchChange()">
+                  <option value="">먼저 회사를 선택하세요</option>
+                </select>
+                <input class="auth-input" type="text" id="f-branch-text" placeholder="목록에 없으면 직접 입력 (예: 더원지점)" maxlength="50" disabled style="opacity:.5;margin-top:6px;">
               </div>
               <div class="auth-form-group">
-                <label class="auth-label" for="f-team-text">팀명 (직접 입력)</label>
-                <input class="auth-input" type="text" id="f-team-text" placeholder="예: 4팀" maxlength="30">
+                <label class="auth-label" for="f-team-select">팀 (선택)</label>
+                <select class="auth-input" id="f-team-select" onchange="onGaTeamChange()">
+                  <option value="">먼저 지점을 선택하세요</option>
+                </select>
+                <input class="auth-input" type="text" id="f-team-text" placeholder="목록에 없으면 직접 입력 (예: 4팀)" maxlength="30" disabled style="opacity:.5;margin-top:6px;">
               </div>
             </div>
 
