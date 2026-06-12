@@ -15,8 +15,10 @@
 <script src="/js/admin-config.js"></script>
 <script src="/js/auth.js"></script>
 <style>
-:root[data-theme="dark"]{--bg:#0B0C0E;--s1:#141518;--s2:#1C1D21;--sh:#222328;--bd:#26272B;--tp:#F4F4F5;--ts:#A1A1AA;--tf:#6B6D72;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#D4D4D8;--t-uw:#22D3EE;--t-product:#6366F1;--t-event:#E879F9;--ok:#22C55E;--warn:#F59E0B;--err:#EF4444;}
-:root[data-theme="light"]{--bg:#F4F4F6;--s1:#FFFFFF;--s2:#F4F4F6;--sh:#EEEEF1;--bd:#E4E4E7;--tp:#18181B;--ts:#52525B;--tf:#71717A;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#3F3F46;--t-uw:#0891B2;--t-product:#6366F1;--t-event:#C026D3;--ok:#16A34A;--warn:#F59E0B;--err:#DC2626;}
+/* 2026-06-13 디자인 토큰 1차 — 다크 제거, 라이트(화이트 기반) 단일 전제(사용자 페이지). data-theme 분기 폐기.
+   화이트 기반: 배경 거의 순백(--bg), 카드 순백(--s1), 구분은 테두리(--bd)로. --s2는 배경과 미세차(보조 표면).
+   admin_v2(--admin-*)는 별도 토큰. */
+:root{--bg:#FAFAFB;--s1:#FFFFFF;--s2:#F2F2F4;--sh:#EDEDF0;--bd:#DCDCE1;--tp:#18181B;--ts:#52525B;--tf:#71717A;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#3F3F46;--t-uw:#0891B2;--t-product:#6366F1;--t-event:#C026D3;--ok:#16A34A;--warn:#F59E0B;--err:#DC2626;}
 /* 작업9: radius 토큰 전역 정의 (app.html에 tokens.css 미링크 → 미정의로 직각 렌더되던 것 봉합). B안 넉넉히 · 토큰만(개별 하드코딩 금지) */
 :root{--radius-xs:8px;--radius-sm:11px;--radius-md:13px;--radius-lg:18px;--radius-xl:18px;--radius-full:9999px;--radius:11px;}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard',sans-serif;}
@@ -1774,7 +1776,6 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .script-acc-main{font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
 .script-acc-sub{color:var(--ts);font-weight:500;margin-bottom:8px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
 .script-acc-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 6px 6px 0;padding:8px 10px;font-size:0.78rem;font-weight:700;color:#7A4400;line-height:1.5;margin-top:6px;word-break:keep-all;overflow-wrap:anywhere}
-[data-theme="dark"] .script-acc-coach{background:rgba(200,146,59,0.15);color:#E0B774}
 
 /* 미완 자료 안내 */
 .script-card-empty-ttl{font-size:0.92rem;font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.35}
@@ -1951,8 +1952,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="mi" onclick="showView('myspace')"><span>라이브러리</span></div>
           <div class="mi" onclick="openProfile()"><span>개인정보 수정</span></div>
           <div class="mdiv"></div>
-          <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">화면 모드</div><div class="seg"><span class="on" onclick="setTheme('light')" id="sl">라이트</span><span onclick="setTheme('dark')" id="sd">다크</span></div></div>
-          <div class="mdiv"></div>
+          <!-- 화면 모드(다크 토글) 제거 — 라이트 단일 (2026-06-13) -->
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">글자 크기</div><div class="seg"><span onclick="setFont(90)" id="f90">90</span><span class="on" onclick="setFont(100)" id="f100">100</span><span onclick="setFont(110)" id="f110">110</span><span onclick="setFont(125)" id="f125">125</span></div></div>
           <div class="mdiv"></div>
           <div class="mi" onclick="confirmLogout()"><span>로그아웃</span></div>
@@ -8332,7 +8332,6 @@ document.addEventListener('keydown',function(e){
   if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openSearch();}
   if(e.key==='Escape'){closeSearch();closeAsk();closeProfile();closeMyspaceWrite();closeLogoutConfirm();}
 });
-function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('sl').classList.toggle('on',t==='light');document.getElementById('sd').classList.toggle('on',t==='dark');}
 // 질문하기 모달
 var askForms={notice:{t:'공지사항 작성'},uw:{t:'인수 질문 작성'},product:{t:'상품 질문 작성'},etc:{t:'기타 질문 작성'}};
 function openAsk(){document.getElementById('askmodal').classList.add('open');backToPick();}
