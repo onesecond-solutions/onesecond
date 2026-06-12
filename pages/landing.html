@@ -844,105 +844,104 @@ body {
         </div>
       </div>
 
-      <!-- ────── 가입 — 보험사 소속/직급 (signup-2 = 보험사 전용 / GA는 위저드 STEP으로 분해 완료) ────── -->
-      <div class="auth-step-page" id="page-signup-2">
-        <div class="auth-page-badge">소속 정보</div>
-        <h2 class="auth-page-title">소속을 알려주세요</h2>
-        <p class="auth-page-sub">정확한 정보일수록 매니저 매핑이 정확합니다</p>
+      <!-- ════ 보험사 가입 위저드 STEP (2026-06-12 위저드화 — signup-2 단일폼을 GA 대칭 4 STEP으로 분해) ════
+           필드 id는 전부 보존 → validateSignup·OTP·_collectInsurerBranchNames가 id/클래스로 그대로 읽음. -->
 
+      <!-- 보험사 STEP 3 — 보험사 선택 -->
+      <div class="auth-step-page" id="page-signup-ins-company">
+        <h2 class="auth-page-title">보험사를 선택하세요</h2>
+        <p class="auth-page-sub">소속 보험사(원수사)를 선택해 주세요</p>
+        <div class="auth-err-box" id="signupInsCompanyErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-insurer">보험사</label>
+          <select class="auth-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
+            <option value="">불러오는 중…</option>
+          </select>
+          <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
+        </div>
+        <div class="domain-guide" id="domain-guide" style="display:none;">
+          💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다.
+        </div>
+        <div class="signup-info-box is-emphasis">
+          <p><span class="emphasis-icon">🛡️</span><strong>소속 보험사를 <span class="emphasis-key">정확히</span> 선택해 주세요</strong></p>
+          <p class="signup-info-sub">이메일 인증 → 소속 보험사 운영자 확인 → 승인 후 사용 시작.</p>
+        </div>
+      </div>
+
+      <!-- 보험사 STEP 4 — 담당 지점 (복수) -->
+      <div class="auth-step-page" id="page-signup-ins-branch">
+        <h2 class="auth-page-title">담당 지점을 입력하세요</h2>
+        <p class="auth-page-sub">담당하시는 지점을 입력해 주세요 (여러 곳이면 추가)</p>
+        <div class="auth-err-box" id="signupInsBranchErrBox"></div>
+        <div class="auth-form-group" id="insurer-branches-group">
+          <label class="auth-label">담당 지점 <span class="req">*</span></label>
+          <div id="insurer-branch-rows">
+            <div class="insurer-branch-row">
+              <input class="auth-input insurer-branch-inp" type="text" placeholder="담당 지점 입력" maxlength="50" required oninput="clearFieldError('insurer-branches-group','e-insurer-branch')">
+            </div>
+          </div>
+          <button type="button" class="auth-add-branch" onclick="addInsurerBranchRow()">+ 담당 지점 추가</button>
+          <div class="auth-form-err" id="e-insurer-branch">담당 지점을 입력해 주세요.</div>
+        </div>
+      </div>
+
+      <!-- 보험사 STEP 5 — 직책 -->
+      <div class="auth-step-page" id="page-signup-ins-role">
+        <h2 class="auth-page-title">직책을 선택하세요</h2>
+        <p class="auth-page-sub">보험사 내 직급을 선택해 주세요</p>
+        <div class="auth-err-box" id="signupInsRoleErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-role">직급</label>
+          <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
+            <option value="">선택해 주세요</option>
+            <option value="branch_manager">원수사 지점장</option>
+            <option value="manager">원수사 매니저</option>
+          </select>
+          <div class="auth-form-err" id="e-role">직급을 선택해 주세요.</div>
+        </div>
+        <div class="role-hint" id="roleHint">
+          💡 <span id="roleHintText"></span>
+        </div>
+      </div>
+
+      <!-- 보험사 STEP 6 — 이메일 인증 (OTP 인라인, f-email은 STEP 2에 있음 — id로 읽힘) -->
+      <div class="auth-step-page" id="page-signup-ins-otp">
+        <h2 class="auth-page-title">이메일 인증</h2>
+        <p class="auth-page-sub">본인 이메일 확인을 위해 인증 코드를 받아 입력해 주세요</p>
         <div class="auth-err-box" id="signupErrBox"></div>
-
-        <form id="reg-form" novalidate>
-          <div class="signup-form-body" id="signup-form-body">
-
-            <!-- 본인정보(이름·전화·이메일) = STEP 2(page-signup-identity)로 이동 (2026-06-12) -->
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-role">직급</label>
-              <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
-                <option value="">선택해 주세요</option>
-                <option value="branch_manager">지점장 / 센터장</option>
-                <option value="manager">매니저 / 실장</option>
-                <option value="member">설계사 / 팀장</option>
-                <option value="staff">스텝 / 총무</option>
-              </select>
-              <div class="auth-form-err" id="e-role">직급을 선택해 주세요.</div>
+        <div class="auth-err-box" id="signupInsOtpErrBox"></div>
+        <div class="otp-inline-box" id="otp-inline-box" style="margin-top:8px; padding:14px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2);">
+          <div id="otp-send-area">
+            <button class="auth-btn auth-btn-outline" type="button" id="btnSendInsurerOtp" onclick="sendInsurerOtp()" style="width:100%;">
+              <span id="btnSendInsurerOtpTxt">✉️ 이메일 인증 코드 받기</span>
+            </button>
+            <p style="font-size:12px; color:var(--color-text-tertiary); margin-top:8px; text-align:center;">
+              입력한 이메일 메일함으로 6자리 코드가 발송됩니다.
+            </p>
+          </div>
+          <div id="otp-verify-area" style="display:none;">
+            <p style="font-size:13px; color:var(--color-text-secondary); margin-bottom:8px;">
+              📬 <strong id="otp-sent-to">example@email.com</strong> 메일함(스팸함 포함)을 확인해 주세요.
+            </p>
+            <div style="display:flex; gap:8px; align-items:stretch;">
+              <input class="auth-input" type="text" id="f-insurer-otp-code"
+                     placeholder="6자리 코드" inputmode="numeric" maxlength="6"
+                     autocomplete="one-time-code"
+                     style="font-size:18px; letter-spacing:4px; text-align:center; font-weight:700; flex:1;"
+                     oninput="this.value=this.value.replace(/[^0-9]/g,''); document.getElementById('e-insurer-otp').classList.remove('on');">
+              <button class="auth-btn" type="button" id="btnVerifyInsurerOtp" onclick="verifyInsurerOtp()" style="width:auto; padding:0 18px; flex:0 0 auto;">
+                확인
+              </button>
             </div>
-
-            <div class="role-hint" id="roleHint">
-              💡 <span id="roleHintText"></span>
+            <div class="auth-form-err" id="e-insurer-otp" style="margin-top:6px;">코드가 일치하지 않습니다.</div>
+            <div id="otp-verified-msg" style="display:none; margin-top:8px; padding:8px 12px; background:#E8F5E9; color:#2E7D32; border-radius:6px; font-size:13px; font-weight:600;">
+              ✅ 이메일 인증 통과
             </div>
-
-            <!-- 핸드폰·이메일 = STEP 2(page-signup-identity)로 이동 (2026-06-12) -->
-            <!-- 보험사 분기 한정 — 이메일 OTP 인라인 인증 (f-email은 STEP 2에 있음, DOM 유지) -->
-            <div class="otp-inline-box" id="otp-inline-box" style="display:none; margin-top:8px; padding:14px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2);">
-              <div id="otp-send-area">
-                <button class="auth-btn auth-btn-outline" type="button" id="btnSendInsurerOtp" onclick="sendInsurerOtp()" style="width:100%;">
-                  <span id="btnSendInsurerOtpTxt">✉️ 이메일 인증 코드 받기</span>
-                </button>
-                <p style="font-size:12px; color:var(--color-text-tertiary); margin-top:8px; text-align:center;">
-                  입력한 이메일 메일함으로 6자리 코드가 발송됩니다.
-                </p>
-              </div>
-              <div id="otp-verify-area" style="display:none;">
-                <p style="font-size:13px; color:var(--color-text-secondary); margin-bottom:8px;">
-                  📬 <strong id="otp-sent-to">example@email.com</strong> 메일함(스팸함 포함)을 확인해 주세요.
-                </p>
-                <div style="display:flex; gap:8px; align-items:stretch;">
-                  <input class="auth-input" type="text" id="f-insurer-otp-code"
-                         placeholder="6자리 코드" inputmode="numeric" maxlength="6"
-                         autocomplete="one-time-code"
-                         style="font-size:18px; letter-spacing:4px; text-align:center; font-weight:700; flex:1;"
-                         oninput="this.value=this.value.replace(/[^0-9]/g,''); document.getElementById('e-insurer-otp').classList.remove('on');">
-                  <button class="auth-btn" type="button" id="btnVerifyInsurerOtp" onclick="verifyInsurerOtp()" style="width:auto; padding:0 18px; flex:0 0 auto;">
-                    확인
-                  </button>
-                </div>
-                <div class="auth-form-err" id="e-insurer-otp" style="margin-top:6px;">코드가 일치하지 않습니다.</div>
-                <div id="otp-verified-msg" style="display:none; margin-top:8px; padding:8px 12px; background:#E8F5E9; color:#2E7D32; border-radius:6px; font-size:13px; font-weight:600;">
-                  ✅ 이메일 인증 통과
-                </div>
-                <button class="auth-link" type="button" onclick="resetInsurerOtp()" style="display:block; margin-top:8px; font-size:12px;">
-                  코드 재발송 / 다른 이메일로 변경
-                </button>
-              </div>
-            </div>
-
-            <div class="form-divider" id="form-divider-affiliation" style="font-weight:700; color:var(--color-brand);">📋 소속 정보 <span style="font-weight:400; color:var(--color-text-tertiary); font-size:0.85em;">— 정확히 입력해 주세요</span></div>
-
-            <!-- 보험사 분기 -->
-            <div class="insurer-fields" id="insurer-fields">
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-insurer">보험사</label>
-                <select class="auth-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
-                  <option value="">불러오는 중…</option>
-                </select>
-                <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
-              </div>
-              <div class="auth-form-group" id="insurer-branches-group">
-                <label class="auth-label">담당 지점 <span class="req">*</span></label>
-                <div id="insurer-branch-rows">
-                  <div class="insurer-branch-row">
-                    <input class="auth-input insurer-branch-inp" type="text" placeholder="담당 지점 입력" maxlength="50" required oninput="clearFieldError('insurer-branches-group','e-insurer-branch')">
-                  </div>
-                </div>
-                <button type="button" class="auth-add-branch" onclick="addInsurerBranchRow()">+ 담당 지점 추가</button>
-                <div class="auth-form-err" id="e-insurer-branch">담당 지점을 입력해 주세요.</div>
-              </div>
-              <div class="domain-guide" id="domain-guide" style="display:none;">
-                💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다.
-              </div>
-              <div class="signup-info-box is-emphasis">
-                <p><span class="emphasis-icon">🛡️</span><strong>소속 보험사를 <span class="emphasis-key">정확히</span> 선택해 주세요</strong></p>
-                <p class="signup-info-sub">이메일 인증 → 소속 보험사 운영자 확인 → 승인 후 사용 시작.</p>
-              </div>
-            </div>
-
-            <!-- GA 분기 -->
-            <!-- GA 소속(회사·지점·팀) = 위저드 STEP 3~5로 분해(2026-06-12 커밋2-3). ga-fields 비움(보험사 토글 구조 유지). -->
-            <div class="ga-fields" id="ga-fields"></div>
-
-          </div><!-- /.signup-form-body -->
-        </form>
+            <button class="auth-link" type="button" onclick="resetInsurerOtp()" style="display:block; margin-top:8px; font-size:12px;">
+              코드 재발송 / 다른 이메일로 변경
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- ────── 가입 Step 3 — 약관 + 가입 ────── -->

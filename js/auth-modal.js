@@ -236,7 +236,7 @@ function _showStep(step) {
   else if (step === 'signup-identity') {
     /* 2026-06-12 위저드 v2 — STEP 2 본인정보 (이름·전화·이메일) */
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
-    if (ctaBtn)   ctaBtn.onclick = function() { if (vIdentity()) _showStep(window.gSignupSite === 'ga' ? 'signup-company' : 'signup-2'); };
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vIdentity()) _showStep(window.gSignupSite === 'ga' ? 'signup-company' : 'signup-ins-company'); };
     if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-1'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
     if (progress) { progress.hidden = false; _setProgress(2); }
@@ -284,16 +284,40 @@ function _showStep(step) {
     if (progress) { progress.hidden = false; _setProgress(6); }
     setTimeout(function() { var el = document.getElementById('f-ga-role'); if (el) el.focus(); }, 80);
   }
-  else if (step === 'signup-2') {
+  else if (step === 'signup-ins-company') {
+    /* 2026-06-12 보험사 위저드 STEP 3 — 보험사 선택 */
     if (ctaTxt)   ctaTxt.textContent = '다음 →';
-    if (ctaBtn)   ctaBtn.onclick = function() { window.authNextSignup3(); };
-    if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-team' : 'signup-identity'); }; }
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vInsCompany()) _showStep('signup-ins-branch'); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-identity'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
-    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 6 : 3); }
-    setTimeout(function() {
-      var el = document.getElementById('f-role');
-      if (el) el.focus();
-    }, 80);
+    if (progress) { progress.hidden = false; _setProgress(3); }
+    setTimeout(function() { var el = document.getElementById('f-insurer'); if (el) el.focus(); }, 80);
+  }
+  else if (step === 'signup-ins-branch') {
+    /* 2026-06-12 보험사 위저드 STEP 4 — 담당 지점 (복수) */
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vInsBranch()) _showStep('signup-ins-role'); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-ins-company'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(4); }
+    setTimeout(function() { var el = document.querySelector('.insurer-branch-inp'); if (el) el.focus(); }, 80);
+  }
+  else if (step === 'signup-ins-role') {
+    /* 2026-06-12 보험사 위저드 STEP 5 — 직책 */
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vInsRole()) _showStep('signup-ins-otp'); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-ins-branch'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(5); }
+    setTimeout(function() { var el = document.getElementById('f-role'); if (el) el.focus(); }, 80);
+  }
+  else if (step === 'signup-ins-otp') {
+    /* 2026-06-12 보험사 위저드 STEP 6 — 이메일 인증 (OTP) */
+    if (ctaTxt)   ctaTxt.textContent = '다음 →';
+    if (ctaBtn)   ctaBtn.onclick = function() { if (vInsOtp()) _showStep('signup-3'); };
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-ins-role'); }; }
+    if (crossLnk) crossLnk.style.display = 'none';
+    if (progress) { progress.hidden = false; _setProgress(6); }
   }
   else if (step === 'signup-3') {
     /* 2026-05-28: site 분기 — GA = 이메일 OTP / 보험사 = 카카오 승인 요청 (signup API + 임시 비번) */
@@ -310,9 +334,9 @@ function _showStep(step) {
         ctaBtn.style.color = '';
       }
     }
-    if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-role' : 'signup-2'); }; }
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep(window.gSignupSite === 'ga' ? 'signup-role' : 'signup-ins-otp'); }; }
     if (crossLnk) crossLnk.style.display = 'none';
-    if (progress) { progress.hidden = false; _setProgress(window.gSignupSite === 'ga' ? 7 : 4); }
+    if (progress) { progress.hidden = false; _setProgress(7); }
   }
   else if (step === 'login-success' || step === 'signup-success') {
     if (ctaArea)  ctaArea.style.display = 'none';
@@ -323,8 +347,8 @@ function _showStep(step) {
 function _setProgress(activeIdx) {
   var prog = document.getElementById('authProgress');
   if (!prog) return;
-  /* 위저드 v2: 트리별 총 단계 동적 생성 — GA 7(소속·본인·회사·지점·팀·직책·약관) / 보험사 4(소속·본인·소속폼·약관) */
-  var total = (window.gSignupSite === 'ga') ? 7 : 4;
+  /* 위저드 v2: 트리별 총 단계 동적 생성 — GA 7(소속·본인·회사·지점·팀·직책·약관) / 보험사 7(소속·본인·보험사·담당지점·직책·인증·약관) */
+  var total = 7;
   var html = '';
   for (var i = 1; i <= total; i++) html += '<span' + (i <= activeIdx ? ' class="is-active"' : '') + '></span>';
   prog.innerHTML = html;
@@ -457,6 +481,40 @@ function vRole() {
   return false;
 }
 window.vRole = vRole;
+
+/* ════ 위저드 v2 — 보험사 STEP 검증 (2026-06-12 위저드화, 필드 id는 단일폼 시절 그대로) ════ */
+/* STEP 3 보험사 선택 (필수) */
+function vInsCompany() {
+  var sel = document.getElementById('f-insurer');
+  var er  = document.getElementById('e-insurer');
+  if (sel && sel.value) { if (er) er.classList.remove('on'); sel.classList.remove('err'); return true; }
+  if (sel) sel.classList.add('err'); if (er) er.classList.add('on');
+  return false;
+}
+/* STEP 4 담당 지점 (1개 이상 필수 — .insurer-branch-inp 클래스 수집) */
+function vInsBranch() {
+  var er = document.getElementById('e-insurer-branch');
+  if (_collectInsurerBranchNames().length > 0) { if (er) er.classList.remove('on'); return true; }
+  if (er) er.classList.add('on');
+  return false;
+}
+/* STEP 5 직책 (필수) */
+function vInsRole() {
+  var sel = document.getElementById('f-role');
+  var er  = document.getElementById('e-role');
+  if (sel && sel.value) { if (er) er.classList.remove('on'); sel.classList.remove('err'); return true; }
+  if (sel) sel.classList.add('err'); if (er) er.classList.add('on');
+  return false;
+}
+/* STEP 6 이메일 인증 게이트 (gInsurerOtpVerified) */
+function vInsOtp() {
+  if (window.gInsurerOtpVerified) return true;
+  var er = document.getElementById('signupInsOtpErrBox');
+  if (er) { er.textContent = '이메일 인증을 먼저 통과해 주세요. ([인증 코드 받기] → 코드 입력 → [확인])'; er.classList.add('on'); }
+  return false;
+}
+window.vInsCompany = vInsCompany; window.vInsBranch = vInsBranch;
+window.vInsRole = vInsRole; window.vInsOtp = vInsOtp;
 
 /* ════ typeahead 키보드 네비 (↑↓ 이동 · Enter 선택 · Esc 닫기) — 회사·지점·팀 공용, 2026-06-12 ════ */
 function _taSetActive(items, idx) {
@@ -1200,52 +1258,15 @@ function selectSite(site) {
     if (cardGa)      cardGa.setAttribute('aria-checked',      site === 'ga');
     if (cardInsurer) cardInsurer.setAttribute('aria-checked', site === 'insurer');
 
-    var formBody = document.getElementById('signup-form-body');
-    var insurerFields = document.getElementById('insurer-fields');
-    var gaFields = document.getElementById('ga-fields');
-    if (formBody) formBody.classList.add('is-open');
-    if (insurerFields) insurerFields.classList.toggle('is-open', site === 'insurer');
-    if (gaFields)      gaFields.classList.toggle('is-open',      site === 'ga');
-
-    /* DOM 재배치 — 보험사 분기 한정 입력폼 순서 정정 */
+    /* 2026-06-12 보험사 위저드화: signup-2 단일폼 분해 → DOM 재배치·필드 토글(insurer-fields/ga-fields)·
+       배지/부제(#page-signup-2)·OTP display 토글 제거. 소속 변경 시 OTP 상태 리셋만 유지. */
     try {
-      var formDivider = document.getElementById('form-divider-affiliation');
-      if (formBody && insurerFields) {
-        if (site === 'insurer') {
-          formBody.insertBefore(insurerFields, formBody.firstChild);
-          if (formDivider) formDivider.style.display = 'none';
-        } else {
-          if (formDivider && formDivider.parentNode === formBody) {
-            formBody.insertBefore(insurerFields, formDivider.nextSibling);
-            formDivider.style.display = '';
-          }
-        }
-      }
-    } catch (e) {
-      console.error('[selectSite DOM 재배치 격차]', e);
-    }
-
-    /* OTP 인라인 박스 노출 + 상태 리셋 */
-    try {
-      var otpBox = document.getElementById('otp-inline-box');
-      if (otpBox) otpBox.style.display = (site === 'insurer') ? 'block' : 'none';
       if (typeof resetInsurerOtp === 'function') resetInsurerOtp();
     } catch (e) {
       console.error('[selectSite OTP 리셋 격차]', e);
     }
 
-    /* 배지 + 부제 + 이메일 안내 + 직급 옵션 동적 분기 */
-    var badge = document.querySelector('#page-signup-2 .auth-page-badge');
-    if (badge) {
-      badge.textContent = site === 'insurer' ? '보험사 임직원 전용' : '보험 설계사·매니저 전용';
-    }
-    /* 2026-05-29 PR-OTP-v2: 부제도 site 분기에 따라 갈아끼움 (배지/부제 정합) */
-    var sub = document.querySelector('#page-signup-2 .auth-page-sub');
-    if (sub) {
-      sub.textContent = site === 'insurer'
-        ? '보험사 임직원 가입 — 소속 보험사 운영자 승인 후 사용이 활성화됩니다'
-        : '보험 설계사·매니저 가입 — 정확한 정보일수록 매니저 매핑이 정확합니다';
-    }
+    /* 이메일 안내 문구 — f-email은 공용 본인정보 STEP(보험사 분기 동적 안내 유지) */
     var emailHint = document.getElementById('f-email-hint');
     if (emailHint) {
       emailHint.textContent = site === 'insurer'
@@ -1262,23 +1283,7 @@ function selectSite(site) {
           : 'example@email.com'
       );
     }
-    var roleSel = document.getElementById('f-role');
-    if (roleSel) {
-      if (site === 'insurer') {
-        roleSel.innerHTML =
-          '<option value="">선택해 주세요</option>' +
-          '<option value="branch_manager">원수사 지점장</option>' +
-          '<option value="manager">원수사 매니저</option>';
-      } else {
-        roleSel.innerHTML =
-          '<option value="">선택해 주세요</option>' +
-          '<option value="branch_manager">지점장 / 센터장</option>' +
-          '<option value="manager">매니저 / 실장</option>' +
-          '<option value="member">설계사 / 팀장</option>' +
-          '<option value="staff">스텝 / 총무</option>';
-      }
-    }
-
+    /* f-role 옵션 = landing의 보험사 직책 STEP에 원수사 2옵션 고정(위저드화) → 동적 갈아끼움 제거 */
     onRoleChange();
 
     /* site 선택 후 이름 input 자동 포커스 — 진입 직후 site-picker 카드에 포커스 있을 때만 */
@@ -1772,7 +1777,7 @@ async function doSubmit() {
 
   var email = document.getElementById('f-email').value.trim();
   var site  = window.gSignupSite;
-  /* GA = 직책 STEP(f-ga-role) / 보험사 = signup-2(f-role) */
+  /* GA = 직책 STEP(f-ga-role) / 보험사 = 직책 STEP(f-role, 위저드화 후에도 id 보존) */
   var gradeShort = (site === 'ga') ? ((document.getElementById('f-ga-role') || {}).value || '') : ((document.getElementById('f-role') || {}).value || '');
   var roleKey = mapToRoleKey(site, gradeShort);
 
