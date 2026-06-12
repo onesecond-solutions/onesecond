@@ -1022,6 +1022,19 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-ud-k{flex:0 0 88px;color:var(--ts);font-size:0.78rem}
 .ac-ud-v{flex:1;color:var(--tp);word-break:break-all}
 .ac-pd-body{margin-top:14px;padding-top:14px;border-top:1px solid var(--bd);font-size:0.88rem;line-height:1.6;color:var(--bodytx);white-space:pre-wrap;word-break:break-word}
+/* 시스템 — 메뉴 매트릭스 / 설정 토글 (2026-06-12) */
+.ac-sys-note{font-size:11px;color:var(--tf);background:var(--s2);border:1px dashed var(--bd);border-radius:9px;padding:8px 11px;margin-bottom:13px;line-height:1.5}
+.ac-mtog{min-width:36px;height:26px;padding:0 9px;border:1px solid var(--bd);border-radius:7px;background:var(--s1);color:var(--tf);font-weight:800;font-size:0.72rem;cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+.ac-mtog:hover{border-color:var(--ac)}
+.ac-mtog.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.ac-mtx td:first-child,.ac-mtx th:first-child{position:sticky;left:0;background:var(--s1);z-index:1}
+.ac-mtx th:first-child{background:var(--s2)}
+.ac-set-grp{margin-bottom:15px;border:1px solid var(--bd);border-radius:var(--radius-md,13px);overflow:hidden}
+.ac-set-grp-h{padding:8px 12px;background:var(--s2);font-weight:800;font-size:0.78rem;color:var(--ts)}
+.ac-set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;border-top:1px solid var(--bd)}
+.ac-set-lbl{font-size:0.82rem;color:var(--tp)}
+.ac-set-edit{display:flex;gap:6px;align-items:center}
+.ac-set-input{width:min(320px,46vw);padding:6px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--s1);color:var(--tp);font-size:0.8rem}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
@@ -2675,10 +2688,21 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         </div>
       </div>
 
-      <!-- 시스템 (예정 골격) -->
-      <div class="ac-sec" data-sec="menu"><div class="ac-card ac-card-empty">메뉴 — menu_settings_by_role 연결 예정</div></div>
-      <div class="ac-sec" data-sec="notice"><div class="ac-card ac-card-empty">공지·배너 — app_settings 연결 예정</div></div>
-      <div class="ac-sec" data-sec="settings"><div class="ac-card ac-card-empty">설정 — app_settings 토글 재사용 예정</div></div>
+      <!-- 시스템: 메뉴 (role × menu 가시성 매트릭스 · menu_settings_by_role) -->
+      <div class="ac-sec" data-sec="menu">
+        <div class="ac-section-head"><i data-lucide="menu"></i><h2>메뉴</h2><span class="ac-section-sub">역할별 메뉴 노출 · menu_settings_by_role</span></div>
+        <div id="ac-sec-menu-body"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+      <!-- 시스템: 공지·배너 (app_settings) -->
+      <div class="ac-sec" data-sec="notice">
+        <div class="ac-section-head"><i data-lucide="megaphone"></i><h2>공지·배너</h2><span class="ac-section-sub">홈/페이지 배너 · app_settings</span></div>
+        <div id="ac-sec-notice-body"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
+      <!-- 시스템: 설정 (app_settings 운영 토글群) -->
+      <div class="ac-sec" data-sec="settings">
+        <div class="ac-section-head"><i data-lucide="settings"></i><h2>설정</h2><span class="ac-section-sub">운영 토글 · app_settings</span></div>
+        <div id="ac-sec-settings-body"><div class="ac-card-empty">불러오는 중…</div></div>
+      </div>
 
       <!-- 로그 (예정 골격) -->
       <div class="ac-sec" data-sec="logs">
