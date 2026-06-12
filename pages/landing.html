@@ -720,6 +720,19 @@ body {
         </div>
       </div>
 
+      <!-- ────── 가입 STEP 0 — 인트로 (위저드 v2, 2026-06-12) ────── -->
+      <div class="auth-step-page" id="page-signup-0">
+        <span class="auth-friendly-emoji">👋</span>
+        <h2 class="auth-page-title">원세컨드에 오신 걸 환영합니다 ~!</h2>
+        <p class="auth-page-sub" style="line-height:1.7; margin-top:12px;">
+          원세컨드는 <strong>보험 통합 솔루션</strong>을 추구하는<br>보험 전문 플랫폼이에요.
+        </p>
+        <p class="auth-page-sub" style="line-height:1.7; margin-top:14px;">
+          보험 설계사와 원수사 직원은<br>하는 일도, 보는 자료도, 소속 구조도 달라요.<br>
+          그래서 가입 절차를 <strong>두 가지 방식</strong>으로 안내해 드려요.
+        </p>
+      </div>
+
       <!-- ────── 가입 Step 1 — 소속 선택 ────── -->
       <div class="auth-step-page" id="page-signup-1">
         <span class="auth-friendly-emoji">🎉</span>
@@ -727,41 +740,122 @@ body {
         <p class="auth-page-sub">어떤 소속이신지 알려주세요</p>
 
         <div class="auth-site-grid">
-          <button class="auth-site-card-v2" type="button" id="site-card-ga" data-site="ga" onclick="selectSite('ga'); window.authNextSignup();">
-            <div class="icon">👥</div>
-            <div class="info">
-              <div class="title">보험 설계사 · 매니저</div>
-              <div class="desc">회사 · 지점 · 팀 소속</div>
-            </div>
+          <button class="auth-site-card-v2" type="button" id="site-card-ga" data-site="ga" onclick="selectSite('ga'); window.authNextSignup();"
+                  style="display:block;width:100%;text-align:left;padding:18px 20px;border:2px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;margin-bottom:12px;">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--color-text);margin-bottom:6px;">👥 보험 설계사 · 매니저</div>
+            <div style="font-size:0.875rem;color:var(--color-text-secondary);line-height:1.55;">대리점(GA) 소속 — 회사 · 지점 · 팀<br>설계사 · 실장 · 지점장 · 스탭</div>
           </button>
 
-          <button class="auth-site-card-v2" type="button" id="site-card-insurer" data-site="insurer" onclick="selectSite('insurer'); window.authNextSignup();">
-            <div class="icon">🏢</div>
-            <div class="info">
-              <div class="title">보험사 임직원</div>
-              <div class="desc">31개 손·생명 보험사 직원</div>
-            </div>
+          <button class="auth-site-card-v2" type="button" id="site-card-insurer" data-site="insurer" onclick="selectSite('insurer'); window.authNextSignup();"
+                  style="display:block;width:100%;text-align:left;padding:18px 20px;border:2px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--color-text);margin-bottom:6px;">🏢 보험사 임직원</div>
+            <div style="font-size:0.875rem;color:var(--color-text-secondary);line-height:1.55;">손해 · 생명 보험사(원수사) 직원<br>31개 보험사</div>
           </button>
         </div>
       </div>
 
       <!-- ────── 가입 Step 2 — 정보 입력 ────── -->
+      <!-- ────── 가입 STEP 2 — 본인 정보 (위저드 v2, 2026-06-12) ────── -->
+      <div class="auth-step-page" id="page-signup-identity">
+        <h2 class="auth-page-title">본인 정보를 알려주세요</h2>
+        <p class="auth-page-sub">가입과 인증에 사용됩니다</p>
+        <div class="auth-err-box" id="signupIdErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-name">이름</label>
+          <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
+          <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-phone">핸드폰</label>
+          <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
+          <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-email">이메일</label>
+          <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); onInsurerEmailInput();">
+          <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
+          <p id="f-email-hint" style="font-size:12px; color:var(--color-text-tertiary); margin-top:6px;">이 이메일로 인증 코드가 발송됩니다.</p>
+        </div>
+      </div>
+
+      <!-- ────── 가입 STEP 3 — 회사 (GA, 위저드 v2) ────── -->
+      <div class="auth-step-page" id="page-signup-company">
+        <h2 class="auth-page-title">회사를 선택하세요</h2>
+        <p class="auth-page-sub">소속 회사(대리점)를 검색해 선택해 주세요</p>
+        <div class="auth-err-box" id="signupCompanyErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-company-text">회사명</label>
+          <div class="ta-wrap" style="position:relative;">
+            <input class="auth-input" type="text" id="f-company-text" placeholder="회사명 입력 (2글자 이상)" maxlength="50" autocomplete="off" oninput="onCompanyTaInput()" onblur="onCompanyTaBlur()" onkeydown="onCompanyTaKeydown(event)">
+            <div class="ta-list" id="company-ta-list" style="display:none;"></div>
+          </div>
+          <input type="hidden" id="f-company-id" value="">
+          <p class="auth-page-sub" style="margin-top:10px;">회사가 목록에 없으면 <strong>별도 문의</strong>로 등록을 안내드립니다.</p>
+        </div>
+      </div>
+
+      <!-- ────── 가입 STEP 4 — 지점 (GA, 자율입력+자동완성) ────── -->
+      <div class="auth-step-page" id="page-signup-branch">
+        <h2 class="auth-page-title">지점을 입력해주세요</h2>
+        <p class="auth-page-sub">소속 지점/센터명을 입력하세요</p>
+        <div class="auth-err-box" id="signupBranchErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-ga-branch">지점/센터</label>
+          <div class="ta-wrap" style="position:relative;">
+            <input class="auth-input" type="text" id="f-ga-branch" placeholder="예: 더원지점" maxlength="50" autocomplete="off" oninput="wzAcInput('branch')" onblur="wzAcBlur('branch')" onkeydown="wzAcKeydown(event,'branch')">
+            <div class="ta-list" id="ga-branch-list" style="display:none;"></div>
+          </div>
+          <input type="hidden" id="f-ga-branch-id" value="">
+          <p class="auth-page-sub" style="margin-top:10px;">입력 중 같은 회사의 기존 지점이 제안돼요. 제안을 누르면 그 지점에 연결되고, 없으면 입력한 이름으로 새 지점이 만들어집니다.</p>
+        </div>
+      </div>
+
+      <!-- ────── 가입 STEP 5 — 팀 (GA, 자율입력+자동완성, 선택) ────── -->
+      <div class="auth-step-page" id="page-signup-team">
+        <h2 class="auth-page-title">팀을 입력해주세요</h2>
+        <p class="auth-page-sub">소속 팀명을 입력하세요 (선택 — 없으면 비워두세요)</p>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-ga-team">팀</label>
+          <div class="ta-wrap" style="position:relative;">
+            <input class="auth-input" type="text" id="f-ga-team" placeholder="예: 4팀" maxlength="30" autocomplete="off" oninput="wzAcInput('team')" onblur="wzAcBlur('team')" onkeydown="wzAcKeydown(event,'team')">
+            <div class="ta-list" id="ga-team-list" style="display:none;"></div>
+          </div>
+          <input type="hidden" id="f-ga-team-id" value="">
+          <p class="auth-page-sub" style="margin-top:10px;">같은 지점의 기존 팀이 제안돼요. 팀이 없으면 비워두고 넘어가도 됩니다.</p>
+        </div>
+      </div>
+
+      <!-- ────── 가입 STEP 6 — 직책 (GA, 위저드 v2) ────── -->
+      <div class="auth-step-page" id="page-signup-role">
+        <h2 class="auth-page-title">직책을 선택하세요</h2>
+        <p class="auth-page-sub">소속 내 직책을 선택해 주세요</p>
+        <div class="auth-err-box" id="signupRoleErrBox"></div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="f-ga-role">직책</label>
+          <select class="auth-select" id="f-ga-role" onchange="clearFieldError('f-ga-role','e-ga-role')">
+            <option value="">선택해 주세요</option>
+            <option value="member">팀장 (설계사)</option>
+            <option value="manager">실장 (매니저)</option>
+            <option value="branch_manager">지점장 (센터장)</option>
+            <option value="staff">스탭 (총무)</option>
+            <option value="etc">기타</option>
+          </select>
+          <div class="auth-form-err" id="e-ga-role">직책을 선택해 주세요.</div>
+        </div>
+      </div>
+
+      <!-- ────── 가입 — 보험사 소속/직급 (signup-2 = 보험사 전용 / GA는 위저드 STEP으로 분해 완료) ────── -->
       <div class="auth-step-page" id="page-signup-2">
-        <div class="auth-page-badge">보험 설계사·매니저 전용</div>
-        <h2 class="auth-page-title">정보를 입력해 주세요</h2>
-        <p class="auth-page-sub">보험 설계사·매니저 가입 — 정확한 정보일수록 매니저 매핑이 정확합니다</p>
+        <div class="auth-page-badge">소속 정보</div>
+        <h2 class="auth-page-title">소속을 알려주세요</h2>
+        <p class="auth-page-sub">정확한 정보일수록 매니저 매핑이 정확합니다</p>
 
         <div class="auth-err-box" id="signupErrBox"></div>
 
         <form id="reg-form" novalidate>
           <div class="signup-form-body" id="signup-form-body">
 
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-name">이름</label>
-              <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
-              <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
-            </div>
-
+            <!-- 본인정보(이름·전화·이메일) = STEP 2(page-signup-identity)로 이동 (2026-06-12) -->
             <div class="auth-form-group">
               <label class="auth-label" for="f-role">직급</label>
               <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
@@ -778,22 +872,8 @@ body {
               💡 <span id="roleHintText"></span>
             </div>
 
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-phone">핸드폰</label>
-              <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
-              <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
-            </div>
-
-            <div class="auth-form-group">
-              <label class="auth-label" for="f-email">이메일</label>
-              <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); onInsurerEmailInput();">
-              <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
-              <p id="f-email-hint" style="font-size:12px; color:var(--color-text-tertiary); margin-top:6px;">
-                이 이메일로 인증 코드가 발송됩니다.
-              </p>
-            </div>
-
-            <!-- 보험사 분기 한정 — 이메일 OTP 인라인 인증 (2026-05-28 신설) -->
+            <!-- 핸드폰·이메일 = STEP 2(page-signup-identity)로 이동 (2026-06-12) -->
+            <!-- 보험사 분기 한정 — 이메일 OTP 인라인 인증 (f-email은 STEP 2에 있음, DOM 유지) -->
             <div class="otp-inline-box" id="otp-inline-box" style="display:none; margin-top:8px; padding:14px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2);">
               <div id="otp-send-area">
                 <button class="auth-btn auth-btn-outline" type="button" id="btnSendInsurerOtp" onclick="sendInsurerOtp()" style="width:100%;">
@@ -858,36 +938,8 @@ body {
             </div>
 
             <!-- GA 분기 -->
-            <div class="ga-fields" id="ga-fields">
-              <div class="signup-info-box is-emphasis">
-                <p><span class="emphasis-icon">⚠️</span><strong>소속 정보를 <span class="emphasis-key">정확히</span> 입력해 주세요</strong></p>
-                <p>회사·지점·팀이 정확해야 <strong>지점 게시판</strong>과 <strong>팀 게시판</strong>이 활성화됩니다.</p>
-                <p class="signup-info-sub">💡 목록에 없으면 "기타 입력"으로 직접 입력 — 매니저 승인 시 매핑됩니다.</p>
-              </div>
-              <!-- 2026-05-28: 회사명 typeahead (companies 마스터 105개 + aliases 검색).
-                   목록에 없으면 자유 입력 허용 (마스터에 없는 소형 대리점 대비).
-                   PR #146 누락 정정 — landing.html 동시 적용. -->
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-company-text">회사명</label>
-                <div class="ta-wrap" style="position:relative;">
-                  <input class="auth-input" type="text" id="f-company-text"
-                         placeholder="회사명 입력 (2글자 이상)" maxlength="50"
-                         autocomplete="off"
-                         oninput="onCompanyTaInput()" onblur="onCompanyTaBlur()">
-                  <div class="ta-list" id="company-ta-list" style="display:none;"></div>
-                </div>
-              </div>
-              <!-- 2026-05-28: 지점/팀 select+text 듀얼 폐기 → 단일 input.
-                   매니저 승인 시 admin 콘솔에서 branch_id/team_id 매핑. -->
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-branch-text">지점/센터명 (직접 입력)</label>
-                <input class="auth-input" type="text" id="f-branch-text" placeholder="예: 더원지점" maxlength="50">
-              </div>
-              <div class="auth-form-group">
-                <label class="auth-label" for="f-team-text">팀명 (직접 입력)</label>
-                <input class="auth-input" type="text" id="f-team-text" placeholder="예: 4팀" maxlength="30">
-              </div>
-            </div>
+            <!-- GA 소속(회사·지점·팀) = 위저드 STEP 3~5로 분해(2026-06-12 커밋2-3). ga-fields 비움(보험사 토글 구조 유지). -->
+            <div class="ga-fields" id="ga-fields"></div>
 
           </div><!-- /.signup-form-body -->
         </form>
