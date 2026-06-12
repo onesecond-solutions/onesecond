@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -130,7 +130,7 @@
   <a href="/app.html?view=admin&sec=knowledge" target="_top" class="backlink">← 운영센터로 돌아가기</a>
   <div class="topbar">
     <h1>📚 지식창고 <span class="ver">v0.2 · admin · 비공개</span></h1>
-    <button class="iconbtn" id="themeBtn" title="다크/라이트">◐</button>
+    <!-- 화면 모드 토글 제거 — 라이트 단일 (2026-06-13) -->
   </div>
   <div class="sub">대상 <b>knowledge_logs</b> + <b>knowledge_entries</b> (신버전 pdnwgzneooyygfejrvbg) · 야간 자동 학습(Phase 3) 선행 인프라</div>
 
@@ -454,11 +454,11 @@ window.KV = (function(){
   }
 
   // ── 테마 ──
-  function toggleTheme(){ var r=document.documentElement; r.setAttribute('data-theme', r.getAttribute('data-theme')==='dark'?'light':'dark'); }
+  /* toggleTheme 제거 — 라이트 단일 (2026-06-13) */
 
   // ── init ──
   function init(){
-    $('themeBtn').addEventListener('click', toggleTheme);
+    /* themeBtn 토글 바인딩 제거 — 라이트 단일 */
     $('reasonModal').addEventListener('click', function(e){ if(e.target===$('reasonModal')) closeReason(); });
     $('confirmModal').addEventListener('click', function(e){ if(e.target===$('confirmModal')) closeConfirm(); });
     document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeReason(); closeConfirm(); } });
