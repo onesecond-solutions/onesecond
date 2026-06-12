@@ -1035,12 +1035,13 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-set-lbl{font-size:0.82rem;color:var(--tp)}
 .ac-set-edit{display:flex;gap:6px;align-items:center}
 .ac-set-input{width:min(320px,46vw);padding:6px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--s1);color:var(--tp);font-size:0.8rem}
-/* 설정 탭: 토글 다수 → 반응형 2컬럼 (공지·배너는 입력칸 위주라 1컬럼 유지) */
-#ac-sec-settings-body .ac-set-grp{display:grid;grid-template-columns:1fr 1fr}
-#ac-sec-settings-body .ac-set-grp-h{grid-column:1 / -1}
-#ac-sec-settings-body .ac-set-row{max-width:none}
-#ac-sec-settings-body .ac-set-row:nth-child(2n){border-left:1px solid var(--bd)}
-@media(max-width:680px){#ac-sec-settings-body .ac-set-grp{grid-template-columns:1fr}#ac-sec-settings-body .ac-set-row:nth-child(2n){border-left:none}}
+/* 설정 탭: 그룹=카드 / 카드 2열 masonry / 카드 내부 토글 1열 (공지·배너는 1컬럼 유지) */
+#ac-sec-settings-body{column-count:2;column-gap:14px}
+#ac-sec-settings-body .ac-sys-note{column-span:all}
+#ac-sec-settings-body .ac-set-grp{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px 18px;margin-bottom:14px;break-inside:avoid;overflow:visible}
+#ac-sec-settings-body .ac-set-grp-h{background:transparent;padding:0;margin-bottom:10px}
+#ac-sec-settings-body .ac-set-row{border-top:none;max-width:none;padding:6px 0}
+@media(max-width:680px){#ac-sec-settings-body{column-count:1}}
 /* 3컬럼 */
 .mys-vault-cols{display:flex;align-items:flex-start;gap:14px;width:100%}
 .mys-vault-tree{flex:2 1 0}
