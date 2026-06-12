@@ -158,7 +158,7 @@ var _authCurrentStep = 'login';
 function openAuthModal(focusSection) {
   var overlay = document.getElementById('authOverlay');
   if (!overlay) return;
-  var startStep = (focusSection === 'signup') ? 'signup-1' : 'login';
+  var startStep = (focusSection === 'signup') ? 'signup-0' : 'login';
   _showStep(startStep);
   overlay.hidden = false;
   document.body.style.overflow = 'hidden';
@@ -219,8 +219,16 @@ function _showStep(step) {
     }
     if (crossLnk) crossLnk.style.display = 'none';
   }
+  else if (step === 'signup-0') {
+    /* 2026-06-12 위저드 v2 — STEP 0 인트로 */
+    if (ctaTxt)   ctaTxt.textContent = '시작하기';
+    if (ctaBtn)   ctaBtn.onclick = function() { _showStep('signup-1'); };
+    if (crossTxt) crossTxt.textContent = '이미 회원이신가요?';
+    if (crossBtn) { crossBtn.textContent = '로그인 →'; crossBtn.onclick = function() { window.switchAuthSection('login'); }; }
+  }
   else if (step === 'signup-1') {
     if (ctaArea)  ctaArea.style.display = 'none'; // Step 1 = 카드 클릭 = 자동 진입
+    if (back)     { back.hidden = false; back.onclick = function() { _showStep('signup-0'); }; }
     if (crossTxt) crossTxt.textContent = '이미 회원이신가요?';
     if (crossBtn) { crossBtn.textContent = '로그인 →'; crossBtn.onclick = function() { window.switchAuthSection('login'); }; }
     if (progress) { progress.hidden = false; _setProgress(1); }
@@ -337,7 +345,7 @@ function _validateSignupStep2Inline() {
 }
 
 window.switchAuthSection = function(target) {
-  if (target === 'signup') _showStep('signup-1');
+  if (target === 'signup') _showStep('signup-0');
   else                     _showStep('login');
 };
 
