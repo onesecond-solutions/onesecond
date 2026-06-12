@@ -1035,6 +1035,13 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .ac-set-lbl{font-size:0.82rem;color:var(--tp)}
 .ac-set-edit{display:flex;gap:6px;align-items:center}
 .ac-set-input{width:min(320px,46vw);padding:6px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--s1);color:var(--tp);font-size:0.8rem}
+/* 입력폼 모달 (지점·사용자, 2026-06-12) */
+.ac-form-field{margin-bottom:11px}
+.ac-form-field label{display:block;font-size:0.76rem;color:var(--ts);margin-bottom:4px}
+.ac-form-field input,.ac-form-field select{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--s1);color:var(--tp);font-size:0.86rem}
+.ac-form-err{color:var(--err);font-size:0.78rem;min-height:1em;margin-top:4px}
+.ac-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.ac-form-req{color:var(--err)}
 /* 설정 탭: 그룹=카드 / 카드 2열 masonry / 카드 내부 토글 1열 (공지·배너는 1컬럼 유지) */
 #ac-sec-settings-body{column-count:2;column-gap:14px}
 #ac-sec-settings-body .ac-sys-note{column-span:all}
@@ -2654,7 +2661,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       </div>
       <!-- 운영: 지점 -->
       <div class="ac-sec" data-sec="branches">
-        <div class="ac-section-head"><i data-lucide="building-2"></i><h2>지점</h2><span class="ac-section-sub" id="ac-branches-count">—</span></div>
+        <div class="ac-section-head"><i data-lucide="building-2"></i><h2>지점</h2><span class="ac-section-sub" id="ac-branches-count">—</span><button class="ac-btn ac-btn-sm ac-btn-primary" style="margin-left:auto" onclick="acBranchForm(null)">+ 지점 추가</button></div>
         <div id="ac-branches-list"><div class="ac-card-empty">불러오는 중…</div></div>
       </div>
 
