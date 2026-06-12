@@ -2,7 +2,7 @@
 
 > 세션 시작 시 **`docs/decisions/` 최신 문서 필독**.
 > ⚠️ 옛 백로그를 임의로 1순위로 올리지 말 것.
-> 🚨 **코덱스(Codex) 진입 시 필독:** 본 문서 + `docs/work_orders/`의 본인 작업지시서 + `docs/ops/codex_setup_guide.md`. 지시서 범위 밖 작업 금지.
+> 🚨 **코덱스(Codex) 진입 시 필독:** 본 문서 + `docs/work_orders/`의 본인 작업지시서 + `docs/ops/codex_setup_guide.md` + `docs/ops/codex_data_map.md`(저장 지형·프로세스). 지시서 범위 밖 작업 금지.
 
 ## 조직 (2026-06-09 호칭 통일)
 
@@ -37,6 +37,13 @@
 - ❌ **제품 데이터 쓰기** — `users`·`posts`·`branches`·`teams` 등 운영 데이터 INSERT/UPDATE/DELETE 금지.
 - ❌ **main 직접 push** — 반드시 PR.
 - ❌ **구버전 DB 참조** — 신버전 `pdnwgzneooyygfejrvbg`(onesecond-v1-restore-0420)만. 키는 환경 secret으로만 받고 코드·로그·PR에 노출 금지.
+- 🚨 **사용자 자료 원본 보존** — 자료실(`myspace` 버킷·`library`·`myspace_files`)은 남의 자료다. 초기엔 원본 이동·삭제·덮어쓰기 금지, **정리 결과는 별도 컬럼/사본/제안**으로만. 사용자 자료함 자동 반영은 검증+대표님 결재 후. 상세 = `docs/ops/codex_data_map.md`.
+
+## 🚨 운영 리듬 — 하루 2회 결재 (2026-06-13)
+
+- 코덱스는 작업 결과를 **PR로 쌓아둔다. 자동 머지 금지.**
+- 대표님이 **하루 2회(아침·저녁)** 결재 = 총괄팀장 검수 → 일괄 머지 → 필요 시 `approved` 승격.
+- 코덱스는 밤새 PR을 만들어 두고 결재를 기다린다. 검색 노출·사용자 자료 반영은 이 결재 흐름 안에서만.
 
 ## 공통 규칙
 
