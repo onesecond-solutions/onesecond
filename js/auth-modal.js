@@ -867,6 +867,10 @@ function populateBranchSelect(branches) {
   var sel = document.getElementById('f-branch-select');
   if (!sel) return;
   sel.innerHTML = '';
+  var ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = branches.length ? '지점을 선택하세요' : '등록된 지점이 없습니다 — 기타 입력';
+  sel.appendChild(ph);
   for (var i = 0; i < branches.length; i++) {
     var b = branches[i];
     var opt = document.createElement('option');
@@ -939,6 +943,36 @@ async function loadTeamsByBranch(branchId) {
 
 window.loadSignupSelects = loadSignupSelects;
 window.loadTeamsByBranch = loadTeamsByBranch;
+
+/* PR-1 (2026-06-12): GA 회사 선택 → 그 회사의 기존 지점 목록 동적 로드. 하드코딩 0. */
+async function loadBranchesByCompany(companyId) {
+  var bs = document.getElementById('f-branch-select');
+  if (!bs) return;
+  if (!companyId) { _resetGaBranchTeam(); return; }
+  try {
+    var res = await fetch(SUPABASE_URL + '/rest/v1/branches?company_id=eq.' + encodeURIComponent(companyId) + '&is_active=eq.true&select=id,name&order=name', { headers: { 'apikey': SUPABASE_KEY } });
+    var branches = res.ok ? await res.json() : [];
+    populateBranchSelect(branches);
+    clearTeamSelect();
+    var tt = document.getElementById('f-team-text');
+    if (tt) { tt.value = ''; tt.disabled = true; tt.style.opacity = '0.5'; }
+  } catch (e) {
+    console.error('[loadBranchesByCompany 실패]', e);
+  }
+}
+window.loadBranchesByCompany = loadBranchesByCompany;
+
+/* PR-1: 회사 변경 시 지점/팀 선택 초기화 (재선택 강제) */
+function _resetGaBranchTeam() {
+  var bs = document.getElementById('f-branch-select');
+  if (bs) bs.innerHTML = '<option value="">먼저 회사를 선택하세요</option>';
+  var bt = document.getElementById('f-branch-text');
+  if (bt) { bt.value = ''; bt.disabled = true; bt.style.opacity = '0.5'; }
+  var ts = document.getElementById('f-team-select');
+  if (ts) ts.innerHTML = '<option value="">먼저 지점을 선택하세요</option>';
+  var tt = document.getElementById('f-team-text');
+  if (tt) { tt.value = ''; tt.disabled = true; tt.style.opacity = '0.5'; }
+}
 
 window.gSignupSite = null;
 
@@ -1096,6 +1130,9 @@ function onCompanyTaInput() {
   var list = document.getElementById('company-ta-list');
   if (!input || !list) return;
   var q = (input.value || '').trim();
+  /* PR-1: 회사명을 다시 타이핑하면 이전 선택(company_id) 무효화 + 지점/팀 리셋(재선택 강제) */
+  var _hid = document.getElementById('f-company-id');
+  if (_hid && _hid.value) { _hid.value = ''; _resetGaBranchTeam(); }
 
   if (_companyTaTimer) clearTimeout(_companyTaTimer);
   if (q.length < 2) {
@@ -1112,7 +1149,7 @@ async function _companyTaFetch(q) {
   var list = document.getElementById('company-ta-list');
   if (!list) return;
   try {
-    var url = SUPABASE_URL + '/rest/v1/companies?select=name'
+    var url = SUPABASE_URL + '/rest/v1/companies?select=id,name'
       + '&search_text=ilike.*' + encodeURIComponent(q) + '*'
       + '&order=agent_count.desc.nullslast&limit=10';
     var res = await fetch(url, {
@@ -1124,7 +1161,8 @@ async function _companyTaFetch(q) {
     if (!rows || rows.length === 0) { list.style.display = 'none'; return; }
     var html = rows.map(function (r) {
       var safe = String(r.name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      return '<div class="ta-item" onmousedown="onCompanyTaPick(this)" data-name="' + safe + '">' + safe + '</div>';
+      var idAttr = String(r.id == null ? '' : r.id);
+      return '<div class="ta-item" onmousedown="onCompanyTaPick(this)" data-id="' + idAttr + '" data-name="' + safe + '">' + safe + '</div>';
     }).join('');
     list.innerHTML = html;
     list.style.display = 'block';
@@ -1135,10 +1173,14 @@ async function _companyTaFetch(q) {
 
 function onCompanyTaPick(el) {
   var name = el && el.getAttribute('data-name') || '';
+  var id   = el && el.getAttribute('data-id')   || '';
   var input = document.getElementById('f-company-text');
   if (input) input.value = name;
+  var hid = document.getElementById('f-company-id');
+  if (hid) hid.value = id;
   var list = document.getElementById('company-ta-list');
   if (list) list.style.display = 'none';
+  loadBranchesByCompany(id);   /* PR-1: 회사 → 그 회사 지점 목록 동적 로드 */
 }
 
 function onCompanyTaBlur() {
@@ -1521,6 +1563,7 @@ async function doSubmit() {
   var teamId    = '';
   var statusValue = 'active';
   var companyName = '';
+  var companyId   = '';
   var branchName  = '';
   var teamName    = '';
 
@@ -1537,13 +1580,31 @@ async function doSubmit() {
       return;
     }
   } else {
-    /* 2026-05-28: GA 분기 — 지점/팀 select 듀얼 폐기 → 단일 input.
-       매니저 승인 시 admin 콘솔에서 branch_id/team_id 매핑 (가입 시 NULL).
-       회사명 typeahead 자료 (PR #146) 정합 — 단일 input 값 그대로 저장. */
+    /* 2026-06-12 PR-1: GA 분기 — 회사>지점>팀 ID 선택 위저드.
+       기존 조직 선택 = branch_id/team_id 전송(미배정 해소).
+       "기타 입력"(__other__)·미선택 = 텍스트 폴백 → branch_id/team_id NULL (PR-2까지 하위호환). */
     companyName = (document.getElementById('f-company-text').value || '').trim();
-    branchName  = (document.getElementById('f-branch-text').value  || '').trim();
-    teamName    = (document.getElementById('f-team-text').value    || '').trim();
-    /* branchId / teamId = NULL (드롭다운 폐기, 매핑은 admin 승인 자체) */
+    companyId   = (document.getElementById('f-company-id') ? (document.getElementById('f-company-id').value || '') : '');
+    var brSel = document.getElementById('f-branch-select');
+    var brVal = brSel ? brSel.value : '';
+    if (brVal && brVal !== '__other__') {
+      branchId = brVal;
+      var brOpt = brSel.options[brSel.selectedIndex];
+      branchName = ((brOpt && (brOpt.getAttribute('data-name') || brOpt.textContent)) || '').trim();
+    } else {
+      branchName = (document.getElementById('f-branch-text').value || '').trim();
+      branchId = '';
+    }
+    var tmSel = document.getElementById('f-team-select');
+    var tmVal = tmSel ? tmSel.value : '';
+    if (tmVal && tmVal !== '__other__') {
+      teamId = tmVal;
+      var tmOpt = tmSel.options[tmSel.selectedIndex];
+      teamName = ((tmOpt && (tmOpt.getAttribute('data-name') || tmOpt.textContent)) || '').trim();
+    } else {
+      teamName = (document.getElementById('f-team-text').value || '').trim();
+      teamId = '';
+    }
     statusValue = 'active';
   }
 
@@ -1553,6 +1614,7 @@ async function doSubmit() {
     name:    document.getElementById('f-name').value.trim(),
     phone:   document.getElementById('f-phone').value.trim(),
     company: companyName,
+    company_id: companyId,
     branch:  branchName,
     role:    roleKey,
     team:    teamName,
