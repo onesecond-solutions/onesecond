@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -84,7 +84,7 @@
   <div class="topbar">
     <h1>🔎 지식엔진 검색 <span style="font-size:.62rem;color:var(--tf);font-weight:400">v1.2 · admin 검증 · 비공개</span></h1>
     <button class="iconbtn" id="modeBtn" title="사용자/기술검증 전환">기술검증(4컬럼)</button>
-    <button class="iconbtn" id="themeBtn" title="다크/라이트">◐</button>
+    <!-- 화면 모드 토글 제거 — 라이트 단일 (2026-06-13) -->
   </div>
   <div class="sub">대상 <b>knowledge_entries</b> (신버전 pdnwgzneooyygfejrvbg) · 전건 클라이언트 검색(검색어 서버 전송·저장 없음) · 랭킹+동의어 확장</div>
 
@@ -370,7 +370,7 @@
   $('q').addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(); });
   $('q').addEventListener('input', function(){ if(LOADED) doSearch(); });
   $('modeBtn').addEventListener('click', function(){ MODE = (MODE==='user'?'tech':'user'); this.textContent = (MODE==='user'?'기술검증(4컬럼)':'사용자 모드'); this.classList.toggle('on', MODE==='tech'); doSearch(); });
-  $('themeBtn').addEventListener('click', function(){ var h=document.documentElement; h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark'); });
+  /* themeBtn 토글 제거 — 라이트 단일 (2026-06-13) */
   // 결과 영역 위임: 더보기 / 집계 카테고리 스크롤 / 집계 키워드 재검색
   $('results').addEventListener('click', function(e){
     var mb = e.target.closest('.morebtn');
