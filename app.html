@@ -11873,13 +11873,11 @@ document.addEventListener('keydown', function(e){
 .os-sheet.os-dragging{transition:none;}
 body:has(.app.collapsed) .os-sheet{left:56px;}
 .os-sheet.snap-mid{height:42vh;}
-.os-sheet.snap-open{height:84vh;}
-.os-sheet-handle{flex:0 0 auto;height:46px;display:flex;align-items:center;gap:10px;padding:0 16px;cursor:ns-resize;user-select:none;touch-action:none;}
-.os-sheet-grip{width:36px;flex:0 0 auto;display:flex;flex-direction:column;gap:3px;}
-.os-sheet-grip::before,.os-sheet-grip::after{content:"";display:block;height:3px;border-radius:3px;background:var(--bd);}
-.os-sheet-handle .lbl{font-size:.9rem;font-weight:700;color:var(--tp);}
-.os-sheet-handle .cnt{font-size:.72rem;font-weight:700;color:#fff;background:var(--ac);border-radius:10px;padding:1px 7px;min-width:18px;text-align:center;}
-.os-sheet-handle .os-sheet-x{margin-left:auto;font-size:.95rem;line-height:1;color:var(--ts);background:transparent;border:0;cursor:pointer;padding:6px;}
+.os-sheet.snap-open{height:var(--os-open-h,84vh);}  /* 최대 펼침 = A영역(헤더) 하단까지 — 높이는 JS가 헤더 측정해 --os-open-h 설정 */
+.os-sheet-handle{position:relative;flex:0 0 auto;height:46px;display:flex;align-items:center;gap:10px;padding:0 16px;cursor:ns-resize;user-select:none;touch-action:none;overflow:hidden;}
+/* 접힘 핸들 = 가로 그라데이션 곡선 라인 띠 (그립·"쓱"·카운트 제거, 2026-06-13). 파랑 계열 = 현행 --ac */
+.os-sheet-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.os-sheet-handle .os-sheet-x{position:relative;z-index:1;margin-left:auto;font-size:.95rem;line-height:1;color:var(--ts);background:transparent;border:0;cursor:pointer;padding:6px;}
 .os-sheet-chips{flex:0 0 auto;display:flex;gap:7px;padding:0 14px 10px;overflow-x:auto;}
 .os-chip{flex:0 0 auto;font-size:.8rem;font-weight:600;color:var(--ts);background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:6px 13px;cursor:pointer;white-space:nowrap;}
 .os-chip.on{background:var(--ac);color:#fff;border-color:transparent;}
@@ -11948,9 +11946,22 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 </style>
 <div id="osSheet" class="os-sheet" role="region" aria-label="스크립트 시트">
   <div class="os-sheet-handle" id="osSheetHandle">
-    <div class="os-sheet-grip"></div>
-    <span class="lbl">쓱</span>
-    <span class="cnt" id="osSheetCnt">0</span>
+    <svg class="os-sheet-lines" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="osLineGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="var(--ac)" stop-opacity="0"/>
+        <stop offset="22%" stop-color="var(--ac)" stop-opacity=".85"/>
+        <stop offset="50%" stop-color="var(--ac)" stop-opacity="1"/>
+        <stop offset="78%" stop-color="var(--ac)" stop-opacity=".85"/>
+        <stop offset="100%" stop-color="var(--ac)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <g fill="none" stroke="url(#osLineGrad)" stroke-width="1.4" stroke-linecap="round">
+        <path d="M0,13 C280,6 520,22 820,11 S1120,9 1200,14" stroke-opacity=".5"/>
+        <path d="M0,18 C300,9 550,26 800,16 S1100,12 1200,18" stroke-opacity=".7"/>
+        <path d="M0,23 C200,12 400,30 600,20 S1000,14 1200,22"/>
+        <path d="M0,28 C250,18 500,34 750,24 S1050,20 1200,26" stroke-opacity=".7"/>
+        <path d="M0,33 C220,24 480,38 700,30 S1080,26 1200,31" stroke-opacity=".5"/>
+      </g>
+    </svg>
     <button class="os-sheet-x" id="osSheetToggle" type="button" aria-label="펼치기 접기">▲</button>
   </div>
   <!-- 칩 5종 제거(2026-06-11): 마이 스크립트·마이 채팅·공유 스크립트·공유 채팅·공유 자료 삭제 + scripts 자동 읽기 차단.
@@ -12024,10 +12035,15 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   if(!sheet) return;
   function updateArrow(s){ if(!toggleBtn) return; toggleBtn.textContent=(s==='collapsed')?'▲':((s==='open')?'▼':'▲▼'); }
   /* 콘텐츠가 닫힌/열린 시트 높이만큼 하단 여백 확보 → 시트가 콘텐츠를 가리지 않음. .main padding-bottom = --os-sheet-offset */
-  function syncSheetOffset(){ var snap=sheet.dataset.snap, h; if(snap==='mid') h=Math.round(window.innerHeight*0.42); else if(snap==='open') h=Math.round(window.innerHeight*0.84); else if(snap==='free') h=Math.round(sheet.getBoundingClientRect().height); else h=46; document.documentElement.style.setProperty('--os-sheet-offset', h+'px'); }
+  /* 최대 펼침 높이 = 화면높이 − 헤더(A영역)높이 → 시트 상단이 A/D 구분선에 붙음. 헤더는 데스크탑54/모바일50이라 런타임 측정 */
+  function _headH(){ var hd=document.querySelector('.head'); return hd?Math.round(hd.getBoundingClientRect().height):54; }
+  function _openH(){ return Math.max(120, window.innerHeight - _headH()); }
+  function syncOpenH(){ document.documentElement.style.setProperty('--os-open-h', _openH()+'px'); }
+  function syncSheetOffset(){ var snap=sheet.dataset.snap, h; if(snap==='mid') h=Math.round(window.innerHeight*0.42); else if(snap==='open') h=_openH(); else if(snap==='free') h=Math.round(sheet.getBoundingClientRect().height); else h=46; document.documentElement.style.setProperty('--os-sheet-offset', h+'px'); }
   function applySnap(s){ sheet.classList.remove('snap-mid','snap-open'); if(s==='mid')sheet.classList.add('snap-mid'); else if(s==='open')sheet.classList.add('snap-open'); sheet.dataset.snap=s; updateArrow(s); syncSheetOffset(); }
+  syncOpenH();
   applySnap('collapsed');
-  window.addEventListener('resize', syncSheetOffset);
+  window.addEventListener('resize', function(){ syncOpenH(); syncSheetOffset(); });
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fallbackCopy(t){ try{ var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(window.toast)toast('복사됐어요'); }catch(e){} }
   function copyText(t){ if(!t) return; try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ if(window.toast)toast('복사됐어요'); }).catch(function(){fallbackCopy(t);}); } else fallbackCopy(t); }catch(e){fallbackCopy(t);} }
