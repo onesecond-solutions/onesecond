@@ -873,6 +873,10 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-cell.today{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
 .cal-cell.sel{background:var(--sh)}
 .cal-d{font-size:14px;color:var(--tp);font-weight:700;line-height:1}
+.cal-mark{font-size:10px;line-height:1.25;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 0}
+.cal-mark.h{color:var(--err)}
+.cal-mark.t{color:#0E9A6C}   /* 절기 = 그린(계절 구분색, 도메인 액센트) */
+.cal-mark.d{color:var(--ts)}
 .cal-dow .cal-sun{color:var(--err)}
 .cal-d.cal-off{color:var(--err)}
 .cal-dots{display:flex;flex-wrap:wrap;gap:2px}
@@ -10211,6 +10215,20 @@ var CAL_SRC={
 var CAL_HOST={ mys:'mys-split', mr:'mr-office-split', iv:'iv-split' };  /* prefix별 자료 split id */
 /* 휴무(빨간날) = 대한민국 2026 법정 공휴일 (양력+음력 확정분, 대체공휴일 포함). 매년 갱신 필요(음력 변동) */
 var CAL_HOLIDAYS=['2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02','2026-05-05','2026-05-24','2026-05-25','2026-06-06','2026-08-15','2026-09-24','2026-09-25','2026-09-26','2026-10-03','2026-10-09','2026-12-25'];
+/* 달력 표시용 마크 (고객 접점 이야깃거리) — 공휴일(h)·24절기(t)·기념일(d). 2026 기준(절기=KASI 대조). 과하지 않게 한 줄 라벨. 공휴일과 겹치는 절기(입하 5/5·망종 6/6)는 공휴일 우선. */
+var CAL_MARKS={
+  '2026-01-01':{n:'신정',t:'h'},'2026-02-16':{n:'설날 연휴',t:'h'},'2026-02-17':{n:'설날',t:'h'},'2026-02-18':{n:'설날 연휴',t:'h'},
+  '2026-03-01':{n:'삼일절',t:'h'},'2026-03-02':{n:'대체공휴일',t:'h'},'2026-05-05':{n:'어린이날',t:'h'},'2026-05-24':{n:'부처님오신날',t:'h'},
+  '2026-05-25':{n:'대체공휴일',t:'h'},'2026-06-06':{n:'현충일',t:'h'},'2026-08-15':{n:'광복절',t:'h'},'2026-09-24':{n:'추석 연휴',t:'h'},
+  '2026-09-25':{n:'추석',t:'h'},'2026-09-26':{n:'추석 연휴',t:'h'},'2026-10-03':{n:'개천절',t:'h'},'2026-10-09':{n:'한글날',t:'h'},'2026-12-25':{n:'성탄절',t:'h'},
+  '2026-01-05':{n:'소한',t:'t'},'2026-01-20':{n:'대한',t:'t'},'2026-02-04':{n:'입춘',t:'t'},'2026-02-19':{n:'우수',t:'t'},'2026-03-05':{n:'경칩',t:'t'},
+  '2026-03-20':{n:'춘분',t:'t'},'2026-04-05':{n:'청명',t:'t'},'2026-04-20':{n:'곡우',t:'t'},'2026-05-21':{n:'소만',t:'t'},'2026-06-21':{n:'하지',t:'t'},
+  '2026-07-07':{n:'소서',t:'t'},'2026-07-23':{n:'대서',t:'t'},'2026-08-07':{n:'입추',t:'t'},'2026-08-23':{n:'처서',t:'t'},'2026-09-07':{n:'백로',t:'t'},
+  '2026-09-23':{n:'추분',t:'t'},'2026-10-08':{n:'한로',t:'t'},'2026-10-23':{n:'상강',t:'t'},'2026-11-07':{n:'입동',t:'t'},'2026-11-22':{n:'소설',t:'t'},
+  '2026-12-07':{n:'대설',t:'t'},'2026-12-22':{n:'동지',t:'t'},
+  '2026-05-08':{n:'어버이날',t:'d'}
+};
+window.CAL_MARKS=CAL_MARKS;
 window._calSt=window._calSt||{};
 function _cst(p){ return (window._calSt[p]=window._calSt[p]||{ym:null,rows:[],sel:null}); }
 function calIcon(src){ var s=CAL_SRC[src]||CAL_SRC.personal; return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+s.icon+'"/></svg>'; }
@@ -10290,7 +10308,9 @@ function renderCalGrid(p,byDay,y,m){
     var off=(new Date(y,m,d).getDay()===0)||(CAL_HOLIDAYS.indexOf(ds)>=0);  /* 일요일 또는 공휴일(휴무) = 빨강 */
     var evHtml=evs.slice(0,3).map(function(e){ var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color; var tm=e.event_time?(String(e.event_time).slice(0,5)+' '):''; var evClick=(p==='mys')?(' onclick="event.stopPropagation();openDiaryPanel(null,\''+e.id+'\')" style="border-left-color:'+c+';cursor:pointer"'):(' style="border-left-color:'+c+'"'); return '<div class="cal-ev"'+evClick+' title="'+_calEsc(tm+e.title)+'">'+_calEsc(tm+e.title)+'</div>'; }).join('');
     if(evs.length>3) evHtml+='<div class="cal-more">+'+(evs.length-3)+'</div>';
-    cells+='<div class="cal-cell'+(ds===today?' today':'')+(ds===sel?' sel':'')+'" onclick="calPickDay(\''+p+'\',\''+ds+'\')"><span class="cal-d'+(off?' cal-off':'')+'">'+d+'</span><div class="cal-evs">'+evHtml+'</div></div>';
+    var _mk=(typeof CAL_MARKS!=='undefined')?CAL_MARKS[ds]:null;
+    var _mkHtml=_mk?('<div class="cal-mark '+_mk.t+'" title="'+_calEsc(_mk.n)+'">'+_calEsc(_mk.n)+'</div>'):'';
+    cells+='<div class="cal-cell'+(ds===today?' today':'')+(ds===sel?' sel':'')+'" onclick="calPickDay(\''+p+'\',\''+ds+'\')"><span class="cal-d'+(off?' cal-off':'')+'">'+d+'</span>'+_mkHtml+'<div class="cal-evs">'+evHtml+'</div></div>';
   }
   return '<div class="cal-dow">'+dow+'</div><div class="cal-cells">'+cells+'</div>';
 }
