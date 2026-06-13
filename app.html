@@ -2156,7 +2156,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="mys-vault-cols">
           <div class="mys-vault-tree">
             <div class="mvcol-head"><span class="mvcol-ttl">폴더</span><button class="mys-vault-newfolder" onclick="mysVaultCreateFolder()">+ 새 폴더</button></div>
-            <div id="mys-vault-folders" class="mys-vault-folders"><div class="mys-news-empty">불러오는 중…</div></div>
+            <div id="mys-vault-folders" class="mys-vault-folders" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mysVaultDrop(event)"><div class="mys-news-empty">불러오는 중…</div></div>
             <div class="mys-vault-dropzone" id="mys-vault-dropzone" onclick="mysVaultPickFolder()" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mysVaultDrop(event)"><div class="mvdz-t">폴더를 끌어다 놓으세요</div><span class="mvdz-sub">또는 클릭해서 폴더 선택 · 파일은 오른쪽에서</span></div>
           </div>
           <div class="mys-vault-grid-col">
