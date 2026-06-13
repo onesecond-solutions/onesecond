@@ -2190,10 +2190,11 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="chip on" onclick="mysQnaSub(this,'all')">전체보기</div>
         <div class="chip" onclick="mysQnaSub(this,'mine')">MINE</div>
       </div></div>
-      <div class="split" id="mys-qna-split">
+      <div class="split cosp-split scr-mode" id="mys-qna-split">
         <div class="col list-col"><div class="list" id="mys-qna-list"><div class="mys-news-empty">불러오는 중…</div></div></div>
         <div class="col viewer-col">
           <button class="backbtn" onclick="mysQnaBack()">&#8249; 목록으로</button>
+          <div class="osws-newrow" id="qna-il-newrow"><button class="osws-newbtn" onclick="openQnaInline()">+ 질문하기</button></div>
           <div class="viewer" id="mys-qna-viewer"><div class="mys-news-empty">왼쪽에서 질문을 선택하세요.</div></div>
         </div>
       </div>
@@ -9392,6 +9393,68 @@ function mysQnaOpen(idx, keepList){
 window.mysQnaOpen=mysQnaOpen;
 function mysQnaBack(){ var sp=document.getElementById('mys-qna-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysQnaBack=mysQnaBack;
+/* 보험 Q&A 인라인 질문폼 = 스크립트/팀방 폼 골격 + Q&A 양식(유형 인수/상품/기타 + 유형별 본문 템플릿 자동채움).
+ * 리치 에디터 미사용(plain textarea) — 질문은 항목 정보 입력이라 평문이 맞고 표시도 기존 escape+줄바꿈 정합. posts(board_type=qna) 저장. */
+function _qnaTpl(type){
+  if(type==='상품') return '상품군: \n보험사 범위: \n건강체: \n확인하고 싶은 내용: \n';
+  if(type==='기타') return '질문 유형(녹취/서류/전산/민원 등): \n확인하고 싶은 범위: \n답변 희망 대상: \n';
+  return '연령: \n성별: \n직업: \n병력: \n진단시기: \n약복용: \n현재상태: \n';  /* 인수(기본) */
+}
+function openQnaInline(){
+  var split=document.getElementById('mys-qna-split');
+  var viewer=split?split.querySelector('.viewer'):null;
+  if(!viewer||!(window.OSWS&&window.OSWS.openForm)){ if(typeof toast==='function') toast('질문 폼을 열 수 없습니다.'); return; }
+  window._qnaIlType='인수';
+  var TYPES=['인수','상품','기타'];
+  var seg=TYPES.map(function(t,i){ return '<button type="button" class="'+(i===0?'on':'')+'" onclick="qnaIlType(this,\''+t+'\')">'+t+'</button>'; }).join('');
+  var formHtml=''
+    +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg cosp-il-seg" id="qna-il-seg">'+seg+'</div></div>'
+    +'<div class="iv-fld"><label>제목</label><input type="text" id="qna-il-title" class="mys-write-input" maxlength="100" placeholder="예: 60대 여 갑상선 결절 인수 가능?"></div>'
+    +'<div class="iv-fld"><label>내용</label><textarea id="qna-il-body" class="mys-write-input" rows="9" placeholder="질문 내용을 작성하세요"></textarea></div>'
+    +'<div class="iv-fld"><label>키워드</label><input type="text" id="qna-il-kw" class="mys-write-input" maxlength="200" placeholder="예: 갑상선, 인수 (쉼표로 구분)"></div>'
+    +'<div class="iv-fld"><label>파일 첨부 (모든 파일)</label><input type="file" id="qna-il-file" multiple onchange="mysWriteFilePreview(this,\'qna-il-fp\')"><div id="qna-il-fp" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>';
+  window.OSWS.openForm(viewer,'create',formHtml,saveQnaInline,closeQnaInline);
+  var ta=document.getElementById('qna-il-body'); if(ta){ ta.value=_qnaTpl('인수'); window._qnaLastTpl=ta.value; }  /* 기본 인수 템플릿 자동채움 */
+  var nr=document.getElementById('qna-il-newrow'); if(nr) nr.style.display='none';
+  if(split) split.classList.add('show-viewer');
+}
+window.openQnaInline=openQnaInline;
+function qnaIlType(btn,type){
+  window._qnaIlType=type;
+  var sg=document.getElementById('qna-il-seg'); if(sg){ var bs=sg.querySelectorAll('button'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i]===btn); }
+  var ta=document.getElementById('qna-il-body');
+  if(ta){ var cur=(ta.value||'').trim(), last=(window._qnaLastTpl||'').trim();
+    if(cur===''||cur===last){ ta.value=_qnaTpl(type); window._qnaLastTpl=ta.value; } }  /* 사용자가 직접 쓴 내용 없을 때만 템플릿 교체 */
+}
+window.qnaIlType=qnaIlType;
+function closeQnaInline(){ var nr=document.getElementById('qna-il-newrow'); if(nr) nr.style.display=''; if(typeof loadMysQna==='function') loadMysQna(); }
+window.closeQnaInline=closeQnaInline;
+async function saveQnaInline(){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var type=window._qnaIlType||'인수';
+  var title=((document.getElementById('qna-il-title')||{}).value||'').trim();
+  var body=((document.getElementById('qna-il-body')||{}).value||'').trim();
+  if(!title){ alert('제목을 입력하세요.'); return; }
+  if(!body){ alert('내용을 입력하세요.'); return; }
+  var kw=((document.getElementById('qna-il-kw')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var sv=document.querySelector('#mys-qna-split .osws-save'); if(sv){ sv.disabled=true; sv.textContent='저장 중…'; }
+  var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('qna-il-file','qna',token); if(a===null){ if(sv){sv.disabled=false;sv.textContent='저장';} return; } atts=a||[]; }
+  var branchId=u.branch_id||null;
+  if(branchId==null && u.id){ try{ var _br=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select=branch_id'); if(_br.ok){ var _bj=await _br.json(); if(_bj&&_bj[0]) branchId=_bj[0].branch_id||null; } }catch(e){} }
+  var row={ board_type:'qna', title:title, content:body, question_type:type, insurer_target:null, keywords:kw, attachments:atts, author_id:(u.id||''), author_name:(u.name||''), branch_id:branchId };
+  try{
+    var res=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(row)});
+    if(!(res.ok||res.status===201)){ var t=''; try{t=await res.text();}catch(e){} console.error('[saveQnaInline]',res.status,t); alert('등록 실패 ('+res.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
+    if(typeof toast==='function') toast('보험 Q&A에 등록됐습니다!');
+    window._mysQnaCache=null; window._mrQnaCache=null; window._vaultQnaCache=null;
+    var nr=document.getElementById('qna-il-newrow'); if(nr) nr.style.display='';
+    if(typeof loadMysQna==='function') loadMysQna();
+    if(typeof loadMrQna==='function') loadMrQna();
+    if(typeof loadVaultQna==='function') loadVaultQna();
+  }catch(e){ console.error('[saveQnaInline]',e); alert('저장 중 오류가 발생했습니다.'); if(sv){sv.disabled=false;sv.textContent='저장';} }
+}
+window.saveQnaInline=saveQnaInline;
 
 /* === 라이브러리 상세 보기 모달 (2026-05-29 PR #164) === */
 function openMyspaceDetail(itemId, type){
