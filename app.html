@@ -11948,8 +11948,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-branch.collapsed > .sp-node > .sp-caret{transform:rotate(-90deg);}
 .sp-children{margin-left:13px;border-left:1px solid var(--bd);padding-left:4px;}
 .sp-leaf .sp-caret{visibility:hidden;}
-.sp-bc{font-size:.74rem;color:var(--ts);margin-bottom:4px;}
-.sp-soko{font-size:.92rem;font-weight:600;color:var(--tp);margin-bottom:14px;}
+.sp-soko-card{background:color-mix(in srgb,var(--ac) 8%,#fff);border:1px solid color-mix(in srgb,var(--ac) 20%,var(--bd));border-left:3px solid var(--ac);border-radius:12px;padding:11px 14px;margin-bottom:16px;}
+.sp-bc{font-size:.74rem;font-weight:700;color:var(--ac);margin-bottom:3px;}
+.sp-soko{font-size:.92rem;font-weight:600;color:var(--tp);}
 .sp-soko-sub{font-weight:400;color:var(--ts);font-size:.74rem;}
 .sp-title{font-size:1.05rem;font-weight:800;color:var(--tp);margin-bottom:13px;}
 .sp-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
@@ -12224,9 +12225,11 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     qna_u:{title:'보험 Q&A · 인수', tabs:['상품','인수','기타'], on:1, items:['고혈압 인수 문의','직업 변경 고지','병력 고지 범위'], ico:'i-check'},
     qna_e:{title:'보험 Q&A · 기타', tabs:['상품','인수','기타'], on:2, items:['전산 처리 질문','민원 사례','기타 문의'], ico:'i-dots'}
   };
+  function _spHead(){ return '<div class="sp-soko-card"><div class="sp-bc">내 소속</div><div class="sp-soko">회사 · 지점 · 팀 <span class="sp-soko-sub">(로그인 정보로 표시)</span></div></div>'; }
+  window._spHead=_spHead;
   function _spPaint(k){
     var d=DATA[k]||DATA.tspace, c=document.getElementById('spContent'); if(!c) return;
-    var head='<div class="sp-bc">내 소속</div><div class="sp-soko">회사 · 지점 · 팀 <span class="sp-soko-sub">(로그인 정보로 표시)</span></div>';
+    var head=_spHead();
     var tabs=''; if(d.tabs&&d.tabs.length){ tabs='<div class="sp-tabs">'; for(var i=0;i<d.tabs.length;i++){ tabs+='<span class="sp-tab'+(i===(d.on||0)?' on':'')+'">'+d.tabs[i]+'</span>'; } tabs+='</div>'; }
     var bd='';
     if(d.note){ bd='<div class="sp-empty2">'+d.note+'</div>'; }
@@ -12238,7 +12241,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   function _spDiaShow(host){
     var d=document.getElementById('mys-today'); if(!d){ if(host) host.innerHTML='<div class="sp-empty2">다이어리를 불러올 수 없습니다.</div>'; return; }
     if(!window._spDiaHome) window._spDiaHome=d.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
-    if(host){ host.innerHTML=''; host.appendChild(d); }
+    if(host){ host.innerHTML=_spHead(); host.appendChild(d); }
     d.style.display='';
     if(typeof loadCal==='function') loadCal('mys');           /* 달력 로드·렌더 (탭과 동일) */
     if(typeof loadDiaryDash==='function') loadDiaryDash();    /* 대시보드 3카드 카운트 */
