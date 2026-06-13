@@ -12229,6 +12229,22 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-item:last-child{border-bottom:0;}
 .sp-item .ic{flex:0 0 auto;color:var(--ts);}
 .sp-empty2{font-size:1rem;color:var(--tp);padding:16px 4px;line-height:1.75;}
+/* 스페이스 설명서 (3계층 공간 안내) */
+.sp-int-hero{font-size:1rem;line-height:1.7;color:var(--tp);background:color-mix(in srgb,var(--ac) 7%,transparent);border-left:3px solid var(--ac);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+.sp-int-hero b{color:var(--ac);}
+.sp-int-card{border:1px solid var(--bd);border-left:3px solid var(--ic,var(--ac));border-radius:12px;padding:13px 15px;margin-bottom:10px;}
+.sp-int-ch{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sp-int-ic{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--ic,var(--ac)) 14%,transparent);color:var(--ic,var(--ac));}
+.sp-int-ic svg{width:18px;height:18px;}
+.sp-int-nm{font-size:1rem;font-weight:800;color:var(--tp);}
+.sp-int-mp{font-size:.86rem;font-weight:700;color:var(--ic,var(--ac));}
+.sp-int-ds{font-size:.9rem;line-height:1.65;color:var(--ts);margin-bottom:9px;}
+.sp-int-ex{display:flex;flex-wrap:wrap;gap:6px;}
+.sp-int-ex span{font-size:.8rem;color:var(--tp);background:var(--s2);border-radius:999px;padding:4px 11px;}
+.sp-int-guide{margin-top:14px;background:var(--s2);border-radius:12px;padding:14px 16px;}
+.sp-int-gh{font-size:.95rem;font-weight:800;color:var(--tp);margin-bottom:9px;}
+.sp-int-grow{font-size:.92rem;color:var(--ts);padding:4px 0;}
+.sp-int-grow b{color:var(--tp);}
 /* 이야깃거리 카드 피드 */
 .sp-talk-intro{font-size:.82rem;color:var(--ts);line-height:1.55;margin-bottom:6px}
 .sp-talk-group{font-size:.74rem;font-weight:800;color:var(--ac);margin:14px 2px 8px}
@@ -12319,6 +12335,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
           <div class="sp-node sp-leaf" data-k="talk"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-spark"/></svg></span>이야깃거리</div>
           <div class="sp-node sp-leaf" data-k="nav_news"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>보험이슈</div>
           <div class="sp-node sp-leaf" data-k="nav_together"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-heart"/></svg></span>함께해요</div>
+          <div class="sp-node sp-leaf" data-k="spguide"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-box"/></svg></span>스페이스 설명서</div>
         </div>
       </div>
       <div class="sp-content" id="spContent"></div>
@@ -12533,6 +12550,27 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   /* 현재 화면의 '내 소속' 카드를 최신 _spMe로 교체 (적재 완료 후) */
   function _spRefreshHeads(){ var sc=document.getElementById('spContent'); if(!sc) return; var card=sc.querySelector('.sp-soko-card'); if(!card) return; var tmp=document.createElement('div'); tmp.innerHTML=_spHead(); if(tmp.firstChild) card.parentNode.replaceChild(tmp.firstChild, card); }
   window._spRefreshHeads=_spRefreshHeads;
+  /* 스페이스 설명서 — 3계층 공간(마이=내 책상 / 팀=우리 팀 서랍 / 지점=지점 자료실) 안내. 핵심 원칙=저장할 때부터 올바른 공간에 */
+  function _spIntroHtml(){
+    function card(ic,color,name,mp,ds,ex){
+      return '<div class="sp-int-card" style="--ic:'+color+'">'
+        +'<div class="sp-int-ch"><span class="sp-int-ic"><svg class="sp-ico"><use href="#'+ic+'"/></svg></span><div><span class="sp-int-nm">'+name+'</span> <span class="sp-int-mp">'+mp+'</span></div></div>'
+        +'<div class="sp-int-ds">'+ds+'</div>'
+        +'<div class="sp-int-ex">'+ex.map(function(e){return '<span>'+_mvEsc(e)+'</span>';}).join('')+'</div></div>';
+    }
+    return _spHead()
+      +'<div class="sp-title">스페이스 설명서</div>'
+      +'<div class="sp-int-hero">자료를 찾기 쉽게 만드는 가장 좋은 방법은,<br><b>저장할 때부터 올바른 공간에 넣는 것</b>입니다.</div>'
+      +card('i-user','var(--ac)','마이 스페이스','— 내 책상','나만 쓰는 개인 공간이에요. 상담 자료·스크립트·메모·다이어리를 자유롭게 저장합니다. 다른 사람에게 공개되지 않아요.',['고객 상담 메모','개인 스크립트','보험료 비교표','개인 다이어리'])
+      +card('i-users','#0E9A6C','팀 스페이스','— 우리 팀 서랍','팀원과 자료를 공유하고 협업하는 공간이에요. 팀 공지·우수 스크립트를 한곳에서 봅니다.',['팀 공지사항','우수 상담 스크립트','공유 자료','교육 자료'])
+      +card('i-building','var(--warn)','지점 스페이스','— 지점 자료실','지점에 소속된 모든 구성원이 함께 쓰는 공용 공간이에요. 지점 공지·운영자료가 관리됩니다.',['지점 공지','원수사 자료실','지점 교육자료','운영 매뉴얼'])
+      +'<div class="sp-int-guide"><div class="sp-int-gh">어디에 저장할까요?</div>'
+        +'<div class="sp-int-grow"><b>나만</b> 사용 → 마이 스페이스</div>'
+        +'<div class="sp-int-grow"><b>우리 팀</b>이 사용 → 팀 스페이스</div>'
+        +'<div class="sp-int-grow"><b>지점 전체</b>가 사용 → 지점 스페이스</div></div>';
+  }
+  function _spIntroRender(host){ if(host) host.innerHTML=_spIntroHtml(); }
+  window._spIntroRender=_spIntroRender; window._spIntroHtml=_spIntroHtml;
   /* 이야깃거리 페이지 — 게시판 카드 피드(오늘/이번 주/다가오는). 멘트 + 복사. CAL_MARKS+CAL_TIPS 사용(실데이터 무관·정적 큐레이션). */
   function _spTalkCopy(btn){ try{ var t=btn.getAttribute('data-tip')||''; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ if(window.toast)toast('멘트 복사됨'); }).catch(function(){}); } else { var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(window.toast)toast('멘트 복사됨'); } }catch(e){} }
   window._spTalkCopy=_spTalkCopy;
@@ -12666,6 +12704,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else if(k==='blib_ins') _spCospShow(sc,'insurer');         /* 원수사 자료실 = 공동 스페이스 보험사별 자료실 */
       else if(k==='qna') _spCospShow(sc,'qna');                  /* 보험 Q&A = 공동 스페이스 보험Q&A */
       else if(k==='talk') _spTalkRender(sc);                     /* 이야깃거리 */
+      else if(k==='spguide') _spIntroRender(sc);                 /* 스페이스 설명서 = 공간 구조 안내 */
       else if(k==='nav_news'||k==='nav_together'){ if(typeof showView==='function') showView(k==='nav_news'?'news':'together'); if(typeof window._osSheetCollapse==='function') window._osSheetCollapse(); }
       else _spPaint(k);
     });
