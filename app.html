@@ -11869,7 +11869,7 @@ document.addEventListener('keydown', function(e){
 <style id="os-sheet-css">
 .os-sheet{position:fixed;left:212px;right:0;bottom:0;z-index:90;display:flex;flex-direction:column;
   background:var(--s2);border-top:2px solid var(--ac);box-shadow:0 -10px 30px rgba(0,0,0,.20);
-  height:46px;max-height:90vh;transition:height .28s cubic-bezier(.34,1.4,.64,1);}
+  height:46px;max-height:var(--os-open-h,90vh);transition:height .28s cubic-bezier(.34,1.4,.64,1);}
 .os-sheet.os-dragging{transition:none;}
 body:has(.app.collapsed) .os-sheet{left:56px;}
 .os-sheet.snap-mid{height:42vh;}
@@ -11954,12 +11954,13 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
         <stop offset="78%" stop-color="var(--ac)" stop-opacity=".85"/>
         <stop offset="100%" stop-color="var(--ac)" stop-opacity="0"/>
       </linearGradient></defs>
-      <g fill="none" stroke="url(#osLineGrad)" stroke-width="1.4" stroke-linecap="round">
-        <path d="M0,13 C280,6 520,22 820,11 S1120,9 1200,14" stroke-opacity=".5"/>
-        <path d="M0,18 C300,9 550,26 800,16 S1100,12 1200,18" stroke-opacity=".7"/>
-        <path d="M0,23 C200,12 400,30 600,20 S1000,14 1200,22"/>
-        <path d="M0,28 C250,18 500,34 750,24 S1050,20 1200,26" stroke-opacity=".7"/>
-        <path d="M0,33 C220,24 480,38 700,30 S1080,26 1200,31" stroke-opacity=".5"/>
+      <g fill="none" stroke="url(#osLineGrad)" stroke-width="1.1" stroke-linecap="round">
+        <path d="M0,14 C400,8 800,15 1200,9"  stroke-opacity=".4"/>
+        <path d="M0,19 C400,13 800,20 1200,14" stroke-opacity=".62"/>
+        <path d="M0,24 C400,18 800,25 1200,19" stroke-opacity=".85"/>
+        <path d="M0,29 C400,23 800,30 1200,24" stroke-opacity=".85"/>
+        <path d="M0,34 C400,28 800,35 1200,29" stroke-opacity=".62"/>
+        <path d="M0,39 C400,33 800,40 1200,34" stroke-opacity=".4"/>
       </g>
     </svg>
     <button class="os-sheet-x" id="osSheetToggle" type="button" aria-label="펼치기 접기">▲</button>
@@ -12131,7 +12132,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   if(toggleBtn) toggleBtn.addEventListener('click', function(e){ e.stopPropagation(); cycleSnap(); });
   var drag=null;
   handle.addEventListener('pointerdown', function(e){ if(e.target===toggleBtn) return; drag={y:e.clientY, h:sheet.getBoundingClientRect().height, moved:false}; sheet.classList.add('os-dragging'); try{handle.setPointerCapture(e.pointerId);}catch(_e){} });
-  handle.addEventListener('pointermove', function(e){ if(!drag) return; var dy=drag.y-e.clientY; if(Math.abs(dy)>4) drag.moved=true; var nh=Math.max(46, Math.min(window.innerHeight*0.9, drag.h+dy)); sheet.style.height=nh+'px'; });
+  handle.addEventListener('pointermove', function(e){ if(!drag) return; var dy=drag.y-e.clientY; if(Math.abs(dy)>4) drag.moved=true; var nh=Math.max(46, Math.min(_openH(), drag.h+dy)); sheet.style.height=nh+'px'; });
   function endDrag(){ if(!drag) return; sheet.classList.remove('os-dragging'); var nh=sheet.getBoundingClientRect().height; var wasMoved=drag.moved; drag=null;
     if(!wasMoved){ sheet.style.height=''; cycleSnap(); return; }
     if(isMobile()){ sheet.style.height=''; var r=nh/window.innerHeight; applySnap(r<0.18?'collapsed':(r<0.62?'mid':'open')); }
