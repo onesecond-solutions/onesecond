@@ -3364,6 +3364,10 @@ window.loadPricing = function(){
  * 2026-06-03: 검색 stub 해제 — 실데이터 통합 검색 활성(doSearch 재작성). 검색 트랙 본진 */
 window.openEditProfile = function(){ alert('내 정보 수정은 다음 자리에서 정합 예정.'); };
 window.setFontScale = function(scale){ document.documentElement.style.setProperty('--fscale', scale || 1); try { localStorage.setItem('os_font_scale', scale); } catch(e){} };
+/* 글자 크기 저장값 부팅 적용 (2026-06-13): 한번 바꾸면 다음 접속에도 유지(현재 매 접속 100% 리셋되던 것 해소·노안 대응). 기본=1(16px) 유지. */
+(function(){ try{ var s=parseFloat(localStorage.getItem('os_font_scale')); if(s>0) document.documentElement.style.setProperty('--fscale', s); }catch(e){} })();
+window._syncFontSeg = function(){ try{ var s=parseFloat(localStorage.getItem('os_font_scale'))||1, p=Math.round(s*100); [90,100,110,125].forEach(function(n){ var el=document.getElementById('f'+n); if(el) el.classList.toggle('on', n===p); }); }catch(e){} };
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._syncFontSeg); else window._syncFontSeg();
 
 /* 2026-05-30 초기화 통합: nav-admin/nav-team 노출은 applyRoleClass(role 확정 시)로 일원화.
  * 기존 100ms polling 2개(각 3초) 폐기 — 메뉴 늦게 따라오던 격차 제거. */
@@ -8453,7 +8457,7 @@ async function saveProfile(){
     toast('저장 중 오류 발생');
   }
 }
-function setFont(p){document.documentElement.style.setProperty('--fscale',p/100);[90,100,110,125].forEach(function(n){document.getElementById('f'+n).classList.toggle('on',n===p);});}
+function setFont(p){var s=p/100;document.documentElement.style.setProperty('--fscale',s);try{localStorage.setItem('os_font_scale',s);}catch(e){}[90,100,110,125].forEach(function(n){var el=document.getElementById('f'+n);if(el)el.classList.toggle('on',n===p);});}
 document.addEventListener('keydown',function(e){if(!document.getElementById('lb').classList.contains('open'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowRight')navi(1);if(e.key==='ArrowLeft')navi(-1);});
 
 function updateHomeGreeting(){
