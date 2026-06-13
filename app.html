@@ -1977,7 +1977,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <header class="head">
       <button class="mmenu" onclick="toggleMSide()">☰</button>
       <div class="sp"></div>
-      <div class="search"><span class="sicon">&#8981;</span><input id="lfTopInput" class="lf-top-input" type="text" placeholder="현재 화면에서 찾기" autocomplete="off" oninput="currentViewFind(this.value)" onkeydown="if(event.key==='Escape'){this.value='';currentViewFind('');this.blur();}"><button type="button" class="lf-top-x" id="lfTopX" onclick="lfClearTop()" aria-label="검색 지우기" style="display:none">&#10005;</button></div>
+      <div class="search" onclick="openSearch()"><span class="sicon">&#8981;</span><span class="stext">스크립트·공지·소식지·지식 검색…</span><span class="kbd">검색</span></div>
       <div class="sp"></div>
       <button class="hbtn hbtn-text" id="reportBtn" onclick="_goReport()" aria-label="전산 이상 신고" title="함께해요 · 전산 이상 신고로 이동"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>전산신고</span></button>
       <div class="notif-wrap">
@@ -3421,7 +3421,7 @@ function _getOsUserRole(){
 }
 function _canSeeVault(){
   var r = _getOsUserRole();
-  return r === 'admin' || r.indexOf('ga_') === 0 || r.indexOf('insurer_') === 0;  /* 베타·파일럿: GA도 보험사 자료실 접근(전 기능 오픈) */
+  return r === 'admin' || r.indexOf('insurer_') === 0;  /* 보험사 자료실 = admin·원수사 전용(GA 제외, 2026-06-13 원복) */
 }
 window._canSeeVault = _canSeeVault;
 /* 운영센터(어드민) view 게이팅 — admin 전용 (2026-05-31 SPA 흡수) */
@@ -8354,13 +8354,20 @@ function _sMark(text, terms){
   var re=new RegExp('('+parts.join('|')+')','gi');
   return esc.replace(re,'<mark class="shi">$1</mark>');   /* 단일 pass — 삽입 태그 재매칭 방지 */
 }
-function _searchGo(view){ closeSearch(); if(typeof showView==='function') showView(view); }
+function _searchGo(view){ closeSearch();
+  /* 권한 없는 메뉴로 이동 방어 (req 11) */
+  if((view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault())||(view==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin())||(view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice())){ if(typeof toast==='function') toast('접근 권한이 없는 메뉴입니다'); return; }
+  if(typeof showView==='function') showView(view); }
 /* 원세컨드 메뉴 인덱스 — 키워드로 메뉴 바로 이동 (어드민 제외 = 대전제). Quick 도구는 quick_contents에서 동적 */
 var OS_NAV_INDEX=[
   {label:'홈', kw:'home 대시보드 메인', view:'home'},
   {label:'라이브러리', kw:'마이스페이스 내 자료함 메모 공유함', view:'myspace'},
   {label:'스크립트', kw:'콜 멘트 화법 상담 단계 script', view:'scripts'},
   {label:'Quick 메뉴', kw:'퀵 빠른 도구 계산 검색', view:'quick'},
+  {label:'BMI 계산기', kw:'bmi 체질량 비만 표준체중 계산 도구', view:'quick'},
+  {label:'회사별 BMI 심사기준', kw:'bmi 심사 인수 기준 회사별 비만', view:'quick'},
+  {label:'보험 나이 계산기', kw:'보험연령 상령일 나이 계산 도구', view:'quick'},
+  {label:'단위 변환기', kw:'변환 단위 계산 도구', view:'quick'},
   {label:'현장의 소리', kw:'단체방 지점 게시판 보험 질문 qna 소리', view:'voice'},
   {label:'함께해요', kw:'together 함께', view:'together'},
   {label:'보험이슈', kw:'뉴스 news 이슈', view:'news'},
@@ -8368,7 +8375,7 @@ var OS_NAV_INDEX=[
   {label:'요금제', kw:'가격 결제 구독 멤버십 plus pro free', view:'pricing'}
 ];
 window._searchGo=_searchGo;
-function openSearch(){if(_getOsUserRole()!=='admin')return;/* 검색 admin 전용 (Ctrl+K 우회 차단) */ if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
+function openSearch(){/* 통합검색 v0.5 — 전 사용자 노출(2026-06-13, 옛 admin 전용 게이트 해제). RLS가 데이터 노출 범위 보장 */ if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
 function closeSearch(){document.getElementById('so').classList.remove('open');}
 function fill(q){document.getElementById('sinput').value=q;doSearch(q);document.getElementById('sinput').focus();}
 /* 검색 기본 화면 — 실제 데이터 현황(각 테이블 건수) 표시 (mock 폐기) */
@@ -8404,7 +8411,8 @@ async function _runSearch(q){
     {label:'소식지',      color:'#6366F1', table:'newsletters',     base:'',                                       cols:['title','company','full_text'],          select:'id,title,company,full_text,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                      t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}},
     {label:'현장의 소리', color:'#22C55E', table:'team_notices',    base:'deleted_at=is.null',                     cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
     {label:'스크립트',    color:'#E879F9', table:'scripts',         base:'is_active=eq.true&scope=eq.global&is_sample=eq.false',                                       cols:['title','script_text','highlight_text'], select:'id,title,script_text,highlight_text,stage',            order:'',                                                        body:function(r){return (r.highlight_text?r.highlight_text+' ':'')+(r.script_text||'');}, m:function(r){return r.stage||'스크립트';}},
-    {label:'캘린더',      color:'#818CF8', table:'calendar_events', base:'',                                       cols:['title','description'],                  select:'id,title,description,event_date',                      order:'event_date.desc',                                         body:function(r){return r.description;},                                    m:function(r){return _sFmtDate(r.event_date);}}
+    {label:'캘린더',      color:'#818CF8', table:'calendar_events', base:'',                                       cols:['title','description'],                  select:'id,title,description,event_date',                      order:'event_date.desc',                                         body:function(r){return r.description;},                                    m:function(r){return _sFmtDate(r.event_date);}},
+    {label:'지식엔진',    color:'#F59E0B', table:'knowledge_entries', base:'status=eq.approved',                   cols:['title','body'],                         select:'id:entry_id,title,body,category',                      order:'',                                                        body:function(r){return r.body;},                                           m:function(r){return r.category||'지식';}}
   ];
   var results=await Promise.all(groups.map(function(g){
     var path=g.table+'?'+(g.base?g.base+'&':'')+_sBuildFilter(g.cols,terms)+'&select='+g.select+(g.order?'&order='+g.order:'')+'&limit=100';
@@ -8412,7 +8420,12 @@ async function _runSearch(q){
   }));
   if(seq!==_searchSeq) return;  /* 더 새 검색이 들어왔으면 폐기(stale) */
   /* 원세컨드 메뉴(정적) + Quick 도구(quick_contents) — 키워드로 메뉴 이동 (어드민 제외) */
-  var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); });
+  var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
+    /* 권한 없는 화면은 결과에서 제외 (req 11 — 권한 없는 딥링크 방어) */
+    if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
+    if(n.view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()) return false;
+    if(n.view==='admin') return false;
+    return true; });
   var qcHits=[];
   try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
   if(seq!==_searchSeq) return;
@@ -8495,15 +8508,16 @@ window._aiAnswer=_aiAnswer;
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
   var _qt=_sTokens(((document.getElementById('sinput')||{}).value||'').trim());  /* 현재 검색어 → 본문 하이라이트용 */
-  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date' };
+  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,category,source_company' };
   var sel=selMap[table]||'title';
+  var idCol=(table==='knowledge_entries')?'entry_id':'id';  /* 지식엔진 PK=entry_id */
   try{
-    var res=await window.db.fetch('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id)+'&select='+sel);
+    var res=await window.db.fetch('/rest/v1/'+table+'?'+idCol+'=eq.'+encodeURIComponent(id)+'&select='+sel);
     var rows=res.ok?await res.json():[]; var r=rows[0];
     if(!r){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); return; }
-    var title=(r.company?r.company+' · ':'')+(r.title||'(제목 없음)');
+    var title=(r.company||r.source_company?((r.company||r.source_company)+' · '):'')+(r.title||'(제목 없음)');
     var meta = r.publish_year?(r.publish_year+'.'+(r.publish_month||'')) : (r.stage||r.category||(r.event_date?String(r.event_date).slice(0,10):(r.created_at?_sFmtDate(r.created_at):'')));
-    var bodyTxt = r.full_text||r.content||r.script_text||r.description||r.memo_text||'(내용 없음)';
+    var bodyTxt = r.full_text||r.content||r.script_text||r.body||r.description||r.memo_text||'(내용 없음)';
     if(r.highlight_text) bodyTxt=r.highlight_text+'\n\n'+bodyTxt;
     if(r.link_url) bodyTxt=bodyTxt+'\n\n'+r.link_url;
     _closeSearchDetail();
