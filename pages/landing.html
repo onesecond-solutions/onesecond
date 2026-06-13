@@ -739,17 +739,29 @@ body {
         <h2 class="auth-page-title">처음이시군요</h2>
         <p class="auth-page-sub">어떤 소속이신지 알려주세요</p>
 
+        <!-- 소속 선택 카드 2종 (2026-06-13 mockup 적용). 기능 배선(id·data-site·onclick) 보존. 동일 높이=flex column + margin-top:auto. -->
         <div class="auth-site-grid">
           <button class="auth-site-card-v2" type="button" id="site-card-ga" data-site="ga" onclick="selectSite('ga'); window.authNextSignup();"
-                  style="display:block;width:100%;text-align:left;padding:18px 20px;border:2px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;margin-bottom:12px;">
-            <div style="font-size:1.05rem;font-weight:800;color:var(--color-text);margin-bottom:6px;">👥 보험 설계사 · 매니저</div>
-            <div style="font-size:0.875rem;color:var(--color-text-secondary);line-height:1.55;">대리점(GA) 소속 — 회사 · 지점 · 팀<br>설계사 · 실장 · 지점장 · 스탭</div>
+                  style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;text-align:left;padding:18px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;">
+            <span style="width:38px;height:38px;border-radius:9px;background:color-mix(in srgb,var(--color-brand) 13%,#fff);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;">👥</span>
+            <span style="font-size:15px;font-weight:700;color:var(--color-text);margin-bottom:6px;">보험 설계사 · 매니저</span>
+            <span style="font-size:14px;color:var(--color-text-secondary);line-height:1.6;">대리점(GA) 소속<br>회사 · 지점 · 팀</span>
+            <span style="margin-top:auto;padding-top:16px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;font-weight:600;color:var(--color-brand);background:color-mix(in srgb,var(--color-brand) 13%,#fff);padding:5px 10px;border-radius:9px;">설계사 · 실장 · 지점장</span>
+              <span style="font-size:16px;color:var(--color-text-tertiary);" aria-hidden="true">›</span>
+            </span>
           </button>
 
+          <!-- 원수사 구분색 = 블루(도메인 구분, 브랜드 인디고와 대비). 블루 토큰 부재로 리터럴 사용. -->
           <button class="auth-site-card-v2" type="button" id="site-card-insurer" data-site="insurer" onclick="selectSite('insurer'); window.authNextSignup();"
-                  style="display:block;width:100%;text-align:left;padding:18px 20px;border:2px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;">
-            <div style="font-size:1.05rem;font-weight:800;color:var(--color-text);margin-bottom:6px;">🏢 보험사 임직원</div>
-            <div style="font-size:0.875rem;color:var(--color-text-secondary);line-height:1.55;">손해 · 생명 보험사(원수사) 직원<br>31개 보험사</div>
+                  style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;text-align:left;padding:18px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;">
+            <span style="width:38px;height:38px;border-radius:9px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;">🏢</span>
+            <span style="font-size:15px;font-weight:700;color:var(--color-text);margin-bottom:6px;">보험사 임직원</span>
+            <span style="font-size:14px;color:var(--color-text-secondary);line-height:1.6;">손해 · 생명 보험사<br>(원수사) 소속</span>
+            <span style="margin-top:auto;padding-top:16px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;font-weight:600;color:#0C447C;background:#E6F1FB;padding:5px 10px;border-radius:9px;">31개 보험사</span>
+              <span style="font-size:16px;color:var(--color-text-tertiary);" aria-hidden="true">›</span>
+            </span>
           </button>
         </div>
       </div>
