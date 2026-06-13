@@ -10249,7 +10249,9 @@ async function loadCal(p){
   if(!window.db||!window.db.fetch){ if(listEl)listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
+    /* 개인 다이어리(mys) = 본인 일정만(author_id 필터). 어드민은 RLS상 전체가 보여 타 사용자 일정이 끌려오던 것 차단. mr/iv 공용 캘린더는 불변. */
+    var _own=''; if(p==='mys'){ var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; if(_me) _own='&author_id=eq.'+encodeURIComponent(_me); }
+    var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500'+_own+'&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     st.rows=rows;
     renderCalMonths(p);      /* 좌: 월별 누적(최신 월 상단) */
