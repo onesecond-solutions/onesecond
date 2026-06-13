@@ -12272,7 +12272,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   </defs></svg>
   <div class="sp-skel">
     <div class="sp-skel-note">SPACE 권한 트리 — <b>레이아웃 골격</b>입니다. 권한 분기·실데이터는 아직 연결하지 않았습니다(결재 후 배선). 노드를 눌러 동선을 확인해 주세요.</div>
-    <div class="sp-skel-sign"><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span><span>소속 회사</span><span style="font-weight:400;color:var(--ts);font-size:.72rem;">· 회사 상호는 간판으로만 표시 (트리 진입 X)</span></div>
+    <div class="sp-skel-sign"><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span><span id="sp-company-name">소속 회사</span><span style="font-weight:400;color:var(--ts);font-size:.72rem;">· 회사 상호는 간판으로만 표시 (트리 진입 X)</span></div>
     <div class="sp-panes">
       <div class="sp-tree" id="spTree">
         <!-- 내 조직 영역 (인디고) -->
@@ -12505,8 +12505,34 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     qna_e:{title:'보험 Q&A · 기타', tabs:['상품','인수','기타'], on:2, items:['전산 처리 질문','민원 사례','기타 문의'], ico:'i-dots'},
     talk:{title:'이야깃거리', note:'<b>오늘의 이야깃거리</b> — 공휴일·절기·기념일을 고객 대화 멘트로 풀어주는 접점 페이지입니다.<br>곧 연결됩니다 (큐레이션 + 대화 멘트 + 복사).'}
   };
-  function _spHead(){ return '<div class="sp-soko-card"><div class="sp-bc">내 소속</div><div class="sp-soko">회사 · 지점 · 팀 <span class="sp-soko-sub">(로그인 정보로 표시)</span></div></div>'; }
+  /* 내 소속 카드 — 로그인 사용자의 실제 회사·지점·팀·이름 표시(window._spMe 캐시). 권한분기(team_id/branch_id)의 표면 */
+  function _spHead(){
+    var m=window._spMe;
+    if(!m){ return '<div class="sp-soko-card"><div class="sp-bc">내 소속</div><div class="sp-soko">불러오는 중…</div></div>'; }
+    var parts=[m.company,m.branch,m.team].filter(Boolean);
+    var soko=parts.length?parts.join(' · '):'소속 미지정';
+    var rl=(m.role&&window.ROLE_LABEL&&window.ROLE_LABEL[m.role])||'';
+    var who=m.name?(' <span class="sp-soko-sub">'+_mvEsc(m.name)+(rl?(' '+rl):'')+'</span>'):'';
+    return '<div class="sp-soko-card"><div class="sp-bc">내 소속</div><div class="sp-soko">'+_mvEsc(soko)+who+'</div></div>';
+  }
   window._spHead=_spHead;
+  /* 소속 이름 1회 적재 — _cospLoadMe로 team_id/branch_id 확보 후 teams/branches/companies 이름 조회 */
+  async function _spLoadMe(){
+    var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+    var me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{team_id:u.team_id,branch_id:u.branch_id,role:u.role};
+    var info={name:(u.name||''), role:(me.role||u.role||''), company:'', branch:'', team:''};
+    try{
+      if(me.team_id){ var tr=await window.db.fetch('/rest/v1/teams?id=eq.'+encodeURIComponent(me.team_id)+'&select=name'); if(tr.ok){ var tj=await tr.json(); if(tj&&tj[0]) info.team=tj[0].name||''; } }
+      if(me.branch_id){ var br=await window.db.fetch('/rest/v1/branches?id=eq.'+encodeURIComponent(me.branch_id)+'&select=name,company_id'); if(br.ok){ var bj=await br.json(); if(bj&&bj[0]){ info.branch=bj[0].name||''; if(bj[0].company_id){ var cr=await window.db.fetch('/rest/v1/companies?id=eq.'+encodeURIComponent(bj[0].company_id)+'&select=name'); if(cr.ok){ var cj=await cr.json(); if(cj&&cj[0]) info.company=cj[0].name||''; } } } } }
+    }catch(e){}
+    window._spMe=info; _spRefreshHeads();
+    var cel=document.getElementById('sp-company-name'); if(cel && info.company) cel.textContent=info.company;  /* 상단 간판 = 실제 회사명 */
+    return info;
+  }
+  window._spLoadMe=_spLoadMe;
+  /* 현재 화면의 '내 소속' 카드를 최신 _spMe로 교체 (적재 완료 후) */
+  function _spRefreshHeads(){ var sc=document.getElementById('spContent'); if(!sc) return; var card=sc.querySelector('.sp-soko-card'); if(!card) return; var tmp=document.createElement('div'); tmp.innerHTML=_spHead(); if(tmp.firstChild) card.parentNode.replaceChild(tmp.firstChild, card); }
+  window._spRefreshHeads=_spRefreshHeads;
   /* 이야깃거리 페이지 — 게시판 카드 피드(오늘/이번 주/다가오는). 멘트 + 복사. CAL_MARKS+CAL_TIPS 사용(실데이터 무관·정적 큐레이션). */
   function _spTalkCopy(btn){ try{ var t=btn.getAttribute('data-tip')||''; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ if(window.toast)toast('멘트 복사됨'); }).catch(function(){}); } else { var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(window.toast)toast('멘트 복사됨'); } }catch(e){} }
   window._spTalkCopy=_spTalkCopy;
@@ -12644,6 +12670,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else _spPaint(k);
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
+    if(typeof _spLoadMe==='function') _spLoadMe();  /* 내 소속(회사·지점·팀·이름) 실데이터 적재 → 헤더·간판 갱신 */
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
 })();
