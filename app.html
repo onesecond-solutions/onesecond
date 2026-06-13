@@ -44,10 +44,13 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #app.is-insurer .nav{display:none;}                     /* 원수사: 전부 숨김 */
 #app.is-insurer .nav.ins-show{display:flex;}            /* 그 중 3개(자료실·현장의소리·함께해요)만 */
 #app.is-admin #nav-insurer-vault{display:flex;}         /* admin: 전체 노출 유지 + 자료실 추가 */
-#app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} /* 단순화(2026-06-10): 일반(GA) 사용자만 숨김. admin·insurer는 기존 게이팅 유지 */
+/* 베타·파일럿(2026-06-13): GA 전 기능 오픈 — ga-hide 숨김 해제. '함께해요' 후기로 보완. 종료 후 재제한 시 아래 규칙 복구:
+   #app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} */
 .nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
 /* 사이드바 하단 안내 — 제한 오픈(감추기>만들기) 보완 문구. 접힘 시 숨김 */
-.side-note{margin-top:auto;padding:12px 10px 4px;font-size:0.72rem;line-height:1.55;color:var(--tf);border-top:1px solid var(--bd);}
+.side-note{margin-top:auto;padding:12px 10px 4px;font-size:0.72rem;line-height:1.6;color:var(--tf);border-top:1px solid var(--bd);}
+.side-note b{color:var(--ts);font-weight:700;}
+.side-note-link{background:none;border:0;padding:0;font:inherit;color:var(--ac);font-weight:700;cursor:pointer;text-decoration:underline;}
 .app.collapsed .side-note{display:none;}
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
@@ -1968,7 +1971,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav ga-hide" id="nav-voice" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav ins-show ga-hide" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav ga-hide" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
-    <div class="side-note" id="sideNote">준비 중인 메뉴·도구는 계속 업데이트할 예정입니다.</div>
+    <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
   </nav>
   <div class="main">
     <header class="head">
@@ -3418,7 +3421,7 @@ function _getOsUserRole(){
 }
 function _canSeeVault(){
   var r = _getOsUserRole();
-  return r === 'admin' || r.indexOf('insurer_') === 0;
+  return r === 'admin' || r.indexOf('ga_') === 0 || r.indexOf('insurer_') === 0;  /* 베타·파일럿: GA도 보험사 자료실 접근(전 기능 오픈) */
 }
 window._canSeeVault = _canSeeVault;
 /* 운영센터(어드민) view 게이팅 — admin 전용 (2026-05-31 SPA 흡수) */
