@@ -12300,6 +12300,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       if(k==='m_diary'){ _spVaultRestore(); _spSplitRestore(); _spDiaShow(sc); }       /* 다이어리 = 실페이지 이식(inplace) */
       else if(k==='m_lib'){ _spDiaRestore(); _spSplitRestore(); _spVaultShow(sc); }     /* 개인 자료실 = 자료함 이식(inplace) */
       else if(k==='m_script'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'스크립트'); }  /* 스크립트 = 목록뷰 이식(inplace) */
+      else if(k==='m_memo'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'메모'); }        /* 메모 = 목록뷰 이식(inplace, #mys-split 공유) */
       else { _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spPaint(k); }      /* 다른 노드 = 이식분 원위치 복귀 후 일반 페인트 */
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
