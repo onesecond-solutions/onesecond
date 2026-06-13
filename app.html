@@ -10995,6 +10995,21 @@ window.mysShareboxOpen=mysShareboxOpen;
    읽기=signed URL. 폴더 통째 재귀 업로드=PR2.
 ═════════════════════════════════════════════════════════ */
 function _mvOwner(){ return (window.AppState&&window.AppState.userId)||''; }
+/* 자료함 스코프 컨텍스트 (2026-06-13 팀/지점 공유 이식) — personal(본인) / team / branch. 단일 컴포넌트 재사용 */
+window._mvScope = window._mvScope || {scope:'personal', id:null};
+function _mvScopeSet(scope,id){ window._mvScope={scope:(scope||'personal'), id:(id||null)}; }
+function _mvScopeQ(){ var s=window._mvScope||{scope:'personal'};   /* 로드 쿼리 필터 */
+  if(s.scope==='team'&&s.id)   return '&scope=eq.team&scope_id=eq.'+encodeURIComponent(s.id);
+  if(s.scope==='branch'&&s.id) return '&scope=eq.branch&scope_id=eq.'+encodeURIComponent(s.id);
+  return '&owner_id=eq.'+encodeURIComponent(_mvOwner()); }
+function _mvScopeRow(){ var s=window._mvScope||{scope:'personal'};  /* INSERT scope 필드 */
+  if(s.scope==='team'&&s.id)   return {scope:'team',   scope_id:s.id};
+  if(s.scope==='branch'&&s.id) return {scope:'branch', scope_id:s.id};
+  return {scope:'personal', scope_id:null}; }
+function _mvStoragePrefix(){ var s=window._mvScope||{scope:'personal'};  /* storage 경로 첫 세그먼트 */
+  if(s.scope==='team'&&s.id)   return 'team/'+s.id;
+  if(s.scope==='branch'&&s.id) return 'branch/'+s.id;
+  return _mvOwner(); }
 function _mvToken(){ return window.db&&window.db.getToken&&window.db.getToken(); }
 function _mvEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _mvEncPath(p){ return String(p).split('/').map(encodeURIComponent).join('/'); }
@@ -11012,10 +11027,12 @@ function mysVaultOpen(el){
   for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
   el.classList.add('on');
   window._mysCat='자료함';
+  if(typeof _mvScopeSet==='function') _mvScopeSet('personal', null);  /* 라이브러리 자료함 = 항상 개인 스코프(트리에서 팀/지점 보다 온 잔상 리셋) */
+  if(typeof _mvApplyVaultNotice==='function') _mvApplyVaultNotice('personal');
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='none';
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='flex';
   if(!_mvOwner()){ var fb=document.getElementById('mys-vault-folders'); if(fb) fb.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
-  if(window._mvCurFolder===undefined) window._mvCurFolder=null;
+  window._mvCurFolder=null;
   if(window._mvView===undefined){ try{ window._mvView=localStorage.getItem('os_mv_view')||'grid'; }catch(e){ window._mvView='grid'; } }
   _mvViewSyncBtns();
   mysVaultLoadFolders();
@@ -11042,7 +11059,7 @@ async function mysVaultLoadFolders(){
   var box=document.getElementById('mys-vault-folders'); if(!box) return;
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   try{
-    var res=await window.db.fetch('/rest/v1/myspace_folders?owner_id=eq.'+encodeURIComponent(owner)+'&deleted_at=is.null&order=sort_order.asc,name.asc&select=id,parent_id,name,depth,sort_order');
+    var res=await window.db.fetch('/rest/v1/myspace_folders?deleted_at=is.null'+_mvScopeQ()+'&order=sort_order.asc,name.asc&select=id,parent_id,name,depth,sort_order');
     var rows=res.ok?await res.json():[];
     window._mvFolders=rows;
     var html=mysVaultTreeHtml(rows);
@@ -11067,7 +11084,7 @@ async function mysVaultLoadFiles(fid){
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var q='/rest/v1/myspace_files?owner_id=eq.'+encodeURIComponent(owner)+'&deleted_at=is.null&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
+    var q='/rest/v1/myspace_files?deleted_at=is.null'+_mvScopeQ()+'&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
     q += fid?('&folder_id=eq.'+encodeURIComponent(fid)):'&folder_id=is.null';
     var res=await window.db.fetch(q);
     var rows=res.ok?await res.json():[];
@@ -11163,13 +11180,31 @@ function mysVaultSetView(v){
 }
 window.mysVaultSetView=mysVaultSetView;
 
+async /* 자료실 상단 고지 문구 — 스코프별(개인=본인자산 / 팀·지점=공유). 스코프 전환 시 확인 재요청 */
+function _mvApplyVaultNotice(scope){
+  var nt=document.getElementById('mys-vault-notice'), txt=nt?nt.querySelector('.mvn-txt'):null;
+  if(txt){
+    if(scope==='team') txt.innerHTML='안내 · <b>팀 공유 자료실</b>입니다. 같은 팀원이 함께 보고 올립니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.';
+    else if(scope==='branch') txt.innerHTML='안내 · <b>지점 공유 자료실</b>입니다. 같은 지점원이 함께 보고 올립니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.';
+    else txt.innerHTML='안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.';
+  }
+  window._mvConfirmed=false;  /* 스코프 바뀌면 다른 고지 → 재확인 */
+  var ck=document.getElementById('mys-vault-confirm'); if(ck) ck.checked=false;
+  var btn=document.getElementById('mys-vault-uploadbtn'); if(btn) btn.disabled=true;
+  if(nt) nt.classList.remove('mvn-done');
+  var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.remove('mvdz-ready');
+}
+window._mvApplyVaultNotice=_mvApplyVaultNotice;
 async function mysVaultCreateFolder(parentId){
   var owner=_mvOwner(), token=_mvToken();
   if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   var name=prompt('새 폴더 이름'); if(name==null) return; name=String(name).trim(); if(!name) return;
   var depth=0; if(parentId){ var p=(window._mvFolders||[]).filter(function(f){return f.id===parentId;})[0]; depth=p?((p.depth||0)+1):0; }
   try{
-    var res=await fetch(window.db.url('/rest/v1/myspace_folders'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({owner_id:owner,parent_id:parentId||null,name:name,depth:depth,sort_order:0})});
+    var _sc=_mvScopeRow();  /* 현재 자료실 스코프(개인/팀/지점) */
+    var _drow={owner_id:owner,parent_id:parentId||null,name:name,depth:depth,sort_order:0};
+    if(_sc.scope!=='personal'){ _drow.scope=_sc.scope; _drow.scope_id=_sc.scope_id; }  /* 개인=scope 미전송(DDL 전에도 안전) */
+    var res=await fetch(window.db.url('/rest/v1/myspace_folders'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(_drow)});
     if(res.ok||res.status===201){ mysVaultLoadFolders(); if(typeof toast==='function') toast('폴더를 만들었습니다.'); }
     else { var e=await res.json().catch(function(){return{};}); alert('폴더 생성 실패: '+(e.message||res.status)); }
   }catch(e){ console.error('[mysVault] createFolder',e); alert('폴더 생성 중 오류가 발생했습니다.'); }
@@ -11295,10 +11330,13 @@ async function _mvUploadOneFile(file, folderId, owner, token){
     var asciiBase=(dot>0?file.name.slice(0,dot):file.name).replace(/[^A-Za-z0-9._-]+/g,'').slice(0,80);
     var asciiExt=ext.replace(/[^A-Za-z0-9]+/g,'');
     var keyName=fid+(asciiBase?('_'+asciiBase):'')+(asciiExt?('.'+asciiExt):'');
-    var pathInner=owner+'/'+(folderId||'root')+'/'+keyName;
+    var pathInner=_mvStoragePrefix()+'/'+(folderId||'root')+'/'+keyName;  /* personal={owner}/.. team=team/{tid}/.. branch=branch/{bid}/.. */
     var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(pathInner)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(file.type||'application/octet-stream'),'x-upsert':'true'},body:file});
     if(!up.ok){ var rs=up.status; return {ok:false, reason:(rs===413?'용량 초과':('업로드 실패 '+rs))}; }
-    var ins=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({id:fid,owner_id:owner,folder_id:folderId,original_name:file.name,storage_path:pathInner,mime_type:(file.type||''),ext:ext,file_size:file.size,source:'picker',status:'pending',search_text:file.name})});
+    var _sc=_mvScopeRow();  /* owner_id=업로더 / scope·scope_id=현재 자료실 */
+    var _frow={id:fid,owner_id:owner,folder_id:folderId,original_name:file.name,storage_path:pathInner,mime_type:(file.type||''),ext:ext,file_size:file.size,source:'picker',status:'pending',search_text:file.name};
+    if(_sc.scope!=='personal'){ _frow.scope=_sc.scope; _frow.scope_id=_sc.scope_id; }  /* 개인=scope 미전송(DDL 전에도 개인 안전·기본값 personal) */
+    var ins=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(_frow)});
     if(ins.ok||ins.status===201) return {ok:true};
     return {ok:false, reason:'DB 기록 실패 '+ins.status};
   }catch(e){ console.error('[mysVault] uploadOne',e); return {ok:false, reason:'오류'}; }
@@ -12517,14 +12555,23 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   }
   window._spDiaShow=_spDiaShow; window._spDiaRestore=_spDiaRestore;
   /* 개인 자료실 노드 = 라이브러리 자료함(#mys-vault)을 우측 패널로 이동(inplace, 기능·데이터 그대로). 다이어리 패턴 정합. */
-  function _spVaultShow(host){
+  /* scope: undefined/'personal'=개인 자료실(m_lib) / 'team'=팀 자료실(tlib) / 'branch'=지점 자료실(blib_b). 같은 #mys-vault 컴포넌트 재사용 */
+  function _spVaultShow(host, scope){
     var v=document.getElementById('mys-vault'); if(!v){ if(host) host.innerHTML='<div class="sp-empty2">자료함을 불러올 수 없습니다.</div>'; return; }
     if(!window._spVaultHome) window._spVaultHome=v.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
+    var sid=null;
+    if(scope==='team'||scope==='branch'){
+      var me=window._cospMe||{}, u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+      sid=(scope==='team')?(me.team_id||u.team_id||null):(me.branch_id||u.branch_id||null);
+      if(!sid){ if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.6">'+(scope==='team'?'팀':'지점')+' 소속 정보가 없어 자료실을 열 수 없어요.<br>소속이 등록되면 이용할 수 있어요.</div>'; if(typeof _mvScopeSet==='function') _mvScopeSet('personal',null); return; }
+      if(typeof _mvScopeSet==='function') _mvScopeSet(scope, sid);
+    } else { if(typeof _mvScopeSet==='function') _mvScopeSet('personal', null); }
     if(host){ host.innerHTML=_spHead(); host.appendChild(v); }
     v.style.display='flex';
     window._mysCat='자료함';
+    if(typeof _mvApplyVaultNotice==='function') _mvApplyVaultNotice(scope);  /* 고지 문구·확인 스코프별 갱신 */
     if(typeof _mvOwner==='function' && !_mvOwner()) return;     /* 미로그인 가드(자료함 내부 문구 표시) */
-    if(window._mvCurFolder===undefined) window._mvCurFolder=null;
+    window._mvCurFolder=null;  /* 스코프 전환 시 루트부터 (이전 스코프 폴더 잔상 방지) */
     if(window._mvView===undefined){ try{ window._mvView=localStorage.getItem('os_mv_view')||'grid'; }catch(e){ window._mvView='grid'; } }
     if(typeof _mvViewSyncBtns==='function') _mvViewSyncBtns();
     if(typeof mysVaultLoadFolders==='function') mysVaultLoadFolders();
@@ -12580,7 +12627,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       var k=node.getAttribute('data-k'), sc=document.getElementById('spContent');
       _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
       if(k==='m_diary') _spDiaShow(sc);                          /* 다이어리 */
-      else if(k==='m_lib') _spVaultShow(sc);                     /* 개인 자료실 = 자료함 */
+      else if(k==='m_lib') _spVaultShow(sc);                     /* 개인 자료실 = 자료함(personal) */
+      else if(k==='tlib') _spVaultShow(sc,'team');               /* 팀 자료실 = 자료함(team 공유) */
+      else if(k==='blib_b') _spVaultShow(sc,'branch');           /* 지점 자료실 = 자료함(branch 공유) */
       else if(k==='m_script') _spSplitShow(sc,'스크립트');        /* 스크립트 */
       else if(k==='m_memo') _spSplitShow(sc,'메모');             /* 메모 */
       else if(k==='m_share') _spSplitShow(sc,'공유함');          /* 공유함 */
