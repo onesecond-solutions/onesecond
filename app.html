@@ -1105,19 +1105,22 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .mvf-cta{display:block;width:100%;margin-top:8px;border:1px dashed var(--ac);background:transparent;color:var(--ac);border-radius:var(--radius-sm);padding:10px;font-size:0.83rem;font-weight:600;cursor:pointer}
 .mvf-cta:hover{background:var(--bg)}
 /* 드롭존 */
-.mys-vault-dropzone{border:1.5px dashed var(--bd);border-radius:var(--radius-sm);padding:16px 8px;text-align:center;font-size:0.8rem;color:var(--ts);cursor:pointer}
-.mys-vault-dropzone.mvdz-ready{border-color:var(--ac)}
-.mys-vault-dropzone.mvdz-over{border-color:var(--ac);background:var(--bg)}
-.mvdz-sub{font-size:0.9rem;opacity:0.7}
+/* 폴더·파일 드롭존 통일 — 위치(칼럼 맨 아래 footer)·폰트·구조 동일, 색만 구역별로 다름(폴더=주황/파일=인디고) */
+.mys-vault-dropzone{border:2px dashed var(--bd);border-radius:var(--radius-md);padding:16px 12px;text-align:center;cursor:pointer;margin-top:8px;flex-shrink:0}
+.mys-vault-dropzone .mvdz-t{font-size:0.92rem;font-weight:700;color:var(--ts)}
+.mvdz-sub{font-size:0.8rem;color:var(--ts);opacity:0.85;margin-top:4px;display:block}
+/* 폴더 드롭존(왼쪽) = 주황 */
+#mys-vault-dropzone{border-color:color-mix(in srgb,var(--warn) 55%,var(--bd));background:color-mix(in srgb,var(--warn) 8%,transparent)}
+#mys-vault-dropzone .mvdz-t{color:var(--warn)}
+#mys-vault-dropzone:hover,#mys-vault-dropzone.mv-drop-hot{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)!important;outline:none}
+/* 파일 드롭존(가운데) = 인디고 */
+#mys-vault-filedrop{border-color:color-mix(in srgb,var(--ac) 55%,var(--bd));background:color-mix(in srgb,var(--ac) 6%,transparent)}
+#mys-vault-filedrop .mvdz-t{color:var(--ac)}
+#mys-vault-filedrop:hover,#mys-vault-filedrop.mv-drop-hot{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent)!important;outline:none}
 /* 파일 그리드 */
 .mys-vault-progress{font-size:0.8rem;color:var(--ac)}
 .mys-vault-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;align-content:start;flex:1;min-height:0;overflow:auto}
 .mv-drop-hot{outline:2px solid var(--ac);outline-offset:-2px;background:color-mix(in srgb,var(--ac) 8%,transparent)!important;border-radius:var(--radius-sm)}
-/* 가운데 파일 드롭 안내 박스 (강조색 점선) — 파일 없을 때 표시. 클릭=파일 선택, 드롭=업로드 */
-.mv-fdrop{grid-column:1/-1;border:2px dashed color-mix(in srgb,var(--ac) 55%,var(--bd));border-radius:var(--radius-md);background:color-mix(in srgb,var(--ac) 6%,transparent);padding:34px 16px;text-align:center;cursor:pointer;margin:4px}
-.mv-fdrop:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 11%,transparent)}
-.mv-fdrop-t{font-size:1rem;font-weight:700;color:var(--ac)}
-.mv-fdrop-s{font-size:0.82rem;color:var(--ts);margin-top:5px}
 .mv-move-list{display:flex;flex-direction:column;gap:3px;max-height:340px;overflow:auto;margin-top:4px}
 .mv-move-dest{border:1px solid var(--bd);background:var(--s1);color:var(--tf);border-radius:var(--radius-sm);padding:8px 12px;font-size:0.84rem;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mv-move-dest:hover{border-color:var(--ac);color:var(--ac);background:var(--bg)}
@@ -2154,12 +2157,13 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="mys-vault-tree">
             <div class="mvcol-head"><span class="mvcol-ttl">폴더</span><button class="mys-vault-newfolder" onclick="mysVaultCreateFolder()">+ 새 폴더</button></div>
             <div id="mys-vault-folders" class="mys-vault-folders"><div class="mys-news-empty">불러오는 중…</div></div>
-            <div class="mys-vault-dropzone" id="mys-vault-dropzone" onclick="mysVaultPickFolder()" ondragover="mysVaultDragOver(event)" ondragleave="mysVaultDragLeave(event)" ondrop="mysVaultDrop(event)">폴더를 끌어다 놓기<br><span class="mvdz-sub">또는 클릭해서 폴더 선택 · 파일은 오른쪽에서</span></div>
+            <div class="mys-vault-dropzone" id="mys-vault-dropzone" onclick="mysVaultPickFolder()" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mysVaultDrop(event)"><div class="mvdz-t">폴더를 끌어다 놓으세요</div><span class="mvdz-sub">또는 클릭해서 폴더 선택 · 파일은 오른쪽에서</span></div>
           </div>
           <div class="mys-vault-grid-col">
             <div class="mvcol-head"><span class="mvcol-ttl mys-vault-curpath" id="mys-vault-curpath">전체</span><span class="mv-view-toggle"><button id="mv-view-grid" class="mv-vt-btn on" onclick="mysVaultSetView('grid')" title="그리드 보기" aria-label="그리드 보기">&#9638;</button><button id="mv-view-list" class="mv-vt-btn" onclick="mysVaultSetView('list')" title="리스트 보기" aria-label="리스트 보기">&#9776;</button></span><span class="mvcol-actions"><button class="mys-vault-uploadbtn" id="mys-vault-uploadbtn" onclick="mysVaultPickFiles()" disabled>+ 파일</button></span><input type="file" id="mys-vault-fileinput" multiple style="display:none" onchange="mysVaultFileInputChange(event)"><input type="file" id="mys-vault-dirinput" webkitdirectory directory multiple style="display:none" onchange="mysVaultDirInputChange(event)"></div>
             <div id="mys-vault-progress" class="mys-vault-progress" style="display:none"></div>
             <div id="mys-vault-files" class="mys-vault-files" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event, (window._mvCurFolder||null))"><div class="mys-news-empty">폴더를 선택하세요.</div></div>
+            <div class="mys-vault-dropzone" id="mys-vault-filedrop" onclick="mysVaultPickFiles()" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,(window._mvCurFolder||null))"><div class="mvdz-t">여기에 파일을 끌어다 놓으세요</div><span class="mvdz-sub">또는 클릭해서 파일 선택 · 폴더는 왼쪽에서</span></div>
           </div>
           <div class="mys-vault-preview-col">
             <div class="mvcol-head"><span class="mvcol-ttl">미리보기</span></div>
@@ -11083,11 +11087,6 @@ function _mvFileThumbHtml(f){ var fid=f.id;
   if(_mvIsPdf(f)) return '<div class="mvfile-ic mvfile-thumb-wrap"><span class="mvfile-thumb-ph">📄</span><img class="mvfile-thumb mvfile-pdfthumb" data-fid="'+fid+'" alt=""></div>';
   return '<div class="mvfile-ic">'+mysVaultIcon(f)+'</div>';
 }
-/* 가운데 칼럼 파일 드롭 안내 박스 — 클릭=파일 선택, 드롭=현재 폴더(cur)로 업로드 */
-function _mvFdropBox(cur){ var arg=cur?("'"+cur+"'"):'null';
-  return '<div class="mv-fdrop" onclick="mysVaultPickFiles()" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,'+arg+')"><div class="mv-fdrop-t">여기에 파일을 끌어다 놓으세요</div><div class="mv-fdrop-s">또는 클릭해서 파일 선택 · 폴더는 왼쪽에서</div></div>';
-}
-window._mvFdropBox=_mvFdropBox;
 function mysVaultRenderFiles(){
   var box=document.getElementById('mys-vault-files'); if(!box) return;
   var rows=window._mvFiles||[];
@@ -11098,7 +11097,7 @@ function mysVaultRenderFiles(){
   var parentArg=(curFolder&&curFolder.parent_id)?("'"+curFolder.parent_id+"'"):'null';
   var list=(window._mvView==='list');
   box.classList.toggle('mvlist', list);
-  if(!cur && !subs.length && !rows.length){ box.innerHTML=_mvFdropBox(null); return; }  /* 빈 자료실 = 파일 드롭 안내 박스 */
+  if(!cur && !subs.length && !rows.length){ box.innerHTML='<div class="mys-news-empty">아직 자료가 없어요.<br>아래 영역에 파일을 끌어다 놓으세요.</div>'; return; }  /* 빈 자료실 — 파일 드롭존은 칼럼 맨 아래 footer */
   var html='';
   if(cur){
     html += list
@@ -11120,7 +11119,6 @@ function mysVaultRenderFiles(){
       html+='<div class="mvfile" data-fid="'+fid+'" data-mime="'+_mvEsc(f.mime_type||'')+'" data-ext="'+_mvEsc(f.ext||'')+'" draggable="true" ondragstart="mvDragStart(event,\'file\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'file\',\''+fid+'\');return false;" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button>'+_mvFileThumbHtml(f)+'<div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div></div>';
     }
   });
-  if(!rows.length){ html+=_mvFdropBox(cur); }  /* 파일 없을 때(폴더 안 포함) 드롭 안내 박스 */
   box.innerHTML=html;
   _mvLoadThumbs();
   _mvLoadPdfThumbs();
