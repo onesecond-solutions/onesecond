@@ -12443,6 +12443,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else if(k==='m_share') _spSplitShow(sc,'공유함');          /* 공유함 */
       else if(k==='troom') _spCospShow(sc,'team');               /* 팀방 = 공동 스페이스 팀방 */
       else if(k==='broom') _spCospShow(sc,'branch');             /* 지점방 = 공동 스페이스 지점방 */
+      else if(k==='blib_ins') _spCospShow(sc,'insurer');         /* 원수사 자료실 = 공동 스페이스 보험사별 자료실 */
       else if(k==='talk') _spTalkRender(sc);                     /* 이야깃거리 */
       else if(k==='nav_news'||k==='nav_together'){ if(typeof showView==='function') showView(k==='nav_news'?'news':'together'); if(typeof window._osSheetCollapse==='function') window._osSheetCollapse(); }
       else _spPaint(k);
