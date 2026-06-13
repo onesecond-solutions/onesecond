@@ -11969,6 +11969,14 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-tree > .sp-branch > .sp-node{background:color-mix(in srgb,var(--ac) 11%,transparent);color:var(--ac);font-weight:700;}
 .sp-tree > .sp-branch > .sp-node .ic{color:var(--ac);}
 .sp-tree > .sp-branch > .sp-node:hover{background:color-mix(in srgb,var(--ac) 16%,transparent);}
+/* 원세컨드 제공 영역 — 조직(인디고)과 구분되는 청록 카드 (우리 지점 귀속 아님) */
+.sp-plat{margin-top:12px;padding:7px 6px 6px;border-radius:11px;background:color-mix(in srgb,#0E9A6C 5%,transparent);border:1px solid color-mix(in srgb,#0E9A6C 18%,var(--bd));}
+.sp-plat-label{font-size:.66rem;font-weight:800;color:#0E9A6C;letter-spacing:.4px;padding:1px 7px 5px;}
+.sp-plat .sp-node .ic{color:#0E9A6C;}
+.sp-plat .sp-node:hover{background:color-mix(in srgb,#0E9A6C 9%,transparent);}
+.sp-plat .sp-node.sel{background:color-mix(in srgb,#0E9A6C 14%,transparent);color:#0E9A6C;box-shadow:inset 3px 0 0 #0E9A6C;}
+.sp-plat .sp-node.sel .ic{color:#0E9A6C;}
+.sp-plat .sp-children{border-left-color:color-mix(in srgb,#0E9A6C 22%,var(--bd));}
 .sp-branch.collapsed > .sp-children{display:none;}
 .sp-branch.collapsed > .sp-node > .sp-caret{transform:rotate(-90deg);}
 .sp-children{margin-left:13px;border-left:1px solid var(--bd);padding-left:4px;}
@@ -12012,12 +12020,15 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4v9l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v9"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9.5 3.2h5V6h-5z"/><path d="M9 13l2 2 4-4"/></symbol>
     <symbol id="i-dots" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 4.9L18.5 9.5l-4.7 1.6L12 16l-1.8-4.9L5.5 9.5l4.7-1.6z"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.4a3.8 3.8 0 0 1 7-2.1 3.8 3.8 0 0 1 7 2.1c0 5-7 9.4-7 9.4z"/></symbol>
   </defs></svg>
   <div class="sp-skel">
     <div class="sp-skel-note">SPACE 권한 트리 — <b>레이아웃 골격</b>입니다. 권한 분기·실데이터는 아직 연결하지 않았습니다(결재 후 배선). 노드를 눌러 동선을 확인해 주세요.</div>
     <div class="sp-skel-sign"><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span><span>소속 회사</span><span style="font-weight:400;color:var(--ts);font-size:.72rem;">· 회사 상호는 간판으로만 표시 (트리 진입 X)</span></div>
     <div class="sp-panes">
       <div class="sp-tree" id="spTree">
+        <!-- 내 조직 영역 (인디고) -->
         <div class="sp-branch">
           <div class="sp-node" data-k="branch"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-pin"/></svg></span>우리 지점</div>
           <div class="sp-children">
@@ -12026,13 +12037,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
               <div class="sp-node" data-k="bspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>지점 스페이스</div>
               <div class="sp-children">
                 <div class="sp-node sp-leaf" data-k="broom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-msg"/></svg></span>지점방</div>
-                <div class="sp-branch collapsed">
-                  <div class="sp-node" data-k="blib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>자료실</div>
-                  <div class="sp-children">
-                    <div class="sp-node sp-leaf" data-k="blib_b"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>지점 자료실</div>
-                    <div class="sp-node sp-leaf" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
-                  </div>
-                </div>
+                <div class="sp-node sp-leaf" data-k="blib_b"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>지점 자료실</div>
               </div>
             </div>
 
@@ -12055,16 +12060,24 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
               </div>
             </div>
 
-            <div class="sp-branch collapsed">
-              <div class="sp-node" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
-              <div class="sp-children">
-                <div class="sp-node sp-leaf" data-k="qna_p"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-box"/></svg></span>상품</div>
-                <div class="sp-node sp-leaf" data-k="qna_u"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-check"/></svg></span>인수</div>
-                <div class="sp-node sp-leaf" data-k="qna_e"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-dots"/></svg></span>기타</div>
-              </div>
-            </div>
-
           </div>
+        </div>
+
+        <!-- 원세컨드 제공 영역 (청록 카드 · 우리 지점 귀속 아님) -->
+        <div class="sp-plat">
+          <div class="sp-plat-label">원세컨드 제공</div>
+          <div class="sp-node sp-leaf" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
+          <div class="sp-branch collapsed">
+            <div class="sp-node" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
+            <div class="sp-children">
+              <div class="sp-node sp-leaf" data-k="qna_p"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-box"/></svg></span>상품</div>
+              <div class="sp-node sp-leaf" data-k="qna_u"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-check"/></svg></span>인수</div>
+              <div class="sp-node sp-leaf" data-k="qna_e"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-dots"/></svg></span>기타</div>
+            </div>
+          </div>
+          <div class="sp-node sp-leaf" data-k="talk"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-spark"/></svg></span>이야깃거리</div>
+          <div class="sp-node sp-leaf" data-k="nav_news"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>보험이슈</div>
+          <div class="sp-node sp-leaf" data-k="nav_together"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-heart"/></svg></span>함께해요</div>
         </div>
       </div>
       <div class="sp-content" id="spContent"></div>
@@ -12106,6 +12119,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   function applySnap(s){ sheet.classList.remove('snap-mid','snap-open'); if(s==='mid')sheet.classList.add('snap-mid'); else if(s==='open')sheet.classList.add('snap-open'); sheet.dataset.snap=s; updateArrow(s); syncSheetOffset(); }
   syncOpenH();
   applySnap('collapsed');
+  window._osSheetCollapse=function(){ applySnap('collapsed'); };  /* 외부(트리 nav)에서 시트 접기 */
   window.addEventListener('resize', function(){ syncOpenH(); syncSheetOffset(); });
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fallbackCopy(t){ try{ var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(window.toast)toast('복사됐어요'); }catch(e){} }
@@ -12231,9 +12245,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   /* 중립 구조 라벨(좌측 트리) ↔ 실소속(우측 '내 소속')의 정체성 분리. 라벨에 구체 조직명 안 씀. */
   var DATA={
     branch:{title:'우리 지점', tabs:[], note:'지점 아래 <b>지점 스페이스 · 팀 스페이스 · 마이 스페이스 · 보험 Q&amp;A</b>로 들어갑니다.<br>권한에 따라 보이는 범위가 달라집니다 — 설계사 = 본인 팀 / 실장 = 담당 팀들 / 지점장 = 지점 전체.'},
-    bspace:{title:'지점 스페이스', tabs:['지점방','자료실'], on:0, items:['지점 전체 공지','지점 운영 가이드','신상품 안내']},
+    bspace:{title:'지점 스페이스', tabs:['지점방','지점 자료실'], on:0, items:['지점 전체 공지','지점 운영 가이드','신상품 안내']},
     broom:{title:'지점방', items:['지점장 공지','이번 주 지점 일정','전달 사항'], ico:'i-msg'},
-    blib:{title:'자료실', tabs:['지점 자료실','원수사 자료실'], on:0, items:['지점 공통 양식','교육 자료','업무 매뉴얼']},
     blib_b:{title:'지점 자료실', items:['지점 공통 양식','교육 자료','업무 매뉴얼']},
     blib_ins:{title:'원수사 자료실', items:['손보사 요율표','생보사 인수지침','보험사 소식지'], ico:'i-building'},
     tspace:{title:'팀 스페이스', tabs:['팀 자료','팀 공지','구성원'], on:0, items:['6월 상품 핵심 포인트','팀 공유 스크립트','인수 가이드 모음']},
@@ -12248,7 +12261,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     qna:{title:'보험 Q&A', tabs:['상품','인수','기타'], on:0, items:['실손 보장 범위 문의','고혈압 인수 문의','자동차 특약 질문'], ico:'i-help'},
     qna_p:{title:'보험 Q&A · 상품', tabs:['상품','인수','기타'], on:0, items:['실손 보장 범위','신상품 비교','특약 구성'], ico:'i-box'},
     qna_u:{title:'보험 Q&A · 인수', tabs:['상품','인수','기타'], on:1, items:['고혈압 인수 문의','직업 변경 고지','병력 고지 범위'], ico:'i-check'},
-    qna_e:{title:'보험 Q&A · 기타', tabs:['상품','인수','기타'], on:2, items:['전산 처리 질문','민원 사례','기타 문의'], ico:'i-dots'}
+    qna_e:{title:'보험 Q&A · 기타', tabs:['상품','인수','기타'], on:2, items:['전산 처리 질문','민원 사례','기타 문의'], ico:'i-dots'},
+    talk:{title:'이야깃거리', note:'<b>오늘의 이야깃거리</b> — 공휴일·절기·기념일을 고객 대화 멘트로 풀어주는 접점 페이지입니다.<br>곧 연결됩니다 (큐레이션 + 대화 멘트 + 복사).'}
   };
   function _spHead(){ return '<div class="sp-soko-card"><div class="sp-bc">내 소속</div><div class="sp-soko">회사 · 지점 · 팀 <span class="sp-soko-sub">(로그인 정보로 표시)</span></div></div>'; }
   window._spHead=_spHead;
@@ -12324,6 +12338,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else if(k==='m_script'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'스크립트'); }  /* 스크립트 = 목록뷰 이식(inplace) */
       else if(k==='m_memo'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'메모'); }        /* 메모 = 목록뷰 이식(inplace, #mys-split 공유) */
       else if(k==='m_share'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'공유함'); }     /* 공유함 = 목록뷰 이식(inplace, mysShareboxOpen placeholder) */
+      else if(k==='nav_news'||k==='nav_together'){ _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); if(typeof showView==='function') showView(k==='nav_news'?'news':'together'); if(typeof window._osSheetCollapse==='function') window._osSheetCollapse(); }  /* 원세컨드 제공 = 기존 뷰로 이동(시트 접힘) */
       else { _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spPaint(k); }      /* 다른 노드 = 이식분 원위치 복귀 후 일반 페인트 */
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
