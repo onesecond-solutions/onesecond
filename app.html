@@ -8134,6 +8134,41 @@ function filterLocal(q){
    ════════════════════════════════════════════════════════════════ */
 window.LocalFind=(function(){
   var HL='lf-hl', HIDE='lf-hidden', NORES='lf-noresult';
+  /* ── 보험사 별칭 맵 (현재 화면 찾기 보조 전용 — 정식 검색기 아님) ──
+     현장 약칭·전사·흔한 오타 대응. 검색어가 그룹의 한 별칭에 걸리면 그룹 전체를 함께 찾음(대표 보험사명 포함).
+     대표명에 포함되는 약칭(메리츠→메리츠화재)은 부분일치로 자동 처리 → 여기엔 비포함형(멜츠·디비·손보 등)만 둠.
+     ⚠️ 보험사명/약칭/오타 수준만. 향후 D영역 정식 검색기 = knowledge_synonyms로 이관(이 상수는 stopgap). */
+  var INSURER_ALIAS=[
+    ['DB손해보험','DB손해','DB손보','디비손해','디비손보','디비손해보험','디비'],
+    ['메리츠화재','메리츠손보','멜츠','메리쯔'],
+    ['삼성화재','삼성손보','삼성손해보험','삼성화재해상'],
+    ['현대해상','현해','현대해상화재'],
+    ['KB손해보험','KB손보','케이비손보','케이비손해','KB손해'],
+    ['한화손해보험','한화손보','한화손해'],
+    ['롯데손해보험','롯데손보','롯데손해'],
+    ['흥국화재','흥국손보','흥국화재해상'],
+    ['MG손해보험','MG손보','엠지손보','엠지손해보험'],
+    ['NH농협손해보험','NH손보','농협손보','농협손해','NH손해'],
+    ['AXA손해보험','악사','악사손보'],
+    ['캐롯손해보험','캐롯','캐롯손보'],
+    ['하나손해보험','하나손보'],
+    ['삼성생명','삼성생보'],['한화생명','한화생보'],['교보생명','교보생보'],
+    ['신한라이프','신한생명','신한생보'],['NH농협생명','농협생명','NH생명'],
+    ['미래에셋생명','미래에셋생보'],['동양생명','동양생보'],
+    ['KB라이프','KB생명','KB라이프생명'],['흥국생명','흥국생보'],
+    ['메트라이프','메트라이프생명'],['DB생명','디비생명'],
+    ['라이나생명','라이나','라이나손보'],['ABL생명','ABL']
+  ];
+  function nrm(s){ return String(s||'').toLowerCase().replace(/\s+/g,''); }
+  /* 검색어 → 별칭 확장 토큰 집합(literal 항상 포함). 2글자 미만은 literal만(오매칭 방지) */
+  function expand(q){
+    var out=[q], nq=nrm(q); if(nq.length<2) return out;
+    for(var g=0;g<INSURER_ALIAS.length;g++){ var grp=INSURER_ALIAS[g], hit=false;
+      for(var i=0;i<grp.length;i++){ var nt=nrm(grp[i]); if(nt&&(nt.indexOf(nq)>=0||nq.indexOf(nt)>=0)){ hit=true; break; } }
+      if(hit){ for(var j=0;j<grp.length;j++) if(out.indexOf(grp[j])<0) out.push(grp[j]); }
+    }
+    return out;
+  }
   /* D영역 root = 바텀시트(snap-open/mid)에 내용 있으면 #spContent, 아니면 활성 .view.on */
   function dRoot(){
     var sheet=document.getElementById('osSheet'), sc=document.getElementById('spContent');
@@ -8145,18 +8180,22 @@ window.LocalFind=(function(){
   function items(root){ return root?Array.prototype.slice.call(root.querySelectorAll(ITEM_SEL)):[]; }
   /* 기존 하이라이트 제거(unwrap) — 새 하이라이트 전 필수 */
   function clearHL(root){ if(!root) return; var ms=root.querySelectorAll('mark.'+HL); for(var i=0;i<ms.length;i++){ var m=ms[i],p=m.parentNode; if(!p) continue; p.replaceChild(document.createTextNode(m.textContent),m); p.normalize(); } }
-  /* 텍스트 노드만 교체 = 요소 구조·클릭 핸들러 보존 */
-  function hilite(el,q){
-    var ql=q.toLowerCase();
+  function escRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+  /* 여러 토큰(검색어+별칭) 하이라이트 — 텍스트 노드만 교체(요소 구조·클릭 핸들러 보존). 긴 토큰 우선 매칭 */
+  function hiliteTerms(el,terms){
+    var list=terms.filter(Boolean).slice().sort(function(a,b){return b.length-a.length;}).map(escRe);
+    var pat=list.join('|'); if(!pat) return;
+    var det=new RegExp(pat,'i');
     var w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
       if(!n.nodeValue||!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
       var pn=n.parentNode?n.parentNode.nodeName:''; if(/SCRIPT|STYLE|MARK|INPUT|TEXTAREA|BUTTON/.test(pn)) return NodeFilter.FILTER_REJECT;
-      return n.nodeValue.toLowerCase().indexOf(ql)>=0?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+      return det.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
     }});
     var t=[],n; while(n=w.nextNode()) t.push(n);
-    for(var i=0;i<t.length;i++){ var tn=t[i],txt=tn.nodeValue,low=txt.toLowerCase(),frag=document.createDocumentFragment(),idx=0,p;
-      while((p=low.indexOf(ql,idx))>=0){ if(p>idx) frag.appendChild(document.createTextNode(txt.slice(idx,p))); var mk=document.createElement('mark'); mk.className=HL; mk.textContent=txt.slice(p,p+q.length); frag.appendChild(mk); idx=p+q.length; }
-      if(idx<txt.length) frag.appendChild(document.createTextNode(txt.slice(idx)));
+    var re=new RegExp(pat,'gi');
+    for(var i=0;i<t.length;i++){ var tn=t[i],txt=tn.nodeValue,frag=document.createDocumentFragment(),last=0,m; re.lastIndex=0;
+      while((m=re.exec(txt))){ if(m[0].length===0){ re.lastIndex++; continue; } if(m.index>last) frag.appendChild(document.createTextNode(txt.slice(last,m.index))); var mk=document.createElement('mark'); mk.className=HL; mk.textContent=m[0]; frag.appendChild(mk); last=m.index+m[0].length; }
+      if(last<txt.length) frag.appendChild(document.createTextNode(txt.slice(last)));
       if(tn.parentNode) tn.parentNode.replaceChild(frag,tn);
     }
   }
@@ -8169,10 +8208,10 @@ window.LocalFind=(function(){
     clearHL(root); clearMsg(root);
     var its=items(root);
     if(!q){ for(var i=0;i<its.length;i++) its[i].classList.remove(HIDE); return; }
-    var ql=q.toLowerCase();
-    hilite(root,q);                                   /* 1) D영역 내 모든 텍스트 하이라이트 (클래스 무관 — 어디 있든 찾음) */
+    var terms=expand(q), lows=terms.map(function(t){return t.toLowerCase();});  /* 검색어 + 보험사 별칭 그룹 */
+    hiliteTerms(root,terms);                           /* 1) D영역 내 모든 텍스트 하이라이트(검색어+별칭, 클래스 무관) */
     var any=!!root.querySelector('mark.'+HL);
-    for(var j=0;j<its.length;j++){ var it=its[j]; it.classList.toggle(HIDE, (it.textContent||'').toLowerCase().indexOf(ql)<0); }  /* 2) 항목(카드/리스트) 단위 필터 */
+    for(var j=0;j<its.length;j++){ var it=its[j], tx=(it.textContent||'').toLowerCase(), hit=false; for(var k=0;k<lows.length;k++){ if(lows[k]&&tx.indexOf(lows[k])>=0){ hit=true; break; } } it.classList.toggle(HIDE,!hit); }  /* 2) 항목 단위 필터(별칭 포함) */
     if(!any) showMsg(root);                            /* 3) 어디에도 없을 때만 '찾을 수 없습니다' */
   }
   function clear(){ var root=dRoot(); var x=document.getElementById('lfTopX'); if(x) x.style.display='none'; if(!root) return; clearHL(root); clearMsg(root); var its=root.querySelectorAll('.'+HIDE); for(var i=0;i<its.length;i++) its[i].classList.remove(HIDE); }
