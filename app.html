@@ -86,13 +86,13 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .search .stext{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .search .sicon{flex-shrink:0;}
 /* 현재 화면 검색(localSearch) — 상단 검색창 입력 + 하이라이트/숨김 (정식 검색기 전 stopgap) */
-.search .ls-top-input{flex:1;min-width:0;border:0;background:transparent;outline:none;color:var(--tp);font-size:inherit;font-family:inherit;padding:0;}
-.search .ls-top-input::placeholder{color:var(--tf);}
-.search .ls-top-x{flex:0 0 auto;border:0;background:transparent;color:var(--tf);cursor:pointer;font-size:0.9rem;line-height:1;padding:2px 4px;}
-.search .ls-top-x:hover{color:var(--tp);}
-mark.ls-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inherit;border-radius:3px;padding:0 1px;}
-.ls-hidden{display:none !important;}
-.ls-noresult{padding:22px 14px;text-align:center;color:var(--ts);font-size:0.92rem;}
+.search .lf-top-input{flex:1;min-width:0;border:0;background:transparent;outline:none;color:var(--tp);font-size:inherit;font-family:inherit;padding:0;}
+.search .lf-top-input::placeholder{color:var(--tf);}
+.search .lf-top-x{flex:0 0 auto;border:0;background:transparent;color:var(--tf);cursor:pointer;font-size:0.9rem;line-height:1;padding:2px 4px;}
+.search .lf-top-x:hover{color:var(--tp);}
+mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inherit;border-radius:3px;padding:0 1px;}
+.lf-hidden{display:none !important;}
+.lf-noresult{padding:22px 14px;text-align:center;color:var(--ts);font-size:0.92rem;}
 .head .sp{flex:1;}
 .hbtn{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--ts);font-size:1.0625rem;cursor:pointer;border:none;background:transparent;}
 .hbtn:hover{background:var(--sh);}
@@ -1970,7 +1970,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <header class="head">
       <button class="mmenu" onclick="toggleMSide()">☰</button>
       <div class="sp"></div>
-      <div class="search"><span class="sicon">&#8981;</span><input id="lsTopInput" class="ls-top-input" type="text" placeholder="현재 화면에서 검색…" autocomplete="off" oninput="searchCurrentView(this.value)" onkeydown="if(event.key==='Escape'){this.value='';searchCurrentView('');this.blur();}"><button type="button" class="ls-top-x" id="lsTopX" onclick="lsClearTop()" aria-label="검색 지우기" style="display:none">&#10005;</button></div>
+      <div class="search"><span class="sicon">&#8981;</span><input id="lfTopInput" class="lf-top-input" type="text" placeholder="현재 화면에서 찾기" autocomplete="off" oninput="currentViewFind(this.value)" onkeydown="if(event.key==='Escape'){this.value='';currentViewFind('');this.blur();}"><button type="button" class="lf-top-x" id="lfTopX" onclick="lfClearTop()" aria-label="검색 지우기" style="display:none">&#10005;</button></div>
       <div class="sp"></div>
       <button class="hbtn hbtn-text" id="reportBtn" onclick="_goReport()" aria-label="전산 이상 신고" title="함께해요 · 전산 이상 신고로 이동"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>전산신고</span></button>
       <div class="notif-wrap">
@@ -4353,7 +4353,7 @@ var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
-function showView(key,options){options=options||{};try{if(window.LocalSearch)window.LocalSearch.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -8130,18 +8130,18 @@ function filterLocal(q){
    현재 화면 검색 (localSearch) — 독립 모듈 (2026-06-13, 정식 검색기 전 stopgap)
    · D영역(우측 메인 콘텐츠)만 대상. 전체 DB 검색 아님. 현재 렌더된 DOM 텍스트만.
    · 사이드바·상단바·바텀시트 핸들·알림 영역 제외. DB/데이터 무변경.
-   · 향후 정식 검색기와 교체 가능하도록 window.LocalSearch 단일 모듈.
+   · 향후 정식 검색기와 교체 가능하도록 window.LocalFind 단일 모듈.
    ════════════════════════════════════════════════════════════════ */
-window.LocalSearch=(function(){
-  var HL='ls-hl', HIDE='ls-hidden', NORES='ls-noresult';
+window.LocalFind=(function(){
+  var HL='lf-hl', HIDE='lf-hidden', NORES='lf-noresult';
   /* D영역 root = 바텀시트(snap-open/mid)에 내용 있으면 #spContent, 아니면 활성 .view.on */
   function dRoot(){
     var sheet=document.getElementById('osSheet'), sc=document.getElementById('spContent');
     if(sheet&&sc&&/(snap-open|snap-mid)/.test(sheet.className||'')&&sc.children.length) return sc;
     return document.querySelector('.main .view.on')||null;
   }
-  /* 검색 단위 항목 — 리스트/카드 류. (없으면 항목 필터 없이 하이라이트만) */
-  var ITEM_SEL='.item,.mvfile,.mvrow,.sp-item,.sp-talk-card,.sp-int-card,.post,[data-ls-item]';
+  /* 검색 단위 항목 — 리스트/카드 류(필터 대상). 하이라이트는 클래스 무관 전체 텍스트라 여기 없어도 찾아짐 */
+  var ITEM_SEL='.item,.mvfile,.mvrow,.sp-item,.sp-talk-card,.sp-int-card,.post,.mys-card,.card,.iv-card,.nl-card,.qrow,[data-ls-item]';
   function items(root){ return root?Array.prototype.slice.call(root.querySelectorAll(ITEM_SEL)):[]; }
   /* 기존 하이라이트 제거(unwrap) — 새 하이라이트 전 필수 */
   function clearHL(root){ if(!root) return; var ms=root.querySelectorAll('mark.'+HL); for(var i=0;i<ms.length;i++){ var m=ms[i],p=m.parentNode; if(!p) continue; p.replaceChild(document.createTextNode(m.textContent),m); p.normalize(); } }
@@ -8164,26 +8164,26 @@ window.LocalSearch=(function(){
   function showMsg(root){ clearMsg(root); var d=document.createElement('div'); d.className=NORES; d.textContent='현재 화면에서 찾을 수 없습니다.'; if(root.firstChild) root.insertBefore(d,root.firstChild); else root.appendChild(d); }
   function run(q){
     q=(q||'').trim(); var root=dRoot();
-    var x=document.getElementById('lsTopX'); if(x) x.style.display=q?'':'none';
+    var x=document.getElementById('lfTopX'); if(x) x.style.display=q?'':'none';
     if(!root) return;
     clearHL(root); clearMsg(root);
     var its=items(root);
     if(!q){ for(var i=0;i<its.length;i++) its[i].classList.remove(HIDE); return; }
-    var ql=q.toLowerCase(), shown=0;
-    if(its.length){
-      for(var j=0;j<its.length;j++){ var it=its[j], hit=(it.textContent||'').toLowerCase().indexOf(ql)>=0; if(hit){ it.classList.remove(HIDE); shown++; hilite(it,q); } else it.classList.add(HIDE); }
-      if(!shown) showMsg(root);
-    } else { hilite(root,q); if(!root.querySelector('mark.'+HL)) showMsg(root); }
+    var ql=q.toLowerCase();
+    hilite(root,q);                                   /* 1) D영역 내 모든 텍스트 하이라이트 (클래스 무관 — 어디 있든 찾음) */
+    var any=!!root.querySelector('mark.'+HL);
+    for(var j=0;j<its.length;j++){ var it=its[j]; it.classList.toggle(HIDE, (it.textContent||'').toLowerCase().indexOf(ql)<0); }  /* 2) 항목(카드/리스트) 단위 필터 */
+    if(!any) showMsg(root);                            /* 3) 어디에도 없을 때만 '찾을 수 없습니다' */
   }
-  function clear(){ var root=dRoot(); var x=document.getElementById('lsTopX'); if(x) x.style.display='none'; if(!root) return; clearHL(root); clearMsg(root); var its=root.querySelectorAll('.'+HIDE); for(var i=0;i<its.length;i++) its[i].classList.remove(HIDE); }
+  function clear(){ var root=dRoot(); var x=document.getElementById('lfTopX'); if(x) x.style.display='none'; if(!root) return; clearHL(root); clearMsg(root); var its=root.querySelectorAll('.'+HIDE); for(var i=0;i<its.length;i++) its[i].classList.remove(HIDE); }
   /* 전 영역 초기화 — 뷰/노드 전환 시(이전 화면 잔상 방지) */
-  function resetAll(){ var sc=document.querySelectorAll('.main .view, #spContent'); for(var s=0;s<sc.length;s++){ var r=sc[s]; clearHL(r); clearMsg(r); var h=r.querySelectorAll('.'+HIDE); for(var i=0;i<h.length;i++) h[i].classList.remove(HIDE); } var inp=document.getElementById('lsTopInput'); if(inp) inp.value=''; var x=document.getElementById('lsTopX'); if(x) x.style.display='none'; }
+  function resetAll(){ var sc=document.querySelectorAll('.main .view, #spContent'); for(var s=0;s<sc.length;s++){ var r=sc[s]; clearHL(r); clearMsg(r); var h=r.querySelectorAll('.'+HIDE); for(var i=0;i<h.length;i++) h[i].classList.remove(HIDE); } var inp=document.getElementById('lfTopInput'); if(inp) inp.value=''; var x=document.getElementById('lfTopX'); if(x) x.style.display='none'; }
   return { run:run, clear:clear, resetAll:resetAll, dRoot:dRoot };
 })();
-function searchCurrentView(q){ window.LocalSearch.run(q); }
-function filterCurrentContent(q){ window.LocalSearch.run(q); }
-function lsClearTop(){ var i=document.getElementById('lsTopInput'); if(i){ i.value=''; i.focus(); } window.LocalSearch.clear(); }
-window.searchCurrentView=searchCurrentView; window.filterCurrentContent=filterCurrentContent; window.lsClearTop=lsClearTop;
+function currentViewFind(q){ window.LocalFind.run(q); }
+function localFind(q){ window.LocalFind.run(q); }
+function lfClearTop(){ var i=document.getElementById('lfTopInput'); if(i){ i.value=''; i.focus(); } window.LocalFind.clear(); }
+window.currentViewFind=currentViewFind; window.localFind=localFind; window.lfClearTop=lfClearTop;
 var posts = [
   {badge:'인수 같음', tc:'t-uw', title:'70년 남 사무직 뇌경색/부정맥/고혈압 순환계 기왕증 보장', meta:'5월 15일 16:28 · 답변 3 · 첨부 3',
     body:'안녕하세요. 도와주세요~ 700814-1 사무직.<br>뇌경색 혈전용해치료한지 3년넘었고.<br>부정맥 전극도자절제술한지 3년넘었어요.<br>고혈압복용중이구요.<br>순환계질환 주요치료비를 넣었을때(혈전용해치료, 혈전제거, 수술, 중환자실) 기왕증도 모두 보장 가능한 회사가 있을까요?',
@@ -12758,7 +12758,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       node.classList.add('sel');
       var k=node.getAttribute('data-k'), sc=document.getElementById('spContent');
       _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
-      try{ if(window.LocalSearch) window.LocalSearch.resetAll(); }catch(e){}      /* 화면 검색 잔상 초기화(노드 전환) */
+      try{ if(window.LocalFind) window.LocalFind.resetAll(); }catch(e){}      /* 화면 검색 잔상 초기화(노드 전환) */
       if(k==='m_diary') _spDiaShow(sc);                          /* 다이어리 */
       else if(k==='m_lib') _spVaultShow(sc);                     /* 개인 자료실 = 자료함(personal) */
       else if(k==='tlib') _spVaultShow(sc,'team');               /* 팀 자료실 = 자료함(team 공유) */
