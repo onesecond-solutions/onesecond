@@ -212,6 +212,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .vttl{font-size:1.25rem;font-weight:800;margin-bottom:6px;line-height:1.4;}
 .vmeta{font-size:0.75rem;color:var(--tf);margin-bottom:18px;}
 .vbody{font-size:0.875rem;color:var(--bodytx);line-height:1.85;}
+/* 리치 본문(osRich 작성 공지) 뷰어 안전 스타일 — 이미지 칸 넘침 방지·표 테두리 */
+.vbody img{max-width:100%;height:auto;border-radius:8px;margin:6px 0;display:block;}
+.vbody table{border-collapse:collapse;margin:8px 0;max-width:100%;}
+.vbody td,.vbody th{border:1px solid var(--bd);padding:6px 10px;}
 /* ═══ 공용 인라인 작업공간 셸 (Phase 0, 2026-06-11) — 우측 작업공간 view/create/edit. 노란 메모지 금지(create=accent / edit=warn) ═══ */
 /* OSWS 2카드 표준: 글쓰기 = 독립 카드1(흰·0.5테두리·radius-lg). 버튼은 카드 안 가로중앙 210×44(풀폭 금지) */
 .osws-newrow{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);padding:14px;text-align:center;}
@@ -6576,7 +6580,7 @@ async function _loadNoticeFeed(scope, tabKey){
       var _acts=(_editDel||_hideBtn)?('<div class="post-acts">'+_editDel+_hideBtn+'</div>'):'';
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att); var _attHtml=_ah.html, _imgs=_ah.imgs, _imgNames=_ah.names;
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72rem;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true, _id:r.id, _ntype:r.notice_type, _rtitle:(r.title||''), _rcontent:(r.content||''), _rkw:(r.keywords||[]), _attachments:_att, _imgs:_imgs, _imgNames:_imgNames};
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:0.72rem;font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:_noticeBody(r.content)+_attHtml+_acts, real:true, _id:r.id, _ntype:r.notice_type, _rtitle:(r.title||''), _rcontent:(r.content||''), _rkw:(r.keywords||[]), _attachments:_att, _imgs:_imgs, _imgNames:_imgNames};
     });
     if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
     var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
@@ -6697,6 +6701,13 @@ function _cospCard(title, meta, body){
     +(meta?'<div style="font-size:0.74rem;color:var(--ts);margin-top:2px">'+meta+'</div>':'')
     +(body?'<div style="font-size:0.82rem;color:var(--bodytx);margin-top:6px;white-space:pre-wrap">'+body+'</div>':'')+'</div>';
 }
+/* 공지 본문 렌더 — 리치 HTML(osRich 작성)이면 그대로, 평문(옛 공지)이면 escape+줄바꿈.
+ * 팀방/지점방 입력폼을 스크립트와 동일한 리치 에디터로 통일(2026-06-13) → 신규=HTML / 기존=평문 혼재 안전 처리. */
+function _noticeBody(c){ c=(c==null?'':String(c));
+  if(/<(p|br|div|table|img|b|i|u|strong|em|ul|ol|li|span|h[1-6]|a|font)[\s\/>]/i.test(c)) return c;  /* 리치 HTML = 그대로 */
+  return c.replace(/[&<>"]/g,function(x){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];}).replace(/\n/g,'<br>');  /* 평문 = escape + 줄바꿈 */
+}
+window._noticeBody=_noticeBody;
 /* 팀방/지점방 공지·공유자료 = 좌카드+우상세 (IA 정정 2026-06-11: _loadNoticeFeed 렌더류 재사용,
  * 현장의 소리 #qlist/showTabPost는 무수정 → 회귀 0. cosp 자체 split·뱃지·첨부 라이트박스 동일). */
 async function cospRenderNotices(materialsOnly){
@@ -6741,7 +6752,7 @@ async function cospRenderNotices(materialsOnly){
       if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=(au.name||'')+(rl?' '+rl:''); }
       var a=r.attachments; if(typeof a==='string'){try{a=JSON.parse(a);}catch(e){a=[];}} if(!Array.isArray(a))a=[];
       var ah=(typeof _voiceAttsHtml==='function')?_voiceAttsHtml(a):{html:'',imgs:[],names:[]};
-      return { badge:t[0], tc:t[1], rtitle:(r.title||'(제목 없음)'), meta:[_cospDate(r.created_at),who].filter(Boolean).join(' · '), bodyHtml:_cospEsc(r.content||'').replace(/\n/g,'<br>')+(ah.html||''), _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
+      return { badge:t[0], tc:t[1], rtitle:(r.title||'(제목 없음)'), meta:[_cospDate(r.created_at),who].filter(Boolean).join(' · '), bodyHtml:_noticeBody(r.content)+(ah.html||''), _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
     });
     /* 글쓰기 = 방 소속자 누구나(카톡 단톡방). 어드민(창시자)·공유자료 모드 제외. 핵심 권한은 작성이 아니라 가시성(소속 격리) */
     var _me=window._cospMe||{};
@@ -6815,9 +6826,10 @@ function cospWriteInline(){
   var formHtml=''
     +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg cosp-il-seg" id="cosp-il-seg">'+seg+'</div></div>'
     +'<div class="iv-fld"><label>제목</label><input type="text" id="cospi-title" class="mys-write-input" maxlength="100" placeholder="공지 제목"></div>'
-    +'<div class="iv-fld"><label>내용</label><textarea id="cospi-body" class="mys-write-input" rows="7" placeholder="공지 내용을 입력하세요"></textarea></div>'
+    +'<div class="iv-fld"><label>내용</label><div id="cosp-il-rich"></div></div>'
     +'<div class="iv-fld"><label>키워드</label><input type="text" id="cospi-kw" class="mys-write-input" maxlength="200" placeholder="예: 인수, 마감 (쉼표로 구분)"></div>';
   window.OSWS.openForm(viewer, 'create', formHtml, saveCospInline, closeCospInline);
+  if(window.osRich&&window.osRich.mount) window.osRich.mount('cosp-il-rich', '', {placeholder:'공지 내용을 작성하세요 (이미지·서식·정렬)'});  /* 스크립트 폼과 동일 리치 에디터 */
   if(split) split.classList.add('show-viewer');  /* 모바일에서 뷰어(작업공간) 노출 */
 }
 window.cospWriteInline=cospWriteInline;
@@ -6827,9 +6839,9 @@ function closeCospInline(){ if(typeof cospRenderNotices==='function') cospRender
 window.closeCospInline=closeCospInline;
 function saveCospInline(){
   var title=((document.getElementById('cospi-title')||{}).value||'').trim();
-  var body=((document.getElementById('cospi-body')||{}).value||'').trim();
+  var body=(window.osRich&&window.osRich.html)?(window.osRich.html()||'').trim():'';  /* 리치 HTML (스크립트 폼과 동일) */
   if(!title){ alert('제목을 입력하세요.'); return; }
-  if(!body){ alert('내용을 입력하세요.'); return; }
+  if(!body||body==='<br>'){ alert('내용을 입력하세요.'); return; }
   /* 검증된 모달 저장 로직 재사용 — 인라인 값 → 숨은 모달 필드 주입 후 mrSubmitNotice 호출(POST + cospRenderNotices 재렌더) */
   var mt=document.getElementById('mr-f-title'); if(mt) mt.value=title;
   var mb=document.getElementById('mr-f-body'); if(mb) mb.value=body;
@@ -7810,7 +7822,7 @@ window.osRich=window.osRich||{
       +'<button type="button" title="오른쪽 정렬" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'justifyRight\')">&#8677;</button>'
       +'<span class="osrich-sep"></span>'
       +'<button type="button" title="이미지 본문 삽입" onclick="osRich.image()">&#128247;</button>'
-      +'<button type="button" title="표 삽입" onclick="osRich.table()">&#9638;</button>'
+      /* 표 삽입 버튼 제거(2026-06-13) — prompt 기반 정적 표=반쪽 기능·"딸깍" 정체성 부적합. osRich.table() 함수는 아래 보존(미연결). 표 필요 시 이미지 캡처 첨부 또는 상품 비교 기능 사용 */
       +'</div>'
       +'<div class="osrich-body" id="'+bid+'" contenteditable="true" data-ph="'+_sEsc(opts.placeholder||'내용을 입력하세요')+'"></div>';
     var b=document.getElementById(bid); if(b) b.innerHTML=html||'';
@@ -9259,7 +9271,7 @@ async function loadMysTeam(){
       var au=nameMap[r.author_id]; var who=''; if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
       var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
       var _ah=_voiceAttsHtml(_att);
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), bodyHtml:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
+      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), bodyHtml:_noticeBody(r.content)+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
     });
     renderMysTeam();
   }catch(e){ console.error('[mysTeam]', e); listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
