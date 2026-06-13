@@ -12079,9 +12079,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 /* 좌측 카드 컬러 보강 — B 악센트 레일 + C 루트 헤더띠 (2026-06-13) */
 .sp-tree{border-left:3px solid var(--ac);}
 .sp-node.sel{box-shadow:inset 3px 0 0 var(--ac);}
-.sp-tree > .sp-branch > .sp-node{background:color-mix(in srgb,var(--ac) 11%,transparent);color:var(--ac);font-weight:700;}
+.sp-tree > .sp-branch > .sp-node{color:var(--ac);font-weight:700;border-bottom:1px solid color-mix(in srgb,var(--ac) 18%,var(--bd));border-radius:0;margin-bottom:4px;}
 .sp-tree > .sp-branch > .sp-node .ic{color:var(--ac);}
-.sp-tree > .sp-branch > .sp-node:hover{background:color-mix(in srgb,var(--ac) 16%,transparent);}
+.sp-tree > .sp-branch > .sp-node:hover{background:color-mix(in srgb,var(--ac) 8%,transparent);}
 /* 원세컨드 제공 영역 — 조직(인디고)과 구분되는 청록 카드 (우리 지점 귀속 아님) */
 .sp-plat{margin-top:12px;padding:7px 6px 6px;border-radius:11px;background:color-mix(in srgb,#0E9A6C 5%,transparent);border:1px solid color-mix(in srgb,#0E9A6C 18%,var(--bd));}
 .sp-plat-label{font-size:.74rem;font-weight:800;color:#0E9A6C;letter-spacing:.4px;padding:1px 7px 5px;}
@@ -12195,7 +12195,6 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 
         <!-- 원세컨드 제공 영역 (청록 카드) — 이야깃거리·보험이슈·함께해요 -->
         <div class="sp-plat">
-          <div class="sp-plat-label">원세컨드 제공</div>
           <div class="sp-node sp-leaf" data-k="talk"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-spark"/></svg></span>이야깃거리</div>
           <div class="sp-node sp-leaf" data-k="nav_news"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>보험이슈</div>
           <div class="sp-node sp-leaf" data-k="nav_together"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-heart"/></svg></span>함께해요</div>
