@@ -7128,6 +7128,7 @@ function mysTab(el,key){
   if(typeof _spDiaRestore==='function') _spDiaRestore();  /* 바텀시트로 이동됐던 다이어리(#mys-today) 라이브러리로 회수(2026-06-13 이식) */
   if(typeof _spVaultRestore==='function') _spVaultRestore();  /* 자료함(#mys-vault)도 회수 */
   if(typeof _spSplitRestore==='function') _spSplitRestore();  /* 목록뷰(#mys-split, 스크립트/메모)도 회수 */
+  if(typeof _spCospRestore==='function') _spCospRestore();  /* 공동 스페이스(#mys-team, 팀방/지점방)도 회수 */
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
   var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved'), team=document.getElementById('mys-team'), qna=document.getElementById('mys-qna'), mem=document.getElementById('mr-main');
@@ -12407,6 +12408,25 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(sp && home && sp.parentNode!==home){ sp.style.display='none'; home.appendChild(sp); }
   }
   window._spSplitShow=_spSplitShow; window._spSplitRestore=_spSplitRestore;
+  /* 팀방·지점방 노드 = 공동 스페이스(#mys-team)의 방을 우측 패널로 이동(inplace). 트리가 방 스위처이므로 방 칩은 숨기고 해당 방만 표시. */
+  function _spCospShow(host, roomKey){
+    var t=document.getElementById('mys-team'); if(!t){ if(host) host.innerHTML='<div class="sp-empty2">공동 스페이스를 불러올 수 없습니다.</div>'; return; }
+    if(!window._spTeamHome) window._spTeamHome=t.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
+    if(host){ host.innerHTML=_spHead(); host.appendChild(t); }
+    t.style.display='';
+    function after(){
+      var rt=document.getElementById('cosp-rooms'); if(!rt) return;
+      var chips=rt.querySelectorAll('.chip');
+      for(var i=0;i<chips.length;i++){ if((chips[i].getAttribute('onclick')||'').indexOf("'"+roomKey+"'")>=0){ if(typeof cospRoom==='function') cospRoom(chips[i], roomKey); break; } }
+      rt.style.display='none';  /* 방 칩 숨김 — 트리가 스위처 */
+    }
+    if(typeof loadCospace==='function'){ var p=loadCospace(); if(p&&p.then) p.then(after); else setTimeout(after,30); }
+  }
+  function _spCospRestore(){
+    var t=document.getElementById('mys-team'), home=window._spTeamHome;
+    if(t && home && t.parentNode!==home){ t.style.display='none'; home.appendChild(t); }
+  }
+  window._spCospShow=_spCospShow; window._spCospRestore=_spCospRestore;
   window._spaceTreeInit=function(){
     var tree=document.getElementById('spTree'); if(!tree||tree._spInit) return; tree._spInit=true;
     tree.addEventListener('click', function(e){
@@ -12415,14 +12435,17 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
       node.classList.add('sel');
       var k=node.getAttribute('data-k'), sc=document.getElementById('spContent');
-      if(k==='m_diary'){ _spVaultRestore(); _spSplitRestore(); _spDiaShow(sc); }       /* 다이어리 = 실페이지 이식(inplace) */
-      else if(k==='m_lib'){ _spDiaRestore(); _spSplitRestore(); _spVaultShow(sc); }     /* 개인 자료실 = 자료함 이식(inplace) */
-      else if(k==='m_script'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'스크립트'); }  /* 스크립트 = 목록뷰 이식(inplace) */
-      else if(k==='m_memo'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'메모'); }        /* 메모 = 목록뷰 이식(inplace, #mys-split 공유) */
-      else if(k==='m_share'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'공유함'); }     /* 공유함 = 목록뷰 이식(inplace, mysShareboxOpen placeholder) */
-      else if(k==='talk'){ _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spTalkRender(sc); }   /* 이야깃거리 = 접점 멘트 카드 피드 */
-      else if(k==='nav_news'||k==='nav_together'){ _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); if(typeof showView==='function') showView(k==='nav_news'?'news':'together'); if(typeof window._osSheetCollapse==='function') window._osSheetCollapse(); }  /* 원세컨드 제공 = 기존 뷰로 이동(시트 접힘) */
-      else { _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spPaint(k); }      /* 다른 노드 = 이식분 원위치 복귀 후 일반 페인트 */
+      _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
+      if(k==='m_diary') _spDiaShow(sc);                          /* 다이어리 */
+      else if(k==='m_lib') _spVaultShow(sc);                     /* 개인 자료실 = 자료함 */
+      else if(k==='m_script') _spSplitShow(sc,'스크립트');        /* 스크립트 */
+      else if(k==='m_memo') _spSplitShow(sc,'메모');             /* 메모 */
+      else if(k==='m_share') _spSplitShow(sc,'공유함');          /* 공유함 */
+      else if(k==='troom') _spCospShow(sc,'team');               /* 팀방 = 공동 스페이스 팀방 */
+      else if(k==='broom') _spCospShow(sc,'branch');             /* 지점방 = 공동 스페이스 지점방 */
+      else if(k==='talk') _spTalkRender(sc);                     /* 이야깃거리 */
+      else if(k==='nav_news'||k==='nav_together'){ if(typeof showView==='function') showView(k==='nav_news'?'news':'together'); if(typeof window._osSheetCollapse==='function') window._osSheetCollapse(); }
+      else _spPaint(k);
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
   };
