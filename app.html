@@ -6682,6 +6682,7 @@ function _cospQnaShow(body){
 }
 window._cospQnaShow=_cospQnaShow;
 function _cospQnaRestore(){
+  if(typeof _qnaInlineFinish==='function') _qnaInlineFinish();  /* 질문 폼 열린 채 떠나면 구조화 폼 DOM을 모달 자리로 복귀(고아 방지) */
   var q=document.getElementById('mys-qna'), home=window._mysQnaHome;
   if(q && home && q.parentNode!==home){ q.style.display='none'; home.appendChild(q); }  /* cosp로 옮겨졌던 경우만 원위치 복귀 */
 }
@@ -9393,15 +9394,47 @@ function mysQnaOpen(idx, keepList){
 window.mysQnaOpen=mysQnaOpen;
 function mysQnaBack(){ var sp=document.getElementById('mys-qna-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.mysQnaBack=mysQnaBack;
-/* 보험 Q&A 질문하기 = 기존 구조화 모달 폼 재사용(2026-06-13 정정).
+/* 보험 Q&A 질문하기 = 기존 구조화 폼(#mysWritePaneQna)을 오른쪽 카드에 인라인 이식(2026-06-13).
  * 인수/상품/기타 항목별 입력 → _saveMyspaceQna가 [연령] 60 식으로 조합 저장 = 구조화 데이터가 그대로 DB에 쌓이는 게 핵심(대표님).
- * 평문 인라인 폼 폐기. 모달 z-index 140 > 시트 90 = 바텀시트 위로 정상 표시. */
+ * 모달 아님 — 스크립트/팀방처럼 카드 안 입력. 폼 DOM을 모달에서 카드로 이동(inplace), 성공/취소 시 모달 자리로 복귀(복제 아님=단일 폼·단일 저장로직). */
 function openQnaInline(){
-  if(typeof openMyspaceWrite!=='function'){ if(typeof toast==='function') toast('질문 폼을 열 수 없습니다.'); return; }
-  openMyspaceWrite();                                  /* 기존 라이브러리 글쓰기 모달 */
-  if(typeof switchMyspaceTab==='function') switchMyspaceTab('qna');  /* 보험 Q&A 구조화 폼 탭으로 전환 */
+  var split=document.getElementById('mys-qna-split');
+  var col=split?split.querySelector('.viewer-col'):null;
+  var pane=document.getElementById('mysWritePaneQna');
+  if(!col||!pane){ if(typeof openMyspaceWrite==='function'){ openMyspaceWrite(); if(typeof switchMyspaceTab==='function') switchMyspaceTab('qna'); } return; }  /* 폴백: 모달 */
+  if(!window._qnaPaneHome) window._qnaPaneHome=pane.parentNode;  /* 원 부모(모달) 1회 기억 */
+  var host=document.getElementById('qna-il-host');
+  if(!host){ host=document.createElement('div'); host.id='qna-il-host'; host.className='viewer'; col.appendChild(host); }
+  host.innerHTML='<div class="osws-panel osws-create"><div class="osws-bar"></div><div class="osws-head"><span class="osws-label">질문하기</span></div><div class="osws-form" id="qna-il-mount" style="padding:8px 14px 0"></div><div class="osws-acts"><button type="button" class="iv-write-submit osws-save" id="qna-il-save" onclick="_qnaInlineSave()">질문 등록</button><button type="button" class="osws-cancel" onclick="_qnaInlineCancel()">취소</button></div></div>';
+  document.getElementById('qna-il-mount').appendChild(pane);   /* 구조화 폼 DOM 이동 */
+  pane.classList.add('on');                                    /* .mys-write-pane.on = visible */
+  var r=document.querySelector('input[name="mysQnaType"][value="인수"]'); if(r) r.checked=true;
+  if(typeof mysQnaSwitch==='function') mysQnaSwitch('인수');    /* 기본 인수 하위폼 표시 */
+  var vw=document.getElementById('mys-qna-viewer'); if(vw) vw.style.display='none';
+  var nr=document.getElementById('qna-il-newrow'); if(nr) nr.style.display='none';
+  host.style.display='';
+  if(split) split.classList.add('show-viewer');
 }
 window.openQnaInline=openQnaInline;
+async function _qnaInlineSave(){
+  var b=document.getElementById('qna-il-save'); if(b){ b.disabled=true; b.textContent='등록 중…'; }
+  var ok=false;
+  try{ ok=((await _saveMyspaceQna())===true); }catch(e){ ok=false; }
+  if(b){ b.disabled=false; b.textContent='질문 등록'; }
+  if(ok) _qnaInlineFinish();  /* 성공 시에만 카드 닫고 목록 복귀. 실패(검증/네트워크)=폼 유지하여 수정 */
+}
+window._qnaInlineSave=_qnaInlineSave;
+function _qnaInlineCancel(){ _qnaInlineFinish(); }
+window._qnaInlineCancel=_qnaInlineCancel;
+/* 폼 DOM을 모달 자리로 되돌리고 카드/목록 원복 — 성공·취소·다른 노드 이동 시 호출(폼 유실·고아 방지) */
+function _qnaInlineFinish(){
+  var pane=document.getElementById('mysWritePaneQna'), home=window._qnaPaneHome;
+  if(pane&&home&&pane.parentNode!==home){ pane.classList.remove('on'); home.appendChild(pane); }  /* 폼 DOM 복귀(먼저) */
+  var host=document.getElementById('qna-il-host'); if(host){ host.style.display='none'; host.innerHTML=''; }
+  var vw=document.getElementById('mys-qna-viewer'); if(vw) vw.style.display='';
+  var nr=document.getElementById('qna-il-newrow'); if(nr) nr.style.display='';
+}
+window._qnaInlineFinish=_qnaInlineFinish;
 
 /* === 라이브러리 상세 보기 모달 (2026-05-29 PR #164) === */
 function openMyspaceDetail(itemId, type){
@@ -10309,6 +10342,7 @@ async function _saveMyspaceQna(){
       if(typeof loadMrQna==='function') loadMrQna();
       if(typeof loadVaultQna==='function') loadVaultQna();
       if(typeof toast==='function') toast('보험 Q&A에 등록됐습니다!');
+      return true;  /* 인라인 카드 폼이 성공 판별에 사용 — 성공 시에만 폼 닫고 복귀 */
     } else { var err=await res.json().catch(function(){return{};}); alert('저장 실패: '+(err.message||res.status)); }
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
   finally{ btn.disabled=false; btn.textContent='저장하기'; }
