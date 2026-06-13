@@ -12120,14 +12120,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 
             <div class="sp-node sp-leaf" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
 
-            <div class="sp-branch collapsed">
-              <div class="sp-node" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
-              <div class="sp-children">
-                <div class="sp-node sp-leaf" data-k="qna_p"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-box"/></svg></span>상품</div>
-                <div class="sp-node sp-leaf" data-k="qna_u"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-check"/></svg></span>인수</div>
-                <div class="sp-node sp-leaf" data-k="qna_e"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-dots"/></svg></span>기타</div>
-              </div>
-            </div>
+            <div class="sp-node sp-leaf" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
 
           </div>
         </div>
@@ -12444,6 +12437,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else if(k==='troom') _spCospShow(sc,'team');               /* 팀방 = 공동 스페이스 팀방 */
       else if(k==='broom') _spCospShow(sc,'branch');             /* 지점방 = 공동 스페이스 지점방 */
       else if(k==='blib_ins') _spCospShow(sc,'insurer');         /* 원수사 자료실 = 공동 스페이스 보험사별 자료실 */
+      else if(k==='qna') _spCospShow(sc,'qna');                  /* 보험 Q&A = 공동 스페이스 보험Q&A */
       else if(k==='talk') _spTalkRender(sc);                     /* 이야깃거리 */
       else if(k==='nav_news'||k==='nav_together'){ if(typeof showView==='function') showView(k==='nav_news'?'news':'together'); if(typeof window._osSheetCollapse==='function') window._osSheetCollapse(); }
       else _spPaint(k);
