@@ -1092,7 +1092,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .mys-vault-uploadbtn:disabled{opacity:0.45;cursor:not-allowed}
 .mv-fail{color:var(--err)}
 /* 폴더 트리 */
-.mys-vault-folders{border:1px solid var(--bd);border-radius:var(--radius-sm);padding:6px;flex:1;min-height:0;overflow:auto}
+.mys-vault-folders{padding:2px 2px 0;flex:1;min-height:0;overflow:auto}  /* 내부 테두리 제거 — 가운데 파일 창처럼 카드에 바로 붙는 한 창(창 속의 창 해소) */
 .mvf-item{display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:var(--radius-sm);font-size:0.85rem;color:var(--tf);cursor:pointer}
 .mvf-item:hover{background:var(--bg)}
 .mvf-item.on{background:var(--ac);color:#fff}
@@ -11046,7 +11046,7 @@ async function mysVaultLoadFolders(){
     var rows=res.ok?await res.json():[];
     window._mvFolders=rows;
     var html=mysVaultTreeHtml(rows);
-    if(!rows.length){ html+='<button class="mvf-cta" onclick="mysVaultCreateFolder()">+ 첫 폴더 만들기</button>'; }
+    if(!rows.length){ html+='<div class="mys-news-empty" style="padding:26px 10px;line-height:1.7">이 창에 <b style="color:var(--warn)">폴더를 끌어다 놓으세요</b><br>또는 아래에서 새 폴더 만들기<br><button class="mvf-cta" style="margin-top:12px" onclick="mysVaultCreateFolder()">+ 첫 폴더 만들기</button></div>'; }
     box.innerHTML=html;
     if(typeof mysVaultRenderFiles==='function') mysVaultRenderFiles();  /* 폴더 변경→중앙(하위폴더) 동기화 */
   }catch(e){ console.error('[mysVault] folders',e); box.innerHTML='<div class="mys-news-empty">폴더를 불러오지 못했습니다.</div>'; }
