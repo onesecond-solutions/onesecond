@@ -11918,6 +11918,33 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .os-card-edit:hover{border-color:var(--ac);color:var(--ac);}
 .os-sit-edit{flex:0 0 auto;background:transparent;border:1px solid var(--bd);border-radius:6px;color:var(--ts);font-size:.78rem;line-height:1;padding:3px 7px;cursor:pointer;}
 .os-sit-edit:hover{border-color:var(--ac);color:var(--ac);}
+/* ── SPACE 권한 트리 골격 (2026-06-13 §7 1단계 레이아웃 — 권한·실데이터 미연결) ── */
+.sp-skel{display:flex;flex-direction:column;height:100%;min-height:0;}
+.sp-skel-note{flex:0 0 auto;font-size:.72rem;color:var(--ts);background:color-mix(in srgb,var(--ac) 8%,transparent);border:1px dashed var(--ac);border-radius:8px;padding:7px 11px;margin:0 0 10px;line-height:1.55;}
+.sp-skel-sign{flex:0 0 auto;display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:800;color:var(--tp);padding:0 2px 9px;}
+.sp-panes{flex:1;min-height:0;display:flex;gap:12px;}
+.sp-tree{flex:0 0 232px;min-width:0;overflow:auto;border:1px solid var(--bd);border-radius:12px;background:var(--s1);padding:8px 6px;}
+.sp-content{flex:1;min-width:0;overflow:auto;border:1px solid var(--bd);border-radius:12px;background:var(--s1);padding:15px 17px;}
+@media(max-width:780px){ .sp-panes{flex-direction:column;} .sp-tree{flex:0 0 auto;max-height:40%;} }
+.sp-node{display:flex;align-items:center;gap:5px;font-size:.84rem;color:var(--tp);border-radius:8px;padding:5px 7px;cursor:pointer;white-space:nowrap;user-select:none;}
+.sp-node:hover{background:var(--s2);}
+.sp-node.sel{background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);font-weight:700;}
+.sp-node .ic{flex:0 0 auto;width:18px;text-align:center;}
+.sp-caret{flex:0 0 auto;width:13px;text-align:center;color:var(--ts);font-size:.68rem;transition:transform .15s;}
+.sp-branch.collapsed > .sp-children{display:none;}
+.sp-branch.collapsed > .sp-node > .sp-caret{transform:rotate(-90deg);}
+.sp-children{margin-left:13px;border-left:1px solid var(--bd);padding-left:4px;}
+.sp-leaf .sp-caret{visibility:hidden;}
+.sp-bc{font-size:.74rem;color:var(--ts);margin-bottom:7px;}
+.sp-title{font-size:1.05rem;font-weight:800;color:var(--tp);margin-bottom:13px;}
+.sp-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.sp-tab{font-size:.78rem;font-weight:600;color:var(--ts);background:var(--s2);border:1px solid var(--bd);border-radius:999px;padding:5px 13px;cursor:default;}
+.sp-tab.on{background:var(--ac);color:#fff;border-color:transparent;}
+.sp-items{display:flex;flex-direction:column;}
+.sp-item{display:flex;align-items:center;gap:9px;font-size:.86rem;color:var(--tp);padding:11px 4px;border-bottom:1px solid var(--bd);cursor:default;}
+.sp-item:last-child{border-bottom:0;}
+.sp-item .ic{flex:0 0 auto;color:var(--ts);}
+.sp-empty2{font-size:.82rem;color:var(--ts);padding:16px 4px;line-height:1.65;}
 </style>
 <div id="osSheet" class="os-sheet" role="region" aria-label="스크립트 시트">
   <div class="os-sheet-handle" id="osSheetHandle">
@@ -11929,7 +11956,46 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   <!-- 칩 5종 제거(2026-06-11): 마이 스크립트·마이 채팅·공유 스크립트·공유 채팅·공유 자료 삭제 + scripts 자동 읽기 차단.
        바텀시트 골격(핸들·body)은 유지(용도 변경 예정). 마이 스페이스 스크립트는 독립 fetch라 무영향. -->
   <div class="os-sheet-chips"></div>
-  <div class="os-sheet-body" id="osSheetBody"><div class="os-empty">준비 중입니다.</div></div>
+  <div class="os-sheet-body" id="osSheetBody"><!-- SPACE 권한 트리 골격 (2026-06-13 §7 1단계). 정적 레이아웃 — 권한 분기·실데이터 미연결. 결재 후 배선. -->
+  <div class="sp-skel">
+    <div class="sp-skel-note">SPACE 권한 트리 — <b>레이아웃 골격</b>입니다. 권한 분기·실데이터는 아직 연결하지 않았습니다(결재 후 배선). 노드를 눌러 동선을 확인해 주세요.</div>
+    <div class="sp-skel-sign"><span>🏢 에즈금융서비스</span><span style="font-weight:400;color:var(--ts);font-size:.72rem;">· 회사 상호는 간판으로만 표시 (트리 진입 X)</span></div>
+    <div class="sp-panes">
+      <div class="sp-tree" id="spTree">
+        <div class="sp-branch">
+          <div class="sp-node" data-k="dw"><span class="sp-caret">▾</span><span class="ic">📍</span>더원지점</div>
+          <div class="sp-children">
+            <div class="sp-branch collapsed">
+              <div class="sp-node" data-k="common"><span class="sp-caret">▾</span><span class="ic">📋</span>지점 공통</div>
+              <div class="sp-children">
+                <div class="sp-node sp-leaf" data-k="common_lib"><span class="sp-caret">▾</span><span class="ic">📄</span>지점 자료실</div>
+                <div class="sp-node sp-leaf" data-k="common_ins"><span class="sp-caret">▾</span><span class="ic">📄</span>보험사별 자료실</div>
+                <div class="sp-node sp-leaf" data-k="common_qna"><span class="sp-caret">▾</span><span class="ic">💬</span>보험 Q&amp;A</div>
+              </div>
+            </div>
+            <div class="sp-branch collapsed">
+              <div class="sp-node sel" data-k="team"><span class="sp-caret">▾</span><span class="ic">👥</span>4팀</div>
+              <div class="sp-children">
+                <div class="sp-node sp-leaf" data-k="team_notice"><span class="sp-caret">▾</span><span class="ic">📢</span>팀 공지</div>
+                <div class="sp-node sp-leaf" data-k="team_lib"><span class="sp-caret">▾</span><span class="ic">📄</span>팀 자료</div>
+                <div class="sp-node sp-leaf" data-k="team_member"><span class="sp-caret">▾</span><span class="ic">👤</span>구성원</div>
+              </div>
+            </div>
+            <div class="sp-branch collapsed">
+              <div class="sp-node" data-k="mine"><span class="sp-caret">▾</span><span class="ic">👤</span>내 스페이스</div>
+              <div class="sp-children">
+                <div class="sp-node sp-leaf" data-k="mine_lib"><span class="sp-caret">▾</span><span class="ic">📄</span>자료</div>
+                <div class="sp-node sp-leaf" data-k="mine_script"><span class="sp-caret">▾</span><span class="ic">📝</span>스크립트</div>
+                <div class="sp-node sp-leaf" data-k="mine_memo"><span class="sp-caret">▾</span><span class="ic">🗒️</span>메모</div>
+                <div class="sp-node sp-leaf" data-k="mine_diary"><span class="sp-caret">▾</span><span class="ic">📅</span>다이어리</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sp-content" id="spContent"></div>
+    </div>
+  </div></div>
 </div>
 <script>
 (function(){
@@ -12076,6 +12142,50 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
      render 함수들은 정의만 남고 호출되지 않음. OSSheet.reload*는 활성 칩 없으면 no-op(가드 존재). */
   function boot(){ /* no-op — 칩 렌더 트리거 제거 */ }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+</script>
+<script>
+/* ═══ SPACE 권한 트리 골격 (2026-06-13 §7 1단계) — 정적 레이아웃. 권한 분기·실데이터 미연결.
+   기존 시트 IIFE와 분리. 노드 클릭 → 우측 콘텐츠 교체 / 카레트 클릭 → 펼침·접힘. ═══ */
+(function(){
+  'use strict';
+  var DATA={
+    dw:{bc:'에즈금융서비스 › 더원지점', title:'더원지점', tabs:[], note:'지점 아래 <b>지점 공통 · 4팀 · 내 스페이스</b>로 들어갑니다.<br>권한에 따라 보이는 범위가 달라집니다 — 설계사 = 본인 팀 / 실장 = 담당 팀들 / 지점장 = 지점 전체 팀.'},
+    common:{bc:'에즈금융서비스 › 더원지점 › 지점 공통', title:'지점 공통', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:0, items:['지점 전체 공지 모음','신상품 안내 자료','지점 운영 가이드']},
+    common_lib:{bc:'에즈금융서비스 › 더원지점 › 지점 공통 › 지점 자료실', title:'지점 자료실', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:0, items:['지점 전체 공지 모음','신상품 안내 자료','지점 운영 가이드']},
+    common_ins:{bc:'에즈금융서비스 › 더원지점 › 지점 공통 › 보험사별 자료실', title:'보험사별 자료실', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:1, items:['손보사 요율표','생보사 인수지침','보험사별 소식지']},
+    common_qna:{bc:'에즈금융서비스 › 더원지점 › 지점 공통 › 보험 Q&A', title:'보험 Q&A', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:2, items:['인수 문의 — 고혈압 600','전산 처리 질문','민원 사례 공유']},
+    team:{bc:'에즈금융서비스 › 더원지점 › 4팀', title:'4팀 스페이스', tabs:['팀 자료','팀 공지','구성원'], on:0, items:['6월 DB손보 핵심 포인트','4팀 공유 스크립트','인수 가이드 모음']},
+    team_lib:{bc:'에즈금융서비스 › 더원지점 › 4팀 › 팀 자료', title:'4팀 · 팀 자료', tabs:['팀 자료','팀 공지','구성원'], on:0, items:['6월 DB손보 핵심 포인트','4팀 공유 스크립트','인수 가이드 모음']},
+    team_notice:{bc:'에즈금융서비스 › 더원지점 › 4팀 › 팀 공지', title:'4팀 · 팀 공지', tabs:['팀 자료','팀 공지','구성원'], on:1, items:['오늘의 업무 방향','긴급 체크 — 마감 임박','팀 회의 공지']},
+    team_member:{bc:'에즈금융서비스 › 더원지점 › 4팀 › 구성원', title:'4팀 · 구성원', tabs:['팀 자료','팀 공지','구성원'], on:2, members:['김설계 · 설계사','이실장 · 실장','박총무 · 스텝']},
+    mine:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스', title:'내 스페이스', tabs:['자료','스크립트','메모','다이어리'], on:0, items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
+    mine_lib:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 자료', title:'내 스페이스 · 자료', tabs:['자료','스크립트','메모','다이어리'], on:0, items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
+    mine_script:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 스크립트', title:'내 스페이스 · 스크립트', tabs:['자료','스크립트','메모','다이어리'], on:1, items:['오프닝 화법','반론 처리 스크립트','클로징 멘트']},
+    mine_memo:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 메모', title:'내 스페이스 · 메모', tabs:['자료','스크립트','메모','다이어리'], on:2, items:['상담 메모','체크리스트','아이디어']},
+    mine_diary:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 다이어리', title:'내 스페이스 · 다이어리', tabs:['자료','스크립트','메모','다이어리'], on:3, items:['오늘 일정','이번 주 할 일','월간 목표']}
+  };
+  function _spPaint(k){
+    var d=DATA[k]||DATA.team, c=document.getElementById('spContent'); if(!c) return;
+    var tabs=''; if(d.tabs&&d.tabs.length){ tabs='<div class="sp-tabs">'; for(var i=0;i<d.tabs.length;i++){ tabs+='<span class="sp-tab'+(i===(d.on||0)?' on':'')+'">'+d.tabs[i]+'</span>'; } tabs+='</div>'; }
+    var bd='';
+    if(d.note){ bd='<div class="sp-empty2">'+d.note+'</div>'; }
+    else { var list=d.members||d.items||[], ic=d.members?'👤':'📄'; if(list.length){ bd='<div class="sp-items">'; for(var j=0;j<list.length;j++){ bd+='<div class="sp-item"><span class="ic">'+ic+'</span>'+list[j]+'</div>'; } bd+='</div><div class="sp-empty2" style="padding-top:13px">※ 골격 — 예시 항목입니다 (실데이터 미연결).</div>'; } }
+    c.innerHTML='<div class="sp-bc">'+d.bc+'</div><div class="sp-title">'+d.title+'</div>'+tabs+bd;
+  }
+  window._spPaint=_spPaint;
+  window._spaceTreeInit=function(){
+    var tree=document.getElementById('spTree'); if(!tree||tree._spInit) return; tree._spInit=true;
+    tree.addEventListener('click', function(e){
+      var car=e.target.closest('.sp-caret'), node=e.target.closest('.sp-node'); if(!node) return;
+      if(car && node.parentElement.classList.contains('sp-branch')) node.parentElement.classList.toggle('collapsed');
+      var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
+      node.classList.add('sel');
+      _spPaint(node.getAttribute('data-k'));
+    });
+    _spPaint('team'); /* 초기 = 4팀 (목업 기준) */
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
 })();
 </script>
 </body>
