@@ -6827,7 +6827,8 @@ function cospWriteInline(){
     +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg cosp-il-seg" id="cosp-il-seg">'+seg+'</div></div>'
     +'<div class="iv-fld"><label>제목</label><input type="text" id="cospi-title" class="mys-write-input" maxlength="100" placeholder="공지 제목"></div>'
     +'<div class="iv-fld"><label>내용</label><div id="cosp-il-rich"></div></div>'
-    +'<div class="iv-fld"><label>키워드</label><input type="text" id="cospi-kw" class="mys-write-input" maxlength="200" placeholder="예: 인수, 마감 (쉼표로 구분)"></div>';
+    +'<div class="iv-fld"><label>키워드</label><input type="text" id="cospi-kw" class="mys-write-input" maxlength="200" placeholder="예: 인수, 마감 (쉼표로 구분)"></div>'
+    +'<div class="iv-fld"><label>파일 첨부 (모든 파일)</label><input type="file" id="cospi-file" multiple onchange="mysWriteFilePreview(this,\'cospi-fp\')"><div id="cospi-fp" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>';
   window.OSWS.openForm(viewer, 'create', formHtml, saveCospInline, closeCospInline);
   if(window.osRich&&window.osRich.mount) window.osRich.mount('cosp-il-rich', '', {placeholder:'공지 내용을 작성하세요 (이미지·서식·정렬)'});  /* 스크립트 폼과 동일 리치 에디터 */
   if(split) split.classList.add('show-viewer');  /* 모바일에서 뷰어(작업공간) 노출 */
@@ -6837,20 +6838,29 @@ function cospIlType(btn,v){ window._cospIlType=v; var sg=document.getElementById
 window.cospIlType=cospIlType;
 function closeCospInline(){ if(typeof cospRenderNotices==='function') cospRenderNotices(false); }
 window.closeCospInline=closeCospInline;
-function saveCospInline(){
+async function saveCospInline(){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var title=((document.getElementById('cospi-title')||{}).value||'').trim();
   var body=(window.osRich&&window.osRich.html)?(window.osRich.html()||'').trim():'';  /* 리치 HTML (스크립트 폼과 동일) */
   if(!title){ alert('제목을 입력하세요.'); return; }
   if(!body||body==='<br>'){ alert('내용을 입력하세요.'); return; }
-  /* 검증된 모달 저장 로직 재사용 — 인라인 값 → 숨은 모달 필드 주입 후 mrSubmitNotice 호출(POST + cospRenderNotices 재렌더) */
-  var mt=document.getElementById('mr-f-title'); if(mt) mt.value=title;
-  var mb=document.getElementById('mr-f-body'); if(mb) mb.value=body;
-  var mk=document.getElementById('mr-f-keywords'); if(mk) mk.value=((document.getElementById('cospi-kw')||{}).value||'');
-  var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(window._cospIlType||'operation')+'"]'); if(rt) rt.checked=true;
-  window._mrEditId=null;
-  window._mrScope=(window._cospRoom==='branch')?'branch_internal':'team_internal';
-  window._cospWriting=true;
-  if(typeof mrSubmitNotice==='function') mrSubmitNotice();
+  var me=window._cospMe||{}, room=window._cospRoom||'team';
+  var scope=(room==='branch')?'branch_internal':'team_internal';
+  var sid=(room==='branch')?me.branch_id:me.team_id;
+  if(!sid){ alert('소속 정보가 없어 작성할 수 없습니다.'); return; }
+  var kw=((document.getElementById('cospi-kw')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var sv=document.querySelector('#cosp-notice-split .osws-save'); if(sv){ sv.disabled=true; sv.textContent='저장 중…'; }
+  /* 첨부 업로드 = 스크립트 폼과 동일 헬퍼(_mysUploadAtts) 재사용 */
+  var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('cospi-file','notice',token); if(a===null){ if(sv){sv.disabled=false;sv.textContent='저장';} return; } atts=a||[]; }
+  var row={ notice_type:(window._cospIlType||'operation'), title:title, content:body, scope:scope, author_id:me.id||null, keywords:kw, attachments:atts };
+  if(scope==='branch_internal') row.branch_id=sid; else row.team_id=sid;
+  try{
+    var res=await fetch(window.db.url('/rest/v1/team_notices'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(row)});
+    if(!(res.ok||res.status===201)){ var t=''; try{t=await res.text();}catch(e){} console.error('[saveCospInline]',res.status,t); alert('등록 실패 ('+res.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
+    if(typeof toast==='function') toast('공지가 등록되었습니다');
+    window._mysTeamCache=null; window._mrTeamCache=null;  /* 다른 뷰 캐시 무효화 */
+    if(typeof cospRenderNotices==='function') cospRenderNotices(false);  /* 목록 갱신(폼 닫고 첫 항목 보기) */
+  }catch(e){ console.error('[saveCospInline]',e); alert('저장 중 오류가 발생했습니다.'); if(sv){sv.disabled=false;sv.textContent='저장';} }
 }
 window.saveCospInline=saveCospInline;
 /* 폴백: 인라인 뷰어가 없을 때 기존 모달 */
