@@ -249,10 +249,10 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .osrich-body td,.osrich-body th{border:1px solid var(--bd);padding:6px 10px;min-width:48px;}
 /* 마이 스페이스 스크립트 인라인 작업공간 (Phase 1) — 스크립트 칩에서만 적용(scr-mode 가드). 글쓰기 카드 + 작업공간 카드 세로 2카드 */
 #mys-scr-newrow{display:none;}
-#mys-split.scr-mode .viewer-col{background:transparent;border:0;border-radius:0;overflow:visible;gap:12px;min-width:0;}
-#mys-split.scr-mode #mysViewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;min-width:0;overflow:auto;}
+#mys-split.scr-mode .viewer-col,.cosp-split.scr-mode .viewer-col{background:transparent;border:0;border-radius:0;overflow:visible;gap:12px;min-width:0;}
+#mys-split.scr-mode #mysViewer,.cosp-split.scr-mode .viewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;min-width:0;overflow:auto;}
 /* 넓은 표/이미지가 칸을 화면 밖으로 늘리지 못하게(min-width:0) — 글쓰기 버튼이 우측으로 밀려 잘리던 회귀 방지. 본문은 카드 안에서 가로스크롤 */
-#mys-split.scr-mode .osws-newrow{max-width:100%;box-sizing:border-box;}
+#mys-split.scr-mode .osws-newrow,.cosp-split.scr-mode .osws-newrow{max-width:100%;box-sizing:border-box;}
 /* 보기 화면 본문의 큰 이미지가 카드 폭을 늘리지 못하게 — 카드 폭에 맞춰 축소(전체보기 포함 모든 마이스페이스 칩, 에디터 .osrich-body와 동일 규칙) */
 #mysViewer img{max-width:100%;height:auto;}
 /* 넓은 표/이미지가 그리드 칸을 화면 밖으로 밀어내지 못하게(전체보기 등 전 칩) */
@@ -6712,9 +6712,10 @@ async function cospRenderNotices(materialsOnly){
     /* 소속 없음 — 어드민은 페이지 레이아웃(좌목록+우뷰어)은 정상 노출(페이지 검증 가능), 목록 영역에 평상시 미열람 안내+사고대응 버튼.
        내용(사용자 글)만 안 보이고 화면 구조는 보임. 일반은 소속 안내. */
     if(_cospAdmin){
-      box.innerHTML=_wbtn+'<div class="split cosp-split" id="cosp-notice-split">'
+      box.innerHTML='<div class="split cosp-split scr-mode" id="cosp-notice-split">'
         +'<div class="col list-col"><div class="list"><div class="mys-news-empty" style="padding:22px 12px;line-height:1.6">어드민은 평상시 '+_rs+' 공지를 열람하지 않습니다.<br>(화면 구조는 검증용으로 표시됩니다)<br><button class="osws-newbtn" style="margin-top:12px" onclick="cospAdminAll()">전체 '+_rs+' 공지 열람 (사고 대응)</button></div></div></div>'
         +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
+        +_wbtn
         +'<div class="viewer"><div class="mys-news-empty">선택된 공지가 없습니다.</div></div></div></div>';
     } else {
       box.innerHTML=_wbtn+'<div class="mys-news-empty">소속 '+_rs+' 정보가 없습니다.</div>';
@@ -6746,12 +6747,19 @@ async function cospRenderNotices(materialsOnly){
     var _me=window._cospMe||{};
     var _canWrite=!materialsOnly && !_cospAdmin && (window._cospRoom==='branch'?!!_me.branch_id:!!_me.team_id);
     var _writeBtn=_wbtn;  /* 항상 노출 — 권한 없으면 클릭 시 안내 팝업(cospWrite) */
-    if(!window._cospNotices.length){ box.innerHTML=_writeBtn+'<div class="mys-news-empty">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.'+(_canWrite?'<br>+ 글쓰기로 첫 공지를 작성해보세요.':''))+'</div>'; return; }
+    if(!window._cospNotices.length){
+      box.innerHTML='<div class="split cosp-split scr-mode" id="cosp-notice-split">'
+        +'<div class="col list-col"><div class="list"><div class="mys-news-empty" style="padding:22px 12px;line-height:1.6">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.'+(_canWrite?'<br>+ 글쓰기로 첫 공지를 작성해보세요.':''))+'</div></div></div>'
+        +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
+        +_writeBtn
+        +'<div class="viewer"><div class="mys-news-empty">왼쪽에서 공지를 선택하세요.</div></div></div></div>';
+      return;
+    }
     box.innerHTML=(_adminAll?'<div style="font-size:0.74rem;color:var(--warn);margin-bottom:6px;font-weight:700">사고 대응 모드 — 전 '+_rs+' 공지 열람 중 <button onclick="cospAdminAll(false)" style="margin-left:6px;font-size:0.95rem;background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--ts)">평상시로</button></div>':'')
-      +_writeBtn
-      +'<div class="split cosp-split" id="cosp-notice-split">'
+      +'<div class="split cosp-split scr-mode" id="cosp-notice-split">'
       +'<div class="col list-col"><div class="list" id="cosp-qlist"></div></div>'
       +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
+      +_writeBtn
       +'<div class="viewer" id="cosp-viewer"><span class="vbadge"></span><div class="vttl"></div><div class="vmeta"></div><div class="vbody"></div></div></div></div>';
     var ql=document.getElementById('cosp-qlist');
     ql.innerHTML=window._cospNotices.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="cospShowNotice('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+_cospEsc(p.rtitle)+'</div><div class="id">'+_cospEsc(p.meta)+'</div></div>'; }).join('');
