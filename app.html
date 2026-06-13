@@ -11932,13 +11932,18 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-node{display:flex;align-items:center;gap:5px;font-size:.84rem;color:var(--tp);border-radius:8px;padding:5px 7px;cursor:pointer;white-space:nowrap;user-select:none;}
 .sp-node:hover{background:var(--s2);}
 .sp-node.sel{background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);font-weight:700;}
-.sp-node .ic{flex:0 0 auto;width:18px;text-align:center;}
-.sp-caret{flex:0 0 auto;width:13px;text-align:center;color:var(--ts);font-size:.68rem;transition:transform .15s;}
+.sp-node .ic{flex:0 0 auto;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;color:var(--ts);}
+.sp-node.sel .ic{color:var(--ac);}
+.sp-caret{flex:0 0 auto;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;color:var(--ts);transition:transform .15s;}
+.sp-ico{width:16px;height:16px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;}
+.sp-caret .sp-ico{width:12px;height:12px;stroke-width:2;}
 .sp-branch.collapsed > .sp-children{display:none;}
 .sp-branch.collapsed > .sp-node > .sp-caret{transform:rotate(-90deg);}
 .sp-children{margin-left:13px;border-left:1px solid var(--bd);padding-left:4px;}
 .sp-leaf .sp-caret{visibility:hidden;}
-.sp-bc{font-size:.74rem;color:var(--ts);margin-bottom:7px;}
+.sp-bc{font-size:.74rem;color:var(--ts);margin-bottom:4px;}
+.sp-soko{font-size:.92rem;font-weight:600;color:var(--tp);margin-bottom:14px;}
+.sp-soko-sub{font-weight:400;color:var(--ts);font-size:.74rem;}
 .sp-title{font-size:1.05rem;font-weight:800;color:var(--tp);margin-bottom:13px;}
 .sp-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
 .sp-tab{font-size:.78rem;font-weight:600;color:var(--ts);background:var(--s2);border:1px solid var(--bd);border-radius:999px;padding:5px 13px;cursor:default;}
@@ -11958,39 +11963,74 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
        바텀시트 골격(핸들·body)은 유지(용도 변경 예정). 마이 스페이스 스크립트는 독립 fetch라 무영향. -->
   <div class="os-sheet-chips"></div>
   <div class="os-sheet-body" id="osSheetBody"><!-- SPACE 권한 트리 골격 (2026-06-13 §7 1단계). 정적 레이아웃 — 권한 분기·실데이터 미연결. 결재 후 배선. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="i-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21c4-4.5 6-7.5 6-11a6 6 0 1 0-12 0c0 3.5 2 6.5 6 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+    <symbol id="i-building" viewBox="0 0 24 24"><path d="M5 21V4h9v17"/><path d="M14 9h5v12"/><path d="M8 8h3M8 12h3M8 16h3"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24"><path d="M5 5h14v9.5H9.5L5 18z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.3a3 3 0 0 1 0 5.6"/><path d="M20.5 20a5.5 5.5 0 0 0-4-5.3"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9.5 13h5M9.5 16.5h5"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 12.5h8M8 16h5"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.1 10.9l7.8-3.7M8.1 13.1l7.8 3.7"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M9 3v4M15 3v4"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.4a2.7 2.7 0 0 1 5.1 1.1c0 1.7-1.9 2-1.9 3.5"/><path d="M12 16.9h.01"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4v9l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9.5 3.2h5V6h-5z"/><path d="M9 13l2 2 4-4"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></symbol>
+  </defs></svg>
   <div class="sp-skel">
     <div class="sp-skel-note">SPACE 권한 트리 — <b>레이아웃 골격</b>입니다. 권한 분기·실데이터는 아직 연결하지 않았습니다(결재 후 배선). 노드를 눌러 동선을 확인해 주세요.</div>
-    <div class="sp-skel-sign"><span>🏢 에즈금융서비스</span><span style="font-weight:400;color:var(--ts);font-size:.72rem;">· 회사 상호는 간판으로만 표시 (트리 진입 X)</span></div>
+    <div class="sp-skel-sign"><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span><span>소속 회사</span><span style="font-weight:400;color:var(--ts);font-size:.72rem;">· 회사 상호는 간판으로만 표시 (트리 진입 X)</span></div>
     <div class="sp-panes">
       <div class="sp-tree" id="spTree">
         <div class="sp-branch">
-          <div class="sp-node" data-k="dw"><span class="sp-caret">▾</span><span class="ic">📍</span>더원지점</div>
+          <div class="sp-node" data-k="branch"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-pin"/></svg></span>우리 지점</div>
           <div class="sp-children">
+
             <div class="sp-branch collapsed">
-              <div class="sp-node" data-k="common"><span class="sp-caret">▾</span><span class="ic">📋</span>지점 공통</div>
+              <div class="sp-node" data-k="bspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>지점 스페이스</div>
               <div class="sp-children">
-                <div class="sp-node sp-leaf" data-k="common_lib"><span class="sp-caret">▾</span><span class="ic">📄</span>지점 자료실</div>
-                <div class="sp-node sp-leaf" data-k="common_ins"><span class="sp-caret">▾</span><span class="ic">📄</span>보험사별 자료실</div>
-                <div class="sp-node sp-leaf" data-k="common_qna"><span class="sp-caret">▾</span><span class="ic">💬</span>보험 Q&amp;A</div>
+                <div class="sp-node sp-leaf" data-k="broom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-msg"/></svg></span>지점방</div>
+                <div class="sp-branch collapsed">
+                  <div class="sp-node" data-k="blib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>자료실</div>
+                  <div class="sp-children">
+                    <div class="sp-node sp-leaf" data-k="blib_b"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>지점 자료실</div>
+                    <div class="sp-node sp-leaf" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
+                  </div>
+                </div>
               </div>
             </div>
+
             <div class="sp-branch collapsed">
-              <div class="sp-node sel" data-k="team"><span class="sp-caret">▾</span><span class="ic">👥</span>4팀</div>
+              <div class="sp-node sel" data-k="tspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>팀 스페이스</div>
               <div class="sp-children">
-                <div class="sp-node sp-leaf" data-k="team_notice"><span class="sp-caret">▾</span><span class="ic">📢</span>팀 공지</div>
-                <div class="sp-node sp-leaf" data-k="team_lib"><span class="sp-caret">▾</span><span class="ic">📄</span>팀 자료</div>
-                <div class="sp-node sp-leaf" data-k="team_member"><span class="sp-caret">▾</span><span class="ic">👤</span>구성원</div>
+                <div class="sp-node sp-leaf" data-k="troom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-msg"/></svg></span>팀방</div>
+                <div class="sp-node sp-leaf" data-k="tlib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>팀 자료실</div>
               </div>
             </div>
+
             <div class="sp-branch collapsed">
-              <div class="sp-node" data-k="mine"><span class="sp-caret">▾</span><span class="ic">👤</span>내 스페이스</div>
+              <div class="sp-node" data-k="mspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-user"/></svg></span>마이 스페이스</div>
               <div class="sp-children">
-                <div class="sp-node sp-leaf" data-k="mine_lib"><span class="sp-caret">▾</span><span class="ic">📄</span>자료</div>
-                <div class="sp-node sp-leaf" data-k="mine_script"><span class="sp-caret">▾</span><span class="ic">📝</span>스크립트</div>
-                <div class="sp-node sp-leaf" data-k="mine_memo"><span class="sp-caret">▾</span><span class="ic">🗒️</span>메모</div>
-                <div class="sp-node sp-leaf" data-k="mine_diary"><span class="sp-caret">▾</span><span class="ic">📅</span>다이어리</div>
+                <div class="sp-node sp-leaf" data-k="m_lib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>개인 자료실</div>
+                <div class="sp-node sp-leaf" data-k="m_script"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>스크립트</div>
+                <div class="sp-node sp-leaf" data-k="m_memo"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-note"/></svg></span>메모</div>
+                <div class="sp-node sp-leaf" data-k="m_share"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-share"/></svg></span>공유함</div>
+                <div class="sp-node sp-leaf" data-k="m_diary"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-cal"/></svg></span>다이어리</div>
               </div>
             </div>
+
+            <div class="sp-branch collapsed">
+              <div class="sp-node" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
+              <div class="sp-children">
+                <div class="sp-node sp-leaf" data-k="qna_p"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-box"/></svg></span>상품</div>
+                <div class="sp-node sp-leaf" data-k="qna_u"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-check"/></svg></span>인수</div>
+                <div class="sp-node sp-leaf" data-k="qna_e"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-dots"/></svg></span>기타</div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -12155,29 +12195,36 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
    기존 시트 IIFE와 분리. 노드 클릭 → 우측 콘텐츠 교체 / 카레트 클릭 → 펼침·접힘. ═══ */
 (function(){
   'use strict';
+  /* 중립 구조 라벨(좌측 트리) ↔ 실소속(우측 '내 소속')의 정체성 분리. 라벨에 구체 조직명 안 씀. */
   var DATA={
-    dw:{bc:'에즈금융서비스 › 더원지점', title:'더원지점', tabs:[], note:'지점 아래 <b>지점 공통 · 4팀 · 내 스페이스</b>로 들어갑니다.<br>권한에 따라 보이는 범위가 달라집니다 — 설계사 = 본인 팀 / 실장 = 담당 팀들 / 지점장 = 지점 전체 팀.'},
-    common:{bc:'에즈금융서비스 › 더원지점 › 지점 공통', title:'지점 공통', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:0, items:['지점 전체 공지 모음','신상품 안내 자료','지점 운영 가이드']},
-    common_lib:{bc:'에즈금융서비스 › 더원지점 › 지점 공통 › 지점 자료실', title:'지점 자료실', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:0, items:['지점 전체 공지 모음','신상품 안내 자료','지점 운영 가이드']},
-    common_ins:{bc:'에즈금융서비스 › 더원지점 › 지점 공통 › 보험사별 자료실', title:'보험사별 자료실', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:1, items:['손보사 요율표','생보사 인수지침','보험사별 소식지']},
-    common_qna:{bc:'에즈금융서비스 › 더원지점 › 지점 공통 › 보험 Q&A', title:'보험 Q&A', tabs:['지점 자료실','보험사별 자료실','보험 Q&A'], on:2, items:['인수 문의 — 고혈압 600','전산 처리 질문','민원 사례 공유']},
-    team:{bc:'에즈금융서비스 › 더원지점 › 4팀', title:'4팀 스페이스', tabs:['팀 자료','팀 공지','구성원'], on:0, items:['6월 DB손보 핵심 포인트','4팀 공유 스크립트','인수 가이드 모음']},
-    team_lib:{bc:'에즈금융서비스 › 더원지점 › 4팀 › 팀 자료', title:'4팀 · 팀 자료', tabs:['팀 자료','팀 공지','구성원'], on:0, items:['6월 DB손보 핵심 포인트','4팀 공유 스크립트','인수 가이드 모음']},
-    team_notice:{bc:'에즈금융서비스 › 더원지점 › 4팀 › 팀 공지', title:'4팀 · 팀 공지', tabs:['팀 자료','팀 공지','구성원'], on:1, items:['오늘의 업무 방향','긴급 체크 — 마감 임박','팀 회의 공지']},
-    team_member:{bc:'에즈금융서비스 › 더원지점 › 4팀 › 구성원', title:'4팀 · 구성원', tabs:['팀 자료','팀 공지','구성원'], on:2, members:['김설계 · 설계사','이실장 · 실장','박총무 · 스텝']},
-    mine:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스', title:'내 스페이스', tabs:['자료','스크립트','메모','다이어리'], on:0, items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
-    mine_lib:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 자료', title:'내 스페이스 · 자료', tabs:['자료','스크립트','메모','다이어리'], on:0, items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
-    mine_script:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 스크립트', title:'내 스페이스 · 스크립트', tabs:['자료','스크립트','메모','다이어리'], on:1, items:['오프닝 화법','반론 처리 스크립트','클로징 멘트']},
-    mine_memo:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 메모', title:'내 스페이스 · 메모', tabs:['자료','스크립트','메모','다이어리'], on:2, items:['상담 메모','체크리스트','아이디어']},
-    mine_diary:{bc:'에즈금융서비스 › 더원지점 › 내 스페이스 › 다이어리', title:'내 스페이스 · 다이어리', tabs:['자료','스크립트','메모','다이어리'], on:3, items:['오늘 일정','이번 주 할 일','월간 목표']}
+    branch:{title:'우리 지점', tabs:[], note:'지점 아래 <b>지점 스페이스 · 팀 스페이스 · 마이 스페이스 · 보험 Q&amp;A</b>로 들어갑니다.<br>권한에 따라 보이는 범위가 달라집니다 — 설계사 = 본인 팀 / 실장 = 담당 팀들 / 지점장 = 지점 전체.'},
+    bspace:{title:'지점 스페이스', tabs:['지점방','자료실'], on:0, items:['지점 전체 공지','지점 운영 가이드','신상품 안내']},
+    broom:{title:'지점방', items:['지점장 공지','이번 주 지점 일정','전달 사항'], ico:'i-msg'},
+    blib:{title:'자료실', tabs:['지점 자료실','원수사 자료실'], on:0, items:['지점 공통 양식','교육 자료','업무 매뉴얼']},
+    blib_b:{title:'지점 자료실', items:['지점 공통 양식','교육 자료','업무 매뉴얼']},
+    blib_ins:{title:'원수사 자료실', items:['손보사 요율표','생보사 인수지침','보험사 소식지'], ico:'i-building'},
+    tspace:{title:'팀 스페이스', tabs:['팀 자료','팀 공지','구성원'], on:0, items:['6월 상품 핵심 포인트','팀 공유 스크립트','인수 가이드 모음']},
+    troom:{title:'팀방', items:['오늘의 업무 방향','긴급 체크','팀 회의 공지'], ico:'i-msg'},
+    tlib:{title:'팀 자료실', items:['6월 상품 핵심 포인트','팀 공유 스크립트','인수 가이드 모음']},
+    mspace:{title:'마이 스페이스', tabs:['자료','스크립트','메모','공유함','다이어리'], on:0, items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
+    m_lib:{title:'개인 자료실', items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
+    m_script:{title:'스크립트', items:['오프닝 화법','반론 처리','클로징 멘트'], ico:'i-file'},
+    m_memo:{title:'메모', items:['상담 메모','체크리스트','아이디어'], ico:'i-note'},
+    m_share:{title:'공유함', items:['받은 공유 자료','보낸 공유'], ico:'i-share'},
+    m_diary:{title:'다이어리', items:['오늘 일정','이번 주 할 일','월간 목표'], ico:'i-cal'},
+    qna:{title:'보험 Q&A', tabs:['상품','인수','기타'], on:0, items:['실손 보장 범위 문의','고혈압 인수 문의','자동차 특약 질문'], ico:'i-help'},
+    qna_p:{title:'보험 Q&A · 상품', tabs:['상품','인수','기타'], on:0, items:['실손 보장 범위','신상품 비교','특약 구성'], ico:'i-box'},
+    qna_u:{title:'보험 Q&A · 인수', tabs:['상품','인수','기타'], on:1, items:['고혈압 인수 문의','직업 변경 고지','병력 고지 범위'], ico:'i-check'},
+    qna_e:{title:'보험 Q&A · 기타', tabs:['상품','인수','기타'], on:2, items:['전산 처리 질문','민원 사례','기타 문의'], ico:'i-dots'}
   };
   function _spPaint(k){
-    var d=DATA[k]||DATA.team, c=document.getElementById('spContent'); if(!c) return;
+    var d=DATA[k]||DATA.tspace, c=document.getElementById('spContent'); if(!c) return;
+    var head='<div class="sp-bc">내 소속</div><div class="sp-soko">회사 · 지점 · 팀 <span class="sp-soko-sub">(로그인 정보로 표시)</span></div>';
     var tabs=''; if(d.tabs&&d.tabs.length){ tabs='<div class="sp-tabs">'; for(var i=0;i<d.tabs.length;i++){ tabs+='<span class="sp-tab'+(i===(d.on||0)?' on':'')+'">'+d.tabs[i]+'</span>'; } tabs+='</div>'; }
     var bd='';
     if(d.note){ bd='<div class="sp-empty2">'+d.note+'</div>'; }
-    else { var list=d.members||d.items||[], ic=d.members?'👤':'📄'; if(list.length){ bd='<div class="sp-items">'; for(var j=0;j<list.length;j++){ bd+='<div class="sp-item"><span class="ic">'+ic+'</span>'+list[j]+'</div>'; } bd+='</div><div class="sp-empty2" style="padding-top:13px">※ 골격 — 예시 항목입니다 (실데이터 미연결).</div>'; } }
-    c.innerHTML='<div class="sp-bc">'+d.bc+'</div><div class="sp-title">'+d.title+'</div>'+tabs+bd;
+    else { var list=d.members||d.items||[], sym=d.members?'i-user':(d.ico||'i-file'); if(list.length){ bd='<div class="sp-items">'; for(var j=0;j<list.length;j++){ bd+='<div class="sp-item"><span class="ic"><svg class="sp-ico"><use href="#'+sym+'"/></svg></span>'+list[j]+'</div>'; } bd+='</div><div class="sp-empty2" style="padding-top:13px">※ 골격 — 예시 항목입니다 (실데이터 미연결).</div>'; } }
+    c.innerHTML=head+'<div class="sp-title">'+d.title+'</div>'+tabs+bd;
   }
   window._spPaint=_spPaint;
   window._spaceTreeInit=function(){
@@ -12189,7 +12236,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       node.classList.add('sel');
       _spPaint(node.getAttribute('data-k'));
     });
-    _spPaint('team'); /* 초기 = 4팀 (목업 기준) */
+    _spPaint('tspace'); /* 초기 = 팀 스페이스 */
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
 })();
