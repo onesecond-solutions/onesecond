@@ -12280,7 +12280,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(host){ host.innerHTML=_spHead(); host.appendChild(sp); }
     sp.style.display='';
     window._mysCat=cat;
-    function apply(){ var cs=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<cs.length;i++){ if(cs[i].textContent.trim()===cat){ if(typeof filterMys==='function') filterMys(cs[i],cat); return; } } }
+    function apply(){ var cs=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<cs.length;i++){ if(cs[i].textContent.trim()===cat){ var oc=cs[i].getAttribute('onclick')||''; if(oc.indexOf('mysShareboxOpen')>=0){ if(typeof mysShareboxOpen==='function') mysShareboxOpen(cs[i]); } else if(typeof filterMys==='function'){ filterMys(cs[i],cat); } return; } } }
     if(window._myspaceLoaded){ apply(); }
     else { var p=(typeof loadMyspace==='function')?loadMyspace():null; if(p&&p.then) p.then(apply); else apply(); }
   }
@@ -12301,6 +12301,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else if(k==='m_lib'){ _spDiaRestore(); _spSplitRestore(); _spVaultShow(sc); }     /* 개인 자료실 = 자료함 이식(inplace) */
       else if(k==='m_script'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'스크립트'); }  /* 스크립트 = 목록뷰 이식(inplace) */
       else if(k==='m_memo'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'메모'); }        /* 메모 = 목록뷰 이식(inplace, #mys-split 공유) */
+      else if(k==='m_share'){ _spDiaRestore(); _spVaultRestore(); _spSplitShow(sc,'공유함'); }     /* 공유함 = 목록뷰 이식(inplace, mysShareboxOpen placeholder) */
       else { _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spPaint(k); }      /* 다른 노드 = 이식분 원위치 복귀 후 일반 페인트 */
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
