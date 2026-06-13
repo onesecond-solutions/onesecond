@@ -46,6 +46,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #app.is-admin #nav-insurer-vault{display:flex;}         /* admin: 전체 노출 유지 + 자료실 추가 */
 #app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} /* 단순화(2026-06-10): 일반(GA) 사용자만 숨김. admin·insurer는 기존 게이팅 유지 */
 .nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
+/* 사이드바 하단 안내 — 제한 오픈(감추기>만들기) 보완 문구. 접힘 시 숨김 */
+.side-note{margin-top:auto;padding:12px 10px 4px;font-size:0.72rem;line-height:1.55;color:var(--tf);border-top:1px solid var(--bd);}
+.app.collapsed .side-note{display:none;}
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
 #app.role-ready #app-loading-shell{display:none;}
@@ -1965,6 +1968,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav ga-hide" id="nav-voice" onclick="showView('voice')"><span class="ic">&#9636;</span><span class="lbl">현장의 소리</span></div>
     <div class="nav ins-show ga-hide" onclick="showView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav ga-hide" onclick="showView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
+    <div class="side-note" id="sideNote">준비 중인 메뉴·도구는 계속 업데이트할 예정입니다.</div>
   </nav>
   <div class="main">
     <header class="head">
