@@ -260,6 +260,8 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .scr-type-seg{display:flex;gap:6px;}
 .scr-type-seg button{flex:0 0 auto;padding:7px 16px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-sm,11px);cursor:pointer;font-weight:600;font-size:0.85rem;}
 .scr-type-seg button.on{background:var(--ac);border-color:var(--ac);color:#fff;}
+.cosp-il-seg{flex-wrap:wrap;gap:7px;}
+.cosp-il-seg button{padding:6px 13px;font-size:0.82rem;}
 .answer{margin-top:18px;background:var(--s2);border-radius:10px;padding:16px 18px;}
 .answer .who{font-size:0.75rem;color:var(--t-uw);font-weight:700;margin-bottom:8px;}
 .atts{margin-top:20px;border-top:0.5px solid var(--bd);padding-top:16px;}
@@ -6764,18 +6766,57 @@ function cospShowNotice(idx){
 window.cospShowNotice=cospShowNotice;
 function cospNoticeBack(){ var sp=document.getElementById('cosp-notice-split'); if(sp) sp.classList.remove('show-viewer'); }
 window.cospNoticeBack=cospNoticeBack;
-/* 공동 스페이스 팀방/지점방 글쓰기 = 기존 단체방 폼(mrWriteModal) 재사용. scope는 역할이 아니라 현재 방(_cospRoom) 기준으로 강제 */
-function cospWrite(){
+/* 공동 스페이스 팀방/지점방 글쓰기 = 스크립트 페이지 인라인 작업공간(OSWS) 레이아웃 + 단체방 공지 유형선택 폼.
+ * 저장은 검증된 mrSubmitNotice 재사용(인라인 필드→숨은 모달 필드 주입 후 호출). scope=현재 방(_cospRoom) 강제. */
+var _COSP_NTYPES=[['operation','운영'],['urgent','긴급'],['product','상품'],['underwriting','인수'],['education','교육'],['event','일정'],['etc','기타']];
+function cospWrite(){ if(typeof cospWriteInline==='function') cospWriteInline(); else cospWriteModal(); }
+window.cospWrite=cospWrite;
+function cospWriteInline(){
+  var split=document.getElementById('cosp-notice-split');
+  var viewer=split?split.querySelector('.viewer'):document.querySelector('#cosp-sub-body .viewer');
+  if(!viewer || !(window.OSWS&&window.OSWS.openForm)){ return cospWriteModal(); }  /* 뷰어 없으면 모달 폴백 */
+  window._cospIlType='operation';
+  var seg=_COSP_NTYPES.map(function(t,i){ return '<button type="button" class="'+(i===0?'on':'')+'" onclick="cospIlType(this,\''+t[0]+'\')">'+t[1]+'</button>'; }).join('');
+  var formHtml=''
+    +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg cosp-il-seg" id="cosp-il-seg">'+seg+'</div></div>'
+    +'<div class="iv-fld"><label>제목</label><input type="text" id="cospi-title" class="mys-write-input" maxlength="100" placeholder="공지 제목"></div>'
+    +'<div class="iv-fld"><label>내용</label><textarea id="cospi-body" class="mys-write-input" rows="7" placeholder="공지 내용을 입력하세요"></textarea></div>'
+    +'<div class="iv-fld"><label>키워드</label><input type="text" id="cospi-kw" class="mys-write-input" maxlength="200" placeholder="예: 인수, 마감 (쉼표로 구분)"></div>';
+  window.OSWS.openForm(viewer, 'create', formHtml, saveCospInline, closeCospInline);
+  if(split) split.classList.add('show-viewer');  /* 모바일에서 뷰어(작업공간) 노출 */
+}
+window.cospWriteInline=cospWriteInline;
+function cospIlType(btn,v){ window._cospIlType=v; var sg=document.getElementById('cosp-il-seg'); if(sg){ var bs=sg.querySelectorAll('button'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i]===btn); } }
+window.cospIlType=cospIlType;
+function closeCospInline(){ if(typeof cospRenderNotices==='function') cospRenderNotices(false); }
+window.closeCospInline=closeCospInline;
+function saveCospInline(){
+  var title=((document.getElementById('cospi-title')||{}).value||'').trim();
+  var body=((document.getElementById('cospi-body')||{}).value||'').trim();
+  if(!title){ alert('제목을 입력하세요.'); return; }
+  if(!body){ alert('내용을 입력하세요.'); return; }
+  /* 검증된 모달 저장 로직 재사용 — 인라인 값 → 숨은 모달 필드 주입 후 mrSubmitNotice 호출(POST + cospRenderNotices 재렌더) */
+  var mt=document.getElementById('mr-f-title'); if(mt) mt.value=title;
+  var mb=document.getElementById('mr-f-body'); if(mb) mb.value=body;
+  var mk=document.getElementById('mr-f-keywords'); if(mk) mk.value=((document.getElementById('cospi-kw')||{}).value||'');
+  var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(window._cospIlType||'operation')+'"]'); if(rt) rt.checked=true;
+  window._mrEditId=null;
+  window._mrScope=(window._cospRoom==='branch')?'branch_internal':'team_internal';
+  window._cospWriting=true;
+  if(typeof mrSubmitNotice==='function') mrSubmitNotice();
+}
+window.saveCospInline=saveCospInline;
+/* 폴백: 인라인 뷰어가 없을 때 기존 모달 */
+function cospWriteModal(){
   if(typeof mrOpenWrite!=='function'){ if(typeof toast==='function') toast('작성 폼을 열 수 없습니다.'); return; }
-  var _mw=document.getElementById('mrWriteModal'); if(_mw && _mw.parentElement!==document.body) document.body.appendChild(_mw);  /* 어느 view에서든 뜨게 body 직속 */
-  window._mrEditId=null;  /* 신규 보장 */
+  var _mw=document.getElementById('mrWriteModal'); if(_mw && _mw.parentElement!==document.body) document.body.appendChild(_mw);
+  window._mrEditId=null;
   mrOpenWrite();
-  /* mrOpenWrite가 역할 기준으로 _mrScope를 덮으므로(7715) 방 기준으로 재강제 + 제목 보정 */
   window._mrScope=(window._cospRoom==='branch')?'branch_internal':'team_internal';
   var wt=document.getElementById('mr-write-title'); if(wt) wt.textContent=(window._cospRoom==='branch')?'지점방 공지 작성':'팀방 공지 작성';
-  window._cospWriting=true;  /* 저장 성공 후 팀방 목록 갱신 플래그 */
+  window._cospWriting=true;
 }
-window.cospWrite=cospWrite;
+window.cospWriteModal=cospWriteModal;
 /* 어드민 사고 대응 — 전 팀/지점 공지 전체 열람 토글(평상시 OFF). 향후 어드민 콘솔로 이전 예정 */
 function cospAdminAll(on){ window._cospAdminAll=(on!==false); if(typeof cospRenderNotices==='function') cospRenderNotices(false); }
 window.cospAdminAll=cospAdminAll;
