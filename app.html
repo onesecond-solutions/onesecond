@@ -262,6 +262,11 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .scr-type-seg button.on{background:var(--ac);border-color:var(--ac);color:#fff;}
 .cosp-il-seg{flex-wrap:wrap;gap:7px;}
 .cosp-il-seg button{padding:6px 13px;font-size:0.82rem;}
+.sp-deny-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1200;align-items:center;justify-content:center;padding:20px;}
+.sp-deny-box{background:var(--s1);border-radius:16px;padding:22px 22px 18px;max-width:340px;width:100%;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.25);}
+.sp-deny-ttl{font-size:1rem;font-weight:800;color:var(--tp);margin-bottom:9px;}
+.sp-deny-msg{font-size:0.9rem;color:var(--ts);line-height:1.6;margin-bottom:18px;}
+.sp-deny-ok{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:10px 28px;font-weight:700;font-size:0.9rem;cursor:pointer;}
 .answer{margin-top:18px;background:var(--s2);border-radius:10px;padding:16px 18px;}
 .answer .who{font-size:0.75rem;color:var(--t-uw);font-weight:700;margin-bottom:8px;}
 .atts{margin-top:20px;border-top:0.5px solid var(--bd);padding-top:16px;}
@@ -6702,16 +6707,17 @@ async function cospRenderNotices(materialsOnly){
   var _adminAll=_cospAdmin && !!window._cospAdminAll;
   var s=_cospScope();
   var _rs=(window._cospRoom==='branch'?'지점':'팀');
+  var _wbtn=!materialsOnly?'<div class="osws-newrow" style="margin-bottom:10px"><button class="osws-newbtn" onclick="cospWrite()">+ 글쓰기</button></div>':'';  /* 글쓰기 버튼=항상 노출(권한은 클릭 시 안내 팝업) */
   if(!_adminAll && !s.id){
     /* 소속 없음 — 어드민은 페이지 레이아웃(좌목록+우뷰어)은 정상 노출(페이지 검증 가능), 목록 영역에 평상시 미열람 안내+사고대응 버튼.
        내용(사용자 글)만 안 보이고 화면 구조는 보임. 일반은 소속 안내. */
     if(_cospAdmin){
-      box.innerHTML='<div class="split cosp-split" id="cosp-notice-split">'
+      box.innerHTML=_wbtn+'<div class="split cosp-split" id="cosp-notice-split">'
         +'<div class="col list-col"><div class="list"><div class="mys-news-empty" style="padding:22px 12px;line-height:1.6">어드민은 평상시 '+_rs+' 공지를 열람하지 않습니다.<br>(화면 구조는 검증용으로 표시됩니다)<br><button class="osws-newbtn" style="margin-top:12px" onclick="cospAdminAll()">전체 '+_rs+' 공지 열람 (사고 대응)</button></div></div></div>'
         +'<div class="col viewer-col"><button class="backbtn" onclick="cospNoticeBack()">&#8249; 목록으로</button>'
         +'<div class="viewer"><div class="mys-news-empty">선택된 공지가 없습니다.</div></div></div></div>';
     } else {
-      box.innerHTML='<div class="mys-news-empty">소속 '+_rs+' 정보가 없습니다.</div>';
+      box.innerHTML=_wbtn+'<div class="mys-news-empty">소속 '+_rs+' 정보가 없습니다.</div>';
     }
     return;
   }
@@ -6739,7 +6745,7 @@ async function cospRenderNotices(materialsOnly){
     /* 글쓰기 = 방 소속자 누구나(카톡 단톡방). 어드민(창시자)·공유자료 모드 제외. 핵심 권한은 작성이 아니라 가시성(소속 격리) */
     var _me=window._cospMe||{};
     var _canWrite=!materialsOnly && !_cospAdmin && (window._cospRoom==='branch'?!!_me.branch_id:!!_me.team_id);
-    var _writeBtn=_canWrite?'<div class="osws-newrow" style="margin-bottom:10px"><button class="osws-newbtn" onclick="cospWrite()">+ 글쓰기</button></div>':'';
+    var _writeBtn=_wbtn;  /* 항상 노출 — 권한 없으면 클릭 시 안내 팝업(cospWrite) */
     if(!window._cospNotices.length){ box.innerHTML=_writeBtn+'<div class="mys-news-empty">'+(materialsOnly?'아직 공유된 자료가 없습니다.':'아직 등록된 공지가 없습니다.'+(_canWrite?'<br>+ 글쓰기로 첫 공지를 작성해보세요.':''))+'</div>'; return; }
     box.innerHTML=(_adminAll?'<div style="font-size:0.74rem;color:var(--warn);margin-bottom:6px;font-weight:700">사고 대응 모드 — 전 '+_rs+' 공지 열람 중 <button onclick="cospAdminAll(false)" style="margin-left:6px;font-size:0.95rem;background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--ts)">평상시로</button></div>':'')
       +_writeBtn
@@ -6769,8 +6775,29 @@ window.cospNoticeBack=cospNoticeBack;
 /* 공동 스페이스 팀방/지점방 글쓰기 = 스크립트 페이지 인라인 작업공간(OSWS) 레이아웃 + 단체방 공지 유형선택 폼.
  * 저장은 검증된 mrSubmitNotice 재사용(인라인 필드→숨은 모달 필드 주입 후 호출). scope=현재 방(_cospRoom) 강제. */
 var _COSP_NTYPES=[['operation','운영'],['urgent','긴급'],['product','상품'],['underwriting','인수'],['education','교육'],['event','일정'],['etc','기타']];
-function cospWrite(){ if(typeof cospWriteInline==='function') cospWriteInline(); else cospWriteModal(); }
+function cospWrite(){
+  var me=window._cospMe||{}, room=window._cospRoom||'team';
+  var rn=(room==='branch')?'지점방':'팀방', grp=(room==='branch')?'지점':'팀';
+  if(me.role==='admin'){ return _spDenyPopup('작성 권한 안내', '이 '+rn+'은 '+grp+' 구성원이 함께 쓰는 공간이에요.<br>어드민(창시자) 계정은 글을 작성하지 않습니다.'); }
+  var hasMember=(room==='branch')?!!me.branch_id:!!me.team_id;
+  if(!hasMember){ return _spDenyPopup('작성 권한 안내', '이 '+rn+'에 글을 쓰려면 '+grp+' 소속이 필요해요.<br>소속이 등록되면 바로 작성할 수 있어요.'); }
+  if(typeof cospWriteInline==='function') cospWriteInline(); else cospWriteModal();
+}
 window.cospWrite=cospWrite;
+/* 범용 권한 안내 팝업 — 글쓰기·노드 접근 등 권한 없을 때 친절 안내(숨기지 않고 클릭 시 설명) */
+function _spDenyPopup(title, msg){
+  var ov=document.getElementById('sp-deny-ov');
+  if(!ov){ ov=document.createElement('div'); ov.id='sp-deny-ov'; ov.className='sp-deny-ov';
+    ov.innerHTML='<div class="sp-deny-box"><div class="sp-deny-ttl"></div><div class="sp-deny-msg"></div><button class="sp-deny-ok" type="button">확인</button></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click',function(e){ if(e.target===ov) ov.style.display='none'; });
+    ov.querySelector('.sp-deny-ok').addEventListener('click',function(){ ov.style.display='none'; });
+  }
+  ov.querySelector('.sp-deny-ttl').textContent=title||'안내';
+  ov.querySelector('.sp-deny-msg').innerHTML=msg||'';
+  ov.style.display='flex';
+}
+window._spDenyPopup=_spDenyPopup;
 function cospWriteInline(){
   var split=document.getElementById('cosp-notice-split');
   var viewer=split?split.querySelector('.viewer'):document.querySelector('#cosp-sub-body .viewer');
