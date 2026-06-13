@@ -11180,7 +11180,7 @@ function mysVaultSetView(v){
 }
 window.mysVaultSetView=mysVaultSetView;
 
-async /* 자료실 상단 고지 문구 — 스코프별(개인=본인자산 / 팀·지점=공유). 스코프 전환 시 확인 재요청 */
+/* 자료실 상단 고지 문구 — 스코프별(개인=본인자산 / 팀·지점=공유). 스코프 전환 시 확인 재요청 */
 function _mvApplyVaultNotice(scope){
   var nt=document.getElementById('mys-vault-notice'), txt=nt?nt.querySelector('.mvn-txt'):null;
   if(txt){
@@ -12556,13 +12556,15 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   window._spDiaShow=_spDiaShow; window._spDiaRestore=_spDiaRestore;
   /* 개인 자료실 노드 = 라이브러리 자료함(#mys-vault)을 우측 패널로 이동(inplace, 기능·데이터 그대로). 다이어리 패턴 정합. */
   /* scope: undefined/'personal'=개인 자료실(m_lib) / 'team'=팀 자료실(tlib) / 'branch'=지점 자료실(blib_b). 같은 #mys-vault 컴포넌트 재사용 */
-  function _spVaultShow(host, scope){
+  async function _spVaultShow(host, scope){
     var v=document.getElementById('mys-vault'); if(!v){ if(host) host.innerHTML='<div class="sp-empty2">자료함을 불러올 수 없습니다.</div>'; return; }
     if(!window._spVaultHome) window._spVaultHome=v.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
     var sid=null;
     if(scope==='team'||scope==='branch'){
-      var me=window._cospMe||{}, u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
-      sid=(scope==='team')?(me.team_id||u.team_id||null):(me.branch_id||u.branch_id||null);
+      var me=window._cospMe||{};
+      var need=(scope==='team')?!me.team_id:!me.branch_id;
+      if(need && typeof _cospLoadMe==='function'){ try{ me=(await _cospLoadMe())||{}; }catch(e){ me=window._cospMe||{}; } }  /* os_user에 없으면 DB에서 직접 조회(users.id=auth.uid) */
+      sid=(scope==='team')?(me.team_id||null):(me.branch_id||null);
       if(!sid){ if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.6">'+(scope==='team'?'팀':'지점')+' 소속 정보가 없어 자료실을 열 수 없어요.<br>소속이 등록되면 이용할 수 있어요.</div>'; if(typeof _mvScopeSet==='function') _mvScopeSet('personal',null); return; }
       if(typeof _mvScopeSet==='function') _mvScopeSet(scope, sid);
     } else { if(typeof _mvScopeSet==='function') _mvScopeSet('personal', null); }
