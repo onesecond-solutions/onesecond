@@ -7121,6 +7121,7 @@ function _goVaultCalendar(){
 }
 window._goVaultCalendar=_goVaultCalendar;
 function mysTab(el,key){
+  if(typeof _spDiaRestore==='function') _spDiaRestore();  /* 바텀시트로 이동됐던 다이어리(#mys-today) 라이브러리로 회수(2026-06-13 이식) */
   var tabs=document.querySelectorAll('#mys-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#mys-tabs .tab'); if(f) f.classList.add('on'); }
   var today=document.getElementById('mys-today'), saved=document.getElementById('mys-saved'), team=document.getElementById('mys-team'), qna=document.getElementById('mys-qna'), mem=document.getElementById('mr-main');
@@ -12233,6 +12234,20 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     c.innerHTML=head+'<div class="sp-title">'+d.title+'</div>'+tabs+bd;
   }
   window._spPaint=_spPaint;
+  /* 다이어리 노드 = 라이브러리 다이어리(#mys-today)를 우측 패널로 이동(inplace, 복제 아님 → id 충돌 0·기능·데이터 그대로). 보험Q&A 인플레이스 패턴 정합. */
+  function _spDiaShow(host){
+    var d=document.getElementById('mys-today'); if(!d){ if(host) host.innerHTML='<div class="sp-empty2">다이어리를 불러올 수 없습니다.</div>'; return; }
+    if(!window._spDiaHome) window._spDiaHome=d.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
+    if(host){ host.innerHTML=''; host.appendChild(d); }
+    d.style.display='';
+    if(typeof loadCal==='function') loadCal('mys');           /* 달력 로드·렌더 (탭과 동일) */
+    if(typeof loadDiaryDash==='function') loadDiaryDash();    /* 대시보드 3카드 카운트 */
+  }
+  function _spDiaRestore(){
+    var d=document.getElementById('mys-today'), home=window._spDiaHome;
+    if(d && home && d.parentNode!==home){ d.style.display='none'; home.appendChild(d); }  /* 시트로 옮겨졌던 경우만 라이브러리로 복귀 */
+  }
+  window._spDiaShow=_spDiaShow; window._spDiaRestore=_spDiaRestore;
   window._spaceTreeInit=function(){
     var tree=document.getElementById('spTree'); if(!tree||tree._spInit) return; tree._spInit=true;
     tree.addEventListener('click', function(e){
@@ -12240,7 +12255,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       if(node.parentElement.classList.contains('sp-branch')) node.parentElement.classList.toggle('collapsed');  /* 화살표·텍스트 어디 눌러도 펼침/접힘 */
       var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
       node.classList.add('sel');
-      _spPaint(node.getAttribute('data-k'));
+      var k=node.getAttribute('data-k');
+      if(k==='m_diary'){ _spDiaShow(document.getElementById('spContent')); }   /* 다이어리 = 실페이지 이식(inplace) */
+      else { _spDiaRestore(); _spPaint(k); }                                    /* 다른 노드 = 다이어리 원위치 복귀 후 일반 페인트 */
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
   };
