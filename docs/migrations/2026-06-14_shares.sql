@@ -21,6 +21,7 @@ create table if not exists public.shares (
   scope      text not null check (scope in ('team','branch')),
   scope_id   uuid not null,                       -- 내 team_id / branch_id
   title      text,                                -- 항목 제목 스냅샷(원본 삭제 대비)
+  payload    jsonb,                               -- 내용 스냅샷: script={script_text,keywords,attachments} / memo={memo_text,description} / file={original_name,ext,mime_type,file_size}
   created_at timestamptz not null default now()
 );
 create index if not exists idx_shares_scope on public.shares(scope, scope_id, created_at desc);
