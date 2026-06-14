@@ -7320,6 +7320,7 @@ function _goMysQna(){
 window._goMysQna=_goMysQna;
 /* 헤더 전산신고 버튼 → 함께해요 이동 + '전산 이상 신고' 필터 활성화 (2026-06-05) */
 function _goReport(){
+  if(window._osSheetCollapse) window._osSheetCollapse();   /* 바텀시트 열려있으면 슬라이드(.28s)로 내리고 전산신고 화면 표시 */
   if(typeof showView==='function') showView('together');
   setTimeout(function(){
     var chip=document.querySelector('#v-together .chip[onclick*="전산 이상 신고"]');
