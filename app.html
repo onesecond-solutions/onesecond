@@ -12419,7 +12419,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 /* ── 스페이스 온보딩 스토리북 (2026-06-14) — 페이지 넘김 + 좌우2단(Variant B) ── */
 .sp-bk{max-width:720px;margin:0 auto;position:relative;}
 /* 트리에서 마이/팀/지점 클릭 시 단일 공간 = 카드로 감싸기(허전함 해소). 좌측 공간색 강조선 */
-.sp-bk-solo{max-width:680px;margin:14px auto 0;padding:24px 26px;background:var(--card,#fff);border:1px solid var(--bd);border-left:3px solid var(--c,var(--ac));border-radius:16px;box-shadow:0 1px 10px rgba(20,20,40,.05);}
+.sp-bk-solo{max-width:none;margin:14px 0 0;padding:24px 26px;background:var(--card,#fff);border:1px solid var(--bd);border-left:3px solid var(--c,var(--ac));border-radius:16px;box-shadow:0 1px 10px rgba(20,20,40,.05);}
+/* 카드는 풀폭, 내용(헤더·좌우2단)만 가운데로 모아 좌우 벌어짐 해소 */
+.sp-bk-solo .sp-bk-shead,.sp-bk-solo .sp-bk-two{max-width:640px;margin-left:auto;margin-right:auto;}
 @media(max-width:680px){.sp-bk-solo{padding:18px 16px;}}
 /* 공유 브릿지 흐름 다이어그램 (마이→공유→팀→지점) */
 .sp-flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:24px;padding:16px 14px;background:var(--s2);border-radius:14px;}
