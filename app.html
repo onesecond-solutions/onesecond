@@ -305,6 +305,17 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .os-memo-fab{position:fixed;right:31px;bottom:96px;width:44px;height:44px;border-radius:12px 12px 12px 4px;background:#FFE067;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 6px 18px rgba(0,0,0,0.22);z-index:95;transform:rotate(-4deg);transition:transform .15s,box-shadow .15s;}
 .os-memo-fab:hover{transform:rotate(0deg) translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.28);}
 .os-memo-fab:active{transform:rotate(0deg) scale(0.94);}
+/* 스크립트 페이지 — 노란 메모지 가리키는 출렁출렁 손가락 (스크립트 화면일 때만) */
+.os-memo-finger{position:fixed;right:30px;bottom:148px;font-size:2.3rem;z-index:96;display:none;pointer-events:none;filter:drop-shadow(0 3px 7px rgba(0,0,0,0.28));animation:memoFingerBob 1.1s ease-in-out infinite;}
+body:has(#v-scripts.on) .os-memo-finger{display:block;}
+@keyframes memoFingerBob{0%,100%{transform:translateY(-6px)}50%{transform:translateY(6px)}}
+/* 스크립트 페이지 영감→메모 안내 블록 (노란 메모지 톤) */
+.scr-memo-hint{margin:14px 0 18px;padding:14px 16px;background:#FFF7C9;border:1px solid #FFE067;border-radius:12px;}
+.scr-memo-q{font-size:1rem;font-weight:800;color:var(--tp);margin-bottom:6px;}
+.scr-memo-do{font-size:.88rem;line-height:1.55;color:var(--ts);margin-bottom:12px;}
+.scr-memo-do b{color:var(--tp);}
+.scr-memo-write{font-size:.9rem;font-weight:700;padding:10px 18px;border-radius:9px;border:0;background:var(--ac);color:#fff;cursor:pointer;}
+.scr-memo-write:hover{background:var(--ach);}
 .os-memo-pop{position:fixed;right:26px;bottom:150px;width:288px;max-width:calc(100vw - 36px);background:#FFF7C9;border-radius:14px 14px 14px 6px;box-shadow:0 18px 48px rgba(0,0,0,0.32);z-index:120;display:none;flex-direction:column;overflow:hidden;transform-origin:bottom right;}
 .os-memo-pop.on{display:flex;animation:memoPop .16s ease-out;}
 @keyframes memoPop{from{opacity:0;transform:translateY(8px) scale(.96);}to{opacity:1;transform:none;}}
@@ -2328,6 +2339,11 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      <div class="wrap view" id="v-scripts">
       <div class="ttl">스크립트 <span class="ac">· 보험 상담 화법</span></div>
       <div class="sub">통화 중 1초 안에 꺼낼 수 있는 화법 카드.</div>
+      <div class="scr-memo-hint">
+        <div class="scr-memo-q">&#128221; 스크립트를 보다가 영감을 받으셨나요?</div>
+        <div class="scr-memo-do">메모장에 기록하세요 — 우측 하단 <b>노란 메모지</b>를 눌러보세요.</div>
+        <button class="scr-memo-write" onclick="_navScriptWrite()">스크립트 작성하기</button>
+      </div>
       <!-- 2026-05-27 갈아끼움: 풀스크린 모달 폐기 → 가로 정렬 + 오버레이 확장 카드 그리드 -->
       <div class="chips" id="scriptsChips">
         <!-- JS loadScriptsView() 가동 시 동적 자료 -->
@@ -2930,6 +2946,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 <button class="fab" onclick="openQuickLauncher()" aria-label="빠른 실행 열기"><span class="fic">&#9889;</span><span class="flbl">딸깍</span></button>
 <!-- 빠른 메모(포스트잇) — 딸깍 위. 화면 어디서나 메모 → 라이브러리 메모 -->
 <button class="os-memo-fab" onclick="toggleQuickMemo()" aria-label="빠른 메모" title="빠른 메모">&#128221;</button>
+<div class="os-memo-finger" aria-hidden="true">&#128071;</div><!-- 스크립트 페이지에서만 노출 — 노란 메모지 가리키는 출렁출렁 손가락 -->
+
 <div class="os-memo-pop" id="osMemoPop" role="dialog" aria-label="빠른 메모 작성">
   <div class="os-memo-head">
     <span class="t">&#128221; 빠른 메모</span>
@@ -4445,6 +4463,21 @@ window._navMyspace=_navMyspace;
 /* 전체화면 메뉴(홈·스크립트·함께해요·보험이슈·요금제) = 바텀시트가 열려 있으면 슬라이드(.28s)로 내리고 해당 화면 표시 */
 function _navView(key){ if(window._osSheetCollapse) window._osSheetCollapse(); if(typeof showView==='function') showView(key); }
 window._navView=_navView;
+/* 스크립트 작성하기 = 바텀시트 부드럽게 올리고(_osSheetOpen slow) 트리 '스크립트' 노드로 진입 */
+function _navScriptWrite(){
+  if(window._osSheetOpen) window._osSheetOpen(true);
+  setTimeout(function(){
+    try{
+      var tree=document.getElementById('spTree'); if(!tree) return;
+      var node=tree.querySelector('.sp-node[data-k="m_script"]'); if(!node) return;
+      var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
+      node.classList.add('sel');
+      var branch=node.closest('.sp-branch'); if(branch) branch.classList.remove('collapsed');
+      if(window._spSplitShow){ var sc=document.getElementById('spContent'); window._spSplitShow(sc,'스크립트'); }
+    }catch(e){}
+  }, 90);
+}
+window._navScriptWrite=_navScriptWrite;
 function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
