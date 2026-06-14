@@ -48,8 +48,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
    #app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} */
 .nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
 /* 사이드바 하단 안내 — 제한 오픈(감추기>만들기) 보완 문구. 접힘 시 숨김 */
-.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;background:var(--sh);border-radius:10px;padding:8px 6px;}/* 하단 묶음 — 조금 더 진한 그레이(안내문·요금제·어드민) */
-.side-note{padding:6px 8px 8px;font-size:0.72rem;line-height:1.6;color:var(--tf);}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;}/* 하단 묶음 — 안내문(파란 테두리)·요금제(일반)·어드민(진한 회색) 개별 처리 */
+.side-note{padding:10px 11px;font-size:0.72rem;line-height:1.6;color:var(--tf);border:1px solid var(--ac);border-radius:10px;}/* 베타·파일럿 = 파란 테두리 박스 */
+.side-foot #nav-admin{background:color-mix(in srgb,var(--bd) 60%,var(--sh));border-radius:10px;padding:16px 8px;}/* 어드민 = 진한 회색 박스(높이감) */
 .side-note b{color:var(--ts);font-weight:700;}
 .side-note-link{background:none;border:0;padding:0;font:inherit;color:var(--ac);font-weight:700;cursor:pointer;text-decoration:underline;}
 .app.collapsed .side-note{display:none;}
