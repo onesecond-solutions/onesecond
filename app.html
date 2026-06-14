@@ -2066,6 +2066,9 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <button class="os-banner-ov-nav next" type="button" aria-label="다음" onclick="osBannerOvStep(1,event)">›</button>
       </div>
 
+      <!-- 원세컨드 시작하기 — 클릭 시 바텀시트 상승 + 스페이스 설명서(스토리북). 첫 방문 1회 자동(2026-06-14) -->
+      <button type="button" class="os-start-cta" onclick="_osStartGuide()"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> 원세컨드 시작하기</button>
+
       <!-- 홈 3카테고리 텍스트 포털 (2026-06-10 단순화): 공지 / 라이브러리 / 스크립트 — 호버 발견형. 도구·소식정보 제거(감추기>만들기). 사이드바(홈/라이브러리/스크립트) 정합. -->
       <div class="home-portal">
       <div class="home-cols">
@@ -12413,6 +12416,48 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-talk-tip{font-size:.9rem;color:var(--tp);line-height:1.55;margin-bottom:11px}
 .sp-talk-copy{font-size:.78rem;font-weight:700;color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent);border:0;border-radius:8px;padding:6px 14px;cursor:pointer}
 .sp-talk-copy:active{filter:brightness(.95)}
+/* ── 스페이스 온보딩 스토리북 (2026-06-14) — 페이지 넘김 + 좌우2단(Variant B) ── */
+.sp-bk{max-width:720px;margin:0 auto;position:relative;}
+.sp-bk-page{display:none;}
+.sp-bk-page.on{display:block;animation:spBkIn .30s cubic-bezier(.22,.9,.32,1);}
+@keyframes spBkIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:none;}}
+.sp-bk-num{font-size:.72rem;font-weight:800;letter-spacing:.06em;color:var(--tf);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.sp-bk-num::before{content:"";width:20px;height:2px;background:var(--ac);border-radius:2px;}
+.sp-bk-h1{font-size:1.5rem;font-weight:800;line-height:1.4;letter-spacing:-.01em;color:var(--tp);margin-bottom:18px;}
+.sp-bk-p{font-size:1.05rem;line-height:1.85;color:var(--ts);margin-bottom:13px;}
+.sp-bk-p .em{color:var(--ac);font-weight:700;}
+.sp-bk-day{margin:16px 0;padding-left:16px;border-left:3px solid var(--bd);}
+.sp-bk-day p{font-size:1rem;line-height:1.75;color:var(--ts);margin-bottom:6px;}
+.sp-bk-punch{font-size:1.1rem;font-weight:700;color:var(--tp);margin-top:16px;line-height:1.6;}
+.sp-bk-shead{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.sp-bk-sic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--c,var(--ac));}
+.sp-bk-sic svg{width:22px;height:22px;stroke:#fff;stroke-width:2;fill:none;}
+.sp-bk-snm{font-size:1.3rem;font-weight:800;color:var(--tp);}
+.sp-bk-smp{font-size:.95rem;font-weight:700;color:var(--tf);margin-left:3px;}
+.sp-bk-two{display:grid;grid-template-columns:1.15fr 1fr;gap:18px;align-items:start;}
+.sp-bk-left p{font-size:1.02rem;line-height:1.78;color:var(--ts);margin-bottom:11px;}
+.sp-bk-left p b{color:var(--c,var(--ac));}
+.sp-bk-ex{background:color-mix(in srgb,var(--c,var(--ac)) 8%,#fff);border:1px solid color-mix(in srgb,var(--c,var(--ac)) 22%,var(--bd));border-radius:14px;padding:15px 17px;}
+.sp-bk-ex .eh{font-size:.78rem;font-weight:800;color:var(--c,var(--ac));margin-bottom:9px;letter-spacing:.02em;}
+.sp-bk-ex .row{display:flex;align-items:center;gap:8px;font-size:.95rem;color:var(--ts);padding:6px 0;}
+.sp-bk-ex .row svg{width:15px;height:15px;stroke:var(--c,var(--ac));stroke-width:2.4;fill:none;flex:0 0 auto;}
+.sp-bk-btns{display:flex;flex-direction:column;gap:10px;margin-top:22px;}
+.sp-bk-b{display:flex;align-items:center;justify-content:center;padding:14px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;border:1.5px solid var(--bd);background:var(--card,#fff);color:var(--tp);font-family:inherit;}
+.sp-bk-b:active{filter:brightness(.97);}
+.sp-bk-b.primary{background:var(--ac);border-color:var(--ac);color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--ac) 35%,transparent);}
+.sp-bk-nav{display:flex;align-items:center;gap:14px;margin-top:22px;padding-top:16px;border-top:1px solid var(--bd);}
+.sp-bk-dots{display:flex;gap:6px;}
+.sp-bk-dots i{width:7px;height:7px;border-radius:50%;background:var(--bd);transition:all .2s;}
+.sp-bk-dots i.on{background:var(--ac);width:20px;border-radius:4px;}
+.sp-bk-nbtn{font-size:.95rem;font-weight:700;color:var(--ac);background:none;border:none;cursor:pointer;padding:6px 4px;font-family:inherit;}
+.sp-bk-nbtn[disabled]{color:var(--bd);cursor:default;}
+.sp-bk-nbtn.prev{margin-left:auto;}
+@media(max-width:680px){.sp-bk-two{grid-template-columns:1fr;}}
+/* 홈 — 원세컨드 시작하기 CTA */
+.os-start-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;max-width:620px;margin:14px auto 0;padding:15px 20px;border:none;border-radius:14px;background:var(--ac);color:#fff;font-size:1.02rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px color-mix(in srgb,var(--ac) 32%,transparent);transition:filter .15s,transform .15s;}
+.os-start-cta:hover{filter:brightness(1.05);}
+.os-start-cta:active{transform:translateY(1px);}
+.os-start-cta svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;}
 </style>
 <div id="osSheet" class="os-sheet" role="region" aria-label="스크립트 시트">
   <div class="os-sheet-handle" id="osSheetHandle">
@@ -12533,6 +12578,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   syncOpenH();
   applySnap('collapsed');
   window._osSheetCollapse=function(){ applySnap('collapsed'); };  /* 외부(트리 nav)에서 시트 접기 */
+  window._osSheetOpen=function(){ applySnap('open'); };           /* 외부(홈 '원세컨드 시작하기')에서 시트 펼치기 */
   window.addEventListener('resize', function(){ syncOpenH(); syncSheetOffset(); });
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function fallbackCopy(t){ try{ var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(window.toast)toast('복사됐어요'); }catch(e){} }
@@ -12706,26 +12752,99 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   function _spRefreshHeads(){ var sc=document.getElementById('spContent'); if(!sc) return; var card=sc.querySelector('.sp-soko-card'); if(!card) return; var tmp=document.createElement('div'); tmp.innerHTML=_spHead(); if(tmp.firstChild) card.parentNode.replaceChild(tmp.firstChild, card); }
   window._spRefreshHeads=_spRefreshHeads;
   /* 스페이스 설명서 — 3계층 공간(마이=내 책상 / 팀=우리 팀 서랍 / 지점=지점 자료실) 안내. 핵심 원칙=저장할 때부터 올바른 공간에 */
+  /* 스페이스 설명서 = 원세컨드 온보딩 스토리북(2026-06-14). 페이지 넘김 6장: 왜→공간이먼저→마이→팀→지점→시작. 좌(설명)/우(예시) 2단. */
   function _spIntroHtml(){
-    function card(ic,color,name,mp,ds,ex){
-      return '<div class="sp-int-card" style="--ic:'+color+'">'
-        +'<div class="sp-int-ch"><span class="sp-int-ic"><svg class="sp-ico"><use href="#'+ic+'"/></svg></span><div><span class="sp-int-nm">'+name+'</span> <span class="sp-int-mp">'+mp+'</span></div></div>'
-        +'<div class="sp-int-ds">'+ds+'</div>'
-        +'<div class="sp-int-ex">'+ex.map(function(e){return '<span>'+_mvEsc(e)+'</span>';}).join('')+'</div></div>';
+    var CHK='<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
+    var ICO={
+      my:'<svg viewBox="0 0 24 24"><path d="M4 19a8 8 0 0 1 16 0"/><circle cx="12" cy="8" r="4"/></svg>',
+      team:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.5a5 5 0 0 1 4.5 4.5"/></svg>',
+      branch:'<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>'
+    };
+    function spaceCard(n,color,svg,name,mp,paras,ex){
+      return '<div class="sp-bk-page" data-p="'+n+'" style="--c:'+color+'">'
+        +'<div class="sp-bk-num">공간 '+(n-1)+' / 3 · '+name+'</div>'
+        +'<div class="sp-bk-shead"><span class="sp-bk-sic">'+svg+'</span><div><span class="sp-bk-snm">'+name+'</span><span class="sp-bk-smp">— '+mp+'</span></div></div>'
+        +'<div class="sp-bk-two"><div class="sp-bk-left">'+paras.map(function(p){return '<p>'+p+'</p>';}).join('')+'</div>'
+        +'<div class="sp-bk-ex"><div class="eh">이런 걸 담아요</div>'+ex.map(function(e){return '<div class="row">'+CHK+_mvEsc(e)+'</div>';}).join('')+'</div></div></div>';
     }
-    return _spHead()
-      +'<div class="sp-title">스페이스 설명서</div>'
-      +'<div class="sp-int-hero">자료를 찾기 쉽게 만드는 가장 좋은 방법은,<br><b>저장할 때부터 올바른 공간에 넣는 것</b>입니다.</div>'
-      +card('i-user','var(--ac)','마이 스페이스','— 내 책상','나만 쓰는 개인 공간이에요. 상담 자료·스크립트·메모·다이어리를 자유롭게 저장합니다. 다른 사람에게 공개되지 않아요.',['고객 상담 메모','개인 스크립트','보험료 비교표','개인 다이어리'])
-      +card('i-users','#0E9A6C','팀 스페이스','— 우리 팀 서랍','팀원과 자료를 공유하고 협업하는 공간이에요. 팀 공지·우수 스크립트를 한곳에서 봅니다.',['팀 공지사항','우수 상담 스크립트','공유 자료','교육 자료'])
-      +card('i-building','var(--warn)','지점 스페이스','— 지점 자료실','지점에 소속된 모든 구성원이 함께 쓰는 공용 공간이에요. 지점 공지·운영자료가 관리됩니다.',['지점 공지','원수사 자료실','지점 교육자료','운영 매뉴얼'])
-      +'<div class="sp-int-guide"><div class="sp-int-gh">어디에 저장할까요?</div>'
-        +'<div class="sp-int-grow"><b>나만</b> 사용 → 마이 스페이스</div>'
-        +'<div class="sp-int-grow"><b>우리 팀</b>이 사용 → 팀 스페이스</div>'
-        +'<div class="sp-int-grow"><b>지점 전체</b>가 사용 → 지점 스페이스</div></div>';
+    var dots=''; for(var i=0;i<6;i++) dots+='<i'+(i===0?' class="on"':'')+'></i>';
+    return '<div class="sp-bk" id="spBook" data-cur="0">'
+      +'<div class="sp-bk-page on" data-p="0">'
+        +'<div class="sp-bk-num">원세컨드 이야기 · 1</div>'
+        +'<div class="sp-bk-h1">원세컨드는<br>보험 통합 솔루션을<br>만들고 싶지 않았습니다.</div>'
+        +'<div class="sp-bk-p">보험 설계사의 하루를 떠올려보면,</div>'
+        +'<div class="sp-bk-day"><p>아침에는 지점 공지를 확인하고,</p><p>팀원에게 받은 자료를 정리하고,</p><p>원수사에서 내려온 상품 자료를 확인하고,</p><p>고객 상담 내용을 기록하고,</p><p>필요한 스크립트를 찾아보고, 내일 상담을 준비합니다.</p></div>'
+        +'<div class="sp-bk-p">하지만 대부분의 자료는 <span class="em">카카오톡·문자·메모장·PC 폴더·단체방</span>에 흩어져 있습니다.</div>'
+        +'<div class="sp-bk-punch">자료를 찾는 시간보다,<br>자료를 잃어버리는 시간이 더 많았습니다.</div>'
+      +'</div>'
+      +'<div class="sp-bk-page" data-p="1">'
+        +'<div class="sp-bk-num">원세컨드 이야기 · 2</div>'
+        +'<div class="sp-bk-h1">원세컨드는 검색보다<br>공간을 먼저 만들었습니다.</div>'
+        +'<div class="sp-bk-p">자료를 찾기 어렵게 만드는 가장 큰 이유는, 자료가 없는 것이 아니라 <span class="em">자료가 제자리에 없기 때문</span>입니다.</div>'
+        +'<div class="sp-bk-p">그래서 원세컨드는 보험 현장의 실제 업무 흐름을 기준으로 <span class="em">세 개의 공간</span>을 만들었습니다.</div>'
+        +'<div class="sp-bk-p">다음 장에서 하나씩 만나보세요.</div>'
+      +'</div>'
+      +spaceCard(2,'var(--ac)',ICO.my,'마이 스페이스','내 책상',
+        ['마이 스페이스는 <b>나만 사용하는 개인 공간</b>입니다.','상담 중 필요한 자료, 자주 쓰는 스크립트·메모·다이어리를 자유롭게 저장하고 관리할 수 있습니다.','다른 사람에게 공개되지 않으며, 내가 업무를 하기 위한 개인 작업 공간입니다.'],
+        ['고객 상담 메모','개인 스크립트','보험료 비교표','자주 쓰는 자료','개인 다이어리'])
+      +spaceCard(3,'#0E9A6C',ICO.team,'팀 스페이스','우리 팀 서랍',
+        ['팀 스페이스는 <b>팀원들과 자료를 공유하고 협업</b>하는 공간입니다.','팀장이 제공한 자료나 팀원들이 공유한 스크립트·공지사항 등을 한곳에서 확인할 수 있습니다.','개인이 아닌 팀 전체의 업무 효율을 높이기 위한 공간입니다.'],
+        ['팀 공지사항','우수 상담 스크립트','공유 자료','교육 자료','팀 운영 문서'])
+      +spaceCard(4,'var(--warn)',ICO.branch,'지점 스페이스','지점 자료실',
+        ['지점 스페이스는 <b>지점에 소속된 모든 구성원이 함께 쓰는</b> 공간입니다.','지점 공지, 교육자료, 원수사 자료, 운영자료 등 지점 차원의 정보가 관리됩니다.','개인이나 팀 단위가 아닌 지점 전체를 위한 공간입니다.'],
+        ['지점 공지','원수사 자료실','지점 교육자료','운영 매뉴얼','지점 공용 문서'])
+      +'<div class="sp-bk-page" data-p="5">'
+        +'<div class="sp-bk-num">이제 시작</div>'
+        +'<div class="sp-bk-h1">원세컨드는<br>아직 배우는 중입니다.</div>'
+        +'<div class="sp-bk-p">지금 이 순간에도 새로운 자료가 추가되고, 새로운 경험이 공유되고, 새로운 지식이 만들어지고 있습니다.</div>'
+        +'<div class="sp-bk-p">원세컨드는 <span class="em">여러분과 함께 성장</span>합니다. 이제 여러분만의 공간을 만들어보세요.</div>'
+        +'<div class="sp-bk-btns">'
+          +'<div class="sp-bk-b primary" onclick="_spBookGoNode(\'mspace\')">마이 스페이스로 이동</div>'
+          +'<div class="sp-bk-b" onclick="_spBookGoNode(\'tspace\')">팀 스페이스 둘러보기</div>'
+          +'<div class="sp-bk-b" onclick="if(window._osSheetCollapse)window._osSheetCollapse()">원세컨드 시작하기</div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="sp-bk-nav"><span class="sp-bk-dots" id="spBkDots">'+dots+'</span>'
+        +'<button class="sp-bk-nbtn prev" id="spBkPrev" onclick="_spBookNav(-1)" disabled>&#8249; 이전</button>'
+        +'<button class="sp-bk-nbtn" id="spBkNext" onclick="_spBookNav(1)">다음 &#8250;</button></div>'
+      +'</div>';
   }
   function _spIntroRender(host){ if(host) host.innerHTML=_spIntroHtml(); }
   window._spIntroRender=_spIntroRender; window._spIntroHtml=_spIntroHtml;
+  /* 스토리북 페이지 넘김 */
+  function _spBookGo(i){
+    var book=document.getElementById('spBook'); if(!book) return;
+    var pages=book.querySelectorAll('.sp-bk-page'); var n=pages.length; if(!n) return;
+    i=Math.max(0,Math.min(n-1,i));
+    for(var j=0;j<n;j++) pages[j].classList.toggle('on',j===i);
+    var dots=book.querySelectorAll('#spBkDots i'); for(var k=0;k<dots.length;k++) dots[k].classList.toggle('on',k===i);
+    var prev=document.getElementById('spBkPrev'), next=document.getElementById('spBkNext');
+    if(prev) prev.disabled=(i===0);
+    if(next) next.innerHTML=(i===n-1)?'닫기':'다음 &#8250;';
+    book.dataset.cur=i;
+    var sb=document.getElementById('osSheetBody'); if(sb) sb.scrollTop=0;
+  }
+  function _spBookNav(d){
+    var book=document.getElementById('spBook'); if(!book) return;
+    var cur=parseInt(book.dataset.cur||'0',10);
+    var n=book.querySelectorAll('.sp-bk-page').length;
+    if(d>0 && cur>=n-1){ if(window._osSheetCollapse) window._osSheetCollapse(); return; }
+    _spBookGo(cur+d);
+  }
+  function _spBookGoNode(k){
+    var node=document.querySelector('#spTree .sp-node[data-k="'+k+'"]');
+    if(node){ node.click(); }
+    else if(window._osSheetCollapse){ window._osSheetCollapse(); }
+  }
+  window._spBookGo=_spBookGo; window._spBookNav=_spBookNav; window._spBookGoNode=_spBookGoNode;
+  /* 홈 '원세컨드 시작하기' → 바텀시트 펼침 + 스페이스 설명서(스토리북) 1페이지부터 */
+  function _osStartGuide(){
+    if(window._osSheetOpen) window._osSheetOpen();
+    var node=document.querySelector('#spTree .sp-node[data-k="spguide"]');
+    if(node){ node.click(); }
+    setTimeout(function(){ if(window._spBookGo) window._spBookGo(0); }, 60);
+  }
+  window._osStartGuide=_osStartGuide;
   /* 이야깃거리 페이지 — 게시판 카드 피드(오늘/이번 주/다가오는). 멘트 + 복사. CAL_MARKS+CAL_TIPS 사용(실데이터 무관·정적 큐레이션). */
   function _spTalkCopy(btn){ try{ var t=btn.getAttribute('data-tip')||''; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ if(window.toast)toast('멘트 복사됨'); }).catch(function(){}); } else { var ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if(window.toast)toast('멘트 복사됨'); } }catch(e){} }
   window._spTalkCopy=_spTalkCopy;
@@ -12905,6 +13024,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
     if(typeof _spLoadMe==='function') _spLoadMe();  /* 내 소속(회사·지점·팀·이름) 실데이터 적재 → 헤더·간판 갱신 */
+    /* 첫 방문 1회 — 홈에서 스페이스 설명서(스토리북) 자동 안내(2026-06-14 대표 B안). 이후엔 '원세컨드 시작하기' 버튼으로만. */
+    try{ if(!localStorage.getItem('os_space_intro_seen')){ localStorage.setItem('os_space_intro_seen','1');
+      setTimeout(function(){ var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&window._osStartGuide) window._osStartGuide(); }, 1300); } }catch(e){}
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
 })();
