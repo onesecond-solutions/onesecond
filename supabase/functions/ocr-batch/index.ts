@@ -15,7 +15,11 @@
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const CRON_SECRET   = Deno.env.get("CRON_SECRET") ?? "";
-const BATCH = 5;            // 틱당 처리 건수(비용·시간 제어). 필요 시 cron 주기와 함께 조정.
+// 틱당 처리 건수 — 소식지·자료실 분리(둘 다 매 틱 진행 + Edge Function 150초 한도 보호).
+// 한 함수에서 소식지 후 자료실 순차 실행 → 합산 시간이 150초 넘으면 504. Gemini OCR 건당 ~25-30초이므로
+// 소식지2 + 자료실2 = 4건/틱 ≈ 120초로 안전 마진 확보(2026-06-14 504 타임아웃 대응). 필요 시 함께 조정.
+const BATCH_NL    = 2;      // 소식지(newsletters) 틱당 처리 건수
+const BATCH_FILES = 2;      // 자료실(myspace_files) 틱당 처리 건수
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -54,7 +58,7 @@ Deno.serve(async (req: Request) => {
   const q = "newsletters?select=id,source_pdf_url,source_path,title&full_text=is.null"
           + "&or=(source_pdf_url.not.is.null,source_path.not.is.null)"
           + "&or=(text_quality.is.null,text_quality.neq." + encodeURIComponent("비었음") + ")"
-          + "&limit=" + BATCH;
+          + "&limit=" + BATCH_NL;
   let rows: Array<{ id: string; source_pdf_url: string | null; source_path: string | null; title: string | null }> = [];
   try {
     const r = await rest(q);
@@ -141,7 +145,7 @@ async function processMyspaceFiles() {
   let rows: Array<{ id: string; storage_path: string; mime_type: string | null; ext: string | null; original_name: string | null }> = [];
   try {
     const q = "myspace_files?select=id,storage_path,mime_type,ext,original_name"
-            + "&ocr_status=is.null&storage_path=not.is.null&deleted_at=is.null&limit=" + BATCH;
+            + "&ocr_status=is.null&storage_path=not.is.null&deleted_at=is.null&limit=" + BATCH_FILES;
     const r = await rest(q);
     if (!r.ok) { (out as any).error = "files 조회 실패 " + r.status; return out; }
     rows = await r.json();
