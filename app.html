@@ -12576,7 +12576,7 @@ document.addEventListener('keydown', function(e){
 <style id="os-sheet-css">
 .os-sheet{position:fixed;left:212px;right:0;bottom:0;z-index:90;display:flex;flex-direction:column;
   background:var(--s2);border-top:2px solid transparent;border-image:linear-gradient(90deg,transparent,var(--ac) 50%,transparent) 1;box-shadow:0 -10px 30px rgba(0,0,0,.20);
-  height:46px;max-height:var(--os-open-h,90vh);transition:height .28s cubic-bezier(.34,1.4,.64,1);}
+  height:46px;max-height:var(--os-open-h,90vh);transition:height .5s cubic-bezier(.34,1.4,.5,1);}/* 한 번 부드럽게 출렁(overshoot 1.4) → 스~윽 안착(시간 .5s·꼬리 완만). 촐싹(빠름) X 고급(느긋) O */
 .os-sheet.os-dragging{transition:none;}
 body:has(.app.collapsed) .os-sheet{left:56px;}
 .os-sheet.snap-mid{height:42vh;}
