@@ -11212,7 +11212,42 @@ function _osShareSel(i){
   if(window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
 }
 window._osShareSel=_osShareSel;
-function _osShareReceive(i){ if(typeof toast==='function') toast('받기 — 곧 추가됩니다(다음 단계).'); }
+async function _osShareReceive(i){
+  var s=(window._osShareRows||[])[i]; if(!s) return;
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken();
+  var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
+  var owner=(window.AppState&&window.AppState.userId)||((typeof _mvOwner==='function')?_mvOwner():'');
+  var pl=s.payload||{}; if(typeof pl==='string'){ try{ pl=JSON.parse(pl); }catch(e){ pl={}; } }
+  try{
+    if(s.item_type==='script'){
+      var kw=(Array.isArray(pl.keywords)?pl.keywords.slice():[]); if(kw.indexOf('공유받음')<0) kw.push('공유받음');
+      var b={owner_id:owner, title:(s.title||'공유받은 스크립트'), script_text:(pl.script_text||''), highlight_text:(pl.highlight_text||''), keywords:kw, attachments:(pl.attachments||[]), scope:'personal', is_active:true};
+      var r=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:H,body:JSON.stringify(b)});
+      if(!(r.ok||r.status===201)) throw new Error('script '+r.status);
+    } else if(s.item_type==='memo'){
+      var kw2=(Array.isArray(pl.keywords)?pl.keywords.slice():[]); if(kw2.indexOf('공유받음')<0) kw2.push('공유받음');
+      var b2={owner_id:owner, title:(s.title||''), memo_text:(pl.memo_text||''), description:(pl.description||''), keywords:kw2};
+      var r2=await fetch(window.db.url('/rest/v1/library'),{method:'POST',headers:H,body:JSON.stringify(b2)});
+      if(!(r2.ok||r2.status===201)) throw new Error('memo '+r2.status);
+    } else if(s.item_type==='file'){
+      if(typeof toast==='function') toast('받는 중…');
+      var tf0=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(s.item_id)+'&select=id,original_name,storage_path,mime_type,ext,file_size');
+      var tf=(tf0.ok?await tf0.json():[])[0]; if(!tf){ alert('공유 파일을 찾을 수 없습니다.'); return; }
+      var signed=(typeof _mvSignedUrl==='function')?await _mvSignedUrl(tf, token):null; if(!signed){ alert('파일을 불러오지 못했습니다.'); return; }
+      var blob=await (await fetch(signed)).blob();
+      var ext=(tf.ext||'').replace(/^\./,'');
+      var key=((window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+Date.now()))+(ext?('.'+ext):'');
+      var myPath=owner+'/root/'+key;  /* 개인 자료실 prefix={owner} */
+      var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(myPath)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(blob.type||tf.mime_type||'application/octet-stream'),'x-upsert':'true'},body:blob});
+      if(!(up.ok||up.status===200)){ alert('받기에 실패했습니다.'); return; }
+      var fb={owner_id:owner, original_name:tf.original_name, storage_path:myPath, mime_type:tf.mime_type||'', ext:ext, file_size:tf.file_size||blob.size, scope:'personal', search_text:tf.original_name, status:'pending'};
+      var fr=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:H,body:JSON.stringify(fb)});
+      if(!(fr.ok||fr.status===201)) throw new Error('file '+fr.status);
+    }
+    if(typeof toast==='function') toast('받았어요! 내 ' + (s.item_type==='file'?'자료실':(s.item_type==='memo'?'메모':'스크립트')) + '에 저장됐어요.');
+  }catch(e){ console.error('[share] receive',e); alert('받기 중 오류가 발생했습니다.'); }
+}
 window._osShareReceive=_osShareReceive;
 
 /* ── 공유하기 (Phase 1) — 마이스페이스 항목(스크립트/메모/자료)을 팀/지점 공유함으로 ── */
