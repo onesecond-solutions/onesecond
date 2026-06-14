@@ -1118,6 +1118,17 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 /* 빈 상태 CTA (③) */
 .mvf-cta{display:block;width:100%;margin-top:8px;border:1px dashed var(--ac);background:transparent;color:var(--ac);border-radius:var(--radius-sm);padding:10px;font-size:0.83rem;font-weight:600;cursor:pointer}
 .mvf-cta:hover{background:var(--bg)}
+/* 어드민 사고 대응 — 자료실 읽기 전용 모드: 모든 쓰기 어포던스(고지 확인·새 폴더·드롭존·업로드·항목 메뉴) 숨김 */
+.mys-vault.mv-ro .mys-vault-notice,
+.mys-vault.mv-ro .mys-vault-newfolder,
+.mys-vault.mv-ro #mys-vault-dropzone,
+.mys-vault.mv-ro #mys-vault-filedrop,
+.mys-vault.mv-ro .mvcol-actions,
+.mys-vault.mv-ro .mvf-actions,
+.mys-vault.mv-ro .mvfile-menu,
+.mys-vault.mv-ro .mvrow-menu{display:none!important}
+.mv-admin-banner{font-size:0.74rem;color:var(--warn);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mv-admin-banner button{font-size:0.95rem;background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--ts)}
 /* 드롭존 */
 /* 폴더·파일 드롭존 통일 — 위치(칼럼 맨 아래 footer)·폰트·구조 동일, 색만 구역별로 다름(폴더=주황/파일=인디고) */
 .mys-vault-dropzone{border:2px dashed var(--bd);border-radius:var(--radius-md);padding:16px 12px;text-align:center;cursor:pointer;margin-top:8px;flex-shrink:0}
@@ -11123,8 +11134,9 @@ window.mysShareboxOpen=mysShareboxOpen;
 function _mvOwner(){ return (window.AppState&&window.AppState.userId)||''; }
 /* 자료함 스코프 컨텍스트 (2026-06-13 팀/지점 공유 이식) — personal(본인) / team / branch. 단일 컴포넌트 재사용 */
 window._mvScope = window._mvScope || {scope:'personal', id:null};
-function _mvScopeSet(scope,id){ window._mvScope={scope:(scope||'personal'), id:(id||null)}; }
+function _mvScopeSet(scope,id,adminAll){ window._mvScope={scope:(scope||'personal'), id:(id||null), adminAll:!!adminAll}; }
 function _mvScopeQ(){ var s=window._mvScope||{scope:'personal'};   /* 로드 쿼리 필터 */
+  if(s.adminAll && (s.scope==='team'||s.scope==='branch')) return '&scope=eq.'+s.scope;  /* 어드민 사고대응 전체 열람 = scope_id 무관(전 팀/지점) */
   if(s.scope==='team'&&s.id)   return '&scope=eq.team&scope_id=eq.'+encodeURIComponent(s.id);
   if(s.scope==='branch'&&s.id) return '&scope=eq.branch&scope_id=eq.'+encodeURIComponent(s.id);
   return '&owner_id=eq.'+encodeURIComponent(_mvOwner()); }
@@ -11137,6 +11149,10 @@ function _mvStoragePrefix(){ var s=window._mvScope||{scope:'personal'};  /* stor
   if(s.scope==='branch'&&s.id) return 'branch/'+s.id;
   return _mvOwner(); }
 function _mvToken(){ return window.db&&window.db.getToken&&window.db.getToken(); }
+/* 어드민 사고대응 읽기 전용 — 쓰기 진입점 가드. 서버 RLS가 이미 어드민 쓰기를 막지만(혼란 방지) 화면에서도 차단 */
+function _mvRoGuard(){ if(window._mvReadonly){ if(typeof _spDenyPopup==='function') _spDenyPopup('읽기 전용','어드민 사고 대응 열람 모드입니다.<br>이 자료실에서는 보기만 가능하고 올리기·이름변경·이동·삭제는 할 수 없습니다.'); else alert('읽기 전용 — 보기만 가능합니다.'); return true; } return false; }
+function _mvRoClear(){ window._mvReadonly=false; var v=document.getElementById('mys-vault'); if(v){ v.classList.remove('mv-ro'); var b=v.querySelector('.mv-admin-banner'); if(b) b.remove(); } }
+window._mvRoClear=_mvRoClear;
 function _mvEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _mvEncPath(p){ return String(p).split('/').map(encodeURIComponent).join('/'); }
 function mysVaultSize(b){ b=Number(b)||0; if(b<1024)return b+'B'; if(b<1048576)return (b/1024).toFixed(0)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
@@ -11322,6 +11338,7 @@ function _mvApplyVaultNotice(scope){
 }
 window._mvApplyVaultNotice=_mvApplyVaultNotice;
 async function mysVaultCreateFolder(parentId){
+  if(_mvRoGuard()) return;
   var owner=_mvOwner(), token=_mvToken();
   if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   var name=prompt('새 폴더 이름'); if(name==null) return; name=String(name).trim(); if(!name) return;
@@ -11351,7 +11368,7 @@ window.mysVaultConfirmToggle=mysVaultConfirmToggle;
 function _mvFolderPath(fid){ if(!fid) return '전체'; var path=[], cur=fid, all=window._mvFolders||[], g=0; while(cur&&g++<50){ var f=all.filter(function(x){return x.id===cur;})[0]; if(!f) break; path.unshift(f.name); cur=f.parent_id||null; } return '전체 > '+path.join(' > '); }
 /* item 2: 버튼 업로드 직전 저장 위치 안내(잘못 들어가는 사고 방지) */
 function _mvUploadHerePrompt(){ return confirm('저장 위치: '+_mvFolderPath(window._mvCurFolder||null)+'\n\n여기에 올릴까요?'); }
-function mysVaultPickFiles(){ if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; } if(!_mvUploadHerePrompt()) return; var inp=document.getElementById('mys-vault-fileinput'); if(inp) inp.click(); }
+function mysVaultPickFiles(){ if(_mvRoGuard()) return; if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; } if(!_mvUploadHerePrompt()) return; var inp=document.getElementById('mys-vault-fileinput'); if(inp) inp.click(); }
 window.mysVaultPickFiles=mysVaultPickFiles;
 function mysVaultFileInputChange(e){ var fs=e.target.files; mysVaultUpload(fs); e.target.value=''; }
 window.mysVaultFileInputChange=mysVaultFileInputChange;
@@ -11396,6 +11413,7 @@ function mvDragLeaveEl(e){ e.currentTarget.classList.remove('mv-drop-hot'); }
 window.mvDragOverEl=mvDragOverEl; window.mvDragLeaveEl=mvDragLeaveEl;
 async function mvDropOn(e, destFolderId){
   e.preventDefault(); e.stopPropagation(); _mvClearDropHover();
+  if(_mvRoGuard()) return;  /* 읽기 전용 = 드래그 이동·외부 업로드 모두 차단 */
   var dest=(destFolderId===undefined?null:destFolderId);
   /* 내부 이동(Move) 우선 분기 */
   var raw=''; try{ raw=e.dataTransfer.getData('text/x-mv'); }catch(err){}
@@ -11499,6 +11517,7 @@ window.mysVaultUpload=mysVaultUpload;
 
 /* 폴더 picker (디렉터리 선택). webkitRelativePath로 계층 복원. */
 function mysVaultPickFolder(){
+  if(_mvRoGuard()) return;
   if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
   if(!_mvUploadHerePrompt()) return;
   var inp=document.getElementById('mys-vault-dirinput'); if(!inp) return;
@@ -11748,6 +11767,7 @@ function mvVaultCloseMenu(){
 }
 function mvVaultMenu(e,type,id){
   e.stopPropagation(); e.preventDefault();
+  if(window._mvReadonly) return;  /* 읽기 전용 = 항목 메뉴(이름변경·이동·삭제) 비활성 */
   var m=document.getElementById('mv-ctxmenu'); if(!m) return;
   if(m._open&&m._id===id&&m._type===type){ mvVaultCloseMenu(); return; }
   document.removeEventListener('click',mvVaultCloseMenu); document.removeEventListener('keydown',mvVaultMenuEsc);
@@ -12749,13 +12769,23 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   async function _spVaultShow(host, scope){
     var v=document.getElementById('mys-vault'); if(!v){ if(host) host.innerHTML='<div class="sp-empty2">자료함을 불러올 수 없습니다.</div>'; return; }
     if(!window._spVaultHome) window._spVaultHome=v.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
+    if(typeof _mvRoClear==='function') _mvRoClear();  /* 이전 어드민 읽기전용 모드 잔상 해제 */
     var sid=null;
     if(scope==='team'||scope==='branch'){
       var me=window._cospMe||{};
-      var need=(scope==='team')?!me.team_id:!me.branch_id;
+      var need=(scope==='team')?(!me.team_id||!me.role):(!me.branch_id||!me.role);
       if(need && typeof _cospLoadMe==='function'){ try{ me=(await _cospLoadMe())||{}; }catch(e){ me=window._cospMe||{}; } }  /* os_user에 없으면 DB에서 직접 조회(users.id=auth.uid) */
       sid=(scope==='team')?(me.team_id||null):(me.branch_id||null);
-      if(!sid){ if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.6">'+(scope==='team'?'팀':'지점')+' 소속 정보가 없어 자료실을 열 수 없어요.<br>소속이 등록되면 이용할 수 있어요.</div>'; if(typeof _mvScopeSet==='function') _mvScopeSet('personal',null); return; }
+      if(!sid){
+        var _g=(scope==='team')?'팀':'지점';
+        if(me&&me.role==='admin'){
+          /* 어드민(창시자)은 소속이 없어 평상시 자료실 미열람 — 공지(지점방/팀방)와 동일하게 '사고 대응' 토글로 전체 열람 */
+          if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.7">어드민(창시자)은 평상시 '+_g+' 자료실을 열람하지 않습니다.<br>(자료실 구조는 검증용으로 표시됩니다)<br><button class="osws-newbtn" style="margin-top:14px" onclick="_spVaultAdminAll(\''+scope+'\')">전체 '+_g+' 자료실 열람 (사고 대응)</button></div>';
+        } else {
+          if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.6">'+_g+' 소속 정보가 없어 자료실을 열 수 없어요.<br>소속이 등록되면 이용할 수 있어요.</div>';
+        }
+        if(typeof _mvScopeSet==='function') _mvScopeSet('personal',null); return;
+      }
       if(typeof _mvScopeSet==='function') _mvScopeSet(scope, sid);
     } else { if(typeof _mvScopeSet==='function') _mvScopeSet('personal', null); }
     if(host){ host.innerHTML=_spHead(); host.appendChild(v); }
@@ -12770,10 +12800,39 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(typeof mysVaultLoadFiles==='function') mysVaultLoadFiles(window._mvCurFolder);
   }
   function _spVaultRestore(){
+    if(typeof _mvRoClear==='function') _mvRoClear();  /* 읽기전용 모드 해제(다른 노드 전환 시 잔상 방지) */
     var v=document.getElementById('mys-vault'), home=window._spVaultHome;
     if(v && home && v.parentNode!==home){ v.style.display='none'; home.appendChild(v); }
   }
   window._spVaultShow=_spVaultShow; window._spVaultRestore=_spVaultRestore;
+  /* 어드민 사고 대응 — 전 팀/지점 자료실 읽기 전용 열람. 공지(cospAdminAll)와 동일 모델(전체 열람), scope_id 무관. */
+  async function _spVaultAdminAll(scope){
+    var host=document.getElementById('spContent');
+    var v=document.getElementById('mys-vault'); if(!v){ if(host) host.innerHTML='<div class="sp-empty2">자료함을 불러올 수 없습니다.</div>'; return; }
+    if(!window._spVaultHome) window._spVaultHome=v.parentNode;
+    window._mvReadonly=true;
+    if(typeof _mvScopeSet==='function') _mvScopeSet(scope, null, true);  /* adminAll = scope_id 없이 전체 */
+    if(host){ host.innerHTML=_spHead(); host.appendChild(v); }
+    v.style.display='flex'; v.classList.add('mv-ro');
+    /* 사고대응 배너 + '평상시로' 복귀 */
+    var _g=(scope==='team')?'팀':'지점';
+    var old=v.querySelector('.mv-admin-banner'); if(old) old.remove();
+    var bn=document.createElement('div'); bn.className='mv-admin-banner';
+    bn.innerHTML='사고 대응 모드 — 전 '+_g+' 자료실 열람 중 (읽기 전용) <button type="button" onclick="_spVaultAdminExit(\''+scope+'\')">평상시로</button>';
+    v.insertBefore(bn, v.firstChild);
+    window._mysCat='자료함';
+    if(typeof _mvApplyVaultNotice==='function') _mvApplyVaultNotice(scope);
+    window._mvCurFolder=null;
+    if(window._mvView===undefined){ try{ window._mvView=localStorage.getItem('os_mv_view')||'grid'; }catch(e){ window._mvView='grid'; } }
+    if(typeof _mvViewSyncBtns==='function') _mvViewSyncBtns();
+    if(typeof mysVaultLoadFolders==='function') mysVaultLoadFolders();
+    if(typeof mysVaultLoadFiles==='function') mysVaultLoadFiles(window._mvCurFolder);
+  }
+  function _spVaultAdminExit(scope){
+    if(typeof _spVaultRestore==='function') _spVaultRestore();  /* v를 라이브러리로 회수(host.innerHTML 파괴 방지) + 읽기전용 해제 */
+    if(typeof _spVaultShow==='function') _spVaultShow(document.getElementById('spContent'), scope);  /* 평상시(어드민 미열람 안내) 화면 복귀 */
+  }
+  window._spVaultAdminAll=_spVaultAdminAll; window._spVaultAdminExit=_spVaultAdminExit;
   /* 스크립트(·메모) 노드 = 라이브러리 목록뷰(#mys-split) 필터 상태를 우측 패널로 이동(inplace). #mys-split는 전체/스크립트/메모 공유 → cat으로 필터. */
   function _spSplitShow(host, cat){
     var sp=document.getElementById('mys-split'); if(!sp){ if(host) host.innerHTML='<div class="sp-empty2">'+cat+'을(를) 불러올 수 없습니다.</div>'; return; }
