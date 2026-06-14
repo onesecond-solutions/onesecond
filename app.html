@@ -87,7 +87,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .app.collapsed .nav{justify-content:center;padding:9px 0;}
 .app.collapsed .nav .lbl{display:none;}
 .main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100vh;overflow:hidden;padding-bottom:calc(var(--os-sheet-offset, 46px) + env(safe-area-inset-bottom));transition:padding-bottom .28s cubic-bezier(.34,1.4,.64,1);}
-.head{height:54px;flex-shrink:0;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:16px;padding:0 18px;position:relative;}
+.head{height:54px;flex-shrink:0;border-bottom:0.5px solid var(--bd);display:flex;align-items:center;gap:16px;padding:0 18px;position:relative;z-index:95;}/* z-index:95 = 바텀시트(90) 위로 헤더+드롭다운(임태성 메뉴·알림벨) 올림. 전체화면 모달(100+)보다는 아래라 모달은 정상적으로 헤더를 덮음 */
 .search{position:absolute;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 520px));height:34px;background:var(--s2);border:0.5px solid var(--bd);border-radius:9px;display:flex;align-items:center;padding:0 12px;gap:8px;color:var(--tf);font-size:0.8125rem;overflow:hidden;}
 .search .stext{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .search .sicon{flex-shrink:0;}
