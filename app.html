@@ -12580,8 +12580,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   window._osSheetCollapse=function(){ applySnap('collapsed'); };  /* 외부(트리 nav)에서 시트 접기 */
   window._osSheetOpen=function(slow){                              /* 외부(홈 '원세컨드 시작하기')에서 시트 펼치기 */
     if(slow){ /* 슬라이딩 도어 — 천천히·튕김 없이 부드럽게(첫 경험 몰입). 기본 transition(.28s overshoot)을 일시 대체 */
-      sheet.style.transition='height 1s cubic-bezier(.65,.05,.36,1)';  /* 느리게→빠르게→느리게(ease-in-out) 슬라이딩 도어 */
-      setTimeout(function(){ try{ sheet.style.transition=''; }catch(e){} }, 1150);
+      sheet.style.transition='height 1.05s cubic-bezier(.83,0,.17,1)';  /* 초반 더 느리게→빠르게→느리게 부드럽게 연결(easeInOutQuint) 슬라이딩 도어 */
+      setTimeout(function(){ try{ sheet.style.transition=''; }catch(e){} }, 1200);
     }
     applySnap('open');
   };
