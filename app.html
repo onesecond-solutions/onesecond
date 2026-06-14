@@ -852,6 +852,29 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .dia-cal-body{display:flex;gap:14px;align-items:flex-start}
 .dia-cal-body .cal-grid-wrap{flex:1;min-width:0}
 .dia-panel{width:0;overflow:hidden;flex-shrink:0;transition:width .18s ease}
+/* 이야깃거리 — 캘린더 아래 펼침/접힘 (2026-06-14) */
+.dia-talk{margin-top:16px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);overflow:hidden}
+.dia-talk-head{width:100%;display:flex;align-items:center;gap:10px;padding:14px 16px;background:transparent;border:0;cursor:pointer;text-align:left;color:var(--tp)}
+.dia-talk-title{font-size:1rem;font-weight:800}
+.dia-talk-sub{font-size:.82rem;color:var(--ts);flex:1}
+.dia-talk-caret{font-size:.9rem;color:var(--ts);flex-shrink:0}
+.dia-talk-body{padding:0 16px 16px}
+.dia-talk-intro{font-size:.85rem;color:var(--ts);line-height:1.55;margin-bottom:10px}
+.dia-talk-grp{font-size:.78rem;font-weight:800;color:var(--ac);margin:14px 2px 8px}
+.dia-talk-card{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--s2)}
+.dia-talk-cmeta{font-size:.8rem;color:var(--ts);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dia-talk-dday{font-weight:800;color:var(--ac)}
+.dia-talk-cn{flex:1;min-width:0}
+.dia-talk-ty{font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:6px}
+.dia-talk-ty.h{color:var(--err);background:color-mix(in srgb,var(--err) 10%,transparent)}
+.dia-talk-ty.t{color:#0E9A6C;background:color-mix(in srgb,#0E9A6C 10%,transparent)}
+.dia-talk-ty.d{color:var(--ts);background:var(--s1)}
+.dia-talk-tip{font-size:.95rem;line-height:1.6;color:var(--tp);margin-bottom:10px;white-space:pre-wrap}
+.dia-talk-acts{display:flex;gap:8px}
+.dia-talk-btn{font-size:.85rem;font-weight:700;padding:8px 16px;border-radius:8px;border:1px solid var(--ac);background:var(--ac);color:#fff;cursor:pointer}
+.dia-talk-btn.ghost{background:transparent;color:var(--ac)}
+.dia-talk-edit{margin-top:10px}
+.dia-talk-ta{width:100%;min-height:74px;font-family:inherit;font-size:.95rem;line-height:1.6;color:var(--tp);background:var(--s1);border:1px solid var(--ac);border-radius:8px;padding:10px 12px;resize:vertical;margin-bottom:8px;box-sizing:border-box}
 .dia-panel.open{width:300px;border-left:1px solid var(--bd);padding-left:14px}
 .dia-panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .dia-panel-hd b{color:var(--tp);font-size:0.95rem}
@@ -2170,6 +2193,14 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
            <div id="mys-cal-grid" class="cal-grid-wrap"></div>
            <aside class="dia-panel" id="dia-panel"></aside>
          </div>
+       </div>
+       <div class="dia-talk" id="dia-talk">
+         <button class="dia-talk-head" id="dia-talk-head" type="button" onclick="diaTalkToggle()" aria-expanded="true">
+           <span class="dia-talk-title">이야깃거리</span>
+           <span class="dia-talk-sub">고객에게 한마디 건네기 좋은 날</span>
+           <span class="dia-talk-caret" id="dia-talk-caret">&#9662;</span>
+         </button>
+         <div class="dia-talk-body" id="dia-talk-body"></div>
        </div>
       </div>
       <div id="mys-saved" style="display:none">
@@ -7307,7 +7338,7 @@ function mysTab(el,key){
     if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
     else { if(_brTab) _brTab.style.display=''; if(_brTab&&typeof mrMemSub==='function') mrMemSub(_brTab,'branch'); }
   } }
-  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); if(typeof loadDiaryDash==='function') loadDiaryDash(); }
+  else { if(today){ today.style.display=''; if(typeof loadCal==='function') loadCal('mys'); if(typeof loadDiaryDash==='function') loadDiaryDash(); if(typeof diaTalkRender==='function') diaTalkRender(); }
     /* 다이어리 개편: 우측 D-패널 → 상단 대시보드 3카드로 대체(숨김) */
     if(dpanel){ dpanel.style.display='none'; } }
 }
@@ -10871,6 +10902,59 @@ function loadDiaryDash(){
   if(typeof diaAlarmStart==='function') diaAlarmStart();  /* 인앱 알람 폴링 시작(앱 세션 유지) */
 }
 window.loadDiaryDash=loadDiaryDash;
+/* ── 이야깃거리 (캘린더 아래 펼침/접힘) — 멘트 복사(원문) + 수정 후 복사. CAL_MARKS/CAL_TIPS 정적 큐레이션. 임시방편(2026-06-14) ── */
+function diaTalkToggle(){
+  var b=document.getElementById('dia-talk-body'), c=document.getElementById('dia-talk-caret'), h=document.getElementById('dia-talk-head');
+  if(!b) return;
+  var open=b.style.display!=='none';
+  if(open){ b.style.display='none'; if(c)c.innerHTML='&#9656;'; if(h)h.setAttribute('aria-expanded','false'); }
+  else { b.style.display=''; if(c)c.innerHTML='&#9662;'; if(h)h.setAttribute('aria-expanded','true'); diaTalkRender(); }
+}
+window.diaTalkToggle=diaTalkToggle;
+function diaTalkRender(){
+  var host=document.getElementById('dia-talk-body'); if(!host) return;
+  if(typeof CAL_MARKS==='undefined'||typeof CAL_TIPS==='undefined'){ host.innerHTML='<div class="dia-talk-intro">이야깃거리를 불러올 수 없습니다.</div>'; return; }
+  function pad(n){ return (n<10?'0':'')+n; }
+  var now=new Date(), t0=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  function dd(ds){ return Math.round((new Date(ds+'T00:00:00')-new Date(t0+'T00:00:00'))/86400000); }
+  var DOW=['일','월','화','수','목','금','토'], TY={h:'공휴일',t:'절기',d:'기념일'};
+  var items=[];
+  for(var ds in CAL_MARKS){ if(!CAL_TIPS[ds]) continue; var d=dd(ds); if(d<0||d>45) continue; var dt=new Date(ds+'T00:00:00'); items.push({ds:ds,n:CAL_MARKS[ds].n,t:CAL_MARKS[ds].t,tip:CAL_TIPS[ds],d:d,lbl:(dt.getMonth()+1)+'월 '+dt.getDate()+'일('+DOW[dt.getDay()]+')'}); }
+  items.sort(function(a,b){ return a.d-b.d; });
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function card(it){ var dday=(it.d===0)?'오늘':((it.d===1)?'내일':'D-'+it.d);
+    return '<div class="dia-talk-card"><div class="dia-talk-cmeta"><span class="dia-talk-dday">'+dday+'</span><span class="dia-talk-cn">'+esc(it.n)+' · '+it.lbl+'</span><span class="dia-talk-ty '+it.t+'">'+TY[it.t]+'</span></div>'
+      +'<div class="dia-talk-tip">'+esc(it.tip)+'</div>'
+      +'<div class="dia-talk-acts"><button class="dia-talk-btn" data-tip="'+esc(it.tip)+'" onclick="_spTalkCopy(this)">복사</button><button class="dia-talk-btn ghost" onclick="diaTalkEdit(this)">수정</button></div></div>'; }
+  function grp(title, arr){ if(!arr.length) return ''; return '<div class="dia-talk-grp">'+title+'</div>'+arr.map(card).join(''); }
+  var g1=items.filter(function(i){return i.d===0;}), g2=items.filter(function(i){return i.d>=1&&i.d<=7;}), g3=items.filter(function(i){return i.d>=8;});
+  var body=grp('오늘',g1)+grp('이번 주',g2)+grp('다가오는',g3);
+  if(!items.length) body='<div class="dia-talk-intro">다가오는 접점이 없어요. 달력에서 절기·공휴일을 확인해 보세요.</div>';
+  host.innerHTML='<div class="dia-talk-intro">고객에게 한마디 건네기 좋은 날이에요. 그대로 복사하거나, 수정해서 내 말투로 바꿔 보내세요.</div>'+body;
+}
+window.diaTalkRender=diaTalkRender;
+function diaTalkEdit(btn){
+  var card=btn.closest('.dia-talk-card'); if(!card||card.querySelector('.dia-talk-edit')) return;
+  var tipEl=card.querySelector('.dia-talk-tip'), cur=tipEl?tipEl.textContent:'';
+  var acts=card.querySelector('.dia-talk-acts'); if(acts) acts.style.display='none';
+  var box=document.createElement('div'); box.className='dia-talk-edit';
+  box.innerHTML='<textarea class="dia-talk-ta"></textarea><div class="dia-talk-acts"><button class="dia-talk-btn" onclick="diaTalkCopyEdited(this)">수정본 복사</button><button class="dia-talk-btn ghost" onclick="diaTalkCancel(this)">취소</button></div>';
+  card.appendChild(box);
+  var ta=box.querySelector('textarea'); if(ta){ ta.value=cur; ta.focus(); }
+}
+window.diaTalkEdit=diaTalkEdit;
+function diaTalkCopyEdited(btn){
+  var box=btn.closest('.dia-talk-edit'); if(!box) return;
+  var ta=box.querySelector('.dia-talk-ta'), t=ta?ta.value:'';
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ if(window.toast)toast('수정본 복사됨'); }).catch(function(){}); } else { if(ta){ ta.select(); document.execCommand('copy'); } if(window.toast)toast('수정본 복사됨'); } }catch(e){}
+}
+window.diaTalkCopyEdited=diaTalkCopyEdited;
+function diaTalkCancel(btn){
+  var box=btn.closest('.dia-talk-edit'); if(!box) return;
+  var card=box.closest('.dia-talk-card'); box.remove();
+  if(card){ var acts=card.querySelector('.dia-talk-acts'); if(acts) acts.style.display=''; }
+}
+window.diaTalkCancel=diaTalkCancel;
 function diaDashGo(which){
   if(which==='today'){ calGoToday('mys'); openDiaryPanel(_calToday(), null); }
   else if(which==='notice'){ if(typeof _goVoiceTab==='function') _goVoiceTab('team'); else if(typeof showView==='function') showView('voice'); }
@@ -12721,11 +12805,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
           </div>
         </div>
 
-        <!-- 원세컨드 제공 영역 (청록 카드) — 이야깃거리·보험이슈·함께해요 -->
+        <!-- 원세컨드 제공 영역 (청록 카드) — 스페이스 설명서. 이야깃거리는 다이어리(캘린더 아래)로 이동, 보험이슈·함께해요는 사이드바/홈으로 일원화 (2026-06-14) -->
         <div class="sp-plat">
-          <div class="sp-node sp-leaf" data-k="talk"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-spark"/></svg></span>이야깃거리</div>
-          <div class="sp-node sp-leaf" data-k="nav_news"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>보험이슈</div>
-          <div class="sp-node sp-leaf" data-k="nav_together"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-heart"/></svg></span>함께해요</div>
           <div class="sp-node sp-leaf" data-k="spguide"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-box"/></svg></span>스페이스 설명서</div>
         </div>
       </div>
@@ -13105,6 +13186,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     d.style.display='';
     if(typeof loadCal==='function') loadCal('mys');           /* 달력 로드·렌더 (탭과 동일) */
     if(typeof loadDiaryDash==='function') loadDiaryDash();    /* 대시보드 3카드 카운트 */
+    if(typeof diaTalkRender==='function') diaTalkRender();    /* 캘린더 아래 이야깃거리(기본 펼침) */
   }
   function _spDiaRestore(){
     var d=document.getElementById('mys-today'), home=window._spDiaHome;
@@ -13236,9 +13318,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else if(k==='broom') _spCospShow(sc,'branch');             /* 지점방 = 공동 스페이스 지점방 */
       else if(k==='blib_ins') _spCospShow(sc,'insurer');         /* 원수사 자료실 = 공동 스페이스 보험사별 자료실 */
       else if(k==='qna') _spCospShow(sc,'qna');                  /* 보험 Q&A = 공동 스페이스 보험Q&A */
-      else if(k==='talk') _spTalkRender(sc);                     /* 이야깃거리 */
       else if(k==='spguide') _spIntroRender(sc);                 /* 스페이스 설명서 = 공간 구조 안내 */
-      else if(k==='nav_news'||k==='nav_together'){ if(typeof showView==='function') showView(k==='nav_news'?'news':'together'); if(typeof window._osSheetCollapse==='function') window._osSheetCollapse(); }
       else _spPaint(k);
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
