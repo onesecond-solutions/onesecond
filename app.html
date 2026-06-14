@@ -12296,11 +12296,11 @@ document.addEventListener('keydown', function(e){
 body:has(.app.collapsed) .os-sheet{left:56px;}
 .os-sheet.snap-mid{height:42vh;}
 .os-sheet.snap-open{height:var(--os-open-h,84vh);}  /* 최대 펼침 = A영역(헤더) 하단까지 — 높이는 JS가 헤더 측정해 --os-open-h 설정 */
-.os-sheet-handle{position:relative;flex:0 0 auto;height:46px;display:flex;align-items:center;gap:10px;padding:0 16px;cursor:ns-resize;user-select:none;touch-action:none;overflow:hidden;}
+.os-sheet-handle{position:relative;flex:0 0 auto;height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;cursor:ns-resize;user-select:none;touch-action:none;overflow:hidden;}
 /* 접힘 핸들 = 중앙 그래버 알약(당겨올림 affordance) + 브랜드 파랑 그라데이션 + 소프트 글로우 (2026-06-13 B안). "쓱"·카운트 제거. 파랑 = 현행 --ac */
-.os-sheet-lines{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.os-sheet-lines{position:relative;display:flex;align-items:center;justify-content:center;pointer-events:none;}
 .os-sheet-lines span{width:58px;height:5px;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 45%,white),var(--ac));box-shadow:0 2px 9px color-mix(in srgb,var(--ac) 35%,transparent);}
-.os-sheet-handle .os-sheet-x{position:relative;z-index:1;margin-left:auto;font-size:.95rem;line-height:1;color:var(--ts);background:transparent;border:0;cursor:pointer;padding:6px;}
+.os-sheet-handle .os-sheet-x{position:relative;z-index:1;margin:0;display:flex;align-items:center;gap:4px;font-size:.82rem;font-weight:700;line-height:1;color:var(--ts);background:transparent;border:0;cursor:pointer;padding:2px 8px;}
 .os-sheet-chips{flex:0 0 auto;display:flex;gap:7px;padding:0 14px 10px;overflow-x:auto;}
 .os-chip{flex:0 0 auto;font-size:.8rem;font-weight:600;color:var(--ts);background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:6px 13px;cursor:pointer;white-space:nowrap;}
 .os-chip.on{background:var(--ac);color:#fff;border-color:transparent;}
@@ -12462,7 +12462,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 <div id="osSheet" class="os-sheet" role="region" aria-label="스크립트 시트">
   <div class="os-sheet-handle" id="osSheetHandle">
     <div class="os-sheet-lines" aria-hidden="true"><span></span></div>
-    <button class="os-sheet-x" id="osSheetToggle" type="button" aria-label="펼치기 접기">▲</button>
+    <button class="os-sheet-x" id="osSheetToggle" type="button" aria-label="펼치기 접기">열기 ▲</button>
   </div>
   <!-- 칩 5종 제거(2026-06-11): 마이 스크립트·마이 채팅·공유 스크립트·공유 채팅·공유 자료 삭제 + scripts 자동 읽기 차단.
        바텀시트 골격(핸들·body)은 유지(용도 변경 예정). 마이 스페이스 스크립트는 독립 fetch라 무영향. -->
@@ -12567,7 +12567,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       handle=document.getElementById('osSheetHandle'), cntEl=document.getElementById('osSheetCnt'),
       toggleBtn=document.getElementById('osSheetToggle');
   if(!sheet) return;
-  function updateArrow(s){ if(!toggleBtn) return; toggleBtn.textContent=(s==='collapsed')?'▲':((s==='open')?'▼':'▲▼'); }
+  function updateArrow(s){ if(!toggleBtn) return; toggleBtn.textContent=(s==='collapsed'||s==='mid')?'열기 ▲':'닫기 ▼'; }  /* 가운데 글자+화살표(어르신 인식 — 우측 화살표 대체) */
   /* 콘텐츠가 닫힌/열린 시트 높이만큼 하단 여백 확보 → 시트가 콘텐츠를 가리지 않음. .main padding-bottom = --os-sheet-offset */
   /* 최대 펼침 높이 = 화면높이 − 헤더(A영역)높이 → 시트 상단이 A/D 구분선에 붙음. 헤더는 데스크탑54/모바일50이라 런타임 측정 */
   function _headH(){ var hd=document.querySelector('.head'); return hd?Math.round(hd.getBoundingClientRect().height):54; }
