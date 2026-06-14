@@ -727,7 +727,53 @@
       _rows('users?select=branch_id&status=eq.active')
     ]);
     renderBranches(branches, ubranch, unassigned);
+    if(window.acLoadSearchData) window.acLoadSearchData();  /* 검색 데이터 현황 (별도·비차단) */
     if(window.lucide) window.lucide.createIcons();
+  };
+
+  // ── 검색 데이터 현황 (OCR·통합검색·지식엔진 진행률을 눈으로) — 2026-06-14 ──
+  function _nz(x){ return (x==null)?'—':Number(x).toLocaleString(); }
+  function _sdStat(label, valStr, sub){
+    return '<div class="ac-stat"><div class="ac-stat-label">'+label+'</div>'+
+      '<div class="ac-stat-value">'+valStr+'</div>'+
+      (sub?'<div style="font-size:11px;color:var(--tf);margin-top:3px;line-height:1.4;">'+sub+'</div>':'')+'</div>';
+  }
+  function renderSearchData(d){
+    var el=document.getElementById('ac-search-data'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    var mined = d.lastMined ? String(d.lastMined).slice(0,10) : '기록 없음';
+    var minedBadge = d.lastMined ? '' : ' <span class="ac-badge high">정지</span>';
+    var nlSub = [ (d.nlPending? d.nlPending+'건 분석 대기':''), (d.nlFail? d.nlFail+'건 실패':'') ].filter(Boolean).join(' · ');
+    var fSub  = [ (d.fPending? d.fPending+'건 분석 대기':''), (d.fSkip? d.fSkip+'건 제외(office)':'') ].filter(Boolean).join(' · ');
+    var kSub  = (d.kQueue? d.kQueue+'건 검수 대기':'검수 대기 0');
+    el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">'+
+      _sdStat('소식지 본문화', _nz(d.nlText)+' / '+_nz(d.nlTotal), nlSub)+
+      _sdStat('자료실 색인',   _nz(d.fDone)+' / '+_nz(d.fTotal),  fSub)+
+      _sdStat('지식엔진 승인', _nz(d.kApproved), kSub)+'</div>'+
+      '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bd);font-size:12px;color:var(--tf);">'+
+        '마지막 채굴: <b style="color:var(--ts);">'+mined+'</b>'+minedBadge+'</div>';
+  }
+  window.acLoadSearchData = async function(){
+    var T=encodeURIComponent('텍스트'), E=encodeURIComponent('비었음');
+    var c = await Promise.all([
+      _count('newsletters?select=id'),                                                  /* 0 nlTotal */
+      _count('newsletters?text_quality=eq.'+T+'&select=id'),                            /* 1 nlText */
+      _count('newsletters?text_quality=eq.'+E+'&select=id'),                            /* 2 nlFail */
+      _count('newsletters?full_text=is.null&source_path=not.is.null&select=id'),        /* 3 nlPending(원본있음 대기) */
+      _count('myspace_files?deleted_at=is.null&select=id'),                             /* 4 fTotal */
+      _count('myspace_files?ocr_status=eq.done&deleted_at=is.null&select=id'),          /* 5 fDone */
+      _count('myspace_files?ocr_status=is.null&deleted_at=is.null&select=id'),          /* 6 fPending */
+      _count('myspace_files?ocr_status=eq.skip&deleted_at=is.null&select=id'),          /* 7 fSkip */
+      _count('knowledge_entries?status=eq.approved&select=id'),                         /* 8 kApproved */
+      _count('knowledge_entries?status=eq.ai_draft&select=id')                          /* 9 kQueue */
+    ]);
+    var runs=[]; try{ runs=await _rows('knowledge_extract_runs?select=created_at&order=created_at.desc&limit=1'); }catch(e){}
+    renderSearchData({
+      nlTotal:c[0], nlText:c[1], nlFail:c[2], nlPending:c[3],
+      fTotal:c[4], fDone:c[5], fPending:c[6], fSkip:c[7],
+      kApproved:c[8], kQueue:c[9],
+      lastMined:(runs&&runs[0])?runs[0].created_at:null
+    });
   };
 
   // 초기화
