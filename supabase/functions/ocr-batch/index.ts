@@ -48,13 +48,14 @@ Deno.serve(async (req: Request) => {
   }
   if (!SUPABASE_URL || !SERVICE_ROLE) return json({ error: "env(SUPABASE_URL/SERVICE_ROLE) 미설정" }, 500);
 
-  // 1) 미처리 대상 N건 — full_text 비어있고, 빈추출 마킹('비었음') 아님, PDF URL 있음
-  //    PostgREST: full_text.is.null, text_quality not '비었음'(또는 null), source_pdf_url not null
-  const q = "newsletters?select=id,source_pdf_url,title&full_text=is.null"
-          + "&source_pdf_url=not.is.null"
+  // 1) 미처리 대상 N건 — full_text 비어있고, 빈추출 마킹('비었음') 아님, (공개 PDF URL 또는 private storage 경로) 있음
+  //    PostgREST: full_text.is.null, text_quality not '비었음'(또는 null), source_pdf_url 또는 source_path 있음
+  //    ※ source_path = newsletters private 버킷 경로(2026-06 정리분). source_pdf_url 없으면 아래에서 서명URL 생성.
+  const q = "newsletters?select=id,source_pdf_url,source_path,title&full_text=is.null"
+          + "&or=(source_pdf_url.not.is.null,source_path.not.is.null)"
           + "&or=(text_quality.is.null,text_quality.neq." + encodeURIComponent("비었음") + ")"
           + "&limit=" + BATCH;
-  let rows: Array<{ id: string; source_pdf_url: string; title: string | null }> = [];
+  let rows: Array<{ id: string; source_pdf_url: string | null; source_path: string | null; title: string | null }> = [];
   try {
     const r = await rest(q);
     if (!r.ok) return json({ error: "대상 조회 실패 " + r.status, detail: await r.text().catch(() => "") }, 500);
@@ -68,11 +69,27 @@ Deno.serve(async (req: Request) => {
   let ok = 0, empty = 0, failed = 0;
   for (const nl of rows) {
     try {
-      // 2) ocr-extract 호출 (Gemini). fileUrl = source_pdf_url (배포 검증: private면 서명URL 필요 — 아래 NOTE)
+      // 2a) fileUrl 결정 — 공개 source_pdf_url 우선 / 없으면 source_path로 newsletters private 버킷 서명URL(자료실과 동일 패턴)
+      let fileUrl = (nl.source_pdf_url || "").trim();
+      if (!fileUrl && nl.source_path) {
+        const enc = nl.source_path.split("/").map(encodeURIComponent).join("/");
+        const sg = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/newsletters/${enc}`, {
+          method: "POST",
+          headers: { apikey: SERVICE_ROLE, Authorization: `Bearer ${SERVICE_ROLE}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ expiresIn: 3600 }),
+        });
+        const sj = await sg.json().catch(() => ({}));
+        const signed = sj && typeof sj.signedURL === "string" ? sj.signedURL : "";
+        if (!sg.ok || !signed) { failed++; console.error("[ocr-batch] 소식지 서명 실패", nl.id, sg.status); continue; }
+        fileUrl = `${SUPABASE_URL}/storage/v1${signed}`;
+      }
+      if (!fileUrl) { failed++; console.error("[ocr-batch] fileUrl 없음", nl.id); continue; }
+
+      // 2b) ocr-extract 호출 (Gemini)
       const ex = await fetch(`${SUPABASE_URL}/functions/v1/ocr-extract`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_ROLE}` },
-        body: JSON.stringify({ fileUrl: nl.source_pdf_url }),
+        body: JSON.stringify({ fileUrl }),
       });
       const j = await ex.json().catch(() => ({}));
       if (!ex.ok) { failed++; console.error("[ocr-batch] extract 실패", nl.id, ex.status, j?.error); continue; }
@@ -96,7 +113,8 @@ Deno.serve(async (req: Request) => {
   // 남은 미처리 건수(참고)
   let remaining = -1;
   try {
-    const r2 = await rest("newsletters?select=id&full_text=is.null&source_pdf_url=not.is.null"
+    const r2 = await rest("newsletters?select=id&full_text=is.null"
+      + "&or=(source_pdf_url.not.is.null,source_path.not.is.null)"
       + "&or=(text_quality.is.null,text_quality.neq." + encodeURIComponent("비었음") + ")", { headers: { Prefer: "count=exact", Range: "0-0" } });
     const cr = r2.headers.get("content-range"); if (cr) remaining = parseInt(cr.split("/")[1] || "-1", 10);
   } catch (_e) {}
