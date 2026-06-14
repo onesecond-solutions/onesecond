@@ -47,6 +47,17 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 /* 베타·파일럿(2026-06-13): GA 전 기능 오픈 — ga-hide 숨김 해제. '함께해요' 후기로 보완. 종료 후 재제한 시 아래 규칙 복구:
    #app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} */
 .nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
+/* 매니저룸 — 핑크 차별화 + 실장·지점장·어드민만(is-mgr) 노출 */
+.sp-node.sp-mgr{color:#DB2777;font-weight:700;}
+.sp-node.sp-mgr .ic .sp-ico{color:#DB2777;}
+.sp-node.sp-mgr.sel{background:color-mix(in srgb,#EC4899 15%,transparent);box-shadow:inset 3px 0 0 #EC4899;}
+.sp-node.sp-mgr:hover{background:color-mix(in srgb,#EC4899 9%,transparent);}
+.sp-node.sp-mgr{display:none;}/* .sp-node{display:flex}보다 강한 specificity로 기본 숨김 */
+#app.is-mgr .sp-node.sp-mgr{display:flex;}
+.nav.nav-mgr{color:#DB2777;display:none;}
+.nav.nav-mgr .sp-ico{color:#DB2777;}
+.nav.nav-mgr.on{background:color-mix(in srgb,#EC4899 12%,transparent);color:#DB2777;}
+#app.is-mgr .nav.nav-mgr{display:flex;}
 /* 사이드바 하단 안내 — 제한 오픈(감추기>만들기) 보완 문구. 접힘 시 숨김 */
 .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;}/* 하단 묶음 — 안내문(파란 테두리)·요금제(일반)·어드민(진한 회색) 개별 처리 */
 .side-note{padding:10px 11px;font-size:0.72rem;line-height:1.6;color:var(--tf);border:1px solid var(--ac);border-radius:10px;}/* 베타·파일럿 = 파란 테두리 박스 */
@@ -2024,6 +2035,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav ins-show" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
     <div class="nav on" onclick="_navView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
     <div class="nav" id="nav-myspace" onclick="_navMyspace()"><span class="ic">&#9672;</span><span class="lbl">마이 스페이스</span></div>
+    <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저룸</span></div>
     <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav ins-show" onclick="_navView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="_navView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
@@ -3577,6 +3589,7 @@ function applyRoleClass(){
   var nv = document.getElementById('nav-voice');
   if(nv) nv.style.display = _canSeeVoice() ? '' : 'none';
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
+  app.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸(바텀시트 노드·사이드 nav) 노출 게이팅 */
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
@@ -4478,6 +4491,20 @@ function _navScriptWrite(){
   }, 90);
 }
 window._navScriptWrite=_navScriptWrite;
+/* 매니저룸(사이드 nav) = 바텀시트 부드럽게 올리고 트리 '매니저룸' 노드로 진입 */
+function _navMgr(){
+  if(window._osSheetOpen) window._osSheetOpen(true);
+  setTimeout(function(){
+    try{
+      var tree=document.getElementById('spTree'); if(!tree) return;
+      var node=tree.querySelector('.sp-node[data-k="mrroom"]'); if(!node) return;
+      var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
+      node.classList.add('sel');
+      if(window._spMrShow){ var sc=document.getElementById('spContent'); window._spMrShow(sc); }
+    }catch(e){}
+  }, 90);
+}
+window._navMgr=_navMgr;
 function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
@@ -12851,6 +12878,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
               </div>
             </div>
 
+            <div class="sp-node sp-leaf sp-mgr" data-k="mrroom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>매니저룸</div>
+
             <div class="sp-node sp-leaf" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
 
             <div class="sp-node sp-leaf" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
@@ -13331,6 +13360,19 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(sp && home && sp.parentNode!==home){ sp.style.display='none'; home.appendChild(sp); }
   }
   window._spSplitShow=_spSplitShow; window._spSplitRestore=_spSplitRestore;
+  /* 매니저룸 노드 = 팀원관리(#mr-main)를 우측 패널로 inplace 이동 (기능·데이터 그대로). 실장·지점장·어드민만 노드 노출(is-mgr) */
+  function _spMrShow(host){
+    var m=document.getElementById('mr-main'); if(!m){ if(host) host.innerHTML='<div class="sp-empty2">매니저룸을 불러올 수 없습니다.</div>'; return; }
+    if(!window._spMrHome) window._spMrHome=m.parentNode;
+    if(host){ host.innerHTML=_spHead(); host.appendChild(m); }
+    m.style.display='';
+    setTimeout(function(){ var c=document.querySelector('#mr-mem-sub .chip'); if(c){ var oc=c.getAttribute('onclick')||'', mm=oc.match(/mrMemSub\(this,'([^']+)'\)/); if(mm&&typeof mrMemSub==='function') mrMemSub(c,mm[1]); } }, 0);
+  }
+  function _spMrRestore(){
+    var m=document.getElementById('mr-main'), home=window._spMrHome;
+    if(m && home && m.parentNode!==home){ m.style.display='none'; home.appendChild(m); }
+  }
+  window._spMrShow=_spMrShow; window._spMrRestore=_spMrRestore;
   /* 팀방·지점방 노드 = 공동 스페이스(#mys-team)의 방을 우측 패널로 이동(inplace). 트리가 방 스위처이므로 방 칩은 숨기고 해당 방만 표시. */
   function _spCospShow(host, roomKey){
     var t=document.getElementById('mys-team'); if(!t){ if(host) host.innerHTML='<div class="sp-empty2">공동 스페이스를 불러올 수 없습니다.</div>'; return; }
@@ -13358,7 +13400,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
       node.classList.add('sel');
       var k=node.getAttribute('data-k'), sc=document.getElementById('spContent');
-      _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
+      _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore(); _spMrRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
       try{ if(window.LocalFind) window.LocalFind.resetAll(); }catch(e){}      /* 화면 검색 잔상 초기화(노드 전환) */
       if(k==='m_diary') _spDiaShow(sc);                          /* 다이어리 */
       else if(k==='m_lib') _spVaultShow(sc);                     /* 개인 자료실 = 자료함(personal) */
@@ -13371,6 +13413,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
       else if(k==='broom') _spCospShow(sc,'branch');             /* 지점방 = 공동 스페이스 지점방 */
       else if(k==='blib_ins') _spCospShow(sc,'insurer');         /* 원수사 자료실 = 공동 스페이스 보험사별 자료실 */
       else if(k==='qna') _spCospShow(sc,'qna');                  /* 보험 Q&A = 공동 스페이스 보험Q&A */
+      else if(k==='mrroom') _spMrShow(sc);                       /* 매니저룸 = 팀원관리 inplace */
       else if(k==='spguide') _spIntroRender(sc);                 /* 스페이스 설명서 = 공간 구조 안내 */
       else _spPaint(k);
     });
