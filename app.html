@@ -53,11 +53,11 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .sp-node.sp-mgr.sel{background:color-mix(in srgb,#EC4899 15%,transparent);box-shadow:inset 3px 0 0 #EC4899;}
 .sp-node.sp-mgr:hover{background:color-mix(in srgb,#EC4899 9%,transparent);}
 .sp-node.sp-mgr{display:none;}/* .sp-node{display:flex}보다 강한 specificity로 기본 숨김 */
-#app.is-mgr .sp-node.sp-mgr{display:flex;}
+body.is-mgr .sp-node.sp-mgr{display:flex;}
 .nav.nav-mgr{color:#DB2777;display:none;}
 .nav.nav-mgr .sp-ico{color:#DB2777;}
 .nav.nav-mgr.on{background:color-mix(in srgb,#EC4899 12%,transparent);color:#DB2777;}
-#app.is-mgr .nav.nav-mgr{display:flex;}
+body.is-mgr .nav.nav-mgr{display:flex;}
 /* 사이드바 하단 안내 — 제한 오픈(감추기>만들기) 보완 문구. 접힘 시 숨김 */
 .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;}/* 하단 묶음 — 안내문(파란 테두리)·요금제(일반)·어드민(진한 회색) 개별 처리 */
 .side-note{padding:10px 11px;font-size:0.72rem;line-height:1.6;color:var(--tf);border:1px solid var(--ac);border-radius:10px;}/* 베타·파일럿 = 파란 테두리 박스 */
@@ -3589,7 +3589,7 @@ function applyRoleClass(){
   var nv = document.getElementById('nav-voice');
   if(nv) nv.style.display = _canSeeVoice() ? '' : 'none';
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
-  app.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸(바텀시트 노드·사이드 nav) 노출 게이팅 */
+  document.body.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸 노출 — body 기준(바텀시트가 #app 밖이라 #app 기준이면 안 닿음) */
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
