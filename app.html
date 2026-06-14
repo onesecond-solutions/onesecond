@@ -13366,7 +13366,14 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(!window._spMrHome) window._spMrHome=m.parentNode;
     if(host){ host.innerHTML=_spHead(); host.appendChild(m); }
     m.style.display='';
-    setTimeout(function(){ var c=document.querySelector('#mr-mem-sub .chip'); if(c){ var oc=c.getAttribute('onclick')||'', mm=oc.match(/mrMemSub\(this,'([^']+)'\)/); if(mm&&typeof mrMemSub==='function') mrMemSub(c,mm[1]); } }, 0);
+    /* role별 자동: 실장→내 팀(manager) / 지점장·어드민→지점 전체(branch). 라이브러리 팀원관리(mysTab 'members')와 동일 — 어드민 빈 화면 해소 */
+    setTimeout(function(){
+      var _r=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+      var _brTab=document.querySelector('#mr-mem-sub .chip[onclick*="branch"]');
+      var _mgTab=document.querySelector('#mr-mem-sub .chip[onclick*="manager"]');
+      if(_r==='ga_manager'){ if(_brTab) _brTab.style.display='none'; if(_mgTab&&typeof mrMemSub==='function') mrMemSub(_mgTab,'manager'); }
+      else if(typeof mrMemSub==='function'){ if(_brTab){ _brTab.style.display=''; mrMemSub(_brTab,'branch'); } }
+    }, 30);
   }
   function _spMrRestore(){
     var m=document.getElementById('mr-main'), home=window._spMrHome;
