@@ -2180,6 +2180,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="chip" onclick="filterMys(this,'스크립트')">스크립트</div>
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
           <div class="chip" onclick="mysShareboxOpen(this)">공유함</div>
+          <div class="chip" onclick="filterMys(this,'공유받음')">공유받음</div>
         </div>
       </div>
       <div class="split" id="mys-split">
@@ -11154,7 +11155,7 @@ function filterMys(el,cat){
   /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
-  var f=(cat==='전체')?items.slice():items.filter(function(it){ return (it._badge||'')===cat; });
+  var f=(cat==='전체')?items.slice():(cat==='공유받음')?items.filter(function(it){ return Array.isArray(it.keywords)&&it.keywords.indexOf('공유받음')>=0; }):items.filter(function(it){ return (it._badge||'')===cat; });
   if(window._mysReorder){ f.sort(function(a,b){ var sa=(a._sort==null)?Infinity:a._sort, sb=(b._sort==null)?Infinity:b._sort; if(sa!==sb) return sa-sb; return (b._date||'').localeCompare(a._date||''); }); }
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
 }
