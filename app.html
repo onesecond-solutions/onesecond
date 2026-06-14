@@ -1125,6 +1125,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .os-share-pick:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 5%,var(--card,#fff))}
 .os-share-pick b{font-size:1rem;font-weight:700;color:var(--tp)}
 .os-share-pick span{font-size:0.8rem;color:var(--tf)}
+.mys-shared{display:inline-block;font-size:0.62rem;font-weight:700;color:var(--ok,#0E9A6C);background:color-mix(in srgb,var(--ok,#0E9A6C) 12%,transparent);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle}
 .shx-tabs{display:flex;gap:6px;margin-bottom:10px}
 .shx-tab{flex:1;padding:8px;border:1px solid var(--bd);background:var(--card,#fff);border-radius:9px;font-size:0.85rem;font-weight:700;color:var(--tf);cursor:pointer;font-family:inherit}
 .shx-tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
@@ -9339,7 +9340,7 @@ async function loadMyspace(force){
     var items=[];
     for(var i=0;i<scripts.length;i++){
       var s=scripts[i];
-      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,_sort:s.sort_order,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments});
+      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,_sort:s.sort_order,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments,keywords:s.keywords});
     }
     for(var j=0;j<library.length;j++){
       var l=library[j];
@@ -9374,12 +9375,13 @@ function renderMyspace(items){
     var title=(it.title||'제목 없음').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var tableName=(it._type==='script')?'scripts':'library';
     var dot=(it._badge==='메모'&&typeof OS_MEMO_COLORS!=='undefined')?'<span class="mys-cdot" style="background:'+OS_MEMO_COLORS[_memoColorKey(it.keywords)]+'"></span>':'';
+    var shared=(Array.isArray(it.keywords)&&it.keywords.indexOf('공유받음')>=0)?'<span class="mys-shared">공유받음</span>':'';  /* 공유받은 항목 출처 뱃지 */
     var _ro=window._mysReorder;
     /* 드래그는 그립 핸들에만 — 카드 본문은 텍스트 선택·복사 가능(2026-06-09 회귀 수정). 카드는 드롭 대상만. */
     var _drag=_ro?(' ondragover="mysDragOver(event)" ondrop="mysDrop(event,'+i+')"'):'';
     var _roc=_ro?('<div class="mys-reord"><button class="mys-reord-grip" draggable="true" ondragstart="mysDragStart(event,'+i+')" ondragend="mysDragEnd(event)" title="드래그로 이동" aria-label="드래그 이동">&#10303;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',-1)" aria-label="위로">&#9650;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',1)" aria-label="아래로">&#9660;</button></div>'):'';
     return '<div class="item'+(i===0?' on':'')+(_ro?' mys-reord-on':'')+'"'+_drag+' onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
-      +'<span class="badge">'+it._badge+'</span>'+dot
+      +'<span class="badge">'+it._badge+'</span>'+dot+shared
       +'<div class="it">'+title+'</div>'
       +'<div class="id">'+dt+'</div>'+_roc+'</div>';
   }).join('');
