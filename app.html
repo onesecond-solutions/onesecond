@@ -1125,6 +1125,9 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .os-share-pick:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 5%,var(--card,#fff))}
 .os-share-pick b{font-size:1rem;font-weight:700;color:var(--tp)}
 .os-share-pick span{font-size:0.8rem;color:var(--tf)}
+.shx-tabs{display:flex;gap:6px;margin-bottom:10px}
+.shx-tab{flex:1;padding:8px;border:1px solid var(--bd);background:var(--card,#fff);border-radius:9px;font-size:0.85rem;font-weight:700;color:var(--tf);cursor:pointer;font-family:inherit}
+.shx-tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .os-share-note{margin-top:14px;font-size:0.78rem;line-height:1.5;color:var(--tf);background:var(--s2);border-radius:10px;padding:10px 12px}
 .os-share-note b{color:var(--ts);font-weight:700}
 .os-share-cancel{margin-top:10px;width:100%;padding:11px;border:0;background:none;color:var(--tf);font-size:0.9rem;cursor:pointer;font-family:inherit}
@@ -11156,19 +11159,61 @@ window.filterMys=filterMys;
 
 /* 공유함 (구 즐겨찾기 칩 자리 재사용, 2026-06-10 기획실장 작업지시서 — 골격: 라벨+의도된 빈 상태만).
  * 즐겨찾기는 백킹 데이터 없는 placeholder였음(유실 0). 4탭 골격·공유 알맹이(CRUD)는 방 쓰기 연결 후 별도. */
-function mysShareboxOpen(el){
-  var chips=el.parentElement.querySelectorAll('.chip');
-  for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
-  el.classList.add('on');
+async function mysShareboxOpen(el){
+  if(el&&el.parentElement){ var chips=el.parentElement.querySelectorAll('.chip'); for(var i=0;i<chips.length;i++)chips[i].classList.remove('on'); el.classList.add('on'); }
   window._mysCat='공유함'; window._mysReorder=false;
   if(typeof _scrModeOff==='function') _scrModeOff();
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='none';
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
-  var listEl=document.getElementById('mysList');
-  if(listEl) listEl.innerHTML='<div class="mys-news-empty">공유함은 준비 중입니다.<br>곧 다른 분과 자료·스크립트를 주고받을 수 있어요.</div>';
-  var vv=document.getElementById('mysViewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">공유 기능 준비 중입니다.</div>';
+  if(!window._osShareTab) window._osShareTab='recv';
+  await _osShareboxRender();
 }
 window.mysShareboxOpen=mysShareboxOpen;
+/* 공유함 게시판 (Phase 2) — 받은/보낸 탭 + 좌목록 + 우미리보기(payload 기반, 원본 RLS 무관) */
+function _shEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function _shDate(s){ if(!s)return''; var d=new Date(s); if(isNaN(d.getTime()))return''; var p=function(n){return(n<10?'0':'')+n;}; return (d.getFullYear()%100)+'.'+p(d.getMonth()+1)+'.'+p(d.getDate()); }
+function _shSize(b){ b=Number(b)||0; if(b<1024)return b+'B'; if(b<1048576)return(b/1024).toFixed(0)+'KB'; return(b/1048576).toFixed(1)+'MB'; }
+var _SH_TY={script:'스크립트',memo:'메모',file:'자료'};
+async function _osShareboxRender(){
+  var listEl=document.getElementById('mysList'); if(!listEl) return;
+  var vv=document.getElementById('mysViewer');
+  listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
+  if(vv) vv.innerHTML='<div class="mys-news-empty">왼쪽에서 공유 항목을 선택하세요.</div>';
+  var me={}; try{ me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; }catch(e){}
+  var myId=String(me.id||(window.AppState&&window.AppState.userId)||'');
+  var rows=[];
+  try{ var r=await window.db.fetch('/rest/v1/shares?order=created_at.desc&limit=200&select=id,item_type,item_id,from_user,from_name,scope,scope_id,title,payload,created_at'); if(r.ok) rows=await r.json(); }catch(e){}
+  if(!Array.isArray(rows)) rows=[];
+  var tab=window._osShareTab||'recv';
+  var filtered=rows.filter(function(x){ return tab==='sent' ? String(x.from_user)===myId : String(x.from_user)!==myId; });
+  window._osShareRows=filtered;
+  var tabsHtml='<div class="shx-tabs"><button class="shx-tab'+(tab==='recv'?' on':'')+'" onclick="_osShareTabSet(\'recv\')">받은 공유</button><button class="shx-tab'+(tab==='sent'?' on':'')+'" onclick="_osShareTabSet(\'sent\')">보낸 공유</button></div>';
+  var body;
+  if(!filtered.length){ body='<div class="mys-news-empty" style="padding:20px 10px">'+(tab==='sent'?'보낸 공유가 없습니다.':'받은 공유가 없습니다.')+'</div>'; }
+  else { body=filtered.map(function(s,i){ var meta=[(s.from_name||''),_shDate(s.created_at)].filter(Boolean).join(' · ');
+    return '<div class="item" onclick="_osShareSel('+i+')"><span class="badge">'+(_SH_TY[s.item_type]||'항목')+'</span><div class="it">'+_shEsc(s.title||'(제목 없음)')+'</div><div class="id">'+_shEsc(meta)+'</div></div>'; }).join(''); }
+  listEl.innerHTML=tabsHtml+body;
+}
+function _osShareTabSet(t){ window._osShareTab=t; _osShareboxRender(); }
+window._osShareTabSet=_osShareTabSet; window._osShareboxRender=_osShareboxRender;
+function _osShareSel(i){
+  var s=(window._osShareRows||[])[i]; if(!s) return;
+  var vv=document.getElementById('mysViewer'); if(!vv) return;
+  var items=document.querySelectorAll('#mysList .item'); for(var k=0;k<items.length;k++) items[k].classList.toggle('on',k===i);
+  var pl=s.payload||{}; if(typeof pl==='string'){ try{ pl=JSON.parse(pl); }catch(e){ pl={}; } }
+  var bodyHtml='';
+  if(s.item_type==='script'){ var t=pl.script_text||''; bodyHtml=/<(p|div|br|img|table|span|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(t)?t:(_shEsc(t).replace(/\n/g,'<br>')); }
+  else if(s.item_type==='memo'){ bodyHtml=_shEsc(pl.memo_text||pl.description||'').replace(/\n/g,'<br>'); }
+  else { bodyHtml='<div style="line-height:1.7">파일: <b>'+_shEsc(pl.original_name||s.title||'')+'</b><br>'+_shEsc((pl.ext||'').toUpperCase())+(pl.file_size?(' · '+_shSize(pl.file_size)):'')+'<br><br>받기를 누르면 내 자료실에 저장됩니다.</div>'; }
+  var meta=[(s.from_name||''),_shDate(s.created_at)].filter(Boolean).join(' · ');
+  var sent=(window._osShareTab==='sent');
+  var act=sent?'':'<div class="post-acts"><button class="post-act" onclick="_osShareReceive('+i+')">받기</button></div>';
+  vv.innerHTML='<span class="vbadge">'+(_SH_TY[s.item_type]||'')+'</span><div class="vttl">'+_shEsc(s.title||'(제목 없음)')+'</div><div class="vmeta">'+_shEsc(meta)+'</div><div class="vbody">'+(bodyHtml||'(내용 없음)')+'</div>'+act;
+  if(window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
+}
+window._osShareSel=_osShareSel;
+function _osShareReceive(i){ if(typeof toast==='function') toast('받기 — 곧 추가됩니다(다음 단계).'); }
+window._osShareReceive=_osShareReceive;
 
 /* ── 공유하기 (Phase 1) — 마이스페이스 항목(스크립트/메모/자료)을 팀/지점 공유함으로 ── */
 function _osShareItem(){ var c=window._mysDetailCurrent; if(!c||!c.id) return; _osShareOpen(c.type==='script'?'script':'memo', c.id, c.title); }
