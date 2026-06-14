@@ -946,12 +946,6 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .mys-vault-notice{width:100%;background:color-mix(in srgb,var(--warn) 10%,var(--s2));border:1.5px solid color-mix(in srgb,var(--warn) 38%,var(--bd));border-radius:var(--radius-sm);padding:14px;font-size:0.84rem;color:var(--ts);display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;transition:background .15s,border-color .15s}
 .mys-vault-notice .mvn-txt{flex:none;line-height:1.5}
 .mys-vault-notice b{color:var(--warn);font-weight:700}
-.mys-vault-confirm-lbl{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:1.08rem;color:#fff;background:var(--warn);padding:9px 22px;border-radius:9999px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 10px color-mix(in srgb,var(--warn) 40%,transparent);transition:background .15s,box-shadow .15s}
-.mys-vault-confirm-lbl input{width:19px;height:19px;accent-color:#fff;cursor:pointer;margin:0}
-/* 체크 완료 = 초록 피드백(딸깍 즉시 반응) */
-.mys-vault-notice.mvn-done{background:color-mix(in srgb,var(--ok) 9%,var(--s2));border-color:color-mix(in srgb,var(--ok) 32%,var(--bd))}
-.mys-vault-notice.mvn-done b{color:var(--ok)}
-.mys-vault-notice.mvn-done .mys-vault-confirm-lbl{background:var(--ok);box-shadow:0 2px 10px color-mix(in srgb,var(--ok) 38%,transparent)}
 /* 전체보기 빈 상태 종류 선택 팝업 */
 .mys-pick-ov{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;animation:mpfade .15s}
 @keyframes mpfade{from{opacity:0}to{opacity:1}}
@@ -1118,6 +1112,17 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 /* 빈 상태 CTA (③) */
 .mvf-cta{display:block;width:100%;margin-top:8px;border:1px dashed var(--ac);background:transparent;color:var(--ac);border-radius:var(--radius-sm);padding:10px;font-size:0.83rem;font-weight:600;cursor:pointer}
 .mvf-cta:hover{background:var(--bg)}
+/* 어드민 사고 대응 — 자료실 읽기 전용 모드: 모든 쓰기 어포던스(고지 확인·새 폴더·드롭존·업로드·항목 메뉴) 숨김 */
+.mys-vault.mv-ro .mys-vault-notice,
+.mys-vault.mv-ro .mys-vault-newfolder,
+.mys-vault.mv-ro #mys-vault-dropzone,
+.mys-vault.mv-ro #mys-vault-filedrop,
+.mys-vault.mv-ro .mvcol-actions,
+.mys-vault.mv-ro .mvf-actions,
+.mys-vault.mv-ro .mvfile-menu,
+.mys-vault.mv-ro .mvrow-menu{display:none!important}
+.mv-admin-banner{font-size:0.74rem;color:var(--warn);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mv-admin-banner button{font-size:0.95rem;background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--ts)}
 /* 드롭존 */
 /* 폴더·파일 드롭존 통일 — 위치(칼럼 맨 아래 footer)·폰트·구조 동일, 색만 구역별로 다름(폴더=주황/파일=인디고) */
 .mys-vault-dropzone{border:2px dashed var(--bd);border-radius:var(--radius-md);padding:16px 12px;text-align:center;cursor:pointer;margin-top:8px;flex-shrink:0}
@@ -2167,7 +2172,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 자료함 v1 (P1 후속, 폴더형 개인 보관함). myspace_folders/files, private 버킷 myspace. 풀폭 고지+3컬럼 20/30/50. 폴더 재귀 업로드=PR2 -->
       <div class="mys-vault" id="mys-vault" style="display:none">
         <!-- §4 방어선: 풀폭 상단 고지 (모달화 금지) -->
-        <div class="mys-vault-notice" id="mys-vault-notice"><span class="mvn-txt">안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요. 올린 PDF·이미지는 통합검색을 위해 내용 텍스트가 자동 추출·색인됩니다.</span><label class="mys-vault-confirm-lbl"><input type="checkbox" id="mys-vault-confirm" onchange="mysVaultConfirmToggle()"> 확인했습니다</label></div>
+        <div class="mys-vault-notice" id="mys-vault-notice"><span class="mvn-txt">안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요. 올린 PDF·이미지는 통합검색을 위해 내용 텍스트가 자동 추출·색인됩니다.</span></div>
         <div class="mys-vault-cols">
           <div class="mys-vault-tree">
             <div class="mvcol-head"><span class="mvcol-ttl">폴더</span><button class="mys-vault-newfolder" onclick="mysVaultCreateFolder()">+ 새 폴더</button></div>
@@ -2175,7 +2180,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
             <div class="mys-vault-dropzone" id="mys-vault-dropzone" onclick="mysVaultPickFolder()" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mysVaultDrop(event)"><div class="mvdz-t">폴더를 끌어다 놓으세요</div><span class="mvdz-sub">또는 클릭해서 폴더 선택 · 파일은 오른쪽에서</span></div>
           </div>
           <div class="mys-vault-grid-col">
-            <div class="mvcol-head"><span class="mvcol-ttl mys-vault-curpath" id="mys-vault-curpath">전체</span><span class="mv-view-toggle"><button id="mv-view-grid" class="mv-vt-btn on" onclick="mysVaultSetView('grid')" title="그리드 보기" aria-label="그리드 보기">&#9638;</button><button id="mv-view-list" class="mv-vt-btn" onclick="mysVaultSetView('list')" title="리스트 보기" aria-label="리스트 보기">&#9776;</button></span><span class="mvcol-actions"><button class="mys-vault-uploadbtn" id="mys-vault-uploadbtn" onclick="mysVaultPickFiles()" disabled>+ 파일</button></span><input type="file" id="mys-vault-fileinput" multiple style="display:none" onchange="mysVaultFileInputChange(event)"><input type="file" id="mys-vault-dirinput" webkitdirectory directory multiple style="display:none" onchange="mysVaultDirInputChange(event)"></div>
+            <div class="mvcol-head"><span class="mvcol-ttl mys-vault-curpath" id="mys-vault-curpath">전체</span><span class="mv-view-toggle"><button id="mv-view-grid" class="mv-vt-btn on" onclick="mysVaultSetView('grid')" title="그리드 보기" aria-label="그리드 보기">&#9638;</button><button id="mv-view-list" class="mv-vt-btn" onclick="mysVaultSetView('list')" title="리스트 보기" aria-label="리스트 보기">&#9776;</button></span><span class="mvcol-actions"><button class="mys-vault-uploadbtn" id="mys-vault-uploadbtn" onclick="mysVaultPickFiles()">+ 파일</button></span><input type="file" id="mys-vault-fileinput" multiple style="display:none" onchange="mysVaultFileInputChange(event)"><input type="file" id="mys-vault-dirinput" webkitdirectory directory multiple style="display:none" onchange="mysVaultDirInputChange(event)"></div>
             <div id="mys-vault-progress" class="mys-vault-progress" style="display:none"></div>
             <div id="mys-vault-files" class="mys-vault-files" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event, (window._mvCurFolder||null))"><div class="mys-news-empty">폴더를 선택하세요.</div></div>
             <div class="mys-vault-dropzone" id="mys-vault-filedrop" onclick="mysVaultPickFiles()" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,(window._mvCurFolder||null))"><div class="mvdz-t">여기에 파일을 끌어다 놓으세요</div><span class="mvdz-sub">또는 클릭해서 파일 선택 · 폴더는 왼쪽에서</span></div>
@@ -11130,8 +11135,9 @@ window.mysShareboxOpen=mysShareboxOpen;
 function _mvOwner(){ return (window.AppState&&window.AppState.userId)||''; }
 /* 자료함 스코프 컨텍스트 (2026-06-13 팀/지점 공유 이식) — personal(본인) / team / branch. 단일 컴포넌트 재사용 */
 window._mvScope = window._mvScope || {scope:'personal', id:null};
-function _mvScopeSet(scope,id){ window._mvScope={scope:(scope||'personal'), id:(id||null)}; }
+function _mvScopeSet(scope,id,adminAll){ window._mvScope={scope:(scope||'personal'), id:(id||null), adminAll:!!adminAll}; }
 function _mvScopeQ(){ var s=window._mvScope||{scope:'personal'};   /* 로드 쿼리 필터 */
+  if(s.adminAll && (s.scope==='team'||s.scope==='branch')) return '&scope=eq.'+s.scope;  /* 어드민 사고대응 전체 열람 = scope_id 무관(전 팀/지점) */
   if(s.scope==='team'&&s.id)   return '&scope=eq.team&scope_id=eq.'+encodeURIComponent(s.id);
   if(s.scope==='branch'&&s.id) return '&scope=eq.branch&scope_id=eq.'+encodeURIComponent(s.id);
   return '&owner_id=eq.'+encodeURIComponent(_mvOwner()); }
@@ -11144,6 +11150,10 @@ function _mvStoragePrefix(){ var s=window._mvScope||{scope:'personal'};  /* stor
   if(s.scope==='branch'&&s.id) return 'branch/'+s.id;
   return _mvOwner(); }
 function _mvToken(){ return window.db&&window.db.getToken&&window.db.getToken(); }
+/* 어드민 사고대응 읽기 전용 — 쓰기 진입점 가드. 서버 RLS가 이미 어드민 쓰기를 막지만(혼란 방지) 화면에서도 차단 */
+function _mvRoGuard(){ if(window._mvReadonly){ if(typeof _spDenyPopup==='function') _spDenyPopup('읽기 전용','어드민 사고 대응 열람 모드입니다.<br>이 자료실에서는 보기만 가능하고 올리기·이름변경·이동·삭제는 할 수 없습니다.'); else alert('읽기 전용 — 보기만 가능합니다.'); return true; } return false; }
+function _mvRoClear(){ window._mvReadonly=false; var v=document.getElementById('mys-vault'); if(v){ v.classList.remove('mv-ro'); var b=v.querySelector('.mv-admin-banner'); if(b) b.remove(); } }
+window._mvRoClear=_mvRoClear;
 function _mvEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _mvEncPath(p){ return String(p).split('/').map(encodeURIComponent).join('/'); }
 function mysVaultSize(b){ b=Number(b)||0; if(b<1024)return b+'B'; if(b<1048576)return (b/1024).toFixed(0)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
@@ -11322,14 +11332,11 @@ function _mvApplyVaultNotice(scope){
     else if(scope==='branch') txt.innerHTML='안내 · <b>지점 공유 자료실</b>입니다. 같은 지점원이 함께 보고 올립니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.'+_ocrNote;
     else txt.innerHTML='안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.'+_ocrNote;
   }
-  window._mvConfirmed=false;  /* 스코프 바뀌면 다른 고지 → 재확인 */
-  var ck=document.getElementById('mys-vault-confirm'); if(ck) ck.checked=false;
-  var btn=document.getElementById('mys-vault-uploadbtn'); if(btn) btn.disabled=true;
-  if(nt) nt.classList.remove('mvn-done');
-  var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.remove('mvdz-ready');
+  /* 업로드 사전 확인 체크박스 폐지(2026-06-14) — 자료 처리 동의는 가입 시 약관·개인정보처리방침으로 갈음. 안내 문구만 유지. */
 }
 window._mvApplyVaultNotice=_mvApplyVaultNotice;
 async function mysVaultCreateFolder(parentId){
+  if(_mvRoGuard()) return;
   var owner=_mvOwner(), token=_mvToken();
   if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   var name=prompt('새 폴더 이름'); if(name==null) return; name=String(name).trim(); if(!name) return;
@@ -11345,26 +11352,16 @@ async function mysVaultCreateFolder(parentId){
 }
 window.mysVaultCreateFolder=mysVaultCreateFolder;
 
-function mysVaultConfirmToggle(){
-  var ck=document.getElementById('mys-vault-confirm');
-  window._mvConfirmed=!!(ck&&ck.checked);
-  var btn=document.getElementById('mys-vault-uploadbtn'); if(btn) btn.disabled=!window._mvConfirmed;
-  var fbtn=document.getElementById('mys-vault-folderbtn'); if(fbtn) fbtn.disabled=!window._mvConfirmed;
-  var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.toggle('mvdz-ready',window._mvConfirmed);
-  var nt=document.getElementById('mys-vault-notice'); if(nt) nt.classList.toggle('mvn-done',window._mvConfirmed);  /* 체크 시 주황→초록 완료 피드백 */
-}
-window.mysVaultConfirmToggle=mysVaultConfirmToggle;
-
 /* 현재 폴더 경로 문자열 "전체 > A > B" */
 function _mvFolderPath(fid){ if(!fid) return '전체'; var path=[], cur=fid, all=window._mvFolders||[], g=0; while(cur&&g++<50){ var f=all.filter(function(x){return x.id===cur;})[0]; if(!f) break; path.unshift(f.name); cur=f.parent_id||null; } return '전체 > '+path.join(' > '); }
 /* item 2: 버튼 업로드 직전 저장 위치 안내(잘못 들어가는 사고 방지) */
 function _mvUploadHerePrompt(){ return confirm('저장 위치: '+_mvFolderPath(window._mvCurFolder||null)+'\n\n여기에 올릴까요?'); }
-function mysVaultPickFiles(){ if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; } if(!_mvUploadHerePrompt()) return; var inp=document.getElementById('mys-vault-fileinput'); if(inp) inp.click(); }
+function mysVaultPickFiles(){ if(_mvRoGuard()) return; if(!_mvUploadHerePrompt()) return; var inp=document.getElementById('mys-vault-fileinput'); if(inp) inp.click(); }
 window.mysVaultPickFiles=mysVaultPickFiles;
 function mysVaultFileInputChange(e){ var fs=e.target.files; mysVaultUpload(fs); e.target.value=''; }
 window.mysVaultFileInputChange=mysVaultFileInputChange;
 
-function mysVaultDragOver(e){ e.preventDefault(); if(window._mvConfirmed){ var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.add('mvdz-over'); } }
+function mysVaultDragOver(e){ e.preventDefault(); var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.add('mvdz-over'); }
 function mysVaultDragLeave(e){ var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.remove('mvdz-over'); }
 function _mvReadEntries(reader){
   return new Promise(function(resolve){ var all=[];
@@ -11399,18 +11396,18 @@ async function _mvHandleExternalDrop(dt, target){
   } else if(dt&&dt.files){ mysVaultUpload(Array.prototype.slice.call(dt.files), target); }
 }
 function _mvClearDropHover(){ var els=document.querySelectorAll('.mv-drop-hot'); for(var i=0;i<els.length;i++) els[i].classList.remove('mv-drop-hot'); var dz=document.getElementById('mys-vault-dropzone'); if(dz) dz.classList.remove('mvdz-over'); }
-function mvDragOverEl(e){ e.preventDefault(); e.stopPropagation(); if(window._mvConfirmed) e.currentTarget.classList.add('mv-drop-hot'); }
+function mvDragOverEl(e){ e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.add('mv-drop-hot'); }
 function mvDragLeaveEl(e){ e.currentTarget.classList.remove('mv-drop-hot'); }
 window.mvDragOverEl=mvDragOverEl; window.mvDragLeaveEl=mvDragLeaveEl;
 async function mvDropOn(e, destFolderId){
   e.preventDefault(); e.stopPropagation(); _mvClearDropHover();
+  if(_mvRoGuard()) return;  /* 읽기 전용 = 드래그 이동·외부 업로드 모두 차단 */
   var dest=(destFolderId===undefined?null:destFolderId);
   /* 내부 이동(Move) 우선 분기 */
   var raw=''; try{ raw=e.dataTransfer.getData('text/x-mv'); }catch(err){}
   var item=null; if(raw){ try{ item=JSON.parse(raw); }catch(err){} } if(!item) item=window._mvDragItem;
   if(item&&item.id){ window._mvDragItem=null; return mvDoMove(item.type, item.id, dest); }
   /* 외부 파일/폴더 업로드 */
-  if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
   await _mvHandleExternalDrop(e.dataTransfer, dest);
 }
 window.mvDropOn=mvDropOn;
@@ -11498,7 +11495,6 @@ async function _mvDoUploads(entries, skipped){
 /* 평면 파일 업로드 (현재 폴더로). */
 function mysVaultUpload(fileList, targetOverride){
   var files=Array.prototype.slice.call(fileList||[]); if(!files.length) return;
-  if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
   if(!_mvOwner()||!_mvToken()){ alert('로그인이 필요합니다.'); return; }
   var folderId=(targetOverride!==undefined)?targetOverride:(window._mvCurFolder||null);
   _mvDoUploads(files.map(function(f){ return {file:f, folderId:folderId}; }), 0);
@@ -11507,7 +11503,7 @@ window.mysVaultUpload=mysVaultUpload;
 
 /* 폴더 picker (디렉터리 선택). webkitRelativePath로 계층 복원. */
 function mysVaultPickFolder(){
-  if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
+  if(_mvRoGuard()) return;
   if(!_mvUploadHerePrompt()) return;
   var inp=document.getElementById('mys-vault-dirinput'); if(!inp) return;
   /* 작업1 검증: HTML 속성만으론 디렉터리 모드 미적용 사례 → 클릭 직전 JS 프로퍼티로 확정(폴더 선택 대화상자 강제) */
@@ -11544,7 +11540,6 @@ async function _mvCreateFolderRow(parentId, name, depth, owner, token){
 }
 /* 폴더 계층 보존 업로드: dirs 생성(부모 먼저) → 매핑 → 파일 업로드. 빈 폴더도 생성. */
 async function _mvProcessUpload(items, baseOverride){
-  if(!window._mvConfirmed){ alert('개인정보 고지를 먼저 확인해 주세요.'); return; }
   var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   var base=(baseOverride!==undefined)?baseOverride:(window._mvCurFolder||null);
   var baseDepth=0; if(base){ var bf=(window._mvFolders||[]).filter(function(f){return f.id===base;})[0]; baseDepth=bf?(bf.depth||0):0; }
@@ -11756,6 +11751,7 @@ function mvVaultCloseMenu(){
 }
 function mvVaultMenu(e,type,id){
   e.stopPropagation(); e.preventDefault();
+  if(window._mvReadonly) return;  /* 읽기 전용 = 항목 메뉴(이름변경·이동·삭제) 비활성 */
   var m=document.getElementById('mv-ctxmenu'); if(!m) return;
   if(m._open&&m._id===id&&m._type===type){ mvVaultCloseMenu(); return; }
   document.removeEventListener('click',mvVaultCloseMenu); document.removeEventListener('keydown',mvVaultMenuEsc);
@@ -12757,13 +12753,23 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   async function _spVaultShow(host, scope){
     var v=document.getElementById('mys-vault'); if(!v){ if(host) host.innerHTML='<div class="sp-empty2">자료함을 불러올 수 없습니다.</div>'; return; }
     if(!window._spVaultHome) window._spVaultHome=v.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
+    if(typeof _mvRoClear==='function') _mvRoClear();  /* 이전 어드민 읽기전용 모드 잔상 해제 */
     var sid=null;
     if(scope==='team'||scope==='branch'){
       var me=window._cospMe||{};
-      var need=(scope==='team')?!me.team_id:!me.branch_id;
+      var need=(scope==='team')?(!me.team_id||!me.role):(!me.branch_id||!me.role);
       if(need && typeof _cospLoadMe==='function'){ try{ me=(await _cospLoadMe())||{}; }catch(e){ me=window._cospMe||{}; } }  /* os_user에 없으면 DB에서 직접 조회(users.id=auth.uid) */
       sid=(scope==='team')?(me.team_id||null):(me.branch_id||null);
-      if(!sid){ if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.6">'+(scope==='team'?'팀':'지점')+' 소속 정보가 없어 자료실을 열 수 없어요.<br>소속이 등록되면 이용할 수 있어요.</div>'; if(typeof _mvScopeSet==='function') _mvScopeSet('personal',null); return; }
+      if(!sid){
+        var _g=(scope==='team')?'팀':'지점';
+        if(me&&me.role==='admin'){
+          /* 어드민(창시자)은 소속이 없어 평상시 자료실 미열람 — 공지(지점방/팀방)와 동일하게 '사고 대응' 토글로 전체 열람 */
+          if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.7">어드민(창시자)은 평상시 '+_g+' 자료실을 열람하지 않습니다.<br>(자료실 구조는 검증용으로 표시됩니다)<br><button class="osws-newbtn" style="margin-top:14px" onclick="_spVaultAdminAll(\''+scope+'\')">전체 '+_g+' 자료실 열람 (사고 대응)</button></div>';
+        } else {
+          if(host) host.innerHTML=_spHead()+'<div class="sp-empty2" style="padding:24px 12px;line-height:1.6">'+_g+' 소속 정보가 없어 자료실을 열 수 없어요.<br>소속이 등록되면 이용할 수 있어요.</div>';
+        }
+        if(typeof _mvScopeSet==='function') _mvScopeSet('personal',null); return;
+      }
       if(typeof _mvScopeSet==='function') _mvScopeSet(scope, sid);
     } else { if(typeof _mvScopeSet==='function') _mvScopeSet('personal', null); }
     if(host){ host.innerHTML=_spHead(); host.appendChild(v); }
@@ -12778,10 +12784,39 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     if(typeof mysVaultLoadFiles==='function') mysVaultLoadFiles(window._mvCurFolder);
   }
   function _spVaultRestore(){
+    if(typeof _mvRoClear==='function') _mvRoClear();  /* 읽기전용 모드 해제(다른 노드 전환 시 잔상 방지) */
     var v=document.getElementById('mys-vault'), home=window._spVaultHome;
     if(v && home && v.parentNode!==home){ v.style.display='none'; home.appendChild(v); }
   }
   window._spVaultShow=_spVaultShow; window._spVaultRestore=_spVaultRestore;
+  /* 어드민 사고 대응 — 전 팀/지점 자료실 읽기 전용 열람. 공지(cospAdminAll)와 동일 모델(전체 열람), scope_id 무관. */
+  async function _spVaultAdminAll(scope){
+    var host=document.getElementById('spContent');
+    var v=document.getElementById('mys-vault'); if(!v){ if(host) host.innerHTML='<div class="sp-empty2">자료함을 불러올 수 없습니다.</div>'; return; }
+    if(!window._spVaultHome) window._spVaultHome=v.parentNode;
+    window._mvReadonly=true;
+    if(typeof _mvScopeSet==='function') _mvScopeSet(scope, null, true);  /* adminAll = scope_id 없이 전체 */
+    if(host){ host.innerHTML=_spHead(); host.appendChild(v); }
+    v.style.display='flex'; v.classList.add('mv-ro');
+    /* 사고대응 배너 + '평상시로' 복귀 */
+    var _g=(scope==='team')?'팀':'지점';
+    var old=v.querySelector('.mv-admin-banner'); if(old) old.remove();
+    var bn=document.createElement('div'); bn.className='mv-admin-banner';
+    bn.innerHTML='사고 대응 모드 — 전 '+_g+' 자료실 열람 중 (읽기 전용) <button type="button" onclick="_spVaultAdminExit(\''+scope+'\')">평상시로</button>';
+    v.insertBefore(bn, v.firstChild);
+    window._mysCat='자료함';
+    if(typeof _mvApplyVaultNotice==='function') _mvApplyVaultNotice(scope);
+    window._mvCurFolder=null;
+    if(window._mvView===undefined){ try{ window._mvView=localStorage.getItem('os_mv_view')||'grid'; }catch(e){ window._mvView='grid'; } }
+    if(typeof _mvViewSyncBtns==='function') _mvViewSyncBtns();
+    if(typeof mysVaultLoadFolders==='function') mysVaultLoadFolders();
+    if(typeof mysVaultLoadFiles==='function') mysVaultLoadFiles(window._mvCurFolder);
+  }
+  function _spVaultAdminExit(scope){
+    if(typeof _spVaultRestore==='function') _spVaultRestore();  /* v를 라이브러리로 회수(host.innerHTML 파괴 방지) + 읽기전용 해제 */
+    if(typeof _spVaultShow==='function') _spVaultShow(document.getElementById('spContent'), scope);  /* 평상시(어드민 미열람 안내) 화면 복귀 */
+  }
+  window._spVaultAdminAll=_spVaultAdminAll; window._spVaultAdminExit=_spVaultAdminExit;
   /* 스크립트(·메모) 노드 = 라이브러리 목록뷰(#mys-split) 필터 상태를 우측 패널로 이동(inplace). #mys-split는 전체/스크립트/메모 공유 → cat으로 필터. */
   function _spSplitShow(host, cat){
     var sp=document.getElementById('mys-split'); if(!sp){ if(host) host.innerHTML='<div class="sp-empty2">'+cat+'을(를) 불러올 수 없습니다.</div>'; return; }
