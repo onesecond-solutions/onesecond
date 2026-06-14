@@ -101,8 +101,92 @@ Deno.serve(async (req: Request) => {
     const cr = r2.headers.get("content-range"); if (cr) remaining = parseInt(cr.split("/")[1] || "-1", 10);
   } catch (_e) {}
 
-  return json({ picked: rows.length, ok, empty, failed, remaining });
+  // ── 자료실 파일(myspace_files) OCR — Phase A (2026-06-14) ─────────────────
+  //   ocr_status is null(미처리) + PDF/이미지 + storage_path 있는 행 N건.
+  //   private 'myspace' 버킷 → service_role 서명URL 생성 → ocr-extract → search_text 적재.
+  //   스코프(personal/team/branch) 격리는 검색 시 사용자 토큰 RLS가 자동 보장(여기선 적재만).
+  //   멱등: 성공='done' / 빈추출='empty' / 비대상 타입='skip' 마킹 → 재선택 방지.
+  const files = await processMyspaceFiles();
+
+  return json({ picked: rows.length, ok, empty, failed, remaining, files });
 });
+
+// PDF/이미지 판별 (Gemini 직접 OCR 대상). office류는 후순위(skip).
+function isOcrTarget(mime: string, ext: string): boolean {
+  const m = (mime || "").toLowerCase(); const e = (ext || "").toLowerCase().replace(/^\./, "");
+  if (m === "application/pdf" || m.startsWith("image/")) return true;
+  return ["pdf", "png", "jpg", "jpeg", "webp", "gif", "bmp", "tif", "tiff", "heic", "heif"].indexOf(e) >= 0;
+}
+
+async function processMyspaceFiles() {
+  const out = { picked: 0, ok: 0, empty: 0, failed: 0, skip: 0, remaining: -1 };
+  let rows: Array<{ id: string; storage_path: string; mime_type: string | null; ext: string | null; original_name: string | null }> = [];
+  try {
+    const q = "myspace_files?select=id,storage_path,mime_type,ext,original_name"
+            + "&ocr_status=is.null&storage_path=not.is.null&deleted_at=is.null&limit=" + BATCH;
+    const r = await rest(q);
+    if (!r.ok) { (out as any).error = "files 조회 실패 " + r.status; return out; }
+    rows = await r.json();
+  } catch (e) { (out as any).error = "files 조회 오류 " + String(e); return out; }
+
+  out.picked = rows.length;
+  for (const f of rows) {
+    try {
+      // 비대상 타입(office류 등) → skip 마킹(재선택 방지)
+      if (!isOcrTarget(f.mime_type || "", f.ext || "")) {
+        await patchFile(f.id, { ocr_status: "skip" }); out.skip++; continue;
+      }
+      // private 'myspace' 버킷 서명URL (service_role)
+      const enc = f.storage_path.split("/").map(encodeURIComponent).join("/");
+      const sg = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/myspace/${enc}`, {
+        method: "POST",
+        headers: { apikey: SERVICE_ROLE, Authorization: `Bearer ${SERVICE_ROLE}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ expiresIn: 3600 }),
+      });
+      const sj = await sg.json().catch(() => ({}));
+      const signed = sj && typeof sj.signedURL === "string" ? sj.signedURL : "";
+      if (!sg.ok || !signed) { out.failed++; console.error("[ocr-batch/files] 서명 실패", f.id, sg.status); continue; }
+      const fileUrl = `${SUPABASE_URL}/storage/v1${signed}`;
+
+      const ex = await fetch(`${SUPABASE_URL}/functions/v1/ocr-extract`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_ROLE}` },
+        body: JSON.stringify({ fileUrl }),
+      });
+      const j = await ex.json().catch(() => ({}));
+      if (!ex.ok) { out.failed++; console.error("[ocr-batch/files] extract 실패", f.id, ex.status, j?.error); continue; }
+      const text = (j && typeof j.text === "string") ? j.text : "";
+
+      if (text.trim().length) {
+        // 파일명 + 추출본문 → search_text (둘 다 검색되게). 'done' 마킹.
+        const name = (f.original_name || "").trim();
+        const merged = (name ? name + "\n" : "") + text;
+        await patchFile(f.id, { search_text: merged, ocr_status: "done" });
+        out.ok++;
+      } else {
+        await patchFile(f.id, { ocr_status: "empty" });
+        out.empty++;
+      }
+    } catch (e) { out.failed++; console.error("[ocr-batch/files] 처리 오류", f.id, String(e)); }
+  }
+
+  try {
+    const r2 = await rest("myspace_files?select=id&ocr_status=is.null&storage_path=not.is.null&deleted_at=is.null",
+      { headers: { Prefer: "count=exact", Range: "0-0" } });
+    const cr = r2.headers.get("content-range"); if (cr) out.remaining = parseInt(cr.split("/")[1] || "-1", 10);
+  } catch (_e) {}
+  return out;
+}
+
+async function patchFile(id: string, patch: Record<string, unknown>) {
+  const up = await rest("myspace_files?id=eq." + encodeURIComponent(id), {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify(patch),
+  });
+  if (!(up.ok || up.status === 204)) console.error("[ocr-batch/files] UPDATE 실패", id, up.status);
+  return up;
+}
 
 // ── 배포 NOTE ──────────────────────────────────────────────
 // 1) source_pdf_url 이 private(서명 필요/만료) URL이면 ocr-extract fetch 가 403 → failed.
