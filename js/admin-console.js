@@ -86,7 +86,6 @@
     script_view:'스크립트를 조회했습니다'
   };
 
-  function _isoAgo(ms){ return new Date(Date.now()-ms).toISOString(); }
   function _kstMidnightISO(){
     var k = new Date(Date.now()+9*3600000);
     return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).toISOString();
@@ -105,32 +104,7 @@
     catch(e){ return []; }
   }
 
-  function _task(tag,cls,label,value,unit,view,btn){
-    return '<div class="ac-task '+cls+'"><div class="ac-task-meta">'+
-      '<span class="ac-badge '+cls+'">'+tag+'</span>'+
-      '<div class="ac-task-label">'+label+'</div>'+
-      '<div class="ac-task-value">'+(value==null?'—':value)+unit+'</div></div>'+
-      '<button class="ac-btn" onclick="acSwitchView(\''+view+'\')">'+esc(btn)+'</button></div>';
-  }
-  function renderTaskQueue(p,u,s){
-    var el=document.getElementById('ac-task-queue'); if(!el) return;
-    el.innerHTML =
-      _task(p>0?'CRITICAL':'NORMAL', p>0?'critical':'normal', '승인 대기', p, '건', 'approvals', '승인하러 가기')+
-      _task(u>0?'HIGH':'NORMAL', u>0?'high':'normal', '지점 미배정', u, '명', 'users', '사용자 관리')+
-      _task(s>0?'CRITICAL':'NORMAL', s>0?'critical':'normal', '장기 미처리(24h+)', s, '건', 'approvals', '확인');
-  }
-  function renderRisk(p,u,s){
-    var el=document.getElementById('ac-risk-alerts'); if(!el) return;
-    el.classList.remove('ac-card-empty');
-    var items=[];
-    if(s>0) items.push(['critical','CRITICAL','24시간 초과 미처리 승인 '+s+'건','approvals']);
-    if(u>0) items.push(['high','HIGH','지점 미배정 사용자 '+u+'명','users']);
-    if(p>0) items.push(['medium','MEDIUM','승인 대기 '+p+'건','approvals']);
-    if(!items.length){ el.innerHTML='<div class="ac-card-empty"><i data-lucide="shield-check"></i>현재 위험 신호 없음</div>'; return; }
-    el.innerHTML=items.map(function(i){
-      return '<div class="ac-risk-row ac-clk" onclick="acGoSec(\''+i[3]+'\')"><span class="ac-badge '+i[0]+'">'+i[1]+'</span><span>'+esc(i[2])+'</span></div>';
-    }).join('');
-  }
+  /* 옛 Task Queue·Risk Alert 위젯 렌더 제거 — 관제센터 상황판으로 대체 (2026-06-15) */
   function _hhmm(iso){ var t=new Date(iso); if(isNaN(t.getTime())) return '--:--';
     var h=t.getHours(), m=t.getMinutes(); return (h<10?'0':'')+h+':'+(m<10?'0':'')+m; }
   // 운영 피드 = 시각 + severity 배지 + 변환 문장 (actor는 user_id→name JOIN)
@@ -157,32 +131,7 @@
         '<span>'+sentence+'</span></div>';
     }).join('');
   }
-  function _stat(l,v,sec){
-    var attr = sec ? 'class="ac-stat ac-clk" onclick="acGoSec(\''+sec+'\')"' : 'class="ac-stat"';
-    return '<div '+attr+'><div class="ac-stat-label">'+l+'</div>'+
-      '<div class="ac-stat-value">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
-  function renderService(total,active,nt,posts,scripts,lib){
-    var el=document.getElementById('ac-service-overview'); if(!el) return;
-    el.classList.remove('ac-card-empty');
-    el.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">'+
-      _stat('총 사용자',total,'users')+_stat('활성',active,'users')+_stat('오늘 신규',nt,'users')+
-      _stat('게시글',posts,'posts')+_stat('스크립트',scripts,'library')+_stat('자료',lib,'library')+'</div>';
-  }
-  function renderBranches(branches,users,unassigned){
-    var el=document.getElementById('ac-branch-overview'); if(!el) return;
-    el.classList.remove('ac-card-empty');
-    var cnt={}; (users||[]).forEach(function(u){ if(u.branch_id) cnt[u.branch_id]=(cnt[u.branch_id]||0)+1; });
-    var rows=(branches||[]).map(function(b){
-      var n=cnt[b.id]||0;
-      var badge=(n===0)?' <span class="ac-badge high">인원 0</span>':'';
-      return '<div class="ac-brow" onclick="acGoSec(\'branches\')" style="display:flex;justify-content:space-between;padding:7px 8px;border-bottom:1px solid var(--bd);">'+
-        '<span>'+esc(b.name)+' <span style="color:var(--tf);font-size:12px;">'+esc(b.ga_org_name||'')+'</span></span>'+
-        '<span>'+n+'명'+badge+'</span></div>';
-    }).join('');
-    el.innerHTML='<div style="margin-bottom:8px;color:var(--tf);font-size:12px;">전체 '+
-      (branches?branches.length:0)+'개 지점 · 미배정 '+(unassigned==null?'—':unassigned)+'명</div>'+
-      (rows || '<div class="ac-card-empty">지점 없음</div>');
-  }
+  /* 옛 Service·Branch Overview 위젯 렌더 제거 — 관제센터 상황판·조직트리로 대체 (2026-06-15) */
 
   // ── 사용자 view — 칩 필터 + 검색 + 페이지네이션 + 액션(권한 변경·정지/해제) ──
   var _usersAll=[], _usersFilter='all', _uq='', _uPage=0;
