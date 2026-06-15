@@ -909,19 +909,27 @@
         '<td style="color:'+(stale?'var(--warn)':'var(--ts)')+'">'+esc(seen)+'</td>'+
         '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
     }).join('');
-    var metaTeam = isTeam ? '' : '<span>팀 <b>'+teamCnt+'</b></span>';
-    var uc=_CT.userContent||{}; var content7=arr.reduce(function(s,u){ return s+(uc[u.id]||0); },0);
+    /* 계층별 하위 단위 집계 (회사>지점>팀>사용자>로그인중). 로그인중=오늘 접속(실시간 세션 부재 근사) */
+    var _mid=_kstMidnightISO(); var loginN=0; arr.forEach(function(u){ var t=ls[u.id]; if(t && t>=_mid) loginN++; });
+    var cells;
+    if(bid==='_all'){
+      var coN=(_CT.companies||[]).filter(function(c){ return (_CT.byCompany[c.id]||[]).length; }).length;
+      cells=[['회사',coN],['지점',(_CT.branches||[]).length],['팀',teamCnt],['사용자',arr.length],['로그인중',loginN]];
+    } else if(bid.indexOf('C|')===0){
+      var _cid=bid.slice(2); var _brs=(_cid==='_noco')?(_CT.byCompany['_noco']||[]):(_CT.byCompany[_cid]||[]);
+      cells=[['지점',_brs.length],['팀',teamCnt],['사용자',arr.length],['로그인중',loginN]];
+    } else if(isTeam){
+      cells=[['사용자',arr.length],['로그인중',loginN]];
+    } else {
+      cells=[['팀',teamCnt],['사용자',arr.length],['로그인중',loginN]];
+    }
     el.innerHTML =
       '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div>'+
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><h2>'+esc(name)+'</h2>'+
         ((_ctHost.tree==='ac-org-tree')?'<button class="ac-btn ac-btn-sm" onclick="acGoSec(\'orgtree\')">운영 탭에서 관리 →</button>':'')+'</div>'+
-        '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span>'+metaTeam+
-        '<span>7일 활성 <b>'+act7+'</b></span>'+
-        '<span>7일 게시글 <b>'+content7+'</b></span>'+
-        '<span>설계사 <b>'+(roleCnt['ga_member']||0)+'</b></span></div></div>'+
-      '<div class="act-mini">'+
-        _ctMc('인원', arr.length)+_ctMc('7일 활성', act7)+
-        _ctMc('실장', roleCnt['ga_manager']||0)+_ctMc('지점장', roleCnt['ga_branch_manager']||0)+
+        '<div class="act-meta">'+cells.map(function(c){ return '<span>'+c[0]+' <b>'+c[1]+'</b></span>'; }).join('')+'</div></div>'+
+      '<div class="act-mini" style="grid-template-columns:repeat('+cells.length+',1fr)">'+
+        cells.map(function(c){ return _ctMc(c[0], c[1]); }).join('')+
       '</div>'+
       '<div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
         (rows||'<tr><td colspan="5" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
