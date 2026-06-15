@@ -2038,7 +2038,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav ins-show" onclick="_navView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="_navView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
-    <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저룸</span></div>
+    <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저방</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
       <div class="nav" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
@@ -9824,7 +9824,7 @@ window._ovDown=_ovDown; window._ovClick=_ovClick;
 /* === 라이브러리 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(ctx, edit){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
-  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'스크립트 수정'):((ctx==='team')?'매니저룸 글쓰기':'라이브러리에 저장');
+  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'스크립트 수정'):((ctx==='team')?'매니저방 글쓰기':'라이브러리에 저장');
   /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
   var _ss=document.getElementById('mysWriteScrStage');
   if(_ss && !_ss.dataset.loaded && typeof SCRIPTS_GROUPS!=='undefined'){
@@ -12878,7 +12878,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
               </div>
             </div>
 
-            <div class="sp-node sp-leaf sp-mgr" data-k="mrroom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>매니저룸</div>
+            <div class="sp-node sp-leaf sp-mgr" data-k="mrroom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>매니저방</div>
 
             <div class="sp-node sp-leaf" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
 
@@ -13362,7 +13362,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   window._spSplitShow=_spSplitShow; window._spSplitRestore=_spSplitRestore;
   /* 매니저룸 노드 = 팀원관리(#mr-main)를 우측 패널로 inplace 이동 (기능·데이터 그대로). 실장·지점장·어드민만 노드 노출(is-mgr) */
   function _spMrShow(host){
-    var m=document.getElementById('mr-main'); if(!m){ if(host) host.innerHTML='<div class="sp-empty2">매니저룸을 불러올 수 없습니다.</div>'; return; }
+    var m=document.getElementById('mr-main'); if(!m){ if(host) host.innerHTML='<div class="sp-empty2">매니저방을 불러올 수 없습니다.</div>'; return; }
     if(!window._spMrHome) window._spMrHome=m.parentNode;
     if(host){ host.innerHTML=_spHead(); host.appendChild(m); }
     m.style.display='';
