@@ -173,6 +173,19 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .org-add:hover{background:var(--s2);}
 .org-view-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:0.5px solid var(--bd);font-size:0.9rem;color:var(--tp);}
 .org-add-sm{margin-left:auto;padding:6px 10px;border:1px dashed var(--ac);border-radius:8px;color:var(--ac);font-size:0.75rem;font-weight:700;cursor:pointer;background:none;}
+.mr-view-head{display:flex;align-items:center;gap:8px;padding:6px 4px 13px;border-bottom:0.5px solid var(--bd);font-size:0.86rem;font-weight:700;color:var(--tp);margin-bottom:6px;}
+.mr-view-head b{font-weight:800;}
+.mr-presence{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;flex:0 0 8px;}
+.mr-presence.on{background:#2F9E68;box-shadow:0 0 0 3px rgba(47,158,104,.22);}
+.mr-presence.off{background:#cfcfd6;}
+.mr-tbl{width:100%;border-collapse:collapse;font-size:0.82rem;}
+.mr-tbl th{text-align:left;font-size:0.7rem;color:var(--tf);font-weight:600;padding:8px 10px;border-bottom:0.5px solid var(--bd);}
+.mr-tbl td{padding:10px;border-bottom:0.5px solid var(--bd);vertical-align:middle;}
+.mr-tbl tr:last-child td{border-bottom:none;}
+.mr-tbl .mr-presence{margin-right:7px;}
+.mr-role{font-size:0.7rem;color:var(--tf);background:color-mix(in srgb,var(--bd) 45%,transparent);padding:2px 8px;border-radius:5px;}
+.mr-stale{color:var(--warn);}
+.mr-sub{color:var(--tf);}
 .org-grp{border-bottom:0.5px solid var(--bd);}
 .org-grp-h{padding:10px 14px;font-size:0.8125rem;font-weight:700;color:var(--ts);cursor:pointer;display:flex;align-items:center;gap:6px;}
 .org-grp-arrow{transition:transform .15s;font-size:0.75rem;}
@@ -7641,7 +7654,7 @@ async function loadBranchOrg(){
   window._MR_BID=bId;
   try{
     var tr=await window.db.fetch('/rest/v1/teams?branch_id=eq.'+bId+'&is_active=eq.true&select=id,name&order=name');
-    var ur=await window.db.fetch('/rest/v1/users?branch_id=eq.'+bId+'&role=like.ga_*&select=id,name,role,team_id');
+    var ur=await window.db.fetch('/rest/v1/users?branch_id=eq.'+bId+'&role=like.ga_*&select=id,name,role,team_id,status,created_at,last_seen_at');
     var teams=tr.ok?await tr.json():[]; var users=ur.ok?await ur.json():[];
     window._mrTeams=teams; window._mrUsers=users;
     var html='';
@@ -7668,7 +7681,7 @@ async function loadManagerOrg(){
   window._MR_BID=bId;
   try{
     var tr=await window.db.fetch('/rest/v1/teams?branch_id=eq.'+bId+'&is_active=eq.true&select=id,name');
-    var ur=await window.db.fetch('/rest/v1/users?branch_id=eq.'+bId+'&role=like.ga_*&select=id,name,role,team_id');
+    var ur=await window.db.fetch('/rest/v1/users?branch_id=eq.'+bId+'&role=like.ga_*&select=id,name,role,team_id,status,created_at,last_seen_at');
     var teams=tr.ok?await tr.json():[]; var users=ur.ok?await ur.json():[];
     window._mrTeams=teams; window._mrUsers=users;
     var tname={}; teams.forEach(function(t){ tname[t.id]=t.name; });
@@ -7684,6 +7697,9 @@ async function loadManagerOrg(){
   }catch(e){ org.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
 window.loadManagerOrg=loadManagerOrg;
+function _mrMidnight(){ var k=new Date(Date.now()+9*3600000); return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).getTime(); }
+function _mrRel(iso){ if(!iso) return '기록 없음'; var m=(Date.now()-new Date(iso).getTime())/60000; if(m<1)return'방금'; if(m<60)return Math.floor(m)+'분 전'; if(m<1440)return Math.floor(m/60)+'시간 전'; return Math.floor(m/1440)+'일 전'; }
+/* 운영 탭 구성원 현황 표 차용: 로그인 상태등·직책·마지막 접속·가입 */
 function mrSelectTeam(teamId,el){
   var items=document.querySelectorAll('#mr-org-list .org-team'); for(var i=0;i<items.length;i++) items[i].classList.remove('on');
   if(el) el.classList.add('on');
@@ -7691,12 +7707,23 @@ function mrSelectTeam(teamId,el){
   var users=window._mrUsers||[], teams=window._mrTeams||[];
   var t=null; for(var j=0;j<teams.length;j++) if(teams[j].id===teamId) t=teams[j];
   var mem=users.filter(function(u){return u.team_id===teamId;});
-  var mgrs=mem.filter(function(u){return u.role==='ga_manager';});
-  var rest=mem.filter(function(u){return u.role!=='ga_manager';});
-  var html='<div class="org-view-head"><b>'+_sEsc(t?t.name:'')+'</b> · 구성원 '+mem.length+'명<button class="org-add-sm" onclick="mrInvite(\'lead\')">+ 팀장 추가(초대)</button></div>';
-  html+=_orgGroup('실장 '+mgrs.length+'명', mgrs);
-  html+=_orgGroup('팀원 '+rest.length+'명', rest);
-  view.innerHTML=html;
+  var RL=window.ROLE_LABEL||{};
+  var now=Date.now(), wk=7*86400000, mid=_mrMidnight();
+  var online=mem.filter(function(u){ var l=u.last_seen_at; return l&&new Date(l).getTime()>=mid; }).length;
+  /* 로그인중 상단 정렬 */
+  var sorted=mem.slice().sort(function(a,b){ var ao=(a.last_seen_at&&new Date(a.last_seen_at).getTime()>=mid)?1:0, bo=(b.last_seen_at&&new Date(b.last_seen_at).getTime()>=mid)?1:0; return bo-ao; });
+  var rows=sorted.map(function(u){
+    var lsv=u.last_seen_at; var on=!!(lsv&&new Date(lsv).getTime()>=mid);
+    var stale=!lsv||((now-new Date(lsv).getTime())>=wk);
+    return '<tr><td><span class="mr-presence '+(on?'on':'off')+'"></span>'+_sEsc(u.name||'(이름 없음)')+'</td>'+
+      '<td><span class="mr-role">'+_sEsc(RL[u.role]||u.role||'-')+'</span></td>'+
+      '<td class="'+(stale?'mr-stale':'')+'">'+_sEsc(_mrRel(lsv))+'</td>'+
+      '<td class="mr-sub">'+_sEsc((u.created_at||'').slice(0,10))+'</td></tr>';
+  }).join('');
+  view.innerHTML='<div class="mr-view-head"><b>'+_sEsc(t?t.name:'')+'</b> · 구성원 '+mem.length+'명 · <span class="mr-presence on"></span>로그인중 '+online+
+    '<button class="org-add-sm" onclick="mrInvite(\'lead\')">+ 팀장 추가(초대)</button></div>'+
+    '<table class="mr-tbl"><thead><tr><th>구성원</th><th>직책</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="4" style="text-align:center;color:var(--tf,#888);padding:18px">구성원이 없습니다</td></tr>')+'</tbody></table>';
 }
 window.mrSelectTeam=mrSelectTeam;
 function _orgGroup(label,arr){
