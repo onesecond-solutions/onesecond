@@ -661,7 +661,7 @@
   // ════ 운영 관제센터 (전국 상황판 + 조직 트리 + 드릴다운) — 2026-06-15 ════
   //  · 전부 실데이터(users·branches·activity_logs). 추측 없음. RLS상 admin 전체 조회.
   //  · 건강도 색 = 인원수 기준 1차(0=빨강·<3=노랑·그외 녹색). 활동 가중 건강도는 후속.
-  var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{}, companies:[], byCompany:{} };
+  var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{}, companies:[], byCompany:{}, userContent:{} };
   function _ctMc(l,v){ return '<div class="act-mc"><div class="l">'+l+'</div><div class="v">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
   function _ctHealth(n){ if(!n) return 'r'; if(n<3) return 'y'; return 'g'; }
   /* 건강도 = 인원 + 7일 실활성 + 리더십. 로그 인프라 비면 인원 기준 fallback(초기 오판 방지) */
@@ -858,10 +858,12 @@
         '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
     }).join('');
     var metaTeam = isTeam ? '' : '<span>팀 <b>'+teamCnt+'</b></span>';
+    var uc=_CT.userContent||{}; var content7=arr.reduce(function(s,u){ return s+(uc[u.id]||0); },0);
     el.innerHTML =
       '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div><h2>'+esc(name)+'</h2>'+
         '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span>'+metaTeam+
         '<span>7일 활성 <b>'+act7+'</b></span>'+
+        '<span>7일 게시글 <b>'+content7+'</b></span>'+
         '<span>설계사 <b>'+(roleCnt['ga_member']||0)+'</b></span></div></div>'+
       '<div class="act-mini">'+
         _ctMc('인원', arr.length)+_ctMc('7일 활성', act7)+
@@ -894,6 +896,12 @@
       if(!lastSeen[l.user_id]) lastSeen[l.user_id]=l.created_at;  /* desc 정렬 → 첫 등장 = 최근 접속 */
       if(l.created_at>=_mid) ts[l.user_id]=1;
     });
+
+    // 콘텐츠 활성도: 최근 7일 게시글 → 작성자별 집계(author_id→user, 지점 매핑은 드릴다운에서 arr 합산)
+    var recentPosts=[];
+    try{ recentPosts=await _rows('posts?created_at=gte.'+new Date(Date.now()-7*86400000).toISOString()+'&select=author_id&limit=8000'); }catch(e){}
+    var userContent={}; recentPosts.forEach(function(p){ if(p.author_id) userContent[p.author_id]=(userContent[p.author_id]||0)+1; });
+    _CT.userContent=userContent;
 
     var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
     var byCompany={}; (branches||[]).forEach(function(b){ var k=b.company_id||'_noco'; (byCompany[k]=byCompany[k]||[]).push(b); });
