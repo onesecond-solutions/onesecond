@@ -7624,7 +7624,9 @@ async function loadBranchCard(){
   el.innerHTML='<div class="bm-card"><div class="bm-role">지점장</div><div class="bm-name">불러오는 중…</div></div>';
   try{
     if(!window.db||!window.db.fetch){ el.innerHTML=''; return; }
-    var res=await window.db.fetch('/rest/v1/users?role=eq.ga_branch_manager&select=id,name,company&order=name&limit=1');
+    var bId=await _mrBranchId();
+    if(!bId){ el.innerHTML='<div class="bm-card"><div class="bm-role">지점장</div><div class="bm-name">미지정</div></div>'; return; }
+    var res=await window.db.fetch('/rest/v1/users?branch_id=eq.'+bId+'&role=eq.ga_branch_manager&select=id,name,company&order=name&limit=1');
     var rows=res.ok?await res.json():[];
     if(!rows.length){ el.innerHTML='<div class="bm-card"><div class="bm-role">지점장</div><div class="bm-name">미지정</div></div>'; return; }
     var u=rows[0];
@@ -7635,6 +7637,13 @@ window.loadBranchCard=loadBranchCard;
 /* 로그인 매니저의 자기 지점 branch_id 조회 (소속 없음/admin = null → 안내). 하드코딩 제거 2026-06-15 */
 async function _mrBranchId(){
   try{
+    /* 어드민 = 전체 열람·레이아웃 표시(막지 않음). 첫 활성 지점 기본 / 매니저 = 자기 지점 */
+    var role=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+    if(role==='admin'){
+      var br=await window.db.fetch('/rest/v1/branches?is_active=eq.true&select=id&order=name&limit=1');
+      if(br.ok){ var bj=await br.json(); if(bj&&bj[0]) return bj[0].id; }
+      return null;
+    }
     var meId=(window.AppState&&window.AppState.userId)||((typeof _getOwnerId==='function')&&_getOwnerId());
     if(!meId) return null;
     var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(meId)+'&select=branch_id');
