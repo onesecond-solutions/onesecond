@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영 관제센터 — 디자인 시안</title>
+<style>
+  :root{
+    --bg:#FAFAFB; --card:#FFFFFF; --line:#ECECF1; --line2:#F4F4F7;
+    --ink:#16161D; --muted:#6B6B78; --faint:#9A9AA6;
+    --accent:#4F46E5; --accent-soft:#EEF0FF;
+    --danger:#E5484D; --danger-soft:#FDECEC;
+    --ok:#2F9E68; --ok-soft:#E8F6EE;
+    --warn:#D9890B; --warn-soft:#FCF3E2;
+    --r:12px; --r-sm:8px;
+    --sh:0 1px 2px rgba(16,16,29,.04), 0 2px 6px rgba(16,16,29,.05);
+    --sh-lg:0 4px 16px rgba(16,16,29,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,'Segoe UI',Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45}
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 32px 60px}
+
+  /* ── 헤더 ── */
+  .top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+  .top h1{font-size:22px;font-weight:700;margin:0;letter-spacing:-.02em}
+  .top .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .top .badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);
+    color:var(--accent);font-weight:600;font-size:11.5px;padding:5px 11px;border-radius:999px;letter-spacing:.01em}
+  .top .right{display:flex;align-items:center;gap:14px;color:var(--faint);font-size:12.5px}
+  .dot-live{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft);display:inline-block;margin-right:6px}
+  .sample{font-size:11px;color:var(--faint);background:#fff;border:1px dashed var(--line);padding:4px 9px;border-radius:6px}
+
+  /* ── 전국 상황판 ── */
+  .board{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 14px;box-shadow:var(--sh);position:relative;overflow:hidden}
+  .kpi .lab{font-size:12px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px}
+  .kpi .ico{width:14px;height:14px;opacity:.55}
+  .kpi .num{font-size:28px;font-weight:700;letter-spacing:-.03em;margin-top:9px;line-height:1}
+  .kpi .num small{font-size:14px;font-weight:600;color:var(--faint);margin-left:2px}
+  .kpi .delta{font-size:11.5px;font-weight:600;margin-top:8px;display:inline-flex;align-items:center;gap:3px}
+  .delta.up{color:var(--ok)} .delta.down{color:var(--danger)} .delta.flat{color:var(--faint)}
+  .kpi.alert{border-color:#F6D5D6} .kpi.alert .num{color:var(--danger)}
+  .kpi.alert::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--danger)}
+  .kpi.warn{border-color:#F0DDB6} .kpi.warn .num{color:var(--warn)}
+  .kpi.warn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--warn)}
+
+  /* ── 메인 2단 ── */
+  .main{display:grid;grid-template-columns:312px 1fr;gap:16px;align-items:start}
+
+  /* 조직 트리 */
+  .tree{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+  .tree .hd{padding:14px 16px;border-bottom:1px solid var(--line2);display:flex;align-items:center;justify-content:space-between}
+  .tree .hd b{font-size:13px;font-weight:700}
+  .tree .hd .cnt{font-size:11.5px;color:var(--faint)}
+  .tree .body{padding:8px 8px 12px;max-height:560px;overflow:auto}
+  .node{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;position:relative;user-select:none}
+  .node:hover{background:var(--line2)}
+  .node.sel{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .node.sel::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--accent)}
+  .node .caret{width:14px;color:var(--faint);font-size:10px;transition:transform .15s;flex:0 0 14px;text-align:center}
+  .node.open .caret{transform:rotate(90deg)}
+  .node.leaf .caret{visibility:hidden}
+  .node .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .node .hp{width:7px;height:7px;border-radius:50%;flex:0 0 7px}
+  .hp.g{background:var(--ok)} .hp.y{background:var(--warn)} .hp.r{background:var(--danger)} .hp.o{background:#D2D2DA}
+  .node .sm{font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .lvl1{padding-left:10px}.lvl2{padding-left:30px}.lvl3{padding-left:50px}
+  .children{display:none}.children.show{display:block}
+
+  /* 우측 드릴다운 */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);min-height:560px}
+  .p-hd{padding:20px 22px 18px;border-bottom:1px solid var(--line2)}
+  .p-hd .crumb{font-size:11.5px;color:var(--faint);margin-bottom:7px}
+  .p-hd .ttl{display:flex;align-items:center;gap:12px}
+  .p-hd h2{font-size:20px;font-weight:700;margin:0;letter-spacing:-.02em}
+  .health{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}
+  .health.g{background:var(--ok-soft);color:var(--ok)} .health.y{background:var(--warn-soft);color:var(--warn)} .health.r{background:var(--danger-soft);color:var(--danger)}
+  .p-hd .meta{display:flex;gap:18px;margin-top:12px;color:var(--muted);font-size:12.5px}
+  .p-hd .meta b{color:var(--ink);font-weight:600}
+
+  .mini{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 22px}
+  .mc{border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 14px;background:#fff}
+  .mc .l{font-size:11.5px;color:var(--muted)}
+  .mc .v{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:5px}
+  .mc .t{font-size:11px;color:var(--ok);font-weight:600;margin-top:4px}
+
+  .tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--line2)}
+  .tab{padding:11px 14px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-weight:500;margin-bottom:-1px}
+  .tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+  .tabpane{padding:18px 22px 24px;display:none}.tabpane.on{display:block}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:11.5px;color:var(--faint);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line2);letter-spacing:.01em}
+  td{padding:11px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .who{display:flex;align-items:center;gap:9px}
+  .av{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 28px}
+  .role{font-size:11px;color:var(--muted);background:var(--line2);padding:2px 8px;border-radius:5px;font-weight:500}
+  .bar{height:6px;border-radius:3px;background:var(--line2);width:88px;overflow:hidden;display:inline-block;vertical-align:middle}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#6366F1,#4F46E5)}
+  .ago{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums}
+
+  .feed{list-style:none;margin:0;padding:0}
+  .feed li{display:flex;align-items:flex-start;gap:11px;padding:11px 2px;border-bottom:1px solid var(--line2)}
+  .feed li:last-child{border-bottom:none}
+  .feed .tm{font-size:11.5px;color:var(--faint);width:42px;flex:0 0 42px;padding-top:1px;font-variant-numeric:tabular-nums}
+  .feed .ic{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 8px;background:var(--accent)}
+  .feed .ic.ok{background:var(--ok)}.feed .ic.warn{background:var(--warn)}
+  .feed .tx{font-size:13px}.feed .tx b{font-weight:600}
+
+  .risk{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:10px}
+  .risk .sev{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.02em}
+  .sev.h{background:var(--danger-soft);color:var(--danger)} .sev.m{background:var(--warn-soft);color:var(--warn)}
+  .risk .txt{flex:1;font-size:13px} .risk .go{font-size:12px;color:var(--accent);font-weight:600}
+
+  .spark{display:flex;align-items:flex-end;gap:3px;height:40px;margin-top:4px}
+  .spark i{flex:1;background:var(--accent-soft);border-radius:2px 2px 0 0}
+  .spark i.hi{background:var(--accent)}
+  .note{margin-top:26px;font-size:12px;color:var(--faint);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <h1>운영 관제센터 <span class="badge">전국 조직 관제</span></h1>
+      <div class="sub">원세컨드 전체 조직을 위에서 내려다보는 운영 콘솔</div>
+    </div>
+    <div class="right">
+      <span class="sample">디자인 시안 · 샘플 데이터</span>
+      <span><span class="dot-live"></span>실시간</span>
+    </div>
+  </div>
+
+  <!-- 전국 상황판 -->
+  <div class="board">
+    <div class="kpi">
+      <div class="lab">총 사용자</div>
+      <div class="num">542<small>명</small></div>
+      <div class="delta up">▲ 6 오늘 신규</div>
+    </div>
+    <div class="kpi">
+      <div class="lab">오늘 접속</div>
+      <div class="num">183<small>명</small></div>
+      <div class="delta up">34% 활성</div>
+    </div>
+    <div class="kpi">
+      <div class="lab">활성 지점</div>
+      <div class="num">17<small>/20</small></div>
+      <div class="delta flat">3개 비활성</div>
+    </div>
+    <div class="kpi alert">
+      <div class="lab">위험 지점</div>
+      <div class="num">3</div>
+      <div class="delta down">30일+ 무활동</div>
+    </div>
+    <div class="kpi warn">
+      <div class="lab">미배정 사용자</div>
+      <div class="num">8<small>명</small></div>
+      <div class="delta down">지점/팀 없음</div>
+    </div>
+    <div class="kpi warn">
+      <div class="lab">승인 대기</div>
+      <div class="num">12<small>건</small></div>
+      <div class="delta down">최장 2일</div>
+    </div>
+  </div>
+
+  <!-- 메인 -->
+  <div class="main">
+
+    <!-- 조직 트리 -->
+    <div class="tree">
+      <div class="hd"><b>조직 트리</b><span class="cnt">지점 20 · 팀 64</span></div>
+      <div class="body" id="tree">
+        <div class="node open lvl1" onclick="tg(this)"><span class="caret">▶</span><span class="nm">원세컨드 전체</span><span class="sm">542</span></div>
+        <div class="children show">
+
+          <div class="node open lvl2 sel" data-k="dw" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">더원지점</span><span class="hp g"></span><span class="sm">23</span></div>
+          <div class="children show">
+            <div class="node leaf lvl3" data-k="dw1" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">1팀</span><span class="hp g"></span><span class="sm">7</span></div>
+            <div class="node leaf lvl3" data-k="dw2" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">2팀</span><span class="hp g"></span><span class="sm">6</span></div>
+            <div class="node leaf lvl3" data-k="dw3" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">3팀</span><span class="hp y"></span><span class="sm">5</span></div>
+            <div class="node leaf lvl3" data-k="dw4" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">4팀</span><span class="hp g"></span><span class="sm">5</span></div>
+          </div>
+
+          <div class="node lvl2" data-k="gn" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">강남지점</span><span class="hp o"></span><span class="sm">31</span></div>
+          <div class="node lvl2" data-k="bd" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">분당지점</span><span class="hp g"></span><span class="sm">28</span></div>
+          <div class="node lvl2" data-k="pg" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">판교지점</span><span class="hp r"></span><span class="sm">12</span></div>
+          <div class="node lvl2" data-k="sw" onclick="pick(this,event)"><span class="caret">▶</span><span class="nm">수원지점</span><span class="hp g"></span><span class="sm">19</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 드릴다운 -->
+    <div class="panel">
+      <div class="p-hd">
+        <div class="crumb">원세컨드 전체 › <span id="crumb">더원지점</span></div>
+        <div class="ttl">
+          <h2 id="pname">더원지점</h2>
+          <span class="health g" id="phealth">건강도 92</span>
+        </div>
+        <div class="meta">
+          <span>팀 <b id="m-team">4</b></span>
+          <span>인원 <b id="m-people">23</b></span>
+          <span>오늘 접속 <b id="m-today">14</b></span>
+          <span>지점장 <b id="m-mgr">이은정</b></span>
+        </div>
+      </div>
+
+      <div class="mini">
+        <div class="mc"><div class="l">자료실 파일</div><div class="v" id="k-file">142</div><div class="t">▲ 9 / 7일</div></div>
+        <div class="mc"><div class="l">스크립트</div><div class="v" id="k-scr">87</div><div class="t">▲ 5 / 7일</div></div>
+        <div class="mc"><div class="l">다이어리</div><div class="v" id="k-diary">31</div><div class="t">▲ 12 / 7일</div></div>
+        <div class="mc"><div class="l">공유 활동</div><div class="v" id="k-share">24</div><div class="t">▲ 3 / 7일</div></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab on" onclick="tab(this,'mem')">구성원</div>
+        <div class="tab" onclick="tab(this,'act')">최근 활동</div>
+        <div class="tab" onclick="tab(this,'rsk')">위험</div>
+        <div class="tab" onclick="tab(this,'trd')">활동 추이</div>
+      </div>
+
+      <div class="tabpane on" id="mem">
+        <table>
+          <thead><tr><th>구성원</th><th>직책</th><th>최근 접속</th><th>활동량 (30일)</th></tr></thead>
+          <tbody>
+            <tr><td><div class="who"><div class="av">이은</div>이은정</div></td><td><span class="role">지점장</span></td><td><span class="ago">10분 전</span></td><td><span class="bar"><i style="width:94%"></i></span></td></tr>
+            <tr><td><div class="who"><div class="av">김민</div>김민수</div></td><td><span class="role">실장</span></td><td><span class="ago">1시간 전</span></td><td><span class="bar"><i style="width:81%"></i></span></td></tr>
+            <tr><td><div class="who"><div class="av">박서</div>박서연</div></td><td><span class="role">설계사</span></td><td><span class="ago">오늘 08:40</span></td><td><span class="bar"><i style="width:72%"></i></span></td></tr>
+            <tr><td><div class="who"><div class="av">정현</div>정현우</div></td><td><span class="role">설계사</span></td><td><span class="ago">어제</span></td><td><span class="bar"><i style="width:58%"></i></span></td></tr>
+            <tr><td><div class="who"><div class="av">최지</div>최지아</div></td><td><span class="role">스텝</span></td><td><span class="ago">3일 전</span></td><td><span class="bar"><i style="width:22%"></i></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tabpane" id="act">
+        <ul class="feed">
+          <li><span class="tm">09:43</span><span class="ic ok"></span><span class="tx"><b>이은정</b> 지점장이 로그인했습니다</span></li>
+          <li><span class="tm">09:21</span><span class="ic"></span><span class="tx"><b>박서연</b>님이 자료실에 <b>약관 3건</b>을 업로드했습니다</span></li>
+          <li><span class="tm">08:55</span><span class="ic"></span><span class="tx"><b>김민수</b> 실장이 팀 공지를 등록했습니다</span></li>
+          <li><span class="tm">08:40</span><span class="ic warn"></span><span class="tx"><b>정현우</b>님이 다이어리 일정 4건을 추가했습니다</span></li>
+          <li><span class="tm">어제</span><span class="ic"></span><span class="tx"><b>2팀</b> 스크립트 5건이 새로 공유되었습니다</span></li>
+        </ul>
+      </div>
+
+      <div class="tabpane" id="rsk">
+        <div class="risk"><span class="sev m">MEDIUM</span><span class="txt"><b>최지아</b>님 7일 이상 활동 없음 (스텝)</span><span class="go">사용자 보기 →</span></div>
+        <div class="risk"><span class="sev m">MEDIUM</span><span class="txt"><b>3팀</b> 자료 등록이 30일간 없었습니다</span><span class="go">팀 보기 →</span></div>
+        <div class="risk"><span class="sev h">HIGH</span><span class="txt">미배정 사용자 <b>2명</b> — 팀 소속이 없습니다</span><span class="go">배정하기 →</span></div>
+      </div>
+
+      <div class="tabpane" id="trd">
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px">최근 14일 일별 접속</div>
+        <div class="spark">
+          <i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:70%"></i>
+          <i style="height:62%"></i><i style="height:35%"></i><i style="height:30%"></i><i style="height:58%"></i>
+          <i style="height:75%"></i><i style="height:68%"></i><i style="height:80%"></i><i class="hi" style="height:92%"></i>
+          <i class="hi" style="height:85%"></i><i class="hi" style="height:96%"></i>
+        </div>
+        <div style="font-size:12.5px;color:var(--muted);margin:20px 0 6px">콘텐츠 누적 증가 (주별)</div>
+        <div class="spark">
+          <i style="height:30%"></i><i style="height:38%"></i><i style="height:44%"></i><i style="height:52%"></i>
+          <i style="height:60%"></i><i style="height:66%"></i><i style="height:78%"></i><i class="hi" style="height:90%"></i>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="note">※ 본 화면은 레이아웃·디자인 확정용 시안입니다. 숫자·이름은 샘플이며, 결재 후 실데이터를 연결합니다.</div>
+</div>
+
+<script>
+  var DATA = {
+    dw:{nm:'더원지점',cr:'더원지점',team:4,people:23,today:14,mgr:'이은정',h:92,hc:'g',file:142,scr:87,diary:31,share:24},
+    dw1:{nm:'1팀',cr:'더원지점 › 1팀',team:'-',people:7,today:5,mgr:'김민수',h:88,hc:'g',file:41,scr:28,diary:11,share:9},
+    dw2:{nm:'2팀',cr:'더원지점 › 2팀',team:'-',people:6,today:4,mgr:'한지민',h:84,hc:'g',file:33,scr:21,diary:8,share:6},
+    dw3:{nm:'3팀',cr:'더원지점 › 3팀',team:'-',people:5,today:1,mgr:'오세훈',h:61,hc:'y',file:18,scr:12,diary:4,share:2},
+    dw4:{nm:'4팀',cr:'더원지점 › 4팀',team:'-',people:5,today:4,mgr:'서나래',h:79,hc:'g',file:29,scr:18,diary:6,share:4},
+    gn:{nm:'강남지점',cr:'강남지점',team:5,people:31,today:0,mgr:'(미지정)',h:48,hc:'y',file:64,scr:30,diary:9,share:5},
+    bd:{nm:'분당지점',cr:'분당지점',team:4,people:28,today:11,mgr:'윤가은',h:81,hc:'g',file:98,scr:54,diary:22,share:14},
+    pg:{nm:'판교지점',cr:'판교지점',team:3,people:12,today:0,mgr:'장도윤',h:34,hc:'r',file:21,scr:9,diary:2,share:1},
+    sw:{nm:'수원지점',cr:'수원지점',team:4,people:19,today:8,mgr:'배수지',h:76,hc:'g',file:73,scr:41,diary:17,share:10}
+  };
+  function tg(el){ el.classList.toggle('open'); var c=el.nextElementSibling; if(c&&c.classList.contains('children')) c.classList.toggle('show'); }
+  function pick(el,ev){
+    if(ev) ev.stopPropagation();
+    var k=el.getAttribute('data-k'); var d=DATA[k]; if(!d) return;
+    var ns=document.querySelectorAll('#tree .node'); for(var i=0;i<ns.length;i++) ns[i].classList.remove('sel');
+    el.classList.add('sel');
+    set('pname',d.nm); set('crumb',d.cr.split('› ').pop()); set('m-team',d.team); set('m-people',d.people);
+    set('m-today',d.today); set('m-mgr',d.mgr); set('k-file',d.file); set('k-scr',d.scr); set('k-diary',d.diary); set('k-share',d.share);
+    document.querySelector('.crumb').innerHTML = '원세컨드 전체 › <span id="crumb">'+d.cr+'</span>';
+    var hb=document.getElementById('phealth'); hb.textContent='건강도 '+d.h; hb.className='health '+d.hc;
+    // 자식 노드면 caret 펼침 동작도
+    if(el.classList.contains('lvl2')&&!el.classList.contains('leaf')) tg(el);
+  }
+  function set(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+  function tab(el,id){
+    var ts=el.parentNode.querySelectorAll('.tab'); for(var i=0;i<ts.length;i++) ts[i].classList.remove('on'); el.classList.add('on');
+    var ps=document.querySelectorAll('.tabpane'); for(var j=0;j<ps.length;j++) ps[j].classList.remove('on');
+    document.getElementById(id).classList.add('on');
+  }
+</script>
+</body>
+</html>
