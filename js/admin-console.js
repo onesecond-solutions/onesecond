@@ -1431,14 +1431,17 @@
     if(window.lucide) window.lucide.createIcons();
   };
 
-  // ── 설정 — app_settings (운영 토글群). menu_b(전역 메뉴)는 role 매트릭스와 별개로 별도 그룹 표시(가드2) ──
-  var _SETTINGS_GROUPS=['board_visibility','board_tab','feature_gate','gate','operations','menu_b'];
+  // ── 설정 — 옛 토글 6그룹 전수 소비처 0(죽은 토글) → 허상 제거, 안내로 대체 (2026-06-15) ──
   window.acLoadSettings = async function(){
     var area=document.getElementById('ac-sec-settings-body'); if(!area) return;
-    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div></div>';
-    var orFilter='or=('+_SETTINGS_GROUPS.map(function(g){ return 'group_name.eq.'+g; }).join(',')+',key.eq.ops_console)';
-    var rows=await _rows("app_settings?select=group_name,key,label,value&"+orFilter+"&order=group_name.asc,key.asc");
-    area.innerHTML=_SYS_NOTE+_renderSettingRows(rows,{});  /* 전부 bool 자동 판별 */
+    /* 허상 제거(2026-06-15): 옛 토글 6그룹(board/menu_b/gate/feature/operations)+ops_console 전수 소비처 0.
+       어드민에서 켜도 화면 무반응이라 노출 중단. DB 행은 보존(숨김만). 실작동 설정 생기면 이 자리에 추가. */
+    area.innerHTML='<div class="ac-card-empty" style="padding:34px 0;text-align:center;line-height:1.7">'+
+      '<i data-lucide="settings"></i>'+
+      '<div style="margin-top:8px;font-weight:600;color:var(--ts)">현재 시스템에서 작동하는 운영 토글이 없습니다.</div>'+
+      '<div style="font-size:12.5px;color:var(--tf);margin-top:7px">옛 게시판·기능 토글(실제 화면에 연결되지 않음)은 정리되었습니다.<br>'+
+      '역할별 메뉴 노출은 <b>메뉴</b> 탭, 홈·페이지 배너는 <b>공지·배너</b> 탭에서 관리합니다.</div>'+
+      '</div>';
     if(window.lucide) window.lucide.createIcons();
   };
 
