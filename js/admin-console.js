@@ -724,32 +724,59 @@
       kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', '');
   }
 
+  function _ctTeams(arr){  // 지점 인원 → 팀(text) 그룹 (빈 팀명 제외)
+    var m={}; (arr||[]).forEach(function(u){ var t=(u.team||'').trim(); if(t){ (m[t]=m[t]||[]).push(u); } }); return m;
+  }
   function renderOrgTree(branches, byBranch){
     var el=document.getElementById('ac-org-tree'); if(!el) return;
     el.classList.remove('ac-card-empty');
-    var html='<div class="act-node" data-bid="_all" onclick="acOrgPick(\'_all\')"><span class="nm">원세컨드 전체</span><span class="sm">'+_CT.usersAll.length+'</span></div>';
+    var html='<div class="act-node" data-bid="_all" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="nm">원세컨드 전체</span><span class="sm">'+_CT.usersAll.length+'</span></div>';
     branches.forEach(function(b){
       var arr=byBranch[b.id]||[]; var hc=(b.is_active===false)?'o':_ctHealth(arr.length);
-      html+='<div class="act-node" data-bid="'+esc(b.id)+'" onclick="acOrgPick(\''+esc(b.id)+'\')"><span class="hp act-hp-'+hc+'"></span>'+
-        '<span class="nm">'+esc(b.name||'(이름 없음)')+'</span><span class="sm">'+arr.length+'</span></div>';
+      var tmap=_ctTeams(arr); var tnames=Object.keys(tmap).sort(); var hasT=tnames.length>0;
+      html+='<div class="act-node" data-bid="'+esc(b.id)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
+        '<span class="act-caret'+(hasT?'':' act-caret-hide')+'">&#9654;</span>'+
+        '<span class="hp act-hp-'+hc+'"></span><span class="nm">'+esc(b.name||'(이름 없음)')+'</span><span class="sm">'+arr.length+'</span></div>';
+      if(hasT){
+        html+='<div class="act-children" data-parent="'+esc(b.id)+'">';
+        tnames.forEach(function(t){
+          html+='<div class="act-node child" data-bid="T|'+esc(b.id)+'|'+esc(t)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
+            '<span class="act-caret act-caret-hide"></span><span class="nm">'+esc(t)+'</span><span class="sm">'+tmap[t].length+'</span></div>';
+        });
+        html+='</div>';
+      }
     });
     var un=byBranch['_none']||[];
-    if(un.length) html+='<div class="act-node" data-bid="_none" onclick="acOrgPick(\'_none\')"><span class="hp act-hp-o"></span><span class="nm">미배정</span><span class="sm">'+un.length+'</span></div>';
+    if(un.length) html+='<div class="act-node" data-bid="_none" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="hp act-hp-o"></span><span class="nm">미배정</span><span class="sm">'+un.length+'</span></div>';
     el.innerHTML=html;
     var cnt=document.getElementById('ac-tree-cnt'); if(cnt) cnt.textContent='지점 '+branches.length;
   }
 
   window.acOrgPick = function(bid){
-    var ns=document.querySelectorAll('#ac-org-tree .act-node');
-    for(var i=0;i<ns.length;i++) ns[i].classList.toggle('sel', ns[i].getAttribute('data-bid')===bid);
     var el=document.getElementById('ac-org-detail'); if(!el) return; el.classList.remove('ac-card-empty');
-    var arr, name, crumb;
+    var arr, name, crumb, isTeam=false;
     if(bid==='_all'){ arr=_CT.usersAll; name='원세컨드 전체'; crumb='전체 조직'; }
     else if(bid==='_none'){ arr=_CT.byBranch['_none']||[]; name='미배정 사용자'; crumb='지점 배정 필요'; }
-    else { var b=_CT.branches.filter(function(x){return x.id===bid;})[0]; arr=_CT.byBranch[bid]||[]; name=(b&&b.name)||'지점'; crumb=(b&&b.ga_org_name)||'지점'; }
+    else if(bid.indexOf('T|')===0){
+      isTeam=true; var ps=bid.split('|'); var brId=ps[1]; var tnm=ps.slice(2).join('|');
+      var bb=_CT.branches.filter(function(x){return x.id===brId;})[0];
+      arr=(_CT.byBranch[brId]||[]).filter(function(u){ return (u.team||'').trim()===tnm; });
+      name=tnm; crumb=((bb&&bb.name)||'지점')+' · 팀';
+    } else {
+      var b=_CT.branches.filter(function(x){return x.id===bid;})[0];
+      arr=_CT.byBranch[bid]||[]; name=(b&&b.name)||'지점'; crumb=(b&&b.ga_org_name)||'지점';
+      var ch=document.querySelector('.act-children[data-parent="'+bid+'"]');  /* 지점 클릭 = 팀 펼침 토글 */
+      if(ch){
+        ch.classList.toggle('show');
+        var nodes=document.querySelectorAll('#ac-org-tree .act-node');
+        for(var z=0;z<nodes.length;z++){ if(nodes[z].getAttribute('data-bid')===bid){ nodes[z].classList.toggle('open', ch.classList.contains('show')); break; } }
+      }
+    }
+    var ns=document.querySelectorAll('#ac-org-tree .act-node');
+    for(var i=0;i<ns.length;i++) ns[i].classList.toggle('sel', ns[i].getAttribute('data-bid')===bid);
+
     var roleCnt={}; arr.forEach(function(u){ roleCnt[u.role]=(roleCnt[u.role]||0)+1; });
-    var teams={}; arr.forEach(function(u){ var t=(u.team||'').trim(); if(t) teams[t]=1; });
-    var teamCnt=Object.keys(teams).length;
+    var teamCnt=Object.keys(_ctTeams(arr)).length;
     var RL=window.ROLE_LABEL||{};
     var rows=arr.slice(0,300).map(function(u){
       var ini=esc((u.name||'?').slice(0,2));
@@ -758,12 +785,14 @@
         '<td>'+esc(u.team||'-')+'</td>'+
         '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
     }).join('');
+    var metaTeam = isTeam ? '' : '<span>팀 <b>'+teamCnt+'</b></span>';
+    var miniSecond = isTeam ? _ctMc('설계사', roleCnt['ga_member']||0) : _ctMc('팀', teamCnt);
     el.innerHTML =
       '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div><h2>'+esc(name)+'</h2>'+
-        '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span><span>팀 <b>'+teamCnt+'</b></span>'+
+        '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span>'+metaTeam+
         '<span>설계사 <b>'+(roleCnt['ga_member']||0)+'</b></span></div></div>'+
       '<div class="act-mini">'+
-        _ctMc('인원', arr.length)+_ctMc('팀', teamCnt)+
+        _ctMc('인원', arr.length)+miniSecond+
         _ctMc('실장', roleCnt['ga_manager']||0)+_ctMc('지점장', roleCnt['ga_branch_manager']||0)+
       '</div>'+
       '<div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>가입</th></tr></thead><tbody>'+
