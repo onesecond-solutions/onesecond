@@ -712,6 +712,8 @@
   //  · 전부 실데이터(users·branches·activity_logs). 추측 없음. RLS상 admin 전체 조회.
   //  · 건강도 색 = 인원수 기준 1차(0=빨강·<3=노랑·그외 녹색). 활동 가중 건강도는 후속.
   var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{}, companies:[], byCompany:{}, userContent:{} };
+  /* 조직트리 컴포넌트 host (대시보드 / 운영>조직트리 재사용 — 활성 탭 기준) */
+  var _ctHost = { tree:'ac-org-tree', detail:'ac-org-detail', cnt:'ac-tree-cnt' };
   function _ctMc(l,v){ return '<div class="act-mc"><div class="l">'+l+'</div><div class="v">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
   function _ctHealth(n){ if(!n) return 'r'; if(n<3) return 'y'; return 'g'; }
   /* 건강도 = 인원 + 7일 실활성 + 리더십. 로그 인프라 비면 인원 기준 fallback(초기 오판 방지) */
@@ -840,7 +842,7 @@
   }
 
   function renderOrgTree(companies, branches, byBranch, byCompany){
-    var el=document.getElementById('ac-org-tree'); if(!el) return;
+    var el=document.getElementById(_ctHost.tree); if(!el) return;
     el.classList.remove('ac-card-empty');
     var html='<div class="act-legend"><span><span class="hp act-hp-g"></span>정상</span><span><span class="hp act-hp-y"></span>주의</span><span><span class="hp act-hp-r"></span>위험</span><span><span class="hp act-hp-o"></span>비활성</span></div>';
     html+='<div class="act-node" data-bid="_all" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="nm">원세컨드 전체</span><span class="sm">'+_CT.usersAll.length+'</span></div>';
@@ -855,11 +857,11 @@
     var un=byBranch['_none']||[];
     if(un.length) html+='<div class="act-node" data-bid="_none" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="hp act-hp-o"></span><span class="nm">미배정</span><span class="sm">'+un.length+'</span></div>';
     el.innerHTML=html;
-    var cnt=document.getElementById('ac-tree-cnt'); if(cnt) cnt.textContent='회사 '+coShown+' · 지점 '+branches.length;
+    var cnt=document.getElementById(_ctHost.cnt); if(cnt) cnt.textContent='회사 '+coShown+' · 지점 '+branches.length;
   }
 
   window.acOrgPick = function(bid){
-    var el=document.getElementById('ac-org-detail'); if(!el) return; el.classList.remove('ac-card-empty');
+    var el=document.getElementById(_ctHost.detail); if(!el) return; el.classList.remove('ac-card-empty');
     var arr, name, crumb, isTeam=false, toggleKey=null;
     if(bid==='_all'){ arr=_CT.usersAll; name='원세컨드 전체'; crumb='전체 조직'; }
     else if(bid==='_none'){ arr=_CT.byBranch['_none']||[]; name='미배정 사용자'; crumb='지점 배정 필요'; }
@@ -882,14 +884,14 @@
       toggleKey=bid;
     }
     if(toggleKey){  /* 회사·지점 클릭 = 하위 펼침 토글 */
-      var ch=document.querySelector('.act-children[data-parent="'+toggleKey+'"]');
+      var ch=document.querySelector('#'+_ctHost.tree+' .act-children[data-parent="'+toggleKey+'"]');
       if(ch){
         ch.classList.toggle('show');
-        var nodes=document.querySelectorAll('#ac-org-tree .act-node');
+        var nodes=document.querySelectorAll('#'+_ctHost.tree+' .act-node');
         for(var z=0;z<nodes.length;z++){ if(nodes[z].getAttribute('data-bid')===toggleKey){ nodes[z].classList.toggle('open', ch.classList.contains('show')); break; } }
       }
     }
-    var ns=document.querySelectorAll('#ac-org-tree .act-node');
+    var ns=document.querySelectorAll('#'+_ctHost.tree+' .act-node');
     for(var i=0;i<ns.length;i++) ns[i].classList.toggle('sel', ns[i].getAttribute('data-bid')===bid);
 
     var roleCnt={}; arr.forEach(function(u){ roleCnt[u.role]=(roleCnt[u.role]||0)+1; });
@@ -924,6 +926,33 @@
       '<div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
         (rows||'<tr><td colspan="5" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
       '</tbody></table></div>';
+  };
+
+  // 조직트리 데이터 적재 (대시보드/운영>조직트리 공용) → _CT 채움
+  async function _loadOrgData(){
+    var res=await Promise.all([
+      _rows('branches?select=id,name,ga_org_name,is_active,company_id&order=name.asc'),
+      _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000'),
+      _rows('companies?select=id,name&order=name.asc')
+    ]);
+    var branches=res[0]||[], users=res[1]||[], companies=res[2]||[];
+    var loginLogs=[]; try{ loginLogs=await _rows('activity_logs?event_type=in.(login,login_admin)&created_at=gte.'+new Date(Date.now()-30*86400000).toISOString()+'&select=user_id,created_at&order=created_at.desc&limit=8000'); }catch(e){}
+    var lastSeen={}; loginLogs.forEach(function(l){ if(l.user_id && !lastSeen[l.user_id]) lastSeen[l.user_id]=l.created_at; });
+    var recentPosts=[]; try{ recentPosts=await _rows('posts?created_at=gte.'+new Date(Date.now()-7*86400000).toISOString()+'&select=author_id&limit=8000'); }catch(e){}
+    var userContent={}; recentPosts.forEach(function(p){ if(p.author_id) userContent[p.author_id]=(userContent[p.author_id]||0)+1; });
+    var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
+    var byCompany={}; branches.forEach(function(b){ var k=b.company_id||'_noco'; (byCompany[k]=byCompany[k]||[]).push(b); });
+    _CT.branches=branches; _CT.byBranch=byBranch; _CT.usersAll=users; _CT.lastSeen=lastSeen;
+    _CT.companies=companies; _CT.byCompany=byCompany; _CT.userContent=userContent;
+  }
+  // 운영 > 조직 트리 (대시보드 좌트리+우상세 컴포넌트 재사용)
+  window.acLoadOrgTree = async function(){
+    _ctHost={ tree:'ac-org-tree2', detail:'ac-org-detail2', cnt:'ac-tree-cnt2' };
+    var host=document.getElementById('ac-org-tree2'); if(host) host.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+    await _loadOrgData();
+    renderOrgTree(_CT.companies, _CT.branches, _CT.byBranch, _CT.byCompany);
+    acOrgPick('_all');
+    if(window.lucide) window.lucide.createIcons();
   };
 
   window.acLoadDashboard = async function(){
@@ -967,6 +996,7 @@
       activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned,
       pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified,
       orgCos:(companies||[]).filter(function(c){ return (byCompany[c.id]||[]).length; }).length, orgBrs:branches.length, orgTeams:Object.keys(_teamSet).length });
+    _ctHost={ tree:'ac-org-tree', detail:'ac-org-detail', cnt:'ac-tree-cnt' };  /* 대시보드 컨텍스트 */
     renderOrgTree(_CT.companies, branches, byBranch, byCompany);
     renderRiskPanel(branches, byBranch);
     acOrgPick('_all');
@@ -1063,18 +1093,18 @@
   // ════════════════════════════════════════════════════════════════════
   var AC_GROUPS = {
     dashboard:{}, logs:{}, knowledge:{},
-    ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점'],['teams','팀']] },
+    ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점'],['teams','팀'],['orgtree','조직 트리']] },
     content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
     validation:{ secs:[['visibility','화면 가시성'],['rls','데이터 권한(RLS)']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
   };
   var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs', knowledge:'knowledge',
-    approvals:'ops', users:'ops', branches:'ops', teams:'ops',
+    approvals:'ops', users:'ops', branches:'ops', teams:'ops', orgtree:'ops',
     posts:'content', comments:'content', library:'content',
     visibility:'validation', rls:'validation',
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
-    branches:'acLoadBranches', teams:'acLoadTeams', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
+    branches:'acLoadBranches', teams:'acLoadTeams', orgtree:'acLoadOrgTree', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
     visibility:'acLoadVisibility', rls:'acLoadRlsOverview', logs:'acLoadLogs',
     menu:'acLoadMenu', notice:'acLoadNotice', settings:'acLoadSettings' };
   var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','validation','system','logs'];
