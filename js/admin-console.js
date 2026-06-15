@@ -933,12 +933,14 @@
       '<div class="act-mini" style="grid-template-columns:repeat('+cells.length+',1fr)">'+
         cells.map(function(c){ return _ctMc(c[0], c[1]); }).join('')+
       '</div>'+
-      '<div class="act-mlist">'+
-        '<div class="act-mlist-hd" onclick="acToggleMlist(this)"><span>구성원 <b>'+arr.length+'</b>명 · <span class="act-presence on" style="margin:0 5px 0 3px"></span>로그인중 <b>'+loginN+'</b></span><span class="act-mlist-caret">▾</span></div>'+
-        '<div class="act-mlist-body"><div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
-          (rows||'<tr><td colspan="5" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
-        '</tbody></table></div></div>'+
-      '</div>';
+      /* 사용자 리스트는 운영>조직트리(원본)에서만. 대시보드는 심플(집계까지만) */
+      ((_ctHost.tree==='ac-org-tree') ? '' :
+        '<div class="act-mlist">'+
+          '<div class="act-mlist-hd" onclick="acToggleMlist(this)"><span>구성원 <b>'+arr.length+'</b>명 · <span class="act-presence on" style="margin:0 5px 0 3px"></span>로그인중 <b>'+loginN+'</b></span><span class="act-mlist-caret">▾</span></div>'+
+          '<div class="act-mlist-body"><div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
+            (rows||'<tr><td colspan="5" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
+          '</tbody></table></div></div>'+
+        '</div>');
   };
   window.acToggleMlist=function(el){ var w=el&&el.parentNode; if(w) w.classList.toggle('collapsed'); };
 
