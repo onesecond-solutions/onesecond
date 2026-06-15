@@ -664,6 +664,21 @@
   var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{}, companies:[], byCompany:{} };
   function _ctMc(l,v){ return '<div class="act-mc"><div class="l">'+l+'</div><div class="v">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
   function _ctHealth(n){ if(!n) return 'r'; if(n<3) return 'y'; return 'g'; }
+  /* 건강도 = 인원 + 7일 실활성 + 리더십. 로그 인프라 비면 인원 기준 fallback(초기 오판 방지) */
+  function _ctHealth2(arr){
+    var n=(arr||[]).length; if(!n) return 'r';
+    var ls=_CT.lastSeen||{}, hasLog=false; for(var k in ls){ hasLog=true; break; }
+    if(!hasLog) return _ctHealth(n);                        /* 접속 기록 전무 → 인원 기준 */
+    var now=Date.now(), wk=7*86400000, act=0, leader=0;
+    arr.forEach(function(u){
+      var t=ls[u.id]; if(t && (now-new Date(t).getTime())<wk) act++;
+      var r=u.role; if(r==='ga_branch_manager'||r==='ga_manager'||r==='insurer_branch_manager'||r==='insurer_manager') leader++;
+    });
+    if(act===0) return 'y';            /* 전원 7일+ 미접속 = 주의 */
+    if(n>=3 && leader===0) return 'y'; /* 리더(지점장·실장) 공백 = 주의 */
+    if(act/n < 0.34) return 'y';       /* 실활성률 1/3 미만 = 주의 */
+    return 'g';
+  }
   function _ctDate(iso){ if(typeof _fmtDate==='function') return _fmtDate(iso); return iso?String(iso).slice(0,10):'-'; }
 
   function renderBoard(d){
@@ -689,7 +704,7 @@
     var m={}; (arr||[]).forEach(function(u){ var t=(u.team||'').trim(); if(t){ (m[t]=m[t]||[]).push(u); } }); return m;
   }
   function _ctBranchBlock(b, byBranch){  // 지점 노드(child) + 하위 팀(child2)
-    var arr=byBranch[b.id]||[]; var hc=(b.is_active===false)?'o':_ctHealth(arr.length);
+    var arr=byBranch[b.id]||[]; var hc=(b.is_active===false)?'o':_ctHealth2(arr);
     var tmap=_ctTeams(arr); var tnames=Object.keys(tmap).sort(); var hasT=tnames.length>0;
     var s='<div class="act-node child" data-bid="'+esc(b.id)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
       '<span class="act-caret'+(hasT?'':' act-caret-hide')+'">&#9654;</span>'+
@@ -717,7 +732,8 @@
   function renderOrgTree(companies, branches, byBranch, byCompany){
     var el=document.getElementById('ac-org-tree'); if(!el) return;
     el.classList.remove('ac-card-empty');
-    var html='<div class="act-node" data-bid="_all" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="nm">원세컨드 전체</span><span class="sm">'+_CT.usersAll.length+'</span></div>';
+    var html='<div class="act-legend"><span><span class="hp act-hp-g"></span>정상</span><span><span class="hp act-hp-y"></span>주의</span><span><span class="hp act-hp-r"></span>위험</span><span><span class="hp act-hp-o"></span>비활성</span></div>';
+    html+='<div class="act-node" data-bid="_all" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="nm">원세컨드 전체</span><span class="sm">'+_CT.usersAll.length+'</span></div>';
     var coShown=0;
     companies.forEach(function(c){
       var brs=byCompany[c.id]||[]; if(!brs.length) return;  /* 지점 없는 회사 숨김 */
