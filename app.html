@@ -187,6 +187,7 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .mr-stale{color:var(--warn);}
 .mr-sub{color:var(--tf);}
 .mr-sample-note{font-size:0.74rem;color:var(--tf);background:color-mix(in srgb,var(--bd) 22%,transparent);border-radius:8px;padding:8px 12px;margin-bottom:12px;}
+.mr-view-chips{display:flex;gap:8px;margin-bottom:12px;}
 .mr-org{display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start;}
 .mr-org-tree{border:0.5px solid var(--bd);border-radius:10px;padding:7px;background:var(--s1);}
 .mr-tn{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:7px;font-size:0.84rem;}
@@ -2336,6 +2337,11 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <div id="mr-main" style="display:none">
       <!-- 조직 트리 레이아웃 복제 (운영 탭). 샘플 데이터 — 실제 가입 시 자기 조직 데이터로 채워짐 -->
       <div class="mr-sample-note">샘플 레이아웃 — 실제 사용자가 가입하면 자기 회사·지점·팀·구성원 데이터로 채워집니다.</div>
+      <!-- 어드민 전용: 지점장/실장 관점 전환 -->
+      <div class="mr-view-chips" id="mr-view-chips" style="display:none">
+        <button class="chip on" onclick="mrViewMode('branch',this)">지점장 관점</button>
+        <button class="chip" onclick="mrViewMode('manager',this)">실장 관점</button>
+      </div>
       <div class="mr-org">
         <div class="mr-org-tree" id="mr-org-tree2"><div class="mys-news-empty">불러오는 중…</div></div>
         <div class="mr-org-panel" id="mr-org-panel2"><div class="mys-news-empty">팀을 선택하세요</div></div>
@@ -7727,8 +7733,19 @@ var MR_SAMPLE={ company:'한빛금융서비스', branches:[
       {name:'윤실장',role:'ga_manager',on:true,seen:'방금',joined:'2026.03.01'},
       {name:'임설계',role:'ga_member',on:false,seen:'3일 전',joined:'2026.04.22'} ] } ] } ] };
 var _mrSel=null;
+window._mrViewMode=window._mrViewMode||'branch';
+function mrViewMode(mode,el){
+  window._mrViewMode=mode;
+  var chips=document.querySelectorAll('#mr-view-chips .chip'); for(var i=0;i<chips.length;i++) chips[i].classList.remove('on'); if(el) el.classList.add('on');
+  _mrSel=null; mrRenderSampleTree();
+}
+window.mrViewMode=mrViewMode;
 function mrRenderSampleTree(){
   var tree=document.getElementById('mr-org-tree2'); if(!tree) return;
+  /* 지점장/실장 관점 전환 = 어드민만 노출 */
+  var chips=document.getElementById('mr-view-chips');
+  if(chips) chips.style.display=((typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin')?'flex':'none';
+  var mode=window._mrViewMode||'branch';
   var totalM=0; MR_SAMPLE.branches.forEach(function(b){ b.teams.forEach(function(t){ totalM+=t.members.length; }); });
   var html='<div class="mr-tn mr-tn-co">'+_sEsc(MR_SAMPLE.company)+'<span class="mr-tn-c">'+totalM+'</span></div>';
   MR_SAMPLE.branches.forEach(function(b,bi){
@@ -7736,7 +7753,10 @@ function mrRenderSampleTree(){
     html+='<div class="mr-tn mr-tn-br">'+_sEsc(b.name)+'<span class="mr-tn-c">'+bm+'</span></div>';
     b.teams.forEach(function(t,ti){
       var key=bi+'_'+ti;
-      html+='<div class="mr-tn mr-tn-tm'+(key===_mrSel?' on':'')+'" onclick="mrSamplePick(\''+key+'\')">'+_sEsc(t.name)+'<span class="mr-tn-c">'+t.members.length+'</span></div>';
+      var label;
+      if(mode==='manager'){ var mgr=t.members.filter(function(m){return m.role==='ga_manager';})[0]; label=(mgr?_sEsc(mgr.name)+' 실장':'(실장 미지정)')+' · '+_sEsc(t.name); }
+      else label=_sEsc(t.name);
+      html+='<div class="mr-tn mr-tn-tm'+(key===_mrSel?' on':'')+'" onclick="mrSamplePick(\''+key+'\')">'+label+'<span class="mr-tn-c">'+t.members.length+'</span></div>';
     });
   });
   tree.innerHTML=html;
