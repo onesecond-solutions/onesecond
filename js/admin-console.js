@@ -966,7 +966,7 @@
     renderBoard({ total:total, today:Object.keys(ts).length, newToday:newToday,
       activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned,
       pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified,
-      orgCos:(companies||[]).length, orgBrs:branches.length, orgTeams:Object.keys(_teamSet).length });
+      orgCos:(companies||[]).filter(function(c){ return (byCompany[c.id]||[]).length; }).length, orgBrs:branches.length, orgTeams:Object.keys(_teamSet).length });
     renderOrgTree(_CT.companies, branches, byBranch, byCompany);
     renderRiskPanel(branches, byBranch);
     acOrgPick('_all');
