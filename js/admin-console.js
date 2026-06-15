@@ -540,24 +540,27 @@
     el.innerHTML=defs.map(function(d){ return '<button class="ac-chip'+(_libFilter===d[0]?' active':'')+'" data-lf="'+d[0]+'">'+d[1]+'</button>'; }).join('');
     el.querySelectorAll('[data-lf]').forEach(function(b){ b.addEventListener('click',function(){ _libFilter=b.getAttribute('data-lf'); renderLibChips(); loadLibList(); }); });
   }
+  function _libScope(s){ return s==='team'?'팀':(s==='branch'?'지점':((s==='personal'||!s)?'개인':esc(s))); }
   async function loadLibList(){
     var area=document.getElementById('ac-library-list'); if(!area) return;
     area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
-    var rows, label;
-    if(_libFilter==='scripts'){ rows=await _rows('scripts?select=id,title,stage,created_at&order=created_at.desc&limit=100'); label='스크립트'; }
-    else { rows=await _rows('library?select=id,title,created_at&order=created_at.desc&limit=100'); label='자료'; }
+    var rows, label, isScr=(_libFilter==='scripts');
+    if(isScr){ rows=await _rows('scripts?select=id,title,stage,created_at&order=created_at.desc&limit=100'); label='스크립트'; }
+    else { rows=await _rows('myspace_files?select=id,original_name,ext,scope,ocr_status,created_at&deleted_at=is.null&order=created_at.desc&limit=100'); label='자료'; }
     var c=document.getElementById('ac-library-count'); if(c) c.textContent=rows.length+'건';
     if(!rows.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="folder-kanban"></i>'+label+' 없음</div>'; if(window.lucide) window.lucide.createIcons(); return; }
-    var isScr=(_libFilter==='scripts');
     var body=rows.map(function(r){
-      return '<tr class="ac-tr-clk" onclick="acLibDetail(\''+esc(r.id)+'\')"><td class="ac-td-name">'+esc(r.title||'(제목 없음)')+'</td>'+(isScr?'<td class="ac-td-sub">'+esc(r.stage||'-')+'</td>':'')+'<td class="ac-td-date">'+esc(_fmtDate(r.created_at))+'</td></tr>';
+      if(isScr) return '<tr class="ac-tr-clk" onclick="acLibDetail(\''+esc(r.id)+'\')"><td class="ac-td-name">'+esc(r.title||'(제목 없음)')+'</td><td class="ac-td-sub">'+esc(r.stage||'-')+'</td><td class="ac-td-date">'+esc(_fmtDate(r.created_at))+'</td></tr>';
+      var idx=(r.ocr_status==='done')?'<span class="ac-badge st-active">색인</span>':((r.ocr_status==='skip')?'<span class="ac-badge">제외</span>':'<span class="ac-badge st-pending">대기</span>');
+      return '<tr class="ac-tr-clk" onclick="acLibDetail(\''+esc(r.id)+'\')"><td class="ac-td-name">'+esc(r.original_name||'(파일)')+'</td><td class="ac-td-sub">'+esc(String(r.ext||'').toUpperCase())+'</td><td class="ac-td-sub">'+_libScope(r.scope)+'</td><td>'+idx+'</td><td class="ac-td-date">'+esc(_fmtDate(r.created_at))+'</td></tr>';
     }).join('');
-    area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>제목</th>'+(isScr?'<th>스테이지</th>':'')+'<th>날짜</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    var thead=isScr?'<th>제목</th><th>스테이지</th><th>날짜</th>':'<th>제목</th><th>형식</th><th>범위</th><th>색인</th><th>날짜</th>';
+    area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr>'+thead+'</tr></thead><tbody>'+body+'</tbody></table></div>';
     if(window.lucide) window.lucide.createIcons();
   }
-  // 행 클릭 → 자료/스크립트 상세 (개별 select * + 본문). 공용 모달 재사용
+  // 행 클릭 → 자료(myspace_files)/스크립트 상세 (개별 select * + 본문). 공용 모달 재사용
   window.acLibDetail=async function(id){
-    var isScr=(_libFilter==='scripts'), tbl=isScr?'scripts':'library';
+    var isScr=(_libFilter==='scripts'), tbl=isScr?'scripts':'myspace_files';
     var ov=document.getElementById('ac-udetail-ov');
     if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; document.body.appendChild(ov); }
     ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acUserDetailClose()">✕</button><div id="ac-udetail-body"><div class="ac-card-empty">불러오는 중…</div></div></div>';
@@ -567,11 +570,10 @@
     var b=document.getElementById('ac-udetail-body'); if(!b) return;
     if(!r){ b.innerHTML='<div class="ac-card-empty">찾을 수 없습니다.</div>'; return; }
     function row(k,v){ return (v==null||v==='')?'':'<div class="ac-ud-row"><span class="ac-ud-k">'+esc(k)+'</span><span class="ac-ud-v">'+esc(String(v))+'</span></div>'; }
-    var bodyTxt=isScr?esc(r.script_text||'').replace(/\n/g,'<br>'):esc(r.memo_text||r.description||'').replace(/\n/g,'<br>');
-    var h='<div class="ac-ud-title">'+esc(r.title||'(제목 없음)')+'</div>';
+    var bodyTxt=isScr?esc(r.script_text||'').replace(/\n/g,'<br>'):esc(r.search_text||'').replace(/\n/g,'<br>');
+    var h='<div class="ac-ud-title">'+esc((isScr?r.title:r.original_name)||'(제목 없음)')+'</div>';
     if(isScr){ h+=row('스테이지',r.stage); }
-    else { h+=row('설명',r.description); h+=row('링크',r.link_url); h+=row('파일',r.file_url); }
-    h+=row('키워드',(r.keywords&&r.keywords.join)?r.keywords.join(', '):r.keywords);
+    else { h+=row('형식',String(r.ext||'').toUpperCase()); h+=row('범위',_libScope(r.scope)); h+=row('색인 상태',r.ocr_status==='done'?'색인 완료':(r.ocr_status==='skip'?'제외':(r.ocr_status==='empty'?'본문 없음':'대기'))); }
     h+=row('작성일',_fmtDate(r.created_at));
     if(bodyTxt) h+='<div class="ac-pd-body">'+bodyTxt+'</div>';
     b.innerHTML=h;
