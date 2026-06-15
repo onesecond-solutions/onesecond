@@ -845,13 +845,15 @@
   //  · 보류함 본체는 지식엔진 탭. 여기선 합계만 노출 + 클릭 시 그 탭으로 이동
   window.acRenderHoldRisk = async function(){
     var el=document.getElementById('ac-risk-panel'); if(!el) return;
-    var P=encodeURIComponent('경로오류'), E=encodeURIComponent('비었음');
+    var P=encodeURIComponent('경로오류'), E=encodeURIComponent('비었음'), Z=encodeURIComponent('크기초과');
     var c=await Promise.all([
       _count('newsletters?text_quality=eq.'+P+'&select=id'),
       _count('newsletters?text_quality=eq.'+E+'&select=id'),
-      _count('myspace_files?ocr_status=eq.empty&deleted_at=is.null&select=id')
+      _count('myspace_files?ocr_status=eq.empty&deleted_at=is.null&select=id'),
+      _count('newsletters?text_quality=eq.'+Z+'&select=id'),
+      _count('myspace_files?ocr_status=eq.oversize&deleted_at=is.null&select=id')
     ]);
-    var n=(c[0]||0)+(c[1]||0)+(c[2]||0); if(n<=0) return;
+    var n=(c[0]||0)+(c[1]||0)+(c[2]||0)+(c[3]||0)+(c[4]||0); if(n<=0) return;
     var row='<div class="act-risk-row" onclick="acGoSec(\'knowledge\')"><span class="act-risk-sev y">주의</span>'+
       '<span class="act-risk-nm">OCR 보류</span><span class="act-risk-rs">'+n+'건 — 자동 처리 못함, 확인 필요</span><span class="act-risk-go">보기 →</span></div>';
     var empty=el.querySelector('.ac-card-empty');
@@ -1155,12 +1157,14 @@
         holdTxt+'마지막 채굴: <b style="color:var(--ts);">'+mined+'</b>'+minedBadge+'</div>';
   }
   // ── 보류함: 자동 처리 못한 파일 목록 + 막힌 사유 (대표 운영비전 2026-06-16) ──
-  //  소식지(newsletters): text_quality='경로오류'(서명실패)·'비었음'(빈추출) / 자료실(myspace_files): ocr_status='empty'(본문없음)
-  //  ※ 크기초과(18MB+ Gemini 413)는 현재 마커 없음(ocr-batch 보강 후속). 형식불가(office)는 'skip'=정상 제외이므로 보류 아님.
+  //  소식지(newsletters): text_quality='경로오류'(서명실패)·'비었음'(빈추출)·'크기초과'(18MB+)
+  //  자료실(myspace_files): ocr_status='empty'(본문없음)·'oversize'(18MB+)
+  //  ※ 형식불가(office)는 'skip'=정상 제외이므로 보류 아님.
   function _hbReason(kind, code){
     if(code==='경로오류') return {t:'경로 오류 · 서명 실패', c:'r'};
     if(code==='비었음')   return {t:'본문 없음 · 분석 실패', c:'y'};
     if(code==='empty')    return {t:'본문 없음', c:'y'};
+    if(code==='크기초과' || code==='oversize') return {t:'용량 초과 · 18MB+', c:'r'};
     return {t:code||'사유 미상', c:'y'};
   }
   function renderHoldBox(items){
@@ -1185,7 +1189,7 @@
         '자동 처리하지 못한 파일입니다. 사유를 확인하고 재업로드·형식 변경 후 다시 올려주세요.</div>'+rows;
   }
   window.acLoadSearchData = async function(){
-    var T=encodeURIComponent('텍스트'), E=encodeURIComponent('비었음'), P=encodeURIComponent('경로오류');
+    var T=encodeURIComponent('텍스트'), E=encodeURIComponent('비었음'), P=encodeURIComponent('경로오류'), Z=encodeURIComponent('크기초과');
     var c = await Promise.all([
       _count('newsletters?select=id'),                                                  /* 0 nlTotal */
       _count('newsletters?text_quality=eq.'+T+'&select=id'),                            /* 1 nlText */
@@ -1198,10 +1202,12 @@
       _count('knowledge_entries?status=eq.approved&select=id'),                         /* 8 kApproved */
       _count('knowledge_entries?status=eq.ai_draft&select=id'),                         /* 9 kQueue */
       _count('newsletters?text_quality=eq.'+P+'&select=id'),                            /* 10 nlPathErr(경로오류) */
-      _count('myspace_files?ocr_status=eq.empty&deleted_at=is.null&select=id')          /* 11 fEmpty(본문없음) */
+      _count('myspace_files?ocr_status=eq.empty&deleted_at=is.null&select=id'),         /* 11 fEmpty(본문없음) */
+      _count('newsletters?text_quality=eq.'+Z+'&select=id'),                            /* 12 nlOversize(크기초과) */
+      _count('myspace_files?ocr_status=eq.oversize&deleted_at=is.null&select=id')       /* 13 fOversize(크기초과) */
     ]);
     var runs=[]; try{ runs=await _rows('knowledge_extract_runs?select=created_at&order=created_at.desc&limit=1'); }catch(e){}
-    var holdTotal=(c[10]||0)+(c[2]||0)+(c[11]||0);  /* 경로오류 + 비었음 + 자료실 본문없음 */
+    var holdTotal=(c[10]||0)+(c[2]||0)+(c[11]||0)+(c[12]||0)+(c[13]||0);  /* 경로오류 + 비었음 + 본문없음 + 소식지/자료실 크기초과 */
     renderSearchData({
       nlTotal:c[0], nlText:c[1], nlFail:c[2], nlPending:c[3],
       fTotal:c[4], fDone:c[5], fPending:c[6], fSkip:c[7],
@@ -1212,13 +1218,17 @@
     var hb=await Promise.all([
       _rows('newsletters?text_quality=eq.'+P+'&select=id,title,company,publish_year,publish_month&limit=200'),
       _rows('newsletters?text_quality=eq.'+E+'&select=id,title,company,publish_year,publish_month&limit=200'),
-      _rows('myspace_files?ocr_status=eq.empty&deleted_at=is.null&select=id,original_name,ext,created_at&order=created_at.desc&limit=200')
+      _rows('newsletters?text_quality=eq.'+Z+'&select=id,title,company,publish_year,publish_month&limit=200'),
+      _rows('myspace_files?ocr_status=eq.empty&deleted_at=is.null&select=id,original_name,ext,created_at&order=created_at.desc&limit=200'),
+      _rows('myspace_files?ocr_status=eq.oversize&deleted_at=is.null&select=id,original_name,ext,created_at&order=created_at.desc&limit=200')
     ]);
     function _nlDate(r){ return (r.publish_year? r.publish_year+(r.publish_month? '.'+('0'+r.publish_month).slice(-2):'') : ''); }
     var items=[];
     (hb[0]||[]).forEach(function(r){ items.push({kind:'소식지', code:'경로오류', name:r.title||r.company||'(소식지)', date:_nlDate(r)}); });
     (hb[1]||[]).forEach(function(r){ items.push({kind:'소식지', code:'비었음',   name:r.title||r.company||'(소식지)', date:_nlDate(r)}); });
-    (hb[2]||[]).forEach(function(r){ items.push({kind:'자료실', code:'empty',    name:r.original_name||'(파일)', date:(r.created_at||'').slice(0,10)}); });
+    (hb[2]||[]).forEach(function(r){ items.push({kind:'소식지', code:'크기초과', name:r.title||r.company||'(소식지)', date:_nlDate(r)}); });
+    (hb[3]||[]).forEach(function(r){ items.push({kind:'자료실', code:'empty',    name:r.original_name||'(파일)', date:(r.created_at||'').slice(0,10)}); });
+    (hb[4]||[]).forEach(function(r){ items.push({kind:'자료실', code:'oversize', name:r.original_name||'(파일)', date:(r.created_at||'').slice(0,10)}); });
     renderHoldBox(items);
   };
 

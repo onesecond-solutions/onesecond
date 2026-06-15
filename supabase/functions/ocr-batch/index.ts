@@ -20,6 +20,8 @@ const CRON_SECRET   = Deno.env.get("CRON_SECRET") ?? "";
 // 소식지2 + 자료실2 = 4건/틱 ≈ 120초로 안전 마진 확보(2026-06-14 504 타임아웃 대응). 필요 시 함께 조정.
 const BATCH_NL    = 2;      // 소식지(newsletters) 틱당 처리 건수
 const BATCH_FILES = 2;      // 자료실(myspace_files) 틱당 처리 건수
+// ocr-extract 의 MAX_FILE_BYTES(18MB)와 동일. 초과분은 Gemini가 413 → 마킹해서 보류함에 잡고 무한 재시도 차단.
+const MAX_FILE_BYTES = 18 * 1024 * 1024;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -57,7 +59,7 @@ Deno.serve(async (req: Request) => {
   //    ※ source_path = newsletters private 버킷 경로(2026-06 정리분). source_pdf_url 없으면 아래에서 서명URL 생성.
   const q = "newsletters?select=id,source_pdf_url,source_path,title&full_text=is.null"
           + "&or=(source_pdf_url.not.is.null,source_path.not.is.null)"
-          + "&or=(text_quality.is.null,and(text_quality.neq." + encodeURIComponent("비었음") + ",text_quality.neq." + encodeURIComponent("경로오류") + "))"
+          + "&or=(text_quality.is.null,and(text_quality.neq." + encodeURIComponent("비었음") + ",text_quality.neq." + encodeURIComponent("경로오류") + ",text_quality.neq." + encodeURIComponent("크기초과") + "))"
           + "&limit=" + BATCH_NL;
   let rows: Array<{ id: string; source_pdf_url: string | null; source_path: string | null; title: string | null }> = [];
   try {
@@ -101,6 +103,12 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({ fileUrl }),
       });
       const j = await ex.json().catch(() => ({}));
+      // 18MB 초과(413) → '크기초과' 마킹(대상 쿼리에서 제외 = 무한 재시도 차단, 보류함에 노출)
+      if (ex.status === 413) {
+        failed++; console.error("[ocr-batch] 소식지 크기초과", nl.id);
+        await rest("newsletters?id=eq." + encodeURIComponent(nl.id), { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ text_quality: "크기초과" }) }).catch(() => {});
+        continue;
+      }
       if (!ex.ok) { failed++; console.error("[ocr-batch] extract 실패", nl.id, ex.status, j?.error); continue; }
       const text = (j && typeof j.text === "string") ? j.text : "";
       const chars = (j && typeof j.chars === "number") ? j.chars : text.length;
@@ -124,7 +132,7 @@ Deno.serve(async (req: Request) => {
   try {
     const r2 = await rest("newsletters?select=id&full_text=is.null"
       + "&or=(source_pdf_url.not.is.null,source_path.not.is.null)"
-      + "&or=(text_quality.is.null,text_quality.neq." + encodeURIComponent("비었음") + ")", { headers: { Prefer: "count=exact", Range: "0-0" } });
+      + "&or=(text_quality.is.null,and(text_quality.neq." + encodeURIComponent("비었음") + ",text_quality.neq." + encodeURIComponent("경로오류") + ",text_quality.neq." + encodeURIComponent("크기초과") + "))", { headers: { Prefer: "count=exact", Range: "0-0" } });
     const cr = r2.headers.get("content-range"); if (cr) remaining = parseInt(cr.split("/")[1] || "-1", 10);
   } catch (_e) {}
 
@@ -146,10 +154,10 @@ function isOcrTarget(mime: string, ext: string): boolean {
 }
 
 async function processMyspaceFiles() {
-  const out = { picked: 0, ok: 0, empty: 0, failed: 0, skip: 0, remaining: -1 };
-  let rows: Array<{ id: string; storage_path: string; mime_type: string | null; ext: string | null; original_name: string | null }> = [];
+  const out = { picked: 0, ok: 0, empty: 0, failed: 0, skip: 0, oversize: 0, remaining: -1 };
+  let rows: Array<{ id: string; storage_path: string; mime_type: string | null; ext: string | null; original_name: string | null; file_size: number | null }> = [];
   try {
-    const q = "myspace_files?select=id,storage_path,mime_type,ext,original_name"
+    const q = "myspace_files?select=id,storage_path,mime_type,ext,original_name,file_size"
             + "&ocr_status=is.null&storage_path=not.is.null&deleted_at=is.null&limit=" + BATCH_FILES;
     const r = await rest(q);
     if (!r.ok) { (out as any).error = "files 조회 실패 " + r.status; return out; }
@@ -162,6 +170,10 @@ async function processMyspaceFiles() {
       // 비대상 타입(office류 등) → skip 마킹(재선택 방지)
       if (!isOcrTarget(f.mime_type || "", f.ext || "")) {
         await patchFile(f.id, { ocr_status: "skip" }); out.skip++; continue;
+      }
+      // 18MB 초과 → 사전 'oversize' 마킹(Gemini 호출 0 = 다운로드·OCR 비용 0, 무한 재시도 차단, 보류함 노출)
+      if (f.file_size && f.file_size > MAX_FILE_BYTES) {
+        await patchFile(f.id, { ocr_status: "oversize" }); out.oversize++; continue;
       }
       // private 'myspace' 버킷 서명URL (service_role)
       const enc = f.storage_path.split("/").map(encodeURIComponent).join("/");
@@ -181,6 +193,10 @@ async function processMyspaceFiles() {
         body: JSON.stringify({ fileUrl }),
       });
       const j = await ex.json().catch(() => ({}));
+      // 18MB 초과(413, file_size 없어 사전차단 못한 경우) → 'oversize' 마킹
+      if (ex.status === 413) { await patchFile(f.id, { ocr_status: "oversize" }); out.oversize++; console.error("[ocr-batch/files] 크기초과", f.id); continue; }
+      // 형식 불가(415, isOcrTarget 통과했으나 실제 content-type 비대상) → 'skip' 마킹
+      if (ex.status === 415) { await patchFile(f.id, { ocr_status: "skip" }); out.skip++; console.error("[ocr-batch/files] 형식불가", f.id); continue; }
       if (!ex.ok) { out.failed++; console.error("[ocr-batch/files] extract 실패", f.id, ex.status, j?.error); continue; }
       const text = (j && typeof j.text === "string") ? j.text : "";
 
