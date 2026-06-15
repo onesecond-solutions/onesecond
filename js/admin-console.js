@@ -681,8 +681,8 @@
       kpi('', '오늘 접속', d.today, '명', actPct, 'logs') +
       kpi('', '활성 지점', d.activeBr, '개', d.totalBr?('전체 '+d.totalBr):'', 'branches') +
       kpi(d.riskBr>0?'alert':'', '위험 지점', d.riskBr, '개', '인원 0', 'branches') +
-      kpi(d.unassigned>0?'warn':'', '미배정', d.unassigned, '명', '지점 없음', 'users') +
-      kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', '', 'approvals');
+      kpi((d.unassigned>0||d.unclassified>0)?'warn':'', '미배정', d.unassigned, '명', (d.unclassified>0?('지점없음 · 역할 미분류 '+d.unclassified):'지점 없음'), 'users') +
+      kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', (d.pendingOther>0?('원수사 '+d.pendingIns+' · 기타 '+d.pendingOther):''), 'approvals');
   }
 
   function _ctTeams(arr){  // 지점 인원 → 팀(text) 그룹 (빈 팀명 제외)
@@ -767,15 +767,17 @@
   };
 
   window.acLoadDashboard = async function(){
-    var [total, pendingAll, pendingIns, unassigned, newToday, branches, users] = await Promise.all([
+    var [total, pendingAll, pendingIns, unassigned, newToday, unclassified, branches, users] = await Promise.all([
       _count('users?select=id'),
       _count('users?status=eq.pending&select=id'),
       _count('users?status=eq.pending&role=in.('+INSURER_ROLES+')&select=id'),
       _count('users?status=eq.active&branch_id=is.null&select=id'),
       _count('users?created_at=gte.'+_kstMidnightISO()+'&select=id'),
+      _count('users?status=eq.active&role=not.in.('+ROLE_KEYS.join(',')+')&select=id'),
       _rows('branches?select=id,name,ga_org_name,is_active&order=name.asc'),
       _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000')
     ]);
+    var pendingOther = Math.max(0, (pendingAll||0) - (pendingIns||0));  /* 원수사 외 pending = GA·기타(승인 화면 미노출, 사용자 탭 처리) */
     // 최근 30일 로그인 → user별 마지막 접속(lastSeen) + 오늘 접속(distinct)
     var loginLogs=[];
     try{ loginLogs=await _rows('activity_logs?event_type=in.(login,login_admin)&created_at=gte.'+new Date(Date.now()-30*86400000).toISOString()+'&select=user_id,created_at&order=created_at.desc&limit=8000'); }catch(e){}
@@ -792,7 +794,8 @@
     var riskBr=branches.filter(function(b){ return !((byBranch[b.id]||[]).length); }).length;
 
     renderBoard({ total:total, today:Object.keys(ts).length, newToday:newToday,
-      activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned, pending:pendingAll });
+      activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned,
+      pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified });
     renderOrgTree(branches, byBranch);
     acOrgPick('_all');
 
