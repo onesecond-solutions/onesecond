@@ -2795,17 +2795,19 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="act-panel" id="ac-org-detail"><div class="ac-card-empty" style="padding:40px 0">조직을 선택하세요</div></div>
         </div>
 
-        <!-- 검색 데이터 현황 (어드민 = 상태 본다 모델 · 보존) -->
+        <!-- 검색 데이터 현황 (어드민 = 상태 본다 모델 · 요약) -->
         <div class="ac-section" style="margin-top:26px">
           <div class="ac-section-head"><i data-lucide="search"></i>
-            <h2>검색 데이터 현황</h2><span class="ac-section-sub">Search Index</span></div>
+            <h2>검색 데이터 현황</h2><span class="ac-section-sub">Search Index</span>
+            <button class="ac-btn ac-btn-sm" style="margin-left:auto" onclick="acGoSec('knowledge')">지식엔진 관리 →</button></div>
           <div class="ac-card ac-card-empty" id="ac-search-data">불러오는 중…</div>
         </div>
 
-        <!-- 전사 최근 활동 (보존) -->
+        <!-- 전사 최근 활동 (요약 — 전수는 로그 탭) -->
         <div class="ac-section">
           <div class="ac-section-head"><i data-lucide="clock"></i>
-            <h2>최근 활동</h2><span class="ac-section-sub">Recent Activity</span></div>
+            <h2>최근 활동</h2><span class="ac-section-sub">Recent Activity</span>
+            <button class="ac-btn ac-btn-sm" style="margin-left:auto" onclick="acGoSec('logs')">전체 로그 →</button></div>
           <div class="ac-card ac-card-empty" id="ac-recent-activity">불러오는 중…</div>
         </div>
       </div>
