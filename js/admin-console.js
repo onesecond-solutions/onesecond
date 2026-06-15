@@ -142,41 +142,10 @@
     renderUserChips(); renderUserSearch();
     if(!_usersAll.length || reload){
       area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
-      _usersAll = await _rows('users?select=id,name,email,role,company,status,created_at,branch_id,team&order=created_at.desc&limit=300');
+      _usersAll = await _rows('users?select=id,name,email,role,company,status,created_at&order=created_at.desc&limit=300');
     }
-    renderUsersOrg();
     renderUserCards();
   };
-  // 조직별 사용 현황 — 회사 > 지점 > 팀 인원 일목요연 (운영>사용자 상단)
-  async function renderUsersOrg(){
-    var host=document.getElementById('ac-users-org'); if(!host) return;
-    var res; try{ res=await Promise.all([_rows('branches?select=id,name,company_id,is_active&order=name.asc'), _rows('companies?select=id,name')]); }catch(e){ host.innerHTML=''; return; }
-    var branches=res[0]||[], companies=res[1]||[];
-    var users=(_usersAll||[]).filter(function(u){ return u.status!=='pending'; });
-    var byBr={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBr[k]=byBr[k]||[]).push(u); });
-    var byCo={}; branches.forEach(function(b){ var k=b.company_id||'_noco'; (byCo[k]=byCo[k]||[]).push(b); });
-    function teamRows(arr){
-      var tmap={}; arr.forEach(function(u){ var t=(u.team||'').trim()||'(팀 미지정)'; (tmap[t]=tmap[t]||[]).push(u); });
-      return Object.keys(tmap).sort().map(function(t){ return '<div class="ac-org-row lv3"><span class="ac-org-nm">'+esc(t)+'</span><span class="ac-org-n">'+tmap[t].length+'명</span></div>'; }).join('');
-    }
-    function brBlock(b){
-      var arr=byBr[b.id]||[];
-      return '<div class="ac-org-row lv2"><span class="ac-org-nm">'+esc(b.name||'(지점)')+(b.is_active===false?' <span class="ac-badge">비활성</span>':'')+'</span><span class="ac-org-n">'+arr.length+'명</span></div>'+teamRows(arr);
-    }
-    var rows='';
-    companies.forEach(function(c){
-      var brs=byCo[c.id]||[]; if(!brs.length) return;
-      var tot=0; brs.forEach(function(b){ tot+=(byBr[b.id]||[]).length; });
-      rows+='<div class="ac-org-row lv1"><span class="ac-org-nm">'+esc(c.name||'(회사)')+'</span><span class="ac-org-n">'+tot+'명</span></div>';
-      brs.forEach(function(b){ rows+=brBlock(b); });
-    });
-    var noco=byCo['_noco']||[];
-    if(noco.length){ var t2=0; noco.forEach(function(b){ t2+=(byBr[b.id]||[]).length; }); rows+='<div class="ac-org-row lv1"><span class="ac-org-nm" style="color:var(--tf)">회사 미지정</span><span class="ac-org-n">'+t2+'명</span></div>'; noco.forEach(function(b){ rows+=brBlock(b); }); }
-    var un=byBr['_none']||[];
-    if(un.length) rows+='<div class="ac-org-row lv1"><span class="ac-org-nm" style="color:var(--err)">미배정 (지점 없음)</span><span class="ac-org-n">'+un.length+'명</span></div>';
-    host.innerHTML='<div class="ac-org-summary"><div class="ac-org-hd"><i data-lucide="network"></i>조직별 사용 현황 <small>회사 · 지점 · 팀</small></div>'+(rows||'<div class="ac-card-empty" style="padding:20px 0">조직 없음</div>')+'</div>';
-    if(window.lucide) window.lucide.createIcons();
-  }
   function renderUserChips(){
     var el=document.getElementById('ac-users-chips'); if(!el) return;
     var defs=[['all','전체'],['admin','어드민'],['ga','GA'],['insurer','원수사'],['pending','승인대기']];
