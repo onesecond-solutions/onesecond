@@ -197,6 +197,9 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .mr-tn-tm{padding-left:36px;cursor:pointer;}
 .mr-tn-tm:hover{background:color-mix(in srgb,var(--bd) 30%,transparent);}
 .mr-tn-tm.on{background:color-mix(in srgb,var(--ac) 12%,transparent);color:var(--ac);font-weight:700;}
+.mr-tn-br2{font-weight:800;}
+.mr-tn-add{padding-left:36px;color:var(--ac);font-weight:700;cursor:pointer;}
+.mr-tn-add:hover{background:color-mix(in srgb,var(--ac) 9%,transparent);}
 .mr-org-panel{border:0.5px solid var(--bd);border-radius:10px;padding:16px 18px;background:var(--s1);min-height:200px;}
 @media(max-width:760px){.mr-org{grid-template-columns:1fr;}}
 .org-grp{border-bottom:0.5px solid var(--bd);}
@@ -7746,19 +7749,18 @@ function mrRenderSampleTree(){
   var chips=document.getElementById('mr-view-chips');
   if(chips) chips.style.display=((typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin')?'flex':'none';
   var mode=window._mrViewMode||'branch';
-  var totalM=0; MR_SAMPLE.branches.forEach(function(b){ b.teams.forEach(function(t){ totalM+=t.members.length; }); });
-  var html='<div class="mr-tn mr-tn-co">'+_sEsc(MR_SAMPLE.company)+'<span class="mr-tn-c">'+totalM+'</span></div>';
-  MR_SAMPLE.branches.forEach(function(b,bi){
-    var bm=0; b.teams.forEach(function(t){ bm+=t.members.length; });
-    html+='<div class="mr-tn mr-tn-br">'+_sEsc(b.name)+'<span class="mr-tn-c">'+bm+'</span></div>';
-    b.teams.forEach(function(t,ti){
-      var key=bi+'_'+ti;
-      var label;
-      if(mode==='manager'){ var mgr=t.members.filter(function(m){return m.role==='ga_manager';})[0]; label=(mgr?_sEsc(mgr.name)+' 실장':'(실장 미지정)')+' · '+_sEsc(t.name); }
-      else label=_sEsc(t.name);
-      html+='<div class="mr-tn mr-tn-tm'+(key===_mrSel?' on':'')+'" onclick="mrSamplePick(\''+key+'\')">'+label+'<span class="mr-tn-c">'+t.members.length+'</span></div>';
-    });
+  /* 지점장 관점: 회사 노드 없음(상단 표시). 본인 지점(샘플=첫 지점) → 팀들 → + 팀 추가 */
+  var b=MR_SAMPLE.branches[0];
+  var bm=0; b.teams.forEach(function(t){ bm+=t.members.length; });
+  var html='<div class="mr-tn mr-tn-br2">'+_sEsc(b.name)+'<span class="mr-tn-c">'+bm+'명</span></div>';
+  b.teams.forEach(function(t,ti){
+    var key='0_'+ti;
+    var label;
+    if(mode==='manager'){ var mgr=t.members.filter(function(m){return m.role==='ga_manager';})[0]; label=(mgr?_sEsc(mgr.name)+' 실장':'(실장 미지정)')+' · '+_sEsc(t.name); }
+    else label=_sEsc(t.name);
+    html+='<div class="mr-tn mr-tn-tm'+(key===_mrSel?' on':'')+'" onclick="mrSamplePick(\''+key+'\')">'+label+'<span class="mr-tn-c">'+t.members.length+'</span></div>';
   });
+  html+='<div class="mr-tn mr-tn-add" onclick="alert(\'샘플 — 실제로는 여기서 팀을 추가합니다 (또는 지점원이 가입하면 자동 생성)\')">+ 팀 추가</div>';
   tree.innerHTML=html;
   mrSamplePick(_mrSel||'0_0');
 }
