@@ -9086,6 +9086,11 @@ async function _runSearch(q){
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
   var terms=_sTokens(q); if(!terms.length){ body.innerHTML=defaultPanel; return; }
   var SIK=encodeURIComponent('*소식지*');
+  /* 자료실 누출 방어(2026-06-16): 비-admin은 개인 파일(scope=personal)은 본인(owner_id) 것만 검색 노출.
+     팀/지점 공유 파일은 RLS가 소속 격리. 어드민은 사고대응 god-view 유지(필터 없음). */
+  var _me=(window.AppState&&window.AppState.userId)||'';
+  var _isAdm=!!document.querySelector('#app.is-admin');
+  var _vaultBase='deleted_at=is.null'+((!_isAdm&&_me)?'&or=(scope.neq.personal,owner_id.eq.'+encodeURIComponent(_me)+')':'');
   var groups=[
     {label:'보험Q&A',     color:'#22D3EE', table:'posts',           base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                       select:'id,title,content,created_at',                          order:'created_at.desc',                                         body:function(r){return r.content;},                                        m:function(r){return _sFmtDate(r.created_at);}},
     {label:'소식지',      color:'#6366F1', table:'newsletters',     base:'',                                       cols:['title','company','full_text'],          select:'id,title,company,full_text,text_quality,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                      t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}},
@@ -9094,7 +9099,7 @@ async function _runSearch(q){
     /* 캘린더(calendar_events)는 검색 대상에서 제외 — 개인 일정·다이어리가 통합검색에 노출되는 것 차단(2026-06-16). RLS상 본인/공개만이지만 통합검색 대상에서 빼는 게 정합 */
     {label:'지식엔진',    color:'#F59E0B', table:'knowledge_entries', base:'status=eq.approved',                   cols:['title','body'],                         select:'id:entry_id,title,body,category',                      order:'',                                                        body:function(r){return r.body;},                                           m:function(r){return r.category||'지식';}},
     /* 자료실(myspace_files) — OCR 적재된 search_text 검색. 스코프(개인/팀/지점) 격리는 사용자 토큰 RLS가 자동 보장 (별도 권한코드 불필요) */
-    {label:'자료실',      color:'#14B8A6', table:'myspace_files',   base:'deleted_at=is.null',                     cols:['search_text','original_name'],          select:'id,original_name,search_text,ocr_status,ext,updated_at',          order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                    t:function(r){return r.original_name||'(파일)';},                          m:function(r){return (r.ext||'파일').toString().toUpperCase();}}
+    {label:'자료실',      color:'#14B8A6', table:'myspace_files',   base:_vaultBase,                               cols:['search_text','original_name'],          select:'id,original_name,search_text,ocr_status,ext,updated_at',          order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                    t:function(r){return r.original_name||'(파일)';},                          m:function(r){return (r.ext||'파일').toString().toUpperCase();}}
   ];
   var results=await Promise.all(groups.map(function(g){
     var path=g.table+'?'+(g.base?g.base+'&':'')+_sBuildFilter(g.cols,terms)+'&select='+g.select+(g.order?'&order='+g.order:'')+'&limit=100';
