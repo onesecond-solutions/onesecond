@@ -729,6 +729,48 @@
     s+='</div>';
     return s;
   }
+  /* 지점 위험 사유 다차원 (비활성 지점은 제외 — 의도적 비활성) */
+  function _ctRiskReasons(b, arr){
+    if(b.is_active===false) return [];
+    var n=(arr||[]).length;
+    if(!n) return ['인원 0'];
+    var ls=_CT.lastSeen||{}, hasLog=false; for(var k in ls){ hasLog=true; break; }
+    var reasons=[];
+    if(hasLog){
+      var now=Date.now(), wk=7*86400000, act=0, leader=0;
+      arr.forEach(function(u){
+        var t=ls[u.id]; if(t && (now-new Date(t).getTime())<wk) act++;
+        var r=u.role; if(r==='ga_branch_manager'||r==='ga_manager'||r==='insurer_branch_manager'||r==='insurer_manager') leader++;
+      });
+      if(act===0) reasons.push('전원 7일+ 미접속');
+      else if(act/n < 0.34) reasons.push('활성 저조 '+act+'/'+n);
+      if(n>=3 && leader===0) reasons.push('리더(지점장·실장) 공백');
+    }
+    return reasons;
+  }
+  function renderRiskPanel(branches, byBranch){
+    var el=document.getElementById('ac-risk-panel'); if(!el) return;
+    var items=[];
+    (branches||[]).forEach(function(b){
+      var arr=byBranch[b.id]||[]; var rs=_ctRiskReasons(b, arr);
+      if(rs.length) items.push({ b:b, reasons:rs, sev:(!arr.length?'r':'y') });
+    });
+    var un=(byBranch['_none']||[]).length;
+    el.classList.remove('ac-card-empty');
+    if(!items.length && !un){ el.innerHTML='<div class="ac-card-empty" style="padding:22px 0"><i data-lucide="shield-check"></i>현재 위험 신호 없음 — 모든 지점 정상</div>'; if(window.lucide)window.lucide.createIcons(); return; }
+    items.sort(function(a,b){ return (a.sev==='r'?0:1)-(b.sev==='r'?0:1); });
+    var rows=items.map(function(it){
+      var badge='<span class="act-risk-sev '+it.sev+'">'+(it.sev==='r'?'위험':'주의')+'</span>';
+      return '<div class="act-risk-row" onclick="acOrgPick(\''+esc(it.b.id)+'\')">'+badge+
+        '<span class="act-risk-nm">'+esc(it.b.name||'(지점)')+'</span>'+
+        '<span class="act-risk-rs">'+it.reasons.map(esc).join(' · ')+'</span>'+
+        '<span class="act-risk-go">보기 →</span></div>';
+    }).join('');
+    if(un) rows+='<div class="act-risk-row" onclick="acOrgPick(\'_none\')"><span class="act-risk-sev y">주의</span>'+
+      '<span class="act-risk-nm">미배정 사용자</span><span class="act-risk-rs">'+un+'명 — 지점 배정 필요</span><span class="act-risk-go">보기 →</span></div>';
+    el.innerHTML=rows;
+  }
+
   function renderOrgTree(companies, branches, byBranch, byCompany){
     var el=document.getElementById('ac-org-tree'); if(!el) return;
     el.classList.remove('ac-card-empty');
@@ -846,6 +888,7 @@
       activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned,
       pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified });
     renderOrgTree(_CT.companies, branches, byBranch, byCompany);
+    renderRiskPanel(branches, byBranch);
     acOrgPick('_all');
 
     // 보존 위젯
