@@ -972,22 +972,41 @@
       return { title:t.title, cat:t.cat, done:done, total:t.phases.length, cur:cur?cur.n:'완료' };
     });
   }
+  /* 좌측 작업 목록(타이틀 카드) / 우측 선택 상세(타임라인) — 스크립트·게시판 형식 */
+  var _flowSel=0;
+  function _flowDone(t){ return t.phases.every(function(p){return p.s==='done';}); }
+  function _renderFlowList(){
+    var el=document.getElementById('ac-flow-list'); if(!el) return;
+    el.innerHTML=WORK_TRACKS.map(function(t,i){
+      var st=_flowDone(t)?'done':'active', dn=t.phases.filter(function(p){return p.s==='done';}).length;
+      return '<div class="flow-li'+(i===_flowSel?' sel':'')+'" onclick="acFlowPick('+i+')">'+
+        '<div class="flow-li-top"><span class="flow-cat">'+esc(t.cat)+'</span><span class="flow-st '+st+'">'+(st==='done'?'완료':'진행중')+'</span></div>'+
+        '<div class="flow-li-title">'+esc(t.title)+'</div>'+
+        '<div class="flow-li-sub">'+dn+'/'+t.phases.length+' 단계</div>'+
+      '</div>';
+    }).join('');
+  }
+  function _renderFlowDetail(){
+    var el=document.getElementById('ac-flow-detail'); if(!el) return;
+    var t=WORK_TRACKS[_flowSel];
+    if(!t){ el.innerHTML='<div class="ac-card-empty" style="padding:40px 0">작업을 선택하세요</div>'; return; }
+    var st=_flowDone(t)?'done':'active';
+    var nodes=t.phases.map(function(p,i){
+      var ic=(p.s==='done')?'✓':(i+1);
+      return '<div class="flow-node '+p.s+'"><div class="flow-dot">'+ic+'</div><div class="flow-name">'+esc(p.n)+'</div></div>';
+    }).join('<div class="flow-bar"></div>');
+    el.innerHTML='<div class="flow-d-top"><span class="flow-cat">'+esc(t.cat)+'</span><span class="flow-st '+st+'">'+(st==='done'?'완료':'진행중')+'</span></div>'+
+      '<div class="flow-d-title">'+esc(t.title)+'</div>'+
+      '<div class="flow-d-note">'+esc(t.note||'')+'</div>'+
+      '<div class="flow-line">'+nodes+'</div>';
+  }
+  window.acFlowPick=function(i){ _flowSel=i; _renderFlowDetail();
+    var ls=document.querySelectorAll('#ac-flow-list .flow-li'); for(var k=0;k<ls.length;k++) ls[k].classList.toggle('sel', k===i); };
   window.acLoadFlow = function(){
     var area=document.getElementById('ac-flow-body'); if(!area) return;
-    function card(t){
-      var st=t.phases.every(function(p){return p.s==='done';})?'done':'active';
-      var badge=(st==='done')?'<span class="flow-st done">완료</span>':'<span class="flow-st active">진행중</span>';
-      var nodes=t.phases.map(function(p,i){
-        var ic=(p.s==='done')?'✓':(i+1);
-        return '<div class="flow-node '+p.s+'"><div class="flow-dot">'+ic+'</div><div class="flow-name">'+esc(p.n)+'</div></div>';
-      }).join('<div class="flow-bar"></div>');
-      return '<div class="flow-track '+st+'">'+
-        '<div class="flow-info"><span class="flow-cat">'+esc(t.cat)+'</span>'+badge+'<b>'+esc(t.title)+'</b><span class="flow-note">'+esc(t.note||'')+'</span></div>'+
-        '<div class="flow-line">'+nodes+'</div>'+
-      '</div>';
-    }
-    /* 카드 안 좌(정보)/우(타임라인) · 세로 쌓임 · 배열 순서=최신순(위로) */
-    area.innerHTML='<div class="flow-list">'+WORK_TRACKS.map(card).join('')+'</div>';
+    if(_flowSel>=WORK_TRACKS.length) _flowSel=0;
+    area.innerHTML='<div class="flow-split"><div class="flow-list" id="ac-flow-list"></div><div class="flow-detail" id="ac-flow-detail"></div></div>';
+    _renderFlowList(); _renderFlowDetail();
     if(window.lucide) window.lucide.createIcons();
   };
 
