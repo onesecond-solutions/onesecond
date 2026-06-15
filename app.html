@@ -2817,6 +2817,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           #v-admin .flow-info-top{display:flex;align-items:center;gap:6px}
           #v-admin .flow-info b{font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:var(--ts)}
           #v-admin .flow-note{font-size:11.5px;color:var(--tf);line-height:1.4}
+          #v-admin .flow-go{font-size:11.5px;color:var(--ac);font-weight:700;margin-top:3px}
+          #v-admin .flow-track[onclick]:hover{border-color:color-mix(in srgb,var(--ac) 50%,var(--bd))}
           #v-admin .flow-cat{font-size:11px;font-weight:700;color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent);padding:3px 9px;border-radius:6px}
           #v-admin .flow-st{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px}
           #v-admin .flow-st.done{background:color-mix(in srgb,#2F9E68 14%,transparent);color:#2F9E68}
@@ -2877,13 +2879,6 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="act-panel" id="ac-org-detail"><div class="ac-card-empty" style="padding:40px 0">조직을 선택하세요</div></div>
         </div>
 
-        <!-- 검색 데이터 현황 (어드민 = 상태 본다 모델 · 요약) -->
-        <div class="ac-section" style="margin-top:26px">
-          <div class="ac-section-head"><i data-lucide="search"></i>
-            <h2>검색 데이터 현황</h2><span class="ac-section-sub">Search Index</span>
-            <button class="ac-btn ac-btn-sm" style="margin-left:auto" onclick="acGoSec('knowledge')">지식엔진 관리 →</button></div>
-          <div class="ac-card ac-card-empty" id="ac-search-data">불러오는 중…</div>
-        </div>
 
         <!-- 전사 최근 활동 (요약 — 전수는 로그 탭) -->
         <div class="ac-section">
@@ -2979,6 +2974,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 지식엔진 (별도 최상위 탭 · 카드 클릭 = 카드 아래 iframe 인라인 펼침. 정식 SPA 내장은 Phase 3 백로그) -->
       <div class="ac-sec" data-sec="knowledge">
         <div class="ac-section-head"><i data-lucide="brain-circuit"></i><h2>지식엔진</h2><span class="ac-section-sub">Knowledge Engine · admin 도구</span></div>
+        <!-- 검색 데이터 현황 (대시보드에서 이사 · 2026-06-15) -->
+        <div class="ac-section" style="margin:4px 0 18px">
+          <div class="ac-section-head" style="font-size:14px"><i data-lucide="search"></i>
+            <h2 style="font-size:14px">검색 데이터 현황</h2><span class="ac-section-sub">Search Index</span></div>
+          <div class="ac-card ac-card-empty" id="ac-search-data">불러오는 중…</div>
+        </div>
         <div class="ac-grid cols-2">
           <div class="ac-card kn-card" data-kn="vault" onclick="acKnToggle('vault',this)" style="cursor:pointer;">
             <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i data-lucide="library-big"></i> 지식창고 <i data-lucide="chevron-down" class="kn-chev" style="margin-left:auto;width:16px;height:16px;"></i></div>

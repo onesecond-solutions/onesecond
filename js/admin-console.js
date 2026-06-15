@@ -956,11 +956,11 @@
       {n:'탭 전수 점검', s:'done'}, {n:'자료실 myspace_files', s:'done'}, {n:'시스템 설정 허상제거', s:'done'} ] },
     { cat:'어드민', title:'사이드바·바텀시트 개편', note:'매니저방·라이브러리 이식·스크립트 힌트', phases:[
       {n:'헤더·바텀시트 UX', s:'done'}, {n:'사이드바 재편', s:'done'}, {n:'매니저방 신설', s:'done'} ] },
-    { cat:'검색', title:'검색 데이터 인프라', note:'보험사 자료 → 검색 가능 구조화', phases:[
+    { cat:'검색', title:'검색 데이터 인프라', note:'보험사 자료 → 검색 가능 구조화', link:'knowledge', phases:[
       {n:'Phase A 자료실 OCR', s:'done'}, {n:'Phase B 게시판·첨부', s:'todo'}, {n:'Phase C 통합검색', s:'todo'} ] },
-    { cat:'지식', title:'지식엔진 채굴', note:'용어·사례 자동 채굴 → 검수 → 적재', phases:[
+    { cat:'지식', title:'지식엔진 채굴', note:'용어·사례 자동 채굴 → 검수 → 적재', link:'knowledge', phases:[
       {n:'사이클1~3 적재', s:'done'}, {n:'사이클4 검수', s:'active'}, {n:'적재', s:'todo'} ] },
-    { cat:'검색', title:'소식지 본문화', note:'PDF 소식지 → OCR 본문 검색화', phases:[
+    { cat:'검색', title:'소식지 본문화', note:'PDF 소식지 → OCR 본문 검색화', link:'knowledge', phases:[
       {n:'업로드', s:'done'}, {n:'OCR 본문화', s:'active'}, {n:'완료', s:'todo'} ] },
     { cat:'결제', title:'정기결제(빌링)', note:'구독 자동결제 (PortOne/KG이니시스)', phases:[
       {n:'구독·테이블·Edge함수', s:'done'}, {n:'PG 심사·실증', s:'active'}, {n:'cron 자동화', s:'todo'} ] }
@@ -983,9 +983,11 @@
         var ic=(p.s==='done')?'✓':(i+1);
         return '<div class="flow-node '+p.s+'"><div class="flow-dot">'+ic+'</div><div class="flow-name">'+esc(p.n)+'</div></div>';
       }).join('<div class="flow-bar"></div>');
-      return '<div class="flow-track '+st+'">'+
+      var clk = t.link ? ' onclick="acGoSec(\''+t.link+'\')" style="cursor:pointer"' : '';
+      var go = t.link ? '<span class="flow-go">상세 보기 →</span>' : '';
+      return '<div class="flow-track '+st+'"'+clk+'>'+
         '<div class="flow-info"><div class="flow-info-top"><span class="flow-cat">'+esc(t.cat)+'</span>'+badge+'</div>'+
-          '<b>'+esc(t.title)+'</b><span class="flow-note">'+esc(t.note||'')+'</span></div>'+
+          '<b>'+esc(t.title)+'</b><span class="flow-note">'+esc(t.note||'')+'</span>'+go+'</div>'+
         '<div class="flow-line">'+nodes+'</div>'+
       '</div>';
     }
@@ -1099,10 +1101,9 @@
       renderTrend(signupSeries, loginSeries);
     })();
 
-    // 보존 위젯
+    // 보존 위젯 (검색 데이터 현황은 지식엔진 탭으로 이사 — 대시보드 미로드)
     if(window.renderFlowSummary) window.renderFlowSummary();
     await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=5'));
-    if(window.acLoadSearchData) window.acLoadSearchData();
 
     // 승인 배지 동기화 (기존 의미 = 보험사 가입 승인)
     var nb=document.getElementById('ac-nav-badge-approvals');
@@ -1190,7 +1191,7 @@
     posts:'content', comments:'content', library:'content',
     visibility:'validation', rls:'validation',
     menu:'system', notice:'system', settings:'system' };
-  var AC_LOAD = { dashboard:'acLoadDashboard', flow:'acLoadFlow', approvals:'acLoadApprovals', users:'acLoadUsers',
+  var AC_LOAD = { dashboard:'acLoadDashboard', flow:'acLoadFlow', knowledge:'acLoadSearchData', approvals:'acLoadApprovals', users:'acLoadUsers',
     branches:'acLoadBranches', teams:'acLoadTeams', orgtree:'acLoadOrgTree', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
     visibility:'acLoadVisibility', rls:'acLoadRlsOverview', logs:'acLoadLogs',
     menu:'acLoadMenu', notice:'acLoadNotice', settings:'acLoadSettings' };
