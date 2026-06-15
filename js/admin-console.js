@@ -947,10 +947,15 @@
   // ════ 작업 흐름 (Process Flow) — 총괄팀장이 작업하며 갱신, 어드민에 대표용 보관 ════
   //  · 데이터=코드 상수(git 진실원천). s: done(완료)·active(진행중)·todo(예정)
   //  · 진행 단계가 바뀌면 이 배열만 갱신하면 됨
+  //  · 배열 순서 = 최신순(위로). 새 작업/갱신은 위쪽에 둔다.
   var WORK_TRACKS = [
     { cat:'어드민', title:'운영 관제센터', note:'게시판 알림판 → 전국 조직 관제센터', phases:[
       {n:'1차 상황판·조직트리', s:'done'}, {n:'2차 회사계층·건강도', s:'done'},
       {n:'3차 위험·추세·콘텐츠', s:'done'}, {n:'작업 흐름 보드', s:'active'} ] },
+    { cat:'어드민', title:'어드민 구버전 정리', note:'자료실·시스템 설정 현행화', phases:[
+      {n:'탭 전수 점검', s:'done'}, {n:'자료실 myspace_files', s:'done'}, {n:'시스템 설정 허상제거', s:'done'} ] },
+    { cat:'어드민', title:'사이드바·바텀시트 개편', note:'매니저방·라이브러리 이식·스크립트 힌트', phases:[
+      {n:'헤더·바텀시트 UX', s:'done'}, {n:'사이드바 재편', s:'done'}, {n:'매니저방 신설', s:'done'} ] },
     { cat:'검색', title:'검색 데이터 인프라', note:'보험사 자료 → 검색 가능 구조화', phases:[
       {n:'Phase A 자료실 OCR', s:'done'}, {n:'Phase B 게시판·첨부', s:'todo'}, {n:'Phase C 통합검색', s:'todo'} ] },
     { cat:'지식', title:'지식엔진 채굴', note:'용어·사례 자동 채굴 → 검수 → 적재', phases:[
@@ -969,16 +974,20 @@
   }
   window.acLoadFlow = function(){
     var area=document.getElementById('ac-flow-body'); if(!area) return;
-    area.innerHTML = WORK_TRACKS.map(function(t){
+    function card(t){
+      var st=t.phases.every(function(p){return p.s==='done';})?'done':'active';
+      var badge=(st==='done')?'<span class="flow-st done">완료</span>':'<span class="flow-st active">진행중</span>';
       var nodes=t.phases.map(function(p,i){
         var ic=(p.s==='done')?'✓':(i+1);
         return '<div class="flow-node '+p.s+'"><div class="flow-dot">'+ic+'</div><div class="flow-name">'+esc(p.n)+'</div></div>';
       }).join('<div class="flow-bar"></div>');
-      return '<div class="flow-track">'+
-        '<div class="flow-track-hd"><span class="flow-cat">'+esc(t.cat)+'</span><b>'+esc(t.title)+'</b><span class="flow-note">'+esc(t.note||'')+'</span></div>'+
+      return '<div class="flow-track '+st+'">'+
+        '<div class="flow-info"><span class="flow-cat">'+esc(t.cat)+'</span>'+badge+'<b>'+esc(t.title)+'</b><span class="flow-note">'+esc(t.note||'')+'</span></div>'+
         '<div class="flow-line">'+nodes+'</div>'+
       '</div>';
-    }).join('');
+    }
+    /* 카드 안 좌(정보)/우(타임라인) · 세로 쌓임 · 배열 순서=최신순(위로) */
+    area.innerHTML='<div class="flow-list">'+WORK_TRACKS.map(card).join('')+'</div>';
     if(window.lucide) window.lucide.createIcons();
   };
 
