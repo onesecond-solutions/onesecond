@@ -944,6 +944,44 @@
   };
   window.acToggleMlist=function(el){ var w=el&&el.parentNode; if(w) w.classList.toggle('collapsed'); };
 
+  // ════ 작업 흐름 (Process Flow) — 총괄팀장이 작업하며 갱신, 어드민에 대표용 보관 ════
+  //  · 데이터=코드 상수(git 진실원천). s: done(완료)·active(진행중)·todo(예정)
+  //  · 진행 단계가 바뀌면 이 배열만 갱신하면 됨
+  var WORK_TRACKS = [
+    { cat:'어드민', title:'운영 관제센터', note:'게시판 알림판 → 전국 조직 관제센터', phases:[
+      {n:'1차 상황판·조직트리', s:'done'}, {n:'2차 회사계층·건강도', s:'done'},
+      {n:'3차 위험·추세·콘텐츠', s:'done'}, {n:'작업 흐름 보드', s:'active'} ] },
+    { cat:'검색', title:'검색 데이터 인프라', note:'보험사 자료 → 검색 가능 구조화', phases:[
+      {n:'Phase A 자료실 OCR', s:'done'}, {n:'Phase B 게시판·첨부', s:'todo'}, {n:'Phase C 통합검색', s:'todo'} ] },
+    { cat:'지식', title:'지식엔진 채굴', note:'용어·사례 자동 채굴 → 검수 → 적재', phases:[
+      {n:'사이클1~3 적재', s:'done'}, {n:'사이클4 검수', s:'active'}, {n:'적재', s:'todo'} ] },
+    { cat:'검색', title:'소식지 본문화', note:'PDF 소식지 → OCR 본문 검색화', phases:[
+      {n:'업로드', s:'done'}, {n:'OCR 본문화', s:'active'}, {n:'완료', s:'todo'} ] },
+    { cat:'결제', title:'정기결제(빌링)', note:'구독 자동결제 (PortOne/KG이니시스)', phases:[
+      {n:'구독·테이블·Edge함수', s:'done'}, {n:'PG 심사·실증', s:'active'}, {n:'cron 자동화', s:'todo'} ] }
+  ];
+  function acFlowSummary(){  /* 대시보드 요약용: 진행중 트랙 수 + 트랙별 현재 단계 */
+    return WORK_TRACKS.map(function(t){
+      var done=t.phases.filter(function(p){return p.s==='done';}).length;
+      var cur=t.phases.filter(function(p){return p.s==='active';})[0];
+      return { title:t.title, cat:t.cat, done:done, total:t.phases.length, cur:cur?cur.n:'완료' };
+    });
+  }
+  window.acLoadFlow = function(){
+    var area=document.getElementById('ac-flow-body'); if(!area) return;
+    area.innerHTML = WORK_TRACKS.map(function(t){
+      var nodes=t.phases.map(function(p,i){
+        var ic=(p.s==='done')?'✓':(i+1);
+        return '<div class="flow-node '+p.s+'"><div class="flow-dot">'+ic+'</div><div class="flow-name">'+esc(p.n)+'</div></div>';
+      }).join('<div class="flow-bar"></div>');
+      return '<div class="flow-track">'+
+        '<div class="flow-track-hd"><span class="flow-cat">'+esc(t.cat)+'</span><b>'+esc(t.title)+'</b><span class="flow-note">'+esc(t.note||'')+'</span></div>'+
+        '<div class="flow-line">'+nodes+'</div>'+
+      '</div>';
+    }).join('');
+    if(window.lucide) window.lucide.createIcons();
+  };
+
   // 조직트리 데이터 적재 (대시보드/운영>조직트리 공용) → _CT 채움
   async function _loadOrgData(){
     var res=await Promise.all([
@@ -1108,22 +1146,22 @@
   //  · 데이터 로딩(acLoad*)·승인 모달은 위 standalone 로직 그대로 재사용
   // ════════════════════════════════════════════════════════════════════
   var AC_GROUPS = {
-    dashboard:{}, logs:{}, knowledge:{},
+    dashboard:{}, flow:{}, logs:{}, knowledge:{},
     ops:    { secs:[['orgtree','조직 트리'],['approvals','가입 승인'],['users','사용자'],['branches','지점'],['teams','팀']] },
     content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
     validation:{ secs:[['visibility','화면 가시성'],['rls','데이터 권한(RLS)']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
   };
-  var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs', knowledge:'knowledge',
+  var AC_SEC_GROUP = { dashboard:'dashboard', flow:'flow', logs:'logs', knowledge:'knowledge',
     approvals:'ops', users:'ops', branches:'ops', teams:'ops', orgtree:'ops',
     posts:'content', comments:'content', library:'content',
     visibility:'validation', rls:'validation',
     menu:'system', notice:'system', settings:'system' };
-  var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
+  var AC_LOAD = { dashboard:'acLoadDashboard', flow:'acLoadFlow', approvals:'acLoadApprovals', users:'acLoadUsers',
     branches:'acLoadBranches', teams:'acLoadTeams', orgtree:'acLoadOrgTree', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
     visibility:'acLoadVisibility', rls:'acLoadRlsOverview', logs:'acLoadLogs',
     menu:'acLoadMenu', notice:'acLoadNotice', settings:'acLoadSettings' };
-  var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','validation','system','logs'];
+  var AC_TAB_ORDER = ['dashboard','flow','ops','content','knowledge','validation','system','logs'];
 
   function _acSpaRoot(){ return document.getElementById('v-admin'); }
 
