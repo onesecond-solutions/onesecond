@@ -709,19 +709,20 @@
   function renderBoard(d){
     var el=document.getElementById('ac-board'); if(!el) return;
     el.classList.remove('ac-card-empty');
-    function kpi(cls,lab,num,unit,delta){
-      return '<div class="act-kpi '+cls+'"><div class="l">'+esc(lab)+'</div>'+
+    function kpi(cls,lab,num,unit,delta,sec){
+      var on = sec ? ' onclick="acGoSec(\''+sec+'\')" style="cursor:pointer"' : '';
+      return '<div class="act-kpi '+cls+'"'+on+'><div class="l">'+esc(lab)+'</div>'+
         '<div class="n">'+(num==null?'—':Number(num).toLocaleString())+(unit?'<small>'+unit+'</small>':'')+'</div>'+
         (delta?'<div class="d">'+esc(delta)+'</div>':'')+'</div>';
     }
     var actPct = (d.total>0) ? Math.round((d.today/d.total)*100)+'% 활성' : '';
     el.innerHTML =
-      kpi('', '총 사용자', d.total, '명', d.newToday>0?('▲ '+d.newToday+' 오늘 신규'):'') +
-      kpi('', '오늘 접속', d.today, '명', actPct) +
-      kpi('', '활성 지점', d.activeBr, '개', d.totalBr?('전체 '+d.totalBr):'') +
-      kpi(d.riskBr>0?'alert':'', '위험 지점', d.riskBr, '개', '인원 0') +
-      kpi(d.unassigned>0?'warn':'', '미배정', d.unassigned, '명', '지점 없음') +
-      kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', '');
+      kpi('', '총 사용자', d.total, '명', d.newToday>0?('▲ '+d.newToday+' 오늘 신규'):'', 'users') +
+      kpi('', '오늘 접속', d.today, '명', actPct, 'logs') +
+      kpi('', '활성 지점', d.activeBr, '개', d.totalBr?('전체 '+d.totalBr):'', 'branches') +
+      kpi(d.riskBr>0?'alert':'', '위험 지점', d.riskBr, '개', '인원 0', 'branches') +
+      kpi(d.unassigned>0?'warn':'', '미배정', d.unassigned, '명', '지점 없음', 'users') +
+      kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', '', 'approvals');
   }
 
   function _ctTeams(arr){  // 지점 인원 → 팀(text) 그룹 (빈 팀명 제외)
@@ -780,7 +781,7 @@
     var RL=window.ROLE_LABEL||{};
     var rows=arr.slice(0,300).map(function(u){
       var ini=esc((u.name||'?').slice(0,2));
-      return '<tr><td><span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
+      return '<tr class="ac-tr-clk" onclick="acUserDetail(\''+esc(u.id)+'\')"><td><span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
         '<td><span class="act-role">'+esc(RL[u.role]||u.role||'-')+'</span></td>'+
         '<td>'+esc(u.team||'-')+'</td>'+
         '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
@@ -826,7 +827,7 @@
     acOrgPick('_all');
 
     // 보존 위젯
-    await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=12'));
+    await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=5'));
     if(window.acLoadSearchData) window.acLoadSearchData();
 
     // 승인 배지 동기화 (기존 의미 = 보험사 가입 승인)
