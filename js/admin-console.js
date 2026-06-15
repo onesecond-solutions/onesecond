@@ -650,7 +650,7 @@
   // ════ 운영 관제센터 (전국 상황판 + 조직 트리 + 드릴다운) — 2026-06-15 ════
   //  · 전부 실데이터(users·branches·activity_logs). 추측 없음. RLS상 admin 전체 조회.
   //  · 건강도 색 = 인원수 기준 1차(0=빨강·<3=노랑·그외 녹색). 활동 가중 건강도는 후속.
-  var _CT = { branches:[], byBranch:{}, usersAll:[] };
+  var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{} };
   function _ctMc(l,v){ return '<div class="act-mc"><div class="l">'+l+'</div><div class="v">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
   function _ctHealth(n){ if(!n) return 'r'; if(n<3) return 'y'; return 'g'; }
   function _ctDate(iso){ if(typeof _fmtDate==='function') return _fmtDate(iso); return iso?String(iso).slice(0,10):'-'; }
@@ -728,25 +728,30 @@
     var roleCnt={}; arr.forEach(function(u){ roleCnt[u.role]=(roleCnt[u.role]||0)+1; });
     var teamCnt=Object.keys(_ctTeams(arr)).length;
     var RL=window.ROLE_LABEL||{};
+    var ls=_CT.lastSeen||{}, _now=Date.now(), _wk=7*86400000;
+    var act7=0; arr.forEach(function(u){ var t=ls[u.id]; if(t && (_now-new Date(t).getTime())<_wk) act7++; });
     var rows=arr.slice(0,300).map(function(u){
       var ini=esc((u.name||'?').slice(0,2));
+      var lsv=ls[u.id]; var stale=(!lsv)||((_now-new Date(lsv).getTime())>=_wk);
+      var seen=lsv?_rel(lsv):'기록 없음';
       return '<tr class="ac-tr-clk" onclick="acUserDetail(\''+esc(u.id)+'\')"><td><span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
         '<td><span class="act-role">'+esc(RL[u.role]||u.role||'-')+'</span></td>'+
         '<td>'+esc(u.team||'-')+'</td>'+
+        '<td style="color:'+(stale?'var(--warn)':'var(--ts)')+'">'+esc(seen)+'</td>'+
         '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
     }).join('');
     var metaTeam = isTeam ? '' : '<span>팀 <b>'+teamCnt+'</b></span>';
-    var miniSecond = isTeam ? _ctMc('설계사', roleCnt['ga_member']||0) : _ctMc('팀', teamCnt);
     el.innerHTML =
       '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div><h2>'+esc(name)+'</h2>'+
         '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span>'+metaTeam+
+        '<span>7일 활성 <b>'+act7+'</b></span>'+
         '<span>설계사 <b>'+(roleCnt['ga_member']||0)+'</b></span></div></div>'+
       '<div class="act-mini">'+
-        _ctMc('인원', arr.length)+miniSecond+
+        _ctMc('인원', arr.length)+_ctMc('7일 활성', act7)+
         _ctMc('실장', roleCnt['ga_manager']||0)+_ctMc('지점장', roleCnt['ga_branch_manager']||0)+
       '</div>'+
-      '<div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>가입</th></tr></thead><tbody>'+
-        (rows||'<tr><td colspan="4" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
+      '<div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
+        (rows||'<tr><td colspan="5" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
       '</tbody></table></div>';
   };
 
@@ -760,13 +765,18 @@
       _rows('branches?select=id,name,ga_org_name,is_active&order=name.asc'),
       _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000')
     ]);
-    // 오늘 접속 = 오늘 로그인 이벤트의 distinct 사용자
-    var todayLogs=[];
-    try{ todayLogs=await _rows('activity_logs?event_type=in.(login,login_admin)&created_at=gte.'+_kstMidnightISO()+'&select=user_id&limit=5000'); }catch(e){}
-    var ts={}; todayLogs.forEach(function(l){ if(l.user_id) ts[l.user_id]=1; });
+    // 최근 30일 로그인 → user별 마지막 접속(lastSeen) + 오늘 접속(distinct)
+    var loginLogs=[];
+    try{ loginLogs=await _rows('activity_logs?event_type=in.(login,login_admin)&created_at=gte.'+new Date(Date.now()-30*86400000).toISOString()+'&select=user_id,created_at&order=created_at.desc&limit=8000'); }catch(e){}
+    var lastSeen={}, ts={}, _mid=_kstMidnightISO();
+    loginLogs.forEach(function(l){
+      if(!l.user_id) return;
+      if(!lastSeen[l.user_id]) lastSeen[l.user_id]=l.created_at;  /* desc 정렬 → 첫 등장 = 최근 접속 */
+      if(l.created_at>=_mid) ts[l.user_id]=1;
+    });
 
     var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
-    _CT.branches=branches; _CT.byBranch=byBranch; _CT.usersAll=users;
+    _CT.branches=branches; _CT.byBranch=byBranch; _CT.usersAll=users; _CT.lastSeen=lastSeen;
     var activeBr=branches.filter(function(b){ return b.is_active!==false; }).length;
     var riskBr=branches.filter(function(b){ return !((byBranch[b.id]||[]).length); }).length;
 
