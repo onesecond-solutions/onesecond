@@ -698,36 +698,112 @@
     }catch(e){ err.textContent='네트워크 오류'; err.className='ac-modal-err on'; btn.disabled=false; btn.textContent='승인 확정'; }
   }
 
+  // ════ 운영 관제센터 (전국 상황판 + 조직 트리 + 드릴다운) — 2026-06-15 ════
+  //  · 전부 실데이터(users·branches·activity_logs). 추측 없음. RLS상 admin 전체 조회.
+  //  · 건강도 색 = 인원수 기준 1차(0=빨강·<3=노랑·그외 녹색). 활동 가중 건강도는 후속.
+  var _CT = { branches:[], byBranch:{}, usersAll:[] };
+  function _ctMc(l,v){ return '<div class="act-mc"><div class="l">'+l+'</div><div class="v">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
+  function _ctHealth(n){ if(!n) return 'r'; if(n<3) return 'y'; return 'g'; }
+  function _ctDate(iso){ if(typeof _fmtDate==='function') return _fmtDate(iso); return iso?String(iso).slice(0,10):'-'; }
+
+  function renderBoard(d){
+    var el=document.getElementById('ac-board'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    function kpi(cls,lab,num,unit,delta){
+      return '<div class="act-kpi '+cls+'"><div class="l">'+esc(lab)+'</div>'+
+        '<div class="n">'+(num==null?'—':Number(num).toLocaleString())+(unit?'<small>'+unit+'</small>':'')+'</div>'+
+        (delta?'<div class="d">'+esc(delta)+'</div>':'')+'</div>';
+    }
+    var actPct = (d.total>0) ? Math.round((d.today/d.total)*100)+'% 활성' : '';
+    el.innerHTML =
+      kpi('', '총 사용자', d.total, '명', d.newToday>0?('▲ '+d.newToday+' 오늘 신규'):'') +
+      kpi('', '오늘 접속', d.today, '명', actPct) +
+      kpi('', '활성 지점', d.activeBr, '개', d.totalBr?('전체 '+d.totalBr):'') +
+      kpi(d.riskBr>0?'alert':'', '위험 지점', d.riskBr, '개', '인원 0') +
+      kpi(d.unassigned>0?'warn':'', '미배정', d.unassigned, '명', '지점 없음') +
+      kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', '');
+  }
+
+  function renderOrgTree(branches, byBranch){
+    var el=document.getElementById('ac-org-tree'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    var html='<div class="act-node" data-bid="_all" onclick="acOrgPick(\'_all\')"><span class="nm">원세컨드 전체</span><span class="sm">'+_CT.usersAll.length+'</span></div>';
+    branches.forEach(function(b){
+      var arr=byBranch[b.id]||[]; var hc=(b.is_active===false)?'o':_ctHealth(arr.length);
+      html+='<div class="act-node" data-bid="'+esc(b.id)+'" onclick="acOrgPick(\''+esc(b.id)+'\')"><span class="hp act-hp-'+hc+'"></span>'+
+        '<span class="nm">'+esc(b.name||'(이름 없음)')+'</span><span class="sm">'+arr.length+'</span></div>';
+    });
+    var un=byBranch['_none']||[];
+    if(un.length) html+='<div class="act-node" data-bid="_none" onclick="acOrgPick(\'_none\')"><span class="hp act-hp-o"></span><span class="nm">미배정</span><span class="sm">'+un.length+'</span></div>';
+    el.innerHTML=html;
+    var cnt=document.getElementById('ac-tree-cnt'); if(cnt) cnt.textContent='지점 '+branches.length;
+  }
+
+  window.acOrgPick = function(bid){
+    var ns=document.querySelectorAll('#ac-org-tree .act-node');
+    for(var i=0;i<ns.length;i++) ns[i].classList.toggle('sel', ns[i].getAttribute('data-bid')===bid);
+    var el=document.getElementById('ac-org-detail'); if(!el) return; el.classList.remove('ac-card-empty');
+    var arr, name, crumb;
+    if(bid==='_all'){ arr=_CT.usersAll; name='원세컨드 전체'; crumb='전체 조직'; }
+    else if(bid==='_none'){ arr=_CT.byBranch['_none']||[]; name='미배정 사용자'; crumb='지점 배정 필요'; }
+    else { var b=_CT.branches.filter(function(x){return x.id===bid;})[0]; arr=_CT.byBranch[bid]||[]; name=(b&&b.name)||'지점'; crumb=(b&&b.ga_org_name)||'지점'; }
+    var roleCnt={}; arr.forEach(function(u){ roleCnt[u.role]=(roleCnt[u.role]||0)+1; });
+    var teams={}; arr.forEach(function(u){ var t=(u.team||'').trim(); if(t) teams[t]=1; });
+    var teamCnt=Object.keys(teams).length;
+    var RL=window.ROLE_LABEL||{};
+    var rows=arr.slice(0,300).map(function(u){
+      var ini=esc((u.name||'?').slice(0,2));
+      return '<tr><td><span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
+        '<td><span class="act-role">'+esc(RL[u.role]||u.role||'-')+'</span></td>'+
+        '<td>'+esc(u.team||'-')+'</td>'+
+        '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
+    }).join('');
+    el.innerHTML =
+      '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div><h2>'+esc(name)+'</h2>'+
+        '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span><span>팀 <b>'+teamCnt+'</b></span>'+
+        '<span>설계사 <b>'+(roleCnt['ga_member']||0)+'</b></span></div></div>'+
+      '<div class="act-mini">'+
+        _ctMc('인원', arr.length)+_ctMc('팀', teamCnt)+
+        _ctMc('실장', roleCnt['ga_manager']||0)+_ctMc('지점장', roleCnt['ga_branch_manager']||0)+
+      '</div>'+
+      '<div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>가입</th></tr></thead><tbody>'+
+        (rows||'<tr><td colspan="4" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
+      '</tbody></table></div>';
+  };
+
   window.acLoadDashboard = async function(){
-    var [pending, unassigned, stale] = await Promise.all([
+    var [total, pendingAll, pendingIns, unassigned, newToday, branches, users] = await Promise.all([
+      _count('users?select=id'),
+      _count('users?status=eq.pending&select=id'),
       _count('users?status=eq.pending&role=in.('+INSURER_ROLES+')&select=id'),
       _count('users?status=eq.active&branch_id=is.null&select=id'),
-      _count('users?status=eq.pending&created_at=lt.'+_isoAgo(86400000)+'&select=id')
-    ]);
-    renderTaskQueue(pending, unassigned, stale);
-    renderRisk(pending, unassigned, stale);
-    var nb=document.getElementById('ac-nav-badge-approvals');
-    if(nb){ nb.textContent=pending||0; nb.style.display=(pending>0)?'inline-flex':'none'; }
-    if(window._refreshAdminBadge) window._refreshAdminBadge(pending);  /* SPA 사이드바 배지 동기화 */
-
-    var [total, active, newToday, posts, scripts, lib] = await Promise.all([
-      _count('users?select=id'),
-      _count('users?status=eq.active&select=id'),
       _count('users?created_at=gte.'+_kstMidnightISO()+'&select=id'),
-      _count('posts?select=id'),
-      _count('scripts?select=id'),
-      _count('library?select=id')
+      _rows('branches?select=id,name,ga_org_name,is_active&order=name.asc'),
+      _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000')
     ]);
-    renderService(total, active, newToday, posts, scripts, lib);
+    // 오늘 접속 = 오늘 로그인 이벤트의 distinct 사용자
+    var todayLogs=[];
+    try{ todayLogs=await _rows('activity_logs?event_type=in.(login,login_admin)&created_at=gte.'+_kstMidnightISO()+'&select=user_id&limit=5000'); }catch(e){}
+    var ts={}; todayLogs.forEach(function(l){ if(l.user_id) ts[l.user_id]=1; });
 
+    var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
+    _CT.branches=branches; _CT.byBranch=byBranch; _CT.usersAll=users;
+    var activeBr=branches.filter(function(b){ return b.is_active!==false; }).length;
+    var riskBr=branches.filter(function(b){ return !((byBranch[b.id]||[]).length); }).length;
+
+    renderBoard({ total:total, today:Object.keys(ts).length, newToday:newToday,
+      activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned, pending:pendingAll });
+    renderOrgTree(branches, byBranch);
+    acOrgPick('_all');
+
+    // 보존 위젯
     await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=12'));
+    if(window.acLoadSearchData) window.acLoadSearchData();
 
-    var [branches, ubranch] = await Promise.all([
-      _rows('branches?select=id,name,ga_org_name,is_active'),
-      _rows('users?select=branch_id&status=eq.active')
-    ]);
-    renderBranches(branches, ubranch, unassigned);
-    if(window.acLoadSearchData) window.acLoadSearchData();  /* 검색 데이터 현황 (별도·비차단) */
+    // 승인 배지 동기화 (기존 의미 = 보험사 가입 승인)
+    var nb=document.getElementById('ac-nav-badge-approvals');
+    if(nb){ nb.textContent=pendingIns||0; nb.style.display=(pendingIns>0)?'inline-flex':'none'; }
+    if(window._refreshAdminBadge) window._refreshAdminBadge(pendingIns);
     if(window.lucide) window.lucide.createIcons();
   };
 
