@@ -897,13 +897,14 @@
     var roleCnt={}; arr.forEach(function(u){ roleCnt[u.role]=(roleCnt[u.role]||0)+1; });
     var teamCnt=Object.keys(_ctTeams(arr)).length;
     var RL=window.ROLE_LABEL||{};
-    var ls=_CT.lastSeen||{}, _now=Date.now(), _wk=7*86400000;
-    var act7=0; arr.forEach(function(u){ var t=ls[u.id]; if(t && (_now-new Date(t).getTime())<_wk) act7++; });
+    var ls=_CT.lastSeen||{}, _now=Date.now(), _wk=7*86400000, _midR=_kstMidnightISO();
     var rows=arr.slice(0,300).map(function(u){
       var ini=esc((u.name||'?').slice(0,2));
       var lsv=ls[u.id]; var stale=(!lsv)||((_now-new Date(lsv).getTime())>=_wk);
+      var online=!!(lsv && lsv>=_midR);  /* 로그인중 = 오늘 접속 */
+      var dot='<span class="act-presence '+(online?'on':'off')+'" title="'+(online?'로그인중':'비로그인')+'"></span>';
       var seen=lsv?_rel(lsv):'기록 없음';
-      return '<tr class="ac-tr-clk" onclick="acGoSec(\'users\')"><td><span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
+      return '<tr class="ac-tr-clk" onclick="acGoSec(\'users\')"><td>'+dot+'<span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
         '<td><span class="act-role">'+esc(RL[u.role]||u.role||'-')+'</span></td>'+
         '<td>'+esc(u.team||'-')+'</td>'+
         '<td style="color:'+(stale?'var(--warn)':'var(--ts)')+'">'+esc(seen)+'</td>'+
