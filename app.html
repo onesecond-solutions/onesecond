@@ -7787,16 +7787,23 @@ function mrRenderSampleTree(){
   var chips=document.getElementById('mr-view-chips');
   if(chips) chips.style.display=((typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin')?'flex':'none';
   var mode=window._mrViewMode||'branch';
-  /* 지점장 관점: 회사 노드 없음(상단 표시). 본인 지점(샘플=첫 지점) → 팀들 → + 팀 추가 */
+  if(mode==='manager'){
+    /* 실장 관점: 최상위=실장 본인(지점·회사 없음). 000 실장 · 인원 → + 실/팀원 추가. 우측=본인 팀 구성원 */
+    var mt=MR_SAMPLE.branches[0].teams[0];
+    var mgr=mt.members.filter(function(m){return m.role==='ga_manager';})[0];
+    var h2='<div class="mr-tn mr-tn-br2">'+(mgr?_sEsc(mgr.name)+' 실장':'(실장)')+'<span class="mr-tn-c">'+mt.members.length+'명</span></div>';
+    h2+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite()">+ 실/팀원 추가</div>';
+    tree.innerHTML=h2;
+    mrSamplePick('0_0');  /* 본인 팀 자동 표시 */
+    return;
+  }
+  /* 지점장 관점: 회사 노드 없음(상단 표시). 본인 지점(샘플=첫 지점) → 팀들 → + 실/팀 추가 */
   var b=MR_SAMPLE.branches[0];
   var bm=0; b.teams.forEach(function(t){ bm+=t.members.length; });
   var html='<div class="mr-tn mr-tn-br2">'+_sEsc(b.name)+'<span class="mr-tn-c">'+bm+'명</span></div>';
   b.teams.forEach(function(t,ti){
     var key='0_'+ti;
-    var label;
-    if(mode==='manager'){ var mgr=t.members.filter(function(m){return m.role==='ga_manager';})[0]; label=(mgr?_sEsc(mgr.name)+' 실장':'(실장 미지정)')+' · '+_sEsc(t.name); }
-    else label=_sEsc(t.name);
-    html+='<div class="mr-tn mr-tn-tm'+(key===_mrSel?' on':'')+'" onclick="mrSamplePick(\''+key+'\')">'+label+'<span class="mr-tn-c">'+t.members.length+'</span></div>';
+    html+='<div class="mr-tn mr-tn-tm'+(key===_mrSel?' on':'')+'" onclick="mrSamplePick(\''+key+'\')">'+_sEsc(t.name)+'<span class="mr-tn-c">'+t.members.length+'</span></div>';
   });
   html+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite()">+ 실/팀 추가</div>';
   tree.innerHTML=html;
