@@ -661,7 +661,7 @@
   // ════ 운영 관제센터 (전국 상황판 + 조직 트리 + 드릴다운) — 2026-06-15 ════
   //  · 전부 실데이터(users·branches·activity_logs). 추측 없음. RLS상 admin 전체 조회.
   //  · 건강도 색 = 인원수 기준 1차(0=빨강·<3=노랑·그외 녹색). 활동 가중 건강도는 후속.
-  var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{} };
+  var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{}, companies:[], byCompany:{} };
   function _ctMc(l,v){ return '<div class="act-mc"><div class="l">'+l+'</div><div class="v">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
   function _ctHealth(n){ if(!n) return 'r'; if(n<3) return 'y'; return 'g'; }
   function _ctDate(iso){ if(typeof _fmtDate==='function') return _fmtDate(iso); return iso?String(iso).slice(0,10):'-'; }
@@ -688,36 +688,63 @@
   function _ctTeams(arr){  // 지점 인원 → 팀(text) 그룹 (빈 팀명 제외)
     var m={}; (arr||[]).forEach(function(u){ var t=(u.team||'').trim(); if(t){ (m[t]=m[t]||[]).push(u); } }); return m;
   }
-  function renderOrgTree(branches, byBranch){
+  function _ctBranchBlock(b, byBranch){  // 지점 노드(child) + 하위 팀(child2)
+    var arr=byBranch[b.id]||[]; var hc=(b.is_active===false)?'o':_ctHealth(arr.length);
+    var tmap=_ctTeams(arr); var tnames=Object.keys(tmap).sort(); var hasT=tnames.length>0;
+    var s='<div class="act-node child" data-bid="'+esc(b.id)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
+      '<span class="act-caret'+(hasT?'':' act-caret-hide')+'">&#9654;</span>'+
+      '<span class="hp act-hp-'+hc+'"></span><span class="nm">'+esc(b.name||'(이름 없음)')+'</span><span class="sm">'+arr.length+'</span></div>';
+    if(hasT){
+      s+='<div class="act-children" data-parent="'+esc(b.id)+'">';
+      tnames.forEach(function(t){
+        s+='<div class="act-node child2" data-bid="T|'+esc(b.id)+'|'+esc(t)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
+          '<span class="act-caret act-caret-hide"></span><span class="nm">'+esc(t)+'</span><span class="sm">'+tmap[t].length+'</span></div>';
+      });
+      s+='</div>';
+    }
+    return s;
+  }
+  function _ctCompanyBlock(key, label, brs, byBranch, faint){  // 회사 노드 + 하위 지점들
+    var totalP=0; brs.forEach(function(b){ totalP+=(byBranch[b.id]||[]).length; });
+    var s='<div class="act-node" data-bid="C|'+esc(key)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
+      '<span class="act-caret">&#9654;</span>'+
+      '<span class="nm"'+(faint?' style="color:var(--tf)"':'')+'>'+esc(label)+'</span><span class="sm">'+totalP+'</span></div>';
+    s+='<div class="act-children" data-parent="C|'+esc(key)+'">';
+    brs.forEach(function(b){ s+=_ctBranchBlock(b, byBranch); });
+    s+='</div>';
+    return s;
+  }
+  function renderOrgTree(companies, branches, byBranch, byCompany){
     var el=document.getElementById('ac-org-tree'); if(!el) return;
     el.classList.remove('ac-card-empty');
     var html='<div class="act-node" data-bid="_all" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="nm">원세컨드 전체</span><span class="sm">'+_CT.usersAll.length+'</span></div>';
-    branches.forEach(function(b){
-      var arr=byBranch[b.id]||[]; var hc=(b.is_active===false)?'o':_ctHealth(arr.length);
-      var tmap=_ctTeams(arr); var tnames=Object.keys(tmap).sort(); var hasT=tnames.length>0;
-      html+='<div class="act-node" data-bid="'+esc(b.id)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
-        '<span class="act-caret'+(hasT?'':' act-caret-hide')+'">&#9654;</span>'+
-        '<span class="hp act-hp-'+hc+'"></span><span class="nm">'+esc(b.name||'(이름 없음)')+'</span><span class="sm">'+arr.length+'</span></div>';
-      if(hasT){
-        html+='<div class="act-children" data-parent="'+esc(b.id)+'">';
-        tnames.forEach(function(t){
-          html+='<div class="act-node child" data-bid="T|'+esc(b.id)+'|'+esc(t)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
-            '<span class="act-caret act-caret-hide"></span><span class="nm">'+esc(t)+'</span><span class="sm">'+tmap[t].length+'</span></div>';
-        });
-        html+='</div>';
-      }
+    var coShown=0;
+    companies.forEach(function(c){
+      var brs=byCompany[c.id]||[]; if(!brs.length) return;  /* 지점 없는 회사 숨김 */
+      coShown++;
+      html+=_ctCompanyBlock(c.id, c.name||'(회사)', brs, byBranch, false);
     });
+    var noco=byCompany['_noco']||[];
+    if(noco.length) html+=_ctCompanyBlock('_noco', '회사 미지정', noco, byBranch, true);
     var un=byBranch['_none']||[];
     if(un.length) html+='<div class="act-node" data-bid="_none" onclick="acOrgPick(this.getAttribute(\'data-bid\'))"><span class="act-caret act-caret-hide"></span><span class="hp act-hp-o"></span><span class="nm">미배정</span><span class="sm">'+un.length+'</span></div>';
     el.innerHTML=html;
-    var cnt=document.getElementById('ac-tree-cnt'); if(cnt) cnt.textContent='지점 '+branches.length;
+    var cnt=document.getElementById('ac-tree-cnt'); if(cnt) cnt.textContent='회사 '+coShown+' · 지점 '+branches.length;
   }
 
   window.acOrgPick = function(bid){
     var el=document.getElementById('ac-org-detail'); if(!el) return; el.classList.remove('ac-card-empty');
-    var arr, name, crumb, isTeam=false;
+    var arr, name, crumb, isTeam=false, toggleKey=null;
     if(bid==='_all'){ arr=_CT.usersAll; name='원세컨드 전체'; crumb='전체 조직'; }
     else if(bid==='_none'){ arr=_CT.byBranch['_none']||[]; name='미배정 사용자'; crumb='지점 배정 필요'; }
+    else if(bid.indexOf('C|')===0){
+      var cid=bid.slice(2);
+      var brs=(cid==='_noco')?(_CT.byCompany['_noco']||[]):(_CT.byCompany[cid]||[]);
+      arr=[]; brs.forEach(function(b){ arr=arr.concat(_CT.byBranch[b.id]||[]); });
+      var co=_CT.companies.filter(function(x){return x.id===cid;})[0];
+      name=(cid==='_noco')?'회사 미지정':((co&&co.name)||'회사'); crumb='회사 · 지점 '+brs.length+'개';
+      toggleKey=bid;
+    }
     else if(bid.indexOf('T|')===0){
       isTeam=true; var ps=bid.split('|'); var brId=ps[1]; var tnm=ps.slice(2).join('|');
       var bb=_CT.branches.filter(function(x){return x.id===brId;})[0];
@@ -726,11 +753,14 @@
     } else {
       var b=_CT.branches.filter(function(x){return x.id===bid;})[0];
       arr=_CT.byBranch[bid]||[]; name=(b&&b.name)||'지점'; crumb=(b&&b.ga_org_name)||'지점';
-      var ch=document.querySelector('.act-children[data-parent="'+bid+'"]');  /* 지점 클릭 = 팀 펼침 토글 */
+      toggleKey=bid;
+    }
+    if(toggleKey){  /* 회사·지점 클릭 = 하위 펼침 토글 */
+      var ch=document.querySelector('.act-children[data-parent="'+toggleKey+'"]');
       if(ch){
         ch.classList.toggle('show');
         var nodes=document.querySelectorAll('#ac-org-tree .act-node');
-        for(var z=0;z<nodes.length;z++){ if(nodes[z].getAttribute('data-bid')===bid){ nodes[z].classList.toggle('open', ch.classList.contains('show')); break; } }
+        for(var z=0;z<nodes.length;z++){ if(nodes[z].getAttribute('data-bid')===toggleKey){ nodes[z].classList.toggle('open', ch.classList.contains('show')); break; } }
       }
     }
     var ns=document.querySelectorAll('#ac-org-tree .act-node');
@@ -767,15 +797,16 @@
   };
 
   window.acLoadDashboard = async function(){
-    var [total, pendingAll, pendingIns, unassigned, newToday, unclassified, branches, users] = await Promise.all([
+    var [total, pendingAll, pendingIns, unassigned, newToday, unclassified, branches, users, companies] = await Promise.all([
       _count('users?select=id'),
       _count('users?status=eq.pending&select=id'),
       _count('users?status=eq.pending&role=in.('+INSURER_ROLES+')&select=id'),
       _count('users?status=eq.active&branch_id=is.null&select=id'),
       _count('users?created_at=gte.'+_kstMidnightISO()+'&select=id'),
       _count('users?status=eq.active&role=not.in.('+ROLE_KEYS.join(',')+')&select=id'),
-      _rows('branches?select=id,name,ga_org_name,is_active&order=name.asc'),
-      _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000')
+      _rows('branches?select=id,name,ga_org_name,is_active,company_id&order=name.asc'),
+      _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000'),
+      _rows('companies?select=id,name&order=name.asc')
     ]);
     var pendingOther = Math.max(0, (pendingAll||0) - (pendingIns||0));  /* 원수사 외 pending = GA·기타(승인 화면 미노출, 사용자 탭 처리) */
     // 최근 30일 로그인 → user별 마지막 접속(lastSeen) + 오늘 접속(distinct)
@@ -789,14 +820,16 @@
     });
 
     var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
+    var byCompany={}; (branches||[]).forEach(function(b){ var k=b.company_id||'_noco'; (byCompany[k]=byCompany[k]||[]).push(b); });
     _CT.branches=branches; _CT.byBranch=byBranch; _CT.usersAll=users; _CT.lastSeen=lastSeen;
+    _CT.companies=companies||[]; _CT.byCompany=byCompany;
     var activeBr=branches.filter(function(b){ return b.is_active!==false; }).length;
     var riskBr=branches.filter(function(b){ return !((byBranch[b.id]||[]).length); }).length;
 
     renderBoard({ total:total, today:Object.keys(ts).length, newToday:newToday,
       activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned,
       pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified });
-    renderOrgTree(branches, byBranch);
+    renderOrgTree(_CT.companies, branches, byBranch, byCompany);
     acOrgPick('_all');
 
     // 보존 위젯
