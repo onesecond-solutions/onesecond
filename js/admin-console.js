@@ -729,6 +729,24 @@
     s+='</div>';
     return s;
   }
+  /* 시계열 스파크라인 (최근 N일, 끝 3일 강조) */
+  function _ctSpark(series){
+    var max=Math.max.apply(null, series.concat([1]));
+    return '<div class="act-spark">'+series.map(function(v,i){
+      var h=Math.max(3, Math.round(v/max*100)); var hi=(i>=series.length-3)?' class="hi"':'';
+      return '<i'+hi+' style="height:'+h+'%" title="'+v+'건"></i>';
+    }).join('')+'</div>';
+  }
+  function renderTrend(signups, logins){
+    var el=document.getElementById('ac-trend'); if(!el) return; el.classList.remove('ac-card-empty');
+    var sumS=signups.reduce(function(a,b){return a+b;},0);
+    var peakL=Math.max.apply(null, logins.concat([0]));
+    el.innerHTML='<div class="act-trend-grid">'+
+      '<div><div class="act-trend-l">신규 가입 <b>'+sumS+'</b> / 14일</div>'+_ctSpark(signups)+'</div>'+
+      '<div><div class="act-trend-l">일별 접속 (피크 <b>'+peakL+'</b>명)</div>'+_ctSpark(logins)+'</div>'+
+    '</div>';
+  }
+
   /* 지점 위험 사유 다차원 (비활성 지점은 제외 — 의도적 비활성) */
   function _ctRiskReasons(b, arr){
     if(b.is_active===false) return [];
@@ -890,6 +908,18 @@
     renderOrgTree(_CT.companies, branches, byBranch, byCompany);
     renderRiskPanel(branches, byBranch);
     acOrgPick('_all');
+
+    // 추세 14일: 접속(loginLogs 재사용·일별 distinct) + 가입(별도 fetch)
+    (async function(){
+      var days=[]; for(var i=13;i>=0;i--){ days.push(new Date(Date.now()-i*86400000).toISOString().slice(0,10)); }
+      var loginByDay={};
+      loginLogs.forEach(function(l){ var d=(l.created_at||'').slice(0,10); if(!d||!l.user_id) return; (loginByDay[d]=loginByDay[d]||{})[l.user_id]=1; });
+      var loginSeries=days.map(function(d){ return Object.keys(loginByDay[d]||{}).length; });
+      var slogs=[]; try{ slogs=await _rows('users?created_at=gte.'+new Date(Date.now()-14*86400000).toISOString()+'&select=created_at&limit=5000'); }catch(e){}
+      var signupByDay={}; slogs.forEach(function(u){ var d=(u.created_at||'').slice(0,10); if(d) signupByDay[d]=(signupByDay[d]||0)+1; });
+      var signupSeries=days.map(function(d){ return signupByDay[d]||0; });
+      renderTrend(signupSeries, loginSeries);
+    })();
 
     // 보존 위젯
     await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=5'));
