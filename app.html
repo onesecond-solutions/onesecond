@@ -213,6 +213,7 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .mri-co-btn{flex:1;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:none;font-weight:700;font-size:0.82rem;cursor:pointer;color:var(--tf);}
 .mri-co-btn.on{background:var(--ac);color:#fff;border-color:var(--ac);}
 .mri-co-hint{font-size:0.76rem;color:var(--tf);line-height:1.5;margin-bottom:14px;}
+.mri-admin-note{background:color-mix(in srgb,var(--warn) 12%,var(--s1));border:1px solid var(--warn);border-radius:8px;padding:9px 11px;font-size:0.78rem;color:var(--tp);line-height:1.5;margin-bottom:12px;}
 .mri-steps{margin:0 0 16px;padding-left:4px;list-style:none;font-size:0.86rem;line-height:1.9;color:var(--tp);}
 .mri-link,.mri-resend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:color-mix(in srgb,var(--bd) 20%,transparent);border-radius:8px;padding:10px 12px;margin-bottom:8px;}
 .mri-link code,.mri-resend code{font-size:0.78rem;color:var(--ac);word-break:break-all;flex:1;}
@@ -2385,7 +2386,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           </div>
           <!-- 2단계: 이렇게 하세요 안내 -->
           <div id="mri-step-done" style="display:none">
-            <div class="mr-invite-hd">초대가 등록됐습니다 — 이렇게 하세요</div>
+            <div class="mr-invite-hd" id="mri-done-hd">초대가 등록됐습니다 — 이렇게 하세요</div>
+            <div class="mri-admin-note" id="mri-admin-note" style="display:none">어드민 미리보기 — 실제로 저장되지 않았습니다. 레이아웃·흐름 확인용이며, 실제 초대는 지점장·실장 계정에서 발급됩니다.</div>
             <ol class="mri-steps">
               <li><b>① 아래 초대 링크를 복사</b>하세요.</li>
               <li><b>② 실장님께 카톡·문자로 전달</b>하세요. (자동 발송은 추후 제공)</li>
@@ -7889,6 +7891,19 @@ async function mrDoInvite(){
     /* invite_token = DB default 자동 생성 → return=representation으로 받아 링크 구성. */
     var org=await _mrMyOrg();
     if(!org||!org.me_id){ alert('로그인 정보를 확인해 주세요.'); return; }
+    var _adminNote=document.getElementById('mri-admin-note'), _doneHd=document.getElementById('mri-done-hd');
+    if(org.role==='admin'){
+      /* 어드민 = 레이아웃·흐름 확인용 미리보기 (소속 회사 없음 → 저장만 안 함, 화면은 끝까지 보여줌). */
+      _mrInvite={ team:(same?team:''), name:name, phone:phone, same:same, token:'', link:'(미리보기 — 실제 발급 시 여기에 초대 링크가 표시됩니다)', preview:true };
+      if(_adminNote) _adminNote.style.display='';
+      if(_doneHd) _doneHd.textContent='초대 화면 미리보기';
+      var _ltp=document.getElementById('mri-link-text'); if(_ltp) _ltp.textContent=_mrInvite.link;
+      document.getElementById('mri-step-form').style.display='none';
+      document.getElementById('mri-step-done').style.display='';
+      return;
+    }
+    if(_adminNote) _adminNote.style.display='none';
+    if(_doneHd) _doneHd.textContent='초대가 등록됐습니다 — 이렇게 하세요';
     var body;
     if(same){
       /* 같은 회사 = 내 회사·지점 경계 박기. 새 실(new_team_name) 만들며 실장(ga_manager) 초대 */
