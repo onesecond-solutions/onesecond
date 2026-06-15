@@ -692,7 +692,7 @@
     }
     var actPct = (d.total>0) ? Math.round((d.today/d.total)*100)+'% 활성' : '';
     el.innerHTML =
-      kpi('', '총 사용자', d.total, '명', d.newToday>0?('▲ '+d.newToday+' 오늘 신규'):'', 'users') +
+      kpi('', '총 사용자', d.total, '명', '회사 '+(d.orgCos||0)+' · 지점 '+(d.orgBrs||0)+' · 팀 '+(d.orgTeams||0), 'users') +
       kpi('', '오늘 접속', d.today, '명', actPct, 'logs') +
       kpi('', '활성 지점', d.activeBr, '개', d.totalBr?('전체 '+d.totalBr):'', 'branches') +
       kpi(d.riskBr>0?'alert':'', '위험 지점', d.riskBr, '개', '인원 0', 'branches') +
@@ -851,7 +851,7 @@
       var ini=esc((u.name||'?').slice(0,2));
       var lsv=ls[u.id]; var stale=(!lsv)||((_now-new Date(lsv).getTime())>=_wk);
       var seen=lsv?_rel(lsv):'기록 없음';
-      return '<tr class="ac-tr-clk" onclick="acUserDetail(\''+esc(u.id)+'\')"><td><span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
+      return '<tr class="ac-tr-clk" onclick="acGoSec(\'users\')"><td><span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
         '<td><span class="act-role">'+esc(RL[u.role]||u.role||'-')+'</span></td>'+
         '<td>'+esc(u.team||'-')+'</td>'+
         '<td style="color:'+(stale?'var(--warn)':'var(--ts)')+'">'+esc(seen)+'</td>'+
@@ -860,7 +860,9 @@
     var metaTeam = isTeam ? '' : '<span>팀 <b>'+teamCnt+'</b></span>';
     var uc=_CT.userContent||{}; var content7=arr.reduce(function(s,u){ return s+(uc[u.id]||0); },0);
     el.innerHTML =
-      '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div><h2>'+esc(name)+'</h2>'+
+      '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><h2>'+esc(name)+'</h2>'+
+        '<button class="ac-btn ac-btn-sm" onclick="acGoSec(\'users\')">운영 탭에서 관리 →</button></div>'+
         '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span>'+metaTeam+
         '<span>7일 활성 <b>'+act7+'</b></span>'+
         '<span>7일 게시글 <b>'+content7+'</b></span>'+
@@ -910,9 +912,11 @@
     var activeBr=branches.filter(function(b){ return b.is_active!==false; }).length;
     var riskBr=branches.filter(function(b){ return !((byBranch[b.id]||[]).length); }).length;
 
+    var _teamSet={}; users.forEach(function(u){ var t=(u.team||'').trim(); if(t) _teamSet[t]=1; });
     renderBoard({ total:total, today:Object.keys(ts).length, newToday:newToday,
       activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned,
-      pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified });
+      pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified,
+      orgCos:(companies||[]).length, orgBrs:branches.length, orgTeams:Object.keys(_teamSet).length });
     renderOrgTree(_CT.companies, branches, byBranch, byCompany);
     renderRiskPanel(branches, byBranch);
     acOrgPick('_all');
