@@ -744,7 +744,7 @@
     }
     var actPct = (d.total>0) ? Math.round((d.today/d.total)*100)+'% 활성' : '';
     el.innerHTML =
-      kpi('', '총 사용자', d.total, '명', '회사 '+(d.orgCos||0)+' · 지점 '+(d.orgBrs||0)+' · 팀 '+(d.orgTeams||0), 'users') +
+      kpi('', '총 사용자', d.total, '명', '회사 '+(d.orgCos||0)+' · 지점 '+(d.orgBrs||0)+' · 팀 '+(d.orgTeams||0), 'orgtree') +
       kpi('', '오늘 접속', d.today, '명', actPct, 'logs') +
       kpi('', '활성 지점', d.activeBr, '개', d.totalBr?('전체 '+d.totalBr):'', 'branches') +
       kpi(d.riskBr>0?'alert':'', '위험 지점', d.riskBr, '개', '인원 0', 'branches') +
@@ -914,7 +914,7 @@
     el.innerHTML =
       '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div>'+
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><h2>'+esc(name)+'</h2>'+
-        '<button class="ac-btn ac-btn-sm" onclick="acGoSec(\'users\')">운영 탭에서 관리 →</button></div>'+
+        '<button class="ac-btn ac-btn-sm" onclick="acGoSec(\'orgtree\')">운영 탭에서 관리 →</button></div>'+
         '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span>'+metaTeam+
         '<span>7일 활성 <b>'+act7+'</b></span>'+
         '<span>7일 게시글 <b>'+content7+'</b></span>'+
@@ -1093,7 +1093,7 @@
   // ════════════════════════════════════════════════════════════════════
   var AC_GROUPS = {
     dashboard:{}, logs:{}, knowledge:{},
-    ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점'],['teams','팀'],['orgtree','조직 트리']] },
+    ops:    { secs:[['orgtree','조직 트리'],['approvals','가입 승인'],['users','사용자'],['branches','지점'],['teams','팀']] },
     content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
     validation:{ secs:[['visibility','화면 가시성'],['rls','데이터 권한(RLS)']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
