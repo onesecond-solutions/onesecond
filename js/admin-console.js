@@ -914,7 +914,7 @@
     el.innerHTML =
       '<div class="act-p-hd"><div class="act-crumb">'+esc(crumb)+'</div>'+
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><h2>'+esc(name)+'</h2>'+
-        '<button class="ac-btn ac-btn-sm" onclick="acGoSec(\'orgtree\')">운영 탭에서 관리 →</button></div>'+
+        ((_ctHost.tree==='ac-org-tree')?'<button class="ac-btn ac-btn-sm" onclick="acGoSec(\'orgtree\')">운영 탭에서 관리 →</button>':'')+'</div>'+
         '<div class="act-meta"><span>인원 <b>'+arr.length+'</b></span>'+metaTeam+
         '<span>7일 활성 <b>'+act7+'</b></span>'+
         '<span>7일 게시글 <b>'+content7+'</b></span>'+
