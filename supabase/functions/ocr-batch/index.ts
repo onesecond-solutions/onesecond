@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
   //    ※ source_path = newsletters private 버킷 경로(2026-06 정리분). source_pdf_url 없으면 아래에서 서명URL 생성.
   const q = "newsletters?select=id,source_pdf_url,source_path,title&full_text=is.null"
           + "&or=(source_pdf_url.not.is.null,source_path.not.is.null)"
-          + "&or=(text_quality.is.null,text_quality.neq." + encodeURIComponent("비었음") + ")"
+          + "&or=(text_quality.is.null,and(text_quality.neq." + encodeURIComponent("비었음") + ",text_quality.neq." + encodeURIComponent("경로오류") + "))"
           + "&limit=" + BATCH_NL;
   let rows: Array<{ id: string; source_pdf_url: string | null; source_path: string | null; title: string | null }> = [];
   try {
@@ -83,8 +83,13 @@ Deno.serve(async (req: Request) => {
           body: JSON.stringify({ expiresIn: 3600 }),
         });
         const sj = await sg.json().catch(() => ({}));
-        const signed = sj && typeof sj.signedURL === "string" ? sj.signedURL : "";
-        if (!sg.ok || !signed) { failed++; console.error("[ocr-batch] 소식지 서명 실패", nl.id, sg.status); continue; }
+        const signed = sj && (sj.signedUrl ?? sj.signedURL ?? "");   // Storage v2=signedUrl(소문자 l) / 구버전=signedURL 양쪽 호환
+        if (!sg.ok || !signed) {
+          failed++; console.error("[ocr-batch] 소식지 서명 실패", nl.id, sg.status, JSON.stringify(sj));
+          // 서명 실패 행은 '경로오류' 마킹 → 무한 재시도·큐 막힘 방지 (아래 대상 쿼리에서 '경로오류' 제외)
+          await rest("newsletters?id=eq." + encodeURIComponent(nl.id), { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ text_quality: "경로오류" }) }).catch(() => {});
+          continue;
+        }
         fileUrl = `${SUPABASE_URL}/storage/v1${signed}`;
       }
       if (!fileUrl) { failed++; console.error("[ocr-batch] fileUrl 없음", nl.id); continue; }
@@ -166,8 +171,8 @@ async function processMyspaceFiles() {
         body: JSON.stringify({ expiresIn: 3600 }),
       });
       const sj = await sg.json().catch(() => ({}));
-      const signed = sj && typeof sj.signedURL === "string" ? sj.signedURL : "";
-      if (!sg.ok || !signed) { out.failed++; console.error("[ocr-batch/files] 서명 실패", f.id, sg.status); continue; }
+      const signed = sj && (sj.signedUrl ?? sj.signedURL ?? "");   // Storage v2=signedUrl / 구버전=signedURL 양쪽 호환
+      if (!sg.ok || !signed) { out.failed++; console.error("[ocr-batch/files] 서명 실패", f.id, sg.status, JSON.stringify(sj)); continue; }
       const fileUrl = `${SUPABASE_URL}/storage/v1${signed}`;
 
       const ex = await fetch(`${SUPABASE_URL}/functions/v1/ocr-extract`, {
