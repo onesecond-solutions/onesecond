@@ -81,7 +81,7 @@
     update_notice:'공지를 수정했습니다', update_setting:'시스템 설정을 변경했습니다',
     hide_post:'게시글을 숨김 처리했습니다', delete_post:'게시글을 삭제했습니다',
     delete_comment:'댓글을 삭제했습니다', delete_user:'사용자를 삭제했습니다', update_menu:'메뉴 설정을 변경했습니다',
-    create_branch:'지점을 생성했습니다', update_branch:'지점 정보를 수정했습니다',
+    create_branch:'지점을 생성했습니다', update_branch:'지점 정보를 수정했습니다', update_team:'팀 정보를 수정했습니다',
     delete_branch:'지점을 삭제했습니다', login:'로그인했습니다',
     script_view:'스크립트를 조회했습니다'
   };
@@ -579,6 +579,54 @@
     b.innerHTML=h;
   };
 
+  // ── 팀 상세관리 (운영 탭 · teams 테이블, 지점 패턴) ──
+  var _teamCache={ list:[], cnt:{}, bmap:{} };
+  window.acLoadTeams = async function(){
+    var area=document.getElementById('ac-teams-list'); if(!area) return;
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+    var ts=await _rows('teams?select=id,name,branch_id,is_active&order=name.asc');
+    var bs=await _rows('branches?select=id,name');
+    var us=await _rows('users?select=team_id&status=eq.active');
+    var bmap={}; bs.forEach(function(b){ bmap[b.id]=b.name; });
+    var cnt={}; us.forEach(function(u){ if(u.team_id) cnt[u.team_id]=(cnt[u.team_id]||0)+1; });
+    _teamCache={ list:ts, cnt:cnt, bmap:bmap };
+    var c=document.getElementById('ac-teams-count'); if(c) c.textContent=ts.length+'개';
+    if(!ts.length){ area.innerHTML='<div class="ac-card-empty"><i data-lucide="users-round"></i>등록된 팀이 없습니다</div>'; if(window.lucide) window.lucide.createIcons(); return; }
+    var body=ts.map(function(t){
+      var n=cnt[t.id]||0;
+      var stBadge=(t.is_active===false)?'<span class="ac-badge high">비활성</span>':'<span class="ac-badge st-active">활성</span>';
+      var nCell=(n===0)?'<span style="color:var(--err);font-weight:700">0</span>':('<b>'+n+'</b>');
+      var toggleBtn='<button class="ac-btn ac-btn-sm" onclick="event.stopPropagation();acTeamToggle(\''+esc(t.id)+'\','+(t.is_active===false?'true':'false')+')">'+(t.is_active===false?'활성화':'비활성')+'</button>';
+      return '<tr class="ac-tr-clk" onclick="acTeamDetail(\''+esc(t.id)+'\')"><td class="ac-td-name">'+esc(t.name||'(팀)')+'</td><td class="ac-td-sub">'+esc(bmap[t.branch_id]||'-')+'</td><td style="text-align:center">'+nCell+'</td><td>'+stBadge+'</td><td class="ac-td-acts">'+toggleBtn+'</td></tr>';
+    }).join('');
+    area.innerHTML='<div class="ac-tbl-wrap"><table class="ac-tbl"><thead><tr><th>팀명</th><th>소속 지점</th><th>인원</th><th>상태</th><th>관리</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    if(window.lucide) window.lucide.createIcons();
+  };
+  window.acTeamToggle=async function(id, activate){
+    try{
+      var res=await window.db.fetch('/rest/v1/teams?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({is_active:!!activate})});
+      if(!res.ok){ acToast((activate?'활성화':'비활성')+' 실패 ('+res.status+') — RLS 확인',true); return; }
+      if(window.db.logActivity) window.db.logActivity('update_team','team',id,{is_active:!!activate});
+      acToast(activate?'팀을 활성화했습니다':'팀을 비활성화했습니다');
+      window.acLoadTeams();
+    }catch(e){ acToast('네트워크 오류',true); }
+  };
+  window.acTeamDetail=function(id){
+    var t=null; (_teamCache.list||[]).forEach(function(x){ if(String(x.id)===String(id)) t=x; });
+    if(!t) return;
+    var n=(_teamCache.cnt||{})[id]||0; var bname=(_teamCache.bmap||{})[t.branch_id]||'-';
+    var ov=document.getElementById('ac-udetail-ov');
+    if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; document.body.appendChild(ov); }
+    ov.innerHTML='<div class="ac-udetail-box"><button class="ac-udetail-x" onclick="acUserDetailClose()">✕</button>'
+      +'<div class="ac-ud-title">'+esc(t.name||'(팀)')+'</div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">소속 지점</span><span class="ac-ud-v">'+esc(bname)+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">소속 인원</span><span class="ac-ud-v">'+n+'명</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">상태</span><span class="ac-ud-v">'+(t.is_active===false?'비활성':'활성')+'</span></div>'
+      +'<div class="ac-ud-row"><span class="ac-ud-k">ID</span><span class="ac-ud-v">'+esc(t.id)+'</span></div></div>';
+    ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); };
+    ov.classList.add('on');
+  };
+
   // ── 가입 승인 (admin-approvals 흡수 + approve_user/assign_branch 로깅) ──
   var _appr = { pending:[], branches:[], sel:null };
   function _fmtDate(iso){ if(!iso) return ''; var d=new Date(iso); if(isNaN(d.getTime())) return '';
@@ -1015,18 +1063,18 @@
   // ════════════════════════════════════════════════════════════════════
   var AC_GROUPS = {
     dashboard:{}, logs:{}, knowledge:{},
-    ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점']] },
+    ops:    { secs:[['approvals','가입 승인'],['users','사용자'],['branches','지점'],['teams','팀']] },
     content:{ secs:[['posts','게시글'],['comments','댓글'],['library','자료실']] },
     validation:{ secs:[['visibility','화면 가시성'],['rls','데이터 권한(RLS)']] },
     system: { secs:[['menu','메뉴'],['notice','공지·배너'],['settings','설정']] }
   };
   var AC_SEC_GROUP = { dashboard:'dashboard', logs:'logs', knowledge:'knowledge',
-    approvals:'ops', users:'ops', branches:'ops',
+    approvals:'ops', users:'ops', branches:'ops', teams:'ops',
     posts:'content', comments:'content', library:'content',
     visibility:'validation', rls:'validation',
     menu:'system', notice:'system', settings:'system' };
   var AC_LOAD = { dashboard:'acLoadDashboard', approvals:'acLoadApprovals', users:'acLoadUsers',
-    branches:'acLoadBranches', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
+    branches:'acLoadBranches', teams:'acLoadTeams', posts:'acLoadPosts', comments:'acLoadComments', library:'acLoadLibrary',
     visibility:'acLoadVisibility', rls:'acLoadRlsOverview', logs:'acLoadLogs',
     menu:'acLoadMenu', notice:'acLoadNotice', settings:'acLoadSettings' };
   var AC_TAB_ORDER = ['dashboard','ops','content','knowledge','validation','system','logs'];
