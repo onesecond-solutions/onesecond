@@ -341,13 +341,13 @@
   };
 
   // ── 콘텐츠 view (게시글 / 댓글 / 자료실) ──
-  var BOARD_LABEL={ qna:'스마트 게시판', insurer:'보험사', navigation:'네비방', hub:'허브',
-    manager_notice:'공지', manager_lounge:'매니저 라운지', archive_legacy:'아카이브' };
+  /* 현재 시스템 게시판(posts.board_type) — 2026-06-16 현행화. 옛 navigation/manager_notice/manager_lounge/archive_legacy 폐기 */
+  var BOARD_LABEL={ qna:'보험 Q&A', insurer:'보험사 자료실', community:'함께해요', hub:'허브' };
   // 게시글 — 필터(게시판)·검색(제목·본문)·본문 미리보기·작성자·페이지네이션. 300건 캐시 후 클라이언트 필터
   var _pState = { cache:null, filter:'all', q:'', page:0, per:20 };
   window.acLoadPosts = async function(reload){
     var list=document.getElementById('ac-posts-list'); if(!list) return;
-    _renderPostTools();
+    _renderPostTools();  /* 로딩 중엔 '전체'만(캐시 전) */
     if(!_pState.cache || reload){
       list.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div><div class="ac-skel"></div></div>';
       _pState.cache = await _rows('posts?select=id,title,content,board_type,author_name,author_id,created_at,is_hidden&order=created_at.desc&limit=300');
@@ -358,11 +358,16 @@
         _pState.cache.forEach(function(p){ p._cmt=_cmap[p.id]||0; });
       }catch(e){}
     }
+    _renderPostTools();  /* 캐시 적재 후 = 실제 board_type 기반 칩 재렌더 */
     _renderPostList();
   };
   function _renderPostTools(){
     var t=document.getElementById('ac-posts-tools'); if(!t) return;
-    var boards=['all','qna','insurer','navigation','hub','manager_notice','manager_lounge','archive_legacy'];
+    /* 칩 = 실제 데이터에 존재하는 게시판(board_type)만 노출 → 시스템 버전과 자동 정합(2026-06-16, 옛 하드코딩 목록 폐기) */
+    var KNOWN=['qna','insurer','community','hub'];  /* 현재 시스템 게시판 표시 순서 */
+    var present={}; (_pState.cache||[]).forEach(function(p){ if(p.board_type) present[p.board_type]=1; });
+    var boards=['all'].concat(KNOWN.filter(function(b){ return present[b]; }));
+    Object.keys(present).forEach(function(b){ if(KNOWN.indexOf(b)<0) boards.push(b); });  /* 레거시·신규 등 그 외 실재 타입도 빠짐없이 */
     var chips=boards.map(function(b){ var lbl=(b==='all'?'전체':(BOARD_LABEL[b]||b)); return '<button class="ac-chip'+(_pState.filter===b?' active':'')+'" onclick="acPostFilter(\''+b+'\')">'+lbl+'</button>'; }).join('');
     t.innerHTML='<div class="ac-post-tools">'+chips+'<input class="ac-post-search" id="ac-post-q" placeholder="제목·본문 검색" value="'+esc(_pState.q)+'" oninput="acPostSearch(this.value)"></div>';
   }
