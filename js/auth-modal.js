@@ -647,6 +647,63 @@ document.addEventListener('keydown', function (e) {
   } catch (e) { /* noop */ }
 })();
 
+// 초대 링크 진입 — ?invite=token → 초대 조회 후 가입 모달 + 프리필 (거미줄 합류)
+(function () {
+  try {
+    var inviteTok = new URLSearchParams(window.location.search).get('invite');
+    if (!inviteTok) return;
+    window._gInviteToken = inviteTok;
+    fetch(SUPABASE_URL + '/rest/v1/rpc/get_invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ p_token: inviteTok })
+    }).then(function (r) { return r.ok ? r.json() : null; }).then(function (inv) {
+      if (!inv || !inv.ok) { window._gInvite = null; return; }
+      window._gInvite = inv;
+      setTimeout(function () { openAuthModal('signup'); _applyInvitePrefill(inv); }, 200);
+    }).catch(function () { /* noop */ });
+  } catch (e) { /* noop */ }
+})();
+
+function _inviteRoleLabel(r) {
+  return ({ ga_branch_manager: '지점장', ga_manager: '실장', ga_member: '팀장(설계사)', ga_staff: '스탭' })[r] || r;
+}
+function _inviteLock(id, val) {
+  var e = document.getElementById(id);
+  if (e) { e.value = val || ''; e.setAttribute('readonly', 'readonly'); e.style.background = '#f3f3f5'; }
+}
+function _applyInvitePrefill(inv) {
+  if (!inv || !inv.ok) return;
+  if (typeof selectSite === 'function') selectSite('ga');
+  var roleSel = document.getElementById('f-ga-role');
+  if (roleSel && inv.invited_role) {
+    roleSel.value = inv.invited_role.replace(/^ga_/, '');
+    roleSel.setAttribute('disabled', 'disabled');
+  }
+  if (inv.same_company) {
+    _inviteLock('f-company-text', inv.company_name);
+    var cid = document.getElementById('f-company-id'); if (cid) cid.value = inv.company_id || '';
+    _inviteLock('f-ga-branch', inv.branch_name);
+    var bid = document.getElementById('f-ga-branch-id'); if (bid) bid.value = inv.branch_id || '';
+    if (inv.new_team_name) _inviteLock('f-ga-team', inv.new_team_name);
+  }
+  try {
+    var nameEl = document.getElementById('f-name');
+    var host = (nameEl && nameEl.closest) ? nameEl.closest('form, .auth-body, .auth-modal-body, .auth-card') : null;
+    var b = document.getElementById('_invite-banner');
+    if (!b && host && host.prepend) {
+      b = document.createElement('div');
+      b.id = '_invite-banner';
+      b.style.cssText = 'background:#eef3ff;border:1px solid #b9ccf5;border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:13px;color:#234;line-height:1.5';
+      host.prepend(b);
+    }
+    if (b) b.textContent = inv.same_company
+      ? ('초대받으셨습니다 — ' + (inv.company_name || '') + ' ' + (inv.branch_name || '') + ' · ' + _inviteRoleLabel(inv.invited_role) + '로 가입합니다.')
+      : ('초대받으셨습니다 — 회사를 선택해 새로 시작합니다 (' + _inviteRoleLabel(inv.invited_role) + ').');
+  } catch (e) { /* noop */ }
+}
+window._applyInvitePrefill = _applyInvitePrefill;
+
 // ============================================================================
 //  비밀번호 보기/숨기기 토글 (로그인 + 가입 공용)
 // ============================================================================
@@ -882,6 +939,16 @@ async function verifyOtp() {
       _resetBtn();
 
       if (_otpMode === 'signup') {
+        /* 초대 가입 = 그 자리에 합류 (같은 회사면 새 실 생성+회사·지점·실·역할 연결) */
+        if (window._gInviteToken) {
+          try {
+            await fetch(SUPABASE_URL + '/rest/v1/rpc/accept_invite', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + data.access_token },
+              body: JSON.stringify({ p_token: window._gInviteToken })
+            });
+          } catch (_e) { console.error('[accept_invite]', _e); }
+        }
         var descEl = document.getElementById('signup-success-desc');
         var pendingNoticeEl = document.getElementById('pending-notice');
         var site = (_otpSignupData && _otpSignupData.site) || 'ga';
@@ -1503,7 +1570,7 @@ function validateSignup() {
   /* P1(Chrome 검수): GA 최종 게이트 — 회사 미선택 제출 차단(스텝 우회·직접 doSubmit 방어). 서버 RLS와 별개 클라 방어. */
   if (window.gSignupSite === 'ga') {
     var _cid = document.getElementById('f-company-id');
-    if (!_cid || !_cid.value) { if (errBox) { errBox.textContent = '회사를 선택해 주세요.'; errBox.classList.add('on'); } ok = false; }
+    if ((!_cid || !_cid.value) && !(window._gInvite && window._gInvite.same_company)) { if (errBox) { errBox.textContent = '회사를 선택해 주세요.'; errBox.classList.add('on'); } ok = false; }
   }
 
   if (!document.getElementById('f-consent').checked) {
@@ -1837,6 +1904,17 @@ async function doSubmit() {
     new_team_name:   newTeamName,
     status:      statusValue
   };
+
+  /* 초대 가입이면 회사·지점·실·역할을 초대대로 우선 (트리거가 가입 직후 저장, accept_invite가 최종 확정) */
+  if (window._gInvite && window._gInviteToken) {
+    signupData.invite_token = window._gInviteToken;
+    signupData.role = window._gInvite.invited_role || signupData.role;
+    if (window._gInvite.same_company) {
+      signupData.company_id    = window._gInvite.company_id    || signupData.company_id;
+      signupData.branch_id     = window._gInvite.branch_id     || signupData.branch_id;
+      signupData.new_team_name = window._gInvite.new_team_name || signupData.new_team_name;
+    }
+  }
 
   try {
     var authRes = await fetch(SUPABASE_URL + '/auth/v1/otp', {
