@@ -2831,6 +2831,14 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           #v-admin .flow-node.active .flow-dot{background:var(--ac);border-color:var(--ac);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 20%,transparent)}
           #v-admin .flow-node.active .flow-name{color:var(--ac);font-weight:700}
           @media(max-width:760px){#v-admin .flow-track{flex-direction:column}#v-admin .flow-info{flex:none;border-right:none;border-bottom:1px solid var(--bd)}}
+          #v-admin .flow-sum-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--bd);cursor:pointer}
+          #v-admin .flow-sum-row:last-child{border-bottom:none}
+          #v-admin .flow-sum-row:hover{background:color-mix(in srgb,var(--bd) 26%,transparent)}
+          #v-admin .flow-sum-title{font-weight:700;font-size:13px;flex:0 0 auto}
+          #v-admin .flow-sum-cur{font-size:12px;color:var(--ac);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+          #v-admin .flow-sum-prog{width:84px;height:6px;background:var(--bd);border-radius:3px;overflow:hidden;flex:0 0 84px}
+          #v-admin .flow-sum-bar{display:block;height:100%;background:var(--ac)}
+          #v-admin .flow-sum-pct{font-size:11.5px;color:var(--tf);flex:0 0 auto;font-variant-numeric:tabular-nums}
           #v-admin .act-role{font-size:11px;color:var(--tf);background:color-mix(in srgb,var(--bd) 45%,transparent);padding:2px 8px;border-radius:5px}
           @media(max-width:980px){#v-admin .act-board{grid-template-columns:repeat(3,1fr)}#v-admin .act-main{grid-template-columns:1fr}}
         </style>
@@ -2843,6 +2851,14 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="ac-section-head"><i data-lucide="shield-alert"></i>
             <h2>위험 신호</h2><span class="ac-section-sub">Risk Alerts</span></div>
           <div class="ac-card" id="ac-risk-panel"><div class="ac-card-empty">불러오는 중…</div></div>
+        </div>
+
+        <!-- 작업 흐름 요약 (클릭 → 작업 흐름 탭) -->
+        <div class="ac-section" style="margin:6px 0 18px">
+          <div class="ac-section-head"><i data-lucide="git-branch"></i>
+            <h2>작업 흐름</h2><span class="ac-section-sub">진행중 작업</span>
+            <button class="ac-btn ac-btn-sm" style="margin-left:auto" onclick="acGoSec('flow')">작업 흐름 전체 →</button></div>
+          <div class="ac-card" id="ac-flow-summary"><div class="ac-card-empty">불러오는 중…</div></div>
         </div>
 
         <!-- 추세 (최근 14일 가입·접속) -->

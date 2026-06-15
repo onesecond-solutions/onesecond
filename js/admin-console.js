@@ -994,6 +994,25 @@
     area.innerHTML='<div class="flow-list">'+active.concat(done).map(card).join('')+'</div>';
     if(window.lucide) window.lucide.createIcons();
   };
+  // 대시보드 요약 카드 — 진행중 작업 한 줄씩 + 클릭 시 작업 흐름 탭
+  window.renderFlowSummary = function(){
+    var el=document.getElementById('ac-flow-summary'); if(!el) return;
+    el.classList.remove('ac-card-empty');
+    var active=WORK_TRACKS.filter(function(t){ return !_flowDone(t); });
+    if(!active.length){ el.innerHTML='<div class="ac-card-empty" style="padding:18px 0">진행중 작업 없음</div>'; return; }
+    el.innerHTML=active.map(function(t){
+      var dn=t.phases.filter(function(p){return p.s==='done';}).length;
+      var cur=t.phases.filter(function(p){return p.s==='active';})[0];
+      var pct=Math.round(dn/t.phases.length*100);
+      return '<div class="flow-sum-row" onclick="acGoSec(\'flow\')">'+
+        '<span class="flow-cat">'+esc(t.cat)+'</span>'+
+        '<span class="flow-sum-title">'+esc(t.title)+'</span>'+
+        '<span class="flow-sum-cur">'+esc(cur?cur.n:'-')+'</span>'+
+        '<span class="flow-sum-prog"><span class="flow-sum-bar" style="width:'+pct+'%"></span></span>'+
+        '<span class="flow-sum-pct">'+dn+'/'+t.phases.length+'</span>'+
+      '</div>';
+    }).join('');
+  };
 
   // 조직트리 데이터 적재 (대시보드/운영>조직트리 공용) → _CT 채움
   async function _loadOrgData(){
@@ -1081,6 +1100,7 @@
     })();
 
     // 보존 위젯
+    if(window.renderFlowSummary) window.renderFlowSummary();
     await renderActivity(await _rows('activity_logs?select=id,user_id,event_type,severity,created_at&order=created_at.desc&limit=5'));
     if(window.acLoadSearchData) window.acLoadSearchData();
 
