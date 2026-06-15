@@ -265,9 +265,20 @@
     // 위에 없는 기타 컬럼 자동 표시(민감 제외)
     var shown={name:1,role:1,status:1,email:1,company:1,phone:1,branch_id:1,team_id:1,created_at:1,id:1,auth_user_id:1,updated_at:1};
     Object.keys(u).forEach(function(k){ if(!shown[k] && u[k]!=null && u[k]!==''){ var v=(typeof u[k]==='object')?JSON.stringify(u[k]):u[k]; h+=row(_UFIELD[k]||k,v); } });
-    body.innerHTML=h;
+    /* 발견→처리: 상세에서 바로 조치 (어드민 계정은 정지 버튼 숨김·보호) */
+    var _st=u.status||'active';
+    var _acts='<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--bd);padding-top:14px;">'+
+      '<button class="ac-btn ac-btn-sm" onclick="acUserForm(\''+esc(u.id)+'\')">수정 · 지점/팀 배정</button>'+
+      (u.role==='admin' ? '' :
+        (_st==='suspended'
+          ? '<button class="ac-btn ac-btn-sm" onclick="acUserSuspend(\''+esc(u.id)+'\',false).then(_acDetailAfter)">정지 해제</button>'
+          : '<button class="ac-btn ac-btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="acUserSuspend(\''+esc(u.id)+'\',true).then(_acDetailAfter)">정지</button>'))+
+      '</div>';
+    body.innerHTML=h+_acts;
   };
   window.acUserDetailClose=function(){ var ov=document.getElementById('ac-udetail-ov'); if(ov) ov.classList.remove('on'); };
+  /* 상세 모달 액션 후 대시보드 갱신 (정지/해제 → 트리·KPI 즉시 반영) */
+  window._acDetailAfter=function(){ acUserDetailClose(); if(window.acLoadDashboard) window.acLoadDashboard(); };
 
   // ── 지점 view — 테이블 + 행클릭 상세 + 활성토글/삭제(인원0) ──
   var _brCache={ list:[], cnt:{} };
