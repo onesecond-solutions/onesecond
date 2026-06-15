@@ -898,7 +898,8 @@
     var teamCnt=Object.keys(_ctTeams(arr)).length;
     var RL=window.ROLE_LABEL||{};
     var ls=_CT.lastSeen||{}, _now=Date.now(), _wk=7*86400000, _midR=_kstMidnightISO();
-    var rows=arr.slice(0,300).map(function(u){
+    var _sorted=arr.slice().sort(function(a,b){ var ao=(ls[a.id]&&ls[a.id]>=_midR)?1:0, bo=(ls[b.id]&&ls[b.id]>=_midR)?1:0; return bo-ao; });  /* 로그인중 상단 정렬 */
+    var rows=_sorted.slice(0,300).map(function(u){
       var ini=esc((u.name||'?').slice(0,2));
       var lsv=ls[u.id]; var stale=(!lsv)||((_now-new Date(lsv).getTime())>=_wk);
       var online=!!(lsv && lsv>=_midR);  /* 로그인중 = 오늘 접속 */
@@ -932,10 +933,14 @@
       '<div class="act-mini" style="grid-template-columns:repeat('+cells.length+',1fr)">'+
         cells.map(function(c){ return _ctMc(c[0], c[1]); }).join('')+
       '</div>'+
-      '<div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
-        (rows||'<tr><td colspan="5" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
-      '</tbody></table></div>';
+      '<div class="act-mlist">'+
+        '<div class="act-mlist-hd" onclick="acToggleMlist(this)"><span>구성원 <b>'+arr.length+'</b>명 · <span class="act-presence on" style="margin:0 5px 0 3px"></span>로그인중 <b>'+loginN+'</b></span><span class="act-mlist-caret">▾</span></div>'+
+        '<div class="act-mlist-body"><div style="padding:2px 20px 22px"><table class="act-tbl"><thead><tr><th>구성원</th><th>직책</th><th>팀</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
+          (rows||'<tr><td colspan="5" style="color:var(--tf);text-align:center;padding:24px">구성원이 없습니다</td></tr>')+
+        '</tbody></table></div></div>'+
+      '</div>';
   };
+  window.acToggleMlist=function(el){ var w=el&&el.parentNode; if(w) w.classList.toggle('collapsed'); };
 
   // 조직트리 데이터 적재 (대시보드/운영>조직트리 공용) → _CT 채움
   async function _loadOrgData(){
