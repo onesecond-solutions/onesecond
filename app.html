@@ -12130,17 +12130,29 @@ window._osShareDo=_osShareDo;
 function _mvOwner(){ return (window.AppState&&window.AppState.userId)||''; }
 /* 자료함 스코프 컨텍스트 (2026-06-13 팀/지점 공유 이식) — personal(본인) / team / branch. 단일 컴포넌트 재사용 */
 window._mvScope = window._mvScope || {scope:'personal', id:null};
-function _mvScopeSet(scope,id,adminAll){ window._mvScope={scope:(scope||'personal'), id:(id||null), adminAll:!!adminAll}; }
-function _mvScopeQ(){ var s=window._mvScope||{scope:'personal'};   /* 로드 쿼리 필터 */
+function _mvScopeSet(scope,id,adminAll){ window._mvScope={scope:(scope||'personal'), id:(id||null), adminAll:!!adminAll};
+  /* scope를 자료함 DOM(#mys-vault)에도 고정 — 로드/업로드가 항상 '지금 보는 자료실' 기준(전역 잔상 방지) */
+  var v=document.getElementById('mys-vault');
+  if(v){ v.setAttribute('data-scope', scope||'personal');
+    if(id) v.setAttribute('data-scope-id', id); else v.removeAttribute('data-scope-id');
+    if(adminAll) v.setAttribute('data-scope-all','1'); else v.removeAttribute('data-scope-all'); }
+}
+function _mvScopeCur(){ /* 현재 자료함 화면의 scope (DOM 우선 → 전역 폴백) */
+  var v=document.getElementById('mys-vault');
+  if(v && v.getAttribute('data-scope')) return {scope:v.getAttribute('data-scope'), id:(v.getAttribute('data-scope-id')||null), adminAll:(v.getAttribute('data-scope-all')==='1')};
+  return window._mvScope||{scope:'personal', id:null};
+}
+function _mvScopeQ(){ var s=_mvScopeCur();   /* 로드 쿼리 필터 */
   if(s.adminAll && (s.scope==='team'||s.scope==='branch')) return '&scope=eq.'+s.scope;  /* 어드민 사고대응 전체 열람 = scope_id 무관(전 팀/지점) */
   if(s.scope==='team'&&s.id)   return '&scope=eq.team&scope_id=eq.'+encodeURIComponent(s.id);
   if(s.scope==='branch'&&s.id) return '&scope=eq.branch&scope_id=eq.'+encodeURIComponent(s.id);
-  return '&owner_id=eq.'+encodeURIComponent(_mvOwner()); }
-function _mvScopeRow(){ var s=window._mvScope||{scope:'personal'};  /* INSERT scope 필드 */
+  /* 개인 자료실 = 본인 파일 중 개인(scope=personal 또는 옛 데이터 null)만 — 팀/지점에 올린 본인 파일이 개인에 섞여 보이지 않게 */
+  return '&owner_id=eq.'+encodeURIComponent(_mvOwner())+'&or=(scope.is.null,scope.eq.personal)'; }
+function _mvScopeRow(){ var s=_mvScopeCur();  /* INSERT scope 필드 */
   if(s.scope==='team'&&s.id)   return {scope:'team',   scope_id:s.id};
   if(s.scope==='branch'&&s.id) return {scope:'branch', scope_id:s.id};
   return {scope:'personal', scope_id:null}; }
-function _mvStoragePrefix(){ var s=window._mvScope||{scope:'personal'};  /* storage 경로 첫 세그먼트 */
+function _mvStoragePrefix(){ var s=_mvScopeCur();  /* storage 경로 첫 세그먼트 */
   if(s.scope==='team'&&s.id)   return 'team/'+s.id;
   if(s.scope==='branch'&&s.id) return 'branch/'+s.id;
   return _mvOwner(); }
