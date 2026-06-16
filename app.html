@@ -12006,11 +12006,32 @@ function _osShareSel(i){
   else { bodyHtml='<div style="line-height:1.7">파일: <b>'+_shEsc(pl.original_name||s.title||'')+'</b><br>'+_shEsc((pl.ext||'').toUpperCase())+(pl.file_size?(' · '+_shSize(pl.file_size)):'')+'<br><br>받기를 누르면 내 자료실에 저장됩니다.</div>'; }
   var meta=[(s.from_name||''),_shDate(s.created_at)].filter(Boolean).join(' · ');
   var sent=(window._osShareTab==='sent');
-  var act=sent?'':'<div class="post-acts"><button class="post-act" onclick="_osShareReceive('+i+')">받기</button></div>';
+  var act=sent
+    ?'<div class="post-acts"><button class="post-act post-act-del" onclick="_osShareCancel('+i+')">공유 취소</button></div>'
+    :'<div class="post-acts"><button class="post-act" onclick="_osShareReceive('+i+')">받기</button></div>';
   vv.innerHTML='<span class="vbadge">'+(_SH_TY[s.item_type]||'')+'</span><div class="vttl">'+_shEsc(s.title||'(제목 없음)')+'</div><div class="vmeta">'+_shEsc(meta)+'</div><div class="vbody">'+(bodyHtml||'(내용 없음)')+'</div>'+act;
   if(window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
 }
 window._osShareSel=_osShareSel;
+/* 공유 취소(보낸 사람만) — shares 삭제 + 파일 공유면 받는 자료실 자동 사본까지 완전 삭제(storage+DB) */
+async function _osShareCancel(i){
+  var s=(window._osShareRows||[])[i]; if(!s) return;
+  if(!window.confirm('이 공유를 취소할까요?\n받는 분의 공유함과 자료실에서 사본까지 함께 삭제됩니다.')) return;
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); var key=window.db.key;
+  try{
+    if(s.item_type==='file' && s.item_id){
+      var fr=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(s.item_id)+'&select=storage_path');
+      var sp=((fr.ok?await fr.json():[])[0]||{}).storage_path;
+      if(sp && typeof _mvEncPath==='function'){ await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(sp)),{method:'DELETE',headers:{'apikey':key,'Authorization':'Bearer '+token}}).catch(function(){}); }
+      await fetch(window.db.url('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(s.item_id)),{method:'DELETE',headers:{'apikey':key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'}}).catch(function(){});
+    }
+    var r=await fetch(window.db.url('/rest/v1/shares?id=eq.'+encodeURIComponent(s.id)),{method:'DELETE',headers:{'apikey':key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'}});
+    if(r.ok||r.status===204){ if(typeof toast==='function') toast('공유를 취소했어요.'); var vv=document.getElementById('mysViewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">왼쪽에서 공유 항목을 선택하세요.</div>'; _osShareboxRender(); }
+    else { alert('공유 취소에 실패했습니다 ('+r.status+')'); }
+  }catch(e){ console.error('[share] cancel',e); alert('공유 취소 중 오류가 발생했습니다.'); }
+}
+window._osShareCancel=_osShareCancel;
 async function _osShareReceive(i){
   var s=(window._osShareRows||[])[i]; if(!s) return;
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
