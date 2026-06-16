@@ -240,7 +240,7 @@
     }catch(e){ acToast('네트워크 오류',true); }
   };
   // 행 클릭 → 사용자 상세 (전체 컬럼 + 지점 이름 매핑). 모달
-  var _UFIELD={ name:'이름', role:'권한', status:'상태', email:'이메일', company:'소속/회사', phone:'전화', branch_id:'지점', team_id:'팀', created_at:'가입일', id:'ID' };
+  var _UFIELD={ name:'이름', role:'권한', status:'상태', email:'이메일', company:'소속/회사', phone:'전화', branch_id:'지점', team_id:'팀', created_at:'가입일', id:'ID', removed_at:'내보낸 일시', removed_by:'내보낸 사람(ID)' };
   window.acUserDetail=async function(id){
     var ov=document.getElementById('ac-udetail-ov');
     if(!ov){ ov=document.createElement('div'); ov.id='ac-udetail-ov'; ov.className='ac-udetail-ov'; ov.onclick=function(e){ if(e.target===ov) acUserDetailClose(); }; document.body.appendChild(ov); }
@@ -263,7 +263,7 @@
     h+=row('가입일',_fmtDate(u.created_at));
     h+=row('ID',u.id);
     // 위에 없는 기타 컬럼 자동 표시(민감 제외)
-    var shown={name:1,role:1,status:1,email:1,company:1,phone:1,branch_id:1,team_id:1,created_at:1,id:1,auth_user_id:1,updated_at:1};
+    var shown={name:1,role:1,status:1,email:1,company:1,phone:1,branch_id:1,team_id:1,created_at:1,id:1,auth_user_id:1,updated_at:1,removal_ack:1};
     Object.keys(u).forEach(function(k){ if(!shown[k] && u[k]!=null && u[k]!==''){ var v=(typeof u[k]==='object')?JSON.stringify(u[k]):u[k]; h+=row(_UFIELD[k]||k,v); } });
     /* 발견→처리: 상세에서 바로 조치 (어드민 계정은 정지 버튼 숨김·보호) */
     var _st=u.status||'active';

@@ -211,6 +211,15 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 /* 구성원 내보내기 버튼 (표 행) */
 .mr-remove-btn{padding:4px 10px;border:1px solid color-mix(in srgb,var(--color-danger) 38%,transparent);background:color-mix(in srgb,var(--color-danger) 8%,transparent);color:var(--color-danger);border-radius:var(--radius-sm);font-size:0.76rem;font-weight:700;cursor:pointer;white-space:nowrap;}
 .mr-remove-btn:hover{background:color-mix(in srgb,var(--color-danger) 16%,transparent);}
+/* 내보내짐 안내 모달 (본인 로그인 시) */
+.os-removal-ov{position:fixed;inset:0;z-index:99999;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:20px;}
+.os-removal-card{background:var(--s1,#fff);border-radius:var(--radius-lg,18px);max-width:380px;width:100%;padding:26px 24px;box-shadow:0 18px 50px rgba(0,0,0,.25);text-align:center;}
+.os-removal-hd{font-size:1.08rem;font-weight:800;color:var(--tp);margin-bottom:12px;}
+.os-removal-bd{font-size:0.92rem;line-height:1.6;color:var(--ts);margin-bottom:20px;}
+.os-removal-act{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.os-removal-keep{padding:12px;border:none;border-radius:var(--radius-sm);background:var(--ac);color:#fff;font-weight:800;font-size:0.92rem;cursor:pointer;font-family:inherit;}
+.os-removal-quit{padding:12px;border:1px solid color-mix(in srgb,var(--color-danger) 40%,transparent);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--color-danger) 8%,transparent);color:var(--color-danger);font-weight:800;font-size:0.92rem;cursor:pointer;font-family:inherit;}
+.os-removal-note{font-size:0.8rem;color:var(--tf);margin-top:14px;line-height:1.5;}
 .mr-invite-ov{position:fixed;inset:0;background:rgba(20,20,30,.4);display:flex;align-items:center;justify-content:center;z-index:9500;}
 .mr-invite-box{background:var(--s1,#fff);border-radius:14px;padding:22px 24px;width:min(420px,92vw);box-shadow:0 8px 30px rgba(0,0,0,.18);}
 .mr-invite-hd{font-size:1rem;font-weight:800;margin-bottom:16px;}
@@ -8049,6 +8058,44 @@ function _osTouchSeen(){
   }catch(e){}
 }
 window._osTouchSeen=_osTouchSeen;
+/* 내보내기 2단계 — 본인이 조직에서 제외됐고(removed_at) 아직 응답 안 함(removal_ack=false)이면 안내 모달 */
+async function _osCheckRemoval(){
+  try{
+    if(!window.db||!window.db.fetch) return;
+    var meId=(window.AppState&&window.AppState.userId)||((typeof _getOwnerId==='function')&&_getOwnerId());
+    if(!meId) return;
+    var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(meId)+'&select=removed_at,removal_ack');
+    if(!r.ok) return; var j=await r.json(); var u=j&&j[0];
+    if(u && u.removed_at && u.removal_ack!==true) _osShowRemovalNotice();
+  }catch(e){}
+}
+window._osCheckRemoval=_osCheckRemoval;
+function _osShowRemovalNotice(){
+  if(document.getElementById('osRemovalOv')) return;
+  var ov=document.createElement('div'); ov.id='osRemovalOv'; ov.className='os-removal-ov';
+  ov.innerHTML='<div class="os-removal-card">'+
+    '<div class="os-removal-hd">소속 조직에서 제외되었습니다</div>'+
+    '<div class="os-removal-bd">회사 · 지점 · 팀 · 직책 정보가 해제되었습니다.<br>계정을 어떻게 하시겠어요?</div>'+
+    '<div class="os-removal-act">'+
+      '<button class="os-removal-keep" type="button" onclick="_osRemovalKeep()">계정 유지</button>'+
+      '<button class="os-removal-quit" type="button" onclick="_osRemovalWithdraw()">탈퇴</button>'+
+    '</div>'+
+    '<div class="os-removal-note">유지하면 미배정 상태로 남아 다른 조직에 다시 합류할 수 있어요.</div>'+
+  '</div>';
+  document.body.appendChild(ov);
+}
+function _osRemovalKeep(){
+  window.db.fetch('/rest/v1/rpc/keep_after_removal',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+    .then(function(){ var o=document.getElementById('osRemovalOv'); if(o)o.remove(); if(typeof toast==='function')toast('계정을 유지합니다'); })
+    .catch(function(){ alert('처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'); });
+}
+function _osRemovalWithdraw(){
+  if(!window.confirm('정말 탈퇴하시겠어요?\n탈퇴 시 계정이 정지되고 로그아웃됩니다.')) return;
+  window.db.fetch('/rest/v1/rpc/withdraw_after_removal',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+    .then(function(){ alert('탈퇴 처리되었습니다. 그동안 이용해 주셔서 감사합니다.'); if(window.Auth&&window.Auth.logout){ window.Auth.logout(); } else { try{localStorage.clear();sessionStorage.clear();}catch(e){} location.href='/'; } })
+    .catch(function(){ alert('처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'); });
+}
+window._osRemovalKeep=_osRemovalKeep; window._osRemovalWithdraw=_osRemovalWithdraw;
 function _mrRel(iso){ if(!iso) return '기록 없음'; var m=(Date.now()-new Date(iso).getTime())/60000; if(m<1)return'방금'; if(m<60)return Math.floor(m)+'분 전'; if(m<1440)return Math.floor(m/60)+'시간 전'; return Math.floor(m/1440)+'일 전'; }
 /* (구) 실데이터 팀원 렌더 — 샘플 레이아웃 확정 후 실데이터 연결 시 참고용 보존 */
 function mrSelectTeam(teamId,el){
@@ -9655,6 +9702,7 @@ else _updateAccountHeader();
         window.AppState.userId=uid;
         window.AppState.token=token;
         if(typeof _osTouchSeen==='function'){ _osTouchSeen(); if(!window._osSeenTimer){ window._osSeenTimer=setInterval(function(){ if(document.visibilityState!=='hidden') _osTouchSeen(); }, 120000); } }
+        if(typeof _osCheckRemoval==='function') _osCheckRemoval();
         if(window.Auth.loadUser)window.Auth.loadUser();
         if(typeof _updateAccountHeader==='function') _updateAccountHeader();
         if(typeof applyRoleClass==='function') applyRoleClass();
