@@ -717,6 +717,7 @@
   //  · 전부 실데이터(users·branches·activity_logs). 추측 없음. RLS상 admin 전체 조회.
   //  · 건강도 색 = 인원수 기준 1차(0=빨강·<3=노랑·그외 녹색). 활동 가중 건강도는 후속.
   var _CT = { branches:[], byBranch:{}, usersAll:[], lastSeen:{}, companies:[], byCompany:{}, userContent:{} };
+  var _ctPendingPick = null;  /* 조직트리 진입 직후 선택할 노드(예: 대시보드 미배정 카드 → '_none'). 1회 소비. */
   /* 조직트리 컴포넌트 host (대시보드 / 운영>조직트리 재사용 — 활성 탭 기준) */
   var _ctHost = { tree:'ac-org-tree', detail:'ac-org-detail', cnt:'ac-tree-cnt' };
   function _ctMc(l,v){ return '<div class="act-mc"><div class="l">'+l+'</div><div class="v">'+(v==null?'—':Number(v).toLocaleString())+'</div></div>'; }
@@ -741,8 +742,9 @@
   function renderBoard(d){
     var el=document.getElementById('ac-board'); if(!el) return;
     el.classList.remove('ac-card-empty');
-    function kpi(cls,lab,num,unit,delta,sec){
-      var on = sec ? ' onclick="acGoSec(\''+sec+'\')" style="cursor:pointer"' : '';
+    function kpi(cls,lab,num,unit,delta,sec,act){
+      var click = act ? act : (sec ? 'acGoSec(\''+sec+'\')' : '');
+      var on = click ? ' onclick="'+click+'" style="cursor:pointer"' : '';
       return '<div class="act-kpi '+cls+'"'+on+'><div class="l">'+esc(lab)+'</div>'+
         '<div class="n">'+(num==null?'—':Number(num).toLocaleString())+(unit?'<small>'+unit+'</small>':'')+'</div>'+
         (delta?'<div class="d">'+esc(delta)+'</div>':'')+'</div>';
@@ -753,7 +755,7 @@
       kpi('', '오늘 접속', d.today, '명', actPct, 'logs') +
       kpi('', '활성 지점', d.activeBr, '개', d.totalBr?('전체 '+d.totalBr):'', 'branches') +
       kpi(d.riskBr>0?'alert':'', '위험 지점', d.riskBr, '개', '인원 0', 'branches') +
-      kpi((d.unassigned>0||d.unclassified>0)?'warn':'', '미배정', d.unassigned, '명', (d.unclassified>0?('지점없음 · 역할 미분류 '+d.unclassified):'지점 없음'), 'users') +
+      kpi((d.unassigned>0||d.unclassified>0)?'warn':'', '미배정', d.unassigned, '명', (d.unclassified>0?('지점없음 · 역할 미분류 '+d.unclassified):'지점 없음'), '', 'acGoUnassigned()') +
       kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', (d.pendingOther>0?('원수사 '+d.pendingIns+' · 기타 '+d.pendingOther):''), 'approvals');
   }
 
@@ -1063,9 +1065,13 @@
     var host=document.getElementById('ac-org-tree2'); if(host) host.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
     await _loadOrgData();
     renderOrgTree(_CT.companies, _CT.branches, _CT.byBranch, _CT.byCompany);
-    acOrgPick('_all');
+    var pick = _ctPendingPick || '_all'; _ctPendingPick = null;  /* 대기 픽 1회 소비 후 기본 전체 */
+    acOrgPick(pick);
     if(window.lucide) window.lucide.createIcons();
   };
+
+  /* 대시보드 '미배정' 카드 → 운영>조직 트리 진입 + 왼쪽 트리 '미배정' 노드 선택(8명만 노출) */
+  window.acGoUnassigned = function(){ _ctPendingPick = '_none'; acGoSec('orgtree'); };
 
   window.acLoadDashboard = async function(){
     var [total, pendingAll, pendingIns, unassigned, newToday, unclassified, branches, users, companies] = await Promise.all([
