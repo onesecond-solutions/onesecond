@@ -923,12 +923,12 @@
     var roleCnt={}; arr.forEach(function(u){ roleCnt[u.role]=(roleCnt[u.role]||0)+1; });
     var teamCnt=Object.keys(_ctTeams(arr)).length;
     var RL=window.ROLE_LABEL||{};
-    var ls=_CT.lastSeen||{}, _now=Date.now(), _wk=7*86400000, _midR=_kstMidnightISO();
+    var ls=_CT.lastSeen||{}, _now=Date.now(), _wk=7*86400000, _midR=new Date(_now-10*60*1000).toISOString();  /* 현재 접속 = 최근 10분(heartbeat) */
     var _sorted=arr.slice().sort(function(a,b){ var ao=(ls[a.id]&&ls[a.id]>=_midR)?1:0, bo=(ls[b.id]&&ls[b.id]>=_midR)?1:0; return bo-ao; });  /* 로그인중 상단 정렬 */
     var rows=_sorted.slice(0,300).map(function(u){
       var ini=esc((u.name||'?').slice(0,2));
       var lsv=ls[u.id]; var stale=(!lsv)||((_now-new Date(lsv).getTime())>=_wk);
-      var online=!!(lsv && lsv>=_midR);  /* 로그인중 = 오늘 접속 */
+      var online=!!(lsv && lsv>=_midR);  /* 로그인중 = 최근 10분 접속(heartbeat) */
       var dot='<span class="act-presence '+(online?'on':'off')+'" title="'+(online?'로그인중':'비로그인')+'"></span>';
       var seen=lsv?_rel(lsv):'기록 없음';
       return '<tr class="ac-tr-clk" onclick="acGoSec(\'users\')"><td>'+dot+'<span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
@@ -937,8 +937,8 @@
         '<td style="color:'+(stale?'var(--warn)':'var(--ts)')+'">'+esc(seen)+'</td>'+
         '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
     }).join('');
-    /* 계층별 하위 단위 집계 (회사>지점>팀>사용자>로그인중). 로그인중=오늘 접속(실시간 세션 부재 근사) */
-    var _mid=_kstMidnightISO(); var loginN=0; arr.forEach(function(u){ var t=ls[u.id]; if(t && t>=_mid) loginN++; });
+    /* 계층별 하위 단위 집계 (회사>지점>팀>사용자>로그인중). 로그인중 = 최근 10분 접속(heartbeat, 매니저방과 동일 기준) */
+    var _mid=new Date(Date.now()-10*60*1000).toISOString(); var loginN=0; arr.forEach(function(u){ var t=ls[u.id]; if(t && t>=_mid) loginN++; });
     var cells;
     if(bid==='_all'){
       var coN=(_CT.companies||[]).filter(function(c){ return (_CT.byCompany[c.id]||[]).length; }).length;
@@ -1046,12 +1046,12 @@
   async function _loadOrgData(){
     var res=await Promise.all([
       _rows('branches?select=id,name,ga_org_name,is_active,company_id&order=name.asc'),
-      _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000'),
+      _rows('users?select=id,name,role,status,branch_id,team,created_at,last_seen_at&status=eq.active&order=created_at.desc&limit=2000'),
       _rows('companies?select=id,name&order=name.asc')
     ]);
     var branches=res[0]||[], users=res[1]||[], companies=res[2]||[];
-    var loginLogs=[]; try{ loginLogs=await _rows('activity_logs?event_type=in.(login,login_admin)&created_at=gte.'+new Date(Date.now()-30*86400000).toISOString()+'&select=user_id,created_at&order=created_at.desc&limit=8000'); }catch(e){}
-    var lastSeen={}; loginLogs.forEach(function(l){ if(l.user_id && !lastSeen[l.user_id]) lastSeen[l.user_id]=l.created_at; });
+    /* 현재 접속(presence) = users.last_seen_at(heartbeat). 매니저방과 동일 소스로 통일(2026-06-16) */
+    var lastSeen={}; users.forEach(function(u){ if(u.last_seen_at) lastSeen[u.id]=u.last_seen_at; });
     var recentPosts=[]; try{ recentPosts=await _rows('posts?created_at=gte.'+new Date(Date.now()-7*86400000).toISOString()+'&select=author_id&limit=8000'); }catch(e){}
     var userContent={}; recentPosts.forEach(function(p){ if(p.author_id) userContent[p.author_id]=(userContent[p.author_id]||0)+1; });
     var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
@@ -1082,19 +1082,17 @@
       _count('users?created_at=gte.'+_kstMidnightISO()+'&select=id'),
       _count('users?status=eq.active&role=not.in.('+ROLE_KEYS.join(',')+')&select=id'),
       _rows('branches?select=id,name,ga_org_name,is_active,company_id&order=name.asc'),
-      _rows('users?select=id,name,role,status,branch_id,team,created_at&status=eq.active&order=created_at.desc&limit=2000'),
+      _rows('users?select=id,name,role,status,branch_id,team,created_at,last_seen_at&status=eq.active&order=created_at.desc&limit=2000'),
       _rows('companies?select=id,name&order=name.asc')
     ]);
     var pendingOther = Math.max(0, (pendingAll||0) - (pendingIns||0));  /* 원수사 외 pending = GA·기타(승인 화면 미노출, 사용자 탭 처리) */
     // 최근 30일 로그인 → user별 마지막 접속(lastSeen) + 오늘 접속(distinct)
     var loginLogs=[];
     try{ loginLogs=await _rows('activity_logs?event_type=in.(login,login_admin)&created_at=gte.'+new Date(Date.now()-30*86400000).toISOString()+'&select=user_id,created_at&order=created_at.desc&limit=8000'); }catch(e){}
+    /* 현재 접속(presence) = users.last_seen_at(heartbeat) / 오늘 접속 KPI(ts) = 로그인 기록 */
     var lastSeen={}, ts={}, _mid=_kstMidnightISO();
-    loginLogs.forEach(function(l){
-      if(!l.user_id) return;
-      if(!lastSeen[l.user_id]) lastSeen[l.user_id]=l.created_at;  /* desc 정렬 → 첫 등장 = 최근 접속 */
-      if(l.created_at>=_mid) ts[l.user_id]=1;
-    });
+    users.forEach(function(u){ if(u.last_seen_at) lastSeen[u.id]=u.last_seen_at; });
+    loginLogs.forEach(function(l){ if(l.user_id && l.created_at>=_mid) ts[l.user_id]=1; });
 
     // 콘텐츠 활성도: 최근 7일 게시글 → 작성자별 집계(author_id→user, 지점 매핑은 드릴다운에서 arr 합산)
     var recentPosts=[];
