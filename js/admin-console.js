@@ -924,7 +924,12 @@
     var teamCnt=Object.keys(_ctTeams(arr)).length;
     var RL=window.ROLE_LABEL||{};
     var ls=_CT.lastSeen||{}, _now=Date.now(), _wk=7*86400000, _midR=new Date(_now-10*60*1000).toISOString();  /* 현재 접속 = 최근 10분(heartbeat) */
-    var _sorted=arr.slice().sort(function(a,b){ var ao=(ls[a.id]&&ls[a.id]>=_midR)?1:0, bo=(ls[b.id]&&ls[b.id]>=_midR)?1:0; return bo-ao; });  /* 로그인중 상단 정렬 */
+    var _rk=function(r){ return r==='ga_branch_manager'?0:(r==='ga_manager'?1:2); };  /* 지점장>실장>구성원 */
+    var _sorted=arr.slice().sort(function(a,b){
+      var ra=_rk(a.role), rb=_rk(b.role); if(ra!==rb) return ra-rb;                                          /* 1차: 직책 위계 */
+      var ao=(ls[a.id]&&ls[a.id]>=_midR)?1:0, bo=(ls[b.id]&&ls[b.id]>=_midR)?1:0; if(ao!==bo) return bo-ao;  /* 2차: 로그인중 위로 */
+      return (a.name||'').localeCompare(b.name||'','ko');                                                    /* 3차: 가나다 */
+    });
     var rows=_sorted.slice(0,300).map(function(u){
       var ini=esc((u.name||'?').slice(0,2));
       var lsv=ls[u.id]; var stale=(!lsv)||((_now-new Date(lsv).getTime())>=_wk);
