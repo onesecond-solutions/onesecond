@@ -200,6 +200,14 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .mr-tn-br2{font-weight:800;}
 .mr-tn-add{padding-left:36px;color:var(--ac);font-weight:700;cursor:pointer;}
 .mr-tn-add:hover{background:color-mix(in srgb,var(--ac) 9%,transparent);}
+/* 매니저방 추가 액션 — 1행 2카드 색상 구분 (실/팀=브랜드 / 팀원=초록) */
+.mr-add-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;}
+.mr-add-card{display:flex;align-items:center;justify-content:center;text-align:center;gap:4px;padding:11px 6px;border-radius:var(--radius-sm);font-size:0.8rem;font-weight:800;line-height:1.25;word-break:keep-all;cursor:pointer;border:1px solid;transition:background .12s,transform .1s;}
+.mr-add-card:active{transform:translateY(1px);}
+.mr-add-card.k-team{color:var(--ac);border-color:color-mix(in srgb,var(--ac) 40%,transparent);background:color-mix(in srgb,var(--ac) 9%,transparent);}
+.mr-add-card.k-team:hover{background:color-mix(in srgb,var(--ac) 17%,transparent);}
+.mr-add-card.k-member{color:var(--color-success);border-color:color-mix(in srgb,var(--color-success) 40%,transparent);background:color-mix(in srgb,var(--color-success) 9%,transparent);}
+.mr-add-card.k-member:hover{background:color-mix(in srgb,var(--color-success) 17%,transparent);}
 .mr-invite-ov{position:fixed;inset:0;background:rgba(20,20,30,.4);display:flex;align-items:center;justify-content:center;z-index:9500;}
 .mr-invite-box{background:var(--s1,#fff);border-radius:14px;padding:22px 24px;width:min(420px,92vw);box-shadow:0 8px 30px rgba(0,0,0,.18);}
 .mr-invite-hd{font-size:1rem;font-weight:800;margin-bottom:16px;}
@@ -7792,8 +7800,7 @@ async function mrRenderSampleTree(){
     /* 어드민 = 특정 기존 지점에 묶이지 않음. 빈 상태 (관점 확인은 [상황설정] 칩으로) */
     if((typeof _getOsUserRole==='function') && _getOsUserRole()==='admin'){
       tree.innerHTML='<div class="mr-tn mr-tn-br2">아직 조직이 없습니다<span class="mr-tn-c">0</span></div>'+
-        '<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>'+
-        '<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div>';
+        '<div class="mr-add-row"><div class="mr-add-card k-team" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div><div class="mr-add-card k-member" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div></div>';
       if(panel) panel.innerHTML='<div class="mys-news-empty">가입·초대가 쌓이면 여기에 조직이 나타납니다.<br>(어드민은 특정 지점에 묶이지 않습니다)<br><br>특정 지점장·실장 시점으로 확인하려면 위 <b>[상황설정]</b> 칩을 누르세요.</div>';
       return;
     }
@@ -7819,8 +7826,7 @@ async function mrRenderSampleTree(){
       var mcnt=users.filter(function(u){return u.team_id===meTeam;}).length;
       var mgr=users.filter(function(u){return u.team_id===meTeam&&u.role==='ga_manager';})[0];
       var h2='<div class="mr-tn mr-tn-br2">'+_sEsc(mgr?(mgr.name+' 실장'):(mt?mt.name:'내 실'))+'<span class="mr-tn-c">'+mcnt+'명</span></div>';
-      h2+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>';
-      h2+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div>';
+      h2+='<div class="mr-add-row"><div class="mr-add-card k-team" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div><div class="mr-add-card k-member" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div></div>';
       tree.innerHTML=h2;
       if(meTeam) mrSamplePick(meTeam);
       else if(panel) panel.innerHTML='<div class="mys-news-empty">아직 팀원이 없습니다. [+ 팀원 추가]로 초대하세요.</div>';
@@ -7832,8 +7838,7 @@ async function mrRenderSampleTree(){
       var cnt=users.filter(function(u){return u.team_id===t.id;}).length;
       html+='<div class="mr-tn mr-tn-tm" data-tid="'+_sEsc(t.id)+'" onclick="mrSamplePick(\''+t.id+'\')">'+_sEsc(t.name)+'<span class="mr-tn-c">'+cnt+'</span></div>';
     });
-    html+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>';
-    html+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div>';
+    html+='<div class="mr-add-row"><div class="mr-add-card k-team" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div><div class="mr-add-card k-member" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div></div>';
     tree.innerHTML=html;
     if(teams[0]) mrSamplePick(teams[0].id);
     else if(panel) panel.innerHTML='<div class="mys-news-empty">아직 실/팀이 없습니다. [+ 실/팀 추가]로 먼저 실/팀을 만든 뒤 팀원을 초대하세요.</div>';
