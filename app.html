@@ -12077,6 +12077,18 @@ function _osShareOpen(type, id, title){
 }
 function _osShareClose(){ var ov=document.getElementById('osShareOv'); if(ov) ov.classList.remove('on'); }
 window._osShareOpen=_osShareOpen; window._osShareClose=_osShareClose;
+/* 공유 스코프(팀/지점) 자료실의 '공유함' 폴더 확보 — 없으면 1회 생성(멱등), 있으면 재사용. 공유 파일은 이 폴더에 모음 */
+async function _osEnsureSharedFolder(scope, sid, owner, token){
+  try{
+    var q='/rest/v1/myspace_folders?scope=eq.'+scope+'&scope_id=eq.'+encodeURIComponent(sid)+'&name=eq.'+encodeURIComponent('공유함')+'&parent_id=is.null&deleted_at=is.null&select=id&limit=1';
+    var r=await window.db.fetch(q); var rows=r.ok?await r.json():[];
+    if(rows[0]&&rows[0].id) return rows[0].id;
+    var fid=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('fd'+Date.now());
+    var body={id:fid, owner_id:owner, parent_id:null, name:'공유함', depth:0, sort_order:0, scope:scope, scope_id:sid};
+    var ins=await fetch(window.db.url('/rest/v1/myspace_folders'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    return (ins.ok||ins.status===201)?fid:null;
+  }catch(e){ console.error('[share] ensureSharedFolder',e); return null; }
+}
 async function _osShareDo(scope){
   var ctx=window._osShareCtx; if(!ctx||!ctx.id){ _osShareClose(); return; }
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
@@ -12110,7 +12122,8 @@ async function _osShareDo(scope){
       var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(newPath)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(blob.type||f.mime_type||'application/octet-stream'),'x-upsert':'true'},body:blob});
       if(!(up.ok||up.status===200)){ alert('파일 복사에 실패했습니다.'); _osShareClose(); return; }
       var owner=(typeof _mvOwner==='function')?_mvOwner():'';
-      var frow={owner_id:owner,original_name:f.original_name,storage_path:newPath,mime_type:f.mime_type||'',ext:ext,file_size:f.file_size||blob.size,scope:scope,scope_id:sid,search_text:f.original_name,status:'pending'};
+      var _sharedFid=await _osEnsureSharedFolder(scope, sid, owner, token);  /* 공유받은 파일은 '공유함' 폴더에 모음(A: 신규만) */
+      var frow={owner_id:owner,folder_id:(_sharedFid||null),original_name:f.original_name,storage_path:newPath,mime_type:f.mime_type||'',ext:ext,file_size:f.file_size||blob.size,scope:scope,scope_id:sid,search_text:f.original_name,status:'pending'};
       var fr=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:Object.assign({},H,{'Prefer':'return=representation'}),body:JSON.stringify(frow)});
       var nf=(fr.ok?await fr.json():[])[0];
       if(!nf||!nf.id){ alert('파일 등록에 실패했습니다.'); _osShareClose(); return; }
