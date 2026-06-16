@@ -208,6 +208,9 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .mr-add-card.k-team:hover{background:color-mix(in srgb,var(--ac) 17%,transparent);}
 .mr-add-card.k-member{color:var(--color-success);border-color:color-mix(in srgb,var(--color-success) 40%,transparent);background:color-mix(in srgb,var(--color-success) 9%,transparent);}
 .mr-add-card.k-member:hover{background:color-mix(in srgb,var(--color-success) 17%,transparent);}
+/* 구성원 내보내기 버튼 (표 행) */
+.mr-remove-btn{padding:4px 10px;border:1px solid color-mix(in srgb,var(--color-danger) 38%,transparent);background:color-mix(in srgb,var(--color-danger) 8%,transparent);color:var(--color-danger);border-radius:var(--radius-sm);font-size:0.76rem;font-weight:700;cursor:pointer;white-space:nowrap;}
+.mr-remove-btn:hover{background:color-mix(in srgb,var(--color-danger) 16%,transparent);}
 .mr-invite-ov{position:fixed;inset:0;background:rgba(20,20,30,.4);display:flex;align-items:center;justify-content:center;z-index:9500;}
 .mr-invite-box{background:var(--s1,#fff);border-radius:14px;padding:22px 24px;width:min(420px,92vw);box-shadow:0 8px 30px rgba(0,0,0,.18);}
 .mr-invite-hd{font-size:1rem;font-weight:800;margin-bottom:16px;}
@@ -7858,18 +7861,20 @@ function mrSamplePick(teamId){
   var mid=(typeof _mrOnlineSince==='function')?_mrOnlineSince():0;
   var online=mem.filter(function(u){var l=u.last_seen_at;return l&&new Date(l).getTime()>=mid;}).length;
   var RL=window.ROLE_LABEL||{};
+  var meId=(window.AppState&&window.AppState.userId)||((typeof _getOwnerId==='function')&&_getOwnerId())||'';
   var sorted=mem.slice().sort(function(a,b){ var ra=_mrRoleRank(a.role), rb=_mrRoleRank(b.role); if(ra!==rb) return ra-rb; return (a.name||'').localeCompare(b.name||'','ko'); });  /* 지점장>실장>구성원, 같은 단계 가나다 */
   var rows=sorted.map(function(u){
     var on=!!(u.last_seen_at&&new Date(u.last_seen_at).getTime()>=mid);
     var stale=!u.last_seen_at||((Date.now()-new Date(u.last_seen_at).getTime())>=7*86400000);
+    var act=(u.id===meId)?'<td></td>':'<td><button class="mr-remove-btn" onclick="mrRemoveMember(\''+u.id+'\')">내보내기</button></td>';
     return '<tr><td><span class="mr-presence '+(on?'on':'off')+'"></span>'+_sEsc(u.name||'(이름 없음)')+'</td>'+
       '<td><span class="mr-role">'+_sEsc(RL[u.role]||u.role||'-')+'</span></td>'+
       '<td class="'+(stale?'mr-stale':'')+'">'+_sEsc((typeof _mrRel==='function')?_mrRel(u.last_seen_at):'')+'</td>'+
-      '<td class="mr-sub">'+_sEsc((u.created_at||'').slice(0,10))+'</td></tr>';
+      '<td class="mr-sub">'+_sEsc((u.created_at||'').slice(0,10))+'</td>'+act+'</tr>';
   }).join('');
   panel.innerHTML='<div class="mr-view-head"><b>'+_sEsc((window._mrBranchName||'')+' · '+t.name)+'</b> · 구성원 '+mem.length+'명 · <span class="mr-presence on"></span>로그인중 '+online+'</div>'+
-    '<table class="mr-tbl"><thead><tr><th>구성원</th><th>직책</th><th>마지막 접속</th><th>가입</th></tr></thead><tbody>'+
-    (rows||'<tr><td colspan="4" style="text-align:center;color:var(--tf,#888);padding:18px">구성원이 없습니다</td></tr>')+'</tbody></table>';
+    '<table class="mr-tbl"><thead><tr><th>구성원</th><th>직책</th><th>마지막 접속</th><th>가입</th><th></th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="5" style="text-align:center;color:var(--tf,#888);padding:18px">구성원이 없습니다</td></tr>')+'</tbody></table>';
 }
 window.mrRenderSampleTree=mrRenderSampleTree; window.mrSamplePick=mrSamplePick;
 /* ── 상황설정 (어드민 = 다른 사람 시점으로 보기 / 신규 조직 운영 확인) ── */
@@ -8100,7 +8105,26 @@ function _orgAfter(r,msg){ if(r&&(r.ok||r.status===201||r.status===204)){ if(typ
 function mrAddTeam(){ _orgPrompt('새 실(팀) 이름', '', async function(name){ try{ var r=await window.db.fetch('/rest/v1/teams',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({name:name,branch_id:_MR_BID,is_active:true})}); _orgAfter(r,'실을 추가했습니다'); }catch(e){ if(typeof toast==='function')toast('추가 실패'); } }); }
 function mrEditTeam(id){ var t=_orgFindTeam(id); _orgPrompt('실(팀) 이름 수정', t?t.name:'', async function(name){ try{ var r=await window.db.fetch('/rest/v1/teams?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({name:name})}); _orgAfter(r,'수정했습니다'); }catch(e){ if(typeof toast==='function')toast('수정 실패'); } }); }
 function mrDeleteTeam(id){ var t=_orgFindTeam(id); var cnt=(window._mrUsers||[]).filter(function(u){return u.team_id===id;}).length; if(cnt>0){ _orgAlert('"'+(t?t.name:'')+'"에 구성원 '+cnt+'명이 있습니다.\n먼저 모두 내보낸 뒤 삭제하세요.'); return; } _orgConfirm('"'+(t?t.name:'')+'" 실을 삭제할까요?', async function(){ try{ var r=await window.db.fetch('/rest/v1/teams?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}}); _orgAfter(r,'삭제했습니다'); }catch(e){ if(typeof toast==='function')toast('삭제 실패'); } }); }
-function mrRemoveMember(id){ var u=_orgFindUser(id); _orgConfirm('"'+(u?u.name:'')+'"님을 이 실에서 내보낼까요? (소속 해제)', async function(){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({team_id:null})}); _orgAfter(r,'내보냈습니다'); }catch(e){ if(typeof toast==='function')toast('처리 실패'); } }); }
+/* 구성원 내보내기 = 조직 분리(회사·지점·팀·직책 삭제, 계정 유지). 권한은 remove_member RPC가 판정 */
+function mrRemoveMember(id, name){
+  if(!id) return;
+  if(!name){ var _u=(window._mrUsers||[]).filter(function(x){return x.id===id;})[0]; name=_u?_u.name:''; }
+  var msg=(name||'이 사용자')+'님을 조직에서 내보냅니다.\n\n· 회사 · 지점 · 팀 · 직책 정보가 삭제됩니다.\n· 계정은 유지되며, 탈퇴 / 유지는 본인이 선택합니다.\n\n진행하시겠어요?';
+  if(!window.confirm(msg)) return;
+  window.db.fetch('/rest/v1/rpc/remove_member',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p_target:id})})
+    .then(async function(r){
+      var j=null; try{ j=await r.json(); }catch(e){}
+      if(r.ok && j && j.ok){
+        if(typeof toast==='function') toast((name||'사용자')+'님을 내보냈습니다');
+        if(typeof mrRenderSampleTree==='function') mrRenderSampleTree();
+        if(typeof loadBranchOrg==='function' && document.getElementById('mr-org-list')) loadBranchOrg();
+      } else {
+        var rs=(j&&j.reason)||'';
+        var M={cannot_remove_self:'본인은 내보낼 수 없습니다.',cannot_remove_admin:'어드민은 내보낼 수 없습니다.',out_of_scope:'본인 소속(지점/팀)의 구성원만 내보낼 수 있습니다.',rank_not_allowed:'자신과 같거나 윗 직책은 내보낼 수 없습니다.',no_permission:'내보내기 권한이 없습니다.',target_not_found:'대상을 찾을 수 없습니다.',not_authenticated:'로그인이 필요합니다.'};
+        alert(M[rs]||('내보내기에 실패했습니다.'+(rs?(' ('+rs+')'):'')));
+      }
+    }).catch(function(){ alert('내보내기 처리 중 오류가 발생했습니다.'); });
+}
 window.mrAddTeam=mrAddTeam; window.mrEditTeam=mrEditTeam; window.mrDeleteTeam=mrDeleteTeam; window.mrRemoveMember=mrRemoveMember; window._orgModalClose=_orgModalClose;
 /* 팀원 카드 클릭 → 상세(개인정보·회사·지점·팀·가입일) + 어드민 수정 */
 function _mdField(label,id,val){ return '<div class="md-f"><label>'+label+'</label><input id="'+id+'" value="'+_sEsc(val||'')+'"></div>'; }
