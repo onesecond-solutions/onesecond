@@ -7853,7 +7853,7 @@ function mrSamplePick(teamId){
   if(!t){ panel.innerHTML='<div class="mys-news-empty">팀을 선택하세요</div>'; return; }
   window._mrPickedTeam=teamId; window._mrPickedTeamName=t.name||'';  /* 팀원 추가 대상 = 선택된 실/팀 */
   var mem=users.filter(function(u){return u.team_id===teamId;});
-  var mid=(typeof _mrMidnight==='function')?_mrMidnight():0;
+  var mid=(typeof _mrOnlineSince==='function')?_mrOnlineSince():0;
   var online=mem.filter(function(u){var l=u.last_seen_at;return l&&new Date(l).getTime()>=mid;}).length;
   var RL=window.ROLE_LABEL||{};
   var sorted=mem.slice().sort(function(a,b){ var ao=(a.last_seen_at&&new Date(a.last_seen_at).getTime()>=mid)?1:0,bo=(b.last_seen_at&&new Date(b.last_seen_at).getTime()>=mid)?1:0; return bo-ao; });
@@ -8032,6 +8032,16 @@ function mrInviteFinish(){
 window.mrOpenInvite=mrOpenInvite; window.mrCloseInvite=mrCloseInvite; window.mrDoInvite=mrDoInvite; window.mrCopyLink=mrCopyLink; window.mrInviteFinish=mrInviteFinish;
 
 function _mrMidnight(){ var k=new Date(Date.now()+9*3600000); return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).getTime(); }
+/* 실시간 접속중 판정 기준 = 최근 10분 이내 last_seen_at (presence 초록불) */
+function _mrOnlineSince(){ return Date.now() - 10*60*1000; }
+/* 본인 last_seen_at 갱신(RPC) — 앱 진입 + 2분 heartbeat에서 호출. presence 소스 */
+function _osTouchSeen(){
+  try{
+    if(!window.db||!window.db.fetch) return;
+    window.db.fetch('/rest/v1/rpc/touch_last_seen',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(function(){});
+  }catch(e){}
+}
+window._osTouchSeen=_osTouchSeen;
 function _mrRel(iso){ if(!iso) return '기록 없음'; var m=(Date.now()-new Date(iso).getTime())/60000; if(m<1)return'방금'; if(m<60)return Math.floor(m)+'분 전'; if(m<1440)return Math.floor(m/60)+'시간 전'; return Math.floor(m/1440)+'일 전'; }
 /* (구) 실데이터 팀원 렌더 — 샘플 레이아웃 확정 후 실데이터 연결 시 참고용 보존 */
 function mrSelectTeam(teamId,el){
@@ -8042,7 +8052,7 @@ function mrSelectTeam(teamId,el){
   var t=null; for(var j=0;j<teams.length;j++) if(teams[j].id===teamId) t=teams[j];
   var mem=users.filter(function(u){return u.team_id===teamId;});
   var RL=window.ROLE_LABEL||{};
-  var now=Date.now(), wk=7*86400000, mid=_mrMidnight();
+  var now=Date.now(), wk=7*86400000, mid=_mrOnlineSince();
   var online=mem.filter(function(u){ var l=u.last_seen_at; return l&&new Date(l).getTime()>=mid; }).length;
   /* 로그인중 상단 정렬 */
   var sorted=mem.slice().sort(function(a,b){ var ao=(a.last_seen_at&&new Date(a.last_seen_at).getTime()>=mid)?1:0, bo=(b.last_seen_at&&new Date(b.last_seen_at).getTime()>=mid)?1:0; return bo-ao; });
@@ -9618,6 +9628,7 @@ else _updateAccountHeader();
       if(uid&&window.AppState){
         window.AppState.userId=uid;
         window.AppState.token=token;
+        if(typeof _osTouchSeen==='function'){ _osTouchSeen(); if(!window._osSeenTimer){ window._osSeenTimer=setInterval(function(){ if(document.visibilityState!=='hidden') _osTouchSeen(); }, 120000); } }
         if(window.Auth.loadUser)window.Auth.loadUser();
         if(typeof _updateAccountHeader==='function') _updateAccountHeader();
         if(typeof applyRoleClass==='function') applyRoleClass();
