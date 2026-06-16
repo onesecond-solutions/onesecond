@@ -1233,9 +1233,10 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .mvf-item{display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:var(--radius-sm);font-size:0.85rem;color:var(--tf);cursor:pointer}
 /* 폴더 트리 접기/펼치기 (윈도우 탐색기형, 2026-06-16) */
 .mvf-children.collapsed{display:none}
-.mvf-caret{display:inline-flex;width:14px;flex-shrink:0;justify-content:center;align-items:center;color:var(--tf);font-size:0.7rem;transition:transform .12s;cursor:pointer}
+.mvf-caret{display:inline-flex;width:22px;height:22px;flex-shrink:0;justify-content:center;align-items:center;color:var(--ts);font-size:0.82rem;border-radius:6px;transition:transform .12s,background .12s;cursor:pointer}
+.mvf-caret:hover{background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac)}
 .mvf-caret.open{transform:rotate(90deg)}
-.mvf-caret-none{visibility:hidden;cursor:default}
+.mvf-caret-none{visibility:hidden;cursor:default;width:22px}
 .mvf-item:hover{background:var(--bg)}
 .mvf-item.on{background:var(--ac);color:#fff}
 .mvf-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -12199,8 +12200,16 @@ window.mysVaultOpen=mysVaultOpen;
 /* 폴더 펼침 상태(localStorage) — 접기/펼치기. 기본 접힘, 선택 경로는 자동 펼침 */
 function _mvOpenSet(){ try{ var a=JSON.parse(localStorage.getItem('os_mv_folder_open')||'[]'); var o={}; for(var i=0;i<a.length;i++) o[a[i]]=1; return o; }catch(e){ return {}; } }
 function _mvSaveOpen(o){ try{ localStorage.setItem('os_mv_folder_open', JSON.stringify(Object.keys(o))); }catch(e){} }
-function _mvToggleFolder(id){ var o=_mvOpenSet(); if(o[id]) delete o[id]; else o[id]=1; _mvSaveOpen(o); var box=document.getElementById('mys-vault-folders'); if(box) box.innerHTML=mysVaultTreeHtml(window._mvFolders||[]); }
-window._mvToggleFolder=_mvToggleFolder;
+/* caret 클릭 = 접기/펼치기 토글(DOM 직접 — 폴더 선택과 간섭 없음). 폴더 글씨 클릭은 항상 펼침+선택 */
+function _mvCaretToggle(ev, el, id){
+  if(ev){ ev.stopPropagation(); }
+  var node=el.closest('.mvf-node'); if(!node) return;
+  var ch=node.querySelector(':scope > .mvf-children'); if(!ch) return;
+  var collapsedNow=ch.classList.toggle('collapsed');
+  el.classList.toggle('open', !collapsedNow);
+  var o=_mvOpenSet(); if(collapsedNow) delete o[id]; else o[id]=1; _mvSaveOpen(o);
+}
+window._mvCaretToggle=_mvCaretToggle;
 function mysVaultTreeHtml(rows){
   var byParent={}; rows.forEach(function(r){ var p=r.parent_id||'__root'; (byParent[p]=byParent[p]||[]).push(r); });
   var cur=window._mvCurFolder; var open=_mvOpenSet();
@@ -12210,7 +12219,7 @@ function mysVaultTreeHtml(rows){
       var on=(cur===r.id)?' on':''; var pad=8+depth*14;
       var hasKids=!!(byParent[r.id]&&byParent[r.id].length); var isOpen=!!open[r.id];
       var caret=hasKids
-        ? '<span class="mvf-caret'+(isOpen?' open':'')+'" onclick="event.stopPropagation();_mvToggleFolder(\''+r.id+'\')">&#9656;</span>'
+        ? '<span class="mvf-caret'+(isOpen?' open':'')+'" onclick="_mvCaretToggle(event,this,\''+r.id+'\')" title="펼치기/접기">&#9656;</span>'
         : '<span class="mvf-caret mvf-caret-none"></span>';
       return '<div class="mvf-node">'
         +'<div class="mvf-item'+on+'" style="padding-left:'+pad+'px" draggable="true" ondragstart="mvDragStart(event,\'folder\',\''+r.id+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'folder\',\''+r.id+'\');return false;" onclick="mysVaultSelectFolder(\''+r.id+'\')" ondragover="mvDragOverEl(event)" ondragleave="mvDragLeaveEl(event)" ondrop="mvDropOn(event,\''+r.id+'\')">'+caret+'📁 <span class="mvf-nm">'+_mvEsc(r.name)+'</span>'
