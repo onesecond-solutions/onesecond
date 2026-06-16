@@ -7792,7 +7792,7 @@ async function mrRenderSampleTree(){
     /* 어드민 = 특정 기존 지점에 묶이지 않음. 빈 상태 (관점 확인은 [상황설정] 칩으로) */
     if((typeof _getOsUserRole==='function') && _getOsUserRole()==='admin'){
       tree.innerHTML='<div class="mr-tn mr-tn-br2">아직 조직이 없습니다<span class="mr-tn-c">0</span></div>'+
-        '<div class="mr-tn mr-tn-add" onclick="mrOpenInvite()">+ 실/팀 추가</div>';
+        '<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>';
       if(panel) panel.innerHTML='<div class="mys-news-empty">가입·초대가 쌓이면 여기에 조직이 나타납니다.<br>(어드민은 특정 지점에 묶이지 않습니다)<br><br>특정 지점장·실장 시점으로 확인하려면 위 <b>[상황설정]</b> 칩을 누르세요.</div>';
       return;
     }
@@ -7818,10 +7818,11 @@ async function mrRenderSampleTree(){
       var mcnt=users.filter(function(u){return u.team_id===meTeam;}).length;
       var mgr=users.filter(function(u){return u.team_id===meTeam&&u.role==='ga_manager';})[0];
       var h2='<div class="mr-tn mr-tn-br2">'+_sEsc(mgr?(mgr.name+' 실장'):(mt?mt.name:'내 실'))+'<span class="mr-tn-c">'+mcnt+'명</span></div>';
-      h2+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite()">+ 실/팀원 추가</div>';
+      h2+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>';
+      h2+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div>';
       tree.innerHTML=h2;
       if(meTeam) mrSamplePick(meTeam);
-      else if(panel) panel.innerHTML='<div class="mys-news-empty">아직 팀원이 없습니다. [+ 실/팀원 추가]로 초대하세요.</div>';
+      else if(panel) panel.innerHTML='<div class="mys-news-empty">아직 팀원이 없습니다. [+ 팀원 추가]로 초대하세요.</div>';
       return;
     }
     /* 지점장 관점: 지점 → 팀들 → + 실/팀 추가 */
@@ -7830,10 +7831,11 @@ async function mrRenderSampleTree(){
       var cnt=users.filter(function(u){return u.team_id===t.id;}).length;
       html+='<div class="mr-tn mr-tn-tm" data-tid="'+_sEsc(t.id)+'" onclick="mrSamplePick(\''+t.id+'\')">'+_sEsc(t.name)+'<span class="mr-tn-c">'+cnt+'</span></div>';
     });
-    html+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite()">+ 실/팀 추가</div>';
+    html+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>';
+    html+='<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div>';
     tree.innerHTML=html;
     if(teams[0]) mrSamplePick(teams[0].id);
-    else if(panel) panel.innerHTML='<div class="mys-news-empty">아직 실/팀이 없습니다. [+ 실/팀 추가]로 초대하세요.</div>';
+    else if(panel) panel.innerHTML='<div class="mys-news-empty">아직 실/팀이 없습니다. [+ 실/팀 추가]로 먼저 실/팀을 만든 뒤 팀원을 초대하세요.</div>';
   }catch(e){ tree.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
 function mrSamplePick(teamId){
@@ -7843,6 +7845,7 @@ function mrSamplePick(teamId){
   var tns=document.querySelectorAll('#mr-org-tree2 .mr-tn-tm');
   for(var k=0;k<tns.length;k++){ tns[k].classList.toggle('on', tns[k].getAttribute('data-tid')===teamId); }
   if(!t){ panel.innerHTML='<div class="mys-news-empty">팀을 선택하세요</div>'; return; }
+  window._mrPickedTeam=teamId; window._mrPickedTeamName=t.name||'';  /* 팀원 추가 대상 = 선택된 실/팀 */
   var mem=users.filter(function(u){return u.team_id===teamId;});
   var mid=(typeof _mrMidnight==='function')?_mrMidnight():0;
   var online=mem.filter(function(u){var l=u.last_seen_at;return l&&new Date(l).getTime()>=mid;}).length;
@@ -7919,20 +7922,46 @@ function mrInviteCo(mode){
   var nl=document.getElementById('mri-name-l'); if(nl) nl.textContent=same?'실장 이름':'받는 분 이름';
 }
 window.mrInviteCo=mrInviteCo;
-function mrOpenInvite(){
+var _mrInviteKind='team';   /* 'team'=실/팀+실장 초대 / 'member'=기존 실/팀에 팀원(ga_member) 초대 */
+function mrOpenInvite(kind){
+  _mrInviteKind=(kind==='member')?'member':'team';
   ['mri-team','mri-name','mri-phone'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
-  if(typeof mrInviteCo==='function') mrInviteCo('same');
+  var coSeg=document.querySelector('#mr-invite-modal .mri-co-seg');
+  var hd=document.querySelector('#mr-invite-modal .mr-invite-hd');
+  var teamF=document.getElementById('mri-team-f');
+  var teamInp=document.getElementById('mri-team');
+  var teamLbl=teamF?teamF.querySelector('label'):null;
+  var nameL=document.getElementById('mri-name-l');
+  var hint=document.getElementById('mri-co-hint');
+  if(_mrInviteKind==='member'){
+    if(!window._mrPickedTeam){ alert('먼저 왼쪽에서 실/팀을 선택하거나 [+ 실/팀 추가]로 실/팀을 만든 뒤 팀원을 초대할 수 있어요.'); return; }
+    _mrInviteCo='same';
+    if(coSeg) coSeg.style.display='none';                 /* 팀원 추가 = 우리 회사 고정(토글 숨김) */
+    if(hd) hd.textContent='팀원 초대';
+    if(teamF) teamF.style.display='';
+    if(teamLbl) teamLbl.textContent='대상 실/팀';
+    if(teamInp){ teamInp.value=window._mrPickedTeamName||''; teamInp.readOnly=true; }
+    if(nameL) nameL.textContent='팀원 이름';
+    if(hint){ hint.style.display=''; hint.textContent='선택한 실/팀에 팀원을 초대합니다.'; }
+  } else {
+    if(coSeg) coSeg.style.display='';
+    if(hd) hd.textContent='실/팀원 초대';
+    if(teamLbl) teamLbl.textContent='실/팀명';
+    if(teamInp) teamInp.readOnly=false;
+    if(typeof mrInviteCo==='function') mrInviteCo('same');
+  }
   var f=document.getElementById('mri-step-form'), d=document.getElementById('mri-step-done');
   if(f) f.style.display=''; if(d) d.style.display='none';
   var m=document.getElementById('mr-invite-modal'); if(m) m.style.display='flex';
 }
 function mrCloseInvite(){ var m=document.getElementById('mr-invite-modal'); if(m) m.style.display='none'; }
 async function mrDoInvite(){
-  var same=(_mrInviteCo!=='other');
+  var kind=_mrInviteKind||'team';
+  var same=(kind==='member')?true:(_mrInviteCo!=='other');
   var team=((document.getElementById('mri-team')||{}).value||'').trim();
   var name=((document.getElementById('mri-name')||{}).value||'').trim();
   var phone=((document.getElementById('mri-phone')||{}).value||'').trim();
-  if(same && !team){ alert('실/팀명을 입력하세요'); return; }
+  if(kind==='team' && same && !team){ alert('실/팀명을 입력하세요'); return; }
   if(!name){ alert('이름을 입력하세요'); return; }
   var btn=document.querySelector('#mri-step-form .mr-invite-act .primary');
   var btnTxt=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='초대 등록 중…'; }
@@ -7943,7 +7972,7 @@ async function mrDoInvite(){
     var _adminNote=document.getElementById('mri-admin-note'), _doneHd=document.getElementById('mri-done-hd');
     if(org.role==='admin'){
       /* 어드민 = 레이아웃·흐름 확인용 미리보기 (소속 회사 없음 → 저장만 안 함, 화면은 끝까지 보여줌). */
-      _mrInvite={ team:(same?team:''), name:name, phone:phone, same:same, token:'', link:'(미리보기 — 실제 발급 시 여기에 초대 링크가 표시됩니다)', preview:true };
+      _mrInvite={ kind:kind, team:(same?team:''), name:name, phone:phone, same:same, token:'', link:'(미리보기 — 실제 발급 시 여기에 초대 링크가 표시됩니다)', preview:true };
       if(_adminNote) _adminNote.style.display='';
       if(_doneHd) _doneHd.textContent='초대 화면 미리보기';
       var _ltp=document.getElementById('mri-link-text'); if(_ltp) _ltp.textContent=_mrInvite.link;
@@ -7954,7 +7983,12 @@ async function mrDoInvite(){
     if(_adminNote) _adminNote.style.display='none';
     if(_doneHd) _doneHd.textContent='초대가 등록됐습니다 — 이렇게 하세요';
     var body;
-    if(same){
+    if(kind==='member'){
+      /* 팀원 추가 = 기존 실/팀(team_id)에 팀원(ga_member) 초대. 새 실 만들지 않음 */
+      if(!org.company_id){ alert('회사 정보를 찾을 수 없습니다. 소속(회사·지점)을 확인해 주세요.'); return; }
+      if(!window._mrPickedTeam){ alert('대상 실/팀을 찾을 수 없습니다. 왼쪽에서 실/팀을 선택해 주세요.'); return; }
+      body={ inviter_id:org.me_id, company_id:org.company_id, branch_id:org.branch_id, team_id:window._mrPickedTeam, invited_name:name, invited_phone:phone, invited_role:'ga_member' };
+    } else if(same){
       /* 같은 회사 = 내 회사·지점 경계 박기. 새 실(new_team_name) 만들며 실장(ga_manager) 초대 */
       if(!org.company_id){ alert('회사 정보를 찾을 수 없습니다. 소속(회사·지점)을 확인해 주세요.'); return; }
       body={ inviter_id:org.me_id, company_id:org.company_id, branch_id:org.branch_id, new_team_name:team, invited_name:name, invited_phone:phone, invited_role:'ga_manager' };
@@ -7966,7 +8000,7 @@ async function mrDoInvite(){
     if(!r||!r.ok){ var et=r?await r.text():''; console.error('[mrDoInvite] insert fail', et); alert('초대 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.'); return; }
     var rows=await r.json(); var token=(rows&&rows[0]&&rows[0].invite_token)||'';
     if(!token){ alert('초대는 저장됐으나 링크 생성에 실패했습니다.'); return; }
-    _mrInvite={ team:team, name:name, phone:phone, token:token, link:location.origin+'/?invite='+token };
+    _mrInvite={ kind:kind, team:team, name:name, phone:phone, token:token, link:location.origin+'/?invite='+token };
     var lt=document.getElementById('mri-link-text'); if(lt) lt.textContent=_mrInvite.link;
     document.getElementById('mri-step-form').style.display='none';
     document.getElementById('mri-step-done').style.display='';
@@ -7979,13 +8013,14 @@ function mrCopyLink(){
 }
 function mrInviteFinish(){
   mrCloseInvite();
-  /* 우측 카드: 새 팀 헤더 + 초대된 실장(미가입) 행 (1차 화면 표시) */
+  /* 우측 카드: 초대 헤더 + 초대된 사람(미가입) 행 (1차 화면 표시) */
   var iv=_mrInvite, bName=window._mrBranchName||'우리 지점';
   var panel=document.getElementById('mr-org-panel2'); if(!panel||!iv.team) return;
-  panel.innerHTML='<div class="mr-view-head"><b>'+_sEsc(bName+' · '+iv.team+' · '+iv.name+' 실장')+'</b> · 구성원 1명 · 가입자 0명 · <span class="mr-presence off"></span>로그인중 0명</div>'+
+  var roleLbl=(iv.kind==='member')?'팀원':'실장';
+  panel.innerHTML='<div class="mr-view-head"><b>'+_sEsc(bName+' · '+iv.team+' · '+iv.name+' '+roleLbl)+'</b> · 구성원 1명 · 가입자 0명 · <span class="mr-presence off"></span>로그인중 0명</div>'+
     '<div class="mri-resend"><span class="mr-sub">초대 링크: </span><code>'+_sEsc(iv.link)+'</code> <button onclick="mrCopyLink()">복사</button></div>'+
     '<table class="mr-tbl"><thead><tr><th>이름</th><th>직책</th><th>전화번호</th><th>초대</th><th>가입여부</th><th>가입일</th><th>마지막 접속</th></tr></thead><tbody>'+
-    '<tr><td>'+_sEsc(iv.name)+'</td><td><span class="mr-role">실장</span></td><td>'+_sEsc(iv.phone||'-')+'</td><td>초대 완료</td><td><span class="mr-stale">미가입</span></td><td class="mr-sub">-</td><td class="mr-sub">-</td></tr>'+
+    '<tr><td>'+_sEsc(iv.name)+'</td><td><span class="mr-role">'+roleLbl+'</span></td><td>'+_sEsc(iv.phone||'-')+'</td><td>초대 완료</td><td><span class="mr-stale">미가입</span></td><td class="mr-sub">-</td><td class="mr-sub">-</td></tr>'+
     '</tbody></table>';
 }
 window.mrOpenInvite=mrOpenInvite; window.mrCloseInvite=mrCloseInvite; window.mrDoInvite=mrDoInvite; window.mrCopyLink=mrCopyLink; window.mrInviteFinish=mrInviteFinish;
