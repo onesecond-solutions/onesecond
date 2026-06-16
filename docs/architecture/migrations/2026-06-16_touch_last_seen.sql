@@ -14,7 +14,8 @@
 --     2분마다(heartbeat) 호출 → '최근 10분 이내 접속 = 접속중(초록)' 판정의 소스.
 --
 --   ※ SECURITY DEFINER = RLS와 무관하게 본인 행만 갱신(auth.uid() 일치분).
---   ※ id = auth.uid() OR auth_user_id = auth.uid() = 두 매핑 모두 안전 커버.
+--   ※ 신버전 users는 id = auth.users.id 단일 매핑(handle_new_user가 NEW.id를 id에 저장).
+--     auth_user_id 컬럼 없음 → id = auth.uid() 만 사용.
 --   ※ CREATE OR REPLACE — 멱등.
 --
 -- ============================================================================
@@ -29,7 +30,7 @@ CREATE OR REPLACE FUNCTION public.touch_last_seen()
 AS $function$
   UPDATE public.users
      SET last_seen_at = now()
-   WHERE id = auth.uid() OR auth_user_id = auth.uid();
+   WHERE id = auth.uid();
 $function$;
 
 GRANT EXECUTE ON FUNCTION public.touch_last_seen() TO authenticated;
