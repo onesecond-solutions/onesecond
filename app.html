@@ -7844,6 +7844,8 @@ async function mrRenderSampleTree(){
     else if(panel) panel.innerHTML='<div class="mys-news-empty">아직 실/팀이 없습니다. [+ 실/팀 추가]로 먼저 실/팀을 만든 뒤 팀원을 초대하세요.</div>';
   }catch(e){ tree.innerHTML='<div class="mys-news-empty">불러오지 못했습니다.</div>'; }
 }
+/* 매니저방 구성원 정렬 위계: 지점장(0) → 실장(1) → 구성원(2). 같은 단계는 가나다 */
+function _mrRoleRank(r){ return r==='ga_branch_manager'?0:(r==='ga_manager'?1:2); }
 function mrSamplePick(teamId){
   var panel=document.getElementById('mr-org-panel2'); if(!panel) return;
   var users=window._mrUsers||[], teams=window._mrTeams||[];
@@ -7856,7 +7858,7 @@ function mrSamplePick(teamId){
   var mid=(typeof _mrOnlineSince==='function')?_mrOnlineSince():0;
   var online=mem.filter(function(u){var l=u.last_seen_at;return l&&new Date(l).getTime()>=mid;}).length;
   var RL=window.ROLE_LABEL||{};
-  var sorted=mem.slice().sort(function(a,b){ var ao=(a.last_seen_at&&new Date(a.last_seen_at).getTime()>=mid)?1:0,bo=(b.last_seen_at&&new Date(b.last_seen_at).getTime()>=mid)?1:0; return bo-ao; });
+  var sorted=mem.slice().sort(function(a,b){ var ra=_mrRoleRank(a.role), rb=_mrRoleRank(b.role); if(ra!==rb) return ra-rb; return (a.name||'').localeCompare(b.name||'','ko'); });  /* 지점장>실장>구성원, 같은 단계 가나다 */
   var rows=sorted.map(function(u){
     var on=!!(u.last_seen_at&&new Date(u.last_seen_at).getTime()>=mid);
     var stale=!u.last_seen_at||((Date.now()-new Date(u.last_seen_at).getTime())>=7*86400000);
@@ -8054,8 +8056,8 @@ function mrSelectTeam(teamId,el){
   var RL=window.ROLE_LABEL||{};
   var now=Date.now(), wk=7*86400000, mid=_mrOnlineSince();
   var online=mem.filter(function(u){ var l=u.last_seen_at; return l&&new Date(l).getTime()>=mid; }).length;
-  /* 로그인중 상단 정렬 */
-  var sorted=mem.slice().sort(function(a,b){ var ao=(a.last_seen_at&&new Date(a.last_seen_at).getTime()>=mid)?1:0, bo=(b.last_seen_at&&new Date(b.last_seen_at).getTime()>=mid)?1:0; return bo-ao; });
+  /* 정렬: 지점장>실장>구성원, 같은 단계 가나다 */
+  var sorted=mem.slice().sort(function(a,b){ var ra=_mrRoleRank(a.role), rb=_mrRoleRank(b.role); if(ra!==rb) return ra-rb; return (a.name||'').localeCompare(b.name||'','ko'); });
   var rows=sorted.map(function(u){
     var lsv=u.last_seen_at; var on=!!(lsv&&new Date(lsv).getTime()>=mid);
     var stale=!lsv||((now-new Date(lsv).getTime())>=wk);
