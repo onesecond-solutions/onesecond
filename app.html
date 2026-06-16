@@ -2196,47 +2196,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 원세컨드 시작하기 — 클릭 시 바텀시트 상승 + 스페이스 설명서(스토리북). 첫 방문 1회 자동(2026-06-14) -->
       <button type="button" class="os-start-cta" onclick="_osStartGuide()"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> 원세컨드 시작하기</button>
 
-      <!-- 홈 3카테고리 텍스트 포털 (2026-06-10 단순화): 공지 / 라이브러리 / 스크립트 — 호버 발견형. 도구·소식정보 제거(감추기>만들기). 사이드바(홈/라이브러리/스크립트) 정합. -->
-      <div class="home-portal">
-      <div class="home-cols">
-        <!-- ① 공지 = 현장의 소리 4개 게시판 -->
-        <div class="home-col">
-          <div class="home-col-head"><span class="os-sec-title">공지</span></div>
-          <div class="home-col-body">
-            <div class="home-menu">
-              <div class="home-menu-item" onclick="_goVoiceTab('team')"><span class="nm">단체방</span></div>
-              <div class="home-menu-item" onclick="_goVoiceTab('voice')"><span class="nm">보험 Q&amp;A</span></div>
-              <div class="home-menu-item" onclick="_goVoiceTab('smart')"><span class="nm">스마트 게시판</span></div>
-              <div class="home-menu-item" onclick="_goVoiceTab('branch')"><span class="nm">지점 게시판</span></div>
-            </div>
-          </div>
-        </div>
-        <!-- ② 라이브러리 -->
-        <div class="home-col">
-          <div class="home-col-head"><span class="os-sec-title">라이브러리</span></div>
-          <div class="home-col-body">
-            <div class="home-menu">
-              <div class="home-menu-item" onclick="_goMysTab('today')"><span class="nm">오늘의 할 일</span></div>
-              <div class="home-menu-item" onclick="_goMysTab('saved')"><span class="nm">마이 스페이스</span></div>
-            </div>
-          </div>
-        </div>
-        <!-- ③ 스크립트 = 스크립트 페이지 + Quick 녹취 콘텐츠 2종 + 녹취 변환 도구 -->
-        <div class="home-col">
-          <div class="home-col-head"><span class="os-sec-title">스크립트</span></div>
-          <div class="home-col-body">
-            <div class="home-menu">
-              <div class="home-menu-item" onclick="showView('scripts')"><span class="nm">스크립트 페이지</span></div>
-              <div class="home-menu-item" onclick="_goQuickItem('recording_script')"><span class="nm">가입설계·선심사 동의 녹취</span></div>
-              <div class="home-menu-item" onclick="_goQuickItem('mirror_script')"><span class="nm">미러링 전 녹취</span></div>
-              <div class="home-menu-item" onclick="showView('quick'); openQuickToolV2('콜스크립트작성')"><span class="nm">녹취·스크립트 변환</span></div>
-            </div>
-          </div>
-        </div>
-        <!-- ④ 도구 / ⑤ 소식·정보 = 단순화(2026-06-10)로 홈 포털에서 제거 (감추기>만들기). 도구·소식정보는 추후 검색기로 흡수 -->
-      </div>
-      <div class="home-portal-hint">해당 메뉴에 마우스를 올려보세요</div>
-      </div>
+      <!-- 홈 포털(공지/라이브러리/스크립트 3열 + 안내문) 제거(2026-06-16) — 링크 오배선으로 통째 삭제, '원세컨드 시작하기' 버튼만 유지. -->
      </div>
      <div class="wrap view" id="v-myspace">
       <div class="ttl">라이브러리 <span class="ac">· 내가 저장한 자료들</span></div>
@@ -13347,7 +13307,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-bk-nbtn.prev{margin-left:auto;}
 @media(max-width:680px){.sp-bk-two{grid-template-columns:1fr;}}
 /* 홈 — 원세컨드 시작하기 CTA */
-.os-start-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;max-width:620px;margin:14px auto 0;padding:15px 20px;border:none;border-radius:14px;background:var(--ac);color:#fff;font-size:1.02rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px color-mix(in srgb,var(--ac) 32%,transparent);transition:filter .15s,transform .15s;}
+.os-start-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;max-width:620px;margin:40px auto 0;padding:15px 20px;border:none;border-radius:14px;background:var(--ac);color:#fff;font-size:1.02rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px color-mix(in srgb,var(--ac) 32%,transparent);transition:filter .15s,transform .15s;}
 .os-start-cta:hover{filter:brightness(1.05);}
 .os-start-cta:active{transform:translateY(1px);}
 .os-start-cta svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;}
