@@ -12234,19 +12234,12 @@ async function mysVaultLoadFiles(fid){
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var q='/rest/v1/myspace_files?deleted_at=is.null'+_mvScopeQ()+'&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at,scope,scope_id';
+    var q='/rest/v1/myspace_files?deleted_at=is.null'+_mvScopeQ()+'&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
     q += fid?('&folder_id=eq.'+encodeURIComponent(fid)):'&folder_id=is.null';
     var res=await window.db.fetch(q);
     var rows=res.ok?await res.json():[];
     window._mvFiles=rows;
     mysVaultRenderFiles();
-    /* [임시 진단 2026-06-16] 현재 자료실 scope + 받아온 파일 scope 분포를 화면에 표기 — 버그 확정 후 제거 */
-    try{ var _dsc=_mvScopeCur(); var _dist={}; rows.forEach(function(r){ var s=r.scope||'(null)'; _dist[s]=(_dist[s]||0)+1; });
-      var _dbg=document.getElementById('mvScopeDebug');
-      if(!_dbg){ _dbg=document.createElement('div'); _dbg.id='mvScopeDebug'; _dbg.style.cssText='background:#fff3cd;color:#664d03;padding:6px 10px;font-size:11px;border-radius:6px;margin:0 0 8px;line-height:1.4';
-        if(box&&box.parentNode) box.parentNode.insertBefore(_dbg, box); }
-      _dbg.textContent='[진단] 현재 자료실 scope='+(_dsc.scope||'?')+(_dsc.id?('·id='+String(_dsc.id).slice(0,8)):'')+' / 받은 파일 '+rows.length+'개 분포='+JSON.stringify(_dist)+' / 쿼리scope='+_mvScopeQ();
-    }catch(e){}
   }catch(e){ console.error('[mysVault] files',e); box.innerHTML='<div class="mys-news-empty">파일을 불러오지 못했습니다.</div>'; }
 }
 window.mysVaultLoadFiles=mysVaultLoadFiles;
@@ -12547,8 +12540,15 @@ function _mvUniqueName(parentId, name, used){
 async function _mvCreateFolderRow(parentId, name, depth, owner, token){
   try{
     var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('fd'+(new Date().getTime())+'-'+Math.floor(Math.random()*1e6));
-    var res=await fetch(window.db.url('/rest/v1/myspace_folders'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({id:id,owner_id:owner,parent_id:parentId||null,name:name,depth:depth,sort_order:0})});
-    if(res.ok||res.status===201){ (window._mvFolders=window._mvFolders||[]).push({id:id,parent_id:parentId||null,name:name,depth:depth,sort_order:0}); return id; }
+    var _sc=_mvScopeRow();  /* 현재 자료실 scope(개인/팀/지점) — 파일 업로드(_mvUploadOneFile)와 동일 기준. 누락 시 폴더가 personal로 새는 버그 방지 */
+    var _row={id:id,owner_id:owner,parent_id:parentId||null,name:name,depth:depth,sort_order:0};
+    if(_sc.scope!=='personal'){ _row.scope=_sc.scope; _row.scope_id=_sc.scope_id; }
+    var res=await fetch(window.db.url('/rest/v1/myspace_folders'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(_row)});
+    if(res.ok||res.status===201){
+      var _cache={id:id,parent_id:parentId||null,name:name,depth:depth,sort_order:0};
+      if(_sc.scope!=='personal'){ _cache.scope=_sc.scope; _cache.scope_id=_sc.scope_id; }
+      (window._mvFolders=window._mvFolders||[]).push(_cache); return id;
+    }
     return null;
   }catch(e){ console.error('[mysVault] createFolderRow',e); return null; }
 }
