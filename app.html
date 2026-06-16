@@ -44,8 +44,6 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #app.is-insurer .nav{display:none;}                     /* 원수사: 전부 숨김 */
 #app.is-insurer .nav.ins-show{display:flex;}            /* 그 중 3개(자료실·현장의소리·함께해요)만 */
 #app.is-admin #nav-insurer-vault{display:flex;}         /* admin: 전체 노출 유지 + 자료실 추가 */
-.nav-quick-adm{display:none;}                           /* 빠른 메뉴(v-quick) = 어드민만 사이드바 노출(일반은 딸깍 빠른실행) */
-#app.is-admin .nav-quick-adm{display:flex;}
 /* 베타·파일럿(2026-06-13): GA 전 기능 오픈 — ga-hide 숨김 해제. '함께해요' 후기로 보완. 종료 후 재제한 시 아래 규칙 복구:
    #app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} */
 .nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
@@ -2119,12 +2117,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav on" onclick="_navView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
     <div class="nav" id="nav-myspace" onclick="_navMyspace()"><span class="ic">&#9672;</span><span class="lbl">마이 스페이스</span></div>
     <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
+    <div class="nav" onclick="_navView('quick')"><span class="ic">&#9889;</span><span class="lbl">빠른 메뉴</span></div>
     <div class="nav ins-show" onclick="_navView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav" onclick="_navView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저방</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
-      <div class="nav nav-quick-adm" onclick="_navView('quick')"><span class="ic">&#9889;</span><span class="lbl">빠른 메뉴</span></div>
       <div class="nav" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
       <div class="nav" id="nav-admin" style="display:none" onclick="_navView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
     </div>
@@ -9123,14 +9121,14 @@ function _searchGo(view){ closeSearch();
 /* 원세컨드 메뉴 인덱스 — 키워드로 메뉴 바로 이동 (어드민 제외 = 대전제). Quick 도구는 quick_contents에서 동적 */
 var OS_NAV_INDEX=[
   {label:'홈', kw:'home 대시보드 메인', view:'home'},
-  {label:'라이브러리', kw:'마이스페이스 내 자료함 메모 공유함', view:'myspace'},
+  /* 라이브러리(view:myspace) 검색 제외(2026-06-16) — 바텀시트 아래 숨은 풀페이지 직접 진입 차단. 마이 스페이스는 사이드바·바텀시트로만 */
   {label:'스크립트', kw:'콜 멘트 화법 상담 단계 script', view:'scripts'},
-  {label:'Quick 메뉴', kw:'퀵 빠른 도구 계산 검색', view:'quick'},
+  {label:'빠른 메뉴', kw:'퀵 quick 빠른 도구 계산 검색', view:'quick'},
   {label:'BMI 계산기', kw:'bmi 체질량 비만 표준체중 계산 도구', view:'quick'},
   {label:'회사별 BMI 심사기준', kw:'bmi 심사 인수 기준 회사별 비만', view:'quick'},
   {label:'보험 나이 계산기', kw:'보험연령 상령일 나이 계산 도구', view:'quick'},
   {label:'단위 변환기', kw:'변환 단위 계산 도구', view:'quick'},
-  {label:'현장의 소리', kw:'단체방 지점 게시판 보험 질문 qna 소리', view:'voice'},
+  /* 현장의 소리(view:voice) 검색 제외(2026-06-16) — 폐지·공동스페이스로 이관 */
   {label:'함께해요', kw:'together 함께', view:'together'},
   {label:'보험이슈', kw:'뉴스 news 이슈', view:'news'},
   {label:'보험사 자료실', kw:'자료실 보험사 소식지', view:'insurer-vault'},
