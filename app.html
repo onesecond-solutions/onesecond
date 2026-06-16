@@ -7792,7 +7792,8 @@ async function mrRenderSampleTree(){
     /* 어드민 = 특정 기존 지점에 묶이지 않음. 빈 상태 (관점 확인은 [상황설정] 칩으로) */
     if((typeof _getOsUserRole==='function') && _getOsUserRole()==='admin'){
       tree.innerHTML='<div class="mr-tn mr-tn-br2">아직 조직이 없습니다<span class="mr-tn-c">0</span></div>'+
-        '<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>';
+        '<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'team\')">+ 실/팀 추가</div>'+
+        '<div class="mr-tn mr-tn-add" onclick="mrOpenInvite(\'member\')">+ 팀원 추가</div>';
       if(panel) panel.innerHTML='<div class="mys-news-empty">가입·초대가 쌓이면 여기에 조직이 나타납니다.<br>(어드민은 특정 지점에 묶이지 않습니다)<br><br>특정 지점장·실장 시점으로 확인하려면 위 <b>[상황설정]</b> 칩을 누르세요.</div>';
       return;
     }
