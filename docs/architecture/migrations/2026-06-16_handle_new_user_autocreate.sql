@@ -56,6 +56,7 @@ DECLARE
   v_team_id    uuid := NULLIF(meta->>'team_id', '')::uuid;
   v_new_branch text := NULLIF(meta->>'new_branch_name', '');
   v_new_team   text := NULLIF(meta->>'new_team_name', '');
+  v_ga_org     text;   -- branches.ga_org_name(NOT NULL) 채움용
 BEGIN
   -- 9역할 8종 IN 절 (admin 제외, 옵션 B 정합)
   IF v_role IS NULL OR v_role NOT IN (
@@ -78,8 +79,14 @@ BEGIN
        AND company_id IS NOT DISTINCT FROM v_company_id
      LIMIT 1;
     IF v_branch_id IS NULL THEN
-      INSERT INTO public.branches (name, company_id, is_active)
-      VALUES (v_new_branch, v_company_id, true)
+      -- ga_org_name 은 NOT NULL — 회사명 → 가입 입력 회사 텍스트 → 지점명 순으로 채움
+      v_ga_org := NULLIF(meta->>'company', '');
+      IF v_company_id IS NOT NULL THEN
+        SELECT name INTO v_ga_org FROM public.companies WHERE id = v_company_id;
+      END IF;
+      v_ga_org := COALESCE(NULLIF(v_ga_org, ''), v_new_branch);
+      INSERT INTO public.branches (name, ga_org_name, company_id, is_active)
+      VALUES (v_new_branch, v_ga_org, v_company_id, true)
       RETURNING id INTO v_branch_id;
     END IF;
   END IF;
