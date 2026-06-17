@@ -13472,6 +13472,22 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-plat .sp-node.sel{background:color-mix(in srgb,#0E9A6C 14%,transparent);color:#0E9A6C;box-shadow:inset 3px 0 0 #0E9A6C;}
 .sp-plat .sp-node.sel .ic{color:#0E9A6C;}
 .sp-plat .sp-children{border-left-color:color-mix(in srgb,#0E9A6C 22%,var(--bd));}
+/* ═══ 스페이스 범위 4신호 코딩 (2026-06-17, 김팀장 안) — 색=범위 / 뱃지=누가 보나 / 아이콘=공용·개인 / 현위치=색 강조. 지점 파랑·팀 초록·마이 빨강 ═══ */
+.sp-sc-branch{--sc:#2563EB;} .sp-sc-team{--sc:#0E9A6C;} .sp-sc-my{--sc:#C0392B;}
+.sp-node.sp-scope{border-left:3px solid var(--sc);border-radius:0 8px 8px 0;color:var(--tp);font-weight:600;}
+.sp-node.sp-scope .ic{color:var(--sc);}
+.sp-node.sp-scope:hover{background:color-mix(in srgb,var(--sc) 8%,transparent);}
+.sp-node.sp-scope.sel{background:color-mix(in srgb,var(--sc) 13%,transparent);color:var(--sc);box-shadow:inset 3px 0 0 var(--sc);}
+.sp-node.sp-scope.sel .ic{color:var(--sc);}
+/* 현위치 강조 = 선택 노드를 품은 스페이스에 옅은 틴트 */
+.sp-branch:has(.sp-node.sel) > .sp-node.sp-scope{background:color-mix(in srgb,var(--sc) 8%,transparent);}
+/* 스페이스 자식 좌측 레일도 범위 색 계열 (그룹 결속) */
+.sp-branch:has(> .sp-node.sp-sc-branch) > .sp-children{border-left-color:color-mix(in srgb,#2563EB 30%,var(--bd));}
+.sp-branch:has(> .sp-node.sp-sc-team) > .sp-children{border-left-color:color-mix(in srgb,#0E9A6C 30%,var(--bd));}
+.sp-branch:has(> .sp-node.sp-sc-my) > .sp-children{border-left-color:color-mix(in srgb,#C0392B 30%,var(--bd));}
+/* 공유 범위 뱃지 (누가 보나) */
+.sp-aud{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-size:.7rem;font-weight:600;color:var(--sc);border:1px solid color-mix(in srgb,var(--sc) 35%,var(--bd));border-radius:999px;padding:1px 7px;white-space:nowrap;}
+.sp-aud .sp-ico{width:11px;height:11px;}
 .sp-branch.collapsed > .sp-children{display:none;}
 .sp-branch.collapsed > .sp-node > .sp-caret{transform:rotate(-90deg);}
 .sp-children{margin-left:13px;border-left:1px solid var(--bd);padding-left:4px;}
@@ -13598,6 +13614,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     <symbol id="i-dots" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></symbol>
     <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 4.9L18.5 9.5l-4.7 1.6L12 16l-1.8-4.9L5.5 9.5l4.7-1.6z"/></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.4a3.8 3.8 0 0 1 7-2.1 3.8 3.8 0 0 1 7 2.1c0 5-7 9.4-7 9.4z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
   </defs></svg>
   <div class="sp-skel">
     <div class="sp-skel-sign"><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span><span id="sp-company-name">소속 회사</span></div>
@@ -13609,7 +13626,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
           <div class="sp-children">
 
             <div class="sp-branch collapsed">
-              <div class="sp-node" data-k="bspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>지점 스페이스</div>
+              <div class="sp-node sp-scope sp-sc-branch" data-k="bspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>지점 스페이스<span class="sp-aud"><svg class="sp-ico"><use href="#i-users"/></svg>지점 전체</span></div>
               <div class="sp-children">
                 <div class="sp-node sp-leaf" data-k="broom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-msg"/></svg></span>지점방</div>
                 <div class="sp-node sp-leaf" data-k="blib_b"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>지점 자료실</div>
@@ -13617,7 +13634,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
             </div>
 
             <div class="sp-branch collapsed">
-              <div class="sp-node sel" data-k="tspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>팀 스페이스</div>
+              <div class="sp-node sp-scope sp-sc-team sel" data-k="tspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>팀 스페이스<span class="sp-aud"><svg class="sp-ico"><use href="#i-users"/></svg>우리 팀</span></div>
               <div class="sp-children">
                 <div class="sp-node sp-leaf" data-k="troom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-msg"/></svg></span>팀방</div>
                 <div class="sp-node sp-leaf" data-k="tlib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>팀 자료실</div>
@@ -13625,19 +13642,20 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
             </div>
 
             <div class="sp-branch collapsed">
-              <div class="sp-node" data-k="mspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-user"/></svg></span>마이 스페이스</div>
+              <div class="sp-node sp-scope sp-sc-my" data-k="mspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-user"/></svg></span>마이 스페이스<span class="sp-aud"><svg class="sp-ico"><use href="#i-lock"/></svg>나만</span></div>
               <div class="sp-children">
                 <div class="sp-node sp-leaf" data-k="m_diary"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-cal"/></svg></span>다이어리</div>
                 <div class="sp-node sp-leaf" data-k="m_lib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>개인 자료실</div>
                 <div class="sp-node sp-leaf" data-k="m_script"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>스크립트</div>
                 <div class="sp-node sp-leaf" data-k="m_memo"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-note"/></svg></span>메모</div>
-                <div class="sp-node sp-leaf" data-k="m_share"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-share"/></svg></span>공유함</div>
               </div>
             </div>
 
             <div class="sp-node sp-leaf sp-op-hide" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
 
             <div class="sp-node sp-leaf sp-op-hide" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
+
+            <div class="sp-node sp-leaf" data-k="m_share"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-share"/></svg></span>공유함</div>
 
             <div class="sp-node sp-leaf sp-mgr" data-k="mrroom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>매니저방</div>
 
