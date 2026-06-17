@@ -2917,10 +2917,35 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           #v-admin .flow-sum-pct{font-size:11.5px;color:var(--tf);flex:0 0 auto;font-variant-numeric:tabular-nums}
           #v-admin .act-role{font-size:11px;color:var(--tf);background:color-mix(in srgb,var(--bd) 45%,transparent);padding:2px 8px;border-radius:5px}
           @media(max-width:980px){#v-admin .act-board{grid-template-columns:repeat(3,1fr)}#v-admin .act-main{grid-template-columns:1fr}}
+          /* 시스템 현황 패널 (2026-06-17) */
+          #v-admin .sys-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+          #v-admin .sys-kpi{background:var(--card,#fff);border:1px solid var(--bd);border-radius:var(--radius-sm,8px);padding:12px 14px}
+          #v-admin .sys-kpi .l{font-size:11px;color:var(--tf)}
+          #v-admin .sys-kpi .n{font-size:20px;font-weight:700;margin-top:2px}
+          #v-admin .sys-kpi .n small{font-size:11px;font-weight:500;color:var(--tf)}
+          #v-admin .sys-kpi .d{font-size:11px;color:var(--tf);margin-top:3px}
+          #v-admin .sys-kpi.warn{border-color:#F59E0B}
+          #v-admin .sys-gauge{height:6px;border-radius:3px;background:color-mix(in srgb,var(--bd) 60%,transparent);margin:6px 0 2px;overflow:hidden}
+          #v-admin .sys-gauge i{display:block;height:100%;border-radius:3px}
+          #v-admin .sys-gauge i.g{background:#16A34A}#v-admin .sys-gauge i.y{background:#F59E0B}#v-admin .sys-gauge i.r{background:#EF4444}
+          #v-admin .sys-bks{background:var(--card,#fff);border:1px solid var(--bd);border-radius:var(--radius-sm,8px);padding:10px 14px}
+          #v-admin .sys-bks-h{font-size:11px;color:var(--tf);margin-bottom:6px}
+          #v-admin .sys-bk{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-top:1px solid color-mix(in srgb,var(--bd) 40%,transparent)}
+          #v-admin .sys-bk:first-of-type{border-top:0}
+          #v-admin .sys-bk-v{color:var(--tf)}
+          @media(max-width:980px){#v-admin .sys-grid{grid-template-columns:repeat(2,1fr)}}
         </style>
 
         <!-- 전국 상황판 -->
         <div class="act-board" id="ac-board"><div class="ac-card ac-card-empty">불러오는 중…</div></div>
+
+        <!-- 시스템 현황 (Supabase 용량·색인) — admin_system_status RPC -->
+        <div class="ac-section" style="margin:6px 0 18px">
+          <div class="ac-section-head"><i data-lucide="server"></i>
+            <h2>시스템 현황</h2><span class="ac-section-sub">Supabase 용량·색인</span>
+            <a class="ac-btn ac-btn-sm" style="margin-left:auto" href="https://supabase.com/dashboard/project/pdnwgzneooyygfejrvbg/settings/usage" target="_blank" rel="noopener">Supabase 대시보드 &rarr;</a></div>
+          <div class="ac-card" id="ac-sys"><div class="ac-card-empty">불러오는 중…</div></div>
+        </div>
 
         <!-- 위험 신호 (다차원 경보) -->
         <div class="ac-section" style="margin:6px 0 18px">
