@@ -4737,12 +4737,14 @@ function _navMyspace(){
   }, 90);
 }
 window._navMyspace=_navMyspace;
-/* 사이드 '다이어리' nav = 마이 스페이스의 다이어리 탭으로 직접 이동 (2026-06-17, 데모 단순화 — 바텀시트 트리 대신 전체화면 다이어리) */
+/* 사이드 '다이어리' nav = 바텀시트 펼침 + 트리 '마이 스페이스 > 다이어리' 노드로 이동 (2026-06-17, _navMyspace/_spBookGoNode 패턴) */
 function _navDiary(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-myspace'); if(me) me.classList.add('on'); }catch(e){}
-  if(window._osSheetCollapse) window._osSheetCollapse();   /* 바텀시트 열려 있으면 슬라이드로 내림 */
-  if(typeof _goMysTab==='function') _goMysTab('today');    /* showView('myspace') + 다이어리 탭(index 0) 활성화 */
-  else if(typeof showView==='function') showView('myspace');
+  if(typeof window._osSheetOpen==='function') window._osSheetOpen(true);   /* 바텀시트 슬라이딩 펼침(1.05s) */
+  setTimeout(function(){
+    var node=document.querySelector('#spTree .sp-node[data-k="m_diary"]');   /* 마이 스페이스 > 다이어리 노드 */
+    if(node) node.click();   /* 트리 다이어리 노드 클릭과 동일 = 시트 안 다이어리 표시 */
+  }, 90);
 }
 window._navDiary=_navDiary;
 /* 전체화면 메뉴(홈·스크립트·함께해요·보험이슈·요금제) = 바텀시트가 열려 있으면 슬라이드(.28s)로 내리고 해당 화면 표시 */
