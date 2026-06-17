@@ -57,6 +57,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .sp-node.sp-mgr:hover{background:color-mix(in srgb,#EC4899 9%,transparent);}
 .sp-node.sp-mgr{display:none;}/* .sp-node{display:flex}보다 강한 specificity로 기본 숨김 */
 body.is-mgr .sp-node.sp-mgr{display:flex;}
+/* 원수사 자료실·보험 Q&A 트리 노드 — 일반 사용자 숨김, 어드민만 노출 (바텀시트=#app 밖 → body 기준) (2026-06-17) */
+.sp-node.sp-op-hide{display:none;}
+body.is-admin .sp-node.sp-op-hide{display:flex;}
 .nav.nav-mgr{color:#DB2777;display:none;}
 .nav.nav-mgr .sp-ico{color:#DB2777;}
 .nav.nav-mgr.on{background:color-mix(in srgb,#EC4899 12%,transparent);color:#DB2777;}
@@ -3854,6 +3857,7 @@ function applyRoleClass(){
   if(nv) nv.style.display = _canSeeVoice() ? '' : 'none';
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
   document.body.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸 노출 — body 기준(바텀시트가 #app 밖이라 #app 기준이면 안 닿음) */
+  document.body.classList.toggle('is-admin', r === 'admin');  /* 바텀시트(#app 밖) 어드민 게이트 — 원수사 자료실·보험 Q&A 트리 노드 노출용 (2026-06-17) */
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
@@ -13631,9 +13635,9 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
               </div>
             </div>
 
-            <div class="sp-node sp-leaf" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
+            <div class="sp-node sp-leaf sp-op-hide" data-k="blib_ins"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span>원수사 자료실</div>
 
-            <div class="sp-node sp-leaf" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
+            <div class="sp-node sp-leaf sp-op-hide" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
 
             <div class="sp-node sp-leaf sp-mgr" data-k="mrroom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>매니저방</div>
 
