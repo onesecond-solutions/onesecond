@@ -867,6 +867,39 @@
     if(empty){ el.classList.remove('ac-card-empty'); el.innerHTML=row; } else { el.insertAdjacentHTML('afterbegin', row); }
   };
 
+  // 시스템 현황 패널 — Supabase 용량/파일수/DB/OCR 대기 (admin_system_status RPC, 읽기 전용). 2026-06-17
+  //  · 대표 운영비전: 용량·색인 상태를 대시보드에서 한눈에(매번 Supabase 안 들어가게)
+  window.acRenderSystemStatus = function(){
+    var host=document.getElementById('ac-sys'); if(!host||!window.db||!window.db.fetch) return;
+    var GB=1073741824, CAP=100;  /* Storage 포함량 100GB */
+    function fmtGB(b){ b=Number(b||0); return (b/GB).toFixed(b<GB?2:1); }
+    window.db.fetch('/rest/v1/rpc/admin_system_status',{ method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' })
+      .then(function(r){
+        if(r.status===404){ host.innerHTML='<div class="ac-card-empty">시스템 현황 함수(admin_system_status)가 아직 설치되지 않았습니다.<br><code>docs/migrations/2026-06-17_admin_system_status.sql</code> 을 Supabase에서 실행하면 표시됩니다.</div>'; return null; }
+        return r.ok?r.json():null;
+      })
+      .then(function(d){
+        if(!d){ host.innerHTML='<div class="ac-card-empty">시스템 현황을 불러오지 못했습니다.</div>'; return; }
+        var sb=Number(d.storage_bytes||0), pct=Math.min(100, sb/GB/CAP*100);
+        var gcls=pct>=90?'r':(pct>=70?'y':'g');
+        var buckets=(d.buckets||[]).map(function(b){
+          return '<div class="sys-bk"><span class="sys-bk-n">'+esc(b.bucket)+'</span>'+
+            '<span class="sys-bk-v">'+fmtGB(b.bytes)+' GB · '+Number(b.files||0).toLocaleString()+'개</span></div>';
+        }).join('');
+        host.innerHTML=
+          '<div class="sys-grid">'+
+            '<div class="sys-kpi"><div class="l">Storage</div><div class="n">'+fmtGB(sb)+'<small> / '+CAP+' GB</small></div>'+
+              '<div class="sys-gauge"><i class="'+gcls+'" style="width:'+pct.toFixed(1)+'%"></i></div>'+
+              '<div class="d">'+pct.toFixed(1)+'% 사용</div></div>'+
+            '<div class="sys-kpi"><div class="l">전체 파일</div><div class="n">'+Number(d.total_files||0).toLocaleString()+'<small>개</small></div></div>'+
+            '<div class="sys-kpi"><div class="l">DB 용량</div><div class="n">'+fmtGB(d.db_bytes)+'<small> / 8 GB</small></div></div>'+
+            '<div class="sys-kpi'+(Number(d.ocr_pending||0)>0?' warn':'')+'"><div class="l">OCR 색인 대기</div><div class="n">'+Number(d.ocr_pending||0).toLocaleString()+'<small>건</small></div></div>'+
+          '</div>'+
+          '<div class="sys-bks"><div class="sys-bks-h">버킷별 용량</div>'+(buckets||'<div class="ac-card-empty" style="padding:8px 0">데이터 없음</div>')+'</div>';
+      })
+      .catch(function(){ host.innerHTML='<div class="ac-card-empty">시스템 현황을 불러오지 못했습니다.</div>'; });
+  };
+
   function renderOrgTree(companies, branches, byBranch, byCompany){
     var el=document.getElementById(_ctHost.tree); if(!el) return;
     el.classList.remove('ac-card-empty');
@@ -1121,6 +1154,7 @@
     renderOrgTree(_CT.companies, branches, byBranch, byCompany);
     renderRiskPanel(branches, byBranch);
     if(window.acRenderHoldRisk) window.acRenderHoldRisk();  /* OCR 보류 행 추가(비동기·있을 때만) */
+    if(window.acRenderSystemStatus) window.acRenderSystemStatus();  /* 시스템 현황(용량·OCR·DB) 패널 (2026-06-17) */
     acOrgPick('_all');
 
     // 추세 14일: 접속(loginLogs 재사용·일별 distinct) + 가입(별도 fetch)
