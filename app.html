@@ -12201,7 +12201,7 @@ async function _osShareDo(scope){
       payload={original_name:f.original_name, ext:ext, mime_type:f.mime_type||'', file_size:frow.file_size};
     }
   }catch(e){ console.error('[share] snapshot',e); alert('공유 준비 중 오류가 발생했습니다.'); _osShareClose(); return; }
-  var row={ item_type:ctx.type, item_id:itemId, scope:scope, scope_id:sid, title:(ctx.title||null), from_name:(me.name||null), payload:payload };
+  var row={ item_type:ctx.type, item_id:itemId, scope:scope, scope_id:sid, title:(ctx.title||null), from_user:(me.id||(window.AppState&&window.AppState.userId)||null), from_name:(me.name||null), payload:payload };
   try{
     var res=await fetch(window.db.url('/rest/v1/shares'),{method:'POST',headers:Object.assign({},H,{'Prefer':'return=minimal'}),body:JSON.stringify(row)});
     if(res.ok||res.status===201){ if(typeof toast==='function') toast(grp+' 공유함에 공유했어요.'); _osShareClose(); }
