@@ -46,6 +46,9 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 #app.is-admin #nav-insurer-vault{display:flex;}         /* admin: 전체 노출 유지 + 자료실 추가 */
 /* 베타·파일럿(2026-06-13): GA 전 기능 오픈 — ga-hide 숨김 해제. '함께해요' 후기로 보완. 종료 후 재제한 시 아래 규칙 복구:
    #app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} */
+/* 운영자 전용 사이드 메뉴 — 빠른 메뉴·함께해요·보험이슈는 일반 사용자(GA·보험사)에게 숨기고 admin만 노출 (2026-06-17, 데모 단순화) */
+.nav.op-hide{display:none;}
+#app.is-admin .nav.op-hide{display:flex;}
 .nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
 /* 매니저룸 — 핑크 차별화 + 실장·지점장·어드민만(is-mgr) 노출 */
 .sp-node.sp-mgr{color:#DB2777;font-weight:700;}
@@ -2121,11 +2124,11 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <!-- 사이드바 재구성(2026-06-14): 구분선 제거·순차 배치 / 라이브러리→마이 스페이스(클릭=바텀시트 슬라이딩+마이스페이스 기본) / Quick·현장의소리 사이드바 제거(Quick=딸깍 FAB로 접근) / 하단 그레이 영역=안내문·요금제·어드민 -->
     <div class="nav ins-show" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
     <div class="nav on" onclick="_navView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
-    <div class="nav" id="nav-myspace" onclick="_navMyspace()"><span class="ic">&#9672;</span><span class="lbl">마이 스페이스</span></div>
+    <div class="nav" id="nav-myspace" onclick="_navDiary()"><span class="ic">&#9672;</span><span class="lbl">다이어리</span></div>
     <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
-    <div class="nav" onclick="_navView('quick')"><span class="ic">&#9889;</span><span class="lbl">빠른 메뉴</span></div>
-    <div class="nav ins-show" onclick="_navView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
-    <div class="nav" onclick="_navView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
+    <div class="nav op-hide" onclick="_navView('quick')"><span class="ic">&#9889;</span><span class="lbl">빠른 메뉴</span></div>
+    <div class="nav op-hide" onclick="_navView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
+    <div class="nav op-hide" onclick="_navView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저방</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
@@ -4734,6 +4737,14 @@ function _navMyspace(){
   }, 90);
 }
 window._navMyspace=_navMyspace;
+/* 사이드 '다이어리' nav = 마이 스페이스의 다이어리 탭으로 직접 이동 (2026-06-17, 데모 단순화 — 바텀시트 트리 대신 전체화면 다이어리) */
+function _navDiary(){
+  try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-myspace'); if(me) me.classList.add('on'); }catch(e){}
+  if(window._osSheetCollapse) window._osSheetCollapse();   /* 바텀시트 열려 있으면 슬라이드로 내림 */
+  if(typeof _goMysTab==='function') _goMysTab('today');    /* showView('myspace') + 다이어리 탭(index 0) 활성화 */
+  else if(typeof showView==='function') showView('myspace');
+}
+window._navDiary=_navDiary;
 /* 전체화면 메뉴(홈·스크립트·함께해요·보험이슈·요금제) = 바텀시트가 열려 있으면 슬라이드(.28s)로 내리고 해당 화면 표시 */
 function _navView(key){ if(window._osSheetCollapse) window._osSheetCollapse(); if(typeof showView==='function') showView(key); }
 window._navView=_navView;
