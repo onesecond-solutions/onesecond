@@ -7617,7 +7617,10 @@ async function _ttCalBody(){
   var yest=new Date(td); yest.setDate(yest.getDate()-1);
   var tom=new Date(td); tom.setDate(tom.getDate()+1);
   var from=_f(yest), today=_f(td), to=_f(tom), rows=[];
-  try{ var res=await window.db.fetch('/rest/v1/calendar_events?event_date=gte.'+from+'&event_date=lte.'+to+'&order=event_date.asc&select=id,event_date,event_time,title,source_type'); if(res.ok){ rows=await res.json(); if(!Array.isArray(rows)) rows=[]; } }catch(e){}
+  /* 본인 일정만(author_id 필터). 어드민은 RLS상 전체가 보여 타 사용자 개인 다이어리가 끌려오던 것 차단(2026-06-17). 로그인 정보 없으면 표시 안 함(전체 누출 방지). */
+  var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null;
+  if(!_me) return '<div class="tt-card-hint" style="margin-top:6px">로그인 후 표시됩니다.</div>';
+  try{ var res=await window.db.fetch('/rest/v1/calendar_events?author_id=eq.'+encodeURIComponent(_me)+'&event_date=gte.'+from+'&event_date=lte.'+to+'&order=event_date.asc&select=id,event_date,event_time,title,source_type'); if(res.ok){ rows=await res.json(); if(!Array.isArray(rows)) rows=[]; } }catch(e){}
   if(!rows.length) return '<div class="tt-card-hint" style="margin-top:6px">전일·당일·내일 예정 일정이 없습니다.</div>';
   rows.sort(function(a,b){ if(a.event_date!==b.event_date) return a.event_date<b.event_date?-1:1; var ta=a.event_time||'99:99', tb=b.event_time||'99:99'; return ta<tb?-1:(ta>tb?1:0); });
   return '<div class="tt-cal-list">'+rows.map(function(r){
@@ -11422,8 +11425,9 @@ async function loadCal(p){
   if(!window.db||!window.db.fetch){ if(listEl)listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    /* 개인 다이어리(mys) = 본인 일정만(author_id 필터). 어드민은 RLS상 전체가 보여 타 사용자 일정이 끌려오던 것 차단. mr/iv 공용 캘린더는 불변. */
-    var _own=''; if(p==='mys'){ var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; if(_me) _own='&author_id=eq.'+encodeURIComponent(_me); }
+    /* 모든 캘린더(mys 개인 다이어리 + iv 보험사 자료실 + mr 매니저룸) = 본인 일정만(author_id 필터).
+       어드민은 RLS상 전체가 보여 타 사용자 개인 다이어리가 끌려오던 것 차단(2026-06-17, A안). 로그인 정보 없으면 빈 결과로 안전. */
+    var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; var _own=_me?'&author_id=eq.'+encodeURIComponent(_me):'';
     var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500'+_own+'&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     st.rows=rows;
