@@ -4924,8 +4924,10 @@ window.openQuickToolV2 = openQuickToolV2;
  * 이미지 출력 = 카드 만들기 html2canvas 패턴 재사용(loadHtml2Canvas / mcFallbackDownload).
  * 요금제 게이트 = CMP_LOCK_PLUS 단일 플래그 한 곳(_cmpLocked)에서만 판정.
  * ════════════════════════════════════════════════════════════════ */
+var BETA_OPEN_ALL = true;    /* 검증기간 요금제 게이트 전면 개방 (2026-06-17 대표 결재). plus/pro 기준 확정 시 false로 끄면 게이트 복원. */
 var CMP_LOCK_PLUS = false;   /* 기본 = 전체 사용 가능(잠금 off). true 한 줄로 PLUS 잠금 전환. 판정은 _cmpLocked 한 곳만. */
 function _cmpLocked(){
+  if(BETA_OPEN_ALL) return false;   /* 검증기간 전면 개방 */
   if(!CMP_LOCK_PLUS) return false;
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var plan=(u.plan||'free').toLowerCase(), role=(u.role||'');
@@ -5481,7 +5483,8 @@ function _cardGateKey(){ return 'os_cardv2_' + new Date().toISOString().slice(0,
 function mcCheckGate(){
   var u = window.currentUser || {};
   // 보완e: PLUS 전용 (admin·plus 통과). plan 정보 없으면 막지 않음(회귀 방지).
-  if(u.plan && u.plan!=='plus' && u.plan!=='admin' && u.role!=='admin'){
+  // 2026-06-17: 검증기간 = BETA_OPEN_ALL true면 PLUS 잠금 해제(free도 사용). 일일 한도(아래)는 그대로 유지.
+  if(!BETA_OPEN_ALL && u.plan && u.plan!=='plus' && u.plan!=='admin' && u.role!=='admin'){
     mcShowErrV2('AI 카드 만들기는 PLUS 전용 기능입니다.'); return false;
   }
   var n = parseInt(localStorage.getItem(_cardGateKey())||'0',10);

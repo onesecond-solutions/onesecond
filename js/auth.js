@@ -85,10 +85,12 @@
   }
 
   // ── 6. PRO 판단 ───────────────────────────────────────────────────────────
-  // PRO = plan이 'pro' 이거나, role이 매니저 이상 (무료 혜택 대상)
+  // PRO = plan이 'plus' 또는 'pro' (2026-06-17 정책: role 자동 무료혜택 폐기·전원 free 시작)
   function isPro() {
+    /* 2026-06-17 정책 일원화: 요금제 기반만(plus/pro). role 자동 무료혜택 폐기.
+       검증기간 전면 개방은 app.html BETA_OPEN_ALL이 별도 담당. */
     var s = window.AppState;
-    return s.plan === 'pro' || isFreeTier(s.role);
+    return s.plan === 'plus' || s.plan === 'pro';
   }
 
   // ── 7. Admin 판단 ─────────────────────────────────────────────────────────
