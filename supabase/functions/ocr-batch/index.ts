@@ -22,6 +22,10 @@ const BATCH_NL    = 2;      // 소식지(newsletters) 틱당 처리 건수
 const BATCH_FILES = 2;      // 자료실(myspace_files) 틱당 처리 건수
 // ocr-extract 의 MAX_FILE_BYTES(18MB)와 동일. 초과분은 Gemini가 413 → 마킹해서 보류함에 잡고 무한 재시도 차단.
 const MAX_FILE_BYTES = 18 * 1024 * 1024;
+// AI 한글 제목 생성 — Gemini(ocr-extract와 동일 키·모델). 파일럿 계정이 자료실에 올린 무의미 파일명만 대상(2026-06-17).
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const PILOT_TITLE_EMAIL = "bylts@naver.com";  // 임태성 실장 계정(본인 파일럿)
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -155,9 +159,18 @@ function isOcrTarget(mime: string, ext: string): boolean {
 
 async function processMyspaceFiles() {
   const out = { picked: 0, ok: 0, empty: 0, failed: 0, skip: 0, oversize: 0, remaining: -1 };
-  let rows: Array<{ id: string; storage_path: string; mime_type: string | null; ext: string | null; original_name: string | null; file_size: number | null }> = [];
+  let rows: Array<{ id: string; owner_id: string | null; storage_path: string; mime_type: string | null; ext: string | null; original_name: string | null; file_size: number | null }> = [];
+  // AI 제목 파일럿 계정 id 1회 조회(이 계정이 올린 파일만 한글 제목 생성). 조회 실패 시 pilotId="" → 제목 생성 전면 skip(안전).
+  let pilotId = "";
   try {
-    const q = "myspace_files?select=id,storage_path,mime_type,ext,original_name,file_size"
+    const pr = await rest("users?email=eq." + encodeURIComponent(PILOT_TITLE_EMAIL) + "&select=id&limit=1");
+    if (pr.ok) { const pj = await pr.json(); pilotId = (pj && pj[0] && pj[0].id) ? String(pj[0].id) : ""; }
+  } catch (_e) {}
+  // 저장 날짜(KST, YYMMDD) — 본문에 날짜가 없을 때 제목 끝에 붙임
+  const _kst = new Date(Date.now() + 9 * 3600 * 1000);
+  const todayYMD = String(_kst.getUTCFullYear()).slice(2) + String(_kst.getUTCMonth() + 1).padStart(2, "0") + String(_kst.getUTCDate()).padStart(2, "0");
+  try {
+    const q = "myspace_files?select=id,owner_id,storage_path,mime_type,ext,original_name,file_size"
             + "&ocr_status=is.null&storage_path=not.is.null&deleted_at=is.null&limit=" + BATCH_FILES;
     const r = await rest(q);
     if (!r.ok) { (out as any).error = "files 조회 실패 " + r.status; return out; }
@@ -201,10 +214,21 @@ async function processMyspaceFiles() {
       const text = (j && typeof j.text === "string") ? j.text : "";
 
       if (text.trim().length) {
-        // 파일명 + 추출본문 → search_text (둘 다 검색되게). 'done' 마킹.
-        const name = (f.original_name || "").trim();
-        const merged = (name ? name + "\n" : "") + text;
-        await patchFile(f.id, { search_text: merged, ocr_status: "done" });
+        // AI 한글 제목 — 파일럿 계정(임태성 실장)이 올린 무의미 파일명(한글 없음=카톡/영문/숫자)만 → original_name 직접 교체(원본 보존 불필요·대표 결정).
+        // 확장자는 유지(다운로드명 정상). storage 키는 그대로라 파일 자체 영향 0. 표시·다운로드·검색 전부 한글 제목 기준이 됨.
+        let dispName = (f.original_name || "").trim();
+        if (pilotId && String(f.owner_id || "") === pilotId && isMeaninglessName(f.original_name)) {
+          const title = await genKoreanTitle(text, todayYMD);
+          if (title) {
+            const e = (f.ext || "").replace(/^\./, "");
+            dispName = title + (e ? "." + e : "");
+          }
+        }
+        // 파일명(한글 제목) + 추출본문 → search_text. 'done' 마킹.
+        const merged = (dispName ? dispName + "\n" : "") + text;
+        const patch: Record<string, unknown> = { search_text: merged, ocr_status: "done" };
+        if (dispName && dispName !== (f.original_name || "").trim()) patch.original_name = dispName;
+        await patchFile(f.id, patch);
         out.ok++;
       } else {
         await patchFile(f.id, { ocr_status: "empty" });
@@ -219,6 +243,41 @@ async function processMyspaceFiles() {
     const cr = r2.headers.get("content-range"); if (cr) out.remaining = parseInt(cr.split("/")[1] || "-1", 10);
   } catch (_e) {}
   return out;
+}
+
+// 파일명이 무의미한가 — 확장자 제외 이름에 한글이 없으면 무의미(카톡/IMG/영문/숫자)로 간주. 한글 파일명은 건드리지 않음.
+function isMeaninglessName(name: string | null): boolean {
+  const base = (name || "").replace(/\.[^.]+$/, "").trim();
+  if (!base) return true;
+  return !/[가-힣]/.test(base);
+}
+
+// OCR 본문 → 한글 파일명 1줄 + 날짜(Gemini 2.5 Flash, ocr-extract와 동일 키). 실패 시 "" 반환(제목 미설정 = original_name 그대로).
+// 날짜 = 본문에 발행/시행/기준일 있으면 그 날짜, 없으면 AI가 'NODATE' → 코드가 저장 날짜(fallbackYMD)로 치환.
+async function genKoreanTitle(text: string, fallbackYMD: string): Promise<string> {
+  if (!GEMINI_API_KEY) return "";
+  const snippet = text.slice(0, 3000);
+  const prompt = "다음은 보험 업무 자료의 본문이다. 이 자료를 한눈에 알아볼 수 있는 한국어 파일명을 만들어라.\n"
+    + "규칙: 보험회사명·상품명·핵심내용을 밑줄(_)로 연결하고, 맨 끝에 '_'와 6자리 날짜(YYMMDD)를 붙인다. "
+    + "본문에 발행일·시행일·기준일 등 날짜가 있으면 그 날짜를 YYMMDD로 쓰고, 날짜를 찾을 수 없으면 정확히 'NODATE'라고 쓴다. "
+    + "제목 본문(날짜 제외)은 25자 이내. 확장자·따옴표·설명 없이 제목만 한 줄로 출력.\n\n본문:\n" + snippet;
+  try {
+    const res = await fetch(`${GEMINI_API_BASE}/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 60, thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    });
+    if (!res.ok) { console.error("[ocr-batch/title] Gemini", res.status); return ""; }
+    const j = await res.json().catch(() => ({}));
+    let t = ((j?.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join("")).trim();
+    t = t.replace(/[\r\n]+/g, " ").replace(/^["'`\s]+|["'`\s]+$/g, "").replace(/\s+/g, " ").slice(0, 48);
+    // AI가 날짜를 못 찾아 'NODATE'로 표기했으면 저장 날짜로 치환. 'NODATE'가 남아있지 않게 보강.
+    t = t.replace(/_?NODATE/gi, "_" + fallbackYMD).replace(/__+/g, "_").replace(/_+$/g, "");
+    return t;
+  } catch (e) { console.error("[ocr-batch/title] 오류", String(e)); return ""; }
 }
 
 async function patchFile(id: string, patch: Record<string, unknown>) {
