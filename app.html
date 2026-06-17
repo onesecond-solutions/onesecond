@@ -1312,6 +1312,10 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .mvfile-menu:hover{opacity:1}
 .mvfile-ic{font-size:1.9rem;line-height:1}
 .mvfile-nm{font-size:0.76rem;color:var(--tf);word-break:break-all;line-height:1.25;max-height:2.5em;overflow:hidden}
+/* AI 파일명 정리 중 시그널(B) — 액센트 텍스트 + 은은한 점멸 점(운영툴 톤, 과한 애니메이션 X) */
+.mv-airename{display:inline-flex;align-items:center;gap:5px;color:var(--ac);font-weight:600}
+.mv-airename-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);flex:0 0 auto;animation:mvAiPulse 1.1s ease-in-out infinite}
+@keyframes mvAiPulse{0%,100%{opacity:.35}50%{opacity:1}}
 .mvfile-sz{font-size:0.7rem;color:var(--ts)}
 /* 작업11: 보기 토글 + 리스트 뷰 */
 .mv-view-toggle{display:inline-flex;flex:none;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden}
@@ -12348,7 +12352,7 @@ async function mysVaultLoadFiles(fid){
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var q='/rest/v1/myspace_files?deleted_at=is.null'+_mvScopeQ()+'&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
+    var q='/rest/v1/myspace_files?deleted_at=is.null'+_mvScopeQ()+'&order=created_at.desc&select=id,original_name,ocr_status,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
     q += fid?('&folder_id=eq.'+encodeURIComponent(fid)):'&folder_id=is.null';
     var res=await window.db.fetch(q);
     var rows=res.ok?await res.json():[];
@@ -12362,6 +12366,23 @@ function _mvDate(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d.getTime()))
 /* 작업: 윈도우 탐색기 모델 — 중앙 = 상위이동 + 하위폴더(더블클릭 진입) + 파일. 이미지=썸네일. 용량=그리드 숨김/리스트 끝 */
 function _mvIsImg(f){ var mt=(f.mime_type||'').toLowerCase(),ex=(f.ext||'').toLowerCase(); return /^image\//.test(mt)||/(png|jpe?g|gif|webp|bmp|svg|avif)$/.test(ex); }
 function _mvIsPdf(f){ return (f.mime_type||'').toLowerCase()==='application/pdf'||(f.ext||'').toLowerCase()==='pdf'; }
+/* AI 파일명 정리 파일럿(임태성 실장) — 변환 진행 시그널(B). 서버 ocr-batch와 동일 가드/판별 기준. */
+var _MV_AI_PILOT='bylts@naver.com';
+function _mvIsPilot(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.email||'').toLowerCase()===_MV_AI_PILOT; }catch(e){ return false; } }
+function _mvNameMeaningless(name){ var b=String(name||'').replace(/\.[^.]+$/,''); return !!b && !/[가-힣]/.test(b); }  /* 확장자 제외 한글 없음 = 무의미(카톡/영문/숫자) */
+/* 정리 중 = 파일럿 계정 + OCR대상(PDF/이미지) + 무의미 파일명 + 아직 OCR 미처리(ocr_status 비어있음). done/skip/empty/oversize면 처리 끝. */
+function _mvIsAiRenaming(f){ return _mvIsPilot() && (_mvIsImg(f)||_mvIsPdf(f)) && _mvNameMeaningless(f.original_name) && !(f.ocr_status&&String(f.ocr_status).trim()); }
+function _mvNameCell(f){ return _mvIsAiRenaming(f) ? '<span class="mv-airename"><span class="mv-airename-dot"></span>AI 파일명 정리 중…</span>' : _mvEsc(f.original_name); }
+/* 정리 중 파일이 있으면 주기적으로 자료실 재로드 → '정리 중'이 한글 이름으로 자동 전환되는 것까지 보이게(폴링, 안전 상한). */
+function _mvSchedulePoll(){
+  if(window._mvPollT){ clearTimeout(window._mvPollT); window._mvPollT=null; }
+  var rows=window._mvFiles||[];
+  var anyProc=rows.some(_mvIsAiRenaming);
+  if(!anyProc){ window._mvPollN=0; return; }
+  window._mvPollN=(window._mvPollN||0)+1;
+  if(window._mvPollN>20) return;  /* 최대 ~20회(약 2분) 후 중지 — 무한 폴링 방지 */
+  window._mvPollT=setTimeout(function(){ if(typeof mysVaultLoadFiles==='function') mysVaultLoadFiles(window._mvCurFolder); }, 6000);
+}
 /* 원칙 8a: 타입 분기는 '썸네일 렌더' 한 곳에서만. 카드 wrapper·click·data·menu는 전 타입 공통 */
 function _mvFileThumbHtml(f){ var fid=f.id;
   if(_mvIsImg(f)) return '<div class="mvfile-ic mvfile-thumb-wrap"><span class="mvfile-thumb-ph">🖼️</span><img class="mvfile-thumb" data-fid="'+fid+'" alt=""></div>';
@@ -12394,15 +12415,16 @@ function mysVaultRenderFiles(){
   });
   rows.forEach(function(f){ var fid=f.id;
     if(list){
-      html+='<div class="mvrow" draggable="true" ondragstart="mvDragStart(event,\'file\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'file\',\''+fid+'\');return false;" onclick="mysVaultPreview(\''+fid+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvEsc(f.original_name)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button></div>';
+      html+='<div class="mvrow" draggable="true" ondragstart="mvDragStart(event,\'file\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'file\',\''+fid+'\');return false;" onclick="mysVaultPreview(\''+fid+'\')"><span class="mvrow-ic">'+mysVaultIcon(f)+'</span><span class="mvrow-nm">'+_mvNameCell(f)+'</span><span class="mvrow-ext">'+_mvEsc((f.ext||'').toUpperCase())+'</span><span class="mvrow-dt">'+_mvDate(f.updated_at||f.created_at)+'</span><span class="mvrow-sz">'+mysVaultSize(f.file_size)+'</span><button class="mvrow-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button></div>';
     } else {
       /* 원칙 7: 파일 카드 = 타입 무관 단일 컴포넌트. onclick·data·menu 전 타입 동일, 타입 분기는 _mvFileThumbHtml(썸네일)만 */
-      html+='<div class="mvfile" data-fid="'+fid+'" data-mime="'+_mvEsc(f.mime_type||'')+'" data-ext="'+_mvEsc(f.ext||'')+'" draggable="true" ondragstart="mvDragStart(event,\'file\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'file\',\''+fid+'\');return false;" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button>'+_mvFileThumbHtml(f)+'<div class="mvfile-nm">'+_mvEsc(f.original_name)+'</div></div>';
+      html+='<div class="mvfile" data-fid="'+fid+'" data-mime="'+_mvEsc(f.mime_type||'')+'" data-ext="'+_mvEsc(f.ext||'')+'" draggable="true" ondragstart="mvDragStart(event,\'file\',\''+fid+'\')" ondragend="mvDragEnd()" oncontextmenu="mvVaultMenu(event,\'file\',\''+fid+'\');return false;" onclick="mysVaultPreview(\''+fid+'\')"><button class="mvfile-menu" onclick="mvVaultMenu(event,\'file\',\''+fid+'\')" title="이름 변경·이동·삭제">⋮</button>'+_mvFileThumbHtml(f)+'<div class="mvfile-nm">'+_mvNameCell(f)+'</div></div>';
     }
   });
   box.innerHTML=html;
   _mvLoadThumbs();
   _mvLoadPdfThumbs();
+  _mvSchedulePoll();  /* AI 파일명 정리 중 파일이 있으면 자동 재로드(한글명 전환까지 보이게) */
 }
 window.mysVaultRenderFiles=mysVaultRenderFiles;
 /* 그리드 이미지 썸네일 — lazy 서명(렌더 후 채움). PDF 썸네일은 _mvLoadPdfThumbs 별도 처리 */
