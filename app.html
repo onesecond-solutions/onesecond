@@ -13488,6 +13488,12 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 /* 공유 범위 뱃지 (누가 보나) */
 .sp-aud{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-size:.7rem;font-weight:600;color:var(--sc);border:1px solid color-mix(in srgb,var(--sc) 35%,var(--bd));border-radius:999px;padding:1px 7px;white-space:nowrap;}
 .sp-aud .sp-ico{width:11px;height:11px;}
+/* 공유함 = 독립 영역 표시(왼쪽 세로 색 띠) — 스코프 3색·매니저방 핑크와 구분되는 보라. 마이 스페이스 귀속 느낌 방지 (2026-06-17) */
+.sp-node.sp-share{border-left:3px solid #7C3AED;border-radius:0 8px 8px 0;}
+.sp-node.sp-share .ic{color:#7C3AED;}
+.sp-node.sp-share:hover{background:color-mix(in srgb,#7C3AED 8%,transparent);}
+.sp-node.sp-share.sel{background:color-mix(in srgb,#7C3AED 13%,transparent);color:#7C3AED;box-shadow:inset 3px 0 0 #7C3AED;}
+.sp-node.sp-share.sel .ic{color:#7C3AED;}
 .sp-branch.collapsed > .sp-children{display:none;}
 .sp-branch.collapsed > .sp-node > .sp-caret{transform:rotate(-90deg);}
 .sp-children{margin-left:13px;border-left:1px solid var(--bd);padding-left:4px;}
@@ -13655,7 +13661,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 
             <div class="sp-node sp-leaf sp-op-hide" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
 
-            <div class="sp-node sp-leaf" data-k="m_share"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-share"/></svg></span>공유함</div>
+            <div class="sp-node sp-leaf sp-share" data-k="m_share"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-share"/></svg></span>공유함</div>
 
             <div class="sp-node sp-leaf sp-mgr" data-k="mrroom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>매니저방</div>
 
