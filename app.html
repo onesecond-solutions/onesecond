@@ -882,10 +882,11 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 #app.home-search-preview #headGreet{display:flex;}
 #app.home-search-preview .home-greeting,
 #app.home-search-preview #osBannerCarousel,
-#app.home-search-preview #osBannerMini{display:none;}
+#app.home-search-preview #osBannerMini,
+#app.home-search-preview .os-start-cta{display:none;}
 #homeSearch{display:none;}
 #app.home-search-preview #homeSearch{display:block;}
-.hs-wrap{max-width:760px;margin:0 auto;padding:7vh 16px 0;}
+.hs-wrap{max-width:760px;margin:0 auto;padding:13vh 16px 0;}
 #homeSearch.searching .hs-wrap{padding-top:16px;}
 .hs-head{text-align:center;font-size:1.5rem;font-weight:800;color:var(--tp);letter-spacing:-.01em;margin-bottom:18px;}
 #homeSearch.searching .hs-head{display:none;}
@@ -901,17 +902,21 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .hs-go:hover{background:var(--ach);}
 .hs-sub{text-align:center;font-size:0.9375rem;color:var(--ts);margin:14px auto 18px;max-width:700px;}
 #homeSearch.searching .hs-sub{display:none;}
-.hs-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:700px;margin:0 auto;}
-#homeSearch.searching .hs-cards{display:none;}
-.hs-card{display:flex;flex-direction:column;gap:5px;padding:18px;border:1px solid var(--bd);border-radius:14px;background:var(--s1);cursor:pointer;text-align:left;font:inherit;}
-.hs-card:hover{border-color:var(--ac);}
-.hs-card.primary{background:var(--ac);border-color:var(--ac);}
-.hs-card .hc-t{font-size:1.0625rem;font-weight:800;color:var(--tp);}
-.hs-card .hc-d{font-size:0.8125rem;color:var(--ts);}
-.hs-card.primary .hc-t,.hs-card.primary .hc-d{color:#fff;}
-.hs-card.primary .hc-d{opacity:.88;}
+/* 검색 입구(상품·인수) = 검색창에 종속된 작은 렌즈 칩 / 상담 시작 = 구분선 아래 '이동' 버튼(성격 분리) */
+.hs-lens{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;max-width:700px;margin:0 auto;}
+.hs-chip{display:inline-flex;align-items:center;gap:7px;height:46px;padding:0 18px;border:1px solid var(--bd);border-radius:9999px;background:var(--s1);color:var(--tp);font-size:0.9375rem;font-weight:700;cursor:pointer;}
+.hs-chip:hover{border-color:var(--ac);color:var(--ac);}
+.hs-chip svg{width:18px;height:18px;color:var(--tf);}
+.hs-chip:hover svg{color:var(--ac);}
+#homeSearch.searching .hs-lens{display:none;}
+.hs-div{max-width:380px;height:1px;background:var(--bd);margin:26px auto 18px;}
+#homeSearch.searching .hs-div{display:none;}
+.hs-consult{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;max-width:380px;height:58px;margin:0 auto;padding:0 22px;border:1.5px solid var(--ac);border-radius:14px;background:var(--s1);color:var(--ac);font-size:1.0625rem;font-weight:800;cursor:pointer;}
+.hs-consult:hover{background:var(--ac);color:#fff;}
+.hs-consult svg{width:22px;height:22px;}
+#homeSearch.searching .hs-consult{display:none;}
 #hsResults{max-width:760px;margin:8px auto 0;}
-@media(max-width:640px){.hs-cards{grid-template-columns:1fr;}.hs-head{font-size:1.25rem;}.hs-field{height:56px;}.hs-field input{font-size:1.0625rem;}.hs-go{height:56px;padding:0 16px;}#headGreet{font-size:0.9375rem;}}
+@media(max-width:640px){.hs-wrap{padding-top:6vh;}.hs-head{font-size:1.25rem;}.hs-field{height:56px;}.hs-field input{font-size:1.0625rem;}.hs-go{height:56px;padding:0 16px;}#headGreet{font-size:0.9375rem;}}
 
 /* 질문하기 모달 */
 .askmodal{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:none;z-index:140;padding:5vh 20px;overflow-y:auto;}
@@ -2231,11 +2236,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
             <button class="hs-go" type="button" onclick="_hsSearch(document.getElementById('hsInput').value)">검색</button>
           </div>
           <div class="hs-sub">검색하면 내 것 → 전체까지 한 번에 · 범위는 결과가 알려줍니다</div>
-          <div class="hs-cards">
-            <button class="hs-card" type="button" onclick="_hsCard('product')"><span class="hc-t">상품</span><span class="hc-d">보험료·보장 검색</span></button>
-            <button class="hs-card" type="button" onclick="_hsCard('uw')"><span class="hc-t">인수</span><span class="hc-d">고지·인수기준 확인</span></button>
-            <button class="hs-card primary" type="button" onclick="_hsCard('consult')"><span class="hc-t">상담 시작</span><span class="hc-d">다이어리 열기</span></button>
+          <div class="hs-lens">
+            <button class="hs-chip" type="button" onclick="_hsCard('product')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>상품</button>
+            <button class="hs-chip" type="button" onclick="_hsCard('uw')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>인수</button>
           </div>
+          <div class="hs-div"></div>
+          <button class="hs-consult" type="button" onclick="_hsCard('consult')"><span>상담 시작</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           <div id="hsResults"></div>
         </div>
       </div>
