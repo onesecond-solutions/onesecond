@@ -905,7 +905,10 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 #homeSearch{display:none;}
 #app.home-search-preview #homeSearch{display:block;}
 .hs-wrap{max-width:760px;margin:0 auto;padding:25vh 16px 0;}
-#homeSearch.searching .hs-wrap{padding-top:16px;}
+/* 슬라이스 2 — 검색 후 좌측 정렬(구글 결과). 검색 전=중앙(.hs-wrap margin:0 auto) / 검색 후=좌측. 로고 outdent=사이드바 onesecond가 맡음 */
+#homeSearch.searching .hs-wrap{max-width:none;margin:0;padding:16px 20px 0;}
+#homeSearch.searching .hs-box{margin:0;max-width:640px;}
+#homeSearch.searching #hsResults{margin:10px 0 0;max-width:820px;}
 .hs-head{text-align:center;font-size:1.5rem;font-weight:800;color:var(--tp);letter-spacing:-.01em;margin-bottom:18px;}
 #homeSearch.searching .hs-head{display:none;}
 .hs-box{display:flex;align-items:center;gap:8px;max-width:700px;margin:0 auto;}
