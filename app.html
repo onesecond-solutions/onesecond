@@ -9541,6 +9541,9 @@ window._svAskFrom=_svAskFrom;
 function _svScopeColor(k){ for(var i=0;i<SV_SCOPES.length;i++) if(SV_SCOPES[i].k===k) return SV_SCOPES[i].color; return '#64748B'; }
 /* HTML strip — 스크립트가 script_text에 HTML로 저장돼 검색 스니펫에 태그 노출되던 회귀 stopgap. 영구 수정=search_text 컬럼 분리(대표 DDL) */
 function _svStripHtml(s){ if(!s) return ''; return String(s).replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim(); }
+/* 스크립트 저장(insert/update) 시 search_text(HTML 제거 검색본) write-time 기록 — 신규 저장 HTML 회귀 차단(#814 백필 후속). body에 script_text 있으면 호출 */
+function _scrFillSearchText(b){ if(b&&typeof b==='object') b.search_text=_svStripHtml((b.highlight_text?b.highlight_text+' ':'')+(b.script_text||'')); return b; }
+window._scrFillSearchText=_scrFillSearchText;
 
 /* ════════ 검색 홈(D영역) — 3계정 미리보기 ════════
    허용 계정이면 #app에 home-search-preview 클래스 → CSS가 기존 홈(인사·배너) 숨기고 검색 홈 노출 + 헤더 인사 채움.
@@ -9655,7 +9658,7 @@ window._aiAnswer=_aiAnswer;
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
   var _qt=_sTokens(((document.getElementById('sinput')||{}).value||'').trim());  /* 현재 검색어 → 본문 하이라이트용 */
-  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,category,source_company', myspace_files:'original_name,search_text,ext,storage_path' };
+  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,search_text,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,category,source_company', myspace_files:'original_name,search_text,ext,storage_path' };
   var sel=selMap[table]||'title';
   var idCol=(table==='knowledge_entries')?'entry_id':'id';  /* 지식엔진 PK=entry_id */
   try{
@@ -9664,8 +9667,8 @@ async function _searchOpen(table, id){
     if(!r){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); return; }
     var title=(r.company||r.source_company?((r.company||r.source_company)+' · '):'')+(r.title||r.original_name||'(제목 없음)');
     var meta = r.publish_year?(r.publish_year+'.'+(r.publish_month||'')) : (r.stage||r.category||(r.ext?('자료실 · '+String(r.ext).toUpperCase()):'')||(r.event_date?String(r.event_date).slice(0,10):(r.created_at?_sFmtDate(r.created_at):'')));
-    var bodyTxt = r.full_text||r.content||r.script_text||r.body||r.description||r.memo_text||r.search_text||'(내용 없음)';
-    if(r.highlight_text) bodyTxt=r.highlight_text+'\n\n'+bodyTxt;
+    var bodyTxt = r.full_text||r.content||r.search_text||r.script_text||r.body||r.description||r.memo_text||'(내용 없음)';
+    if(r.highlight_text && table!=='scripts') bodyTxt=r.highlight_text+'\n\n'+bodyTxt;   /* 스크립트=search_text에 핵심멘트 이미 포함(클렌징) → 원본 highlight(HTML) 중복·태그 노출 방지 */
     if(r.link_url) bodyTxt=bodyTxt+'\n\n'+r.link_url;
     /* 자료실 파일 = 원본 열기 버튼(서명URL, 권한 없으면 401 안내). _openSignedAtt 재사용 */
     var vaultBar=(table==='myspace_files'&&r.storage_path)
@@ -10938,11 +10941,11 @@ async function saveScrInline(){
   var ed=window._scrInlineEdit;
   try{
     if(ed&&ed.id){
-      var body={title:title, script_text:html, keywords:kw}; if(atts.length) body.attachments=atts;
+      var body={title:title, script_text:html, keywords:kw}; if(atts.length) body.attachments=atts; _scrFillSearchText(body);
       var pr=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(ed.id)),{method:'PATCH',headers:H,body:JSON.stringify(body)});
       if(!(pr.ok||pr.status===204)){ var t1=''; try{t1=await pr.text();}catch(e){} console.error('[saveScrInline patch]',pr.status,t1); alert('수정 실패 ('+pr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
     } else {
-      var body2={owner_id:(u.id||(window.AppState&&window.AppState.userId)||''), title:title, script_text:html, keywords:kw, attachments:atts, scope:'personal', is_active:true};
+      var body2={owner_id:(u.id||(window.AppState&&window.AppState.userId)||''), title:title, script_text:html, keywords:kw, attachments:atts, scope:'personal', is_active:true}; _scrFillSearchText(body2);
       var rr=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:H,body:JSON.stringify(body2)});
       if(!(rr.ok||rr.status===201)){ var t2=''; try{t2=await rr.text();}catch(e){} console.error('[saveScrInline post]',rr.status,t2); alert('등록 실패 ('+rr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
     }
@@ -10984,7 +10987,7 @@ async function _saveMyspaceEdit(){
     if(!sit){ alert('상황(제목)을 입력해 주세요.'); return; }
     if(!alts.length){ alert('대안 화법을 1개 이상 입력해 주세요.'); return; }
     var enc=(window.OSChatScript&&window.OSChatScript.encode)?window.OSChatScript.encode(alts):'';
-    body={title:sit, script_text:enc, highlight_text:(alts[0].text||'').slice(0,200), keywords:[(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅'].concat(kwExtra)};
+    body={title:sit, script_text:enc, highlight_text:(alts[0].text||'').slice(0,200), keywords:[(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅'].concat(kwExtra)}; _scrFillSearchText(body);
   } else {
     var sstage=((document.getElementById('mysWriteScrStage')||{}).value||'').trim();
     var stitle=((document.getElementById('mysWriteScrTitle')||{}).value||'').trim();
@@ -10995,7 +10998,7 @@ async function _saveMyspaceEdit(){
     if(!stitle){ alert('제목을 입력해 주세요.'); return; }
     if(!stext){ alert('스크립트 내용을 입력해 주세요.'); return; }
     if(!shi){ alert('핵심 멘트를 입력해 주세요.'); return; }
-    body={title:stitle, script_text:stext, highlight_text:shi, stage:sstage, keywords:skw};
+    body={title:stitle, script_text:stext, highlight_text:shi, stage:sstage, keywords:skw}; _scrFillSearchText(body);
   }
   btn.disabled=true; btn.textContent='저장 중...';
   try{
@@ -11422,7 +11425,7 @@ async function saveMyspaceWrite(){
           else console.error('[scriptWrite] 첨부 업로드 실패', _sup.status, _sf.name);
         }catch(_e){ console.error('[scriptWrite] 첨부 업로드 오류', _e); }
       }
-      var sbody={title:stitle,script_text:stext,highlight_text:shilite,stage:sstage,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw,attachments:sAtts};
+      var sbody={title:stitle,script_text:stext,highlight_text:shilite,stage:sstage,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw,attachments:sAtts}; _scrFillSearchText(sbody);
       var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
       if(sres.ok||sres.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
@@ -11488,7 +11491,7 @@ async function _saveChatScript(btn,headers,userId){
   var kws=[(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅'].concat(kwExtra);
   btn.disabled=true;btn.textContent='저장 중...';
   try{
-    var sbody={title:sit,script_text:enc,highlight_text:(alts[0].text||'').slice(0,200),stage:'chat',top_category:'채팅',owner_id:userId,scope:'global',is_active:true,keywords:kws,attachments:[]};
+    var sbody={title:sit,script_text:enc,highlight_text:(alts[0].text||'').slice(0,200),stage:'chat',top_category:'채팅',owner_id:userId,scope:'global',is_active:true,keywords:kws,attachments:[]}; _scrFillSearchText(sbody);
     var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
     if(sres.ok||sres.status===201){
       if(typeof clearMyspaceWriteForm==='function')clearMyspaceWriteForm();
@@ -12395,7 +12398,7 @@ async function _osShareReceive(i){
   try{
     if(s.item_type==='script'){
       var kw=(Array.isArray(pl.keywords)?pl.keywords.slice():[]); if(kw.indexOf('공유받음')<0) kw.push('공유받음');
-      var b={owner_id:owner, title:(s.title||'공유받은 스크립트'), script_text:(pl.script_text||''), highlight_text:(pl.highlight_text||''), keywords:kw, attachments:(pl.attachments||[]), scope:'personal', is_active:true};
+      var b={owner_id:owner, title:(s.title||'공유받은 스크립트'), script_text:(pl.script_text||''), highlight_text:(pl.highlight_text||''), keywords:kw, attachments:(pl.attachments||[]), scope:'personal', is_active:true}; _scrFillSearchText(b);
       var r=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:H,body:JSON.stringify(b)});
       if(!(r.ok||r.status===201)) throw new Error('script '+r.status);
     } else if(s.item_type==='memo'){
