@@ -916,6 +916,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .hs-field:focus-within{border-color:var(--ac);box-shadow:0 4px 18px rgba(99,102,241,.14);}
 .hs-field svg{width:26px;height:26px;flex-shrink:0;color:var(--tf);}
 .hs-field input{flex:1;border:0;outline:0;background:transparent;font-size:1.25rem;color:var(--tp);min-width:0;}
+.hs-field input::-webkit-search-cancel-button,.hs-field input::-webkit-search-decoration{-webkit-appearance:none;appearance:none;}/* 브라우저 기본 X 숨김 — 커스텀 .hs-x와 중복 방지 */
 .hs-x{display:none;border:0;background:transparent;cursor:pointer;color:var(--tf);width:34px;height:34px;border-radius:50%;font-size:1.05rem;line-height:1;flex-shrink:0;}
 .hs-x:hover{background:var(--s2);}
 #homeSearch.searching .hs-x{display:inline-block;}
