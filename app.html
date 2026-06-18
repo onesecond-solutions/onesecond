@@ -868,6 +868,14 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .nl-mi:hover{background:var(--s2);}
 .sochip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;margin:4px;border-radius:8px;background:var(--s2);font-size:0.75rem;color:var(--ts);cursor:pointer;}
 .sochip:hover{background:var(--sh);}
+/* 검색 범위 가시화(v2, 어드민·실장·팀장 미리보기) — 범위 칩 + 범위 그룹 헤더. 색 = 4신호(마이 빨강/팀 초록/지점 파랑/공동 슬레이트) */
+.sv-chips{display:flex;flex-wrap:wrap;gap:5px;padding:9px 11px 5px;border-bottom:1px solid var(--bd,rgba(0,0,0,.06));}
+.sv-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9999px;background:var(--s2);font-size:0.75rem;font-weight:600;color:var(--ts);cursor:pointer;border:1.5px solid transparent;}
+.sv-chip:hover{background:var(--sh);}
+.sv-chip .sv-dot{width:9px;height:9px;border-radius:50%;background:var(--svc);flex-shrink:0;}
+.sv-chip.on{border-color:var(--svc);color:var(--svc);background:transparent;}
+.sv-grp{font-size:0.6875rem;font-weight:800;padding:12px 12px 6px;margin-top:2px;color:var(--svc);border-left:3px solid var(--svc);}
+.sv-empty{padding:2px 14px 12px;font-size:0.75rem;color:var(--tf);line-height:1.5;}
 
 /* 질문하기 모달 */
 .askmodal{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:none;z-index:140;padding:5vh 20px;overflow-y:auto;}
@@ -9219,6 +9227,9 @@ function doSearch(q){
 window.doSearch=doSearch;
 /* 실데이터 통합 검색 — 7그룹 다중 키워드 AND(db.fetch=RLS 자동 필터) → 관련도 랭킹 + 본문 스니펫 하이라이트 */
 async function _runSearch(q){
+  /* 검색 범위 가시화 v2 — 허용 3계정만 새 화면(범위 그룹+칩). 그 외 전부 기존 평면 검색 그대로(회귀 0).
+     RLS가 데이터 격리를 지키므로 이 명단은 보안 경계가 아니라 '어느 화면을 보여줄지' UI 라우터일 뿐. */
+  if(_searchScopeAllow()){ return _runSearchV2(q); }
   var body=document.getElementById('sobody'); if(!body) return;
   var seq=++_searchSeq;
   body.innerHTML='<div class="sogroup">검색 중…</div>';
@@ -9282,6 +9293,124 @@ async function _runSearch(q){
   body.innerHTML=aiBar+html;
 }
 window._runSearch=_runSearch;
+
+/* ════════ 검색 범위 가시화 v2 (어드민·실장·팀장 미리보기) ════════
+   문제: 결과가 "데이터 종류"(Q&A/소식지/스크립트…)로 묶여, 사용자가 "지금 어디를 뒤지는지(범위)"를 못 읽음.
+   해결: 결과를 "범위"(내 자료/우리 팀/우리 지점/원세컨드 공동)로 재편 + 범위 칩 + 4신호 색.
+   격리·fetch·RLS는 기존 그대로. 명단=UI 라우터(보안 경계 아님). 승인 후 _searchScopeAllow를 'return true'로 열면 전체 라이브. */
+var _SEARCH_V2_ALLOW=['bylts@naver.com','bylts@kakao.com','bylts0428@gmail.com'];
+function _searchScopeAllow(){
+  try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');
+    return _SEARCH_V2_ALLOW.indexOf((u.email||'').trim().toLowerCase())>=0;
+  }catch(e){ return false; }
+}
+window._searchScopeAllow=_searchScopeAllow;
+/* 범위 4종 — 동심원(나→팀→지점→공동). 색 = 트리 4신호와 동일 언어 */
+var SV_SCOPES=[
+  {k:'mine',  label:'내 자료',       color:'#C0392B', empty:'여기에 올린 자료는 나만 검색됩니다. MY SPACE에 자료를 올려보세요.'},
+  {k:'team',  label:'우리 팀',       color:'#0E9A6C', empty:'우리 팀이 공유한 자료·공지가 여기 모입니다.'},
+  {k:'branch',label:'우리 지점',     color:'#2563EB', empty:'우리 지점이 공유한 자료·공지가 여기 모입니다.'},
+  {k:'common',label:'원세컨드 공동', color:'#64748B', empty:'소식지·지식·보험 Q&A 등 모두가 함께 보는 자료입니다.'}
+];
+function _svCanSee(k, me, cnt){
+  if(k==='mine'||k==='common') return true;
+  if(k==='team')   return !!me.team_id   || cnt>0;
+  if(k==='branch') return !!me.branch_id || cnt>0;
+  return false;
+}
+async function _runSearchV2(q){
+  var body=document.getElementById('sobody'); if(!body) return;
+  var seq=++_searchSeq;
+  body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
+  if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
+  var terms=_sTokens(q); if(!terms.length){ body.innerHTML=defaultPanel; _searchStats(); return; }
+  /* 내 소속 컨텍스트(이메일·role·팀·지점) — 세션 1회 캐시 */
+  var me=window._svMe;
+  if(!me){
+    var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+    me={ id:(u.id||(window.AppState&&window.AppState.userId)||''), email:(u.email||''), role:u.role||'', team_id:u.team_id||null, branch_id:u.branch_id||null };
+    if(me.id&&(!me.team_id||!me.branch_id||!me.role)){
+      try{ var ur=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(me.id)+'&select=team_id,branch_id,role'); if(ur.ok){ var uj=await ur.json(); if(uj&&uj[0]){ me.team_id=me.team_id||uj[0].team_id; me.branch_id=me.branch_id||uj[0].branch_id; me.role=me.role||uj[0].role; } } }catch(e){}
+    }
+    window._svMe=me;
+  }
+  if(seq!==_searchSeq) return;
+  var SIK=encodeURIComponent('*소식지*');
+  var _isAdm=!!document.querySelector('#app.is-admin');
+  /* 자료실 누출 방어(2026-06-16과 동일): 비-admin은 개인 파일(personal)은 본인 것만 */
+  var _vaultBase='deleted_at=is.null'+((!_isAdm&&me.id)?'&or=(scope.neq.personal,owner_id.eq.'+encodeURIComponent(me.id)+')':'');
+  /* 출처 그룹 + 각 row의 범위 분류 함수(scope). 종류 라벨(src)은 결과 안 서브태그로 유지 */
+  var groups=[
+    {src:'보험 Q&A',  table:'posts',            base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                 select:'id,title,content,created_at',                                       order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return 'common';}},
+    {src:'소식지',    table:'newsletters',      base:'',                                       cols:['title','company','full_text'],    select:'id,title,company,full_text,text_quality,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                          t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}, scope:function(r){return 'common';}},
+    {src:'팀·지점 공지', table:'team_notices',   base:'deleted_at=is.null',                     cols:['title','content'],                 select:'id,title,content,created_at,scope',                                 order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return r.scope==='branch_internal'?'branch':'team';}},
+    {src:'스크립트',  table:'scripts',          base:'is_active=eq.true&scope=eq.global&is_sample=eq.false',                            cols:['title','script_text','highlight_text'], select:'id,title,script_text,highlight_text,stage',                   order:'',                                                        body:function(r){return (r.highlight_text?r.highlight_text+' ':'')+(r.script_text||'');}, m:function(r){return r.stage||'스크립트';},                          scope:function(r){return 'common';}},
+    {src:'지식엔진',  table:'knowledge_entries',base:'status=eq.approved',                     cols:['title','body'],                    select:'id:entry_id,title,body,category',                                   order:'',                                                        body:function(r){return r.body;},                                               m:function(r){return r.category||'지식';},                                       scope:function(r){return 'common';}},
+    {src:'자료',      table:'myspace_files',    base:_vaultBase,                               cols:['search_text','original_name'],     select:'id,original_name,search_text,ocr_status,ext,updated_at,scope',       order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                        t:function(r){return r.original_name||'(파일)';},                            m:function(r){return (r.ext||'파일').toString().toUpperCase();},                 scope:function(r){return r.scope==='team'?'team':(r.scope==='branch'?'branch':'mine');}}
+  ];
+  var results=await Promise.all(groups.map(function(g){
+    var path=g.table+'?'+(g.base?g.base+'&':'')+_sBuildFilter(g.cols,terms)+'&select='+g.select+(g.order?'&order='+g.order:'')+'&limit=100';
+    return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
+  }));
+  if(seq!==_searchSeq) return;
+  /* 메뉴·도구(정적+quick) — 공동 성격이나 '바로가기'라 별도 상단 그룹으로 (어드민 제외) */
+  var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
+    if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
+    if(n.view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()) return false;
+    if(n.view==='admin') return false;
+    return true; });
+  var qcHits=[];
+  try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
+  if(seq!==_searchSeq) return;
+  /* 범위 버킷 적재 + 관련도 정렬 */
+  var buckets={mine:[],team:[],branch:[],common:[]};
+  for(var gi=0; gi<groups.length; gi++){ var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)) continue;
+    var titleOf=g.t||function(r){return r.title;};
+    rows.forEach(function(r){ r.__s=_sScore(titleOf(r), g.body(r), terms); var k=g.scope(r); if(!buckets[k]) k='common'; buckets[k].push({g:g,row:r,s:r.__s}); });
+  }
+  Object.keys(buckets).forEach(function(k){ buckets[k].sort(function(a,b){ return b.s-a.s; }); });
+  var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
+  window._searchV2Data={ buckets:buckets, nav:navItems, terms:terms, me:me };
+  _svRender(null);
+}
+window._runSearchV2=_runSearchV2;
+/* 범위 칩 + 범위별 그룹 렌더. active=null이면 전체, 'mine'|'team'|'branch'|'common'이면 그 범위만 */
+function _svRender(active){
+  var d=window._searchV2Data; if(!d) return;
+  var body=document.getElementById('sobody'); if(!body) return;
+  var me=d.me, buckets=d.buckets, terms=d.terms, nav=d.nav||[];
+  var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
+  /* 범위 칩 */
+  var chips='<div class="sv-chips">';
+  SV_SCOPES.forEach(function(s){ var cnt=buckets[s.k].length; if(!_svCanSee(s.k,me,cnt)) return;
+    var on=(active===s.k)?' on':'';
+    var next=(active===s.k)?'null':("'"+s.k+"'");
+    chips+='<span class="sv-chip'+on+'" style="--svc:'+s.color+'" onclick="_svRender('+next+')"><i class="sv-dot"></i>'+s.label+' '+cnt+'</span>';
+  });
+  chips+='</div>';
+  var html='';
+  /* 메뉴·도구 바로가기 — 필터 없을 때만 상단 노출 */
+  if(!active && nav.length){
+    html+='<div class="sv-grp" style="--svc:#64748B">원세컨드 메뉴·도구 ('+nav.length+')</div>';
+    nav.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#64748B">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
+  }
+  /* 범위별 그룹 */
+  var anyRow=false;
+  SV_SCOPES.forEach(function(s){ if(active&&active!==s.k) return; var rows=buckets[s.k]; if(!_svCanSee(s.k,me,rows.length)) return;
+    html+='<div class="sv-grp" style="--svc:'+s.color+'">'+s.label+' ('+(rows.length>=100?'100+':rows.length)+')</div>';
+    if(!rows.length){ html+='<div class="sv-empty">'+_sEsc(s.empty)+'</div>'; return; }
+    anyRow=true;
+    rows.forEach(function(it){ var g=it.g, r=it.row;
+      var titleOf=g.t||function(r){return r.title;};
+      var snip=_sSnippet(g.body(r),terms,160);
+      var snipHtml=snip?'<span class="ssnip">'+_sMark(snip,terms)+'</span>':'';
+      var st=_idxStatus(g.table,r); var stHtml=st?'<span class="sidx" style="color:'+st.c+'">'+st.t+'</span>':'';
+      html+='<div class="sores" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+s.color+'">'+g.src+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+stHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
+    });
+  });
+  body.innerHTML=aiBar+chips+html;
+}
+window._svRender=_svRender;
 /* 검색 결과 색인 상태 배지 — 미완성 자료를 숨기지 않고 "어디까지 검색 가능한지" 표시(2026-06-14 대표 A안).
    자료실(myspace_files)=ocr_status / 소식지(newsletters)=full_text·text_quality 기준. 텍스트 소스는 배지 없음(당연 본문검색). */
 function _idxStatus(table, r){
