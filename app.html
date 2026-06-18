@@ -9401,6 +9401,13 @@ var SV_SRC=[
   {k:'myspace_files', label:'자료'}
 ];
 function _svSrcLabel(t){ for(var i=0;i<SV_SRC.length;i++) if(SV_SRC[i].k===t) return SV_SRC[i].label; return t; }
+/* 계열 필터 = 기존 knowledge_entries.category 묶음 파생 (DDL 0 / 재태깅 0). 실제 22 category값 기준 확정.
+   미분류(아래 안 잡히는 category)는 제외 X — 전체/지식 평검색에 그대로 노출. 비교·상담=지식 category 아님(이번 제외) */
+var SV_CATGROUP={
+  '상품': ['상품','상품구조특약'],
+  '인수': ['인수','인수심사','계약청약고지'],
+  '보장': ['보장','보장담보','손해사정보험금','보상','청구']
+};
 function _svCanSee(k, me, cnt){
   if(k==='mine'||k==='common') return true;
   if(k==='team')   return !!me.team_id   || cnt>0;
@@ -9485,7 +9492,7 @@ function _svRender(){
   /* 표시 대상 = 활성 소스 + (지식이면 분류 필터) */
   var shown=items.filter(function(it){
     if(activeSrc!=='all' && it.src!==activeSrc) return false;
-    if(catF && it.src==='knowledge_entries' && (it.cat||'').indexOf(catF)<0) return false;
+    if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return false; }
     return true;
   });
   /* 스코프 = 가벼운 요약 카운트 (소스 탭과 시각 층 분리) */
