@@ -2247,7 +2247,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="hs-box">
             <div class="hs-field">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input id="hsInput" type="search" placeholder="상품·인수기준·질병명·자료 검색" autocomplete="off" enterkeyhint="search" oninput="_hsSearch(this.value)" onkeydown="if(event.key==='Enter')_hsSearch(this.value)">
+              <input id="hsInput" type="search" placeholder="상품·인수기준·질병명·자료 검색" autocomplete="off" enterkeyhint="search" oninput="_hsInput(this.value)" onkeydown="if(event.key==='Enter')_hsSearch(this.value)">
               <button class="hs-x" type="button" aria-label="지우기" onclick="_hsClear()">&#10005;</button>
             </div>
             <button class="hs-go" type="button" onclick="_hsSearch(document.getElementById('hsInput').value)">검색</button>
@@ -9565,16 +9565,27 @@ function _homeSearchInit(){
 }
 window._homeSearchInit=_homeSearchInit;
 var _hsTimer=null;
+/* 검색 홈 리셋 — 입력 비움/초기화 (hero 복귀) */
+function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs)hs.classList.remove('searching'); if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; }
+window._hsReset=_hsReset;
+/* 제출(엔터·검색버튼·카드) — 이때만 화면 이동(.searching)+결과 표시. 구글/네이버처럼 입력 중엔 안 움직임 */
 function _hsSearch(q){
-  var hs=document.getElementById('homeSearch'), rs=document.getElementById('hsResults');
-  if(!hs||!rs) return;
-  if(!q||!q.trim()){ if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; hs.classList.remove('searching'); rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; return; }
+  var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(!hs||!rs) return;
+  q=((q==null?((document.getElementById('hsInput')||{}).value||''):q)||'').trim();
+  if(!q){ _hsReset(); return; }
   hs.classList.add('searching');
   if(_hsTimer)clearTimeout(_hsTimer);
-  _hsTimer=setTimeout(function(){ _runSearchV2(q.trim(),'hsResults'); }, 250);
+  _runSearchV2(q,'hsResults');
 }
 window._hsSearch=_hsSearch;
-function _hsClear(){ var i=document.getElementById('hsInput'); if(i)i.value=''; _hsSearch(''); if(i)i.focus(); }
+/* 입력 중(oninput) — 화면 이동 안 함. 비면 리셋 / 이미 결과화면이면 라이브 갱신 / 아직 제출 전 hero면 대기 */
+function _hsInput(q){
+  var hs=document.getElementById('homeSearch'); if(!hs) return;
+  if(!q||!q.trim()){ _hsReset(); return; }
+  if(hs.classList.contains('searching')){ if(_hsTimer)clearTimeout(_hsTimer); _hsTimer=setTimeout(function(){ _runSearchV2(q.trim(),'hsResults'); },250); }
+}
+window._hsInput=_hsInput;
+function _hsClear(){ var i=document.getElementById('hsInput'); if(i)i.value=''; _hsReset(); if(i)i.focus(); }
 window._hsClear=_hsClear;
 /* 카드: 상담=다이어리(행동) / 상품·인수=검색 렌즈(지식 탭 + 분류 필터, 진입 시 활성 칩 표시) */
 function _hsCard(kind){
