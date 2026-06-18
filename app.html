@@ -887,6 +887,13 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-scope{display:flex;flex-wrap:wrap;gap:14px;padding:9px 13px;font-size:0.75rem;color:var(--tf);}
 .sv-scope span{display:inline-flex;align-items:center;gap:5px;}
 .sv-scope i{width:8px;height:8px;border-radius:50%;background:var(--svc);flex-shrink:0;}
+/* 무결과 CTA — ① 필터 끄기 / ② 질문 남기기(플라이휠 입구) */
+.sv-empty-cta{padding:28px 16px;text-align:center;}
+.sv-empty-cta .sec-msg{font-size:0.95rem;color:var(--ts);margin-bottom:14px;}
+.sv-empty-cta .sec-btn{height:46px;padding:0 22px;border:1.5px solid var(--bd);border-radius:12px;background:var(--s1);color:var(--tp);font-size:0.9375rem;font-weight:700;cursor:pointer;}
+.sv-empty-cta .sec-btn:hover{border-color:var(--ac);}
+.sv-empty-cta .sec-btn.primary{background:var(--ac);border-color:var(--ac);color:#fff;}
+.sv-empty-cta .sec-btn.primary:hover{background:var(--ach);}
 /* 검색 홈(미리보기 — 3계정 게이트). 헤더 인사 좌측 + D영역 중앙 검색 + 카드3 + 인라인 결과. 비허용 계정엔 #homeSearch display:none 유지=기존 홈 그대로 */
 #headGreet{display:none;align-items:center;gap:6px;font-size:1.0625rem;font-weight:700;color:var(--tp);white-space:nowrap;margin-left:4px;}
 #app.home-search-preview .search{display:none;}
@@ -3427,7 +3434,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="fld"><label>건강체</label><select><option>선택</option><option>초건강체형(10년고지형)</option><option>초경증·유병자형(10년고지형)</option><option>기타</option></select></div>
         <div class="fld"><label>확인하고 싶은 내용</label><select><option>선택</option><option>보장내용</option><option>특약</option><option>보험료</option><option>가입조건</option><option>판매중지</option><option>비교</option><option>설계방법</option><option>기타</option></select></div>
       </div>
-      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 메리츠 실손 특약 비교 질문"></div>
+      <div class="fld"><label>질문 제목 <span class="req">*</span></label><input type="text" placeholder="예: 실손 특약 비교 질문"></div>
       <div class="fld"><label>질문 내용 <span class="req">*</span></label><textarea placeholder="어떤 부분이 헷갈리셨나요?"></textarea></div>
       <div class="fld"><label>키워드</label><input type="text" placeholder="쉼표로 구분 (예: 실손, 특약, 비교)"><div class="fhint">키워드를 입력해두면 나중에 찾을 때 편해요 ^^</div></div>
     </div>
@@ -9491,7 +9498,18 @@ function _svRender(){
     html+='<div class="sv-grp" style="--svc:#64748B">메뉴·도구 ('+nav.length+')</div>';
     nav.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#64748B">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
   }
-  if(!shown.length){ html+='<div class="sv-empty">이 범주에는 결과가 없습니다.</div>'; }
+  if(!shown.length){
+    if(items.length===0){
+      /* ② 진짜 무결과(전 범위 0) = 플라이휠 입구 */
+      var aArg=(catF==='상품')?"'상품'":((catF==='인수')?"'인수'":'null');
+      html+='<div class="sv-empty-cta"><div class="sec-msg">찾는 답이 없으면, 질문으로 남겨보세요.</div><button class="sec-btn primary" type="button" onclick="_svAskFrom('+aArg+')">질문 남기기</button></div>';
+    } else if(catF){
+      /* ① 필터 때문에 0 (필터 끄면 결과 있음) */
+      html+='<div class="sv-empty-cta"><div class="sec-msg">&lsquo;'+_sEsc(catF)+'&rsquo; 필터에선 결과가 없어요.</div><button class="sec-btn" type="button" onclick="_svClearCat()">필터 끄기</button></div>';
+    } else {
+      html+='<div class="sv-empty">이 탭에는 결과가 없습니다. 다른 탭을 눌러보세요.</div>';
+    }
+  }
   else shown.forEach(function(it){ var g=it.g, r=it.row;
     var titleOf=g.t||function(r){return r.title;};
     var snip=_sSnippet(g.body(r),terms,160);
@@ -9506,6 +9524,13 @@ function _svTab(k){ window._svActiveSource=k; _svRender(); }
 window._svTab=_svTab;
 function _svClearCat(){ window._svCatFilter=null; _svRender(); }
 window._svClearCat=_svClearCat;
+/* 무결과 → 질문 남기기: 기존 #ask 보험 Q&A 폼을 검색 유형(상품/인수)에 맞춰 연다. (제출→네비방 라우팅은 다음 슬라이스) */
+function _svAskFrom(cat){
+  if(typeof openAsk==='function') openAsk();
+  if(cat==='상품' && typeof goForm==='function') goForm('product');
+  else if(cat==='인수' && typeof goForm==='function') goForm('uw');
+}
+window._svAskFrom=_svAskFrom;
 function _svScopeColor(k){ for(var i=0;i<SV_SCOPES.length;i++) if(SV_SCOPES[i].k===k) return SV_SCOPES[i].color; return '#64748B'; }
 
 /* ════════ 검색 홈(D영역) — 3계정 미리보기 ════════
