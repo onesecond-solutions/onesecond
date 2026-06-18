@@ -876,6 +876,17 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-chip.on{border-color:var(--svc);color:var(--svc);background:transparent;}
 .sv-grp{font-size:0.6875rem;font-weight:800;padding:12px 12px 6px;margin-top:2px;color:var(--svc);border-left:3px solid var(--svc);}
 .sv-empty{padding:2px 14px 12px;font-size:0.75rem;color:var(--tf);line-height:1.5;}
+/* 소스 탭(주 축) + 분류 필터칩 + 스코프 요약줄(보조 축) — 시각 층 분리 */
+.sv-tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 10px 8px;border-bottom:1px solid var(--bd);}
+.sv-tab{border:0;background:transparent;padding:8px 13px;border-radius:8px;font-size:0.8125rem;font-weight:700;color:var(--ts);cursor:pointer;}
+.sv-tab:hover{background:var(--s2);}
+.sv-tab.on{background:var(--ac);color:#fff;}
+.sv-catbar{padding:9px 12px 0;}
+.sv-catchip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9999px;background:var(--ac);color:#fff;font-size:0.8125rem;font-weight:700;}
+.sv-catchip button{border:0;background:transparent;color:#fff;cursor:pointer;font-size:0.95rem;line-height:1;padding:0;}
+.sv-scope{display:flex;flex-wrap:wrap;gap:14px;padding:9px 13px;font-size:0.75rem;color:var(--tf);}
+.sv-scope span{display:inline-flex;align-items:center;gap:5px;}
+.sv-scope i{width:8px;height:8px;border-radius:50%;background:var(--svc);flex-shrink:0;}
 /* 검색 홈(미리보기 — 3계정 게이트). 헤더 인사 좌측 + D영역 중앙 검색 + 카드3 + 인라인 결과. 비허용 계정엔 #homeSearch display:none 유지=기존 홈 그대로 */
 #headGreet{display:none;align-items:center;gap:6px;font-size:1.0625rem;font-weight:700;color:var(--tp);white-space:nowrap;margin-left:4px;}
 #app.home-search-preview .search{display:none;}
@@ -9372,6 +9383,17 @@ var SV_SCOPES=[
   {k:'branch',label:'우리 지점',     color:'#2563EB', empty:'우리 지점이 공유한 자료·공지가 여기 모입니다.'},
   {k:'common',label:'원세컨드 공동', color:'#64748B', empty:'소식지·지식·보험 Q&A 등 모두가 함께 보는 자료입니다.'}
 ];
+/* 소스 탭 (답 품질 우선: 지식·Q&A 먼저, raw 자료 뒤). 라벨=사용자 말(내부 시스템명 노출 금지) */
+var SV_SRC=[
+  {k:'all', label:'전체'},
+  {k:'knowledge_entries', label:'지식'},
+  {k:'posts', label:'보험Q&A'},
+  {k:'newsletters', label:'소식지'},
+  {k:'team_notices', label:'공지'},
+  {k:'scripts', label:'스크립트'},
+  {k:'myspace_files', label:'자료'}
+];
+function _svSrcLabel(t){ for(var i=0;i<SV_SRC.length;i++) if(SV_SRC[i].k===t) return SV_SRC[i].label; return t; }
 function _svCanSee(k, me, cnt){
   if(k==='mine'||k==='common') return true;
   if(k==='team')   return !!me.team_id   || cnt>0;
@@ -9423,55 +9445,68 @@ async function _runSearchV2(q, targetId){
   var qcHits=[];
   try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
   if(seq!==_searchSeq) return;
-  /* 범위 버킷 적재 + 관련도 정렬 */
-  var buckets={mine:[],team:[],branch:[],common:[]};
+  /* 결과를 평면 items로 — 소스/스코프/분류(category) 태그 부착 + 관련도 정렬 */
+  var items=[];
   for(var gi=0; gi<groups.length; gi++){ var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)) continue;
     var titleOf=g.t||function(r){return r.title;};
-    rows.forEach(function(r){ r.__s=_sScore(titleOf(r), g.body(r), terms); var k=g.scope(r); if(!buckets[k]) k='common'; buckets[k].push({g:g,row:r,s:r.__s}); });
+    rows.forEach(function(r){ var sc=_sScore(titleOf(r), g.body(r), terms); var k=g.scope(r); if(['mine','team','branch','common'].indexOf(k)<0) k='common';
+      items.push({ g:g, row:r, s:sc, src:g.table, scope:k, cat:(g.table==='knowledge_entries'?(r.category||''):'') }); });
   }
-  Object.keys(buckets).forEach(function(k){ buckets[k].sort(function(a,b){ return b.s-a.s; }); });
+  items.sort(function(a,b){ return b.s-a.s; });
   var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
-  window._searchV2Data={ buckets:buckets, nav:navItems, terms:terms, me:me, targetId:bodyId };
-  _svRender(null);
+  window._searchV2Data={ items:items, nav:navItems, terms:terms, me:me, targetId:bodyId };
+  _svRender();
 }
 window._runSearchV2=_runSearchV2;
 /* 범위 칩 + 범위별 그룹 렌더. active=null이면 전체, 'mine'|'team'|'branch'|'common'이면 그 범위만 */
-function _svRender(active){
+function _svRender(){
   var d=window._searchV2Data; if(!d) return;
   var body=document.getElementById(d.targetId||'sobody'); if(!body) return;
-  var me=d.me, buckets=d.buckets, terms=d.terms, nav=d.nav||[];
+  var items=d.items||[], terms=d.terms, nav=d.nav||[];
+  var activeSrc=window._svActiveSource||'all';
+  var catF=window._svCatFilter||null;
   var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
-  /* 범위 칩 */
-  var chips='<div class="sv-chips">';
-  SV_SCOPES.forEach(function(s){ var cnt=buckets[s.k].length; if(!_svCanSee(s.k,me,cnt)) return;
-    var on=(active===s.k)?' on':'';
-    var next=(active===s.k)?'null':("'"+s.k+"'");
-    chips+='<span class="sv-chip'+on+'" style="--svc:'+s.color+'" onclick="_svRender('+next+')"><i class="sv-dot"></i>'+s.label+' '+cnt+'</span>';
+  /* 소스 탭(주 축) — 건수 0 소스 탭은 숨김(전체 제외) */
+  var srcCount={}; items.forEach(function(it){ srcCount[it.src]=(srcCount[it.src]||0)+1; });
+  var tabs='<div class="sv-tabs">';
+  SV_SRC.forEach(function(s){ var n=(s.k==='all')?items.length:(srcCount[s.k]||0); if(s.k!=='all'&&n===0) return;
+    tabs+='<button class="sv-tab'+(activeSrc===s.k?' on':'')+'" onclick="_svTab(\''+s.k+'\')">'+s.label+(s.k==='all'?'':' '+n)+'</button>';
   });
-  chips+='</div>';
+  tabs+='</div>';
+  /* 활성 분류 필터 칩 (홈 상품/인수 진입 시 누른 주제가 보이게) */
+  var chip = catF ? '<div class="sv-catbar"><span class="sv-catchip">'+_sEsc(catF)+' <button onclick="_svClearCat()" aria-label="분류 필터 해제">&#10005;</button></span></div>' : '';
+  /* 표시 대상 = 활성 소스 + (지식이면 분류 필터) */
+  var shown=items.filter(function(it){
+    if(activeSrc!=='all' && it.src!==activeSrc) return false;
+    if(catF && it.src==='knowledge_entries' && (it.cat||'').indexOf(catF)<0) return false;
+    return true;
+  });
+  /* 스코프 = 가벼운 요약 카운트 (소스 탭과 시각 층 분리) */
+  var scCnt={mine:0,team:0,branch:0,common:0};
+  shown.forEach(function(it){ if(scCnt[it.scope]!=null) scCnt[it.scope]++; });
+  var scope='<div class="sv-scope">'+SV_SCOPES.map(function(sp){ return '<span style="--svc:'+sp.color+'"><i></i>'+sp.label+' '+(scCnt[sp.k]||0)+'</span>'; }).join('')+'</div>';
+  /* 결과 */
   var html='';
-  /* 메뉴·도구 바로가기 — 필터 없을 때만 상단 노출 */
-  if(!active && nav.length){
-    html+='<div class="sv-grp" style="--svc:#64748B">원세컨드 메뉴·도구 ('+nav.length+')</div>';
+  if(activeSrc==='all' && !catF && nav.length){
+    html+='<div class="sv-grp" style="--svc:#64748B">메뉴·도구 ('+nav.length+')</div>';
     nav.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#64748B">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
   }
-  /* 범위별 그룹 */
-  var anyRow=false;
-  SV_SCOPES.forEach(function(s){ if(active&&active!==s.k) return; var rows=buckets[s.k]; if(!_svCanSee(s.k,me,rows.length)) return;
-    html+='<div class="sv-grp" style="--svc:'+s.color+'">'+s.label+' ('+(rows.length>=100?'100+':rows.length)+')</div>';
-    if(!rows.length){ html+='<div class="sv-empty">'+_sEsc(s.empty)+'</div>'; return; }
-    anyRow=true;
-    rows.forEach(function(it){ var g=it.g, r=it.row;
-      var titleOf=g.t||function(r){return r.title;};
-      var snip=_sSnippet(g.body(r),terms,160);
-      var snipHtml=snip?'<span class="ssnip">'+_sMark(snip,terms)+'</span>':'';
-      var st=_idxStatus(g.table,r); var stHtml=st?'<span class="sidx" style="color:'+st.c+'">'+st.t+'</span>':'';
-      html+='<div class="sores" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+s.color+'">'+g.src+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+stHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
-    });
+  if(!shown.length){ html+='<div class="sv-empty">이 범주에는 결과가 없습니다.</div>'; }
+  else shown.forEach(function(it){ var g=it.g, r=it.row;
+    var titleOf=g.t||function(r){return r.title;};
+    var snip=_sSnippet(g.body(r),terms,160);
+    var snipHtml=snip?'<span class="ssnip">'+_sMark(snip,terms)+'</span>':'';
+    var st=_idxStatus(g.table,r); var stHtml=st?'<span class="sidx" style="color:'+st.c+'">'+st.t+'</span>':'';
+    html+='<div class="sores" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+_svScopeColor(it.scope)+'">'+_svSrcLabel(it.src)+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+stHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
   });
-  body.innerHTML=aiBar+chips+html;
+  body.innerHTML=aiBar+tabs+chip+scope+html;
 }
 window._svRender=_svRender;
+function _svTab(k){ window._svActiveSource=k; _svRender(); }
+window._svTab=_svTab;
+function _svClearCat(){ window._svCatFilter=null; _svRender(); }
+window._svClearCat=_svClearCat;
+function _svScopeColor(k){ for(var i=0;i<SV_SCOPES.length;i++) if(SV_SCOPES[i].k===k) return SV_SCOPES[i].color; return '#64748B'; }
 
 /* ════════ 검색 홈(D영역) — 3계정 미리보기 ════════
    허용 계정이면 #app에 home-search-preview 클래스 → CSS가 기존 홈(인사·배너) 숨기고 검색 홈 노출 + 헤더 인사 채움.
@@ -9493,7 +9528,7 @@ var _hsTimer=null;
 function _hsSearch(q){
   var hs=document.getElementById('homeSearch'), rs=document.getElementById('hsResults');
   if(!hs||!rs) return;
-  if(!q||!q.trim()){ if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; hs.classList.remove('searching'); rs.innerHTML=''; return; }
+  if(!q||!q.trim()){ if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; hs.classList.remove('searching'); rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; return; }
   hs.classList.add('searching');
   if(_hsTimer)clearTimeout(_hsTimer);
   _hsTimer=setTimeout(function(){ _runSearchV2(q.trim(),'hsResults'); }, 250);
@@ -9501,12 +9536,15 @@ function _hsSearch(q){
 window._hsSearch=_hsSearch;
 function _hsClear(){ var i=document.getElementById('hsInput'); if(i)i.value=''; _hsSearch(''); if(i)i.focus(); }
 window._hsClear=_hsClear;
-/* 카드: 상담=다이어리(행동) / 상품·인수=검색 렌즈(현재는 검색창 포커스+힌트, 범주 필터는 Phase 2) */
+/* 카드: 상담=다이어리(행동) / 상품·인수=검색 렌즈(지식 탭 + 분류 필터, 진입 시 활성 칩 표시) */
 function _hsCard(kind){
   if(kind==='consult'){ if(typeof _navDiary==='function')_navDiary(); return; }
   var i=document.getElementById('hsInput'); if(!i) return;
+  window._svCatFilter=(kind==='product')?'상품':'인수';
+  window._svActiveSource='knowledge_entries';
   i.placeholder=(kind==='product')?'상품·보장·보험료 검색':'병력·고지·인수기준 검색';
   i.focus();
+  if(i.value && i.value.trim()) _hsSearch(i.value);
 }
 window._hsCard=_hsCard;
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _homeSearchInit); else _homeSearchInit();
