@@ -876,6 +876,42 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-chip.on{border-color:var(--svc);color:var(--svc);background:transparent;}
 .sv-grp{font-size:0.6875rem;font-weight:800;padding:12px 12px 6px;margin-top:2px;color:var(--svc);border-left:3px solid var(--svc);}
 .sv-empty{padding:2px 14px 12px;font-size:0.75rem;color:var(--tf);line-height:1.5;}
+/* 검색 홈(미리보기 — 3계정 게이트). 헤더 인사 좌측 + D영역 중앙 검색 + 카드3 + 인라인 결과. 비허용 계정엔 #homeSearch display:none 유지=기존 홈 그대로 */
+#headGreet{display:none;align-items:center;gap:6px;font-size:1.0625rem;font-weight:700;color:var(--tp);white-space:nowrap;margin-left:4px;}
+#app.home-search-preview .search{display:none;}
+#app.home-search-preview #headGreet{display:flex;}
+#app.home-search-preview .home-greeting,
+#app.home-search-preview #osBannerCarousel,
+#app.home-search-preview #osBannerMini{display:none;}
+#homeSearch{display:none;}
+#app.home-search-preview #homeSearch{display:block;}
+.hs-wrap{max-width:760px;margin:0 auto;padding:7vh 16px 0;}
+#homeSearch.searching .hs-wrap{padding-top:16px;}
+.hs-head{text-align:center;font-size:1.5rem;font-weight:800;color:var(--tp);letter-spacing:-.01em;margin-bottom:18px;}
+#homeSearch.searching .hs-head{display:none;}
+.hs-box{display:flex;align-items:center;gap:8px;max-width:700px;margin:0 auto;}
+.hs-field{flex:1;display:flex;align-items:center;gap:10px;height:64px;padding:0 16px;background:var(--s1);border:2px solid var(--bd);border-radius:14px;min-width:0;}
+.hs-field:focus-within{border-color:var(--ac);box-shadow:0 4px 18px rgba(99,102,241,.14);}
+.hs-field svg{width:26px;height:26px;flex-shrink:0;color:var(--tf);}
+.hs-field input{flex:1;border:0;outline:0;background:transparent;font-size:1.25rem;color:var(--tp);min-width:0;}
+.hs-x{display:none;border:0;background:transparent;cursor:pointer;color:var(--tf);width:34px;height:34px;border-radius:50%;font-size:1.05rem;line-height:1;flex-shrink:0;}
+.hs-x:hover{background:var(--s2);}
+#homeSearch.searching .hs-x{display:inline-block;}
+.hs-go{height:64px;padding:0 22px;border:0;border-radius:14px;background:var(--ac);color:#fff;font-size:1.0625rem;font-weight:700;cursor:pointer;flex-shrink:0;}
+.hs-go:hover{background:var(--ach);}
+.hs-sub{text-align:center;font-size:0.9375rem;color:var(--ts);margin:14px auto 18px;max-width:700px;}
+#homeSearch.searching .hs-sub{display:none;}
+.hs-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:700px;margin:0 auto;}
+#homeSearch.searching .hs-cards{display:none;}
+.hs-card{display:flex;flex-direction:column;gap:5px;padding:18px;border:1px solid var(--bd);border-radius:14px;background:var(--s1);cursor:pointer;text-align:left;font:inherit;}
+.hs-card:hover{border-color:var(--ac);}
+.hs-card.primary{background:var(--ac);border-color:var(--ac);}
+.hs-card .hc-t{font-size:1.0625rem;font-weight:800;color:var(--tp);}
+.hs-card .hc-d{font-size:0.8125rem;color:var(--ts);}
+.hs-card.primary .hc-t,.hs-card.primary .hc-d{color:#fff;}
+.hs-card.primary .hc-d{opacity:.88;}
+#hsResults{max-width:760px;margin:8px auto 0;}
+@media(max-width:640px){.hs-cards{grid-template-columns:1fr;}.hs-head{font-size:1.25rem;}.hs-field{height:56px;}.hs-field input{font-size:1.0625rem;}.hs-go{height:56px;padding:0 16px;}#headGreet{font-size:0.9375rem;}}
 
 /* 질문하기 모달 */
 .askmodal{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:none;z-index:140;padding:5vh 20px;overflow-y:auto;}
@@ -2150,6 +2186,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
   <div class="main">
     <header class="head">
       <button class="mmenu" onclick="toggleMSide()">☰</button>
+      <div class="head-greet" id="headGreet"></div>
       <div class="sp"></div>
       <div class="search" onclick="openSearch()"><span class="sicon">&#8981;</span><span class="stext">베타 검색 중 · 스크립트·공지·소식지·지식 검색</span><span class="kbd">검색</span></div>
       <div class="sp"></div>
@@ -2179,6 +2216,28 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <div class="home-greeting">
         <div class="home-greeting-name" id="homeGreetName"></div>
         <div class="home-greeting-msg" id="homeGreetMsg">오늘 하루도 화이팅입니다 ☕</div>
+      </div>
+
+      <!-- 검색 홈(미리보기 — 3계정 게이트). 비허용 계정엔 #homeSearch가 display:none이라 기존 홈(인사+배너+위젯) 그대로 노출 -->
+      <div id="homeSearch">
+        <div class="hs-wrap">
+          <div class="hs-head">무엇을 찾으세요?</div>
+          <div class="hs-box">
+            <div class="hs-field">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input id="hsInput" type="search" placeholder="상품·인수기준·질병명·자료 검색" autocomplete="off" enterkeyhint="search" oninput="_hsSearch(this.value)" onkeydown="if(event.key==='Enter')_hsSearch(this.value)">
+              <button class="hs-x" type="button" aria-label="지우기" onclick="_hsClear()">&#10005;</button>
+            </div>
+            <button class="hs-go" type="button" onclick="_hsSearch(document.getElementById('hsInput').value)">검색</button>
+          </div>
+          <div class="hs-sub">검색하면 내 것 → 전체까지 한 번에 · 범위는 결과가 알려줍니다</div>
+          <div class="hs-cards">
+            <button class="hs-card" type="button" onclick="_hsCard('product')"><span class="hc-t">상품</span><span class="hc-d">보험료·보장 검색</span></button>
+            <button class="hs-card" type="button" onclick="_hsCard('uw')"><span class="hc-t">인수</span><span class="hc-d">고지·인수기준 확인</span></button>
+            <button class="hs-card primary" type="button" onclick="_hsCard('consult')"><span class="hc-t">상담 시작</span><span class="hc-d">다이어리 열기</span></button>
+          </div>
+          <div id="hsResults"></div>
+        </div>
       </div>
 
       <div class="os-banner-carousel" id="osBannerCarousel">
@@ -9318,12 +9377,13 @@ function _svCanSee(k, me, cnt){
   if(k==='branch') return !!me.branch_id || cnt>0;
   return false;
 }
-async function _runSearchV2(q){
-  var body=document.getElementById('sobody'); if(!body) return;
+async function _runSearchV2(q, targetId){
+  var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
+  var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
   body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
-  var terms=_sTokens(q); if(!terms.length){ body.innerHTML=defaultPanel; _searchStats(); return; }
+  var terms=_sTokens(q); if(!terms.length){ if(bodyId==='sobody'){ body.innerHTML=defaultPanel; _searchStats(); } else { body.innerHTML=''; } return; }
   /* 내 소속 컨텍스트(이메일·role·팀·지점) — 세션 1회 캐시 */
   var me=window._svMe;
   if(!me){
@@ -9370,14 +9430,14 @@ async function _runSearchV2(q){
   }
   Object.keys(buckets).forEach(function(k){ buckets[k].sort(function(a,b){ return b.s-a.s; }); });
   var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
-  window._searchV2Data={ buckets:buckets, nav:navItems, terms:terms, me:me };
+  window._searchV2Data={ buckets:buckets, nav:navItems, terms:terms, me:me, targetId:bodyId };
   _svRender(null);
 }
 window._runSearchV2=_runSearchV2;
 /* 범위 칩 + 범위별 그룹 렌더. active=null이면 전체, 'mine'|'team'|'branch'|'common'이면 그 범위만 */
 function _svRender(active){
   var d=window._searchV2Data; if(!d) return;
-  var body=document.getElementById('sobody'); if(!body) return;
+  var body=document.getElementById(d.targetId||'sobody'); if(!body) return;
   var me=d.me, buckets=d.buckets, terms=d.terms, nav=d.nav||[];
   var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
   /* 범위 칩 */
@@ -9411,6 +9471,46 @@ function _svRender(active){
   body.innerHTML=aiBar+chips+html;
 }
 window._svRender=_svRender;
+
+/* ════════ 검색 홈(D영역) — 3계정 미리보기 ════════
+   허용 계정이면 #app에 home-search-preview 클래스 → CSS가 기존 홈(인사·배너) 숨기고 검색 홈 노출 + 헤더 인사 채움.
+   비허용 계정은 클래스 안 붙어 기존 홈 그대로(회귀 0). showView 미수정(클래스 게이팅만). */
+function _homeSearchInit(){
+  var app=document.getElementById('app'); if(!app) return;
+  if(!_searchScopeAllow()){ app.classList.remove('home-search-preview'); return; }
+  app.classList.add('home-search-preview');
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  var hg=document.getElementById('headGreet');
+  if(hg && u.name){
+    var roleLabel=(window.Auth&&window.Auth.getRoleLabel)?window.Auth.getRoleLabel(u.role):'';
+    var dept=(roleLabel&&roleLabel!==u.name)?' '+roleLabel:'';
+    hg.textContent='안녕하세요, '+u.name+dept+'님';
+  }
+}
+window._homeSearchInit=_homeSearchInit;
+var _hsTimer=null;
+function _hsSearch(q){
+  var hs=document.getElementById('homeSearch'), rs=document.getElementById('hsResults');
+  if(!hs||!rs) return;
+  if(!q||!q.trim()){ if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; hs.classList.remove('searching'); rs.innerHTML=''; return; }
+  hs.classList.add('searching');
+  if(_hsTimer)clearTimeout(_hsTimer);
+  _hsTimer=setTimeout(function(){ _runSearchV2(q.trim(),'hsResults'); }, 250);
+}
+window._hsSearch=_hsSearch;
+function _hsClear(){ var i=document.getElementById('hsInput'); if(i)i.value=''; _hsSearch(''); if(i)i.focus(); }
+window._hsClear=_hsClear;
+/* 카드: 상담=다이어리(행동) / 상품·인수=검색 렌즈(현재는 검색창 포커스+힌트, 범주 필터는 Phase 2) */
+function _hsCard(kind){
+  if(kind==='consult'){ if(typeof _navDiary==='function')_navDiary(); return; }
+  var i=document.getElementById('hsInput'); if(!i) return;
+  i.placeholder=(kind==='product')?'상품·보장·보험료 검색':'병력·고지·인수기준 검색';
+  i.focus();
+}
+window._hsCard=_hsCard;
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _homeSearchInit); else _homeSearchInit();
+document.addEventListener('appstate:ready', function(){ try{ _homeSearchInit(); }catch(e){} });
+
 /* 검색 결과 색인 상태 배지 — 미완성 자료를 숨기지 않고 "어디까지 검색 가능한지" 표시(2026-06-14 대표 A안).
    자료실(myspace_files)=ocr_status / 소식지(newsletters)=full_text·text_quality 기준. 텍스트 소스는 배지 없음(당연 본문검색). */
 function _idxStatus(table, r){
@@ -9850,6 +9950,8 @@ function _updateAccountHeader(){
     var _dept = (roleLabel && roleLabel !== u.name) ? ' ' + roleLabel : '';
     homeName.textContent = u.name + _dept + '님, 안녕하세요~';
   }
+  /* 검색 홈 미리보기(3계정) — 헤더 인사 채움 + 게이트 클래스 동기화 */
+  try{ if(typeof _homeSearchInit === 'function') _homeSearchInit(); }catch(e){}
 }
 window._updateAccountHeader = _updateAccountHeader;
 /* 페이지 로드 시 즉시 1회 호출 */
