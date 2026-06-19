@@ -832,6 +832,10 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sores .smeta{font-size:0.6875rem;color:var(--tf);margin-left:auto;flex-shrink:0;margin-top:2px;}
 .sores .sidx{display:inline-block;font-size:0.625rem;font-weight:600;padding:1px 7px;border-radius:9999px;margin-top:3px;border:1px solid currentColor;opacity:0.92;}
 .sores mark.shi{background:rgba(99,102,241,.22);color:inherit;border-radius:3px;padding:0 2px;font-weight:700;}
+/* 슬라이스3 Phase A — 좌측 선택표시(우측 패널이 어느 결과인지 결속). 인디고 좌측 보더 + 옅은 틴트. box-shadow inset이라 레이아웃 안 밀림. */
+.sores.on{background:rgba(99,102,241,.10);box-shadow:inset 3px 0 0 var(--ac);}
+.sores.on:hover{background:rgba(99,102,241,.14);}
+.sores.on .sttl{color:var(--ac);font-weight:700;}
 .sostat{display:flex;flex-wrap:wrap;gap:8px;padding:4px 10px 10px;}
 .sostat-i{font-size:0.8125rem;color:var(--ts);background:var(--s2);border:0.5px solid var(--bd);border-radius:9px;padding:7px 11px;}
 .sostat-i b{color:var(--ac);font-weight:800;margin-right:4px;}
@@ -9466,7 +9470,7 @@ async function _runSearchV2(q, targetId){
   var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
   var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
-  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널 초기화 / 같은 검색어=누적·유지 */
+  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; window._svOpenKey=null; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널·선택표시 초기화 / 같은 검색어=누적·유지 */
   window._svQ=q; window._svTarget=bodyId;
   body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
@@ -9574,7 +9578,9 @@ function _svRender(){
     var snip=_sSnippet(g.body(r),terms,160);
     var snipHtml=snip?'<span class="ssnip">'+_sMark(snip,terms)+'</span>':'';
     var st=_idxStatus(g.table,r); var stHtml=st?'<span class="sidx" style="color:'+st.c+'">'+st.t+'</span>':'';
-    html+='<div class="sores" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+_svScopeColor(it.scope)+'">'+_svSrcLabel(it.src)+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+stHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
+    /* Phase A: 선택표시 — 홈 2단(hsResults)에서만 active. 키=table:id. 탭 전환·더보기 재렌더 후에도 _svOpenKey로 유지 */
+    var _svk=g.table+':'+r.id; var _svOn=(window._svOpenKey===_svk && (d.targetId||'sobody')==='hsResults')?' on':'';
+    html+='<div class="sores'+_svOn+'" data-svkey="'+_sEsc(_svk)+'" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+_svScopeColor(it.scope)+'">'+_svSrcLabel(it.src)+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+stHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
   });
   if(window._svHasMore && shown.length){ html+='<div class="sv-more"><button type="button" onclick="_svMore()">더 많은 결과 보기</button></div>'; }
   if((d.targetId||'sobody')==='hsResults'){
@@ -9625,7 +9631,7 @@ function _homeSearchInit(){
 window._homeSearchInit=_homeSearchInit;
 var _hsTimer=null;
 /* 검색 홈 리셋 — 입력 비움/초기화 (hero 복귀) */
-function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs)hs.classList.remove('searching'); if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; window._svLimit=40; window._svQ=null; window._svPanelHtml=null; }
+function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs)hs.classList.remove('searching'); if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; window._svLimit=40; window._svQ=null; window._svPanelHtml=null; window._svOpenKey=null; }
 window._hsReset=_hsReset;
 /* 제출(엔터·검색버튼·카드) — 이때만 화면 이동(.searching)+결과 표시. 구글/네이버처럼 입력 중엔 안 움직임 */
 function _hsSearch(q){
@@ -9777,6 +9783,9 @@ async function _searchOpen(table, id){
         _ph=_head+_chip+_openBtn+_bodyBlock;
       }
       window._svPanelHtml=_ph;
+      /* Phase A: 좌↔우 결속 — 선택 키 기록 + 좌측 카드 하이라이트(전체 재렌더 없이 클래스만 토글 → 스크롤 유지) */
+      window._svOpenKey=table+':'+id;
+      try{ var _lc=document.getElementById('hsResults'); if(_lc){ _lc.querySelectorAll('.sores.on').forEach(function(el){ el.classList.remove('on'); }); var _selEl=_lc.querySelector('.sores[data-svkey="'+(table+':'+id)+'"]'); if(_selEl) _selEl.classList.add('on'); } }catch(e){}
       var _pn=document.getElementById('svPanel');
       if(_pn){
         _pn.innerHTML=_ph; _pn.scrollTop=0;
@@ -9810,7 +9819,7 @@ async function _searchOpen(table, id){
 }
 window._searchOpen=_searchOpen;
 /* 우측 패널 닫기(홈 2단) — 안내 상태로 복원 */
-function _svPanelClose(){ window._svPanelHtml=null; var p=document.getElementById('svPanel'); if(p) p.innerHTML='<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>'; }
+function _svPanelClose(){ window._svPanelHtml=null; window._svOpenKey=null; var c=document.querySelector('#hsResults .sores.on'); if(c) c.classList.remove('on'); var p=document.getElementById('svPanel'); if(p) p.innerHTML='<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>'; }
 window._svPanelClose=_svPanelClose;
 /* 소식지(PDF) 딸깍 — 미리보기 모달 안 다운로드/라이브러리/복사 (카드 만들기는 PDF 미지원이라 제외) */
 function _nlCloseMenu(){ var m=document.getElementById('nlMenu'); if(m) m.remove(); document.removeEventListener('click',_nlOut,true); }
