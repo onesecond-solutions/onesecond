@@ -9427,6 +9427,7 @@ async function _runSearchV2(q, targetId){
   var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
   var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
+  var _pt0=(window.performance&&performance.now)?performance.now():0;   /* 임시 계측 — 검색 시작 시점 */
   if(window._svQ!==q) window._svLimit=40;   /* 새 검색어면 더보기 한도(40)부터 / 같은 검색어=더보기 누적 */
   window._svQ=q; window._svTarget=bodyId;
   body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
@@ -9472,6 +9473,7 @@ async function _runSearchV2(q, targetId){
   var qcHits=[];
   try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
   if(seq!==_searchSeq) return;
+  var _ptF=(window.performance&&performance.now)?performance.now():0;   /* 임시 계측 — 전체 fetch(me+소스9+quick) 완료 시점 */
   /* 결과를 평면 items로 — 소스/스코프/분류(category) 태그 부착 + 관련도 정렬 */
   var items=[];
   for(var gi=0; gi<groups.length; gi++){ var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)) continue;
@@ -9482,7 +9484,9 @@ async function _runSearchV2(q, targetId){
   items.sort(function(a,b){ return b.s-a.s; });
   var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
   window._searchV2Data={ items:items, nav:navItems, terms:terms, me:me, targetId:bodyId };
+  var _ptR=(window.performance&&performance.now)?performance.now():0;
   _svRender();
+  try{ if(seq===_searchSeq && body){ var _ptE=performance.now(); var _pf=document.createElement('div'); _pf.style.cssText='font-size:11px;color:#94A3B8;padding:6px 12px 0;font-weight:700;'; _pf.textContent='[계측] 결과 '+items.length+'건 · 데이터 '+Math.round(_ptF-_pt0)+'ms · 렌더 '+Math.round(_ptE-_ptR)+'ms · 총 '+Math.round(_ptE-_pt0)+'ms'+(window._svHasMore?' · 일부 소스 한도('+(window._svLimit||40)+') 도달=더보기 가능':' · 한도 미도달(limit 무관)')+' (측정 후 제거)'; body.insertBefore(_pf, body.firstChild); } }catch(e){}
 }
 window._runSearchV2=_runSearchV2;
 /* 범위 칩 + 범위별 그룹 렌더. active=null이면 전체, 'mine'|'team'|'branch'|'common'이면 그 범위만 */
