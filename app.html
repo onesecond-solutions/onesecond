@@ -9486,7 +9486,7 @@ async function _runSearchV2(q, targetId){
   window._searchV2Data={ items:items, nav:navItems, terms:terms, me:me, targetId:bodyId };
   var _ptR=(window.performance&&performance.now)?performance.now():0;
   _svRender();
-  try{ if(seq===_searchSeq && body){ var _ptE=performance.now(); var _pf=document.createElement('div'); _pf.style.cssText='font-size:11px;color:#94A3B8;padding:6px 12px 0;font-weight:700;'; _pf.textContent='[계측] 데이터 '+Math.round(_ptF-_pt0)+'ms · 렌더 '+Math.round(_ptE-_ptR)+'ms · 총 '+Math.round(_ptE-_pt0)+'ms (측정 후 제거)'; body.insertBefore(_pf, body.firstChild); } }catch(e){}
+  try{ if(seq===_searchSeq && body){ var _ptE=performance.now(); var _pf=document.createElement('div'); _pf.style.cssText='font-size:11px;color:#94A3B8;padding:6px 12px 0;font-weight:700;'; _pf.textContent='[계측] 결과 '+items.length+'건 · 데이터 '+Math.round(_ptF-_pt0)+'ms · 렌더 '+Math.round(_ptE-_ptR)+'ms · 총 '+Math.round(_ptE-_pt0)+'ms'+(window._svHasMore?' · 일부 소스 한도('+(window._svLimit||40)+') 도달=더보기 가능':' · 한도 미도달(limit 무관)')+' (측정 후 제거)'; body.insertBefore(_pf, body.firstChild); } }catch(e){}
 }
 window._runSearchV2=_runSearchV2;
 /* 범위 칩 + 범위별 그룹 렌더. active=null이면 전체, 'mine'|'team'|'branch'|'common'이면 그 범위만 */
