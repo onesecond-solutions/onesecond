@@ -876,6 +876,9 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-chip.on{border-color:var(--svc);color:var(--svc);background:transparent;}
 .sv-grp{font-size:0.6875rem;font-weight:800;padding:12px 12px 6px;margin-top:2px;color:var(--svc);border-left:3px solid var(--svc);}
 .sv-empty{padding:2px 14px 12px;font-size:0.75rem;color:var(--tf);line-height:1.5;}
+.sv-more{text-align:center;padding:16px 12px 8px;}
+.sv-more button{height:42px;padding:0 24px;border:1.5px solid var(--bd);border-radius:12px;background:var(--s1);color:var(--tp);font-size:0.875rem;font-weight:700;cursor:pointer;}
+.sv-more button:hover{border-color:var(--ac);color:var(--ac);}
 /* 소스 탭(주 축) + 분류 필터칩 + 스코프 요약줄(보조 축) — 시각 층 분리 */
 .sv-tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 10px 8px;border-bottom:1px solid var(--bd);}
 .sv-tab{border:0;background:transparent;padding:8px 13px;border-radius:8px;font-size:0.8125rem;font-weight:700;color:var(--ts);cursor:pointer;}
@@ -9424,6 +9427,8 @@ async function _runSearchV2(q, targetId){
   var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
   var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
+  if(window._svQ!==q) window._svLimit=40;   /* 새 검색어면 더보기 한도(40)부터 / 같은 검색어=더보기 누적 */
+  window._svQ=q; window._svTarget=bodyId;
   body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
   var terms=_sTokens(q); if(!terms.length){ if(bodyId==='sobody'){ body.innerHTML=defaultPanel; _searchStats(); } else { body.innerHTML=''; } return; }
@@ -9451,11 +9456,13 @@ async function _runSearchV2(q, targetId){
     {src:'지식엔진',  table:'knowledge_entries',base:'status=eq.approved',                     cols:['title','body'],                    select:'id:entry_id,title,body,category',                                   order:'',                                                        body:function(r){return r.body;},                                               m:function(r){return r.category||'지식';},                                       scope:function(r){return 'common';}},
     {src:'자료',      table:'myspace_files',    base:_vaultBase,                               cols:['search_text','original_name'],     select:'id,original_name,search_text,ocr_status,ext,updated_at,scope',       order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                        t:function(r){return r.original_name||'(파일)';},                            m:function(r){return (r.ext||'파일').toString().toUpperCase();},                 scope:function(r){return r.scope==='team'?'team':(r.scope==='branch'?'branch':'mine');}}
   ];
+  var lim=window._svLimit||40;   /* 소스별 fetch 한도 — 100→40으로 전송량↓(체감속도). 부족하면 '더 보기'로 +40 */
   var results=await Promise.all(groups.map(function(g){
-    var path=g.table+'?'+(g.base?g.base+'&':'')+_sBuildFilter(g.cols,terms)+'&select='+g.select+(g.order?'&order='+g.order:'')+'&limit=100';
+    var path=g.table+'?'+(g.base?g.base+'&':'')+_sBuildFilter(g.cols,terms)+'&select='+g.select+(g.order?'&order='+g.order:'')+'&limit='+lim;
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
   }));
   if(seq!==_searchSeq) return;
+  window._svHasMore = results.some(function(rr){ return Array.isArray(rr)&&rr.length>=lim; });   /* 어느 소스든 꽉 찼으면 더 있을 수 있음 */
   /* 메뉴·도구(정적+quick) — 공동 성격이나 '바로가기'라 별도 상단 그룹으로 (어드민 제외) */
   var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
@@ -9530,9 +9537,13 @@ function _svRender(){
     var st=_idxStatus(g.table,r); var stHtml=st?'<span class="sidx" style="color:'+st.c+'">'+st.t+'</span>':'';
     html+='<div class="sores" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+_svScopeColor(it.scope)+'">'+_svSrcLabel(it.src)+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+stHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
   });
+  if(window._svHasMore && shown.length){ html+='<div class="sv-more"><button type="button" onclick="_svMore()">더 많은 결과 보기</button></div>'; }
   body.innerHTML=aiBar+tabs+chip+scope+html;
 }
 window._svRender=_svRender;
+/* 더 보기 — 소스별 한도를 +40 늘려 같은 검색어로 재조회(전송량은 필요할 때만 증가) */
+function _svMore(){ window._svLimit=(window._svLimit||40)+40; if(window._svQ) _runSearchV2(window._svQ, window._svTarget); }
+window._svMore=_svMore;
 function _svTab(k){ window._svActiveSource=k; _svRender(); }
 window._svTab=_svTab;
 function _svClearCat(){ window._svCatFilter=null; _svRender(); }
@@ -9569,7 +9580,7 @@ function _homeSearchInit(){
 window._homeSearchInit=_homeSearchInit;
 var _hsTimer=null;
 /* 검색 홈 리셋 — 입력 비움/초기화 (hero 복귀) */
-function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs)hs.classList.remove('searching'); if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; }
+function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs)hs.classList.remove('searching'); if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; window._svLimit=40; window._svQ=null; }
 window._hsReset=_hsReset;
 /* 제출(엔터·검색버튼·카드) — 이때만 화면 이동(.searching)+결과 표시. 구글/네이버처럼 입력 중엔 안 움직임 */
 function _hsSearch(q){
