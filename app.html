@@ -882,14 +882,27 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 /* 슬라이스 3 — 검색 결과 2단(좌 결과목록 / 우 상세 미리보기 패널). 홈 검색(#hsResults)에서만 적용 */
 .sv-2col{display:flex;gap:16px;align-items:flex-start;}
 .sv-left{flex:1.55;min-width:0;}
-.sv-right{flex:1;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 96px);overflow-y:auto;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;}
+.sv-right{flex:0 0 440px;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 96px);overflow-y:auto;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;}/* 슬라이스3 폭 확대 ~440px */
 .sv-panel-empty{padding:54px 22px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.8;}
 .sv-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:0.5px solid var(--bd);position:sticky;top:0;background:var(--s1);z-index:1;}
 .sv-panel-head .sph-t{font-weight:800;color:var(--tp);font-size:1rem;line-height:1.4;}
 .sv-panel-head .sph-m{font-size:0.78rem;color:var(--ts);margin-top:4px;}
 .sv-panel-x{background:none;border:none;color:var(--ts);font-size:18px;cursor:pointer;flex-shrink:0;line-height:1;}
 .sv-panel-x:hover{color:var(--tp);}
-@media(max-width:860px){.sv-2col{flex-direction:column;}.sv-right{width:100%;position:static;max-height:none;}}
+/* 슬라이스3 — 우측 상세 조판(시안 right_panel_detail_polished). 출처 칩 / 이미지 미리보기 / 본문 라이트 카드 */
+.sv-d-chip{display:inline-block;margin:10px 18px 0;padding:3px 11px;background:color-mix(in srgb,var(--ac) 12%,transparent);color:var(--ach);border-radius:999px;font-size:0.72rem;font-weight:700;}
+.sv-d-imgwrap{margin:14px 18px 0;border:0.5px solid var(--bd);border-radius:12px;background:var(--s2);min-height:150px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.sv-d-imgwrap img{max-width:100%;max-height:300px;object-fit:contain;display:block;cursor:zoom-in;}
+.sv-d-imgph{color:var(--tf);font-size:0.8rem;text-align:center;line-height:1.7;padding:30px 16px;}
+.sv-d-zoom{position:absolute;right:10px;bottom:10px;background:var(--s1);border:0.5px solid var(--bd);border-radius:8px;padding:5px 11px;font-size:0.72rem;font-weight:700;color:var(--tp);cursor:pointer;}
+.sv-d-zoom:hover{border-color:var(--ac);color:var(--ac);}
+.sv-d-open{display:inline-flex;align-items:center;gap:5px;margin:14px 18px 0;padding:9px 14px;border:1px solid var(--bd);border-radius:10px;background:var(--s1);color:var(--tp);font-size:0.82rem;font-weight:700;cursor:pointer;text-decoration:none;}
+.sv-d-open:hover{border-color:var(--ac);color:var(--ac);}
+.sv-d-bodylabel{margin:18px 18px 7px;font-size:0.75rem;font-weight:800;color:var(--ts);}
+.sv-d-body{margin:0 18px 16px;padding:16px 18px;background:var(--s2);border-radius:12px;line-height:1.8;font-size:0.9rem;color:var(--bodytx);white-space:pre-wrap;word-break:break-word;}
+.sv-d-pdf{margin:14px 18px 0;border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;background:#fff;}
+.sv-d-pdf iframe{width:100%;border:0;display:block;min-height:420px;}
+@media(max-width:860px){.sv-2col{flex-direction:column;}.sv-right{flex:1 1 auto;width:100%;position:static;max-height:none;}}
 /* 소스 탭(주 축) + 분류 필터칩 + 스코프 요약줄(보조 축) — 시각 층 분리 */
 .sv-tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 10px 8px;border-bottom:1px solid var(--bd);}
 .sv-tab{border:0;background:transparent;padding:8px 13px;border-radius:8px;font-size:0.8125rem;font-weight:700;color:var(--ts);cursor:pointer;}
@@ -7637,6 +7650,20 @@ async function _openSignedAtt(e, el){
   return false;
 }
 window._openSignedAtt=_openSignedAtt;
+/* 서명 URL 문자열만 발급(미리보기·라이트박스용). _openSignedAtt는 새 탭 열기, 이건 URL만 반환. */
+async function _svSignUrl(bucket, path){
+  try{
+    var token=(typeof localStorage!=='undefined'&&localStorage.getItem('os_token'))||(typeof sessionStorage!=='undefined'&&sessionStorage.getItem('os_token'))||'';
+    if(!token||!bucket||!path) return '';
+    var encPath=String(path).split('/').map(encodeURIComponent).join('/');
+    var res=await fetch(window.db.url('/storage/v1/object/sign/'+encodeURIComponent(bucket)+'/'+encPath),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});
+    if(!res.ok) return '';
+    var j=await res.json(); var signed=j.signedURL||j.signedUrl||'';
+    if(!signed) return '';
+    return (typeof _mvSignedFull==='function'?_mvSignedFull(signed):window.db.url(signed));
+  }catch(e){ return ''; }
+}
+window._svSignUrl=_svSignUrl;
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
 function renderMrEditAtts(){
   var wrap=document.getElementById('mr-edit-atts'); var fld=document.getElementById('mr-edit-atts-fld');
@@ -9729,12 +9756,42 @@ async function _searchOpen(table, id){
     var bodyInner = isPdf
       ? '<iframe src="'+_sEsc(r.source_pdf_url)+'" style="flex:1;width:100%;border:0;background:#fff;min-height:62vh" title="소식지 원문 미리보기"></iframe>'
       : '<div id="_sdBody" style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9rem;line-height:1.65">'+_sMark(bodyTxt,_qt)+'</div>';
-    /* 홈 검색(2단) = 모달 대신 우측 패널에 렌더. 그 외(오버레이) = 기존 풀스크린 모달 */
+    /* 홈 검색(2단) = 모달 대신 우측 패널에 시안 조판으로 렌더(소스별). 그 외(오버레이) = 기존 풀스크린 모달 */
     if(window._svTarget==='hsResults'){
-      var _ph='<div class="sv-panel-head"><div><div class="sph-t">'+_sEsc(title)+'</div>'+(meta?'<div class="sph-m">'+_sEsc(meta)+'</div>':'')+'</div><button class="sv-panel-x" onclick="_svPanelClose()" aria-label="닫기">&#10005;</button></div>'+actionBar+vaultBar+bodyInner;
+      var _isImg=(table==='myspace_files' && /^(png|jpe?g|gif|webp|bmp)$/i.test(String(r.ext||'')));
+      var _chipTxt=_svSrcLabel(table)+(r.ext?' · '+String(r.ext).toUpperCase():(r.company?' · '+r.company:''));
+      var _head='<div class="sv-panel-head"><div><div class="sph-t">'+_sEsc(title)+'</div>'+(meta?'<div class="sph-m">'+_sEsc(meta)+'</div>':'')+'</div><button class="sv-panel-x" onclick="_svPanelClose()" aria-label="닫기">&#10005;</button></div>';
+      var _chip='<span class="sv-d-chip">'+_sEsc(_chipTxt)+'</span>';
+      var _bodyBlock='<div class="sv-d-bodylabel">본문 텍스트</div><div class="sv-d-body">'+_sMark(bodyTxt,_qt)+'</div>';
+      var _openBtn=(table==='myspace_files'&&r.storage_path)?'<a class="sv-d-open" href="#" data-bucket="myspace" data-path="'+_sEsc(r.storage_path)+'" onclick="return _openSignedAtt(event,this)">원본 열기 &#8599;</a>':'';
+      var _ph;
+      if(isPdf){
+        /* 소식지 = PDF 첫 페이지 iframe(현행 유지) + 소식지 딸깍·원문(actionBar) + 본문 조판 */
+        _ph=_head+_chip+'<div class="sv-d-pdf"><iframe src="'+_sEsc(r.source_pdf_url)+'" title="소식지 원문 미리보기"></iframe></div>'+actionBar+_bodyBlock;
+      } else if(_isImg){
+        /* 자료실 이미지 = 미리보기 영역(서명URL 비동기)+클릭하면 크게(openLb 오버레이)+원본 열기. 패널 딸깍 버튼 없음(오버레이 안에 4줄) */
+        _ph=_head+_chip+'<div class="sv-d-imgwrap" id="svDImg"><div class="sv-d-imgph">이미지 불러오는 중…</div></div>'+_openBtn+_bodyBlock;
+      } else {
+        /* 텍스트형(지식·Q&A·공지·스크립트) + 비이미지 자료 = 본문 조판만(이미지 영역 생략) */
+        _ph=_head+_chip+_openBtn+_bodyBlock;
+      }
       window._svPanelHtml=_ph;
       var _pn=document.getElementById('svPanel');
-      if(_pn){ _pn.innerHTML=_ph; _pn.scrollTop=0; if(!isPdf){ var _fh2=_pn.querySelector('mark.shi'); if(_fh2) setTimeout(function(){ try{ _fh2.scrollIntoView({block:'center'}); }catch(e){} },30); } }
+      if(_pn){
+        _pn.innerHTML=_ph; _pn.scrollTop=0;
+        if(!isPdf){ var _fh2=_pn.querySelector('mark.shi'); if(_fh2) setTimeout(function(){ try{ _fh2.scrollIntoView({block:'center'}); }catch(e){} },30); }
+        if(_isImg && r.storage_path){
+          _svSignUrl('myspace', r.storage_path).then(function(u){
+            var box=document.getElementById('svDImg'); if(!box) return;
+            if(!u){ box.innerHTML='<div class="sv-d-imgph">미리보기를 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; }
+            else {
+              window.imgs=[u]; window.names=[(r.original_name||'이미지')];
+              box.innerHTML='<img src="'+u.replace(/"/g,'&quot;')+'" alt="" onclick="if(typeof openLb===\'function\')openLb(0)"><button class="sv-d-zoom" type="button" onclick="if(typeof openLb===\'function\')openLb(0)">&#128269; 클릭하면 크게</button>';
+            }
+            var _pn2=document.getElementById('svPanel'); if(_pn2) window._svPanelHtml=_pn2.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
+          });
+        }
+      }
       return;
     }
     var ov=document.createElement('div'); ov.id='searchDetailModal';
