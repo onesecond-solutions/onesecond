@@ -925,9 +925,9 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .hs-sub{text-align:center;font-size:0.9375rem;color:var(--ts);margin:14px auto 18px;max-width:700px;}
 #homeSearch.searching .hs-sub{display:none;}
 /* 검색바 아래 3항목 — 박스 폐기, 세로바+라벨+설명 텍스트 구조(home01). 상품·인수=회색바 / 상담시작=인디고 */
-.hs-quick{display:flex;gap:18px;max-width:700px;margin:38px auto 0;}/* 검색바 폭(700)에 맞춰 가운데·균등 분배 + 도움말과 ~38px 간격(별개 섹션) */
+.hs-quick{display:flex;justify-content:space-between;gap:18px;max-width:700px;margin:38px auto 0;}/* 검색바 폭(700)에 양끝 정렬: 상품=입력 시작선, 상담시작=검색버튼 끝선 + 도움말과 ~38px 간격 */
 #homeSearch.searching .hs-quick{display:none;}
-.hs-q{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;background:transparent;border:0;padding:2px 0;cursor:pointer;text-align:left;font:inherit;}
+.hs-q{display:flex;flex-direction:column;gap:3px;background:transparent;border:0;padding:2px 0;cursor:pointer;text-align:left;font:inherit;}
 .hq-t{display:inline-flex;align-items:center;gap:7px;font-size:1.0625rem;font-weight:800;color:var(--tp);line-height:1.3;}
 .hq-bar{width:3px;height:1.05em;border-radius:2px;background:var(--tf);flex-shrink:0;}
 .hq-d{font-size:0.8125rem;color:var(--ts);margin-left:10px;}
