@@ -906,6 +906,13 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-d-body{margin:0 18px 16px;padding:16px 18px;background:var(--s2);border-radius:12px;line-height:1.8;font-size:0.9rem;color:var(--bodytx);white-space:pre-wrap;word-break:break-word;}
 .sv-d-pdf{margin:14px 18px 0;border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;background:#fff;}
 .sv-d-pdf iframe{width:100%;border:0;display:block;min-height:420px;}
+/* B-4 — 본문 [정제본|원본] 탭 (OCR 3소스) */
+.sv-d-tabs{display:flex;gap:4px;margin:16px 18px 0;border-bottom:1px solid var(--bd);}
+.sv-d-tab{border:0;background:transparent;padding:7px 14px;font-size:0.8rem;font-weight:700;color:var(--ts);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.sv-d-tab:hover{color:var(--tp);}
+.sv-d-tab.on{color:var(--ac);border-bottom-color:var(--ac);}
+.sv-d-pane{margin-top:9px;}
+.sv-d-cleanwait{font-size:0.78rem;color:var(--tf);margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px dashed var(--bd);}
 @media(max-width:860px){.sv-2col{flex-direction:column;}.sv-right{flex:1 1 auto;width:100%;position:static;max-height:none;}}
 /* 소스 탭(주 축) + 분류 필터칩 + 스코프 요약줄(보조 축) — 시각 층 분리 */
 .sv-tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 10px 8px;border-bottom:1px solid var(--bd);}
@@ -9737,7 +9744,7 @@ window._aiAnswer=_aiAnswer;
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
   var _qt=_sTokens(((document.getElementById(window._svTarget==='hsResults'?'hsInput':'sinput')||{}).value||'').trim());  /* 현재 검색어 → 본문 하이라이트용 (홈=hsInput / 오버레이=sinput) */
-  var selMap={ newsletters:'title,company,full_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,search_text,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,category,source_company', myspace_files:'original_name,search_text,ext,storage_path' };
+  var selMap={ newsletters:'title,company,full_text,clean_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,search_text,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,clean_text,category,source_company', myspace_files:'original_name,search_text,clean_text,ext,storage_path' };
   var sel=selMap[table]||'title';
   var idCol=(table==='knowledge_entries')?'entry_id':'id';  /* 지식엔진 PK=entry_id */
   try{
@@ -9769,7 +9776,19 @@ async function _searchOpen(table, id){
       var _chipTxt=_svSrcLabel(table)+(r.ext?' · '+String(r.ext).toUpperCase():(r.company?' · '+r.company:''));
       var _head='<div class="sv-panel-head"><div><div class="sph-t">'+_sEsc(title)+'</div>'+(meta?'<div class="sph-m">'+_sEsc(meta)+'</div>':'')+'</div><button class="sv-panel-x" onclick="_svPanelClose()" aria-label="닫기">&#10005;</button></div>';
       var _chip='<span class="sv-d-chip">'+_sEsc(_chipTxt)+'</span>';
-      var _bodyBlock='<div class="sv-d-bodylabel">본문 텍스트</div><div class="sv-d-body">'+_sMark(bodyTxt,_qt)+'</div>';
+      /* B-4: OCR 3소스(자료실·소식지·지식)는 [정제본|원본] 탭. 정제본 비어있으면 안내+원본 표시(백필 전 회귀 0). 그 외 소스는 단일 본문 */
+      var _hasClean=(table==='myspace_files'||table==='newsletters'||table==='knowledge_entries');
+      var _cleanTxt=String(r.clean_text||'').trim();
+      var _bodyBlock;
+      if(_hasClean){
+        var _cleanPane=_cleanTxt ? _sMark(_cleanTxt,_qt)
+          : '<div class="sv-d-cleanwait">정제본 준비 중입니다. 아래는 원본 텍스트입니다.</div>'+_sMark(bodyTxt,_qt);
+        _bodyBlock='<div class="sv-d-tabs"><button type="button" class="sv-d-tab on" data-pane="clean" onclick="_svBodyTab(this,\'clean\')">정제본</button><button type="button" class="sv-d-tab" data-pane="raw" onclick="_svBodyTab(this,\'raw\')">원본</button></div>'
+          +'<div class="sv-d-body sv-d-pane" data-pane="clean">'+_cleanPane+'</div>'
+          +'<div class="sv-d-body sv-d-pane" data-pane="raw" style="display:none">'+_sMark(bodyTxt,_qt)+'</div>';
+      } else {
+        _bodyBlock='<div class="sv-d-bodylabel">본문 텍스트</div><div class="sv-d-body">'+_sMark(bodyTxt,_qt)+'</div>';
+      }
       var _openBtn=(table==='myspace_files'&&r.storage_path)?'<a class="sv-d-open" href="#" data-bucket="myspace" data-path="'+_sEsc(r.storage_path)+'" onclick="return _openSignedAtt(event,this)">원본 열기 &#8599;</a>':'';
       var _ph;
       if(isPdf){
@@ -9821,6 +9840,14 @@ window._searchOpen=_searchOpen;
 /* 우측 패널 닫기(홈 2단) — 안내 상태로 복원 */
 function _svPanelClose(){ window._svPanelHtml=null; window._svOpenKey=null; var c=document.querySelector('#hsResults .sores.on'); if(c) c.classList.remove('on'); var p=document.getElementById('svPanel'); if(p) p.innerHTML='<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>'; }
 window._svPanelClose=_svPanelClose;
+/* B-4: 우측 패널 본문 [정제본|원본] 탭 전환 — 클라 토글(재fetch 없음) + 상태 보존 */
+function _svBodyTab(btn, which){
+  var panel=document.getElementById('svPanel'); if(!panel) return;
+  panel.querySelectorAll('.sv-d-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-pane')===which); });
+  panel.querySelectorAll('.sv-d-pane').forEach(function(p){ p.style.display=(p.getAttribute('data-pane')===which)?'':'none'; });
+  try{ window._svPanelHtml=panel.innerHTML; }catch(e){}  /* 소스탭 전환·더보기 후에도 선택 탭 유지 */
+}
+window._svBodyTab=_svBodyTab;
 /* 소식지(PDF) 딸깍 — 미리보기 모달 안 다운로드/라이브러리/복사 (카드 만들기는 PDF 미지원이라 제외) */
 function _nlCloseMenu(){ var m=document.getElementById('nlMenu'); if(m) m.remove(); document.removeEventListener('click',_nlOut,true); }
 function _nlOut(e){ var m=document.getElementById('nlMenu'); if(m&&!m.contains(e.target)) _nlCloseMenu(); }
