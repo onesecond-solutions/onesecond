@@ -887,7 +887,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 /* 슬라이스 3 — 검색 결과 2단(좌 결과목록 / 우 상세 미리보기 패널). 홈 검색(#hsResults)에서만 적용 */
 .sv-2col{display:flex;gap:16px;align-items:stretch;flex:1;min-height:0;}/* 슬라이스3b: 높이 채워 좌우 동일 높이 → 각자 내부 스크롤 */
 .sv-left{flex:1.55;min-width:0;overflow-y:auto;min-height:0;}/* 좌측 결과 자체 스크롤(우측과 독립) */
-.sv-right{flex:0 0 560px;min-width:0;overflow-y:visible;align-self:flex-start;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;}/* 슬라이스3 폭~560 / 우측 미리보기 = 내부 스크롤 제거(대표 지시 2026-06-19). align-self:flex-start로 내용 높이만큼만(빈 박스 방지). 좌측 목록은 그대로 독립 스크롤 */
+.sv-right{flex:0 0 560px;min-width:0;overflow-y:auto;min-height:0;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;}/* 슬라이스3 폭~560 / 우측 미리보기 자체 스크롤 — sticky 폐기, 부모 stretch 높이를 받아 독립 스크롤(좌측이 길어도 안 밀림) */
 .sv-panel-empty{padding:54px 22px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.8;}
 .sv-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:0.5px solid var(--bd);position:sticky;top:0;background:var(--s1);z-index:1;}
 .sv-panel-head .sph-t{font-weight:800;color:var(--tp);font-size:1rem;line-height:1.4;}
