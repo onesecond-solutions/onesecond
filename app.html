@@ -949,8 +949,6 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 #homeSearch.searching .hs-wrap{max-width:none;margin:0;padding:16px 20px 0;display:flex;flex-direction:column;flex:1;min-height:0;}
 #homeSearch.searching .hs-box{margin:0;max-width:640px;}
 #homeSearch.searching #hsResults{margin:10px 0 0;max-width:1300px;width:100%;flex:1;min-height:0;display:flex;flex-direction:column;}/* 슬라이스3 2단 확장(우측560+120) + flex:1로 남은 높이 채움(좌우 독립 스크롤 컨테이너) */
-/* 좌·우 독립 스크롤 복구 — SPA 셸 규칙(#v-home{display:block;overflow-y:auto})이 #homeSearch.searching의 flex:1 높이 체인을 끊어 페이지 전체가 스크롤되며 우측 미리보기가 같이 밀리던 문제. 검색 중일 때만 #v-home을 flex 높이 컨테이너로 복원(#v-voice.on/#v-together.on과 동일 패턴). 데스크탑 한정 — 모바일(≤860)은 위 미디어쿼리에서 세로 stack+전체 스크롤 유지 */
-@media(min-width:861px){#v-home:has(#homeSearch.searching){display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0;}}
 .hs-head{text-align:center;font-size:1.5rem;font-weight:800;color:var(--tp);letter-spacing:-.01em;margin-bottom:18px;}
 #homeSearch.searching .hs-head{display:none;}
 .hs-box{display:flex;align-items:center;gap:8px;max-width:700px;margin:0 auto;}
