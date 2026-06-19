@@ -950,7 +950,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 #homeSearch.searching .hs-box{margin:0;max-width:640px;}
 #homeSearch.searching #hsResults{margin:10px 0 0;max-width:1300px;width:100%;flex:1;min-height:0;display:flex;flex-direction:column;}/* 슬라이스3 2단 확장(우측560+120) + flex:1로 남은 높이 채움(좌우 독립 스크롤 컨테이너) */
 .sv-head{flex:0 0 auto;}/* 슬라이스3 §2: 검색 상단 헤더(AI 검색바·소스탭·분류칩·범위)는 고정 — 결과 목록·우측 패널과 함께 스크롤되지 않음 */
-@media(min-width:861px){#v-home.on:has(#homeSearch.searching){display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0;}}/* §5: 검색 중에만(.on AND .searching) #v-home을 고정높이 flex 컨테이너로 → sv-2col이 뷰포트 잔여 높이를 받아 좌/우 각자 내부 스크롤, 페이지 전체는 결과 수만큼 안 늘어남. .on 필수 — 없으면 다른 화면 이동 시 .view{display:none}을 못 이겨 view가 겹침(#v-voice.on/#v-together.on과 동일 패턴) */
+@media(min-width:861px){#v-home.on:has(#homeSearch.searching){display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0;}#app.home-search-preview #homeSearch.searching{display:flex;}}/* §5: 검색 중에만(.on AND .searching) #v-home을 고정높이 flex 컨테이너로 → sv-2col이 뷰포트 잔여 높이를 받아 좌/우 각자 내부 스크롤, 페이지 전체는 결과 수만큼 안 늘어남. .on 필수(없으면 화면 이동 시 .view{display:none} 못 이겨 view 겹침). 둘째 규칙=#app.home-search-preview #homeSearch{display:block}(특이성 2,1,0)이 #homeSearch.searching{display:flex}(1,1,0)를 눌러 flex 컬럼이 안 되던 버그 해결(데스크탑 한정·특이성 2,2,0). #v-voice.on/#v-together.on과 동일 패턴 */
 .hs-head{text-align:center;font-size:1.5rem;font-weight:800;color:var(--tp);letter-spacing:-.01em;margin-bottom:18px;}
 #homeSearch.searching .hs-head{display:none;}
 .hs-box{display:flex;align-items:center;gap:8px;max-width:700px;margin:0 auto;}
