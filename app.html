@@ -905,8 +905,13 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-d-open:hover{border-color:var(--ac);color:var(--ac);}
 .sv-d-bodylabel{margin:18px 18px 7px;font-size:0.75rem;font-weight:800;color:var(--ts);}
 .sv-d-body{margin:0 18px 16px;padding:16px 18px;background:var(--s2);border-radius:12px;line-height:1.8;font-size:0.9rem;color:var(--bodytx);white-space:pre-wrap;word-break:break-word;}
-.sv-d-pdf{margin:14px 18px 0;border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;background:#fff;}
-.sv-d-pdf iframe{width:100%;border:0;display:block;min-height:420px;}
+.sv-d-pdf{margin:14px 18px 0;border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;background:#fff;position:relative;cursor:zoom-in;}
+.sv-d-pdf iframe{width:100%;border:0;display:block;min-height:420px;pointer-events:none;}
+/* 미리보기 hover 돋보기 오버레이 — 이미지·소식지 공통: 마우스 올리면 '크게 보기' 뜨고 클릭하면 전체화면(+딸깍) */
+.sv-d-zoomov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:zoom-in;opacity:0;transition:opacity .15s;background:rgba(15,23,42,0);}
+.sv-d-pdf:hover .sv-d-zoomov,.sv-d-imgwrap:hover .sv-d-zoomov{opacity:1;background:rgba(15,23,42,.16);}
+.sv-d-zb{display:inline-flex;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:7px 13px;font-size:0.78rem;font-weight:800;color:var(--tp);box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.sv-d-zb svg{width:15px;height:15px;}
 /* B-4 — 본문 [정제본|원본] 탭 (OCR 3소스) */
 .sv-d-tabs{display:flex;gap:4px;margin:16px 18px 0;border-bottom:1px solid var(--bd);}
 .sv-d-tab{border:0;background:transparent;padding:7px 14px;font-size:0.8rem;font-weight:700;color:var(--ts);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
@@ -9804,7 +9809,7 @@ async function _searchOpen(table, id){
       var _ph;
       if(isPdf){
         /* 소식지 = PDF 첫 페이지 iframe(현행 유지) + 소식지 딸깍·원문(actionBar) + 본문 조판 */
-        _ph=_head+_chip+'<div class="sv-d-pdf"><iframe src="'+_sEsc(_pdfUrl)+'" title="소식지 원문 미리보기"></iframe></div>'+actionBar+_bodyBlock;
+        _ph=_head+_chip+'<div class="sv-d-pdf" onclick="if(typeof _nlOpenFull===\'function\')_nlOpenFull()"><iframe src="'+_sEsc(_pdfUrl)+'" title="소식지 원문 미리보기" tabindex="-1"></iframe><div class="sv-d-zoomov"><span class="sv-d-zb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>크게 보기</span></div></div>'+actionBar+_bodyBlock;
       } else if(_isImg){
         /* 자료실 이미지 = 미리보기 영역(서명URL 비동기)+클릭하면 크게(openLb 오버레이)+원본 열기. 패널 딸깍 버튼 없음(오버레이 안에 4줄) */
         _ph=_head+_chip+'<div class="sv-d-imgwrap" id="svDImg"><div class="sv-d-imgph">이미지 불러오는 중…</div></div>'+_openBtn+_bodyBlock;
@@ -9826,7 +9831,7 @@ async function _searchOpen(table, id){
             if(!u){ box.innerHTML='<div class="sv-d-imgph">미리보기를 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; }
             else {
               window.imgs=[u]; window.names=[(r.original_name||'이미지')];
-              box.innerHTML='<img src="'+u.replace(/"/g,'&quot;')+'" alt="" onclick="if(typeof openLb===\'function\')openLb(0)"><button class="sv-d-zoom" type="button" onclick="if(typeof openLb===\'function\')openLb(0)">&#128269; 클릭하면 크게</button>';
+              box.innerHTML='<img src="'+u.replace(/"/g,'&quot;')+'" alt=""><div class="sv-d-zoomov" onclick="if(typeof openLb===\'function\')openLb(0)"><span class="sv-d-zb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>크게 보기</span></div>';
             }
             var _pn2=document.getElementById('svPanel'); if(_pn2) window._svPanelHtml=_pn2.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
           });
@@ -9872,6 +9877,26 @@ function _nlDdalggak(btn){
   setTimeout(function(){ document.addEventListener('click',_nlOut,true); },0);
 }
 window._nlDdalggak=_nlDdalggak;
+/* 소식지 미리보기 돋보기 클릭 → 전체화면 큰 화면(딸깍 + 새 탭에서 열기 + 닫기). window._nlCur(url/text/name) 재사용 */
+function _nlOpenFull(){
+  var c=window._nlCur; if(!c||!c.url){ return; }
+  var old=document.getElementById('nlFullOv'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.id='nlFullOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99996;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:980px;height:90vh;display:flex;flex-direction:column;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid var(--bd)">'
+    +'<div style="font-weight:800;color:var(--tp);font-size:0.96rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_sEsc(c.name||'소식지')+'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'
+    +'<button onclick="_nlDdalggak(this)" style="padding:7px 13px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:0.8125rem;font-weight:700;cursor:pointer">&#9889; 딸깍</button>'
+    +'<a href="'+_sEsc(c.url)+'" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--ts);text-decoration:none">새 탭에서 열기 &#8599;</a>'
+    +'<button onclick="var o=document.getElementById(\'nlFullOv\');if(o)o.remove();" aria-label="닫기" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>'
+    +'</div></div>'
+    +'<iframe src="'+_sEsc(c.url)+'" style="flex:1;width:100%;border:0;background:#fff" title="소식지 전체 미리보기"></iframe>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+window._nlOpenFull=_nlOpenFull;
 async function _nlAct(action){
   _nlCloseMenu();
   var c=window._nlCur||{}; var T=(typeof toast==='function')?toast:function(){};
