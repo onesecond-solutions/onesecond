@@ -882,7 +882,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 /* 슬라이스 3 — 검색 결과 2단(좌 결과목록 / 우 상세 미리보기 패널). 홈 검색(#hsResults)에서만 적용 */
 .sv-2col{display:flex;gap:16px;align-items:flex-start;}
 .sv-left{flex:1.55;min-width:0;}
-.sv-right{flex:0 0 440px;min-width:0;position:sticky;top:12px;max-height:calc(100vh - 96px);overflow-y:auto;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;}/* 슬라이스3 폭 확대 ~440px */
+.sv-right{flex:0 0 440px;min-width:0;position:sticky;top:0;max-height:calc(100vh - 120px);overflow-y:auto;background:var(--s1);border:0.5px solid var(--bd);border-radius:14px;}/* 슬라이스3 폭~440 / 스크롤 컨테이너=#homeSearch.searching 기준 sticky top:0, 패널 자체 스크롤(바텀시트 위까지) */
 .sv-panel-empty{padding:54px 22px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.8;}
 .sv-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:0.5px solid var(--bd);position:sticky;top:0;background:var(--s1);z-index:1;}
 .sv-panel-head .sph-t{font-weight:800;color:var(--tp);font-size:1rem;line-height:1.4;}
@@ -933,6 +933,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 #app.home-search-preview #homeSearch{display:block;}
 .hs-wrap{max-width:760px;margin:0 auto;padding:25vh 16px 0;}
 /* 슬라이스 2 — 검색 후 좌측 정렬(구글 결과). 검색 전=중앙(.hs-wrap margin:0 auto) / 검색 후=좌측. 로고 outdent=사이드바 onesecond가 맡음 */
+#homeSearch.searching{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;}/* 검색 결과 = 세로 스크롤 영역(.wrap이 overflow:hidden이라 자체 스크롤 필요). 바텀시트는 .main padding-bottom으로 공간 확보 */
 #homeSearch.searching .hs-wrap{max-width:none;margin:0;padding:16px 20px 0;}
 #homeSearch.searching .hs-box{margin:0;max-width:640px;}
 #homeSearch.searching #hsResults{margin:10px 0 0;max-width:1180px;}/* 슬라이스 3 2단(좌 결과+우 패널)이라 확장 */
