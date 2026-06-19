@@ -9443,7 +9443,7 @@ window._runSearch=_runSearch;
 
 /* ════════ 검색 범위 가시화 v2 (어드민·실장·팀장 미리보기) ════════
    문제: 결과가 "데이터 종류"(Q&A/소식지/스크립트…)로 묶여, 사용자가 "지금 어디를 뒤지는지(범위)"를 못 읽음.
-   해결: 결과를 "범위"(내 자료/우리 팀/우리 지점/원세컨드 공동)로 재편 + 범위 칩 + 4신호 색.
+   해결: 결과를 "범위"(내 자료/우리 팀/우리 지점/원세컨드 제공)로 재편 + 범위 칩 + 4신호 색.
    격리·fetch·RLS는 기존 그대로. 명단=UI 라우터(보안 경계 아님). 승인 후 _searchScopeAllow를 'return true'로 열면 전체 라이브. */
 var _SEARCH_V2_ALLOW=['bylts@naver.com','bylts@kakao.com','bylts0428@gmail.com'];
 function _searchScopeAllow(){
@@ -9457,7 +9457,7 @@ var SV_SCOPES=[
   {k:'mine',  label:'내 자료',       color:'#C0392B', who:'나만 볼 수 있어요',         empty:'여기에 올린 자료는 나만 검색됩니다. MY SPACE에 자료를 올려보세요.'},
   {k:'team',  label:'우리 팀',       color:'#0E9A6C', who:'우리 팀만 볼 수 있어요',     empty:'우리 팀이 공유한 자료·공지가 여기 모입니다.'},
   {k:'branch',label:'우리 지점',     color:'#2563EB', who:'우리 지점만 볼 수 있어요',   empty:'우리 지점이 공유한 자료·공지가 여기 모입니다.'},
-  {k:'common',label:'원세컨드 공동', color:'#64748B', who:'원세컨드 가입자만 볼 수 있어요', empty:'소식지·지식·보험 Q&A 등 모두가 함께 보는 자료입니다.'}
+  {k:'common',label:'원세컨드 제공', color:'#64748B', who:'원세컨드 가입자라면 누구나 볼 수 있어요', empty:'원세컨드가 제공하는 지식·소식지 등 모두가 함께 보는 자료입니다.'}
 ];
 /* 소스 탭 (답 품질 우선: 지식·Q&A 먼저, raw 자료 뒤). 라벨=사용자 말(내부 시스템명 노출 금지) */
 var SV_SRC=[
