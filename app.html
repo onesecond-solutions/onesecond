@@ -949,6 +949,8 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 #homeSearch.searching .hs-wrap{max-width:none;margin:0;padding:16px 20px 0;display:flex;flex-direction:column;flex:1;min-height:0;}
 #homeSearch.searching .hs-box{margin:0;max-width:640px;}
 #homeSearch.searching #hsResults{margin:10px 0 0;max-width:1300px;width:100%;flex:1;min-height:0;display:flex;flex-direction:column;}/* 슬라이스3 2단 확장(우측560+120) + flex:1로 남은 높이 채움(좌우 독립 스크롤 컨테이너) */
+.sv-head{flex:0 0 auto;}/* 슬라이스3 §2: 검색 상단 헤더(AI 검색바·소스탭·분류칩·범위)는 고정 — 결과 목록·우측 패널과 함께 스크롤되지 않음 */
+@media(min-width:861px){#v-home.on:has(#homeSearch.searching){display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0;}}/* §5: 검색 중에만(.on AND .searching) #v-home을 고정높이 flex 컨테이너로 → sv-2col이 뷰포트 잔여 높이를 받아 좌/우 각자 내부 스크롤, 페이지 전체는 결과 수만큼 안 늘어남. .on 필수 — 없으면 다른 화면 이동 시 .view{display:none}을 못 이겨 view가 겹침(#v-voice.on/#v-together.on과 동일 패턴) */
 .hs-head{text-align:center;font-size:1.5rem;font-weight:800;color:var(--tp);letter-spacing:-.01em;margin-bottom:18px;}
 #homeSearch.searching .hs-head{display:none;}
 .hs-box{display:flex;align-items:center;gap:8px;max-width:700px;margin:0 auto;}
@@ -9543,7 +9545,9 @@ function _svRender(){
   var items=d.items||[], terms=d.terms, nav=d.nav||[];
   var activeSrc=window._svActiveSource||'all';
   var catF=window._svCatFilter||null;
-  var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
+  var aiBarFixed='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>';
+  var aiAns='<div id="aiAnsBox"></div>';
+  var aiBar=aiBarFixed+aiAns;  /* 오버레이(#sobody)용 결합 — hsResults에선 aiBarFixed(고정 헤더)·aiAns(좌측 스크롤)로 분리 */
   /* 소스 탭(주 축) — 건수 0 소스 탭은 숨김(전체 제외) */
   var srcCount={}; items.forEach(function(it){ srcCount[it.src]=(srcCount[it.src]||0)+1; });
   var tabs='<div class="sv-tabs">';
@@ -9595,7 +9599,7 @@ function _svRender(){
     /* 홈 검색 = 2단(좌 결과 / 우 상세 패널). 패널 내용은 _svPanelHtml에 보존돼 탭 전환·더보기 시 유지 */
     var _panel=window._svPanelHtml||'<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>';
     /* 슬라이스3b: AI 정리(aiBar+aiAnsBox)를 좌측 칼럼 맨 위로 → 기본 결과와 한 흐름(좌 목록 ↔ 우 미리보기 통일) */
-    body.innerHTML='<div class="sv-2col"><div class="sv-left">'+aiBar+tabs+chip+scope+html+'</div><div class="sv-right" id="svPanel">'+_panel+'</div></div>';
+    body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+chip+scope+'</div><div class="sv-2col"><div class="sv-left">'+aiAns+html+'</div><div class="sv-right" id="svPanel">'+_panel+'</div></div>';
   } else {
     body.innerHTML=aiBar+tabs+chip+scope+html;
   }
