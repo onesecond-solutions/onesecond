@@ -9695,7 +9695,8 @@ window._idxStatus=_idxStatus;
 async function _aiAnswer(limit){
   limit=limit||8;
   var box=document.getElementById('aiAnsBox'); if(!box) return;
-  var q=((document.getElementById('sinput')||{}).value||'').trim();
+  /* 검색어 소스: 홈 검색=hsInput / 오버레이=sinput / fallback=마지막 검색어(_svQ). 기존엔 sinput만 봐서 홈에서 검색어를 못 읽던 버그 수정 */
+  var q=((document.getElementById(window._svTarget==='hsResults'?'hsInput':'sinput')||{}).value||window._svQ||'').trim();
   if(q.length<2){ box.innerHTML='<div class="ai-ans-err">검색어를 2자 이상 입력해 주세요</div>'; return; }
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="ai-ans-err">로그인 후 이용할 수 있습니다</div>'; return; }
   var btn=document.querySelector('.ai-ans-btn'); if(btn){ btn.disabled=true; }
