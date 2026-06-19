@@ -9752,13 +9752,16 @@ window._aiAnswer=_aiAnswer;
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
   var _qt=_sTokens(((document.getElementById(window._svTarget==='hsResults'?'hsInput':'sinput')||{}).value||'').trim());  /* 현재 검색어 → 본문 하이라이트용 (홈=hsInput / 오버레이=sinput) */
-  var selMap={ newsletters:'title,company,full_text,clean_text,publish_year,publish_month,source_pdf_url', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,search_text,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,clean_text,category,source_company', myspace_files:'original_name,search_text,clean_text,ext,storage_path' };
+  var selMap={ newsletters:'title,company,full_text,clean_text,publish_year,publish_month,source_pdf_url,source_path', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,search_text,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,clean_text,category,source_company', myspace_files:'original_name,search_text,clean_text,ext,storage_path' };
   var sel=selMap[table]||'title';
   var idCol=(table==='knowledge_entries')?'entry_id':'id';  /* 지식엔진 PK=entry_id */
   try{
     var res=await window.db.fetch('/rest/v1/'+table+'?'+idCol+'=eq.'+encodeURIComponent(id)+'&select='+sel);
     var rows=res.ok?await res.json():[]; var r=rows[0];
     if(!r){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); return; }
+    /* 소식지 PDF URL — 공개 source_pdf_url 우선, 없으면 source_path를 newsletters 버킷 서명URL로(2026-06 업로드분=private 버킷, source_pdf_url=null). ocr-batch와 동일 패턴 → 6월 소식지도 미리보기 일관 노출 */
+    var _pdfUrl=(table==='newsletters')?String(r.source_pdf_url||'').trim():'';
+    if(table==='newsletters' && !_pdfUrl && r.source_path){ try{ _pdfUrl=await _svSignUrl('newsletters', r.source_path); }catch(e){ _pdfUrl=''; } }
     var title=(r.company||r.source_company?((r.company||r.source_company)+' · '):'')+(r.title||r.original_name||'(제목 없음)');
     var meta = r.publish_year?(r.publish_year+'.'+(r.publish_month||'')) : (r.stage||r.category||(r.ext?('자료실 · '+String(r.ext).toUpperCase()):'')||(r.event_date?String(r.event_date).slice(0,10):(r.created_at?_sFmtDate(r.created_at):'')));
     var bodyTxt = r.full_text||r.content||r.search_text||r.script_text||r.body||r.description||r.memo_text||'(내용 없음)';
@@ -9769,14 +9772,14 @@ async function _searchOpen(table, id){
       ? '<div style="padding:12px 18px 0"><a href="#" data-bucket="myspace" data-path="'+_sEsc(r.storage_path)+'" onclick="return _openSignedAtt(event,this)" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원본 파일 열기</a></div>'
       : '';
     _closeSearchDetail();
-    var isPdf=(table==='newsletters' && !!r.source_pdf_url);
-    window._nlCur = isPdf ? { url:r.source_pdf_url, text:(r.full_text||''), name:(r.title||'소식지')+'.pdf' } : null;
+    var isPdf=(table==='newsletters' && !!_pdfUrl);
+    window._nlCur = isPdf ? { url:_pdfUrl, text:(r.full_text||''), name:(r.title||'소식지')+'.pdf' } : null;
     var maxW = isPdf ? '940px' : '680px';
     var actionBar = isPdf
-      ? '<div style="padding:10px 18px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center"><button onclick="_nlDdalggak(this)" style="padding:7px 13px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:0.8125rem;font-weight:700;cursor:pointer">&#9889; 딸깍</button><a href="'+_sEsc(r.source_pdf_url)+'" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--ts);text-decoration:none">새 탭에서 열기 &#8599;</a></div>'
-      : (r.source_pdf_url?'<div style="padding:12px 18px 0"><a href="'+_sEsc(r.source_pdf_url)+'" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원문 PDF 보기 (표·사진 포함)</a></div>':'');
+      ? '<div style="padding:10px 18px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center"><button onclick="_nlDdalggak(this)" style="padding:7px 13px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:0.8125rem;font-weight:700;cursor:pointer">&#9889; 딸깍</button><a href="'+_sEsc(_pdfUrl)+'" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--ts);text-decoration:none">새 탭에서 열기 &#8599;</a></div>'
+      : (_pdfUrl?'<div style="padding:12px 18px 0"><a href="'+_sEsc(_pdfUrl)+'" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원문 PDF 보기 (표·사진 포함)</a></div>':'');
     var bodyInner = isPdf
-      ? '<iframe src="'+_sEsc(r.source_pdf_url)+'" style="flex:1;width:100%;border:0;background:#fff;min-height:62vh" title="소식지 원문 미리보기"></iframe>'
+      ? '<iframe src="'+_sEsc(_pdfUrl)+'" style="flex:1;width:100%;border:0;background:#fff;min-height:62vh" title="소식지 원문 미리보기"></iframe>'
       : '<div id="_sdBody" style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9rem;line-height:1.65">'+_sMark(bodyTxt,_qt)+'</div>';
     /* 홈 검색(2단) = 모달 대신 우측 패널에 시안 조판으로 렌더(소스별). 그 외(오버레이) = 기존 풀스크린 모달 */
     if(window._svTarget==='hsResults'){
@@ -9801,7 +9804,7 @@ async function _searchOpen(table, id){
       var _ph;
       if(isPdf){
         /* 소식지 = PDF 첫 페이지 iframe(현행 유지) + 소식지 딸깍·원문(actionBar) + 본문 조판 */
-        _ph=_head+_chip+'<div class="sv-d-pdf"><iframe src="'+_sEsc(r.source_pdf_url)+'" title="소식지 원문 미리보기"></iframe></div>'+actionBar+_bodyBlock;
+        _ph=_head+_chip+'<div class="sv-d-pdf"><iframe src="'+_sEsc(_pdfUrl)+'" title="소식지 원문 미리보기"></iframe></div>'+actionBar+_bodyBlock;
       } else if(_isImg){
         /* 자료실 이미지 = 미리보기 영역(서명URL 비동기)+클릭하면 크게(openLb 오버레이)+원본 열기. 패널 딸깍 버튼 없음(오버레이 안에 4줄) */
         _ph=_head+_chip+'<div class="sv-d-imgwrap" id="svDImg"><div class="sv-d-imgph">이미지 불러오는 중…</div></div>'+_openBtn+_bodyBlock;
