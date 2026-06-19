@@ -851,6 +851,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .ai-ans-sum{font-size:0.875rem;color:var(--tp);font-weight:600;line-height:1.55;padding:11px;background:var(--s2);border-radius:10px;margin-bottom:8px;}
 .ai-ans-co{padding:10px 11px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;cursor:pointer;}
 .ai-ans-co:hover{background:var(--s2);}
+.ai-ans-co.on{background:rgba(99,102,241,.10);box-shadow:inset 3px 0 0 var(--ac);border-color:var(--ac);}/* 슬라이스3b 선택표식 — .sores.on과 통일 */
 .ai-ans-co-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px;}
 .ai-ans-co-h b{font-size:0.875rem;color:var(--tp);}
 .ai-ans-src{font-size:0.6875rem;color:var(--ac);flex-shrink:0;font-weight:600;}
@@ -9593,7 +9594,8 @@ function _svRender(){
   if((d.targetId||'sobody')==='hsResults'){
     /* 홈 검색 = 2단(좌 결과 / 우 상세 패널). 패널 내용은 _svPanelHtml에 보존돼 탭 전환·더보기 시 유지 */
     var _panel=window._svPanelHtml||'<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>';
-    body.innerHTML=aiBar+'<div class="sv-2col"><div class="sv-left">'+tabs+chip+scope+html+'</div><div class="sv-right" id="svPanel">'+_panel+'</div></div>';
+    /* 슬라이스3b: AI 정리(aiBar+aiAnsBox)를 좌측 칼럼 맨 위로 → 기본 결과와 한 흐름(좌 목록 ↔ 우 미리보기 통일) */
+    body.innerHTML='<div class="sv-2col"><div class="sv-left">'+aiBar+tabs+chip+scope+html+'</div><div class="sv-right" id="svPanel">'+_panel+'</div></div>';
   } else {
     body.innerHTML=aiBar+tabs+chip+scope+html;
   }
@@ -9724,7 +9726,8 @@ async function _aiAnswer(limit){
       html+='<div class="ai-co-head">🏢 회사별 비교 ('+comps.length+')</div>';
       comps.forEach(function(c){
         var pts=(Array.isArray(c.points)?c.points:[]).map(function(p){ return '<li>'+_sMark(String(p||''),terms)+'</li>'; }).join('');
-        html+='<div class="ai-ans-co" onclick="_searchOpen(\'newsletters\',\''+_sEsc(String(c.source_id||''))+'\')">'
+        var _sid=_sEsc(String(c.source_id||''));
+        html+='<div class="ai-ans-co" data-svkey="newsletters:'+_sid+'" onclick="_searchOpen(\'newsletters\',\''+_sid+'\')">'
           +'<div class="ai-ans-co-h"><b>'+_sEsc(c.company||'')+'</b><span class="ai-ans-src">'+(c.period?_sEsc(c.period)+' 소식지 ':'')+'📄</span></div>'
           +'<ul class="ai-co-pts">'+pts+'</ul></div>';
       });
@@ -9805,7 +9808,7 @@ async function _searchOpen(table, id){
       window._svPanelHtml=_ph;
       /* Phase A: 좌↔우 결속 — 선택 키 기록 + 좌측 카드 하이라이트(전체 재렌더 없이 클래스만 토글 → 스크롤 유지) */
       window._svOpenKey=table+':'+id;
-      try{ var _lc=document.getElementById('hsResults'); if(_lc){ _lc.querySelectorAll('.sores.on').forEach(function(el){ el.classList.remove('on'); }); var _selEl=_lc.querySelector('.sores[data-svkey="'+(table+':'+id)+'"]'); if(_selEl) _selEl.classList.add('on'); } }catch(e){}
+      try{ var _lc=document.getElementById('hsResults'); if(_lc){ var _k=table+':'+id; _lc.querySelectorAll('.sores.on,.ai-ans-co.on').forEach(function(el){ el.classList.remove('on'); }); var _selEl=_lc.querySelector('.sores[data-svkey="'+_k+'"],.ai-ans-co[data-svkey="'+_k+'"]'); if(_selEl) _selEl.classList.add('on'); } }catch(e){}
       var _pn=document.getElementById('svPanel');
       if(_pn){
         _pn.innerHTML=_ph; _pn.scrollTop=0;
@@ -9839,7 +9842,7 @@ async function _searchOpen(table, id){
 }
 window._searchOpen=_searchOpen;
 /* 우측 패널 닫기(홈 2단) — 안내 상태로 복원 */
-function _svPanelClose(){ window._svPanelHtml=null; window._svOpenKey=null; var c=document.querySelector('#hsResults .sores.on'); if(c) c.classList.remove('on'); var p=document.getElementById('svPanel'); if(p) p.innerHTML='<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>'; }
+function _svPanelClose(){ window._svPanelHtml=null; window._svOpenKey=null; document.querySelectorAll('#hsResults .sores.on,#hsResults .ai-ans-co.on').forEach(function(c){ c.classList.remove('on'); }); var p=document.getElementById('svPanel'); if(p) p.innerHTML='<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>'; }
 window._svPanelClose=_svPanelClose;
 /* B-4: 우측 패널 본문 [정제본|원본] 탭 전환 — 클라 토글(재fetch 없음) + 상태 보존 */
 function _svBodyTab(btn, which){
