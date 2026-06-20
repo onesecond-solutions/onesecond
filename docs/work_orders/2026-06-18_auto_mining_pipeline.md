@@ -1,5 +1,7 @@
 # 자동 채굴 파이프라인 (코덱스 없이 자체 서버) — 설계 박제
 
+> 🚨 **검수기준 진실원천 = `docs/decisions/2026-06-20_mining_review_criteria_v1.md`** (단일 소스). 소스 적격성·개인정보 분기·자동 diff·익명화·중립성·출처보존·시의성(current/archive)·최종 4분기(approved/hold/archive/discard)·표본검수 전부 그 문서 기준. 본 작업지시서에 기준을 복사하지 말고 링크로 참조.
+>
 > 작성: 2026-06-17 총괄팀장(Code). 결재: 임태성 대표님 — "병목 풀렸으니 코덱스 없이 자동 채굴".
 > 방식: **ocr-batch와 동일 패턴** = Supabase Edge Function + pg_cron. 외부 구독·세팅 0. 코덱스 트랙 폐기(병목 해소로 불요).
 > 순서: 내일 1순위 = 검색 디테일 이식([[project_search_detail_migration_pending]]). 본 트랙은 그 다음(검색이 풀려야 채굴분이 검색에 보임).
