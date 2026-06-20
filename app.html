@@ -9310,6 +9310,18 @@ function _sBuildFilter(cols, terms){
   if(terms.length<=1){ var e=encodeURIComponent('*'+(terms[0]||'')+'*'); return 'or=('+cols.map(function(c){return c+'.ilike.'+e;}).join(',')+')'; }
   return 'and=('+terms.map(orFor).join(',')+')';   /* 모든 키워드 AND */
 }
+/* 스크립트 전용 필터 — 일반 컬럼(title/search_text/script_text)에 더해 '고정 유형명: 스크립트' 매칭.
+   "도입 스크립트"에서 본문에 '스크립트' 단어가 없어도 콘텐츠 유형으로 매칭(다중 토큰 AND 원칙은 그대로). */
+function _scrFilter(cols, terms){
+  var TYPE='스크립트';
+  function orArr(t){
+    var arr=cols.map(function(c){return c+'.ilike.'+encodeURIComponent('*'+t+'*');});
+    if(t.length>=2 && TYPE.indexOf(t)>=0) arr.push('id.not.is.null');   /* 유형명에 포함되는 토큰 = 항상참 */
+    return arr;
+  }
+  if(terms.length<=1){ return 'or=('+orArr(terms[0]||'').join(',')+')'; }
+  return 'and=('+terms.map(function(t){return 'or('+orArr(t).join(',')+')';}).join(',')+')';
+}
 function _sCount(hay, t){ if(!hay||!t) return 0; return String(hay).toLowerCase().split(String(t).toLowerCase()).length-1; }
 function _sScore(titleText, bodyText, terms){
   var score=0, allTitle=true;
@@ -9527,13 +9539,14 @@ async function _runSearchV2(q, targetId){
     {src:'보험 Q&A',  table:'posts',            base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                 select:'id,title,content,created_at',                                       order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return 'common';}},
     {src:'소식지',    table:'newsletters',      base:'',                                       cols:['title','company','full_text'],    select:'id,title,company,full_text,text_quality,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                          t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}, scope:function(r){return 'common';}},
     {src:'팀·지점 공지', table:'team_notices',   base:'deleted_at=is.null',                     cols:['title','content'],                 select:'id,title,content,created_at,scope',                                 order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return r.scope==='branch_internal'?'branch':'team';}},
-    {src:'스크립트',  table:'scripts',          base:'is_active=eq.true&scope=eq.global&is_sample=eq.false',                            cols:['title','search_text','script_text'], select:'id,title,search_text,script_text,highlight_text,stage',                   order:'',                                                        body:function(r){return r.search_text||_svStripHtml((r.highlight_text?r.highlight_text+' ':'')+(r.script_text||''));}, m:function(r){return '스크립트';}/* 검색=search_text(클렌징·#814 백필) 우선, 없으면 strip fallback. stage 노출 금지 */,                          scope:function(r){return 'common';}},
+    {src:'스크립트',  table:'scripts',          base:'is_active=eq.true&is_sample=eq.false'+(me.id?'&or=(scope.eq.global,and(scope.eq.personal,owner_id.eq.'+encodeURIComponent(me.id)+'))':'&scope=eq.global'), cols:['title','search_text','script_text'], filter:_scrFilter, select:'id,title,search_text,script_text,highlight_text,stage,scope,owner_id',                   order:'',                                                        body:function(r){return r.search_text||_svStripHtml((r.highlight_text?r.highlight_text+' ':'')+(r.script_text||''));}, m:function(r){return '스크립트';}/* global+본인 personal만(타인 personal·team/branch·매니저룸 제외). 유형명 매칭=_scrFilter */,                          scope:function(r){return (r.scope==='personal'&&me.id&&r.owner_id===me.id)?'mine':'common';}},
     {src:'지식엔진',  table:'knowledge_entries',base:'status=eq.approved',                     cols:['title','body'],                    select:'id:entry_id,title,body,category',                                   order:'',                                                        body:function(r){return r.body;},                                               m:function(r){return r.category||'지식';},                                       scope:function(r){return 'common';}},
     {src:'자료',      table:'myspace_files',    base:_vaultBase,                               cols:['search_text','original_name'],     select:'id,original_name,search_text,ocr_status,ext,updated_at,scope',       order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                        t:function(r){return r.original_name||'(파일)';},                            m:function(r){return (r.ext||'파일').toString().toUpperCase();},                 scope:function(r){return r.scope==='team'?'team':(r.scope==='branch'?'branch':'mine');}}
   ];
   var lim=window._svLimit||40;   /* 소스별 fetch 한도 — 100→40으로 전송량↓(체감속도). 부족하면 '더 보기'로 +40 */
   var results=await Promise.all(groups.map(function(g){
-    var path=g.table+'?'+(g.base?g.base+'&':'')+_sBuildFilter(g.cols,terms)+'&select='+g.select+(g.order?'&order='+g.order:'')+'&limit='+lim;
+    var _filt=g.filter?g.filter(g.cols,terms):_sBuildFilter(g.cols,terms);   /* 소스별 커스텀 필터 허용(스크립트=유형명 매칭) */
+    var path=g.table+'?'+(g.base?g.base+'&':'')+_filt+'&select='+g.select+(g.order?'&order='+g.order:'')+'&limit='+lim;
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
   }));
   if(seq!==_searchSeq) return;
