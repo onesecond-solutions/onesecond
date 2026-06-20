@@ -1171,21 +1171,20 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-gridhead{justify-content:center;gap:10px}
 .cal-month-sec{margin-bottom:16px}
 .cal-month-hd{font-size:14px;font-weight:800;color:var(--tp);padding:7px 4px;border-bottom:2px solid var(--ac);margin-bottom:9px;cursor:pointer;position:sticky;top:0;background:var(--bg);z-index:1}
-/* 라이브러리 (2026-06-10 정정): D 고정 해제 — A+B+D 가 한 화면처럼 함께 스크롤(#511 sticky 정정).
-   #v-myspace 자체가 단일 세로 스크롤 컨테이너 → D 패널은 콘텐츠와 함께 자연스럽게 스크롤.
-   .main padding-bottom(--os-sheet-offset)로 바텀시트 하단 가림 방지는 그대로 유지.
-   스코프 = 라이브러리 한정. 전 게시판 공용 .split/.col/.list/.viewer 본체는 불변. */
-#v-myspace.on{overflow-y:auto}
+/* 라이브러리 다이어리(today): D 패널이 콘텐츠와 함께 세로 스크롤(#511 sticky 정정·2026-06-10).
+   2026-06-21 정정: 페이지 통째 스크롤은 다이어리(#mys-today)·자료함(#mys-vault)으로 한정.
+   게시판 split(스크립트·메모·팀방·Q&A)은 전 영역 공용 .split 기본값(좌·우 독립 스크롤)을 따른다.
+   .main padding-bottom(--os-sheet-offset)로 바텀시트 하단 가림 방지는 그대로 유지. */
+/* 2026-06-21: 마이스페이스 게시판도 전 영역 공통 .split 동작으로 통일 — 좌 목록 독립 스크롤(위로 가면 상단으로 숨김)·우 미리보기 위치 고정+내부 스크롤 유지·페이지 안 늘어남. 페이지 통째 스크롤(overflow-y:auto) 오버라이드 제거 → 위 #v-myspace.on{overflow:hidden;flex} 본체가 적용됨. 다이어리(#mys-today)·자료함(#mys-vault)만 자체 스크롤로 보존. 진실원천 docs/work_orders/2026-06-21_master_detail_scroll_pattern.md */
+#mys-today{overflow-y:auto}
+#mys-vault{flex:1;min-height:0;overflow-y:auto}
 .mys-workspace{display:flex;gap:18px;align-items:flex-start;padding-bottom:18px}
 .mys-main-col{flex:1;min-width:0;display:flex;flex-direction:column}
 .mys-dpanel{width:330px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--bd);padding-left:18px}
 .dpanel-ttl{font-size:0.9rem;font-weight:800;color:var(--tp);margin-bottom:12px;letter-spacing:-.02em;flex-shrink:0}
 .mys-dpanel .tt-grid{grid-template-columns:1fr}
 .mys-dpanel .tt-card{min-height:0}
-/* 안쪽 게시판 split: 라이브러리 안에서는 내부 스크롤 끄고 자연 높이로 흐름 (스코프 한정) */
-#v-myspace .split{flex:none;overflow:visible;align-items:start}
-#v-myspace .col{overflow:visible}
-#v-myspace .list,#v-myspace .viewer{flex:none;overflow:visible}
+/* 2026-06-21: 위 페이지-스크롤 오버라이드 제거에 맞춰, 내부 스크롤 끄던 .split/.col/.list/.viewer 오버라이드도 제거 → 공용 기본값(좌 목록·우 미리보기 각자 독립 스크롤) 복원. */
 @media (max-width:900px){
   .mys-workspace{flex-direction:column}
   .mys-main-col{flex:none}
