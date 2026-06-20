@@ -54,18 +54,58 @@ mine-batch 실행
 - DB 상태명 = `ai_draft · hold · approved · discarded` (코드와 통일)
 - `hard_failed` = 적재 차단 결과 → `knowledge_entry_id=null`, `source_id`+`batch_id`로 추적
 
-## 검수 원자성 (대표님 §2)
+## 복합 사유 보존 (대표님 §1 — 2차 결재)
 
-`review_knowledge_entry(p_entry_id, p_action, p_note, p_reason_code)` RPC 1콜:
-- knowledge_entries 상태 변경 + 이벤트 INSERT = 같은 트랜잭션 성공/실패
+`reason_code text`(단일) → **`reason_codes text[] not null default '{}'`**.
+- mine-batch 복합 사유를 단일 대표코드로 축소하지 않고 **배열로 전체 보존**. 예: `['diff_warning','numeric_ambiguity']`, `['pii_warning','source_missing']`, `['admin_hold','numeric_ambiguity']`.
+- 배열 모든 원소가 화이트리스트만 허용: `CHECK (reason_codes <@ array[...]::text[])`.
+- 화면은 대표 사유 1개만 표시할 수 있으나, 원장에는 전체 보존.
+- mine-batch writer(3단계)가 현재 복합 문자열(`"uncertainty:source_missing"` 등)을 깨끗한 코드 배열로 매핑.
+
+## 이벤트 멱등성 (대표님 §2 — 2차 결재)
+
+`idempotency_key text not null` + `UNIQUE`. 재시도 시 중복 INSERT 0.
+- mine: `mine:{batch_id}:{source_type}:{source_id}:{event_type}`
+- review: `review:{entry_id}:{from_status}:{to_status}`
+- reprocess: `reprocess:{entry_id}:{batch_id}`
+- writer/RPC = `on conflict (idempotency_key) do nothing`.
+
+## 검수 원자성 (대표님 §2·§3)
+
+`review_knowledge_entry(p_entry_id, p_action, p_note, p_reason_codes[])` RPC 1콜:
+- knowledge_entries 상태 변경 + 이벤트 INSERT = **같은 트랜잭션** 성공/실패
 - `actor_type='admin'`, `actor_id=auth.uid()` RPC 내부 강제 (클라이언트 임의 입력 불가)
-- SECURITY DEFINER + `is_admin()` 가드 + `for update` 행 잠금
-- 자유서술 사유(p_note) → `knowledge_entries.review_note`에만. 원장엔 `reason_code`(코드)만.
+- `SECURITY DEFINER` + `SET search_path=public` + `is_admin()` 가드 + `for update` 행 잠금
+- `revoke all from public` + `grant execute to authenticated`(내부 is_admin로 admin만 통과)
+- 멱등: 이미 목표 상태면 무동작 / 이벤트 `on conflict do nothing`
+- 자유서술 사유(p_note) → `knowledge_entries.review_note`에만. 원장엔 `reason_codes`(코드 배열)만.
+
+## 상태 전환표 (대표님 §4) — RPC 내부 제한
+
+| from \ to | approved | hold | discarded |
+|---|---|---|---|
+| **ai_draft** | ✓ | ✓ | ✓ |
+| **hold** | ✓ | — | ✓ |
+| **approved** | (역전 금지) | (역전 금지) | (역전 금지) |
+| **discarded** | (역전 금지) | (역전 금지) | (역전 금지) |
+
+- approved 역전 = 일반 검수 RPC **금지**. 재검수·재처리는 **별도 명시 액션(reprocessed)** 으로만.
+- 허용 외 전환 = `raise exception 'illegal_transition'`.
+
+## 직접 PATCH 차단 (대표님 §5)
+
+현재 knowledge_entries RLS = `kentries_admin FOR ALL is_admin` → **admin이 이벤트 없이 status 직접 UPDATE 가능(우회 경로)**.
+- 차단 방안: `kpe_guard_status_change()` BEFORE UPDATE 트리거 — 세션 플래그 `app.kpe_via_rpc='on'`(RPC가 설정) 없이 status 변경 시 거부.
+- **★활성화 시점 = 배선 4단계(검수큐 프론트 RPC 완전 전환) 검증 후.** 지금 켜면 현재 직접 PATCH 검수가 깨짐 → 마이그레이션엔 함수만 정의, `create trigger`는 주석(미적용).
+
+## FK 삭제 정책 (대표님 §6)
+
+`knowledge_entry_id bigint references knowledge_entries(entry_id) **ON DELETE SET NULL**` — entry 삭제돼도 감사 이력 보존(링크만 null).
 
 ## 개인정보 차단 (대표님 §4)
 
 원장 저장 금지: raw 본문 / clean_text 전체 / 고객정보 / 개인정보 / 자유서술 오류메시지 / Gemini 전체 출력.
-→ 원장 컬럼에 위 자료를 담는 컬럼 자체가 없음. `reason_code` = 화이트리스트 CHECK(자유서술 차단).
+→ 원장에 위 자료 담는 컬럼 자체가 없음. `reason_codes` = 화이트리스트 CHECK(자유서술 차단).
 
 ## 배선 순서 (대표님 §6)
 
