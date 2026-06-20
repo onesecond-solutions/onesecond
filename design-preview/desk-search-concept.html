@@ -107,6 +107,27 @@
   .row .rs{font-size:0.82rem; color:var(--ts); display:block; margin-top:3px; font-weight:400;}
   .empty{color:var(--tf); font-size:0.85rem; padding:14px; text-align:center;}
 
+  /* 캘린더 (다이어리) */
+  .minical .mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px;}
+  .minical .mc-dow{text-align:center;font-size:0.66rem;color:var(--tf);font-weight:700;padding:2px 0;}
+  .minical .mc-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:0.74rem;color:var(--ts);border-radius:6px;position:relative;}
+  .minical .mc-cell.today{background:var(--ac);color:#fff;font-weight:800;}
+  .minical .mc-cell.has::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--ac);}
+  .minical .mc-cell.today.has::after{background:#fff;}
+  .cal{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius);padding:14px 16px;}
+  .cal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .cal-mon{font-weight:800;font-size:1.05rem;}
+  .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:6px;}
+  .cal-dow span{text-align:center;font-size:0.72rem;color:var(--tf);font-weight:700;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-cell{min-height:64px;border:1px solid var(--bd2);border-radius:8px;padding:5px 6px;display:flex;flex-direction:column;gap:3px;}
+  .cal-cell .d{font-weight:700;color:var(--tp);font-size:0.8rem;}
+  .cal-cell.sun .d{color:#D6455B;} .cal-cell.sat .d{color:var(--ins);}
+  .cal-cell.today{border-color:var(--ac);background:var(--ac-soft);}
+  .cal-evt{font-size:0.66rem;background:var(--ac-soft);color:var(--ac);border-radius:5px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}
+  .cal-evt.br{background:var(--br-soft);color:var(--br);} .cal-evt.tm{background:var(--tm-soft);color:var(--tm);} .cal-evt.ins{background:var(--ins-soft);color:var(--ins);}
+  @media(max-width:680px){ .cal-cell{min-height:50px;} .cal-evt{display:none;} .cal-cell.today .d{color:var(--ac);} }
+
   .note{position:absolute; bottom:14px; left:50%; transform:translateX(-50%); font-size:0.78rem; color:var(--tf); z-index:4;}
 
   @media(max-width:680px){ .cards3{grid-template-columns:1fr;} .tools{grid-template-columns:repeat(3,1fr);} .brand{font-size:1.7rem;} }
@@ -168,10 +189,9 @@
         <div class="diary" onclick="openDetail('diary')">
           <div class="dh">
             <div class="l"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>다이어리 <small style="color:var(--tf);font-weight:600">(지금 우리 캘린더)</small></div>
-            <div class="date">6월 21일 (토) · 펼치기 ›</div>
+            <div class="date">2026년 6월 · 펼치기 ›</div>
           </div>
-          <div class="sk"></div><div class="sk short"></div>
-          <div class="ph">오늘의 상담 · 일정을 기록하세요</div>
+          <div class="minical" id="miniCal"></div>
         </div>
 
         <div class="tools">
@@ -250,7 +270,44 @@
     ]},
   };
 
+  /* 2026년 6월 일정 (1일=일요일, 30일=화요일) */
+  var CAL_EVT={
+    5:[{t:'신규 상담',c:''}],
+    9:[{t:'팀 주간회의',c:'tm'}],
+    12:[{t:'상품 교육',c:'tm'}],
+    18:[{t:'B화재 신담보',c:'ins'}],
+    21:[{t:'상담 10:00',c:''},{t:'상담 15:00',c:''}],
+    23:[{t:'지점 회의',c:'br'}],
+    25:[{t:'청약 마감',c:''}],
+    29:[{t:'월말 정산',c:''}]
+  };
+  var DOWS=['일','월','화','수','목','금','토'];
+  function buildMiniCal(){
+    var h='<div class="mc-grid">';
+    DOWS.forEach(function(d){h+='<span class="mc-dow">'+d+'</span>';});
+    for(var d=1;d<=30;d++){ var cls='mc-cell'; if(d===21)cls+=' today'; if(CAL_EVT[d])cls+=' has'; h+='<span class="'+cls+'">'+d+'</span>'; }
+    return h+'</div>';
+  }
+  function buildBigCal(){
+    var h='<div class="cal"><div class="cal-top"><span class="cal-mon">2026년 6월</span><span style="font-size:.8rem;color:var(--tf)">오늘 21일 (토)</span></div>';
+    h+='<div class="cal-dow">'+DOWS.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="cal-grid">';
+    for(var d=1;d<=30;d++){
+      var dow=(d-1)%7; var cls='cal-cell'; if(dow===0)cls+=' sun'; if(dow===6)cls+=' sat'; if(d===21)cls+=' today';
+      h+='<div class="'+cls+'"><span class="d">'+d+'</span>';
+      if(CAL_EVT[d]) CAL_EVT[d].forEach(function(e){ h+='<span class="cal-evt '+(e.c||'')+'">'+e.t+'</span>'; });
+      h+='</div>';
+    }
+    return h+'</div></div>';
+  }
+  function fillMini(){ var m=document.getElementById('miniCal'); if(m) m.innerHTML=buildMiniCal(); }
+  if(document.readyState!=='loading') fillMini(); else document.addEventListener('DOMContentLoaded',fillMini);
+
   function openDetail(key){
+    if(key==='diary'){
+      document.getElementById('dtTitle').innerHTML='<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>다이어리 (캘린더)';
+      document.getElementById('dtBody').innerHTML=buildBigCal();
+      document.body.classList.add('indetail'); document.querySelector('.desk-body').scrollTop=0; return;
+    }
     var d = DETAIL[key]; if(!d) return;
     document.getElementById('dtTitle').innerHTML = '<svg class="ic" viewBox="0 0 24 24">'+d.icon+'</svg>'+d.title;
     var html='';
