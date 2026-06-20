@@ -52,7 +52,7 @@ interface Config {
   dryRun: boolean; pipelineVersion: string; forceReprocess: boolean;
 }
 interface Candidate {
-  source_type: string; source_id: string; raw: string;
+  source_type: string; source_id: string; raw: string; has_clean: boolean;
   company: string | null; title: string | null;
   publish_year: number | null; publish_month: number | null;
 }
@@ -110,8 +110,23 @@ function canonicalDates(s: string): Set<string> {
 function stripDates(s: string): string {
   return s.replace(DATE_SEP, " ").replace(DATE_KOR, " ").replace(DATE_8, " ");
 }
-function tokenizeNumbers(s: string): string[] {
-  return (s.match(/\d[\d,]*(?:\.\d+)?%?/g) || []).map((x) => x.replace(/,/g, ""));
+// Phase E — 안전 숫자 정규화 + 비정상 자릿수 감지.
+//  · 통화기호·천단위쉼표·천단위공백 제거(소수점 보존) → 28,700 = 28 700 = 28700
+//  · 비정상(쉼표 뒤 4자리+, 예 $3,5000)은 ★복원 추정 안 함 → nums에 미포함 + abnormal로 보고 → hold 유도
+//  · 호출 측에서 raw쪽 집합에만 적용(원문 동일숫자 확인용). out(Gemini) 쪽도 동일 정규화하되 결합 추정은 안 함.
+function numberTokens(text: string): { nums: Set<string>; abnormal: string[] } {
+  const nums = new Set<string>();
+  const abnormal: string[] = [];
+  let work = text.replace(/[$₩€£¥]/g, " ");
+  // (1) 비정상 자릿수: 쉼표 뒤 4자리+ → 추정 금지(제거만, nums에 안 넣음)
+  work = work.replace(/\b\d{1,3},\d{4,}\b/g, (m) => { abnormal.push(m); return " "; });
+  // (2) 정상 천단위 그룹(쉼표/공백 1~2개 + 정확히 3자리)+ 소수 → 구분자 제거.
+  //     1~2개 제한 = OCR이 "28,700"을 "28, 700"·"28 700"으로 깬 것은 결합하되,
+  //     명확한 셀 구분(여러 공백)은 결합 안 함. 3자리 규칙으로 별개 숫자 합침도 방지.
+  work = work.replace(/\b\d{1,3}(?:[,\s]{1,2}\d{3})+(?:\.\d+)?\b/g, (m) => { nums.add(m.replace(/[,\s]/g, "")); return " "; });
+  // (3) 나머지 일반 숫자/소수/퍼센트
+  work = work.replace(/\b\d+(?:\.\d+)?%?\b/g, (m) => { nums.add(m.replace(/%$/, "")); return " "; });
+  return { nums, abnormal };
 }
 
 // ── 1) loadConfig ─────────────────────────────────────────────
@@ -159,7 +174,8 @@ async function fetchNewsletters(sb: SupabaseClient, ids: string[] | null, limit:
   return ((data as Array<Record<string, unknown>>) || []).map((n) => ({
     source_type: "newsletter",
     source_id: String(n.id),
-    raw: String(n.clean_text ?? n.full_text ?? ""),
+    raw: String(n.clean_text ?? n.full_text ?? ""),    // clean_text 최우선 입력(없으면 raw fallback)
+    has_clean: n.clean_text != null && String(n.clean_text).trim().length > 0,
     company: (n.company as string) ?? null,
     title: (n.title as string) ?? (n.source_filename as string) ?? null,
     publish_year: (n.publish_year as number) ?? null,
@@ -177,6 +193,7 @@ async function fetchPosts(sb: SupabaseClient, ids: string[] | null, limit: numbe
     source_type: "post",
     source_id: String(p.id),
     raw: String(p.content ?? ""),
+    has_clean: false,
     company: null,
     title: (p.title as string) ?? null,
     publish_year: null, publish_month: null,
@@ -325,9 +342,9 @@ async function extractKnowledgeWithGemini(cfg: Config, c: Candidate): Promise<Ex
   try { return JSON.parse(txt) as Extracted; } catch { return null; }
 }
 
-// ── 9) runDeterministicDiff (검수기준 §4 — Phase C 3분기) ─────
-function runDeterministicDiff(raw: string, ex: Extracted, c: Candidate): { flag: DiffFlag; hard: string[]; warn: string[] } {
-  const hard: string[] = [], warn: string[] = [];
+// ── 9) runDeterministicDiff (검수기준 §4 — Phase C 3분기 + Phase E 숫자 정규화) ─────
+function runDeterministicDiff(raw: string, ex: Extracted, c: Candidate): { flag: DiffFlag; hard: string[]; warn: string[]; ambiguity: string[] } {
+  const hard: string[] = [], warn: string[] = [], ambiguity: string[] = [];
   const outText = `${ex.title}\n${ex.body}\n${(ex.proper_nouns || []).join(" ")}`;
 
   // (1) 날짜 — canonical 비교(형식 차이는 오판 아님). 본문에 없는 새 날짜는 메타 가능성 → warning.
@@ -335,11 +352,17 @@ function runDeterministicDiff(raw: string, ex: Extracted, c: Candidate): { flag:
   const newD = [...outD].filter((d) => !rawD.has(d));
   if (newD.length) warn.push("신규 날짜(메타 가능) " + newD.slice(0, 3).join(","));
 
-  // (2) 숫자(날짜 제외) — 원문에 없는 2자리+ 숫자 생성 = 실제 수치 왜곡 → hard
-  const rawNums = new Set(tokenizeNumbers(stripDates(raw)));
-  const outNums = tokenizeNumbers(stripDates(outText));
-  const newNums = outNums.filter((n) => n.length >= 2 && !rawNums.has(n));
-  if (newNums.length) hard.push("신규 숫자 " + newNums.slice(0, 5).join(","));
+  // (2) 숫자 — Phase E: 안전 정규화(쉼표·공백·통화 제거, 소수점 보존) 후 비교.
+  //     rawAbnormal(쉼표 뒤 4자리 등)은 ★복원 추정 안 함 → numeric_ambiguity → hold(추정 통과 금지).
+  const rawTok = numberTokens(stripDates(raw));
+  const outTok = numberTokens(stripDates(outText));
+  if (rawTok.abnormal.length) ambiguity.push("raw 비정상 숫자 " + rawTok.abnormal.slice(0, 3).join(","));
+  const newNums = [...outTok.nums].filter((n) => n.length >= 2 && !rawTok.nums.has(n));
+  // 비정상 자릿수가 raw에 있으면, 신규 숫자가 그 복원 후보일 수 있음 → hard 단정 금지, ambiguity로 hold.
+  if (newNums.length) {
+    if (rawTok.abnormal.length) ambiguity.push("신규 숫자(비정상 동반·추정금지) " + newNums.slice(0, 5).join(","));
+    else hard.push("신규 숫자 " + newNums.slice(0, 5).join(","));
+  }
 
   // (3) 회사명 — 근거집합(raw본문 + source_company + canonical + 제목/파일명) 기반
   const evidence = new Set<string>([
@@ -360,8 +383,11 @@ function runDeterministicDiff(raw: string, ex: Extracted, c: Candidate): { flag:
 
   // Phase D: Gemini 자유서술(uncertainty)은 더 이상 diff 트리거가 아님(구조화 code로 build에서 처리).
 
-  const flag: DiffFlag = hard.length ? "diff_hard_fail" : (warn.length ? "diff_warning" : "diff_pass");
-  return { flag, hard, warn };
+  // 우선순위: 진짜 환각(hard) > 비정상 추정금지(ambiguity→hold) > 형식차이(warning) > pass.
+  // ambiguity는 hard로 격상하지 않음(추정 금지) + diff_pass로 통과시키지도 않음 → warning + build에서 hold.
+  const flag: DiffFlag = hard.length ? "diff_hard_fail"
+    : (warn.length || ambiguity.length) ? "diff_warning" : "diff_pass";
+  return { flag, hard, warn, ambiguity };
 }
 
 // ── 10) evaluateLifecycleCandidate (검수기준 §8 — Phase D: 발행일과 분리) ──
@@ -383,7 +409,7 @@ interface BuiltResult {
 }
 function buildKnowledgeCandidate(
   c: Candidate, ex: Extracted, elig: Eligibility, diff: DiffFlag, lifecycle: Lifecycle,
-  hash: string, pipelineVersion: string, piiWarning: boolean,
+  hash: string, pipelineVersion: string, piiWarning: boolean, numericAmbiguity: boolean,
 ): BuiltResult {
   // discard 한정(§6): 지식없음 / 개인정보 분리불가 / 소스 부적격 / 내부자료.
   if (!ex.has_insurance_knowledge)
@@ -406,9 +432,11 @@ function buildKnowledgeCandidate(
   if (ex.pii_present) holdReasons.push("개인정보 제거후 확인");      // hard PII(분리가능) — 빠른 줄 불가
   if (piiWarning) holdReasons.push("pii_warning(계좌형식)");
   if (HOLD_UNCERTAINTY.has(code)) holdReasons.push("uncertainty:" + code);  // source_missing/numeric/condition/extraction_quality
+  if (numericAmbiguity) holdReasons.push("numeric_ambiguity(raw 비정상·추정금지)");  // Phase E — diff_pass 통과 금지
   if (!ex.neutrality_ok) holdReasons.push("중립성 확인");
   if (elig === "manual_review_required") holdReasons.push("소스 적격성 확인");
   // lifecycle_ambiguity·none·validity_unknown → hold 아님(빠른 줄 허용). 현재성은 검색 노출 단계에서 분리.
+  // clean_text 없고 raw 비정상(numericAmbiguity)이면 위에서 이미 hold = 자동 ai_draft 금지(안전경계 6).
 
   const decision: Decision = holdReasons.length ? "hold" : "ai_draft";
   const noteParts = [`code=${code}`, ex.uncertainty_note ? `note=${ex.uncertainty_note}` : ""].filter(Boolean);
@@ -548,7 +576,7 @@ Deno.serve(async (req: Request) => {
 
     const diff = runDeterministicDiff(c.raw, ex, c);
     const lifecycle = evaluateLifecycleCandidate(c.raw, ex);
-    const built = buildKnowledgeCandidate(c, ex, elig.status, diff.flag, lifecycle, hash, cfg.pipelineVersion, pii.warning.length > 0);
+    const built = buildKnowledgeCandidate(c, ex, elig.status, diff.flag, lifecycle, hash, cfg.pipelineVersion, pii.warning.length > 0, diff.ambiguity.length > 0);
 
     const didInsert = await writeCandidate(sb, cfg, built.row);
     if (didInsert) inserted++;
@@ -570,7 +598,8 @@ Deno.serve(async (req: Request) => {
       eligibility: elig.status,
       pii_present: ex.pii_present, pii_separable: ex.pii_separable,
       pii_hard: pii.hard, pii_warning: pii.warning,
-      diff: diff.flag, diff_hard: diff.hard, diff_warn: diff.warn,
+      diff: diff.flag, diff_hard: diff.hard, diff_warn: diff.warn, diff_ambiguity: diff.ambiguity,
+      has_clean: c.has_clean,
       lifecycle, timeliness_signal: ex.timeliness_signal,
       uncertainty_code: ex.uncertainty_code || "none",
       decision: built.decision, reason: built.reason,
