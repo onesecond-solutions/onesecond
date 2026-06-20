@@ -150,9 +150,11 @@ RPC 처리 순서:
 1. (선택)처리 시작 표시 → 2. Gemini·diff·PII 판정 → 3. RPC(후보+이벤트 원자) 또는 writeEvent(이벤트 단독) → **4. 성공 확인 → 5. 그 후에만** mining_state 최종(done/skipped/failed).
 - RPC/이벤트 **실패 시**: 함수 성공 반환 금지 · `failed_count++` · `last_error_code`=비식별 코드 · mining_state=**failed**(done/skipped로 끝내지 않음) → 같은 source_hash+pipeline_version 재실행 가능.
 
-**동시 실행 방어(§5):** 앱 사전조회 의존 X. (가) `pg_advisory_xact_lock`(같은 원천 직렬화) + (나) **partial UNIQUE index** `uq_ke_mine_source (source_id,pipeline_version) WHERE source_type in (mine_*)` = 구조적 최종 보장. 기존 914(non-mine) 영향 0.
+**동시 실행 방어(§5·2차):** 앱 사전조회 의존 X. (가) `pg_advisory_xact_lock`(같은 `type:sid:hash:pv` 직렬화·64bit) + (나) **partial UNIQUE index** `uq_ke_mine_identity (source_type,source_id,source_hash,pipeline_version) WHERE source_type in (mine_*)`. 기존 914(non-mine) 영향 0. **source_id 단독 UNIQUE 금지**(원문/pv 변경 후 정상 재채굴 허용).
 
 **멱등키(§4):** `mine:{pipeline_version}:{source_type}:{source_id}:{source_hash}:{event_type}` — batch 무관 결정적. 동일 재시도 = 후보 0·이벤트 0·기존 변경 0.
+
+**RPC 반환 계약(§3·2차):** `jsonb {entry_id, outcome}` — `inserted`(신규 후보+이벤트) / `already_exists`(중복 후보 존재, duplicate 이벤트) / `idempotent_replay`(이벤트 멱등 충돌=이전 부분기록 재시도). mine-batch는 이 셋 중 하나면 mining_state=done, **RPC 예외/예상밖이면 done 금지 → failed + 비식별 last_error_code + failed_count++ + 재실행 가능**.
 
 **#869에서 제거·교체되는 부분(리팩터 — 결재 후):**
 - ai_draft/hold: `writeCandidate`(단독 INSERT) + `writeEvent`(분리) → **`record_mined_entry` RPC 1콜**로 대체.
