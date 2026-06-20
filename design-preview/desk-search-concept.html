@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원세컨드 — 검색과 내 책상 (개념 시안)</title>
+<style>
+  :root{
+    --bg:#FAFAFB; --card:#FFFFFF; --bd:#E7E7EF; --bd2:#EFEFF4;
+    --tp:#1A1A2E; --ts:#6B6B7B; --tf:#9A9AA8;
+    --ac:#534AB7; --ac-soft:#EEF0FB; --ac-line:#D9DCF6;
+    --radius:18px; --radius-sm:12px;
+    --ease:cubic-bezier(0.83,0,0.17,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg); color:var(--tp); font-size:16px; line-height:1.5;
+    overflow:hidden; position:relative;
+  }
+  svg.ic{width:20px;height:20px;flex:0 0 auto;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* ============ 바닥 = 검색 ============ */
+  .floor{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:24px;
+  }
+  .floor-tag{
+    position:absolute; top:22px; left:26px; display:flex; align-items:center; gap:7px;
+    font-size:0.8rem; font-weight:700; color:var(--tf); letter-spacing:.02em;
+  }
+  .floor-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);}
+  .brand{font-size:2.1rem; font-weight:800; letter-spacing:-.03em; color:var(--tp); margin-bottom:26px;}
+  .brand b{color:var(--ac);}
+  .search-wrap{width:100%; max-width:620px;}
+  .search-box{
+    display:flex; align-items:center; gap:12px; width:100%;
+    background:var(--card); border:1.5px solid var(--bd); border-radius:999px;
+    padding:16px 22px; box-shadow:0 6px 22px rgba(30,30,60,.06);
+  }
+  .search-box:focus-within{border-color:var(--ac-line); box-shadow:0 8px 28px rgba(83,74,183,.12);}
+  .search-box .ic{width:22px;height:22px;color:var(--tf);}
+  .search-box input{flex:1; border:0; outline:0; font-size:1.05rem; background:transparent; color:var(--tp);}
+  .search-box input::placeholder{color:var(--tf);}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:18px;}
+  .chip{
+    font-size:0.85rem; color:var(--ts); background:var(--card);
+    border:1px solid var(--bd); border-radius:999px; padding:7px 15px; cursor:default;
+  }
+  .floor-hint{margin-top:30px; font-size:0.85rem; color:var(--tf);}
+
+  /* ============ 책상 열기 핸들 ============ */
+  .desk-handle{
+    position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+    width:min(560px,92%); background:var(--card);
+    border:1px solid var(--bd); border-bottom:0;
+    border-radius:var(--radius) var(--radius) 0 0;
+    box-shadow:0 -6px 26px rgba(30,30,60,.08);
+    padding:13px 20px 16px; cursor:pointer; z-index:5;
+    transition:transform .35s var(--ease), opacity .25s;
+  }
+  .desk-handle:hover{transform:translateX(-50%) translateY(-3px);}
+  .desk-handle .grab{width:46px;height:5px;border-radius:999px;
+    background:linear-gradient(90deg,var(--ac-line),var(--ac));margin:0 auto 10px;}
+  .desk-handle .hrow{display:flex; align-items:center; justify-content:center; gap:9px;
+    font-weight:800; font-size:1rem; color:var(--tp);}
+  .desk-handle .hrow .ic{color:var(--ac);}
+  .desk-handle .up{color:var(--ac);}
+  body.deskopen .desk-handle{opacity:0; pointer-events:none;}
+
+  /* ============ 바텀시트 = 내 책상 ============ */
+  .scrim{position:absolute; inset:0; background:rgba(20,20,40,.28);
+    opacity:0; pointer-events:none; transition:opacity .5s var(--ease); z-index:8;}
+  body.deskopen .scrim{opacity:1; pointer-events:auto;}
+  .desk{
+    position:absolute; left:0; right:0; bottom:0; height:88%;
+    background:var(--bg); border-radius:22px 22px 0 0;
+    box-shadow:0 -10px 40px rgba(20,20,50,.18);
+    transform:translateY(100%); transition:transform .6s var(--ease);
+    z-index:9; display:flex; flex-direction:column; overflow:hidden;
+  }
+  body.deskopen .desk{transform:translateY(0);}
+  .desk-bar{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding:16px 22px 12px; cursor:pointer;}
+  .desk-bar .ttl{display:flex; align-items:center; gap:9px; font-size:1.15rem; font-weight:800;}
+  .desk-bar .ttl .ic{color:var(--ac);}
+  .desk-bar .ttl small{font-size:0.8rem; font-weight:600; color:var(--tf); margin-left:2px;}
+  .desk-bar .close{display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:700;
+    color:var(--ts); background:var(--card); border:1px solid var(--bd); border-radius:999px; padding:7px 14px; cursor:pointer;}
+  .desk-grab{width:46px;height:5px;border-radius:999px;background:var(--bd);margin:8px auto 0;}
+  .desk-body{flex:1; min-height:0; overflow-y:auto; padding:6px 22px 26px;}
+
+  .cards3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px;}
+  .dcard{background:var(--card); border:1px solid var(--bd); border-radius:var(--radius); padding:16px 18px;}
+  .dcard .ch{display:flex; align-items:center; gap:8px; font-size:0.92rem; font-weight:800; color:var(--tp); margin-bottom:12px;}
+  .dcard .ch .ic{width:18px;height:18px;color:var(--ac);}
+  .li{display:flex; align-items:center; gap:9px; font-size:0.9rem; color:var(--ts); padding:5px 0;}
+  .li .box{width:15px;height:15px;border:1.6px solid var(--bd);border-radius:5px;flex:0 0 auto;}
+  .li b{color:var(--tp); font-weight:700;}
+  .pl{font-size:0.9rem; color:var(--ts); padding:4px 0;}
+  .pl b{color:var(--ac); font-weight:800;}
+  .pl .sub{display:block; font-size:0.78rem; color:var(--tf); margin-top:6px; font-weight:500;}
+
+  .diary{background:var(--card); border:1px solid var(--bd); border-radius:var(--radius); padding:16px 18px; margin-bottom:18px;}
+  .diary .dh{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .diary .dh .l{display:flex; align-items:center; gap:8px; font-weight:800; font-size:0.95rem;}
+  .diary .dh .l .ic{color:var(--ac);}
+  .diary .dh .date{font-size:0.85rem; color:var(--tf); font-weight:600;}
+  .diary .sk{height:9px; border-radius:6px; background:var(--bd2); margin-bottom:8px;}
+  .diary .sk.short{width:42%;}
+  .diary .ph{font-size:0.85rem; color:var(--tf); margin-top:10px;}
+
+  .tools{display:grid; grid-template-columns:repeat(5,1fr); gap:12px;}
+  .tool{display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--bd); border-radius:var(--radius-sm);
+    padding:16px 8px; font-size:0.82rem; font-weight:700; color:var(--ts); cursor:pointer;}
+  .tool .ic{width:22px;height:22px;color:var(--ts);}
+  .tool.on{border-color:var(--ac-line); background:var(--ac-soft); color:var(--ac);}
+  .tool.on .ic{color:var(--ac);}
+  .tool:hover{border-color:var(--ac-line);}
+
+  .note{position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    font-size:0.78rem; color:var(--tf); z-index:4;}
+
+  @media(max-width:680px){
+    .cards3{grid-template-columns:1fr;}
+    .tools{grid-template-columns:repeat(3,1fr);}
+    .brand{font-size:1.7rem;}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== 바닥 = 검색 ===== -->
+  <div class="floor">
+    <div class="floor-tag"><span class="dot"></span>검색 · 무엇이든 찾는 곳</div>
+    <div class="brand">one<b>second</b></div>
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="상품 · 인수기준 · 자료 · 공지 무엇이든 검색">
+      </div>
+      <div class="chips">
+        <span class="chip">상품</span><span class="chip">인수기준</span>
+        <span class="chip">자료실</span><span class="chip">공지</span><span class="chip">스크립트</span>
+      </div>
+    </div>
+    <div class="floor-hint">아래 손잡이를 올리면 — 내 책상이 열립니다</div>
+  </div>
+
+  <!-- ===== 책상 열기 핸들 ===== -->
+  <div class="desk-handle" onclick="openDesk()">
+    <div class="grab"></div>
+    <div class="hrow">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M3 9h18M3 9l1.5-4.5h15L21 9M5 9v10h14V9M9 13h6"/></svg>
+      내 책상 열기 <span class="up">▲</span>
+    </div>
+  </div>
+
+  <!-- ===== 바텀시트 = 내 책상 ===== -->
+  <div class="scrim" onclick="closeDesk()"></div>
+  <section class="desk" id="desk">
+    <div class="desk-bar" onclick="closeDesk()">
+      <div class="ttl">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M3 9h18M3 9l1.5-4.5h15L21 9M5 9v10h14V9M9 13h6"/></svg>
+        내 책상 <small>— 오늘 내 일을 한눈에</small>
+      </div>
+      <button class="close" onclick="closeDesk()">닫기 ▼</button>
+    </div>
+    <div class="desk-grab"></div>
+    <div class="desk-body">
+
+      <div class="cards3">
+        <div class="dcard">
+          <div class="ch"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>오늘의 할 일</div>
+          <div class="li"><span class="box"></span><span><b>상령일</b> D-7</span></div>
+          <div class="li"><span class="box"></span>예약 고객 연락</div>
+          <div class="li"><span class="box"></span>자동 케어 발송</div>
+        </div>
+        <div class="dcard">
+          <div class="ch"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="19" cy="14" r="3"/></svg>파이프라인</div>
+          <div class="pl"><b>신규 2</b> · 예약 1</div>
+          <div class="pl"><b>진행중 3</b> · 청약 1<span class="sub">내 영업 흐름 한눈에</span></div>
+        </div>
+        <div class="dcard">
+          <div class="ch"><svg class="ic" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M16 9a5 5 0 0 1 0 6"/></svg>공지</div>
+          <div class="li"><span style="color:var(--ac);font-weight:800">·</span>4팀 회의 안내</div>
+          <div class="li"><span style="color:var(--ac);font-weight:800">·</span>신상품 교육</div>
+        </div>
+      </div>
+
+      <div class="diary">
+        <div class="dh">
+          <div class="l"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>다이어리 <small style="color:var(--tf);font-weight:600">(지금 우리 캘린더)</small></div>
+          <div class="date">6월 21일 (토)</div>
+        </div>
+        <div class="sk"></div>
+        <div class="sk short"></div>
+        <div class="ph">오늘의 상담 · 일정을 기록하세요</div>
+      </div>
+
+      <div class="tools">
+        <div class="tool"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>다이어리</div>
+        <div class="tool on"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5M8 13h8M8 17h5"/></svg>영업노트</div>
+        <div class="tool"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>개인 자료실</div>
+        <div class="tool"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>스크립트</div>
+        <div class="tool"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3v5h5M9 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-5-5H9z"/></svg>메모</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="note">개념 시안 · 바닥(검색)과 내 책상(작업)의 이원화를 보여주기 위한 것입니다</div>
+
+<script>
+  function openDesk(){ document.body.classList.add('deskopen'); }
+  function closeDesk(){ document.body.classList.remove('deskopen'); }
+</script>
+</body>
+</html>
