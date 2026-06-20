@@ -110,23 +110,27 @@ function canonicalDates(s: string): Set<string> {
 function stripDates(s: string): string {
   return s.replace(DATE_SEP, " ").replace(DATE_KOR, " ").replace(DATE_8, " ");
 }
-// Phase E — 안전 숫자 정규화 + 비정상 자릿수 감지.
-//  · 통화기호·천단위쉼표·천단위공백 제거(소수점 보존) → 28,700 = 28 700 = 28700
-//  · 비정상(쉼표 뒤 4자리+, 예 $3,5000)은 ★복원 추정 안 함 → nums에 미포함 + abnormal로 보고 → hold 유도
-//  · 호출 측에서 raw쪽 집합에만 적용(원문 동일숫자 확인용). out(Gemini) 쪽도 동일 정규화하되 결합 추정은 안 함.
-function numberTokens(text: string): { nums: Set<string>; abnormal: string[] } {
-  const nums = new Set<string>();
+// Phase F — 숫자 타입 분리(plain/percent/currency/abnormal) + 토큰 경계 정밀화.
+//  · 비율(%)을 별도 percent 집합으로 → 120.2%→12.2% 변조·없는 비율 생성은 잡고, %유무 형식차이는 흡수.
+//  · 통화는 currency 집합(기호·구분자 제거). 비정상(쉼표 뒤 4자리, $3,5000)은 abnormal(추정 금지).
+//  · ★토큰 경계 = \b 대신 '숫자 경계' lookaround → 'x3.0%'처럼 문자에 붙은 숫자도 누락 안 함.
+//  · ★천단위 구분자에서 줄바꿈(\n) 제외 → '9,220\n120.2'를 '9220120.2'로 합치는 오류 방지.
+function numberTokens(text: string): { plain: Set<string>; percent: Set<string>; currency: Set<string>; abnormal: string[] } {
+  const plain = new Set<string>(), percent = new Set<string>(), currency = new Set<string>();
   const abnormal: string[] = [];
-  let work = text.replace(/[$₩€£¥]/g, " ");
-  // (1) 비정상 자릿수: 쉼표 뒤 4자리+ → 추정 금지(제거만, nums에 안 넣음)
-  work = work.replace(/\b\d{1,3},\d{4,}\b/g, (m) => { abnormal.push(m); return " "; });
-  // (2) 정상 천단위 그룹(쉼표/공백 1~2개 + 정확히 3자리)+ 소수 → 구분자 제거.
-  //     1~2개 제한 = OCR이 "28,700"을 "28, 700"·"28 700"으로 깬 것은 결합하되,
-  //     명확한 셀 구분(여러 공백)은 결합 안 함. 3자리 규칙으로 별개 숫자 합침도 방지.
-  work = work.replace(/\b\d{1,3}(?:[,\s]{1,2}\d{3})+(?:\.\d+)?\b/g, (m) => { nums.add(m.replace(/[,\s]/g, "")); return " "; });
-  // (3) 나머지 일반 숫자/소수/퍼센트
-  work = work.replace(/\b\d+(?:\.\d+)?%?\b/g, (m) => { nums.add(m.replace(/%$/, "")); return " "; });
-  return { nums, abnormal };
+  const normNum = (s: string) => { const n = Number(s); return Number.isFinite(n) ? String(n) : s; };  // 3.0=3, 120.2=120.2
+  let work = text;
+  // (1) 비정상 자릿수(쉼표 뒤 4자리+, 통화기호 동반 가능) → 추정 금지(abnormal만)
+  work = work.replace(/(?<![\d.])[$₩€£¥]?\s?\d{1,3},\d{4,}(?![\d])/g, (m) => { abnormal.push(m.trim()); return " "; });
+  // (2) 비율(%) → percent. 값 정규화(3.0%=3%). 천단위 쉼표·공백 허용.
+  work = work.replace(/(?<![\d.])\d{1,3}(?:[, ]\d{3})*(?:\.\d+)?\s?%(?![\d])/g, (m) => { percent.add(normNum(m.replace(/[%,\s]/g, ""))); return " "; });
+  // (3) 통화 → currency(기호·구분자 제거). 금액끼리 비교(plain과 교차 허용).
+  work = work.replace(/[$₩€£¥]\s?\d{1,3}(?:[, ]\d{3})*(?:\.\d+)?(?![\d])/g, (m) => { currency.add(m.replace(/[$₩€£¥,\s]/g, "")); return " "; });
+  // (4) 천단위 그룹(쉼표/공백 1~2개, ★줄바꿈 제외) → plain
+  work = work.replace(/(?<![\d.])\d{1,3}(?:[, \t]{1,2}\d{3})+(?:\.\d+)?(?![\d])/g, (m) => { plain.add(m.replace(/[, \t]/g, "")); return " "; });
+  // (5) 일반 숫자(\b 대신 숫자경계 lookaround = 문자 인접도 잡음) → plain. %는 (2)가 이미 소비.
+  work = work.replace(/(?<![\d.])\d+(?:\.\d+)?(?![\d%])/g, (m) => { plain.add(m); return " "; });
+  return { plain, percent, currency, abnormal };
 }
 
 // ── 1) loadConfig ─────────────────────────────────────────────
@@ -352,17 +356,29 @@ function runDeterministicDiff(raw: string, ex: Extracted, c: Candidate): { flag:
   const newD = [...outD].filter((d) => !rawD.has(d));
   if (newD.length) warn.push("신규 날짜(메타 가능) " + newD.slice(0, 3).join(","));
 
-  // (2) 숫자 — Phase E: 안전 정규화(쉼표·공백·통화 제거, 소수점 보존) 후 비교.
-  //     rawAbnormal(쉼표 뒤 4자리 등)은 ★복원 추정 안 함 → numeric_ambiguity → hold(추정 통과 금지).
+  // (2) 숫자 — Phase F: 타입 분리(plain/percent/currency) 후 타입별 비교.
+  //     비율(%)·금액·일반을 섞지 않음. raw 비정상(쉼표 뒤 4자리)은 추정 금지 → numeric_ambiguity → hold.
   const rawTok = numberTokens(stripDates(raw));
   const outTok = numberTokens(stripDates(outText));
   if (rawTok.abnormal.length) ambiguity.push("raw 비정상 숫자 " + rawTok.abnormal.slice(0, 3).join(","));
-  const newNums = [...outTok.nums].filter((n) => n.length >= 2 && !rawTok.nums.has(n));
-  // 비정상 자릿수가 raw에 있으면, 신규 숫자가 그 복원 후보일 수 있음 → hard 단정 금지, ambiguity로 hold.
-  if (newNums.length) {
-    if (rawTok.abnormal.length) ambiguity.push("신규 숫자(비정상 동반·추정금지) " + newNums.slice(0, 5).join(","));
-    else hard.push("신규 숫자 " + newNums.slice(0, 5).join(","));
+
+  // 금액성(plain+currency)은 서로 교차 허용($3,500=3500). 비율(percent)은 비율끼리만.
+  const rawMoney = new Set<string>([...rawTok.plain, ...rawTok.currency]);
+  const outMoney = new Set<string>([...outTok.plain, ...outTok.currency]);
+  // 신규 금액 = out 금액 중 raw 금액에도, raw 비율에도 없는 것(2자리+)
+  const newMoney = [...outMoney].filter((n) => n.length >= 2 && !rawMoney.has(n) && !rawTok.percent.has(n));
+  // 신규 비율 = out 비율 중 raw 비율에도, raw 금액에도 없는 것
+  const newPct = [...outTok.percent].filter((p) => !rawTok.percent.has(p) && !rawMoney.has(p));
+  // 단위 불일치 = 같은 값이 한쪽은 비율, 다른쪽은 금액(% 소실/추가) → 의미 훼손 의심 → warning(hold)
+  const unitMis = [...outTok.percent].filter((p) => !rawTok.percent.has(p) && rawMoney.has(p))
+    .concat([...outMoney].filter((n) => !rawMoney.has(n) && rawTok.percent.has(n)));
+
+  if (newMoney.length) {
+    if (rawTok.abnormal.length) ambiguity.push("신규 숫자(비정상 동반·추정금지) " + newMoney.slice(0, 5).join(","));
+    else hard.push("신규 숫자 " + newMoney.slice(0, 5).join(","));
   }
+  if (newPct.length) hard.push("신규 비율 " + newPct.slice(0, 5).join(",") + "%");   // 없는 비율 생성·비율값 변조
+  if (unitMis.length) warn.push("단위 불일치(%소실/추가) " + unitMis.slice(0, 3).join(","));
 
   // (3) 회사명 — 근거집합(raw본문 + source_company + canonical + 제목/파일명) 기반
   const evidence = new Set<string>([
