@@ -31,6 +31,14 @@
 -- select column_name, data_type from information_schema.columns where table_schema='public' and table_name='newsletters' and column_name='id';  -- uuid 기대
 -- select column_name, data_type from information_schema.columns where table_schema='public' and table_name='posts'       and column_name='id';  -- bigint 기대
 -- select conname, pg_get_constraintdef(oid) from pg_constraint where conrelid='public.knowledge_entries'::regclass and conname='chk_ke_status';
+--
+-- §1(2차) 소유자/권한 확인 — 트리거가 비교할 '실제 소유자 역할'을 눈으로 확인(역할명 추정 금지).
+-- select tableowner from pg_tables where schemaname='public' and tablename='knowledge_entries';            -- 테이블 소유자
+-- select proowner::regrole::text as fn_owner from pg_proc                                                  -- RPC 함수 소유자(STEP 2 적용 후 재확인)
+--   where proname='review_knowledge_entry' and pronamespace='public'::regnamespace;
+-- select grantee, privilege_type from information_schema.role_table_grants                                 -- authenticated 의 직접 UPDATE 권한 현황
+--   where table_schema='public' and table_name='knowledge_entries' and privilege_type='UPDATE';
+-- select polname, cmd, qual, with_check from pg_policies where tablename='knowledge_entries';              -- 기존 UPDATE RLS 정책
 
 -- ════════════════════════════════════════════════════════════════
 -- STEP 1 : 이벤트 원장 테이블 (append-only)
@@ -147,6 +155,7 @@ declare
   v_codes   text[];
   v_uid     uuid := auth.uid();               -- §3 actor 강제(클라이언트 임의입력 불가)
   v_key     text;
+  v_ins     int;
 begin
   -- §3 권한: admin 만 (SECURITY DEFINER 이므로 명시 가드 필수)
   if not is_admin() then
@@ -190,13 +199,20 @@ begin
          updated_at  = now()
    where entry_id = p_entry_id;
 
-  -- (2) 같은 트랜잭션에서 이벤트 기록 (actor 강제 + 멱등키). 재시도 충돌 시 무시.
+  -- (2) 같은 트랜잭션에서 이벤트 기록 (actor 강제 + 결정적 멱등키).
+  --   §2 정상 재시도는 위 'v_from=v_to 무동작'에서 이미 걸러짐(상태가 목표면 INSERT 미도달).
+  --   여기서 충돌이 나면 = 같은 전환 이벤트가 이미 존재(비정상 동시성). 상태만 바뀐 채 끝나지 않도록
+  --   예외를 던져 트랜잭션 전체(상태 UPDATE 포함)를 롤백한다.
   v_key := 'review:' || p_entry_id || ':' || v_from || ':' || v_to;
   insert into public.knowledge_pipeline_events
     (event_type, knowledge_entry_id, from_status, to_status, reason_codes, actor_type, actor_id, idempotency_key)
   values
     (v_event, p_entry_id, v_from, v_to, v_codes, 'admin', v_uid, v_key)
   on conflict (idempotency_key) do nothing;
+  get diagnostics v_ins = row_count;
+  if v_ins = 0 then
+    raise exception 'event_conflict_rollback: % (상태변경 취소)', v_key;  -- 이벤트 없는 상태변경 방지
+  end if;
 end;
 $$;
 
@@ -205,25 +221,44 @@ revoke all on function public.review_knowledge_entry(bigint, text, text, text[])
 grant execute on function public.review_knowledge_entry(bigint, text, text, text[]) to authenticated;
 
 -- ════════════════════════════════════════════════════════════════
--- STEP 3 : 직접 PATCH 차단 트리거 (§5) — ★설계·미적용.
---   knowledge_entries.status 를 이벤트 없이 바꾸는 우회 경로 차단용.
---   ★검수큐 프론트가 RPC로 완전 전환(배선 4단계)되고 검증된 뒤에만 'create trigger' 주석 해제.
+-- STEP 3 : 직접 PATCH 차단 트리거 (§5 — 2차 결재) — ★설계·미적용.
+--   knowledge_entries.status 를 이벤트 없이 바꾸는 우회 경로 차단(최종 방어선).
+--   ★1차 방어선 = authenticated 의 직접 UPDATE 권한 제거(배선 6단계에서 함께 수행).
+--   ★검수큐 프론트가 RPC로 완전 전환(배선 5단계)·검증된 뒤에만 'create trigger' 주석 해제(6단계).
 --   지금 활성화하면 현재 직접 PATCH 검수가 깨지므로 함수만 정의하고 트리거는 비활성.
+--
+--   ※ 세션 플래그 단독 신뢰 금지(§5 2차). 상태 변경 허용 = 다음 2가지 모두 충족:
+--      (1) current_setting('app.kpe_via_rpc', true) = 'on'  (RPC 가 세션-로컬로 설정)
+--      (2) current_user = review_knowledge_entry 함수의 '실제 소유자 역할'
+--          → SECURITY DEFINER 함수 본문 안의 UPDATE 만 current_user 가 소유자가 됨.
+--            직접 PATCH(authenticated 등)는 소유자가 아니므로 차단. 소유자명은 박지 않고 런타임 조회.
+--   ※ 이 트리거는 SECURITY INVOKER(기본) — definer 로 만들면 current_user 가 항상 트리거 소유자로
+--     바뀌어 (2) 판별이 무력화되므로 절대 definer 로 만들지 않는다.
 -- ════════════════════════════════════════════════════════════════
 create or replace function public.kpe_guard_status_change() returns trigger
 language plpgsql
-security definer
-set search_path = public
+-- (SECURITY INVOKER 기본 — 의도적으로 definer 미지정)
+set search_path = pg_catalog, public
 as $$
+declare
+  v_owner text;
 begin
-  if new.status is distinct from old.status
-     and coalesce(current_setting('app.kpe_via_rpc', true), 'off') <> 'on' then
-    raise exception 'status_change_must_use_review_rpc';  -- 이벤트 없는 상태변경 차단
+  if new.status is distinct from old.status then
+    -- 함수의 실제 소유자 역할을 런타임 조회(추정 금지)
+    select proowner::regrole::text into v_owner
+      from pg_proc
+     where proname = 'review_knowledge_entry' and pronamespace = 'public'::regnamespace
+     limit 1;
+    if coalesce(current_setting('app.kpe_via_rpc', true), 'off') <> 'on'
+       or v_owner is null
+       or current_user <> v_owner then
+      raise exception 'status_change_must_use_review_rpc';  -- 이벤트 없는 상태변경 차단
+    end if;
   end if;
   return new;
 end;
 $$;
--- ★4단계 검증 후 주석 해제:
+-- ★배선 6단계(프론트 RPC 전환 검증 + 직접 UPDATE 권한 제거) 후 주석 해제:
 -- drop trigger if exists trg_kpe_guard_status on public.knowledge_entries;
 -- create trigger trg_kpe_guard_status before update on public.knowledge_entries
 --   for each row execute function public.kpe_guard_status_change();

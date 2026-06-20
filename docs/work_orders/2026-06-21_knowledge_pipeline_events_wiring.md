@@ -92,11 +92,33 @@ mine-batch 실행
 - approved 역전 = 일반 검수 RPC **금지**. 재검수·재처리는 **별도 명시 액션(reprocessed)** 으로만.
 - 허용 외 전환 = `raise exception 'illegal_transition'`.
 
-## 직접 PATCH 차단 (대표님 §5)
+## 직접 PATCH 차단 (대표님 §5 — 1·2차)
 
 현재 knowledge_entries RLS = `kentries_admin FOR ALL is_admin` → **admin이 이벤트 없이 status 직접 UPDATE 가능(우회 경로)**.
-- 차단 방안: `kpe_guard_status_change()` BEFORE UPDATE 트리거 — 세션 플래그 `app.kpe_via_rpc='on'`(RPC가 설정) 없이 status 변경 시 거부.
-- **★활성화 시점 = 배선 4단계(검수큐 프론트 RPC 완전 전환) 검증 후.** 지금 켜면 현재 직접 PATCH 검수가 깨짐 → 마이그레이션엔 함수만 정의, `create trigger`는 주석(미적용).
+
+**방어선 2겹:**
+1. **1차(주)** = authenticated 의 `knowledge_entries.status` 직접 UPDATE 권한 제거 + UPDATE RLS 정책 점검.
+2. **2차(최종)** = `kpe_guard_status_change()` BEFORE UPDATE 트리거.
+
+**트리거 허용 조건 = 다음 2가지 모두 충족(세션 플래그 단독 신뢰 금지):**
+- `current_setting('app.kpe_via_rpc', true) = 'on'` (RPC가 세션-로컬 설정)
+- `current_user = review_knowledge_entry 함수의 실제 소유자` (SECURITY DEFINER 함수 본문의 UPDATE만 소유자로 실행됨 / 소유자명은 런타임 `pg_proc` 조회, 추정 금지)
+- 트리거는 **SECURITY INVOKER**(definer면 current_user가 트리거 소유자로 고정돼 조건2 무력화).
+
+**배선 6단계에서 함께 점검(우회 경로 0 확인):**
+- authenticated 의 knowledge_entries.status 직접 UPDATE 권한 제거
+- 기존 RLS UPDATE 정책에서 직접 상태 변경 가능 여부
+- 다른 프론트·RPC·Edge Function 의 직접 PATCH 경로
+- 이벤트 없이 status만 바뀌는 우회 경로 0
+
+**★활성화 시점 = 6단계.** 지금 켜면 현재 직접 PATCH 검수가 깨짐 → 마이그레이션엔 함수만 정의, `create trigger`는 주석(미적용).
+
+## 이벤트 충돌 처리 (대표님 §2 — 2차)
+
+RPC 처리 순서:
+1. 이미 목표 상태면 **UPDATE 전 무동작 반환**(정상 재시도 흡수)
+2. 유효 신규 전환이면 상태 UPDATE + 이벤트 INSERT를 **같은 트랜잭션**에서
+3. 예상치 못한 멱등 충돌(`on conflict do nothing` 후 `row_count=0`)이면 → **`raise exception`으로 트랜잭션 전체 롤백** = 상태만 바뀌고 이벤트 없는 상황 0.
 
 ## FK 삭제 정책 (대표님 §6)
 
@@ -107,14 +129,17 @@ mine-batch 실행
 원장 저장 금지: raw 본문 / clean_text 전체 / 고객정보 / 개인정보 / 자유서술 오류메시지 / Gemini 전체 출력.
 → 원장에 위 자료 담는 컬럼 자체가 없음. `reason_codes` = 화이트리스트 CHECK(자유서술 차단).
 
-## 배선 순서 (대표님 §6)
+## 배선 순서 (대표님 최종 — 8단계)
 
-1. **[이 PR] 마이그레이션 SQL + RPC 설계** ← 지금
-2. 대표 결재 후 DB 적용 (Dashboard, STEP 0 검증 먼저)
-3. mine-batch 이벤트 writer (mined/held/hard_failed/skipped 기록)
-4. 검수큐 원자적 RPC 배선 (knowledge-vault.html patchStatus → review_knowledge_entry 호출로 교체)
-5. 학습일지 이벤트 피드 (2영역: 신규 events / 과거 logs)
-6. 5건 제한 실적재로 전체 흐름 검증 (dry_run=false, limit=5)
+0. **[이 PR #868] 마이그레이션 SQL + RPC 설계** ← 머지 완료 자리
+1. Dashboard **STEP 0** 자료형·소유자·권한 확인
+2. **STEP 1·2** DB 적용
+3. 적용 결과 검증
+4. **mine-batch writer** (mined/held/hard_failed/skipped 이벤트 기록)
+5. **검수큐 RPC 배선** (knowledge-vault.html patchStatus → review_knowledge_entry 호출로 교체)
+6. **직접 PATCH 차단 트리거 활성화** (+ authenticated 직접 UPDATE 권한 제거, 우회 0 점검)
+7. **학습일지 이벤트 피드** (2영역: 신규 events / 과거 logs)
+8. **5건 제한 실적재**로 전체 흐름 검증 (dry_run=false, limit=5)
 
 ## 완료 검증 (대표님 §7) — 첫 5건 실적재에서 확인
 
