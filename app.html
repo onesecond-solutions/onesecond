@@ -2,6 +2,22 @@
 <html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
+<!-- ===== TEST ONLY (home_test1) — 검색/책상 이원화 시안 미리보기. URL 아는 우리만. 부팅 전에 신호를 잡아야 해서 head 맨 위. 테스트 후 삭제 예정 ===== -->
+<script>
+(function(){try{
+  if(new URLSearchParams(location.search).get('view')!=='home_test1') return;
+  function mount(){
+    if(document.getElementById('__home_test1_frame')) return;
+    var f=document.createElement('iframe');
+    f.id='__home_test1_frame';
+    f.src='/design-preview/desk-search-concept.html?_t='+Date.now();
+    f.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#FAFAFB';
+    (document.body||document.documentElement).appendChild(f);
+  }
+  if(document.readyState!=='loading') mount();
+  else document.addEventListener('DOMContentLoaded',mount);
+}catch(e){}})();
+</script>
 <!-- 2026-05-30: app.html 캐시 무효화 (role 게이팅 옛 JS 캐시 방지 — 강력새로고침 의존 제거) -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -14701,21 +14717,6 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
 })();
-</script>
-<!-- ===== TEST ONLY (home_test1) — 검색/책상 이원화 시안 미리보기. URL 아는 우리만 접근. 테스트 후 삭제 예정 ===== -->
-<script>
-(function(){try{
-  if(new URLSearchParams(location.search).get('view')!=='home_test1') return;
-  function mount(){
-    if(document.getElementById('__home_test1_frame')) return;
-    var f=document.createElement('iframe');
-    f.id='__home_test1_frame';
-    f.src='/design-preview/desk-search-concept.html?_t='+Date.now();
-    f.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;border:0;z-index:2147483647;background:#FAFAFB';
-    document.body.appendChild(f);
-  }
-  if(document.body) mount(); else document.addEventListener('DOMContentLoaded',mount);
-}catch(e){}})();
 </script>
 </body>
 </html>
