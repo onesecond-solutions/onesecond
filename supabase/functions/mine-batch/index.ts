@@ -24,7 +24,9 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 // ── 설정 상수(작업지시서 §11) ─────────────────────────────────
-const PIPELINE_VERSION  = "v1c";          // Phase C — 재채굴 트리거(이전 v1 결과와 분리)
+const PIPELINE_VERSION  = "v1d";          // Phase D — 시의성/uncertainty 분리·PII 인접성 정밀화
+// uncertainty_code 중 자동 hold 사유가 되는 것(작업지시서 Phase D). lifecycle_ambiguity·none은 hold 아님.
+const HOLD_UNCERTAINTY = new Set(["source_missing", "numeric_ambiguity", "condition_ambiguity", "extraction_quality"]);
 const MAX_ITEMS_PER_RUN = 5;
 const MAX_ITEMS_PER_DAY = 50;
 const MAX_SAMPLE        = 30;             // dry-run 표본 지정 상한
@@ -234,19 +236,31 @@ const HARD_PII: Array<[string, RegExp]> = [
   ["이메일",   /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/],
   ["카톡대화", /\[(오전|오후)\s*\d{1,2}:\d{2}\]/],
 ];
-const ACCT_RE  = /\b\d{2,6}-\d{2,6}-\d{2,7}\b/;
-const ACCT_CTX = /(은행|계좌|예금주|입금|송금|이체|account|bank)/i;
+const ACCT_RE   = /\b\d{2,6}-\d{2,6}-\d{2,7}\b/g;
+const ACCT_CTX  = /(은행|계좌|예금주|입금|송금|이체|account|bank)/i;
+const PHONE_RE  = /\b0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4}\b/g;       // 전화(계좌 오인 제외용)
+const CARD16_RE = /\b(?:\d{4}[-\s]?){3}\d{4}\b/g;               // 카드번호(계좌 오인 제외용)
+// Phase D: 계좌·증권은 '인접 문맥'이 있을 때만 PII 확정. 전화·카드·날짜는 사전 제거(오인 방지).
 function detectSensitiveData(raw: string): { hard: string[]; warning: string[] } {
   const hard: string[] = [], warning: string[] = [];
   for (const [name, re] of HARD_PII) { if (re.test(raw)) hard.push(name); }
-  if (ACCT_RE.test(raw)) { if (ACCT_CTX.test(raw)) hard.push("계좌(문맥확인)"); else warning.push("계좌형식(문맥없음)"); }
+  // 계좌형식 검사 입력 = 날짜·전화·카드 제거(이들을 계좌로 오인하지 않게)
+  const cleaned = stripDates(raw).replace(PHONE_RE, " ").replace(CARD16_RE, " ");
+  let m: RegExpExecArray | null, acctHard = false, acctWarn = false;
+  ACCT_RE.lastIndex = 0;
+  while ((m = ACCT_RE.exec(cleaned)) !== null) {
+    const around = cleaned.slice(Math.max(0, m.index - 15), m.index + m[0].length + 15);
+    if (ACCT_CTX.test(around)) acctHard = true; else acctWarn = true;   // 숫자 '주변'에 문맥 있을 때만 hard
+  }
+  if (acctHard) hard.push("계좌(문맥인접)");
+  else if (acctWarn) warning.push("계좌형식(문맥없음)");
   return { hard, warning };
 }
 // 개인정보 마스킹(로그·보고용 — 원문 저장 금지)
 function maskPII(s: string): string {
   let t = s;
   for (const [, re] of HARD_PII) t = t.replace(new RegExp(re, "g"), "███");
-  t = t.replace(new RegExp(ACCT_RE, "g"), "███");
+  t = t.replace(ACCT_RE, "███");
   return t;
 }
 
@@ -259,13 +273,16 @@ const EXTRACT_SCHEMA = {
     tags: { type: "ARRAY", items: { type: "STRING" } },
     company: { type: "STRING" },
     proper_nouns: { type: "ARRAY", items: { type: "STRING" } },
-    timeliness_signal: { type: "STRING" },
+    timeliness_signal: { type: "STRING", enum: ["current", "expired", "archive", "unknown"] },
     pii_present: { type: "BOOLEAN" }, pii_separable: { type: "BOOLEAN" },
     eligibility_doubt: { type: "BOOLEAN" }, neutrality_ok: { type: "BOOLEAN" },
-    uncertainty: { type: "STRING" }, confidence: { type: "STRING" },
+    uncertainty_code: { type: "STRING",
+      enum: ["none", "source_missing", "numeric_ambiguity", "condition_ambiguity", "lifecycle_ambiguity", "extraction_quality"] },
+    uncertainty_note: { type: "STRING" },
+    confidence: { type: "STRING" },
   },
   required: ["has_insurance_knowledge", "title", "body", "pii_present", "pii_separable",
-             "eligibility_doubt", "neutrality_ok", "timeliness_signal", "confidence"],
+             "eligibility_doubt", "neutrality_ok", "timeliness_signal", "uncertainty_code", "confidence"],
 };
 const EXTRACT_SYSTEM = [
   "너는 보험 공식 자료에서 '검색 가능한 보험 지식'을 추출·일반화하는 검수자다.",
@@ -276,13 +293,19 @@ const EXTRACT_SYSTEM = [
   "중립: 특정 보험사를 단정적으로 우대('무조건 최고','반드시 가입')하지 않는다. 사실 기반 비교만 허용.",
   "개인정보(고객실명·주민번호·전화·녹취·가족/질병)가 있으면 pii_present=true. 지식과 분리 불가하면 pii_separable=false.",
   "보험 지식이 없으면 has_insurance_knowledge=false. 타 GA·외부 제작물로 의심되면 eligibility_doubt=true.",
+  // Phase D — 시의성: 발행 시점이 아니라 '내용의 현재 유효성' 기준. 명확한 근거가 있을 때만 판정.
+  "timeliness_signal: 원문에 명확한 시행일·사용기한·판매중단·단종·대체 표현이 있을 때만 current/expired/archive. 그런 근거가 없으면 unknown. 발행 월이 최근이라는 이유만으로 current로 단정하지 마라.",
+  // Phase D — 불확실성은 구조화 코드로. 자유서술(note)은 참고용일 뿐 판정 트리거 아님.
+  "uncertainty_code로 분류: none / source_missing(출처 불명) / numeric_ambiguity(숫자·금액·기간 모호) / condition_ambiguity(조건·예외 모호) / lifecycle_ambiguity(현재성만 모호) / extraction_quality(원문 OCR 품질 불량). 상세는 uncertainty_note에 짧게.",
+  "단순히 '확실하지 않다'는 일반 서술은 uncertainty_code=none + note로만 남긴다. 실제 모호함이 있을 때만 해당 code를 쓴다.",
 ].join("\n");
 
 interface Extracted {
   has_insurance_knowledge: boolean; title: string; body: string;
   category?: string; tags?: string[]; company?: string; proper_nouns?: string[];
   timeliness_signal: string; pii_present: boolean; pii_separable: boolean;
-  eligibility_doubt: boolean; neutrality_ok: boolean; uncertainty?: string; confidence: string;
+  eligibility_doubt: boolean; neutrality_ok: boolean;
+  uncertainty_code?: string; uncertainty_note?: string; confidence: string;
 }
 async function extractKnowledgeWithGemini(cfg: Config, c: Candidate): Promise<Extracted | null> {
   const body = c.raw.slice(0, MAX_INPUT_CHARS);
@@ -335,24 +358,22 @@ function runDeterministicDiff(raw: string, ex: Extracted, c: Candidate): { flag:
   // (4) 본문 과다(원문보다 1.3배+) = 창작 의심 → warning
   if ((ex.body || "").length > raw.length * 1.3 && raw.length > 200) warn.push("본문 과다(창작 의심)");
 
-  // (5) Gemini 자체 불확실 표기 → warning
-  if (ex.uncertainty && ex.uncertainty.trim()) warn.push("ai_uncertainty");
+  // Phase D: Gemini 자유서술(uncertainty)은 더 이상 diff 트리거가 아님(구조화 code로 build에서 처리).
 
   const flag: DiffFlag = hard.length ? "diff_hard_fail" : (warn.length ? "diff_warning" : "diff_pass");
   return { flag, hard, warn };
 }
 
-// ── 10) evaluateLifecycleCandidate (검수기준 §8) ──────────────
-function evaluateLifecycleCandidate(c: Candidate, ex: Extracted): Lifecycle {
+// ── 10) evaluateLifecycleCandidate (검수기준 §8 — Phase D: 발행일과 분리) ──
+// 발행 시점(publish_year/month)으로 current를 자동 확정하지 않는다. 내용의 현재 유효성은 별도 축.
+// 원문에 명확한 시행/만료/단종/대체 표현이 있을 때만 확정. 근거 불충분 = validity_unknown(hold 사유 아님).
+const EXPIRE_KW = /판매\s*(종료|중단|중지)|단종|판매\s*중지|신상품으로\s*대체|대체\s*판매|개정\s*시행/;
+function evaluateLifecycleCandidate(raw: string, ex: Extracted): Lifecycle {
   const sig = (ex.timeliness_signal || "").toLowerCase();
-  if (sig.includes("expired") || sig.includes("superseded") || sig.includes("단종") || sig.includes("만료"))
-    return "expired_or_superseded";
-  if (sig.includes("archive") || sig.includes("과거")) return "archive";
-  if (sig.includes("current") || sig.includes("현재")) {
-    if (c.publish_year && c.publish_year <= 2024) return "validity_unknown";  // 오래된 건 사람 확인
-    return "current";
-  }
-  return "validity_unknown";
+  if (sig === "expired" || EXPIRE_KW.test(raw)) return "expired_or_superseded";
+  if (sig === "archive") return "archive";
+  if (sig === "current") return "current";   // Gemini가 '명확한 현재 유효 근거'로 판정한 경우만
+  return "validity_unknown";                  // 근거 불충분 — hold로 보내지 않음(빠른 줄 허용)
 }
 
 // ── 11) buildKnowledgeCandidate (Phase C — discard 한정 + hard_fail 분기) ──
@@ -378,16 +399,19 @@ function buildKnowledgeCandidate(
   if (diff === "diff_hard_fail")
     return { decision: "hard_fail", lifecycle, diff, row: null, reason: "diff_hard_fail(실제 왜곡/환각)" };
 
-  // hold 사유: 개인정보(제거후 확인)·pii_warning(문맥없는 계좌형식)·diff_warning·적격성 미확정·시의성 미확정·중립성 의심
+  // Phase D — hold 사유(느린 줄): 실제 의심 항목만. ★시의성 미확정(validity_unknown)은 hold 사유 아님.
+  const code = ex.uncertainty_code || "none";
   const holdReasons: string[] = [];
-  if (ex.pii_present) holdReasons.push("개인정보 제거후 확인");
-  if (piiWarning) holdReasons.push("pii_warning(계좌형식)");
   if (diff === "diff_warning") holdReasons.push("diff_warning");
-  if (elig === "manual_review_required") holdReasons.push("소스 적격성 확인");
-  if (lifecycle === "validity_unknown") holdReasons.push("시의성 미확정");
+  if (ex.pii_present) holdReasons.push("개인정보 제거후 확인");      // hard PII(분리가능) — 빠른 줄 불가
+  if (piiWarning) holdReasons.push("pii_warning(계좌형식)");
+  if (HOLD_UNCERTAINTY.has(code)) holdReasons.push("uncertainty:" + code);  // source_missing/numeric/condition/extraction_quality
   if (!ex.neutrality_ok) holdReasons.push("중립성 확인");
+  if (elig === "manual_review_required") holdReasons.push("소스 적격성 확인");
+  // lifecycle_ambiguity·none·validity_unknown → hold 아님(빠른 줄 허용). 현재성은 검색 노출 단계에서 분리.
 
   const decision: Decision = holdReasons.length ? "hold" : "ai_draft";
+  const noteParts = [`code=${code}`, ex.uncertainty_note ? `note=${ex.uncertainty_note}` : ""].filter(Boolean);
   const row = {
     type: "scenario",
     title: (ex.title || "").slice(0, 300),
@@ -407,6 +431,7 @@ function buildKnowledgeCandidate(
     diff_flag: diff,                  // diff_pass 또는 diff_warning만(hard_fail은 여기 도달 못함)
     pipeline_version: pipelineVersion,
     source_hash: hash,
+    review_note: maskPII("[ai] " + noteParts.join("; ")).slice(0, 500),   // uncertainty 참고정보(트리거 아님·마스킹)
     created_by: "ai",
   };
   return { decision, lifecycle, diff, row, reason: holdReasons.join("+") || "ok" };
@@ -522,7 +547,7 @@ Deno.serve(async (req: Request) => {
     if (pii.hard.length) ex.pii_present = true;
 
     const diff = runDeterministicDiff(c.raw, ex, c);
-    const lifecycle = evaluateLifecycleCandidate(c, ex);
+    const lifecycle = evaluateLifecycleCandidate(c.raw, ex);
     const built = buildKnowledgeCandidate(c, ex, elig.status, diff.flag, lifecycle, hash, cfg.pipelineVersion, pii.warning.length > 0);
 
     const didInsert = await writeCandidate(sb, cfg, built.row);
@@ -546,7 +571,8 @@ Deno.serve(async (req: Request) => {
       pii_present: ex.pii_present, pii_separable: ex.pii_separable,
       pii_hard: pii.hard, pii_warning: pii.warning,
       diff: diff.flag, diff_hard: diff.hard, diff_warn: diff.warn,
-      lifecycle,
+      lifecycle, timeliness_signal: ex.timeliness_signal,
+      uncertainty_code: ex.uncertainty_code || "none",
       decision: built.decision, reason: built.reason,
       neutrality_ok: ex.neutrality_ok, confidence: ex.confidence,
       title: (ex.title || "").slice(0, 80),
