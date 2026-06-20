@@ -20,6 +20,10 @@ const CRON_SECRET   = Deno.env.get("CRON_SECRET") ?? "";
 // 소식지2 + 자료실2 = 4건/틱 ≈ 120초로 안전 마진 확보(2026-06-14 504 타임아웃 대응). 필요 시 함께 조정.
 const BATCH_NL    = 2;      // 소식지(newsletters) 틱당 처리 건수
 const BATCH_FILES = 2;      // 자료실(myspace_files) 틱당 처리 건수
+// B-2 정제 백필 — raw(원본)는 보존, clean_text(정제본)만 채움. 이미지 재OCR 0(이미 적재된 텍스트만 정제 = 저렴·빠름).
+// OCR 바쁘면 소스당 1건(150초 한도 보호), OCR idle이면 소스당 4건(밤샘 집중 백필).
+const BATCH_REFINE_BUSY = 1;
+const BATCH_REFINE_IDLE = 4;
 // ocr-extract 의 MAX_FILE_BYTES(18MB)와 동일. 초과분은 Gemini가 413 → 마킹해서 보류함에 잡고 무한 재시도 차단.
 const MAX_FILE_BYTES = 18 * 1024 * 1024;
 // AI 한글 제목 생성 — Gemini(ocr-extract와 동일 키·모델). 파일럿 계정이 자료실에 올린 무의미 파일명만 대상(2026-06-17).
@@ -147,7 +151,13 @@ Deno.serve(async (req: Request) => {
   //   멱등: 성공='done' / 빈추출='empty' / 비대상 타입='skip' 마킹 → 재선택 방지.
   const files = await processMyspaceFiles();
 
-  return json({ picked: rows.length, ok, empty, failed, remaining, files });
+  // ── B-2 정제 백필(refine) ──────────────────────────────────
+  //   clean_text 비어있고 raw 있는 행을 3소스(소식지·자료실·지식)에서 꺼내 정제본 적재(raw 보존).
+  //   OCR이 이번 틱에 무엇이든 처리했으면(busy) 정제는 적게, 아니면(idle) 많이 — 150초 한도 보호.
+  const ocrBusy = (rows.length + (files.picked || 0)) > 0;
+  const refine = await processRefine(ocrBusy ? BATCH_REFINE_BUSY : BATCH_REFINE_IDLE);
+
+  return json({ picked: rows.length, ok, empty, failed, remaining, files, refine });
 });
 
 // PDF/이미지 판별 (Gemini 직접 OCR 대상). office류는 후순위(skip).
@@ -288,6 +298,80 @@ async function patchFile(id: string, patch: Record<string, unknown>) {
   });
   if (!(up.ok || up.status === 204)) console.error("[ocr-batch/files] UPDATE 실패", id, up.status);
   return up;
+}
+
+// ── B-2 정제 백필(refine) ──────────────────────────────────────
+// 정제 = OCR raw 텍스트의 "가독성만" 복원. 내용·숫자·담보명·보험사명 절대 불변(보험 정보 정확성 최우선).
+// 이미지 재전송 0(이미 적재된 raw 텍스트만 입력) → 저렴·빠름. ocr-extract와 동일 Gemini 키/모델.
+const REFINE_SYSTEM = [
+  "너는 OCR로 추출된 보험 업무 문서 텍스트의 가독성만 복원하는 편집기다.",
+  "내용은 절대 바꾸지 않는다. 붙어버린 글자 사이의 띄어쓰기와 문장·문단 줄바꿈만 자연스럽게 복원한다.",
+  "숫자·금액·비율·날짜·보험회사명·상품명·담보명·고유명사는 변경·요약·생략·추가를 절대 하지 않는다.",
+  "단어를 다른 표현으로 바꾸거나 의역·요약하지 않는다. 원문 단어를 그대로 두고 띄어쓰기·줄바꿈만 넣는다.",
+  "표는 행 단위로 줄을 나누되 칸 내용은 원문 그대로 둔다.",
+  "출력은 정리된 본문 텍스트 그 자체만. 설명·머리말·코드블록 표시를 붙이지 않는다.",
+].join(" ");
+
+// raw 텍스트 → 정제본. 실패 시 "" 반환(그 틱 skip = 다음 틱 재시도, 무한루프는 cron 주기로 자연 제어).
+async function refineText(raw: string): Promise<string> {
+  if (!GEMINI_API_KEY) return "";
+  const src = raw.slice(0, 30000); // 과대 입력 방어(대부분 OCR 본문은 이 안에 들어옴)
+  try {
+    const res = await fetch(`${GEMINI_API_BASE}/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: REFINE_SYSTEM }] },
+        contents: [{ role: "user", parts: [{ text: "다음 OCR 텍스트의 띄어쓰기·줄바꿈만 복원해줘. 내용·숫자·고유명사는 그대로:\n\n" + src }] }],
+        generationConfig: { temperature: 0, responseMimeType: "text/plain", maxOutputTokens: 16384, thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    });
+    if (!res.ok) { console.error("[ocr-batch/refine] Gemini", res.status, await res.text().catch(() => "")); return ""; }
+    const j = await res.json().catch(() => ({}));
+    const t = ((j?.candidates?.[0]?.content?.parts || []).map((p: { text?: string }) => p.text || "").join("")).trim();
+    return t;
+  } catch (e) { console.error("[ocr-batch/refine] 오류", String(e)); return ""; }
+}
+
+// 정제 백필 대상 3소스 — raw 컬럼이 있고 clean_text 비어있는 행. id 컬럼은 knowledge_entries만 entry_id.
+const REFINE_SOURCES = [
+  { table: "newsletters",       raw: "full_text",   idCol: "id",       filter: "&full_text=not.is.null&clean_text=is.null" },
+  { table: "myspace_files",     raw: "search_text", idCol: "id",       filter: "&search_text=not.is.null&clean_text=is.null&deleted_at=is.null" },
+  { table: "knowledge_entries", raw: "body",        idCol: "entry_id", filter: "&body=not.is.null&clean_text=is.null" },
+];
+
+async function processRefine(perSource: number) {
+  const out: Record<string, { picked: number; ok: number; failed: number; remaining: number; error?: string }> = {};
+  for (const s of REFINE_SOURCES) {
+    const res = { picked: 0, ok: 0, failed: 0, remaining: -1 } as { picked: number; ok: number; failed: number; remaining: number; error?: string };
+    let rows: Array<Record<string, unknown>> = [];
+    try {
+      const r = await rest(s.table + "?select=" + s.idCol + "," + s.raw + s.filter + "&limit=" + perSource);
+      if (!r.ok) { res.error = "조회 실패 " + r.status; out[s.table] = res; continue; }
+      rows = await r.json();
+    } catch (e) { res.error = String(e); out[s.table] = res; continue; }
+    res.picked = rows.length;
+    for (const row of rows) {
+      try {
+        const raw = String(row[s.raw] || "");
+        if (!raw.trim()) { res.failed++; continue; }
+        const clean = await refineText(raw);
+        if (!clean) { res.failed++; continue; }   // 다음 틱 재시도
+        const up = await rest(s.table + "?" + s.idCol + "=eq." + encodeURIComponent(String(row[s.idCol])), {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ clean_text: clean }),
+        });
+        if (up.ok || up.status === 204) res.ok++; else { res.failed++; console.error("[ocr-batch/refine] UPDATE 실패", s.table, up.status); }
+      } catch (e) { res.failed++; console.error("[ocr-batch/refine] 처리 오류", s.table, String(e)); }
+    }
+    try {
+      const r2 = await rest(s.table + "?select=" + s.idCol + s.filter, { headers: { Prefer: "count=exact", Range: "0-0" } });
+      const cr = r2.headers.get("content-range"); if (cr) res.remaining = parseInt(cr.split("/")[1] || "-1", 10);
+    } catch (_e) {}
+    out[s.table] = res;
+  }
+  return out;
 }
 
 // ── 배포 NOTE ──────────────────────────────────────────────
