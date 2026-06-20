@@ -105,8 +105,10 @@ mine-batch 실행
 - `current_user = review_knowledge_entry 함수의 실제 소유자` (SECURITY DEFINER 함수 본문의 UPDATE만 소유자로 실행됨 / 소유자명은 런타임 `pg_proc` 조회, 추정 금지)
 - 트리거는 **SECURITY INVOKER**(definer면 current_user가 트리거 소유자로 고정돼 조건2 무력화).
 
+**STEP 0 확정값(2026-06-21):** 테이블·함수 소유자 = **postgres**(트리거 `current_user=소유자` 비교 기준). 자료형 4/4 일치. ⚠️ **anon·authenticated 둘 다 knowledge_entries UPDATE 권한 보유**(현재 RLS is_admin로 차단 중이나 6단계 제거 대상). status=914 approved 불변.
+
 **배선 6단계에서 함께 점검(우회 경로 0 확인):**
-- authenticated 의 knowledge_entries.status 직접 UPDATE 권한 제거
+- **authenticated + anon** 의 knowledge_entries(특히 status) 직접 UPDATE 권한 제거
 - 기존 RLS UPDATE 정책에서 직접 상태 변경 가능 여부
 - 다른 프론트·RPC·Edge Function 의 직접 PATCH 경로
 - 이벤트 없이 status만 바뀌는 우회 경로 0
