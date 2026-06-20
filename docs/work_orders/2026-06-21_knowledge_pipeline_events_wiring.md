@@ -131,6 +131,37 @@ RPC 처리 순서:
 원장 저장 금지: raw 본문 / clean_text 전체 / 고객정보 / 개인정보 / 자유서술 오류메시지 / Gemini 전체 출력.
 → 원장에 위 자료 담는 컬럼 자체가 없음. `reason_codes` = 화이트리스트 CHECK(자유서술 차단).
 
+## 4b — 후보+이벤트 원자화 (record_mined_entry RPC)
+
+> 진실원천 SQL = `docs/migrations/2026-06-21_record_mined_entry_rpc.sql`. #869 부분 실패(후보만·이벤트 없음) 취약 해소.
+
+**후보 생성/비생성 전환표:**
+
+| 판정 | knowledge_entry | 경로 | event_type | reason_codes |
+|---|---|---|---|---|
+| ai_draft | 생성 | record_mined_entry RPC(원자) | mined | ['pass'] |
+| hold | 생성 | record_mined_entry RPC(원자) | held | 복합 코드 |
+| 중복(source_id+pv 존재) | 생성 안 함 | RPC 내부 dedup | skipped | ['duplicate'] |
+| hard_failed | 생성 안 함 | writeEvent 단독 | hard_failed | ['diff_hard_fail'] |
+| 자동 discard(지식없음/PII분리불가/소스부적격/내부) | 생성 안 함 | writeEvent 단독 | skipped | 해당 코드 |
+| 이미 채굴됨(재실행) | 생성 안 함 | writeEvent 단독 | skipped | ['already_mined'] |
+
+**mining_state 확정 순서(§3):**
+1. (선택)처리 시작 표시 → 2. Gemini·diff·PII 판정 → 3. RPC(후보+이벤트 원자) 또는 writeEvent(이벤트 단독) → **4. 성공 확인 → 5. 그 후에만** mining_state 최종(done/skipped/failed).
+- RPC/이벤트 **실패 시**: 함수 성공 반환 금지 · `failed_count++` · `last_error_code`=비식별 코드 · mining_state=**failed**(done/skipped로 끝내지 않음) → 같은 source_hash+pipeline_version 재실행 가능.
+
+**동시 실행 방어(§5):** 앱 사전조회 의존 X. (가) `pg_advisory_xact_lock`(같은 원천 직렬화) + (나) **partial UNIQUE index** `uq_ke_mine_source (source_id,pipeline_version) WHERE source_type in (mine_*)` = 구조적 최종 보장. 기존 914(non-mine) 영향 0.
+
+**멱등키(§4):** `mine:{pipeline_version}:{source_type}:{source_id}:{source_hash}:{event_type}` — batch 무관 결정적. 동일 재시도 = 후보 0·이벤트 0·기존 변경 0.
+
+**#869에서 제거·교체되는 부분(리팩터 — 결재 후):**
+- ai_draft/hold: `writeCandidate`(단독 INSERT) + `writeEvent`(분리) → **`record_mined_entry` RPC 1콜**로 대체.
+- 이벤트 멱등키: batch 기반 → **pipeline_version+source_hash 기반**으로 통일(writeEvent/already_mined 포함).
+- `writeMiningState` 호출: 이벤트/RPC **성공 후로 이동**, 실패 시 `failed`.
+- skipped/hard_failed/already_mined: `writeEvent` 유지(이벤트 단독)하되 성공 확인 후 mining_state 확정.
+
+★ 이 단계 = **SQL+설계 PR 보고까지만.** DB 실행·Edge Function 배포·mine-batch 리팩터 코드는 결재 후.
+
 ## 배선 순서 (대표님 최종 — 8단계)
 
 0. **[이 PR #868] 마이그레이션 SQL + RPC 설계** ← 머지 완료 자리
