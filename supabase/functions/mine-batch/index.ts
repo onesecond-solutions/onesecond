@@ -422,6 +422,7 @@ function evaluateLifecycleCandidate(raw: string, ex: Extracted): Lifecycle {
 interface BuiltResult {
   decision: Decision; lifecycle: Lifecycle; diff: DiffFlag;
   row: Record<string, unknown> | null; reason: string;
+  codes: string[];   // 이벤트 원장 reason_codes(화이트리스트 코드, 복합 보존)
 }
 function buildKnowledgeCandidate(
   c: Candidate, ex: Extracted, elig: Eligibility, diff: DiffFlag, lifecycle: Lifecycle,
@@ -429,28 +430,30 @@ function buildKnowledgeCandidate(
 ): BuiltResult {
   // discard 한정(§6): 지식없음 / 개인정보 분리불가 / 소스 부적격 / 내부자료.
   if (!ex.has_insurance_knowledge)
-    return { decision: "discarded", lifecycle, diff, row: null, reason: "보험지식 없음" };
+    return { decision: "discarded", lifecycle, diff, row: null, reason: "보험지식 없음", codes: ["no_knowledge"] };
   if (ex.pii_present && !ex.pii_separable)
-    return { decision: "discarded", lifecycle, diff, row: null, reason: "개인정보 분리 불가" };
+    return { decision: "discarded", lifecycle, diff, row: null, reason: "개인정보 분리 불가", codes: ["pii_unseparable"] };
   if (elig === "source_rejected" || ex.eligibility_doubt)
-    return { decision: "discarded", lifecycle, diff, row: null, reason: "소스 부적격/외부저작물 의심" };
+    return { decision: "discarded", lifecycle, diff, row: null, reason: "소스 부적격/외부저작물 의심", codes: ["source_rejected"] };
   if (elig === "internal_only")
-    return { decision: "discarded", lifecycle, diff, row: null, reason: "내부자료(공용 적재 금지)" };
+    return { decision: "discarded", lifecycle, diff, row: null, reason: "내부자료(공용 적재 금지)", codes: ["internal_only"] };
 
   // diff_hard_fail = 적재 차단이되 즉시 영구폐기 아님 → 재채굴 분기(§6).
   if (diff === "diff_hard_fail")
-    return { decision: "hard_fail", lifecycle, diff, row: null, reason: "diff_hard_fail(실제 왜곡/환각)" };
+    return { decision: "hard_fail", lifecycle, diff, row: null, reason: "diff_hard_fail(실제 왜곡/환각)", codes: ["diff_hard_fail"] };
 
   // Phase D — hold 사유(느린 줄): 실제 의심 항목만. ★시의성 미확정(validity_unknown)은 hold 사유 아님.
+  // holdReasons=내부 표시용(복합 한글) / codes=이벤트 원장 화이트리스트 코드(복합 보존).
   const code = ex.uncertainty_code || "none";
   const holdReasons: string[] = [];
-  if (diff === "diff_warning") holdReasons.push("diff_warning");
-  if (ex.pii_present) holdReasons.push("개인정보 제거후 확인");      // hard PII(분리가능) — 빠른 줄 불가
-  if (piiWarning) holdReasons.push("pii_warning(계좌형식)");
-  if (HOLD_UNCERTAINTY.has(code)) holdReasons.push("uncertainty:" + code);  // source_missing/numeric/condition/extraction_quality
-  if (numericAmbiguity) holdReasons.push("numeric_ambiguity(raw 비정상·추정금지)");  // Phase E — diff_pass 통과 금지
-  if (!ex.neutrality_ok) holdReasons.push("중립성 확인");
-  if (elig === "manual_review_required") holdReasons.push("소스 적격성 확인");
+  const codes: string[] = [];
+  if (diff === "diff_warning") { holdReasons.push("diff_warning"); codes.push("diff_warning"); }
+  if (ex.pii_present) { holdReasons.push("개인정보 제거후 확인"); codes.push("pii_present"); }   // hard PII(분리가능)
+  if (piiWarning) { holdReasons.push("pii_warning(계좌형식)"); codes.push("pii_warning"); }
+  if (HOLD_UNCERTAINTY.has(code)) { holdReasons.push("uncertainty:" + code); codes.push(code); }  // source_missing/numeric/condition/extraction_quality
+  if (numericAmbiguity) { holdReasons.push("numeric_ambiguity(raw 비정상·추정금지)"); codes.push("numeric_ambiguity"); }  // Phase E
+  if (!ex.neutrality_ok) { holdReasons.push("중립성 확인"); codes.push("neutrality_check"); }
+  if (elig === "manual_review_required") { holdReasons.push("소스 적격성 확인"); codes.push("source_eligibility_check"); }
   // lifecycle_ambiguity·none·validity_unknown → hold 아님(빠른 줄 허용). 현재성은 검색 노출 단계에서 분리.
   // clean_text 없고 raw 비정상(numericAmbiguity)이면 위에서 이미 hold = 자동 ai_draft 금지(안전경계 6).
 
@@ -478,7 +481,10 @@ function buildKnowledgeCandidate(
     review_note: maskPII("[ai] " + noteParts.join("; ")).slice(0, 500),   // uncertainty 참고정보(트리거 아님·마스킹)
     created_by: "ai",
   };
-  return { decision, lifecycle, diff, row, reason: holdReasons.join("+") || "ok" };
+  return {
+    decision, lifecycle, diff, row, reason: holdReasons.join("+") || "ok",
+    codes: codes.length ? Array.from(new Set(codes)) : ["pass"],   // 적재(ai_draft)=pass
+  };
 }
 
 // ── 12) writeMiningState (멱등 upsert) ────────────────────────
@@ -497,13 +503,36 @@ async function writeMiningState(
 }
 
 // ── 13) writeCandidate (dry_run=false + 적재 대상일 때만 INSERT) ──
-async function writeCandidate(sb: SupabaseClient, cfg: Config, row: Record<string, unknown> | null): Promise<boolean> {
-  if (cfg.dryRun || !row) return false;
+//   반환 = { id, outcome }. id=신규/기존 entry_id(이벤트 링크용), outcome=inserted|duplicate|failed|dryrun.
+type WriteResult = { id: number | null; outcome: "inserted" | "duplicate" | "failed" | "dryrun" };
+async function writeCandidate(sb: SupabaseClient, cfg: Config, row: Record<string, unknown> | null): Promise<WriteResult> {
+  if (cfg.dryRun || !row) return { id: null, outcome: "dryrun" };
   const { data: dup } = await sb.from("knowledge_entries")
     .select("entry_id").eq("source_id", row.source_id).eq("pipeline_version", row.pipeline_version).limit(1);
-  if (dup && dup.length) return false;
-  const { error } = await sb.from("knowledge_entries").insert(row);
-  return !error;
+  if (dup && dup.length) return { id: (dup[0] as { entry_id: number }).entry_id ?? null, outcome: "duplicate" };
+  const { data: ins, error } = await sb.from("knowledge_entries").insert(row).select("entry_id").single();
+  if (error) return { id: null, outcome: "failed" };
+  return { id: (ins as { entry_id: number })?.entry_id ?? null, outcome: "inserted" };
+}
+
+// ── 13b) writeEvent (감사 원장 append — dry_run=0, 멱등키로 재시도 중복 방지) ──
+//   actor=ai(자동 채굴). 사람 검수 이벤트는 review_knowledge_entry RPC가 별도로 기록.
+async function writeEvent(
+  sb: SupabaseClient, cfg: Config,
+  ev: {
+    event_type: string; source_type: string; source_id: string;
+    knowledge_entry_id: number | null; from_status: string | null; to_status: string | null;
+    reason_codes: string[]; batch_id: string;
+  },
+): Promise<void> {
+  if (cfg.dryRun) return;   // dry-run = 이벤트 0(마커 0 원칙)
+  const key = `mine:${ev.batch_id}:${ev.source_type}:${ev.source_id}:${ev.event_type}`;
+  await sb.from("knowledge_pipeline_events").upsert({
+    event_type: ev.event_type, source_type: ev.source_type, source_id: ev.source_id,
+    knowledge_entry_id: ev.knowledge_entry_id, batch_id: ev.batch_id,
+    pipeline_version: cfg.pipelineVersion, from_status: ev.from_status, to_status: ev.to_status,
+    reason_codes: ev.reason_codes, actor_type: "ai", actor_id: null, idempotency_key: key,
+  }, { onConflict: "idempotency_key", ignoreDuplicates: true });
 }
 
 // ── 14) returnSafeReport (raw 마스킹 — 원문 비노출 보장) ───────
@@ -564,7 +593,16 @@ Deno.serve(async (req: Request) => {
 
     const hash = await calculateSourceHash(c.raw);
     const ms = await checkMiningState(sb, cfg, c, hash);
-    if (ms.skip) { skipped++; continue; }
+    if (ms.skip) {
+      skipped++;
+      // §7 재실행 추적: 이미 채굴된 원천은 skipped 이벤트로 기록(중복 적재 0)
+      await writeEvent(sb, cfg, {
+        event_type: "skipped", source_type: c.source_type, source_id: c.source_id,
+        knowledge_entry_id: null, from_status: null, to_status: null,
+        reason_codes: ["already_mined"], batch_id: batchId,
+      });
+      continue;
+    }
     processed++;
 
     const elig = evaluateSourceEligibility(c);
@@ -594,8 +632,8 @@ Deno.serve(async (req: Request) => {
     const lifecycle = evaluateLifecycleCandidate(c.raw, ex);
     const built = buildKnowledgeCandidate(c, ex, elig.status, diff.flag, lifecycle, hash, cfg.pipelineVersion, pii.warning.length > 0, diff.ambiguity.length > 0);
 
-    const didInsert = await writeCandidate(sb, cfg, built.row);
-    if (didInsert) inserted++;
+    const wr = await writeCandidate(sb, cfg, built.row);
+    if (wr.outcome === "inserted") inserted++;
 
     // mining_state: ai_draft/hold=done / discarded=skipped(영구) / hard_fail=failed(재채굴, 한도 내)
     let finalState: "done" | "failed" | "skipped" = "done";
@@ -603,6 +641,20 @@ Deno.serve(async (req: Request) => {
     if (built.decision === "discarded") finalState = "skipped";
     else if (built.decision === "hard_fail") { finalState = "failed"; errCode = "diff_hard_fail"; }
     await writeMiningState(sb, cfg, c, hash, elig.status, finalState, ms.attempt, errCode, batchId);
+
+    // ── 감사 원장 이벤트 (actor=ai) ──
+    //   적재 성공: mined/held(entry_id) / 자동버림: skipped(null) / 차단: hard_failed(null) / 중복: skipped(기존id)
+    let evType = "skipped", toStatus: string | null = null, entryId: number | null = wr.id, evCodes = built.codes;
+    if (built.decision === "ai_draft" || built.decision === "hold") {
+      if (wr.outcome === "duplicate") { evType = "skipped"; toStatus = null; evCodes = ["duplicate"]; }
+      else { evType = built.decision === "ai_draft" ? "mined" : "held"; toStatus = built.decision; }
+    } else if (built.decision === "hard_fail") { evType = "hard_failed"; entryId = null; }
+    else { evType = "skipped"; entryId = null; }   // 자동 discard
+    await writeEvent(sb, cfg, {
+      event_type: evType, source_type: c.source_type, source_id: c.source_id,
+      knowledge_entry_id: entryId, from_status: null, to_status: toStatus,
+      reason_codes: evCodes, batch_id: batchId,
+    });
 
     if (built.decision === "ai_draft") adraft++;
     else if (built.decision === "hold") held++;
