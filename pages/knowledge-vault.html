@@ -41,6 +41,8 @@
   .morebtn{margin-top:5px;width:100%;background:var(--s2);border:1px dashed var(--bd);border-radius:var(--r-md);color:var(--ts);padding:10px;font-size:.8rem;cursor:pointer;font-family:inherit;font-weight:var(--fw-semibold)}
   .morebtn:hover{border-color:var(--ac);color:var(--tp)}
   .morebtn:disabled{opacity:.5;cursor:default}
+  /* RPC 처리 중 = 판정 버튼 잠금(중복 클릭 방지) */
+  .md.busy .d-acts{pointer-events:none;opacity:.5}
 
   /* 필터칩 */
   .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
@@ -234,7 +236,8 @@ window.KV = (function(){
     cur: 0,                  // 검수 큐 선택 인덱스
     selected: {},            // entry_id -> true
     syn: {},                 // lowercased term/synonym -> [그룹 전체]
-    pending: null            // {id, status} 사유 모달 대기
+    pending: null,           // {id, status} 사유 모달 대기
+    busy: false              // RPC 처리 중(중복 클릭 방지)
   };
 
   function $(id){ return document.getElementById(id); }
@@ -471,6 +474,7 @@ window.KV = (function(){
     var sa=$('selAll'); if(sa) sa.checked = selectable>0 && n>=selectable;
   }
   function bulkApprove(){
+    if(state.busy) return;
     var ids=selectedIds(); if(!ids.length) return;
     openConfirm(ids.length+'건을 승인합니다. 진행할까요?', function(){ patchStatus(ids,'approved',null,true); });
   }
@@ -481,8 +485,9 @@ window.KV = (function(){
   function okConfirm(){ var cb=_confirmCb; closeConfirm(); if(typeof cb==='function') cb(); }
 
   // ── 단건 액션 (판정 후 자동 다음) ──
-  function approveOne(id){ patchStatus([id],'approved',null,false); }
+  function approveOne(id){ if(state.busy) return; patchStatus([id],'approved',null,false); }
   function askReason(id,status){
+    if(state.busy) return;
     state.pending={id:id,status:status};
     $('reasonTitle').textContent=(status==='hold'?'보류':'폐기')+' 사유';
     $('reasonDesc').textContent=(status==='hold'?'보류':'폐기')+' 사유를 1줄 이상 입력해주세요. (필수)';
@@ -498,23 +503,44 @@ window.KV = (function(){
     patchStatus([p.id],p.status,note,false);
   }
 
-  // ── status UPDATE (PATCH, is_admin RLS 경유) ──
+  // ── 상태 변경 = review_knowledge_entry RPC (상태변경+이벤트 1트랜잭션, actor=auth.uid()) ──
+  //   클라이언트가 knowledge_entries.status 를 직접 PATCH 하지 않는다(우회 경로 차단·이벤트 누락 0).
+  var ACTION = { approved:'approve', hold:'hold', discarded:'discard' };
+  function setBusy(on){
+    state.busy = on;
+    var bb=$('bulkBtn'); if(bb) bb.disabled = on || selectedIds().length===0;
+    var md=$('md'); if(md) md.classList.toggle('busy', on);   // 요청 중 액션 버튼 잠금(CSS)
+  }
   function patchStatus(ids,status,note,isBulk){
-    var u=adminUser();
-    var body={ status:status, reviewed_at:new Date().toISOString(), reviewed_by:u.id||null };
-    if(note!=null) body.review_note=note;
-    var filter = ids.length===1 ? 'entry_id=eq.'+ids[0] : 'entry_id=in.('+ids.join(',')+')';
+    if(state.busy) return;                       // 중복 클릭 방지
+    var action = ACTION[status];
+    if(!action){ showError('알 수 없는 상태: '+esc(status)); return; }
     $('meta').textContent='반영 중...';
-    var keepIdx = state.cur;   // 판정 후 같은 인덱스 유지 = 자동 다음
-    window.db.fetch('/rest/v1/knowledge_entries?'+filter,{
-      method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(body)
-    }).then(function(res){
-      if(!res.ok) throw new Error('HTTP '+res.status);
+    setBusy(true);
+    var keepIdx = state.cur;                      // 판정 후 같은 인덱스 유지 = 자동 다음
+    var calls = ids.map(function(id){
+      // actor_id 미전달 → RPC 내부 auth.uid() 강제 / p_reason_codes 미전달 → RPC 기본 admin 코드
+      return window.db.fetch('/rest/v1/rpc/review_knowledge_entry',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ p_entry_id:id, p_action:action, p_note:(note!=null?note:null) })
+      }).then(function(res){
+        if(res.ok) return true;                   // 멱등(이미 목표 상태)도 200 → 정상 처리
+        return res.text().then(function(t){ throw new Error('HTTP '+res.status+(t?(' '+t.slice(0,160)):'')); });
+      });
+    });
+    Promise.all(calls).then(function(){
       state.selected={};
       if(isBulk) state.cur=0; else state.cur=keepIdx;   // 단건은 같은 자리(=다음 항목), 일괄은 처음
-      loadCounts();        // 상태가 바뀌었으니 집계 바 갱신
-      loadEntries(true);
-    }).catch(function(err){ console.error('[vault] patch:',err); showError('상태 반영 실패: '+err.message); loadEntries(true); });
+      setBusy(false);
+      loadCounts();                               // 상단 COUNT 재조회
+      loadEntries(true);                          // 현재 목록 재조회(서버 실제 상태 기준)
+    }).catch(function(err){
+      console.error('[vault] rpc:',err);
+      setBusy(false);
+      // 낙관적 변경 안 함 — 오류 표시 후 서버 실제 상태로 재동기화
+      showError('상태 반영 실패(변경 취소됨): '+err.message);
+      loadCounts(); loadEntries(true);
+    });
   }
 
   // ── 테마 ──
