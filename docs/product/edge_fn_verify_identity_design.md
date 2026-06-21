@@ -43,8 +43,19 @@ issue_signup_token = 단일 INSERT(verificationId 재사용 시 예외). consume
 ## 9. 필요한 환경변수
 `PORTONE_V2_API_SECRET`(재조회) · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY`. — ★실값 미설정(배포 시).
 
-## 10. 가입 함수 연결 (다음 단계)
-가입 위저드 배선 단계에서 `complete-signup`(또는 가입 RPC)이 `consume_signup_token(token_hash, verificationId, phone)` 검증 → 통과 시 `auth.admin.createUser` + metadata(phone·phone_verified_at) → handle_new_user. **토큰 없이는 계정 생성 불가.**
+## 10. 가입 함수 연결 — 2단계 소비 (보강 §1: 토큰 유실·중복 계정 방지)
+Auth와 public DB가 한 트랜잭션으로 안 묶이는 점을 고려한 **reserve → 생성 → finalize**:
+```
+complete-signup (service_role):
+ 1. reserve_signup_token(token_hash, verificationId, phone)   ← 검증 + processing 선점
+      · proceed=false + created_user_id → 이미 가입됨 → 기존 계정 수렴(새 계정 X)
+      · proceed=true → 2
+ 2. auth.admin.createUser(metadata: phone·phone_verified_at)  ← ★멱등(already exists면 기존 user)
+ 3. public.users + 조직 연결(handle_new_user)
+ 4. 전체 가입 완료 확인
+ 5. finalize_signup_token(token_hash, user_id)               ← 마지막에 consumed + created_user_id
+```
+**중간 실패 보상·재시도:** 토큰은 `processing`으로 남아 **유실 0**. 재시도 → reserve가 (계정 있으면)수렴/(없으면)재진행, createUser 멱등 → **중복 auth.users 0**, 이미 생성됐으면 **기존 수렴**. 토큰 없이는 createUser 시작 안 됨(고아 0). `token_hash`=idempotency key.
 
 ## ★금지
 배포 / 실문자 인증 / 운영 채널 연결 / 이메일 인증 제거 / 라이브 DB 실행. 전부 대표 결재 후.
