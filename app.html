@@ -9606,9 +9606,13 @@ function _svRender(){
     if(activeScope!=='all' && it.scope!==activeScope) return false;
     return true;
   });
-  /* 범위 칩 = 검색 전체 출처 분포(숫자는 탭과 무관하게 고정) + 누르면 그 범위만(같은 칩 다시 누르면 전체) */
+  /* 범위 칩 = 활성 소스 탭(+지식 분류 필터) 기준 scope 분포. 누르면 그 범위만(같은 칩 다시 누르면 전체) */
   var scCnt={mine:0,team:0,branch:0,common:0};
-  items.forEach(function(it){ if(scCnt[it.scope]!=null) scCnt[it.scope]++; });
+  items.forEach(function(it){
+    if(activeSrc!=='all' && it.src!==activeSrc) return;                 // 상단 탭(전체/지식/소식지/공지/자료) 반영
+    if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return; }
+    if(scCnt[it.scope]!=null) scCnt[it.scope]++;
+  });
   var scope='<div class="sv-scope">'+SV_SCOPES.map(function(sp){ var on=(activeScope===sp.k); return '<span class="svs'+(on?' on':'')+'" style="--svc:'+sp.color+'" role="button" tabindex="0" aria-pressed="'+on+'" onclick="_svScope(\''+sp.k+'\')"><i></i><b class="svs-lbl">'+sp.label+' '+(scCnt[sp.k]||0)+'</b><em class="svs-who">'+sp.who+'</em></span>'; }).join('')+'</div>';
   /* 결과 */
   var html='';
