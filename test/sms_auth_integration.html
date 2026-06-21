@@ -45,9 +45,9 @@ button:disabled{background:#ccc;cursor:not-allowed}
 <button id="tab-btn-login" onclick="switchTab('login',this)">기존 로그인</button>
 </div>
 <div class="tab-pane active" id="tab-signup">
-<div class="section"><h3>① signup_token 예약</h3>
+<div class="section"><h3>① 이메일 입력</h3>
 <input type="email" id="su-email" placeholder="이메일"/>
-<button id="btn-reserve" onclick="reserveToken()" disabled>토큰 예약</button>
+<button id="btn-reserve" onclick="reserveToken()" disabled>이메일 확인</button>
 <div class="result" id="res-reserve"></div></div>
 <div class="section"><h3>② 휴대폰 본인인증 (PortOne)</h3>
 <button id="btn-verify-su" onclick="startVerify('signup')" disabled>본인인증 시작</button>
@@ -75,10 +75,9 @@ const TEST_REF='gelbgtfiuhqdpnlwxqrs';
 const PROD_REF='pdnwgzneooyygfejrvbg';
 const EDGE_BASE='https://'+TEST_REF+'.supabase.co/functions/v1';
 const AUTH_URL='https://'+TEST_REF+'.supabase.co/auth/v1/verify';
-const RPC_URL='https://'+TEST_REF+'.supabase.co/rest/v1/rpc/reserve_signup_token';
 const STORE_ID='store-41e93948-a67a-4ae0-abc5-1c95266ee12b';
 const CH_KEY='channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387';
-const ALL_URLS=[EDGE_BASE,AUTH_URL,RPC_URL];
+const ALL_URLS=[EDGE_BASE,AUTH_URL];
 const ANON_KEY=(typeof window.__TEST_ANON_KEY__==='string')?window.__TEST_ANON_KEY__:'';
 let po=null,blocked=false,stkn=null,vsu=null,vlogin=null,lhash=null;
 const L=m=>{const b=document.getElementById('log-box');b.textContent='['+new Date().toLocaleTimeString('ko-KR')+'] '+m+'\n'+b.textContent;};
@@ -109,29 +108,35 @@ async function loadPO(){
   S('d-sdk','오류 ⛔','err'); L('[ERR] PortOne SDK 미로드(window.PortOne 없음)');
 }
 const AF=async(url,body)=>{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY},body:JSON.stringify(body)});return{r,d:await r.json().catch(()=>({}))};};
+const _ivId=()=>'iv'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):(Date.now().toString(36)+Math.random().toString(36).slice(2,12)));
+// ① 이메일 확인만(서버 RPC 직접호출 없음). signup_token은 본인인증 후 verify-identity가 발급.
 window.reserveToken=async()=>{
   if(blocked||ANON_KEY.length<=20)return;
   const em=document.getElementById('su-email').value.trim();
   if(!em||!em.includes('@')){R('res-reserve',false,'이메일 입력');return;}
-  document.getElementById('btn-reserve').disabled=true;L('[SIGNUP] reserve...');
-  try{const{r,d}=await AF(RPC_URL,{p_email:em});
-    if(!r.ok){R('res-reserve',false,'실패:'+(d?.error||r.status));L('[SIGNUP] 실패'+r.status);}
-    else{stkn=d;R('res-reserve',true,'예약 ✅');L('[SIGNUP] reserve 완료');document.getElementById('btn-verify-su').disabled=false;}
-  }catch(e){R('res-reserve',false,e.message);L('[ERR]'+e.message);}
-  document.getElementById('btn-reserve').disabled=false;
+  R('res-reserve',true,'이메일 확인 ✅ — 본인인증을 진행하세요');L('[SIGNUP] 이메일 확인, 본인인증 대기');
+  document.getElementById('btn-verify-su').disabled=false;
 };
 window.startVerify=async mode=>{
   if(blocked)return;
-  if(!po?.requestIdentityVerification){L('[ERR] PortOne 미준비');R('res-verify-'+(mode==='signup'?'su':'login'),false,'PortOne 미준비');return;}
+  const rid='res-verify-'+(mode==='signup'?'su':'login');
+  if(!po?.requestIdentityVerification){L('[ERR] PortOne 미준비');R(rid,false,'PortOne 미준비');return;}
   L('[VERIFY] 시작('+mode+')');
-  try{const rsp=await po.requestIdentityVerification({storeId:STORE_ID,identityVerificationId:'iv-'+Date.now(),channelKey:CH_KEY});
-    if(rsp?.code!=null){R('res-verify-'+(mode==='signup'?'su':'login'),false,'취소/실패');L('[VERIFY] 취소');return;}
+  try{const rsp=await po.requestIdentityVerification({storeId:STORE_ID,identityVerificationId:_ivId(),channelKey:CH_KEY});
+    if(rsp?.code!=null){R(rid,false,'취소/실패');L('[VERIFY] 취소');return;}
     const vid=rsp?.identityVerificationId;
-    if(!vid){R('res-verify-'+(mode==='signup'?'su':'login'),false,'verificationId 없음');L('[ERR] vid 없음');return;}
-    if(mode==='signup'){vsu=vid;R('res-verify-su',true,'본인인증 ✅');document.getElementById('btn-signup').disabled=false;}
+    if(!vid){R(rid,false,'verificationId 없음');L('[ERR] vid 없음');return;}
+    if(mode==='signup'){
+      vsu=vid;
+      // 본인인증 직후 verify-identity로 signup_token 발급(서버 재조회). 실패 시 fail closed.
+      const{r,d}=await AF(EDGE_BASE+'/verify-identity',{verificationId:vid,state:(crypto.randomUUID?crypto.randomUUID():String(Date.now()))});
+      if(!r.ok||!d?.signup_token){R('res-verify-su',false,'토큰 발급 실패:'+(d?.error||r.status));L('[VERIFY] verify-identity 실패:'+(d?.error||r.status));return;}
+      stkn=d.signup_token;
+      R('res-verify-su',true,'본인인증 ✅ · signup_token 발급');document.getElementById('btn-signup').disabled=false;
+    }
     else{vlogin=vid;R('res-verify-login',true,'본인인증 ✅');document.getElementById('btn-login').disabled=false;}
     L('[VERIFY] 완료('+mode+')');
-  }catch(e){R('res-verify-'+(mode==='signup'?'su':'login'),false,e.message);L('[ERR]'+e.message);}
+  }catch(e){R(rid,false,e.message);L('[ERR]'+e.message);}
 };
 window.doSignup=async()=>{
   if(blocked||!stkn||!vsu)return;
@@ -140,7 +145,7 @@ window.doSignup=async()=>{
   if(!nm){R('res-signup',false,'이름 입력');return;}
   document.getElementById('btn-signup').disabled=true;L('[SIGNUP] complete-signup...');
   try{const{r,d}=await AF(EDGE_BASE+'/complete-signup',{signup_token:stkn,verificationId:vsu,email:em,name:nm});
-    if(d?.token_hash){R('res-signup',true,'가입 ✅');L('[SIGNUP] 완료');}
+    if(r.ok&&d?.user_id){R('res-signup',true,'가입 ✅'+(d.converged?'(기존 수렴)':''));L('[SIGNUP] 완료 user_id 수령');}
     else{R('res-signup',false,d?.error||r.status);L('[SIGNUP] 실패:'+(d?.error||r.status));document.getElementById('btn-signup').disabled=false;}
   }catch(e){R('res-signup',false,e.message);L('[ERR]'+e.message);document.getElementById('btn-signup').disabled=false;}
 };
