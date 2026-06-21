@@ -63,12 +63,11 @@ async function runIdentity(){
 </script>
 
 <h2>② 결제 (KG이니시스 테스트 · 플러스 9,900원)</h2>
-<button class="alt" disabled title="webhook 서명 검증 보강 후 가능">테스트 결제 — 🔒 웹훅 보안 보강 후 테스트 가능</button>
-<pre id="payOut">webhook 서명 검증 연결 전까지 결제 테스트는 차단됩니다.</pre>
+<button class="alt" onclick="runPayment()">테스트 결제 (KG이니시스 테스트 · 9,900원)</button>
+<pre id="payOut">결과가 여기 표시됩니다.</pre>
 <script>
 async function runPayment(){
-  log("payOut","🔒 결제는 webhook 서명 검증 보강 완료 후에만 테스트합니다(현재 차단).");
-  return;   // ★webhook 서명 검증 연결 전 결제 차단
+  log("payOut","결제창 호출 중...");
   const paymentId = "pay-" + uuid();
   try{
     const res = await PortOne.requestPayment({
