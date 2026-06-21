@@ -46,8 +46,6 @@ async function runIdentity(){
     const res = await PortOne.requestIdentityVerification({
       storeId: STORE_ID, channelKey: IDENTITY_CHANNEL_KEY,
       identityVerificationId,
-      // customData로 state 전달(서버 재조회 시 일치 확인). 모바일은 redirectUrl 필요.
-      customData: JSON.stringify({ state }),
     });
     if(res.code){ log("idOut",{step:"인증창 실패/취소", code:res.code, message:res.message}); return; }
     // ★서버 재조회 — verify-identity 함수가 PortOne API로 결과 확정 + signup token 발급
