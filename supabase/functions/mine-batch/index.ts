@@ -502,37 +502,41 @@ async function writeMiningState(
   }, { onConflict: "source_type,source_id,pipeline_version" });
 }
 
-// ── 13) writeCandidate (dry_run=false + 적재 대상일 때만 INSERT) ──
-//   반환 = { id, outcome }. id=신규/기존 entry_id(이벤트 링크용), outcome=inserted|duplicate|failed|dryrun.
-type WriteResult = { id: number | null; outcome: "inserted" | "duplicate" | "failed" | "dryrun" };
-async function writeCandidate(sb: SupabaseClient, cfg: Config, row: Record<string, unknown> | null): Promise<WriteResult> {
-  if (cfg.dryRun || !row) return { id: null, outcome: "dryrun" };
-  const { data: dup } = await sb.from("knowledge_entries")
-    .select("entry_id").eq("source_id", row.source_id).eq("pipeline_version", row.pipeline_version).limit(1);
-  if (dup && dup.length) return { id: (dup[0] as { entry_id: number }).entry_id ?? null, outcome: "duplicate" };
-  const { data: ins, error } = await sb.from("knowledge_entries").insert(row).select("entry_id").single();
-  if (error) return { id: null, outcome: "failed" };
-  return { id: (ins as { entry_id: number })?.entry_id ?? null, outcome: "inserted" };
+// ── 13) recordMined (후보+mined/held 이벤트 원자 기록 = record_mined_entry RPC) ──
+//   #869 취약경로(writeCandidate 단독 INSERT + 분리 writeEvent) 대체. 후보·이벤트 동시 or 전체 롤백.
+//   반환 = { outcome, id } (inserted|already_exists|idempotent_replay). dry_run=null. 실패=throw → 호출자 mining_state=failed.
+async function recordMined(
+  sb: SupabaseClient, cfg: Config,
+  row: Record<string, unknown>, eventType: "mined" | "held", codes: string[],
+): Promise<{ outcome: string; id: number | null } | null> {
+  if (cfg.dryRun) return null;   // dry-run = 적재/이벤트 0
+  const { data, error } = await sb.rpc("record_mined_entry", {
+    p_entry: row, p_event_type: eventType, p_reason_codes: codes,
+  });
+  if (error) throw new Error("rpc_" + (error.code || "fail"));
+  const d = (data ?? {}) as { entry_id?: number | null; outcome?: string };
+  return { outcome: d.outcome ?? "unknown", id: d.entry_id ?? null };
 }
 
-// ── 13b) writeEvent (감사 원장 append — dry_run=0, 멱등키로 재시도 중복 방지) ──
-//   actor=ai(자동 채굴). 사람 검수 이벤트는 review_knowledge_entry RPC가 별도로 기록.
+// ── 13b) writeEvent (후보 없는 판정용 단독 이벤트 — skipped/hard_failed/already_mined) ──
+//   actor=ai. 멱등키=원천종류·source_hash 기반(RPC와 통일). 성공 여부 반환(mining_state 게이팅용).
 async function writeEvent(
   sb: SupabaseClient, cfg: Config,
   ev: {
-    event_type: string; source_type: string; source_id: string;
-    knowledge_entry_id: number | null; from_status: string | null; to_status: string | null;
+    event_type: string; source_type: string; source_id: string; source_hash: string;
+    knowledge_entry_id: number | null; to_status: string | null;
     reason_codes: string[]; batch_id: string;
   },
-): Promise<void> {
-  if (cfg.dryRun) return;   // dry-run = 이벤트 0(마커 0 원칙)
-  const key = `mine:${ev.batch_id}:${ev.source_type}:${ev.source_id}:${ev.event_type}`;
-  await sb.from("knowledge_pipeline_events").upsert({
+): Promise<boolean> {
+  if (cfg.dryRun) return true;   // dry-run = 이벤트 0, 성공 취급
+  const key = `mine:${cfg.pipelineVersion}:${ev.source_type}:${ev.source_id}:${ev.source_hash}:${ev.event_type}`;
+  const { error } = await sb.from("knowledge_pipeline_events").upsert({
     event_type: ev.event_type, source_type: ev.source_type, source_id: ev.source_id,
     knowledge_entry_id: ev.knowledge_entry_id, batch_id: ev.batch_id,
-    pipeline_version: cfg.pipelineVersion, from_status: ev.from_status, to_status: ev.to_status,
+    pipeline_version: cfg.pipelineVersion, from_status: null, to_status: ev.to_status,
     reason_codes: ev.reason_codes, actor_type: "ai", actor_id: null, idempotency_key: key,
   }, { onConflict: "idempotency_key", ignoreDuplicates: true });
+  return !error;
 }
 
 // ── 14) returnSafeReport (raw 마스킹 — 원문 비노출 보장) ───────
@@ -597,8 +601,8 @@ Deno.serve(async (req: Request) => {
       skipped++;
       // §7 재실행 추적: 이미 채굴된 원천은 skipped 이벤트로 기록(중복 적재 0)
       await writeEvent(sb, cfg, {
-        event_type: "skipped", source_type: c.source_type, source_id: c.source_id,
-        knowledge_entry_id: null, from_status: null, to_status: null,
+        event_type: "skipped", source_type: c.source_type, source_id: c.source_id, source_hash: hash,
+        knowledge_entry_id: null, to_status: null,
         reason_codes: ["already_mined"], batch_id: batchId,
       });
       continue;
@@ -632,29 +636,43 @@ Deno.serve(async (req: Request) => {
     const lifecycle = evaluateLifecycleCandidate(c.raw, ex);
     const built = buildKnowledgeCandidate(c, ex, elig.status, diff.flag, lifecycle, hash, cfg.pipelineVersion, pii.warning.length > 0, diff.ambiguity.length > 0);
 
-    const wr = await writeCandidate(sb, cfg, built.row);
-    if (wr.outcome === "inserted") inserted++;
-
-    // mining_state: ai_draft/hold=done / discarded=skipped(영구) / hard_fail=failed(재채굴, 한도 내)
+    // ── 적재/이벤트 기록 → 성공 확인 후에만 mining_state 최종 확정(부분 실패 0) ──
     let finalState: "done" | "failed" | "skipped" = "done";
     let errCode: string | null = null;
-    if (built.decision === "discarded") finalState = "skipped";
-    else if (built.decision === "hard_fail") { finalState = "failed"; errCode = "diff_hard_fail"; }
-    await writeMiningState(sb, cfg, c, hash, elig.status, finalState, ms.attempt, errCode, batchId);
 
-    // ── 감사 원장 이벤트 (actor=ai) ──
-    //   적재 성공: mined/held(entry_id) / 자동버림: skipped(null) / 차단: hard_failed(null) / 중복: skipped(기존id)
-    let evType = "skipped", toStatus: string | null = null, entryId: number | null = wr.id, evCodes = built.codes;
     if (built.decision === "ai_draft" || built.decision === "hold") {
-      if (wr.outcome === "duplicate") { evType = "skipped"; toStatus = null; evCodes = ["duplicate"]; }
-      else { evType = built.decision === "ai_draft" ? "mined" : "held"; toStatus = built.decision; }
-    } else if (built.decision === "hard_fail") { evType = "hard_failed"; entryId = null; }
-    else { evType = "skipped"; entryId = null; }   // 자동 discard
-    await writeEvent(sb, cfg, {
-      event_type: evType, source_type: c.source_type, source_id: c.source_id,
-      knowledge_entry_id: entryId, from_status: null, to_status: toStatus,
-      reason_codes: evCodes, batch_id: batchId,
-    });
+      // 후보 + mined/held 이벤트 = record_mined_entry RPC 원자 기록(둘 중 실패 시 전체 롤백)
+      const evType = built.decision === "ai_draft" ? "mined" : "held";
+      try {
+        const res = await recordMined(sb, cfg, built.row!, evType, built.codes);   // dry_run=null
+        if (res && res.outcome === "inserted") inserted++;
+        finalState = "done";
+      } catch (_e) {
+        // RPC 실패 = 성공으로 처리하지 않음. failed + 재처리 가능(mining_state=failed)
+        failed++;
+        if (!cfg.dryRun) await writeMiningState(sb, cfg, c, hash, elig.status, "failed", ms.attempt, "rpc_record_failed", batchId);
+        report.push({ source_id: c.source_id, source_type: c.source_type, eligibility: elig.status, error: "rpc_record_failed" });
+        continue;
+      }
+    } else {
+      // 후보 없는 판정(자동 discard / hard_fail) → 단독 이벤트, 성공 확인 후 mining_state 확정
+      const evType = built.decision === "hard_fail" ? "hard_failed" : "skipped";
+      const ok = await writeEvent(sb, cfg, {
+        event_type: evType, source_type: c.source_type, source_id: c.source_id, source_hash: hash,
+        knowledge_entry_id: null, to_status: null, reason_codes: built.codes, batch_id: batchId,
+      });
+      if (!ok) {
+        failed++;
+        await writeMiningState(sb, cfg, c, hash, elig.status, "failed", ms.attempt, "event_write_failed", batchId);
+        report.push({ source_id: c.source_id, source_type: c.source_type, eligibility: elig.status, error: "event_write_failed" });
+        continue;
+      }
+      finalState = built.decision === "hard_fail" ? "failed" : "skipped";   // hard_fail=재채굴 / discard=영구 skip
+      if (built.decision === "hard_fail") errCode = "diff_hard_fail";
+    }
+
+    // 위 기록이 성공한 경우에만 mining_state 최종 확정
+    await writeMiningState(sb, cfg, c, hash, elig.status, finalState, ms.attempt, errCode, batchId);
 
     if (built.decision === "ai_draft") adraft++;
     else if (built.decision === "hold") held++;
