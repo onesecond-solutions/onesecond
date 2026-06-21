@@ -17,27 +17,31 @@
 2. SMS 인증번호 입력
 3. PortOne 인증 완료
 4. ★서버에서 인증 결과 재조회 (verify-identity Edge Function, GET /identity-verifications/{id})
-5. 인증 성공·중복(phone_normalized/DI) 확인
-6. 가입 정보 입력
-7. auth.users + public.users 생성  ← 인증 통과 후에만
-8. 회사·지점·팀 자동배정(handle_new_user)
-9. 소속 확인 상태(status) 적용
-10. 가입 완료
+5. 인증 성공·중복(phone_normalized) 확인
+6. **★verify-identity가 가입용 서버 토큰 발급**(signup_tokens: 짧은 유효·1회·verification_id+phone 바인딩·state/nonce)
+7. 가입 정보 입력
+8. auth.users + public.users 생성  ← **이 토큰 검증 성공 시에만**(브라우저 결과만으론 생성 X)
+9. 토큰 consumed 처리(재사용·타계정 사용 차단)
+10. 회사·지점·팀 자동배정(handle_new_user) → 소속 확인 상태(status) → 가입 완료
 ```
-**기존**: 이메일 OTP 발송 시점(`create_user:true`)에 auth.users 즉시 생성 → 고아 위험. **변경**: 본인인증 완료 후 생성으로 고아 방지.
+**기존**: 이메일 OTP 발송 시점(`create_user:true`)에 auth.users 즉시 생성 → 고아 위험. **변경**: 본인인증+서버 토큰 검증 후 생성으로 고아 방지.
 
-## 저장 정보 (B-3) — 최소 저장
-| 저장 | phone · phone_normalized · phone_verified_at · phone_verification_provider('nhn_kcp') · verification_id · verification_status · provider_identity_key(DI 해시, 법적근거 검토 후) |
+## 가입용 서버 토큰 (보강 §5) — signup_tokens
+verify-identity(PortOne 재조회 통과)가 발급 → 가입 함수가 **검증 성공 시에만** 계정 생성. **짧은 유효(예 10분)·1회 사용·verification_id+phone 바인딩·state/nonce 검증·가입 완료 시 consumed·재사용/타계정 차단.** service_role 전용(클라가 토큰 못 읽음). 토큰 원문 미저장(해시).
+
+## 저장 정보 (B-3·보강 §2) — 최소 저장 (DI 미저장)
+| 저장 | phone · phone_normalized · phone_verified_at · phone_verification_provider('nhn_kcp') · verification_id · verification_status |
 |---|---|
-| **저장 금지/최소화** | 인증 응답 원문 전체 · 주민등록번호 · 불필요 생년월일 원문 · 통신사 상세 · 전체 payload · **CI**(전 사이트 공통 식별, 비저장) |
+| **저장 안 함(초기)** | **DI**(phone UNIQUE + verification_id 1회로 충분 → 미저장. 향후 번호변경 후 동일인·탈퇴후 재가입 방지 필요성·법적근거 확인 시 di_hash를 service_role 전용·SELECT 금지·보유기간 명시 후 추가) |
+| **저장 금지** | 인증 응답 원문 전체 · 주민등록번호 · 불필요 생년월일 원문 · 통신사 상세 · 전체 payload · **CI** |
 
 번호 변경 시 → `phone_verified_at=null` + 재인증 요구.
 
 ## 기존 사용자 정책 (B-4) — 강제 차단 금지
 신규 가입자부터 문자 인증 필수. **기존 47명 즉시 차단 X, 계정 유지.** 추후 대표 결재로 (순차 / 다음 로그인 / 중요 기능 진입 / 전원 일괄) 중 택1. 현 단계 강제 차단 없음.
 
-## 중복 가입 방지 (B-5)
-`phone_normalized` UNIQUE(1인 1계정). 동일 번호 타계정 존재 시 → 자동 가입 금지 + 관리자 검토 상태 + 기존 계정 찾기/복구 경로 안내. 인증 1건 다계정 재사용 차단(verification_id 1회). ★기존 중복은 STEP 0 확인 후 적용.
+## 중복 가입 방지 (B-5·보강 §1)
+**일반 UNIQUE 금지 → 활성 계정(`deleted_at IS NULL`)만 1인 1번호 partial UNIQUE.** 탈퇴 계정 번호는 재사용 허용. 동일 번호 활성 타계정 존재 시 → 자동 가입 금지 + 관리자 검토 상태 + 기존 계정 찾기/복구 경로 안내. 인증 1건 다계정 재사용 차단(verification_id + signup_token 1회). 테스트/관리자 계정 예외는 운영 정책. **★기존 정규화 중복은 STEP 0에서 먼저 확인**(`regexp_replace(phone,'[^0-9]','','g')` 중복 건수) 후 적용.
 
 ## 보안 (B-6) — 서버 확정
 클라 인증 결과만 신뢰 X. **서버(verify-identity)가 PortOne API로 재조회**: verificationId 유효성·인증 상태·완료 여부·전화번호·요청-결과 일치·기사용 여부·만료. 통과 후에만 DB 기록. API Secret은 서버에서만.
