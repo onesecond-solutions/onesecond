@@ -19,8 +19,33 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 //   ★Edge 함수(complete-phone-login/verify-identity/complete-signup)는 운영 배포 후에만 동작.
 //   ★본인인증 채널키는 운영 채널로 교체 필요(현재 검수 채널). window.OS_IDENTITY로 주입 가능.
 // ============================================================================
-var OS_IDENTITY_STORE_ID    = (window.OS_PAYMENT && window.OS_PAYMENT.storeId) || 'store-41e93948-a67a-4ae0-abc5-1c95266ee12b';
-var OS_IDENTITY_CHANNEL_KEY = (window.OS_IDENTITY && window.OS_IDENTITY.channelKey) || 'channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387';
+// ── SMS 경로 환경별 설정(이메일 OTP는 위 SUPABASE_URL/KEY 그대로, 무관) ──
+//   Deploy Preview(deploy-preview-*)·localhost = 테스트 프로젝트(onesecond-test) 기준.
+//   운영(onesecond.solutions) = 운영 프로젝트 기준(기존 SUPABASE_URL/KEY 재사용).
+//   ★운영 채널키/스토어는 실값 미상 → placeholder. window.OS_IDENTITY로 주입(하드코딩 금지).
+var OS_SMS = (function () {
+  var host = (typeof location !== 'undefined' && location.hostname) || '';
+  var isPreview = host.indexOf('deploy-preview') !== -1 || host === 'localhost' || host === '127.0.0.1';
+  if (isPreview) {
+    var TEST_URL = 'https://gelbgtfiuhqdpnlwxqrs.supabase.co';
+    return {
+      env: 'preview',
+      supabaseUrl: TEST_URL,
+      anonKey: (window.OS_SMS_ANON || ''),   // 테스트 anon(공개값)은 Preview/로컬에서 주입 — 저장소 미고정
+      edgeBase: TEST_URL + '/functions/v1',
+      storeId: (window.OS_IDENTITY && window.OS_IDENTITY.storeId) || 'store-41e93948-a67a-4ae0-abc5-1c95266ee12b',
+      channelKey: (window.OS_IDENTITY && window.OS_IDENTITY.channelKey) || 'channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387' // 검수 채널
+    };
+  }
+  return {
+    env: 'prod',
+    supabaseUrl: SUPABASE_URL,
+    anonKey: SUPABASE_KEY,
+    edgeBase: SUPABASE_URL + '/functions/v1',
+    storeId: (window.OS_IDENTITY && window.OS_IDENTITY.storeId) || 'OS_PROD_IDENTITY_STORE_ID',       // ★운영 스토어ID 주입 필요
+    channelKey: (window.OS_IDENTITY && window.OS_IDENTITY.channelKey) || 'OS_PROD_IDENTITY_CHANNEL_KEY' // ★운영 본인인증 채널키 주입 필요
+  };
+})();
 function _osGenIvId() { return 'iv' + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12))); }
 function _osIdentityReady() { return !!(window.PortOne && window.PortOne.requestIdentityVerification); }
 
@@ -29,7 +54,7 @@ async function _osRunIdentity() {
   if (!_osIdentityReady()) { alert('본인인증 모듈 로드 실패. 페이지를 새로고침 해주세요.'); return null; }
   var state = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
   var res = await window.PortOne.requestIdentityVerification({
-    storeId: OS_IDENTITY_STORE_ID, channelKey: OS_IDENTITY_CHANNEL_KEY, identityVerificationId: _osGenIvId()
+    storeId: OS_SMS.storeId, channelKey: OS_SMS.channelKey, identityVerificationId: _osGenIvId()
   });
   if (res && res.code !== undefined) return { error: res.message || res.code };   // 취소/실패
   return { verificationId: res.identityVerificationId, state: state };
@@ -39,8 +64,8 @@ async function _osRunIdentity() {
 async function _osApplyAuthSession(data) {
   var userObj = data.user || {};
   try {
-    var profRes = await fetch(SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userObj.id) + '&select=role,name,plan',
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + data.access_token } });
+    var profRes = await fetch(OS_SMS.supabaseUrl + '/rest/v1/users?id=eq.' + encodeURIComponent(userObj.id) + '&select=role,name,plan',
+      { headers: { 'apikey': OS_SMS.anonKey, 'Authorization': 'Bearer ' + data.access_token } });
     if (profRes.ok) { var rows = await profRes.json(); if (rows && rows[0]) { userObj.role = rows[0].role || ''; userObj.name = rows[0].name || ''; userObj.plan = rows[0].plan || 'free'; } }
   } catch (_e) {}
   localStorage.setItem('os_token', data.access_token);
@@ -58,8 +83,8 @@ window.doPhoneLogin = async function () {
   if (!iv) return;
   if (iv.error) { if (errBox) { errBox.textContent = '본인인증이 취소되었거나 실패했습니다.'; errBox.classList.add('on'); } return; }
   try {
-    var r1 = await fetch(SUPABASE_URL + '/functions/v1/complete-phone-login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+    var r1 = await fetch(OS_SMS.edgeBase + '/complete-phone-login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': OS_SMS.anonKey },
       body: JSON.stringify({ verificationId: iv.verificationId, state: iv.state })
     });
     var d1 = await r1.json();
@@ -67,8 +92,8 @@ window.doPhoneLogin = async function () {
       if (errBox) { errBox.textContent = '가입된 휴대폰 정보를 찾을 수 없습니다. 이메일로 로그인하거나 회원가입해 주세요.'; errBox.classList.add('on'); }
       return;
     }
-    var r2 = await fetch(SUPABASE_URL + '/auth/v1/verify', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+    var r2 = await fetch(OS_SMS.supabaseUrl + '/auth/v1/verify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': OS_SMS.anonKey },
       body: JSON.stringify({ type: 'email', token_hash: d1.token_hash })
     });
     var d2 = await r2.json();
@@ -87,8 +112,8 @@ window.osPhoneVerifySignup = async function () {
   if (!iv) return;
   if (iv.error) { if (statusEl) statusEl.textContent = '본인인증이 취소/실패했습니다. 다시 시도해 주세요.'; return; }
   try {
-    var r = await fetch(SUPABASE_URL + '/functions/v1/verify-identity', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+    var r = await fetch(OS_SMS.edgeBase + '/verify-identity', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': OS_SMS.anonKey },
       body: JSON.stringify({ verificationId: iv.verificationId, state: iv.state })
     });
     var d = await r.json();
@@ -107,8 +132,8 @@ window.osPhoneVerifySignup = async function () {
 /* 휴대폰 본인인증 기반 가입 제출 — signup_token 있으면 complete-signup으로(이메일 OTP 대신). */
 async function _osSubmitViaPhone(signupData, email, resetBtn, errBox) {
   try {
-    var res = await fetch(SUPABASE_URL + '/functions/v1/complete-signup', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+    var res = await fetch(OS_SMS.edgeBase + '/complete-signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': OS_SMS.anonKey },
       body: JSON.stringify({
         signup_token: window.gSignupToken, verificationId: window.gSignupVerificationId,
         email: email, name: signupData.name,
