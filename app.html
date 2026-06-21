@@ -2467,7 +2467,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 자료함 v1 (P1 후속, 폴더형 개인 보관함). myspace_folders/files, private 버킷 myspace. 풀폭 고지+3컬럼 20/30/50. 폴더 재귀 업로드=PR2 -->
       <div class="mys-vault" id="mys-vault" style="display:none">
         <!-- §4 방어선: 풀폭 상단 고지 (모달화 금지) -->
-        <div class="mys-vault-notice" id="mys-vault-notice"><span class="mvn-txt">안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요. 올린 PDF·이미지는 통합검색을 위해 내용 텍스트가 자동 추출·색인됩니다.</span></div>
+        <div class="mys-vault-notice" id="mys-vault-notice"><span class="mvn-txt">안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.</span></div>
         <div class="mys-vault-cols">
           <div class="mys-vault-tree">
             <div class="mvcol-head"><span class="mvcol-ttl">폴더</span><button class="mys-vault-newfolder" onclick="mysVaultCreateFolder()">+ 새 폴더</button></div>
@@ -12989,7 +12989,7 @@ window.mysVaultSetView=mysVaultSetView;
 function _mvApplyVaultNotice(scope){
   var nt=document.getElementById('mys-vault-notice'), txt=nt?nt.querySelector('.mvn-txt'):null;
   if(txt){
-    var _ocrNote=' 올린 PDF·이미지는 통합검색을 위해 내용 텍스트가 자동 추출·색인됩니다.';
+    var _ocrNote='';
     if(scope==='team') txt.innerHTML='안내 · <b>팀 공유 자료실</b>입니다. 같은 팀원이 함께 보고 올립니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.'+_ocrNote;
     else if(scope==='branch') txt.innerHTML='안내 · <b>지점 공유 자료실</b>입니다. 같은 지점원이 함께 보고 올립니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.'+_ocrNote;
     else txt.innerHTML='안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.'+_ocrNote;
