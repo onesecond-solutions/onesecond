@@ -26,7 +26,9 @@
   const STORE_ID = "store-41e93948-a67a-4ae0-abc5-1c95266ee12b";
   const IDENTITY_CHANNEL_KEY = "channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387";
   const SUPABASE_URL = "https://gelbgtfiuhqdpnlwxqrs.supabase.co";
-  const LOGIN_FN = SUPABASE_URL + "/functions/v1/complete-phone-login-testmap"; // ★검수 전용 함수
+  // ★검수 전용 함수 호출. login_test.local.js의 window.TEST_LOGIN_FUNCTION 로 지정 가능(기본=testmap).
+  //   운영 complete-phone-login 을 부르면 자동 매핑이 없어 login_failed → 반드시 testmap.
+  const LOGIN_FN = window.TEST_LOGIN_FUNCTION || (SUPABASE_URL + "/functions/v1/complete-phone-login-testmap");
   function log(o){ document.getElementById("out").textContent = (typeof o==="string"?o:JSON.stringify(o,null,2)); }
 
 async function runLogin(){
