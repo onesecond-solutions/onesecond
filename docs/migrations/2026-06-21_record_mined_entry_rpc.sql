@@ -58,7 +58,9 @@ as $$
 declare
   v_id   bigint;
   v_dup  bigint;
-  v_st   text := p_entry->>'source_type';
+  v_st   text := p_entry->>'source_type';   -- knowledge_entries 식별용(mine_newsletter/mine_post)
+  v_st_ev text := case (p_entry->>'source_type') when 'mine_newsletter' then 'newsletter'
+                       when 'mine_post' then 'post' else (p_entry->>'source_type') end;  -- 이벤트 원장용(원천 종류)
   v_sid  text := p_entry->>'source_id';
   v_pv   text := p_entry->>'pipeline_version';
   v_hash text := p_entry->>'source_hash';
@@ -80,10 +82,10 @@ begin
     where source_type = v_st and source_id = v_sid and source_hash = v_hash and pipeline_version = v_pv
     limit 1;
   if v_dup is not null then
-    v_key := 'mine:' || v_pv || ':' || v_st || ':' || v_sid || ':' || v_hash || ':skipped';
+    v_key := 'mine:' || v_pv || ':' || v_st_ev || ':' || v_sid || ':' || v_hash || ':skipped';
     insert into public.knowledge_pipeline_events
       (event_type, source_type, source_id, knowledge_entry_id, pipeline_version, reason_codes, actor_type, idempotency_key)
-    values ('skipped', v_st, v_sid, v_dup, v_pv, array['duplicate'], 'ai', v_key)
+    values ('skipped', v_st_ev, v_sid, v_dup, v_pv, array['duplicate'], 'ai', v_key)
     on conflict (idempotency_key) do nothing;
     get diagnostics v_n = row_count;
     return jsonb_build_object('entry_id', v_dup,
@@ -109,19 +111,19 @@ begin
     select entry_id into v_dup from public.knowledge_entries
       where source_type = v_st and source_id = v_sid and source_hash = v_hash and pipeline_version = v_pv
       limit 1;
-    v_key := 'mine:' || v_pv || ':' || v_st || ':' || v_sid || ':' || v_hash || ':skipped';
+    v_key := 'mine:' || v_pv || ':' || v_st_ev || ':' || v_sid || ':' || v_hash || ':skipped';
     insert into public.knowledge_pipeline_events
       (event_type, source_type, source_id, knowledge_entry_id, pipeline_version, reason_codes, actor_type, idempotency_key)
-    values ('skipped', v_st, v_sid, v_dup, v_pv, array['duplicate'], 'ai', v_key)
+    values ('skipped', v_st_ev, v_sid, v_dup, v_pv, array['duplicate'], 'ai', v_key)
     on conflict (idempotency_key) do nothing;
     return jsonb_build_object('entry_id', v_dup, 'outcome', 'already_exists');
   end;
 
   -- 같은 트랜잭션 mined/held 이벤트 (실패 시 후보 INSERT 까지 전체 롤백)
-  v_key := 'mine:' || v_pv || ':' || v_st || ':' || v_sid || ':' || v_hash || ':' || p_event_type;
+  v_key := 'mine:' || v_pv || ':' || v_st_ev || ':' || v_sid || ':' || v_hash || ':' || p_event_type;
   insert into public.knowledge_pipeline_events
     (event_type, source_type, source_id, knowledge_entry_id, from_status, to_status, pipeline_version, reason_codes, actor_type, idempotency_key)
-  values (p_event_type, v_st, v_sid, v_id, null, v_to, v_pv, p_reason_codes, 'ai', v_key)
+  values (p_event_type, v_st_ev, v_sid, v_id, null, v_to, v_pv, p_reason_codes, 'ai', v_key)
   on conflict (idempotency_key) do nothing;
   get diagnostics v_n = row_count;
 
