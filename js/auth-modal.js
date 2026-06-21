@@ -25,7 +25,9 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 //   ★운영 채널키/스토어는 실값 미상 → placeholder. window.OS_IDENTITY로 주입(하드코딩 금지).
 var OS_SMS = (function () {
   var host = (typeof location !== 'undefined' && location.hostname) || '';
-  var isPreview = host.indexOf('deploy-preview') !== -1 || host === 'localhost' || host === '127.0.0.1';
+  // 로컬 실기기 검수: 휴대폰이 PC 사설 IP(192.168.*/10.*/172.16-31.*)로 접속 시에도 테스트 분기.
+  var isPreview = host.indexOf('deploy-preview') !== -1 || host === 'localhost' || host === '127.0.0.1'
+    || /^192\.168\./.test(host) || /^10\./.test(host) || /^172\.(1[6-9]|2[0-9]|3[01])\./.test(host);
   if (isPreview) {
     var TEST_URL = 'https://gelbgtfiuhqdpnlwxqrs.supabase.co';
     return {
