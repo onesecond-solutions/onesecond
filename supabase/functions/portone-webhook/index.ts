@@ -10,8 +10,7 @@
 //  - 멱등(event_id) → 중복 웹훅 0. 처리 실패 시 5xx → PortOne 재발송(재처리).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-// PortOne 웹훅 검증(StandardWebhooks 표준). 실제 배포 시 @portone/server-sdk Webhook.verify 사용.
-// import { Webhook } from "npm:@portone/server-sdk";
+import * as PortOne from "npm:@portone/server-sdk";   // 웹훅 서명 검증(StandardWebhooks)
 
 const PORTONE_API = "https://api.portone.io";
 const MAX_BODY = 64 * 1024;            // 요청 크기 제한
@@ -44,17 +43,22 @@ Deno.serve(async (req) => {
   const raw = await req.text();
   if (raw.length > MAX_BODY) return json({ error: "payload_too_large" }, 413);
 
-  // (1) 웹훅 서명 검증 — 위조 방지. 실패 시 401(본문 불신).
+  // (1) ★웹훅 서명 검증 — JSON 필드 처리보다 먼저. 실패 시 DB write 0(401/400). 위조 차단.
   const whSecret = Deno.env.get("PORTONE_WEBHOOK_SECRET");
   if (!whSecret) return json({ error: "server_misconfig" }, 500);
   let evt: Record<string, unknown>;
   try {
-    // 실제: const payload = await Webhook.verify(whSecret, raw, {
-    //   "webhook-id": req.headers.get("webhook-id")!, "webhook-signature": ..., "webhook-timestamp": ... });
-    // 설계 단계 스켈레톤: 서명 검증 통과 가정 후 파싱(배포 전 verify 연결 필수).
-    evt = JSON.parse(raw);
-  } catch {
-    return json({ error: "invalid_signature_or_body" }, 401);
+    // PortOne.Webhook.verify(secret, body(text), headers). 검증된 payload만 반환.
+    evt = await PortOne.Webhook.verify(whSecret, raw, {
+      "webhook-id": req.headers.get("webhook-id") ?? "",
+      "webhook-signature": req.headers.get("webhook-signature") ?? "",
+      "webhook-timestamp": req.headers.get("webhook-timestamp") ?? "",
+    }) as Record<string, unknown>;
+  } catch (e) {
+    if (e instanceof PortOne.Webhook.WebhookVerificationError) {
+      return json({ error: "invalid_signature" }, 401);   // 서명 없음/불일치 → 처리 0
+    }
+    return json({ error: "verify_error" }, 400);
   }
 
   const eventId = req.headers.get("webhook-id") || String((evt as { id?: string }).id || "");

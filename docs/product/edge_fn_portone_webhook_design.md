@@ -33,7 +33,8 @@ payment_events 멱등 INSERT(event_id) → (중복이면 무동작 반환) → p
 - **payment_events.processing_status 4구분:** `received`(선기록)→`applied`(정상) / `ignored`(중복·역행) / `failed`(RPC 실패 시 Edge가 멱등 기록). 동일 상태 재수신=멱등 성공.
 
 ## 7. 보안 점검표
-- [x] 웹훅 서명 검증 후에만 처리(본문 불신) — ★배포 전 `@portone/server-sdk Webhook.verify` 연결 필수
+- [x] 웹훅 서명 검증 후에만 처리(본문 불신) — **`@portone/server-sdk Webhook.verify` 연결 완료**(JSON 처리보다 먼저, 실패 시 401·DB write 0)
+- [ ] ★재배포 후 검수: 서명없음→401 / 잘못된서명→401 / 변조 body→401 / 정상서명→처리 / 중복 event→멱등(DB write 0) 확인
 - [x] 결제 상태/금액/plan = **서버 재조회 결과만 신뢰**
 - [x] users.plan 변경 = RPC(service_role)만. anon/authenticated revoke
 - [x] API Secret·service_role = Edge env만(클라 노출 0)
