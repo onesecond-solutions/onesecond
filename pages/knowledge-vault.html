@@ -44,6 +44,24 @@
   /* RPC 처리 중 = 판정 버튼 잠금(중복 클릭 방지) */
   .md.busy .d-acts{pointer-events:none;opacity:.5}
 
+  /* 학습일지 2영역 — 생산 이력(이벤트 피드) + 과거 기록 */
+  .kv-sec-h{font-weight:var(--fw-bold);font-size:.9rem;margin:6px 0 8px;color:var(--tp)}
+  .kv-sec-h span{font-weight:400;font-size:.74rem;color:var(--tf)}
+  .kv-feed{display:flex;flex-direction:column;gap:5px}
+  .kv-ev{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:7px 11px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-md);font-size:.78rem;border-left:3px solid var(--tf)}
+  .kv-ev-t{font-weight:var(--fw-bold)}
+  .kv-ev-src{color:var(--ts);font-variant-numeric:tabular-nums}
+  .kv-ev-tr{color:var(--tf);font-size:.72rem}
+  .kv-ev-codes{color:var(--ts);font-size:.72rem}
+  .kv-ev-actor{margin-left:auto;font-size:.66rem;color:var(--tf);text-transform:uppercase;letter-spacing:.04em}
+  .kv-ev-at{font-size:.7rem;color:var(--tf);font-variant-numeric:tabular-nums}
+  .kv-ev-mined{border-left-color:var(--ac)} .kv-ev-mined .kv-ev-t{color:var(--ac)}
+  .kv-ev-approved{border-left-color:var(--ok,#3ba55d)} .kv-ev-approved .kv-ev-t{color:var(--ok,#3ba55d)}
+  .kv-ev-held .kv-ev-t,.kv-ev-review_held .kv-ev-t{color:var(--warn)}
+  .kv-ev-held,.kv-ev-review_held{border-left-color:var(--warn)}
+  .kv-ev-discarded,.kv-ev-hard_failed{border-left-color:var(--err)} .kv-ev-discarded .kv-ev-t,.kv-ev-hard_failed .kv-ev-t{color:var(--err)}
+  .kv-ev-reprocessed{border-left-color:#8B5CF6} .kv-ev-reprocessed .kv-ev-t{color:#8B5CF6}
+
   /* 필터칩 */
   .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
   .fchip{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r-pill);color:var(--ts);padding:5px 13px;font-size:.78rem;cursor:pointer;font-family:inherit}
@@ -231,6 +249,7 @@ window.KV = (function(){
     tab: 'log',
     filter: 'ai_draft',
     logs: [],
+    events: [],               // 신규 생산 이력(knowledge_pipeline_events)
     entries: [],
     total: 0,                // 현재 필터의 전체 건수 (페이지네이션 기준)
     cur: 0,                  // 검수 큐 선택 인덱스
@@ -286,33 +305,60 @@ window.KV = (function(){
     for(var j=0;j<ks.length;j++) ks[j].classList.toggle('on', ks[j].getAttribute('data-f')===state.filter);
   }
 
-  // ════ 학습일지 ════
+  // ════ 학습일지 = 2영역(신규 생산 이력=events / 과거 학습 기록=logs) ════
+  var EV_LABEL={ mined:'채굴 적재', held:'보류(채굴)', hard_failed:'적재 차단', skipped:'건너뜀', approved:'승인', review_held:'보류(검수)', discarded:'폐기', reprocessed:'재처리' };
   function loadLogs(){
     clearError(); $('meta').textContent='학습일지 불러오는 중...'; $('list').innerHTML='';
-    window.db.fetch('/rest/v1/knowledge_logs?select=*&order=run_at.desc&limit=100')
-      .then(function(res){ if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
-      .then(function(rows){ state.logs = Array.isArray(rows)?rows:[]; renderLogs(); })
-      .catch(function(err){ console.error('[vault] logs:',err); showError('학습일지 조회 실패: '+err.message+' (admin 권한/로그인 확인)'); $('meta').textContent=''; });
+    Promise.all([
+      window.db.fetch('/rest/v1/knowledge_pipeline_events?select=event_id,event_type,source_type,source_id,knowledge_entry_id,from_status,to_status,reason_codes,actor_type,created_at&order=created_at.desc&limit=120').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
+      window.db.fetch('/rest/v1/knowledge_logs?select=*&order=run_at.desc&limit=100').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; })
+    ]).then(function(res){
+      state.events = Array.isArray(res[0])?res[0]:[];
+      state.logs   = Array.isArray(res[1])?res[1]:[];
+      renderLog();
+    }).catch(function(err){ console.error('[vault] logs:',err); showError('학습일지 조회 실패: '+err.message+' (admin 권한/로그인 확인)'); $('meta').textContent=''; });
   }
-  function renderLogs(){
-    if(!state.logs.length){
-      $('meta').textContent='';
-      $('list').innerHTML='<div class="empty"><div class="big">🌙</div>야간 학습 가동 전입니다.<br>Phase 3에서 자동 학습이 가동되면 이 자리에 작업 일지가 쌓입니다.</div>';
-      return;
+  function renderLog(){
+    $('meta').innerHTML='생산 이력 <b>'+state.events.length+'</b> · 과거 기록 <b>'+state.logs.length+'</b>';
+    var html='';
+    // 영역 1 — 신규 생산 이력(이벤트 원장)
+    html+='<div class="kv-sec-h">생산 이력 <span>(채굴·검수 이벤트)</span></div>';
+    if(!state.events.length){
+      html+='<div class="empty" style="padding:24px 16px">아직 생산 이력이 없어요.<br>채굴이 가동되면 채굴·승인·보류·폐기 이벤트가 시간순으로 쌓입니다.</div>';
+    } else {
+      html+='<div class="kv-feed">'+state.events.map(function(e){
+        var lbl=EV_LABEL[e.event_type]||e.event_type;
+        var codes=Array.isArray(e.reason_codes)?e.reason_codes:[];
+        var trans=(e.from_status||e.to_status)?(esc(e.from_status||'·')+'→'+esc(e.to_status||'·')):'';
+        return '<div class="kv-ev kv-ev-'+esc(e.event_type)+'">'+
+          '<span class="kv-ev-t">'+esc(lbl)+'</span>'+
+          '<span class="kv-ev-src">'+esc(e.source_type||'-')+(e.source_id?(' #'+esc(e.source_id)):'')+(e.knowledge_entry_id?(' · entry '+esc(e.knowledge_entry_id)):'')+'</span>'+
+          (trans?'<span class="kv-ev-tr">'+trans+'</span>':'')+
+          (codes.length?'<span class="kv-ev-codes">'+codes.map(function(c){return esc(c);}).join(', ')+'</span>':'')+
+          '<span class="kv-ev-actor">'+esc(e.actor_type||'')+'</span>'+
+          '<span class="kv-ev-at">'+esc(fmt(e.created_at))+'</span>'+
+        '</div>';
+      }).join('')+'</div>';
     }
-    $('meta').innerHTML='학습일지 <b>'+state.logs.length+'</b>건';
-    $('list').innerHTML = state.logs.map(function(lg){
-      return '<div class="card log-row" onclick="KV.toggleLog('+lg.id+')">'+
-        '<div class="card-ttl">'+esc(fmt(lg.run_at))+' · '+esc(lg.run_type||'manual')+(lg.engine_version?(' · '+esc(lg.engine_version)):'')+'</div>'+
-        '<div class="badges">'+
-          '<span class="b b-type">추출 '+(lg.extracted_count==null?'-':lg.extracted_count)+'건</span>'+
-          '<span class="b b-st-'+esc(lg.status||'ai_draft')+'">'+esc(STATUS_LABEL[lg.status]||lg.status||'ai_draft')+'</span>'+
-          '<span class="b b-src">'+esc(lg.author||'ai')+'</span>'+
-        '</div>'+
-        (lg.handover_note?'<div class="card-body">'+esc(lg.handover_note)+'</div>':'')+
-        '<div class="log-detail" id="logd'+lg.id+'">'+logDetailHtml(lg)+'</div>'+
-      '</div>';
-    }).join('');
+    // 영역 2 — 과거 학습 기록(knowledge_logs, 보존)
+    html+='<div class="kv-sec-h" style="margin-top:18px">과거 학습 기록 <span>(배치 요약 · 보존)</span></div>';
+    if(!state.logs.length){
+      html+='<div class="empty" style="padding:24px 16px">과거 학습 기록이 없습니다.</div>';
+    } else {
+      html+=state.logs.map(function(lg){
+        return '<div class="card log-row" onclick="KV.toggleLog('+lg.id+')">'+
+          '<div class="card-ttl">'+esc(fmt(lg.run_at))+' · '+esc(lg.run_type||'manual')+(lg.engine_version?(' · '+esc(lg.engine_version)):'')+'</div>'+
+          '<div class="badges">'+
+            '<span class="b b-type">추출 '+(lg.extracted_count==null?'-':lg.extracted_count)+'건</span>'+
+            '<span class="b b-st-'+esc(lg.status||'ai_draft')+'">'+esc(STATUS_LABEL[lg.status]||lg.status||'ai_draft')+'</span>'+
+            '<span class="b b-src">'+esc(lg.author||'ai')+'</span>'+
+          '</div>'+
+          (lg.handover_note?'<div class="card-body">'+esc(lg.handover_note)+'</div>':'')+
+          '<div class="log-detail" id="logd'+lg.id+'">'+logDetailHtml(lg)+'</div>'+
+        '</div>';
+      }).join('');
+    }
+    $('list').innerHTML=html;
   }
   function logDetailHtml(lg){
     var parts=[];
