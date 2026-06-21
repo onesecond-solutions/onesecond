@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>★PortOne 통합 테스트 (onesecond-test 전용)</title>
+<!-- ★테스트 전용 페이지. 운영 SPA·운영 PortOne·운영 Supabase 와 무관. 실결제·실문자 아님(테스트 모드). -->
+<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:680px;margin:24px auto;padding:0 16px;line-height:1.6;color:#222}
+  .warn{background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:10px 14px;font-size:.9rem;margin-bottom:16px}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin-top:24px}
+  button{background:#534AB7;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:.95rem;cursor:pointer;margin:4px 0}
+  button.alt{background:#0E9A6C}
+  pre{background:#0F172A;color:#CBD5E1;border-radius:8px;padding:12px;font-size:.78rem;overflow:auto;white-space:pre-wrap;word-break:break-all}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  label{font-size:.85rem;color:#555}
+  input{padding:6px 8px;border:1px solid #ccc;border-radius:6px;width:100%;box-sizing:border-box}
+</style>
+</head>
+<body>
+<div class="warn">★ <b>테스트 전용</b> — 실제 결제·실제 문자 인증이 아닙니다. NHN KCP 테스트(인증창에 임의 6자리), KG이니시스 테스트 결제. onesecond-test 프로젝트에만 연결.</div>
+<h1>PortOne 통합 테스트</h1>
+
+<!-- ★공개값만(storeId/channelKey). Secret(API/Webhook/service_role)은 절대 포함 0. -->
+<script>
+  const STORE_ID = "store-41e93948-a67a-4ae0-abc5-1c95266ee12b";
+  const PAY_CHANNEL_KEY = "channel-key-bdc24119-0b48-4017-b87d-1c74499c8db6";       // KG이니시스 테스트 결제
+  const IDENTITY_CHANNEL_KEY = "channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387"; // NHN KCP 테스트 본인인증
+  const VERIFY_IDENTITY_URL = "https://gelbgtfiuhqdpnlwxqrs.supabase.co/functions/v1/verify-identity";
+  // webhook은 PortOne 서버 → 우리 서버(브라우저 호출 아님). 결제 결과는 서버 웹훅으로 반영.
+
+  function log(el, obj){ document.getElementById(el).textContent = (typeof obj==="string"?obj:JSON.stringify(obj,null,2)); }
+  function uuid(){ return crypto.randomUUID(); }
+</script>
+
+<h2>① 휴대폰 본인인증 (NHN KCP 테스트)</h2>
+<button onclick="runIdentity()">본인인증 시작</button>
+<pre id="idOut">결과가 여기 표시됩니다.</pre>
+<script>
+async function runIdentity(){
+  log("idOut","본인인증창 호출 중...");
+  const identityVerificationId = "iv-" + uuid();
+  const state = uuid();                       // state/nonce — verify-identity 서버 검증용
+  try{
+    const res = await PortOne.requestIdentityVerification({
+      storeId: STORE_ID, channelKey: IDENTITY_CHANNEL_KEY,
+      identityVerificationId,
+      // customData로 state 전달(서버 재조회 시 일치 확인). 모바일은 redirectUrl 필요.
+      customData: JSON.stringify({ state }),
+    });
+    if(res.code){ log("idOut",{step:"인증창 실패/취소", code:res.code, message:res.message}); return; }
+    // ★서버 재조회 — verify-identity 함수가 PortOne API로 결과 확정 + signup token 발급
+    const r = await fetch(VERIFY_IDENTITY_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ verificationId: res.identityVerificationId, state }),
+    });
+    const data = await r.json();
+    // ★브라우저 로그에 휴대폰 원본/payload 남기지 않음 — 서버가 phone_masked만 반환
+    log("idOut",{ step:"verify-identity 응답", http:r.status, ok:data.ok,
+      signup_token_present: !!data.signup_token, phone_masked:data.phone_masked, expires_in:data.expires_in, error:data.error });
+    window.__signupToken = data.signup_token;   // 가입 함수 테스트에 사용(다음 단계)
+  }catch(e){ log("idOut",{step:"예외", message:String(e && e.message || e)}); }
+}
+</script>
+
+<h2>② 결제 (KG이니시스 테스트 · 플러스 9,900원)</h2>
+<button class="alt" onclick="runPayment()">테스트 결제</button>
+<pre id="payOut">결과가 여기 표시됩니다.</pre>
+<script>
+async function runPayment(){
+  log("payOut","결제창 호출 중...");
+  const paymentId = "pay-" + uuid();
+  try{
+    const res = await PortOne.requestPayment({
+      storeId: STORE_ID, channelKey: PAY_CHANNEL_KEY,
+      paymentId, orderName: "플러스 구독(테스트)",
+      totalAmount: 9900, currency: "CURRENCY_KRW", payMethod: "CARD",
+      customData: { plan_code: "plus" },   // 서버 웹훅이 plan 검증에 사용
+    });
+    if(res.code){ log("payOut",{step:"결제 실패/취소", code:res.code, message:res.message}); return; }
+    // 결제 성공 → PortOne가 서버로 웹훅 발송 → portone-webhook이 재조회 후 DB 반영(브라우저 무관).
+    log("payOut",{ step:"결제창 완료", paymentId: res.paymentId,
+      note:"서버 웹훅 수신·DB 반영은 onesecond-test에서 payment_events/payments/subscriptions로 확인" });
+  }catch(e){ log("payOut",{step:"예외", message:String(e && e.message || e)}); }
+}
+</script>
+
+<p style="color:#888;font-size:.8rem;margin-top:28px">실행: 이 파일 폴더에서 <code>python -m http.server 8000</code> → <code>http://localhost:8000/portone_test.html</code></p>
+</body>
+</html>
