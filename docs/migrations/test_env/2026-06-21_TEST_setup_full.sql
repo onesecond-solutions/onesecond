@@ -36,6 +36,30 @@ create table if not exists public.users (
 );
 create unique index if not exists uq_users_phone_norm on public.users (phone_normalized) where phone_normalized is not null and deleted_at is null;
 
+-- ── handle_new_user 트리거 (auth.users INSERT → public.users 연결 검증용) ──
+--   테스트 사용자는 Dashboard Auth / auth.admin.createUser / verify-identity 가입 흐름으로 생성.
+--   이 트리거가 raw_user_meta_data를 public.users로 옮긴다(가입 함수 흐름 검증).
+create or replace function public.handle_new_user() returns trigger
+  language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.users (id, email, name, phone, role, status, plan,
+    phone_normalized, phone_verified_at, phone_verification_provider, verification_id, verification_status)
+  values (new.id, new.email,
+    new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'phone',
+    coalesce(new.raw_user_meta_data->>'role','ga_member'),
+    coalesce(new.raw_user_meta_data->>'status','active'), 'free',
+    new.raw_user_meta_data->>'phone_normalized',
+    nullif(new.raw_user_meta_data->>'phone_verified_at','')::timestamptz,
+    new.raw_user_meta_data->>'phone_verification_provider',
+    new.raw_user_meta_data->>'verification_id',
+    new.raw_user_meta_data->>'verification_status')
+  on conflict (id) do nothing;
+  return new;
+end; $$;
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users
+  for each row execute function public.handle_new_user();
+
 -- ── plans / subscriptions(완전체) / payments / payment_events / refunds / signup_tokens ──
 create table if not exists public.plans (
   id uuid primary key default gen_random_uuid(), code text not null unique, name text not null,
@@ -85,7 +109,10 @@ alter table public.refunds enable row level security;
 alter table public.signup_tokens enable row level security;
 drop policy if exists plans_admin on public.plans;
 create policy plans_admin on public.plans for select to authenticated using (is_admin());
-create or replace view public.plans_public as select code,name,billing_cycle,amount,currency,is_active,features from public.plans where is_active;
+-- plans_public: 공개 항목만 노출. security_invoker=false(소유자 권한)로 plans RLS를 우회하되
+--   view 정의가 공개 컬럼만 select하므로 내부값 노출 0. anon 공개는 요금제 표시 목적(정당).
+create or replace view public.plans_public with (security_invoker = false) as
+  select code, name, billing_cycle, amount, currency, is_active, features from public.plans where is_active;
 grant select on public.plans_public to authenticated, anon;
 drop policy if exists pay_select_own on public.payments;
 create policy pay_select_own on public.payments for select to authenticated using (auth.uid()=user_id or is_admin());
@@ -100,10 +127,9 @@ insert into public.branches  (id,company_id,name) values ('22222222-2222-2222-22
 insert into public.teams     (id,branch_id,name) values ('33333333-3333-3333-3333-333333333333','22222222-2222-2222-2222-222222222222','테스트1팀') on conflict (id) do nothing;
 insert into public.plans (code,name,billing_cycle,amount) values
   ('free','무료','month',0),('plus','플러스','month',9900),('pro','프로','month',19900) on conflict (code) do nothing;
-insert into public.users (id,email,name,role,status,plan,company_id,branch_id,team_id) values
-  ('aaaaaaaa-0000-0000-0000-000000000001','test-admin@example.com','테스트관리자','admin','active','free','11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','33333333-3333-3333-3333-333333333333'),
-  ('aaaaaaaa-0000-0000-0000-000000000002','test-user@example.com','테스트사용자','ga_member','active','free','11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','33333333-3333-3333-3333-333333333333')
-  on conflict (id) do nothing;
+-- ★테스트 사용자는 SQL seed로 만들지 않음(auth.users 불일치 방지). 적용 후:
+--   Dashboard Authentication 추가 / auth.admin.createUser / verify-identity 가입 흐름으로 생성 → handle_new_user가 public.users 연결.
+--   테스트 admin이 필요하면 Auth로 생성한 계정의 role을: update public.users set role='admin' where id='<auth uid>';
 
 commit;
 
@@ -114,7 +140,8 @@ commit;
 -- select code,amount from public.plans order by amount;  -- free0/plus9900/pro19900
 -- select count(*) from public.users;  -- 2(테스트)
 --
--- ✅ 테스트 종료 후 초기화(데이터만, 스키마 유지) — 별도 RUN
+-- ✅ 테스트 종료 후 초기화 — 별도 RUN. ★결제 원장만 삭제. auth.users·public.users 행은 삭제하지 않음.
 -- truncate public.payment_events, public.payments, public.refunds, public.subscriptions, public.signup_tokens restart identity;
--- update public.users set plan='free', phone_verified_at=null, phone_normalized=null, verification_id=null;
+-- (선택) 결제 테스트 흔적 되돌리기 — auth.users 미삭제, public.users.plan만 리셋:
+-- update public.users set plan='free' where plan <> 'free';
 -- ════════════════════════════════════════════════════════════════
