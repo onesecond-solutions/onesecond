@@ -4,71 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>★SMS 로그인 교환 검증 (onesecond-test 전용)</title>
-<!-- ★테스트 전용. 운영 무관. 로그인 세션 교환(generateLink→token_hash→verifyOtp) 단독 검증.
-     anon key·EXPECTED_USER_ID는 커밋에 박지 않고 실행 시 입력(localStorage). 토큰 원문 표시·저장 0. -->
+<!-- ★테스트 전용. 운영 무관. 본인인증 1회 → 서버내부 매핑+세션 교환. 토큰 원문 표시·저장 0.
+     anon key·EXPECTED_USER_ID는 검수팀이 로컬 파일(login_test.local.js, gitignore)로 주입 — 커밋·대표 입력 0. -->
 <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+<script src="login_test.local.js"></script>  <!-- 검수팀 로컬 생성: window.TEST_ANON / window.TEST_EXPECTED -->
 <style>
   body{font-family:system-ui,sans-serif;max-width:680px;margin:24px auto;padding:0 16px;line-height:1.6;color:#222}
   .warn{background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:10px 14px;font-size:.9rem;margin-bottom:16px}
   h1{font-size:1.2rem}
-  button{background:#534AB7;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:.95rem;cursor:pointer}
-  pre{background:#0F172A;color:#CBD5E1;border-radius:8px;padding:12px;font-size:.78rem;overflow:auto;white-space:pre-wrap;word-break:break-all}
-  label{font-size:.85rem;color:#555;display:block;margin-top:10px}
-  input{padding:6px 8px;border:1px solid #ccc;border-radius:6px;width:100%;box-sizing:border-box}
+  button{background:#534AB7;color:#fff;border:0;border-radius:8px;padding:12px 22px;font-size:1rem;cursor:pointer}
+  pre{background:#0F172A;color:#CBD5E1;border-radius:8px;padding:12px;font-size:.8rem;white-space:pre-wrap;word-break:break-all}
 </style>
 </head>
 <body>
-<div class="warn">★ <b>테스트 전용</b> — SMS 로그인 세션 교환 검증. 본인인증창엔 <b>test-login 계정에 매핑한 그 번호</b>를 입력하세요(임의 6자리 인증).</div>
-<h1>SMS 로그인 교환 검증</h1>
+<div class="warn">★ <b>테스트 전용</b> — 아래 버튼을 <b>한 번</b>만 누르세요. 본인 명의 휴대폰으로 KCP 테스트 인증 1회.</div>
+<h1>SMS 로그인 검증</h1>
+<p><button onclick="runLogin()">휴대폰 본인인증으로 로그인</button></p>
+<pre id="out">버튼을 누르면 결과가 표시됩니다.</pre>
 
 <script>
   const STORE_ID = "store-41e93948-a67a-4ae0-abc5-1c95266ee12b";
-  const IDENTITY_CHANNEL_KEY = "channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387"; // 본인인증 채널
+  const IDENTITY_CHANNEL_KEY = "channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387";
   const SUPABASE_URL = "https://gelbgtfiuhqdpnlwxqrs.supabase.co";
-  const LOGIN_FN = SUPABASE_URL + "/functions/v1/complete-phone-login";
+  const LOGIN_FN = SUPABASE_URL + "/functions/v1/complete-phone-login-testmap"; // ★검수 전용 함수
   function log(o){ document.getElementById("out").textContent = (typeof o==="string"?o:JSON.stringify(o,null,2)); }
-</script>
-
-<label>Supabase anon key (공개값 — 로컬 입력, 커밋 안 됨)</label>
-<input id="anon" autocomplete="off">
-<label>EXPECTED_USER_ID (test-login 계정 user id — 로컬 입력)</label>
-<input id="expected" autocomplete="off">
-
-<p><button onclick="runLogin()">휴대폰 본인인증으로 로그인</button></p>
-<pre id="out">결과가 여기 표시됩니다.</pre>
-
-<script>
-  // 로컬 입력값 기억(localStorage) — 대표님 재입력 부담 0. 저장소엔 안 들어감.
-  window.addEventListener("DOMContentLoaded", function(){
-    document.getElementById("anon").value = localStorage.getItem("os_test_anon") || "";
-    document.getElementById("expected").value = localStorage.getItem("os_test_expected") || "";
-  });
 
 async function runLogin(){
-  const anon = (document.getElementById("anon").value || "").trim();
-  const expected = (document.getElementById("expected").value || "").trim();
-  if(!anon || !expected){ log("anon key와 EXPECTED_USER_ID를 먼저 입력하세요(로컬 전용)."); return; }
-  localStorage.setItem("os_test_anon", anon);
-  localStorage.setItem("os_test_expected", expected);
-
+  const anon = window.TEST_ANON, expected = window.TEST_EXPECTED;
+  if(!anon || !expected){ log("검수팀: login_test.local.js (window.TEST_ANON / window.TEST_EXPECTED) 를 먼저 생성하세요."); return; }
   log("본인인증창 호출 중...");
   const identityVerificationId = "ivlogin-" + crypto.randomUUID();
   const state = crypto.randomUUID();
   try{
-    const res = await PortOne.requestIdentityVerification({
-      storeId: STORE_ID, channelKey: IDENTITY_CHANNEL_KEY, identityVerificationId,
-    });
+    const res = await PortOne.requestIdentityVerification({ storeId: STORE_ID, channelKey: IDENTITY_CHANNEL_KEY, identityVerificationId });
     if(res && res.code !== undefined){ log({step:"인증 취소/실패", code:res.code, message:res.message}); return; }
 
-    // 1) 서버: 본인인증 확정 → 기존 user 단일 확정 → 일회용 token_hash(세션 아님)
+    // 1) 서버: 본인인증 확정 → 서버내부 매핑 → 일회용 token_hash(세션 아님). phone·token 로그 0.
     const r1 = await fetch(LOGIN_FN, {
       method:"POST", headers:{ "Content-Type":"application/json", "apikey":anon, "Authorization":"Bearer "+anon },
       body: JSON.stringify({ verificationId: res.identityVerificationId, state }),
     });
     const d1 = await r1.json();
-    if(!r1.ok || !d1.token_hash){ log({step:"complete-phone-login", http:r1.status, error:d1.error}); return; }
+    if(!r1.ok || !d1.token_hash){ log({step:"login(testmap)", http:r1.status, error:d1.error}); return; }
 
-    // 2) 클라: 공식 verifyOtp 교환 → 실제 세션 (token_hash 로그·저장 0)
+    // 2) 클라: 공식 verifyOtp 교환 → 실제 세션
     const r2 = await fetch(SUPABASE_URL + "/auth/v1/verify", {
       method:"POST", headers:{ "Content-Type":"application/json", "apikey":anon },
       body: JSON.stringify({ type:"email", token_hash: d1.token_hash }),
@@ -85,6 +64,5 @@ async function runLogin(){
   }catch(e){ log({step:"예외", message:String(e && e.message || e)}); }
 }
 </script>
-<p style="color:#888;font-size:.8rem;margin-top:24px">실행: 저장소 루트 로컬서버 → http://localhost:8000/test/login_test.html</p>
 </body>
 </html>
