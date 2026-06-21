@@ -12,6 +12,124 @@ var LOGO_SRC     = '../assets/images/logo/logo03.jpg';
 var SUPABASE_URL = 'https://pdnwgzneooyygfejrvbg.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkbndnem5lb295eWdmZWpydmJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NDc5ODgsImV4cCI6MjA5MjQyMzk4OH0.I79w8Jk-pPgoLHNrcSLhem88jz6_azcDOqglBZjRjPs';
 
+// ============================================================================
+// 휴대폰 SMS 본인인증 경로 (PortOne) — 기존 이메일 OTP 경로와 100% 병행. 회귀 0.
+//   로그인: requestIdentityVerification → complete-phone-login → verifyOtp(token_hash) → 세션
+//   가입:   requestIdentityVerification → verify-identity(signup_token) → complete-signup
+//   ★Edge 함수(complete-phone-login/verify-identity/complete-signup)는 운영 배포 후에만 동작.
+//   ★본인인증 채널키는 운영 채널로 교체 필요(현재 검수 채널). window.OS_IDENTITY로 주입 가능.
+// ============================================================================
+var OS_IDENTITY_STORE_ID    = (window.OS_PAYMENT && window.OS_PAYMENT.storeId) || 'store-41e93948-a67a-4ae0-abc5-1c95266ee12b';
+var OS_IDENTITY_CHANNEL_KEY = (window.OS_IDENTITY && window.OS_IDENTITY.channelKey) || 'channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387';
+function _osGenIvId() { return 'iv' + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12))); }
+function _osIdentityReady() { return !!(window.PortOne && window.PortOne.requestIdentityVerification); }
+
+/* 본인인증창 1회 호출 → {verificationId, state}. 실패/취소 시 null. */
+async function _osRunIdentity() {
+  if (!_osIdentityReady()) { alert('본인인증 모듈 로드 실패. 페이지를 새로고침 해주세요.'); return null; }
+  var state = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  var res = await window.PortOne.requestIdentityVerification({
+    storeId: OS_IDENTITY_STORE_ID, channelKey: OS_IDENTITY_CHANNEL_KEY, identityVerificationId: _osGenIvId()
+  });
+  if (res && res.code !== undefined) return { error: res.message || res.code };   // 취소/실패
+  return { verificationId: res.identityVerificationId, state: state };
+}
+
+/* 인증 응답(access_token/user) → 세션 저장 + 리다이렉트. verifyOtp의 검증된 로직 재사용(휴대폰 경로 전용). */
+async function _osApplyAuthSession(data) {
+  var userObj = data.user || {};
+  try {
+    var profRes = await fetch(SUPABASE_URL + '/rest/v1/users?id=eq.' + encodeURIComponent(userObj.id) + '&select=role,name,plan',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + data.access_token } });
+    if (profRes.ok) { var rows = await profRes.json(); if (rows && rows[0]) { userObj.role = rows[0].role || ''; userObj.name = rows[0].name || ''; userObj.plan = rows[0].plan || 'free'; } }
+  } catch (_e) {}
+  localStorage.setItem('os_token', data.access_token);
+  localStorage.setItem('os_refresh_token', data.refresh_token);
+  localStorage.setItem('os_user', JSON.stringify(userObj));
+  sessionStorage.setItem('os_token', data.access_token);
+  sessionStorage.setItem('os_user', JSON.stringify(userObj));
+}
+
+/* 휴대폰 본인인증 로그인 — 기존 이메일 OTP와 별개 경로. */
+window.doPhoneLogin = async function () {
+  var errBox = document.getElementById('loginErrBox');
+  if (errBox) errBox.classList.remove('on');
+  var iv = await _osRunIdentity();
+  if (!iv) return;
+  if (iv.error) { if (errBox) { errBox.textContent = '본인인증이 취소되었거나 실패했습니다.'; errBox.classList.add('on'); } return; }
+  try {
+    var r1 = await fetch(SUPABASE_URL + '/functions/v1/complete-phone-login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ verificationId: iv.verificationId, state: iv.state })
+    });
+    var d1 = await r1.json();
+    if (!r1.ok || !d1.token_hash) {
+      if (errBox) { errBox.textContent = '가입된 휴대폰 정보를 찾을 수 없습니다. 이메일로 로그인하거나 회원가입해 주세요.'; errBox.classList.add('on'); }
+      return;
+    }
+    var r2 = await fetch(SUPABASE_URL + '/auth/v1/verify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ type: 'email', token_hash: d1.token_hash })
+    });
+    var d2 = await r2.json();
+    if (!r2.ok || !d2.access_token) { if (errBox) { errBox.textContent = '로그인 세션 생성에 실패했습니다. 다시 시도해 주세요.'; errBox.classList.add('on'); } return; }
+    await _osApplyAuthSession(d2);
+    if (typeof _showStep === 'function') _showStep('login-success');
+    setTimeout(function () { window.location.href = '/app.html'; }, 800);
+  } catch (e) { if (errBox) { errBox.textContent = '네트워크 오류가 발생했습니다.'; errBox.classList.add('on'); } }
+};
+
+/* 가입 STEP(본인정보)에서 휴대폰 본인인증 → signup_token 확보. 성공 시 gPhoneVerified=true. */
+window.osPhoneVerifySignup = async function () {
+  var btn = document.getElementById('phoneVerifyBtn');
+  var statusEl = document.getElementById('phoneVerifyStatus');
+  var iv = await _osRunIdentity();
+  if (!iv) return;
+  if (iv.error) { if (statusEl) statusEl.textContent = '본인인증이 취소/실패했습니다. 다시 시도해 주세요.'; return; }
+  try {
+    var r = await fetch(SUPABASE_URL + '/functions/v1/verify-identity', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ verificationId: iv.verificationId, state: iv.state })
+    });
+    var d = await r.json();
+    if (!r.ok || !d.signup_token) {
+      if (statusEl) statusEl.textContent = (d && d.error === 'phone_in_use') ? '이미 가입된 휴대폰입니다. 로그인해 주세요.' : '본인인증 처리에 실패했습니다.';
+      return;
+    }
+    window.gSignupVerificationId = iv.verificationId;
+    window.gSignupToken = d.signup_token;
+    window.gPhoneVerified = true;
+    if (statusEl) statusEl.textContent = '✓ 휴대폰 본인인증 완료';
+    if (btn) { btn.disabled = true; btn.textContent = '인증 완료'; }
+  } catch (e) { if (statusEl) statusEl.textContent = '네트워크 오류가 발생했습니다.'; }
+};
+
+/* 휴대폰 본인인증 기반 가입 제출 — signup_token 있으면 complete-signup으로(이메일 OTP 대신). */
+async function _osSubmitViaPhone(signupData, email, resetBtn, errBox) {
+  try {
+    var res = await fetch(SUPABASE_URL + '/functions/v1/complete-signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        signup_token: window.gSignupToken, verificationId: window.gSignupVerificationId,
+        email: email, name: signupData.name,
+        company_id: signupData.company_id, branch_id: signupData.branch_id, team_id: signupData.team_id,
+        role: signupData.role, status: signupData.status
+      })
+    });
+    var d = await res.json();
+    if (!res.ok || !d.ok) {
+      if (errBox) { errBox.textContent = (d && d.error === 'email_in_use') ? '이미 가입된 이메일입니다.' : '가입 처리에 실패했습니다. (' + res.status + ')'; errBox.classList.add('on'); }
+      if (resetBtn) resetBtn();
+      return;
+    }
+    window.gPhoneVerified = false; window.gSignupToken = null; window.gSignupVerificationId = null;
+    var descEl = document.getElementById('signup-success-desc');
+    if (descEl) descEl.innerHTML = '<strong>' + escapeText(email) + '</strong><br>가입이 완료됐습니다!<br>잠시 후 메인 화면으로 이동합니다 😊';
+    if (typeof _showStep === 'function') _showStep('signup-success');
+    setTimeout(function () { window.location.href = '/app.html'; }, 1500);
+  } catch (e) { if (errBox) { errBox.textContent = '네트워크 오류가 발생했습니다.'; errBox.classList.add('on'); } if (resetBtn) resetBtn(); }
+}
+
 // 로고 src 주입 (5/15 후 이전 시 위 LOGO_SRC만 갱신)
 (function () {
   var logoEl = document.getElementById('logoImg');
@@ -1914,6 +2032,11 @@ async function doSubmit() {
       signupData.branch_id     = window._gInvite.branch_id     || signupData.branch_id;
       signupData.new_team_name = window._gInvite.new_team_name || signupData.new_team_name;
     }
+  }
+
+  /* 휴대폰 본인인증 완료 시 = complete-signup 경로(이메일 OTP 대신). 미인증 시 아래 기존 이메일 OTP 경로 그대로. */
+  if (window.gPhoneVerified && window.gSignupToken) {
+    return _osSubmitViaPhone(signupData, email, _resetBtn, errBox);
   }
 
   try {
