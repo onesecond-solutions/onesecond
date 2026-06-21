@@ -1,93 +1,102 @@
 @echo off
-chcp 65001 >nul
-setlocal
-title PortOne 통합 테스트 서버
+setlocal enabledelayedexpansion
+title PortOne Integration Test Launcher
 
 set "REPO=C:\limtaesung\github\onesecond"
 set "WT=C:\limtaesung\github\onesecond-portone-test"
 set "BRANCH=feat/test-env-setup"
+set "URL=http://localhost:8000/test/portone_test.html"
 
 echo ============================================
-echo   PortOne 통합 테스트 서버 시작
+echo   PortOne Integration Test Launcher
 echo ============================================
 echo.
 
-REM --- git 확인 ---
 where git >nul 2>&1
-if errorlevel 1 (
-  echo [오류] git 을 찾을 수 없습니다. Git 설치를 확인하세요.
-  echo.
-  pause
-  exit /b 1
-)
+if errorlevel 1 goto err_git
 
-REM --- Python 확인 ---
-where python >nul 2>&1
-if errorlevel 1 (
-  echo [오류] python 을 찾을 수 없습니다. Python 설치를 확인하세요.
-  echo.
-  pause
-  exit /b 1
-)
-
-REM --- 포트 8000 사용 중 확인 ---
 netstat -ano | findstr ":8000 " | findstr "LISTENING" >nul 2>&1
-if not errorlevel 1 (
-  echo [중지] 포트 8000 이 이미 사용 중입니다.
-  echo   먼저 STOP_PORTONE_TEST.bat 을 더블클릭해 종료한 뒤 다시 실행하세요.
-  echo.
-  pause
-  exit /b 1
-)
+if not errorlevel 1 goto err_port
 
-REM --- 최신 코드 가져오기 (메인 저장소 브랜치/작업파일 무영향) ---
-echo [1/4] 최신 테스트 코드 가져오는 중...
+echo [1/5] Fetching latest test code ...
 git -C "%REPO%" fetch origin %BRANCH%
-if errorlevel 1 (
-  echo [오류] git fetch 실패. 네트워크 또는 저장소 상태를 확인하세요.
-  echo.
-  pause
-  exit /b 1
-)
+if errorlevel 1 goto err_fetch
 
-REM --- 별도 worktree 생성 또는 갱신 (현재 작업본과 분리) ---
-if exist "%WT%\.git" (
-  echo [2/4] 테스트 작업본 갱신 중...
-  git -C "%WT%" reset --hard origin/%BRANCH%
-) else (
-  echo [2/4] 테스트 작업본 생성 중...
-  git -C "%REPO%" worktree add --force "%WT%" origin/%BRANCH%
-)
-if errorlevel 1 (
-  echo [오류] 테스트 작업본 준비에 실패했습니다.
-  echo.
-  pause
-  exit /b 1
-)
+if exist "%WT%\.git" goto wt_update
+echo [2/5] Creating test worktree ...
+git -C "%REPO%" worktree add --force "%WT%" origin/%BRANCH%
+if errorlevel 1 goto err_worktree
+goto wt_done
+:wt_update
+echo [2/5] Updating test worktree ...
+git -C "%WT%" reset --hard origin/%BRANCH%
+if errorlevel 1 goto err_worktree
+:wt_done
 
-REM --- 테스트 페이지 존재 확인 ---
-if not exist "%WT%\test\portone_test.html" (
-  echo [오류] test\portone_test.html 을 찾을 수 없습니다.
-  echo.
-  pause
-  exit /b 1
-)
+if not exist "%WT%\test\portone_test.html" goto err_html
 
-REM --- 브라우저 자동 열기 (서버가 곧 뜹니다. 안 보이면 새로고침 F5) ---
-echo [3/4] 브라우저를 엽니다...
-start "" "http://localhost:8000/test/portone_test.html"
+echo [3/5] Selecting server runtime ...
+set "SERVERCMD="
+python -c "import sys" >nul 2>&1
+if not errorlevel 1 set "SERVERCMD=python -m http.server 8000 --directory %WT%"
+if defined SERVERCMD goto have_server
+py -3 -c "import sys" >nul 2>&1
+if not errorlevel 1 set "SERVERCMD=py -3 -m http.server 8000 --directory %WT%"
+if defined SERVERCMD goto have_server
+set "SERVERCMD=powershell -NoProfile -ExecutionPolicy Bypass -File %~dp0serve_test.ps1 %WT% 8000"
+:have_server
+echo       Using server: !SERVERCMD!
 
-REM --- 로컬 서버 실행 (이 창에서. 창을 닫으면 서버 종료) ---
-echo [4/4] 로컬 서버 실행 (포트 8000)
+echo [4/5] Starting server in a separate window (kept open) ...
+start "PortOne Test Server" cmd /k !SERVERCMD!
+
+set "OK="
+set "TRIES=0"
+:waitloop
+set /a TRIES+=1
+timeout /t 1 /nobreak >nul
+netstat -ano | findstr ":8000 " | findstr "LISTENING" >nul 2>&1
+if not errorlevel 1 goto served
+if !TRIES! LSS 20 goto waitloop
+goto err_server
+:served
+
+echo [5/5] Verifying HTTP 200 ...
+powershell -NoProfile -Command "try{$r=Invoke-WebRequest 'http://localhost:8000/test/portone_test.html' -UseBasicParsing -TimeoutSec 5; if($r.StatusCode -eq 200){exit 0}else{exit 1}}catch{exit 1}"
+if errorlevel 1 goto err_verify
+
+echo       OK (HTTP 200). Opening browser ...
+start "" "%URL%"
 echo.
-echo   * 브라우저가 안 떴거나 "연결 거부"가 보이면 1~2초 뒤 F5(새로고침) 하세요.
-echo   * 테스트가 끝나면 STOP_PORTONE_TEST.bat 을 더블클릭하세요.
-echo   * (이 검은 창을 닫아도 서버가 종료됩니다.)
+echo Done. The "PortOne Test Server" window stays open until you stop it.
+echo When finished, double-click STOP_PORTONE_TEST.bat
 echo.
-cd /d "%WT%"
-python -m http.server 8000
-
-echo.
-echo 서버가 종료되었습니다.
 pause
-endlocal
+exit /b 0
+
+:err_git
+echo [ERROR] git not found. Please install Git.
+goto hold
+:err_port
+echo [STOP] Port 8000 is already in use. Run STOP_PORTONE_TEST.bat first.
+goto hold
+:err_fetch
+echo [ERROR] git fetch failed. Check network and repository.
+goto hold
+:err_worktree
+echo [ERROR] Failed to prepare test worktree.
+goto hold
+:err_html
+echo [ERROR] test\portone_test.html not found in worktree.
+goto hold
+:err_server
+echo [ERROR] Server did not start on port 8000 within timeout.
+echo         Browser was NOT opened. Check the "PortOne Test Server" window.
+goto hold
+:err_verify
+echo [ERROR] Server is listening but HTTP 200 check failed. Browser NOT opened.
+goto hold
+:hold
+echo.
+pause
+exit /b 1
