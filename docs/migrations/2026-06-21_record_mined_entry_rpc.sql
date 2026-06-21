@@ -131,8 +131,11 @@ begin
 end;
 $$;
 
--- §6 권한: PUBLIC EXECUTE 회수. service_role(정의자 격) 전용. authenticated/anon 부여 안 함.
+-- §6 권한: service_role 전용. PUBLIC 회수만으로는 Supabase 기본 상속(anon/authenticated)이
+--   남을 수 있어 두 롤에 명시 revoke 추가(2026-06-21 검수팀 적발). is_admin 가드 없는 RPC라 필수.
 revoke all on function public.record_mined_entry(jsonb, text, text[]) from public;
+revoke execute on function public.record_mined_entry(jsonb, text, text[]) from anon;
+revoke execute on function public.record_mined_entry(jsonb, text, text[]) from authenticated;
 
 -- ════════════════════════════════════════════════════════════════
 -- STEP 3 : 검증 (별도 RUN)
