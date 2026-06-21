@@ -949,6 +949,11 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-scope i{width:8px;height:8px;border-radius:50%;background:var(--svc);flex-shrink:0;align-self:center;}
 .sv-scope .svs-lbl{font-weight:700;color:var(--ts);}
 .sv-scope .svs-who{grid-column:2;font-size:0.69rem;color:var(--tf);font-style:normal;}
+.sv-scope span.svs{cursor:pointer;border-radius:9px;padding:4px 9px;margin:-4px -2px;transition:background .12s,box-shadow .12s;}
+.sv-scope span.svs:hover{background:color-mix(in srgb,var(--svc) 9%,transparent);}
+.sv-scope span.svs:focus-visible{outline:2px solid color-mix(in srgb,var(--svc) 55%,transparent);outline-offset:1px;}
+.sv-scope span.svs.on{background:color-mix(in srgb,var(--svc) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--svc) 45%,transparent);}
+.sv-scope span.svs.on .svs-lbl{color:var(--svc);}
 /* 무결과 CTA — ① 필터 끄기 / ② 질문 남기기(플라이휠 입구) */
 .sv-empty-cta{padding:28px 16px;text-align:center;}
 .sv-empty-cta .sec-msg{font-size:0.95rem;color:var(--ts);margin-bottom:14px;}
@@ -9514,7 +9519,7 @@ async function _runSearchV2(q, targetId){
   var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
   var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
-  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; window._svOpenKey=null; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널·선택표시 초기화 / 같은 검색어=누적·유지 */
+  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; window._svOpenKey=null; window._svActiveScope='all'; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널·선택표시·범위선택 초기화 / 같은 검색어=누적·유지 */
   window._svQ=q; window._svTarget=bodyId;
   body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
@@ -9592,16 +9597,18 @@ function _svRender(){
   tabs+='</div>';
   /* 활성 분류 필터 칩 (홈 상품/인수 진입 시 누른 주제가 보이게) */
   var chip = catF ? '<div class="sv-catbar"><span class="sv-catchip">'+_sEsc(catF)+' <button onclick="_svClearCat()" aria-label="분류 필터 해제">&#10005;</button></span></div>' : '';
-  /* 표시 대상 = 활성 소스 + (지식이면 분류 필터) */
+  var activeScope=window._svActiveScope||'all';
+  /* 표시 대상 = 활성 소스 + (지식이면 분류 필터) + 범위 칩 선택 */
   var shown=items.filter(function(it){
     if(activeSrc!=='all' && it.src!==activeSrc) return false;
     if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return false; }
+    if(activeScope!=='all' && it.scope!==activeScope) return false;
     return true;
   });
-  /* 스코프 = 검색 결과 전체의 출처 분포(탭과 무관하게 고정). 소스 탭을 바꿔도 숫자가 안 변한다. */
+  /* 범위 칩 = 검색 전체 출처 분포(숫자는 탭과 무관하게 고정) + 누르면 그 범위만(같은 칩 다시 누르면 전체) */
   var scCnt={mine:0,team:0,branch:0,common:0};
   items.forEach(function(it){ if(scCnt[it.scope]!=null) scCnt[it.scope]++; });
-  var scope='<div class="sv-scope">'+SV_SCOPES.map(function(sp){ return '<span style="--svc:'+sp.color+'"><i></i><b class="svs-lbl">'+sp.label+' '+(scCnt[sp.k]||0)+'</b><em class="svs-who">'+sp.who+'</em></span>'; }).join('')+'</div>';
+  var scope='<div class="sv-scope">'+SV_SCOPES.map(function(sp){ var on=(activeScope===sp.k); return '<span class="svs'+(on?' on':'')+'" style="--svc:'+sp.color+'" role="button" tabindex="0" aria-pressed="'+on+'" onclick="_svScope(\''+sp.k+'\')"><i></i><b class="svs-lbl">'+sp.label+' '+(scCnt[sp.k]||0)+'</b><em class="svs-who">'+sp.who+'</em></span>'; }).join('')+'</div>';
   /* 결과 */
   var html='';
   if(activeSrc==='all' && !catF && nav.length){
@@ -9613,6 +9620,9 @@ function _svRender(){
       /* ② 진짜 무결과(전 범위 0) = 플라이휠 입구 */
       var aArg=(catF==='상품')?"'상품'":((catF==='인수')?"'인수'":'null');
       html+='<div class="sv-empty-cta"><div class="sec-msg">찾는 답이 없으면, 질문으로 남겨보세요.</div><button class="sec-btn primary" type="button" onclick="_svAskFrom('+aArg+')">질문 남기기</button></div>';
+    } else if(activeScope!=='all'){
+      /* 범위 칩으로 좁혀서 0건 — 같은 칩 다시 누르면 전체 */
+      html+='<div class="sv-empty">이 범위에는 결과가 없어요.</div>';
     } else if(catF){
       /* ① 필터 때문에 0 (필터 끄면 결과 있음) */
       html+='<div class="sv-empty-cta"><div class="sec-msg">&lsquo;'+_sEsc(catF)+'&rsquo; 필터에선 결과가 없어요.</div><button class="sec-btn" type="button" onclick="_svClearCat()">필터 끄기</button></div>';
@@ -9645,6 +9655,9 @@ function _svMore(){ window._svLimit=(window._svLimit||40)+40; if(window._svQ) _r
 window._svMore=_svMore;
 function _svTab(k){ window._svActiveSource=k; _svRender(); }
 window._svTab=_svTab;
+/* 범위 칩 클릭 = 그 범위 결과만(같은 칩 다시 누르면 전체). 칩 숫자는 전체 기준 고정 */
+function _svScope(k){ window._svActiveScope=(window._svActiveScope===k)?'all':k; _svRender(); }
+window._svScope=_svScope;
 function _svClearCat(){ window._svCatFilter=null; _svRender(); }
 window._svClearCat=_svClearCat;
 /* 무결과 → 질문 남기기: 기존 #ask 보험 Q&A 폼을 검색 유형(상품/인수)에 맞춰 연다. (제출→네비방 라우팅은 다음 슬라이스) */
