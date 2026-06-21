@@ -74,6 +74,12 @@ async function runPayment(){
       storeId: STORE_ID, channelKey: PAY_CHANNEL_KEY,
       paymentId, orderName: "플러스 구독(테스트)",
       totalAmount: 9900, currency: "CURRENCY_KRW", payMethod: "CARD",
+      customer: {                          // ★이니시스 V2 일반결제 필수(테스트 가상 정보, 실개인정보 금지)
+        customerId: "test-customer-001",
+        fullName: "테스트 사용자",
+        email: "test@onesecond.solutions",
+        phoneNumber: "01000000000",
+      },
       customData: { plan_code: "plus" },   // 서버 웹훅이 plan 검증에 사용
     });
     if(res.code){ log("payOut",{step:"결제 실패/취소", code:res.code, message:res.message}); return; }
