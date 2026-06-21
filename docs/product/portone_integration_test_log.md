@@ -25,15 +25,17 @@
 |---|---|---|
 | 동일 verificationId 재호출 | 409 verification_already_used · 토큰 증가 0 | (검수팀 기록 예정) |
 
-## 4. 웹훅 서명 검증 (재배포 후)
+## 4. 웹훅 서명 검증 (재배포 c185af4 후)
 | 케이스 | 기대 | 결과 |
 |---|---|---|
-| 서명 없음 | 401 · DB write 0 | (예정) |
-| 잘못된 서명 | 401 · DB write 0 | (예정) |
-| 변조 body | 401 · DB write 0 | (예정) |
-| 정상 서명 | 처리 | (예정) |
-| 중복 event | 멱등(duplicate_ignored) | (예정) |
-| 순서 역전 | terminal 역행 ignored | (예정) |
+| 서명 없음 | 401 · DB write 0 | ✅ 401 invalid_signature |
+| 잘못된 서명 | 401 · DB write 0 | ✅ 401 invalid_signature |
+| 변조 body | 401 · DB write 0 | ✅ 401 invalid_signature |
+| DB write 0 교차 | payment_events/payments/subscriptions/refunds = 0 | ✅ 네 테이블 0 |
+| 응답 보안 | Secret·payload·stack 0 | ✅ invalid_signature만 |
+| 정상 서명 | 처리 | (결제 흐름에서) |
+| 중복 event | 멱등(duplicate_ignored) | (결제 흐름에서) |
+| 순서 역전 | terminal 역행 ignored | (결제 흐름에서) |
 
 ## 5. 결제 흐름 (서명검증 통과 후에만 잠금 해제)
 (예정)
