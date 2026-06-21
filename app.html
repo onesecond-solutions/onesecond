@@ -87,6 +87,7 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 .side-note b{color:var(--ts);font-weight:700;}
 .side-note-link{background:none;border:0;padding:0;font:inherit;color:var(--ac);font-weight:700;cursor:pointer;text-decoration:underline;}
 .app.collapsed .side-note{display:none;}
+#app:not(.is-admin) #sideNote,#app:not(.is-admin) #nav-pricing{display:none !important;}/* 요금제·안내문 = 어드민만 노출 (2026-06-22) */
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
 #app.role-ready #app-loading-shell{display:none;}
@@ -2273,7 +2274,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저방</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
-      <div class="nav" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
+      <div class="nav" id="nav-pricing" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
       <div class="nav" id="nav-admin" style="display:none" onclick="_navView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
     </div>
   </nav>
