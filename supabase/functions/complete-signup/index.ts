@@ -67,9 +67,14 @@ Deno.serve(async (req) => {
     email, email_confirm: true, user_metadata: meta });
   if (created?.user?.id) userId = created.user.id;
   else {
-    // already_exists 등 → 기존 user로 수렴(고아·중복 방지)
-    const { data: ex } = await sb.from("users").select("id").eq("email", email).is("deleted_at", null).limit(1);
-    if (ex && ex.length) userId = ex[0].id as string;
+    // already_exists → 본인 재시도(방금 생성, phone 미설정/이번 phone 동일)인지 타인 이메일 중복인지 구분.
+    //   타인 이메일에 휴대폰이 매핑되는 탈취를 막음.
+    const { data: ex } = await sb.from("users").select("id, phone_normalized").eq("email", email).is("deleted_at", null).limit(1);
+    if (ex && ex.length) {
+      const exu = ex[0] as { id: string; phone_normalized: string | null };
+      if (!exu.phone_normalized || exu.phone_normalized === phone) userId = exu.id;  // 본인 수렴
+      else return json({ error: "email_in_use" }, 409);                              // 타인 이메일 중복 → 차단
+    }
   }
   if (!userId) { console.error("[complete-signup] create", cErr?.code || "err"); return json({ error: "signup_failed" }, 409); }
 
