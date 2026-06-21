@@ -27,9 +27,10 @@ payment_events 멱등 INSERT(event_id) → (중복이면 무동작 반환) → p
 - 웹훅: `event_id`(webhook-id) → payment_events UNIQUE. 중복 웹훅 = `duplicate_ignored` 무동작.
 - 결제: `payment_id` UNIQUE(payments). 순서 역전/재발송에도 최종 재조회 상태로 수렴(upsert).
 
-## 6. 실패·재처리 정책
+## 6. 실패·재처리 정책 + 순서 역전 (보강)
 - 서명 검증 실패 → 401(처리 0). / 재조회 실패 → 502. / RPC 실패 → 500 + 비식별 코드 → **PortOne 자동 재발송(재처리)**. 멱등이라 재처리 안전.
-- 순서 역전: 서버 재조회가 항상 **현재 결제 상태**를 가져오므로 늦게 온 웹훅도 최신 상태 반영.
+- **순서 역전(보강):** RPC가 **현재 구독 상태 조회 후 terminal(canceled/expired) 역행 차단** — 환불/취소 이후 늦게 온 paid/failed = **무시(이벤트 이력만 `ignored`)**. 과거 paid가 refunded를 못 되돌림. 재조회(p_verified.status)가 항상 진실.
+- **payment_events.processing_status 4구분:** `received`(선기록)→`applied`(정상) / `ignored`(중복·역행) / `failed`(RPC 실패 시 Edge가 멱등 기록). 동일 상태 재수신=멱등 성공.
 
 ## 7. 보안 점검표
 - [x] 웹훅 서명 검증 후에만 처리(본문 불신) — ★배포 전 `@portone/server-sdk Webhook.verify` 연결 필수

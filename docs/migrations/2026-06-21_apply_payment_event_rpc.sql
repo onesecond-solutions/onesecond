@@ -20,15 +20,24 @@ declare
   v_uid      uuid := (p_verified->>'user_id')::uuid;
   v_sub      uuid := nullif(p_verified->>'subscription_id','')::uuid;
   v_plan     text := p_verified->>'plan_code';        -- plans.code
-  v_target   text;                                    -- users.plan 목표값
+  v_cur      text;                                    -- 현재 구독 상태(순서 역전 판정용)
 begin
-  -- 1) 멱등: 같은 event_id 이미 처리됐으면 무동작
+  -- 1) 멱등: 같은 event_id 이미 처리됐으면 무동작. processing_status=received로 선기록.
   insert into public.payment_events (event_id, payment_id, subscription_id, event_type, processing_status)
-  values (p_event_id, p_verified->>'payment_id', v_sub, p_event_type, 'processed')
+  values (p_event_id, p_verified->>'payment_id', v_sub, p_event_type, 'received')
   on conflict (event_id) do nothing;
   get diagnostics v_n = row_count;
   if v_n = 0 then
     return jsonb_build_object('outcome','duplicate_ignored');   -- 중복 웹훅 0
+  end if;
+
+  -- 1.5) ★순서 역전 방어 — 현재 구독 상태 조회 후 terminal 역행 차단(이벤트 이력만 ignored 기록)
+  --   재조회(p_verified.status)가 진실. terminal(canceled/expired) 이후 늦게 온 paid/failed는 무시.
+  if v_sub is not null then select status into v_cur from public.subscriptions where id = v_sub; end if;
+  if v_cur in ('canceled','expired')
+     and p_event_type in ('paid','billing_paid','failed','billing_failed') then
+    update public.payment_events set processing_status='ignored' where event_id = p_event_id;
+    return jsonb_build_object('outcome','ignored_stale','current',v_cur,'event_type',p_event_type);
   end if;
 
   -- 2) payments 원장 upsert (payment_id 멱등)
@@ -96,6 +105,9 @@ begin
     update public.users set plan='free' where id=v_uid;
   end if;
 
+  -- 처리 완료 표시(received → applied). 실패 시 자연 raise → 전체 롤백(received 포함) → 웹훅 5xx → 재발송.
+  --   failed 기록은 호출자(Edge)가 RPC 실패 시 별도 멱등 기록(payment_events on conflict).
+  update public.payment_events set processing_status='applied', processed_at=now() where event_id = p_event_id;
   return jsonb_build_object('outcome','applied','event_type',p_event_type);
 end;
 $$;

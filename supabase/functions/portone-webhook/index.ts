@@ -93,8 +93,12 @@ Deno.serve(async (req) => {
     p_event_id: eventId, p_event_type: mapped, p_verified: verified,
   });
   if (error) {
-    // 비식별 오류코드만. 휴대폰/빌링키/payload 미출력. 5xx → PortOne 재발송(재처리).
+    // 비식별 오류코드만. 휴대폰/빌링키/payload 미출력. failed 멱등 기록(롤백된 received 대체) + 5xx → 재발송.
     console.error("[portone-webhook] apply_failed", error.code || "rpc_error");
+    await sb.from("payment_events").upsert(
+      { event_id: eventId, payment_id: paymentId, event_type: mapped, processing_status: "failed", error_code: error.code || "rpc_error" },
+      { onConflict: "event_id" },
+    );
     return json({ error: "processing_failed" }, 500);
   }
   return json({ ok: true, outcome: (data as { outcome?: string })?.outcome }, 200);  // 200 → 재발송 중단
