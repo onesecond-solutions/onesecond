@@ -98,30 +98,44 @@ alter table public.subscriptions
   add column if not exists current_period_end   timestamptz,
   add column if not exists retry_count          integer not null default 0,
   add column if not exists last_failure_code    text;
+-- partial UNIQUE 대상 = 진행형 상태만(pending/active/past_due). canceled·expired는 새 구독 허용.
 create unique index if not exists uq_sub_active_user
-  on public.subscriptions (user_id) where status in ('active','past_due');
+  on public.subscriptions (user_id) where status in ('pending','active','past_due');
 
 -- ════════════════════════════════════════════════════════════════
--- STEP 6 : RLS — plans=공개 읽기 / payments·events·refunds=본인+admin 읽기, 쓰기는 service_role(서버)만
---   ★users.plan 변경·결제 기록은 Edge Function(service_role)만. 클라 직접 쓰기 경로 없음.
+-- STEP 6 : RLS (대표 보강 §3·§4)
+--   plans 원본 = admin만(내부 PG설정·테스트값 비공개) / 공개는 plans_public view(공개 항목만)
+--   payment_events = admin/service만(일반 SELECT 금지) / payments·refunds = 본인+admin 정제 조회
+--   쓰기(INSERT/UPDATE)는 정책 없음 = service_role(서버 Edge Function)만.
 -- ════════════════════════════════════════════════════════════════
 alter table public.plans          enable row level security;
 alter table public.payments       enable row level security;
 alter table public.payment_events enable row level security;
 alter table public.refunds        enable row level security;
 
-drop policy if exists plans_read on public.plans;
-create policy plans_read on public.plans for select to authenticated using (true);   -- 요금제는 공개
+-- §3 plans 원본은 admin만. 일반/공개에 전체 노출 금지.
+drop policy if exists plans_read  on public.plans;
+drop policy if exists plans_admin on public.plans;
+create policy plans_admin on public.plans for select to authenticated using (is_admin());
+-- 공개용 view — 공개 가능 항목만(상품명·표시가격·주기·판매여부·공개기능). 내부 PG설정·메모 제외.
+create or replace view public.plans_public as
+  select code, name, billing_cycle, amount, currency, is_active, features
+  from public.plans where is_active = true;
+grant select on public.plans_public to authenticated, anon;
 
+-- §4 payments = 본인+admin 읽기(민감·비밀값 컬럼 없음). 쓰기는 service_role만.
 drop policy if exists pay_select_own on public.payments;
 create policy pay_select_own on public.payments for select to authenticated using (auth.uid() = user_id or is_admin());
--- INSERT/UPDATE 정책 없음 = service_role(서버)만 기록
 
+-- §4 payment_events = admin/service 전용(일반 사용자 SELECT 금지). 원문 payload 미저장(해시만).
 drop policy if exists pe_admin_read on public.payment_events;
 create policy pe_admin_read on public.payment_events for select to authenticated using (is_admin());
 
+-- refunds = 본인+admin 읽기.
 drop policy if exists rf_admin_read on public.refunds;
-create policy rf_admin_read on public.refunds for select to authenticated using (is_admin());
+drop policy if exists rf_select_own on public.refunds;
+create policy rf_select_own on public.refunds for select to authenticated
+  using (is_admin() or exists (select 1 from public.payments p where p.payment_id = refunds.payment_id and p.user_id = auth.uid()));
 
 -- ════════════════════════════════════════════════════════════════
 -- STEP 7 : 검증 (별도 RUN)

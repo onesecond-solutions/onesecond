@@ -16,7 +16,12 @@ PortOne V2 Browser SDK / 빌링키 발급 화면·코드(`app.html:3819~3916`) /
 | `payments` | 결제 시도·결과 원장 | payment_id UNIQUE |
 | `payment_events` | 웹훅·상태변경 이벤트 원장(원문 미저장, 해시만) | event_id UNIQUE |
 | `refunds` | 환불 이력 | refund_id UNIQUE |
-| `subscriptions`(보강) | cancel_at_period_end·canceled_at·기간·retry_count 등 + **user_id active partial UNIQUE** | |
+| `subscriptions`(보강) | cancel_at_period_end·canceled_at·기간·retry_count 등 + **user_id partial UNIQUE(pending/active/past_due만)** | |
+| `plans_public`(view) | 공개 항목만. 원본 plans=admin만 | |
+
+**partial UNIQUE 상태(보강):** `pending·active·past_due` 만 1개 제한. **canceled·expired는 새 구독 생성 허용.**
+
+**RLS(보강 §3·§4):** plans 원본=admin만(내부 PG설정·테스트값 비공개) + 공개는 `plans_public` view(상품명·표시가격·주기·판매여부·공개기능) / payment_events=**admin·service 전용**(일반 SELECT 금지·원문 미저장) / payments·refunds=본인+admin 정제 조회 / 쓰기는 service_role(서버)만.
 
 ## 결제 상태 전환표
 
