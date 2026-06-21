@@ -15,9 +15,10 @@ const PORTONE_API = "https://api.portone.io";
 const MAX_BODY = 16 * 1024;
 const TOKEN_TTL = 600;   // 가입 토큰 10분
 
-// ★CORS: 운영 시 우리 도메인만 허용(설계 단계는 자리표시).
+// ★CORS: 허용 출처는 env(ALLOWED_ORIGIN). 운영/테스트 프로젝트별 Secret로 도메인 주입(하드코딩 0).
+//   미설정 시 빈 문자열(차단) — 배포 시 ALLOWED_ORIGIN 필수.
 const CORS = {
-  "Access-Control-Allow-Origin": "https://onesecond.solutions",
+  "Access-Control-Allow-Origin": Deno.env.get("ALLOWED_ORIGIN") ?? "",
   "Access-Control-Allow-Headers": "content-type, authorization, apikey",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };

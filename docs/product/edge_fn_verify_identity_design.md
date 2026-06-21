@@ -41,7 +41,7 @@ issue_signup_token = 단일 INSERT(verificationId 재사용 시 예외). consume
 정상 인증 / 잘못된 state(401) / 만료 인증 / 취소 인증(409) / verificationId 재사용(409) / 동일번호 중복(409 recover) / 토큰 만료(consume 예외) / 토큰 재사용(예외) / 인증 후 가입 중단(토큰 만료로 무효) / 다른 이메일로 토큰 재사용 시도(바인딩 불일치 차단).
 
 ## 9. 필요한 환경변수
-`PORTONE_V2_API_SECRET`(재조회) · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY`. — ★실값 미설정(배포 시).
+`PORTONE_V2_API_SECRET`(재조회) · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `ALLOWED_ORIGIN`(CORS 허용 도메인 — 운영/테스트 프로젝트별 주입, 도메인 하드코딩 0). — ★실값 미설정(배포 시).
 
 ## 10. 가입 함수 연결 — 2단계 소비 (보강 §1: 토큰 유실·중복 계정 방지)
 Auth와 public DB가 한 트랜잭션으로 안 묶이는 점을 고려한 **reserve → 생성 → finalize**:
