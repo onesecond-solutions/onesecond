@@ -52,6 +52,11 @@ function _osIdentityReady() { return !!(window.PortOne && window.PortOne.request
 /* 본인인증창 1회 호출 → {verificationId, state}. 실패/취소 시 null. */
 async function _osRunIdentity() {
   if (!_osIdentityReady()) { alert('본인인증 모듈 로드 실패. 페이지를 새로고침 해주세요.'); return null; }
+  // ★설정 누락/placeholder 시 묵시적 fallback 없이 명시 중단(빈 anon·미주입 채널로 호출 금지)
+  if (!OS_SMS.anonKey || !OS_SMS.channelKey || !OS_SMS.storeId ||
+      String(OS_SMS.channelKey).indexOf('OS_PROD_') === 0 || String(OS_SMS.storeId).indexOf('OS_PROD_') === 0) {
+    alert('본인인증 설정이 완료되지 않아 진행할 수 없습니다. 관리자에게 문의해 주세요.'); return null;
+  }
   var state = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
   var res = await window.PortOne.requestIdentityVerification({
     storeId: OS_SMS.storeId, channelKey: OS_SMS.channelKey, identityVerificationId: _osGenIvId()
