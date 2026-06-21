@@ -1,5 +1,5 @@
 -- apply_payment_event : 결제 웹훅 결과를 payments+subscriptions+users.plan 원자 반영 (트랙 A)
--- 신버전 pdnwgzneooyygfejrvbg. ★DB 미실행. portone-webhook Edge Function이 서버 재조회 후 호출.
+-- 신버전 운영 프로젝트(별도). ★DB 미실행. portone-webhook Edge Function이 서버 재조회 후 호출.
 -- 선행: 2026-06-21_payment_track_a.sql(plans/payments/payment_events/refunds/subscriptions) 적용.
 --
 -- 원자성: payment_events 멱등(event_id) → payments upsert → subscriptions 갱신 → users.plan 변경 = 한 트랜잭션.
