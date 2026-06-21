@@ -1,5 +1,5 @@
 -- signup_tokens 발급/예약/확정 RPC (트랙 B) — 본인인증 후 가입용 서버 토큰 (2단계 소비)
--- 신버전 pdnwgzneooyygfejrvbg. ★DB 미실행. 선행: 2026-06-21_auth_track_b.sql(signup_tokens).
+-- 신버전 운영 프로젝트(별도). ★DB 미실행. 선행: 2026-06-21_auth_track_b.sql(signup_tokens).
 -- verify-identity가 issue / 가입 함수(complete-signup)가 reserve→(계정생성)→finalize.
 -- ★대표 보강 §1: consume을 먼저 끝내지 않고, processing 선점 → 계정 생성 → 마지막 consumed.
 --   중간 실패 시 재시도 안전·중복 auth.users 0·토큰 유실 0·이미 생성됐으면 기존 결과 수렴.
