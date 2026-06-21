@@ -35,7 +35,7 @@ async function runLogin(){
   const anon = window.TEST_ANON, expected = window.TEST_EXPECTED;
   if(!anon || !expected){ log("검수팀: login_test.local.js (window.TEST_ANON / window.TEST_EXPECTED) 를 먼저 생성하세요."); return; }
   log("본인인증창 호출 중...");
-  const identityVerificationId = "ivlogin-" + crypto.randomUUID();
+  const identityVerificationId = "ivl" + crypto.randomUUID().replace(/-/g, "");  // 하이픈 제거·35자(KCP ordr_idx 형식)
   const state = crypto.randomUUID();
   try{
     const res = await PortOne.requestIdentityVerification({ storeId: STORE_ID, channelKey: IDENTITY_CHANNEL_KEY, identityVerificationId });
