@@ -10,11 +10,13 @@
  *   - anon key 원문을 콘솔·로그·HTTP 응답 바디에 출력하지 않음.
  *   - 본 파일을 저장소에 커밋할 때 TEST_ANON_KEY 값을 포함하지 마세요.
  */
-'use strict';
-const http = require('http');
-const fs   = require('fs');
-const path = require('path');
+// package.json "type":"module" → ESM. require 대신 import 사용.
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT     = 8000;
 const ROOT_DIR = __dirname;
 
