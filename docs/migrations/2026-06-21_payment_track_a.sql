@@ -29,6 +29,7 @@ create table if not exists public.plans (
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+alter table public.plans drop constraint if exists chk_plans_cycle;   -- 멱등(재실행 대비)
 alter table public.plans add constraint chk_plans_cycle check (billing_cycle in ('month','year'));
 
 -- ════════════════════════════════════════════════════════════════
@@ -50,6 +51,7 @@ create table if not exists public.payments (
   created_at              timestamptz not null default now(),
   updated_at              timestamptz not null default now()
 );
+alter table public.payments drop constraint if exists chk_payments_status;   -- 멱등(재실행 대비)
 alter table public.payments add constraint chk_payments_status
   check (status in ('paid','failed','canceled','refunded','partial_refunded'));
 create index if not exists idx_payments_user on public.payments (user_id, created_at desc);
