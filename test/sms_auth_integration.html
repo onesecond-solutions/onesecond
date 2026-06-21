@@ -134,7 +134,7 @@ window.startVerify=async mode=>{
       stkn=d.signup_token;
       R('res-verify-su',true,'본인인증 ✅ · signup_token 발급');document.getElementById('btn-signup').disabled=false;
     }
-    else{vlogin=vid;R('res-verify-login',true,'본인인증 ✅');document.getElementById('btn-login').disabled=false;}
+    else{vlogin=vid;window._vloginState=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2));R('res-verify-login',true,'본인인증 ✅');document.getElementById('btn-login').disabled=false;}
     L('[VERIFY] 완료('+mode+')');
   }catch(e){R(rid,false,e.message);L('[ERR]'+e.message);}
 };
@@ -152,7 +152,7 @@ window.doSignup=async()=>{
 window.doLogin=async()=>{
   if(blocked||!vlogin)return;
   document.getElementById('btn-login').disabled=true;L('[LOGIN] complete-phone-login...');
-  try{const{r,d}=await AF(EDGE_BASE+'/complete-phone-login',{verificationId:vlogin});
+  try{const{r,d}=await AF(EDGE_BASE+'/complete-phone-login',{verificationId:vlogin,state:window._vloginState});
     if(d?.token_hash){lhash=d.token_hash;R('res-login',true,'token_hash ✅');document.getElementById('btn-otp').disabled=false;L('[LOGIN] token_hash 수령');}
     else{R('res-login',false,d?.error||r.status);L('[LOGIN] 실패:'+(d?.error||r.status));document.getElementById('btn-login').disabled=false;}
   }catch(e){R('res-login',false,e.message);L('[ERR]'+e.message);document.getElementById('btn-login').disabled=false;}
