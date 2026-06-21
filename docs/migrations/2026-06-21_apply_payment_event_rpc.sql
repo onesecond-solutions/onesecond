@@ -57,10 +57,12 @@ begin
 
   -- 3) subscriptions + 4) users.plan (권한 규칙)
   if p_event_type in ('paid','billing_paid') then
-    -- 결제/정기청구 성공 → active + plan 부여
+    -- 결제/정기청구 성공 → active + plan 부여 + 다음 결제일 전진(멱등 가드 통과한 첫 처리만)
+    --   next_billing_at = max(현재 next_billing_at, now()) + 1개월. 중복 이벤트는 위 멱등에서 차단되어 이중 전진 0.
     if v_sub is not null then
       update public.subscriptions
         set status='active', last_payment_at=now(), last_payment_id=p_verified->>'payment_id',
+            next_billing_at = greatest(coalesce(next_billing_at, now()), now()) + interval '1 month',
             retry_count=0, last_failure_code=null, updated_at=now()
         where id=v_sub;
     end if;
