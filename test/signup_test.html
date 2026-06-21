@@ -17,7 +17,8 @@
 <body>
 <div class="warn">★ <b>테스트 전용</b> — 새 테스트 계정 가입 흐름 검증. 본인인증 1회(임의 6자리). 신규 auth 1건 생성됨(검증 후 검수팀 삭제).</div>
 <h1>SMS 가입 검증</h1>
-<p><button onclick="runSignup()">휴대폰 본인인증으로 가입</button></p>
+<p><button onclick="runSignup()">휴대폰 본인인증으로 가입</button>
+   <button onclick="retrySignup()" style="background:#6B7280">동일 요청 재시도 (수렴 검증)</button></p>
 <pre id="out">버튼을 누르면 결과가 표시됩니다.</pre>
 
 <script>
@@ -53,8 +54,22 @@ async function runSignup(){
     const d2 = await r2.json();
     if(!r2.ok || !d2.user_id){ log({step:"complete-signup", http:r2.status, error:d2.error}); return; }
 
-    log({ "가입 성공(user 생성)": !!d2.user_id, "수렴(기존)": !!d2.converged,
-      note:"signup_token·token 원문 미표시. 신규 auth 1건은 검증 후 검수팀 삭제." });
+    window._lastSignup = { signup_token: d1.signup_token, verificationId: res.identityVerificationId, email, user_id: d2.user_id };
+    log({ "가입 성공(user 생성)": !!d2.user_id, "수렴(기존)": !!d2.converged, user_id: d2.user_id,
+      안내: "아래 '동일 요청 재시도' 버튼으로 수렴(중복 0) 검증하세요." });
+  }catch(e){ log({step:"예외", message:String(e && e.message || e)}); }
+}
+async function retrySignup(){
+  const s = window._lastSignup;
+  if(!s){ log("먼저 위에서 가입을 1회 완료하세요."); return; }
+  log("동일 가입 요청 재시도 중(같은 signup_token)...");
+  const anon = window.TEST_ANON;
+  try{
+    const r = await fetch(SIGNUP_FN, { method:"POST", headers:{ "Content-Type":"application/json", "apikey":anon, "Authorization":"Bearer "+anon },
+      body: JSON.stringify({ signup_token: s.signup_token, verificationId: s.verificationId, email: s.email, name:"가입테스트", role:"ga_member" }) });
+    const d = await r.json();
+    log({ "재시도 http": r.status, "수렴(기존)": !!d.converged, "user_id 동일": d.user_id === s.user_id,
+      note:"기대: 수렴 true·user_id 동일·신규 auth 추가 0(작업자 DB 교차)." });
   }catch(e){ log({step:"예외", message:String(e && e.message || e)}); }
 }
 </script>
