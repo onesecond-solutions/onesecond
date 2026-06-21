@@ -62,30 +62,34 @@ async function runIdentity(){
 }
 </script>
 
-<h2>② 결제 (KG이니시스 테스트 · 플러스 9,900원)</h2>
-<button class="alt" onclick="runPayment()">테스트 결제 (KG이니시스 테스트 · 9,900원)</button>
+<h2>② 정기결제 — 빌링키 발급 (KG이니시스 테스트 · 원세컨드 PLUS 월 9,900원 자동결제)</h2>
+<button class="alt" onclick="runBilling()">정기결제 빌링키 발급 (월 9,900원)</button>
 <pre id="payOut">결과가 여기 표시됩니다.</pre>
 <script>
-async function runPayment(){
-  log("payOut","결제창 호출 중...");
-  const paymentId = "pay-" + uuid();
+// app.html handlePaidCta(정기결제) 구성 그대로 — billing.png 화면(원세컨드 PLUS 정기결제).
+async function runBilling(){
+  log("payOut","정기결제(빌링키 발급)창 호출 중...");
+  const issueId = "os" + uuid().replace(/-/g, "");
   try{
-    const res = await PortOne.requestPayment({
+    const res = await PortOne.requestIssueBillingKey({
       storeId: STORE_ID, channelKey: PAY_CHANNEL_KEY,
-      paymentId, orderName: "플러스 구독(테스트)",
-      totalAmount: 9900, currency: "CURRENCY_KRW", payMethod: "CARD",
-      customer: {                          // ★이니시스 V2 일반결제 필수(테스트 가상 정보, 실개인정보 금지)
+      billingKeyMethod: "CARD",
+      issueId,
+      issueName: "원세컨드 PLUS 정기결제",
+      displayAmount: 9900,                 // 표시 전용(실청구는 서버 charge-subscriptions)
+      currency: "KRW",
+      offerPeriod: { interval: "1m" },     // 월 1회 자동결제
+      customer: {                          // 테스트 가상 정보(실개인정보 금지)
         customerId: "test-customer-001",
         fullName: "테스트 사용자",
         email: "test@onesecond.solutions",
         phoneNumber: "01000000000",
       },
-      customData: { plan_code: "plus" },   // 서버 웹훅이 plan 검증에 사용
     });
-    if(res.code){ log("payOut",{step:"결제 실패/취소", code:res.code, message:res.message}); return; }
-    // 결제 성공 → PortOne가 서버로 웹훅 발송 → portone-webhook이 재조회 후 DB 반영(브라우저 무관).
-    log("payOut",{ step:"결제창 완료", paymentId: res.paymentId,
-      note:"서버 웹훅 수신·DB 반영은 onesecond-test에서 payment_events/payments/subscriptions로 확인" });
+    if(res && res.code !== undefined){ log("payOut",{step:"빌링키 발급 실패/취소", code:res.code, message:res.message}); return; }
+    // 빌링키 발급 성공 → (실서비스는) subscriptions 저장 → 정기청구 cron → webhook billing_paid → DB 반영
+    log("payOut",{ step:"빌링키 발급 완료", billingKey_present: !!(res && res.billingKey),
+      note:"이 빌링키로 subscriptions 저장 + 정기청구(charge-subscriptions) → webhook billing_paid 흐름 확인" });
   }catch(e){ log("payOut",{step:"예외", message:String(e && e.message || e)}); }
 }
 </script>
