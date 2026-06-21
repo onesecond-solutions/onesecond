@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>★SMS 가입 검증 (onesecond-test 전용)</title>
+<!-- ★테스트 전용. 운영 무관. 본인인증→signup_token→complete-signup 가입 정상흐름 검증. 토큰·phone 표시 0. -->
+<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+<script src="login_test.local.js"></script>  <!-- window.TEST_ANON 재사용(검수팀 로컬) -->
+<style>
+  body{font-family:system-ui,sans-serif;max-width:680px;margin:24px auto;padding:0 16px;line-height:1.6;color:#222}
+  .warn{background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:10px 14px;font-size:.9rem;margin-bottom:16px}
+  button{background:#0E9A6C;color:#fff;border:0;border-radius:8px;padding:12px 22px;font-size:1rem;cursor:pointer}
+  pre{background:#0F172A;color:#CBD5E1;border-radius:8px;padding:12px;font-size:.8rem;white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="warn">★ <b>테스트 전용</b> — 새 테스트 계정 가입 흐름 검증. 본인인증 1회(임의 6자리). 신규 auth 1건 생성됨(검증 후 검수팀 삭제).</div>
+<h1>SMS 가입 검증</h1>
+<p><button onclick="runSignup()">휴대폰 본인인증으로 가입</button></p>
+<pre id="out">버튼을 누르면 결과가 표시됩니다.</pre>
+
+<script>
+  const STORE_ID = "store-41e93948-a67a-4ae0-abc5-1c95266ee12b";
+  const IDENTITY_CHANNEL_KEY = "channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387";
+  const SUPABASE_URL = "https://gelbgtfiuhqdpnlwxqrs.supabase.co";
+  const VERIFY_FN = SUPABASE_URL + "/functions/v1/verify-identity";
+  const SIGNUP_FN = SUPABASE_URL + "/functions/v1/complete-signup";
+  function log(o){ document.getElementById("out").textContent = (typeof o==="string"?o:JSON.stringify(o,null,2)); }
+
+async function runSignup(){
+  const anon = window.TEST_ANON;
+  if(!anon){ log("검수팀: login_test.local.js(window.TEST_ANON) 필요"); return; }
+  log("본인인증창 호출 중...");
+  const identityVerificationId = "iv" + crypto.randomUUID().replace(/-/g,"");  // 하이픈 제거(KCP)
+  const state = crypto.randomUUID();
+  // 매 실행 새 이메일(중복 회피) — 실개인정보 아님
+  const email = "signup-test-" + crypto.randomUUID().slice(0,8) + "@example.com";
+  try{
+    const res = await PortOne.requestIdentityVerification({ storeId: STORE_ID, channelKey: IDENTITY_CHANNEL_KEY, identityVerificationId });
+    if(res && res.code !== undefined){ log({step:"인증 취소/실패", code:res.code, message:res.message}); return; }
+
+    // 1) verify-identity → signup_token
+    const h = { "Content-Type":"application/json", "apikey":anon, "Authorization":"Bearer "+anon };
+    const r1 = await fetch(VERIFY_FN, { method:"POST", headers:h, body: JSON.stringify({ verificationId: res.identityVerificationId, state }) });
+    const d1 = await r1.json();
+    if(!r1.ok || !d1.signup_token){ log({step:"verify-identity", http:r1.status, error:d1.error}); return; }
+
+    // 2) complete-signup(가입)
+    const r2 = await fetch(SIGNUP_FN, { method:"POST", headers:h, body: JSON.stringify({
+      signup_token: d1.signup_token, verificationId: res.identityVerificationId,
+      email, name: "가입테스트", role: "ga_member" }) });
+    const d2 = await r2.json();
+    if(!r2.ok || !d2.user_id){ log({step:"complete-signup", http:r2.status, error:d2.error}); return; }
+
+    log({ "가입 성공(user 생성)": !!d2.user_id, "수렴(기존)": !!d2.converged,
+      note:"signup_token·token 원문 미표시. 신규 auth 1건은 검증 후 검수팀 삭제." });
+  }catch(e){ log({step:"예외", message:String(e && e.message || e)}); }
+}
+</script>
+</body>
+</html>
