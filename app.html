@@ -9598,9 +9598,9 @@ function _svRender(){
     if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return false; }
     return true;
   });
-  /* 스코프 = 가벼운 요약 카운트 (소스 탭과 시각 층 분리) */
+  /* 스코프 = 검색 결과 전체의 출처 분포(탭과 무관하게 고정). 소스 탭을 바꿔도 숫자가 안 변한다. */
   var scCnt={mine:0,team:0,branch:0,common:0};
-  shown.forEach(function(it){ if(scCnt[it.scope]!=null) scCnt[it.scope]++; });
+  items.forEach(function(it){ if(scCnt[it.scope]!=null) scCnt[it.scope]++; });
   var scope='<div class="sv-scope">'+SV_SCOPES.map(function(sp){ return '<span style="--svc:'+sp.color+'"><i></i><b class="svs-lbl">'+sp.label+' '+(scCnt[sp.k]||0)+'</b><em class="svs-who">'+sp.who+'</em></span>'; }).join('')+'</div>';
   /* 결과 */
   var html='';
