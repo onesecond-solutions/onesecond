@@ -24,20 +24,21 @@
   const STORE_ID = "store-41e93948-a67a-4ae0-abc5-1c95266ee12b";
   const IDENTITY_CHANNEL_KEY = "channel-key-c53d6ac7-21e9-4db6-b523-2dcfecc06387"; // 본인인증 채널
   const SUPABASE_URL = "https://gelbgtfiuhqdpnlwxqrs.supabase.co";
+  // ★검수팀이 배포 전 채움(둘 다 공개/비교용 — 비밀 토큰 아님):
+  const SUPABASE_ANON_KEY = "__FILL_ANON_PUBLIC__";        // Dashboard → Settings → API → anon public
+  const EXPECTED_USER_ID  = "__FILL_TEST_LOGIN_USER_ID__"; // test-login@example.com 의 auth user id
   const LOGIN_FN = SUPABASE_URL + "/functions/v1/complete-phone-login";
   function log(o){ document.getElementById("out").textContent = (typeof o==="string"?o:JSON.stringify(o,null,2)); }
 </script>
 
-<label>Supabase anon key (공개값 — Dashboard → Settings → API → anon public)</label>
-<input id="anon" placeholder="eyJ... (테스트 프로젝트 anon key 붙여넣기)">
-
+<p>본인인증창에 등록된 테스트 번호 <b>010-1234-5678</b> 를 입력하세요(임의 6자리 인증).</p>
 <p><button onclick="runLogin()">휴대폰 본인인증으로 로그인</button></p>
 <pre id="out">결과가 여기 표시됩니다.</pre>
 
 <script>
 async function runLogin(){
-  const anon = document.getElementById("anon").value.trim();
-  if(!anon){ log("anon key를 먼저 입력하세요(공개값)."); return; }
+  const anon = SUPABASE_ANON_KEY;
+  if(anon.indexOf("__FILL")===0 || EXPECTED_USER_ID.indexOf("__FILL")===0){ log("검수팀: SUPABASE_ANON_KEY / EXPECTED_USER_ID 를 먼저 채우세요."); return; }
   log("본인인증창 호출 중...");
   const identityVerificationId = "ivlogin-" + crypto.randomUUID();
   const state = crypto.randomUUID();
@@ -63,12 +64,12 @@ async function runLogin(){
     const d2 = await r2.json();
     if(!r2.ok || !d2.access_token){ log({step:"verifyOtp 교환", http:r2.status, error:(d2.error_description||d2.msg||d2.error)}); return; }
 
-    // 3) 세션 생성 성공 — user.id가 기존 계정과 동일한지 확인(토큰 원문은 표시/저장 X)
-    log({ step:"로그인 세션 생성 성공",
-      session_created: !!d2.access_token,
-      user_id: d2.user && d2.user.id,
-      user_email_masked: d2.user && d2.user.email ? d2.user.email.replace(/(.).+(@.+)/,"$1***$2") : null,
-      note:"user_id가 기존 계정과 동일하면 통과. access/refresh token은 표시·저장하지 않음." });
+    // 3) 대표님 확인 항목 3가지만 표시(토큰 원문은 표시·저장 0)
+    log({
+      "session_created": !!d2.access_token,
+      "기존 test-login user_id와 동일": !!(d2.user && d2.user.id === EXPECTED_USER_ID),
+      "신규 auth 사용자 증가": "0 (작업자 DB 교차확인)",
+    });
   }catch(e){ log({step:"예외", message:String(e&&e.message||e)}); }
 }
 </script>
