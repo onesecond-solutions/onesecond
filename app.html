@@ -7933,6 +7933,22 @@ async function _svSignUrl(bucket, path){
   }catch(e){ return ''; }
 }
 window._svSignUrl=_svSignUrl;
+/* 미디어 재생용 src — 스토리지 Content-Type이 octet-stream이면 브라우저가 디코딩 못 해 0:00만 뜸.
+   서명 URL을 blob으로 받아 확장자 기준 올바른 MIME으로 다시 입힌 objectURL 반환(이미 audio/video면 원본 URL 유지=스트리밍). hint=ext 또는 파일명. */
+function _svMimeByExt(ext){
+  var m={mp3:'audio/mpeg',wav:'audio/wav',m4a:'audio/mp4',aac:'audio/aac',ogg:'audio/ogg',oga:'audio/ogg',flac:'audio/flac',mp4:'video/mp4',webm:'video/webm',ogv:'video/ogg',mov:'video/quicktime',m4v:'video/mp4'};
+  return m[String(ext||'').toLowerCase().replace(/^.*\./,'').replace(/[^a-z0-9]/g,'')]||'';
+}
+async function _svPlaySrc(url, hint){
+  try{
+    var resp=await fetch(url); if(!resp.ok) return url;
+    var blob=await resp.blob();
+    if(/^(audio|video)\//.test(blob.type)) return url;   /* 이미 올바른 타입 → 원본 URL(스트리밍 유지) */
+    var mime=_svMimeByExt(hint); if(!mime) return url;
+    return URL.createObjectURL(new Blob([blob],{type:mime}));   /* octet-stream 등 → 올바른 MIME 재입힘 */
+  }catch(e){ return url; }
+}
+window._svMimeByExt=_svMimeByExt; window._svPlaySrc=_svPlaySrc;
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
 function renderMrEditAtts(){
   var wrap=document.getElementById('mr-edit-atts'); var fld=document.getElementById('mr-edit-atts-fld');
@@ -10123,18 +10139,24 @@ async function _searchOpen(table, id){
         }
         if(_isAud && r.storage_path){
           _svSignUrl('myspace', r.storage_path).then(function(u){
-            var box=document.getElementById('svDAud'); if(!box) return;
-            if(!u){ box.innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; }
-            else { box.innerHTML='<audio controls preload="metadata" style="width:100%" src="'+u.replace(/"/g,'&quot;')+'"></audio>'; }
-            var _pn3=document.getElementById('svPanel'); if(_pn3) window._svPanelHtml=_pn3.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
+            if(!document.getElementById('svDAud')) return;
+            if(!u){ document.getElementById('svDAud').innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; var _p0=document.getElementById('svPanel'); if(_p0) window._svPanelHtml=_p0.innerHTML; return; }
+            _svPlaySrc(u, String(r.ext||r.original_name||'')).then(function(src){
+              var b2=document.getElementById('svDAud'); if(!b2) return;
+              b2.innerHTML='<audio controls preload="metadata" style="width:100%" src="'+src.replace(/"/g,'&quot;')+'"></audio>';
+              var _pn3=document.getElementById('svPanel'); if(_pn3) window._svPanelHtml=_pn3.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
+            });
           });
         }
         if(_isVid && r.storage_path){
           _svSignUrl('myspace', r.storage_path).then(function(u){
-            var box=document.getElementById('svDVid'); if(!box) return;
-            if(!u){ box.innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; }
-            else { box.innerHTML='<video controls preload="metadata" playsinline style="width:100%;max-height:60vh;background:#000;border-radius:10px" src="'+u.replace(/"/g,'&quot;')+'"></video>'; }
-            var _pn4=document.getElementById('svPanel'); if(_pn4) window._svPanelHtml=_pn4.innerHTML;
+            if(!document.getElementById('svDVid')) return;
+            if(!u){ document.getElementById('svDVid').innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; var _q0=document.getElementById('svPanel'); if(_q0) window._svPanelHtml=_q0.innerHTML; return; }
+            _svPlaySrc(u, String(r.ext||r.original_name||'')).then(function(src){
+              var b3=document.getElementById('svDVid'); if(!b3) return;
+              b3.innerHTML='<video controls preload="metadata" playsinline style="width:100%;max-height:60vh;background:#000;border-radius:10px" src="'+src.replace(/"/g,'&quot;')+'"></video>';
+              var _pn4=document.getElementById('svPanel'); if(_pn4) window._svPanelHtml=_pn4.innerHTML;
+            });
           });
         }
       }
