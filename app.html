@@ -1066,10 +1066,9 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 /* 검색바 아래 3항목 — 박스 폐기, 세로바+라벨+설명 텍스트 구조(home01). 상품·인수=회색바 / 상담시작=인디고 */
 .hs-quick{display:flex;justify-content:space-between;gap:18px;max-width:700px;margin:38px auto 0;}/* 검색바 폭(700)에 양끝 정렬: 상품=입력 시작선, 상담시작=검색버튼 끝선 + 도움말과 ~38px 간격 */
 #homeSearch.searching .hs-quick{display:none;}
-/* 홈 하단 철학 문구(브랜드 선언) — 진입 카드 아래, 보조 톤. 검색 중 숨김. 우선 임태성 실장(is-uat-homephilo)만 노출=단계적 반영(2026-06-22). */
+/* 홈 하단 철학 문구(브랜드 선언) — 진입 카드 아래, 보조 톤. 검색 중 숨김. 2026-06-23 전체 노출(게이트 해제). */
 .hs-philo{text-align:center;font-size:0.8rem;color:var(--tf);line-height:1.65;max-width:560px;margin:24px auto 0;letter-spacing:-.01em;}
 #homeSearch.searching .hs-philo{display:none;}
-body:not(.is-uat-homephilo) .hs-philo{display:none;}
 .hs-q{display:flex;flex-direction:column;gap:3px;background:transparent;border:0;padding:2px 0;cursor:pointer;text-align:left;font:inherit;}
 .hq-t{display:inline-flex;align-items:center;gap:7px;font-size:1.0625rem;font-weight:800;color:var(--tp);line-height:1.3;}
 .hq-bar{width:3px;height:1.05em;border-radius:2px;background:var(--tf);flex-shrink:0;}
@@ -4098,8 +4097,7 @@ function applyRoleClass(){
   /* AI 글 다듬기 = 우선 임태성 실장(bylts@naver.com)만 검수용 — 단계적 반영(2026-06-22). 검수 후 게이트 해제→전체. */
   var _uatA='';try{var _uatAU=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');_uatA=((_uatAU.email||'').trim().toLowerCase());}catch(e){}
   document.body.classList.toggle('is-uat-aipolish', _uatA==='bylts@naver.com');
-  /* 홈 하단 철학 문구 = 우선 임태성 실장(bylts@naver.com)만 검수용 — 단계적 반영(2026-06-22). 검수 후 게이트 해제→전체. */
-  document.body.classList.toggle('is-uat-homephilo', _uatA==='bylts@naver.com');
+  /* 홈 하단 철학 문구 = 2026-06-23 전체 개방(게이트 해제) — CSS body:not(.is-uat-homephilo) 규칙 제거됨. 검색 중 숨김 규칙만 유지. */
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
@@ -9974,9 +9972,9 @@ window._runSearch=_runSearch;
    격리·fetch·RLS는 기존 그대로. 명단=UI 라우터(보안 경계 아님). 승인 후 _searchScopeAllow를 'return true'로 열면 전체 라이브. */
 var _SEARCH_V2_ALLOW=['bylts@naver.com','bylts@kakao.com','bylts0428@gmail.com'];
 function _searchScopeAllow(){
-  try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');
-    return _SEARCH_V2_ALLOW.indexOf((u.email||'').trim().toLowerCase())>=0;
-  }catch(e){ return false; }
+  /* 2026-06-23 전체 개방(대표 결재) — 검색 홈을 전원 기본 홈으로. 3계정 미리보기 게이트 해제.
+     _SEARCH_V2_ALLOW(위)는 롤백 참조용 보존. RLS가 데이터 격리=보안 경계 / 이 함수는 '어느 화면을 보여줄지' UI 라우터일 뿐. */
+  return true;
 }
 window._searchScopeAllow=_searchScopeAllow;
 /* 범위 4종 — 동심원(나→팀→지점→공동). 색 = 트리 4신호와 동일 언어 */
