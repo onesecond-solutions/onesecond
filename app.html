@@ -13106,7 +13106,7 @@ function _osShareOpen(type, id, title){
         +'<button class="os-share-pick" onclick="_osShareDo(\'team\')"><b>팀 공유</b><span>우리 팀 공유함으로 보냅니다</span></button>'
         +'<button class="os-share-pick" onclick="_osShareDo(\'branch\')"><b>지점 공유</b><span>우리 지점 공유함으로 보냅니다</span></button>'
       +'</div>'
-      +'<div class="os-share-note">공유하면 받은 분이 <b>받기</b>를 눌러 본인 공간에 저장해요. 원본은 그대로 남아요.</div>'
+      +'<div class="os-share-note">공유하면 <b>팀/지점 게시판</b>에 바로 올라가고, 받은 분은 공유함에서 <b>받기</b>로 본인 공간에 저장할 수도 있어요. 원본은 그대로 남아요.</div>'
       +'<button class="os-share-cancel" onclick="_osShareClose()">취소</button>'
       +'</div>';
     ov.addEventListener('click', function(e){ if(e.target===ov) _osShareClose(); });
@@ -13132,52 +13132,91 @@ async function _osEnsureSharedFolder(scope, sid, owner, token){
 async function _osShareDo(scope){
   var ctx=window._osShareCtx; if(!ctx||!ctx.id){ _osShareClose(); return; }
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
-  var me={}; try{ me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; }catch(e){}
-  var sid=(scope==='team')?me.team_id:me.branch_id, grp=(scope==='team')?'팀':'지점';
-  if(!sid){ if(typeof toast==='function') toast(grp+' 소속이 없어 공유할 수 없어요.'); _osShareClose(); return; }
-  var token=window.db.getToken&&window.db.getToken();
-  var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token};
-  var itemId=ctx.id, payload=null;
+  if(window._osShareBusy) return; window._osShareBusy=true;   /* 중복 클릭 이중 저장 방지 */
+  var _picks=document.querySelectorAll('#osShareOv .os-share-pick'); for(var _p=0;_p<_picks.length;_p++) _picks[_p].disabled=true;
   try{
-    if(ctx.type==='script'){
-      var rs=await window.db.fetch('/rest/v1/scripts?id=eq.'+encodeURIComponent(ctx.id)+'&select=title,script_text,highlight_text,keywords,attachments');
-      var o=(rs.ok?await rs.json():[])[0]||{};
-      payload={script_text:o.script_text||'', highlight_text:o.highlight_text||'', keywords:o.keywords||[], attachments:o.attachments||[]};
-    } else if(ctx.type==='memo'){
-      var rm=await window.db.fetch('/rest/v1/library?id=eq.'+encodeURIComponent(ctx.id)+'&select=title,memo_text,description,keywords');
-      var om=(rm.ok?await rm.json():[])[0]||{};
-      payload={memo_text:om.memo_text||'', description:om.description||'', keywords:om.keywords||[]};
-    } else if(ctx.type==='file'){
-      /* 파일 자동 팀/지점 복사 — 받는 사람이 RLS로 못 읽으므로 공유 시점에 공유 스코프 스토리지로 복사 */
-      if(typeof toast==='function') toast('공유 중…');
-      var f=window._mvPreviewFile;
-      if(!f||String(f.id)!==String(ctx.id)){ var f0=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(ctx.id)+'&select=id,original_name,storage_path,mime_type,ext,file_size'); f=(f0.ok?await f0.json():[])[0]; }
-      if(!f){ alert('원본 파일을 찾을 수 없습니다.'); _osShareClose(); return; }
-      var signed=(typeof _mvSignedUrl==='function')?await _mvSignedUrl(f, token):null;
-      if(!signed){ alert('파일을 불러오지 못했습니다.'); _osShareClose(); return; }
-      var blob=await (await fetch(signed)).blob();
-      var ext=(f.ext||'').replace(/^\./,'');
-      var key=((window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+Date.now()))+(ext?('.'+ext):'');
-      var newPath=(scope==='team'?('team/'+sid):('branch/'+sid))+'/shared/'+key;
-      var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(newPath)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(blob.type||f.mime_type||'application/octet-stream'),'x-upsert':'true'},body:blob});
-      if(!(up.ok||up.status===200)){ alert('파일 복사에 실패했습니다.'); _osShareClose(); return; }
-      var owner=(typeof _mvOwner==='function')?_mvOwner():'';
-      var _sharedFid=await _osEnsureSharedFolder(scope, sid, owner, token);  /* 공유받은 파일은 '공유함' 폴더에 모음(A: 신규만) */
-      var frow={owner_id:owner,folder_id:(_sharedFid||null),original_name:f.original_name,storage_path:newPath,mime_type:f.mime_type||'',ext:ext,file_size:f.file_size||blob.size,scope:scope,scope_id:sid,search_text:f.original_name,status:'pending'};
-      var fr=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:Object.assign({},H,{'Prefer':'return=representation'}),body:JSON.stringify(frow)});
-      var nf=(fr.ok?await fr.json():[])[0];
-      if(!nf||!nf.id){ alert('파일 등록에 실패했습니다.'); _osShareClose(); return; }
-      itemId=nf.id;
-      payload={original_name:f.original_name, ext:ext, mime_type:f.mime_type||'', file_size:frow.file_size};
+    var me={}; try{ me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; }catch(e){}
+    var isTeam=(scope==='team');
+    var sid=isTeam?me.team_id:me.branch_id, grp=isTeam?'팀':'지점';
+    var scopeInternal=isTeam?'team_internal':'branch_internal';
+    if(!sid){ if(typeof toast==='function') toast(grp+' 소속이 없어 공유할 수 없어요.'); _osShareClose(); return; }
+    var token=window.db.getToken&&window.db.getToken();
+    var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token};
+    var itemId=ctx.id, payload=null;
+    /* ── 1) 스냅샷 준비(원본 SELECT만 — 원본 수정 안 함). 파일은 공유 스코프로 사본 복사 ── */
+    try{
+      if(ctx.type==='script'){
+        var rs=await window.db.fetch('/rest/v1/scripts?id=eq.'+encodeURIComponent(ctx.id)+'&select=title,script_text,highlight_text,keywords,attachments');
+        var o=(rs.ok?await rs.json():[])[0]||{};
+        payload={script_text:o.script_text||'', highlight_text:o.highlight_text||'', keywords:o.keywords||[], attachments:o.attachments||[]};
+      } else if(ctx.type==='memo'){
+        var rm=await window.db.fetch('/rest/v1/library?id=eq.'+encodeURIComponent(ctx.id)+'&select=title,memo_text,description,keywords');
+        var om=(rm.ok?await rm.json():[])[0]||{};
+        payload={memo_text:om.memo_text||'', description:om.description||'', keywords:om.keywords||[]};
+      } else if(ctx.type==='file'){
+        /* 파일 자동 팀/지점 복사 — 받는 사람이 RLS로 못 읽으므로 공유 시점에 공유 스코프 스토리지로 복사 */
+        if(typeof toast==='function') toast('공유 중…');
+        var f=window._mvPreviewFile;
+        if(!f||String(f.id)!==String(ctx.id)){ var f0=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(ctx.id)+'&select=id,original_name,storage_path,mime_type,ext,file_size'); f=(f0.ok?await f0.json():[])[0]; }
+        if(!f){ alert('원본 파일을 찾을 수 없습니다.'); _osShareClose(); return; }
+        var signed=(typeof _mvSignedUrl==='function')?await _mvSignedUrl(f, token):null;
+        if(!signed){ alert('파일을 불러오지 못했습니다.'); _osShareClose(); return; }
+        var blob=await (await fetch(signed)).blob();
+        var ext=(f.ext||'').replace(/^\./,'');
+        var key=((window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+Date.now()))+(ext?('.'+ext):'');
+        var newPath=(isTeam?('team/'+sid):('branch/'+sid))+'/shared/'+key;
+        var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(newPath)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(blob.type||f.mime_type||'application/octet-stream'),'x-upsert':'true'},body:blob});
+        if(!(up.ok||up.status===200)){ alert('파일 복사에 실패했습니다.'); _osShareClose(); return; }
+        var owner=(typeof _mvOwner==='function')?_mvOwner():'';
+        var _sharedFid=await _osEnsureSharedFolder(scope, sid, owner, token);  /* 공유받은 파일은 '공유함' 폴더에 모음(A: 신규만) */
+        var frow={owner_id:owner,folder_id:(_sharedFid||null),original_name:f.original_name,storage_path:newPath,mime_type:f.mime_type||'',ext:ext,file_size:f.file_size||blob.size,scope:scope,scope_id:sid,search_text:f.original_name,status:'pending'};
+        var fr=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:Object.assign({},H,{'Prefer':'return=representation'}),body:JSON.stringify(frow)});
+        var nf=(fr.ok?await fr.json():[])[0];
+        if(!nf||!nf.id){ alert('파일 등록에 실패했습니다.'); _osShareClose(); return; }
+        itemId=nf.id;
+        payload={original_name:f.original_name, ext:ext, mime_type:f.mime_type||'', file_size:frow.file_size};
+      }
+    }catch(e){ console.error('[share] snapshot',e); alert('공유 준비 중 오류가 발생했습니다.'); _osShareClose(); return; }
+
+    /* ── 2) 보낸 공유함(shares) INSERT — 앱 정식 경로(window.db.fetch=401 자동 갱신). 실패는 숨기지 않고 그대로 노출 ── */
+    var shareRow={ item_type:ctx.type, item_id:itemId, scope:scope, scope_id:sid, title:(ctx.title||null), from_user:(me.id||(window.AppState&&window.AppState.userId)||null), from_name:(me.name||null), payload:payload };
+    var shRes=await window.db.fetch('/rest/v1/shares',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(shareRow)});
+    if(!(shRes.ok||shRes.status===201)){
+      var sb=''; try{ sb=await shRes.text(); }catch(e){}
+      console.error('[share] shares insert FAIL', shRes.status, sb);
+      alert('공유함 저장에 실패했습니다 ('+shRes.status+').\n'+String(sb||'').slice(0,300)+'\n(저장되지 않았습니다. 권한·로그인 상태를 확인해 주세요.)');
+      return;   /* 성공 처리 금지 — team_notices도 진행 안 함 */
     }
-  }catch(e){ console.error('[share] snapshot',e); alert('공유 준비 중 오류가 발생했습니다.'); _osShareClose(); return; }
-  var row={ item_type:ctx.type, item_id:itemId, scope:scope, scope_id:sid, title:(ctx.title||null), from_user:(me.id||(window.AppState&&window.AppState.userId)||null), from_name:(me.name||null), payload:payload };
-  try{
-    var res=await fetch(window.db.url('/rest/v1/shares'),{method:'POST',headers:Object.assign({},H,{'Prefer':'return=minimal'}),body:JSON.stringify(row)});
-    if(res.ok||res.status===201){ if(typeof toast==='function') toast(grp+' 공유함에 공유했어요.'); _osShareClose(); }
-    else if(res.status===404||res.status===400||res.status===401){ if(typeof toast==='function') toast('공유 기능 준비 중입니다. 잠시 후 다시 시도해 주세요.'); _osShareClose(); }
-    else { var e2=await res.json().catch(function(){return{};}); alert('공유 실패: '+(e2.message||res.status)); }
-  }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
+    var shId=null; try{ var sj=await shRes.json(); shId=(sj&&sj[0]&&sj[0].id)||null; }catch(e){}
+
+    /* ── 3) 팀/지점방 게시물(team_notices) INSERT — content=스냅샷 본문(_noticeBody 리치 HTML 그대로 렌더), source 연결 ── */
+    var tnBody = ctx.type==='script' ? (payload.script_text||'')
+               : ctx.type==='memo'   ? (payload.memo_text||payload.description||'')
+               : ('공유 파일: '+(ctx.title||(payload&&payload.original_name)||''));
+    var tnRow={ notice_type:'operation', title:(ctx.title||'공유'), content:tnBody, scope:scopeInternal,
+                author_id:(me.id||(window.AppState&&window.AppState.userId)||null),
+                keywords:((payload&&payload.keywords)||[]), attachments:((payload&&payload.attachments)||[]),
+                source_type:ctx.type, source_id:String(itemId) };
+    if(isTeam) tnRow.team_id=sid; else tnRow.branch_id=sid;
+    var tnRes=await window.db.fetch('/rest/v1/team_notices',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(tnRow)});
+    if(!(tnRes.ok||tnRes.status===201)){
+      var tb=''; try{ tb=await tnRes.text(); }catch(e){}
+      console.error('[share] team_notices insert FAIL', tnRes.status, tb);
+      /* 한쪽이라도 실패 → 성공 처리 금지 + 방금 만든 shares 롤백(부분 저장 방지) */
+      if(shId){ try{ await window.db.fetch('/rest/v1/shares?id=eq.'+encodeURIComponent(shId),{method:'DELETE',headers:{'Prefer':'return=minimal'}}); }catch(e){} }
+      alert(grp+'방 게시에 실패했습니다 ('+tnRes.status+').\n'+String(tb||'').slice(0,300)+'\n(공유를 취소했습니다. 다시 시도해 주세요.)');
+      return;
+    }
+
+    /* ── 4) 둘 다 성공한 뒤에만 성공 처리 ── */
+    if(typeof toast==='function') toast(grp+'방과 공유함에 공유했어요.');
+    _osShareClose();
+    window._mrTeamCache=null;
+    try{ if(isTeam){ if(typeof loadTeamNotices==='function') loadTeamNotices(); } else { if(typeof loadBranchFeed==='function') loadBranchFeed(); } }catch(e){}
+    try{ if(typeof loadMrTeam==='function') loadMrTeam(); }catch(e){}
+    try{ if(typeof loadMysTeam==='function') loadMysTeam(); }catch(e){}
+  }catch(e){ console.error('[share] do',e); alert('공유 중 오류가 발생했습니다.'); }
+  finally{ window._osShareBusy=false; var _bb=document.querySelectorAll('#osShareOv .os-share-pick'); for(var _q=0;_q<_bb.length;_q++) _bb[_q].disabled=false; }
 }
 window._osShareDo=_osShareDo;
 
