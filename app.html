@@ -7954,6 +7954,75 @@ window._svMimeByExt=_svMimeByExt; window._svPlaySrc=_svPlaySrc;
 /* 미디어 재생 실패(코덱·형식 등) 시 안내로 교체 */
 function _svMediaErr(el){ try{ var p=el&&el.parentNode; if(p){ p.innerHTML='<div class="sv-d-imgph">이 파일은 브라우저에서 바로 재생되지 않습니다(형식·코덱).<br>아래 ‘원본 열기’로 받아서 들어주세요.</div>'; var _pe=document.getElementById('svPanel'); if(_pe) window._svPanelHtml=_pe.innerHTML; } }catch(e){} }
 window._svMediaErr=_svMediaErr;
+
+/* ════ WAV 재생 진단 (admin/임태성, app.html#wavdiag 진입). 라이브 _svSignUrl 그대로 재사용 — 별도 서명로직 안 만듦 ════ */
+var _wavDiagPreset='branch/306edf6a-15db-4b69-a6b9-dae74b08cd33/543e0f99-0533-47bd-8836-be961c72a273/f8e747b5-2486-4dfe-9635-99ba092be126_1.wav';
+var _wavDiagFmt={1:'PCM(재생가능)',2:'MS-ADPCM',6:'A-law',7:'µ-law',17:'IMA-ADPCM',49:'GSM6.10',85:'MP3',65534:'EXTENSIBLE'};
+function _wavDiagGated(){
+  var em=''; try{ em=(JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}').email||'').toLowerCase(); }catch(e){}
+  var role=(typeof _getOsUserRole==='function')?_getOsUserRole():'';
+  return (role==='admin' || em==='bylts@naver.com');
+}
+function _wavDiagOpen(){
+  if(!_wavDiagGated()){ return; }
+  if(document.getElementById('wavDiagOv')) return;
+  var ov=document.createElement('div'); ov.id='wavDiagOv';
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.5);display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto';
+  ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:680px;width:100%;padding:18px;font-size:13px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center"><b>&#128266; WAV 재생 진단 (라이브 _svSignUrl 재사용)</b><button onclick="var o=document.getElementById(\'wavDiagOv\');if(o)o.remove();" style="border:0;background:transparent;font-size:18px;cursor:pointer">&#10005;</button></div>'
+    +'<textarea id="wavDiagPath" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:54px;font-family:monospace;font-size:12px"></textarea>'
+    +'<div style="margin-top:8px"><button onclick="_wavDiagRun()" style="background:#2563eb;color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer">진단 실행</button></div>'
+    +'<div id="wavDiagOut" style="margin-top:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all"></div>'
+    +'<div id="wavDiagPlayer" style="margin-top:8px"></div></div>';
+  document.body.appendChild(ov);
+  var ta=document.getElementById('wavDiagPath'); if(ta) ta.value=_wavDiagPreset;
+  _wavDiagRun();
+}
+async function _wavDiagRun(){
+  var out=document.getElementById('wavDiagOut'); if(!out) return;
+  var path=((document.getElementById('wavDiagPath')||{}).value||'').trim();
+  out.textContent='진단 중…'; var L=[];
+  try{
+    if(typeof _svSignUrl!=='function'){ out.textContent='_svSignUrl 함수 없음(로드 전)'; return; }
+    var url=await _svSignUrl('myspace', path);   /* 라이브 검색과 동일 함수 */
+    if(!url){
+      /* 서명 실패 → 동일 요청으로 400 상세 body 표출(진단용) */
+      var token=localStorage.getItem('os_token')||sessionStorage.getItem('os_token')||'';
+      var encPath=String(path).split('/').map(encodeURIComponent).join('/');
+      var r0=await fetch(window.db.url('/storage/v1/object/sign/'+encodeURIComponent('myspace')+'/'+encPath),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:600})});
+      var body=''; try{ body=await r0.text(); }catch(e){}
+      out.textContent='❌ _svSignUrl 발급 실패\nsign HTTP: '+r0.status+'\nbody: '+body+'\ntoken 존재: '+(!!token)+'\n경로: '+path;
+      return;
+    }
+    L.push('✅ 서명 URL 발급 OK');
+    var isWav=/\.wave?$/i.test(path);
+    var resp=await fetch(url,{headers:{Range:'bytes=0-127'}});
+    L.push('HTTP '+resp.status+' | Content-Type: '+(resp.headers.get('content-type')||''));
+    var ab=await resp.arrayBuffer(), af=-1;
+    if(isWav){
+      var dv=new DataView(ab),u8=new Uint8Array(ab),tg=function(o){return String.fromCharCode(u8[o],u8[o+1],u8[o+2],u8[o+3]);};
+      var i=12,fmt=-1; while(i+8<=dv.byteLength){ if(tg(i)==='fmt '){fmt=i+8;break;} var sz=dv.getUint32(i+4,true); if(sz<0||sz>1e7)break; i+=8+sz; }
+      af=(fmt>=0&&fmt+16<=dv.byteLength)?dv.getUint16(fmt,true):-1;
+      L.push('RIFF/WAVE: '+tg(0)+'/'+tg(8));
+      L.push('FORMAT 코드: '+af+' → '+(_wavDiagFmt[af]||'비표준/압축')+(af===1?' (PCM)':' (비-PCM)'));
+      if(fmt>=0) L.push('채널/레이트/비트: '+dv.getUint16(fmt+2,true)+'ch / '+dv.getUint32(fmt+4,true)+'Hz / '+dv.getUint16(fmt+14,true)+'bit');
+    }
+    var pl=document.getElementById('wavDiagPlayer'); pl.innerHTML='';
+    var a=new Audio(); a.controls=true; a.preload='metadata'; a.style.width='100%'; pl.appendChild(a);
+    var pr=await new Promise(function(rs){ var d=false; function f(){ if(d)return; d=true; rs({e:(a.error&&a.error.code)||0,dur:a.duration}); }
+      a.addEventListener('loadedmetadata',function(){setTimeout(f,300);}); a.addEventListener('error',function(){setTimeout(f,300);}); setTimeout(f,9000); a.src=url; a.load(); });
+    L.push('audio.error.code: '+pr.e+(pr.e===4?' (디코딩 불가)':'')+' | duration: '+((pr.dur>0&&pr.dur!==Infinity)?pr.dur.toFixed(1)+'초':'0:00/측정불가'));
+    if(isWav&&af>0&&af!==1&&pr.e===4) L.push('\n🔴 코덱 문제 확정(비-PCM + err4) → 원본 보존 + MP3 변환 필요');
+    else if(isWav&&af===1&&!(pr.dur>0&&pr.dur!==Infinity)) L.push('\n🟠 PCM인데 재생 실패 → URL/Range/CORS 추적');
+    else if(pr.dur>0&&pr.dur!==Infinity) L.push('\n🟢 재생 정상');
+    else L.push('\n🟠 판정 보류 — 위 값 확인');
+    out.textContent=L.join('\n');
+  }catch(e){ out.textContent='⚠️ 오류: '+(e&&e.message||e)+'\n'+L.join('\n'); }
+}
+window._wavDiagOpen=_wavDiagOpen; window._wavDiagRun=_wavDiagRun;
+function _wavDiagBoot(n){ if(location.hash!=='#wavdiag') return; if(_wavDiagGated()) _wavDiagOpen(); else if(n<12) setTimeout(function(){ _wavDiagBoot(n+1); },800); }
+window.addEventListener('hashchange',function(){ if(location.hash==='#wavdiag') _wavDiagBoot(0); });
+setTimeout(function(){ _wavDiagBoot(0); },1000);
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
 function renderMrEditAtts(){
   var wrap=document.getElementById('mr-edit-atts'); var fld=document.getElementById('mr-edit-atts-fld');
