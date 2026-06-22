@@ -4148,7 +4148,9 @@ function ivOpenDetail(idx, keepList){
   v.innerHTML = '<span class="vbadge">'+ivEsc(cat)+'</span>'
     + '<div class="vttl">'+ivEsc(r.title || '제목 없음')+hidTag+'</div>'
     + '<div class="vmeta">'+ivFmtDate(r.created_at)+(ivAuthor(r) ? ' · '+ivAuthor(r) : '')+'</div>'
-    + '<div class="vbody">'+ivEsc(r.content || '').replace(/\n/g,'<br>')+atts+ivManageActions(r)+'</div>';
+    + '<div class="vbody">'+ivEsc(r.content || '').replace(/\n/g,'<br>')+atts+ivManageActions(r)+'</div>'
+    + (window._socialBar?_socialBar(r.id,'ivb'):'');  /* insurer_board 좋아요+댓글(posts, 게이트 내부 가드) */
+  if(window._socialBarLoad) _socialBarLoad(r.id,'ivb');
   var items = document.querySelectorAll('#iv-list .item');
   for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth <= 1024){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.add('show-viewer'); }
@@ -4295,8 +4297,9 @@ function vaultQnaOpen(idx, keepList){
   v.innerHTML='<span class="vbadge">'+ivEsc(r.question_type||'질문')+'</span>'
     +'<div class="vttl">'+ivEsc(r.title||'제목 없음')+'</div>'
     +'<div class="vmeta">'+ivFmtDate(r.created_at)+' · 비공개'+'</div>'
-    +'<div class="vbody">'+ivEsc(r.content||'').replace(/\n/g,'<br>')+atts+'</div>'+_postActs('qna',r.id,r.author_id,'iv')+qnaThreadHtml(r.id,'iv');
+    +'<div class="vbody">'+ivEsc(r.content||'').replace(/\n/g,'<br>')+atts+'</div>'+_postActs('qna',r.id,r.author_id,'iv')+(window._likeBarHtml?_likeBarHtml(r.id,'iv'):'')+qnaThreadHtml(r.id,'iv');
   if(typeof loadQnaComments==='function') loadQnaComments(r.id,'iv');
+  if(window._likeBarLoad) _likeBarLoad(r.id,'iv');  /* Q&A 좋아요(댓글=답변 기존, 게이트 내부 가드) */
   var items=document.querySelectorAll('#iv-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('iv-qna-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -7588,7 +7591,8 @@ function cospShowNotice(idx){
   var t=v.querySelector('.vttl'); if(t) t.textContent=p.rtitle;
   var m=v.querySelector('.vmeta'); if(m) m.textContent=p.meta;
   var actsHtml=(typeof _postActs==='function' && p.id)?_postActs('team', p.id, p.author_id, 'cosp'):'';  /* 수정/삭제 = 작성자 본인+admin(서버 RLS 정합) */
-  var bd=v.querySelector('.vbody'); if(bd) bd.innerHTML=(p.bodyHtml||'')+actsHtml;
+  var bd=v.querySelector('.vbody'); if(bd) bd.innerHTML=(p.bodyHtml||'')+actsHtml+(window._eBar?_eBar('team_notice',p.id,'cosp'):'');
+  if(window._eBarLoad) _eBarLoad('team_notice',p.id,'cosp');  /* 팀방/지점방(스페이스 트리) 좋아요+댓글(게이트 내부 가드) */
   var ql=document.getElementById('cosp-qlist'); if(ql){ var its=ql.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.toggle('on',i===idx); }
   var sp=document.getElementById('cosp-notice-split'); if(sp) sp.classList.add('show-viewer');  /* 모바일: 상세 표시 */
 }
@@ -11040,7 +11044,8 @@ function mysTeamOpen(idx, keepList){
   var list=window._mysTeamFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mys-team-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('team',p._id,p.author_id,'mys');
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('team',p._id,p.author_id,'mys')+(window._eBar?_eBar('team_notice',p._id,'mys'):'');
+  if(window._eBarLoad) _eBarLoad('team_notice',p._id,'mys');  /* 팀방/지점방 좋아요+댓글(team_notices, 게이트 내부 가드) */
   var items=document.querySelectorAll('#mys-team-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-team-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -11107,8 +11112,9 @@ function mysQnaOpen(idx, keepList){
   var list=window._mysQnaFiltered||[]; var p=list[idx]; if(!p) return;
   var v=document.getElementById('mys-qna-viewer'); if(!v) return;
   window._voiceImgs=p.imgs||[]; window._voiceImgNames=p.names||[];
-  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('qna',p._id,p.author_id,'mys')+qnaThreadHtml(p._id,'mys');
+  v.innerHTML='<span class="vbadge">'+p.badge+'</span><div class="vttl">'+p.title+'</div><div class="vmeta">'+p.meta+'</div><div class="vbody">'+p.bodyHtml+'</div>'+_postActs('qna',p._id,p.author_id,'mys')+(window._likeBarHtml?_likeBarHtml(p._id,'mys'):'')+qnaThreadHtml(p._id,'mys');
   if(typeof loadQnaComments==='function') loadQnaComments(p._id,'mys');
+  if(window._likeBarLoad) _likeBarLoad(p._id,'mys');  /* Q&A 좋아요(게이트 내부 가드) */
   var items=document.querySelectorAll('#mys-qna-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('mys-qna-split'); if(sp) sp.classList.add('show-viewer'); }
 }
