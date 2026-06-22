@@ -512,6 +512,12 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .soc-reply-ta{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--s2);color:var(--tp);font-size:0.9rem;font-family:inherit;resize:vertical;outline:none;}
 .soc-reply-ta:focus{border-color:var(--ac);}
 .soc-reply-btn{align-self:flex-end;}
+/* 댓글 본인 수정·삭제 (entry_comments — 바텀시트 스페이스: 개인/팀/지점 자료실·스크립트·메모·팀방·지점방) */
+.cmt-acts{display:flex;gap:6px;margin-top:7px;}
+.cmt-acts .post-act{padding:3px 11px;font-size:0.75rem;font-weight:700;}
+.cmt-edit{margin-top:8px;display:flex;flex-direction:column;gap:8px;}
+.cmt-edit-ta{width:100%;box-sizing:border-box;min-height:60px;padding:9px 11px;border:1px solid var(--ac);border-radius:9px;background:var(--s2);color:var(--tp);font-size:0.875rem;font-family:inherit;resize:vertical;outline:none;}
+.cmt-edit-row{display:flex;gap:8px;justify-content:flex-end;}
 /* 자료실 미리보기에 좋아요·댓글 붙을 때 하단 잘림 방지 — 미리보기 영역 스크롤 허용 (전체 개방 2026-06-22) */
 .mys-vault-preview-col .viewer{overflow-y:auto;}
 /* ── 보험료 비교표 빌더 (Quick 실행도구) — UI는 토큰, 출력 시트(.cmp-sheet)는 고정 라이트 팔레트(이미지 가독성, 카드 만들기 출력 팔레트와 동일 예외) ── */
@@ -4367,7 +4373,12 @@ async function loadQnaComments(postId, px){
       var rl=(roleMap[c.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[c.author_id]])||'';
       var who=esc(c.author_name||'(이름 없음)')+(rl?' · '+rl:'');
       var d=new Date(c.created_at); var dt=isNaN(d.getTime())?'':((d.getMonth()+1)+'월 '+d.getDate()+'일');
-      return '<div class="qna-cmt"><div class="qna-cmt-who">'+who+'</div><div class="qna-cmt-body">'+esc(c.content||'').replace(/\n/g,'<br>')+'</div><div class="qna-cmt-date">'+dt+'</div></div>';
+      return '<div class="qna-cmt js-cmt'+(_cmtMine(c.author_id)?' is-mine':'')+'" data-cid="'+esc(String(c.id))+'" data-raw="'+esc(c.content||'')+'">'
+        +'<div class="qna-cmt-who">'+who+'</div>'
+        +'<div class="qna-cmt-body js-cmt-body">'+esc(c.content||'').replace(/\n/g,'<br>')+'</div>'
+        +'<div class="qna-cmt-date">'+dt+'</div>'
+        +_cmtOwnActs('comments', c.id, c.author_id)
+        +'</div>';
     }).join('');
   }catch(e){ console.error('[qnaComments]',e); box.innerHTML='<div class="qna-cmt-empty">답변을 불러오지 못했습니다.</div>'; }
 }
@@ -4455,7 +4466,12 @@ async function _cmtLoad(postId, px){
       var rl=(roleMap[c.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[c.author_id]])||'';
       var who=_socEsc(c.author_name||'(이름 없음)')+(rl?' · '+rl:'');
       var d=new Date(c.created_at); var dt=isNaN(d.getTime())?'':((d.getMonth()+1)+'월 '+d.getDate()+'일');
-      return '<div class="soc-cmt"><div class="soc-cmt-who">'+who+'</div><div class="soc-cmt-body">'+_socEsc(c.content||'').replace(/\n/g,'<br>')+'</div><div class="soc-cmt-date">'+dt+'</div></div>';
+      return '<div class="soc-cmt js-cmt'+(_cmtMine(c.author_id)?' is-mine':'')+'" data-cid="'+_socEsc(String(c.id))+'" data-raw="'+_socEsc(c.content||'')+'">'
+        +'<div class="soc-cmt-who">'+who+'</div>'
+        +'<div class="soc-cmt-body js-cmt-body">'+_socEsc(c.content||'').replace(/\n/g,'<br>')+'</div>'
+        +'<div class="soc-cmt-date">'+dt+'</div>'
+        +_cmtOwnActs('comments', c.id, c.author_id)
+        +'</div>';
     }).join('');
   }catch(e){ box.innerHTML='<div class="soc-cmt-empty">댓글을 불러오지 못했습니다.</div>'; }
 }
@@ -4522,7 +4538,12 @@ async function _eCmtLoad(st,sid,px){ var box=document.getElementById(px+'-ecmt-'
       var rl=(roleMap[c.author_id]&&window.ROLE_LABEL&&window.ROLE_LABEL[roleMap[c.author_id]])||'';
       var who=_socEsc(c.author_name||'(이름 없음)')+(rl?' · '+rl:'');
       var d=new Date(c.created_at); var dt=isNaN(d.getTime())?'':((d.getMonth()+1)+'월 '+d.getDate()+'일');
-      return '<div class="soc-cmt"><div class="soc-cmt-who">'+who+'</div><div class="soc-cmt-body">'+_socEsc(c.content||'').replace(/\n/g,'<br>')+'</div><div class="soc-cmt-date">'+dt+'</div></div>';
+      return '<div class="soc-cmt js-cmt'+(_cmtMine(c.author_id)?' is-mine':'')+'" data-cid="'+_socEsc(String(c.id))+'" data-raw="'+_socEsc(c.content||'')+'">'
+        +'<div class="soc-cmt-who">'+who+'</div>'
+        +'<div class="soc-cmt-body js-cmt-body">'+_socEsc(c.content||'').replace(/\n/g,'<br>')+'</div>'
+        +'<div class="soc-cmt-date">'+dt+'</div>'
+        +_cmtOwnActs('entry_comments', c.id, c.author_id)
+        +'</div>';
     }).join('');
   }catch(e){ box.innerHTML='<div class="soc-cmt-empty">댓글을 불러오지 못했습니다.</div>'; } }
 async function _eCmtSubmit(st,sid,px){ var ta=document.getElementById(px+'-ecmt-ta-'+_eKey(st,sid)); var text=((ta&&ta.value)||'').trim();
@@ -4538,6 +4559,91 @@ async function _eCmtSubmit(st,sid,px){ var ta=document.getElementById(px+'-ecmt-
   }catch(e){ if(typeof toast==='function') toast('네트워크 오류가 발생했습니다.'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent='댓글 등록'; } } }
 window._eBar=_eBar; window._eBarLoad=_eBarLoad; window._eLikeToggle=_eLikeToggle; window._eCmtSubmit=_eCmtSubmit; window._eLikeLoad=_eLikeLoad; window._eCmtLoad=_eCmtLoad;
+
+/* ════ 댓글 본인 수정·삭제 — 두 테이블 공용 (tbl 인자로 일반화) ════
+ * 대상: entry_comments(바텀시트 스페이스: 개인/팀/지점 자료실·스크립트·메모·팀방·지점방)
+ *       + comments(게시판 posts: 보험Q&A·원수사(보험사) 자료실 등).
+ * 본인(author_id=현재 사용자)에게만 버튼 노출. UI 숨김은 1차일 뿐 최종 방어선=RLS(author_id=auth.uid). */
+function _cmtMine(authorId){ var uid=_socUid(); return !!(uid && authorId!=null && String(authorId)===uid); }
+function _cmtOwnActs(tbl, id, authorId){ if(!_cmtMine(authorId)) return '';
+  var ids=_socEsc(String(id));
+  return '<div class="cmt-acts">'
+    +'<button type="button" class="post-act cmt-edit-btn" onclick="_cmtEditStart(this,\''+tbl+'\',\''+ids+'\')">수정</button>'
+    +'<button type="button" class="post-act post-act-del" onclick="_cmtDelete(this,\''+tbl+'\',\''+ids+'\')">삭제</button>'
+    +'</div>'; }
+function _cmtItemEl(node){ return (node&&node.closest)?node.closest('.js-cmt'):null; }
+function _cmtEditStart(btn, tbl, id){
+  var item=_cmtItemEl(btn); if(!item) return;
+  if(item.querySelector('.cmt-edit')) return;                 /* 이미 편집 중 — 중복 진입 차단 */
+  var bodyEl=item.querySelector('.js-cmt-body'); if(!bodyEl) return;
+  var raw=item.getAttribute('data-raw')||'';
+  var acts=item.querySelector('.cmt-acts');
+  bodyEl.style.display='none'; if(acts) acts.style.display='none';
+  var wrap=document.createElement('div'); wrap.className='cmt-edit';
+  var ta=document.createElement('textarea'); ta.className='cmt-edit-ta'; ta.maxLength=2000; ta.value=raw;
+  var row=document.createElement('div'); row.className='cmt-edit-row';
+  var cancel=document.createElement('button'); cancel.type='button'; cancel.className='post-act cmt-edit-cancel'; cancel.textContent='취소';
+  var save=document.createElement('button'); save.type='button'; save.className='post-act cmt-edit-save'; save.textContent='저장';
+  cancel.onclick=function(){ _cmtEditCancel(item); };
+  save.onclick=function(){ _cmtEditSave(save, tbl, id); };
+  row.appendChild(cancel); row.appendChild(save);
+  wrap.appendChild(ta); wrap.appendChild(row);
+  bodyEl.parentNode.insertBefore(wrap, bodyEl.nextSibling);
+  ta.focus(); try{ ta.setSelectionRange(ta.value.length, ta.value.length); }catch(e){}
+}
+function _cmtEditCancel(item){
+  if(!item) return;
+  var wrap=item.querySelector('.cmt-edit'); if(wrap) wrap.remove();
+  var bodyEl=item.querySelector('.js-cmt-body'); if(bodyEl) bodyEl.style.display='';
+  var acts=item.querySelector('.cmt-acts'); if(acts) acts.style.display='';
+}
+async function _cmtEditSave(saveBtn, tbl, id){
+  var item=_cmtItemEl(saveBtn); if(!item) return;
+  var ta=item.querySelector('.cmt-edit-ta'); var text=((ta&&ta.value)||'').trim();
+  if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('댓글 내용을 적어주세요.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  saveBtn.disabled=true; saveBtn.textContent='저장 중…';
+  try{
+    var res=await fetch(window.db.url('/rest/v1/'+tbl+'?id=eq.'+encodeURIComponent(id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({content:text})});
+    if(res.ok||res.status===204){
+      var bodyEl=item.querySelector('.js-cmt-body');
+      if(bodyEl) bodyEl.innerHTML=_socEsc(text).replace(/\n/g,'<br>');
+      item.setAttribute('data-raw', text);                    /* 다음 편집을 위해 원문 갱신(raw로 저장) */
+      var dateEl=item.querySelector('.soc-cmt-date,.qna-cmt-date');
+      if(dateEl && dateEl.textContent.indexOf('수정됨')<0){ dateEl.textContent=(dateEl.textContent?dateEl.textContent+' · ':'')+'수정됨'; }
+      _cmtEditCancel(item);
+      if(typeof toast==='function') toast('수정됐어요!');
+    } else {
+      var err=await res.json().catch(function(){return{};});
+      saveBtn.disabled=false; saveBtn.textContent='저장';
+      if(typeof toast==='function') toast('수정 실패: '+(err.message||res.status));
+    }
+  }catch(e){ saveBtn.disabled=false; saveBtn.textContent='저장'; if(typeof toast==='function') toast('네트워크 오류가 발생했습니다.'); }
+}
+async function _cmtDelete(btn, tbl, id){
+  if(!confirm('이 댓글을 삭제할까요? 삭제하면 되돌릴 수 없습니다.')) return;
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  btn.disabled=true;
+  try{
+    var res=await fetch(window.db.url('/rest/v1/'+tbl+'?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
+    if(res.ok||res.status===204){
+      var item=_cmtItemEl(btn); var box=item?item.parentNode:null;
+      if(item) item.remove();
+      if(box){
+        var cntEl=box.querySelector('.soc-cmt-cnt,.qna-cmt-cnt');
+        var left=box.querySelectorAll('.js-cmt').length;
+        if(cntEl){
+          var label=cntEl.textContent.indexOf('답변')>=0?'답변':'댓글';
+          if(left<=0){ box.innerHTML='<div class="'+(label==='답변'?'qna-cmt-empty':'soc-cmt-empty')+'">아직 '+label+'이 없습니다. 첫 '+label+'을 남겨보세요.</div>'; }
+          else { cntEl.textContent=label+' '+left; }
+        }
+      }
+      if(typeof toast==='function') toast('삭제했어요.');
+    } else { btn.disabled=false; if(typeof toast==='function') toast('삭제 실패: '+res.status); }
+  }catch(e){ btn.disabled=false; if(typeof toast==='function') toast('네트워크 오류가 발생했습니다.'); }
+}
+window._cmtMine=_cmtMine; window._cmtOwnActs=_cmtOwnActs;
+window._cmtEditStart=_cmtEditStart; window._cmtEditCancel=_cmtEditCancel; window._cmtEditSave=_cmtEditSave; window._cmtDelete=_cmtDelete;
 
 /* ════ 단체방·보험 Q&A 글 수정·삭제 (작성자 본인 + admin) — 화면 공용 ════
  * Q&A(posts qna)=인라인 모달(제목·내용) / 단체방(team_notices)=기존 mrWriteModal 재사용. */
