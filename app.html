@@ -11201,9 +11201,21 @@ function closeMyspaceDetail(){
 }
 window.closeMyspaceDetail = closeMyspaceDetail;
 
+/* HTML 본문 → 평문(줄바꿈 보존). 복사·카드 만들기 등에서 리치 스크립트가 태그째 나가는 것 방지. 평문이면 그대로 통과. */
+function _htmlToPlain(html){
+  if(html==null) return '';
+  var s=String(html);
+  if(s.indexOf('<')<0 && s.indexOf('&')<0) return s;            /* 이미 평문 → 변환 스킵 */
+  s=s.replace(/<\s*br\s*\/?\s*>/gi,'\n')                          /* <br> → 줄바꿈 */
+     .replace(/<\/\s*(p|div|li|h[1-6]|tr|blockquote)\s*>/gi,'\n') /* 블록 닫힘 → 줄바꿈 */
+     .replace(/<[^>]+>/g,'');                                     /* 나머지 태그 제거 */
+  var ta=document.createElement('textarea'); ta.innerHTML=s; s=ta.value;  /* 엔티티 디코드 */
+  return s.replace(/ /g,' ').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+window._htmlToPlain=_htmlToPlain;
 function mysDetailCopy(){
   var c = window._mysDetailCurrent; if(!c) return;
-  var text = (c.title ? c.title + '\n\n' : '') + (c.body || '');
+  var text = (c.title ? c.title + '\n\n' : '') + _htmlToPlain(c.body || '');
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(function(){
       if(typeof toast === 'function') toast('복사 완료'); else alert('복사 완료');
@@ -11217,7 +11229,7 @@ window.mysDetailCopy = mysDetailCopy;
 function mysDetailMakeCard(){
   var c = window._mysDetailCurrent; if(!c) return;
   if(typeof openMakeCardModal !== 'function'){ alert('카드 만들기 모듈 로드 실패'); return; }
-  var fullText = (c.title ? c.title + '\n\n' : '') + (c.body || '');
+  var fullText = (c.title ? c.title + '\n\n' : '') + _htmlToPlain(c.body || '');
   var trimmed = (typeof trimForCard === 'function') ? trimForCard(fullText, 300) : fullText.substring(0, 300);
   openMakeCardModal({ text: trimmed, contentType: 'mySpace', title: '내 자료 → 카드 만들기' });
 }
