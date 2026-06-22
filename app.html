@@ -490,8 +490,8 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .soc-reply-ta{width:100%;box-sizing:border-box;min-height:64px;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--s2);color:var(--tp);font-size:0.9rem;font-family:inherit;resize:vertical;outline:none;}
 .soc-reply-ta:focus{border-color:var(--ac);}
 .soc-reply-btn{align-self:flex-end;}
-/* 자료실 미리보기에 좋아요·댓글 붙을 때(임태성 게이트) 하단 잘림 방지 — 미리보기 영역 스크롤 허용 */
-body.is-uat-comments .mys-vault-preview-col .viewer{overflow-y:auto;}
+/* 자료실 미리보기에 좋아요·댓글 붙을 때 하단 잘림 방지 — 미리보기 영역 스크롤 허용 (전체 개방 2026-06-22) */
+.mys-vault-preview-col .viewer{overflow-y:auto;}
 /* ── 보험료 비교표 빌더 (Quick 실행도구) — UI는 토큰, 출력 시트(.cmp-sheet)는 고정 라이트 팔레트(이미지 가독성, 카드 만들기 출력 팔레트와 동일 예외) ── */
 .cmp-wrap{display:flex;flex-direction:column;gap:14px}
 .cmp-guard{font-size:0.8125rem;line-height:1.5;color:var(--tp);background:var(--s2);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-sm,8px);padding:10px 12px}
@@ -4056,9 +4056,6 @@ function applyRoleClass(){
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
   document.body.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸 노출 — body 기준(바텀시트가 #app 밖이라 #app 기준이면 안 닿음) */
   document.body.classList.toggle('is-admin', r === 'admin');  /* 바텀시트(#app 밖) 어드민 게이트 — 원수사 자료실·보험 Q&A 트리 노드 노출용 (2026-06-17) */
-  /* 게시판 좋아요·댓글 Phase 1 = 우선 임태성 실장(bylts@naver.com)만 검수용 — 단계적 반영(2026-06-22). 검수 후 게이트 해제→전체. */
-  var _uatC='';try{var _uatCU=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');_uatC=((_uatCU.email||'').trim().toLowerCase());}catch(e){}
-  document.body.classList.toggle('is-uat-comments', _uatC==='bylts@naver.com');
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
@@ -4357,7 +4354,7 @@ window.qnaThreadHtml=qnaThreadHtml; window.loadQnaComments=loadQnaComments; wind
 /* ════ 게시판 좋아요·댓글 공용 모듈 (Phase 1, posts 기반) ════
  * 게이트: is-uat-comments(임태성 bylts@naver.com 검수). 좋아요=post_likes 토글(per-user) / 댓글=comments(post_id) 재사용(Q&A '답변'과 별개 '댓글' 표기).
  * px=뷰 prefix(같은 글이 여러 뷰에 떠도 id 충돌 방지). 검수 후 게이트 해제→전체, 보드별 주입은 한 줄(_socialBar/_socialBarLoad). */
-function _socEnabled(){ return document.body.classList.contains('is-uat-comments'); }
+function _socEnabled(){ return true; }  /* 2026-06-22 전체 개방(어드민 포함 전원 + 신규 가입자) — is-uat-comments 게이트 해제 */
 function _socUid(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||''); }catch(e){ return ''; } }
 function _socEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 /* 좋아요 바 HTML */
