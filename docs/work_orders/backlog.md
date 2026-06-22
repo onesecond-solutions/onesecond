@@ -2,6 +2,18 @@
 
 > 결재는 났으나 설계/우선순위로 뒤로 미룬 항목. 착수 시 이 파일에서 꺼내 진행하고, 완료되면 줄을 지운다.
 
+## ★ 자동 채굴 dry-run 재개 — 인증 차단으로 보류 (2026-06-23)
+
+**진단 결론(완료):** 채굴 트랙 **A. 재가동 가능**. 코드(mine-batch Phase A~F·`v1d`)·DB 배선(`record_mined_entry`/`review_knowledge_entry` RPC·`uq_ke_mine_identity` 인덱스·`knowledge_pipeline_events` 테이블 존재 0행) 완비. cron mine job 없음(자동 OFF). `events=0` = **채굴 실행 0회·914 이후 신규 적재 0**. 자동 approved 다겹 차단.
+
+**오늘 한 것:** `CRON_SECRET`이 6함수 공유 + cron 2개(ocr `*/1`·diary `*/5`)·notify 트리거가 리터럴 사용 → 교체 시 운영 동시 장애 발견. **mine-batch만 `MINE_SECRET` 전용 인증으로 분리(fallback 없음)** PR #923 머지(`99f5779`). **CRON_SECRET 불변·타 함수/cron/트리거 무변경·mine-batch 미재배포 → 운영 영향 0.**
+
+**막힌 지점:** `npx supabase`(2.107.0) 확보했으나 `supabase login`이 **non-TTY 자동화 터미널에서 불가**(LegacyLoginMissingTokenError). secret 설정·재배포 인증 경로 필요.
+
+**재개 경로(택1):** (가) 대표 본인 PC **일반 터미널(TTY)**에서 `npx supabase login`(브라우저 승인) 후 같은 PC에서 진행 / (나) Dashboard > Account > Access Tokens 발급 → `SUPABASE_ACCESS_TOKEN` 환경변수 / (다) Dashboard GUI로 `MINE_SECRET` 추가 + mine-batch 재배포.
+
+**재개 후 순서:** ref 연결 → `MINE_SECRET` 난수 생성·설정(원문 비노출) → mine-batch만 재배포 → 틀린 secret 401 확인 → `{dry_run:true,limit:5}` → 실행 전후 DB write 0 확인 → 5건 품질 보고 → **실적재(dry_run=false) 대표 승인 대기.** ⛔ dry_run=false·cron 등록·CRON_SECRET 변경 금지. 진실원천 = `docs/work_orders/2026-06-21_knowledge_pipeline_events_wiring.md`(배선 8단계).
+
 ## 보안 교차검증 잔여 — 댓글 본인 수정·삭제 타인 격리 (2026-06-23)
 
 **상태:** 기능 **완료**(PR #922 머지·라이브 반영, DB RLS 적용 완료). 본인 수정·삭제 실측 통과(임태성 실장 계정). 무인증(anon) REST PATCH/DELETE 차단 라이브 실증 완료. → **잔여 = 보안 교차검증 1건뿐.**
