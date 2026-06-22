@@ -976,6 +976,8 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-d-imgph{color:var(--tf);font-size:0.8rem;text-align:center;line-height:1.7;padding:30px 16px;}
 .sv-d-audio{margin:14px 18px 0;}
 .sv-d-audio audio{width:100%;display:block;}
+.sv-d-video{margin:14px 18px 0;}
+.sv-d-video video{width:100%;display:block;}
 .sv-d-zoom{position:absolute;right:10px;bottom:10px;background:var(--s1);border:0.5px solid var(--bd);border-radius:8px;padding:5px 11px;font-size:0.72rem;font-weight:700;color:var(--tp);cursor:pointer;}
 .sv-d-zoom:hover{border-color:var(--ac);color:var(--ac);}
 .sv-d-open{display:inline-flex;align-items:center;gap:5px;margin:14px 18px 0;padding:9px 14px;border:1px solid var(--bd);border-radius:10px;background:var(--s1);color:var(--tp);font-size:0.82rem;font-weight:700;cursor:pointer;text-decoration:none;}
@@ -10065,6 +10067,7 @@ async function _searchOpen(table, id){
     if(window._svTarget==='hsResults'){
       var _isImg=(table==='myspace_files' && /^(png|jpe?g|gif|webp|bmp)$/i.test(String(r.ext||'')));
       var _isAud=(table==='myspace_files' && /^(mp3|wav|m4a|aac|ogg|oga|flac)$/i.test(String(r.ext||'')));  /* 오디오 = 인라인 재생 플레이어 */
+      var _isVid=(table==='myspace_files' && /^(mp4|webm|ogv|mov|m4v)$/i.test(String(r.ext||'')));  /* 동영상 = 인라인 재생 플레이어 */
       var _chipTxt=_svSrcLabel(table)+(r.ext?' · '+String(r.ext).toUpperCase():(r.company?' · '+r.company:''));
       var _head='<div class="sv-panel-head"><div><div class="sph-t">'+_sEsc(title)+'</div>'+(meta?'<div class="sph-m">'+_sEsc(meta)+'</div>':'')+'</div><button class="sv-panel-x" onclick="_svPanelClose()" aria-label="닫기">&#10005;</button></div>';
       var _chip='<span class="sv-d-chip">'+_sEsc(_chipTxt)+'</span>';
@@ -10092,6 +10095,9 @@ async function _searchOpen(table, id){
       } else if(_isAud){
         /* 자료실 오디오(mp3·wav 등) = 인라인 재생 플레이어(서명URL 비동기) + 원본 열기 */
         _ph=_head+_chip+'<div class="sv-d-audio" id="svDAud"><div class="sv-d-imgph">오디오 불러오는 중…</div></div>'+_openBtn+_bodyBlock;
+      } else if(_isVid){
+        /* 자료실 동영상(mp4·webm 등) = 인라인 재생 플레이어(서명URL 비동기) + 원본 열기 */
+        _ph=_head+_chip+'<div class="sv-d-video" id="svDVid"><div class="sv-d-imgph">동영상 불러오는 중…</div></div>'+_openBtn+_bodyBlock;
       } else {
         /* 텍스트형(지식·Q&A·공지·스크립트) + 비이미지 자료 = 본문 조판만(이미지 영역 생략) */
         _ph=_head+_chip+_openBtn+_bodyBlock;
@@ -10121,6 +10127,14 @@ async function _searchOpen(table, id){
             if(!u){ box.innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; }
             else { box.innerHTML='<audio controls preload="metadata" style="width:100%" src="'+u.replace(/"/g,'&quot;')+'"></audio>'; }
             var _pn3=document.getElementById('svPanel'); if(_pn3) window._svPanelHtml=_pn3.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
+          });
+        }
+        if(_isVid && r.storage_path){
+          _svSignUrl('myspace', r.storage_path).then(function(u){
+            var box=document.getElementById('svDVid'); if(!box) return;
+            if(!u){ box.innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; }
+            else { box.innerHTML='<video controls preload="metadata" playsinline style="width:100%;max-height:60vh;background:#000;border-radius:10px" src="'+u.replace(/"/g,'&quot;')+'"></video>'; }
+            var _pn4=document.getElementById('svPanel'); if(_pn4) window._svPanelHtml=_pn4.innerHTML;
           });
         }
       }
