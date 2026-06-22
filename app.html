@@ -13204,6 +13204,13 @@ async function _osEnsureSharedFolder(scope, sid, owner, token){
     return (ins.ok||ins.status===201)?fid:null;
   }catch(e){ console.error('[share] ensureSharedFolder',e); return null; }
 }
+/* 다형 source_id 검증 — team_notices.source_id(text)에 들어갈 값 형식 검사.
+   script/memo=bigint(정수 문자열) / file=myspace_files uuid. 표시용 key는 통과 못 함. */
+function _shareValidSourceId(type, id){
+  id=String(id==null?'':id);
+  if(type==='file') return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+  return /^\d+$/.test(id);
+}
 async function _osShareDo(scope){
   var ctx=window._osShareCtx; if(!ctx||!ctx.id){ _osShareClose(); return; }
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
@@ -13222,12 +13229,22 @@ async function _osShareDo(scope){
     /* ── 1) 스냅샷 준비(원본 SELECT만 — 원본 수정 안 함). 파일은 공유 스코프로 사본 복사 ── */
     try{
       if(ctx.type==='script'){
-        var rs=await window.db.fetch('/rest/v1/scripts?id=eq.'+encodeURIComponent(ctx.id)+'&select=title,script_text,highlight_text,keywords,attachments');
-        var o=(rs.ok?await rs.json():[])[0]||{};
+        /* scripts.id=bigint. 표시문자(#) 등 제거→정수만→실제 행 재조회→DB 실제 id 사용(표시 key 금지) */
+        var _sid=String(ctx.id).replace(/[^0-9]/g,'');
+        if(!/^\d+$/.test(_sid)){ alert('공유할 스크립트 식별자가 올바르지 않습니다.'); _osShareClose(); return; }
+        var rs=await window.db.fetch('/rest/v1/scripts?id=eq.'+_sid+'&select=id,title,script_text,highlight_text,keywords,attachments');
+        var o=(rs.ok?await rs.json():[])[0];
+        if(!o||o.id==null){ alert('원본 스크립트를 찾을 수 없습니다.'); _osShareClose(); return; }
+        itemId=String(o.id);
         payload={script_text:o.script_text||'', highlight_text:o.highlight_text||'', keywords:o.keywords||[], attachments:o.attachments||[]};
       } else if(ctx.type==='memo'){
-        var rm=await window.db.fetch('/rest/v1/library?id=eq.'+encodeURIComponent(ctx.id)+'&select=title,memo_text,description,keywords');
-        var om=(rm.ok?await rm.json():[])[0]||{};
+        /* library.id=bigint. 동일 처리 */
+        var _mid=String(ctx.id).replace(/[^0-9]/g,'');
+        if(!/^\d+$/.test(_mid)){ alert('공유할 메모 식별자가 올바르지 않습니다.'); _osShareClose(); return; }
+        var rm=await window.db.fetch('/rest/v1/library?id=eq.'+_mid+'&select=id,title,memo_text,description,keywords');
+        var om=(rm.ok?await rm.json():[])[0];
+        if(!om||om.id==null){ alert('원본 메모를 찾을 수 없습니다.'); _osShareClose(); return; }
+        itemId=String(om.id);
         payload={memo_text:om.memo_text||'', description:om.description||'', keywords:om.keywords||[]};
       } else if(ctx.type==='file'){
         /* 파일 자동 팀/지점 복사 — 받는 사람이 RLS로 못 읽으므로 공유 시점에 공유 스코프 스토리지로 복사 */
@@ -13254,6 +13271,13 @@ async function _osShareDo(scope){
       }
     }catch(e){ console.error('[share] snapshot',e); alert('공유 준비 중 오류가 발생했습니다.'); _osShareClose(); return; }
 
+    /* source_id 형식 검증 — script/memo=정수문자열, file=uuid. 아니면 INSERT 중단(다형 참조 무결성) */
+    if(!_shareValidSourceId(ctx.type, itemId)){
+      console.error('[share] invalid source_id', ctx.type, itemId);
+      alert('원본 식별자 형식이 올바르지 않아 공유를 중단합니다.');
+      return;
+    }
+
     /* ── 2) 보낸 공유함(shares) INSERT — 앱 정식 경로(window.db.fetch=401 자동 갱신). 실패는 숨기지 않고 그대로 노출 ── */
     var shareRow={ item_type:ctx.type, item_id:itemId, scope:scope, scope_id:sid, title:(ctx.title||null), from_user:(me.id||(window.AppState&&window.AppState.userId)||null), from_name:(me.name||null), payload:payload };
     var shRes=await window.db.fetch('/rest/v1/shares',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(shareRow)});
@@ -13279,7 +13303,11 @@ async function _osShareDo(scope){
       var tb=''; try{ tb=await tnRes.text(); }catch(e){}
       console.error('[share] team_notices insert FAIL', tnRes.status, tb);
       /* 한쪽이라도 실패 → 성공 처리 금지 + 방금 만든 shares 롤백(부분 저장 방지) */
-      if(shId){ try{ await window.db.fetch('/rest/v1/shares?id=eq.'+encodeURIComponent(shId),{method:'DELETE',headers:{'Prefer':'return=minimal'}}); }catch(e){} }
+      if(shId){
+        try{ var _rb=await window.db.fetch('/rest/v1/shares?id=eq.'+encodeURIComponent(shId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+          if(!(_rb.ok||_rb.status===204)) console.error('[share] rollback FAILED — orphan shares id='+shId+' status='+_rb.status);
+        }catch(e){ console.error('[share] rollback FAILED — orphan shares id='+shId, e); }
+      }
       alert(grp+'방 게시에 실패했습니다 ('+tnRes.status+').\n'+String(tb||'').slice(0,300)+'\n(공유를 취소했습니다. 다시 시도해 주세요.)');
       return;
     }
