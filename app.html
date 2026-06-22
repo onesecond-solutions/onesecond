@@ -7988,6 +7988,17 @@ window._svMimeByExt=_svMimeByExt; window._svPlaySrc=_svPlaySrc;
 /* 미디어 재생 실패(코덱·형식 등) 시 안내로 교체 */
 function _svMediaErr(el){ try{ var p=el&&el.parentNode; if(p){ p.innerHTML='<div class="sv-d-imgph">이 파일은 브라우저에서 바로 재생되지 않습니다(형식·코덱).<br>아래 ‘원본 열기’로 받아서 들어주세요.</div>'; var _pe=document.getElementById('svPanel'); if(_pe) window._svPanelHtml=_pe.innerHTML; } }catch(e){} }
 window._svMediaErr=_svMediaErr;
+/* WAV→MP3 파생본(playback_path) 우선 재생 게이트 — 단일 함수로만 관리(조건 분산 금지).
+   2026-06-22 샘플 1건 검증: 임태성 실장 user_id에만 한정. 그 외 사용자는 기존 WAV 동작 유지.
+   전체 개방·일괄 변환은 별도 결재 전까지 금지. */
+function _wavPlaybackEnabled(){
+  try{
+    var uid=(window.AppState&&window.AppState.userId)||'';
+    if(!uid){ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); uid=u.id||''; }
+    return String(uid)==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';
+  }catch(e){ return false; }
+}
+window._wavPlaybackEnabled=_wavPlaybackEnabled;
 
 /* ════ WAV 재생 진단 (admin/임태성, app.html#wavdiag 진입). 라이브 _svSignUrl 그대로 재사용 — 별도 서명로직 안 만듦 ════ */
 var _wavDiagPreset='branch/306edf6a-15db-4b69-a6b9-dae74b08cd33/543e0f99-0533-47bd-8836-be961c72a273/f8e747b5-2486-4dfe-9635-99ba092be126_1.wav';
@@ -10275,9 +10286,10 @@ async function _searchOpen(table, id){
           });
         }
         if(_isAud && (r.playback_path||r.storage_path)){
-          /* playback_path(MP3 파생본) 있으면 우선 재생, 없으면 기존 원본. 원본 storage_path·이름은 불변(원본 열기/다운로드는 그대로 원본). */
-          var _audPath=r.playback_path||r.storage_path;
-          var _audHint=r.playback_path?'mp3':(_fext||String(r.ext||r.original_name||''));
+          /* playback_path(MP3 파생본)는 게이트(_wavPlaybackEnabled) 통과 계정만 우선 재생. 그 외=기존 원본. 원본 storage_path·이름 불변. */
+          var _useMp3=!!(r.playback_path && typeof _wavPlaybackEnabled==='function' && _wavPlaybackEnabled());
+          var _audPath=_useMp3?r.playback_path:r.storage_path;
+          var _audHint=_useMp3?'mp3':(_fext||String(r.ext||r.original_name||''));
           _svSignUrl('myspace', _audPath).then(function(u){
             if(!document.getElementById('svDAud')) return;
             if(!u){ document.getElementById('svDAud').innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; var _p0=document.getElementById('svPanel'); if(_p0) window._svPanelHtml=_p0.innerHTML; return; }
@@ -13891,7 +13903,7 @@ async function mysVaultPreview(fid){
     var isPptx=ext==='pptx'||mt.indexOf('presentationml')>=0;
     if(isImg){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><img class="mvprev-img" src="'+signed+'" alt="" onclick="mvVaultDdak(\''+f.id+'\')" onerror="mvViewerFallback(\''+f.id+'\')"></div>'; }
     else if(isVid){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><video class="mv-media" src="'+signed+'" controls preload="metadata"></video></div>'; }
-    else if(isAud){ var _audSrc=signed; if(f.playback_path){ var _ps=await _svSignUrl('myspace', f.playback_path); if(_ps) _audSrc=_ps; } /* MP3 파생본 우선, 없으면 기존 원본. 원본 경로·이름 불변 */ box.innerHTML=head+'<div class="mv-stage mv-stage--fit mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+_audSrc+'" controls></audio></div>'; }
+    else if(isAud){ var _audSrc=signed; if(f.playback_path && typeof _wavPlaybackEnabled==='function' && _wavPlaybackEnabled()){ var _ps=await _svSignUrl('myspace', f.playback_path); if(_ps) _audSrc=_ps; } /* 게이트 계정만 MP3 파생본 우선, 그 외=기존 원본. 원본 경로·이름 불변 */ box.innerHTML=head+'<div class="mv-stage mv-stage--fit mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+_audSrc+'" controls></audio></div>'; }
     else if(isPdf){ /* PNG와 동일 UX: pdf.js로 1페이지 캔버스 렌더(네이티브 툴바 없음) + 호버 돋보기 + 클릭 확대 모달 */ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><canvas class="mvprev-pdfcanvas" onclick="mvPdfModalOpen(\''+f.id+'\')" title="클릭하면 크게 보기"><div class="mys-news-empty">PDF 불러오는 중…</div></canvas></div>'; _mvPdfInlineRender(box.querySelector('.mvprev-pdfcanvas'), signed); }
     else if(isCsv){ var tc=await fetch(signed); box.innerHTML=head+_mvCsvTable(await tc.text()); }
     else if(isTxt){ var tt=await fetch(signed); box.innerHTML=head+'<div class="mv-stage"><pre class="mvprev-text">'+_mvEsc((await tt.text()).slice(0,50000))+'</pre></div>'; }
