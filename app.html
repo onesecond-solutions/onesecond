@@ -7937,7 +7937,7 @@ window._svSignUrl=_svSignUrl;
    (예: wav가 audio/x-wav 등으로 떠 직접재생 실패) 0:00만 뜸. 서명 URL을 blob으로 받아 확장자 기준
    올바른 MIME으로 다시 입힌 objectURL로 통일 재생. 확장자를 모를 때만 원본 URL/blob타입으로 폴백. hint=ext 또는 파일명. */
 function _svMimeByExt(ext){
-  var m={mp3:'audio/mpeg',wav:'audio/wav',m4a:'audio/mp4',aac:'audio/aac',ogg:'audio/ogg',oga:'audio/ogg',flac:'audio/flac',mp4:'video/mp4',webm:'video/webm',ogv:'video/ogg',mov:'video/quicktime',m4v:'video/mp4'};
+  var m={mp3:'audio/mpeg',wav:'audio/wav',wave:'audio/wav',m4a:'audio/mp4',aac:'audio/aac',ogg:'audio/ogg',oga:'audio/ogg',flac:'audio/flac',mp4:'video/mp4',webm:'video/webm',ogv:'video/ogg',mov:'video/quicktime',m4v:'video/mp4'};
   return m[String(ext||'').toLowerCase().replace(/^.*\./,'').replace(/[^a-z0-9]/g,'')]||'';
 }
 async function _svPlaySrc(url, hint){
@@ -7951,6 +7951,9 @@ async function _svPlaySrc(url, hint){
   }catch(e){ return url; }
 }
 window._svMimeByExt=_svMimeByExt; window._svPlaySrc=_svPlaySrc;
+/* 미디어 재생 실패(코덱·형식 등) 시 안내로 교체 */
+function _svMediaErr(el){ try{ var p=el&&el.parentNode; if(p){ p.innerHTML='<div class="sv-d-imgph">이 파일은 브라우저에서 바로 재생되지 않습니다(형식·코덱).<br>아래 ‘원본 열기’로 받아서 들어주세요.</div>'; var _pe=document.getElementById('svPanel'); if(_pe) window._svPanelHtml=_pe.innerHTML; } }catch(e){} }
+window._svMediaErr=_svMediaErr;
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
 function renderMrEditAtts(){
   var wrap=document.getElementById('mr-edit-atts'); var fld=document.getElementById('mr-edit-atts-fld');
@@ -10083,9 +10086,10 @@ async function _searchOpen(table, id){
       : '<div id="_sdBody" style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9rem;line-height:1.65">'+_sMark(bodyTxt,_qt)+'</div>';
     /* 홈 검색(2단) = 모달 대신 우측 패널에 시안 조판으로 렌더(소스별). 그 외(오버레이) = 기존 풀스크린 모달 */
     if(window._svTarget==='hsResults'){
-      var _isImg=(table==='myspace_files' && /^(png|jpe?g|gif|webp|bmp)$/i.test(String(r.ext||'')));
-      var _isAud=(table==='myspace_files' && /^(mp3|wav|m4a|aac|ogg|oga|flac)$/i.test(String(r.ext||'')));  /* 오디오 = 인라인 재생 플레이어 */
-      var _isVid=(table==='myspace_files' && /^(mp4|webm|ogv|mov|m4v)$/i.test(String(r.ext||'')));  /* 동영상 = 인라인 재생 플레이어 */
+      var _fext=(String(r.ext||'').toLowerCase().replace(/^\./,'')||String(r.original_name||'').toLowerCase().split('.').pop()||'');  /* ext 비어도 파일명 확장자로 폴백 */
+      var _isImg=(table==='myspace_files' && /^(png|jpe?g|gif|webp|bmp)$/.test(_fext));
+      var _isAud=(table==='myspace_files' && /^(mp3|wav|wave|m4a|aac|ogg|oga|flac)$/.test(_fext));  /* 오디오 = 인라인 재생 플레이어 (wave 4글자 포함) */
+      var _isVid=(table==='myspace_files' && /^(mp4|webm|ogv|mov|m4v)$/.test(_fext));  /* 동영상 = 인라인 재생 플레이어 */
       var _chipTxt=_svSrcLabel(table)+(r.ext?' · '+String(r.ext).toUpperCase():(r.company?' · '+r.company:''));
       var _head='<div class="sv-panel-head"><div><div class="sph-t">'+_sEsc(title)+'</div>'+(meta?'<div class="sph-m">'+_sEsc(meta)+'</div>':'')+'</div><button class="sv-panel-x" onclick="_svPanelClose()" aria-label="닫기">&#10005;</button></div>';
       var _chip='<span class="sv-d-chip">'+_sEsc(_chipTxt)+'</span>';
@@ -10143,9 +10147,9 @@ async function _searchOpen(table, id){
           _svSignUrl('myspace', r.storage_path).then(function(u){
             if(!document.getElementById('svDAud')) return;
             if(!u){ document.getElementById('svDAud').innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; var _p0=document.getElementById('svPanel'); if(_p0) window._svPanelHtml=_p0.innerHTML; return; }
-            _svPlaySrc(u, String(r.ext||r.original_name||'')).then(function(src){
+            _svPlaySrc(u, _fext||String(r.ext||r.original_name||'')).then(function(src){
               var b2=document.getElementById('svDAud'); if(!b2) return;
-              b2.innerHTML='<audio controls preload="metadata" style="width:100%" src="'+src.replace(/"/g,'&quot;')+'"></audio>';
+              b2.innerHTML='<audio controls preload="metadata" style="width:100%" src="'+src.replace(/"/g,'&quot;')+'" onerror="if(window._svMediaErr)_svMediaErr(this)"></audio>';
               var _pn3=document.getElementById('svPanel'); if(_pn3) window._svPanelHtml=_pn3.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
             });
           });
@@ -10154,9 +10158,9 @@ async function _searchOpen(table, id){
           _svSignUrl('myspace', r.storage_path).then(function(u){
             if(!document.getElementById('svDVid')) return;
             if(!u){ document.getElementById('svDVid').innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; var _q0=document.getElementById('svPanel'); if(_q0) window._svPanelHtml=_q0.innerHTML; return; }
-            _svPlaySrc(u, String(r.ext||r.original_name||'')).then(function(src){
+            _svPlaySrc(u, _fext||String(r.ext||r.original_name||'')).then(function(src){
               var b3=document.getElementById('svDVid'); if(!b3) return;
-              b3.innerHTML='<video controls preload="metadata" playsinline style="width:100%;max-height:60vh;background:#000;border-radius:10px" src="'+src.replace(/"/g,'&quot;')+'"></video>';
+              b3.innerHTML='<video controls preload="metadata" playsinline style="width:100%;max-height:60vh;background:#000;border-radius:10px" src="'+src.replace(/"/g,'&quot;')+'" onerror="if(window._svMediaErr)_svMediaErr(this)"></video>';
               var _pn4=document.getElementById('svPanel'); if(_pn4) window._svPanelHtml=_pn4.innerHTML;
             });
           });
