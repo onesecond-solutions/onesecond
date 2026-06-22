@@ -7933,19 +7933,21 @@ async function _svSignUrl(bucket, path){
   }catch(e){ return ''; }
 }
 window._svSignUrl=_svSignUrl;
-/* 미디어 재생용 src — 스토리지 Content-Type이 octet-stream이면 브라우저가 디코딩 못 해 0:00만 뜸.
-   서명 URL을 blob으로 받아 확장자 기준 올바른 MIME으로 다시 입힌 objectURL 반환(이미 audio/video면 원본 URL 유지=스트리밍). hint=ext 또는 파일명. */
+/* 미디어 재생용 src — 스토리지 Content-Type이 octet-stream이거나 브라우저가 직접 URL로 못 읽는 경우
+   (예: wav가 audio/x-wav 등으로 떠 직접재생 실패) 0:00만 뜸. 서명 URL을 blob으로 받아 확장자 기준
+   올바른 MIME으로 다시 입힌 objectURL로 통일 재생. 확장자를 모를 때만 원본 URL/blob타입으로 폴백. hint=ext 또는 파일명. */
 function _svMimeByExt(ext){
   var m={mp3:'audio/mpeg',wav:'audio/wav',m4a:'audio/mp4',aac:'audio/aac',ogg:'audio/ogg',oga:'audio/ogg',flac:'audio/flac',mp4:'video/mp4',webm:'video/webm',ogv:'video/ogg',mov:'video/quicktime',m4v:'video/mp4'};
   return m[String(ext||'').toLowerCase().replace(/^.*\./,'').replace(/[^a-z0-9]/g,'')]||'';
 }
 async function _svPlaySrc(url, hint){
   try{
+    var mime=_svMimeByExt(hint);
     var resp=await fetch(url); if(!resp.ok) return url;
     var blob=await resp.blob();
-    if(/^(audio|video)\//.test(blob.type)) return url;   /* 이미 올바른 타입 → 원본 URL(스트리밍 유지) */
-    var mime=_svMimeByExt(hint); if(!mime) return url;
-    return URL.createObjectURL(new Blob([blob],{type:mime}));   /* octet-stream 등 → 올바른 MIME 재입힘 */
+    var useType=mime || (/^(audio|video)\//.test(blob.type)?blob.type:'');
+    if(!useType) return url;   /* 확장자·타입 모두 불명 → 원본 URL 폴백 */
+    return URL.createObjectURL(new Blob([blob],{type:useType}));   /* 확장자 MIME으로 통일(mp3·wav 동일 경로) */
   }catch(e){ return url; }
 }
 window._svMimeByExt=_svMimeByExt; window._svPlaySrc=_svPlaySrc;
