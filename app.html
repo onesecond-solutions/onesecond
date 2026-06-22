@@ -388,9 +388,9 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 #mys-split.scr-mode #mysViewer,.cosp-split.scr-mode .viewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;min-width:0;overflow:auto;}
 /* 넓은 표/이미지가 칸을 화면 밖으로 늘리지 못하게(min-width:0) — 글쓰기 버튼이 우측으로 밀려 잘리던 회귀 방지. 본문은 카드 안에서 가로스크롤 */
 #mys-split.scr-mode .osws-newrow,.cosp-split.scr-mode .osws-newrow{max-width:100%;box-sizing:border-box;}
-/* 좌측 카드 목록만 자기 영역 안에서 스크롤 — 목록이 길어져도 레이아웃을 밀지 않게(우측 미리보기·전체 스크롤 무관). 우측은 댓글·좋아요 등 확장 예정이라 미접촉. 데스크탑 2단 한정. 우선 임태성 실장 계정(is-uat-listscroll=bylts@naver.com)만 검수용 적용=단계적 반영(2026-06-22). 인라인 글쓰기 작업공간(viewer-col overflow:visible) 전체=스크립트/보험Q&A/팀·지점 공지작성(scr-mode)+함께해요(#tg-split). */
+/* 좌측 카드 목록만 자기 영역 안에서 스크롤 — 목록이 길어져도 레이아웃을 밀지 않게(우측 미리보기·전체 스크롤 무관). 우측은 댓글·좋아요 등 확장 예정이라 미접촉. 데스크탑 2단 한정. 전체 사용자(현재+신규 가입자) 적용 — 검수 통과 후 게이트 해제(2026-06-22). 인라인 글쓰기 작업공간(viewer-col overflow:visible) 전체=스크립트/보험Q&A/팀·지점 공지작성(scr-mode)+함께해요(#tg-split). */
 @media (min-width:1025px){
-  body.is-uat-listscroll #mys-split.scr-mode .list-col,body.is-uat-listscroll .cosp-split.scr-mode .list-col,body.is-uat-listscroll #tg-split .list-col{align-self:start;max-height:calc(100vh - 140px);}
+  #mys-split.scr-mode .list-col,.cosp-split.scr-mode .list-col,#tg-split .list-col{align-self:start;max-height:calc(100vh - 140px);}
 }
 /* 보기 화면 본문의 큰 이미지가 카드 폭을 늘리지 못하게 — 카드 폭에 맞춰 축소(전체보기 포함 모든 마이스페이스 칩, 에디터 .osrich-body와 동일 규칙) */
 #mysViewer img{max-width:100%;height:auto;}
@@ -4024,9 +4024,6 @@ function applyRoleClass(){
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
   document.body.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸 노출 — body 기준(바텀시트가 #app 밖이라 #app 기준이면 안 닿음) */
   document.body.classList.toggle('is-admin', r === 'admin');  /* 바텀시트(#app 밖) 어드민 게이트 — 원수사 자료실·보험 Q&A 트리 노드 노출용 (2026-06-17) */
-  /* 좌측 목록 독립 스크롤 = 우선 임태성 실장 계정(bylts@naver.com)만 검수용 적용 — 단계적 반영(2026-06-22). 검수 후 게이트 해제→전체. */
-  var _uatEm='';try{var _uat=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');_uatEm=((_uat.email||'').trim().toLowerCase());}catch(e){}
-  document.body.classList.toggle('is-uat-listscroll', _uatEm==='bylts@naver.com');
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
