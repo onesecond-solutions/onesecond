@@ -18,7 +18,9 @@
 //  - 개인정보 원문 로그 0(마스킹) / 멱등=knowledge_mining_state(원천 본문 미변경)
 //  - dry_run 기본 true / cron 미등록(CRON_ENABLED=false) / 표본 통과 전 대량 금지
 //
-// 보안: x-cron-secret == CRON_SECRET 일 때만. DB 쓰기는 service_role.
+// 보안: x-cron-secret == MINE_SECRET 일 때만(mine-batch 전용 secret — 공유 CRON_SECRET 사용 안 함).
+//   CRON_SECRET을 공유하면 그 값 교체 시 ocr-batch/diary-push/notify 등 운영 호출자가 깨지므로 분리.
+//   DB 쓰기는 service_role.
 // 입력: { limit?, source_type?, source_ids?[], samples?[{type,id}], dry_run?, pipeline_version?, force_reprocess? }
 
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
@@ -47,7 +49,7 @@ const json = (b: unknown, s = 200) =>
 // ── 타입 ──────────────────────────────────────────────────────
 interface SampleRef { type: "newsletter" | "post"; id: string; }
 interface Config {
-  cronSecret: string; geminiKey: string; killed: boolean;
+  mineSecret: string; geminiKey: string; killed: boolean;
   limit: number; sourceType: "newsletter" | "post"; sourceIds: string[]; samples: SampleRef[];
   dryRun: boolean; pipelineVersion: string; forceReprocess: boolean;
 }
@@ -146,7 +148,7 @@ function loadConfig(payload: Record<string, unknown>): Config {
     ? samples.length
     : Math.min(num(payload.limit, MAX_ITEMS_PER_RUN), MAX_ITEMS_PER_RUN);
   return {
-    cronSecret: Deno.env.get("CRON_SECRET") ?? "",
+    mineSecret: Deno.env.get("MINE_SECRET") ?? "",   // mine-batch 전용(CRON_SECRET과 분리)
     geminiKey:  Deno.env.get("GEMINI_API_KEY") ?? "",
     killed:     (Deno.env.get("MINE_KILL_SWITCH") ?? "").toLowerCase() === "on",
     limit,
@@ -563,7 +565,7 @@ Deno.serve(async (req: Request) => {
   try { payload = await req.json(); } catch { /* */ }
   const cfg = loadConfig(payload);
 
-  if (!cfg.cronSecret || req.headers.get("x-cron-secret") !== cfg.cronSecret) return json({ error: "unauthorized" }, 401);
+  if (!cfg.mineSecret || req.headers.get("x-cron-secret") !== cfg.mineSecret) return json({ error: "unauthorized" }, 401);
   if (!cfg.geminiKey) return json({ error: "missing_gemini_key" }, 500);
 
   const kill = checkKillSwitch(cfg);
