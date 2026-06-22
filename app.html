@@ -7919,6 +7919,34 @@ async function _openSignedAtt(e, el){
   return false;
 }
 window._openSignedAtt=_openSignedAtt;
+/* 실제 파일 저장(다운로드) — '원본 열기'(새 탭 재생)와 별도. 서명 URL을 받아 Blob으로 받아 <a download>로 저장.
+   · 파일명=original_name 유지 / WAV·MP3 등 모든 형식 동일 동작 / 모바일도 동작(blob+download)
+   · _svSignUrl 재사용 = 매 클릭 새 서명 발급(만료 자동 회피) + 토큰 만료 시 window.db.fetch가 자동 갱신
+   · 실패 시 오류 안내. data-name 없으면 경로 끝 파일명으로 폴백. */
+async function _dlSignedFile(e, el){
+  if(e&&e.preventDefault) e.preventDefault();
+  if(!el) return false;
+  var bucket=el.getAttribute('data-bucket'), path=el.getAttribute('data-path');
+  var name=el.getAttribute('data-name')||(String(path||'').split('/').pop())||'download';
+  if(!bucket||!path) return false;
+  if(window.db&&typeof window.db.getToken==='function'&&!window.db.getToken()){ alert('로그인 후 이용해 주세요.'); return false; }
+  var _label=el.textContent;
+  try{
+    el.style.pointerEvents='none'; el.textContent='다운로드 중…';
+    var url=(typeof _svSignUrl==='function')?await _svSignUrl(bucket, path):'';
+    if(!url){ alert('다운로드 링크를 만들지 못했습니다. 권한·로그인 상태를 확인해 주세요.'); return false; }
+    var resp=await fetch(url);
+    if(!resp.ok){ alert('다운로드에 실패했습니다. (HTTP '+resp.status+') 잠시 후 다시 시도해 주세요.'); return false; }
+    var blob=await resp.blob();
+    var obj=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=obj; a.download=name; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ try{ URL.revokeObjectURL(obj); }catch(e){} }, 5000);
+  }catch(err){ console.error('[dlSignedFile]', err); alert('다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.'); }
+  finally{ try{ el.style.pointerEvents=''; el.textContent=_label; }catch(e){} }
+  return false;
+}
+window._dlSignedFile=_dlSignedFile;
 /* 서명 URL 문자열만 발급(미리보기·라이트박스용). _openSignedAtt는 새 탭 열기, 이건 URL만 반환. */
 async function _svSignUrl(bucket, path){
   try{
@@ -10204,7 +10232,12 @@ async function _searchOpen(table, id){
       } else {
         _bodyBlock='<div class="sv-d-bodylabel">본문 텍스트</div><div class="sv-d-body">'+_sMark(bodyTxt,_qt)+'</div>';
       }
-      var _openBtn=(table==='myspace_files'&&r.storage_path)?'<a class="sv-d-open" href="#" data-bucket="myspace" data-path="'+_sEsc(r.storage_path)+'" onclick="return _openSignedAtt(event,this)">원본 열기 &#8599;</a>':'';
+      var _openBtn='';
+      if(table==='myspace_files'&&r.storage_path){
+        var _dlp=_sEsc(r.storage_path), _dln=_sEsc(r.original_name||'');
+        _openBtn='<a class="sv-d-open" href="#" data-bucket="myspace" data-path="'+_dlp+'" onclick="return _openSignedAtt(event,this)">원본 열기 &#8599;</a>'
+          +'<a class="sv-d-open" href="#" data-bucket="myspace" data-path="'+_dlp+'" data-name="'+_dln+'" onclick="return _dlSignedFile(event,this)">&#11015; 다운로드</a>';
+      }
       var _ph;
       if(isPdf){
         /* 소식지 = PDF 첫 페이지 iframe(현행 유지) + 소식지 딸깍·원문(actionBar) + 본문 조판 */
