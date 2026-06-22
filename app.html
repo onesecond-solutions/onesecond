@@ -382,6 +382,28 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .osrich-body img{max-width:100%;height:auto;border-radius:8px;margin:6px 0;display:block;}
 .osrich-body table{border-collapse:collapse;margin:8px 0;width:auto;}
 .osrich-body td,.osrich-body th{border:1px solid var(--bd);padding:6px 10px;min-width:48px;}
+/* ════ AI 글 다듬기 (is-uat-aipolish 게이트=임태성 검수) ════ */
+body:not(.is-uat-aipolish) .aip-only{display:none !important;}
+.aip-btn{display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:700;color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,#fff);border:1px solid color-mix(in srgb,var(--ac) 30%,var(--bd));border-radius:8px;padding:5px 10px;cursor:pointer;line-height:1;}
+.aip-btn:hover{background:color-mix(in srgb,var(--ac) 14%,#fff);}
+.aip-menu{position:fixed;z-index:9000;background:#fff;border:0.5px solid var(--bd);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.16);padding:6px;min-width:210px;}
+.aip-menu button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:10px 12px;font-size:0.88rem;font-weight:700;color:var(--tp);cursor:pointer;}
+.aip-menu button:hover{background:var(--s2);}
+.aip-menu .aip-m-sub{display:block;font-size:0.72rem;font-weight:400;color:var(--tf);margin-top:1px;}
+.aip-ov{position:fixed;inset:0;z-index:9100;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;}
+.aip-ov.on{display:flex;}
+.aip-modal{background:#fff;border-radius:16px;max-width:880px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;}
+.aip-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:0.5px solid var(--bd);font-weight:800;color:var(--tp);}
+.aip-head .aip-x{border:0;background:transparent;font-size:1.05rem;cursor:pointer;color:var(--tf);}
+.aip-cols{display:flex;gap:14px;padding:16px 18px;overflow-y:auto;}
+.aip-col{flex:1;min-width:0;}
+.aip-col h4{font-size:0.76rem;font-weight:800;color:var(--ts);margin:0 0 7px;}
+.aip-box{border:0.5px solid var(--bd);border-radius:10px;padding:12px 14px;background:var(--s2);font-size:0.88rem;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:var(--tp);max-height:56vh;overflow-y:auto;}
+.aip-col.aip-new .aip-box{background:color-mix(in srgb,var(--ac) 6%,#fff);border-color:color-mix(in srgb,var(--ac) 30%,var(--bd));}
+.aip-acts{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:0.5px solid var(--bd);}
+.aip-acts .aip-cancel{background:var(--s2);border:0.5px solid var(--bd);border-radius:9px;padding:9px 16px;font-weight:700;color:var(--ts);cursor:pointer;}
+.aip-acts .aip-apply{background:var(--ac);border:0;border-radius:9px;padding:9px 18px;font-weight:800;color:#fff;cursor:pointer;}
+@media(max-width:640px){.aip-cols{flex-direction:column;}}
 /* 마이 스페이스 스크립트 인라인 작업공간 (Phase 1) — 스크립트 칩에서만 적용(scr-mode 가드). 글쓰기 카드 + 작업공간 카드 세로 2카드 */
 #mys-scr-newrow{display:none;}
 #mys-split.scr-mode .viewer-col,.cosp-split.scr-mode .viewer-col{background:transparent;border:0;border-radius:0;overflow:visible;gap:12px;min-width:0;}
@@ -3667,6 +3689,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
               <button type="button" class="mys-tool-btn" title="이미지 삽입" onclick="mysEditorTool('image','mysWriteScrFile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>
               <button type="button" class="mys-tool-btn" title="표 삽입" onclick="mysEditorTool('table')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg></button>
               <button type="button" class="mys-tool-btn" title="캘린더 삽입" onclick="mysEditorTool('calendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></button>
+              <button type="button" class="aip-btn aip-only" title="AI 글 다듬기" onclick="_aipMenu(event,'ta','mysWriteScrText')">&#10024; AI 다듬기</button>
             </div>
           </div>
         </div>
@@ -4056,6 +4079,9 @@ function applyRoleClass(){
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
   document.body.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸 노출 — body 기준(바텀시트가 #app 밖이라 #app 기준이면 안 닿음) */
   document.body.classList.toggle('is-admin', r === 'admin');  /* 바텀시트(#app 밖) 어드민 게이트 — 원수사 자료실·보험 Q&A 트리 노드 노출용 (2026-06-17) */
+  /* AI 글 다듬기 = 우선 임태성 실장(bylts@naver.com)만 검수용 — 단계적 반영(2026-06-22). 검수 후 게이트 해제→전체. */
+  var _uatA='';try{var _uatAU=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');_uatA=((_uatAU.email||'').trim().toLowerCase());}catch(e){}
+  document.body.classList.toggle('is-uat-aipolish', _uatA==='bylts@naver.com');
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
   if(mysMem) mysMem.style.display = (mgr.indexOf(r) !== -1) ? '' : 'none';
@@ -9038,6 +9064,8 @@ window.osRich=window.osRich||{
       +'<button type="button" title="오른쪽 정렬" onmousedown="event.preventDefault()" onclick="osRich.cmd(\'justifyRight\')">&#8677;</button>'
       +'<span class="osrich-sep"></span>'
       +'<button type="button" title="이미지 본문 삽입" onclick="osRich.image()">&#128247;</button>'
+      +'<span class="osrich-sep aip-only"></span>'
+      +'<button type="button" class="aip-btn aip-only" title="AI 글 다듬기" onmousedown="event.preventDefault()" onclick="_aipMenu(event,\'rich\')">&#10024; AI 다듬기</button>'
       /* 표 삽입 버튼 제거(2026-06-13) — prompt 기반 정적 표=반쪽 기능·"딸깍" 정체성 부적합. osRich.table() 함수는 아래 보존(미연결). 표 필요 시 이미지 캡처 첨부 또는 상품 비교 기능 사용 */
       +'</div>'
       +'<div class="osrich-body" id="'+bid+'" contenteditable="true" data-ph="'+_sEsc(opts.placeholder||'내용을 입력하세요')+'"></div>';
@@ -11214,6 +11242,64 @@ function _htmlToPlainText(value){
   return t.replace(/\u00a0/g,' ').replace(/\t+(\n|$)/g,'$1').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
 }
 window._htmlToPlainText=_htmlToPlainText;
+
+/* ════ AI 글 다듬기 (is-uat-aipolish 게이트=임태성). Edge Function ai-polish(Gemini) 호출. 원본 보존+미리보기+적용. ════ */
+function _aipEnabled(){ return document.body.classList.contains('is-uat-aipolish'); }
+function _aipTextToHtml(t){ return String(t==null?'':t).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}).replace(/\n/g,'<br>'); }
+function _aipCloseMenu(){ var m=document.getElementById('aipMenu'); if(m) m.remove(); document.removeEventListener('mousedown',_aipOutside); }
+function _aipOutside(e){ var m=document.getElementById('aipMenu'); if(m&&!m.contains(e.target)) _aipCloseMenu(); }
+/* kind='ta'(textarea, taId 필요) | 'rich'(osRich) */
+function _aipMenu(ev, kind, taId){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  _aipCloseMenu();
+  var get, set;
+  if(kind==='rich'){
+    get=function(){ return (window.osRich&&osRich.html)?(window._htmlToPlainText?_htmlToPlainText(osRich.html()):osRich.html()):''; };
+    set=function(t){ var b=(window.osRich&&osRich._body)?osRich._body():null; if(b) b.innerHTML=_aipTextToHtml(t); };
+  } else {
+    get=function(){ var ta=document.getElementById(taId); return ta?ta.value:''; };
+    set=function(t){ var ta=document.getElementById(taId); if(ta) ta.value=t; };
+  }
+  var m=document.createElement('div'); m.className='aip-menu'; m.id='aipMenu';
+  m.innerHTML='<button type="button" data-m="spelling">맞춤법만 교정<span class="aip-m-sub">오탈자·띄어쓰기만, 내용 그대로</span></button>'
+    +'<button type="button" data-m="natural">문장을 자연스럽게<span class="aip-m-sub">뜻 보존, 더 읽기 쉽게</span></button>';
+  document.body.appendChild(m);
+  var btnEl=(ev&&ev.currentTarget)?ev.currentTarget:null;
+  var r=btnEl?btnEl.getBoundingClientRect():{bottom:80,left:80};
+  m.style.top=(r.bottom+6)+'px';
+  m.style.left=Math.max(8, Math.min(r.left, window.innerWidth-m.offsetWidth-8))+'px';
+  var btns=m.querySelectorAll('button');
+  for(var i=0;i<btns.length;i++){ (function(btn){ btn.onclick=function(){ var mode=btn.getAttribute('data-m'); _aipCloseMenu(); _aipRun(mode, get, set); }; })(btns[i]); }
+  setTimeout(function(){ document.addEventListener('mousedown',_aipOutside); },0);
+}
+async function _aipRun(mode, get, set){
+  var orig=(get()||''); if(!orig.trim()){ if(typeof toast==='function') toast('다듬을 내용이 없어요.'); return; }
+  if(!window.db||!window.db.fetch){ if(typeof toast==='function') toast('네트워크 모듈 로드 실패'); return; }
+  if(typeof toast==='function') toast(mode==='natural'?'자연스럽게 다듬는 중…':'맞춤법 교정 중…');
+  try{
+    var res=await window.db.fetch('/functions/v1/ai-polish',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:orig, mode:mode}) });
+    if(!res.ok){ var e=await res.json().catch(function(){return{};}); if(typeof toast==='function') toast('AI 다듬기 실패: '+(e.error||res.status)); return; }
+    var d=await res.json(); var polished=String((d&&d.polished)||'').trim();
+    if(!polished){ if(typeof toast==='function') toast('결과가 비었어요.'); return; }
+    _aipPreview(orig, polished, mode, function(){ set(polished); if(typeof toast==='function') toast('AI 교정본을 적용했어요. 저장하면 반영됩니다.'); });
+  }catch(e){ console.error('[ai-polish]',e); if(typeof toast==='function') toast('AI 다듬기 중 오류가 발생했어요.'); }
+}
+function _aipPreview(orig, polished, mode, onApply){
+  var ov=document.getElementById('aipOv');
+  if(!ov){ ov=document.createElement('div'); ov.id='aipOv'; ov.className='aip-ov'; document.body.appendChild(ov); }
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});};
+  ov.innerHTML='<div class="aip-modal"><div class="aip-head"><span>✨ AI 글 다듬기 — '+(mode==='natural'?'자연스럽게':'맞춤법 교정')+' 미리보기</span><button type="button" class="aip-x" aria-label="닫기">✕</button></div>'
+    +'<div class="aip-cols"><div class="aip-col"><h4>원본 (그대로 유지)</h4><div class="aip-box">'+esc(orig)+'</div></div>'
+    +'<div class="aip-col aip-new"><h4>AI 교정본</h4><div class="aip-box">'+esc(polished)+'</div></div></div>'
+    +'<div class="aip-acts"><button type="button" class="aip-cancel">취소 (원본 유지)</button><button type="button" class="aip-apply">교정본 적용</button></div></div>';
+  ov.classList.add('on');
+  var close=function(){ ov.classList.remove('on'); };
+  ov.querySelector('.aip-x').onclick=close;
+  ov.querySelector('.aip-cancel').onclick=close;
+  ov.querySelector('.aip-apply').onclick=function(){ close(); onApply(); };
+  ov.onclick=function(e){ if(e.target===ov) close(); };
+}
+window._aipMenu=_aipMenu;
 function mysDetailCopy(){
   var c = window._mysDetailCurrent; if(!c) return;
   var text = _htmlToPlainText(c.body || '');  /* 제목 제외, 본문만 */
