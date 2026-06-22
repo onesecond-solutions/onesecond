@@ -11594,11 +11594,11 @@ async function _aipRun(mode, get, set){
   if(typeof toast==='function') toast(mode==='natural'?'자연스럽게 다듬는 중…':'맞춤법 교정 중…');
   try{
     var res=await window.db.fetch('/functions/v1/ai-polish',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:orig, mode:mode}) });
-    if(!res.ok){ var e=await res.json().catch(function(){return{};}); if(typeof toast==='function') toast('AI 다듬기 실패: '+(e.error||res.status)); return; }
+    if(!res.ok){ var e=await res.json().catch(function(){return{};}); if(typeof toast==='function') toast('AI 글 다듬기 실패: '+(e.error||res.status)); return; }
     var d=await res.json(); var polished=String((d&&d.polished)||'').trim();
     if(!polished){ if(typeof toast==='function') toast('결과가 비었어요.'); return; }
     _aipPreview(orig, polished, mode, function(){ set(polished); if(typeof toast==='function') toast('AI 교정본을 적용했어요. 저장하면 반영됩니다.'); });
-  }catch(e){ console.error('[ai-polish]',e); if(typeof toast==='function') toast('AI 다듬기 중 오류가 발생했어요.'); }
+  }catch(e){ console.error('[ai-polish]',e); if(typeof toast==='function') toast('AI 글 다듬기 중 오류가 발생했어요.'); }
 }
 function _aipPreview(orig, polished, mode, onApply){
   var ov=document.getElementById('aipOv');
