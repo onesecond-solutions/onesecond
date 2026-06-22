@@ -10181,7 +10181,7 @@ window._aiAnswer=_aiAnswer;
 async function _searchOpen(table, id){
   if(!window.db||!window.db.fetch) return;
   var _qt=_sTokens(((document.getElementById(window._svTarget==='hsResults'?'hsInput':'sinput')||{}).value||'').trim());  /* 현재 검색어 → 본문 하이라이트용 (홈=hsInput / 오버레이=sinput) */
-  var selMap={ newsletters:'title,company,full_text,clean_text,publish_year,publish_month,source_pdf_url,source_path', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,search_text,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,clean_text,category,source_company', myspace_files:'original_name,search_text,clean_text,ext,storage_path' };
+  var selMap={ newsletters:'title,company,full_text,clean_text,publish_year,publish_month,source_pdf_url,source_path', posts:'title,content,category,author_name,created_at', team_notices:'title,content,created_at', scripts:'title,search_text,script_text,highlight_text,stage', library:'title,description,memo_text,link_url', calendar_events:'title,description,event_date', knowledge_entries:'title,body,clean_text,category,source_company', myspace_files:'original_name,search_text,clean_text,ext,storage_path,playback_path' };
   var sel=selMap[table]||'title';
   var idCol=(table==='knowledge_entries')?'entry_id':'id';  /* 지식엔진 PK=entry_id */
   try{
@@ -10274,11 +10274,14 @@ async function _searchOpen(table, id){
             var _pn2=document.getElementById('svPanel'); if(_pn2) window._svPanelHtml=_pn2.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
           });
         }
-        if(_isAud && r.storage_path){
-          _svSignUrl('myspace', r.storage_path).then(function(u){
+        if(_isAud && (r.playback_path||r.storage_path)){
+          /* playback_path(MP3 파생본) 있으면 우선 재생, 없으면 기존 원본. 원본 storage_path·이름은 불변(원본 열기/다운로드는 그대로 원본). */
+          var _audPath=r.playback_path||r.storage_path;
+          var _audHint=r.playback_path?'mp3':(_fext||String(r.ext||r.original_name||''));
+          _svSignUrl('myspace', _audPath).then(function(u){
             if(!document.getElementById('svDAud')) return;
             if(!u){ document.getElementById('svDAud').innerHTML='<div class="sv-d-imgph">재생을 불러오지 못했습니다.<br>아래 ‘원본 열기’를 눌러주세요.</div>'; var _p0=document.getElementById('svPanel'); if(_p0) window._svPanelHtml=_p0.innerHTML; return; }
-            _svPlaySrc(u, _fext||String(r.ext||r.original_name||'')).then(function(src){
+            _svPlaySrc(u, _audHint).then(function(src){
               var b2=document.getElementById('svDAud'); if(!b2) return;
               b2.innerHTML='<audio controls preload="metadata" style="width:100%" src="'+src.replace(/"/g,'&quot;')+'" onerror="if(window._svMediaErr)_svMediaErr(this)"></audio>';
               var _pn3=document.getElementById('svPanel'); if(_pn3) window._svPanelHtml=_pn3.innerHTML;   /* 로드 결과 보존(탭 전환 복원용) */
@@ -13377,7 +13380,7 @@ async function mysVaultLoadFiles(fid){
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var q='/rest/v1/myspace_files?deleted_at=is.null'+_mvScopeQ()+'&order=created_at.desc&select=id,original_name,storage_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
+    var q='/rest/v1/myspace_files?deleted_at=is.null'+_mvScopeQ()+'&order=created_at.desc&select=id,original_name,storage_path,playback_path,mime_type,ext,file_size,thumbnail_path,folder_id,updated_at,created_at';
     q += fid?('&folder_id=eq.'+encodeURIComponent(fid)):'&folder_id=is.null';
     var res=await window.db.fetch(q);
     var rows=res.ok?await res.json():[];
@@ -13888,7 +13891,7 @@ async function mysVaultPreview(fid){
     var isPptx=ext==='pptx'||mt.indexOf('presentationml')>=0;
     if(isImg){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><img class="mvprev-img" src="'+signed+'" alt="" onclick="mvVaultDdak(\''+f.id+'\')" onerror="mvViewerFallback(\''+f.id+'\')"></div>'; }
     else if(isVid){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><video class="mv-media" src="'+signed+'" controls preload="metadata"></video></div>'; }
-    else if(isAud){ box.innerHTML=head+'<div class="mv-stage mv-stage--fit mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+signed+'" controls></audio></div>'; }
+    else if(isAud){ var _audSrc=signed; if(f.playback_path){ var _ps=await _svSignUrl('myspace', f.playback_path); if(_ps) _audSrc=_ps; } /* MP3 파생본 우선, 없으면 기존 원본. 원본 경로·이름 불변 */ box.innerHTML=head+'<div class="mv-stage mv-stage--fit mv-audio-stage"><div class="mv-unsup-ic">🎵</div><audio class="mv-audio" src="'+_audSrc+'" controls></audio></div>'; }
     else if(isPdf){ /* PNG와 동일 UX: pdf.js로 1페이지 캔버스 렌더(네이티브 툴바 없음) + 호버 돋보기 + 클릭 확대 모달 */ box.innerHTML=head+'<div class="mv-stage mv-stage--fit"><canvas class="mvprev-pdfcanvas" onclick="mvPdfModalOpen(\''+f.id+'\')" title="클릭하면 크게 보기"><div class="mys-news-empty">PDF 불러오는 중…</div></canvas></div>'; _mvPdfInlineRender(box.querySelector('.mvprev-pdfcanvas'), signed); }
     else if(isCsv){ var tc=await fetch(signed); box.innerHTML=head+_mvCsvTable(await tc.text()); }
     else if(isTxt){ var tt=await fetch(signed); box.innerHTML=head+'<div class="mv-stage"><pre class="mvprev-text">'+_mvEsc((await tt.text()).slice(0,50000))+'</pre></div>'; }
