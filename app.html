@@ -8020,8 +8020,11 @@ async function _wavDiagRun(){
   }catch(e){ out.textContent='⚠️ 오류: '+(e&&e.message||e)+'\n'+L.join('\n'); }
 }
 window._wavDiagOpen=_wavDiagOpen; window._wavDiagRun=_wavDiagRun;
-function _wavDiagBoot(n){ if(location.hash!=='#wavdiag') return; if(_wavDiagGated()) _wavDiagOpen(); else if(n<12) setTimeout(function(){ _wavDiagBoot(n+1); },800); }
-window.addEventListener('hashchange',function(){ if(location.hash==='#wavdiag') _wavDiagBoot(0); });
+/* 라우터(showView)가 pushState/replaceState로 '?view='만 남기고 #wavdiag 해시를 제거하므로,
+   로드 시점 URL에서 한 번 캡처(해시·쿼리 어느 형태든). 라우팅이 지워도 플래그 유지 → 패널 진입 보장. */
+var _wavDiagReq=/wavdiag/i.test((typeof location!=='undefined'&&location.href)||'');
+function _wavDiagBoot(n){ if(!_wavDiagReq) return; if(_wavDiagGated()) _wavDiagOpen(); else if(n<20) setTimeout(function(){ _wavDiagBoot(n+1); },800); }
+window.addEventListener('hashchange',function(){ if(location.hash==='#wavdiag'){ _wavDiagReq=true; _wavDiagBoot(0); } });
 setTimeout(function(){ _wavDiagBoot(0); },1000);
 /* 수정 모달 — 기존 첨부 표시 + 개별 삭제 (window._mrEditAtts 상태, 저장 시 attachments로 반영) */
 function renderMrEditAtts(){
