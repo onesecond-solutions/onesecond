@@ -15,7 +15,8 @@ begin;
 create table if not exists public.shares (
   id         uuid primary key default gen_random_uuid(),
   item_type  text not null check (item_type in ('script','memo','file')),
-  item_id    uuid not null,                       -- 원본 scripts.id 또는 myspace_files.id
+  item_id    text not null,                       -- 폴리모픽 원본 id(text 통일): script/memo=scripts·library.id(bigint), file=myspace_files.id(uuid)
+                                                   -- ⚠️ 2026-06-23 uuid→text 정정. 근원: scripts.id는 bigint인데 uuid로 가정 → 스크립트 팀 공유 시 22P02(invalid input syntax for type uuid). 파일(uuid)·스크립트/메모(bigint) 모두 text로 안전 저장.
   from_user  uuid not null default auth.uid(),    -- 보낸 사람(users.id=auth.uid)
   from_name  text,                                -- 보낸 사람 이름 스냅샷(목록 표시용)
   scope      text not null check (scope in ('team','branch')),
