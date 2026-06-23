@@ -3630,9 +3630,10 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <div class="fld"><label>회사명</label><input type="text" id="prof-company" placeholder="회사명"></div>
       <div class="frow">
         <div class="fld"><label>지점(센터)명</label><input type="text" id="prof-branch" placeholder="지점명"></div>
-        <div class="fld"><label>팀명</label><input type="text" id="prof-team" placeholder="팀명"></div>
+        <div class="fld"><label>팀명</label><input type="text" id="prof-team" readonly style="background:var(--sh);color:var(--ts);cursor:not-allowed" placeholder="미배정"></div>
       </div>
       <div class="fld"><label>직책</label><input type="text" id="prof-role" readonly style="background:var(--sh);color:var(--ts);cursor:not-allowed"></div>
+      <div class="profask">팀 변경이 필요하신가요? <span class="profask-link">매니저·어드민에게 요청 &#8594;</span></div>
       <div class="profask">직책 변경이 필요하신가요? <span class="profask-link">어드민에게 요청 &#8594;</span></div>
     </div>
     <div class="askfoot on profoot">
@@ -10573,12 +10574,13 @@ window.closeLogoutConfirm = closeLogoutConfirm;
 window.doLogoutConfirmed = doLogoutConfirmed;
 async function saveProfile(){
   var get = function(id){ var el = document.getElementById(id); return (el && el.value || '').trim(); };
+  /* 팀(team/team_id)은 셀프서비스 변경 금지 — 조직 권한이라 매니저/어드민 경로(매니저방)만.
+     레거시 team 텍스트를 여기서 보내면 team_id와 어긋나거나(트리거가 덮어 무의미) 오인 저장됨(2026-06-23 P0). */
   var payload = {
     name:    get('prof-name'),
     phone:   get('prof-phone'),
     company: get('prof-company'),
-    branch:  get('prof-branch'),
-    team:    get('prof-team')
+    branch:  get('prof-branch')
   };
   if (!payload.name) { toast('이름을 입력해 주세요'); return; }
 
@@ -10588,8 +10590,8 @@ async function saveProfile(){
     if (!u || !u.id) { toast('로그인이 필요합니다'); return; }
     if (!window.db || !window.db.fetch) { toast('네트워크 모듈 로드 실패'); return; }
 
-    /* PATCH /rest/v1/users?id=eq.{userId} — 5 필드 통째 UPDATE
-       (직책 role = readonly, 변경 X / 이메일 = auth 자료, 변경 X) */
+    /* PATCH /rest/v1/users?id=eq.{userId} — 이름·전화·회사·지점 UPDATE
+       (팀 = team_id 기반·매니저/어드민 전용이라 셀프 수정 X / 직책 role·이메일 = readonly) */
     var res = await window.db.fetch(
       '/rest/v1/users?id=eq.' + encodeURIComponent(u.id),
       {
@@ -10606,7 +10608,7 @@ async function saveProfile(){
       return;
     }
 
-    /* localStorage os_user 갱신 (5 필드 통째 병합) */
+    /* localStorage os_user 갱신 (이름·전화·회사·지점 병합) */
     Object.assign(u, payload);
     localStorage.setItem('os_user', JSON.stringify(u));
     sessionStorage.setItem('os_user', JSON.stringify(u));
