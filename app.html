@@ -13393,31 +13393,33 @@ async function _osShareDo(scope){
     }
     var shId=null; try{ var sj=await shRes.json(); shId=(sj&&sj[0]&&sj[0].id)||null; }catch(e){}
 
-    /* ── 3) 팀/지점방 게시물(team_notices) INSERT — content=스냅샷 본문(_noticeBody 리치 HTML 그대로 렌더), source 연결 ── */
-    var tnBody = ctx.type==='script' ? (payload.script_text||'')
-               : ctx.type==='memo'   ? (payload.memo_text||payload.description||'')
-               : ('공유 파일: '+(ctx.title||(payload&&payload.original_name)||''));
-    var tnRow={ notice_type:'operation', title:(ctx.title||'공유'), content:tnBody, scope:scopeInternal,
-                author_id:(me.id||(window.AppState&&window.AppState.userId)||null),
-                keywords:((payload&&payload.keywords)||[]), attachments:((payload&&payload.attachments)||[]),
-                source_type:ctx.type, source_id:String(itemId) };
-    if(isTeam) tnRow.team_id=sid; else tnRow.branch_id=sid;
-    var tnRes=await window.db.fetch('/rest/v1/team_notices',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(tnRow)});
-    if(!(tnRes.ok||tnRes.status===201)){
-      var tb=''; try{ tb=await tnRes.text(); }catch(e){}
-      console.error('[share] team_notices insert FAIL', tnRes.status, tb);
-      /* 한쪽이라도 실패 → 성공 처리 금지 + 방금 만든 shares 롤백(부분 저장 방지) */
-      if(shId){
-        try{ var _rb=await window.db.fetch('/rest/v1/shares?id=eq.'+encodeURIComponent(shId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
-          if(!(_rb.ok||_rb.status===204)) console.error('[share] rollback FAILED — orphan shares id='+shId+' status='+_rb.status);
-        }catch(e){ console.error('[share] rollback FAILED — orphan shares id='+shId, e); }
+    /* ── 3) 팀/지점방 게시물(team_notices) INSERT — 공지·전달용. 파일 공유는 팀 자료실(myspace_files team scope)에
+       이미 저장되므로 팀방 공지 생성 안 함(2026-06-23 P0 오타게팅 수정). 스크립트·메모만 팀방 노출 유지(전 유형 제거 여부 대표 확인 대기). ── */
+    if(ctx.type!=='file'){
+      var tnBody = ctx.type==='script' ? (payload.script_text||'')
+                 : (payload.memo_text||payload.description||'');
+      var tnRow={ notice_type:'operation', title:(ctx.title||'공유'), content:tnBody, scope:scopeInternal,
+                  author_id:(me.id||(window.AppState&&window.AppState.userId)||null),
+                  keywords:((payload&&payload.keywords)||[]), attachments:((payload&&payload.attachments)||[]),
+                  source_type:ctx.type, source_id:String(itemId) };
+      if(isTeam) tnRow.team_id=sid; else tnRow.branch_id=sid;
+      var tnRes=await window.db.fetch('/rest/v1/team_notices',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(tnRow)});
+      if(!(tnRes.ok||tnRes.status===201)){
+        var tb=''; try{ tb=await tnRes.text(); }catch(e){}
+        console.error('[share] team_notices insert FAIL', tnRes.status, tb);
+        /* 한쪽이라도 실패 → 성공 처리 금지 + 방금 만든 shares 롤백(부분 저장 방지) */
+        if(shId){
+          try{ var _rb=await window.db.fetch('/rest/v1/shares?id=eq.'+encodeURIComponent(shId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+            if(!(_rb.ok||_rb.status===204)) console.error('[share] rollback FAILED — orphan shares id='+shId+' status='+_rb.status);
+          }catch(e){ console.error('[share] rollback FAILED — orphan shares id='+shId, e); }
+        }
+        alert(grp+'방 게시에 실패했습니다 ('+tnRes.status+').\n'+String(tb||'').slice(0,300)+'\n(공유를 취소했습니다. 다시 시도해 주세요.)');
+        return;
       }
-      alert(grp+'방 게시에 실패했습니다 ('+tnRes.status+').\n'+String(tb||'').slice(0,300)+'\n(공유를 취소했습니다. 다시 시도해 주세요.)');
-      return;
     }
 
-    /* ── 4) 둘 다 성공한 뒤에만 성공 처리 ── */
-    if(typeof toast==='function') toast(grp+'방과 공유함에 공유했어요.');
+    /* ── 4) 성공 처리 ── */
+    if(typeof toast==='function') toast(ctx.type==='file' ? (grp+' 자료실과 공유함에 공유했어요.') : (grp+'방과 공유함에 공유했어요.'));
     _osShareClose();
     window._mrTeamCache=null;
     try{ if(isTeam){ if(typeof loadTeamNotices==='function') loadTeamNotices(); } else { if(typeof loadBranchFeed==='function') loadBranchFeed(); } }catch(e){}
