@@ -5122,26 +5122,41 @@ function copyTextFallback(txt){
     return ok;
   }catch(e){return false;}
 }
+/* blob → PNG 재인코딩 — Chrome 클립보드는 image/png만 허용하므로 JPEG·webp 등도 복사 가능하게.
+   blob: 객체 URL(동일 출처)로 그려 canvas taint 없음. 이미 PNG면 그대로 통과. */
+function _blobToPng(blob){
+  if(blob && blob.type==='image/png') return Promise.resolve(blob);
+  return new Promise(function(resolve,reject){
+    var url=URL.createObjectURL(blob);
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var c=document.createElement('canvas');
+        c.width=img.naturalWidth||img.width; c.height=img.naturalHeight||img.height;
+        c.getContext('2d').drawImage(img,0,0);
+        c.toBlob(function(b){ URL.revokeObjectURL(url); b?resolve(b):reject(new Error('toBlob null')); },'image/png');
+      }catch(err){ URL.revokeObjectURL(url); reject(err); }
+    };
+    img.onerror=function(){ URL.revokeObjectURL(url); reject(new Error('img load failed')); };
+    img.src=url;
+  });
+}
 async function doCopy(){
   document.getElementById('tm').classList.remove('open');
-  var label=names[cur];
-  try{
-    var resp=await fetch(imgs[cur]);
-    var blob=await resp.blob();
-    if(navigator.clipboard && window.ClipboardItem){
-      await navigator.clipboard.write([new ClipboardItem({[blob.type]:blob})]);
+  var label=names[cur], src=imgs[cur];
+  if(navigator.clipboard && window.ClipboardItem){
+    try{
+      /* PNG로 변환한 blob을 Promise 형태로 넘겨 user-gesture 유지 — 모든 이미지 타입 복사 */
+      var pngPromise=(async function(){ var resp=await fetch(src); var blob=await resp.blob(); return await _blobToPng(blob); })();
+      await navigator.clipboard.write([new ClipboardItem({'image/png':pngPromise})]);
       toast('이미지 복사됨 — 톡에 붙여넣기 하세요');
       return;
-    }
-    throw new Error('no clipboard image');
-  }catch(e){
-    var txt='['+label+'] 원세컨드 첨부 자료';
-    if(copyTextFallback(txt)){
-      toast('텍스트로 복사됨 (이 환경은 이미지 복사 미지원)');
-    }else{
-      toast('복사 실패 — 브라우저가 막았습니다');
-    }
+    }catch(e){ console.error('[doCopy] 이미지 복사 실패 → 파일명 폴백', e); }
   }
+  /* 진짜 이미지 복사 불가 환경에서만 파일명 텍스트 폴백(오해 문구 정정) */
+  var txt='['+label+'] 원세컨드 첨부 자료';
+  if(copyTextFallback(txt)) toast('이미지 복사가 막혀 파일명만 복사했어요');
+  else toast('복사 실패 — 브라우저가 막았습니다');
 }
 var cards=[
 {brand:"한화손해보험 · 5세대 실손",name:"5세대 실손의료비<br>월 보험료 안내",rows:[["대상 연령","40세 · 여"],["주계약 (급여)","상해·질병 입통원 통합"],["보장 한도","연간 5천만원"],["월 보험료","16,290원",true]]},
