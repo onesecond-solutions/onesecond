@@ -759,20 +759,31 @@
       kpi(d.pending>0?'warn':'', '승인 대기', d.pending, '건', (d.pendingOther>0?('원수사 '+d.pendingIns+' · 기타 '+d.pendingOther):''), 'approvals');
   }
 
-  function _ctTeams(arr){  // 지점 인원 → 팀(text) 그룹 (빈 팀명 제외)
-    var m={}; (arr||[]).forEach(function(u){ var t=(u.team||'').trim(); if(t){ (m[t]=m[t]||[]).push(u); } }); return m;
+  /* 팀 소속 단일 진실원 = users.team_id (uuid). text 'team' 필드는 표시/레거시이며 조직 판정에 미사용 — 2026-06-23 */
+  function _ctTeamKey(u){ return (u && u.team_id) ? u.team_id : '_noteam'; }
+  function _ctTeamLabel(key){
+    if(key==='_noteam') return '팀 미배정';
+    return (_CT.teamsById && _CT.teamsById[key]) ? _CT.teamsById[key] : '유효하지 않은 팀 매핑';
+  }
+  function _ctTeams(arr){  // 지점 인원 → 팀(team_id) 그룹. team_id NULL = '_noteam'(팀 미배정)
+    var m={}; (arr||[]).forEach(function(u){ var k=_ctTeamKey(u); (m[k]=m[k]||[]).push(u); }); return m;
   }
   function _ctBranchBlock(b, byBranch){  // 지점 노드(child) + 하위 팀(child2)
     var arr=byBranch[b.id]||[]; var hc=(b.is_active===false)?'o':_ctHealth2(arr);
-    var tmap=_ctTeams(arr); var tnames=Object.keys(tmap).sort(); var hasT=tnames.length>0;
+    var tmap=_ctTeams(arr);
+    var tkeys=Object.keys(tmap).sort(function(x,y){
+      if(x==='_noteam') return 1; if(y==='_noteam') return -1;  /* 팀 미배정은 항상 끝 */
+      return _ctTeamLabel(x).localeCompare(_ctTeamLabel(y),'ko');
+    });
+    var hasT=tkeys.length>0;
     var s='<div class="act-node child" data-bid="'+esc(b.id)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
       '<span class="act-caret'+(hasT?'':' act-caret-hide')+'">&#9654;</span>'+
       '<span class="hp act-hp-'+hc+'"></span><span class="nm">'+esc(b.name||'(이름 없음)')+'</span><span class="sm">'+arr.length+'</span></div>';
     if(hasT){
       s+='<div class="act-children" data-parent="'+esc(b.id)+'">';
-      tnames.forEach(function(t){
-        s+='<div class="act-node child2" data-bid="T|'+esc(b.id)+'|'+esc(t)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
-          '<span class="act-caret act-caret-hide"></span><span class="nm">'+esc(t)+'</span><span class="sm">'+tmap[t].length+'</span></div>';
+      tkeys.forEach(function(k){
+        s+='<div class="act-node child2" data-bid="T|'+esc(b.id)+'|'+esc(k)+'" onclick="acOrgPick(this.getAttribute(\'data-bid\'))">'+
+          '<span class="act-caret act-caret-hide"></span><span class="nm">'+esc(_ctTeamLabel(k))+'</span><span class="sm">'+tmap[k].length+'</span></div>';
       });
       s+='</div>';
     }
@@ -933,10 +944,10 @@
       toggleKey=bid;
     }
     else if(bid.indexOf('T|')===0){
-      isTeam=true; var ps=bid.split('|'); var brId=ps[1]; var tnm=ps.slice(2).join('|');
+      isTeam=true; var ps=bid.split('|'); var brId=ps[1]; var tkey=ps.slice(2).join('|');
       var bb=_CT.branches.filter(function(x){return x.id===brId;})[0];
-      arr=(_CT.byBranch[brId]||[]).filter(function(u){ return (u.team||'').trim()===tnm; });
-      name=tnm; crumb=((bb&&bb.name)||'지점')+' · 팀';
+      arr=(_CT.byBranch[brId]||[]).filter(function(u){ return _ctTeamKey(u)===tkey; });
+      name=_ctTeamLabel(tkey); crumb=((bb&&bb.name)||'지점')+' · 팀';
     } else {
       var b=_CT.branches.filter(function(x){return x.id===bid;})[0];
       arr=_CT.byBranch[bid]||[]; name=(b&&b.name)||'지점'; crumb=(b&&b.ga_org_name)||'지점';
@@ -971,7 +982,7 @@
       var seen=lsv?_rel(lsv):'기록 없음';
       return '<tr class="ac-tr-clk" onclick="acGoSec(\'users\')"><td>'+dot+'<span class="act-av">'+ini+'</span>'+esc(u.name||'(이름 없음)')+'</td>'+
         '<td><span class="act-role">'+esc(RL[u.role]||u.role||'-')+'</span></td>'+
-        '<td>'+esc(u.team||'-')+'</td>'+
+        '<td>'+esc(_ctTeamLabel(_ctTeamKey(u)))+'</td>'+
         '<td style="color:'+(stale?'var(--warn)':'var(--ts)')+'">'+esc(seen)+'</td>'+
         '<td style="color:var(--tf)">'+esc(_ctDate(u.created_at))+'</td></tr>';
     }).join('');
@@ -1084,10 +1095,12 @@
   async function _loadOrgData(){
     var res=await Promise.all([
       _rows('branches?select=id,name,ga_org_name,is_active,company_id&order=name.asc'),
-      _rows('users?select=id,name,role,status,branch_id,team,created_at,last_seen_at&status=eq.active&order=created_at.desc&limit=2000'),
-      _rows('companies?select=id,name&order=name.asc')
+      _rows('users?select=id,name,role,status,branch_id,team,team_id,created_at,last_seen_at&status=eq.active&order=created_at.desc&limit=2000'),
+      _rows('companies?select=id,name&order=name.asc'),
+      _rows('teams?select=id,name&order=name.asc')
     ]);
-    var branches=res[0]||[], users=res[1]||[], companies=res[2]||[];
+    var branches=res[0]||[], users=res[1]||[], companies=res[2]||[], teams=res[3]||[];
+    var teamsById={}; teams.forEach(function(t){ teamsById[t.id]=t.name; });
     /* 현재 접속(presence) = users.last_seen_at(heartbeat). 매니저방과 동일 소스로 통일(2026-06-16) */
     var lastSeen={}; users.forEach(function(u){ if(u.last_seen_at) lastSeen[u.id]=u.last_seen_at; });
     var recentPosts=[]; try{ recentPosts=await _rows('posts?created_at=gte.'+new Date(Date.now()-7*86400000).toISOString()+'&select=author_id&limit=8000'); }catch(e){}
@@ -1095,7 +1108,7 @@
     var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
     var byCompany={}; branches.forEach(function(b){ var k=b.company_id||'_noco'; (byCompany[k]=byCompany[k]||[]).push(b); });
     _CT.branches=branches; _CT.byBranch=byBranch; _CT.usersAll=users; _CT.lastSeen=lastSeen;
-    _CT.companies=companies; _CT.byCompany=byCompany; _CT.userContent=userContent;
+    _CT.companies=companies; _CT.byCompany=byCompany; _CT.userContent=userContent; _CT.teamsById=teamsById;
   }
   // 운영 > 조직 트리 (대시보드 좌트리+우상세 컴포넌트 재사용)
   window.acLoadOrgTree = async function(){
@@ -1112,7 +1125,7 @@
   window.acGoUnassigned = function(){ _ctPendingPick = '_none'; acGoSec('orgtree'); };
 
   window.acLoadDashboard = async function(){
-    var [total, pendingAll, pendingIns, unassigned, newToday, unclassified, branches, users, companies] = await Promise.all([
+    var [total, pendingAll, pendingIns, unassigned, newToday, unclassified, branches, users, companies, teams] = await Promise.all([
       _count('users?select=id'),
       _count('users?status=eq.pending&select=id'),
       _count('users?status=eq.pending&role=in.('+INSURER_ROLES+')&select=id'),
@@ -1120,8 +1133,9 @@
       _count('users?created_at=gte.'+_kstMidnightISO()+'&select=id'),
       _count('users?status=eq.active&role=not.in.('+ROLE_KEYS.join(',')+')&select=id'),
       _rows('branches?select=id,name,ga_org_name,is_active,company_id&order=name.asc'),
-      _rows('users?select=id,name,role,status,branch_id,team,created_at,last_seen_at&status=eq.active&order=created_at.desc&limit=2000'),
-      _rows('companies?select=id,name&order=name.asc')
+      _rows('users?select=id,name,role,status,branch_id,team,team_id,created_at,last_seen_at&status=eq.active&order=created_at.desc&limit=2000'),
+      _rows('companies?select=id,name&order=name.asc'),
+      _rows('teams?select=id,name&order=name.asc')
     ]);
     var pendingOther = Math.max(0, (pendingAll||0) - (pendingIns||0));  /* 원수사 외 pending = GA·기타(승인 화면 미노출, 사용자 탭 처리) */
     // 최근 30일 로그인 → user별 마지막 접속(lastSeen) + 오늘 접속(distinct)
@@ -1140,12 +1154,13 @@
 
     var byBranch={}; users.forEach(function(u){ var k=u.branch_id||'_none'; (byBranch[k]=byBranch[k]||[]).push(u); });
     var byCompany={}; (branches||[]).forEach(function(b){ var k=b.company_id||'_noco'; (byCompany[k]=byCompany[k]||[]).push(b); });
+    var teamsById={}; (teams||[]).forEach(function(t){ teamsById[t.id]=t.name; });
     _CT.branches=branches; _CT.byBranch=byBranch; _CT.usersAll=users; _CT.lastSeen=lastSeen;
-    _CT.companies=companies||[]; _CT.byCompany=byCompany;
+    _CT.companies=companies||[]; _CT.byCompany=byCompany; _CT.teamsById=teamsById;
     var activeBr=branches.filter(function(b){ return b.is_active!==false; }).length;
     var riskBr=branches.filter(function(b){ return !((byBranch[b.id]||[]).length); }).length;
 
-    var _teamSet={}; users.forEach(function(u){ var t=(u.team||'').trim(); if(t) _teamSet[t]=1; });
+    var _teamSet={}; users.forEach(function(u){ if(u.team_id) _teamSet[u.team_id]=1; });
     renderBoard({ total:total, today:Object.keys(ts).length, newToday:newToday,
       activeBr:activeBr, totalBr:branches.length, riskBr:riskBr, unassigned:unassigned,
       pending:pendingAll, pendingIns:pendingIns, pendingOther:pendingOther, unclassified:unclassified,
