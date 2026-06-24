@@ -5186,13 +5186,9 @@ function _memoAutoLink(raw){
   return out.replace(/\n/g,'<br>');
 }
 window._memoAutoLink=_memoAutoLink;
-/* autolink 노출 게이트 — 3계정(어드민·실장 bylts@naver·팀장 bylts@kakao)만 미리보기. 그 외 전원 현행(esc+br). 검수 후 게이트 해제로 전체 개방. */
-function _memoLinkOn(){
-  try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');
-    var em=((u.email||'').trim().toLowerCase());
-    return em==='bylts@naver.com'||em==='bylts@kakao.com'||em==='bylts0428@gmail.com'||u.role==='admin';
-  }catch(e){ return false; }
-}
+/* autolink 노출 게이트 — 2026-06-24 3계정 검수 통과 후 전체 개방. XSS 가드(_memoAutoLink)·새 창은 동일 적용.
+   롤백 시 3계정 게이트 복원: return (em==='bylts@naver.com'||em==='bylts@kakao.com'||em==='bylts0428@gmail.com'||u.role==='admin'). */
+function _memoLinkOn(){ return true; }
 window._memoLinkOn=_memoLinkOn;
 function renderCard(){var c=window._genCard||cards[cur];if(!c){document.getElementById('thecard').innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ts);">카드 내용을 불러오지 못했습니다.</div>';return;}var E=window._genCard?_escHtml:function(x){return x==null?'':x;};document.querySelector('#cm .ch span').textContent='카드 만들기';var b=E(c.brand);var h='<div class="ctop">'+(b?'<div class="cbrand">'+b+'</div>':'')+'<div class="cname">'+E(c.name)+'</div></div><div class="cbody">';
 c.rows.forEach(function(r){h+='<div class="crow"><span class="k">'+E(r[0])+'</span><span class="v'+(r[2]?' big':'')+'">'+E(r[1])+'</span></div>';});
