@@ -119,6 +119,16 @@ body.is-uat-spacenav .side .nav,body.is-admin .side .nav{padding:7px 10px;}  /* 
 /* 업무 메뉴 타일 — 현황 보드와 떨어뜨려 그룹 구분 */
 .sn-cards{margin-top:4px;}
 @media(max-width:680px){.sn-dash{grid-template-columns:1fr;} .sn-dcard + .sn-dcard{box-shadow:inset 0 1px 0 var(--bd);}}
+/* 팀/지점 공유 스크립트 목록(아코디언) */
+.sn-scr-list{display:flex;flex-direction:column;gap:8px;}
+.sn-scr-item{border:1px solid var(--bd);border-radius:var(--radius-md,12px);overflow:hidden;background:var(--s1);}
+.sn-scr-item.open{border-color:var(--ac);}
+.sn-scr-head{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 14px;background:transparent;border:0;cursor:pointer;text-align:left;font-family:inherit;}
+.sn-scr-head:hover{background:var(--s2);}
+.sn-scr-t{font-weight:700;font-size:0.92rem;color:var(--tp);}
+.sn-scr-p{font-size:0.8rem;color:var(--ts);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.sn-scr-body{padding:2px 14px 14px;font-size:0.9rem;line-height:1.6;color:var(--bodytx);white-space:pre-wrap;word-break:break-word;}
+.sn-scr-by{margin-top:10px;font-size:0.75rem;color:var(--tf);}
 .sn-slot{margin-top:2px;}                                  /* 카드 아래 콘텐츠 영역(첫 진입=다이어리 캘린더) */
 /* 소속 풀바 — 창 밖 상단(간판 줄). is-uat-spacenav 전용. 창 안 중복(콘텐츠 소속 카드)은 숨김. */
 .sp-owner-bar{display:none;}
@@ -5482,9 +5492,31 @@ function _snScopeCard(scope, kind){
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
   if(kind==='notice' && window._spCospShow) window._spCospShow(slot, scope);          /* 팀방/지점방 공지(team/branch) */
   else if(kind==='lib' && window._spVaultShow) window._spVaultShow(slot, scope);       /* 팀/지점 자료실 */
-  else if(kind==='script'){ slot.innerHTML='<div class="sp-empty2" style="padding:26px 14px;line-height:1.6">'+(scope==='team'?'팀':'지점')+' 공유 스크립트는 준비 중입니다.<br>(스크립트 공유 적용 예정)</div>'; }  /* P0(scripts scope) 적용 후 연결 */
+  else if(kind==='script'){ _snScopeScripts(slot, scope); }   /* 팀/지점 공유 스크립트 목록(P0 SELECT RLS로 같은 팀/지점만) */
 }
 window._snScopeCard=_snScopeCard;
+/* 팀/지점 공유 스크립트 목록 (P2-b-2) — scope='team'/'branch' 스크립트 fetch. RLS(P0)가 같은 팀/지점만 반환하므로 scope_id 명시 불필요. 아코디언(제목→클릭 시 본문). 본문 URL 자동 링크. */
+async function _snScopeScripts(slot, scope){
+  if(!slot) return;
+  slot.innerHTML='<div class="sp-empty2" style="padding:18px 12px">불러오는 중…</div>';
+  if(!window.db||!window.db.fetch){ slot.innerHTML='<div class="sp-empty2">모듈 로드 실패. 새로고침 부탁드립니다.</div>'; return; }
+  try{
+    var rows=await window.db.fetch('/rest/v1/scripts?scope=eq.'+scope+'&is_active=eq.true&order=created_at.desc&limit=100&select=id,title,script_text,highlight_text,owner_email').then(function(r){ return r.ok?r.json():[]; });
+    if(!rows||!rows.length){ slot.innerHTML='<div class="sp-empty2" style="padding:24px 12px;line-height:1.6">아직 '+(scope==='team'?'팀':'지점')+' 공유 스크립트가 없어요.<br>스크립트를 '+(scope==='team'?'팀':'지점')+'에 공유하면 여기 모입니다.</div>'; return; }
+    var rich=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i;
+    var html='<div class="sn-scr-list">';
+    for(var i=0;i<rows.length;i++){ var s=rows[i];
+      var prev=_escHtml(String(s.highlight_text||String(s.script_text||'').replace(/<[^>]+>/g,' ')).slice(0,90));
+      var body=rich.test(s.script_text||'') ? (typeof _linkifyHtml==='function'?_linkifyHtml(s.script_text||''):(s.script_text||'')) : (typeof _linkifyText==='function'?_linkifyText(s.script_text||''):_escHtml(s.script_text||''));
+      html+='<div class="sn-scr-item"><button type="button" class="sn-scr-head" onclick="_snScrToggle(this)"><span class="sn-scr-t">'+_escHtml(s.title||'(제목 없음)')+'</span><span class="sn-scr-p">'+prev+'</span></button><div class="sn-scr-body" style="display:none">'+body+(s.owner_email?'<div class="sn-scr-by">'+_escHtml(s.owner_email)+'</div>':'')+'</div></div>';
+    }
+    html+='</div>';
+    slot.innerHTML=html;
+  }catch(e){ slot.innerHTML='<div class="sp-empty2">불러오기 실패. 새로고침 부탁드립니다.</div>'; }
+}
+window._snScopeScripts=_snScopeScripts;
+function _snScrToggle(el){ var it=el.parentNode, b=it&&it.querySelector('.sn-scr-body'); if(b){ var open=b.style.display==='none'; b.style.display=open?'':'none'; it.classList.toggle('open', open); } }
+window._snScrToggle=_snScrToggle;
 /* 팀/지점 스페이스 nav (스페이스 네비 P1, 2026-06-24) = _navMyspace 패턴. 바텀시트 펼침 + tspace/bspace 노드 선택 + 스페이스 카드(_spPaint). is-uat-spacenav 전용. */
 function _navTeamspace(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-team'); if(me) me.classList.add('on'); }catch(e){}
