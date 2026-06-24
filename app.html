@@ -90,7 +90,7 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 #app:not(.is-admin) #sideNote,#app:not(.is-admin) #nav-pricing{display:none !important;}/* 요금제·안내문 = 어드민만 노출 (2026-06-22) */
 /* ════ 스페이스 네비 재설계 (is-uat-spacenav 게이트=임태성 검수, P1 2026-06-24) ════ */
 .nav.sn2-only{display:none;}                              /* 기본 숨김 — 전원 기존 그대로 */
-body.is-uat-spacenav .nav.sn2-only{display:flex;}         /* UAT만 새 스페이스 항목(마이/팀/지점) 노출 */
+body.is-uat-spacenav .nav.sn2-only,body.is-admin .nav.sn2-only{display:flex;}  /* UAT(임태성) + 어드민 = 스페이스 항목(마이/팀/지점) 노출. 어드민은 사이드 메뉴 전체 보임(다이어리도 유지) */
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
 body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 compact(간격 축소) */
 /* 마이 스페이스 페이지(배너 + 카드 그리드, P1-2) — 바텀시트 #spContent에 렌더 */
