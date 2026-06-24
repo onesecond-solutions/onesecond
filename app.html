@@ -104,8 +104,23 @@ body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 co
 .sn-card-tx{display:flex;flex-direction:column;gap:3px;min-width:0;}
 .sn-card-t{font-weight:700;font-size:0.95rem;color:var(--tp);}
 .sn-card-d{font-size:0.8rem;color:var(--ts);line-height:1.4;}
-.sn-card.on{border-color:var(--ac);background:var(--s2);}   /* 활성 카드(현재 콘텐츠 영역에 표시 중) */
+/* 활성 카드 = 현재 콘텐츠 영역에 표시 중인 화면(색상 강조) */
+.sn-card.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 9%,var(--s1));box-shadow:inset 3px 0 0 var(--ac);}
+.sn-card.on .sn-card-t{color:var(--ac);}
+.sn-card.on .sn-card-ic{background:color-mix(in srgb,var(--ac) 20%,transparent);}
 .sn-slot{margin-top:2px;}                                  /* 카드 아래 콘텐츠 영역(첫 진입=다이어리 캘린더) */
+/* 소속 한 줄(배너 위) */
+.sn-owner{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:0 2px 2px;}
+.sn-owner-org{font-size:0.92rem;font-weight:800;color:var(--tp);}
+.sn-owner-who{font-size:0.82rem;color:var(--ts);}
+/* 배너 우하단 꺾쇠 토글(접기·펼치기) */
+.sn-banner{position:relative;border-radius:var(--radius-lg,14px);overflow:hidden;}
+.sn-banner.collapsed{min-height:34px;background:var(--s2);}
+.sn-banner.collapsed img{display:none;}
+.sn-banner-toggle{position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:var(--radius-sm,8px);background:rgba(0,0,0,0.42);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.sn-banner-toggle .sp-ico{width:16px;height:16px;color:#fff;transform:rotate(180deg);}  /* 펼침 = ∧(접기) */
+.sn-banner.collapsed .sn-banner-toggle{bottom:50%;transform:translateY(50%);background:var(--bd);}
+.sn-banner.collapsed .sn-banner-toggle .sp-ico{transform:rotate(0deg);color:var(--ts);}  /* 접힘 = ∨(펼치기) */
 @media(max-width:680px){.sn-cards{grid-template-columns:1fr;}}
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
@@ -5380,11 +5395,36 @@ function _snMyspaceShow(host){
   for(var i=0;i<cards.length;i++){ var c=cards[i];
     ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
   }
-  /* 배너·카드 = 상단 고정 / sn-slot = 아래 콘텐츠 영역(첫 진입 = 다이어리 캘린더, 카드 클릭 = 이 영역만 전환) */
-  host.innerHTML='<div class="sn-page"><div class="sn-banner sn-banner-my"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"></div><div class="sn-cards">'+ch+'</div><div class="sn-slot" id="sn-slot"></div></div>';
+  /* 소속(회사·지점·팀 · 이름직함)=배너 위 / 배너 우하단 꺾쇠=접기·펼치기 / 배너·카드 고정 / sn-slot=아래 콘텐츠(첫 진입=다이어리 캘린더) */
+  var _col=false; try{ _col=localStorage.getItem('os_sn_banner_collapsed')==='1'; }catch(e){}
+  host.innerHTML='<div class="sn-page">'
+    +'<div class="sn-owner" id="sn-owner">'+_snOwnerHtml()+'</div>'
+    +'<div class="sn-banner sn-banner-my'+(_col?' collapsed':'')+'" id="sn-banner"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"><button type="button" class="sn-banner-toggle" onclick="_snBannerToggle()" aria-label="배너 접기·펼치기"><svg class="sp-ico"><use href="#i-caret"/></svg></button></div>'
+    +'<div class="sn-cards">'+ch+'</div>'
+    +'<div class="sn-slot" id="sn-slot"></div>'
+    +'</div>';
+  if(!window._spMe && typeof _spLoadMe==='function'){ _spLoadMe().then(function(){ var oe=document.getElementById('sn-owner'); if(oe) oe.innerHTML=_snOwnerHtml(); }); }  /* 소속 미적재 시 로드 후 갱신 */
   if(typeof _snCard==='function') _snCard('diary');   /* 첫 진입 기본 = 다이어리 */
 }
 window._snMyspaceShow=_snMyspaceShow;
+/* 소속 한 줄(배너 위) — _spMe(회사·지점·팀·이름·role) 기반 */
+function _snOwnerHtml(){
+  var m=window._spMe;
+  if(!m) return '<span class="sn-owner-org">불러오는 중…</span>';
+  var parts=[m.company,m.branch,m.team].filter(Boolean);
+  var org=parts.length?parts.join(' · '):'소속 미지정';
+  var rl=(m.role&&window.ROLE_LABEL&&window.ROLE_LABEL[m.role])||'';
+  var who=m.name?(_mvEsc(m.name)+(rl?(' '+rl):'')):'';
+  return '<span class="sn-owner-org">'+_mvEsc(org)+'</span>'+(who?'<span class="sn-owner-who">'+who+'</span>':'');
+}
+window._snOwnerHtml=_snOwnerHtml;
+/* 배너 접기·펼치기 토글(상태 localStorage 유지) */
+function _snBannerToggle(){
+  var b=document.getElementById('sn-banner'); if(!b) return;
+  var c=b.classList.toggle('collapsed');
+  try{ localStorage.setItem('os_sn_banner_collapsed', c?'1':'0'); }catch(e){}
+}
+window._snBannerToggle=_snBannerToggle;
 /* 카드 클릭 = sn-slot(콘텐츠 영역)만 인플레이스 전환. 배너·카드는 상단 고정 유지. 기존 엔진(_spDiaShow/_spVaultShow/_spSplitShow) 재사용. */
 function _snCard(kind){
   var slot=document.getElementById('sn-slot'); if(!slot) return;
