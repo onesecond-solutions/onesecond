@@ -13614,10 +13614,12 @@ async function _scrShareToScope(scope){
   var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var g=(scope==='team')?'팀':'지점';
   try{
-    var me=window._cospMe||(typeof _cospLoadMe==='function'?(await _cospLoadMe())||{}:{});
-    var sid=(scope==='team')?me.team_id:me.branch_id;
-    if(!sid){ if(typeof toast==='function') toast(g+' 소속 정보가 없어 공유할 수 없어요.'); return; }
     var H={'apikey':window.db.key,'Authorization':'Bearer '+token};
+    /* team_id/branch_id = users(DB)에서 직접 조회. os_user 캐시는 stale/null 가능 → RLS os_user_team_id()와 어긋나 INSERT 실패. DB 직접이라야 scope_id=os_user_team_id() 일치 보장. */
+    var meRow=await fetch(window.db.url('/rest/v1/users?id=eq.'+encodeURIComponent(window.AppState.userId)+'&select=team_id,branch_id'),{headers:H}).then(function(r){return r.ok?r.json():[];}).catch(function(){return[];});
+    var m=(meRow&&meRow[0])||{};
+    var sid=(scope==='team')?m.team_id:m.branch_id;
+    if(!sid){ if(typeof toast==='function') toast(g+' 소속 정보가 없어 공유할 수 없어요. (소속 미지정)'); return; }
     var src=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(c.id)+'&select=title,script_text,highlight_text,keywords,stage,top_category'),{headers:H}).then(function(r){ return r.ok?r.json():[]; });
     var s=src&&src[0]; if(!s){ if(typeof toast==='function') toast('원본 스크립트를 찾을 수 없어요.'); return; }
     var body={owner_id:window.AppState.userId, title:s.title, script_text:s.script_text, highlight_text:s.highlight_text, keywords:s.keywords, stage:s.stage, top_category:s.top_category, scope:scope, scope_id:String(sid), is_active:true};
