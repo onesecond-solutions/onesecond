@@ -11267,7 +11267,13 @@ async function loadMyspace(force){
     items.sort(function(a,b){return (b._date||'').localeCompare(a._date||'');});
     window._myspaceCache=items;
     window._myspaceLoaded=true;
-    renderMyspace(items);
+    /* 조회 단계 격리(화면 숨김 아님): 현재 활성 칩이 메모/스크립트/전체/공유받음이면 그 유형으로 필터해 렌더.
+       loadMyspace가 scripts+library 전체를 무필터로 renderMyspace에 넘겨 '메모' 화면에 스크립트 카드가 혼입되던 문제 차단. */
+    var _onChip=document.querySelector('#mys-saved .mys-toolbar .chip.on');
+    var _onCat=_onChip?_onChip.textContent.trim():'';
+    var _catMap={'전체보기':'전체','메모':'메모','스크립트':'스크립트','공유받음':'공유받음'};
+    if(_onChip && _catMap[_onCat] && typeof filterMys==='function'){ filterMys(_onChip, _catMap[_onCat]); }
+    else { renderMyspace(items); }
   }catch(e){
     grid.innerHTML='<div class="mys-news-empty">불러오기 실패. 새로고침 부탁드립니다.</div>';
   }
@@ -13204,7 +13210,8 @@ function filterMys(el,cat){
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
   var f=(cat==='전체')?items.slice():(cat==='공유받음')?items.filter(function(it){ return Array.isArray(it.keywords)&&it.keywords.indexOf('공유받음')>=0; }):items.filter(function(it){ return (it._badge||'')===cat; });
-  if(window._mysReorder){ f.sort(function(a,b){ var sa=(a._sort==null)?Infinity:a._sort, sb=(b._sort==null)?Infinity:b._sort; if(sa!==sb) return sa-sb; return (b._date||'').localeCompare(a._date||''); }); }
+  /* 신규 최상단 원칙: sort_order 미할당(null=신규/미정렬)을 맨 위로(-Infinity). 드래그로 명시 정렬한 항목은 그 순서 보존(아래). 동순위는 created_at DESC, id DESC. (기존 Infinity=맨 아래라 신규 메모가 최하단으로 가던 버그 정정) */
+  if(window._mysReorder){ f.sort(function(a,b){ var sa=(a._sort==null)?-Infinity:a._sort, sb=(b._sort==null)?-Infinity:b._sort; if(sa!==sb) return sa-sb; return ((b._date||'').localeCompare(a._date||'')) || ((Number(b.id)||0)-(Number(a.id)||0)); }); }
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
 }
 window.filterMys=filterMys;
