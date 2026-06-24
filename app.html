@@ -44,7 +44,7 @@ body{background:var(--bg);color:var(--tp);font-size:var(--fs-base);line-height:1
 html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .app{display:grid;grid-template-columns:212px 1fr;height:100vh;transition:grid-template-columns .18s ease;}
 .app.collapsed{grid-template-columns:56px 1fr;}
-.side{background:var(--s1);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;padding:12px 10px;gap:4px;overflow:hidden;}
+.side{background:var(--s1);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;padding:12px 10px;gap:6px;overflow:hidden;}
 .side .top{display:flex;align-items:center;gap:10px;padding:2px 6px;margin-bottom:12px;height:30px;}
 .side .logo{width:30px;height:30px;border-radius:8px;background:var(--ac);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9375rem;color:#fff;flex-shrink:0;cursor:pointer;}
 .side .bname{font-weight:800;font-size:0.9375rem;white-space:nowrap;}
@@ -53,7 +53,7 @@ html{height:100%;font-size:calc(100% * var(--fscale, 1));}
 .hamb:hover{background:var(--sh);}
 .app.collapsed .side .top{flex-direction:column;justify-content:center;gap:8px;height:auto;}
 .app.collapsed .hamb{margin-left:0;}
-.nav{display:flex;align-items:center;gap:12px;padding:9px 8px;border-radius:9px;color:var(--ts);font-size:0.875rem;cursor:pointer;white-space:nowrap;}
+.nav{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:9px;color:var(--ts);font-size:0.875rem;cursor:pointer;white-space:nowrap;}
 .nav .ic{font-size:1.1875rem;width:24px;text-align:center;flex-shrink:0;}
 /* 원수사 자료실 사이드 게이팅 (단계 1, 2026-05-30) — #app role 클래스 기반 즉시 노출 */
 #nav-insurer-vault{display:none;}                       /* 기본 숨김 (ga_*·비로그인) */
@@ -92,7 +92,7 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 .nav.sn2-only{display:none;}                              /* 기본 숨김 — 전원 기존 그대로 */
 body.is-uat-spacenav .nav.sn2-only,body.is-admin .nav.sn2-only{display:flex;}  /* UAT(임태성) + 어드민 = 스페이스 항목(마이/팀/지점) 노출. 어드민은 사이드 메뉴 전체 보임(다이어리도 유지) */
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
-body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 compact(간격 축소) */
+body.is-uat-spacenav .side .nav,body.is-admin .side .nav{padding:7px 10px;}  /* 항목 많은 UAT·어드민 = compact(세로 축소·좌우 통일) */
 /* 마이 스페이스 페이지(배너 + 카드 그리드, P1-2) — 바텀시트 #spContent에 렌더 */
 .sn-page{display:flex;flex-direction:column;gap:16px;padding:2px;}
 .sn-banner img{width:100%;height:auto;display:block;border-radius:var(--radius-lg,14px);}
