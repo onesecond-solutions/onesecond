@@ -104,8 +104,8 @@ body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 co
 .sn-card-tx{display:flex;flex-direction:column;gap:3px;min-width:0;}
 .sn-card-t{font-weight:700;font-size:0.95rem;color:var(--tp);}
 .sn-card-d{font-size:0.8rem;color:var(--ts);line-height:1.4;}
-.sn-back{display:inline-flex;align-items:center;gap:4px;margin-bottom:12px;padding:7px 13px;border:1px solid var(--bd);border-radius:var(--radius-sm,8px);background:var(--s1);color:var(--ts);font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;}
-.sn-back:hover{border-color:var(--ac);color:var(--ac);}
+.sn-card.on{border-color:var(--ac);background:var(--s2);}   /* 활성 카드(현재 콘텐츠 영역에 표시 중) */
+.sn-slot{margin-top:2px;}                                  /* 카드 아래 콘텐츠 영역(첫 진입=다이어리 캘린더) */
 @media(max-width:680px){.sn-cards{grid-template-columns:1fr;}}
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
@@ -5378,21 +5378,22 @@ function _snMyspaceShow(host){
   ];
   var ch='';
   for(var i=0;i<cards.length;i++){ var c=cards[i];
-    ch+='<button type="button" class="sn-card" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
+    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
   }
-  host.innerHTML='<div class="sn-page"><div class="sn-banner sn-banner-my"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"></div><div class="sn-cards">'+ch+'</div></div>';
+  /* 배너·카드 = 상단 고정 / sn-slot = 아래 콘텐츠 영역(첫 진입 = 다이어리 캘린더, 카드 클릭 = 이 영역만 전환) */
+  host.innerHTML='<div class="sn-page"><div class="sn-banner sn-banner-my"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"></div><div class="sn-cards">'+ch+'</div><div class="sn-slot" id="sn-slot"></div></div>';
+  if(typeof _snCard==='function') _snCard('diary');   /* 첫 진입 기본 = 다이어리 */
 }
 window._snMyspaceShow=_snMyspaceShow;
+/* 카드 클릭 = sn-slot(콘텐츠 영역)만 인플레이스 전환. 배너·카드는 상단 고정 유지. 기존 엔진(_spDiaShow/_spVaultShow/_spSplitShow) 재사용. */
 function _snCard(kind){
-  var sc=document.getElementById('spContent'); if(!sc) return;
+  var slot=document.getElementById('sn-slot'); if(!slot) return;
+  try{ var bs=document.querySelectorAll('.sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-snk')===kind); }catch(e){}  /* 활성 카드 표시 */
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
-  if(kind==='diary' && window._spDiaShow) window._spDiaShow(sc);
-  else if(kind==='lib' && window._spVaultShow) window._spVaultShow(sc);
-  else if(kind==='script' && window._spSplitShow) window._spSplitShow(sc,'스크립트');
-  else if(kind==='memo' && window._spSplitShow) window._spSplitShow(sc,'메모');
-  else { return; }
-  /* 뒤로(마이 스페이스) 버튼 — 콘텐츠 맨 위에 끼움. 페이지 이동 없이 카드 화면으로 복귀 */
-  try{ var back=document.createElement('button'); back.className='sn-back'; back.type='button'; back.innerHTML='&#8249; 마이 스페이스'; back.onclick=function(){ _snMyspaceShow(sc); }; if(sc.firstChild) sc.insertBefore(back, sc.firstChild); else sc.appendChild(back); }catch(e){}
+  if(kind==='diary' && window._spDiaShow) window._spDiaShow(slot);
+  else if(kind==='lib' && window._spVaultShow) window._spVaultShow(slot);
+  else if(kind==='script' && window._spSplitShow) window._spSplitShow(slot,'스크립트');
+  else if(kind==='memo' && window._spSplitShow) window._spSplitShow(slot,'메모');
 }
 window._snCard=_snCard;
 /* 팀/지점 스페이스 nav (스페이스 네비 P1, 2026-06-24) = _navMyspace 패턴. 바텀시트 펼침 + tspace/bspace 노드 선택 + 스페이스 카드(_spPaint). is-uat-spacenav 전용. */
