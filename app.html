@@ -93,6 +93,20 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 body.is-uat-spacenav .nav.sn2-only{display:flex;}         /* UAT만 새 스페이스 항목(마이/팀/지점) 노출 */
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
 body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 compact(간격 축소) */
+/* 마이 스페이스 페이지(배너 + 카드 그리드, P1-2) — 바텀시트 #spContent에 렌더 */
+.sn-page{display:flex;flex-direction:column;gap:16px;padding:2px;}
+.sn-banner img{width:100%;height:auto;display:block;border-radius:var(--radius-lg,14px);}
+.sn-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.sn-card{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--bd);border-radius:var(--radius-lg,14px);background:var(--s1);cursor:pointer;text-align:left;font-family:inherit;}
+.sn-card:hover{border-color:var(--ac);background:var(--s2);}
+.sn-card-ic{flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm,9px);background:color-mix(in srgb,var(--ac) 10%,transparent);}
+.sn-card-ic .sp-ico{width:19px;height:19px;color:var(--ac);}
+.sn-card-tx{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.sn-card-t{font-weight:700;font-size:0.95rem;color:var(--tp);}
+.sn-card-d{font-size:0.8rem;color:var(--ts);line-height:1.4;}
+.sn-back{display:inline-flex;align-items:center;gap:4px;margin-bottom:12px;padding:7px 13px;border:1px solid var(--bd);border-radius:var(--radius-sm,8px);background:var(--s1);color:var(--ts);font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.sn-back:hover{border-color:var(--ac);color:var(--ac);}
+@media(max-width:680px){.sn-cards{grid-template-columns:1fr;}}
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
 #app.role-ready #app-loading-shell{display:none;}
@@ -5338,20 +5352,49 @@ function showMore(){document.getElementById('qlist').classList.add('expanded');}
 function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 /* 마이 스페이스 nav = 바텀시트 슬라이딩 펼침 + 트리 '마이 스페이스' 노드 기본 표시 (라이브러리 전체화면 입구 대체, DOM·라우팅은 유지) */
 function _navMyspace(){
-  try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-myspace'); if(me) me.classList.add('on'); }catch(e){}
-  if(typeof window._osSheetOpen==='function') window._osSheetOpen(true);   /* 스토리북과 같은 슬라이딩 속도(1.05s) */
+  try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-my'); if(me) me.classList.add('on'); }catch(e){}
+  if(typeof window._osSheetOpen==='function') window._osSheetOpen(true);   /* 바텀시트 슬라이딩 펼침 */
   setTimeout(function(){
     try{
-      var tree=document.getElementById('spTree'); if(!tree) return;
-      var node=tree.querySelector('.sp-node[data-k="mspace"]'); if(!node) return;
-      var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
-      node.classList.add('sel');
-      var branch=node.closest('.sp-branch'); if(branch) branch.classList.remove('collapsed');  /* 하위(다이어리·자료실·스크립트·메모·공유함) 펼침 */
-      if(typeof window._spPaint==='function') window._spPaint('mspace');   /* 우측 패널 = 마이 스페이스 카드 */
+      var tree=document.getElementById('spTree');
+      if(tree){ var node=tree.querySelector('.sp-node[data-k="mspace"]'); if(node){ var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel'); node.classList.add('sel'); var branch=node.closest('.sp-branch'); if(branch) branch.classList.remove('collapsed'); } }
+      var sc=document.getElementById('spContent');
+      if(sc && typeof window._snMyspaceShow==='function'){ window._snMyspaceShow(sc); }   /* 마이 스페이스 페이지 = 배너 + 카드 그리드 (P1-2) */
+      else if(typeof window._spPaint==='function'){ window._spPaint('mspace'); }           /* fallback */
     }catch(e){}
   }, 90);
 }
 window._navMyspace=_navMyspace;
+/* 마이 스페이스 페이지(배너+카드) — 사이드바 마이 클릭 시 바텀시트 안에 렌더. 카드 클릭 = 기존 인플레이스 엔진(_spDiaShow/_spVaultShow/_spSplitShow) 재사용 + 뒤로 버튼. (스페이스 네비 P1-2, 2026-06-24) */
+function _snMyspaceShow(host){
+  if(!host) host=document.getElementById('spContent'); if(!host) return;
+  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}  /* 이식분 회수 */
+  window._mysCat=null;
+  var cards=[
+    {k:'diary',ic:'i-cal',t:'다이어리',d:'일정 · 할 일 · 이야깃거리'},
+    {k:'lib',ic:'i-folder',t:'개인 자료실',d:'내 파일 · 문서 보관함'},
+    {k:'script',ic:'i-file',t:'스크립트',d:'내 영업 멘트'},
+    {k:'memo',ic:'i-note',t:'메모',d:'빠른 메모 · 아이디어'}
+  ];
+  var ch='';
+  for(var i=0;i<cards.length;i++){ var c=cards[i];
+    ch+='<button type="button" class="sn-card" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
+  }
+  host.innerHTML='<div class="sn-page"><div class="sn-banner sn-banner-my"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"></div><div class="sn-cards">'+ch+'</div></div>';
+}
+window._snMyspaceShow=_snMyspaceShow;
+function _snCard(kind){
+  var sc=document.getElementById('spContent'); if(!sc) return;
+  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
+  if(kind==='diary' && window._spDiaShow) window._spDiaShow(sc);
+  else if(kind==='lib' && window._spVaultShow) window._spVaultShow(sc);
+  else if(kind==='script' && window._spSplitShow) window._spSplitShow(sc,'스크립트');
+  else if(kind==='memo' && window._spSplitShow) window._spSplitShow(sc,'메모');
+  else { return; }
+  /* 뒤로(마이 스페이스) 버튼 — 콘텐츠 맨 위에 끼움. 페이지 이동 없이 카드 화면으로 복귀 */
+  try{ var back=document.createElement('button'); back.className='sn-back'; back.type='button'; back.innerHTML='&#8249; 마이 스페이스'; back.onclick=function(){ _snMyspaceShow(sc); }; if(sc.firstChild) sc.insertBefore(back, sc.firstChild); else sc.appendChild(back); }catch(e){}
+}
+window._snCard=_snCard;
 /* 팀/지점 스페이스 nav (스페이스 네비 P1, 2026-06-24) = _navMyspace 패턴. 바텀시트 펼침 + tspace/bspace 노드 선택 + 스페이스 카드(_spPaint). is-uat-spacenav 전용. */
 function _navTeamspace(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-team'); if(me) me.classList.add('on'); }catch(e){}
