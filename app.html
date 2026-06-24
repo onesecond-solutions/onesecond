@@ -10773,7 +10773,18 @@ async function saveQuickMemo(){
       if(ta) ta.value='';
       closeQuickMemo();
       window._myspaceLoaded=false; window._homeRecentLoaded=false;
-      var mv=document.getElementById('v-myspace'); if(mv&&mv.classList.contains('on')&&typeof loadMyspace==='function') loadMyspace(true);
+      var mv=document.getElementById('v-myspace');
+      if(mv&&mv.classList.contains('on')&&typeof loadMyspace==='function'){
+        Promise.resolve(loadMyspace(true)).then(function(){
+          /* 저장 직후 = 방금 저장한 메모를 '메모' 칩에 즉시 노출. loadMyspace는 전체 목록만 다시 그려 활성 칩과 어긋났던 흐름 정정(메모가 전체/스크립트 칩 화면에 섞여 보이던 문제). 마이 스페이스(saved) 목록이 열린 경우만 — 다이어리 탭은 그대로. */
+          var sv=document.getElementById('mys-saved');
+          if(sv&&sv.style.display!=='none'){
+            var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'), memoChip=null;
+            for(var i=0;i<chips.length;i++){ if(chips[i].textContent.trim()==='메모'){ memoChip=chips[i]; break; } }
+            if(memoChip&&typeof filterMys==='function') filterMys(memoChip,'메모');
+          }
+        });
+      }
       var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&typeof loadHomeRecent==='function') loadHomeRecent(true);
       if(typeof toast==='function') toast('라이브러리 메모에 저장됐어요! 📝');
     }else{
