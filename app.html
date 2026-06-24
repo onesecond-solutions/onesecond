@@ -88,6 +88,11 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 .side-note-link{background:none;border:0;padding:0;font:inherit;color:var(--ac);font-weight:700;cursor:pointer;text-decoration:underline;}
 .app.collapsed .side-note{display:none;}
 #app:not(.is-admin) #sideNote,#app:not(.is-admin) #nav-pricing{display:none !important;}/* 요금제·안내문 = 어드민만 노출 (2026-06-22) */
+/* ════ 스페이스 네비 재설계 (is-uat-spacenav 게이트=임태성 검수, P1 2026-06-24) ════ */
+.nav.sn2-only{display:none;}                              /* 기본 숨김 — 전원 기존 그대로 */
+body.is-uat-spacenav .nav.sn2-only{display:flex;}         /* UAT만 새 스페이스 항목(마이/팀/지점) 노출 */
+body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
+body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 compact(간격 축소) */
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
 #app.role-ready #app-loading-shell{display:none;}
@@ -2342,6 +2347,10 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav ins-show" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
     <div class="nav on" onclick="_navView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
     <div class="nav" id="nav-myspace" onclick="_navDiary()"><span class="ic">&#9672;</span><span class="lbl">다이어리</span></div>
+    <!-- 스페이스 네비(P1, is-uat-spacenav 전용) — 마이/팀/지점 스코프 선택 → 바텀시트 스페이스 페이지 -->
+    <div class="nav sn2-only" id="nav-sp-my" onclick="_navMyspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-user"/></svg></span><span class="lbl">마이 스페이스</span></div>
+    <div class="nav sn2-only" id="nav-sp-team" onclick="_navTeamspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">팀 스페이스</span></div>
+    <div class="nav sn2-only" id="nav-sp-branch" onclick="_navBranchspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-building"/></svg></span><span class="lbl">지점 스페이스</span></div>
     <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
     <div class="nav op-hide" onclick="_navView('quick')"><span class="ic">&#9889;</span><span class="lbl">빠른 메뉴</span></div>
     <div class="nav op-hide" onclick="_navView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
@@ -4101,6 +4110,9 @@ function applyRoleClass(){
   /* AI 글 다듬기 = 우선 임태성 실장(bylts@naver.com)만 검수용 — 단계적 반영(2026-06-22). 검수 후 게이트 해제→전체. */
   var _uatA='';try{var _uatAU=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');_uatA=((_uatAU.email||'').trim().toLowerCase());}catch(e){}
   document.body.classList.toggle('is-uat-aipolish', _uatA==='bylts@naver.com');
+  /* 스페이스 네비 재설계(P1, 2026-06-24) = 임태성 실장(user_id 98c5f4f9)만 새 사이드바/스페이스 페이지 노출. 검수 후 전체 개방. */
+  var _uatId='';try{ _uatId=String((_uatAU&&_uatAU.id)||''); }catch(e){}
+  document.body.classList.toggle('is-uat-spacenav', _uatId.indexOf('98c5f4f9')===0);
   /* 홈 하단 철학 문구 = 2026-06-23 전체 개방(게이트 해제) — CSS body:not(.is-uat-homephilo) 규칙 제거됨. 검색 중 숨김 규칙만 유지. */
   /* 팀원관리 탭(매니저룸 → 라이브러리 이전) = mgr 역할만 노출. 실제 방어는 RLS (2026-06-05 통합 1단계) */
   var mysMem = document.querySelector('#mys-tabs .tab[onclick*="members"]');
@@ -5340,6 +5352,33 @@ function _navMyspace(){
   }, 90);
 }
 window._navMyspace=_navMyspace;
+/* 팀/지점 스페이스 nav (스페이스 네비 P1, 2026-06-24) = _navMyspace 패턴. 바텀시트 펼침 + tspace/bspace 노드 선택 + 스페이스 카드(_spPaint). is-uat-spacenav 전용. */
+function _navTeamspace(){
+  try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-team'); if(me) me.classList.add('on'); }catch(e){}
+  if(typeof window._osSheetOpen==='function') window._osSheetOpen(true);
+  setTimeout(function(){
+    try{ var tree=document.getElementById('spTree'); if(!tree) return;
+      var node=tree.querySelector('.sp-node[data-k="tspace"]'); if(!node) return;
+      var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
+      node.classList.add('sel'); var branch=node.closest('.sp-branch'); if(branch) branch.classList.remove('collapsed');
+      if(typeof window._spPaint==='function') window._spPaint('tspace');
+    }catch(e){}
+  }, 90);
+}
+window._navTeamspace=_navTeamspace;
+function _navBranchspace(){
+  try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-branch'); if(me) me.classList.add('on'); }catch(e){}
+  if(typeof window._osSheetOpen==='function') window._osSheetOpen(true);
+  setTimeout(function(){
+    try{ var tree=document.getElementById('spTree'); if(!tree) return;
+      var node=tree.querySelector('.sp-node[data-k="bspace"]'); if(!node) return;
+      var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
+      node.classList.add('sel'); var branch=node.closest('.sp-branch'); if(branch) branch.classList.remove('collapsed');
+      if(typeof window._spPaint==='function') window._spPaint('bspace');
+    }catch(e){}
+  }, 90);
+}
+window._navBranchspace=_navBranchspace;
 /* 사이드 '다이어리' nav = 바텀시트 펼침 + 트리 '마이 스페이스 > 다이어리' 노드로 이동 (2026-06-17, _navMyspace/_spBookGoNode 패턴) */
 function _navDiary(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-myspace'); if(me) me.classList.add('on'); }catch(e){}
