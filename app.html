@@ -7754,8 +7754,8 @@ function _cospCard(title, meta, body){
 /* 공지 본문 렌더 — 리치 HTML(osRich 작성)이면 그대로, 평문(옛 공지)이면 escape+줄바꿈.
  * 팀방/지점방 입력폼을 스크립트와 동일한 리치 에디터로 통일(2026-06-13) → 신규=HTML / 기존=평문 혼재 안전 처리. */
 function _noticeBody(c){ c=(c==null?'':String(c));
-  if(/<(p|br|div|table|img|b|i|u|strong|em|ul|ol|li|span|h[1-6]|a|font)[\s\/>]/i.test(c)) return c;  /* 리치 HTML = 그대로 */
-  return c.replace(/[&<>"]/g,function(x){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];}).replace(/\n/g,'<br>');  /* 평문 = escape + 줄바꿈 */
+  if(/<(p|br|div|table|img|b|i|u|strong|em|ul|ol|li|span|h[1-6]|a|font)[\s\/>]/i.test(c)) return (typeof _linkifyHtml==='function'?_linkifyHtml(c):c);  /* 리치 HTML = 텍스트 노드만 URL 링크화(기존 a/구조 보존) */
+  return (typeof _linkifyText==='function'?_linkifyText(c):c.replace(/[&<>"]/g,function(x){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];}).replace(/\n/g,'<br>'));  /* 평문 = escape + 줄바꿈 + URL 링크화 */
 }
 window._noticeBody=_noticeBody;
 /* 팀방/지점방 공지·공유자료 = 좌카드+우상세 (IA 정정 2026-06-11: _loadNoticeFeed 렌더류 재사용,
@@ -10431,7 +10431,7 @@ async function _searchOpen(table, id){
       : (_pdfUrl?'<div style="padding:12px 18px 0"><a href="'+_sEsc(_pdfUrl)+'" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:var(--ac);color:#fff;border-radius:8px;font-size:0.8125rem;font-weight:700;text-decoration:none">&#128196; 원문 PDF 보기 (표·사진 포함)</a></div>':'');
     var bodyInner = isPdf
       ? '<iframe src="'+_sEsc(_pdfUrl)+'" style="flex:1;width:100%;border:0;background:#fff;min-height:62vh" title="소식지 원문 미리보기"></iframe>'
-      : '<div id="_sdBody" style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9rem;line-height:1.65">'+_sMark(bodyTxt,_qt)+'</div>';
+      : '<div id="_sdBody" style="padding:16px 18px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--bodytx);font-size:0.9rem;line-height:1.65">'+_linkifyHtml(_sMark(bodyTxt,_qt))+'</div>';
     /* 홈 검색(2단) = 모달 대신 우측 패널에 시안 조판으로 렌더(소스별). 그 외(오버레이) = 기존 풀스크린 모달 */
     if(window._svTarget==='hsResults'){
       var _fext=(String(r.ext||'').toLowerCase().replace(/^\./,'')||String(r.original_name||'').toLowerCase().split('.').pop()||'');  /* ext 비어도 파일명 확장자로 폴백 */
@@ -10446,13 +10446,13 @@ async function _searchOpen(table, id){
       var _cleanTxt=String(r.clean_text||'').trim();
       var _bodyBlock;
       if(_hasClean){
-        var _cleanPane=_cleanTxt ? _sMark(_cleanTxt,_qt)
-          : '<div class="sv-d-cleanwait">정제본 준비 중입니다. 아래는 원본 텍스트입니다.</div>'+_sMark(bodyTxt,_qt);
+        var _cleanPane=_cleanTxt ? _linkifyHtml(_sMark(_cleanTxt,_qt))
+          : '<div class="sv-d-cleanwait">정제본 준비 중입니다. 아래는 원본 텍스트입니다.</div>'+_linkifyHtml(_sMark(bodyTxt,_qt));
         _bodyBlock='<div class="sv-d-tabs"><button type="button" class="sv-d-tab on" data-pane="clean" onclick="_svBodyTab(this,\'clean\')">정제본</button><button type="button" class="sv-d-tab" data-pane="raw" onclick="_svBodyTab(this,\'raw\')">원본</button></div>'
           +'<div class="sv-d-body sv-d-pane" data-pane="clean">'+_cleanPane+'</div>'
-          +'<div class="sv-d-body sv-d-pane" data-pane="raw" style="display:none">'+_sMark(bodyTxt,_qt)+'</div>';
+          +'<div class="sv-d-body sv-d-pane" data-pane="raw" style="display:none">'+_linkifyHtml(_sMark(bodyTxt,_qt))+'</div>';
       } else {
-        _bodyBlock='<div class="sv-d-bodylabel">본문 텍스트</div><div class="sv-d-body">'+_sMark(bodyTxt,_qt)+'</div>';
+        _bodyBlock='<div class="sv-d-bodylabel">본문 텍스트</div><div class="sv-d-body">'+_linkifyHtml(_sMark(bodyTxt,_qt))+'</div>';
       }
       var _openBtn='';
       if(table==='myspace_files'&&r.storage_path){
