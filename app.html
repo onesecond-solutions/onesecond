@@ -4953,7 +4953,8 @@ function ivMemoOpen(idx, keepList){
   var dt=(typeof fmtMysDate==='function')?fmtMysDate(it._date):'';
   var _memoHex=(typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
   var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
-  v.innerHTML='<span class="vbadge">메모</span><div class="vmeta">'+esc(dt)+'</div><div class="vbody"'+_bodyStyle+'>'+(esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)')+'</div><div class="post-acts"><button class="post-act" onclick="mysEditStart()">✏️ 수정</button><button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\'library\')">삭제</button></div>';
+  var _ivMemoInner=(window._memoLinkOn && _memoLinkOn()) ? (_memoAutoLink(bodyText)||'(본문이 없습니다)') : (esc(bodyText).replace(/\n/g,'<br>')||'(본문이 없습니다)');  /* 메모 URL autolink(게이트) */
+  v.innerHTML='<span class="vbadge">메모</span><div class="vmeta">'+esc(dt)+'</div><div class="vbody"'+_bodyStyle+'>'+_ivMemoInner+'</div><div class="post-acts"><button class="post-act" onclick="mysEditStart()">✏️ 수정</button><button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\'library\')">삭제</button></div>';
   var items=document.querySelectorAll('#iv-list .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
   if(!keepList && window.innerWidth<=1024){ var sp=document.getElementById('iv-split'); if(sp) sp.classList.add('show-viewer'); }
 }
@@ -5165,6 +5166,34 @@ var cards=[
 ];
 /* Gemini 카드 결과(window._genCard) 또는 데모(cards[cur]) 렌더. _genCard = 동적 데이터라 escape. */
 function _escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+/* 메모 본문 URL 자동 링크화(autolink) — 저장은 plain text 불변, 렌더 단계에서만 변환(회귀 최소).
+   ★XSS 가드: (1) 전체를 _escHtml로 이스케이프 → (2) http/https URL만 토큰화해 <a>로. javascript:/data:/vbscript: 등은 패턴(^https?://)에서 애초에 매칭 안 됨. href엔 이스케이프된 URL만 들어가 속성 탈출 불가.
+   URL 문자는 ASCII URL 클래스로 제한 → 뒤에 붙은 한글/공백/줄바꿈에서 자동 경계. trailing 문장부호는 링크에서 제외. 모든 링크 target=_blank(새 창)+rel=noopener noreferrer. (2026-06-24 기획팀장 의뢰) */
+function _memoAutoLink(raw){
+  var s=String(raw==null?'':raw);
+  var re=/https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+/g;
+  var out='', last=0, m;
+  while((m=re.exec(s))){
+    out+=_escHtml(s.slice(last,m.index));
+    var url=m[0], trail='';
+    var tm=url.match(/[)\].,!?;:'"]+$/); if(tm){ trail=tm[0]; url=url.slice(0,url.length-trail.length); }
+    if(/^https?:\/\/.+/i.test(url)){ var eu=_escHtml(url); out+='<a href="'+eu+'" target="_blank" rel="noopener noreferrer">'+eu+'</a>'; }
+    else { out+=_escHtml(m[0]); trail=''; }
+    out+=_escHtml(trail);
+    last=re.lastIndex;
+  }
+  out+=_escHtml(s.slice(last));
+  return out.replace(/\n/g,'<br>');
+}
+window._memoAutoLink=_memoAutoLink;
+/* autolink 노출 게이트 — 3계정(어드민·실장 bylts@naver·팀장 bylts@kakao)만 미리보기. 그 외 전원 현행(esc+br). 검수 후 게이트 해제로 전체 개방. */
+function _memoLinkOn(){
+  try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');
+    var em=((u.email||'').trim().toLowerCase());
+    return em==='bylts@naver.com'||em==='bylts@kakao.com'||em==='bylts0428@gmail.com'||u.role==='admin';
+  }catch(e){ return false; }
+}
+window._memoLinkOn=_memoLinkOn;
 function renderCard(){var c=window._genCard||cards[cur];if(!c){document.getElementById('thecard').innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ts);">카드 내용을 불러오지 못했습니다.</div>';return;}var E=window._genCard?_escHtml:function(x){return x==null?'':x;};document.querySelector('#cm .ch span').textContent='카드 만들기';var b=E(c.brand);var h='<div class="ctop">'+(b?'<div class="cbrand">'+b+'</div>':'')+'<div class="cname">'+E(c.name)+'</div></div><div class="cbody">';
 c.rows.forEach(function(r){h+='<div class="crow"><span class="k">'+E(r[0])+'</span><span class="v'+(r[2]?' big':'')+'">'+E(r[1])+'</span></div>';});
 var _me={};try{_me=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');}catch(e){}
@@ -11290,7 +11319,9 @@ function mysOpenItem(idx, keepList){
   var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');  /* 메모는 제목 개념 없음 — 날짜+포스트잇 카드만 */
   /* 스크립트: 리치 HTML이면 그대로 렌더, 아니면(기존 plain/섹션) esc+개행 보존(회귀 0) */
   var _isRichScr=(it._type==='script' && /<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(bodyText||''));
-  var _bodyInner=_isRichScr ? (bodyText||'') : ((esc(bodyText).replace(/\n/g,'<br>'))||'(본문이 없습니다)');
+  var _bodyInner=_isRichScr ? (bodyText||'')
+    : (isMemo && window._memoLinkOn && _memoLinkOn()) ? (_memoAutoLink(bodyText)||'(본문이 없습니다)')   /* 메모만 URL autolink(게이트), 스크립트/자료는 현행 */
+    : ((esc(bodyText).replace(/\n/g,'<br>'))||'(본문이 없습니다)');
   v.innerHTML='<span class="vbadge">'+esc(it._badge||'')+'</span>'
     +_ttlHtml
     +'<div class="vmeta">'+esc(dt)+'</div>'
