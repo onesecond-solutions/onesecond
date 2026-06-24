@@ -5444,6 +5444,47 @@ function _snCard(kind){
   else if(kind==='memo' && window._spSplitShow) window._spSplitShow(slot,'메모');
 }
 window._snCard=_snCard;
+/* 팀/지점 스페이스 페이지 (P2) — 배너 + 카드(공지게시판·자료실·스크립트). 카드 클릭 = sn-slot 인플레이스(기존 _spCospShow/_spVaultShow 재사용). 첫 진입 = 공지게시판. */
+var _SN_SCOPE={
+  team:{banner:'teamspace.jpg',cards:[
+    {k:'notice',ic:'i-msg',t:'공지게시판',d:'팀 공지 · 공유 알림',c:'var(--ok)'},
+    {k:'lib',ic:'i-folder',t:'자료실',d:'팀 자료실',c:'var(--t-uw)'},
+    {k:'script',ic:'i-file',t:'스크립트',d:'팀 공유 스크립트',c:'var(--t-event)'}
+  ]},
+  branch:{banner:'branchspace.jpg',cards:[
+    {k:'notice',ic:'i-msg',t:'공지게시판',d:'지점 공지 · 공유 알림',c:'var(--ac)'},
+    {k:'lib',ic:'i-folder',t:'자료실',d:'지점 자료실',c:'var(--ac)'},
+    {k:'script',ic:'i-file',t:'스크립트',d:'지점 공유 스크립트',c:'var(--ac)'}
+  ]}
+};
+function _snScopeShow(host, scope){
+  if(!host) host=document.getElementById('spContent'); if(!host) return;
+  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
+  var cfg=_SN_SCOPE[scope]; if(!cfg){ if(typeof _spPaint==='function') _spPaint(scope==='team'?'tspace':'bspace'); return; }
+  window._mysCat=null;
+  var ch='';
+  for(var i=0;i<cfg.cards.length;i++){ var c=cfg.cards[i];
+    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" style="--c:'+c.c+'" onclick="_snScopeCard(\''+scope+'\',\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
+  }
+  var _col=false; try{ _col=localStorage.getItem('os_sn_banner_collapsed')==='1'; }catch(e){}
+  host.innerHTML='<div class="sn-page">'
+    +'<div class="sn-banner sn-banner-'+scope+(_col?' collapsed':'')+'" id="sn-banner"><img src="assets/images/space_banner/'+cfg.banner+'" alt="스페이스 배너" loading="lazy"><button type="button" class="sn-banner-toggle" onclick="_snBannerToggle()" aria-label="배너 접기·펼치기"><svg class="sp-ico"><use href="#i-caret"/></svg></button></div>'
+    +'<div class="sn-cards">'+ch+'</div>'
+    +'<div class="sn-slot" id="sn-slot"></div>'
+    +'</div>';
+  if(!window._spMe && typeof _spLoadMe==='function'){ _spLoadMe(); } else if(typeof _spOwnerBarSet==='function'){ _spOwnerBarSet(); }
+  if(typeof _snScopeCard==='function') _snScopeCard(scope,'notice');   /* 첫 진입 = 공지게시판 */
+}
+window._snScopeShow=_snScopeShow;
+function _snScopeCard(scope, kind){
+  var slot=document.getElementById('sn-slot'); if(!slot) return;
+  try{ var bs=document.querySelectorAll('.sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-snk')===kind); }catch(e){}
+  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
+  if(kind==='notice' && window._spCospShow) window._spCospShow(slot, scope);          /* 팀방/지점방 공지(team/branch) */
+  else if(kind==='lib' && window._spVaultShow) window._spVaultShow(slot, scope);       /* 팀/지점 자료실 */
+  else if(kind==='script'){ slot.innerHTML='<div class="sp-empty2" style="padding:26px 14px;line-height:1.6">'+(scope==='team'?'팀':'지점')+' 공유 스크립트는 준비 중입니다.<br>(스크립트 공유 적용 예정)</div>'; }  /* P0(scripts scope) 적용 후 연결 */
+}
+window._snScopeCard=_snScopeCard;
 /* 팀/지점 스페이스 nav (스페이스 네비 P1, 2026-06-24) = _navMyspace 패턴. 바텀시트 펼침 + tspace/bspace 노드 선택 + 스페이스 카드(_spPaint). is-uat-spacenav 전용. */
 function _navTeamspace(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-team'); if(me) me.classList.add('on'); }catch(e){}
@@ -5453,7 +5494,7 @@ function _navTeamspace(){
       var node=tree.querySelector('.sp-node[data-k="tspace"]'); if(!node) return;
       var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
       node.classList.add('sel'); var branch=node.closest('.sp-branch'); if(branch) branch.classList.remove('collapsed');
-      if(typeof window._spPaint==='function') window._spPaint('tspace');
+      var sc=document.getElementById('spContent'); if(sc&&window._snScopeShow){ window._snScopeShow(sc,'team'); } else if(typeof window._spPaint==='function'){ window._spPaint('tspace'); }
     }catch(e){}
   }, 90);
 }
@@ -5466,7 +5507,7 @@ function _navBranchspace(){
       var node=tree.querySelector('.sp-node[data-k="bspace"]'); if(!node) return;
       var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
       node.classList.add('sel'); var branch=node.closest('.sp-branch'); if(branch) branch.classList.remove('collapsed');
-      if(typeof window._spPaint==='function') window._spPaint('bspace');
+      var sc=document.getElementById('spContent'); if(sc&&window._snScopeShow){ window._snScopeShow(sc,'branch'); } else if(typeof window._spPaint==='function'){ window._spPaint('bspace'); }
     }catch(e){}
   }, 90);
 }
