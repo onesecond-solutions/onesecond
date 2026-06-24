@@ -7990,7 +7990,7 @@ async function cospRenderNotices(materialsOnly){
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   try{
     var col=window._cospRoom==='branch'?'branch_id':'team_id';
-    var _q='/rest/v1/team_notices?scope=eq.'+s.scope+'&deleted_at=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords';
+    var _q='/rest/v1/team_notices?scope=eq.'+s.scope+'&deleted_at=is.null&source_type=is.null&order=created_at.desc&limit=50&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords';  /* source_type=is.null = 순수 공지만. 스크립트/메모 공유(옛 dual-write)는 제외 — 스크립트는 스크립트 카드로 이식 */
     if(!_adminAll) _q+='&'+col+'=eq.'+encodeURIComponent(s.id);  /* 사고 대응 모드만 전체 열람 / 그 외(일반·평상시 어드민)는 본인 소속만 */
     var res=await window.db.fetch(_q);
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
