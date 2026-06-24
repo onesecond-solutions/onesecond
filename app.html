@@ -99,21 +99,29 @@ body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 co
 .sn-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
 .sn-card{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--bd);border-radius:var(--radius-lg,14px);background:var(--s1);cursor:pointer;text-align:left;font-family:inherit;}
 .sn-card:hover{border-color:var(--ac);background:var(--s2);}
-.sn-card-ic{flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm,9px);background:color-mix(in srgb,var(--ac) 10%,transparent);}
-.sn-card-ic .sp-ico{width:19px;height:19px;color:var(--ac);}
+.sn-card-ic{flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm,9px);background:color-mix(in srgb,var(--c,var(--ac)) 12%,transparent);}
+.sn-card-ic .sp-ico{width:19px;height:19px;color:var(--c,var(--ac));}
 .sn-card-tx{display:flex;flex-direction:column;gap:3px;min-width:0;}
 .sn-card-t{font-weight:700;font-size:0.95rem;color:var(--tp);}
 .sn-card-d{font-size:0.8rem;color:var(--ts);line-height:1.4;}
 /* 활성 카드 = 현재 콘텐츠 영역에 표시 중인 화면(색상 강조) */
-.sn-card.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 9%,var(--s1));box-shadow:inset 3px 0 0 var(--ac);}
-.sn-card.on .sn-card-t{color:var(--ac);}
-.sn-card.on .sn-card-ic{background:color-mix(in srgb,var(--ac) 20%,transparent);}
+.sn-card.on{border-color:var(--c,var(--ac));background:color-mix(in srgb,var(--c,var(--ac)) 9%,var(--s1));box-shadow:inset 3px 0 0 var(--c,var(--ac));}
+.sn-card.on .sn-card-t{color:var(--c,var(--ac));}
+.sn-card.on .sn-card-ic{background:color-mix(in srgb,var(--c,var(--ac)) 20%,transparent);}
+/* 다이어리 대시보드 3카드(배너 아래) — v2 토큰 색별 */
+.sn-dash{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.sn-dcard{display:flex;flex-direction:column;align-items:flex-start;gap:5px;background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--c,var(--ac));border-radius:var(--radius-md,13px);padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit;}
+.sn-dcard:hover{border-color:var(--c,var(--ac));}
+.sn-dcard-n{font-size:1.6rem;font-weight:800;color:var(--c,var(--ac));line-height:1;}
+.sn-dcard-l{font-size:0.82rem;color:var(--ts);}
+@media(max-width:680px){.sn-dash{grid-template-columns:1fr;}}
 .sn-slot{margin-top:2px;}                                  /* 카드 아래 콘텐츠 영역(첫 진입=다이어리 캘린더) */
 /* 소속 풀바 — 창 밖 상단(간판 줄). is-uat-spacenav 전용. 창 안 중복(콘텐츠 소속 카드)은 숨김. */
 .sp-owner-bar{display:none;}
 body.is-uat-spacenav .sp-owner-bar{display:inline;font-size:0.9rem;font-weight:700;color:var(--tp);}
 body.is-uat-spacenav .sp-skel-sign #sp-company-name{display:none;}   /* 풀바가 회사 포함 → 간판 회사명 중복 숨김 */
 body.is-uat-spacenav .sn-slot .sp-soko-card{display:none;}           /* 콘텐츠 영역 소속 카드(_spHead) 숨김 — 소속은 창 밖 풀바로 */
+body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐츠 영역 원본 대시보드 숨김 — 3카드는 배너 아래 sn-dash로 이동(중복 제거) */
 /* 배너 우하단 꺾쇠 토글(접기·펼치기) */
 .sn-banner{position:relative;border-radius:var(--radius-lg,14px);overflow:hidden;}
 .sn-banner.collapsed{min-height:34px;background:var(--s2);}
@@ -5386,20 +5394,25 @@ function _snMyspaceShow(host){
   if(!host) host=document.getElementById('spContent'); if(!host) return;
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}  /* 이식분 회수 */
   window._mysCat=null;
+  /* 카드별 v2 토큰 색(--c) — 다 인디고이던 단조로움 해소 */
   var cards=[
-    {k:'diary',ic:'i-cal',t:'다이어리',d:'일정 · 할 일 · 이야깃거리'},
-    {k:'lib',ic:'i-folder',t:'개인 자료실',d:'내 파일 · 문서 보관함'},
-    {k:'script',ic:'i-file',t:'스크립트',d:'내 영업 멘트'},
-    {k:'memo',ic:'i-note',t:'메모',d:'빠른 메모 · 아이디어'}
+    {k:'diary',ic:'i-cal',t:'다이어리',d:'일정 · 할 일 · 이야깃거리',c:'var(--ac)'},
+    {k:'lib',ic:'i-folder',t:'개인 자료실',d:'내 파일 · 문서 보관함',c:'var(--t-uw)'},
+    {k:'script',ic:'i-file',t:'스크립트',d:'내 영업 멘트',c:'var(--t-event)'},
+    {k:'memo',ic:'i-note',t:'메모',d:'빠른 메모 · 아이디어',c:'var(--warn)'}
   ];
   var ch='';
   for(var i=0;i<cards.length;i++){ var c=cards[i];
-    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
+    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" style="--c:'+c.c+'" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
   }
-  /* 배너 우하단 꺾쇠=접기·펼치기 / 배너·카드 고정 / sn-slot=아래 콘텐츠(첫 진입=다이어리). 소속은 창 밖 상단 풀바(sp-owner-bar)로 이동 — 창 안 중복 제거. */
+  /* 다이어리 대시보드 3카드(오늘 일정·공지·답변대기 Q&A) = 배너 바로 아래 고정. 카운트는 loadDiaryDash가 data-dcnt 미러로 갱신(원본 dia-dash는 콘텐츠 영역에서 숨김). */
+  var dash=[{k:'today',l:'오늘 일정',c:'var(--ac)'},{k:'notice',l:'공지',c:'var(--warn)'},{k:'qna',l:'답변 대기 Q&A',c:'var(--ok)'}];
+  var dh=''; for(var j=0;j<dash.length;j++){ var dd=dash[j]; dh+='<button type="button" class="sn-dcard" style="--c:'+dd.c+'" onclick="diaDashGo(\''+dd.k+'\')"><span class="sn-dcard-n" data-dcnt="'+dd.k+'">–</span><span class="sn-dcard-l">'+dd.l+'</span></button>'; }
+  /* 배너 우하단 꺾쇠=접기·펼치기 / 배너·3카드·4카드 고정 / sn-slot=아래 콘텐츠(첫 진입=다이어리 캘린더). 소속은 창 밖 풀바. */
   var _col=false; try{ _col=localStorage.getItem('os_sn_banner_collapsed')==='1'; }catch(e){}
   host.innerHTML='<div class="sn-page">'
     +'<div class="sn-banner sn-banner-my'+(_col?' collapsed':'')+'" id="sn-banner"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"><button type="button" class="sn-banner-toggle" onclick="_snBannerToggle()" aria-label="배너 접기·펼치기"><svg class="sp-ico"><use href="#i-caret"/></svg></button></div>'
+    +'<div class="sn-dash">'+dh+'</div>'
     +'<div class="sn-cards">'+ch+'</div>'
     +'<div class="sn-slot" id="sn-slot"></div>'
     +'</div>';
@@ -13038,7 +13051,9 @@ window.updateCalEvent=updateCalEvent;
 
 /* ═══ 다이어리(mys) 개편: 대시보드 + 슬라이드 패널 즉시입력 + 알람 타이밍 저장(reminders). mr/iv 공용 함수 불변 ═══ */
 function _diaOwnerId(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return u.id||null; }catch(e){ return null; } }
-function _diaSetCnt(id,n){ var el=document.getElementById(id); if(el) el.textContent=n; }
+function _diaSetCnt(id,n){ var el=document.getElementById(id); if(el) el.textContent=n;
+  var k=id.replace('dia-cnt-',''); var mr=document.querySelectorAll('[data-dcnt="'+k+'"]'); for(var i=0;i<mr.length;i++) mr[i].textContent=n;  /* 마이 스페이스 페이지 미러 카드(sn-dash) 동기화 */
+}
 function _diaCount(url){ return window.db.fetch(url+'&select=id',{headers:{'Prefer':'count=exact','Range':'0-0'}}).then(function(r){ var cr=r.headers.get('content-range')||''; var n=parseInt((cr.split('/')[1]||'0'),10); return isNaN(n)?0:n; }).catch(function(){ return 0; }); }
 function loadDiaryDash(){
   var today=_calToday();
