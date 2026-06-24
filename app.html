@@ -109,10 +109,11 @@ body.is-uat-spacenav .side .nav{padding:7px 8px;}         /* 항목 증가분 co
 .sn-card.on .sn-card-t{color:var(--ac);}
 .sn-card.on .sn-card-ic{background:color-mix(in srgb,var(--ac) 20%,transparent);}
 .sn-slot{margin-top:2px;}                                  /* 카드 아래 콘텐츠 영역(첫 진입=다이어리 캘린더) */
-/* 소속 한 줄(배너 위) */
-.sn-owner{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:0 2px 2px;}
-.sn-owner-org{font-size:0.92rem;font-weight:800;color:var(--tp);}
-.sn-owner-who{font-size:0.82rem;color:var(--ts);}
+/* 소속 풀바 — 창 밖 상단(간판 줄). is-uat-spacenav 전용. 창 안 중복(콘텐츠 소속 카드)은 숨김. */
+.sp-owner-bar{display:none;}
+body.is-uat-spacenav .sp-owner-bar{display:inline;font-size:0.9rem;font-weight:700;color:var(--tp);}
+body.is-uat-spacenav .sp-skel-sign #sp-company-name{display:none;}   /* 풀바가 회사 포함 → 간판 회사명 중복 숨김 */
+body.is-uat-spacenav .sn-slot .sp-soko-card{display:none;}           /* 콘텐츠 영역 소속 카드(_spHead) 숨김 — 소속은 창 밖 풀바로 */
 /* 배너 우하단 꺾쇠 토글(접기·펼치기) */
 .sn-banner{position:relative;border-radius:var(--radius-lg,14px);overflow:hidden;}
 .sn-banner.collapsed{min-height:34px;background:var(--s2);}
@@ -5395,29 +5396,18 @@ function _snMyspaceShow(host){
   for(var i=0;i<cards.length;i++){ var c=cards[i];
     ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
   }
-  /* 소속(회사·지점·팀 · 이름직함)=배너 위 / 배너 우하단 꺾쇠=접기·펼치기 / 배너·카드 고정 / sn-slot=아래 콘텐츠(첫 진입=다이어리 캘린더) */
+  /* 배너 우하단 꺾쇠=접기·펼치기 / 배너·카드 고정 / sn-slot=아래 콘텐츠(첫 진입=다이어리). 소속은 창 밖 상단 풀바(sp-owner-bar)로 이동 — 창 안 중복 제거. */
   var _col=false; try{ _col=localStorage.getItem('os_sn_banner_collapsed')==='1'; }catch(e){}
   host.innerHTML='<div class="sn-page">'
-    +'<div class="sn-owner" id="sn-owner">'+_snOwnerHtml()+'</div>'
     +'<div class="sn-banner sn-banner-my'+(_col?' collapsed':'')+'" id="sn-banner"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"><button type="button" class="sn-banner-toggle" onclick="_snBannerToggle()" aria-label="배너 접기·펼치기"><svg class="sp-ico"><use href="#i-caret"/></svg></button></div>'
     +'<div class="sn-cards">'+ch+'</div>'
     +'<div class="sn-slot" id="sn-slot"></div>'
     +'</div>';
-  if(!window._spMe && typeof _spLoadMe==='function'){ _spLoadMe().then(function(){ var oe=document.getElementById('sn-owner'); if(oe) oe.innerHTML=_snOwnerHtml(); }); }  /* 소속 미적재 시 로드 후 갱신 */
+  if(!window._spMe && typeof _spLoadMe==='function'){ _spLoadMe(); }            /* 소속 풀바(창 밖) 적재 */
+  else if(typeof _spOwnerBarSet==='function'){ _spOwnerBarSet(); }
   if(typeof _snCard==='function') _snCard('diary');   /* 첫 진입 기본 = 다이어리 */
 }
 window._snMyspaceShow=_snMyspaceShow;
-/* 소속 한 줄(배너 위) — _spMe(회사·지점·팀·이름·role) 기반 */
-function _snOwnerHtml(){
-  var m=window._spMe;
-  if(!m) return '<span class="sn-owner-org">불러오는 중…</span>';
-  var parts=[m.company,m.branch,m.team].filter(Boolean);
-  var org=parts.length?parts.join(' · '):'소속 미지정';
-  var rl=(m.role&&window.ROLE_LABEL&&window.ROLE_LABEL[m.role])||'';
-  var who=m.name?(_mvEsc(m.name)+(rl?(' '+rl):'')):'';
-  return '<span class="sn-owner-org">'+_mvEsc(org)+'</span>'+(who?'<span class="sn-owner-who">'+who+'</span>':'');
-}
-window._snOwnerHtml=_snOwnerHtml;
 /* 배너 접기·펼치기 토글(상태 localStorage 유지) */
 function _snBannerToggle(){
   var b=document.getElementById('sn-banner'); if(!b) return;
@@ -15094,7 +15084,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
   </defs></svg>
   <div class="sp-skel">
-    <div class="sp-skel-sign"><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span><span id="sp-company-name">소속 회사</span></div>
+    <div class="sp-skel-sign"><span class="ic"><svg class="sp-ico"><use href="#i-building"/></svg></span><span id="sp-company-name">소속 회사</span><span id="sp-owner-bar" class="sp-owner-bar"></span></div>
     <div class="sp-panes">
       <div class="sp-tree" id="spTree">
         <!-- 내 조직 영역 (인디고) -->
@@ -15346,6 +15336,17 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     return '<div class="sp-soko-card"><div class="sp-soko">'+_mvEsc(soko)+who+'</div></div>';
   }
   window._spHead=_spHead;
+  /* 소속 풀바(창 밖 상단 간판 줄) — 회사·지점·팀 · 이름직함. is-uat-spacenav일 때만 노출(CSS). */
+  function _spOwnerBarSet(){
+    var obar=document.getElementById('sp-owner-bar'); if(!obar) return;
+    var m=window._spMe; if(!m){ obar.textContent=''; return; }
+    var parts=[m.company,m.branch,m.team].filter(Boolean);
+    var org=parts.length?parts.join(' · '):'소속 미지정';
+    var rl=(m.role&&window.ROLE_LABEL&&window.ROLE_LABEL[m.role])||'';
+    var who=m.name?(m.name+(rl?(' '+rl):'')):'';
+    obar.textContent=org+(who?('   ·   '+who):'');
+  }
+  window._spOwnerBarSet=_spOwnerBarSet;
   /* 소속 이름 1회 적재 — _cospLoadMe로 team_id/branch_id 확보 후 teams/branches/companies 이름 조회 */
   async function _spLoadMe(){
     var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
@@ -15357,6 +15358,7 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
     }catch(e){}
     window._spMe=info; _spRefreshHeads();
     var cel=document.getElementById('sp-company-name'); if(cel && info.company) cel.textContent=info.company;  /* 상단 간판 = 실제 회사명 */
+    if(typeof _spOwnerBarSet==='function') _spOwnerBarSet();  /* 소속 풀바(창 밖) 갱신 */
     return info;
   }
   window._spLoadMe=_spLoadMe;
