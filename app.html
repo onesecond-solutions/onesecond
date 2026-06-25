@@ -2404,10 +2404,14 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav sn2-only" id="nav-sp-team" onclick="_navTeamspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">팀 스페이스</span></div>
     <div class="nav sn2-only" id="nav-sp-branch" onclick="_navBranchspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-building"/></svg></span><span class="lbl">지점 스페이스</span></div>
     <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
+    <!-- 스페이스 네비(P1): 트리에서 글로벌 사이드바로 이동(2026-06-25) — 원수사 자료실·보험 Q&A. 클릭=바텀시트 펼침+해당 스페이스 콘텐츠 -->
+    <div class="nav sn2-only" id="nav-sp-insvault" onclick="_navInsurerVaultSp()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-building"/></svg></span><span class="lbl">원수사 자료실</span></div>
+    <div class="nav sn2-only" id="nav-sp-qna" onclick="_navQnaSp()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-help"/></svg></span><span class="lbl">보험 Q&amp;A</span></div>
     <div class="nav op-hide" onclick="_navView('quick')"><span class="ic">&#9889;</span><span class="lbl">빠른 메뉴</span></div>
     <div class="nav op-hide" onclick="_navView('together')"><span class="ic">&#9829;</span><span class="lbl">함께해요</span></div>
     <div class="nav op-hide" onclick="_navView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저방</span></div>
+    <div class="nav sn2-only" id="nav-sp-guide" onclick="_navSpGuide()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-box"/></svg></span><span class="lbl">스페이스 설명서</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
       <div class="nav" id="nav-pricing" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
@@ -5586,6 +5590,25 @@ function _navMgr(){
   }, 90);
 }
 window._navMgr=_navMgr;
+/* 원수사 자료실(사이드 nav) = 바텀시트 펼침 + (숨겨진) 트리 '원수사 자료실' 노드 진입 — 기존 _spCospShow(insurer) 라우팅 재사용 (스페이스 네비 P1, 2026-06-25) */
+function _navInsurerVaultSp(){
+  if(window._osSheetOpen) window._osSheetOpen(true);
+  setTimeout(function(){ try{ var n=document.querySelector('#spTree .sp-node[data-k="blib_ins"]'); if(n) n.click(); }catch(e){} }, 90);
+}
+window._navInsurerVaultSp=_navInsurerVaultSp;
+/* 보험 Q&A(사이드 nav) = 바텀시트 펼침 + (숨겨진) 트리 '보험 Q&A' 노드 진입 — 기존 _spCospShow(qna) 라우팅 재사용 */
+function _navQnaSp(){
+  if(window._osSheetOpen) window._osSheetOpen(true);
+  setTimeout(function(){ try{ var n=document.querySelector('#spTree .sp-node[data-k="qna"]'); if(n) n.click(); }catch(e){} }, 90);
+}
+window._navQnaSp=_navQnaSp;
+/* 스페이스 설명서(사이드 nav) = 기존 _osStartGuide(바텀시트 펼침 + 스토리북 1페이지) 재사용 */
+function _navSpGuide(){
+  if(window._osStartGuide){ window._osStartGuide(); return; }
+  if(window._osSheetOpen) window._osSheetOpen(true);
+  setTimeout(function(){ try{ var n=document.querySelector('#spTree .sp-node[data-k="spguide"]'); if(n) n.click(); }catch(e){} }, 90);
+}
+window._navSpGuide=_navSpGuide;
 function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
@@ -15028,6 +15051,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .sp-panes{flex:1;min-height:0;display:flex;gap:12px;}
 .sp-tree{flex:0 0 232px;min-width:0;overflow:auto;border:1px solid var(--bd);border-radius:12px;background:var(--s1);padding:8px 6px;}
 .sp-content{flex:1;min-width:0;overflow:auto;border:1px solid var(--bd);border-radius:12px;background:var(--s1);padding:15px 17px;}
+/* 스페이스 네비(P1, 2026-06-25): 바텀시트 안 좌측 트리 숨김 — UAT(임태성)만. 글로벌 사이드바 카드 드릴다운으로 일원화(이중 메뉴 해소). 비-UAT 일반 사용자는 트리 유지(영향 0). 노드 DOM은 보존(사이드 nav가 노드 클릭으로 라우팅 재사용). */
+body.is-uat-spacenav #spTree{display:none;}
 @media(max-width:780px){ .sp-panes{flex-direction:column;} .sp-tree{flex:0 0 auto;max-height:40%;} }
 .sp-node{display:flex;align-items:center;gap:5px;font-size:.95rem;color:var(--tp);border-radius:8px;padding:6px 7px;cursor:pointer;white-space:nowrap;user-select:none;}
 .sp-node:hover{background:var(--s2);}
