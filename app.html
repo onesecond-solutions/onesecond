@@ -15853,8 +15853,8 @@ body.is-uat-spacenav #spTree{display:none;}
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
     if(typeof _spLoadMe==='function') _spLoadMe();  /* 내 소속(회사·지점·팀·이름) 실데이터 적재 → 헤더·간판 갱신 */
-    /* 첫 방문 1회 자동 안내 = 어드민 전용(2026-06-25 전체 개방 후 스페이스 설명서를 일반 사용자에게 숨김). 옛 2026-06-14 B안 자동 표시는 어드민에서만. */
-    try{ if(document.body.classList.contains('is-admin') && !localStorage.getItem('os_space_intro_seen')){ localStorage.setItem('os_space_intro_seen','1');
+    /* 첫 방문 1회 자동 안내 = 전원 대상(2026-06-25 대표 지시: 첫 진입 스페이스 온보딩은 모든 사용자에게 노출). 사이드바 메뉴·홈 CTA만 어드민 전용이고, 첫 진입 자동 안내는 전원. */
+    try{ if(!localStorage.getItem('os_space_intro_seen')){ localStorage.setItem('os_space_intro_seen','1');
       setTimeout(function(){ var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&window._osStartGuide) window._osStartGuide(); }, 1300); } }catch(e){}
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
