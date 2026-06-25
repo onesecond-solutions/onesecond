@@ -5515,7 +5515,7 @@ async function _snScopeScripts(slot, scope){
     +'</div>';
   if(!window.db||!window.db.fetch){ var l0=document.getElementById('sn-scr-list'); if(l0) l0.innerHTML='<div class="mys-news-empty">모듈 로드 실패. 새로고침 부탁드립니다.</div>'; return; }
   try{
-    var rows=await window.db.fetch('/rest/v1/scripts?scope=eq.'+scope+'&is_active=eq.true&order=created_at.desc&limit=100&select=id,title,script_text,highlight_text,owner_email,owner_id').then(function(r){ return r.ok?r.json():[]; });
+    var rows=await window.db.fetch('/rest/v1/scripts?scope=eq.'+scope+'&is_active=eq.true&order=created_at.desc&limit=100&select=id,title,script_text,highlight_text,owner_email,owner_id,attachments').then(function(r){ return r.ok?r.json():[]; });
     var listEl=document.getElementById('sn-scr-list'); if(!listEl) return;
     if(!rows||!rows.length){ listEl.innerHTML='<div class="mys-news-empty" style="padding:24px 12px;line-height:1.6">아직 '+(scope==='team'?'팀':'지점')+' 공유 스크립트가 없어요.<br>스크립트를 '+(scope==='team'?'팀':'지점')+'에 공유하면 여기 모입니다.</div>'; var v0=document.getElementById('sn-scr-viewer'); if(v0) v0.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>'; return; }
     window._snScrRows=rows;
@@ -5536,6 +5536,9 @@ function _snScrPick(i, btn, keepList){
   try{ if(btn&&btn.parentNode){ var its=btn.parentNode.querySelectorAll('.item'); for(var j=0;j<its.length;j++) its[j].classList.remove('on'); btn.classList.add('on'); } }catch(e){}
   var rich=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i;
   var body=rich.test(s.script_text||'') ? (typeof _linkifyHtml==='function'?_linkifyHtml(s.script_text||''):(s.script_text||'')) : (typeof _linkifyText==='function'?_linkifyText(s.script_text||''):_escHtml(s.script_text||''));
+  /* 첨부 렌더 — 마이 스페이스 뷰어와 동일 헬퍼(_voiceAttsHtml) 재사용. 이미지 썸네일·파일·딸깍 정합. 공유 사본은 attachments를 그대로 복사 저장(13659)했으나 #957 통일 때 렌더만 빠졌던 것 복원. (2026-06-25) */
+  var _ia=s.attachments; if(typeof _ia==='string'){ try{ _ia=JSON.parse(_ia); }catch(e){ _ia=[]; } } if(!Array.isArray(_ia)) _ia=[];
+  var attHtml=''; if(_ia.length && typeof _voiceAttsHtml==='function'){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
   var v=document.getElementById('sn-scr-viewer');
   /* 공유한 본인(owner)에게만 수정·삭제 노출 — owner_id는 공유 INSERT 때 저장된 본인 id. RLS(scripts_update_own/delete_own)가 owner만 허용하므로 UI도 owner 게이트로 정합. (2026-06-25) */
   var _myId=(typeof _getOwnerId==='function')?_getOwnerId():((window.AppState&&window.AppState.userId)||'');
@@ -5543,7 +5546,7 @@ function _snScrPick(i, btn, keepList){
   var _acts=_isOwner?('<div class="vacts" style="margin-top:16px;display:flex;gap:8px">'
     +'<button class="post-act" onclick="scrEditInline('+JSON.stringify(String(s.id))+')">&#9999;&#65039; 수정</button>'
     +'<button class="post-act" onclick="_snScrDelete('+JSON.stringify(String(s.id))+')">&#128465;&#65039; 삭제</button></div>'):'';
-  if(v){ v.innerHTML='<div class="vttl">'+_escHtml(s.title||'(제목 없음)')+'</div>'+(s.owner_email?'<div class="vmeta">'+_escHtml(s.owner_email)+'</div>':'')+'<div class="vbody" style="word-break:break-word">'+body+'</div>'+_acts; }  /* 마이 스크립트·공지·자료실 상세와 동일한 공통 뷰어 클래스(.vttl 1.25rem/.vmeta/.vbody)로 통일 — 2026-06-25 */
+  if(v){ v.innerHTML='<div class="vttl">'+_escHtml(s.title||'(제목 없음)')+'</div>'+(s.owner_email?'<div class="vmeta">'+_escHtml(s.owner_email)+'</div>':'')+'<div class="vbody" style="word-break:break-word">'+body+attHtml+'</div>'+_acts; }  /* 마이 스크립트·공지·자료실 상세와 동일한 공통 뷰어 클래스(.vttl 1.25rem/.vmeta/.vbody)로 통일 — 2026-06-25 */
   if(!keepList){ var sp=document.getElementById('sn-scr-split'); if(sp) sp.classList.add('show-viewer'); }   /* 모바일=미리보기 전환 */
 }
 window._snScrPick=_snScrPick;
