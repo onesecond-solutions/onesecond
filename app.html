@@ -136,6 +136,7 @@ body.is-uat-spacenav .sp-owner-bar{display:inline;font-size:0.9rem;font-weight:7
 body.is-uat-spacenav .sp-skel-sign #sp-company-name{display:none;}   /* 풀바가 회사 포함 → 간판 회사명 중복 숨김 */
 body.is-uat-spacenav .sn-slot .sp-soko-card{display:none;}           /* 콘텐츠 영역 소속 카드(_spHead) 숨김 — 소속은 창 밖 풀바로 */
 body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐츠 영역 원본 대시보드 숨김 — 3카드는 배너 아래 sn-dash로 이동(중복 제거) */
+#mys-today.sp-shared-cal .dia-dash,#mys-today.sp-shared-cal .dia-talk{display:none;}   /* 팀/지점 공유 일정 모드 = 개인 전용 영역(대시보드·이야깃거리) 숨김, 공유 캘린더만 */
 /* 배너 우하단 꺾쇠 토글(접기·펼치기) */
 .sn-banner{position:relative;border-radius:var(--radius-lg,14px);overflow:hidden;}
 .sn-banner.collapsed{min-height:34px;background:var(--s2);}
@@ -5463,12 +5464,14 @@ var _SN_SCOPE={
   team:{banner:'teamspace.jpg',cards:[
     {k:'notice',ic:'i-msg',t:'공지게시판',d:'팀 공지 · 공유 알림',c:'var(--ok)'},
     {k:'lib',ic:'i-folder',t:'자료실',d:'팀 자료실',c:'var(--t-uw)'},
-    {k:'script',ic:'i-file',t:'스크립트',d:'팀 공유 스크립트',c:'var(--t-event)'}
+    {k:'script',ic:'i-file',t:'스크립트',d:'팀 공유 스크립트',c:'var(--t-event)'},
+    {k:'diary',ic:'i-cal',t:'다이어리',d:'팀 공유 일정',c:'var(--ac)'}
   ]},
   branch:{banner:'branchspace.jpg',cards:[
     {k:'notice',ic:'i-msg',t:'공지게시판',d:'지점 공지 · 공유 알림',c:'var(--ac)'},
     {k:'lib',ic:'i-folder',t:'자료실',d:'지점 자료실',c:'var(--ac)'},
-    {k:'script',ic:'i-file',t:'스크립트',d:'지점 공유 스크립트',c:'var(--ac)'}
+    {k:'script',ic:'i-file',t:'스크립트',d:'지점 공유 스크립트',c:'var(--ac)'},
+    {k:'diary',ic:'i-cal',t:'다이어리',d:'지점 공유 일정',c:'var(--ac)'}
   ]}
 };
 function _snScopeShow(host, scope){
@@ -5497,6 +5500,7 @@ function _snScopeCard(scope, kind){
   if(kind==='notice' && window._spCospShow) window._spCospShow(slot, scope);          /* 팀방/지점방 공지(team/branch) */
   else if(kind==='lib' && window._spVaultShow) window._spVaultShow(slot, scope);       /* 팀/지점 자료실 */
   else if(kind==='script'){ _snScopeScripts(slot, scope); }   /* 팀/지점 공유 스크립트 목록(P0 SELECT RLS로 같은 팀/지점만) */
+  else if(kind==='diary' && window._spDiaShow){ window._spDiaShow(slot, scope); }   /* 팀/지점 공유 일정 캘린더(loadCal team/branch 필터) */
 }
 window._snScopeCard=_snScopeCard;
 /* 팀/지점 공유 스크립트 목록 (P2-b-2) — scope='team'/'branch' 스크립트 fetch. RLS(P0)가 같은 팀/지점만 반환하므로 scope_id 명시 불필요. 아코디언(제목→클릭 시 본문). 본문 URL 자동 링크. */
@@ -12942,16 +12946,28 @@ function calNav(p,delta){
   st.sel=null; renderCalGridMonth(p);
 }
 window.calNav=calNav;
-async function loadCal(p){
+async function loadCal(p, scopeOpt){
   var st=_cst(p); if(!st.ym) st.ym=_calToday().slice(0,7);
+  if(scopeOpt!==undefined) st.scope=scopeOpt;   /* 'personal'(기본) | 'team' | 'branch' — 스페이스 다이어리 진입 시 지정. 이후 calNav/저장은 state 유지 */
+  var scope=st.scope||'personal';
   var listEl=document.getElementById(p+'-cal-list');
   if(!window.db||!window.db.fetch){ if(listEl)listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    /* 모든 캘린더(mys 개인 다이어리 + iv 보험사 자료실 + mr 매니저룸) = 본인 일정만(author_id 필터).
-       어드민은 RLS상 전체가 보여 타 사용자 개인 다이어리가 끌려오던 것 차단(2026-06-17, A안). 로그인 정보 없으면 빈 결과로 안전. */
-    var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; var _own=_me?'&author_id=eq.'+encodeURIComponent(_me):'';
-    var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500'+_own+'&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
+    /* personal = 본인 일정만(author_id). 어드민도 본인 것만(2026-06-17 A안, 타 사용자 개인 다이어리 끌려오던 것 차단).
+       team/branch = 소속 공유 일정(team_id/branch_id + audience_target). 같은 팀/지점 노출은 calendar_events RLS(team_internal/branch_internal SELECT)에 의존. */
+    var _filter;
+    if(scope==='team' || scope==='branch'){
+      var _m=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{};   /* 소속은 DB 직접(os_user 캐시 stale 방지) */
+      var _id=(scope==='team')?_m.team_id:_m.branch_id;
+      if(!_id){ st.rows=[]; renderCalMonths(p); renderCalGridMonth(p); if(listEl) listEl.innerHTML='<div class="mys-news-empty">소속 '+(scope==='team'?'팀':'지점')+' 정보가 없어 공유 일정을 불러올 수 없어요.</div>'; return; }
+      _filter=(scope==='team')
+        ? '&team_id=eq.'+encodeURIComponent(_id)+'&audience_target=eq.team_internal'
+        : '&branch_id=eq.'+encodeURIComponent(_id)+'&audience_target=eq.branch_internal';
+    } else {
+      var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; _filter=_me?('&author_id=eq.'+encodeURIComponent(_me)):'';
+    }
+    var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500'+_filter+'&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
     st.rows=rows;
     renderCalMonths(p);      /* 좌: 월별 누적(최신 월 상단) */
@@ -15658,14 +15674,18 @@ body.is-uat-spacenav #spTree{display:none;}
   }
   window._spPaint=_spPaint;
   /* 다이어리 노드 = 라이브러리 다이어리(#mys-today)를 우측 패널로 이동(inplace, 복제 아님 → id 충돌 0·기능·데이터 그대로). 보험Q&A 인플레이스 패턴 정합. */
-  function _spDiaShow(host){
+  function _spDiaShow(host, scope){
     var d=document.getElementById('mys-today'); if(!d){ if(host) host.innerHTML='<div class="sp-empty2">다이어리를 불러올 수 없습니다.</div>'; return; }
     if(!window._spDiaHome) window._spDiaHome=d.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
     if(host){ host.innerHTML=_spHead(); host.appendChild(d); }
     d.style.display='';
-    if(typeof loadCal==='function') loadCal('mys');           /* 달력 로드·렌더 (탭과 동일) */
-    if(typeof loadDiaryDash==='function') loadDiaryDash();    /* 대시보드 3카드 카운트 */
-    if(typeof diaTalkRender==='function') diaTalkRender();    /* 캘린더 아래 이야깃거리(기본 펼침) */
+    scope=scope||'personal';
+    d.classList.toggle('sp-shared-cal', scope!=='personal');  /* 팀/지점 모드 = 개인 전용 영역(이야깃거리) 숨김. 대시보드는 .sn-slot CSS로 이미 숨김 */
+    if(typeof loadCal==='function') loadCal('mys', scope);    /* 달력 로드·렌더 — personal/team/branch */
+    if(scope==='personal'){
+      if(typeof loadDiaryDash==='function') loadDiaryDash();    /* 대시보드 3카드 카운트(개인 전용) */
+      if(typeof diaTalkRender==='function') diaTalkRender();    /* 캘린더 아래 이야깃거리(개인 다이어리만) */
+    }
   }
   function _spDiaRestore(){
     var d=document.getElementById('mys-today'), home=window._spDiaHome;
