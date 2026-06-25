@@ -5507,6 +5507,7 @@ window._snScopeCard=_snScopeCard;
    레이아웃 = 마이 스페이스 스크립트와 동일(좌 목록/우 미리보기 split). 기존 .split.scr-mode.cosp-split/.list-col/.item/.viewer CSS 재사용. 본문 URL 자동 링크. (2026-06-25) */
 async function _snScopeScripts(slot, scope){
   if(!slot) return;
+  window._snScrScope=scope;   /* 공유한 사람 수정·삭제 후 목록 리프레시용(sn-scr-split DOM 존재로 게이트) */
   slot.innerHTML='<div class="split scr-mode cosp-split" id="sn-scr-split">'
     +'<div class="col list-col"><div class="list" id="sn-scr-list"><div class="mys-news-empty">불러오는 중…</div></div></div>'
     +'<div class="col viewer-col"><button class="backbtn" onclick="document.getElementById(\'sn-scr-split\').classList.remove(\'show-viewer\')">&#8249; 목록으로</button>'
@@ -5514,7 +5515,7 @@ async function _snScopeScripts(slot, scope){
     +'</div>';
   if(!window.db||!window.db.fetch){ var l0=document.getElementById('sn-scr-list'); if(l0) l0.innerHTML='<div class="mys-news-empty">모듈 로드 실패. 새로고침 부탁드립니다.</div>'; return; }
   try{
-    var rows=await window.db.fetch('/rest/v1/scripts?scope=eq.'+scope+'&is_active=eq.true&order=created_at.desc&limit=100&select=id,title,script_text,highlight_text,owner_email').then(function(r){ return r.ok?r.json():[]; });
+    var rows=await window.db.fetch('/rest/v1/scripts?scope=eq.'+scope+'&is_active=eq.true&order=created_at.desc&limit=100&select=id,title,script_text,highlight_text,owner_email,owner_id').then(function(r){ return r.ok?r.json():[]; });
     var listEl=document.getElementById('sn-scr-list'); if(!listEl) return;
     if(!rows||!rows.length){ listEl.innerHTML='<div class="mys-news-empty" style="padding:24px 12px;line-height:1.6">아직 '+(scope==='team'?'팀':'지점')+' 공유 스크립트가 없어요.<br>스크립트를 '+(scope==='team'?'팀':'지점')+'에 공유하면 여기 모입니다.</div>'; var v0=document.getElementById('sn-scr-viewer'); if(v0) v0.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>'; return; }
     window._snScrRows=rows;
@@ -5536,10 +5537,33 @@ function _snScrPick(i, btn, keepList){
   var rich=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i;
   var body=rich.test(s.script_text||'') ? (typeof _linkifyHtml==='function'?_linkifyHtml(s.script_text||''):(s.script_text||'')) : (typeof _linkifyText==='function'?_linkifyText(s.script_text||''):_escHtml(s.script_text||''));
   var v=document.getElementById('sn-scr-viewer');
-  if(v){ v.innerHTML='<div class="vttl">'+_escHtml(s.title||'(제목 없음)')+'</div>'+(s.owner_email?'<div class="vmeta">'+_escHtml(s.owner_email)+'</div>':'')+'<div class="vbody" style="word-break:break-word">'+body+'</div>'; }  /* 마이 스크립트·공지·자료실 상세와 동일한 공통 뷰어 클래스(.vttl 1.25rem/.vmeta/.vbody)로 통일 — 2026-06-25 */
+  /* 공유한 본인(owner)에게만 수정·삭제 노출 — owner_id는 공유 INSERT 때 저장된 본인 id. RLS(scripts_update_own/delete_own)가 owner만 허용하므로 UI도 owner 게이트로 정합. (2026-06-25) */
+  var _myId=(typeof _getOwnerId==='function')?_getOwnerId():((window.AppState&&window.AppState.userId)||'');
+  var _isOwner=(!!_myId && String(s.owner_id||'')===String(_myId));
+  var _acts=_isOwner?('<div class="vacts" style="margin-top:16px;display:flex;gap:8px">'
+    +'<button class="post-act" onclick="scrEditInline('+JSON.stringify(String(s.id))+')">&#9999;&#65039; 수정</button>'
+    +'<button class="post-act" onclick="_snScrDelete('+JSON.stringify(String(s.id))+')">&#128465;&#65039; 삭제</button></div>'):'';
+  if(v){ v.innerHTML='<div class="vttl">'+_escHtml(s.title||'(제목 없음)')+'</div>'+(s.owner_email?'<div class="vmeta">'+_escHtml(s.owner_email)+'</div>':'')+'<div class="vbody" style="word-break:break-word">'+body+'</div>'+_acts; }  /* 마이 스크립트·공지·자료실 상세와 동일한 공통 뷰어 클래스(.vttl 1.25rem/.vmeta/.vbody)로 통일 — 2026-06-25 */
   if(!keepList){ var sp=document.getElementById('sn-scr-split'); if(sp) sp.classList.add('show-viewer'); }   /* 모바일=미리보기 전환 */
 }
 window._snScrPick=_snScrPick;
+/* 팀/지점 공유 스크립트 삭제 — 공유한 본인만(RLS owner 게이트). deleteMyspaceItem 패턴(representation으로 0행=RLS 차단 표면화) + 성공 시 팀/지점 목록 리프레시. (2026-06-25) */
+async function _snScrDelete(id){
+  if(!confirm('이 스크립트를 삭제하시겠습니까?')) return;
+  if(!window.db||!window.db.getToken){ return; }
+  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  try{
+    var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=representation'}});
+    var _rows=null; try{ _rows=await res.json(); }catch(e){}
+    var _ok=(res.ok||res.status===204), _zero=(Array.isArray(_rows)&&_rows.length===0);
+    if(_ok&&!_zero){
+      if(typeof toast==='function') toast('삭제 완료');
+      var _slot=document.getElementById('sn-slot'); if(_slot&&window._snScrScope&&window._snScopeScripts) window._snScopeScripts(_slot, window._snScrScope);
+    }else if(_ok&&_zero){ alert('삭제되지 않았습니다. 본인이 공유한 스크립트인지 확인해 주세요.'); }
+    else{ alert('삭제 실패: '+res.status); }
+  }catch(e){ alert('삭제 중 오류가 발생했습니다.'); }
+}
+window._snScrDelete=_snScrDelete;
 /* 팀/지점 스페이스 nav (스페이스 네비 P1, 2026-06-24) = _navMyspace 패턴. 바텀시트 펼침 + tspace/bspace 노드 선택 + 스페이스 카드(_spPaint). is-uat-spacenav 전용. */
 function _navTeamspace(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-team'); if(me) me.classList.add('on'); }catch(e){}
@@ -12229,6 +12253,7 @@ async function _saveMyspaceEdit(){
       window._myspaceLoaded=false; if(typeof loadMyspace==='function') loadMyspace(true);
       window._scriptsLoaded=false;
       try{ if(window.OSSheet){ window.OSSheet.reloadMine&&window.OSSheet.reloadMine(); window.OSSheet.reloadChat&&window.OSSheet.reloadChat(); } }catch(_e){}
+      try{ if(document.getElementById('sn-scr-split')&&window._snScrScope&&window._snScopeScripts){ var _ss2=document.getElementById('sn-slot'); if(_ss2) window._snScopeScripts(_ss2, window._snScrScope); } }catch(_e3){}  /* 팀/지점 공유 스크립트 화면이 떠 있으면 그 목록도 갱신(2026-06-25) */
       if(typeof toast==='function') toast('수정됐어요!');
     }else{ var er=await res.json().catch(function(){return{};}); alert('수정 실패: '+(er.message||res.status)); }
   }catch(e2){ alert('네트워크 오류가 발생했습니다.'); }
