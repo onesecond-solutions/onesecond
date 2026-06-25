@@ -5536,7 +5536,7 @@ function _snScrPick(i, btn, keepList){
   var rich=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i;
   var body=rich.test(s.script_text||'') ? (typeof _linkifyHtml==='function'?_linkifyHtml(s.script_text||''):(s.script_text||'')) : (typeof _linkifyText==='function'?_linkifyText(s.script_text||''):_escHtml(s.script_text||''));
   var v=document.getElementById('sn-scr-viewer');
-  if(v){ v.innerHTML='<div style="font-weight:800;font-size:1.05rem;margin-bottom:12px">'+_escHtml(s.title||'(제목 없음)')+'</div><div class="sn-scr-vbody" style="line-height:1.7;word-break:break-word">'+body+'</div>'+(s.owner_email?'<div style="margin-top:14px;color:var(--ts);font-size:0.85rem">'+_escHtml(s.owner_email)+'</div>':''); }
+  if(v){ v.innerHTML='<div class="vttl">'+_escHtml(s.title||'(제목 없음)')+'</div>'+(s.owner_email?'<div class="vmeta">'+_escHtml(s.owner_email)+'</div>':'')+'<div class="vbody" style="word-break:break-word">'+body+'</div>'; }  /* 마이 스크립트·공지·자료실 상세와 동일한 공통 뷰어 클래스(.vttl 1.25rem/.vmeta/.vbody)로 통일 — 2026-06-25 */
   if(!keepList){ var sp=document.getElementById('sn-scr-split'); if(sp) sp.classList.add('show-viewer'); }   /* 모바일=미리보기 전환 */
 }
 window._snScrPick=_snScrPick;
