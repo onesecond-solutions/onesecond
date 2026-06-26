@@ -16012,9 +16012,7 @@ body.is-uat-spacenav #spTree{display:none;}
     });
     _spPaint('tspace'); /* 초기 = 팀 스페이스 */
     if(typeof _spLoadMe==='function') _spLoadMe();  /* 내 소속(회사·지점·팀·이름) 실데이터 적재 → 헤더·간판 갱신 */
-    /* 첫 방문 1회 자동 안내 = 어드민 전용(2026-06-25 전체 개방 후 스페이스 설명서를 일반 사용자에게 숨김). 옛 2026-06-14 B안 자동 표시는 어드민에서만. */
-    try{ if(document.body.classList.contains('is-admin') && !localStorage.getItem('os_space_intro_seen')){ localStorage.setItem('os_space_intro_seen','1');
-      setTimeout(function(){ var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&window._osStartGuide) window._osStartGuide(); }, 1300); } }catch(e){}
+    /* 첫 방문 자동 안내(_osStartGuide) 자동 호출 제거 (2026-06-27) — 어드민+localStorage 미설정(시크릿창 등)에서 진입 1.3초 후 바텀시트가 사용자 동작 없이 자동으로 열리던 문제. 시트는 '원세컨드 시작하기' 버튼·메뉴를 직접 눌렀을 때만 열림. _osStartGuide 함수·시작하기 버튼은 그대로 유지(직접 클릭 시 정상 동작). */
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
 })();
