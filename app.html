@@ -111,6 +111,39 @@ body.is-uat-spacenav .side .nav,body.is-admin .side .nav{padding:7px 10px;}  /* 
 .sn-page.space-my{--c:var(--space-my-line);--sc:var(--space-my-text);--soft:var(--space-my-soft);}
 .sn-page.space-team{--c:var(--space-team-line);--sc:var(--space-team-text);--soft:var(--space-team-soft);}
 .sn-page.space-branch{--c:var(--space-branch-line);--sc:var(--space-branch-text);--soft:var(--space-branch-soft);}
+/* ═══ 스페이스 설명서 풀스크린 (슝슝 플라이인) — 사이드 '스페이스 설명서' 클릭 시. 흡수 멘트 금지(격리·선택권 카피) (2026-06-27) ═══ */
+.spg-ov{position:fixed;inset:0;z-index:2000;display:none;overflow-y:auto;background:radial-gradient(130% 90% at 50% -10%, var(--s1) 0%, var(--bg) 60%);}
+.spg-ov.on{display:block;animation:spgFade .35s ease both;}
+@keyframes spgFade{from{opacity:0}to{opacity:1}}
+.spg-close{position:fixed;top:18px;right:20px;width:40px;height:40px;border-radius:999px;border:1px solid var(--bd);background:var(--s1);font-size:17px;color:var(--ts);cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;}
+.spg-close:hover{background:var(--s2);}
+.spg-stage{max-width:980px;margin:0 auto;padding:64px 24px 80px;}
+.spg-head{text-align:center;margin-bottom:38px;}
+.spg-eyebrow{font-size:12px;letter-spacing:.16em;color:var(--ts);font-weight:700;text-transform:uppercase;animation:spgUp .5s .05s both;}
+.spg-title{font-size:clamp(26px,4vw,34px);font-weight:800;letter-spacing:-.02em;margin:10px 0 8px;color:var(--tp);animation:spgUp .5s .12s both;}
+.spg-lead{font-size:15.5px;color:var(--ts);line-height:1.65;margin:0;animation:spgUp .5s .2s both;}
+.spg-lead b{color:var(--tp);}
+.spg-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+@media(max-width:760px){.spg-cards{grid-template-columns:1fr;}}
+.spg-card{position:relative;background:var(--s1);border:1px solid var(--bd);border-radius:16px;overflow:hidden;padding-bottom:18px;opacity:0;transform:translateY(52px) scale(.93);animation:spgFly .62s cubic-bezier(.2,.9,.3,1) both;}
+.spg-my{--cc:var(--space-my-line);}.spg-team{--cc:var(--space-team-line);}.spg-branch{--cc:var(--space-branch-line);}
+.spg-card.spg-my{animation-delay:.30s;}.spg-card.spg-team{animation-delay:.46s;}.spg-card.spg-branch{animation-delay:.62s;}
+@keyframes spgFly{to{opacity:1;transform:none;}}
+.spg-card:hover{transform:translateY(-5px);box-shadow:0 10px 28px rgba(0,0,0,.10);transition:transform .2s ease,box-shadow .2s ease;}
+.spg-band{height:6px;background:var(--cc);}
+.spg-ctop{display:flex;align-items:center;gap:12px;padding:18px 18px 8px;}
+.spg-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:color-mix(in srgb,var(--cc) 12%,transparent);color:var(--cc);}
+.spg-ico .sp-ico{width:24px;height:24px;}
+.spg-cname{font-size:17px;font-weight:800;color:var(--tp);}
+.spg-cmeta{font-size:12.5px;color:var(--cc);font-weight:600;margin-top:2px;}
+.spg-cdesc{padding:4px 18px 14px;font-size:13.5px;color:var(--bodytx);line-height:1.62;}
+.spg-cdesc b{color:var(--tp);}
+.spg-eh{padding:0 18px 8px;font-size:11.5px;font-weight:700;color:var(--ts);letter-spacing:.04em;}
+.spg-chips{padding:0 18px;display:flex;flex-wrap:wrap;gap:6px;}
+.spg-chip{font-size:12px;color:var(--bodytx);background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:4px 9px;}
+.spg-punch{text-align:center;font-size:14.5px;color:var(--ts);line-height:1.65;margin-top:34px;animation:spgUp .5s .85s both;}
+.spg-punch b{color:var(--tp);}
+@keyframes spgUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
 /* 활성 카드 = 현재 콘텐츠 영역에 표시 중인 화면(색상 강조) */
 .sn-card.on{border-color:var(--c,var(--ac));background:var(--s1);box-shadow:inset 3px 0 0 var(--c,var(--ac));}  /* 면 흰색 유지(의뢰서 §B-3) — 신호는 좌보더+아이콘+제목색만 (2026-06-27) */
 .sn-card.on .sn-card-t{color:var(--c,var(--ac));}
@@ -2419,7 +2452,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <!-- 함께해요 사이드 nav 제거(2026-06-26) — 상단 우측 '전산신고'(_goReport) → 바텀시트 함께해요로 일원화. 다른 진입(검색·안내링크)은 showView('together')→_togetherSheetShow로 수렴 -->
     <div class="nav op-hide" onclick="_navView('news')"><span class="ic">&#9776;</span><span class="lbl">보험이슈</span></div>
     <div class="nav nav-mgr" id="nav-mgr" onclick="_navMgr()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">매니저방</span></div>
-    <div class="nav sn2-only" id="nav-sp-guide" onclick="_navSpGuide()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-box"/></svg></span><span class="lbl">스페이스 설명서</span></div>
+    <div class="nav sn2-only" id="nav-sp-guide" onclick="_spGuideShow()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-box"/></svg></span><span class="lbl">스페이스 설명서</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
       <div class="nav" id="nav-pricing" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
@@ -5655,6 +5688,42 @@ function _navSpGuide(){
   if(window._osSheetOpen) window._osSheetOpen(true);
   setTimeout(function(){ try{ var n=document.querySelector('#spTree .sp-node[data-k="spguide"]'); if(n) n.click(); }catch(e){} }, 90);
 }
+/* 스페이스 설명서 풀스크린(슝슝 플라이인) — 사이드 '스페이스 설명서' 클릭 진입. 흡수 멘트 금지(격리·선택권 카피). (2026-06-27) */
+function _spgCard(k,name,meta,desc,chips){
+  var ic={my:'#i-user',team:'#i-users',branch:'#i-building'}[k]||'#i-box';
+  var ch=chips.map(function(c){return '<span class="spg-chip">'+c+'</span>';}).join('');
+  return '<div class="spg-card spg-'+k+'">'
+    +'<div class="spg-band"></div>'
+    +'<div class="spg-ctop"><span class="spg-ico"><svg class="sp-ico"><use href="'+ic+'"/></svg></span>'
+    +'<div><div class="spg-cname">'+name+'</div><div class="spg-cmeta">'+meta+'</div></div></div>'
+    +'<div class="spg-cdesc">'+desc+'</div>'
+    +'<div class="spg-eh">이런 걸 담아요</div><div class="spg-chips">'+ch+'</div>'
+    +'</div>';
+}
+function _spGuideShow(){
+  var ov=document.getElementById('spGuideOv');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='spGuideOv'; ov.className='spg-ov'; document.body.appendChild(ov);
+    ov.addEventListener('click', function(e){ if(e.target===ov||e.target.classList.contains('spg-close')) _spGuideClose(); });
+  }
+  ov.innerHTML='<button class="spg-close" type="button" aria-label="닫기">&#10005;</button>'
+    +'<div class="spg-stage">'
+      +'<div class="spg-head">'
+        +'<div class="spg-eyebrow">onesecond · space</div>'
+        +'<h2 class="spg-title">세 개의 공간</h2>'
+        +'<p class="spg-lead">내 자료는 <b>내 공간</b>에. 공유는 <b>내가 고를 때만</b>.<br>마이 · 팀 · 지점 — 저장할 때부터 제자리에.</p>'
+      +'</div>'
+      +'<div class="spg-cards">'
+        +_spgCard('my','마이 스페이스','내 책상 · 나만','나만 쓰는 개인 공간. 상담 자료·스크립트·메모·다이어리를 자유롭게. <b>다른 사람에게 보이지 않습니다.</b>',['고객 상담 메모','개인 스크립트','보험료 비교표','개인 다이어리'])
+        +_spgCard('team','팀 스페이스','우리 팀 서랍 · 공유','<b>내가 공유한 것만</b> 팀원과 함께 보는 공간. 공유해도 <b>원본은 내 마이 스페이스에 그대로</b> 남아요.',['팀 공지','공유 스크립트','공유 자료','교육 자료'])
+        +_spgCard('branch','지점 스페이스','지점 자료실 · 전체','지점 구성원이 함께 보는 공간. 지점 공지·교육·원수사·운영 자료를 한곳에서.',['지점 공지','원수사 자료실','지점 교육자료','운영 매뉴얼'])
+      +'</div>'
+      +'<p class="spg-punch">공유는 <b>내 선택</b>이고, 원본은 <b>언제나 내 것</b>입니다.</p>'
+    +'</div>';
+  ov.classList.remove('on'); void ov.offsetWidth; ov.classList.add('on');   /* 재진입 시 애니메이션 리트리거 */
+}
+function _spGuideClose(){ var ov=document.getElementById('spGuideOv'); if(ov) ov.classList.remove('on'); }
+window._spGuideShow=_spGuideShow; window._spGuideClose=_spGuideClose;
 window._navSpGuide=_navSpGuide;
 /* 보험이슈 = 바텀시트 전용 슬롯(#newsSheetSlot)에서 표시. #spContent(스페이스 전용) 미사용 → 스페이스 화면 전환과 물리적 격리(이전 #966 DOM 유실 버그 차단). #v-news는 슬롯에 영구 상주, show-news 클래스로 표시/숨김. (2026-06-26) */
 function _newsSheetShow(){
