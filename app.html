@@ -4099,8 +4099,7 @@ function _canSeeAdmin(){ return _getOsUserRole() === 'admin'; }
 window._canSeeAdmin = _canSeeAdmin;
 /* 현장의 소리 게이팅 — admin·ga_* 전용 (insurer 계열·비로그인 차단, 2026-06-07 role_access_map §6 #1) */
 function _canSeeVoice(){
-  var r = _getOsUserRole();
-  return r === 'admin' || r.indexOf('ga_') === 0;
+  return false;   /* 현장의 소리(#v-voice) 전면 숨김 (2026-06-27 대표 지시) — 전 사용자(admin 포함) 진입 차단: showView 가드 !_canSeeVoice()→home + nav 숨김. 기존 admin·ga_ 노출 폐기. 데이터(posts/team_notices)는 보존, 화면 진입만 차단. */
 }
 window._canSeeVoice = _canSeeVoice;
 /* 표준 9 role 판별 — 미분류 가입자(9 role에 안 맞는 사람, 예: 민인환) = 승인 대기 게이팅 대상 */
@@ -4741,11 +4740,7 @@ window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCl
  * 전부 try/catch — 실패해도 화면 무해.
  * ════════════════════════════════════════════════════════════════ */
 var NOTIF_FEEDS=[
-  {key:'voice', label:'현장의 소리', view:'voice', srcs:[
-    {p:'/rest/v1/team_notices?scope=eq.team_internal&deleted_at=is.null', t:'created_at'},
-    {p:'/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*', t:'created_at'},
-    {p:'/rest/v1/posts?board_type=eq.insurer', t:'created_at'}
-  ]},
+  /* 현장의 소리(voice) 알림 피드 제거 (2026-06-27) — 전면 숨김. 알림 센터에도 노출 0(존재 자체를 모르게). */
   {key:'vault', label:'보험사 자료실', view:'insurer-vault', srcs:[
     {p:'/rest/v1/posts?board_type=eq.insurer', t:'created_at'},
     {p:'/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*', t:'created_at'}
