@@ -5605,7 +5605,7 @@ function _navDiary(){
 }
 window._navDiary=_navDiary;
 /* 전체화면 메뉴(홈·스크립트·함께해요·보험이슈·요금제) = 바텀시트가 열려 있으면 슬라이드(.28s)로 내리고 해당 화면 표시 */
-function _navView(key){ if(window._osSheetCollapse) window._osSheetCollapse(); if(typeof showView==='function') showView(key); }
+function _navView(key){ if(key!=='news' && window._osSheetCollapse) window._osSheetCollapse(); if(typeof showView==='function') showView(key); }  /* news는 시트로 흡수 → showView가 시트를 펼치므로 선행 collapse 생략(깜빡임 방지) (2026-06-26) */
 window._navView=_navView;
 /* 스크립트 작성하기 = 바텀시트 부드럽게 올리고(_osSheetOpen slow) 트리 '스크립트' 노드로 진입 */
 function _navScriptWrite(){
@@ -5655,7 +5655,7 @@ function _navSpGuide(){
   setTimeout(function(){ try{ var n=document.querySelector('#spTree .sp-node[data-k="spguide"]'); if(n) n.click(); }catch(e){} }, 90);
 }
 window._navSpGuide=_navSpGuide;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){var _scN=document.getElementById('spContent');if(_scN&&window._spNewsShow){window._spNewsShow(_scN);}if(window._osSheetOpen)window._osSheetOpen();return;}/* 보험이슈 = 바텀시트로 흡수: 바닥 view·history 안 건드리고 시트에서 표시 (2026-06-26) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -15935,6 +15935,19 @@ body.is-uat-spacenav #spTree{display:none;}
     if(t && home && t.parentNode!==home){ t.style.display='none'; home.appendChild(t); }
   }
   window._spCospShow=_spCospShow; window._spCospRestore=_spCospRestore;
+  /* 보험이슈(#v-news)를 바텀시트 슬롯(#spContent)으로 inplace 이동 — 바닥은 건드리지 않음. (2026-06-26 보험이슈 시트 흡수) */
+  function _spNewsShow(host){
+    var n=document.getElementById('v-news'); if(!n){ if(host) host.innerHTML='<div class="sp-empty2">보험이슈를 불러올 수 없습니다.</div>'; return; }
+    if(!window._spNewsHome) window._spNewsHome=n.parentNode;   /* 원 부모(바닥) 1회 기억 */
+    if(host){ host.innerHTML=''; host.appendChild(n); }
+    n.style.display='block';
+    if(typeof fetchNews==='function') fetchNews();
+  }
+  function _spNewsRestore(){
+    var n=document.getElementById('v-news'), home=window._spNewsHome;
+    if(n && home && n.parentNode!==home){ n.style.display='none'; home.appendChild(n); }
+  }
+  window._spNewsShow=_spNewsShow; window._spNewsRestore=_spNewsRestore;
   window._spaceTreeInit=function(){
     var tree=document.getElementById('spTree'); if(!tree||tree._spInit) return; tree._spInit=true;
     tree.addEventListener('click', function(e){
@@ -15943,7 +15956,7 @@ body.is-uat-spacenav #spTree{display:none;}
       var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
       node.classList.add('sel');
       var k=node.getAttribute('data-k'), sc=document.getElementById('spContent');
-      _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore(); _spMrRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
+      _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore(); _spMrRestore(); _spNewsRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
       try{ if(window.LocalFind) window.LocalFind.resetAll(); }catch(e){}      /* 화면 검색 잔상 초기화(노드 전환) */
       if(k==='m_diary') _spDiaShow(sc);                          /* 다이어리 */
       else if(k==='m_lib') _spVaultShow(sc);                     /* 개인 자료실 = 자료함(personal) */
