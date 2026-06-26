@@ -5662,6 +5662,7 @@ function _newsSheetShow(){
   if(n) n.style.display='block';
   if(window._osSheetOpen) window._osSheetOpen();                  /* 시트 펼침(내부에서 show-news 해제) */
   if(body) body.classList.add('show-news');                       /* 그 후 보험이슈 모드 ON */
+  if(body) body.classList.remove('iv-hide-fab');                  /* 시트 열림 = 딸깍 FAB 노출 — 인터셉트가 showView의 fab 토글을 건너뛰어 직전 view(insurer-vault) 상태로 stale 되던 것 보정 (2026-06-27) */
   if(typeof fetchNews==='function') fetchNews();
 }
 window._newsSheetShow=_newsSheetShow;
@@ -5677,6 +5678,7 @@ function _togetherSheetShow(options){
   }
   if(window._osSheetOpen) window._osSheetOpen();                  /* 시트 펼침(내부에서 show-news·show-together 해제) */
   if(body) body.classList.add('show-together');                   /* 그 후 함께해요 모드 ON */
+  if(body) body.classList.remove('iv-hide-fab');                  /* 시트 열림 = 딸깍 FAB 노출 (stale 보정) (2026-06-27) */
   if(typeof loadTogether==='function') loadTogether();
 }
 window._togetherSheetShow=_togetherSheetShow;
@@ -5687,6 +5689,7 @@ function _scriptsSheetShow(){
   if(n) n.classList.add('on');                                    /* #v-scripts.on{display} — 위치 무관 적용 */
   if(window._osSheetOpen) window._osSheetOpen();                  /* 시트 펼침(내부에서 show-news·together·scripts 해제) */
   if(body) body.classList.add('show-scripts');                   /* 그 후 스크립트 모드 ON */
+  if(body) body.classList.remove('iv-hide-fab');                  /* 시트 열림 = 딸깍 FAB 노출 (stale 보정) (2026-06-27) */
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
