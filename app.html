@@ -15188,6 +15188,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 #scriptsSheetSlot{display:none;}
 .os-sheet-body.show-scripts .sp-skel{display:none;}
 .os-sheet-body.show-scripts #scriptsSheetSlot{display:block;}
+/* 시트 안에서는 #v-scripts를 자연 높이 + 부모(.os-sheet-body) 스크롤로 — 바닥용 height:100%/overflow-y:auto가 슬롯(height 미지정) 안에서 안 풀려 하단이 잘리던 문제 보정(보험이슈와 동일 방식). (2026-06-27) */
+.os-sheet-body.show-scripts #v-scripts.on{height:auto;overflow:visible;}
 .os-empty{padding:34px 12px;text-align:center;color:var(--ts);font-size:.84rem;line-height:1.65;}
 .os-card{border:1px solid var(--bd);border-radius:12px;padding:12px 13px;margin-bottom:9px;background:var(--s1);cursor:pointer;}
 .os-card:active{background:var(--s2);}
