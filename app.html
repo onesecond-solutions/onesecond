@@ -5605,7 +5605,7 @@ function _navDiary(){
 }
 window._navDiary=_navDiary;
 /* 전체화면 메뉴(홈·스크립트·함께해요·보험이슈·요금제) = 바텀시트가 열려 있으면 슬라이드(.28s)로 내리고 해당 화면 표시 */
-function _navView(key){ if(window._osSheetCollapse) window._osSheetCollapse(); if(typeof showView==='function') showView(key); }
+function _navView(key){ if(key!=='news' && window._osSheetCollapse) window._osSheetCollapse(); if(typeof showView==='function') showView(key); }  /* news는 시트 전용 슬롯으로 흡수 → _newsSheetShow가 시트를 펼치므로 선행 collapse 생략 (2026-06-26) */
 window._navView=_navView;
 /* 스크립트 작성하기 = 바텀시트 부드럽게 올리고(_osSheetOpen slow) 트리 '스크립트' 노드로 진입 */
 function _navScriptWrite(){
@@ -5655,7 +5655,17 @@ function _navSpGuide(){
   setTimeout(function(){ try{ var n=document.querySelector('#spTree .sp-node[data-k="spguide"]'); if(n) n.click(); }catch(e){} }, 90);
 }
 window._navSpGuide=_navSpGuide;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+/* 보험이슈 = 바텀시트 전용 슬롯(#newsSheetSlot)에서 표시. #spContent(스페이스 전용) 미사용 → 스페이스 화면 전환과 물리적 격리(이전 #966 DOM 유실 버그 차단). #v-news는 슬롯에 영구 상주, show-news 클래스로 표시/숨김. (2026-06-26) */
+function _newsSheetShow(){
+  var slot=document.getElementById('newsSheetSlot'), n=document.getElementById('v-news'), body=document.getElementById('osSheetBody');
+  if(slot && n && n.parentNode!==slot){ slot.appendChild(n); }   /* 1회 이동 — 전용 슬롯이라 이후 유실 없음 */
+  if(n) n.style.display='block';
+  if(window._osSheetOpen) window._osSheetOpen();                  /* 시트 펼침(내부에서 show-news 해제) */
+  if(body) body.classList.add('show-news');                       /* 그 후 보험이슈 모드 ON */
+  if(typeof fetchNews==='function') fetchNews();
+}
+window._newsSheetShow=_newsSheetShow;
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -15149,6 +15159,10 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 .os-chip{flex:0 0 auto;font-size:.8rem;font-weight:600;color:var(--ts);background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:6px 13px;cursor:pointer;white-space:nowrap;}
 .os-chip.on{background:var(--ac);color:#fff;border-color:transparent;}
 .os-sheet-body{flex:1;min-height:0;overflow-y:auto;padding:0 14px 16px;}
+/* 보험이슈 전용 슬롯(#spContent 미사용 — 스페이스와 격리). show-news 토글로 스페이스(.sp-skel) ↔ 보험이슈 단일 전환 (2026-06-26) */
+#newsSheetSlot{display:none;}
+.os-sheet-body.show-news .sp-skel{display:none;}
+.os-sheet-body.show-news #newsSheetSlot{display:block;}
 .os-empty{padding:34px 12px;text-align:center;color:var(--ts);font-size:.84rem;line-height:1.65;}
 .os-card{border:1px solid var(--bd);border-radius:12px;padding:12px 13px;margin-bottom:9px;background:var(--s1);cursor:pointer;}
 .os-card:active{background:var(--s2);}
@@ -15420,7 +15434,7 @@ body.is-uat-spacenav #spTree{display:none;}
       </div>
       <div class="sp-content" id="spContent"></div>
     </div>
-  </div></div>
+  </div><div class="news-sheet-slot" id="newsSheetSlot" aria-label="보험이슈"></div></div>
 </div>
 <script>
 (function(){
@@ -15463,6 +15477,7 @@ body.is-uat-spacenav #spTree{display:none;}
       sheet.style.transition='height 1.05s cubic-bezier(.83,0,.17,1)';  /* 초반 더 느리게→빠르게→느리게 부드럽게 연결(easeInOutQuint) 슬라이딩 도어 */
       setTimeout(function(){ try{ sheet.style.transition=''; }catch(e){} }, 1200);
     }
+    var _ob=document.getElementById('osSheetBody'); if(_ob) _ob.classList.remove('show-news');   /* 보험이슈 외 시트 열기 = 스페이스 모드 복귀 (2026-06-26) */
     applySnap('open');
   };
   window.addEventListener('resize', function(){ syncOpenH(); syncSheetOffset(); });
@@ -15943,6 +15958,7 @@ body.is-uat-spacenav #spTree{display:none;}
       var sels=tree.querySelectorAll('.sp-node.sel'); for(var i=0;i<sels.length;i++) sels[i].classList.remove('sel');
       node.classList.add('sel');
       var k=node.getAttribute('data-k'), sc=document.getElementById('spContent');
+      var _tb=document.getElementById('osSheetBody'); if(_tb) _tb.classList.remove('show-news');   /* 스페이스 노드 클릭 = 보험이슈 모드 해제(.sp-skel 표시) (2026-06-26) */
       _spDiaRestore(); _spVaultRestore(); _spSplitRestore(); _spCospRestore(); _spMrRestore();   /* 이식분 모두 원위치 복귀 후, 해당 노드만 표시 */
       try{ if(window.LocalFind) window.LocalFind.resetAll(); }catch(e){}      /* 화면 검색 잔상 초기화(노드 전환) */
       if(k==='m_diary') _spDiaShow(sc);                          /* 다이어리 */
