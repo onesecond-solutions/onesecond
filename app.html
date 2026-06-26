@@ -11668,9 +11668,11 @@ function mysOpenItem(idx, keepList){
   var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
   var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
   var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):('<button class="post-act" onclick="scrEditInline('+JSON.stringify(it.id)+')">✏️ 수정</button>');
-  /* 스크립트 팀/지점 공유 버튼 — 스페이스 네비 대상(is-uat/admin)만. 지점 공유는 매니저(is-mgr). 메모/자료는 제외(스크립트만). P2-b-3 */
+  /* 통합 공유 — 스크립트=공유하기 1버튼→팝업(_shareHubOpen, 팀/지점 직접 scope 공유). 노출=기존 팀 공유 가능자(_canScopeShare). 메모는 기존 _osShareItem 유지(범위 밖). (2026-06-26) */
   var _canScopeShare=(document.body.classList.contains('is-uat-spacenav')||document.body.classList.contains('is-admin'));
-  var _shareScope=(it._type==='script'&&_canScopeShare)?('<button class="post-act" onclick="_scrShareToScope(\'team\')">&#128101; 팀 공유</button>'+(document.body.classList.contains('is-mgr')?'<button class="post-act" onclick="_scrShareToScope(\'branch\')">&#127970; 지점 공유</button>':'')):'';
+  var _shareHubBtn=(it._type==='script')
+    ? (_canScopeShare?'<button class="post-act" onclick="_shareHubOpen(\'script\')">공유하기</button>':'')
+    : '<button class="post-act" onclick="_osShareItem()">공유하기</button>';
   var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');  /* 메모는 제목 개념 없음 — 날짜+포스트잇 카드만 */
   /* 스크립트: 리치 HTML이면 그대로 렌더, 아니면(기존 plain/섹션) esc+개행 보존(회귀 0) */
   var _isRichScr=(it._type==='script' && /<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(bodyText||''));
@@ -11681,7 +11683,7 @@ function mysOpenItem(idx, keepList){
     +_ttlHtml
     +'<div class="vmeta">'+esc(dt)+'</div>'
     +'<div class="vbody"'+_bodyStyle+'>'+_bodyInner+attHtml+'</div>'
-    +'<div class="post-acts">'+_editBtn+_shareScope+'<button class="post-act" onclick="mysDetailCopy()">📋 복사</button><button class="post-act" onclick="_osShareItem()">공유하기</button><button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>'
+    +'<div class="post-acts">'+_editBtn+'<button class="post-act" onclick="mysDetailCopy()">📋 복사</button>'+_shareHubBtn+'<button class="post-act" onclick="mysDetailMakeCard()">🪪 카드 만들기</button><button class="post-act post-act-del" onclick="deleteMyspaceItem('+JSON.stringify(it.id)+',\''+delType+'\')">삭제</button></div>'
     +(window._eBar?_eBar((it._type==='script')?'script':(isMemo?'memo':'library'), it.id, 'mys'):'');
   if(window._eBarLoad) _eBarLoad((it._type==='script')?'script':(isMemo?'memo':'library'), it.id, 'mys');  /* 스크립트/메모/자료 좋아요·댓글(게이트 내부 가드) */
   var items=document.querySelectorAll('#mysList .item'); for(var i=0;i<items.length;i++) items[i].classList.toggle('on', i===idx);
@@ -13706,7 +13708,7 @@ async function _scrShareToScope(scope){
     var s=src&&src[0]; if(!s){ if(typeof toast==='function') toast('원본 스크립트를 찾을 수 없어요.'); return; }
     var body={owner_id:window.AppState.userId, title:s.title, script_text:s.script_text, highlight_text:s.highlight_text, keywords:s.keywords, stage:s.stage, top_category:s.top_category, attachments:(s.attachments||[]), scope:scope, scope_id:String(sid), is_active:true};  /* 팀/지점 사본에 첨부 스냅샷 복사 — 누락 시 공유 뷰어에 첨부 안 보임 (2026-06-26) */
     var res=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
-    if(res.ok||res.status===201){ if(typeof toast==='function') toast(g+'에 공유했어요! '+g+' 스페이스 > 스크립트에서 볼 수 있어요.'); }
+    if(res.ok||res.status===201){ if(typeof toast==='function') toast(scope==='team'?'팀 스페이스의 스크립트에 공유했습니다.':'지점 스페이스의 스크립트에 공유했습니다.'); }
     else { var e=await res.json().catch(function(){return{};}); alert('공유 실패: '+(e.message||e.hint||res.status)); }
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
 }
@@ -13870,6 +13872,85 @@ async function _osShareDo(scope){
   finally{ window._osShareBusy=false; var _bb=document.querySelectorAll('#osShareOv button.os-share-pick'); for(var _q=0;_q<_bb.length;_q++) _bb[_q].disabled=false; }
 }
 window._osShareDo=_osShareDo;
+
+/* ── 통합 공유 허브 (2026-06-26) — 스크립트·자료실 공통 "공유하기" 1버튼 → 팀/지점 선택 팝업 → 직접 scope 공유.
+   공유함(shares)·받기(_osShareReceive)·team_notices 전달 경로는 호출하지 않음(스크립트=_scrShareToScope / 자료실=_vaultShareToScope만).
+   기존 _osShareOpen/_osShareDo(공유함 모델)는 메모 등 다른 곳이 쓰므로 보존 — 호출부만 분리. ── */
+/* 지점 공유 권한 = 서버 is_manager()와 동일 집합(실장·지점장·admin + 원수사 매니저). is-mgr 클래스(GA만)와 달라 별도 판정(클래스 부작용 회피) */
+function _isMgrShare(){
+  var r='';
+  try{ r=(JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}').role)||''; }catch(e){}
+  if(!r && window.AppState) r=window.AppState.role||'';
+  return ['admin','ga_branch_manager','ga_manager','insurer_branch_manager','insurer_manager'].indexOf(r)>=0;
+}
+window._isMgrShare=_isMgrShare;
+function _shareHubOpen(kind){
+  window._shareHubCtx={kind:kind};
+  var ov=document.getElementById('shareHubOv');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='shareHubOv'; ov.className='os-share-ov';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function(e){ if(e.target===ov) _shareHubClose(); });
+  }
+  var canBranch=_isMgrShare();
+  ov.innerHTML='<div class="os-share-box" role="dialog" aria-label="공유하기">'
+    +'<div class="os-share-ttl">공유할 공간을 선택하세요</div>'
+    +'<div class="os-share-btns">'
+      +'<button class="os-share-pick" onclick="_shareHubGo(\'team\')"><b>팀에 공유</b><span>우리 팀 스페이스에 올립니다.</span></button>'
+      +(canBranch
+        ?'<button class="os-share-pick" onclick="_shareHubGo(\'branch\')"><b>지점에 공유</b><span>우리 지점 스페이스에 올립니다.</span></button>'
+        :'<div class="os-share-pick is-soon" aria-disabled="true"><b>지점에 공유</b><span>실장·지점장 이상 사용 가능</span></div>')
+    +'</div>'
+    +'<button class="os-share-cancel" onclick="_shareHubClose()">취소</button>'
+    +'</div>';
+  ov.classList.add('on');
+}
+function _shareHubClose(){ var ov=document.getElementById('shareHubOv'); if(ov) ov.classList.remove('on'); }
+async function _shareHubGo(scope){
+  var ctx=window._shareHubCtx||{};
+  if(scope==='branch' && !_isMgrShare()){ if(typeof toast==='function') toast('지점 공유는 실장·지점장 이상 사용할 수 있어요.'); return; }
+  if(window._shareHubBusy) return;   /* 연속 클릭 중복 방지(스크립트·자료실 공통) */
+  window._shareHubBusy=true;
+  _shareHubClose();
+  try{
+    if(ctx.kind==='file'){ await _vaultShareToScope(scope); }
+    else { await _scrShareToScope(scope); }
+  } finally { window._shareHubBusy=false; }
+}
+window._shareHubOpen=_shareHubOpen; window._shareHubClose=_shareHubClose; window._shareHubGo=_shareHubGo;
+/* 자료실 파일 직접 공유 — _osShareDo file 분기의 복제 로직 재사용(원본 보존 + 공유 스코프 스토리지 복제 + myspace_files scope 행). shares·team_notices INSERT 없음. */
+async function _vaultShareToScope(scope){
+  if(!window.db||!window.db.fetch||!window.AppState||!window.AppState.userId){ alert('로그인 후 공유할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var isTeam=(scope==='team'); var grp=isTeam?'팀':'지점';
+  var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token};
+  /* 소속 = users(DB) 직접 조회 — os_user 캐시 stale 회피(#953 정합, RLS scope_id 일치 보장) */
+  var meRow=await fetch(window.db.url('/rest/v1/users?id=eq.'+encodeURIComponent(window.AppState.userId)+'&select=team_id,branch_id'),{headers:H}).then(function(r){return r.ok?r.json():[];}).catch(function(){return[];});
+  var m=(meRow&&meRow[0])||{};
+  var sid=isTeam?m.team_id:m.branch_id;
+  if(!sid){ if(typeof toast==='function') toast(grp+' 소속 정보가 없어 공유할 수 없어요. (소속 미지정)'); return; }
+  var pf=window._mvPreviewFile;
+  if(!pf||!pf.id){ if(typeof toast==='function') toast('공유할 파일을 찾을 수 없어요.'); return; }
+  try{
+    var f0=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(pf.id)+'&select=id,original_name,storage_path,mime_type,ext,file_size');
+    var f=(f0.ok?await f0.json():[])[0]; if(!f){ alert('원본 파일을 찾을 수 없습니다.'); return; }
+    var signed=(typeof _mvSignedUrl==='function')?await _mvSignedUrl(f, token):null;
+    if(!signed){ alert('파일을 불러오지 못했습니다.'); return; }
+    var blob=await (await fetch(signed)).blob();
+    var ext=(f.ext||'').replace(/^\./,'');
+    var key=((window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+Date.now()))+(ext?('.'+ext):'');
+    var newPath=(isTeam?('team/'+sid):('branch/'+sid))+'/shared/'+key;
+    var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(newPath)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(blob.type||f.mime_type||'application/octet-stream'),'x-upsert':'true'},body:blob});
+    if(!(up.ok||up.status===200)){ alert('파일 복사에 실패했습니다.'); return; }
+    var owner=(typeof _mvOwner==='function')?_mvOwner():((window.AppState&&window.AppState.userId)||'');
+    var _sharedFid=await _osEnsureSharedFolder(scope, sid, owner, token);
+    var frow={owner_id:owner,folder_id:(_sharedFid||null),original_name:f.original_name,storage_path:newPath,mime_type:f.mime_type||'',ext:ext,file_size:f.file_size||blob.size,scope:scope,scope_id:sid,search_text:f.original_name,status:'pending'};
+    var fr=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:Object.assign({},H,{'Prefer':'return=minimal'}),body:JSON.stringify(frow)});
+    if(!(fr.ok||fr.status===201)){ var eb=''; try{eb=await fr.text();}catch(e){} console.error('[vaultShare] insert fail', fr.status, eb); alert('파일 등록에 실패했습니다 ('+fr.status+').'); return; }
+    if(typeof toast==='function') toast(isTeam?'팀 스페이스의 자료실에 공유했습니다.':'지점 스페이스의 자료실에 공유했습니다.');
+  }catch(e){ console.error('[vaultShare]',e); alert('공유 중 오류가 발생했습니다.'); }
+}
+window._vaultShareToScope=_vaultShareToScope;
 
 /* ═════════════════════════════════════════════════════════
    자료함 v1 (P1) — 폴더형 개인 보관함
@@ -14377,7 +14458,7 @@ async function _mvSignedUrl(f, token){
 function _mvViewerHead(f, signed){
   return '<div class="mvprev-head"><span class="mvprev-nm" title="'+_mvEsc(f.original_name)+'">'+_mvEsc(f.original_name)+'</span>'
     +'<span class="mvprev-acts"><button class="mvprev-ddak" onclick="mvVaultDdak(\''+f.id+'\')" title="딸깍">⚡ 딸깍</button>'
-    +'<button class="mvprev-share" onclick="_osShareFile()">공유하기</button>'
+    +'<button class="mvprev-share" onclick="_shareHubOpen(\'file\')">공유하기</button>'
     +'<a class="mvprev-dl" href="'+signed+'" download="'+_mvEsc(f.original_name)+'" target="_blank" rel="noopener">⬇ 다운로드</a></span></div>';
 }
 function _mvUnsupported(f, signed){
