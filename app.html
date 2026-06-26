@@ -35,6 +35,8 @@
    화이트 기반: 배경 거의 순백(--bg), 카드 순백(--s1), 구분은 테두리(--bd)로. --s2는 배경과 미세차(보조 표면).
    admin_v2(--admin-*)는 별도 토큰. */
 :root{--bg:#FAFAFB;--s1:#FFFFFF;--s2:#F2F2F4;--sh:#EDEDF0;--bd:#DCDCE1;--tp:#18181B;--ts:#52525B;--tf:#71717A;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#3F3F46;--t-uw:#0891B2;--t-product:#6366F1;--t-event:#C026D3;--ok:#16A34A;--warn:#F59E0B;--err:#DC2626;}
+/* 스페이스 색상 토큰 (마이/팀/지점) — 기획팀장 의뢰 §A. 신호점·배지 단일 소스(app.html이 tokens-v2.css 미링크라 인라인). 차분한 톤(형광 금지). (2026-06-27) */
+:root{--space-my-line:#D85A30;--space-my-soft:#FAECE7;--space-my-text:#993C1D;--space-my-badge-t:#4A1B0C;--space-my-badge-bg:#F5C4B3;--space-team-line:#639922;--space-team-soft:#EAF3DE;--space-team-text:#3B6D11;--space-team-badge-t:#173404;--space-team-badge-bg:#C0DD97;--space-branch-line:#7F77DD;--space-branch-soft:#EEEDFE;--space-branch-text:#534AB7;--space-branch-badge-t:#26215C;--space-branch-badge-bg:#CECBF6;}
 /* 작업9: radius 토큰 전역 정의 (app.html에 tokens.css 미링크 → 미정의로 직각 렌더되던 것 봉합). B안 넉넉히 · 토큰만(개별 하드코딩 금지) */
 :root{--radius-xs:8px;--radius-sm:11px;--radius-md:13px;--radius-lg:18px;--radius-xl:18px;--radius-full:9999px;--radius:11px;}
 /* 2026-06-13 폰트 스케일 토큰 1차(b) — 바닥선 고정(본문 16px 기준). em 곱연산 누적 제거는 2차(em→rem 전면). */
@@ -105,8 +107,12 @@ body.is-uat-spacenav .side .nav,body.is-admin .side .nav{padding:7px 10px;}  /* 
 .sn-card-tx{display:flex;flex-direction:column;gap:3px;min-width:0;}
 .sn-card-t{font-weight:700;font-size:0.95rem;color:var(--tp);}
 .sn-card-d{font-size:0.8rem;color:var(--ts);line-height:1.4;}
+/* 스페이스별 공간색 매핑 — sn-page에 space-* 클래스 → 하위 카드/현황(--c)·배지(--sc) 상속 (기획팀장 의뢰 §B, 2026-06-27) */
+.sn-page.space-my{--c:var(--space-my-line);--sc:var(--space-my-text);}
+.sn-page.space-team{--c:var(--space-team-line);--sc:var(--space-team-text);}
+.sn-page.space-branch{--c:var(--space-branch-line);--sc:var(--space-branch-text);}
 /* 활성 카드 = 현재 콘텐츠 영역에 표시 중인 화면(색상 강조) */
-.sn-card.on{border-color:var(--c,var(--ac));background:color-mix(in srgb,var(--c,var(--ac)) 9%,var(--s1));box-shadow:inset 3px 0 0 var(--c,var(--ac));}
+.sn-card.on{border-color:var(--c,var(--ac));background:var(--s1);box-shadow:inset 3px 0 0 var(--c,var(--ac));}  /* 면 흰색 유지(의뢰서 §B-3) — 신호는 좌보더+아이콘+제목색만 (2026-06-27) */
 .sn-card.on .sn-card-t{color:var(--c,var(--ac));}
 .sn-card.on .sn-card-ic{background:color-mix(in srgb,var(--c,var(--ac)) 20%,transparent);}
 /* 현황 보드(읽는 지표) — 업무 메뉴 타일과 형태 차별화: 옅은 배경 한 묶음 + 컴팩트 + 좌측 색 바 + 카드 간 얇은 구분(테두리 없음 = '누르는 타일' 아닌 '읽는 보드' 시그널) */
@@ -5417,14 +5423,14 @@ function _snMyspaceShow(host){
   ];
   var ch='';
   for(var i=0;i<cards.length;i++){ var c=cards[i];
-    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" style="--c:'+c.c+'" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
+    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" onclick="_snCard(\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
   }
   /* 다이어리 대시보드 3카드(오늘 일정·공지·답변대기 Q&A) = 배너 바로 아래 고정. 카운트는 loadDiaryDash가 data-dcnt 미러로 갱신(원본 dia-dash는 콘텐츠 영역에서 숨김). */
   var dash=[{k:'today',l:'오늘 일정',c:'var(--ac)'},{k:'notice',l:'공지',c:'var(--warn)'},{k:'qna',l:'답변 대기 Q&A',c:'var(--ok)'}];
-  var dh=''; for(var j=0;j<dash.length;j++){ var dd=dash[j]; dh+='<button type="button" class="sn-dcard" style="--c:'+dd.c+'" onclick="diaDashGo(\''+dd.k+'\')"><span class="sn-dcard-n" data-dcnt="'+dd.k+'">–</span><span class="sn-dcard-l">'+dd.l+'</span></button>'; }
+  var dh=''; for(var j=0;j<dash.length;j++){ var dd=dash[j]; dh+='<button type="button" class="sn-dcard" onclick="diaDashGo(\''+dd.k+'\')"><span class="sn-dcard-n" data-dcnt="'+dd.k+'">–</span><span class="sn-dcard-l">'+dd.l+'</span></button>'; }
   /* 배너 우하단 꺾쇠=접기·펼치기 / 배너·3카드·4카드 고정 / sn-slot=아래 콘텐츠(첫 진입=다이어리 캘린더). 소속은 창 밖 풀바. */
   var _col=false; try{ _col=localStorage.getItem('os_sn_banner_collapsed')==='1'; }catch(e){}
-  host.innerHTML='<div class="sn-page">'
+  host.innerHTML='<div class="sn-page space-my">'
     +'<div class="sn-banner sn-banner-my'+(_col?' collapsed':'')+'" id="sn-banner"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"><button type="button" class="sn-banner-toggle" onclick="_snBannerToggle()" aria-label="배너 접기·펼치기"><svg class="sp-ico"><use href="#i-caret"/></svg></button></div>'
     +'<div class="sn-dash-label">오늘의 현황</div>'
     +'<div class="sn-dash">'+dh+'</div>'
@@ -5476,10 +5482,10 @@ function _snScopeShow(host, scope){
   window._mysCat=null;
   var ch='';
   for(var i=0;i<cfg.cards.length;i++){ var c=cfg.cards[i];
-    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" style="--c:'+c.c+'" onclick="_snScopeCard(\''+scope+'\',\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
+    ch+='<button type="button" class="sn-card" data-snk="'+c.k+'" onclick="_snScopeCard(\''+scope+'\',\''+c.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+c.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+c.t+'</span><span class="sn-card-d">'+c.d+'</span></span></button>';
   }
   var _col=false; try{ _col=localStorage.getItem('os_sn_banner_collapsed')==='1'; }catch(e){}
-  host.innerHTML='<div class="sn-page">'
+  host.innerHTML='<div class="sn-page space-'+scope+'">'
     +'<div class="sn-banner sn-banner-'+scope+(_col?' collapsed':'')+'" id="sn-banner"><img src="assets/images/space_banner/'+cfg.banner+'" alt="스페이스 배너" loading="lazy"><button type="button" class="sn-banner-toggle" onclick="_snBannerToggle()" aria-label="배너 접기·펼치기"><svg class="sp-ico"><use href="#i-caret"/></svg></button></div>'
     +'<div class="sn-cards">'+ch+'</div>'
     +'<div class="sn-slot" id="sn-slot"></div>'
@@ -15258,7 +15264,7 @@ body.is-uat-spacenav #spTree{display:none;}
 .sp-plat .sp-node.sel .ic{color:#0E9A6C;}
 .sp-plat .sp-children{border-left-color:color-mix(in srgb,#0E9A6C 22%,var(--bd));}
 /* ═══ 스페이스 범위 4신호 코딩 (2026-06-17, 김팀장 안) — 색=범위 / 뱃지=누가 보나 / 아이콘=공용·개인 / 현위치=색 강조. 지점 파랑·팀 초록·마이 빨강 ═══ */
-.sp-sc-branch{--sc:#2563EB;} .sp-sc-team{--sc:#0E9A6C;} .sp-sc-my{--sc:#C0392B;}
+.sp-sc-branch{--sc:var(--space-branch-text);} .sp-sc-team{--sc:var(--space-team-text);} .sp-sc-my{--sc:var(--space-my-text);}  /* 공간 토큰 경유(단일 소스) + 지점 파랑#2563EB→보라 교정 (2026-06-27) */
 .sp-node.sp-scope{border-left:3px solid var(--sc);border-radius:0 8px 8px 0;color:var(--tp);font-weight:600;}
 .sp-node.sp-scope .ic{color:var(--sc);}
 .sp-node.sp-scope:hover{background:color-mix(in srgb,var(--sc) 8%,transparent);}
