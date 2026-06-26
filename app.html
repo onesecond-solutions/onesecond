@@ -8373,7 +8373,7 @@ function _voiceAttsHtml(att){
     var u2=esc(url);
     var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
     if(isImg){ var li=imgs.length; imgs.push(url); names.push((a&&a.name)||String(url).split('/').pop().split('?')[0]); return '<div class="athumb" onclick="voiceOpenLb('+li+')"><img src="'+u2+'" alt=""></div>'; }
-    return '<a class="att-file" href="'+u2+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82rem;color:var(--ts);text-decoration:none">&#128206; '+esc(String(url).split('/').pop().split('?')[0])+'</a>';
+    return '<a class="att-file" href="'+u2+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;font-size:0.82rem;color:var(--ts);text-decoration:none">&#128206; '+esc((a&&a.name)||String(url).split('/').pop().split('?')[0])+'</a>';  /* 일반 첨부도 저장된 원본 파일명(a.name) 우선 — 없을 때만 URL 끝 fallback (2026-06-26) */
   }).join('');
   var html='<div class="atts"><div class="alabel">첨부 '+att.length+' · 이미지 클릭 = 큰 화면 + 딸깍</div><div class="athumbs">'+cells+'</div></div>';
   return {html:html, imgs:imgs, names:names};
@@ -13702,9 +13702,9 @@ async function _scrShareToScope(scope){
     var m=(meRow&&meRow[0])||{};
     var sid=(scope==='team')?m.team_id:m.branch_id;
     if(!sid){ if(typeof toast==='function') toast(g+' 소속 정보가 없어 공유할 수 없어요. (소속 미지정)'); return; }
-    var src=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(c.id)+'&select=title,script_text,highlight_text,keywords,stage,top_category'),{headers:H}).then(function(r){ return r.ok?r.json():[]; });
+    var src=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(c.id)+'&select=title,script_text,highlight_text,keywords,stage,top_category,attachments'),{headers:H}).then(function(r){ return r.ok?r.json():[]; });
     var s=src&&src[0]; if(!s){ if(typeof toast==='function') toast('원본 스크립트를 찾을 수 없어요.'); return; }
-    var body={owner_id:window.AppState.userId, title:s.title, script_text:s.script_text, highlight_text:s.highlight_text, keywords:s.keywords, stage:s.stage, top_category:s.top_category, scope:scope, scope_id:String(sid), is_active:true};
+    var body={owner_id:window.AppState.userId, title:s.title, script_text:s.script_text, highlight_text:s.highlight_text, keywords:s.keywords, stage:s.stage, top_category:s.top_category, attachments:(s.attachments||[]), scope:scope, scope_id:String(sid), is_active:true};  /* 팀/지점 사본에 첨부 스냅샷 복사 — 누락 시 공유 뷰어에 첨부 안 보임 (2026-06-26) */
     var res=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
     if(res.ok||res.status===201){ if(typeof toast==='function') toast(g+'에 공유했어요! '+g+' 스페이스 > 스크립트에서 볼 수 있어요.'); }
     else { var e=await res.json().catch(function(){return{};}); alert('공유 실패: '+(e.message||e.hint||res.status)); }
