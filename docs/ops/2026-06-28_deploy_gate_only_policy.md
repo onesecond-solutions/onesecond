@@ -33,6 +33,14 @@
 - **PR 프리뷰만 끄기:** Site configuration → Build & deploy → **Deploy Previews → Disable**.
 - 위 어느 것도 설정/이력 보존. 복구는 토글 한 번.
 
-## 4. 복구 트리거 (전체배포 재개 시)
+## 4. 실행 기록
 
-- 대표님이 "전체 배포 재개" 지시 → ① 해당 기능 게이트 해제(코드) ② Netlify "Start builds/auto publishing"(원하면) ③ CLAUDE.md PR+Preview 흐름 복귀.
+- **2026-06-28 Netlify 자동 빌드 중단 완료** (검수팀=Claude in Chrome 실행, 대표 브라우저).
+  - 경로(최신 UI): Build & deploy → Build settings → **Configure** → Build status 라디오를 **"Stopped builds"** 선택 → **Save**. (옛 단일 "Stop builds" 버튼 아님)
+  - 현재 상태 화면 표기: **Build status: ⚠️ Stopped**
+  - 효과: Netlify 미러(`splendorous-bavarois-818e3a.netlify.app`) 자동 빌드/배포 + PR Deploy Preview 중단. **onesecond.solutions(GitHub Pages) 무영향**(미접촉).
+  - 삭제·설정변경 없이 토글만 → 복구 가능.
+
+## 5. 복구 트리거 (전체배포 재개 시)
+
+- 대표님이 "전체 배포 재개" 지시 → ① 해당 기능 게이트 해제(코드) ② **Netlify 복구**: Build settings → Configure → **"Active builds"** 라디오 선택 → Save(즉시 자동 빌드 재개) ③ CLAUDE.md PR+Preview 흐름 복귀.
