@@ -105,7 +105,7 @@ body.is-uat-roadmap .roadmap-only{display:flex;}   /* 임태성 실장 user_id �
 #v-roadmap .rm-chip{font-size:12px;padding:6px 13px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;}
 #v-roadmap .rm-chip.on{background:var(--ac);color:#fff;border-color:var(--ac);}
 /* 자체 스크롤 뷰(v-voice/v-together 패턴) — .wrap{overflow:hidden}+.main padding-bottom(시트 오프셋) 안에서 내부 split 스크롤. 페이지 전체가 안 늘어나 바텀시트 가림 없음 */
-#v-roadmap.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0;}
+#v-roadmap.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:22px;}/* 패널 하단을 바텀시트(.os-sheet 상단) 위 22px에서 끝냄 — 시트의 기존 상단 그림자(0 -10px 30px)가 드러나 두 영역 분리. .main padding-bottom(--os-sheet-offset)이 시트 높이 자동 반영 → 화면 높이 바뀌어도 안 겹침. 2026-06-27 */
 #v-roadmap .rm-note,#v-roadmap .rm-head,#v-roadmap .rm-sub,#v-roadmap .rm-bar{flex-shrink:0;}
 #v-roadmap .rm-layout{display:grid;grid-template-columns:200px 1fr 320px;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;flex:1 1 auto;min-height:0;}
 #v-roadmap .rm-col{overflow-y:auto;min-height:0;padding:12px;}
