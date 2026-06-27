@@ -236,24 +236,25 @@ body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐�
 #iv-il-host{display:flex;flex-direction:column;min-height:0;flex:1;}
 #iv-il-host .iv-write-modal{max-width:none;max-height:none;width:100%;flex:1;overflow-y:auto;}
 /* 회사 검색 허브 아코디언 (UAT — 임태성 실장 전용, 2026-06-27) */
-.chub{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
-.chub-co{display:flex;align-items:center;gap:9px;font-size:1.1rem;font-weight:800;color:var(--tp);padding:2px 2px 6px;}
-.chub-colg{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--radius-sm);background:var(--s2);color:var(--ac);font-size:0.9rem;font-weight:800;}
+.chub{display:flex;flex-direction:column;gap:8px;margin-top:36px;margin-bottom:16px;}
+.chub-co{display:flex;align-items:center;gap:10px;font-size:1.2rem;font-weight:800;color:var(--tp);padding:2px 2px 8px;}
+.chub-colg{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);background:var(--s2);color:var(--ac);font-size:1rem;font-weight:800;}
 .chub-item{border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);overflow:hidden;}
-.chub-head{display:flex;align-items:center;gap:10px;width:100%;padding:14px 15px;background:none;border:none;cursor:pointer;text-align:left;font-family:inherit;}
-.chub-t{flex:1;font-size:0.95rem;font-weight:700;color:var(--tp);}
-.chub-tag{font-style:normal;font-size:0.72rem;font-weight:700;color:var(--ac);background:var(--s2);padding:2px 8px;border-radius:999px;margin-left:7px;vertical-align:middle;}
-.chub-ext{font-size:0.8rem;color:var(--ts);white-space:nowrap;}
-.chub-car{width:18px;height:18px;color:var(--tf);transition:transform .2s;flex-shrink:0;}
+.chub-head{display:flex;align-items:center;gap:10px;width:100%;padding:15px 16px;background:none;border:none;cursor:pointer;text-align:left;font-family:inherit;}
+.chub-t{flex:1;font-size:1.05rem;font-weight:700;color:var(--tp);}
+.chub-tag{font-style:normal;font-size:0.82rem;font-weight:700;color:var(--ac);background:var(--s2);padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;}
+.chub-ext{font-size:0.92rem;color:var(--ts);white-space:nowrap;}
+.chub-car{width:20px;height:20px;color:var(--tf);transition:transform .2s;flex-shrink:0;}
 .chub-item.open .chub-car{transform:rotate(180deg);}
-.chub-body{display:none;padding:6px 15px 15px;font-size:0.88rem;color:var(--ts);line-height:1.65;border-top:1px solid var(--bd);}
+.chub-body{display:none;padding:8px 16px 16px;font-size:1rem;color:var(--ts);line-height:1.7;border-top:1px solid var(--bd);}
 .chub-item.open .chub-body{display:block;}
-.chub-empty{color:var(--tf);font-size:0.84rem;padding:8px 0;}
-.chub-nl{display:flex;flex-direction:column;gap:12px;}
-.chub-nlyr b{font-size:0.92rem;color:var(--tp);}
-.chub-nlyr span{font-size:0.78rem;color:var(--ts);margin-left:5px;}
-.chub-nlms{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px;}
-.chub-nlm{border:1px solid var(--bd);border-radius:999px;background:var(--s1);padding:6px 12px;font-size:0.82rem;color:var(--tp);cursor:pointer;font-family:inherit;}
+.chub-body div{font-size:0.97rem;}
+.chub-empty{color:var(--tf);font-size:0.95rem;padding:8px 0;}
+.chub-nl{display:flex;flex-direction:column;gap:14px;}
+.chub-nlyr b{font-size:1.02rem;color:var(--tp);}
+.chub-nlyr span{font-size:0.9rem;color:var(--ts);margin-left:6px;}
+.chub-nlms{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.chub-nlm{border:1px solid var(--bd);border-radius:999px;background:var(--s1);padding:8px 14px;font-size:0.95rem;color:var(--tp);cursor:pointer;font-family:inherit;}
 .chub-nlm:hover{background:var(--s2);border-color:var(--ac);}
 .diet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;}
 .diet-box{max-width:360px;width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:28px 24px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25);}
@@ -10774,7 +10775,7 @@ async function _companyHubHtml(q){
   var payB=_hubPick(qc[T.pay], co), bmiB=_hubPick(qc[T.bmi], co), jeonB=_hubPick(qc[T.jeon], co);
   var jeonUrl=''; try{ var jd=new DOMParser().parseFromString('<div>'+jeonB+'</div>','text/html'); var a=jd.querySelector('a[href]'); if(a) jeonUrl=a.getAttribute('href')||''; }catch(e){}
   var nlY={};
-  try{ var nr=await window.db.fetch('/rest/v1/newsletters?company=ilike.*'+encodeURIComponent(co)+'*&select=id,publish_year,publish_month&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200');
+  try{ var nr=await window.db.fetch('/rest/v1/newsletters?company=ilike.*'+encodeURIComponent(co)+'*&select=id,publish_year,publish_month,source_pdf_url,source_path&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200');
     if(nr.ok){ (await nr.json()||[]).forEach(function(n){ var y=n.publish_year||'기타'; (nlY[y]=nlY[y]||[]).push(n); }); }
   }catch(e){}
   function row(title,tag,bodyHtml,opts){ opts=opts||{};
@@ -10786,7 +10787,7 @@ async function _companyHubHtml(q){
   }
   var nlBody=''; var yrs=Object.keys(nlY).filter(function(y){return y!=='기타';}).sort().reverse();
   if(yrs.length){ nlBody='<div class="chub-nl">';
-    yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ return '<button class="chub-nlm" type="button" onclick="_searchOpen(\'newsletters\',\''+n.id+'\')">'+_sEsc(String(n.publish_month||'?'))+'월 &#8599;</button>'; }).join('')+'</div></div>'; });
+    yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ return '<button class="chub-nlm" type="button" data-u="'+_sEsc(n.source_pdf_url||'')+'" data-p="'+_sEsc(n.source_path||'')+'" onclick="_hubOpenNl(this)">'+_sEsc(String(n.publish_month||'?'))+'월 &#8599;</button>'; }).join('')+'</div></div>'; });
     nlBody+='</div>';
   }
   var H='<div class="chub" data-co="'+_sEsc(co)+'"><div class="chub-co"><span class="chub-colg">'+_sEsc(co.slice(0,1))+'</span>'+_sEsc(co)+'</div>';
@@ -10803,6 +10804,13 @@ async function _companyHubHtml(q){
 window._companyHubHtml=_companyHubHtml;
 function _hubToggle(btn){ try{ var it=btn.closest('.chub-item'); if(it) it.classList.toggle('open'); }catch(e){} }
 window._hubToggle=_hubToggle;
+/* 소식지 월 칩 = 새 탭 전체화면(우측 미리보기 사용 안 함). 공개 source_pdf_url 우선, 없으면 source_path 서명URL */
+async function _hubOpenNl(btn){
+  var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'';
+  if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
+  if(u){ window.open(u,'_blank','noopener'); } else if(typeof toast==='function'){ toast('원본을 열 수 없습니다.'); }
+}
+window._hubOpenNl=_hubOpenNl;
 /* 범위 칩 + 범위별 그룹 렌더. active=null이면 전체, 'mine'|'team'|'branch'|'common'이면 그 범위만 */
 function _svRender(){
   var d=window._searchV2Data; if(!d) return;
