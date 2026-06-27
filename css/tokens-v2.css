@@ -13,6 +13,15 @@
  * - 2단계 (월요일 D-day): app.html + pages/*.html = data-theme="dark"
  */
 
+/* 타이포그래피 기준선 미러 (2026-06-27) — 실효 정의는 app.html inline :root.
+   여기는 동일 값 미러만(app.html이 본 파일 미링크 → 연결은 별도 결재 트랙·본 PR 연결 금지). */
+:root {
+  --fs-caption:12px; --fs-meta:13px; --fs-body:14px; --fs-body-lg:15px;
+  --fs-title-sm:16px; --fs-title:18px; --fs-heading:20px;
+  --fw-regular:400; --fw-medium:500;
+  --lh-tight:1.4; --lh-base:1.6; --lh-relaxed:1.7; --lh-dense:1.5;
+}
+
 /* ── 색상 — 다크 모드 (로그인 후 기본, 월요일 적용) ─────────────────────── */
 :root[data-theme="dark"] {
   --bg:        #0B0C0E;
