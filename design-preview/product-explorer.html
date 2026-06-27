@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>전 보험사 상품 로드맵 탐색 — onesecond (시안)</title>
+<style>
+:root{--bg:#FAFBFC;--s1:#fff;--s2:#F4F5F6;--bd:#E8E8EC;--tp:#1A1D21;--ts:#6B7178;--ac:#534AB7;
+ --healthy:#0E9A6C;--ill:#D97706;--mix:#7F77DD;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tp);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+header{padding:14px 24px;background:var(--s1);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;margin:0;font-weight:800}
+header h1 small{font-weight:400;color:var(--ts);font-size:13px}
+header .sub{font-size:12px;color:var(--ts);margin-top:3px}
+.note{font-size:11.5px;color:#9A5B06;padding:8px 24px;background:#FFF8E6;border-bottom:1px solid var(--bd);line-height:1.5}
+.bar{padding:10px 24px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar input{flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;font-size:14px}
+.chip{font-size:12px;padding:6px 13px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.layout{display:grid;grid-template-columns:210px 1fr 340px;height:calc(100vh - 150px)}
+@media(max-width:900px){.layout{grid-template-columns:1fr;height:auto}}
+.col{overflow-y:auto;padding:14px}
+#companies{border-right:1px solid var(--bd);background:var(--s1)}
+.co{padding:9px 11px;border-radius:8px;cursor:pointer;font-size:13.5px;display:flex;justify-content:space-between;align-items:center}
+.co:hover{background:var(--bg)}.co.on{background:#EEEDFE;color:var(--ac);font-weight:700}
+.co .n{color:var(--ts);font-size:12px}.co.on .n{color:var(--ac)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.pc{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:12px 13px;cursor:pointer;border-left:3px solid var(--bd);transition:box-shadow .15s}
+.pc:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.pc.h{border-left-color:var(--healthy)}.pc.i{border-left-color:var(--ill)}.pc.m{border-left-color:var(--mix)}
+.pc .nm{font-size:13.5px;font-weight:700;line-height:1.35;margin-bottom:7px}
+.pc .meta{font-size:11.5px;color:var(--ts)}
+.badge{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:6px;font-weight:700;margin-right:4px}
+.b-h{background:#EAF3DE;color:#3B6D11}.b-i{background:#FDE9D0;color:#9A5B06}.b-m{background:#EEEDFE;color:#534AB7}.b-x{background:#F1F1F3;color:#777}
+#detail{border-left:1px solid var(--bd);background:var(--s1)}
+#detail .ph{font-size:15px;font-weight:800;line-height:1.4;margin-bottom:8px}
+#detail dl{margin:0}#detail dt{font-size:11px;color:var(--ts);font-weight:700;margin-top:11px;letter-spacing:.02em}
+#detail dd{margin:3px 0 0;font-size:13px;line-height:1.55}
+.empty{color:var(--ts);font-size:13px;padding:24px 14px;text-align:center;line-height:1.6}
+</style></head><body>
+<header>
+ <h1>전 보험사 상품 로드맵 탐색 <small>(씨드 초안 시안)</small></h1>
+ <div class="sub" id="stat">불러오는 중…</div>
+</header>
+<div class="note">⚠️ 2026-06-03 소식지 추출 기반 <b>검수 전 초안</b>입니다. "가입 가능" 단정이 아니라 <b>검토 후보·가입 가능성 안내</b> 용도이며, 인수 세부는 보험회사 공식 약관·상품설명서 기준입니다.</div>
+<div class="bar">
+ <input id="q" placeholder="상품명·상품군 검색 (예: 종신, 암, 간병)">
+ <span class="chip on" data-f="all">전체</span>
+ <span class="chip" data-f="h">건강체</span>
+ <span class="chip" data-f="i">유병자(간편)</span>
+ <span class="chip" data-f="m">혼합</span>
+</div>
+<div class="layout">
+ <div class="col" id="companies"></div>
+ <div class="col" id="products"><div class="empty">왼쪽에서 회사를 선택하세요.</div></div>
+ <div class="col" id="detail"><div class="empty">상품을 선택하면<br>인수기준이 표시됩니다.</div></div>
+</div>
+<script>
+var DATA=[],curCo=null,filter='all',q='';
+function clsOf(ct){ct=ct||'';var h=/건강체|일반/.test(ct),i=/간편|유병/.test(ct);if(h&&i)return'm';if(i)return'i';if(h)return'h';return'x';}
+function badge(c){return{h:'<span class="badge b-h">건강체</span>',i:'<span class="badge b-i">유병자</span>',m:'<span class="badge b-m">혼합</span>',x:'<span class="badge b-x">미상</span>'}[c];}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+fetch('product_lineup_seed.json').then(function(r){return r.json();}).then(function(d){
+ DATA=d.filter(function(c){return c.products&&c.products.length;});
+ var tp=DATA.reduce(function(s,c){return s+c.products.length;},0);
+ document.getElementById('stat').textContent='회사 '+DATA.length+'곳 · 상품 '+tp+'개 · 건강체/유병자/혼합 분류';
+ renderCo();
+}).catch(function(e){document.getElementById('companies').innerHTML='<div class=empty>데이터 로드 실패<br>'+e+'</div>';});
+function renderCo(){var h='';DATA.forEach(function(c,i){h+='<div class="co'+(i===curCo?' on':'')+'" onclick="selCo('+i+')"><span>'+esc(c.company)+'</span><span class="n">'+c.products.length+'</span></div>';});document.getElementById('companies').innerHTML=h;}
+function selCo(i){curCo=i;renderCo();renderP();}
+function match(p){var c=clsOf(p.coverType);if(filter!=='all'&&filter!==c)return false;if(q){var s=((p.name||'')+' '+(p.group||'')).toLowerCase();if(s.indexOf(q.toLowerCase())<0)return false;}return true;}
+function renderP(){if(curCo===null){document.getElementById('products').innerHTML='<div class=empty>왼쪽에서 회사를 선택하세요.</div>';return;}
+ var c=DATA[curCo],h='<div class=pgrid>',n=0;
+ c.products.forEach(function(p,j){if(!match(p))return;n++;var cl=clsOf(p.coverType);h+='<div class="pc '+cl+'" onclick="selP('+curCo+','+j+')"><div class=nm>'+esc(p.name)+'</div>'+badge(cl)+'<span class=meta>'+esc(p.group||'')+'</span></div>';});
+ h+='</div>';if(!n)h='<div class=empty>조건에 맞는 상품이 없습니다.</div>';document.getElementById('products').innerHTML=h;}
+function selP(ci,pj){var p=DATA[ci].products[pj],cl=clsOf(p.coverType);
+ var h='<div class=ph>'+esc(p.name)+'</div>'+badge(cl)+'<span class=meta style="font-size:12px;color:#6B7178"> '+esc(DATA[ci].company)+'</span><dl>';
+ function row(k,v){if(v)h+='<dt>'+k+'</dt><dd>'+esc(v)+'</dd>';}
+ row('상품군',p.group);row('심사구분',p.coverType);row('가입연령',p.entryAge);row('보험기간',p.period);row('납입',p.payment);row('가입금액',p.amount);row('인수·고지기준',p.underwriting);row('강점',p.strength);row('판매상태',p.status);
+ h+='</dl>';document.getElementById('detail').innerHTML=h;}
+document.getElementById('q').addEventListener('input',function(e){q=e.target.value;renderP();});
+document.querySelectorAll('.chip').forEach(function(ch){ch.addEventListener('click',function(){document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});this.classList.add('on');filter=this.dataset.f;renderP();});});
+</script></body></html>
