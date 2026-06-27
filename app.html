@@ -232,6 +232,9 @@ body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐�
 .iv-write-btn:hover{background:var(--ach);}
 .iv-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
 .iv-write-modal{max-width:760px;width:100%;max-height:90vh;overflow-y:auto;background:var(--s1);border:1px solid var(--bd);border-radius:14px;}
+/* 보험사 자료실 글쓰기 인라인 이식 호스트 — 모달 카드(.iv-write-modal)를 iv-split 우측(viewer-col)에 인라인 표시. 폼 그대로, 그릇만 모달→인라인 (2026-06-27) */
+#iv-il-host{display:flex;flex-direction:column;min-height:0;flex:1;}
+#iv-il-host .iv-write-modal{max-width:none;max-height:none;width:100%;flex:1;overflow-y:auto;}
 .diet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;}
 .diet-box{max-width:360px;width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:28px 24px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25);}
 .diet-emoji{font-size:2.4rem;margin-bottom:10px;line-height:1;}
@@ -3165,7 +3168,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           </div>
         </div>
         <div class="iv-write-foot">
-          <button class="iv-write-submit" onclick="ivSubmit()">자료 등록</button>
+          <button class="iv-write-submit" id="iv-submit-btn" onclick="ivSubmit()">자료 등록</button>
         </div>
       </div>
      </div>
@@ -5069,12 +5072,12 @@ async function ivEditPost(id){
     var t=document.getElementById('iv-f-title'); if(t)t.value=p.title||'';
     var b=document.getElementById('iv-f-body'); if(b)b.value=p.content||'';
     var k=document.getElementById('iv-f-keywords'); if(k)k.value=((p.keywords||[]).join(', '));
-    var rt=document.querySelector('#ivWriteModal input[name="iv-type"][value="'+(p.category||'공지')+'"]'); if(rt)rt.checked=true;
+    var rt=document.querySelector('input[name="iv-type"][value="'+(p.category||'공지')+'"]'); if(rt)rt.checked=true;
     /* 기존 첨부 로드 — 문자열로 직렬화된 경우 배열 파싱 (ivOpenDetail과 동일 가드) */
     var _ea=p.attachments; if(typeof _ea==='string'){ try{ _ea=JSON.parse(_ea); }catch(e){ _ea=[]; } } if(!Array.isArray(_ea)) _ea=[];
     window._ivEditAtts=_ea.slice(); if(typeof renderIvEditAtts==='function')renderIvEditAtts();
     window._ivEditId=id;
-    var sb=document.querySelector('#ivWriteModal .iv-write-submit'); if(sb)sb.textContent='자료 수정';
+    var sb=document.getElementById('iv-submit-btn'); if(sb)sb.textContent='자료 수정';
   }catch(e){ console.error('[ivEditPost]',e); alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
 }
 window.ivEditPost=ivEditPost;
@@ -5180,25 +5183,57 @@ async function ivOpenWrite(forceEtc){
     var fc = document.getElementById('iv-f-company'); if(fc) fc.value = _getOsUserCompany() || '우리 회사';
   }
   /* 비공식(forceEtc) = 유형 '기타' 고정+잠금 + 안내 / 공식·수정 = 자유 선택 */
-  var _types=document.querySelectorAll('#ivWriteModal input[name="iv-type"]');
+  var _types=document.querySelectorAll('input[name="iv-type"]');
   for(var _ti=0;_ti<_types.length;_ti++){
     if(forceEtc){ _types[_ti].checked=(_types[_ti].value==='기타'); _types[_ti].disabled=(_types[_ti].value!=='기타'); }
     else { _types[_ti].checked=(_types[_ti].value==='긴급(마감)'); _types[_ti].disabled=false; }
   }
   var _note=document.getElementById('iv-unofficial-note'); if(_note) _note.style.display=forceEtc?'':'none';
-  var m = document.getElementById('ivWriteModal'); if(m) m.style.display = 'flex';
+  _ivMountInline();   /* 모달 오버레이 대신 보험사 자료실 split 우측에 폼 인라인 이식(폼·ivSubmit 무변경) */
 }
 window.ivOpenWrite = ivOpenWrite;
+/* 보험사 자료실 글쓰기 폼(.iv-write-modal)을 모달 오버레이 대신 iv-split 우측(viewer-col)에 인라인 이식.
+   보험 Q&A(openQnaInline) 패턴 — 폼 DOM·저장 로직(ivSubmit) 그대로, 그릇만 모달→인라인.
+   iv-split/viewer-col 없으면 모달로 폴백(안전). */
+function _ivMountInline(){
+  var m=document.getElementById('ivWriteModal');
+  var card=m?m.querySelector('.iv-write-modal'):null;
+  var split=document.getElementById('iv-split');
+  var col=split?split.querySelector('.viewer-col'):null;
+  if(!card||!col){ if(m) m.style.display='flex'; return; }   /* 폴백: 모달 */
+  if(!window._ivCardHome) window._ivCardHome=m;               /* 원 부모(오버레이) 1회 기억 */
+  var host=document.getElementById('iv-il-host');
+  if(!host){ host=document.createElement('div'); host.id='iv-il-host'; col.appendChild(host); }
+  if(card.parentNode!==host) host.appendChild(card);          /* 폼 카드 DOM 이동 */
+  host.style.display=''; if(m) m.style.display='none';        /* 오버레이/딤 미표시 */
+  var vw=document.getElementById('iv-viewer'); if(vw) vw.style.display='none';
+  var bb=col.querySelector('.backbtn'); if(bb) bb.style.display='none';
+  window._ivInlineOpen=true;
+  if(split && window.innerWidth<=1024) split.classList.add('show-viewer');
+}
+window._ivMountInline=_ivMountInline;
 /* 글쓰기 게이트 — 공식/비공식 선택 후 글쓰기 폼 진입. 비공식 → 유형 '기타' 강제 */
 function ivWriteGate(){ var m=document.getElementById('ivGateModal'); if(m) m.style.display='flex'; }
 function ivGateClose(){ var m=document.getElementById('ivGateModal'); if(m) m.style.display='none'; }
 function ivGateChoose(kind){ ivGateClose(); if(typeof ivOpenWrite==='function') ivOpenWrite(kind==='unofficial'); }
 window.ivWriteGate=ivWriteGate; window.ivGateClose=ivGateClose; window.ivGateChoose=ivGateChoose;
 function ivCloseWrite(){
-  var m = document.getElementById('ivWriteModal'); if(m) m.style.display = 'none';
+  var m = document.getElementById('ivWriteModal');
+  /* 인라인 카드 원위치 복귀(먼저) + split 우측 뷰어 복원. 모달 폴백도 함께 처리 */
+  var home=window._ivCardHome||m;
+  var host=document.getElementById('iv-il-host');
+  var card=(host&&host.querySelector('.iv-write-modal'))||(home&&home.querySelector('.iv-write-modal'));
+  if(card&&home&&card.parentNode!==home) home.appendChild(card);
+  if(host) host.style.display='none';
+  if(m) m.style.display='none';
+  var vw=document.getElementById('iv-viewer'); if(vw) vw.style.display='';
+  var split=document.getElementById('iv-split');
+  var bb=split?split.querySelector('.viewer-col .backbtn'):null; if(bb) bb.style.display='';
+  if(split) split.classList.remove('show-viewer');
+  window._ivInlineOpen=false;
   window._ivEditId=null; window._ivEditAtts=[];
-  var sb=document.querySelector('#ivWriteModal .iv-write-submit'); if(sb) sb.textContent='자료 등록';
-  var _ts=document.querySelectorAll('#ivWriteModal input[name="iv-type"]'); for(var _i=0;_i<_ts.length;_i++) _ts[_i].disabled=false;
+  var sb=document.getElementById('iv-submit-btn'); if(sb) sb.textContent='자료 등록';
+  var _ts=document.querySelectorAll('input[name="iv-type"]'); for(var _i=0;_i<_ts.length;_i++) _ts[_i].disabled=false;
   var _n=document.getElementById('iv-unofficial-note'); if(_n) _n.style.display='none';
 }
 window.ivCloseWrite = ivCloseWrite;
@@ -5223,7 +5258,7 @@ async function ivSubmit(){
   /* 첨부 파일 → onesecond_banner/vault 업로드 → URL 수집 (실패 파일은 건너뜀) */
   var attachments = [];
   var _files = ((document.getElementById('iv-f-file')||{}).files) || [];
-  var _sb = document.querySelector('#ivWriteModal .iv-write-submit');
+  var _sb = document.getElementById('iv-submit-btn');
   if(_files.length && _sb){ _sb.disabled = true; _sb.textContent = '업로드 중…'; }
   for(var _i=0; _i<_files.length; _i++){
     var _f = _files[_i];
@@ -8939,6 +8974,7 @@ function mysTab(el,key){
 }
 window.mysTab=mysTab;
 function ivTab(el,key){
+  if(window._ivInlineOpen && typeof ivCloseWrite==='function') ivCloseWrite();   /* 인라인 글쓰기 열린 채 탭 전환 = 폼 원위치 복귀(고아 방지) */
   var tabs=document.querySelectorAll('#iv-tabs .tab'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
   if(el) el.classList.add('on'); else { var f=document.querySelector('#iv-tabs .tab'); if(f) f.classList.add('on'); }
   var todo=document.getElementById('iv-todo'), today=document.getElementById('iv-today'), saved=document.getElementById('iv-saved');
