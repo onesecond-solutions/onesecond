@@ -246,19 +246,19 @@ body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐�
 /* 회사 검색 허브 아코디언 (UAT — 임태성 실장 전용) · 타이포 토큰 기준선 적용(2026-06-27)
    본문 --fs-body(14)·weight≤medium(500)·라벨 무채색·신호색은 신호점만 */
 .chub{display:flex;flex-direction:column;gap:8px;margin-top:36px;margin-bottom:16px;}
-.chub-co{display:flex;align-items:center;gap:10px;font-size:var(--fs-title);font-weight:var(--fw-medium);line-height:var(--lh-tight);color:var(--tp);padding:2px 2px 8px;}
+.chub-co{display:flex;align-items:center;gap:10px;font-size:var(--fs-heading);font-weight:var(--fw-medium);line-height:var(--lh-tight);color:var(--tp);padding:2px 2px 8px;}
 .chub-colg{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);background:var(--s2);color:var(--ac);font-size:var(--fs-meta);font-weight:var(--fw-medium);}
 .chub-item{border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);overflow:hidden;}
 .chub-head{display:flex;align-items:center;gap:10px;width:100%;padding:14px 16px;background:none;border:none;cursor:pointer;text-align:left;font-family:inherit;}
-.chub-t{flex:1;font-size:var(--fs-title-sm);font-weight:var(--fw-medium);line-height:var(--lh-base);color:var(--tp);}
+.chub-t{flex:1;font-size:var(--fs-title);font-weight:var(--fw-regular);line-height:var(--lh-base);color:var(--tp);}
 .chub-tag{font-style:normal;font-size:var(--fs-caption);font-weight:var(--fw-medium);color:var(--ts);background:var(--s2);padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;}
 .chub-ext{font-size:var(--fs-meta);color:var(--ts);white-space:nowrap;}
 .chub-car{width:18px;height:18px;color:var(--tf);transition:transform .2s;flex-shrink:0;}
 .chub-item.open .chub-car{transform:rotate(180deg);}
-.chub-body{display:none;padding:6px 16px 16px;font-size:var(--fs-body);font-weight:var(--fw-regular);line-height:var(--lh-base);color:var(--ts);border-top:1px solid var(--bd);}
+.chub-body{display:none;padding:6px 16px 16px;font-size:var(--fs-title-sm);font-weight:var(--fw-regular);line-height:var(--lh-relaxed);color:var(--ts);border-top:1px solid var(--bd);}   /* 본문 16px — 대표 선호(긴 설명 텍스트 가독) */
 .chub-item.open .chub-body{display:block;}
-.chub-body div{font-size:var(--fs-body);}
-.chub-body b{color:var(--ts) !important;font-weight:var(--fw-medium);}   /* content_html 라벨(인라인 accent) → 무채색 강제(신호색 남발 차단) */
+.chub-body div,.chub-body span,.chub-body p{font-size:var(--fs-title-sm) !important;}   /* content_html 인라인 작은 폰트(0.8em 등) → 16px 강제 */
+.chub-body b{color:var(--ts) !important;font-weight:var(--fw-medium);font-size:var(--fs-title-sm) !important;}   /* 라벨 = 무채색·16px(신호색 남발 차단) */
 .chub-empty{color:var(--tf);font-size:var(--fs-meta);padding:8px 0;}
 .chub-nl{display:flex;flex-direction:column;gap:14px;}
 .chub-nlyr b{font-size:var(--fs-body-lg);font-weight:var(--fw-medium);color:var(--tp);}
@@ -277,7 +277,7 @@ body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐�
 .sv-1col .chub-item{border:none;border-bottom:1px solid var(--bd);border-radius:0;background:none;overflow:visible;}
 .sv-1col .chub-item:last-child{border-bottom:none;}
 .sv-1col .chub-head{padding:14px 2px;}
-.sv-1col .chub-t{color:var(--ac);font-weight:var(--fw-medium);}
+.sv-1col .chub-t{color:var(--ac);font-weight:var(--fw-regular);}
 .sv-1col .chub-body{padding:2px 2px 18px;border-top:none;}
 .diet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;}
 .diet-box{max-width:360px;width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:28px 24px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.25);}
@@ -10836,6 +10836,7 @@ function _nlShortName(fn, company){
   var s=String(fn||'').replace(/\.(pdf|jpg|jpeg|png)$/i,'');
   if(company) s=s.split(company).join('');
   s=s.replace(/\([^)]*\)/g,'').replace(/\d{1,2}월/g,'').replace(/\d{2,4}[.\-_ ]?\d{1,2}([.\-_]\d{1,2})?/g,'').replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim();
+  if(!/[가-힣]/.test(s)) return '';   /* 난수·해시 파일명(예: 625bd2df…) = 의미없는 자료명 → 빈값(월만 표시) */
   return s.length>22?s.slice(0,22)+'…':s;
 }
 window._nlShortName=_nlShortName;
