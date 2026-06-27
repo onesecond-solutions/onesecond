@@ -104,9 +104,12 @@ body.is-uat-roadmap .roadmap-only{display:flex;}   /* 임태성 실장 user_id �
 #v-roadmap .rm-bar input{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);font-size:14px;}
 #v-roadmap .rm-chip{font-size:12px;padding:6px 13px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;}
 #v-roadmap .rm-chip.on{background:var(--ac);color:#fff;border-color:var(--ac);}
-#v-roadmap .rm-layout{display:grid;grid-template-columns:200px 1fr 320px;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;min-height:58vh;}
-@media(max-width:900px){#v-roadmap .rm-layout{grid-template-columns:1fr;}}
-#v-roadmap .rm-col{overflow-y:auto;padding:12px;max-height:72vh;}
+/* 자체 스크롤 뷰(v-voice/v-together 패턴) — .wrap{overflow:hidden}+.main padding-bottom(시트 오프셋) 안에서 내부 split 스크롤. 페이지 전체가 안 늘어나 바텀시트 가림 없음 */
+#v-roadmap.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0;}
+#v-roadmap .rm-note,#v-roadmap .rm-head,#v-roadmap .rm-sub,#v-roadmap .rm-bar{flex-shrink:0;}
+#v-roadmap .rm-layout{display:grid;grid-template-columns:200px 1fr 320px;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;flex:1 1 auto;min-height:0;}
+#v-roadmap .rm-col{overflow-y:auto;min-height:0;padding:12px;}
+@media(max-width:900px){#v-roadmap.on{overflow-y:auto;padding-bottom:28px;}#v-roadmap .rm-layout{grid-template-columns:1fr;flex:none;}#v-roadmap .rm-col{max-height:60vh;}}
 #v-roadmap #rm-companies{border-right:1px solid var(--bd);background:var(--s2);}
 #v-roadmap .rm-co{padding:9px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;}
 #v-roadmap .rm-co:hover{background:var(--s1);}
