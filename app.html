@@ -10462,7 +10462,17 @@ function _svNewsletterDate(q, terms){
   if(dt.month!=null) extra+='&publish_month=eq.'+dt.month;
   if(dt.year!=null)  extra+='&publish_year=eq.'+dt.year;
   var keep=(terms||[]).filter(function(t){ return !/^(20\d{2}년?|\d{2}년|\d{1,2}월|20\d{2}[-.\/]\d{1,2})$/.test(t); });
-  return { extra:extra, terms:keep, active:(dt.month!=null||dt.year!=null) };
+  return { extra:extra, terms:keep, active:(dt.month!=null||dt.year!=null), month:dt.month, year:dt.year };
+}
+/* 연도 미지정(월만) 검색 시 = 그 달의 '최신 발행연도'만 추가로 잡아 publish_year 필터 보강(A안, 2026-06-27).
+   "6월 소식지" → 2025·2026 6월이 섞이던 것을 최신연도(2026)만으로. 작년 건 "2025년 6월"처럼 연도 명시. */
+async function _svNewsletterYearFix(nd){
+  if(!nd.active || nd.month==null || nd.year!=null) return nd.extra;
+  try{
+    var yj=await window.db.fetch('/rest/v1/newsletters?publish_month=eq.'+nd.month+'&select=publish_year&order=publish_year.desc.nullslast&limit=1').then(function(r){return r.ok?r.json():[];});
+    if(yj&&yj[0]&&yj[0].publish_year!=null) return nd.extra+'&publish_year=eq.'+yj[0].publish_year;
+  }catch(e){}
+  return nd.extra;
 }
 /* 스크립트 전용 필터 — 일반 컬럼(title/search_text/script_text)에 더해 '고정 유형명: 스크립트' 매칭.
    "도입 스크립트"에서 본문에 '스크립트' 단어가 없어도 콘텐츠 유형으로 매칭(다중 토큰 AND 원칙은 그대로). */
@@ -10579,9 +10589,9 @@ async function _runSearch(q){
     /* 자료실(myspace_files) — OCR 적재된 search_text 검색. 스코프(개인/팀/지점) 격리는 사용자 토큰 RLS가 자동 보장 (별도 권한코드 불필요) */
     {label:'자료실',      color:'#14B8A6', table:'myspace_files',   base:_vaultBase,                               cols:['search_text','original_name'],          select:'id,original_name,search_text,ocr_status,ext,updated_at',          order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                    t:function(r){return r.original_name||'(파일)';},                          m:function(r){return (r.ext||'파일').toString().toUpperCase();}}
   ];
-  var results=await Promise.all(groups.map(function(g){
+  var results=await Promise.all(groups.map(async function(g){
     var gTerms=terms, gBase=g.base;
-    if(g.table==='newsletters'){ var nd=_svNewsletterDate(q, terms); if(nd.active){ gBase=g.base+nd.extra; gTerms=nd.terms; } }   /* 소식지=발행월 자동 필터(텍스트 '6월' 노이즈 제거) */
+    if(g.table==='newsletters'){ var nd=_svNewsletterDate(q, terms); if(nd.active){ gBase=g.base+(await _svNewsletterYearFix(nd)); gTerms=nd.terms; } }   /* 소식지=발행월 자동 필터 + 연도미지정시 최신연도만 */
     var _f=gTerms.length?_sBuildFilter(g.cols,gTerms):'';
     var path=g.table+'?'+(gBase?gBase+'&':'')+(_f?_f+'&':'')+'select='+g.select+(g.order?'&order='+g.order:'')+'&limit=100';
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
@@ -10701,9 +10711,9 @@ async function _runSearchV2(q, targetId){
     {src:'자료',      table:'myspace_files',    base:_vaultBase,                               cols:['search_text','original_name'],     select:'id,original_name,search_text,ocr_status,ext,updated_at,scope',       order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                        t:function(r){return r.original_name||'(파일)';},                            m:function(r){return (r.ext||'파일').toString().toUpperCase();},                 scope:function(r){return r.scope==='team'?'team':(r.scope==='branch'?'branch':'mine');}}
   ];
   var lim=window._svLimit||40;   /* 소스별 fetch 한도 — 100→40으로 전송량↓(체감속도). 부족하면 '더 보기'로 +40 */
-  var results=await Promise.all(groups.map(function(g){
+  var results=await Promise.all(groups.map(async function(g){
     var gTerms=terms, gBase=g.base;
-    if(g.table==='newsletters'){ var nd=_svNewsletterDate(q, terms); if(nd.active){ gBase=g.base+nd.extra; gTerms=nd.terms; } }   /* 소식지=발행월 자동 필터(텍스트 '6월' 노이즈 제거) */
+    if(g.table==='newsletters'){ var nd=_svNewsletterDate(q, terms); if(nd.active){ gBase=g.base+(await _svNewsletterYearFix(nd)); gTerms=nd.terms; } }   /* 소식지=발행월 자동 필터 + 연도미지정시 최신연도만(노이즈·작년섞임 제거) */
     var _filt=gTerms.length?(g.filter?g.filter(g.cols,gTerms):_sBuildFilter(g.cols,gTerms)):'';   /* 소스별 커스텀 필터 허용(스크립트=유형명 매칭) */
     var path=g.table+'?'+(gBase?gBase+'&':'')+(_filt?_filt+'&':'')+'select='+g.select+(g.order?'&order='+g.order:'')+'&limit='+lim;
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
