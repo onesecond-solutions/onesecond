@@ -94,6 +94,38 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 .nav.sn2-only{display:none;}                              /* 기본 숨김 — 전원 기존 그대로 */
 body.is-uat-spacenav .nav.sn2-only,body.is-admin .nav.sn2-only{display:flex;}  /* UAT(임태성) + 어드민 = 스페이스 항목(마이/팀/지점) 노출. 어드민은 사이드 메뉴 전체 보임(다이어리도 유지) */
 #nav-sp-guide{display:none;}body.is-admin #nav-sp-guide{display:flex;}  /* 스페이스 설명서 = 어드민 전용. 전체 개방 후에도 일반 사용자 숨김(id 특이도로 sn2-only 무력화), 2026-06-25 */
+/* ════ 상품 로드맵 (is-uat-roadmap 게이트 = 임태성 실장 user_id 전용 검수 · 어드민 포함 타 계정 전면 비노출 · raw_seed 비공개·검수 전 사용자 노출/통합검색 미연결, 2026-06-27) ════ */
+.roadmap-only{display:none;}                       /* 기본 숨김 — 어드민 포함 전원 숨김(sn2-only와 별개) */
+body.is-uat-roadmap .roadmap-only{display:flex;}   /* 임태성 실장 user_id 일치 계정만 노출 */
+#v-roadmap .rm-note{font-size:11.5px;color:#9A5B06;background:#FFF8E6;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 12px;line-height:1.55;margin-bottom:10px;}
+#v-roadmap .rm-head{font-size:17px;font-weight:800;margin:2px 0 4px;}
+#v-roadmap .rm-sub{font-size:12px;color:var(--ts);margin-bottom:10px;}
+#v-roadmap .rm-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+#v-roadmap .rm-bar input{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);font-size:14px;}
+#v-roadmap .rm-chip{font-size:12px;padding:6px 13px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;}
+#v-roadmap .rm-chip.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+#v-roadmap .rm-layout{display:grid;grid-template-columns:200px 1fr 320px;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;min-height:58vh;}
+@media(max-width:900px){#v-roadmap .rm-layout{grid-template-columns:1fr;}}
+#v-roadmap .rm-col{overflow-y:auto;padding:12px;max-height:72vh;}
+#v-roadmap #rm-companies{border-right:1px solid var(--bd);background:var(--s2);}
+#v-roadmap .rm-co{padding:9px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;}
+#v-roadmap .rm-co:hover{background:var(--s1);}
+#v-roadmap .rm-co.on{background:var(--ac);color:#fff;font-weight:700;}
+#v-roadmap .rm-co .n{color:var(--ts);font-size:12px;}#v-roadmap .rm-co.on .n{color:#fff;}
+#v-roadmap #rm-products{padding:12px;}
+#v-roadmap .rm-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+#v-roadmap .rm-pc{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:12px 13px;cursor:pointer;border-left:3px solid var(--bd);}
+#v-roadmap .rm-pc:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);}
+#v-roadmap .rm-pc.h{border-left-color:#0E9A6C;}#v-roadmap .rm-pc.i{border-left-color:#D97706;}#v-roadmap .rm-pc.m{border-left-color:#7F77DD;}
+#v-roadmap .rm-pc .nm{font-size:13.5px;font-weight:700;line-height:1.35;margin-bottom:7px;}
+#v-roadmap .rm-pc .meta{font-size:11.5px;color:var(--ts);}
+#v-roadmap .rm-badge{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:6px;font-weight:700;margin-right:4px;}
+#v-roadmap .b-h{background:#EAF3DE;color:#3B6D11;}#v-roadmap .b-i{background:#FDE9D0;color:#9A5B06;}#v-roadmap .b-m{background:#EEEDFE;color:#534AB7;}#v-roadmap .b-x{background:var(--s2);color:var(--ts);}
+#v-roadmap #rm-detail{border-left:1px solid var(--bd);background:var(--s1);}
+#v-roadmap #rm-detail .ph{font-size:15px;font-weight:800;line-height:1.4;margin-bottom:8px;}
+#v-roadmap #rm-detail dt{font-size:11px;color:var(--ts);font-weight:700;margin-top:11px;}
+#v-roadmap #rm-detail dd{margin:3px 0 0;font-size:13px;line-height:1.55;}
+#v-roadmap .rm-empty{color:var(--ts);font-size:13px;padding:24px 14px;text-align:center;line-height:1.6;}
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
 body.is-uat-spacenav .side .nav,body.is-admin .side .nav{padding:7px 10px;}  /* 항목 많은 UAT·어드민 = compact(세로 축소·좌우 통일) */
 /* 마이 스페이스 페이지(배너 + 카드 그리드, P1-2) — 바텀시트 #spContent에 렌더 */
@@ -2455,6 +2487,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav sn2-only" id="nav-sp-guide" onclick="_spGuideShow()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-box"/></svg></span><span class="lbl">스페이스 설명서</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
+      <div class="nav roadmap-only" id="nav-roadmap" onclick="_navView('roadmap')"><span class="ic">&#128203;</span><span class="lbl">상품 로드맵</span><span class="nav-badge" style="background:#9A5B06">검수</span></div>
       <div class="nav" id="nav-pricing" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
       <div class="nav" id="nav-admin" style="display:none" onclick="_navView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
     </div>
@@ -3136,6 +3169,25 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      <!-- 2026-05-28: 요금제 view (어제 PR #126 결제 자료 정합 — pages/pricing-content.html innerHTML fetch 패턴) -->
      <div class="wrap view" id="v-pricing">
       <div style="padding:40px;text-align:center;color:var(--ts)">로딩 중...</div>
+     </div>
+     <!-- ════ 상품 로드맵 (#v-roadmap) — 임태성 실장 user_id 전용 검수 화면. raw_seed 비공개·검수 전 사용자 노출/통합검색 미연결. 2026-06-27 ════ -->
+     <div class="wrap view" id="v-roadmap">
+      <div class="rm-note">⚠️ <b>비공개 검수용</b> — 이 화면은 검수 담당 계정에만 보입니다. 데이터는 <b>raw_seed(미검증 씨드)</b> 상태로, 보험사 소식지(2026.04 기준)에서 자동 추출한 <b>초안</b>입니다. <b>아직 검수 전이라 "가입 가능" 여부를 단정하지 않으며</b>, 원문에 명시된 가입연령·상품유형·간편고지 조건 등 사실만 표시합니다. 출처·기준일은 회사 단위로 연결되어 있습니다.</div>
+      <div class="rm-head">전 보험사 상품 로드맵 <span style="font-weight:400;color:var(--ts);font-size:13px">씨드 검수</span></div>
+      <div class="rm-sub" id="rm-stat">불러오는 중…</div>
+      <div class="rm-bar">
+        <input id="rm-q" type="text" placeholder="상품명·상품군 검색" autocomplete="off">
+        <span class="rm-chip on" data-f="all">전체</span>
+        <span class="rm-chip" data-f="h">건강체</span>
+        <span class="rm-chip" data-f="i">유병자/간편</span>
+        <span class="rm-chip" data-f="m">혼합</span>
+        <span class="rm-chip" data-f="x">미상</span>
+      </div>
+      <div class="rm-layout">
+        <div class="rm-col" id="rm-companies"></div>
+        <div class="rm-col" id="rm-products"><div class="rm-empty">왼쪽에서 보험사를 선택하세요.</div></div>
+        <div class="rm-col" id="rm-detail"><div class="rm-empty">상품을 선택하면<br>원문 기준 정보가 표시됩니다.</div></div>
+      </div>
      </div>
      <!-- ════ 운영센터(어드민) — SPA D영역 흡수 (#v-admin · 2단 탭/칩) ════ -->
      <div class="wrap view" id="v-admin">
@@ -4136,6 +4188,34 @@ window._canSeeVault = _canSeeVault;
 /* 운영센터(어드민) view 게이팅 — admin 전용 (2026-05-31 SPA 흡수) */
 function _canSeeAdmin(){ return _getOsUserRole() === 'admin'; }
 window._canSeeAdmin = _canSeeAdmin;
+/* 상품 로드맵 게이트 — 임태성 실장 user_id 전용 검수(2026-06-27). 이름/표시명/role 아닌 확정 user_id로 판별. 어드민 포함 타 계정 전면 차단(_wavPlaybackEnabled와 동일 식별값). */
+function _canSeeRoadmap(){
+  try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; }
+}
+window._canSeeRoadmap = _canSeeRoadmap;
+/* 상품 로드맵 로더 — 씨드 JSON(docs/data) fetch + 3열 렌더(design-preview/product-explorer.html 이식). 통합검색 인덱스와 무관(별도 fetch)·게이트 통과 계정만 호출. raw_seed 초안 표시·"가입 가능" 단정 금지(원문 사실만). 2026-06-27 */
+var _rmData=[],_rmCo=null,_rmFilter='all',_rmQ='',_rmLoaded=false;
+function _rmEsc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _rmCls(ct){ct=ct||'';var h=/건강체|일반/.test(ct),i=/간편|유병/.test(ct);if(h&&i)return'm';if(i)return'i';if(h)return'h';return'x';}
+function _rmBadge(c){return{h:'<span class="rm-badge b-h">건강체</span>',i:'<span class="rm-badge b-i">유병자</span>',m:'<span class="rm-badge b-m">혼합</span>',x:'<span class="rm-badge b-x">미상</span>'}[c];}
+function loadRoadmap(){
+  if(!(typeof _canSeeRoadmap==='function'&&_canSeeRoadmap())) return; /* 이중 가드 — showView 가드 외 직접 호출 방어 */
+  var q=document.getElementById('rm-q'); if(q&&!q._b){q._b=1;q.addEventListener('input',function(e){_rmQ=e.target.value;_rmRenderP();});}
+  document.querySelectorAll('#v-roadmap .rm-chip').forEach(function(ch){if(ch._b)return;ch._b=1;ch.addEventListener('click',function(){document.querySelectorAll('#v-roadmap .rm-chip').forEach(function(x){x.classList.remove('on');});this.classList.add('on');_rmFilter=this.dataset.f;_rmRenderP();});});
+  if(_rmLoaded) return;
+  fetch('docs/data/2026-06-27_product_lineup_seed.json').then(function(r){return r.json();}).then(function(d){
+    _rmData=d.filter(function(c){return c.products&&c.products.length;});
+    var tp=_rmData.reduce(function(s,c){return s+c.products.length;},0);
+    var st=document.getElementById('rm-stat'); if(st) st.textContent='보험사 '+_rmData.length+'곳 · 상품 '+tp+'개 · raw_seed 초안(검수 전, 가입 가능 여부 미확정)';
+    _rmLoaded=true; _rmRenderCo();
+  }).catch(function(e){var c=document.getElementById('rm-companies'); if(c) c.innerHTML='<div class="rm-empty">데이터 로드 실패<br>'+_rmEsc(String(e))+'</div>';});
+}
+function _rmRenderCo(){var h='';_rmData.forEach(function(c,i){h+='<div class="rm-co'+(i===_rmCo?' on':'')+'" onclick="_rmSelCo('+i+')"><span>'+_rmEsc(c.company)+'</span><span class="n">'+c.products.length+'</span></div>';});var el=document.getElementById('rm-companies');if(el)el.innerHTML=h;}
+function _rmSelCo(i){_rmCo=i;_rmRenderCo();_rmRenderP();}
+function _rmMatch(p){var c=_rmCls(p.coverType);if(_rmFilter!=='all'&&_rmFilter!==c)return false;if(_rmQ){var s=((p.name||'')+' '+(p.group||'')).toLowerCase();if(s.indexOf(_rmQ.toLowerCase())<0)return false;}return true;}
+function _rmRenderP(){var el=document.getElementById('rm-products');if(!el)return;if(_rmCo===null){el.innerHTML='<div class="rm-empty">왼쪽에서 보험사를 선택하세요.</div>';return;}var c=_rmData[_rmCo],h='<div class="rm-pgrid">',n=0;c.products.forEach(function(p,j){if(!_rmMatch(p))return;n++;var cl=_rmCls(p.coverType);h+='<div class="rm-pc '+cl+'" onclick="_rmSelP('+_rmCo+','+j+')"><div class="nm">'+_rmEsc(p.name)+'</div>'+_rmBadge(cl)+'<span class="meta">'+_rmEsc(p.group||'')+'</span></div>';});h+='</div>';if(!n)h='<div class="rm-empty">조건에 맞는 상품이 없습니다.</div>';el.innerHTML=h;}
+function _rmSelP(ci,pj){var p=_rmData[ci].products[pj],cl=_rmCls(p.coverType);var el=document.getElementById('rm-detail');if(!el)return;var h='<div class="ph">'+_rmEsc(p.name)+'</div>'+_rmBadge(cl)+'<span class="meta" style="font-size:12px;color:var(--ts)"> '+_rmEsc(_rmData[ci].company)+'</span><dl>';function row(k,v){if(v)h+='<dt>'+k+'</dt><dd>'+_rmEsc(v)+'</dd>';}row('상품군',p.group);row('심사구분',p.coverType);row('가입연령(원문)',p.entryAge);row('보험기간',p.period);row('납입',p.payment);row('가입금액',p.amount);row('인수·고지기준(원문)',p.underwriting);row('강점',p.strength);row('판매상태(원문)',p.status);h+='</dl>';var src=(_rmData[ci].sources||[]);if(src.length){h+='<dt style="margin-top:14px">출처·기준일(회사 단위)</dt>';src.forEach(function(s){h+='<dd style="font-size:11.5px;color:var(--ts)">· '+_rmEsc(s)+'</dd>';});}el.innerHTML=h;}
+window.loadRoadmap=loadRoadmap;window._rmSelCo=_rmSelCo;window._rmSelP=_rmSelP;
 /* 현장의 소리 게이팅 — admin·ga_* 전용 (insurer 계열·비로그인 차단, 2026-06-07 role_access_map §6 #1) */
 function _canSeeVoice(){
   return false;   /* 현장의 소리(#v-voice) 전면 숨김 (2026-06-27 대표 지시) — 전 사용자(admin 포함) 진입 차단: showView 가드 !_canSeeVoice()→home + nav 숨김. 기존 admin·ga_ 노출 폐기. 데이터(posts/team_notices)는 보존, 화면 진입만 차단. */
@@ -4206,6 +4286,8 @@ function applyRoleClass(){
   /* AI 글 다듬기 = 우선 임태성 실장(bylts@naver.com)만 검수용 — 단계적 반영(2026-06-22). 검수 후 게이트 해제→전체. */
   var _uatA='';try{var _uatAU=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');_uatA=((_uatAU.email||'').trim().toLowerCase());}catch(e){}
   document.body.classList.toggle('is-uat-aipolish', _uatA==='bylts@naver.com');
+  /* 상품 로드맵 = 임태성 실장 user_id 전용 검수(2026-06-27). 어드민 포함 타 계정 비노출. 메뉴 노출은 CSS(body.is-uat-roadmap), 직접 진입 차단은 showView 가드(_canSeeRoadmap). */
+  document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   /* 스페이스 네비 재설계 = 2026-06-25 전체 개방(게이트 해제). 임태성 실장 계정 검수 완료 → 전원 새 사이드바/스페이스 페이지 노출. (P3, homephilo 게이트 해제 전례) */
   document.body.classList.add('is-uat-spacenav');
   /* 홈 하단 철학 문구 = 2026-06-23 전체 개방(게이트 해제) — CSS body:not(.is-uat-homephilo) 규칙 제거됨. 검색 중 숨김 규칙만 유지. */
@@ -5763,7 +5845,7 @@ function _scriptsSheetShow(){
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){if(window._togetherSheetShow)window._togetherSheetShow();return;}/* 함께해요 = 바텀시트 전용 슬롯으로 흡수 (2026-06-26) */if(key==='scripts'){if(window._scriptsSheetShow)window._scriptsSheetShow();return;}/* 스크립트 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-27) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){if(window._togetherSheetShow)window._togetherSheetShow();return;}/* 함께해요 = 바텀시트 전용 슬롯으로 흡수 (2026-06-26) */if(key==='scripts'){if(window._scriptsSheetShow)window._scriptsSheetShow();return;}/* 스크립트 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-27) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
