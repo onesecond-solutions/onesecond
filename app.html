@@ -5161,11 +5161,13 @@ async function ivOpenWrite(forceEtc){
   window._ivEditAtts=[]; if(typeof renderIvEditAtts==='function')renderIvEditAtts();  /* 새 작성 = 기존첨부 영역 숨김. 편집은 ivEditPost가 이 뒤에 채움 */
   var role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var isAdmin = (role === 'admin');
+  var canPickInsurer = (isAdmin || role==='ga_manager' || role==='ga_branch_manager');  /* 보험사 선택(대리 작성) — admin + GA 실장·지점장 (2026-06-27) */
   var compFld = document.getElementById('iv-company-fld');
   var insFld  = document.getElementById('iv-insurer-fld');
   var insSel  = document.getElementById('iv-f-insurer');
-  if(isAdmin){
-    /* admin 대리 작성: 회사 input 숨기고 보험사 선택 노출 + 목록 1회 로드 */
+  var _lblSpan=document.querySelector('#iv-insurer-fld label span'); if(_lblSpan) _lblSpan.textContent = isAdmin ? '· admin 대리 작성' : '· 보험사 선택';
+  if(canPickInsurer){
+    /* admin·GA 실장/지점장: 회사 input 숨기고 보험사 선택 노출 + 목록 1회 로드 */
     if(compFld) compFld.style.display = 'none';
     if(insFld)  insFld.style.display = '';
     if(insSel && !insSel.dataset.loaded && window.db && window.db.fetch){
@@ -5195,21 +5197,29 @@ window.ivOpenWrite = ivOpenWrite;
 /* 보험사 자료실 글쓰기 폼(.iv-write-modal)을 모달 오버레이 대신 iv-split 우측(viewer-col)에 인라인 이식.
    보험 Q&A(openQnaInline) 패턴 — 폼 DOM·저장 로직(ivSubmit) 그대로, 그릇만 모달→인라인.
    iv-split/viewer-col 없으면 모달로 폴백(안전). */
+/* 현재 화면에 보이는 자료실 split의 우측 viewer-col 선택 — 원수사 자료실(cosp-ins) 우선 → 보험사 자료실(iv).
+   두 화면이 같은 글쓰기 폼을 공유하므로, 지금 보이는 쪽에 인라인 이식해야 먹통 방지(2026-06-27). */
+function _ivTargetCol(){
+  var ids=['cosp-ins-split','iv-split'];
+  for(var i=0;i<ids.length;i++){ var s=document.getElementById(ids[i]); if(s&&(s.offsetWidth>0||s.offsetHeight>0)){ var c=s.querySelector('.viewer-col'); if(c) return {split:s,col:c}; } }
+  return null;
+}
 function _ivMountInline(){
   var m=document.getElementById('ivWriteModal');
   var card=m?m.querySelector('.iv-write-modal'):null;
-  var split=document.getElementById('iv-split');
-  var col=split?split.querySelector('.viewer-col'):null;
-  if(!card||!col){ if(m) m.style.display='flex'; return; }   /* 폴백: 모달 */
+  var t=_ivTargetCol();
+  if(!card||!t){ if(m) m.style.display='flex'; return; }       /* 폴백: 모달 */
   if(!window._ivCardHome) window._ivCardHome=m;               /* 원 부모(오버레이) 1회 기억 */
+  var col=t.col;
   var host=document.getElementById('iv-il-host');
-  if(!host){ host=document.createElement('div'); host.id='iv-il-host'; col.appendChild(host); }
+  if(!host){ host=document.createElement('div'); host.id='iv-il-host'; }
+  if(host.parentNode!==col) col.appendChild(host);            /* 현재 화면 split으로 호스트 이동 */
   if(card.parentNode!==host) host.appendChild(card);          /* 폼 카드 DOM 이동 */
   host.style.display=''; if(m) m.style.display='none';        /* 오버레이/딤 미표시 */
-  var vw=document.getElementById('iv-viewer'); if(vw) vw.style.display='none';
+  var vw=col.querySelector('.viewer'); if(vw) vw.style.display='none';
   var bb=col.querySelector('.backbtn'); if(bb) bb.style.display='none';
   window._ivInlineOpen=true;
-  if(split && window.innerWidth<=1024) split.classList.add('show-viewer');
+  if(window.innerWidth<=1024) t.split.classList.add('show-viewer');
 }
 window._ivMountInline=_ivMountInline;
 /* 글쓰기 게이트 — 공식/비공식 선택 후 글쓰기 폼 진입. 비공식 → 유형 '기타' 강제 */
@@ -5222,14 +5232,12 @@ function ivCloseWrite(){
   /* 인라인 카드 원위치 복귀(먼저) + split 우측 뷰어 복원. 모달 폴백도 함께 처리 */
   var home=window._ivCardHome||m;
   var host=document.getElementById('iv-il-host');
+  var col=host?host.parentNode:null;   /* 카드가 끼어 있던 viewer-col (보험사 iv 또는 원수사 cosp) */
   var card=(host&&host.querySelector('.iv-write-modal'))||(home&&home.querySelector('.iv-write-modal'));
   if(card&&home&&card.parentNode!==home) home.appendChild(card);
   if(host) host.style.display='none';
   if(m) m.style.display='none';
-  var vw=document.getElementById('iv-viewer'); if(vw) vw.style.display='';
-  var split=document.getElementById('iv-split');
-  var bb=split?split.querySelector('.viewer-col .backbtn'):null; if(bb) bb.style.display='';
-  if(split) split.classList.remove('show-viewer');
+  if(col){ var vw=col.querySelector('.viewer'); if(vw) vw.style.display=''; var bb=col.querySelector('.backbtn'); if(bb) bb.style.display=''; var sp=col.closest('.split'); if(sp) sp.classList.remove('show-viewer'); }
   window._ivInlineOpen=false;
   window._ivEditId=null; window._ivEditAtts=[];
   var sb=document.getElementById('iv-submit-btn'); if(sb) sb.textContent='자료 등록';
@@ -5247,8 +5255,9 @@ async function ivSubmit(){
   if(!token){ alert('로그인이 필요합니다.'); return; }
   var _role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var _isAdmin = (_role === 'admin');
-  var insurerId = _isAdmin ? (((document.getElementById('iv-f-insurer')||{}).value)||'') : u.insurer_id;
-  if(!window._ivEditId && !insurerId){ alert(_isAdmin ? '보험사를 선택해 주세요.' : '소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
+  var _canPick = (_isAdmin || _role==='ga_manager' || _role==='ga_branch_manager');  /* 보험사 선택 = admin + GA 실장·지점장 */
+  var insurerId = _canPick ? (((document.getElementById('iv-f-insurer')||{}).value)||'') : u.insurer_id;
+  if(!window._ivEditId && !insurerId){ alert(_canPick ? '보험사를 선택해 주세요.' : '소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
   var typeEl = document.querySelector('input[name="iv-type"]:checked');
   var category = typeEl ? typeEl.value : '소식지';
   var title = (document.getElementById('iv-f-title').value || '').trim();
@@ -5274,13 +5283,17 @@ async function ivSubmit(){
     }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _e); }
   }
   if(_sb){ _sb.disabled = false; _sb.textContent = window._ivEditId?'자료 수정':'자료 등록'; }
+  var _branchId = null;
+  if(!_isAdmin && _canPick){   /* GA 실장/지점장 작성 = 본인 지점 박음 → 같은 지점 GA만 열람(RLS posts_select_insurer_ga_branch 정합) */
+    try{ var _me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; _branchId=_me.branch_id||null; }catch(e){}
+  }
   var _eid = window._ivEditId;
   var body = _eid
     ? { category:category, title:title, content:content, keywords:keywords, attachments:(window._ivEditAtts||[]).concat(attachments) }   /* 편집 = 남은 기존 첨부 + 새로 업로드한 파일 */
     : {
         board_type: 'insurer',
         insurer_id: insurerId,
-        branch_id:  null,            /* MVP 전사 공지 */
+        branch_id:  _branchId,       /* admin/원수사=null(전사) · GA 실장/지점장=본인 지점(같은 지점 GA 열람) */
         author_type: (_isAdmin ? 'platform' : null),  /* 2b: admin 임시 작성 = 시스템(platform), 임태성 개인 admin 글과 구분 */
         category:   category,
         title:      title,
@@ -8475,7 +8488,9 @@ async function cospRenderInsurer(){
       var coName=insMap[r.insurer_id]||'미지정';
       return { cat:cat, tc:tc, company:coName, rtitle:(r.title||'(제목 없음)'), hidTag:hidTag, meta:[coName,_cospDate(r.created_at),(r.author_name||'')].filter(Boolean).join(' · '), bodyHtml:_linkifyText(r.content||'')+(ah.html||'')+acts, _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
     });
-    var _writeBtn=_meAdmin?'<button class="newb" onclick="cospInsurerWrite()">+ 자료 등록</button>':'';
+    var _meRole=(window._cospMe&&window._cospMe.role)||'';
+    var _canWrite=(_meRole==='admin'||_meRole==='ga_manager'||_meRole==='ga_branch_manager');  /* admin + GA 실장·지점장 작성 허용(2026-06-27). 저장 권한은 posts RLS 확대와 함께 완성 */
+    var _writeBtn=_canWrite?'<button class="newb" onclick="cospInsurerWrite()">+ 자료 등록</button>':'';
     /* "회사별" 모아보기 버튼 = 전체 왼쪽·다른 색(accent). 누르면 회사명 헤더로 그룹 + 회사 순 정렬 */
     var _byCo='<div class="chip" onclick="cospInsCat(this,\'회사별\')" style="background:var(--t-event);border-color:var(--t-event);color:#fff;font-weight:700">회사별</div>';  /* 독립 분홍(항상) — 인라인이 .chip.on(파랑)보다 우선이라 선택돼도 분홍 유지·글자 흰색 명확 */
     var chipsHtml=_byCo+COSP_INS_CHIPS.map(function(c,i){ return '<div class="chip'+(i===0?' on':'')+'" onclick="cospInsCat(this,\''+c+'\')">'+c+'</div>'; }).join('');
