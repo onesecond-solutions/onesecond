@@ -5161,11 +5161,13 @@ async function ivOpenWrite(forceEtc){
   window._ivEditAtts=[]; if(typeof renderIvEditAtts==='function')renderIvEditAtts();  /* 새 작성 = 기존첨부 영역 숨김. 편집은 ivEditPost가 이 뒤에 채움 */
   var role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var isAdmin = (role === 'admin');
+  var canPickInsurer = (isAdmin || role==='ga_manager' || role==='ga_branch_manager');  /* 보험사 선택(대리 작성) — admin + GA 실장·지점장 (2026-06-27) */
   var compFld = document.getElementById('iv-company-fld');
   var insFld  = document.getElementById('iv-insurer-fld');
   var insSel  = document.getElementById('iv-f-insurer');
-  if(isAdmin){
-    /* admin 대리 작성: 회사 input 숨기고 보험사 선택 노출 + 목록 1회 로드 */
+  var _lblSpan=document.querySelector('#iv-insurer-fld label span'); if(_lblSpan) _lblSpan.textContent = isAdmin ? '· admin 대리 작성' : '· 보험사 선택';
+  if(canPickInsurer){
+    /* admin·GA 실장/지점장: 회사 input 숨기고 보험사 선택 노출 + 목록 1회 로드 */
     if(compFld) compFld.style.display = 'none';
     if(insFld)  insFld.style.display = '';
     if(insSel && !insSel.dataset.loaded && window.db && window.db.fetch){
@@ -5253,8 +5255,9 @@ async function ivSubmit(){
   if(!token){ alert('로그인이 필요합니다.'); return; }
   var _role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var _isAdmin = (_role === 'admin');
-  var insurerId = _isAdmin ? (((document.getElementById('iv-f-insurer')||{}).value)||'') : u.insurer_id;
-  if(!window._ivEditId && !insurerId){ alert(_isAdmin ? '보험사를 선택해 주세요.' : '소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
+  var _canPick = (_isAdmin || _role==='ga_manager' || _role==='ga_branch_manager');  /* 보험사 선택 = admin + GA 실장·지점장 */
+  var insurerId = _canPick ? (((document.getElementById('iv-f-insurer')||{}).value)||'') : u.insurer_id;
+  if(!window._ivEditId && !insurerId){ alert(_canPick ? '보험사를 선택해 주세요.' : '소속 보험사 정보를 확인할 수 없습니다. 다시 로그인해 주세요.'); return; }
   var typeEl = document.querySelector('input[name="iv-type"]:checked');
   var category = typeEl ? typeEl.value : '소식지';
   var title = (document.getElementById('iv-f-title').value || '').trim();
