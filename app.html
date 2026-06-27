@@ -5283,13 +5283,17 @@ async function ivSubmit(){
     }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _e); }
   }
   if(_sb){ _sb.disabled = false; _sb.textContent = window._ivEditId?'자료 수정':'자료 등록'; }
+  var _branchId = null;
+  if(!_isAdmin && _canPick){   /* GA 실장/지점장 작성 = 본인 지점 박음 → 같은 지점 GA만 열람(RLS posts_select_insurer_ga_branch 정합) */
+    try{ var _me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; _branchId=_me.branch_id||null; }catch(e){}
+  }
   var _eid = window._ivEditId;
   var body = _eid
     ? { category:category, title:title, content:content, keywords:keywords, attachments:(window._ivEditAtts||[]).concat(attachments) }   /* 편집 = 남은 기존 첨부 + 새로 업로드한 파일 */
     : {
         board_type: 'insurer',
         insurer_id: insurerId,
-        branch_id:  null,            /* MVP 전사 공지 */
+        branch_id:  _branchId,       /* admin/원수사=null(전사) · GA 실장/지점장=본인 지점(같은 지점 GA 열람) */
         author_type: (_isAdmin ? 'platform' : null),  /* 2b: admin 임시 작성 = 시스템(platform), 임태성 개인 admin 글과 구분 */
         category:   category,
         title:      title,
