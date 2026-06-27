@@ -10779,7 +10779,18 @@ function _hubPick(html, company){
   if(!html||!company) return '';
   try{ var doc=new DOMParser().parseFromString(html,'text/html');
     var els=doc.body.querySelectorAll('div,h1,h2,h3,h4,p,b,strong,span');
-    for(var i=0;i<els.length;i++){ if((els[i].textContent||'').trim()===company){ var p=els[i].parentElement; return p?p.innerHTML:''; } }
+    var hit=null;
+    for(var i=0;i<els.length;i++){ if((els[i].textContent||'').trim()===company){ hit=els[i]; break; } }
+    if(!hit) return '';
+    /* 회사명 요소에서 위로 올라가 '카드들의 컨테이너(grid)' 직전 = 회사 카드 전체 반환.
+       회사명 부모(헤더)만 잡으면 헤더 형제인 본문 박스(삼성화재 '방진' 등)가 누락됨 */
+    var node=hit;
+    while(node.parentElement && node.parentElement!==doc.body){
+      var ps=(node.parentElement.getAttribute('style')||'');
+      if(/grid-template|display\s*:\s*grid/i.test(ps)) return node.innerHTML;
+      node=node.parentElement;
+    }
+    return hit.parentElement ? hit.parentElement.innerHTML : '';  /* grid 컨테이너 없으면 기존 동작 폴백 = 연락처/결제 회귀 0 */
   }catch(e){}
   return '';
 }
