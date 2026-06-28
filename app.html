@@ -11120,9 +11120,16 @@ async function _hubNlRenderThumb(th){
     var pdf=await task.promise;
     var page=await pdf.getPage(1);
     var base=page.getViewport({scale:1});
-    var vp=page.getViewport({scale:(280/base.width)});
-    var cv=document.createElement('canvas'); cv.width=Math.ceil(vp.width); cv.height=Math.ceil(vp.height);
-    await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
+    /* 펼침면(세로 2쪽이 한 장: 삼성화재·하나손보 GA소식지 등, 가로 비율 1.3 초과) = 표지 한 면만 잘라
+       세로 썸네일로 통일(잘라내 좌우 치우침 제거). 기본=오른쪽 면(앞표지). 라이브 검수로 좌/우 정정. */
+    var spread=(base.width/base.height) > 1.3;
+    var unitW=spread ? base.width/2 : base.width;     /* 표지 한 면 너비 기준으로 280px 확보 */
+    var vp=page.getViewport({scale:(280/unitW)});
+    var cv=document.createElement('canvas');
+    cv.width=Math.ceil(spread ? vp.width/2 : vp.width); cv.height=Math.ceil(vp.height);
+    /* 오른쪽 면을 보이려면 콘텐츠를 왼쪽으로 vp.width/2 이동. 왼쪽 면이 표지면 transform=null로 변경 */
+    var transform=spread ? [1,0,0,1, -vp.width/2, 0] : null;
+    await page.render({canvasContext:cv.getContext('2d'), viewport:vp, transform:transform}).promise;
     th.innerHTML=''; th.appendChild(cv);
     try{ pdf.cleanup&&pdf.cleanup(); task.destroy&&task.destroy(); }catch(e){}
   }catch(e){ /* placeholder 유지(로드 실패) */ }
