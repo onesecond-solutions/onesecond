@@ -293,9 +293,16 @@ body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐�
 .chub-nl{display:flex;flex-direction:column;gap:14px;}
 .chub-nlyr b{font-size:var(--fs-body-lg);font-weight:var(--fw-medium);color:var(--tp);}
 .chub-nlyr span{font-size:var(--fs-meta);color:var(--ts);margin-left:6px;}
-.chub-nlms{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.chub-nlms{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}
 .chub-nlm{border:1px solid var(--bd);border-radius:999px;background:var(--s1);padding:7px 14px;font-size:var(--fs-meta);color:var(--tp);cursor:pointer;font-family:inherit;}
 .chub-nlm:hover{background:var(--s2);border-color:var(--ac);}
+/* 소식지 = 칩 자리에 조그만 네모 썸네일(PDF 첫 페이지 이미지). 클릭 시 크게 보기 모달 */
+.chub-nlbox{display:flex;flex-direction:column;gap:6px;width:116px;border:1px solid var(--bd);border-radius:10px;background:var(--s1);padding:8px;cursor:pointer;font-family:inherit;}
+.chub-nlbox:hover{border-color:var(--ac);background:var(--s2);}
+.chub-nlthumb{display:flex;align-items:center;justify-content:center;width:100%;height:140px;border-radius:6px;background:var(--s2);overflow:hidden;position:relative;}
+.chub-nlthumb canvas,.chub-nlthumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;}
+.chub-nlthumb-ph{font-size:var(--sz-s,13px);color:var(--tf);font-weight:700;letter-spacing:.04em;}
+.chub-nlcap{font-size:var(--sz-s,13px);color:var(--tp);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chub-link{margin-top:12px;}
 .chub-link a{color:var(--ac);font-size:var(--fs-body);text-decoration:none;font-weight:var(--fw-medium);}
 .chub-link a:hover{text-decoration:underline;}
@@ -10937,7 +10944,7 @@ async function _companyHubHtml(q){
   }
   var nlBody=''; var yrs=Object.keys(nlY).filter(function(y){return y!=='기타';}).sort().reverse();
   if(yrs.length){ nlBody='<div class="chub-nl">';
-    yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ var _nm=(typeof _nlShortName==='function')?_nlShortName(n.source_filename, co):''; var _lbl=_sEsc(String(n.publish_month||'?'))+'월'+(_nm?' · '+_sEsc(_nm):''); return '<button class="chub-nlm" type="button" data-u="'+_sEsc(n.source_pdf_url||'')+'" data-p="'+_sEsc(n.source_path||'')+'" onclick="_hubOpenNl(this)">'+_lbl+' &#8599;</button>'; }).join('')+'</div></div>'; });
+    yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ var _nm=(typeof _nlShortName==='function')?_nlShortName(n.source_filename, co):''; var _lbl=_sEsc(String(n.publish_month||'?'))+'월'+(_nm?' · '+_sEsc(_nm):''); return '<button class="chub-nlbox" type="button" data-u="'+_sEsc(n.source_pdf_url||'')+'" data-p="'+_sEsc(n.source_path||'')+'" title="'+_lbl+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_lbl+'</span></button>'; }).join('')+'</div></div>'; });
     nlBody+='</div>';
   }
   var H='<div class="chub" data-co="'+_sEsc(co)+'"><div class="chub-co"><span class="chub-colg">'+_sEsc(co.slice(0,1))+'</span>'+_sEsc(co)+'</div>';
@@ -10959,7 +10966,7 @@ async function _companyHubHtml(q){
   return H;
 }
 window._companyHubHtml=_companyHubHtml;
-function _hubToggle(btn){ try{ var it=btn.closest('.chub-item'); if(it) it.classList.toggle('open'); }catch(e){} }
+function _hubToggle(btn){ try{ var it=btn.closest('.chub-item'); if(it){ it.classList.toggle('open'); if(it.classList.contains('open') && typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(it); },0); } }catch(e){} }
 window._hubToggle=_hubToggle;
 /* ════ 삼성화재 상품 라인업·납입면제 독립 페이지 (회사 허브 진입 · 임태성 게이트, 2026-06-28)
    데이터=기획팀장 전달 정형 JSON(GA소식지 2026-06, 라인업 p.17·납입면제 p.16) 화면 상수. DB·통합검색 무관. 사양: docs/specs/samsung_lineup_waiver_pages_v1.md ════ */
@@ -11045,13 +11052,67 @@ function _nlShortName(fn, company){
   return s.length>22?s.slice(0,22)+'…':s;
 }
 window._nlShortName=_nlShortName;
-/* 소식지 월 칩 = 새 탭 전체화면(우측 미리보기 사용 안 함). 공개 source_pdf_url 우선, 없으면 source_path 서명URL */
+/* 소식지 썸네일 박스 클릭 = 크게 보기 미리보기 창(모달). 새 탭 점유 안 함. 공개 source_pdf_url 우선, 없으면 source_path 서명URL */
 async function _hubOpenNl(btn){
   var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'';
   if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
-  if(u){ window.open(u,'_blank','noopener'); } else if(typeof toast==='function'){ toast('원본을 열 수 없습니다.'); }
+  if(!u){ if(typeof toast==='function') toast('원본을 열 수 없습니다.'); return; }
+  var name=String(btn.getAttribute('title')||btn.textContent||'소식지').trim();   /* 박스 title=월 라벨(캡션·placeholder 혼입 방지) */
+  _hubNlPreview(u, name);
 }
 window._hubOpenNl=_hubOpenNl;
+/* 소식지 PDF 미리보기 모달 — 가운데 창(가로 넉넉·전체 탭 점유 X). 헤더(제목·새 탭에서 열기·닫기) + iframe. 회사 허브 게이트 안에서만 진입 */
+function _hubNlPreview(url, name){
+  var old=document.getElementById('hubNlOv'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.id='hubNlOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99996;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:1100px;height:84vh;display:flex;flex-direction:column;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid var(--bd)">'
+    +'<div style="font-weight:800;color:var(--tp);font-size:var(--sz-m,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_sEsc(name||'소식지')+'</div>'
+    +'<div style="display:flex;gap:10px;align-items:center;flex-shrink:0">'
+    +'<a href="'+_sEsc(url)+'" target="_blank" rel="noopener" style="font-size:var(--sz-s,13px);color:var(--ts);text-decoration:none">새 탭에서 열기 &#8599;</a>'
+    +'<button onclick="var o=document.getElementById(\'hubNlOv\');if(o)o.remove();" aria-label="닫기" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>'
+    +'</div></div>'
+    +'<iframe src="'+_sEsc(url)+'" style="flex:1;width:100%;border:0;background:#fff" title="소식지 미리보기"></iframe>'
+    +'</div>';
+  document.body.appendChild(ov);
+  /* Esc 닫기 */
+  var esc=function(e){ if(e.key==='Escape'){ var o=document.getElementById('hubNlOv'); if(o)o.remove(); document.removeEventListener('keydown',esc); } };
+  document.addEventListener('keydown',esc);
+}
+window._hubNlPreview=_hubNlPreview;
+/* 소식지 박스 썸네일 렌더 — PDF 첫 페이지를 캔버스 이미지로(동시성 2). 실패 시 PDF placeholder 유지. PDF.js=기존 loadPdfJs() 재사용 */
+async function _hubNlThumbs(root){
+  try{
+    var scope=root&&root.querySelectorAll?root:document;
+    var ths=[].slice.call(scope.querySelectorAll('.chub-nlbox .chub-nlthumb[data-rendered="0"]'));
+    if(!ths.length) return;
+    var lib; try{ lib=await loadPdfJs(); }catch(e){ return; }
+    if(!lib||!lib.getDocument) return;
+    var idx=0;
+    async function worker(){
+      while(idx<ths.length){ var th=ths[idx++]; if(!th) continue; th.setAttribute('data-rendered','1');
+        var btn=th.closest('.chub-nlbox'); if(!btn) continue;
+        var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'';
+        if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
+        if(!u) continue;
+        try{
+          var pdf=await lib.getDocument({url:u}).promise;
+          var page=await pdf.getPage(1);
+          var base=page.getViewport({scale:1});
+          var vp=page.getViewport({scale:(300/base.width)});   /* 가로 300px 기준 렌더(레티나 여유) */
+          var cv=document.createElement('canvas'); cv.width=Math.ceil(vp.width); cv.height=Math.ceil(vp.height);
+          await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
+          th.innerHTML=''; th.appendChild(cv);
+          try{ pdf.cleanup&&pdf.cleanup(); }catch(e){}
+        }catch(e){ /* placeholder 유지 */ }
+      }
+    }
+    await Promise.all([worker(), worker()]);
+  }catch(e){}
+}
+window._hubNlThumbs=_hubNlThumbs;
 /* 범위 칩 + 범위별 그룹 렌더. active=null이면 전체, 'mine'|'team'|'branch'|'common'이면 그 범위만 */
 function _svRender(){
   var d=window._searchV2Data; if(!d) return;
@@ -11123,6 +11184,7 @@ function _svRender(){
     if(d.hubHtml && typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){
       /* 회사 허브 모드(UAT) = 구글 스타일 1칼럼 · 우측 미리보기 없음 (전체 폭, 깔끔) */
       body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+chip+scope+'</div><div class="sv-1col">'+aiAns+html+'</div>';
+      if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(body); },0);   /* 소식지 박스 썸네일(PDF 첫 페이지) 렌더 */
     } else {
     /* 홈 검색 = 2단(좌 결과 / 우 상세 패널). 패널 내용은 _svPanelHtml에 보존돼 탭 전환·더보기 시 유지 */
     var _panel=window._svPanelHtml||'<div class="sv-panel-empty">왼쪽 결과를 누르면<br>여기에서 본문을 미리 봅니다.</div>';
