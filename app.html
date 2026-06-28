@@ -303,6 +303,8 @@ body.is-uat-spacenav .sn-slot .dia-dash{display:none;}               /* 콘텐�
 .chub-nlthumb canvas,.chub-nlthumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;}
 .chub-nlthumb-ph{font-size:var(--sz-s,13px);color:var(--tf);font-weight:700;letter-spacing:.04em;}
 .chub-nlcap{font-size:var(--sz-s,13px);color:var(--tp);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chub-nlbox.is-nosrc{cursor:default;opacity:.55;}
+.chub-nlbox.is-nosrc:hover{border-color:var(--bd);background:var(--s1);}
 .chub-link{margin-top:12px;}
 .chub-link a{color:var(--ac);font-size:var(--fs-body);text-decoration:none;font-weight:var(--fw-medium);}
 .chub-link a:hover{text-decoration:underline;}
@@ -10877,6 +10879,20 @@ window._resolveCompany=_resolveCompany;
 /* 기준명 → 소스 매칭용 이름 변형 목록(기준명 + 별칭, 중복 제거). 소스마다 표기가 달라도(예 소식지 'DB손보') 누락 0 */
 function _companyNames(canon){ if(!canon) return []; var arr=[canon].concat(_COMPANY_ALIASES[canon]||[]); var seen={},out=[]; arr.forEach(function(x){ if(x && !seen[x]){ seen[x]=1; out.push(x); } }); return out; }
 window._companyNames=_companyNames;
+/* 입력이 회사명/별칭인가(싼 검사) — 별칭 인덱스 + insurers 캐시 이름. content_html fetch 전 게이트(일반 검색 가속) */
+function _hubIsCompany(name){ var n=_normCo(name); if(!n) return false; if(_COMPANY_ALIAS_INDEX[n]) return true; var ins=window._acInsurers; if(ins){ for(var i=0;i<ins.length;i++){ if(_normCo(ins[i].name)===n) return true; } } return false; }
+window._hubIsCompany=_hubIsCompany;
+/* 회사 허브 content_html 세션 캐시 — 회사 무관·거의 불변. 성공 시에만 캐시(에러 땐 다음 검색 재시도) */
+async function _hubGetQc(T){
+  if(window._hubQcCache) return window._hubQcCache;
+  var qc={};
+  try{ var inList=Object.keys(T).map(function(k){return '"'+T[k]+'"';}).join(',');
+    var r=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html&tab_title=in.('+inList+')');
+    if(r.ok){ (await r.json()||[]).forEach(function(c){ qc[c.tab_title]=c.content_html||''; }); window._hubQcCache=qc; }
+  }catch(e){}
+  return qc;
+}
+window._hubGetQc=_hubGetQc;
 /* ════ 회사 검색 허브 (UAT — 임태성 실장 전용, 2026-06-27) ════
    회사명 검색 시 우측 미리보기 대신 결과 상단에 아코디언 허브: BMI·결제·콜센터·청구·원전산·소식지·상품라인업.
    데이터=기존 Quick 카드 content_html(회사별 블록)에서 해당 회사 블록만 추출해 인라인 표시. 설계사 업무 흐름 정합. */
@@ -10911,12 +10927,10 @@ async function _companyHubHtml(q){
   var co=_canon||raw;                        /* 표시·매칭 기준 = 기준명(별칭 변환) 또는 원래 입력 */
   var names=_canon?_companyNames(_canon):[co];   /* 소스 매칭용 이름 변형(기준명+별칭). 소스 표기 차이 누락 0 */
   if(co.length<2 || !window.db || !window.db.fetch) return '';
+  if(typeof _acLoadInsurers==='function') _acLoadInsurers();   /* insurers 캐시(자동완성과 공유) */
+  if(!_hubIsCompany(co)) return '';   /* 회사명/별칭이 아니면 큰 content_html fetch 생략 → 일반 검색 가속 */
   var T={call:'보험회사 (모니터링) 연락처', pay:'보험회사 결제정보', bmi:'회사별 BMI 심사기준', jeon:'원전산 설계 바로가기'};
-  var qc={};
-  try{ var inList=Object.keys(T).map(function(k){return '"'+T[k]+'"';}).join(',');
-    var r=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html&tab_title=in.('+inList+')');
-    if(r.ok){ (await r.json()||[]).forEach(function(c){ qc[c.tab_title]=c.content_html||''; }); }
-  }catch(e){}
+  var qc=await _hubGetQc(T);   /* content_html 세션 캐시(회사 무관·거의 불변) → 재검색마다 재fetch 0 */
   /* 이름 변형 중 첫 매칭 블록 반환(소스 표기 차이 흡수) */
   function _pickAny(html){ for(var i=0;i<names.length;i++){ var b=_hubPick(html, names[i]); if(b) return b; } return ''; }
   var callB=_pickAny(qc[T.call]);
@@ -10944,7 +10958,9 @@ async function _companyHubHtml(q){
   }
   var nlBody=''; var yrs=Object.keys(nlY).filter(function(y){return y!=='기타';}).sort().reverse();
   if(yrs.length){ nlBody='<div class="chub-nl">';
-    yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ var _nm=(typeof _nlShortName==='function')?_nlShortName(n.source_filename, co):''; var _lbl=_sEsc(String(n.publish_month||'?'))+'월'+(_nm?' · '+_sEsc(_nm):''); return '<button class="chub-nlbox" type="button" data-u="'+_sEsc(n.source_pdf_url||'')+'" data-p="'+_sEsc(n.source_path||'')+'" title="'+_lbl+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_lbl+'</span></button>'; }).join('')+'</div></div>'; });
+    yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ var _nm=(typeof _nlShortName==='function')?_nlShortName(n.source_filename, co):''; var _lbl=_sEsc(String(n.publish_month||'?'))+'월'+(_nm?' · '+_sEsc(_nm):''); var _u=String(n.source_pdf_url||'').trim(), _p=String(n.source_path||'').trim(); var _has=!!(_u||_p);
+      if(!_has) return '<div class="chub-nlbox is-nosrc" title="'+_lbl+' (원본 파일 없음)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">원본 없음</span></span><span class="chub-nlcap">'+_lbl+'</span></div>';
+      return '<button class="chub-nlbox" type="button" data-u="'+_sEsc(_u)+'" data-p="'+_sEsc(_p)+'" title="'+_lbl+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_lbl+'</span></button>'; }).join('')+'</div></div>'; });
     nlBody+='</div>';
   }
   var H='<div class="chub" data-co="'+_sEsc(co)+'"><div class="chub-co"><span class="chub-colg">'+_sEsc(co.slice(0,1))+'</span>'+_sEsc(co)+'</div>';
@@ -11082,34 +11098,42 @@ function _hubNlPreview(url, name){
   document.addEventListener('keydown',esc);
 }
 window._hubNlPreview=_hubNlPreview;
-/* 소식지 박스 썸네일 렌더 — PDF 첫 페이지를 캔버스 이미지로(동시성 2). 실패 시 PDF placeholder 유지. PDF.js=기존 loadPdfJs() 재사용 */
-async function _hubNlThumbs(root){
+/* 소식지 박스 썸네일 — 화면에 보일 때만(lazy) PDF 첫 페이지를 캔버스로. 동시성 2 큐. PDF.js=기존 loadPdfJs() 재사용 */
+var _hubThumbQ=[], _hubThumbRunning=0;
+function _hubThumbPump(){
+  while(_hubThumbRunning<2 && _hubThumbQ.length){
+    var th=_hubThumbQ.shift(); _hubThumbRunning++;
+    _hubNlRenderThumb(th).then(function(){ _hubThumbRunning--; _hubThumbPump(); }, function(){ _hubThumbRunning--; _hubThumbPump(); });
+  }
+}
+async function _hubNlRenderThumb(th){
+  var btn=th.closest('.chub-nlbox'); if(!btn) return;
+  var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'';
+  if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
+  if(!u) return;
+  var lib; try{ lib=await loadPdfJs(); }catch(e){ return; }
+  if(!lib||!lib.getDocument) return;
+  try{
+    /* disableAutoFetch/disableStream = 첫 페이지에 필요한 범위만 Range로 받음(전체 PDF 다운로드 회피 → 빠름) */
+    var task=lib.getDocument({url:u, disableAutoFetch:true, disableStream:true, rangeChunkSize:65536});
+    var pdf=await task.promise;
+    var page=await pdf.getPage(1);
+    var base=page.getViewport({scale:1});
+    var vp=page.getViewport({scale:(280/base.width)});
+    var cv=document.createElement('canvas'); cv.width=Math.ceil(vp.width); cv.height=Math.ceil(vp.height);
+    await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
+    th.innerHTML=''; th.appendChild(cv);
+    try{ pdf.cleanup&&pdf.cleanup(); task.destroy&&task.destroy(); }catch(e){}
+  }catch(e){ /* placeholder 유지(로드 실패) */ }
+}
+function _hubNlThumbs(root){
   try{
     var scope=root&&root.querySelectorAll?root:document;
     var ths=[].slice.call(scope.querySelectorAll('.chub-nlbox .chub-nlthumb[data-rendered="0"]'));
     if(!ths.length) return;
-    var lib; try{ lib=await loadPdfJs(); }catch(e){ return; }
-    if(!lib||!lib.getDocument) return;
-    var idx=0;
-    async function worker(){
-      while(idx<ths.length){ var th=ths[idx++]; if(!th) continue; th.setAttribute('data-rendered','1');
-        var btn=th.closest('.chub-nlbox'); if(!btn) continue;
-        var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'';
-        if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
-        if(!u) continue;
-        try{
-          var pdf=await lib.getDocument({url:u}).promise;
-          var page=await pdf.getPage(1);
-          var base=page.getViewport({scale:1});
-          var vp=page.getViewport({scale:(300/base.width)});   /* 가로 300px 기준 렌더(레티나 여유) */
-          var cv=document.createElement('canvas'); cv.width=Math.ceil(vp.width); cv.height=Math.ceil(vp.height);
-          await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
-          th.innerHTML=''; th.appendChild(cv);
-          try{ pdf.cleanup&&pdf.cleanup(); }catch(e){}
-        }catch(e){ /* placeholder 유지 */ }
-      }
-    }
-    await Promise.all([worker(), worker()]);
+    if(!('IntersectionObserver' in window)){ ths.forEach(function(th){ th.setAttribute('data-rendered','1'); _hubThumbQ.push(th); }); _hubThumbPump(); return; }
+    var io=new IntersectionObserver(function(ents){ ents.forEach(function(e){ if(e.isIntersecting){ var th=e.target; io.unobserve(th); if(th.getAttribute('data-rendered')==='1') return; th.setAttribute('data-rendered','1'); _hubThumbQ.push(th); _hubThumbPump(); } }); }, {rootMargin:'300px'});
+    ths.forEach(function(th){ io.observe(th); });
   }catch(e){}
 }
 window._hubNlThumbs=_hubNlThumbs;
