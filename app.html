@@ -10844,8 +10844,10 @@ async function _companyHubHtml(q){
   }catch(e){}
   var callB=_hubPick(qc[T.call], co);
   if(!callB) return '';   /* 연락처에 그 회사 블록 없음 = 회사명 아님 → 허브 미표시 */
-  var payB=_hubPick(qc[T.pay], co), bmiB=_hubPick(qc[T.bmi], co), jeonB=_hubPick(qc[T.jeon], co);
-  var jeonUrl=''; try{ var jd=new DOMParser().parseFromString('<div>'+jeonB+'</div>','text/html'); var a=jd.querySelector('a[href]'); if(a) jeonUrl=a.getAttribute('href')||''; }catch(e){}
+  var payB=_hubPick(qc[T.pay], co), bmiB=_hubPick(qc[T.bmi], co);
+  /* 원전산: 회사마다 자기 <a>로 감싸인 평면 목록(손보/생보 각 칼럼) 구조라 _hubPick(grid 칼럼 통째 반환)을 쓰면 칼럼 첫 링크(DB손해보험)가 잡힘.
+     회사명과 정확히 일치하는 행의 closest('a[href]')만 집어 해당 회사 포털로 정확히 연결. 못 찾으면 '' → href='#'(엉뚱한 회사 이동 0). */
+  var jeonUrl=''; try{ var jd=new DOMParser().parseFromString(qc[T.jeon]||'','text/html'); var jels=jd.body.querySelectorAll('div,span,b,strong,p'); for(var jk=0;jk<jels.length;jk++){ if((jels[jk].textContent||'').trim()===co){ var ja=jels[jk].closest('a[href]'); if(ja) jeonUrl=ja.getAttribute('href')||''; break; } } }catch(e){}
   /* insurers 마스터 URL(홈페이지·청구) — 컬럼 없으면(DDL 전) ok=false라 안전 무시. DDL+UPDATE 후 자동 링크(§5 insurers 단일 source) */
   var _insU={}; try{ var _ir=await window.db.fetch('/rest/v1/insurers?name=eq.'+encodeURIComponent(co)+'&select=home_url,claim_url&limit=1'); if(_ir.ok){ var _ij=await _ir.json(); if(_ij&&_ij[0]) _insU=_ij[0]||{}; } }catch(e){}
   var nlY={};
