@@ -1256,7 +1256,14 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .hs-head{text-align:center;font-size:1.5rem;font-weight:800;color:var(--tp);letter-spacing:-.01em;margin-bottom:18px;}
 #homeSearch.searching .hs-head{display:none;}
 .hs-box{display:flex;align-items:center;gap:8px;max-width:700px;margin:0 auto;}
-.hs-field{flex:1;display:flex;align-items:center;gap:10px;height:64px;padding:0 16px;background:var(--s1);border:2px solid var(--bd);border-radius:14px;min-width:0;}
+.hs-field{flex:1;display:flex;align-items:center;gap:10px;height:64px;padding:0 16px;background:var(--s1);border:2px solid var(--bd);border-radius:14px;min-width:0;position:relative;}
+/* 통합 검색 자동완성 드롭다운 (회사명·별칭 + 삼성 상품, 임태성 게이트) */
+.hs-suggest{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--s1);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.14);z-index:60;overflow:hidden;display:none;padding:6px;}
+.hs-suggest.open{display:block;}
+.hs-sug-item{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:9px 12px;border-radius:9px;cursor:pointer;text-align:left;}
+.hs-sug-item:hover,.hs-sug-item.active{background:var(--s2);}
+.hs-sug-name{font-size:var(--sz-m,16px);font-weight:700;color:var(--tc);line-height:1.3;}
+.hs-sug-sub{font-size:var(--sz-s,13px);color:var(--tf);line-height:1.3;}
 .hs-field:focus-within{border-color:var(--ac);box-shadow:0 4px 18px rgba(99,102,241,.14);}
 .hs-field svg{width:26px;height:26px;flex-shrink:0;color:var(--tf);}
 .hs-field input{flex:1;border:0;outline:0;background:transparent;font-size:1.25rem;color:var(--tp);min-width:0;}
@@ -2606,8 +2613,9 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="hs-box">
             <div class="hs-field">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input id="hsInput" type="search" placeholder="상품·인수기준·질병명·자료 검색" autocomplete="off" enterkeyhint="search" oninput="_hsInput(this.value)" onkeydown="if(event.key==='Enter')_hsSearch(this.value)">
+              <input id="hsInput" type="search" placeholder="상품·인수기준·질병명·자료 검색" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="hsSuggest" oninput="_hsInput(this.value)" onkeydown="_acKeydown(event)" onblur="_acBlur()">
               <button class="hs-x" type="button" aria-label="지우기" onclick="_hsClear()">&#10005;</button>
+              <div id="hsSuggest" class="hs-suggest" role="listbox" aria-label="보험회사·상품 자동완성"></div>
             </div>
             <button class="hs-go" type="button" onclick="_hsSearch(document.getElementById('hsInput').value)">검색</button>
           </div>
@@ -10806,6 +10814,27 @@ async function _runSearchV2(q, targetId){
   _svRender();
 }
 window._runSearchV2=_runSearchV2;
+/* ════ 보험회사 별칭(alias) → 기준명(canonical) 매핑 — 전 회사 공통 구조 (2026-06-29) ════
+   원칙: 회사마다 기준명(=insurers.name·content_html·화면표시) 1개 + 별칭 배열.
+   DB손해보험만 하드코딩 아님 — 줄 추가만으로 전 회사 확장. 원본(newsletters.company 등)은 미수정, 검색·표시 연결만 정규화.
+   insurer_id는 기준명이 곧 insurers.name(고유)이라 그것으로 연결(향후 insurers 마스터 이관 시 id 직접 매핑). */
+var _COMPANY_ALIASES={
+  'DB손해보험': ['DB손보','디비손해보험','디비손보','디비손해','디비'],
+  /* ↓ 전 회사 확장 자리 (같은 형식 한 줄씩). 예:
+  '현대해상': ['현대해상화재','현대해상화재보험','현대'],
+  '메리츠화재': ['메리츠','메리츠화재해상보험'], */
+};
+/* 입력 정규화: 영문 소문자화 + 모든 공백 제거 + 특수문자 제거(한글·영문·숫자만) */
+function _normCo(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,'').replace(/[^0-9a-z가-힣]/g,''); }
+window._normCo=_normCo;
+/* 정규화 별칭 → 기준명 역인덱스 (기준명 자신도 포함) */
+var _COMPANY_ALIAS_INDEX=(function(){ var idx={}; for(var canon in _COMPANY_ALIASES){ if(!_COMPANY_ALIASES.hasOwnProperty(canon)) continue; idx[_normCo(canon)]=canon; _COMPANY_ALIASES[canon].forEach(function(a){ var k=_normCo(a); if(k) idx[k]=canon; }); } return idx; })();
+/* 입력값 → 기준명(별칭이면 변환, 아니면 '') */
+function _resolveCompany(q){ var n=_normCo(q); return n?(_COMPANY_ALIAS_INDEX[n]||''):''; }
+window._resolveCompany=_resolveCompany;
+/* 기준명 → 소스 매칭용 이름 변형 목록(기준명 + 별칭, 중복 제거). 소스마다 표기가 달라도(예 소식지 'DB손보') 누락 0 */
+function _companyNames(canon){ if(!canon) return []; var arr=[canon].concat(_COMPANY_ALIASES[canon]||[]); var seen={},out=[]; arr.forEach(function(x){ if(x && !seen[x]){ seen[x]=1; out.push(x); } }); return out; }
+window._companyNames=_companyNames;
 /* ════ 회사 검색 허브 (UAT — 임태성 실장 전용, 2026-06-27) ════
    회사명 검색 시 우측 미리보기 대신 결과 상단에 아코디언 허브: BMI·결제·콜센터·청구·원전산·소식지·상품라인업.
    데이터=기존 Quick 카드 content_html(회사별 블록)에서 해당 회사 블록만 추출해 인라인 표시. 설계사 업무 흐름 정합. */
@@ -10835,24 +10864,32 @@ function _hubPick(html, company){
 /* 회사 허브 HTML — 회사명 아니면 '' 반환(일반 검색 유지) */
 async function _companyHubHtml(q){
   if(!_canSeeCompanyHub()) return '';
-  var co=String(q||'').trim(); if(co.length<2 || !window.db || !window.db.fetch) return '';
+  var raw=String(q||'').trim();
+  var _canon=_resolveCompany(raw);          /* 별칭이면 기준명, 아니면 '' */
+  var co=_canon||raw;                        /* 표시·매칭 기준 = 기준명(별칭 변환) 또는 원래 입력 */
+  var names=_canon?_companyNames(_canon):[co];   /* 소스 매칭용 이름 변형(기준명+별칭). 소스 표기 차이 누락 0 */
+  if(co.length<2 || !window.db || !window.db.fetch) return '';
   var T={call:'보험회사 (모니터링) 연락처', pay:'보험회사 결제정보', bmi:'회사별 BMI 심사기준', jeon:'원전산 설계 바로가기'};
   var qc={};
   try{ var inList=Object.keys(T).map(function(k){return '"'+T[k]+'"';}).join(',');
     var r=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html&tab_title=in.('+inList+')');
     if(r.ok){ (await r.json()||[]).forEach(function(c){ qc[c.tab_title]=c.content_html||''; }); }
   }catch(e){}
-  var callB=_hubPick(qc[T.call], co);
+  /* 이름 변형 중 첫 매칭 블록 반환(소스 표기 차이 흡수) */
+  function _pickAny(html){ for(var i=0;i<names.length;i++){ var b=_hubPick(html, names[i]); if(b) return b; } return ''; }
+  var callB=_pickAny(qc[T.call]);
   if(!callB) return '';   /* 연락처에 그 회사 블록 없음 = 회사명 아님 → 허브 미표시 */
-  var payB=_hubPick(qc[T.pay], co), bmiB=_hubPick(qc[T.bmi], co);
+  var payB=_pickAny(qc[T.pay]), bmiB=_pickAny(qc[T.bmi]);
   /* 원전산: 회사마다 자기 <a>로 감싸인 평면 목록(손보/생보 각 칼럼) 구조라 _hubPick(grid 칼럼 통째 반환)을 쓰면 칼럼 첫 링크(DB손해보험)가 잡힘.
-     회사명과 정확히 일치하는 행의 closest('a[href]')만 집어 해당 회사 포털로 정확히 연결. 못 찾으면 '' → href='#'(엉뚱한 회사 이동 0). */
-  var jeonUrl=''; try{ var jd=new DOMParser().parseFromString(qc[T.jeon]||'','text/html'); var jels=jd.body.querySelectorAll('div,span,b,strong,p'); for(var jk=0;jk<jels.length;jk++){ if((jels[jk].textContent||'').trim()===co){ var ja=jels[jk].closest('a[href]'); if(ja) jeonUrl=ja.getAttribute('href')||''; break; } } }catch(e){}
-  /* insurers 마스터 URL(홈페이지·청구) — 컬럼 없으면(DDL 전) ok=false라 안전 무시. DDL+UPDATE 후 자동 링크(§5 insurers 단일 source) */
+     회사명(또는 별칭)과 정확히 일치하는 행의 closest('a[href]')만 집어 해당 회사 포털로 정확히 연결. 못 찾으면 '' → href='#'(엉뚱한 회사 이동 0). */
+  var jeonUrl=''; try{ var jd=new DOMParser().parseFromString(qc[T.jeon]||'','text/html'); var jels=jd.body.querySelectorAll('div,span,b,strong,p'); for(var jk=0;jk<jels.length && !jeonUrl;jk++){ var _tx=(jels[jk].textContent||'').trim(); for(var jn=0;jn<names.length;jn++){ if(_tx===names[jn]){ var ja=jels[jk].closest('a[href]'); if(ja) jeonUrl=ja.getAttribute('href')||''; break; } } } }catch(e){}
+  /* insurers 마스터 URL(홈페이지·청구) — 기준명이 insurers.name과 일치. 컬럼 없으면(DDL 전) ok=false라 안전 무시. */
   var _insU={}; try{ var _ir=await window.db.fetch('/rest/v1/insurers?name=eq.'+encodeURIComponent(co)+'&select=home_url,claim_url&limit=1'); if(_ir.ok){ var _ij=await _ir.json(); if(_ij&&_ij[0]) _insU=_ij[0]||{}; } }catch(e){}
   var nlY={};
-  try{ var nr=await window.db.fetch('/rest/v1/newsletters?company=ilike.*'+encodeURIComponent(co)+'*&select=id,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200');
-    if(nr.ok){ (await nr.json()||[]).forEach(function(n){ var y=n.publish_year||'기타'; (nlY[y]=nlY[y]||[]).push(n); }); }
+  /* 소식지: 소스(newsletters.company)가 'DB손보'처럼 축약 표기일 수 있어 이름 변형 전부 OR ilike. 원본 미수정·매칭만 확장 */
+  try{ var _nlOr=names.map(function(n){ return 'company.ilike.*'+encodeURIComponent(n)+'*'; }).join(',');
+    var nr=await window.db.fetch('/rest/v1/newsletters?or=('+_nlOr+')&select=id,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200');
+    if(nr.ok){ var _seenNl={}; (await nr.json()||[]).forEach(function(n){ if(_seenNl[n.id]) return; _seenNl[n.id]=1; var y=n.publish_year||'기타'; (nlY[y]=nlY[y]||[]).push(n); }); }
   }catch(e){}
   function row(title,tag,bodyHtml,opts){ opts=opts||{};
     var right,onclk,noBody=false;
@@ -11118,12 +11155,96 @@ window._hsSearch=_hsSearch;
 /* 입력 중(oninput) — 화면 이동 안 함. 비면 리셋 / 이미 결과화면이면 라이브 갱신 / 아직 제출 전 hero면 대기 */
 function _hsInput(q){
   var hs=document.getElementById('homeSearch'); if(!hs) return;
-  if(!q||!q.trim()){ _hsReset(); return; }
+  if(!q||!q.trim()){ _acClose(); _hsReset(); return; }
+  _acInput(q);   /* 자동완성 갱신(게이트 내부에서만 항목 생성) */
   if(hs.classList.contains('searching')){ if(_hsTimer)clearTimeout(_hsTimer); _hsTimer=setTimeout(function(){ _runSearchV2(q.trim(),'hsResults'); },250); }
 }
 window._hsInput=_hsInput;
-function _hsClear(){ var i=document.getElementById('hsInput'); if(i)i.value=''; _hsReset(); if(i)i.focus(); }
+function _hsClear(){ var i=document.getElementById('hsInput'); if(i)i.value=''; _acClose(); _hsReset(); if(i)i.focus(); }
 window._hsClear=_hsClear;
+/* ════ 통합 검색창 자동완성 — 보험회사명+별칭, 삼성 상품명(best-effort). 임태성 게이트(_canSeeCompanyHub). 2026-06-29 ════
+   원칙: 별칭 입력해도 정식명 한 건만(회사당 1항목, 중복 0) / 영문대소문·공백차 무시(_normCo) / 키보드↑↓·Enter·Esc·마우스 / 선택 시 기준명으로 회사 허브 동일 결과.
+   상품명=삼성 라인업/납면 화면상수(전사 상품 마스터는 검수·DB적재 후 확대) / 담보명=구조화 데이터 부재로 이번 미포함. */
+var _AC_MAX=8;            /* 최대 노출 */
+var _acIndex=null;        /* [{label,sub,type,canon,product,terms:[정규화 매칭어]}] */
+var _acList=[];           /* 현재 렌더된 항목 */
+var _acActive=-1;         /* 키보드 활성 인덱스 */
+var _acBlurTimer=null;
+/* 인덱스 1회 구성(지연) — insurers(전 회사) + _COMPANY_ALIASES + 삼성 상품 */
+function _acBuild(){
+  if(_acIndex) return _acIndex;
+  var items=[], seen={};
+  /* 회사: insurers 전 회사. 별칭은 매칭어로만 합류(항목은 회사당 1개=중복 0) */
+  try{ (window._acInsurers||[]).forEach(function(c){
+    var name=String(c&&c.name||'').trim(); if(!name||seen['co:'+name]) return; seen['co:'+name]=1;
+    var terms=[_normCo(name)];
+    var al=_COMPANY_ALIASES[name]; if(al){ al.forEach(function(a){ var k=_normCo(a); if(k&&terms.indexOf(k)<0) terms.push(k); }); }
+    items.push({label:name, sub:'보험회사', type:'company', canon:name, terms:terms});
+  }); }catch(e){}
+  /* 삼성 상품(best-effort): 라인업+납면 화면상수 상품명. 회사=삼성화재 */
+  try{ var prods={};
+    (typeof _samsungLineup!=='undefined'?_samsungLineup:[]).forEach(function(p){ if(p&&p.상품명) prods[p.상품명]=1; });
+    (typeof _samsungWaiver!=='undefined'?_samsungWaiver:[]).forEach(function(p){ if(p&&p.상품명) prods[p.상품명]=1; });
+    Object.keys(prods).forEach(function(nm){ items.push({label:nm, sub:'삼성화재 · 상품', type:'product', canon:'삼성화재', product:nm, terms:[_normCo(nm)]}); });
+  }catch(e){}
+  _acIndex=items; return items;
+}
+/* insurers 캐시 로드(1회) */
+function _acLoadInsurers(){
+  if(window._acInsurers||window._acInsurersLoading) return; window._acInsurersLoading=true;
+  try{ if(!window.db||!window.db.fetch){ window._acInsurersLoading=false; return; }
+    window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=id,name,type&order=name').then(function(r){ return r&&r.ok?r.json():[]; }).then(function(rows){ window._acInsurers=rows||[]; _acIndex=null; window._acInsurersLoading=false; }).catch(function(){ window._acInsurersLoading=false; });
+  }catch(e){ window._acInsurersLoading=false; }
+}
+function _acClose(){ var b=document.getElementById('hsSuggest'); if(b){ b.classList.remove('open'); b.innerHTML=''; } var i=document.getElementById('hsInput'); if(i) i.setAttribute('aria-expanded','false'); _acList=[]; _acActive=-1; }
+window._acClose=_acClose;
+function _acBlur(){ if(_acBlurTimer)clearTimeout(_acBlurTimer); _acBlurTimer=setTimeout(_acClose,160); }   /* 항목 클릭 여유 후 닫기 */
+window._acBlur=_acBlur;
+/* 입력 → 후보 매칭·렌더 */
+function _acInput(q){
+  var box=document.getElementById('hsSuggest'); if(!box) return;
+  if(typeof _canSeeCompanyHub==='function' && !_canSeeCompanyHub()){ _acClose(); return; }   /* 게이트 외엔 자동완성 없음 */
+  _acLoadInsurers();
+  var n=_normCo(q); if(!n){ _acClose(); return; }
+  var idx=_acBuild();
+  var pre=[], inc=[];
+  for(var i=0;i<idx.length;i++){ var it=idx[i], hit=0, prefix=0;
+    for(var t=0;t<it.terms.length;t++){ var term=it.terms[t]; if(!term) continue; if(term.indexOf(n)===0){ prefix=1; hit=1; break; } if(term.indexOf(n)>=0){ hit=1; } }
+    if(hit){ (prefix?pre:inc).push(it); }
+  }
+  /* 회사 우선, 그 다음 상품. 접두 일치 우선 */
+  function _coFirst(a,b){ if(a.type!==b.type) return a.type==='company'?-1:1; return 0; }
+  pre.sort(_coFirst); inc.sort(_coFirst);
+  _acList=pre.concat(inc).slice(0,_AC_MAX);
+  if(!_acList.length){ _acClose(); return; }
+  _acActive=-1;
+  box.innerHTML=_acList.map(function(it,i){ return '<div class="hs-sug-item" role="option" id="hsSug'+i+'" data-i="'+i+'" onmousedown="event.preventDefault();_acSelect('+i+')" onmouseenter="_acHover('+i+')"><span class="hs-sug-name">'+_sEsc(it.label)+'</span><span class="hs-sug-sub">'+_sEsc(it.sub)+'</span></div>'; }).join('');
+  box.classList.add('open');
+  var inp=document.getElementById('hsInput'); if(inp) inp.setAttribute('aria-expanded','true');
+}
+window._acInput=_acInput;
+function _acHover(i){ _acActive=i; _acPaint(); }
+window._acHover=_acHover;
+function _acPaint(){ var box=document.getElementById('hsSuggest'); if(!box) return; var els=box.querySelectorAll('.hs-sug-item'); for(var i=0;i<els.length;i++){ els[i].classList.toggle('active', i===_acActive); } var inp=document.getElementById('hsInput'); if(inp) inp.setAttribute('aria-activedescendant', _acActive>=0?('hsSug'+_acActive):''); }
+function _acMove(d){ if(!_acList.length) return; _acActive+=d; if(_acActive<0)_acActive=_acList.length-1; if(_acActive>=_acList.length)_acActive=0; _acPaint(); var el=document.getElementById('hsSug'+_acActive); if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest'}); }
+function _acSelect(i){ var it=_acList[i]; if(!it) return; var inp=document.getElementById('hsInput');
+  /* 회사=기준명으로 검색(허브 동일 결과) / 상품=상품명으로 검색 */
+  var term = it.type==='company' ? it.canon : it.label;
+  if(inp) inp.value=term; _acClose(); if(typeof _hsSearch==='function') _hsSearch(term);
+}
+window._acSelect=_acSelect;
+/* 입력창 키 처리 — ↑↓ 이동 / Enter 선택(활성 없으면 일반 검색) / Esc 닫기 */
+function _acKeydown(e){
+  var box=document.getElementById('hsSuggest'); var open=box&&box.classList.contains('open');
+  if(e.key==='ArrowDown'){ if(open){ e.preventDefault(); _acMove(1); } return; }
+  if(e.key==='ArrowUp'){ if(open){ e.preventDefault(); _acMove(-1); } return; }
+  if(e.key==='Escape'){ if(open){ e.preventDefault(); _acClose(); } return; }
+  if(e.key==='Enter'){
+    if(open && _acActive>=0 && _acList[_acActive]){ e.preventDefault(); _acSelect(_acActive); }
+    else { _acClose(); if(typeof _hsSearch==='function') _hsSearch((e.target&&e.target.value)||''); }
+  }
+}
+window._acKeydown=_acKeydown;
 /* 카드: 상담=다이어리(행동) / 상품·인수=검색 렌즈(지식 탭 + 분류 필터, 진입 시 활성 칩 표시) */
 function _hsCard(kind){
   if(kind==='consult'){ if(typeof _navDiary==='function')_navDiary(); return; }
