@@ -11127,9 +11127,9 @@ async function _hubNlRenderThumb(th){
     var vp=page.getViewport({scale:(280/unitW)});
     var cv=document.createElement('canvas');
     cv.width=Math.ceil(spread ? vp.width/2 : vp.width); cv.height=Math.ceil(vp.height);
-    /* 오른쪽 면을 보이려면 콘텐츠를 왼쪽으로 vp.width/2 이동. 왼쪽 면이 표지면 transform=null로 변경 */
-    var transform=spread ? [1,0,0,1, -vp.width/2, 0] : null;
-    await page.render({canvasContext:cv.getContext('2d'), viewport:vp, transform:transform}).promise;
+    /* 펼침면 표지=왼쪽 면(라이브 검수 확정 2026-06-29). 왼쪽 면은 캔버스 폭만 절반으로 두면
+       콘텐츠 왼쪽부터 그려져 그대로 보임(transform 불필요). 오른쪽 면이 표지면 [1,0,0,1,-vp.width/2,0] */
+    await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
     th.innerHTML=''; th.appendChild(cv);
     try{ pdf.cleanup&&pdf.cleanup(); task.destroy&&task.destroy(); }catch(e){}
   }catch(e){ /* placeholder 유지(로드 실패) */ }
