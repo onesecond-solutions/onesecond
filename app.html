@@ -138,13 +138,18 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .sn-btn.ghost{background:var(--s2);color:var(--tp);border:1px solid var(--bd);}
 .sn-btn.danger{background:#c0392b;}
 .sn-btn.danger:hover{background:#a93226;}
-.sn-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
-.sn-modal-bg.on{display:flex;}
-.sn-modal{background:var(--s1);border-radius:14px;padding:22px 24px;width:min(420px,92vw);max-height:90vh;overflow-y:auto;}
-.sn-modal-h{font-size:16px;font-weight:800;color:var(--tp);margin-bottom:14px;}
-.sn-modal label{display:block;font-size:12px;color:var(--ts);font-weight:700;margin-bottom:12px;}
-.sn-modal input,.sn-modal select{width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:var(--s2);color:var(--tp);font-family:inherit;box-sizing:border-box;}
-.sn-modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;}
+/* 우측 패널 인라인 폼 — 스크립트 게시판 구조(모달 아님) + sales_form001 2열 그리드 스타일 */
+#v-salesnote .sn-form{padding:18px 22px;}
+#v-salesnote .sn-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+#v-salesnote .sn-fld{display:flex;flex-direction:column;gap:4px;}
+#v-salesnote .sn-fld.full{grid-column:1 / -1;}
+#v-salesnote .sn-fld label{font-size:12px;font-weight:700;color:var(--tp);}
+#v-salesnote .sn-fld label .req{color:#c0392b;margin-left:2px;}
+#v-salesnote .sn-fld input,#v-salesnote .sn-fld select,#v-salesnote .sn-fld textarea{padding:9px 11px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:var(--s2);color:var(--tp);font-family:inherit;box-sizing:border-box;width:100%;}
+#v-salesnote .sn-fld textarea{min-height:70px;resize:vertical;}
+#v-salesnote .sn-form-acts{display:flex;gap:8px;margin-top:18px;}
+#v-salesnote .sn-form-label{display:inline-block;font-size:0.72rem;font-weight:800;padding:3px 10px;border-radius:6px;color:#fff;margin-bottom:12px;}
+@media(max-width:720px){#v-salesnote .sn-form-grid{grid-template-columns:1fr;}}
 #v-roadmap .rm-note{font-size:11.5px;color:#9A5B06;background:#FFF8E6;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 12px;line-height:1.55;margin-bottom:10px;}
 #v-roadmap .rm-head{font-size:17px;font-weight:800;margin:2px 0 4px;}
 #v-roadmap .rm-sub{font-size:12px;color:var(--ts);margin-bottom:10px;}
@@ -3339,19 +3344,6 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="sn-col sn-detail" id="sn-detail"><div class="sn-empty">왼쪽에서 고객을 선택하세요.</div></div>
       </div>
      </div>
-     <!-- 영업노트 고객 신규/수정 폼 모달 -->
-     <div class="sn-modal-bg" id="snModalBg" onclick="if(event.target===this)_snCloseForm()">
-       <div class="sn-modal">
-         <div class="sn-modal-h" id="snModalTitle">신규 고객</div>
-         <label>이름 *<input id="snf-name" type="text" autocomplete="off"></label>
-         <label>연락처<input id="snf-phone" type="text" placeholder="010-0000-0000" autocomplete="off"></label>
-         <label>생년월일<input id="snf-birth" type="text" placeholder="1980-01-01" autocomplete="off"></label>
-         <label>성별<select id="snf-gender"><option value="">-</option><option>남</option><option>여</option></select></label>
-         <label>상담채널<input id="snf-channel" type="text" placeholder="소개·DB 등" autocomplete="off"></label>
-         <label>영업상태<select id="snf-status"><option>신규</option><option>진행중</option><option>계약</option><option>보류</option><option>종결</option></select></label>
-         <div class="sn-modal-foot"><button class="sn-btn ghost" onclick="_snCloseForm()">취소</button><button class="sn-btn" onclick="_snSaveForm()">저장</button></div>
-       </div>
-     </div>
      <!-- ════ 삼성화재 상품 라인업 (#v-samsung-lineup) — 임태성 실장 게이트(회사 허브 진입). 일반 사용자·어드민 무영향. 2026-06-28 ════ -->
      <div class="wrap view" id="v-samsung-lineup">
        <button class="smsg-back" type="button" onclick="_samsungBack()">&#8249; 검색으로</button>
@@ -4447,17 +4439,38 @@ var _snFormEditId=null;
 function _snVal(id){var e=document.getElementById(id);return e?String(e.value||''):'';}
 function _snSetv(id,v){var e=document.getElementById(id);if(e)e.value=(v==null?'':v);}
 function _snOwnerId(){try{var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');return String(u.id||'');}catch(e){return'';}}
+var _SN_STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료']; /* 노션 상담 단계(2026-06-29 대표 확정) */
+function _snFormHtml(c){
+  c=c||{}; var v=function(x){return _snEsc(x==null?'':String(x));};
+  var st=c.status||'신규DB', g=c.gender||'';
+  var opts=_SN_STAGES.slice(); if(st&&opts.indexOf(st)<0)opts.unshift(st); /* 레거시 상태값(예 '신규') 보존 */
+  var stOpt=opts.map(function(s){return '<option'+(s===st?' selected':'')+'>'+_snEsc(s)+'</option>';}).join('');
+  return '<div class="sn-form">'
+    +'<span class="sn-form-label" style="background:'+(c.id?'var(--warn)':'var(--ac)')+'">'+(c.id?'고객 수정':'신규 고객')+'</span>'
+    +'<div class="sn-form-grid">'
+    +'<div class="sn-fld"><label>이름<span class="req">*</span></label><input id="snf-name" type="text" value="'+v(c.name)+'" autocomplete="off"></div>'
+    +'<div class="sn-fld"><label>연락처</label><input id="snf-phone" type="text" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000" autocomplete="off"></div>'
+    +'<div class="sn-fld"><label>생년월일</label><input id="snf-birth" type="text" value="'+v(c.birth_date)+'" placeholder="1980-01-01" autocomplete="off"></div>'
+    +'<div class="sn-fld"><label>성별</label><select id="snf-gender"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div>'
+    +'<div class="sn-fld"><label>상담채널</label><input id="snf-channel" type="text" value="'+v(c.channel)+'" placeholder="소개·DB 등" autocomplete="off"></div>'
+    +'<div class="sn-fld"><label>영업상태</label><select id="snf-status">'+stOpt+'</select></div>'
+    +'</div>'
+    +'<div class="sn-form-acts"><button class="sn-btn" onclick="_snSaveForm()">저장</button><button class="sn-btn ghost" onclick="_snCloseForm()">취소</button>'
+    +(c.id?'<button class="sn-btn danger" style="margin-left:auto" onclick="_snDelete(_snSel)">삭제</button>':'')
+    +'</div></div>';
+}
 function _snOpenForm(i){
   var isNew=(i==null||i===undefined);
-  var c=isNew?{}:(_snData[i]||{});
-  _snFormEditId=isNew?null:(c.id||null);
-  var t=document.getElementById('snModalTitle'); if(t)t.textContent=isNew?'신규 고객':'고객 수정';
-  _snSetv('snf-name',c.name);_snSetv('snf-phone',c.phone||c.phone_raw);_snSetv('snf-birth',c.birth_date);
-  _snSetv('snf-gender',c.gender||'');_snSetv('snf-channel',c.channel);_snSetv('snf-status',c.status||'신규');
-  var bg=document.getElementById('snModalBg'); if(bg)bg.classList.add('on');
+  if(!isNew)_snSel=i;
+  _snFormEditId=isNew?null:((_snData[i]||{}).id||null);
+  var d=document.getElementById('sn-detail'); if(!d) return;
+  d.innerHTML=_snFormHtml(isNew?{}:(_snData[i]||{}));
   var nm=document.getElementById('snf-name'); if(nm)setTimeout(function(){nm.focus();},50);
 }
-function _snCloseForm(){var bg=document.getElementById('snModalBg'); if(bg)bg.classList.remove('on');}
+function _snCloseForm(){
+  if(_snSel!=null && _snData[_snSel]){ _snSel_(_snSel); }
+  else { var d=document.getElementById('sn-detail'); if(d)d.innerHTML='<div class="sn-empty">왼쪽에서 고객을 선택하세요.</div>'; }
+}
 function _snAfterWrite(){_snLoaded=false;_snSel=null;var d=document.getElementById('sn-detail');if(d)d.innerHTML='<div class="sn-empty">왼쪽에서 고객을 선택하세요.</div>';if(typeof loadSalesNote==='function')loadSalesNote();}
 function _snSaveForm(){
   var name=_snVal('snf-name').trim(); if(!name){alert('이름을 입력하세요');return;}
@@ -4466,7 +4479,7 @@ function _snSaveForm(){
   var now=new Date().toISOString();
   var body={name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birth||null, gender:_snVal('snf-gender')||null, channel:_snVal('snf-channel').trim()||null,
-    status:_snVal('snf-status')||'신규', updated_at:now};
+    status:_snVal('snf-status')||'신규DB', updated_at:now};
   var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _snAfterWrite(); _snCloseForm(); };
   var err=function(e){ alert((_snFormEditId?'수정':'등록')+' 실패: '+(e&&e.message||e)); };
   if(_snFormEditId){
