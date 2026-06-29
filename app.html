@@ -16450,7 +16450,7 @@ body.is-uat-spacenav #spTree{display:none;}
             </div>
 
             <div class="sp-branch collapsed">
-              <div class="sp-node sp-scope sp-sc-team sel" data-k="tspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>팀 스페이스<span class="sp-aud"><svg class="sp-ico"><use href="#i-users"/></svg>우리 팀</span></div>
+              <div class="sp-node sp-scope sp-sc-team" data-k="tspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>팀 스페이스<span class="sp-aud"><svg class="sp-ico"><use href="#i-users"/></svg>우리 팀</span></div>
               <div class="sp-children">
                 <div class="sp-node sp-leaf" data-k="troom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-msg"/></svg></span>팀방</div>
                 <div class="sp-node sp-leaf" data-k="tlib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>팀 자료실</div>
@@ -16458,7 +16458,7 @@ body.is-uat-spacenav #spTree{display:none;}
             </div>
 
             <div class="sp-branch collapsed">
-              <div class="sp-node sp-scope sp-sc-my" data-k="mspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-user"/></svg></span>마이 스페이스<span class="sp-aud"><svg class="sp-ico"><use href="#i-lock"/></svg>나만</span></div>
+              <div class="sp-node sp-scope sp-sc-my sel" data-k="mspace"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-user"/></svg></span>마이 스페이스<span class="sp-aud"><svg class="sp-ico"><use href="#i-lock"/></svg>나만</span></div>
               <div class="sp-children">
                 <div class="sp-node sp-leaf" data-k="m_diary"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-cal"/></svg></span>다이어리</div>
                 <div class="sp-node sp-leaf" data-k="m_lib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>개인 자료실</div>
@@ -17031,7 +17031,9 @@ body.is-uat-spacenav #spTree{display:none;}
       else if(k==='spguide') _spIntroRender(sc);                 /* 스페이스 설명서 = 공간 구조 안내 */
       else _spPaint(k);
     });
-    _spPaint('tspace'); /* 초기 = 팀 스페이스 */
+    /* 초기 시트 콘텐츠 = 마이 스페이스 첫화면(front001). 시트는 collapsed로 시작(자동 열림 없음) — 시트를 열면 마이 스페이스가 먼저 보임. 함수 미가용 시 팀 스페이스 폴백. (2026-06-30) */
+    if(typeof window._snMyspaceShow==='function'){ window._snMyspaceShow(document.getElementById('spContent')); }
+    else { _spPaint('tspace'); }
     if(typeof _spLoadMe==='function') _spLoadMe();  /* 내 소속(회사·지점·팀·이름) 실데이터 적재 → 헤더·간판 갱신 */
     /* 첫 방문 자동 안내(_osStartGuide) 자동 호출 제거 (2026-06-27) — 어드민+localStorage 미설정(시크릿창 등)에서 진입 1.3초 후 바텀시트가 사용자 동작 없이 자동으로 열리던 문제. 시트는 '원세컨드 시작하기' 버튼·메뉴를 직접 눌렀을 때만 열림. _osStartGuide 함수·시작하기 버튼은 그대로 유지(직접 클릭 시 정상 동작). */
   };
