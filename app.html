@@ -4455,16 +4455,30 @@ function _snFormHtml(c){
     +'<div class="sn-fld"><label>상담채널</label><input id="snf-channel" type="text" value="'+v(c.channel)+'" placeholder="소개·DB 등" autocomplete="off"></div>'
     +'<div class="sn-fld"><label>영업상태</label><select id="snf-status">'+stOpt+'</select></div>'
     +'</div>'
+    +'<div class="sn-fld full" style="margin-top:14px"><label>고객정보 원문 · 상담 메모 <span style="font-weight:400;color:var(--tf)">(화면 캡처 Ctrl+V·텍스트·표 자유 입력)</span></label><div id="sn-rich"></div></div>'
     +'<div class="sn-form-acts"><button class="sn-btn" onclick="_snSaveForm()">저장</button><button class="sn-btn ghost" onclick="_snCloseForm()">취소</button>'
     +(c.id?'<button class="sn-btn danger" style="margin-left:auto" onclick="_snDelete(_snSel)">삭제</button>':'')
     +'</div></div>';
+}
+var _snFormProfile={};
+function _snMountRich(noteHtml){
+  if(window.osRich&&window.osRich.mount) window.osRich.mount('sn-rich', noteHtml||'', {placeholder:'고객정보 화면 캡처(Ctrl+V) · 상담 메모를 자유롭게 입력하세요', pasteImage:true});
 }
 function _snOpenForm(i){
   var isNew=(i==null||i===undefined);
   if(!isNew)_snSel=i;
   _snFormEditId=isNew?null:((_snData[i]||{}).id||null);
+  _snFormProfile={};
   var d=document.getElementById('sn-detail'); if(!d) return;
   d.innerHTML=_snFormHtml(isNew?{}:(_snData[i]||{}));
+  _snMountRich('');  /* 우선 빈 에디터 마운트 */
+  if(!isNew && _snFormEditId && window.db && window.db.fetch){
+    /* 수정 = 원문(profile.note_html)은 목록 select에 없어 단건 fetch 후 재마운트 + merge용 보관 */
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(_snFormEditId)+'&select=profile&limit=1').then(function(r){return r.ok?r.json():[];}).then(function(rows){
+      var p=(rows&&rows[0]&&rows[0].profile)||{}; _snFormProfile=(p&&typeof p==='object')?p:{};
+      _snMountRich((_snFormProfile&&_snFormProfile.note_html)||'');
+    }).catch(function(){});
+  }
   var nm=document.getElementById('snf-name'); if(nm)setTimeout(function(){nm.focus();},50);
 }
 function _snCloseForm(){
@@ -4480,6 +4494,10 @@ function _snSaveForm(){
   var body={name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birth||null, gender:_snVal('snf-gender')||null, channel:_snVal('snf-channel').trim()||null,
     status:_snVal('snf-status')||'신규DB', updated_at:now};
+  /* 리치 원문 = profile jsonb(note_html). 기존 profile 보존 merge(주소·직업 등 미래 키 안 지움). 새 컬럼 0. */
+  var prof=(_snFormProfile&&typeof _snFormProfile==='object')?_snFormProfile:{};
+  if(window.osRich&&window.osRich.html){ prof.note_html=window.osRich.html(); }
+  body.profile=prof;
   var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _snAfterWrite(); _snCloseForm(); };
   var err=function(e){ alert((_snFormEditId?'수정':'등록')+' 실패: '+(e&&e.message||e)); };
   if(_snFormEditId){
@@ -10237,7 +10255,25 @@ window.osRich=window.osRich||{
       +'</div>'
       +'<div class="osrich-body" id="'+bid+'" contenteditable="true" data-ph="'+_sEsc(opts.placeholder||'내용을 입력하세요')+'"></div>';
     var b=document.getElementById(bid); if(b) b.innerHTML=html||'';
+    /* 클립보드 이미지 붙여넣기(Ctrl+V) — opts.pasteImage 인스턴스만. base64 본문 인라인(공개 버킷 미사용 → 고객 캡처는 RLS 보호 행에만 보존). 텍스트는 기본 동작. */
+    if(b && opts.pasteImage){ b.addEventListener('paste', osRich._pasteInline); }
     this._id=bid; this._bucket=opts.bucket||'onesecond_banner';
+  },
+  _pasteInline:function(ev){
+    try{
+      var dt=ev.clipboardData; if(!dt||!dt.items) return;
+      for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
+        if(it.kind==='file' && /^image\//.test(it.type||'')){
+          var f=it.getAsFile(); if(!f) continue;
+          ev.preventDefault();
+          var rd=new FileReader();
+          rd.onload=function(e){ try{ osRich.insert('<img src="'+e.target.result+'" alt="">'); }catch(_e){} };
+          rd.readAsDataURL(f);
+          return;
+        }
+      }
+      /* 이미지 없으면(일반 텍스트 등) 기본 붙여넣기 동작 유지 */
+    }catch(e){}
   },
   _body:function(){ return this._id?document.getElementById(this._id):null; },
   cmd:function(c,v){ var b=this._body(); if(b) b.focus(); try{ document.execCommand(c,false,v||null); }catch(e){} },
