@@ -149,6 +149,13 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 #v-salesnote .sn-fld textarea{min-height:70px;resize:vertical;}
 #v-salesnote .sn-form-acts{display:flex;gap:8px;margin-top:18px;}
 #v-salesnote .sn-form-label{display:inline-block;font-size:0.72rem;font-weight:800;padding:3px 10px;border-radius:6px;color:#fff;margin-bottom:12px;}
+#v-salesnote .sn-ocr{border:1px dashed var(--ac);border-radius:10px;padding:12px;margin-bottom:14px;background:var(--s2);}
+#v-salesnote .sn-ocr-hint{font-size:12px;color:var(--ts);margin-bottom:8px;line-height:1.55;}
+#v-salesnote .sn-ocr-drop{min-height:54px;border:1px solid var(--bd);border-radius:8px;background:var(--s1);padding:8px;outline:0;font-size:12px;color:var(--tf);}
+#v-salesnote .sn-ocr-drop:empty::before{content:attr(data-ph);color:var(--tf);}
+#v-salesnote .sn-ocr-drop img{max-width:100%;max-height:220px;border-radius:6px;display:block;}
+#v-salesnote .sn-ocr-acts{display:flex;align-items:center;gap:10px;margin-top:8px;}
+#v-salesnote .sn-ocr-stat{font-size:12px;color:var(--ac);}
 @media(max-width:720px){#v-salesnote .sn-form-grid{grid-template-columns:1fr;}}
 #v-roadmap .rm-note{font-size:11.5px;color:#9A5B06;background:#FFF8E6;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 12px;line-height:1.55;margin-bottom:10px;}
 #v-roadmap .rm-head{font-size:17px;font-weight:800;margin:2px 0 4px;}
@@ -4445,38 +4452,90 @@ function _snFormHtml(c){
   var st=c.status||'신규DB', g=c.gender||'';
   var opts=_SN_STAGES.slice(); if(st&&opts.indexOf(st)<0)opts.unshift(st); /* 레거시 상태값(예 '신규') 보존 */
   var stOpt=opts.map(function(s){return '<option'+(s===st?' selected':'')+'>'+_snEsc(s)+'</option>';}).join('');
+  var ctypes=['뱅크샐러드','카카오페이','보맵','키워','해피톡','기타'];
+  var ctOpt='<option value="">선택</option>'+ctypes.map(function(s){return '<option>'+s+'</option>';}).join('');
   return '<div class="sn-form">'
     +'<span class="sn-form-label" style="background:'+(c.id?'var(--warn)':'var(--ac)')+'">'+(c.id?'고객 수정':'신규 고객')+'</span>'
+    /* 캡처 자동입력 영역 — 원본 이미지 미저장(OCR 추출용 휘발). 사용자가 직접 붙여넣고 직접 실행할 때만 호출 */
+    +'<div class="sn-ocr">'
+      +'<div class="sn-ocr-hint">📷 해피톡·뱅크샐러드·카카오페이·보맵·키워 등 <b>고객정보 화면을 캡처</b>해 아래에 <b>Ctrl+V</b> → [캡처에서 정보 읽기] (원본 이미지는 저장하지 않습니다)</div>'
+      +'<div id="sn-ocr-drop" class="sn-ocr-drop" contenteditable="true" data-ph="여기를 클릭하고 Ctrl+V로 캡처 붙여넣기"></div>'
+      +'<div class="sn-ocr-acts"><button class="sn-btn" type="button" onclick="_snOcrRun()">캡처에서 정보 읽기</button><span class="sn-ocr-stat" id="sn-ocr-stat"></span></div>'
+    +'</div>'
     +'<div class="sn-form-grid">'
     +'<div class="sn-fld"><label>이름<span class="req">*</span></label><input id="snf-name" type="text" value="'+v(c.name)+'" autocomplete="off"></div>'
     +'<div class="sn-fld"><label>연락처</label><input id="snf-phone" type="text" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000" autocomplete="off"></div>'
     +'<div class="sn-fld"><label>생년월일</label><input id="snf-birth" type="text" value="'+v(c.birth_date)+'" placeholder="1980-01-01" autocomplete="off"></div>'
     +'<div class="sn-fld"><label>성별</label><select id="snf-gender"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div>'
-    +'<div class="sn-fld"><label>상담채널</label><input id="snf-channel" type="text" value="'+v(c.channel)+'" placeholder="소개·DB 등" autocomplete="off"></div>'
+    +'<div class="sn-fld"><label>나이</label><input id="snf-age" type="text" placeholder="자동/직접" autocomplete="off"></div>'
+    +'<div class="sn-fld"><label>고객유형 <span style="font-weight:400;color:var(--tf)">(유입 플랫폼)</span></label><select id="snf-ctype">'+ctOpt+'</select></div>'
+    +'<div class="sn-fld"><label>상담채널 <span style="font-weight:400;color:var(--tf)">(상담 수단)</span></label><input id="snf-channel" type="text" value="'+v(c.channel)+'" placeholder="전화·문자·카카오톡·해피톡" autocomplete="off"></div>'
     +'<div class="sn-fld"><label>영업상태</label><select id="snf-status">'+stOpt+'</select></div>'
     +'</div>'
-    +'<div class="sn-fld full" style="margin-top:14px"><label>고객정보 원문 · 상담 메모 <span style="font-weight:400;color:var(--tf)">(화면 캡처 Ctrl+V·텍스트·표 자유 입력)</span></label><div id="sn-rich"></div></div>'
+    +'<div class="sn-fld full" style="margin-top:14px"><label>상담 메모 <span style="font-weight:400;color:var(--tf)">(텍스트·이미지·표 자유 입력)</span></label><div id="sn-rich"></div></div>'
     +'<div class="sn-form-acts"><button class="sn-btn" onclick="_snSaveForm()">저장</button><button class="sn-btn ghost" onclick="_snCloseForm()">취소</button>'
     +(c.id?'<button class="sn-btn danger" style="margin-left:auto" onclick="_snDelete(_snSel)">삭제</button>':'')
     +'</div></div>';
 }
 var _snFormProfile={};
+var _snOcr={base64:'',mime:''};
 function _snMountRich(noteHtml){
-  if(window.osRich&&window.osRich.mount) window.osRich.mount('sn-rich', noteHtml||'', {placeholder:'고객정보 화면 캡처(Ctrl+V) · 상담 메모를 자유롭게 입력하세요', pasteImage:true});
+  if(window.osRich&&window.osRich.mount) window.osRich.mount('sn-rich', noteHtml||'', {placeholder:'상담 메모(텍스트·이미지 Ctrl+V·표)', pasteImage:true});
+}
+function _snSetSelect(id,val){
+  var e=document.getElementById(id); if(!e||!val) return; val=String(val);
+  for(var i=0;i<e.options.length;i++){ if(e.options[i].value===val||e.options[i].text===val){ e.selectedIndex=i; return; } }
+  var o=document.createElement('option'); o.text=val; o.selected=true; e.add(o);  /* 없는 값(레거시·신규 플랫폼)이면 추가 */
+}
+/* 캡처 자동입력 — 붙여넣은 이미지를 base64로 보관(저장 X), [읽기] 누를 때만 Edge Function 호출 */
+function _snOcrBind(){
+  var box=document.getElementById('sn-ocr-drop'); if(!box||box._b) return; box._b=1;
+  box.addEventListener('paste', function(ev){
+    try{ var dt=ev.clipboardData; if(!dt||!dt.items) return;
+      for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
+        if(it.kind==='file' && /^image\//.test(it.type||'')){ var f=it.getAsFile(); if(!f) continue; ev.preventDefault();
+          var rd=new FileReader();
+          rd.onload=function(e){ var u=String(e.target.result||''); _snOcr.base64=u.split(',')[1]||''; _snOcr.mime=(u.match(/^data:([^;]+);/)||[])[1]||'image/png';
+            box.innerHTML='<img src="'+u+'" alt="캡처">'; var s=document.getElementById('sn-ocr-stat'); if(s)s.textContent='캡처 준비됨 — [캡처에서 정보 읽기]를 누르세요'; };
+          rd.readAsDataURL(f); return; } }
+    }catch(e){}
+  });
+}
+function _snOcrRun(){
+  if(!_snOcr.base64){ alert('먼저 고객정보 화면 캡처를 붙여넣어 주세요 (Ctrl+V).'); return; }
+  var s=document.getElementById('sn-ocr-stat'); if(s)s.textContent='읽는 중…';
+  if(!window.db||!window.db.fetch){ if(s)s.textContent='연결 오류'; return; }
+  window.db.fetch('/functions/v1/gemini-customer-ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:_snOcr.base64,mimeType:_snOcr.mime})})
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+    .then(function(res){
+      if(!res.ok){ if(s)s.textContent=(res.j&&res.j.error)||'추출 실패'; return; }
+      var d=res.j||{};
+      if(d.name)_snSetv('snf-name',d.name);
+      if(d.phone)_snSetv('snf-phone',d.phone);
+      if(d.birth_date)_snSetv('snf-birth',d.birth_date);
+      if(d.age)_snSetv('snf-age',d.age);
+      if(d.gender)_snSetSelect('snf-gender',d.gender);
+      if(d.customer_type)_snSetSelect('snf-ctype',d.customer_type);
+      if(s)s.textContent='반영됨 — 확인·수정 후 저장하세요';
+    })
+    .catch(function(e){ if(s)s.textContent='오류: '+(e&&e.message||e); });
 }
 function _snOpenForm(i){
   var isNew=(i==null||i===undefined);
   if(!isNew)_snSel=i;
   _snFormEditId=isNew?null:((_snData[i]||{}).id||null);
-  _snFormProfile={};
+  _snFormProfile={}; _snOcr={base64:'',mime:''};
   var d=document.getElementById('sn-detail'); if(!d) return;
   d.innerHTML=_snFormHtml(isNew?{}:(_snData[i]||{}));
   _snMountRich('');  /* 우선 빈 에디터 마운트 */
+  _snOcrBind();
   if(!isNew && _snFormEditId && window.db && window.db.fetch){
-    /* 수정 = 원문(profile.note_html)은 목록 select에 없어 단건 fetch 후 재마운트 + merge용 보관 */
+    /* 수정 = profile(note_html·age·customer_type)은 목록 select에 없어 단건 fetch 후 반영 + merge용 보관 */
     window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(_snFormEditId)+'&select=profile&limit=1').then(function(r){return r.ok?r.json():[];}).then(function(rows){
       var p=(rows&&rows[0]&&rows[0].profile)||{}; _snFormProfile=(p&&typeof p==='object')?p:{};
       _snMountRich((_snFormProfile&&_snFormProfile.note_html)||'');
+      if(_snFormProfile.age)_snSetv('snf-age',_snFormProfile.age);
+      if(_snFormProfile.customer_type)_snSetSelect('snf-ctype',_snFormProfile.customer_type);
     }).catch(function(){});
   }
   var nm=document.getElementById('snf-name'); if(nm)setTimeout(function(){nm.focus();},50);
@@ -4497,6 +4556,8 @@ function _snSaveForm(){
   /* 리치 원문 = profile jsonb(note_html). 기존 profile 보존 merge(주소·직업 등 미래 키 안 지움). 새 컬럼 0. */
   var prof=(_snFormProfile&&typeof _snFormProfile==='object')?_snFormProfile:{};
   if(window.osRich&&window.osRich.html){ prof.note_html=window.osRich.html(); }
+  prof.customer_type=_snVal('snf-ctype')||null;  /* 고객유형=유입 플랫폼 (상담채널 channel과 분리) */
+  prof.age=_snVal('snf-age')||null;
   body.profile=prof;
   var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _snAfterWrite(); _snCloseForm(); };
   var err=function(e){ alert((_snFormEditId?'수정':'등록')+' 실패: '+(e&&e.message||e)); };
@@ -4514,7 +4575,7 @@ function _snDelete(i){
     if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _snAfterWrite();
   }).catch(function(e){ alert('삭제 실패: '+(e&&e.message||e)); });
 }
-window._snOpenForm=_snOpenForm;window._snCloseForm=_snCloseForm;window._snSaveForm=_snSaveForm;window._snDelete=_snDelete;
+window._snOpenForm=_snOpenForm;window._snCloseForm=_snCloseForm;window._snSaveForm=_snSaveForm;window._snDelete=_snDelete;window._snOcrRun=_snOcrRun;
 /* 현장의 소리 게이팅 — admin·ga_* 전용 (insurer 계열·비로그인 차단, 2026-06-07 role_access_map §6 #1) */
 function _canSeeVoice(){
   return false;   /* 현장의 소리(#v-voice) 전면 숨김 (2026-06-27 대표 지시) — 전 사용자(admin 포함) 진입 차단: showView 가드 !_canSeeVoice()→home + nav 숨김. 기존 admin·ga_ 노출 폐기. 데이터(posts/team_notices)는 보존, 화면 진입만 차단. */
