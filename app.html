@@ -14849,7 +14849,7 @@ function filterMys(el,cat){
   /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
-  var f=(cat==='전체')?items.slice():(cat==='공유받음')?items.filter(function(it){ return Array.isArray(it.keywords)&&it.keywords.indexOf('공유받음')>=0; }):items.filter(function(it){ return (it._badge||'')===cat; });
+  var f=(cat==='전체')?items.slice():(cat==='공유받음')?items.filter(function(it){ return Array.isArray(it.keywords)&&it.keywords.indexOf('공유받음')>=0; }):(cat==='스크립트')?items.filter(function(it){ return it._type==='script'; }):items.filter(function(it){ return (it._badge||'')===cat; });  /* 스크립트=안정 키 _type로 매칭(badge 표시명 '업무노트'로 변경됨 #1024 → _badge 매칭 깨짐 회귀 수정, 전 사용자) */
   /* 신규 최상단 원칙: sort_order 미할당(null=신규/미정렬)을 맨 위로(-Infinity). 드래그로 명시 정렬한 항목은 그 순서 보존(아래). 동순위는 created_at DESC, id DESC. (기존 Infinity=맨 아래라 신규 메모가 최하단으로 가던 버그 정정) */
   if(window._mysReorder){ f.sort(function(a,b){ var sa=(a._sort==null)?-Infinity:a._sort, sb=(b._sort==null)?-Infinity:b._sort; if(sa!==sb) return sa-sb; return ((b._date||'').localeCompare(a._date||'')) || ((Number(b.id)||0)-(Number(a.id)||0)); }); }
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
