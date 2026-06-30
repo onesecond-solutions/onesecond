@@ -37,6 +37,8 @@
 :root{--bg:#FAFAFB;--s1:#FFFFFF;--s2:#F2F2F4;--sh:#EDEDF0;--bd:#DCDCE1;--tp:#18181B;--ts:#52525B;--tf:#71717A;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#3F3F46;--t-uw:#0891B2;--t-product:#6366F1;--t-event:#C026D3;--ok:#16A34A;--warn:#F59E0B;--err:#DC2626;}
 /* 스페이스 색상 토큰 (마이/팀/지점) — 기획팀장 의뢰 §A. 신호점·배지 단일 소스(app.html이 tokens-v2.css 미링크라 인라인). 차분한 톤(형광 금지). (2026-06-27) */
 :root{--space-my-line:#D85A30;--space-my-soft:#FAECE7;--space-my-text:#993C1D;--space-my-badge-t:#4A1B0C;--space-my-badge-bg:#F5C4B3;--space-team-line:#639922;--space-team-soft:#EAF3DE;--space-team-text:#3B6D11;--space-team-badge-t:#173404;--space-team-badge-bg:#C0DD97;--space-branch-line:#7F77DD;--space-branch-soft:#EEEDFE;--space-branch-text:#534AB7;--space-branch-badge-t:#26215C;--space-branch-badge-bg:#CECBF6;}
+/* 10색 카테고리 토큰 (기획팀장 v2 — 라이트=Tailwind 600 동일톤). 상품 분류 색코드 단일 소스. 기존 의미색(--ok/--t-uw/--t-product/--t-event)과 값 동일 = 충돌 0. 전 보험사 상품 라인업 색코드의 시작점(2026-06-30). */
+:root{--cat-red:#DC2626;--cat-orange:#EA580C;--cat-amber:#D97706;--cat-green:#16A34A;--cat-teal:#0D9488;--cat-cyan:#0891B2;--cat-blue:#2563EB;--cat-indigo:#6366F1;--cat-violet:#7C3AED;--cat-magenta:#C026D3;}
 /* 작업9: radius 토큰 전역 정의 (app.html에 tokens.css 미링크 → 미정의로 직각 렌더되던 것 봉합). B안 넉넉히 · 토큰만(개별 하드코딩 금지) */
 :root{--radius-xs:8px;--radius-sm:11px;--radius-md:13px;--radius-lg:18px;--radius-xl:18px;--radius-full:9999px;--radius:11px;}
 /* 2026-06-13 폰트 스케일 토큰 1차(b) — 바닥선 고정(본문 16px 기준). em 곱연산 누적 제거는 2차(em→rem 전면). */
@@ -217,6 +219,18 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .smsg-tbl tr.smsg-grp td{border-top:2px solid var(--bd);}
 .smsg-tbl tr.smsg-grp:first-child td{border-top:none;}/* 첫 그룹은 thead 경계와 중복 방지 */
 .smsg-note{font-size:var(--sz-s);color:var(--tf);margin-top:12px;line-height:1.6;flex-shrink:0;}
+/* ── 상품 분류 색코드(10색 토큰) — 한눈에 스캔·임팩트. 운영툴 톤 유지(저채도·모션 0). 색 옆 라벨 병기(색각이상 대응). 셀별 --cat 인라인 주입. (2026-06-30) ── */
+.smsg-legend{display:flex;flex-wrap:wrap;gap:7px 9px;margin-bottom:13px;flex-shrink:0;}
+.smsg-lg{display:inline-flex;align-items:center;gap:6px;font-size:var(--sz-s);font-weight:700;color:var(--cat,var(--ts));padding:4px 11px 4px 9px;border-radius:999px;background:var(--s2);border:1px solid var(--bd);}
+.smsg-lg-dot{width:8px;height:8px;border-radius:50%;background:var(--cat,var(--ts));flex-shrink:0;}
+.smsg-tbl .smsg-cat{border-left:3px solid var(--cat,var(--bd));color:var(--cat,var(--ts));background:var(--s1);background:color-mix(in srgb, var(--cat, var(--s2)) 7%, var(--s1));}
+.smsg-cat-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--cat,var(--ts));margin-right:6px;vertical-align:middle;}
+.smsg-tbl .smsg-age .smsg-pill{display:inline-block;font-size:var(--sz-s);font-weight:600;color:var(--ts);background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:2px 9px;white-space:nowrap;}
+.smsg-tbl .smsg-nm .smsg-nm-bar{display:inline-block;width:3px;height:14px;border-radius:2px;background:var(--cat,var(--bd));margin-right:8px;vertical-align:-2px;}
+.smsg-trigwrap{line-height:2;}
+.smsg-trigger{display:inline-block;font-size:var(--sz-s);font-weight:600;color:var(--ts);background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:2px 9px;margin:2px 5px 2px 0;white-space:nowrap;}
+.smsg-trigger.add{color:var(--cat-violet);border-color:#D6CCF5;background:#F3EFFC;}
+.smsg-dash{color:var(--tf);}
 .chub-go{font-size:var(--sz-s);color:var(--ac);font-weight:600;white-space:nowrap;}
 @media(max-width:900px){#v-samsung-lineup.on,#v-samsung-waiver.on{overflow-y:auto;}.smsg-tablewrap{overflow:visible;}.smsg-tbl th{position:static;}}
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
@@ -11291,27 +11305,43 @@ var _samsungWaiver=[
   {"상품명":"새로고침 311-5","납입면제사유":"암(유사암제외) / 뇌졸중 / 급성심근경색 / 상해·질병후유장해80%이상 / 중대화상부식 / 뇌내장손상수술","무해지형추가":"—"},
   {"상품명":"New 마이슈퍼스타","납입면제사유":"암(유사암제외) / 뇌혈관질환 / 허혈성심장질환 / 2대주요기관 양성종양 / 중대화상 / 상해질병후유장해50%이상 / 희귀난치성질환 산정특례대상 / 기타심장부정맥(I49) / 특정3대심장질환","무해지형추가":"뇌내장손상수술"}
 ];
+/* 대분류 → 카테고리 색(10색 토큰). 제안 매핑(자유 조정) — 라인업·납면 양쪽 공유로 색 일관. (2026-06-30) */
+var _SM_CAT_COLOR={'신상품':'var(--cat-red)','치료비':'var(--cat-orange)','건강':'var(--cat-green)','간편':'var(--cat-blue)','자녀':'var(--cat-magenta)','운전자':'var(--cat-teal)','가정':'var(--cat-amber)','치아':'var(--cat-cyan)'};
+function _smNorm(s){ return String(s||'').toLowerCase().replace(/\s+/g,''); }
+/* 상품명(정규화) → 대분류 — 라인업 데이터에서 1회 구성. 납면 표가 상품의 라인업 색을 그대로 물려받게(NEW/New 대소문·공백 차이 흡수) */
+var _SM_PROD_CAT=(function(){ var m={}; _samsungLineup.forEach(function(p){ m[_smNorm(p['상품명'])]=p['대분류']; }); return m; })();
+function _smCatColor(cat){ return _SM_CAT_COLOR[cat]||''; }
+function _smCatColorByProduct(name){ var c=_SM_PROD_CAT[_smNorm(name)]; return c?_smCatColor(c):''; }
 function _smEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _samsungRender(key){
   if(typeof _canSeeCompanyHub==='function' && !_canSeeCompanyHub()) return;   /* 이중 가드 — showView 가드 외 직접 호출 방어 */
   if(key==='samsung-waiver'){
     var wb=document.getElementById('smsg-waiver-body'); if(!wb) return;
+    /* 납입면제 사유 = '/' 구분을 컬러 칩으로(스캔성·과밀 완화). 상품명 좌측 바 = 라인업 대분류 색 물려받아 두 페이지 색 일관. */
+    function _trigChips(s, cls){ var arr=String(s||'').split('/').map(function(x){return x.trim();}).filter(function(x){ return x && x!=='—'; });
+      if(!arr.length) return '<span class="smsg-dash">—</span>';
+      return arr.map(function(x){ return '<span class="smsg-trigger'+(cls?(' '+cls):'')+'">'+_smEsc(x)+'</span>'; }).join(''); }
     var h='<table class="smsg-tbl"><thead><tr><th>상품명</th><th>납입면제 사유</th><th>무해지형 추가 사유</th></tr></thead><tbody>';
-    _samsungWaiver.forEach(function(w){ h+='<tr><td class="smsg-nm">'+_smEsc(w['상품명'])+'</td><td>'+_smEsc(w['납입면제사유'])+'</td><td>'+_smEsc(w['무해지형추가'])+'</td></tr>'; });
-    wb.innerHTML='<div class="smsg-szhint">글씨 적용 — 대 22 · 중 16 · 소 14</div>'+h+'</tbody></table>';
+    _samsungWaiver.forEach(function(w){ var _cc=_smCatColorByProduct(w['상품명'])||'var(--bd)';
+      h+='<tr><td class="smsg-nm" style="--cat:'+_cc+'"><span class="smsg-nm-bar"></span>'+_smEsc(w['상품명'])+'</td><td class="smsg-trigwrap">'+_trigChips(w['납입면제사유'])+'</td><td class="smsg-trigwrap">'+_trigChips(w['무해지형추가'],'add')+'</td></tr>'; });
+    wb.innerHTML=h+'</tbody></table>';
   }else{
     var lb=document.getElementById('smsg-lineup-body'); if(!lb) return;
+    /* 색 범례 — 대분류 등장 순서대로 색·라벨 칩(색=의미 교육 + 스캔 단서) */
+    var _cats=[]; _samsungLineup.forEach(function(p){ if(_cats.indexOf(p['대분류'])<0) _cats.push(p['대분류']); });
+    var _leg='<div class="smsg-legend">'+_cats.map(function(c){ return '<span class="smsg-lg" style="--cat:'+(_smCatColor(c)||'var(--ts)')+'"><span class="smsg-lg-dot"></span>'+_smEsc(c)+'</span>'; }).join('')+'</div>';
     var h2='<table class="smsg-tbl"><thead><tr><th>대분류</th><th>상품명</th><th>운영형태</th><th>가입연령</th><th>핵심 특징</th></tr></thead><tbody>';
-    /* 대분류 세로 병합: json 배열에서 같은 '대분류'가 연속하는 구간을 한 그룹으로 묶어 첫 행에만 rowspan 셀, 이후 행은 대분류 칸 생략. 소식지 p.17 동일 */
+    /* 대분류 세로 병합: json 배열에서 같은 '대분류'가 연속하는 구간을 한 그룹으로 묶어 첫 행에만 rowspan 셀(분류 색코드), 이후 행은 대분류 칸 생략. 소식지 p.17 동일 */
     for(var i=0;i<_samsungLineup.length;i++){ var p=_samsungLineup[i];
       var grpStart=(i===0)||(_samsungLineup[i-1]['대분류']!==p['대분류']);
       h2+='<tr'+(grpStart?' class="smsg-grp"':'')+'>';
       if(grpStart){ var span=1; for(var j=i+1;j<_samsungLineup.length && _samsungLineup[j]['대분류']===p['대분류'];j++) span++;
-        h2+='<td class="smsg-cat" rowspan="'+span+'">'+_smEsc(p['대분류'])+'</td>'; }
-      h2+='<td class="smsg-nm">'+_smEsc(p['상품명'])+'</td><td class="smsg-op">'+_smEsc(p['운영형태_원문'])+'</td><td class="smsg-age">'+_smEsc(p['가입연령'])+'</td><td>'+_smEsc(p['핵심특징'])+'</td></tr>';
+        var _cc=_smCatColor(p['대분류'])||'var(--ts)';
+        h2+='<td class="smsg-cat" rowspan="'+span+'" style="--cat:'+_cc+'"><span class="smsg-cat-dot"></span>'+_smEsc(p['대분류'])+'</td>'; }
+      h2+='<td class="smsg-nm">'+_smEsc(p['상품명'])+'</td><td class="smsg-op">'+_smEsc(p['운영형태_원문'])+'</td><td class="smsg-age"><span class="smsg-pill">'+_smEsc(p['가입연령'])+'</span></td><td>'+_smEsc(p['핵심특징'])+'</td></tr>';
     }
     h2+='</tbody></table><div class="smsg-note">본 라인업은 삼성화재 GA소식지 2026-06(p.17) 기준으로, 실제 가입 조건은 변경될 수 있으며 정확한 사항은 약관 및 원수사 자료를 확인하시기 바랍니다.</div>';
-    lb.innerHTML='<div class="smsg-szhint">글씨 적용 — 대 22 · 중 16 · 소 14</div>'+h2;
+    lb.innerHTML=_leg+h2;
   }
 }
 window._samsungRender=_samsungRender;
