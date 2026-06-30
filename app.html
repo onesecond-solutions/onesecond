@@ -2848,7 +2848,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="chips">
           <div class="chip on" onclick="filterMys(this,'전체')">전체보기</div>
           <div class="chip" onclick="mysVaultOpen(this)">자료함</div>
-          <div class="chip" onclick="filterMys(this,'스크립트')">스크립트</div>
+          <div class="chip" onclick="filterMys(this,'스크립트')">업무노트</div>
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
           <div class="chip" onclick="mysShareboxOpen(this)">공유함</div>
           <div class="chip" onclick="filterMys(this,'공유받음')">공유받음</div>
@@ -2997,7 +2997,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <div class="scr-memo-hint">
         <div class="scr-memo-q">&#128221; 스크립트를 보다가 영감을 받으셨나요?</div>
         <div class="scr-memo-do">메모장에 기록하세요 — 우측 하단 <b>노란 메모지</b>를 눌러보세요.</div>
-        <button class="scr-memo-write" onclick="_navScriptWrite()">스크립트 작성하기</button>
+        <button class="scr-memo-write" onclick="_navScriptWrite()">업무노트 작성하기</button>
       </div>
       <!-- 2026-05-27 갈아끼움: 풀스크린 모달 폐기 → 가로 정렬 + 오버레이 확장 카드 그리드 -->
       <div class="chips" id="scriptsChips">
@@ -4042,7 +4042,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <button class="askx" onclick="closeMyspaceWrite()">&#10005;</button>
     </div>
     <div class="mys-write-tabs">
-      <button class="mys-write-tab on" data-tab="script" onclick="switchMyspaceTab('script')">스크립트</button>
+      <button class="mys-write-tab on" data-tab="script" onclick="switchMyspaceTab('script')">업무노트</button>
       <button class="mys-write-tab" data-tab="library" onclick="switchMyspaceTab('library')">자료</button>
       <button class="mys-write-tab" data-tab="group" onclick="switchMyspaceTab('group')">단체방</button>
       <button class="mys-write-tab" data-tab="qna" onclick="switchMyspaceTab('qna')">보험 Q&amp;A</button>
@@ -5974,7 +5974,7 @@ function _snMyspaceShow(host){
   var cards=[
     {k:'diary',ic:'i-cal',t:'다이어리',d:'일정 · 할 일 · 이야깃거리',c:'var(--ac)'},
     {k:'lib',ic:'i-folder',t:'개인 자료실',d:'내 파일 · 문서 보관함',c:'var(--t-uw)'},
-    {k:'script',ic:'i-file',t:'스크립트',d:'내 영업 멘트',c:'var(--t-event)'},
+    {k:'script',ic:'i-file',t:'업무노트',d:'내 영업 멘트',c:'var(--t-event)'},
     {k:'memo',ic:'i-note',t:'메모',d:'빠른 메모 · 아이디어',c:'var(--warn)'}
   ];
   var ch='';
@@ -6021,13 +6021,13 @@ var _SN_SCOPE={
   team:{banner:'teamspace.jpg',cards:[
     {k:'notice',ic:'i-msg',t:'공지게시판',d:'팀 공지 · 공유 알림',c:'var(--ok)'},
     {k:'lib',ic:'i-folder',t:'자료실',d:'팀 자료실',c:'var(--t-uw)'},
-    {k:'script',ic:'i-file',t:'스크립트',d:'팀 공유 스크립트',c:'var(--t-event)'},
+    {k:'script',ic:'i-file',t:'업무노트',d:'팀 공유 업무노트',c:'var(--t-event)'},
     {k:'diary',ic:'i-cal',t:'다이어리',d:'팀 공유 일정',c:'var(--ac)'}
   ]},
   branch:{banner:'branchspace.jpg',cards:[
     {k:'notice',ic:'i-msg',t:'공지게시판',d:'지점 공지 · 공유 알림',c:'var(--ac)'},
     {k:'lib',ic:'i-folder',t:'자료실',d:'지점 자료실',c:'var(--ac)'},
-    {k:'script',ic:'i-file',t:'스크립트',d:'지점 공유 스크립트',c:'var(--ac)'},
+    {k:'script',ic:'i-file',t:'업무노트',d:'지점 공유 업무노트',c:'var(--ac)'},
     {k:'diary',ic:'i-cal',t:'다이어리',d:'지점 공유 일정',c:'var(--ac)'}
   ]}
 };
@@ -6079,7 +6079,7 @@ async function _snScopeScripts(slot, scope){
     listEl.innerHTML=rows.map(function(s,i){
       var prev=_escHtml(String(s.highlight_text||String(s.script_text||'').replace(/<[^>]+>/g,' ')).slice(0,90));
       return '<div class="item'+(i===0?' on':'')+'" onclick="_snScrPick('+i+',this)" style="--tc:var(--t-event)">'
-        +'<span class="badge">스크립트</span>'
+        +'<span class="badge">업무노트</span>'
         +'<div class="it">'+_escHtml(s.title||'(제목 없음)')+'</div>'
         +'<div class="id">'+prev+'</div></div>';
     }).join('');
@@ -12078,7 +12078,7 @@ async function _searchGoScript(id){
     var cache=window._myspaceCache||[], citem=null;
     for(var k=0;k<cache.length;k++){ if(cache[k]._type==='script' && String(cache[k].id)===String(id)){ citem=cache[k]; break; } }
     if(!citem){ _svToast('이 스크립트를 마이 스페이스에서 찾지 못했습니다'); return; }
-    var scrChip=null, chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var c=0;c<chips.length;c++){ if(chips[c].textContent.trim()==='스크립트'){ scrChip=chips[c]; break; } }
+    var scrChip=null, chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var c=0;c<chips.length;c++){ if(chips[c].textContent.trim()==='업무노트'){ scrChip=chips[c]; break; } }
     if(scrChip && typeof filterMys==='function') filterMys(scrChip,'스크립트');
     var fil=window._mysFiltered||[], fi=-1; for(var m=0;m<fil.length;m++){ if(fil[m]._type==='script' && String(fil[m].id)===String(id)){ fi=m; break; } }
     if(fi<0){ (window._mysFiltered=window._mysFiltered||[]).unshift(citem); fi=0; }
@@ -12627,7 +12627,7 @@ function renderHomeScripts(scripts){
     if(!hasId) console.warn('[home] 스크립트 카드 id 없음 — 클릭 비활성:',it.title);
     var attr=hasId?(' onclick="openHomeRecent(\'scripts\',\''+it.id+'\')" style="--tc:var(--t-product)"'):' style="--tc:var(--t-product);cursor:default" aria-disabled="true"';
     html+='<div class="home-recent-card"'+attr+'>'+
-      '<div class="home-recent-card-row1"><span class="home-recent-card-badge">스크립트</span><div class="home-recent-card-title">'+escHomeHtml(it.title||'제목 없음')+'</div></div>'+
+      '<div class="home-recent-card-row1"><span class="home-recent-card-badge">업무노트</span><div class="home-recent-card-title">'+escHomeHtml(it.title||'제목 없음')+'</div></div>'+
       '<div class="home-recent-card-meta">'+fmtHomeDate(it.used_at)+' 사용</div>'+
     '</div>';
   }
@@ -12869,7 +12869,7 @@ async function loadMyspace(force){
     var items=[];
     for(var i=0;i<scripts.length;i++){
       var s=scripts[i];
-      items.push({_type:'script',_badge:'스크립트',_date:s.created_at,_sort:s.sort_order,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments,keywords:s.keywords});
+      items.push({_type:'script',_badge:'업무노트',_date:s.created_at,_sort:s.sort_order,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments,keywords:s.keywords});
     }
     for(var j=0;j<library.length;j++){
       var l=library[j];
@@ -13330,7 +13330,7 @@ window._ovDown=_ovDown; window._ovClick=_ovClick;
 /* === 라이브러리 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(ctx, edit){
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
-  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'스크립트 수정'):((ctx==='team')?'매니저방 글쓰기':'라이브러리에 저장');
+  var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'업무노트 수정'):((ctx==='team')?'매니저방 글쓰기':'라이브러리에 저장');
   /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
   var _ss=document.getElementById('mysWriteScrStage');
   if(_ss && !_ss.dataset.loaded && typeof SCRIPTS_GROUPS!=='undefined'){
@@ -13373,14 +13373,14 @@ async function scrEditOpen(id){
     if(!res.ok){ alert('불러오기 실패 ('+res.status+')'); return; }
     var rows=await res.json(); var r=rows&&rows[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
     var isChat=(r.keywords||[]).indexOf('유형:채팅')!==-1;
-    openMyspaceWrite(null, {type:isChat?'chat':'script', id:r.id, row:r});
+    openMyspaceWrite(null, {type:isChat?'chat':'note', id:r.id, row:r});
   }catch(e){ alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
 }
 window.scrEditOpen=scrEditOpen;
 
 /* ═══ 마이 스페이스 스크립트 인라인 작업공간 (Phase 1, 2026-06-11) — 우측 2카드(글쓰기/작업공간) + osRich 리치텍스트.
  * 콜/채팅 = 분류 태그만(둘 다 리치 자유). 단계·핵심멘트·대안화법 폐기. script_text=HTML 저장. 기존 모달(openMyspaceWrite)·수정 모달 공존. ═══ */
-function scrIlType(t){ window._scrIlType=t; var seg=document.getElementById('scr-il-seg'); if(seg){ var bs=seg.querySelectorAll('button'); if(bs[0]) bs[0].classList.toggle('on',t==='call'); if(bs[1]) bs[1].classList.toggle('on',t==='chat'); } }
+function scrIlType(t){ window._scrIlType=t; var seg=document.getElementById('scr-il-seg'); if(seg){ var bs=seg.querySelectorAll('button'); if(bs[0]) bs[0].classList.toggle('on',t==='note'); if(bs[1]) bs[1].classList.toggle('on',t==='call'); if(bs[2]) bs[2].classList.toggle('on',t==='chat'); } }
 window.scrIlType=scrIlType;
 /* 스크립트 인라인 모드 해제 — 다른 칩(공유함)·탭 이동 시 글쓰기 카드 잔존 방지 */
 function _scrModeOff(){ var ms=document.getElementById('mys-split'); if(ms) ms.classList.remove('scr-mode'); var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none'; }
@@ -13388,10 +13388,10 @@ window._scrModeOff=_scrModeOff;
 function openScriptInline(edit){
   var v=document.getElementById('mysViewer'); if(!v) return;
   window._scrInlineEdit=edit||null;
-  var type=(edit&&edit.type)?edit.type:'call';
+  var type=(edit&&edit.type)?edit.type:'note';
   window._scrIlType=type;
   var formHtml=''
-    +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg" id="scr-il-seg"><button type="button" class="'+(type==='call'?'on':'')+'" onclick="scrIlType(\'call\')">콜스크립트</button><button type="button" class="'+(type==='chat'?'on':'')+'" onclick="scrIlType(\'chat\')">채팅 스크립트</button></div></div>'
+    +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg" id="scr-il-seg"><button type="button" class="'+(type==='note'?'on':'')+'" onclick="scrIlType(\'note\')">업무노트</button><button type="button" class="'+(type==='call'?'on':'')+'" onclick="scrIlType(\'call\')">콜스크립트</button><button type="button" class="'+(type==='chat'?'on':'')+'" onclick="scrIlType(\'chat\')">채팅 스크립트</button></div></div>'
     +'<div class="iv-fld"><label>제목</label><input type="text" id="scr-il-title" class="mys-write-input" maxlength="100" placeholder="제목"></div>'
     +'<div class="iv-fld"><label>내용</label><div id="scr-il-rich"></div></div>'
     +'<div class="iv-fld"><label>키워드</label><input type="text" id="scr-il-kw" class="mys-write-input" maxlength="200" placeholder="예: 암보험, 클로징 (쉼표로 구분)"></div>'
@@ -13413,7 +13413,7 @@ function closeScrInline(){
   renderMyspace(window._mysFiltered||[]);  /* view 복귀(첫 항목 보기) */
 }
 window.closeScrInline=closeScrInline;
-function _scrReselectChip(){ var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<chips.length;i++){ if(chips[i].textContent.trim()==='스크립트'){ if(typeof filterMys==='function') filterMys(chips[i],'스크립트'); break; } } }
+function _scrReselectChip(){ var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<chips.length;i++){ if(chips[i].textContent.trim()==='업무노트'){ if(typeof filterMys==='function') filterMys(chips[i],'스크립트'); break; } } }
 /* 전체보기 빈 상태 첫 작성 = 스크립트 칩 전환(scr-mode 켜짐 → 우측 2단) 후 인라인 작성 폼 */
 /* 전체보기 빈 상태 첫 작성 = 종류 선택 팝업(자료함/스크립트/메모/공유함) → 해당 메뉴 입력으로. 옛 모달 미사용 */
 function mysEmptyPick(){
@@ -13424,7 +13424,7 @@ function mysEmptyPick(){
     +'<div class="mys-pick-ttl">무엇을 만들까요?</div>'
     +'<div class="mys-pick-sub">고르시면 해당 메뉴 작성 화면으로 바로 이동합니다.</div>'
     +'<div class="mys-pick-grid">'
-    +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'스크립트\')"><span class="mpb-nm">스크립트</span><span class="mpb-ds">상담 멘트·화법</span></button>'
+    +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'스크립트\')"><span class="mpb-nm">업무노트</span><span class="mpb-ds">상담 멘트·화법</span></button>'
     +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'메모\')"><span class="mpb-nm">메모</span><span class="mpb-ds">간단 기록</span></button>'
     +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'자료함\')"><span class="mpb-nm">자료함</span><span class="mpb-ds">파일 보관</span></button>'
     +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'공유함\')"><span class="mpb-nm">공유함</span><span class="mpb-ds">함께 보기</span></button>'
@@ -13453,8 +13453,10 @@ async function saveScrInline(){
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   if(!html||html==='<br>'){ alert('내용을 입력해 주세요.'); return; }
   var kw=((document.getElementById('scr-il-kw')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-  var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅';
-  if(window._scrIlType==='chat' && kw.indexOf(CHATKW)<0) kw.unshift(CHATKW);  /* 채팅 분류 태그 */
+  var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅', CALLKW='유형:콜';
+  kw=kw.filter(function(k){return k!==CHATKW&&k!==CALLKW;});  /* 타입 키워드 초기화(수정 시 타입 변경 반영) */
+  if(window._scrIlType==='chat') kw.unshift(CHATKW);          /* 채팅 분류 태그 */
+  else if(window._scrIlType==='call') kw.unshift(CALLKW);     /* 콜 분류 태그 (업무노트=무태그 기본) */
   var sv=document.querySelector('#mysViewer .osws-save'); if(sv){ sv.disabled=true; sv.textContent='저장 중…'; }
   var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('scr-il-file','script',token); if(a===null){ if(sv){sv.disabled=false;sv.textContent='저장';} return; } atts=a||[]; }
   var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
@@ -13471,7 +13473,7 @@ async function saveScrInline(){
     }
     window._scrInlineEdit=null;
     var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='block';  /* 글쓰기 카드 복귀('block' 명시) */
-    if(typeof toast==='function') toast(ed?'수정됐어요!':'스크립트가 저장됐어요!');
+    if(typeof toast==='function') toast(ed?'수정됐어요!':'업무노트가 저장됐어요!');
     if(typeof loadMyspace==='function'){ window._myspaceLoaded=false; await loadMyspace(); }  /* 새 목록 반영 대기 */
     _scrReselectChip();  /* 목록 재로드 후 스크립트 칩 재선택 → 작성 폼 닫고 첫 항목 보기 */
   }catch(e){ console.error('[saveScrInline]',e); alert('저장 중 오류가 발생했습니다.'); if(sv){sv.disabled=false;sv.textContent='저장';} }
@@ -13483,13 +13485,13 @@ async function scrEditInline(id){
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,keywords'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     var r=((res.ok?await res.json():[])||[])[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
-    var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅';
-    var kws=r.keywords||[]; var isChat=kws.indexOf(CHATKW)!==-1;
-    var kw=kws.filter(function(k){return k!==CHATKW;}).join(', ');
+    var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅', CALLKW='유형:콜';
+    var kws=r.keywords||[]; var isChat=kws.indexOf(CHATKW)!==-1, isCall=kws.indexOf(CALLKW)!==-1;
+    var kw=kws.filter(function(k){return k!==CHATKW&&k!==CALLKW;}).join(', ');
     var raw=r.script_text||'';
     var isHtml=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(raw);
     var html=isHtml?raw:_sEsc(raw).replace(/\n/g,'<br>');  /* 기존 plain/섹션 → 줄바꿈 보존(데이터 손실 0) */
-    openScriptInline({id:r.id, type:isChat?'chat':'call', title:r.title||'', html:html, kw:kw});
+    openScriptInline({id:r.id, type:isChat?'chat':(isCall?'call':'note'), title:r.title||'', html:html, kw:kw});
   }catch(e){ alert('수정 화면을 여는 중 오류가 발생했습니다.'); }
 }
 window.scrEditInline=scrEditInline;
@@ -14864,7 +14866,7 @@ window.mysShareboxOpen=mysShareboxOpen;
 function _shEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function _shDate(s){ if(!s)return''; var d=new Date(s); if(isNaN(d.getTime()))return''; var p=function(n){return(n<10?'0':'')+n;}; return (d.getFullYear()%100)+'.'+p(d.getMonth()+1)+'.'+p(d.getDate()); }
 function _shSize(b){ b=Number(b)||0; if(b<1024)return b+'B'; if(b<1048576)return(b/1024).toFixed(0)+'KB'; return(b/1048576).toFixed(1)+'MB'; }
-var _SH_TY={script:'스크립트',memo:'메모',file:'자료'};
+var _SH_TY={script:'업무노트',memo:'메모',file:'자료'};
 async function _osShareboxRender(){
   var listEl=document.getElementById('mysList'); if(!listEl) return;
   var vv=document.getElementById('mysViewer');
@@ -16684,7 +16686,7 @@ body.is-uat-spacenav #spTree{display:none;}
               <div class="sp-children">
                 <div class="sp-node sp-leaf" data-k="m_diary"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-cal"/></svg></span>다이어리</div>
                 <div class="sp-node sp-leaf" data-k="m_lib"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-folder"/></svg></span>개인 자료실</div>
-                <div class="sp-node sp-leaf" data-k="m_script"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>스크립트</div>
+                <div class="sp-node sp-leaf" data-k="m_script"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-file"/></svg></span>업무노트</div>
                 <div class="sp-node sp-leaf" data-k="m_memo"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-note"/></svg></span>메모</div>
               </div>
             </div>
@@ -16887,9 +16889,9 @@ body.is-uat-spacenav #spTree{display:none;}
     tspace:{title:'팀 스페이스', note:'<b>팀 스페이스</b>는 팀이 함께 쓰는 공지·자료 공간이에요.<br>아래에서 <b>팀방 · 팀 자료실</b>로 들어갑니다.<br><br>· 사용 가능: <b>개인 · 팀</b> 단위로 구성된 사용자'},
     troom:{title:'팀방', items:['오늘의 업무 방향','긴급 체크','팀 회의 공지'], ico:'i-msg'},
     tlib:{title:'팀 자료실', items:['6월 상품 핵심 포인트','팀 공유 스크립트','인수 가이드 모음']},
-    mspace:{title:'마이 스페이스', note:'<b>마이 스페이스</b>는 개인 학습·영업 활용 공간이에요.<br>아래에서 <b>다이어리 · 개인 자료실 · 스크립트 · 메모 · 공유함</b>으로.<br><br>· <b>나만의 공간</b> — 누구도 볼 수 없어요.<br>· 단, 자료의 <b>공유하기</b>를 켜면 <b>공유함</b>으로 다른 사람과 함께 볼 수 있어요.'},
+    mspace:{title:'마이 스페이스', note:'<b>마이 스페이스</b>는 개인 학습·영업 활용 공간이에요.<br>아래에서 <b>다이어리 · 개인 자료실 · 업무노트 · 메모 · 공유함</b>으로.<br><br>· <b>나만의 공간</b> — 누구도 볼 수 없어요.<br>· 단, 자료의 <b>공유하기</b>를 켜면 <b>공유함</b>으로 다른 사람과 함께 볼 수 있어요.'},
     m_lib:{title:'개인 자료실', items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
-    m_script:{title:'스크립트', items:['오프닝 화법','반론 처리','클로징 멘트'], ico:'i-file'},
+    m_script:{title:'업무노트', items:['오프닝 화법','반론 처리','클로징 멘트'], ico:'i-file'},
     m_memo:{title:'메모', items:['상담 메모','체크리스트','아이디어'], ico:'i-note'},
     m_share:{title:'공유함', items:['받은 공유 자료','보낸 공유'], ico:'i-share'},
     m_diary:{title:'다이어리', items:['오늘 일정','이번 주 할 일','월간 목표'], ico:'i-cal'},
