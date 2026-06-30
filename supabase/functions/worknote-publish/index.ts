@@ -76,6 +76,9 @@ Deno.serve(async (req) => {
     meta = (b && b.meta) || {};
   } catch (_e) { return json({ error: "요청 형식이 올바르지 않습니다." }, 400); }
   if (!scriptId) return json({ error: "scriptId가 없습니다." }, 400);
+  if (action !== "publish" && action !== "unpublish" && action !== "delete") {
+    return json({ error: "허용되지 않은 action입니다(publish|unpublish|delete)." }, 400);
+  }
 
   const sid = scriptId; // source_id = scripts.id::text
 
