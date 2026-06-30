@@ -12076,20 +12076,20 @@ async function _searchGoScript(id){
     card.click();
     try{ card.scrollIntoView({block:'center'}); }catch(e){}
   } else {
-    /* personal(본인) — 마이 스페이스 '저장' 탭(#mys-saved)에서 정확히 열기. showView('myspace')는 다이어리 기본이라 saved 탭 전환 필수(2026-06-30 버그수정) */
-    if(typeof showView==='function') showView('myspace');
-    var _savedTab=document.querySelector('#mys-tabs .tab[onclick*="saved"]');
-    if(typeof mysTab==='function') mysTab(_savedTab,'saved');   /* 다이어리 기본 → 저장 탭 전환(+loadMyspace) */
+    /* personal(본인) — 바텀시트 마이 스페이스(책상)에서 연다. 바닥(floor)은 검색 유지 → showView('myspace') 금지(바닥=검색만 정합, 2026-06-30 누수 수정) */
+    if(typeof _navMyspace==='function') _navMyspace();   /* 시트 펼침 + 마이 스페이스 카드 (바닥 #v-home 유지) */
+    else if(typeof showView==='function'){ showView('myspace'); }  /* 폴백(스페이스 nav 없을 때만) */
+    await _waitFor(function(){ return document.getElementById('sn-slot') || document.getElementById('mysList'); }, 4000);
+    if(typeof _snCard==='function') _snCard('script');   /* '업무노트' 카드 → _spSplitShow('스크립트') → #mys-split 시트로 이식 + filterMys */
     var ok2=await _waitFor(function(){ return window._myspaceLoaded && Array.isArray(window._myspaceCache); }, 6000);
     if(!ok2){ _svToast('마이 스페이스를 여는 중 시간이 초과됐습니다'); return; }
     var cache=window._myspaceCache||[], citem=null;
     for(var k=0;k<cache.length;k++){ if(cache[k]._type==='script' && String(cache[k].id)===String(id)){ citem=cache[k]; break; } }
-    if(!citem){ _svToast('이 스크립트를 마이 스페이스에서 찾지 못했습니다'); return; }
-    var scrChip=null, chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var c=0;c<chips.length;c++){ if(chips[c].textContent.trim()==='업무노트'){ scrChip=chips[c]; break; } }
-    if(scrChip && typeof filterMys==='function') filterMys(scrChip,'스크립트');
+    if(!citem){ _svToast('이 업무노트를 마이 스페이스에서 찾지 못했습니다'); return; }
+    await _waitFor(function(){ var f=window._mysFiltered||[]; for(var m2=0;m2<f.length;m2++){ if(f[m2]._type==='script' && String(f[m2].id)===String(id)) return true; } return false; }, 2500);
     var fil=window._mysFiltered||[], fi=-1; for(var m=0;m<fil.length;m++){ if(fil[m]._type==='script' && String(fil[m].id)===String(id)){ fi=m; break; } }
     if(fi<0){ (window._mysFiltered=window._mysFiltered||[]).unshift(citem); fi=0; }
-    if(typeof mysOpenItem==='function') mysOpenItem(fi); else _svToast('원본 스크립트를 열지 못했습니다');
+    if(typeof mysOpenItem==='function') mysOpenItem(fi); else _svToast('원본 업무노트를 열지 못했습니다');
   }
 }
 /* 우측 패널 닫기(홈 2단) — 안내 상태로 복원 */
