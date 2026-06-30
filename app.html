@@ -231,6 +231,21 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .smsg-trigger{display:inline-block;font-size:var(--sz-s);font-weight:600;color:var(--ts);background:var(--s2);border:1px solid var(--bd);border-radius:7px;padding:2px 9px;margin:2px 5px 2px 0;white-space:nowrap;}
 .smsg-trigger.add{color:var(--cat-violet);border-color:#D6CCF5;background:#F3EFFC;}
 .smsg-dash{color:var(--tf);}
+/* ── 클로드 스타일 비교 블록(라인업 아래·비교용) — 색 대신 여백·글자 위계, 따뜻한 톤(claude.ai 결). 의도적 대안 팔레트라 .smcl 로컬 토큰으로 격리(전역 토큰과 분리). (2026-06-30) ── */
+.smcl{--cl-bg:#FAF8F5;--cl-line:#E7E0D6;--cl-line2:#F1ECE4;--cl-ink:#211D17;--cl-body:#4A443B;--cl-meta:#9B8E7C;--cl-clay:#B0552F;--cl-cnt:#A99A86;
+  margin-top:30px;padding:26px 24px 28px;background:var(--cl-bg);border:1px solid var(--cl-line);border-radius:16px;}
+.smcl-sep{font-size:var(--sz-s);font-weight:700;letter-spacing:.2px;color:var(--cl-clay);margin-bottom:5px;}
+.smcl-intro{font-size:var(--sz-s);color:var(--cl-body);margin-bottom:22px;line-height:1.55;}
+.smcl-sec{margin-bottom:24px;}
+.smcl-sec:last-child{margin-bottom:0;}
+.smcl-h{display:flex;align-items:baseline;gap:9px;padding-bottom:9px;margin-bottom:10px;border-bottom:1px solid var(--cl-line);}
+.smcl-cat{font-size:var(--sz-m);font-weight:800;color:var(--cl-ink);letter-spacing:-.2px;}
+.smcl-cnt{font-size:var(--sz-s);color:var(--cl-cnt);}
+.smcl-item{padding:13px 0;border-bottom:1px solid var(--cl-line2);}
+.smcl-sec .smcl-item:last-child{border-bottom:none;padding-bottom:2px;}
+.smcl-nm{font-size:var(--sz-m);font-weight:700;color:var(--cl-ink);margin-bottom:4px;letter-spacing:-.2px;}
+.smcl-why{font-size:var(--sz-m);color:var(--cl-body);line-height:1.55;margin-bottom:6px;}
+.smcl-meta{font-size:var(--sz-s);color:var(--cl-meta);line-height:1.5;}
 .chub-go{font-size:var(--sz-s);color:var(--ac);font-weight:600;white-space:nowrap;}
 @media(max-width:900px){#v-samsung-lineup.on,#v-samsung-waiver.on{overflow-y:auto;}.smsg-tablewrap{overflow:visible;}.smsg-tbl th{position:static;}}
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
@@ -11341,7 +11356,16 @@ function _samsungRender(key){
       h2+='<td class="smsg-nm">'+_smEsc(p['상품명'])+'</td><td class="smsg-op">'+_smEsc(p['운영형태_원문'])+'</td><td class="smsg-age"><span class="smsg-pill">'+_smEsc(p['가입연령'])+'</span></td><td>'+_smEsc(p['핵심특징'])+'</td></tr>';
     }
     h2+='</tbody></table><div class="smsg-note">본 라인업은 삼성화재 GA소식지 2026-06(p.17) 기준으로, 실제 가입 조건은 변경될 수 있으며 정확한 사항은 약관 및 원수사 자료를 확인하시기 바랍니다.</div>';
-    lb.innerHTML=_leg+h2;
+    /* 클로드 스타일 비교 블록 — 색코드 표 아래. 같은 데이터를 색 대신 섹션·여백·글자 위계로(차분·과밀 해소). 라이브 비교용. (2026-06-30) */
+    var _cl='<div class="smcl"><div class="smcl-sep">클로드 스타일 · 비교용</div><div class="smcl-intro">같은 19종을 색 대신 여백·글자 위계로 — 차분히 읽는 카탈로그.</div>';
+    _cats.forEach(function(c){
+      var _it=_samsungLineup.filter(function(p){ return p['대분류']===c; });
+      _cl+='<section class="smcl-sec"><div class="smcl-h"><span class="smcl-cat">'+_smEsc(c)+'</span><span class="smcl-cnt">'+_it.length+'종</span></div>';
+      _it.forEach(function(p){ _cl+='<div class="smcl-item"><div class="smcl-nm">'+_smEsc(p['상품명'])+'</div><div class="smcl-why">'+_smEsc(p['핵심특징'])+'</div><div class="smcl-meta">가입 '+_smEsc(p['가입연령'])+' · '+_smEsc(p['운영형태_원문'])+'</div></div>'; });
+      _cl+='</section>';
+    });
+    _cl+='</div>';
+    lb.innerHTML=_leg+h2+_cl;
   }
 }
 window._samsungRender=_samsungRender;
