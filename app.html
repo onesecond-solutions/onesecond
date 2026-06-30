@@ -718,6 +718,7 @@ body:not(.is-uat-aipolish) .aip-only{display:none !important;}
 @media(max-width:640px){.aip-cols{flex-direction:column;}}
 /* 마이 스페이스 스크립트 인라인 작업공간 (Phase 1) — 스크립트 칩에서만 적용(scr-mode 가드). 글쓰기 카드 + 작업공간 카드 세로 2카드 */
 #mys-scr-newrow{display:none;}
+#mys-memo-newrow{display:none;}
 #mys-split.scr-mode .viewer-col,.cosp-split.scr-mode .viewer-col{background:transparent;border:0;border-radius:0;overflow:visible;gap:12px;min-width:0;}
 #mys-split.scr-mode #mysViewer,.cosp-split.scr-mode .viewer{background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);box-shadow:none;min-width:0;overflow:auto;}
 /* 넓은 표/이미지가 칸을 화면 밖으로 늘리지 못하게(min-width:0) — 글쓰기 버튼이 우측으로 밀려 잘리던 회귀 방지. 본문은 카드 안에서 가로스크롤 */
@@ -2864,6 +2865,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <button class="backbtn" onclick="mysBackToList()">&#8249; 목록으로</button>
           <!-- 스크립트 칩 전용 인라인 글쓰기 카드(Phase 1, scr-mode에서만 표시). 우상단 모달 글쓰기 버튼은 공존 유지 -->
           <div class="osws-newrow" id="mys-scr-newrow"><button class="osws-newbtn" onclick="openScriptInline()">+ 글쓰기</button></div>
+          <div class="osws-newrow" id="mys-memo-newrow"><button class="osws-newbtn" onclick="openMemoInline()">+ 메모 쓰기</button></div>
           <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
         </div>
       </div>
@@ -12902,7 +12904,7 @@ function renderMyspace(items){
   var vv=document.getElementById('mysViewer');
   if(!items||items.length===0){
     /* 빈 상태 CTA = 현재 칩 정합(옛 모달 미사용·입력 경험 통일). 스크립트=인라인, 메모=우측하단 빠른메모, 전체보기·기타=종류 선택 팝업 */
-    var _emptyCta=(window._mysCat==='스크립트')?'openScriptInline()':((window._mysCat==='메모')?'openQuickMemo()':'mysEmptyPick()');
+    var _emptyCta=(window._mysCat==='스크립트')?'openScriptInline()':((window._mysCat==='메모')?((typeof _canSeeCompanyHub==='function'&&_canSeeCompanyHub())?'openMemoInline()':'openQuickMemo()'):'mysEmptyPick()');
     listEl.innerHTML='<div class="mys-news-empty">아직 저장된 항목이 없습니다.<br>+ 글쓰기 버튼으로 첫 항목을 작성해보세요.<br><button class="mys-write-empty-cta" onclick="'+_emptyCta+'">+ 첫 항목 작성</button></div>';
     if(vv) vv.innerHTML='<div class="mys-news-empty">항목이 없습니다.</div>';
     return;
@@ -13419,6 +13421,65 @@ function closeScrInline(){
   renderMyspace(window._mysFiltered||[]);  /* view 복귀(첫 항목 보기) */
 }
 window.closeScrInline=closeScrInline;
+/* ═══ 메모 인라인 작성 (업무노트 글쓰기 스타일 — 리스트 위 '메모 쓰기' 카드 + #mysViewer 인라인 폼). 라이트(내용+색상). 임태성 게이트(검수 후 전면 개방). 저장=library memo(saveQuickMemo와 동일 스키마). (2026-06-30) ═══ */
+function openMemoInline(edit){
+  if(!(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub())){ if(typeof openQuickMemo==='function') return openQuickMemo(); return; }  /* 게이트 외 = 기존 팝업 폴백 */
+  var v=document.getElementById('mysViewer'); if(!v) return;
+  window._memoInlineEdit=edit||null;
+  var color=(edit&&edit.color)||'yellow';
+  try{ if(!edit){ color=localStorage.getItem('os_quickmemo_color')||'yellow'; } }catch(e){}
+  if(!OS_MEMO_COLORS[color]) color='yellow';
+  window._memoIlColor=color;
+  var sw=''; for(var k in OS_MEMO_COLORS){ if(!OS_MEMO_COLORS.hasOwnProperty(k)) continue; sw+='<button type="button" class="os-memo-sw'+(k===color?' on':'')+'" data-color="'+k+'" style="background:'+OS_MEMO_COLORS[k]+'" onclick="memoIlColor(\''+k+'\')" aria-label="'+k+'"></button>'; }
+  var formHtml=''
+    +'<div class="iv-fld"><label>색상</label><div class="os-memo-colors" id="memo-il-colors">'+sw+'</div></div>'
+    +'<div class="iv-fld"><label>내용</label><textarea id="memo-il-text" class="mys-write-input" rows="6" maxlength="2000" placeholder="빠른 메모·아이디어를 적어보세요"></textarea></div>';
+  window.OSWS.openForm(v, (edit?'edit':'create'), formHtml, saveMemoInline, closeMemoInline);
+  if(edit){ var t=document.getElementById('memo-il-text'); if(t) t.value=edit.text||''; }
+  var nr=document.getElementById('mys-memo-newrow'); if(nr) nr.style.display='none';
+  if(!edit){ var list=document.getElementById('mysList'); if(list){ var its=list.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.remove('on'); var tc=document.createElement('div'); tc.className='item on osws-tempcard'; tc.id='memo-il-temp'; list.insertBefore(tc, list.firstChild); } }
+  if(window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
+  setTimeout(function(){ var ti=document.getElementById('memo-il-text'); if(ti) ti.focus(); },60);
+}
+window.openMemoInline=openMemoInline;
+function memoIlColor(k){ if(!OS_MEMO_COLORS[k]) return; window._memoIlColor=k; var box=document.getElementById('memo-il-colors'); if(box){ var sws=box.querySelectorAll('.os-memo-sw'); for(var i=0;i<sws.length;i++) sws[i].classList.toggle('on', sws[i].getAttribute('data-color')===k); } try{ localStorage.setItem('os_quickmemo_color',k); }catch(e){} }
+window.memoIlColor=memoIlColor;
+function closeMemoInline(){
+  window._memoInlineEdit=null;
+  var tc=document.getElementById('memo-il-temp'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc);
+  var nr=document.getElementById('mys-memo-newrow'), ms=document.getElementById('mys-split');
+  if(nr&&ms&&ms.classList.contains('scr-mode')) nr.style.display='block';  /* 글쓰기 카드 복귀 */
+  renderMyspace(window._mysFiltered||[]);
+}
+window.closeMemoInline=closeMemoInline;
+async function saveMemoInline(){
+  var ta=document.getElementById('memo-il-text'); var text=((ta&&ta.value)||'').trim();
+  if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var color=window._memoIlColor||'yellow';
+  var firstLine=text.split('\n')[0].trim();
+  var title=firstLine?(firstLine.length>24?firstLine.slice(0,24)+'…':firstLine):'빠른 메모';
+  var desc=text.length>200?text.slice(0,200):text;
+  var edit=window._memoInlineEdit;
+  try{
+    var ok=false;
+    if(edit&&edit.id){
+      var b1={title:title, description:desc, memo_text:text, keywords:['메모색:'+color]};
+      var r1=await fetch(window.db.url('/rest/v1/library?id=eq.'+encodeURIComponent(edit.id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(b1)}); ok=r1.ok;
+    } else {
+      var b2={title:title, description:desc, owner_id:window.AppState.userId, link_url:null, memo_text:text, file_url:null, image_url:null, keywords:['메모색:'+color]};
+      var r2=await fetch(window.db.url('/rest/v1/library'),{method:'POST',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(b2)}); ok=r2.ok||r2.status===201;
+    }
+    if(!ok){ if(typeof toast==='function') toast('저장 실패'); return; }
+    window._memoInlineEdit=null;
+    var tc=document.getElementById('memo-il-temp'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc);
+    window._myspaceLoaded=false; window._homeRecentLoaded=false;
+    if(typeof loadMyspace==='function'){ await loadMyspace(true); var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'), memoChip=null; for(var i=0;i<chips.length;i++){ if((chips[i].getAttribute('onclick')||'').indexOf("'메모'")>=0){ memoChip=chips[i]; break; } } if(memoChip&&typeof filterMys==='function') filterMys(memoChip,'메모'); }
+    if(typeof toast==='function') toast(edit?'메모 수정됐어요! 📝':'메모가 저장됐어요! 📝');
+  }catch(e){ if(typeof toast==='function') toast('네트워크 오류가 발생했습니다.'); }
+}
+window.saveMemoInline=saveMemoInline;
 function _scrReselectChip(){ var chips=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<chips.length;i++){ if(chips[i].textContent.trim()==='업무노트'){ if(typeof filterMys==='function') filterMys(chips[i],'스크립트'); break; } } }
 /* 전체보기 빈 상태 첫 작성 = 스크립트 칩 전환(scr-mode 켜짐 → 우측 2단) 후 인라인 작성 폼 */
 /* 전체보기 빈 상태 첫 작성 = 종류 선택 팝업(자료함/스크립트/메모/공유함) → 해당 메뉴 입력으로. 옛 모달 미사용 */
@@ -13446,7 +13507,7 @@ function _mysPickChip(txt){ var cs=document.querySelectorAll('#mys-saved .mys-to
 function mysPickGo(kind){
   mysPickClose();
   if(kind==='스크립트'){ var c=_mysPickChip('스크립트'); if(c&&typeof filterMys==='function') filterMys(c,'스크립트'); if(typeof openScriptInline==='function') openScriptInline(); }
-  else if(kind==='메모'){ var c=_mysPickChip('메모'); if(c&&typeof filterMys==='function') filterMys(c,'메모'); if(typeof openQuickMemo==='function') openQuickMemo(); if(typeof toast==='function') toast('우측 아래 메모 입력창이 열렸어요.'); }
+  else if(kind==='메모'){ var c=_mysPickChip('메모'); if(c&&typeof filterMys==='function') filterMys(c,'메모'); if(typeof _canSeeCompanyHub==='function'&&_canSeeCompanyHub()){ if(typeof openMemoInline==='function') openMemoInline(); } else { if(typeof openQuickMemo==='function') openQuickMemo(); if(typeof toast==='function') toast('우측 아래 메모 입력창이 열렸어요.'); } }
   else if(kind==='자료함'){ var c=_mysPickChip('자료함'); if(c&&typeof mysVaultOpen==='function') mysVaultOpen(c); }
   else if(kind==='공유함'){ var c=_mysPickChip('공유함'); if(c&&typeof mysShareboxOpen==='function') mysShareboxOpen(c); }
 }
@@ -14844,8 +14905,11 @@ function filterMys(el,cat){
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
   /* 스크립트 칩 = 인라인 작업공간(글쓰기 카드 표시 + 2카드). 다른 칩 = 해제(공용 회귀 0) */
   var _scr=(cat==='스크립트'); var _nr=document.getElementById('mys-scr-newrow');
-  if(_ms){ _ms.classList.toggle('scr-mode', _scr); }
+  var _memoUat=(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub());   /* 메모 인라인 글쓰기 = 임태성 게이트 먼저(검수 후 전면 개방) */
+  var _memo=(cat==='메모' && _memoUat); var _mnr=document.getElementById('mys-memo-newrow');
+  if(_ms){ _ms.classList.toggle('scr-mode', _scr || _memo); }  /* 스크립트·(게이트)메모 = 인라인 작성 레이아웃 */
   if(_nr){ _nr.style.display=_scr?'block':'none'; }  /* 'block' 명시 — display:''는 CSS display:none을 못 덮음 */
+  if(_mnr){ _mnr.style.display=_memo?'block':'none'; }  /* 메모 글쓰기 카드(게이트 안에서만) */
   /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
