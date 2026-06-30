@@ -3827,7 +3827,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="sobody" id="sobody">
       <div class="sogroup" id="sostat-label">검색 가능한 데이터</div>
       <div class="sostat" id="sostat"><span class="sostat-load">현황 불러오는 중…</span></div>
-      <div class="sohint">상품·인수기준·질병명·회사명을 입력하면 위 데이터에서 한 번에 찾습니다.<br>✨ 원세컨드 AI 검색을 누르면 회사별로 정리해 드려요.</div>
+      <div class="sohint">상품·인수기준·질병명·회사명을 입력하면 위 데이터에서 한 번에 찾습니다.</div>
     </div>
   </div>
 </div>
@@ -11018,7 +11018,7 @@ async function _runSearch(q){
   }
   if(!total) html='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">키워드 결과가 없습니다 — 위 ✨ AI 정리를 눌러보세요</div>';
   /* AI 회사별 정리 바를 맨 위에 (소식지 본문 기반, Gemini 합성) */
-  var aiBar='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div><div id="aiAnsBox"></div>';
+  var aiBar=((typeof _canSeeCompanyHub==='function'&&_canSeeCompanyHub())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'')+'<div id="aiAnsBox"></div>';  /* AI 검색 = 임태성 실장 게이트(_canSeeCompanyHub=98c5f4f9). 그 외 미노출. (2026-06-30) */
   body.innerHTML=aiBar+html;
 }
 window._runSearch=_runSearch;
@@ -11477,7 +11477,7 @@ function _svRender(){
   var items=d.items||[], terms=d.terms, nav=d.nav||[];
   var activeSrc=window._svActiveSource||'all';
   var catF=window._svCatFilter||null;
-  var aiBarFixed='<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>';
+  var aiBarFixed=(typeof _canSeeCompanyHub==='function'&&_canSeeCompanyHub())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'';  /* AI 검색 = 임태성 실장 게이트(_canSeeCompanyHub=98c5f4f9). 그 외 미노출. (2026-06-30) */
   var aiAns='<div id="aiAnsBox"></div>';
   var aiBar=aiBarFixed+aiAns;  /* 오버레이(#sobody)용 결합 — hsResults에선 aiBarFixed(고정 헤더)·aiAns(좌측 스크롤)로 분리 */
   /* 소스 탭(주 축) — 건수 0 소스 탭은 숨김(전체 제외) */
@@ -11735,6 +11735,7 @@ function _idxStatus(table, r){
 window._idxStatus=_idxStatus;
 /* AI 검색 답변 — search-answer 함수 호출 → 회사별 정리 카드 렌더 */
 async function _aiAnswer(limit){
+  if(typeof _canSeeCompanyHub==='function' && !_canSeeCompanyHub()){ return; }  /* AI 검색 = 임태성 게이트 — 버튼 미노출 외 실행 방어선(비용 차단) (2026-06-30) */
   limit=limit||8;
   var box=document.getElementById('aiAnsBox'); if(!box) return;
   /* 검색어 소스: 홈 검색=hsInput / 오버레이=sinput / fallback=마지막 검색어(_svQ). 기존엔 sinput만 봐서 홈에서 검색어를 못 읽던 버그 수정 */
