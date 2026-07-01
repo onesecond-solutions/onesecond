@@ -21,38 +21,59 @@
 2. **DDL** `db/newsletters/2026-07-01_submit_gate_columns.sql`
    - newsletters에 `status`/`submitted_by` 추가 + **기존 4월/6월분 published 백필**(검색 노출 유지) + DEFAULT reviewing.
 
+## ⚠️ 본 스키마 = 1단계 구조 (소식지 원본 + 검색용 본문)
+현재 등록 스키마는 **소식지 원본(PDF)과 검색용 본문(full_text)을 적재하는 1단계**입니다.
+**상품 라인업·보험료·인수(언더라이팅)·담보 구조화는 후속 확장**으로, 별도 컬럼/테이블·별도 등록 필드로 뒤에 붙입니다(본 PR 범위 밖).
+
+## 허용값 제한 (자유입력 불가)
+- `insurance_type` ∈ **{생명, 손해}** — 그 외 값은 400 거부
+- `category` ∈ **{소식지, 영업방향, 세일즈가이드, 매거진, 요약, 리플렛, 강의안}** — 그 외 값은 400 거부(정규화 fallback 없음)
+
+## 중복 판단 = 회사·발행월·자료유형·파일해시 (파일명 아님)
+- **완전 일치**(회사+발행월+category+`file_hash` 동일) → 멱등 차단(409).
+- **같은 회사·발행월·자료유형 + 다른 해시** → `is_revision=true` **수정본 후보**로 등록(응답 `revisionCandidate`, `existingSameGroup` 반환) → 총괄팀장 검수 시 세대/개정 판단.
+- `file_hash` = PDF sha256(64 hex). **Code가 Storage 업로드 시 파일별 sha256 산출표를 김실장·기획팀장에 제공** → 그들이 JSON에 넣음.
+
 ## 김실장·기획팀장 제출 JSON 스키마 (create_draft)
 ```json
 {
   "action": "create_draft",
   "submitter": "gpt",                     // gpt(김실장) | web(기획팀장)
   "company": "삼성생명",
-  "insurance_type": "생명",               // 생명 | 손해
+  "insurance_type": "생명",               // 허용값: 생명 | 손해
   "publish_year": 2026,
   "publish_month": 7,
-  "category": "소식지",                   // 소식지|영업방향|세일즈가이드|매거진|요약|리플렛|강의안
+  "category": "소식지",                   // 허용값: 소식지|영업방향|세일즈가이드|매거진|요약|리플렛|강의안
   "title": "삼성생명 GA소식지 26.07",
   "full_text": "...PDF 본문 구조화 텍스트(30자 이상)...",
   "keywords": ["건강보험", "간편심사"],   // 선택
   "source_filename": "삼성생명 GA소식지 26.07.pdf",
+  "file_hash": "<PDF sha256 64자리 hex>", // 필수 — Code 제공 산출표 사용
   "page_count": 16                        // 선택
 }
 ```
-- 호출: `POST /functions/v1/newsletter-submit`, 헤더 `x-submit-key: <등록키>`.
-- 먼저 `check_duplicate`로 중복 확인 후 `create_draft` 권장.
+- 호출: `POST /functions/v1/newsletter-submit`, 헤더 `x-submit-key: <등록키(비밀)>`.
+- 먼저 `check_duplicate`(회사·발행월·자료유형·해시)로 확인 후 `create_draft` 권장.
 
 ## 흐름 (7월 소식지 23건)
-1. **[Code] Storage 업로드** — 로컬 `upgrade_20260521/소식지/` 7월 PDF 23건 → `newsletters` 버킷(private, 기존 6월분과 동일). ⚠️한글 파일명=Storage 키 ASCII 전용 → uuid 키, 원본명은 `source_filename`. 업로드 후 `source_path` 확보.
+1. **[Code] Storage 업로드 + 해시 산출** — 로컬 `upgrade_20260521/소식지/` 7월 PDF 23건 → `newsletters` 버킷(private, 기존 6월분과 동일). ⚠️한글 파일명=Storage 키 ASCII 전용 → uuid 키, 원본명은 `source_filename`. 업로드 후 `source_path` + **파일별 sha256 산출표**(source_filename ↔ file_hash) 확보 → 김실장·기획팀장에 제공.
 2. **[김실장·기획팀장] 구조 분석·등록** — 각 PDF 읽고 JSON → `create_draft`. status=reviewing.
 3. **[Code] source_path 연결** — source_filename ↔ 업로드 source_path 매핑으로 UPDATE(미리보기 PDF).
 4. **[Code] 시스템 검수** — 중복 0·검색작동·PDF 미리보기·권한 확인 → `status='published'` 승격.
 5. **[Code] 검색 노출 필터** — app.html newsletters fetch에 `status=eq.published`(후속 PR, 전체 사용자 → 대표 검수·머지).
 
-## 결정 필요 (대표)
-1. **프로젝트 확인(규칙):** Supabase = `onesecond-v1-restore-0420`(`pdnwgzneooyygfejrvbg`) 맞는지 → YES 전 배포·DDL·업로드 실행 안 함.
-2. **배포/업로드 주체:** Edge Function 배포 + Storage 업로드 = (a) Chrome 검수팀 위임 (b) 대표 대시보드. Code는 코드·SQL·업로드 매핑 준비.
-3. **검수 게이트 수위:** 본 설계 = reviewing→(Code 검수)→published. "공식자료라 바로 노출"을 원하면 등록 API 기본을 published로 1줄 변경 가능.
-4. **등록키 전달:** `NEWSLETTER_SUBMIT_KEY` 생성 후 김실장·기획팀장에게만 공유(대표 채널).
+## 확정 사항 (대표 2026-07-01)
+1. **프로젝트:** `onesecond-v1-restore-0420`(`pdnwgzneooyygfejrvbg`) 기준.
+2. **배포·DDL·Storage 업로드 = Chrome 검수팀 위임.** Code는 코드·SQL·업로드 매핑·파일해시 산출표 준비.
+3. **검수 게이트 = reviewing 유지, 검수 후에만 published 승격.** (바로 노출 안 함)
+4. **등록키(`NEWSLETTER_SUBMIT_KEY`) = 비밀값으로만 관리.** 코드·문서·로그·브라우저에 값 노출 0.
+   - 생성·저장 = Supabase Function Secrets(대시보드/Chrome). 김실장·기획팀장에겐 값만 대표 채널로 별도 전달(리포지토리·PR·로그에 기록 금지).
+
+## 배포 체크리스트 (Chrome 검수팀)
+1. `NEWSLETTER_SUBMIT_KEY` = Supabase secret 설정(임의 난수, 값 비공개).
+2. `db/newsletters/2026-07-01_submit_gate_columns.sql` 실행(프로젝트 `pdnwgzneooyygfejrvbg` 확인 후) → 기존분 published 백필 검증.
+3. `supabase functions deploy newsletter-submit` (Verify JWT는 사용 안 함 — 자체 x-submit-key 인증) → `deno check` EXIT 0 확인.
+4. 스모크: 무키 401 / 잘못 submitter 400 / 필수누락 400 / 정상 create_draft → reviewing 1건.
 
 ## 미포함(후속)
 - keywords 전용 컬럼(현재 title/full_text 검색 흡수)

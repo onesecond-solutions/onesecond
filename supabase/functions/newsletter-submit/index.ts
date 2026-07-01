@@ -90,44 +90,56 @@ Deno.serve(async (req) => {
     const pm = Number(b.publish_month) || 0;
     const filename = String(b.source_filename || "").trim();
 
-    // ── check_duplicate: 회사+발행년월(+파일명) 중복 확인 ──
+    // ── check_duplicate: 회사·발행월·자료유형·파일해시 기준 ──
     if (action === "check_duplicate") {
+      const cat = String(b.category || "").trim();
+      const fh = String(b.file_hash || "").trim().toLowerCase();
       if (!company || !py || !pm) return json({ error: "company, publish_year, publish_month가 필요합니다." }, 400);
-      let q = admin.from("newsletters").select("id,company,title,source_filename,status,submitted_by")
+      let q = admin.from("newsletters").select("id,company,category,title,source_filename,file_hash,status,submitted_by")
         .eq("company", company).eq("publish_year", py).eq("publish_month", pm);
+      if (cat) q = q.eq("category", cat);
       const { data, error } = await q;
       if (error) return json({ error: "중복 조회 실패: " + error.message }, 500);
-      const hitByFile = filename ? (data || []).filter((r: Record<string, unknown>) => String(r.source_filename || "") === filename) : [];
-      return json({ ok: true, duplicate: (data || []).length > 0, byFilename: hitByFile.length > 0, existing: data || [] });
+      const exact = fh ? (data || []).filter((r: Record<string, unknown>) => String(r.file_hash || "").toLowerCase() === fh) : [];
+      const revision = (data || []).length > 0 && exact.length === 0;
+      return json({ ok: true, exactDuplicate: exact.length > 0, revisionCandidate: revision, existing: data || [] });
     }
 
     // ── create_draft: 구조 JSON → newsletters INSERT (status='reviewing' 서버 강제) ──
     const insurance_type = String(b.insurance_type || "").trim();
-    let category = String(b.category || "소식지").trim();
+    const category = String(b.category || "").trim();
     const title = String(b.title || "").trim();
     const full_text = String(b.full_text || "").trim();
     const page_count = Number(b.page_count) || null;
     const keywords = Array.isArray(b.keywords) ? (b.keywords as string[]).filter(Boolean).slice(0, 30) : [];
+    const file_hash = String(b.file_hash || "").trim().toLowerCase();
 
-    // 필수 검증
+    // 필수 검증 — insurance_type·category = 허용값 목록으로 제한(자유입력 불가, 미허용값=거부)
     const missing: string[] = [];
     if (!company) missing.push("company");
-    if (!ALLOWED_TYPES.includes(insurance_type)) missing.push("insurance_type(생명|손해)");
+    if (!ALLOWED_TYPES.includes(insurance_type)) missing.push("insurance_type(허용값: " + ALLOWED_TYPES.join("|") + ")");
     if (!py) missing.push("publish_year");
     if (!pm || pm < 1 || pm > 12) missing.push("publish_month(1-12)");
+    if (!ALLOWED_CATEGORY.includes(category)) missing.push("category(허용값: " + ALLOWED_CATEGORY.join("|") + ")");
     if (!title) missing.push("title");
     if (!full_text || full_text.length < 30) missing.push("full_text(30자 이상)");
     if (!filename) missing.push("source_filename");
+    if (!/^[a-f0-9]{64}$/.test(file_hash)) missing.push("file_hash(sha256 64자리 hex)");
     if (missing.length) return json({ error: "필수 항목 누락/오류: " + missing.join(", ") }, 400);
-    if (!ALLOWED_CATEGORY.includes(category)) category = "소식지";
 
     // 개인정보 방어
     const pii = detectPII(title + "\n" + full_text);
     if (pii) return json({ ok: false, piiDetected: true, error: pii + "가 포함되어 등록을 중단했습니다." }, 409);
 
-    // 중복 방지: 같은 파일명 이미 있으면 재등록 차단(멱등)
-    const { data: dup } = await admin.from("newsletters").select("id,status").eq("source_filename", filename).limit(1);
-    if (dup && dup[0]) return json({ ok: false, duplicate: true, id: dup[0].id, status: dup[0].status, error: "이미 등록된 소식지입니다(source_filename 중복)." }, 409);
+    // 중복 판단 = 회사·발행월·자료유형·파일해시 (파일명 아님)
+    const { data: sameGroup } = await admin.from("newsletters")
+      .select("id,file_hash,status,source_filename")
+      .eq("company", company).eq("publish_year", py).eq("publish_month", pm).eq("category", category);
+    // 완전 일치(해시 동일) → 멱등 차단
+    const exact = (sameGroup || []).find((r: Record<string, unknown>) => String(r.file_hash || "").toLowerCase() === file_hash);
+    if (exact) return json({ ok: false, duplicate: true, id: (exact as Record<string, unknown>).id, status: (exact as Record<string, unknown>).status, error: "이미 등록된 동일 소식지입니다(회사·발행월·자료유형·해시 일치)." }, 409);
+    // 같은 회사·발행월·자료유형의 다른 해시 → 수정본 후보(등록하되 검수 표시)
+    const revisionCandidate = (sameGroup || []).length > 0;
 
     const cpp = page_count && page_count > 0 ? Math.round(full_text.length / page_count) : null;
 
@@ -150,12 +162,21 @@ Deno.serve(async (req) => {
       status: "reviewing",
       submitted_by: submittedBy,
       extracted_at: new Date().toISOString(),
+      file_hash,
+      is_revision: revisionCandidate,
       // keywords는 newsletters에 컬럼 없음 → title/full_text 검색으로 흡수(별도 컬럼 도입 시 확장)
     };
 
     const { data: ins, error: insErr } = await admin.from("newsletters").insert(payload).select("id").limit(1);
     if (insErr) return json({ error: "등록 실패: " + insErr.message }, 500);
-    return json({ ok: true, action: "insert", id: ins && ins[0] && ins[0].id, status: "reviewing", note: "총괄팀장 시스템검수 후 published 승격 시 검색 노출됩니다." });
+    return json({
+      ok: true, action: "insert", id: ins && ins[0] && ins[0].id, status: "reviewing",
+      revisionCandidate,
+      existingSameGroup: (sameGroup || []).map((r: Record<string, unknown>) => ({ id: r.id, source_filename: r.source_filename, status: r.status })),
+      note: revisionCandidate
+        ? "같은 회사·발행월·자료유형의 기존 자료가 있어 '수정본 후보'로 등록됐습니다. 총괄팀장 검수 후 처리됩니다."
+        : "총괄팀장 시스템검수 후 published 승격 시 검색 노출됩니다.",
+    });
   } catch (e) {
     console.error("[newsletter-submit] 오류", e);
     return json({ error: "처리 중 오류가 발생했습니다." }, 500);

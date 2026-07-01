@@ -8,6 +8,8 @@ BEGIN;
 -- 1) 컬럼 추가 (없을 때만)
 ALTER TABLE public.newsletters ADD COLUMN IF NOT EXISTS submitted_by text;
 ALTER TABLE public.newsletters ADD COLUMN IF NOT EXISTS status text;
+ALTER TABLE public.newsletters ADD COLUMN IF NOT EXISTS file_hash text;       -- PDF sha256(64 hex) — 중복 판단 기준
+ALTER TABLE public.newsletters ADD COLUMN IF NOT EXISTS is_revision boolean DEFAULT false;  -- 같은 회사·월·유형 다른 해시 = 수정본 후보
 
 -- 2) 기존 전량 = published 백필 (신규 등록 전이라 전부 기존분 → 검색 노출 유지)
 UPDATE public.newsletters SET status = 'published' WHERE status IS NULL;
@@ -15,8 +17,11 @@ UPDATE public.newsletters SET status = 'published' WHERE status IS NULL;
 -- 3) 이후 신규 INSERT 기본값 = reviewing (등록 API는 명시적으로 'reviewing' 전달, DEFAULT는 방어)
 ALTER TABLE public.newsletters ALTER COLUMN status SET DEFAULT 'reviewing';
 
--- 4) 상태 인덱스
+-- 4) 인덱스
 CREATE INDEX IF NOT EXISTS idx_newsletters_status ON public.newsletters (status);
+-- 중복 판단(회사·발행월·자료유형·해시) 조회 가속
+CREATE INDEX IF NOT EXISTS idx_newsletters_dupkey ON public.newsletters (company, publish_year, publish_month, category);
+CREATE INDEX IF NOT EXISTS idx_newsletters_file_hash ON public.newsletters (file_hash);
 
 COMMIT;
 
