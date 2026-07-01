@@ -26,7 +26,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>원세컨드 시안 — 딸깍(저장·복사·카드)</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- html2canvas: 상단 blocking 로드 제거(2026-07-01 perf) → 카드 저장·복사·비교표 출력 시에만 loadHtml2Canvas()로 동적 로드. 홈 첫 진입 파싱 지연 194KB 해소. -->
 <script src="/js/db.js"></script>
 <script src="/js/admin-config.js"></script>
 <script src="/js/auth.js"></script>
@@ -5411,7 +5411,10 @@ function _osWelcomeMaybeShow(){ try{ var u=JSON.parse(localStorage.getItem('os_u
 window.osWelcomeClose=osWelcomeClose; window.osWelcomeEnable=osWelcomeEnable; window.osWelcomeMore=osWelcomeMore;
 (function(){ try{ document.addEventListener('appstate:ready', function(){ setTimeout(function(){ try{ _osWelcomeMaybeShow(); }catch(e){} }, 900); }); }catch(e){} })();
 /* 2026-06-04: 로그인 완료(토큰 확정) 시 홈 강제 재로드 — 부팅 중 토큰 없이 그려진 "로그인 후 표시됩니다" placeholder 해소 */
-(function(){ try{ document.addEventListener('appstate:ready', function(){ try{ window._homeRecentLoaded=false; var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&typeof loadHomeRecent==='function') loadHomeRecent(true); }catch(e){} }); }catch(e){} })();
+/* 2026-07-01 perf: appstate:ready 후 홈 재로드는 loadHomeRecent 자체 가드(_homeRecentLoaded&&!force)에 위임.
+   기존엔 _homeRecentLoaded 강제 리셋 + force=true라 bootView→showView('home')→loadHomeRecent 경로와 겹쳐 홈 API 세트가 2회 실행(중복).
+   가드만 존중하면: 재방문(이미 실데이터 로드)=가드 skip 1회 / OAuth 콜백(placeholder만·가드 false 유지)=여기서 실데이터 1회. */
+(function(){ try{ document.addEventListener('appstate:ready', function(){ try{ var hv=document.getElementById('v-home'); if(hv&&hv.classList.contains('on')&&typeof loadHomeRecent==='function') loadHomeRecent(); }catch(e){} }); }catch(e){} })();
 window.vaultQnaBack=vaultQnaBack;
 async function loadInsurerVault(){
   var grid = document.getElementById('iv-list'); if(!grid) return;
@@ -5924,7 +5927,8 @@ async function openCard(){
 function copyCardText(){var c=window._genCard||cards[cur];if(!c){toast('복사할 카드가 없습니다');return;}var lines=[];if(c.brand)lines.push(c.brand);lines.push(String(c.name).replace(/<br>/g,' '));c.rows.forEach(function(r){lines.push(r[0]+': '+r[1]);});var _m={};try{_m=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');}catch(e){}if(_m.name||_m.phone)lines.push((_m.name||'')+((_m.name&&_m.phone)?' · ':'')+(_m.phone||''));lines.push('※ 상담 참고용');var txt=lines.join('\n');if(copyTextFallback(txt)){toast('카드 텍스트 복사됨 — 톡에 붙여넣기');}else{toast('복사 실패 — 브라우저가 막았습니다');}}
 async function renderCardCanvas(){
   var el=document.getElementById('thecard');
-  return await html2canvas(el,{scale:2,backgroundColor:null,logging:false});
+  await loadHtml2Canvas();  /* 상단 blocking 제거(2026-07-01) → 사용 시점 동적 로드 */
+  return await window.html2canvas(el,{scale:2,backgroundColor:null,logging:false});
 }
 async function copyCardImage(){
   try{
@@ -8367,13 +8371,14 @@ window.saveSignature = saveSignature;
 async function finalizeMakeCard(){
   var card = document.getElementById('mc-card');
   if(!card){ alert('미리보기 카드를 찾지 못했습니다.'); return; }
-  if(typeof html2canvas !== 'function'){
+  try{ await loadHtml2Canvas(); }  /* 상단 blocking 제거(2026-07-01) → 사용 시점 동적 로드 */
+  catch(e){
     alert('이미지 변환 라이브러리가 로드되지 않았습니다. 새로고침 후 다시 시도해주세요.');
     return;
   }
 
   try{
-    var canvas = await html2canvas(card, { scale:2, backgroundColor:'#FFFFFF', logging:false, useCORS:true });
+    var canvas = await window.html2canvas(card, { scale:2, backgroundColor:'#FFFFFF', logging:false, useCORS:true });
     canvas.toBlob(async function(blob){
       if(!blob){
         finalizeMakeCardFallbackText();
