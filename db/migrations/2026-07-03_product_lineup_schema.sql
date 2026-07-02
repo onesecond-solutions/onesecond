@@ -145,7 +145,7 @@ as $$
   left join insurer_company_snapshots cs on cs.company_id=c.id and cs.base_month=p_month;
 $$;
 
--- ── 10. RLS (보완 2026-07-03: published 게이트 DB 강제 · 발행변경 admin/service_role) ──
+-- ── 10. RLS (보완 2026-07-03: published 게이트 DB 강제 · 발행변경 service_role 전용) ──
 -- 정책 분리: 고유정보(회사·상품·테마)는 공개 SELECT / 월별 스냅샷·테마·발행월은 published만 SELECT.
 --   → draft 월 정보는 스냅샷·테마·lineup_months 레벨에서 차단되므로, 고유정보와 조인돼도 draft는 노출 0.
 
@@ -161,7 +161,7 @@ returns boolean language sql stable security definer set search_path = public as
     where s.id = sid and insurer_is_published_month(s.base_month)
   );
 $$;
--- 관리자 판별은 기존 프로젝트 헬퍼 is_admin()(SECURITY DEFINER) 재사용 (없으면 선행 정의 필요).
+-- 발행 상태 변경은 service_role 서버 경로 전용(아래) → is_admin() 등 관리자 헬퍼 선행조건 없음.
 
 alter table insurer_companies               enable row level security;
 alter table insurer_company_snapshots       enable row level security;
@@ -188,19 +188,15 @@ create policy insurer_company_snapshots_sel_pub on insurer_company_snapshots
 create policy insurer_snapshot_themes_sel_pub on insurer_product_snapshot_themes
   for select to authenticated using (insurer_is_published_snapshot(snapshot_id));
 
--- [보완3] 발행 게이트 — 일반 authenticated는 published 월만 조회. 상태변경/등록/삭제는 admin만.
---   service_role은 RLS 우회 → 소식지식 Edge Function 경유가 기본 발행 경로. 일반 authenticated 직접 UPDATE 권한 없음.
+-- [보완3-정정] 발행 상태 변경 경로 = service_role 서버 경로(승인 API/Edge Function)로 단일화.
+--   authenticated(일반·admin 무관)는 SELECT도 published 월만 → draft 월은 모든 화면 경로에서 0건.
+--   INSERT/UPDATE/DELETE 정책 미부여 = authenticated(admin 포함) 직접 쓰기 0. service_role(RLS 우회)만 발행·수정·draft 조회.
 create policy insurer_lineup_months_sel on insurer_lineup_months
-  for select to authenticated using (status = 'published' or is_admin());
-create policy insurer_lineup_months_upd_admin on insurer_lineup_months
-  for update to authenticated using (is_admin()) with check (is_admin());
-create policy insurer_lineup_months_ins_admin on insurer_lineup_months
-  for insert to authenticated with check (is_admin());
-create policy insurer_lineup_months_del_admin on insurer_lineup_months
-  for delete to authenticated using (is_admin());
+  for select to authenticated using (status = 'published');
+-- (INSERT/UPDATE/DELETE 정책 없음 = 프런트 직접 발행 상태 변경 전면 차단)
 
--- 회사·상품·스냅샷·테마 쓰기(insert/update/delete) 정책은 미부여 = 일반 authenticated 차단.
---   기본 등록/수정 경로 = service_role Edge Function(RLS 우회). admin 직접 편집 허용 시 각 테이블에 is_admin() 정책 추가.
+-- 회사·상품·스냅샷·테마 쓰기(insert/update/delete) 정책도 미부여 = authenticated(admin 포함) 차단.
+--   모든 등록/수정/발행 경로 = service_role 서버(승인 API/Edge Function, RLS 우회)로 단일화. 프런트 직접 쓰기 0.
 -- 과거 월 이력 보존: 스냅샷은 append-only 운영(발행 후 archived 전이). UPDATE/DELETE 정책 미부여로 일반 경로 수정·삭제 0.
 
 -- ⚠️ 검증(별도 RUN): select current_database();  -- pdnwgzneooyygfejrvbg 확인
