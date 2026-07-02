@@ -110,9 +110,13 @@
 - 인자 월의 스냅샷 조인 반환. **단, `insurer_lineup_months.status='published'`인 월만 허용**(비published 월 요청 시 빈 결과).
 - 라인업 페이지 `?month=` 파라미터·과거 월 이력 조회에 사용. current 뷰와 책임 분리.
 
-### 1-10. RLS (초안)
-- 읽기: 로그인 사용자(설계사 전용). published 월만 노출은 뷰/RPC/앱 레벨에서 보장.
-- 쓰기(insert/update/delete): service_role 또는 admin만(소식지 등록 통로와 동일 사상). 일반 사용자 쓰기 0.
+### 1-10. RLS (보완 반영 2026-07-03 — published 게이트 DB 강제)
+- **고유정보 공개**: 회사·상품·테마 마스터는 authenticated SELECT(true).
+- **월별 published 강제**: `insurer_product_snapshots`·`insurer_company_snapshots` SELECT = `insurer_is_published_month(base_month)`. `insurer_product_snapshot_themes` = `insurer_is_published_snapshot(snapshot_id)`. → 고유정보가 draft 월 스냅샷과 조인돼도 draft는 노출 0(정책 분리로 차단).
+- **발행 게이트**: `insurer_lineup_months` SELECT = published 또는 admin. UPDATE/INSERT/DELETE = `is_admin()`만. **일반 authenticated 직접 UPDATE 권한 없음.** 기본 발행 경로 = service_role Edge Function(RLS 우회, 소식지와 동일 사상).
+- **헬퍼**: `insurer_is_published_month`·`insurer_is_published_snapshot`(SECURITY DEFINER, search_path 고정 — lineup_months RLS 재귀 회피). 관리자 판별 = 기존 `is_admin()` 재사용.
+- **뷰/RPC 우회 방지**: 뷰 `insurer_products_current`는 `security_invoker=on`, RPC `insurer_products_for_month`는 `security invoker`+`search_path=public`+published join → 호출자 RLS 그대로 적용.
+- **이력 보존**: 스냅샷 쓰기 정책 미부여 = 일반 경로 UPDATE/DELETE 0. 발행 후 archived 전이(append-only 운영).
 - 고객 게시 금지는 앱 레벨 컴플라이언스 문구(company_snapshots.compliance) 노출로.
 
 ---
