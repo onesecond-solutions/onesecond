@@ -361,6 +361,15 @@ body.is-uat-homedesk #v-home .os-banner-mini,
 body.is-uat-homedesk #v-home .os-start-cta{display:none !important;}
 /* 검색바(홈 검색) 노출 — 데스크 최상단 통합검색 */
 body.is-uat-homedesk #homeSearch{display:block;}
+/* "무엇을 찾으세요?" 이하 전체를 상단으로 끌어올림(사이드바 마이스페이스 높이) — 25vh 상단 패딩 축소 + 홈 인사말 숨김 (2026-07-02 대표 지시) */
+body.is-uat-homedesk #v-home .home-greeting{display:none;}
+body.is-uat-homedesk .hs-wrap{padding-top:10px;}
+/* 워크스페이스 4카드 크게 — 세로 레이아웃(아이콘 위) + 큰 패딩 (2026-07-02 대표 지시) */
+#homeDesk .sn-card{flex-direction:column;align-items:flex-start;gap:12px;padding:20px 18px;}
+#homeDesk .sn-card-ic{width:46px;height:46px;border-radius:var(--radius-md,12px);}
+#homeDesk .sn-card-ic .sp-ico{width:24px;height:24px;}
+#homeDesk .sn-card-t{font-size:1.05rem;}
+#homeDesk .sn-card-d{font-size:0.82rem;}
 /* 데스크 섹션 라벨 */
 .hd-label{font-size:0.78rem;font-weight:800;color:var(--ts);letter-spacing:.4px;margin:22px 2px 11px;display:flex;align-items:center;gap:8px;}
 .hd-label:first-child{margin-top:4px;}
@@ -2751,8 +2760,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 검색 홈(미리보기 — 3계정 게이트). 비허용 계정엔 #homeSearch가 display:none이라 기존 홈(인사+배너+위젯) 그대로 노출 -->
       <div id="homeSearch">
         <div class="hs-wrap">
-          <div class="hs-philo aip-homephilo">완성된 척하지 않습니다. 원세컨드가 매일 자라는 모습을, 날 것 그대로 보여드릴게요.</div>
           <div class="hs-head">무엇을 찾으세요?</div>
+          <div class="hs-philo aip-homephilo">완성된 척하지 않습니다. 원세컨드가 매일 자라는 모습을, 날 것 그대로 보여드릴게요.</div>
           <div class="hs-box">
             <div class="hs-field">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
