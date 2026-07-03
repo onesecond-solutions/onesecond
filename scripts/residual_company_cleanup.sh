@@ -39,19 +39,8 @@ judge(){ local co="$1" sf="$2" id="$3"; local body
     if printf '%s' "$body" | grep -qi 'IBK'; then echo "IBK연금보험|생명|본문 IBK|fix"; return; fi
     echo "-|-|미상: 본문 발행사 불명|hold"; return
   fi
-  if [ "$co" = '라이나' ]; then
-    body="$(ft "$id")"
-    if printf '%s' "$body""$sf" | grep -q '라이나생명'; then echo "라이나생명|생명|본문/파일 라이나생명|fix"; return; fi
-    if printf '%s' "$body""$sf" | grep -q '라이나손해보험'; then echo "라이나손해보험|손해|라이나손해보험 명시|fix"; return; fi
-    echo "-|-|라이나: 생/손 명시 근거 없음|hold"; return
-  fi
-  # 소식지(회사명 아님) 또는 파일명 오염(...pdf)
-  body="$(ft "$id")"; local hits="" cnt=0
-  for cand in 현대해상 삼성화재 DB손해보험 메리츠화재 한화손해보험 흥국화재 롯데손해보험 KB손해보험 NH농협손해보험 AIG손해보험 삼성생명 한화생명 교보생명 신한라이프; do
-    if printf '%s' "$body""$sf""$co" | grep -q "$cand"; then hits="$cand"; cnt=$((cnt+1)); fi
-  done
-  if [ "$cnt" = 1 ]; then local t=손해; case "$hits" in *생명|*라이프|교보생명) t=생명;; esac; echo "$hits|$t|본문/파일 단일 발행사 $hits|fix"; return; fi
-  echo "-|-|발행사 불명 또는 다중매칭($cnt)|hold"
+  # 라이나·소식지·파일명값 등 그 외 = 대표 승인상 자동수정 금지 → 조사만·항상 hold
+  echo "-|-|자동수정 제외(조사·보류 전용): $co|hold"
 }
 
 case "$MODE" in
@@ -68,6 +57,7 @@ diagnose)
       echo "  FIX   [$co/$it] -> [$nco/$nt]  ($rs)  <- $sf"
     else
       echo "  HOLD  [$co/$it]  ($rs)  <- $sf"
+      echo "        본문: $(ft "$id" | head -c 160)"
     fi
   done
   echo "-- 스냅샷: $SNAP / 패치안: $PLAN --"
