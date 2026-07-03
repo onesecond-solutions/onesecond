@@ -18,6 +18,10 @@ export PGPASSWORD="$(_dec "${_up#*:}")"
 export PGDATABASE="${_hpq#*/}"
 export PGHOST="${_hostport%%:*}"
 [ "$_hostport" = "$PGHOST" ] || export PGPORT="${_hostport##*:}"
+# Supabase pooler(Supavisor)는 사용자명이 postgres.<projectref> 형식 필요 — ref 누락 시 자동 보정.
+case "$PGHOST" in
+  *pooler.supabase.com*) case "$PGUSER" in *.*) : ;; *) export PGUSER="${PGUSER}.${PROJECT_REF}" ;; esac ;;
+esac
 case "$_q" in *sslmode=*) _sm="${_q##*sslmode=}"; export PGSSLMODE="${_sm%%&*}";; *) export PGSSLMODE=require;; esac
 unset _np _up _hp _hpq _q _hostport _sm SUPABASE_DB_URL_UNUSED
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)   # conninfo 인자 없음 → argv에 접속정보 0
