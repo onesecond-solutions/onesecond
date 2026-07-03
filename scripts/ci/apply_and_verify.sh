@@ -26,6 +26,12 @@ case "$_q" in *sslmode=*) _sm="${_q##*sslmode=}"; export PGSSLMODE="${_sm%%&*}";
 unset _np _up _hp _hpq _q _hostport _sm SUPABASE_DB_URL_UNUSED
 PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)   # conninfo 인자 없음 → argv에 접속정보 0
 
+# 안전 진단(비밀번호 값 절대 미출력): 접속 구조·비번 상태 플래그만. 리전/user/ref/치환상태 규명용.
+case "$PGPASSWORD" in *%[0-9A-Fa-f][0-9A-Fa-f]*) _pct=percentlike;; *%*) _pct=has_raw_percent;; *) _pct=none;; esac
+case "$PGPASSWORD" in *YOUR-PASSWORD*|*'['*|*']'*|"") _ph=PLACEHOLDER_OR_EMPTY;; *) _ph=filled;; esac
+echo "DIAG host=$PGHOST user=$PGUSER db=$PGDATABASE port=${PGPORT:-5432} sslmode=$PGSSLMODE pw_len=${#PGPASSWORD} pw_percent=$_pct pw_state=$_ph"
+unset _pct _ph
+
 # 로그 유출 방지: URL·비밀번호 스크럽(perl \Q 리터럴 → 특수문자 안전).
 scrub(){ perl -pe 'BEGIN{$u=$ENV{SUPABASE_DB_URL};$p=$ENV{PGPASSWORD}} s/\Q$u\E/<redacted>/g if length($u); s/\Q$p\E/<redacted>/g if length($p)'; }
 run_sql(){ "${PSQL[@]}" "$@" 2> >(scrub >&2); }
