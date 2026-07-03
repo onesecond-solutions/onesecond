@@ -3959,10 +3959,13 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 감사센터 1차 — 소식지 회사명 표준화 (admin 전용·제한형 RPC). 2026-07-03 -->
       <div class="ac-sec" data-sec="audit">
         <div class="ac-section-head"><i data-lucide="shield-check"></i><h2>감사센터 · 소식지 회사명 표준화</h2><span class="ac-section-sub">검수 매핑 v1 · company만 · 미리보기→승인하고 실행→롤백</span></div>
-        <div style="margin:8px 0 16px"><button class="acn-btn" onclick="_acnPrepare()">대상 미리보기(작업 생성)</button> <span class="acn-mut">매핑 버전 v1_2026_07 · status=published 대상 · 개인문서 제외</span></div>
-        <div id="acn-preview"></div>
-        <div class="ac-section-head" style="margin-top:22px"><i data-lucide="history"></i><h2 style="font-size:15px">작업 이력 · 감사</h2></div>
-        <div id="acn-history"><div class="ac-card-empty">—</div></div>
+        <div id="acn-lock" class="ac-card-empty">상태 확인 중…</div>
+        <div id="acn-tools" style="display:none">
+          <div style="margin:8px 0 16px"><button class="acn-btn" onclick="_acnPrepare()">대상 미리보기(작업 생성)</button> <span class="acn-mut">매핑 버전 v1_2026_07 · status=published 대상 · 개인문서 제외</span></div>
+          <div id="acn-preview"></div>
+          <div class="ac-section-head" style="margin-top:22px"><i data-lucide="history"></i><h2 style="font-size:15px">작업 이력 · 감사</h2></div>
+          <div id="acn-history"><div class="ac-card-empty">—</div></div>
+        </div>
       </div>
 
       <!-- 가입 승인 모달 (admin-console 흡수) -->
@@ -11891,23 +11894,34 @@ function _acAudit(){
   try{ var secs=document.querySelectorAll('#v-admin .ac-sec'); for(var i=0;i<secs.length;i++)secs[i].classList.remove('on'); }catch(e){}
   var mine=document.querySelector('#v-admin .ac-sec[data-sec="audit"]'); if(mine)mine.classList.add('on');
   try{ var tabs=document.querySelectorAll('#ac-tabs .tab'); for(var t=0;t<tabs.length;t++)tabs[t].classList.toggle('on',(tabs[t].getAttribute('onclick')||'').indexOf('_acAudit')>=0); }catch(e){}
-  _acnList();
+  /* RPC 배포 전 완전 잠금: get_job 프로브 성공(=배포+admin)일 때만 도구 노출. 실패=잠김(오류 클릭 노출 0) */
+  var lk=document.getElementById('acn-lock'), tl=document.getElementById('acn-tools');
+  if(lk){lk.style.display='';lk.textContent='상태 확인 중…';} if(tl)tl.style.display='none';
+  _acnRpc('ac_nlstd_get_job',{}).then(function(rows){
+    if(lk)lk.style.display='none'; if(tl)tl.style.display='';
+    _acnRenderHistory(Array.isArray(rows)?rows:[]);
+  }).catch(function(){
+    if(tl)tl.style.display='none';
+    if(lk){lk.style.display='';lk.textContent='감사센터는 마이그레이션 배포 후 활성화됩니다. 현재 잠김(미배포).';}
+  });
 }
 window._acAudit=_acAudit;
+function _acnRenderHistory(rows){
+  var el=document.getElementById('acn-history'); if(!el)return;
+  rows=Array.isArray(rows)?rows:[];
+  if(!rows.length){ el.innerHTML='<div class="ac-card-empty">작업 이력 없음</div>'; return; }
+  el.innerHTML='<table class="acn-tbl"><thead><tr><th>작업</th><th>버전</th><th>상태</th><th>대상/변경</th><th>준비</th><th>승인</th><th></th></tr></thead><tbody>'+
+    rows.map(function(j){
+      var rb=(j.status==='executed')?'<button class="acn-btn sm" onclick="_acnRollback(\''+j.id+'\')">되돌리기</button>':'';
+      return '<tr><td>'+_acnEsc(String(j.id).slice(0,8))+'</td><td>'+_acnEsc(j.mapping_version)+'</td><td>'+_acnEsc(j.status)+
+        (j.fail_reason?' <span class="acn-mut">('+_acnEsc(j.fail_reason)+')</span>':'')+'</td><td>'+(j.target_count||0)+' / '+(j.changed_count||0)+
+        '</td><td>'+_acnEsc(String(j.prepared_at||'').slice(0,16).replace('T',' '))+'</td><td>'+_acnEsc(String(j.approved_at||'').slice(0,16).replace('T',' '))+'</td><td>'+rb+'</td></tr>';
+    }).join('')+'</tbody></table>';
+}
 function _acnList(){
   var el=document.getElementById('acn-history'); if(el)el.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
-  _acnRpc('ac_nlstd_get_job',{}).then(function(rows){
-    rows=Array.isArray(rows)?rows:[];
-    if(!el)return;
-    if(!rows.length){ el.innerHTML='<div class="ac-card-empty">작업 이력 없음</div>'; return; }
-    el.innerHTML='<table class="acn-tbl"><thead><tr><th>작업</th><th>버전</th><th>상태</th><th>대상/변경</th><th>준비</th><th>승인</th><th></th></tr></thead><tbody>'+
-      rows.map(function(j){
-        var rb=(j.status==='executed')?'<button class="acn-btn sm" onclick="_acnRollback(\''+j.id+'\')">되돌리기</button>':'';
-        return '<tr><td>'+_acnEsc(String(j.id).slice(0,8))+'</td><td>'+_acnEsc(j.mapping_version)+'</td><td>'+_acnEsc(j.status)+
-          (j.fail_reason?' <span class="acn-mut">('+_acnEsc(j.fail_reason)+')</span>':'')+'</td><td>'+(j.target_count||0)+' / '+(j.changed_count||0)+
-          '</td><td>'+_acnEsc(String(j.prepared_at||'').slice(0,16).replace('T',' '))+'</td><td>'+_acnEsc(String(j.approved_at||'').slice(0,16).replace('T',' '))+'</td><td>'+rb+'</td></tr>';
-      }).join('')+'</tbody></table>';
-  }).catch(function(e){ if(el)el.innerHTML='<div class="ac-card-empty">조회 실패: '+_acnEsc(String(e.message||e))+' (권한 없음이면 정상)</div>'; });
+  _acnRpc('ac_nlstd_get_job',{}).then(function(rows){ _acnRenderHistory(rows); })
+    .catch(function(e){ if(el)el.innerHTML='<div class="ac-card-empty">조회 실패: '+_acnEsc(String(e.message||e))+'</div>'; });
 }
 function _acnPrepare(){
   var el=document.getElementById('acn-preview'); if(el)el.innerHTML='<div class="ac-card-empty">작업안 생성 중…</div>';
