@@ -248,6 +248,19 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .smcl-meta{font-size:var(--sz-s);color:var(--cl-meta);line-height:1.5;}
 .chub-go{font-size:var(--sz-s);color:var(--ac);font-weight:600;white-space:nowrap;}
 @media(max-width:900px){#v-samsung-lineup.on,#v-samsung-waiver.on{overflow-y:auto;}.smsg-tablewrap{overflow:visible;}.smsg-tbl th{position:static;}}
+/* ════ 원수사 GA소식지 (#v-newsletters) — 임태성 게이트. 발행월별 모음. 박스=chub-nlbox 재사용. 2026-07-03 ════ */
+#v-newsletters.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding:0 0 22px;}
+.nlp-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 2px;flex-shrink:0;}
+.nlp-title{font-size:var(--sz-m);font-weight:700;color:var(--ts);}.nlp-title b{color:var(--ac);}
+.nlp-count{font-size:var(--sz-s);color:var(--tf);}
+.nlp-search{margin-left:auto;}
+.nlp-search input{border:1px solid var(--bd);border-radius:9px;padding:8px 12px;font-family:inherit;font-size:var(--sz-s);background:var(--s2);color:var(--tp);min-width:180px;}
+.nlp-search input:focus{outline:none;border-color:var(--ac);background:var(--s1);}
+.nlp-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:4px;}
+.nlp-sec{margin-bottom:20px;}
+.nlp-seclb{font-size:var(--sz-s);font-weight:800;color:var(--ac);padding:6px 10px;background:color-mix(in srgb,var(--ac) 8%,var(--s1));border-radius:7px;display:inline-block;margin-bottom:10px;}
+.nlp-grid{display:flex;flex-wrap:wrap;gap:12px;}
+.nlp-empty{color:var(--tf);font-size:var(--sz-s);text-align:center;padding:40px 0;}
 /* ════ 원수사 상품 라인업 (#v-product-lineup) — 임태성 게이트, DB 2026-07 draft. 시안 포팅(pl- 접두사·원세컨드 토큰). 2026-07-03 ════ */
 #v-product-lineup{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;}
 #v-product-lineup.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding:0 0 22px;}
@@ -3571,6 +3584,15 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
          </div>
        </div>
      </div>
+     <!-- ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. newsletters 발행월별 모음. 일반/어드민 무영향. 2026-07-03 ════ -->
+     <div class="wrap view" id="v-newsletters">
+       <div class="nlp-hd">
+         <div class="nlp-title">원수사 <b>GA소식지</b></div>
+         <div class="nlp-count" id="nlp-count"></div>
+         <div class="nlp-search"><input id="nlp-q" type="text" placeholder="회사 검색" autocomplete="off"></div>
+       </div>
+       <div class="nlp-body" id="nlp-body"></div>
+     </div>
      <!-- ════ 운영센터(어드민) — SPA D영역 흡수 (#v-admin · 2단 탭/칩) ════ -->
      <div class="wrap view" id="v-admin">
       <div class="ttl">운영센터 <span class="ac">· admin</span></div>
@@ -6215,7 +6237,7 @@ function _homeDeskShow(){
   var tools=[
     {v:'scripts',       ic:'i-msg',     t:'스크립트',   d:'원세컨드 제공 상담 멘트·화법', c:'var(--ac)'},
     {v:'product-lineup', ic:'i-box',     t:'상품 라인업', d:'원수사 상품 한눈에 비교',      c:'var(--t-uw)'},
-    {v:'news',          ic:'i-building', t:'소식지',    d:'원수사 GA소식지 월별 모음',     c:'var(--t-event)'}
+    {v:'newsletters',    ic:'i-building', t:'소식지',    d:'원수사 GA소식지 월별 모음',     c:'var(--t-event)'}
   ];
   var th='';
   for(var j=0;j<tools.length;j++){ var t=tools[j];
@@ -6527,7 +6549,7 @@ function _scriptsSheetShow(){
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) */if(key==='product-lineup'&&typeof _canSeePl==='function'&&!_canSeePl()){key='home';}/* 원수사 상품 라인업 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){if(window._togetherSheetShow)window._togetherSheetShow();return;}/* 함께해요 = 바텀시트 전용 슬롯으로 흡수 (2026-06-26) */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',salesnote:'영업노트','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='salesnote'&&typeof loadSalesNote==='function')loadSalesNote();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) */if(key==='product-lineup'&&typeof _canSeePl==='function'&&!_canSeePl()){key='home';}/* 원수사 상품 라인업 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){if(window._togetherSheetShow)window._togetherSheetShow();return;}/* 함께해요 = 바텀시트 전용 슬롯으로 흡수 (2026-06-26) */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',salesnote:'영업노트','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='salesnote'&&typeof loadSalesNote==='function')loadSalesNote();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -11730,6 +11752,60 @@ function _plBind(){
   var bd=document.getElementById('pl-backdrop'); if(bd)bd.onclick=_plCloseSide;
 }
 window.loadProductLineup=loadProductLineup;
+/* ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. newsletters 발행월별 모음. 썸네일/미리보기=회사허브 기계 재사용(_hubNlThumbs·_hubOpenNl). 2026-07-03 ════ */
+function _canSeeNl(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; } }
+window._canSeeNl=_canSeeNl;
+var _nlData=[],_nlLoaded=false,_nlLoading=false,_nlQuery='';
+function _nlEsc(s){return(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function loadNewsletters(){
+  if(!(typeof _canSeeNl==='function'&&_canSeeNl())) return;
+  _nlBind();
+  if(_nlLoaded){ _nlRender(); return; }
+  if(_nlLoading) return;
+  if(!window.db||!window.db.fetch){ var b0=document.getElementById('nlp-body'); if(b0)b0.innerHTML='<div class="nlp-empty">데이터 연결 없음</div>'; return; }
+  _nlLoading=true;
+  var b1=document.getElementById('nlp-body'); if(b1)b1.innerHTML='<div class="nlp-empty">불러오는 중…</div>';
+  window.db.fetch('/rest/v1/newsletters?select=id,company,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000')
+    .then(function(r){return r.ok?r.json():[];})
+    .then(function(rows){
+      _nlData=Array.isArray(rows)?rows:[]; _nlLoaded=true; _nlLoading=false;
+      var c=document.getElementById('nlp-count'); if(c)c.textContent='총 '+_nlData.length+'건';
+      _nlRender();
+    })
+    .catch(function(e){ _nlLoading=false; var b2=document.getElementById('nlp-body'); if(b2)b2.innerHTML='<div class="nlp-empty">불러오기 실패<br>'+_nlEsc(String(e))+'</div>'; });
+}
+function _nlBox(n){
+  var u=String(n.source_pdf_url||'').trim(), p=String(n.source_path||'').trim(), has=!!(u||p);
+  var co=n.company||'(회사 미상)';
+  if(!has) return '<div class="chub-nlbox is-nosrc" title="'+_nlEsc(co)+' (원본 없음)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">원본 없음</span></span><span class="chub-nlcap">'+_nlEsc(co)+'</span></div>';
+  return '<button class="chub-nlbox" type="button" data-u="'+_nlEsc(u)+'" data-p="'+_nlEsc(p)+'" title="'+_nlEsc(co)+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_nlEsc(co)+'</span></button>';
+}
+function _nlRender(){
+  var body=document.getElementById('nlp-body'); if(!body)return;
+  var q=_nlQuery.trim().toLowerCase();
+  var rows=q?_nlData.filter(function(n){return String(n.company||'').toLowerCase().indexOf(q)>=0;}):_nlData;
+  if(!rows.length){ body.innerHTML='<div class="nlp-empty">'+(q?'검색 결과 없음':'소식지가 없습니다.')+'</div>'; return; }
+  var order=[],map={};
+  rows.forEach(function(n){
+    var y=(n.publish_year!=null&&n.publish_year!=='')?n.publish_year:'?';
+    var m=(n.publish_month!=null&&n.publish_month!=='')?n.publish_month:'?';
+    var key=y+'|'+m;
+    if(!map[key]){ map[key]=[]; order.push({key:key,y:y,m:m}); }
+    map[key].push(n);
+  });
+  var html=order.map(function(o){
+    var lb=(o.y==='?'?'연도 미상':o.y+'년')+' '+(o.m==='?'?'월 미상':o.m+'월');
+    var boxes=map[o.key].map(_nlBox).join('');
+    return '<div class="nlp-sec"><span class="nlp-seclb">'+_nlEsc(lb)+' · '+map[o.key].length+'건</span><div class="nlp-grid">'+boxes+'</div></div>';
+  }).join('');
+  body.innerHTML=html;
+  if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(body); },0);
+}
+function _nlBind(){
+  var root=document.getElementById('v-newsletters'); if(!root||root._nlB)return; root._nlB=1;
+  var q=document.getElementById('nlp-q'); if(q)q.oninput=function(e){_nlQuery=e.target.value;_nlRender();};
+}
+window.loadNewsletters=loadNewsletters;
 function _openSamsung(kind){
   try{ var inp=document.getElementById('hsInput'); window._samsungReturnQ=(inp&&inp.value&&inp.value.trim())||'삼성화재'; }catch(e){ window._samsungReturnQ='삼성화재'; }
   if(typeof showView==='function') showView(kind==='waiver'?'samsung-waiver':'samsung-lineup');
