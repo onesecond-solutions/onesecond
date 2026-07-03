@@ -8,14 +8,29 @@ set -euo pipefail
 PROJECT_REF="${PROJECT_REF:-pdnwgzneooyygfejrvbg}"
 FILE="db/migrations/${MIG_FILE}"
 
-# 조건7: 공식 연결문자열 전체를 env(PGDATABASE)로 전달 → 셸 명령문 결합·파싱·argv 노출 없음.
-#   psql은 conninfo 인자 없이 PGDATABASE의 URI를 확장(특수문자는 libpq URI가 percent-decode 처리).
-export PGDATABASE="$SUPABASE_DB_URL"
-PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)
+# 조건7: 공식 URI를 표준 PG* 환경변수로 안전 분해(비밀번호 percent-decode). PGDATABASE=dbname만(전체 URI 아님).
+#   secret을 셸 명령문에 결합하거나 argv/conninfo 인자에 노출하지 않음. psql은 PG* env로만 접속.
+_dec(){ printf '%s' "$1" | perl -pe 's/%([0-9A-Fa-f]{2})/chr(hex($1))/ge'; }
+_np="${SUPABASE_DB_URL#*://}"; _up="${_np%@*}"; _hp="${_np##*@}"      # user:pass / host:port/db?query (마지막 @ 기준)
+_hpq="${_hp%%\?*}"; _q="${_hp#*\?}"; _hostport="${_hpq%%/*}"
+export PGUSER="$(_dec "${_up%%:*}")"
+export PGPASSWORD="$(_dec "${_up#*:}")"
+export PGDATABASE="${_hpq#*/}"
+export PGHOST="${_hostport%%:*}"
+[ "$_hostport" = "$PGHOST" ] || export PGPORT="${_hostport##*:}"
+case "$_q" in *sslmode=*) _sm="${_q##*sslmode=}"; export PGSSLMODE="${_sm%%&*}";; *) export PGSSLMODE=require;; esac
+unset _np _up _hp _hpq _q _hostport _sm SUPABASE_DB_URL_UNUSED
+PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)   # conninfo 인자 없음 → argv에 접속정보 0
 
-# 로그 유출 방지: 연결문자열 전체 스크럽(부분 노출도 마스킹). 공식 문자열은 특수문자를 %-인코딩하므로 sed 구분자 안전.
-scrub(){ sed "s#${SUPABASE_DB_URL}#<redacted>#g"; }
+# 로그 유출 방지: URL·비밀번호 스크럽(perl \Q 리터럴 → 특수문자 안전).
+scrub(){ perl -pe 'BEGIN{$u=$ENV{SUPABASE_DB_URL};$p=$ENV{PGPASSWORD}} s/\Q$u\E/<redacted>/g if length($u); s/\Q$p\E/<redacted>/g if length($p)'; }
 run_sql(){ "${PSQL[@]}" "$@" 2> >(scrub >&2); }
+
+# 조건: 연결 검증(실제 러너 psql 버전) — 성공해야만 이후 SQL 실행. 실패 시 즉시 중단.
+if ! printf 'select 1;\n' | "${PSQL[@]}" >/dev/null 2> >(scrub >&2); then
+  echo "STOP: DB 연결 실패 — 마이그레이션 실행 안 함"; exit 1
+fi
+echo "DB 연결 확인(select 1) OK — 접속정보 미출력"
 
 echo "::group::pre-flight"
 # 대상 프로젝트 마커 확인(연결문자열 미출력): onesecond DB면 newsletters 존재
