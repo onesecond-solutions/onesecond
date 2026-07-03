@@ -262,7 +262,7 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .nlp-grid{display:flex;flex-wrap:wrap;gap:12px;}
 .nlp-empty{color:var(--tf);font-size:var(--sz-s);text-align:center;padding:40px 0;}
 /* ════ 원수사 상품 라인업 (#v-product-lineup) — 임태성 게이트, DB 2026-07 draft. 시안 포팅(pl- 접두사·원세컨드 토큰). 2026-07-03 ════ */
-#v-product-lineup{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;}
+#v-product-lineup,#v-newsletters{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;}
 #v-product-lineup.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding:0 0 22px;}
 .pl-hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 2px;flex-shrink:0;}
 .pl-menu{display:none;border:1px solid var(--bd);background:var(--s1);border-radius:var(--radius-sm);padding:6px 10px;font-family:inherit;font-weight:700;font-size:var(--sz-s);cursor:pointer;}
@@ -3586,13 +3586,27 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      </div>
      <!-- ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. newsletters 발행월별 모음. 일반/어드민 무영향. 2026-07-03 ════ -->
      <div class="wrap view" id="v-newsletters">
-       <div class="nlp-hd">
-         <div class="nlp-title">원수사 <b>GA소식지</b></div>
-         <div class="nlp-count" id="nlp-count"></div>
-         <div class="pl-scope" id="nlp-pool"><button data-p="all" class="on">전체</button><button data-p="nonlife">손해</button><button data-p="life">생명</button></div>
-         <div class="nlp-search"><input id="nlp-q" type="text" placeholder="회사 검색" autocomplete="off"></div>
+       <div class="pl-hd">
+         <button class="pl-menu" type="button" id="nlp-menuBtn">회사 목록</button>
+         <div class="pl-title">원수사 <b>GA소식지</b></div>
+         <div class="pl-comp">설계사 전용 · 고객 게시 금지</div>
        </div>
-       <div class="nlp-body" id="nlp-body"></div>
+       <div class="pl-layout">
+         <aside class="pl-side" id="nlp-side">
+           <div class="pl-pool" id="nlp-pool"><button data-p="all" class="on">전체</button><button data-p="nonlife">손해</button><button data-p="life">생명</button></div>
+           <div class="pl-search"><input id="nlp-q" type="text" placeholder="회사 검색" autocomplete="off"></div>
+           <div id="nlp-coList"></div>
+         </aside>
+         <div class="pl-backdrop" id="nlp-backdrop"></div>
+         <div class="pl-right">
+           <div class="pl-ctrl">
+             <div class="pl-scope" id="nlp-scope"><button data-s="all" class="on">전체 조망</button><button data-s="co">회사별</button></div>
+             <span class="pl-hint" id="nlp-hint"></span>
+           </div>
+           <div class="pl-cnt" id="nlp-cnt"></div>
+           <div class="pl-body"><div class="pl-main" id="nlp-main"></div></div>
+         </div>
+       </div>
      </div>
      <!-- ════ 운영센터(어드민) — SPA D영역 흡수 (#v-admin · 2단 탭/칩) ════ -->
      <div class="wrap view" id="v-admin">
@@ -11753,74 +11767,96 @@ function _plBind(){
   var bd=document.getElementById('pl-backdrop'); if(bd)bd.onclick=_plCloseSide;
 }
 window.loadProductLineup=loadProductLineup;
-/* ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. newsletters 발행월별 모음. 썸네일/미리보기=회사허브 기계 재사용(_hubNlThumbs·_hubOpenNl). 2026-07-03 ════ */
+/* ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. 상품 라인업 구조 재활용(좌 회사목록·전체조망↔회사별). 썸네일/미리보기=회사허브 기계 재사용. 2026-07-03 ════ */
 function _canSeeNl(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; } }
 window._canSeeNl=_canSeeNl;
-var _nlData=[],_nlLoaded=false,_nlLoading=false,_nlQuery='',_nlPool='all',_nlSecMap={};
+var _nlRows=[],_nlCos=[],_nlLoaded=false,_nlLoading=false,_nlQuery='',_nlPool='all',_nlScope='all',_nlCo=null,_nlSecMap={};
 function _nlEsc(s){return(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function _nlSecFromStr(t){ t=String(t||''); if(/손해|손보|화재|해상/.test(t))return'nonlife'; if(/생명|생보|라이프|life|연금/i.test(t))return'life'; return ''; }
-function _nlSecOf(n){
-  var co=n.company||'';
-  var norm=(typeof _normCo==='function')?_normCo(co):String(co).toLowerCase();
+function _nlSecOf(co){
+  var norm=(typeof _normCo==='function')?_normCo(co):String(co||'').toLowerCase();
   if(_nlSecMap[norm])return _nlSecMap[norm];
   if(typeof _resolveCompany==='function'){ var canon=_resolveCompany(co); if(canon){ var cn=(typeof _normCo==='function')?_normCo(canon):canon; if(_nlSecMap[cn])return _nlSecMap[cn]; var s2=_nlSecFromStr(canon); if(s2)return s2; } }
-  return _nlSecFromStr(co);
+  return _nlSecFromStr(co)||'nonlife';
 }
+function _nlLabel(n){ if(typeof _nlShortName==='function'){ var s=_nlShortName(n.source_filename, n.company); if(s)return s; } return '소식지'; }
+function _nlHas(n){ return !!(String(n.source_pdf_url||'').trim()||String(n.source_path||'').trim()); }
 function loadNewsletters(){
   if(!(typeof _canSeeNl==='function'&&_canSeeNl())) return;
   _nlBind();
   if(_nlLoaded){ _nlRender(); return; }
   if(_nlLoading) return;
-  if(!window.db||!window.db.fetch){ var b0=document.getElementById('nlp-body'); if(b0)b0.innerHTML='<div class="nlp-empty">데이터 연결 없음</div>'; return; }
+  if(!window.db||!window.db.fetch){ var b0=document.getElementById('nlp-main'); if(b0)b0.innerHTML='<div class="pl-empty">데이터 연결 없음</div>'; return; }
   _nlLoading=true;
-  var b1=document.getElementById('nlp-body'); if(b1)b1.innerHTML='<div class="nlp-empty">불러오는 중…</div>';
+  var b1=document.getElementById('nlp-main'); if(b1)b1.innerHTML='<div class="pl-empty">불러오는 중…</div>';
   Promise.all([
     window.db.fetch('/rest/v1/newsletters?select=id,company,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function(r){return r.ok?r.json():[];}),
     window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=name,type').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
   ]).then(function(res){
-    _nlData=Array.isArray(res[0])?res[0]:[];
+    _nlRows=Array.isArray(res[0])?res[0]:[];
     var ins=Array.isArray(res[1])?res[1]:[];
     _nlSecMap={}; ins.forEach(function(x){ if(!x||!x.name)return; var s=_nlSecFromStr(x.type)||_nlSecFromStr(x.name); if(s){ _nlSecMap[(typeof _normCo==='function')?_normCo(x.name):String(x.name).toLowerCase()]=s; } });
-    _nlLoaded=true; _nlLoading=false;
-    _nlRender();
-  }).catch(function(e){ _nlLoading=false; var b2=document.getElementById('nlp-body'); if(b2)b2.innerHTML='<div class="nlp-empty">불러오기 실패<br>'+_nlEsc(String(e))+'</div>'; });
+    var coMap={},order=[];
+    _nlRows.forEach(function(n){ var co=n.company||'(회사 미상)'; if(!coMap[co]){ coMap[co]={n:co,sec:_nlSecOf(co),items:[]}; order.push(co); } coMap[co].items.push(n); });
+    _nlCos=order.map(function(k){return coMap[k];});
+    _nlLoaded=true; _nlLoading=false; _nlRender();
+  }).catch(function(e){ _nlLoading=false; var b2=document.getElementById('nlp-main'); if(b2)b2.innerHTML='<div class="pl-empty">불러오기 실패<br>'+_nlEsc(String(e))+'</div>'; });
 }
+function _nlPoolCos(){ return _nlCos.filter(function(c){ return _nlPool==='all'||c.sec===_nlPool; }); }
+function _nlPoolCosBy(sec){ return _nlCos.filter(function(c){return c.sec===sec;}); }
+function _nlCoHit(c){ if(!_nlQuery)return true; var q=_nlQuery.toLowerCase(); return String(c.n).toLowerCase().indexOf(q)>=0; }
 function _nlBox(n){
-  var u=String(n.source_pdf_url||'').trim(), p=String(n.source_path||'').trim(), has=!!(u||p);
-  var co=n.company||'(회사 미상)';
-  if(!has) return '<div class="chub-nlbox is-nosrc" title="'+_nlEsc(co)+' (원본 없음)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">원본 없음</span></span><span class="chub-nlcap">'+_nlEsc(co)+'</span></div>';
-  return '<button class="chub-nlbox" type="button" data-u="'+_nlEsc(u)+'" data-p="'+_nlEsc(p)+'" title="'+_nlEsc(co)+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_nlEsc(co)+'</span></button>';
+  var u=String(n.source_pdf_url||'').trim(), p=String(n.source_path||'').trim(), cap=_nlEsc((n.publish_month||'?')+'월');
+  if(!_nlHas(n)) return '<div class="chub-nlbox is-nosrc" title="원본 없음"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">원본 없음</span></span><span class="chub-nlcap">'+cap+'</span></div>';
+  return '<button class="chub-nlbox" type="button" data-u="'+_nlEsc(u)+'" data-p="'+_nlEsc(p)+'" title="'+_nlEsc(_nlLabel(n))+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+cap+'</span></button>';
 }
-function _nlRender(){
-  var body=document.getElementById('nlp-body'); if(!body)return;
-  var q=_nlQuery.trim().toLowerCase();
-  var rows=_nlData.filter(function(n){
-    if(q && String(n.company||'').toLowerCase().indexOf(q)<0) return false;
-    if(_nlPool!=='all' && _nlSecOf(n)!==_nlPool) return false;
-    return true;
+function _nlRenderSide(){
+  var groups=_nlPool==='all'?[['손해보험',_nlPoolCosBy('nonlife')],['생명보험',_nlPoolCosBy('life')]]:_nlPool==='nonlife'?[['손해보험',_nlPoolCosBy('nonlife')]]:[['생명보험',_nlPoolCosBy('life')]];
+  var html='',any=false;
+  groups.forEach(function(pair){
+    var arr=pair[1].filter(_nlCoHit);
+    if(!arr.length)return; any=true;
+    html+='<div class="pl-pool-lb">'+pair[0]+'</div>';
+    html+=arr.map(function(c){return '<button class="pl-co '+(_nlCo&&_nlCo.n===c.n?'on':'')+'" data-co="'+_nlEsc(c.n)+'" style="--cl:var(--ac)"><span class="dot"></span><span class="nm">'+_nlEsc(c.n)+'</span><span class="cnt">'+c.items.length+'</span></button>';}).join('');
   });
-  var c=document.getElementById('nlp-count'); if(c)c.textContent=rows.length+'건'+(_nlPool!=='all'||q?' (전체 '+_nlData.length+')':'');
-  if(!rows.length){ body.innerHTML='<div class="nlp-empty">'+(q||_nlPool!=='all'?'해당 소식지 없음':'소식지가 없습니다.')+'</div>'; return; }
+  var el=document.getElementById('nlp-coList'); if(el)el.innerHTML=any?html:'<div class="pl-empty">검색 결과 없음</div>';
+}
+function _nlRenderCount(){
+  var el=document.getElementById('nlp-cnt'); if(!el)return;
+  var cos=_nlPoolCos(); var nc=cos.length, nn=cos.reduce(function(a,c){return a+c.items.length;},0);
+  el.innerHTML='회사 <b>'+nc+'곳</b> · 소식지 <b>'+nn+'건</b>';
+}
+function _nlSetHint(){ var el=document.getElementById('nlp-hint'); if(el)el.textContent=_nlScope==='all'?'회사를 클릭하면 발행월별 소식지로':'좌측에서 다른 회사를 고를 수 있어요'; }
+function _nlCardAll(c){
+  var rows=c.items.map(function(n){ var y=(n.publish_year||'?'), m=(n.publish_month||'?'); var lbl=y+'.'+m+' · '+_nlLabel(n); var att=_nlHas(n)?(' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" onclick="_hubOpenNl(this)"'):''; return '<div class="p"'+att+'><span class="pn">'+_nlEsc(lbl)+'</span></div>'; }).join('');
+  return '<div class="pl-cc" style="--cl:var(--ac)"><div class="ch" data-co="'+_nlEsc(c.n)+'"><div class="cn"><span class="dot"></span>'+_nlEsc(c.n)+'<span class="num">'+c.items.length+'건</span></div></div><div class="pl-list">'+rows+'</div></div>';
+}
+function _nlRenderAll(){
+  var secs=_nlPool==='all'?[['손해보험','nonlife'],['생명보험','life']]:_nlPool==='nonlife'?[['손해보험','nonlife']]:[['생명보험','life']];
+  var html=secs.map(function(pair){ var arr=_nlPoolCosBy(pair[1]).filter(_nlCoHit); if(!arr.length)return ''; return '<div class="pl-seclb">'+pair[0]+'</div><div class="pl-grid">'+arr.map(_nlCardAll).join('')+'</div>'; }).join('');
+  var el=document.getElementById('nlp-main'); if(el)el.innerHTML=html||'<div class="pl-empty">소식지가 없습니다.</div>';
+}
+function _nlRenderCo(){
+  if(!_nlCo)_nlCo=_nlPoolCos()[0]; var c=_nlCo; if(!c){var e0=document.getElementById('nlp-main');if(e0)e0.innerHTML='<div class="pl-empty">회사 없음</div>';return;}
   var order=[],map={};
-  rows.forEach(function(n){
-    var y=(n.publish_year!=null&&n.publish_year!=='')?n.publish_year:'?';
-    var m=(n.publish_month!=null&&n.publish_month!=='')?n.publish_month:'?';
-    var key=y+'|'+m;
-    if(!map[key]){ map[key]=[]; order.push({key:key,y:y,m:m}); }
-    map[key].push(n);
-  });
-  var html=order.map(function(o){
-    var lb=(o.y==='?'?'연도 미상':o.y+'년')+' '+(o.m==='?'?'월 미상':o.m+'월');
-    var boxes=map[o.key].map(_nlBox).join('');
-    return '<div class="nlp-sec"><span class="nlp-seclb">'+_nlEsc(lb)+' · '+map[o.key].length+'건</span><div class="nlp-grid">'+boxes+'</div></div>';
-  }).join('');
-  body.innerHTML=html;
-  if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(body); },0);
+  c.items.forEach(function(n){ var y=(n.publish_year!=null&&n.publish_year!=='')?n.publish_year:'?', m=(n.publish_month!=null&&n.publish_month!=='')?n.publish_month:'?'; var key=y+'|'+m; if(!map[key]){map[key]=[];order.push({key:key,y:y,m:m});} map[key].push(n); });
+  var html='<div class="pl-cohd" style="--cl:var(--ac);--cl2:var(--ac)"><div><div class="nm">'+_nlEsc(c.n)+'</div><div class="mo">'+(c.sec==='life'?'생명보험':'손해보험')+'</div></div><span class="num">총 '+c.items.length+'건</span></div>';
+  html+=order.map(function(o){ var lb=(o.y==='?'?'연도 미상':o.y+'년')+' '+(o.m==='?'?'월 미상':o.m+'월'); return '<div class="pl-grp"><span class="pl-gh">'+_nlEsc(lb)+' · '+map[o.key].length+'건</span><div class="nlp-grid">'+map[o.key].map(_nlBox).join('')+'</div></div>'; }).join('');
+  var el=document.getElementById('nlp-main'); if(el){ el.innerHTML=html; if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(el); },0); }
 }
+function _nlRender(){ _nlRenderSide(); _nlRenderCount(); _nlSetHint(); if(_nlScope==='all')_nlRenderAll(); else _nlRenderCo(); }
+function _nlSetScope(s){ _nlScope=s; var sc=document.getElementById('nlp-scope'); if(sc)[].slice.call(sc.children).forEach(function(x){x.classList.toggle('on',x.getAttribute('data-s')===s);}); }
+function _nlSetPool(p){ _nlPool=p; var po=document.getElementById('nlp-pool'); if(po)[].slice.call(po.children).forEach(function(x){x.classList.toggle('on',x.getAttribute('data-p')===p);}); }
+function _nlCloseSide(){ var s=document.getElementById('nlp-side'); if(s)s.classList.remove('open'); var b=document.getElementById('nlp-backdrop'); if(b)b.classList.remove('on'); }
 function _nlBind(){
   var root=document.getElementById('v-newsletters'); if(!root||root._nlB)return; root._nlB=1;
-  var q=document.getElementById('nlp-q'); if(q)q.oninput=function(e){_nlQuery=e.target.value;_nlRender();};
-  var pool=document.getElementById('nlp-pool'); if(pool)pool.onclick=function(e){var b=e.target.closest('button');if(!b)return;_nlPool=b.getAttribute('data-p');[].slice.call(pool.children).forEach(function(x){x.classList.toggle('on',x.getAttribute('data-p')===_nlPool);});_nlRender();};
+  var pool=document.getElementById('nlp-pool'); if(pool)pool.onclick=function(e){var b=e.target.closest('button');if(!b)return;_nlSetPool(b.getAttribute('data-p'));if(_nlCo&&_nlPool!=='all'&&_nlCo.sec!==_nlPool){_nlCo=null;}_nlRender();};
+  var scope=document.getElementById('nlp-scope'); if(scope)scope.onclick=function(e){var b=e.target.closest('button');if(!b)return;_nlSetScope(b.getAttribute('data-s'));_nlRender();};
+  var q=document.getElementById('nlp-q'); if(q)q.oninput=function(e){_nlQuery=e.target.value.trim();_nlRender();};
+  var coList=document.getElementById('nlp-coList'); if(coList)coList.onclick=function(e){var b=e.target.closest('[data-co]');if(!b)return;var nm=b.getAttribute('data-co');var c=_nlCos.filter(function(x){return x.n===nm;})[0];if(!c)return;_nlCo=c;if(c.sec!==_nlPool&&_nlPool!=='all')_nlSetPool(c.sec);_nlSetScope('co');_nlCloseSide();_nlRender();};
+  var main=document.getElementById('nlp-main'); if(main)main.addEventListener('click',function(e){var open=e.target.closest('.ch[data-co]');if(open){var nm=open.getAttribute('data-co');var c=_nlCos.filter(function(x){return x.n===nm;})[0];if(c){_nlCo=c;_nlSetScope('co');_nlRender();}return;}});
+  var mb=document.getElementById('nlp-menuBtn'); if(mb)mb.onclick=function(){var s=document.getElementById('nlp-side');if(s)s.classList.toggle('open');var bd=document.getElementById('nlp-backdrop');if(bd)bd.classList.toggle('on');};
+  var bd=document.getElementById('nlp-backdrop'); if(bd)bd.onclick=_nlCloseSide;
 }
 window.loadNewsletters=loadNewsletters;
 function _openSamsung(kind){
