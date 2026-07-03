@@ -40,11 +40,11 @@ jobs:
           INPUT_FILE: ${{ github.event.inputs.file }}
         run: node scripts/ci/precheck.mjs
 
-  deploy:                        # Environment 승인 1회 후 apply + 사후 verify 연속(item 4)
+  deploy:                        # 수동 dispatch로만 apply (조건3: main 머지 자동배포 금지). push는 validate까지만.
     needs: validate
-    if: github.repository == 'onesecond-solutions/onesecond'
+    if: github.repository == 'onesecond-solutions/onesecond' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    environment: production-db   # Required reviewers=대표 · Secret은 승인 후 접근 · main 한정 · fork 불가
+    environment: production-db   # Secret은 이 job에서만 접근 · main 한정 · fork 불가
     steps:
       - uses: actions/checkout@v4
       - name: install psql

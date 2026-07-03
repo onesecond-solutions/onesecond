@@ -35,15 +35,15 @@ fi
 echo "apply OK"
 echo "::endgroup::"
 
-# 사후 검증 (해당 마이그레이션에 검증 스크립트가 있으면)
+# 사후 검증 (조건7: 파일명 규약 동반 postverify 필수 — precheck가 존재 강제, 여기선 실행)
 VERIFY="skipped"; VOK=1
-if [ "$MIG_FILE" = "2026-07-03_nlstd_audit_center.sql" ]; then
-  echo "::group::post-verify (DB 권한 계층)"
-  if "${PSQL[@]}" -f scripts/ci/postverify_nlstd.sql 2> >(scrub >&2); then VERIFY="passed"; else VERIFY="failed"; VOK=0; fi
+PV="scripts/ci/postverify_${MIG_FILE%.sql}.sql"
+if [ -f "$PV" ]; then
+  echo "::group::post-verify ($PV)"
+  if "${PSQL[@]}" -f "$PV" 2> >(scrub >&2); then VERIFY="passed"; else VERIFY="failed"; VOK=0; fi
   echo "::endgroup::"
-elif [ "$MIG_FILE" = "2026-07-03_ci_ops_migration_history.sql" ]; then
-  OKN=$(run_sql -c "select (to_regclass('ops.migration_history') is not null)::int;")
-  if [ "$OKN" = "1" ]; then VERIFY="passed"; else VERIFY="failed"; VOK=0; fi
+else
+  echo "사후검증 스크립트 부재($PV) — 검증 없이 성공 처리 불가"; VERIFY="failed"; VOK=0
 fi
 
 # 이력 기록 (ops 테이블 존재 시). approver=미확인이면 null(run/deployment id로 대체) — item 5

@@ -76,6 +76,15 @@ const nBegin = (top.match(/\bbegin\b/gi)||[]).length;
 const nCommit = (top.match(/\bcommit\b/gi)||[]).length;
 if (nBegin !== 1 || nCommit !== 1) fail(`단일 트랜잭션 아님(탑레벨 begin=${nBegin}, commit=${nCommit}; 각 1개 필요)`);
 
+// 조건9: 롤백 경로(DOWN/ROLLBACK 블록) 존재 강제 — 없는 위험작업 배포 차단
+if (!/--\s*(down|rollback)\b/i.test(src) && !/^\s*(down|rollback)/im.test(src.replace(/--[^\n]*/g,''))) {
+  fail('롤백 경로 없음: 마이그레이션에 DOWN 또는 ROLLBACK 블록(주석 포함)이 필요합니다');
+}
+// 조건7: 동반 postverify 스크립트 필수(파일명 규약) — 없으면 사후검증 불가 → 차단
+if (!fs.existsSync(`scripts/ci/postverify_${file.replace(/\.sql$/,'')}.sql`)) {
+  fail(`사후검증 부재: scripts/ci/postverify_${file.replace(/\.sql$/,'')}.sql 이 필요합니다`);
+}
+
 console.log(`PRECHECK PASS: file=${file} sha256=${hash} (탑레벨 금지구문 0, newsletters 데이터변경 0)`);
 out('file', file);
 out('sha256', hash);
