@@ -8,16 +8,13 @@ set -euo pipefail
 PROJECT_REF="${PROJECT_REF:-pdnwgzneooyygfejrvbg}"
 FILE="db/migrations/${MIG_FILE}"
 
-# 조건7: 연결문자열을 PG* 환경변수로 분해 → 비밀번호·URL이 명령행(argv)에 노출되지 않음.
-_u="${SUPABASE_DB_URL#postgres*://}"; _cred="${_u%%@*}"; _rest="${_u#*@}"
-export PGUSER="${_cred%%:*}"; export PGPASSWORD="${_cred#*:}"
-_hpd="${_rest%%\?*}"; export PGDATABASE="${_hpd#*/}"; _hp="${_hpd%%/*}"
-export PGHOST="${_hp%%:*}"; export PGPORT="${_hp#*:}"; export PGSSLMODE="${PGSSLMODE:-require}"
-unset _u _cred _rest _hpd _hp
-PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)   # conninfo는 argv 아닌 PG* env로
+# 조건7: 공식 연결문자열 전체를 env(PGDATABASE)로 전달 → 셸 명령문 결합·파싱·argv 노출 없음.
+#   psql은 conninfo 인자 없이 PGDATABASE의 URI를 확장(특수문자는 libpq URI가 percent-decode 처리).
+export PGDATABASE="$SUPABASE_DB_URL"
+PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)
 
-# 혹시 모를 로그 유출 방지: URL·비밀번호 스크럽
-scrub(){ sed -e "s#${SUPABASE_DB_URL}#<redacted>#g" -e "s#${PGPASSWORD}#<redacted>#g"; }
+# 로그 유출 방지: 연결문자열 전체 스크럽(부분 노출도 마스킹). 공식 문자열은 특수문자를 %-인코딩하므로 sed 구분자 안전.
+scrub(){ sed "s#${SUPABASE_DB_URL}#<redacted>#g"; }
 run_sql(){ "${PSQL[@]}" "$@" 2> >(scrub >&2); }
 
 echo "::group::pre-flight"
