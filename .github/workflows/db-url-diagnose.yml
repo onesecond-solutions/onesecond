@@ -1,9 +1,13 @@
 name: DB URL Diagnose (parse-only, no DB)
 
-# 비운영 진단 전용 채널. SUPABASE_DB_URL 파싱 상태 플래그만 출력.
-# - DB 접속/변경 0 · 마이그레이션 실행 0 · psql 설치 안 함.
-# - production-db(리뷰어=대표) 환경을 쓰지 않음 → 승인 없이 실행.
-# - secret은 리뷰어 없는 db-validate 환경에서 읽음(진단 전용). 원인 확정 후 환경/복사본 삭제.
+# 진단 전용 채널. SUPABASE_DB_URL 파싱 상태 플래그만 출력.
+# 보안 원칙(대표 결재 2026-07-04):
+#   1) secret은 production-db Environment 하나만 사용(복제 금지).
+#   2) 이 workflow도 production-db Environment 아래에서만 실행 → 대표 승인 1회 게이트 유지.
+#   3) DB 접속 0 · psql 설치 안 함 · migration/apply 경로 없음 · 실제 SQL 실행 경로 없음.
+#   4) 출력은 상태 플래그만(pw_state/pw_len/pw_len_raw/pw_percent/pw_decode_changed/PGHOST/PGUSER/PGDATABASE/PROJECT_REF).
+#   5) 비밀번호 원문·부분값·해시·전체 URL 출력 금지.
+# ⇒ 이 run 승인은 '배포(apply) 승인'이 아니라 '진단 전용 run 1회 승인'. newsletters 데이터 반영 0.
 
 on:
   workflow_dispatch: {}
@@ -19,10 +23,11 @@ jobs:
   diagnose:
     if: github.repository == 'onesecond-solutions/onesecond'
     runs-on: ubuntu-latest
-    environment: db-validate     # 리뷰어 없음 → 승인 프롬프트 없음. 진단 전용 secret 위치.
+    environment: production-db   # secret 단일 위치. 리뷰어=대표 → 진단 run 1회 승인 게이트.
     steps:
       - uses: actions/checkout@v4
-      - name: parse-only diagnose (no DB connection)
+      # ⚠️ psql/postgresql-client 설치 step 없음(의도적). DB 접속 도구 자체가 러너에 없음.
+      - name: parse-only diagnose (no DB connection, no psql, no SQL)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
