@@ -3963,6 +3963,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div id="acn-tools" style="display:none">
           <div style="margin:8px 0 16px"><button class="acn-btn" onclick="_acnPrepare()">대상 미리보기(작업 생성)</button> <span class="acn-mut">매핑 버전 v1_2026_07 · status=published 대상 · 개인문서 제외</span></div>
           <div id="acn-preview"></div>
+          <div style="margin:16px 0 8px;border-top:1px solid var(--bd);padding-top:12px"><b>잔여 회사명 정제 (1회 고정 작업)</b> <button class="acn-btn" onclick="_residPreview()">미리보기</button> <span class="acn-mut">MG·미상(IBK/신한라이프)만·company·구분만·개인문서 제외</span></div>
+          <div id="resid-preview"></div>
           <div class="ac-section-head" style="margin-top:22px"><i data-lucide="history"></i><h2 style="font-size:15px">작업 이력 · 감사</h2></div>
           <div id="acn-history"><div class="ac-card-empty">—</div></div>
         </div>
@@ -11929,6 +11931,17 @@ function _acnPrepare(){
     .catch(function(e){ if(el)el.innerHTML='<div class="ac-card-empty">준비 실패: '+_acnEsc(String(e.message||e))+'</div>'; });
 }
 window._acnPrepare=_acnPrepare;
+function _residPreview(){var el=document.getElementById('resid-preview');if(el)el.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';_acnRpc('resid_fix_preview',{}).then(function(rows){
+  if(!rows||!rows.length){if(el)el.innerHTML='<div class="ac-card-empty">대상 없음</div>';return;}
+  var fx=rows.filter(function(r){return r.action==='fix';}),hd=rows.filter(function(r){return r.action==='hold';});
+  var h='<div class="acn-note">수정 <b>'+fx.length+'</b>건 · 보류 <b>'+hd.length+'</b>건 · company·구분만 변경 · 실행 직전 현재값 재검증 · 스냅샷 롤백</div><table class="acn-tbl"><thead><tr><th>파일</th><th>현재</th><th>변경후</th><th>근거</th><th>구분</th></tr></thead><tbody>';
+  rows.forEach(function(r){h+='<tr><td>'+_acnEsc(r.source_filename||'')+'</td><td>'+_acnEsc((r.cur_company||'')+' / '+(r.cur_type||'∅'))+'</td><td>'+_acnEsc((r.new_company||'-')+' / '+(r.new_type||'-'))+'</td><td>'+_acnEsc(r.evidence||'')+'</td><td>'+r.action+'</td></tr>';});
+  h+='</tbody></table><button class="acn-btn primary" onclick="_residApply()">승인하고 실행 ('+fx.length+'건)</button> <button class="acn-btn" onclick="_residRollback()">되돌리기</button>';
+  if(el)el.innerHTML=h;
+}).catch(function(e){if(el)el.innerHTML='<div class="ac-card-empty">오류: '+_acnEsc(String(e))+'</div>';});}
+function _residApply(){if(!confirm('잔여 회사명 수정(fix 대상)을 실행합니다. 진행할까요?'))return;_acnRpc('resid_fix_apply',{}).then(function(r){alert('적용 '+r.applied+' / skip '+r.skipped);_residPreview();});}
+function _residRollback(){if(!confirm('이번 정제를 스냅샷으로 되돌립니까?'))return;_acnRpc('resid_fix_rollback',{}).then(function(r){alert('복원 '+r.rolled_back+'건');_residPreview();});}
+window._residPreview=_residPreview;window._residApply=_residApply;window._residRollback=_residRollback;
 function _acnShowJob(job_id){
   var el=document.getElementById('acn-preview'); if(el)el.innerHTML='<div class="ac-card-empty">미리보기 불러오는 중…</div>';
   _acnRpc('ac_nlstd_get_job',{p_job_id:job_id}).then(function(d){
