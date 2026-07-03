@@ -8,6 +8,27 @@
 -- ============================================================================
 begin;
 
+-- ── 설치 전 필수 정책 실측(조건 1) — 라이브 newsletters RLS를 실제 조회. ──
+--    admin 호출자가 SELECT·company UPDATE 가능한 정책이 없으면 RAISE → 전체 롤백(설치 0).
+do $$
+declare has_sel boolean; has_upd boolean;
+begin
+  -- SELECT: authenticated 대상 정책의 USING이 is_admin() 포함 또는 true(=admin 통과)
+  select exists(select 1 from pg_policies
+    where schemaname='public' and tablename='newsletters' and cmd in ('SELECT','ALL')
+      and ('authenticated' = any(roles) or 'public' = any(roles))
+      and (coalesce(qual,'') ilike '%is_admin%' or coalesce(qual,'')='true')) into has_sel;
+  -- UPDATE: USING이 is_admin() 포함, WITH CHECK는 null(=USING 상속) 또는 is_admin() 포함
+  select exists(select 1 from pg_policies
+    where schemaname='public' and tablename='newsletters' and cmd in ('UPDATE','ALL')
+      and ('authenticated' = any(roles) or 'public' = any(roles))
+      and coalesce(qual,'') ilike '%is_admin%'
+      and (with_check is null or with_check ilike '%is_admin%')) into has_upd;
+  if not has_sel then raise exception 'PRECHECK FAIL: newsletters SELECT admin 통과 정책 부재 — 설치 중단(패키지/모델 재검토)'; end if;
+  if not has_upd then raise exception 'PRECHECK FAIL: newsletters company UPDATE admin 정책 부재 — 설치 중단(패키지/모델 재검토)'; end if;
+  raise notice 'PRECHECK OK: 라이브 newsletters admin SELECT·UPDATE 정책 확인 → 설치 진행.';
+end $$;
+
 create extension if not exists pgcrypto;
 create schema if not exists ops;
 
