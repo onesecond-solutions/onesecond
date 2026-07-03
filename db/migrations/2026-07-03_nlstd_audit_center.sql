@@ -58,7 +58,6 @@ do $$ begin
   end if;
 end $$;
 grant usage on schema public to ac_nlstd_fn_owner;
-grant select on public.insurers            to ac_nlstd_fn_owner;
 grant select on public.newsletters         to ac_nlstd_fn_owner;
 grant update (company) on public.newsletters to ac_nlstd_fn_owner;   -- ★ company 컬럼만
 grant select, insert, update on public.ac_nlstd_jobs      to ac_nlstd_fn_owner;
@@ -265,3 +264,19 @@ commit;
 
 -- 배포 후 셀프검증(읽기, admin 세션): select public.ac_nlstd_prepare('v1_2026_07');  -- job_id
 --   → get_job(job_id)로 대상·건수 확인 → 콘솔에서 [승인하고 실행].
+--
+-- ============================================================================
+-- ROLLBACK (down) — 배포 실패/철회 시. newsletters 데이터 무변경(인프라+매핑시드만) → 데이터 손실 0.
+--   begin;
+--   drop function if exists public.ac_nlstd_prepare(text);
+--   drop function if exists public.ac_nlstd_approve_execute(uuid);
+--   drop function if exists public.ac_nlstd_rollback(uuid);
+--   drop function if exists public.ac_nlstd_get_job(uuid);
+--   drop table if exists public.ac_nlstd_job_items;
+--   drop table if exists public.ac_nlstd_jobs;
+--   drop table if exists public.ac_nlstd_mapping;
+--   revoke all on public.newsletters from ac_nlstd_fn_owner;
+--   revoke all on schema public from ac_nlstd_fn_owner;
+--   drop role if exists ac_nlstd_fn_owner;
+--   commit;
+-- ============================================================================
