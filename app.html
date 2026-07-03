@@ -11563,15 +11563,12 @@ async function _hubNlRenderThumb(th){
     var pdf=await task.promise;
     var page=await pdf.getPage(1);
     var base=page.getViewport({scale:1});
-    /* 펼침면(세로 2쪽이 한 장: 삼성화재·하나손보 GA소식지 등, 가로 비율 1.3 초과) = 표지 한 면만 잘라
-       세로 썸네일로 통일(잘라내 좌우 치우침 제거). 기본=오른쪽 면(앞표지). 라이브 검수로 좌/우 정정. */
-    var spread=(base.width/base.height) > 1.3;
-    var unitW=spread ? base.width/2 : base.width;     /* 표지 한 면 너비 기준으로 280px 확보 */
-    var vp=page.getViewport({scale:(280/unitW)});
+    /* 펼침면·단면 구분 없이 첫 페이지 전체를 비율 유지로 렌더(좌우 자르지 않음 → 편향 원천 제거).
+       CSS(.chub-nlthumb canvas: max-width/height + margin auto)가 박스에 맞춰 축소·정중앙 정렬.
+       (2026-07-03 통째 표시로 전환 — 펼침면 표지가 회사·월호마다 좌/우 달라 왼쪽 고정 시 치우침 발생) */
+    var vp=page.getViewport({scale:(420/base.width)});
     var cv=document.createElement('canvas');
-    cv.width=Math.ceil(spread ? vp.width/2 : vp.width); cv.height=Math.ceil(vp.height);
-    /* 펼침면 표지=왼쪽 면(라이브 검수 확정 2026-06-29). 왼쪽 면은 캔버스 폭만 절반으로 두면
-       콘텐츠 왼쪽부터 그려져 그대로 보임(transform 불필요). 오른쪽 면이 표지면 [1,0,0,1,-vp.width/2,0] */
+    cv.width=Math.ceil(vp.width); cv.height=Math.ceil(vp.height);
     await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
     th.innerHTML=''; th.appendChild(cv);
     try{ pdf.cleanup&&pdf.cleanup(); task.destroy&&task.destroy(); }catch(e){}
