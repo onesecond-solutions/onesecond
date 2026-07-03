@@ -70,10 +70,11 @@ const banned = [
 ];
 for (const [re, name] of banned) if (re.test(top)) fail('금지 구문 탐지: ' + name);
 
-// begin/commit 균형(참고 수준) — 최종 판정은 psql
+// 단일 트랜잭션 강제(탑레벨 begin/commit 정확히 1개 — 함수본문 begin은 $$ 제거로 제외).
+// 중간 commit 없는 파일 전체 1 트랜잭션. 최종 판정은 psql ON_ERROR_STOP.
 const nBegin = (top.match(/\bbegin\b/gi)||[]).length;
 const nCommit = (top.match(/\bcommit\b/gi)||[]).length;
-if (nBegin < 1 || nCommit < 1) fail('트랜잭션(begin/commit) 미포함');
+if (nBegin !== 1 || nCommit !== 1) fail(`단일 트랜잭션 아님(탑레벨 begin=${nBegin}, commit=${nCommit}; 각 1개 필요)`);
 
 console.log(`PRECHECK PASS: file=${file} sha256=${hash} (탑레벨 금지구문 0, newsletters 데이터변경 0)`);
 out('file', file);
