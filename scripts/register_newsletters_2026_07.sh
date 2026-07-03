@@ -5,8 +5,8 @@ set -euo pipefail
 MODE="${1:-verify}"
 ENV="$(cd "$(dirname "$0")/.." && pwd)/.env.local"
 [ -f "$ENV" ] || { echo "STOP: .env.local 없음 — 대표 1회 입력 대기(SUPABASE_URL·SUPABASE_SERVICE_ROLE_KEY)"; exit 1; }
-URL="$(grep -m1 '^SUPABASE_URL=' "$ENV" | cut -d= -f2- | tr -d '\r' | xargs)"
-KEY="$(grep -m1 '^SUPABASE_SERVICE_ROLE_KEY=' "$ENV" | cut -d= -f2- | tr -d '\r' | xargs)"
+URL="$(tr -s '[:space:]' '\n' < "$ENV" | grep -m1 '^SUPABASE_URL=' | cut -d= -f2-)"
+KEY="$(tr -s '[:space:]' '\n' < "$ENV" | grep -m1 '^SUPABASE_SERVICE_ROLE_KEY=' | cut -d= -f2-)"
 [ -n "$URL" ] && [ -n "$KEY" ] || { echo "STOP: URL/KEY 비어있음"; exit 1; }
 case "$URL" in *pdnwgzneooyygfejrvbg*) : ;; *) echo "STOP: 신버전 프로젝트 아님"; exit 1 ;; esac
 AUTH=(-H "apikey: $KEY" -H "Authorization: Bearer $KEY")
@@ -39,7 +39,7 @@ ROWS=(
 )
 [ "${#ROWS[@]}" = "23" ] || { echo "STOP: 내장 행 23 아님(${#ROWS[@]})"; exit 1; }
 
-jesc(){ printf '%s' "$1" | python -c 'import json,sys;print(json.dumps(sys.stdin.read()))'; }
+jesc(){ local s="$1"; s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; printf '"%s"' "$s"; }
 count_jul(){ curl -s "${AUTH[@]}" -H "Prefer: count=exact" -I "$API?publish_year=eq.2026&publish_month=eq.7&select=id" | tr -d '\r' | awk -F'[ /]' 'tolower($1)=="content-range:"{print $NF}'; }
 exists(){ local fh="$1"; curl -s "${AUTH[@]}" "$API?file_hash=eq.$fh&select=id" | grep -c '"id"'; }
 
@@ -53,7 +53,8 @@ for r in "${ROWS[@]}"; do
     register)
       if [ "$(exists "$fh")" -gt 0 ]; then echo "  SKIP(중복) $sf"; skip=$((skip+1)); continue; fi
       body="{\"source_filename\":$(jesc "$sf"),\"company\":$(jesc "$co"),\"insurance_type\":$(jesc "$it"),\"publish_year\":2026,\"publish_month\":7,\"category\":$(jesc "$ca"),\"title\":$(jesc "$ti"),\"source_path\":$(jesc "$sp"),\"file_hash\":$(jesc "$fh"),\"status\":\"reviewing\"}"
-      code=$(curl -s -o /dev/null -w '%{http_code}' "${AUTH[@]}" -H "Content-Type: application/json" -H "Prefer: return=minimal" -X POST "$API" -d "$body")
+      tmp="$(mktemp)"; printf '%s' "$body" > "$tmp"
+      code=$(curl -s -o /dev/null -w '%{http_code}' "${AUTH[@]}" -H "Content-Type: application/json" -H "Prefer: return=minimal" -X POST "$API" --data-binary "@$tmp"); rm -f "$tmp"
       if [ "$code" = "201" ]; then echo "  INSERT reviewing $sf"; ins=$((ins+1)); else echo "  FAIL http=$code $sf — 전체 중단"; exit 3; fi ;;
     promote)
       code=$(curl -s -o /dev/null -w '%{http_code}' "${AUTH[@]}" -H "Content-Type: application/json" -H "Prefer: return=minimal" -X PATCH "$API?file_hash=eq.$fh&status=eq.reviewing" -d '{"status":"published"}')
