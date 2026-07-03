@@ -1,42 +1,30 @@
 #!/usr/bin/env bash
-# CI apply + 사후 검증 (deploy job, Environment 승인 후에만 실행 = Secret 접근 가능).
-# 보안(item 6): set -x 금지 · DB_URL/환경변수 에코 금지 · 오류 로그에 연결문자열 미노출.
+# CI apply + 사후 검증 (deploy job, production-db 승인 후에만 실행 = PGPASSWORD 접근).
+# 분리형 PG* 방식: connection URI 파싱·percent-decode·@분리 전부 없음(URI 통짜 secret 폐기).
+#   psql은 PG* 환경변수(PGHOST/PGPORT/PGUSER/PGDATABASE/PGPASSWORD/PGSSLMODE)만 사용.
+# 보안: set -x 금지 · PGPASSWORD echo/argv/로그/해시/부분값(길이 포함) 금지 · conninfo/URI 인자 미사용.
 set -euo pipefail
 
-: "${SUPABASE_DB_URL:?missing}"   # Environment Secret (값 출력 안 함)
+# workflow가 주입: PGHOST/PGPORT/PGDATABASE/PGUSER(공개값·env 고정) + PGPASSWORD(production-db Environment secret).
+# 존재만 강제(값 미출력). PGPASSWORD는 이 스크립트 어디서도 echo/치환/부분노출하지 않음.
+: "${PGHOST:?PGHOST missing}"; : "${PGUSER:?PGUSER missing}"
+: "${PGDATABASE:?PGDATABASE missing}"; : "${PGPASSWORD:?PGPASSWORD missing}"
+export PGHOST PGUSER PGDATABASE PGPASSWORD
+export PGPORT="${PGPORT:-5432}"; export PGSSLMODE="${PGSSLMODE:-require}"
 : "${MIG_FILE:?}"; : "${MIG_SHA:?}"; : "${RUN_ID:?}"; : "${COMMIT_SHA:?}"
 PROJECT_REF="${PROJECT_REF:-pdnwgzneooyygfejrvbg}"
 FILE="db/migrations/${MIG_FILE}"
 
-# 조건7: 공식 URI를 표준 PG* 환경변수로 안전 분해(비밀번호 percent-decode). PGDATABASE=dbname만(전체 URI 아님).
-#   secret을 셸 명령문에 결합하거나 argv/conninfo 인자에 노출하지 않음. psql은 PG* env로만 접속.
-_dec(){ printf '%s' "$1" | perl -pe 's/%([0-9A-Fa-f]{2})/chr(hex($1))/ge'; }
-_np="${SUPABASE_DB_URL#*://}"; _up="${_np%@*}"; _hp="${_np##*@}"      # user:pass / host:port/db?query (마지막 @ 기준)
-_hpq="${_hp%%\?*}"; _q="${_hp#*\?}"; _hostport="${_hpq%%/*}"
-export PGUSER="$(_dec "${_up%%:*}")"
-export PGPASSWORD="$(_dec "${_up#*:}")"
-export PGDATABASE="${_hpq#*/}"
-export PGHOST="${_hostport%%:*}"
-[ "$_hostport" = "$PGHOST" ] || export PGPORT="${_hostport##*:}"
-# Supabase pooler(Supavisor)는 사용자명이 postgres.<projectref> 형식 필요 — ref 누락 시 자동 보정.
-case "$PGHOST" in
-  *pooler.supabase.com*) case "$PGUSER" in *.*) : ;; *) export PGUSER="${PGUSER}.${PROJECT_REF}" ;; esac ;;
-esac
-case "$_q" in *sslmode=*) _sm="${_q##*sslmode=}"; export PGSSLMODE="${_sm%%&*}";; *) export PGSSLMODE=require;; esac
-unset _np _up _hp _hpq _q _hostport _sm SUPABASE_DB_URL_UNUSED
-PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)   # conninfo 인자 없음 → argv에 접속정보 0
+PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)   # conninfo/URI 인자 없음 → argv에 접속정보·비번 0. PG* env만 사용.
 
-# 안전 진단(비밀번호 값 절대 미출력): 접속 구조·비번 상태 플래그만. 리전/user/ref/치환상태 규명용.
-case "$PGPASSWORD" in *%[0-9A-Fa-f][0-9A-Fa-f]*) _pct=percentlike;; *%*) _pct=has_raw_percent;; *) _pct=none;; esac
-case "$PGPASSWORD" in *YOUR-PASSWORD*|*'['*|*']'*|"") _ph=PLACEHOLDER_OR_EMPTY;; *) _ph=filled;; esac
-echo "DIAG host=$PGHOST user=$PGUSER db=$PGDATABASE port=${PGPORT:-5432} sslmode=$PGSSLMODE pw_len=${#PGPASSWORD} pw_percent=$_pct pw_state=$_ph"
-unset _pct _ph
+# 접속 대상만 출력(비밀번호 관련 일절 미출력 — 값·길이·해시·부분·상태 전부 금지).
+echo "DIAG host=$PGHOST user=$PGUSER db=$PGDATABASE port=$PGPORT sslmode=$PGSSLMODE"
 
-# 로그 유출 방지: URL·비밀번호 스크럽(perl \Q 리터럴 → 특수문자 안전).
-scrub(){ perl -pe 'BEGIN{$u=$ENV{SUPABASE_DB_URL};$p=$ENV{PGPASSWORD}} s/\Q$u\E/<redacted>/g if length($u); s/\Q$p\E/<redacted>/g if length($p)'; }
+# 로그 유출 방지: 표준오류에서 PGPASSWORD 리터럴만 스크럽(perl \Q → 특수문자 안전).
+scrub(){ perl -pe 'BEGIN{$p=$ENV{PGPASSWORD}} s/\Q$p\E/<redacted>/g if length($p)'; }
 run_sql(){ "${PSQL[@]}" "$@" 2> >(scrub >&2); }
 
-# 조건: 연결 검증(실제 러너 psql 버전) — 성공해야만 이후 SQL 실행. 실패 시 즉시 중단.
+# 연결·인증 검증(실제 러너 psql) — 성공해야만 이후 SQL 실행. 실패 시 migration 실행 전 STOP(DB 반영 0).
 if ! printf 'select 1;\n' | "${PSQL[@]}" >/dev/null 2> >(scrub >&2); then
   echo "STOP: DB 연결 실패 — 마이그레이션 실행 안 함"; exit 1
 fi
