@@ -53,8 +53,14 @@ jobs:
           sudo apt-get install -y -qq postgresql-client
       - name: apply + verify
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}   # ci_migrate 최소권한 역할 연결
-          PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}     # 공개값(Secret 아님)
+          # 분리형 PG* 방식: URI 파싱 없음. 공개 접속값은 여기 고정, 비밀은 PGPASSWORD 하나뿐.
+          PGHOST: aws-1-ap-south-1.pooler.supabase.com     # 공개값(Session pooler)
+          PGPORT: '5432'                                   # 공개값(Session pooler)
+          PGDATABASE: postgres                             # 공개값
+          PGUSER: postgres.pdnwgzneooyygfejrvbg            # 공개값(Supavisor 테넌트 형식)
+          PGSSLMODE: require                               # 공개값
+          PGPASSWORD: ${{ secrets.PGPASSWORD }}            # ★ production-db Environment secret (유일 비밀)
+          PROJECT_REF: pdnwgzneooyygfejrvbg                # 공개값
           MIG_FILE: ${{ needs.validate.outputs.file }}
           MIG_SHA: ${{ needs.validate.outputs.sha256 }}
           RUN_ID: ${{ github.run_id }}
