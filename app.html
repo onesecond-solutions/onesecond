@@ -2691,6 +2691,16 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 #app:not(.is-admin) #v-admin{ display:none !important; }              /* 비-admin UI 가드(belt) */
 #v-admin .ac-sec{ display:none; }
 #v-admin .ac-sec.on{ display:block; }
+/* 감사센터 1차 — 소식지 회사명 표준화 (2026-07-03) */
+.acn-note{background:color-mix(in srgb,var(--ac) 8%,var(--s1));border:1px solid color-mix(in srgb,var(--ac) 18%,var(--s1));border-radius:8px;padding:10px 12px;font-size:var(--sz-s,14px);color:var(--tp);margin-bottom:12px;line-height:1.7}
+.acn-note b{color:var(--ac)}
+.acn-tbl{width:100%;border-collapse:collapse;font-size:var(--sz-s,14px);margin-bottom:12px}
+.acn-tbl th{text-align:left;color:var(--tf);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--bd)}
+.acn-tbl td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--tp)}
+.acn-btn{border:1px solid var(--bd);background:var(--s1);color:var(--ts);border-radius:8px;padding:8px 14px;font-family:inherit;font-weight:700;font-size:var(--sz-s,14px);cursor:pointer}
+.acn-btn.sm{padding:4px 9px;font-size:12px}
+.acn-btn.primary{background:var(--ac);border-color:var(--ac);color:#fff}
+.acn-mut{color:var(--tf);font-size:12px}
 #v-admin #ac-chips:empty{ display:none; }                            /* 칩 없는 탭(대시보드/로그) */
 #v-admin .ac-section{ margin-bottom:28px; }
 #v-admin .ac-section-head{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
@@ -3621,6 +3631,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="tab" onclick="acTab('validation')">권한 검증</div>
         <div class="tab" onclick="acTab('system')">시스템</div>
         <div class="tab" onclick="acTab('logs')">로그</div>
+        <div class="tab" onclick="_acAudit()">감사센터</div>
       </div>
       <div class="chips" id="ac-chips"></div>
 
@@ -3943,6 +3954,15 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div id="ac-logs-tools"></div>
         <div id="ac-logs-list"><div class="ac-card-empty">불러오는 중…</div></div>
         <div id="ac-logs-pager" style="margin-top:14px;text-align:center"></div>
+      </div>
+
+      <!-- 감사센터 1차 — 소식지 회사명 표준화 (admin 전용·제한형 RPC). 2026-07-03 -->
+      <div class="ac-sec" data-sec="audit">
+        <div class="ac-section-head"><i data-lucide="shield-check"></i><h2>감사센터 · 소식지 회사명 표준화</h2><span class="ac-section-sub">검수 매핑 v1 · company만 · 미리보기→승인하고 실행→롤백</span></div>
+        <div style="margin:8px 0 16px"><button class="acn-btn" onclick="_acnPrepare()">대상 미리보기(작업 생성)</button> <span class="acn-mut">매핑 버전 v1_2026_07 · status=published 대상 · 개인문서 제외</span></div>
+        <div id="acn-preview"></div>
+        <div class="ac-section-head" style="margin-top:22px"><i data-lucide="history"></i><h2 style="font-size:15px">작업 이력 · 감사</h2></div>
+        <div id="acn-history"><div class="ac-card-empty">—</div></div>
       </div>
 
       <!-- 가입 승인 모달 (admin-console 흡수) -->
@@ -11859,6 +11879,73 @@ function _nlBind(){
   var bd=document.getElementById('nlp-backdrop'); if(bd)bd.onclick=_nlCloseSide;
 }
 window.loadNewsletters=loadNewsletters;
+/* ════ 감사센터 1차 — 소식지 회사명 표준화 (admin 전용·자기완결·RPC 4개). 2026-07-03 ════
+   RPC=window.db.fetch('/rest/v1/rpc/<fn>',POST). 서버 is_admin() 재검증. company만 변경. */
+function _acnEsc(s){return(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function _acnRpc(fn,body){
+  if(!window.db||!window.db.fetch) return Promise.reject(new Error('no db'));
+  return window.db.fetch('/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body||{})}).then(function(r){return r.json().then(function(j){ if(!r.ok) throw new Error((j&&(j.message||j.hint))||('HTTP '+r.status)); return j; });});
+}
+function _acAudit(){
+  try{ var secs=document.querySelectorAll('#v-admin .ac-sec'); for(var i=0;i<secs.length;i++)secs[i].classList.remove('on'); }catch(e){}
+  var mine=document.querySelector('#v-admin .ac-sec[data-sec="audit"]'); if(mine)mine.classList.add('on');
+  try{ var tabs=document.querySelectorAll('#ac-tabs .tab'); for(var t=0;t<tabs.length;t++)tabs[t].classList.toggle('on',(tabs[t].getAttribute('onclick')||'').indexOf('_acAudit')>=0); }catch(e){}
+  _acnList();
+}
+window._acAudit=_acAudit;
+function _acnList(){
+  var el=document.getElementById('acn-history'); if(el)el.innerHTML='<div class="ac-card-empty">불러오는 중…</div>';
+  _acnRpc('ac_nlstd_get_job',{}).then(function(rows){
+    rows=Array.isArray(rows)?rows:[];
+    if(!el)return;
+    if(!rows.length){ el.innerHTML='<div class="ac-card-empty">작업 이력 없음</div>'; return; }
+    el.innerHTML='<table class="acn-tbl"><thead><tr><th>작업</th><th>버전</th><th>상태</th><th>대상/변경</th><th>준비</th><th>승인</th><th></th></tr></thead><tbody>'+
+      rows.map(function(j){
+        var rb=(j.status==='executed')?'<button class="acn-btn sm" onclick="_acnRollback(\''+j.id+'\')">되돌리기</button>':'';
+        return '<tr><td>'+_acnEsc(String(j.id).slice(0,8))+'</td><td>'+_acnEsc(j.mapping_version)+'</td><td>'+_acnEsc(j.status)+
+          (j.fail_reason?' <span class="acn-mut">('+_acnEsc(j.fail_reason)+')</span>':'')+'</td><td>'+(j.target_count||0)+' / '+(j.changed_count||0)+
+          '</td><td>'+_acnEsc(String(j.prepared_at||'').slice(0,16).replace('T',' '))+'</td><td>'+_acnEsc(String(j.approved_at||'').slice(0,16).replace('T',' '))+'</td><td>'+rb+'</td></tr>';
+      }).join('')+'</tbody></table>';
+  }).catch(function(e){ if(el)el.innerHTML='<div class="ac-card-empty">조회 실패: '+_acnEsc(String(e.message||e))+' (권한 없음이면 정상)</div>'; });
+}
+function _acnPrepare(){
+  var el=document.getElementById('acn-preview'); if(el)el.innerHTML='<div class="ac-card-empty">작업안 생성 중…</div>';
+  _acnRpc('ac_nlstd_prepare',{p_version:'v1_2026_07'}).then(function(job_id){ _acnShowJob(job_id); })
+    .catch(function(e){ if(el)el.innerHTML='<div class="ac-card-empty">준비 실패: '+_acnEsc(String(e.message||e))+'</div>'; });
+}
+window._acnPrepare=_acnPrepare;
+function _acnShowJob(job_id){
+  var el=document.getElementById('acn-preview'); if(el)el.innerHTML='<div class="ac-card-empty">미리보기 불러오는 중…</div>';
+  _acnRpc('ac_nlstd_get_job',{p_job_id:job_id}).then(function(d){
+    if(!el)return; if(!d||!d.job){ el.innerHTML='<div class="ac-card-empty">작업 없음</div>'; return; }
+    var items=d.items||[]; var map={};
+    items.forEach(function(it){ var k=it.old+' → '+it.new; map[k]=(map[k]||0)+1; });
+    var rows=Object.keys(map).sort().map(function(k){ return '<tr><td>'+_acnEsc(k)+'</td><td style="text-align:right">'+map[k]+'</td></tr>'; }).join('');
+    el.innerHTML=
+      '<div class="acn-note">총 변경 행 수 <b>'+(d.job.target_count||0)+'</b> · 보류 <b>0</b>건 · company 외 필드 변경 없음 · 실패 시 전체 롤백 · 실행 후 되돌리기 가능</div>'+
+      '<table class="acn-tbl"><thead><tr><th>회사명 전환</th><th style="text-align:right">건수</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<button class="acn-btn primary" onclick="_acnExec(\''+_acnEsc(d.job.id)+'\')">승인하고 실행</button> '+
+      '<span class="acn-mut">(admin 승인+실행이 하나의 서버 트랜잭션으로 처리됩니다)</span>';
+  }).catch(function(e){ if(el)el.innerHTML='<div class="ac-card-empty">미리보기 실패: '+_acnEsc(String(e.message||e))+'</div>'; });
+}
+window._acnShowJob=_acnShowJob;
+function _acnExec(job_id){
+  if(!window.confirm('회사명 표준화를 승인하고 실행합니다. company 필드만 변경되며 실패 시 전체 롤백됩니다. 진행할까요?')) return;
+  _acnRpc('ac_nlstd_approve_execute',{p_job_id:job_id}).then(function(r){
+    if(typeof toast==='function') toast(r&&r.status==='executed'?('실행 완료 — '+r.changed+'건 변경'):('중단: '+(r&&r.status)+(r&&r.mismatches?(' ('+r.mismatches+'건 상태변동)'):'' )));
+    var el=document.getElementById('acn-preview'); if(el)el.innerHTML='<div class="ac-card-empty">결과: '+_acnEsc(JSON.stringify(r))+'</div>'; _acnList();
+  }).catch(function(e){ if(typeof toast==='function')toast('실행 오류: '+String(e.message||e)); _acnList(); });
+}
+window._acnExec=_acnExec;
+function _acnRollback(job_id){
+  if(!window.confirm('이 작업을 되돌립니다(전부 성공 또는 전부 중단). 진행할까요?')) return;
+  _acnRpc('ac_nlstd_rollback',{p_job_id:job_id}).then(function(r){
+    if(typeof toast==='function') toast(r&&r.status==='rolled_back'?('되돌리기 완료 — '+r.changed+'건'):('되돌리기 중단: '+(r&&r.mismatches)+'건 불일치'));
+    _acnList();
+  }).catch(function(e){ if(typeof toast==='function')toast('롤백 오류: '+String(e.message||e)); });
+}
+window._acnRollback=_acnRollback;
 function _openSamsung(kind){
   try{ var inp=document.getElementById('hsInput'); window._samsungReturnQ=(inp&&inp.value&&inp.value.trim())||'삼성화재'; }catch(e){ window._samsungReturnQ='삼성화재'; }
   if(typeof showView==='function') showView(kind==='waiver'?'samsung-waiver':'samsung-lineup');
