@@ -1,0 +1,62 @@
+name: DB Migration (guarded)
+
+# 제한형 마이그레이션 실행 채널.
+# - main 머지만으로 운영 DB 자동 변경 금지: apply는 production-db Environment 수동 승인 후에만(item 4).
+# - db/migrations/ 리뷰 파일 1개만. 임의 SQL·SQL 본문 입력 없음. 부트스트랩은 제한형 수동 실행(item 1).
+
+on:
+  push:
+    branches: [main]
+    paths: ['db/migrations/**']
+  workflow_dispatch:
+    inputs:
+      file:
+        description: 'db/migrations/ 바로 아래 정확한 파일명 (예: 2026-07-03_nlstd_audit_center.sql)'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrate
+  cancel-in-progress: false
+
+jobs:
+  validate:                      # Secret·DB 접근 없음
+    if: github.repository == 'onesecond-solutions/onesecond'
+    runs-on: ubuntu-latest
+    outputs:
+      file: ${{ steps.pc.outputs.file }}
+      sha256: ${{ steps.pc.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: precheck
+        id: pc
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+          INPUT_FILE: ${{ github.event.inputs.file }}
+        run: node scripts/ci/precheck.mjs
+
+  deploy:                        # 수동 dispatch로만 apply (조건3: main 머지 자동배포 금지). push는 validate까지만.
+    needs: validate
+    if: github.repository == 'onesecond-solutions/onesecond' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: production-db   # Required reviewer=대표(운영반영 직전 최종승인 1클릭) · Secret은 승인 후 접근 · main 한정 · fork 불가
+    steps:
+      - uses: actions/checkout@v4
+      - name: install psql
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+      - name: apply + verify
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}   # ci_migrate 최소권한 역할 연결
+          PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}     # 공개값(Secret 아님)
+          MIG_FILE: ${{ needs.validate.outputs.file }}
+          MIG_SHA: ${{ needs.validate.outputs.sha256 }}
+          RUN_ID: ${{ github.run_id }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: bash scripts/ci/apply_and_verify.sh
