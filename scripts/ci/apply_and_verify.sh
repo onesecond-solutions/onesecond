@@ -7,10 +7,17 @@ set -euo pipefail
 : "${MIG_FILE:?}"; : "${MIG_SHA:?}"; : "${RUN_ID:?}"; : "${COMMIT_SHA:?}"
 PROJECT_REF="${PROJECT_REF:-pdnwgzneooyygfejrvbg}"
 FILE="db/migrations/${MIG_FILE}"
-PSQL=(psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -X -q -t -A)
 
-# 연결문자열이 로그에 새지 않도록 psql 출력 스크럽
-scrub(){ sed "s#${SUPABASE_DB_URL}#<redacted>#g"; }
+# 조건7: 연결문자열을 PG* 환경변수로 분해 → 비밀번호·URL이 명령행(argv)에 노출되지 않음.
+_u="${SUPABASE_DB_URL#postgres*://}"; _cred="${_u%%@*}"; _rest="${_u#*@}"
+export PGUSER="${_cred%%:*}"; export PGPASSWORD="${_cred#*:}"
+_hpd="${_rest%%\?*}"; export PGDATABASE="${_hpd#*/}"; _hp="${_hpd%%/*}"
+export PGHOST="${_hp%%:*}"; export PGPORT="${_hp#*:}"; export PGSSLMODE="${PGSSLMODE:-require}"
+unset _u _cred _rest _hpd _hp
+PSQL=(psql -v ON_ERROR_STOP=1 -X -q -t -A)   # conninfo는 argv 아닌 PG* env로
+
+# 혹시 모를 로그 유출 방지: URL·비밀번호 스크럽
+scrub(){ sed -e "s#${SUPABASE_DB_URL}#<redacted>#g" -e "s#${PGPASSWORD}#<redacted>#g"; }
 run_sql(){ "${PSQL[@]}" "$@" 2> >(scrub >&2); }
 
 echo "::group::pre-flight"

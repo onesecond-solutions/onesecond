@@ -85,6 +85,11 @@ if (!fs.existsSync(`scripts/ci/postverify_${file.replace(/\.sql$/,'')}.sql`)) {
   fail(`사후검증 부재: scripts/ci/postverify_${file.replace(/\.sql$/,'')}.sql 이 필요합니다`);
 }
 
-console.log(`PRECHECK PASS: file=${file} sha256=${hash} (탑레벨 금지구문 0, newsletters 데이터변경 0)`);
+// 조건5: 배포는 main 대상만(dispatch가 main HEAD에서 실행). GITHUB_REF 확인.
+if (process.env.GITHUB_REF && process.env.GITHUB_REF !== 'refs/heads/main') {
+  fail(`배포 대상은 main만 허용(현재 ref=${process.env.GITHUB_REF})`);
+}
+
+console.log(`PRECHECK PASS: file=${file} sha256=${hash} (탑레벨 금지구문 0, newsletters 데이터변경 0, DOWN/postverify 존재)`);
 out('file', file);
 out('sha256', hash);
