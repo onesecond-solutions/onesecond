@@ -95,7 +95,7 @@ begin
 end $$;
 
 revoke execute on function public.resid_fix_preview(), public.resid_fix_apply(), public.resid_fix_rollback(), public.resid_fix_targets() from public;
-grant execute on function public.resid_fix_preview(), public.resid_fix_apply(), public.resid_fix_rollback() to authenticated;
+grant execute on function public.resid_fix_preview(), public.resid_fix_apply(), public.resid_fix_rollback(), public.resid_fix_targets() to authenticated;
 commit;
 
 -- DOWN (작업 완료 후 기능 제거):
