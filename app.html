@@ -11958,8 +11958,12 @@ function _nlRenderCount(){
 }
 function _nlSetHint(){ var el=document.getElementById('nlp-hint'); if(el)el.textContent=_nlScope==='all'?'회사를 클릭하면 발행월별 소식지로':'좌측에서 다른 회사를 고를 수 있어요'; }
 function _nlCardAll(c){
+  /* 회사 최신월 다음 ~ 2026.07 까지 빠진 달을 "년.월 · -"로 추가(전체 화면, 최근만 채움) (2026-07-04 대표 b안) */
+  var END=2026*12+(7-1), maxIdx=null;
+  c.items.forEach(function(n){ var y=Number(n.publish_year), m=Number(n.publish_month); if(y&&m){ var ix=y*12+(m-1); if(maxIdx===null||ix>maxIdx)maxIdx=ix; } });
+  var fill=''; if(maxIdx!==null){ for(var ix=END; ix>maxIdx; ix--){ var yy=Math.floor(ix/12), mm=(ix%12)+1; fill+='<div class="p is-nosrc"><span class="pn">'+yy+'.'+mm+' · -</span></div>'; } }
   var rows=c.items.map(function(n){ var y=(n.publish_year||'?'), m=(n.publish_month||'?'); var has=_nlHas(n); var lbl=y+'.'+m+' · '+(has?_nlLabel(n):'-'); var att=has?(' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" onclick="_hubOpenNl(this)"'):''; return '<div class="p'+(has?'':' is-nosrc')+'"'+att+'><span class="pn">'+_nlEsc(lbl)+'</span></div>'; }).join('');  /* 원본 없으면 "년.월 · -" (2026-07-04 대표) */
-  return '<div class="pl-cc" style="--cl:var(--ac)"><div class="ch" data-co="'+_nlEsc(c.n)+'"><div class="cn"><span class="dot"></span>'+_nlEsc(c.n)+'<span class="num">'+c.items.length+'건</span></div></div><div class="pl-list">'+rows+'</div></div>';
+  return '<div class="pl-cc" style="--cl:var(--ac)"><div class="ch" data-co="'+_nlEsc(c.n)+'"><div class="cn"><span class="dot"></span>'+_nlEsc(c.n)+'<span class="num">'+c.items.length+'건</span></div></div><div class="pl-list">'+fill+rows+'</div></div>';
 }
 function _nlRenderAll(){
   var secs=_nlPool==='all'?[['손해보험','nonlife'],['생명보험','life']]:_nlPool==='nonlife'?[['손해보험','nonlife']]:[['생명보험','life']];
