@@ -13832,6 +13832,9 @@ window.mysQnaBack=mysQnaBack;
  * 인수/상품/기타 항목별 입력 → _saveMyspaceQna가 [연령] 60 식으로 조합 저장 = 구조화 데이터가 그대로 DB에 쌓이는 게 핵심(대표님).
  * 모달 아님 — 스크립트/팀방처럼 카드 안 입력. 폼 DOM을 모달에서 카드로 이동(inplace), 성공/취소 시 모달 자리로 복귀(복제 아님=단일 폼·단일 저장로직). */
 function openQnaInline(){
+  /* 2026-07-04 대표 지시: 질문하기 = 준비 중 안내로 대기. 기능 준비 완료 시 아래 안내·return 두 줄만 제거하면 기존 폼 복구. */
+  if(typeof toast==='function') toast('질문하기 기능은 준비 중입니다.'); else if(typeof alert==='function') alert('질문하기 기능은 준비 중입니다.');
+  return;
   var split=document.getElementById('mys-qna-split');
   var col=split?split.querySelector('.viewer-col'):null;
   var pane=document.getElementById('mysWritePaneQna');
