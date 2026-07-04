@@ -849,6 +849,15 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .mys-reord-btn:hover{border-color:var(--ac);color:var(--ac)}
 .item:hover{background:var(--s2);}
 .item.on{background:var(--s2);}
+/* 핀 고정(라이브러리 카드 최상단, 2026-07-05) — keywords '핀' 태그 기반. 재정렬 모드에선 핀 버튼 숨김(우측 충돌 방지). */
+#mysList .item{position:relative;}
+.mys-pin{position:absolute;top:7px;right:7px;width:26px;height:26px;border:0;background:transparent;color:var(--tf);cursor:pointer;border-radius:7px;display:flex;align-items:center;justify-content:center;opacity:.45;transition:opacity .12s,color .12s,background .12s;padding:0;}
+#mysList .item:hover .mys-pin{opacity:.8;}
+.mys-pin:hover{background:var(--s2);color:var(--ts);}
+.mys-pin.on{opacity:1;color:var(--ac);}
+.item.mys-pinned{background:color-mix(in srgb,var(--ac) 5%,var(--s1));}
+.item.mys-pinned.on{background:color-mix(in srgb,var(--ac) 9%,var(--s2));}
+.item.mys-reord-on .mys-pin{display:none;}
 .item .badge{font-size:var(--ts-badge);color:var(--tc);font-weight:700;margin-bottom:4px;display:inline-block;}
 .item .it{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);margin-bottom:3px;line-height:1.4;}
 .item .id{font-size:var(--ts-preview);color:var(--tf);}
@@ -13609,7 +13618,7 @@ async function loadMyspace(force){
       var badge=(l.memo_text&&!l.file_url&&!l.image_url&&!l.link_url)?'메모':'자료';
       items.push({_type:'library',_badge:badge,_date:l.created_at,_sort:l.sort_order,title:l.title,description:l.description,memo_text:l.memo_text,id:l.id,keywords:l.keywords});
     }
-    items.sort(function(a,b){return (b._date||'').localeCompare(a._date||'');});
+    items.sort(function(a,b){var pa=_isPinnedMys(a)?1:0,pb=_isPinnedMys(b)?1:0; if(pa!==pb)return pb-pa; return (b._date||'').localeCompare(a._date||'');});  /* 핀 고정 먼저, 그 다음 최신순 (2026-07-05) */
     window._myspaceCache=items;
     window._myspaceLoaded=true;
     /* 조회 단계 격리(화면 숨김 아님): 현재 활성 칩이 메모/스크립트/전체/공유받음이면 그 유형으로 필터해 렌더.
@@ -13626,6 +13635,21 @@ async function loadMyspace(force){
 
 /* 오피스 = 게시판 형태(목록+뷰어 split). 카드 그리드 → 좌측 목록 + 우측 뷰어 */
 var MYS_COLOR={'자료':'var(--t-uw)','스크립트':'var(--t-product)','메모':'var(--t-event)','즐겨찾기':'var(--ok)'};
+/* ── 핀 고정(라이브러리, 2026-07-05) — keywords '핀' 태그 기반(DDL 없이). 임태성 게이트 테스트 후 전체 개방 예정. ── */
+function _isPinnedMys(it){ return !!(it && Array.isArray(it.keywords) && it.keywords.indexOf('핀')>=0); }
+function _canPinMys(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; } }
+window.mysTogglePin=function(table, id){
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var cache=window._myspaceCache||[], it=null;
+  for(var k=0;k<cache.length;k++){ var t=(cache[k]._type==='script')?'scripts':'library'; if(t===table && String(cache[k].id)===String(id)){ it=cache[k]; break; } }
+  if(!it) return;
+  var kw=Array.isArray(it.keywords)?it.keywords.slice():[];
+  var pi=kw.indexOf('핀'); if(pi>=0) kw.splice(pi,1); else kw.unshift('핀');
+  fetch(window.db.url('/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({keywords:kw})}).then(function(res){
+    if(res.ok||res.status===204){ it.keywords=kw; window._myspaceLoaded=false; if(typeof loadMyspace==='function') loadMyspace(); if(typeof toast==='function') toast(pi>=0?'고정 해제됐어요.':'맨 위에 고정했어요.'); }
+    else { if(typeof toast==='function') toast('고정 실패: '+res.status); }
+  }).catch(function(){ if(typeof toast==='function') toast('고정 중 오류가 발생했습니다.'); });
+};
 function renderMyspace(items){
   var listEl=document.getElementById('mysList');if(!listEl)return;
   window._mysFiltered=items||[];
@@ -13648,8 +13672,10 @@ function renderMyspace(items){
     /* 드래그는 그립 핸들에만 — 카드 본문은 텍스트 선택·복사 가능(2026-06-09 회귀 수정). 카드는 드롭 대상만. */
     var _drag=_ro?(' ondragover="mysDragOver(event)" ondrop="mysDrop(event,'+i+')"'):'';
     var _roc=_ro?('<div class="mys-reord"><button class="mys-reord-grip" draggable="true" ondragstart="mysDragStart(event,'+i+')" ondragend="mysDragEnd(event)" title="드래그로 이동" aria-label="드래그 이동">&#10303;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',-1)" aria-label="위로">&#9650;</button><button class="mys-reord-btn" onclick="event.stopPropagation();mysMove('+i+',1)" aria-label="아래로">&#9660;</button></div>'):'';
-    return '<div class="item'+(i===0?' on':'')+(_ro?' mys-reord-on':'')+'"'+_drag+' onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
-      +'<span class="badge">'+it._badge+'</span>'+dot+shared
+    var _pinned=_isPinnedMys(it);
+    var _pinBtn=_canPinMys()?('<button class="mys-pin'+(_pinned?' on':'')+'" onclick="event.stopPropagation();mysTogglePin(\''+tableName+'\',\''+it.id+'\')" title="'+(_pinned?'고정 해제':'맨 위 고정')+'" aria-label="핀 고정"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4.5l-4 4l-4 1.5l-1.5 1.5l7 7l1.5 -1.5l1.5 -4l4 -4"/><line x1="9" y1="15" x2="4.5" y2="19.5"/><line x1="14.5" y1="4" x2="20" y2="9.5"/></svg></button>'):'';
+    return '<div class="item'+(i===0?' on':'')+(_ro?' mys-reord-on':'')+(_pinned?' mys-pinned':'')+'"'+_drag+' onclick="updateLastUsed(\''+tableName+'\',\''+it.id+'\');mysOpenItem('+i+')" style="--tc:'+tc+'">'
+      +'<span class="badge">'+it._badge+'</span>'+dot+shared+_pinBtn
       +'<div class="it">'+title+'</div>'
       +'<div class="id">'+dt+'</div>'+_roc+'</div>';
   }).join('');
