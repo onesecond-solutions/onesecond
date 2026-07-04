@@ -1591,6 +1591,12 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 /* 홈 하단 철학 문구(브랜드 선언) — 진입 카드 아래, 보조 톤. 검색 중 숨김. 2026-06-23 전체 노출(게이트 해제). */
 .hs-philo{text-align:center;font-size:0.8rem;color:var(--tf);line-height:1.65;max-width:560px;margin:24px auto 0;letter-spacing:-.01em;}
 #homeSearch.searching .hs-philo{display:none;}
+/* 원세컨드 소개(스토리텔링) 진입 — 미로그인/신규 방문자용. landing 스토리텔링 재사용(Phase 3, 2026-07-05). 검색 중 숨김. */
+.hs-intro{text-align:center;margin:16px auto 0;}
+.hs-intro-link{display:inline-block;font-size:0.85rem;color:var(--ts);text-decoration:none;border:1px solid var(--bd);border-radius:999px;padding:7px 17px;transition:background .15s,border-color .15s;}
+.hs-intro-link:hover{background:var(--s2);border-color:var(--ac);}
+.hs-intro-link b{color:var(--ac);font-weight:700;}
+#homeSearch.searching .hs-intro{display:none;}
 .hs-q{display:flex;flex-direction:column;gap:3px;background:transparent;border:0;padding:2px 0;cursor:pointer;text-align:left;font:inherit;}
 .hq-t{display:inline-flex;align-items:center;gap:7px;font-size:1.0625rem;font-weight:800;color:var(--tp);line-height:1.3;}
 .hq-bar{width:3px;height:1.05em;border-radius:2px;background:var(--tf);flex-shrink:0;}
@@ -2960,6 +2966,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
             <button class="hs-go" type="button" onclick="_hsSearch(document.getElementById('hsInput').value)">검색</button>
           </div>
           <div class="hs-sub">검색하면 내 것 → 전체까지 한 번에 · 범위는 결과가 알려줍니다</div>
+          <div class="hs-intro"><a href="/pages/landing.html" class="hs-intro-link">원세컨드가 처음이신가요? <b>서비스 소개 보기 &rarr;</b></a></div>
           <!-- 상품·인수·상담 시작 quick 3버튼(.hs-quick) 삭제 (2026-07-02) · philo 문구는 검색기 위로 이동 (2026-07-02 대표 지시) -->
           <div id="hsResults"></div>
         </div>
