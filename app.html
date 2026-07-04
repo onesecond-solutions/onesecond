@@ -459,7 +459,12 @@ body.is-uat-homedesk #homeDesk{display:block;margin-top:6px;}
 @media(max-width:440px){#homeDesk .sn-cards{grid-template-columns:1fr;}}
 /* 인라인 펼침 영역 — 카드 클릭 시 그 아래 표시. 우측 상단 X 닫기. 재클릭/X로 닫힘(토글). */
 .hd-inline{position:relative;display:none;margin-top:10px;}
-.hd-inline.open{display:block;}
+.hd-inline.open{display:block;border:1px solid color-mix(in srgb,var(--hdc,var(--bd)) 30%,var(--bd));border-top:3px solid var(--hdc,var(--bd));border-radius:var(--radius-md,12px);padding:12px;background:color-mix(in srgb,var(--hdsoft,transparent) 45%,var(--s1));}
+/* 홈 범위 색상 구분 — 기존 스페이스 토큰 재사용(개인=마이 / 팀 / 지점). 전체=중립 비활성. (2026-07-04) */
+.hd-inline.scope-personal{--hdc:var(--space-my-line);--hdsoft:var(--space-my-soft);--hdtext:var(--space-my-text);}
+.hd-inline.scope-team{--hdc:var(--space-team-line);--hdsoft:var(--space-team-soft);--hdtext:var(--space-team-text);}
+.hd-inline.scope-branch{--hdc:var(--space-branch-line);--hdsoft:var(--space-branch-soft);--hdtext:var(--space-branch-text);}
+.hd-inline.scope-all-disabled{--hdc:var(--bd);--hdsoft:var(--s2);--hdtext:var(--ts);}
 .hd-inline-x{position:absolute;top:10px;right:10px;z-index:6;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:var(--radius-sm,8px);background:var(--s1);color:var(--ts);font-size:14px;line-height:1;cursor:pointer;padding:0;}
 .hd-inline-x:hover{background:var(--s2);color:var(--tp);}
 .hd-inline #home-desk-slot{margin-top:0;}
@@ -469,8 +474,8 @@ body.is-uat-homedesk #homeDesk{display:block;margin-top:6px;}
 .hd-scope-b{display:inline-flex;align-items:center;gap:7px;padding:7px 15px 7px 12px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--ts);font-family:inherit;font-size:0.85rem;font-weight:600;line-height:1;cursor:pointer;}
 .hd-scope-b::before{content:'';width:13px;height:13px;border-radius:50%;border:2px solid var(--bd);box-sizing:border-box;flex-shrink:0;}
 .hd-scope-b:hover{border-color:var(--ac);color:var(--tp);}
-.hd-scope-b.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent);color:var(--tp);}
-.hd-scope-b.on::before{border-color:var(--ac);background:var(--ac);box-shadow:inset 0 0 0 2px var(--s1);}
+.hd-scope-b.on{border-color:var(--hdc,var(--ac));background:color-mix(in srgb,var(--hdc,var(--ac)) 12%,transparent);color:var(--hdtext,var(--tp));}
+.hd-scope-b.on::before{border-color:var(--hdc,var(--ac));background:var(--hdc,var(--ac));box-shadow:inset 0 0 0 2px var(--s1);}
 .hd-prep{padding:28px 16px;text-align:center;color:var(--ts);line-height:1.7;font-size:0.88rem;}
 /* 시안대로 깔끔하게 — 임태성 홈에선 큰 배너 캐러셀·미니배너·시작하기 CTA 숨김(인사말+검색바+데스크만) */
 body.is-uat-homedesk #v-home .os-banner-carousel,
@@ -6332,6 +6337,7 @@ window._homeCard=_homeCard;
 function _homeScope(kind, scope){
   var slot=document.getElementById('home-desk-slot'); if(!slot) return;
   _homeOpenScope=scope;
+  try{ var _inl=document.getElementById('hd-inline'); if(_inl){ _inl.classList.remove('scope-personal','scope-team','scope-branch','scope-all-disabled'); _inl.classList.add(scope==='all'?'scope-all-disabled':('scope-'+scope)); } }catch(e){}  /* 표시 영역 범위 색상(개인/팀/지점=스페이스 토큰, 전체=중립 비활성) */
   try{ var cs=document.querySelectorAll('#hd-scope .hd-scope-b'); for(var i=0;i<cs.length;i++) cs[i].classList.toggle('on', cs[i].getAttribute('data-sc')===scope); }catch(e){}  /* 활성 범위 표시 */
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
   if(scope==='all'){ slot.innerHTML='<div class="hd-prep">전체 보기는 준비 중이에요.<br>개인 · 팀 · 지점 중에서 선택해 주세요.</div>'; return; }
@@ -6349,7 +6355,7 @@ function _homeCardClose(){
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
   var slot=document.getElementById('home-desk-slot'); if(slot) slot.innerHTML='';
   var box=document.getElementById('hd-scope'); if(box) box.innerHTML='';
-  var inline=document.getElementById('hd-inline'); if(inline) inline.classList.remove('open');
+  var inline=document.getElementById('hd-inline'); if(inline) inline.classList.remove('open','scope-personal','scope-team','scope-branch','scope-all-disabled');
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); }catch(e){}
   _homeOpenKind=null; _homeOpenScope=null;
 }
