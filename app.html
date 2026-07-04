@@ -13852,9 +13852,10 @@ function _comingSoon(msg){
 }
 window._comingSoon=_comingSoon;
 function openQnaInline(force){
-  /* 2026-07-04 대표 지시: 일반 진입 = 준비 중 안내(미완 기능 진입 방지). 폼 자체는 보존 —
-     이 질문 양식은 향후 고객관리 카테고리 설계에 재사용 예정. 총괄팀장 검토는 _qnaFormPreview()로 폼 확인(게이트 우회). */
-  if(!force){
+  /* 2026-07-04 대표 지시: 일반 진입 = 준비 중 안내(미완 기능 진입 방지). 어드민은 폼 사용 허용(양식 확인·활용).
+     폼 자체는 보존 — 이 질문 양식은 향후 고객관리 카테고리 설계에 재사용 예정. 총괄팀장 검토는 _qnaFormPreview()로도 가능. */
+  var _adm=(typeof _canSeeAdmin==='function' && _canSeeAdmin());
+  if(!force && !_adm){
     if(typeof _comingSoon==='function') _comingSoon('질문하기 기능은\n준비 중입니다.'); else if(typeof alert==='function') alert('질문하기 기능은 준비 중입니다.');
     return;
   }
