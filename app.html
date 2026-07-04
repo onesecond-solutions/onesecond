@@ -5562,7 +5562,7 @@ function _notifPushDbRead(key,iso){
     window.db.fetch('/rest/v1/board_reads',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},body:JSON.stringify({user_id:uid,board_key:key,last_read_at:iso})}).then(function(r){ if(r&&(r.status===404||r.status===400)) window._notifDbReady=false; }).catch(function(){});
   }catch(e){ /* 무해 */ }
 }
-function _notifNav(label){ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++){ var l=navs[i].querySelector('.lbl'); if(l&&l.textContent.trim()===label) return navs[i]; } return null; }
+function _notifNav(label){ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++){ var l=navs[i].querySelector('.lbl'); if(l&&l.textContent.trim()===label){ try{ if(window.getComputedStyle(navs[i]).display==='none') return null; }catch(e){} return navs[i]; } } return null; }   /* 숨겨진(권한 밖) 메뉴는 알림에서도 제외 — 접근 못 하는 화면 알림 방지 (2026-07-04) */
 function _notifSince(p,t,sinceIso){ try{ var url=p+'&'+t+'=gt.'+encodeURIComponent(sinceIso)+'&select=id&limit=1'; return window.db.fetch(url,{headers:{'Prefer':'count=exact'}}).then(function(r){ if(!r.ok) return 0; var cr=(r.headers&&r.headers.get&&r.headers.get('content-range'))||''; var m=cr.match(/\/(\d+)$/); return m?Number(m[1]):0; }).catch(function(){ return 0; }); }catch(e){ return Promise.resolve(0); } }
 async function notifRefresh(){
   try{
@@ -15587,6 +15587,12 @@ function _diaAlarmFire(r, min){
   if(typeof toast==='function') toast('🔔 '+r.title+' ('+tm+')');
 }
 function _diaAlarmGo(id, date){
+  if(document.body.classList.contains('is-uat-homedesk')){   /* 캘린더가 홈으로 내려온 계정 = 홈 캘린더로(옛 라이브러리 대신) (2026-07-04) */
+    if(typeof showView==='function') showView('home');
+    if(typeof _homeCard==='function') _homeCard('diary');
+    setTimeout(function(){ var st=_cst('mys'); if(date) st.ym=date.slice(0,7); if(typeof renderCalGridMonth==='function') renderCalGridMonth('mys'); if(typeof openDiaryPanel==='function') openDiaryPanel(null, id); }, 260);
+    return;
+  }
   if(typeof showView==='function') showView('myspace');
   var t=document.querySelector('#mys-tabs .tab[onclick*="today"]'); if(t&&typeof mysTab==='function') mysTab(t,'today');
   setTimeout(function(){ var st=_cst('mys'); if(date) st.ym=date.slice(0,7); if(typeof renderCalGridMonth==='function') renderCalGridMonth('mys'); if(typeof openDiaryPanel==='function') openDiaryPanel(null, id); }, 220);
