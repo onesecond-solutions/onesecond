@@ -11427,7 +11427,7 @@ async function _runSearch(q){
   }
   if(!total) html='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">키워드 결과가 없습니다 — 위 ✨ AI 정리를 눌러보세요</div>';
   /* AI 회사별 정리 바를 맨 위에 (소식지 본문 기반, Gemini 합성) */
-  var aiBar=((typeof _canSeeCompanyHub==='function'&&_canSeeCompanyHub())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'')+'<div id="aiAnsBox"></div>';  /* AI 검색 = 임태성 실장 게이트(_canSeeCompanyHub=98c5f4f9). 그 외 미노출. (2026-06-30) */
+  var aiBar=((typeof _canSeeAiSearch==='function'&&_canSeeAiSearch())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'')+'<div id="aiAnsBox"></div>';  /* AI 검색 = 임태성 실장 게이트(_canSeeAiSearch=98c5f4f9). 그 외 미노출. (2026-07-04 분리) */
   body.innerHTML=aiBar+html;
 }
 window._runSearch=_runSearch;
@@ -11606,9 +11606,12 @@ window._hubGetQc=_hubGetQc;
 /* ════ 회사 검색 허브 (UAT — 임태성 실장 전용, 2026-06-27) ════
    회사명 검색 시 우측 미리보기 대신 결과 상단에 아코디언 허브: BMI·결제·콜센터·청구·원전산·소식지·상품라인업.
    데이터=기존 Quick 카드 content_html(회사별 블록)에서 해당 회사 블록만 추출해 인라인 표시. 설계사 업무 흐름 정합. */
-function _canSeeCompanyHub(){
+function _canSeeCompanyHub(){ return true; }  /* 2026-07-04 전원 개방(검색결과 허브·자동완성·결과열기·메모·업무노트). AI 검색만 _canSeeAiSearch로 분리 유지(대표 승인). */
+/* AI 검색(_aiAnswer + 상단 "✨ 원세컨드 AI 검색" 바) = 임태성 실장 게이트 유지(비용). 대표 지시: AI 검색만 제외. 2026-07-04 */
+function _canSeeAiSearch(){
   try{ var u=(window.os_user)||JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return !!(u && u.id==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'); }catch(e){ return false; }
 }
+window._canSeeAiSearch=_canSeeAiSearch;
 /* content_html(전 회사 블록)에서 회사명 헤더가 든 카드 블록의 부모 innerHTML 추출 */
 function _hubPick(html, company){
   if(!html||!company) return '';
@@ -11898,7 +11901,7 @@ function _plBind(){
 }
 window.loadProductLineup=loadProductLineup;
 /* ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. 상품 라인업 구조 재활용(좌 회사목록·전체조망↔회사별). 썸네일/미리보기=회사허브 기계 재사용. 2026-07-03 ════ */
-function _canSeeNl(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; } }
+function _canSeeNl(){ return true; }  /* 2026-07-04 소식지 전원 개방(대표 승인) */
 window._canSeeNl=_canSeeNl;
 var _nlRows=[],_nlCos=[],_nlLoaded=false,_nlLoading=false,_nlQuery='',_nlPool='all',_nlScope='all',_nlCo=null,_nlSecMap={};
 function _nlEsc(s){return(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -12191,7 +12194,7 @@ function _svRender(){
   var items=d.items||[], terms=d.terms, nav=d.nav||[];
   var activeSrc=window._svActiveSource||'all';
   var catF=window._svCatFilter||null;
-  var aiBarFixed=(typeof _canSeeCompanyHub==='function'&&_canSeeCompanyHub())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'';  /* AI 검색 = 임태성 실장 게이트(_canSeeCompanyHub=98c5f4f9). 그 외 미노출. (2026-06-30) */
+  var aiBarFixed=(typeof _canSeeAiSearch==='function'&&_canSeeAiSearch())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'';  /* AI 검색 = 임태성 실장 게이트(_canSeeAiSearch=98c5f4f9). 그 외 미노출. (2026-07-04 분리) */
   var aiAns='<div id="aiAnsBox"></div>';
   var aiBar=aiBarFixed+aiAns;  /* 오버레이(#sobody)용 결합 — hsResults에선 aiBarFixed(고정 헤더)·aiAns(좌측 스크롤)로 분리 */
   /* 소스 탭(주 축) — 건수 0 소스 탭은 숨김(전체 제외) */
@@ -12449,7 +12452,7 @@ function _idxStatus(table, r){
 window._idxStatus=_idxStatus;
 /* AI 검색 답변 — search-answer 함수 호출 → 회사별 정리 카드 렌더 */
 async function _aiAnswer(limit){
-  if(typeof _canSeeCompanyHub==='function' && !_canSeeCompanyHub()){ return; }  /* AI 검색 = 임태성 게이트 — 버튼 미노출 외 실행 방어선(비용 차단) (2026-06-30) */
+  if(typeof _canSeeAiSearch==='function' && !_canSeeAiSearch()){ return; }  /* AI 검색 = 임태성 게이트 — 버튼 미노출 외 실행 방어선(비용 차단) (2026-07-04 분리) */
   limit=limit||8;
   var box=document.getElementById('aiAnsBox'); if(!box) return;
   /* 검색어 소스: 홈 검색=hsInput / 오버레이=sinput / fallback=마지막 검색어(_svQ). 기존엔 sinput만 봐서 홈에서 검색어를 못 읽던 버그 수정 */
