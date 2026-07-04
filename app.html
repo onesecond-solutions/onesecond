@@ -15434,11 +15434,20 @@ async function diarySaveEvent(){
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var me=_diaOwnerId(), editId=window._diaEdit;
+  /* 현재 캘린더 범위(개인/팀/지점) 반영 — 팀/지점을 골라도 개인으로 저장되던 문제 수정 (2026-07-04).
+     신규 저장에만 적용(수정은 원래 출처 유지). 팀/지점 저장 방식은 기존 saveCalEvent와 동일한 필드·경로 재사용. */
+  var _dscope=((_cst('mys')||{}).scope)||'personal';
+  var _dsrc='personal', _daud='personal', _dteam=null, _dbranch=null;
+  if(!editId && (_dscope==='team'||_dscope==='branch')){
+    var _diaUField=async function(f){ var uu={}; try{ uu=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){} var v=(uu&&uu[f])||null; if(v==null&&me){ try{ var rr=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(me)+'&select='+f); if(rr.ok){ var jj=await rr.json(); if(jj&&jj[0]) v=jj[0][f]||null; } }catch(e){} } return v; };
+    if(_dscope==='team'){ _dsrc='manager'; _daud='team_internal'; _dteam=await _diaUField('team_id'); if(!_dteam){ alert('소속 팀 정보가 없어 팀 일정으로 저장할 수 없습니다.'); return; } }
+    else { _dsrc='branch'; _daud='branch_internal'; _dbranch=await _diaUField('branch_id'); if(!_dbranch){ alert('소속 지점 정보가 없어 지점 일정으로 저장할 수 없습니다.'); return; } }
+  }
   try{
     var res;
     if(editId){ res=await window.db.fetch('/rest/v1/calendar_events?id=eq.'+encodeURIComponent(editId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({event_date:date,event_time:time,title:title,description:desc||null,reminders:reminders})}); }
-    else { res=await window.db.fetch('/rest/v1/calendar_events',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({event_date:date,event_time:time,title:title,description:desc||null,event_type:'operation',source_type:'personal',audience_target:'personal',author_id:me,reminders:reminders})}); }
-    if(res.ok||res.status===201||res.status===204){ var st=_cst('mys'); st.ym=date.slice(0,7); diaryClosePanel(); loadCal('mys'); loadDiaryDash(); if(typeof toast==='function') toast(editId?'일정이 수정됐습니다!':'일정이 추가됐습니다!'); }
+    else { res=await window.db.fetch('/rest/v1/calendar_events',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({event_date:date,event_time:time,title:title,description:desc||null,event_type:'operation',source_type:_dsrc,audience_target:_daud,team_id:_dteam,branch_id:_dbranch,author_id:me,reminders:reminders})}); }
+    if(res.ok||res.status===201||res.status===204){ var st=_cst('mys'); st.ym=date.slice(0,7); diaryClosePanel(); loadCal('mys'); loadDiaryDash(); if(typeof toast==='function') toast(editId?'일정이 수정됐습니다!':(_dscope==='personal'?'일정이 추가됐습니다!':'일정이 공유됐습니다!')); }
     else { var e=await res.json().catch(function(){return{};}); alert('저장 실패: '+(e.message||res.status)); }
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
 }
