@@ -1591,12 +1591,6 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 /* 홈 하단 철학 문구(브랜드 선언) — 진입 카드 아래, 보조 톤. 검색 중 숨김. 2026-06-23 전체 노출(게이트 해제). */
 .hs-philo{text-align:center;font-size:0.8rem;color:var(--tf);line-height:1.65;max-width:560px;margin:24px auto 0;letter-spacing:-.01em;}
 #homeSearch.searching .hs-philo{display:none;}
-/* 원세컨드 소개(스토리텔링) 진입 — 미로그인/신규 방문자용. landing 스토리텔링 재사용(Phase 3, 2026-07-05). 검색 중 숨김. */
-.hs-intro{text-align:center;margin:16px auto 0;}
-.hs-intro-link{display:inline-block;font-size:0.85rem;color:var(--ts);text-decoration:none;border:1px solid var(--bd);border-radius:999px;padding:7px 17px;transition:background .15s,border-color .15s;}
-.hs-intro-link:hover{background:var(--s2);border-color:var(--ac);}
-.hs-intro-link b{color:var(--ac);font-weight:700;}
-#homeSearch.searching .hs-intro{display:none;}
 .hs-q{display:flex;flex-direction:column;gap:3px;background:transparent;border:0;padding:2px 0;cursor:pointer;text-align:left;font:inherit;}
 .hq-t{display:inline-flex;align-items:center;gap:7px;font-size:1.0625rem;font-weight:800;color:var(--tp);line-height:1.3;}
 .hq-bar{width:3px;height:1.05em;border-radius:2px;background:var(--tf);flex-shrink:0;}
@@ -2852,23 +2846,6 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 
 <!-- 2026-05-28: 포트원 V2 SDK (어제 PR #126 결제 자료 v1 → v2 이식) -->
 <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
-<!-- Phase 1 QA (2026-07-05): 로그인/가입 모달 app.html 이식. landing 유지·index 리다이렉트 무변경. ?qa= 로만 트리거. -->
-<link rel="stylesheet" href="/css/auth-modal.css?20260705qa">
-<style>
-/* auth-modal.css가 요구하는 v2 토큰을 모달 컨테이너에 스코프 → 앱 전역 토큰과 격리(다크모드 포함 항상 밝은 모달). */
-.auth-overlay{
-  --color-brand:#6366F1;--color-brand-light:#7C7FF2;--color-accent:#6366F1;
-  --brand-50:#EEEFFF;--brand-500:#6366F1;--accent-50:#EEEFFF;
-  --color-surface:#FFFFFF;--color-surface-2:#F4F4F5;
-  --color-border:#E4E4E7;--color-border-2:#D4D4D8;
-  --color-text-primary:#18181B;--color-text-secondary:#52525B;--color-text-tertiary:#A1A1AA;--color-text-placeholder:#A1A1AA;
-  --color-danger:#DC2626;--color-danger-bg:#FEF2F2;
-  --neutral-200:#E5E7EB;--neutral-800:#1F2937;
-  --radius:12px;--radius-full:9999px;--radius-xl:20px;
-  --shadow-1:0 1px 3px rgba(0,0,0,.08);--shadow-modal:0 20px 60px rgba(0,0,0,.28);
-  --tp:#18181B;--ts:#52525B;
-}
-</style>
 </head>
 <body>
 <div class="app collapsed" id="app">
@@ -2966,7 +2943,6 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
             <button class="hs-go" type="button" onclick="_hsSearch(document.getElementById('hsInput').value)">검색</button>
           </div>
           <div class="hs-sub">검색하면 내 것 → 전체까지 한 번에 · 범위는 결과가 알려줍니다</div>
-          <div class="hs-intro"><a href="/pages/landing.html" class="hs-intro-link">원세컨드가 처음이신가요? <b>서비스 소개 보기 &rarr;</b></a></div>
           <!-- 상품·인수·상담 시작 quick 3버튼(.hs-quick) 삭제 (2026-07-02) · philo 문구는 검색기 위로 이동 (2026-07-02 대표 지시) -->
           <div id="hsResults"></div>
         </div>
@@ -4600,7 +4576,8 @@ window.handlePaidCta = function(planId){
     _name  = (_u.name  || '').trim();
   } catch (e) {}
   if (!_email || !_id) {
-    _authGate();
+    alert('로그인이 필요합니다. 로그인 후 이용해 주세요.');
+    window.location.href = '/index.html?auth=login';
     return;
   }
   if (_email.indexOf('@') === -1) {
@@ -4996,7 +4973,7 @@ function applyRoleClass(){
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
   /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민은 운영·유지보수 계정 = 사이드바 접힘 규칙에서 제외(:not(.is-admin)) → 전체 네비 유지(위 CSS). */
-  document.body.classList.toggle('is-uat-homedesk', true);   /* Phase 2b(2026-07-05): 미로그인 포함 전원 홈 데스크 동일 노출. 개인 데이터는 카드 클릭 시 로그인 안내(_homeCard 가드). 어드민은 사이드바 :not(.is-admin)로 전체 네비 유지. */
+  document.body.classList.toggle('is-uat-homedesk', !!r);
   /* 스페이스 네비 재설계 = 2026-06-25 전체 개방(게이트 해제). 임태성 실장 계정 검수 완료 → 전원 새 사이드바/스페이스 페이지 노출. (P3, homephilo 게이트 해제 전례) */
   document.body.classList.add('is-uat-spacenav');
   /* 홈 하단 철학 문구 = 2026-06-23 전체 개방(게이트 해제) — CSS body:not(.is-uat-homephilo) 규칙 제거됨. 검색 중 숨김 규칙만 유지. */
@@ -5010,12 +4987,6 @@ function applyRoleClass(){
 }
 window.applyRoleClass = applyRoleClass;
 /* 인라인 게이팅(첫 페인트)이 is-insurer/is-admin 1차 부착. nav 노출·재확정은 bootView(role 확정)에서 1회 — 즉시/DOMContentLoaded 중복 호출 폐기. */
-
-/* ── 미로그인 쓰기 게이트 (Phase 2a, 2026-07-05) — 읽기는 통과, 쓰기 시에만 안내 + 인앱 로그인 모달(랜딩 이동 X). ── */
-window._authGate = function(msg){
-  try{ if(typeof toast==='function') toast(msg || '로그인하고 사용해 주세요.'); }catch(e){}
-  try{ if(typeof window.openAuthModal==='function') window.openAuthModal('login'); }catch(e){}
-};
 
 /* 2026-05-30 초기화 통합: appstate:ready 후 role UI 재구성은 bootView(초기 진입 게이트)로 일원화. */
 
@@ -5291,8 +5262,8 @@ async function loadQnaComments(postId, px){
 async function submitQnaComment(postId, px){
   var ta=document.getElementById(px+'-qra-'+postId); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('답변 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 답변할 수 있어요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 답변할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var btn=ta&&ta.parentElement?ta.parentElement.querySelector('.qna-reply-btn'):null;
   if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
@@ -5345,8 +5316,8 @@ async function _likeLoad(postId, px){
 }
 /* 좋아요 토글 (낙관 갱신 후 재조회) */
 async function _likeToggle(postId, px){
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
   var box=document.getElementById(px+'-like-'+postId); if(!box) return;
   var uid=_socUid()||String(window.AppState.userId||''); var mine=box.dataset.mine==='1';
   var btn=box.querySelector('.soc-like-btn'); if(btn) btn.disabled=true;
@@ -5385,8 +5356,8 @@ async function _cmtLoad(postId, px){
 async function _cmtSubmit(postId, px){
   var ta=document.getElementById(px+'-cmt-ta-'+postId); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('댓글 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var btn=ta&&ta.parentElement?ta.parentElement.querySelector('.soc-reply-btn'):null;
   if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
@@ -5425,8 +5396,8 @@ async function _eLikeLoad(st,sid,px){ var box=document.getElementById(px+'-elike
     box.dataset.mine=mine?'1':'0';
   }catch(e){} }
 async function _eLikeToggle(st,sid,px){
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
   var box=document.getElementById(px+'-elike-'+_eKey(st,sid)); if(!box) return;
   var uid=_socUid()||String(window.AppState.userId||''); var mine=box.dataset.mine==='1'; var btn=box.querySelector('.soc-like-btn'); if(btn) btn.disabled=true;
   try{ if(mine){ await fetch(window.db.url('/rest/v1/entry_likes?source_type=eq.'+encodeURIComponent(st)+'&source_id=eq.'+encodeURIComponent(sid)+'&user_id=eq.'+encodeURIComponent(uid)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); }
@@ -5454,8 +5425,8 @@ async function _eCmtLoad(st,sid,px){ var box=document.getElementById(px+'-ecmt-'
   }catch(e){ box.innerHTML='<div class="soc-cmt-empty">댓글을 불러오지 못했습니다.</div>'; } }
 async function _eCmtSubmit(st,sid,px){ var ta=document.getElementById(px+'-ecmt-ta-'+_eKey(st,sid)); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('댓글 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var btn=ta&&ta.parentElement?ta.parentElement.querySelector('.soc-reply-btn'):null; if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
   try{ var body={source_type:st, source_id:String(sid), content:text, author_id:(u.id||window.AppState.userId||''), author_name:(u.name||'')};
@@ -5507,7 +5478,7 @@ async function _cmtEditSave(saveBtn, tbl, id){
   var item=_cmtItemEl(saveBtn); if(!item) return;
   var ta=item.querySelector('.cmt-edit-ta'); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('댓글 내용을 적어주세요.'); return; }
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
   saveBtn.disabled=true; saveBtn.textContent='저장 중…';
   try{
     var res=await fetch(window.db.url('/rest/v1/'+tbl+'?id=eq.'+encodeURIComponent(id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({content:text})});
@@ -5528,7 +5499,7 @@ async function _cmtEditSave(saveBtn, tbl, id){
 }
 async function _cmtDelete(btn, tbl, id){
   if(!confirm('이 댓글을 삭제할까요? 삭제하면 되돌릴 수 없습니다.')) return;
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
   btn.disabled=true;
   try{
     var res=await fetch(window.db.url('/rest/v1/'+tbl+'?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
@@ -5558,13 +5529,13 @@ function _postActs(kind, id, authorId, ctx){ if(!_canEditPost(authorId)) return 
 /* 보험 Q&A (posts qna) */
 var _qnaEditId=null,_qnaEditCtx=null;
 function _qnaReload(ctx){ window._mysQnaCache=null; window._mrQnaCache=null; window._vaultQnaCache=null; var f=({voice:'loadVoiceQna',mys:'loadMysQna',mr:'loadMrQna',iv:'loadVaultQna'})[ctx]; if(f&&typeof window[f]==='function') window[f](); }
-async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠습니까? (등록된 답변도 함께 삭제됩니다)')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ _qnaReload(ctx); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
-async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
+async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠습니까? (등록된 답변도 함께 삭제됩니다)')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ _qnaReload(ctx); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
+async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
 function qnaCloseEdit(){ var m=document.getElementById('qnaEditModal'); if(m) m.style.display='none'; _qnaEditId=null; }
-async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } var title=((document.getElementById('qnaEditTitle')||{}).value||'').trim(), content=((document.getElementById('qnaEditContent')||{}).value||'').trim(); if(!title){ alert('제목을 입력해 주세요.'); return; } if(!content){ alert('내용을 입력해 주세요.'); return; } var ctx=_qnaEditCtx; try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(_qnaEditId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({title:title,content:content})}); if(res.ok||res.status===204){ qnaCloseEdit(); _qnaReload(ctx); if(typeof toast==='function') toast('수정됐어요!'); } else { var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); } }catch(e){ alert('네트워크 오류가 발생했습니다.'); } }
+async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } var title=((document.getElementById('qnaEditTitle')||{}).value||'').trim(), content=((document.getElementById('qnaEditContent')||{}).value||'').trim(); if(!title){ alert('제목을 입력해 주세요.'); return; } if(!content){ alert('내용을 입력해 주세요.'); return; } var ctx=_qnaEditCtx; try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(_qnaEditId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({title:title,content:content})}); if(res.ok||res.status===204){ qnaCloseEdit(); _qnaReload(ctx); if(typeof toast==='function') toast('수정됐어요!'); } else { var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); } }catch(e){ alert('네트워크 오류가 발생했습니다.'); } }
 /* 단체방 (team_notices) — 라이브러리·매니저룸 */
-async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof cospRenderNotices==='function') cospRenderNotices(false); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
-async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
+async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof cospRenderNotices==='function') cospRenderNotices(false); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
+async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
 window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCloseEdit=qnaCloseEdit; window.qnaSaveEdit=qnaSaveEdit; window.teamEditNotice=teamEditNotice; window.teamDeleteNotice=teamDeleteNotice;
 
 /* ════════════════════════════════════════════════════════════════
@@ -5646,7 +5617,7 @@ function _vapidKey(b64){ var pad='='.repeat((4-b64.length%4)%4); var base=(b64+p
 async function notifEnablePush(){
   try{
     if(!('serviceWorker' in navigator)||!('PushManager' in window)){ alert('이 브라우저는 푸시 알림을 지원하지 않습니다.'); return; }
-    var uid=_notifUid(); if(!uid){ _authGate(); return; }
+    var uid=_notifUid(); if(!uid){ alert('로그인 후 이용해 주세요.'); return; }
     var reg=await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready;
     var perm=await Notification.requestPermission();
     if(perm!=='granted'){ alert('알림 권한이 허용되지 않았습니다. 브라우저 주소창 옆 설정에서 알림을 허용해 주세요.'); return; }
@@ -5765,7 +5736,7 @@ function ivManageActions(r){
   return '<div class="post-acts">'+_ed+_hide+'</div>';
 }
 async function ivToggleHide(id, hide){
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var on=(hide===true||hide==='true');
   try{
     var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({is_hidden:on}) });
@@ -5775,7 +5746,7 @@ async function ivToggleHide(id, hide){
 }
 window.ivToggleHide=ivToggleHide;
 async function ivEditPost(id){
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   try{
     var r=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=id,category,title,content,keywords,attachments');
     if(!r.ok){ alert('불러오기 실패 ('+r.status+')'); return; }
@@ -5795,7 +5766,7 @@ async function ivEditPost(id){
 window.ivEditPost=ivEditPost;
 async function ivDeletePost(id){
   if(!confirm('이 자료를 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   try{
     var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{ method:'DELETE', headers:{'Prefer':'return=minimal'} });
     if(res.ok||res.status===204){ if(typeof toast==='function')toast('삭제했습니다'); if(typeof _ivReloadBoards==='function')_ivReloadBoards(); }
@@ -5964,7 +5935,7 @@ async function ivSubmit(){
   var token = window.db && window.db.getToken && window.db.getToken();
   var u = {};
   try { u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e){}
-  if(!token){ _authGate(); return; }
+  if(!token){ alert('로그인이 필요합니다.'); return; }
   var _role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var _isAdmin = (_role === 'admin');
   var _canPick = (_isAdmin || _role==='ga_manager' || _role==='ga_branch_manager');  /* 보험사 선택 = admin + GA 실장·지점장 */
@@ -6403,16 +6374,6 @@ function _homeCard(kind){
   var slot=document.getElementById('home-desk-slot'); if(!slot) return;
   var inline=document.getElementById('hd-inline');
   if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 영역 재선택 = 토글 닫힘 */
-  /* Phase 2b(2026-07-05): 미로그인 = 개인/소속 자료 없음 → fetch 렌더러 대신 로그인 안내(홈 레이아웃은 동일). */
-  var _hdTok=(window.db&&typeof window.db.getToken==='function'&&window.db.getToken());
-  if(!_hdTok){
-    _homeOpenKind=kind;
-    try{ var _hbs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var _hi=0;_hi<_hbs.length;_hi++) _hbs[_hi].classList.toggle('on', _hbs[_hi].getAttribute('data-hdk')===kind); }catch(e){}
-    var _hbox=document.getElementById('hd-scope'); if(_hbox) _hbox.innerHTML='';
-    if(inline) inline.classList.add('open');
-    slot.innerHTML='<div class="hd-prep">로그인 후 볼 수 있어요.<br><button type="button" class="hd-scope-b" style="margin-top:12px" onclick="_authGate()">로그인 / 회원가입</button></div>';
-    return;
-  }
   _homeOpenKind=kind;
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-hdk')===kind); }catch(e){}  /* 활성 영역 표시 */
   if(kind==='insvault'||kind==='insqna'){   /* 원수사 · Q&A = 지점 단일 자료: 범위 동그라미 없이 바로 열기(지점 배지) */
@@ -6568,7 +6529,7 @@ window._snScrPick=_snScrPick;
 async function _snScrDelete(id){
   if(!confirm('이 스크립트를 삭제하시겠습니까?')) return;
   if(!window.db||!window.db.getToken){ return; }
-  var token=window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=representation'}});
     var _rows=null; try{ _rows=await res.json(); }catch(e){}
@@ -7631,7 +7592,7 @@ function mcFallbackDownload(blob){
 
 function mcSaveToMySpace(){
   if(!window.currentUser){
-    _authGate();
+    alert('로그인 후 사용 가능합니다.');
     return;
   }
   // 본 단계는 mock — 다음 단계 별 PR에서 Storage 업로드 + library INSERT 가동
@@ -7795,10 +7756,10 @@ window.bmiAction = bmiAction;
 async function bmiSaveToMyspace(){
   var r = window._bmiResult; if(!r) return;
   if(!window.db || !window.AppState || !window.AppState.userId){
-    _authGate(); return;
+    alert('로그인이 필요합니다.'); return;
   }
   var token = window.db.getToken && window.db.getToken();
-  if(!token){ _authGate(); return; }
+  if(!token){ alert('로그인이 필요합니다.'); return; }
   var title = 'BMI 계산 — ' + (r.name || '고객');
   var memo = bmiFormatText();
   try{
@@ -8006,10 +7967,10 @@ window.insAgeAction = insAgeAction;
 async function insAgeSaveToMyspace(){
   var r = window._insAgeResult; if(!r) return;
   if(!window.db || !window.AppState || !window.AppState.userId){
-    _authGate(); return;
+    alert('로그인이 필요합니다.'); return;
   }
   var token = window.db.getToken && window.db.getToken();
-  if(!token){ _authGate(); return; }
+  if(!token){ alert('로그인이 필요합니다.'); return; }
   var title = '보험연령 계산 — ' + (r.name || '고객');
   var memo = insAgeFormatText();
   try{
@@ -9244,7 +9205,7 @@ window.cospIlType=cospIlType;
 function closeCospInline(){ if(typeof cospRenderNotices==='function') cospRenderNotices(false); }
 window.closeCospInline=closeCospInline;
 async function saveCospInline(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var title=((document.getElementById('cospi-title')||{}).value||'').trim();
   var body=(window.osRich&&window.osRich.html)?(window.osRich.html()||'').trim():'';  /* 리치 HTML (스크립트 폼과 동일) */
   if(!title){ alert('제목을 입력하세요.'); return; }
@@ -9389,7 +9350,7 @@ window.cospInsurerWrite=cospInsurerWrite;
 /* 작성자 본인(+admin) 글 삭제 — 소프트(deleted_at), 피드 deleted_at=is.null 필터로 즉시 숨김. RLS team_notices_update/delete가 author=auth.uid() 허용 */
 async function voiceDeleteNotice(id, tabKey){
   if(!confirm('이 글을 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   try{
     /* 하드 DELETE — soft delete(deleted_at UPDATE)가 RLS WITH CHECK에 막혀(403/42501),
        DELETE 정책(is_admin() OR author_id=auth.uid(), WITH CHECK 없음)으로 우회. 자료실과 동일 방식. */
@@ -9421,7 +9382,7 @@ function voiceEditNotice(id, tabKey){
 window.voiceEditNotice=voiceEditNotice;
 /* admin 전용 숨김/숨김 해제 — is_hidden PATCH. 일반 사용자에겐 숨김 글이 목록에서 제외됨(_loadNoticeFeed 필터) */
 async function voiceToggleHide(id, tabKey, hide){
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var on=(hide===true||hide==='true');
   try{
     var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({is_hidden:on}) });
@@ -9470,7 +9431,7 @@ async function _openSignedAtt(e, el){
     var bucket=el.getAttribute('data-bucket'), path=el.getAttribute('data-path');
     if(!bucket||!path) return false;
     var token=(typeof localStorage!=='undefined'&&localStorage.getItem('os_token'))||(typeof sessionStorage!=='undefined'&&sessionStorage.getItem('os_token'))||'';
-    if(!token){ _authGate(); return false; }
+    if(!token){ alert('로그인 후 이용해 주세요.'); return false; }
     var encPath=String(path).split('/').map(encodeURIComponent).join('/');
     var res=await fetch(window.db.url('/storage/v1/object/sign/'+encodeURIComponent(bucket)+'/'+encPath),{
       method:'POST',
@@ -9495,7 +9456,7 @@ async function _dlSignedFile(e, el){
   var bucket=el.getAttribute('data-bucket'), path=el.getAttribute('data-path');
   var name=el.getAttribute('data-name')||(String(path||'').split('/').pop())||'download';
   if(!bucket||!path) return false;
-  if(window.db&&typeof window.db.getToken==='function'&&!window.db.getToken()){ _authGate(); return false; }
+  if(window.db&&typeof window.db.getToken==='function'&&!window.db.getToken()){ alert('로그인 후 이용해 주세요.'); return false; }
   var _label=el.textContent;
   try{
     el.style.pointerEvents='none'; el.textContent='다운로드 중…';
@@ -10834,7 +10795,7 @@ window.osRich=window.osRich||{
     var self=this; var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
     inp.onchange=async function(){
       var f=inp.files&&inp.files[0]; if(!f) return;
-      var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+      var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
       var ext=((f.name||'').split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'')||'png';
       var path='scriptimg/'+Date.now()+'_'+(f.size||0)+'.'+ext;  /* ASCII 키 (한글 파일명 400 회피) */
       try{
@@ -10877,7 +10838,7 @@ function _tgInlineDone(){ window._tgiEdit=null; var tc=document.getElementById('
 function closeTogetherInline(){ window._tgiEdit=null; var tc=document.getElementById('tg-tempcard'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc); var nr=document.getElementById('tg-newrow'); if(nr) nr.style.display=''; renderTogether(); }
 function tgEditInline(id){ var rows=window._tgCache||[]; var r=null; for(var i=0;i<rows.length;i++){ if(String(rows[i].id)===String(id)){ r=rows[i]; break; } } if(!r){ alert('항목을 찾을 수 없습니다.'); return; } openTogetherInline({id:id, row:r}); }
 async function saveTogetherInline(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var cat=((document.getElementById('tgi-f-cat')||{}).value||'전산 이상 신고');
@@ -10905,7 +10866,7 @@ async function saveTogetherInline(){
 window.openTogetherInline=openTogetherInline; window.saveTogetherInline=saveTogetherInline; window.closeTogetherInline=closeTogetherInline; window.tgEditInline=tgEditInline; window._tgInlineDone=_tgInlineDone;
 function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; window._tgEdit=null; var tf=document.getElementById('tg-f-file'); if(tf) tf.value=''; var tp=document.getElementById('tg-f-filePreview'); if(tp) tp.innerHTML=''; }
 async function saveTogether(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var cat=((document.getElementById('tg-f-cat')||{}).value||'전산 이상 신고');
@@ -10937,7 +10898,7 @@ async function saveTogether(){
 }
 async function deleteTogether(id){
   if(!confirm('이 글을 삭제하시겠습니까?')) return;
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     if(res.ok||res.status===204){ window._tgLoaded=false; loadTogether(true); if(typeof toast==='function') toast('삭제 완료'); }
@@ -12998,7 +12959,7 @@ async function saveProfile(){
   try {
     var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
     var u = JSON.parse(raw);
-    if (!u || !u.id) { _authGate(); return; }
+    if (!u || !u.id) { toast('로그인이 필요합니다'); return; }
     if (!window.db || !window.db.fetch) { toast('네트워크 모듈 로드 실패'); return; }
 
     /* PATCH /rest/v1/users?id=eq.{userId} — 이름·전화·회사·지점 UPDATE
@@ -13130,8 +13091,8 @@ async function saveQuickMemo(){
   var ta=document.getElementById('osMemoText'), btn=document.getElementById('osMemoSaveBtn');
   var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 메모할 수 있어요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var firstLine=text.split('\n')[0].trim();
   var title=firstLine?(firstLine.length>24?firstLine.slice(0,24)+'…':firstLine):'빠른 메모';
   var desc=text.length>200?text.slice(0,200):text;
@@ -14152,7 +14113,7 @@ function _mysPrefillEdit(edit){
 window._mysPrefillEdit=_mysPrefillEdit;
 /* 스크립트/채팅 편집 진입 — id로 fetch 후 편집 모드 오픈 (본인 글) */
 async function scrEditOpen(id){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,stage,script_text,highlight_text,keywords,scope'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     if(!res.ok){ alert('불러오기 실패 ('+res.status+')'); return; }
@@ -14276,8 +14237,8 @@ window.closeMemoInline=closeMemoInline;
 async function saveMemoInline(){
   var ta=document.getElementById('memo-il-text'); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 메모할 수 있어요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var color=window._memoIlColor||'yellow';
   var firstLine=text.split('\n')[0].trim();
   var title=firstLine?(firstLine.length>24?firstLine.slice(0,24)+'…':firstLine):'빠른 메모';
@@ -14334,7 +14295,7 @@ function mysPickGo(kind){
 }
 window.mysPickGo=mysPickGo;
 async function saveScrInline(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var title=((document.getElementById('scr-il-title')||{}).value||'').trim();
   var html=(window.osRich&&window.osRich.html)?(window.osRich.html()||'').trim():'';
@@ -14381,7 +14342,7 @@ async function saveScrInline(){
 window.saveScrInline=saveScrInline;
 /* 스크립트 수정 = 인라인 edit (새 리치 HTML은 그대로, 기존 plain은 줄바꿈 보존 변환). mysOpenItem 수정버튼에서 호출 */
 async function scrEditInline(id){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,keywords'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     var r=((res.ok?await res.json():[])||[])[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
@@ -14408,7 +14369,7 @@ window.scrEditInline=scrEditInline;
 async function _saveMyspaceEdit(){
   var e=window._mysWriteEdit; if(!e) return;
   var btn=document.getElementById('mysWriteSaveBtn');
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var headers={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
   var body;
   if(e.type==='chat'){
@@ -14805,7 +14766,7 @@ async function saveMyspaceWrite(){
   if(tab==='qna'){ return _saveMyspaceQna(); }
   var btn=document.getElementById('mysWriteSaveBtn');
   if(!window.db||!window.AppState||!window.AppState.userId){alert('로그인 정보를 가져오지 못했습니다.');return;}
-  var token=window.db.getToken();if(!token){_authGate();return;}
+  var token=window.db.getToken();if(!token){alert('로그인이 필요합니다.');return;}
   var userId=window.AppState.userId;
   var headers={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
   if(tab==='library'){
@@ -14952,8 +14913,8 @@ async function _mysUploadAtts(inputId, subdir, token){
 /* 단체방 글쓰기 → team_notices INSERT (scope=team_internal). mrSubmitNotice 검증 컬럼 정합 */
 async function _saveMyspaceGroup(){
   var btn=document.getElementById('mysWriteSaveBtn');
-  if(!window.db||!window.db.fetch){ _authGate('로그인 후 작성할 수 있어요.'); return; }
-  var token=window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인 후 작성할 수 있습니다.'); return; }
+  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var title=((document.getElementById('mysWriteGrpTitle')||{}).value||'').trim();
   var content=((document.getElementById('mysWriteGrpBody')||{}).value||'').trim();
   var keywords=((document.getElementById('mysWriteGrpKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
@@ -14982,8 +14943,8 @@ async function _saveMyspaceGroup(){
 /* 보험Q&A 글쓰기 → posts INSERT (board_type=qna). ivSubmit 검증 컬럼 정합 + 전용 컬럼 없는 폼값은 content 조합 */
 async function _saveMyspaceQna(){
   var btn=document.getElementById('mysWriteSaveBtn');
-  if(!window.db||!window.db.fetch){ _authGate('로그인 후 작성할 수 있어요.'); return; }
-  var token=window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인 후 작성할 수 있습니다.'); return; }
+  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var typeEl=document.querySelector('input[name="mysQnaType"]:checked');
   var qtype=typeEl?typeEl.value:'인수';
@@ -15331,7 +15292,7 @@ async function saveCalEvent(p){
   var desc=(((document.getElementById('calf-desc')||{}).value)||'').trim();
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var scope=((document.getElementById('calf-scope')||{}).value)||'personal';
   async function _uField(f){ var v=u[f]||null; if(v==null&&u.id){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select='+f); if(r.ok){ var j=await r.json(); if(j&&j[0]) v=j[0][f]||null; } }catch(e){} } return v; }
@@ -15387,7 +15348,7 @@ async function updateCalEvent(p,id){
   var desc=(((document.getElementById('calf-desc')||{}).value)||'').trim();
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var etime=((document.getElementById('calf-time')||{}).value)||null;
   var body={ event_date:date, event_time:etime, title:title, description:desc||null };
   try{
@@ -15581,7 +15542,7 @@ async function diarySaveEvent(){
   var reminders=_diaReadReminders();
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var me=_diaOwnerId(), editId=window._diaEdit;
   /* 현재 캘린더 범위(개인/팀/지점) 반영 — 팀/지점을 골라도 개인으로 저장되던 문제 수정 (2026-07-04).
      신규 저장에만 적용(수정은 원래 출처 유지). 팀/지점 저장 방식은 기존 saveCalEvent와 동일한 필드·경로 재사용. */
@@ -15668,7 +15629,7 @@ function _diaAlarmGo(id, date){
 async function deleteMyspaceItem(id,type){
   if(!confirm('이 항목을 삭제하시겠습니까?'))return;
   if(!window.db||!window.db.getToken)return;
-  var token=window.db.getToken();if(!token){_authGate();return;}
+  var token=window.db.getToken();if(!token){alert('로그인이 필요합니다.');return;}
   var url=type==='script'?'/rest/v1/scripts?id=eq.'+encodeURIComponent(id):'/rest/v1/library?id=eq.'+encodeURIComponent(id);
   try{
     /* return=representation → 삭제된 행 반환. RLS 차단 등 0행 삭제(조용한 실패)를 표면화 */
@@ -15733,7 +15694,7 @@ function mysEditStart(){
 }
 async function mysEditSave(){
   var c=window._mysDetailCurrent; if(!c||!c._item) return; var it=c._item;
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var titleEl=document.getElementById('mysEditTitle'), textEl=document.getElementById('mysEditText');
   var title=((titleEl&&titleEl.value)||'').trim(), text=((textEl&&textEl.value)||'').trim();
   var isMemo=it._badge==='메모';
@@ -15840,7 +15801,7 @@ window._osShareSel=_osShareSel;
 async function _osShareCancel(i){
   var s=(window._osShareRows||[])[i]; if(!s) return;
   if(!window.confirm('이 공유를 취소할까요?\n받는 분의 공유함과 자료실에서 사본까지 함께 삭제됩니다.')) return;
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var token=window.db.getToken&&window.db.getToken(); var key=window.db.key;
   try{
     if(s.item_type==='file' && s.item_id){
@@ -15857,7 +15818,7 @@ async function _osShareCancel(i){
 window._osShareCancel=_osShareCancel;
 async function _osShareReceive(i){
   var s=(window._osShareRows||[])[i]; if(!s) return;
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   var token=window.db.getToken&&window.db.getToken();
   var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
   var owner=(window.AppState&&window.AppState.userId)||((typeof _mvOwner==='function')?_mvOwner():'');
@@ -15898,8 +15859,8 @@ function _osShareItem(){ var c=window._mysDetailCurrent; if(!c||!c.id) return; _
 /* 스크립트 팀/지점 공유 — 원본은 그대로 두고 scope='team'/'branch' 사본 INSERT(공유=복사). INSERT RLS(P2-b-1)가 owner 본인 + scope_id=내 팀/지점만 허용 → 타팀 주입 불가. 알림(공지 포인터)은 send-push 수정 트랙과 함께(별도). */
 async function _scrShareToScope(scope){
   var c=window._mysDetailCurrent; if(!c||!c.id||c.type!=='script'){ if(typeof toast==='function') toast('스크립트만 공유할 수 있어요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 공유할 수 있어요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 공유할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var g=(scope==='team')?'팀':'지점';
   try{
     var H={'apikey':window.db.key,'Authorization':'Bearer '+token};
@@ -15964,7 +15925,7 @@ function _shareValidSourceId(type, id){
 }
 async function _osShareDo(scope){
   var ctx=window._osShareCtx; if(!ctx||!ctx.id){ _osShareClose(); return; }
-  if(!window.db||!window.db.fetch){ _authGate(); return; }
+  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
   if(scope!=='team'){ if(typeof toast==='function') toast('지점 공유는 추후 제공돼요.'); _osShareClose(); return; }   /* #918: 지점 공유 보류(branch_internal RLS 정책 미확정) — 팀 공유만 */
   if(window._osShareBusy) return; window._osShareBusy=true;   /* 중복 클릭 이중 저장 방지 */
   var _picks=document.querySelectorAll('#osShareOv button.os-share-pick'); for(var _p=0;_p<_picks.length;_p++) _picks[_p].disabled=true;
@@ -16124,8 +16085,8 @@ async function _shareHubGo(scope){
 window._shareHubOpen=_shareHubOpen; window._shareHubClose=_shareHubClose; window._shareHubGo=_shareHubGo;
 /* 자료실 파일 직접 공유 — _osShareDo file 분기의 복제 로직 재사용(원본 보존 + 공유 스코프 스토리지 복제 + myspace_files scope 행). shares·team_notices INSERT 없음. */
 async function _vaultShareToScope(scope){
-  if(!window.db||!window.db.fetch||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 공유할 수 있어요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
+  if(!window.db||!window.db.fetch||!window.AppState||!window.AppState.userId){ alert('로그인 후 공유할 수 있습니다.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
   var isTeam=(scope==='team'); var grp=isTeam?'팀':'지점';
   var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token};
   /* 소속 = users(DB) 직접 조회 — os_user 캐시 stale 회피(#953 정합, RLS scope_id 일치 보장) */
@@ -16404,7 +16365,7 @@ window._mvApplyVaultNotice=_mvApplyVaultNotice;
 async function mysVaultCreateFolder(parentId){
   if(_mvRoGuard()) return;
   var owner=_mvOwner(), token=_mvToken();
-  if(!owner||!token){ _authGate(); return; }
+  if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   var name=prompt('새 폴더 이름'); if(name==null) return; name=String(name).trim(); if(!name) return;
   var depth=0; if(parentId){ var p=(window._mvFolders||[]).filter(function(f){return f.id===parentId;})[0]; depth=p?((p.depth||0)+1):0; }
   try{
@@ -16482,7 +16443,7 @@ function mvDragStart(e,type,id){ try{ e.dataTransfer.setData('text/x-mv', JSON.s
 function mvDragEnd(){ window._mvDragItem=null; _mvClearDropHover(); }
 window.mvDragStart=mvDragStart; window.mvDragEnd=mvDragEnd;
 async function mvDoMove(srcType, srcId, destFolderId){
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   destFolderId=destFolderId||null;
   if(srcType==='folder'){
     var desc=_mvDescendantFolderIds(srcId); /* 자신+하위 */
@@ -16540,7 +16501,7 @@ async function _mvUploadOneFile(file, folderId, owner, token){
 }
 /* 공통 업로드 루프 — 진행 표시 + 부분 실패(성공분 유지, 실패 목록 안내). 전체 롤백 안 함. */
 async function _mvDoUploads(entries, skipped){
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   var prog=document.getElementById('mys-vault-progress'); if(prog) prog.style.display='block';
   var ok=0, fails=[];
   for(var i=0;i<entries.length;i++){
@@ -16561,7 +16522,7 @@ async function _mvDoUploads(entries, skipped){
 /* 평면 파일 업로드 (현재 폴더로). */
 function mysVaultUpload(fileList, targetOverride){
   var files=Array.prototype.slice.call(fileList||[]); if(!files.length) return;
-  if(!_mvOwner()||!_mvToken()){ _authGate(); return; }
+  if(!_mvOwner()||!_mvToken()){ alert('로그인이 필요합니다.'); return; }
   var folderId=(targetOverride!==undefined)?targetOverride:(window._mvCurFolder||null);
   _mvDoUploads(files.map(function(f){ return {file:f, folderId:folderId}; }), 0);
 }
@@ -16613,7 +16574,7 @@ async function _mvCreateFolderRow(parentId, name, depth, owner, token){
 }
 /* 폴더 계층 보존 업로드: dirs 생성(부모 먼저) → 매핑 → 파일 업로드. 빈 폴더도 생성. */
 async function _mvProcessUpload(items, baseOverride){
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   var base=(baseOverride!==undefined)?baseOverride:(window._mvCurFolder||null);
   var baseDepth=0; if(base){ var bf=(window._mvFolders||[]).filter(function(f){return f.id===base;})[0]; baseDepth=bf?(bf.depth||0):0; }
   /* 전체 폴더 경로 집합 = dirs + 파일 폴더경로의 모든 접두 */
@@ -16850,7 +16811,7 @@ function _mvPatch(table,id,body,token,done){
 }
 function mvVaultRename(type,id){
   mvVaultCloseMenu();
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   if(type==='folder'){
     var fo=(window._mvFolders||[]).filter(function(f){return f.id===id;})[0]||{};
     var nn=prompt('폴더 이름 변경', fo.name||''); if(nn==null) return; nn=String(nn).trim(); if(!nn||nn===fo.name) return;
@@ -16875,7 +16836,7 @@ async function _mvDeleteStorageObj(path,token){
 }
 async function mvVaultDelete(type,id){
   mvVaultCloseMenu();
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
   if(type==='file'){
     var f=(window._mvFiles||[]).filter(function(x){return x.id===id;})[0]; if(!f) return;
     if(!confirm('“'+(f.original_name||'이 파일')+'”을(를) 삭제할까요?\n실제 파일까지 삭제되며 되돌릴 수 없습니다.')) return;
@@ -18191,412 +18152,6 @@ body.is-uat-spacenav #spTree{display:none;}
     /* 첫 방문 자동 안내(_osStartGuide) 자동 호출 제거 (2026-06-27) — 어드민+localStorage 미설정(시크릿창 등)에서 진입 1.3초 후 바텀시트가 사용자 동작 없이 자동으로 열리던 문제. 시트는 '원세컨드 시작하기' 버튼·메뉴를 직접 눌렀을 때만 열림. _osStartGuide 함수·시작하기 버튼은 그대로 유지(직접 클릭 시 정상 동작). */
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', window._spaceTreeInit); else window._spaceTreeInit();
-})();
-</script>
-<!-- ===== Phase 1 QA: 로그인/가입 모달 (landing에서 이식, 2026-07-05) ===== -->
-<div class="auth-overlay" id="authOverlay" hidden>
-  <div class="auth-modal is-v2" role="dialog" aria-modal="true">
-
-    <!-- 헤더 -->
-    <div class="auth-page-header">
-      <button class="auth-page-back" id="authBackBtn" type="button" hidden onclick="window.authPrev()" aria-label="뒤로">←</button>
-      <div class="auth-step-progress" id="authProgress" hidden>
-        <span class="is-active"></span><span></span><span></span>
-      </div>
-      <button class="auth-page-close" type="button" onclick="closeAuthModal()" aria-label="닫기">✕</button>
-    </div>
-
-    <!-- 본문 (스크롤 영역) -->
-    <div class="auth-page-body" id="authBody">
-
-      <!-- ────── 로그인 (1 step) ────── -->
-      <div class="auth-step-page is-active" id="page-login">
-        <span class="auth-friendly-emoji">👋</span>
-        <h2 class="auth-page-title">안녕하세요</h2>
-        <p class="auth-page-sub">원세컨드에 다시 오신 것을 환영해요</p>
-
-        <div class="auth-err-box" id="loginErrBox"></div>
-
-        <!-- 영역 1: 구글 빠른 로그인 -->
-        <div class="auth-login-method auth-login-method--google">
-          <div class="auth-login-method-label">방법 1 · 빠른 로그인</div>
-          <button class="auth-google-btn" type="button" onclick="signInWithGoogle()" aria-label="Google로 로그인">
-            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-              <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
-              <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
-              <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
-              <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-            </svg>
-            Google로 시작하기
-          </button>
-          <p class="auth-login-method-hint">구글 계정으로 한 번에 로그인</p>
-        </div>
-
-        <div class="auth-or-divider">또는</div>
-
-        <!-- 영역 2: 이메일 인증 코드 -->
-        <div class="auth-login-method auth-login-method--email">
-          <div class="auth-login-method-label">방법 2 · 이메일 인증 코드</div>
-          <div class="auth-form-group">
-            <label class="auth-label" for="f-email-login">이메일</label>
-            <input class="auth-input" type="email" id="f-email-login" placeholder="example@email.com" autocomplete="email">
-            <div class="auth-form-err" id="e-email-login">올바른 이메일을 입력해 주세요.</div>
-          </div>
-          <p class="auth-login-method-hint">비밀번호 없이 이메일 인증 코드로 안전하게 로그인</p>
-        </div>
-      </div>
-
-      <!-- ────── 가입 STEP 0 — 인트로 (위저드 v2, 2026-06-12) ────── -->
-      <div class="auth-step-page" id="page-signup-0">
-        <span class="auth-friendly-emoji">👋</span>
-        <h2 class="auth-page-title">원세컨드에 오신 걸 환영합니다 ~!</h2>
-        <p class="auth-page-sub" style="line-height:1.7; margin-top:12px;">
-          원세컨드는 <strong>보험 통합 솔루션</strong>을 추구하는<br>보험 전문 플랫폼이에요.
-        </p>
-        <p class="auth-page-sub" style="line-height:1.7; margin-top:14px;">
-          보험 설계사와 원수사 직원은<br>하는 일도, 보는 자료도, 소속 구조도 달라요.<br>
-          그래서 가입 절차를 <strong>두 가지 방식</strong>으로 안내해 드려요.
-        </p>
-      </div>
-
-      <!-- ────── 가입 Step 1 — 소속 선택 ────── -->
-      <div class="auth-step-page" id="page-signup-1">
-        <span class="auth-friendly-emoji">🎉</span>
-        <h2 class="auth-page-title">처음이시군요</h2>
-        <p class="auth-page-sub">어떤 소속이신지 알려주세요</p>
-
-        <!-- 소속 선택 카드 2종 (2026-06-13 mockup 적용). 기능 배선(id·data-site·onclick) 보존. 동일 높이=flex column + margin-top:auto. -->
-        <div class="auth-site-grid">
-          <button class="auth-site-card-v2" type="button" id="site-card-ga" data-site="ga" onclick="selectSite('ga'); window.authNextSignup();"
-                  style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;text-align:left;padding:18px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;">
-            <span style="width:38px;height:38px;border-radius:9px;background:color-mix(in srgb,var(--color-brand) 13%,#fff);display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.3a3 3 0 0 1 0 5.6"/><path d="M20.5 20a5.5 5.5 0 0 0-4-5.3"/></svg></span>
-            <span style="font-size:15px;font-weight:700;color:var(--color-text);margin-bottom:6px;">보험 설계사 · 매니저</span>
-            <span style="font-size:14px;color:var(--color-text-secondary);line-height:1.6;">대리점(GA) 소속<br>회사 · 지점 · 팀</span>
-            <span style="margin-top:auto;padding-top:16px;display:flex;align-items:center;justify-content:space-between;">
-              <span style="font-size:13px;font-weight:600;color:var(--color-brand);background:color-mix(in srgb,var(--color-brand) 13%,#fff);padding:5px 10px;border-radius:9px;">설계사 · 실장 · 지점장</span>
-              <span style="font-size:16px;color:var(--color-text-tertiary);" aria-hidden="true">›</span>
-            </span>
-          </button>
-
-          <!-- 원수사 구분색 = 블루(도메인 구분, 브랜드 인디고와 대비). 블루 토큰 부재로 리터럴 사용. -->
-          <button class="auth-site-card-v2" type="button" id="site-card-insurer" data-site="insurer" onclick="selectSite('insurer'); window.authNextSignup();"
-                  style="display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;text-align:left;padding:18px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);cursor:pointer;">
-            <span style="width:38px;height:38px;border-radius:9px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4h9v17"/><path d="M14 9h5v12"/><path d="M8 8h3M8 12h3M8 16h3"/></svg></span>
-            <span style="font-size:15px;font-weight:700;color:var(--color-text);margin-bottom:6px;">보험사 임직원</span>
-            <span style="font-size:14px;color:var(--color-text-secondary);line-height:1.6;">손해 · 생명 보험사<br>(원수사) 소속</span>
-            <span style="margin-top:auto;padding-top:16px;display:flex;align-items:center;justify-content:space-between;">
-              <span style="font-size:13px;font-weight:600;color:#0C447C;background:#E6F1FB;padding:5px 10px;border-radius:9px;">31개 보험사</span>
-              <span style="font-size:16px;color:var(--color-text-tertiary);" aria-hidden="true">›</span>
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <!-- ────── 가입 Step 2 — 정보 입력 ────── -->
-      <!-- ────── 가입 STEP 2 — 본인 정보 (위저드 v2, 2026-06-12) ────── -->
-      <div class="auth-step-page" id="page-signup-identity">
-        <h2 class="auth-page-title">본인 정보를 알려주세요</h2>
-        <p class="auth-page-sub">가입과 인증에 사용됩니다</p>
-        <div class="auth-err-box" id="signupIdErrBox"></div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-name">이름</label>
-          <input class="auth-input" type="text" id="f-name" placeholder="홍길동" maxlength="20" oninput="clearFieldError('f-name','e-name')">
-          <div class="auth-form-err" id="e-name">이름을 입력해 주세요.</div>
-        </div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-phone">핸드폰</label>
-          <input class="auth-input" type="tel" id="f-phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this); clearFieldError('f-phone','e-phone')">
-          <div class="auth-form-err" id="e-phone">핸드폰 번호를 입력해 주세요.</div>
-        </div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-email">이메일</label>
-          <input class="auth-input" type="email" id="f-email" placeholder="example@email.com" oninput="clearFieldError('f-email','e-email'); onInsurerEmailInput();">
-          <div class="auth-form-err" id="e-email">올바른 이메일을 입력해 주세요.</div>
-          <p id="f-email-hint" style="font-size:13px; color:var(--color-text-tertiary); margin-top:6px;">이 이메일로 인증 코드가 발송됩니다.</p>
-        </div>
-      </div>
-
-      <!-- ────── 가입 STEP 3 — 회사 (GA, 위저드 v2) ────── -->
-      <div class="auth-step-page" id="page-signup-company">
-        <h2 class="auth-page-title">회사를 선택하세요</h2>
-        <p class="auth-page-sub">소속 회사(대리점)를 검색해 선택해 주세요</p>
-        <div class="auth-err-box" id="signupCompanyErrBox"></div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-company-text">회사명</label>
-          <div class="ta-wrap" style="position:relative;">
-            <input class="auth-input" type="text" id="f-company-text" placeholder="회사명 입력 (2글자 이상)" maxlength="50" autocomplete="off" oninput="onCompanyTaInput()" onblur="onCompanyTaBlur()" onkeydown="onCompanyTaKeydown(event)">
-            <div class="ta-list" id="company-ta-list" style="display:none;"></div>
-          </div>
-          <input type="hidden" id="f-company-id" value="">
-          <p class="auth-page-sub" style="margin-top:10px;">회사가 목록에 없으면 <strong>별도 문의</strong>로 등록을 안내드립니다.</p>
-        </div>
-      </div>
-
-      <!-- ────── 가입 STEP 4 — 지점 (GA, 자율입력+자동완성) ────── -->
-      <div class="auth-step-page" id="page-signup-branch">
-        <h2 class="auth-page-title">지점을 입력해주세요</h2>
-        <p class="auth-page-sub">소속 지점/센터명을 입력하세요</p>
-        <div class="auth-err-box" id="signupBranchErrBox"></div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-ga-branch">지점/센터</label>
-          <div class="ta-wrap" style="position:relative;">
-            <input class="auth-input" type="text" id="f-ga-branch" placeholder="예: 더원지점" maxlength="50" autocomplete="off" oninput="wzAcInput('branch')" onblur="wzAcBlur('branch')" onkeydown="wzAcKeydown(event,'branch')">
-            <div class="ta-list" id="ga-branch-list" style="display:none;"></div>
-          </div>
-          <input type="hidden" id="f-ga-branch-id" value="">
-          <p class="auth-page-sub" style="margin-top:10px;">입력 중 같은 회사의 기존 지점이 제안돼요. 제안을 누르면 그 지점에 연결되고, 없으면 입력한 이름으로 새 지점이 만들어집니다.</p>
-        </div>
-      </div>
-
-      <!-- ────── 가입 STEP 5 — 팀 (GA, 자율입력+자동완성, 선택) ────── -->
-      <div class="auth-step-page" id="page-signup-team">
-        <h2 class="auth-page-title">팀을 입력해주세요</h2>
-        <p class="auth-page-sub">소속 팀명을 입력하세요 (선택 — 없으면 비워두세요)</p>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-ga-team">팀</label>
-          <div class="ta-wrap" style="position:relative;">
-            <input class="auth-input" type="text" id="f-ga-team" placeholder="예: 4팀" maxlength="30" autocomplete="off" oninput="wzAcInput('team')" onblur="wzAcBlur('team')" onkeydown="wzAcKeydown(event,'team')">
-            <div class="ta-list" id="ga-team-list" style="display:none;"></div>
-          </div>
-          <input type="hidden" id="f-ga-team-id" value="">
-          <p class="auth-page-sub" style="margin-top:10px;">같은 지점의 기존 팀이 제안돼요. 팀이 없으면 비워두고 넘어가도 됩니다.</p>
-        </div>
-      </div>
-
-      <!-- ────── 가입 STEP 6 — 직책 (GA, 위저드 v2) ────── -->
-      <div class="auth-step-page" id="page-signup-role">
-        <h2 class="auth-page-title">직책을 선택하세요</h2>
-        <p class="auth-page-sub">소속 내 직책을 선택해 주세요</p>
-        <div class="auth-err-box" id="signupRoleErrBox"></div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-ga-role">직책</label>
-          <select class="auth-select" id="f-ga-role" onchange="clearFieldError('f-ga-role','e-ga-role')">
-            <option value="">선택해 주세요</option>
-            <option value="member">팀장 (설계사)</option>
-            <option value="manager">실장 (매니저)</option>
-            <option value="branch_manager">지점장 (센터장)</option>
-            <option value="staff">스탭 (총무)</option>
-            <option value="etc">기타</option>
-          </select>
-          <div class="auth-form-err" id="e-ga-role">직책을 선택해 주세요.</div>
-        </div>
-      </div>
-
-      <!-- ════ 보험사 가입 위저드 STEP (2026-06-12 위저드화 — signup-2 단일폼을 GA 대칭 4 STEP으로 분해) ════
-           필드 id는 전부 보존 → validateSignup·OTP·_collectInsurerBranchNames가 id/클래스로 그대로 읽음. -->
-
-      <!-- 보험사 STEP 3 — 보험사 선택 -->
-      <div class="auth-step-page" id="page-signup-ins-company">
-        <h2 class="auth-page-title">보험사를 선택하세요</h2>
-        <p class="auth-page-sub">소속 보험사(원수사)를 선택해 주세요</p>
-        <div class="auth-err-box" id="signupInsCompanyErrBox"></div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-insurer">보험사</label>
-          <select class="auth-select" id="f-insurer" onchange="onInsurerChange(); clearFieldError('f-insurer','e-insurer')">
-            <option value="">불러오는 중…</option>
-          </select>
-          <div class="auth-form-err" id="e-insurer">보험사를 선택해 주세요.</div>
-        </div>
-        <div class="domain-guide" id="domain-guide" style="display:none;">
-          💡 <strong id="domain-guide-name">선택한 보험사</strong>의 공식 이메일 도메인은 <strong id="domain-guide-domain">@example.com</strong>입니다.
-        </div>
-        <div class="signup-info-box is-emphasis">
-          <p><span class="emphasis-icon">🛡️</span><strong>소속 보험사를 <span class="emphasis-key">정확히</span> 선택해 주세요</strong></p>
-          <p class="signup-info-sub">이메일 인증 → 소속 보험사 운영자 확인 → 승인 후 사용 시작.</p>
-        </div>
-      </div>
-
-      <!-- 보험사 STEP 4 — 담당 지점 (복수) -->
-      <div class="auth-step-page" id="page-signup-ins-branch">
-        <h2 class="auth-page-title">담당 지점을 입력하세요</h2>
-        <p class="auth-page-sub">담당하시는 지점을 입력해 주세요 (여러 곳이면 추가)</p>
-        <div class="auth-err-box" id="signupInsBranchErrBox"></div>
-        <div class="auth-form-group" id="insurer-branches-group">
-          <label class="auth-label">담당 지점 <span class="req">*</span></label>
-          <div id="insurer-branch-rows">
-            <div class="insurer-branch-row">
-              <input class="auth-input insurer-branch-inp" type="text" placeholder="담당 지점 입력" maxlength="50" required oninput="clearFieldError('insurer-branches-group','e-insurer-branch')">
-            </div>
-          </div>
-          <button type="button" class="auth-add-branch" onclick="addInsurerBranchRow()">+ 담당 지점 추가</button>
-          <div class="auth-form-err" id="e-insurer-branch">담당 지점을 입력해 주세요.</div>
-        </div>
-      </div>
-
-      <!-- 보험사 STEP 5 — 직책 -->
-      <div class="auth-step-page" id="page-signup-ins-role">
-        <h2 class="auth-page-title">직책을 선택하세요</h2>
-        <p class="auth-page-sub">보험사 내 직급을 선택해 주세요</p>
-        <div class="auth-err-box" id="signupInsRoleErrBox"></div>
-        <div class="auth-form-group">
-          <label class="auth-label" for="f-role">직급</label>
-          <select class="auth-select" id="f-role" onchange="onRoleChange(); clearFieldError('f-role','e-role')">
-            <option value="">선택해 주세요</option>
-            <option value="branch_manager">원수사 지점장</option>
-            <option value="manager">원수사 매니저</option>
-          </select>
-          <div class="auth-form-err" id="e-role">직급을 선택해 주세요.</div>
-        </div>
-        <div class="role-hint" id="roleHint">
-          💡 <span id="roleHintText"></span>
-        </div>
-      </div>
-
-      <!-- 보험사 STEP 6 — 이메일 인증 (OTP 인라인, f-email은 STEP 2에 있음 — id로 읽힘) -->
-      <div class="auth-step-page" id="page-signup-ins-otp">
-        <h2 class="auth-page-title">이메일 인증</h2>
-        <p class="auth-page-sub">본인 이메일 확인을 위해 인증 코드를 받아 입력해 주세요</p>
-        <div class="auth-err-box" id="signupErrBox"></div>
-        <div class="auth-err-box" id="signupInsOtpErrBox"></div>
-        <div class="otp-inline-box" id="otp-inline-box" style="margin-top:8px; padding:14px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2);">
-          <div id="otp-send-area">
-            <button class="auth-btn auth-btn-outline" type="button" id="btnSendInsurerOtp" onclick="sendInsurerOtp()" style="width:100%;">
-              <span id="btnSendInsurerOtpTxt">✉️ 이메일 인증 코드 받기</span>
-            </button>
-            <p style="font-size:13px; color:var(--color-text-tertiary); margin-top:8px; text-align:center;">
-              입력한 이메일 메일함으로 6자리 코드가 발송됩니다.
-            </p>
-          </div>
-          <div id="otp-verify-area" style="display:none;">
-            <p style="font-size:14px; color:var(--color-text-secondary); margin-bottom:8px;">
-              📬 <strong id="otp-sent-to">example@email.com</strong> 메일함(스팸함 포함)을 확인해 주세요.
-            </p>
-            <div style="display:flex; gap:8px; align-items:stretch;">
-              <input class="auth-input" type="text" id="f-insurer-otp-code"
-                     placeholder="6자리 코드" inputmode="numeric" maxlength="6"
-                     autocomplete="one-time-code"
-                     style="font-size:18px; letter-spacing:4px; text-align:center; font-weight:700; flex:1;"
-                     oninput="this.value=this.value.replace(/[^0-9]/g,''); document.getElementById('e-insurer-otp').classList.remove('on');">
-              <button class="auth-btn" type="button" id="btnVerifyInsurerOtp" onclick="verifyInsurerOtp()" style="width:auto; padding:0 18px; flex:0 0 auto;">
-                확인
-              </button>
-            </div>
-            <div class="auth-form-err" id="e-insurer-otp" style="margin-top:6px;">코드가 일치하지 않습니다.</div>
-            <div id="otp-verified-msg" style="display:none; margin-top:8px; padding:8px 12px; background:#E8F5E9; color:#2E7D32; border-radius:6px; font-size:14px; font-weight:600;">
-              ✅ 이메일 인증 통과
-            </div>
-            <button class="auth-link" type="button" onclick="resetInsurerOtp()" style="display:block; margin-top:8px; font-size:13px;">
-              코드 재발송 / 다른 이메일로 변경
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ────── 가입 Step 3 — 약관 + 가입 ────── -->
-      <div class="auth-step-page" id="page-signup-3">
-        <span class="auth-friendly-emoji">🙌</span>
-        <h2 class="auth-page-title">거의 다 왔어요</h2>
-        <p class="auth-page-sub">약관 동의 후 가입이 완료됩니다</p>
-
-        <div class="form-check" style="padding:14px 0;">
-          <input type="checkbox" id="f-consent" onchange="clearFieldError('f-consent','e-consent')">
-          <label for="f-consent" style="margin-left:8px;">
-            <strong style="color:var(--color-text-primary);">(필수)</strong>
-            <a href="/terms.html" target="_blank" rel="noopener">이용약관</a> 및
-            <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 동의합니다
-          </label>
-        </div>
-        <div class="auth-form-err" id="e-consent">동의가 필요합니다.</div>
-
-        <div class="form-check" style="padding:14px 0;">
-          <input type="checkbox" id="agree2">
-          <label for="agree2" style="margin-left:8px;">(선택) 마케팅 정보 수신에 동의합니다</label>
-        </div>
-      </div>
-
-      <!-- 로그인 성공 -->
-      <div class="auth-step-page" id="page-login-success">
-        <div class="auth-success" style="text-align:center; padding:32px 0;">
-          <span class="auth-friendly-emoji">✅</span>
-          <h2 class="auth-page-title" style="text-align:center;">로그인 성공!</h2>
-          <p class="auth-page-sub" style="text-align:center;">잠시 후 메인 화면으로 이동합니다.</p>
-        </div>
-      </div>
-
-      <!-- 가입 성공 -->
-      <div class="auth-step-page" id="page-signup-success">
-        <div class="auth-success" style="text-align:center; padding:24px 0;">
-          <span class="auth-friendly-emoji">🎉</span>
-          <h2 class="auth-page-title" style="text-align:center;">가입 완료!</h2>
-          <div class="auth-page-sub" id="signup-success-desc" style="text-align:center;"></div>
-          <div class="pending-notice" id="pending-notice" style="margin-top:16px;">
-            ⏳ <strong>운영자 승인 대기 중입니다.</strong><br>
-            보험사 임직원 가입은 운영자 승인 후 사용이 활성화됩니다. 승인 결과는 가입한 이메일로 안내됩니다.
-          </div>
-        </div>
-      </div>
-
-      <!-- ────── OTP 6자리 인증 (로그인 + 가입 공용, 2026-05-18 신설) ────── -->
-      <div class="auth-step-page" id="page-otp-verify">
-        <span class="auth-friendly-emoji">📧</span>
-        <h2 class="auth-page-title">이메일로 인증 코드를 보냈어요</h2>
-        <p class="auth-page-sub">
-          📬 <strong id="otp-target-email">example@email.com</strong><br><br>
-          위 <strong style="color:var(--color-brand);">이메일 메일함</strong>을 확인해 주세요.<br>
-          6자리 인증 코드가 도착해 있습니다.
-        </p>
-
-        <div style="background:#FFF8E1; border-left:3px solid #F4B400; padding:10px 14px; margin:16px 0; border-radius:6px; font-size:14px; color:#5F4B00;">
-          ⚠️ <strong>휴대폰 문자가 아닙니다.</strong> 가입하신 이메일 메일함(스팸함 포함)을 확인해 주세요.
-        </div>
-
-        <div class="auth-err-box" id="otpErrBox"></div>
-
-        <div class="auth-form-group" style="margin-top:20px;">
-          <label class="auth-label" for="f-otp-code">이메일에 적힌 6자리 코드</label>
-          <input class="auth-input" type="text" id="f-otp-code"
-                 placeholder="이메일에서 확인한 6자리"
-                 autocomplete="one-time-code"
-                 inputmode="numeric"
-                 maxlength="6"
-                 style="font-size:24px; letter-spacing:8px; text-align:center; font-weight:700;"
-                 oninput="this.value=this.value.replace(/[^0-9]/g,''); document.getElementById('e-otp-code').classList.remove('on');">
-          <div class="auth-form-err" id="e-otp-code">6자리 숫자를 입력해 주세요.</div>
-        </div>
-
-        <p style="font-size:14px; color:var(--color-text-tertiary); margin-top:16px; text-align:center;">
-          📨 메일이 도착하지 않았나요?<br>
-          스팸함(정크 메일함)도 함께 확인해 주세요.
-        </p>
-
-        <div style="text-align:center; margin-top:12px;">
-          <button class="auth-link" type="button" id="otpResendBtn" onclick="resendOtp()">인증 코드 재전송</button>
-        </div>
-      </div>
-
-    </div><!-- /.auth-page-body -->
-
-    <!-- 하단 sticky CTA -->
-    <div class="auth-cta-area" id="authCtaArea">
-      <button class="auth-btn" id="authMainCta" type="button">
-        <span id="authMainCtaTxt">로그인</span>
-        <span class="auth-spinner" id="authMainCtaSpinner" aria-hidden="true"></span>
-      </button>
-      <div class="auth-cross-link" id="authCrossLink">
-        <span id="authCrossLinkText">처음 오셨나요?</span>
-        <button class="auth-link auth-link-strong" type="button" id="authCrossLinkBtn" onclick="window.switchAuthSection('signup')">회원가입하기 →</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-<script src="/js/auth-modal.js" defer></script>
-<script>
-/* Phase 1 QA 트리거 — ?qa=auth-login / ?qa=auth-signup / ?qa=public-home. 정상 흐름(파라미터 없음)·landing·index 리다이렉트 무영향. */
-(function(){
-  try{
-    var qa=new URLSearchParams(location.search).get('qa');
-    if(!qa) return;
-    if(qa==='auth-login'||qa==='auth-signup'){
-      var mode=(qa==='auth-signup')?'signup':'login';
-      var n=0;
-      (function open(){
-        if(typeof window.openAuthModal==='function'){ window.openAuthModal(mode); return; }
-        if(n++<60) setTimeout(open,100); /* auth-modal.js defer 로드 대기 */
-      })();
-    }
-    /* qa==='public-home' = 모달 없이 홈만(미로그인 검수). 별도 동작 없음. */
-  }catch(e){}
 })();
 </script>
 </body>
