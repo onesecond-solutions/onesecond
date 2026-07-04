@@ -11826,24 +11826,19 @@ function loadProductLineup(){
   _plBind();
   if(_plLoaded){ _plRender(); return; }
   if(_plLoading) return;
-  if(!window.db||!window.db.fetch){ var m0=document.getElementById('pl-main'); if(m0)m0.innerHTML='<div class="pl-empty">데이터 연결 없음</div>'; return; }
   _plLoading=true;
-  var M=_plMonth,base='/rest/v1/';
-  Promise.all([
-    window.db.fetch(base+'insurer_companies?select=id,name,section,color,color2,sort_order&order=sort_order.asc').then(function(r){return r.ok?r.json():[];}),
-    window.db.fetch(base+'insurer_company_snapshots?base_month=eq.'+M+'&select=company_id,catchphrase,compliance,source_doc').then(function(r){return r.ok?r.json():[];}),
-    window.db.fetch(base+'insurer_products?select=id,company_id,name,product_group').then(function(r){return r.ok?r.json():[];}),
-    window.db.fetch(base+'insurer_product_snapshots?base_month=eq.'+M+'&select=id,product_id,age,features,goji_type,badge,insurer_product_snapshot_themes(theme_key)').then(function(r){return r.ok?r.json():[];}),
-    window.db.fetch(base+'insurer_themes?select=key,sort_order&order=sort_order.asc').then(function(r){return r.ok?r.json():[];})
-  ]).then(function(res){
-    var cos=res[0]||[],cosnap=res[1]||[],prods=res[2]||[],psnap=res[3]||[],themes=res[4]||[];
-    _plThemeOrder=themes.map(function(t){return t.key;});
-    var csMap={}; cosnap.forEach(function(s){csMap[s.company_id]=s;});
-    var snapByProd={}; psnap.forEach(function(s){snapByProd[s.product_id]=s;});
-    var coMap={};
-    cos.forEach(function(c){ var cs=csMap[c.id]||{}; coMap[c.id]={n:c.name,_sec:c.section,cl:c.color||'#6366F1',cl2:c.color2||c.color||'#6366F1',cat:cs.catchphrase||'',comp:cs.compliance||'',mo:cs.source_doc||'',ps:[]}; });
-    prods.forEach(function(p){ var co=coMap[p.company_id]; if(!co)return; var s=snapByProd[p.id]; if(!s)return; var th=(s.insurer_product_snapshot_themes||[]).map(function(x){return x.theme_key;}); co.ps.push({t:p.name,grp:p.product_group||'',age:s.age||'',f:s.features||'',gojiType:s.goji_type||'',b:s.badge||'',th:th}); });
-    var arr=Object.keys(coMap).map(function(k){return coMap[k];}).filter(function(c){return c.ps.length;});
+  /* 2026-07-05: 상품 DB 테이블 DDL 미적용 → 기획팀장 정리 검색데이터를 JSON 파일로 로드(임태성 테스트). DDL 풀리면 DB 경로 복원. */
+  fetch('/data/insurer_products_2607.json?v=20260705').then(function(r){return r.ok?r.json():[];}).then(function(recs){
+    if(!Array.isArray(recs)) recs=[];
+    var coMap={},order=[];
+    recs.forEach(function(rec){
+      var coName=rec.company||'(미상)';
+      var sec=(String(rec.section||'').toLowerCase()==='life')?'life':'nonlife';
+      if(!coMap[coName]){ coMap[coName]={n:coName,_sec:sec,cl:rec.company_color||'#6366F1',cl2:rec.company_color||'#6366F1',cat:'',comp:'',mo:rec.source||'',ps:[]}; order.push(coName); }
+      var th=Array.isArray(rec.themes)?rec.themes:(rec.themes?String(rec.themes).split('|'):[]);
+      coMap[coName].ps.push({t:rec.product||'',grp:rec.group||'기타',age:rec.age||'',f:rec.feature||'',gojiType:rec.goji_type||'',b:rec.badge||'',th:th});
+    });
+    var arr=order.map(function(k){return coMap[k];}).filter(function(c){return c.ps.length;});
     _plNON=arr.filter(function(c){return c._sec==='nonlife';});
     _plLIFE=arr.filter(function(c){return c._sec==='life';});
     _plLoaded=true; _plLoading=false; _plRender();
