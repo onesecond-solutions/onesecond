@@ -6301,6 +6301,7 @@ window._snCard=_snCard;
 function _homeDeskShow(){
   var host=document.getElementById('homeDesk'); if(!host) return;
   if(!document.body.classList.contains('is-uat-homedesk')) return;   /* 게이트 밖 계정이면 렌더 안 함 */
+  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}   /* 재렌더(innerHTML) 전 빌려온 노드를 라이브러리로 회수 — 슬롯 노드 고아·재진입 시 카드 안 열림 방지 (2026-07-04) */
   window._mysCat=null;
   /* 내 워크스페이스 4카드 — k는 기존 엔진 키 보존(diary/lib/script/memo), 표시명만 시안 정합(다이어리→캘린더) */
   var cards=[
