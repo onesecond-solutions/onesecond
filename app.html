@@ -4989,7 +4989,7 @@ function applyRoleClass(){
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
   /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민은 운영·유지보수 계정 = 사이드바 접힘 규칙에서 제외(:not(.is-admin)) → 전체 네비 유지(위 CSS). */
-  document.body.classList.toggle('is-uat-homedesk', !!r);
+  document.body.classList.toggle('is-uat-homedesk', true);   /* Phase 2b(2026-07-05): 미로그인 포함 전원 홈 데스크 동일 노출. 개인 데이터는 카드 클릭 시 로그인 안내(_homeCard 가드). 어드민은 사이드바 :not(.is-admin)로 전체 네비 유지. */
   /* 스페이스 네비 재설계 = 2026-06-25 전체 개방(게이트 해제). 임태성 실장 계정 검수 완료 → 전원 새 사이드바/스페이스 페이지 노출. (P3, homephilo 게이트 해제 전례) */
   document.body.classList.add('is-uat-spacenav');
   /* 홈 하단 철학 문구 = 2026-06-23 전체 개방(게이트 해제) — CSS body:not(.is-uat-homephilo) 규칙 제거됨. 검색 중 숨김 규칙만 유지. */
@@ -6396,6 +6396,16 @@ function _homeCard(kind){
   var slot=document.getElementById('home-desk-slot'); if(!slot) return;
   var inline=document.getElementById('hd-inline');
   if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 영역 재선택 = 토글 닫힘 */
+  /* Phase 2b(2026-07-05): 미로그인 = 개인/소속 자료 없음 → fetch 렌더러 대신 로그인 안내(홈 레이아웃은 동일). */
+  var _hdTok=(window.db&&typeof window.db.getToken==='function'&&window.db.getToken());
+  if(!_hdTok){
+    _homeOpenKind=kind;
+    try{ var _hbs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var _hi=0;_hi<_hbs.length;_hi++) _hbs[_hi].classList.toggle('on', _hbs[_hi].getAttribute('data-hdk')===kind); }catch(e){}
+    var _hbox=document.getElementById('hd-scope'); if(_hbox) _hbox.innerHTML='';
+    if(inline) inline.classList.add('open');
+    slot.innerHTML='<div class="hd-prep">로그인 후 볼 수 있어요.<br><button type="button" class="hd-scope-b" style="margin-top:12px" onclick="_authGate()">로그인 / 회원가입</button></div>';
+    return;
+  }
   _homeOpenKind=kind;
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-hdk')===kind); }catch(e){}  /* 활성 영역 표시 */
   if(kind==='insvault'||kind==='insqna'){   /* 원수사 · Q&A = 지점 단일 자료: 범위 동그라미 없이 바로 열기(지점 배지) */
