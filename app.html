@@ -360,12 +360,13 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 }
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
 body.is-uat-spacenav .side .nav,body.is-admin .side .nav{padding:7px 10px;}  /* 항목 많은 UAT·어드민 = compact(세로 축소·좌우 통일) */
-/* 사이드바 정리(홈 데스크 개방) — 어드민 제외 전원: 홈(전원)+매니저방(매니저급 is-mgr)+로드맵·영업노트(임태성 검수). 나머지 숨김(삭제 아님). 어드민은 규칙 밖=전체 유지. (2026-07-04 대표 승인) */
+/* 사이드바 정리(홈 데스크 개방) — 로그인 전원: 홈(전원)+매니저방(매니저급 is-mgr)+로드맵·영업노트(임태성 검수). 나머지 숨김(삭제 아님). 어드민도 홈 게이트 포함(2026-07-05 순차 개방)하되 어드민 콘솔(#nav-admin)은 유지보수 접근 위해 예외 노출. */
 body.is-uat-homedesk .side .nav{display:none !important;}
 body.is-uat-homedesk .side #nav-home{display:flex !important;}
 body.is-uat-homedesk.is-mgr .side #nav-mgr{display:flex !important;}
 body.is-uat-homedesk.is-uat-roadmap .side #nav-roadmap{display:flex !important;}
 body.is-uat-homedesk.is-uat-salesnote .side #nav-salesnote{display:flex !important;}
+body.is-uat-homedesk.is-admin .side #nav-admin{display:flex !important;}  /* 어드민 콘솔 = 홈 게이트 접힘에서도 유지(유지보수 접근 보존, 2026-07-05) */
 /* 마이 스페이스 페이지(배너 + 카드 그리드, P1-2) — 바텀시트 #spContent에 렌더 */
 .sn-page{display:flex;flex-direction:column;gap:16px;padding:2px;}
 .sn-banner img{width:100%;height:auto;display:block;border-radius:var(--radius-lg,14px);}
@@ -4971,8 +4972,8 @@ function applyRoleClass(){
   /* 상품 로드맵 = 임태성 실장 user_id 전용 검수(2026-06-27). 어드민 포함 타 계정 비노출. 메뉴 노출은 CSS(body.is-uat-roadmap), 직접 진입 차단은 showView 가드(_canSeeRoadmap). */
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
-  /* 홈 데스크 = 어드민 제외 전원 개방(2026-07-04 대표 승인). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민은 기존 홈·전체 사이드바 유지(제외). */
-  document.body.classList.toggle('is-uat-homedesk', (!!r && r !== 'admin'));
+  /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민 콘솔 nav(#nav-admin)는 CSS 예외로 유지(유지보수 접근 보존). */
+  document.body.classList.toggle('is-uat-homedesk', !!r);
   /* 스페이스 네비 재설계 = 2026-06-25 전체 개방(게이트 해제). 임태성 실장 계정 검수 완료 → 전원 새 사이드바/스페이스 페이지 노출. (P3, homephilo 게이트 해제 전례) */
   document.body.classList.add('is-uat-spacenav');
   /* 홈 하단 철학 문구 = 2026-06-23 전체 개방(게이트 해제) — CSS body:not(.is-uat-homephilo) 규칙 제거됨. 검색 중 숨김 규칙만 유지. */
