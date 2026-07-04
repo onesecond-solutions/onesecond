@@ -457,6 +457,22 @@ body.is-uat-homedesk #homeDesk{display:block;margin-top:6px;}
 #homeDesk .sn-cards{grid-template-columns:repeat(4,1fr);}
 @media(max-width:760px){#homeDesk .sn-cards{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:440px){#homeDesk .sn-cards{grid-template-columns:1fr;}}
+/* 홈 워크스페이스 2그룹 배치 — 좌 워크스페이스(주) / 우 원수사·Q&A(보조), 여백+세로 구분선(hairline). (2026-07-04) */
+.hd-groups{display:flex;gap:18px;align-items:flex-start;}
+.hd-group{min-width:0;}
+.hd-group-work{flex:2 1 0;}
+.hd-group-ref{flex:1 1 0;border-left:1px solid var(--bd);padding-left:18px;}
+#homeDesk .hd-group-work .sn-cards{grid-template-columns:repeat(4,1fr);}
+#homeDesk .hd-group-ref .sn-cards{grid-template-columns:repeat(2,1fr);}
+@media(max-width:900px){
+  .hd-groups{flex-direction:column;gap:16px;}
+  .hd-group-ref{border-left:0;border-top:1px solid var(--bd);padding-left:0;padding-top:14px;}
+  #homeDesk .hd-group-work .sn-cards{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:440px){
+  #homeDesk .hd-group-work .sn-cards{grid-template-columns:1fr;}
+  #homeDesk .hd-group-ref .sn-cards{grid-template-columns:1fr;}
+}
 /* 인라인 펼침 영역 — 카드 클릭 시 그 아래 표시. 우측 상단 X 닫기. 재클릭/X로 닫힘(토글). */
 .hd-inline{position:relative;display:none;margin-top:10px;}
 .hd-inline.open{display:block;border:1px solid color-mix(in srgb,var(--hdc,var(--bd)) 30%,var(--bd));border-top:3px solid var(--hdc,var(--bd));border-radius:var(--radius-md,12px);padding:12px;background:color-mix(in srgb,var(--hdsoft,transparent) 45%,var(--s1));}
@@ -6297,9 +6313,20 @@ function _homeDeskShow(){
   for(var j=0;j<tools.length;j++){ var t=tools[j];
     th+='<button type="button" class="hd-tool" style="--c:'+t.c+'" onclick="showView(\''+t.v+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+t.t+'</span><span class="sn-card-d">'+t.d+'</span></span><svg class="hd-tool-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></button>';
   }
+  /* 원수사 · Q&A 그룹 2카드 — 지점이 보는 공용 자료. 클릭 시 바텀시트 _spCospShow(insurer/qna)를 홈 슬롯에 재사용(바닥 이전). 범위 동그라미 없이 지점 색 단일 진입. */
+  var refs=[
+    {k:'insvault', ic:'i-building', t:'원수사 자료실', d:'지점이 보는 원수사 자료', c:'var(--space-branch-line)'},
+    {k:'insqna',   ic:'i-msg',      t:'보험 Q&A',     d:'지점 공유 질문 · 답변',    c:'var(--space-branch-line)'}
+  ];
+  var rh='';
+  for(var k=0;k<refs.length;k++){ var rc=refs[k];
+    rh+='<button type="button" class="sn-card" data-hdk="'+rc.k+'" style="--c:'+rc.c+'" onclick="_homeCard(\''+rc.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+rc.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+rc.t+'</span><span class="sn-card-d">'+rc.d+'</span></span></button>';
+  }
   host.innerHTML='<div class="sn-page">'
-    +'<div class="hd-label">워크스페이스</div>'
-    +'<div class="sn-cards">'+ch+'</div>'
+    +'<div class="hd-groups">'
+      +'<div class="hd-group hd-group-work"><div class="hd-label">워크스페이스</div><div class="sn-cards">'+ch+'</div></div>'
+      +'<div class="hd-group hd-group-ref"><div class="hd-label">원수사 · Q&amp;A</div><div class="sn-cards">'+rh+'</div></div>'
+    +'</div>'
     +'<div class="hd-inline" id="hd-inline"><button type="button" class="hd-inline-x" onclick="_homeCardClose()" aria-label="닫기">&#10005;</button><div class="hd-scope" id="hd-scope"></div><div class="sn-slot" id="home-desk-slot"></div></div>'
     +'<div class="hd-label">자료 · 도구</div>'
     +'<div class="hd-tools">'+th+'</div>'
@@ -6320,6 +6347,12 @@ function _homeCard(kind){
   if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 영역 재선택 = 토글 닫힘 */
   _homeOpenKind=kind;
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-hdk')===kind); }catch(e){}  /* 활성 영역 표시 */
+  if(kind==='insvault'||kind==='insqna'){   /* 원수사 · Q&A = 지점 단일 자료: 범위 동그라미 없이 바로 열기 */
+    var box0=document.getElementById('hd-scope'); if(box0) box0.innerHTML='';
+    if(inline) inline.classList.add('open');
+    _homeRef(kind);
+    return;
+  }
   /* 범위 선택 동그라미 렌더 — 메모는 개인만 */
   var scopes=_HD_SCOPES[kind]||['personal'];
   var box=document.getElementById('hd-scope');
@@ -6333,6 +6366,17 @@ function _homeCard(kind){
   _homeScope(kind, 'personal');   /* 기본 선택 = 개인 */
 }
 window._homeCard=_homeCard;
+/* 원수사 자료실 · 보험 Q&A = 지점(원수사) 공용 자료. 범위 선택 없이 바로 열기(지점 색). 바텀시트 _spCospShow 재사용(바닥 이전). */
+function _homeRef(kind){
+  var slot=document.getElementById('home-desk-slot'); if(!slot) return;
+  _homeOpenScope=null;
+  var inl=document.getElementById('hd-inline');
+  if(inl){ inl.classList.remove('scope-personal','scope-team','scope-branch','scope-all-disabled'); inl.classList.add('scope-branch'); }  /* 지점 색 분위기 */
+  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
+  if(kind==='insvault'){ if(window._spCospShow) window._spCospShow(slot,'insurer'); }
+  else if(kind==='insqna'){ if(window._spCospShow) window._spCospShow(slot,'qna'); }
+}
+window._homeRef=_homeRef;
 /* 범위 선택 = 슬롯만 전환. 개인/팀/지점 = 기존 안전 조회 재사용. 전체 = 기존 병합 경로가 없어 안내로 처리. */
 function _homeScope(kind, scope){
   var slot=document.getElementById('home-desk-slot'); if(!slot) return;
