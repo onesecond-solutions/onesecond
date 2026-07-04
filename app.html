@@ -15116,7 +15116,7 @@ async function loadCal(p, scopeOpt){
   if(!window.db||!window.db.fetch){ if(listEl)listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    /* personal = 본인 일정만(author_id). 어드민도 본인 것만(2026-06-17 A안, 타 사용자 개인 다이어리 끌려오던 것 차단).
+    /* personal = 본인의 개인 일정만(author_id + audience_target=personal). 어드민도 동일 — 내가 만든 팀/지점 일정은 개인 뷰에서 제외, 각 뷰에서만 노출 (2026-07-04 대표 A안).
        team/branch = 소속 공유 일정(team_id/branch_id + audience_target). 같은 팀/지점 노출은 calendar_events RLS(team_internal/branch_internal SELECT)에 의존. */
     var _filter;
     if(scope==='team' || scope==='branch'){
@@ -15127,7 +15127,7 @@ async function loadCal(p, scopeOpt){
         ? '&team_id=eq.'+encodeURIComponent(_id)+'&audience_target=eq.team_internal'
         : '&branch_id=eq.'+encodeURIComponent(_id)+'&audience_target=eq.branch_internal';
     } else {
-      var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; _filter=_me?('&author_id=eq.'+encodeURIComponent(_me)):'';
+      var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; _filter=_me?('&author_id=eq.'+encodeURIComponent(_me)+'&or=(audience_target.eq.personal,audience_target.is.null)'):'';   /* 개인 뷰 = 개인 일정만(+audience 미지정 legacy 안전 포함). 내가 만든 팀/지점 일정은 각 뷰에만 */
     }
     var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500'+_filter+'&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
