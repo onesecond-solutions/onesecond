@@ -1,0 +1,23 @@
+name: Typo Floor Guard
+
+# 읽기용 텍스트에 10·11px급 하드코딩 폰트가 다시 들어오는 것을 차단한다.
+# grep만 수행 — 시크릿·DB·배포 없음.
+
+on:
+  pull_request:
+    paths: ['app.html', 'scripts/check_font_floor.sh']
+  push:
+    branches: [main]
+    paths: ['app.html']
+
+permissions:
+  contents: read
+
+jobs:
+  font-floor:
+    if: github.repository == 'onesecond-solutions/onesecond'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 10·11px 하드코딩 폰트 차단
+        run: bash scripts/check_font_floor.sh app.html
