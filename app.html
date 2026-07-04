@@ -194,8 +194,8 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 #v-roadmap #rm-detail dd{margin:3px 0 0;font-size:13px;line-height:1.55;}
 #v-roadmap .rm-empty{color:var(--ts);font-size:13px;padding:24px 14px;text-align:center;line-height:1.6;}
 /* ════ 삼성화재 상품 라인업·납입면제 독립 페이지 (회사 허브 진입 · 임태성 게이트, 2026-06-28) ════ */
-/* 폰트 크기 = 대/중/소 3개로만. 위계는 굵기·색으로 구분 (대표 방침 2026-06-28) */
-:root{--sz-l:22px;--sz-m:16px;--sz-s:14px;}
+/* 폰트 크기 = 어제(2026-07-04) 타이포그래피 --ts-* 기준선으로 통일(2026-07-05 대표 지시). 대/중/소는 --ts 스케일에 매핑(대=viewer-title 20 · 중=body 16 · 소=preview 14). 위계는 굵기·색으로 구분. */
+:root{--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);}
 #v-samsung-lineup.on,#v-samsung-waiver.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:22px;}
 .smsg-back{align-self:flex-start;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);font-size:var(--sz-s);color:var(--ts);padding:8px 15px;cursor:pointer;margin-bottom:14px;flex-shrink:0;}
 .smsg-back:hover{background:var(--s2);}
@@ -557,7 +557,8 @@ body.is-uat-homedesk .hs-wrap{padding-top:10px;}
 #iv-il-host .iv-write-modal{max-width:none;max-height:none;width:100%;flex:1;overflow-y:auto;}
 /* 회사 검색 허브 아코디언 (UAT — 임태성 실장 전용) · 타이포 토큰 기준선 적용(2026-06-27)
    본문 --fs-body(14)·weight≤medium(500)·라벨 무채색·신호색은 신호점만 */
-.chub{display:flex;flex-direction:column;gap:8px;margin-top:36px;margin-bottom:16px;}
+/* 타이포그래피 = 어제(2026-07-04) --ts-* 기준선으로 통일(2026-07-05 대표 지시). --fs-* → --ts-* 별칭(.chub 스코프·값 보존). 소식지 썸네일/중앙정렬 등 소식지 영역은 별도 지시 대기(무시). */
+.chub{--fs-heading:var(--ts-viewer-title);--fs-title:var(--ts-viewer-title);--fs-title-sm:var(--ts-body);--fs-body-lg:var(--ts-list-title);--fs-body:var(--ts-preview);--fs-meta:var(--ts-meta);--fs-caption:var(--ts-badge);display:flex;flex-direction:column;gap:8px;margin-top:36px;margin-bottom:16px;}
 .chub-co{display:flex;align-items:center;gap:10px;font-size:var(--fs-heading);font-weight:var(--fw-medium);line-height:var(--lh-tight);color:var(--tp);padding:2px 2px 8px;}
 .chub-colg{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--radius-sm);background:var(--s2);color:var(--ac);font-size:var(--fs-meta);font-weight:var(--fw-medium);}
 .chub-item{border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);overflow:hidden;}
@@ -569,8 +570,8 @@ body.is-uat-homedesk .hs-wrap{padding-top:10px;}
 .chub-item.open .chub-car{transform:rotate(180deg);}
 .chub-body{display:none;padding:6px 16px 16px;font-size:var(--fs-title-sm);font-weight:var(--fw-regular);line-height:var(--lh-relaxed);color:var(--ts);border-top:1px solid var(--bd);}   /* 본문 16px — 대표 선호(긴 설명 텍스트 가독) */
 .chub-item.open .chub-body{display:block;}
-.chub-body div,.chub-body span,.chub-body p{font-size:var(--fs-title-sm) !important;}   /* content_html 인라인 작은 폰트(0.8em 등) → 16px 강제 */
-.chub-body b{color:var(--ts) !important;font-weight:var(--fw-medium);font-size:var(--fs-title-sm) !important;}   /* 라벨 = 무채색·16px(신호색 남발 차단) */
+.chub-body div,.chub-body span,.chub-body p,.chub-body li,.chub-body td,.chub-body th,.chub-body a,.chub-body font,.chub-body small,.chub-body strong,.chub-body em{font-size:var(--ts-body) !important;}   /* content_html 인라인 작은 폰트(0.8em·표·목록·링크 등) → 본문 16px 강제. div/span/p 외 표·목록·링크가 작게 새던 것 전 태그로 확장(어제 --ts 기준선 통일, 2026-07-05) */
+.chub-body b{color:var(--ts) !important;font-weight:var(--fw-medium);font-size:var(--ts-body) !important;}   /* 라벨 = 무채색·16px(신호색 남발 차단) */
 .chub-empty{color:var(--tf);font-size:var(--fs-meta);padding:8px 0;}
 .chub-nl{display:flex;flex-direction:column;gap:14px;}
 .chub-nlyr b{font-size:var(--fs-body-lg);font-weight:var(--fw-medium);color:var(--tp);}
