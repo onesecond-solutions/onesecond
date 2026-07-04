@@ -463,6 +463,15 @@ body.is-uat-homedesk #homeDesk{display:block;margin-top:6px;}
 .hd-inline-x{position:absolute;top:10px;right:10px;z-index:6;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:var(--radius-sm,8px);background:var(--s1);color:var(--ts);font-size:14px;line-height:1;cursor:pointer;padding:0;}
 .hd-inline-x:hover{background:var(--s2);color:var(--tp);}
 .hd-inline #home-desk-slot{margin-top:0;}
+/* 홈 영역 범위 선택(동그라미) — 캘린더·업무노트·자료실=전체/개인/팀/지점, 메모=개인 (임태성 실장 홈 게이트 1차, 2026-07-04) */
+.hd-scope{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;padding-right:42px;}
+.hd-scope:empty{margin:0;}
+.hd-scope-b{display:inline-flex;align-items:center;gap:7px;padding:7px 15px 7px 12px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--ts);font-family:inherit;font-size:0.85rem;font-weight:600;line-height:1;cursor:pointer;}
+.hd-scope-b::before{content:'';width:13px;height:13px;border-radius:50%;border:2px solid var(--bd);box-sizing:border-box;flex-shrink:0;}
+.hd-scope-b:hover{border-color:var(--ac);color:var(--tp);}
+.hd-scope-b.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent);color:var(--tp);}
+.hd-scope-b.on::before{border-color:var(--ac);background:var(--ac);box-shadow:inset 0 0 0 2px var(--s1);}
+.hd-prep{padding:28px 16px;text-align:center;color:var(--ts);line-height:1.7;font-size:0.88rem;}
 /* 시안대로 깔끔하게 — 임태성 홈에선 큰 배너 캐러셀·미니배너·시작하기 CTA 숨김(인사말+검색바+데스크만) */
 body.is-uat-homedesk #v-home .os-banner-carousel,
 body.is-uat-homedesk #v-home .os-banner-mini,
@@ -6286,37 +6295,63 @@ function _homeDeskShow(){
   host.innerHTML='<div class="sn-page">'
     +'<div class="hd-label">워크스페이스</div>'
     +'<div class="sn-cards">'+ch+'</div>'
-    +'<div class="hd-inline" id="hd-inline"><button type="button" class="hd-inline-x" onclick="_homeCardClose()" aria-label="닫기">&#10005;</button><div class="sn-slot" id="home-desk-slot"></div></div>'
+    +'<div class="hd-inline" id="hd-inline"><button type="button" class="hd-inline-x" onclick="_homeCardClose()" aria-label="닫기">&#10005;</button><div class="hd-scope" id="hd-scope"></div><div class="sn-slot" id="home-desk-slot"></div></div>'
     +'<div class="hd-label">자료 · 도구</div>'
     +'<div class="hd-tools">'+th+'</div>'
     +'</div>';
   _homeOpenKind=null;   /* 토글 구조 — 첫 진입은 아무것도 안 열린 상태 (2026-07-02 대표 지시) */
 }
 window._homeDeskShow=_homeDeskShow;
-/* 홈 데스크 카드 클릭 = 홈 전용 슬롯(#home-desk-slot)만 인플레이스 전환. 기존 _spDiaShow/_spVaultShow/_spSplitShow 재사용.
-   토글 구조(2026-07-02): 같은 카드 재클릭 = 닫힘 / 우측 상단 X = 닫힘 / 첫 진입 = 미열림. */
+/* 홈 영역 선택 = 홈 전용 슬롯(#home-desk-slot)만 인플레이스 전환. 기존 조회 함수 재사용.
+   토글 구조(2026-07-02): 같은 영역 재선택 = 닫힘 / 우측 상단 X = 닫힘 / 첫 진입 = 미열림.
+   범위 선택(2026-07-04): 영역 선택 시 하단에 동그라미(전체/개인/팀/지점) 표시, 기본=개인. 메모는 개인만. */
 var _homeOpenKind=null;
+var _homeOpenScope=null;
+var _HD_SCOPES={ diary:['all','personal','team','branch'], script:['all','personal','team','branch'], lib:['all','personal','team','branch'], memo:['personal'] };
+var _HD_SCOPE_LABEL={ all:'전체', personal:'개인', team:'팀', branch:'지점' };
 function _homeCard(kind){
   var slot=document.getElementById('home-desk-slot'); if(!slot) return;
   var inline=document.getElementById('hd-inline');
-  if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 카드 재클릭 = 토글 닫힘 */
+  if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 영역 재선택 = 토글 닫힘 */
   _homeOpenKind=kind;
-  try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-hdk')===kind); }catch(e){}  /* 활성 카드 표시 */
-  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
-  if(kind==='diary' && window._spDiaShow) window._spDiaShow(slot);
-  else if(kind==='lib' && window._spVaultShow) window._spVaultShow(slot);
-  else if(kind==='script' && window._spSplitShow) window._spSplitShow(slot,'스크립트');
-  else if(kind==='memo' && window._spSplitShow) window._spSplitShow(slot,'메모');
+  try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-hdk')===kind); }catch(e){}  /* 활성 영역 표시 */
+  /* 범위 선택 동그라미 렌더 — 메모는 개인만 */
+  var scopes=_HD_SCOPES[kind]||['personal'];
+  var box=document.getElementById('hd-scope');
+  if(box){ var sh='';
+    for(var s=0;s<scopes.length;s++){ var sk=scopes[s];
+      sh+='<button type="button" class="hd-scope-b" data-sc="'+sk+'" onclick="_homeScope(\''+kind+'\',\''+sk+'\')">'+_HD_SCOPE_LABEL[sk]+'</button>';
+    }
+    box.innerHTML=sh;
+  }
   if(inline) inline.classList.add('open');
+  _homeScope(kind, 'personal');   /* 기본 선택 = 개인 */
 }
 window._homeCard=_homeCard;
+/* 범위 선택 = 슬롯만 전환. 개인/팀/지점 = 기존 안전 조회 재사용. 전체 = 기존 병합 경로가 없어 안내로 처리. */
+function _homeScope(kind, scope){
+  var slot=document.getElementById('home-desk-slot'); if(!slot) return;
+  _homeOpenScope=scope;
+  try{ var cs=document.querySelectorAll('#hd-scope .hd-scope-b'); for(var i=0;i<cs.length;i++) cs[i].classList.toggle('on', cs[i].getAttribute('data-sc')===scope); }catch(e){}  /* 활성 범위 표시 */
+  try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
+  if(scope==='all'){ slot.innerHTML='<div class="hd-prep">전체 보기는 준비 중이에요.<br>개인 · 팀 · 지점 중에서 선택해 주세요.</div>'; return; }
+  if(kind==='diary'){ if(window._spDiaShow) window._spDiaShow(slot, scope); }               /* 캘린더: 개인/팀/지점 (loadCal 필터) */
+  else if(kind==='lib'){ if(window._spVaultShow) window._spVaultShow(slot, scope); }        /* 자료실: 개인/팀/지점 */
+  else if(kind==='script'){                                                                 /* 업무노트: 개인=내 목록 / 팀·지점=공유 목록 */
+    if(scope==='personal'){ if(window._spSplitShow) window._spSplitShow(slot,'스크립트'); }
+    else if(typeof _snScopeScripts==='function'){ _snScopeScripts(slot, scope); }
+  }
+  else if(kind==='memo'){ if(window._spSplitShow) window._spSplitShow(slot,'메모'); }        /* 메모: 개인만 */
+}
+window._homeScope=_homeScope;
 /* 홈 데스크 인라인 닫기 — X 버튼 또는 같은 카드 재클릭. 노드는 라이브러리로 회수(restore) 후 슬롯 비움. */
 function _homeCardClose(){
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
   var slot=document.getElementById('home-desk-slot'); if(slot) slot.innerHTML='';
+  var box=document.getElementById('hd-scope'); if(box) box.innerHTML='';
   var inline=document.getElementById('hd-inline'); if(inline) inline.classList.remove('open');
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); }catch(e){}
-  _homeOpenKind=null;
+  _homeOpenKind=null; _homeOpenScope=null;
 }
 window._homeCardClose=_homeCardClose;
 /* 팀/지점 스페이스 페이지 (P2) — 배너 + 카드(공지게시판·자료실·스크립트). 카드 클릭 = sn-slot 인플레이스(기존 _spCospShow/_spVaultShow 재사용). 첫 진입 = 공지게시판. */
