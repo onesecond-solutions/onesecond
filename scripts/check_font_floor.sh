@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # 타이포 재발 방지 가드 (2026-07-04, 1차 잠금)
-# 목적: 읽기용 텍스트에서 10·11px급 폰트가 다시 들어오는 것을 차단한다.
-# 대상(금지): font-size 값이 정확히 10·11px에 해당하는 하드코딩
-#   → 0.625rem · 0.6875rem · 0.7rem · 10px · 11px
+# 목적: 읽기용 텍스트에서 12px 미만 폰트가 다시 들어오는 것을 차단한다.
+# 대상(금지): 10·11·11.5px 및 그 rem 등가(0.625~0.74rem)
+#   → 0.625·0.66·0.6875·0.68·0.69·0.7·0.72·0.74rem · 10px · 11px · 11.5px
 # 반드시 토큰 사용: var(--ts-badge)=12 · var(--ts-meta)=13 · var(--ts-preview)=14
 #                   · var(--ts-list-title)=15 · var(--ts-body)=16 · var(--ts-viewer-title)=20
 # 주의(범위 밖, 이번 잠금 대상 아님):
@@ -12,10 +12,10 @@ set -euo pipefail
 FILE="${1:-app.html}"
 [ -f "$FILE" ] || { echo "파일 없음: $FILE"; exit 2; }
 
-hits=$(grep -nE "font-size:(0\.625rem|0\.6875rem|0\.7rem|10px|11px)([^0-9]|$)" "$FILE" || true)
+hits=$(grep -nE "font-size:(0\.625rem|0\.66rem|0\.6875rem|0\.68rem|0\.69rem|0\.7rem|0\.72rem|0\.74rem|10px|11px|11\.5px)([^0-9]|$)" "$FILE" || true)
 
 if [ -n "$hits" ]; then
-  echo "❌ 타이포 가드 위반 — $FILE 에 10·11px급 하드코딩 font-size 재유입:"
+  echo "❌ 타이포 가드 위반 — $FILE 에 12px 미만(읽기용) 하드코딩 font-size 재유입:"
   echo "$hits"
   echo ""
   echo "→ 토큰을 쓰세요: var(--ts-badge)=12 · var(--ts-meta)=13 · var(--ts-preview)=14 · var(--ts-list-title)=15 · var(--ts-body)=16 · var(--ts-viewer-title)=20"
