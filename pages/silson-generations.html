@@ -253,7 +253,7 @@ td .gr{font-weight:700;color:#059669}
 </div>
 
 <script>
-function sel(g){
+function sel(g,noScroll){
   var card=document.querySelector('.gen[data-g="'+g+'"]');
   if(card.dataset.open==='1'){
     document.getElementById('pan'+g).classList.remove('show');
@@ -263,9 +263,9 @@ function sel(g){
   document.querySelectorAll('.gen').forEach(c=>{c.classList.remove('active');c.dataset.open='0';});
   document.getElementById('pan'+g).classList.add('show');
   card.classList.add('active'); card.dataset.open='1';
-  document.getElementById('pan'+g).scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(!noScroll) document.getElementById('pan'+g).scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-sel(5);
+sel(5,true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 scrollIntoView 유지 */
 </script>
 </body>
 </html>
