@@ -4593,8 +4593,7 @@ window.handlePaidCta = function(planId){
     _name  = (_u.name  || '').trim();
   } catch (e) {}
   if (!_email || !_id) {
-    alert('로그인이 필요합니다. 로그인 후 이용해 주세요.');
-    window.location.href = '/index.html?auth=login';
+    _authGate();
     return;
   }
   if (_email.indexOf('@') === -1) {
@@ -5005,6 +5004,12 @@ function applyRoleClass(){
 window.applyRoleClass = applyRoleClass;
 /* 인라인 게이팅(첫 페인트)이 is-insurer/is-admin 1차 부착. nav 노출·재확정은 bootView(role 확정)에서 1회 — 즉시/DOMContentLoaded 중복 호출 폐기. */
 
+/* ── 미로그인 쓰기 게이트 (Phase 2a, 2026-07-05) — 읽기는 통과, 쓰기 시에만 안내 + 인앱 로그인 모달(랜딩 이동 X). ── */
+window._authGate = function(msg){
+  try{ if(typeof toast==='function') toast(msg || '로그인하고 사용해 주세요.'); }catch(e){}
+  try{ if(typeof window.openAuthModal==='function') window.openAuthModal('login'); }catch(e){}
+};
+
 /* 2026-05-30 초기화 통합: appstate:ready 후 role UI 재구성은 bootView(초기 진입 게이트)로 일원화. */
 
 /* 2026-05-30 단계 2: 원수사 자료실 view UI (저장/조회 DB 연동은 단계 3 확정 후) */
@@ -5279,8 +5284,8 @@ async function loadQnaComments(postId, px){
 async function submitQnaComment(postId, px){
   var ta=document.getElementById(px+'-qra-'+postId); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('답변 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 답변할 수 있습니다.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 답변할 수 있어요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var btn=ta&&ta.parentElement?ta.parentElement.querySelector('.qna-reply-btn'):null;
   if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
@@ -5333,8 +5338,8 @@ async function _likeLoad(postId, px){
 }
 /* 좋아요 토글 (낙관 갱신 후 재조회) */
 async function _likeToggle(postId, px){
-  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var box=document.getElementById(px+'-like-'+postId); if(!box) return;
   var uid=_socUid()||String(window.AppState.userId||''); var mine=box.dataset.mine==='1';
   var btn=box.querySelector('.soc-like-btn'); if(btn) btn.disabled=true;
@@ -5373,8 +5378,8 @@ async function _cmtLoad(postId, px){
 async function _cmtSubmit(postId, px){
   var ta=document.getElementById(px+'-cmt-ta-'+postId); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('댓글 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var btn=ta&&ta.parentElement?ta.parentElement.querySelector('.soc-reply-btn'):null;
   if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
@@ -5413,8 +5418,8 @@ async function _eLikeLoad(st,sid,px){ var box=document.getElementById(px+'-elike
     box.dataset.mine=mine?'1':'0';
   }catch(e){} }
 async function _eLikeToggle(st,sid,px){
-  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var box=document.getElementById(px+'-elike-'+_eKey(st,sid)); if(!box) return;
   var uid=_socUid()||String(window.AppState.userId||''); var mine=box.dataset.mine==='1'; var btn=box.querySelector('.soc-like-btn'); if(btn) btn.disabled=true;
   try{ if(mine){ await fetch(window.db.url('/rest/v1/entry_likes?source_type=eq.'+encodeURIComponent(st)+'&source_id=eq.'+encodeURIComponent(sid)+'&user_id=eq.'+encodeURIComponent(uid)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); }
@@ -5442,8 +5447,8 @@ async function _eCmtLoad(st,sid,px){ var box=document.getElementById(px+'-ecmt-'
   }catch(e){ box.innerHTML='<div class="soc-cmt-empty">댓글을 불러오지 못했습니다.</div>'; } }
 async function _eCmtSubmit(st,sid,px){ var ta=document.getElementById(px+'-ecmt-ta-'+_eKey(st,sid)); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('댓글 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ if(typeof toast==='function') toast('로그인 후 이용해 주세요.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate(); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var btn=ta&&ta.parentElement?ta.parentElement.querySelector('.soc-reply-btn'):null; if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
   try{ var body={source_type:st, source_id:String(sid), content:text, author_id:(u.id||window.AppState.userId||''), author_name:(u.name||'')};
@@ -5495,7 +5500,7 @@ async function _cmtEditSave(saveBtn, tbl, id){
   var item=_cmtItemEl(saveBtn); if(!item) return;
   var ta=item.querySelector('.cmt-edit-ta'); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('댓글 내용을 적어주세요.'); return; }
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   saveBtn.disabled=true; saveBtn.textContent='저장 중…';
   try{
     var res=await fetch(window.db.url('/rest/v1/'+tbl+'?id=eq.'+encodeURIComponent(id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({content:text})});
@@ -5516,7 +5521,7 @@ async function _cmtEditSave(saveBtn, tbl, id){
 }
 async function _cmtDelete(btn, tbl, id){
   if(!confirm('이 댓글을 삭제할까요? 삭제하면 되돌릴 수 없습니다.')) return;
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ if(typeof toast==='function') toast('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   btn.disabled=true;
   try{
     var res=await fetch(window.db.url('/rest/v1/'+tbl+'?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
@@ -5546,13 +5551,13 @@ function _postActs(kind, id, authorId, ctx){ if(!_canEditPost(authorId)) return 
 /* 보험 Q&A (posts qna) */
 var _qnaEditId=null,_qnaEditCtx=null;
 function _qnaReload(ctx){ window._mysQnaCache=null; window._mrQnaCache=null; window._vaultQnaCache=null; var f=({voice:'loadVoiceQna',mys:'loadMysQna',mr:'loadMrQna',iv:'loadVaultQna'})[ctx]; if(f&&typeof window[f]==='function') window[f](); }
-async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠습니까? (등록된 답변도 함께 삭제됩니다)')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ _qnaReload(ctx); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
-async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
+async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠습니까? (등록된 답변도 함께 삭제됩니다)')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ _qnaReload(ctx); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
+async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
 function qnaCloseEdit(){ var m=document.getElementById('qnaEditModal'); if(m) m.style.display='none'; _qnaEditId=null; }
-async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } var title=((document.getElementById('qnaEditTitle')||{}).value||'').trim(), content=((document.getElementById('qnaEditContent')||{}).value||'').trim(); if(!title){ alert('제목을 입력해 주세요.'); return; } if(!content){ alert('내용을 입력해 주세요.'); return; } var ctx=_qnaEditCtx; try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(_qnaEditId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({title:title,content:content})}); if(res.ok||res.status===204){ qnaCloseEdit(); _qnaReload(ctx); if(typeof toast==='function') toast('수정됐어요!'); } else { var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); } }catch(e){ alert('네트워크 오류가 발생했습니다.'); } }
+async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } var title=((document.getElementById('qnaEditTitle')||{}).value||'').trim(), content=((document.getElementById('qnaEditContent')||{}).value||'').trim(); if(!title){ alert('제목을 입력해 주세요.'); return; } if(!content){ alert('내용을 입력해 주세요.'); return; } var ctx=_qnaEditCtx; try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(_qnaEditId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({title:title,content:content})}); if(res.ok||res.status===204){ qnaCloseEdit(); _qnaReload(ctx); if(typeof toast==='function') toast('수정됐어요!'); } else { var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); } }catch(e){ alert('네트워크 오류가 발생했습니다.'); } }
 /* 단체방 (team_notices) — 라이브러리·매니저룸 */
-async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof cospRenderNotices==='function') cospRenderNotices(false); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
-async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
+async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof cospRenderNotices==='function') cospRenderNotices(false); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
+async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
 window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCloseEdit=qnaCloseEdit; window.qnaSaveEdit=qnaSaveEdit; window.teamEditNotice=teamEditNotice; window.teamDeleteNotice=teamDeleteNotice;
 
 /* ════════════════════════════════════════════════════════════════
@@ -5634,7 +5639,7 @@ function _vapidKey(b64){ var pad='='.repeat((4-b64.length%4)%4); var base=(b64+p
 async function notifEnablePush(){
   try{
     if(!('serviceWorker' in navigator)||!('PushManager' in window)){ alert('이 브라우저는 푸시 알림을 지원하지 않습니다.'); return; }
-    var uid=_notifUid(); if(!uid){ alert('로그인 후 이용해 주세요.'); return; }
+    var uid=_notifUid(); if(!uid){ _authGate(); return; }
     var reg=await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready;
     var perm=await Notification.requestPermission();
     if(perm!=='granted'){ alert('알림 권한이 허용되지 않았습니다. 브라우저 주소창 옆 설정에서 알림을 허용해 주세요.'); return; }
@@ -5753,7 +5758,7 @@ function ivManageActions(r){
   return '<div class="post-acts">'+_ed+_hide+'</div>';
 }
 async function ivToggleHide(id, hide){
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   var on=(hide===true||hide==='true');
   try{
     var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({is_hidden:on}) });
@@ -5763,7 +5768,7 @@ async function ivToggleHide(id, hide){
 }
 window.ivToggleHide=ivToggleHide;
 async function ivEditPost(id){
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   try{
     var r=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=id,category,title,content,keywords,attachments');
     if(!r.ok){ alert('불러오기 실패 ('+r.status+')'); return; }
@@ -5783,7 +5788,7 @@ async function ivEditPost(id){
 window.ivEditPost=ivEditPost;
 async function ivDeletePost(id){
   if(!confirm('이 자료를 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   try{
     var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id),{ method:'DELETE', headers:{'Prefer':'return=minimal'} });
     if(res.ok||res.status===204){ if(typeof toast==='function')toast('삭제했습니다'); if(typeof _ivReloadBoards==='function')_ivReloadBoards(); }
@@ -5952,7 +5957,7 @@ async function ivSubmit(){
   var token = window.db && window.db.getToken && window.db.getToken();
   var u = {};
   try { u = JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}'); } catch(e){}
-  if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!token){ _authGate(); return; }
   var _role = (typeof _getOsUserRole==='function') ? _getOsUserRole() : '';
   var _isAdmin = (_role === 'admin');
   var _canPick = (_isAdmin || _role==='ga_manager' || _role==='ga_branch_manager');  /* 보험사 선택 = admin + GA 실장·지점장 */
@@ -6546,7 +6551,7 @@ window._snScrPick=_snScrPick;
 async function _snScrDelete(id){
   if(!confirm('이 스크립트를 삭제하시겠습니까?')) return;
   if(!window.db||!window.db.getToken){ return; }
-  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db.getToken(); if(!token){ _authGate(); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=representation'}});
     var _rows=null; try{ _rows=await res.json(); }catch(e){}
@@ -7609,7 +7614,7 @@ function mcFallbackDownload(blob){
 
 function mcSaveToMySpace(){
   if(!window.currentUser){
-    alert('로그인 후 사용 가능합니다.');
+    _authGate();
     return;
   }
   // 본 단계는 mock — 다음 단계 별 PR에서 Storage 업로드 + library INSERT 가동
@@ -7773,10 +7778,10 @@ window.bmiAction = bmiAction;
 async function bmiSaveToMyspace(){
   var r = window._bmiResult; if(!r) return;
   if(!window.db || !window.AppState || !window.AppState.userId){
-    alert('로그인이 필요합니다.'); return;
+    _authGate(); return;
   }
   var token = window.db.getToken && window.db.getToken();
-  if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!token){ _authGate(); return; }
   var title = 'BMI 계산 — ' + (r.name || '고객');
   var memo = bmiFormatText();
   try{
@@ -7984,10 +7989,10 @@ window.insAgeAction = insAgeAction;
 async function insAgeSaveToMyspace(){
   var r = window._insAgeResult; if(!r) return;
   if(!window.db || !window.AppState || !window.AppState.userId){
-    alert('로그인이 필요합니다.'); return;
+    _authGate(); return;
   }
   var token = window.db.getToken && window.db.getToken();
-  if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!token){ _authGate(); return; }
   var title = '보험연령 계산 — ' + (r.name || '고객');
   var memo = insAgeFormatText();
   try{
@@ -9222,7 +9227,7 @@ window.cospIlType=cospIlType;
 function closeCospInline(){ if(typeof cospRenderNotices==='function') cospRenderNotices(false); }
 window.closeCospInline=closeCospInline;
 async function saveCospInline(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var title=((document.getElementById('cospi-title')||{}).value||'').trim();
   var body=(window.osRich&&window.osRich.html)?(window.osRich.html()||'').trim():'';  /* 리치 HTML (스크립트 폼과 동일) */
   if(!title){ alert('제목을 입력하세요.'); return; }
@@ -9367,7 +9372,7 @@ window.cospInsurerWrite=cospInsurerWrite;
 /* 작성자 본인(+admin) 글 삭제 — 소프트(deleted_at), 피드 deleted_at=is.null 필터로 즉시 숨김. RLS team_notices_update/delete가 author=auth.uid() 허용 */
 async function voiceDeleteNotice(id, tabKey){
   if(!confirm('이 글을 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   try{
     /* 하드 DELETE — soft delete(deleted_at UPDATE)가 RLS WITH CHECK에 막혀(403/42501),
        DELETE 정책(is_admin() OR author_id=auth.uid(), WITH CHECK 없음)으로 우회. 자료실과 동일 방식. */
@@ -9399,7 +9404,7 @@ function voiceEditNotice(id, tabKey){
 window.voiceEditNotice=voiceEditNotice;
 /* admin 전용 숨김/숨김 해제 — is_hidden PATCH. 일반 사용자에겐 숨김 글이 목록에서 제외됨(_loadNoticeFeed 필터) */
 async function voiceToggleHide(id, tabKey, hide){
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   var on=(hide===true||hide==='true');
   try{
     var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({is_hidden:on}) });
@@ -9448,7 +9453,7 @@ async function _openSignedAtt(e, el){
     var bucket=el.getAttribute('data-bucket'), path=el.getAttribute('data-path');
     if(!bucket||!path) return false;
     var token=(typeof localStorage!=='undefined'&&localStorage.getItem('os_token'))||(typeof sessionStorage!=='undefined'&&sessionStorage.getItem('os_token'))||'';
-    if(!token){ alert('로그인 후 이용해 주세요.'); return false; }
+    if(!token){ _authGate(); return false; }
     var encPath=String(path).split('/').map(encodeURIComponent).join('/');
     var res=await fetch(window.db.url('/storage/v1/object/sign/'+encodeURIComponent(bucket)+'/'+encPath),{
       method:'POST',
@@ -9473,7 +9478,7 @@ async function _dlSignedFile(e, el){
   var bucket=el.getAttribute('data-bucket'), path=el.getAttribute('data-path');
   var name=el.getAttribute('data-name')||(String(path||'').split('/').pop())||'download';
   if(!bucket||!path) return false;
-  if(window.db&&typeof window.db.getToken==='function'&&!window.db.getToken()){ alert('로그인 후 이용해 주세요.'); return false; }
+  if(window.db&&typeof window.db.getToken==='function'&&!window.db.getToken()){ _authGate(); return false; }
   var _label=el.textContent;
   try{
     el.style.pointerEvents='none'; el.textContent='다운로드 중…';
@@ -10812,7 +10817,7 @@ window.osRich=window.osRich||{
     var self=this; var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
     inp.onchange=async function(){
       var f=inp.files&&inp.files[0]; if(!f) return;
-      var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+      var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
       var ext=((f.name||'').split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'')||'png';
       var path='scriptimg/'+Date.now()+'_'+(f.size||0)+'.'+ext;  /* ASCII 키 (한글 파일명 400 회피) */
       try{
@@ -10855,7 +10860,7 @@ function _tgInlineDone(){ window._tgiEdit=null; var tc=document.getElementById('
 function closeTogetherInline(){ window._tgiEdit=null; var tc=document.getElementById('tg-tempcard'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc); var nr=document.getElementById('tg-newrow'); if(nr) nr.style.display=''; renderTogether(); }
 function tgEditInline(id){ var rows=window._tgCache||[]; var r=null; for(var i=0;i<rows.length;i++){ if(String(rows[i].id)===String(id)){ r=rows[i]; break; } } if(!r){ alert('항목을 찾을 수 없습니다.'); return; } openTogetherInline({id:id, row:r}); }
 async function saveTogetherInline(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var cat=((document.getElementById('tgi-f-cat')||{}).value||'전산 이상 신고');
@@ -10883,7 +10888,7 @@ async function saveTogetherInline(){
 window.openTogetherInline=openTogetherInline; window.saveTogetherInline=saveTogetherInline; window.closeTogetherInline=closeTogetherInline; window.tgEditInline=tgEditInline; window._tgInlineDone=_tgInlineDone;
 function closeTogetherWrite(){ var m=document.getElementById('tgWriteModal'); if(m) m.style.display='none'; window._tgEdit=null; var tf=document.getElementById('tg-f-file'); if(tf) tf.value=''; var tp=document.getElementById('tg-f-filePreview'); if(tp) tp.innerHTML=''; }
 async function saveTogether(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   if(!window.AppState||!window.AppState.userId){ alert('로그인 정보를 가져오지 못했습니다.'); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var cat=((document.getElementById('tg-f-cat')||{}).value||'전산 이상 신고');
@@ -10915,7 +10920,7 @@ async function saveTogether(){
 }
 async function deleteTogether(id){
   if(!confirm('이 글을 삭제하시겠습니까?')) return;
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     if(res.ok||res.status===204){ window._tgLoaded=false; loadTogether(true); if(typeof toast==='function') toast('삭제 완료'); }
@@ -12976,7 +12981,7 @@ async function saveProfile(){
   try {
     var raw = localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}';
     var u = JSON.parse(raw);
-    if (!u || !u.id) { toast('로그인이 필요합니다'); return; }
+    if (!u || !u.id) { _authGate(); return; }
     if (!window.db || !window.db.fetch) { toast('네트워크 모듈 로드 실패'); return; }
 
     /* PATCH /rest/v1/users?id=eq.{userId} — 이름·전화·회사·지점 UPDATE
@@ -13108,8 +13113,8 @@ async function saveQuickMemo(){
   var ta=document.getElementById('osMemoText'), btn=document.getElementById('osMemoSaveBtn');
   var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 메모할 수 있어요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var firstLine=text.split('\n')[0].trim();
   var title=firstLine?(firstLine.length>24?firstLine.slice(0,24)+'…':firstLine):'빠른 메모';
   var desc=text.length>200?text.slice(0,200):text;
@@ -14130,7 +14135,7 @@ function _mysPrefillEdit(edit){
 window._mysPrefillEdit=_mysPrefillEdit;
 /* 스크립트/채팅 편집 진입 — id로 fetch 후 편집 모드 오픈 (본인 글) */
 async function scrEditOpen(id){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,stage,script_text,highlight_text,keywords,scope'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     if(!res.ok){ alert('불러오기 실패 ('+res.status+')'); return; }
@@ -14254,8 +14259,8 @@ window.closeMemoInline=closeMemoInline;
 async function saveMemoInline(){
   var ta=document.getElementById('memo-il-text'); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 메모할 수 있어요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var color=window._memoIlColor||'yellow';
   var firstLine=text.split('\n')[0].trim();
   var title=firstLine?(firstLine.length>24?firstLine.slice(0,24)+'…':firstLine):'빠른 메모';
@@ -14312,7 +14317,7 @@ function mysPickGo(kind){
 }
 window.mysPickGo=mysPickGo;
 async function saveScrInline(){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var title=((document.getElementById('scr-il-title')||{}).value||'').trim();
   var html=(window.osRich&&window.osRich.html)?(window.osRich.html()||'').trim():'';
@@ -14359,7 +14364,7 @@ async function saveScrInline(){
 window.saveScrInline=saveScrInline;
 /* 스크립트 수정 = 인라인 edit (새 리치 HTML은 그대로, 기존 plain은 줄바꿈 보존 변환). mysOpenItem 수정버튼에서 호출 */
 async function scrEditInline(id){
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,keywords'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     var r=((res.ok?await res.json():[])||[])[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
@@ -14386,7 +14391,7 @@ window.scrEditInline=scrEditInline;
 async function _saveMyspaceEdit(){
   var e=window._mysWriteEdit; if(!e) return;
   var btn=document.getElementById('mysWriteSaveBtn');
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var headers={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
   var body;
   if(e.type==='chat'){
@@ -14783,7 +14788,7 @@ async function saveMyspaceWrite(){
   if(tab==='qna'){ return _saveMyspaceQna(); }
   var btn=document.getElementById('mysWriteSaveBtn');
   if(!window.db||!window.AppState||!window.AppState.userId){alert('로그인 정보를 가져오지 못했습니다.');return;}
-  var token=window.db.getToken();if(!token){alert('로그인이 필요합니다.');return;}
+  var token=window.db.getToken();if(!token){_authGate();return;}
   var userId=window.AppState.userId;
   var headers={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
   if(tab==='library'){
@@ -14930,8 +14935,8 @@ async function _mysUploadAtts(inputId, subdir, token){
 /* 단체방 글쓰기 → team_notices INSERT (scope=team_internal). mrSubmitNotice 검증 컬럼 정합 */
 async function _saveMyspaceGroup(){
   var btn=document.getElementById('mysWriteSaveBtn');
-  if(!window.db||!window.db.fetch){ alert('로그인 후 작성할 수 있습니다.'); return; }
-  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate('로그인 후 작성할 수 있어요.'); return; }
+  var token=window.db.getToken(); if(!token){ _authGate(); return; }
   var title=((document.getElementById('mysWriteGrpTitle')||{}).value||'').trim();
   var content=((document.getElementById('mysWriteGrpBody')||{}).value||'').trim();
   var keywords=((document.getElementById('mysWriteGrpKeywords')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
@@ -14960,8 +14965,8 @@ async function _saveMyspaceGroup(){
 /* 보험Q&A 글쓰기 → posts INSERT (board_type=qna). ivSubmit 검증 컬럼 정합 + 전용 컬럼 없는 폼값은 content 조합 */
 async function _saveMyspaceQna(){
   var btn=document.getElementById('mysWriteSaveBtn');
-  if(!window.db||!window.db.fetch){ alert('로그인 후 작성할 수 있습니다.'); return; }
-  var token=window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate('로그인 후 작성할 수 있어요.'); return; }
+  var token=window.db.getToken(); if(!token){ _authGate(); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var typeEl=document.querySelector('input[name="mysQnaType"]:checked');
   var qtype=typeEl?typeEl.value:'인수';
@@ -15309,7 +15314,7 @@ async function saveCalEvent(p){
   var desc=(((document.getElementById('calf-desc')||{}).value)||'').trim();
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var scope=((document.getElementById('calf-scope')||{}).value)||'personal';
   async function _uField(f){ var v=u[f]||null; if(v==null&&u.id){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select='+f); if(r.ok){ var j=await r.json(); if(j&&j[0]) v=j[0][f]||null; } }catch(e){} } return v; }
@@ -15365,7 +15370,7 @@ async function updateCalEvent(p,id){
   var desc=(((document.getElementById('calf-desc')||{}).value)||'').trim();
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   var etime=((document.getElementById('calf-time')||{}).value)||null;
   var body={ event_date:date, event_time:etime, title:title, description:desc||null };
   try{
@@ -15559,7 +15564,7 @@ async function diarySaveEvent(){
   var reminders=_diaReadReminders();
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   var me=_diaOwnerId(), editId=window._diaEdit;
   /* 현재 캘린더 범위(개인/팀/지점) 반영 — 팀/지점을 골라도 개인으로 저장되던 문제 수정 (2026-07-04).
      신규 저장에만 적용(수정은 원래 출처 유지). 팀/지점 저장 방식은 기존 saveCalEvent와 동일한 필드·경로 재사용. */
@@ -15646,7 +15651,7 @@ function _diaAlarmGo(id, date){
 async function deleteMyspaceItem(id,type){
   if(!confirm('이 항목을 삭제하시겠습니까?'))return;
   if(!window.db||!window.db.getToken)return;
-  var token=window.db.getToken();if(!token){alert('로그인이 필요합니다.');return;}
+  var token=window.db.getToken();if(!token){_authGate();return;}
   var url=type==='script'?'/rest/v1/scripts?id=eq.'+encodeURIComponent(id):'/rest/v1/library?id=eq.'+encodeURIComponent(id);
   try{
     /* return=representation → 삭제된 행 반환. RLS 차단 등 0행 삭제(조용한 실패)를 표면화 */
@@ -15711,7 +15716,7 @@ function mysEditStart(){
 }
 async function mysEditSave(){
   var c=window._mysDetailCurrent; if(!c||!c._item) return; var it=c._item;
-  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var titleEl=document.getElementById('mysEditTitle'), textEl=document.getElementById('mysEditText');
   var title=((titleEl&&titleEl.value)||'').trim(), text=((textEl&&textEl.value)||'').trim();
   var isMemo=it._badge==='메모';
@@ -15818,7 +15823,7 @@ window._osShareSel=_osShareSel;
 async function _osShareCancel(i){
   var s=(window._osShareRows||[])[i]; if(!s) return;
   if(!window.confirm('이 공유를 취소할까요?\n받는 분의 공유함과 자료실에서 사본까지 함께 삭제됩니다.')) return;
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   var token=window.db.getToken&&window.db.getToken(); var key=window.db.key;
   try{
     if(s.item_type==='file' && s.item_id){
@@ -15835,7 +15840,7 @@ async function _osShareCancel(i){
 window._osShareCancel=_osShareCancel;
 async function _osShareReceive(i){
   var s=(window._osShareRows||[])[i]; if(!s) return;
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   var token=window.db.getToken&&window.db.getToken();
   var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
   var owner=(window.AppState&&window.AppState.userId)||((typeof _mvOwner==='function')?_mvOwner():'');
@@ -15876,8 +15881,8 @@ function _osShareItem(){ var c=window._mysDetailCurrent; if(!c||!c.id) return; _
 /* 스크립트 팀/지점 공유 — 원본은 그대로 두고 scope='team'/'branch' 사본 INSERT(공유=복사). INSERT RLS(P2-b-1)가 owner 본인 + scope_id=내 팀/지점만 허용 → 타팀 주입 불가. 알림(공지 포인터)은 send-push 수정 트랙과 함께(별도). */
 async function _scrShareToScope(scope){
   var c=window._mysDetailCurrent; if(!c||!c.id||c.type!=='script'){ if(typeof toast==='function') toast('스크립트만 공유할 수 있어요.'); return; }
-  if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 공유할 수 있습니다.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 공유할 수 있어요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var g=(scope==='team')?'팀':'지점';
   try{
     var H={'apikey':window.db.key,'Authorization':'Bearer '+token};
@@ -15942,7 +15947,7 @@ function _shareValidSourceId(type, id){
 }
 async function _osShareDo(scope){
   var ctx=window._osShareCtx; if(!ctx||!ctx.id){ _osShareClose(); return; }
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch){ _authGate(); return; }
   if(scope!=='team'){ if(typeof toast==='function') toast('지점 공유는 추후 제공돼요.'); _osShareClose(); return; }   /* #918: 지점 공유 보류(branch_internal RLS 정책 미확정) — 팀 공유만 */
   if(window._osShareBusy) return; window._osShareBusy=true;   /* 중복 클릭 이중 저장 방지 */
   var _picks=document.querySelectorAll('#osShareOv button.os-share-pick'); for(var _p=0;_p<_picks.length;_p++) _picks[_p].disabled=true;
@@ -16102,8 +16107,8 @@ async function _shareHubGo(scope){
 window._shareHubOpen=_shareHubOpen; window._shareHubClose=_shareHubClose; window._shareHubGo=_shareHubGo;
 /* 자료실 파일 직접 공유 — _osShareDo file 분기의 복제 로직 재사용(원본 보존 + 공유 스코프 스토리지 복제 + myspace_files scope 행). shares·team_notices INSERT 없음. */
 async function _vaultShareToScope(scope){
-  if(!window.db||!window.db.fetch||!window.AppState||!window.AppState.userId){ alert('로그인 후 공유할 수 있습니다.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; }
+  if(!window.db||!window.db.fetch||!window.AppState||!window.AppState.userId){ _authGate('로그인 후 공유할 수 있어요.'); return; }
+  var token=window.db.getToken&&window.db.getToken(); if(!token){ _authGate(); return; }
   var isTeam=(scope==='team'); var grp=isTeam?'팀':'지점';
   var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token};
   /* 소속 = users(DB) 직접 조회 — os_user 캐시 stale 회피(#953 정합, RLS scope_id 일치 보장) */
@@ -16382,7 +16387,7 @@ window._mvApplyVaultNotice=_mvApplyVaultNotice;
 async function mysVaultCreateFolder(parentId){
   if(_mvRoGuard()) return;
   var owner=_mvOwner(), token=_mvToken();
-  if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  if(!owner||!token){ _authGate(); return; }
   var name=prompt('새 폴더 이름'); if(name==null) return; name=String(name).trim(); if(!name) return;
   var depth=0; if(parentId){ var p=(window._mvFolders||[]).filter(function(f){return f.id===parentId;})[0]; depth=p?((p.depth||0)+1):0; }
   try{
@@ -16460,7 +16465,7 @@ function mvDragStart(e,type,id){ try{ e.dataTransfer.setData('text/x-mv', JSON.s
 function mvDragEnd(){ window._mvDragItem=null; _mvClearDropHover(); }
 window.mvDragStart=mvDragStart; window.mvDragEnd=mvDragEnd;
 async function mvDoMove(srcType, srcId, destFolderId){
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
   destFolderId=destFolderId||null;
   if(srcType==='folder'){
     var desc=_mvDescendantFolderIds(srcId); /* 자신+하위 */
@@ -16518,7 +16523,7 @@ async function _mvUploadOneFile(file, folderId, owner, token){
 }
 /* 공통 업로드 루프 — 진행 표시 + 부분 실패(성공분 유지, 실패 목록 안내). 전체 롤백 안 함. */
 async function _mvDoUploads(entries, skipped){
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
   var prog=document.getElementById('mys-vault-progress'); if(prog) prog.style.display='block';
   var ok=0, fails=[];
   for(var i=0;i<entries.length;i++){
@@ -16539,7 +16544,7 @@ async function _mvDoUploads(entries, skipped){
 /* 평면 파일 업로드 (현재 폴더로). */
 function mysVaultUpload(fileList, targetOverride){
   var files=Array.prototype.slice.call(fileList||[]); if(!files.length) return;
-  if(!_mvOwner()||!_mvToken()){ alert('로그인이 필요합니다.'); return; }
+  if(!_mvOwner()||!_mvToken()){ _authGate(); return; }
   var folderId=(targetOverride!==undefined)?targetOverride:(window._mvCurFolder||null);
   _mvDoUploads(files.map(function(f){ return {file:f, folderId:folderId}; }), 0);
 }
@@ -16591,7 +16596,7 @@ async function _mvCreateFolderRow(parentId, name, depth, owner, token){
 }
 /* 폴더 계층 보존 업로드: dirs 생성(부모 먼저) → 매핑 → 파일 업로드. 빈 폴더도 생성. */
 async function _mvProcessUpload(items, baseOverride){
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
   var base=(baseOverride!==undefined)?baseOverride:(window._mvCurFolder||null);
   var baseDepth=0; if(base){ var bf=(window._mvFolders||[]).filter(function(f){return f.id===base;})[0]; baseDepth=bf?(bf.depth||0):0; }
   /* 전체 폴더 경로 집합 = dirs + 파일 폴더경로의 모든 접두 */
@@ -16828,7 +16833,7 @@ function _mvPatch(table,id,body,token,done){
 }
 function mvVaultRename(type,id){
   mvVaultCloseMenu();
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
   if(type==='folder'){
     var fo=(window._mvFolders||[]).filter(function(f){return f.id===id;})[0]||{};
     var nn=prompt('폴더 이름 변경', fo.name||''); if(nn==null) return; nn=String(nn).trim(); if(!nn||nn===fo.name) return;
@@ -16853,7 +16858,7 @@ async function _mvDeleteStorageObj(path,token){
 }
 async function mvVaultDelete(type,id){
   mvVaultCloseMenu();
-  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ alert('로그인이 필요합니다.'); return; }
+  var owner=_mvOwner(), token=_mvToken(); if(!owner||!token){ _authGate(); return; }
   if(type==='file'){
     var f=(window._mvFiles||[]).filter(function(x){return x.id===id;})[0]; if(!f) return;
     if(!confirm('“'+(f.original_name||'이 파일')+'”을(를) 삭제할까요?\n실제 파일까지 삭제되며 되돌릴 수 없습니다.')) return;
