@@ -358,6 +358,12 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 }
 body.is-uat-spacenav #nav-myspace{display:none !important;} /* 다이어리 항목 → 마이 스페이스 카드로 흡수 */
 body.is-uat-spacenav .side .nav,body.is-admin .side .nav{padding:7px 10px;}  /* 항목 많은 UAT·어드민 = compact(세로 축소·좌우 통일) */
+/* 임태성 실장 사이드바 정리 — 홈·매니저방·상품로드맵·영업노트만 유지, 나머지 숨김(삭제 아님·게이트 해제 시 복원). (2026-07-04) */
+body.is-uat-homedesk .side .nav{display:none !important;}
+body.is-uat-homedesk .side #nav-home,
+body.is-uat-homedesk .side #nav-mgr,
+body.is-uat-homedesk .side #nav-roadmap,
+body.is-uat-homedesk .side #nav-salesnote{display:flex !important;}
 /* 마이 스페이스 페이지(배너 + 카드 그리드, P1-2) — 바텀시트 #spContent에 렌더 */
 .sn-page{display:flex;flex-direction:column;gap:16px;padding:2px;}
 .sn-banner img{width:100%;height:auto;display:block;border-radius:var(--radius-lg,14px);}
@@ -2858,7 +2864,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     </div>
     <!-- 사이드바 재구성(2026-06-14): 구분선 제거·순차 배치 / 라이브러리→마이 스페이스(클릭=바텀시트 슬라이딩+마이스페이스 기본) / Quick·현장의소리 사이드바 제거(Quick=딸깍 FAB로 접근) / 하단 그레이 영역=안내문·요금제·어드민 -->
     <div class="nav ins-show" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
-    <div class="nav on" onclick="_navView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
+    <div class="nav on" id="nav-home" onclick="_navView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
     <div class="nav" id="nav-myspace" onclick="_navDiary()"><span class="ic">&#9672;</span><span class="lbl">다이어리</span></div>
     <!-- 스페이스 네비(P1, is-uat-spacenav 전용) — 마이/팀/지점 스코프 선택 → 바텀시트 스페이스 페이지 -->
     <div class="nav sn2-only" id="nav-sp-my" onclick="_navMyspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-user"/></svg></span><span class="lbl">마이 스페이스</span></div>
