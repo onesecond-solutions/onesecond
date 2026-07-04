@@ -11968,10 +11968,20 @@ function _nlRenderAll(){
 }
 function _nlRenderCo(){
   if(!_nlCo)_nlCo=_nlPoolCos()[0]; var c=_nlCo; if(!c){var e0=document.getElementById('nlp-main');if(e0)e0.innerHTML='<div class="pl-empty">회사 없음</div>';return;}
-  var order=[],map={};
-  c.items.forEach(function(n){ var y=(n.publish_year!=null&&n.publish_year!=='')?n.publish_year:'?', m=(n.publish_month!=null&&n.publish_month!=='')?n.publish_month:'?'; var key=y+'|'+m; if(!map[key]){map[key]=[];order.push({key:key,y:y,m:m});} map[key].push(n); });
+  var map={},unknown=[];
+  c.items.forEach(function(n){ var y=(n.publish_year!=null&&n.publish_year!=='')?Number(n.publish_year):null, m=(n.publish_month!=null&&n.publish_month!=='')?Number(n.publish_month):null; if(y&&m){ (map[y+'|'+m]=map[y+'|'+m]||[]).push(n); } else { unknown.push(n); } });
+  /* 회사별 최초월 ~ 2026.07 까지 모든 월을 표시. 소식지 없는 월 = "년.월 -"(사용자 유무 확인). (2026-07-04 대표) */
+  var END=2026*12+(7-1);
+  var minIdx=null; Object.keys(map).forEach(function(k){ var pp=k.split('|'); var ix=Number(pp[0])*12+(Number(pp[1])-1); if(minIdx===null||ix<minIdx)minIdx=ix; });
+  if(minIdx===null)minIdx=END;
   var html='<div class="pl-cohd" style="--cl:var(--ac);--cl2:var(--ac)"><div><div class="nm">'+_nlEsc(c.n)+'</div><div class="mo">'+(c.sec==='life'?'생명보험':'손해보험')+'</div></div><span class="num">총 '+c.items.length+'건</span></div>';
-  html+=order.map(function(o){ var lb=(o.y==='?'?'연도 미상':o.y+'년')+' '+(o.m==='?'?'월 미상':o.m+'월'); return '<div class="pl-grp"><span class="pl-gh">'+_nlEsc(lb)+' · '+map[o.key].length+'건</span><div class="nlp-grid">'+map[o.key].map(_nlBox).join('')+'</div></div>'; }).join('');
+  var grp='';
+  for(var ix2=END; ix2>=minIdx; ix2--){ var yy=Math.floor(ix2/12), mm=(ix2%12)+1; var its=map[yy+'|'+mm]||[]; var lb=yy+'년 '+mm+'월';
+    var body=its.length?its.map(_nlBox).join(''):'<div class="chub-nlbox is-nosrc" title="소식지 없음(미등록)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">-</span></span><span class="chub-nlcap">'+yy+'.'+mm+' -</span></div>';
+    grp+='<div class="pl-grp"><span class="pl-gh">'+_nlEsc(lb)+' · '+(its.length?its.length+'건':'없음')+'</span><div class="nlp-grid">'+body+'</div></div>';
+  }
+  if(unknown.length){ grp+='<div class="pl-grp"><span class="pl-gh">연도·월 미상 · '+unknown.length+'건</span><div class="nlp-grid">'+unknown.map(_nlBox).join('')+'</div></div>'; }
+  html+=grp;
   var el=document.getElementById('nlp-main'); if(el){ el.innerHTML=html; if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(el); },0); }
 }
 function _nlRender(){ _nlRenderSide(); _nlRenderCount(); _nlSetHint(); if(_nlScope==='all')_nlRenderAll(); else _nlRenderCo(); }
