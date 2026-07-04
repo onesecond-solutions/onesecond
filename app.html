@@ -11937,7 +11937,7 @@ function _nlPoolCosBy(sec){ return _nlCos.filter(function(c){return c.sec===sec;
 function _nlCoHit(c){ if(!_nlQuery)return true; var q=_nlQuery.toLowerCase(); return String(c.n).toLowerCase().indexOf(q)>=0; }
 function _nlBox(n){
   var u=String(n.source_pdf_url||'').trim(), p=String(n.source_path||'').trim(), cap=_nlEsc((n.publish_month||'?')+'월');
-  if(!_nlHas(n)) return '<div class="chub-nlbox is-nosrc" title="원본 없음"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">원본 없음</span></span><span class="chub-nlcap">'+cap+'</span></div>';
+  if(!_nlHas(n)){ var _ym=_nlEsc((n.publish_year||'?')+'.'+(n.publish_month||'?')); return '<div class="chub-nlbox is-nosrc" title="소식지 없음(원본 미등록)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">-</span></span><span class="chub-nlcap">'+_ym+' -</span></div>'; }  /* 소식지 없는 자리 = "년.월 -" 표시 (2026-07-04 대표) */
   return '<button class="chub-nlbox" type="button" data-u="'+_nlEsc(u)+'" data-p="'+_nlEsc(p)+'" title="'+_nlEsc(_nlLabel(n))+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+cap+'</span></button>';
 }
 function _nlRenderSide(){
@@ -11958,7 +11958,7 @@ function _nlRenderCount(){
 }
 function _nlSetHint(){ var el=document.getElementById('nlp-hint'); if(el)el.textContent=_nlScope==='all'?'회사를 클릭하면 발행월별 소식지로':'좌측에서 다른 회사를 고를 수 있어요'; }
 function _nlCardAll(c){
-  var rows=c.items.map(function(n){ var y=(n.publish_year||'?'), m=(n.publish_month||'?'); var lbl=y+'.'+m+' · '+_nlLabel(n); var att=_nlHas(n)?(' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" onclick="_hubOpenNl(this)"'):''; return '<div class="p"'+att+'><span class="pn">'+_nlEsc(lbl)+'</span></div>'; }).join('');
+  var rows=c.items.map(function(n){ var y=(n.publish_year||'?'), m=(n.publish_month||'?'); var has=_nlHas(n); var lbl=y+'.'+m+' · '+(has?_nlLabel(n):'-'); var att=has?(' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" onclick="_hubOpenNl(this)"'):''; return '<div class="p'+(has?'':' is-nosrc')+'"'+att+'><span class="pn">'+_nlEsc(lbl)+'</span></div>'; }).join('');  /* 원본 없으면 "년.월 · -" (2026-07-04 대표) */
   return '<div class="pl-cc" style="--cl:var(--ac)"><div class="ch" data-co="'+_nlEsc(c.n)+'"><div class="cn"><span class="dot"></span>'+_nlEsc(c.n)+'<span class="num">'+c.items.length+'건</span></div></div><div class="pl-list">'+rows+'</div></div>';
 }
 function _nlRenderAll(){
