@@ -493,6 +493,10 @@ body.is-uat-homedesk #homeDesk{display:block;margin-top:6px;}
 .hd-scope-b.on{border-color:var(--hdc,var(--ac));background:color-mix(in srgb,var(--hdc,var(--ac)) 12%,transparent);color:var(--hdtext,var(--tp));}
 .hd-scope-b.on::before{border-color:var(--hdc,var(--ac));background:var(--hdc,var(--ac));box-shadow:inset 0 0 0 2px var(--s1);}
 .hd-prep{padding:28px 16px;text-align:center;color:var(--ts);line-height:1.7;font-size:0.88rem;}
+/* 지점 자료 배지 — 원수사 자료실·Q&A가 원세컨드 제공 외부 자료가 아니라 지점 내부 공유 자료임을 명시. (2026-07-04) */
+.hd-refbadge{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;background:var(--space-branch-soft);color:var(--space-branch-text);font-size:0.8rem;font-weight:700;line-height:1;}
+.hd-refbadge .sp-ico{width:14px;height:14px;color:var(--space-branch-line);}
+.hd-refbadge em{font-style:normal;font-weight:500;font-size:0.75rem;opacity:.85;}
 /* 시안대로 깔끔하게 — 임태성 홈에선 큰 배너 캐러셀·미니배너·시작하기 CTA 숨김(인사말+검색바+데스크만) */
 body.is-uat-homedesk #v-home .os-banner-carousel,
 body.is-uat-homedesk #v-home .os-banner-mini,
@@ -6347,8 +6351,7 @@ function _homeCard(kind){
   if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 영역 재선택 = 토글 닫힘 */
   _homeOpenKind=kind;
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-hdk')===kind); }catch(e){}  /* 활성 영역 표시 */
-  if(kind==='insvault'||kind==='insqna'){   /* 원수사 · Q&A = 지점 단일 자료: 범위 동그라미 없이 바로 열기 */
-    var box0=document.getElementById('hd-scope'); if(box0) box0.innerHTML='';
+  if(kind==='insvault'||kind==='insqna'){   /* 원수사 · Q&A = 지점 단일 자료: 범위 동그라미 없이 바로 열기(지점 배지) */
     if(inline) inline.classList.add('open');
     _homeRef(kind);
     return;
@@ -6372,6 +6375,8 @@ function _homeRef(kind){
   _homeOpenScope=null;
   var inl=document.getElementById('hd-inline');
   if(inl){ inl.classList.remove('scope-personal','scope-team','scope-branch','scope-all-disabled'); inl.classList.add('scope-branch'); }  /* 지점 색 분위기 */
+  var box=document.getElementById('hd-scope');
+  if(box){ box.innerHTML='<span class="hd-refbadge"><svg class="sp-ico" aria-hidden="true"><use href="#i-building"/></svg>지점 자료<em>우리 지점 안에서만 공유돼요</em></span>'; }  /* 지점 내부 자료 명시 — 외부 제공 자료 오해 방지 */
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}
   if(kind==='insvault'){ if(window._spCospShow) window._spCospShow(slot,'insurer'); }
   else if(kind==='insqna'){ if(window._spCospShow) window._spCospShow(slot,'qna'); }
