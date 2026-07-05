@@ -1593,8 +1593,14 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .svb-muted{color:var(--tf);font-weight:500;}
 .svb-grade{margin-top:6px;text-align:right;font-size:var(--ts-badge);font-weight:700;color:var(--tf);}
 .svb-foot{margin-top:10px;font-size:var(--ts-badge);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:8px;padding:8px 10px;line-height:1.5;}
-/* 독립 도구 페이지(#v-tool) 제목 — 계산기·변환기 (2026-07-05) */
+/* 독립 도구 허브 페이지(#v-tool) — 제목 + 3카드 그리드 + 아래 실행 슬롯 (2026-07-05) */
 .tool-page-h{font-size:var(--ts-viewer-title);font-weight:800;margin:6px 0 14px;color:var(--tp);}
+.tool-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+@media(max-width:640px){.tool-cards{grid-template-columns:1fr;}}
+.tool-card{display:flex;align-items:center;gap:12px;padding:15px 16px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);cursor:pointer;text-align:left;font-family:inherit;transition:border-color .12s,background .12s;}
+.tool-card:hover{border-color:var(--ac);}
+.tool-card.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 7%,transparent);}
+.tool-slot-empty{padding:44px 20px;text-align:center;color:var(--tf);font-size:var(--ts-meta);}
 /* 무결과 CTA — ① 필터 끄기 / ② 질문 남기기(플라이휠 입구) */
 .sv-empty-cta{padding:28px 16px;text-align:center;}
 .sv-empty-cta .sec-msg{font-size:0.95rem;color:var(--ts);margin-bottom:14px;}
@@ -3683,7 +3689,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      <!-- ════ 독립 도구 페이지 (#v-tool) — BMI 계산기·보험연령 계산기·이미지 변환기. 홈 도구 섹션 카드 진입. 임태성 게이트(Phase 1). Quick 렌더러 재사용(slotId). 2026-07-05 ════ -->
      <div class="wrap view" id="v-tool">
        <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
-       <div class="tool-page-h" id="tool-title">도구</div>
+       <div class="tool-page-h">계산기 · 변환기</div>
+       <div class="tool-cards" id="tool-cards"></div>
        <div class="qck-content-slot" id="tool-slot"></div>
      </div>
      <!-- ════ 원수사 상품 라인업 (#v-product-lineup) — 임태성 실장 게이트. DB(2026-07 draft) 읽어 시안 렌더. 일반/어드민 무영향. 2026-07-03 ════ -->
@@ -6428,19 +6435,12 @@ function _homeDeskShow(){
   for(var k=0;k<refs.length;k++){ var rc=refs[k];
     rh+='<button type="button" class="sn-card" data-hdk="'+rc.k+'" style="--c:'+rc.c+'" onclick="_homeCard(\''+rc.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+rc.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+rc.t+'</span><span class="sn-card-d">'+rc.d+'</span></span></button>';
   }
-  /* 도구 섹션(자료·도구 아래) — 계산기·변환기 독립 페이지 진입. 임태성 게이트(Phase 1 검수). 2026-07-05 */
+  /* 도구 섹션(자료 아래) — "계산기·변환기" 카드 1장 → 독립 도구 허브 페이지(#v-tool). 임태성 게이트(Phase 1). 2026-07-05 */
   var calcTools='';
   if(typeof _canSeePl==='function' && _canSeePl()){
-    var _ct=[
-      {k:'BMI계산기',    ic:'i-heart', t:'BMI 계산기',    d:'키·몸무게로 BMI 산출',   c:'var(--ac)'},
-      {k:'보험연령계산기', ic:'i-cal',   t:'보험연령 계산기', d:'상령일 기준 보험 나이',   c:'var(--ok)'},
-      {k:'변환기',       ic:'i-file',  t:'이미지 변환',    d:'PNG·PDF → JPG',        c:'var(--warn)'}
-    ];
-    var cth='';
-    for(var m=0;m<_ct.length;m++){ var ctc=_ct[m];
-      cth+='<button type="button" class="hd-tool" style="--c:'+ctc.c+'" onclick="openToolPage(\''+ctc.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+ctc.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+ctc.t+'</span><span class="sn-card-d">'+ctc.d+'</span></span><svg class="hd-tool-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></button>';
-    }
-    calcTools='<div class="hd-label">도구</div><div class="hd-tools">'+cth+'</div>';
+    calcTools='<div class="hd-label">도구</div><div class="hd-tools">'
+      +'<button type="button" class="hd-tool" style="--c:var(--ac)" onclick="showView(\'tool\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#i-box"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">계산기 · 변환기</span><span class="sn-card-d">BMI · 보험연령 · 이미지 변환</span></span><svg class="hd-tool-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></button>'
+      +'</div>';
   }
   host.innerHTML='<div class="sn-page">'
     +'<div class="hd-groups">'
@@ -6966,17 +6966,25 @@ function openQuickToolV2(name){
 window.openQuickToolV2 = openQuickToolV2;
 /* ════ 독립 도구 페이지 (#v-tool) — Quick 렌더러(slotId) 재사용. 홈 도구 섹션 카드 진입. 임태성 게이트(Phase 1). 2026-07-05 ════ */
 var _TOOL_PAGE_MAP={ 'BMI계산기':['BMI 계산기', renderBmiTool], '보험연령계산기':['보험연령 계산기', renderInsuranceAgeTool], '변환기':['이미지 변환 (PNG·PDF → JPG)', renderConverterTool] };
-function openToolPage(name){ window._toolPage=name; if(typeof showView==='function') showView('tool'); }
+function openToolPage(){ if(typeof showView==='function') showView('tool'); }   /* 홈 '계산기·변환기' 카드 → 허브 페이지 */
 window.openToolPage=openToolPage;
+var _TOOL_HUB=[['BMI계산기','BMI 계산기','키·몸무게로 BMI 산출','i-heart'],['보험연령계산기','보험연령 계산기','상령일 기준 보험 나이','i-cal'],['변환기','이미지 변환','PNG·PDF → JPG','i-file']];
+/* 허브 진입 = 3카드 렌더 + 아래 슬롯 초기화. 카드 클릭 시 _toolPick이 슬롯에 실행 */
 function loadToolPage(){
-  var name=window._toolPage||'', t=_TOOL_PAGE_MAP[name];
-  var ti=document.getElementById('tool-title'), s=document.getElementById('tool-slot');
-  try{ var q=document.getElementById('qck-content-slot'); if(q) q.innerHTML=''; }catch(e){}   /* Quick 슬롯 비움 — 중복 id 방지 */
-  if(!t){ if(ti)ti.textContent='도구'; if(s)s.innerHTML='<div style="padding:30px;color:var(--tf)">준비 중입니다.</div>'; return; }
-  if(ti)ti.textContent=t[0];
-  t[1]('tool-slot');
+  var cards=document.getElementById('tool-cards'); if(!cards) return;
+  cards.innerHTML=_TOOL_HUB.map(function(x){ return '<button type="button" class="tool-card" data-tk="'+x[0]+'" onclick="_toolPick(\''+x[0]+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+x[3]+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+x[1]+'</span><span class="sn-card-d">'+x[2]+'</span></span></button>'; }).join('');
+  var s=document.getElementById('tool-slot'); if(s) s.innerHTML='<div class="tool-slot-empty">위 도구를 선택하면 여기에서 바로 실행됩니다.</div>';
 }
 window.loadToolPage=loadToolPage;
+/* 카드 클릭 = 그 도구를 페이지 아래 슬롯(#tool-slot)에 렌더 + 카드 활성표시 */
+function _toolPick(name){
+  var t=_TOOL_PAGE_MAP[name]; if(!t) return;
+  try{ var q=document.getElementById('qck-content-slot'); if(q) q.innerHTML=''; }catch(e){}   /* Quick 슬롯 비움 — 중복 id 방지 */
+  try{ var cs=document.querySelectorAll('#tool-cards .tool-card'); for(var i=0;i<cs.length;i++){ cs[i].classList.toggle('on', cs[i].getAttribute('data-tk')===name); } }catch(e){}
+  t[1]('tool-slot');
+  var s=document.getElementById('tool-slot'); if(s) setTimeout(function(){ s.scrollIntoView({behavior:'smooth',block:'start'}); },80);
+}
+window._toolPick=_toolPick;
 
 /* ════════════════════════════════════════════════════════════════
  * Quick 실행도구 — 보험료 비교표 빌더 (2026-06-04)
