@@ -13306,10 +13306,15 @@ async function _qnaBulkImport(auto){
     function _bp(o){ return { board_type:'qna', title:String(o.title||'').slice(0,200), content:_qnaComposeContent(o), question_type:(o.category||'인수'), insurer_target:null, keywords:(Array.isArray(o.tags)?o.tags:[]).concat(['카톡네비']), attachments:[], author_id:u.id, author_name:(u.name||''), branch_id:branchId }; }
     var okC=0, ansC=0, failC=0, lastErr='', comments=[], PAR=8;
     async function _insP(o){
-      try{ var r=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(_bp(o))});
-        if(r.ok||r.status===201){ var j=await r.json().catch(function(){return null;}); var pid=(j&&j[0]&&j[0].id)||null; if(pid){ okC++; (o.answers||[]).forEach(function(a){ comments.push({post_id:pid, content:'['+a.insurer+'] '+a.content, author_id:u.id, author_name:(u.name||'')}); }); return; } failC++; if(!lastErr) lastErr='삽입 응답에 id 없음'; }
-        else { failC++; if(!lastErr){ lastErr=r.status+' '+String(await r.text().catch(function(){return'';})).slice(0,180); } }
-      }catch(e){ failC++; if(!lastErr) lastErr=String((e&&e.message)||e); }
+      async function _try(qt){ try{ var b=_bp(o); if(qt) b.question_type=qt;
+          var r=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(b)});
+          if(r.ok||r.status===201){ var j=await r.json().catch(function(){return null;}); return {pid:(j&&j[0]&&j[0].id)||null}; }
+          return {err:r.status+' '+String(await r.text().catch(function(){return'';})).slice(0,300)};
+        }catch(e){ return {err:String((e&&e.message)||e)}; } }
+      var a=await _try(null);
+      if(!a.pid && (o.category||'인수')!=='인수'){ a=await _try('인수'); }   /* question_type 값 거부 가능성 → 30데모 검증값 '인수'로 재시도(자동 복구) */
+      if(a.pid){ okC++; (o.answers||[]).forEach(function(x){ comments.push({post_id:a.pid, content:'['+x.insurer+'] '+x.content, author_id:u.id, author_name:(u.name||'')}); }); }
+      else { failC++; if(!lastErr) lastErr=(a.err||'id 없음'); }
     }
     for(var i=0;i<fresh.length;i+=PAR){ log('질문 등록 '+i+' / '+fresh.length+'…'); await Promise.all(fresh.slice(i,i+PAR).map(_insP));
       if(i===0 && okC===0){ log('등록 실패: '+(lastErr||'원인 미상')); if(!auto&&typeof alert==='function') alert('실패: '+lastErr); if(btn)btn.disabled=false; window._qnaBulkRunning=false; return; }
@@ -13317,7 +13322,7 @@ async function _qnaBulkImport(auto){
     async function _insC(cb){ try{ var r=await window.db.fetch('/rest/v1/comments',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(cb)}); if(r.ok||r.status===201) ansC++; }catch(e){} }
     for(var c=0;c<comments.length;c+=PAR){ log('답변 등록 '+c+' / '+comments.length+'…'); await Promise.all(comments.slice(c,c+PAR).map(_insC)); }
     if(!failC){ try{localStorage.setItem('os_qna_bulk_done','1');}catch(e){} }
-    var msg='임포트 완료 — 질문 '+okC+' · 답변 '+ansC+' · 중복 '+skipC+(failC?(' · 실패 '+failC):'');
+    var msg='임포트 완료 — 질문 '+okC+' · 답변 '+ansC+' · 중복 '+skipC+(failC?(' · 실패 '+failC+' ['+lastErr+']'):'');
     log(msg); if(!auto&&typeof alert==='function') alert(msg);
   }catch(e){ log('오류: '+(e&&e.message||e)); }
   finally{ if(btn) btn.disabled=false; window._qnaBulkRunning=false; }
