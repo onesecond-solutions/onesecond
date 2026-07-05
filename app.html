@@ -1600,6 +1600,12 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .sv-inline-ans-h{font-size:var(--ts-badge);font-weight:800;color:var(--ac);margin-bottom:5px;}
 .sv-inline-a{font-size:var(--ts-meta);color:var(--tp);line-height:1.5;padding:5px 0;border-bottom:1px solid color-mix(in srgb,var(--bd) 50%,transparent);}
 .sv-inline-a:last-child{border-bottom:none;}
+/* 카톡 Q&A 전량 임포트 버튼 (임태성 실장 전용, 임시) */
+#qnaImportBtn-wrap{position:fixed;left:14px;bottom:14px;z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:flex-start;}
+body:not(.is-uat-qnaimport) #qnaImportBtn-wrap{display:none !important;}
+#qnaImportBtn{padding:10px 16px;border:none;border-radius:10px;background:#0891B2;color:#fff;font-size:var(--ts-body);font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(8,145,178,.35);}
+#qnaImportBtn:disabled{opacity:.6;cursor:default;}
+#qnaImportOut{font-size:var(--ts-meta);color:var(--tp);background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;max-width:280px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
 /* 상품 라인업 탭 = pl-* 레이아웃 검색결과 스코프 — 변수 스코프 이식(#v-product-lineup 미러) (2026-07-05) */
 .pl-layout.svpl{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);margin-top:4px;}
 /* 상세 패널 = 클릭한 상품 위치에 맞춰 절대배치(플로팅). top·max-height는 _svplPositionDrawer가 JS로 설정 (2026-07-05) */
@@ -5126,6 +5132,7 @@ function applyRoleClass(){
   document.body.classList.toggle('is-uat-aipolish', _uatA==='bylts@naver.com');
   /* 상품 로드맵 = 임태성 실장 user_id 전용 검수(2026-06-27). 어드민 포함 타 계정 비노출. 메뉴 노출은 CSS(body.is-uat-roadmap), 직접 진입 차단은 showView 가드(_canSeeRoadmap). */
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
+  document.body.classList.toggle('is-uat-qnaimport', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 카톡 Q&A 전량 임포트 버튼 = 임태성 실장 전용(임시, 실행 후 제거). 2026-07-05 */
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
   /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민은 운영·유지보수 계정 = 사이드바 접힘 규칙에서 제외(:not(.is-admin)) → 전체 네비 유지(위 CSS). */
   document.body.classList.toggle('is-uat-homedesk', !!r);
@@ -13262,6 +13269,69 @@ async function _searchOpenOrigin(table, id){
   }catch(e){ _svToast('원본을 여는 중 문제가 발생했습니다'); }
 }
 window._searchOpenOrigin=_searchOpenOrigin;
+/* ════ 카톡 Q&A 전량 임포트 (임태성 실장 전용, 임시) — Gist 데이터 → 배치 insert + 제목+본문 서명 중복방지 + 첫배치 실패 자동중단 + 결과표시. 2026-07-05 대표 지시(AI팀 실행). 완료 후 제거 예정 ════ */
+var _QNA_BULK_URL='https://gist.githubusercontent.com/onesecond-solutions/43d9b9745e5263879accee25cf9c254c/raw/qna_import_all.json';
+function _qnaComposeContent(o){ var L=[];
+  if(o.age_sex) L.push('[연령/성별] '+o.age_sex);
+  if(o.job) L.push('[직업] '+o.job);
+  if(o.history) L.push('[병력] '+o.history);
+  if(o.onset) L.push('[진단시기] '+o.onset);
+  if(o.status) L.push('[현재 상태] '+o.status);
+  if(o.want_cover) L.push('[원하는 담보] '+o.want_cover);
+  if(o.body){ L.push(''); L.push(o.body); }
+  return L.join('\n').trim();
+}
+async function _qnaBulkImport(auto){
+  if(!(typeof _canSeeRoadmap==='function' && _canSeeRoadmap())) return;   /* 임태성 실장 전용 */
+  var out=document.getElementById('qnaImportOut'), btn=document.getElementById('qnaImportBtn');
+  function log(m){ if(out) out.textContent=m; try{console.log('[qnaBulk]',m);}catch(e){} }
+  var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
+  if(!window.db||!window.db.fetch||!u.id){ log('로그인 필요'); return; }
+  if(btn) btn.disabled=true;
+  try{
+    log('데이터 불러오는 중…');
+    var dres=await fetch(_QNA_BULK_URL,{cache:'no-store'}); var data=dres.ok?await dres.json():null;
+    var items=(data&&data.items)||[]; if(items.length<50){ log('데이터 이상(건수 부족) — 중단'); if(btn)btn.disabled=false; return; }
+    if(!auto){ if(!confirm('임태성 실장 계정으로 보험 Q&A '+items.length+'건을 등록합니다. 진행할까요?')){ if(btn)btn.disabled=false; return; } }
+    var branchId=u.branch_id||null;
+    if(branchId==null){ try{ var br=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select=branch_id'); if(br.ok){ var bj=await br.json(); if(bj&&bj[0]) branchId=bj[0].branch_id||null; } }catch(e){} }
+    log('기존 질문 확인 중…');
+    var sig={}; try{ var er=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&select=title,content&limit=8000'); if(er.ok){ (await er.json()).forEach(function(p){ sig[String(p.title||'').trim()+'\x1f'+String(p.content||'').trim()]=1; }); } }catch(e){}
+    var fresh=[], seen={};
+    items.forEach(function(o){ var s=String(o.title||'').trim()+'\x1f'+_qnaComposeContent(o); if(sig[s]||seen[s]) return; seen[s]=1; fresh.push(o); });
+    var skipC=items.length-fresh.length;
+    if(!fresh.length){ log('완료 — 신규 0 · 중복 건너뜀 '+skipC); try{localStorage.setItem('os_qna_bulk_done','1');}catch(e){} if(btn)btn.disabled=false; return; }
+    var CHUNK=150, okC=0, ansC=0, failC=0, comments=[];
+    for(var i=0;i<fresh.length;i+=CHUNK){
+      var batch=fresh.slice(i,i+CHUNK);
+      var pbody=batch.map(function(o){ return { board_type:'qna', title:o.title, content:_qnaComposeContent(o), question_type:(o.category||'인수'), insurer_target:null, keywords:(o.tags||[]).concat(['카톡네비']), attachments:[], author_id:u.id, author_name:(u.name||''), branch_id:branchId }; });
+      log('질문 등록 '+i+'~'+(i+batch.length)+' / '+fresh.length+'…');
+      try{
+        var pr=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(pbody)});
+        if(pr.ok||pr.status===201){ var ins=await pr.json(); if(!Array.isArray(ins)) ins=[]; okC+=ins.length;
+          for(var j=0;j<ins.length && j<batch.length;j++){ var pid=ins[j].id; (batch[j].answers||[]).forEach(function(a){ comments.push({post_id:pid, content:'['+a.insurer+'] '+a.content, author_id:u.id, author_name:(u.name||'')}); }); }
+        } else { failC+=batch.length; try{console.warn('post batch fail',pr.status,await pr.text());}catch(e){} }
+      }catch(e){ failC+=batch.length; }
+      if(i===0 && okC===0){ log('첫 배치 등록 실패 — 안전 중단(권한·구조 확인 필요)'); if(!auto&&typeof alert==='function') alert('첫 배치 실패 — 중단'); if(btn)btn.disabled=false; return; }   /* 피해 최소화 */
+    }
+    for(var c=0;c<comments.length;c+=CHUNK){
+      var cb=comments.slice(c,c+CHUNK);
+      log('답변 등록 '+c+'~'+(c+cb.length)+' / '+comments.length+'…');
+      try{ var cr=await window.db.fetch('/rest/v1/comments',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(cb)}); if(cr.ok||cr.status===201) ansC+=cb.length; }catch(e){}
+    }
+    if(!failC){ try{localStorage.setItem('os_qna_bulk_done','1');}catch(e){} }
+    var msg='임포트 완료 — 질문 '+okC+' · 답변 '+ansC+' · 중복 '+skipC+(failC?(' · 실패 '+failC):'');
+    log(msg); if(!auto&&typeof alert==='function') alert(msg);
+  }catch(e){ log('오류: '+(e&&e.message||e)); }
+  finally{ if(btn) btn.disabled=false; }
+}
+window._qnaBulkImport=_qnaBulkImport;
+/* 자동 실행 — 임태성 실장이 app 로드 시 1회(started 플래그로 중복·동시실행 방지). 대표 클릭 없이 자율 완성. */
+setTimeout(function(){ try{
+  if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap() && localStorage.getItem('os_qna_bulk_started')!=='1' && localStorage.getItem('os_qna_bulk_done')!=='1'){
+    localStorage.setItem('os_qna_bulk_started','1'); _qnaBulkImport(true);
+  }
+}catch(e){} }, 5000);
 /* 1) 지식엔진 — 결과 카드 안 인라인 펼침(이동 X·토글) */
 async function _svInlineKnowledge(id){
   var card=document.querySelector('#hsResults .sores[data-svkey="knowledge_entries:'+id+'"]');
@@ -18118,6 +18188,11 @@ body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드
 .os-start-cta:active{transform:translateY(1px);}
 .os-start-cta svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;}
 </style>
+<!-- 카톡 Q&A 전량 임포트 (임태성 실장 전용, 임시). 자동실행+수동버튼. 완료 후 제거 (2026-07-05) -->
+<div id="qnaImportBtn-wrap">
+  <button id="qnaImportBtn" type="button" onclick="_qnaBulkImport(false)">보험 Q&amp;A 전량 임포트</button>
+  <div id="qnaImportOut">임태성 실장 로드 시 자동 실행됩니다</div>
+</div>
 <div id="osSheet" class="os-sheet" role="region" aria-label="스크립트 시트">
   <div class="os-sheet-handle" id="osSheetHandle">
     <div class="os-sheet-lines" aria-hidden="true"><span></span></div>
