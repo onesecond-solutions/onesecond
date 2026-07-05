@@ -1574,6 +1574,16 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 /* 상품 라인업 탭 = pl-* 레이아웃 검색결과 스코프 — 변수 스코프 이식(#v-product-lineup 미러) (2026-07-05) */
 .pl-layout.svpl{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);margin-top:4px;}
+/* 알릴의무 요약(상품라인업 상세 접목) — 요약만·확정만 세부문항 (2026-07-05) */
+.gj-sum{margin-top:16px;padding-top:14px;border-top:2px solid var(--ac);}
+.gj-h{font-size:var(--ts-preview);font-weight:800;color:var(--tp);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.gj-grade{font-size:var(--ts-badge);font-weight:700;color:var(--gc);background:color-mix(in srgb,var(--gc) 12%,transparent);border:1px solid color-mix(in srgb,var(--gc) 35%,transparent);border-radius:999px;padding:2px 8px;}
+.gj-row{display:flex;gap:8px;padding:3px 0;font-size:var(--ts-meta);}
+.gj-k{min-width:66px;font-weight:800;color:var(--tf);flex-shrink:0;}
+.gj-v{color:var(--tp);flex:1;line-height:1.5;}
+.gj-code{display:inline-block;font-size:var(--ts-badge);font-weight:700;color:var(--ac);background:var(--pl-ac50);border:1px solid var(--pl-ac100);border-radius:5px;padding:1px 6px;margin-right:4px;}
+.gj-detail{margin-top:6px;padding-top:6px;border-top:1px dashed var(--bd);}
+.gj-note{margin-top:10px;font-size:var(--ts-badge);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:7px;padding:7px 9px;line-height:1.5;}
 /* ════ BMI 4축 회사별 비교(임태성) — 예전 BMI 페이지 대체. 정상/할증/방진/거절=도메인 stage 색상 (2026-07-05) ════ */
 .svb-wrap{border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);padding:12px;margin:6px 0 10px;}
 .svb-hd{font-size:var(--ts-preview);font-weight:800;color:var(--tp);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
@@ -12612,7 +12622,7 @@ function _svplDrawerHtml(cos){
   var sel=window._svplSel; if(!sel) return '';
   var c=_svplFindCo(cos,sel.co); if(!c) return ''; var p=c.ps[sel.idx]; if(!p) return '';
   var tags=((p.th&&p.th.length)?p.th:['미분류']).map(function(t){return '<span>'+_sEsc(t)+'</span>';}).join('');
-  return '<button type="button" class="pl-dr-close" onclick="_svplClose()">×</button><div class="pl-dr-co"><span style="color:'+_sEsc(c.cl)+'">●</span> '+_sEsc(c.n)+'</div><div class="pl-dr-pn">'+_sEsc(p.t)+'</div><div class="pl-dr-badges">'+(p.b?'<span class="pl-bd '+_sEsc(p.b)+'">'+_sEsc(p.b)+'</span>':'')+'<span class="pl-bd" style="background:var(--s2);color:var(--ts)">'+_sEsc(p.gj||'—')+'</span></div><div class="pl-dr-field"><div class="k">상품군</div><div class="v">'+_sEsc(p.grp||'—')+'</div></div><div class="pl-dr-field"><div class="k">가입연령</div><div class="v">'+_sEsc(p.age||'—')+'</div></div><div class="pl-dr-field"><div class="k">핵심 특징</div><div class="v">'+_sEsc(p.f||'—')+'</div></div><div class="pl-dr-field"><div class="k">테마 분류</div><div class="pl-dr-tags">'+tags+'</div></div><div class="pl-dr-src">출처 · '+_sEsc(c.mo)+'<br>정확한 조건은 약관·상품설명서 확인</div>';
+  return '<button type="button" class="pl-dr-close" onclick="_svplClose()">×</button><div class="pl-dr-co"><span style="color:'+_sEsc(c.cl)+'">●</span> '+_sEsc(c.n)+'</div><div class="pl-dr-pn">'+_sEsc(p.t)+'</div><div class="pl-dr-badges">'+(p.b?'<span class="pl-bd '+_sEsc(p.b)+'">'+_sEsc(p.b)+'</span>':'')+'<span class="pl-bd" style="background:var(--s2);color:var(--ts)">'+_sEsc(p.gj||'—')+'</span></div><div class="pl-dr-field"><div class="k">상품군</div><div class="v">'+_sEsc(p.grp||'—')+'</div></div><div class="pl-dr-field"><div class="k">가입연령</div><div class="v">'+_sEsc(p.age||'—')+'</div></div><div class="pl-dr-field"><div class="k">핵심 특징</div><div class="v">'+_sEsc(p.f||'—')+'</div></div><div class="pl-dr-field"><div class="k">테마 분류</div><div class="pl-dr-tags">'+tags+'</div></div><div class="pl-dr-src">출처 · '+_sEsc(c.mo)+'<br>정확한 조건은 약관·상품설명서 확인</div>'+_svGojiSummaryHtml(c.n, p.t);
 }
 function _svplLayoutHtml(prodItems){
   var cos=_svplModel(prodItems);
@@ -12629,9 +12639,43 @@ function _svplLayoutHtml(prodItems){
 }
 function _svplPickCo(name){ window._svplCo=name||null; window._svplSel=null; _svRender(); }
 function _svplPickTheme(t){ window._svplTheme=(window._svplTheme===t)?'전체':t; _svRender(); }
-function _svplOpen(co,idx){ window._svplSel={co:co,idx:+idx}; _svRender(); }
+function _svplOpen(co,idx){ window._svplSel={co:co,idx:+idx}; _svRender(); if(typeof _svLoadGoji==='function' && !window._svGojiMap){ _svLoadGoji().then(function(){ if(window._svplSel) _svRender(); }); } }   /* 알릴의무 요약 지연 로드 후 재렌더 */
 function _svplClose(){ window._svplSel=null; _svRender(); }
 window._svplPickCo=_svplPickCo; window._svplPickTheme=_svplPickTheme; window._svplOpen=_svplOpen; window._svplClose=_svplClose;
+/* ════ 알릴의무 요약 접목 — 상품라인업 상세 패널에 요약만(대분류·고지유형·고지코드·등급·출처·안내문 / 확정 5건만 세부문항). data/goji_records.json(114) 회사+상품명 정규화 매칭. 추정 0. 별도 비교 탭·공통 리팩터와 분리 (2026-07-05) ════ */
+function _svGojiNorm(s){ return String(s||'').toLowerCase().replace(/[\s·\.\(\)]/g,''); }
+var _svGojiLoading=null;
+function _svLoadGoji(){
+  if(window._svGojiMap) return Promise.resolve(window._svGojiMap);
+  if(_svGojiLoading) return _svGojiLoading;
+  _svGojiLoading=fetch('/data/goji_records.json?v=20260705').then(function(r){return r.ok?r.json():[];}).then(function(recs){
+    var m={}; if(Array.isArray(recs)) recs.forEach(function(g){ m[_svGojiNorm(g.co)+'|'+_svGojiNorm(g.prod)]=g; });
+    window._svGojiMap=m; return m;
+  }).catch(function(){ window._svGojiMap={}; return {}; });
+  return _svGojiLoading;
+}
+window._svLoadGoji=_svLoadGoji;
+function _svGojiSummaryHtml(co, prod){
+  var m=window._svGojiMap; if(!m) return '';
+  var g=m[_svGojiNorm(co)+'|'+_svGojiNorm(prod)]; if(!g) return '';   /* 매칭 114개만. 나머지 132개 미표시 */
+  var daebun=(g.goji==='일반고지')?'건강체':'유병자';
+  var GK={'확정':['확정','#16A34A'],'코드확인':['코드 확인','#4F46E5'],'유형확인':['유형 확인','#64748B']};
+  var gk=GK[g.grade]||[g.grade,'#64748B'];
+  var codes=(g.codes&&g.codes.length)?g.codes.map(function(c){return '<span class="gj-code">'+_sEsc(c)+'</span>';}).join(''):'';
+  var h='<div class="gj-sum"><div class="gj-h">알릴의무 요약 <span class="gj-grade" style="--gc:'+gk[1]+'">'+_sEsc(gk[0])+'</span></div>';
+  h+='<div class="gj-row"><span class="gj-k">상품대분류</span><span class="gj-v">'+_sEsc(daebun)+'</span></div>';
+  h+='<div class="gj-row"><span class="gj-k">고지유형</span><span class="gj-v">'+_sEsc(g.goji||'—')+'</span></div>';
+  if(codes) h+='<div class="gj-row"><span class="gj-k">고지코드</span><span class="gj-v">'+codes+'</span></div>';
+  if(g.grade==='확정' && g.detail){ var d=g.detail; h+='<div class="gj-detail">';   /* 세부문항 = 확정 5건만. 코드/유형확인은 추정 표시 안 함 */
+    if(d['입원수술']) h+='<div class="gj-row"><span class="gj-k">입원·수술</span><span class="gj-v">'+_sEsc(d['입원수술'])+'</span></div>';
+    if(d['중대질환']) h+='<div class="gj-row"><span class="gj-k">중대질환</span><span class="gj-v">'+_sEsc(d['중대질환'])+'</span></div>';
+    if(d['납면']) h+='<div class="gj-row"><span class="gj-k">납입면제</span><span class="gj-v">'+_sEsc(d['납면'])+'</span></div>';
+    h+='</div>';
+  }
+  h+='<div class="gj-note">최종 고지는 청약서·상품설명서 기준 확인이 필요합니다.</div></div>';
+  return h;
+}
+window._svGojiSummaryHtml=_svGojiSummaryHtml;
 /* ════ BMI 심사 기준 검색 (임태성 게이트) — 예전 BMI Quick 페이지 대체. 현장메모 4축(정상·할증·방진·거절). DB 무관 (2026-07-05) ════ */
 var _SV_BMI=[
   {co:'메리츠화재',cl:'#B91C1C',type:'성별 기준',n:'남 18~30 / 여 16~29',h:'',b:'',r:'남 18 미만·30 이상 / 여 16 미만·29 이상 벗어남',note:''},
