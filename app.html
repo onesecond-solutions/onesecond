@@ -1595,6 +1595,11 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .svc-note{margin-top:8px;font-size:var(--ts-badge);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:8px;padding:9px 11px;line-height:1.55;font-weight:600;}
 /* 보험 Q&A 출처 안내 배너 (더원지점 카톡 네비방 기반 데모, 2026-07-05) */
 .qna-src-notice{margin:0 0 10px;padding:9px 13px;font-size:var(--ts-meta);line-height:1.55;color:var(--tp);background:color-mix(in srgb,var(--ac) 6%,var(--s1));border:1px solid color-mix(in srgb,var(--ac) 16%,var(--bd));border-left:3px solid var(--ac);border-radius:var(--radius-sm);}
+/* 검색 결과 Q&A 인라인 답변 (바텀시트 무의존 딥링크 대체, 2026-07-05) */
+.sv-inline-ans{margin-top:8px;border-top:1px dashed var(--bd);padding-top:8px;}
+.sv-inline-ans-h{font-size:var(--ts-badge);font-weight:800;color:var(--ac);margin-bottom:5px;}
+.sv-inline-a{font-size:var(--ts-meta);color:var(--tp);line-height:1.5;padding:5px 0;border-bottom:1px solid color-mix(in srgb,var(--bd) 50%,transparent);}
+.sv-inline-a:last-child{border-bottom:none;}
 /* 상품 라인업 탭 = pl-* 레이아웃 검색결과 스코프 — 변수 스코프 이식(#v-product-lineup 미러) (2026-07-05) */
 .pl-layout.svpl{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);margin-top:4px;}
 /* 상세 패널 = 클릭한 상품 위치에 맞춰 절대배치(플로팅). top·max-height는 _svplPositionDrawer가 JS로 설정 (2026-07-05) */
@@ -13297,21 +13302,30 @@ function _svQnaMap(r){
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,'비공개'].filter(Boolean).join(' · '), bodyHtml:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, imgs:_ah.imgs, names:_ah.names, _id:r.id, author_id:r.author_id, created_at:r.created_at};
 }
+/* 검색 결과 인라인 펼침 공용 — 바텀시트 경유 딥링크가 숨김 후 깨져서, Q&A·공지·개인 스크립트는 카드 안 인라인으로 표시(바텀시트 무의존, 지식엔진 패턴). 2026-07-05 */
+function _svInlineBox(table, id){
+  var k=table+':'+id;
+  var card=document.querySelector('#hsResults .sores[data-svkey="'+k+'"]')||document.querySelector('#sobody .sores[data-svkey="'+k+'"]')||document.querySelector('.sores[data-svkey="'+k+'"]');
+  if(!card){ _svToast('결과 카드를 찾지 못했습니다'); return null; }
+  var ex=card.querySelector('.sv-inline');
+  if(ex){ ex.remove(); card.classList.remove('sv-open'); return {closed:true}; }   /* 두 번째 클릭 = 접기 */
+  var box=document.createElement('div'); box.className='sv-inline'; box.innerHTML='<div class="sv-inline-load">불러오는 중…</div>';
+  box.addEventListener('click', function(e){ e.stopPropagation(); });
+  card.appendChild(box); card.classList.add('sv-open');
+  return {card:card, box:box};
+}
 async function _searchGoQna(id){
-  var r=null;
-  try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&board_type=eq.qna&select=id,title,content,attachments,author_id,author_name,created_at,question_type'); var rows=res.ok?await res.json():[]; r=rows[0]; }catch(e){}
-  if(!r){ _svToast('권한이 없거나 삭제된 질문입니다'); return; }
-  if(typeof closeSearch==='function') closeSearch();
-  if(typeof _navQnaSp==='function') _navQnaSp(); else { _svToast('보험 Q&A 화면을 열 수 없습니다'); return; }
-  var ok=await _waitFor(function(){ return Array.isArray(window._mysQnaCache) && document.getElementById('mys-qna-viewer'); }, 6000);
-  if(!ok){ _svToast('보험 Q&A 화면을 여는 중 시간이 초과됐습니다'); return; }
-  var fil=window._mysQnaFiltered||[];
-  for(var i=0;i<fil.length;i++){ if(String(fil[i]._id)===String(id)){ mysQnaOpen(i); return; } }
-  var cache=window._mysQnaCache||[]; var item=null;
-  for(var j=0;j<cache.length;j++){ if(String(cache[j]._id)===String(id)){ item=cache[j]; break; } }
-  if(!item) item=_svQnaMap(r);   /* 100건 밖 = 단건 보강 */
-  (window._mysQnaFiltered=window._mysQnaFiltered||[]).unshift(item);
-  if(typeof mysQnaOpen==='function') mysQnaOpen(0); else _svToast('원본 질문을 열지 못했습니다');
+  var b=_svInlineBox('posts', id); if(!b||b.closed) return;
+  try{
+    var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&board_type=eq.qna&select=id,title,content,author_name,created_at,question_type');
+    var rows=res.ok?await res.json():[]; var r=rows[0];
+    if(!r){ b.box.innerHTML='<div class="sv-inline-empty">권한이 없거나 삭제된 질문입니다.</div>'; return; }
+    var qt=_svQTokens();
+    var cres=await window.db.fetch('/rest/v1/comments?post_id=eq.'+encodeURIComponent(id)+'&order=created_at.asc&select=content,author_name,created_at');
+    var cs=cres&&cres.ok?await cres.json():[]; if(!Array.isArray(cs)) cs=[];
+    var ans=cs.length?('<div class="sv-inline-ans"><div class="sv-inline-ans-h">답변 '+cs.length+'</div>'+cs.map(function(c){ return '<div class="sv-inline-a">'+_sMark(String(c.content||''),qt)+'</div>'; }).join('')+'</div>'):'<div class="sv-inline-empty">아직 답변이 없습니다.</div>';
+    b.box.innerHTML='<div class="sv-inline-body">'+_sMark(String(r.content||''),qt)+'</div>'+ans;
+  }catch(e){ b.box.innerHTML='<div class="sv-inline-empty">본문을 불러오지 못했습니다.</div>'; }
 }
 /* 4) 팀·지점 공지 — scope 확인 후 바텀시트 공동 스페이스 공지게시판으로 이동 */
 function _svNoticeMap(r){
@@ -13322,19 +13336,14 @@ function _svNoticeMap(r){
   return { id:r.id, author_id:r.author_id, badge:t[0], tc:t[1], rtitle:(r.title||'(제목 없음)'), meta:dt, bodyHtml:((typeof _noticeBody==='function')?_noticeBody(r.content):String(r.content||''))+(ah.html||''), _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
 }
 async function _searchGoNotice(id){
-  var r=null;
-  try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&deleted_at=is.null&select=id,scope,team_id,branch_id,notice_type,title,content,created_at,author_id,attachments,is_hidden'); var rows=res.ok?await res.json():[]; r=rows[0]; }catch(e){}
-  if(!r || r.is_hidden){ _svToast('권한이 없거나 삭제된 공지입니다'); return; }
-  var scope=(r.scope==='branch_internal')?'branch':'team';
-  if(scope==='branch'){ if(typeof _navBranchspace==='function') _navBranchspace(); else { _svToast('지점 공지 화면을 열 수 없습니다'); return; } }
-  else { if(typeof _navTeamspace==='function') _navTeamspace(); else { _svToast('팀 공지 화면을 열 수 없습니다'); return; } }
-  var ok=await _waitFor(function(){ return Array.isArray(window._cospNotices) && document.getElementById('cosp-viewer'); }, 7000);
-  if(!ok){ _svToast('공지 화면을 여는 중 시간이 초과됐습니다'); return; }
-  var list=window._cospNotices||[];
-  for(var i=0;i<list.length;i++){ if(String(list[i].id)===String(id)){ cospShowNotice(i); return; } }
-  var item=_svNoticeMap(r);   /* 50건 밖 = 단건 보강 */
-  (window._cospNotices=window._cospNotices||[]).unshift(item);
-  if(typeof cospShowNotice==='function') cospShowNotice(0); else _svToast('원본 공지를 열지 못했습니다');
+  var b=_svInlineBox('team_notices', id); if(!b||b.closed) return;
+  try{
+    var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&deleted_at=is.null&select=title,content,is_hidden');
+    var rows=res.ok?await res.json():[]; var r=rows[0];
+    if(!r||r.is_hidden){ b.box.innerHTML='<div class="sv-inline-empty">권한이 없거나 삭제된 공지입니다.</div>'; return; }
+    var qt=_svQTokens();
+    b.box.innerHTML='<div class="sv-inline-body">'+_sMark(String(r.content||''),qt)+'</div>';
+  }catch(e){ b.box.innerHTML='<div class="sv-inline-empty">본문을 불러오지 못했습니다.</div>'; }
 }
 /* 5) 스크립트 — global=스크립트 시트(스테이지+카드 id) / personal(본인)=마이 스페이스 */
 async function _searchGoScript(id){
@@ -13356,20 +13365,11 @@ async function _searchGoScript(id){
     card.click();
     try{ card.scrollIntoView({block:'center'}); }catch(e){}
   } else {
-    /* personal(본인) — 바텀시트 마이 스페이스(책상)에서 연다. 바닥(floor)은 검색 유지 → showView('myspace') 금지(바닥=검색만 정합, 2026-06-30 누수 수정) */
-    if(typeof _navMyspace==='function') _navMyspace();   /* 시트 펼침 + 마이 스페이스 카드 (바닥 #v-home 유지) */
-    else if(typeof showView==='function'){ showView('myspace'); }  /* 폴백(스페이스 nav 없을 때만) */
-    await _waitFor(function(){ return document.getElementById('sn-slot') || document.getElementById('mysList'); }, 4000);
-    if(typeof _snCard==='function') _snCard('script');   /* '업무노트' 카드 → _spSplitShow('스크립트') → #mys-split 시트로 이식 + filterMys */
-    var ok2=await _waitFor(function(){ return window._myspaceLoaded && Array.isArray(window._myspaceCache); }, 6000);
-    if(!ok2){ _svToast('마이 스페이스를 여는 중 시간이 초과됐습니다'); return; }
-    var cache=window._myspaceCache||[], citem=null;
-    for(var k=0;k<cache.length;k++){ if(cache[k]._type==='script' && String(cache[k].id)===String(id)){ citem=cache[k]; break; } }
-    if(!citem){ _svToast('이 업무노트를 마이 스페이스에서 찾지 못했습니다'); return; }
-    await _waitFor(function(){ var f=window._mysFiltered||[]; for(var m2=0;m2<f.length;m2++){ if(f[m2]._type==='script' && String(f[m2].id)===String(id)) return true; } return false; }, 2500);
-    var fil=window._mysFiltered||[], fi=-1; for(var m=0;m<fil.length;m++){ if(fil[m]._type==='script' && String(fil[m].id)===String(id)){ fi=m; break; } }
-    if(fi<0){ (window._mysFiltered=window._mysFiltered||[]).unshift(citem); fi=0; }
-    if(typeof mysOpenItem==='function') mysOpenItem(fi); else _svToast('원본 업무노트를 열지 못했습니다');
+    /* personal(본인) — 검색 카드 인라인 펼침. 바텀시트 마이스페이스(책상) 숨김 후 딥링크 불가 → 인라인 대체(바텀시트 무의존). 2026-07-05 */
+    var b=_svInlineBox('scripts', id); if(!b||b.closed) return;
+    var qt=_svQTokens();
+    var txt=String(r.script_text||'').trim();
+    b.box.innerHTML=txt?('<div class="sv-inline-body">'+_sMark(txt,qt)+'</div>'):'<div class="sv-inline-empty">본문이 비어 있습니다.</div>';
   }
 }
 /* 우측 패널 닫기(홈 2단) — 안내 상태로 복원 */
