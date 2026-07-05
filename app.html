@@ -1601,6 +1601,16 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .tool-card:hover{border-color:var(--ac);}
 .tool-card.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 7%,transparent);}
 .tool-slot-empty{padding:44px 20px;text-align:center;color:var(--tf);font-size:var(--ts-meta);}
+/* 실제 계산기 (사칙연산) — 독립 도구 허브 (2026-07-05) */
+.calc-tool{max-width:320px;}
+.calc-disp{width:100%;box-sizing:border-box;font-size:32px;text-align:right;padding:16px 18px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s2);color:var(--tp);font-weight:700;margin-bottom:10px;font-family:inherit;}
+.calc-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.calc-btn{padding:16px 0;font-size:19px;font-weight:700;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);cursor:pointer;font-family:inherit;transition:background .1s;}
+.calc-btn:hover{background:var(--s2);}
+.calc-btn.opr{color:var(--ac);}
+.calc-btn.op{color:var(--ts);background:var(--s2);}
+.calc-btn.eq{background:var(--ac);color:#fff;border-color:var(--ac);}
+.calc-btn.eq:hover{background:var(--ach);}
 /* 무결과 CTA — ① 필터 끄기 / ② 질문 남기기(플라이휠 입구) */
 .sv-empty-cta{padding:28px 16px;text-align:center;}
 .sv-empty-cta .sec-msg{font-size:0.95rem;color:var(--ts);margin-bottom:14px;}
@@ -6965,10 +6975,10 @@ function openQuickToolV2(name){
 }
 window.openQuickToolV2 = openQuickToolV2;
 /* ════ 독립 도구 페이지 (#v-tool) — Quick 렌더러(slotId) 재사용. 홈 도구 섹션 카드 진입. 임태성 게이트(Phase 1). 2026-07-05 ════ */
-var _TOOL_PAGE_MAP={ 'BMI계산기':['BMI 계산기', renderBmiTool], '보험연령계산기':['보험연령 계산기', renderInsuranceAgeTool], '변환기':['이미지 변환 (PNG·PDF → JPG)', renderConverterTool] };
+var _TOOL_PAGE_MAP={ '계산기':['계산기', renderCalcTool], 'BMI계산기':['BMI 계산기', renderBmiTool], '보험연령계산기':['보험연령 계산기', renderInsuranceAgeTool], '변환기':['이미지 변환 (PNG·PDF → JPG)', renderConverterTool] };
 function openToolPage(){ if(typeof showView==='function') showView('tool'); }   /* 홈 '계산기·변환기' 카드 → 허브 페이지 */
 window.openToolPage=openToolPage;
-var _TOOL_HUB=[['BMI계산기','BMI 계산기','키·몸무게로 BMI 산출','i-heart'],['보험연령계산기','보험연령 계산기','상령일 기준 보험 나이','i-cal'],['변환기','이미지 변환','PNG·PDF → JPG','i-file']];
+var _TOOL_HUB=[['계산기','계산기','사칙연산 계산기','i-box'],['BMI계산기','BMI 계산기','키·몸무게로 BMI 산출','i-heart'],['보험연령계산기','보험연령 계산기','상령일 기준 보험 나이','i-cal'],['변환기','이미지 변환','PNG·PDF → JPG','i-file']];
 /* 허브 진입 = 3카드 렌더 + 아래 슬롯 초기화. 카드 클릭 시 _toolPick이 슬롯에 실행 */
 function loadToolPage(){
   var cards=document.getElementById('tool-cards'); if(!cards) return;
@@ -6985,6 +6995,43 @@ function _toolPick(name){
   var s=document.getElementById('tool-slot'); if(s) setTimeout(function(){ s.scrollIntoView({behavior:'smooth',block:'start'}); },80);
 }
 window._toolPick=_toolPick;
+/* ════ 실제 계산기(사칙연산) — 독립 도구 허브. eval 미사용 상태머신. 2026-07-05 ════ */
+function renderCalcTool(slotId){
+  var slot=document.getElementById(slotId||'qck-content-slot'); if(!slot) return;
+  window._calcState={cur:'0',prev:null,op:null,fresh:true};
+  var keys=[
+    ['C','C','op'],['back','←','op'],['%','%','op'],['/','÷','opr'],
+    ['7','7',''],['8','8',''],['9','9',''],['*','×','opr'],
+    ['4','4',''],['5','5',''],['6','6',''],['-','−','opr'],
+    ['1','1',''],['2','2',''],['3','3',''],['+','+','opr'],
+    ['+/-','±','op'],['0','0',''],['.','.',''],['=','=','eq']
+  ];
+  var pad=keys.map(function(k){ return '<button type="button" class="calc-btn'+(k[2]?' '+k[2]:'')+'" onclick="_calcKey(\''+k[0]+'\')">'+k[1]+'</button>'; }).join('');
+  slot.innerHTML='<div class="calc-tool"><input type="text" class="calc-disp" id="calcDisp" value="0" readonly aria-label="계산 결과"><div class="calc-pad">'+pad+'</div></div>';
+}
+window.renderCalcTool=renderCalcTool;
+function _calcRender(){ var d=document.getElementById('calcDisp'); if(d) d.value=window._calcState?window._calcState.cur:'0'; }
+function _calcEquals(){
+  var s=window._calcState; if(!s||s.op==null||s.prev==null) return;
+  var a=s.prev, b=parseFloat(s.cur), r=0;
+  if(s.op==='+')r=a+b; else if(s.op==='-')r=a-b; else if(s.op==='*')r=a*b; else if(s.op==='/')r=(b===0?NaN:a/b);
+  if(isNaN(r)||!isFinite(r)){ s.cur='오류'; } else { r=Math.round(r*1e10)/1e10; s.cur=String(r); }
+  s.prev=null; s.fresh=true;
+}
+function _calcKey(k){
+  var s=window._calcState; if(!s){ window._calcState=s={cur:'0',prev:null,op:null,fresh:true}; }
+  if(s.cur==='오류' && k!=='C'){ return; }
+  if(k==='C'){ s.cur='0'; s.prev=null; s.op=null; s.fresh=true; }
+  else if(k==='back'){ s.cur=(s.cur.length>1)?s.cur.slice(0,-1):'0'; if(s.cur==='-')s.cur='0'; }
+  else if(k==='.'){ if(s.fresh){ s.cur='0.'; s.fresh=false; } else if(s.cur.indexOf('.')<0){ s.cur+='.'; } }
+  else if('0123456789'.indexOf(k)>=0){ if(s.fresh||s.cur==='0'){ s.cur=k; s.fresh=false; } else { s.cur+=k; } }
+  else if(k==='+'||k==='-'||k==='*'||k==='/'){ if(s.op!=null && !s.fresh){ _calcEquals(); } s.prev=parseFloat(s.cur); s.op=k; s.fresh=true; }
+  else if(k==='='){ _calcEquals(); s.op=null; }
+  else if(k==='%'){ s.cur=String(parseFloat(s.cur)/100); s.fresh=true; }
+  else if(k==='+/-'){ if(s.cur!=='0') s.cur=(s.cur.charAt(0)==='-')?s.cur.slice(1):('-'+s.cur); }
+  _calcRender();
+}
+window._calcKey=_calcKey;
 
 /* ════════════════════════════════════════════════════════════════
  * Quick 실행도구 — 보험료 비교표 빌더 (2026-06-04)
