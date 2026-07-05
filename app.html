@@ -11493,8 +11493,9 @@ function _sFmtDate(s){ if(!s) return ''; var p=String(s).slice(0,10).split('-');
 /* 검색 고도화 — 다중 키워드 토큰 / 다중 AND 필터(각 키워드는 어느 컬럼이든 포함) / 관련도 점수 / 본문 스니펫 / 하이라이트 */
 function _sTokens(q){ return String(q||'').split(/\s+/).filter(Boolean); }
 function _sBuildFilter(cols, terms){
-  function orFor(t){ var e=encodeURIComponent('*'+t+'*'); return 'or('+cols.map(function(c){return c+'.ilike.'+e;}).join(',')+')'; }
-  if(terms.length<=1){ var e=encodeURIComponent('*'+(terms[0]||'')+'*'); return 'or=('+cols.map(function(c){return c+'.ilike.'+e;}).join(',')+')'; }
+  function enc(s){ return encodeURIComponent('*'+s+'*').replace(/\(/g,'%28').replace(/\)/g,'%29'); }   /* 괄호는 encodeURIComponent가 안 바꿔 PostgREST 필터 구조(or(...))를 깨뜨림 → 수동 인코딩. "(고혈압·고지혈)" 같은 제목 검색 0건 버그 수정 (2026-07-05) */
+  function orFor(t){ var e=enc(t); return 'or('+cols.map(function(c){return c+'.ilike.'+e;}).join(',')+')'; }
+  if(terms.length<=1){ var e=enc(terms[0]||''); return 'or=('+cols.map(function(c){return c+'.ilike.'+e;}).join(',')+')'; }
   return 'and=('+terms.map(orFor).join(',')+')';   /* 모든 키워드 AND */
 }
 /* 검색어에서 발행 연·월 추출 — 소식지를 발행월로 정확히 좁히기 위함. "6월"이 본문 텍스트로 매칭돼
