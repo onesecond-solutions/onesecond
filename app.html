@@ -18094,7 +18094,7 @@ body.is-uat-spacenav #spTree{display:none;}
 /* 홈 — 원세컨드 시작하기 CTA */
 .os-start-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;max-width:620px;margin:80px auto 0;padding:15px 20px;border:none;border-radius:14px;background:var(--ac);color:#fff;font-size:1.02rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px color-mix(in srgb,var(--ac) 32%,transparent);transition:filter .15s,transform .15s;}
 #app:not(.is-admin) .os-start-cta{display:none !important;}  /* 스페이스 설명서 = 어드민 전용 → 홈 '원세컨드 시작하기' CTA도 일반 사용자 숨김(2026-06-25) */
-#app:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드민 전용(일단 숨김). 껍데기·코드 보존(재사용 예정), 안의 placeholder 내용만 사용자 비노출. 2026-07-05 대표 지시 */
+body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드민(role=admin) 전용(일단 숨김). #osSheet는 #app 밖이라 body.is-admin 기준이어야 함(#app 선택자는 안 닿음). 껍데기·코드 보존(재사용), placeholder 내용 사용자·임태성실장 비노출. 2026-07-05 대표 지시 */
 .os-start-cta:hover{filter:brightness(1.05);}
 .os-start-cta:active{transform:translateY(1px);}
 .os-start-cta svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;}
