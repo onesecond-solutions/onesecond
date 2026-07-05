@@ -11471,12 +11471,13 @@ async function _runSearch(q){
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
     if(n.view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()) return false;
     if(n.view==='admin') return false;
+    if(n.view==='quick') return false;   /* Quick 메뉴 페이지·도구 = 검색 결과 제외, 어드민 전용 보전 (2026-07-05 대표 지시) */
     return true; });
   var qcHits=[];
-  try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
+  /* quick_contents 검색 주입 제거 — Quick 메뉴 페이지는 검색 결과에 안 뜸(어드민 전용 보전). 불필요 fetch 삭제 (2026-07-05) */
   if(seq!==_searchSeq) return;
   var html='', total=0;
-  var menuItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
+  var menuItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; });   /* Quick 메뉴 페이지(quick_contents) 검색 제외 — 어드민 전용 보전 (2026-07-05) */
   if(menuItems.length){
     html+='<div class="sogroup">원세컨드 메뉴·도구 ('+menuItems.length+')</div>';
     menuItems.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#6366F1">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
@@ -11612,10 +11613,10 @@ async function _runSearchV2(q, targetId){
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
     if(n.view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()) return false;
     if(n.view==='admin') return false;
-    if(_svBmiMatch(terms)&&(n.label||'').indexOf('BMI 심사')>=0) return false;   /* 새 BMI 4축 인라인 블록이 예전 BMI 페이지 대체 — 전체 개방 (2026-07-05) */
+    if(n.view==='quick') return false;   /* Quick 메뉴 페이지·도구 = 검색 결과에서 제외, 어드민 전용 보전 (2026-07-05 대표 지시). BMI는 4축 블록이 대체 */
     return true; });
   var qcHits=[];
-  try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
+  /* quick_contents 검색 주입 제거 — Quick 메뉴 페이지는 검색 결과에 안 뜸(어드민 전용 보전). 불필요 fetch 삭제 (2026-07-05) */
   if(seq!==_searchSeq) return;
   /* 결과를 평면 items로 — 소스/스코프/분류(category) 태그 부착 + 관련도 정렬 */
   var items=[];
@@ -11636,8 +11637,7 @@ async function _runSearchV2(q, targetId){
     if(seq!==_searchSeq) return;
   }
   items.sort(function(a,b){ return b.s-a.s; });
-  var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
-  if(_svBmiMatch(terms)){ navItems=navItems.filter(function(m){ return (m.label||'').indexOf('BMI 심사')<0; }); }   /* quick_contents BMI 페이지도 억제 — 새 4축 블록이 대체 (전체 개방) */
+  var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; });   /* Quick 메뉴 페이지(quick_contents) 검색 제외 — 어드민 전용 보전 (2026-07-05). navHits에서 view==='quick'도 이미 제외 */
   var hubHtml=''; try{ hubHtml=await _companyHubHtml(q); }catch(e){}   /* 회사 검색 허브(UAT 게이트 내부에서만 비어있지 않음) */
   var bmiHtml=''; try{ bmiHtml=_svBmiHtml(terms); }catch(e){}   /* BMI 4축 회사별 비교(임태성) — 예전 BMI 페이지 결과 대체 (2026-07-05) */
   if(seq!==_searchSeq) return;
