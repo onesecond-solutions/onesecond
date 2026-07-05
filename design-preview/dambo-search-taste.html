@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onesecond 담보 검색 — 회사 가로 비교 (실데이터)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{--ac:#6366F1;--ac-d:#4F46E5;--ac-l:#EEF0FE;--tp:#1E293B;--ts:#64748B;--tf:#94A3B8;--bd:#E2E8F0;--bg:#F8FAFC;--s2:#FFFFFF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--tp);line-height:1.55;padding:1.5rem}
+.wrap{max-width:80rem;margin:0 auto}
+.head h1{font-size:1.4rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+.head p{color:var(--ts);font-size:.88rem;margin:.35rem 0 1.25rem}
+.badge{background:var(--ac-l);color:var(--ac-d);font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:1rem}
+.sbar{display:flex;gap:.5rem;margin-bottom:.75rem}
+.sbar input{flex:1;border:2px solid var(--ac);border-radius:2rem;padding:.8rem 1.15rem;font-size:1rem;font-family:inherit;outline:none}
+.covchips{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.cc{background:var(--s2);border:1px solid var(--bd);border-radius:2rem;padding:.42rem .9rem;font-size:.82rem;font-weight:600;color:var(--ts);cursor:pointer}
+.cc.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+/* 담보 정의 헤더 */
+.cov-def{background:var(--s2);border:1px solid var(--bd);border-left:.3rem solid var(--ac);border-radius:.7rem;padding:1rem 1.15rem;margin-bottom:1rem}
+.cov-def .ct{font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+.cov-def .cty{font-size:.68rem;font-weight:700;background:var(--ac-l);color:var(--ac-d);padding:.15rem .5rem;border-radius:1rem}
+.cov-def .cd{font-size:.85rem;color:var(--tp);margin-top:.5rem}
+.cov-def .cs{font-size:.8rem;color:var(--ts);margin-top:.35rem}
+.cov-def .cnt{font-size:.8rem;color:var(--ac-d);font-weight:700;margin-top:.5rem}
+/* 회사 가로 나열 */
+.hrow{display:flex;gap:.75rem;overflow-x:auto;padding-bottom:.75rem}
+.ccard{min-width:15rem;max-width:15rem;flex:0 0 auto;background:var(--s2);border:1px solid var(--bd);border-radius:.7rem;overflow:hidden}
+.ccard .ch{color:#fff;padding:.6rem .85rem;font-weight:800;font-size:.86rem}
+.ccard .cb{padding:.7rem .85rem}
+.ccard .amt{font-size:.92rem;font-weight:800;color:var(--ac-d);line-height:1.35}
+.ccard .pn{font-size:.74rem;color:var(--ts);margin-top:.3rem}
+.ccard .ok{display:inline-block;font-size:.62rem;font-weight:700;border-radius:1rem;padding:.05rem .4rem;margin-top:.4rem}
+.ccard .ok.O{background:#DCFCE7;color:#166534}.ccard .ok.△{background:#FEF3C7;color:#92400E}
+.mid{text-align:center;color:var(--tf);padding:2rem}
+.note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:.6rem;padding:.65rem .95rem;font-size:.76rem;color:#92400E;margin-top:1rem;display:flex;gap:.4rem}
+</style></head><body>
+<div class="wrap">
+  <div class="head"><h1>🩺 담보 검색 — 회사 가로 비교 <span class="badge">실데이터 · 금액 포함</span></h1>
+  <p>담보 하나를 검색 → 그 담보를 파는 회사들이 금액과 함께 가로로 나란히</p></div>
+  <div class="sbar"><input id="q" placeholder="담보 검색 (예: 암주요치료비, 간병, 3대 진단비, 치아)" oninput="filt()"></div>
+  <div class="covchips" id="chips"></div>
+  <div id="out"></div>
+  <div class="note">⚠️<div>오늘 정독한 소식지 기준 <b>주요 상품 23개 연결</b> 샘플입니다. 금액 O=소식지 확인, △=불확실. 전체 246상품 연결은 추가 채굴 필요.</div></div>
+</div>
+<script>
+var DIC=[{"cover": "암주요치료비", "type": "치료비(반복·비례)", "def": "암 진단 확정 후 치료 과정(수술·항암약물·방사선·표적·중입자 등)에서 발생하는 주요 치료비를 반복·비례 보장.", "성격": "진단비가 '한 번에 목돈'이라면, 주요치료비는 '치료가 이어지는 동안 반복' 지급. 고액 항암(표적·면역·중입자) 부담 커지며 비중↑.", "회사별명칭": {"KB라이프": "하이클래스 암주요치료특약(1,000만)·종합병원 암 주요치료Plus특약", "KB손해보험": "암주요치료비(호르몬제외) — 5.10.10 플러스 주요보장", "라이나손해보험": "통.순.치 내 암 치료비 성격(최대 3천만)"}, "구분주의": "진단비·통원비와 구분(별도 담보)", "확인회사수": 3, "텍스트매칭_상품수": 1}, {"cover": "암진단비", "type": "진단비(정액)", "def": "암 진단 확정 시 정액으로 지급하는 목돈. 유사암·소액암·재진단(전이·재발)으로 세분.", "성격": "암 확정 즉시 목돈. 재진단암(전이·재발 반복보장)이 최근 트렌드.", "회사별명칭": {"KB손해보험": "3.N.암 심플러스(전이·재발 보상)", "라이나손해보험": "5회암진단비(최대 5천만)", "라이나생명": "원모어암 진단", "메리츠화재": "또 걸려도 또 받는 암"}, "구분주의": "", "확인회사수": 4, "텍스트매칭_상품수": 8}, {"cover": "순환계·심뇌 주요치료비", "type": "치료비(반복·비례)", "def": "뇌혈관·허혈성심장질환 등 순환계 질환의 수술·혈전용해·혈전제거·중환자실 등 주요치료비 보장.", "성격": "혈관질환은 한 번의 치료로 끝나지 않아 반복 치료비 필요. 혈전제거 포함 여부가 회사별 차이.", "회사별명칭": {"KB손해보험": "순환계 주요치료비Plus특약", "라이나손해보험": "통합순환계질환주요치료비(통.순.치)", "KB라이프": "순환계질환 주요치료Plus특약"}, "구분주의": "", "확인회사수": 3, "텍스트매칭_상품수": 2}, {"cover": "3대 진단비", "type": "진단비(정액)", "def": "암·뇌혈관(뇌졸중)·허혈성심장(급성심근경색) 3대 질환 진단 시 지급하는 진단비.", "성격": "보험의 기본 골격. 회사마다 뇌혈관/뇌졸중, 허혈성/심근경색 등 담보 범위 차이.", "회사별명칭": {"KB손해보험": "심장진단비+I49진단비", "KB라이프": "뇌혈관진단Ⅱ·허혈성심장질환진단Ⅱ", "한화손해보험": "뇌혈관·허혈성심장 진단"}, "구분주의": "", "확인회사수": 3, "텍스트매칭_상품수": 9}, {"cover": "간병·치매", "type": "간병/요양", "def": "장기요양(1~5등급)·중증치매 상태 시 간병자금·요양비 보장. 표적치매약(레켐비) 포함형.", "성격": "고령화로 수요 급증. 재가·시설 보장기간 확대, 표적치매약물치료가 최신 담보.", "회사별명칭": {"KB손해보험": "골든라이프 간병(간편치매플랜)", "KB라이프": "골든라이프 딱좋은 간병(표적치매약 3,200만)", "라이나생명": "브레인케어(레켐비)", "메리츠화재": "안심되는 치매통합케어"}, "구분주의": "", "확인회사수": 4, "텍스트매칭_상품수": 22}, {"cover": "치아치료비", "type": "치과", "def": "임플란트·크라운·틀니·충전·보철 등 치과 치료비 보장.", "성격": "보철(임플란트·크라운)과 보존(충전·레진) 보장 한도·개수제한이 회사별 차이.", "회사별명칭": {"라이나생명": "THE건강한 치아보험V·덴탈어카운트", "메리츠화재": "치아보험 이목구비", "라이나손해보험": "더핏 THE든든한 치아"}, "구분주의": "", "확인회사수": 3, "텍스트매칭_상품수": 8}, {"cover": "납입면제", "type": "부가(면제)", "def": "암·뇌졸중·급성심근경색·80%후유장해 등 특정 사유 발생 시 이후 보험료 납입 면제.", "성격": "3대납면·5대납면·6대납면 등 면제 사유 개수가 상품 경쟁력. 유병자 상품일수록 면제 범위 좁음.", "회사별명칭": {"KB손해보험": "3대/5대/6대 납입면제", "한화손해보험": "8대납면(더건강한 한아름)", "DB손해보험": "상해질병 80%후유·암·뇌졸중·급성심근경색 납면"}, "구분주의": "", "확인회사수": 3, "텍스트매칭_상품수": 27}, {"cover": "실손의료비", "type": "실손", "def": "급여·비급여 실제 부담 의료비 보장. 세대(1~5세대)·중증/비중증 특약 구분.", "성격": "거의 모든 손보사 보유. 5세대(26.5.6~) 중증·비중증 분리가 최신 이슈.", "회사별명칭": {"메리츠화재": "실손의료비보험(표준/유병력자/계약전환/노후)", "KB손해보험": "5세대 실손(중증30%/비중증50%)"}, "구분주의": "", "확인회사수": 2, "텍스트매칭_상품수": 1}];
+var BYCOVER={"3대 진단비": [{"co": "KB라이프", "prod": "KB 딱좋은 0540 건강보험", "금액": "암/뇌혈관/허혈성 진단Ⅱ 각 1,000~2,000만", "확인": "O"}, {"co": "KB손해보험", "prod": "5.10.10 플러스 건강보험", "금액": "심장진단비+I49진단비", "확인": "O"}, {"co": "한화손해보험", "prod": "더건강한 한아름2504", "금액": "암·뇌졸중·급성심근경색 진단", "확인": "O"}], "암진단비": [{"co": "KB라이프", "prod": "KB 딱좋은 0540 건강보험", "금액": "암진단Ⅱ 2,000만·소액암 400만", "확인": "O"}, {"co": "KB라이프", "prod": "KB 딱좋은 요즘 건강보험", "금액": "통합암(전이포함) 진단특약 3,000만", "확인": "O"}, {"co": "KB손해보험", "prod": "3.N.암 심플러스", "금액": "암진단비(전이·재발 보상)", "확인": "O"}, {"co": "라이나손해보험", "prod": "(무)더핏 간편한 나만의 종합보험 (해약환급금미지급형, 갱신형)", "금액": "5회암진단비 최대 5천만", "확인": "O"}], "납입면제": [{"co": "KB라이프", "prod": "KB 딱좋은 0540 건강보험", "금액": "11대질병 납입면제", "확인": "O"}, {"co": "한화손해보험", "prod": "더건강한 한아름2504", "금액": "8대납면", "확인": "O"}], "암주요치료비": [{"co": "KB라이프", "prod": "KB 딱좋은 요즘 건강보험", "금액": "하이클래스 암주요치료 1,000만·항암약물 1,000만", "확인": "O"}, {"co": "KB손해보험", "prod": "5.10.10 플러스 건강보험", "금액": "암주요치료비(호르몬제외) — 최대 13% 인하", "확인": "O"}, {"co": "KB손해보험", "prod": "3.N.암 심플러스", "금액": "암주요치료비·생활비", "확인": "O"}, {"co": "라이나손해보험", "prod": "(무)더핏 간편한 나만의 종합보험 (해약환급금미지급형, 갱신형)", "금액": "암직접치료통원 최대 20만", "확인": "O"}], "순환계·심뇌 주요치료비": [{"co": "KB라이프", "prod": "KB 딱좋은 요즘 건강보험", "금액": "순환계 주요치료Plus 1,000만", "확인": "O"}, {"co": "KB손해보험", "prod": "5.10.10 플러스 건강보험", "금액": "순환계 치료비", "확인": "O"}, {"co": "라이나손해보험", "prod": "(무)더핏 간편한 나만의 종합보험 (해약환급금미지급형, 갱신형)", "금액": "통.순.치 최대 3천만·뇌허심진단비 2천만", "확인": "O"}], "간병·치매": [{"co": "KB라이프", "prod": "KB 골든라이프 딱좋은 간병보험", "금액": "표적치매약물허가치료 최대 3,200만·치매간병 신규특약 17종", "확인": "O"}, {"co": "KB손해보험", "prod": "골든라이프케어 간병보험", "금액": "간편치매플랜·최저P 1만원", "확인": "O"}, {"co": "라이나생명", "prod": "라이나 브레인케어 건강보험", "금액": "치매 신상약 레켐비·표적치매약물치료", "확인": "O"}, {"co": "메리츠화재", "prod": "안심되는 치매통합케어보험", "금액": "중등도 이상 치매·상해 80%후유", "확인": "O"}], "치아치료비": [{"co": "라이나생명", "prod": "THE건강한 치아보험V", "금액": "임플란트 100만·크라운 50만·프리미엄", "확인": "O"}, {"co": "메리츠화재", "prod": "치아보험 이목구비", "금액": "상해 80%이상 후유장해", "확인": "△"}], "실손의료비": [{"co": "메리츠화재", "prod": "실손의료비보험", "금액": "표준/유병력자/계약전환/노후", "확인": "O"}]};
+var COLORS={"KB라이프": "#A16207", "ABL생명": "#1E3A8A", "DB생명": "#16A34A", "농협생명": "#15803D", "미래에셋생명": "#EA580C", "삼성생명": "#1D4ED8", "신한라이프": "#1E40AF", "하나생명": "#03897E", "한화생명": "#C2410C", "동양생명": "#1D4ED8", "라이나생명": "#BE123C", "메트라이프생명": "#0369A1", "KB손해보험": "#CA8A04", "메리츠화재": "#B91C1C", "현대해상": "#0F8B7E", "롯데손해보험": "#C0392B", "흥국화재": "#2563EB", "하나손해보험": "#03897E", "DB손해보험": "#15803D", "한화손해보험": "#C2410C", "라이나손해보험": "#DC2626"};
+var LIST=DIC.map(function(d){return d.cover;});
+var cur=LIST[0];
+var chips=document.getElementById('chips');
+LIST.forEach(function(cov){var el=document.createElement('div');el.className='cc'+(cov===cur?' on':'');el.textContent=cov;
+  el.onclick=function(){cur=cov;document.getElementById('q').value='';document.querySelectorAll('.cc').forEach(function(c){c.classList.toggle('on',c.textContent===cov)});render(cov);};chips.appendChild(el);});
+function filt(){var q=document.getElementById('q').value.trim();if(!q){render(cur);return;}
+  var m=LIST.filter(function(c){return c.indexOf(q)>=0||q.indexOf(c.slice(0,2))>=0;});
+  if(m.length){render(m[0]);document.querySelectorAll('.cc').forEach(function(c){c.classList.toggle('on',c.textContent===m[0])});}
+  else render(q);}
+function render(cov){
+  var out=document.getElementById('out');
+  var def=DIC.find(function(d){return d.cover===cov;});
+  var items=BYCOVER[cov]||[];
+  if(!def){out.innerHTML='<div class="mid">「'+cov+'」 담보 정의가 아직 없습니다.</div>';return;}
+  var h='<div class="cov-def"><div class="ct">🩺 '+def.cover+' <span class="cty">'+def.type+'</span></div>'+
+        '<div class="cd">'+def['def']+'</div><div class="cs">'+def['성격']+'</div>'+
+        '<div class="cnt">소식지 확인 '+items.length+'개 상품에서 보장</div></div>';
+  if(!items.length){h+='<div class="mid">이 담보의 상품 연결이 아직 채굴되지 않았습니다.</div>';out.innerHTML=h;return;}
+  h+='<div class="hrow">';
+  items.forEach(function(it){
+    var cl=COLORS[it.co]||'#6366F1';
+    h+='<div class="ccard"><div class="ch" style="background:'+cl+'">'+it.co+'</div><div class="cb">'+
+       '<div class="amt">'+it['금액']+'</div><div class="pn">'+it.prod+'</div>'+
+       '<span class="ok '+it['확인']+'">'+(it['확인']==='O'?'소식지 확인':'확인 필요')+'</span></div></div>';
+  });
+  h+='</div>';
+  out.innerHTML=h;
+}
+render(cur);
+</script>
+</body></html>
