@@ -1600,6 +1600,7 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .sv-inline-ans-h{font-size:var(--ts-badge);font-weight:800;color:var(--ac);margin-bottom:5px;}
 .sv-inline-a{font-size:var(--ts-meta);color:var(--tp);line-height:1.5;padding:5px 0;border-bottom:1px solid color-mix(in srgb,var(--bd) 50%,transparent);}
 .sv-inline-a:last-child{border-bottom:none;}
+.iv-qna-cnt{font-size:var(--ts-meta);font-weight:800;color:var(--ac);padding:6px 10px 8px;}
 /* 카톡 Q&A 전량 임포트 버튼 (임태성 실장 전용, 임시) */
 #qnaImportBtn-wrap{position:fixed;left:14px;bottom:14px;z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:flex-start;}
 body:not(.is-uat-qnaimport) #qnaImportBtn-wrap{display:none !important;}
@@ -5332,7 +5333,7 @@ async function loadVaultQna(){
   try{
     /* 소식지 제외 — 소식지(자료)가 예전부터 board_type=qna에 제목 '…소식지'로 섞여 저장됨.
        보험 Q&A는 질문만 보여야 하므로 제목에 '소식지' 들어간 건 제외(근본은 데이터 정리, 후속). */
-    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type,insurer_target');
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=1500&select=id,title,content,attachments,author_id,author_name,created_at,question_type,insurer_target');
     if(!res.ok){ var _t=''; try{_t=await res.text();}catch(e){} console.error('[vaultQna] HTTP', res.status, _t); listEl.innerHTML=ivStateCard('불러오지 못했습니다 ('+res.status+')','잠시 후 새로고침 해주세요'); return; }
     window._vaultQnaCache=(await res.json())||[];
     vaultQnaRender();
@@ -5349,7 +5350,7 @@ function vaultQnaRender(){
     var vv=document.getElementById('iv-qna-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">질문이 없습니다.</div>';
     return;
   }
-  listEl.innerHTML=list.map(function(r,i){
+  listEl.innerHTML='<div class="iv-qna-cnt">전체 '+list.length+'건</div>'+list.map(function(r,i){
     var qt=r.question_type||'질문';
     return '<div class="item'+(i===0?' on':'')+'" onclick="vaultQnaOpen('+i+')" style="--tc:var(--t-uw)">'
       +'<span class="badge">'+ivEsc(qt)+'</span>'
