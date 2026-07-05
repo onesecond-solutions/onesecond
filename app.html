@@ -6357,18 +6357,11 @@ function _snMyspaceShow(host){
   var dh=''; for(var j=0;j<dash.length;j++){ var dd=dash[j]; dh+='<button type="button" class="sn-dcard" onclick="diaDashGo(\''+dd.k+'\')"><span class="sn-dcard-n" data-dcnt="'+dd.k+'">–</span><span class="sn-dcard-l">'+dd.l+'</span></button>'; }
   /* 배너 우하단 꺾쇠=접기·펼치기 / 배너·3카드·4카드 고정 / sn-slot=아래 콘텐츠(첫 진입=다이어리 캘린더). 소속은 창 밖 풀바. */
   var _col=false; try{ _col=localStorage.getItem('os_sn_banner_collapsed')==='1'; }catch(e){}
-  /* 도구 섹션(자료 카드 아래) — 계산기·변환기 독립 페이지 진입. 임태성 게이트(Phase 1 검수). 2026-07-05 */
-  var toolsHtml='';
-  if(typeof _canSeePl==='function' && _canSeePl()){
-    var _tools=[{k:'BMI계산기',t:'BMI 계산기',d:'키·몸무게로 BMI 산출',ic:'i-heart'},{k:'보험연령계산기',t:'보험연령 계산기',d:'상령일 기준 보험 나이',ic:'i-cal'},{k:'변환기',t:'이미지 변환',d:'PNG·PDF → JPG',ic:'i-file'}];
-    toolsHtml='<div class="sn-dash-label">도구</div><div class="sn-cards">'+_tools.map(function(x){ return '<button type="button" class="sn-card" onclick="openToolPage(\''+x.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+x.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+x.t+'</span><span class="sn-card-d">'+x.d+'</span></span></button>'; }).join('')+'</div>';
-  }
   host.innerHTML='<div class="sn-page space-my">'
     +'<div class="sn-banner sn-banner-my'+(_col?' collapsed':'')+'" id="sn-banner"><img src="assets/images/space_banner/myspace.jpg" alt="마이 스페이스" loading="lazy"><button type="button" class="sn-banner-toggle" onclick="_snBannerToggle()" aria-label="배너 접기·펼치기"><svg class="sp-ico"><use href="#i-caret"/></svg></button></div>'
     +'<div class="sn-dash-label">오늘의 현황</div>'
     +'<div class="sn-dash">'+dh+'</div>'
     +'<div class="sn-cards">'+ch+'</div>'
-    +toolsHtml
     +'<div class="sn-slot" id="sn-slot"></div>'
     +'</div>';
   if(!window._spMe && typeof _spLoadMe==='function'){ _spLoadMe(); }            /* 소속 풀바(창 밖) 적재 */
@@ -6435,6 +6428,20 @@ function _homeDeskShow(){
   for(var k=0;k<refs.length;k++){ var rc=refs[k];
     rh+='<button type="button" class="sn-card" data-hdk="'+rc.k+'" style="--c:'+rc.c+'" onclick="_homeCard(\''+rc.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+rc.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+rc.t+'</span><span class="sn-card-d">'+rc.d+'</span></span></button>';
   }
+  /* 도구 섹션(자료·도구 아래) — 계산기·변환기 독립 페이지 진입. 임태성 게이트(Phase 1 검수). 2026-07-05 */
+  var calcTools='';
+  if(typeof _canSeePl==='function' && _canSeePl()){
+    var _ct=[
+      {k:'BMI계산기',    ic:'i-heart', t:'BMI 계산기',    d:'키·몸무게로 BMI 산출',   c:'var(--ac)'},
+      {k:'보험연령계산기', ic:'i-cal',   t:'보험연령 계산기', d:'상령일 기준 보험 나이',   c:'var(--ok)'},
+      {k:'변환기',       ic:'i-file',  t:'이미지 변환',    d:'PNG·PDF → JPG',        c:'var(--warn)'}
+    ];
+    var cth='';
+    for(var m=0;m<_ct.length;m++){ var ctc=_ct[m];
+      cth+='<button type="button" class="hd-tool" style="--c:'+ctc.c+'" onclick="openToolPage(\''+ctc.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+ctc.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+ctc.t+'</span><span class="sn-card-d">'+ctc.d+'</span></span><svg class="hd-tool-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></button>';
+    }
+    calcTools='<div class="hd-label">도구</div><div class="hd-tools">'+cth+'</div>';
+  }
   host.innerHTML='<div class="sn-page">'
     +'<div class="hd-groups">'
       +'<div class="hd-group hd-group-work"><div class="hd-label">워크스페이스</div><div class="sn-cards">'+ch+'</div></div>'
@@ -6443,6 +6450,7 @@ function _homeDeskShow(){
     +'<div class="hd-inline" id="hd-inline"><button type="button" class="hd-inline-x" onclick="_homeCardClose()" aria-label="닫기">&#10005;</button><div class="hd-scope" id="hd-scope"></div><div class="sn-slot" id="home-desk-slot"></div></div>'
     +'<div class="hd-label">자료 · 도구</div>'
     +'<div class="hd-tools">'+th+'</div>'
+    +calcTools
     +'</div>';
   _homeOpenKind=null;   /* 토글 구조 — 첫 진입은 아무것도 안 열린 상태 (2026-07-02 대표 지시) */
 }
