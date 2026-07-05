@@ -18094,6 +18094,7 @@ body.is-uat-spacenav #spTree{display:none;}
 /* 홈 — 원세컨드 시작하기 CTA */
 .os-start-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;max-width:620px;margin:80px auto 0;padding:15px 20px;border:none;border-radius:14px;background:var(--ac);color:#fff;font-size:1.02rem;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 18px color-mix(in srgb,var(--ac) 32%,transparent);transition:filter .15s,transform .15s;}
 #app:not(.is-admin) .os-start-cta{display:none !important;}  /* 스페이스 설명서 = 어드민 전용 → 홈 '원세컨드 시작하기' CTA도 일반 사용자 숨김(2026-06-25) */
+#app:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드민 전용(일단 숨김). 껍데기·코드 보존(재사용 예정), 안의 placeholder 내용만 사용자 비노출. 2026-07-05 대표 지시 */
 .os-start-cta:hover{filter:brightness(1.05);}
 .os-start-cta:active{transform:translateY(1px);}
 .os-start-cta svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2;fill:none;}
@@ -18219,6 +18220,7 @@ body.is-uat-spacenav #spTree{display:none;}
   applySnap('collapsed');
   window._osSheetCollapse=function(){ applySnap('collapsed'); };  /* 외부(트리 nav)에서 시트 접기 */
   window._osSheetOpen=function(slow){                              /* 외부(홈 '원세컨드 시작하기')에서 시트 펼치기 */
+    if(typeof _canSeeAdmin==='function' && !_canSeeAdmin()) return;   /* 바텀시트 어드민 전용(일단 숨김) — 어떤 트리거로도 non-admin 열림 방지. 2026-07-05 */
     if(slow){ /* 슬라이딩 도어 — 천천히·튕김 없이 부드럽게(첫 경험 몰입). 기본 transition(.28s overshoot)을 일시 대체 */
       sheet.style.transition='height 1.05s cubic-bezier(.83,0,.17,1)';  /* 초반 더 느리게→빠르게→느리게 부드럽게 연결(easeInOutQuint) 슬라이딩 도어 */
       setTimeout(function(){ try{ sheet.style.transition=''; }catch(e){} }, 1200);
