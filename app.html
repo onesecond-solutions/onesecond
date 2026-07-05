@@ -1572,6 +1572,27 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .svp-src{margin-top:14px;font-size:12px;color:var(--tf);line-height:1.6;border-top:1px solid var(--bd);padding-top:11px;}
 /* 검색 중(.searching)엔 홈 카드(홈 데스크) 아래 노출 안 함 (2026-07-05 대표 지시) */
 body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
+/* ════ BMI 4축 회사별 비교(임태성) — 예전 BMI 페이지 대체. 정상/할증/방진/거절=도메인 stage 색상 (2026-07-05) ════ */
+.svb-wrap{border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);padding:12px;margin:6px 0 10px;}
+.svb-hd{font-size:var(--ts-preview);font-weight:800;color:var(--tp);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.svb-badge{font-size:var(--ts-badge);font-weight:700;color:var(--tf);background:var(--s2);border-radius:999px;padding:2px 8px;}
+.svb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+@media(max-width:820px){.svb-grid{grid-template-columns:1fr;}}
+.svb-card{border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--s1);}
+.svb-ch{padding:7px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);gap:6px;}
+.svb-co{font-size:var(--ts-meta);font-weight:800;color:var(--tp);}
+.svb-ty{font-size:var(--ts-badge);font-weight:700;color:var(--tf);background:var(--s2);padding:2px 7px;border-radius:999px;white-space:nowrap;}
+.svb-cb{padding:7px 10px;}
+.svb-ax{display:flex;gap:7px;padding:3px 0;font-size:var(--ts-meta);align-items:flex-start;}
+.svb-lab{min-width:38px;text-align:center;font-size:var(--ts-badge);font-weight:700;padding:1px 5px;border-radius:4px;white-space:nowrap;}
+.svb-lab.n{background:#F0FDF4;color:#16A34A;}
+.svb-lab.h{background:#FEFCE8;color:#CA8A04;}
+.svb-lab.b{background:#FFF7ED;color:#EA580C;}
+.svb-lab.r{background:#FEF2F2;color:#DC2626;}
+.svb-v{color:var(--tp);font-weight:600;flex:1;line-height:1.45;}
+.svb-muted{color:var(--tf);font-weight:500;}
+.svb-grade{margin-top:6px;text-align:right;font-size:var(--ts-badge);font-weight:700;color:var(--tf);}
+.svb-foot{margin-top:10px;font-size:var(--ts-badge);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:8px;padding:8px 10px;line-height:1.5;}
 /* 무결과 CTA — ① 필터 끄기 / ② 질문 남기기(플라이휠 입구) */
 .sv-empty-cta{padding:28px 16px;text-align:center;}
 .sv-empty-cta .sec-msg{font-size:0.95rem;color:var(--ts);margin-bottom:14px;}
@@ -11591,6 +11612,7 @@ async function _runSearchV2(q, targetId){
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
     if(n.view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()) return false;
     if(n.view==='admin') return false;
+    if(typeof _canSeePl==='function'&&_canSeePl()&&_svBmiMatch(terms)&&(n.label||'').indexOf('BMI 심사')>=0) return false;   /* 임태성 = 새 BMI 4축 인라인 블록이 예전 BMI 페이지 대체 (2026-07-05) */
     return true; });
   var qcHits=[];
   try{ var qcr=await window.db.fetch('/rest/v1/quick_contents?is_active=eq.true&select=tab_title,content_html'); if(qcr.ok){ var qc=await qcr.json(); if(Array.isArray(qc)) qcHits=qc.filter(function(c){ var hay=((c.tab_title||'')+' '+(c.content_html||'')).toLowerCase(); return terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; }); }); } }catch(e){}
@@ -11615,9 +11637,11 @@ async function _runSearchV2(q, targetId){
   }
   items.sort(function(a,b){ return b.s-a.s; });
   var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
+  if(typeof _canSeePl==='function'&&_canSeePl()&&_svBmiMatch(terms)){ navItems=navItems.filter(function(m){ return (m.label||'').indexOf('BMI 심사')<0; }); }   /* quick_contents BMI 페이지도 억제 — 새 4축 블록이 대체 */
   var hubHtml=''; try{ hubHtml=await _companyHubHtml(q); }catch(e){}   /* 회사 검색 허브(UAT 게이트 내부에서만 비어있지 않음) */
+  var bmiHtml=''; try{ bmiHtml=_svBmiHtml(terms); }catch(e){}   /* BMI 4축 회사별 비교(임태성) — 예전 BMI 페이지 결과 대체 (2026-07-05) */
   if(seq!==_searchSeq) return;
-  window._searchV2Data={ items:items, nav:navItems, terms:terms, me:me, targetId:bodyId, hubHtml:hubHtml };
+  window._searchV2Data={ items:items, nav:navItems, terms:terms, me:me, targetId:bodyId, hubHtml:hubHtml, bmiHtml:bmiHtml };
   _svRender();
 }
 window._runSearchV2=_runSearchV2;
@@ -12294,6 +12318,7 @@ function _svRender(){
   /* 범위 칩 = 활성 소스 탭(+지식 분류 필터) 기준 scope 분포. 누르면 그 범위만(같은 칩 다시 누르면 전체) */
   var scCnt={mine:0,team:0,branch:0,common:0};
   items.forEach(function(it){
+    if(it.src==='products') return;                                    // 상품은 스코프 칩 집계 제외(전용 탭·리스트 미노출) (2026-07-05 안정화)
     if(activeSrc!=='all' && it.src!==activeSrc) return;                 // 상단 탭(전체/지식/소식지/공지/자료) 반영
     if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return; }
     if(scCnt[it.scope]!=null) scCnt[it.scope]++;
@@ -12302,12 +12327,14 @@ function _svRender(){
   /* 결과 */
   var html='';
   if(d.hubHtml && activeSrc==='all'){ html+=d.hubHtml; }   /* 회사 검색 허브 — 결과 최상단(전체 탭에서만, UAT) */
+  if(d.bmiHtml && activeSrc==='all'){ html+=d.bmiHtml; }   /* BMI 4축 회사별 비교(임태성) — 예전 BMI 페이지 대체, 결과 상단 (2026-07-05) */
   if(activeSrc==='all' && !catF && nav.length){
     html+='<div class="sv-grp" style="--svc:#64748B">메뉴·도구 ('+nav.length+')</div>';
     nav.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#64748B">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
   }
-  /* 전체 탭 = 상품 라인업 요약 블록(일부 노출) — 상단에. 전용 탭으로 전환 버튼 포함 (2026-07-05) */
-  var prodSummaryHtml=(activeSrc==='all' && !catF && prodItems.length)?_svProdSummary(prodItems,terms):'';
+  /* 전체 탭 = 상품 라인업 요약 블록(일부 노출) — 상단에. 전용 탭으로 전환 버튼 포함 (2026-07-05).
+     스코프 칩(개인/팀/지점) 선택 시엔 숨김 — 상품은 소속 스코프 축이 아니라 전용 탭 축 (2026-07-05 안정화) */
+  var prodSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && prodItems.length)?_svProdSummary(prodItems,terms):'';
   html+=prodSummaryHtml;
   if(!shown.length){
     if(prodSummaryHtml){ /* 상품 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
@@ -12422,6 +12449,36 @@ function _svProdOpen(id){ window._svActiveSource='products'; window._svOpenKey='
 window._svProdOpen=_svProdOpen;
 function _svProdFilterCo(name){ if(!name){ window._svProdCo=null; } else { window._svProdCo=(window._svProdCo===name)?null:name; } _svRender(); }
 window._svProdFilterCo=_svProdFilterCo;
+/* ════ BMI 심사 기준 검색 (임태성 게이트) — 예전 BMI Quick 페이지 대체. 현장메모 4축(정상·할증·방진·거절). DB 무관 (2026-07-05) ════ */
+var _SV_BMI=[
+  {co:'메리츠화재',cl:'#B91C1C',type:'성별 기준',n:'남 18~30 / 여 16~29',h:'',b:'',r:'남 18 미만·30 이상 / 여 16 미만·29 이상 벗어남',note:''},
+  {co:'DB손해보험',cl:'#15803D',type:'수치',n:'17 ~ 27.99',h:'',b:'28 이상',r:'',note:''},
+  {co:'KB손해보험',cl:'#CA8A04',type:'수치',n:'17 ~ 30',h:'30 이상 할증심사',b:'',r:'',note:''},
+  {co:'흥국화재',cl:'#2563EB',type:'수치',n:'17 ~ 30',h:'',b:'',r:'',note:'범위 내 확인'},
+  {co:'한화손해보험',cl:'#C2410C',type:'수치',n:'19 ~ 30',h:'',b:'',r:'',note:'범위 내 확인'},
+  {co:'삼성화재',cl:'#6366F1',type:'수치',n:'~ 29',h:'',b:'29 초과 방진',r:'',note:''},
+  {co:'롯데손해보험',cl:'#C0392B',type:'수치',n:'17 ~ 30',h:'',b:'',r:'',note:'범위 내 확인'},
+  {co:'현대해상',cl:'#0F8B7E',type:'고지 여부',n:'BMI 병력 무고지 시 제한 없음',h:'',b:'',r:'BMI 병력 고지 시 제한/거절 가능',note:''},
+  {co:'농협손해보험',cl:'#15803D',type:'수치',n:'16 ~ 30',h:'',b:'30~32 담보별 검토 / 33 이상 방문진단',r:'',note:''},
+  {co:'MG손해보험',cl:'#6366F1',type:'수치',n:'17 ~ 29',h:'',b:'',r:'16 이하 / 30 이상 거절',note:''},
+  {co:'흥국생명',cl:'#DC2626',type:'수치',n:'17 ~ 30',h:'',b:'30 이상 방진',r:'34 이상 거절',note:''},
+  {co:'동양생명',cl:'#1D4ED8',type:'질환별',n:'암 17~36 / 뇌·심·질병·수술·사망 17~30',h:'',b:'',r:'',note:'상해 확인 필요'}
+];
+function _svBmiMatch(terms){ return (terms||[]).some(function(t){ t=String(t).toLowerCase(); return t.indexOf('bmi')>=0||t.indexOf('비만')>=0||t.indexOf('체질량')>=0; }); }
+function _svBmiHtml(terms){
+  if(!(typeof _canSeePl==='function'&&_canSeePl())) return '';   /* 임태성 게이트 — 그 외 일반 사용자는 기존 동작 유지 */
+  if(!_svBmiMatch(terms)) return '';
+  var ax=function(lab,cls,v){ return v?'<div class="svb-ax"><span class="svb-lab '+cls+'">'+lab+'</span><span class="svb-v">'+_sEsc(v)+'</span></div>':''; };
+  var cards=_SV_BMI.map(function(d){
+    return '<div class="svb-card"><div class="svb-ch" style="border-left:3px solid '+_sEsc(d.cl)+'"><span class="svb-co">'+_sEsc(d.co)+'</span><span class="svb-ty">'+_sEsc(d.type)+'</span></div><div class="svb-cb">'
+      +ax('정상','n',d.n)+ax('할증','h',d.h)+ax('방진','b',d.b)+ax('거절','r',d.r)
+      +(d.note?'<div class="svb-ax"><span class="svb-v svb-muted">※ '+_sEsc(d.note)+'</span></div>':'')
+      +'<div class="svb-grade">현장 메모</div></div></div>';
+  }).join('');
+  return '<div class="svb-wrap"><div class="svb-hd">회사별 BMI 심사 기준 <span class="svb-badge">현장 메모 · 참고</span></div><div class="svb-grid">'+cards+'</div>'
+    +'<div class="svb-foot">현장 메모 기반의 보수적 예시입니다. 실제 심사 기준은 보험사·상품·고객 조건에 따라 달라지며, 최종 사용·안내 책임은 사용자에게 있습니다.</div></div>';
+}
+window._svBmiHtml=_svBmiHtml;
 /* 무결과 → 질문 남기기: 기존 #ask 보험 Q&A 폼을 검색 유형(상품/인수)에 맞춰 연다. (제출→네비방 라우팅은 다음 슬라이스) */
 function _svAskFrom(cat){
   if(typeof openAsk==='function') openAsk();
