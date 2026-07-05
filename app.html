@@ -11827,6 +11827,23 @@ async function _runSearchV2(q, targetId){
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
   }));
   if(seq!==_searchSeq) return;
+  /* 답변(comments) 검색 합류 — 답변에만 있는 말("메리츠 부담보" 등)로 쳐도 그 질문이 뜸. 부모 qna를 보험Q&A 결과에 병합(중복 제거). RLS 그대로. 2026-07-05 */
+  try{
+    var _qgi=-1; for(var _gg=0;_gg<groups.length;_gg++){ if(groups[_gg].table==='posts'){ _qgi=_gg; break; } }
+    var _cflt=terms.length?_sBuildFilter(['content'],terms):'';
+    if(_qgi>=0 && _cflt){
+      var _cres=await window.db.fetch('/rest/v1/comments?'+_cflt+'&select=post_id&limit='+lim);
+      var _cs=_cres&&_cres.ok?await _cres.json():[]; if(!Array.isArray(_cs)) _cs=[];
+      var _pids=[]; _cs.forEach(function(c){ if(c.post_id!=null && _pids.indexOf(c.post_id)<0) _pids.push(c.post_id); });
+      var _q0=results[_qgi]||[]; var _have={}; _q0.forEach(function(r){ _have[String(r.id)]=1; });
+      var _need=_pids.filter(function(p){ return !_have[String(p)]; });
+      if(_need.length){
+        var _pr=await window.db.fetch('/rest/v1/posts?id=in.('+_need.join(',')+')&board_type=eq.qna&title=not.ilike.'+SIK+'&select=id,title,content,created_at&limit='+lim);
+        var _ps=_pr&&_pr.ok?await _pr.json():[]; if(Array.isArray(_ps)&&_ps.length){ results[_qgi]=_q0.concat(_ps); }
+      }
+    }
+  }catch(e){}
+  if(seq!==_searchSeq) return;
   window._svHasMore = results.some(function(rr){ return Array.isArray(rr)&&rr.length>=lim; });   /* 어느 소스든 꽉 찼으면 더 있을 수 있음 */
   /* 메뉴·도구(정적+quick) — 공동 성격이나 '바로가기'라 별도 상단 그룹으로 (어드민 제외) */
   var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
