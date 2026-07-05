@@ -1593,6 +1593,8 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .svc-ok.t{background:#FEF3C7;color:#92400E;}
 .svc-empty{font-size:var(--ts-meta);color:var(--tf);padding:12px;}
 .svc-note{margin-top:8px;font-size:var(--ts-badge);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:8px;padding:9px 11px;line-height:1.55;font-weight:600;}
+/* 보험 Q&A 출처 안내 배너 (더원지점 카톡 네비방 기반 데모, 2026-07-05) */
+.qna-src-notice{margin:0 0 10px;padding:9px 13px;font-size:var(--ts-meta);line-height:1.55;color:var(--tp);background:color-mix(in srgb,var(--ac) 6%,var(--s1));border:1px solid color-mix(in srgb,var(--ac) 16%,var(--bd));border-left:3px solid var(--ac);border-radius:var(--radius-sm);}
 /* 상품 라인업 탭 = pl-* 레이아웃 검색결과 스코프 — 변수 스코프 이식(#v-product-lineup 미러) (2026-07-05) */
 .pl-layout.svpl{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);margin-top:4px;}
 /* 상세 패널 = 클릭한 상품 위치에 맞춰 절대배치(플로팅). top·max-height는 _svplPositionDrawer가 JS로 설정 (2026-07-05) */
@@ -3250,6 +3252,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="chip on" onclick="mysQnaSub(this,'all')">전체보기</div>
         <div class="chip" onclick="mysQnaSub(this,'mine')">MINE</div>
       </div></div>
+      <!-- 보험 Q&A 출처 안내 배너 (2026-07-05 대표 지시 — 더원지점 카톡 네비방 현장자료 기반 데모). 문구 수정 가능 -->
+      <div class="qna-src-notice">이 보험 Q&amp;A는 더원지점 '상품 네비게이션' 카톡방의 실제 현장 문의·답변을 바탕으로 정리했습니다. 개인정보는 모두 제거했으며, 인수 가능 여부는 보험사·상품·고객 조건에 따라 달라질 수 있으니 참고용으로 봐주세요.</div>
       <div class="split cosp-split scr-mode" id="mys-qna-split">
         <div class="col list-col"><div class="list" id="mys-qna-list"><div class="mys-news-empty">불러오는 중…</div></div></div>
         <div class="col viewer-col">
