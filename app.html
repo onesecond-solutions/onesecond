@@ -1550,6 +1550,28 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-scope span.svs:focus-visible{outline:2px solid color-mix(in srgb,var(--svc) 55%,transparent);outline-offset:1px;}
 .sv-scope span.svs.on{background:color-mix(in srgb,var(--svc) 15%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--svc) 45%,transparent);}
 .sv-scope span.svs.on .svs-lbl{color:var(--svc);}
+/* ════ 상품 라인업 통합검색 (임태성 게이트) — 회사 요약 스트립 + 요약블록 전체보기 + 상세패널 (2026-07-05) ════ */
+.sv-costrip{display:flex;gap:8px;overflow-x:auto;padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--s1);}
+.sv-costrip .cc{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ts);white-space:nowrap;font-family:inherit;}
+.sv-costrip .cc:hover{border-color:var(--ac);}
+.sv-costrip .cc.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,transparent);color:var(--ac);}
+.sv-costrip .cc .dot{width:9px;height:9px;border-radius:50%;background:var(--cc,#6366F1);flex-shrink:0;}
+.sv-costrip .cc .n{color:var(--tf);font-weight:600;}
+.sv-prodmore{padding:6px 12px 10px;}
+.sv-prodmore button{border:1px solid var(--ac);color:var(--ac);background:var(--s1);border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.sv-prodmore button:hover{background:color-mix(in srgb,var(--ac) 8%,transparent);}
+.svp-bd{font-size:11px;font-weight:800;color:var(--err);}
+.svp-co{display:inline-block;font-size:12px;font-weight:800;color:#fff;padding:4px 11px;border-radius:999px;margin-bottom:10px;}
+.svp-ttl{font-size:17px;font-weight:800;line-height:1.35;margin:0 0 4px;letter-spacing:-.01em;}
+.svp-sec{font-size:12px;color:var(--tf);margin-bottom:12px;}
+.svp-f{margin-top:12px;}
+.svp-f .k{font-size:12px;font-weight:800;color:var(--tf);margin-bottom:4px;letter-spacing:.02em;}
+.svp-f .v{font-size:14px;color:var(--tp);line-height:1.55;}
+.svp-themes{display:flex;flex-wrap:wrap;gap:6px;}
+.svp-themes span{font-size:12px;font-weight:700;color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,transparent);border:1px solid color-mix(in srgb,var(--ac) 25%,transparent);padding:3px 9px;border-radius:999px;}
+.svp-src{margin-top:14px;font-size:12px;color:var(--tf);line-height:1.6;border-top:1px solid var(--bd);padding-top:11px;}
+/* 검색 중(.searching)엔 홈 카드(홈 데스크) 아래 노출 안 함 (2026-07-05 대표 지시) */
+body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 /* 무결과 CTA — ① 필터 끄기 / ② 질문 남기기(플라이휠 입구) */
 .sv-empty-cta{padding:28px 16px;text-align:center;}
 .sv-empty-cta .sec-msg{font-size:0.95rem;color:var(--ts);margin-bottom:14px;}
@@ -11480,6 +11502,7 @@ var SV_SCOPES=[
 /* 소스 탭 (답 품질 우선: 지식·Q&A 먼저, raw 자료 뒤). 라벨=사용자 말(내부 시스템명 노출 금지) */
 var SV_SRC=[
   {k:'all', label:'전체'},
+  {k:'products', label:'상품 라인업'},   /* 임태성 게이트(_canSeePl) — 건수 0이면 탭 자동 숨김. 일반 사용자엔 미노출 (2026-07-05) */
   {k:'knowledge_entries', label:'지식'},
   {k:'posts', label:'보험Q&A'},
   {k:'newsletters', label:'소식지'},
@@ -11487,6 +11510,24 @@ var SV_SRC=[
   {k:'scripts', label:'스크립트'},
   {k:'myspace_files', label:'자료'}
 ];
+/* ── 상품 라인업 검색 소스 (임태성 게이트) — 파일 기반 246건 in-memory. DB/RLS 무관. 통합검색 주입용 (2026-07-05) ── */
+var _SV_PGROUP={ table:'products',
+  t:function(r){ return r.product||''; },
+  body:function(r){ return r.feature||r.search_text||''; },
+  m:function(r){ return (r.group||'')+(r.goji_type?' · '+r.goji_type:''); },
+  scope:function(){ return 'common'; } };
+var _svProdCache=null, _svProdLoading=null;
+function _svLoadProducts(){
+  if(_svProdCache) return Promise.resolve(_svProdCache);
+  if(_svProdLoading) return _svProdLoading;
+  _svProdLoading=fetch('/data/insurer_products_2607.json?v=20260705').then(function(r){return r.ok?r.json():[];}).then(function(recs){
+    if(!Array.isArray(recs)) recs=[];
+    recs.forEach(function(p){ p._hay=String(p.search_text||'').toLowerCase(); });
+    _svProdCache=recs; return recs;
+  }).catch(function(){ _svProdCache=[]; return []; });
+  return _svProdLoading;
+}
+window._svLoadProducts=_svLoadProducts;
 function _svSrcLabel(t){ for(var i=0;i<SV_SRC.length;i++) if(SV_SRC[i].k===t) return SV_SRC[i].label; return t; }
 /* 계열 필터 = 기존 knowledge_entries.category 묶음 파생 (DDL 0 / 재태깅 0). 실제 22 category값 기준 확정.
    미분류(아래 안 잡히는 category)는 제외 X — 전체/지식 평검색에 그대로 노출. 비교·상담=지식 category 아님(이번 제외) */
@@ -11505,7 +11546,7 @@ async function _runSearchV2(q, targetId){
   var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
   var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
-  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; window._svOpenKey=null; window._svActiveScope='all'; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널·선택표시·범위선택 초기화 / 같은 검색어=누적·유지 */
+  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; window._svOpenKey=null; window._svActiveScope='all'; window._svProdCo=null; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널·선택표시·범위선택·상품 회사필터 초기화 / 같은 검색어=누적·유지 */
   window._svQ=q; window._svTarget=bodyId;
   body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
@@ -11559,6 +11600,17 @@ async function _runSearchV2(q, targetId){
     var titleOf=g.t||function(r){return r.title;};
     rows.forEach(function(r){ var sc=_sScore(titleOf(r), g.body(r), terms); var k=g.scope(r); if(['mine','team','branch','common'].indexOf(k)<0) k='common';
       items.push({ g:g, row:r, s:sc, src:g.table, scope:k, cat:(g.table==='knowledge_entries'?(r.category||''):'') }); });
+  }
+  /* 상품 라인업 주입(임태성 게이트) — 파일기반 246건 in-memory AND 매칭. DB/RLS 무관 (2026-07-05) */
+  if(typeof _canSeePl==='function' && _canSeePl()){
+    try{ var _prods=await _svLoadProducts();
+      for(var _pi=0; _pi<_prods.length; _pi++){ var _p=_prods[_pi], _ok=true;
+        for(var _pt=0; _pt<terms.length; _pt++){ if(_p._hay.indexOf(terms[_pt].toLowerCase())<0){ _ok=false; break; } }
+        if(!_ok) continue;
+        items.push({ g:_SV_PGROUP, row:_p, s:_sScore((_p.product||'')+' '+(_p.company||''), _p.search_text, terms), src:'products', scope:'common', cat:'' });
+      }
+    }catch(e){}
+    if(seq!==_searchSeq) return;
   }
   items.sort(function(a,b){ return b.s-a.s; });
   var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; }).concat(qcHits.map(function(c){ return {label:c.tab_title||'Quick',view:'quick',tag:'Quick'}; }));
@@ -12215,6 +12267,7 @@ function _svRender(){
   var body=document.getElementById(d.targetId||'sobody'); if(!body) return;
   var items=d.items||[], terms=d.terms, nav=d.nav||[];
   var activeSrc=window._svActiveSource||'all';
+  var prodItems=items.filter(function(it){return it.src==='products';});   /* 상품 라인업(임태성 게이트) — 전용 탭·전체탭 요약으로만 렌더 */
   var catF=window._svCatFilter||null;
   var aiBarFixed=(typeof _canSeeAiSearch==='function'&&_canSeeAiSearch())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'';  /* AI 검색 = 임태성 실장 게이트(_canSeeAiSearch=98c5f4f9). 그 외 미노출. (2026-07-04 분리) */
   var aiAns='<div id="aiAnsBox"></div>';
@@ -12231,6 +12284,7 @@ function _svRender(){
   var activeScope=window._svActiveScope||'all';
   /* 표시 대상 = 활성 소스 + (지식이면 분류 필터) + 범위 칩 선택 */
   var shown=items.filter(function(it){
+    if(it.src==='products') return false;   /* 상품은 일반 리스트 제외 — 전체탭=요약 블록, 상품 라인업 탭=전용 렌더 (2026-07-05) */
     if(activeSrc!=='all' && it.src!==activeSrc) return false;
     if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return false; }
     if(activeScope!=='all' && it.scope!==activeScope) return false;
@@ -12251,8 +12305,12 @@ function _svRender(){
     html+='<div class="sv-grp" style="--svc:#64748B">메뉴·도구 ('+nav.length+')</div>';
     nav.forEach(function(mi){ html+='<div class="sores" onclick="_searchGo(\''+mi.view+'\')"><span class="stag" style="--tcolor:#64748B">'+mi.tag+'</span><div class="sbody"><span class="sttl">'+_sMark(mi.label,terms)+'</span></div><span class="smeta">바로가기</span></div>'; });
   }
+  /* 전체 탭 = 상품 라인업 요약 블록(일부 노출) — 상단에. 전용 탭으로 전환 버튼 포함 (2026-07-05) */
+  var prodSummaryHtml=(activeSrc==='all' && !catF && prodItems.length)?_svProdSummary(prodItems,terms):'';
+  html+=prodSummaryHtml;
   if(!shown.length){
-    if(items.length===0){
+    if(prodSummaryHtml){ /* 상품 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
+    else if(items.length===0){
       /* ② 진짜 무결과(전 범위 0) = 플라이휠 입구 */
       var aArg=(catF==='상품')?"'상품'":((catF==='인수')?"'인수'":'null');
       html+='<div class="sv-empty-cta"><div class="sec-msg">찾는 답이 없으면, 질문으로 남겨보세요.</div><button class="sec-btn primary" type="button" onclick="_svAskFrom('+aArg+')">질문 남기기</button></div>';
@@ -12276,7 +12334,14 @@ function _svRender(){
     html+='<div class="sores'+_svOn+'" data-svkey="'+_sEsc(_svk)+'" onclick="_searchOpen(\''+g.table+'\',\''+r.id+'\')"><span class="stag" style="--tcolor:'+_svScopeColor(it.scope)+'">'+((g.table==='knowledge_entries'&&r&&r.source_type==='work_note'&&r.category)?_sEsc(r.category):_svSrcLabel(it.src))+'</span><div class="sbody"><span class="sttl">'+_sMark(titleOf(r),terms)+'</span>'+snipHtml+stHtml+'</div><span class="smeta">'+_sEsc(g.m(r))+'</span></div>';
   });
   if(window._svHasMore && shown.length){ html+='<div class="sv-more"><button type="button" onclick="_svMore()">더 많은 결과 보기</button></div>'; }
+  if(activeSrc==='products'){ html=_svProdList(prodItems,terms); }   /* 상품 라인업 전용 탭 = 좌측 리스트만(오버레이 등 비-hsResults 폴백) */
   if((d.targetId||'sobody')==='hsResults'){
+    if(activeSrc==='products'){
+      /* 상품 라인업 전용 탭 = 상단 회사 요약 스트립 + 좌 리스트 + 우 상세 (standalone 구조, 2026-07-05) */
+      var _pp=window._svPanelHtml||'<div class="sv-panel-empty">왼쪽 상품을 누르면<br>여기에서 상세를 미리 봅니다.</div>';
+      body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+'</div>'+_svCoStrip(prodItems)+'<div class="sv-2col sv-prodcol"><div class="sv-left">'+_svProdList(prodItems,terms)+'</div><div class="sv-right" id="svPanel">'+_pp+'</div></div>';
+      return;
+    }
     if(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){
       /* 임태성 게이트 = 1칼럼(우측 미리보기 없음). 회사검색=허브만(.sv-1col, 결과 숨김) / 일반검색=결과 1칼럼(.sv-list1). 클릭=원본 화면 이동(_searchOpenOrigin). (2026-06-30) */
       var _g1cls=(d.hubHtml && activeSrc==='all')?'sv-1col':'sv-list1';
@@ -12303,6 +12368,59 @@ function _svScope(k){ window._svActiveScope=(window._svActiveScope===k)?'all':k;
 window._svScope=_svScope;
 function _svClearCat(){ window._svCatFilter=null; _svRender(); }
 window._svClearCat=_svClearCat;
+/* ════ 상품 라인업 통합검색 렌더 (임태성 게이트) — 전체탭 요약 + 전용탭 회사스트립·리스트·상세 (2026-07-05) ════ */
+function _svJsq(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function _svProdCard(p, terms){
+  var on=(window._svOpenKey==='products:'+p.id)?' on':'';
+  var snip=_sSnippet(p.feature||p.search_text, terms, 150);
+  var badge=p.badge?' <span class="svp-bd">'+_sEsc(p.badge)+'</span>':'';
+  return '<div class="sores'+on+'" data-svkey="products:'+_sEsc(p.id)+'" onclick="_svProdOpen(\''+_svJsq(p.id)+'\')">'
+    +'<span class="stag" style="--tcolor:'+_sEsc(p.company_color||'#6366F1')+'">'+_sEsc(p.company)+'</span>'
+    +'<div class="sbody"><span class="sttl">'+_sMark(p.product||'',terms)+badge+'</span>'
+    +(snip?'<span class="ssnip">'+_sMark(snip,terms)+'</span>':'')+'</div>'
+    +'<span class="smeta">'+_sEsc((p.group||'')+(p.goji_type?' · '+p.goji_type:''))+'</span></div>';
+}
+function _svProdSummary(prodItems, terms){
+  var N=4, n=prodItems.length;
+  var cards=prodItems.slice(0,N).map(function(it){ return _svProdCard(it.row, terms); }).join('');
+  var more=(n>N)?'<div class="sv-prodmore"><button type="button" onclick="_svTab(\'products\')">상품 라인업 전체 '+n+'건 보기 →</button></div>'
+                :'<div class="sv-prodmore"><button type="button" onclick="_svTab(\'products\')">상품 라인업 자세히 보기 →</button></div>';
+  return '<div class="sv-grp" style="--svc:#6366F1">상품 라인업 ('+n+')</div>'+cards+more;
+}
+function _svCoStrip(prodItems){
+  var map={}, order=[];
+  prodItems.forEach(function(it){ var p=it.row, c=p.company||'(미상)';
+    if(!map[c]){ map[c]={n:c, cl:p.company_color||'#6366F1', cnt:0}; order.push(c); }
+    map[c].cnt++; });
+  var cur=window._svProdCo||null;
+  var chips='<button type="button" class="cc'+(cur?'':' on')+'" onclick="_svProdFilterCo(\'\')"><span class="dot" style="--cc:#6366F1"></span>전체 <span class="n">'+prodItems.length+'</span></button>';
+  chips+=order.map(function(k){ var c=map[k]; return '<button type="button" class="cc'+(cur===k?' on':'')+'" onclick="_svProdFilterCo(\''+_svJsq(k)+'\')"><span class="dot" style="--cc:'+_sEsc(c.cl)+'"></span>'+_sEsc(k)+' <span class="n">'+c.cnt+'</span></button>'; }).join('');
+  return '<div class="sv-costrip">'+chips+'</div>';
+}
+function _svProdList(prodItems, terms){
+  var cur=window._svProdCo||null;
+  var arr=cur?prodItems.filter(function(it){return (it.row.company||'(미상)')===cur;}):prodItems;
+  if(!arr.length) return '<div class="sv-empty">이 회사의 상품 결과가 없어요.</div>';
+  return '<div class="sv-grp" style="--svc:#6366F1">상품 '+arr.length+'종</div>'+arr.map(function(it){ return _svProdCard(it.row, terms); }).join('');
+}
+function _svProdFind(id){ var its=(window._searchV2Data&&window._searchV2Data.items)||[]; for(var i=0;i<its.length;i++){ if(its[i].src==='products'&&its[i].row&&its[i].row.id===id) return its[i].row; } return null; }
+function _svProdPanel(id){
+  var p=_svProdFind(id); if(!p) return '<div class="sv-panel-empty">상품을 찾을 수 없습니다.</div>';
+  var themes=(Array.isArray(p.themes)?p.themes:[]).map(function(t){return '<span>'+_sEsc(t)+'</span>';}).join('');
+  var badge=p.badge?'<span class="svp-bd" style="margin-left:6px">'+_sEsc(p.badge)+'</span>':'';
+  return '<div class="svp-co" style="background:'+_sEsc(p.company_color||'#6366F1')+'">'+_sEsc(p.company)+'</div>'
+    +'<div class="svp-ttl">'+_sEsc(p.product||'')+badge+'</div>'
+    +'<div class="svp-sec">'+(String(p.section||'').toLowerCase()==='life'?'생명보험':'손해보험')+(p.group?' · '+_sEsc(p.group):'')+'</div>'
+    +'<div class="svp-f"><div class="k">핵심 특징</div><div class="v">'+_sEsc(p.feature||'—')+'</div></div>'
+    +(themes?'<div class="svp-f"><div class="k">테마</div><div class="svp-themes">'+themes+'</div></div>':'')
+    +'<div class="svp-f"><div class="k">가입나이</div><div class="v">'+_sEsc(p.age||'—')+'</div></div>'
+    +'<div class="svp-f"><div class="k">고지유형</div><div class="v">'+_sEsc(p.goji_type||'—')+'</div></div>'
+    +'<div class="svp-src">출처 · '+_sEsc(p.source||'')+'<br>정확한 조건은 약관·상품설명서 확인</div>';
+}
+function _svProdOpen(id){ window._svActiveSource='products'; window._svOpenKey='products:'+id; window._svPanelHtml=_svProdPanel(id); _svRender(); var pv=document.getElementById('svPanel'); if(pv) pv.scrollTop=0; }   /* 전체탭 요약 클릭 시에도 상세패널 있는 상품 라인업 탭으로 이동 */
+window._svProdOpen=_svProdOpen;
+function _svProdFilterCo(name){ if(!name){ window._svProdCo=null; } else { window._svProdCo=(window._svProdCo===name)?null:name; } _svRender(); }
+window._svProdFilterCo=_svProdFilterCo;
 /* 무결과 → 질문 남기기: 기존 #ask 보험 Q&A 폼을 검색 유형(상품/인수)에 맞춰 연다. (제출→네비방 라우팅은 다음 슬라이스) */
 function _svAskFrom(cat){
   if(typeof openAsk==='function') openAsk();
