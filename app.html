@@ -1595,8 +1595,9 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .svb-foot{margin-top:10px;font-size:var(--ts-badge);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:8px;padding:8px 10px;line-height:1.5;}
 /* 독립 도구 허브 페이지(#v-tool) — 제목 + 3카드 그리드 + 아래 실행 슬롯 (2026-07-05) */
 .tool-page-h{font-size:var(--ts-viewer-title);font-weight:800;margin:6px 0 14px;color:var(--tp);}
-.tool-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
-@media(max-width:640px){.tool-cards{grid-template-columns:1fr;}}
+.tool-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+@media(max-width:760px){.tool-cards{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:440px){.tool-cards{grid-template-columns:1fr;}}
 .tool-card{display:flex;align-items:center;gap:12px;padding:15px 16px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);cursor:pointer;text-align:left;font-family:inherit;transition:border-color .12s,background .12s;}
 .tool-card:hover{border-color:var(--ac);}
 .tool-card.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 7%,transparent);}
