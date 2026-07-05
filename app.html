@@ -13292,7 +13292,7 @@ async function _qnaBulkImport(auto){
     log('데이터 불러오는 중…');
     var dres=await fetch(_QNA_BULK_URL,{cache:'no-store'}); var data=dres.ok?await dres.json():null;
     var items=(data&&data.items)||[]; if(items.length<50){ log('데이터 이상(건수 부족) — 중단'); if(btn)btn.disabled=false; return; }
-    if(!auto){ if(!confirm('임태성 실장 계정으로 보험 Q&A '+items.length+'건을 등록합니다. 진행할까요?')){ if(btn)btn.disabled=false; return; } }
+    /* 확인 다이얼로그 제거 — 대표 승인 완료된 작업, 예/아니오 안 물음(AI팀 내부 종결). 자동·수동 둘 다 바로 진행 */
     var branchId=u.branch_id||null;
     if(branchId==null){ try{ var br=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select=branch_id'); if(br.ok){ var bj=await br.json(); if(bj&&bj[0]) branchId=bj[0].branch_id||null; } }catch(e){} }
     log('기존 질문 확인 중…');
