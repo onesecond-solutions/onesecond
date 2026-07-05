@@ -11711,7 +11711,7 @@ function _svLoadProducts(){
   if(_svProdLoading) return _svProdLoading;
   _svProdLoading=fetch('/data/insurer_products_2607.json?v=20260705').then(function(r){return r.ok?r.json():[];}).then(function(recs){
     if(!Array.isArray(recs)) recs=[];
-    recs.forEach(function(p){ p._hay=String(p.search_text||'').toLowerCase(); });
+    recs.forEach(function(p){ p._hay=String(p.search_text||'').toLowerCase(); p._nhay=_svSynNorm(p.search_text||''); });   /* _nhay=동의어 정규화 매칭용 */
     _svProdCache=recs; return recs;
   }).catch(function(){ _svProdCache=[]; return []; });
   return _svProdLoading;
@@ -11733,7 +11733,7 @@ function _svLoadCover(){
       var rows=(v.bycover&&v.bycover[d.cover])||[];
       var nm=d['회사별명칭']||{};
       var hay=(d.cover+' '+(d.type||'')+' '+(d.def||'')+' '+(d['성격']||'')+' '+Object.keys(nm).join(' ')+' '+Object.keys(nm).map(function(k){return nm[k];}).join(' ')+' '+rows.map(function(r){return r.co+' '+r.prod+' '+(r['금액']||'');}).join(' ')).toLowerCase();
-      return { cover:d.cover, type:d.type||'', def:d.def||'', seong:d['성격']||'', gubun:d['구분주의']||'', rows:rows, _hay:hay };
+      return { cover:d.cover, type:d.type||'', def:d.def||'', seong:d['성격']||'', gubun:d['구분주의']||'', rows:rows, _hay:hay, _nname:_svSynNorm(d.cover), _nhay:_svSynNorm(hay) };   /* _nname/_nhay=동의어 정규화 매칭용 */
     });
     _svCoverData={covers:covers, colors:(v.colors||{})};
     return _svCoverData;
@@ -11741,6 +11741,25 @@ function _svLoadCover(){
   return _svCoverLoading;
 }
 window._svLoadCover=_svLoadCover;
+/* ── 검색 동의어·별칭 확장 — data/search_synonyms.json(48term/164alias). "실비→실손"·"뇌심→순환계" 등 다른 말로 쳐도 정답. 상품·담보 in-memory 매칭에 적용 (2026-07-05) ── */
+function _svSynNorm(s){ return String(s||'').toLowerCase().replace(/[\s·.()\-]/g,''); }
+var _svSynLoading=null;
+function _svLoadSyn(){
+  if(window._svSynGroups) return Promise.resolve(window._svSynGroups);
+  if(_svSynLoading) return _svSynLoading;
+  _svSynLoading=fetch('/data/search_synonyms.json?v=20260705').then(function(r){return r.ok?r.json():null;}).then(function(v){
+    var groups=[], lookup={};
+    if(v&&Array.isArray(v.terms)){ v.terms.forEach(function(t){
+      var forms=[t.canonical].concat(t.aliases||[]).map(_svSynNorm).filter(Boolean);
+      if(forms.length>1){ var gi=groups.length; groups.push(forms); forms.forEach(function(f){ if(lookup[f]==null) lookup[f]=gi; }); }
+    }); }
+    window._svSynGroups=groups; window._svSynLookup=lookup; return groups;
+  }).catch(function(){ window._svSynGroups=[]; window._svSynLookup={}; return []; });
+  return _svSynLoading;
+}
+window._svLoadSyn=_svLoadSyn;
+/* 검색어 → [정규화 term + 동의어 폼들]. 상품/담보 정규화본(_nhay)에 하나라도 있으면 매칭 */
+function _svTermForms(term){ var n=_svSynNorm(term), forms=[n]; var gi=(window._svSynLookup||{})[n]; if(gi!=null){ (window._svSynGroups[gi]||[]).forEach(function(f){ if(forms.indexOf(f)<0) forms.push(f); }); } return forms; }
 function _svSrcLabel(t){ for(var i=0;i<SV_SRC.length;i++) if(SV_SRC[i].k===t) return SV_SRC[i].label; return t; }
 /* 계열 필터 = 기존 knowledge_entries.category 묶음 파생 (DDL 0 / 재태깅 0). 실제 22 category값 기준 확정.
    미분류(아래 안 잡히는 category)는 제외 X — 전체/지식 평검색에 그대로 노출. 비교·상담=지식 category 아님(이번 제외) */
@@ -11815,10 +11834,14 @@ async function _runSearchV2(q, targetId){
     rows.forEach(function(r){ var sc=_sScore(titleOf(r), g.body(r), terms); var k=g.scope(r); if(['mine','team','branch','common'].indexOf(k)<0) k='common';
       items.push({ g:g, row:r, s:sc, src:g.table, scope:k, cat:(g.table==='knowledge_entries'?(r.category||''):'') }); });
   }
-  /* 상품 라인업 주입 — 전체 개방(2026-07-05 대표 승인, 실사용 반응 관찰 단계). 파일기반 246건 in-memory AND 매칭. DB/RLS 무관. (AI검색은 별도 _canSeeAiSearch 임태성 게이트 유지) */
+  /* 검색어 동의어 확장 — 각 term → [정규화 term + 동의어 폼]. 상품·담보 정규화본(_nhay)에 하나라도 있으면 매칭 (2026-07-05) */
+  try{ await _svLoadSyn(); }catch(e){}
+  if(seq!==_searchSeq) return;
+  var _termForms=terms.map(_svTermForms);
+  /* 상품 라인업 주입 — 전체 개방. 동의어 확장 매칭(_nhay). DB/RLS 무관. (AI검색은 별도 _canSeeAiSearch 임태성 게이트 유지) */
   try{ var _prods=await _svLoadProducts();
     for(var _pi=0; _pi<_prods.length; _pi++){ var _p=_prods[_pi], _ok=true;
-      for(var _pt=0; _pt<terms.length; _pt++){ if(_p._hay.indexOf(terms[_pt].toLowerCase())<0){ _ok=false; break; } }
+      for(var _pt=0; _pt<_termForms.length; _pt++){ var _fs=_termForms[_pt], _hit=false; for(var _fi=0; _fi<_fs.length; _fi++){ if(_p._nhay.indexOf(_fs[_fi])>=0){ _hit=true; break; } } if(!_hit){ _ok=false; break; } }
       if(!_ok) continue;
       items.push({ g:_SV_PGROUP, row:_p, s:_sScore((_p.product||'')+' '+(_p.company||''), _p.search_text, terms), src:'products', scope:'common', cat:'' });
     }
@@ -11827,7 +11850,7 @@ async function _runSearchV2(q, targetId){
   /* 담보 주입 — 전체 개방. 담보명 우선 매칭(정확 단어=그 담보만), 담보명 매칭 없으면 내용(정의·회사·금액)으로 포괄 매칭 (2026-07-05) */
   try{ var _cd=await _svLoadCover(), _covN=[], _covC=[];
     for(var _ci=0; _ci<_cd.covers.length; _ci++){ var _cov=_cd.covers[_ci], _inN=true, _inH=true;
-      for(var _ct=0; _ct<terms.length; _ct++){ var _tl=terms[_ct].toLowerCase(); if(_cov.cover.toLowerCase().indexOf(_tl)<0) _inN=false; if(_cov._hay.indexOf(_tl)<0) _inH=false; }
+      for(var _ct=0; _ct<_termForms.length; _ct++){ var _fs=_termForms[_ct], _nHit=false, _hHit=false; for(var _fi=0; _fi<_fs.length; _fi++){ var _f=_fs[_fi]; if(_cov._nname.indexOf(_f)>=0) _nHit=true; if(_cov._nhay.indexOf(_f)>=0) _hHit=true; } if(!_nHit) _inN=false; if(!_hHit) _inH=false; }
       if(_inN) _covN.push(_cov); else if(_inH) _covC.push(_cov);
     }
     (_covN.length?_covN:_covC).forEach(function(_cov){ items.push({ g:_SV_CGROUP, row:_cov, s:_sScore(_cov.cover, _cov._hay, terms), src:'covers', scope:'common', cat:'' }); });
