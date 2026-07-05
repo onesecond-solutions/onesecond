@@ -3403,7 +3403,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      <!-- 매니저방 = 바닥 독립 페이지 (2026-07-04, 바텀시트→바닥 이전). #mr-main을 _spMrShow로 여기 렌더, 떠날 때 _spMrRestore로 라이브러리 회수 -->
      <div class="wrap view" id="v-mrroom"><div id="mrroom-host"></div></div>
      <!-- 실비 세대별 변천사 = 기획팀장 자료(pages/silson-generations.html) iframe 격리 로드 (2026-07-04) -->
-     <div class="wrap view" id="v-silson"><iframe id="silson-frame" title="실손 세대별 변천사" loading="lazy"></iframe></div>
+     <div class="wrap view" id="v-silson"><button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button><iframe id="silson-frame" title="실손 세대별 변천사" loading="lazy"></iframe></div>
      <div class="wrap view" id="v-together">
       <div class="ttl">함께해요 <span class="ac">· 원세컨드 커뮤니티</span></div>
       <div class="sub">17년 현장의 경험을 바탕으로, 여러분의 노하우를 함께하겠습니다.</div>
@@ -3655,6 +3655,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      </div>
      <!-- ════ 상품 로드맵 (#v-roadmap) — 임태성 실장 user_id 전용 검수 화면. raw_seed 비공개·검수 전 사용자 노출/통합검색 미연결. 2026-06-27 ════ -->
      <div class="wrap view" id="v-roadmap">
+      <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
       <div class="rm-note">⚠️ <b>비공개 검수용</b> — 이 화면은 검수 담당 계정에만 보입니다. 데이터는 <b>raw_seed(미검증 씨드)</b> 상태로, 보험사 소식지(2026.04 기준)에서 자동 추출한 <b>초안</b>입니다. <b>아직 검수 전이라 "가입 가능" 여부를 단정하지 않으며</b>, 원문에 명시된 가입연령·상품유형·간편고지 조건 등 사실만 표시합니다. 출처·기준일은 회사 단위로 연결되어 있습니다.</div>
       <div class="rm-head">전 보험사 상품 로드맵 <span style="font-weight:400;color:var(--ts);font-size:13px">씨드 검수</span></div>
       <div class="rm-sub" id="rm-stat">불러오는 중…</div>
@@ -3674,6 +3675,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      </div>
      <!-- ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용 조회(v0, 읽기전용·AI없음·외부전송0). 일반/어드민 무영향. 2026-06-29 ════ -->
      <div class="wrap view" id="v-salesnote">
+      <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
       <div class="rm-note">🔒 <b>비공개</b> — 본인 영업 데이터 조회 전용 화면입니다. 외부 전송·AI 처리 없음. 등록·수정은 다음 단계.</div>
       <div class="sn-head">영업노트 <span style="font-weight:400;color:var(--ts);font-size:13px">고객·상담 조회</span></div>
       <div class="sn-sub" id="sn-stat">불러오는 중…</div>
@@ -3708,6 +3710,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      </div>
      <!-- ════ 원수사 상품 라인업 (#v-product-lineup) — 임태성 실장 게이트. DB(2026-07 draft) 읽어 시안 렌더. 일반/어드민 무영향. 2026-07-03 ════ -->
      <div class="wrap view" id="v-product-lineup">
+       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
        <div class="pl-hd">
          <button class="pl-menu" type="button" id="pl-menuBtn">회사 목록</button>
          <div class="pl-title">2026년 7월 · <b>원수사 상품 라인업</b></div>
@@ -3737,6 +3740,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
      </div>
      <!-- ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. newsletters 발행월별 모음. 일반/어드민 무영향. 2026-07-03 ════ -->
      <div class="wrap view" id="v-newsletters">
+       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
        <div class="pl-hd">
          <button class="pl-menu" type="button" id="nlp-menuBtn">회사 목록</button>
          <div class="pl-title">원수사 <b>GA소식지</b></div>
