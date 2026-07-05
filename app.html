@@ -13283,6 +13283,7 @@ function _qnaComposeContent(o){ var L=[];
 }
 async function _qnaBulkImport(auto){
   if(!(typeof _canSeeRoadmap==='function' && _canSeeRoadmap())) return;   /* 임태성 실장 전용 */
+  if(window._qnaBulkRunning) return; window._qnaBulkRunning=true;   /* 동시 실행 방지(런타임) */
   var out=document.getElementById('qnaImportOut'), btn=document.getElementById('qnaImportBtn');
   function log(m){ if(out) out.textContent=m; try{console.log('[qnaBulk]',m);}catch(e){} }
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
@@ -13301,36 +13302,30 @@ async function _qnaBulkImport(auto){
     items.forEach(function(o){ var s=String(o.title||'').trim()+'\x1f'+_qnaComposeContent(o); if(sig[s]||seen[s]) return; seen[s]=1; fresh.push(o); });
     var skipC=items.length-fresh.length;
     if(!fresh.length){ log('완료 — 신규 0 · 중복 건너뜀 '+skipC); try{localStorage.setItem('os_qna_bulk_done','1');}catch(e){} if(btn)btn.disabled=false; return; }
-    var CHUNK=150, okC=0, ansC=0, failC=0, comments=[];
-    for(var i=0;i<fresh.length;i+=CHUNK){
-      var batch=fresh.slice(i,i+CHUNK);
-      var pbody=batch.map(function(o){ return { board_type:'qna', title:o.title, content:_qnaComposeContent(o), question_type:(o.category||'인수'), insurer_target:null, keywords:(o.tags||[]).concat(['카톡네비']), attachments:[], author_id:u.id, author_name:(u.name||''), branch_id:branchId }; });
-      log('질문 등록 '+i+'~'+(i+batch.length)+' / '+fresh.length+'…');
-      try{
-        var pr=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(pbody)});
-        if(pr.ok||pr.status===201){ var ins=await pr.json(); if(!Array.isArray(ins)) ins=[]; okC+=ins.length;
-          for(var j=0;j<ins.length && j<batch.length;j++){ var pid=ins[j].id; (batch[j].answers||[]).forEach(function(a){ comments.push({post_id:pid, content:'['+a.insurer+'] '+a.content, author_id:u.id, author_name:(u.name||'')}); }); }
-        } else { failC+=batch.length; try{console.warn('post batch fail',pr.status,await pr.text());}catch(e){} }
-      }catch(e){ failC+=batch.length; }
-      if(i===0 && okC===0){ log('첫 배치 등록 실패 — 안전 중단(권한·구조 확인 필요)'); if(!auto&&typeof alert==='function') alert('첫 배치 실패 — 중단'); if(btn)btn.disabled=false; return; }   /* 피해 최소화 */
+    /* 1건씩 병렬(8개) 등록 — 30건 데모 검증된 단건 POST 방식(배열 POST가 거부돼 배치 실패했었음). 각 행 독립 = 나쁜 행만 스킵 */
+    function _bp(o){ return { board_type:'qna', title:String(o.title||'').slice(0,200), content:_qnaComposeContent(o), question_type:(o.category||'인수'), insurer_target:null, keywords:(Array.isArray(o.tags)?o.tags:[]).concat(['카톡네비']), attachments:[], author_id:u.id, author_name:(u.name||''), branch_id:branchId }; }
+    var okC=0, ansC=0, failC=0, lastErr='', comments=[], PAR=8;
+    async function _insP(o){
+      try{ var r=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(_bp(o))});
+        if(r.ok||r.status===201){ var j=await r.json().catch(function(){return null;}); var pid=(j&&j[0]&&j[0].id)||null; if(pid){ okC++; (o.answers||[]).forEach(function(a){ comments.push({post_id:pid, content:'['+a.insurer+'] '+a.content, author_id:u.id, author_name:(u.name||'')}); }); return; } failC++; if(!lastErr) lastErr='삽입 응답에 id 없음'; }
+        else { failC++; if(!lastErr){ lastErr=r.status+' '+String(await r.text().catch(function(){return'';})).slice(0,180); } }
+      }catch(e){ failC++; if(!lastErr) lastErr=String((e&&e.message)||e); }
     }
-    for(var c=0;c<comments.length;c+=CHUNK){
-      var cb=comments.slice(c,c+CHUNK);
-      log('답변 등록 '+c+'~'+(c+cb.length)+' / '+comments.length+'…');
-      try{ var cr=await window.db.fetch('/rest/v1/comments',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(cb)}); if(cr.ok||cr.status===201) ansC+=cb.length; }catch(e){}
+    for(var i=0;i<fresh.length;i+=PAR){ log('질문 등록 '+i+' / '+fresh.length+'…'); await Promise.all(fresh.slice(i,i+PAR).map(_insP));
+      if(i===0 && okC===0){ log('등록 실패: '+(lastErr||'원인 미상')); if(!auto&&typeof alert==='function') alert('실패: '+lastErr); if(btn)btn.disabled=false; window._qnaBulkRunning=false; return; }
     }
+    async function _insC(cb){ try{ var r=await window.db.fetch('/rest/v1/comments',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(cb)}); if(r.ok||r.status===201) ansC++; }catch(e){} }
+    for(var c=0;c<comments.length;c+=PAR){ log('답변 등록 '+c+' / '+comments.length+'…'); await Promise.all(comments.slice(c,c+PAR).map(_insC)); }
     if(!failC){ try{localStorage.setItem('os_qna_bulk_done','1');}catch(e){} }
     var msg='임포트 완료 — 질문 '+okC+' · 답변 '+ansC+' · 중복 '+skipC+(failC?(' · 실패 '+failC):'');
     log(msg); if(!auto&&typeof alert==='function') alert(msg);
   }catch(e){ log('오류: '+(e&&e.message||e)); }
-  finally{ if(btn) btn.disabled=false; }
+  finally{ if(btn) btn.disabled=false; window._qnaBulkRunning=false; }
 }
 window._qnaBulkImport=_qnaBulkImport;
-/* 자동 실행 — 임태성 실장이 app 로드 시 1회(started 플래그로 중복·동시실행 방지). 대표 클릭 없이 자율 완성. */
+/* 자동 실행 — 임태성 실장이 app 로드 시 (미완료면). 런타임 락으로 동시실행 방지, 실패 시 다음 로드에 자동 재시도(서명 중복방지로 안전). */
 setTimeout(function(){ try{
-  if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap() && localStorage.getItem('os_qna_bulk_started')!=='1' && localStorage.getItem('os_qna_bulk_done')!=='1'){
-    localStorage.setItem('os_qna_bulk_started','1'); _qnaBulkImport(true);
-  }
+  if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap() && localStorage.getItem('os_qna_bulk_done')!=='1' && !window._qnaBulkRunning){ _qnaBulkImport(true); }
 }catch(e){} }, 5000);
 /* 1) 지식엔진 — 결과 카드 안 인라인 펼침(이동 X·토글) */
 async function _svInlineKnowledge(id){
