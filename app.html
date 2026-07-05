@@ -1603,12 +1603,10 @@ body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
 .tool-card.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 7%,transparent);}
 .tool-slot-empty{padding:44px 20px;text-align:center;color:var(--tf);font-size:var(--ts-meta);}
 /* 실제 계산기 (사칙연산) — 독립 도구 허브 (2026-07-05) */
-.calc-tool{max-width:320px;}
-.calc-lcd{border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s2);padding:9px 16px 11px;margin-bottom:10px;}
-.calc-expr{min-height:18px;text-align:right;font-size:var(--ts-meta);color:var(--tf);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.calc-disp{display:block;width:100%;box-sizing:border-box;font-size:32px;text-align:right;padding:2px 0 0;border:0;background:transparent;color:var(--tp);font-weight:700;font-family:inherit;outline:none;}
-.calc-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.calc-btn{padding:16px 0;font-size:19px;font-weight:700;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);cursor:pointer;font-family:inherit;transition:background .1s;}
+.calc-tool{max-width:300px;}
+.calc-disp{width:100%;box-sizing:border-box;font-size:24px;text-align:right;white-space:nowrap;overflow:hidden;padding:12px 15px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s2);color:var(--tp);font-weight:700;margin-bottom:8px;font-family:inherit;}
+.calc-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+.calc-btn{padding:13px 0;font-size:17px;font-weight:700;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--tp);cursor:pointer;font-family:inherit;transition:background .1s;}
 .calc-btn:hover{background:var(--s2);}
 .calc-btn.opr{color:var(--ac);}
 .calc-btn.op{color:var(--ts);background:var(--s2);}
@@ -7003,7 +7001,7 @@ window._toolPick=_toolPick;
 /* ════ 실제 계산기(사칙연산) — 독립 도구 허브. eval 미사용 상태머신. 2026-07-05 ════ */
 function renderCalcTool(slotId){
   var slot=document.getElementById(slotId||'qck-content-slot'); if(!slot) return;
-  window._calcState={cur:'0',prev:null,op:null,fresh:true,expr:'',justEq:false};
+  window._calcState={cur:'0',prev:null,op:null,fresh:true,expr:'',justEq:false,eqLine:''};
   var keys=[
     ['C','C','op'],['back','←','op'],['%','%','op'],['/','÷','opr'],
     ['7','7',''],['8','8',''],['9','9',''],['*','×','opr'],
@@ -7012,7 +7010,7 @@ function renderCalcTool(slotId){
     ['+/-','±','op'],['0','0',''],['.','.',''],['=','=','eq']
   ];
   var pad=keys.map(function(k){ return '<button type="button" class="calc-btn'+(k[2]?' '+k[2]:'')+'" onclick="_calcKey(\''+k[0]+'\')">'+k[1]+'</button>'; }).join('');
-  slot.innerHTML='<div class="calc-tool"><div class="calc-lcd"><div class="calc-expr" id="calcExpr" aria-hidden="true"></div><input type="text" class="calc-disp" id="calcDisp" value="0" readonly aria-label="계산 결과"></div><div class="calc-pad">'+pad+'</div></div>';
+  slot.innerHTML='<div class="calc-tool"><input type="text" class="calc-disp" id="calcDisp" value="0" readonly aria-label="계산"><div class="calc-pad">'+pad+'</div></div>';
 }
 window.renderCalcTool=renderCalcTool;
 function _calcFmt(s){   /* 표시용 세자리 콤마 — 정수부만 콤마(소수부·부호·오류·입력중 '.' 보존). cur는 raw 유지 */
@@ -7023,11 +7021,16 @@ function _calcFmt(s){   /* 표시용 세자리 콤마 — 정수부만 콤마(�
   return (neg?'-':'')+intp+(p.length>1?('.'+p[1]):'');
 }
 var _CALC_SYM={'+':'+','-':'−','*':'×','/':'÷'};
-function _calcRender(){
-  var s=window._calcState;
-  var ex=document.getElementById('calcExpr'); if(ex) ex.textContent=s?(s.expr||''):'';
-  var d=document.getElementById('calcDisp'); if(d) d.value=_calcFmt(s?s.cur:'0');
+/* 한 줄 표시 — 입력 중=수식 진행("20 + 30"), = 후=수식+결과 한 줄("20 + 30 = 50") */
+function _calcLine(s){
+  if(!s) return '0';
+  if(s.cur==='오류') return '오류';
+  if(s.justEq) return s.eqLine||_calcFmt(s.cur);
+  var left=s.expr||'';
+  if(s.fresh && left) return left.replace(/\s+$/,'');   /* 연산자 직후: "20 +" */
+  return left+_calcFmt(s.cur);                          /* "20 + 30" 또는 "30" */
 }
+function _calcRender(){ var d=document.getElementById('calcDisp'); if(d) d.value=_calcLine(window._calcState); }
 function _calcEquals(){
   var s=window._calcState; if(!s||s.op==null||s.prev==null) return;
   var a=s.prev, b=parseFloat(s.cur), r=0;
@@ -7049,8 +7052,8 @@ function _calcKey(k){
   }
   else if(k==='='){
     if(s.op!=null && s.prev!=null){
-      s.expr=_calcFmt(String(s.prev))+' '+_CALC_SYM[s.op]+' '+_calcFmt(s.cur)+' =';
-      _calcEquals(); s.op=null; s.justEq=true;
+      var _lft=_calcFmt(String(s.prev))+' '+_CALC_SYM[s.op]+' '+_calcFmt(s.cur);
+      _calcEquals(); s.eqLine=_lft+' = '+_calcFmt(s.cur); s.op=null; s.justEq=true;
     }
   }
   else if(k==='%'){ s.cur=String(parseFloat(s.cur)/100); s.fresh=true; }
