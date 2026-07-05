@@ -7011,7 +7011,14 @@ function renderCalcTool(slotId){
   slot.innerHTML='<div class="calc-tool"><input type="text" class="calc-disp" id="calcDisp" value="0" readonly aria-label="계산 결과"><div class="calc-pad">'+pad+'</div></div>';
 }
 window.renderCalcTool=renderCalcTool;
-function _calcRender(){ var d=document.getElementById('calcDisp'); if(d) d.value=window._calcState?window._calcState.cur:'0'; }
+function _calcFmt(s){   /* 표시용 세자리 콤마 — 정수부만 콤마(소수부·부호·오류·입력중 '.' 보존). cur는 raw 유지 */
+  if(s==null||s==='오류') return s||'0';
+  var neg=(s.charAt(0)==='-'); if(neg) s=s.slice(1);
+  var p=s.split('.'); if(!/^\d*$/.test(p[0])) return (neg?'-':'')+s;   /* 지수표기 등 예외는 그대로 */
+  var intp=(p[0]||'0').replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return (neg?'-':'')+intp+(p.length>1?('.'+p[1]):'');
+}
+function _calcRender(){ var d=document.getElementById('calcDisp'); if(d) d.value=_calcFmt(window._calcState?window._calcState.cur:'0'); }
 function _calcEquals(){
   var s=window._calcState; if(!s||s.op==null||s.prev==null) return;
   var a=s.prev, b=parseFloat(s.cur), r=0;
