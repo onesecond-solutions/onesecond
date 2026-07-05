@@ -11824,13 +11824,13 @@ async function _runSearchV2(q, targetId){
     }
   }catch(e){}
   if(seq!==_searchSeq) return;
-  /* 담보 주입 — 전체 개방. 담보명·정의·회사별명칭·회사/상품/금액 AND 매칭 (2026-07-05) */
-  try{ var _cd=await _svLoadCover();
-    for(var _ci=0; _ci<_cd.covers.length; _ci++){ var _cov=_cd.covers[_ci], _cok=true;
-      for(var _ct=0; _ct<terms.length; _ct++){ if(_cov._hay.indexOf(terms[_ct].toLowerCase())<0){ _cok=false; break; } }
-      if(!_cok) continue;
-      items.push({ g:_SV_CGROUP, row:_cov, s:_sScore(_cov.cover, _cov._hay, terms), src:'covers', scope:'common', cat:'' });
+  /* 담보 주입 — 전체 개방. 담보명 우선 매칭(정확 단어=그 담보만), 담보명 매칭 없으면 내용(정의·회사·금액)으로 포괄 매칭 (2026-07-05) */
+  try{ var _cd=await _svLoadCover(), _covN=[], _covC=[];
+    for(var _ci=0; _ci<_cd.covers.length; _ci++){ var _cov=_cd.covers[_ci], _inN=true, _inH=true;
+      for(var _ct=0; _ct<terms.length; _ct++){ var _tl=terms[_ct].toLowerCase(); if(_cov.cover.toLowerCase().indexOf(_tl)<0) _inN=false; if(_cov._hay.indexOf(_tl)<0) _inH=false; }
+      if(_inN) _covN.push(_cov); else if(_inH) _covC.push(_cov);
     }
+    (_covN.length?_covN:_covC).forEach(function(_cov){ items.push({ g:_SV_CGROUP, row:_cov, s:_sScore(_cov.cover, _cov._hay, terms), src:'covers', scope:'common', cat:'' }); });
   }catch(e){}
   if(seq!==_searchSeq) return;
   items.sort(function(a,b){ return b.s-a.s; });
