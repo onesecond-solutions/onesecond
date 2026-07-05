@@ -1572,6 +1572,8 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .svp-src{margin-top:14px;font-size:12px;color:var(--tf);line-height:1.6;border-top:1px solid var(--bd);padding-top:11px;}
 /* 검색 중(.searching)엔 홈 카드(홈 데스크) 아래 노출 안 함 (2026-07-05 대표 지시) */
 body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
+/* 상품 라인업 탭 = pl-* 레이아웃 검색결과 스코프 — 변수 스코프 이식(#v-product-lineup 미러) (2026-07-05) */
+.pl-layout.svpl{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);margin-top:4px;}
 /* ════ BMI 4축 회사별 비교(임태성) — 예전 BMI 페이지 대체. 정상/할증/방진/거절=도메인 stage 색상 (2026-07-05) ════ */
 .svb-wrap{border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);padding:12px;margin:6px 0 10px;}
 .svb-hd{font-size:var(--ts-preview);font-weight:800;color:var(--tp);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
@@ -11690,7 +11692,7 @@ async function _runSearchV2(q, targetId){
   var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
   var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
-  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; window._svOpenKey=null; window._svActiveScope='all'; window._svProdCo=null; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널·선택표시·범위선택·상품 회사필터 초기화 / 같은 검색어=누적·유지 */
+  if(window._svQ!==q){ window._svLimit=40; window._svPanelHtml=null; window._svOpenKey=null; window._svActiveScope='all'; window._svProdCo=null; window._svplCo=null; window._svplTheme='전체'; window._svplSel=null; }   /* 새 검색어면 더보기 한도(40)부터 + 우측 패널·선택표시·범위선택·상품 회사필터·상품라인업 탭 상태 초기화 / 같은 검색어=누적·유지 */
   window._svQ=q; window._svTarget=bodyId;
   body.innerHTML='<div class="sv-grp" style="--svc:#64748B">검색 중…</div>';
   if(!window.db||!window.db.fetch){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">로그인 후 검색됩니다</div>'; return; }
@@ -12486,9 +12488,8 @@ function _svRender(){
   if(activeSrc==='products'){ html=_svProdList(prodItems,terms); }   /* 상품 라인업 전용 탭 = 좌측 리스트만(오버레이 등 비-hsResults 폴백) */
   if((d.targetId||'sobody')==='hsResults'){
     if(activeSrc==='products'){
-      /* 상품 라인업 전용 탭 = 상단 회사 요약 스트립 + 좌 리스트 + 우 상세 (standalone 구조, 2026-07-05) */
-      var _pp=window._svPanelHtml||'<div class="sv-panel-empty">왼쪽 상품을 누르면<br>여기에서 상세를 미리 봅니다.</div>';
-      body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+'</div>'+_svCoStrip(prodItems)+'<div class="sv-2col sv-prodcol"><div class="sv-left">'+_svProdList(prodItems,terms)+'</div><div class="sv-right" id="svPanel">'+_pp+'</div></div>';
+      /* 상품 라인업 탭 = 기존 pl-* 레이아웃(좌 회사목록/상단 테마/중앙 회사별 그룹/우 상세) 검색결과 스코프 적용. #v-product-lineup 상태 무접촉 (2026-07-05) */
+      body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+'</div>'+_svplLayoutHtml(prodItems);
       return;
     }
     if(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){
@@ -12570,6 +12571,67 @@ function _svProdOpen(id){ window._svActiveSource='products'; window._svOpenKey='
 window._svProdOpen=_svProdOpen;
 function _svProdFilterCo(name){ if(!name){ window._svProdCo=null; } else { window._svProdCo=(window._svProdCo===name)?null:name; } _svRender(); }
 window._svProdFilterCo=_svProdFilterCo;
+/* ════ 상품 라인업 탭 = pl-* 레이아웃(검색결과 스코프) — #v-product-lineup·그 상태 무접촉, CSS 재사용. 담보/알릴의무 공통 리팩터와 별개 (2026-07-05) ════ */
+function _svplModel(prodItems){
+  var map={},order=[];
+  (prodItems||[]).forEach(function(it){ var p=it.row, c=p.company||'(미상)';
+    if(!map[c]){ map[c]={n:c,cl:p.company_color||'#6366F1',sec:(String(p.section||'').toLowerCase()==='life'?'life':'nonlife'),mo:p.source||'',ps:[]}; order.push(c); }
+    map[c].ps.push({id:p.id,t:p.product||'',grp:p.group||'기타',age:p.age||'',f:p.feature||'',gj:p.goji_type||'',b:p.badge||'',th:(Array.isArray(p.themes)?p.themes:[])});
+  });
+  return order.map(function(k){return map[k];});
+}
+function _svplTh(){ return window._svplTheme||'전체'; }
+function _svplInTh(p){ var t=_svplTh(); return t==='전체'||(p.th||[]).indexOf(t)>=0; }
+function _svplCoHit(c){ return (c.ps||[]).some(_svplInTh); }
+function _svplThList(cos){ var s={},o=[]; cos.forEach(function(c){c.ps.forEach(function(p){(p.th||[]).forEach(function(t){if(!s[t]){s[t]=1;o.push(t);}});});}); return ['전체'].concat(o); }
+function _svplFindCo(cos,n){ for(var i=0;i<cos.length;i++) if(cos[i].n===n) return cos[i]; return null; }
+function _svplSideHtml(cos){
+  function grp(lb,arr){ var sh=arr.filter(_svplCoHit); if(!sh.length) return ''; return '<div class="pl-pool-lb">'+lb+'</div>'+sh.map(function(c){ var n=c.ps.filter(_svplInTh).length; return '<button type="button" class="pl-co'+(window._svplCo===c.n?' on':'')+'" onclick="_svplPickCo(\''+_svJsq(c.n)+'\')" style="--cl:'+_sEsc(c.cl)+'"><span class="dot"></span><span class="nm">'+_sEsc(c.n)+'</span><span class="cnt">'+n+'</span></button>'; }).join(''); }
+  var h=grp('손해보험',cos.filter(function(c){return c.sec==='nonlife';}))+grp('생명보험',cos.filter(function(c){return c.sec==='life';}));
+  return h||'<div class="pl-empty">결과 없음</div>';
+}
+function _svplThemesHtml(cos){ var cur=_svplTh(); return '<span class="tl">테마</span>'+_svplThList(cos).map(function(t){return '<span class="pl-th'+(t===cur?' on':'')+'" onclick="_svplPickTheme(\''+_svJsq(t)+'\')">'+_sEsc(t)+'</span>';}).join(''); }
+function _svplCardAll(c){
+  var dim=(_svplTh()!=='전체')&&!_svplCoHit(c);
+  var ps=c.ps.map(function(p,i){ var m=(_svplTh()!=='전체')&&_svplInTh(p); return '<div class="p'+(m?' match':'')+'" onclick="_svplOpen(\''+_svJsq(c.n)+'\','+i+')">'+(p.b?'<span class="pl-bd '+_sEsc(p.b)+'">'+_sEsc(p.b)+'</span>':'<span style="width:0"></span>')+'<span class="pn">'+_sEsc(p.t)+'</span></div>'; }).join('');
+  return '<div class="pl-cc'+(dim?' dim':'')+'" style="--cl:'+_sEsc(c.cl)+'"><div class="ch" onclick="_svplPickCo(\''+_svJsq(c.n)+'\')"><div class="cn"><span class="dot"></span>'+_sEsc(c.n)+'<span class="num">'+c.ps.length+'종</span></div></div><div class="pl-list">'+ps+'</div></div>';
+}
+function _svplMainHtml(cos){
+  if(window._svplCo){
+    var c=_svplFindCo(cos,window._svplCo); if(!c) return '<div class="pl-empty">회사 없음</div>';
+    var order=[],map={}; c.ps.forEach(function(p,idx){ var g=p.grp||'기타'; if(!map[g]){map[g]=[];order.push(g);} map[g].push({p:p,idx:idx}); });
+    var html='<div class="pl-cohd" style="--cl:'+_sEsc(c.cl)+';--cl2:'+_sEsc(c.cl)+'"><div><div class="nm">'+_sEsc(c.n)+'</div><div class="mo">'+_sEsc(c.mo)+'</div></div><span class="num">총 '+c.ps.length+'종</span></div>';
+    order.forEach(function(g){ var items=map[g].map(function(it){ var p=it.p; var m=(_svplTh()!=='전체')&&_svplInTh(p); return '<div class="pl-rw'+(m?' match':'')+'" onclick="_svplOpen(\''+_svJsq(c.n)+'\','+it.idx+')"><div class="m"><div class="pn">'+_sEsc(p.t)+(p.b?'<span class="pl-bd '+_sEsc(p.b)+'">'+_sEsc(p.b)+'</span>':'')+'</div><div class="feat">'+_sEsc(p.f)+'</div></div><div class="age">'+_sEsc(p.age||'—')+'</div></div>'; }).join(''); html+='<div class="pl-grp"><span class="pl-gh">'+_sEsc(g)+'</span>'+items+'</div>'; });
+    return html;
+  }
+  var secs=[['손해보험',cos.filter(function(c){return c.sec==='nonlife';})],['생명보험',cos.filter(function(c){return c.sec==='life';})]];
+  return secs.map(function(pair){ if(!pair[1].length) return ''; return '<div class="pl-seclb">'+pair[0]+'</div><div class="pl-grid">'+pair[1].map(_svplCardAll).join('')+'</div>'; }).join('');
+}
+function _svplCntHtml(cos){ var t=_svplTh(); if(t==='전체') return ''; var hit=cos.filter(_svplCoHit); var np=cos.reduce(function(a,c){return a+c.ps.filter(_svplInTh).length;},0); return '<b>'+_sEsc(t)+'</b> — 회사 <b>'+hit.length+'곳</b> · 상품 <b>'+np+'종</b>'; }
+function _svplDrawerHtml(cos){
+  var sel=window._svplSel; if(!sel) return '';
+  var c=_svplFindCo(cos,sel.co); if(!c) return ''; var p=c.ps[sel.idx]; if(!p) return '';
+  var tags=((p.th&&p.th.length)?p.th:['미분류']).map(function(t){return '<span>'+_sEsc(t)+'</span>';}).join('');
+  return '<button type="button" class="pl-dr-close" onclick="_svplClose()">×</button><div class="pl-dr-co"><span style="color:'+_sEsc(c.cl)+'">●</span> '+_sEsc(c.n)+'</div><div class="pl-dr-pn">'+_sEsc(p.t)+'</div><div class="pl-dr-badges">'+(p.b?'<span class="pl-bd '+_sEsc(p.b)+'">'+_sEsc(p.b)+'</span>':'')+'<span class="pl-bd" style="background:var(--s2);color:var(--ts)">'+_sEsc(p.gj||'—')+'</span></div><div class="pl-dr-field"><div class="k">상품군</div><div class="v">'+_sEsc(p.grp||'—')+'</div></div><div class="pl-dr-field"><div class="k">가입연령</div><div class="v">'+_sEsc(p.age||'—')+'</div></div><div class="pl-dr-field"><div class="k">핵심 특징</div><div class="v">'+_sEsc(p.f||'—')+'</div></div><div class="pl-dr-field"><div class="k">테마 분류</div><div class="pl-dr-tags">'+tags+'</div></div><div class="pl-dr-src">출처 · '+_sEsc(c.mo)+'<br>정확한 조건은 약관·상품설명서 확인</div>';
+}
+function _svplLayoutHtml(prodItems){
+  var cos=_svplModel(prodItems);
+  if(!cos.length) return '<div class="sv-empty">상품 라인업 결과가 없습니다.</div>';
+  var back=window._svplCo?'<button type="button" class="pl-th" style="margin-bottom:8px" onclick="_svplPickCo(\'\')">‹ 전체 조망</button>':'';
+  return '<div class="pl-layout svpl">'
+    +'<aside class="pl-side">'+_svplSideHtml(cos)+'</aside>'
+    +'<div class="pl-right">'
+      +'<div class="pl-themes">'+_svplThemesHtml(cos)+'</div>'
+      +'<div class="pl-cnt">'+_svplCntHtml(cos)+'</div>'
+      +'<div class="pl-body"><div class="pl-main">'+back+_svplMainHtml(cos)+'</div>'
+      +'<aside class="pl-drawer'+(window._svplSel?' open':'')+'"><div class="pl-dr-in">'+_svplDrawerHtml(cos)+'</div></aside></div>'
+    +'</div></div>';
+}
+function _svplPickCo(name){ window._svplCo=name||null; window._svplSel=null; _svRender(); }
+function _svplPickTheme(t){ window._svplTheme=(window._svplTheme===t)?'전체':t; _svRender(); }
+function _svplOpen(co,idx){ window._svplSel={co:co,idx:+idx}; _svRender(); }
+function _svplClose(){ window._svplSel=null; _svRender(); }
+window._svplPickCo=_svplPickCo; window._svplPickTheme=_svplPickTheme; window._svplOpen=_svplOpen; window._svplClose=_svplClose;
 /* ════ BMI 심사 기준 검색 (임태성 게이트) — 예전 BMI Quick 페이지 대체. 현장메모 4축(정상·할증·방진·거절). DB 무관 (2026-07-05) ════ */
 var _SV_BMI=[
   {co:'메리츠화재',cl:'#B91C1C',type:'성별 기준',n:'남 18~30 / 여 16~29',h:'',b:'',r:'남 18 미만·30 이상 / 여 16 미만·29 이상 벗어남',note:''},
