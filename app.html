@@ -1572,6 +1572,27 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .svp-src{margin-top:14px;font-size:12px;color:var(--tf);line-height:1.6;border-top:1px solid var(--bd);padding-top:11px;}
 /* 검색 중(.searching)엔 홈 카드(홈 데스크) 아래 노출 안 함 (2026-07-05 대표 지시) */
 body.is-uat-homedesk #homeSearch.searching ~ #homeDesk{display:none !important;}
+/* ════ 담보 탭(통합검색) — 정의 헤더 + 회사별 가로 비교 카드 + 안내문. 확정=초록 O / 확인필요=노랑 (2026-07-05) ════ */
+.svc-wrap{padding:4px 2px 8px;overflow-y:auto;}
+.svc-cov{margin-bottom:18px;}
+.svc-def{background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:10px;}
+.svc-ct{font-size:var(--ts-list-title);font-weight:800;color:var(--tp);display:flex;align-items:center;gap:8px;}
+.svc-ty{font-size:var(--ts-badge);font-weight:700;color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent);border-radius:999px;padding:2px 8px;}
+.svc-cd{font-size:var(--ts-preview);color:var(--tp);margin-top:6px;line-height:1.5;}
+.svc-cs{font-size:var(--ts-meta);color:var(--ts);margin-top:5px;line-height:1.5;}
+.svc-gubun{font-size:var(--ts-meta);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:6px;padding:5px 9px;margin-top:7px;line-height:1.5;}
+.svc-cnt{font-size:var(--ts-meta);color:var(--ac);font-weight:700;margin-top:7px;}
+.svc-hrow{display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;}
+.svc-card{min-width:210px;max-width:210px;flex:0 0 auto;background:var(--s1);border:1px solid var(--bd);border-radius:11px;overflow:hidden;}
+.svc-ch{color:#fff;padding:8px 11px;font-weight:800;font-size:var(--ts-meta);}
+.svc-cb{padding:9px 11px;}
+.svc-amt{font-size:var(--ts-preview);font-weight:800;color:var(--ac);line-height:1.4;}
+.svc-pn{font-size:var(--ts-badge);color:var(--ts);margin-top:4px;line-height:1.4;}
+.svc-ok{display:inline-block;font-size:var(--ts-badge);font-weight:700;border-radius:999px;padding:2px 8px;margin-top:6px;}
+.svc-ok.o{background:#DCFCE7;color:#166534;}
+.svc-ok.t{background:#FEF3C7;color:#92400E;}
+.svc-empty{font-size:var(--ts-meta);color:var(--tf);padding:12px;}
+.svc-note{margin-top:8px;font-size:var(--ts-badge);color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:8px;padding:9px 11px;line-height:1.55;font-weight:600;}
 /* 상품 라인업 탭 = pl-* 레이아웃 검색결과 스코프 — 변수 스코프 이식(#v-product-lineup 미러) (2026-07-05) */
 .pl-layout.svpl{--pl-ac50:color-mix(in srgb,var(--ac) 8%,var(--s1));--pl-ac100:color-mix(in srgb,var(--ac) 18%,var(--s1));--pl-new:#16A34A;--pl-hot:#DC2626;--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);margin-top:4px;}
 /* 상세 패널 = 클릭한 상품 위치에 맞춰 절대배치(플로팅). top·max-height는 _svplPositionDrawer가 JS로 설정 (2026-07-05) */
@@ -11669,7 +11690,8 @@ var SV_SCOPES=[
 /* 소스 탭 (답 품질 우선: 지식·Q&A 먼저, raw 자료 뒤). 라벨=사용자 말(내부 시스템명 노출 금지) */
 var SV_SRC=[
   {k:'all', label:'전체'},
-  {k:'products', label:'상품 라인업'},   /* 임태성 게이트(_canSeePl) — 건수 0이면 탭 자동 숨김. 일반 사용자엔 미노출 (2026-07-05) */
+  {k:'products', label:'상품 라인업'},   /* 전체 개방 — 건수 0이면 탭 자동 숨김 (2026-07-05) */
+  {k:'covers', label:'담보'},   /* 담보 검색(v3, 13담보) 통합검색 이식 — 전체 개방. 건수 0이면 탭 자동 숨김 (2026-07-05) */
   {k:'knowledge_entries', label:'지식'},
   {k:'posts', label:'보험Q&A'},
   {k:'newsletters', label:'소식지'},
@@ -11695,6 +11717,30 @@ function _svLoadProducts(){
   return _svProdLoading;
 }
 window._svLoadProducts=_svLoadProducts;
+/* ── 담보 검색 소스(v3, 13담보) — 통합검색 이식, 전체 개방. data/cover_data_v3.json in-memory. DB 무관 (2026-07-05) ── */
+var _SV_CGROUP={ table:'covers',
+  t:function(r){ return r.cover||''; },
+  body:function(r){ return r.def||''; },
+  m:function(r){ return r.type||''; },
+  scope:function(){ return 'common'; } };
+var _svCoverData=null, _svCoverLoading=null;
+function _svLoadCover(){
+  if(_svCoverData) return Promise.resolve(_svCoverData);
+  if(_svCoverLoading) return _svCoverLoading;
+  _svCoverLoading=fetch('/data/cover_data_v3.json?v=20260705').then(function(r){return r.ok?r.json():null;}).then(function(v){
+    if(!v||!Array.isArray(v.dictionary)){ _svCoverData={covers:[],colors:{}}; return _svCoverData; }
+    var covers=v.dictionary.map(function(d){
+      var rows=(v.bycover&&v.bycover[d.cover])||[];
+      var nm=d['회사별명칭']||{};
+      var hay=(d.cover+' '+(d.type||'')+' '+(d.def||'')+' '+(d['성격']||'')+' '+Object.keys(nm).join(' ')+' '+Object.keys(nm).map(function(k){return nm[k];}).join(' ')+' '+rows.map(function(r){return r.co+' '+r.prod+' '+(r['금액']||'');}).join(' ')).toLowerCase();
+      return { cover:d.cover, type:d.type||'', def:d.def||'', seong:d['성격']||'', gubun:d['구분주의']||'', rows:rows, _hay:hay };
+    });
+    _svCoverData={covers:covers, colors:(v.colors||{})};
+    return _svCoverData;
+  }).catch(function(){ _svCoverData={covers:[],colors:{}}; return _svCoverData; });
+  return _svCoverLoading;
+}
+window._svLoadCover=_svLoadCover;
 function _svSrcLabel(t){ for(var i=0;i<SV_SRC.length;i++) if(SV_SRC[i].k===t) return SV_SRC[i].label; return t; }
 /* 계열 필터 = 기존 knowledge_entries.category 묶음 파생 (DDL 0 / 재태깅 0). 실제 22 category값 기준 확정.
    미분류(아래 안 잡히는 category)는 제외 X — 전체/지식 평검색에 그대로 노출. 비교·상담=지식 category 아님(이번 제외) */
@@ -11775,6 +11821,15 @@ async function _runSearchV2(q, targetId){
       for(var _pt=0; _pt<terms.length; _pt++){ if(_p._hay.indexOf(terms[_pt].toLowerCase())<0){ _ok=false; break; } }
       if(!_ok) continue;
       items.push({ g:_SV_PGROUP, row:_p, s:_sScore((_p.product||'')+' '+(_p.company||''), _p.search_text, terms), src:'products', scope:'common', cat:'' });
+    }
+  }catch(e){}
+  if(seq!==_searchSeq) return;
+  /* 담보 주입 — 전체 개방. 담보명·정의·회사별명칭·회사/상품/금액 AND 매칭 (2026-07-05) */
+  try{ var _cd=await _svLoadCover();
+    for(var _ci=0; _ci<_cd.covers.length; _ci++){ var _cov=_cd.covers[_ci], _cok=true;
+      for(var _ct=0; _ct<terms.length; _ct++){ if(_cov._hay.indexOf(terms[_ct].toLowerCase())<0){ _cok=false; break; } }
+      if(!_cok) continue;
+      items.push({ g:_SV_CGROUP, row:_cov, s:_sScore(_cov.cover, _cov._hay, terms), src:'covers', scope:'common', cat:'' });
     }
   }catch(e){}
   if(seq!==_searchSeq) return;
@@ -12434,7 +12489,8 @@ function _svRender(){
   var body=document.getElementById(d.targetId||'sobody'); if(!body) return;
   var items=d.items||[], terms=d.terms, nav=d.nav||[];
   var activeSrc=window._svActiveSource||'all';
-  var prodItems=items.filter(function(it){return it.src==='products';});   /* 상품 라인업(임태성 게이트) — 전용 탭·전체탭 요약으로만 렌더 */
+  var prodItems=items.filter(function(it){return it.src==='products';});   /* 상품 라인업 — 전용 탭·전체탭 요약으로만 렌더 */
+  var coverItems=items.filter(function(it){return it.src==='covers';});   /* 담보 — 전용 탭·전체탭 요약으로만 렌더 (2026-07-05) */
   var catF=window._svCatFilter||null;
   var aiBarFixed=(typeof _canSeeAiSearch==='function'&&_canSeeAiSearch())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'';  /* AI 검색 = 임태성 실장 게이트(_canSeeAiSearch=98c5f4f9). 그 외 미노출. (2026-07-04 분리) */
   var aiAns='<div id="aiAnsBox"></div>';
@@ -12451,7 +12507,7 @@ function _svRender(){
   var activeScope=window._svActiveScope||'all';
   /* 표시 대상 = 활성 소스 + (지식이면 분류 필터) + 범위 칩 선택 */
   var shown=items.filter(function(it){
-    if(it.src==='products') return false;   /* 상품은 일반 리스트 제외 — 전체탭=요약 블록, 상품 라인업 탭=전용 렌더 (2026-07-05) */
+    if(it.src==='products'||it.src==='covers') return false;   /* 상품·담보는 일반 리스트 제외 — 전체탭=요약 블록, 전용 탭=전용 렌더 (2026-07-05) */
     if(activeSrc!=='all' && it.src!==activeSrc) return false;
     if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return false; }
     if(activeScope!=='all' && it.scope!==activeScope) return false;
@@ -12477,9 +12533,10 @@ function _svRender(){
   /* 전체 탭 = 상품 라인업 요약 블록(일부 노출) — 상단에. 전용 탭으로 전환 버튼 포함 (2026-07-05).
      스코프 칩(개인/팀/지점) 선택 시엔 숨김 — 상품은 소속 스코프 축이 아니라 전용 탭 축 (2026-07-05 안정화) */
   var prodSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && prodItems.length)?_svProdSummary(prodItems,terms):'';
-  html+=prodSummaryHtml;
+  var coverSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && coverItems.length)?_svCoverSummary(coverItems,terms):'';
+  html+=coverSummaryHtml+prodSummaryHtml;
   if(!shown.length){
-    if(prodSummaryHtml){ /* 상품 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
+    if(prodSummaryHtml||coverSummaryHtml){ /* 상품·담보 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
     else if(items.length===0){
       /* ② 진짜 무결과(전 범위 0) = 플라이휠 입구 */
       var aArg=(catF==='상품')?"'상품'":((catF==='인수')?"'인수'":'null');
@@ -12505,7 +12562,13 @@ function _svRender(){
   });
   if(window._svHasMore && shown.length){ html+='<div class="sv-more"><button type="button" onclick="_svMore()">더 많은 결과 보기</button></div>'; }
   if(activeSrc==='products'){ html=_svProdList(prodItems,terms); }   /* 상품 라인업 전용 탭 = 좌측 리스트만(오버레이 등 비-hsResults 폴백) */
+  if(activeSrc==='covers'){ html=_svCoverTabHtml(coverItems,terms); }   /* 담보 전용 탭(오버레이 등 폴백) */
   if((d.targetId||'sobody')==='hsResults'){
+    if(activeSrc==='covers'){
+      /* 담보 탭 = 정의 헤더 + 회사별 가로 비교 카드 + 안내문 (2026-07-05) */
+      body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+'</div><div class="sv-list1 svc-wrap">'+_svCoverTabHtml(coverItems,terms)+'</div>';
+      return;
+    }
     if(activeSrc==='products'){
       /* 상품 라인업 탭 = 기존 pl-* 레이아웃(좌 회사목록/상단 테마/중앙 회사별 그룹/우 상세) 검색결과 스코프 적용. #v-product-lineup 상태 무접촉 (2026-07-05) */
       body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+'</div>'+_svplLayoutHtml(prodItems);
@@ -12707,6 +12770,26 @@ function _svGojiSummaryHtml(co, prod){
   return h;
 }
 window._svGojiSummaryHtml=_svGojiSummaryHtml;
+/* ════ 담보 탭 렌더 — 전체탭 요약 + 담보탭(정의 헤더 + 회사별 가로 비교 카드 + 참고 안내문). 담보 검색 taste 구조 재사용, DB 무관 (2026-07-05) ════ */
+function _svCoverColor(co){ var m=(window._svCoverData&&window._svCoverData.colors)||(_svCoverData&&_svCoverData.colors)||{}; return m[co]||'#6366F1'; }
+function _svCoverCard(cov, terms){
+  var n=(cov.rows||[]).length;
+  return '<div class="sores" onclick="_svTab(\'covers\')"><span class="stag" style="--tcolor:#0891B2">담보</span><div class="sbody"><span class="sttl">'+_sMark(cov.cover,terms)+'</span><span class="ssnip">'+_sMark(_sSnippet(cov.def,terms,120),terms)+'</span></div><span class="smeta">'+_sEsc(cov.type)+' · '+n+'곳</span></div>';
+}
+function _svCoverSummary(coverItems, terms){
+  var n=coverItems.length, cards=coverItems.slice(0,4).map(function(it){ return _svCoverCard(it.row, terms); }).join('');
+  return '<div class="sv-grp" style="--svc:#0891B2">담보 ('+n+')</div>'+cards+'<div class="sv-prodmore"><button type="button" onclick="_svTab(\'covers\')">담보 전체 '+n+'개 보기 →</button></div>';
+}
+function _svCoverTabHtml(coverItems, terms){
+  if(!coverItems.length) return '<div class="sv-empty">담보 결과가 없습니다.</div>';
+  var secs=coverItems.map(function(it){ var cov=it.row;
+    var def='<div class="svc-def"><div class="svc-ct">'+_sMark(cov.cover,terms)+' <span class="svc-ty">'+_sEsc(cov.type)+'</span></div><div class="svc-cd">'+_sEsc(cov.def)+'</div>'+(cov.seong?'<div class="svc-cs">'+_sEsc(cov.seong)+'</div>':'')+(cov.gubun?'<div class="svc-gubun">구분주의 · '+_sEsc(cov.gubun)+'</div>':'')+'<div class="svc-cnt">회사 '+(cov.rows||[]).length+'곳 확인</div></div>';
+    var cards=(cov.rows||[]).length?('<div class="svc-hrow">'+cov.rows.map(function(r){ var cl=_svCoverColor(r.co); var oc=(r['확인']==='O')?'o':'t'; var ol=(r['확인']==='O')?'소식지 확인':'확인 필요'; return '<div class="svc-card"><div class="svc-ch" style="background:'+_sEsc(cl)+'">'+_sEsc(r.co)+'</div><div class="svc-cb"><div class="svc-amt">'+_sEsc(r['금액']||'—')+'</div><div class="svc-pn">'+_sEsc(r.prod)+'</div><span class="svc-ok '+oc+'">'+ol+'</span></div></div>'; }).join('')+'</div>'):'<div class="svc-empty">회사 연결 준비 중</div>';
+    return '<div class="svc-cov">'+def+cards+'</div>';
+  }).join('');
+  return secs+'<div class="svc-note">현재 정보는 소식지 및 확인된 자료 기준의 설계 참고용입니다. 금액과 보장 내용은 상품 개정·기준월·가입조건에 따라 달라질 수 있습니다. 최종 안내 전 반드시 해당 보험사의 소식지·상품설명서·약관을 확인해야 합니다.</div>';
+}
+window._svCoverTabHtml=_svCoverTabHtml;
 /* ════ BMI 심사 기준 검색 (임태성 게이트) — 예전 BMI Quick 페이지 대체. 현장메모 4축(정상·할증·방진·거절). DB 무관 (2026-07-05) ════ */
 var _SV_BMI=[
   {co:'메리츠화재',cl:'#B91C1C',type:'성별 기준',n:'남 18~30 / 여 16~29',h:'',b:'',r:'남 18 미만·30 이상 / 여 16 미만·29 이상 벗어남',note:''},
