@@ -13174,7 +13174,7 @@ window._searchOpenOrigin=_searchOpenOrigin;
 /* ════ 카톡 Q&A 전량 임포트 (임태성 실장 전용, 임시) — Gist 데이터 → 배치 insert + 제목+본문 서명 중복방지 + 첫배치 실패 자동중단 + 결과표시. 2026-07-05 대표 지시(AI팀 실행). 완료 후 제거 예정 ════ */
 var _QNA_BULK_URL='https://gist.githubusercontent.com/onesecond-solutions/43d9b9745e5263879accee25cf9c254c/raw/qna_import_all.json';
 /* 재임포트 절차: 새 카톡 대화록 → 채굴팀장 추출 → Gist 갱신(_QNA_BULK_URL) + 아래 버전 올림('v2'…) → 배포. 서명(제목+본문) 중복방지로 기존 스킵·신규만 추가. 버전이 다르면 임태성 실장 로드 시 자동 재실행. */
-var _QNA_BULK_VER='v1';
+var _QNA_BULK_VER='v2';  /* v1→v2 (2026-07-06): 지난 임포트가 ~142건 미완(중간 중단)으로 남음. 완료 플래그(os_qna_bulk_done)가 'v1'로 남아 자동 재실행이 막힐 가능성 대비 버전 상향 → 임태성 실장 다음 로드 시 강제 재실행. Gist·데이터 동일, 제목+본문 서명 중복방지로 기존 게시분 스킵·미업로드분만 추가(중복 0). */
 function _qnaComposeContent(o){ var L=[];
   if(o.age_sex) L.push('[연령/성별] '+o.age_sex);
   if(o.job) L.push('[직업] '+o.job);
