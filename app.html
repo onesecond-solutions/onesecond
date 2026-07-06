@@ -14381,13 +14381,12 @@ async function loadMysQna(){
   if(!token){ listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   if(!window._mysQnaCache) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
-    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type');
+    /* 정본 품질 통일(2026-07-06): limit 100→1500 — iv-qna(보험사 자료실)와 동일 기준. GA·전원이 지점 공유 Q&A 전건을 봄(RLS 실측=누출 0). 정렬 created_at.desc 유지. */
+    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=1500&select=id,title,content,attachments,author_id,author_name,created_at,question_type');
     if(!res.ok){ listEl.innerHTML='<div class="mys-news-empty">불러오지 못했습니다 ('+res.status+')</div>'; return; }
     var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
     var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
-    var roleMap={};
-    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ roleMap[u.id]=u.role; }); } }catch(e){} }
+    /* roleMap 조회 제거(2026-07-06): who='비공개' 고정이라 역할값 미사용 — limit 1500 승격 시 author_id in.(…) 대량 URL 요청만 낭비. 질문자 익명 표시 유지(회귀 0). */
     window._mysQnaCache=rows.map(function(r){
       var cat=r.question_type||'질문';
       var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
@@ -14420,7 +14419,7 @@ function renderMysQna(){
     listEl.innerHTML='<div class="mys-news-empty">'+(mode==='today'?'오늘 들어온 질문이 없습니다.':mode==='mine'?'내가 쓴 질문이 없습니다.':'아직 들어온 질문이 없습니다.')+'</div>';
     var vv=document.getElementById('mys-qna-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">질문이 없습니다.</div>'; return;
   }
-  listEl.innerHTML=list.map(function(p,i){
+  listEl.innerHTML='<div class="iv-qna-cnt">전체 '+list.length+'건</div>'+list.map(function(p,i){
     return '<div class="item'+(i===0?' on':'')+'" onclick="mysQnaOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="item-no">'+(list.length-i)+'</span><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
   }).join('');
   mysQnaOpen(0, true);
