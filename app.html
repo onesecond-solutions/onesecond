@@ -1484,6 +1484,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-chip.on{border-color:var(--svc);color:var(--svc);background:transparent;}
 .sv-grp{font-size:var(--ts-meta);font-weight:800;padding:12px 12px 6px;margin-top:2px;color:var(--svc);border-left:3px solid var(--svc);}
 .sv-empty{padding:2px 14px 12px;font-size:0.75rem;color:var(--tf);line-height:1.5;}
+.sv-relax-note{margin:8px 12px 6px;padding:8px 11px;font-size:0.75rem;line-height:1.5;color:var(--ts);background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-sm);}
 .sv-more{text-align:center;padding:16px 12px 8px;}
 .sv-more button{height:42px;padding:0 24px;border:1.5px solid var(--bd);border-radius:12px;background:var(--s1);color:var(--tp);font-size:0.875rem;font-weight:700;cursor:pointer;}
 .sv-more button:hover{border-color:var(--ac);color:var(--ac);}
@@ -11439,6 +11440,58 @@ function _scrFilter(cols, terms){
   if(terms.length<=1){ return 'or=('+orArr(terms[0]||'').join(',')+')'; }
   return 'and=('+terms.map(function(t){return 'or('+orArr(t).join(',')+')';}).join(',')+')';
 }
+/* ════ 보험 Q&A(posts) 전용 — 통합검색 0건 방지·관련도 랭킹 1차 적용 (2026-07-06) ════
+   철학(공통): 단어 하나로 0건 나면 안 됨 + 정확한 단어 몰라도 관련자료 찾아줌.
+   1차는 posts(board_type=qna)에만 적용. 공용 함수(_sBuildFilter·_sScore·전역 .s 정렬)는 무접촉.
+   전 신규 로직은 src==='posts' 게이트 안에서만 돈다 → 상품·담보·소식지·지식·자료 코드경로 바이트 동일. */
+/* [T1] Q&A 전용 OR 필터 — 단어끼리 OR(어느 단어든 맞으면 후보). AND 0건 방지.
+   괄호 수동 인코딩은 _sBuildFilter와 동일(제목에 () 든 글 0건 버그 방지, 2026-07-05 계승). */
+function _qnaOrFilter(cols, terms){
+  function enc(s){ return encodeURIComponent('*'+s+'*').replace(/\(/g,'%28').replace(/\)/g,'%29'); }
+  var arr=[];
+  terms.forEach(function(t){ var e=enc(t); cols.forEach(function(c){ arr.push(c+'.ilike.'+e); }); });
+  return 'or=('+arr.join(',')+')';   /* title/content × 모든 단어를 하나의 OR로 */
+}
+/* [T2-a] 검색어 N개 중 이 글(제목+본문[+답변])에 등장한 '서로 다른 단어' 수·목록.
+   extraHit = 답변(comments)에서 맞은 단어 배열(§3-4 부모 합산). posts 전용. 공용 _sScore 무접촉. */
+function _qnaMatch(titleText, bodyText, terms, extraHit){
+  var hay=((titleText||'')+' '+(bodyText||'')).toLowerCase();
+  var tl=(titleText||'').toLowerCase();
+  var extra={}; (extraHit||[]).forEach(function(t){ extra[String(t).toLowerCase()]=1; });
+  var hit=[], miss=[], titleHit=0;
+  terms.forEach(function(t){
+    var lt=String(t).toLowerCase();
+    if(hay.indexOf(lt)>=0 || extra[lt]){ hit.push(t); if(tl.indexOf(lt)>=0) titleHit++; }
+    else miss.push(t);
+  });
+  return { matched:hit.length, total:terms.length, hit:hit, miss:miss, titleHit:titleHit };
+}
+/* [T2-b] 컷 임계 — 유지 최소 matched. 1~2단어=1(OR 후보는 항상 ≥1), 3단어↑=2(=절반 근처, 1개만 맞은 글 제외).
+   과확장(잡글 섞임) 방지 + 0건 방지 균형. 파라미터(대표 확정 시 조정 가능). */
+function _qnaKeepMin(N){ if(N<=2) return 1; return 2; }
+/* [T2-c] posts subset만 2차 정렬(matched desc → _sScore desc). 4/4>3/4>2/4 보장.
+   비-posts 아이템은 원래 인덱스 그대로 유지 → cross-source(전역 .s) 순서 불변. */
+function _qnaTierSort(list){
+  var posts=[], slots=[];
+  for(var i=0;i<list.length;i++){ if(list[i].src==='posts'){ posts.push(list[i]); slots.push(i); } }
+  if(posts.length<2) return list;
+  posts.sort(function(a,b){ if(b.mq.matched!==a.mq.matched) return b.mq.matched-a.mq.matched; return b.s-a.s; });
+  var out=list.slice();
+  for(var j=0;j<slots.length;j++){ out[slots[j]]=posts[j]; }
+  return out;
+}
+/* [T7] 완전일치 아닐 때 안내 배너 — hit=어느 글이든 맞은 단어, miss=전 글에서 0인 단어.
+   "검색 실패"가 아니라 "더 넓게 찾아드렸다"는 긍정 톤. 완전일치(miss 없음)면 배너 없음(과잉 안내 방지). */
+function _qnaBanner(postItems, terms){
+  if(!postItems||!postItems.length) return '';
+  var everHit={};
+  postItems.forEach(function(it){ if(it&&it.mq&&it.mq.hit) it.mq.hit.forEach(function(t){ everHit[t]=1; }); });
+  var hit=terms.filter(function(t){return everHit[t];});
+  var miss=terms.filter(function(t){return !everHit[t];});
+  if(!miss.length || !hit.length) return '';
+  return '<div class="sv-relax-note">‘'+_sEsc(miss.join('·'))+'’ 포함 글은 없지만, '
+       + _sEsc(hit.join('·'))+' 관련 Q&amp;A를 찾았습니다.</div>';
+}
 function _sCount(hay, t){ if(!hay||!t) return 0; return String(hay).toLowerCase().split(String(t).toLowerCase()).length-1; }
 function _sScore(titleText, bodyText, terms){
   var score=0, allTitle=true;
@@ -11720,7 +11773,7 @@ async function _runSearchV2(q, targetId){
   var _vaultBase='deleted_at=is.null'+((!_isAdm&&me.id)?'&or=(scope.neq.personal,owner_id.eq.'+encodeURIComponent(me.id)+')':'');
   /* 출처 그룹 + 각 row의 범위 분류 함수(scope). 종류 라벨(src)은 결과 안 서브태그로 유지 */
   var groups=[
-    {src:'보험 Q&A',  table:'posts',            base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                 select:'id,title,content,created_at',                                       order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return 'common';}},
+    {src:'보험 Q&A',  table:'posts',            base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'], filter:_qnaOrFilter, /* 0건 방지: 단어끼리 OR(공용 _sBuildFilter 무접촉). 몇 단어 맞았나는 _qnaMatch로 랭킹·컷 (2026-07-06) */ select:'id,title,content,created_at',                                       order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return 'common';}},
     {src:'소식지',    table:'newsletters',      base:'',                                       cols:['title','company','full_text'],    select:'id,title,company,full_text,text_quality,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                          t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}, scope:function(r){return 'common';}},
     {src:'팀·지점 공지', table:'team_notices',   base:'deleted_at=is.null',                     cols:['title','content'],                 select:'id,title,content,created_at,scope',                                 order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return r.scope==='branch_internal'?'branch':'team';}},
     {src:'스크립트',  table:'scripts',          base:'is_active=eq.true&is_sample=eq.false'+(me.id?'&or=(scope.eq.global,and(scope.eq.personal,owner_id.eq.'+encodeURIComponent(me.id)+'))':'&scope=eq.global'), cols:['title','search_text','script_text'], filter:_scrFilter, select:'id,title,search_text,script_text,highlight_text,stage,scope,owner_id',                   order:'',                                                        body:function(r){return r.search_text||_svStripHtml((r.highlight_text?r.highlight_text+' ':'')+(r.script_text||''));}, m:function(r){return '스크립트';}/* global+본인 personal만(타인 personal·team/branch·매니저룸 제외). 유형명 매칭=_scrFilter */,                          scope:function(r){return (r.scope==='personal'&&me.id&&r.owner_id===me.id)?'mine':'common';}},
@@ -11737,13 +11790,17 @@ async function _runSearchV2(q, targetId){
   }));
   if(seq!==_searchSeq) return;
   /* 답변(comments) 검색 합류 — 답변에만 있는 말("메리츠 부담보" 등)로 쳐도 그 질문이 뜸. 부모 qna를 보험Q&A 결과에 병합(중복 제거). RLS 그대로. 2026-07-05 */
+  /* _ansHit[post_id] = 그 글의 답변에서 맞은 검색어 배열 → _qnaMatch에 합산(§3-4, 답변으로만 매칭된 글이 컷에서 오탈락 방지). posts 전용. */
+  var _ansHit={};
   try{
     var _qgi=-1; for(var _gg=0;_gg<groups.length;_gg++){ if(groups[_gg].table==='posts'){ _qgi=_gg; break; } }
-    var _cflt=terms.length?_sBuildFilter(['content'],terms):'';
+    var _cflt=terms.length?_qnaOrFilter(['content'],terms):'';   /* Q&A 답변도 OR — 0건 방지 일관 (2026-07-06, 기존 AND에서 전환) */
     if(_qgi>=0 && _cflt){
-      var _cres=await window.db.fetch('/rest/v1/comments?'+_cflt+'&select=post_id&limit='+lim);
+      var _cres=await window.db.fetch('/rest/v1/comments?'+_cflt+'&select=post_id,content&limit='+lim);
       var _cs=_cres&&_cres.ok?await _cres.json():[]; if(!Array.isArray(_cs)) _cs=[];
-      var _pids=[]; _cs.forEach(function(c){ if(c.post_id!=null && _pids.indexOf(c.post_id)<0) _pids.push(c.post_id); });
+      var _pids=[]; _cs.forEach(function(c){ if(c.post_id!=null && _pids.indexOf(c.post_id)<0) _pids.push(c.post_id);
+        if(c.post_id!=null){ var _k=String(c.post_id), _cl=String(c.content||'').toLowerCase(); if(!_ansHit[_k]) _ansHit[_k]=[];
+          terms.forEach(function(t){ var lt=String(t).toLowerCase(); if(_cl.indexOf(lt)>=0 && _ansHit[_k].indexOf(t)<0) _ansHit[_k].push(t); }); } });
       var _q0=results[_qgi]||[]; var _have={}; _q0.forEach(function(r){ _have[String(r.id)]=1; });
       var _need=_pids.filter(function(p){ return !_have[String(p)]; });
       if(_need.length){
@@ -11769,8 +11826,22 @@ async function _runSearchV2(q, targetId){
   for(var gi=0; gi<groups.length; gi++){ var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)) continue;
     var titleOf=g.t||function(r){return r.title;};
     rows.forEach(function(r){ var sc=_sScore(titleOf(r), g.body(r), terms); var k=g.scope(r); if(['mine','team','branch','common'].indexOf(k)<0) k='common';
-      items.push({ g:g, row:r, s:sc, src:g.table, scope:k, cat:(g.table==='knowledge_entries'?(r.category||''):'') }); });
+      var it={ g:g, row:r, s:sc, src:g.table, scope:k, cat:(g.table==='knowledge_entries'?(r.category||''):'') };
+      if(g.table==='posts'){ it.mq=_qnaMatch(titleOf(r), g.body(r), terms, _ansHit[String(r.id)]); }   /* Q&A 전용 matched(§3-4 답변 합산). 비-posts는 mq 없음 → 기존과 동일 */
+      items.push(it); });
   }
+  /* [T5] 보험 Q&A(posts) 전용 컷 — N개 중 matched<keepMin 약한 후보 제외. 전부 약하면 완화(matched≥1)해 0건 방지(§3-5).
+     posts 항목만 제거/유지 → 비-posts 코드경로 무접촉. 공용 정렬(.s)·타 소스 매칭 영향 0. */
+  (function(){
+    var _N=terms.length; if(_N<1) return;
+    var _keepMin=_qnaKeepMin(_N);
+    var _pIdx=[]; for(var _i=0;_i<items.length;_i++){ if(items[_i].src==='posts') _pIdx.push(_i); }
+    if(!_pIdx.length) return;
+    var _strong=_pIdx.filter(function(i){ return items[i].mq.matched>=_keepMin; });
+    var _keepSet=_strong.length?_strong:_pIdx.filter(function(i){ return items[i].mq.matched>=1; });   /* 안전장치: 강한 후보 0이면 1개라도 맞은 것 유지 */
+    var _keepFlag={}; _keepSet.forEach(function(i){ _keepFlag[i]=1; });
+    items=items.filter(function(it,idx){ return it.src!=='posts' || _keepFlag[idx]; });
+  })();
   /* 검색어 동의어 확장 — 각 term → [정규화 term + 동의어 폼]. 상품·담보 정규화본(_nhay)에 하나라도 있으면 매칭 (2026-07-05) */
   try{ await _svLoadSyn(); }catch(e){}
   if(seq!==_searchSeq) return;
@@ -12473,6 +12544,7 @@ function _svRender(){
     if(activeScope!=='all' && it.scope!==activeScope) return false;
     return true;
   });
+  shown=_qnaTierSort(shown);   /* [T6] 보험 Q&A subset만 matched 2차 정렬(4/4>3/4>2/4). 비-posts는 인덱스 고정 → cross-source 순서 불변 (2026-07-06) */
   /* 범위 칩 = 활성 소스 탭(+지식 분류 필터) 기준 scope 분포. 누르면 그 범위만(같은 칩 다시 누르면 전체) */
   var scCnt={mine:0,team:0,branch:0,common:0};
   items.forEach(function(it){
@@ -12495,6 +12567,11 @@ function _svRender(){
   var prodSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && prodItems.length)?_svProdSummary(prodItems,terms):'';
   var coverSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && coverItems.length)?_svCoverSummary(coverItems,terms):'';
   html+=coverSummaryHtml+prodSummaryHtml;
+  /* [T7] 보험 Q&A 완화 안내 배너 — 완전일치 아닐 때만, 전체/Q&A 탭에서 결과 리스트 맨 위. posts 결과 있을 때만 (2026-07-06) */
+  if((activeSrc==='all'||activeSrc==='posts') && shown.length){
+    var _qBan=''; try{ _qBan=_qnaBanner(items.filter(function(it){return it.src==='posts';}), terms); }catch(e){}
+    if(_qBan) html+=_qBan;
+  }
   if(!shown.length){
     if(prodSummaryHtml||coverSummaryHtml){ /* 상품·담보 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
     else if(items.length===0){
