@@ -1808,7 +1808,7 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-ym{font-weight:800;font-size:15px;color:var(--tp);min-width:92px;text-align:center}
 .cal-add{margin-left:auto;border:1px solid var(--ac);background:transparent;color:var(--ac);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;min-height:34px}
 .cal-grid-wrap{padding:2px;flex:1;display:flex;flex-direction:column;min-height:0}
-#mys-cal-area,#mr-cal-area,#iv-cal-area{display:flex;flex-direction:column;flex:1;min-height:0}
+#mys-cal-area,#iv-cal-area{display:flex;flex-direction:column;flex:1;min-height:0}
 .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
 .cal-dow span{text-align:center;font-size:13px;color:var(--ts);font-weight:700;padding:2px 0}
 .cal-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;flex:1;grid-auto-rows:minmax(92px,1fr)}
@@ -4225,33 +4225,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         </div>
         <div class="col viewer-col">
           <button class="backbtn" onclick="backToList()">‹ 목록으로</button>
-          <div class="viewer">
-            <span class="vbadge">인수 같음</span>
-            <div class="vttl">70년 남 사무직 뇌경색/부정맥/고혈압 순환계 기왕증 보장</div>
-            <div class="vmeta">5월 15일 16:28 · 답변 3 · 첨부 3</div>
-            <div class="vbody">안녕하세요. 도와주세요~ 700814-1 사무직.<br>뇌경색 혈전용해치료한지 3년넘었고.<br>부정맥 전극도자절제술한지 3년넘었어요.<br>고혈압복용중이구요.<br>순환계질환 주요치료비를 넣었을때(혈전용해치료, 혈전제거, 수술, 중환자실) 기왕증도 모두 보장 가능한 회사가 있을까요?
-              <div class="answer">
-                <div class="who">한화손보 답변</div>
-                한화손보 간편 2대치료비. 진단문구 없어서 기왕증 가능합니다.
-              </div>
-              <div class="answer">
-                <div class="who">라이나손보 답변</div>
-                라이나손보 가능합니다.
-              </div>
-              <div class="answer">
-                <div class="who">현대해상 답변</div>
-                현대해상 : 3333플랜 가능합니다.
-              </div>
-              <div class="atts">
-                <div class="alabel">첨부 3 · 클릭하면 큰 화면 + 딸깍 기능</div>
-                <div class="athumbs">
-                  <div class="athumb" onclick="openLb(0)"><img src=""><div class="nm">5세대 보험료표</div></div>
-                  <div class="athumb" onclick="openLb(1)"><img src=""><div class="nm">특약 비교</div></div>
-                  <div class="athumb" onclick="openLb(2)"><img src=""><div class="nm">주계약 비교</div></div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div class="viewer"></div>
         </div>
       </div>
      </div>
@@ -15469,7 +15443,7 @@ async function saveMyspaceWrite(){
       var res=await fetch(window.db.url('/rest/v1/library'),{method:'POST',headers:headers,body:JSON.stringify(body)});
       if(res.ok||res.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
-        window._myspaceLoaded=false;loadMyspace(true); if(typeof loadMrOffice==='function'){ window._mrOfficeLoaded=false; loadMrOffice(true); }
+        window._myspaceLoaded=false;loadMyspace(true);
         if(typeof toast==='function')toast('자료가 저장됐습니다!');
       }else{
         var err=await res.json().catch(function(){return{};});
@@ -15508,7 +15482,7 @@ async function saveMyspaceWrite(){
       var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
       if(sres.ok||sres.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
-        window._myspaceLoaded=false;loadMyspace(true); if(typeof loadMrOffice==='function'){ window._mrOfficeLoaded=false; loadMrOffice(true); }
+        window._myspaceLoaded=false;loadMyspace(true);
         if(typeof toast==='function')toast('스크립트가 저장됐습니다!');
       }else{
         var serr=await sres.json().catch(function(){return{};});
@@ -15728,7 +15702,7 @@ var CAL_SRC={
   branch:  { label:'지점',   color:'var(--warn)',     icon:'M3 21V9l9-6 9 6v12M9 21v-6h6v6' },
   personal:{ label:'내 일정', color:'var(--t-event)', icon:'M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.8 1-5.8L3.5 9.7l5.9-.9Z' }
 };
-var CAL_HOST={ mys:'mys-split', mr:'mr-office-split', iv:'iv-split' };  /* prefix별 자료 split id */
+var CAL_HOST={ mys:'mys-split', iv:'iv-split' };  /* prefix별 자료 split id */
 /* 휴무(빨간날) = 대한민국 2026 법정 공휴일 (양력+음력 확정분, 대체공휴일 포함). 매년 갱신 필요(음력 변동) */
 var CAL_HOLIDAYS=['2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02','2026-05-05','2026-05-24','2026-05-25','2026-06-06','2026-08-15','2026-09-24','2026-09-25','2026-09-26','2026-10-03','2026-10-09','2026-12-25'];
 /* 달력 표시용 마크 (고객 접점 이야깃거리) — 공휴일(h)·24절기(t)·기념일(d). 2026 기준(절기=KASI 대조). 과하지 않게 한 줄 라벨. 공휴일과 겹치는 절기(입하 5/5·망종 6/6)는 공휴일 우선. */
@@ -16325,10 +16299,9 @@ async function deleteMyspaceItem(id,type){
     if(_ok&&!_zeroRows){
       /* 업무노트(scripts) 삭제 → 임태성이면 연결 원세컨드 제공 검색자료도 제거(고아 0) */
       if(type==='script' && typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub() && typeof _wnPublishSync==='function'){ try{ await _wnPublishSync(id,'delete'); }catch(e){} }
-      window._myspaceLoaded=false; window._mrOfficeLoaded=false; window._ivMemoLoaded=false;
+      window._myspaceLoaded=false; window._ivMemoLoaded=false;
       var _dx=(window._mysDetailCurrent&&window._mysDetailCurrent.ctx)||'mys';
-      if(_dx==='mr'&&typeof loadMrOffice==='function') loadMrOffice(true);
-      else if(_dx==='iv'&&typeof loadIvMemo==='function') loadIvMemo(true);
+      if(_dx==='iv'&&typeof loadIvMemo==='function') loadIvMemo(true);
       else if(typeof loadMyspace==='function') loadMyspace(true);
       if(typeof toast==='function')toast('삭제 완료');
     }else if(_ok&&_zeroRows){
@@ -16346,11 +16319,10 @@ function _memoColorKey(keywords){
   return 'yellow';
 }
 window._mysEditColor='yellow';
-/* 메모 상세/수정 컨텍스트 — 라이브러리(mys)·매니저룸 오피스(mr)·보험사 자료실 메모(iv) 공용.
+/* 메모 상세/수정 컨텍스트 — 라이브러리(mys)·보험사 자료실 메모(iv) 공용.
  * 각 open 함수가 _mysDetailCurrent.ctx 지정 → 수정/취소/재로드가 해당 영역으로 라우팅. */
 var MEMO_CTX={
   mys:{viewer:'mysViewer',         reopen:function(i){ if(typeof mysOpenItem==='function') mysOpenItem(i,true); },   reload:function(){ window._myspaceLoaded=false;  if(typeof loadMyspace==='function')  return loadMyspace(true); }},
-  mr: {viewer:'mr-office-viewer',  reopen:function(i){ if(typeof mrOfficeOpen==='function') mrOfficeOpen(i,true); }, reload:function(){ window._mrOfficeLoaded=false; if(typeof loadMrOffice==='function') return loadMrOffice(true); }},
   iv: {viewer:'iv-viewer',         reopen:function(i){ if(typeof ivMemoOpen==='function') ivMemoOpen(i,true); },     reload:function(){ window._ivMemoLoaded=false;   if(typeof loadIvMemo==='function')   return loadIvMemo(true); }}
 };
 function _memoCtx(){ var c=window._mysDetailCurrent; var k=(c&&c.ctx&&MEMO_CTX[c.ctx])?c.ctx:'mys'; return MEMO_CTX[k]; }
@@ -16391,7 +16363,7 @@ async function mysEditSave(){
   try{
     var res=await fetch(window.db.url('/rest/v1/library?id=eq.'+encodeURIComponent(it.id)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify(body)});
     if(res.ok||res.status===204){
-      window._myspaceLoaded=false; window._mrOfficeLoaded=false; window._ivMemoLoaded=false; window._homeRecentLoaded=false;
+      window._myspaceLoaded=false; window._ivMemoLoaded=false; window._homeRecentLoaded=false;
       await _memoCtx().reload();
       if(typeof toast==='function') toast('수정됐어요!');
     }else{ var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); }
