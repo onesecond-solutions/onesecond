@@ -692,7 +692,7 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .split{flex:1;min-height:0;display:grid;grid-template-columns:330px 1fr;gap:16px;overflow:hidden;padding-bottom:18px;}
 /* 자료실 split 사이즈 정합 — 현장의 소리와 동일(부모 flex 컬럼 체인 복원) */
 #v-insurer-vault.on,#v-myspace.on{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
-#iv-saved,#iv-today,#mys-saved,#mys-team,#mys-qna,#mr-team,#mr-office,#mr-qna{flex:1;min-height:0;display:flex;flex-direction:column;}
+#iv-saved,#iv-today,#mys-saved,#mys-team,#mys-qna{flex:1;min-height:0;display:flex;flex-direction:column;}
 #mys-today{flex:1;min-height:0;display:flex;flex-direction:column;}
 #mr-main{flex:1;min-height:0;overflow-y:auto;}
 .col{background:var(--s1);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
@@ -5691,7 +5691,7 @@ function _canEditPost(authorId){ var me=(typeof _getOwnerId==='function')?_getOw
 function _postActs(kind, id, authorId, ctx){ if(!_canEditPost(authorId)) return ''; var ed=(kind==='qna')?'qnaEditPost':'teamEditNotice', dl=(kind==='qna')?'qnaDeletePost':'teamDeleteNotice'; return '<div class="post-acts"><button class="post-act" onclick="'+ed+'(\''+id+'\',\''+ctx+'\')">✏️ 수정</button><button class="post-act post-act-del" onclick="'+dl+'(\''+id+'\',\''+ctx+'\')">삭제</button></div>'; }
 /* 보험 Q&A (posts qna) */
 var _qnaEditId=null,_qnaEditCtx=null;
-function _qnaReload(ctx){ window._mysQnaCache=null; window._mrQnaCache=null; window._vaultQnaCache=null; var f=({voice:'loadVoiceQna',mys:'loadMysQna',mr:'loadMrQna',iv:'loadVaultQna'})[ctx]; if(f&&typeof window[f]==='function') window[f](); }
+function _qnaReload(ctx){ window._mysQnaCache=null; window._vaultQnaCache=null; var f=({voice:'loadVoiceQna',mys:'loadMysQna',iv:'loadVaultQna'})[ctx]; if(f&&typeof window[f]==='function') window[f](); }
 async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠습니까? (등록된 답변도 함께 삭제됩니다)')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ _qnaReload(ctx); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
 async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ alert('로그인이 필요합니다.'); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
 function qnaCloseEdit(){ var m=document.getElementById('qnaEditModal'); if(m) m.style.display='none'; _qnaEditId=null; }
@@ -15701,9 +15701,8 @@ async function _saveMyspaceQna(){
     var res=await window.db.fetch('/rest/v1/posts',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
     if(res.ok||res.status===201){
       clearMyspaceWriteForm(); closeMyspaceWrite();
-      window._mysQnaCache=null; window._mrQnaCache=null;
+      window._mysQnaCache=null;
       if(typeof loadMysQna==='function') loadMysQna();
-      if(typeof loadMrQna==='function') loadMrQna();
       if(typeof loadVaultQna==='function') loadVaultQna();
       if(typeof toast==='function') toast('보험 Q&A에 등록됐습니다!');
       return true;  /* 인라인 카드 폼이 성공 판별에 사용 — 성공 시에만 폼 닫고 복귀 */
