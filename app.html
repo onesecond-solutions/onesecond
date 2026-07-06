@@ -503,6 +503,9 @@ body.is-uat-homedesk #homeDesk{display:block;margin-top:6px;}
 .hd-scope-b:hover{border-color:var(--ac);color:var(--tp);}
 .hd-scope-b.on{border-color:var(--hdc,var(--ac));background:color-mix(in srgb,var(--hdc,var(--ac)) 12%,transparent);color:var(--hdtext,var(--tp));}
 .hd-scope-b.on::before{border-color:var(--hdc,var(--ac));background:var(--hdc,var(--ac));box-shadow:inset 0 0 0 2px var(--s1);}
+/* 정본 자료함 범위 동그라미 — 임태성 게이트(is-uat-vaultscope) 전용. .hd-scope 재사용, 자료함엔 X버튼 없어 padding-right 리셋. 팀/지점 scope 일반 개방=3단계 RLS 실측 후. (2026-07-06) */
+#mv-scope{display:none;padding-right:0;margin:12px 0 0;}
+body.is-uat-vaultscope #mys-vault #mv-scope{display:flex;}
 .hd-prep{padding:28px 16px;text-align:center;color:var(--ts);line-height:1.7;font-size:0.88rem;}
 /* 지점 자료 배지 — 원수사 자료실·Q&A가 원세컨드 제공 외부 자료가 아니라 지점 내부 공유 자료임을 명시. (2026-07-04) */
 .hd-refbadge{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;background:var(--space-branch-soft);color:var(--space-branch-text);font-size:0.8rem;font-weight:700;line-height:1;}
@@ -3223,6 +3226,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <div class="mys-vault" id="mys-vault" style="display:none">
         <!-- §4 방어선: 풀폭 상단 고지 (모달화 금지) -->
         <div class="mys-vault-notice" id="mys-vault-notice"><span class="mvn-txt">안내 · 자료함은 <b>본인 영업 자산</b> 보관용입니다. 고객 주민번호·연락처 등 식별정보가 담긴 파일은 올리지 말아 주세요.</span></div>
+        <!-- 범위 동그라미(개인/팀/지점) — 임태성 게이트(is-uat-vaultscope) 전용. 홈데스크 .hd-scope 패턴 재사용. 클릭=_spVaultShow(null,scope)=재-parent 없이 in-place scope 전환(scope 엔진·게이트·notice 재사용). 팀/지점 일반 개방=3단계 RLS 실측 통과 후. (2026-07-06) -->
+        <div class="mv-scope hd-scope" id="mv-scope">
+          <button type="button" class="hd-scope-b on" data-sc="personal" onclick="mysVaultScope('personal')">개인</button>
+          <button type="button" class="hd-scope-b" data-sc="team" onclick="mysVaultScope('team')">팀</button>
+          <button type="button" class="hd-scope-b" data-sc="branch" onclick="mysVaultScope('branch')">지점</button>
+        </div>
         <div class="mys-vault-cols">
           <div class="mys-vault-tree">
             <div class="mvcol-head"><span class="mvcol-ttl">폴더</span><button class="mys-vault-newfolder" onclick="mysVaultCreateFolder()">+ 새 폴더</button></div>
@@ -5139,6 +5148,7 @@ function applyRoleClass(){
   /* 상품 로드맵 = 임태성 실장 user_id 전용 검수(2026-06-27). 어드민 포함 타 계정 비노출. 메뉴 노출은 CSS(body.is-uat-roadmap), 직접 진입 차단은 showView 가드(_canSeeRoadmap). */
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-qnaimport', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 카톡 Q&A 전량 임포트 버튼 = 임태성 실장 전용(임시, 실행 후 제거). 2026-07-05 */
+  document.body.classList.toggle('is-uat-vaultscope', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 자료함 범위 동그라미(개인/팀/지점) = 임태성 실장 user_id 전용. 게이트 밖=정본 자료함 personal 고정(현행 유지). 팀/지점 scope 일반 개방=3단계 RLS 실측 통과 후 이 게이트 해제. 2026-07-06 */
   /* 카드 역순 넘버링 = 임태성 실장 user_id 전용 검수(2026-07-06). 어드민 포함 타 계정 비노출. .item-no span은 항상 렌더되고 CSS(body.is-uat-cardno)로만 표시. ▶ 전체 개방 플립 지점: 이 toggle을 add(항상 부여)로 바꾸거나 CSS 게이트 해제. */
   document.body.classList.toggle('is-uat-cardno', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
@@ -16860,6 +16870,7 @@ function mysVaultOpen(el){
   window._mysCat='자료함';
   if(typeof _mvScopeSet==='function') _mvScopeSet('personal', null);  /* 라이브러리 자료함 = 항상 개인 스코프(트리에서 팀/지점 보다 온 잔상 리셋) */
   if(typeof _mvApplyVaultNotice==='function') _mvApplyVaultNotice('personal');
+  try{ var _mvsc=document.querySelectorAll('#mv-scope .hd-scope-b'); for(var _si=0;_si<_mvsc.length;_si++) _mvsc[_si].classList.toggle('on', _mvsc[_si].getAttribute('data-sc')==='personal'); }catch(e){}  /* 범위 동그라미 초기 상태=개인(임태성 게이트 전용, 게이트 밖=CSS로 숨김) */
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='none';
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='flex';
   if(!_mvOwner()){ var fb=document.getElementById('mys-vault-folders'); if(fb) fb.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
@@ -16870,6 +16881,14 @@ function mysVaultOpen(el){
   mysVaultLoadFiles(window._mvCurFolder);
 }
 window.mysVaultOpen=mysVaultOpen;
+
+/* 자료함 범위 동그라미 클릭(개인/팀/지점) — 홈데스크 _homeScope('lib',scope) 패턴 복제. host=null=재-parent 없이 in-place scope 전환(#mys-vault 제자리). scope 엔진(_mvScope*)·게이트(_spVaultShow)·notice 전부 재사용, 신규 조회·RLS 0. 임태성 게이트(is-uat-vaultscope) 전용 노출. 팀/지점 일반 개방=3단계 RLS 실측 후. (2026-07-06) */
+function mysVaultScope(scope){
+  scope=scope||'personal';
+  try{ var cs=document.querySelectorAll('#mv-scope .hd-scope-b'); for(var i=0;i<cs.length;i++) cs[i].classList.toggle('on', cs[i].getAttribute('data-sc')===scope); }catch(e){}  /* 활성 범위 표시 */
+  if(window._spVaultShow) window._spVaultShow(null, scope);  /* host=null → §2-2 소속해석·게이트·notice·재로드만(재-parent 없음). 홈데스크 _homeScope 호출 패턴 정합 */
+}
+window.mysVaultScope=mysVaultScope;
 
 /* 폴더 펼침 상태(localStorage) — 접기/펼치기. 기본 접힘, 선택 경로는 자동 펼침 */
 function _mvOpenSet(){ try{ var a=JSON.parse(localStorage.getItem('os_mv_folder_open')||'[]'); var o={}; for(var i=0;i<a.length;i++) o[a[i]]=1; return o; }catch(e){ return {}; } }
