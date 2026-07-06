@@ -859,6 +859,8 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .item.mys-pinned.on{background:color-mix(in srgb,var(--ac) 9%,var(--s2));}
 .item.mys-reord-on .mys-pin{display:none;}
 .item .badge{font-size:var(--ts-badge);color:var(--tc);font-weight:700;margin-bottom:4px;display:inline-block;}
+/* 카드 넘버링(역순 — 최신=큰번호). 빠릿한 운영툴 톤: 작고 차분하게. (2026-07-06) */
+.item .item-no{font-size:11px;color:var(--tf);font-weight:600;font-variant-numeric:tabular-nums;opacity:.6;margin-right:6px;display:inline-block;border-radius:var(--radius-sm);}
 .item .it{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);margin-bottom:3px;line-height:1.4;}
 .item .id{font-size:var(--ts-preview);color:var(--tf);}
 .viewer{padding:24px 28px;overflow-y:auto;flex:1;}
@@ -5196,6 +5198,7 @@ function ivRender(rows, filterType){
     var cat = r.category || '자료'; var tc = IV_CAT_COLOR[cat] || 'var(--ac)';
     var hidTag = (_meAdmin && r.is_hidden) ? ' <span style="color:var(--err);font-size:var(--ts-meta);font-weight:700">[숨김]</span>' : '';
     return '<div class="item'+(i===0?' on':'')+'" onclick="ivOpenDetail('+i+')" style="--tc:'+tc+'">'
+      + '<span class="item-no">'+(list.length-i)+'</span>'
       + '<span class="badge">'+ivEsc(cat)+'</span>'
       + '<div class="it">'+ivEsc(r.title || '제목 없음')+hidTag+'</div>'
       + '<div class="id">'+ivFmtDate(r.created_at)+(ivAuthor(r) ? ' · '+ivAuthor(r) : '')+'</div></div>';
@@ -5353,6 +5356,7 @@ function vaultQnaRender(){
   listEl.innerHTML='<div class="iv-qna-cnt">전체 '+list.length+'건</div>'+list.map(function(r,i){
     var qt=r.question_type||'질문';
     return '<div class="item'+(i===0?' on':'')+'" onclick="vaultQnaOpen('+i+')" style="--tc:var(--t-uw)">'
+      +'<span class="item-no">'+(list.length-i)+'</span>'
       +'<span class="badge">'+ivEsc(qt)+'</span>'
       +'<div class="it">'+ivEsc(r.title||'제목 없음')+'</div>'
       +'<div class="id">'+ivFmtDate(r.created_at)+' · 비공개'+'</div></div>';
@@ -6665,6 +6669,7 @@ async function _snScopeScripts(slot, scope){
     listEl.innerHTML=rows.map(function(s,i){
       var prev=_escHtml(String(s.highlight_text||String(s.script_text||'').replace(/<[^>]+>/g,' ')).slice(0,90));
       return '<div class="item'+(i===0?' on':'')+'" onclick="_snScrPick('+i+',this)" style="--tc:var(--t-event)">'
+        +'<span class="item-no">'+(rows.length-i)+'</span>'
         +'<span class="badge">업무노트</span>'
         +'<div class="it">'+_escHtml(s.title||'(제목 없음)')+'</div>'
         +'<div class="id">'+prev+'</div></div>';
@@ -10943,7 +10948,7 @@ function renderTogether(){
   if(!list.length){ listEl.innerHTML='<div class="mys-news-empty">아직 글이 없습니다.<br>+ 글쓰기로 첫 글을 남겨보세요.</div>'; if(vv) vv.innerHTML='<div class="mys-news-empty">글이 없습니다.</div>'; return; }
   listEl.innerHTML=list.map(function(r,i){
     var c=_tgEsc(r.category||'자유'); var who=_tgWho(r);
-    return '<div class="item'+(i===0?' on':'')+'" onclick="togetherOpen('+i+')" style="--tc:var(--ac)"><span class="badge">'+c+'</span><div class="it">'+_tgEsc(r.title||'제목 없음')+'</div><div class="id">'+_tgDate(r.created_at)+(who?' · '+who:'')+'</div></div>';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="togetherOpen('+i+')" style="--tc:var(--ac)"><span class="item-no">'+(list.length-i)+'</span><span class="badge">'+c+'</span><div class="it">'+_tgEsc(r.title||'제목 없음')+'</div><div class="id">'+_tgDate(r.created_at)+(who?' · '+who:'')+'</div></div>';
   }).join('');
   togetherOpen(0,true);
 }
@@ -14451,7 +14456,7 @@ function renderMysTeam(){
     var vv=document.getElementById('mys-team-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">공지가 없습니다.</div>'; return;
   }
   listEl.innerHTML=list.map(function(p,i){
-    return '<div class="item'+(i===0?' on':'')+'" onclick="mysTeamOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="mysTeamOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="item-no">'+(list.length-i)+'</span><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
   }).join('');
   mysTeamOpen(0, true);
 }
@@ -14519,7 +14524,7 @@ function renderMysQna(){
     var vv=document.getElementById('mys-qna-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">질문이 없습니다.</div>'; return;
   }
   listEl.innerHTML=list.map(function(p,i){
-    return '<div class="item'+(i===0?' on':'')+'" onclick="mysQnaOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="mysQnaOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="item-no">'+(list.length-i)+'</span><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
   }).join('');
   mysQnaOpen(0, true);
 }
