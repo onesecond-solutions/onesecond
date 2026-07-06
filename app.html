@@ -3203,8 +3203,6 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="chip" onclick="mysVaultOpen(this)">자료함</div>
           <div class="chip" onclick="filterMys(this,'스크립트')">업무노트</div>
           <div class="chip" onclick="filterMys(this,'메모')">메모</div>
-          <div class="chip" onclick="mysShareboxOpen(this)">공유함</div>
-          <div class="chip" onclick="filterMys(this,'공유받음')">공유받음</div>
         </div>
       </div>
       <div class="split" id="mys-split">
@@ -14165,7 +14163,7 @@ async function loadMyspace(force){
        loadMyspace가 scripts+library 전체를 무필터로 renderMyspace에 넘겨 '메모' 화면에 스크립트 카드가 혼입되던 문제 차단. */
     var _onChip=document.querySelector('#mys-saved .mys-toolbar .chip.on');
     var _onCat=_onChip?_onChip.textContent.trim():'';
-    var _catMap={'전체보기':'전체','메모':'메모','스크립트':'스크립트','공유받음':'공유받음'};
+    var _catMap={'전체보기':'전체','메모':'메모','스크립트':'스크립트'};
     if(_onChip && _catMap[_onCat] && typeof filterMys==='function'){ filterMys(_onChip, _catMap[_onCat]); }
     else { renderMyspace(items); }
   }catch(e){
@@ -14240,11 +14238,11 @@ function mysOpenItem(idx, keepList){
   var _memoHex=(isMemo&&typeof OS_MEMO_COLORS!=='undefined')?(OS_MEMO_COLORS[memoColorKey]||OS_MEMO_COLORS.yellow):null;
   var _bodyStyle=_memoHex?(' style="background:'+_memoHex+';color:#3A3320;border-radius:10px;padding:12px"'):'';
   var _editBtn=(it._type==='library')?('<button class="post-act" onclick="mysEditStart()">✏️ 수정</button>'):('<button class="post-act" onclick="scrEditInline('+JSON.stringify(it.id)+')">✏️ 수정</button>');
-  /* 통합 공유 — 스크립트=공유하기 1버튼→팝업(_shareHubOpen, 팀/지점 직접 scope 공유). 노출=기존 팀 공유 가능자(_canScopeShare). 메모는 기존 _osShareItem 유지(범위 밖). (2026-06-26) */
+  /* 통합 공유 — 스크립트=공유하기 1버튼→팝업(_shareHubOpen, 팀/지점 직접 scope 공유). 노출=기존 팀 공유 가능자(_canScopeShare). 메모 공유(보내기)는 옛 공유함 화면 은퇴와 함께 제거 — 볼 화면이 없어 무의미(2026-07-06). */
   var _canScopeShare=(document.body.classList.contains('is-uat-spacenav')||document.body.classList.contains('is-admin'));
   var _shareHubBtn=(it._type==='script')
     ? (_canScopeShare?'<button class="post-act" onclick="_shareHubOpen(\'script\')">공유하기</button>':'')
-    : '<button class="post-act" onclick="_osShareItem()">공유하기</button>';
+    : '';
   var _ttlHtml=isMemo?'':('<div class="vttl">'+esc(it.title||'제목 없음')+'</div>');  /* 메모는 제목 개념 없음 — 날짜+포스트잇 카드만 */
   /* 스크립트: 리치 HTML이면 그대로 렌더, 아니면(기존 plain/섹션) esc+개행 보존(회귀 0) */
   var _isRichScr=(it._type==='script' && /<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(bodyText||''));
@@ -14854,7 +14852,6 @@ function mysEmptyPick(){
     +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'스크립트\')"><span class="mpb-nm">업무노트</span><span class="mpb-ds">상담 멘트·화법</span></button>'
     +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'메모\')"><span class="mpb-nm">메모</span><span class="mpb-ds">간단 기록</span></button>'
     +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'자료함\')"><span class="mpb-nm">자료함</span><span class="mpb-ds">파일 보관</span></button>'
-    +'<button type="button" class="mys-pick-btn" onclick="mysPickGo(\'공유함\')"><span class="mpb-nm">공유함</span><span class="mpb-ds">함께 보기</span></button>'
     +'</div>'
     +'<button type="button" class="mys-pick-cancel" onclick="mysPickClose()">닫기</button>'
     +'</div>';
@@ -14869,7 +14866,6 @@ function mysPickGo(kind){
   if(kind==='스크립트'){ var c=_mysPickChip('스크립트'); if(c&&typeof filterMys==='function') filterMys(c,'스크립트'); if(typeof openScriptInline==='function') openScriptInline(); }
   else if(kind==='메모'){ var c=_mysPickChip('메모'); if(c&&typeof filterMys==='function') filterMys(c,'메모'); if(typeof _canSeeCompanyHub==='function'&&_canSeeCompanyHub()){ if(typeof openMemoInline==='function') openMemoInline(); } else { if(typeof openQuickMemo==='function') openQuickMemo(); if(typeof toast==='function') toast('우측 아래 메모 입력창이 열렸어요.'); } }
   else if(kind==='자료함'){ var c=_mysPickChip('자료함'); if(c&&typeof mysVaultOpen==='function') mysVaultOpen(c); }
-  else if(kind==='공유함'){ var c=_mysPickChip('공유함'); if(c&&typeof mysShareboxOpen==='function') mysShareboxOpen(c); }
 }
 window.mysPickGo=mysPickGo;
 async function saveScrInline(){
@@ -16308,129 +16304,15 @@ function filterMys(el,cat){
   /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
   var items=window._myspaceCache||[];
-  var f=(cat==='전체')?items.slice():(cat==='공유받음')?items.filter(function(it){ return Array.isArray(it.keywords)&&it.keywords.indexOf('공유받음')>=0; }):(cat==='스크립트')?items.filter(function(it){ return it._type==='script'; }):items.filter(function(it){ return (it._badge||'')===cat; });  /* 스크립트=안정 키 _type로 매칭(badge 표시명 '업무노트'로 변경됨 #1024 → _badge 매칭 깨짐 회귀 수정, 전 사용자) */
+  var f=(cat==='전체')?items.slice():(cat==='스크립트')?items.filter(function(it){ return it._type==='script'; }):items.filter(function(it){ return (it._badge||'')===cat; });  /* 스크립트=안정 키 _type로 매칭(badge 표시명 '업무노트'로 변경됨 #1024 → _badge 매칭 깨짐 회귀 수정, 전 사용자) */
   /* 신규 최상단 원칙: sort_order 미할당(null=신규/미정렬)을 맨 위로(-Infinity). 드래그로 명시 정렬한 항목은 그 순서 보존(아래). 동순위는 created_at DESC, id DESC. (기존 Infinity=맨 아래라 신규 메모가 최하단으로 가던 버그 정정) */
   if(window._mysReorder){ f.sort(function(a,b){ var sa=(a._sort==null)?-Infinity:a._sort, sb=(b._sort==null)?-Infinity:b._sort; if(sa!==sb) return sa-sb; return ((b._date||'').localeCompare(a._date||'')) || ((Number(b.id)||0)-(Number(a.id)||0)); }); }
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
 }
 window.filterMys=filterMys;
 
-/* 공유함 (구 즐겨찾기 칩 자리 재사용, 2026-06-10 기획실장 작업지시서 — 골격: 라벨+의도된 빈 상태만).
- * 즐겨찾기는 백킹 데이터 없는 placeholder였음(유실 0). 4탭 골격·공유 알맹이(CRUD)는 방 쓰기 연결 후 별도. */
-async function mysShareboxOpen(el){
-  if(el&&el.parentElement){ var chips=el.parentElement.querySelectorAll('.chip'); for(var i=0;i<chips.length;i++)chips[i].classList.remove('on'); el.classList.add('on'); }
-  window._mysCat='공유함'; window._mysReorder=false;
-  if(typeof _scrModeOff==='function') _scrModeOff();
-  var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='none';
-  var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
-  if(!window._osShareTab) window._osShareTab='recv';
-  await _osShareboxRender();
-}
-window.mysShareboxOpen=mysShareboxOpen;
-/* 공유함 게시판 (Phase 2) — 받은/보낸 탭 + 좌목록 + 우미리보기(payload 기반, 원본 RLS 무관) */
-function _shEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
-function _shDate(s){ if(!s)return''; var d=new Date(s); if(isNaN(d.getTime()))return''; var p=function(n){return(n<10?'0':'')+n;}; return (d.getFullYear()%100)+'.'+p(d.getMonth()+1)+'.'+p(d.getDate()); }
-function _shSize(b){ b=Number(b)||0; if(b<1024)return b+'B'; if(b<1048576)return(b/1024).toFixed(0)+'KB'; return(b/1048576).toFixed(1)+'MB'; }
-var _SH_TY={script:'업무노트',memo:'메모',file:'자료'};
-async function _osShareboxRender(){
-  var listEl=document.getElementById('mysList'); if(!listEl) return;
-  var vv=document.getElementById('mysViewer');
-  listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
-  if(vv) vv.innerHTML='<div class="mys-news-empty">왼쪽에서 공유 항목을 선택하세요.</div>';
-  var me={}; try{ me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; }catch(e){}
-  var myId=String(me.id||(window.AppState&&window.AppState.userId)||'');
-  var rows=[];
-  try{ var r=await window.db.fetch('/rest/v1/shares?order=created_at.desc&limit=200&select=id,item_type,item_id,from_user,from_name,scope,scope_id,title,payload,created_at'); if(r.ok) rows=await r.json(); }catch(e){}
-  if(!Array.isArray(rows)) rows=[];
-  var tab=window._osShareTab||'recv';
-  var filtered=rows.filter(function(x){ return tab==='sent' ? String(x.from_user)===myId : String(x.from_user)!==myId; });
-  window._osShareRows=filtered;
-  var tabsHtml='<div class="shx-tabs"><button class="shx-tab'+(tab==='recv'?' on':'')+'" onclick="_osShareTabSet(\'recv\')">받은 공유</button><button class="shx-tab'+(tab==='sent'?' on':'')+'" onclick="_osShareTabSet(\'sent\')">보낸 공유</button></div>';
-  var body;
-  if(!filtered.length){ body='<div class="mys-news-empty" style="padding:20px 10px">'+(tab==='sent'?'보낸 공유가 없습니다.':'받은 공유가 없습니다.')+'</div>'; }
-  else { body=filtered.map(function(s,i){ var meta=[(s.from_name||''),_shDate(s.created_at)].filter(Boolean).join(' · ');
-    return '<div class="item" onclick="_osShareSel('+i+')"><span class="badge">'+(_SH_TY[s.item_type]||'항목')+'</span><div class="it">'+_shEsc(s.title||'(제목 없음)')+'</div><div class="id">'+_shEsc(meta)+'</div></div>'; }).join(''); }
-  listEl.innerHTML=tabsHtml+body;
-}
-function _osShareTabSet(t){ window._osShareTab=t; _osShareboxRender(); }
-window._osShareTabSet=_osShareTabSet; window._osShareboxRender=_osShareboxRender;
-function _osShareSel(i){
-  var s=(window._osShareRows||[])[i]; if(!s) return;
-  var vv=document.getElementById('mysViewer'); if(!vv) return;
-  var items=document.querySelectorAll('#mysList .item'); for(var k=0;k<items.length;k++) items[k].classList.toggle('on',k===i);
-  var pl=s.payload||{}; if(typeof pl==='string'){ try{ pl=JSON.parse(pl); }catch(e){ pl={}; } }
-  var bodyHtml='';
-  if(s.item_type==='script'){ var t=pl.script_text||''; bodyHtml=/<(p|div|br|img|table|span|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(t)?t:(_shEsc(t).replace(/\n/g,'<br>')); }
-  else if(s.item_type==='memo'){ bodyHtml=_linkifyText(pl.memo_text||pl.description||''); }
-  else { bodyHtml='<div style="line-height:1.7">파일: <b>'+_shEsc(pl.original_name||s.title||'')+'</b><br>'+_shEsc((pl.ext||'').toUpperCase())+(pl.file_size?(' · '+_shSize(pl.file_size)):'')+'<br><br>받기를 누르면 내 자료실에 저장됩니다.</div>'; }
-  var meta=[(s.from_name||''),_shDate(s.created_at)].filter(Boolean).join(' · ');
-  var sent=(window._osShareTab==='sent');
-  var act=sent
-    ?'<div class="post-acts"><button class="post-act post-act-del" onclick="_osShareCancel('+i+')">공유 취소</button></div>'
-    :'<div class="post-acts"><button class="post-act" onclick="_osShareReceive('+i+')">받기</button></div>';
-  vv.innerHTML='<span class="vbadge">'+(_SH_TY[s.item_type]||'')+'</span><div class="vttl">'+_shEsc(s.title||'(제목 없음)')+'</div><div class="vmeta">'+_shEsc(meta)+'</div><div class="vbody">'+(bodyHtml||'(내용 없음)')+'</div>'+act;
-  if(window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
-}
-window._osShareSel=_osShareSel;
-/* 공유 취소(보낸 사람만) — shares 삭제 + 파일 공유면 받는 자료실 자동 사본까지 완전 삭제(storage+DB) */
-async function _osShareCancel(i){
-  var s=(window._osShareRows||[])[i]; if(!s) return;
-  if(!window.confirm('이 공유를 취소할까요?\n받는 분의 공유함과 자료실에서 사본까지 함께 삭제됩니다.')) return;
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
-  var token=window.db.getToken&&window.db.getToken(); var key=window.db.key;
-  try{
-    if(s.item_type==='file' && s.item_id){
-      var fr=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(s.item_id)+'&select=storage_path');
-      var sp=((fr.ok?await fr.json():[])[0]||{}).storage_path;
-      if(sp && typeof _mvEncPath==='function'){ await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(sp)),{method:'DELETE',headers:{'apikey':key,'Authorization':'Bearer '+token}}).catch(function(){}); }
-      await fetch(window.db.url('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(s.item_id)),{method:'DELETE',headers:{'apikey':key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'}}).catch(function(){});
-    }
-    var r=await fetch(window.db.url('/rest/v1/shares?id=eq.'+encodeURIComponent(s.id)),{method:'DELETE',headers:{'apikey':key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'}});
-    if(r.ok||r.status===204){ if(typeof toast==='function') toast('공유를 취소했어요.'); var vv=document.getElementById('mysViewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">왼쪽에서 공유 항목을 선택하세요.</div>'; _osShareboxRender(); }
-    else { alert('공유 취소에 실패했습니다 ('+r.status+')'); }
-  }catch(e){ console.error('[share] cancel',e); alert('공유 취소 중 오류가 발생했습니다.'); }
-}
-window._osShareCancel=_osShareCancel;
-async function _osShareReceive(i){
-  var s=(window._osShareRows||[])[i]; if(!s) return;
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
-  var token=window.db.getToken&&window.db.getToken();
-  var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
-  var owner=(window.AppState&&window.AppState.userId)||((typeof _mvOwner==='function')?_mvOwner():'');
-  var pl=s.payload||{}; if(typeof pl==='string'){ try{ pl=JSON.parse(pl); }catch(e){ pl={}; } }
-  try{
-    if(s.item_type==='script'){
-      var kw=(Array.isArray(pl.keywords)?pl.keywords.slice():[]); if(kw.indexOf('공유받음')<0) kw.push('공유받음');
-      var b={owner_id:owner, title:(s.title||'공유받은 스크립트'), script_text:(pl.script_text||''), highlight_text:(pl.highlight_text||''), keywords:kw, attachments:(pl.attachments||[]), scope:'personal', is_active:true}; _scrFillSearchText(b);
-      var r=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:H,body:JSON.stringify(b)});
-      if(!(r.ok||r.status===201)) throw new Error('script '+r.status);
-    } else if(s.item_type==='memo'){
-      var kw2=(Array.isArray(pl.keywords)?pl.keywords.slice():[]); if(kw2.indexOf('공유받음')<0) kw2.push('공유받음');
-      var b2={owner_id:owner, title:(s.title||''), memo_text:(pl.memo_text||''), description:(pl.description||''), keywords:kw2};
-      var r2=await fetch(window.db.url('/rest/v1/library'),{method:'POST',headers:H,body:JSON.stringify(b2)});
-      if(!(r2.ok||r2.status===201)) throw new Error('memo '+r2.status);
-    } else if(s.item_type==='file'){
-      if(typeof toast==='function') toast('받는 중…');
-      var tf0=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(s.item_id)+'&select=id,original_name,storage_path,mime_type,ext,file_size');
-      var tf=(tf0.ok?await tf0.json():[])[0]; if(!tf){ alert('공유 파일을 찾을 수 없습니다.'); return; }
-      var signed=(typeof _mvSignedUrl==='function')?await _mvSignedUrl(tf, token):null; if(!signed){ alert('파일을 불러오지 못했습니다.'); return; }
-      var blob=await (await fetch(signed)).blob();
-      var ext=(tf.ext||'').replace(/^\./,'');
-      var key=((window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+Date.now()))+(ext?('.'+ext):'');
-      var myPath=owner+'/root/'+key;  /* 개인 자료실 prefix={owner} */
-      var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(myPath)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(blob.type||tf.mime_type||'application/octet-stream'),'x-upsert':'true'},body:blob});
-      if(!(up.ok||up.status===200)){ alert('받기에 실패했습니다.'); return; }
-      var fb={owner_id:owner, original_name:tf.original_name, storage_path:myPath, mime_type:tf.mime_type||'', ext:ext, file_size:tf.file_size||blob.size, scope:'personal', search_text:tf.original_name, status:'pending'};
-      var fr=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:H,body:JSON.stringify(fb)});
-      if(!(fr.ok||fr.status===201)) throw new Error('file '+fr.status);
-    }
-    if(typeof toast==='function') toast('받았어요! 내 ' + (s.item_type==='file'?'자료실':(s.item_type==='memo'?'메모':'스크립트')) + '에 저장됐어요.');
-  }catch(e){ console.error('[share] receive',e); alert('받기 중 오류가 발생했습니다.'); }
-}
-window._osShareReceive=_osShareReceive;
 
 /* ── 공유하기 (Phase 1) — 마이스페이스 항목(스크립트/메모/자료)을 팀/지점 공유함으로 ── */
-function _osShareItem(){ var c=window._mysDetailCurrent; if(!c||!c.id) return; _osShareOpen(c.type==='script'?'script':'memo', c.id, c.title); }
 /* 스크립트 팀/지점 공유 — 원본은 그대로 두고 scope='team'/'branch' 사본 INSERT(공유=복사). INSERT RLS(P2-b-1)가 owner 본인 + scope_id=내 팀/지점만 허용 → 타팀 주입 불가. 알림(공지 포인터)은 send-push 수정 트랙과 함께(별도). */
 async function _scrShareToScope(scope){
   var c=window._mysDetailCurrent; if(!c||!c.id||c.type!=='script'){ if(typeof toast==='function') toast('스크립트만 공유할 수 있어요.'); return; }
@@ -16453,32 +16335,6 @@ async function _scrShareToScope(scope){
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
 }
 window._scrShareToScope=_scrShareToScope;
-function _osShareFile(){ var f=window._mvPreviewFile; if(f&&f.id) _osShareOpen('file', f.id, f.original_name||''); }
-window._osShareItem=_osShareItem; window._osShareFile=_osShareFile;
-function _osShareOpen(type, id, title){
-  if(!id) return;
-  window._osShareCtx={type:type, id:id, title:(title||'')};
-  var ov=document.getElementById('osShareOv');
-  if(!ov){
-    ov=document.createElement('div'); ov.id='osShareOv'; ov.className='os-share-ov';
-    ov.innerHTML='<div class="os-share-box" role="dialog" aria-label="공유하기">'
-      +'<div class="os-share-ttl">어디에 공유할까요?</div>'
-      +'<div class="os-share-sub" id="osShareSub"></div>'
-      +'<div class="os-share-btns">'
-        +'<button class="os-share-pick" onclick="_osShareDo(\'team\')"><b>팀 공유</b><span>우리 팀 공유함으로 보냅니다</span></button>'
-        +'<div class="os-share-pick is-soon" aria-disabled="true"><b>지점 공유</b><span>추후 제공 예정이에요</span></div>'
-      +'</div>'
-      +'<div class="os-share-note">공유하면 <b>우리 팀 게시판</b>에 바로 올라가고, 받은 분은 공유함에서 <b>받기</b>로 본인 공간에 저장할 수도 있어요. 원본은 그대로 남아요.</div>'
-      +'<button class="os-share-cancel" onclick="_osShareClose()">취소</button>'
-      +'</div>';
-    ov.addEventListener('click', function(e){ if(e.target===ov) _osShareClose(); });
-    document.body.appendChild(ov);
-  }
-  var sub=document.getElementById('osShareSub'); if(sub) sub.textContent=(window._osShareCtx.title||'(제목 없음)');
-  ov.classList.add('on');
-}
-function _osShareClose(){ var ov=document.getElementById('osShareOv'); if(ov) ov.classList.remove('on'); }
-window._osShareOpen=_osShareOpen; window._osShareClose=_osShareClose;
 /* 공유 스코프(팀/지점) 자료실의 '공유함' 폴더 확보 — 없으면 1회 생성(멱등), 있으면 재사용. 공유 파일은 이 폴더에 모음 */
 async function _osEnsureSharedFolder(scope, sid, owner, token){
   try{
@@ -16491,131 +16347,9 @@ async function _osEnsureSharedFolder(scope, sid, owner, token){
     return (ins.ok||ins.status===201)?fid:null;
   }catch(e){ console.error('[share] ensureSharedFolder',e); return null; }
 }
-/* 다형 source_id 검증 — team_notices.source_id(text)에 들어갈 값 형식 검사.
-   script/memo=bigint(정수 문자열) / file=myspace_files uuid. 표시용 key는 통과 못 함. */
-function _shareValidSourceId(type, id){
-  id=String(id==null?'':id);
-  if(type==='file') return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
-  return /^\d+$/.test(id);
-}
-async function _osShareDo(scope){
-  var ctx=window._osShareCtx; if(!ctx||!ctx.id){ _osShareClose(); return; }
-  if(!window.db||!window.db.fetch){ alert('로그인이 필요합니다.'); return; }
-  if(scope!=='team'){ if(typeof toast==='function') toast('지점 공유는 추후 제공돼요.'); _osShareClose(); return; }   /* #918: 지점 공유 보류(branch_internal RLS 정책 미확정) — 팀 공유만 */
-  if(window._osShareBusy) return; window._osShareBusy=true;   /* 중복 클릭 이중 저장 방지 */
-  var _picks=document.querySelectorAll('#osShareOv button.os-share-pick'); for(var _p=0;_p<_picks.length;_p++) _picks[_p].disabled=true;
-  try{
-    var me={}; try{ me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; }catch(e){}
-    var isTeam=(scope==='team');
-    var sid=isTeam?me.team_id:me.branch_id, grp=isTeam?'팀':'지점';
-    var scopeInternal=isTeam?'team_internal':'branch_internal';
-    if(!sid){ if(typeof toast==='function') toast(grp+' 소속이 없어 공유할 수 없어요.'); _osShareClose(); return; }
-    var token=window.db.getToken&&window.db.getToken();
-    var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token};
-    var itemId=ctx.id, payload=null;
-    /* ── 1) 스냅샷 준비(원본 SELECT만 — 원본 수정 안 함). 파일은 공유 스코프로 사본 복사 ── */
-    try{
-      if(ctx.type==='script'){
-        /* scripts.id=bigint. 표시문자(#) 등 제거→정수만→실제 행 재조회→DB 실제 id 사용(표시 key 금지) */
-        var _sid=String(ctx.id).replace(/[^0-9]/g,'');
-        if(!/^\d+$/.test(_sid)){ alert('공유할 스크립트 식별자가 올바르지 않습니다.'); _osShareClose(); return; }
-        var rs=await window.db.fetch('/rest/v1/scripts?id=eq.'+_sid+'&select=id,title,script_text,highlight_text,keywords,attachments');
-        var o=(rs.ok?await rs.json():[])[0];
-        if(!o||o.id==null){ alert('원본 스크립트를 찾을 수 없습니다.'); _osShareClose(); return; }
-        itemId=String(o.id);
-        payload={script_text:o.script_text||'', highlight_text:o.highlight_text||'', keywords:o.keywords||[], attachments:o.attachments||[]};
-      } else if(ctx.type==='memo'){
-        /* library.id=bigint. 동일 처리 */
-        var _mid=String(ctx.id).replace(/[^0-9]/g,'');
-        if(!/^\d+$/.test(_mid)){ alert('공유할 메모 식별자가 올바르지 않습니다.'); _osShareClose(); return; }
-        var rm=await window.db.fetch('/rest/v1/library?id=eq.'+_mid+'&select=id,title,memo_text,description,keywords');
-        var om=(rm.ok?await rm.json():[])[0];
-        if(!om||om.id==null){ alert('원본 메모를 찾을 수 없습니다.'); _osShareClose(); return; }
-        itemId=String(om.id);
-        payload={memo_text:om.memo_text||'', description:om.description||'', keywords:om.keywords||[]};
-      } else if(ctx.type==='file'){
-        /* 파일 자동 팀/지점 복사 — 받는 사람이 RLS로 못 읽으므로 공유 시점에 공유 스코프 스토리지로 복사 */
-        if(typeof toast==='function') toast('공유 중…');
-        var f=window._mvPreviewFile;
-        if(!f||String(f.id)!==String(ctx.id)){ var f0=await window.db.fetch('/rest/v1/myspace_files?id=eq.'+encodeURIComponent(ctx.id)+'&select=id,original_name,storage_path,mime_type,ext,file_size'); f=(f0.ok?await f0.json():[])[0]; }
-        if(!f){ alert('원본 파일을 찾을 수 없습니다.'); _osShareClose(); return; }
-        var signed=(typeof _mvSignedUrl==='function')?await _mvSignedUrl(f, token):null;
-        if(!signed){ alert('파일을 불러오지 못했습니다.'); _osShareClose(); return; }
-        var blob=await (await fetch(signed)).blob();
-        var ext=(f.ext||'').replace(/^\./,'');
-        var key=((window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+Date.now()))+(ext?('.'+ext):'');
-        var newPath=(isTeam?('team/'+sid):('branch/'+sid))+'/shared/'+key;
-        var up=await fetch(window.db.url('/storage/v1/object/myspace/'+_mvEncPath(newPath)),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(blob.type||f.mime_type||'application/octet-stream'),'x-upsert':'true'},body:blob});
-        if(!(up.ok||up.status===200)){ alert('파일 복사에 실패했습니다.'); _osShareClose(); return; }
-        var owner=(typeof _mvOwner==='function')?_mvOwner():'';
-        var _sharedFid=await _osEnsureSharedFolder(scope, sid, owner, token);  /* 공유받은 파일은 '공유함' 폴더에 모음(A: 신규만) */
-        var frow={owner_id:owner,folder_id:(_sharedFid||null),original_name:f.original_name,storage_path:newPath,mime_type:f.mime_type||'',ext:ext,file_size:f.file_size||blob.size,scope:scope,scope_id:sid,search_text:f.original_name,status:'pending'};
-        var fr=await fetch(window.db.url('/rest/v1/myspace_files'),{method:'POST',headers:Object.assign({},H,{'Prefer':'return=representation'}),body:JSON.stringify(frow)});
-        var nf=(fr.ok?await fr.json():[])[0];
-        if(!nf||!nf.id){ alert('파일 등록에 실패했습니다.'); _osShareClose(); return; }
-        itemId=nf.id;
-        payload={original_name:f.original_name, ext:ext, mime_type:f.mime_type||'', file_size:frow.file_size};
-      }
-    }catch(e){ console.error('[share] snapshot',e); alert('공유 준비 중 오류가 발생했습니다.'); _osShareClose(); return; }
-
-    /* source_id 형식 검증 — script/memo=정수문자열, file=uuid. 아니면 INSERT 중단(다형 참조 무결성) */
-    if(!_shareValidSourceId(ctx.type, itemId)){
-      console.error('[share] invalid source_id', ctx.type, itemId);
-      alert('원본 식별자 형식이 올바르지 않아 공유를 중단합니다.');
-      return;
-    }
-
-    /* ── 2) 보낸 공유함(shares) INSERT — 앱 정식 경로(window.db.fetch=401 자동 갱신). 실패는 숨기지 않고 그대로 노출 ── */
-    var shareRow={ item_type:ctx.type, item_id:itemId, scope:scope, scope_id:sid, title:(ctx.title||null), from_user:(me.id||(window.AppState&&window.AppState.userId)||null), from_name:(me.name||null), payload:payload };
-    var shRes=await window.db.fetch('/rest/v1/shares',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(shareRow)});
-    if(!(shRes.ok||shRes.status===201)){
-      var sb=''; try{ sb=await shRes.text(); }catch(e){}
-      console.error('[share] shares insert FAIL', shRes.status, sb);
-      alert('공유함 저장에 실패했습니다 ('+shRes.status+').\n'+String(sb||'').slice(0,300)+'\n(저장되지 않았습니다. 권한·로그인 상태를 확인해 주세요.)');
-      return;   /* 성공 처리 금지 — team_notices도 진행 안 함 */
-    }
-    var shId=null; try{ var sj=await shRes.json(); shId=(sj&&sj[0]&&sj[0].id)||null; }catch(e){}
-
-    /* ── 3) 팀/지점방 게시물(team_notices) INSERT — 공지·전달용. 파일 공유는 팀 자료실(myspace_files team scope)에
-       이미 저장되므로 팀방 공지 생성 안 함(2026-06-23 P0 오타게팅 수정). 스크립트·메모만 팀방 노출 유지(전 유형 제거 여부 대표 확인 대기). ── */
-    if(ctx.type!=='file'){
-      var tnBody = ctx.type==='script' ? (payload.script_text||'')
-                 : (payload.memo_text||payload.description||'');
-      var tnRow={ notice_type:'operation', title:(ctx.title||'공유'), content:tnBody, scope:scopeInternal,
-                  author_id:(me.id||(window.AppState&&window.AppState.userId)||null),
-                  keywords:((payload&&payload.keywords)||[]), attachments:((payload&&payload.attachments)||[]),
-                  source_type:ctx.type, source_id:String(itemId) };
-      if(isTeam) tnRow.team_id=sid; else tnRow.branch_id=sid;
-      var tnRes=await window.db.fetch('/rest/v1/team_notices',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(tnRow)});
-      if(!(tnRes.ok||tnRes.status===201)){
-        var tb=''; try{ tb=await tnRes.text(); }catch(e){}
-        console.error('[share] team_notices insert FAIL', tnRes.status, tb);
-        /* 한쪽이라도 실패 → 성공 처리 금지 + 방금 만든 shares 롤백(부분 저장 방지) */
-        if(shId){
-          try{ var _rb=await window.db.fetch('/rest/v1/shares?id=eq.'+encodeURIComponent(shId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
-            if(!(_rb.ok||_rb.status===204)) console.error('[share] rollback FAILED — orphan shares id='+shId+' status='+_rb.status);
-          }catch(e){ console.error('[share] rollback FAILED — orphan shares id='+shId, e); }
-        }
-        alert(grp+'방 게시에 실패했습니다 ('+tnRes.status+').\n'+String(tb||'').slice(0,300)+'\n(공유를 취소했습니다. 다시 시도해 주세요.)');
-        return;
-      }
-    }
-
-    /* ── 4) 성공 처리 ── */
-    if(typeof toast==='function') toast(ctx.type==='file' ? (grp+' 자료실과 공유함에 공유했어요.') : (grp+'방과 공유함에 공유했어요.'));
-    _osShareClose();
-    window._mrTeamCache=null;
-    try{ if(isTeam){ if(typeof loadTeamNotices==='function') loadTeamNotices(); } else { if(typeof loadBranchFeed==='function') loadBranchFeed(); } }catch(e){}
-    try{ if(typeof loadMrTeam==='function') loadMrTeam(); }catch(e){}
-    try{ if(typeof loadMysTeam==='function') loadMysTeam(); }catch(e){}
-  }catch(e){ console.error('[share] do',e); alert('공유 중 오류가 발생했습니다.'); }
-  finally{ window._osShareBusy=false; var _bb=document.querySelectorAll('#osShareOv button.os-share-pick'); for(var _q=0;_q<_bb.length;_q++) _bb[_q].disabled=false; }
-}
-window._osShareDo=_osShareDo;
 
 /* ── 통합 공유 허브 (2026-06-26) — 스크립트·자료실 공통 "공유하기" 1버튼 → 팀/지점 선택 팝업 → 직접 scope 공유.
-   공유함(shares)·받기(_osShareReceive)·team_notices 전달 경로는 호출하지 않음(스크립트=_scrShareToScope / 자료실=_vaultShareToScope만).
-   기존 _osShareOpen/_osShareDo(공유함 모델)는 메모 등 다른 곳이 쓰므로 보존 — 호출부만 분리. ── */
+   현재 유일한 공유 경로: 스크립트=_scrShareToScope / 자료실=_vaultShareToScope. 옛 공유함 모델(shares 테이블·받기·_osShareOpen/_osShareDo)은 볼 화면(공유함) 은퇴와 함께 제거됨(2026-07-06). shares 테이블·데이터는 보존. ── */
 /* 지점 공유 권한 = 서버 is_manager()와 동일 집합(실장·지점장·admin + 원수사 매니저). is-mgr 클래스(GA만)와 달라 별도 판정(클래스 부작용 회피) */
 function _isMgrShare(){
   var r='';
@@ -18166,7 +17900,6 @@ body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드
 
             <div class="sp-node sp-leaf sp-op-hide" data-k="qna"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-help"/></svg></span>보험 Q&amp;A</div>
 
-            <div class="sp-node sp-leaf sp-share" data-k="m_share"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-share"/></svg></span>공유함</div>
 
             <div class="sp-node sp-leaf sp-mgr" data-k="mrroom"><span class="sp-caret"><svg class="sp-ico"><use href="#i-caret"/></svg></span><span class="ic"><svg class="sp-ico"><use href="#i-users"/></svg></span>매니저방</div>
 
@@ -18361,11 +18094,10 @@ body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드
     tspace:{title:'팀 스페이스', note:'<b>팀 스페이스</b>는 팀이 함께 쓰는 공지·자료 공간이에요.<br>아래에서 <b>팀방 · 팀 자료실</b>로 들어갑니다.<br><br>· 사용 가능: <b>개인 · 팀</b> 단위로 구성된 사용자'},
     troom:{title:'팀방', items:['오늘의 업무 방향','긴급 체크','팀 회의 공지'], ico:'i-msg'},
     tlib:{title:'팀 자료실', items:['6월 상품 핵심 포인트','팀 공유 스크립트','인수 가이드 모음']},
-    mspace:{title:'마이 스페이스', note:'<b>마이 스페이스</b>는 개인 학습·영업 활용 공간이에요.<br>아래에서 <b>다이어리 · 개인 자료실 · 업무노트 · 메모 · 공유함</b>으로.<br><br>· <b>나만의 공간</b> — 누구도 볼 수 없어요.<br>· 단, 자료의 <b>공유하기</b>를 켜면 <b>공유함</b>으로 다른 사람과 함께 볼 수 있어요.'},
+    mspace:{title:'마이 스페이스', note:'<b>마이 스페이스</b>는 개인 학습·영업 활용 공간이에요.<br>아래에서 <b>다이어리 · 개인 자료실 · 업무노트 · 메모</b>로.<br><br>· <b>나만의 공간</b> — 누구도 볼 수 없어요.'},
     m_lib:{title:'개인 자료실', items:['내가 저장한 자료','보험료 비교표','고객 상담 메모']},
     m_script:{title:'업무노트', items:['오프닝 화법','반론 처리','클로징 멘트'], ico:'i-file'},
     m_memo:{title:'메모', items:['상담 메모','체크리스트','아이디어'], ico:'i-note'},
-    m_share:{title:'공유함', items:['받은 공유 자료','보낸 공유'], ico:'i-share'},
     m_diary:{title:'다이어리', items:['오늘 일정','이번 주 할 일','월간 목표'], ico:'i-cal'},
     qna:{title:'보험 Q&A', tabs:['상품','인수','기타'], on:0, items:['실손 보장 범위 문의','고혈압 인수 문의','자동차 특약 질문'], ico:'i-help'},
     qna_p:{title:'보험 Q&A · 상품', tabs:['상품','인수','기타'], on:0, items:['실손 보장 범위','신상품 비교','특약 구성'], ico:'i-box'},
@@ -18657,7 +18389,7 @@ body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드
     if(host){ host.innerHTML=_spHead(); host.appendChild(sp); }
     sp.style.display='';
     window._mysCat=cat;
-    function apply(){ var cs=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<cs.length;i++){ var oc=cs[i].getAttribute('onclick')||''; if(cs[i].textContent.trim()===cat || oc.indexOf("'"+cat+"'")>=0){ /* 칩을 표시텍스트 OR onclick 키로 매칭 — '스크립트'→'업무노트' 표시 변경(2026-06-30 #1024)에도 라우팅 보존 */ if(oc.indexOf('mysShareboxOpen')>=0){ if(typeof mysShareboxOpen==='function') mysShareboxOpen(cs[i]); } else if(typeof filterMys==='function'){ filterMys(cs[i],cat); } return; } } }
+    function apply(){ var cs=document.querySelectorAll('#mys-saved .mys-toolbar .chip'); for(var i=0;i<cs.length;i++){ var oc=cs[i].getAttribute('onclick')||''; if(cs[i].textContent.trim()===cat || oc.indexOf("'"+cat+"'")>=0){ /* 칩을 표시텍스트 OR onclick 키로 매칭 — '스크립트'→'업무노트' 표시 변경(2026-06-30 #1024)에도 라우팅 보존 */ if(typeof filterMys==='function'){ filterMys(cs[i],cat); } return; } } }
     if(window._myspaceLoaded){ apply(); }
     else { var p=(typeof loadMyspace==='function')?loadMyspace():null; if(p&&p.then) p.then(apply); else apply(); }
   }
@@ -18718,7 +18450,6 @@ body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드
       else if(k==='blib_b') _spVaultShow(sc,'branch');           /* 지점 자료실 = 자료함(branch 공유) */
       else if(k==='m_script') _spSplitShow(sc,'스크립트');        /* 스크립트 */
       else if(k==='m_memo') _spSplitShow(sc,'메모');             /* 메모 */
-      else if(k==='m_share') _spSplitShow(sc,'공유함');          /* 공유함 */
       else if(k==='troom') _spCospShow(sc,'team');               /* 팀방 = 공동 스페이스 팀방 */
       else if(k==='broom') _spCospShow(sc,'branch');             /* 지점방 = 공동 스페이스 지점방 */
       else if(k==='blib_ins') _spCospShow(sc,'insurer');         /* 원수사 자료실 = 공동 스페이스 보험사별 자료실 */
