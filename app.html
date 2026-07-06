@@ -859,6 +859,11 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .item.mys-pinned.on{background:color-mix(in srgb,var(--ac) 9%,var(--s2));}
 .item.mys-reord-on .mys-pin{display:none;}
 .item .badge{font-size:var(--ts-badge);color:var(--tc);font-weight:700;margin-bottom:4px;display:inline-block;}
+/* 카드 넘버링(역순 — 최신=큰번호). 빠릿한 운영툴 톤: 작고 차분하게. (2026-07-06)
+   게이트: is-uat-cardno(임태성 실장 user_id 98c5f4f9 전용 검수). 기본 숨김 + 게이트 계정만 노출. 일반·어드민 미노출.
+   ▶ 전체 개방 플립 지점: 아래 display:none 규칙을 display:inline-block으로 바꾸고 body.is-uat-cardno 규칙을 제거하면 전원 노출. (2026-07-06) */
+.item .item-no{display:none;}
+body.is-uat-cardno .item .item-no{font-size:11px;color:var(--tf);font-weight:600;font-variant-numeric:tabular-nums;opacity:.6;margin-right:6px;display:inline-block;border-radius:var(--radius-sm);}
 .item .it{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);margin-bottom:3px;line-height:1.4;}
 .item .id{font-size:var(--ts-preview);color:var(--tf);}
 .viewer{padding:24px 28px;overflow-y:auto;flex:1;}
@@ -5134,6 +5139,8 @@ function applyRoleClass(){
   /* 상품 로드맵 = 임태성 실장 user_id 전용 검수(2026-06-27). 어드민 포함 타 계정 비노출. 메뉴 노출은 CSS(body.is-uat-roadmap), 직접 진입 차단은 showView 가드(_canSeeRoadmap). */
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-qnaimport', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 카톡 Q&A 전량 임포트 버튼 = 임태성 실장 전용(임시, 실행 후 제거). 2026-07-05 */
+  /* 카드 역순 넘버링 = 임태성 실장 user_id 전용 검수(2026-07-06). 어드민 포함 타 계정 비노출. .item-no span은 항상 렌더되고 CSS(body.is-uat-cardno)로만 표시. ▶ 전체 개방 플립 지점: 이 toggle을 add(항상 부여)로 바꾸거나 CSS 게이트 해제. */
+  document.body.classList.toggle('is-uat-cardno', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
   /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민은 운영·유지보수 계정 = 사이드바 접힘 규칙에서 제외(:not(.is-admin)) → 전체 네비 유지(위 CSS). */
   document.body.classList.toggle('is-uat-homedesk', !!r);
@@ -5196,6 +5203,7 @@ function ivRender(rows, filterType){
     var cat = r.category || '자료'; var tc = IV_CAT_COLOR[cat] || 'var(--ac)';
     var hidTag = (_meAdmin && r.is_hidden) ? ' <span style="color:var(--err);font-size:var(--ts-meta);font-weight:700">[숨김]</span>' : '';
     return '<div class="item'+(i===0?' on':'')+'" onclick="ivOpenDetail('+i+')" style="--tc:'+tc+'">'
+      + '<span class="item-no">'+(list.length-i)+'</span>'
       + '<span class="badge">'+ivEsc(cat)+'</span>'
       + '<div class="it">'+ivEsc(r.title || '제목 없음')+hidTag+'</div>'
       + '<div class="id">'+ivFmtDate(r.created_at)+(ivAuthor(r) ? ' · '+ivAuthor(r) : '')+'</div></div>';
@@ -5353,6 +5361,7 @@ function vaultQnaRender(){
   listEl.innerHTML='<div class="iv-qna-cnt">전체 '+list.length+'건</div>'+list.map(function(r,i){
     var qt=r.question_type||'질문';
     return '<div class="item'+(i===0?' on':'')+'" onclick="vaultQnaOpen('+i+')" style="--tc:var(--t-uw)">'
+      +'<span class="item-no">'+(list.length-i)+'</span>'
       +'<span class="badge">'+ivEsc(qt)+'</span>'
       +'<div class="it">'+ivEsc(r.title||'제목 없음')+'</div>'
       +'<div class="id">'+ivFmtDate(r.created_at)+' · 비공개'+'</div></div>';
@@ -6665,6 +6674,7 @@ async function _snScopeScripts(slot, scope){
     listEl.innerHTML=rows.map(function(s,i){
       var prev=_escHtml(String(s.highlight_text||String(s.script_text||'').replace(/<[^>]+>/g,' ')).slice(0,90));
       return '<div class="item'+(i===0?' on':'')+'" onclick="_snScrPick('+i+',this)" style="--tc:var(--t-event)">'
+        +'<span class="item-no">'+(rows.length-i)+'</span>'
         +'<span class="badge">업무노트</span>'
         +'<div class="it">'+_escHtml(s.title||'(제목 없음)')+'</div>'
         +'<div class="id">'+prev+'</div></div>';
@@ -10943,7 +10953,7 @@ function renderTogether(){
   if(!list.length){ listEl.innerHTML='<div class="mys-news-empty">아직 글이 없습니다.<br>+ 글쓰기로 첫 글을 남겨보세요.</div>'; if(vv) vv.innerHTML='<div class="mys-news-empty">글이 없습니다.</div>'; return; }
   listEl.innerHTML=list.map(function(r,i){
     var c=_tgEsc(r.category||'자유'); var who=_tgWho(r);
-    return '<div class="item'+(i===0?' on':'')+'" onclick="togetherOpen('+i+')" style="--tc:var(--ac)"><span class="badge">'+c+'</span><div class="it">'+_tgEsc(r.title||'제목 없음')+'</div><div class="id">'+_tgDate(r.created_at)+(who?' · '+who:'')+'</div></div>';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="togetherOpen('+i+')" style="--tc:var(--ac)"><span class="item-no">'+(list.length-i)+'</span><span class="badge">'+c+'</span><div class="it">'+_tgEsc(r.title||'제목 없음')+'</div><div class="id">'+_tgDate(r.created_at)+(who?' · '+who:'')+'</div></div>';
   }).join('');
   togetherOpen(0,true);
 }
@@ -14451,7 +14461,7 @@ function renderMysTeam(){
     var vv=document.getElementById('mys-team-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">공지가 없습니다.</div>'; return;
   }
   listEl.innerHTML=list.map(function(p,i){
-    return '<div class="item'+(i===0?' on':'')+'" onclick="mysTeamOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="mysTeamOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="item-no">'+(list.length-i)+'</span><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
   }).join('');
   mysTeamOpen(0, true);
 }
@@ -14519,7 +14529,7 @@ function renderMysQna(){
     var vv=document.getElementById('mys-qna-viewer'); if(vv) vv.innerHTML='<div class="mys-news-empty">질문이 없습니다.</div>'; return;
   }
   listEl.innerHTML=list.map(function(p,i){
-    return '<div class="item'+(i===0?' on':'')+'" onclick="mysQnaOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
+    return '<div class="item'+(i===0?' on':'')+'" onclick="mysQnaOpen('+i+')" style="--tc:var(--'+p.tc+')"><span class="item-no">'+(list.length-i)+'</span><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';
   }).join('');
   mysQnaOpen(0, true);
 }
