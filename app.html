@@ -107,7 +107,7 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 #app:not(.is-admin) #sideNote,#app:not(.is-admin) #nav-pricing{display:none !important;}/* 요금제·안내문 = 어드민만 노출 (2026-06-22) */
 /* ════ 스페이스 네비 재설계 (is-uat-spacenav 게이트=임태성 검수, P1 2026-06-24) ════ */
 .nav.sn2-only{display:none;}                              /* 기본 숨김 — 전원 기존 그대로 */
-body.is-uat-spacenav .nav.sn2-only,body.is-admin .nav.sn2-only{display:flex;}  /* UAT(임태성) + 어드민 = 스페이스 항목(마이/팀/지점) 노출. 어드민은 사이드 메뉴 전체 보임(다이어리도 유지) */
+/* 스페이스 sn2-only 5종(마이/팀/지점/원수사자료실/보험Q&A) = 어드민 화면에서도 제거(2026-07-07 대표 결정 A). 노출 규칙 삭제 → 109 기본숨김이 전원 적용(어드민 포함 비노출). guide(#nav-sp-guide)는 111의 id 규칙으로 어드민 유지(이 규칙과 독립). 팀방/지점방 공지 진입 끊김은 대표 감수 확정(뷰 코드 보존, 홈 자리 마련 시 재연결). 되돌리기 = 다음 한 줄 복원: body.is-uat-spacenav .nav.sn2-only,body.is-admin .nav.sn2-only{display:flex;} */
 #nav-sp-guide{display:none;}body.is-admin #nav-sp-guide{display:flex;}  /* 스페이스 설명서 = 어드민 전용. 전체 개방 후에도 일반 사용자 숨김(id 특이도로 sn2-only 무력화), 2026-06-25 */
 /* ════ 상품 로드맵 (is-uat-roadmap 게이트 = 임태성 실장 user_id 전용 검수 · 어드민 포함 타 계정 전면 비노출 · raw_seed 비공개·검수 전 사용자 노출/통합검색 미연결, 2026-06-27) ════ */
 .roadmap-only{display:none;}                       /* 기본 숨김 — 어드민 포함 전원 숨김(sn2-only와 별개) */
@@ -3015,7 +3015,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav sn2-only" id="nav-sp-my" onclick="_navMyspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-user"/></svg></span><span class="lbl">마이 스페이스</span></div>
     <div class="nav sn2-only" id="nav-sp-team" onclick="_navTeamspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">팀 스페이스</span></div>
     <div class="nav sn2-only" id="nav-sp-branch" onclick="_navBranchspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-building"/></svg></span><span class="lbl">지점 스페이스</span></div>
-    <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
+    <!-- 스크립트 사이드 nav 제거(2026-07-07 대표 결정 A) — 홈 도구 카드 '스크립트'(showView('scripts'), app.html 홈데스크 tools)로 진입 유지. 되돌리기 = 다음 한 줄 복원: <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div> -->
     <!-- 스페이스 네비(P1): 트리에서 글로벌 사이드바로 이동(2026-06-25) — 원수사 자료실·보험 Q&A. 클릭=바텀시트 펼침+해당 스페이스 콘텐츠 -->
     <div class="nav sn2-only" id="nav-sp-insvault" onclick="_navInsurerVaultSp()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-building"/></svg></span><span class="lbl">원수사 자료실</span></div>
     <div class="nav sn2-only" id="nav-sp-qna" onclick="_navQnaSp()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-help"/></svg></span><span class="lbl">보험 Q&amp;A</span></div>
@@ -17829,6 +17829,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 #scriptsSheetSlot{display:none;}
 .os-sheet-body.show-scripts .sp-skel{display:none;}
 .os-sheet-body.show-scripts #scriptsSheetSlot{display:block;}
+/* 바텀시트 스페이스 내용 비움(2026-07-07 대표 결정 A) — 껍데기·손잡이·엔진·흡수 슬롯(news/together/scripts)은 보존, 스페이스 골격(간판+트리+콘텐츠)만 화면 숨김. #spTree는 17877로 이미 전원 숨김이나 간판(.sp-skel-sign)·콘텐츠(#spContent)까지 함께 비움. 슬롯은 .sp-skel 바깥 형제라 영향 없음. 되돌리기 = 이 규칙 1줄 삭제. */
+#osSheetBody .sp-skel{display:none;}
 /* 시트 안에서는 #v-scripts를 자연 높이 + 부모(.os-sheet-body) 스크롤로 — 바닥용 height:100%/overflow-y:auto가 슬롯(height 미지정) 안에서 안 풀려 하단이 잘리던 문제 보정(보험이슈와 동일 방식). (2026-06-27) */
 .os-sheet-body.show-scripts #v-scripts.on{height:auto;overflow:visible;}
 .os-empty{padding:34px 12px;text-align:center;color:var(--ts);font-size:.84rem;line-height:1.65;}
