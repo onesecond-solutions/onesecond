@@ -9,10 +9,13 @@ Allow: /$
 Allow: /index.html
 Allow: /pages/landing.html
 Allow: /about.html
-Allow: /pricing.html
 Allow: /terms.html
 Allow: /privacy.html
 Allow: /refund.html
+
+# 요금제 (미노출 — 사용자 10명 미만, 요금제 미사용 · 차단)
+Disallow: /pricing.html
+Disallow: /pages/pricing-content.html
 
 # 업무앱 / 로그인 / 점검 (차단)
 Disallow: /app.html
