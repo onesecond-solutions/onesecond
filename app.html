@@ -1819,6 +1819,9 @@ body.is-uat-homesearch2 .hs2-aux{display:block;width:100%;max-width:640px;margin
 .hs2-recent{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
 .hs2-recent span{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--bd);font-size:14px;color:var(--ts);cursor:pointer;transition:border-color .16s,color .16s,background .16s;}
 .hs2-recent span:hover{border-color:var(--ac);color:var(--ac);background:color-mix(in srgb,var(--ac) 5%,var(--s1));}
+.hs2-recent-x{margin:0 -4px 0 7px;border:none;background:none;padding:2px;font-size:11px;line-height:1;color:var(--tf);cursor:pointer;opacity:.55;transition:opacity .16s,color .16s;}
+.hs2-recent-chip:hover .hs2-recent-x{opacity:.8;}
+.hs2-recent-x:hover{opacity:1;color:var(--ac);}
 /* 자주 찾는 보험 자료 — 실제 데이터 화면으로 바로 진입(기존 showView 재사용). 정돈된 타일. */
 .hs2-hub{display:none;}
 body.is-uat-homesearch2 .hs2-hub{display:block;width:100%;max-width:860px;margin:30px auto 0;}
@@ -3221,15 +3224,10 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           <div class="hs-sub">검색하면 내 것 → 전체까지 한 번에 · 범위는 결과가 알려줍니다</div>
           <!-- 상품·인수·상담 시작 quick 3버튼(.hs-quick) 삭제 (2026-07-02) · philo 문구는 검색기 위로 이동 (2026-07-02 대표 지시) -->
           <div id="hsResults"></div>
-          <!-- 최근 검색 (is-uat-homesearch2) — 검색창 바로 아래 칩. 시각 요소(후속 배선). 검색 중엔 CSS로 숨김. -->
-          <div class="hs2-aux" aria-hidden="true">
+          <!-- 최근 검색 (is-uat-homesearch2) — 검색창 바로 아래 칩. 그 기기 기준(localStorage) 실제 최근 검색. _hs2RenderRecent()가 주입, 비면 섹션 숨김. 검색 중엔 CSS로 숨김. 2026-07-07 -->
+          <div class="hs2-aux" style="display:none">
             <div class="hs2-aux-title">최근 검색</div>
-            <div class="hs2-recent">
-              <span>실손 전환</span>
-              <span>고지 3개월</span>
-              <span>납입면제</span>
-              <span>무해지형</span>
-            </div>
+            <div class="hs2-recent"><!-- _hs2RenderRecent()가 localStorage 기반 실제 칩 주입 --></div>
           </div>
           <!-- 자주 찾는 보험 자료 (is-uat-homesearch2) — 타일 목록은 하드코딩 고정이 아니라 각 기능의 실제 공개 상태(게이트)로 필터링해 _hs2RenderHub()가 생성. 진입은 기존 showView 재사용(신규 로직 없음). 전체 개방(is-uat-homesearch2 제거) 후에도 미공개 기능(알릴의무 등) 타일은 일반 홈에 안 생김. 검색 중엔 CSS로 숨김. -->
           <nav class="hs2-hub" aria-label="자주 찾는 보험 자료">
@@ -5070,6 +5068,28 @@ function _hs2RenderHub(){
   grid.innerHTML=h;
 }
 window._hs2RenderHub=_hs2RenderHub;
+/* 최근 검색(is-uat-homesearch2) — 그 기기 기준 localStorage. 검색 실행 시 _hsSearch에서 _hs2RecentSave 훅으로 적재, 홈 진입/검색 후 _hs2RenderRecent로 실제 칩 렌더. 검색 함수 로직 무접촉. 2026-07-07 */
+var _HS2_RECENT_KEY='onesecond_recent_search', _HS2_RECENT_MAX=8;
+function _hs2RecentLoad(){ try{ var a=JSON.parse(localStorage.getItem(_HS2_RECENT_KEY)||'[]'); return Array.isArray(a)?a.filter(function(x){return typeof x==='string'&&x.trim();}):[]; }catch(e){ return []; } }
+function _hs2RecentSave(q){ try{ q=(q||'').trim(); if(!q) return; var a=_hs2RecentLoad().filter(function(x){return x!==q;}); a.unshift(q); if(a.length>_HS2_RECENT_MAX) a=a.slice(0,_HS2_RECENT_MAX); localStorage.setItem(_HS2_RECENT_KEY, JSON.stringify(a)); }catch(e){} try{ _hs2RenderRecent(); }catch(e){} }
+function _hs2RecentRemove(q){ try{ var a=_hs2RecentLoad().filter(function(x){return x!==q;}); localStorage.setItem(_HS2_RECENT_KEY, JSON.stringify(a)); }catch(e){} try{ _hs2RenderRecent(); }catch(e){} }
+function _hs2RecentClear(){ try{ localStorage.removeItem(_HS2_RECENT_KEY); }catch(e){} try{ _hs2RenderRecent(); }catch(e){} }
+function _hs2RecentEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _hs2RecentClick(q){ var i=document.getElementById('hsInput'); if(i) i.value=q; if(typeof _hsSearch==='function') _hsSearch(q); }
+window._hs2RecentSave=_hs2RecentSave; window._hs2RecentRemove=_hs2RecentRemove; window._hs2RecentClear=_hs2RecentClear; window._hs2RecentClick=_hs2RecentClick;
+function _hs2RenderRecent(){
+  var aux=document.querySelector('#homeSearch .hs2-aux'); if(!aux) return;
+  var wrap=aux.querySelector('.hs2-recent'); if(!wrap) return;
+  var a=_hs2RecentLoad();
+  if(!a.length){ aux.style.display='none'; wrap.innerHTML=''; return; }
+  var h='';
+  for(var i=0;i<a.length;i++){ var q=_hs2RecentEsc(a[i]);
+    h+='<span class="hs2-recent-chip" role="button" tabindex="0" data-q="'+q+'" onclick="_hs2RecentClick(this.getAttribute(\'data-q\'))" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();_hs2RecentClick(this.getAttribute(\'data-q\'));}">'+q+'<button type="button" class="hs2-recent-x" aria-label="최근 검색에서 삭제" onclick="event.stopPropagation();_hs2RecentRemove(this.parentNode.getAttribute(\'data-q\'))">&#10005;</button></span>';
+  }
+  wrap.innerHTML=h;
+  aux.style.display='';   /* '' = CSS 게이트에 위임(게이트 계정만 block, 검색 중엔 .searching 규칙이 숨김). 'block' 인라인 금지(검색 중 숨김 규칙을 덮어씀) */
+}
+window._hs2RenderRecent=_hs2RenderRecent;
 var _snData=[],_snSel=null,_snQ='',_snLoaded=false;
 function _snEsc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function loadSalesNote(){
@@ -5332,6 +5352,8 @@ function applyRoleClass(){
   document.body.classList.toggle('is-uat-homedesk', !!r);
   /* 자주 찾는 보험 자료 타일 = 게이트 조건 필터 렌더. is-uat-homedesk 토글 이후 호출(실비 변천사 타일이 이 클래스를 조건으로 봄). is-uat-homesearch2 계정만 노출되는 섹션이라 그 안에서만 채움. */
   try{ if(document.body.classList.contains('is-uat-homesearch2') && typeof _hs2RenderHub==='function') _hs2RenderHub(); }catch(e){}
+  /* 최근 검색 칩 = 홈 진입 시 localStorage 기반 실제 렌더(그 기기 기준). 게이트 계정만. 비면 섹션 숨김. 2026-07-07 */
+  try{ if(document.body.classList.contains('is-uat-homesearch2') && typeof _hs2RenderRecent==='function') _hs2RenderRecent(); }catch(e){}
   /* 스페이스 네비 재설계 = 2026-06-25 전체 개방(게이트 해제). 임태성 실장 계정 검수 완료 → 전원 새 사이드바/스페이스 페이지 노출. (P3, homephilo 게이트 해제 전례) */
   document.body.classList.add('is-uat-spacenav');
   /* 홈 하단 철학 문구 = 2026-06-23 전체 개방(게이트 해제) — CSS body:not(.is-uat-homephilo) 규칙 제거됨. 검색 중 숨김 규칙만 유지. */
@@ -13444,6 +13466,8 @@ function _hsSearch(q){
   hs.classList.add('searching');
   if(_hsTimer)clearTimeout(_hsTimer);
   _runSearchV2(q,'hsResults');
+  /* 최근 검색 저장 훅(그 기기 기준·localStorage). 검색 로직 무변경 — 호출 후 저장만. is-uat-homesearch2 게이트 홈에서만 표시되므로 저장도 그 스코프로 한정. 2026-07-07 */
+  try{ if(document.body.classList.contains('is-uat-homesearch2') && typeof _hs2RecentSave==='function') _hs2RecentSave(q); }catch(e){}
 }
 window._hsSearch=_hsSearch;
 /* 입력 중(oninput) — 화면 이동 안 함. 비면 리셋 / 이미 결과화면이면 라이브 갱신 / 아직 제출 전 hero면 대기 */
