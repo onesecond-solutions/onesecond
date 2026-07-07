@@ -14699,7 +14699,17 @@ function _homeFetch(label,path){
 async function loadHomeRecent(force){
   if(typeof loadHome4==='function')loadHome4();
   if(window._homeRecentLoaded&&!force)return;
-  showHomeSkeleton();  // 로딩 (4 영역 통째)
+  if(window._homeRecentPending&&!force)return;   /* 이미 예약됨 — 중복 스케줄 방지 (perf 2026-07-08) */
+  window._homeRecentPending=true;
+  showHomeSkeleton();  // 즉시 스켈레톤(빈 화면 방지) — 자리(높이)를 먼저 잡아 레이아웃 시프트 억제
+  /* perf(2026-07-08): 개인·전역 데이터 fetch(library·script_usage·posts·issues)를 첫 페인트 이후로 미룸.
+     검색창·기본 카드·스켈레톤을 먼저 그린 뒤 rAF 다음 프레임에서 네트워크를 시작 → 첫 화면이 막히지 않음.
+     데이터는 곧이어 정상 로드(누락 0). 스켈레톤이 자리를 유지하므로 데이터 도착 시 밀림(CLS) 없음. */
+  await new Promise(function(res){
+    if(typeof requestAnimationFrame==='function'){ requestAnimationFrame(function(){ setTimeout(res,0); }); }
+    else { setTimeout(res,0); }
+  });
+  window._homeRecentPending=false;
   var jobs=[];
   // 4층: 로그인 사용자만 fetch (개인 자료)
   var token=window.db&&window.db.getToken&&window.db.getToken();

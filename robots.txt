@@ -1,0 +1,36 @@
+# robots.txt — onesecond.solutions
+# 공개 페이지만 크롤 허용, 업무앱/시안/관리자/내부 자료는 차단.
+# robots.txt는 표준 준수 봇(Googlebot, Yeti 등)에만 적용되는 색인 힌트입니다.
+
+User-agent: *
+
+# 공개 페이지 (허용)
+Allow: /$
+Allow: /index.html
+Allow: /pages/landing.html
+Allow: /about.html
+Allow: /pricing.html
+Allow: /terms.html
+Allow: /privacy.html
+Allow: /refund.html
+
+# 업무앱 / 로그인 / 점검 (차단)
+Disallow: /app.html
+Disallow: /login.html
+Disallow: /maintenance.html
+
+# 관리자 / 시안 / 내부 문서 (차단)
+Disallow: /pages/
+Disallow: /design-preview/
+Disallow: /archive/
+Disallow: /claude_code/
+Disallow: /upgrade_20260521/
+Disallow: /data/
+Disallow: /db/
+Disallow: /docs/
+Disallow: /scripts/
+Disallow: /supabase/
+Disallow: /start/
+Disallow: /work%20folder/
+
+Sitemap: https://onesecond.solutions/sitemap.xml
