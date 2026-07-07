@@ -1,0 +1,75 @@
+/* css/app-core.css — app.html에서 분리한 코어 CSS (Phase 1, 2026-07-08 perf/css-extract).
+   내용 = 디자인 토큰(:root 커스텀 프로퍼티) + 리셋 + 기본 요소(body/html) + 앱 셸/사이드바/네비(범용 레이아웃).
+   app.html <head>에서 인라인 <style> 바로 앞 <link>로 로드(렌더 블로킹=FOUC 방지). cascade 순서 = 원본과 동일(원본 <style> 최상단 블록을 그대로 앞으로 이동).
+   시각 변화 0. 되돌리기 = app.html의 <link ...app-core.css> 제거 후 이 파일 내용을 <style> 최상단에 복원. */
+/* 2026-06-13 디자인 토큰 1차 — 다크 제거, 라이트(화이트 기반) 단일 전제(사용자 페이지). data-theme 분기 폐기.
+   화이트 기반: 배경 거의 순백(--bg), 카드 순백(--s1), 구분은 테두리(--bd)로. --s2는 배경과 미세차(보조 표면).
+   admin_v2(--admin-*)는 별도 토큰. */
+:root{--bg:#FAFAFB;--s1:#FFFFFF;--s2:#F2F2F4;--sh:#EDEDF0;--bd:#DCDCE1;--tp:#18181B;--ts:#52525B;--tf:#71717A;--ac:#6366F1;--ach:#7C7FF2;--bodytx:#3F3F46;--t-uw:#0891B2;--t-product:#6366F1;--t-event:#C026D3;--ok:#16A34A;--warn:#F59E0B;--err:#DC2626;}
+/* 스페이스 색상 토큰 (마이/팀/지점) — 기획팀장 의뢰 §A. 신호점·배지 단일 소스(app.html이 tokens-v2.css 미링크라 인라인). 차분한 톤(형광 금지). (2026-06-27) */
+:root{--space-my-line:#D85A30;--space-my-soft:#FAECE7;--space-my-text:#993C1D;--space-my-badge-t:#4A1B0C;--space-my-badge-bg:#F5C4B3;--space-team-line:#639922;--space-team-soft:#EAF3DE;--space-team-text:#3B6D11;--space-team-badge-t:#173404;--space-team-badge-bg:#C0DD97;--space-branch-line:#7F77DD;--space-branch-soft:#EEEDFE;--space-branch-text:#534AB7;--space-branch-badge-t:#26215C;--space-branch-badge-bg:#CECBF6;}
+/* 10색 카테고리 토큰 (기획팀장 v2 — 라이트=Tailwind 600 동일톤). 상품 분류 색코드 단일 소스. 기존 의미색(--ok/--t-uw/--t-product/--t-event)과 값 동일 = 충돌 0. 전 보험사 상품 라인업 색코드의 시작점(2026-06-30). */
+:root{--cat-red:#DC2626;--cat-orange:#EA580C;--cat-amber:#D97706;--cat-green:#16A34A;--cat-teal:#0D9488;--cat-cyan:#0891B2;--cat-blue:#2563EB;--cat-indigo:#6366F1;--cat-violet:#7C3AED;--cat-magenta:#C026D3;}
+/* 작업9: radius 토큰 전역 정의 (app.html에 tokens.css 미링크 → 미정의로 직각 렌더되던 것 봉합). B안 넉넉히 · 토큰만(개별 하드코딩 금지) */
+:root{--radius-xs:8px;--radius-sm:11px;--radius-md:13px;--radius-lg:18px;--radius-xl:18px;--radius-full:9999px;--radius:11px;}
+/* 2026-06-13 폰트 스케일 토큰 1차(b) — 바닥선 고정(본문 16px 기준). em 곱연산 누적 제거는 2차(em→rem 전면). */
+:root{--fs-xs:0.8125rem;--fs-sm:0.875rem;--fs-base:1rem;--fs-md:1.0625rem;--fs-lg:1.1875rem;--fs-xl:1.375rem;}
+/* 타이포 기준선 재정립 1차 (2026-07-04) — 10·11px 폐지, 최소 12px. 단일 소스, 향후 확장 시 재사용. */
+:root{--ts-badge:12px;--ts-meta:13px;--ts-preview:14px;--ts-list-title:15px;--ts-body:16px;--ts-viewer-title:20px;}
+/* 타이포그래피 기준선 (구글급·절제형, 2026-06-27) — 실효=app.html inline :root. tokens-v2.css에 미러(미연결).
+   규칙: 본문 14px·weight≤500·위계는 크기+색+여백, bold 남발 금지·라벨 무채색·신호색은 신호점만. */
+:root{
+  --fs-caption:12px; --fs-meta:13px; --fs-body:14px; --fs-body-lg:15px;
+  --fs-title-sm:16px; --fs-title:18px; --fs-heading:20px;
+  --fw-regular:400; --fw-medium:500;
+  --lh-tight:1.4; --lh-base:1.6; --lh-relaxed:1.7; --lh-dense:1.5;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard',sans-serif;}
+body{background:var(--bg);color:var(--tp);font-size:var(--fs-base);line-height:1.6;height:100vh;overflow:hidden;}
+html{height:100%;font-size:calc(100% * var(--fscale, 1));}
+.app{display:grid;grid-template-columns:212px 1fr;height:100vh;transition:grid-template-columns .18s ease;}
+.app.collapsed{grid-template-columns:56px 1fr;}
+.side{background:var(--s1);border-right:0.5px solid var(--bd);display:flex;flex-direction:column;padding:12px 10px;gap:6px;overflow:hidden;}
+.side .top{display:flex;align-items:center;gap:10px;padding:2px 6px;margin-bottom:12px;height:30px;}
+.side .logo{width:30px;height:30px;border-radius:8px;background:var(--ac);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9375rem;color:#fff;flex-shrink:0;cursor:pointer;}
+.side .bname{font-weight:800;font-size:0.9375rem;white-space:nowrap;}
+.app.collapsed .side .bname{display:none;}
+.hamb{margin-left:auto;background:transparent;border:none;color:var(--ts);font-size:1.0625rem;cursor:pointer;width:26px;height:26px;border-radius:6px;flex-shrink:0;}
+.hamb:hover{background:var(--sh);}
+.app.collapsed .side .top{flex-direction:column;justify-content:center;gap:8px;height:auto;}
+.app.collapsed .hamb{margin-left:0;}
+.nav{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:9px;color:var(--ts);font-size:0.875rem;cursor:pointer;white-space:nowrap;}
+.nav .ic{font-size:1.1875rem;width:24px;text-align:center;flex-shrink:0;}
+/* 원수사 자료실 사이드 게이팅 (단계 1, 2026-05-30) — #app role 클래스 기반 즉시 노출 */
+#nav-insurer-vault{display:none;}                       /* 기본 숨김 (ga_*·비로그인) */
+#app.is-insurer .nav{display:none;}                     /* 원수사: 전부 숨김 */
+#app.is-insurer .nav.ins-show{display:flex;}            /* 그 중 3개(자료실·현장의소리·함께해요)만 */
+#app.is-admin #nav-insurer-vault{display:flex;}         /* admin: 전체 노출 유지 + 자료실 추가 */
+/* 베타·파일럿(2026-06-13): GA 전 기능 오픈 — ga-hide 숨김 해제. '함께해요' 후기로 보완. 종료 후 재제한 시 아래 규칙 복구:
+   #app:not(.is-admin):not(.is-insurer) .nav.ga-hide{display:none;} */
+/* 운영자 전용 사이드 메뉴 — 빠른 메뉴·함께해요·보험이슈는 일반 사용자(GA·보험사)에게 숨기고 admin만 노출 (2026-06-17, 데모 단순화) */
+.nav.op-hide{display:none;}
+#app.is-admin .nav.op-hide{display:flex;}
+.nav-divider{height:1px;background:var(--bd);margin:8px 8px;opacity:0.7;}
+/* 매니저룸 — 핑크 차별화 + 실장·지점장·어드민만(is-mgr) 노출 */
+.sp-node.sp-mgr{color:#DB2777;font-weight:700;border-left:3px solid #DB2777;border-radius:0 8px 8px 0;}
+.sp-node.sp-mgr .ic .sp-ico{color:#DB2777;}
+.sp-node.sp-mgr.sel{background:color-mix(in srgb,#EC4899 15%,transparent);box-shadow:inset 3px 0 0 #EC4899;}
+.sp-node.sp-mgr:hover{background:color-mix(in srgb,#EC4899 9%,transparent);}
+.sp-node.sp-mgr{display:none;}/* .sp-node{display:flex}보다 강한 specificity로 기본 숨김 */
+body.is-mgr .sp-node.sp-mgr{display:flex;}
+/* 원수사 자료실·보험 Q&A 트리 노드 — 일반 사용자 숨김, 어드민만 노출 (바텀시트=#app 밖 → body 기준) (2026-06-17) */
+.sp-node.sp-op-hide{display:none;}
+body.is-admin .sp-node.sp-op-hide{display:flex;}
+.nav.nav-mgr{color:#DB2777;display:none;}
+.nav.nav-mgr .sp-ico{color:#DB2777;}
+.nav.nav-mgr.on{background:color-mix(in srgb,#EC4899 12%,transparent);color:#DB2777;}
+body.is-mgr .nav.nav-mgr{display:flex;}
+/* 사이드바 하단 안내 — 제한 오픈(감추기>만들기) 보완 문구. 접힘 시 숨김 */
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;}/* 하단 묶음 — 안내문(파란 테두리)·요금제(일반)·어드민(진한 회색) 개별 처리 */
+.side-note{padding:10px 11px;font-size:var(--ts-meta);line-height:1.6;color:var(--tf);border:1px solid var(--ac);border-radius:10px;}/* 베타·파일럿 = 파란 테두리 박스 */
+.side-foot #nav-admin{background:color-mix(in srgb,var(--bd) 60%,var(--sh));border-radius:10px;padding:16px 8px;}/* 어드민 = 진한 회색 박스(높이감) */
+.side-note b{color:var(--ts);font-weight:700;}
+.side-note-link{background:none;border:0;padding:0;font:inherit;color:var(--ac);font-weight:700;cursor:pointer;text-decoration:underline;}
+.app.collapsed .side-note{display:none;}
+#app:not(.is-admin) #sideNote,#app:not(.is-admin) #nav-pricing{display:none !important;}/* 요금제·안내문 = 어드민만 노출 (2026-06-22) */
