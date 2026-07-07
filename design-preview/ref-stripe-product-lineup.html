@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상품 라인업 — 원세컨드 (Stripe 계열 시안)</title>
+<style>
+  /* ============================================================
+     원세컨드 x Stripe 계열 — 상품 라인업 시안
+     의도: 촘촘한 표 + 절제된 상태 배지 + 비교 트레이.
+     예쁨보다 "읽기 쉬움 / 비교 쉬움 / 클릭 판단 쉬움".
+     라이트 단일 · 본문 16px+ · 터치 44px+ · radius 8px+ · 라인 SVG만.
+     ============================================================ */
+  :root {
+    --brand:        #6366F1;
+    --brand-strong: #4F46E5;
+    --brand-soft:   #EEF0FE;
+    --brand-border: #C9CCF8;
+
+    --ink:      #1A1D27;  /* 본문 최상위 */
+    --ink-2:    #4B5163;  /* 보조 텍스트 */
+    --ink-3:    #7B8194;  /* 메타 / 열 헤더 */
+
+    --bg:       #F7F8FA;
+    --surface:  #FFFFFF;
+    --line:     #E6E8EE;  /* 촘촘한 표의 기준 선 */
+    --line-2:   #F0F1F5;  /* 행 사이 더 옅은 선 */
+
+    /* 상태 배지 — 절제 팔레트 (연한 바탕 + 진한 글자) */
+    --hot-bg:    #FDEEEE; --hot-fg:    #C2413B;
+    --new-bg:    #E8F4EE; --new-fg:    #1F7A4D;
+    --nosv-bg:   #FFF4E5; --nosv-fg:   #A05A00;  /* 무해지형 */
+    --stop-bg:   #F1F2F5; --stop-fg:   #6B7080;  /* 판매중지 예정 */
+
+    --radius:    12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 2px rgba(26,29,39,.05), 0 4px 16px rgba(26,29,39,.04);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    font-family: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-size:16px; line-height:1.5; color:var(--ink); background:var(--bg);
+    font-feature-settings:"tnum";  /* 숫자 열 정렬 = 표 가독의 핵심 */
+  }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+  svg { display:block; flex:none; }
+
+  /* ---------- 상단 헤더 ---------- */
+  .topbar {
+    background:var(--surface); border-bottom:1px solid var(--line);
+    padding:0 28px; height:64px;
+    display:flex; align-items:center; gap:16px;
+    position:sticky; top:0; z-index:30;
+  }
+  .topbar h1 { font-size:19px; font-weight:700; letter-spacing:-.01em; }
+  .topbar .crumb { font-size:16px; color:var(--ink-3); display:flex; align-items:center; gap:8px; }
+  .topbar .crumb strong { color:var(--ink); font-weight:700; }
+
+  .searchbox {
+    margin-left:auto; display:flex; align-items:center; gap:10px;
+    background:var(--bg); border:1px solid var(--line); border-radius:var(--radius-sm);
+    height:44px; padding:0 14px; width:320px;
+  }
+  .searchbox input {
+    border:0; background:none; outline:none; font:inherit; font-size:16px;
+    color:var(--ink); width:100%;
+  }
+  .searchbox input::placeholder { color:var(--ink-3); }
+
+  /* 표 / 카드 보기 전환 */
+  .viewtoggle {
+    display:flex; border:1px solid var(--line); border-radius:var(--radius-sm);
+    background:var(--bg); padding:3px; gap:2px;
+  }
+  .viewtoggle button {
+    height:38px; min-width:44px; padding:0 14px; border-radius:6px;
+    display:flex; align-items:center; gap:7px;
+    font-size:15px; font-weight:600; color:var(--ink-3);
+  }
+  .viewtoggle button.on { background:var(--surface); color:var(--ink);
+    box-shadow:0 1px 2px rgba(26,29,39,.08); }
+
+  /* ---------- 2단 레이아웃 ---------- */
+  .layout { display:flex; align-items:flex-start; gap:24px;
+    max-width:1360px; margin:0 auto; padding:24px 28px 120px; }
+
+  /* ---------- 좌측 레일: 회사 + 필터 ---------- */
+  .rail { width:248px; flex:none; position:sticky; top:88px; }
+  .rail-section { margin-bottom:24px; }
+  .rail-label {
+    font-size:13px; font-weight:700; color:var(--ink-3);
+    letter-spacing:.06em; text-transform:uppercase;
+    padding:0 12px; margin-bottom:8px;
+  }
+  .co-list { display:flex; flex-direction:column; gap:2px; }
+  .co-item {
+    display:flex; align-items:center; gap:10px;
+    height:44px; padding:0 12px; border-radius:var(--radius-sm);
+    font-size:16px; font-weight:500; color:var(--ink-2);
+    width:100%; text-align:left;
+  }
+  .co-item:hover { background:#EFF0F4; }
+  .co-item.on { background:var(--brand-soft); color:var(--brand-strong); font-weight:700; }
+  .co-item .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+  .co-item .cnt {
+    margin-left:auto; font-size:13px; font-weight:600; color:var(--ink-3);
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:999px; padding:1px 9px;
+  }
+  .co-item.on .cnt { color:var(--brand-strong); border-color:var(--brand-border); background:#fff; }
+
+  .filter-card {
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); padding:8px;
+  }
+  .f-row {
+    display:flex; align-items:center; gap:10px;
+    min-height:44px; padding:0 8px; border-radius:var(--radius-sm);
+    font-size:15px; color:var(--ink-2); cursor:pointer; user-select:none;
+  }
+  .f-row:hover { background:var(--bg); }
+  .f-row input { width:18px; height:18px; accent-color:var(--brand); cursor:pointer; }
+  .f-row .n { margin-left:auto; font-size:13px; color:var(--ink-3); }
+  .f-divider { height:1px; background:var(--line-2); margin:6px 8px; }
+
+  .rail-reset {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    height:44px; width:100%; margin-top:12px;
+    font-size:15px; font-weight:600; color:var(--ink-3);
+    border:1px dashed var(--line); border-radius:var(--radius-sm);
+  }
+  .rail-reset:hover { color:var(--brand-strong); border-color:var(--brand-border); }
+
+  /* ---------- 우측 본문 ---------- */
+  .main { flex:1; min-width:0; }
+
+  /* 요약 스탯 스트립 (Stripe 대시보드 감각) */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  .stat {
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 18px;
+  }
+  .stat .k { font-size:13px; font-weight:600; color:var(--ink-3); margin-bottom:2px; }
+  .stat .v { font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .stat .v small { font-size:14px; font-weight:600; color:var(--ink-3); margin-left:2px; }
+  .stat.accent .v { color:var(--brand-strong); }
+
+  /* 표 컨테이너 */
+  .board {
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+  }
+  .board-head {
+    display:flex; align-items:center; gap:12px;
+    padding:14px 20px; border-bottom:1px solid var(--line);
+  }
+  .board-head h2 { font-size:17px; font-weight:700; }
+  .board-head .sub { font-size:14px; color:var(--ink-3); }
+  .sortnote {
+    margin-left:auto; display:flex; align-items:center; gap:6px;
+    font-size:14px; color:var(--ink-3);
+  }
+
+  .tbl-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; min-width:960px; }
+
+  thead th {
+    font-size:13px; font-weight:700; color:var(--ink-3);
+    letter-spacing:.05em; text-transform:uppercase;
+    text-align:left; padding:10px 14px;
+    border-bottom:1px solid var(--line);
+    background:#FBFBFD; white-space:nowrap;
+    position:sticky; top:64px; z-index:10;
+  }
+  thead th.num { text-align:right; }
+  thead th:first-child { padding-left:20px; width:44px; }
+
+  tbody td {
+    padding:12px 14px; border-bottom:1px solid var(--line-2);
+    vertical-align:middle; font-size:16px;
+  }
+  tbody td:first-child { padding-left:20px; }
+  tbody tr:last-child td { border-bottom:0; }
+  tbody tr { cursor:pointer; }
+  tbody tr:hover { background:#FAFAFE; }
+  tbody tr.picked { background:var(--brand-soft); }
+  tbody tr.picked:hover { background:#E6E8FD; }
+
+  /* 회사 그룹 헤더 행 (전체 조망일 때) */
+  tr.group td {
+    background:var(--bg); border-bottom:1px solid var(--line);
+    padding:8px 20px; cursor:default;
+    font-size:14px; font-weight:700; color:var(--ink-2);
+  }
+  tr.group td .g-inner { display:flex; align-items:center; gap:8px; }
+  tr.group td .g-cnt { font-weight:600; color:var(--ink-3); }
+  tr.group:hover td { background:var(--bg); }
+
+  .pick { width:20px; height:20px; accent-color:var(--brand); cursor:pointer; display:block; }
+  /* 체크박스 터치 여유 44px */
+  .pick-hit { display:flex; align-items:center; justify-content:center;
+    width:44px; height:44px; margin:-12px; }
+
+  .pname { font-weight:700; letter-spacing:-.01em; }
+  .pmeta { font-size:13.5px; color:var(--ink-3); margin-top:1px; }
+  .cover { color:var(--ink-2); font-size:15px; line-height:1.45; max-width:340px; }
+  .cover b { color:var(--ink); font-weight:700; }
+
+  td.num { text-align:right; white-space:nowrap; }
+  .price { font-weight:800; font-size:16.5px; }
+  .price small { font-size:13px; font-weight:600; color:var(--ink-3); margin-left:2px; }
+  .price-note { font-size:12.5px; color:var(--ink-3); margin-top:1px; }
+  .age { color:var(--ink-2); white-space:nowrap; }
+
+  /* 배지 — 절제된 톤, 텍스트로 판별 (색약 대응) */
+  .badges { display:flex; flex-wrap:wrap; gap:5px; max-width:170px; }
+  .badge {
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:12.5px; font-weight:700; letter-spacing:.02em;
+    padding:3px 9px; border-radius:999px; white-space:nowrap;
+  }
+  .b-hot  { background:var(--hot-bg);  color:var(--hot-fg); }
+  .b-new  { background:var(--new-bg);  color:var(--new-fg); }
+  .b-nosv { background:var(--nosv-bg); color:var(--nosv-fg); }
+  .b-std  { background:var(--brand-soft); color:var(--brand-strong); }
+  .b-stop { background:var(--stop-bg); color:var(--stop-fg); }
+
+  .rowact {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:44px; height:44px; border-radius:var(--radius-sm); color:var(--ink-3);
+  }
+  .rowact:hover { background:var(--brand-soft); color:var(--brand-strong); }
+
+  /* ---------- 비교 트레이 (하단 고정) ---------- */
+  .tray {
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+    background:var(--ink); color:#fff; border-radius:14px;
+    box-shadow:0 8px 32px rgba(26,29,39,.28);
+    display:flex; align-items:center; gap:16px;
+    padding:10px 12px 10px 22px; z-index:50;
+    opacity:0; pointer-events:none; transition:opacity .15s, transform .15s;
+    transform:translateX(-50%) translateY(8px);
+  }
+  .tray.show { opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); }
+  .tray .t-label { font-size:15px; font-weight:600; color:#C7CAD4; }
+  .tray .t-label b { color:#fff; font-weight:800; }
+  .tray .t-clear {
+    height:44px; padding:0 14px; border-radius:var(--radius-sm);
+    font-size:15px; font-weight:600; color:#C7CAD4;
+  }
+  .tray .t-clear:hover { color:#fff; background:rgba(255,255,255,.08); }
+  .tray .t-go {
+    height:44px; padding:0 20px; border-radius:var(--radius-sm);
+    background:var(--brand); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; gap:8px;
+  }
+  .tray .t-go:hover { background:var(--brand-strong); }
+
+  /* ---------- 카드 보기 (전환용) ---------- */
+  .cards { display:none; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:14px; padding:20px; }
+  .card {
+    border:1px solid var(--line); border-radius:var(--radius); padding:18px;
+    display:flex; flex-direction:column; gap:10px; background:var(--surface);
+  }
+  .card:hover { border-color:var(--brand-border); box-shadow:var(--shadow); }
+  .card .c-co { font-size:13px; font-weight:700; color:var(--ink-3);
+    letter-spacing:.04em; text-transform:uppercase; }
+  .card .c-name { font-size:17px; font-weight:800; letter-spacing:-.01em; }
+  .card .c-cover { font-size:15px; color:var(--ink-2); line-height:1.5; flex:1; }
+  .card .c-foot { display:flex; align-items:flex-end; justify-content:space-between;
+    border-top:1px solid var(--line-2); padding-top:12px; }
+  .card .c-age { font-size:13.5px; color:var(--ink-3); }
+  body.cardview .tbl-wrap { display:none; }
+  body.cardview .cards { display:grid; }
+
+  /* ---------- 반응형 ---------- */
+  @media (max-width: 1080px) {
+    .rail { display:none; }
+    .stats { grid-template-columns:repeat(2,1fr); }
+    .searchbox { width:200px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================= 상단 헤더 ======================= -->
+<header class="topbar">
+  <span class="crumb">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg>
+    보험사 자료실
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+    <strong>상품 라인업</strong>
+  </span>
+
+  <div class="searchbox">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7B8194" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" placeholder="상품명·보장으로 검색  (예: 뇌혈관)">
+  </div>
+
+  <div class="viewtoggle" role="tablist" aria-label="보기 전환">
+    <button class="on" id="btn-table" onclick="setView('table')" aria-label="표 보기">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      표
+    </button>
+    <button id="btn-card" onclick="setView('card')" aria-label="카드 보기">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+      카드
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ======================= 좌측 레일 ======================= -->
+  <aside class="rail">
+    <div class="rail-section">
+      <div class="rail-label">보험사</div>
+      <nav class="co-list">
+        <button class="co-item on" onclick="pickCo(this,'전체')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+          전체 조망 <span class="cnt">9</span>
+        </button>
+        <button class="co-item" onclick="pickCo(this,'A생명')">
+          <span class="dot" style="background:#6366F1"></span> A생명 <span class="cnt">3</span>
+        </button>
+        <button class="co-item" onclick="pickCo(this,'B손해보험')">
+          <span class="dot" style="background:#0EA5A4"></span> B손해보험 <span class="cnt">3</span>
+        </button>
+        <button class="co-item" onclick="pickCo(this,'C화재')">
+          <span class="dot" style="background:#E0912F"></span> C화재 <span class="cnt">3</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="rail-section">
+      <div class="rail-label">필터</div>
+      <div class="filter-card">
+        <label class="f-row"><input type="checkbox" checked> 판매중만 보기 <span class="n">8</span></label>
+        <div class="f-divider"></div>
+        <label class="f-row"><input type="checkbox"> 무해지형만 <span class="n">3</span></label>
+        <label class="f-row"><input type="checkbox"> 일반형만 <span class="n">6</span></label>
+        <div class="f-divider"></div>
+        <label class="f-row"><input type="checkbox"> HOT <span class="n">3</span></label>
+        <label class="f-row"><input type="checkbox"> NEW <span class="n">2</span></label>
+        <div class="f-divider"></div>
+        <label class="f-row"><input type="checkbox"> 월 5만원 이하 <span class="n">4</span></label>
+        <label class="f-row"><input type="checkbox"> 유병자 간편심사 <span class="n">2</span></label>
+      </div>
+      <button class="rail-reset">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        필터 초기화
+      </button>
+    </div>
+  </aside>
+
+  <!-- ======================= 우측 본문 ======================= -->
+  <main class="main">
+
+    <!-- 요약 스탯 -->
+    <div class="stats">
+      <div class="stat"><div class="k">전체 상품</div><div class="v">9<small>개</small></div></div>
+      <div class="stat accent"><div class="k">이번 달 신규</div><div class="v">2<small>개</small></div></div>
+      <div class="stat"><div class="k">무해지형</div><div class="v">3<small>개</small></div></div>
+      <div class="stat"><div class="k">최저 월납</div><div class="v">29,400<small>원</small></div></div>
+    </div>
+
+    <!-- 표 -->
+    <section class="board">
+      <div class="board-head">
+        <h2 id="board-title">전체 조망</h2>
+        <span class="sub">3개 보험사 · 9개 상품 · 40세 남 표준체 기준</span>
+        <span class="sortnote">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>
+          보험료 낮은순
+        </span>
+      </div>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><span style="position:absolute;width:1px;height:1px;overflow:hidden;">비교 선택</span></th>
+              <th>상품명</th>
+              <th>보장 핵심</th>
+              <th class="num">월 보험료</th>
+              <th>가입연령</th>
+              <th>상태</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- ===== A생명 ===== -->
+            <tr class="group"><td colspan="7"><span class="g-inner">
+              <span class="dot" style="width:8px;height:8px;border-radius:50%;background:#6366F1;display:inline-block"></span>
+              A생명 <span class="g-cnt">3개 상품</span></span></td></tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 뉴원스 종합건강보험"></span></td>
+              <td><div class="pname">뉴원스 종합건강보험 V</div><div class="pmeta">2604 개정 · 비갱신 20년납</div></td>
+              <td><div class="cover">암진단 <b>5,000만</b> · 뇌혈관 <b>2,000만</b> · 허혈성 <b>2,000만</b></div></td>
+              <td class="num"><div class="price">47,800<small>원</small></div><div class="price-note">40세 남 · 20년납 90세만기</div></td>
+              <td class="age">15~65세</td>
+              <td><span class="badges"><span class="badge b-hot">HOT</span><span class="badge b-std">일반형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 원스 무해지 암보험"></span></td>
+              <td><div class="pname">원스 암보험 플러스</div><div class="pmeta">2606 신상품 · 비갱신 30년납</div></td>
+              <td><div class="cover">일반암 <b>3,000만</b> · 유사암 <b>600만</b> · 표적항암 연간 <b>1,000만</b></div></td>
+              <td class="num"><div class="price">29,400<small>원</small></div><div class="price-note">40세 남 · 30년납 100세만기</div></td>
+              <td class="age">0~70세</td>
+              <td><span class="badges"><span class="badge b-new">NEW</span><span class="badge b-nosv">무해지형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 원스 종신보험"></span></td>
+              <td><div class="pname">원스 든든 종신보험</div><div class="pmeta">2512 개정 · 저해지 환급형</div></td>
+              <td><div class="cover">사망 <b>1억</b> · 재해사망 <b>2억</b> · 납입면제(암·뇌·심)</div></td>
+              <td class="num"><div class="price">183,000<small>원</small></div><div class="price-note">40세 남 · 20년납 종신</div></td>
+              <td class="age">20~60세</td>
+              <td><span class="badges"><span class="badge b-std">일반형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <!-- ===== B손해보험 ===== -->
+            <tr class="group"><td colspan="7"><span class="g-inner">
+              <span class="dot" style="width:8px;height:8px;border-radius:50%;background:#0EA5A4;display:inline-block"></span>
+              B손해보험 <span class="g-cnt">3개 상품</span></span></td></tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 튼튼 건강보험"></span></td>
+              <td><div class="pname">튼튼 3대질병 건강보험</div><div class="pmeta">2605 개정 · 비갱신 20년납</div></td>
+              <td><div class="cover">암진단 <b>5,000만</b> · 뇌혈관 <b>3,000만</b> · 허혈성 <b>3,000만</b></div></td>
+              <td class="num"><div class="price">52,300<small>원</small></div><div class="price-note">40세 남 · 20년납 100세만기</div></td>
+              <td class="age">15~70세</td>
+              <td><span class="badges"><span class="badge b-hot">HOT</span><span class="badge b-std">일반형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 튼튼 간편건강"></span></td>
+              <td><div class="pname">튼튼 355 간편건강보험</div><div class="pmeta">유병자 간편심사 3·5·5</div></td>
+              <td><div class="cover">암진단 <b>3,000만</b> · 뇌혈관 <b>1,000만</b> · 입원일당 <b>3만</b></div></td>
+              <td class="num"><div class="price">68,900<small>원</small></div><div class="price-note">40세 남 · 20년납 90세만기</div></td>
+              <td class="age">30~75세</td>
+              <td><span class="badges"><span class="badge b-nosv">무해지형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 튼튼 운전자보험"></span></td>
+              <td><div class="pname">튼튼 New 운전자보험</div><div class="pmeta">2603 개정 · 갱신 없음</div></td>
+              <td><div class="cover">교통사고처리지원금 <b>2억</b> · 변호사선임 <b>5,000만</b></div></td>
+              <td class="num"><div class="price">31,200<small>원</small></div><div class="price-note">40세 남 · 20년납 20년만기</div></td>
+              <td class="age">19~80세</td>
+              <td><span class="badges"><span class="badge b-std">일반형</span><span class="badge b-stop">판매중지 예정</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <!-- ===== C화재 ===== -->
+            <tr class="group"><td colspan="7"><span class="g-inner">
+              <span class="dot" style="width:8px;height:8px;border-radius:50%;background:#E0912F;display:inline-block"></span>
+              C화재 <span class="g-cnt">3개 상품</span></span></td></tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 케어 종합건강"></span></td>
+              <td><div class="pname">케어 올인원 건강보험</div><div class="pmeta">2606 신상품 · 비갱신 20년납</div></td>
+              <td><div class="cover">암진단 <b>5,000만</b> · 뇌혈관 <b>2,000만</b> · 수술비 최대 <b>500만</b></div></td>
+              <td class="num"><div class="price">49,600<small>원</small></div><div class="price-note">40세 남 · 20년납 100세만기</div></td>
+              <td class="age">0~65세</td>
+              <td><span class="badges"><span class="badge b-new">NEW</span><span class="badge b-hot">HOT</span><span class="badge b-std">일반형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 케어 무해지 어린이"></span></td>
+              <td><div class="pname">케어 어린이 종합보험</div><div class="pmeta">태아 가입 가능 · 30년납</div></td>
+              <td><div class="cover">어린이암 <b>3,000만</b> · 골절진단 <b>50만</b> · 화상수술 <b>300만</b></div></td>
+              <td class="num"><div class="price">38,700<small>원</small></div><div class="price-note">5세 · 30년납 30세만기</div></td>
+              <td class="age">태아~15세</td>
+              <td><span class="badges"><span class="badge b-nosv">무해지형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+            <tr onclick="togglePick(this)">
+              <td><span class="pick-hit"><input class="pick" type="checkbox" aria-label="비교 선택: 케어 치아보험"></span></td>
+              <td><div class="pname">케어 튼튼 치아보험</div><div class="pmeta">면책 90일 · 갱신형 10년</div></td>
+              <td><div class="cover">임플란트 <b>150만</b> · 크라운 <b>30만</b> · 충전치료 <b>10만</b></div></td>
+              <td class="num"><div class="price">33,500<small>원</small></div><div class="price-note">40세 남 · 10년 갱신</div></td>
+              <td class="age">20~70세</td>
+              <td><span class="badges"><span class="badge b-std">일반형</span></span></td>
+              <td><span class="rowact" title="상세 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 카드 보기 (동일 데이터 3장 예시 — 전환 확인용) -->
+      <div class="cards">
+        <article class="card">
+          <div class="c-co">A생명</div>
+          <div class="c-name">원스 암보험 플러스</div>
+          <span class="badges"><span class="badge b-new">NEW</span><span class="badge b-nosv">무해지형</span></span>
+          <div class="c-cover">일반암 3,000만 · 유사암 600만 · 표적항암 연간 1,000만</div>
+          <div class="c-foot">
+            <span class="c-age">가입 0~70세</span>
+            <span class="price">29,400<small>원/월</small></span>
+          </div>
+        </article>
+        <article class="card">
+          <div class="c-co">A생명</div>
+          <div class="c-name">뉴원스 종합건강보험 V</div>
+          <span class="badges"><span class="badge b-hot">HOT</span><span class="badge b-std">일반형</span></span>
+          <div class="c-cover">암진단 5,000만 · 뇌혈관 2,000만 · 허혈성 2,000만</div>
+          <div class="c-foot">
+            <span class="c-age">가입 15~65세</span>
+            <span class="price">47,800<small>원/월</small></span>
+          </div>
+        </article>
+        <article class="card">
+          <div class="c-co">C화재</div>
+          <div class="c-name">케어 올인원 건강보험</div>
+          <span class="badges"><span class="badge b-new">NEW</span><span class="badge b-hot">HOT</span></span>
+          <div class="c-cover">암진단 5,000만 · 뇌혈관 2,000만 · 수술비 최대 500만</div>
+          <div class="c-foot">
+            <span class="c-age">가입 0~65세</span>
+            <span class="price">49,600<small>원/월</small></span>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ======================= 비교 트레이 ======================= -->
+<div class="tray" id="tray">
+  <span class="t-label"><b id="tray-n">0</b>개 상품 선택됨</span>
+  <button class="t-clear" onclick="clearPicks()">선택 해제</button>
+  <button class="t-go">
+    비교하기
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </button>
+</div>
+
+<script>
+/* 시안용 최소 인터랙션 — 구현 시 상태·데이터는 실제 배선으로 교체 */
+
+function togglePick(tr){
+  var cb = tr.querySelector('.pick');
+  cb.checked = !cb.checked;
+  tr.classList.toggle('picked', cb.checked);
+  refreshTray();
+}
+function clearPicks(){
+  document.querySelectorAll('tbody tr.picked').forEach(function(tr){
+    tr.classList.remove('picked');
+    tr.querySelector('.pick').checked = false;
+  });
+  refreshTray();
+}
+function refreshTray(){
+  var n = document.querySelectorAll('.pick:checked').length;
+  document.getElementById('tray-n').textContent = n;
+  document.getElementById('tray').classList.toggle('show', n > 0);
+}
+
+function pickCo(btn, name){
+  document.querySelectorAll('.co-item').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  document.getElementById('board-title').textContent =
+    (name === '전체') ? '전체 조망' : name + ' 라인업';
+  /* 회사별 필터: 그룹 행 기준으로 소속 행 표시/숨김 */
+  var current = null;
+  document.querySelectorAll('tbody tr').forEach(function(tr){
+    if (tr.classList.contains('group')){
+      current = tr.textContent.trim().split(' ')[0];
+      tr.style.display = (name === '전체') ? '' : 'none';
+    } else {
+      tr.style.display = (name === '전체' || current === name) ? '' : 'none';
+    }
+  });
+}
+
+function setView(v){
+  document.body.classList.toggle('cardview', v === 'card');
+  document.getElementById('btn-table').classList.toggle('on', v === 'table');
+  document.getElementById('btn-card').classList.toggle('on', v === 'card');
+}
+</script>
+</body>
+</html>

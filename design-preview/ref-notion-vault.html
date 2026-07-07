@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원세컨드 — 자료실 시안 (Notion 재해석)</title>
+<style>
+  /* ============================================================
+     원세컨드 자료실 시안 — Notion 계열 재해석
+     문서형 카드 리스트 + 문서형 상세(콜아웃 강조)
+     라이트 · 인디고 #6366F1 · 본문 16px+ · 터치 44px+ · 라인 아이콘
+     ============================================================ */
+  :root {
+    --indigo: #6366F1;
+    --indigo-deep: #4F46E5;
+    --indigo-tint: #EEF2FF;
+    --indigo-tint-2: #E0E7FF;
+    --ink-900: #191A23;
+    --ink-700: #3F4150;
+    --ink-500: #6B6E7E;
+    --ink-400: #9295A3;
+    --line: #E8E9EF;
+    --line-soft: #F1F2F6;
+    --paper: #FFFFFF;
+    --canvas: #FAFAFC;
+    --amber-tint: #FFF7E8;
+    --amber-line: #F3DFB6;
+    --amber-ink: #8A6410;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-card: 0 1px 2px rgba(25,26,35,.04);
+    --shadow-pop: 0 8px 28px rgba(25,26,35,.10);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-900);
+    background: var(--canvas);
+    -webkit-font-smoothing: antialiased;
+  }
+  svg { display: block; flex: none; }
+
+  /* ---------- 상단 바 ---------- */
+  .topbar {
+    height: 60px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 24px;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; letter-spacing: -.2px; }
+  .brand-dot { width: 26px; height: 26px; border-radius: 8px; background: var(--indigo); display: flex; align-items: center; justify-content: center; }
+  .crumb { display: flex; align-items: center; gap: 8px; color: var(--ink-500); font-size: 15px; }
+  .crumb b { color: var(--ink-900); font-weight: 700; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 44px; padding: 0 18px;
+    border-radius: 10px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink-700);
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: var(--line-soft); }
+  .btn-primary { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+  .btn-primary:hover { background: var(--indigo-deep); }
+
+  /* ---------- 2단 레이아웃 ---------- */
+  .layout {
+    display: grid;
+    grid-template-columns: 480px 1fr;
+    height: calc(100vh - 60px);
+  }
+
+  /* ============================================================
+     좌측 — 문서형 카드 리스트
+     ============================================================ */
+  .list-pane {
+    border-right: 1px solid var(--line);
+    background: var(--paper);
+    display: flex; flex-direction: column;
+    min-width: 0;
+  }
+  .list-head { padding: 24px 24px 0; }
+  .list-title { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+  .list-sub { margin-top: 4px; font-size: 15px; color: var(--ink-500); }
+
+  /* 검색 */
+  .search {
+    margin: 16px 24px 0;
+    display: flex; align-items: center; gap: 10px;
+    min-height: 46px; padding: 0 14px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: var(--canvas); color: var(--ink-400);
+  }
+  .search input {
+    border: 0; outline: 0; background: transparent;
+    font-size: 16px; color: var(--ink-900); width: 100%;
+    font-family: inherit;
+  }
+  .search input::placeholder { color: var(--ink-400); }
+
+  /* 카테고리 탭 */
+  .tabs {
+    display: flex; gap: 6px;
+    padding: 14px 24px 14px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .tab {
+    min-height: 44px; padding: 0 16px;
+    border-radius: 10px; border: 1px solid transparent;
+    background: transparent; color: var(--ink-500);
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+    font-family: inherit;
+    transition: background .15s, color .15s;
+  }
+  .tab:hover { background: var(--line-soft); color: var(--ink-700); }
+  .tab.on { background: var(--indigo-tint); color: var(--indigo-deep); border-color: var(--indigo-tint-2); }
+  .tab .cnt { font-size: 13px; font-weight: 700; color: var(--ink-400); }
+  .tab.on .cnt { color: var(--indigo); }
+
+  /* 카드 스크롤 영역 */
+  .cards { overflow-y: auto; padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* 문서형 카드 */
+  .doc-card {
+    position: relative;
+    text-align: left; width: 100%;
+    border: 1px solid var(--line); border-radius: var(--radius-md);
+    background: var(--paper);
+    padding: 18px 18px 16px 20px;
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition: border-color .15s, box-shadow .15s, background .15s;
+    font-family: inherit; color: inherit;
+  }
+  .doc-card:hover { border-color: #D6D8E4; box-shadow: var(--shadow-pop); }
+  .doc-card.on { border-color: var(--indigo); background: linear-gradient(0deg, rgba(99,102,241,.035), rgba(99,102,241,.035)), var(--paper); }
+  .doc-card.on::before {
+    content: ""; position: absolute; left: -1px; top: 14px; bottom: 14px;
+    width: 3px; border-radius: 3px; background: var(--indigo);
+  }
+  .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 700;
+    padding: 3px 10px; border-radius: 999px;
+    background: var(--line-soft); color: var(--ink-500);
+  }
+  .chip.notice  { background: var(--indigo-tint); color: var(--indigo-deep); }
+  .chip.edu     { background: #ECFDF5; color: #047857; }
+  .chip.news    { background: #FDF2F8; color: #BE185D; }
+  .chip.data    { background: #F0F9FF; color: #0369A1; }
+  .card-date { margin-left: auto; font-size: 13.5px; color: var(--ink-400); }
+  .card-title { font-size: 17px; font-weight: 750; line-height: 1.4; letter-spacing: -.2px; }
+  .doc-card.on .card-title { color: var(--indigo-deep); }
+  .card-summary {
+    margin-top: 6px; font-size: 15px; color: var(--ink-500); line-height: 1.55;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card-meta {
+    margin-top: 12px; display: flex; align-items: center; gap: 14px;
+    font-size: 13.5px; color: var(--ink-400);
+  }
+  .card-meta .m { display: inline-flex; align-items: center; gap: 5px; }
+  .card-meta .m.attach { color: var(--ink-500); font-weight: 600; }
+
+  /* ============================================================
+     우측 — 문서형 상세 (Notion 문서 감각)
+     ============================================================ */
+  .doc-pane { overflow-y: auto; background: var(--canvas); }
+  .doc-sheet {
+    max-width: 780px; margin: 28px auto 60px;
+    background: var(--paper);
+    border: 1px solid var(--line); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 52px 64px 56px;
+  }
+
+  .doc-head { border-bottom: 1px solid var(--line-soft); padding-bottom: 24px; margin-bottom: 32px; }
+  .doc-cat { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .doc-title { font-size: 30px; font-weight: 800; letter-spacing: -.5px; line-height: 1.32; }
+  .doc-meta {
+    margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px;
+    font-size: 14.5px; color: var(--ink-500);
+  }
+  .doc-meta .m { display: inline-flex; align-items: center; gap: 6px; }
+  .doc-meta .src { font-weight: 700; color: var(--ink-700); }
+
+  /* 문서 본문 타이포 */
+  .doc-body { font-size: 16.5px; line-height: 1.75; color: var(--ink-700); }
+  .doc-body h2 {
+    font-size: 20px; font-weight: 800; color: var(--ink-900);
+    letter-spacing: -.3px; margin: 36px 0 12px;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .doc-body h2 .bar { width: 4px; height: 18px; border-radius: 3px; background: var(--indigo); }
+  .doc-body p { margin: 0 0 14px; }
+  .doc-body ul { margin: 0 0 14px; padding-left: 4px; list-style: none; }
+  .doc-body li {
+    position: relative; padding-left: 22px; margin-bottom: 8px;
+  }
+  .doc-body li::before {
+    content: ""; position: absolute; left: 6px; top: 12px;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--indigo);
+  }
+  .doc-body strong { color: var(--ink-900); font-weight: 750; }
+  .doc-body mark {
+    background: var(--indigo-tint); color: var(--indigo-deep);
+    padding: 1px 5px; border-radius: 5px; font-weight: 700;
+  }
+
+  /* 콜아웃 — 절제된 인디고 틴트 */
+  .callout {
+    display: flex; gap: 14px;
+    background: var(--indigo-tint);
+    border: 1px solid var(--indigo-tint-2);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    margin: 20px 0 24px;
+  }
+  .callout .co-icon {
+    width: 34px; height: 34px; border-radius: 9px; flex: none;
+    background: var(--paper); border: 1px solid var(--indigo-tint-2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--indigo);
+  }
+  .callout .co-body { font-size: 15.5px; line-height: 1.65; color: #3D3E8F; }
+  .callout .co-body b { display: block; font-size: 15px; font-weight: 800; color: var(--indigo-deep); margin-bottom: 3px; }
+
+  /* 콜아웃 — 주의(앰버, 절제) */
+  .callout.warn { background: var(--amber-tint); border-color: var(--amber-line); }
+  .callout.warn .co-icon { border-color: var(--amber-line); color: var(--amber-ink); }
+  .callout.warn .co-body { color: #6B5416; }
+  .callout.warn .co-body b { color: var(--amber-ink); }
+
+  /* 요점 정리 표 느낌의 정의 리스트 */
+  .kv {
+    border: 1px solid var(--line); border-radius: var(--radius-md);
+    overflow: hidden; margin: 18px 0 24px;
+  }
+  .kv-row { display: grid; grid-template-columns: 168px 1fr; }
+  .kv-row + .kv-row { border-top: 1px solid var(--line-soft); }
+  .kv-k {
+    background: var(--canvas); padding: 13px 18px;
+    font-size: 14.5px; font-weight: 700; color: var(--ink-500);
+    display: flex; align-items: center;
+  }
+  .kv-v { padding: 13px 18px; font-size: 15.5px; color: var(--ink-700); }
+  .kv-v b { color: var(--ink-900); }
+
+  /* 인용 스타일 구분선 문단 */
+  .quoteline {
+    border-left: 3px solid var(--indigo-tint-2);
+    padding: 4px 0 4px 18px; margin: 18px 0 22px;
+    color: var(--ink-500); font-size: 15.5px;
+  }
+
+  /* 첨부 블록 */
+  .attach-block { margin-top: 40px; border-top: 1px solid var(--line-soft); padding-top: 26px; }
+  .attach-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 800; color: var(--ink-900); margin-bottom: 14px;
+  }
+  .attach-head .n { color: var(--indigo); }
+  .attach-list { display: flex; flex-direction: column; gap: 8px; }
+  .attach-item {
+    display: flex; align-items: center; gap: 14px;
+    min-height: 56px; padding: 8px 14px;
+    border: 1px solid var(--line); border-radius: var(--radius-md);
+    background: var(--paper); cursor: pointer;
+    transition: border-color .15s, background .15s;
+    font-family: inherit; text-align: left; width: 100%;
+  }
+  .attach-item:hover { border-color: var(--indigo-tint-2); background: var(--indigo-tint); }
+  .file-badge {
+    width: 40px; height: 40px; border-radius: 10px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11.5px; font-weight: 800; letter-spacing: .3px;
+  }
+  .file-badge.pdf { background: #FEF2F2; color: #B91C1C; }
+  .file-badge.xls { background: #ECFDF5; color: #047857; }
+  .file-badge.img { background: var(--indigo-tint); color: var(--indigo-deep); }
+  .attach-name { font-size: 15.5px; font-weight: 650; color: var(--ink-900); }
+  .attach-size { font-size: 13.5px; color: var(--ink-400); margin-top: 1px; }
+  .attach-dl {
+    margin-left: auto; width: 44px; height: 44px; flex: none;
+    border-radius: 10px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink-500);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .attach-item:hover .attach-dl { color: var(--indigo); border-color: var(--indigo-tint-2); }
+
+  /* 문서 하단 액션 */
+  .doc-actions {
+    margin-top: 34px; display: flex; gap: 10px; flex-wrap: wrap;
+  }
+
+  /* 반응형 — 좁으면 상세만 */
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: 1fr; }
+    .list-pane { display: none; }
+    .doc-sheet { margin: 16px; padding: 32px 24px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 상단 바 ================= -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-dot">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+    </span>
+    원세컨드
+  </div>
+  <div class="crumb">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    보험사 자료실 <span aria-hidden="true">/</span> <b>중앙손해보험</b>
+  </div>
+  <div class="topbar-right">
+    <button class="btn" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      필터
+    </button>
+    <button class="btn btn-primary" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      새 자료 올리기
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ================= 좌측: 문서형 카드 리스트 ================= -->
+  <aside class="list-pane">
+    <div class="list-head">
+      <div class="list-title">자료실</div>
+      <div class="list-sub">공지·자료·소식지·교육자료를 한곳에서</div>
+    </div>
+
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="제목·내용·첨부 파일명 검색">
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="자료 분류">
+      <button class="tab on" type="button">전체 <span class="cnt">24</span></button>
+      <button class="tab" type="button">공지 <span class="cnt">6</span></button>
+      <button class="tab" type="button">자료 <span class="cnt">9</span></button>
+      <button class="tab" type="button">소식지 <span class="cnt">5</span></button>
+      <button class="tab" type="button">교육자료 <span class="cnt">4</span></button>
+    </div>
+
+    <div class="cards" id="cards">
+
+      <button class="doc-card on" type="button" data-doc="d1">
+        <div class="card-top">
+          <span class="chip notice">공지</span>
+          <span class="chip">필독</span>
+          <span class="card-date">오늘 09:40</span>
+        </div>
+        <div class="card-title">7월 건강보험 개정 상품 판매 지침 안내</div>
+        <div class="card-summary">7월 15일부터 적용되는 건강보험 개정 상품의 인수 기준·판매 자격·전산 반영 일정을 정리했습니다. 기존 상품 절판 일정도 함께 확인해 주세요.</div>
+        <div class="card-meta">
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            상품기획팀
+          </span>
+          <span class="m attach">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            첨부 3
+          </span>
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            412
+          </span>
+        </div>
+      </button>
+
+      <button class="doc-card" type="button" data-doc="d2">
+        <div class="card-top">
+          <span class="chip data">자료</span>
+          <span class="card-date">어제</span>
+        </div>
+        <div class="card-title">종합건강보험 플랜별 보장 비교표 (2026-07)</div>
+        <div class="card-summary">기본형·표준형·고급형 3개 플랜의 담보 구성과 보험료 예시를 한 장으로 비교했습니다. 상담 시 바로 열어서 쓰는 용도입니다.</div>
+        <div class="card-meta">
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            영업지원팀
+          </span>
+          <span class="m attach">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            첨부 2
+          </span>
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            287
+          </span>
+        </div>
+      </button>
+
+      <button class="doc-card" type="button" data-doc="d3">
+        <div class="card-top">
+          <span class="chip news">소식지</span>
+          <span class="card-date">7월 4일</span>
+        </div>
+        <div class="card-title">주간 언더라이팅 소식 — 7월 1주차</div>
+        <div class="card-summary">이번 주 인수 지침 변경 2건, 자주 반려되는 고지 항목 정리, 심사팀이 알려주는 서류 준비 요령을 담았습니다.</div>
+        <div class="card-meta">
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            심사팀
+          </span>
+          <span class="m attach">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            첨부 1
+          </span>
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            198
+          </span>
+        </div>
+      </button>
+
+      <button class="doc-card" type="button" data-doc="d4">
+        <div class="card-top">
+          <span class="chip edu">교육자료</span>
+          <span class="card-date">7월 2일</span>
+        </div>
+        <div class="card-title">신입 설계사를 위한 청약 전 확인 체크리스트</div>
+        <div class="card-summary">청약 전 반드시 확인해야 하는 12가지 항목을 순서대로 정리했습니다. 인쇄해서 책상에 두고 쓰기 좋은 A4 1장 구성입니다.</div>
+        <div class="card-meta">
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            교육지원팀
+          </span>
+          <span class="m attach">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            첨부 1
+          </span>
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            156
+          </span>
+        </div>
+      </button>
+
+      <button class="doc-card" type="button" data-doc="d5">
+        <div class="card-top">
+          <span class="chip data">자료</span>
+          <span class="card-date">6월 30일</span>
+        </div>
+        <div class="card-title">납입면제 조건 요약 — 상품군별 정리</div>
+        <div class="card-summary">상품군별 납입면제 발생 조건과 예외 사항을 표로 정리했습니다. 무해지형·일반형 구분 기준 포함.</div>
+        <div class="card-meta">
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            상품기획팀
+          </span>
+          <span class="m attach">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            첨부 2
+          </span>
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            134
+          </span>
+        </div>
+      </button>
+
+      <button class="doc-card" type="button" data-doc="d6">
+        <div class="card-top">
+          <span class="chip notice">공지</span>
+          <span class="card-date">6월 27일</span>
+        </div>
+        <div class="card-title">전산 점검 안내 — 7월 12일(일) 02:00~06:00</div>
+        <div class="card-summary">청약 시스템 정기 점검으로 해당 시간 동안 전자청약·조회 서비스가 일시 중단됩니다.</div>
+        <div class="card-meta">
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            IT운영팀
+          </span>
+          <span class="m">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            96
+          </span>
+        </div>
+      </button>
+
+    </div>
+  </aside>
+
+  <!-- ================= 우측: 문서 상세 (Notion 문서 감각) ================= -->
+  <main class="doc-pane">
+    <article class="doc-sheet" id="docSheet">
+
+      <header class="doc-head">
+        <div class="doc-cat">
+          <span class="chip notice">공지</span>
+          <span class="chip">필독</span>
+        </div>
+        <h1 class="doc-title">7월 건강보험 개정 상품 판매 지침 안내</h1>
+        <div class="doc-meta">
+          <span class="m src">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            중앙손해보험 · 상품기획팀
+          </span>
+          <span class="m">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            2026년 7월 7일 09:40
+          </span>
+          <span class="m">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            412회 열람
+          </span>
+        </div>
+      </header>
+
+      <div class="doc-body">
+
+        <div class="callout">
+          <span class="co-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </span>
+          <div class="co-body">
+            <b>핵심 요약</b>
+            개정 상품은 <strong>7월 15일(수)부터 판매</strong>됩니다. 기존 상품 청약은 <strong>7월 14일(화) 18:00 마감</strong>이며, 마감 이후 접수분은 전산에서 자동 반려됩니다.
+          </div>
+        </div>
+
+        <h2><span class="bar"></span>1. 적용 일정</h2>
+        <div class="kv">
+          <div class="kv-row"><div class="kv-k">개정 상품 판매 개시</div><div class="kv-v"><b>2026년 7월 15일(수) 09:00</b> 전산 오픈과 동시</div></div>
+          <div class="kv-row"><div class="kv-k">기존 상품 청약 마감</div><div class="kv-v"><b>2026년 7월 14일(화) 18:00</b> 접수분까지 유효</div></div>
+          <div class="kv-row"><div class="kv-k">교육 이수 기한</div><div class="kv-v">7월 13일(월)까지 사이버연수원 필수과정 이수</div></div>
+        </div>
+
+        <h2><span class="bar"></span>2. 주요 변경 사항</h2>
+        <p>이번 개정의 핵심은 <mark>인수 기준 완화</mark>와 <mark>보장 한도 조정</mark> 두 가지입니다. 상담 화법에 직접 영향이 있는 항목만 추렸습니다.</p>
+        <ul>
+          <li><strong>가입 연령 확대</strong> — 주계약 가입 가능 연령이 기존 최대 65세에서 <strong>70세</strong>로 확대됩니다.</li>
+          <li><strong>간편 고지 항목 축소</strong> — 간편심사형 고지 항목이 5개에서 <strong>3개</strong>로 줄어 인수 문턱이 낮아집니다.</li>
+          <li><strong>일부 담보 한도 하향</strong> — 입원일당 담보의 최대 가입 한도가 조정됩니다. 세부 수치는 첨부 요약표를 확인하세요.</li>
+        </ul>
+
+        <div class="callout warn">
+          <span class="co-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </span>
+          <div class="co-body">
+            <b>판매 자격 유의</b>
+            필수 교육 미이수 상태에서는 7월 15일 이후 개정 상품 청약 입력이 <strong>차단</strong>됩니다. 교육 이수 여부를 미리 확인해 주세요.
+          </div>
+        </div>
+
+        <h2><span class="bar"></span>3. 절판 안내 시 화법 기준</h2>
+        <div class="quoteline">
+          절판을 이유로 가입을 재촉하는 안내는 불완전판매로 분류될 수 있습니다. 아래 기준을 지켜 주세요.
+        </div>
+        <ul>
+          <li>기존 상품과 개정 상품의 <strong>차이를 먼저 설명</strong>하고, 고객이 유리한 쪽을 선택하도록 안내합니다.</li>
+          <li>"오늘이 마지막"류의 표현 대신 <strong>정확한 마감 일시</strong>를 전달합니다.</li>
+          <li>비교 안내 시 첨부된 <strong>공식 비교표만</strong> 사용합니다. 개인 제작 자료 사용은 금지됩니다.</li>
+        </ul>
+
+      </div>
+
+      <!-- 첨부 -->
+      <section class="attach-block">
+        <div class="attach-head">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          첨부 파일 <span class="n">3</span>
+        </div>
+        <div class="attach-list">
+          <button class="attach-item" type="button">
+            <span class="file-badge pdf">PDF</span>
+            <span>
+              <span class="attach-name">개정 상품 판매 지침 전문.pdf</span>
+              <div class="attach-size">2.4MB · 판매 지침 원문 24쪽</div>
+            </span>
+            <span class="attach-dl">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </span>
+          </button>
+          <button class="attach-item" type="button">
+            <span class="file-badge xls">XLS</span>
+            <span>
+              <span class="attach-name">담보 한도 변경 요약표.xlsx</span>
+              <div class="attach-size">148KB · 신구 대비 1시트</div>
+            </span>
+            <span class="attach-dl">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </span>
+          </button>
+          <button class="attach-item" type="button">
+            <span class="file-badge img">IMG</span>
+            <span>
+              <span class="attach-name">고객 안내용 공식 비교표.png</span>
+              <div class="attach-size">820KB · 상담 화면 공유용</div>
+            </span>
+            <span class="attach-dl">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <div class="doc-actions">
+        <button class="btn btn-primary" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+          딸깍 카드 만들기
+        </button>
+        <button class="btn" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          MY SPACE에 담기
+        </button>
+        <button class="btn" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          링크 복사
+        </button>
+      </div>
+
+    </article>
+  </main>
+</div>
+
+<script>
+  // 시안용 최소 상호작용: 카드 선택 표시만 전환 (상세 내용은 대표 예시 1건 고정)
+  document.querySelectorAll('.doc-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      document.querySelectorAll('.doc-card').forEach(function (c) { c.classList.remove('on'); });
+      card.classList.add('on');
+      document.getElementById('docSheet').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+
+</body>
+</html>

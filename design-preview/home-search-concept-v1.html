@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원세컨드 — 홈 검색 레이아웃 초안 v1 (시안)</title>
+<style>
+/* ============================================================
+   원세컨드 홈=검색 레이아웃 초안 시안 v1
+   - 구현 아님. 레이아웃·위계·여백 방향 시각화 전용.
+   - self-contained (외부 리소스 0)
+   - 브랜드 V2 인디고 #534AB7 / #6366F1
+   ============================================================ */
+
+:root {
+  --brand:        #534AB7;
+  --brand-soft:   #6366F1;
+  --brand-tint:   #EEEDFB;
+  --brand-tint-2: #F6F5FD;
+
+  --bg:           #FFFFFF;
+  --surface:      #FFFFFF;
+  --surface-2:    #F7F7FA;
+  --border:       #E6E6EE;
+  --border-soft:  #EFEFF5;
+
+  --text-1:       #1C1C28;
+  --text-2:       #62626E;
+  --text-3:       #9A9AA6;
+
+  --badge-product:  #534AB7;
+  --badge-goji:     #B45309;
+  --badge-news:     #0E7490;
+  --badge-qna:      #15803D;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 9999px;
+
+  --shadow-1: 0 1px 3px rgba(28,28,40,.06), 0 4px 16px rgba(28,28,40,.05);
+  --shadow-2: 0 2px 8px rgba(83,74,183,.10), 0 10px 32px rgba(28,28,40,.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand:        #7B74E0;
+    --brand-soft:   #8B8DF5;
+    --brand-tint:   #2A2842;
+    --brand-tint-2: #232134;
+
+    --bg:           #15151D;
+    --surface:      #1D1D28;
+    --surface-2:    #23232F;
+    --border:       #32323F;
+    --border-soft:  #2A2A36;
+
+    --text-1:       #F0F0F5;
+    --text-2:       #A8A8B6;
+    --text-3:       #6E6E7C;
+
+    --shadow-1: 0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+    --shadow-2: 0 2px 8px rgba(0,0,0,.35), 0 10px 32px rgba(0,0,0,.3);
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+               'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+svg { display: block; flex: none; }
+
+/* ── 시안 안내 바 (제품 아님 표시) ───────────────────── */
+.spec-bar {
+  background: var(--text-1);
+  color: var(--bg);
+  font-size: 13px;
+  padding: 8px 16px;
+  text-align: center;
+  letter-spacing: .02em;
+}
+.spec-bar strong { font-weight: 700; }
+
+/* ── 변형안 탭 ───────────────────────────────────────── */
+.variant-nav {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; gap: 6px; justify-content: center;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-soft);
+  overflow-x: auto;
+}
+.variant-nav button {
+  appearance: none; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2);
+  font: inherit; font-size: 14px; font-weight: 600;
+  min-height: 44px; padding: 0 18px;
+  border-radius: var(--radius-full);
+  cursor: pointer; white-space: nowrap;
+}
+.variant-nav button.active {
+  background: var(--brand); border-color: var(--brand);
+  color: #fff;
+}
+
+.variant { display: none; }
+.variant.show { display: block; }
+
+/* ── 시안 의도 주석 박스 ─────────────────────────────── */
+.intent {
+  max-width: 720px; margin: 28px auto 0;
+  padding: 14px 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text-2); font-size: 14px;
+}
+.intent b { color: var(--text-1); }
+
+/* ============================================================
+   공통 부품 — 검색창 / 칩 / 결과 카드
+   ============================================================ */
+
+.search-shell { position: relative; width: 100%; }
+
+.search-box {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 0 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  transition: border-color .15s, box-shadow .15s;
+}
+.search-box.focus {
+  border-color: var(--brand-soft);
+  box-shadow: var(--shadow-2);
+}
+.search-box .icon { color: var(--text-3); }
+.search-box.focus .icon { color: var(--brand); }
+.search-box input {
+  flex: 1; border: 0; outline: 0; background: transparent;
+  font: inherit; font-size: 18px; color: var(--text-1);
+  min-height: 44px;
+}
+.search-box input::placeholder { color: var(--text-3); }
+.search-kbd {
+  font-size: 12px; color: var(--text-3);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 3px 8px; background: var(--surface-2);
+  white-space: nowrap;
+}
+
+/* 자동완성 패널 (목업 — 항상 열려 보이게) */
+.suggest {
+  position: relative;
+  margin-top: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+.suggest-row {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 48px; padding: 6px 18px;
+  font-size: 16px; color: var(--text-1);
+  cursor: pointer;
+}
+.suggest-row:hover, .suggest-row.hl { background: var(--brand-tint-2); }
+.suggest-row .icon { color: var(--text-3); }
+.suggest-row mark {
+  background: transparent; color: var(--brand); font-weight: 700;
+}
+.suggest-row .tail {
+  margin-left: auto; font-size: 13px; color: var(--text-3); white-space: nowrap;
+}
+.suggest-foot {
+  padding: 10px 18px; border-top: 1px solid var(--border-soft);
+  font-size: 13px; color: var(--text-3);
+}
+
+/* 데이터 소스 칩 */
+.chips {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+}
+.chips.left { justify-content: flex-start; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 44px; padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  font-size: 15px; font-weight: 500; color: var(--text-2);
+  cursor: pointer; white-space: nowrap;
+}
+.chip .icon { color: var(--text-3); }
+.chip.on {
+  background: var(--brand-tint); border-color: transparent;
+  color: var(--brand); font-weight: 700;
+}
+.chip.on .icon { color: var(--brand); }
+.chip .cnt { font-size: 13px; font-weight: 400; color: var(--text-3); }
+.chip.on .cnt { color: var(--brand-soft); }
+
+/* 결과 카드 */
+.result-list { display: flex; flex-direction: column; gap: 12px; }
+.rcard {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.rcard:hover { border-color: var(--brand-soft); box-shadow: var(--shadow-1); }
+.rcard-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.rbadge {
+  font-size: 12px; font-weight: 700; letter-spacing: .02em;
+  padding: 3px 9px; border-radius: var(--radius-sm);
+  color: #fff;
+}
+.rbadge.product { background: var(--badge-product); }
+.rbadge.goji    { background: var(--badge-goji); }
+.rbadge.news    { background: var(--badge-news); }
+.rbadge.qna     { background: var(--badge-qna); }
+.rcard-src { font-size: 13px; color: var(--text-3); }
+.rcard-title { font-size: 17px; font-weight: 700; color: var(--text-1); }
+.rcard-title mark { background: transparent; color: var(--brand); }
+.rcard-snippet {
+  margin-top: 4px; font-size: 15px; color: var(--text-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rcard-snippet mark {
+  background: var(--brand-tint); color: var(--brand);
+  border-radius: 3px; padding: 0 2px;
+}
+.rcard-meta {
+  margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 13px; color: var(--text-3);
+}
+
+/* 보조 진입 (도구·최근) */
+.aux-title {
+  font-size: 13px; font-weight: 700; color: var(--text-3);
+  letter-spacing: .06em; margin-bottom: 10px;
+}
+.aux-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.aux-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 15px; color: var(--text-2); font-weight: 500;
+  cursor: pointer;
+}
+.aux-link:hover { color: var(--brand); background: var(--brand-tint-2); }
+.aux-link .icon { color: var(--text-3); }
+.aux-link:hover .icon { color: var(--brand); }
+
+/* 최근 검색어 */
+.recent-q { display: flex; flex-wrap: wrap; gap: 8px; }
+.recent-q span {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 0 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-soft);
+  font-size: 14px; color: var(--text-2); cursor: pointer;
+}
+.recent-q span:hover { border-color: var(--brand-soft); color: var(--brand); }
+
+/* ============================================================
+   안 A — 검색이 곧 홈 (진입 상태 · 중앙 집중)
+   ============================================================ */
+.va-stage {
+  max-width: 720px; margin: 0 auto;
+  padding: clamp(48px, 12vh, 128px) 20px 64px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.va-brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: clamp(28px, 5vh, 48px);
+}
+.va-brand .mark {
+  width: 40px; height: 40px; border-radius: var(--radius-md);
+  background: var(--brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 18px;
+}
+.va-brand .name { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+.va-brand .name em { font-style: normal; color: var(--brand); }
+.va-tagline {
+  font-size: 16px; color: var(--text-2); margin-bottom: 28px; text-align: center;
+}
+.va-search { width: 100%; max-width: 640px; }
+.va-chips { margin-top: 20px; }
+.va-aux {
+  margin-top: clamp(40px, 8vh, 72px);
+  width: 100%; max-width: 640px;
+  display: grid; gap: 28px;
+}
+@media (min-width: 640px) { .va-aux { grid-template-columns: 1fr 1fr; } }
+
+/* ============================================================
+   안 B — 검색 + 살아있는 결과 (한 화면)
+   ============================================================ */
+.vb-wrap { max-width: 760px; margin: 0 auto; padding: 36px 20px 72px; }
+.vb-top { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.vb-top .mark {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  background: var(--brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 15px;
+}
+.vb-top .name { font-size: 18px; font-weight: 800; }
+.vb-top .name em { font-style: normal; color: var(--brand); }
+.vb-chips { margin: 16px 0 8px; }
+.vb-count {
+  font-size: 14px; color: var(--text-3);
+  margin: 18px 2px 10px;
+}
+.vb-count b { color: var(--text-1); }
+.vb-aux { margin-top: 40px; display: grid; gap: 28px; }
+@media (min-width: 640px) { .vb-aux { grid-template-columns: 1fr 1fr; } }
+
+/* ============================================================
+   안 C — 컴팩트 운영형 (고정 검색 헤더 + 2열)
+   ============================================================ */
+.vc-header {
+  position: sticky; top: 65px; z-index: 40;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 12px 20px;
+}
+.vc-header-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: center; gap: 14px;
+}
+.vc-header .mark {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  background: var(--brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 15px;
+}
+.vc-search { flex: 1; }
+.vc-search .search-box { min-height: 48px; border-radius: var(--radius-full); box-shadow: none; }
+.vc-search input { font-size: 16px; }
+.vc-body {
+  max-width: 960px; margin: 0 auto;
+  padding: 20px 20px 72px;
+  display: grid; gap: 32px;
+}
+@media (min-width: 860px) {
+  .vc-body { grid-template-columns: minmax(0,1fr) 280px; align-items: start; }
+}
+.vc-rail { display: flex; flex-direction: column; gap: 28px; }
+.vc-rail .panel {
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.vc-rail .aux-link { background: var(--surface); }
+</style>
+</head>
+<body>
+
+<div class="spec-bar"><strong>시안</strong> — 홈=검색 레이아웃 초안 v1 · 구현 아님 · 데이터 전부 목업 · 보험사명 중립 예시</div>
+
+<nav class="variant-nav">
+  <button class="active" data-v="a">안 A — 검색이 곧 홈</button>
+  <button data-v="b">안 B — 검색 + 결과 한 화면</button>
+  <button data-v="c">안 C — 컴팩트 운영형</button>
+</nav>
+
+<!-- ============================================================
+     안 A : 진입 상태. 화면 전체가 검색 하나에 집중.
+     ============================================================ -->
+<section class="variant show" id="v-a">
+  <div class="intent">
+    <b>안 A 의도</b> — 홈에 처음 들어온 순간. 다른 어떤 것도 경쟁하지 않고
+    검색창 하나가 화면의 주인. 위아래 여백을 크게 비워 "여기에 물어보면 된다"는
+    메시지만 남긴다. 칩은 검색의 범위 안내, 도구·최근은 아래로 물러난 보조 진입.
+  </div>
+
+  <div class="va-stage">
+    <div class="va-brand">
+      <div class="mark">1s</div>
+      <div class="name">one<em>second</em></div>
+    </div>
+    <p class="va-tagline">상품 · 알릴의무 · 소식지 · Q&amp;A — 한 번에 검색</p>
+
+    <div class="va-search">
+      <div class="search-shell">
+        <div class="search-box focus">
+          <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" value="간경변" aria-label="통합 검색">
+          <span class="search-kbd">Enter</span>
+        </div>
+
+        <!-- 자동완성 목업 : 실제로는 입력 시 열림 -->
+        <div class="suggest">
+          <div class="suggest-row hl">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <span><mark>간경변</mark> 인수 기준</span>
+            <span class="tail">알릴의무 · 12건</span>
+          </div>
+          <div class="suggest-row">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <span><mark>간경변</mark> 유병자 플랜</span>
+            <span class="tail">상품 · 8건</span>
+          </div>
+          <div class="suggest-row">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v4l2.5 2.5"/><circle cx="12" cy="12" r="9"/></svg>
+            <span>간수치 (최근 검색)</span>
+            <span class="tail">지우기</span>
+          </div>
+          <div class="suggest-foot">실비 → 실손 같은 동의어도 함께 찾아드립니다</div>
+        </div>
+      </div>
+
+      <div class="chips va-chips">
+        <span class="chip on">
+          <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          전체
+        </span>
+        <span class="chip">
+          <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L12 3 4 7v10l8 4 8-4V7z"/><path d="M12 11L4 7M12 11l8-4M12 11v10"/></svg>
+          상품
+        </span>
+        <span class="chip">
+          <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+          알릴의무
+        </span>
+        <span class="chip">
+          <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-3-2-3 2-3-2-3 2V4z"/><path d="M9 8h6M9 12h6"/></svg>
+          소식지
+        </span>
+        <span class="chip">
+          <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/><path d="M9 11h6"/></svg>
+          Q&amp;A
+        </span>
+        <span class="chip">
+          <svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/></svg>
+          자료실
+        </span>
+      </div>
+    </div>
+
+    <div class="va-aux">
+      <div>
+        <div class="aux-title">최근 검색</div>
+        <div class="recent-q">
+          <span>실손 전환</span>
+          <span>고지 3개월</span>
+          <span>납입면제</span>
+          <span>무해지형</span>
+        </div>
+      </div>
+      <div>
+        <div class="aux-title">도구</div>
+        <div class="aux-links">
+          <span class="aux-link">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 11h16"/></svg>
+            다이어리
+          </span>
+          <span class="aux-link">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            스크립트
+          </span>
+          <span class="aux-link">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/></svg>
+            MY SPACE
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     안 B : 검색 후 상태. 검색창은 위로, 혼합 결과가 본문.
+     ============================================================ -->
+<section class="variant" id="v-b">
+  <div class="intent">
+    <b>안 B 의도</b> — 검색어를 넣은 다음 화면. 검색창이 위로 올라가고
+    본문 전체가 결과가 된다. 상품·알릴의무·소식지·Q&amp;A가 한 리스트에 섞여
+    "종류가 달라도 답은 한 줄"임을 보여준다. 칩이 결과 필터로 역할 전환.
+  </div>
+
+  <div class="vb-wrap">
+    <div class="vb-top">
+      <div class="mark">1s</div>
+      <div class="name">one<em>second</em></div>
+    </div>
+
+    <div class="search-shell">
+      <div class="search-box focus">
+        <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" value="간경변 인수" aria-label="통합 검색">
+      </div>
+    </div>
+
+    <div class="chips left vb-chips">
+      <span class="chip on">전체 <span class="cnt">23</span></span>
+      <span class="chip">상품 <span class="cnt">8</span></span>
+      <span class="chip">알릴의무 <span class="cnt">9</span></span>
+      <span class="chip">소식지 <span class="cnt">4</span></span>
+      <span class="chip">Q&amp;A <span class="cnt">2</span></span>
+    </div>
+
+    <p class="vb-count"><b>"간경변 인수"</b> 결과 23건 · 0.4초</p>
+
+    <div class="result-list">
+      <article class="rcard">
+        <div class="rcard-head">
+          <span class="rbadge goji">알릴의무</span>
+          <span class="rcard-src">A생명 · 인수 기준표</span>
+        </div>
+        <h3 class="rcard-title"><mark>간경변</mark> 진단자 청약 시 알릴의무 정리</h3>
+        <p class="rcard-snippet">최근 5년 내 <mark>간경변</mark> 진단·치료 이력이 있는 경우 고지 대상입니다. 진단 시점과 치료 종결 여부에 따라 <mark>인수</mark> 가능 범위가 달라지며…</p>
+        <div class="rcard-meta"><span>2026-06-30</span><span>조회 214</span></div>
+      </article>
+
+      <article class="rcard">
+        <div class="rcard-head">
+          <span class="rbadge product">상품</span>
+          <span class="rcard-src">B손해보험 · 유병자 플랜</span>
+        </div>
+        <h3 class="rcard-title">간질환 유병자 간편심사 건강보험 (3·2·5)</h3>
+        <p class="rcard-snippet"><mark>간경변</mark> 포함 간질환 병력자 대상 간편고지 3문항 플랜. 무해지형·일반형 선택 가능, 납입면제 특약 부가 시…</p>
+        <div class="rcard-meta"><span>라인업 2026-07</span><span>보장 비교 가능</span></div>
+      </article>
+
+      <article class="rcard">
+        <div class="rcard-head">
+          <span class="rbadge qna">Q&amp;A</span>
+          <span class="rcard-src">보험 Q&amp;A · 인수</span>
+        </div>
+        <h3 class="rcard-title">Q. <mark>간경변</mark> 초기 진단, 치료 종결 2년 — 암보험 <mark>인수</mark> 가능할까요?</h3>
+        <p class="rcard-snippet">A. 치료 종결 시점과 최근 검사 수치가 핵심입니다. 회사별로 부담보 조건부 <mark>인수</mark> 사례가 있으며, 간편심사 상품으로 우회하는 방법도…</p>
+        <div class="rcard-meta"><span>답변 2건</span><span>2026-06-18</span></div>
+      </article>
+
+      <article class="rcard">
+        <div class="rcard-head">
+          <span class="rbadge news">소식지</span>
+          <span class="rcard-src">C화재 · 6월 2주차</span>
+        </div>
+        <h3 class="rcard-title">6월 언더라이팅 완화 — 간질환 <mark>인수</mark> 기준 변경 안내</h3>
+        <p class="rcard-snippet">이번 달부터 경증 간질환 병력자의 <mark>인수</mark> 기준이 완화됩니다. 기존 부담보 5년에서 3년으로 단축되며…</p>
+        <div class="rcard-meta"><span>2026-06-08</span><span>원문 보기</span></div>
+      </article>
+    </div>
+
+    <div class="vb-aux">
+      <div>
+        <div class="aux-title">최근 검색</div>
+        <div class="recent-q">
+          <span>실손 전환</span>
+          <span>고지 3개월</span>
+          <span>납입면제</span>
+        </div>
+      </div>
+      <div>
+        <div class="aux-title">도구</div>
+        <div class="aux-links">
+          <span class="aux-link">다이어리</span>
+          <span class="aux-link">스크립트</span>
+          <span class="aux-link">MY SPACE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     안 C : 컴팩트 운영형. 검색 헤더 고정 + 결과/보조 2열.
+     ============================================================ -->
+<section class="variant" id="v-c">
+  <div class="intent">
+    <b>안 C 의도</b> — 하루 종일 켜 두고 쓰는 업무 화면. 검색이 항상
+    상단에 고정되고, 스크롤해도 사라지지 않는다. 데스크톱에서는 결과 옆에
+    최근·도구 레일이 붙고, 모바일에서는 자연스럽게 한 열로 쌓인다.
+  </div>
+
+  <div class="vc-header">
+    <div class="vc-header-inner">
+      <div class="mark">1s</div>
+      <div class="vc-search search-shell">
+        <div class="search-box">
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" placeholder="상품 · 알릴의무 · 소식지 · Q&amp;A 통합 검색" aria-label="통합 검색">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="vc-body">
+    <div>
+      <div class="chips left" style="margin-bottom:16px;">
+        <span class="chip on">전체</span>
+        <span class="chip">상품</span>
+        <span class="chip">알릴의무</span>
+        <span class="chip">소식지</span>
+        <span class="chip">Q&amp;A</span>
+      </div>
+
+      <div class="result-list">
+        <article class="rcard">
+          <div class="rcard-head">
+            <span class="rbadge product">상품</span>
+            <span class="rcard-src">A생명 · 종합건강</span>
+          </div>
+          <h3 class="rcard-title">뇌·심장 진단비 집중 플랜 — 무해지형</h3>
+          <p class="rcard-snippet">뇌혈관·허혈성 진단비 중심 설계. 무해지형 선택 시 보험료 절감, 납입 중 해지 시 환급금 없음…</p>
+          <div class="rcard-meta"><span>라인업 2026-07</span></div>
+        </article>
+
+        <article class="rcard">
+          <div class="rcard-head">
+            <span class="rbadge goji">알릴의무</span>
+            <span class="rcard-src">B손해보험</span>
+          </div>
+          <h3 class="rcard-title">최근 3개월 이내 진료·투약 고지 범위</h3>
+          <p class="rcard-snippet">3개월 이내 의사의 진찰·검사·투약 사실은 회사와 무관하게 공통 고지 대상입니다. 단순 건강검진의 경우…</p>
+          <div class="rcard-meta"><span>2026-06-24</span></div>
+        </article>
+
+        <article class="rcard">
+          <div class="rcard-head">
+            <span class="rbadge news">소식지</span>
+            <span class="rcard-src">C화재 · 7월 1주차</span>
+          </div>
+          <h3 class="rcard-title">7월 시책 및 신상품 출시 일정 안내</h3>
+          <p class="rcard-snippet">7월 신상품 2종 출시와 함께 간편심사 라인 시책이 조정됩니다. 자세한 내용은…</p>
+          <div class="rcard-meta"><span>2026-07-01</span></div>
+        </article>
+
+        <article class="rcard">
+          <div class="rcard-head">
+            <span class="rbadge qna">Q&amp;A</span>
+            <span class="rcard-src">보험 Q&amp;A · 상품</span>
+          </div>
+          <h3 class="rcard-title">Q. 무해지형과 일반형, 고객 설명 포인트가 궁금합니다</h3>
+          <p class="rcard-snippet">A. 핵심 차이는 납입 중 해지 시 환급금 유무입니다. 보험료 차이와 함께 유지 가능성을 기준으로…</p>
+          <div class="rcard-meta"><span>답변 3건</span></div>
+        </article>
+      </div>
+    </div>
+
+    <aside class="vc-rail">
+      <div class="panel">
+        <div class="aux-title">최근 검색</div>
+        <div class="recent-q">
+          <span>간경변 인수</span>
+          <span>실손 전환</span>
+          <span>납입면제</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="aux-title">도구</div>
+        <div class="aux-links" style="flex-direction:column; align-items:stretch;">
+          <span class="aux-link">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 11h16"/></svg>
+            다이어리
+          </span>
+          <span class="aux-link">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            스크립트
+          </span>
+          <span class="aux-link">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/></svg>
+            MY SPACE
+          </span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+// 변형안 전환 (시안 열람용 최소 스크립트)
+document.querySelectorAll('.variant-nav button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.variant-nav button').forEach(function (b) { b.classList.remove('active'); });
+    document.querySelectorAll('.variant').forEach(function (v) { v.classList.remove('show'); });
+    btn.classList.add('active');
+    document.getElementById('v-' + btn.dataset.v).classList.add('show');
+    window.scrollTo({ top: 0 });
+  });
+});
+</script>
+
+</body>
+</html>
