@@ -34,6 +34,7 @@
 <script src="/js/admin-config.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/util-format.js"></script><!-- 순수 포맷터·이스케이프 분리(인라인보다 먼저 로드). Phase2 2026-07-08 -->
+<script src="/js/tools-calc.js"></script><!-- 사칙연산 계산기 도구 분리. 인라인보다 먼저 로드(=_TOOL_PAGE_MAP 호이스팅 캡처 대응). Phase2 2026-07-08 -->
 <link rel="stylesheet" href="/css/app-core.css?v=20260708"><!-- app.html에서 분리한 코어 CSS(토큰+셸). Phase1 perf. 인라인 style 블록 바로 앞=cascade 순서 보존 -->
 <link rel="stylesheet" href="/css/app-views.css?v=20260708"><!-- app.html 인라인 <style> 상단 연속 구간(게이트 뷰+공용 컴포넌트) 분리. app-core 다음·인라인 style 앞=cascade 100% 보존. Phase2 perf -->
 <style>
@@ -6015,69 +6016,7 @@ function _toolPick(name){
   var s=document.getElementById('tool-slot'); if(s) setTimeout(function(){ s.scrollIntoView({behavior:'smooth',block:'start'}); },80);
 }
 window._toolPick=_toolPick;
-/* ════ 실제 계산기(사칙연산) — 독립 도구 허브. eval 미사용 상태머신. 2026-07-05 ════ */
-function renderCalcTool(slotId){
-  var slot=document.getElementById(slotId||'qck-content-slot'); if(!slot) return;
-  window._calcState={cur:'0',prev:null,op:null,fresh:true,expr:'',justEq:false,eqLine:''};
-  var keys=[
-    ['C','C','op'],['back','←','op'],['%','%','op'],['/','÷','opr'],
-    ['7','7',''],['8','8',''],['9','9',''],['*','×','opr'],
-    ['4','4',''],['5','5',''],['6','6',''],['-','−','opr'],
-    ['1','1',''],['2','2',''],['3','3',''],['+','+','opr'],
-    ['+/-','±','op'],['0','0',''],['.','.',''],['=','=','eq']
-  ];
-  var pad=keys.map(function(k){ return '<button type="button" class="calc-btn'+(k[2]?' '+k[2]:'')+'" onclick="_calcKey(\''+k[0]+'\')">'+k[1]+'</button>'; }).join('');
-  slot.innerHTML='<div class="calc-tool"><input type="text" class="calc-disp" id="calcDisp" value="0" readonly aria-label="계산"><div class="calc-pad">'+pad+'</div></div>';
-}
-window.renderCalcTool=renderCalcTool;
-function _calcFmt(s){   /* 표시용 세자리 콤마 — 정수부만 콤마(소수부·부호·오류·입력중 '.' 보존). cur는 raw 유지 */
-  if(s==null||s==='오류') return s||'0';
-  var neg=(s.charAt(0)==='-'); if(neg) s=s.slice(1);
-  var p=s.split('.'); if(!/^\d*$/.test(p[0])) return (neg?'-':'')+s;   /* 지수표기 등 예외는 그대로 */
-  var intp=(p[0]||'0').replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  return (neg?'-':'')+intp+(p.length>1?('.'+p[1]):'');
-}
-var _CALC_SYM={'+':'+','-':'−','*':'×','/':'÷'};
-/* 한 줄 표시 — 입력 중=수식 진행("20 + 30"), = 후=수식+결과 한 줄("20 + 30 = 50") */
-function _calcLine(s){
-  if(!s) return '0';
-  if(s.cur==='오류') return '오류';
-  if(s.justEq) return s.eqLine||_calcFmt(s.cur);
-  var left=s.expr||'';
-  if(s.fresh && left) return left.replace(/\s+$/,'');   /* 연산자 직후: "20 +" */
-  return left+_calcFmt(s.cur);                          /* "20 + 30" 또는 "30" */
-}
-function _calcRender(){ var d=document.getElementById('calcDisp'); if(d) d.value=_calcLine(window._calcState); }
-function _calcEquals(){
-  var s=window._calcState; if(!s||s.op==null||s.prev==null) return;
-  var a=s.prev, b=parseFloat(s.cur), r=0;
-  if(s.op==='+')r=a+b; else if(s.op==='-')r=a-b; else if(s.op==='*')r=a*b; else if(s.op==='/')r=(b===0?NaN:a/b);
-  if(isNaN(r)||!isFinite(r)){ s.cur='오류'; } else { r=Math.round(r*1e10)/1e10; s.cur=String(r); }
-  s.prev=null; s.fresh=true;
-}
-function _calcKey(k){
-  var s=window._calcState; if(!s){ window._calcState=s={cur:'0',prev:null,op:null,fresh:true,expr:'',justEq:false}; }
-  if(s.cur==='오류' && k!=='C'){ return; }
-  if(k==='C'){ s.cur='0'; s.prev=null; s.op=null; s.fresh=true; s.expr=''; s.justEq=false; }
-  else if(k==='back'){ if(!s.fresh){ s.cur=(s.cur.length>1)?s.cur.slice(0,-1):'0'; if(s.cur==='-')s.cur='0'; } }
-  else if(k==='.'){ if(s.justEq){ s.cur='0'; s.expr=''; s.justEq=false; s.fresh=false; s.cur='0.'; } else if(s.fresh){ s.cur='0.'; s.fresh=false; } else if(s.cur.indexOf('.')<0){ s.cur+='.'; } }
-  else if('0123456789'.indexOf(k)>=0){ if(s.justEq){ s.expr=''; s.justEq=false; s.cur=k; s.fresh=false; } else if(s.fresh||s.cur==='0'){ s.cur=k; s.fresh=false; } else { s.cur+=k; } }
-  else if(k==='+'||k==='-'||k==='*'||k==='/'){
-    if(s.op!=null && !s.fresh){ _calcEquals(); }
-    s.prev=parseFloat(s.cur); s.op=k; s.fresh=true; s.justEq=false;
-    s.expr=_calcFmt(s.cur)+' '+_CALC_SYM[k]+' ';
-  }
-  else if(k==='='){
-    if(s.op!=null && s.prev!=null){
-      var _lft=_calcFmt(String(s.prev))+' '+_CALC_SYM[s.op]+' '+_calcFmt(s.cur);
-      _calcEquals(); s.eqLine=_lft+' = '+_calcFmt(s.cur); s.op=null; s.justEq=true;
-    }
-  }
-  else if(k==='%'){ s.cur=String(parseFloat(s.cur)/100); s.fresh=true; }
-  else if(k==='+/-'){ if(s.cur!=='0'&&s.cur!=='오류') s.cur=(s.cur.charAt(0)==='-')?s.cur.slice(1):('-'+s.cur); }
-  _calcRender();
-}
-window._calcKey=_calcKey;
+/* 사칙연산 계산기(renderCalcTool·_calcKey 등) → js/tools-calc.js 분리(2026-07-08). 인라인보다 먼저 로드(=_TOOL_PAGE_MAP 호이스팅 캡처 대응). */
 
 /* ════════════════════════════════════════════════════════════════
  * Quick 실행도구 — 보험료 비교표 빌더 (2026-06-04)
