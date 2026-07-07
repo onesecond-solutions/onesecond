@@ -1846,6 +1846,34 @@ body.is-uat-homesearch2 #homeSearch.searching .hs2-hub{display:none;}
 body.is-uat-homesearch2 #homeSearch.searching .hs-wrap{align-items:stretch;padding-top:16px;}   /* 검색 후엔 중앙정렬 해제 → 결과 전폭 */
 body.is-uat-homesearch2 #homeSearch.searching .hs-box{max-width:640px;}
 @media(max-width:640px){body.is-uat-homesearch2 .hs-field{min-height:56px;height:56px;}body.is-uat-homesearch2 .hs-go{height:56px;}}
+/* ════ 홈 하단 카드(워크스페이스·원수사·Q&A)를 위 hs2-hub-tile 타일과 한 톤으로 통일 (is-uat-homesearch2 스코프, 2026-07-07) ════
+   "위는 새 옷, 아래는 헌 옷" 해소 — 위 타일의 디자인 언어(radius·padding·아이콘·타이포·hover)를 아래 카드에 그대로 입힘.
+   겉모습(CSS)만 오버라이드. 마크업·클릭(onclick _homeCard/showView)·라우터·state 무접촉. .on(선택) 상태의 --c 신호는 보존.
+   전부 body.is-uat-homesearch2 스코프 → 그 외 전원(어드민 포함) 기존 홈 카드 완전 무변경(회귀 0). */
+/* 위 타일 섹션(max-width 860 중앙)과 정렬·여백 리듬(30px) 통일 */
+body.is-uat-homesearch2 #homeDesk{max-width:860px;margin:30px auto 0;}
+/* 섹션 라벨 = hs2-hub-title과 동일(11.5px·700·uppercase·중앙·인디고그레이) + 하단 hairline 제거 */
+body.is-uat-homesearch2 #homeDesk .hd-group > .hd-label{font-size:11.5px;font-weight:700;color:var(--tf);letter-spacing:.08em;text-transform:uppercase;text-align:center;margin:0 2px 13px;}
+body.is-uat-homesearch2 #homeDesk .hd-group > .hd-label::after{display:none;}
+/* 카드 그리드 = 타일과 같은 여유(워크스페이스 2열, 원수사·Q&A 1열). 좁은 화면은 1열 */
+body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns:repeat(2,1fr);}
+body.is-uat-homesearch2 #homeDesk .hd-group-ref .sn-cards{grid-template-columns:1fr;}
+@media(max-width:440px){body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns:1fr;}}
+/* 카드 본체 = 타일 메트릭(가로형·radius-md·부드러운 hover lift+그림자+transition 0.17s) */
+body.is-uat-homesearch2 #homeDesk .sn-card{flex-direction:row;align-items:center;gap:13px;min-height:68px;padding:14px 16px;border-radius:var(--radius-md,12px);transition:border-color .17s ease,background .17s ease,transform .17s ease,box-shadow .17s ease;}
+body.is-uat-homesearch2 #homeDesk .sn-card:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 5%,var(--s1));transform:translateY(-2px);box-shadow:0 5px 16px color-mix(in srgb,var(--ac) 13%,transparent);}
+body.is-uat-homesearch2 #homeDesk .sn-card:active{transform:translateY(0);box-shadow:none;}
+body.is-uat-homesearch2 #homeDesk .sn-card:focus-visible{outline:2px solid var(--ac);outline-offset:2px;}
+/* 아이콘 = 타일과 동일(42px·radius-sm). 유휴=균일 인디고·s2 배경. 선택(.on)은 기존 --c 신호 유지 */
+body.is-uat-homesearch2 #homeDesk .sn-card-ic{width:42px;height:42px;border-radius:var(--radius-sm,9px);transition:background .17s ease;}
+body.is-uat-homesearch2 #homeDesk .sn-card-ic .sp-ico{width:22px;height:22px;}
+body.is-uat-homesearch2 #homeDesk .sn-card:not(.on) .sn-card-ic{background:var(--s2);}
+body.is-uat-homesearch2 #homeDesk .sn-card:not(.on) .sn-card-ic .sp-ico{color:var(--ac);}
+body.is-uat-homesearch2 #homeDesk .sn-card:not(.on):hover .sn-card-ic{background:color-mix(in srgb,var(--ac) 14%,var(--s1));}
+/* 라벨 타이포 = 타일(제목 15px/650, 설명 13px). 선택(.on) 제목색(--c)은 보존 */
+body.is-uat-homesearch2 #homeDesk .sn-card-t{font-size:15px;font-weight:650;line-height:1.3;letter-spacing:-.01em;}
+body.is-uat-homesearch2 #homeDesk .sn-card:not(.on) .sn-card-t{color:var(--tp);}
+body.is-uat-homesearch2 #homeDesk .sn-card-d{font-size:13px;color:var(--ts);line-height:1.4;}
 
 /* 질문하기 모달 */
 .askmodal{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:none;z-index:140;padding:5vh 20px;overflow-y:auto;}
