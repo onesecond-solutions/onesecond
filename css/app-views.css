@@ -61,6 +61,17 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 #v-salesnote .sn-ocr-acts{display:flex;align-items:center;gap:10px;margin-top:8px;}
 #v-salesnote .sn-ocr-stat{font-size:12px;color:var(--ac);}
 @media(max-width:720px){#v-salesnote .sn-form-grid{grid-template-columns:1fr;}}
+/* 상태 단계 필터 칩 (2026-07-08) */
+#v-salesnote .sn-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+#v-salesnote .sn-chip{font-size:12px;padding:5px 12px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;color:var(--tp);}
+#v-salesnote .sn-chip.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+#v-salesnote .sn-chip b{font-weight:700;opacity:.7;margin-left:2px;}
+/* 상담 회차 추가 폼 (2026-07-08) */
+#v-salesnote .sn-tl-add{padding:4px 12px;font-size:12px;float:right;}
+#v-salesnote .sn-cadd{border:1px dashed var(--ac);border-radius:10px;padding:12px;margin-bottom:12px;background:var(--s2);}
+#v-salesnote .sn-cadd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+#v-salesnote .sn-cadd-acts{display:flex;align-items:center;gap:10px;margin-top:12px;}
+@media(max-width:720px){#v-salesnote .sn-cadd-grid{grid-template-columns:1fr;}}
 #v-roadmap .rm-note{font-size:var(--ts-meta);color:#9A5B06;background:#FFF8E6;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 12px;line-height:1.55;margin-bottom:10px;}
 #v-roadmap .rm-head{font-size:17px;font-weight:800;margin:2px 0 4px;}
 #v-roadmap .rm-sub{font-size:12px;color:var(--ts);margin-bottom:10px;}
