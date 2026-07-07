@@ -11452,19 +11452,43 @@ function _qnaOrFilter(cols, terms){
   terms.forEach(function(t){ var e=enc(t); cols.forEach(function(c){ arr.push(c+'.ilike.'+e); }); });
   return 'or=('+arr.join(',')+')';   /* title/content × 모든 단어를 하나의 OR로 */
 }
+/* [T2-const] 노이즈 억제 상수 (2026-07-06 보완 — 과확장 상한·substring 충돌맵). seed 최소·확장 후속. 모듈-로컬(window 미등록). */
+var _qnaCommon = {'보험':1,'가입':1,'상품':1,'문의':1};   /* 고빈도 흔한단어 — 가중 0.5(이 단어만 맞은 글은 강한후보 제외) */
+var _QNA_RELAX_CAP = 24;                                   /* 완화(0건 방지) fallback 최종 노출 상한 — 잡글 폭주 방지 */
+var _qnaCollide = {'고지':['혈']};                          /* 검색어 뒤 음절이 이거면 다른 단어(오탐). 예:'고지혈증'의 '고지'는 미hit / '고지의무'·'고지서'는 정상 */
+/* term이 hay에 유효 등장(뒤음절 충돌 아님)하는지 — 여러 등장 중 하나라도 비충돌이면 hit 인정. */
+function _qnaTermHitValid(hay, lt, collideList){
+  if(!lt) return false;
+  if(!collideList) return hay.indexOf(lt)>=0;
+  var from=0, idx;
+  while((idx=hay.indexOf(lt,from))>=0){
+    var nextCh=hay.charAt(idx+lt.length);
+    if(nextCh==='' || collideList.indexOf(nextCh)<0) return true;   /* 뒤음절 없음/비충돌 = 유효 hit */
+    from=idx+1;
+  }
+  return false;
+}
 /* [T2-a] 검색어 N개 중 이 글(제목+본문[+답변])에 등장한 '서로 다른 단어' 수·목록.
-   extraHit = 답변(comments)에서 맞은 단어 배열(§3-4 부모 합산). posts 전용. 공용 _sScore 무접촉. */
+   extraHit = 답변(comments)에서 맞은 단어 배열(§3-4 부모 합산). posts 전용. 공용 _sScore 무접촉.
+   wmatched=hit weight 합(고빈도0.5/그외1.0) · strongHit=non-common hit 수(과확장 판정용). */
 function _qnaMatch(titleText, bodyText, terms, extraHit){
   var hay=((titleText||'')+' '+(bodyText||'')).toLowerCase();
   var tl=(titleText||'').toLowerCase();
   var extra={}; (extraHit||[]).forEach(function(t){ extra[String(t).toLowerCase()]=1; });
-  var hit=[], miss=[], titleHit=0;
+  var hit=[], miss=[], titleHit=0, wmatched=0, strongHit=0;
   terms.forEach(function(t){
     var lt=String(t).toLowerCase();
-    if(hay.indexOf(lt)>=0 || extra[lt]){ hit.push(t); if(tl.indexOf(lt)>=0) titleHit++; }
+    var col=_qnaCollide[lt]||null;
+    if(_qnaTermHitValid(hay, lt, col) || extra[lt]){
+      hit.push(t);
+      if(_qnaTermHitValid(tl, lt, col)) titleHit++;
+      var isCommon=_qnaCommon[lt]?true:false;
+      wmatched += isCommon?0.5:1.0;
+      if(!isCommon) strongHit++;
+    }
     else miss.push(t);
   });
-  return { matched:hit.length, total:terms.length, hit:hit, miss:miss, titleHit:titleHit };
+  return { matched:hit.length, total:terms.length, hit:hit, miss:miss, titleHit:titleHit, wmatched:wmatched, strongHit:strongHit };
 }
 /* [T2-b] 컷 임계 — 유지 최소 matched. 1~2단어=1(OR 후보는 항상 ≥1), 3단어↑=2(=절반 근처, 1개만 맞은 글 제외).
    과확장(잡글 섞임) 방지 + 0건 방지 균형. 파라미터(대표 확정 시 조정 가능). */
@@ -11781,9 +11805,27 @@ async function _runSearchV2(q, targetId){
     {src:'자료',      table:'myspace_files',    base:_vaultBase,                               cols:['search_text','original_name'],     select:'id,original_name,search_text,ocr_status,ext,updated_at,scope',       order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                        t:function(r){return r.original_name||'(파일)';},                            m:function(r){return (r.ext||'파일').toString().toUpperCase();},                 scope:function(r){return r.scope==='team'?'team':(r.scope==='branch'?'branch':'mine');}}
   ];
   var lim=window._svLimit||40;   /* 소스별 fetch 한도 — 100→40으로 전송량↓(체감속도). 부족하면 '더 보기'로 +40 */
+  window._svQnaPreciseN=0; window._svQnaRelaxN=0;   /* posts 2단계 fetch 크기 초기화(직전 검색 잔값 누수 방지) */
   var results=await Promise.all(groups.map(async function(g){
     var gTerms=terms, gBase=g.base;
     if(g.table==='newsletters'){ var nd=_svNewsletterDate(q, terms); if(nd.active){ gBase=g.base+(await _svNewsletterYearFix(nd)); gTerms=nd.terms; } }   /* 소식지=발행월 자동 필터 + 연도미지정시 최신연도만(노이즈·작년섞임 제거) */
+    if(g.table==='posts' && gTerms.length){
+      /* [T3] posts 2단계 fetch — (A) 정밀 AND(다단어 관련글 항상 확보) ∪ (B) 완화 OR(0건 방지, limit 200 고정으로 1000행 하드캡 회피). id 중복제거. 다른 소스 무접촉. (2026-07-06) */
+      var _pAndF=_sBuildFilter(g.cols,gTerms), _pOrF=_qnaOrFilter(g.cols,gTerms);
+      var _pOrd=(g.order?'&order='+g.order:'');
+      var _pathA=g.table+'?'+(gBase?gBase+'&':'')+(_pAndF?_pAndF+'&':'')+'select='+g.select+_pOrd+'&limit='+lim;
+      var _pathB=g.table+'?'+(gBase?gBase+'&':'')+(_pOrF?_pOrF+'&':'')+'select='+g.select+_pOrd+'&limit=200';
+      var _pair=await Promise.all([
+        window.db.fetch('/rest/v1/'+_pathA).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
+        window.db.fetch('/rest/v1/'+_pathB).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
+      ]);
+      var _pa=Array.isArray(_pair[0])?_pair[0]:[], _pb=Array.isArray(_pair[1])?_pair[1]:[];
+      window._svQnaPreciseN=_pa.length; window._svQnaRelaxN=_pb.length;   /* hasMore·더보기 판정용(병합 length 오검출 방지) */
+      var _seen={}, _merged=[];
+      _pb.forEach(function(r){ var k=String(r.id); if(!_seen[k]){ _seen[k]=1; _merged.push(r); } });   /* 완화(B) 먼저 담고 정밀(A) 신규만 추가 = A∪B */
+      _pa.forEach(function(r){ var k=String(r.id); if(!_seen[k]){ _seen[k]=1; _merged.push(r); } });
+      return _merged;
+    }
     var _filt=gTerms.length?(g.filter?g.filter(g.cols,gTerms):_sBuildFilter(g.cols,gTerms)):'';   /* 소스별 커스텀 필터 허용(스크립트=유형명 매칭) */
     var path=g.table+'?'+(gBase?gBase+'&':'')+(_filt?_filt+'&':'')+'select='+g.select+(g.order?'&order='+g.order:'')+'&limit='+lim;
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
@@ -11810,7 +11852,8 @@ async function _runSearchV2(q, targetId){
     }
   }catch(e){}
   if(seq!==_searchSeq) return;
-  window._svHasMore = results.some(function(rr){ return Array.isArray(rr)&&rr.length>=lim; });   /* 어느 소스든 꽉 찼으면 더 있을 수 있음 */
+  window._svHasMore = results.some(function(rr,ri){ if(groups[ri]&&groups[ri].table==='posts') return false; return Array.isArray(rr)&&rr.length>=lim; })
+    || (window._svQnaPreciseN>=lim) || (window._svQnaRelaxN>=200);   /* posts는 병합셋 length 대신 정밀(A)·완화(B) 각각의 상한 도달로 판정 */
   /* 메뉴·도구(정적+quick) — 공동 성격이나 '바로가기'라 별도 상단 그룹으로 (어드민 제외) */
   var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
@@ -11837,8 +11880,19 @@ async function _runSearchV2(q, targetId){
     var _keepMin=_qnaKeepMin(_N);
     var _pIdx=[]; for(var _i=0;_i<items.length;_i++){ if(items[_i].src==='posts') _pIdx.push(_i); }
     if(!_pIdx.length) return;
-    var _strong=_pIdx.filter(function(i){ return items[i].mq.matched>=_keepMin; });
-    var _keepSet=_strong.length?_strong:_pIdx.filter(function(i){ return items[i].mq.matched>=1; });   /* 안전장치: 강한 후보 0이면 1개라도 맞은 것 유지 */
+    /* 강한후보 = matched≥keepMin AND non-common hit≥1 (고빈도 단어로만 맞은 글 제외 → 과확장 억제) */
+    var _strong=_pIdx.filter(function(i){ return items[i].mq.matched>=_keepMin && items[i].mq.strongHit>=1; });
+    var _keepSet;
+    if(_strong.length){ _keepSet=_strong; }
+    else {
+      /* 안전장치+완화 상한: 강한후보 0이면 matched≥1을 (wmatched↓·titleHit↓·.s↓) 정렬 후 상위 _QNA_RELAX_CAP개만(0건 방지 유지·잡글 폭주 차단) */
+      _keepSet=_pIdx.filter(function(i){ return items[i].mq.matched>=1; })
+        .sort(function(a,b){ var A=items[a].mq, B=items[b].mq;
+          if(B.wmatched!==A.wmatched) return B.wmatched-A.wmatched;
+          if(B.titleHit!==A.titleHit) return B.titleHit-A.titleHit;
+          return items[b].s-items[a].s; })
+        .slice(0,_QNA_RELAX_CAP);
+    }
     var _keepFlag={}; _keepSet.forEach(function(i){ _keepFlag[i]=1; });
     items=items.filter(function(it,idx){ return it.src!=='posts' || _keepFlag[idx]; });
   })();
@@ -13251,7 +13305,7 @@ window._searchOpenOrigin=_searchOpenOrigin;
 /* ════ 카톡 Q&A 전량 임포트 (임태성 실장 전용, 임시) — Gist 데이터 → 배치 insert + 제목+본문 서명 중복방지 + 첫배치 실패 자동중단 + 결과표시. 2026-07-05 대표 지시(AI팀 실행). 완료 후 제거 예정 ════ */
 var _QNA_BULK_URL='https://gist.githubusercontent.com/onesecond-solutions/43d9b9745e5263879accee25cf9c254c/raw/qna_import_all.json';
 /* 재임포트 절차: 새 카톡 대화록 → 채굴팀장 추출 → Gist 갱신(_QNA_BULK_URL) + 아래 버전 올림('v2'…) → 배포. 서명(제목+본문) 중복방지로 기존 스킵·신규만 추가. 버전이 다르면 임태성 실장 로드 시 자동 재실행. */
-var _QNA_BULK_VER='v1';
+var _QNA_BULK_VER='v2';  /* v1→v2 (2026-07-06): 지난 임포트가 ~142건 미완(중간 중단)으로 남음. 완료 플래그(os_qna_bulk_done)가 'v1'로 남아 자동 재실행이 막힐 가능성 대비 버전 상향 → 임태성 실장 다음 로드 시 강제 재실행. Gist·데이터 동일, 제목+본문 서명 중복방지로 기존 게시분 스킵·미업로드분만 추가(중복 0). */
 function _qnaComposeContent(o){ var L=[];
   if(o.age_sex) L.push('[연령/성별] '+o.age_sex);
   if(o.job) L.push('[직업] '+o.job);
