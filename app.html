@@ -1794,25 +1794,49 @@ body:not(.is-uat-qnaimport) #qnaImportBtn-wrap{display:none !important;}
 #hsResults{max-width:760px;margin:8px auto 0;}
 @media(max-width:640px){.hs-quick{gap:16px 22px;}.hs-head{font-size:1.25rem;}.hs-field{height:56px;}.hs-field input{font-size:1.0625rem;}.hs-go{height:56px;padding:0 16px;}#headGreet{font-size:0.9375rem;}}
 /* ════ 홈 검색 새 레이아웃 (is-uat-homesearch2 게이트 = 임태성 실장 user_id 98c5f4f9 전용, 2026-07-07) ════
-   design-preview/home-search-concept-v1.html 안A(검색이 홈)·안B(검색+결과) 흐름을 홈 검색 hero에 적용.
-   = 브랜드 워드마크 + 태그라인 + 큰 라운드 검색창. 검색창/결과는 기존 #hsInput·_hsSearch·_runSearchV2 그대로 재사용(기능 로직 무변경).
-   전부 body.is-uat-homesearch2 스코프 → 그 외 전원(어드민 포함) 기존 홈 완전 무변경(회귀 0). 라이트 단일(다크 모드 신설 없음). 브랜드색 var(--ac)=#6366F1. */
-.hs2-hero{display:none;}
-body.is-uat-homesearch2 .hs2-hero{display:flex;flex-direction:column;align-items:center;margin:6px auto 22px;}
+   design-preview/home-search-concept-v1.html 안A "검색이 곧 홈"을 홈에 시각 충실 재현.
+   = 상단 넓은 여백 + 태그라인 + 큰 라운드 검색창 + 데이터소스 칩 6개 + 보조(최근검색·도구). 로고 없음(대표 지시).
+   검색창/결과는 기존 #hsInput·_hsSearch·_runSearchV2 그대로 재사용(기능 로직 무변경). 칩·도구는 현재 모양만(클릭 필터/라우팅은 후속).
+   전부 body.is-uat-homesearch2 스코프 → 그 외 전원(어드민 포함) 기존 홈 완전 무변경(회귀 0). 브랜드색 var(--ac)=#6366F1. */
+/* 안A 무대 — 상단 넓은 여백 + 세로 중앙 정렬(homedesk padding-top:10px 오버라이드). 시안 .va-stage */
+body.is-uat-homesearch2 .hs-wrap{max-width:720px;padding:clamp(48px,12vh,128px) 20px 64px;display:flex;flex-direction:column;align-items:center;}
 body.is-uat-homesearch2 .hs-head,
-body.is-uat-homesearch2 .hs-philo{display:none;}   /* 브랜드 워드마크+태그라인이 대체 */
-.hs2-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-.hs2-mark{width:40px;height:40px;border-radius:var(--radius-md,12px);background:var(--ac);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;letter-spacing:-.02em;}
-.hs2-name{font-size:1.4rem;font-weight:800;letter-spacing:-.01em;color:var(--tp);}
-.hs2-name em{font-style:normal;color:var(--ac);}
-.hs2-tagline{font-size:1rem;color:var(--ts);text-align:center;line-height:1.5;}
-/* 검색창 = design-preview 라운드(22px)·60px 높이. 포커스 브랜드색은 기존 var(--ac) 유지 */
-body.is-uat-homesearch2 .hs-field{height:60px;border-radius:22px;border-width:1.5px;}
+body.is-uat-homesearch2 .hs-philo,
+body.is-uat-homesearch2 .hs-sub{display:none;}   /* 시안엔 큰 제목·철학문구·보조문구 없음 — 태그라인+칩이 대체 */
+body.is-uat-homesearch2 .hs-box{max-width:640px;width:100%;}
+/* 태그라인 (시안 .va-tagline) */
+.hs2-tagline{display:none;}
+body.is-uat-homesearch2 .hs2-tagline{display:block;font-size:16px;color:var(--ts);text-align:center;line-height:1.5;margin:0 auto 28px;}
+/* 큰 검색창 = 시안 라운드(22px)·최소높이 60px. 포커스 브랜드색 var(--ac) 유지 */
+body.is-uat-homesearch2 .hs-field{min-height:60px;height:60px;border-radius:22px;border-width:1.5px;}
 body.is-uat-homesearch2 .hs-go{height:60px;border-radius:22px;}
-body.is-uat-homesearch2 .hs-sub{margin-top:16px;}
-/* 안B(검색 후) — hero 숨김. 검색창 상단 정렬 전환은 기존 #homeSearch.searching 규칙 그대로 재사용 */
-body.is-uat-homesearch2 #homeSearch.searching .hs2-hero{display:none;}
-@media(max-width:640px){.hs2-name{font-size:1.2rem;}.hs2-mark{width:36px;height:36px;font-size:16px;}body.is-uat-homesearch2 .hs-field{height:56px;}body.is-uat-homesearch2 .hs-go{height:56px;}}
+/* 데이터소스 칩 6개 (시안 .chip — 모양만, 클릭 필터는 후속. 커서만 pointer) */
+.hs2-chips{display:none;}
+body.is-uat-homesearch2 .hs2-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%;max-width:640px;margin:20px auto 0;}
+.hs2-chip{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 16px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);font-size:15px;font-weight:500;color:var(--ts);cursor:pointer;white-space:nowrap;}
+.hs2-chip svg{width:17px;height:17px;color:var(--tf);flex-shrink:0;}
+.hs2-chip.on{background:color-mix(in srgb,var(--ac) 12%,transparent);border-color:transparent;color:var(--ac);font-weight:700;}
+.hs2-chip.on svg{color:var(--ac);}
+/* 보조 진입 — 최근검색(목업) + 도구 2열 (시안 .va-aux) */
+.hs2-aux{display:none;}
+body.is-uat-homesearch2 .hs2-aux{display:grid;gap:28px;width:100%;max-width:640px;margin:clamp(40px,8vh,72px) auto 0;}
+@media(min-width:640px){body.is-uat-homesearch2 .hs2-aux{grid-template-columns:1fr 1fr;}}
+.hs2-aux-title{font-size:13px;font-weight:700;color:var(--tf);letter-spacing:.06em;margin-bottom:10px;}
+.hs2-recent{display:flex;flex-wrap:wrap;gap:8px;}
+.hs2-recent span{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--bd);font-size:14px;color:var(--ts);cursor:pointer;}
+.hs2-recent span:hover{border-color:var(--ac);color:var(--ac);}
+.hs2-tools{display:flex;flex-wrap:wrap;gap:8px;}
+.hs2-tool{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:var(--radius-sm,8px);background:var(--s2);font-size:15px;color:var(--ts);font-weight:500;cursor:pointer;border:0;font-family:inherit;}
+.hs2-tool svg{width:18px;height:18px;color:var(--tf);flex-shrink:0;}
+.hs2-tool:hover{color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,transparent);}
+.hs2-tool:hover svg{color:var(--ac);}
+/* 검색 후(.searching) — 태그라인·칩·보조 숨김. 검색창 상단 정렬은 기존 #homeSearch.searching 규칙 그대로 재사용 */
+body.is-uat-homesearch2 #homeSearch.searching .hs2-tagline,
+body.is-uat-homesearch2 #homeSearch.searching .hs2-chips,
+body.is-uat-homesearch2 #homeSearch.searching .hs2-aux{display:none;}
+body.is-uat-homesearch2 #homeSearch.searching .hs-wrap{align-items:stretch;padding-top:16px;}   /* 검색 후엔 무대 중앙정렬 해제 → 결과 전폭(기존 .searching 규칙 재사용) */
+body.is-uat-homesearch2 #homeSearch.searching .hs-box{max-width:640px;}
+@media(max-width:640px){body.is-uat-homesearch2 .hs-field{min-height:56px;height:56px;}body.is-uat-homesearch2 .hs-go{height:56px;}}
 
 /* 질문하기 모달 */
 .askmodal{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:none;z-index:140;padding:5vh 20px;overflow-y:auto;}
@@ -3144,11 +3168,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       <!-- 검색 홈(미리보기 — 3계정 게이트). 비허용 계정엔 #homeSearch가 display:none이라 기존 홈(인사+배너+위젯) 그대로 노출 -->
       <div id="homeSearch">
         <div class="hs-wrap">
-          <!-- 홈 검색 새 레이아웃 hero (is-uat-homesearch2 게이트=임태성 실장 98c5f4f9 전용, 2026-07-07). 기본 숨김, 게이트 계정만 노출. design-preview/home-search-concept-v1.html 안A 브랜드 아이덴티티. -->
-          <div class="hs2-hero" aria-hidden="true">
-            <div class="hs2-brand"><span class="hs2-mark">1s</span><span class="hs2-name">one<em>second</em></span></div>
-            <p class="hs2-tagline">상품 · 알릴의무 · 소식지 · Q&amp;A — 한 번에 검색</p>
-          </div>
+          <!-- 홈 검색 새 레이아웃 (is-uat-homesearch2 게이트=임태성 실장 98c5f4f9 전용, 2026-07-07). design-preview/home-search-concept-v1.html 안A "검색이 곧 홈" 충실 재현. 로고 없음(대표 지시). 기본 숨김, 게이트 계정만 노출. -->
+          <p class="hs2-tagline">상품 · 알릴의무 · 소식지 · Q&amp;A — 한 번에 검색</p>
           <div class="hs-head">무엇을 찾으세요?</div>
           <div class="hs-philo aip-homephilo">완성된 척하지 않습니다. 원세컨드가 매일 자라는 모습을, 날 것 그대로 보여드릴게요.</div>
           <div class="hs-box">
@@ -3162,7 +3183,36 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
           </div>
           <div class="hs-sub">검색하면 내 것 → 전체까지 한 번에 · 범위는 결과가 알려줍니다</div>
           <!-- 상품·인수·상담 시작 quick 3버튼(.hs-quick) 삭제 (2026-07-02) · philo 문구는 검색기 위로 이동 (2026-07-02 대표 지시) -->
+          <!-- 데이터소스 칩 6개 (is-uat-homesearch2, 시안 안A 재현). 현재는 시각 요소만 — 클릭 필터 동작 없음(커서 pointer). 검색 중엔 CSS로 숨김. -->
+          <div class="hs2-chips" aria-hidden="true">
+            <span class="hs2-chip on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>전체</span>
+            <span class="hs2-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7L12 3 4 7v10l8 4 8-4V7z"/><path d="M12 11L4 7M12 11l8-4M12 11v10"/></svg>상품</span>
+            <span class="hs2-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>알릴의무</span>
+            <span class="hs2-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-3-2-3 2-3-2-3 2V4z"/><path d="M9 8h6M9 12h6"/></svg>소식지</span>
+            <span class="hs2-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/><path d="M9 11h6"/></svg>Q&amp;A</span>
+            <span class="hs2-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/></svg>자료실</span>
+          </div>
           <div id="hsResults"></div>
+          <!-- 보조 진입 — 최근검색(목업) + 도구 (is-uat-homesearch2, 시안 안A .va-aux). 시각 요소만 — 동작 없음(커서 pointer). 검색 중엔 CSS로 숨김. -->
+          <div class="hs2-aux" aria-hidden="true">
+            <div>
+              <div class="hs2-aux-title">최근 검색</div>
+              <div class="hs2-recent">
+                <span>실손 전환</span>
+                <span>고지 3개월</span>
+                <span>납입면제</span>
+                <span>무해지형</span>
+              </div>
+            </div>
+            <div>
+              <div class="hs2-aux-title">도구</div>
+              <div class="hs2-tools">
+                <span class="hs2-tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 11h16"/></svg>다이어리</span>
+                <span class="hs2-tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>스크립트</span>
+                <span class="hs2-tool"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/></svg>MY SPACE</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -5232,6 +5282,8 @@ function applyRoleClass(){
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
   /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 임태성 실장 user_id 전용 선적용(2026-07-07). CSS·마크업만(기능 무변경). 어드민 포함 타 계정 비노출 → 기존 홈 그대로. */
   document.body.classList.toggle('is-uat-homesearch2', (typeof _canSeeHomeSearch2==='function' && _canSeeHomeSearch2()));
+  /* 안A 검색창 placeholder = "무엇을 찾으세요?" (게이트 계정만 — 속성이라 CSS 스코프 불가). 비게이트 계정은 기존 placeholder 그대로 = 무변경. */
+  try{ if(document.body.classList.contains('is-uat-homesearch2')){ var _hi2=document.getElementById('hsInput'); if(_hi2) _hi2.setAttribute('placeholder','무엇을 찾으세요?'); } }catch(e){}
   /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민은 운영·유지보수 계정 = 사이드바 접힘 규칙에서 제외(:not(.is-admin)) → 전체 네비 유지(위 CSS). */
   document.body.classList.toggle('is-uat-homedesk', !!r);
   /* 스페이스 네비 재설계 = 2026-06-25 전체 개방(게이트 해제). 임태성 실장 계정 검수 완료 → 전원 새 사이드바/스페이스 페이지 노출. (P3, homephilo 게이트 해제 전례) */
