@@ -196,6 +196,60 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 #v-roadmap #rm-detail dt{font-size:var(--ts-meta);color:var(--ts);font-weight:700;margin-top:11px;}
 #v-roadmap #rm-detail dd{margin:3px 0 0;font-size:13px;line-height:1.55;}
 #v-roadmap .rm-empty{color:var(--ts);font-size:13px;padding:24px 14px;text-align:center;line-height:1.6;}
+/* ════ 알릴의무(고지) 독립 페이지 #v-goji + 검색 '알릴의무' 탭 공용 카드 (is-uat-goji 게이트 = 임태성 실장 user_id 전용 검수, 2026-07-06)
+   레이아웃은 roadmap(rm-*) 패턴 재사용, 색은 tokens 재테마. 경고 배너 3색(#92400E/#FEFCE8/#FDE68A)만 기존 .gj-note 컨벤션 계승(도메인 고지 경고 톤). */
+#v-goji.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:22px;}
+#v-goji .gj2-note{font-size:var(--ts-meta);color:#9A5B06;background:#FFF8E6;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 12px;line-height:1.55;margin-bottom:10px;}
+#v-goji .gj2-head{font-size:17px;font-weight:800;margin:2px 0 4px;}
+#v-goji .gj2-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;}
+#v-goji .gj2-bar input{flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);font-size:14px;}
+#v-goji .gj2-chip,#v-goji .gj2-cchip{font-size:12px;padding:6px 12px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;color:var(--tp);}
+#v-goji .gj2-chip.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+#v-goji .gj2-cchip{color:var(--ac);font-weight:700;}
+#v-goji .gj2-cchip.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+#v-goji .gj2-note,#v-goji .gj2-head,#v-goji .gj2-bar,#v-goji .gj2-legend,#v-goji .gj2-foot{flex-shrink:0;}
+#v-goji .gj2-layout{display:grid;grid-template-columns:200px 1fr 340px;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;flex:1 1 auto;min-height:0;}
+#v-goji .gj2-col{overflow-y:auto;min-height:0;padding:12px;}
+@media(max-width:900px){#v-goji.on{overflow-y:auto;padding-bottom:28px;}#v-goji .gj2-layout{grid-template-columns:1fr;flex:none;}#v-goji .gj2-col{max-height:56vh;}}
+#v-goji #gj2-cos{border-right:1px solid var(--bd);background:var(--s2);}
+#v-goji .gj2-cot{padding:9px 11px;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;gap:6px;}
+#v-goji .gj2-cot:hover{background:var(--s1);}
+#v-goji .gj2-cot.on{background:var(--ac);color:#fff;font-weight:700;}
+#v-goji .gj2-cot .n{color:var(--ts);font-size:12px;}#v-goji .gj2-cot.on .n{color:#fff;}
+#v-goji .gj2-cnt{font-size:12px;color:var(--ts);margin-bottom:8px;}#v-goji .gj2-cnt b{color:var(--ac);}
+#v-goji #gj2-detail{border-left:1px solid var(--bd);background:var(--s1);}
+#v-goji .gj2-dh{font-size:15px;font-weight:800;line-height:1.4;margin-bottom:6px;color:var(--tp);}
+#v-goji .gj2-dco{font-size:12px;color:var(--ts);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#v-goji .gj2-drow{display:flex;gap:8px;padding:4px 0;font-size:var(--ts-meta);border-top:1px dashed var(--bd);}
+#v-goji .gj2-drow .gj2-dk{min-width:66px;font-weight:800;color:var(--tf);flex-shrink:0;}
+#v-goji .gj2-drow .gj2-dv{color:var(--tp);flex:1;line-height:1.5;}
+#v-goji .gj2-dhint{font-size:12px;color:var(--ts);background:var(--s2);border-radius:var(--radius-xs);padding:7px 9px;margin:9px 0;line-height:1.5;}
+/* ── 공용 카드(독립 페이지 center + 검색 탭 #hsResults 양쪽 사용, 스코프 없음) ── */
+.gj2-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:8px;cursor:pointer;}
+.gj2-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);}
+.gj2-ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.gj2-pt{font-size:14px;font-weight:800;line-height:1.35;color:var(--tp);}
+.gj2-co{font-size:12px;font-weight:700;color:var(--ts);margin-top:2px;}
+.gj2-gr{font-size:var(--ts-badge);font-weight:700;white-space:nowrap;color:var(--gc);background:color-mix(in srgb,var(--gc) 12%,transparent);border:1px solid color-mix(in srgb,var(--gc) 35%,transparent);border-radius:999px;padding:2px 8px;}
+.gj2-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:7px;}
+.gj2-ty{font-size:var(--ts-badge);font-weight:700;color:var(--t-uw);background:var(--s2);border-radius:5px;padding:2px 7px;}
+.gj2-code{display:inline-block;font-size:var(--ts-badge);font-weight:700;color:var(--ac);background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:1px 6px;margin-right:3px;}
+.gj2-detail{margin-top:8px;padding:8px 10px;background:var(--s2);border-radius:var(--radius-xs);}
+.gj2-dr{display:flex;gap:8px;padding:2px 0;font-size:var(--ts-meta);}
+.gj2-dk{min-width:66px;font-weight:800;color:var(--tf);flex-shrink:0;}
+.gj2-dv{color:var(--tp);flex:1;line-height:1.5;}
+.gj2-codebox{background:var(--s1);border:1px dashed var(--ac);border-radius:var(--radius-sm);padding:11px 13px;margin:0 0 12px;}
+.gj2-cl{font-size:var(--ts-badge);font-weight:700;color:var(--ac);background:var(--s2);display:inline-block;padding:2px 8px;border-radius:999px;margin-bottom:7px;}
+.gj2-cc{font-size:16px;font-weight:800;color:var(--tp);}
+.gj2-cm{font-size:13px;color:var(--tp);margin-top:4px;line-height:1.5;}
+.gj2-axis{font-size:12px;color:var(--ts);margin-top:8px;line-height:1.6;}
+.gj2-cwarn{font-size:12px;color:#92400E;background:#FEFCE8;border:1px solid #FDE68A;border-radius:6px;padding:6px 9px;margin-top:8px;line-height:1.5;}
+.gj2-legend{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;margin-bottom:10px;}
+.gj2-lg{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-weight:700;color:var(--gc);background:color-mix(in srgb,var(--gc) 12%,transparent);}
+.gj2-foot{margin-top:10px;background:#FEFCE8;border:1px solid #FDE68A;border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;color:#92400E;font-weight:600;line-height:1.5;}
+.gj2-note-sc{margin-top:10px;background:#FEFCE8;border:1px solid #FDE68A;border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;color:#92400E;font-weight:600;line-height:1.55;}
+.gj2-scwrap{padding:14px 16px;}
+.gj2-empty{color:var(--ts);font-size:13px;padding:22px 14px;text-align:center;line-height:1.6;}
 /* ════ 삼성화재 상품 라인업·납입면제 독립 페이지 (회사 허브 진입 · 임태성 게이트, 2026-06-28) ════ */
 /* 폰트 크기 = 어제(2026-07-04) 타이포그래피 --ts-* 기준선으로 통일(2026-07-05 대표 지시). 대/중/소는 --ts 스케일에 매핑(대=viewer-title 20 · 중=body 16 · 소=preview 14). 위계는 굵기·색으로 구분. */
 :root{--sz-l:var(--ts-viewer-title);--sz-m:var(--ts-body);--sz-s:var(--ts-preview);}
@@ -3738,6 +3792,36 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="rm-col" id="rm-detail"><div class="rm-empty">상품을 선택하면<br>원문 기준 정보가 표시됩니다.</div></div>
       </div>
      </div>
+     <!-- ════ 알릴의무(고지) 독립 페이지 (#v-goji) — is-uat-goji 게이트 = 임태성 실장 user_id 전용 검수. 일반/어드민 무영향. data/goji_records.json(114). 표시원칙=확정(세부문항)/코드확인(고지코드)/유형확인(고지유형)/자료없음. 2026-07-06 ════ -->
+     <div class="wrap view" id="v-goji">
+      <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
+      <div class="gj2-note">&#128203; 회사별 <b>알릴의무(고지)</b> — 고지유형 · 간편고지 코드 · 확정 세부문항. 자료가 확인된 항목만 표시하며, 표준코드 의미는 개별 상품의 확정 고지 문항이 아닙니다.</div>
+      <div class="gj2-head">알릴의무 검색 <span style="font-weight:400;color:var(--ts);font-size:13px">회사 · 상품별 고지 정보</span></div>
+      <div class="gj2-bar">
+        <input id="gj2-q" type="text" placeholder="상품명 · 고지코드(3.10.5 · 3.N.5) · 간편/유병자 검색" autocomplete="off">
+        <span class="gj2-chip on" data-gt="all">전체</span>
+        <span class="gj2-chip" data-gt="일반고지">일반 · 건강체</span>
+        <span class="gj2-chip" data-gt="간편고지">간편 · 유병자</span>
+        <span class="gj2-cchip" data-gc="3.10.5">3.10.5</span>
+        <span class="gj2-cchip" data-gc="3.5.5">3.5.5</span>
+        <span class="gj2-cchip" data-gc="3.3.5">3.3.5</span>
+        <span class="gj2-cchip" data-gc="3.2.5">3.2.5</span>
+        <span class="gj2-cchip" data-gc="3.1.5">3.1.5</span>
+        <span class="gj2-cchip" data-gc="3.0.5">3.0.5</span>
+        <span class="gj2-cchip" data-gc="3.N.5">3.N.5</span>
+      </div>
+      <div class="gj2-legend">
+        <span class="gj2-lg" style="--gc:var(--ok)">확정 · 세부문항</span>
+        <span class="gj2-lg" style="--gc:var(--ac)">코드 확인</span>
+        <span class="gj2-lg" style="--gc:var(--ts)">유형 확인</span>
+      </div>
+      <div class="gj2-layout">
+        <div class="gj2-col" id="gj2-cos"><div class="gj2-empty">불러오는 중…</div></div>
+        <div class="gj2-col" id="gj2-center"><div class="gj2-empty">왼쪽에서 회사를 선택하거나<br>위에서 검색·필터하세요.</div></div>
+        <div class="gj2-col" id="gj2-detail"><div class="gj2-empty">상품을 선택하면<br>고지 상세가 표시됩니다.</div></div>
+      </div>
+      <div class="gj2-foot">&#9888;&#65039; 최종 고지는 해당 보험사의 청약서 · 상품설명서 기준으로 확인이 필요합니다. 본 화면 정보는 설계 참고용입니다.</div>
+     </div>
      <!-- ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용 조회(v0, 읽기전용·AI없음·외부전송0). 일반/어드민 무영향. 2026-06-29 ════ -->
      <div class="wrap view" id="v-salesnote">
       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
@@ -5111,6 +5195,7 @@ function applyRoleClass(){
   document.body.classList.toggle('is-uat-aipolish', _uatA==='bylts@naver.com');
   /* 상품 로드맵 = 임태성 실장 user_id 전용 검수(2026-06-27). 어드민 포함 타 계정 비노출. 메뉴 노출은 CSS(body.is-uat-roadmap), 직접 진입 차단은 showView 가드(_canSeeRoadmap). */
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
+  document.body.classList.toggle('is-uat-goji', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 알릴의무 독립 페이지 = 임태성 실장 user_id 전용. roadmap 패턴. 메뉴 노출 CSS(미래), 진입 차단은 showView 가드+로더 재가드 (2026-07-06) */
   document.body.classList.toggle('is-uat-qnaimport', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 카톡 Q&A 전량 임포트 버튼 = 임태성 실장 전용(임시, 실행 후 제거). 2026-07-05 */
   /* 카드 역순 넘버링 = 임태성 실장 user_id 전용 검수(2026-07-06). 어드민 포함 타 계정 비노출. .item-no span은 항상 렌더되고 CSS(body.is-uat-cardno)로만 표시. ▶ 전체 개방 플립 지점: 이 toggle을 add(항상 부여)로 바꾸거나 CSS 게이트 해제. */
   document.body.classList.toggle('is-uat-cardno', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
@@ -6483,6 +6568,11 @@ function _homeDeskShow(){
     {v:'silson',         ic:'i-file',    t:'실비 세대별 변천사', d:'실손 1~5세대 보장·전환 전략', c:'var(--warn)'},
     {v:'newsletters',    ic:'i-building', t:'소식지',    d:'원수사 GA소식지 월별 모음',     c:'var(--t-event)'}
   ];
+  /* 알릴의무(goji) = 임태성 실장 user_id 전용(2026-07-06). 진입점(카드) 자체를 게이트 통과 계정에만 생성 —
+     비게이트 계정은 DOM 미생성(리다이렉트가 아니라 카드 존재 자체 0). showView·로더 재가드는 별도 정합. */
+  if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap()){
+    tools.push({v:'goji', ic:'i-check', t:'알릴의무', d:'회사별 고지유형·간편고지 코드', c:'var(--cat-teal)'});
+  }
   var th='';
   for(var j=0;j<tools.length;j++){ var t=tools[j];
     th+='<button type="button" class="hd-tool" style="--c:'+t.c+'" onclick="showView(\''+t.v+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+t.t+'</span><span class="sn-card-d">'+t.d+'</span></span><svg class="hd-tool-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></button>';
@@ -6847,7 +6937,7 @@ function _scriptsSheetShow(){
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',salesnote:'영업노트','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='salesnote'&&typeof loadSalesNote==='function')loadSalesNote();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'영업노트','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof loadSalesNote==='function')loadSalesNote();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -11689,6 +11779,7 @@ var SV_SRC=[
   {k:'all', label:'전체'},
   {k:'products', label:'상품 라인업'},   /* 전체 개방 — 건수 0이면 탭 자동 숨김 (2026-07-05) */
   {k:'covers', label:'담보'},   /* 담보 검색(v3, 13담보) 통합검색 이식 — 전체 개방. 건수 0이면 탭 자동 숨김 (2026-07-05) */
+  {k:'goji', label:'알릴의무'},   /* 알릴의무 검색 — 임태성 게이트(주입 시 _canSeeRoadmap 통과 계정만 items에 push → 일반은 건수 0 → 탭 자동 숨김). data/goji_records.json in-memory (2026-07-06) */
   {k:'knowledge_entries', label:'지식'},
   {k:'posts', label:'보험Q&A'},
   {k:'newsletters', label:'소식지'},
@@ -11917,6 +12008,16 @@ async function _runSearchV2(q, targetId){
     }
     (_covN.length?_covN:_covC).forEach(function(_cov){ items.push({ g:_SV_CGROUP, row:_cov, s:_sScore(_cov.cover, _cov._hay, terms), src:'covers', scope:'common', cat:'' }); });
   }catch(e){}
+  if(seq!==_searchSeq) return;
+  /* 알릴의무 주입 — 임태성 게이트(_canSeeRoadmap)만. 동의어 정규화 매칭(_gnhay: 고지코드 3.10.5·3.N.5·간편/유병자·상품명·회사별칭). DB/RLS 무관. 일반·어드민은 push 0 → 탭 건수 0 → 탭 자동 숨김. (2026-07-06) */
+  try{ if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap()){
+    var _gl=await _svGojiSearchList();
+    for(var _gi2=0; _gi2<_gl.length; _gi2++){ var _gg2=_gl[_gi2], _gok=true;
+      for(var _gt2=0; _gt2<_termForms.length; _gt2++){ var _gfs=_termForms[_gt2], _ghit=false; for(var _gfi=0; _gfi<_gfs.length; _gfi++){ if(_gg2._gnhay.indexOf(_gfs[_gfi])>=0){ _ghit=true; break; } } if(!_ghit){ _gok=false; break; } }
+      if(!_gok) continue;
+      items.push({ g:_SV_GGROUP, row:_gg2, s:_sScore((_gg2.prod||'')+' '+(_gg2.co||''), _gg2._ghay, terms), src:'goji', scope:'common', cat:'' });
+    }
+  } }catch(e){}
   if(seq!==_searchSeq) return;
   items.sort(function(a,b){ return b.s-a.s; });
   var navItems=navHits.map(function(n){ return {label:n.label,view:n.view,tag:'메뉴'}; });   /* Quick 메뉴 페이지(quick_contents) 검색 제외 — 어드민 전용 보전 (2026-07-05). navHits에서 view==='quick'도 이미 제외 */
@@ -12640,6 +12741,7 @@ function _svRender(){
   var activeSrc=window._svActiveSource||'all';
   var prodItems=items.filter(function(it){return it.src==='products';});   /* 상품 라인업 — 전용 탭·전체탭 요약으로만 렌더 */
   var coverItems=items.filter(function(it){return it.src==='covers';});   /* 담보 — 전용 탭·전체탭 요약으로만 렌더 (2026-07-05) */
+  var gojiItems=items.filter(function(it){return it.src==='goji';});   /* 알릴의무 — 전용 탭·전체탭 요약으로만 렌더 (임태성 게이트, 2026-07-06) */
   var catF=window._svCatFilter||null;
   var aiBarFixed=(typeof _canSeeAiSearch==='function'&&_canSeeAiSearch())?'<div class="ai-ans-bar"><button class="ai-ans-btn" onclick="_aiAnswer()">✨ 원세컨드 AI 검색</button><div class="ai-ans-hint">소식지 본문에서 회사별 보장내용을 정리하고 근거 소식지를 알려드려요</div></div>':'';  /* AI 검색 = 임태성 실장 게이트(_canSeeAiSearch=98c5f4f9). 그 외 미노출. (2026-07-04 분리) */
   var aiAns='<div id="aiAnsBox"></div>';
@@ -12656,7 +12758,7 @@ function _svRender(){
   var activeScope=window._svActiveScope||'all';
   /* 표시 대상 = 활성 소스 + (지식이면 분류 필터) + 범위 칩 선택 */
   var shown=items.filter(function(it){
-    if(it.src==='products'||it.src==='covers') return false;   /* 상품·담보는 일반 리스트 제외 — 전체탭=요약 블록, 전용 탭=전용 렌더 (2026-07-05) */
+    if(it.src==='products'||it.src==='covers'||it.src==='goji') return false;   /* 상품·담보·알릴의무는 일반 리스트 제외 — 전체탭=요약 블록, 전용 탭=전용 렌더 (2026-07-05·goji 2026-07-06) */
     if(activeSrc!=='all' && it.src!==activeSrc) return false;
     if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return false; }
     if(activeScope!=='all' && it.scope!==activeScope) return false;
@@ -12666,7 +12768,7 @@ function _svRender(){
   /* 범위 칩 = 활성 소스 탭(+지식 분류 필터) 기준 scope 분포. 누르면 그 범위만(같은 칩 다시 누르면 전체) */
   var scCnt={mine:0,team:0,branch:0,common:0};
   items.forEach(function(it){
-    if(it.src==='products') return;                                    // 상품은 스코프 칩 집계 제외(전용 탭·리스트 미노출) (2026-07-05 안정화)
+    if(it.src==='products'||it.src==='goji') return;                   // 상품·알릴의무는 스코프 칩 집계 제외(전용 탭·리스트 미노출) (2026-07-05·goji 2026-07-06)
     if(activeSrc!=='all' && it.src!==activeSrc) return;                 // 상단 탭(전체/지식/소식지/공지/자료) 반영
     if(catF && it.src==='knowledge_entries'){ var grp=SV_CATGROUP[catF]; if(grp ? grp.indexOf(it.cat)<0 : (it.cat||'').indexOf(catF)<0) return; }
     if(scCnt[it.scope]!=null) scCnt[it.scope]++;
@@ -12684,14 +12786,15 @@ function _svRender(){
      스코프 칩(개인/팀/지점) 선택 시엔 숨김 — 상품은 소속 스코프 축이 아니라 전용 탭 축 (2026-07-05 안정화) */
   var prodSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && prodItems.length)?_svProdSummary(prodItems,terms):'';
   var coverSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && coverItems.length)?_svCoverSummary(coverItems,terms):'';
-  html+=coverSummaryHtml+prodSummaryHtml;
+  var gojiSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && gojiItems.length)?_svGojiSummary(gojiItems,terms):'';
+  html+=gojiSummaryHtml+coverSummaryHtml+prodSummaryHtml;
   /* [T7] 보험 Q&A 완화 안내 배너 — 완전일치 아닐 때만, 전체/Q&A 탭에서 결과 리스트 맨 위. posts 결과 있을 때만 (2026-07-06) */
   if((activeSrc==='all'||activeSrc==='posts') && shown.length){
     var _qBan=''; try{ _qBan=_qnaBanner(items.filter(function(it){return it.src==='posts';}), terms); }catch(e){}
     if(_qBan) html+=_qBan;
   }
   if(!shown.length){
-    if(prodSummaryHtml||coverSummaryHtml){ /* 상품·담보 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
+    if(prodSummaryHtml||coverSummaryHtml||gojiSummaryHtml){ /* 상품·담보·알릴의무 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
     else if(items.length===0){
       /* ② 진짜 무결과(전 범위 0) = 플라이휠 입구 */
       var aArg=(catF==='상품')?"'상품'":((catF==='인수')?"'인수'":'null');
@@ -12718,7 +12821,13 @@ function _svRender(){
   if(window._svHasMore && shown.length){ html+='<div class="sv-more"><button type="button" onclick="_svMore()">더 많은 결과 보기</button></div>'; }
   if(activeSrc==='products'){ html=_svProdList(prodItems,terms); }   /* 상품 라인업 전용 탭 = 좌측 리스트만(오버레이 등 비-hsResults 폴백) */
   if(activeSrc==='covers'){ html=_svCoverTabHtml(coverItems,terms); }   /* 담보 전용 탭(오버레이 등 폴백) */
+  if(activeSrc==='goji'){ html=_svGojiTabHtml(gojiItems,terms); }   /* 알릴의무 전용 탭(오버레이 등 폴백) (2026-07-06) */
   if((d.targetId||'sobody')==='hsResults'){
+    if(activeSrc==='goji'){
+      /* 알릴의무 탭 = 코드정의(검색어 코드 시) + 등급 범례 + 확정 우선 정렬 카드 + 고정 경고문 (임태성 게이트, 2026-07-06) */
+      body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+'</div><div class="sv-list1 gj2-scwrap">'+_svGojiTabHtml(gojiItems,terms)+'</div>';
+      return;
+    }
     if(activeSrc==='covers'){
       /* 담보 탭 = 정의 헤더 + 회사별 가로 비교 카드 + 안내문 (2026-07-05) */
       body.innerHTML='<div class="sv-head">'+aiBarFixed+tabs+'</div><div class="sv-list1 svc-wrap">'+_svCoverTabHtml(coverItems,terms)+'</div>';
@@ -12925,6 +13034,136 @@ function _svGojiSummaryHtml(co, prod){
   return h;
 }
 window._svGojiSummaryHtml=_svGojiSummaryHtml;
+/* ════════════════════════════════════════════════════════════════════════════
+   알릴의무(고지) 독립 페이지 #v-goji + 검색 '알릴의무' 탭 (임태성 게이트 _canSeeRoadmap)
+   시안 design-preview/goji-search-taste.html 이식 + tokens 재테마.
+   데이터 data/goji_records.json(114): 확정5(세부문항)/코드확인23(고지코드)/유형확인86(고지유형).
+   표시원칙: 확정=세부문항까지 / 코드확인=고지코드까지 / 유형확인=고지유형까지 / 자료없음=안내.
+   전 화면 하단 "최종 고지는 청약서·상품설명서 기준" 고정. 자료에 있는 것만(추정 0).
+   ⚠️ DB/RLS 무변경. Q&A(posts)·_sBuildFilter·_sScore·전역 정렬 무접촉 — goji는 src==='goji' 별도 경로. 2026-07-06
+   ════════════════════════════════════════════════════════════════════════════ */
+var _GJ_CODE_DEF={
+  '축':{'1축':'최근 3개월 이내 질병확정진단·입원·수술·추가검사·재검사 소견 여부','2축':'최근 X년 이내 질병·상해로 입원 또는 수술(제왕절개 포함) 여부','3축':'최근 Y년 이내 중대질환(암·뇌졸중·급성심근경색 등) 진단·입원·수술 여부'},
+  '코드':{'3.10.5':'3개월 / 10년 입원·수술 / 5년 중대질환 — 고지 범위 가장 넓음(인수 까다로움)','3.5.5':'3개월 / 5년 입원·수술 / 5년 중대질환','3.3.5':'3개월 / 3년 입원·수술 / 5년 중대질환','3.2.5':'3개월 / 2년 입원·수술 / 5년 중대질환','3.1.5':'3개월 / 1년 입원·수술 / 5년 중대질환 — 고지 범위 좁음(인수 쉬움)','3.0.5':'3개월 / 입원·수술 고지 없음 / 5년 중대질환','3.N.5':'3개월 / N년(상품·플랜별 가변) / 5년 중대질환'}
+};
+var _GJ_GM={'확정':['확정','var(--ok)'],'코드확인':['코드 확인','var(--ac)'],'유형확인':['유형 확인','var(--ts)']};
+function _gjGrade(g){ return _GJ_GM[g]||[(g||'자료없음'),'var(--ts)']; }
+/* 검색어 토큰 중 표준코드 키가 있으면 그 코드 반환(정규화 비교: 3.10.5→3105). 없으면 '' */
+function _gjCodeInQuery(terms){ if(!terms) return ''; var keys=Object.keys(_GJ_CODE_DEF['코드']); for(var i=0;i<terms.length;i++){ var t=_svSynNorm(terms[i]); for(var k=0;k<keys.length;k++){ if(_svSynNorm(keys[k])===t) return keys[k]; } } return ''; }
+function _gjCodeDefHtml(code){ if(!code||!_GJ_CODE_DEF['코드'][code]) return ''; var A=_GJ_CODE_DEF['축'];
+  return '<div class="gj2-codebox"><div class="gj2-cl">고지코드 일반 정의</div><div class="gj2-cc">'+_sEsc(code)+'</div><div class="gj2-cm">'+_sEsc(_GJ_CODE_DEF['코드'][code])+'</div>'
+    +'<div class="gj2-axis">1축 '+_sEsc(A['1축'])+'<br>2축 '+_sEsc(A['2축'])+'<br>3축 '+_sEsc(A['3축'])+'</div>'
+    +'<div class="gj2-cwarn">이것은 고지코드의 <b>표준 의미</b>입니다. 개별 상품의 확정 고지 문항이 아니며, 상품마다 다를 수 있습니다.</div></div>';
+}
+function _gjFootHtml(sticky){ return '<div class="'+(sticky?'gj2-foot':'gj2-note-sc')+'">&#9888;&#65039; 최종 고지는 해당 보험사의 청약서·상품설명서 기준으로 확인이 필요합니다. 본 화면 정보는 설계 참고용입니다.</div>'; }
+/* 공용 결과 카드 — 표시원칙 엄수: 유형확인=고지유형만 / 코드확인=고지코드까지 / 확정=세부문항까지. terms=강조용 토큰 배열 */
+function _gjCard(g, terms){
+  var gk=_gjGrade(g.grade);
+  var chips='<span class="gj2-ty">'+_sEsc(g.goji||'고지유형 미상')+'</span>';
+  if(g.grade!=='유형확인' && g.codes && g.codes.length){ chips+=g.codes.map(function(c){return '<span class="gj2-code">'+_sEsc(c)+'</span>';}).join(''); }
+  var det='';
+  if(g.grade==='확정' && g.detail){ var d=g.detail; det='<div class="gj2-detail">'
+      +(d.code?'<div class="gj2-dr"><span class="gj2-dk">고지코드</span><span class="gj2-dv">'+_sEsc(d.code)+'</span></div>':'')
+      +(d['입원수술']?'<div class="gj2-dr"><span class="gj2-dk">입원·수술</span><span class="gj2-dv">'+_sEsc(d['입원수술'])+'</span></div>':'')
+      +(d['중대질환']?'<div class="gj2-dr"><span class="gj2-dk">중대질환</span><span class="gj2-dv">'+_sEsc(d['중대질환'])+'</span></div>':'')
+      +(d['납면']?'<div class="gj2-dr"><span class="gj2-dk">납입면제</span><span class="gj2-dv">'+_sEsc(d['납면'])+'</span></div>':'')
+      +'</div>'; }
+  return '<div class="gj2-card"><div class="gj2-ctop"><div><div class="gj2-pt">'+_sMark(g.prod||'',terms)+'</div><div class="gj2-co">'+_sEsc(g.co||'')+'</div></div>'
+    +'<span class="gj2-gr" style="--gc:'+gk[1]+'">'+_sEsc(gk[0])+'</span></div><div class="gj2-meta">'+chips+'</div>'+det+'</div>';
+}
+var _GJ_LEGEND='<div class="gj2-legend"><span class="gj2-lg" style="--gc:var(--ok)">확정 · 세부문항</span><span class="gj2-lg" style="--gc:var(--ac)">코드 확인</span><span class="gj2-lg" style="--gc:var(--ts)">유형 확인</span></div>';
+var _GJ_ORDER={'확정':0,'코드확인':1,'유형확인':2};
+function _gjSortGrade(a,b){ return (_GJ_ORDER[a.grade]==null?9:_GJ_ORDER[a.grade])-(_GJ_ORDER[b.grade]==null?9:_GJ_ORDER[b.grade]); }
+/* ── 독립 페이지 (#v-goji) ── */
+var _gjData=null,_gjLoaded=false,_gjCoSel=null,_gjType='all',_gjCode='',_gjQ='',_gjSel=null;
+function loadGojiPage(){
+  if(!(typeof _canSeeRoadmap==='function'&&_canSeeRoadmap())) return;   /* 로더 내부 재가드 — showView 가드 외 직접 호출 방어 */
+  var q=document.getElementById('gj2-q'); if(q&&!q._b){ q._b=1; q.addEventListener('input',function(e){ _gjQ=e.target.value; _gjSel=null; _gjRenderCos(); _gjRenderCenter(); _gjRenderDetail(); }); }
+  _gjBindChips();
+  if(_gjLoaded){ _gjRenderCos(); _gjRenderCenter(); _gjRenderDetail(); return; }
+  fetch('/data/goji_records.json?v=20260706').then(function(r){return r.ok?r.json():[];}).then(function(recs){
+    _gjData=Array.isArray(recs)?recs:[]; _gjLoaded=true; _gjRenderCos(); _gjRenderCenter(); _gjRenderDetail();
+  }).catch(function(){ var c=document.getElementById('gj2-cos'); if(c) c.innerHTML='<div class="gj2-empty">데이터 로드 실패</div>'; });
+}
+window.loadGojiPage=loadGojiPage;
+function _gjBindChips(){
+  var v=document.getElementById('v-goji'); if(!v) return;
+  v.querySelectorAll('.gj2-chip').forEach(function(ch){ if(ch._b)return; ch._b=1; ch.addEventListener('click',function(){ v.querySelectorAll('.gj2-chip').forEach(function(x){x.classList.remove('on');}); this.classList.add('on'); _gjType=this.dataset.gt; _gjSel=null; _gjRenderCos(); _gjRenderCenter(); _gjRenderDetail(); }); });
+  v.querySelectorAll('.gj2-cchip').forEach(function(ch){ if(ch._b)return; ch._b=1; ch.addEventListener('click',function(){ var c=this.dataset.gc, was=(_gjCode===c); v.querySelectorAll('.gj2-cchip').forEach(function(x){x.classList.remove('on');}); if(!was){ this.classList.add('on'); _gjCode=c; } else { _gjCode=''; } _gjSel=null; _gjRenderCos(); _gjRenderCenter(); _gjRenderDetail(); }); });
+}
+function _gjPass(g, useCo){
+  if(_gjType!=='all' && g.goji!==_gjType) return false;
+  if(_gjCode && !((g.codes||[]).indexOf(_gjCode)>=0)) return false;
+  if(_gjQ && _gjQ.trim()){ var s=((g.co||'')+' '+(g.prod||'')+' '+(g.goji||'')+' '+((g.codes||[]).join(' '))).toLowerCase(); if(s.indexOf(_gjQ.trim().toLowerCase())<0) return false; }
+  if(useCo && _gjCoSel && g.co!==_gjCoSel) return false;
+  return true;
+}
+function _gjRenderCos(){
+  var el=document.getElementById('gj2-cos'); if(!el) return;
+  var map={},order=[]; (_gjData||[]).forEach(function(g){ if(!_gjPass(g,false)) return; var c=g.co||'(미상)'; if(map[c]==null){ map[c]=0; order.push(c); } map[c]++; });
+  if(!order.length){ el.innerHTML='<div class="gj2-empty">해당 조건의 회사가 없습니다.</div>'; return; }
+  el.innerHTML=order.map(function(c){ return '<div class="gj2-cot'+(_gjCoSel===c?' on':'')+'" onclick="_gjSelCo(\''+_svJsq(c)+'\')"><span>'+_sEsc(c)+'</span><span class="n">'+map[c]+'</span></div>'; }).join('');
+}
+function _gjSelCo(c){ _gjCoSel=(_gjCoSel===c)?null:c; _gjSel=null; _gjRenderCos(); _gjRenderCenter(); _gjRenderDetail(); }
+window._gjSelCo=_gjSelCo;
+function _gjRenderCenter(){
+  var el=document.getElementById('gj2-center'); if(!el) return;
+  var terms=(_gjQ&&_gjQ.trim())?[_gjQ.trim().toLowerCase()]:[];
+  if(!_gjCoSel && !(_gjQ&&_gjQ.trim()) && !_gjCode && _gjType==='all'){ el.innerHTML='<div class="gj2-empty">왼쪽에서 회사를 선택하거나<br>위에서 검색·필터하세요.</div>'; return; }
+  var arr=(_gjData||[]).filter(function(g){ return _gjPass(g,true); }); arr.sort(_gjSortGrade);
+  var head=_gjCode?_gjCodeDefHtml(_gjCode):'';
+  if(!arr.length){ el.innerHTML=head+'<div class="gj2-empty">조건에 맞는 상품이 없습니다.<br>알릴의무 자료 없음.</div>'; el._arr=[]; return; }
+  var cnt='<div class="gj2-cnt"><b>'+arr.length+'</b>건'+(_gjCoSel?' · '+_sEsc(_gjCoSel):'')+'</div>';
+  el.innerHTML=head+cnt+arr.map(function(g,i){ return '<div onclick="_gjSelRec('+i+')">'+_gjCard(g,terms)+'</div>'; }).join('');
+  el._arr=arr;
+}
+function _gjSelRec(i){ var el=document.getElementById('gj2-center'); if(!el||!el._arr) return; _gjSel=el._arr[i]||null; _gjRenderDetail(); }
+window._gjSelRec=_gjSelRec;
+function _gjRenderDetail(){
+  var el=document.getElementById('gj2-detail'); if(!el) return;
+  var g=_gjSel; if(!g){ el.innerHTML='<div class="gj2-empty">상품을 선택하면<br>고지 상세가 표시됩니다.</div>'; return; }
+  var gk=_gjGrade(g.grade);
+  var h='<div class="gj2-dh">'+_sEsc(g.prod||'')+'</div><div class="gj2-dco">'+_sEsc(g.co||'')+' <span class="gj2-gr" style="--gc:'+gk[1]+'">'+_sEsc(gk[0])+'</span></div>';
+  h+='<div class="gj2-drow"><span class="gj2-dk">고지유형</span><span class="gj2-dv">'+_sEsc(g.goji||'—')+'</span></div>';
+  if(g.grade!=='유형확인' && g.codes && g.codes.length){ h+='<div class="gj2-drow"><span class="gj2-dk">고지코드</span><span class="gj2-dv">'+g.codes.map(function(c){return '<span class="gj2-code">'+_sEsc(c)+'</span>';}).join('')+'</span></div>'; }
+  if(g.grade==='확정' && g.detail){ var d=g.detail;
+    if(d['입원수술']) h+='<div class="gj2-drow"><span class="gj2-dk">입원·수술</span><span class="gj2-dv">'+_sEsc(d['입원수술'])+'</span></div>';
+    if(d['중대질환']) h+='<div class="gj2-drow"><span class="gj2-dk">중대질환</span><span class="gj2-dv">'+_sEsc(d['중대질환'])+'</span></div>';
+    if(d['납면']) h+='<div class="gj2-drow"><span class="gj2-dk">납입면제</span><span class="gj2-dv">'+_sEsc(d['납면'])+'</span></div>';
+  }
+  if(g.grade==='유형확인'){ h+='<div class="gj2-dhint">고지유형까지 확인됩니다. 세부 고지코드·문항은 자료 없음 — 청약서 기준 확인이 필요합니다.</div>'; }
+  else if(g.grade==='코드확인'){ h+='<div class="gj2-dhint">고지코드까지 확인됩니다. 아래 표준 정의는 코드 일반 의미이며, 개별 상품의 확정 고지 문항이 아닙니다.</div>'; }
+  if(g.codes && g.codes.length){ g.codes.forEach(function(c){ h+=_gjCodeDefHtml(c); }); }
+  h+=_gjFootHtml(false); el.innerHTML=h;
+}
+/* ── 검색 '알릴의무' 탭 소스 (임태성 게이트) — data/goji_records.json in-memory. _svLoadGoji 맵 재사용. ── */
+var _SV_GGROUP={ table:'goji', t:function(r){ return r.prod||''; }, body:function(r){ return (r.goji||'')+' '+((r.codes||[]).join(' ')); }, m:function(r){ return (r.co||'')+(r.goji?' · '+r.goji:''); }, scope:function(){ return 'common'; } };
+function _svGojiSearchList(){
+  if(window._svGojiSList) return Promise.resolve(window._svGojiSList);
+  return _svLoadGoji().then(function(m){
+    var arr=[]; for(var k in m){ if(!m.hasOwnProperty(k)) continue; var g=m[k];
+      var canon=(typeof _resolveCompany==='function'&&_resolveCompany(g.co))||g.co;
+      var conames=(typeof _companyNames==='function')?_companyNames(canon).join(' '):(g.co||'');
+      var typeSyn=(g.goji==='간편고지')?' 유병자 간편':(g.goji==='일반고지'?' 건강체 표준체':'');   /* 유형확인 수준 동의어만(데이터에 있는 유형 기반, 억지 매칭 금지) */
+      var raw=((g.co||'')+' '+conames+' '+(g.prod||'')+' '+(g.goji||'')+' '+((g.codes||[]).join(' '))+' '+(g.grade||'')+typeSyn+' 알릴의무 고지 고지의무').toLowerCase();
+      g._ghay=raw; g._gnhay=_svSynNorm(raw); arr.push(g);
+    }
+    window._svGojiSList=arr; return arr;
+  }).catch(function(){ window._svGojiSList=[]; return []; });
+}
+window._svGojiSearchList=_svGojiSearchList;
+function _svGojiSummary(gojiItems, terms){
+  var n=gojiItems.length; var arr=gojiItems.slice().sort(function(a,b){ return _gjSortGrade(a.row,b.row); });
+  var cards=arr.slice(0,4).map(function(it){ return _gjCard(it.row,terms); }).join('');
+  return '<div class="sv-grp" style="--svc:#16A34A">알릴의무 ('+n+')</div>'+cards+'<div class="sv-prodmore"><button type="button" onclick="_svTab(\'goji\')">알릴의무 전체 '+n+'건 보기 →</button></div>';
+}
+function _svGojiTabHtml(gojiItems, terms){
+  if(!gojiItems.length) return '<div class="gj2-empty">알릴의무 결과가 없습니다.</div>';
+  var arr=gojiItems.slice().sort(function(a,b){ return _gjSortGrade(a.row,b.row); });
+  var code=_gjCodeInQuery(terms); var head=code?_gjCodeDefHtml(code):'';
+  return head+_GJ_LEGEND+arr.map(function(it){ return _gjCard(it.row,terms); }).join('')+_gjFootHtml(false);
+}
+window._svGojiTabHtml=_svGojiTabHtml; window._svGojiSummary=_svGojiSummary;
 /* ════ 담보 탭 렌더 — 전체탭 요약 + 담보탭(정의 헤더 + 회사별 가로 비교 카드 + 참고 안내문). 담보 검색 taste 구조 재사용, DB 무관 (2026-07-05) ════ */
 function _svCoverColor(co){ var m=(window._svCoverData&&window._svCoverData.colors)||(_svCoverData&&_svCoverData.colors)||{}; return m[co]||'#6366F1'; }
 function _svCoverCard(cov, terms){
