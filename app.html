@@ -2882,10 +2882,19 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .home-recent-card-badge{flex:0 0 auto;display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-size:var(--ts-badge);font-weight:700;color:var(--tc,var(--ac));background:color-mix(in srgb,var(--tc,var(--ac)) 12%,transparent);white-space:nowrap}
 .home-recent-card-title{flex:1 1 auto;font-size:0.9rem;font-weight:700;color:var(--tp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em;min-width:0}
 .home-recent-card-meta{font-size:var(--ts-meta);color:var(--ts);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.home-recent-card.skel{background:linear-gradient(90deg,var(--s2),var(--s1),var(--s2));background-size:200% 100%;animation:skelPulse 1.4s ease-in-out infinite;min-height:54px;border-color:transparent;border-left-color:transparent;cursor:default}
+.home-recent-card.skel{background:linear-gradient(90deg,var(--s2),var(--s1),var(--s2));background-size:200% 100%;animation:skelPulse 1.4s ease-in-out infinite;min-height:60px;border-color:transparent;border-left-color:transparent;cursor:default}
 .home-recent-card.skel:hover{transform:none;border-color:transparent}
 .home-recent-card.skel .home-recent-card-row1,.home-recent-card.skel .home-recent-card-meta{visibility:hidden}
 @keyframes skelPulse{0%{background-position:100% 0}100%{background-position:-100% 0}}
+/* perf(2026-07-08): 클릭 즉시 반응 — 주요 인터랙션 요소 눌림(:active) 피드백. 0ms 시각 반응으로 '반응 없음' 체감 제거.
+   transform/opacity만 사용(색 하드코딩 없음). 스켈레톤(.skel)은 비활성이라 제외. */
+.home-recent-card:not(.skel):active{transform:scale(.985);}
+.hd-tool{transition:transform .12s ease,border-color .15s;}
+.hd-tool:active{transform:scale(.99);}
+.hs-go{transition:transform .12s ease,background .15s;}
+.hs-go:active{transform:scale(.97);}
+.nav{transition:transform .1s ease,background .15s,color .15s;}
+.nav:active{transform:scale(.98);}
 /* 홈 최근사용 위젯 상태 카드 (데이터 없음 / 권한 없음 / 조회 실패) — 빈 박스 금지 */
 .home-recent-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;padding:20px 14px;min-height:54px;border:1px dashed var(--bd);border-radius:9px;background:var(--s1);color:var(--ts);font-size:0.9rem;line-height:1.5}
 .home-recent-state .hrs-ic{font-size:1.35rem;opacity:.65;margin-bottom:1px}
