@@ -5356,8 +5356,8 @@ function applyRoleClass(){
   /* 카드 역순 넘버링 = 임태성 실장 user_id 전용 검수(2026-07-06). 어드민 포함 타 계정 비노출. .item-no span은 항상 렌더되고 CSS(body.is-uat-cardno)로만 표시. ▶ 전체 개방 플립 지점: 이 toggle을 add(항상 부여)로 바꾸거나 CSS 게이트 해제. */
   document.body.classList.toggle('is-uat-cardno', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
-  /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 임태성 실장 user_id 전용 선적용(2026-07-07). CSS·마크업만(기능 무변경). 어드민 포함 타 계정 비노출 → 기존 홈 그대로. */
-  document.body.classList.toggle('is-uat-homesearch2', (typeof _canSeeHomeSearch2==='function' && _canSeeHomeSearch2()));
+  /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 로그인 전원 개방(2026-07-08 대표 승인, 어드민 포함). 홈 데스크(is-uat-homedesk)와 짝 = !!r 동일 조건. CSS·마크업만(기능 무변경). 비로그인은 미부여 → 기존 홈 hero 그대로. 완성 기능만 노출: 타일 게이트(_HS2_TILES show)가 각 기능 공개상태를 따르므로 미완성(알릴의무=_canSeeRoadmap)은 임태성 실장에게만 뜸. ▶ 전체 개방 전 롤백: 이 조건을 _canSeeHomeSearch2()로 되돌리면 임태성 전용으로 복귀. */
+  document.body.classList.toggle('is-uat-homesearch2', !!r);
   /* 안A 검색창 placeholder = "무엇을 찾으세요?" (게이트 계정만 — 속성이라 CSS 스코프 불가). 비게이트 계정은 기존 placeholder 그대로 = 무변경. */
   try{ if(document.body.classList.contains('is-uat-homesearch2')){ var _hi2=document.getElementById('hsInput'); if(_hi2) _hi2.setAttribute('placeholder','무엇을 찾으세요?'); } }catch(e){}
   /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민은 운영·유지보수 계정 = 사이드바 접힘 규칙에서 제외(:not(.is-admin)) → 전체 네비 유지(위 CSS). */
