@@ -33,6 +33,7 @@
 <script src="/js/db.js"></script>
 <script src="/js/admin-config.js"></script>
 <script src="/js/auth.js"></script>
+<script src="/js/util-format.js"></script><!-- 순수 포맷터·이스케이프 분리(인라인보다 먼저 로드). Phase2 2026-07-08 -->
 <link rel="stylesheet" href="/css/app-core.css?v=20260708"><!-- app.html에서 분리한 코어 CSS(토큰+셸). Phase1 perf. 인라인 style 블록 바로 앞=cascade 순서 보존 -->
 <link rel="stylesheet" href="/css/app-views.css?v=20260708"><!-- app.html 인라인 <style> 상단 연속 구간(게이트 뷰+공용 컴포넌트) 분리. app-core 다음·인라인 style 앞=cascade 100% 보존. Phase2 perf -->
 <style>
@@ -5197,7 +5198,7 @@ var cards=[
 {brand:"5세대 실손 · 주계약",name:"5세대 주계약<br>4세대 대비 변화",rows:[["보장 한도","연간 5천만 (동일)"],["임신·출산","면책 → 급여보장 신설",true],["통원 자기부담","건보 본인부담률 반영"],["적용 시점","26년 5월부터 시행"]]}
 ];
 /* Gemini 카드 결과(window._genCard) 또는 데모(cards[cur]) 렌더. _genCard = 동적 데이터라 escape. */
-function _escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+/* _escHtml → util-format.js */
 /* 메모 본문 URL 자동 링크화(autolink) — 저장은 plain text 불변, 렌더 단계에서만 변환(회귀 최소).
    ★XSS 가드: (1) 전체를 _escHtml로 이스케이프 → (2) http/https URL만 토큰화해 <a>로. javascript:/data:/vbscript: 등은 패턴(^https?://)에서 애초에 매칭 안 됨. href엔 이스케이프된 URL만 들어가 속성 탈출 불가.
    URL 문자는 ASCII URL 클래스로 제한 → 뒤에 붙은 한글/공백/줄바꿈에서 자동 경계. trailing 문장부호는 링크에서 제외. 모든 링크 target=_blank(새 창)+rel=noopener noreferrer. (2026-06-24 기획팀장 의뢰) */
@@ -7059,13 +7060,7 @@ function calcInsuranceAge(birthStr, refDate){
   return { age: age, insAge: insAge, nextChange: nextAgeChange };
 }
 
-function fmtYMD(d){
-  if(!d) return '';
-  var y = d.getFullYear();
-  var m = String(d.getMonth()+1).padStart(2,'0');
-  var dd = String(d.getDate()).padStart(2,'0');
-  return y + '-' + m + '-' + dd;
-}
+/* fmtYMD → util-format.js */
 
 function insAgeBirthInput(el){
   // 숫자만 추출 + 자동 - 삽입 (YYYY-MM-DD)
@@ -7264,11 +7259,7 @@ function renderConverterTool(slotId){
   }
 }
 
-function fmtFileSize(bytes){
-  if(bytes < 1024) return bytes + ' B';
-  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/(1024*1024)).toFixed(1) + ' MB';
-}
+/* fmtFileSize → util-format.js */
 
 function convFileSelect(file){
   if(!file) return;
@@ -13182,12 +13173,7 @@ window._homeRecentLoaded=false;
 window.HOME_DEBUG=(window.HOME_DEBUG!==undefined)?window.HOME_DEBUG:true;
 function _hlog(){ if(window.HOME_DEBUG&&window.console&&console.log){ console.log.apply(console,['[home]'].concat([].slice.call(arguments))); } }
 
-function fmtHomeDate(iso){
-  if(!iso)return '';
-  var d=new Date(iso);if(isNaN(d.getTime()))return '';
-  return (d.getMonth()+1)+'월 '+d.getDate()+'일';
-}
-function escHomeHtml(s){return String(s||'').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+/* fmtHomeDate·escHomeHtml → util-format.js */
 
 async function updateLastUsed(table,id){
   if(!window.db||!window.AppState||!window.AppState.userId)return;
@@ -13495,11 +13481,7 @@ async function loadHomeRecent(force){
 window._myspaceCache=null;
 window._myspaceLoaded=false;
 
-function fmtMysDate(iso){
-  if(!iso)return '';
-  var d=new Date(iso);if(isNaN(d.getTime()))return '';
-  return (d.getMonth()+1)+'월 '+d.getDate()+'일 저장';
-}
+/* fmtMysDate → util-format.js */
 
 async function loadMyspace(force){
   if(window._myspaceLoaded&&!force){
