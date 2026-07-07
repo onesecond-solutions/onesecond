@@ -1937,7 +1937,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
       <div class="nav roadmap-only" id="nav-roadmap" onclick="_navView('roadmap')"><span class="ic">&#128203;</span><span class="lbl">상품 로드맵</span><span class="nav-badge" style="background:#9A5B06">검수</span></div>
-      <div class="nav salesnote-only" id="nav-salesnote" onclick="_navView('salesnote')"><span class="ic">&#128221;</span><span class="lbl">영업노트</span><span class="nav-badge" style="background:#3A7">조회</span></div>
+      <div class="nav salesnote-only" id="nav-salesnote" onclick="_navView('salesnote')"><span class="ic">&#128221;</span><span class="lbl">영업노트</span><span class="nav-badge" style="background:#3A7">관리</span></div>
       <div class="nav" id="nav-pricing" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
       <div class="nav" id="nav-admin" style="display:none" onclick="_navView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
     </div>
@@ -2690,13 +2690,14 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
       </div>
       <div class="gj2-foot">&#9888;&#65039; 최종 고지는 해당 보험사의 청약서 · 상품설명서 기준으로 확인이 필요합니다. 본 화면 정보는 설계 참고용입니다.</div>
      </div>
-     <!-- ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용 조회(v0, 읽기전용·AI없음·외부전송0). 일반/어드민 무영향. 2026-06-29 ════ -->
+     <!-- ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용(AI없음·외부전송0). 고객 CRUD + 상담 회차 누적. 일반/어드민 무영향. 2026-06-29 ════ -->
      <div class="wrap view" id="v-salesnote">
       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
-      <div class="rm-note">🔒 <b>비공개</b> — 본인 영업 데이터 조회 전용 화면입니다. 외부 전송·AI 처리 없음. 등록·수정은 다음 단계.</div>
-      <div class="sn-head">영업노트 <span style="font-weight:400;color:var(--ts);font-size:13px">고객·상담 조회</span></div>
+      <div class="rm-note">🔒 <b>비공개</b> — 본인 영업 데이터 관리 전용 화면입니다. 외부 전송·AI 처리 없음.</div>
+      <div class="sn-head">영업노트 <span style="font-weight:400;color:var(--ts);font-size:13px">고객·상담 관리</span></div>
       <div class="sn-sub" id="sn-stat">불러오는 중…</div>
       <div class="sn-bar"><input id="sn-q" type="text" placeholder="이름·전화 검색" autocomplete="off"><button class="sn-btn" onclick="_snOpenForm(null)">+ 신규 고객</button></div>
+      <div class="sn-chips" id="sn-chips"></div>
       <div class="sn-layout">
         <div class="sn-col" id="sn-list"><div class="sn-empty">불러오는 중…</div></div>
         <div class="sn-col sn-detail" id="sn-detail"><div class="sn-empty">왼쪽에서 고객을 선택하세요.</div></div>
@@ -3809,7 +3810,7 @@ function _rmMatch(p){var c=_rmCls(p.coverType);if(_rmFilter!=='all'&&_rmFilter!=
 function _rmRenderP(){var el=document.getElementById('rm-products');if(!el)return;if(_rmCo===null){el.innerHTML='<div class="rm-empty">왼쪽에서 보험사를 선택하세요.</div>';return;}var c=_rmData[_rmCo],h='<div class="rm-pgrid">',n=0;c.products.forEach(function(p,j){if(!_rmMatch(p))return;n++;var cl=_rmCls(p.coverType);h+='<div class="rm-pc '+cl+'" onclick="_rmSelP('+_rmCo+','+j+')"><div class="nm">'+_rmEsc(p.name)+'</div>'+_rmBadge(cl)+'<span class="meta">'+_rmEsc(p.group||'')+'</span></div>';});h+='</div>';if(!n)h='<div class="rm-empty">조건에 맞는 상품이 없습니다.</div>';el.innerHTML=h;}
 function _rmSelP(ci,pj){var p=_rmData[ci].products[pj],cl=_rmCls(p.coverType);var el=document.getElementById('rm-detail');if(!el)return;var h='<div class="ph">'+_rmEsc(p.name)+'</div>'+_rmBadge(cl)+'<span class="meta" style="font-size:12px;color:var(--ts)"> '+_rmEsc(_rmData[ci].company)+'</span><dl>';function row(k,v){if(v)h+='<dt>'+k+'</dt><dd>'+_rmEsc(v)+'</dd>';}row('상품군',p.group);row('심사구분',p.coverType);row('가입연령(원문)',p.entryAge);row('보험기간',p.period);row('납입',p.payment);row('가입금액',p.amount);row('인수·고지기준(원문)',p.underwriting);row('강점',p.strength);row('판매상태(원문)',p.status);h+='</dl>';var src=(_rmData[ci].sources||[]);if(src.length){h+='<dt style="margin-top:14px">출처·기준일(회사 단위)</dt>';src.forEach(function(s){h+='<dd style="font-size:var(--ts-meta);color:var(--ts)">· '+_rmEsc(s)+'</dd>';});}el.innerHTML=h;}
 window.loadRoadmap=loadRoadmap;window._rmSelCo=_rmSelCo;window._rmSelP=_rmSelP;
-/* ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용 조회 v0(읽기전용·AI없음·외부전송0). 본인(owner) 데이터만 RLS 자동 필터. 등록·수정은 다음 Phase. 2026-06-29 ════ */
+/* ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용(AI없음·외부전송0). 본인(owner) 데이터만 RLS 자동 필터. 고객 CRUD + 상담 회차 누적 지원. 2026-06-29 (상담 회차 추가 2026-07-08) ════ */
 function _canSeeSalesNote(){
   try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; }
 }
@@ -3820,7 +3821,7 @@ function _canSeeHomeSearch2(){
 }
 window._canSeeHomeSearch2=_canSeeHomeSearch2;
 /* 홈 검색 타일(_hs2RenderHub)·최근 검색 칩(_hs2Recent*·_hs2RenderRecent) = js/home.js로 분리(파일 분리 Phase 2, 2026-07-08). 기능 무변경. <script src="/js/home.js"> 로드. revert=home.js 내용 여기로 복원+스크립트태그 제거. */
-var _snData=[],_snSel=null,_snQ='',_snLoaded=false;
+var _snData=[],_snSel=null,_snQ='',_snLoaded=false,_snStageF='all';
 function _snEsc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function loadSalesNote(){
   if(!(typeof _canSeeSalesNote==='function'&&_canSeeSalesNote())) return; /* 이중 가드 */
@@ -3830,10 +3831,25 @@ function loadSalesNote(){
   window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null&select=id,name,phone,phone_raw,birth_date,gender,channel,status&order=name.asc&limit=5000').then(function(r){return r.ok?r.json():[];}).then(function(d){
     _snData=d||[]; _snLoaded=true;
     var st=document.getElementById('sn-stat'); if(st) st.textContent='고객 '+_snData.length+'명 · 본인 영업 데이터';
-    _snRenderList();
+    _snRenderChips(); _snRenderList();
   }).catch(function(e){var el=document.getElementById('sn-list'); if(el) el.innerHTML='<div class="sn-empty">불러오기 실패<br>'+_snEsc(String(e))+'</div>';});
 }
-function _snMatch(c){ if(!_snQ) return true; var s=((c.name||'')+' '+(c.phone||'')+' '+(c.phone_raw||'')).toLowerCase(); return s.indexOf(_snQ.toLowerCase())>=0; }
+/* 상태 단계 필터 칩 — 클라이언트 렌더/필터(DB 쿼리·로직 무변경). 이미 로드된 _snData에서 status로만 거름. 2026-07-08 */
+function _snRenderChips(){
+  var el=document.getElementById('sn-chips'); if(!el) return;
+  var stages=['all'].concat(_SN_STAGES);
+  var h=stages.map(function(s){
+    var lbl=(s==='all')?'전체':s;
+    var n=(s==='all')?_snData.length:_snData.filter(function(c){return (c.status||'')===s;}).length;
+    return '<span class="sn-chip'+(_snStageF===s?' on':'')+'" onclick="_snSetStage('+JSON.stringify(s).replace(/"/g,'&quot;')+')">'+_snEsc(lbl)+' <b>'+n+'</b></span>';
+  }).join('');
+  el.innerHTML=h;
+}
+function _snSetStage(s){ _snStageF=s; _snRenderChips(); _snRenderList(); }
+function _snMatch(c){
+  if(_snStageF!=='all' && (c.status||'')!==_snStageF) return false;
+  if(!_snQ) return true; var s=((c.name||'')+' '+(c.phone||'')+' '+(c.phone_raw||'')).toLowerCase(); return s.indexOf(_snQ.toLowerCase())>=0;
+}
 function _snRenderList(){
   var el=document.getElementById('sn-list'); if(!el) return; var h='',n=0;
   _snData.forEach(function(c,i){ if(!_snMatch(c)) return; n++;
@@ -3850,8 +3866,21 @@ function _snSel_(i){
     +'<div class="sn-dm">'+_snEsc(c.phone||c.phone_raw||'')+(meta.length?' · '+meta.join(' · '):'')+'</div>'
     +(c.status?'<span class="sn-stat-badge">'+_snEsc(c.status)+'</span>':'')
     +'<div class="sn-dbtns"><button class="sn-btn ghost" onclick="_snOpenForm('+i+')">수정</button><button class="sn-btn danger" onclick="_snDelete('+i+')">삭제</button></div>'
-    +'<div class="sn-tl-h">상담 이력</div><div class="sn-tl" id="sn-tl"><div class="sn-empty">불러오는 중…</div></div>';
-  if(!window.db||!window.db.fetch) return;
+    +'<div class="sn-tl-h">상담 이력 <button class="sn-btn sn-tl-add" onclick="_snConsultToggle()">+ 상담 추가</button></div>'
+    +'<div class="sn-cadd" id="sn-cadd" style="display:none">'
+      +'<div class="sn-cadd-grid">'
+        +'<div class="sn-fld"><label>상담일</label><input id="snc-date" type="date" value="'+_snToday()+'"></div>'
+        +'<div class="sn-fld"><label>상담채널</label><input id="snc-channel" type="text" value="'+_snEsc(c.channel||'')+'" placeholder="전화·문자·카카오톡·해피톡" autocomplete="off"></div>'
+      +'</div>'
+      +'<div class="sn-fld full" style="margin-top:10px"><label>상담 내용<span class="req">*</span></label><textarea id="snc-memo" placeholder="이번 상담 내용을 기록하세요(회차별 누적)"></textarea></div>'
+      +'<div class="sn-cadd-acts"><button class="sn-btn" onclick="_snConsultSave()">상담 저장</button><button class="sn-btn ghost" onclick="_snConsultToggle()">취소</button><span class="sn-ocr-stat" id="snc-stat"></span></div>'
+    +'</div>'
+    +'<div class="sn-tl" id="sn-tl"><div class="sn-empty">불러오는 중…</div></div>';
+  _snLoadTimeline(c);
+}
+function _snToday(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+function _snLoadTimeline(c){
+  if(!c||!window.db||!window.db.fetch) return;
   window.db.fetch('/rest/v1/sales_consultations?customer_id=eq.'+encodeURIComponent(c.id)+'&select=consulted_at,channel,memo,created_at&order=consulted_at.desc&limit=500').then(function(r){return r.ok?r.json():[];}).then(function(rows){
     var tl=document.getElementById('sn-tl'); if(!tl) return;
     if(!rows||!rows.length){ tl.innerHTML='<div class="sn-empty">상담 기록 없음</div>'; return; }
@@ -3861,7 +3890,33 @@ function _snSel_(i){
     tl.innerHTML=h;
   }).catch(function(e){var tl=document.getElementById('sn-tl'); if(tl) tl.innerHTML='<div class="sn-empty">상담 불러오기 실패</div>';});
 }
-window.loadSalesNote=loadSalesNote;window._snSel_=_snSel_;
+/* 상담 회차 추가 — sales_consultations INSERT(owner_id=본인, customer_id=현재 고객). RLS: FOR ALL · auth.uid()::text=owner_id(기존 고객 INSERT와 동일 owner 패턴). 저장 후 타임라인만 재렌더(기존 읽기 렌더 무손상). 2026-07-08 */
+function _snConsultToggle(){
+  var el=document.getElementById('sn-cadd'); if(!el) return;
+  var show=(el.style.display==='none'||!el.style.display);
+  el.style.display=show?'block':'none';
+  if(show){ var m=document.getElementById('snc-memo'); if(m) setTimeout(function(){m.focus();},30); }
+}
+function _snConsultSave(){
+  var c=_snData[_snSel]; if(!c||!c.id){ alert('고객을 먼저 선택하세요'); return; }
+  var m=document.getElementById('snc-memo'); var memo=m?String(m.value||'').trim():'';
+  if(!memo){ alert('상담 내용을 입력하세요'); if(m)m.focus(); return; }
+  var de=document.getElementById('snc-date'); var date=de?String(de.value||''):'';
+  var ce=document.getElementById('snc-channel'); var channel=ce?String(ce.value||'').trim():'';
+  var owner=_snOwnerId(); if(!owner){ alert('로그인 정보를 확인할 수 없습니다'); return; }
+  var stat=document.getElementById('snc-stat'); if(stat) stat.textContent='저장 중…';
+  var now=new Date().toISOString();
+  var body={customer_id:c.id, owner_id:owner, consulted_at:date||now, channel:channel||null, memo:memo, created_at:now};
+  if(!window.db||!window.db.fetch){ if(stat)stat.textContent='연결 오류'; return; }
+  window.db.fetch('/rest/v1/sales_consultations',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)}).then(function(r){
+    if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); }
+    if(m) m.value='';
+    var cadd=document.getElementById('sn-cadd'); if(cadd) cadd.style.display='none';
+    if(stat) stat.textContent='';
+    _snLoadTimeline(c);
+  }).catch(function(e){ if(stat) stat.textContent=''; alert('상담 저장 실패: '+(e&&e.message||e)); });
+}
+window.loadSalesNote=loadSalesNote;window._snSel_=_snSel_;window._snSetStage=_snSetStage;window._snConsultToggle=_snConsultToggle;window._snConsultSave=_snConsultSave;
 /* 영업노트 고객 CRUD (신규/수정/삭제) — RLS owner 본인만. 삭제=소프트(deleted_at). 2026-06-29 */
 var _snFormEditId=null;
 function _snVal(id){var e=document.getElementById(id);return e?String(e.value||''):'';}
