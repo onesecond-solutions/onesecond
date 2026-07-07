@@ -12603,7 +12603,7 @@ async function _hubOpenNl(btn){
   if(!u){ if(typeof toast==='function') toast('원본을 열 수 없습니다.'); return; }
   var name=String(btn.getAttribute('title')||btn.textContent||'소식지').trim();   /* 박스 title=월 라벨(캡션·placeholder 혼입 방지) */
   /* 헤더 메타·다운로드용 데이터(회사·발행월·원본 파일명·원본 경로). 없으면 있는 것만 표시(빈 값 방어) */
-  var meta={ company:String(btn.getAttribute('data-co')||'').trim(), ym:String(btn.getAttribute('data-ym')||'').trim(), path:p, filename:String(btn.getAttribute('data-fn')||'').trim() };
+  var meta={ company:String(btn.getAttribute('data-co')||'').trim(), ym:String(btn.getAttribute('data-ym')||'').trim(), path:p, filename:String(btn.getAttribute('data-fn')||'').trim(), canvas:true };
   _hubNlPreview(u, name, meta);
 }
 window._hubOpenNl=_hubOpenNl;
@@ -12640,6 +12640,7 @@ function _hubNlPreview(url, name, meta){
   var ym=String(meta.ym||'').trim();
   var path=String(meta.path||'').trim();
   var filename=String(meta.filename||'').trim();
+  var useCanvas=!!meta.canvas;
   var old=document.getElementById('hubNlOv'); if(old) old.remove();
   var ov=document.createElement('div'); ov.id='hubNlOv';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99996;display:flex;align-items:center;justify-content:center;padding:24px';
@@ -12659,7 +12660,12 @@ function _hubNlPreview(url, name, meta){
     +'<button id="hubNlClose" type="button" aria-label="닫기" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&#10005;</button>'
     +'</div></div>'
     +'<div style="position:relative;flex:1;min-height:0">'
-    +'<iframe id="hubNlFrame" src="'+_sEsc(url)+'" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff" title="소식지 미리보기"></iframe>'
+    +(useCanvas
+      ? '<div id="hubNlScroll" style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--s2)">'
+          +'<div id="hubNlStatus" style="padding:40px 16px;text-align:center;color:var(--ts);font-size:var(--sz-s,13px)">소식지를 불러오는 중…</div>'
+          +'<div id="hubNlPages" style="max-width:900px;margin:0 auto;padding:14px 14px 40px"></div>'
+        +'</div>'
+      : '<iframe id="hubNlFrame" src="'+_sEsc(url)+'" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff" title="소식지 미리보기"></iframe>')
     +'<div id="hubNlFallback" style="display:none;position:absolute;inset:0;background:var(--s1);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px">'
     +'<div style="font-size:var(--sz-m,16px);color:var(--tp);font-weight:700;line-height:1.7;max-width:440px">이 PC에서는 PDF 미리보기가 제한되어 있습니다.<br>새 탭 열기 또는 다운로드로 확인해 주세요.</div>'
     +'<div style="display:flex;gap:10px">'
@@ -12678,18 +12684,71 @@ function _hubNlPreview(url, name, meta){
   var dl=function(ev){ if(ev&&ev.preventDefault) ev.preventDefault(); _hubNlDownload(url, path, filename, ym, ev&&ev.currentTarget); };
   var d1=document.getElementById('hubNlDl'); if(d1) d1.onclick=dl;
   var d2=document.getElementById('hubNlDl2'); if(d2) d2.onclick=dl;
-  /* fallback 감지 — iframe onload 정상 로드 시 안내 숨김 / 1.5초 내 로드 없거나 onerror 시 안내 노출(자동 정정) */
+  if(useCanvas){
+    /* 2단계 — 세로스크롤 캔버스. 통짜 fetch→모든 페이지 렌더. 실패 시 iframe으로 이중 폴백 */
+    var pagesEl=document.getElementById('hubNlPages'), statusEl=document.getElementById('hubNlStatus'), scrollEl=document.getElementById('hubNlScroll');
+    _hubNlCanvasRender(pagesEl, url, path, function(i,n){ if(statusEl) statusEl.textContent='소식지를 불러오는 중… ('+i+' / '+n+' 페이지)'; })
+      .then(function(){ if(statusEl) statusEl.remove(); })
+      .catch(function(e){ console.error('[hubNlCanvas]',e); if(statusEl) statusEl.remove(); _hubNlIframeInto(scrollEl, url); });
+  } else {
+    /* 1단계 — iframe. onload 정상 시 안내 숨김 / 1.5초 무로드·onerror 시 안내 노출(자동 정정) */
+    var frame=document.getElementById('hubNlFrame'), fb=document.getElementById('hubNlFallback');
+    var settled=false;
+    var showFb=function(){ if(settled) return; if(fb) fb.style.display='flex'; };
+    var hideFb=function(){ settled=true; if(fb) fb.style.display='none'; };
+    var t=setTimeout(showFb, 1500);
+    if(frame){
+      frame.onload=function(){ clearTimeout(t); hideFb(); };
+      frame.onerror=function(){ clearTimeout(t); showFb(); };
+    }
+  }
+}
+window._hubNlPreview=_hubNlPreview;
+/* 소식지 PDF 2단계 — 세로스크롤 캔버스 뷰어. 전체 arraybuffer를 한 번에 받아(서명URL 만료 회피) 모든 페이지를 세로로 렌더 → 브라우저 PDF 설정에 안 막힘(iframe 종속 탈피). PDF.js=기존 loadPdfJs() 재사용. 실패 시 iframe으로 이중 폴백. */
+async function _hubNlCanvasRender(pagesEl, url, path, onProgress){
+  if(!pagesEl) throw new Error('no container');
+  var pdfjs=await loadPdfJs();
+  /* 원본 경로 있으면 새 서명URL 재발급(만료 회피) 후 통짜 fetch */
+  var durl=url;
+  if(path && typeof _svSignUrl==='function'){ try{ var s=await _svSignUrl('newsletters', path); if(s) durl=s; }catch(e){} }
+  if(!durl) throw new Error('no url');
+  var resp=await fetch(durl);
+  if(!resp.ok) throw new Error('http '+resp.status);
+  var buf=await resp.arrayBuffer();
+  var doc=await pdfjs.getDocument({data:buf}).promise;
+  var n=doc.numPages, dpr=Math.min(2, window.devicePixelRatio||1);
+  var cw=(pagesEl.clientWidth||860);
+  pagesEl.innerHTML='';
+  for(var i=1;i<=n;i++){
+    if(onProgress){ try{ onProgress(i, n); }catch(e){} }
+    var page=await doc.getPage(i);
+    var base=page.getViewport({scale:1});
+    var fit=Math.min(1.7, cw/base.width);
+    var vp=page.getViewport({scale:fit*dpr});
+    var cv=document.createElement('canvas');
+    cv.width=vp.width; cv.height=vp.height;
+    cv.style.width='100%'; cv.style.height='auto'; cv.style.display='block';
+    cv.style.margin='0 auto 12px'; cv.style.background='#fff';
+    cv.style.borderRadius='var(--radius-sm,6px)';
+    cv.style.boxShadow='0 1px 4px rgba(0,0,0,.12)';
+    pagesEl.appendChild(cv);
+    await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
+  }
+  return n;
+}
+window._hubNlCanvasRender=_hubNlCanvasRender;
+/* 캔버스 실패 시 iframe 이중 폴백 — scroll 컨테이너를 iframe으로 교체. iframe도 1.5초 무로드·onerror면 #hubNlFallback(새 탭/다운로드) 노출 = 3중 폴백 */
+function _hubNlIframeInto(scrollEl, url){
+  if(!scrollEl) return;
+  scrollEl.innerHTML='<iframe id="hubNlFrame" src="'+_sEsc(url)+'" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff" title="소식지 미리보기"></iframe>';
   var frame=document.getElementById('hubNlFrame'), fb=document.getElementById('hubNlFallback');
   var settled=false;
   var showFb=function(){ if(settled) return; if(fb) fb.style.display='flex'; };
   var hideFb=function(){ settled=true; if(fb) fb.style.display='none'; };
   var t=setTimeout(showFb, 1500);
-  if(frame){
-    frame.onload=function(){ clearTimeout(t); hideFb(); };
-    frame.onerror=function(){ clearTimeout(t); showFb(); };
-  }
+  if(frame){ frame.onload=function(){ clearTimeout(t); hideFb(); }; frame.onerror=function(){ clearTimeout(t); showFb(); }; }
 }
-window._hubNlPreview=_hubNlPreview;
+window._hubNlIframeInto=_hubNlIframeInto;
 /* 소식지 박스 썸네일 — 화면에 보일 때만(lazy) PDF 첫 페이지를 캔버스로. 동시성 2 큐. PDF.js=기존 loadPdfJs() 재사용 */
 var _hubThumbQ=[], _hubThumbRunning=0;
 function _hubThumbPump(){
