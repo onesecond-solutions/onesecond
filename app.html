@@ -107,7 +107,7 @@ body.is-mgr .nav.nav-mgr{display:flex;}
 #app:not(.is-admin) #sideNote,#app:not(.is-admin) #nav-pricing{display:none !important;}/* 요금제·안내문 = 어드민만 노출 (2026-06-22) */
 /* ════ 스페이스 네비 재설계 (is-uat-spacenav 게이트=임태성 검수, P1 2026-06-24) ════ */
 .nav.sn2-only{display:none;}                              /* 기본 숨김 — 전원 기존 그대로 */
-body.is-uat-spacenav .nav.sn2-only,body.is-admin .nav.sn2-only{display:flex;}  /* UAT(임태성) + 어드민 = 스페이스 항목(마이/팀/지점) 노출. 어드민은 사이드 메뉴 전체 보임(다이어리도 유지) */
+/* 스페이스 sn2-only 5종(마이/팀/지점/원수사자료실/보험Q&A) = 어드민 화면에서도 제거(2026-07-07 대표 결정 A). 노출 규칙 삭제 → 109 기본숨김이 전원 적용(어드민 포함 비노출). guide(#nav-sp-guide)는 111의 id 규칙으로 어드민 유지(이 규칙과 독립). 팀방/지점방 공지 진입 끊김은 대표 감수 확정(뷰 코드 보존, 홈 자리 마련 시 재연결). 되돌리기 = 다음 한 줄 복원: body.is-uat-spacenav .nav.sn2-only,body.is-admin .nav.sn2-only{display:flex;} */
 #nav-sp-guide{display:none;}body.is-admin #nav-sp-guide{display:flex;}  /* 스페이스 설명서 = 어드민 전용. 전체 개방 후에도 일반 사용자 숨김(id 특이도로 sn2-only 무력화), 2026-06-25 */
 /* ════ 상품 로드맵 (is-uat-roadmap 게이트 = 임태성 실장 user_id 전용 검수 · 어드민 포함 타 계정 전면 비노출 · raw_seed 비공개·검수 전 사용자 노출/통합검색 미연결, 2026-06-27) ════ */
 .roadmap-only{display:none;}                       /* 기본 숨김 — 어드민 포함 전원 숨김(sn2-only와 별개) */
@@ -1538,6 +1538,7 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
 .sv-chip.on{border-color:var(--svc);color:var(--svc);background:transparent;}
 .sv-grp{font-size:var(--ts-meta);font-weight:800;padding:12px 12px 6px;margin-top:2px;color:var(--svc);border-left:3px solid var(--svc);}
 .sv-empty{padding:2px 14px 12px;font-size:0.75rem;color:var(--tf);line-height:1.5;}
+.sv-relax-note{margin:8px 12px 6px;padding:8px 11px;font-size:0.75rem;line-height:1.5;color:var(--ts);background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-sm);}
 .sv-more{text-align:center;padding:16px 12px 8px;}
 .sv-more button{height:42px;padding:0 24px;border:1.5px solid var(--bd);border-radius:12px;background:var(--s1);color:var(--tp);font-size:0.875rem;font-weight:700;cursor:pointer;}
 .sv-more button:hover{border-color:var(--ac);color:var(--ac);}
@@ -3068,7 +3069,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <div class="nav sn2-only" id="nav-sp-my" onclick="_navMyspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-user"/></svg></span><span class="lbl">마이 스페이스</span></div>
     <div class="nav sn2-only" id="nav-sp-team" onclick="_navTeamspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-users"/></svg></span><span class="lbl">팀 스페이스</span></div>
     <div class="nav sn2-only" id="nav-sp-branch" onclick="_navBranchspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-building"/></svg></span><span class="lbl">지점 스페이스</span></div>
-    <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div>
+    <!-- 스크립트 사이드 nav 제거(2026-07-07 대표 결정 A) — 홈 도구 카드 '스크립트'(showView('scripts'), app.html 홈데스크 tools)로 진입 유지. 되돌리기 = 다음 한 줄 복원: <div class="nav" onclick="_navView('scripts')"><span class="ic">&#9998;</span><span class="lbl">스크립트</span></div> -->
     <!-- 스페이스 네비(P1): 트리에서 글로벌 사이드바로 이동(2026-06-25) — 원수사 자료실·보험 Q&A. 클릭=바텀시트 펼침+해당 스페이스 콘텐츠 -->
     <div class="nav sn2-only" id="nav-sp-insvault" onclick="_navInsurerVaultSp()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-building"/></svg></span><span class="lbl">원수사 자료실</span></div>
     <div class="nav sn2-only" id="nav-sp-qna" onclick="_navQnaSp()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-help"/></svg></span><span class="lbl">보험 Q&amp;A</span></div>
@@ -11529,6 +11530,82 @@ function _scrFilter(cols, terms){
   if(terms.length<=1){ return 'or=('+orArr(terms[0]||'').join(',')+')'; }
   return 'and=('+terms.map(function(t){return 'or('+orArr(t).join(',')+')';}).join(',')+')';
 }
+/* ════ 보험 Q&A(posts) 전용 — 통합검색 0건 방지·관련도 랭킹 1차 적용 (2026-07-06) ════
+   철학(공통): 단어 하나로 0건 나면 안 됨 + 정확한 단어 몰라도 관련자료 찾아줌.
+   1차는 posts(board_type=qna)에만 적용. 공용 함수(_sBuildFilter·_sScore·전역 .s 정렬)는 무접촉.
+   전 신규 로직은 src==='posts' 게이트 안에서만 돈다 → 상품·담보·소식지·지식·자료 코드경로 바이트 동일. */
+/* [T1] Q&A 전용 OR 필터 — 단어끼리 OR(어느 단어든 맞으면 후보). AND 0건 방지.
+   괄호 수동 인코딩은 _sBuildFilter와 동일(제목에 () 든 글 0건 버그 방지, 2026-07-05 계승). */
+function _qnaOrFilter(cols, terms){
+  function enc(s){ return encodeURIComponent('*'+s+'*').replace(/\(/g,'%28').replace(/\)/g,'%29'); }
+  var arr=[];
+  terms.forEach(function(t){ var e=enc(t); cols.forEach(function(c){ arr.push(c+'.ilike.'+e); }); });
+  return 'or=('+arr.join(',')+')';   /* title/content × 모든 단어를 하나의 OR로 */
+}
+/* [T2-const] 노이즈 억제 상수 (2026-07-06 보완 — 과확장 상한·substring 충돌맵). seed 최소·확장 후속. 모듈-로컬(window 미등록). */
+var _qnaCommon = {'보험':1,'가입':1,'상품':1,'문의':1};   /* 고빈도 흔한단어 — 가중 0.5(이 단어만 맞은 글은 강한후보 제외) */
+var _QNA_RELAX_CAP = 24;                                   /* 완화(0건 방지) fallback 최종 노출 상한 — 잡글 폭주 방지 */
+var _qnaCollide = {'고지':['혈']};                          /* 검색어 뒤 음절이 이거면 다른 단어(오탐). 예:'고지혈증'의 '고지'는 미hit / '고지의무'·'고지서'는 정상 */
+/* term이 hay에 유효 등장(뒤음절 충돌 아님)하는지 — 여러 등장 중 하나라도 비충돌이면 hit 인정. */
+function _qnaTermHitValid(hay, lt, collideList){
+  if(!lt) return false;
+  if(!collideList) return hay.indexOf(lt)>=0;
+  var from=0, idx;
+  while((idx=hay.indexOf(lt,from))>=0){
+    var nextCh=hay.charAt(idx+lt.length);
+    if(nextCh==='' || collideList.indexOf(nextCh)<0) return true;   /* 뒤음절 없음/비충돌 = 유효 hit */
+    from=idx+1;
+  }
+  return false;
+}
+/* [T2-a] 검색어 N개 중 이 글(제목+본문[+답변])에 등장한 '서로 다른 단어' 수·목록.
+   extraHit = 답변(comments)에서 맞은 단어 배열(§3-4 부모 합산). posts 전용. 공용 _sScore 무접촉.
+   wmatched=hit weight 합(고빈도0.5/그외1.0) · strongHit=non-common hit 수(과확장 판정용). */
+function _qnaMatch(titleText, bodyText, terms, extraHit){
+  var hay=((titleText||'')+' '+(bodyText||'')).toLowerCase();
+  var tl=(titleText||'').toLowerCase();
+  var extra={}; (extraHit||[]).forEach(function(t){ extra[String(t).toLowerCase()]=1; });
+  var hit=[], miss=[], titleHit=0, wmatched=0, strongHit=0;
+  terms.forEach(function(t){
+    var lt=String(t).toLowerCase();
+    var col=_qnaCollide[lt]||null;
+    if(_qnaTermHitValid(hay, lt, col) || extra[lt]){
+      hit.push(t);
+      if(_qnaTermHitValid(tl, lt, col)) titleHit++;
+      var isCommon=_qnaCommon[lt]?true:false;
+      wmatched += isCommon?0.5:1.0;
+      if(!isCommon) strongHit++;
+    }
+    else miss.push(t);
+  });
+  return { matched:hit.length, total:terms.length, hit:hit, miss:miss, titleHit:titleHit, wmatched:wmatched, strongHit:strongHit };
+}
+/* [T2-b] 컷 임계 — 유지 최소 matched. 1~2단어=1(OR 후보는 항상 ≥1), 3단어↑=2(=절반 근처, 1개만 맞은 글 제외).
+   과확장(잡글 섞임) 방지 + 0건 방지 균형. 파라미터(대표 확정 시 조정 가능). */
+function _qnaKeepMin(N){ if(N<=2) return 1; return 2; }
+/* [T2-c] posts subset만 2차 정렬(matched desc → _sScore desc). 4/4>3/4>2/4 보장.
+   비-posts 아이템은 원래 인덱스 그대로 유지 → cross-source(전역 .s) 순서 불변. */
+function _qnaTierSort(list){
+  var posts=[], slots=[];
+  for(var i=0;i<list.length;i++){ if(list[i].src==='posts'){ posts.push(list[i]); slots.push(i); } }
+  if(posts.length<2) return list;
+  posts.sort(function(a,b){ if(b.mq.matched!==a.mq.matched) return b.mq.matched-a.mq.matched; return b.s-a.s; });
+  var out=list.slice();
+  for(var j=0;j<slots.length;j++){ out[slots[j]]=posts[j]; }
+  return out;
+}
+/* [T7] 완전일치 아닐 때 안내 배너 — hit=어느 글이든 맞은 단어, miss=전 글에서 0인 단어.
+   "검색 실패"가 아니라 "더 넓게 찾아드렸다"는 긍정 톤. 완전일치(miss 없음)면 배너 없음(과잉 안내 방지). */
+function _qnaBanner(postItems, terms){
+  if(!postItems||!postItems.length) return '';
+  var everHit={};
+  postItems.forEach(function(it){ if(it&&it.mq&&it.mq.hit) it.mq.hit.forEach(function(t){ everHit[t]=1; }); });
+  var hit=terms.filter(function(t){return everHit[t];});
+  var miss=terms.filter(function(t){return !everHit[t];});
+  if(!miss.length || !hit.length) return '';
+  return '<div class="sv-relax-note">‘'+_sEsc(miss.join('·'))+'’ 포함 글은 없지만, '
+       + _sEsc(hit.join('·'))+' 관련 Q&amp;A를 찾았습니다.</div>';
+}
 function _sCount(hay, t){ if(!hay||!t) return 0; return String(hay).toLowerCase().split(String(t).toLowerCase()).length-1; }
 function _sScore(titleText, bodyText, terms){
   var score=0, allTitle=true;
@@ -11811,7 +11888,7 @@ async function _runSearchV2(q, targetId){
   var _vaultBase='deleted_at=is.null'+((!_isAdm&&me.id)?'&or=(scope.neq.personal,owner_id.eq.'+encodeURIComponent(me.id)+')':'');
   /* 출처 그룹 + 각 row의 범위 분류 함수(scope). 종류 라벨(src)은 결과 안 서브태그로 유지 */
   var groups=[
-    {src:'보험 Q&A',  table:'posts',            base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'],                 select:'id,title,content,created_at',                                       order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return 'common';}},
+    {src:'보험 Q&A',  table:'posts',            base:'board_type=eq.qna&title=not.ilike.'+SIK, cols:['title','content'], filter:_qnaOrFilter, /* 0건 방지: 단어끼리 OR(공용 _sBuildFilter 무접촉). 몇 단어 맞았나는 _qnaMatch로 랭킹·컷 (2026-07-06) */ select:'id,title,content,created_at',                                       order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return 'common';}},
     {src:'소식지',    table:'newsletters',      base:'',                                       cols:['title','company','full_text'],    select:'id,title,company,full_text,text_quality,publish_year,publish_month', order:'publish_year.desc.nullslast,publish_month.desc.nullslast', body:function(r){return r.full_text;},                                          t:function(r){return (r.company?r.company+' · ':'')+(r.title||'(제목없음)');}, m:function(r){return r.publish_year?(r.publish_year+'.'+(r.publish_month||'')):'소식지';}, scope:function(r){return 'common';}},
     {src:'팀·지점 공지', table:'team_notices',   base:'deleted_at=is.null',                     cols:['title','content'],                 select:'id,title,content,created_at,scope',                                 order:'created_at.desc',                                         body:function(r){return r.content;},                                            m:function(r){return _sFmtDate(r.created_at);},                                  scope:function(r){return r.scope==='branch_internal'?'branch':'team';}},
     {src:'스크립트',  table:'scripts',          base:'is_active=eq.true&is_sample=eq.false'+(me.id?'&or=(scope.eq.global,and(scope.eq.personal,owner_id.eq.'+encodeURIComponent(me.id)+'))':'&scope=eq.global'), cols:['title','search_text','script_text'], filter:_scrFilter, select:'id,title,search_text,script_text,highlight_text,stage,scope,owner_id',                   order:'',                                                        body:function(r){return r.search_text||_svStripHtml((r.highlight_text?r.highlight_text+' ':'')+(r.script_text||''));}, m:function(r){return '스크립트';}/* global+본인 personal만(타인 personal·team/branch·매니저룸 제외). 유형명 매칭=_scrFilter */,                          scope:function(r){return (r.scope==='personal'&&me.id&&r.owner_id===me.id)?'mine':'common';}},
@@ -11819,22 +11896,44 @@ async function _runSearchV2(q, targetId){
     {src:'자료',      table:'myspace_files',    base:_vaultBase,                               cols:['search_text','original_name'],     select:'id,original_name,search_text,ocr_status,ext,updated_at,scope',       order:'updated_at.desc',                                         body:function(r){return r.search_text;},                                        t:function(r){return r.original_name||'(파일)';},                            m:function(r){return (r.ext||'파일').toString().toUpperCase();},                 scope:function(r){return r.scope==='team'?'team':(r.scope==='branch'?'branch':'mine');}}
   ];
   var lim=window._svLimit||40;   /* 소스별 fetch 한도 — 100→40으로 전송량↓(체감속도). 부족하면 '더 보기'로 +40 */
+  window._svQnaPreciseN=0; window._svQnaRelaxN=0;   /* posts 2단계 fetch 크기 초기화(직전 검색 잔값 누수 방지) */
   var results=await Promise.all(groups.map(async function(g){
     var gTerms=terms, gBase=g.base;
     if(g.table==='newsletters'){ var nd=_svNewsletterDate(q, terms); if(nd.active){ gBase=g.base+(await _svNewsletterYearFix(nd)); gTerms=nd.terms; } }   /* 소식지=발행월 자동 필터 + 연도미지정시 최신연도만(노이즈·작년섞임 제거) */
+    if(g.table==='posts' && gTerms.length){
+      /* [T3] posts 2단계 fetch — (A) 정밀 AND(다단어 관련글 항상 확보) ∪ (B) 완화 OR(0건 방지, limit 200 고정으로 1000행 하드캡 회피). id 중복제거. 다른 소스 무접촉. (2026-07-06) */
+      var _pAndF=_sBuildFilter(g.cols,gTerms), _pOrF=_qnaOrFilter(g.cols,gTerms);
+      var _pOrd=(g.order?'&order='+g.order:'');
+      var _pathA=g.table+'?'+(gBase?gBase+'&':'')+(_pAndF?_pAndF+'&':'')+'select='+g.select+_pOrd+'&limit='+lim;
+      var _pathB=g.table+'?'+(gBase?gBase+'&':'')+(_pOrF?_pOrF+'&':'')+'select='+g.select+_pOrd+'&limit=200';
+      var _pair=await Promise.all([
+        window.db.fetch('/rest/v1/'+_pathA).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
+        window.db.fetch('/rest/v1/'+_pathB).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
+      ]);
+      var _pa=Array.isArray(_pair[0])?_pair[0]:[], _pb=Array.isArray(_pair[1])?_pair[1]:[];
+      window._svQnaPreciseN=_pa.length; window._svQnaRelaxN=_pb.length;   /* hasMore·더보기 판정용(병합 length 오검출 방지) */
+      var _seen={}, _merged=[];
+      _pb.forEach(function(r){ var k=String(r.id); if(!_seen[k]){ _seen[k]=1; _merged.push(r); } });   /* 완화(B) 먼저 담고 정밀(A) 신규만 추가 = A∪B */
+      _pa.forEach(function(r){ var k=String(r.id); if(!_seen[k]){ _seen[k]=1; _merged.push(r); } });
+      return _merged;
+    }
     var _filt=gTerms.length?(g.filter?g.filter(g.cols,gTerms):_sBuildFilter(g.cols,gTerms)):'';   /* 소스별 커스텀 필터 허용(스크립트=유형명 매칭) */
     var path=g.table+'?'+(gBase?gBase+'&':'')+(_filt?_filt+'&':'')+'select='+g.select+(g.order?'&order='+g.order:'')+'&limit='+lim;
     return window.db.fetch('/rest/v1/'+path).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
   }));
   if(seq!==_searchSeq) return;
   /* 답변(comments) 검색 합류 — 답변에만 있는 말("메리츠 부담보" 등)로 쳐도 그 질문이 뜸. 부모 qna를 보험Q&A 결과에 병합(중복 제거). RLS 그대로. 2026-07-05 */
+  /* _ansHit[post_id] = 그 글의 답변에서 맞은 검색어 배열 → _qnaMatch에 합산(§3-4, 답변으로만 매칭된 글이 컷에서 오탈락 방지). posts 전용. */
+  var _ansHit={};
   try{
     var _qgi=-1; for(var _gg=0;_gg<groups.length;_gg++){ if(groups[_gg].table==='posts'){ _qgi=_gg; break; } }
-    var _cflt=terms.length?_sBuildFilter(['content'],terms):'';
+    var _cflt=terms.length?_qnaOrFilter(['content'],terms):'';   /* Q&A 답변도 OR — 0건 방지 일관 (2026-07-06, 기존 AND에서 전환) */
     if(_qgi>=0 && _cflt){
-      var _cres=await window.db.fetch('/rest/v1/comments?'+_cflt+'&select=post_id&limit='+lim);
+      var _cres=await window.db.fetch('/rest/v1/comments?'+_cflt+'&select=post_id,content&limit='+lim);
       var _cs=_cres&&_cres.ok?await _cres.json():[]; if(!Array.isArray(_cs)) _cs=[];
-      var _pids=[]; _cs.forEach(function(c){ if(c.post_id!=null && _pids.indexOf(c.post_id)<0) _pids.push(c.post_id); });
+      var _pids=[]; _cs.forEach(function(c){ if(c.post_id!=null && _pids.indexOf(c.post_id)<0) _pids.push(c.post_id);
+        if(c.post_id!=null){ var _k=String(c.post_id), _cl=String(c.content||'').toLowerCase(); if(!_ansHit[_k]) _ansHit[_k]=[];
+          terms.forEach(function(t){ var lt=String(t).toLowerCase(); if(_cl.indexOf(lt)>=0 && _ansHit[_k].indexOf(t)<0) _ansHit[_k].push(t); }); } });
       var _q0=results[_qgi]||[]; var _have={}; _q0.forEach(function(r){ _have[String(r.id)]=1; });
       var _need=_pids.filter(function(p){ return !_have[String(p)]; });
       if(_need.length){
@@ -11844,7 +11943,8 @@ async function _runSearchV2(q, targetId){
     }
   }catch(e){}
   if(seq!==_searchSeq) return;
-  window._svHasMore = results.some(function(rr){ return Array.isArray(rr)&&rr.length>=lim; });   /* 어느 소스든 꽉 찼으면 더 있을 수 있음 */
+  window._svHasMore = results.some(function(rr,ri){ if(groups[ri]&&groups[ri].table==='posts') return false; return Array.isArray(rr)&&rr.length>=lim; })
+    || (window._svQnaPreciseN>=lim) || (window._svQnaRelaxN>=200);   /* posts는 병합셋 length 대신 정밀(A)·완화(B) 각각의 상한 도달로 판정 */
   /* 메뉴·도구(정적+quick) — 공동 성격이나 '바로가기'라 별도 상단 그룹으로 (어드민 제외) */
   var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
@@ -11860,8 +11960,33 @@ async function _runSearchV2(q, targetId){
   for(var gi=0; gi<groups.length; gi++){ var g=groups[gi], rows=results[gi]||[]; if(!Array.isArray(rows)) continue;
     var titleOf=g.t||function(r){return r.title;};
     rows.forEach(function(r){ var sc=_sScore(titleOf(r), g.body(r), terms); var k=g.scope(r); if(['mine','team','branch','common'].indexOf(k)<0) k='common';
-      items.push({ g:g, row:r, s:sc, src:g.table, scope:k, cat:(g.table==='knowledge_entries'?(r.category||''):'') }); });
+      var it={ g:g, row:r, s:sc, src:g.table, scope:k, cat:(g.table==='knowledge_entries'?(r.category||''):'') };
+      if(g.table==='posts'){ it.mq=_qnaMatch(titleOf(r), g.body(r), terms, _ansHit[String(r.id)]); }   /* Q&A 전용 matched(§3-4 답변 합산). 비-posts는 mq 없음 → 기존과 동일 */
+      items.push(it); });
   }
+  /* [T5] 보험 Q&A(posts) 전용 컷 — N개 중 matched<keepMin 약한 후보 제외. 전부 약하면 완화(matched≥1)해 0건 방지(§3-5).
+     posts 항목만 제거/유지 → 비-posts 코드경로 무접촉. 공용 정렬(.s)·타 소스 매칭 영향 0. */
+  (function(){
+    var _N=terms.length; if(_N<1) return;
+    var _keepMin=_qnaKeepMin(_N);
+    var _pIdx=[]; for(var _i=0;_i<items.length;_i++){ if(items[_i].src==='posts') _pIdx.push(_i); }
+    if(!_pIdx.length) return;
+    /* 강한후보 = matched≥keepMin AND non-common hit≥1 (고빈도 단어로만 맞은 글 제외 → 과확장 억제) */
+    var _strong=_pIdx.filter(function(i){ return items[i].mq.matched>=_keepMin && items[i].mq.strongHit>=1; });
+    var _keepSet;
+    if(_strong.length){ _keepSet=_strong; }
+    else {
+      /* 안전장치+완화 상한: 강한후보 0이면 matched≥1을 (wmatched↓·titleHit↓·.s↓) 정렬 후 상위 _QNA_RELAX_CAP개만(0건 방지 유지·잡글 폭주 차단) */
+      _keepSet=_pIdx.filter(function(i){ return items[i].mq.matched>=1; })
+        .sort(function(a,b){ var A=items[a].mq, B=items[b].mq;
+          if(B.wmatched!==A.wmatched) return B.wmatched-A.wmatched;
+          if(B.titleHit!==A.titleHit) return B.titleHit-A.titleHit;
+          return items[b].s-items[a].s; })
+        .slice(0,_QNA_RELAX_CAP);
+    }
+    var _keepFlag={}; _keepSet.forEach(function(i){ _keepFlag[i]=1; });
+    items=items.filter(function(it,idx){ return it.src!=='posts' || _keepFlag[idx]; });
+  })();
   /* 검색어 동의어 확장 — 각 term → [정규화 term + 동의어 폼]. 상품·담보 정규화본(_nhay)에 하나라도 있으면 매칭 (2026-07-05) */
   try{ await _svLoadSyn(); }catch(e){}
   if(seq!==_searchSeq) return;
@@ -12035,7 +12160,7 @@ async function _companyHubHtml(q){
   if(yrs.length){ nlBody='<div class="chub-nl">';
     yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ var _nm=(typeof _nlShortName==='function')?_nlShortName(n.source_filename, co):''; var _lbl=_sEsc(String(n.publish_month||'?'))+'월'+(_nm?' · '+_sEsc(_nm):''); var _u=String(n.source_pdf_url||'').trim(), _p=String(n.source_path||'').trim(); var _has=!!(_u||_p);
       if(!_has) return '<div class="chub-nlbox is-nosrc" title="'+_lbl+' (원본 파일 없음)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">원본 없음</span></span><span class="chub-nlcap">'+_lbl+'</span></div>';
-      return '<button class="chub-nlbox" type="button" data-u="'+_sEsc(_u)+'" data-p="'+_sEsc(_p)+'" title="'+_lbl+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_lbl+'</span></button>'; }).join('')+'</div></div>'; });
+      return '<button class="chub-nlbox" type="button" data-u="'+_sEsc(_u)+'" data-p="'+_sEsc(_p)+'" data-co="'+_sEsc(co)+'" data-ym="'+_sEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_sEsc(String(n.source_filename||''))+'" title="'+_lbl+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_lbl+'</span></button>'; }).join('')+'</div></div>'; });
     nlBody+='</div>';
   }
   var H='<div class="chub" data-co="'+_sEsc(co)+'"><div class="chub-co"><span class="chub-colg">'+_sEsc(co.slice(0,1))+'</span>'+_sEsc(co)+'</div>';
@@ -12298,7 +12423,7 @@ function _nlCoHit(c){ if(!_nlQuery)return true; var q=_nlQuery.toLowerCase(); re
 function _nlBox(n){
   var u=String(n.source_pdf_url||'').trim(), p=String(n.source_path||'').trim(), cap=_nlEsc((n.publish_month||'?')+'월');
   if(!_nlHas(n)){ var _ym=_nlEsc((n.publish_year||'?')+'.'+(n.publish_month||'?')); return '<div class="chub-nlbox is-nosrc" title="소식지 없음(원본 미등록)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">-</span></span><span class="chub-nlcap">'+_ym+' -</span></div>'; }  /* 소식지 없는 자리 = "년.월 -" 표시 (2026-07-04 대표) */
-  return '<button class="chub-nlbox" type="button" data-u="'+_nlEsc(u)+'" data-p="'+_nlEsc(p)+'" title="'+_nlEsc(_nlLabel(n))+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+cap+'</span></button>';
+  return '<button class="chub-nlbox" type="button" data-u="'+_nlEsc(u)+'" data-p="'+_nlEsc(p)+'" data-co="'+_nlEsc(String(n.company||''))+'" data-ym="'+_nlEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_nlEsc(String(n.source_filename||''))+'" title="'+_nlEsc(_nlLabel(n))+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+cap+'</span></button>';
 }
 function _nlRenderSide(){
   var groups=_nlPool==='all'?[['손해보험',_nlPoolCosBy('nonlife')],['생명보험',_nlPoolCosBy('life')]]:_nlPool==='nonlife'?[['손해보험',_nlPoolCosBy('nonlife')]]:[['생명보험',_nlPoolCosBy('life')]];
@@ -12322,7 +12447,7 @@ function _nlCardAll(c){
   var END=2026*12+(7-1), maxIdx=null;
   c.items.forEach(function(n){ var y=Number(n.publish_year), m=Number(n.publish_month); if(y&&m){ var ix=y*12+(m-1); if(maxIdx===null||ix>maxIdx)maxIdx=ix; } });
   var fill=''; if(maxIdx!==null){ for(var ix=END; ix>maxIdx; ix--){ var yy=Math.floor(ix/12), mm=(ix%12)+1; fill+='<div class="p is-nosrc"><span class="pn">'+yy+'.'+mm+' · -</span></div>'; } }
-  var rows=c.items.map(function(n){ var y=(n.publish_year||'?'), m=(n.publish_month||'?'); var has=_nlHas(n); var lbl=y+'.'+m+' · '+(has?_nlLabel(n):'-'); var att=has?(' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" onclick="_hubOpenNl(this)"'):''; return '<div class="p'+(has?'':' is-nosrc')+'"'+att+'><span class="pn">'+_nlEsc(lbl)+'</span></div>'; }).join('');  /* 원본 없으면 "년.월 · -" (2026-07-04 대표) */
+  var rows=c.items.map(function(n){ var y=(n.publish_year||'?'), m=(n.publish_month||'?'); var has=_nlHas(n); var lbl=y+'.'+m+' · '+(has?_nlLabel(n):'-'); var att=has?(' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" data-co="'+_nlEsc(String(n.company||''))+'" data-ym="'+_nlEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_nlEsc(String(n.source_filename||''))+'" onclick="_hubOpenNl(this)"'):''; return '<div class="p'+(has?'':' is-nosrc')+'"'+att+'><span class="pn">'+_nlEsc(lbl)+'</span></div>'; }).join('');  /* 원본 없으면 "년.월 · -" (2026-07-04 대표) */
   return '<div class="pl-cc" style="--cl:var(--ac)"><div class="ch" data-co="'+_nlEsc(c.n)+'"><div class="cn"><span class="dot"></span>'+_nlEsc(c.n)+'<span class="num">'+c.items.length+'건</span></div></div><div class="pl-list">'+fill+rows+'</div></div>';
 }
 function _nlRenderAll(){
@@ -12477,28 +12602,92 @@ async function _hubOpenNl(btn){
   if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
   if(!u){ if(typeof toast==='function') toast('원본을 열 수 없습니다.'); return; }
   var name=String(btn.getAttribute('title')||btn.textContent||'소식지').trim();   /* 박스 title=월 라벨(캡션·placeholder 혼입 방지) */
-  _hubNlPreview(u, name);
+  /* 헤더 메타·다운로드용 데이터(회사·발행월·원본 파일명·원본 경로). 없으면 있는 것만 표시(빈 값 방어) */
+  var meta={ company:String(btn.getAttribute('data-co')||'').trim(), ym:String(btn.getAttribute('data-ym')||'').trim(), path:p, filename:String(btn.getAttribute('data-fn')||'').trim() };
+  _hubNlPreview(u, name, meta);
 }
 window._hubOpenNl=_hubOpenNl;
-/* 소식지 PDF 미리보기 모달 — 가운데 창(가로 넉넉·전체 탭 점유 X). 헤더(제목·새 탭에서 열기·닫기) + iframe. 회사 허브 게이트 안에서만 진입 */
-function _hubNlPreview(url, name){
+/* 소식지 원본 다운로드 — 미리보기와 공존하는 선택지(브라우저 PDF 설정에 안 막힘).
+   · source_path 있으면 매 클릭 서명 URL 재발급(만료 회피) / 없으면 공개 url 직접 사용
+   · 파일명 = 원본 파일명 우선, 없으면 발행월 기반 ASCII 폴백(newsletter_YYYY-MM.pdf)
+   · Blob 저장 = 모바일 포함 동작. _dlSignedFile 관례 정합. */
+async function _hubNlDownload(url, path, filename, ym, btnEl){
+  var name=String(filename||'').trim();
+  if(!name){ name='newsletter'+(ym?('_'+String(ym).replace(/\./g,'-')):'')+'.pdf'; }
+  var _label=btnEl?btnEl.textContent:'';
+  try{
+    if(btnEl){ btnEl.style.pointerEvents='none'; btnEl.textContent='다운로드 중…'; }
+    var durl=url;
+    if(path && typeof _svSignUrl==='function'){ try{ var s=await _svSignUrl('newsletters', path); if(s) durl=s; }catch(e){} }
+    if(!durl){ alert('다운로드 링크를 만들지 못했습니다. 권한·로그인 상태를 확인해 주세요.'); return false; }
+    var resp=await fetch(durl);
+    if(!resp.ok){ alert('다운로드에 실패했습니다. (HTTP '+resp.status+') 잠시 후 다시 시도해 주세요.'); return false; }
+    var blob=await resp.blob();
+    var obj=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=obj; a.download=name; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ try{ URL.revokeObjectURL(obj); }catch(e){} }, 5000);
+  }catch(err){ console.error('[hubNlDownload]', err); alert('다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.'); }
+  finally{ if(btnEl){ try{ btnEl.style.pointerEvents=''; btnEl.textContent=_label; }catch(e){} } }
+  return false;
+}
+window._hubNlDownload=_hubNlDownload;
+/* 소식지 PDF 미리보기 모달 — 가운데 창(가로 넉넉·전체 탭 점유 X). 헤더(제목·회사·발행월 + 새 탭/다운로드/닫기) + iframe.
+   iframe 유지(1단계) — 렌더 실패(빈 화면·자동 다운로드) 대비 fallback 안내(새 탭/다운로드). 회사 허브 게이트 안에서 진입 */
+function _hubNlPreview(url, name, meta){
+  meta=meta||{};
+  var company=String(meta.company||'').trim();
+  var ym=String(meta.ym||'').trim();
+  var path=String(meta.path||'').trim();
+  var filename=String(meta.filename||'').trim();
   var old=document.getElementById('hubNlOv'); if(old) old.remove();
   var ov=document.createElement('div'); ov.id='hubNlOv';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99996;display:flex;align-items:center;justify-content:center;padding:24px';
   ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  var subBits=[]; if(company) subBits.push(_sEsc(company)); if(ym) subBits.push(_sEsc(ym));
+  var subHtml=subBits.length?('<div style="font-size:var(--sz-s,13px);color:var(--ts);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+subBits.join(' · ')+'</div>'):'';
+  var btnCss='font-size:var(--sz-s,13px);color:var(--ts);background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:6px 12px;cursor:pointer;text-decoration:none;line-height:1.4;white-space:nowrap;display:inline-flex;align-items:center';
   ov.innerHTML='<div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:1100px;height:84vh;display:flex;flex-direction:column;overflow:hidden">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;border-bottom:1px solid var(--bd)">'
+    +'<div style="min-width:0;flex:1">'
     +'<div style="font-weight:800;color:var(--tp);font-size:var(--sz-m,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_sEsc(name||'소식지')+'</div>'
-    +'<div style="display:flex;gap:10px;align-items:center;flex-shrink:0">'
-    +'<a href="'+_sEsc(url)+'" target="_blank" rel="noopener" style="font-size:var(--sz-s,13px);color:var(--ts);text-decoration:none">새 탭에서 열기 &#8599;</a>'
-    +'<button onclick="var o=document.getElementById(\'hubNlOv\');if(o)o.remove();" aria-label="닫기" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>'
+    +subHtml
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'
+    +'<a href="'+_sEsc(url)+'" target="_blank" rel="noopener" style="'+btnCss+'">새 탭에서 열기 &#8599;</a>'
+    +'<button id="hubNlDl" type="button" style="'+btnCss+'">다운로드</button>'
+    +'<button id="hubNlClose" type="button" aria-label="닫기" style="background:none;border:none;color:var(--ts);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&#10005;</button>'
     +'</div></div>'
-    +'<iframe src="'+_sEsc(url)+'" style="flex:1;width:100%;border:0;background:#fff" title="소식지 미리보기"></iframe>'
+    +'<div style="position:relative;flex:1;min-height:0">'
+    +'<iframe id="hubNlFrame" src="'+_sEsc(url)+'" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff" title="소식지 미리보기"></iframe>'
+    +'<div id="hubNlFallback" style="display:none;position:absolute;inset:0;background:var(--s1);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px">'
+    +'<div style="font-size:var(--sz-m,16px);color:var(--tp);font-weight:700;line-height:1.7;max-width:440px">이 PC에서는 PDF 미리보기가 제한되어 있습니다.<br>새 탭 열기 또는 다운로드로 확인해 주세요.</div>'
+    +'<div style="display:flex;gap:10px">'
+    +'<a href="'+_sEsc(url)+'" target="_blank" rel="noopener" style="'+btnCss+'">새 탭에서 열기 &#8599;</a>'
+    +'<button id="hubNlDl2" type="button" style="'+btnCss+'">다운로드</button>'
+    +'</div></div>'
+    +'</div>'
     +'</div>';
   document.body.appendChild(ov);
-  /* Esc 닫기 */
-  var esc=function(e){ if(e.key==='Escape'){ var o=document.getElementById('hubNlOv'); if(o)o.remove(); document.removeEventListener('keydown',esc); } };
+  /* Esc·닫기 */
+  var closeOv=function(){ var o=document.getElementById('hubNlOv'); if(o)o.remove(); document.removeEventListener('keydown',esc); };
+  var esc=function(e){ if(e.key==='Escape'){ closeOv(); } };
   document.addEventListener('keydown',esc);
+  var cbtn=document.getElementById('hubNlClose'); if(cbtn) cbtn.onclick=closeOv;
+  /* 다운로드(헤더 + fallback 공용) */
+  var dl=function(ev){ if(ev&&ev.preventDefault) ev.preventDefault(); _hubNlDownload(url, path, filename, ym, ev&&ev.currentTarget); };
+  var d1=document.getElementById('hubNlDl'); if(d1) d1.onclick=dl;
+  var d2=document.getElementById('hubNlDl2'); if(d2) d2.onclick=dl;
+  /* fallback 감지 — iframe onload 정상 로드 시 안내 숨김 / 1.5초 내 로드 없거나 onerror 시 안내 노출(자동 정정) */
+  var frame=document.getElementById('hubNlFrame'), fb=document.getElementById('hubNlFallback');
+  var settled=false;
+  var showFb=function(){ if(settled) return; if(fb) fb.style.display='flex'; };
+  var hideFb=function(){ settled=true; if(fb) fb.style.display='none'; };
+  var t=setTimeout(showFb, 1500);
+  if(frame){
+    frame.onload=function(){ clearTimeout(t); hideFb(); };
+    frame.onerror=function(){ clearTimeout(t); showFb(); };
+  }
 }
 window._hubNlPreview=_hubNlPreview;
 /* 소식지 박스 썸네일 — 화면에 보일 때만(lazy) PDF 첫 페이지를 캔버스로. 동시성 2 큐. PDF.js=기존 loadPdfJs() 재사용 */
@@ -12575,6 +12764,7 @@ function _svRender(){
     if(activeScope!=='all' && it.scope!==activeScope) return false;
     return true;
   });
+  shown=_qnaTierSort(shown);   /* [T6] 보험 Q&A subset만 matched 2차 정렬(4/4>3/4>2/4). 비-posts는 인덱스 고정 → cross-source 순서 불변 (2026-07-06) */
   /* 범위 칩 = 활성 소스 탭(+지식 분류 필터) 기준 scope 분포. 누르면 그 범위만(같은 칩 다시 누르면 전체) */
   var scCnt={mine:0,team:0,branch:0,common:0};
   items.forEach(function(it){
@@ -12598,6 +12788,11 @@ function _svRender(){
   var coverSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && coverItems.length)?_svCoverSummary(coverItems,terms):'';
   var gojiSummaryHtml=(activeSrc==='all' && !catF && activeScope==='all' && gojiItems.length)?_svGojiSummary(gojiItems,terms):'';
   html+=gojiSummaryHtml+coverSummaryHtml+prodSummaryHtml;
+  /* [T7] 보험 Q&A 완화 안내 배너 — 완전일치 아닐 때만, 전체/Q&A 탭에서 결과 리스트 맨 위. posts 결과 있을 때만 (2026-07-06) */
+  if((activeSrc==='all'||activeSrc==='posts') && shown.length){
+    var _qBan=''; try{ _qBan=_qnaBanner(items.filter(function(it){return it.src==='posts';}), terms); }catch(e){}
+    if(_qBan) html+=_qBan;
+  }
   if(!shown.length){
     if(prodSummaryHtml||coverSummaryHtml||gojiSummaryHtml){ /* 상품·담보·알릴의무 요약이 이미 노출됨 → 별도 무결과 메시지 억제 */ }
     else if(items.length===0){
@@ -17873,6 +18068,8 @@ body:has(.app.collapsed) .os-sheet{left:56px;}
 #scriptsSheetSlot{display:none;}
 .os-sheet-body.show-scripts .sp-skel{display:none;}
 .os-sheet-body.show-scripts #scriptsSheetSlot{display:block;}
+/* 바텀시트 스페이스 내용 비움(2026-07-07 대표 결정 A) — 껍데기·손잡이·엔진·흡수 슬롯(news/together/scripts)은 보존, 스페이스 골격(간판+트리+콘텐츠)만 화면 숨김. #spTree는 17877로 이미 전원 숨김이나 간판(.sp-skel-sign)·콘텐츠(#spContent)까지 함께 비움. 슬롯은 .sp-skel 바깥 형제라 영향 없음. 되돌리기 = 이 규칙 1줄 삭제. */
+#osSheetBody .sp-skel{display:none;}
 /* 시트 안에서는 #v-scripts를 자연 높이 + 부모(.os-sheet-body) 스크롤로 — 바닥용 height:100%/overflow-y:auto가 슬롯(height 미지정) 안에서 안 풀려 하단이 잘리던 문제 보정(보험이슈와 동일 방식). (2026-06-27) */
 .os-sheet-body.show-scripts #v-scripts.on{height:auto;overflow:visible;}
 .os-empty{padding:34px 12px;text-align:center;color:var(--ts);font-size:.84rem;line-height:1.65;}
