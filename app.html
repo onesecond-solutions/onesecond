@@ -1853,8 +1853,15 @@ body.is-uat-homesearch2 #homeSearch.searching .hs-box{max-width:640px;}
    "위는 새 옷, 아래는 헌 옷" 해소 — 위 타일의 디자인 언어(radius·padding·아이콘·타이포·hover)를 아래 카드에 그대로 입힘.
    겉모습(CSS)만 오버라이드. 마크업·클릭(onclick _homeCard/showView)·라우터·state 무접촉. .on(선택) 상태의 --c 신호는 보존.
    전부 body.is-uat-homesearch2 스코프 → 그 외 전원(어드민 포함) 기존 홈 카드 완전 무변경(회귀 0). */
-/* 위 타일 섹션(max-width 860 중앙)과 정렬·여백 리듬(30px) 통일 */
-body.is-uat-homesearch2 #homeDesk{max-width:860px;margin:30px auto 0;}
+/* 위 타일 섹션(max-width 860 중앙)과 정렬·여백 리듬(30px) 통일.
+   ⚠️ max-width는 컨테이너(#homeDesk)가 아니라 카드 묶음에만 건다 — #homeDesk에 860 캡을 두면 그 자손으로 인라인 이식되는 원수사/Q&A/캘린더/자료실 등 split 미리보기(#hd-inline)까지 860에 갇혀 좁아짐(2026-07-07 복원). */
+body.is-uat-homesearch2 #homeDesk{margin:30px auto 0;}
+/* 카드 줄(워크스페이스·원수사·Q&A)만 860 컴팩트 중앙 — 위 hs2-hub 타일과 폭 정합. 숨김 처리된 자료·도구 라벨/그리드도 포함(무해). */
+body.is-uat-homesearch2 #homeDesk .hd-groups,
+body.is-uat-homesearch2 #homeDesk .sn-page > .hd-label,
+body.is-uat-homesearch2 #homeDesk .sn-page > .hd-tools{max-width:860px;margin-left:auto;margin-right:auto;}
+/* 인라인 split 미리보기(#hd-inline)는 860에 가두지 않고 넓게 — 6개 카드(캘린더·업무노트·자료실·메모·원수사·Q&A) 전부 이 단일 호스트(_homeCard→.open)에 펼쳐지므로 이 한 규칙으로 전부 커버. 좌 리스트 330 고정 + 우 미리보기 1fr 구조(.split)는 부모 폭만 넓으면 자동 확장. 검색결과(#hsResults max-width:1300)와 톤 정합. */
+body.is-uat-homesearch2 #homeDesk .hd-inline.open{max-width:1300px;margin-left:auto;margin-right:auto;}
 /* 섹션 라벨 = hs2-hub-title과 동일(11.5px·700·uppercase·중앙·인디고그레이) + 하단 hairline 제거 */
 body.is-uat-homesearch2 #homeDesk .hd-group > .hd-label{font-size:11.5px;font-weight:700;color:var(--tf);letter-spacing:.08em;text-transform:uppercase;text-align:center;margin:0 2px 13px;}
 body.is-uat-homesearch2 #homeDesk .hd-group > .hd-label::after{display:none;}
