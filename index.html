@@ -35,17 +35,16 @@
 <link rel="apple-touch-icon" href="/assets/icon-192.png" />
 
 <!-- ============================================================================
-  2026-06-12 구조 통합 (중복 가입 폼 제거):
-    index.html = 순수 진입 redirect 전용. 가입/로그인 모달 마크업 보유 X.
-    · 가입/로그인 폼의 단일 소스 = pages/landing.html (auth-modal.js + #ga-fields)
-    · 옛 index.html(가입 폼 포함) = archive/2026-06-12_index_full_pre_consolidation.html
+  홈 인덱스 전환 (2026-07-08 대표 결정 B안):
+    index.html = 순수 진입 redirect 전용. 첫 화면 = app.html 검색 홈(비로그인 포함).
   진입 분기:
-    · 로그인 토큰 보유 → app.html
-    · 그 외(?auth=signup/login 포함) → pages/landing.html?{원래 쿼리 그대로}
-      (auth-modal.js가 ?auth 파라미터 읽어 모달 자동 오픈 — 페이지 무관)
-    · about.html / app.html 의 index.html?auth=signup|login 링크도 그대로 동작
-      (여기서 landing.html?auth=... 로 포워딩되어 모달 오픈)
-  ⚠️ 가입/랜딩 UI를 고칠 때는 pages/landing.html 한 곳만 고치면 됨 (중복 없음).
+    · 로그인 토큰 보유 → app.html (기존 동일)
+    · 비로그인 → app.html (검색 홈). 옛 랜딩 강제 경유 폐지.
+      ?auth=signup/login 쿼리는 그대로 넘김 → app.html이 인앱 로그인/가입 모달 지연로드로 처리.
+    · 랜딩(pages/landing.html) = 로그인 필수 경유지 아님. about 소개 + 가입 폼 단일 소스로만 유지.
+    · about.html / app.html 의 ?auth=signup|login 링크도 app.html에서 인앱 모달로 동작.
+  ⚠️ 가입/로그인 폼(auth-modal) 마크업 단일 소스 = pages/landing.html.
+     app.html은 클릭 시 지연로드로 그 마크업을 가져와 씀(전역 로드 금지 — 2026-07-05 로그아웃 사고 방지).
 ============================================================================ -->
 <script>
 (function () {
@@ -55,10 +54,10 @@
       window.location.replace('/app.html'); // 로그인 사용자 자동 진입
       return;
     }
-    // 비로그인 = 항상 landing.html. ?auth=signup/login 쿼리는 그대로 넘겨 모달 자동 오픈.
-    window.location.replace('/pages/landing.html' + (window.location.search || ''));
+    // 비로그인 첫 화면 = app.html 검색 홈. ?auth=signup/login 쿼리는 보존(app.html 인앱 모달 오픈).
+    window.location.replace('/app.html' + (window.location.search || ''));
   } catch (e) {
-    window.location.href = '/pages/landing.html';
+    window.location.href = '/app.html';
   }
 })();
 </script>

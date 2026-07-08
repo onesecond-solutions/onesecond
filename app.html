@@ -1893,6 +1893,23 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 @media (prefers-reduced-motion: reduce){ #v-admin .ac-skel{ animation:none } #v-admin .ac-task:hover,#v-admin .ac-approval-card:hover,#v-admin .ac-stat.ac-clk:hover{ transform:none } }
 </style>
 
+<!-- 비로그인(is-guest) 홈 인덱스 전환 — 계정 메뉴/홈 로그인 CTA 분기 (2026-07-08). auth-modal 전역 로드 금지: 로그인/가입은 _osAuth 지연로드. -->
+<style>
+body:not(.is-guest) .mi-guest{display:none!important;}
+body.is-guest .mi-auth{display:none!important;}
+/* 비로그인 홈 로그인/가입 CTA (검색창 아래) */
+.hs-guest-cta{display:none;align-items:center;justify-content:center;gap:10px;margin:14px 0 2px;flex-wrap:wrap;}
+body.is-guest .hs-guest-cta{display:flex;}
+body:not(.is-guest) .hs-guest-cta{display:none;}
+.hs-guest-cta .gc-txt{color:var(--ts);font-size:var(--ts-meta);}
+.hs-guest-cta .gc-btn{border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-pill);padding:8px 18px;font-size:var(--ts-list-title);font-weight:700;cursor:pointer;transition:background .15s,border-color .15s;}
+.hs-guest-cta .gc-btn:hover{background:var(--s2);}
+.hs-guest-cta .gc-btn.gc-primary{background:var(--ac);border-color:var(--ac);color:#fff;}
+.hs-guest-cta .gc-btn.gc-primary:hover{filter:brightness(.96);}
+/* 비로그인 = 사이드바 로그인 전용 nav 숨김(보험사 자료실 등 로그인 기능). 소개·홈은 유지. */
+body.is-guest #nav-insurer-vault{display:none!important;}
+</style>
+
 <!-- 2026-05-28: 포트원 V2 SDK (어제 PR #126 결제 자료 v1 → v2 이식) -->
 <!-- 포트원 결제 SDK = 지연 로드(결제 클릭 시 _loadPortone). 매 로드 blocking 외부요청 제거. 2026-07-05 perf -->
 
@@ -1921,6 +1938,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
     <!-- 사이드바 재구성(2026-06-14): 구분선 제거·순차 배치 / 라이브러리→마이 스페이스(클릭=바텀시트 슬라이딩+마이스페이스 기본) / Quick·현장의소리 사이드바 제거(Quick=딸깍 FAB로 접근) / 하단 그레이 영역=안내문·요금제·어드민 -->
     <div class="nav ins-show" id="nav-insurer-vault" onclick="showView('insurer-vault')"><span class="ic">&#128452;</span><span class="lbl">보험사 자료실</span></div>
     <div class="nav on" id="nav-home" onclick="_navView('home')"><span class="ic">&#9166;</span><span class="lbl">홈</span></div>
+    <!-- 소개(about) = 원세컨드 소개 페이지(pages/landing.html) 진입. 랜딩을 로그인 경유지 아닌 about 소개로 재활용(2026-07-08 홈 인덱스 전환). -->
+    <div class="nav" id="nav-about" onclick="location.href='/pages/landing.html'"><span class="ic">&#8505;</span><span class="lbl">소개</span></div>
     <div class="nav" id="nav-myspace" onclick="_navDiary()"><span class="ic">&#9672;</span><span class="lbl">다이어리</span></div>
     <!-- 스페이스 네비(P1, is-uat-spacenav 전용) — 마이/팀/지점 스코프 선택 → 바텀시트 스페이스 페이지 -->
     <div class="nav sn2-only" id="nav-sp-my" onclick="_navMyspace()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-user"/></svg></span><span class="lbl">마이 스페이스</span></div>
@@ -1960,13 +1979,18 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="menu" id="m">
           <div class="mi"><span></span></div>
           <div class="mdiv"></div>
-          <div class="mi" onclick="showView('myspace')"><span>라이브러리</span></div>
-          <div class="mi" onclick="openProfile()"><span>개인정보 수정</span></div>
-          <div class="mdiv"></div>
+          <!-- 비로그인 전용(is-guest) — 인앱 로그인/가입 모달 지연로드 -->
+          <div class="mi mi-guest" onclick="document.getElementById('m').classList.remove('open');window._osAuth&&_osAuth('login')"><span>로그인</span></div>
+          <div class="mi mi-guest" onclick="document.getElementById('m').classList.remove('open');window._osAuth&&_osAuth('signup')"><span>회원가입</span></div>
+          <div class="mdiv mi-guest"></div>
+          <!-- 로그인 전용(is-auth) -->
+          <div class="mi mi-auth" onclick="showView('myspace')"><span>라이브러리</span></div>
+          <div class="mi mi-auth" onclick="openProfile()"><span>개인정보 수정</span></div>
+          <div class="mdiv mi-auth"></div>
           <!-- 화면 모드(다크 토글) 제거 — 라이트 단일 (2026-06-13) -->
           <div class="mi" style="cursor:default"><div style="margin-bottom:7px;color:var(--ts);font-size:0.75rem;">글자 크기</div><div class="seg"><span onclick="setFont(90)" id="f90">90</span><span class="on" onclick="setFont(100)" id="f100">100</span><span onclick="setFont(110)" id="f110">110</span><span onclick="setFont(125)" id="f125">125</span></div></div>
-          <div class="mdiv"></div>
-          <div class="mi" onclick="confirmLogout()"><span>로그아웃</span></div>
+          <div class="mdiv mi-auth"></div>
+          <div class="mi mi-auth" onclick="confirmLogout()"><span>로그아웃</span></div>
         </div>
       </div>
     </header>
@@ -1995,6 +2019,12 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
             <button class="hs-go" type="button" onclick="_hsSearch(document.getElementById('hsInput').value)">검색</button>
           </div>
           <div class="hs-sub">검색하면 내 것 → 전체까지 한 번에 · 범위는 결과가 알려줍니다</div>
+          <!-- 비로그인 로그인/가입 CTA (is-guest만 표시) — 클릭 시 _osAuth 지연로드 인앱 모달. 랜딩 경유 없음. 2026-07-08 -->
+          <div class="hs-guest-cta">
+            <span class="gc-txt">더 많은 자료·업무 도구를 쓰려면</span>
+            <button type="button" class="gc-btn gc-primary" onclick="window._osAuth&&_osAuth('signup')">회원가입</button>
+            <button type="button" class="gc-btn" onclick="window._osAuth&&_osAuth('login')">로그인</button>
+          </div>
           <!-- 상품·인수·상담 시작 quick 3버튼(.hs-quick) 삭제 (2026-07-02) · philo 문구는 검색기 위로 이동 (2026-07-02 대표 지시) -->
           <div id="hsResults"></div>
           <!-- 최근 검색 (is-uat-homesearch2) — 검색창 바로 아래 칩. 그 기기 기준(localStorage) 실제 최근 검색. _hs2RenderRecent()가 주입, 비면 섹션 숨김. 검색 중엔 CSS로 숨김. 2026-07-07 -->
@@ -4134,8 +4164,10 @@ function applyRoleClass(){
   /* 카드 역순 넘버링 = 임태성 실장 user_id 전용 검수(2026-07-06). 어드민 포함 타 계정 비노출. .item-no span은 항상 렌더되고 CSS(body.is-uat-cardno)로만 표시. ▶ 전체 개방 플립 지점: 이 toggle을 add(항상 부여)로 바꾸거나 CSS 게이트 해제. */
   document.body.classList.toggle('is-uat-cardno', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
-  /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 로그인 전원 개방(2026-07-08 대표 승인, 어드민 포함). 홈 데스크(is-uat-homedesk)와 짝 = !!r 동일 조건. CSS·마크업만(기능 무변경). 비로그인은 미부여 → 기존 홈 hero 그대로. 완성 기능만 노출: 타일 게이트(_HS2_TILES show)가 각 기능 공개상태를 따르므로 미완성(알릴의무=_canSeeRoadmap)은 임태성 실장에게만 뜸. ▶ 전체 개방 전 롤백: 이 조건을 _canSeeHomeSearch2()로 되돌리면 임태성 전용으로 복귀. */
-  document.body.classList.toggle('is-uat-homesearch2', !!r);
+  /* 비로그인(is-guest) 게이트 — 홈 로그인/가입 CTA·계정 메뉴 분기용. r=''(토큰 없음)=비로그인. 2026-07-08 홈 인덱스 전환. */
+  document.body.classList.toggle('is-guest', !r);
+  /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 전원 개방(로그인 + 비로그인, 2026-07-08 홈 인덱스 전환 대표 승인 B안). 홈 데스크(is-uat-homedesk)는 로그인 전용(!!r)으로 분리 유지 = 비로그인은 검색 홈만 보고 개인 데스크 카드는 안 봄. CSS·마크업만(기능 무변경). 완성 기능만 노출: 타일 게이트(_HS2_TILES show)가 각 기능 공개상태를 따르므로 미완성(알릴의무=_canSeeRoadmap)은 노출 안 됨. */
+  document.body.classList.toggle('is-uat-homesearch2', true);
   /* 안A 검색창 placeholder = "무엇을 찾으세요?" (게이트 계정만 — 속성이라 CSS 스코프 불가). 비게이트 계정은 기존 placeholder 그대로 = 무변경. */
   try{ if(document.body.classList.contains('is-uat-homesearch2')){ var _hi2=document.getElementById('hsInput'); if(_hi2) _hi2.setAttribute('placeholder','무엇을 찾으세요?'); } }catch(e){}
   /* 홈 데스크 = 로그인 전원 개방(2026-07-05 대표 승인, 어드민 포함 순차 개방 1단계=홈화면·검색결과 화면). 바텀시트 마이 스페이스 콘텐츠를 홈 바닥으로 내림. 어드민도 새 홈·검색 진입(#homeSearch) 노출. 단 어드민은 운영·유지보수 계정 = 사이드바 접힘 규칙에서 제외(:not(.is-admin)) → 전체 네비 유지(위 CSS). */
@@ -16826,6 +16858,50 @@ document.addEventListener('keydown', function(e){
 </script>
 <!-- 홈 검색 타일·최근 검색 칩 렌더 = 인라인에서 분리(파일 분리 Phase 2, 2026-07-08). 위 인라인 <script> 직후 로드 → 런타임(로그인/검색) 호출 시점보다 먼저 정의. 기능 무변경. -->
 <script src="/js/home.js"></script>
+<!-- ═══ 인앱 로그인/가입 지연로드 (홈 인덱스 전환, 2026-07-08 대표 결정 B안) ═══
+     auth-modal.js 전역 로드 금지(2026-07-05 로그아웃 사고 방지 — 로그인 사용자는 이 스크립트를 절대 안 부름).
+     비로그인이 로그인/가입 클릭 시에만: (1) auth-modal.css 지연 주입 (2) 랜딩(폼 단일 소스)에서 #authOverlay
+     마크업 fetch+주입 (3) auth-modal.js 지연 로드 → openAuthModal(mode). 실패 시 랜딩(?auth=)로 폴백.
+     로그인 성공 시 auth-modal.js가 os_token 저장 후 /app.html 리다이렉트 → 세션 반영(랜딩 경유 없음). -->
+<script>
+(function(){
+  window._osAuthLoaded = false;
+  function _loadJs(mode, fail){
+    if(typeof window.openAuthModal === 'function'){ window._osAuthLoaded = true; window.openAuthModal(mode); return; }
+    var s = document.createElement('script'); s.src = '/js/auth-modal.js';
+    s.onload = function(){ window._osAuthLoaded = true; if(typeof window.openAuthModal === 'function') window.openAuthModal(mode); else fail(); };
+    s.onerror = fail;
+    document.body.appendChild(s);
+  }
+  window._osAuth = function(mode){
+    mode = (mode === 'signup') ? 'signup' : 'login';
+    var fail = function(){ try{ window.location.href = '/pages/landing.html?auth=' + mode; }catch(e){} };
+    if(window._osAuthLoaded && typeof window.openAuthModal === 'function'){ window.openAuthModal(mode); return; }
+    try{
+      if(!document.getElementById('_osAuthCss')){
+        var l = document.createElement('link'); l.id = '_osAuthCss'; l.rel = 'stylesheet'; l.href = '/css/auth-modal.css?20260530f';
+        document.head.appendChild(l);
+      }
+      if(document.getElementById('authOverlay')){ _loadJs(mode, fail); return; }
+      fetch('/pages/landing.html').then(function(r){ return r.ok ? r.text() : Promise.reject(); }).then(function(html){
+        try{
+          var doc = new DOMParser().parseFromString(html, 'text/html');
+          var ov = doc.getElementById('authOverlay');
+          if(ov && !document.getElementById('authOverlay')) document.body.appendChild(document.importNode(ov, true));
+        }catch(e){}
+        if(!document.getElementById('authOverlay')){ fail(); return; }
+        _loadJs(mode, fail);
+      }).catch(fail);
+    }catch(e){ fail(); }
+  };
+  /* ?auth=login|signup 딥링크 — 비로그인만 인앱 모달 자동 오픈(로그인 사용자는 무시). index.html이 쿼리 보존해 넘겨줌. */
+  try{
+    var _a = new URLSearchParams(window.location.search).get('auth');
+    var _tok = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
+    if(!_tok && (_a === 'login' || _a === 'signup')) setTimeout(function(){ if(window._osAuth) window._osAuth(_a); }, 400);
+  }catch(e){}
+})();
+</script>
 <!-- 로그인 환영 팝업 — 베타 출시 + 알림 받기 안내 (사용자별 1회) -->
 <div class="os-welcome-ov" id="osWelcomeOv">
   <div class="os-welcome" role="dialog" aria-modal="true" aria-label="원세컨드 안내">
