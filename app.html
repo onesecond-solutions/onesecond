@@ -11396,9 +11396,10 @@ function _hubNlPreview(url, name, meta){
     +'<div style="position:relative;flex:1;min-height:0">'
     +(useCanvas
       ? '<div id="hubNlScroll" style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--s2)">'
-          +'<div id="hubNlStatus" style="padding:40px 16px;text-align:center;color:var(--ts);font-size:var(--sz-s,13px)">소식지를 불러오는 중…</div>'
           +'<div id="hubNlPages" style="max-width:900px;margin:0 auto;padding:14px 14px 40px"></div>'
         +'</div>'
+        /* 로딩 표시 = 상단 큰 문구 폐기. 800ms 넘게 걸릴 때만 뷰어 내부에 작고 옅은 '불러오는 중…' 칩만 노출(기본 숨김). */
+        +'<div id="hubNlStatus" style="display:none;position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:3;align-items:center;background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:5px 13px;color:var(--ts);font-size:var(--sz-xs,12px);opacity:.9;box-shadow:0 1px 5px rgba(0,0,0,.14);pointer-events:none">불러오는 중…</div>'
       : '<iframe id="hubNlFrame" src="'+_sEsc(url)+'" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff" title="소식지 미리보기"></iframe>')
     +'<div id="hubNlFallback" style="display:none;position:absolute;inset:0;background:var(--s1);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px">'
     +'<div style="font-size:var(--sz-m,16px);color:var(--tp);font-weight:700;line-height:1.7;max-width:440px">이 PC에서는 PDF 미리보기가 제한되어 있습니다.<br>새 탭 열기 또는 다운로드로 확인해 주세요.</div>'
@@ -11419,11 +11420,15 @@ function _hubNlPreview(url, name, meta){
   var d1=document.getElementById('hubNlDl'); if(d1) d1.onclick=dl;
   var d2=document.getElementById('hubNlDl2'); if(d2) d2.onclick=dl;
   if(useCanvas){
-    /* 2단계 — 세로스크롤 캔버스. 통짜 fetch→모든 페이지 렌더. 실패 시 iframe으로 이중 폴백 */
+    /* 2단계 — 세로스크롤 캔버스. 클릭 즉시 빈 뷰어 프레임을 먼저 열고, 통짜 fetch→모든 페이지 렌더. 실패 시 iframe으로 이중 폴백.
+       로딩 표시 = 상단 큰 문구 제거. 800ms 넘게 걸릴 때만 뷰어 내부 작은 칩 노출, 완료·실패 시 즉시 숨김. 캐시(재클릭)면 사실상 표시 안 됨. */
     var pagesEl=document.getElementById('hubNlPages'), statusEl=document.getElementById('hubNlStatus'), scrollEl=document.getElementById('hubNlScroll');
-    _hubNlCanvasRender(pagesEl, url, path, function(i,n){ if(statusEl) statusEl.textContent='소식지를 불러오는 중… ('+i+' / '+n+' 페이지)'; })
-      .then(function(){ if(statusEl) statusEl.remove(); })
-      .catch(function(e){ console.error('[hubNlCanvas]',e); if(statusEl) statusEl.remove(); _hubNlIframeInto(scrollEl, url); });
+    var _nlDone=false;
+    var _nlTimer=setTimeout(function(){ if(!_nlDone && statusEl){ statusEl.style.display='inline-flex'; } }, 800);
+    var _nlClear=function(){ _nlDone=true; try{ clearTimeout(_nlTimer); }catch(e){} if(statusEl){ statusEl.style.display='none'; } };
+    _hubNlCanvasRender(pagesEl, url, path, null)
+      .then(function(){ _nlClear(); })
+      .catch(function(e){ console.error('[hubNlCanvas]',e); _nlClear(); _hubNlIframeInto(scrollEl, url); });
   } else {
     /* 1단계 — iframe. onload 정상 시 안내 숨김 / 1.5초 무로드·onerror 시 안내 노출(자동 정정) */
     var frame=document.getElementById('hubNlFrame'), fb=document.getElementById('hubNlFallback');
@@ -11438,18 +11443,26 @@ function _hubNlPreview(url, name, meta){
   }
 }
 window._hubNlPreview=_hubNlPreview;
-/* 소식지 PDF 2단계 — 세로스크롤 캔버스 뷰어. 전체 arraybuffer를 한 번에 받아(서명URL 만료 회피) 모든 페이지를 세로로 렌더 → 브라우저 PDF 설정에 안 막힘(iframe 종속 탈피). PDF.js=기존 loadPdfJs() 재사용. 실패 시 iframe으로 이중 폴백. */
+/* 소식지 PDF 2단계 — 세로스크롤 캔버스 뷰어. 전체 arraybuffer를 한 번에 받아(서명URL 만료 회피) 모든 페이지를 세로로 렌더 → 브라우저 PDF 설정에 안 막힘(iframe 종속 탈피). PDF.js=기존 loadPdfJs() 재사용. 실패 시 iframe으로 이중 폴백.
+   arraybuffer는 파일 키(source_path 우선, 없으면 url)로 세션 메모리 캐시 → 같은 소식지 재클릭 시 네트워크 없이 즉시 렌더. */
+var _hubNlBufCache={};
 async function _hubNlCanvasRender(pagesEl, url, path, onProgress){
   if(!pagesEl) throw new Error('no container');
   var pdfjs=await loadPdfJs();
-  /* 원본 경로 있으면 새 서명URL 재발급(만료 회피) 후 통짜 fetch */
-  var durl=url;
-  if(path && typeof _svSignUrl==='function'){ try{ var s=await _svSignUrl('newsletters', path); if(s) durl=s; }catch(e){} }
-  if(!durl) throw new Error('no url');
-  var resp=await fetch(durl);
-  if(!resp.ok) throw new Error('http '+resp.status);
-  var buf=await resp.arrayBuffer();
-  var doc=await pdfjs.getDocument({data:buf}).promise;
+  var key=path||url||'';
+  var buf=key?_hubNlBufCache[key]:null;
+  if(!buf){
+    /* 원본 경로 있으면 새 서명URL 재발급(만료 회피) 후 통짜 fetch */
+    var durl=url;
+    if(path && typeof _svSignUrl==='function'){ try{ var s=await _svSignUrl('newsletters', path); if(s) durl=s; }catch(e){} }
+    if(!durl) throw new Error('no url');
+    var resp=await fetch(durl);
+    if(!resp.ok) throw new Error('http '+resp.status);
+    buf=await resp.arrayBuffer();
+    if(key) _hubNlBufCache[key]=buf;   /* 세션 메모리 캐시 — 재클릭 시 네트워크 0 */
+  }
+  /* getDocument는 전달 버퍼를 워커로 이전(detach)하므로 캐시 원본 보존을 위해 매번 복사본(slice) 전달 */
+  var doc=await pdfjs.getDocument({data:buf.slice(0)}).promise;
   var n=doc.numPages, dpr=Math.min(2, window.devicePixelRatio||1);
   var cw=(pagesEl.clientWidth||860);
   pagesEl.innerHTML='';
