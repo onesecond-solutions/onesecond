@@ -5730,8 +5730,7 @@ var _homeOpenScope=null;
 var _HD_SCOPES={ diary:['all','personal','team','branch'], script:['all','personal','team','branch'], lib:['all','personal','team','branch'], memo:['personal'] };
 var _HD_SCOPE_LABEL={ all:'전체', personal:'개인', team:'팀', branch:'지점' };
 function _homeCard(kind){
-  /* 비로그인 = 개인/지점 카드(캘린더·업무노트·자료실·메모·원수사·Q&A) 진입 시 로그인 게이트 (2026-07-08 대표: 개인 자료실 진입·저장성 액션 게이트) */
-  if(document.body.classList.contains('is-guest')){ if(window._osLoginGate) _osLoginGate(); return; }
+  /* 비로그인 = 개인/지점 카드(캘린더·업무노트·자료실·메모·원수사·Q&A) 열람 허용 (2026-07-08 대표: 열람은 열되, 게이트는 쓰기/저장/입력 액션에서만). 페이지 레이아웃은 보이고 개인 데이터는 RLS로 빈 상태. */
   var slot=document.getElementById('home-desk-slot'); if(!slot) return;
   var inline=document.getElementById('hd-inline');
   if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 영역 재선택 = 토글 닫힘 */
@@ -12939,6 +12938,7 @@ async function saveQuickMemo(){
   var ta=document.getElementById('osMemoText'), btn=document.getElementById('osMemoSaveBtn');
   var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
+  var t=window.db&&window.db.getToken&&window.db.getToken(); if(!t){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 저장 게이트(2026-07-08) — AppState.userId 체크보다 먼저 게이트(게스트가 alert 아닌 로그인 게이트를 보도록) */
   if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
   var token=window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; }
   var firstLine=text.split('\n')[0].trim();
@@ -14102,6 +14102,7 @@ window.closeMemoInline=closeMemoInline;
 async function saveMemoInline(){
   var ta=document.getElementById('memo-il-text'); var text=((ta&&ta.value)||'').trim();
   if(!text){ if(ta) ta.focus(); if(typeof toast==='function') toast('메모 내용을 적어주세요.'); return; }
+  var t=window.db&&window.db.getToken&&window.db.getToken(); if(!t){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 저장 게이트(2026-07-08) — AppState.userId 체크보다 먼저 게이트(게스트가 alert 아닌 로그인 게이트를 보도록) */
   if(!window.db||!window.AppState||!window.AppState.userId){ alert('로그인 후 메모할 수 있습니다.'); return; }
   var token=window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; }
   var color=window._memoIlColor||'yellow';
@@ -15198,6 +15199,7 @@ async function saveCalEvent(p){
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   if(!window.db||!window.db.fetch){ _osLoginGate(); return; }
+  var t=window.db&&window.db.getToken&&window.db.getToken(); if(!t){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 저장 게이트(2026-07-08) — db.fetch는 게스트도 존재하므로 토큰으로 게이트 */
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
   var scope=((document.getElementById('calf-scope')||{}).value)||'personal';
   async function _uField(f){ var v=u[f]||null; if(v==null&&u.id){ try{ var r=await window.db.fetch('/rest/v1/users?id=eq.'+encodeURIComponent(u.id)+'&select='+f); if(r.ok){ var j=await r.json(); if(j&&j[0]) v=j[0][f]||null; } }catch(e){} } return v; }
@@ -15448,6 +15450,7 @@ async function diarySaveEvent(){
   if(!date){ alert('날짜를 선택해 주세요.'); return; }
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   if(!window.db||!window.db.fetch){ _osLoginGate(); return; }
+  var t=window.db&&window.db.getToken&&window.db.getToken(); if(!t){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 저장 게이트(2026-07-08) — db.fetch는 게스트도 존재하므로 토큰으로 게이트 */
   var me=_diaOwnerId(), editId=window._diaEdit;
   /* 현재 캘린더 범위(개인/팀/지점) 반영 — 팀/지점을 골라도 개인으로 저장되던 문제 수정 (2026-07-04).
      신규 저장에만 적용(수정은 원래 출처 유지). 팀/지점 저장 방식은 기존 saveCalEvent와 동일한 필드·경로 재사용. */
