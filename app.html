@@ -7949,7 +7949,7 @@ async function loadSmartNewsletters(){
       var _hideBtn=_meAdmin?('<button class="post-act" onclick="ivToggleHide(\''+r.id+'\','+(r.is_hidden?'false':'true')+')">'+(r.is_hidden?'숨김 해제':'숨김')+'</button>'):'';
       var _acts=(_editDel||_hideBtn)?('<div class="post-acts">'+_editDel+_hideBtn+'</div>'):'';
       var _hidTag=(_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:var(--ts-meta);font-weight:700">[숨김]</span>':'';
-      return {badge:cat, tc:tc, title:esc(r.title||'(제목 없음)')+_hidTag, meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_attHtml+_acts, real:true, _id:r.id, _imgs:_imgs, _imgNames:_imgNames, _attachments:_att};
+      return {badge:cat, tc:tc, title:esc(r.title||'(제목 없음)')+_hidTag, meta:[md,who].filter(Boolean).join(' · '), body:(typeof _ivBody==='function'?_ivBody(r.content||''):esc(r.content||'').replace(/\n/g,'<br>'))+_attHtml+_acts, real:true, _id:r.id, _imgs:_imgs, _imgNames:_imgNames, _attachments:_att};   /* 리치 HTML(이미지 포함)=sanitize 후 표시 / 평문=escape+줄바꿈. iv 상세와 동일 렌더 통일 (2026-07-08) */
     });
     if(voiceTabData.smart){ voiceTabData.smart.posts=posts; voiceTabData.smart.cnt=posts.length; }
     window._smartNlLoaded=true;
@@ -8342,7 +8342,7 @@ async function cospRenderInsurer(){
       var acts=mine?('<div class="post-acts"><button class="post-act" onclick="ivEditPost(\''+r.id+'\')">수정</button><button class="post-act post-act-del" onclick="ivDeletePost(\''+r.id+'\')">삭제</button><button class="post-act" onclick="ivToggleHide(\''+r.id+'\','+(r.is_hidden?'false':'true')+')">'+(r.is_hidden?'숨김 해제':'숨김')+'</button></div>'):'';
       var hidTag=(mine&&r.is_hidden)?' <span style="color:var(--err);font-size:var(--ts-meta);font-weight:700">[숨김]</span>':'';
       var coName=insMap[r.insurer_id]||'미지정';
-      return { cat:cat, tc:tc, company:coName, rtitle:(r.title||'(제목 없음)'), hidTag:hidTag, meta:[coName,_cospDate(r.created_at),(r.author_name||'')].filter(Boolean).join(' · '), bodyHtml:_linkifyText(r.content||'')+(ah.html||'')+acts, _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };
+      return { cat:cat, tc:tc, company:coName, rtitle:(r.title||'(제목 없음)'), hidTag:hidTag, meta:[coName,_cospDate(r.created_at),(r.author_name||'')].filter(Boolean).join(' · '), bodyHtml:(typeof _ivBody==='function'?_ivBody(r.content||''):_linkifyText(r.content||''))+(ah.html||'')+acts, _imgs:(ah.imgs||[]), _imgNames:(ah.names||[]) };   /* 리치 HTML(이미지 포함)=sanitize 후 표시 / 평문=escape+줄바꿈. iv 상세와 동일 렌더 통일 (2026-07-08) */
     });
     var _meRole=(window._cospMe&&window._cospMe.role)||'';
     var _canWrite=(_meRole==='admin'||_meRole==='ga_manager'||_meRole==='ga_branch_manager');  /* admin + GA 실장·지점장 작성 허용(2026-06-27). 저장 권한은 posts RLS 확대와 함께 완성 */
