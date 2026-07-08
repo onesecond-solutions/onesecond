@@ -1901,6 +1901,8 @@ body.is-guest .notif-wrap,
 body.is-guest .acct{display:none!important;}
 /* 비로그인 = 사이드바 로그인 전용 nav 숨김(보험사 자료실 등). 홈·about은 유지. */
 body.is-guest #nav-insurer-vault{display:none!important;}
+/* about(소개) = 홈 데스크 최소 사이드바에서도 홈(#nav-home)과 동일하게 항상 노출. app-views.css의 'body.is-uat-homedesk:not(.is-admin) .side .nav{display:none}'가 화이트리스트(#nav-home 등)만 남기고 전부 숨기는데, 오늘 추가된 #nav-about이 목록에서 빠져 비로그인·로그인 모두 접힘/펼침에서 사라지던 버그. #nav-home 화이트리스트(app-views.css:330)와 동일 규칙으로 복원. (2026-07-08) */
+body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
 /* A영역 헤더 로그인/회원가입 — pill(둥근) 버튼. 각진 사각형 금지=var(--radius-full) 9999px. 로그인=조용한 ghost/outline · 회원가입=포인트 filled. 2026-07-08 대표 라이브 피드백. */
 .hdr-guest{display:inline-flex;align-items:center;height:34px;padding:0 16px;margin-left:8px;border-radius:var(--radius-full);font-size:var(--ts-meta);font-weight:600;line-height:1;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,filter .15s;}
 .hdr-guest.hdr-login{background:transparent;border:1px solid var(--bd);color:var(--ts);}
@@ -1937,6 +1939,8 @@ body.is-guest #nav-insurer-vault{display:none!important;}
     var r = (JSON.parse(raw).role) || '';
     var a = document.getElementById('app');
     if(a){ if(r === 'admin') a.classList.add('is-admin'); else if(r.indexOf('insurer_') === 0) a.classList.add('is-insurer'); }
+    /* FOUC 가드(2026-07-08): is-uat-spacenav은 bootView(role 확정, ~수백ms 후)에서 전원 무조건 부착되는데, 그 사이 사이드바가 기본 CSS로 먼저 그려져 '다이어리(#nav-myspace)' 아이콘이 잠깐 보였다가 사라지는 깜빡임 발생. 무조건 부착되는 클래스이므로 첫 페인트 전(nav 파싱 전)에 미리 붙여 최종 상태로 바로 렌더 → 깜빡임 0. 값·기능 무변경(부착 시점만 앞당김). */
+    document.body.classList.add('is-uat-spacenav');
   } catch(e){}
 })();
 </script>
