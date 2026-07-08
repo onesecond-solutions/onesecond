@@ -5176,15 +5176,19 @@ async function ivSubmit(){
    *   실패 파일은 _failed에 모아 등록 직전 사용자에게 사유와 함께 고지하고, 제외 등록/중단 선택권을 준다. */
   var attachments = [];
   var _failed = [];
-  var _MAX_BYTES = 52428800;  /* onesecond_banner 버킷 file_size_limit = 50MB */
+  var _MAX_IMG = 52428800;    /* 이미지 첨부 한도 = 50MB */
+  var _MAX_OTHER = 104857600; /* PDF 등 비이미지 첨부 한도 = 100MB (onesecond_banner 버킷 file_size_limit 정합) */
   var _files = ((document.getElementById('iv-f-file')||{}).files) || [];
   var _sb = document.getElementById('iv-submit-btn');
   if(_files.length && _sb){ _sb.disabled = true; _sb.textContent = '업로드 중…'; }
   for(var _i=0; _i<_files.length; _i++){
     var _f = _files[_i];
     var _fname = _f.name || ('첨부'+(_i+1));
-    /* 사전 용량 가드 — 50MB 초과는 업로드 왕복 없이 즉시 실패 처리(명확한 사유 제공) */
-    if(_f.size && _f.size > _MAX_BYTES){ _failed.push({ name:_fname, reason:'용량 초과(50MB 제한, 현재 '+(Math.round(_f.size/1048576*10)/10)+'MB)' }); console.error('[ivSubmit] 첨부 용량 초과', _fname, _f.size); continue; }
+    /* 사전 용량 가드 — 타입별 한도(이미지 50MB / PDF 등 100MB) 초과는 업로드 왕복 없이 즉시 실패 처리(명확한 사유 제공) */
+    var _isImg = /^image\//.test(_f.type||'');
+    var _limit = _isImg ? _MAX_IMG : _MAX_OTHER;
+    var _limitMB = _isImg ? 50 : 100;
+    if(_f.size && _f.size > _limit){ _failed.push({ name:_fname, reason:'용량 초과('+_limitMB+'MB 제한, 현재 '+(Math.round(_f.size/1048576*10)/10)+'MB)' }); console.error('[ivSubmit] 첨부 용량 초과', _fname, _f.size); continue; }
     var _ext = ((_fname).split('.').pop()||'').toLowerCase();
     var _path = 'vault/' + Date.now() + '_' + _i + (_ext ? ('.'+_ext) : '');
     try{
@@ -5196,7 +5200,7 @@ async function ivSubmit(){
       else {
         var _errt=''; try{ _errt=await _up.text(); }catch(_e2){}
         console.error('[ivSubmit] 첨부 업로드 실패', _up.status, _fname, (_errt||'').slice(0,200));
-        _failed.push({ name:_fname, reason:(_up.status===413?'용량 초과(50MB 제한)':('업로드 오류 '+_up.status)) });
+        _failed.push({ name:_fname, reason:(_up.status===413?('용량 초과('+_limitMB+'MB 제한)'):('업로드 오류 '+_up.status)) });
       }
     }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _fname, _e); _failed.push({ name:_fname, reason:'네트워크 오류' }); }
   }
