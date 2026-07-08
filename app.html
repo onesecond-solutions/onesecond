@@ -2525,6 +2525,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
         <div class="chip" onclick="ivFilter(this,'긴급(마감)')">긴급(마감)</div>
         <div class="chip" onclick="ivFilter(this,'공지')">공지</div>
         <div class="chip" onclick="ivFilter(this,'소식지')">소식지</div>
+        <div class="chip" onclick="ivFilter(this,'영업방향')">영업방향</div>
         <div class="chip" onclick="ivFilter(this,'상품')">상품</div>
         <div class="chip" onclick="ivFilter(this,'인수')">인수</div>
         <div class="chip" onclick="ivFilter(this,'시책/프로모션')">시책/프로모션</div>
@@ -2626,6 +2627,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
               <label class="iv-type"><input type="radio" name="iv-type" value="긴급(마감)" checked> 긴급(마감)</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="공지"> 공지</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="소식지"> 소식지</label>
+              <label class="iv-type"><input type="radio" name="iv-type" value="영업방향"> 영업방향</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="상품"> 상품</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="인수"> 인수</label>
               <label class="iv-type"><input type="radio" name="iv-type" value="시책/프로모션"> 시책/프로모션</label>
@@ -4190,7 +4192,7 @@ window._ivCache = null;
 function ivEsc(s){ return String(s||'').replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
 function ivFmtDate(iso){ if(!iso)return ''; var d=new Date(iso); if(isNaN(d.getTime()))return ''; return (d.getMonth()+1)+'월 '+d.getDate()+'일'; }
 function ivStateCard(main, sub){ return '<div class="mys-news-empty">'+ivEsc(main)+(sub?'<br>'+ivEsc(sub):'')+'</div>'; }
-var IV_CAT_COLOR = {'긴급(마감)':'var(--t-event)','공지':'var(--t-uw)','소식지':'var(--t-product)','상품':'var(--t-uw)','인수':'var(--t-event)','시책/프로모션':'var(--warn)','기타':'var(--ts)'};
+var IV_CAT_COLOR = {'긴급(마감)':'var(--t-event)','공지':'var(--t-uw)','소식지':'var(--t-product)','영업방향':'var(--ok)','상품':'var(--t-uw)','인수':'var(--t-event)','시책/프로모션':'var(--warn)','기타':'var(--ts)'};
 function ivAuthor(r){
   if(!r||!r.author_name) return '';
   var nm=ivEsc(r.author_name);
@@ -7912,7 +7914,7 @@ function finalizeMakeCardFallbackText(){
 var voiceTabData = {
   voice: {title:'보험 Q&A', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:0, posts:[], empty:'아직 등록된 질문이 없어요.<br>라이브러리에서 질문하면 여기에 모입니다.'},
   team: {title:'단체방', sub:'실장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>라이브러리 단체방 글쓰기로 작성하면 여기에 모입니다.'},
-  smart: {title:'스마트 게시판', sub:'모든 보험회사 자료가 한데 모이는 곳.', chips:['전체','긴급(마감)','공지','소식지','상품','인수','시책/프로모션','기타'], cnt:0, posts:[], empty:'아직 모인 자료가 없어요.'},
+  smart: {title:'스마트 게시판', sub:'모든 보험회사 자료가 한데 모이는 곳.', chips:['전체','긴급(마감)','공지','소식지','영업방향','상품','인수','시책/프로모션','기타'], cnt:0, posts:[], empty:'아직 모인 자료가 없어요.'},
   branch: {title:'지점 게시판', sub:'지점장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>라이브러리 단체방 글쓰기로 작성하면 여기에 모입니다.'}
 };
 function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){if(d.posts.length>0){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;showTabPost(key,0);}else{showTabEmpty(d);}}if(key==='voice'&&typeof loadVoiceQna==='function')loadVoiceQna();if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();if(key==='team'&&typeof loadTeamNotices==='function')loadTeamNotices();if(key==='branch'&&typeof loadBranchFeed==='function')loadBranchFeed();}
@@ -7921,7 +7923,7 @@ function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(
  * 보험사 자료실 = 회사별(RLS 필터) 입구·원본 / 스마트 게시판 = 회사 구분 없이 전체 모임(read-only).
  * 칩(긴급(마감)/공지/소식지/상품/인수/시책·프로모션/기타)·split·첨부 딸깍 = 자료실과 동일 UI.
  * 함수명은 호출처 호환 위해 유지(loadSmartNewsletters). */
-var SMART_TC={'긴급(마감)':'t-event','공지':'t-uw','소식지':'t-product','상품':'t-uw','인수':'t-event','시책/프로모션':'warn','기타':'ts'};
+var SMART_TC={'긴급(마감)':'t-event','공지':'t-uw','소식지':'t-product','영업방향':'ok','상품':'t-uw','인수':'t-event','시책/프로모션':'warn','기타':'ts'};
 async function loadSmartNewsletters(){
   if(window._smartNlLoaded) return;
   var token = window.db && window.db.getToken && window.db.getToken();
@@ -8320,8 +8322,8 @@ async function cospRenderChat(){
 /* cospRenderQna(축소판) 폐기 — IA 정정 #3: 보험Q&A = 기존 MY SPACE 보험Q&A 탭(_goMysQna) 그대로 재사용 */
 /* 보험사별 자료실 = 스마트 게시판 레이아웃 이식 (대표 지휘 2026-06-11: 회사탭 제거·전체 통합·카테고리 칩·색상).
  * posts(board_type='insurer') 전체. 수정/삭제/숨김 = 작성자 본인만. admin 자료 등록 유지. 검색=후속. 현장의소리(v-voice) 무수정. */
-var COSP_INS_TC={'긴급(마감)':'t-event','공지':'t-uw','소식지':'t-product','상품':'t-uw','인수':'t-event','시책/프로모션':'warn','기타':'ts'};
-var COSP_INS_CHIPS=['전체','긴급(마감)','공지','소식지','상품','인수','시책/프로모션','기타'];
+var COSP_INS_TC={'긴급(마감)':'t-event','공지':'t-uw','소식지':'t-product','영업방향':'ok','상품':'t-uw','인수':'t-event','시책/프로모션':'warn','기타':'ts'};
+var COSP_INS_CHIPS=['전체','긴급(마감)','공지','소식지','영업방향','상품','인수','시책/프로모션','기타'];
 async function cospRenderInsurer(){
   var box=document.getElementById('cosp-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
