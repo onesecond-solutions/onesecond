@@ -5160,7 +5160,7 @@ function _ivMountInline(){
 }
 window._ivMountInline=_ivMountInline;
 /* 글쓰기 게이트 — 공식/비공식 선택 후 글쓰기 폼 진입. 비공식 → 유형 '기타' 강제 */
-function ivWriteGate(){ var m=document.getElementById('ivGateModal'); if(m) m.style.display='flex'; }
+function ivWriteGate(){ var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 원수사 자료실 글쓰기 진입 게이트(2026-07-08) */ var m=document.getElementById('ivGateModal'); if(m) m.style.display='flex'; }
 function ivGateClose(){ var m=document.getElementById('ivGateModal'); if(m) m.style.display='none'; }
 function ivGateChoose(kind){ ivGateClose(); if(typeof ivOpenWrite==='function') ivOpenWrite(kind==='unofficial'); }
 window.ivWriteGate=ivWriteGate; window.ivGateClose=ivGateClose; window.ivGateChoose=ivGateChoose;
@@ -8332,6 +8332,7 @@ window.cospNoticeBack=cospNoticeBack;
  * 저장은 검증된 mrSubmitNotice 재사용(인라인 필드→숨은 모달 필드 주입 후 호출). scope=현재 방(_cospRoom) 강제. */
 var _COSP_NTYPES=[['operation','운영'],['urgent','긴급'],['product','상품'],['underwriting','인수'],['education','교육'],['event','일정'],['etc','기타']];
 function cospWrite(){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 팀방/지점방 글쓰기 진입 게이트(2026-07-08) */
   var me=window._cospMe||{}, room=window._cospRoom||'team';
   var rn=(room==='branch')?'지점방':'팀방', grp=(room==='branch')?'지점':'팀';
   if(me.role==='admin'){ return _spDenyPopup('작성 권한 안내', '이 '+rn+'은 '+grp+' 구성원이 함께 쓰는 공간이에요.<br>어드민(창시자) 계정은 글을 작성하지 않습니다.'); }
@@ -9985,6 +9986,7 @@ window.osRich=window.osRich||{
 };
 /* 함께해요 인라인 글쓰기/수정 (Phase 0 파일럿 — 기존 모달과 공존, 별도 id tgi-f-*) */
 function openTogetherInline(edit){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 함께해요 글쓰기 진입 게이트(2026-07-08) */
   var v=document.getElementById('tg-viewer'); if(!v) return;
   window._tgiEdit=edit||null;
   var admin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
@@ -12990,6 +12992,7 @@ window.osBannerExpand=osBannerExpand;
 var OS_MEMO_COLORS={yellow:'#FFF7C9',pink:'#FFD9E6',mint:'#CFF3E2',blue:'#D4E8FF',purple:'#E7DBFF'};
 var _osMemoColor='yellow';
 function openQuickMemo(){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 빠른 메모 진입 게이트(2026-07-08) — 폼 열지 말고 로그인 게이트만 */
   var pop=document.getElementById('osMemoPop'); if(!pop) return;
   pop.classList.add('on');
   var ta=document.getElementById('osMemoText');
@@ -14015,6 +14018,7 @@ window._ovDown=_ovDown; window._ovClick=_ovClick;
 
 /* === 라이브러리 글쓰기 모달 + Create/Delete === */
 function openMyspaceWrite(ctx, edit){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 라이브러리/업무노트 글쓰기 진입 게이트(2026-07-08) */
   var m=document.getElementById('myspaceWriteModal');if(!m)return;
   var _wt=document.getElementById('mysWriteTitle'); if(_wt) _wt.textContent=edit?(edit.type==='chat'?'채팅 스크립트 수정':'업무노트 수정'):((ctx==='team')?'매니저방 글쓰기':'라이브러리에 저장');
   /* 단계별 선택 = 스크립트 10단계(SCRIPTS_GROUPS) 1회 채움 */
@@ -14072,6 +14076,7 @@ window.scrIlType=scrIlType;
 function _scrModeOff(){ var ms=document.getElementById('mys-split'); if(ms) ms.classList.remove('scr-mode'); var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none'; }
 window._scrModeOff=_scrModeOff;
 function openScriptInline(edit){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 업무노트 글쓰기 진입 게이트(2026-07-08) */
   var v=document.getElementById('mysViewer'); if(!v) return;
   window._scrInlineEdit=edit||null;
   var type=(edit&&edit.type)?edit.type:'note';
@@ -14145,6 +14150,7 @@ function closeScrInline(){
 window.closeScrInline=closeScrInline;
 /* ═══ 메모 인라인 작성 (업무노트 글쓰기 스타일 — 리스트 위 '메모 쓰기' 카드 + #mysViewer 인라인 폼). 라이트(내용+색상). 임태성 게이트(검수 후 전면 개방). 저장=library memo(saveQuickMemo와 동일 스키마). (2026-06-30) ═══ */
 function openMemoInline(edit){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 메모 쓰기 진입 게이트(2026-07-08) — 폼 열지 말고 로그인 게이트만 */
   if(!(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub())){ if(typeof openQuickMemo==='function') return openQuickMemo(); return; }  /* 게이트 외 = 기존 팝업 폴백 */
   var v=document.getElementById('mysViewer'); if(!v) return;
   window._memoInlineEdit=edit||null;
@@ -15223,6 +15229,7 @@ function renderCalMonths(p){
 }
 window.renderCalMonths=renderCalMonths;
 async function openCalAdd(p){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 글쓰기 진입 게이트(2026-07-08) — 폼 열지 말고 로그인 게이트만 */
   closeCalAdd();
   var d=(_cst(p).sel)||_calToday();
   var u={}; try{ u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){}
@@ -15493,6 +15500,7 @@ var DIA_REMINDERS=[{v:0,t:'정시'},{v:10,t:'10분 전'},{v:30,t:'30분 전'},{v
 function _diaRemHtml(sel){ sel=Array.isArray(sel)?sel:[]; return DIA_REMINDERS.map(function(o){ var on=sel.indexOf(o.v)>=0?' checked':''; return '<label class="dia-rem"><input type="checkbox" class="dia-rem-cb" value="'+o.v+'"'+on+'> '+o.t+'</label>'; }).join(''); }
 function _diaReadReminders(){ var cbs=document.querySelectorAll('#dia-panel .dia-rem-cb:checked'), out=[]; for(var i=0;i<cbs.length;i++){ var v=parseInt(cbs[i].value,10); if(!isNaN(v)) out.push(v); } return out; }
 function openDiaryPanel(ds, editId){
+  var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 일정 추가/수정 진입 게이트(2026-07-08) */
   var panel=document.getElementById('dia-panel'); if(!panel) return;
   window._diaEdit=editId||null;
   var r=null;
@@ -16108,7 +16116,7 @@ window.mysVaultCreateFolder=mysVaultCreateFolder;
 function _mvFolderPath(fid){ if(!fid) return '전체'; var path=[], cur=fid, all=window._mvFolders||[], g=0; while(cur&&g++<50){ var f=all.filter(function(x){return x.id===cur;})[0]; if(!f) break; path.unshift(f.name); cur=f.parent_id||null; } return '전체 > '+path.join(' > '); }
 /* item 2: 버튼 업로드 직전 저장 위치 안내(잘못 들어가는 사고 방지) */
 function _mvUploadHerePrompt(){ return confirm('저장 위치: '+_mvFolderPath(window._mvCurFolder||null)+'\n\n여기에 올릴까요?'); }
-function mysVaultPickFiles(){ if(_mvRoGuard()) return; if(!_mvUploadHerePrompt()) return; var inp=document.getElementById('mys-vault-fileinput'); if(inp) inp.click(); }
+function mysVaultPickFiles(){ if(!_mvToken()){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 자료실 업로드 진입 게이트(2026-07-08) — 파일 선택창 열기 전 차단 */ if(_mvRoGuard()) return; if(!_mvUploadHerePrompt()) return; var inp=document.getElementById('mys-vault-fileinput'); if(inp) inp.click(); }
 window.mysVaultPickFiles=mysVaultPickFiles;
 function mysVaultFileInputChange(e){ var fs=e.target.files; mysVaultUpload(fs); e.target.value=''; }
 window.mysVaultFileInputChange=mysVaultFileInputChange;
@@ -16255,6 +16263,7 @@ window.mysVaultUpload=mysVaultUpload;
 
 /* 폴더 picker (디렉터리 선택). webkitRelativePath로 계층 복원. */
 function mysVaultPickFolder(){
+  if(!_mvToken()){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 자료실 폴더 업로드 진입 게이트(2026-07-08) */
   if(_mvRoGuard()) return;
   if(!_mvUploadHerePrompt()) return;
   var inp=document.getElementById('mys-vault-dirinput'); if(!inp) return;
