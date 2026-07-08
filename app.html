@@ -615,8 +615,8 @@ body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns
 body.is-uat-homesearch2 #homeDesk .hd-group-ref .sn-cards{grid-template-columns:repeat(2,minmax(0,1fr));}
 @media(max-width:900px){body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:560px){body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards,body.is-uat-homesearch2 #homeDesk .hd-group-ref .sn-cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
-/* 카드 본체 = 컴팩트 세로 타일(아이콘 위·내용 중앙) — 긴 가로 막대(리스트형) 해소. 설명은 숨겨 간결하게. 부드러운 hover 유지 */
-body.is-uat-homesearch2 #homeDesk .sn-card{flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;min-height:112px;padding:16px 15px;border-radius:var(--radius-md,12px);transition:border-color .17s ease,background .17s ease,transform .17s ease,box-shadow .17s ease;}
+/* 카드 본체 = 아이콘+텍스트 한 줄(가로) 컴팩트 카드(2026-07-08 대표: SVG·텍스트 한 줄 정렬). 그리드(워크4·원수사2)·그룹 구분 유지. 설명은 숨겨 간결하게. 부드러운 hover 유지 */
+body.is-uat-homesearch2 #homeDesk .sn-card{flex-direction:row;align-items:center;gap:12px;min-height:66px;padding:14px 16px;border-radius:var(--radius-md,12px);transition:border-color .17s ease,background .17s ease,transform .17s ease,box-shadow .17s ease;}
 body.is-uat-homesearch2 #homeDesk .sn-card .sn-card-d{display:none;}
 body.is-uat-homesearch2 #homeDesk .sn-card:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 5%,var(--s1));transform:translateY(-2px);box-shadow:0 5px 16px color-mix(in srgb,var(--ac) 13%,transparent);}
 body.is-uat-homesearch2 #homeDesk .sn-card:active{transform:translateY(0);box-shadow:none;}
