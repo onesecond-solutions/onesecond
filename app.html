@@ -9824,12 +9824,15 @@ window.osRich=window.osRich||{
   _pasteInline:function(ev){
     try{
       var dt=ev.clipboardData; if(!dt||!dt.items) return;
+      /* 붙여넣기가 일어난 '바로 그 본문'에 삽입 — 싱글턴 _id 비의존. 여러 osRich 에디터(자료실·상담메모·공지·스크립트)가 DOM에 공존할 때
+       * _id는 '마지막 mount' 하나만 가리켜, 붙여넣기 이미지가 엉뚱한(마지막 mount된) 에디터로 새던 문제 수정 (2026-07-08). */
+      var body=ev.currentTarget||ev.target;
       for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
         if(it.kind==='file' && /^image\//.test(it.type||'')){
           var f=it.getAsFile(); if(!f) continue;
           ev.preventDefault();
           var rd=new FileReader();
-          rd.onload=function(e){ try{ osRich.insert('<img src="'+e.target.result+'" alt="">'); }catch(_e){} };
+          rd.onload=function(e){ try{ osRich._insertInto(body,'<img src="'+e.target.result+'" alt="">'); }catch(_e){} };
           rd.readAsDataURL(f);
           return;
         }
@@ -9841,6 +9844,8 @@ window.osRich=window.osRich||{
   cmd:function(c,v){ var b=this._body(); if(b) b.focus(); try{ document.execCommand(c,false,v||null); }catch(e){} },
   html:function(){ var b=this._body(); return b?b.innerHTML:''; },
   insert:function(h){ var b=this._body(); if(!b) return; b.focus(); try{ if(!document.execCommand('insertHTML',false,h)) b.innerHTML+=h; }catch(e){ b.innerHTML+=h; } },
+  /* 지정한 본문 요소에 직접 삽입 (붙여넣기 등 이벤트 대상 본문이 명확할 때 — 싱글턴 _id 우회). insert와 동일한 커서 위치 삽입 로직. */
+  _insertInto:function(b,h){ if(!b) return; b.focus(); try{ if(!document.execCommand('insertHTML',false,h)) b.innerHTML+=h; }catch(e){ b.innerHTML+=h; } },
   table:function(){
     var r=parseInt(prompt('행 수 (1~20)','3'),10), c=parseInt(prompt('열 수 (1~10)','3'),10);
     if(!(r>=1&&r<=20&&c>=1&&c<=10)) return;
