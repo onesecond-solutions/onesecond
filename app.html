@@ -607,14 +607,17 @@ body.is-uat-homesearch2 #homeSearch.searching .hs-box{max-width:640px;}
    톤 통일(카드 색·hover·아이콘 인디고·타이포·섹션 라벨)은 그대로 유지 — 이번엔 폭만 원복. */
 body.is-uat-homesearch2 #homeDesk{margin:30px auto 0;}
 /* 섹션 라벨 = hs2-hub-title과 동일(--sz-s·700·uppercase·중앙·인디고그레이) + 하단 hairline 제거 */
-body.is-uat-homesearch2 #homeDesk .hd-group > .hd-label{font-size:var(--sz-s);font-weight:700;color:var(--tf);letter-spacing:.08em;text-transform:uppercase;text-align:center;margin:0 2px 13px;}
+body.is-uat-homesearch2 #homeDesk .hd-group > .hd-label{font-size:var(--sz-s);font-weight:700;color:var(--tf);letter-spacing:.08em;text-transform:uppercase;text-align:left;margin:0 0 13px;}
 body.is-uat-homesearch2 #homeDesk .hd-group > .hd-label::after{display:none;}
-/* 카드 그리드 = 타일과 같은 여유(워크스페이스 2열, 원수사·Q&A 1열). 좁은 화면은 1열 */
-body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns:repeat(2,1fr);}
-body.is-uat-homesearch2 #homeDesk .hd-group-ref .sn-cards{grid-template-columns:1fr;}
-@media(max-width:440px){body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns:1fr;}}
-/* 카드 본체 = 타일 메트릭(가로형·radius-md·부드러운 hover lift+그림자+transition 0.17s) */
-body.is-uat-homesearch2 #homeDesk .sn-card{flex-direction:row;align-items:center;gap:13px;min-height:68px;padding:14px 16px;border-radius:var(--radius-md,12px);transition:border-color .17s ease,background .17s ease,transform .17s ease,box-shadow .17s ease;}
+/* 카드 그리드 = 워크스페이스 4열 · 원수사·Q&A 2열 타일(그룹 구분·좌우 구분선 유지). 좁으면 그룹 세로 stack + 2열
+   (B안, 2026-07-08 대표: 구분 영역 유지 + 긴 가로 막대 → 컴팩트 세로 타일. 임태성=워크4+원수사·Q&A2 / 일반=워크4만 한 줄) */
+body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns:repeat(4,minmax(0,1fr));}
+body.is-uat-homesearch2 #homeDesk .hd-group-ref .sn-cards{grid-template-columns:repeat(2,minmax(0,1fr));}
+@media(max-width:900px){body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:560px){body.is-uat-homesearch2 #homeDesk .hd-group-work .sn-cards,body.is-uat-homesearch2 #homeDesk .hd-group-ref .sn-cards{grid-template-columns:repeat(2,minmax(0,1fr));}}
+/* 카드 본체 = 컴팩트 세로 타일(아이콘 위·내용 중앙) — 긴 가로 막대(리스트형) 해소. 설명은 숨겨 간결하게. 부드러운 hover 유지 */
+body.is-uat-homesearch2 #homeDesk .sn-card{flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;min-height:112px;padding:16px 15px;border-radius:var(--radius-md,12px);transition:border-color .17s ease,background .17s ease,transform .17s ease,box-shadow .17s ease;}
+body.is-uat-homesearch2 #homeDesk .sn-card .sn-card-d{display:none;}
 body.is-uat-homesearch2 #homeDesk .sn-card:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 5%,var(--s1));transform:translateY(-2px);box-shadow:0 5px 16px color-mix(in srgb,var(--ac) 13%,transparent);}
 body.is-uat-homesearch2 #homeDesk .sn-card:active{transform:translateY(0);box-shadow:none;}
 body.is-uat-homesearch2 #homeDesk .sn-card:focus-visible{outline:2px solid var(--ac);outline-offset:2px;}
