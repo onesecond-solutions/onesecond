@@ -718,7 +718,20 @@ input::placeholder,textarea::placeholder{color:var(--tf);opacity:1;}
 .cal-cell{min-height:92px;border:1px solid var(--bd);border-radius:8px;padding:4px 5px;cursor:pointer;background:var(--s1);display:flex;flex-direction:column;gap:2px;overflow:hidden}
 .cal-evs{display:flex;flex-direction:column;gap:2px;overflow:hidden}
 .cal-ev{font-size:12px;line-height:1.35;padding:2px 5px;border-left:3px solid var(--ac);border-radius:3px;background:var(--s2);color:var(--bodytx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-more{font-size:var(--ts-meta);color:var(--ts);padding-left:2px}
+.cal-more{font-size:var(--ts-meta);color:var(--ac);padding:1px 4px;font-weight:700;cursor:pointer;border-radius:3px}
+.cal-more:hover{background:var(--s2);text-decoration:underline}
+.cal-more:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+/* 날짜 상세(그날 전체 일정) 모달 — dia-panel 없는 컨텍스트(iv 등). PC=중앙 / 모바일=하단 시트 (2026-07-08) */
+.cd-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99991;display:flex;align-items:center;justify-content:center;padding:16px}
+.cd-box{background:var(--s1);border:1px solid var(--bd);border-radius:14px;width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.cd-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.cd-hd b{color:var(--tp)}
+.cd-x{background:none;border:none;color:var(--ts);font-size:18px;cursor:pointer;font-family:inherit}
+.cd-bd{padding:12px 16px;display:flex;flex-direction:column;gap:7px;overflow-y:auto}
+.cd-ft{padding:12px 16px;border-top:1px solid var(--bd)}
+.cd-add{width:100%;padding:11px;border:none;border-radius:9px;background:var(--ac);color:#fff;font-weight:700;cursor:pointer;font-family:inherit}
+.cd-empty{color:var(--ts);font-size:13px;text-align:center;padding:18px 0}
+@media(max-width:760px){ .cd-modal{align-items:flex-end;padding:0} .cd-box{max-width:100%;max-height:85vh;border-radius:16px 16px 0 0} }
 /* 다이어리 개편(2026-06-10): 대시보드 3카드 + 기능형 달력 + 슬라이드 패널 */
 .dia-dash{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
 .dia-card{display:flex;flex-direction:column;align-items:flex-start;gap:5px;background:var(--s1);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-md);padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit}
@@ -14856,7 +14869,7 @@ function renderCalGrid(p,byDay,y,m){
     var ds=y+'-'+_calPad(m+1)+'-'+_calPad(d), evs=byDay[ds]||[];
     var off=(new Date(y,m,d).getDay()===0)||(CAL_HOLIDAYS.indexOf(ds)>=0);  /* 일요일 또는 공휴일(휴무) = 빨강 */
     var evHtml=evs.slice(0,3).map(function(e){ var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color; var tm=e.event_time?(String(e.event_time).slice(0,5)+' '):''; var evClick=(p==='mys')?(' onclick="event.stopPropagation();openDiaryPanel(null,\''+e.id+'\')" style="border-left-color:'+c+';cursor:pointer"'):(' style="border-left-color:'+c+'"'); return '<div class="cal-ev"'+evClick+' title="'+_calEsc(tm+e.title)+'">'+_calEsc(tm+e.title)+'</div>'; }).join('');
-    if(evs.length>3) evHtml+='<div class="cal-more">+'+(evs.length-3)+'</div>';
+    if(evs.length>3) evHtml+='<div class="cal-more" role="button" tabindex="0" onclick="event.stopPropagation();openDayEvents(\''+p+'\',\''+ds+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();openDayEvents(\''+p+'\',\''+ds+'\');}" aria-label="'+ds+' 전체 일정 '+evs.length+'건 보기">+'+(evs.length-3)+' 더보기</div>';
     var _mk=(typeof CAL_MARKS!=='undefined')?CAL_MARKS[ds]:null;
     var _mkHtml=_mk?('<div class="cal-mark '+_mk.t+'" title="'+_calEsc(_mk.n)+'">'+_calEsc(_mk.n)+'</div>'):'';
     cells+='<div class="cal-cell'+(ds===today?' today':'')+(ds===sel?' sel':'')+'" onclick="calPickDay(\''+p+'\',\''+ds+'\')"><span class="cal-d'+(off?' cal-off':'')+'">'+d+'</span>'+_mkHtml+'<div class="cal-evs">'+evHtml+'</div></div>';
@@ -14864,11 +14877,54 @@ function renderCalGrid(p,byDay,y,m){
   return '<div class="cal-dow">'+dow+'</div><div class="cal-cells">'+cells+'</div>';
 }
 function calPickDay(p,ds){
-  if(p==='mys'){ var s=_cst(p); s.sel=ds; renderCalGridMonth(p); openDiaryPanel(ds,null); return; }  /* 다이어리: 날짜 클릭→슬라이드 패널 즉시입력 */
-  var st=_cst(p); st.sel=(st.sel===ds)?null:ds;
-  renderCalGridMonth(p);   /* 그리드 그날 강조만 (좌측 누적 목록은 유지) */
+  var st=_cst(p); st.sel=ds; renderCalGridMonth(p);   /* 그리드 그날 강조 */
+  openDayEvents(p,ds);   /* 목록 우선(2026-07-08 대표 결재): 날짜 칸 클릭 → 그날 전체 일정 목록. 추가는 패널 안 [+ 일정 추가]로 보존 */
 }
 window.calPickDay=calPickDay;
+/* ── 날짜 상세 = 그날 전체 일정 목록(칸에 숨겨진 4번째+ 포함). 표시·진입 UX만(저장/RLS/스키마 무변경).
+   mys=기존 다이어리 슬라이드 패널(#dia-panel, 모바일=하단 시트 반응형) 재사용 / iv 등=경량 모달(모바일 하단 시트). 2026-07-08 ── */
+function _calDayLabel(ds){
+  var d=(typeof _diaParse==='function')?_diaParse(ds):new Date(ds+'T00:00:00');
+  var dow=(typeof DIA_DOW!=='undefined')?DIA_DOW[d.getDay()]:'';
+  return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'+(dow?(' ('+dow+')'):'')+' 일정';
+}
+function _calDayEvs(p,ds){
+  var rows=(_cst(p).rows)||[];
+  return rows.filter(function(r){ return r.event_date===ds; }).slice().sort(_diaByTime);
+}
+function openDayEvents(p,ds){
+  if(!ds) return;
+  var evs=_calDayEvs(p,ds), label=_calDayLabel(ds);
+  /* mys = 다이어리 우측 슬라이드 패널 재사용(모바일 하단 시트 = 기존 @media 반응형). 항목 클릭=기존 일정 상세/수정 패널(openDiaryPanel). */
+  if(p==='mys'){
+    var panel=document.getElementById('dia-panel');
+    if(panel){
+      var list=evs.length ? evs.map(_diaEvItem).join('') : '<div class="mys-news-empty">이 날 일정이 없습니다.</div>';
+      panel.innerHTML='<div class="dia-panel-hd"><b>'+_calEsc(label)+'</b><button class="dia-panel-x" onclick="diaryClosePanel()" aria-label="닫기">&#10005;</button></div>'
+        +'<div class="dia-panel-bd">'+list+'</div>'
+        +'<div class="dia-panel-ft"><button class="dia-save" onclick="openDiaryPanel(\''+ds+'\',null)">+ 일정 추가</button></div>';
+      panel.classList.add('open');
+      return;
+    }
+  }
+  /* iv 등 = 경량 모달. 항목 클릭=기존 수정 모달(openCalEdit, prefix-aware). */
+  closeDayEvents();
+  var itemsHtml=evs.length ? evs.map(function(e){
+      var meta=CAL_SRC[e.source_type]||CAL_SRC.personal;
+      var tm=e.event_time?String(e.event_time).slice(0,5):'종일';
+      return '<button class="dia-ev-item" style="border-left-color:'+meta.color+'" onclick="closeDayEvents();openCalEdit(\''+p+'\',\''+e.id+'\')" title="'+_calEsc(tm+' '+(e.title||''))+'"><span class="dia-ev-tm">'+_calEsc(tm)+' · '+_calEsc(meta.label)+'</span><span class="dia-ev-tt">'+_calEsc(e.title||'')+'</span></button>';
+    }).join('') : '<div class="cd-empty">이 날 일정이 없습니다.</div>';
+  var ov=document.createElement('div'); ov.id='calDayModal'; ov.className='cd-modal';
+  ov.onmousedown=function(e){ ov._dn=(e.target===ov); };
+  ov.onclick=function(e){ if(e.target===ov && ov._dn) closeDayEvents(); };
+  ov.innerHTML='<div class="cd-box"><div class="cd-hd"><b>'+_calEsc(label)+'</b><button class="cd-x" onclick="closeDayEvents()" aria-label="닫기">&#10005;</button></div>'
+    +'<div class="cd-bd">'+itemsHtml+'</div>'
+    +'<div class="cd-ft"><button class="cd-add" onclick="closeDayEvents();openCalAdd(\''+p+'\')">+ 일정 추가</button></div></div>';
+  document.body.appendChild(ov);
+}
+window.openDayEvents=openDayEvents;
+function closeDayEvents(){ var m=document.getElementById('calDayModal'); if(m) m.remove(); }
+window.closeDayEvents=closeDayEvents;
 /* 한 일정 카드 HTML */
 function calEvtHtml(p,r,me){
   var s=CAL_SRC[r.source_type]||CAL_SRC.personal;
