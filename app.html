@@ -630,7 +630,8 @@ body.is-uat-homesearch2 #homeDesk .sn-card:not(.on) .sn-card-t{color:var(--tp);}
 body.is-uat-homesearch2 #homeDesk .sn-card-d{font-size:var(--sz-s);color:var(--ts);line-height:1.4;}
 
 /* ════ 홈 푸터 (2026-07-08) — 홈 인덱스 전환으로 첫 화면이 app 홈이 되면서 about 페이지 푸터 링크를 홈 바닥에 최소형으로 재노출. 로그인·비로그인 공통. 검색 중(.searching)엔 숨김. 다른 뷰엔 없음(#v-home 스코프). ════ */
-.home-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 18px;margin:28px auto 0;padding:18px 16px 6px;border-top:0.5px solid var(--bd);width:100%;max-width:960px;}
+/* 카드 블록과 푸터 사이 세로 간격 = 넉넉히(2026-07-08 대표) — 붙어 보이던 문제 해소. margin-top 확대(구분선·링크·스타일은 유지). 데스크탑 큼·모바일도 충분. */
+.home-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 18px;margin:clamp(56px,9vh,104px) auto 0;padding:18px 16px 6px;border-top:0.5px solid var(--bd);width:100%;max-width:960px;}
 .home-footer-copy{font-size:var(--ts-badge);color:var(--tf);letter-spacing:-.01em;}
 .home-footer-links{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;}
 .home-footer-links a{font-size:var(--ts-badge);color:var(--tf);text-decoration:none;border-radius:var(--radius-xs,8px);transition:color .15s ease;}
@@ -638,6 +639,11 @@ body.is-uat-homesearch2 #homeDesk .sn-card-d{font-size:var(--sz-s);color:var(--t
 .home-footer-links a:focus-visible{outline:2px solid var(--ac);outline-offset:2px;}
 /* 검색 중엔 결과가 #v-home flex 높이를 채우므로 푸터가 결과를 밀지 않도록 숨김(homeDesk와 동일 처리) */
 #homeSearch.searching ~ .home-footer{display:none;}
+/* ════ 홈 카드 상세 열람 모드 (2026-07-08) — 워크스페이스·원수사·Q&A 6카드 클릭 시 상세(#hd-inline)를 화면 상단으로 끌어올림.
+   _homeCard가 #v-home에 .hd-detail 부여 → 상세에 최소 높이를 줘 스크롤 여백을 확보(라벨을 about 라인까지 끌어올릴 수 있게) + 상세가 화면을 채움.
+   실제 상단 정렬(워크스페이스 라벨 top ≈ #nav-about top, 데스크탑)은 _homeCardLift가 #v-home.scrollTop을 조정해 수행. 닫으면 원복(회귀 0).
+   검색(.searching)과 무관 — 검색 중엔 위 규칙으로 #homeDesk 자체가 숨겨져 이 규칙은 개입하지 않음. 레이아웃/스크롤/클래스만, 기능·데이터·라우팅 무변경. */
+#v-home.hd-detail #hd-inline.open{min-height:calc(100vh - 170px);}
 
 /* 질문하기 모달 */
 .askmodal{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:none;z-index:140;padding:5vh 20px;overflow-y:auto;}
@@ -5687,6 +5693,7 @@ window._snCard=_snCard;
 function _homeDeskShow(){
   var host=document.getElementById('homeDesk'); if(!host) return;
   if(!document.body.classList.contains('is-uat-homedesk')) return;   /* 게이트 밖 계정이면 렌더 안 함 */
+  try{ var _vh=document.getElementById('v-home'); if(_vh) _vh.classList.remove('hd-detail'); }catch(e){}   /* 홈 재렌더 시 상세 열람 모드 잔여 클래스 초기화(회귀 방지, 2026-07-08) */
   try{ _spDiaRestore&&_spDiaRestore(); _spVaultRestore&&_spVaultRestore(); _spSplitRestore&&_spSplitRestore(); _spCospRestore&&_spCospRestore(); _spMrRestore&&_spMrRestore(); }catch(e){}   /* 재렌더(innerHTML) 전 빌려온 노드를 라이브러리로 회수 — 슬롯 노드 고아·재진입 시 카드 안 열림 방지 (2026-07-04) */
   window._mysCat=null;
   /* 내 워크스페이스 4카드 — k는 기존 엔진 키 보존(diary/lib/script/memo), 표시명만 시안 정합(다이어리→캘린더) */
@@ -5747,6 +5754,7 @@ window._homeDeskShow=_homeDeskShow;
    범위 선택(2026-07-04): 영역 선택 시 하단에 동그라미(전체/개인/팀/지점) 표시, 기본=개인. 메모는 개인만. */
 var _homeOpenKind=null;
 var _homeOpenScope=null;
+var _hdPrevScroll=0;   /* 상세 열람 모드 진입 전 #v-home 스크롤 위치 — 닫을 때 원복 (2026-07-08) */
 var _HD_SCOPES={ diary:['all','personal','team','branch'], script:['all','personal','team','branch'], lib:['all','personal','team','branch'], memo:['personal'] };
 var _HD_SCOPE_LABEL={ all:'전체', personal:'개인', team:'팀', branch:'지점' };
 function _homeCard(kind){
@@ -5755,10 +5763,12 @@ function _homeCard(kind){
   var inline=document.getElementById('hd-inline');
   if(_homeOpenKind===kind){ _homeCardClose(); return; }   /* 같은 영역 재선택 = 토글 닫힘 */
   _homeOpenKind=kind;
+  _homeCardEnterMode();   /* 상세 열람 모드 진입 — #v-home 스크롤 원위치 저장 + .hd-detail 부여 (2026-07-08) */
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-hdk')===kind); }catch(e){}  /* 활성 영역 표시 */
   if(kind==='insvault'||kind==='insqna'){   /* 원수사 · Q&A = 지점 단일 자료: 범위 동그라미 없이 바로 열기(지점 배지) */
     if(inline) inline.classList.add('open');
     _homeRef(kind);
+    _homeCardLift();   /* 상세를 화면 상단으로 (about 라인 정렬 / 모바일=상단) */
     return;
   }
   /* 범위 선택 동그라미 렌더 — 메모는 개인만 */
@@ -5772,8 +5782,41 @@ function _homeCard(kind){
   }
   if(inline) inline.classList.add('open');
   _homeScope(kind, 'personal');   /* 기본 선택 = 개인 */
+  _homeCardLift();   /* 상세를 화면 상단으로 (about 라인 정렬 / 모바일=상단) */
 }
 window._homeCard=_homeCard;
+/* 홈 카드 상세 열람 모드 진입 — #v-home에 .hd-detail 부여(상세 최소높이 = 스크롤 여백 확보) + 진입 전 스크롤 위치 저장(닫을 때 원복). 이미 열려 있으면 저장 위치 보존. (2026-07-08) */
+function _homeCardEnterMode(){
+  try{ var vh=document.getElementById('v-home'); if(!vh) return;
+    if(!vh.classList.contains('hd-detail')){ _hdPrevScroll=vh.scrollTop; vh.classList.add('hd-detail'); }
+  }catch(e){}
+}
+window._homeCardEnterMode=_homeCardEnterMode;
+/* 상세를 화면 상단으로 — 데스크탑(사이드바 노출): 워크스페이스 라벨 top ≈ #nav-about top / 모바일(사이드바 숨김): 상세를 헤더 바로 아래로. #v-home 스크롤만 조정(레이아웃·마크업 무변경). 상세 렌더 후 위치가 안정되도록 rAF 2회 뒤 측정. (2026-07-08) */
+function _homeCardLift(){
+  try{
+    var vh=document.getElementById('v-home'); if(!vh) return;
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      try{
+        var lbl=document.querySelector('#homeDesk .hd-group-work .hd-label'); if(!lbl) return;
+        var nav=document.getElementById('nav-about');
+        var lr=lbl.getBoundingClientRect();
+        var nr=nav?nav.getBoundingClientRect():null;
+        var target;
+        if(window.innerWidth>1024 && nr && nr.width>0 && nr.right>0 && nr.top>=0){   /* 사이드바 노출(데스크탑) = 워크스페이스 라벨 top ≈ #nav-about top 정렬 */
+          target=vh.scrollTop + (lr.top - nr.top);
+        }else{   /* 모바일(사이드바 오버레이/숨김) = about 라인 개념 없음: 상세(#hd-inline)를 #v-home 상단 근처로 끌어올림 */
+          var vr=vh.getBoundingClientRect();
+          var inl=document.getElementById('hd-inline');
+          var ref=inl?inl.getBoundingClientRect().top:lr.top;
+          target=vh.scrollTop + (ref - (vr.top + 10));
+        }
+        vh.scrollTop=Math.max(0, target);
+      }catch(e){}
+    }); });
+  }catch(e){}
+}
+window._homeCardLift=_homeCardLift;
 /* 원수사 자료실 · 보험 Q&A = 지점(원수사) 공용 자료. 범위 선택 없이 바로 열기(지점 색). 바텀시트 _spCospShow 재사용(바닥 이전). */
 function _homeRef(kind){
   var slot=document.getElementById('home-desk-slot'); if(!slot) return;
@@ -5811,6 +5854,7 @@ function _homeCardClose(){
   var box=document.getElementById('hd-scope'); if(box) box.innerHTML='';
   var inline=document.getElementById('hd-inline'); if(inline) inline.classList.remove('open','scope-personal','scope-team','scope-branch','scope-all-disabled');
   try{ var bs=document.querySelectorAll('#homeDesk .sn-cards .sn-card'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); }catch(e){}
+  try{ var vh=document.getElementById('v-home'); if(vh){ vh.classList.remove('hd-detail'); vh.scrollTop=_hdPrevScroll||0; } }catch(e){}  /* 상세 열람 모드 해제 — 스크롤 원위치 복원 (2026-07-08) */
   _homeOpenKind=null; _homeOpenScope=null;
 }
 window._homeCardClose=_homeCardClose;
