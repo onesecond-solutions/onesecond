@@ -5723,14 +5723,19 @@ function _homeDeskShow(){
   for(var j=0;j<tools.length;j++){ var t=tools[j];
     th+='<button type="button" class="hd-tool" style="--c:'+t.c+'" onclick="showView(\''+t.v+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+t.t+'</span><span class="sn-card-d">'+t.d+'</span></span><svg class="hd-tool-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></button>';
   }
-  /* 원수사 · Q&A 그룹 2카드 — 지점이 보는 공용 자료. 클릭 시 바텀시트 _spCospShow(insurer/qna)를 홈 슬롯에 재사용(바닥 이전). 범위 동그라미 없이 지점 색 단일 진입. */
-  var refs=[
-    {k:'insvault', ic:'i-building', t:'원수사 자료실', d:'지점이 보는 원수사 자료', c:'var(--space-branch-line)'},
-    {k:'insqna',   ic:'i-msg',      t:'보험 Q&A',     d:'지점 공유 질문·답변 & 전체 보기',    c:'var(--space-branch-line)'}
-  ];
-  var rh='';
-  for(var k=0;k<refs.length;k++){ var rc=refs[k];
-    rh+='<button type="button" class="sn-card" data-hdk="'+rc.k+'" style="--c:'+rc.c+'" onclick="_homeCard(\''+rc.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+rc.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+rc.t+'</span><span class="sn-card-d">'+rc.d+'</span></span></button>';
+  /* 원수사 · Q&A 그룹 2카드 — 지점이 보는 공용 자료. 클릭 시 바텀시트 _spCospShow(insurer/qna)를 홈 슬롯에 재사용(바닥 이전). 범위 동그라미 없이 지점 색 단일 진입.
+     ▶ 임태성 실장 user_id 전용 게이트(2026-07-08): 대표가 원수사 자료실·보험 Q&A 입력·데이터 작업을 하는 자리라 그 계정에서만 홈 카드로 노출. 게이트 밖(일반·비로그인)은 이 2카드가 DOM에 아예 안 생김(그룹 자체 미생성). 알릴의무 카드(_canSeeRoadmap 조건부 push)와 동일 패턴. 진입 함수(_homeCard insvault/insqna)·화면(#v-insurer-vault·_spCospShow) 로직은 무변경. */
+  var refGroup='';
+  if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap()){
+    var refs=[
+      {k:'insvault', ic:'i-building', t:'원수사 자료실', d:'지점이 보는 원수사 자료', c:'var(--space-branch-line)'},
+      {k:'insqna',   ic:'i-msg',      t:'보험 Q&A',     d:'지점 공유 질문·답변 & 전체 보기',    c:'var(--space-branch-line)'}
+    ];
+    var rh='';
+    for(var k=0;k<refs.length;k++){ var rc=refs[k];
+      rh+='<button type="button" class="sn-card" data-hdk="'+rc.k+'" style="--c:'+rc.c+'" onclick="_homeCard(\''+rc.k+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+rc.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+rc.t+'</span><span class="sn-card-d">'+rc.d+'</span></span></button>';
+    }
+    refGroup='<div class="hd-group hd-group-ref"><div class="hd-label">원수사 · Q&amp;A</div><div class="sn-cards">'+rh+'</div></div>';
   }
   /* 도구 섹션(자료 아래) — "계산기·변환기" 카드 1장 → 독립 도구 허브 페이지(#v-tool). 전체 개방(2026-07-05 대표 승인). */
   var calcTools='<div class="hd-label">도구</div><div class="hd-tools">'
@@ -5739,7 +5744,7 @@ function _homeDeskShow(){
   host.innerHTML='<div class="sn-page">'
     +'<div class="hd-groups">'
       +'<div class="hd-group hd-group-work"><div class="hd-label">워크스페이스</div><div class="sn-cards">'+ch+'</div></div>'
-      +'<div class="hd-group hd-group-ref"><div class="hd-label">원수사 · Q&amp;A</div><div class="sn-cards">'+rh+'</div></div>'
+      +refGroup
     +'</div>'
     +'<div class="hd-inline" id="hd-inline"><button type="button" class="hd-inline-x" onclick="_homeCardClose()" aria-label="닫기">&#10005;</button><div class="hd-scope" id="hd-scope"></div><div class="sn-slot" id="home-desk-slot"></div></div>'
     +'<div class="hd-label">자료</div>'
