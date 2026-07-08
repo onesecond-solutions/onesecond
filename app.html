@@ -4211,7 +4211,7 @@ function applyRoleClass(){
   /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 전원 개방(로그인 + 비로그인, 2026-07-08 홈 인덱스 전환 대표 승인 B안). 홈 데스크(is-uat-homedesk)는 로그인 전용(!!r)으로 분리 유지 = 비로그인은 검색 홈만 보고 개인 데스크 카드는 안 봄. CSS·마크업만(기능 무변경). 완성 기능만 노출: 타일 게이트(_HS2_TILES show)가 각 기능 공개상태를 따르므로 미완성(알릴의무=_canSeeRoadmap)은 노출 안 됨. */
   document.body.classList.toggle('is-uat-homesearch2', true);
   /* 안A 검색창 placeholder = "무엇을 찾으세요?" (게이트 계정만 — 속성이라 CSS 스코프 불가). 비게이트 계정은 기존 placeholder 그대로 = 무변경. */
-  try{ if(document.body.classList.contains('is-uat-homesearch2')){ var _hi2=document.getElementById('hsInput'); if(_hi2) _hi2.setAttribute('placeholder','무엇을 찾으세요?'); } }catch(e){}
+  try{ if(document.body.classList.contains('is-uat-homesearch2')){ var _hi2=document.getElementById('hsInput'); if(_hi2){ var _gtk=window.db&&window.db.getToken&&window.db.getToken(); _hi2.setAttribute('placeholder', _gtk?'무엇을 찾으세요?':'로그인 후 사용 가능합니다'); } } }catch(e){}  /* 비로그인(토큰 없음) = 검색 안내 placeholder 우선. 로그인 시 '무엇을 찾으세요?' 유지 (2026-07-08 유출 수정) */
   /* 홈 데스크 = 전원 개방(로그인 + 비로그인, 2026-07-08 대표 라이브 피드백 "비로그인 홈=로그인 홈 동일"). 워크스페이스·원수사·Q&A 카드는 껍데기만 렌더(_homeDeskShow, 데이터 fetch 0). 비로그인이 개인 카드 클릭(_homeCard)·쓰기/저장 시 로그인 게이트(_osLoginGate). 공개 자료(스크립트·상품·계산기)는 비로그인 사용 가능. */
   document.body.classList.toggle('is-uat-homedesk', true);
   /* 자주 찾는 보험 자료 타일 = 게이트 조건 필터 렌더. is-uat-homedesk 토글 이후 호출(실비 변천사 타일이 이 클래스를 조건으로 봄). is-uat-homesearch2 계정만 노출되는 섹션이라 그 안에서만 채움. */
@@ -12121,6 +12121,8 @@ function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.ge
 window._hsReset=_hsReset;
 /* 제출(엔터·검색버튼·카드) — 이때만 화면 이동(.searching)+결과 표시. 구글/네이버처럼 입력 중엔 안 움직임 */
 function _hsSearch(q){
+  var _stk=window.db&&window.db.getToken&&window.db.getToken();
+  if(!_stk){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 = 검색 실행 차단(결과로 개인/전체 데이터가 새지 않게). 쓰기 게이트와 동일 모델. 2026-07-08 유출 수정 */
   var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(!hs||!rs) return;
   q=((q==null?((document.getElementById('hsInput')||{}).value||''):q)||'').trim();
   if(!q){ _hsReset(); return; }
@@ -12133,6 +12135,8 @@ function _hsSearch(q){
 window._hsSearch=_hsSearch;
 /* 입력 중(oninput) — 화면 이동 안 함. 비면 리셋 / 이미 결과화면이면 라이브 갱신 / 아직 제출 전 hero면 대기 */
 function _hsInput(q){
+  var _itk=window.db&&window.db.getToken&&window.db.getToken();
+  if(!_itk){ if(typeof _acClose==='function')_acClose(); return; }  /* 비로그인 = 자동완성·라이브 검색 억제(입력 시 데이터 fetch 0). 2026-07-08 유출 수정 */
   var hs=document.getElementById('homeSearch'); if(!hs) return;
   if(!q||!q.trim()){ _acClose(); _hsReset(); return; }
   _acInput(q);   /* 자동완성 갱신(게이트 내부에서만 항목 생성) */
@@ -12182,6 +12186,8 @@ window._acBlur=_acBlur;
 /* 입력 → 후보 매칭·렌더 */
 function _acInput(q){
   var box=document.getElementById('hsSuggest'); if(!box) return;
+  var _atk=window.db&&window.db.getToken&&window.db.getToken();
+  if(!_atk){ _acClose(); return; }   /* 비로그인 = 자동완성 없음(데이터 억제). 2026-07-08 유출 수정 */
   if(typeof _canSeeCompanyHub==='function' && !_canSeeCompanyHub()){ _acClose(); return; }   /* 게이트 외엔 자동완성 없음 */
   _acLoadInsurers();
   var n=_normCo(q); if(!n){ _acClose(); return; }
@@ -15025,6 +15031,8 @@ async function loadCal(p, scopeOpt){
   var scope=st.scope||'personal';
   var listEl=document.getElementById(p+'-cal-list');
   if(!window.db||!window.db.fetch){ if(listEl)listEl.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
+  var _calTk=window.db.getToken&&window.db.getToken();
+  if(!_calTk){ st.rows=[]; if(typeof renderCalMonths==='function') renderCalMonths(p); if(typeof renderCalGridMonth==='function') renderCalGridMonth(p); if(listEl) listEl.innerHTML='<div class="mys-news-empty">로그인 후 이용할 수 있어요.</div>'; return; }  /* 비로그인 = 일정 로드 0(빈 달력만). 타인 데이터 노출 방지 (2026-07-08 유출 수정) */
   if(listEl) listEl.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
     /* personal = 본인의 개인 일정만(author_id + audience_target=personal). 어드민도 동일 — 내가 만든 팀/지점 일정은 개인 뷰에서 제외, 각 뷰에서만 노출 (2026-07-04 대표 A안).
@@ -15038,7 +15046,9 @@ async function loadCal(p, scopeOpt){
         ? '&team_id=eq.'+encodeURIComponent(_id)+'&audience_target=eq.team_internal'
         : '&branch_id=eq.'+encodeURIComponent(_id)+'&audience_target=eq.branch_internal';
     } else {
-      var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null; _filter=_me?('&author_id=eq.'+encodeURIComponent(_me)+'&or=(audience_target.eq.personal,audience_target.is.null)'):'';   /* 개인 뷰 = 개인 일정만(+audience 미지정 legacy 안전 포함). 내가 만든 팀/지점 일정은 각 뷰에만 */
+      var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null;
+      if(!_me){ st.rows=[]; renderCalMonths(p); renderCalGridMonth(p); if(listEl) listEl.innerHTML='<div class="mys-news-empty">개인 일정을 불러올 수 없어요.</div>'; return; }   /* owner 미해결 시 전체 fetch 금지 — _filter='' 로 전 사용자 일정을 긁어오던 유출 차단 (2026-07-08) */
+      _filter='&author_id=eq.'+encodeURIComponent(_me)+'&or=(audience_target.eq.personal,audience_target.is.null)';   /* 개인 뷰 = 개인 일정만(+audience 미지정 legacy 안전 포함). 내가 만든 팀/지점 일정은 각 뷰에만 */
     }
     var res=await window.db.fetch('/rest/v1/calendar_events?order=event_date.desc&limit=500'+_filter+'&select=id,event_date,event_time,title,description,event_type,source_type,insurer_id,author_id');
     var rows=res.ok?await res.json():[]; if(!Array.isArray(rows)) rows=[];
@@ -15887,6 +15897,7 @@ function mysVaultTreeHtml(rows){
 
 async function mysVaultLoadFolders(){
   var box=document.getElementById('mys-vault-folders'); if(!box) return;
+  var _mvtkF=window.db&&window.db.getToken&&window.db.getToken(); if(!_mvtkF){ box.innerHTML='<div class="mys-news-empty">로그인 후 이용할 수 있어요.</div>'; return; }  /* 비로그인 = 폴더 fetch 0 (2026-07-08 유출 수정) */
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   try{
     var res=await window.db.fetch('/rest/v1/myspace_folders?deleted_at=is.null'+_mvScopeQ()+'&order=sort_order.asc,name.asc&select=id,parent_id,name,depth,sort_order');
@@ -15915,6 +15926,7 @@ window.mysVaultSelectFolder=mysVaultSelectFolder;
 
 async function mysVaultLoadFiles(fid){
   var box=document.getElementById('mys-vault-files'); if(!box) return;
+  var _mvtkFl=window.db&&window.db.getToken&&window.db.getToken(); if(!_mvtkFl){ box.innerHTML='<div class="mys-news-empty">로그인 후 이용할 수 있어요.</div>'; return; }  /* 비로그인 = 파일 fetch 0 (2026-07-08 유출 수정) */
   var owner=_mvOwner(); if(!owner){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
   box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   try{
@@ -17748,7 +17760,7 @@ body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드
     v.style.display='flex';
     window._mysCat='자료함';
     if(typeof _mvApplyVaultNotice==='function') _mvApplyVaultNotice(scope);  /* 고지 문구·확인 스코프별 갱신 */
-    if(typeof _mvOwner==='function' && !_mvOwner()) return;     /* 미로그인 가드(자료함 내부 문구 표시) */
+    if(typeof _mvOwner==='function' && !_mvOwner()){ var _vff=document.getElementById('mys-vault-folders'), _vfl=document.getElementById('mys-vault-files'); if(_vff)_vff.innerHTML='<div class="mys-news-empty">로그인 후 이용할 수 있어요.</div>'; if(_vfl)_vfl.innerHTML='<div class="mys-news-empty">로그인 후 이용할 수 있어요.</div>'; return; }     /* 미로그인 가드 = 폴더·파일 로드 0(빈 상태만). 타인 데이터 노출 방지 (2026-07-08 유출 수정) */
     window._mvCurFolder=null;  /* 스코프 전환 시 루트부터 (이전 스코프 폴더 잔상 방지) */
     if(window._mvView===undefined){ try{ window._mvView=localStorage.getItem('os_mv_view')||'grid'; }catch(e){ window._mvView='grid'; } }
     if(typeof _mvViewSyncBtns==='function') _mvViewSyncBtns();
