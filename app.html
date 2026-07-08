@@ -629,6 +629,16 @@ body.is-uat-homesearch2 #homeDesk .sn-card-t{font-size:var(--sz-m);font-weight:6
 body.is-uat-homesearch2 #homeDesk .sn-card:not(.on) .sn-card-t{color:var(--tp);}
 body.is-uat-homesearch2 #homeDesk .sn-card-d{font-size:var(--sz-s);color:var(--ts);line-height:1.4;}
 
+/* ════ 홈 푸터 (2026-07-08) — 홈 인덱스 전환으로 첫 화면이 app 홈이 되면서 about 페이지 푸터 링크를 홈 바닥에 최소형으로 재노출. 로그인·비로그인 공통. 검색 중(.searching)엔 숨김. 다른 뷰엔 없음(#v-home 스코프). ════ */
+.home-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 18px;margin:28px auto 0;padding:18px 16px 6px;border-top:0.5px solid var(--bd);width:100%;max-width:960px;}
+.home-footer-copy{font-size:var(--ts-badge);color:var(--tf);letter-spacing:-.01em;}
+.home-footer-links{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;}
+.home-footer-links a{font-size:var(--ts-badge);color:var(--tf);text-decoration:none;border-radius:var(--radius-xs,8px);transition:color .15s ease;}
+.home-footer-links a:hover{color:var(--ts);text-decoration:underline;text-underline-offset:2px;}
+.home-footer-links a:focus-visible{outline:2px solid var(--ac);outline-offset:2px;}
+/* 검색 중엔 결과가 #v-home flex 높이를 채우므로 푸터가 결과를 밀지 않도록 숨김(homeDesk와 동일 처리) */
+#homeSearch.searching ~ .home-footer{display:none;}
+
 /* 질문하기 모달 */
 .askmodal{position:fixed;inset:0;background:rgba(8,9,11,0.7);display:none;z-index:140;padding:5vh 20px;overflow-y:auto;}
 .askmodal.open{display:flex;align-items:flex-start;justify-content:center;}
@@ -2109,6 +2119,16 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
 
       <!-- 홈 데스크 (is-uat-homedesk 게이트 = 임태성 실장 user_id 98c5f4f9 전용, 2026-07-02). 바텀시트 마이 스페이스 콘텐츠(캘린더·업무노트·자료실·메모)를 홈 바닥으로 내림. 시트·손잡이는 유지. _homeDeskShow가 렌더, 기존 _spDiaShow/_spVaultShow/_spSplitShow 엔진 재사용. -->
       <div id="homeDesk" class="home-desk"></div>
+
+      <!-- 홈 푸터 (2026-07-08) — about 페이지 footer의 동일 링크 4항목을 최소형으로 재노출. 로그인·비로그인 공통, 검색 중(.searching) CSS로 숨김. 값 출처=pages/landing.html footer. -->
+      <footer class="home-footer" aria-label="사이트 정보">
+        <span class="home-footer-copy">© 2026 onesecond</span>
+        <nav class="home-footer-links" aria-label="약관 및 문의">
+          <a href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">카카오톡 문의하기</a>
+          <a href="/terms.html">이용약관</a>
+          <a href="/privacy.html">개인정보처리방침</a>
+        </nav>
+      </footer>
      </div>
      <div class="wrap view" id="v-myspace">
       <div class="ttl">라이브러리 <span class="ac">· 내가 저장한 자료들</span></div>
