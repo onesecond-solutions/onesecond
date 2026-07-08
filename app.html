@@ -5128,25 +5128,42 @@ async function ivSubmit(){
   var content = (document.getElementById('iv-f-body').value || '').trim();
   var keywords = ((document.getElementById('iv-f-keywords')||{}).value || '').split(',').map(function(s){return s.trim();}).filter(Boolean);
   if(!title){ alert('제목을 입력해 주세요.'); return; }
-  /* 첨부 파일 → onesecond_banner/vault 업로드 → URL 수집 (실패 파일은 건너뜀) */
+  /* 첨부 파일 → onesecond_banner/vault 업로드 → URL 수집.
+   * 2026-07-08 fix: 업로드 실패 파일을 조용히 삼키던 버그(첨부 누락을 사용자에게 안 알려 attachments:[]로 저장) 수정.
+   *   실패 파일은 _failed에 모아 등록 직전 사용자에게 사유와 함께 고지하고, 제외 등록/중단 선택권을 준다. */
   var attachments = [];
+  var _failed = [];
+  var _MAX_BYTES = 52428800;  /* onesecond_banner 버킷 file_size_limit = 50MB */
   var _files = ((document.getElementById('iv-f-file')||{}).files) || [];
   var _sb = document.getElementById('iv-submit-btn');
   if(_files.length && _sb){ _sb.disabled = true; _sb.textContent = '업로드 중…'; }
   for(var _i=0; _i<_files.length; _i++){
     var _f = _files[_i];
-    var _ext = ((_f.name||'').split('.').pop()||'').toLowerCase();
+    var _fname = _f.name || ('첨부'+(_i+1));
+    /* 사전 용량 가드 — 50MB 초과는 업로드 왕복 없이 즉시 실패 처리(명확한 사유 제공) */
+    if(_f.size && _f.size > _MAX_BYTES){ _failed.push({ name:_fname, reason:'용량 초과(50MB 제한, 현재 '+(Math.round(_f.size/1048576*10)/10)+'MB)' }); console.error('[ivSubmit] 첨부 용량 초과', _fname, _f.size); continue; }
+    var _ext = ((_fname).split('.').pop()||'').toLowerCase();
     var _path = 'vault/' + Date.now() + '_' + _i + (_ext ? ('.'+_ext) : '');
     try{
       var _up = await fetch(window.db.url('/storage/v1/object/onesecond_banner/' + _path), {
         method:'POST',
         headers:{ 'apikey':window.db.key, 'Authorization':'Bearer '+token, 'Content-Type':(_f.type||'application/octet-stream'), 'x-upsert':'true' },
         body:_f });
-      if(_up.ok){ attachments.push({ url: window.db.url('/storage/v1/object/public/onesecond_banner/'+_path), name:_f.name, type:(_f.type||'') }); }
-      else { console.error('[ivSubmit] 첨부 업로드 실패', _up.status, _f.name); }
-    }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _e); }
+      if(_up.ok){ attachments.push({ url: window.db.url('/storage/v1/object/public/onesecond_banner/'+_path), name:_fname, type:(_f.type||'') }); }
+      else {
+        var _errt=''; try{ _errt=await _up.text(); }catch(_e2){}
+        console.error('[ivSubmit] 첨부 업로드 실패', _up.status, _fname, (_errt||'').slice(0,200));
+        _failed.push({ name:_fname, reason:(_up.status===413?'용량 초과(50MB 제한)':('업로드 오류 '+_up.status)) });
+      }
+    }catch(_e){ console.error('[ivSubmit] 첨부 업로드 오류', _fname, _e); _failed.push({ name:_fname, reason:'네트워크 오류' }); }
   }
   if(_sb){ _sb.disabled = false; _sb.textContent = window._ivEditId?'자료 수정':'자료 등록'; }
+  /* 실패 첨부가 있으면 조용히 삼키지 않고 사용자에게 사유와 함께 고지 + 선택권 부여 */
+  if(_failed.length){
+    var _fmsg = _failed.map(function(x){ return '• '+x.name+' — '+x.reason; }).join('\n');
+    var _proceed = confirm('다음 첨부 파일을 업로드하지 못했습니다:\n\n'+_fmsg+'\n\n[확인] 실패한 첨부를 제외하고 등록\n[취소] 등록 중단(파일 확인 후 다시 시도)');
+    if(!_proceed){ return; }
+  }
   var _branchId = null;
   if(!_isAdmin && _canPick){   /* GA 실장/지점장 작성 = 본인 지점 박음 → 같은 지점 GA만 열람(RLS posts_select_insurer_ga_branch 정합) */
     try{ var _me=(typeof _cospLoadMe==='function')?((await _cospLoadMe())||{}):{}; _branchId=_me.branch_id||null; }catch(e){}
