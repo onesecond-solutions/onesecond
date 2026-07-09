@@ -12761,7 +12761,7 @@ async function _searchGoNotice(id){
 /* 5) 스크립트 — global=스크립트 시트(스테이지+카드 id) / personal(본인)=마이 스페이스 */
 async function _searchGoScript(id){
   var r=null;
-  try{ var res=await window.db.fetch('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,highlight_text,stage,scope,owner_id'); var rows=res.ok?await res.json():[]; r=rows[0]; }catch(e){}
+  try{ var res=await window.db.fetch('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,search_text,highlight_text,stage,scope,owner_id,attachments'); var rows=res.ok?await res.json():[]; r=rows[0]; }catch(e){}
   if(!r){ _svToast('권한이 없거나 삭제된 스크립트입니다'); return; }
   if(r.scope==='global'){
     if(typeof showView==='function') showView('scripts');
@@ -12778,11 +12778,18 @@ async function _searchGoScript(id){
     card.click();
     try{ card.scrollIntoView({block:'center'}); }catch(e){}
   } else {
-    /* personal(본인) — 검색 카드 인라인 펼침. 바텀시트 마이스페이스(책상) 숨김 후 딥링크 불가 → 인라인 대체(바텀시트 무의존). 2026-07-05 */
+    /* personal(본인) — 검색 카드 인라인 펼침. 바텀시트 마이스페이스(책상) 숨김 후 딥링크 불가 → 인라인 대체(바텀시트 무의존). 2026-07-05
+       P0(2026-07-09 #1204): 본문은 search_text(HTML strip본) 우선 → raw script_text(osRich HTML)의 <img>·<a>·style·src URL 리터럴 노출 차단. search_text NULL 옛 글은 _svStripHtml 폴백. 본문 첫 이미지=대표 썸네일 복원, 첨부는 _voiceAttsHtml로 본문과 분리(썸네일/배지). 라이브 표시명: 업무노트 */
     var b=_svInlineBox('scripts', id); if(!b||b.closed) return;
     var qt=_svQTokens();
-    var txt=String(r.script_text||'').trim();
-    b.box.innerHTML=txt?('<div class="sv-inline-body">'+_sMark(txt,qt)+'</div>'):'<div class="sv-inline-empty">본문이 비어 있습니다.</div>';
+    var txt=String(r.search_text||'').trim()||_svStripHtml(r.script_text);   /* strip 평문만 → _sMark(_sEsc) 거쳐도 태그·URL 리터럴 노출 0 */
+    var _scrImg=_svFirstImg(r.script_text);   /* 본문에서 태그 strip돼 사라진 대표 이미지 복원(행 귀속 base64/공개 URL만) */
+    var _thumbHtml=_scrImg?'<div class="sv-d-scrthumb"><img src="'+String(_scrImg).replace(/"/g,'&quot;')+'" alt="" loading="lazy"></div>':'';
+    var _scrAtts=_svScrAtts(r); var _attHtml='';   /* 첨부 = 본문과 분리, _voiceAttsHtml이 이미지 썸네일/파일 배지로 렌더 + 라이트박스 전역 세팅 */
+    if(_scrAtts.length && typeof _voiceAttsHtml==='function'){ var _sah=_voiceAttsHtml(_scrAtts); _attHtml=_sah.html; window._voiceImgs=_sah.imgs; window._voiceImgNames=_sah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
+    var _body=txt?('<div class="sv-inline-body">'+_sMark(txt,qt)+'</div>'):'';
+    var _combined=_thumbHtml+_body+_attHtml;
+    b.box.innerHTML=_combined.replace(/\s/g,'')?_combined:'<div class="sv-inline-empty">본문이 비어 있습니다.</div>';
   }
 }
 /* 우측 패널 닫기(홈 2단) — 안내 상태로 복원 */
