@@ -16519,16 +16519,10 @@ async function loadQuickOverlayItems(){
   if(!groups.recording_script) return;
   if(groups.recording_script.dataset.loaded === 'true') return;
 
-  // 토큰 사전 점검 — 토큰 없을 시 fetch 안 함 (db.js 자동 alert 회피)
-  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-  if(!hasToken){
-    Object.keys(groups).forEach(function(gKey){
-      var slot = groups[gKey];
-      if(slot) slot.innerHTML = '<div class="qov-group-loading">로그인 후 가동 (Deploy Preview = 토큰 없음)</div>';
-    });
-    return;
-  }
-
+  // 전체 공개(2026-07-09 대표 승인): quick_contents = owner 없는 전역 운영자료.
+  //   비로그인도 로그인 후와 동일하게 열람 → 토큰 사전 점검 제거.
+  //   window.db.fetch 는 토큰 없으면 apikey(anon)만 전송(Authorization 생략) = anon RLS 조회.
+  //   quick_contents anon SELECT 정책은 마이그레이션으로 개방(총괄 CI 조율).
   if(!window.db){
     Object.keys(groups).forEach(function(gKey){
       var slot = groups[gKey];
@@ -16741,13 +16735,9 @@ async function openQuickOverlay(key){
     }
   }
 
-  // 토큰 사전 점검 (Deploy Preview 정합)
-  var hasToken = localStorage.getItem('os_token') || sessionStorage.getItem('os_token');
-  if(!hasToken){
-    if(target) target.innerHTML = '<div class="qov-group-loading">로그인 후 가동</div>';
-    return;
-  }
-
+  // 전체 공개(2026-07-09 대표 승인): 비로그인도 본문 열람 → 토큰 사전 점검 제거.
+  //   window.db.fetch 는 토큰 없으면 anon(apikey)으로 조회. content_html 내 저장류 onclick 은
+  //   각 함수 자체 _osLoginGate 로 로그인 유지되므로 개방해도 저장은 자동 게이트(무변경).
   if(!window.db){
     if(target) target.innerHTML = '<div class="qov-group-loading">DB 모듈 로딩 중</div>';
     return;
