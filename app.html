@@ -8456,8 +8456,21 @@ async function _dlSignedFile(e, el){
   return false;
 }
 window._dlSignedFile=_dlSignedFile;
-/* 서명 URL 문자열만 발급(미리보기·라이트박스용). _openSignedAtt는 새 탭 열기, 이건 URL만 반환. */
-async function _svSignUrl(bucket, path){
+/* 비로그인 소식지 미리보기 폴백 — published 소식지 id로 공개 EF(newsletter-sign)에서 만료 서명 URL 발급.
+   apikey(anon)만 실어 호출(fetchPublic, verify_jwt=false EF). published 아닌 소식지·없는 id는 EF가 404 → '' 반환.
+   서버가 status=published + newsletters 버킷을 강제하므로 안전(검수중·타 버킷 서명 불가). */
+async function _nlSignAnon(id){
+  try{
+    if(!id||!window.db||typeof window.db.fetchPublic!=='function') return '';
+    var res=await window.db.fetchPublic('/functions/v1/newsletter-sign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});
+    if(!res.ok) return '';
+    var j=await res.json(); return (j&&j.signedUrl)||'';
+  }catch(e){ return ''; }
+}
+window._nlSignAnon=_nlSignAnon;
+/* 서명 URL 문자열만 발급(미리보기·라이트박스용). _openSignedAtt는 새 탭 열기, 이건 URL만 반환.
+   nlId(선택) = 소식지 id. 비로그인일 때 bucket==='newsletters' 이고 nlId 있으면 공개 EF로 폴백(published만). */
+async function _svSignUrl(bucket, path, nlId){
   try{
     if(!bucket||!path) return '';
     /* 2026-06-22: 앱 정식 인증 경로(window.db.fetch)로 통일.
@@ -8466,7 +8479,11 @@ async function _svSignUrl(bucket, path){
        window.db.fetch = apikey+Authorization 자동 주입 + 401이면 os_refresh_token으로 1회 자동 갱신.
        세션(토큰) 자체가 없으면 빈 Bearer로 400 유발하지 말고 요청을 중단한다. */
     if(!window.db||typeof window.db.fetch!=='function') return '';
-    if(typeof window.db.getToken==='function' && !window.db.getToken()) return '';
+    if(typeof window.db.getToken==='function' && !window.db.getToken()){
+      /* 비로그인: 직접 서명 불가 → published 소식지만 공개 EF로 폴백(회귀 0: 그 외 버킷/ id 미상은 기존대로 '') */
+      if(bucket==='newsletters' && nlId) return await _nlSignAnon(nlId);
+      return '';
+    }
     var encPath=String(path).split('/').map(encodeURIComponent).join('/');
     var res=await window.db.fetch('/storage/v1/object/sign/'+encodeURIComponent(bucket)+'/'+encPath,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expiresIn:3600})});
     if(!res.ok) return '';
@@ -10821,7 +10838,7 @@ async function _companyHubHtml(q){
   if(yrs.length){ nlBody='<div class="chub-nl">';
     yrs.forEach(function(y){ var arr=nlY[y]; nlBody+='<div class="chub-nlyr"><b>'+_sEsc(y)+'</b> <span>'+arr.length+'건</span><div class="chub-nlms">'+arr.map(function(n){ var _nm=(typeof _nlShortName==='function')?_nlShortName(n.source_filename, co):''; var _lbl=_sEsc(String(n.publish_month||'?'))+'월'+(_nm?' · '+_sEsc(_nm):''); var _u=String(n.source_pdf_url||'').trim(), _p=String(n.source_path||'').trim(); var _has=!!(_u||_p);
       if(!_has) return '<div class="chub-nlbox is-nosrc" title="'+_lbl+' (원본 파일 없음)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">원본 없음</span></span><span class="chub-nlcap">'+_lbl+'</span></div>';
-      return '<button class="chub-nlbox" type="button" data-u="'+_sEsc(_u)+'" data-p="'+_sEsc(_p)+'" data-co="'+_sEsc(co)+'" data-ym="'+_sEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_sEsc(String(n.source_filename||''))+'" title="'+_lbl+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_lbl+'</span></button>'; }).join('')+'</div></div>'; });
+      return '<button class="chub-nlbox" type="button" data-id="'+_sEsc(String(n.id||''))+'" data-u="'+_sEsc(_u)+'" data-p="'+_sEsc(_p)+'" data-co="'+_sEsc(co)+'" data-ym="'+_sEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_sEsc(String(n.source_filename||''))+'" title="'+_lbl+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+_lbl+'</span></button>'; }).join('')+'</div></div>'; });
     nlBody+='</div>';
   }
   var H='<div class="chub" data-co="'+_sEsc(co)+'"><div class="chub-co"><span class="chub-colg">'+_sEsc(co.slice(0,1))+'</span>'+_sEsc(co)+'</div>';
@@ -11259,8 +11276,8 @@ function _nlShortName(fn, company){
 window._nlShortName=_nlShortName;
 /* 소식지 썸네일 박스 클릭 = 크게 보기 미리보기 창(모달). 새 탭 점유 안 함. 공개 source_pdf_url 우선, 없으면 source_path 서명URL */
 async function _hubOpenNl(btn){
-  var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'';
-  if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
+  var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'', nid=btn.getAttribute('data-id')||'';
+  if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p, nid); }catch(e){} }  /* 비로그인이면 nid로 공개 EF 폴백(published만) */
   if(!u){ if(typeof toast==='function') toast('원본을 열 수 없습니다.'); return; }
   var name=String(btn.getAttribute('title')||btn.textContent||'소식지').trim();   /* 박스 title=월 라벨(캡션·placeholder 혼입 방지) */
   /* 헤더 메타·다운로드용 데이터(회사·발행월·원본 파일명·원본 경로). 없으면 있는 것만 표시(빈 값 방어) */
@@ -11433,8 +11450,8 @@ function _hubThumbPump(){
 }
 async function _hubNlRenderThumb(th){
   var btn=th.closest('.chub-nlbox'); if(!btn) return;
-  var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'';
-  if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p); }catch(e){} }
+  var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'', nid=btn.getAttribute('data-id')||'';
+  if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p, nid); }catch(e){} }  /* 비로그인 썸네일도 공개 EF 폴백(published만) */
   if(!u) return;
   var lib; try{ lib=await loadPdfJs(); }catch(e){ return; }
   if(!lib||!lib.getDocument) return;
@@ -12206,7 +12223,7 @@ async function _searchOpen(table, id){
     if(!r){ if(typeof toast==='function') toast('내용을 불러오지 못했습니다'); return; }
     /* 소식지 PDF URL — 공개 source_pdf_url 우선, 없으면 source_path를 newsletters 버킷 서명URL로(2026-06 업로드분=private 버킷, source_pdf_url=null). ocr-batch와 동일 패턴 → 6월 소식지도 미리보기 일관 노출 */
     var _pdfUrl=(table==='newsletters')?String(r.source_pdf_url||'').trim():'';
-    if(table==='newsletters' && !_pdfUrl && r.source_path){ try{ _pdfUrl=await _svSignUrl('newsletters', r.source_path); }catch(e){ _pdfUrl=''; } }
+    if(table==='newsletters' && !_pdfUrl && r.source_path){ try{ _pdfUrl=await _svSignUrl('newsletters', r.source_path, id); }catch(e){ _pdfUrl=''; } }  /* 비로그인이면 id로 공개 EF 폴백(published만) */
     var title=(r.company||r.source_company?((r.company||r.source_company)+' · '):'')+(r.title||r.original_name||'(제목 없음)');
     var meta = r.publish_year?(r.publish_year+'.'+(r.publish_month||'')) : (r.stage||r.category||(r.ext?('자료실 · '+String(r.ext).toUpperCase()):'')||(r.event_date?String(r.event_date).slice(0,10):(r.created_at?_sFmtDate(r.created_at):'')));
     var bodyTxt = r.full_text||r.content||r.search_text||_svStripHtml(r.script_text)||r.body||r.description||r.memo_text||'(내용 없음)';   /* P0: search_text NULL 옛 업무노트 방어 — raw osRich HTML(script_text) 폴백 시 태그 제거해 <img src=...> 리터럴 노출 차단 */
@@ -12464,7 +12481,7 @@ async function _svOpenNewsletter(id){
     var rows=res.ok?await res.json():[]; var r=rows[0];
     if(!r){ _svToast('소식지를 불러오지 못했습니다(권한·삭제)'); return; }
     var url=String(r.source_pdf_url||'').trim();
-    if(!url && r.source_path && typeof _svSignUrl==='function'){ try{ url=await _svSignUrl('newsletters', r.source_path); }catch(e){ url=''; } }
+    if(!url && r.source_path && typeof _svSignUrl==='function'){ try{ url=await _svSignUrl('newsletters', r.source_path, id); }catch(e){ url=''; } }  /* 비로그인이면 id로 공개 EF 폴백(published만) */
     if(!url){ _svToast('원본 PDF가 없습니다'); return; }
     var nm=(r.company?r.company+' · ':'')+(r.title||'소식지');
     if(typeof _hubNlPreview==='function') _hubNlPreview(url, nm); else window.open(url,'_blank','noopener');
