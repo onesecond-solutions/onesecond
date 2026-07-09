@@ -633,8 +633,12 @@ body.is-uat-homesearch2 #homeDesk .sn-card:not(.on) .sn-card-t{color:var(--tp);}
 body.is-uat-homesearch2 #homeDesk .sn-card-d{font-size:var(--sz-s);color:var(--ts);line-height:1.4;}
 
 /* ════ 홈 푸터 (2026-07-08) — 홈 인덱스 전환으로 첫 화면이 app 홈이 되면서 about 페이지 푸터 링크를 홈 바닥에 최소형으로 재노출. 로그인·비로그인 공통. 검색 중(.searching)엔 숨김. 다른 뷰엔 없음(#v-home 스코프). ════ */
-/* 카드 블록과 푸터 사이 세로 간격 = 넉넉히(2026-07-08 대표) — 붙어 보이던 문제 해소. margin-top 확대(구분선·링크·스타일은 유지). 데스크탑 큼·모바일도 충분. */
-.home-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 18px;margin:clamp(56px,9vh,104px) auto 0;padding:18px 16px 6px;border-top:0.5px solid var(--bd);width:100%;max-width:960px;}
+/* 홈(비검색) 화면을 세로 flex로 만들어 푸터를 margin-top:auto 로 하단에 정렬(2026-07-09). 짧은 화면=하단 근처, 긴 화면=스크롤 끝. padding-top 18px가 최소 간격 확보. */
+/* 홈(비검색) 기본 화면 = 세로 flex 컨테이너 → 푸터가 margin-top:auto로 화면 하단으로 밀림. 검색 중 상태(:has(#homeSearch.searching))는 제외 = 검색 결과 레이아웃 무접촉. #v-home은 .body flex:1로 이미 가용 높이를 채우므로 100vh 대신 이 방식이 헤더 높이 초과(overflow) 없이 정확. (2026-07-09) */
+#v-home.on:not(:has(#homeSearch.searching)){display:flex;flex-direction:column;}
+/* homeDesk(홈 카드)는 is-uat-homesearch2 게이트에서 margin:30px auto 0(가로 auto)로 지정돼 있어, 부모가 flex 컬럼이 되면 가로 auto 마진이 카드 블록을 콘텐츠 너비로 수축·중앙정렬시킨다(블록 흐름에선 auto→0으로 꽉 참). 비검색 홈 flex 문맥에서만 가로 마진을 0으로 되돌려 기존(블록) 렌더와 픽셀 동일하게 유지. 세로 마진 30px(카드 간격)·검색 중 레이아웃은 무접촉. (2026-07-09) */
+#v-home.on:not(:has(#homeSearch.searching)) > #homeDesk{margin-left:0;margin-right:0;}
+.home-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 18px;margin:auto auto 0;padding:18px 16px 6px;border-top:0.5px solid var(--bd);width:100%;max-width:960px;}
 .home-footer-copy{font-size:var(--ts-badge);color:var(--tf);letter-spacing:-.01em;}
 .home-footer-links{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;}
 .home-footer-links a{font-size:var(--ts-badge);color:var(--tf);text-decoration:none;border-radius:var(--radius-xs,8px);transition:color .15s ease;}
