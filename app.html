@@ -14304,7 +14304,7 @@ async function saveScrInline(){
       var pr=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(ed.id)),{method:'PATCH',headers:H,body:JSON.stringify(body)});
       if(!(pr.ok||pr.status===204)){ var t1=''; try{t1=await pr.text();}catch(e){} console.error('[saveScrInline patch]',pr.status,t1); alert('수정 실패 ('+pr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
     } else {
-      var body2={owner_id:(u.id||(window.AppState&&window.AppState.userId)||''), title:title, script_text:html, keywords:kw, attachments:atts, scope:'personal', is_active:true}; _scrFillSearchText(body2);
+      var body2={owner_id:(u.id||(window.AppState&&window.AppState.userId)||''), title:title, script_text:html, keywords:kw, attachments:atts, scope:'personal', is_active:true, sort_order:null}; _scrFillSearchText(body2);  /* sort_order:null 명시 = 신규 업무노트 최상단(filterMys에서 null→-Infinity). scripts.sort_order 컬럼 default 999라 미지정 시 999로 채워져 하단에 삽입되던 문제 정정. 메모(library)와 동일 방식. */
       var Hc={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=representation'};  /* 발행 동기화용 신규 id 확보 */
       var rr=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:Hc,body:JSON.stringify(body2)});
       if(!(rr.ok||rr.status===201)){ var t2=''; try{t2=await rr.text();}catch(e){} console.error('[saveScrInline post]',rr.status,t2); alert('등록 실패 ('+rr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
