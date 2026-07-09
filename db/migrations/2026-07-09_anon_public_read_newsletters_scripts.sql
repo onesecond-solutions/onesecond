@@ -59,6 +59,16 @@ CREATE POLICY scripts_select_anon_public
 COMMIT;
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- DOWN / ROLLBACK (되돌리기) — 이 마이그레이션을 취소하려면 아래를 실행한다.
+--   두 anon SELECT 정책만 제거하면 소식지·스크립트가 다시 authenticated 전용(비로그인 차단)으로 복귀한다.
+--   다른 테이블·기존 authenticated 정책은 무변경이므로 롤백 부작용 없음.
+-- ═══════════════════════════════════════════════════════════════════════════
+-- BEGIN;
+--   DROP POLICY IF EXISTS newsletters_select_anon_published ON public.newsletters;
+--   DROP POLICY IF EXISTS scripts_select_anon_public ON public.scripts;
+-- COMMIT;
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- 검증(🟢 읽기전용) — 적용 후 실행. anon 롤 관점 노출 범위 확인.
 -- ═══════════════════════════════════════════════════════════════════════════
 -- -- 정책 적재 확인
