@@ -642,7 +642,8 @@ body.is-uat-homesearch2 #homeDesk .sn-card-d{font-size:var(--sz-s);color:var(--t
 /* 홈(비검색) 기본 화면 = 세로 flex 컨테이너 → 푸터가 margin-top:auto로 화면 하단으로 밀림. 검색 중 상태(:has(#homeSearch.searching))는 제외 = 검색 결과 레이아웃 무접촉. #v-home은 .body flex:1로 이미 가용 높이를 채우므로 100vh 대신 이 방식이 헤더 높이 초과(overflow) 없이 정확. (2026-07-09) */
 #v-home.on:not(:has(#homeSearch.searching)){display:flex;flex-direction:column;}
 /* homeDesk(홈 카드)는 is-uat-homesearch2 게이트에서 margin:30px auto 0(가로 auto)로 지정돼 있어, 부모가 flex 컬럼이 되면 가로 auto 마진이 카드 블록을 콘텐츠 너비로 수축·중앙정렬시킨다(블록 흐름에선 auto→0으로 꽉 참). 비검색 홈 flex 문맥에서만 가로 마진을 0으로 되돌려 기존(블록) 렌더와 픽셀 동일하게 유지. 세로 마진 30px(카드 간격)·검색 중 레이아웃은 무접촉. (2026-07-09) */
-#v-home.on:not(:has(#homeSearch.searching)) > #homeDesk{margin-left:0;margin-right:0;}
+/* 마지막 카드 블록과 푸터 사이 하단 간격을 clamp(56px,9vh,104px)로 고정(2026-07-09). 로그인 후엔 콘텐츠가 뷰포트를 넘어 footer margin-top:auto가 0으로 붕괴 → 푸터가 마지막 카드에 바짝 붙던 문제를 해소. 이 하단 마진이 최소 간격을 보장. 로그인 전(짧은 화면)엔 footer margin-top:auto가 남는 공간을 흡수해 푸터 하단 정렬이 그대로 유지되고 카드-푸터 간격도 기존과 동일(auto가 이 마진을 포함해 재분배). 값 9vh≈81px = 로그인 전 홈의 실측 간격과 일치. flex에선 인접 마진이 합산되므로(붕괴 X) 간격 = homeDesk.margin-bottom + footer.margin-top. */
+#v-home.on:not(:has(#homeSearch.searching)) > #homeDesk{margin-left:0;margin-right:0;margin-bottom:clamp(56px,9vh,104px);}
 .home-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 18px;margin:auto auto 0;padding:18px 16px 6px;border-top:0.5px solid var(--bd);width:100%;max-width:960px;}
 .home-footer-copy{font-size:var(--ts-badge);color:var(--tf);letter-spacing:-.01em;}
 .home-footer-links{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;}
