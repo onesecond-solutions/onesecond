@@ -14823,7 +14823,7 @@ async function saveMyspaceWrite(){
           else console.error('[scriptWrite] 첨부 업로드 실패', _sup.status, _sf.name);
         }catch(_e){ console.error('[scriptWrite] 첨부 업로드 오류', _e); }
       }
-      var sbody={title:stitle,script_text:stext,highlight_text:shilite,stage:sstage,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw,attachments:sAtts}; _scrFillSearchText(sbody);
+      var sbody={title:stitle,script_text:stext,highlight_text:shilite,stage:sstage,owner_id:userId,scope:'personal',is_active:true,keywords:scrKw,attachments:sAtts,sort_order:null}; _scrFillSearchText(sbody);  /* sort_order:null 명시 = 신규 업무노트 최상단(filterMys에서 null→-Infinity). 홈 워크스페이스 '업무노트' 카드 저장 경로(scriptWrite). 미지정 시 scripts.sort_order 컬럼 default 999로 채워져 하단에 삽입되던 문제 정정 — saveScrInline(body2)과 동일 방식(#1204 후속). */
       var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
       if(sres.ok||sres.status===201){
         clearMyspaceWriteForm();closeMyspaceWrite();
@@ -14889,7 +14889,7 @@ async function _saveChatScript(btn,headers,userId){
   var kws=[(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅'].concat(kwExtra);
   btn.disabled=true;btn.textContent='저장 중...';
   try{
-    var sbody={title:sit,script_text:enc,highlight_text:(alts[0].text||'').slice(0,200),stage:'chat',top_category:'채팅',owner_id:userId,scope:'global',is_active:true,keywords:kws,attachments:[]}; _scrFillSearchText(sbody);
+    var sbody={title:sit,script_text:enc,highlight_text:(alts[0].text||'').slice(0,200),stage:'chat',top_category:'채팅',owner_id:userId,scope:'global',is_active:true,keywords:kws,attachments:[],sort_order:null}; _scrFillSearchText(sbody);  /* sort_order:null 명시 = 신규 저장 최상단. 작성자 소유(owner_id=userId)라 업무노트 카드 목록에도 노출되므로 미지정(default 999) 시 하단 삽입되던 문제 정정 — 신규 작성 INSERT 일관 처리(#1204 후속). */
     var sres=await fetch(window.db.url('/rest/v1/scripts'),{method:'POST',headers:headers,body:JSON.stringify(sbody)});
     if(sres.ok||sres.status===201){
       if(typeof clearMyspaceWriteForm==='function')clearMyspaceWriteForm();
