@@ -1514,9 +1514,7 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 #v-admin,
 #v-tool,
 #v-pricing{overflow-y:auto;overflow-x:hidden;padding-bottom:28px}
-/* v-voice = 좌(목록)/우(내용) split 고정 높이 — 페이지 전체 스크롤 X, 각 컬럼 내부 스크롤 (끝없이 늘어남 방지) */
-#v-voice.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0}
-/* 함께해요 = 표준 split 게시판(좌 목록/우 뷰어) — v-voice와 동일 flex 높이 */
+/* 함께해요 = 표준 split 게시판(좌 목록/우 뷰어) — 고정 높이 flex, 페이지 전체 스크롤 X, 각 컬럼 내부 스크롤 */
 #v-together.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:0}
 /* 2026-05-27 v-scripts 스크롤 격차 정정 (PR #125):
    - on 시 flex 강제 + min-height:0 + 페이지 세로 스크롤 (카드 16개+ grid 전체 보기) */
@@ -3244,37 +3242,6 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       <div class="ac-toast" id="ac-toast"></div>
      </div>
 
-     <!-- 죽은 화면(2026-06-27 진입 차단). 옛 이름=현장의 소리/스마트 게시판. 사용자 도달 안 함 -->
-     <div class="wrap view" id="v-voice">
-      <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
-      <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
-      <div class="tabs">
-        <div class="tab" onclick="showTab(this,'team')">단체방</div>
-        <div class="tab on" onclick="showTab(this,'voice')">보험 Q&amp;A</div>
-        <div class="tab" onclick="showTab(this,'smart')">스마트 게시판</div>
-        <div class="tab" onclick="showTab(this,'branch')">지점 게시판</div>
-      </div>
-      <div class="chips">
-        <div class="chip on" onclick="filterChip(this,'전체')">전체</div>
-        <div class="chip" onclick="filterChip(this,'공지사항')">공지사항</div>
-        <div class="chip" onclick="filterChip(this,'인수 같음')">인수 같음</div>
-        <div class="chip" onclick="filterChip(this,'상품 같음')">상품 같음</div>
-        <div class="chip" onclick="filterChip(this,'기타')">기타</div>
-      </div>
-      <div class="split" id="split">
-        <div class="col list-col">
-          <div class="lhead"><span class="cnt">전체 질문 <b>10건</b></span><div class="lacts"><button class="lbtn2" onclick="toggleLocalSearch()" aria-label="이 방 검색">&#8981;</button><button class="lbtn2 bell" aria-label="알림"><span class="bicon">&#128276;</span><span class="bdot"></span></button><button class="newb" onclick="openAsk()" style="display:none">질문하기</button></div></div>
-          <div class="lsearch" id="lsearch"><span class="lsi">&#8981;</span><input id="lsinput" type="text" placeholder="이 방에서 검색 (네비게이션방)" oninput="filterLocal(this.value)"><button class="lsx" onclick="closeLocalSearch()">&#10005;</button></div>
-          <div class="list" id="qlist">
-            <div class="qlist-empty" style="padding:34px 20px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.7">아직 등록된 질문이 없어요.<br>라이브러리에서 질문하면 여기에 모입니다.</div>
-          </div>
-        </div>
-        <div class="col viewer-col">
-          <button class="backbtn" onclick="backToList()">‹ 목록으로</button>
-          <div class="viewer"></div>
-        </div>
-      </div>
-     </div>
     </div>
   </div>
 </div>
@@ -4159,12 +4126,6 @@ function _snDelete(i){
   }).catch(function(e){ alert('삭제 실패: '+(e&&e.message||e)); });
 }
 window._snOpenForm=_snOpenForm;window._snCloseForm=_snCloseForm;window._snSaveForm=_snSaveForm;window._snDelete=_snDelete;window._snOcrRun=_snOcrRun;
-/* 현장의 소리 게이팅 — admin·ga_* 전용 (insurer 계열·비로그인 차단, 2026-06-07 role_access_map §6 #1) */
-// 죽은 화면(2026-06-27 진입 차단). 옛 이름=현장의 소리/스마트 게시판. 사용자 도달 안 함 (뷰 #v-voice 게이트)
-function _canSeeVoice(){
-  return false;   /* 현장의 소리(#v-voice) 전면 숨김 (2026-06-27 대표 지시) — 전 사용자(admin 포함) 진입 차단: showView 가드 !_canSeeVoice()→home + nav 숨김. 기존 admin·ga_ 노출 폐기. 데이터(posts/team_notices)는 보존, 화면 진입만 차단. */
-}
-window._canSeeVoice = _canSeeVoice;
 /* 표준 9 role 판별 — 미분류 가입자(9 role에 안 맞는 사람, 예: 민인환) = 승인 대기 게이팅 대상 */
 var _STD_ROLES = {admin:1, ga_branch_manager:1, ga_manager:1, ga_member:1, ga_staff:1, insurer_branch_manager:1, insurer_manager:1, insurer_member:1, insurer_staff:1};
 function _isStdRole(r){ return !!_STD_ROLES[r]; }
@@ -4221,9 +4182,6 @@ function applyRoleClass(){
   var na = document.getElementById('nav-admin');
   if(na) na.style.display = (r === 'admin') ? '' : 'none';
   if(r === 'admin' && window._refreshAdminBadge) window._refreshAdminBadge();
-  /* 현장의 소리 nav = admin·ga_*만 노출 (insurer 계열·비로그인 숨김, 2026-06-07) */
-  var nv = document.getElementById('nav-voice');
-  if(nv) nv.style.display = _canSeeVoice() ? '' : 'none';
   var mgr = ['admin','ga_branch_manager','ga_manager'];  /* 매니저(GA 실장·지점장·admin) = 팀원관리 노출 대상 (2026-05-31) */
   document.body.classList.toggle('is-mgr', mgr.indexOf(r) !== -1);  /* 매니저룸 노출 — body 기준(바텀시트가 #app 밖이라 #app 기준이면 안 닿음) */
   document.body.classList.toggle('is-admin', r === 'admin');  /* 바텀시트(#app 밖) 어드민 게이트 — 원수사 자료실·보험 Q&A 트리 노드 노출용 (2026-06-17) */
@@ -4422,7 +4380,6 @@ window.renderIvEditAtts=renderIvEditAtts; window.ivRemoveAtt=ivRemoveAtt;
 /* posts(자료실/스마트게시판) 수정·삭제·숨김 후 두 화면 모두 갱신 — 같은 posts라 일관 유지 */
 function _ivReloadBoards(){
   if(typeof loadInsurerVault==='function') loadInsurerVault();
-  window._smartNlLoaded=false; if(typeof loadSmartNewsletters==='function') loadSmartNewsletters();
   /* 공동 스페이스 보험사별 자료실이 떠 있으면 같이 갱신 (DOM 가드 → 평소 영향 0) */
   if(typeof cospRenderInsurer==='function' && window._cospRoom==='insurer' && document.getElementById('cosp-ins-list')) cospRenderInsurer();
 }
@@ -4806,13 +4763,13 @@ function _canEditPost(authorId){ var me=(typeof _getOwnerId==='function')?_getOw
 function _postActs(kind, id, authorId, ctx){ if(!_canEditPost(authorId)) return ''; var ed=(kind==='qna')?'qnaEditPost':'teamEditNotice', dl=(kind==='qna')?'qnaDeletePost':'teamDeleteNotice'; return '<div class="post-acts"><button class="post-act" onclick="'+ed+'(\''+id+'\',\''+ctx+'\')">✏️ 수정</button><button class="post-act post-act-del" onclick="'+dl+'(\''+id+'\',\''+ctx+'\')">삭제</button></div>'; }
 /* 보험 Q&A (posts qna) */
 var _qnaEditId=null,_qnaEditCtx=null;
-function _qnaReload(ctx){ window._mysQnaCache=null; window._vaultQnaCache=null; var f=({voice:'loadVoiceQna',mys:'loadMysQna',iv:'loadVaultQna'})[ctx]; if(f&&typeof window[f]==='function') window[f](); }
+function _qnaReload(ctx){ window._mysQnaCache=null; window._vaultQnaCache=null; var f=({mys:'loadMysQna',iv:'loadVaultQna'})[ctx]; if(f&&typeof window[f]==='function') window[f](); }
 async function qnaDeletePost(id,ctx){ if(!confirm('이 질문을 삭제하시겠습니까? (등록된 답변도 함께 삭제됩니다)')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; } try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ _qnaReload(ctx); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
 async function qnaEditPost(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; } _qnaEditId=id; _qnaEditCtx=ctx; var ti=document.getElementById('qnaEditTitle'), co=document.getElementById('qnaEditContent'); if(ti)ti.value=''; if(co)co.value='불러오는 중…'; var m=document.getElementById('qnaEditModal'); if(m){ document.body.appendChild(m); m.style.display='flex'; } try{ var res=await window.db.fetch('/rest/v1/posts?id=eq.'+encodeURIComponent(id)+'&select=title,content'); var r=(res.ok?(await res.json()):[])[0]||{}; if(ti)ti.value=r.title||''; if(co)co.value=r.content||''; }catch(e){ if(co)co.value=''; } }
 function qnaCloseEdit(){ var m=document.getElementById('qnaEditModal'); if(m) m.style.display='none'; _qnaEditId=null; }
 async function qnaSaveEdit(){ if(!_qnaEditId) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; } var title=((document.getElementById('qnaEditTitle')||{}).value||'').trim(), content=((document.getElementById('qnaEditContent')||{}).value||'').trim(); if(!title){ alert('제목을 입력해 주세요.'); return; } if(!content){ alert('내용을 입력해 주세요.'); return; } var ctx=_qnaEditCtx; try{ var res=await fetch(window.db.url('/rest/v1/posts?id=eq.'+encodeURIComponent(_qnaEditId)),{method:'PATCH',headers:{'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},body:JSON.stringify({title:title,content:content})}); if(res.ok||res.status===204){ qnaCloseEdit(); _qnaReload(ctx); if(typeof toast==='function') toast('수정됐어요!'); } else { var err=await res.json().catch(function(){return{};}); alert('수정 실패: '+(err.message||res.status)); } }catch(e){ alert('네트워크 오류가 발생했습니다.'); } }
 /* 단체방 (team_notices) — 라이브러리·매니저룸 */
-async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof loadTeamNotices==='function') loadTeamNotices(); if(typeof cospRenderNotices==='function') cospRenderNotices(false); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
+async function teamDeleteNotice(id,ctx){ if(!confirm('이 공지를 삭제하시겠습니까?')) return; var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; } try{ var res=await fetch(window.db.url('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)),{method:'DELETE',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}}); if(res.ok||res.status===204){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); if(typeof cospRenderNotices==='function') cospRenderNotices(false); if(typeof toast==='function') toast('삭제 완료'); } else { alert('삭제 실패: '+res.status); } }catch(e){ alert('삭제 중 오류가 발생했습니다.'); } }
 async function teamEditNotice(id,ctx){ var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; } try{ var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id)+'&select=notice_type,title,content,keywords,attachments'); var r=(res.ok?(await res.json()):[])[0]; if(!r){ alert('공지 정보를 찾지 못했습니다.'); return; } var _mw=document.getElementById('mrWriteModal'); if(_mw&&_mw.parentElement!==document.body) document.body.appendChild(_mw); if(typeof mrOpenWrite==='function') mrOpenWrite(); var t=document.getElementById('mr-f-title'); if(t)t.value=r.title||''; var b=document.getElementById('mr-f-body'); if(b)b.value=r.content||''; var k=document.getElementById('mr-f-keywords'); if(k)k.value=((r.keywords||[]).join(', ')); var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(r.notice_type||'operation')+'"]'); if(rt)rt.checked=true; var _at=r.attachments; if(typeof _at==='string'){try{_at=JSON.parse(_at);}catch(e){_at=[];}} if(!Array.isArray(_at))_at=[]; window._mrEditAtts=_at.slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts(); window._mrEditId=id; var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정'; var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정'; }catch(e){ alert('수정 준비 중 오류가 발생했습니다.'); } }
 window.qnaEditPost=qnaEditPost; window.qnaDeletePost=qnaDeletePost; window.qnaCloseEdit=qnaCloseEdit; window.qnaSaveEdit=qnaSaveEdit; window.teamEditNotice=teamEditNotice; window.teamDeleteNotice=teamDeleteNotice;
 
@@ -4831,7 +4788,7 @@ var NOTIF_FEEDS=[
     {p:'/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*', t:'created_at'}
   ]}
 ];
-var NOTIF_VIEWMAP={voice:'voice','insurer-vault':'vault'};
+var NOTIF_VIEWMAP={'insurer-vault':'vault'};
 window._notifPer={}; window._notifTotal=0; window._notifBusy=false;
 function _notifUid(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return u.id||''; }catch(e){ return ''; } }
 function _notifReads(){ try{ return JSON.parse(localStorage.getItem('os_lastread_'+(_notifUid()||'anon'))||'{}'); }catch(e){ return {}; } }
@@ -5644,7 +5601,6 @@ function closeCard(){document.getElementById('cm').classList.remove('open');}
 var tt;
 function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show');},1800);}
 function showMore(){document.getElementById('qlist').classList.add('expanded');}
-function filterChip(el,cat){var chips=document.querySelectorAll('.chips .chip');for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');el.classList.add('on');var items=document.querySelectorAll('#qlist .item');for(var j=0;j<items.length;j++){var b=items[j].querySelector('.badge');var c=b?b.textContent.trim():'';items[j].style.display=(cat==='전체'||c===cat)?'':'none';}}
 /* 마이 스페이스 nav = 바텀시트 슬라이딩 펼침 + 트리 '마이 스페이스' 노드 기본 표시 (라이브러리 전체화면 입구 대체, DOM·라우팅은 유지) */
 function _navMyspace(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-sp-my'); if(me) me.classList.add('on'); }catch(e){}
@@ -6153,11 +6109,11 @@ function _scriptsSheetShow(){
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()){key='home';}if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',voice:'현장의 소리',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'영업노트','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='voice'){var _vt=document.querySelector('#v-voice .tabs .tab.on')||document.querySelector('#v-voice .tabs .tab');if(_vt){var _m=(_vt.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/);if(_m&&typeof showTab==='function')showTab(_vt,_m[1]);}}if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof loadSalesNote==='function')loadSalesNote();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'){key='home';}/* 죽은 화면(현장의 소리, #v-voice) 제거됨 — 스트레이 딥링크·북마크는 홈으로 폴백 (2026-07-09) */if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'영업노트','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof loadSalesNote==='function')loadSalesNote();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
-  var VALID_VIEWS = ['home','myspace','scripts','quick','voice','together','news','mrroom','silson','team','pricing','insurer-vault','admin'];
+  var VALID_VIEWS = ['home','myspace','scripts','quick','together','news','mrroom','silson','team','pricing','insurer-vault','admin'];
   /* 2026-05-30 초기화 통합: role 확정 후 첫 view 1회 렌더 (FOUC 제거).
    * role 즉시 있으면 바로, 없으면 appstate:ready(loadUser 완료) 대기 + fallback. */
   function getBootRole(){ try { var r = (JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').role) || ''; return (r && r !== 'authenticated') ? r : ''; } catch(e){ return ''; } }  /* 'authenticated'=Supabase auth 기본 role(미확정) → loadUser가 public.users role 채울 때까지 대기 */
@@ -8053,138 +8009,6 @@ function finalizeMakeCardFallbackText(){
     document.body.removeChild(ta);
   }
 }
-var voiceTabData = {
-  voice: {title:'보험 Q&A', sub:'보험사별 인수 가능 여부와 현장 질문을 공유합니다.', chips:['전체','공지사항','인수 같음','상품 같음','기타'], cnt:0, posts:[], empty:'아직 등록된 질문이 없어요.<br>라이브러리에서 질문하면 여기에 모입니다.'},
-  team: {title:'단체방', sub:'실장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>라이브러리 단체방 글쓰기로 작성하면 여기에 모입니다.'},
-  smart: {title:'스마트 게시판', sub:'모든 보험회사 자료가 한데 모이는 곳.', chips:['전체','긴급(마감)','공지','소식지','영업방향','상품','인수','시책/프로모션','기타'], cnt:0, posts:[], empty:'아직 모인 자료가 없어요.'},
-  branch: {title:'지점 게시판', sub:'지점장 공지가 모이는 곳.', chips:['전체','운영','긴급','상품','인수','교육','일정','기타'], cnt:0, posts:[], empty:'아직 등록된 공지가 없어요.<br>라이브러리 단체방 글쓰기로 작성하면 여기에 모입니다.'}
-};
-function showTab(el,key){var tabs=el.parentElement.querySelectorAll('.tab');for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');el.classList.add('on');var d=voiceTabData[key];if(!d)return;document.querySelector('#v-voice .ttl').innerHTML='현장의 소리 <span class="ac">· '+d.title+'</span>';document.querySelector('#v-voice .sub').textContent=d.sub;var chipsHtml=d.chips.map(function(c,i){return '<div class="chip'+(i===0?' on':'')+'" onclick="filterChip(this,\''+c+'\')">'+c+'</div>';}).join('');document.querySelector('#v-voice .chips').innerHTML=chipsHtml;var totalCnt=(d.posts&&d.posts.length)||d.cnt;document.querySelector('#v-voice .lhead .cnt').innerHTML='전체 자료 <b>'+totalCnt+'건</b>';if(d.posts){if(d.posts.length>0){var listHtml=d.posts.map(function(p,i){return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+key+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>';}).join('');document.getElementById('qlist').innerHTML=listHtml;showTabPost(key,0);}else{showTabEmpty(d);}}if(key==='voice'&&typeof loadVoiceQna==='function')loadVoiceQna();if(key==='smart'&&typeof loadSmartNewsletters==='function')loadSmartNewsletters();if(key==='team'&&typeof loadTeamNotices==='function')loadTeamNotices();if(key==='branch'&&typeof loadBranchFeed==='function')loadBranchFeed();}
-
-/* 스마트 게시판 = 모든 보험회사 자료가 한데 모이는 통합 모임 (posts board_type='insurer' 전체).
- * 보험사 자료실 = 회사별(RLS 필터) 입구·원본 / 스마트 게시판 = 회사 구분 없이 전체 모임(read-only).
- * 칩(긴급(마감)/공지/소식지/상품/인수/시책·프로모션/기타)·split·첨부 딸깍 = 자료실과 동일 UI.
- * 함수명은 호출처 호환 위해 유지(loadSmartNewsletters). */
-var SMART_TC={'긴급(마감)':'t-event','공지':'t-uw','소식지':'t-product','영업방향':'ok','상품':'t-uw','인수':'t-event','시책/프로모션':'warn','기타':'ts'};
-async function loadSmartNewsletters(){
-  if(window._smartNlLoaded) return;
-  var token = window.db && window.db.getToken && window.db.getToken();
-  if(!token || !window.db || !window.db.fetch) return;
-  try{
-    var res = await window.db.fetch('/rest/v1/posts?board_type=eq.insurer&order=created_at.desc&limit=100&select=id,category,title,content,attachments,author_id,author_name,created_at,is_hidden');
-    if(!res.ok){ console.error('[smartBoard] HTTP', res.status); return; }
-    var rows = await res.json(); if(!Array.isArray(rows)) rows=[];
-    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
-    var roleMap={};
-    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ roleMap[u.id]=u.role; }); } }catch(e){} }
-    var _meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
-    var posts=(_meAdmin?rows:rows.filter(function(r){return !r.is_hidden;})).map(function(r){
-      var cat=r.category||'기타'; var tc=SMART_TC[cat]||'ts';
-      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var who='시스템';  /* 질문자 익명 — '시스템' 표시 */
-      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
-      var _ah=_voiceAttsHtml(_att); var _attHtml=_ah.html, _imgs=_ah.imgs, _imgNames=_ah.names;
-      var _meId=(typeof _getOwnerId==='function')?_getOwnerId():null;
-      var _canMng=_meAdmin||(_meId&&r.author_id&&String(r.author_id)===String(_meId));
-      var _editDel=_canMng?('<button class="post-act" onclick="ivEditPost(\''+r.id+'\')">수정</button><button class="post-act post-act-del" onclick="ivDeletePost(\''+r.id+'\')">삭제</button>'):'';
-      var _hideBtn=_meAdmin?('<button class="post-act" onclick="ivToggleHide(\''+r.id+'\','+(r.is_hidden?'false':'true')+')">'+(r.is_hidden?'숨김 해제':'숨김')+'</button>'):'';
-      var _acts=(_editDel||_hideBtn)?('<div class="post-acts">'+_editDel+_hideBtn+'</div>'):'';
-      var _hidTag=(_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:var(--ts-meta);font-weight:700">[숨김]</span>':'';
-      return {badge:cat, tc:tc, title:esc(r.title||'(제목 없음)')+_hidTag, meta:[md,who].filter(Boolean).join(' · '), body:(typeof _ivBody==='function'?_ivBody(r.content||''):esc(r.content||'').replace(/\n/g,'<br>'))+_attHtml+_acts, real:true, _id:r.id, _imgs:_imgs, _imgNames:_imgNames, _attachments:_att};   /* 리치 HTML(이미지 포함)=sanitize 후 표시 / 평문=escape+줄바꿈. iv 상세와 동일 렌더 통일 (2026-07-08) */
-    });
-    if(voiceTabData.smart){ voiceTabData.smart.posts=posts; voiceTabData.smart.cnt=posts.length; }
-    window._smartNlLoaded=true;
-    var activeTab=document.querySelector('#v-voice .tabs .tab.on');
-    if(activeTab && activeTab.textContent.trim()==='스마트 게시판'){ showTab(activeTab,'smart'); }
-  }catch(e){ console.error('[smartBoard]', e); }
-}
-window.loadSmartNewsletters = loadSmartNewsletters;
-function showTabPost(key,idx){var d=voiceTabData[key];if(!d||!d.posts||!d.posts[idx])return;var p=d.posts[idx];window._voiceImgs=p._imgs||[];window._voiceImgNames=p._imgNames||[];var v=document.querySelector('#v-voice .viewer');if(!v)return;v.querySelector('.vbadge').textContent=p.badge;v.querySelector('.vbadge').style.color='var(--'+p.tc+')';v.querySelector('.vbadge').style.borderLeftColor='var(--'+p.tc+')';v.querySelector('.vttl').textContent=p.title;v.querySelector('.vmeta').textContent=p.meta;var body=v.querySelector('.vbody');body.innerHTML=(p.body||p.title)+((key==='voice'&&p._id)?(_postActs('qna',p._id,p._authorId,'voice')+qnaThreadHtml(p._id,'voice')):'');if(key==='voice'&&p._id&&typeof loadQnaComments==='function')loadQnaComments(p._id,'voice');document.querySelectorAll('#qlist .item').forEach(function(el,i){el.classList.toggle('on',i===idx);});}
-function showTabEmpty(d){
-  var list=document.getElementById('qlist');
-  if(list)list.innerHTML='<div class="qlist-empty" style="padding:34px 20px;text-align:center;color:var(--tf);font-size:0.8125rem;line-height:1.7">'+((d&&d.empty)||'아직 등록된 자료가 없어요.')+'</div>';
-  var v=document.querySelector('#v-voice .viewer');
-  if(v){
-    var b=v.querySelector('.vbadge');if(b){b.textContent='';}
-    var t=v.querySelector('.vttl');if(t)t.textContent='';
-    var m=v.querySelector('.vmeta');if(m)m.textContent='';
-    var bd=v.querySelector('.vbody');if(bd)bd.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--tf);font-size:0.8125rem">왼쪽에 글이 등록되면 여기에서 볼 수 있어요.</div>';
-  }
-}
-
-/* 현장의 소리 · 단체방 = team_notices 실데이터 + 7유형 정합 (2026-05-31, 매니저룸 작성 폼과 쓰기↔보여주기 맞춤)
- * · read-only. scope=team_internal. RLS SELECT = 같은 team_id OR admin */
-var _ntType={operation:['운영','t-uw'],urgent:['긴급','t-event'],product:['상품','t-product'],underwriting:['인수','t-uw'],education:['교육','ok'],event:['일정','t-event'],etc:['기타','ts']};
-async function _loadNoticeFeed(scope, tabKey){
-  var token=localStorage.getItem('os_token')||sessionStorage.getItem('os_token');
-  if(!token||!window.db||!window.db.fetch) return;
-  var list=document.getElementById('qlist');
-  try{
-    var res=await window.db.fetch('/rest/v1/team_notices?scope=eq.'+scope+'&deleted_at=is.null&select=id,notice_type,title,content,created_at,author_id,attachments,is_hidden,keywords&order=created_at.desc&limit=50');
-    if(!res.ok) return;
-    var rows=await res.json();
-    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
-    var nameMap={};
-    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,name,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ nameMap[u.id]={name:u.name,role:u.role}; }); } }catch(e){} }
-    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-    var _meId=(typeof _getOwnerId==='function')?_getOwnerId():null;
-    var _meAdmin=(typeof _getOsUserRole==='function')&&_getOsUserRole()==='admin';
-    var posts=(_meAdmin?rows:rows.filter(function(r){return !r.is_hidden;})).map(function(r){
-      var t=_ntType[r.notice_type]||['기타','ts'];
-      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var au=nameMap[r.author_id]; var who='';
-      if(au){ var rl=(window.ROLE_LABEL&&window.ROLE_LABEL[au.role])||''; who=esc(au.name||'')+(rl?' '+rl:''); }
-      var _canMng=_meAdmin||(_meId&&r.author_id&&String(r.author_id)===String(_meId));
-      var _editDel=_canMng?('<button class="post-act" onclick="voiceEditNotice(\''+r.id+'\',\''+tabKey+'\')">수정</button><button class="post-act post-act-del" onclick="voiceDeleteNotice(\''+r.id+'\',\''+tabKey+'\')">삭제</button>'):'';
-      var _hideBtn=_meAdmin?('<button class="post-act" onclick="voiceToggleHide(\''+r.id+'\',\''+tabKey+'\','+(r.is_hidden?'false':'true')+')">'+(r.is_hidden?'숨김 해제':'숨김')+'</button>'):'';
-      var _acts=(_editDel||_hideBtn)?('<div class="post-acts">'+_editDel+_hideBtn+'</div>'):'';
-      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
-      var _ah=_voiceAttsHtml(_att); var _attHtml=_ah.html, _imgs=_ah.imgs, _imgNames=_ah.names;
-      return {badge:t[0], tc:t[1], title:esc(r.title||'(제목 없음)')+((_meAdmin&&r.is_hidden)?' <span style="color:var(--err);font-size:var(--ts-meta);font-weight:700">[숨김]</span>':''), meta:[md,who].filter(Boolean).join(' · '), body:_noticeBody(r.content)+_attHtml+_acts, real:true, _id:r.id, _ntype:r.notice_type, _rtitle:(r.title||''), _rcontent:(r.content||''), _rkw:(r.keywords||[]), _attachments:_att, _imgs:_imgs, _imgNames:_imgNames};
-    });
-    if(voiceTabData[tabKey]) voiceTabData[tabKey].posts=posts;
-    var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
-    if(!list) return;
-    if(!posts.length){ list.innerHTML='<div style="padding:30px;text-align:center;color:var(--tf);font-size:0.8125rem;">아직 등록된 공지가 없습니다.<br>라이브러리 단체방 글쓰기로 작성해보세요.</div>'; return; }
-    list.innerHTML=posts.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\''+tabKey+'\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>'; }).join('');
-    showTabPost(tabKey,0);
-  }catch(e){}
-}
-function loadTeamNotices(){ return _loadNoticeFeed('team_internal','team'); }
-function loadBranchFeed(){ return _loadNoticeFeed('branch_internal','branch'); }
-/* 현장의 소리 · 보험Q&A = posts(board_type=qna) 실데이터 (2026-06-03 연결 누락 정정).
- * 라이브러리/자료실/매니저룸과 동일 소스. read-only. 소식지 제외. */
-async function loadVoiceQna(){
-  var token=window.db&&window.db.getToken&&window.db.getToken();
-  var list=document.getElementById('qlist');
-  if(!token) return;
-  try{
-    var res=await window.db.fetch('/rest/v1/posts?board_type=eq.qna&title=not.ilike.*소식지*&order=created_at.desc&limit=100&select=id,title,content,attachments,author_id,author_name,created_at,question_type');
-    if(!res.ok) return;
-    var rows=await res.json(); if(!Array.isArray(rows)) rows=[];
-    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-    var ids=[]; rows.forEach(function(r){ if(r.author_id&&ids.indexOf(r.author_id)<0) ids.push(r.author_id); });
-    var roleMap={};
-    if(ids.length){ try{ var ur=await window.db.fetch('/rest/v1/users?id=in.('+ids.join(',')+')&select=id,role'); if(ur.ok){ (await ur.json()).forEach(function(u){ roleMap[u.id]=u.role; }); } }catch(e){} }
-    var posts=rows.map(function(r){
-      var cat=r.question_type||'질문';
-      var dt=new Date(r.created_at); var md=isNaN(dt.getTime())?'':((dt.getMonth()+1)+'월 '+dt.getDate()+'일');
-      var who='시스템';  /* 질문자 익명 — '시스템' 표시 */
-      var _att=r.attachments; if(typeof _att==='string'){ try{ _att=JSON.parse(_att); }catch(e){ _att=[]; } } if(!Array.isArray(_att)) _att=[];
-      var _ah=_voiceAttsHtml(_att);
-      return {badge:esc(cat), tc:'t-uw', title:esc(r.title||'(제목 없음)'), meta:[md,who].filter(Boolean).join(' · '), body:esc(r.content||'').replace(/\n/g,'<br>')+_ah.html, real:true, _id:r.id, _authorId:r.author_id, _imgs:_ah.imgs, _imgNames:_ah.names, _attachments:_att};
-    });
-    if(voiceTabData.voice){ voiceTabData.voice.posts=posts; voiceTabData.voice.cnt=posts.length; }
-    var cntEl=document.querySelector('#v-voice .lhead .cnt'); if(cntEl) cntEl.innerHTML='전체 자료 <b>'+posts.length+'건</b>';
-    if(!list) return;
-    if(!posts.length){ showTabEmpty(voiceTabData.voice); return; }
-    list.innerHTML=posts.map(function(p,i){ return '<div class="item'+(i===0?' on':'')+'" onclick="showTabPost(\'voice\','+i+')" style="--tc:var(--'+p.tc+')"><span class="badge">'+p.badge+'</span><div class="it">'+p.title+'</div><div class="id">'+p.meta+'</div></div>'; }).join('');
-    showTabPost('voice',0);
-  }catch(e){ console.error('[voiceQna]', e); }
-}
-window.loadVoiceQna=loadVoiceQna;
-window.loadTeamNotices=loadTeamNotices; window.loadBranchFeed=loadBranchFeed;
 
 /* ═══ 공동 스페이스 (Phase 2, 2026-06-11) — 추가형 JS 주입 뷰. 가상 방(room_type+scope_id). 기존 뷰 불변 ═══
  * 방: 팀방(team)/지점방(branch)/보험사별 자료실(insurer)/보험Q&A(qna). 방 내부 탭: 공지/공유자료/공유스크립트/채팅.
@@ -8547,60 +8371,17 @@ async function cospInsurerWrite(){
   await ivOpenWrite();  /* admin이면 회사 드롭다운 노출 — 회사 직접 선택 */
 }
 window.cospInsurerWrite=cospInsurerWrite;
-/* 작성자 본인(+admin) 글 삭제 — 소프트(deleted_at), 피드 deleted_at=is.null 필터로 즉시 숨김. RLS team_notices_update/delete가 author=auth.uid() 허용 */
-async function voiceDeleteNotice(id, tabKey){
-  if(!confirm('이 글을 삭제할까요? 삭제하면 복구할 수 없습니다.')) return;
-  if(!window.db||!window.db.fetch){ _osLoginGate(); return; }
-  try{
-    /* 하드 DELETE — soft delete(deleted_at UPDATE)가 RLS WITH CHECK에 막혀(403/42501),
-       DELETE 정책(is_admin() OR author_id=auth.uid(), WITH CHECK 없음)으로 우회. 자료실과 동일 방식. */
-    var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'DELETE', headers:{'Prefer':'return=minimal'} });
-    if(res.ok||res.status===204){ if(typeof toast==='function')toast('삭제했습니다'); if(tabKey==='branch'){ loadBranchFeed(); } else { loadTeamNotices(); } }
-    else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[voiceDeleteNotice]', res.status, t); alert('삭제 실패 ('+res.status+')'); }
-  }catch(e){ console.error('[voiceDeleteNotice]', e); alert('삭제 중 오류가 발생했습니다.'); }
-}
-window.voiceDeleteNotice=voiceDeleteNotice;
-/* 작성자 본인(+admin) 글 수정 — 작성 폼 prefill 후 PATCH(편집 모드). RLS team_notices_update 허용 */
-function voiceEditNotice(id, tabKey){
-  /* GET 없이 — 이미 피드에 로드된 원본 데이터로 prefill (네트워크 호출 0, 모달 즉시 오픈) */
-  var d=voiceTabData[tabKey];
-  var p=((d&&d.posts)||[]).filter(function(x){return String(x._id)===String(id);})[0];
-  if(!p){ alert('글 정보를 찾지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return; }
-  /* mrWriteModal이 v-team(매니저룸 view) 안에 있어, 다른 화면에선 부모가 display:none → 안 보임.
-     body 직속으로 옮겨야 어느 view에서든 뜸. */
-  var _mw=document.getElementById('mrWriteModal'); if(_mw && _mw.parentElement!==document.body) document.body.appendChild(_mw);
-  if(typeof mrOpenWrite==='function') mrOpenWrite();
-  var t=document.getElementById('mr-f-title'); if(t)t.value=p._rtitle||'';
-  var b=document.getElementById('mr-f-body'); if(b)b.value=p._rcontent||'';
-  var k=document.getElementById('mr-f-keywords'); if(k)k.value=((p._rkw||[]).join(', '));
-  var rt=document.querySelector('#mrWriteModal input[name="mr-type"][value="'+(p._ntype||'operation')+'"]'); if(rt)rt.checked=true;
-  window._mrEditAtts=(p._attachments||[]).slice(); if(typeof renderMrEditAtts==='function')renderMrEditAtts();
-  window._mrEditId=id;
-  var sb=document.getElementById('mr-write-submit'); if(sb)sb.textContent='공지 수정';
-  var wt=document.getElementById('mr-write-title'); if(wt)wt.textContent='공지 수정';
-}
-window.voiceEditNotice=voiceEditNotice;
-/* admin 전용 숨김/숨김 해제 — is_hidden PATCH. 일반 사용자에겐 숨김 글이 목록에서 제외됨(_loadNoticeFeed 필터) */
-async function voiceToggleHide(id, tabKey, hide){
-  if(!window.db||!window.db.fetch){ _osLoginGate(); return; }
-  var on=(hide===true||hide==='true');
-  try{
-    var res=await window.db.fetch('/rest/v1/team_notices?id=eq.'+encodeURIComponent(id),{ method:'PATCH', headers:{'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({is_hidden:on}) });
-    if(res.ok){ if(typeof toast==='function')toast(on?'숨겼습니다':'숨김 해제했습니다'); if(tabKey==='branch'){ loadBranchFeed(); } else { loadTeamNotices(); } }
-    else { var t=''; try{ t=await res.text(); }catch(e){} console.error('[voiceToggleHide]', res.status, t); alert('숨김 처리 실패 ('+res.status+')'); }
-  }catch(e){ console.error('[voiceToggleHide]', e); alert('숨김 처리 중 오류가 발생했습니다.'); }
-}
-window.voiceToggleHide=voiceToggleHide;
-/* 단체방/지점 첨부 이미지 라이트박스 — 현장의 소리 openLb(확대/회전/넘김)+딸깍 재사용.
- * showTabPost가 현재 글 이미지로 _voiceImgs를 세팅 → 클릭 시 전역 imgs/names 교체 후 openLb. (자료실 ivOpenLb 동일 패턴) */
+/* 전 게시판 공용(라이브러리·보험사 자료실·공동 스페이스·홈). 'voice'는 옛 화면명 잔재 — 삭제 금지.
+ * 첨부 이미지 라이트박스: 호출처가 글 이미지로 window._voiceImgs를 세팅 → 클릭 시 전역 imgs/names 교체 후 openLb. (자료실 ivOpenLb 동일 패턴) */
 function voiceOpenLb(i){
   if(!window._voiceImgs||!window._voiceImgs.length) return;
   window.imgs=window._voiceImgs; window.names=window._voiceImgNames||[];
   if(typeof openLb==='function') openLb(i);
 }
 window.voiceOpenLb=voiceOpenLb;
-/* 게시판 첨부 렌더 통일 — 보험사 자료실(.atts) 방식: 구분선 + '첨부 N' 헤더 + 정렬 썸네일.
- * 단체방/지점/스마트게시판 공용. 이미지 클릭 = voiceOpenLb(showTabPost가 글별 _voiceImgs 세팅). returns {html,imgs,names}. */
+/* 전 게시판 공용(라이브러리·보험사 자료실·공동 스페이스·홈). 'voice'는 옛 화면명 잔재 — 삭제 금지.
+ * 게시판 첨부 렌더 통일 — 보험사 자료실(.atts) 방식: 구분선 + '첨부 N' 헤더 + 정렬 썸네일.
+ * 이미지 클릭 = voiceOpenLb(호출처가 글별 window._voiceImgs 세팅). returns {html,imgs,names}. */
 function _voiceAttsHtml(att){
   var imgs=[], names=[];
   if(!Array.isArray(att)||!att.length) return {html:'', imgs:imgs, names:names};
@@ -8841,8 +8622,7 @@ window.renderMrEditAtts=renderMrEditAtts; window.mrRemoveAtt=mrRemoveAtt;
  * 미열람/미답변/우리회사질문 등은 읽음·답변·인큐베이션 DB(다음 단계) → '곧 연결'(가짜 숫자 X). ════ */
 async function _ttCount(q){ try{ if(!window.db||!window.db.fetch) return null; var r=await window.db.fetch('/rest/v1/'+q,{headers:{'Prefer':'count=exact'}}); if(!r.ok) return null; return parseInt((r.headers.get('Content-Range')||'0-0/0').split('/')[1],10)||0; }catch(e){ return null; } }
 function _ttKstMidnightISO(){ var k=new Date(Date.now()+9*3600000); return new Date(Date.UTC(k.getUTCFullYear(),k.getUTCMonth(),k.getUTCDate())-9*3600000).toISOString(); }
-function _goVoiceTab(key){ if(typeof showView!=='function') return; showView('voice'); setTimeout(function(){ var tabs=document.querySelectorAll('#v-voice .tabs .tab'); var map={team:0,voice:1,smart:2,branch:3}; var i=map[key]; if(tabs[i]) tabs[i].click(); },70); }
-/* 홈 텍스트 포털 → 라이브러리 탭 라우팅 (2026-06-09, _goVoiceTab 대칭) */
+/* 홈 텍스트 포털 → 라이브러리 탭 라우팅 (2026-06-09) */
 function _goMysTab(key){ if(typeof showView!=='function') return; showView('myspace'); setTimeout(function(){ var map={today:0,saved:1,team:2,qna:3}; var tabs=document.querySelectorAll('#mys-tabs .tab'); var t=tabs[map[key]]; if(t&&typeof mysTab==='function') mysTab(t,key); },70); }
 window._goMysTab=_goMysTab;
 /* 홈 → Quick 오버레이 특정 항목 직접 열기 (2026-06-09). tab_key(코드 상수)로 호출 →
@@ -8858,7 +8638,6 @@ function _goQuickItem(tabKey){
   })();
 }
 window._goQuickItem=_goQuickItem;
-window._goVoiceTab=_goVoiceTab;
 function _ttCard(o){
   var val=(o.value==null)?'<span style="color:var(--tf);font-size:0.5rem;font-weight:600">곧 연결</span>':(o.value+(o.unit||''));
   var more=o.go?'<div class="home-widget-more" style="cursor:pointer" onclick="'+o.go+'">전체보기 →</div>':'';
@@ -8881,7 +8660,7 @@ async function renderTodayTodo(ctx, mountEl){
     function _num(v){ return '<div class="tt-card-num">'+((v==null)?'<span style="font-size:0.5rem;color:var(--tf)">곧 연결</span>':(v+'<span style="font-size:0.5rem"> 건</span>'))+'</div>'; }
     var tcards=[
       _ttScriptCard({color:'var(--ac)',   badge:'캘린더',     title:'전일·당일·내일', body:calBody, go:'_goMysCalendar()'}),
-      _ttScriptCard({color:'var(--ok)',   badge:'실장 공지',  title:'오늘 단체방',   body:_num(nt)+'<div class="tt-card-hint">단체방 오늘 공지</div>', go:"_goVoiceTab('team')"}),
+      _ttScriptCard({color:'var(--ok)',   badge:'실장 공지',  title:'오늘 단체방',   body:_num(nt)+'<div class="tt-card-hint">단체방 오늘 공지</div>', go:"_goMysTab('team')"}),
       _ttScriptCard({color:'var(--t-uw)', badge:'보험 Q&A',   title:'내 질문·답변',  body:_num(qa)+'<div class="tt-card-hint">보험 Q&amp;A 탭으로</div>', go:"_goMysQna()"}),
       _ttScriptCard({color:'var(--warn)', badge:'원수사 공지', title:'우리 회사',     body:'<div class="tt-card-hint" style="margin-top:6px">다음 단계 연결 예정</div>'})
     ];
@@ -10235,7 +10014,7 @@ async function mrSubmitNotice(){
     var _wasCosp=!!window._cospWriting;
     mrCloseWrite();
     if(typeof toast==='function') toast(_wasEdit?'공지가 수정되었습니다':'공지가 등록되었습니다');
-    if(_wasEdit){ var _vv=document.getElementById('v-voice'); if(_vv&&_vv.classList.contains('on')){ var _at=document.querySelector('#v-voice .tabs .tab.on'); if(_at){ var _mm=(_at.getAttribute('onclick')||'').match(/showTab\(this,'([^']+)'\)/); if(_mm&&typeof showTab==='function') showTab(_at,_mm[1]); } } window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); }
+    if(_wasEdit){ window._mysTeamCache=null; window._mrTeamCache=null; if(typeof loadMysTeam==='function') loadMysTeam(); if(typeof loadMrTeam==='function') loadMrTeam(); }
     if(_wasCosp && typeof cospRenderNotices==='function'){ cospRenderNotices(false); }  /* 공동 스페이스 팀방/지점방 작성 후 목록 갱신 */
     if(btn){ btn.disabled=false; btn.textContent='공지 등록'; }
   }catch(e){ showErr('네트워크 오류가 발생했습니다.'); if(btn){ btn.disabled=false; btn.textContent='공지 등록'; } }
@@ -10516,7 +10295,7 @@ function _sMark(text, terms){
 }
 function _searchGo(view){ closeSearch();
   /* 권한 없는 메뉴로 이동 방어 (req 11) */
-  if((view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault())||(view==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin())||(view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice())){ if(typeof toast==='function') toast('접근 권한이 없는 메뉴입니다'); return; }
+  if((view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault())||(view==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin())){ if(typeof toast==='function') toast('접근 권한이 없는 메뉴입니다'); return; }
   if(typeof showView==='function') showView(view); }
 /* 원세컨드 메뉴 인덱스 — 키워드로 메뉴 바로 이동 (어드민 제외 = 대전제). Quick 도구는 quick_contents에서 동적 */
 var OS_NAV_INDEX=[
@@ -10603,7 +10382,6 @@ async function _runSearch(q){
   var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
     /* 권한 없는 화면은 결과에서 제외 (req 11 — 권한 없는 딥링크 방어) */
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
-    if(n.view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()) return false;
     if(n.view==='admin') return false;
     if(n.view==='quick') return false;   /* Quick 메뉴 페이지·도구 = 검색 결과 제외, 어드민 전용 보전 (2026-07-05 대표 지시) */
     return true; });
@@ -10831,7 +10609,6 @@ async function _runSearchV2(q, targetId){
   /* 메뉴·도구(정적+quick) — 공동 성격이나 '바로가기'라 별도 상단 그룹으로 (어드민 제외) */
   var navHits=OS_NAV_INDEX.filter(function(n){ var hay=(n.label+' '+n.kw).toLowerCase(); if(!terms.every(function(t){ return hay.indexOf(t.toLowerCase())>=0; })) return false;
     if(n.view==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()) return false;
-    if(n.view==='voice'&&typeof _canSeeVoice==='function'&&!_canSeeVoice()) return false;
     if(n.view==='admin') return false;
     if(n.view==='quick') return false;   /* Quick 메뉴 페이지·도구 = 검색 결과에서 제외, 어드민 전용 보전 (2026-07-05 대표 지시). BMI는 4축 블록이 대체 */
     return true; });
@@ -13264,7 +13041,7 @@ window.logScriptUsage=logScriptUsage;
 function showHomeSkeleton(){
   var html3='<div class="home-recent-card skel"></div><div class="home-recent-card skel"></div><div class="home-recent-card skel"></div>';
   var html1='<div class="home-recent-card skel"></div>';
-  ['homeRecentDocs','homeRecentScripts','homeRecentVoice'].forEach(function(id){
+  ['homeRecentDocs','homeRecentScripts'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.innerHTML=html3;
   });
   var news=document.getElementById('homeRecentNews');if(news)news.innerHTML=html3;  // 보험이슈 3건
@@ -13272,11 +13049,10 @@ function showHomeSkeleton(){
 
 /* 상태 카드 — 빈 박스 대신 데이터없음/권한없음/실패를 화면에서 구분 표시.
  * kind: 'empty' | 'auth' | 'error' */
-var HOME_STATE_EL={docs:'homeRecentDocs',scripts:'homeRecentScripts',voice:'homeRecentVoice',news:'homeRecentNews'};
+var HOME_STATE_EL={docs:'homeRecentDocs',scripts:'homeRecentScripts',news:'homeRecentNews'};
 var HOME_EMPTY_MSG={
   docs:   ['아직 저장한 자료가 없습니다','라이브러리에서 첫 자료를 저장해보세요'],
   scripts:['아직 사용한 스크립트가 없습니다','스크립트를 열면 여기에 기록됩니다'],
-  voice:  ['아직 등록된 글이 없습니다','현장의 소리에서 첫 글을 남겨보세요'],
   news:   ['표시할 보험이슈가 없습니다','']
 };
 function homeState(type,kind){
@@ -13326,24 +13102,6 @@ function renderHomeScripts(scripts){
     html+='<div class="home-recent-card"'+attr+'>'+
       '<div class="home-recent-card-row1"><span class="home-recent-card-badge">업무노트</span><div class="home-recent-card-title">'+escHomeHtml(it.title||'제목 없음')+'</div></div>'+
       '<div class="home-recent-card-meta">'+fmtHomeDate(it.used_at)+' 사용</div>'+
-    '</div>';
-  }
-  el.innerHTML=html;
-}
-
-function renderHomeVoice(posts){
-  var el=document.getElementById('homeRecentVoice');if(!el)return;
-  var colorByCat={'인수':'var(--t-uw)','상품':'var(--t-product)','응대':'var(--ok)','거절극복':'var(--t-event)'};
-  var html='';
-  for(var i=0;i<posts.length;i++){
-    var it=posts[i];
-    var cat=it.category||'기타';
-    var tc=colorByCat[cat]||'var(--t-event)';
-    var ansCount=(typeof it.answer_count==='number')?it.answer_count:0;
-    var meta=fmtHomeDate(it.created_at)+' · 답변 '+ansCount+'개';
-    html+='<div class="home-recent-card" style="--tc:'+tc+'" onclick="showView(\'voice\')">'+
-      '<div class="home-recent-card-row1"><span class="home-recent-card-badge">'+escHomeHtml(cat)+'</span><div class="home-recent-card-title">'+escHomeHtml(it.title||'제목 없음')+'</div></div>'+
-      '<div class="home-recent-card-meta">'+meta+'</div>'+
     '</div>';
   }
   el.innerHTML=html;
@@ -13511,18 +13269,7 @@ async function loadHomeRecent(force){
   // 6층: 전역 자료(posts/issues). _homeFetch→db.fetch가 내부에서 SUPABASE_URL을 붙이므로
   // 반드시 '/rest/v1/...' 상대 경로만 넘긴다 (library/script_usage와 동일 패턴).
   // 전체 URL을 넘기면 SUPABASE_URL이 두 번 결합돼 ...supabase.cohttps//...supabase.co 로 깨진다.
-  var voicePath='/rest/v1/posts?select=*&order=created_at.desc&limit=3';
   var newsPath='/rest/v1/issues?select=*&order=pub_date.desc.nullslast&limit=3';
-  /* 비로그인 = posts(board_type 무필터 전량) fetch skip — anon 키로 게시판 데이터가 새지 않도록 프론트 가드(2026-07-09). posts는 authenticated 전용 RLS라 실제로도 빈 응답이지만 defense-in-depth로 요청 자체를 생략. */
-  if(token){
-    jobs.push(_homeFetch('posts',voicePath).then(function(rows){
-      if(rows&&rows.__err){homeState('voice','error');return;}
-      if(rows&&rows.length>0)renderHomeVoice(rows);
-      else homeState('voice','empty');
-    }));
-  }else{
-    homeState('voice','auth');
-  }
   jobs.push(_homeFetch('issues',newsPath).then(function(rows){
     if(rows&&rows.__err){homeState('news','error');return;}
     if(rows&&rows.length>0)renderHomeNews(rows);
@@ -14939,7 +14686,6 @@ async function _saveMyspaceGroup(){
       window._mrTeamCache=null;
       if(typeof loadMysTeam==='function') loadMysTeam();
       if(typeof loadMrTeam==='function') loadMrTeam();
-      if(typeof loadTeamNotices==='function') loadTeamNotices();
       if(typeof toast==='function') toast('단체방에 공유됐습니다!');
     } else { var err=await res.json().catch(function(){return{};}); alert('저장 실패: '+(err.message||res.status)); }
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
@@ -15485,8 +15231,8 @@ function diaTalkCancel(btn){
 window.diaTalkCancel=diaTalkCancel;
 function diaDashGo(which){
   if(which==='today'){ calGoToday('mys'); openDiaryPanel(_calToday(), null); }
-  else if(which==='notice'){ if(typeof _goVoiceTab==='function') _goVoiceTab('team'); else if(typeof showView==='function') showView('voice'); }
-  else if(which==='qna'){ if(typeof _goVoiceTab==='function') _goVoiceTab('voice'); else if(typeof showView==='function') showView('voice'); }
+  else if(which==='notice'){ if(typeof _goMysTab==='function') _goMysTab('team'); else if(typeof showView==='function') showView('myspace'); }   /* 단체방 = 라이브러리 단체방 탭 (죽은 화면 현장의 소리 라우팅 대체, 2026-07-09) */
+  else if(which==='qna'){ if(typeof _goMysQna==='function') _goMysQna(); else if(typeof showView==='function') showView('myspace'); }   /* 보험 Q&A = 라이브러리 보험 Q&A 탭 (죽은 화면 현장의 소리 라우팅 대체, 2026-07-09) */
 }
 window.diaDashGo=diaDashGo;
 function calGoToday(p){ var st=_cst(p), t=_calToday(); st.ym=t.slice(0,7); st.sel=t; if(p==='mys') st.anchor=t; renderCalGridMonth(p); }
