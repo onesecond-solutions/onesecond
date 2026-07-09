@@ -912,7 +912,9 @@ body:not(.is-uat-aipolish) .aip-only{display:none !important;}
 #mysViewer img{max-width:100%;height:auto;}
 /* 넓은 표/이미지가 그리드 칸을 화면 밖으로 밀어내지 못하게(전체보기 등 전 칩) */
 #v-myspace .viewer-col{min-width:0;}
-.scr-type-seg{display:flex;gap:6px;}
+.scr-type-seg{display:flex;gap:6px;flex-wrap:wrap;}  /* 유형 5종 → 좁은 폭에서 줄바꿈 */
+.mys-type-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;flex-shrink:0;}  /* 업무노트 유형 2차 칩(모아보기) */
+.mys-type-chips .chip{padding:4px 11px;font-size:0.8rem;}
 .scr-type-seg button{flex:0 0 auto;padding:7px 16px;border:1px solid var(--bd);background:var(--s1);color:var(--tp);border-radius:var(--radius-sm,11px);cursor:pointer;font-weight:600;font-size:0.85rem;}
 .scr-type-seg button.on{background:var(--ac);border-color:var(--ac);color:#fff;}
 .cosp-il-seg{flex-wrap:wrap;gap:7px;}

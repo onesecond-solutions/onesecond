@@ -2209,6 +2209,8 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       </div>
       <div class="split" id="mys-split">
         <div class="col list-col">
+          <!-- 업무노트 유형 2차 칩(전체·채팅·스크립트·카드·상담관리·기타·미지정) — '업무노트' 칩 활성 시에만 표시 -->
+          <div class="mys-type-chips" id="mys-type-chips" style="display:none"></div>
           <div class="list" id="mysList"><div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div></div>
         </div>
         <div class="col viewer-col">
@@ -13349,7 +13351,7 @@ async function loadMyspace(force){
     var items=[];
     for(var i=0;i<scripts.length;i++){
       var s=scripts[i];
-      items.push({_type:'script',_badge:'업무노트',_date:s.created_at,_sort:s.sort_order,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments,keywords:s.keywords});
+      items.push({_type:'script',_badge:_scrTypeLabel(s.keywords),_date:s.created_at,_sort:s.sort_order,title:s.title,script_text:s.script_text,id:s.id,attachments:s.attachments,keywords:s.keywords});  /* _badge = keywords에서 파생한 유형 라벨(채팅/스크립트/카드/상담관리/기타/미지정). _type='script' 안정키는 무변경 */
     }
     for(var j=0;j<library.length;j++){
       var l=library[j];
@@ -13372,7 +13374,30 @@ async function loadMyspace(force){
 }
 
 /* 오피스 = 게시판 형태(목록+뷰어 split). 카드 그리드 → 좌측 목록 + 우측 뷰어 */
-var MYS_COLOR={'자료':'var(--t-uw)','스크립트':'var(--t-product)','메모':'var(--t-event)','즐겨찾기':'var(--ok)'};
+var MYS_COLOR={'자료':'var(--t-uw)','스크립트':'var(--t-product)','메모':'var(--t-event)','즐겨찾기':'var(--ok)',
+  '채팅':'var(--t-event)','카드':'var(--t-product)','상담관리':'var(--t-uw)','기타':'var(--ac)','미지정':'var(--ts)'};  /* 업무노트 유형 5종 + 미지정 배지 색 */
+/* ═══ 업무노트 유형 5종 — 단일 소스(저장·배지·필터·폼 공유). DB 컬럼 아님 = scripts.keywords 태그 규약 확장(마이그레이션 불필요).
+ * ⚠️ 유형 '스크립트'는 업무노트 카드 안의 사용자 작성 유형 — 원세컨드 제공 '스크립트 카드'(#v-scripts, scope=global)와 무관.
+ * 기존 note/call 키는 하위호환: 무태그·유형:콜 데이터는 '미지정'으로 표시(6번대 규약, DB 미수정). ═══ */
+var SCRIPT_TYPES=[
+  {key:'chat',label:'채팅',kw:'유형:채팅'},
+  {key:'script',label:'스크립트',kw:'유형:스크립트'},
+  {key:'card',label:'카드',kw:'유형:카드'},
+  {key:'care',label:'상담관리',kw:'유형:상담관리'},
+  {key:'etc',label:'기타',kw:'유형:기타'}
+];
+window.SCRIPT_TYPES=SCRIPT_TYPES;
+function _scrTypeByKey(k){ for(var i=0;i<SCRIPT_TYPES.length;i++){ if(SCRIPT_TYPES[i].key===k) return SCRIPT_TYPES[i]; } return null; }
+/* keywords 배열 → 유형 정의(안정키 kw 태그로만 매칭, 표시명 매칭 금지). 없으면 null=미지정 */
+function _scrTypeOf(keywords){ var ks=Array.isArray(keywords)?keywords:[]; for(var i=0;i<SCRIPT_TYPES.length;i++){ if(ks.indexOf(SCRIPT_TYPES[i].kw)>=0) return SCRIPT_TYPES[i]; } return null; }
+/* 유형 배지 라벨(미지정 포함) */
+function _scrTypeLabel(keywords){ var t=_scrTypeOf(keywords); return t?t.label:'미지정'; }
+/* keywords에서 모든 유형:* 태그 제거 후 선택 유형 태그 1개 삽입(수정 시 유형 변경 반영). typeKey 없으면 태그 없이 반환(미지정) */
+function _scrSetTypeKw(keywords, typeKey){
+  var ks=(Array.isArray(keywords)?keywords.slice():[]).filter(function(k){ return String(k).indexOf('유형:')!==0; });
+  var t=_scrTypeByKey(typeKey); if(t) ks.unshift(t.kw); return ks;
+}
+window._scrTypeByKey=_scrTypeByKey; window._scrTypeOf=_scrTypeOf; window._scrTypeLabel=_scrTypeLabel; window._scrSetTypeKw=_scrSetTypeKw;
 /* ── 핀 고정(라이브러리, 2026-07-05) — keywords '핀' 태그 기반(DDL 없이). 임태성 게이트 테스트 후 전체 개방 예정. ── */
 function _isPinnedMys(it){ return !!(it && Array.isArray(it.keywords) && it.keywords.indexOf('핀')>=0); }
 function _canPinMys(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; } }
@@ -13902,7 +13927,7 @@ window.scrEditOpen=scrEditOpen;
 
 /* ═══ 마이 스페이스 스크립트 인라인 작업공간 (Phase 1, 2026-06-11) — 우측 2카드(글쓰기/작업공간) + osRich 리치텍스트.
  * 콜/채팅 = 분류 태그만(둘 다 리치 자유). 단계·핵심멘트·대안화법 폐기. script_text=HTML 저장. 기존 모달(openMyspaceWrite)·수정 모달 공존. ═══ */
-function scrIlType(t){ window._scrIlType=t; var seg=document.getElementById('scr-il-seg'); if(seg){ var bs=seg.querySelectorAll('button'); if(bs[0]) bs[0].classList.toggle('on',t==='note'); if(bs[1]) bs[1].classList.toggle('on',t==='call'); if(bs[2]) bs[2].classList.toggle('on',t==='chat'); } }
+function scrIlType(t){ window._scrIlType=t; var seg=document.getElementById('scr-il-seg'); if(seg){ var bs=seg.querySelectorAll('button'); for(var i=0;i<bs.length;i++){ bs[i].classList.toggle('on', bs[i].getAttribute('data-tkey')===t); } } }  /* 유형 5종 세그먼트 하이라이트(data-tkey 매칭) */
 window.scrIlType=scrIlType;
 /* 스크립트 인라인 모드 해제 — 다른 칩(공유함)·탭 이동 시 글쓰기 카드 잔존 방지 */
 function _scrModeOff(){ var ms=document.getElementById('mys-split'); if(ms) ms.classList.remove('scr-mode'); var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none'; }
@@ -13911,7 +13936,9 @@ function openScriptInline(edit){
   var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 업무노트 글쓰기 진입 게이트(2026-07-08) */
   var v=document.getElementById('mysViewer'); if(!v) return;
   window._scrInlineEdit=edit||null;
-  var type=(edit&&edit.type)?edit.type:'note';
+  /* 유형 5종 정규화 — 신규 기본='기타'(중립 catch-all: '채팅'은 기능키라 일반 노트 오분류 회피). 편집=기존 태그 유형, 레거시 note/call → 기타 */
+  var type=(edit&&edit.type)?edit.type:'etc';
+  if(!_scrTypeByKey(type)) type='etc';
   window._scrIlType=type;
   /* ── 원세컨드 제공 발행 블록 (임태성 게이트). 기본 '내 자료'. provided 선택 시에만 메타 노출. (2026-06-30) ── */
   var _wnOn=(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub());
@@ -13932,8 +13959,9 @@ function openScriptInline(edit){
       +'</div>'
       +'<div class="iv-fld"><div id="scr-il-wnstatus" style="font-size:0.78rem;color:var(--ts)">발행 상태: '+(_wnPub==='provided'?'원세컨드 제공(저장 시 검색 노출)':'내 자료')+'</div></div>';
   }
+  var _segBtns=SCRIPT_TYPES.map(function(t){ return '<button type="button" data-tkey="'+t.key+'" class="'+(type===t.key?'on':'')+'" onclick="scrIlType(\''+t.key+'\')">'+t.label+'</button>'; }).join('');  /* 유형 5종 세그먼트(단일 소스 SCRIPT_TYPES 기반) */
   var formHtml=''
-    +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg" id="scr-il-seg"><button type="button" class="'+(type==='note'?'on':'')+'" onclick="scrIlType(\'note\')">업무노트</button><button type="button" class="'+(type==='call'?'on':'')+'" onclick="scrIlType(\'call\')">콜스크립트</button><button type="button" class="'+(type==='chat'?'on':'')+'" onclick="scrIlType(\'chat\')">채팅 스크립트</button></div></div>'
+    +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg" id="scr-il-seg">'+_segBtns+'</div></div>'
     +'<div class="iv-fld"><label>제목</label><input type="text" id="scr-il-title" class="mys-write-input" maxlength="100" placeholder="제목"></div>'
     +'<div class="iv-fld"><label>내용</label><div id="scr-il-rich"></div></div>'
     +'<div class="iv-fld"><label>키워드</label><input type="text" id="scr-il-kw" class="mys-write-input" maxlength="200" placeholder="예: 암보험, 클로징 (쉼표로 구분)"></div>'
@@ -14079,10 +14107,7 @@ async function saveScrInline(){
   if(!title){ alert('제목을 입력해 주세요.'); return; }
   if(!html||html==='<br>'){ alert('내용을 입력해 주세요.'); return; }
   var kw=((document.getElementById('scr-il-kw')||{}).value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-  var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅', CALLKW='유형:콜';
-  kw=kw.filter(function(k){return k!==CHATKW&&k!==CALLKW;});  /* 타입 키워드 초기화(수정 시 타입 변경 반영) */
-  if(window._scrIlType==='chat') kw.unshift(CHATKW);          /* 채팅 분류 태그 */
-  else if(window._scrIlType==='call') kw.unshift(CALLKW);     /* 콜 분류 태그 (업무노트=무태그 기본) */
+  kw=_scrSetTypeKw(kw, window._scrIlType);  /* 유형 5종: 기존 유형:* 태그 전부 제거 후 선택 유형 1개 삽입(수정 시 유형 변경 반영). 유형 미지정 시 태그 없음 */
   /* 원세컨드 제공 발행 값 캡처(임태성 게이트) — 폼 해체 전에 읽어둠 */
   var _wnPub='mine', _wnMeta=null;
   if(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){
@@ -14123,13 +14148,12 @@ async function scrEditInline(id){
   try{
     var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,keywords'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     var r=((res.ok?await res.json():[])||[])[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
-    var CHATKW=(window.OSChatScript&&window.OSChatScript.KW)||'유형:채팅', CALLKW='유형:콜';
-    var kws=r.keywords||[]; var isChat=kws.indexOf(CHATKW)!==-1, isCall=kws.indexOf(CALLKW)!==-1;
-    var kw=kws.filter(function(k){return k!==CHATKW&&k!==CALLKW;}).join(', ');
+    var kws=r.keywords||[]; var _t=_scrTypeOf(kws); var _tkey=_t?_t.key:'etc';  /* 유형 태그 → 5키, 레거시(유형:콜)·무태그 → 기타(편집 저장 시 재지정) */
+    var kw=(Array.isArray(kws)?kws:[]).filter(function(k){return String(k).indexOf('유형:')!==0;}).join(', ');  /* 키워드 필드엔 유형:* 분류태그 제외 */
     var raw=r.script_text||'';
     var isHtml=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(raw);
     var html=isHtml?raw:_sEsc(raw).replace(/\n/g,'<br>');  /* 기존 plain/섹션 → 줄바꿈 보존(데이터 손실 0) */
-    var _ed={id:r.id, type:isChat?'chat':(isCall?'call':'note'), title:r.title||'', html:html, kw:kw};
+    var _ed={id:r.id, type:_tkey, title:r.title||'', html:html, kw:kw};
     /* 임태성: 이미 원세컨드 제공으로 발행된 글이면 공개범위·메타 prefill(편집 시 실수 공개해제 방지) */
     if(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){
       try{
@@ -14167,6 +14191,7 @@ async function _saveMyspaceEdit(){
     if(!stitle){ alert('제목을 입력해 주세요.'); return; }
     if(!stext){ alert('스크립트 내용을 입력해 주세요.'); return; }
     if(!shi){ alert('핵심 멘트를 입력해 주세요.'); return; }
+    skw=_scrSetTypeKw(skw, null);  /* 유형 규약 일관: 모달 편집(비채팅)은 유형:* 태그를 남기지 않음(사용자 키워드만). 유형 재지정은 업무노트 인라인 편집에서 */
     body={title:stitle, script_text:stext, highlight_text:shi, stage:sstage, keywords:skw}; _scrFillSearchText(body);
   }
   btn.disabled=true; btn.textContent='저장 중...';
@@ -15557,6 +15582,10 @@ function filterMys(el,cat){
   if(_mnr){ _mnr.style.display=_memo?'block':'none'; }  /* 메모 글쓰기 카드(게이트 안에서만) */
   /* 재정렬 적용 칩 = 단일 테이블 칩(자료·메모=library / 스크립트=scripts). 전체·즐겨찾기는 미적용(머지/placeholder) */
   window._mysReorder=(cat==='자료'||cat==='스크립트'||cat==='메모');
+  /* 업무노트 칩 활성 시에만 유형 2차 칩 표시. 다른 칩 = 숨김 + 유형필터 초기화 */
+  var _tcb=document.getElementById('mys-type-chips');
+  if(_scr){ window._mysTypeFilter='all'; if(_tcb){ _tcb.style.display='flex'; } if(typeof _scrRenderTypeChips==='function') _scrRenderTypeChips(); }
+  else { window._mysTypeFilter='all'; if(_tcb){ _tcb.style.display='none'; } }
   var items=window._myspaceCache||[];
   var f=(cat==='전체')?items.slice():(cat==='스크립트')?items.filter(function(it){ return it._type==='script'; }):items.filter(function(it){ return (it._badge||'')===cat; });  /* 스크립트=안정 키 _type로 매칭(badge 표시명 '업무노트'로 변경됨 #1024 → _badge 매칭 깨짐 회귀 수정, 전 사용자) */
   /* 신규 최상단 원칙: sort_order 미할당(null=신규/미정렬)을 맨 위로(-Infinity). 드래그로 명시 정렬한 항목은 그 순서 보존(아래). 동순위는 created_at DESC, id DESC. (기존 Infinity=맨 아래라 신규 메모가 최하단으로 가던 버그 정정) */
@@ -15564,6 +15593,30 @@ function filterMys(el,cat){
   renderMyspace(f);  /* 목록 재렌더 + 첫 항목 뷰어 (게시판 형태) */
 }
 window.filterMys=filterMys;
+/* ── 업무노트 유형 2차 칩(모아보기) — 전체/5종/미지정. kw 안정키로 서브필터(표시명 매칭 금지 #1024~#1026 회귀 방지) ── */
+function _scrRenderTypeChips(){
+  var box=document.getElementById('mys-type-chips'); if(!box) return;
+  var cur=window._mysTypeFilter||'all';
+  var html='<div class="chip'+(cur==='all'?' on':'')+'" onclick="filterMysType(\'all\')">전체</div>';
+  for(var i=0;i<SCRIPT_TYPES.length;i++){ var t=SCRIPT_TYPES[i]; html+='<div class="chip'+(cur===t.key?' on':'')+'" onclick="filterMysType(\''+t.key+'\')">'+t.label+'</div>'; }
+  html+='<div class="chip'+(cur==='none'?' on':'')+'" onclick="filterMysType(\'none\')">미지정</div>';
+  box.innerHTML=html;
+}
+window._scrRenderTypeChips=_scrRenderTypeChips;
+function filterMysType(key){
+  window._mysTypeFilter=key||'all';
+  _scrRenderTypeChips();
+  var items=window._myspaceCache||[];
+  var f=items.filter(function(it){ return it._type==='script'; });  /* 업무노트(scripts) 결과 안에서만 서브필터 */
+  /* filterMys와 동일 정렬 규약(신규 최상단=sort_order null → -Infinity, 동순위 최신순) */
+  f.sort(function(a,b){ var sa=(a._sort==null)?-Infinity:a._sort, sb=(b._sort==null)?-Infinity:b._sort; if(sa!==sb) return sa-sb; return ((b._date||'').localeCompare(a._date||'')) || ((Number(b.id)||0)-(Number(a.id)||0)); });
+  if(key && key!=='all'){
+    if(key==='none'){ f=f.filter(function(it){ return !_scrTypeOf(it.keywords); }); }  /* 미지정 = 유형 태그 하나도 없음 */
+    else { var t=_scrTypeByKey(key); if(t){ f=f.filter(function(it){ return Array.isArray(it.keywords)&&it.keywords.indexOf(t.kw)>=0; }); } }  /* kw 안정키 매칭 */
+  }
+  renderMyspace(f);
+}
+window.filterMysType=filterMysType;
 
 
 /* ── 공유하기 (Phase 1) — 마이스페이스 항목(스크립트/메모/자료)을 팀/지점 공유함으로 ── */
