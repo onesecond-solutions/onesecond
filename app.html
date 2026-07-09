@@ -12480,7 +12480,7 @@ async function _svOpenNewsletter(id){
     var rows=res.ok?await res.json():[]; var r=rows[0];
     if(!r){ _svToast('소식지를 불러오지 못했습니다(권한·삭제)'); return; }
     var url=String(r.source_pdf_url||'').trim();
-    if(!url && r.source_path && typeof _svSignUrl==='function'){ try{ url=await _svSignUrl('newsletters', r.source_path); }catch(e){ url=''; } }
+    if(!url && r.source_path && typeof _svSignUrl==='function'){ try{ url=await _svSignUrl('newsletters', r.source_path, id); }catch(e){ url=''; } }  /* 비로그인이면 id로 공개 EF 폴백(published만) */
     if(!url){ _svToast('원본 PDF가 없습니다'); return; }
     var nm=(r.company?r.company+' · ':'')+(r.title||'소식지');
     if(typeof _hubNlPreview==='function') _hubNlPreview(url, nm); else window.open(url,'_blank','noopener');
