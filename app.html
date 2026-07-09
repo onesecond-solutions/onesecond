@@ -10535,7 +10535,7 @@ var OS_NAV_INDEX=[
   {label:'요금제', kw:'가격 결제 구독 멤버십 plus pro free', view:'pricing'}
 ];
 window._searchGo=_searchGo;
-function openSearch(){/* 통합검색 v0.5 — 전 사용자 노출(2026-06-13, 옛 admin 전용 게이트 해제). RLS가 데이터 노출 범위 보장 */ if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
+function openSearch(){/* 통합검색 v0.5 — 로그인 전용(2026-07-09). RLS가 데이터 노출 범위 보장 + 비로그인은 실행 자체 봉인(홈 히어로 _hsSearch getToken 가드와 동일 모델, #1195 유출 재발 방지) */ var _sotk=window.db&&window.db.getToken&&window.db.getToken(); if(!_sotk){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인(헤더 검색바·Ctrl+K) = 패널 열지 않고 로그인 게이트. 2026-07-09 */ if(!defaultPanel)defaultPanel=document.getElementById('sobody').innerHTML;document.getElementById('so').classList.add('open');document.getElementById('sinput').value='';doSearch('');setTimeout(function(){document.getElementById('sinput').focus();},50);}
 function closeSearch(){document.getElementById('so').classList.remove('open');}
 function fill(q){document.getElementById('sinput').value=q;doSearch(q);document.getElementById('sinput').focus();}
 /* 검색 기본 화면 — 실제 데이터 현황(각 테이블 건수) 표시 (mock 폐기) */
@@ -10557,6 +10557,7 @@ async function _searchStats(){
 }
 window._searchStats=_searchStats;
 function doSearch(q){
+  var _dstk=window.db&&window.db.getToken&&window.db.getToken(); if(!_dstk){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 봉인(defense-in-depth) — openSearch 외 경로(fill 등) 방어. 2026-07-09 */
   var body=document.getElementById('sobody'); if(!body) return;
   if(!q||!q.trim()){ if(_searchTimer) clearTimeout(_searchTimer); _searchSeq++; body.innerHTML=defaultPanel; _searchStats(); return; }
   if(_searchTimer) clearTimeout(_searchTimer);
@@ -10565,6 +10566,7 @@ function doSearch(q){
 window.doSearch=doSearch;
 /* 실데이터 통합 검색 — 7그룹 다중 키워드 AND(db.fetch=RLS 자동 필터) → 관련도 랭킹 + 본문 스니펫 하이라이트 */
 async function _runSearch(q){
+  var _rstk=window.db&&window.db.getToken&&window.db.getToken(); if(!_rstk){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 봉인(deep guard) — 검색 실행 진입점. 2026-07-09 */
   /* 검색 범위 가시화 v2 — 허용 3계정만 새 화면(범위 그룹+칩). 그 외 전부 기존 평면 검색 그대로(회귀 0).
      RLS가 데이터 격리를 지키므로 이 명단은 보안 경계가 아니라 '어느 화면을 보여줄지' UI 라우터일 뿐. */
   if(_searchScopeAllow()){ return _runSearchV2(q); }
@@ -10743,6 +10745,7 @@ function _svCanSee(k, me, cnt){
   return false;
 }
 async function _runSearchV2(q, targetId){
+  var _r2tk=window.db&&window.db.getToken&&window.db.getToken(); if(!_r2tk){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 봉인(deepest guard) — 모든 검색 실행 최종 초크포인트. 홈 히어로·오버레이 공용. 2026-07-09 */
   var bodyId=targetId||'sobody';   /* 오버레이(#sobody) 또는 검색 홈(#hsResults) 공용 */
   var body=document.getElementById(bodyId); if(!body) return;
   var seq=++_searchSeq;
@@ -11024,7 +11027,7 @@ async function _companyHubHtml(q){
   var nlY={};
   /* 소식지: 소스(newsletters.company)가 'DB손보'처럼 축약 표기일 수 있어 이름 변형 전부 OR ilike. 원본 미수정·매칭만 확장 */
   try{ var _nlOr=names.map(function(n){ return 'company.ilike.*'+encodeURIComponent(n)+'*'; }).join(',');
-    var nr=await window.db.fetch('/rest/v1/newsletters?or=('+_nlOr+')&select=id,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200');
+    var nr=await window.db.fetch('/rest/v1/newsletters?status=eq.published&or=('+_nlOr+')&select=id,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=200');  /* status=published만(검수중 초안 숨김). 2026-07-09 */
     if(nr.ok){ var _seenNl={}; (await nr.json()||[]).forEach(function(n){ if(_seenNl[n.id]) return; _seenNl[n.id]=1; var y=n.publish_year||'기타'; (nlY[y]=nlY[y]||[]).push(n); }); }
   }catch(e){}
   function row(title,tag,bodyHtml,opts){ opts=opts||{};
@@ -11285,7 +11288,7 @@ function loadNewsletters(){
   _nlLoading=true;
   var b1=document.getElementById('nlp-main'); if(b1)b1.innerHTML='<div class="pl-empty">불러오는 중…</div>';
   Promise.all([
-    window.db.fetch('/rest/v1/newsletters?select=id,company,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function(r){return r.ok?r.json():[];}),
+    window.db.fetch('/rest/v1/newsletters?status=eq.published&select=id,company,publish_year,publish_month,source_pdf_url,source_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function(r){return r.ok?r.json():[];}),  /* status=published만 노출(검수중 reviewing 초안 숨김) — 로그인/비로그인 공통. 백필로 기존분 전부 published라 회귀 0. 2026-07-09 */
     window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=name,type').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
   ]).then(function(res){
     _nlRows=Array.isArray(res[0])?res[0]:[];
@@ -13510,11 +13513,16 @@ async function loadHomeRecent(force){
   // 전체 URL을 넘기면 SUPABASE_URL이 두 번 결합돼 ...supabase.cohttps//...supabase.co 로 깨진다.
   var voicePath='/rest/v1/posts?select=*&order=created_at.desc&limit=3';
   var newsPath='/rest/v1/issues?select=*&order=pub_date.desc.nullslast&limit=3';
-  jobs.push(_homeFetch('posts',voicePath).then(function(rows){
-    if(rows&&rows.__err){homeState('voice','error');return;}
-    if(rows&&rows.length>0)renderHomeVoice(rows);
-    else homeState('voice','empty');
-  }));
+  /* 비로그인 = posts(board_type 무필터 전량) fetch skip — anon 키로 게시판 데이터가 새지 않도록 프론트 가드(2026-07-09). posts는 authenticated 전용 RLS라 실제로도 빈 응답이지만 defense-in-depth로 요청 자체를 생략. */
+  if(token){
+    jobs.push(_homeFetch('posts',voicePath).then(function(rows){
+      if(rows&&rows.__err){homeState('voice','error');return;}
+      if(rows&&rows.length>0)renderHomeVoice(rows);
+      else homeState('voice','empty');
+    }));
+  }else{
+    homeState('voice','auth');
+  }
   jobs.push(_homeFetch('issues',newsPath).then(function(rows){
     if(rows&&rows.__err){homeState('news','error');return;}
     if(rows&&rows.length>0)renderHomeNews(rows);
