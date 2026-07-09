@@ -2149,6 +2149,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         </nav>
       </footer>
      </div>
+     <!-- 라이브 표시명: 라이브러리 (내가 저장한 자료 화면). 사이드바 nav='다이어리', 탭='마이 스페이스' -->
      <div class="wrap view" id="v-myspace">
       <div class="ttl">라이브러리 <span class="ac">· 내가 저장한 자료들</span></div>
       <div class="sub">딸깍으로 저장한 자료를 한 곳에 모아 봅니다.</div>
@@ -2347,6 +2348,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         </div>
       </div>
      </div>
+     <!-- 라이브 표시명: 스크립트 카드(원세컨드 제공 페이지). 사용자 작성 글=업무노트. 필터 안정키 '스크립트'/'script', 테이블 scripts -->
      <div class="wrap view" id="v-scripts">
       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
       <div class="ttl">스크립트 <span class="ac">· 보험 상담 화법</span></div>
@@ -2364,6 +2366,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         <div class="scripts-cards-empty" id="scriptsLoading">불러오는 중...</div>
       </div>
      </div>
+     <!-- 라이브 표시명: (풀페이지)Quick 메뉴=어드민 전용 / 일반 사용자 실사용=딸깍 FAB(openQuickLauncher, 빠른 실행). 별 기능 -->
      <div class="wrap view" id="v-quick">
       <div class="ttl">Quick 메뉴 <span class="ac">· 빠른 실행</span></div>
       <div class="sub">긴박한 순간, 자주 쓰는 자료를 한 곳에서</div>
@@ -2465,8 +2468,10 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       </div>
      </div>
      <!-- 매니저방 = 바닥 독립 페이지 (2026-07-04, 바텀시트→바닥 이전). #mr-main을 _spMrShow로 여기 렌더, 떠날 때 _spMrRestore로 라이브러리 회수 -->
+     <!-- 라이브 표시명: 매니저방 (코드 id mrroom=매니저룸, mrWriteModal·mr-* = 안정 식별자) -->
      <div class="wrap view" id="v-mrroom"><div id="mrroom-host"></div></div>
      <!-- 실비 세대별 변천사 = 기획팀장 자료(pages/silson-generations.html) iframe 격리 로드 (2026-07-04) -->
+     <!-- 라이브 표시명: 실비 변천사 -->
      <div class="wrap view" id="v-silson"><button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button><iframe id="silson-frame" title="실손 세대별 변천사" loading="lazy"></iframe></div>
      <div class="wrap view" id="v-together">
       <div class="ttl">함께해요 <span class="ac">· 원세컨드 커뮤니티</span></div>
@@ -2555,6 +2560,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        </div>
       </div>
      <!-- 2026-05-30 단계 2: 원수사 자료실 view UI (insurer_* + admin 전용) -->
+     <!-- 라이브 표시명: 원수사 자료실 / 보험사 자료실 -->
      <div class="wrap view" id="v-insurer-vault">
       <div class="ttl"><span id="iv-company-ttl">보험사</span> 자료실 <span class="ac">· 원수사 전용</span></div>
       <div class="sub iv-notice">&#128274; 등록한 자료는 현재 원수사 내부에서만 보입니다 (설계사 비노출).</div>
@@ -2744,6 +2750,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       </div>
      </div>
      <!-- ════ 알릴의무(고지) 독립 페이지 (#v-goji) — is-uat-goji 게이트 = 임태성 실장 user_id 전용 검수. 일반/어드민 무영향. data/goji_records.json(114). 표시원칙=확정(세부문항)/코드확인(고지코드)/유형확인(고지유형)/자료없음. 2026-07-06 ════ -->
+     <!-- 라이브 표시명: 알릴의무 (코드 id goji=고지) -->
      <div class="wrap view" id="v-goji">
       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
       <div class="gj2-note">&#128203; 회사별 <b>알릴의무(고지)</b> — 고지유형 · 간편고지 코드 · 확정 세부문항. 자료가 확인된 항목만 표시하며, 표준코드 의미는 개별 상품의 확정 고지 문항이 아닙니다.</div>
@@ -2795,6 +2802,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        <div class="smsg-src">출처: 삼성화재 GA소식지 2026-06 (p.17)</div>
      </div>
      <!-- ════ 삼성화재 상품별 납입면제 (#v-samsung-waiver) — 동일 게이트 ════ -->
+     <!-- 라이브 표시명: 알릴의무 (코드 id waiver=고지) -->
      <div class="wrap view" id="v-samsung-waiver">
        <button class="smsg-back" type="button" onclick="_samsungBack()">&#8249; 검색으로</button>
        <div class="smsg-h">삼성화재 상품별 납입면제</div>
@@ -2803,6 +2811,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        <div class="smsg-src">출처: 삼성화재 GA소식지 2026-06 (p.16)</div>
      </div>
      <!-- ════ 독립 도구 페이지 (#v-tool) — BMI 계산기·보험연령 계산기·이미지 변환기. 홈 도구 섹션 카드 진입. 임태성 게이트(Phase 1). Quick 렌더러 재사용(slotId). 2026-07-05 ════ -->
+     <!-- 라이브 표시명: 계산기 · 변환기 (BMI·보험연령·이미지 변환) -->
      <div class="wrap view" id="v-tool">
        <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
        <div class="tool-page-h">계산기 · 변환기</div>
@@ -2865,6 +2874,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        </div>
      </div>
      <!-- ════ 운영센터(어드민) — SPA D영역 흡수 (#v-admin · 2단 탭/칩) ════ -->
+     <!-- 라이브 표시명: 운영센터(어드민 전용). 사이드바 nav='어드민' -->
      <div class="wrap view" id="v-admin">
       <div class="ttl">운영센터 <span class="ac">· admin</span></div>
       <div class="sub">플랫폼 운영 · 업무 처리 센터</div>
@@ -3234,6 +3244,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       <div class="ac-toast" id="ac-toast"></div>
      </div>
 
+     <!-- 죽은 화면(2026-06-27 진입 차단). 옛 이름=현장의 소리/스마트 게시판. 사용자 도달 안 함 -->
      <div class="wrap view" id="v-voice">
       <div class="ttl">현장의 소리 <span class="ac">· 실시간 이슈 공유</span></div>
       <div class="sub">허브·팀·지점·보험사 게시판에서 질문하고 답해보세요.</div>
@@ -4149,6 +4160,7 @@ function _snDelete(i){
 }
 window._snOpenForm=_snOpenForm;window._snCloseForm=_snCloseForm;window._snSaveForm=_snSaveForm;window._snDelete=_snDelete;window._snOcrRun=_snOcrRun;
 /* 현장의 소리 게이팅 — admin·ga_* 전용 (insurer 계열·비로그인 차단, 2026-06-07 role_access_map §6 #1) */
+// 죽은 화면(2026-06-27 진입 차단). 옛 이름=현장의 소리/스마트 게시판. 사용자 도달 안 함 (뷰 #v-voice 게이트)
 function _canSeeVoice(){
   return false;   /* 현장의 소리(#v-voice) 전면 숨김 (2026-06-27 대표 지시) — 전 사용자(admin 포함) 진입 차단: showView 가드 !_canSeeVoice()→home + nav 숨김. 기존 admin·ga_ 노출 폐기. 데이터(posts/team_notices)는 보존, 화면 진입만 차단. */
 }
@@ -4303,6 +4315,7 @@ function ivRender(rows, filterType){
   }).join('');
   ivOpenDetail(0, true);  /* 최신(맨 위) 자동 표시. 모바일은 목록 유지 */
 }
+// 라이브 표시명: 원수사 자료실 / 보험사 자료실 (뷰 #v-insurer-vault)
 function ivOpenDetail(idx, keepList){
   var list = window._ivFiltered || []; var r = list[idx]; if(!r) return;
   /* attachments가 직렬화된 JSON 문자열로 저장된 경우 배열로 파싱 (크롬 진단 2026-05-31) */
@@ -6013,6 +6026,7 @@ function _navBranchspace(){
 }
 window._navBranchspace=_navBranchspace;
 /* 사이드 '다이어리' nav = 바텀시트 펼침 + 트리 '마이 스페이스 > 다이어리' 노드로 이동 (2026-06-17, _navMyspace/_spBookGoNode 패턴) */
+// 라이브 표시명: 라이브러리 (내가 저장한 자료 화면). 사이드바 nav='다이어리', 탭='마이 스페이스' — 같은 #v-myspace 화면
 function _navDiary(){
   try{ var navs=document.querySelectorAll('.side .nav'); for(var i=0;i<navs.length;i++) navs[i].classList.remove('on'); var me=document.getElementById('nav-myspace'); if(me) me.classList.add('on'); }catch(e){}
   if(typeof window._osSheetOpen==='function') window._osSheetOpen(true);   /* 바텀시트 슬라이딩 펼침(1.05s) */
@@ -8453,6 +8467,7 @@ async function cospRenderChat(){
  * posts(board_type='insurer') 전체. 수정/삭제/숨김 = 작성자 본인만. admin 자료 등록 유지. 검색=후속. 현장의소리(v-voice) 무수정. */
 var COSP_INS_TC={'긴급(마감)':'t-event','공지':'t-uw','소식지':'t-product','영업방향':'ok','상품':'t-uw','인수':'t-event','시책/프로모션':'warn','기타':'ts'};
 var COSP_INS_CHIPS=['전체','긴급(마감)','공지','소식지','영업방향','상품','인수','시책/프로모션','기타'];
+// 라이브 표시명: 공동 스페이스(라이브러리 탭 #mys-team). ※스페이스→범위 흡수 방향. cosp-* = 안정 식별자
 async function cospRenderInsurer(){
   var box=document.getElementById('cosp-body'); if(!box) return; box.innerHTML='<div class="mys-news-empty">불러오는 중…</div>';
   if(!window.db||!window.db.fetch){ box.innerHTML='<div class="mys-news-empty">로그인이 필요합니다.</div>'; return; }
@@ -9567,6 +9582,7 @@ window._scriptsCache = null;
 window._scriptsLoaded = false;
 window._scriptsActiveStage = 'opening';
 
+// 라이브 표시명: 스크립트 카드(원세컨드 제공 페이지). 사용자 작성 글=업무노트. 필터 안정키 '스크립트'/'script', 테이블 scripts
 async function loadScriptsView(){
   var chipsEl = document.getElementById('scriptsChips');
   var wrap = document.getElementById('scriptsCardsWrap');
@@ -15394,6 +15410,7 @@ function _diaSetCnt(id,n){ var el=document.getElementById(id); if(el) el.textCon
   var k=id.replace('dia-cnt-',''); var mr=document.querySelectorAll('[data-dcnt="'+k+'"]'); for(var i=0;i<mr.length;i++) mr[i].textContent=n;  /* 마이 스페이스 페이지 미러 카드(sn-dash) 동기화 */
 }
 function _diaCount(url){ return window.db.fetch(url+'&select=id',{headers:{'Prefer':'count=exact','Range':'0-0'}}).then(function(r){ var cr=r.headers.get('content-range')||''; var n=parseInt((cr.split('/')[1]||'0'),10); return isNaN(n)?0:n; }).catch(function(){ return 0; }); }
+// 라이브 표시명: 캘린더(홈 워크스페이스 카드) / 다이어리(라이브러리 탭). 엔진키 diary는 안정키(표시명과 분리)
 function loadDiaryDash(){
   var today=_calToday();
   var rows=(window._calSt&&window._calSt.mys&&window._calSt.mys.rows)||[];
@@ -16849,6 +16866,7 @@ function quickSearchKeydown(e){
 window.quickSearchKeydown = quickSearchKeydown;
 
 // ── 진입 / 닫기 ──
+// 라이브 표시명: 딸깍 FAB(빠른 실행) — 일반 사용자 실사용 오버레이. 풀페이지 Quick 메뉴(_navView('quick') #v-quick)=어드민 전용, 별 기능
 function openQuickLauncher(){
   mountQuickOverlay();
   loadQuickOverlayItems();
@@ -17808,6 +17826,7 @@ body:not(.is-admin) #osSheet{display:none !important;}  /* 바텀시트 = 어드
   }
   window._spPaint=_spPaint;
   /* 다이어리 노드 = 라이브러리 다이어리(#mys-today)를 우측 패널로 이동(inplace, 복제 아님 → id 충돌 0·기능·데이터 그대로). 보험Q&A 인플레이스 패턴 정합. */
+  // 라이브 표시명: 캘린더(홈 워크스페이스 카드) / 다이어리(라이브러리 탭). 엔진키 diary는 안정키(표시명과 분리)
   function _spDiaShow(host, scope){
     var d=document.getElementById('mys-today'); if(!d){ if(host) host.innerHTML='<div class="sp-empty2">다이어리를 불러올 수 없습니다.</div>'; return; }
     if(!window._spDiaHome) window._spDiaHome=d.parentNode;  /* 원 부모(라이브러리) 1회 기억 */
