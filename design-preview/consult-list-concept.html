@@ -401,6 +401,98 @@ document.getElementById('themeBtn').addEventListener('click',function(){
   else{r.setAttribute('data-theme', matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');}
 });
 
+/* ══════════════════════════════════════════════════════════════════
+   히든 붙여넣기 자동입력 (뒤단 전용 · 화면 UI 흔적 0)
+   - 폼에 붙여넣은 텍스트가 여러 줄이거나 라벨/전화 뭉치면 규칙기반 파싱→각 필드 자동 채움.
+   - 단일 값(라벨 없는 한 줄)은 파싱 안 하고 일반 붙여넣기(오발동 0).
+   - 전부 브라우저 로컬 처리. 외부 API·fetch 0. 매칭 안 되면 비움(지어내기 0).
+   ════════════════════════════════════════════════════════════════ */
+var _PHONE_RE=/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/;
+var _LABEL_HINT=/(이름|성함|고객명|전화|연락처|휴대폰|핸드폰|생년월일|생년|생일|출생|성별|직업|직장|복용|병력|기왕력|과거력|진단|현재\s*상태|상태)/;
+/* 라벨 사전: 'x'=경계(값 수집 안 함, 해당 값은 패턴으로 별도 추출) / 그 외=텍스트 필드 수집 시작 */
+var _LABEL_MAP={
+  '이름':'name','성함':'name','고객명':'name',
+  '전화':'x','연락처':'x','휴대폰':'x','핸드폰':'x','폰':'x','hp':'x',
+  '생년월일':'x','생년':'x','생일':'x','출생':'x','주민':'x',
+  '성별':'x',
+  '직업':'job','직장':'job',
+  '약':'x','복용':'x','약복용':'x','복용여부':'x',
+  '병력':'hist','기왕력':'hist','과거력':'hist','질병':'hist',
+  '진단':'dx','진단일':'dx','진단시기':'dx',
+  '상태':'status','현재상태':'status','현재':'status','진행':'status'
+};
+
+function _pad2(v){v=String(v);return v.length<2?'0'+v:v;}
+function _normPhone(s){var d=String(s).replace(/\D/g,'');
+  if(d.length===11)return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  if(d.length===10)return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6);return String(s).trim();}
+function _normBirth(s){
+  var m=String(s).replace(/'/g,'').match(/(\d{2,4})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})/);
+  if(!m)return'';var y=m[1];
+  if(y.length===2){var n=+y;y=String(n>30?1900+n:2000+n);}
+  return y+'-'+_pad2(m[2])+'-'+_pad2(m[3]);
+}
+function _looksStructured(t){
+  t=t.trim();if(!t)return false;
+  if(/[\r\n]/.test(t))return true;
+  var toks=t.split(/\s+/);
+  if(_LABEL_HINT.test(t)&&toks.length>=3)return true;
+  if(_PHONE_RE.test(t)&&toks.length>=2)return true;
+  return false;
+}
+function _parseBunch(raw){
+  var out={},w=' '+String(raw).replace(/[\r\n]+/g,' ')+' ';
+  /* 패턴 값 먼저 추출 후 자리표(|)로 치환 → 라벨 스캔 오염 방지 */
+  var mp=w.match(_PHONE_RE); if(mp){out.phone=_normPhone(mp[0]);w=w.replace(mp[0],' | ');}
+  var mb=w.match(/'?\d{2,4}\s*[.\-\/]\s*\d{1,2}\s*[.\-\/]\s*\d{1,2}/);
+  if(mb){var b=_normBirth(mb[0]);if(b){out.birth=b;w=w.replace(mb[0],' | ');}}
+  var medPh=null;
+  if(/과거\s*복용/.test(w)){out.med='과거 복용';medPh=/과거\s*복용/;}
+  else if(/복용\s*안\s*함|복용안함|미복용/.test(w)){out.med='복용 안 함';medPh=/복용\s*안\s*함|복용안함|미복용/;}
+  else if(/복용\s*중|복용중|복용\s*함|복용함/.test(w)){out.med='복용 중';medPh=/복용\s*중|복용중|복용\s*함|복용함/;}
+  if(medPh)w=w.replace(medPh,' | ');
+  var mg=w.match(/(?:^|\s|성별[:：\s]*)(남성|여성|남자|여자|남|여)(?=\s|$)/);
+  if(mg){out.gender=(mg[1].charAt(0)==='남')?'남':'여';w=w.replace(mg[1],' | ');}
+  /* 토큰 스캔: 라벨→필드 전환, 값 토큰은 현재 필드에 누적(경계/자리표에서 종료) */
+  var toks=w.replace(/[:：]/g,' ').split(/\s+/).filter(Boolean);
+  var cur=null,buf={};
+  toks.forEach(function(tk){
+    if(tk==='|'){cur=null;return;}
+    var f=_LABEL_MAP[tk.toLowerCase()]||_LABEL_MAP[tk];
+    if(f){cur=(f==='x')?null:f;if(cur)buf[cur]=buf[cur]||[];return;}
+    if(cur)buf[cur].push(tk);
+  });
+  ['name','job','hist','dx','status'].forEach(function(f){if(buf[f]&&buf[f].length)out[f]=buf[f].join(' ');});
+  if(!out.name){ /* 라벨 없는 선두 한글 토큰 = 이름 후보 */
+    var lead=String(raw).split(/01[016789]/)[0]||String(raw);
+    var mm=lead.match(/[가-힣]{2,4}/);
+    if(mm&&!_LABEL_MAP[mm[0]])out.name=mm[0];
+  }
+  return out;
+}
+function _applyParsed(p){
+  function setV(id,v){if(v!=null&&v!==''){var el=document.getElementById(id);if(el)el.value=v;}}
+  setV('in-name',p.name);setV('in-phone',p.phone);setV('in-birth',p.birth);
+  if(p.gender){var g=document.getElementById('in-gender');if(g)g.value=p.gender;}
+  setV('uw-job',p.job);setV('uw-hist',p.hist);setV('uw-dx',p.dx);setV('uw-status',p.status);
+  if(p.med){var md=document.getElementById('uw-med');if(md)md.value=p.med;}
+  var nm=document.getElementById('in-name').value,ph=document.getElementById('in-phone').value,
+      bd=document.getElementById('in-birth').value,gd=document.getElementById('in-gender').value;
+  if(nm)document.getElementById('fName').textContent=nm;
+  var sub=[ph,bd,gd].filter(Boolean).join(' · ');
+  if(sub)document.getElementById('fSub').textContent=sub;
+}
+(function(){
+  var panel=document.querySelector('.form-panel');if(!panel)return;
+  panel.addEventListener('paste',function(e){
+    var cd=e.clipboardData||window.clipboardData;if(!cd)return;
+    var txt=cd.getData('text')||'';
+    if(!_looksStructured(txt))return;        /* 단일 값 = 일반 붙여넣기(기본 동작 유지) */
+    e.preventDefault();
+    _applyParsed(_parseBunch(txt));
+  });
+})();
+
 /* ── 초기 렌더 ── */
 document.getElementById('cap').innerHTML=CAPS['1'];
 renderChips(); renderList(); fillForm('김영업');
