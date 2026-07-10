@@ -5930,10 +5930,11 @@ function _snScrPick(i, btn, keepList){
   var _ia=s.attachments; if(typeof _ia==='string'){ try{ _ia=JSON.parse(_ia); }catch(e){ _ia=[]; } } if(!Array.isArray(_ia)) _ia=[];
   var attHtml=''; if(_ia.length && typeof _voiceAttsHtml==='function'){ var _ah=_voiceAttsHtml(_ia); attHtml=_ah.html; window._voiceImgs=_ah.imgs; window._voiceImgNames=_ah.names; } else { window._voiceImgs=[]; window._voiceImgNames=[]; }
   var v=document.getElementById('sn-scr-viewer');
-  /* 공유한 본인(owner)에게만 수정·삭제 노출 — owner_id는 공유 INSERT 때 저장된 본인 id. RLS(scripts_update_own/delete_own)가 owner만 허용하므로 UI도 owner 게이트로 정합. (2026-06-25) */
+  /* 수정·삭제 노출 = 공유한 본인(owner) + 소속 매니저(실장·지점장·admin). 서버 RLS가 owner + 같은 팀/지점 매니저 + admin 을 허용하도록 확장됨(2026-07-10). 이 목록(_snScopeScripts)은 RLS SELECT로 뷰어 본인의 팀/지점 범위만 로드되므로, 매니저면 여기 보이는 글 전부 관리 가능(소속 격리는 서버 RLS가 최종 보증). owner_id는 공유 INSERT 때 저장된 본인 id. */
   var _myId=(typeof _getOwnerId==='function')?_getOwnerId():((window.AppState&&window.AppState.userId)||'');
   var _isOwner=(!!_myId && String(s.owner_id||'')===String(_myId));
-  var _acts=_isOwner?('<div class="vacts" style="margin-top:16px;display:flex;gap:8px">'
+  var _canEdit=_isOwner || (typeof window._isMgrShare==='function' && window._isMgrShare());
+  var _acts=_canEdit?('<div class="vacts" style="margin-top:16px;display:flex;gap:8px">'
     +'<button class="post-act" onclick="scrEditInline('+JSON.stringify(String(s.id))+')">&#9999;&#65039; 수정</button>'
     +'<button class="post-act" onclick="_snScrDelete('+JSON.stringify(String(s.id))+')">&#128465;&#65039; 삭제</button></div>'):'';
   if(v){ v.innerHTML='<div class="vttl">'+_escHtml(s.title||'(제목 없음)')+'</div>'+(s.owner_email?'<div class="vmeta">'+_escHtml(s.owner_email)+'</div>':'')+'<div class="vbody" style="word-break:break-word">'+body+attHtml+'</div>'+_acts; }  /* 마이 스크립트·공지·자료실 상세와 동일한 공통 뷰어 클래스(.vttl 1.25rem/.vmeta/.vbody)로 통일 — 2026-06-25 */
