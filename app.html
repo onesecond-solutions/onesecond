@@ -9558,6 +9558,8 @@ function activateCard(card, idx, total){
     allCards[i].style.left = '';
     allCards[i].style.right = '';
     allCards[i].style.minWidth = '';
+    /* 이전에 확장했던 셀 높이 보정 원복 (다른 카드로 전환 시 잔여 minHeight 제거) */
+    if(allCards[i].parentElement) allCards[i].parentElement.style.minHeight = '';
   }
 
   var isMobile = window.innerWidth <= 767;
@@ -9598,6 +9600,14 @@ function activateCard(card, idx, total){
   /* 2026-05-29 PR #169: scripts.last_used_at 갱신 (홈 4층 최근 사용 정합) */
   var scriptId = card.getAttribute('data-id');
   if(scriptId && typeof logScriptUsage === 'function') logScriptUsage(scriptId, 'view');
+  /* 펼친 카드는 position:absolute라 부모 셀(min-height:200px)이 안 커져 wrap 스크롤 높이가
+     증가하지 않는다 → 하단 행 카드 펼침 시 아랫부분 도달 불가. 펼친 실제 높이를 셀 min-height에
+     반영해 스크롤 높이를 확보한다(닫을 때 deactivateCard에서 원복). */
+  var _cell = card.parentElement;
+  if(_cell) _cell.style.minHeight = card.getBoundingClientRect().height + 'px';
+  /* 펼친 카드가 화면 밖이면 보이도록 (block:'nearest' → 이미 보이면 무동작이라 홈 딥링크의
+     자체 scrollIntoView와 이중 호출돼도 무해). */
+  try { card.scrollIntoView({ block: 'nearest' }); } catch(err){}
 }
 
 function deactivateCard(silent){
@@ -9610,6 +9620,8 @@ function deactivateCard(silent){
     cards[i].style.left = '';
     cards[i].style.right = '';
     cards[i].style.minWidth = '';
+    /* activateCard에서 보정한 셀 min-height 원복 */
+    if(cards[i].parentElement) cards[i].parentElement.style.minHeight = '';
   }
   wrap.classList.remove('has-active');
   if(!silent && hasActive && history.state && history.state.scriptCardActive){
