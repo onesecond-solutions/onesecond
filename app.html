@@ -13935,7 +13935,14 @@ window.scrEditOpen=scrEditOpen;
 
 /* ═══ 마이 스페이스 스크립트 인라인 작업공간 (Phase 1, 2026-06-11) — 우측 2카드(글쓰기/작업공간) + osRich 리치텍스트.
  * 콜/채팅 = 분류 태그만(둘 다 리치 자유). 단계·핵심멘트·대안화법 폐기. script_text=HTML 저장. 기존 모달(openMyspaceWrite)·수정 모달 공존. ═══ */
-function scrIlType(t){ window._scrIlType=t; var seg=document.getElementById('scr-il-seg'); if(seg){ var bs=seg.querySelectorAll('button'); for(var i=0;i<bs.length;i++){ bs[i].classList.toggle('on', bs[i].getAttribute('data-tkey')===t); } } }  /* 유형 5종 세그먼트 하이라이트(data-tkey 매칭) */
+/* 상담관리(care) 유형 = 영업노트(#v-salesnote) 화면 전환 진입점(A안, 임태성 게이트 1단계). 인라인 유형이 아니라 별 화면이므로 세그먼트 하이라이트 대신 showView 계열로 전환. care 버튼 자체가 게이트 안(_scrTypesVisible)에서만 렌더되고 showView('salesnote')가 비게이트를 home으로 재가드 → 이중 격리. 라이브 표시명: 상담관리→영업노트. 2026-07-10 */
+function scrIlType(t){
+  if(t==='care'){
+    if(typeof _canSeeSalesNote==='function' && _canSeeSalesNote() && typeof _navView==='function'){ _navView('salesnote'); }
+    return;  /* 게이트 밖(비정상 경로) = no-op, 인라인 폼 상태·유형 무변경 */
+  }
+  window._scrIlType=t; var seg=document.getElementById('scr-il-seg'); if(seg){ var bs=seg.querySelectorAll('button'); for(var i=0;i<bs.length;i++){ bs[i].classList.toggle('on', bs[i].getAttribute('data-tkey')===t); } }
+}  /* 유형 세그먼트 하이라이트(data-tkey 매칭). 상담관리(care)만 영업노트 화면 전환 */
 window.scrIlType=scrIlType;
 /* 스크립트 인라인 모드 해제 — 다른 칩(공유함)·탭 이동 시 글쓰기 카드 잔존 방지 */
 function _scrModeOff(){ var ms=document.getElementById('mys-split'); if(ms) ms.classList.remove('scr-mode'); var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none'; }
