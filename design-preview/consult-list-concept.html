@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상담관리 리스트 UI 비교 시안 — 3안</title>
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   상담관리 리스트 UI 비교 시안 (design-preview 전용 · 라이브 무배선)
+   토큰값 출처 = css/app-core.css :root (실측 추출, 추정 아님)
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  /* 기본 표면·경계 (app-core.css :root 8행) */
+  --bg:#FAFAFB; --s1:#FFFFFF; --s2:#F2F2F4; --sh:#EDEDF0; --bd:#DCDCE1;
+  /* 텍스트 (app-core.css :root 8행) */
+  --tp:#18181B; --ts:#52525B; --tf:#71717A; --bodytx:#3F3F46;
+  /* 브랜드 인디고 · 신호색 (app-core.css :root 8행) */
+  --ac:#6366F1; --ach:#7C7FF2; --ok:#16A34A; --warn:#F59E0B; --err:#DC2626; --t-uw:#0891B2;
+  /* 10색 카테고리 (app-core.css :root 12행) — 단계 색 매핑용 */
+  --cat-cyan:#0891B2; --cat-blue:#2563EB; --cat-indigo:#6366F1; --cat-violet:#7C3AED;
+  --cat-amber:#D97706; --cat-green:#16A34A; --cat-gray:#A1A1AA;
+  /* radius (app-core.css :root 14행) */
+  --radius-xs:8px; --radius-sm:11px; --radius-md:13px; --radius-lg:18px; --radius-full:9999px;
+  /* 타이포 기준선 (app-core.css :root 18행) */
+  --ts-badge:12px; --ts-meta:13px; --ts-preview:14px; --ts-list-title:15px; --ts-body:16px; --ts-viewer-title:20px;
+  /* weight (app-core.css :root 24행) */
+  --fw-regular:400; --fw-medium:500;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#17171A; --s1:#1F1F23; --s2:#26262B; --sh:#2E2E34; --bd:#37373E;
+    --tp:#F4F4F5; --ts:#A1A1AA; --tf:#8A8A93; --bodytx:#D4D4D8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17171A; --s1:#1F1F23; --s2:#26262B; --sh:#2E2E34; --bd:#37373E;
+  --tp:#F4F4F5; --ts:#A1A1AA; --tf:#8A8A93; --bodytx:#D4D4D8;
+}
+:root[data-theme="light"]{
+  --bg:#FAFAFB; --s1:#FFFFFF; --s2:#F2F2F4; --sh:#EDEDF0; --bd:#DCDCE1;
+  --tp:#18181B; --ts:#52525B; --tf:#71717A; --bodytx:#3F3F46;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:var(--bg); color:var(--tp); font-size:var(--ts-body);
+  line-height:1.6; -webkit-font-smoothing:antialiased; padding:24px 20px 60px;
+}
+.page{max-width:1080px;margin:0 auto;}
+
+/* ── 페이지 헤더 ── */
+.hd{margin-bottom:18px;}
+.hd .title{font-size:var(--ts-viewer-title);font-weight:800;letter-spacing:-.01em;}
+.hd .desc{margin-top:6px;font-size:var(--ts-meta);color:var(--ts);line-height:1.6;}
+.hd .theme-toggle{float:right;font-size:var(--ts-meta);color:var(--ts);background:var(--s1);
+  border:1px solid var(--bd);border-radius:var(--radius-sm);padding:6px 12px;cursor:pointer;font-family:inherit;}
+.hd .theme-toggle:hover{background:var(--s2);}
+
+/* ── 안 전환 탭 ── */
+.opt-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 6px;}
+.opt-tab{font-size:var(--ts-preview);font-weight:600;color:var(--ts);background:var(--s1);
+  border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 16px;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;gap:7px;transition:.12s;}
+.opt-tab:hover{background:var(--s2);}
+.opt-tab.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+.opt-tab .rec{font-size:11px;font-weight:700;padding:1px 7px;border-radius:var(--radius-full);
+  background:var(--ok);color:#fff;letter-spacing:.02em;}
+.opt-tab.on .rec{background:rgba(255,255,255,.25);}
+
+/* ── 장단점 캡션 ── */
+.cap{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md);
+  padding:12px 15px;margin:8px 0 16px;font-size:var(--ts-meta);color:var(--bodytx);line-height:1.65;}
+.cap b{color:var(--tp);font-weight:700;}
+.cap .rec-note{color:var(--ok);font-weight:700;}
+.cap .pro::before{content:"+ ";color:var(--ok);font-weight:800;}
+.cap .con::before{content:"− ";color:var(--warn);font-weight:800;}
+.cap .row{display:block;margin-top:3px;}
+
+/* ── 2단 레이아웃 ── */
+.shell{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start;}
+@media(max-width:820px){.shell{grid-template-columns:1fr;}}
+
+/* 좌: 리스트 패널 */
+.list-panel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);
+  padding:14px 13px;min-height:520px;}
+.lp-search{display:flex;gap:8px;margin-bottom:11px;}
+.lp-search input{flex:1;min-width:0;padding:9px 13px;border:1px solid var(--bd);
+  border-radius:var(--radius-sm);font-size:var(--ts-preview);font-family:inherit;background:var(--bg);color:var(--tp);}
+.lp-search input::placeholder{color:var(--tf);}
+.lp-newbtn{border:0;border-radius:var(--radius-sm);background:var(--ac);color:#fff;
+  font-size:var(--ts-meta);font-weight:700;padding:0 14px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.lp-newbtn:hover{background:var(--ach);}
+
+/* 필터칩 (공통) */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.chip{font-size:var(--ts-badge);padding:5px 11px;border:1px solid var(--bd);
+  border-radius:var(--radius-full);cursor:pointer;background:var(--s1);color:var(--tp);
+  user-select:none;transition:.1s;}
+.chip:hover{background:var(--s2);}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+.chip b{font-weight:700;opacity:.65;margin-left:3px;}
+.chip.on b{opacity:.85;}
+
+.list-body{display:flex;flex-direction:column;}
+
+/* ── 안1: 현재 영업노트 스타일 (app.html sn-row 실측 재현) ── */
+.v1 .row1{display:flex;justify-content:space-between;gap:8px;padding:10px 13px;
+  border-bottom:0.5px solid var(--bd);cursor:pointer;font-size:var(--ts-meta);border-radius:var(--radius-xs);}
+.v1 .row1:hover{background:var(--s2);}
+.v1 .row1.on{background:var(--s2);border-left:3px solid var(--ac);}
+.v1 .row1 .nm{font-weight:700;color:var(--tp);}
+.v1 .row1 .ph{color:var(--ts);font-size:var(--ts-badge);white-space:nowrap;}
+
+/* ── 안2: 기획팀장 A안 카드 (단계배지·좌측 색보더) ── */
+.v2 .card2,.v3 .card3{position:relative;cursor:pointer;border:1px solid var(--bd);
+  border-radius:var(--radius-md);padding:12px 14px 12px 15px;margin-bottom:9px;background:var(--s1);
+  border-left:3px solid var(--cat-gray);transition:.12s;}
+.v2 .card2:hover,.v3 .card3:hover{background:var(--s2);border-color:var(--ach);}
+.v2 .card2.on,.v3 .card3.on{background:var(--s2);box-shadow:0 0 0 1px var(--ac) inset;}
+.v2 .c2-top,.v3 .c3-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.v2 .c2-name,.v3 .c3-name{font-size:var(--ts-list-title);font-weight:700;color:var(--tp);}
+.v2 .c2-ph,.v3 .c3-ph{margin-top:3px;font-size:var(--ts-meta);color:var(--ts);}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--radius-full);
+  white-space:nowrap;letter-spacing:.01em;}
+.badge.terminal{border:1px dashed currentColor;background:transparent!important;}
+
+/* ── 안3: 결합(권장) — A안 카드 + 진행 메타 라인 ── */
+.v3 .card3{border-left-width:3px;}
+.v3 .c3-meta{display:flex;gap:10px;margin-top:8px;font-size:var(--ts-badge);color:var(--tf);
+  border-top:0.5px solid var(--bd);padding-top:7px;}
+.v3 .c3-meta .mi{display:flex;align-items:center;gap:4px;}
+.v3 .c3-meta .mi b{color:var(--ts);font-weight:600;}
+
+.empty{padding:30px 14px;text-align:center;color:var(--tf);font-size:var(--ts-meta);}
+
+/* 우: 상세 폼 */
+.form-panel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);
+  padding:22px 24px;min-height:520px;}
+.fp-title{font-size:var(--ts-viewer-title);font-weight:800;color:var(--tp);}
+.fp-sub{margin-top:3px;font-size:var(--ts-meta);color:var(--ts);}
+.fp-badge{display:inline-block;margin-top:10px;font-size:var(--ts-badge);font-weight:700;
+  padding:4px 11px;border-radius:var(--radius-full);}
+
+.sec{margin-top:22px;}
+.sec-h{font-size:var(--ts-meta);font-weight:800;color:var(--tp);letter-spacing:.01em;
+  padding-bottom:7px;border-bottom:1px solid var(--bd);margin-bottom:13px;
+  display:flex;align-items:center;gap:8px;}
+.sec-h .tag{font-size:11px;font-weight:600;color:var(--t-uw);background:color-mix(in srgb,var(--t-uw) 12%,transparent);
+  padding:2px 8px;border-radius:var(--radius-full);}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px 14px;}
+.fld{display:flex;flex-direction:column;gap:5px;}
+.fld.full{grid-column:1 / -1;}
+.fld label{font-size:var(--ts-badge);font-weight:600;color:var(--ts);}
+.fld input,.fld select,.fld textarea{padding:9px 12px;border:1px solid var(--bd);
+  border-radius:var(--radius-sm);font-size:var(--ts-preview);font-family:inherit;
+  background:var(--bg);color:var(--tp);width:100%;}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--ach);outline-offset:-1px;border-color:var(--ac);}
+.fld textarea{resize:vertical;min-height:74px;line-height:1.6;}
+.fld .hint{font-size:11px;color:var(--tf);}
+
+.consent{margin-top:12px;font-size:11px;color:var(--tf);background:var(--s2);
+  border:1px dashed var(--bd);border-radius:var(--radius-sm);padding:9px 12px;line-height:1.55;}
+
+.fp-acts{display:flex;gap:9px;margin-top:22px;}
+.btn{border:0;border-radius:var(--radius-sm);font-size:var(--ts-meta);font-weight:700;
+  padding:10px 18px;cursor:pointer;font-family:inherit;}
+.btn.primary{background:var(--ac);color:#fff;}
+.btn.primary:hover{background:var(--ach);}
+.btn.ghost{background:var(--s2);color:var(--tp);border:1px solid var(--bd);}
+
+.foot{margin-top:34px;font-size:11px;color:var(--tf);line-height:1.7;
+  border-top:1px solid var(--bd);padding-top:14px;}
+.foot b{color:var(--ts);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hd">
+    <button class="theme-toggle" id="themeBtn" type="button">라이트/다크 전환</button>
+    <div class="title">상담관리 리스트 — UI 비교 시안</div>
+    <div class="desc">
+      좌측 카드 리스트를 <b>3안</b>으로 비교하는 미리보기입니다(라이브 배선 아님 · 시안 전용).
+      상단 탭으로 안을 바꿔 눈으로 비교하세요. 우측 상세 폼(기본정보 + 인수 정보 + 상담메모)은 세 안 공통입니다.
+      모든 색·간격·라운드 값은 실제 디자인 토큰(app-core.css)을 그대로 사용했고, 데이터는 전부 가명·가짜 번호입니다.
+    </div>
+  </div>
+
+  <div class="opt-tabs" id="optTabs">
+    <button class="opt-tab on" data-v="1" type="button">안1 · 현재 영업노트</button>
+    <button class="opt-tab" data-v="2" type="button">안2 · A안 카드</button>
+    <button class="opt-tab" data-v="3" type="button">안3 · 결합 <span class="rec">총괄 권장</span></button>
+  </div>
+
+  <div class="cap" id="cap"></div>
+
+  <div class="shell">
+    <!-- 좌: 리스트 -->
+    <div class="list-panel">
+      <div class="lp-search">
+        <input type="text" id="q" placeholder="이름·전화 검색" autocomplete="off">
+        <button class="lp-newbtn" type="button" onclick="return false">+ 신규 고객</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="list-body" id="list"></div>
+    </div>
+
+    <!-- 우: 상세 폼 (공통) -->
+    <div class="form-panel">
+      <div class="fp-title" id="fName">김영업</div>
+      <div class="fp-sub" id="fSub">010-0000-0001 · 1988-03-12 · 남</div>
+      <span class="fp-badge" id="fBadge">신규DB</span>
+
+      <div class="sec">
+        <div class="sec-h">기본 정보</div>
+        <div class="grid">
+          <div class="fld"><label>이름</label><input id="in-name" value="김영업"></div>
+          <div class="fld"><label>연락처</label><input id="in-phone" value="010-0000-0001"></div>
+          <div class="fld"><label>생년월일</label><input id="in-birth" value="1988-03-12" placeholder="YYYY-MM-DD"></div>
+          <div class="fld"><label>성별</label>
+            <select id="in-gender"><option>남</option><option>여</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h">인수 정보 <span class="tag">가입심사 참고 · 리스트 미노출</span></div>
+        <div class="grid">
+          <div class="fld"><label>직업</label><input id="uw-job" placeholder="예: 사무직"></div>
+          <div class="fld"><label>약 복용 여부</label>
+            <select id="uw-med">
+              <option value="">선택</option>
+              <option>복용 중</option>
+              <option>복용 안 함</option>
+              <option>과거 복용</option>
+            </select>
+          </div>
+          <div class="fld full"><label>병력</label>
+            <input id="uw-hist" placeholder="과거·현재 병력 (자유 입력)">
+          </div>
+          <div class="fld"><label>진단시기</label><input id="uw-dx" placeholder="예: 2022-05 / 형식 자유"></div>
+          <div class="fld"><label>현재 상태</label><input id="uw-status" placeholder="인수 관련 현재 상태 서술"></div>
+        </div>
+        <div class="consent">건강·병력 등 민감정보 1회 수집·이용 동의 문구 자리(문안 확정·법무 검토 별도). 인수 5필드는 좌측 리스트 카드에 노출하지 않으며 로그에도 출력하지 않습니다.</div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h">상담 메모</div>
+        <div class="grid">
+          <div class="fld full"><label>메모</label>
+            <textarea id="memo" placeholder="상담 내용을 기록하세요(회차별 누적)"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="fp-acts">
+        <button class="btn primary" type="button" onclick="return false">저장</button>
+        <button class="btn ghost" type="button" onclick="return false">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>시안 안내</b> — design-preview/consult-list-concept.html · 라이브(app.html/pages/js/css) 무접촉 · DB 배선 없음.
+    단계 8종 정본 = 영업노트 실측(_SN_STAGES). 데이터는 전부 가명·가짜 번호(010-0000-000x)이며 실제 고객정보(PII) 없음.
+    표시 용어 = 상담관리 / 코드 안정키 = #v-salesnote(영업노트) 매핑.
+  </div>
+
+</div>
+
+<script>
+/* ── 단계 8종 정본 (영업노트 실측 _SN_STAGES) ── */
+var STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료'];
+/* 단계 색 매핑 (카테고리 토큰 기반) — 진행 파이프라인=인디고 계열, 보류=회색, 청약완료=종결(점선·그린) */
+var STAGE_COLOR={
+  '신규DB':'var(--cat-indigo)','부재':'var(--tf)','예약':'var(--cat-cyan)',
+  '진행중':'var(--cat-violet)','제안서발송':'var(--cat-blue)','보류':'var(--cat-gray)',
+  '클로징':'var(--cat-amber)','청약완료':'var(--cat-green)'
+};
+var TERMINAL={'청약완료':1}; /* END 점선 처리 */
+
+/* ── mock 데이터 (가명·가짜 번호 — PII 없음) ── */
+var DATA=[
+  {name:'김영업', phone:'010-0000-0001', birth:'1988-03-12', gender:'남', status:'신규DB',   last:'2026-07-10', cnt:1, job:'사무직',   med:'복용 안 함', hist:'',            dx:'',        uw:'', memo:''},
+  {name:'이설계', phone:'010-0000-0002', birth:'1979-11-05', gender:'여', status:'진행중',   last:'2026-07-09', cnt:3, job:'자영업',   med:'복용 중',   hist:'고혈압',      dx:'2021-03', uw:'약물 조절 중', memo:'2차 상담 예정'},
+  {name:'박보험', phone:'010-0000-0003', birth:'1992-06-21', gender:'남', status:'제안서발송', last:'2026-07-08', cnt:2, job:'생산직',   med:'복용 안 함', hist:'',            dx:'',        uw:'', memo:'제안서 검토 중'},
+  {name:'최고객', phone:'010-0000-0004', birth:'1985-02-14', gender:'여', status:'예약',     last:'2026-07-07', cnt:1, job:'프리랜서', med:'과거 복용', hist:'갑상선(완치)', dx:'2019-08', uw:'추적 관찰 종료', memo:''},
+  {name:'정상담', phone:'010-0000-0005', birth:'1990-09-30', gender:'남', status:'부재',     last:'2026-07-06', cnt:0, job:'',         med:'',          hist:'',            dx:'',        uw:'', memo:'통화 부재 2회'},
+  {name:'강가입', phone:'010-0000-0006', birth:'1983-12-01', gender:'여', status:'클로징',   last:'2026-07-05', cnt:4, job:'사무직',   med:'복용 안 함', hist:'',            dx:'',        uw:'', memo:'청약 서류 준비'},
+  {name:'윤청약', phone:'010-0000-0007', birth:'1995-04-18', gender:'남', status:'청약완료', last:'2026-07-04', cnt:5, job:'공무원',   med:'복용 안 함', hist:'',            dx:'',        uw:'심사 통과', memo:'증권 발급 대기'},
+  {name:'한보류', phone:'010-0000-0008', birth:'1975-07-22', gender:'여', status:'보류',     last:'2026-06-28', cnt:2, job:'자영업',   med:'복용 중',   hist:'당뇨',        dx:'2018-01', uw:'인수 보류 검토', memo:'재접촉 예정'}
+];
+
+/* ── 안별 장단점 캡션 ── */
+var CAPS={
+  '1':'<b>안1 · 현재 영업노트 스타일</b> (app.html sn-row 실측 재현) '
+     +'<span class="row pro">이미 라이브 운영 중 — 배선 0, 회귀 위험 최소. 한 줄 = 이름+전화로 밀도 높음.</span>'
+     +'<span class="row con">단계를 색/배지로 못 봄(리스트에서 상태 파악 약함). 카드 시각 위계 낮아 투박.</span>',
+  '2':'<b>안2 · 기획팀장 A안 카드</b> (단계 배지 · 좌측 색보더 · 카운트 칩) '
+     +'<span class="row pro">단계가 색·배지로 한눈에. 카드 위계가 또렷해 세련됨.</span>'
+     +'<span class="row con">기존 sn-* 셸을 새 마크업으로 교체 → 배선·회귀 반경 큼. 한 화면 표시 건수는 안1보다 적음.</span>',
+  '3':'<b>안3 · 결합</b> <span class="rec-note">(총괄 권장)</span> — 영업노트 기능 구조 + A안 카드 디자인 + 8단계 정본 '
+     +'<span class="row pro">A안의 단계 배지·색보더 시각성 + 최근 상담일·회차 메타로 실무 정보 밀도까지. 기존 sn-* 데이터 계약(status·phone·updated_at)에 그대로 얹혀 확장 안전.</span>'
+     +'<span class="row con">카드 높이가 안1보다 커 스크롤 증가(밀도-정보 트레이드오프). 메타 라인 배선 소폭 추가.</span>'
+};
+
+var cur='1', selName='김영업', stageF='all', q='';
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function badgeHtml(st){
+  var col=STAGE_COLOR[st]||'var(--cat-gray)';
+  if(TERMINAL[st]) return '<span class="badge terminal" style="color:'+col+'">'+esc(st)+'</span>';
+  return '<span class="badge" style="color:#fff;background:'+col+'">'+esc(st)+'</span>';
+}
+function match(c){
+  if(stageF!=='all' && c.status!==stageF) return false;
+  if(!q) return true;
+  return (c.name+' '+c.phone).toLowerCase().indexOf(q.toLowerCase())>=0;
+}
+
+function renderChips(){
+  var el=document.getElementById('chips');
+  var arr=['all'].concat(STAGES);
+  el.innerHTML=arr.map(function(s){
+    var lbl=(s==='all')?'전체':s;
+    var n=(s==='all')?DATA.length:DATA.filter(function(c){return c.status===s;}).length;
+    return '<span class="chip'+(stageF===s?' on':'')+'" data-s="'+esc(s)+'">'+esc(lbl)+' <b>'+n+'</b></span>';
+  }).join('');
+}
+
+function renderList(){
+  var el=document.getElementById('list'), h='', n=0;
+  DATA.forEach(function(c){
+    if(!match(c)) return; n++;
+    var on=(c.name===selName)?' on':'';
+    if(cur==='1'){
+      h+='<div class="row1'+on+'" data-n="'+esc(c.name)+'"><span class="nm">'+esc(c.name)+'</span><span class="ph">'+esc(c.phone)+'</span></div>';
+    }else if(cur==='2'){
+      var col=STAGE_COLOR[c.status]||'var(--cat-gray)';
+      h+='<div class="card2'+on+'" data-n="'+esc(c.name)+'" style="border-left-color:'+col+'">'
+        +'<div class="c2-top"><span class="c2-name">'+esc(c.name)+'</span>'+badgeHtml(c.status)+'</div>'
+        +'<div class="c2-ph">'+esc(c.phone)+'</div></div>';
+    }else{
+      var col3=STAGE_COLOR[c.status]||'var(--cat-gray)';
+      h+='<div class="card3'+on+'" data-n="'+esc(c.name)+'" style="border-left-color:'+col3+'">'
+        +'<div class="c3-top"><span class="c3-name">'+esc(c.name)+'</span>'+badgeHtml(c.status)+'</div>'
+        +'<div class="c3-ph">'+esc(c.phone)+'</div>'
+        +'<div class="c3-meta"><span class="mi">최근 <b>'+esc(c.last)+'</b></span><span class="mi">상담 <b>'+esc(c.cnt)+'회</b></span></div>'
+        +'</div>';
+    }
+  });
+  el.className='list-body v'+cur;
+  el.innerHTML=n?h:'<div class="empty">검색 결과 없음</div>';
+}
+
+function fillForm(name){
+  var c=null; DATA.forEach(function(x){if(x.name===name)c=x;});
+  if(!c) return;
+  selName=name;
+  document.getElementById('fName').textContent=c.name;
+  document.getElementById('fSub').textContent=c.phone+' · '+c.birth+' · '+c.gender;
+  var b=document.getElementById('fBadge');
+  var col=STAGE_COLOR[c.status]||'var(--cat-gray)';
+  if(TERMINAL[c.status]){b.style.color=col;b.style.background='transparent';b.style.border='1px dashed '+col;}
+  else{b.style.color='#fff';b.style.background=col;b.style.border='0';}
+  b.textContent=c.status;
+  document.getElementById('in-name').value=c.name;
+  document.getElementById('in-phone').value=c.phone;
+  document.getElementById('in-birth').value=c.birth;
+  document.getElementById('in-gender').value=c.gender;
+  document.getElementById('uw-job').value=c.job;
+  document.getElementById('uw-med').value=c.med;
+  document.getElementById('uw-hist').value=c.hist;
+  document.getElementById('uw-dx').value=c.dx;
+  document.getElementById('uw-status').value=c.uw;
+  document.getElementById('memo').value=c.memo;
+}
+
+/* ── 이벤트 ── */
+document.getElementById('optTabs').addEventListener('click',function(e){
+  var t=e.target.closest('.opt-tab'); if(!t)return;
+  cur=t.getAttribute('data-v');
+  Array.prototype.forEach.call(this.children,function(b){b.classList.toggle('on',b===t);});
+  document.getElementById('cap').innerHTML=CAPS[cur];
+  renderList();
+});
+document.getElementById('chips').addEventListener('click',function(e){
+  var t=e.target.closest('.chip'); if(!t)return;
+  stageF=t.getAttribute('data-s'); renderChips(); renderList();
+});
+document.getElementById('list').addEventListener('click',function(e){
+  var t=e.target.closest('[data-n]'); if(!t)return;
+  fillForm(t.getAttribute('data-n')); renderList();
+});
+document.getElementById('q').addEventListener('input',function(){q=this.value;renderList();});
+document.getElementById('themeBtn').addEventListener('click',function(){
+  var r=document.documentElement;
+  var d=r.getAttribute('data-theme');
+  if(d==='dark'){r.setAttribute('data-theme','light');}
+  else if(d==='light'){r.setAttribute('data-theme','dark');}
+  else{r.setAttribute('data-theme', matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');}
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   히든 붙여넣기 자동입력 (뒤단 전용 · 화면 UI 흔적 0)
+   - 폼에 붙여넣은 텍스트가 여러 줄이거나 라벨/전화 뭉치면 규칙기반 파싱→각 필드 자동 채움.
+   - 단일 값(라벨 없는 한 줄)은 파싱 안 하고 일반 붙여넣기(오발동 0).
+   - 전부 브라우저 로컬 처리. 외부 API·fetch 0. 매칭 안 되면 비움(지어내기 0).
+   ════════════════════════════════════════════════════════════════ */
+var _PHONE_RE=/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/;
+var _LABEL_HINT=/(이름|성함|고객명|전화|연락처|휴대폰|핸드폰|생년월일|생년|생일|출생|성별|직업|직장|복용|병력|기왕력|과거력|진단|현재\s*상태|상태)/;
+/* 라벨 사전: 'x'=경계(값 수집 안 함, 해당 값은 패턴으로 별도 추출) / 그 외=텍스트 필드 수집 시작 */
+var _LABEL_MAP={
+  '이름':'name','성함':'name','고객명':'name',
+  '전화':'x','연락처':'x','휴대폰':'x','핸드폰':'x','폰':'x','hp':'x',
+  '생년월일':'x','생년':'x','생일':'x','출생':'x','주민':'x',
+  '성별':'x',
+  '직업':'job','직장':'job',
+  '약':'x','복용':'x','약복용':'x','복용여부':'x',
+  '병력':'hist','기왕력':'hist','과거력':'hist','질병':'hist',
+  '진단':'dx','진단일':'dx','진단시기':'dx',
+  '상태':'status','현재상태':'status','현재':'status','진행':'status'
+};
+
+function _pad2(v){v=String(v);return v.length<2?'0'+v:v;}
+function _normPhone(s){var d=String(s).replace(/\D/g,'');
+  if(d.length===11)return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  if(d.length===10)return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6);return String(s).trim();}
+function _normBirth(s){
+  var m=String(s).replace(/'/g,'').match(/(\d{2,4})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})/);
+  if(!m)return'';var y=m[1];
+  if(y.length===2){var n=+y;y=String(n>30?1900+n:2000+n);}
+  return y+'-'+_pad2(m[2])+'-'+_pad2(m[3]);
+}
+function _looksStructured(t){
+  t=t.trim();if(!t)return false;
+  if(/[\r\n]/.test(t))return true;
+  var toks=t.split(/\s+/);
+  if(_LABEL_HINT.test(t)&&toks.length>=3)return true;
+  if(_PHONE_RE.test(t)&&toks.length>=2)return true;
+  return false;
+}
+function _parseBunch(raw){
+  var out={},w=' '+String(raw).replace(/[\r\n]+/g,' ')+' ';
+  /* 패턴 값 먼저 추출 후 자리표(|)로 치환 → 라벨 스캔 오염 방지 */
+  var mp=w.match(_PHONE_RE); if(mp){out.phone=_normPhone(mp[0]);w=w.replace(mp[0],' | ');}
+  var mb=w.match(/'?\d{2,4}\s*[.\-\/]\s*\d{1,2}\s*[.\-\/]\s*\d{1,2}/);
+  if(mb){var b=_normBirth(mb[0]);if(b){out.birth=b;w=w.replace(mb[0],' | ');}}
+  var medPh=null;
+  if(/과거\s*복용/.test(w)){out.med='과거 복용';medPh=/과거\s*복용/;}
+  else if(/복용\s*안\s*함|복용안함|미복용/.test(w)){out.med='복용 안 함';medPh=/복용\s*안\s*함|복용안함|미복용/;}
+  else if(/복용\s*중|복용중|복용\s*함|복용함/.test(w)){out.med='복용 중';medPh=/복용\s*중|복용중|복용\s*함|복용함/;}
+  if(medPh)w=w.replace(medPh,' | ');
+  var mg=w.match(/(?:^|\s|성별[:：\s]*)(남성|여성|남자|여자|남|여)(?=\s|$)/);
+  if(mg){out.gender=(mg[1].charAt(0)==='남')?'남':'여';w=w.replace(mg[1],' | ');}
+  /* 토큰 스캔: 라벨→필드 전환, 값 토큰은 현재 필드에 누적(경계/자리표에서 종료) */
+  var toks=w.replace(/[:：]/g,' ').split(/\s+/).filter(Boolean);
+  var cur=null,buf={};
+  toks.forEach(function(tk){
+    if(tk==='|'){cur=null;return;}
+    var f=_LABEL_MAP[tk.toLowerCase()]||_LABEL_MAP[tk];
+    if(f){cur=(f==='x')?null:f;if(cur)buf[cur]=buf[cur]||[];return;}
+    if(cur)buf[cur].push(tk);
+  });
+  ['name','job','hist','dx','status'].forEach(function(f){if(buf[f]&&buf[f].length)out[f]=buf[f].join(' ');});
+  if(!out.name){ /* 라벨 없는 선두 한글 토큰 = 이름 후보 */
+    var lead=String(raw).split(/01[016789]/)[0]||String(raw);
+    var mm=lead.match(/[가-힣]{2,4}/);
+    if(mm&&!_LABEL_MAP[mm[0]])out.name=mm[0];
+  }
+  return out;
+}
+function _applyParsed(p){
+  function setV(id,v){if(v!=null&&v!==''){var el=document.getElementById(id);if(el)el.value=v;}}
+  setV('in-name',p.name);setV('in-phone',p.phone);setV('in-birth',p.birth);
+  if(p.gender){var g=document.getElementById('in-gender');if(g)g.value=p.gender;}
+  setV('uw-job',p.job);setV('uw-hist',p.hist);setV('uw-dx',p.dx);setV('uw-status',p.status);
+  if(p.med){var md=document.getElementById('uw-med');if(md)md.value=p.med;}
+  var nm=document.getElementById('in-name').value,ph=document.getElementById('in-phone').value,
+      bd=document.getElementById('in-birth').value,gd=document.getElementById('in-gender').value;
+  if(nm)document.getElementById('fName').textContent=nm;
+  var sub=[ph,bd,gd].filter(Boolean).join(' · ');
+  if(sub)document.getElementById('fSub').textContent=sub;
+}
+(function(){
+  var panel=document.querySelector('.form-panel');if(!panel)return;
+  panel.addEventListener('paste',function(e){
+    var cd=e.clipboardData||window.clipboardData;if(!cd)return;
+    var txt=cd.getData('text')||'';
+    if(!_looksStructured(txt))return;        /* 단일 값 = 일반 붙여넣기(기본 동작 유지) */
+    e.preventDefault();
+    _applyParsed(_parseBunch(txt));
+  });
+})();
+
+/* ── 초기 렌더 ── */
+document.getElementById('cap').innerHTML=CAPS['1'];
+renderChips(); renderList(); fillForm('김영업');
+</script>
+</body>
+</html>
