@@ -5229,8 +5229,7 @@ async function ivSubmit(){
    *   실패 파일은 _failed에 모아 등록 직전 사용자에게 사유와 함께 고지하고, 제외 등록/중단 선택권을 준다. */
   var attachments = [];
   var _failed = [];
-  var _MAX_IMG = 52428800;    /* 이미지 첨부 한도 = 50MB */
-  var _MAX_OTHER = 104857600; /* PDF 등 비이미지 첨부 한도 = 100MB (onesecond_banner 버킷 file_size_limit 정합) */
+  /* 첨부 한도 = 전역 상수(_MAX_IMG 50MB / _MAX_OTHER 100MB) 사용 — fileTooLarge와 단일화(중복 정의 제거, 2026-07-10) */
   var _files = ((document.getElementById('iv-f-file')||{}).files) || [];
   var _sb = document.getElementById('iv-submit-btn');
   if(_files.length && _sb){ _sb.disabled = true; _sb.textContent = '업로드 중…'; }
@@ -14301,7 +14300,13 @@ function switchMyspaceTab(tab){
   }
 }
 /* 파일 용량 초과 안내 팝업 (공용) */
-var FILE_MAX_BYTES=5*1024*1024;
+/* 첨부 용량 한도 — 전역 단일 정의(자료실 ivSubmit 로직과 단일화, 중복 제거 2026-07-10).
+ * FILE_MAX_BYTES(5MB) = 이미지 압축 넛지(다이어트 마법사) 기준으로 이미지 전용.
+ * 실제 업로드 한도는 타입별: 이미지 _MAX_IMG(50MB) / PDF 등 비이미지 _MAX_OTHER(100MB). */
+var FILE_MAX_BYTES=5*1024*1024; /* 이미지 압축 넛지 기준 = 5MB (이미지 전용) */
+var _MAX_IMG=52428800;    /* 이미지 첨부 한도 = 50MB */
+var _MAX_OTHER=104857600; /* PDF 등 비이미지 첨부 한도 = 100MB (onesecond_banner 버킷 file_size_limit 정합) */
+window.FILE_MAX_BYTES=FILE_MAX_BYTES; window._MAX_IMG=_MAX_IMG; window._MAX_OTHER=_MAX_OTHER;
 function showDietPopup(msg){ var m=document.getElementById('dietPopup'); if(!m) return; if(msg){ var e=document.getElementById('dietMsg'); if(e) e.textContent=msg; } m.style.display='flex'; }
 function closeDietPopup(){ var m=document.getElementById('dietPopup'); if(m) m.style.display='none'; }
 /* 딸깍 → Quick 메뉴 이미지 변환 도구로 이동 (홈 이미지변환 버튼과 동일 진입) */
@@ -14368,12 +14373,23 @@ function clearDraftAndForm(){
 }
 window.saveActiveDraft=saveActiveDraft; window.loadActiveDraft=loadActiveDraft; window.clearActiveDraft=clearActiveDraft; window.clearDraftAndForm=clearDraftAndForm;
 window.showDietPopup=showDietPopup; window.closeDietPopup=closeDietPopup; window.dietToImageConvert=dietToImageConvert;
-/* FileList에서 5MB 초과 파일 검사 — 있으면 팝업 띄우고 true 반환 */
+/* FileList 용량 검사(타입 인식) — 초과 파일 있으면 안내 후 true 반환.
+ * 이미지: 5MB 초과 시 기존 압축 넛지(다이어트 마법사) 그대로 유지 — 이미지 넛지 정책 무변경.
+ * PDF 등 비이미지: 100MB(_MAX_OTHER) 한도 · 압축 불가 → 마법사(showDietPopup) 대신 일반 안내(alert). */
 function fileTooLarge(files){
   for(var i=0;i<(files?files.length:0);i++){
-    if(files[i].size>FILE_MAX_BYTES){
-      showDietPopup('"'+files[i].name+'" 파일이 5MB를 넘어요 ('+(files[i].size/1024/1024).toFixed(1)+'MB).\n조금 가볍게 줄여서 올려주세요.');
-      return true;
+    var f=files[i];
+    var isImg=/^image\//.test(f.type||'')||/\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(f.name||'');
+    if(isImg){
+      if(f.size>FILE_MAX_BYTES){
+        showDietPopup('"'+f.name+'" 파일이 5MB를 넘어요 ('+(f.size/1024/1024).toFixed(1)+'MB).\n조금 가볍게 줄여서 올려주세요.');
+        return true;
+      }
+    } else {
+      if(f.size>_MAX_OTHER){
+        alert('"'+f.name+'" 파일이 100MB를 넘어요 ('+(f.size/1024/1024).toFixed(1)+'MB).\nPDF 등 문서는 최대 100MB까지 올릴 수 있어요.');
+        return true;
+      }
     }
   }
   return false;
@@ -14543,7 +14559,8 @@ function mysWriteFilePreview(input, previewId){
   var files=(input&&input.files)||[];
   /* 5MB 초과 PNG/JPG 원본 = 변환 도구 자동 로드용 보관(메모리) */
   window._pendingConvertFile=null;
-  for(var k=0;k<files.length;k++){ if(files[k].size>FILE_MAX_BYTES){ var _nm=files[k].name||''; if(/png|jpe?g/i.test(files[k].type||'')||/\.(png|jpe?g)$/i.test(_nm)) window._pendingConvertFile=files[k]; break; } }
+  /* 5MB 초과 PNG/JPG 원본만 변환 도구 자동 로드 대상으로 보관. 비이미지(PDF 등)는 이미지 전용 흐름에 진입 금지(격리) — 앞선 비이미지에서 break하지 않고 계속 탐색 */
+  for(var k=0;k<files.length;k++){ if(files[k].size>FILE_MAX_BYTES){ var _nm=files[k].name||''; if(/png|jpe?g/i.test(files[k].type||'')||/\.(png|jpe?g)$/i.test(_nm)){ window._pendingConvertFile=files[k]; break; } } }
   if(fileTooLarge(files)){
     /* 5MB 초과 → 다이어트 팝업 + 선택 취소. 출처(첨부칸·탭) 기록 → 변환 후 복귀 자동 첨부 */
     window._convTargetInput=input.id;
