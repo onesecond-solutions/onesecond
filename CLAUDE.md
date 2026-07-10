@@ -42,6 +42,27 @@
 
 ---
 
+### DB/EF 실행 원칙 — 대표에게 SQL·콘솔·토큰을 시키지 않는다 (2026-07-10 대표 확정 · 회귀 판정 기준)
+
+> **운영 DB(RLS·정책·스키마) 및 Edge Function 실행은 AI팀이 기존 CI 채널로 끝낸다. 대표는 방향·승인·외부 계정 인증 1회까지만.** (2026-07-10 대표 3연속 교정 — 이번 실수 박제)
+
+**🚫 대표에게 요구 절대 금지 (하나라도 나오면 즉시 회귀 판정·중단·교정):**
+- SQL 실행 · 콘솔/터미널 명령 붙여넣기 · `.env.local` 등 파일 직접 편집 · PowerShell 붙여넣기 · 환경변수 반영 · 검증 명령 실행 · 로그 복사·전달
+- **토큰/비밀을 채팅에 붙여넣게 안내** (절대) · **지난주에 실패한 절차를 원인 규명 없이 다시 요구**
+
+**✅ 대표에게 요구 가능:** 방향/위험 승인 · 외부 계정에서 꼭 필요한 인증 1회 · GitHub Environment 1클릭 배포 승인(위험 승인).
+
+**실행은 AI팀이 — 이미 작동하는 CI 채널로:**
+- 운영 DB 변경 = `.github/workflows/db-migrate.yml`("DB Migration (guarded)"). 직접 psql→Session pooler, 비밀=`PGPASSWORD`(production-db Environment secret) 하나. **SUPABASE_ACCESS_TOKEN·Management API·URI secret·GitHub Secret 재등록 아님.**
+- 절차: `db/migrations/<날짜>_<name>.sql`(단일 `begin;…commit;` + DOWN 블록) + `scripts/ci/postverify_<name>.sql` 필수 → main 머지 → `gh workflow run db-migrate.yml -f file=<파일>` → deploy가 대표 1클릭 대기 → 대표 승인 시 `gh api .../pending_deployments`로 AI팀 실행(gh가 대표 계정 인증됨) → 로그로 apply+postverify 확인.
+- 완료 보고에 **적용 결과 · 검증 결과 · 토큰/비밀 비노출 확인** 포함.
+
+**⚠️ 실패 방식 재사용 전 강제 절차:** 과거 실패한 방법(예: 토큰/시크릿 방식)을 다시 쓰기 전 **반드시 post-mortem 먼저** — run id·커밋 근거, 실패 지점 분류(저장/읽기/권한/API/워크플로 등), 성공 근거 제시. 성공 근거 없으면 대안. **원인 해소 근거가 있을 때만** 대표에게 다음 인증을 요청한다.
+
+→ 진실 원천: `docs/ops/2026-07-03_ai_team_operating_charter.md` · 정합 메모리: `feedback_db_exec_via_ci_not_daepyo_console` · `project_db_migration_ci_channel`
+
+---
+
 ### 라이브 화면 용어 원칙 — 대화는 현재 라이브 화면 단어로만 (2026-07-09 대표 확정)
 
 > **대표·총괄·AI팀이 대화·질문·보고·작업지시서에서 쓰는 모든 단어(화면·기능·버튼 이름)는 현재 onesecond.solutions 라이브 화면에 실제로 보이는 용어를 기준으로 한다.** 코드 함수명·내부 뷰 id·개명 전(사라진) 옛 화면 이름으로 소통하지 않는다.
