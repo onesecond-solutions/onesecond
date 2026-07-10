@@ -13941,7 +13941,12 @@ function _scrModeOff(){ var ms=document.getElementById('mys-split'); if(ms) ms.c
 window._scrModeOff=_scrModeOff;
 function openScriptInline(edit){
   var _gt=window.db&&window.db.getToken&&window.db.getToken(); if(!_gt){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 업무노트 글쓰기 진입 게이트(2026-07-08) */
-  var v=document.getElementById('mysViewer'); if(!v) return;
+  /* 편집 폼 호스트 감지 — 팀/지점 공유 업무노트 뷰어(#sn-scr-viewer)가 화면에 표시 중이면 그곳에, 아니면 마이 스페이스(#mysViewer)에 폼을 그린다. 공유 업무노트 수정 시 폼이 안 뜨던 버그 정정(2026-07-10). */
+  var _snSplit=document.getElementById('sn-scr-split');
+  var _snVisible=!!(_snSplit && _snSplit.offsetParent!==null);   /* 존재+표시 중(offsetParent null=숨김/미부착)일 때만 팀/지점 호스트로 판정 → 마이 스페이스 흐름 회귀 방지 */
+  var v=_snVisible?document.getElementById('sn-scr-viewer'):document.getElementById('mysViewer');
+  if(!v) return;
+  window._scrEditHost=_snVisible?'sn':'mys';   /* 저장/취소 라우팅용(saveScrInline·closeScrInline). 항상 진입 시 재설정 → 이전 컨텍스트 잔존 방지 */
   window._scrInlineEdit=edit||null;
   /* 유형 5종 정규화 — 신규 기본='기타'(중립 catch-all: '채팅'은 기능키라 일반 노트 오분류 회피). 편집=기존 태그 유형, 레거시 note/call → 기타 */
   var type=(edit&&edit.type)?edit.type:'etc';
@@ -13979,7 +13984,7 @@ function openScriptInline(edit){
   if(edit){ var t=document.getElementById('scr-il-title'); if(t) t.value=edit.title||''; var k=document.getElementById('scr-il-kw'); if(k) k.value=edit.kw||''; }
   var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none';
   if(!edit){ var list=document.getElementById('mysList'); if(list){ var its=list.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.remove('on'); var tc=document.createElement('div'); tc.className='item on osws-tempcard'; tc.id='scr-il-temp'; list.insertBefore(tc, list.firstChild); } }
-  if(window.innerWidth<=1024){ var sp=document.getElementById('mys-split'); if(sp) sp.classList.add('show-viewer'); }
+  if(window.innerWidth<=1024){ var sp=document.getElementById(_snVisible?'sn-scr-split':'mys-split'); if(sp) sp.classList.add('show-viewer'); }   /* 모바일 미리보기 전환 — 호스트별 split 컨테이너 */
   setTimeout(function(){ var ti=document.getElementById('scr-il-title'); if(ti) ti.focus(); },60);
 }
 window.openScriptInline=openScriptInline;
@@ -14010,6 +14015,13 @@ window._wnPublishSync=_wnPublishSync;
 function closeScrInline(){
   window._scrInlineEdit=null;
   var tc=document.getElementById('scr-il-temp'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc);
+  if(window._scrEditHost==='sn'){
+    /* 팀/지점 공유 업무노트 편집 취소 — 그 목록만 다시 그려 미리보기로 복귀(마이 스페이스 렌더 회피) */
+    var _snSlot=document.getElementById('sn-slot');
+    if(_snSlot&&window._snScrScope&&window._snScopeScripts){ window._snScopeScripts(_snSlot, window._snScrScope); }
+    window._scrEditHost='mys';   /* 라우팅 플래그 초기화 */
+    return;
+  }
   var ms=document.getElementById('mys-split'); var nr=document.getElementById('mys-scr-newrow');
   if(nr&&ms&&ms.classList.contains('scr-mode')) nr.style.display='block';  /* 글쓰기 카드 복귀('block' 명시) */
   renderMyspace(window._mysFiltered||[]);  /* view 복귀(첫 항목 보기) */
@@ -14122,7 +14134,8 @@ async function saveScrInline(){
     if(_wnPub==='provided'){ _wnMeta={ documentType:((document.getElementById('scr-il-doctype')||{}).value||''), company:((document.getElementById('scr-il-company')||{}).value||'').trim(), referenceMonth:((document.getElementById('scr-il-refmonth')||{}).value||'').trim(), sourceUrl:((document.getElementById('scr-il-srcurl')||{}).value||'').trim() }; }
   }
   var _newScriptId='';
-  var sv=document.querySelector('#mysViewer .osws-save'); if(sv){ sv.disabled=true; sv.textContent='저장 중…'; }
+  var _svHost=(window._scrEditHost==='sn')?'sn-scr-viewer':'mysViewer';   /* 저장 버튼도 편집 폼이 그려진 호스트 기준으로 조회 */
+  var sv=document.querySelector('#'+_svHost+' .osws-save'); if(sv){ sv.disabled=true; sv.textContent='저장 중…'; }
   var atts=[]; if(typeof _mysUploadAtts==='function'){ var a=await _mysUploadAtts('scr-il-file','script',token); if(a===null){ if(sv){sv.disabled=false;sv.textContent='저장';} return; } atts=a||[]; }
   var H={'Content-Type':'application/json','apikey':window.db.key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'};
   var ed=window._scrInlineEdit;
@@ -14144,8 +14157,15 @@ async function saveScrInline(){
     if(_savedScriptId && typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){ try{ await _wnPublishSync(_savedScriptId, _wnPub, _wnMeta); }catch(e){} }
     var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='block';  /* 글쓰기 카드 복귀('block' 명시) */
     if(typeof toast==='function') toast(ed?'수정됐어요!':'업무노트가 저장됐어요!');
-    if(typeof loadMyspace==='function'){ window._myspaceLoaded=false; await loadMyspace(); }  /* 새 목록 반영 대기 */
-    _scrReselectChip();  /* 목록 재로드 후 스크립트 칩 재선택 → 작성 폼 닫고 첫 항목 보기 */
+    if(window._scrEditHost==='sn'){
+      /* 팀/지점 공유 업무노트 편집 저장 — 그 목록만 리프레시(마이 스페이스 로드 불필요). _snScrDelete 리프레시 패턴 재사용 */
+      var _snSlot=document.getElementById('sn-slot');
+      if(_snSlot&&window._snScrScope&&window._snScopeScripts){ window._snScopeScripts(_snSlot, window._snScrScope); }
+      window._scrEditHost='mys';   /* 라우팅 플래그 초기화 */
+    } else {
+      if(typeof loadMyspace==='function'){ window._myspaceLoaded=false; await loadMyspace(); }  /* 새 목록 반영 대기 */
+      _scrReselectChip();  /* 목록 재로드 후 스크립트 칩 재선택 → 작성 폼 닫고 첫 항목 보기 */
+    }
   }catch(e){ console.error('[saveScrInline]',e); alert('저장 중 오류가 발생했습니다.'); if(sv){sv.disabled=false;sv.textContent='저장';} }
 }
 window.saveScrInline=saveScrInline;
