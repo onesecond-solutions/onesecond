@@ -1,0 +1,170 @@
+{
+  "_meta": {
+    "title": "알릴의무(고지의무) DB화 — 표준 JSON 스키마 + 샘플 2건 (초안)",
+    "track": "알릴의무사항 DB화 1~6단계 / STEP B+C 산출물",
+    "author": "데이터팀 (총괄팀장 지시)",
+    "date": "2026-07-07",
+    "status": "draft (검수 전 · working tree only · 커밋/DB반영 금지)",
+    "principle": "환각 방지 — 원문에 없는 문항·기간·조건 창작 0. 출처 추적 불가·원문 미확보 필드는 null. 모든 항목 review_status='reviewing'.",
+    "grain": "1 row = 1 상품의 1 고지 항목(축). 한 상품이 여러 축(입원수술·중대질환·납입면제)을 가지면 여러 row로 정규화.",
+    "sources_surveyed": [
+      "data/goji_records.json (114건 · #1149 #v-goji 소스 · co/prod/goji/codes/grade/detail 구조 · source 필드 없음)",
+      "data/insurer_products_2607.json (246건 · source 필드 명시 예: 'KB라이프 GA소식지 26.07 (GSM-2606004-1)' · goji_type 보유 · 세부문항 없음)",
+      "design-preview/dambo-goji-audit-v1.md (확정5/코드확인23/유형확인86 분류 감사 · 확정5=KB손해보험 상세축 근거)",
+      "app.html #v-goji 렌더 (_gjCard/_svGojiSummaryHtml · detail 키=code/입원수술/중대질환/납면 · _GJ_CODE_DEF 표준코드 정의)"
+    ]
+  },
+
+  "schema": {
+    "table_name_proposal": "goji_disclosures",
+    "fields": [
+      {"name": "id",              "type": "text (PK)",        "required": true,  "desc": "고지항목 고유 ID. 형식 GOJI-{회사약칭}-{상품seq}-{축seq}", "example": "GOJI-KBNL-0064-02"},
+      {"name": "company",         "type": "text",             "required": true,  "desc": "회사명(원문 표기 그대로). 대표 명시 필수 필드", "example": "KB손해보험"},
+      {"name": "company_id",      "type": "uuid/text (FK)",   "required": false, "desc": "회사 마스터 연결키. 미배선 시 null", "example": null},
+      {"name": "product",         "type": "text",             "required": true,  "desc": "상품명(원문 표기 그대로). 대표 명시 필수 필드", "example": "3.N.5 탑클래스"},
+      {"name": "product_id",      "type": "text (FK)",        "required": false, "desc": "상품 마스터(insurer_products) 연결키. 정합 매칭 시 채움", "example": "L2607-0064"},
+      {"name": "notice_type",     "type": "text (enum)",      "required": true,  "desc": "고지유형: 일반고지 | 간편고지. 대표 명시 필수 필드", "example": "간편고지"},
+      {"name": "notice_code",     "type": "text",             "required": false, "desc": "고지코드(간편고지 3.N.5/3.10.5 등). 일반고지·코드 미상 시 null. 대표 명시 필수 필드(값 없으면 null)", "example": "3.N.5"},
+      {"name": "notice_axis",     "type": "text (enum)",      "required": false, "desc": "고지 항목 축: 입원·수술 | 중대질환 | 납입면제 | 최초질병(1축) | 일반고지전체. 정규화 grain 식별자", "example": "입원·수술"},
+      {"name": "question",        "type": "text",             "required": false, "desc": "상품별 확정 고지 문항 원문. 원문 문구 미확보 시 반드시 null(표준 축정의로 대체 금지). 대표 명시 필수 필드(원문 없으면 null)", "example": null},
+      {"name": "period",          "type": "text",             "required": false, "desc": "고지 대상 기간(원문 그대로). 원문 미확보 시 null. 대표 명시 필수 필드", "example": "최근 10/9/8/7/6년 이내"},
+      {"name": "condition",       "type": "text",             "required": false, "desc": "고지 대상 조건·질병 범위(원문 그대로). 원문 미확보 시 null. 대표 명시 필수 필드", "example": "최근 5년 7대질병(암·백혈병·협심증·심근경색·간경화증·뇌졸중·투석 만성신장질환) 진단·입원·수술"},
+      {"name": "confidence_grade","type": "text (enum)",      "required": true,  "desc": "신뢰등급: 확정 | 코드확인 | 유형확인. 기존 goji_records.grade와 정합. 확정만 세부문항(question/period/condition) 노출", "example": "확정"},
+      {"name": "source_doc",      "type": "text",             "required": true,  "desc": "출처 문서명. 추적 불가 시 항목 자체를 원장에 넣지 않음(=이 필드 null 금지). 대표 명시 필수 필드", "example": "KB손해보험 GA소식지 26.07"},
+      {"name": "source_page",     "type": "text",             "required": false, "desc": "출처 페이지/표 위치. 미확보 시 null. 대표 명시 필수 필드", "example": null},
+      {"name": "effective_date",  "type": "date (text ISO)",  "required": false, "desc": "고지 문항 시행일/기준일. 미확보 시 null(소식지 발행월 26.07은 발행시점이지 시행일 아님→임의부여 금지). 대표 명시 필수 필드", "example": null},
+      {"name": "source_snippet",  "type": "text",             "required": false, "desc": "원문 스니펫(채굴 근거 원문 조각). 원문 없으면 null", "example": "3.N.5 탑클래스 · 입원수술 최근 10/9/8/7/6년 이내 · 중대질환 최근 5년 7대질병 · 5대/6대 납면"},
+      {"name": "mining_basis",    "type": "text",             "required": false, "desc": "채굴 근거 메모(어느 자료의 어느 구조에서 왔는지). 검수팀 판단 보조", "example": "goji_records.json grade='확정' detail 축(입원수술/중대질환/납면) 분해"},
+      {"name": "sort_order",      "type": "int",              "required": false, "desc": "동일 상품 내 축 표시 순서(입원수술1·중대질환2·납입면제3)", "example": 1},
+      {"name": "review_status",   "type": "text (enum)",      "required": true,  "desc": "검수상태: reviewing(검수전 기본) | approved(검수완료). 화면 노출은 approved만. 대표 명시 필수 필드", "example": "reviewing"},
+      {"name": "created_at",      "type": "timestamptz",      "required": false, "desc": "생성 메타", "example": "2026-07-07"},
+      {"name": "created_by",      "type": "text",             "required": false, "desc": "생성 주체(채굴 배치명)", "example": "goji_mining_2026-07-07"}
+    ],
+    "reuse_rationale_4places": {
+      "1_상품라인업상세": "product_id로 그룹핑 → 상품 단위 요약(고지유형·코드·확정축) 렌더. 현행 _svGojiSummaryHtml이 기대하는 goji_type/codes/detail을 notice_type/notice_code/(question,period,condition)로 직접 매핑.",
+      "2_알릴의무독립페이지_v_goji": "company→product 트리 + notice_type/notice_code 필터가 현행 _gjPass 필터축과 1:1. confidence_grade로 확정 우선 정렬(_gjSortGrade 정합).",
+      "3_통합검색": "company+product+notice_type+notice_code+question을 search_text로 인덱싱. row 단위라 '3.N.5'·'입원수술 기간' 등 축 단위 검색 명중.",
+      "4_스마트설계서": "confidence_grade='확정' + review_status='approved' row만 뽑아 상품별 확정 문항/기간/조건을 설계서에 자동 삽입. row 정규화라 필요 축만 선택 인용 가능."
+    },
+    "normalization_note": "row-per-축 구조가 4곳 재사용 + DB 정규화에 최적: 상품은 여러 고지축을 가지며 축마다 신뢰등급·출처가 다를 수 있어 상품 통짜 JSON보다 축 단위 row가 부분 승격(코드확인→확정)·부분 출처추적에 유리."
+  },
+
+  "samples": [
+    {
+      "_sample_note": "샘플1 = KB손해보험 '3.N.5 탑클래스'. 출처: goji_records.json grade='확정' detail 실보유 + dambo-goji-audit-v1.md가 KB손보 26.07 소식지 상세표로 추적. 상품 1개가 3개 축 → 3 row로 정규화. question(문항 문구 원문)은 미확보 → 전부 null(표준 축정의로 대체하지 않음). period/condition은 detail 원문에서 분해.",
+      "product_rows": [
+        {
+          "id": "GOJI-KBGI-0064-01",
+          "company": "KB손해보험",
+          "company_id": null,
+          "product": "3.N.5 탑클래스",
+          "product_id": null,
+          "notice_type": "간편고지",
+          "notice_code": "3.N.5",
+          "notice_axis": "입원·수술",
+          "question": null,
+          "period": "최근 10/9/8/7/6년 이내",
+          "condition": null,
+          "confidence_grade": "확정",
+          "source_doc": "KB손해보험 GA소식지 26.07",
+          "source_page": null,
+          "effective_date": null,
+          "source_snippet": "3.N.5 탑클래스 · 입원수술 최근 10/9/8/7/6년 이내",
+          "mining_basis": "goji_records.json GOJI-0064 detail['입원수술'] 분해 · 출처=audit doc §5 'KB손보 26.07 소식지 원문 상세표'",
+          "sort_order": 1,
+          "review_status": "reviewing",
+          "created_at": "2026-07-07",
+          "created_by": "goji_mining_2026-07-07"
+        },
+        {
+          "id": "GOJI-KBGI-0064-02",
+          "company": "KB손해보험",
+          "company_id": null,
+          "product": "3.N.5 탑클래스",
+          "product_id": null,
+          "notice_type": "간편고지",
+          "notice_code": "3.N.5",
+          "notice_axis": "중대질환",
+          "question": null,
+          "period": "최근 5년",
+          "condition": "7대질병(암·백혈병·협심증·심근경색·간경화증·뇌졸중·투석 만성신장질환) 진단·입원·수술",
+          "confidence_grade": "확정",
+          "source_doc": "KB손해보험 GA소식지 26.07",
+          "source_page": null,
+          "effective_date": null,
+          "source_snippet": "중대질환 최근 5년 7대질병(암·백혈병·협심증·심근경색·간경화증·뇌졸중·투석 만성신장질환)",
+          "mining_basis": "goji_records.json GOJI-0064 detail['중대질환'] 분해(기간/조건 분리)",
+          "sort_order": 2,
+          "review_status": "reviewing",
+          "created_at": "2026-07-07",
+          "created_by": "goji_mining_2026-07-07"
+        },
+        {
+          "id": "GOJI-KBGI-0064-03",
+          "company": "KB손해보험",
+          "company_id": null,
+          "product": "3.N.5 탑클래스",
+          "product_id": null,
+          "notice_type": "간편고지",
+          "notice_code": "3.N.5",
+          "notice_axis": "납입면제",
+          "question": null,
+          "period": null,
+          "condition": "5대/6대 납입면제",
+          "confidence_grade": "확정",
+          "source_doc": "KB손해보험 GA소식지 26.07",
+          "source_page": null,
+          "effective_date": null,
+          "source_snippet": "5대/6대 납면",
+          "mining_basis": "goji_records.json GOJI-0064 detail['납면']",
+          "sort_order": 3,
+          "review_status": "reviewing",
+          "created_at": "2026-07-07",
+          "created_by": "goji_mining_2026-07-07"
+        }
+      ]
+    },
+    {
+      "_sample_note": "샘플2 = KB라이프 'KB 딱좋은 0540 건강보험'(샘플1과 다른 회사·다른 유형). 출처: insurer_products_2607.json L2607-0001 source 필드에 문서코드까지 명시(GSM-2606004-1) + goji_records.json에도 동일 상품 존재(유형확인). 일반고지=코드·세부문항 원문 미확보 → notice_code/question/period/condition 전부 null. null 규율 시연.",
+      "product_rows": [
+        {
+          "id": "GOJI-KBLF-0001-01",
+          "company": "KB라이프",
+          "company_id": null,
+          "product": "KB 딱좋은 0540 건강보험",
+          "product_id": "L2607-0001",
+          "notice_type": "일반고지",
+          "notice_code": null,
+          "notice_axis": "일반고지전체",
+          "question": null,
+          "period": null,
+          "condition": null,
+          "confidence_grade": "유형확인",
+          "source_doc": "KB라이프 GA소식지 26.07 (GSM-2606004-1)",
+          "source_page": null,
+          "effective_date": null,
+          "source_snippet": "goji_type: 일반고지 (insurer_products_2607.json L2607-0001)",
+          "mining_basis": "insurer_products_2607.json source 필드 + goji_records.json 교차확인(co=KB라이프/prod=동일/goji=일반고지/grade=유형확인). 세부 고지 문항 원문 미확보로 detail 없음.",
+          "sort_order": 1,
+          "review_status": "reviewing",
+          "created_at": "2026-07-07",
+          "created_by": "goji_mining_2026-07-07"
+        }
+      ]
+    }
+  ],
+
+  "hallucination_guard_log": {
+    "지어낸값_건수": 0,
+    "null_처리_내역": [
+      "샘플1 question(문항 문구): 3개 축 모두 null — detail에 문항 '문구' 원문 없음(축 라벨+기간/조건만). 표준 축정의(_GJ_CODE_DEF)로 대체하지 않음(상품별 확정 문항 아님).",
+      "샘플1 입원·수술 condition: null — detail엔 기간만 존재.",
+      "샘플1 납입면제 period: null — detail엔 '5대/6대 납면' 조건만.",
+      "전 샘플 source_page: null — 소식지 내 정확한 페이지/표 위치 미확보.",
+      "전 샘플 effective_date: null — 소식지 발행월(26.07)은 발행시점이지 고지문항 시행일이 아니므로 임의부여 금지.",
+      "전 샘플 company_id: null — 회사 마스터 미배선.",
+      "샘플2 notice_code/notice_axis 세부/question/period/condition: 전부 null — 일반고지 세부 고지문항 원문 미확보."
+    ],
+    "출처추적_기준": "source_doc 추적 가능한 항목만 채굴. goji_records.json 자체엔 source 필드가 없어(구조적 공백) 샘플1은 audit doc의 문서단위 추적, 샘플2는 insurer_products source 필드(문서코드 포함)로 교차 확보."
+  }
+}
