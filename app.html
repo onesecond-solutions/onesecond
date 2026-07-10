@@ -13387,9 +13387,16 @@ var SCRIPT_TYPES=[
   {key:'etc',label:'기타',kw:'유형:기타'}
 ];
 window.SCRIPT_TYPES=SCRIPT_TYPES;
+/* ── 상담관리 유형 = 임태성 실장 게이트(98c5f4f9) 전용 노출 (3단계 롤아웃 임태성→4팀→전체 중 1단계).
+ * 게이트 밖 사용자는 상담관리 배지·유형 필터칩·글쓰기 유형 세그먼트 모두 미노출(유형:상담관리 태그 카드는 '미지정'으로 표시).
+ * roadmap/salesnote/AI검색 게이트와 동일 식별값(98c5f4f9). 라이브 표시명: 업무노트 상담관리 유형. ── */
+function _canSeeCareType(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; } }
+/* 현재 사용자에게 노출 가능한 유형만(게이트 반영) — 배지·필터칩·글쓰기 세그먼트 공통 소스 */
+function _scrTypesVisible(){ return _canSeeCareType()?SCRIPT_TYPES:SCRIPT_TYPES.filter(function(t){ return t.key!=='care'; }); }
+window._canSeeCareType=_canSeeCareType; window._scrTypesVisible=_scrTypesVisible;
 function _scrTypeByKey(k){ for(var i=0;i<SCRIPT_TYPES.length;i++){ if(SCRIPT_TYPES[i].key===k) return SCRIPT_TYPES[i]; } return null; }
-/* keywords 배열 → 유형 정의(안정키 kw 태그로만 매칭, 표시명 매칭 금지). 없으면 null=미지정 */
-function _scrTypeOf(keywords){ var ks=Array.isArray(keywords)?keywords:[]; for(var i=0;i<SCRIPT_TYPES.length;i++){ if(ks.indexOf(SCRIPT_TYPES[i].kw)>=0) return SCRIPT_TYPES[i]; } return null; }
+/* keywords 배열 → 유형 정의(안정키 kw 태그로만 매칭, 표시명 매칭 금지). 게이트 밖은 상담관리 유형 미인식→null(미지정). 없으면 null=미지정 */
+function _scrTypeOf(keywords){ var ks=Array.isArray(keywords)?keywords:[]; var TS=_scrTypesVisible(); for(var i=0;i<TS.length;i++){ if(ks.indexOf(TS[i].kw)>=0) return TS[i]; } return null; }
 /* 유형 배지 라벨(미지정 포함) */
 function _scrTypeLabel(keywords){ var t=_scrTypeOf(keywords); return t?t.label:'미지정'; }
 /* keywords에서 모든 유형:* 태그 제거 후 선택 유형 태그 1개 삽입(수정 시 유형 변경 반영). typeKey 없으면 태그 없이 반환(미지정) */
@@ -13959,7 +13966,7 @@ function openScriptInline(edit){
       +'</div>'
       +'<div class="iv-fld"><div id="scr-il-wnstatus" style="font-size:0.78rem;color:var(--ts)">발행 상태: '+(_wnPub==='provided'?'원세컨드 제공(저장 시 검색 노출)':'내 자료')+'</div></div>';
   }
-  var _segBtns=SCRIPT_TYPES.map(function(t){ return '<button type="button" data-tkey="'+t.key+'" class="'+(type===t.key?'on':'')+'" onclick="scrIlType(\''+t.key+'\')">'+t.label+'</button>'; }).join('');  /* 유형 5종 세그먼트(단일 소스 SCRIPT_TYPES 기반) */
+  var _segBtns=_scrTypesVisible().map(function(t){ return '<button type="button" data-tkey="'+t.key+'" class="'+(type===t.key?'on':'')+'" onclick="scrIlType(\''+t.key+'\')">'+t.label+'</button>'; }).join('');  /* 유형 세그먼트(게이트 반영 소스 _scrTypesVisible = 상담관리는 임태성 게이트만) */
   var formHtml=''
     +'<div class="iv-fld"><label>유형</label><div class="scr-type-seg" id="scr-il-seg">'+_segBtns+'</div></div>'
     +'<div class="iv-fld"><label>제목</label><input type="text" id="scr-il-title" class="mys-write-input" maxlength="100" placeholder="제목"></div>'
@@ -15598,7 +15605,8 @@ function _scrRenderTypeChips(){
   var box=document.getElementById('mys-type-chips'); if(!box) return;
   var cur=window._mysTypeFilter||'all';
   var html='<div class="chip'+(cur==='all'?' on':'')+'" onclick="filterMysType(\'all\')">전체</div>';
-  for(var i=0;i<SCRIPT_TYPES.length;i++){ var t=SCRIPT_TYPES[i]; html+='<div class="chip'+(cur===t.key?' on':'')+'" onclick="filterMysType(\''+t.key+'\')">'+t.label+'</div>'; }
+  var _TS=_scrTypesVisible();  /* 게이트 반영: 상담관리 칩은 임태성 게이트에서만 */
+  for(var i=0;i<_TS.length;i++){ var t=_TS[i]; html+='<div class="chip'+(cur===t.key?' on':'')+'" onclick="filterMysType(\''+t.key+'\')">'+t.label+'</div>'; }
   html+='<div class="chip'+(cur==='none'?' on':'')+'" onclick="filterMysType(\'none\')">미지정</div>';
   box.innerHTML=html;
 }
