@@ -148,9 +148,10 @@ window._ciSelCard  = function(id){                 // 카드 클릭 = 그 고객
   document.getElementById('ci-preview').innerHTML = _ciFormHtml(c || {});
   if(window._ciUpdIns) _ciUpdIns();
   if(window._ciConsultRender) _ciConsultRender();
+  if(window._ciFormSetMode) _ciFormSetMode('consult');   // 카드 클릭 = 상담 모드(고객정보 잠금)
   document.getElementById('ci-list').innerHTML = _ciListHtml();
 };
-window._ciNew = function(){ window._ciEditId = null; document.getElementById('ci-preview').innerHTML = _ciFormHtml({}); if(window._ciUpdIns) _ciUpdIns(); if(window._ciConsultRender) _ciConsultRender(); };
+window._ciNew = function(){ window._ciEditId = null; document.getElementById('ci-preview').innerHTML = _ciFormHtml({}); if(window._ciUpdIns) _ciUpdIns(); if(window._ciConsultRender) _ciConsultRender(); if(window._ciFormSetMode) _ciFormSetMode('edit'); };
 window._ciEdit = window._ciSelCard;
 window._ciCloseForm = function(){ document.getElementById('ci-preview').innerHTML = '<div class="ci-empty">왼쪽에서 고객을 선택하세요.</div>'; };
 // 폼 버튼 스텁 (미리보기라 저장/검색/OCR 비활성)
@@ -163,7 +164,8 @@ window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
     var need = ['_ciEsc','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPhoneFmt','_ciPickStage',
                 '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml',
                 '_ciConsultToday','_ciConsultRender','_ciConsultToggle',
-                '_ciDraftKey','_ciDraftGather','_ciDraftSave','_ciDraftApply','_ciDraftRestore','_ciDraftClear','_ciDraftBanner','_ciDraftBind'];
+                '_ciDraftKey','_ciDraftGather','_ciDraftSave','_ciDraftApply','_ciDraftRestore','_ciDraftClear','_ciDraftBanner','_ciDraftBind',
+                '_ciFormSetMode','_ciFormPrimary'];
     var m = src.match(/var _SN_STAGES=\[[^\]]*\];/);
     var pieces = [ m ? m[0] : "var _SN_STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료'];" ];
     need.forEach(function(fn){ pieces.push(extractFn(src, fn)); });
