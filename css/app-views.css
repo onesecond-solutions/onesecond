@@ -165,6 +165,14 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-count-ta>textarea{min-height:240px;}
 /* 상세주소=주소 입력칸과 좌측 정렬(빈 라벨로 들여쓰기) */
 .ci-addr2>label{width:64px;}
+/* v4.2: 한 행을 2칸으로 — 왼쪽 칸=생년월일·보험연령(N세)·성별 / 오른쪽 칸=휴대폰. 이메일 삭제·주소 간격 축소 */
+.ci-bio-left{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;}
+.ci-bio-left>label:first-child{width:64px;flex-shrink:0;}  /* 생년월일 라벨=다른 행과 세로선 정렬 */
+.ci-bio-left label{width:auto;flex-shrink:0;}
+.ci-bio-left .ci-birth-in{flex:1 1 auto;min-width:88px;}
+.ci-bio-left .ci-iage-in{flex:0 0 auto;width:52px;text-align:center;padding:7px 4px;}
+.ci-bio-left .ci-gender-in{flex:0 0 auto;width:58px;}
+.ci-addr2{margin-top:-4px;}  /* 주소~상세주소 라인 간격 축소 */
 /* 상태 단계 필터 칩 (2026-07-08) */
 #v-salesnote .sn-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
 #v-salesnote .sn-chip{font-size:12px;padding:5px 12px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;color:var(--tp);}

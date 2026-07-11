@@ -19,7 +19,7 @@
   .pv-note{font-size:12px;color:var(--tf);padding:8px 16px;background:var(--s2);border-bottom:1px solid var(--bd);}
   .pv-note b{color:var(--ac);}
   /* 상담 패널은 실제 앱 폭(1080px) 고정으로 렌더(밴드 8단계 안 잘림). 좁은 창에서는 body zoom으로 화면에 맞게 축소(아래 스크립트). */
-  .pv-stage{padding:16px;width:1080px;margin:0 auto;}
+  .pv-stage{padding:16px;width:1300px;margin:0 auto;}  /* 라이브(임태성) 폼 폭(~1000px)에 맞춰 실제 모습 확인 */
   .pv-err{color:var(--err);padding:16px;font-size:13px;white-space:pre-wrap;}
   /* #ci-wrap은 앱에서 홈데스크 슬롯 안에 flex로 표출(기본은 display:none). 미리보기선 항상 세로 스택으로 표출. */
   #ci-wrap{display:flex!important;flex-direction:column;}
@@ -49,7 +49,7 @@
 <script>
 /* ── 창 폭에 맞춰 상담 패널(1080px)을 축소해 밴드 잘림 없이 통째로 보이게 ── */
 function _pvFit(){
-  var design = 1080 + 32;                                   // stage 폭 + 좌우 패딩
+  var design = 1300 + 32;                                   // stage 폭 + 좌우 패딩
   var avail = document.documentElement.clientWidth;
   document.body.style.zoom = Math.min(1, avail / design);   // 좁으면 축소, 넓으면 100%
 }
