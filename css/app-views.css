@@ -70,8 +70,12 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-flow{border-left:1px solid var(--bd);}  /* 두 영역 구분 경계선 */
 .ci-today-head{font-size:var(--ts-meta);font-weight:600;color:var(--tp);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .ci-today-date{font-size:var(--ts-badge);font-weight:500;color:var(--tf);}
-.ci-today-row{display:flex;justify-content:space-between;font-size:var(--ts-meta);color:var(--ts);padding:5px 0;}
+.ci-today-row{display:flex;justify-content:space-between;font-size:var(--ts-meta);color:var(--ts);padding:5px 8px;border-radius:var(--radius-xs);}
 .ci-today-row b{color:var(--tp);font-weight:600;}
+.ci-today-row.clk{cursor:pointer;}
+.ci-today-row.clk:hover{background:var(--s2);}
+.ci-today-row.on{background:var(--space-branch-soft);color:var(--space-branch-text);}
+.ci-today-row.on b{color:var(--space-branch-text);}
 .ci-today-note{font-size:var(--ts-badge);color:var(--tf);margin-top:10px;line-height:1.5;}
 .ci-flow-head{font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin-bottom:10px;}
 .ci-band{display:flex;flex-direction:column;gap:10px;}
