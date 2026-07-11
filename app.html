@@ -2225,7 +2225,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       <div class="ci-wrap" id="ci-wrap" style="display:none">
         <div class="ci-top">
           <div class="ci-today" id="ci-today"></div>
-          <div class="ci-flow"><div class="ci-flow-head">상담 플로우</div><div class="ci-band" id="ci-band"></div></div>
+          <div class="ci-flow"><div class="ci-flow-head">상담 플로우 <button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button></div><div class="ci-band" id="ci-band"></div></div>
         </div>
         <div class="ci-bottom">
           <div class="ci-list-col">
@@ -15781,15 +15781,17 @@ function _ciTodayMatch(c,k){
 window._ciTodayMatch=_ciTodayMatch;
 function _ciBandHtml(){
   var data=window._ciData||[], cur=window._ciStageF||'전체';
-  var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 기존 8단계 그대로 재사용(대표 확정 2026-07-11) */
-  var ai=stages.indexOf(cur);  /* 전체=-1 */
-  var cols=stages.map(function(s,i){
+  var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계 정본 */
+  var cards=stages.map(function(s){
     var n=data.filter(function(c){return (c.status||'')===s;}).length;
-    var cls=(ai<0)?'done':((i<ai)?'done':(i===ai?'on':'future'));  /* 전체=전부 연보라 / 선택 시 앞 done·현재 on·뒤 future */
-    return '<div class="ci-fcol '+cls+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')"><div class="ci-farw">'+_ciEsc(s)+'</div><div class="ci-fstep"><div class="ci-fdot">'+n+'</div></div></div>';
+    var cls='ci-scard'+(s===cur?' on':'')+(n===0?' zero':'');
+    return '<button type="button" class="'+cls+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')"><span class="ci-scard-name">'+_ciEsc(s)+'</span><span class="ci-scard-num">'+n+'</span><span class="ci-scard-unit">'+(n===0?'—':'명')+'</span></button>';
   }).join('');
-  return '<button type="button" class="ci-fall'+(ai<0?' on':'')+'" onclick="_ciSetStage(\'전체\')">전체 '+data.length+'</button>'
-    +'<div class="ci-fchart">'+cols+'</div>';
+  var dots=stages.map(function(s){ return '<span class="ci-sdot'+(s===cur?' on':'')+'"><i></i></span>'; }).join('');
+  var foot=(cur!=='전체')
+    ? '<div class="ci-flow-foot">필터: '+_ciEsc(cur)+' '+data.filter(function(c){return (c.status||'')===cur;}).length+'명 — 아래 리스트에 이 단계 고객만 표시</div>'
+    : '<div class="ci-flow-foot muted">단계를 클릭하면 아래 리스트에 해당 단계 고객만 표시됩니다.</div>';
+  return '<div class="ci-scards">'+cards+'</div><div class="ci-sdots">'+dots+'</div>'+foot;
 }
 function _ciTodayHtml(){
   var data=window._ciData||[];
@@ -16161,6 +16163,7 @@ function _ciManageEnd(){
 window._ciManageEnd=_ciManageEnd;
 function _ciRender(){
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
+  var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+((window._ciData||[]).length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
   var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
   var pv=document.getElementById('ci-preview');
