@@ -15821,7 +15821,7 @@ function _ciInsAge(birth){
   var diffM=(next-t)/(1000*60*60*24*30.44); var ins=(diffM<=6)?age+1:age;
   return {age:age, ins:ins};
 }
-function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.value=r?('보험 '+r.ins+'세'):'-'; }
+function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.value=r?('보험 '+r.ins+'세'):'자동 계산'; }
 window._ciUpdIns=_ciUpdIns;
 function _ciPickStage(btn){ var wrap=document.getElementById('cif-stagepick'); if(!wrap) return; var bs=wrap.querySelectorAll('.ci-stagebtn'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); btn.classList.add('on'); wrap.setAttribute('data-st', btn.getAttribute('data-st')); }
 window._ciPickStage=_ciPickStage;
@@ -15835,46 +15835,50 @@ function _ciFormHtml(c){
   var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];
   var stageBtns=stages.map(function(s){ return '<button type="button" class="ci-stagebtn'+(s===st?' on':'')+'" data-st="'+_ciEsc(s)+'" onclick="_ciPickStage(this)">'+_ciEsc(s)+'</button>'; }).join('');
   var medOpt=['','복용 중','복용 안 함','과거 복용'].map(function(o){ return '<option value="'+_ciEsc(o)+'"'+(o===med?' selected':'')+'>'+(o||'선택')+'</option>'; }).join('');
+  var nameLen=(c.name||'').length; var noteLen=(p.note_html||'').length;
   return '<div class="ci-form">'
-    +'<div class="ci-form-head">'+(c.id?'고객 수정':'신규 고객')+'<button type="button" class="ci-form-x" onclick="_ciCloseForm()">✕</button></div>'
-    +'<div class="ci-ocr-hint">고객정보 화면을 캡처해 아래에 Ctrl+V → [캡처에서 정보 읽기] (원본 이미지는 저장하지 않습니다)</div>'
-    +'<div id="cif-ocr-drop" class="ci-ocr-drop" contenteditable="true" data-ph="여기를 클릭하고 Ctrl+V로 캡처 붙여넣기"></div>'
-    +'<div class="ci-ocr-acts"><button type="button" class="ci-btn ghost" onclick="_ciOcrRun()">캡처에서 정보 읽기</button><span id="cif-ocr-stat" class="ci-ocr-stat"></span></div>'
+    +'<div class="ci-banner"><span class="ci-banner-ic">📋</span><span>보장분석·고객정보 화면을 캡처해서 이 페이지에 <b>Ctrl+V</b> 하면 자동으로 입력됩니다</span><span id="cif-ocr-stat" class="ci-ocr-stat"></span></div>'
     +'<div class="ci-fgrid">'
+    /* 1행: 입력일자 단독 */
     +'<div class="ci-ffld"><label>입력일자</label><input id="cif-date" type="date" value="'+v(inDate)+'"></div>'
-    +'<div class="ci-ffld"><label>속성 <span class="ci-sub">(유입)</span></label><input id="cif-attr" type="text" value="'+v(p.attr)+'" placeholder="지인·소개·카카오페이 D"></div>'
-    +'<div class="ci-ffld"><label>이름 *</label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50"></div>'
+    +'<div class="ci-spacer"></div>'
+    /* 2행: 이름 | 속성 */
+    +'<div class="ci-ffld ci-count"><label>이름 *</label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50" placeholder="고객 이름" oninput="var s=this.parentNode.querySelector(\'.ci-cnt\'); if(s)s.textContent=this.value.length+\'/50\';"><span class="ci-cnt">'+nameLen+'/50</span></div>'
+    +'<div class="ci-ffld"><label>속성</label><input id="cif-attr" type="text" value="'+v(p.attr)+'" placeholder="직접 입력 (예: 지인, 소개, 카카오페이 D)"></div>'
+    /* 3행: 생년월일+음력 | 보험연령+성별 */
+    +'<div class="ci-ffld"><label>생년월일</label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="연도-월-일" oninput="_ciUpdIns()"><label class="ci-inl"><input type="checkbox" id="cif-lunar"'+(p.lunar?' checked':'')+'> 음력</label></div>'
+    +'<div class="ci-ffld ci-pair"><label>보험연령</label><input id="cif-iage" type="text" readonly value="자동 계산" class="ci-iage-in"><label class="ci-lbl2">성별</label><select id="cif-gender"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div>'
+    /* 4행: 휴대폰 | 이메일 */
     +'<div class="ci-ffld"><label>휴대폰 *</label><input id="cif-phone" type="text" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000"></div>'
-    +'<div class="ci-ffld"><label>생년월일</label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="1980-01-01" oninput="_ciUpdIns()"><label class="ci-inl"><input type="checkbox" id="cif-lunar"'+(p.lunar?' checked':'')+'> 음력</label></div>'
-    +'<div class="ci-ffld"><label>보험연령</label><input id="cif-iage" type="text" readonly value="-"></div>'
-    +'<div class="ci-ffld"><label>성별</label><select id="cif-gender"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div>'
     +'<div class="ci-ffld"><label>이메일</label><input id="cif-email" type="text" value="'+v(p.email)+'" placeholder="example@email.com"></div>'
-    +'<div class="ci-ffld"><label>상담채널</label><input id="cif-channel" type="text" value="'+v(c.channel)+'" placeholder="전화·문자·카카오톡"></div>'
-    +'<div class="ci-ffld full"><label>주소</label><div class="ci-addr"><input id="cif-zip" type="text" value="'+v(p.zip)+'" placeholder="우편번호" style="max-width:120px"><input id="cif-addr1" type="text" value="'+v(p.addr1)+'" placeholder="주소"><button type="button" class="ci-btn ghost" onclick="_ciAddrSearch()">주소검색</button></div><input id="cif-addr2" type="text" value="'+v(p.addr2)+'" placeholder="상세 주소 (선택)"></div>'
+    /* 5행: 주소(우편·주소·검색) + 상세주소 */
+    +'<div class="ci-ffld full"><label>주소</label><div class="ci-addr"><input id="cif-zip" type="text" value="'+v(p.zip)+'" placeholder="우편번호" style="max-width:120px"><input id="cif-addr1" type="text" value="'+v(p.addr1)+'" placeholder="주소"><button type="button" class="ci-btn ghost" onclick="_ciAddrSearch()">주소검색</button></div></div>'
+    +'<div class="ci-ffld full ci-addr2"><label></label><input id="cif-addr2" type="text" value="'+v(p.addr2)+'" placeholder="상세 주소를 입력해 주세요 (선택)"></div>'
     +'</div>'
-    +'<div class="ci-sec">인수 정보 <span>(가입심사 참고 · 본인만 열람 · 민감정보)</span></div>'
+    +'<div class="ci-sec">인수 정보</div>'
     +'<div class="ci-fgrid">'
-    +'<div class="ci-ffld"><label>직업</label><input id="cif-job" type="text" value="'+v(c.job)+'" placeholder="사무직·운전직·농업"></div>'
-    +'<div class="ci-ffld"><label>약 복용</label><select id="cif-med">'+medOpt+'</select></div>'
-    +'<div class="ci-ffld full"><label>병력</label><input id="cif-history" type="text" value="'+v(c.history)+'" placeholder="갑상선 결절·고혈압·당뇨"></div>'
-    +'<div class="ci-ffld"><label>진단시기</label><input id="cif-dx" type="text" value="'+v(c.dx_date)+'" placeholder="2025년 3월"></div>'
-    +'<div class="ci-ffld"><label>현재상태</label><input id="cif-uw" type="text" value="'+v(c.uw_status)+'" placeholder="추적관찰 중·수술 완료"></div>'
+    +'<div class="ci-ffld"><label>직업</label><input id="cif-job" type="text" value="'+v(c.job)+'" placeholder="예: 사무직 / 운전직 / 농업"></div>'
+    +'<div class="ci-ffld"><label>약복용</label><select id="cif-med">'+medOpt+'</select></div>'
+    +'<div class="ci-ffld full"><label>병력</label><input id="cif-history" type="text" value="'+v(c.history)+'" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨"></div>'
+    +'<div class="ci-ffld"><label>진단시기</label><input id="cif-dx" type="text" value="'+v(c.dx_date)+'" placeholder="예: 2025년 3월"></div>'
+    +'<div class="ci-ffld"><label>현재상태</label><input id="cif-uw" type="text" value="'+v(c.uw_status)+'" placeholder="예: 추적관찰 중 / 수술 완료"></div>'
+    +'<div class="ci-ffld full ci-count ci-count-ta"><label>상담내용</label><textarea id="cif-note" rows="4" placeholder="상담 내용을 기록하세요 — 통화 요지, 고객 반응, 다음 액션 등" oninput="var s=this.parentNode.querySelector(\'.ci-cnt\'); if(s)s.textContent=this.value.length+\'자\';">'+v(p.note_html)+'</textarea><span class="ci-cnt">'+noteLen+'자</span></div>'
     +'</div>'
-    +'<div class="ci-ffld full"><label>상담 내용</label><textarea id="cif-note" rows="4" placeholder="상담 내용을 기록하세요 — 통화 요지·고객 반응·다음 액션">'+v(p.note_html)+'</textarea></div>'
     +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
     +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+'</div>'
     +'<div class="ci-form-acts"><button type="button" class="ci-btn" onclick="_ciSaveForm()">저장</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button></div>'
     +'</div>';
 }
 function _ciOcrBind(){
-  var box=document.getElementById('cif-ocr-drop'); if(!box||box._b) return; box._b=1;
-  box.addEventListener('paste', function(ev){
+  /* 시안 v4: 별도 드롭박스 없이 폼 전체(#ci-preview)에서 Ctrl+V 캡처 → 즉시 자동 인식(배너 안내대로). 리스너는 컨테이너에 1회만(폼 재렌더에도 유지). */
+  var host=document.getElementById('ci-preview'); if(!host||host._ocrB) return; host._ocrB=1;
+  host.addEventListener('paste', function(ev){
     try{ var dt=ev.clipboardData; if(!dt||!dt.items) return;
       for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
         if(it.kind==='file'&&/^image\//.test(it.type||'')){ var f=it.getAsFile(); if(!f) continue; ev.preventDefault();
           var rd=new FileReader();
           rd.onload=function(e){ var u=String(e.target.result||''); window._ciOcr.base64=u.split(',')[1]||''; window._ciOcr.mime=(u.match(/^data:([^;]+);/)||[])[1]||'image/png';
-            box.innerHTML='<img src="'+u+'" alt="캡처">'; var s=document.getElementById('cif-ocr-stat'); if(s) s.textContent='캡처 준비됨 — [캡처에서 정보 읽기]를 누르세요'; };
+            var s=document.getElementById('cif-ocr-stat'); if(s) s.textContent='캡처 인식 중…'; _ciOcrRun(); };  /* 붙여넣기 즉시 자동 실행 */
           rd.readAsDataURL(f); return; } }
     }catch(e){}
   });

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>상담관리 미리보기 — 신규 고객 폼 (개발용)</title>
+<!-- 실제 앱과 동일한 CSS를 그대로 링크 (토큰은 app-core.css에 내장). 이 파일들을 고치면 미리보기도 즉시 반영. -->
+<!-- 폰트: 외부 CDN 블로킹 방지 위해 비동기 로드(없으면 system-ui 폴백). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="/css/app-core.css">
+<link rel="stylesheet" href="/css/app-views.css">
+<style>
+  /* 미리보기 전용 셸(앱 홈데스크 컨텍스트 근사). 실제 스타일은 app-views.css의 .ci-* 규칙이 담당. */
+  html,body{margin:0;background:var(--bg);font-family:'Pretendard',system-ui,sans-serif;color:var(--tp);}
+  /* app-core.css의 SPA 셸 규칙(body{height:100vh;overflow:hidden})을 덮어써 일반 문서 스크롤 허용. */
+  html{height:auto;}
+  body{height:auto;min-height:100vh;overflow-x:hidden;overflow-y:auto;}
+  .pv-note{font-size:12px;color:var(--tf);padding:8px 16px;background:var(--s2);border-bottom:1px solid var(--bd);}
+  .pv-note b{color:var(--ac);}
+  /* 상담 패널은 실제 앱 폭(1080px) 고정으로 렌더(밴드 8단계 안 잘림). 좁은 창에서는 body zoom으로 화면에 맞게 축소(아래 스크립트). */
+  .pv-stage{padding:16px;width:1080px;margin:0 auto;}
+  .pv-err{color:var(--err);padding:16px;font-size:13px;white-space:pre-wrap;}
+  /* #ci-wrap은 앱에서 홈데스크 슬롯 안에 flex로 표출(기본은 display:none). 미리보기선 항상 세로 스택으로 표출. */
+  #ci-wrap{display:flex!important;flex-direction:column;}
+</style>
+</head>
+<body>
+  <div class="pv-note">🔧 <b>상담관리 개발 미리보기</b> — <code>app.html</code>의 상담 함수 + <code>app-views.css</code>를 실시간으로 읽어 렌더합니다. app.html/CSS를 고친 뒤 <b>새로고침</b>하면 즉시 반영됩니다. (mock 데이터 · 로그인/실데이터 불필요)</div>
+  <div class="pv-stage">
+    <!-- 실제 app.html #ci-wrap 셸 사본 (line 2225~2239). display:none만 제거. -->
+    <div class="ci-wrap" id="ci-wrap">
+      <div class="ci-top">
+        <div class="ci-today" id="ci-today"></div>
+        <div class="ci-flow"><div class="ci-flow-head">상담 플로우</div><div class="ci-band" id="ci-band"></div></div>
+      </div>
+      <div class="ci-bottom">
+        <div class="ci-list-col">
+          <div class="ci-list" id="ci-list"></div>
+        </div>
+        <div class="ci-right-col">
+          <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 글쓰기</button></div>
+          <div class="ci-preview" id="ci-preview"><div class="ci-empty">왼쪽에서 고객을 선택하세요.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ── 창 폭에 맞춰 상담 패널(1080px)을 축소해 밴드 잘림 없이 통째로 보이게 ── */
+function _pvFit(){
+  var design = 1080 + 32;                                   // stage 폭 + 좌우 패딩
+  var avail = document.documentElement.clientWidth;
+  document.body.style.zoom = Math.min(1, avail / design);   // 좁으면 축소, 넓으면 100%
+}
+window.addEventListener('resize', _pvFit);
+_pvFit();
+</script>
+<script>
+/* ── 미리보기 하니스 ──
+   app.html을 fetch → 상담 렌더 함수들을 추출·전역 실행 → mock 데이터로 렌더.
+   진실 원천 = app.html. 이 하니스는 함수를 "복사"하지 않고 매 로드시 app.html에서 읽어온다. */
+
+// 문자열/중첩 중괄호를 인식하는 함수 추출기
+function extractFn(src, name){
+  var sig = 'function ' + name + '(';
+  var start = src.indexOf(sig);
+  if(start < 0) throw new Error('함수 못 찾음: ' + name);
+  var i = src.indexOf('{', start);
+  var depth = 0, inStr = null, esc = false;
+  for(; i < src.length; i++){
+    var ch = src[i];
+    if(esc){ esc = false; continue; }
+    if(inStr){ if(ch === '\\'){ esc = true; } else if(ch === inStr){ inStr = null; } continue; }
+    if(ch === '"' || ch === "'" || ch === '`'){ inStr = ch; continue; }
+    if(ch === '{'){ depth++; }
+    else if(ch === '}'){ depth--; if(depth === 0) return src.slice(start, i + 1); }
+  }
+  throw new Error('중괄호 불일치: ' + name);
+}
+
+// mock 고객 (실데이터 대체 · 단계 분산해서 플로우 밴드가 살아보이게)
+var MOCK = [
+  {id:1,  name:'이은경', phone:'010-2009-4628', birth_date:'1985-03-12', gender:'여', channel:'카카오톡', status:'신규DB', created_at:'2026-06-29T09:00:00'},
+  {id:2,  name:'장건석', phone:'010-2010-6457', birth_date:'1978-11-02', gender:'남', channel:'전화',     status:'신규DB', created_at:'2026-06-29T09:05:00'},
+  {id:3,  name:'박정웅', phone:'010-2012-2859', birth_date:'1990-07-21', gender:'남', channel:'문자',     status:'부재',   created_at:'2026-06-29T09:10:00'},
+  {id:4,  name:'신선혜', phone:'010-2012-3146', birth_date:'1982-01-30', gender:'여', channel:'카카오톡', status:'예약',   created_at:'2026-06-29T09:15:00'},
+  {id:5,  name:'이진수', phone:'010-2014-1685', birth_date:'1975-05-18', gender:'남', channel:'전화',     status:'진행중', created_at:'2026-06-29T09:20:00'},
+  {id:6,  name:'박한울', phone:'010-2015-8803', birth_date:'1993-09-09', gender:'여', channel:'문자',     status:'제안서발송', created_at:'2026-06-29T09:25:00'},
+  {id:7,  name:'김도영', phone:'010-3001-2211', birth_date:'1988-02-14', gender:'남', channel:'카카오톡', status:'보류',   created_at:'2026-06-29T09:30:00'},
+  {id:8,  name:'최유나', phone:'010-3110-5522', birth_date:'1996-12-25', gender:'여', channel:'전화',     status:'클로징', created_at:'2026-06-29T09:35:00'},
+  {id:9,  name:'정민호', phone:'010-3220-7788', birth_date:'1980-06-06', gender:'남', channel:'문자',     status:'청약완료', created_at:'2026-06-29T09:40:00'},
+  {id:10, name:'한서진', phone:'010-3330-9911', birth_date:'1991-04-04', gender:'여', channel:'카카오톡', status:'신규DB', created_at:'2026-06-28T14:00:00'},
+  {id:11, name:'오재현', phone:'010-3441-1234', birth_date:'1983-08-19', gender:'남', channel:'전화',     status:'예약',   created_at:'2026-06-28T14:05:00'},
+  {id:12, name:'윤아름', phone:'010-3552-4567', birth_date:'1997-10-11', gender:'여', channel:'문자',     status:'진행중', created_at:'2026-06-28T14:10:00'}
+];
+
+function renderAll(){
+  document.getElementById('ci-today').innerHTML = _ciTodayHtml();
+  document.getElementById('ci-band').innerHTML  = _ciBandHtml();
+  document.getElementById('ci-list').innerHTML  = _ciListHtml();
+}
+
+// 미리보기용 상호작용 핸들러 (네트워크 의존 제거)
+window._ciSetStage = function(s){ window._ciStageF = s; renderAll(); };
+window._ciSelCard  = function(id){
+  var c = MOCK.filter(function(x){ return String(x.id) === String(id); })[0];
+  window._ciSel = id;
+  document.getElementById('ci-preview').innerHTML = _ciPreviewHtml(c);
+  document.getElementById('ci-list').innerHTML = _ciListHtml();
+};
+window._ciNew = function(){ document.getElementById('ci-preview').innerHTML = _ciFormHtml({}); if(window._ciUpdIns) _ciUpdIns(); };
+window._ciEdit = function(id){
+  var c = MOCK.filter(function(x){ return String(x.id) === String(id); })[0];
+  document.getElementById('ci-preview').innerHTML = _ciFormHtml(c || {}); if(window._ciUpdIns) _ciUpdIns();
+};
+window._ciCloseForm = function(){ document.getElementById('ci-preview').innerHTML = '<div class="ci-empty">왼쪽에서 고객을 선택하세요.</div>'; };
+// 폼 버튼 스텁 (미리보기라 저장/검색/OCR 비활성)
+window._ciSaveForm  = function(){ alert('미리보기 — 저장 비활성'); };
+window._ciAddrSearch = function(){ alert('미리보기 — 주소검색 비활성'); };
+window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
+
+(function(){
+  fetch('/app.html?_=' + Date.now()).then(function(r){ return r.text(); }).then(function(src){
+    var need = ['_ciEsc','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPickStage',
+                '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml'];
+    var m = src.match(/var _SN_STAGES=\[[^\]]*\];/);
+    var pieces = [ m ? m[0] : "var _SN_STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료'];" ];
+    need.forEach(function(fn){ pieces.push(extractFn(src, fn)); });
+    (0, eval)(pieces.join('\n'));            // 간접 eval = 전역 스코프에 함수 등록
+    window._ciData = MOCK; window._ciStageF = '전체'; window._ciSel = null;
+    renderAll();
+    _ciNew();                                // 로드 즉시 신규 고객 폼 표출 (두 번째 캡처 = 이 화면)
+  }).catch(function(e){
+    document.getElementById('ci-preview').innerHTML = '<div class="pv-err">추출 실패: ' + (e && e.message || e) + '</div>';
+  });
+})();
+</script>
+</body>
+</html>

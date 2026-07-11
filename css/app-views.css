@@ -122,7 +122,7 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-ocr-drop img{max-width:100%;max-height:200px;border-radius:var(--radius-xs);display:block;}
 .ci-ocr-acts{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .ci-ocr-stat{font-size:var(--ts-badge);color:var(--ac);}
-.ci-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+.ci-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;}  /* 정보 영역 촘촘하게(상담내용 공간 확보) */
 .ci-ffld{display:flex;flex-direction:row;align-items:center;gap:10px;}  /* 라벨 | 입력박스 = 한 줄 */
 .ci-ffld.full{grid-column:1 / -1;}
 .ci-ffld:has(textarea),.ci-ffld:has(.ci-stagepick){align-items:flex-start;}  /* 여러 줄 위젯은 상단 정렬 */
@@ -131,19 +131,40 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-ffld input[readonly]{background:var(--s2);color:var(--ac);font-weight:600;}
 .ci-ffld .ci-sub{font-weight:400;color:var(--tf);}
 .ci-inl{font-weight:400;font-size:var(--ts-badge);color:var(--tf);}
-.ci-ffld input,.ci-ffld select,.ci-ffld textarea{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--bd);border-radius:var(--radius-xs);font-size:var(--ts-preview);background:var(--s1);color:var(--tp);font-family:inherit;box-sizing:border-box;}
+.ci-ffld input,.ci-ffld select,.ci-ffld textarea{flex:1;min-width:0;padding:7px 10px;border:1px solid var(--bd);border-radius:var(--radius-xs);font-size:var(--ts-preview);background:var(--s1);color:var(--tp);font-family:inherit;box-sizing:border-box;}
 .ci-ffld input:focus,.ci-ffld select:focus,.ci-ffld textarea:focus{outline:0;border-color:var(--ac);}
 .ci-ffld textarea{resize:vertical;min-height:72px;}
 .ci-inl-wrap{display:flex;gap:8px;align-items:center;}
 .ci-iage{font-size:var(--ts-meta);font-weight:600;color:var(--ac);white-space:nowrap;min-width:64px;}
 .ci-addr{display:flex;gap:8px;margin-bottom:8px;}
-.ci-sec{font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin:20px 0 12px;padding-top:14px;border-top:1px solid var(--bd);}
+.ci-sec{font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--bd);}
 .ci-sec span{font-size:var(--ts-badge);font-weight:400;color:var(--tf);}
 .ci-stagepick{display:flex;flex-wrap:wrap;gap:6px;}
 .ci-stagebtn{font-size:var(--ts-meta);padding:6px 12px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
 .ci-stagebtn.on{background:var(--ac);border-color:var(--ac);color:#fff;}
 .ci-form-acts{display:flex;gap:8px;margin-top:20px;}
 @media(max-width:860px){.ci-top{grid-template-columns:1fr;}.ci-bottom{grid-template-columns:1fr;}.ci-fgrid{grid-template-columns:1fr;}}
+/* ── v4 폼 재배치(2026-07-11 대표 목표 시안): 상단 안내 배너·입력일자 단독·보험연령+성별 한 칸·글자수 카운터·상담채널 제거 ── */
+.ci-banner{display:flex;align-items:flex-start;gap:8px;background:var(--space-branch-soft);color:var(--space-branch-text);border:1px solid var(--space-branch-badge-bg);border-radius:var(--radius-xs);padding:10px 13px;font-size:var(--ts-badge);font-weight:500;line-height:1.4;margin-bottom:12px;}
+.ci-banner-ic{flex-shrink:0;}
+.ci-banner b{font-weight:700;}
+.ci-ocr-hidden{display:none;}
+.ci-spacer{}  /* 입력일자 우측 빈 칸(2열 그리드 정렬용) */
+/* 보험연령 + 성별을 오른쪽 한 칸에 나란히 */
+.ci-pair{display:flex;align-items:center;gap:8px;}
+.ci-pair label{width:auto;flex-shrink:0;}
+.ci-pair .ci-iage-in{flex:0 0 auto;width:80px;text-align:center;padding:9px 6px;}
+.ci-pair select{flex:1;min-width:0;}
+/* 글자수 카운터(이름 0/50 · 상담내용 0자) */
+.ci-count{position:relative;}
+.ci-count>input,.ci-count>textarea{padding-right:52px;}
+.ci-count .ci-cnt{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--tf);pointer-events:none;}
+.ci-count-ta .ci-cnt{top:auto;bottom:12px;transform:none;}
+/* 상담내용 = 핵심 필드: 확보한 공간을 몰아 크게(드래그로 더 키우기 가능) */
+.ci-count-ta{margin-top:4px;}
+.ci-count-ta>textarea{min-height:240px;}
+/* 상세주소=주소 입력칸과 좌측 정렬(빈 라벨로 들여쓰기) */
+.ci-addr2>label{width:64px;}
 /* 상태 단계 필터 칩 (2026-07-08) */
 #v-salesnote .sn-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
 #v-salesnote .sn-chip{font-size:12px;padding:5px 12px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;color:var(--tp);}
