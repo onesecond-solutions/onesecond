@@ -65,22 +65,34 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 #mys-split.ci-mode #mysList{display:none;}
 #mys-split.ci-mode .viewer-col{display:none;}
 .ci-wrap{display:none;flex-direction:column;gap:12px;padding:4px 2px 12px;}
-.ci-top{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;}
-.ci-today,.ci-flow{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;}
+.ci-top{display:grid;grid-template-columns:340px 1fr;background:var(--s2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;}  /* 오늘의 할 일 + 상담 플로우 = 하나의 박스 (340=아래 카드리스트 폭 정렬) */
+.ci-today,.ci-flow{padding:14px 16px;}
+.ci-flow{border-left:1px solid var(--bd);}  /* 두 영역 구분 경계선 */
 .ci-today-head{font-size:var(--ts-meta);font-weight:800;color:var(--tp);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
 .ci-today-date{font-size:var(--ts-badge);font-weight:600;color:var(--tf);}
 .ci-today-row{display:flex;justify-content:space-between;font-size:var(--ts-meta);color:var(--tp);padding:4px 0;}
 .ci-today-row b{color:var(--ac);}
 .ci-today-note{font-size:var(--ts-badge);color:var(--tf);margin-top:8px;line-height:1.5;}
 .ci-flow-head{font-size:var(--ts-meta);font-weight:800;color:var(--tp);margin-bottom:8px;}
-.ci-band{display:flex;flex-wrap:wrap;gap:6px;}
-.ci-stg{font-size:var(--ts-meta);padding:5px 10px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--tp);cursor:pointer;display:inline-flex;gap:5px;align-items:center;font-family:inherit;}
-.ci-stg b{font-weight:800;color:var(--tf);}
-.ci-stg.on{background:var(--ac);border-color:var(--ac);color:#fff;}
-.ci-stg.on b{color:#fff;}
+.ci-band{display:flex;flex-direction:column;gap:10px;}
+.ci-fall{align-self:flex-start;font-size:var(--ts-meta);font-weight:700;padding:4px 13px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--tp);cursor:pointer;font-family:inherit;}
+.ci-fall.on{background:var(--ac);border-color:var(--ac);color:#fff;}
+.ci-fchart{display:flex;gap:4px;}
+.ci-fcol{flex:1;min-width:74px;display:flex;flex-direction:column;cursor:pointer;}
+.ci-farw{padding:7px 5px 7px 14px;clip-path:polygon(0 0,calc(100% - 11px) 0,100% 50%,calc(100% - 11px) 100%,0 100%,11px 50%);text-align:center;font-size:var(--ts-badge);font-weight:700;line-height:1.15;background:var(--s2);color:var(--tf);}
+.ci-fcol:first-child .ci-farw{clip-path:polygon(0 0,calc(100% - 11px) 0,100% 50%,calc(100% - 11px) 100%,0 100%);padding-left:8px;}
+.ci-fcol.done .ci-farw{background:color-mix(in srgb,var(--ac) 16%,#fff);color:var(--ac);}
+.ci-fcol.on .ci-farw{background:var(--ac);color:#fff;}
+.ci-fstep{position:relative;display:flex;justify-content:center;margin-top:12px;}
+.ci-fcol:not(:last-child) .ci-fstep::after{content:"";position:absolute;top:17px;left:50%;width:100%;height:2px;background:var(--bd);z-index:0;}
+.ci-fcol.done .ci-fstep::after,.ci-fcol.on .ci-fstep::after{background:var(--ac);}
+.ci-fdot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--ts-preview);font-weight:800;z-index:1;border:2px solid var(--bd);background:var(--s1);color:var(--tf);}
+.ci-fcol.done .ci-fdot{border-color:var(--ac);color:var(--ac);}
+.ci-fcol.on .ci-fdot{background:var(--ac);border-color:var(--ac);color:#fff;}
 .ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:start;}
-.ci-newrow{margin-bottom:8px;}
-.ci-list{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow:auto;}
+.ci-list-col{min-width:0;}
+.ci-right-col{display:flex;flex-direction:column;gap:12px;min-width:0;}  /* 우측=스크립트 레이아웃처럼 글쓰기 상단 + 미리보기 아래 */
+.ci-list{display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto;}
 .ci-date-sep{font-size:var(--ts-meta);font-weight:700;color:var(--tf);padding:6px 2px 2px;display:flex;justify-content:space-between;}
 .ci-date-sep span{color:var(--ac);}
 .ci-card{border:1px solid var(--bd);border-radius:10px;padding:9px 11px;background:var(--s2);cursor:pointer;}
