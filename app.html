@@ -15729,8 +15729,22 @@ function _ciShow(){
   }
   if(w) w.style.display='flex';
   if(!window._ciLoaded){ _ciLoad(); } else { _ciRender(); }
+  _ciScrollIntoView();  /* 클릭한 사용자 화면에 상담관리가 확실히 보이도록 해당 영역으로 스크롤(호스트 무관) */
 }
 window._ciShow=_ciShow;
+/* 상담관리 진입 시 어느 호스트(바텀시트/홈데스크/홈딥링크)든 그 영역으로 스크롤. 레이아웃·DOM 이동 안정 후 실행(rAF 2회+지연 백업). */
+function _ciScrollIntoView(){
+  var run=function(){
+    var sp=document.getElementById('mys-split'), w=document.getElementById('ci-wrap');
+    var target=(sp && sp.classList.contains('ci-mode'))?sp:(w||sp); if(!target) return;
+    try{ target.scrollIntoView({behavior:'smooth', block:'start'}); }
+    catch(e){ try{ target.scrollIntoView(); }catch(_e){} }
+  };
+  var raf=window.requestAnimationFrame||function(f){ return setTimeout(f,16); };
+  raf(function(){ raf(run); });   /* 2 rAF = 표출·이동 반영 후 */
+  setTimeout(run, 120);           /* 백업: 비동기 렌더(_ciLoad) 후 위치 확정 */
+}
+window._ciScrollIntoView=_ciScrollIntoView;
 function _ciHide(){
   var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
   if(sp) sp.classList.remove('ci-mode');
