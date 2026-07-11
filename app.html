@@ -15807,9 +15807,8 @@ function _ciPreviewHtml(c){
 }
 function _ciSelCard(id){
   window._ciSel=id;
-  var c=(window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0];
-  var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(c);
-  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();  /* 선택 하이라이트 */
+  _ciOpenForm(id);  /* 카드 클릭 = 그 고객 편집 폼 열기(데이터·상담이력 로드). 읽기전용 요약 대체 */
 }
 window._ciSelCard=_ciSelCard;
 /* ── v3 입력폼(입력일자·속성·음력·보험연령·이메일·주소·인수 5필드·8단계 고객분류) + 캡처 OCR 재사용 ── */
