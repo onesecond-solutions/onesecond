@@ -15775,7 +15775,7 @@ function _ciTodayHtml(){
     ['보험 생일 +1년', 0]
   ];
   var body=rows.map(function(r){ return '<div class="ci-today-row"><span>'+_ciEsc(r[0])+'</span><b>'+r[1]+'명</b></div>'; }).join('');
-  return '<div class="ci-today-head">📌 오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
+  return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
     +'<div class="ci-today-body">'+body+'<div class="ci-today-note">청약 이후 항목(+91·+181일·보험생일)은 캘린더와 연동됩니다.</div></div>';
 }
 function _ciListHtml(){
@@ -15837,7 +15837,7 @@ function _ciFormHtml(c){
   var medOpt=['','복용 중','복용 안 함','과거 복용'].map(function(o){ return '<option value="'+_ciEsc(o)+'"'+(o===med?' selected':'')+'>'+(o||'선택')+'</option>'; }).join('');
   return '<div class="ci-form">'
     +'<div class="ci-form-head">'+(c.id?'고객 수정':'신규 고객')+'<button type="button" class="ci-form-x" onclick="_ciCloseForm()">✕</button></div>'
-    +'<div class="ci-ocr-hint">📷 고객정보 화면을 캡처해 아래에 Ctrl+V → [캡처에서 정보 읽기] (원본 이미지는 저장하지 않습니다)</div>'
+    +'<div class="ci-ocr-hint">고객정보 화면을 캡처해 아래에 Ctrl+V → [캡처에서 정보 읽기] (원본 이미지는 저장하지 않습니다)</div>'
     +'<div id="cif-ocr-drop" class="ci-ocr-drop" contenteditable="true" data-ph="여기를 클릭하고 Ctrl+V로 캡처 붙여넣기"></div>'
     +'<div class="ci-ocr-acts"><button type="button" class="ci-btn ghost" onclick="_ciOcrRun()">캡처에서 정보 읽기</button><span id="cif-ocr-stat" class="ci-ocr-stat"></span></div>'
     +'<div class="ci-fgrid">'
