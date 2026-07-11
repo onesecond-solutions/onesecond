@@ -89,19 +89,25 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-fdot{width:34px;height:34px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-size:var(--ts-preview);font-weight:600;z-index:1;border:2px solid var(--bd);background:var(--s1);color:var(--tf);}
 .ci-fcol.done .ci-fdot{border-color:var(--ac);color:var(--ac);}
 .ci-fcol.on .ci-fdot{background:var(--ac);border-color:var(--ac);color:#fff;}
-.ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:start;}
-.ci-list-col{min-width:0;}
+.ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:stretch;}  /* 좌우 높이 맞춤(우측 폼 라인까지) */
+.ci-list-col{min-width:0;position:relative;}  /* 리스트를 absolute로 채워 우측 폼 높이에 맞춤 */
 .ci-right-col{display:flex;flex-direction:column;gap:12px;min-width:0;}  /* 우측=스크립트 레이아웃처럼 글쓰기 상단 + 미리보기 아래 */
-.ci-list{display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto;}
+.ci-list{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}  /* 우측 폼 높이만큼 채우고 내부 스크롤 */
 .ci-date-sep{font-size:var(--ts-badge);font-weight:600;color:var(--tf);padding:8px 2px 3px;display:flex;justify-content:space-between;}
 .ci-date-sep span{color:var(--tf);font-weight:500;}
-.ci-card{border:1px solid var(--bd);border-radius:var(--radius-sm);padding:11px 13px;background:var(--s1);cursor:pointer;}
+.ci-card{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 13px;background:var(--s1);cursor:pointer;}
 .ci-card:hover{border-color:var(--border-strong,#C4C4CC);background:var(--s2);}
 .ci-card.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset;}
-.ci-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.ci-card-nm{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);}
+.ci-card-nm{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);flex-shrink:0;}
+.ci-card-meta{font-size:var(--ts-meta);color:var(--tf);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ci-card-stg{font-size:var(--ts-badge);color:var(--tf);flex-shrink:0;}
-.ci-card-sub{font-size:var(--ts-meta);color:var(--tf);margin-top:3px;}
+/* 속성(유입 채널)별 카드 색: 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색 (나머지=흰색) */
+.ci-card.ci-src-bank{background:#FEF3C7;border-color:#FDE68A;}
+.ci-card.ci-src-bank:hover{background:#FDE68A;}
+.ci-card.ci-src-kakao{background:#DBEAFE;border-color:#BFDBFE;}
+.ci-card.ci-src-kakao:hover{background:#BFDBFE;}
+.ci-card.ci-src-bomap{background:#E9E9EE;border-color:#D4D4DB;}
+.ci-card.ci-src-bomap:hover{background:#DEDEE4;}
 .ci-preview{border:1px solid var(--bd);border-radius:var(--radius-md);padding:20px 22px;background:var(--s1);min-height:200px;}
 .ci-pv-head{font-size:var(--ts-viewer-title);font-weight:600;color:var(--tp);margin-bottom:14px;display:flex;gap:8px;align-items:center;}
 .ci-pv-stg{font-size:var(--ts-badge);font-weight:500;color:var(--space-branch-text);background:var(--space-branch-soft);padding:3px 9px;border-radius:var(--radius-xs);}
@@ -173,6 +179,19 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-bio-left .ci-iage-in{flex:0 0 auto;width:52px;text-align:center;padding:7px 4px;}
 .ci-bio-left .ci-gender-in{flex:0 0 auto;width:58px;}
 .ci-addr2{margin-top:-4px;}  /* 주소~상세주소 라인 간격 축소 */
+/* 상담이력 로그 + [상담입력]↔[저장하기] 토글 (2026-07-11) */
+.ci-consult{display:flex;flex-direction:column;gap:10px;}
+.ci-consult-acts{display:flex;}
+.ci-consult-acts .ci-btn{padding:8px 18px;}
+.ci-consult-new{border:1px solid var(--ac);border-radius:var(--radius-sm);padding:12px;background:var(--space-branch-soft);}
+.ci-consult-date{font-size:var(--ts-badge);font-weight:600;color:var(--space-branch-text);margin-bottom:8px;}
+.ci-consult-new textarea{width:100%;box-sizing:border-box;min-height:120px;resize:vertical;padding:9px 11px;border:1px solid var(--bd);border-radius:var(--radius-xs);font-size:var(--ts-preview);font-family:inherit;background:var(--s1);color:var(--tp);}
+.ci-consult-new textarea:focus{outline:0;border-color:var(--ac);}
+.ci-consult-log{display:flex;flex-direction:column;gap:8px;}
+.ci-clog-item{border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:var(--radius-xs);padding:10px 12px;background:var(--s1);}
+.ci-clog-date{font-size:var(--ts-badge);font-weight:600;color:var(--ac);margin-bottom:4px;}
+.ci-clog-text{font-size:var(--ts-preview);color:var(--tp);line-height:1.55;white-space:pre-wrap;}
+.ci-clog-empty{font-size:var(--ts-meta);color:var(--tf);text-align:center;padding:20px 12px;border:1px dashed var(--bd);border-radius:var(--radius-xs);}
 /* 상태 단계 필터 칩 (2026-07-08) */
 #v-salesnote .sn-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
 #v-salesnote .sn-chip{font-size:12px;padding:5px 12px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;color:var(--tp);}
