@@ -15821,7 +15821,7 @@ function _ciInsAge(birth){
   var diffM=(next-t)/(1000*60*60*24*30.44); var ins=(diffM<=6)?age+1:age;
   return {age:age, ins:ins};
 }
-function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.value=r?('보험 '+r.ins+'세'):'자동 계산'; }
+function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.value=r?(r.ins+'세'):''; }
 window._ciUpdIns=_ciUpdIns;
 function _ciPickStage(btn){ var wrap=document.getElementById('cif-stagepick'); if(!wrap) return; var bs=wrap.querySelectorAll('.ci-stagebtn'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); btn.classList.add('on'); wrap.setAttribute('data-st', btn.getAttribute('data-st')); }
 window._ciPickStage=_ciPickStage;
@@ -15839,18 +15839,19 @@ function _ciFormHtml(c){
   return '<div class="ci-form">'
     +'<div class="ci-banner"><span class="ci-banner-ic">📋</span><span>보장분석·고객정보 화면을 캡처해서 이 페이지에 <b>Ctrl+V</b> 하면 자동으로 입력됩니다</span><span id="cif-ocr-stat" class="ci-ocr-stat"></span></div>'
     +'<div class="ci-fgrid">'
-    /* 1행: 입력일자 단독 */
+    /* 1행: 입력일자 | 속성 */
     +'<div class="ci-ffld"><label>입력일자</label><input id="cif-date" type="date" value="'+v(inDate)+'"></div>'
-    +'<div class="ci-spacer"></div>'
-    /* 2행: 이름 | 속성 */
-    +'<div class="ci-ffld ci-count"><label>이름 *</label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50" placeholder="고객 이름" oninput="var s=this.parentNode.querySelector(\'.ci-cnt\'); if(s)s.textContent=this.value.length+\'/50\';"><span class="ci-cnt">'+nameLen+'/50</span></div>'
     +'<div class="ci-ffld"><label>속성</label><input id="cif-attr" type="text" value="'+v(p.attr)+'" placeholder="직접 입력 (예: 지인, 소개, 카카오페이 D)"></div>'
-    /* 3행: 생년월일+음력 | 보험연령+성별 */
-    +'<div class="ci-ffld"><label>생년월일</label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="연도-월-일" oninput="_ciUpdIns()"><label class="ci-inl"><input type="checkbox" id="cif-lunar"'+(p.lunar?' checked':'')+'> 음력</label></div>'
-    +'<div class="ci-ffld ci-pair"><label>보험연령</label><input id="cif-iage" type="text" readonly value="자동 계산" class="ci-iage-in"><label class="ci-lbl2">성별</label><select id="cif-gender"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div>'
-    /* 4행: 휴대폰 | 이메일 */
+    /* 2행: 이름 | 생년월일·보험연령(N세)·성별(3종) (음력 제거·자동계산 문구 제거) */
+    +'<div class="ci-ffld ci-count"><label>이름 *</label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50" placeholder="고객 이름" oninput="var s=this.parentNode.querySelector(\'.ci-cnt\'); if(s)s.textContent=this.value.length+\'/50\';"><span class="ci-cnt">'+nameLen+'/50</span></div>'
+    +'<div class="ci-ffld ci-bio-left">'
+    +'<label>생년월일</label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="연도-월-일" oninput="_ciUpdIns()" class="ci-birth-in">'
+    +'<label class="ci-lbl2">보험연령</label><input id="cif-iage" type="text" readonly value="" placeholder="—" class="ci-iage-in">'
+    +'<label class="ci-lbl2">성별</label><select id="cif-gender" class="ci-gender-in"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select>'
+    +'</div>'
+    /* 3행: 휴대폰(이름 아래) | 빈 칸 */
     +'<div class="ci-ffld"><label>휴대폰 *</label><input id="cif-phone" type="text" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000"></div>'
-    +'<div class="ci-ffld"><label>이메일</label><input id="cif-email" type="text" value="'+v(p.email)+'" placeholder="example@email.com"></div>'
+    +'<div class="ci-spacer"></div>'
     /* 5행: 주소(우편·주소·검색) + 상세주소 */
     +'<div class="ci-ffld full"><label>주소</label><div class="ci-addr"><input id="cif-zip" type="text" value="'+v(p.zip)+'" placeholder="우편번호" style="max-width:120px"><input id="cif-addr1" type="text" value="'+v(p.addr1)+'" placeholder="주소"><button type="button" class="ci-btn ghost" onclick="_ciAddrSearch()">주소검색</button></div></div>'
     +'<div class="ci-ffld full ci-addr2"><label></label><input id="cif-addr2" type="text" value="'+v(p.addr2)+'" placeholder="상세 주소를 입력해 주세요 (선택)"></div>'
@@ -15930,12 +15931,14 @@ function _ciSaveForm(){
   var inDate=_ciV('cif-date').trim(); var now=new Date().toISOString();
   var wrap=document.getElementById('cif-stagepick'); var stage=wrap?wrap.getAttribute('data-st'):'신규DB';
   var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
-    birth_date:birth||null, gender:_ciV('cif-gender')||null, channel:_ciV('cif-channel').trim()||null,
+    birth_date:birth||null, gender:_ciV('cif-gender')||null,
     status:stage||'신규DB', updated_at:now,
     job:_ciV('cif-job').trim()||null, medication:_ciV('cif-med')||null,
     history:_ciV('cif-history').trim()||null, dx_date:_ciV('cif-dx').trim()||null, uw_status:_ciV('cif-uw').trim()||null };
   var prof=(window._ciFormProfile&&typeof window._ciFormProfile==='object')?window._ciFormProfile:{};
-  prof.attr=_ciV('cif-attr').trim()||null; prof.email=_ciV('cif-email').trim()||null;
+  prof.attr=_ciV('cif-attr').trim()||null;
+  var _emEl=document.getElementById('cif-email'); if(_emEl){ prof.email=_emEl.value.trim()||null; }  /* v4: 이메일 필드 제거 → 없으면 기존값 보존(덮어쓰기 방지) */
+  var _chEl=document.getElementById('cif-channel'); if(_chEl){ body.channel=_chEl.value.trim()||null; }  /* v4: 상담채널 제거 → 없으면 PATCH에서 키 생략해 기존 DB값 보존 */
   prof.zip=_ciV('cif-zip').trim()||null; prof.addr1=_ciV('cif-addr1').trim()||null; prof.addr2=_ciV('cif-addr2').trim()||null;
   var lun=document.getElementById('cif-lunar'); prof.lunar=!!(lun&&lun.checked); prof.note_html=_ciV('cif-note');
   body.profile=prof;
