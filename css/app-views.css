@@ -123,12 +123,15 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-ocr-acts{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .ci-ocr-stat{font-size:var(--ts-badge);color:var(--ac);}
 .ci-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
-.ci-ffld{display:flex;flex-direction:column;gap:4px;}
+.ci-ffld{display:flex;flex-direction:row;align-items:center;gap:10px;}  /* 라벨 | 입력박스 = 한 줄 */
 .ci-ffld.full{grid-column:1 / -1;}
-.ci-ffld label{font-size:var(--ts-badge);font-weight:700;color:var(--tp);display:flex;align-items:center;gap:6px;}
+.ci-ffld:has(textarea),.ci-ffld:has(.ci-stagepick){align-items:flex-start;}  /* 여러 줄 위젯은 상단 정렬 */
+.ci-ffld label{flex-shrink:0;width:64px;white-space:nowrap;font-size:var(--ts-badge);font-weight:700;color:var(--tp);display:flex;align-items:center;gap:4px;line-height:1.25;}
+.ci-ffld .ci-inl{width:auto;}
+.ci-ffld input[readonly]{background:var(--s1);color:var(--ac);font-weight:700;}
 .ci-ffld .ci-sub{font-weight:400;color:var(--tf);}
 .ci-inl{font-weight:400;font-size:var(--ts-badge);color:var(--tf);}
-.ci-ffld input,.ci-ffld select,.ci-ffld textarea{padding:9px 11px;border:1px solid var(--bd);border-radius:8px;font-size:var(--ts-preview);background:var(--s2);color:var(--tp);font-family:inherit;box-sizing:border-box;width:100%;}
+.ci-ffld input,.ci-ffld select,.ci-ffld textarea{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--bd);border-radius:8px;font-size:var(--ts-preview);background:var(--s2);color:var(--tp);font-family:inherit;box-sizing:border-box;}
 .ci-ffld textarea{resize:vertical;min-height:72px;}
 .ci-inl-wrap{display:flex;gap:8px;align-items:center;}
 .ci-iage{font-size:var(--ts-meta);font-weight:700;color:var(--ac);white-space:nowrap;min-width:64px;}

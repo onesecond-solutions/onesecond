@@ -15821,7 +15821,7 @@ function _ciInsAge(birth){
   var diffM=(next-t)/(1000*60*60*24*30.44); var ins=(diffM<=6)?age+1:age;
   return {age:age, ins:ins};
 }
-function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.textContent=r?('보험 '+r.ins+'세'):'-'; }
+function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.value=r?('보험 '+r.ins+'세'):'-'; }
 window._ciUpdIns=_ciUpdIns;
 function _ciPickStage(btn){ var wrap=document.getElementById('cif-stagepick'); if(!wrap) return; var bs=wrap.querySelectorAll('.ci-stagebtn'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); btn.classList.add('on'); wrap.setAttribute('data-st', btn.getAttribute('data-st')); }
 window._ciPickStage=_ciPickStage;
@@ -15845,8 +15845,9 @@ function _ciFormHtml(c){
     +'<div class="ci-ffld"><label>속성 <span class="ci-sub">(유입)</span></label><input id="cif-attr" type="text" value="'+v(p.attr)+'" placeholder="지인·소개·카카오페이 D"></div>'
     +'<div class="ci-ffld"><label>이름 *</label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50"></div>'
     +'<div class="ci-ffld"><label>휴대폰 *</label><input id="cif-phone" type="text" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000"></div>'
-    +'<div class="ci-ffld"><label>생년월일 <label class="ci-inl"><input type="checkbox" id="cif-lunar"'+(p.lunar?' checked':'')+'> 음력</label></label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="1980-01-01" oninput="_ciUpdIns()"></div>'
-    +'<div class="ci-ffld"><label>보험연령 · 성별</label><div class="ci-inl-wrap"><span id="cif-iage" class="ci-iage">-</span><select id="cif-gender"><option value="">성별</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div></div>'
+    +'<div class="ci-ffld"><label>생년월일</label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="1980-01-01" oninput="_ciUpdIns()"><label class="ci-inl"><input type="checkbox" id="cif-lunar"'+(p.lunar?' checked':'')+'> 음력</label></div>'
+    +'<div class="ci-ffld"><label>보험연령</label><input id="cif-iage" type="text" readonly value="-"></div>'
+    +'<div class="ci-ffld"><label>성별</label><select id="cif-gender"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div>'
     +'<div class="ci-ffld"><label>이메일</label><input id="cif-email" type="text" value="'+v(p.email)+'" placeholder="example@email.com"></div>'
     +'<div class="ci-ffld"><label>상담채널</label><input id="cif-channel" type="text" value="'+v(c.channel)+'" placeholder="전화·문자·카카오톡"></div>'
     +'<div class="ci-ffld full"><label>주소</label><div class="ci-addr"><input id="cif-zip" type="text" value="'+v(p.zip)+'" placeholder="우편번호" style="max-width:120px"><input id="cif-addr1" type="text" value="'+v(p.addr1)+'" placeholder="주소"><button type="button" class="ci-btn ghost" onclick="_ciAddrSearch()">주소검색</button></div><input id="cif-addr2" type="text" value="'+v(p.addr2)+'" placeholder="상세 주소 (선택)"></div>'
