@@ -15883,7 +15883,7 @@ function _ciFormHtml(c){
     +'<div class="ci-consult-log" id="cif-consult-log"></div>'
     +'</div>'
     +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
-    +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+'</div>'
+    +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+(c.id?'<button type="button" class="ci-endbtn" onclick="_ciManageEnd()">상담 종결</button>':'')+'</div>'
     +'<div class="ci-form-acts"><button type="button" class="ci-btn" id="cif-primary" onclick="_ciFormPrimary()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button><span id="cif-draft-ind" class="ci-draft-ind"></span></div>'
     +'</div>';
 }
@@ -15893,11 +15893,46 @@ function _ciConsultRender(){
   var box=document.getElementById('cif-consult-log'); if(!box) return;
   var log=window._ciConsultLog||[];
   if(!log.length){ box.innerHTML='<div class="ci-clog-empty">아직 상담 이력이 없습니다. [상담입력]으로 첫 상담을 기록하세요.</div>'; return; }
-  box.innerHTML=log.map(function(e){
-    return '<div class="ci-clog-item"><div class="ci-clog-date">'+_ciEsc(e.date||'')+'</div><div class="ci-clog-text">'+_ciEsc(e.text||'').replace(/\n/g,'<br>')+'</div></div>';
+  box.innerHTML=log.map(function(e,i){
+    return '<div class="ci-clog-item" data-i="'+i+'">'
+      +'<div class="ci-clog-head"><span class="ci-clog-date">'+_ciEsc(e.date||'')+'</span>'
+      +'<span class="ci-clog-acts"><button type="button" class="ci-clog-btn" onclick="_ciConsultEdit('+i+')">수정</button><button type="button" class="ci-clog-btn del" onclick="_ciConsultDel('+i+')">삭제</button></span></div>'
+      +'<div class="ci-clog-text">'+_ciEsc(e.text||'').replace(/\n/g,'<br>')+'</div></div>';
   }).join('');
 }
 window._ciConsultRender=_ciConsultRender;
+/* 상담이력 즉시 저장(기존 고객=DB PATCH·삭제 시 민감정보 실제 제거) + 임시저장 갱신 */
+function _ciConsultPersist(){
+  if(window._ciEditId && window._ciProfileLoaded && window.db && window.db.fetch){
+    var prof=(window._ciFormProfile&&typeof window._ciFormProfile==='object')?window._ciFormProfile:{};
+    prof.consult_log=window._ciConsultLog; window._ciFormProfile=prof;
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(window._ciEditId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({profile:prof,updated_at:new Date().toISOString()})}).catch(function(){});
+  }
+  if(window._ciDraftSave) _ciDraftSave();
+}
+window._ciConsultPersist=_ciConsultPersist;
+function _ciConsultDel(i){
+  var log=window._ciConsultLog||[]; if(i<0||i>=log.length) return;
+  if(!confirm('이 상담 기록을 삭제할까요? (되돌릴 수 없습니다)')) return;
+  log.splice(i,1); _ciConsultRender(); _ciConsultPersist();
+}
+window._ciConsultDel=_ciConsultDel;
+function _ciConsultEdit(i){
+  var log=window._ciConsultLog||[]; var e=log[i]; if(!e) return;
+  var box=document.getElementById('cif-consult-log'); if(!box) return;
+  var item=box.querySelector('.ci-clog-item[data-i="'+i+'"]'); if(!item) return;
+  item.innerHTML='<div class="ci-clog-head"><span class="ci-clog-date">'+_ciEsc(e.date||'')+'</span></div>'
+    +'<textarea class="ci-clog-edit" id="cif-clog-edit-'+i+'"></textarea>'
+    +'<div class="ci-clog-editacts"><button type="button" class="ci-clog-btn save" onclick="_ciConsultEditSave('+i+')">저장</button><button type="button" class="ci-clog-btn" onclick="_ciConsultRender()">취소</button></div>';
+  var ta=document.getElementById('cif-clog-edit-'+i); if(ta){ ta.value=e.text||''; try{ ta.focus(); }catch(_e){} }
+}
+window._ciConsultEdit=_ciConsultEdit;
+function _ciConsultEditSave(i){
+  var ta=document.getElementById('cif-clog-edit-'+i); if(!ta) return;
+  var log=window._ciConsultLog||[]; if(!log[i]) return;
+  log[i].text=ta.value; _ciConsultRender(); _ciConsultPersist();
+}
+window._ciConsultEditSave=_ciConsultEditSave;
 function _ciConsultToggle(){
   var btn=document.getElementById('cif-consult-btn'), inp=document.getElementById('cif-consult-input'), ta=document.getElementById('cif-consult-new');
   if(!btn||!inp||!ta) return;
@@ -15908,13 +15943,7 @@ function _ciConsultToggle(){
   } else {
     var txt=ta.value.trim();
     if(txt){
-      (window._ciConsultLog=window._ciConsultLog||[]).unshift({date:_ciConsultToday(), text:txt}); _ciConsultRender(); if(window._ciDraftSave) _ciDraftSave();
-      /* 기존 고객이면 즉시 DB 저장(프로필 로드 완료 후에만 병합 저장 → 다른 프로필 값 보존). 신규 고객은 [저장] 시 함께 저장. */
-      if(window._ciEditId && window._ciProfileLoaded && window.db && window.db.fetch){
-        var prof=(window._ciFormProfile&&typeof window._ciFormProfile==='object')?window._ciFormProfile:{};
-        prof.consult_log=window._ciConsultLog; window._ciFormProfile=prof;
-        window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(window._ciEditId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({profile:prof,updated_at:new Date().toISOString()})}).catch(function(){});
-      }
+      (window._ciConsultLog=window._ciConsultLog||[]).unshift({date:_ciConsultToday(), text:txt}); _ciConsultRender(); _ciConsultPersist();
     }
     inp.style.display='none'; ta.value='';
     btn.textContent='상담입력'; btn.setAttribute('data-mode','');
@@ -16079,6 +16108,18 @@ function _ciSaveForm(){
   }
 }
 window._ciSaveForm=_ciSaveForm;
+/* 상담 종결 = 이 고객(상담 중이던 한 사람) 정보 삭제(소프트=deleted_at·복구 가능, 목록에서 숨김). 확인 시 실행, 아니오 시 취소 */
+function _ciManageEnd(){
+  if(window._ciEditId==null){ return; }
+  if(!confirm('상담을 종결하면 이 고객의 정보가 삭제됩니다.\n\n계속하시겠습니까?')) return;  /* 아니오=그대로 닫힘 */
+  var done=function(){ _ciDraftClear(); window._ciData=(window._ciData||[]).filter(function(x){return String(x.id)!==String(window._ciEditId);}); window._ciSel=null; window._ciLoaded=false; _ciLoad(); _ciCloseForm(); };
+  if(window.db && window.db.fetch){
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(window._ciEditId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})})
+      .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } done(); })
+      .catch(function(e){ alert('관리 종결 실패: '+(e&&e.message||e)); });
+  } else { done(); }  /* 미리보기(연결 없음): 로컬 목록에서 제거 */
+}
+window._ciManageEnd=_ciManageEnd;
 function _ciRender(){
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
