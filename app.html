@@ -2221,6 +2221,20 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
           <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
         </div>
       </div>
+      <!-- 상담관리 인라인 4분할(care) — 상담관리 배지 진입 시 표시. 상좌 오늘의 할 일 / 상우 상담 플로우 / 하좌 카드리스트 / 하우 미리보기. 임태성 게이트. -->
+      <div class="ci-wrap" id="ci-wrap" style="display:none">
+        <div class="ci-top">
+          <div class="ci-today" id="ci-today"></div>
+          <div class="ci-flow"><div class="ci-flow-head">상담 플로우</div><div class="ci-band" id="ci-band"></div></div>
+        </div>
+        <div class="ci-bottom">
+          <div class="ci-list-col">
+            <div class="ci-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 글쓰기</button></div>
+            <div class="ci-list" id="ci-list"></div>
+          </div>
+          <div class="ci-preview" id="ci-preview"><div class="ci-empty">왼쪽에서 고객을 선택하세요.</div></div>
+        </div>
+      </div>
       <!-- 자료함 v1 (P1 후속, 폴더형 개인 보관함). myspace_folders/files, private 버킷 myspace. 풀폭 고지+3컬럼 20/30/50. 폴더 재귀 업로드=PR2 -->
       <div class="mys-vault" id="mys-vault" style="display:none">
         <!-- §4 방어선: 풀폭 상단 고지 (모달화 금지) -->
@@ -15647,6 +15661,7 @@ function filterMys(el,cat){
   for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
   el.classList.add('on');
   window._mysCat=cat;
+  if(typeof _ciHide==='function') _ciHide();  /* 상담관리 인라인(_ci) 해제 — 다른 칩 전환 시 4분할 숨김·기본 목록 복귀 */
   /* 자료함(폴더형) 칩이 아닌 다른 칩 = 평면 목록(mys-split) 복귀, 자료함 숨김 */
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='none';
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
@@ -15684,6 +15699,8 @@ window._scrRenderTypeChips=_scrRenderTypeChips;
 function filterMysType(key){
   window._mysTypeFilter=key||'all';
   _scrRenderTypeChips();
+  if(key==='care'){ if(typeof _ciShow==='function') _ciShow(); return; }  /* 상담관리 = 4분할 인라인 화면(_ci*) */
+  if(typeof _ciHide==='function') _ciHide();
   var items=window._myspaceCache||[];
   var f=items.filter(function(it){ return it._type==='script'; });  /* 업무노트(scripts) 결과 안에서만 서브필터 */
   /* filterMys와 동일 정렬 규약(신규 최상단=sort_order null → -Infinity, 동순위 최신순) */
@@ -15695,6 +15712,93 @@ function filterMysType(key){
   renderMyspace(f);
 }
 window.filterMysType=filterMysType;
+/* ═══ 상담관리 인라인(care) — 업무노트 상담관리 배지 진입 시 4분할 레이아웃 (2026-07-11 Phase 1)
+ *  상좌 오늘의 할 일 / 상우 상담 플로우(단계띠) / 하좌 카드리스트(입력일자·날짜별 인원) / 하우 미리보기.
+ *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
+window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false;
+function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
+function _ciShow(){
+  var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
+  if(sp) sp.classList.add('ci-mode');           /* 리스트/뷰어만 숨김·유형칩 바는 유지(CSS) */
+  if(w) w.style.display='flex';
+  if(!window._ciLoaded){ _ciLoad(); } else { _ciRender(); }
+}
+window._ciShow=_ciShow;
+function _ciHide(){
+  var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
+  if(sp) sp.classList.remove('ci-mode');
+  if(w) w.style.display='none';
+}
+window._ciHide=_ciHide;
+function _ciLoad(){
+  window._ciLoaded=true; window._ciData=[];
+  var tok=window.db&&window.db.getToken&&window.db.getToken();
+  if(!tok||!window.db||!window.db.fetch){ _ciRender(); return; }  /* 비로그인=빈 상태(owner RLS로 데이터 0) */
+  window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at&order=created_at.desc&limit=5000')
+    .then(function(r){ return r.ok?r.json():[]; })
+    .then(function(rows){ window._ciData=Array.isArray(rows)?rows:[]; _ciRender(); })
+    .catch(function(){ _ciRender(); });
+}
+window._ciLoad=_ciLoad;
+function _ciSetStage(s){ window._ciStageF=s; _ciRender(); }
+window._ciSetStage=_ciSetStage;
+function _ciBandHtml(){
+  var data=window._ciData||[], cur=window._ciStageF||'전체';
+  var stages=['전체'].concat((typeof _SN_STAGES!=='undefined')?_SN_STAGES:[]);  /* 기존 8단계 그대로 재사용(대표 확정 2026-07-11) */
+  return stages.map(function(s){
+    var n=(s==='전체')?data.length:data.filter(function(c){return (c.status||'')===s;}).length;
+    return '<button type="button" class="ci-stg'+(s===cur?' on':'')+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')">'+_ciEsc(s)+'<b>'+n+'</b></button>';
+  }).join('');
+}
+function _ciTodayHtml(){
+  var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  var todayNew=(window._ciData||[]).filter(function(c){return _ciDateOf(c.created_at)===ymd;}).length;
+  return '<div class="ci-today-head">📌 오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
+    +'<div class="ci-today-body"><div class="ci-today-row"><span>오늘 등록한 고객</span><b>'+todayNew+'명</b></div>'
+    +'<div class="ci-today-note">청약완료 시 보장개시·6개월·보험생일 자동 일정이 여기와 캘린더에 함께 잡힙니다.</div></div>';
+}
+function _ciListHtml(){
+  var data=(window._ciData||[]).slice(), cur=window._ciStageF||'전체';
+  if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;});
+  data.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });
+  if(!data.length) return '<div class="ci-empty">아직 등록된 고객이 없습니다.<br>+ 글쓰기로 첫 고객을 추가하세요.</div>';
+  var byDate={}; data.forEach(function(c){ var d=_ciDateOf(c.created_at)||'날짜 미상'; byDate[d]=(byDate[d]||0)+1; });
+  var out='', last=null;
+  data.forEach(function(c){
+    var d=_ciDateOf(c.created_at)||'날짜 미상';
+    if(d!==last){ last=d; out+='<div class="ci-date-sep">'+_ciEsc(d)+' <span>'+byDate[d]+'명</span></div>'; }  /* 입력일자별 그룹·그날 인원수 */
+    var sel=(window._ciSel!=null&&String(window._ciSel)===String(c.id))?' on':'';
+    out+='<div class="ci-card'+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
+      +'<div class="ci-card-top"><span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span><span class="ci-card-stg">'+_ciEsc(c.status||'신규DB')+'</span></div>'
+      +'<div class="ci-card-sub">'+_ciEsc(c.phone||c.phone_raw||'연락처 없음')+'</div></div>';
+  });
+  return out;
+}
+function _ciPreviewHtml(c){
+  if(!c) return '<div class="ci-empty">왼쪽에서 고객을 선택하세요.</div>';
+  var rows=[['연락처',c.phone||c.phone_raw],['생년월일',c.birth_date],['성별',c.gender],['상담채널',c.channel],['입력일자',_ciDateOf(c.created_at)]];
+  return '<div class="ci-pv-head">'+_ciEsc(c.name||'')+' <span class="ci-pv-stg">'+_ciEsc(c.status||'')+'</span></div>'
+    +'<div class="ci-pv-body">'+rows.map(function(r){return '<div class="ci-pv-row"><span>'+_ciEsc(r[0])+'</span><b>'+_ciEsc(r[1]||'-')+'</b></div>';}).join('')+'</div>'
+    +'<div class="ci-pv-note">상세 입력폼·인수 정보·상담 이력은 다음 단계에서 연동됩니다.</div>';
+}
+function _ciSelCard(id){
+  window._ciSel=id;
+  var c=(window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0];
+  var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(c);
+  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+}
+window._ciSelCard=_ciSelCard;
+function _ciNew(){ if(typeof toast==='function') toast('고객 입력폼(v3)은 다음 단계에서 연동됩니다.'); }  /* Phase 1 후속: v3 입력폼 배선 */
+window._ciNew=_ciNew;
+function _ciRender(){
+  var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
+  var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
+  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+  var pv=document.getElementById('ci-preview');
+  if(pv){ var c=(window._ciSel!=null)?(window._ciData||[]).filter(function(x){return String(x.id)===String(window._ciSel);})[0]:null; pv.innerHTML=_ciPreviewHtml(c); }
+}
+window._ciRender=_ciRender;
 
 
 /* ── 공유하기 (Phase 1) — 마이스페이스 항목(스크립트/메모/자료)을 팀/지점 공유함으로 ── */
