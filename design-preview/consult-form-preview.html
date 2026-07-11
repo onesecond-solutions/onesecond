@@ -32,7 +32,7 @@
     <div class="ci-wrap" id="ci-wrap">
       <div class="ci-top">
         <div class="ci-today" id="ci-today"></div>
-        <div class="ci-flow"><div class="ci-flow-head">상담 플로우</div><div class="ci-band" id="ci-band"></div></div>
+        <div class="ci-flow"><div class="ci-flow-head">상담 플로우 <button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button></div><div class="ci-band" id="ci-band"></div></div>
       </div>
       <div class="ci-bottom">
         <div class="ci-list-col">
@@ -138,6 +138,7 @@ function renderAll(){
   document.getElementById('ci-today').innerHTML = _ciTodayHtml();
   document.getElementById('ci-band').innerHTML  = _ciBandHtml();
   document.getElementById('ci-list').innerHTML  = _ciListHtml();
+  var t=document.getElementById('ci-flow-total'); if(t){ t.textContent='전체 '+((window._ciData||[]).length); t.classList.toggle('on',(window._ciStageF||'전체')==='전체'); }
 }
 
 // 미리보기용 상호작용 핸들러 (네트워크 의존 제거)

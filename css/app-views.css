@@ -77,22 +77,30 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-today-row.on{background:var(--space-branch-soft);color:var(--space-branch-text);}
 .ci-today-row.on b{color:var(--space-branch-text);}
 .ci-today-note{font-size:var(--ts-badge);color:var(--tf);margin-top:10px;line-height:1.5;}
-.ci-flow-head{font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin-bottom:10px;}
-.ci-band{display:flex;flex-direction:column;gap:10px;}
-.ci-fall{align-self:flex-start;font-size:var(--ts-meta);font-weight:600;padding:4px 13px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
-.ci-fall.on{background:var(--ac);border-color:var(--ac);color:#fff;}
-.ci-fchart{display:flex;gap:4px;}
-.ci-fcol{flex:1;min-width:74px;display:flex;flex-direction:column;cursor:pointer;}
-.ci-farw{padding:7px 5px 7px 14px;clip-path:polygon(0 0,calc(100% - 11px) 0,100% 50%,calc(100% - 11px) 100%,0 100%,11px 50%);text-align:center;font-size:var(--ts-badge);font-weight:600;line-height:1.15;background:var(--s2);color:var(--tf);}
-.ci-fcol:first-child .ci-farw{clip-path:polygon(0 0,calc(100% - 11px) 0,100% 50%,calc(100% - 11px) 100%,0 100%);padding-left:8px;}
-.ci-fcol.done .ci-farw{background:var(--space-branch-soft);color:var(--space-branch-text);}
-.ci-fcol.on .ci-farw{background:var(--ac);color:#fff;}
-.ci-fstep{position:relative;display:flex;justify-content:center;margin-top:12px;}
-.ci-fcol:not(:last-child) .ci-fstep::after{content:"";position:absolute;top:17px;left:50%;width:100%;height:2px;background:var(--bd);z-index:0;}
-.ci-fcol.done .ci-fstep::after,.ci-fcol.on .ci-fstep::after{background:var(--ac);}
-.ci-fdot{width:34px;height:34px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-size:var(--ts-preview);font-weight:600;z-index:1;border:2px solid var(--bd);background:var(--s1);color:var(--tf);}
-.ci-fcol.done .ci-fdot{border-color:var(--ac);color:var(--ac);}
-.ci-fcol.on .ci-fdot{background:var(--ac);border-color:var(--ac);color:#fff;}
+/* 상담 플로우 v2 — 카드형(단계·숫자·명, 0=회색·"—") + 진행 점 라인 + 필터 문구. 색상=V2 토큰 */
+.ci-flow-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin-bottom:12px;}
+.ci-flow-total{font-size:var(--ts-badge);font-weight:600;padding:4px 13px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
+.ci-flow-total.on{background:var(--ac);border-color:var(--ac);color:#fff;}
+.ci-band{display:flex;flex-direction:column;}
+.ci-scards{display:flex;gap:8px;}
+.ci-scard{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:11px 4px 9px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);cursor:pointer;font-family:inherit;transition:background .1s;}
+.ci-scard:hover{background:var(--s2);}
+.ci-scard-name{font-size:var(--ts-badge);font-weight:600;color:var(--ts);white-space:nowrap;}
+.ci-scard-num{font-size:var(--ts-viewer-title,20px);font-weight:700;color:var(--tp);line-height:1.15;}
+.ci-scard-unit{font-size:11px;color:var(--tf);}
+.ci-scard.zero{background:var(--s2);}
+.ci-scard.zero .ci-scard-name,.ci-scard.zero .ci-scard-num,.ci-scard.zero .ci-scard-unit{color:var(--tf);}
+.ci-scard.on{border-color:var(--ac);background:var(--space-branch-soft);box-shadow:0 0 0 1px var(--ac) inset;}
+.ci-scard.on .ci-scard-name{color:var(--space-branch-text);}
+.ci-scard.on .ci-scard-num{color:var(--ac);}
+.ci-scard.on .ci-scard-unit{color:var(--space-branch-text);}
+.ci-sdots{display:flex;position:relative;margin-top:12px;}
+.ci-sdots::before{content:"";position:absolute;top:50%;left:6%;right:6%;height:2px;background:var(--bd);transform:translateY(-50%);}
+.ci-sdot{flex:1;display:flex;justify-content:center;position:relative;z-index:1;}
+.ci-sdot i{width:10px;height:10px;border-radius:50%;background:var(--bd);box-shadow:0 0 0 3px var(--s1);}
+.ci-sdot.on i{background:var(--ac);}
+.ci-flow-foot{font-size:var(--ts-badge);color:var(--ac);margin-top:14px;line-height:1.4;}
+.ci-flow-foot.muted{color:var(--tf);}
 .ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:stretch;}  /* 좌우 높이 맞춤(우측 폼 라인까지) */
 .ci-list-col{min-width:0;position:relative;}  /* 리스트를 absolute로 채워 우측 폼 높이에 맞춤 */
 .ci-right-col{display:flex;flex-direction:column;gap:12px;min-width:0;}  /* 우측=스크립트 레이아웃처럼 글쓰기 상단 + 미리보기 아래 */
