@@ -2232,7 +2232,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
             <div class="ci-list" id="ci-list"></div>
           </div>
           <div class="ci-right-col">
-            <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 글쓰기</button></div>
+            <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 고객 추가</button></div>
             <div class="ci-preview" id="ci-preview"><div class="ci-empty">왼쪽에서 고객을 선택하세요.</div></div>
           </div>
         </div>
@@ -15741,7 +15741,7 @@ function _ciLoad(){
   window._ciLoaded=true; window._ciData=[];
   var tok=window.db&&window.db.getToken&&window.db.getToken();
   if(!tok||!window.db||!window.db.fetch){ _ciRender(); return; }  /* 비로그인=빈 상태(owner RLS로 데이터 0) */
-  window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at&order=created_at.desc&limit=5000')
+  window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at,profile&order=created_at.desc&limit=5000')
     .then(function(r){ return r.ok?r.json():[]; })
     .then(function(rows){ window._ciData=Array.isArray(rows)?rows:[]; _ciRender(); })
     .catch(function(){ _ciRender(); });
@@ -15789,9 +15789,12 @@ function _ciListHtml(){
     var d=_ciDateOf(c.created_at)||'날짜 미상';
     if(d!==last){ last=d; out+='<div class="ci-date-sep">'+_ciEsc(d)+' <span>'+byDate[d]+'명</span></div>'; }  /* 입력일자별 그룹·그날 인원수 */
     var sel=(window._ciSel!=null&&String(window._ciSel)===String(c.id))?' on':'';
-    out+='<div class="ci-card'+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
-      +'<div class="ci-card-top"><span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span><span class="ci-card-stg">'+_ciEsc(c.status||'신규DB')+'</span></div>'
-      +'<div class="ci-card-sub">'+_ciEsc(c.phone||c.phone_raw||'연락처 없음')+'</div></div>';
+    var _r=_ciInsAge(c.birth_date); var _meta=[(_r?_r.age+'세':''), (c.gender||'')].filter(Boolean).join(' · ');
+    var _at=((c.profile&&c.profile.attr)||c.attr||''); var _sc=/뱅크샐러드/.test(_at)?' ci-src-bank':(/카카오페이/.test(_at)?' ci-src-kakao':(/보맵/.test(_at)?' ci-src-bomap':''));  /* 속성(유입) 색상: 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색·나머지=흰색 */
+    out+='<div class="ci-card'+_sc+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
+      +'<span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span>'
+      +'<span class="ci-card-meta">'+_ciEsc(_meta)+'</span>'
+      +'<span class="ci-card-stg">'+_ciEsc(c.status||'신규DB')+'</span></div>';
   });
   return out;
 }
@@ -15835,7 +15838,8 @@ function _ciFormHtml(c){
   var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];
   var stageBtns=stages.map(function(s){ return '<button type="button" class="ci-stagebtn'+(s===st?' on':'')+'" data-st="'+_ciEsc(s)+'" onclick="_ciPickStage(this)">'+_ciEsc(s)+'</button>'; }).join('');
   var medOpt=['','복용 중','복용 안 함','과거 복용'].map(function(o){ return '<option value="'+_ciEsc(o)+'"'+(o===med?' selected':'')+'>'+(o||'선택')+'</option>'; }).join('');
-  var nameLen=(c.name||'').length; var noteLen=(p.note_html||'').length;
+  var nameLen=(c.name||'').length;
+  window._ciConsultLog=(p.consult_log&&Array.isArray(p.consult_log))?p.consult_log.slice():[];  /* 현재 폼의 상담이력(최신순) */
   return '<div class="ci-form">'
     +'<div class="ci-banner"><span class="ci-banner-ic">📋</span><span>보장분석·고객정보 화면을 캡처해서 이 페이지에 <b>Ctrl+V</b> 하면 자동으로 입력됩니다</span><span id="cif-ocr-stat" class="ci-ocr-stat"></span></div>'
     +'<div class="ci-fgrid">'
@@ -15863,13 +15867,53 @@ function _ciFormHtml(c){
     +'<div class="ci-ffld full"><label>병력</label><input id="cif-history" type="text" value="'+v(c.history)+'" placeholder="예: 갑상선 결절 / 고혈압 / 당뇨"></div>'
     +'<div class="ci-ffld"><label>진단시기</label><input id="cif-dx" type="text" value="'+v(c.dx_date)+'" placeholder="예: 2025년 3월"></div>'
     +'<div class="ci-ffld"><label>현재상태</label><input id="cif-uw" type="text" value="'+v(c.uw_status)+'" placeholder="예: 추적관찰 중 / 수술 완료"></div>'
-    +'<div class="ci-ffld full ci-count ci-count-ta"><label>상담내용</label><textarea id="cif-note" rows="4" placeholder="상담 내용을 기록하세요 — 통화 요지, 고객 반응, 다음 액션 등" oninput="var s=this.parentNode.querySelector(\'.ci-cnt\'); if(s)s.textContent=this.value.length+\'자\';">'+v(p.note_html)+'</textarea><span class="ci-cnt">'+noteLen+'자</span></div>'
+    +'</div>'
+    /* 상담내용 = 날짜별 상담이력(최신순 위) + [상담입력]↔[저장하기] 토글 */
+    +'<div class="ci-sec">상담내용</div>'
+    +'<div class="ci-consult">'
+    +'<div class="ci-consult-acts"><button type="button" class="ci-btn" id="cif-consult-btn" data-mode="" onclick="_ciConsultToggle()">상담입력</button></div>'
+    +'<div class="ci-consult-new" id="cif-consult-input" style="display:none"><div class="ci-consult-date"><span id="cif-consult-date"></span> 상담 기록</div><textarea id="cif-consult-new" placeholder="상담 내용을 입력하세요 — 통화 요지, 고객 반응, 다음 액션 등"></textarea></div>'
+    +'<div class="ci-consult-log" id="cif-consult-log"></div>'
     +'</div>'
     +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
     +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+'</div>'
-    +'<div class="ci-form-acts"><button type="button" class="ci-btn" onclick="_ciSaveForm()">저장</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button></div>'
+    +'<div class="ci-form-acts"><button type="button" class="ci-btn" onclick="_ciSaveForm()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button></div>'
     +'</div>';
 }
+/* ── 상담이력: [상담입력]→오늘 날짜 자동+[저장하기]로 토글, 저장 시 최신순(위로) 누적 ── */
+function _ciConsultToday(){ var t=new Date(); return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); }
+function _ciConsultRender(){
+  var box=document.getElementById('cif-consult-log'); if(!box) return;
+  var log=window._ciConsultLog||[];
+  if(!log.length){ box.innerHTML='<div class="ci-clog-empty">아직 상담 이력이 없습니다. [상담입력]으로 첫 상담을 기록하세요.</div>'; return; }
+  box.innerHTML=log.map(function(e){
+    return '<div class="ci-clog-item"><div class="ci-clog-date">'+_ciEsc(e.date||'')+'</div><div class="ci-clog-text">'+_ciEsc(e.text||'').replace(/\n/g,'<br>')+'</div></div>';
+  }).join('');
+}
+window._ciConsultRender=_ciConsultRender;
+function _ciConsultToggle(){
+  var btn=document.getElementById('cif-consult-btn'), inp=document.getElementById('cif-consult-input'), ta=document.getElementById('cif-consult-new');
+  if(!btn||!inp||!ta) return;
+  if(btn.getAttribute('data-mode')!=='save'){
+    inp.style.display=''; var d=document.getElementById('cif-consult-date'); if(d) d.textContent=_ciConsultToday();
+    ta.value=''; try{ ta.focus(); }catch(e){}
+    btn.textContent='저장하기'; btn.setAttribute('data-mode','save');
+  } else {
+    var txt=ta.value.trim();
+    if(txt){
+      (window._ciConsultLog=window._ciConsultLog||[]).unshift({date:_ciConsultToday(), text:txt}); _ciConsultRender();
+      /* 기존 고객이면 즉시 DB 저장(프로필 로드 완료 후에만 병합 저장 → 다른 프로필 값 보존). 신규 고객은 [저장] 시 함께 저장. */
+      if(window._ciEditId && window._ciProfileLoaded && window.db && window.db.fetch){
+        var prof=(window._ciFormProfile&&typeof window._ciFormProfile==='object')?window._ciFormProfile:{};
+        prof.consult_log=window._ciConsultLog; window._ciFormProfile=prof;
+        window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(window._ciEditId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({profile:prof,updated_at:new Date().toISOString()})}).catch(function(){});
+      }
+    }
+    inp.style.display='none'; ta.value='';
+    btn.textContent='상담입력'; btn.setAttribute('data-mode','');
+  }
+}
+window._ciConsultToggle=_ciConsultToggle;
 function _ciOcrBind(){
   /* 시안 v4: 별도 드롭박스 없이 폼 전체(#ci-preview)에서 Ctrl+V 캡처 → 즉시 자동 인식(배너 안내대로). 리스너는 컨테이너에 1회만(폼 재렌더에도 유지). */
   var host=document.getElementById('ci-preview'); if(!host||host._ocrB) return; host._ocrB=1;
@@ -15900,13 +15944,15 @@ function _ciOcrRun(){
 }
 window._ciOcrRun=_ciOcrRun;
 function _ciOpenForm(id){
-  window._ciEditId=id||null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''};
+  window._ciEditId=id||null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''}; window._ciProfileLoaded=false;
   var pv=document.getElementById('ci-preview'); if(!pv) return;
   var base=id?((window._ciData||[]).filter(function(x){ return String(x.id)===String(id); })[0]||{}):{};
-  pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns();
+  pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns(); _ciConsultRender();
   if(id && window.db && window.db.fetch){
     window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id)+'&select=profile,job,medication,history,dx_date,uw_status,created_at&limit=1').then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
       var row=(rows&&rows[0])||{}; window._ciFormProfile=(row.profile&&typeof row.profile==='object')?row.profile:{}; var p=window._ciFormProfile;
+      window._ciProfileLoaded=true;  /* 프로필 로드 완료 표시(상담 즉시저장 시 병합 안전) */
+      window._ciConsultLog=(p.consult_log&&Array.isArray(p.consult_log))?p.consult_log.slice():[]; _ciConsultRender();  /* 상담이력 로드 */
       var setv=function(fid,val){ var e=document.getElementById(fid); if(e&&val!=null) e.value=val; };
       setv('cif-attr',p.attr); setv('cif-email',p.email); setv('cif-zip',p.zip); setv('cif-addr1',p.addr1); setv('cif-addr2',p.addr2); setv('cif-note',p.note_html);
       var lun=document.getElementById('cif-lunar'); if(lun) lun.checked=!!p.lunar;
@@ -15940,7 +15986,9 @@ function _ciSaveForm(){
   var _emEl=document.getElementById('cif-email'); if(_emEl){ prof.email=_emEl.value.trim()||null; }  /* v4: 이메일 필드 제거 → 없으면 기존값 보존(덮어쓰기 방지) */
   var _chEl=document.getElementById('cif-channel'); if(_chEl){ body.channel=_chEl.value.trim()||null; }  /* v4: 상담채널 제거 → 없으면 PATCH에서 키 생략해 기존 DB값 보존 */
   prof.zip=_ciV('cif-zip').trim()||null; prof.addr1=_ciV('cif-addr1').trim()||null; prof.addr2=_ciV('cif-addr2').trim()||null;
-  var lun=document.getElementById('cif-lunar'); prof.lunar=!!(lun&&lun.checked); prof.note_html=_ciV('cif-note');
+  var lun=document.getElementById('cif-lunar'); if(lun){ prof.lunar=!!lun.checked; }  /* 음력 필드 제거 → 없으면 기존값 보존 */
+  var _ntEl=document.getElementById('cif-note'); if(_ntEl){ prof.note_html=_ntEl.value; }  /* 상담내용 단일칸 제거 → 없으면 기존값 보존 */
+  prof.consult_log=(window._ciConsultLog&&Array.isArray(window._ciConsultLog))?window._ciConsultLog:(prof.consult_log||[]);  /* 상담이력(최신순) 저장 */
   body.profile=prof;
   if(inDate && /^\d{4}-\d{2}-\d{2}$/.test(inDate)){ body.created_at=inDate+'T00:00:00Z'; }
   var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }

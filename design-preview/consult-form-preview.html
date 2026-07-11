@@ -19,7 +19,7 @@
   .pv-note{font-size:12px;color:var(--tf);padding:8px 16px;background:var(--s2);border-bottom:1px solid var(--bd);}
   .pv-note b{color:var(--ac);}
   /* 상담 패널은 실제 앱 폭(1080px) 고정으로 렌더(밴드 8단계 안 잘림). 좁은 창에서는 body zoom으로 화면에 맞게 축소(아래 스크립트). */
-  .pv-stage{padding:16px;width:1300px;margin:0 auto;}  /* 라이브(임태성) 폼 폭(~1000px)에 맞춰 실제 모습 확인 */
+  .pv-stage{padding:16px;width:1300px;margin:0 auto;}  /* 라이브 폼 폭 · 원래 타이포 크기 그대로(축소 안 함) */
   .pv-err{color:var(--err);padding:16px;font-size:13px;white-space:pre-wrap;}
   /* #ci-wrap은 앱에서 홈데스크 슬롯 안에 flex로 표출(기본은 display:none). 미리보기선 항상 세로 스택으로 표출. */
   #ci-wrap{display:flex!important;flex-direction:column;}
@@ -39,7 +39,7 @@
           <div class="ci-list" id="ci-list"></div>
         </div>
         <div class="ci-right-col">
-          <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 글쓰기</button></div>
+          <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 고객 추가</button></div>
           <div class="ci-preview" id="ci-preview"><div class="ci-empty">왼쪽에서 고객을 선택하세요.</div></div>
         </div>
       </div>
@@ -47,14 +47,8 @@
   </div>
 
 <script>
-/* ── 창 폭에 맞춰 상담 패널(1080px)을 축소해 밴드 잘림 없이 통째로 보이게 ── */
-function _pvFit(){
-  var design = 1300 + 32;                                   // stage 폭 + 좌우 패딩
-  var avail = document.documentElement.clientWidth;
-  document.body.style.zoom = Math.min(1, avail / design);   // 좁으면 축소, 넓으면 100%
-}
-window.addEventListener('resize', _pvFit);
-_pvFit();
+/* 원래 타이포 크기 그대로 렌더(축소 안 함). 창보다 넓으면 가로 스크롤 — 창을 넓히거나 좌우 경계를 드래그해서 조절. */
+document.body.style.zoom = '';
 </script>
 <script>
 /* ── 미리보기 하니스 ──
@@ -79,21 +73,66 @@ function extractFn(src, name){
   throw new Error('중괄호 불일치: ' + name);
 }
 
-// mock 고객 (실데이터 대체 · 단계 분산해서 플로우 밴드가 살아보이게)
+// mock 고객 — 2026-07-01~07-10 하루 3명씩(총 30명). 단계 분산해서 플로우 밴드도 살아보이게.
 var MOCK = [
-  {id:1,  name:'이은경', phone:'010-2009-4628', birth_date:'1985-03-12', gender:'여', channel:'카카오톡', status:'신규DB', created_at:'2026-06-29T09:00:00'},
-  {id:2,  name:'장건석', phone:'010-2010-6457', birth_date:'1978-11-02', gender:'남', channel:'전화',     status:'신규DB', created_at:'2026-06-29T09:05:00'},
-  {id:3,  name:'박정웅', phone:'010-2012-2859', birth_date:'1990-07-21', gender:'남', channel:'문자',     status:'부재',   created_at:'2026-06-29T09:10:00'},
-  {id:4,  name:'신선혜', phone:'010-2012-3146', birth_date:'1982-01-30', gender:'여', channel:'카카오톡', status:'예약',   created_at:'2026-06-29T09:15:00'},
-  {id:5,  name:'이진수', phone:'010-2014-1685', birth_date:'1975-05-18', gender:'남', channel:'전화',     status:'진행중', created_at:'2026-06-29T09:20:00'},
-  {id:6,  name:'박한울', phone:'010-2015-8803', birth_date:'1993-09-09', gender:'여', channel:'문자',     status:'제안서발송', created_at:'2026-06-29T09:25:00'},
-  {id:7,  name:'김도영', phone:'010-3001-2211', birth_date:'1988-02-14', gender:'남', channel:'카카오톡', status:'보류',   created_at:'2026-06-29T09:30:00'},
-  {id:8,  name:'최유나', phone:'010-3110-5522', birth_date:'1996-12-25', gender:'여', channel:'전화',     status:'클로징', created_at:'2026-06-29T09:35:00'},
-  {id:9,  name:'정민호', phone:'010-3220-7788', birth_date:'1980-06-06', gender:'남', channel:'문자',     status:'청약완료', created_at:'2026-06-29T09:40:00'},
-  {id:10, name:'한서진', phone:'010-3330-9911', birth_date:'1991-04-04', gender:'여', channel:'카카오톡', status:'신규DB', created_at:'2026-06-28T14:00:00'},
-  {id:11, name:'오재현', phone:'010-3441-1234', birth_date:'1983-08-19', gender:'남', channel:'전화',     status:'예약',   created_at:'2026-06-28T14:05:00'},
-  {id:12, name:'윤아름', phone:'010-3552-4567', birth_date:'1997-10-11', gender:'여', channel:'문자',     status:'진행중', created_at:'2026-06-28T14:10:00'}
+  // 07-01
+  {id:1,  name:'김민준', phone:'010-2001-1001', birth_date:'1985-03-12', gender:'남', channel:'카카오톡', status:'신규DB',   created_at:'2026-07-01T09:00:00'},
+  {id:2,  name:'이서연', phone:'010-2001-1002', birth_date:'1990-07-21', gender:'여', channel:'전화',     status:'부재',     created_at:'2026-07-01T10:30:00'},
+  {id:3,  name:'박도윤', phone:'010-2001-1003', birth_date:'1978-11-02', gender:'남', channel:'문자',     status:'예약',     created_at:'2026-07-01T14:10:00'},
+  // 07-02
+  {id:4,  name:'최지우', phone:'010-2002-2001', birth_date:'1982-01-30', gender:'여', channel:'카카오톡', status:'진행중',   created_at:'2026-07-02T09:20:00'},
+  {id:5,  name:'정하은', phone:'010-2002-2002', birth_date:'1995-05-18', gender:'여', channel:'전화',     status:'제안서발송', created_at:'2026-07-02T11:05:00'},
+  {id:6,  name:'강시우', phone:'010-2002-2003', birth_date:'1988-09-09', gender:'남', channel:'문자',     status:'보류',     created_at:'2026-07-02T15:40:00'},
+  // 07-03
+  {id:7,  name:'조은우', phone:'010-2003-3001', birth_date:'1993-02-14', gender:'남', channel:'카카오톡', status:'클로징',   created_at:'2026-07-03T09:10:00'},
+  {id:8,  name:'윤지호', phone:'010-2003-3002', birth_date:'1980-12-25', gender:'남', channel:'전화',     status:'청약완료', created_at:'2026-07-03T13:00:00'},
+  {id:9,  name:'임채원', phone:'010-2003-3003', birth_date:'1991-04-04', gender:'여', channel:'문자',     status:'신규DB',   created_at:'2026-07-03T16:20:00'},
+  // 07-04
+  {id:10, name:'한예준', phone:'010-2004-4001', birth_date:'1983-08-19', gender:'남', channel:'카카오톡', status:'부재',     created_at:'2026-07-04T09:30:00'},
+  {id:11, name:'오수아', phone:'010-2004-4002', birth_date:'1997-10-11', gender:'여', channel:'전화',     status:'예약',     created_at:'2026-07-04T11:50:00'},
+  {id:12, name:'서지안', phone:'010-2004-4003', birth_date:'1986-06-06', gender:'여', channel:'문자',     status:'진행중',   created_at:'2026-07-04T15:15:00'},
+  // 07-05
+  {id:13, name:'신건우', phone:'010-2005-5001', birth_date:'1979-03-22', gender:'남', channel:'카카오톡', status:'제안서발송', created_at:'2026-07-05T09:05:00'},
+  {id:14, name:'권서윤', phone:'010-2005-5002', birth_date:'1994-07-30', gender:'여', channel:'전화',     status:'보류',     created_at:'2026-07-05T12:40:00'},
+  {id:15, name:'황준서', phone:'010-2005-5003', birth_date:'1987-11-16', gender:'남', channel:'문자',     status:'클로징',   created_at:'2026-07-05T17:00:00'},
+  // 07-06
+  {id:16, name:'안하윤', phone:'010-2006-6001', birth_date:'1992-01-09', gender:'여', channel:'카카오톡', status:'청약완료', created_at:'2026-07-06T09:25:00'},
+  {id:17, name:'송지훈', phone:'010-2006-6002', birth_date:'1984-05-14', gender:'남', channel:'전화',     status:'신규DB',   created_at:'2026-07-06T13:35:00'},
+  {id:18, name:'전예은', phone:'010-2006-6003', birth_date:'1996-09-28', gender:'여', channel:'문자',     status:'부재',     created_at:'2026-07-06T16:50:00'},
+  // 07-07
+  {id:19, name:'홍유준', phone:'010-2007-7001', birth_date:'1981-02-03', gender:'남', channel:'카카오톡', status:'예약',     created_at:'2026-07-07T09:15:00'},
+  {id:20, name:'유서아', phone:'010-2007-7002', birth_date:'1998-08-08', gender:'여', channel:'전화',     status:'진행중',   created_at:'2026-07-07T11:20:00'},
+  {id:21, name:'고민서', phone:'010-2007-7003', birth_date:'1989-12-01', gender:'여', channel:'문자',     status:'제안서발송', created_at:'2026-07-07T15:05:00'},
+  // 07-08
+  {id:22, name:'문지환', phone:'010-2008-8001', birth_date:'1977-06-19', gender:'남', channel:'카카오톡', status:'보류',     created_at:'2026-07-08T09:40:00'},
+  {id:23, name:'배수빈', phone:'010-2008-8002', birth_date:'1993-10-23', gender:'여', channel:'전화',     status:'클로징',   created_at:'2026-07-08T12:10:00'},
+  {id:24, name:'백지원', phone:'010-2008-8003', birth_date:'1985-03-30', gender:'여', channel:'문자',     status:'청약완료', created_at:'2026-07-08T16:00:00'},
+  // 07-09
+  {id:25, name:'남도현', phone:'010-2009-9001', birth_date:'1990-07-07', gender:'남', channel:'카카오톡', status:'신규DB',   created_at:'2026-07-09T09:00:00'},
+  {id:26, name:'심하율', phone:'010-2009-9002', birth_date:'1996-11-11', gender:'여', channel:'전화',     status:'부재',     created_at:'2026-07-09T13:20:00'},
+  {id:27, name:'노은서', phone:'010-2009-9003', birth_date:'1982-04-17', gender:'여', channel:'문자',     status:'예약',     created_at:'2026-07-09T16:45:00'},
+  // 07-10
+  {id:28, name:'하지민', phone:'010-2010-1001', birth_date:'1988-08-24', gender:'남', channel:'카카오톡', status:'진행중',   created_at:'2026-07-10T09:10:00'},
+  {id:29, name:'곽시연', phone:'010-2010-1002', birth_date:'1994-02-28', gender:'여', channel:'전화',     status:'제안서발송', created_at:'2026-07-10T11:30:00'},
+  {id:30, name:'성주하', phone:'010-2010-1003', birth_date:'1986-12-13', gender:'여', channel:'문자',     status:'보류',     created_at:'2026-07-10T15:55:00'}
 ];
+// 일부 고객에 상담이력 mock 부착(최신순) — 카드 클릭 시 우측 폼 상담내용에 표시
+(function(){
+  var H={
+    8:[{date:'2026-07-09',text:'청약서 서명 완료. 증권 발송 예정 안내.'},{date:'2026-07-05',text:'보장 설계 최종안 확정, 청약 진행 합의.'},{date:'2026-07-03',text:'첫 상담. 종합보험 니즈 확인, 예산 협의.'}],
+    20:[{date:'2026-07-09',text:'제안서 재검토 요청. 특약 2건 추가 설명.'},{date:'2026-07-07',text:'가족력 확인, 건강고지 항목 안내.'}],
+    13:[{date:'2026-07-05',text:'제안서 발송. 3일 내 회신 요청.'}],
+    28:[{date:'2026-07-10',text:'통화 상담. 자녀 보험 관심, 자료 요청.'}]
+  };
+  MOCK.forEach(function(c){ if(H[c.id]){ c.profile=c.profile||{}; c.profile.consult_log=H[c.id]; } });
+})();
+// 속성(유입) mock — 카드 색상 확인용(뱅크샐러드=노랑·카카오페이=파랑·보맵=회색·나머지=흰색)
+(function(){
+  var S={30:'보맵',29:'뱅크샐러드',28:'카카오페이',27:'',26:'카카오페이 D',25:'뱅크샐러드',
+         24:'보맵',23:'카카오페이',22:'',20:'카카오페이',13:'보맵',8:'뱅크샐러드',
+         6:'뱅크샐러드',5:'카카오페이',3:'보맵',2:'카카오페이 D',1:'뱅크샐러드'};
+  MOCK.forEach(function(c){ if(S[c.id]){ c.profile=c.profile||{}; c.profile.attr=S[c.id]; } });
+})();
 
 function renderAll(){
   document.getElementById('ci-today').innerHTML = _ciTodayHtml();
@@ -103,17 +142,16 @@ function renderAll(){
 
 // 미리보기용 상호작용 핸들러 (네트워크 의존 제거)
 window._ciSetStage = function(s){ window._ciStageF = s; renderAll(); };
-window._ciSelCard  = function(id){
+window._ciSelCard  = function(id){                 // 카드 클릭 = 그 고객 편집 폼 열기(상담이력 포함)
   var c = MOCK.filter(function(x){ return String(x.id) === String(id); })[0];
-  window._ciSel = id;
-  document.getElementById('ci-preview').innerHTML = _ciPreviewHtml(c);
+  window._ciSel = id; window._ciEditId = id;
+  document.getElementById('ci-preview').innerHTML = _ciFormHtml(c || {});
+  if(window._ciUpdIns) _ciUpdIns();
+  if(window._ciConsultRender) _ciConsultRender();
   document.getElementById('ci-list').innerHTML = _ciListHtml();
 };
-window._ciNew = function(){ document.getElementById('ci-preview').innerHTML = _ciFormHtml({}); if(window._ciUpdIns) _ciUpdIns(); };
-window._ciEdit = function(id){
-  var c = MOCK.filter(function(x){ return String(x.id) === String(id); })[0];
-  document.getElementById('ci-preview').innerHTML = _ciFormHtml(c || {}); if(window._ciUpdIns) _ciUpdIns();
-};
+window._ciNew = function(){ window._ciEditId = null; document.getElementById('ci-preview').innerHTML = _ciFormHtml({}); if(window._ciUpdIns) _ciUpdIns(); if(window._ciConsultRender) _ciConsultRender(); };
+window._ciEdit = window._ciSelCard;
 window._ciCloseForm = function(){ document.getElementById('ci-preview').innerHTML = '<div class="ci-empty">왼쪽에서 고객을 선택하세요.</div>'; };
 // 폼 버튼 스텁 (미리보기라 저장/검색/OCR 비활성)
 window._ciSaveForm  = function(){ alert('미리보기 — 저장 비활성'); };
@@ -123,7 +161,8 @@ window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
 (function(){
   fetch('/app.html?_=' + Date.now()).then(function(r){ return r.text(); }).then(function(src){
     var need = ['_ciEsc','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPickStage',
-                '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml'];
+                '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml',
+                '_ciConsultToday','_ciConsultRender','_ciConsultToggle'];
     var m = src.match(/var _SN_STAGES=\[[^\]]*\];/);
     var pieces = [ m ? m[0] : "var _SN_STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료'];" ];
     need.forEach(function(fn){ pieces.push(extractFn(src, fn)); });
