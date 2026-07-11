@@ -15761,8 +15761,24 @@ function _ciLoad(){
     .catch(function(){ _ciRender(); });
 }
 window._ciLoad=_ciLoad;
-function _ciSetStage(s){ window._ciStageF=s; _ciRender(); }
+function _ciSetStage(s){ window._ciTodayF=null; window._ciStageF=s; _ciRender(); }  /* 상담 플로우 단계 필터(오늘의 할 일 필터 해제) */
 window._ciSetStage=_ciSetStage;
+function _ciSetTodayF(k){ window._ciStageF='전체'; window._ciTodayF=(window._ciTodayF===k?null:k); _ciRender(); }  /* 오늘의 할 일 클릭 필터(토글·단계 필터 해제) */
+window._ciSetTodayF=_ciSetTodayF;
+function _ciTodayMatch(c,k){
+  var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  if(k==='today') return _ciDateOf(c.created_at)===ymd;                 /* 오늘 등록 */
+  if(k==='reserve') return (c.status||'')==='예약';                     /* 예약 */
+  var ad=(c.profile&&c.profile.appl_date)?String(c.profile.appl_date).slice(0,10):'';  /* 청약완료일(Phase 2 기록) */
+  if(!ad || (c.status||'')!=='청약완료') return false;
+  var base=new Date(ad+'T00:00:00'); if(isNaN(base.getTime())) return false;
+  var addDays=function(d,n){ var x=new Date(d.getTime()); x.setDate(x.getDate()+n); return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2); };
+  if(k==='appl91') return addDays(base,91)===ymd;                       /* +91 보장개시 */
+  if(k==='appl181') return addDays(base,181)===ymd;                     /* +181 6개월 관리 */
+  if(k==='bday'){ var md=('0'+(base.getMonth()+1)).slice(-2)+'-'+('0'+base.getDate()).slice(-2); var tmd=('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); return md===tmd && t.getFullYear()>base.getFullYear(); }  /* 매년 보험생일 */
+  return false;
+}
+window._ciTodayMatch=_ciTodayMatch;
 function _ciBandHtml(){
   var data=window._ciData||[], cur=window._ciStageF||'전체';
   var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 기존 8단계 그대로 재사용(대표 확정 2026-07-11) */
@@ -15778,23 +15794,17 @@ function _ciBandHtml(){
 function _ciTodayHtml(){
   var data=window._ciData||[];
   var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
-  var todayNew=data.filter(function(c){return _ciDateOf(c.created_at)===ymd;}).length;
-  var reserve=data.filter(function(c){return (c.status||'')==='예약';}).length;
-  /* 청약 이후 집계(보장개시 91·6개월 181·보험생일 365)는 청약완료일 + 캘린더 연동(Phase 3) 후 실수치. 현재는 데이터 없음=0명 고정 표시 */
-  var rows=[
-    ['오늘 등록한 고객', todayNew],
-    ['예약', reserve],
-    ['청약 +91일 (보장 개시)', 0],
-    ['청약 +181일 (6개월 관리)', 0],
-    ['보험 생일 +1년', 0]
-  ];
-  var body=rows.map(function(r){ return '<div class="ci-today-row"><span>'+_ciEsc(r[0])+'</span><b>'+r[1]+'명</b></div>'; }).join('');
+  var cur=window._ciTodayF;
+  /* 오늘 등록·예약=실수치 / 청약 이후(+91·+181·보험생일)=청약완료일(profile.appl_date, Phase 2 기록) 기준 계산 */
+  var keys=[['today','오늘 등록한 고객'],['reserve','예약'],['appl91','청약 +91일 (보장 개시)'],['appl181','청약 +181일 (6개월 관리)'],['bday','보험 생일 +1년']];
+  var body=keys.map(function(kv){ var n=data.filter(function(c){return _ciTodayMatch(c,kv[0]);}).length; var on=(cur===kv[0])?' on':''; return '<div class="ci-today-row clk'+on+'" onclick="_ciSetTodayF(\''+kv[0]+'\')"><span>'+_ciEsc(kv[1])+'</span><b>'+n+'명</b></div>'; }).join('');
   return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
-    +'<div class="ci-today-body">'+body+'<div class="ci-today-note">청약 이후 항목(+91·+181일·보험생일)은 캘린더와 연동됩니다.</div></div>';
+    +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>';
 }
 function _ciListHtml(){
-  var data=(window._ciData||[]).slice(), cur=window._ciStageF||'전체';
-  if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;});
+  var data=(window._ciData||[]).slice();
+  if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
+  else { var cur=window._ciStageF||'전체'; if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;}); }
   data.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });
   if(!data.length) return '<div class="ci-empty">아직 등록된 고객이 없습니다.<br>+ 글쓰기로 첫 고객을 추가하세요.</div>';
   var byDate={}; data.forEach(function(c){ var d=_ciDateOf(c.created_at)||'날짜 미상'; byDate[d]=(byDate[d]||0)+1; });
