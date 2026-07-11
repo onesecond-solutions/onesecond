@@ -15884,7 +15884,7 @@ function _ciFormHtml(c){
     +'</div>'
     +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
     +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+'</div>'
-    +'<div class="ci-form-acts"><button type="button" class="ci-btn" onclick="_ciSaveForm()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button><span id="cif-draft-ind" class="ci-draft-ind"></span></div>'
+    +'<div class="ci-form-acts"><button type="button" class="ci-btn" id="cif-primary" onclick="_ciFormPrimary()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button><span id="cif-draft-ind" class="ci-draft-ind"></span></div>'
     +'</div>';
 }
 /* ── 상담이력: [상담입력]→오늘 날짜 자동+[저장하기]로 토글, 저장 시 최신순(위로) 누적 ── */
@@ -15921,6 +15921,20 @@ function _ciConsultToggle(){
   }
 }
 window._ciConsultToggle=_ciConsultToggle;
+/* ── 폼 모드: 'consult'(상담만·고객정보 잠금·회색) / 'edit'(정보 수정 가능). 카드 클릭=consult, 신규=edit ── */
+function _ciFormSetMode(mode){
+  window._ciFormMode=(mode==='edit')?'edit':'consult'; var locked=(window._ciFormMode!=='edit');
+  var form=document.querySelector('.ci-form'); if(!form) return;
+  form.classList.toggle('ci-form-locked', locked);
+  var flds=form.querySelectorAll('.ci-fgrid input, .ci-fgrid select, .ci-fgrid textarea');  /* 고객정보·인수정보 */
+  for(var i=0;i<flds.length;i++){ flds[i].disabled=locked; }
+  var stgs=form.querySelectorAll('.ci-stagepick .ci-stagebtn');  /* 고객 분류 단계 */
+  for(var j=0;j<stgs.length;j++){ stgs[j].disabled=locked; }
+  var pb=document.getElementById('cif-primary'); if(pb) pb.textContent=locked?'정보수정':'저장';
+}
+window._ciFormSetMode=_ciFormSetMode;
+function _ciFormPrimary(){ if(window._ciFormMode==='edit'){ _ciSaveForm(); } else { _ciFormSetMode('edit'); } }  /* 상담모드=정보수정(잠금해제) / 수정모드=저장 */
+window._ciFormPrimary=_ciFormPrimary;
 /* ── 임시저장(자동): 폼 입력을 브라우저 localStorage에 자동 저장 → 재오픈 시 복원. 실제 저장(정보수정/저장) 시 삭제 ── */
 function _ciDraftKey(){ return 'ci_draft_'+(window._ciEditId!=null?window._ciEditId:'new'); }
 function _ciDraftGather(){
@@ -16003,7 +16017,7 @@ function _ciOpenForm(id){
   window._ciEditId=id||null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''}; window._ciProfileLoaded=false;
   var pv=document.getElementById('ci-preview'); if(!pv) return;
   var base=id?((window._ciData||[]).filter(function(x){ return String(x.id)===String(id); })[0]||{}):{};
-  pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns(); _ciConsultRender(); _ciDraftBind(); _ciDraftBanner();
+  pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns(); _ciConsultRender(); _ciDraftBind(); _ciDraftBanner(); _ciFormSetMode(id?'consult':'edit');
   if(id && window.db && window.db.fetch){
     window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id)+'&select=profile,job,medication,history,dx_date,uw_status,created_at&limit=1').then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
       var row=(rows&&rows[0])||{}; window._ciFormProfile=(row.profile&&typeof row.profile==='object')?row.profile:{}; var p=window._ciFormProfile;
@@ -16050,7 +16064,11 @@ function _ciSaveForm(){
   body.profile=prof;
   if(inDate && /^\d{4}-\d{2}-\d{2}$/.test(inDate)){ body.created_at=inDate+'T00:00:00Z'; }
   var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }
-  var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _ciDraftClear(); window._ciSel=null; window._ciLoaded=false; _ciLoad(); _ciCloseForm(); };
+  var wasEdit=(window._ciEditId!=null);
+  var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _ciDraftClear(); window._ciLoaded=false; _ciLoad();
+    if(wasEdit){ _ciFormSetMode('consult'); }  /* 수정 저장 → 상담 모드로 재잠금(폼 유지) */
+    else { window._ciSel=null; _ciCloseForm(); }  /* 신규 저장 → 폼 닫기 */
+  };
   var err=function(e){ alert((window._ciEditId?'수정':'등록')+' 실패: '+(e&&e.message||e)); };
   if(window._ciEditId){
     window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(window._ciEditId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)}).then(ok).catch(err);
