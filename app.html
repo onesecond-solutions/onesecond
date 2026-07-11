@@ -16114,11 +16114,14 @@ function _ciSaveForm(){
   var lun=document.getElementById('cif-lunar'); if(lun){ prof.lunar=!!lun.checked; }  /* 음력 필드 제거 → 없으면 기존값 보존 */
   var _ntEl=document.getElementById('cif-note'); if(_ntEl){ prof.note_html=_ntEl.value; }  /* 상담내용 단일칸 제거 → 없으면 기존값 보존 */
   prof.consult_log=(window._ciConsultLog&&Array.isArray(window._ciConsultLog))?window._ciConsultLog:(prof.consult_log||[]);  /* 상담이력(최신순) 저장 */
+  var _wasAppl=false;
+  if(stage==='청약완료' && !prof.appl_date){ prof.appl_date=now.slice(0,10); _wasAppl=true; }  /* 청약완료 전환 시 청약완료일(오늘) 기록 → 오늘의 할 일 +91·+181·보험생일 근거(Phase 2/3) */
   body.profile=prof;
   if(inDate && /^\d{4}-\d{2}-\d{2}$/.test(inDate)){ body.created_at=inDate+'T00:00:00Z'; }
   var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }
   var wasEdit=(window._ciEditId!=null);
   var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _ciDraftClear(); window._ciLoaded=false; _ciLoad();
+    if(_wasAppl && typeof _ciApplCelebrate==='function') _ciApplCelebrate(name);  /* 청약완료 전환 축하 팝업 */
     if(wasEdit){ _ciFormSetMode('consult'); }  /* 수정 저장 → 상담 모드로 재잠금(폼 유지) */
     else { window._ciSel=null; _ciCloseForm(); }  /* 신규 저장 → 폼 닫기 */
   };
@@ -16132,6 +16135,18 @@ function _ciSaveForm(){
   }
 }
 window._ciSaveForm=_ciSaveForm;
+/* 청약완료 전환 축하 팝업(오버레이·6초 자동닫힘·클릭 닫힘). 고객관리 화면 전환은 대표 지시로 보류 = 축하만 */
+function _ciApplCelebrate(name){
+  try{
+    var ov=document.createElement('div'); ov.className='ci-celebrate-ov';
+    ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+    ov.innerHTML='<div class="ci-celebrate"><div class="ci-celebrate-emoji">🎉</div><div class="ci-celebrate-title">청약 완료를 축하합니다!</div><div class="ci-celebrate-sub">'+_ciEsc(name||'')+' 고객님</div><button type="button" class="ci-btn ci-celebrate-ok">확인</button></div>';
+    var btn=ov.querySelector('.ci-celebrate-ok'); if(btn) btn.onclick=function(){ ov.remove(); };
+    document.body.appendChild(ov);
+    setTimeout(function(){ if(ov.parentNode) ov.remove(); }, 6000);
+  }catch(e){ if(typeof toast==='function') toast('청약 완료를 축하합니다!'); }
+}
+window._ciApplCelebrate=_ciApplCelebrate;
 /* 상담 종결 = 이 고객(상담 중이던 한 사람) 정보 삭제(소프트=deleted_at·복구 가능, 목록에서 숨김). 확인 시 실행, 아니오 시 취소 */
 function _ciManageEnd(){
   if(window._ciEditId==null){ return; }
