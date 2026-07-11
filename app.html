@@ -4025,6 +4025,18 @@ function _snFormHtml(c){
     +'<div class="sn-fld"><label>상담채널 <span style="font-weight:400;color:var(--tf)">(상담 수단)</span></label><input id="snf-channel" type="text" value="'+v(c.channel)+'" placeholder="전화·문자·카카오톡·해피톡" autocomplete="off"></div>'
     +'<div class="sn-fld"><label>영업상태</label><select id="snf-status">'+stOpt+'</select></div>'
     +'</div>'
+    /* 인수 정보(가입심사 참고) — 민감정보. 리스트 카드 미노출·본인만 열람(uw_status는 영업 status와 분리 실컬럼) */
+    +'<div class="sn-uw-sec">'
+      +'<div class="sn-uw-head">🩺 인수 정보 <span class="sn-uw-sub">(가입심사 참고 · 본인만 열람)</span></div>'
+      +'<div class="sn-uw-consent">건강·병력 등 민감정보입니다. 고객 동의 하에 입력하세요.</div>'
+      +'<div class="sn-form-grid">'
+      +'<div class="sn-fld"><label>직업</label><input id="snf-job" type="text" value="" autocomplete="off"></div>'
+      +'<div class="sn-fld"><label>약 복용 여부</label><select id="snf-med"><option value="">선택</option><option>복용 중</option><option>복용 안 함</option><option>과거 복용</option></select></div>'
+      +'<div class="sn-fld"><label>병력</label><input id="snf-history" type="text" value="" autocomplete="off"></div>'
+      +'<div class="sn-fld"><label>진단일</label><input id="snf-dx" type="text" value="" placeholder="자유 입력" autocomplete="off"></div>'
+      +'<div class="sn-fld full"><label>현재 상태 <span style="font-weight:400;color:var(--tf)">(인수 관련 자유 서술)</span></label><input id="snf-uw" type="text" value="" autocomplete="off"></div>'
+      +'</div>'
+    +'</div>'
     +'<div class="sn-fld full" style="margin-top:14px"><label>상담 메모 <span style="font-weight:400;color:var(--tf)">(텍스트·이미지·표 자유 입력)</span></label><div id="sn-rich"></div></div>'
     +'<div class="sn-form-acts"><button class="sn-btn" onclick="_snSaveForm()">저장</button><button class="sn-btn ghost" onclick="_snCloseForm()">취소</button>'
     +(c.id?'<button class="sn-btn danger" style="margin-left:auto" onclick="_snDelete(_snSel)">삭제</button>':'')
@@ -4083,12 +4095,18 @@ function _snOpenForm(i){
   _snMountRich('');  /* 우선 빈 에디터 마운트 */
   _snOcrBind();
   if(!isNew && _snFormEditId && window.db && window.db.fetch){
-    /* 수정 = profile(note_html·age·customer_type)은 목록 select에 없어 단건 fetch 후 반영 + merge용 보관 */
-    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(_snFormEditId)+'&select=profile&limit=1').then(function(r){return r.ok?r.json():[];}).then(function(rows){
-      var p=(rows&&rows[0]&&rows[0].profile)||{}; _snFormProfile=(p&&typeof p==='object')?p:{};
+    /* 수정 = profile(note_html·age·customer_type) + 인수정보 5필드(실컬럼)는 목록 select에 없어 단건 fetch 후 반영 + merge용 보관 */
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(_snFormEditId)+'&select=profile,job,medication,history,dx_date,uw_status&limit=1').then(function(r){return r.ok?r.json():[];}).then(function(rows){
+      var row=(rows&&rows[0])||{};
+      var p=(row.profile)||{}; _snFormProfile=(p&&typeof p==='object')?p:{};
       _snMountRich((_snFormProfile&&_snFormProfile.note_html)||'');
       if(_snFormProfile.age)_snSetv('snf-age',_snFormProfile.age);
       if(_snFormProfile.customer_type)_snSetSelect('snf-ctype',_snFormProfile.customer_type);
+      if(row.job)_snSetv('snf-job',row.job);
+      if(row.medication)_snSetSelect('snf-med',row.medication);
+      if(row.history)_snSetv('snf-history',row.history);
+      if(row.dx_date)_snSetv('snf-dx',row.dx_date);
+      if(row.uw_status)_snSetv('snf-uw',row.uw_status);
     }).catch(function(){});
   }
   var nm=document.getElementById('snf-name'); if(nm)setTimeout(function(){nm.focus();},50);
@@ -4106,6 +4124,12 @@ function _snSaveForm(){
   var body={name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birth||null, gender:_snVal('snf-gender')||null, channel:_snVal('snf-channel').trim()||null,
     status:_snVal('snf-status')||'신규DB', updated_at:now};
+  /* 인수 정보 5필드 = sales_customers 실컬럼(#1222 ALTER). 미입력은 null. uw_status는 영업 status와 별개 컬럼(충돌 회피). */
+  body.job=_snVal('snf-job').trim()||null;
+  body.medication=_snVal('snf-med')||null;
+  body.history=_snVal('snf-history').trim()||null;
+  body.dx_date=_snVal('snf-dx').trim()||null;
+  body.uw_status=_snVal('snf-uw').trim()||null;
   /* 리치 원문 = profile jsonb(note_html). 기존 profile 보존 merge(주소·직업 등 미래 키 안 지움). 새 컬럼 0. */
   var prof=(_snFormProfile&&typeof _snFormProfile==='object')?_snFormProfile:{};
   if(window.osRich&&window.osRich.html){ prof.note_html=window.osRich.html(); }
