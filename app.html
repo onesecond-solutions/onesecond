@@ -2229,10 +2229,12 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         </div>
         <div class="ci-bottom">
           <div class="ci-list-col">
-            <div class="ci-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 글쓰기</button></div>
             <div class="ci-list" id="ci-list"></div>
           </div>
-          <div class="ci-preview" id="ci-preview"><div class="ci-empty">왼쪽에서 고객을 선택하세요.</div></div>
+          <div class="ci-right-col">
+            <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 글쓰기</button></div>
+            <div class="ci-preview" id="ci-preview"><div class="ci-empty">왼쪽에서 고객을 선택하세요.</div></div>
+          </div>
         </div>
       </div>
       <!-- 자료함 v1 (P1 후속, 폴더형 개인 보관함). myspace_folders/files, private 버킷 myspace. 풀폭 고지+3컬럼 20/30/50. 폴더 재귀 업로드=PR2 -->
@@ -15749,18 +15751,32 @@ function _ciSetStage(s){ window._ciStageF=s; _ciRender(); }
 window._ciSetStage=_ciSetStage;
 function _ciBandHtml(){
   var data=window._ciData||[], cur=window._ciStageF||'전체';
-  var stages=['전체'].concat((typeof _SN_STAGES!=='undefined')?_SN_STAGES:[]);  /* 기존 8단계 그대로 재사용(대표 확정 2026-07-11) */
-  return stages.map(function(s){
-    var n=(s==='전체')?data.length:data.filter(function(c){return (c.status||'')===s;}).length;
-    return '<button type="button" class="ci-stg'+(s===cur?' on':'')+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')">'+_ciEsc(s)+'<b>'+n+'</b></button>';
+  var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 기존 8단계 그대로 재사용(대표 확정 2026-07-11) */
+  var ai=stages.indexOf(cur);  /* 전체=-1 */
+  var cols=stages.map(function(s,i){
+    var n=data.filter(function(c){return (c.status||'')===s;}).length;
+    var cls=(ai<0)?'done':((i<ai)?'done':(i===ai?'on':'future'));  /* 전체=전부 연보라 / 선택 시 앞 done·현재 on·뒤 future */
+    return '<div class="ci-fcol '+cls+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')"><div class="ci-farw">'+_ciEsc(s)+'</div><div class="ci-fstep"><div class="ci-fdot">'+n+'</div></div></div>';
   }).join('');
+  return '<button type="button" class="ci-fall'+(ai<0?' on':'')+'" onclick="_ciSetStage(\'전체\')">전체 '+data.length+'</button>'
+    +'<div class="ci-fchart">'+cols+'</div>';
 }
 function _ciTodayHtml(){
+  var data=window._ciData||[];
   var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
-  var todayNew=(window._ciData||[]).filter(function(c){return _ciDateOf(c.created_at)===ymd;}).length;
+  var todayNew=data.filter(function(c){return _ciDateOf(c.created_at)===ymd;}).length;
+  var reserve=data.filter(function(c){return (c.status||'')==='예약';}).length;
+  /* 청약 이후 집계(보장개시 91·6개월 181·보험생일 365)는 청약완료일 + 캘린더 연동(Phase 3) 후 실수치. 현재는 데이터 없음=0명 고정 표시 */
+  var rows=[
+    ['오늘 등록한 고객', todayNew],
+    ['예약', reserve],
+    ['청약 +91일 (보장 개시)', 0],
+    ['청약 +181일 (6개월 관리)', 0],
+    ['보험 생일 +1년', 0]
+  ];
+  var body=rows.map(function(r){ return '<div class="ci-today-row"><span>'+_ciEsc(r[0])+'</span><b>'+r[1]+'명</b></div>'; }).join('');
   return '<div class="ci-today-head">📌 오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
-    +'<div class="ci-today-body"><div class="ci-today-row"><span>오늘 등록한 고객</span><b>'+todayNew+'명</b></div>'
-    +'<div class="ci-today-note">청약완료 시 보장개시·6개월·보험생일 자동 일정이 여기와 캘린더에 함께 잡힙니다.</div></div>';
+    +'<div class="ci-today-body">'+body+'<div class="ci-today-note">청약 이후 항목(+91·+181일·보험생일)은 캘린더와 연동됩니다.</div></div>';
 }
 function _ciListHtml(){
   var data=(window._ciData||[]).slice(), cur=window._ciStageF||'전체';
