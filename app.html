@@ -2221,6 +2221,20 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
           <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
         </div>
       </div>
+      <!-- 상담관리 인라인 4분할(care) — 상담관리 배지 진입 시 표시. 상좌 오늘의 할 일 / 상우 상담 플로우 / 하좌 카드리스트 / 하우 미리보기. 임태성 게이트. -->
+      <div class="ci-wrap" id="ci-wrap" style="display:none">
+        <div class="ci-top">
+          <div class="ci-today" id="ci-today"></div>
+          <div class="ci-flow"><div class="ci-flow-head">상담 플로우</div><div class="ci-band" id="ci-band"></div></div>
+        </div>
+        <div class="ci-bottom">
+          <div class="ci-list-col">
+            <div class="ci-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 글쓰기</button></div>
+            <div class="ci-list" id="ci-list"></div>
+          </div>
+          <div class="ci-preview" id="ci-preview"><div class="ci-empty">왼쪽에서 고객을 선택하세요.</div></div>
+        </div>
+      </div>
       <!-- 자료함 v1 (P1 후속, 폴더형 개인 보관함). myspace_folders/files, private 버킷 myspace. 풀폭 고지+3컬럼 20/30/50. 폴더 재귀 업로드=PR2 -->
       <div class="mys-vault" id="mys-vault" style="display:none">
         <!-- §4 방어선: 풀폭 상단 고지 (모달화 금지) -->
@@ -15647,6 +15661,7 @@ function filterMys(el,cat){
   for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
   el.classList.add('on');
   window._mysCat=cat;
+  if(typeof _ciHide==='function') _ciHide();  /* 상담관리 인라인(_ci) 해제 — 다른 칩 전환 시 4분할 숨김·기본 목록 복귀 */
   /* 자료함(폴더형) 칩이 아닌 다른 칩 = 평면 목록(mys-split) 복귀, 자료함 숨김 */
   var _mv=document.getElementById('mys-vault'); if(_mv) _mv.style.display='none';
   var _ms=document.getElementById('mys-split'); if(_ms) _ms.style.display='';
@@ -15684,6 +15699,8 @@ window._scrRenderTypeChips=_scrRenderTypeChips;
 function filterMysType(key){
   window._mysTypeFilter=key||'all';
   _scrRenderTypeChips();
+  if(key==='care'){ if(typeof _ciShow==='function') _ciShow(); return; }  /* 상담관리 = 4분할 인라인 화면(_ci*) */
+  if(typeof _ciHide==='function') _ciHide();
   var items=window._myspaceCache||[];
   var f=items.filter(function(it){ return it._type==='script'; });  /* 업무노트(scripts) 결과 안에서만 서브필터 */
   /* filterMys와 동일 정렬 규약(신규 최상단=sort_order null → -Infinity, 동순위 최신순) */
@@ -15695,6 +15712,229 @@ function filterMysType(key){
   renderMyspace(f);
 }
 window.filterMysType=filterMysType;
+/* ═══ 상담관리 인라인(care) — 업무노트 상담관리 배지 진입 시 4분할 레이아웃 (2026-07-11 Phase 1)
+ *  상좌 오늘의 할 일 / 상우 상담 플로우(단계띠) / 하좌 카드리스트(입력일자·날짜별 인원) / 하우 미리보기.
+ *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
+window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false;
+function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
+function _ciShow(){
+  var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
+  if(sp) sp.classList.add('ci-mode');           /* 리스트/뷰어만 숨김·유형칩 바는 유지(CSS) */
+  if(w) w.style.display='flex';
+  if(!window._ciLoaded){ _ciLoad(); } else { _ciRender(); }
+}
+window._ciShow=_ciShow;
+function _ciHide(){
+  var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
+  if(sp) sp.classList.remove('ci-mode');
+  if(w) w.style.display='none';
+}
+window._ciHide=_ciHide;
+function _ciLoad(){
+  window._ciLoaded=true; window._ciData=[];
+  var tok=window.db&&window.db.getToken&&window.db.getToken();
+  if(!tok||!window.db||!window.db.fetch){ _ciRender(); return; }  /* 비로그인=빈 상태(owner RLS로 데이터 0) */
+  window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at&order=created_at.desc&limit=5000')
+    .then(function(r){ return r.ok?r.json():[]; })
+    .then(function(rows){ window._ciData=Array.isArray(rows)?rows:[]; _ciRender(); })
+    .catch(function(){ _ciRender(); });
+}
+window._ciLoad=_ciLoad;
+function _ciSetStage(s){ window._ciStageF=s; _ciRender(); }
+window._ciSetStage=_ciSetStage;
+function _ciBandHtml(){
+  var data=window._ciData||[], cur=window._ciStageF||'전체';
+  var stages=['전체'].concat((typeof _SN_STAGES!=='undefined')?_SN_STAGES:[]);  /* 기존 8단계 그대로 재사용(대표 확정 2026-07-11) */
+  return stages.map(function(s){
+    var n=(s==='전체')?data.length:data.filter(function(c){return (c.status||'')===s;}).length;
+    return '<button type="button" class="ci-stg'+(s===cur?' on':'')+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')">'+_ciEsc(s)+'<b>'+n+'</b></button>';
+  }).join('');
+}
+function _ciTodayHtml(){
+  var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  var todayNew=(window._ciData||[]).filter(function(c){return _ciDateOf(c.created_at)===ymd;}).length;
+  return '<div class="ci-today-head">📌 오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
+    +'<div class="ci-today-body"><div class="ci-today-row"><span>오늘 등록한 고객</span><b>'+todayNew+'명</b></div>'
+    +'<div class="ci-today-note">청약완료 시 보장개시·6개월·보험생일 자동 일정이 여기와 캘린더에 함께 잡힙니다.</div></div>';
+}
+function _ciListHtml(){
+  var data=(window._ciData||[]).slice(), cur=window._ciStageF||'전체';
+  if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;});
+  data.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });
+  if(!data.length) return '<div class="ci-empty">아직 등록된 고객이 없습니다.<br>+ 글쓰기로 첫 고객을 추가하세요.</div>';
+  var byDate={}; data.forEach(function(c){ var d=_ciDateOf(c.created_at)||'날짜 미상'; byDate[d]=(byDate[d]||0)+1; });
+  var out='', last=null;
+  data.forEach(function(c){
+    var d=_ciDateOf(c.created_at)||'날짜 미상';
+    if(d!==last){ last=d; out+='<div class="ci-date-sep">'+_ciEsc(d)+' <span>'+byDate[d]+'명</span></div>'; }  /* 입력일자별 그룹·그날 인원수 */
+    var sel=(window._ciSel!=null&&String(window._ciSel)===String(c.id))?' on':'';
+    out+='<div class="ci-card'+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
+      +'<div class="ci-card-top"><span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span><span class="ci-card-stg">'+_ciEsc(c.status||'신규DB')+'</span></div>'
+      +'<div class="ci-card-sub">'+_ciEsc(c.phone||c.phone_raw||'연락처 없음')+'</div></div>';
+  });
+  return out;
+}
+function _ciPreviewHtml(c){
+  if(!c) return '<div class="ci-empty">왼쪽에서 고객을 선택하세요.</div>';
+  var rows=[['연락처',c.phone||c.phone_raw],['생년월일',c.birth_date],['성별',c.gender],['상담채널',c.channel],['입력일자',_ciDateOf(c.created_at)]];
+  return '<div class="ci-pv-head">'+_ciEsc(c.name||'')+' <span class="ci-pv-stg">'+_ciEsc(c.status||'')+'</span><button type="button" class="ci-btn ghost ci-pv-edit" onclick="_ciEdit(\''+_ciEsc(c.id)+'\')">수정</button></div>'
+    +'<div class="ci-pv-body">'+rows.map(function(r){return '<div class="ci-pv-row"><span>'+_ciEsc(r[0])+'</span><b>'+_ciEsc(r[1]||'-')+'</b></div>';}).join('')+'</div>'
+    +'<div class="ci-pv-note">인수 정보·상담 이력은 [수정]에서 입력·열람합니다.</div>';
+}
+function _ciSelCard(id){
+  window._ciSel=id;
+  var c=(window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0];
+  var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(c);
+  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+}
+window._ciSelCard=_ciSelCard;
+/* ── v3 입력폼(입력일자·속성·음력·보험연령·이메일·주소·인수 5필드·8단계 고객분류) + 캡처 OCR 재사용 ── */
+window._ciEditId=null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''};
+function _ciV(id){ var e=document.getElementById(id); return e?String(e.value||''):''; }
+function _ciInsAge(birth){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(birth||'')) return null;
+  var b=new Date(birth+'T00:00:00'), t=new Date();
+  var age=t.getFullYear()-b.getFullYear(); var m=t.getMonth()-b.getMonth(), d=t.getDate()-b.getDate();
+  if(m<0||(m===0&&d<0)) age--;
+  var next=new Date(t.getFullYear(), b.getMonth(), b.getDate()); if(next<t) next=new Date(t.getFullYear()+1, b.getMonth(), b.getDate());
+  var diffM=(next-t)/(1000*60*60*24*30.44); var ins=(diffM<=6)?age+1:age;
+  return {age:age, ins:ins};
+}
+function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.textContent=r?('보험 '+r.ins+'세'):'-'; }
+window._ciUpdIns=_ciUpdIns;
+function _ciPickStage(btn){ var wrap=document.getElementById('cif-stagepick'); if(!wrap) return; var bs=wrap.querySelectorAll('.ci-stagebtn'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); btn.classList.add('on'); wrap.setAttribute('data-st', btn.getAttribute('data-st')); }
+window._ciPickStage=_ciPickStage;
+function _ciAddrSearch(){ if(typeof toast==='function') toast('주소검색(우편번호) 연동은 다음 단계입니다.'); }
+window._ciAddrSearch=_ciAddrSearch;
+function _ciFormHtml(c){
+  c=c||{}; var v=function(x){ return _ciEsc(x==null?'':String(x)); };
+  var p=(c.profile&&typeof c.profile==='object')?c.profile:{};
+  var t=new Date(); var today=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  var inDate=_ciDateOf(c.created_at)||today; var st=c.status||'신규DB'; var g=c.gender||''; var med=c.medication||'';
+  var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];
+  var stageBtns=stages.map(function(s){ return '<button type="button" class="ci-stagebtn'+(s===st?' on':'')+'" data-st="'+_ciEsc(s)+'" onclick="_ciPickStage(this)">'+_ciEsc(s)+'</button>'; }).join('');
+  var medOpt=['','복용 중','복용 안 함','과거 복용'].map(function(o){ return '<option value="'+_ciEsc(o)+'"'+(o===med?' selected':'')+'>'+(o||'선택')+'</option>'; }).join('');
+  return '<div class="ci-form">'
+    +'<div class="ci-form-head">'+(c.id?'고객 수정':'신규 고객')+'<button type="button" class="ci-form-x" onclick="_ciCloseForm()">✕</button></div>'
+    +'<div class="ci-ocr-hint">📷 고객정보 화면을 캡처해 아래에 Ctrl+V → [캡처에서 정보 읽기] (원본 이미지는 저장하지 않습니다)</div>'
+    +'<div id="cif-ocr-drop" class="ci-ocr-drop" contenteditable="true" data-ph="여기를 클릭하고 Ctrl+V로 캡처 붙여넣기"></div>'
+    +'<div class="ci-ocr-acts"><button type="button" class="ci-btn ghost" onclick="_ciOcrRun()">캡처에서 정보 읽기</button><span id="cif-ocr-stat" class="ci-ocr-stat"></span></div>'
+    +'<div class="ci-fgrid">'
+    +'<div class="ci-ffld"><label>입력일자</label><input id="cif-date" type="date" value="'+v(inDate)+'"></div>'
+    +'<div class="ci-ffld"><label>속성 <span class="ci-sub">(유입)</span></label><input id="cif-attr" type="text" value="'+v(p.attr)+'" placeholder="지인·소개·카카오페이 D"></div>'
+    +'<div class="ci-ffld"><label>이름 *</label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50"></div>'
+    +'<div class="ci-ffld"><label>휴대폰 *</label><input id="cif-phone" type="text" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000"></div>'
+    +'<div class="ci-ffld"><label>생년월일 <label class="ci-inl"><input type="checkbox" id="cif-lunar"'+(p.lunar?' checked':'')+'> 음력</label></label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="1980-01-01" oninput="_ciUpdIns()"></div>'
+    +'<div class="ci-ffld"><label>보험연령 · 성별</label><div class="ci-inl-wrap"><span id="cif-iage" class="ci-iage">-</span><select id="cif-gender"><option value="">성별</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select></div></div>'
+    +'<div class="ci-ffld"><label>이메일</label><input id="cif-email" type="text" value="'+v(p.email)+'" placeholder="example@email.com"></div>'
+    +'<div class="ci-ffld"><label>상담채널</label><input id="cif-channel" type="text" value="'+v(c.channel)+'" placeholder="전화·문자·카카오톡"></div>'
+    +'<div class="ci-ffld full"><label>주소</label><div class="ci-addr"><input id="cif-zip" type="text" value="'+v(p.zip)+'" placeholder="우편번호" style="max-width:120px"><input id="cif-addr1" type="text" value="'+v(p.addr1)+'" placeholder="주소"><button type="button" class="ci-btn ghost" onclick="_ciAddrSearch()">주소검색</button></div><input id="cif-addr2" type="text" value="'+v(p.addr2)+'" placeholder="상세 주소 (선택)"></div>'
+    +'</div>'
+    +'<div class="ci-sec">인수 정보 <span>(가입심사 참고 · 본인만 열람 · 민감정보)</span></div>'
+    +'<div class="ci-fgrid">'
+    +'<div class="ci-ffld"><label>직업</label><input id="cif-job" type="text" value="'+v(c.job)+'" placeholder="사무직·운전직·농업"></div>'
+    +'<div class="ci-ffld"><label>약 복용</label><select id="cif-med">'+medOpt+'</select></div>'
+    +'<div class="ci-ffld full"><label>병력</label><input id="cif-history" type="text" value="'+v(c.history)+'" placeholder="갑상선 결절·고혈압·당뇨"></div>'
+    +'<div class="ci-ffld"><label>진단시기</label><input id="cif-dx" type="text" value="'+v(c.dx_date)+'" placeholder="2025년 3월"></div>'
+    +'<div class="ci-ffld"><label>현재상태</label><input id="cif-uw" type="text" value="'+v(c.uw_status)+'" placeholder="추적관찰 중·수술 완료"></div>'
+    +'</div>'
+    +'<div class="ci-ffld full"><label>상담 내용</label><textarea id="cif-note" rows="4" placeholder="상담 내용을 기록하세요 — 통화 요지·고객 반응·다음 액션">'+v(p.note_html)+'</textarea></div>'
+    +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
+    +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+'</div>'
+    +'<div class="ci-form-acts"><button type="button" class="ci-btn" onclick="_ciSaveForm()">저장</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button></div>'
+    +'</div>';
+}
+function _ciOcrBind(){
+  var box=document.getElementById('cif-ocr-drop'); if(!box||box._b) return; box._b=1;
+  box.addEventListener('paste', function(ev){
+    try{ var dt=ev.clipboardData; if(!dt||!dt.items) return;
+      for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
+        if(it.kind==='file'&&/^image\//.test(it.type||'')){ var f=it.getAsFile(); if(!f) continue; ev.preventDefault();
+          var rd=new FileReader();
+          rd.onload=function(e){ var u=String(e.target.result||''); window._ciOcr.base64=u.split(',')[1]||''; window._ciOcr.mime=(u.match(/^data:([^;]+);/)||[])[1]||'image/png';
+            box.innerHTML='<img src="'+u+'" alt="캡처">'; var s=document.getElementById('cif-ocr-stat'); if(s) s.textContent='캡처 준비됨 — [캡처에서 정보 읽기]를 누르세요'; };
+          rd.readAsDataURL(f); return; } }
+    }catch(e){}
+  });
+}
+function _ciOcrRun(){
+  if(!window._ciOcr.base64){ alert('먼저 고객정보 화면 캡처를 붙여넣어 주세요 (Ctrl+V).'); return; }
+  var s=document.getElementById('cif-ocr-stat'); if(s) s.textContent='읽는 중…';
+  if(!window.db||!window.db.fetch){ if(s) s.textContent='연결 오류'; return; }
+  window.db.fetch('/functions/v1/gemini-customer-ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:window._ciOcr.base64,mimeType:window._ciOcr.mime})})
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+    .then(function(res){ if(!res.ok){ if(s) s.textContent=(res.j&&res.j.error)||'추출 실패'; return; }
+      var d=res.j||{}; var setv=function(fid,val){ var e=document.getElementById(fid); if(e&&val) e.value=val; };
+      setv('cif-name',d.name); setv('cif-phone',d.phone); setv('cif-birth',d.birth_date);
+      var gg=document.getElementById('cif-gender'); if(gg&&d.gender) gg.value=d.gender;
+      if(d.customer_type) setv('cif-attr',d.customer_type);
+      _ciUpdIns(); if(s) s.textContent='반영됨 — 확인·수정 후 저장하세요';
+    }).catch(function(e){ if(s) s.textContent='오류: '+(e&&e.message||e); });
+}
+window._ciOcrRun=_ciOcrRun;
+function _ciOpenForm(id){
+  window._ciEditId=id||null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''};
+  var pv=document.getElementById('ci-preview'); if(!pv) return;
+  var base=id?((window._ciData||[]).filter(function(x){ return String(x.id)===String(id); })[0]||{}):{};
+  pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns();
+  if(id && window.db && window.db.fetch){
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id)+'&select=profile,job,medication,history,dx_date,uw_status,created_at&limit=1').then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
+      var row=(rows&&rows[0])||{}; window._ciFormProfile=(row.profile&&typeof row.profile==='object')?row.profile:{}; var p=window._ciFormProfile;
+      var setv=function(fid,val){ var e=document.getElementById(fid); if(e&&val!=null) e.value=val; };
+      setv('cif-attr',p.attr); setv('cif-email',p.email); setv('cif-zip',p.zip); setv('cif-addr1',p.addr1); setv('cif-addr2',p.addr2); setv('cif-note',p.note_html);
+      var lun=document.getElementById('cif-lunar'); if(lun) lun.checked=!!p.lunar;
+      setv('cif-job',row.job); setv('cif-history',row.history); setv('cif-dx',row.dx_date); setv('cif-uw',row.uw_status);
+      var medEl=document.getElementById('cif-med'); if(medEl&&row.medication) medEl.value=row.medication;
+      if(row.created_at){ var de=document.getElementById('cif-date'); if(de) de.value=_ciDateOf(row.created_at); }
+    }).catch(function(){});
+  }
+  var nm=document.getElementById('cif-name'); if(nm) setTimeout(function(){ nm.focus(); },50);
+}
+window._ciOpenForm=_ciOpenForm;
+function _ciNew(){ _ciOpenForm(null); }
+window._ciNew=_ciNew;
+function _ciEdit(id){ _ciOpenForm(id); }
+window._ciEdit=_ciEdit;
+function _ciCloseForm(){ window._ciEditId=null; if(window._ciSel!=null){ _ciSelCard(window._ciSel); } else { var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(null); } }
+window._ciCloseForm=_ciCloseForm;
+function _ciSaveForm(){
+  var name=_ciV('cif-name').trim(); if(!name){ alert('이름을 입력하세요'); return; }
+  var phone=_ciV('cif-phone').trim(); var birth=_ciV('cif-birth').trim();
+  if(birth && !/^\d{4}-\d{2}-\d{2}$/.test(birth)){ alert('생년월일은 1980-01-01 형식으로 입력하세요(비워도 됩니다)'); return; }
+  var inDate=_ciV('cif-date').trim(); var now=new Date().toISOString();
+  var wrap=document.getElementById('cif-stagepick'); var stage=wrap?wrap.getAttribute('data-st'):'신규DB';
+  var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
+    birth_date:birth||null, gender:_ciV('cif-gender')||null, channel:_ciV('cif-channel').trim()||null,
+    status:stage||'신규DB', updated_at:now,
+    job:_ciV('cif-job').trim()||null, medication:_ciV('cif-med')||null,
+    history:_ciV('cif-history').trim()||null, dx_date:_ciV('cif-dx').trim()||null, uw_status:_ciV('cif-uw').trim()||null };
+  var prof=(window._ciFormProfile&&typeof window._ciFormProfile==='object')?window._ciFormProfile:{};
+  prof.attr=_ciV('cif-attr').trim()||null; prof.email=_ciV('cif-email').trim()||null;
+  prof.zip=_ciV('cif-zip').trim()||null; prof.addr1=_ciV('cif-addr1').trim()||null; prof.addr2=_ciV('cif-addr2').trim()||null;
+  var lun=document.getElementById('cif-lunar'); prof.lunar=!!(lun&&lun.checked); prof.note_html=_ciV('cif-note');
+  body.profile=prof;
+  if(inDate && /^\d{4}-\d{2}-\d{2}$/.test(inDate)){ body.created_at=inDate+'T00:00:00Z'; }
+  var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }
+  var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } window._ciSel=null; window._ciLoaded=false; _ciLoad(); _ciCloseForm(); };
+  var err=function(e){ alert((window._ciEditId?'수정':'등록')+' 실패: '+(e&&e.message||e)); };
+  if(window._ciEditId){
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(window._ciEditId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)}).then(ok).catch(err);
+  } else {
+    body.owner_id=(typeof _snOwnerId==='function')?_snOwnerId():((window.AppState&&window.AppState.userId)||null);
+    if(!body.created_at) body.created_at=now;
+    window.db.fetch('/rest/v1/sales_customers',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)}).then(ok).catch(err);
+  }
+}
+window._ciSaveForm=_ciSaveForm;
+function _ciRender(){
+  var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
+  var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
+  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+  var pv=document.getElementById('ci-preview');
+  if(pv){ var c=(window._ciSel!=null)?(window._ciData||[]).filter(function(x){return String(x.id)===String(window._ciSel);})[0]:null; pv.innerHTML=_ciPreviewHtml(c); }
+}
+window._ciRender=_ciRender;
 
 
 /* ── 공유하기 (Phase 1) — 마이스페이스 항목(스크립트/메모/자료)을 팀/지점 공유함으로 ── */

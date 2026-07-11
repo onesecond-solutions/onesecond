@@ -61,6 +61,73 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 #v-salesnote .sn-ocr-acts{display:flex;align-items:center;gap:10px;margin-top:8px;}
 #v-salesnote .sn-ocr-stat{font-size:12px;color:var(--ac);}
 @media(max-width:720px){#v-salesnote .sn-form-grid{grid-template-columns:1fr;}}
+/* 상담관리 인라인 4분할(care) — 업무노트 상담관리 배지 진입 (2026-07-11 Phase 1) */
+#mys-split.ci-mode #mysList{display:none;}
+#mys-split.ci-mode .viewer-col{display:none;}
+.ci-wrap{display:none;flex-direction:column;gap:12px;padding:4px 2px 12px;}
+.ci-top{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;}
+.ci-today,.ci-flow{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;}
+.ci-today-head{font-size:13px;font-weight:800;color:var(--tp);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.ci-today-date{font-size:11px;font-weight:600;color:var(--tf);}
+.ci-today-row{display:flex;justify-content:space-between;font-size:13px;color:var(--tp);padding:4px 0;}
+.ci-today-row b{color:var(--ac);}
+.ci-today-note{font-size:11px;color:var(--tf);margin-top:8px;line-height:1.5;}
+.ci-flow-head{font-size:12px;font-weight:800;color:var(--tp);margin-bottom:8px;}
+.ci-band{display:flex;flex-wrap:wrap;gap:6px;}
+.ci-stg{font-size:12px;padding:5px 10px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--tp);cursor:pointer;display:inline-flex;gap:5px;align-items:center;font-family:inherit;}
+.ci-stg b{font-weight:800;color:var(--tf);}
+.ci-stg.on{background:var(--ac);border-color:var(--ac);color:#fff;}
+.ci-stg.on b{color:#fff;}
+.ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:start;}
+.ci-newrow{margin-bottom:8px;}
+.ci-list{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow:auto;}
+.ci-date-sep{font-size:11px;font-weight:700;color:var(--tf);padding:6px 2px 2px;display:flex;justify-content:space-between;}
+.ci-date-sep span{color:var(--ac);}
+.ci-card{border:1px solid var(--bd);border-radius:10px;padding:9px 11px;background:var(--s2);cursor:pointer;}
+.ci-card:hover{border-color:var(--ac);}
+.ci-card.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset;}
+.ci-card-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ci-card-nm{font-size:14px;font-weight:700;color:var(--tp);}
+.ci-card-stg{font-size:11px;color:var(--tf);flex-shrink:0;}
+.ci-card-sub{font-size:12px;color:var(--tf);margin-top:2px;}
+.ci-preview{border:1px solid var(--bd);border-radius:12px;padding:16px 18px;background:var(--s2);min-height:200px;}
+.ci-pv-head{font-size:16px;font-weight:800;color:var(--tp);margin-bottom:12px;display:flex;gap:8px;align-items:center;}
+.ci-pv-stg{font-size:12px;font-weight:600;color:#fff;background:var(--ac);padding:2px 8px;border-radius:6px;}
+.ci-pv-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--bd);}
+.ci-pv-row span{color:var(--tf);}
+.ci-pv-row b{color:var(--tp);font-weight:600;}
+.ci-pv-note{font-size:11px;color:var(--tf);margin-top:12px;line-height:1.5;}
+.ci-empty{font-size:13px;color:var(--tf);text-align:center;padding:40px 12px;line-height:1.6;}
+.ci-btn{font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;border:1px solid var(--ac);background:var(--ac);color:#fff;cursor:pointer;font-family:inherit;}
+.ci-btn.ghost{background:var(--s1);color:var(--tp);border-color:var(--bd);}
+.ci-pv-edit{margin-left:auto;padding:5px 12px;font-size:12px;}
+.ci-form{display:flex;flex-direction:column;}
+.ci-form-head{font-size:15px;font-weight:800;color:var(--tp);margin-bottom:12px;display:flex;align-items:center;}
+.ci-form-x{margin-left:auto;background:none;border:0;font-size:16px;color:var(--tf);cursor:pointer;}
+.ci-ocr-hint{font-size:12px;color:var(--tf);margin-bottom:8px;line-height:1.5;}
+.ci-ocr-drop{min-height:48px;border:1px dashed var(--ac);border-radius:8px;background:var(--s1);padding:8px;outline:0;font-size:12px;color:var(--tf);margin-bottom:8px;}
+.ci-ocr-drop:empty::before{content:attr(data-ph);color:var(--tf);}
+.ci-ocr-drop img{max-width:100%;max-height:200px;border-radius:6px;display:block;}
+.ci-ocr-acts{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ci-ocr-stat{font-size:12px;color:var(--ac);}
+.ci-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
+.ci-ffld{display:flex;flex-direction:column;gap:4px;}
+.ci-ffld.full{grid-column:1 / -1;}
+.ci-ffld label{font-size:12px;font-weight:700;color:var(--tp);display:flex;align-items:center;gap:6px;}
+.ci-ffld .ci-sub{font-weight:400;color:var(--tf);}
+.ci-inl{font-weight:400;font-size:11px;color:var(--tf);}
+.ci-ffld input,.ci-ffld select,.ci-ffld textarea{padding:9px 11px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:var(--s2);color:var(--tp);font-family:inherit;box-sizing:border-box;width:100%;}
+.ci-ffld textarea{resize:vertical;min-height:72px;}
+.ci-inl-wrap{display:flex;gap:8px;align-items:center;}
+.ci-iage{font-size:13px;font-weight:700;color:var(--ac);white-space:nowrap;min-width:64px;}
+.ci-addr{display:flex;gap:8px;margin-bottom:8px;}
+.ci-sec{font-size:13px;font-weight:800;color:var(--tp);margin:18px 0 10px;padding-top:12px;border-top:1px dashed var(--bd);}
+.ci-sec span{font-size:11px;font-weight:400;color:var(--tf);}
+.ci-stagepick{display:flex;flex-wrap:wrap;gap:6px;}
+.ci-stagebtn{font-size:12px;padding:6px 12px;border:1px solid var(--bd);border-radius:999px;background:var(--s1);color:var(--tp);cursor:pointer;font-family:inherit;}
+.ci-stagebtn.on{background:var(--ac);border-color:var(--ac);color:#fff;}
+.ci-form-acts{display:flex;gap:8px;margin-top:18px;}
+@media(max-width:860px){.ci-top{grid-template-columns:1fr;}.ci-bottom{grid-template-columns:1fr;}.ci-fgrid{grid-template-columns:1fr;}}
 /* 상태 단계 필터 칩 (2026-07-08) */
 #v-salesnote .sn-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
 #v-salesnote .sn-chip{font-size:12px;padding:5px 12px;border:1px solid var(--bd);border-radius:999px;cursor:pointer;background:var(--s1);user-select:none;color:var(--tp);}
