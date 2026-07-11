@@ -160,7 +160,7 @@ window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
 
 (function(){
   fetch('/app.html?_=' + Date.now()).then(function(r){ return r.text(); }).then(function(src){
-    var need = ['_ciEsc','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPickStage',
+    var need = ['_ciEsc','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPhoneFmt','_ciPickStage',
                 '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml',
                 '_ciConsultToday','_ciConsultRender','_ciConsultToggle'];
     var m = src.match(/var _SN_STAGES=\[[^\]]*\];/);

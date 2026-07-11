@@ -15816,8 +15816,9 @@ window._ciSelCard=_ciSelCard;
 window._ciEditId=null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''};
 function _ciV(id){ var e=document.getElementById(id); return e?String(e.value||''):''; }
 function _ciInsAge(birth){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(birth||'')) return null;
-  var b=new Date(birth+'T00:00:00'), t=new Date();
+  var s=String(birth||'').replace(/[^0-9]/g,''); if(s.length!==8) return null;  /* 8자리 숫자 or 하이픈 형식 모두 허용 */
+  var iso=s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
+  var b=new Date(iso+'T00:00:00'); if(isNaN(b.getTime())) return null; var t=new Date();
   var age=t.getFullYear()-b.getFullYear(); var m=t.getMonth()-b.getMonth(), d=t.getDate()-b.getDate();
   if(m<0||(m===0&&d<0)) age--;
   var next=new Date(t.getFullYear(), b.getMonth(), b.getDate()); if(next<t) next=new Date(t.getFullYear()+1, b.getMonth(), b.getDate());
@@ -15826,6 +15827,12 @@ function _ciInsAge(birth){
 }
 function _ciUpdIns(){ var r=_ciInsAge(_ciV('cif-birth')); var e=document.getElementById('cif-iage'); if(e) e.value=r?(r.ins+'세'):''; }
 window._ciUpdIns=_ciUpdIns;
+/* 휴대폰: 숫자만 입력받아 자동 하이픈(010-1234-5678) */
+function _ciPhoneFmt(el){ var d=String(el.value||'').replace(/[^0-9]/g,'').slice(0,11); var o=d;
+  if(d.length>=8) o=d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  else if(d.length>=4) o=d.slice(0,3)+'-'+d.slice(3);
+  el.value=o; }
+window._ciPhoneFmt=_ciPhoneFmt;
 function _ciPickStage(btn){ var wrap=document.getElementById('cif-stagepick'); if(!wrap) return; var bs=wrap.querySelectorAll('.ci-stagebtn'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); btn.classList.add('on'); wrap.setAttribute('data-st', btn.getAttribute('data-st')); }
 window._ciPickStage=_ciPickStage;
 function _ciAddrSearch(){ if(typeof toast==='function') toast('주소검색(우편번호) 연동은 다음 단계입니다.'); }
@@ -15847,14 +15854,14 @@ function _ciFormHtml(c){
     +'<div class="ci-ffld"><label>입력일자</label><input id="cif-date" type="date" value="'+v(inDate)+'"></div>'
     +'<div class="ci-ffld"><label>속성</label><input id="cif-attr" type="text" value="'+v(p.attr)+'" placeholder="직접 입력 (예: 지인, 소개, 카카오페이 D)"></div>'
     /* 2행: 이름 | 생년월일·보험연령(N세)·성별(3종) (음력 제거·자동계산 문구 제거) */
-    +'<div class="ci-ffld ci-count"><label>이름 *</label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50" placeholder="고객 이름" oninput="var s=this.parentNode.querySelector(\'.ci-cnt\'); if(s)s.textContent=this.value.length+\'/50\';"><span class="ci-cnt">'+nameLen+'/50</span></div>'
+    +'<div class="ci-ffld ci-count"><label>이름 <span class="ci-req">*</span></label><input id="cif-name" type="text" value="'+v(c.name)+'" maxlength="50" placeholder="고객 이름" oninput="var s=this.parentNode.querySelector(\'.ci-cnt\'); if(s)s.textContent=this.value.length+\'/50\';"><span class="ci-cnt">'+nameLen+'/50</span></div>'
     +'<div class="ci-ffld ci-bio-left">'
-    +'<label>생년월일</label><input id="cif-birth" type="text" value="'+v(c.birth_date)+'" placeholder="연도-월-일" oninput="_ciUpdIns()" class="ci-birth-in">'
+    +'<label>생년월일 <span class="ci-req">*</span></label><input id="cif-birth" type="text" inputmode="numeric" maxlength="8" value="'+v((c.birth_date||'').replace(/[^0-9]/g,''))+'" placeholder="19760108" oninput="this.value=this.value.replace(/[^0-9]/g,\'\').slice(0,8);_ciUpdIns();" class="ci-birth-in">'
     +'<label class="ci-lbl2">보험연령</label><input id="cif-iage" type="text" readonly value="" placeholder="—" class="ci-iage-in">'
     +'<label class="ci-lbl2">성별</label><select id="cif-gender" class="ci-gender-in"><option value="">선택</option><option'+(g==='남'?' selected':'')+'>남</option><option'+(g==='여'?' selected':'')+'>여</option></select>'
     +'</div>'
     /* 3행: 휴대폰(이름 아래) | 빈 칸 */
-    +'<div class="ci-ffld"><label>휴대폰 *</label><input id="cif-phone" type="text" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000"></div>'
+    +'<div class="ci-ffld"><label>휴대폰 <span class="ci-req">*</span></label><input id="cif-phone" type="text" inputmode="numeric" value="'+v(c.phone||c.phone_raw)+'" placeholder="010-0000-0000" oninput="_ciPhoneFmt(this)"></div>'
     +'<div class="ci-spacer"></div>'
     /* 5행: 주소(우편·주소·검색) + 상세주소 */
     +'<div class="ci-ffld full"><label>주소</label><div class="ci-addr"><input id="cif-zip" type="text" value="'+v(p.zip)+'" placeholder="우편번호" style="max-width:120px"><input id="cif-addr1" type="text" value="'+v(p.addr1)+'" placeholder="주소"><button type="button" class="ci-btn ghost" onclick="_ciAddrSearch()">주소검색</button></div></div>'
@@ -15972,12 +15979,14 @@ function _ciCloseForm(){ window._ciEditId=null; if(window._ciSel!=null){ _ciSelC
 window._ciCloseForm=_ciCloseForm;
 function _ciSaveForm(){
   var name=_ciV('cif-name').trim(); if(!name){ alert('이름을 입력하세요'); return; }
-  var phone=_ciV('cif-phone').trim(); var birth=_ciV('cif-birth').trim();
-  if(birth && !/^\d{4}-\d{2}-\d{2}$/.test(birth)){ alert('생년월일은 1980-01-01 형식으로 입력하세요(비워도 됩니다)'); return; }
+  var phone=_ciV('cif-phone').trim(); if(!phone){ alert('휴대폰 번호를 입력하세요'); return; }
+  var birthDigits=_ciV('cif-birth').replace(/[^0-9]/g,'');
+  if(birthDigits.length!==8){ alert('생년월일을 숫자 8자리로 입력하세요 (예: 19760108)'); return; }
+  var birthISO=birthDigits.slice(0,4)+'-'+birthDigits.slice(4,6)+'-'+birthDigits.slice(6,8);
   var inDate=_ciV('cif-date').trim(); var now=new Date().toISOString();
   var wrap=document.getElementById('cif-stagepick'); var stage=wrap?wrap.getAttribute('data-st'):'신규DB';
   var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
-    birth_date:birth||null, gender:_ciV('cif-gender')||null,
+    birth_date:birthISO, gender:_ciV('cif-gender')||null,
     status:stage||'신규DB', updated_at:now,
     job:_ciV('cif-job').trim()||null, medication:_ciV('cif-med')||null,
     history:_ciV('cif-history').trim()||null, dx_date:_ciV('cif-dx').trim()||null, uw_status:_ciV('cif-uw').trim()||null };
