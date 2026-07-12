@@ -2227,6 +2227,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
           <div class="ci-today" id="ci-today"></div>
           <div class="ci-flow"><div class="ci-flow-head">상담 플로우 <button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button></div><div class="ci-band" id="ci-band"></div></div>
         </div>
+        <div class="ci-stats" id="ci-stats"></div>
         <div class="ci-bottom">
           <div class="ci-list-col">
             <div class="ci-list" id="ci-list"></div>
@@ -15719,6 +15720,7 @@ window.filterMysType=filterMysType;
  *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
 window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false;
 function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _ciNum(n){ n=Number(n); if(!isFinite(n)) n=0; return n.toLocaleString('en-US'); }  /* 상담관리 전용 숫자 3자리 쉼표 헬퍼(_ciEsc와 동일하게 window 미등록) */
 function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
 function _ciShow(){
   var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
@@ -15789,11 +15791,11 @@ function _ciBandHtml(){
   var cards=stages.map(function(s){
     var n=data.filter(function(c){return (c.status||'')===s;}).length;
     var cls='ci-scard'+(s===cur?' on':'')+(n===0?' zero':'');
-    return '<button type="button" class="'+cls+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')"><span class="ci-scard-name">'+_ciEsc(s)+'</span><span class="ci-scard-num">'+n+'</span><span class="ci-scard-unit">'+(n===0?'—':'명')+'</span></button>';
+    return '<button type="button" class="'+cls+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')"><span class="ci-scard-name">'+_ciEsc(s)+'</span><span class="ci-scard-num">'+_ciNum(n)+'</span><span class="ci-scard-unit">'+(n===0?'—':'명')+'</span></button>';
   }).join('');
   var dots=stages.map(function(s){ return '<span class="ci-sdot'+(s===cur?' on':'')+'"><i></i></span>'; }).join('');
   var foot=(cur!=='전체')
-    ? '<div class="ci-flow-foot">필터: '+_ciEsc(cur)+' '+data.filter(function(c){return (c.status||'')===cur;}).length+'명 — 아래 리스트에 이 단계 고객만 표시</div>'
+    ? '<div class="ci-flow-foot">필터: '+_ciEsc(cur)+' '+_ciNum(data.filter(function(c){return (c.status||'')===cur;}).length)+'명 — 아래 리스트에 이 단계 고객만 표시</div>'
     : '<div class="ci-flow-foot muted">단계를 클릭하면 아래 리스트에 해당 단계 고객만 표시됩니다.</div>';
   return '<div class="ci-scards">'+cards+'</div><div class="ci-sdots">'+dots+'</div>'+foot;
 }
@@ -15803,9 +15805,28 @@ function _ciTodayHtml(){
   var cur=window._ciTodayF;
   /* 오늘 등록·예약=실수치 / 청약 이후(+91·+181·보험생일)=청약완료일(profile.appl_date, Phase 2 기록) 기준 계산 */
   var keys=[['today','오늘 등록한 고객'],['reserve','예약'],['appl91','청약 +91일 (보장 개시)'],['appl181','청약 +181일 (6개월 관리)'],['bday','보험 생일 +1년']];
-  var body=keys.map(function(kv){ var n=data.filter(function(c){return _ciTodayMatch(c,kv[0]);}).length; var on=(cur===kv[0])?' on':''; return '<div class="ci-today-row clk'+on+'" onclick="_ciSetTodayF(\''+kv[0]+'\')"><span>'+_ciEsc(kv[1])+'</span><b>'+n+'명</b></div>'; }).join('');
+  var body=keys.map(function(kv){ var n=data.filter(function(c){return _ciTodayMatch(c,kv[0]);}).length; var on=(cur===kv[0])?' on':''; return '<div class="ci-today-row clk'+on+'" onclick="_ciSetTodayF(\''+kv[0]+'\')"><span>'+_ciEsc(kv[1])+'</span><b>'+_ciNum(n)+'명</b></div>'; }).join('');
   return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
     +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>';
+}
+/* 데이터 현황(#ci-stats) — window._ciData의 created_at 기준 실집계(mock 금지). ci-top·ci-bottom 사이 가로 밴드. */
+function _ciStatsHtml(){
+  var data=window._ciData||[];
+  var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  var mon=new Date(t.getFullYear(), t.getMonth(), t.getDate()); mon.setDate(mon.getDate()-((mon.getDay()+6)%7)); mon.setHours(0,0,0,0);  /* 이번 주 월요일 00:00 */
+  var mstart=new Date(t.getFullYear(), t.getMonth(), 1);  /* 이번 달 1일 00:00 */
+  var today=0, week=0, month=0;
+  data.forEach(function(c){
+    var raw=c.created_at; if(!raw) return;
+    var d=new Date(raw); if(isNaN(d.getTime())) return;
+    if(_ciDateOf(raw)===ymd) today++;
+    if(d>=mon) week++;
+    if(d>=mstart) month++;
+  });
+  var tiles=[['오늘 추가',today],['이번 주 추가',week],['이번 달 추가',month],['전체',data.length]];
+  return '<div class="ci-stats-head">데이터 현황</div><div class="ci-stats-row">'
+    +tiles.map(function(tv){ return '<div class="ci-stat-tile"><span class="ci-stat-label">'+_ciEsc(tv[0])+'</span><span class="ci-stat-num">'+_ciNum(tv[1])+'</span></div>'; }).join('')
+    +'</div>';
 }
 function _ciListHtml(){
   var data=(window._ciData||[]).slice();
@@ -15815,13 +15836,14 @@ function _ciListHtml(){
   if(!data.length) return '<div class="ci-empty">아직 등록된 고객이 없습니다.<br>+ 글쓰기로 첫 고객을 추가하세요.</div>';
   var byDate={}; data.forEach(function(c){ var d=_ciDateOf(c.created_at)||'날짜 미상'; byDate[d]=(byDate[d]||0)+1; });
   var out='', last=null;
-  data.forEach(function(c){
+  data.forEach(function(c,idx){
     var d=_ciDateOf(c.created_at)||'날짜 미상';
-    if(d!==last){ last=d; out+='<div class="ci-date-sep">'+_ciEsc(d)+' <span>'+byDate[d]+'명</span></div>'; }  /* 입력일자별 그룹·그날 인원수 */
+    if(d!==last){ last=d; out+='<div class="ci-date-sep">'+_ciEsc(d)+' <span>'+_ciNum(byDate[d])+'명</span></div>'; }  /* 입력일자별 그룹·그날 인원수 */
     var sel=(window._ciSel!=null&&String(window._ciSel)===String(c.id))?' on':'';
     var _r=_ciInsAge(c.birth_date); var _meta=[(_r?_r.age+'세':''), (c.gender||'')].filter(Boolean).join(' · ');
     var _at=((c.profile&&c.profile.attr)||c.attr||''); var _sc=/뱅크샐러드/.test(_at)?' ci-src-bank':(/카카오페이/.test(_at)?' ci-src-kakao':(/보맵/.test(_at)?' ci-src-bomap':''));  /* 속성(유입) 색상: 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색·나머지=흰색 */
     out+='<div class="ci-card'+_sc+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
+      +'<span class="ci-card-no">'+_ciNum(idx+1)+'</span>'  /* 전체 통산 순번(날짜 그룹 넘어 연속 증가, 마지막=총 카드 수) */
       +'<span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span>'
       +'<span class="ci-card-meta">'+_ciEsc(_meta)+'</span>'
       +'<span class="ci-card-stg">'+_ciEsc(c.status||'신규DB')+'</span></div>';
@@ -16167,8 +16189,9 @@ function _ciManageEnd(){
 window._ciManageEnd=_ciManageEnd;
 function _ciRender(){
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
-  var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+((window._ciData||[]).length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
+  var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum((window._ciData||[]).length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
+  var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
   var pv=document.getElementById('ci-preview');
   if(pv && !pv.querySelector('.ci-form')){ var c=(window._ciSel!=null)?(window._ciData||[]).filter(function(x){return String(x.id)===String(window._ciSel);})[0]:null; pv.innerHTML=_ciPreviewHtml(c); }  /* 폼 편집 중이면 덮어쓰지 않음(단계 필터 클릭에도 폼 유지) */

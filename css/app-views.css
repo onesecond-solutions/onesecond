@@ -101,6 +101,13 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-sdot.on i{background:var(--ac);}
 .ci-flow-foot{font-size:var(--ts-badge);color:var(--ac);margin-top:14px;line-height:1.4;}
 .ci-flow-foot.muted{color:var(--tf);}
+/* 데이터 현황(#ci-stats) — ci-top/ci-bottom 사이 가로 전체 밴드. V2 토큰만(색·크기 하드코딩 금지) */
+.ci-stats{display:flex;flex-direction:column;gap:10px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md);padding:16px 18px;}
+.ci-stats-head{font-size:var(--ts-meta);font-weight:600;color:var(--tp);}
+.ci-stats-row{display:flex;gap:8px;flex-wrap:wrap;}
+.ci-stat-tile{flex:1;min-width:110px;display:flex;flex-direction:column;gap:2px;padding:11px 4px 9px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s2);align-items:center;}
+.ci-stat-label{font-size:var(--ts-badge);font-weight:600;color:var(--ts);white-space:nowrap;}
+.ci-stat-num{font-size:var(--ts-viewer-title,20px);font-weight:700;color:var(--tp);line-height:1.15;}
 .ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:stretch;}  /* 좌우 높이 맞춤(우측 폼 라인까지) */
 .ci-list-col{min-width:0;position:relative;}  /* 리스트를 absolute로 채워 우측 폼 높이에 맞춤 */
 .ci-right-col{display:flex;flex-direction:column;gap:12px;min-width:0;}  /* 우측=스크립트 레이아웃처럼 글쓰기 상단 + 미리보기 아래 */
@@ -110,6 +117,7 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-card{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 13px;background:var(--s1);cursor:pointer;}
 .ci-card:hover{border-color:var(--border-strong,#C4C4CC);background:var(--s2);}
 .ci-card.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset;}
+.ci-card-no{font-size:var(--ts-badge);font-weight:500;color:var(--tf);flex-shrink:0;min-width:1.6em;text-align:right;}  /* 전체 통산 순번(무채색·작게) */
 .ci-card-nm{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);flex-shrink:0;}
 .ci-card-meta{font-size:var(--ts-meta);color:var(--tf);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ci-card-stg{font-size:var(--ts-badge);color:var(--tf);flex-shrink:0;}
