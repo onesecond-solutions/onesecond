@@ -15722,6 +15722,10 @@ function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/
 function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
 function _ciShow(){
   var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
+  /* #ci-wrap은 홈 슬롯 공유엔진 _spSplitShow의 host.innerHTML=_spHead() 재설정(스코프 전환·업무노트 재오픈)에 통째로 삭제될 수 있다.
+     최초 진입 시 원본을 1회 템플릿으로 보관해 두었다가, 파괴 감지 시(w=null) 템플릿에서 복제 복원한다(자식 id·inline onclick 보존). */
+  if(w && !window._ciWrapTpl){ window._ciWrapTpl=w.cloneNode(true); }
+  if(!w && window._ciWrapTpl){ w=window._ciWrapTpl.cloneNode(true); }
   if(sp){
     sp.classList.add('ci-mode');                /* 리스트/뷰어만 숨김·유형칩 바는 유지(CSS) */
     /* #mys-split은 홈데스크 진입 시 #home-desk-slot으로 물리 이동(_spSplitShow). #ci-wrap을 항상 그 옆으로 동반 이동시켜야 슬롯 안에서 보임 */
