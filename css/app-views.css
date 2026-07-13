@@ -12,6 +12,9 @@ body.is-uat-roadmap .roadmap-only{display:flex;}   /* 임태성 실장 user_id �
 /* 영업노트 = 임태성 실장 게이트 전용(로드맵과 동일 user_id). 2026-06-29 */
 .salesnote-only{display:none;}
 body.is-uat-salesnote .salesnote-only{display:flex;}
+/* 휴지통 — 상담관리 공용 게이트(_canSeeCare, 영업노트와 동일 계정) 재사용. 2026-07-13 */
+.trash-only{display:none;}
+body.is-uat-trash .trash-only{display:flex;}
 #v-salesnote.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:22px;}
 #v-salesnote .sn-head{font-size:17px;font-weight:800;margin:2px 0 4px;flex-shrink:0;}
 /* 본문 호스트(#sn-ci-host) — 상담관리 4분할(#ci-wrap) 재사용 진입점. #v-roadmap .rm-layout과 동일한 "고정 헤더 + 내부 스크롤 바디" 패턴(2026-07-13). */
@@ -40,6 +43,17 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 #v-salesnote .sn-empty{padding:24px 16px;text-align:center;color:var(--tf);font-size:13px;}
 @media(max-width:720px){#v-salesnote .sn-layout{grid-template-columns:1fr;}}
 #v-salesnote .sn-dbtns{display:flex;gap:8px;margin-top:12px;}
+/* ════ 휴지통 (#v-trash) — 소프트삭제(deleted_at) 고객 목록·복구·영구삭제. #v-salesnote와 동일한 "고정 헤더 + 내부 스크롤 바디" 레이아웃. 2026-07-13 ════ */
+#v-trash.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:22px;}
+#v-trash .trash-head{font-size:17px;font-weight:800;margin:2px 0 4px;flex-shrink:0;display:flex;align-items:center;gap:8px;}
+#v-trash .trash-empty-btn{margin-left:auto;padding:7px 14px;font-size:var(--ts-badge);}
+#v-trash .trash-list{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px;}
+#v-trash .trash-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:0.5px solid var(--bd);border-radius:10px;background:var(--s1);}
+#v-trash .trash-row .nm{font-weight:700;color:var(--tp);min-width:80px;}
+#v-trash .trash-row .ph{color:var(--ts);font-size:12px;white-space:nowrap;}
+#v-trash .trash-row .dt{color:var(--tf);font-size:12px;margin-left:auto;white-space:nowrap;}
+#v-trash .trash-row .trash-acts{display:flex;gap:6px;flex-shrink:0;}
+#v-trash .trash-row .trash-acts button{padding:6px 12px;font-size:var(--ts-badge);}
 .sn-btn{padding:8px 16px;border:0;border-radius:var(--radius-sm);background:var(--ac);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 .sn-btn:hover{background:var(--ach);}
 .sn-btn.ghost{background:var(--s2);color:var(--tp);border:1px solid var(--bd);}
@@ -158,6 +172,7 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-celebrate-sub{font-size:var(--ts-preview);color:var(--ts);margin-bottom:18px;}
 .ci-celebrate .ci-btn{padding:9px 28px;}
 .ci-pv-edit{margin-left:auto;padding:6px 13px;font-size:var(--ts-badge);}
+.ci-pv-del{padding:6px 13px;font-size:var(--ts-badge);}  /* 미리보기 [삭제] — [수정] 옆(margin-left:auto는 edit에만, del은 flex 순서상 바로 이어붙음). 2026-07-13 */
 .ci-form{display:flex;flex-direction:column;}
 .ci-form-head{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);margin-bottom:14px;display:flex;align-items:center;}
 .ci-form-x{margin-left:auto;background:none;border:0;font-size:var(--ts-body);color:var(--tf);cursor:pointer;line-height:1;}
@@ -519,6 +534,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-home{display:flex !important;}
 body.is-uat-homedesk.is-mgr:not(.is-admin) .side #nav-mgr{display:flex !important;}
 body.is-uat-homedesk.is-uat-roadmap:not(.is-admin) .side #nav-roadmap{display:flex !important;}
 body.is-uat-homedesk.is-uat-salesnote:not(.is-admin) .side #nav-salesnote{display:flex !important;}
+body.is-uat-homedesk.is-uat-trash:not(.is-admin) .side #nav-trash{display:flex !important;}  /* 휴지통 = 사이드바 정리 화이트리스트에도 추가(로드맵·영업노트와 동일 필요, 안 넣으면 위 531 mass-hide에 가려짐). 2026-07-13 */
 /* 마이 스페이스 페이지(배너 + 카드 그리드, P1-2) — 바텀시트 #spContent에 렌더 */
 .sn-page{display:flex;flex-direction:column;gap:16px;padding:2px;}
 .sn-banner img{width:100%;height:auto;display:block;border-radius:var(--radius-lg,14px);}

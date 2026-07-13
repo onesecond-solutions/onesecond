@@ -2002,6 +2002,8 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
       <div class="nav roadmap-only" id="nav-roadmap" onclick="_navView('roadmap')"><span class="ic">&#128203;</span><span class="lbl">상품 로드맵</span><span class="nav-badge" style="background:#9A5B06">검수</span></div>
       <div class="nav salesnote-only" id="nav-salesnote" onclick="_navView('salesnote')"><span class="ic">&#128221;</span><span class="lbl">영업노트</span><span class="nav-badge" style="background:#3A7">관리</span></div>
+      <!-- 휴지통(#v-trash) — 상담관리 공용 게이트(_canSeeCare) 재사용. 소프트삭제(deleted_at) 고객 복구·영구삭제. 2026-07-13 -->
+      <div class="nav trash-only" id="nav-trash" onclick="_navView('trash')"><span class="ic">&#128465;</span><span class="lbl">휴지통</span></div>
       <div class="nav" id="nav-pricing" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
       <div class="nav" id="nav-admin" style="display:none" onclick="_navView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
     </div>
@@ -2808,6 +2810,13 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       <div class="rm-note">🔒 <b>비공개</b> — 본인 영업 데이터 관리 전용 화면입니다. 외부 전송·AI 처리 없음.</div>
       <div class="sn-head">영업노트 <span style="font-weight:400;color:var(--ts);font-size:13px">고객·상담 관리</span></div>
       <div class="sn-ci-host" id="sn-ci-host"></div>
+     </div>
+     <!-- ════ 휴지통 (#v-trash) — 상담관리 공용 게이트(_canSeeCare) 재사용(영업노트와 동일 대상). 소프트삭제(deleted_at) 고객 목록·복구·영구삭제. 본인(owner) 데이터만 RLS 자동 필터. 2026-07-13 ════ -->
+     <div class="wrap view" id="v-trash">
+      <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
+      <div class="rm-note">🔒 <b>비공개</b> — 삭제한 고객을 30일 등 별도 기한 없이 보관합니다. [복구]는 되돌리기, [영구삭제]는 복구 불가입니다.</div>
+      <div class="trash-head">휴지통 <span style="font-weight:400;color:var(--ts);font-size:13px">삭제된 고객 관리</span><button type="button" class="ci-btn danger trash-empty-btn" onclick="_trashEmpty()">휴지통 비우기</button></div>
+      <div class="trash-list" id="trash-list"><div class="ci-empty">불러오는 중…</div></div>
      </div>
      <!-- ════ 삼성화재 상품 라인업 (#v-samsung-lineup) — 임태성 실장 게이트(회사 허브 진입). 일반 사용자·어드민 무영향. 2026-06-28 ════ -->
      <div class="wrap view" id="v-samsung-lineup">
@@ -3920,6 +3929,11 @@ function _canSeeSalesNote(){
   return (typeof _canSeeCare==='function') && _canSeeCare();
 }
 window._canSeeSalesNote=_canSeeSalesNote;
+/* ════ 휴지통 (#v-trash) — 상담관리 공용 게이트(_canSeeCare) 재사용, 영업노트·상담관리와 동일 대상(임태성 실장·어드민·카카오임). 소프트삭제(deleted_at) 고객 복구/영구삭제. 2026-07-13 ════ */
+function _canSeeTrash(){
+  return (typeof _canSeeCare==='function') && _canSeeCare();
+}
+window._canSeeTrash=_canSeeTrash;
 /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 임태성 실장 user_id 전용 선적용(2026-07-07). 브랜드 워드마크+태그라인+큰 라운드 검색창. 기능(_hsSearch/_runSearchV2/라우터/state) 무변경, CSS·마크업만. 어드민 포함 타 계정 = 기존 홈 그대로. roadmap/salesnote 게이트와 동일 식별값(98c5f4f9). */
 function _canSeeHomeSearch2(){
   try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; }
@@ -4228,6 +4242,7 @@ function applyRoleClass(){
   /* 카드 역순 넘버링 = 임태성 실장 user_id 전용 검수(2026-07-06). 어드민 포함 타 계정 비노출. .item-no span은 항상 렌더되고 CSS(body.is-uat-cardno)로만 표시. ▶ 전체 개방 플립 지점: 이 toggle을 add(항상 부여)로 바꾸거나 CSS 게이트 해제. */
   document.body.classList.toggle('is-uat-cardno', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
   document.body.classList.toggle('is-uat-salesnote', (typeof _canSeeSalesNote==='function' && _canSeeSalesNote()));
+  document.body.classList.toggle('is-uat-trash', (typeof _canSeeTrash==='function' && _canSeeTrash()));  /* 휴지통 사이드 메뉴 노출 = 상담관리 공용 게이트(영업노트와 동일 대상). 2026-07-13 */
   /* 비로그인(is-guest) 게이트 — 홈 로그인/가입 CTA·계정 메뉴 분기용. r=''(토큰 없음)=비로그인. 2026-07-08 홈 인덱스 전환. */
   document.body.classList.toggle('is-guest', !r);
   /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 전원 개방(로그인 + 비로그인, 2026-07-08 홈 인덱스 전환 대표 승인 B안). 홈 데스크(is-uat-homedesk)는 로그인 전용(!!r)으로 분리 유지 = 비로그인은 검색 홈만 보고 개인 데스크 카드는 안 봄. CSS·마크업만(기능 무변경). 완성 기능만 노출: 타일 게이트(_HS2_TILES show)가 각 기능 공개상태를 따르므로 미완성(알릴의무=_canSeeRoadmap)은 노출 안 됨. */
@@ -6142,7 +6157,7 @@ function _scriptsSheetShow(){
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'){key='home';}/* 죽은 화면(현장의 소리, #v-voice) 제거됨 — 스트레이 딥링크·북마크는 홈으로 폴백 (2026-07-09) */if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'영업노트','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof _snCiShow==='function')_snCiShow();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if(key==='trash'&&typeof _canSeeTrash==='function'&&!_canSeeTrash()){key='home';}/* 휴지통 = 상담관리 공용 게이트(_canSeeCare). 직접 URL 진입도 home 강제(2026-07-13) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'){key='home';}/* 죽은 화면(현장의 소리, #v-voice) 제거됨 — 스트레이 딥링크·북마크는 홈으로 폴백 (2026-07-09) */if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'영업노트',trash:'휴지통','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof _snCiShow==='function')_snCiShow();if(key==='trash'&&typeof loadTrash==='function')loadTrash();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
@@ -15880,10 +15895,28 @@ function _ciListHtml(){
 function _ciPreviewHtml(c){
   if(!c) return '<div class="ci-empty">왼쪽에서 고객을 선택하세요.</div>';
   var rows=[['연락처',c.phone||c.phone_raw],['생년월일',c.birth_date],['성별',c.gender],['상담채널',c.channel],['입력일자',_ciDateOf(c.created_at)]];
-  return '<div class="ci-pv-head">'+_ciEsc(c.name||'')+' <span class="ci-pv-stg">'+_ciEsc(c.status||'')+'</span><button type="button" class="ci-btn ghost ci-pv-edit" onclick="_ciEdit(\''+_ciEsc(c.id)+'\')">수정</button></div>'
+  return '<div class="ci-pv-head">'+_ciEsc(c.name||'')+' <span class="ci-pv-stg">'+_ciEsc(c.status||'')+'</span><button type="button" class="ci-btn ghost ci-pv-edit" onclick="_ciEdit(\''+_ciEsc(c.id)+'\')">수정</button><button type="button" class="ci-btn danger ci-pv-del" onclick="_ciDelete(\''+_ciEsc(c.id)+'\')">삭제</button></div>'
     +'<div class="ci-pv-body">'+rows.map(function(r){return '<div class="ci-pv-row"><span>'+_ciEsc(r[0])+'</span><b>'+_ciEsc(r[1]||'-')+'</b></div>';}).join('')+'</div>'
     +'<div class="ci-pv-note">인수 정보·상담 이력은 [수정]에서 입력·열람합니다.</div>';
 }
+/* 미리보기 [삭제] — 폼을 열지 않고 미리보기 헤더에서 바로 이 고객을 소프트삭제(deleted_at, 휴지통 이동·복구 가능). _ciManageEnd(상담 종결·폼 내부)와 동일 소프트삭제 패턴을 미리보기 진입점에 추가(2026-07-13, 사이드 메뉴 [휴지통]과 짝). */
+function _ciDelete(id){
+  if(id==null) return;
+  if(!confirm('삭제할까요? (휴지통으로 이동, 복구 가능)')) return;
+  var done=function(){
+    window._ciData=(window._ciData||[]).filter(function(x){return String(x.id)!==String(id);});
+    if(window._ciSel!=null && String(window._ciSel)===String(id)) window._ciSel=null;
+    if(window._ciEditId!=null && String(window._ciEditId)===String(id)) window._ciEditId=null;
+    window._ciLoaded=false; _ciLoad();
+    var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(null);
+  };
+  if(window.db && window.db.fetch){
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})})
+      .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } done(); })
+      .catch(function(e){ alert('삭제 실패: '+(e&&e.message||e)); });
+  } else { done(); }  /* 미리보기(연결 없음): 로컬 목록에서만 제거 */
+}
+window._ciDelete=_ciDelete;
 function _ciSelCard(id){
   window._ciSel=id;
   var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();  /* 선택 하이라이트 */
@@ -16225,6 +16258,83 @@ function _ciRender(){
 }
 window._ciRender=_ciRender;
 
+/* ════ 휴지통 (#v-trash) — 소프트삭제(deleted_at 설정) 고객 목록·복구·영구삭제. sales_customers owner RLS로 본인 데이터만 조회(다른 화면과 동일 격리). 2026-07-13
+ * 영구삭제/비우기는 하드 DELETE(복구 불가). 지금까지 이 코드베이스는 sales_customers에 소프트삭제(PATCH deleted_at)만 사용해왔고(_ciManageEnd 등),
+ * owner 본인 행에 대한 DELETE RLS 정책이 실제로 있는지는 이번 트랙에서 처음 확인이 필요하다 — 없으면 아래 하드삭제 호출이 403 등으로 실패하며,
+ * 그 경우에도 alert로 에러를 그대로 보여줘 진단 가능(구현 자체는 정책 추가 없이도 동일하게 유지). */
+window._trashData=[]; window._trashLoaded=false;
+function loadTrash(){
+  var el=document.getElementById('trash-list'); if(el) el.innerHTML='<div class="ci-empty">불러오는 중…</div>';
+  window._trashLoaded=true;
+  var tok=window.db&&window.db.getToken&&window.db.getToken();
+  if(!tok||!window.db||!window.db.fetch){ window._trashData=[]; _trashRender(); return; }  /* 비로그인=빈 상태(owner RLS로 데이터 0) */
+  window.db.fetch('/rest/v1/sales_customers?deleted_at=not.is.null&select=id,name,phone,phone_raw,birth_date,gender,status,created_at,deleted_at&order=deleted_at.desc&limit=1000')
+    .then(function(r){ return r.ok?r.json():[]; })
+    .then(function(rows){ window._trashData=Array.isArray(rows)?rows:[]; _trashRender(); })
+    .catch(function(){ window._trashData=[]; _trashRender(); });
+}
+window.loadTrash=loadTrash;
+function _trashRowHtml(c){
+  var ph=c.phone||c.phone_raw||'-';
+  var dt=c.deleted_at?String(c.deleted_at).slice(0,10):'-';
+  return '<div class="trash-row" data-id="'+_ciEsc(c.id)+'">'
+    +'<span class="nm">'+_ciEsc(c.name||'이름 미상')+'</span>'
+    +'<span class="ph">'+_ciEsc(ph)+'</span>'
+    +'<span class="dt">삭제일 '+_ciEsc(dt)+'</span>'
+    +'<span class="trash-acts">'
+    +'<button type="button" class="ci-btn ghost" onclick="_trashRestore(\''+_ciEsc(c.id)+'\')">복구</button>'
+    +'<button type="button" class="ci-btn danger" onclick="_trashHardDelete(\''+_ciEsc(c.id)+'\')">영구삭제</button>'
+    +'</span></div>';
+}
+function _trashRender(){
+  var el=document.getElementById('trash-list'); if(!el) return;
+  var data=window._trashData||[];
+  el.innerHTML = data.length ? data.map(_trashRowHtml).join('') : '<div class="ci-empty">휴지통이 비어 있습니다.</div>';
+}
+window._trashRender=_trashRender;
+/* [복구] — deleted_at을 null로 되돌려 목록/미리보기·영업노트·상담관리에 다시 노출 */
+function _trashRestore(id){
+  if(id==null) return;
+  if(!window.db||!window.db.fetch){ window._trashData=(window._trashData||[]).filter(function(x){return String(x.id)!==String(id);}); _trashRender(); return; }
+  window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({deleted_at:null})})
+    .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); }
+      window._trashData=(window._trashData||[]).filter(function(x){return String(x.id)!==String(id);});
+      _trashRender();
+      window._ciLoaded=false;  /* 영업노트·상담관리 목록도 다음 진입 시 최신화(복구된 고객 다시 노출) */
+      if(typeof toast==='function') toast('복구되었습니다.'); else alert('복구되었습니다.');
+    })
+    .catch(function(e){ alert('복구 실패: '+(e&&e.message||e)); });
+}
+window._trashRestore=_trashRestore;
+/* [영구삭제](행별) — 하드 DELETE, 복구 불가. RLS가 owner DELETE를 막으면(403 등) alert로 원인 그대로 노출. */
+function _trashHardDelete(id){
+  if(id==null) return;
+  if(!confirm('영구 삭제할까요? 복구할 수 없습니다.')) return;
+  if(!window.db||!window.db.fetch){ alert('로그인 후 이용할 수 있습니다.'); return; }
+  window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}})
+    .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); }
+      window._trashData=(window._trashData||[]).filter(function(x){return String(x.id)!==String(id);});
+      _trashRender();
+      if(typeof toast==='function') toast('영구 삭제되었습니다.');
+    })
+    .catch(function(e){ alert('영구삭제 실패: '+(e&&e.message||e)+'\n\n(권한 정책상 본인 데이터 하드 삭제가 막혀 있을 수 있습니다. 총괄팀에 문의하세요.)'); });
+}
+window._trashHardDelete=_trashHardDelete;
+/* [휴지통 비우기](상단) — 현재 목록에 보이는(=owner RLS로 필터된 본인) 소프트삭제 행 전체 하드 DELETE. N=현재 목록 수로 confirm 문구 생성. */
+function _trashEmpty(){
+  var data=window._trashData||[];
+  if(!data.length){ if(typeof toast==='function') toast('휴지통이 비어 있습니다.'); else alert('휴지통이 비어 있습니다.'); return; }
+  if(!confirm('휴지통의 '+data.length+'명을 영구 삭제합니다. 복구할 수 없습니다.')) return;
+  if(!window.db||!window.db.fetch){ alert('로그인 후 이용할 수 있습니다.'); return; }
+  window.db.fetch('/rest/v1/sales_customers?deleted_at=not.is.null',{method:'DELETE',headers:{'Prefer':'return=minimal'}})
+    .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); }
+      window._trashData=[];
+      _trashRender();
+      if(typeof toast==='function') toast('휴지통을 비웠습니다.');
+    })
+    .catch(function(e){ alert('휴지통 비우기 실패: '+(e&&e.message||e)+'\n\n(권한 정책상 본인 데이터 하드 삭제가 막혀 있을 수 있습니다. 총괄팀에 문의하세요.)'); });
+}
+window._trashEmpty=_trashEmpty;
 
 /* ── 공유하기 (Phase 1) — 마이스페이스 항목(스크립트/메모/자료)을 팀/지점 공유함으로 ── */
 /* 스크립트 팀/지점 공유 — 원본은 그대로 두고 scope='team'/'branch' 사본 INSERT(공유=복사). INSERT RLS(P2-b-1)가 owner 본인 + scope_id=내 팀/지점만 허용 → 타팀 주입 불가. 알림(공지 포인터)은 send-push 수정 트랙과 함께(별도). */
