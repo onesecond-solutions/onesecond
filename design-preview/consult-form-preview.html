@@ -165,7 +165,7 @@ window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
 (function(){
   fetch('/app.html?_=' + Date.now()).then(function(r){ return r.text(); }).then(function(src){
     var need = ['_ciEsc','_ciNum','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPhoneFmt','_ciPickStage',
-                '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml','_ciSetTodayF','_ciSetNameQ','_ciTodayMatch','_ciRender','_ciSetStage',
+                '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciDelete','_ciFormHtml','_ciSetTodayF','_ciSetNameQ','_ciTodayMatch','_ciRender','_ciSetStage',
                 '_ciConsultToday','_ciConsultRender','_ciConsultToggle','_ciConsultPersist','_ciConsultDel','_ciConsultEdit','_ciConsultEditSave',
                 '_ciDraftKey','_ciDraftGather','_ciDraftSave','_ciDraftApply','_ciDraftRestore','_ciDraftClear','_ciDraftBanner','_ciDraftBind',
                 '_ciFormSetMode','_ciFormPrimary','_ciManageEnd','_ciShow','_ciScrollIntoView','_ciApplCelebrate'];

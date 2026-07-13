@@ -15880,10 +15880,28 @@ function _ciListHtml(){
 function _ciPreviewHtml(c){
   if(!c) return '<div class="ci-empty">왼쪽에서 고객을 선택하세요.</div>';
   var rows=[['연락처',c.phone||c.phone_raw],['생년월일',c.birth_date],['성별',c.gender],['상담채널',c.channel],['입력일자',_ciDateOf(c.created_at)]];
-  return '<div class="ci-pv-head">'+_ciEsc(c.name||'')+' <span class="ci-pv-stg">'+_ciEsc(c.status||'')+'</span><button type="button" class="ci-btn ghost ci-pv-edit" onclick="_ciEdit(\''+_ciEsc(c.id)+'\')">수정</button></div>'
+  return '<div class="ci-pv-head">'+_ciEsc(c.name||'')+' <span class="ci-pv-stg">'+_ciEsc(c.status||'')+'</span><button type="button" class="ci-btn ghost ci-pv-edit" onclick="_ciEdit(\''+_ciEsc(c.id)+'\')">수정</button><button type="button" class="ci-btn danger ci-pv-del" onclick="_ciDelete(\''+_ciEsc(c.id)+'\')">삭제</button></div>'
     +'<div class="ci-pv-body">'+rows.map(function(r){return '<div class="ci-pv-row"><span>'+_ciEsc(r[0])+'</span><b>'+_ciEsc(r[1]||'-')+'</b></div>';}).join('')+'</div>'
     +'<div class="ci-pv-note">인수 정보·상담 이력은 [수정]에서 입력·열람합니다.</div>';
 }
+/* 미리보기 [삭제] — 폼을 열지 않고 미리보기 헤더에서 바로 이 고객을 소프트삭제(deleted_at, 휴지통 이동·복구 가능). _ciManageEnd(상담 종결·폼 내부)와 동일 소프트삭제 패턴을 미리보기 진입점에 추가(2026-07-13, 사이드 메뉴 [휴지통]과 짝). */
+function _ciDelete(id){
+  if(id==null) return;
+  if(!confirm('삭제할까요? (휴지통으로 이동, 복구 가능)')) return;
+  var done=function(){
+    window._ciData=(window._ciData||[]).filter(function(x){return String(x.id)!==String(id);});
+    if(window._ciSel!=null && String(window._ciSel)===String(id)) window._ciSel=null;
+    if(window._ciEditId!=null && String(window._ciEditId)===String(id)) window._ciEditId=null;
+    window._ciLoaded=false; _ciLoad();
+    var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(null);
+  };
+  if(window.db && window.db.fetch){
+    window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})})
+      .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } done(); })
+      .catch(function(e){ alert('삭제 실패: '+(e&&e.message||e)); });
+  } else { done(); }  /* 미리보기(연결 없음): 로컬 목록에서만 제거 */
+}
+window._ciDelete=_ciDelete;
 function _ciSelCard(id){
   window._ciSel=id;
   var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();  /* 선택 하이라이트 */
