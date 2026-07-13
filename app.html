@@ -15756,7 +15756,12 @@ var _CI_CARE_CUTOFF='2026-07-13';
 function _ciViewData(){
   var data=window._ciData||[];
   if(window._ciMode==='care'){ return data.filter(function(c){ return String(c&&c.created_at||'')>=_CI_CARE_CUTOFF; }); }
-  return data;
+  /* 고객관리(salesnote)=옛 데이터(컷오프 이전)+청약완료만 표시(진행 중인 신규분은 상담관리에만·B안·2026-07-13 대표 확정).
+     상담관리(care) 분기는 위 그대로 무변경. DB write·삭제 없음(순수 표시 필터). */
+  return data.filter(function(c){
+    var ca=String(c&&c.created_at||''), st=(c&&c.status)||'';
+    return ca<_CI_CARE_CUTOFF || st==='청약완료';
+  });
 }
 window._ciViewData=_ciViewData;
 function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
