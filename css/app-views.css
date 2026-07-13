@@ -125,6 +125,11 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-stat-tile{flex:1;min-width:110px;display:flex;flex-direction:column;gap:2px;padding:11px 4px 9px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s2);align-items:center;}
 .ci-stat-label{font-size:var(--ts-badge);font-weight:600;color:var(--ts);white-space:nowrap;}
 .ci-stat-num{font-size:var(--ts-viewer-title,20px);font-weight:700;color:var(--tp);line-height:1.15;}
+.ci-stats-subhead{font-size:var(--ts-badge);font-weight:600;color:var(--tf);margin-top:2px;}  /* "월별"·"유입별" 소제목 — ci-stats-head보다 한 단계 낮은 위계 */
+/* 유입별 타일 — _ciListHtml의 카드 색(뱅크샐러드=노랑·카카오페이=파랑·보맵=회색) 옅게 미러링 */
+.ci-stat-tile.ci-src-bank{background:#FEF3C7;border-color:#FDE68A;}
+.ci-stat-tile.ci-src-kakao{background:#DBEAFE;border-color:#BFDBFE;}
+.ci-stat-tile.ci-src-bomap{background:#E9E9EE;border-color:#D4D4DB;}
 .ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:stretch;}  /* 좌우 높이 맞춤(우측 폼 라인까지) */
 .ci-list-col{min-width:0;display:flex;flex-direction:column;gap:12px;}  /* 검색행(고정 높이) + 리스트(나머지 전부, 내부 스크롤) */
 .ci-right-col{display:flex;flex-direction:column;gap:12px;min-width:0;}  /* 우측=스크립트 레이아웃처럼 글쓰기 상단 + 미리보기 아래 */

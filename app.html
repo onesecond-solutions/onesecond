@@ -15884,8 +15884,31 @@ function _ciStatsHtml(){
     if(d>=mstart) month++;
   });
   var tiles=[['오늘 추가',today],['이번 주 추가',week],['이번 달 추가',month],['전체',data.length]];
+  /* 월별(최근 4개월, 현재월 포함·최신월 우선) — 0이어도 표시해 "그 달 데이터가 있나"를 눈으로 확신 가능하게 */
+  var monTiles=[];
+  for(var i=0;i<4;i++){
+    var md=new Date(t.getFullYear(), t.getMonth()-i, 1), my=md.getFullYear(), mm=md.getMonth();
+    var mcnt=data.filter(function(c){ var raw=c.created_at; if(!raw) return false; var d=new Date(raw); if(isNaN(d.getTime())) return false; return d.getFullYear()===my && d.getMonth()===mm; }).length;
+    monTiles.push([(mm+1)+'월', mcnt]);
+  }
+  /* 유입별 — 속성값 부분일치 분류. _ciListHtml의 색상 매핑 정규식과 동일 기준(뱅크샐러드/카카오페이/보맵/그 외=기타) 미러링 */
+  var srcCnt={카카오페이:0,뱅크샐러드:0,보맵:0,기타:0};
+  data.forEach(function(c){
+    var _at=(c.profile&&c.profile.attr)||c.attr||'';
+    if(/뱅크샐러드/.test(_at)) srcCnt.뱅크샐러드++;
+    else if(/카카오페이/.test(_at)) srcCnt.카카오페이++;
+    else if(/보맵/.test(_at)) srcCnt.보맵++;
+    else srcCnt.기타++;
+  });
+  var srcTiles=[['카카오페이',srcCnt.카카오페이,'ci-src-kakao'],['뱅크샐러드',srcCnt.뱅크샐러드,'ci-src-bank'],['보맵',srcCnt.보맵,'ci-src-bomap'],['기타',srcCnt.기타,'']];
   return '<div class="ci-stats-head">데이터 현황</div><div class="ci-stats-row">'
     +tiles.map(function(tv){ return '<div class="ci-stat-tile"><span class="ci-stat-label">'+_ciEsc(tv[0])+'</span><span class="ci-stat-num">'+_ciNum(tv[1])+'</span></div>'; }).join('')
+    +'</div>'
+    +'<div class="ci-stats-subhead">월별</div><div class="ci-stats-row">'
+    +monTiles.map(function(tv){ return '<div class="ci-stat-tile"><span class="ci-stat-label">'+_ciEsc(tv[0])+'</span><span class="ci-stat-num">'+_ciNum(tv[1])+'</span></div>'; }).join('')
+    +'</div>'
+    +'<div class="ci-stats-subhead">유입별</div><div class="ci-stats-row">'
+    +srcTiles.map(function(tv){ return '<div class="ci-stat-tile'+(tv[2]?' '+tv[2]:'')+'"><span class="ci-stat-label">'+_ciEsc(tv[0])+'</span><span class="ci-stat-num">'+_ciNum(tv[1])+'</span></div>'; }).join('')
     +'</div>';
 }
 function _ciListHtml(){
