@@ -15852,7 +15852,7 @@ function _ciListHtml(){
     var _r=_ciInsAge(c.birth_date); var _meta=[(_r?_r.age+'세':''), (c.gender||'')].filter(Boolean).join(' · ');
     var _at=((c.profile&&c.profile.attr)||c.attr||''); var _sc=/뱅크샐러드/.test(_at)?' ci-src-bank':(/카카오페이/.test(_at)?' ci-src-kakao':(/보맵/.test(_at)?' ci-src-bomap':''));  /* 속성(유입) 색상: 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색·나머지=흰색 */
     out+='<div class="ci-card'+_sc+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
-      +'<span class="ci-card-no">'+_ciNum(idx+1)+'</span>'  /* 전체 통산 순번(날짜 그룹 넘어 연속 증가, 마지막=총 카드 수) */
+      +'<span class="ci-card-no">'+_ciNum(data.length-idx)+'</span>'  /* 전체 통산 순번 역순(맨 위 최신=총 개수 N, 맨 아래 가장 오래된 첫 고객=1). 카드 정렬(최신 위)은 그대로. 2026-07-13 */
       +'<span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span>'
       +'<span class="ci-card-meta">'+_ciEsc(_meta)+'</span>'
       +'<span class="ci-card-stg">'+_ciEsc(c.status||'신규DB')+'</span></div>';
