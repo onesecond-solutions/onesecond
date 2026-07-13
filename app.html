@@ -3874,6 +3874,19 @@ window._canSeeVault = _canSeeVault;
 /* 운영센터(어드민) view 게이팅 — admin 전용 (2026-05-31 SPA 흡수) */
 function _canSeeAdmin(){ return _getOsUserRole() === 'admin'; }
 window._canSeeAdmin = _canSeeAdmin;
+/* 상담관리 화면 공용 게이트 — 진입점 2곳(업무노트 상담관리 배지 _canSeeCareType · 영업노트 사이드바 _canSeeSalesNote)이 공유.
+ * 개방 대상: 임태성 실장(user_id 98c5f4f9) 기존 + 어드민(role) + 카카오임(email bylts@kakao.com) 추가 개방(2026-07-13 대표 승인).
+ * 데이터 격리(owner_id RLS)는 이 게이트와 무관하게 그대로 유지 — 화면 노출만 넓힘. */
+function _canSeeCare(){
+  try{
+    var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');
+    if(String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd') return true;   /* 임태성 실장(기존) */
+    if((u.role||'')==='admin') return true;                                     /* 어드민 */
+    if(String(u.email||'').trim().toLowerCase()==='bylts@kakao.com') return true; /* 카카오임 */
+    return false;
+  }catch(e){ return false; }
+}
+window._canSeeCare=_canSeeCare;
 /* 상품 로드맵 게이트 — 임태성 실장 user_id 전용 검수(2026-06-27). 이름/표시명/role 아닌 확정 user_id로 판별. 어드민 포함 타 계정 전면 차단(_wavPlaybackEnabled와 동일 식별값). */
 function _canSeeRoadmap(){
   try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; }
@@ -3902,9 +3915,9 @@ function _rmMatch(p){var c=_rmCls(p.coverType);if(_rmFilter!=='all'&&_rmFilter!=
 function _rmRenderP(){var el=document.getElementById('rm-products');if(!el)return;if(_rmCo===null){el.innerHTML='<div class="rm-empty">왼쪽에서 보험사를 선택하세요.</div>';return;}var c=_rmData[_rmCo],h='<div class="rm-pgrid">',n=0;c.products.forEach(function(p,j){if(!_rmMatch(p))return;n++;var cl=_rmCls(p.coverType);h+='<div class="rm-pc '+cl+'" onclick="_rmSelP('+_rmCo+','+j+')"><div class="nm">'+_rmEsc(p.name)+'</div>'+_rmBadge(cl)+'<span class="meta">'+_rmEsc(p.group||'')+'</span></div>';});h+='</div>';if(!n)h='<div class="rm-empty">조건에 맞는 상품이 없습니다.</div>';el.innerHTML=h;}
 function _rmSelP(ci,pj){var p=_rmData[ci].products[pj],cl=_rmCls(p.coverType);var el=document.getElementById('rm-detail');if(!el)return;var h='<div class="ph">'+_rmEsc(p.name)+'</div>'+_rmBadge(cl)+'<span class="meta" style="font-size:12px;color:var(--ts)"> '+_rmEsc(_rmData[ci].company)+'</span><dl>';function row(k,v){if(v)h+='<dt>'+k+'</dt><dd>'+_rmEsc(v)+'</dd>';}row('상품군',p.group);row('심사구분',p.coverType);row('가입연령(원문)',p.entryAge);row('보험기간',p.period);row('납입',p.payment);row('가입금액',p.amount);row('인수·고지기준(원문)',p.underwriting);row('강점',p.strength);row('판매상태(원문)',p.status);h+='</dl>';var src=(_rmData[ci].sources||[]);if(src.length){h+='<dt style="margin-top:14px">출처·기준일(회사 단위)</dt>';src.forEach(function(s){h+='<dd style="font-size:var(--ts-meta);color:var(--ts)">· '+_rmEsc(s)+'</dd>';});}el.innerHTML=h;}
 window.loadRoadmap=loadRoadmap;window._rmSelCo=_rmSelCo;window._rmSelP=_rmSelP;
-/* ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용(AI없음·외부전송0). 본인(owner) 데이터만 RLS 자동 필터. 고객 CRUD + 상담 회차 누적 지원. 2026-06-29 (상담 회차 추가 2026-07-08) ════ */
+/* ════ 영업노트 (#v-salesnote) — 임태성 실장 게이트 전용(AI없음·외부전송0)이었으나 어드민·카카오임 추가 개방(2026-07-13, _canSeeCare 공용 게이트). 본인(owner) 데이터만 RLS 자동 필터. 고객 CRUD + 상담 회차 누적 지원. 2026-06-29 (상담 회차 추가 2026-07-08) ════ */
 function _canSeeSalesNote(){
-  try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; }
+  return (typeof _canSeeCare==='function') && _canSeeCare();
 }
 window._canSeeSalesNote=_canSeeSalesNote;
 /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 임태성 실장 user_id 전용 선적용(2026-07-07). 브랜드 워드마크+태그라인+큰 라운드 검색창. 기능(_hsSearch/_runSearchV2/라우터/state) 무변경, CSS·마크업만. 어드민 포함 타 계정 = 기존 홈 그대로. roadmap/salesnote 게이트와 동일 식별값(98c5f4f9). */
@@ -13416,10 +13429,10 @@ var SCRIPT_TYPES=[
   {key:'etc',label:'기타',kw:'유형:기타'}
 ];
 window.SCRIPT_TYPES=SCRIPT_TYPES;
-/* ── 상담관리 유형 = 임태성 실장 게이트(98c5f4f9) 전용 노출 (3단계 롤아웃 임태성→4팀→전체 중 1단계).
+/* ── 상담관리 유형 = 임태성 실장 게이트(98c5f4f9) 전용 노출이었으나 어드민·카카오임 추가 개방(2026-07-13, _canSeeCare 공용 게이트).
  * 게이트 밖 사용자는 상담관리 배지·유형 필터칩·글쓰기 유형 세그먼트 모두 미노출(유형:상담관리 태그 카드는 '미지정'으로 표시).
- * roadmap/salesnote/AI검색 게이트와 동일 식별값(98c5f4f9). 라이브 표시명: 업무노트 상담관리 유형. ── */
-function _canSeeCareType(){ try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; } }
+ * roadmap/AI검색 게이트는 여전히 임태성 단독(98c5f4f9)이며 이 함수만 _canSeeCare 공용 게이트 사용. 라이브 표시명: 업무노트 상담관리 유형. ── */
+function _canSeeCareType(){ return (typeof _canSeeCare==='function') && _canSeeCare(); }
 /* 현재 사용자에게 노출 가능한 유형만(게이트 반영) — 배지·필터칩·글쓰기 세그먼트 공통 소스 */
 function _scrTypesVisible(){ return _canSeeCareType()?SCRIPT_TYPES:SCRIPT_TYPES.filter(function(t){ return t.key!=='care'; }); }
 window._canSeeCareType=_canSeeCareType; window._scrTypesVisible=_scrTypesVisible;
