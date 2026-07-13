@@ -13,7 +13,10 @@ body.is-uat-roadmap .roadmap-only{display:flex;}   /* 임태성 실장 user_id �
 .salesnote-only{display:none;}
 body.is-uat-salesnote .salesnote-only{display:flex;}
 #v-salesnote.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden;padding-bottom:22px;}
-#v-salesnote .sn-head{font-size:17px;font-weight:800;margin:2px 0 4px;}
+#v-salesnote .sn-head{font-size:17px;font-weight:800;margin:2px 0 4px;flex-shrink:0;}
+/* 본문 호스트(#sn-ci-host) — 상담관리 4분할(#ci-wrap) 재사용 진입점. #v-roadmap .rm-layout과 동일한 "고정 헤더 + 내부 스크롤 바디" 패턴(2026-07-13). */
+#v-salesnote #sn-ci-host{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;}
+/* ↓ 아래 sn-sub/sn-bar/sn-layout/sn-col 등 = 옛 2단 레이아웃 전용 CSS. 해당 마크업이 app.html에서 제거되어 현재 미사용(2026-07-13, #sn-ci-host로 대체). 회귀 위험 최소화를 위해 규칙 자체는 보존. */
 #v-salesnote .sn-sub{font-size:12px;color:var(--ts);margin-bottom:10px;}
 #v-salesnote .sn-bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
 #v-salesnote .sn-bar input{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--radius-sm);font-size:14px;}
