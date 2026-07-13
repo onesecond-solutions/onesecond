@@ -15750,17 +15750,19 @@ window.filterMysType=filterMysType;
  *  상좌 오늘의 할 일 / 상우 상담 플로우(단계띠) / 하좌 카드리스트(입력일자·날짜별 인원) / 하우 미리보기.
  *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
 window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false; window._ciNameQ=''; window._ciMode='care';
-/* 상담관리(care) 진입 = 지금부터(2026-07-13) 저장되는 고객만 표시(삭제 아닌 표시 필터 · 2026-07-13 대표 확정).
-   영업노트(salesnote) 진입은 이 컷오프를 적용하지 않고 window._ciData 전체를 그대로 반환(무영향). */
-var _CI_CARE_CUTOFF='2026-07-13';
+/* 상담관리(care)/고객관리(salesnote) 표시 구분은 날짜 컷오프가 아닌 status 기준(2026-07-13 대표 확정, 오해였던 날짜 컷오프 폐기).
+   옛 대량 데이터(약 1000명)의 status는 전부 정확히 '신규'(레거시 단일값). 대표가 폼으로 추가하는 고객은 _SN_STAGES 8단계
+   ('신규DB'~'청약완료')를 쓰며 첫 단계가 '신규DB'라 '신규'와 절대 겹치지 않는다. → status만으로 날짜 무관하게 정확히 구분 가능.
+   상담관리(care)=status!=='신규'(대표가 추가한 고객 전부, 입력일자 무관) · 고객관리(salesnote)='신규'(옛 대량)+'청약완료'만.
+   DB write·삭제 없음(순수 표시 필터). */
 function _ciViewData(){
   var data=window._ciData||[];
-  if(window._ciMode==='care'){ return data.filter(function(c){ return String(c&&c.created_at||'')>=_CI_CARE_CUTOFF; }); }
-  /* 고객관리(salesnote)=옛 데이터(컷오프 이전)+청약완료만 표시(진행 중인 신규분은 상담관리에만·B안·2026-07-13 대표 확정).
-     상담관리(care) 분기는 위 그대로 무변경. DB write·삭제 없음(순수 표시 필터). */
+  if(window._ciMode==='care'){
+    return data.filter(function(c){ return ((c&&c.status)||'')!=='신규'; });
+  }
   return data.filter(function(c){
-    var ca=String(c&&c.created_at||''), st=(c&&c.status)||'';
-    return ca<_CI_CARE_CUTOFF || st==='청약완료';
+    var st=(c&&c.status)||'';
+    return st==='신규' || st==='청약완료';
   });
 }
 window._ciViewData=_ciViewData;
@@ -15768,7 +15770,7 @@ function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/
 function _ciNum(n){ n=Number(n); if(!isFinite(n)) n=0; return n.toLocaleString('en-US'); }  /* 상담관리 전용 숫자 3자리 쉼표 헬퍼(_ciEsc와 동일하게 window 미등록) */
 function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
 function _ciShow(hostId){
-  window._ciMode=hostId?'salesnote':'care';  /* care=상담관리(컷오프 필터 대상) · salesnote=영업노트(전체 그대로, 2026-07-13) */
+  window._ciMode=hostId?'salesnote':'care';  /* care=상담관리(status!=='신규') · salesnote=고객관리(status==='신규'|'청약완료', 2026-07-13) */
   var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
   /* #ci-wrap은 홈 슬롯 공유엔진 _spSplitShow의 host.innerHTML=_spHead() 재설정(스코프 전환·업무노트 재오픈)에 통째로 삭제될 수 있다.
      최초 진입 시 원본을 1회 템플릿으로 보관해 두었다가, 파괴 감지 시(w=null) 템플릿에서 복제 복원한다(자식 id·inline onclick 보존). */
