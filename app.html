@@ -15746,11 +15746,21 @@ window.filterMysType=filterMysType;
 /* ═══ 상담관리 인라인(care) — 업무노트 상담관리 배지 진입 시 4분할 레이아웃 (2026-07-11 Phase 1)
  *  상좌 오늘의 할 일 / 상우 상담 플로우(단계띠) / 하좌 카드리스트(입력일자·날짜별 인원) / 하우 미리보기.
  *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
-window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false; window._ciNameQ='';
+window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false; window._ciNameQ=''; window._ciMode='care';
+/* 상담관리(care) 진입 = 지금부터(2026-07-13) 저장되는 고객만 표시(삭제 아닌 표시 필터 · 2026-07-13 대표 확정).
+   영업노트(salesnote) 진입은 이 컷오프를 적용하지 않고 window._ciData 전체를 그대로 반환(무영향). */
+var _CI_CARE_CUTOFF='2026-07-13';
+function _ciViewData(){
+  var data=window._ciData||[];
+  if(window._ciMode==='care'){ return data.filter(function(c){ return String(c&&c.created_at||'')>=_CI_CARE_CUTOFF; }); }
+  return data;
+}
+window._ciViewData=_ciViewData;
 function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function _ciNum(n){ n=Number(n); if(!isFinite(n)) n=0; return n.toLocaleString('en-US'); }  /* 상담관리 전용 숫자 3자리 쉼표 헬퍼(_ciEsc와 동일하게 window 미등록) */
 function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
 function _ciShow(hostId){
+  window._ciMode=hostId?'salesnote':'care';  /* care=상담관리(컷오프 필터 대상) · salesnote=영업노트(전체 그대로, 2026-07-13) */
   var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
   /* #ci-wrap은 홈 슬롯 공유엔진 _spSplitShow의 host.innerHTML=_spHead() 재설정(스코프 전환·업무노트 재오픈)에 통째로 삭제될 수 있다.
      최초 진입 시 원본을 1회 템플릿으로 보관해 두었다가, 파괴 감지 시(w=null) 템플릿에서 복제 복원한다(자식 id·inline onclick 보존). */
@@ -15826,7 +15836,7 @@ function _ciTodayMatch(c,k){
 }
 window._ciTodayMatch=_ciTodayMatch;
 function _ciBandHtml(){
-  var data=window._ciData||[], cur=window._ciStageF||'전체';
+  var data=_ciViewData(), cur=window._ciStageF||'전체';
   var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계 정본 */
   var cards=stages.map(function(s){
     var n=data.filter(function(c){return (c.status||'')===s;}).length;
@@ -15840,7 +15850,7 @@ function _ciBandHtml(){
   return '<div class="ci-scards">'+cards+'</div><div class="ci-sdots">'+dots+'</div>'+foot;
 }
 function _ciTodayHtml(){
-  var data=window._ciData||[];
+  var data=_ciViewData();
   var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
   var cur=window._ciTodayF;
   /* 오늘 등록·예약=실수치 / 청약 이후(+91·+181·보험생일)=청약완료일(profile.appl_date, Phase 2 기록) 기준 계산 */
@@ -15851,7 +15861,7 @@ function _ciTodayHtml(){
 }
 /* 데이터 현황(#ci-stats) — window._ciData의 created_at 기준 실집계(mock 금지). ci-top·ci-bottom 사이 가로 밴드. */
 function _ciStatsHtml(){
-  var data=window._ciData||[];
+  var data=_ciViewData();
   var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
   var mon=new Date(t.getFullYear(), t.getMonth(), t.getDate()); mon.setDate(mon.getDate()-((mon.getDay()+6)%7)); mon.setHours(0,0,0,0);  /* 이번 주 월요일 00:00 */
   var mstart=new Date(t.getFullYear(), t.getMonth(), 1);  /* 이번 달 1일 00:00 */
@@ -15869,7 +15879,7 @@ function _ciStatsHtml(){
     +'</div>';
 }
 function _ciListHtml(){
-  var data=(window._ciData||[]).slice();
+  var data=_ciViewData().slice();
   if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
   else { var cur=window._ciStageF||'전체'; if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;}); }
   var _nq=String(window._ciNameQ||'').trim().toLowerCase().replace(/\s+/g,'');  /* 고객명 검색(부분일치·대소문자/공백 무시) — 기존 필터 뒤 AND 결합 */
@@ -16249,7 +16259,7 @@ function _ciManageEnd(){
 window._ciManageEnd=_ciManageEnd;
 function _ciRender(){
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
-  var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum((window._ciData||[]).length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
+  var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
