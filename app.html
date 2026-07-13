@@ -15995,7 +15995,7 @@ function _ciFormHtml(c){
     +'<div class="ci-consult-log" id="cif-consult-log"></div>'
     +'</div>'
     +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
-    +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+(c.id?'<button type="button" class="ci-endbtn" onclick="_ciManageEnd()">상담 종결</button>':'')+'</div>'
+    +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+(c.id?'<button type="button" class="ci-endbtn" onclick="_ciManageEnd()">삭제</button>':'')+'</div>'
     +'<div class="ci-form-acts"><button type="button" class="ci-btn" id="cif-primary" onclick="_ciFormPrimary()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button><span id="cif-draft-ind" class="ci-draft-ind"></span></div>'
     +'</div>';
 }
@@ -16235,15 +16235,15 @@ function _ciApplCelebrate(name){
   }catch(e){ if(typeof toast==='function') toast('청약 완료를 축하합니다!'); }
 }
 window._ciApplCelebrate=_ciApplCelebrate;
-/* 상담 종결 = 이 고객(상담 중이던 한 사람) 정보 삭제(소프트=deleted_at·복구 가능, 목록에서 숨김). 확인 시 실행, 아니오 시 취소 */
+/* 삭제(폼) = 카드 클릭으로 연 편집 폼에서 이 고객을 소프트삭제(deleted_at·복구 가능, 목록에서 숨김·휴지통 이동). 라이브 표시명 '삭제'(옛 '상담 종결' 버튼을 이름 통일, 2026-07-13). 확인 시 실행, 아니오 시 취소 */
 function _ciManageEnd(){
   if(window._ciEditId==null){ return; }
-  if(!confirm('상담을 종결하면 이 고객의 정보가 삭제됩니다.\n\n계속하시겠습니까?')) return;  /* 아니오=그대로 닫힘 */
+  if(!confirm('이 고객을 삭제할까요?\n(휴지통으로 이동 · 복구 가능)')) return;  /* 아니오=그대로 닫힘 */
   var done=function(){ _ciDraftClear(); window._ciData=(window._ciData||[]).filter(function(x){return String(x.id)!==String(window._ciEditId);}); window._ciSel=null; window._ciLoaded=false; _ciLoad(); _ciCloseForm(); };
   if(window.db && window.db.fetch){
     window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(window._ciEditId),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})})
       .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } done(); })
-      .catch(function(e){ alert('관리 종결 실패: '+(e&&e.message||e)); });
+      .catch(function(e){ alert('삭제 실패: '+(e&&e.message||e)); });
   } else { done(); }  /* 미리보기(연결 없음): 로컬 목록에서 제거 */
 }
 window._ciManageEnd=_ciManageEnd;
