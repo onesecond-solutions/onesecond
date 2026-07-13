@@ -36,6 +36,7 @@
       </div>
       <div class="ci-bottom">
         <div class="ci-list-col">
+          <div class="ci-search-row"><input type="text" class="ci-search-input" id="ci-q" placeholder="고객명 검색" autocomplete="off" oninput="_ciSetNameQ(this.value)"></div>
           <div class="ci-list" id="ci-list"></div>
         </div>
         <div class="ci-right-col">
@@ -163,8 +164,8 @@ window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
 
 (function(){
   fetch('/app.html?_=' + Date.now()).then(function(r){ return r.text(); }).then(function(src){
-    var need = ['_ciEsc','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPhoneFmt','_ciPickStage',
-                '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml','_ciSetTodayF','_ciTodayMatch','_ciRender','_ciSetStage',
+    var need = ['_ciEsc','_ciNum','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPhoneFmt','_ciPickStage',
+                '_ciBandHtml','_ciTodayHtml','_ciListHtml','_ciPreviewHtml','_ciFormHtml','_ciSetTodayF','_ciSetNameQ','_ciTodayMatch','_ciRender','_ciSetStage',
                 '_ciConsultToday','_ciConsultRender','_ciConsultToggle','_ciConsultPersist','_ciConsultDel','_ciConsultEdit','_ciConsultEditSave',
                 '_ciDraftKey','_ciDraftGather','_ciDraftSave','_ciDraftApply','_ciDraftRestore','_ciDraftClear','_ciDraftBanner','_ciDraftBind',
                 '_ciFormSetMode','_ciFormPrimary','_ciManageEnd','_ciShow','_ciScrollIntoView','_ciApplCelebrate'];
@@ -172,7 +173,7 @@ window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
     var pieces = [ m ? m[0] : "var _SN_STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료'];" ];
     need.forEach(function(fn){ pieces.push(extractFn(src, fn)); });
     (0, eval)(pieces.join('\n'));            // 간접 eval = 전역 스코프에 함수 등록
-    window._ciData = MOCK; window._ciStageF = '전체'; window._ciSel = null;
+    window._ciData = MOCK; window._ciStageF = '전체'; window._ciSel = null; window._ciNameQ = '';
     renderAll();
     _ciNew();                                // 로드 즉시 신규 고객 폼 표출 (두 번째 캡처 = 이 화면)
   }).catch(function(e){
