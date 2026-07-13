@@ -3,8 +3,8 @@
 --    base 스키마 + 검색키워드(search_keywords text[]) 통합본 [경로②]
 -- ═══════════════════════════════════════════════════════════════════════════
 --
--- ⚠️⚠️⚠️ 초안(DRAFT) — 대표 승인 전 실행 금지. 이 파일은 검토용이며 아직 적용되지 않았다. ⚠️⚠️⚠️
---   실제 반영 = production-db Environment 대표 1클릭 승인(workflow_dispatch) 자리. 본 PR 머지만으로 DB 변경 없음.
+-- ✅ 적용 완료(2026-07-11 CI db-migrate.yml, 테이블·search_keywords 컬럼 라이브 확인). 본 파일은 이력·참조용.
+--   실제 반영 = production-db Environment 대표 1클릭 승인(workflow_dispatch) 자리에서 이미 실행됨.
 --
 -- ⚠️ 대상 프로젝트(유일 진실 원천): onesecond-v1-restore-0420 (pdnwgzneooyygfejrvbg)
 --    구버전(qursjteiovcylqiepmlo)은 2026-06-19 삭제됨 — 절대 참조 금지.
