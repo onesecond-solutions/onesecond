@@ -24,7 +24,10 @@ function renderCalcTool(slotId){
   slot.innerHTML='<div class="calc-tool" tabindex="0" aria-label="계산기(키보드 입력 가능)"><input type="text" class="calc-disp" id="calcDisp" value="0" readonly aria-label="계산"><div class="calc-pad">'+pad+'</div></div>';
   _calcEnsureKbdStyle();
   var box=slot.querySelector('.calc-tool');
-  if(box) box.addEventListener('keydown', _calcOnKeydown);
+  if(box){
+    box.addEventListener('keydown', _calcOnKeydown);
+    box.focus({preventScroll:true});   /* 진입 즉시 키보드 입력 가능(자동 포커스). preventScroll=포커스로 화면 튐 방지. 다른 곳 클릭 시 포커스 빠져 무간섭 유지 (2026-07-13) */
+  }
 }
 window.renderCalcTool=renderCalcTool;
 /* 포커스 링(.calc-tool:focus) + 키 하이라이트(.calc-btn.kbd-active) 스타일 — app.html 미수정 위해 JS로 1회만 주입(id 가드) */
