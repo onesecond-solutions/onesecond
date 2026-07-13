@@ -2230,6 +2230,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         <div class="ci-stats" id="ci-stats"></div>
         <div class="ci-bottom">
           <div class="ci-list-col">
+            <div class="ci-search-row"><input type="text" class="ci-search-input" id="ci-q" placeholder="고객명 검색" autocomplete="off" oninput="_ciSetNameQ(this.value)"></div>
             <div class="ci-list" id="ci-list"></div>
           </div>
           <div class="ci-right-col">
@@ -15717,7 +15718,7 @@ window.filterMysType=filterMysType;
 /* ═══ 상담관리 인라인(care) — 업무노트 상담관리 배지 진입 시 4분할 레이아웃 (2026-07-11 Phase 1)
  *  상좌 오늘의 할 일 / 상우 상담 플로우(단계띠) / 하좌 카드리스트(입력일자·날짜별 인원) / 하우 미리보기.
  *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
-window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false;
+window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false; window._ciNameQ='';
 function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function _ciNum(n){ n=Number(n); if(!isFinite(n)) n=0; return n.toLocaleString('en-US'); }  /* 상담관리 전용 숫자 3자리 쉼표 헬퍼(_ciEsc와 동일하게 window 미등록) */
 function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
@@ -15780,6 +15781,8 @@ function _ciSetStage(s){ window._ciTodayF=null; window._ciStageF=s; _ciRender();
 window._ciSetStage=_ciSetStage;
 function _ciSetTodayF(k){ window._ciStageF='전체'; window._ciTodayF=(window._ciTodayF===k?null:k); _ciRender(); }  /* 오늘의 할 일 클릭 필터(토글·단계 필터 해제) */
 window._ciSetTodayF=_ciSetTodayF;
+function _ciSetNameQ(v){ window._ciNameQ=v||''; var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml(); }  /* 고객명 실시간 검색 — #ci-list만 재렌더(입력 포커스 유지), 기존 오늘의 할 일·단계 필터와 AND 결합 */
+window._ciSetNameQ=_ciSetNameQ;
 function _ciTodayMatch(c,k){
   var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
   if(k==='today') return _ciDateOf(c.created_at)===ymd;                 /* 오늘 등록 */
@@ -15841,6 +15844,8 @@ function _ciListHtml(){
   var data=(window._ciData||[]).slice();
   if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
   else { var cur=window._ciStageF||'전체'; if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;}); }
+  var _nq=String(window._ciNameQ||'').trim().toLowerCase().replace(/\s+/g,'');  /* 고객명 검색(부분일치·대소문자/공백 무시) — 기존 필터 뒤 AND 결합 */
+  if(_nq) data=data.filter(function(c){ return String(c.name||'').toLowerCase().replace(/\s+/g,'').indexOf(_nq)>=0; });
   data.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });
   if(!data.length) return '<div class="ci-empty">아직 등록된 고객이 없습니다.<br>+ 글쓰기로 첫 고객을 추가하세요.</div>';
   var byDate={}; data.forEach(function(c){ var d=_ciDateOf(c.created_at)||'날짜 미상'; byDate[d]=(byDate[d]||0)+1; });

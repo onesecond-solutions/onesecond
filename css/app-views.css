@@ -112,9 +112,13 @@ body.is-uat-salesnote .salesnote-only{display:flex;}
 .ci-stat-label{font-size:var(--ts-badge);font-weight:600;color:var(--ts);white-space:nowrap;}
 .ci-stat-num{font-size:var(--ts-viewer-title,20px);font-weight:700;color:var(--tp);line-height:1.15;}
 .ci-bottom{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:stretch;}  /* 좌우 높이 맞춤(우측 폼 라인까지) */
-.ci-list-col{min-width:0;position:relative;}  /* 리스트를 absolute로 채워 우측 폼 높이에 맞춤 */
+.ci-list-col{min-width:0;display:flex;flex-direction:column;gap:12px;}  /* 검색행(고정 높이) + 리스트(나머지 전부, 내부 스크롤) */
 .ci-right-col{display:flex;flex-direction:column;gap:12px;min-width:0;}  /* 우측=스크립트 레이아웃처럼 글쓰기 상단 + 미리보기 아래 */
-.ci-list{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}  /* 우측 폼 높이만큼 채우고 내부 스크롤 */
+.ci-search-row{flex:none;background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--radius-lg,18px);padding:14px;box-sizing:border-box;}  /* .osws-newrow와 동일 박스모델(배경·테두리·라운드·패딩) → 우측 "+ 고객 추가" 박스와 높이 자동 일치 */
+.ci-search-input{width:100%;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:var(--radius-md,13px);padding:0 14px;background:var(--s2);color:var(--tp);font-size:0.9rem;font-family:inherit;}  /* height=44px=.osws-newbtn과 동일 → 안쪽 컨텐츠 높이까지 맞춰 좌우 상단 라인 정렬 */
+.ci-search-input:focus{outline:none;border-color:var(--ac);}
+.ci-search-input::placeholder{color:var(--tf);}
+.ci-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}  /* 남은 세로 공간 전부 차지 + 내부 스크롤(우측 폼 높이에 맞춤 유지) */
 .ci-date-sep{font-size:var(--ts-badge);font-weight:600;color:var(--tf);padding:8px 2px 3px;display:flex;justify-content:space-between;}
 .ci-date-sep span{color:var(--tf);font-weight:500;}
 .ci-card{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 13px;background:var(--s1);cursor:pointer;}
