@@ -32,5 +32,5 @@ where not exists (
 
 commit;
 
--- ── DOWN (롤백) ──────────────────────────────────────────────────────────────
+-- DOWN / ROLLBACK (롤백) — 아래 주석을 해제해 실행하면 seed 행이 제거된다.
 -- delete from public.app_settings where key = 'calendar_reminder_enabled';
