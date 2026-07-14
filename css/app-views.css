@@ -158,7 +158,9 @@ body.is-uat-trash .trash-only{display:flex;}
 #ci-stats .ds-delta.down{color:#E0703A;background:rgba(224,112,58,.12);}
 #ci-stats .ds-delta.flat{color:var(--tf);background:var(--s2);}
 #ci-stats .ds-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-#ci-stats .ds-card{display:flex;border:1px solid var(--bd);border-radius:var(--radius-md);overflow:hidden;background:var(--s1);}
+#ci-stats .ds-card{display:flex;border:1px solid var(--bd);border-radius:var(--radius-md);overflow:hidden;background:var(--s1);cursor:pointer;}
+#ci-stats .ds-card:hover:not(.on){background:var(--s2);}  /* 채널 카드 클릭→카드리스트 필터(2026-07-14). 같은 카드 재클릭=해제 */
+#ci-stats .ds-card.on{box-shadow:0 0 0 1px var(--ac) inset;background:var(--space-branch-soft);}
 #ci-stats .ds-card-bar{width:4px;flex-shrink:0;}
 #ci-stats .ds-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
 #ci-stats .ds-card-name{display:flex;align-items:center;gap:6px;font-size:var(--ts-badge);font-weight:600;color:var(--ts);}
@@ -185,6 +187,10 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-search-input:focus{outline:none;border-color:var(--ac);}
 .ci-search-input::placeholder{color:var(--tf);}
 .ci-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}  /* 남은 세로 공간 전부 차지 + 내부 스크롤(우측 폼 높이에 맞춤 유지) */
+/* 데이터현황 기간/채널 필터 → 카드리스트 연동 요약바(2026-07-14). 필터 OFF 시 JS가 display:none으로 숨김(기본 상태) */
+.ci-list-filterbar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--space-branch-soft);border:1px solid var(--ac);border-radius:var(--radius-sm);padding:8px 12px;}
+.ci-list-filter-txt{font-size:var(--ts-badge);color:var(--space-branch-text);font-weight:600;flex:1;min-width:0;}
+.ci-list-filter-clear{flex-shrink:0;font-size:var(--ts-badge);font-weight:600;padding:5px 12px;border-radius:var(--radius-xs);border:0;background:var(--ac);color:#fff;cursor:pointer;font-family:inherit;}
 .ci-date-sep{font-size:var(--ts-badge);font-weight:600;color:var(--tf);padding:8px 2px 3px;display:flex;justify-content:space-between;}
 .ci-date-sep span{color:var(--tf);font-weight:500;}
 .ci-card{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:var(--radius-sm);padding:9px 13px;background:var(--s1);cursor:pointer;}
