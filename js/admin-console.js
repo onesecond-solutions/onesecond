@@ -1623,7 +1623,8 @@
     board_tab_company:'보험사 탭', board_tab_hub:'허브 탭',
     feature_quickaction:'빠른 실행 기능', gate_quick_a2:'Quick 게이트(A2)', gate_search_a2:'검색 게이트(A2)',
     menu_home:'메뉴: 홈', menu_board:'메뉴: 게시판', menu_myspace:'메뉴: MY SPACE', menu_news:'메뉴: 보험이슈', menu_quick:'메뉴: Quick', menu_scripts:'메뉴: 스크립트', menu_together:'메뉴: 함께해요',
-    hub_public:'허브 공개', insurer_unified_view:'보험사 통합 뷰', manager_lounge_enabled:'매니저 라운지', ops_calendar:'운영 캘린더', qna_visible:'Q&A 노출', ops_console:'운영 콘솔'
+    hub_public:'허브 공개', insurer_unified_view:'보험사 통합 뷰', manager_lounge_enabled:'매니저 라운지', ops_calendar:'운영 캘린더', qna_visible:'Q&A 노출', ops_console:'운영 콘솔',
+    calendar_reminder_enabled:'캘린더 예약 알림'
   };
   var APP_GROUP_LABELS={
     banner:'홈 배너', page_banner:'페이지별 배너 이미지',
@@ -1687,17 +1688,17 @@
     if(window.lucide) window.lucide.createIcons();
   };
 
-  // ── 설정 — 옛 토글 6그룹 전수 소비처 0(죽은 토글) → 허상 제거, 안내로 대체 (2026-06-15) ──
+  // ── 설정 — 실작동 운영 토글 (2026-07-14 캘린더 예약 알림 마스터 스위치 추가) ──
+  //  · 옛 토글 6그룹(board/menu_b/gate/feature/operations)+ops_console 은 소비처 0으로 정리됨(DB 행 보존·숨김).
+  //  · calendar_reminder_enabled = 캘린더 예약 알림(인앱 팝업 + 웹푸시) 전역 ON/OFF 마스터 스위치. 기본 ON.
+  //    소비처: app.html diaAlarmTick(인앱) + supabase/functions/diary-push(웹푸시). 저장/조회 = 기존 acSettingToggle 라운드트립 그대로.
   window.acLoadSettings = async function(){
     var area=document.getElementById('ac-sec-settings-body'); if(!area) return;
-    /* 허상 제거(2026-06-15): 옛 토글 6그룹(board/menu_b/gate/feature/operations)+ops_console 전수 소비처 0.
-       어드민에서 켜도 화면 무반응이라 노출 중단. DB 행은 보존(숨김만). 실작동 설정 생기면 이 자리에 추가. */
-    area.innerHTML='<div class="ac-card-empty" style="padding:34px 0;text-align:center;line-height:1.7">'+
-      '<i data-lucide="settings"></i>'+
-      '<div style="margin-top:8px;font-weight:600;color:var(--ts)">현재 시스템에서 작동하는 운영 토글이 없습니다.</div>'+
-      '<div style="font-size:12.5px;color:var(--tf);margin-top:7px">옛 게시판·기능 토글(실제 화면에 연결되지 않음)은 정리되었습니다.<br>'+
-      '역할별 메뉴 노출은 <b>메뉴</b> 탭, 홈·페이지 배너는 <b>공지·배너</b> 탭에서 관리합니다.</div>'+
-      '</div>';
+    area.innerHTML='<div class="ac-skel-wrap"><div class="ac-skel"></div><div class="ac-skel"></div></div>';
+    var rows=await _rows("app_settings?select=group_name,key,label,value&key=in.(calendar_reminder_enabled)&order=key.asc");
+    /* 행 미존재(seed 전) = 기본 ON 으로 표시. OFF 저장을 영속화하려면 app_settings seed 행 필요(C등급 DB 작업). */
+    if(!rows||!rows.length) rows=[{group_name:'operations',key:'calendar_reminder_enabled',label:'캘린더 예약 알림',value:'on'}];
+    area.innerHTML=_SYS_NOTE+_renderSettingRows(rows,{calendar_reminder_enabled:'bool'});
     if(window.lucide) window.lucide.createIcons();
   };
 
