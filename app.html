@@ -15790,7 +15790,7 @@ function _ciShow(hostId){
     if(w && sp.parentNode && w.parentNode!==sp.parentNode){ sp.parentNode.insertBefore(w, sp.nextSibling); }
   }
   if(w) w.style.display='flex';
-  if(!window._ciLoaded){ _ciLoad(); } else { _ciRender(); }
+  if(!window._ciLoaded || window._ciLoadedMode!==window._ciMode){ _ciLoad(); } else { _ciRender(); }
   _ciScrollIntoView();  /* 클릭한 사용자 화면에 상담관리가 확실히 보이도록 해당 영역으로 스크롤(호스트 무관) */
 }
 window._ciShow=_ciShow;
@@ -15818,7 +15818,7 @@ function _ciHide(){
 }
 window._ciHide=_ciHide;
 function _ciLoad(){
-  window._ciLoaded=true; window._ciData=[];
+  window._ciLoaded=true; window._ciLoadedMode=window._ciMode; window._ciData=[];
   var tok=window.db&&window.db.getToken&&window.db.getToken();
   if(!tok||!window.db||!window.db.fetch){ _ciRender(); return; }  /* 비로그인=빈 상태(owner RLS로 데이터 0) */
   /* 상담관리(care)는 '신규' 대량(수천 건 옛 데이터)을 서버에서 제외하고 로드한다.
