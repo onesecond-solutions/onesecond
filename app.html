@@ -2005,6 +2005,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
     <div class="nav sn2-only" id="nav-sp-guide" onclick="_spGuideShow()"><span class="ic"><svg class="sp-ico" aria-hidden="true" style="width:19px;height:19px"><use href="#i-box"/></svg></span><span class="lbl">스페이스 설명서</span></div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">베타·파일럿 기간에는 <b>모든 기능</b>을 자유롭게 써보실 수 있어요.<br>부족하거나 바라는 점은 <button type="button" class="side-note-link" onclick="showView('together')">함께해요</button>에 후기로 남겨주세요.</div>
+      <div class="nav coverage-only" id="nav-coverage" onclick="_navView('cov-cancer')"><span class="ic">&#129513;</span><span class="lbl">보장분석</span><span class="nav-badge" style="background:#9A5B06">검수</span></div>
       <div class="nav roadmap-only" id="nav-roadmap" onclick="_navView('roadmap')"><span class="ic">&#128203;</span><span class="lbl">상품 로드맵</span><span class="nav-badge" style="background:#9A5B06">검수</span></div>
       <div class="nav" id="nav-pricing" onclick="_navView('pricing')"><span class="ic">&#8987;</span><span class="lbl">요금제</span></div>
       <div class="nav" id="nav-admin" style="display:none" onclick="_navView('admin')"><span class="ic">&#9881;</span><span class="lbl">어드민</span><span class="nav-badge" id="nav-admin-badge" style="display:none">0</span></div>
@@ -2753,6 +2754,11 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
      <div class="wrap view" id="v-pricing">
       <div style="padding:40px;text-align:center;color:var(--ts)">로딩 중...</div>
      </div>
+     <!-- ════ 보장분석 4축 (#v-cov-*) — 암·뇌/심장·수술비·의료실비. 공통 렌더러 1벌 + category 뷰. 임태성 게이트(_canSeeCoverage) 전용. coverage_* anon 조회→실패/0행/타임아웃 시 임베드 seed 폴백(대표 검토용). lead=payload 데모(insert 비활성). 표준 계약서 v1 배선. 2026-07-15 ════ -->
+     <div class="wrap view" id="v-cov-cancer"></div>
+     <div class="wrap view" id="v-cov-brain"></div>
+     <div class="wrap view" id="v-cov-surgery"></div>
+     <div class="wrap view" id="v-cov-medical"></div>
      <!-- ════ 상품 로드맵 (#v-roadmap) — 임태성 실장 user_id 전용 검수 화면. raw_seed 비공개·검수 전 사용자 노출/통합검색 미연결. 2026-06-27 ════ -->
      <div class="wrap view" id="v-roadmap">
       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
@@ -4241,6 +4247,7 @@ function applyRoleClass(){
   document.body.classList.toggle('is-uat-aipolish', _uatA==='bylts@naver.com');
   /* 상품 로드맵 = 임태성 실장 user_id 전용 검수(2026-06-27). 어드민 포함 타 계정 비노출. 메뉴 노출은 CSS(body.is-uat-roadmap), 직접 진입 차단은 showView 가드(_canSeeRoadmap). */
   document.body.classList.toggle('is-uat-roadmap', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));
+  document.body.classList.toggle('is-uat-coverage', (typeof _canSeeCoverage==='function' && _canSeeCoverage()));  /* 보장분석 4축 메뉴 노출 = 임태성 실장 user_id 전용(roadmap 패턴). 진입 차단은 showView 가드(_canSeeCoverage). CSS(body.is-uat-coverage .coverage-only). 2026-07-15 */
   document.body.classList.toggle('is-uat-goji', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 알릴의무 독립 페이지 = 임태성 실장 user_id 전용. roadmap 패턴. 메뉴 노출 CSS(미래), 진입 차단은 showView 가드+로더 재가드 (2026-07-06) */
   document.body.classList.toggle('is-uat-qnaimport', (typeof _canSeeRoadmap==='function' && _canSeeRoadmap()));  /* 카톡 Q&A 전량 임포트 버튼 = 임태성 실장 전용(임시, 실행 후 제거). 2026-07-05 */
   /* 카드 역순 넘버링 = 임태성 실장 user_id 전용 검수(2026-07-06). 어드민 포함 타 계정 비노출. .item-no span은 항상 렌더되고 CSS(body.is-uat-cardno)로만 표시. ▶ 전체 개방 플립 지점: 이 toggle을 add(항상 부여)로 바꾸거나 CSS 게이트 해제. */
@@ -6161,11 +6168,524 @@ function _scriptsSheetShow(){
   if(typeof loadScriptsView==='function') loadScriptsView();
 }
 window._scriptsSheetShow=_scriptsSheetShow;
-function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if(key==='trash'&&typeof _canSeeTrash==='function'&&!_canSeeTrash()){key='home';}/* 휴지통 = 상담관리 공용 게이트(_canSeeCare). 직접 URL 진입도 home 강제(2026-07-13) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'){key='home';}/* 죽은 화면(현장의 소리, #v-voice) 제거됨 — 스트레이 딥링크·북마크는 홈으로 폴백 (2026-07-09) */if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'고객관리'/* 라이브 표시명: 고객관리(코드 id salesnote) */,trash:'휴지통','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof _snCiShow==='function')_snCiShow();if(key==='trash'&&typeof loadTrash==='function')loadTrash();if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
+/* ═══════════════════════════════════════════════════════════════════════════
+   보장분석 4축 공통 렌더러 (coverage_* — cancer / brain_heart / surgery / medical)
+   · 표준 계약서 v1(docs/product/coverage_analysis_common_schema_v1.md) 배선
+   · 공통 코어(facts/treatments/quiz/result_rules/page_blocks) + 축별 확장(disease_tiers·special_care·life_map·surgery_types·costs·generations)
+   · 게이트: 임태성 실장 user_id 전용(로드맵과 동일 식별값 98c5f4f9). 게이트 밖 노출 0.
+   · 노출 게이트: review_status ∈ (customer_ok, reviewed_official*) 만 확정 수치 렌더. 그 외(internal_only·needs_source_url_verification·reviewing·blocked)=소프트 문구.
+   · 폴백: window.db.fetch 실패·0행·타임아웃 시 아래 임베드 seed 정적 데이터로 렌더(대표가 DB 미적용 상태에서도 4화면 전부 확인). 폴백은 콘솔에 표시.
+   · lead: payload 생성까지만(insert 비활성·데모). 상담관리 신규DB 후보.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  /* ── 게이트(임태성 단독) ─────────────────────────────────────────────── */
+  function _canSeeCoverage(){
+    try{ var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); return String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd'; }catch(e){ return false; }
+  }
+  window._canSeeCoverage=_canSeeCoverage;
+
+  var VIEW2CAT={ 'cov-cancer':'cancer', 'cov-brain':'brain_heart', 'cov-surgery':'surgery', 'cov-medical':'medical' };
+  var META={
+    cancer:{ view:'cov-cancer', label:'암', icon:'&#127877;', tagline:'암, 숫자로 보고 내 보장을 30초에 점검' },
+    brain_heart:{ view:'cov-brain', label:'뇌·심장', icon:'&#129504;', tagline:'뇌·심장은 순식간에 오고, 살아도 길게 남습니다' },
+    surgery:{ view:'cov-surgery', label:'수술비', icon:'&#128137;', tagline:'수술은 확률이 아니라 순서의 문제입니다' },
+    medical:{ view:'cov-medical', label:'의료실비', icon:'&#127973;', tagline:'실손은 가입 세대마다 자기부담·보장이 완전히 다릅니다' }
+  };
+  var CAT_ORDER=['cancer','brain_heart','surgery','medical'];
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* 판정 라벨 4값 정규화 — 계약 §6 확정 enum: 부족/확인필요/점검필요/충분 */
+  function normLevel(lv){
+    var s=String(lv||'').replace(/\s/g,'');
+    if(/충분|양호/.test(s)) return '충분';
+    if(/점검|구조확인/.test(s)) return '점검필요';
+    if(/부족|보완/.test(s)) return '부족';
+    if(/확인/.test(s)) return '확인필요';
+    return '확인필요';
+  }
+  function levelClass(lv){ return { '부족':'lv-low','확인필요':'lv-check','점검필요':'lv-mid','충분':'lv-ok' }[lv]||'lv-check'; }
+
+  /* 노출 게이트 — 확정 수치 렌더 허용 여부(customer_ok 계열만) */
+  function okExpose(rs){ var s=String(rs||''); return s==='customer_ok' || s.indexOf('reviewed_official')===0; }
+  /* 확정 수치를 노출 못 하면 소프트 문구로 대체 */
+  var SOFT='출처 검증 중 · 상담 시 안내';
+
+  /* ── 임베드 폴백 seed (DB 미적용 상태 렌더용) ───────────────────────────
+     값 출처: scratchpad/cov3/*_db_seed_draft_*.json (김실장) + 표준 계약서 v1 */
+  var FB={
+    cancer:{
+      facts:[
+        {g:'stats_incidence',key:'new_cancer_patients_2023_total',label:'2023년 신규 암환자',display:'288,613명',rs:'reviewed_official'},
+        {g:'stats_incidence',key:'lifetime_cancer_probability_male',label:'남자 평생 암 확률',display:'약 2명 중 1명',rs:'reviewed_official'},
+        {g:'stats_incidence',key:'lifetime_cancer_probability_female',label:'여자 평생 암 확률',display:'약 3명 중 1명',rs:'reviewed_official'},
+        {g:'stats_survival',key:'five_year_survival_overall_2019_2023',label:'전체 5년 상대생존율',display:'73.7%',num:73.7,rs:'reviewed_official'},
+        {g:'stats_survival',key:'five_year_survival_local_stage',label:'조기 국한 병기',display:'92.7%',num:92.7,rs:'reviewed_official'},
+        {g:'stats_survival',key:'five_year_survival_distant_stage',label:'원격전이 병기',display:'27.8%',num:27.8,rs:'reviewed_official'},
+        {g:'public_support',key:'special_calculation_exclusions',label:'산정특례의 한계',display:'산정특례는 급여 부담을 낮추지만 비급여 공백까지 없애지는 않습니다.',rs:'reviewed_official'}
+      ],
+      treatments:[
+        {method:'수술',subtype:'개복·복강경 수술',type:'급여',cost:'산정특례 적용 시 급여 본인부담 5%',note:'표준 급여 수술은 산정특례로 부담이 낮아질 수 있음',rs:'reviewed_official_for_support_basis'},
+        {method:'수술',subtype:'로봇수술',type:'비급여',cost:'회당 약 1,000만~1,400만 원',note:'비급여 수술은 산정특례·실손 보상 구조 확인 필요',rs:'needs_source_url_verification'},
+        {method:'항암',subtype:'표적항암 급여',type:'급여',cost:'급여 적용 시 연 300~400만 원 수준',note:'적응증 일치 여부가 핵심',rs:'needs_source_url_verification'},
+        {method:'항암',subtype:'표적항암 비급여',type:'비급여',cost:'총 2,000만 원 이상 가능',note:'통원 치료가 많아 실손 통원 한도 공백 가능',rs:'needs_source_url_verification'},
+        {method:'항암',subtype:'면역항암 비급여',type:'비급여',cost:'연 약 7,000만 원',note:'급여 적응증 불일치 시 전액 본인부담 가능',rs:'needs_source_url_verification'},
+        {method:'방사선',subtype:'중입자치료',type:'비급여',cost:'약 5,000만~8,000만 원',note:'대부분 통원 진행 시 실손 통원 한도 공백 가능',rs:'needs_source_url_verification'}
+      ],
+      quiz:[
+        {key:'gender',var:null,step:1,q:'성별을 선택해 주세요',opts:[{label:'남자',value:'male'},{label:'여자',value:'female'}]},
+        {key:'age_band',var:null,step:2,q:'연령대를 선택해 주세요',opts:[{label:'30대 이하'},{label:'40대'},{label:'50대'},{label:'60대 이상'}]},
+        {key:'cancer_diagnosis_amount',var:'cancer_diagnosis_amount',step:3,q:'암진단비, 얼마나 가입돼 있나요?',opts:[{label:'없음 / 모름',v:0},{label:'3,000만 이하',v:30000000},{label:'3,000~5,000만',v:50000000},{label:'5,000만 이상',v:70000000}]}
+      ],
+      rules:[
+        {cond:{cancer_diagnosis_amount_lte:0},level:'확인 필요',msg:'암진단비 가입 여부와 금액 확인이 필요합니다.'},
+        {cond:{cancer_diagnosis_amount_lte:30000000},level:'부족 가능성',msg:'고액 비급여 치료 시 진단비만으로 공백이 생길 수 있습니다.'},
+        {cond:{cancer_diagnosis_amount_lte:50000000},level:'점검 필요',msg:'기본 진단비는 있으나 비급여 치료비·소득공백 대비는 별도 점검이 필요합니다.'},
+        {cond:{cancer_diagnosis_amount_gte:50000000},level:'상대적으로 양호',msg:'준비액은 상대적으로 양호하나 치료비 담보와 유사암·재진단암 구조 확인이 필요합니다.'}
+      ]
+    },
+    brain_heart:{
+      facts:[
+        {g:'stats_incidence',key:'stroke_annual_cases_2023',label:'뇌졸중 연간 발생',display:'연 113,098건',rs:'customer_ok'},
+        {g:'stats_incidence',key:'myocardial_infarction_annual_cases_2023',label:'심근경색 연간 발생',display:'연 34,768건',rs:'customer_ok'},
+        {g:'stats_incidence_age',key:'stroke_incidence_50s',label:'50대 뇌졸중 발생률',display:'178.3건/10만명',num:178.3,rs:'customer_ok'},
+        {g:'stats_incidence_age',key:'stroke_incidence_60s',label:'60대',display:'351.1건/10만명',num:351.1,rs:'customer_ok'},
+        {g:'stats_incidence_age',key:'stroke_incidence_70s',label:'70대',display:'729.5건/10만명',num:729.5,rs:'customer_ok'},
+        {g:'stats_incidence_age',key:'stroke_incidence_80plus',label:'80대 이상',display:'1,507.5건/10만명',num:1507.5,rs:'customer_ok'},
+        {g:'stats_outcome',key:'stroke_30day_fatality',label:'뇌졸중 30일 치명률',display:'7.5%',rs:'customer_ok'},
+        {g:'stats_outcome',key:'stroke_1year_fatality_65plus',label:'65세 이상 1년 치명률',display:'31.2%',rs:'customer_ok'},
+        {g:'stats_outcome',key:'stroke_disability_registration_rate',label:'뇌졸중 장애등록률',display:'28.3%',rs:'customer_ok'},
+        {g:'stats_outcome',key:'stroke_neurological_impairment',label:'생존 후 신경손상 잔존',display:'생존 환자의 60% 이상',rs:'internal_only'}
+      ],
+      tiers:[
+        {organ:'brain',lvl:1,tlabel:'좁음',name:'뇌출혈 진단비',code:'I60~I62',inc:['지주막하출혈','뇌내출혈'],exc:['뇌경색','미파열 뇌동맥류'],warn:'가장 흔한 뇌경색은 보장 공백 가능성이 있습니다.'},
+        {organ:'brain',lvl:2,tlabel:'중간',name:'뇌졸중 진단비',code:'I60~I64',inc:['뇌출혈','뇌경색'],exc:['미파열 뇌동맥류','후유증'],warn:'미파열 동맥류나 후유증까지는 상품별 확인이 필요합니다.'},
+        {organ:'brain',lvl:3,tlabel:'넓음',name:'뇌혈관질환 진단비',code:'I60~I69',inc:['뇌출혈','뇌경색','기타 뇌혈관질환','후유증'],exc:[],warn:'보장명은 넓어도 지급 조건·면책·감액은 증권 확인이 필요합니다.'},
+        {organ:'heart',lvl:1,tlabel:'좁음',name:'급성심근경색 진단비',code:'I21~I23',inc:['급성심근경색'],exc:['협심증','부정맥','심부전'],warn:'협심증·부정맥 시술은 보장 공백 가능성이 있습니다.'},
+        {organ:'heart',lvl:2,tlabel:'중간',name:'허혈성심장질환 진단비',code:'I20~I25',inc:['협심증','급성심근경색'],exc:['부정맥','심부전'],warn:'부정맥·심부전은 상품별 확대형 여부 확인이 필요합니다.'},
+        {organ:'heart',lvl:3,tlabel:'넓음',name:'심장질환 확대 진단비',code:'I20~I25 + I42~I50 등',inc:['허혈성심장질환','부정맥 일부','심부전'],exc:[],warn:'확대형 명칭이어도 약관상 코드 범위는 반드시 확인해야 합니다.'}
+      ],
+      special:[
+        {label:'뇌혈관·심장 산정특례',dur:'조건 충족 시 최대 30일',warn:'암과 달리 뇌·심장은 30일 이후 재활·추적검사·간병 부담이 길게 남을 수 있습니다.',rs:'customer_ok'},
+        {label:'암 산정특례(비교)',dur:'확진 등록 후 5년',warn:'암 5년 vs 뇌·심장 30일 — 공적 지원 기간의 하늘땅 차이.',rs:'customer_ok'}
+      ],
+      treatments:[
+        {method:'급성기 치료',subtype:'혈전용해·혈전제거술',type:'급여',cost:'조건 충족 시 산정특례 급여 본인부담 5%',note:'골든타임 치료는 급여 축이지만 특례는 30일 기준, 이후 재활·추적검사는 별도 부담 가능.',rs:'customer_ok'},
+        {method:'뇌동맥류 치료',subtype:'코일색전술',type:'혼재',cost:'총 1,000만 원 이상 가능',note:'특례로 경감돼도 재료·추적검사·비급여 부담이 남을 수 있습니다.',rs:'internal_only'},
+        {method:'입원·재활',subtype:'뇌졸중 입원·재활',type:'혼재',cost:'1인당 연 1,593만 원',note:'후유증이 있으면 재활·간병·교통비·소득공백이 장기화될 수 있습니다.',rs:'internal_only'},
+        {method:'관상동맥 시술',subtype:'스텐트(관상동맥중재술)',type:'혼재',cost:'본인부담 100~300만 + 비급여 가능',note:'담보명이 급성심근경색만이면 협심증 단계는 진단비 공백 가능.',rs:'internal_only'},
+        {method:'심장 수술',subtype:'관상동맥우회술',type:'혼재',cost:'총 약 2,690만 원',note:'진단비뿐 아니라 수술비·입원비·생활비 점검 필요.',rs:'internal_only'}
+      ],
+      quiz:[
+        {key:'gender',var:null,step:1,q:'성별을 선택해 주세요',opts:[{label:'남자',value:'male'},{label:'여자',value:'female'}]},
+        {key:'brain_coverage_name',var:'brain_tier',step:2,q:'뇌 관련 진단비, 어떤 이름인가요?',sub:'증권·보장분석의 담보 이름 그대로 골라주세요',opts:[{label:'없음 / 모름',v:0},{label:'뇌출혈 진단비',v:1},{label:'뇌졸중 진단비',v:2},{label:'뇌혈관질환 진단비',v:3}]},
+        {key:'heart_coverage_name',var:'heart_tier',step:3,q:'심장 관련 진단비는요?',opts:[{label:'없음 / 모름',v:0},{label:'급성심근경색 진단비',v:1},{label:'허혈성심장질환 진단비',v:2},{label:'심장질환 확대 진단비',v:3}]}
+      ],
+      rules:[
+        {cond:{brain_tier_lte:0,heart_tier_lte:0},level:'확인 필요',msg:'담보명만 달라져도 지급 범위가 크게 달라집니다. 증권에서 뇌·심장 진단비 이름을 먼저 확인해 보세요.'},
+        {cond:{brain_tier_lte:1},level:'보완 검토',msg:'뇌출혈 중심 담보만 있으면 가장 흔한 뇌경색·미파열 동맥류는 보장 공백 가능성이 있습니다.'},
+        {cond:{heart_tier_lte:1},level:'보완 검토',msg:'급성심근경색 중심 담보만 있으면 협심증·부정맥·심부전에서 보장 공백 가능성이 있습니다.'},
+        {cond:{brain_tier_gte:2,heart_tier_gte:2},level:'점검 필요',msg:'담보 범위는 기본 이상입니다. 다만 진단비 금액·수술비·입원/재활/간병 대비는 별도 확인이 필요합니다.'}
+      ]
+    },
+    surgery:{
+      facts:[
+        {g:'stats_volume',key:'major_surgeries_2024_total',label:'35개 주요수술 연간 건수',display:'연 205만 4,344건',rs:'customer_ok'},
+        {g:'stats_volume',key:'average_medical_cost_per_surgery',label:'건당 평균 진료비',display:'453만 원',rs:'customer_ok'},
+        {g:'stats_volume',key:'total_medical_cost',label:'주요수술 진료비 총액',display:'9조 3,075억 원',rs:'customer_ok'},
+        {g:'top_surgeries',key:'cataract',label:'백내장(1위)',display:'66만 4,306건',rs:'customer_ok'},
+        {g:'top_surgeries',key:'spine',label:'일반척추(2위)',display:'20만 2,099건',rs:'customer_ok'},
+        {g:'top_surgeries',key:'cesarean',label:'제왕절개(3위)',display:'16만 804건',rs:'customer_ok'}
+      ],
+      life_map:[
+        {band:'10s_20s',label:'10~20대',top:['편도절제','충수절제','제왕절개 일부'],msg:'젊은 연령대도 갑작스러운 수술은 발생한다.',rs:'internal_only'},
+        {band:'30s',label:'30대',top:['제왕절개','충수절제','치핵'],msg:'출산·생활습관 관련 수술이 체감된다.',rs:'internal_only'},
+        {band:'40s',label:'40대',top:['치핵','담낭절제','척추 관련'],msg:'생활형 수술과 누적 질환 수술이 나타난다.',rs:'internal_only'},
+        {band:'50s',label:'50대',top:['백내장','일반척추','하지정맥류·담낭절제'],msg:'50대부터 백내장이 급증하고 척추 수술이 체감된다.',rs:'customer_ok'},
+        {band:'60plus',label:'60대 이상',top:['백내장','일반척추','슬관절치환'],msg:'수술 인원 1위 구간. 반복 수술·긴 입원 가능성까지 함께 봐야 한다.',rs:'customer_ok'}
+      ],
+      types:[
+        {name:'질병·상해 수술비',rule:'수술 종류 불문 회당 정액',strength:'반복 지급과 폭넓은 수술 대응',caution:'난이도와 무관하게 동일액인 경우가 많아 고난도 수술엔 체감이 약할 수 있다.'},
+        {name:'종수술비',rule:'수술 난이도별 1~5종 등 차등 정액',strength:'고난도 수술에 큰 금액이 붙을 수 있다.',caution:'보험사·상품·가입시기별 분류표가 달라 특정 수술의 종수 단정 금지.'},
+        {name:'N대 수술비',rule:'약관에 열거된 특정 수술만 지급',strength:'해당 수술에는 강하게 작동할 수 있다.',caution:'열거 밖이면 보장 공백 가능성. 이름보다 약관 분류표 확인이 우선.'},
+        {name:'반복 지급 원칙',rule:'재수술·다른 부위 수술에도 반복 지급 가능',strength:'진단비 1회성과 다른 핵심 가치',caution:'동시 수술은 최고액 1건만 지급되는 경우가 많아 약관 확인 필요.'}
+      ],
+      costs:[
+        {name:'백내장 단초점렌즈',type:'급여',cost:'눈당 20~30만 원 수준',note:'국민 수술 1위의 기본형. 급여 수술 자체는 감당 가능한 축.',rs:'internal_only'},
+        {name:'백내장 다초점렌즈',type:'비급여',cost:'눈당 200~500만 원 흔함',note:'노안 교정 목적 선택이 붙으면 비급여가 커진다. 병원별 가격차 큼.',rs:'internal_only'},
+        {name:'백내장 다초점 양안',type:'비급여',cost:'양안 400~1,000만 원+ 가능',note:'국민 수술 1위에 붙는 국민 비급여. 고객 체감도가 크다.',rs:'internal_only'},
+        {name:'하지정맥류 수술',type:'혼재',cost:'중간 30~160만 원',note:'수술법별·기관별 가격차가 크고 비급여가 섞일 수 있다.',rs:'internal_only'},
+        {name:'슬관절치환',type:'혼재',cost:'급여 중심 + 긴 입원(19.4일)',note:'치료비보다 입원·간병·생활비 체감이 커질 수 있다.',rs:'customer_ok'},
+        {name:'치핵 수술',type:'급여',cost:'건당 119만 원',note:'건당 진료비 기준. 본인부담은 건강보험 적용 후 일부.',rs:'customer_ok'}
+      ],
+      gap_rules:[
+        {label:'백내장 통원 한도 공백',warn:'실손은 통원 한도만 적용될 수 있어 다초점렌즈 비용 앞에서는 공백이 생길 수 있다. 정액 수술비는 수술 사실에 반응하는 별도 구조.'},
+        {label:'종수술비 분류표 차이',warn:'같은 수술도 상품별 분류표에 따라 지급 종수와 금액이 달라질 수 있다.'},
+        {label:'N대 수술비 열거 공백',warn:'중대수술 집중형은 열거된 수술에 강하지만, 열거 밖이면 보장 공백 가능성이 있다.'}
+      ],
+      quiz:[
+        {key:'age_band',var:null,step:1,q:'연령대를 선택해 주세요',opts:[{label:'10~20대'},{label:'30대'},{label:'40대'},{label:'50대'},{label:'60대 이상'}]},
+        {key:'base_surgery_coverage',var:'base_score',step:2,q:'질병·상해 수술비가 있나요?',opts:[{label:'없음 / 모름',v:0},{label:'있음',v:1}]},
+        {key:'graded_or_listed_coverage',var:'extra_score',step:3,q:'종수술비 또는 N대 수술비가 있나요?',opts:[{label:'없음 / 모름',v:0},{label:'종수술비 있음',v:1},{label:'N대 수술비 있음',v:1},{label:'둘 다 있음',v:2}]}
+      ],
+      rules:[
+        {cond:{base_score_lte:0,extra_score_lte:0},level:'확인 필요',msg:'수술은 진단비와 달리 반복·고빈도 보장 축입니다. 증권에서 질병·상해/종/N대 수술비 여부를 먼저 확인하세요.'},
+        {cond:{base_score_gte:1,extra_score_lte:0},level:'점검 필요',msg:'질병·상해 수술비는 넓은 기본기지만 수술 난이도·비급여 선택 비용을 충분히 반영하지 못할 수 있습니다.'},
+        {cond:{extra_score_gte:1},level:'구조 확인',msg:'종수술비·N대 수술비는 분류표·열거 목록이 지급을 결정합니다. 가입 상품 기준으로 실제 지급 범위를 확인해야 합니다.'}
+      ]
+    },
+    medical:{
+      /* 의료실비 = silson_generations 재사용(세대 판정). DB 미적용 시 아래 임베드로 렌더. */
+      generations:[
+        {gen:1,label:'1세대',period:'~2009.9',start:null,end:'2009-09',brief:'구실손. 보장 넓지만 보험료 비쌈, 자기부담 낮음.'},
+        {gen:2,label:'2세대',period:'2009.10~2017.3',start:'2009-10',end:'2017-03',brief:'표준화실손. 2013.4 기준 초기/후기 재가입 조건 갈림.'},
+        {gen:3,label:'3세대',period:'2017.4~2021.6',start:'2017-04',end:'2021-06',brief:'착한실손. 3대 비급여(도수·주사·MRI) 특약 분리.'},
+        {gen:4,label:'4세대',period:'2021.7~2026.5',start:'2021-07',end:'2026-05',brief:'비급여 전체 특약 분리 + 비급여 할증 도입.'},
+        {gen:5,label:'5세대',period:'2026.5.6~',start:'2026-05',end:null,brief:'보험료 최저 축, 비중증 보장·한도 축소. 재가입 구조.'}
+      ]
+    }
+  };
+
+  /* ── 페이지 블록 구성(page_blocks JSON 요약) ─────────────────────────── */
+  var BLOCKS={
+    cancer:['hero','incidence','survival','treatments','gap','quiz','result','lead'],
+    brain_heart:['hero','incidence','age_bars','outcome','tiers','treatments','special','checklist','quiz','result','lead'],
+    surgery:['hero','stats_volume','life_map','types','costs','gap','checklist','quiz','result','lead'],
+    medical:['hero','gen_table','gen_quiz','result','lead']
+  };
+  var CHECKLIST={
+    brain_heart:['뇌 담보명이 뇌출혈/뇌졸중/뇌혈관질환 중 무엇인지','심장 담보명이 급성심근경색/허혈성/확대형 중 무엇인지','진단비 금액이 얼마인지','수술비·입원비·재활·간병 대비가 있는지'],
+    surgery:['질병·상해 수술비가 있는지','종수술비가 있는지','N대 수술비가 있는지','반복 지급·동시 수술 최고액 원칙이 어떻게 되는지']
+  };
+
+  /* ── 상태(카테고리별 문진 답) ────────────────────────────────────────── */
+  var STATE={}; /* cat -> { answers:{}, vars:{}, result:null } */
+  function st(cat){ if(!STATE[cat]) STATE[cat]={answers:{},vars:{},result:null}; return STATE[cat]; }
+
+  /* ── DB fetch(타임아웃 폴백) — coverage_* anon 조회 ──────────────────── */
+  function fetchTable(path){
+    return new Promise(function(res){
+      if(!window.db||!window.db.fetch){ res(null); return; }
+      var done=false, t=setTimeout(function(){ if(!done){ done=true; res(null); } },2500);
+      try{
+        window.db.fetch(path).then(function(r){ return (r&&r.ok)?r.json():null; }).then(function(d){ if(done)return; done=true; clearTimeout(t); res(d&&d.length?d:null); }).catch(function(){ if(done)return; done=true; clearTimeout(t); res(null); });
+      }catch(e){ if(!done){ done=true; clearTimeout(t); res(null); } }
+    });
+  }
+
+  /* ── 렌더러 ──────────────────────────────────────────────────────────── */
+  function tabsBar(activeCat){
+    var h='<div class="cov-tabs" role="tablist">';
+    CAT_ORDER.forEach(function(c){
+      var m=META[c];
+      h+='<button type="button" class="cov-tab'+(c===activeCat?' on':'')+'" onclick="_covGo(\''+m.view+'\')"><span class="ic">'+m.icon+'</span>'+esc(m.label)+'</button>';
+    });
+    return h+'</div>';
+  }
+
+  function factCard(f){
+    var val = okExpose(f.rs) ? esc(f.display) : esc(SOFT);
+    var soft = okExpose(f.rs) ? '' : ' cov-soft';
+    return '<div class="cov-fact'+soft+'"><div class="cov-fact-v">'+val+'</div><div class="cov-fact-l">'+esc(f.label)+'</div></div>';
+  }
+
+  function statCards(facts, groups){
+    var rows=facts.filter(function(f){ return groups.indexOf(f.g)>=0; });
+    if(!rows.length) return '';
+    return '<div class="cov-facts">'+rows.map(factCard).join('')+'</div>';
+  }
+
+  function barCompare(facts){
+    var rows=facts.filter(function(f){ return f.g==='stats_survival' && typeof f.num==='number'; });
+    if(!rows.length) return '';
+    var max=Math.max.apply(null, rows.map(function(f){ return f.num; }));
+    return '<div class="cov-bars">'+rows.map(function(f){
+      var w=Math.round(f.num/max*100);
+      return '<div class="cov-bar-row"><span class="cov-bar-l">'+esc(f.label)+'</span><span class="cov-bar-track"><span class="cov-bar-fill" style="width:'+w+'%"></span></span><span class="cov-bar-v">'+esc(f.display)+'</span></div>';
+    }).join('')+'</div>';
+  }
+  function ageBars(facts){
+    var rows=facts.filter(function(f){ return f.g==='stats_incidence_age' && typeof f.num==='number'; });
+    if(!rows.length) return '';
+    var max=Math.max.apply(null, rows.map(function(f){ return f.num; }));
+    return '<div class="cov-bars">'+rows.map(function(f){
+      var w=Math.round(f.num/max*100);
+      return '<div class="cov-bar-row"><span class="cov-bar-l">'+esc(f.label)+'</span><span class="cov-bar-track"><span class="cov-bar-fill" style="width:'+w+'%"></span></span><span class="cov-bar-v">'+esc(f.display)+'</span></div>';
+    }).join('')+'</div>';
+  }
+
+  function treatmentTable(list){
+    return '<div class="cov-table">'+list.map(function(t){
+      var cost = okExpose(t.rs) ? esc(t.cost) : '<span class="cov-soft-tag">'+esc(SOFT)+'</span>';
+      return '<div class="cov-trow"><div class="cov-tc1"><b>'+esc(t.subtype||t.method)+'</b><span class="cov-type cov-type-'+((t.type==='급여')?'g':(t.type==='비급여'?'n':'m'))+'">'+esc(t.type)+'</span></div><div class="cov-tc2">'+cost+'</div><div class="cov-tc3">'+esc(t.note||'')+'</div></div>';
+    }).join('')+'</div>';
+  }
+
+  function tiersBlock(tiers){
+    function grp(organ,title){
+      var rows=tiers.filter(function(t){ return t.organ===organ; });
+      if(!rows.length) return '';
+      return '<div class="cov-tier-grp"><div class="cov-tier-h">'+title+'</div>'+rows.map(function(t){
+        return '<div class="cov-tier lvl-'+t.lvl+'"><div class="cov-tier-top"><span class="cov-tier-badge">'+esc(t.tlabel)+'</span><b>'+esc(t.name)+'</b><span class="cov-tier-code">'+esc(t.code)+'</span></div><div class="cov-tier-body"><span class="cov-inc">포함: '+esc(t.inc.join(', '))+'</span>'+(t.exc.length?'<span class="cov-exc">제외: '+esc(t.exc.join(', '))+'</span>':'')+'<span class="cov-warn">&#9888; '+esc(t.warn)+'</span></div></div>';
+      }).join('')+'</div>';
+    }
+    return '<div class="cov-tiers">'+grp('brain','뇌 담보 3단')+grp('heart','심장 담보 3단')+'</div>';
+  }
+
+  function specialBlock(special){
+    return '<div class="cov-special">'+special.map(function(s){
+      return '<div class="cov-sp-card"><div class="cov-sp-dur">'+esc(s.dur)+'</div><div class="cov-sp-l">'+esc(s.label)+'</div><div class="cov-sp-w">'+esc(s.warn)+'</div></div>';
+    }).join('')+'</div>';
+  }
+
+  function lifeMapBlock(cat, life){
+    var s=st(cat);
+    var sel=s.answers.age_band_val || null;
+    return '<div class="cov-lifemap"><div class="cov-lm-tabs">'+life.map(function(l){
+      return '<button type="button" class="cov-lm-tab'+(l.band===sel?' on':'')+'" onclick="_covLife(\''+cat+'\',\''+l.band+'\')">'+esc(l.label)+'</button>';
+    }).join('')+'</div><div class="cov-lm-body" id="cov-lm-body-'+cat+'">'+lifeMapBody(life, sel)+'</div></div>';
+  }
+  function lifeMapBody(life, band){
+    var l=null; for(var i=0;i<life.length;i++){ if(life[i].band===band){ l=life[i]; break; } }
+    if(!l) l=life[life.length-1];
+    var top = okExpose(l.rs) ? l.top.map(function(x){ return '<span class="cov-chip">'+esc(x)+'</span>'; }).join('') : '<span class="cov-soft-tag">'+esc(SOFT)+'</span>';
+    return '<div class="cov-lm-card"><div class="cov-lm-name">'+esc(l.label)+' 대표 수술</div><div class="cov-chips">'+top+'</div><div class="cov-lm-msg">'+esc(l.msg)+'</div></div>';
+  }
+
+  function typesBlock(types){
+    return '<div class="cov-types">'+types.map(function(t){
+      return '<div class="cov-type-card"><b>'+esc(t.name)+'</b><div class="cov-type-rule">'+esc(t.rule)+'</div><div class="cov-type-str">&#43; '+esc(t.strength)+'</div><div class="cov-type-cau">&#9888; '+esc(t.caution)+'</div></div>';
+    }).join('')+'</div>';
+  }
+  function costsBlock(costs){ return treatmentTable(costs.map(function(c){ return {subtype:c.name,type:c.type,cost:c.cost,note:c.note,rs:c.rs}; })); }
+  function gapBlock(rules){
+    return '<div class="cov-gap">'+rules.map(function(g){
+      return '<div class="cov-gap-row"><b>'+esc(g.label)+'</b><span>'+esc(g.warn)+'</span></div>';
+    }).join('')+'</div>';
+  }
+  function checklistBlock(items){
+    return '<ul class="cov-check">'+items.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>';
+  }
+
+  /* 문진 */
+  function quizBlock(cat, quiz){
+    var s=st(cat);
+    return '<div class="cov-quiz">'+quiz.map(function(q,qi){
+      var chosen=s.answers[q.key];
+      return '<div class="cov-q"><div class="cov-q-t"><span class="cov-q-step">'+(qi+1)+'</span>'+esc(q.q)+'</div>'+(q.sub?'<div class="cov-q-sub">'+esc(q.sub)+'</div>':'')+'<div class="cov-q-opts">'+q.opts.map(function(o,oi){
+        var on=(chosen!=null && chosen===oi)?' on':'';
+        return '<button type="button" class="cov-opt'+on+'" onclick="_covAns(\''+cat+'\',\''+q.key+'\','+oi+')">'+esc(o.label)+'</button>';
+      }).join('')+'</div></div>';
+    }).join('')+'</div><div class="cov-result-slot" id="cov-result-'+cat+'"></div>';
+  }
+
+  /* 조건 평가 */
+  function evalCond(cond, vars){
+    for(var k in cond){ if(!cond.hasOwnProperty(k)) continue;
+      var m=k.match(/^(.+)_(lte|gte|lt|gt|eq)$/); if(!m) continue;
+      var v=vars[m[1]]; if(v==null) v=0; var t=cond[k];
+      if(m[2]==='lte' && !(v<=t)) return false;
+      if(m[2]==='gte' && !(v>=t)) return false;
+      if(m[2]==='lt'  && !(v< t)) return false;
+      if(m[2]==='gt'  && !(v> t)) return false;
+      if(m[2]==='eq'  && !(v===t)) return false;
+    }
+    return true;
+  }
+  function judge(cat){
+    var s=st(cat), data=window._COV_DATA[cat]; if(!data.rules) return null;
+    for(var i=0;i<data.rules.length;i++){ if(evalCond(data.rules[i].cond, s.vars)){ return data.rules[i]; } }
+    return data.rules[data.rules.length-1];
+  }
+
+  function resultCard(cat){
+    var r=st(cat).result; if(!r) return '';
+    var lv=normLevel(r.level);
+    return '<div class="cov-result '+levelClass(lv)+'"><div class="cov-res-badge">'+esc(lv)+'</div><div class="cov-res-msg">'+esc(r.msg)+'</div>'
+      +'<button type="button" class="cov-cta" onclick="_covLead(\''+cat+'\')">'+esc(r.cta||'내 상황에 맞는 보완 플랜 추천받기')+'</button>'
+      +'<div class="cov-res-note">판정 라벨 4값(부족·확인필요·점검필요·충분)은 표준 계약 §6 확정값입니다.</div></div>';
+  }
+
+  /* 의료실비 세대 판정 */
+  function genTable(gens){
+    return '<div class="cov-gen-table">'+gens.map(function(g){
+      return '<div class="cov-gen"><div class="cov-gen-h">'+esc(g.label)+'</div><div class="cov-gen-p">'+esc(g.period)+'</div><div class="cov-gen-b">'+esc(g.brief)+'</div></div>';
+    }).join('')+'</div>';
+  }
+  function genQuiz(cat, gens){
+    var s=st(cat), chosen=s.answers.gen;
+    return '<div class="cov-quiz"><div class="cov-q"><div class="cov-q-t"><span class="cov-q-step">1</span>실손보험, 언제 가입하셨나요?</div><div class="cov-q-sub">가입 시기를 모르면 증권/보장분석의 가입일을 확인해 주세요</div><div class="cov-q-opts">'+gens.map(function(g,gi){
+      var on=(chosen===gi)?' on':'';
+      return '<button type="button" class="cov-opt'+on+'" onclick="_covGen(\''+cat+'\','+gi+')">'+esc(g.label)+'<small> '+esc(g.period)+'</small></button>';
+    }).join('')+'</div></div></div><div class="cov-result-slot" id="cov-result-'+cat+'"></div>';
+  }
+
+  /* 블록 디스패치 */
+  function renderBlock(cat, bk, data){
+    var title={
+      hero:'', incidence:'얼마나 걸리나', survival:'걸리면 어떻게 되나 — 이제 사는 병', age_bars:'연령이 오르면 급증합니다',
+      outcome:'살아도 끝이 아닙니다', treatments:'치료비는 얼마나 드나', gap:'실비 있는데요? — 구조를 보세요',
+      tiers:'담보 이름이 운명을 가릅니다', special:'나라의 지원, 암과 하늘땅 차이', checklist:'내 보장에서 확인할 것',
+      stats_volume:'수술, 얼마나 흔한가', life_map:'생애 수술 지도 — 내 나이를 눌러보세요', types:'수술비 담보 3형제',
+      costs:'급여는 싸고, 선택은 비쌉니다', quiz:'그럼 나는? — 30초 확인', result:'', lead:'',
+      gen_table:'실손 세대별 변천사', gen_quiz:'내 실손은 몇 세대? — 세대 판정'
+    }[bk];
+    var body='';
+    switch(bk){
+      case 'hero': return heroBlock(cat);
+      case 'incidence': body=statCards(data.facts,['stats_incidence']); break;
+      case 'survival': body=barCompare(data.facts); break;
+      case 'age_bars': body=ageBars(data.facts); break;
+      case 'outcome': body=statCards(data.facts,['stats_outcome']); break;
+      case 'stats_volume': body=statCards(data.facts,['stats_volume','top_surgeries']); break;
+      case 'treatments': body=treatmentTable(data.treatments||[]); break;
+      case 'tiers': body=tiersBlock(data.tiers||[]); break;
+      case 'special': body=specialBlock(data.special||[]); break;
+      case 'life_map': body=lifeMapBlock(cat, data.life_map||[]); break;
+      case 'types': body=typesBlock(data.types||[]); break;
+      case 'costs': body=costsBlock(data.costs||[]); break;
+      case 'gap': body=gapBlock(data.gap_rules|| (cat==='cancer'?[{label:'산정특례의 한계',warn:'산정특례는 급여 부담을 낮추지만 비급여 공백까지 없애지는 않습니다.'}]:[])); break;
+      case 'checklist': body=checklistBlock(CHECKLIST[cat]||[]); break;
+      case 'quiz': body=quizBlock(cat, data.quiz||[]); break;
+      case 'gen_table': body=genTable(data.generations||[]); break;
+      case 'gen_quiz': body=genQuiz(cat, data.generations||[]); break;
+      case 'result': return '';
+      case 'lead': return '';
+      default: return '';
+    }
+    if(!body) return '';
+    return '<section class="cov-sec"><h2 class="cov-sec-t">'+esc(title)+'</h2>'+body+'</section>';
+  }
+
+  function heroBlock(cat){
+    var m=META[cat];
+    return '<div class="cov-hero"><div class="cov-hero-ic">'+m.icon+'</div><h1 class="cov-hero-t">'+esc(m.label)+' 보장분석</h1><p class="cov-hero-sub">'+esc(m.tagline)+'</p></div>';
+  }
+
+  function render(cat, data){
+    var el=document.getElementById('v-'+META[cat].view); if(!el) return;
+    var isFb = data.__fallback;
+    var html='<div class="cov-wrap">'+tabsBar(cat);
+    if(isFb) html+='<div class="cov-fb-note">DB 미적용 — 임베드 seed 폴백으로 렌더 중(대표 검토용). 서버 게이트(status/exposure) 적용 시 확정 수치로 교체됩니다.</div>';
+    BLOCKS[cat].forEach(function(bk){ html+=renderBlock(cat, bk, data); });
+    html+='</div>';
+    el.innerHTML=html;
+    /* 결과가 이미 있으면 반영 */
+    var s=st(cat); if(s.result){ var slot=document.getElementById('cov-result-'+cat); if(slot) slot.innerHTML=resultCard(cat); }
+  }
+
+  /* ── 로드(fetch→폴백) + 렌더 ─────────────────────────────────────────── */
+  window._COV_DATA=window._COV_DATA||{};
+  function loadAndRender(cat){
+    var el=document.getElementById('v-'+META[cat].view);
+    if(el && !el.__init){ el.__init=1; el.innerHTML='<div class="loading-placeholder">보장분석 불러오는 중…</div>'; }
+    /* coverage_* anon 조회 시도(카테고리 필터). 실패/0행/타임아웃 → 폴백. */
+    var q='?category=eq.'+encodeURIComponent(cat)+'&select=*';
+    Promise.all([
+      fetchTable('/rest/v1/coverage_facts'+q),
+      fetchTable('/rest/v1/coverage_treatments'+q),
+      fetchTable('/rest/v1/coverage_quiz_questions'+q),
+      fetchTable('/rest/v1/coverage_result_rules'+q)
+    ]).then(function(res){
+      var data;
+      if(res[0]){ /* DB 응답 있음 — 서버가 이미 approved∧customer_ok만 내려보냄 */
+        data=mapDb(cat, res);
+        data.__fallback=false;
+        console.log('[coverage] '+cat+' — DB 렌더');
+      }else{
+        data=JSON.parse(JSON.stringify(FB[cat]));
+        data.__fallback=true;
+        console.log('[coverage] '+cat+' — 폴백(임베드 seed) 렌더 (DB 미적용/조회 실패)');
+      }
+      window._COV_DATA[cat]=data;
+      render(cat, data);
+    });
+  }
+  /* DB 행 → 렌더 구조 매핑(최소) — 축별 확장 테이블은 이번 배선 범위에서 폴백 공유 */
+  function mapDb(cat, res){
+    var base=JSON.parse(JSON.stringify(FB[cat])); /* 확장(tiers/costs 등)은 폴백 구조 유지, 코어만 DB로 덮음 */
+    base.facts=(res[0]||[]).map(function(r){ return {g:r.fact_group,key:r.fact_key,label:r.label||r.display_text,display:r.display_text,num:r.value_num,rs:r.review_status||r.exposure}; });
+    if(res[1]) base.treatments=res[1].map(function(r){ return {method:r.method,subtype:r.subtype,type:r.coverage_type,cost:r.display_cost,note:r.insurance_gap_note,rs:r.review_status||r.exposure}; });
+    base.__db=true;
+    return base;
+  }
+
+  /* ── 인터랙션 핸들러(전역) ───────────────────────────────────────────── */
+  window._covShow=function(view){
+    if(!_canSeeCoverage()) return; /* 이중 가드 — showView 가드 외 직접 호출 방어 */
+    var cat=VIEW2CAT[view]; if(!cat) return;
+    loadAndRender(cat);
+  };
+  window._covGo=function(view){ if(typeof showView==='function') showView(view); };
+  window._covAns=function(cat,key,oi){
+    var s=st(cat), data=window._COV_DATA[cat]; if(!data) return;
+    var q=null; (data.quiz||[]).forEach(function(x){ if(x.key===key) q=x; }); if(!q) return;
+    s.answers[key]=oi;
+    var o=q.opts[oi];
+    if(q.var){ var val=(o.v!=null?o.v:0); s.vars[q.var]=val; }
+    if(key==='age_band') s.answers.age_band_val=(o.value||o.label);
+    /* 모든 var 문항 응답 시 판정 */
+    var need=(data.quiz||[]).filter(function(x){ return x.var; });
+    var answered=need.every(function(x){ return s.answers[x.key]!=null; });
+    if(answered){ var r=judge(cat); s.result= r?{level:r.level,msg:r.msg,cta:r.cta}:null; }
+    render(cat, data);
+    if(answered){ var slot=document.getElementById('cov-result-'+cat); if(slot){ slot.innerHTML=resultCard(cat); slot.scrollIntoView({behavior:'smooth',block:'nearest'}); } }
+  };
+  window._covLife=function(cat,band){
+    var s=st(cat); s.answers.age_band_val=band;
+    var data=window._COV_DATA[cat]; if(!data) return;
+    var body=document.getElementById('cov-lm-body-'+cat); if(body) body.innerHTML=lifeMapBody(data.life_map||[], band);
+    /* 탭 하이라이트 */
+    var tabs=document.querySelectorAll('#v-'+META[cat].view+' .cov-lm-tab');
+    for(var i=0;i<tabs.length;i++){ tabs[i].classList.toggle('on', (tabs[i].getAttribute('onclick')||'').indexOf("'"+band+"'")>=0); }
+  };
+  window._covGen=function(cat,gi){
+    var s=st(cat), data=window._COV_DATA[cat]; if(!data) return;
+    s.answers.gen=gi;
+    var g=data.generations[gi];
+    s.result={ level:'점검 필요', msg:g.label+' 실손('+g.period+') · '+g.brief+' 세대별 자기부담·재가입·비급여 구조가 달라 유지 vs 전환은 상담으로 점검이 필요합니다.', cta:'내 실손 세대 기준으로 점검받기' };
+    render(cat, data);
+    var slot=document.getElementById('cov-result-'+cat); if(slot){ slot.innerHTML=resultCard(cat); slot.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  };
+
+  /* ── lead 제출 = payload 생성까지만(insert 비활성·데모) ────────────────
+     실제 insert(coverage_lead / sales_customers)는 대표 승인·DB 배선 후. 여기선 payload만 생성해 콘솔+화면 표시. */
+  window._covLead=function(cat){
+    var s=st(cat), data=window._COV_DATA[cat]||{};
+    var lv = s.result ? normLevel(s.result.level) : null;
+    var payload={
+      event_name:'coverage_plan_request',
+      lead_source: cat+'_interactive_page',
+      category: cat,
+      consultation_type:'보장분석',
+      default_stage:'신규DB',
+      result_level: lv,
+      quiz_answers: s.answers,
+      quiz_vars: s.vars,
+      recommended_next_action: s.result?s.result.cta:null,
+      consent_at: null, /* 동의 시점 — 실제 폼 제출 시 채움 */
+      name: null, phone: null, /* 상담신청 폼에서 수집(개인정보) — 데모에선 미수집 */
+      _demo_notice:'insert 비활성(데모). 대표 승인·DB 배선 후 coverage_lead 신규DB로 승격.'
+    };
+    console.log('[coverage] lead payload (DEMO · insert 비활성):', payload);
+    var slot=document.getElementById('cov-result-'+cat);
+    if(slot){
+      var box=document.createElement('div'); box.className='cov-lead-demo';
+      box.innerHTML='<div class="cov-lead-h">상담신청 payload (데모 · 저장 안 함)</div><pre class="cov-lead-pre">'+esc(JSON.stringify(payload,null,2))+'</pre><div class="cov-lead-note">실제 저장은 상담신청 폼 + 동의 후, 대표 승인·DB 배선 시 coverage_lead(신규DB)로 승격됩니다. 지금은 insert 비활성 데모입니다.</div>';
+      var prev=slot.querySelector('.cov-lead-demo'); if(prev) prev.remove();
+      slot.appendChild(box); box.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  };
+
+})();
+
+function showView(key,options){options=options||{};try{if(window.LocalFind)window.LocalFind.resetAll();}catch(e){}/* 화면 검색 잔상 초기화 */if(key==='team')key='myspace';/* 매니저룸 제거(2026-06-05 통합 2단계) → 라이브러리로 라우팅 */try{if(key!=='mrroom'&&window._spMrRestore)window._spMrRestore();}catch(e){}/* 매니저방 떠나면 #mr-main을 라이브러리로 회수(팀원관리 탭 보호) (2026-07-04) */if(key==='mrroom'&&!document.body.classList.contains('is-mgr')){key='home';}/* 매니저방 = 실장·지점장·어드민만(is-mgr). 직접 URL 진입도 home 강제 */if(key==='insurer-vault'&&typeof _canSeeVault==='function'&&!_canSeeVault()){key='home';}if(key==='admin'&&typeof _canSeeAdmin==='function'&&!_canSeeAdmin()){key='home';}if(key==='roadmap'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 상품 로드맵 = 임태성 실장 user_id만. 직접 URL(?view=roadmap) 진입도 home 강제 리다이렉트(2026-06-27) */if(key==='goji'&&typeof _canSeeRoadmap==='function'&&!_canSeeRoadmap()){key='home';}/* 알릴의무 독립 페이지 = 임태성 실장 user_id만. 직접 URL(?view=goji) 진입도 home 강제(2026-07-06) */if(key==='salesnote'&&typeof _canSeeSalesNote==='function'&&!_canSeeSalesNote()){key='home';}/* 영업노트 = 임태성 실장 user_id만. 직접 URL 진입도 home 강제(2026-06-29) */if(key==='trash'&&typeof _canSeeTrash==='function'&&!_canSeeTrash()){key='home';}/* 휴지통 = 상담관리 공용 게이트(_canSeeCare). 직접 URL 진입도 home 강제(2026-07-13) */if((key==='cov-cancer'||key==='cov-brain'||key==='cov-surgery'||key==='cov-medical')&&typeof _canSeeCoverage==='function'&&!_canSeeCoverage()){key='home';}/* 보장분석 4축 = 임태성 실장 user_id 전용. 직접 URL 진입도 home 강제. 게이트 밖 노출 0 (2026-07-15) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _canSeeCompanyHub==='function'&&!_canSeeCompanyHub()){key='home';}/* 삼성화재 라인업·납입면제 = 임태성 게이트(회사 허브 진입). 직접 URL 진입도 home 강제(2026-06-28) *//* 원수사 상품 라인업 페이지 = 전체 개방(2026-07-05 대표 승인, 상품검색 개방과 정합) — 게이트 없음 *//* 독립 도구 페이지(#v-tool) = 전체 개방(2026-07-05 대표 승인) — 게이트 없음 */if(key==='newsletters'&&typeof _canSeeNl==='function'&&!_canSeeNl()){key='home';}/* 원수사 GA소식지 = 임태성 실장 게이트. 직접 URL 진입도 home 강제(2026-07-03) */if(key==='silson'&&!document.body.classList.contains('is-uat-homedesk')){key='home';}/* 실비 세대별 변천사 = 임태성 홈 게이트. 직접 URL 진입도 home 강제(2026-07-04) */if(key==='voice'){key='home';}/* 죽은 화면(현장의 소리, #v-voice) 제거됨 — 스트레이 딥링크·북마크는 홈으로 폴백 (2026-07-09) */if(key==='news'){if(window._newsSheetShow)window._newsSheetShow();return;}/* 보험이슈 = 바텀시트 전용 슬롯으로 흡수(바닥 view·history 미접촉) (2026-06-26) */if(key==='together'){var _tv=document.getElementById('v-together'),_tb=document.querySelector('.body');if(_tv&&_tb&&_tv.parentNode!==_tb){_tv.classList.remove('on');_tb.appendChild(_tv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _obt=document.getElementById('osSheetBody');if(_obt)_obt.classList.remove('show-together');if(options.category){window._tgCat=options.category;try{var _tgc=document.querySelectorAll('#tg-chips .chip');for(var _ci=0;_ci<_tgc.length;_ci++)_tgc[_ci].classList.toggle('on',(_tgc[_ci].getAttribute('onclick')||'').indexOf("'"+options.category+"'")>=0);}catch(e){}}}/* 함께해요 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 .on+loadTogether. 전산신고=options.category로 분류 자동선택(리스트 필터+칩 .on) */if(key==='mrroom'){if(window._osSheetCollapse)window._osSheetCollapse();var _obm=document.getElementById('osSheetBody');if(_obm){_obm.classList.remove('show-news');_obm.classList.remove('show-together');_obm.classList.remove('show-scripts');}}/* 매니저방 = 바닥 전체 페이지(2026-07-04). 아래 일반 뷰 로직으로 #v-mrroom.on + 하단 _spMrShow 렌더 */if(key==='scripts'){if(document.body.classList.contains('is-uat-homedesk')){var _sv=document.getElementById('v-scripts'),_bd=document.querySelector('.body');if(_sv&&_bd&&_sv.parentNode!==_bd){_sv.classList.remove('on');_bd.appendChild(_sv);}/* 슬롯→바닥 복귀 */ if(window._osSheetCollapse)window._osSheetCollapse();var _ob=document.getElementById('osSheetBody');if(_ob)_ob.classList.remove('show-scripts');}else{if(window._scriptsSheetShow)window._scriptsSheetShow();return;}}/* 스크립트: 임태성 홈 데스크=바닥 전체 페이지(바텀시트 흡수 우회, #v-scripts를 .body로 복귀 후 아래 일반 뷰 로직으로 .on+loadScriptsView) / 그 외=바텀시트 슬롯 (2026-07-03) */var views=document.querySelectorAll('.body .view');for(var i=0;i<views.length;i++)views[i].classList.remove('on');var v=document.getElementById('v-'+key);if(v)v.classList.add('on');try{document.body.classList.toggle('iv-hide-fab',key==='insurer-vault');}catch(e){}try{if(typeof _notifOnView==='function')_notifOnView(key);}catch(e){}var labels={home:'홈',myspace:'라이브러리',scripts:'스크립트',quick:'Quick 메뉴',together:'함께해요',news:'보험이슈',mrroom:'매니저방',silson:'실비 세대별 변천사',pricing:'요금제','insurer-vault':'보험사 자료실',admin:'어드민',roadmap:'상품 로드맵',goji:'알릴의무',salesnote:'고객관리'/* 라이브 표시명: 고객관리(코드 id salesnote) */,trash:'휴지통','cov-cancer':'보장분석','cov-brain':'보장분석','cov-surgery':'보장분석','cov-medical':'보장분석','samsung-lineup':'삼성화재 상품 라인업','samsung-waiver':'삼성화재 상품별 납입면제','product-lineup':'원수사 상품 라인업','newsletters':'원수사 GA소식지'};var navs=document.querySelectorAll('.side .nav');for(var j=0;j<navs.length;j++)navs[j].classList.remove('on');for(var k=0;k<navs.length;k++){var lbl=navs[k].querySelector('.lbl');if(lbl&&lbl.textContent.trim()===labels[key]){navs[k].classList.add('on');break;}}if(key==='news'&&typeof fetchNews==='function')fetchNews();if(key==='myspace'&&typeof mysTab==='function')mysTab(null,'today');if(key==='quick'&&typeof loadQuickV2==='function')loadQuickV2();if(key==='home'&&typeof loadHomeRecent==='function')loadHomeRecent();if(key==='home'&&typeof _homeDeskShow==='function')_homeDeskShow();/* 홈 데스크(임태성 게이트) 렌더 — 게이트 밖 계정은 내부 가드로 no-op (2026-07-02) */if(key==='scripts'&&typeof loadScriptsView==='function')loadScriptsView();if(key==='pricing'&&typeof loadPricing==='function')loadPricing();if(key==='roadmap'&&typeof loadRoadmap==='function')loadRoadmap();if(key==='goji'&&typeof loadGojiPage==='function')loadGojiPage();if(key==='salesnote'&&typeof _snCiShow==='function')_snCiShow();if(key==='trash'&&typeof loadTrash==='function')loadTrash();if((key==='cov-cancer'||key==='cov-brain'||key==='cov-surgery'||key==='cov-medical')&&typeof window._covShow==='function')window._covShow(key);/* 보장분석 4축 공통 렌더러 진입 — coverage_* 조회→폴백 렌더 (2026-07-15) */if((key==='samsung-lineup'||key==='samsung-waiver')&&typeof _samsungRender==='function')_samsungRender(key);if(key==='product-lineup'&&typeof loadProductLineup==='function')loadProductLineup();if(key==='tool'&&typeof loadToolPage==='function')loadToolPage();if(key==='newsletters'&&typeof loadNewsletters==='function')loadNewsletters();if(key==='silson'){var _slf=document.getElementById('silson-frame');if(_slf&&!_slf.getAttribute('src'))_slf.setAttribute('src','pages/silson-generations.html');}/* 실비 변천사 iframe 지연 로드(첫 진입 시만) */if(key==='insurer-vault'&&typeof ivTab==='function')ivTab(null,'todo');if(key==='together'&&typeof loadTogether==='function')loadTogether();if(key==='mrroom'&&window._spMrShow)window._spMrShow(document.getElementById('mrroom-host'));/* 매니저방 = #mr-main을 바닥 호스트에 렌더(빌려옴) */if(key==='admin'){var _acSec=null;try{_acSec=new URLSearchParams(location.search).get('sec');}catch(e){}_acLazy(function(){if(window.acInitAdmin)window.acInitAdmin(_acSec);});}if(!options.skipHistory&&window.history&&window.history.pushState){var curView=(window.history.state&&window.history.state.view)||null;if(curView!==key){try{window.history.pushState({view:key},'','?view='+encodeURIComponent(key));}catch(err){}}}}
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
-  var VALID_VIEWS = ['home','myspace','scripts','quick','together','news','mrroom','silson','team','pricing','insurer-vault','admin'];
+  var VALID_VIEWS = ['home','myspace','scripts','quick','together','news','mrroom','silson','team','pricing','insurer-vault','admin','cov-cancer','cov-brain','cov-surgery','cov-medical'];
   /* 2026-05-30 초기화 통합: role 확정 후 첫 view 1회 렌더 (FOUC 제거).
    * role 즉시 있으면 바로, 없으면 appstate:ready(loadUser 완료) 대기 + fallback. */
   function getBootRole(){ try { var r = (JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').role) || ''; return (r && r !== 'authenticated') ? r : ''; } catch(e){ return ''; } }  /* 'authenticated'=Supabase auth 기본 role(미확정) → loadUser가 public.users role 채울 때까지 대기 */
