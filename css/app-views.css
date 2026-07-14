@@ -121,6 +121,12 @@ body.is-uat-trash .trash-only{display:flex;}
 /* 데이터 현황(#ci-stats) — ci-top/ci-bottom 사이 가로 전체 밴드. 기획팀장 시안(2026-07-14): 기간토글+hero+채널카드4개+스택바차트.
    신규 클래스는 전부 ds- 접두어 + #ci-stats 하위로 스코프(앱 전역 오염 방지). 채널색·델타색만 도메인 특화 하드코딩(사양 고정, 총괄 승인 예외). */
 .ci-stats{display:flex;flex-direction:column;gap:14px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md);padding:16px 18px;}
+/* 접기/펼치기(2026-07-14 추가): 제목행(.ds-head) 클릭 시 본문(.ds-body) 토글. 기본 접힘, 상태는 localStorage(ci_stats_collapsed) 유지(JS 쪽) */
+#ci-stats .ds-head{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+#ci-stats .ds-chevron{font-size:10px;color:var(--tf);display:inline-block;width:14px;text-align:center;flex-shrink:0;}
+#ci-stats .ds-title{font-size:var(--ts-meta);font-weight:700;color:var(--tp);}
+#ci-stats .ds-body{display:flex;flex-direction:column;gap:14px;}
+#ci-stats .ds-body.ds-collapsed{display:none;}
 #ci-stats .ds-toggle-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
 #ci-stats .ds-seg{display:flex;gap:2px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:2px;}
 #ci-stats .ds-seg-btn{font-size:var(--ts-badge);font-weight:600;padding:5px 12px;border-radius:var(--radius-xs);border:0;background:transparent;color:var(--ts);cursor:pointer;font-family:inherit;}

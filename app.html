@@ -15869,11 +15869,28 @@ function _ciTodayHtml(){
   return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
     +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>';
 }
+/* 데이터 현황(#ci-stats) 접기/펼치기 — localStorage 'ci_stats_collapsed'('1'=접힘/'0'=펼침). 값 없으면 기본 접힘(true). */
+function _ciStatsIsCollapsed(){
+  try{
+    var v=localStorage.getItem('ci_stats_collapsed');
+    return v===null ? true : v==='1';
+  }catch(e){ return true; }
+}
+window._ciStatsIsCollapsed=_ciStatsIsCollapsed;
+function _ciStatsToggleCollapse(){
+  var next=!_ciStatsIsCollapsed();
+  try{ localStorage.setItem('ci_stats_collapsed', next?'1':'0'); }catch(e){}
+  var el=document.getElementById('ci-stats'); if(el) el.innerHTML=_ciStatsHtml();
+}
+window._ciStatsToggleCollapse=_ciStatsToggleCollapse;
 /* 데이터 현황(#ci-stats) — 기획팀장 시안(2026-07-14 재설계): 기간 토글(일/주/월)+hero+채널카드4개+스택바차트.
    실데이터 소스=_ciViewData()(상담관리 등록분, mock 0). 유입채널=_ciListHtml과 동일 정규식(뱅크샐러드/카카오페이/보맵/기타).
    날짜=created_at 앞 10자리(YYYY-MM-DD)를 로컬 자정 Date로 파싱(타임존 드리프트 방지). 토글 상태=window._ciStatsPeriod('day'|'week'|'month', 기본 day).
+   접기/펼치기(2026-07-14 추가): 제목 행 클릭 시 _ciStatsToggleCollapse(), 본문은 .ds-body(.ds-collapsed 시 숨김), 기본값=접힘, 상태는 localStorage 유지.
    신규 CSS는 모두 ds- 접두어 + #ci-stats 하위 스코프(css/app-views.css). 채널색·델타색은 도메인 특화 하드코딩(사양 고정 hex, 총괄 승인 예외). */
 function _ciStatsHtml(){
+  var _dsCollapsed=_ciStatsIsCollapsed();
+  var head='<div class="ds-head" onclick="_ciStatsToggleCollapse()"><span class="ds-chevron">'+(_dsCollapsed?'&#9654;':'&#9660;')+'</span><span class="ds-title">데이터 현황</span></div>';
   var data=_ciViewData();
   var period=window._ciStatsPeriod; if(period!=='week' && period!=='month') period='day';
   var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
@@ -15937,7 +15954,7 @@ function _ciStatsHtml(){
     +[['day','일별'],['week','주별'],['month','월별']].map(function(kv){ return '<button type="button" class="ds-seg-btn'+(period===kv[0]?' on':'')+'" onclick="_ciSetStatsPeriod(\''+kv[0]+'\')">'+kv[1]+'</button>'; }).join('')
     +'</div><div class="ds-asof">기준: '+ymd+' · 상담관리 등록 데이터 자동 집계</div></div>';
   if(data.length===0){
-    return segRow+'<div class="ci-empty">아직 등록된 고객이 없습니다.<br>상담관리에 고객을 등록하면 이 화면에 실시간으로 집계됩니다.</div>';
+    return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'">'+segRow+'<div class="ci-empty">아직 등록된 고객이 없습니다.<br>상담관리에 고객을 등록하면 이 화면에 실시간으로 집계됩니다.</div></div>';
   }
   var hero='<div class="ds-hero"><div class="ds-hero-main">'
     +'<span class="ds-hero-num">'+_ciNum(heroTotal)+'</span><span class="ds-hero-unit">'+META.unit+' 신규 고객</span>'
@@ -15967,7 +15984,7 @@ function _ciStatsHtml(){
       return '<div class="ds-bar-col'+(isCur?' cur':'')+'"><div class="ds-bar-total">'+_ciNum(b.total)+'</div><div class="ds-bar-track">'+segs+'</div><div class="ds-bar-label">'+_ciEsc(b.label)+'</div></div>';
     }).join('')
     +'</div>';
-  return segRow+hero+cards+chart;
+  return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'">'+segRow+hero+cards+chart+'</div>';
 }
 function _ciSetStatsPeriod(p){ window._ciStatsPeriod=(p==='week'||p==='month')?p:'day'; var el=document.getElementById('ci-stats'); if(el) el.innerHTML=_ciStatsHtml(); }
 window._ciSetStatsPeriod=_ciSetStatsPeriod;
