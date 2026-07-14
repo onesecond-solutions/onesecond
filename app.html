@@ -15883,111 +15883,256 @@ function _ciStatsToggleCollapse(){
   var el=document.getElementById('ci-stats'); if(el) el.innerHTML=_ciStatsHtml();
 }
 window._ciStatsToggleCollapse=_ciStatsToggleCollapse;
-/* 데이터 현황(#ci-stats) — 기획팀장 시안(2026-07-14 재설계): 기간 토글(일/주/월)+hero+채널카드4개+스택바차트.
-   실데이터 소스=_ciViewData()(상담관리 등록분, mock 0). 유입채널=_ciListHtml과 동일 정규식(뱅크샐러드/카카오페이/보맵/기타).
-   날짜=created_at 앞 10자리(YYYY-MM-DD)를 로컬 자정 Date로 파싱(타임존 드리프트 방지). 토글 상태=window._ciStatsPeriod('day'|'week'|'month', 기본 day).
-   접기/펼치기(2026-07-14 추가): 제목 행 클릭 시 _ciStatsToggleCollapse(), 본문은 .ds-body(.ds-collapsed 시 숨김), 기본값=접힘, 상태는 localStorage 유지.
+/* 데이터 현황(#ci-stats) 날짜/집계 헬퍼 — _ciEsc/_ciNum과 동일하게 window 미등록(내부 전용). 미리보기 하니스 need 배열엔 등록해서 추출.
+   TODAY/START은 항상 동적 계산(하드코딩 절대 금지) — TODAY=실제 오늘(로컬 자정), START=_ciViewData() 중 가장 오래된 created_at 날짜(없으면 TODAY). */
+function _dsPad2(n){ return (n<10?'0':'')+n; }
+function _dsTodayStr(){ var t=new Date(); return t.getFullYear()+'-'+_dsPad2(t.getMonth()+1)+'-'+_dsPad2(t.getDate()); }
+function _dsParseYmd(s){ var p=String(s||'').split('-'); var y=+p[0],m=+p[1],d=+p[2]; if(!y||!m||!d) return new Date(); return new Date(y,m-1,d); }
+function _dsYmdStr(d){ return d.getFullYear()+'-'+_dsPad2(d.getMonth()+1)+'-'+_dsPad2(d.getDate()); }
+function _dsAddDaysStr(ymd,n){ var d=_dsParseYmd(ymd); d.setDate(d.getDate()+n); return _dsYmdStr(d); }
+function _dsDayDiff(a,b){ return Math.round((_dsParseYmd(b).getTime()-_dsParseYmd(a).getTime())/86400000); }
+function _dsYmdOfCreated(s){ s=String(s||''); return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0,10) : null; }
+function _dsStartStr(data){  /* 데이터 중 가장 오래된 등록일(YYYY-MM-DD). 데이터 0건이면 오늘(하한=오늘) */
+  var min=null;
+  data.forEach(function(c){ var y=_dsYmdOfCreated(c&&c.created_at); if(y && (!min||y<min)) min=y; });
+  return min || _dsTodayStr();
+}
+function _dsCH(){ return [{k:'뱅크샐러드',c:'#F0B500'},{k:'카카오페이',c:'#4B8DF8'},{k:'보맵',c:'#8A8A96'},{k:'기타',c:'#0EA5A4'}]; }
+function _dsChanIdx(c){  /* 유입채널 분류 — _ciListHtml과 동일 정규식(뱅크샐러드/카카오페이/보맵/기타) */
+  var _at=(c&&c.profile&&c.profile.attr)||(c&&c.attr)||'';
+  if(/뱅크샐러드/.test(_at)) return 0;
+  if(/카카오페이/.test(_at)) return 1;
+  if(/보맵/.test(_at)) return 2;
+  return 3;
+}
+function _dsBuildMap(data){  /* 일자×채널 카운트 맵을 1회 구성(실데이터, mock/의사난수 0). map[ymd]=[뱅크샐러드,카카오페이,보맵,기타] */
+  var map={};
+  data.forEach(function(c){
+    var ymd=_dsYmdOfCreated(c&&c.created_at); if(!ymd) return;
+    var idx=_dsChanIdx(c);
+    if(!map[ymd]) map[ymd]=[0,0,0,0];
+    map[ymd][idx]++;
+  });
+  return map;
+}
+function _dsDayVal(map,ymd,idx){ return (map[ymd]&&map[ymd][idx])||0; }
+function _dsSumRange(map,from,to){  /* 맵 lookup만으로 범위 합산(날짜 순회 없이 실존 키만 필터 — 큰 사용자정의 범위도 안전) */
+  var chan=[0,0,0,0], total=0;
+  Object.keys(map).forEach(function(ymd){
+    if(ymd>=from && ymd<=to){ var row=map[ymd]; for(var i=0;i<4;i++){ chan[i]+=row[i]; total+=row[i]; } }
+  });
+  return {total:total, chan:chan};
+}
+function _dsShiftRange(from,to,delta,START,TODAY){  /* [from,to] 범위를 delta일 이동, START~TODAY로 clamp(길이 최대한 보존) */
+  var nf=_dsAddDaysStr(from,delta), nt=_dsAddDaysStr(to,delta);
+  if(nt>TODAY){ var over=_dsDayDiff(nt,TODAY); nt=TODAY; nf=_dsAddDaysStr(nf,-over); }
+  if(nf<START){ var under=_dsDayDiff(nf,START); nf=START; nt=_dsAddDaysStr(nt,under); if(nt>TODAY) nt=TODAY; }
+  return [nf,nt];
+}
+function _dsRangeCur(){  /* 현재 mode/anchor/cRange(window._ciStats*) 기준 표시 범위 [from,to] */
+  var mode=window._ciStatsMode||'today', anchor=window._ciStatsAnchor||_dsTodayStr();
+  if(mode==='week7') return [_dsAddDaysStr(anchor,-6), anchor];
+  if(mode==='month'){
+    var d=_dsParseYmd(anchor);
+    var s=_dsYmdStr(new Date(d.getFullYear(), d.getMonth(), 1));
+    var eFull=_dsYmdStr(new Date(d.getFullYear(), d.getMonth()+1, 0));
+    var TODAY=_dsTodayStr();
+    var e=eFull<TODAY?eFull:TODAY; if(e<s) e=s;
+    return [s,e];
+  }
+  if(mode==='custom') return window._ciStatsCRange||[anchor,anchor];
+  return [anchor,anchor];  /* today */
+}
+function _dsLabelInfo(mode,anchor,range,TODAY){
+  var WD=['일','월','화','수','목','금','토'];
+  if(mode==='week7'){
+    var f=_dsParseYmd(range[0]), t=_dsParseYmd(range[1]);
+    return {main:(f.getMonth()+1)+'/'+f.getDate()+' ~ '+(t.getMonth()+1)+'/'+t.getDate(), sub:'최근 7일'};
+  }
+  if(mode==='month'){
+    var d=_dsParseYmd(anchor), td=_dsParseYmd(TODAY);
+    var sub=(d.getFullYear()===td.getFullYear() && d.getMonth()===td.getMonth())?'진행중':'';
+    return {main:d.getFullYear()+'년 '+(d.getMonth()+1)+'월', sub:sub};
+  }
+  if(mode==='custom'){
+    var f=_dsParseYmd(range[0]), t=_dsParseYmd(range[1]);
+    var days=_dsDayDiff(range[0],range[1])+1;
+    return {main:(f.getMonth()+1)+'/'+f.getDate()+' ~ '+(t.getMonth()+1)+'/'+t.getDate(), sub:'사용자 지정 · '+days+'일'};
+  }
+  var d2=_dsParseYmd(anchor);
+  return {main:(d2.getMonth()+1)+'월 '+d2.getDate()+'일', sub:WD[d2.getDay()]+'요일'+(anchor===TODAY?' · 오늘':'')};
+}
+function _dsDeltaHtml(n){
+  if(n>0) return '<span class="ds-delta up">▲'+_ciNum(n)+'</span>';
+  if(n<0) return '<span class="ds-delta down">▼'+_ciNum(Math.abs(n))+'</span>';
+  return '<span class="ds-delta flat">—</span>';
+}
+/* 데이터 현황(#ci-stats) — 기획팀장 시안(2026-07-14 재설계, 대표 승인): 프리셋(오늘/최근7일/이번달/지난달/사용자정의)+‹›기간네비+hero+채널카드4개+일별 스택차트.
+   실데이터 소스=_ciViewData()(상담관리 등록분, mock·하드코딩 0). 상태=window._ciStatsMode('today'|'week7'|'month'|'custom')·_ciStatsAnchor(YYYY-MM-DD)·_ciStatsCRange([from,to], custom 전용).
+   접기/펼치기(2026-07-14 유지): 제목 행 클릭 시 _ciStatsToggleCollapse(), 본문은 .ds-body(.ds-collapsed 시 숨김), 기본값=접힘, 상태는 localStorage 유지(변경 없음).
    신규 CSS는 모두 ds- 접두어 + #ci-stats 하위 스코프(css/app-views.css). 채널색·델타색은 도메인 특화 하드코딩(사양 고정 hex, 총괄 승인 예외). */
 function _ciStatsHtml(){
   var _dsCollapsed=_ciStatsIsCollapsed();
   var head='<div class="ds-head" onclick="_ciStatsToggleCollapse()"><span class="ds-chevron">'+(_dsCollapsed?'&#9654;':'&#9660;')+'</span><span class="ds-title">데이터 현황</span></div>';
   var data=_ciViewData();
-  var period=window._ciStatsPeriod; if(period!=='week' && period!=='month') period='day';
-  var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
-  var CH=[{k:'뱅크샐러드',c:'#F0B500'},{k:'카카오페이',c:'#4B8DF8'},{k:'보맵',c:'#8A8A96'},{k:'기타',c:'#0EA5A4'}];
-  function _dsChanOf(c){
-    var _at=(c.profile&&c.profile.attr)||c.attr||'';
-    if(/뱅크샐러드/.test(_at)) return '뱅크샐러드';
-    if(/카카오페이/.test(_at)) return '카카오페이';
-    if(/보맵/.test(_at)) return '보맵';
-    return '기타';
-  }
-  function _dsYmd(s){  /* created_at 앞 10자리를 로컬 자정 Date로 변환(타임존 무관하게 "그 날짜"로 취급) */
-    var p=String(s||'').slice(0,10).split('-');
-    if(p.length!==3) return null;
-    var y=+p[0], m=+p[1], d=+p[2];
-    if(!y||!m||!d) return null;
-    return new Date(y, m-1, d);
-  }
-  function _dsWeekStart(d){ var x=new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }  /* 그 주 월요일 00:00 */
-  /* 기간별 버킷 구성: day=최근14일 / week=최근8주(월요일 시작) / month=최근6개월(1일 시작). 각 버킷은 [start,end) 반개구간 */
-  var buckets=[];
-  if(period==='week'){
-    var ws=_dsWeekStart(t);
-    for(var i=7;i>=0;i--){
-      var s=new Date(ws.getFullYear(), ws.getMonth(), ws.getDate()-7*i);
-      var e=new Date(s.getFullYear(), s.getMonth(), s.getDate()+7);
-      buckets.push({label:(s.getMonth()+1)+'/'+s.getDate()+'~', start:s, end:e});
-    }
-  } else if(period==='month'){
-    for(var i=5;i>=0;i--){
-      var s=new Date(t.getFullYear(), t.getMonth()-i, 1);
-      var e=new Date(t.getFullYear(), t.getMonth()-i+1, 1);
-      buckets.push({label:(s.getMonth()+1)+'월'+(i===0?' (진행중)':''), start:s, end:e});
-    }
-  } else {
-    for(var i=13;i>=0;i--){
-      var d=new Date(t.getFullYear(), t.getMonth(), t.getDate()-i);
-      buckets.push({label:(d.getMonth()+1)+'/'+d.getDate(), start:d, end:new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)});
-    }
-  }
-  buckets.forEach(function(b){ b.chan={}; CH.forEach(function(ch){ b.chan[ch.k]=0; }); b.total=0; });
-  data.forEach(function(c){
-    var dd=_dsYmd(c.created_at); if(!dd) return;
-    var ch=_dsChanOf(c);
-    for(var bi=0;bi<buckets.length;bi++){
-      if(dd>=buckets[bi].start && dd<buckets[bi].end){ buckets[bi].chan[ch]=(buckets[bi].chan[ch]||0)+1; buckets[bi].total++; break; }
-    }
-  });
-  var cur=buckets[buckets.length-1], prev=buckets[buckets.length-2]||{chan:{},total:0};
-  var heroTotal=cur.total, heroDelta=heroTotal-prev.total;
-  var topCh=null, topN=-1;
-  CH.forEach(function(ch){ var v=cur.chan[ch.k]||0; if(v>topN){ topN=v; topCh=ch.k; } });
-  if(heroTotal===0) topCh=null;
-  var META={day:{unit:'오늘',cmp:'전일 대비',seg:'일별',chart:'최근 14일'},week:{unit:'이번 주',cmp:'전주 대비',seg:'주별',chart:'최근 8주'},month:{unit:'이번 달',cmp:'전월 대비',seg:'월별',chart:'최근 6개월'}}[period];
-  function _dsDelta(n){
-    if(n>0) return '<span class="ds-delta up">▲'+_ciNum(n)+'</span>';
-    if(n<0) return '<span class="ds-delta down">▼'+_ciNum(Math.abs(n))+'</span>';
-    return '<span class="ds-delta flat">—</span>';
-  }
-  var segRow='<div class="ds-toggle-row"><div class="ds-seg">'
-    +[['day','일별'],['week','주별'],['month','월별']].map(function(kv){ return '<button type="button" class="ds-seg-btn'+(period===kv[0]?' on':'')+'" onclick="_ciSetStatsPeriod(\''+kv[0]+'\')">'+kv[1]+'</button>'; }).join('')
-    +'</div><div class="ds-asof">기준: '+ymd+' · 상담관리 등록 데이터 자동 집계</div></div>';
   if(data.length===0){
-    return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'">'+segRow+'<div class="ci-empty">아직 등록된 고객이 없습니다.<br>상담관리에 고객을 등록하면 이 화면에 실시간으로 집계됩니다.</div></div>';
+    return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'"><div class="ci-empty">아직 등록된 고객이 없습니다.<br>상담관리에 고객을 등록하면 이 화면에 실시간으로 집계됩니다.</div></div>';
+  }
+  var TODAY=_dsTodayStr(), START=_dsStartStr(data);
+  if(window._ciStatsMode!=='today' && window._ciStatsMode!=='week7' && window._ciStatsMode!=='month' && window._ciStatsMode!=='custom') window._ciStatsMode='today';
+  if(!window._ciStatsAnchor) window._ciStatsAnchor=TODAY;
+  var mode=window._ciStatsMode;
+  var anchor=window._ciStatsAnchor;
+  if(mode!=='custom'){ if(anchor>TODAY) anchor=TODAY; if(anchor<START) anchor=START; window._ciStatsAnchor=anchor; }  /* 데이터 변경 등으로 상태가 범위를 벗어난 경우 방어적 clamp */
+  var map=_dsBuildMap(data);
+  var range=_dsRangeCur();
+  var canPrev=range[0]>START, canNext=range[1]<TODAY;
+  var labelInfo=_dsLabelInfo(mode, anchor, range, TODAY);
+
+  function _dsIsOn(key){
+    if(key==='today') return mode==='today' && anchor===TODAY;
+    if(key==='week7') return mode==='week7' && anchor===TODAY;
+    if(key==='month'){ if(mode!=='month') return false; var d=_dsParseYmd(anchor), td=_dsParseYmd(TODAY); return d.getFullYear()===td.getFullYear() && d.getMonth()===td.getMonth(); }
+    if(key==='lastmonth'){ if(mode!=='month') return false; var d=_dsParseYmd(anchor), td=_dsParseYmd(TODAY); var lm=new Date(td.getFullYear(), td.getMonth()-1, 1); return d.getFullYear()===lm.getFullYear() && d.getMonth()===lm.getMonth(); }
+    return mode==='custom';
+  }
+  var PRESETS=[['today','오늘'],['week7','최근7일'],['month','이번달'],['lastmonth','지난달'],['custom','사용자정의']];
+  var presetRow='<div class="ds-presets">'+PRESETS.map(function(p){
+    return '<button type="button" class="ds-preset'+(_dsIsOn(p[0])?' on':'')+'" onclick="_ciStatsSetPreset(\''+p[0]+'\')">'+p[1]+'</button>';
+  }).join('')+'</div>';
+
+  var customBar='';
+  if(mode==='custom'){
+    var cr=window._ciStatsCRange||range;
+    customBar='<div class="ds-custom-bar">'
+      +'<input type="date" id="ds-cf" class="ds-date-input" value="'+_ciEsc(cr[0])+'" min="'+_ciEsc(START)+'" max="'+_ciEsc(TODAY)+'">'
+      +'<span class="ds-custom-sep">~</span>'
+      +'<input type="date" id="ds-ct" class="ds-date-input" value="'+_ciEsc(cr[1])+'" min="'+_ciEsc(START)+'" max="'+_ciEsc(TODAY)+'">'
+      +'<button type="button" class="ds-custom-apply" onclick="_ciStatsApplyCustom()">적용</button>'
+      +'</div>';
+  }
+
+  var navRow='<div class="ds-period-nav">'
+    +'<button type="button" class="ds-nav-btn"'+(canPrev?'':' disabled')+' onclick="_ciStatsNav(-1)">&lsaquo;</button>'
+    +'<div class="ds-period-label"><span class="ds-period-main">'+_ciEsc(labelInfo.main)+'</span><small class="ds-period-sub">'+_ciEsc(labelInfo.sub)+'</small></div>'
+    +'<button type="button" class="ds-nav-btn"'+(canNext?'':' disabled')+' onclick="_ciStatsNav(1)">&rsaquo;</button>'
+    +'</div>';
+
+  var curAgg=_dsSumRange(map, range[0], range[1]);
+  var heroTotal=curAgg.total;
+  var CH=_dsCH();
+  var topIdx=-1, topN=-1;
+  for(var _ti=0;_ti<4;_ti++){ if(curAgg.chan[_ti]>topN){ topN=curAgg.chan[_ti]; topIdx=_ti; } }
+  var topCh=(heroTotal>0 && topIdx>=0)?CH[topIdx].k:null;
+  var deltaHtml='';
+  if(mode==='month'){  /* 월 모드만 지난달 대비 델타(▲/▼/—) */
+    var _d=_dsParseYmd(anchor);
+    var pmStart=_dsYmdStr(new Date(_d.getFullYear(), _d.getMonth()-1, 1));
+    var pmEnd=_dsYmdStr(new Date(_d.getFullYear(), _d.getMonth(), 0));
+    var pAgg=_dsSumRange(map, pmStart, pmEnd);
+    deltaHtml='<span class="ds-hero-cmp">지난달 대비 '+_dsDeltaHtml(heroTotal-pAgg.total)+'</span>';
   }
   var hero='<div class="ds-hero"><div class="ds-hero-main">'
-    +'<span class="ds-hero-num">'+_ciNum(heroTotal)+'</span><span class="ds-hero-unit">'+META.unit+' 신규 고객</span>'
-    +'<span class="ds-hero-cmp">'+META.cmp+' '+_dsDelta(heroDelta)+'</span>'
+    +'<span class="ds-hero-num">'+_ciNum(heroTotal)+'</span><span class="ds-hero-unit">신규 고객</span>'
+    +deltaHtml
     +'</div><div class="ds-hero-top">최다 유입 채널: <b>'+(topCh?_ciEsc(topCh):'—')+'</b></div></div>';
-  var cards='<div class="ds-cards">'+CH.map(function(ch){
-    var v=cur.chan[ch.k]||0, pv=prev.chan[ch.k]||0, delta=v-pv;
+
+  var cards='<div class="ds-cards">'+CH.map(function(ch,idx){
+    var v=curAgg.chan[idx]||0;
     var share=heroTotal>0?Math.round(v/heroTotal*100):0;
     return '<div class="ds-card"><div class="ds-card-bar" style="background:'+ch.c+'"></div><div class="ds-card-body">'
       +'<div class="ds-card-name"><span class="ds-dot" style="background:'+ch.c+'"></span>'+_ciEsc(ch.k)+'</div>'
       +'<div class="ds-card-num">'+_ciNum(v)+'<span class="ds-card-unit">명</span></div>'
-      +_dsDelta(delta)
       +'<div class="ds-card-track"><div class="ds-card-fill" style="width:'+share+'%;background:'+ch.c+'"></div></div>'
-      +'<div class="ds-card-share">'+META.unit+' 비중 '+share+'%</div>'
+      +'<div class="ds-card-share">비중 '+share+'%</div>'
       +'</div></div>';
   }).join('')+'</div>';
-  var maxTotal=0; buckets.forEach(function(b){ if(b.total>maxTotal) maxTotal=b.total; });
-  var MAXH=96;  /* 차트 막대 최대 높이(px). 인라인 계산(스트리밍 안전) — 데이터 스케일에 따라 각 세그먼트 높이만 동적 산출 */
-  var chart='<div class="ds-chart-head">'+META.chart+'</div><div class="ds-chart">'
-    +buckets.map(function(b,bi){
-      var segs=CH.map(function(ch){
-        var v=b.chan[ch.k]||0; if(v<=0) return '';
-        var h=maxTotal>0?Math.round(v/maxTotal*MAXH):0; if(h<1) h=1;
-        return '<div class="ds-bar-seg" style="height:'+h+'px;background:'+ch.c+'" title="'+_ciEsc(ch.k)+' '+_ciNum(v)+'명"></div>';
-      }).join('');
-      var isCur=(bi===buckets.length-1);
-      return '<div class="ds-bar-col'+(isCur?' cur':'')+'"><div class="ds-bar-total">'+_ciNum(b.total)+'</div><div class="ds-bar-track">'+segs+'</div><div class="ds-bar-label">'+_ciEsc(b.label)+'</div></div>';
-    }).join('')
-    +'</div>';
-  return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'">'+segRow+hero+cards+chart+'</div>';
+
+  var chartFrom=range[0], chartTo=range[1];
+  if(mode==='today'){ chartFrom=_dsAddDaysStr(anchor,-6); chartTo=anchor; }  /* today 모드는 최근 7일 맥락으로 차트 표시 */
+  var days=[]; var _dc=chartFrom; var _guard=0;
+  while(_dc<=chartTo && _guard<3660){ days.push(_dc); _dc=_dsAddDaysStr(_dc,1); _guard++; }
+  var maxTotal=0;
+  var dayTotals=days.map(function(dy){ var tt=0; for(var i=0;i<4;i++) tt+=_dsDayVal(map,dy,i); if(tt>maxTotal) maxTotal=tt; return tt; });
+  var highlightYmd=(days.indexOf(TODAY)>=0)?TODAY:days[days.length-1];  /* 오늘 컬럼 있으면 오늘, 없으면 anchor(범위 끝) 강조 */
+  var interval=days.length>16?Math.ceil(days.length/16):1;  /* 라벨 많으면 간격 표시 */
+  var MAXH=96;
+  var chartCols=days.map(function(dy,i){
+    var segs=CH.map(function(ch,ci){
+      var v=_dsDayVal(map,dy,ci); if(v<=0) return '';
+      var h=maxTotal>0?Math.round(v/maxTotal*MAXH):0; if(h<1) h=1;
+      return '<div class="ds-bar-seg" style="height:'+h+'px;background:'+ch.c+'" title="'+_ciEsc(ch.k)+' '+_ciNum(v)+'명"></div>';
+    }).join('');
+    var isHi=(dy===highlightYmd);
+    var showLabel=(i%interval===0)||i===days.length-1;
+    var dObj=_dsParseYmd(dy);
+    var labelTxt=(dObj.getMonth()+1)+'/'+dObj.getDate();
+    return '<div class="ds-bar-col'+(isHi?' cur':'')+'"><div class="ds-bar-total">'+(dayTotals[i]>0?_ciNum(dayTotals[i]):'')+'</div><div class="ds-bar-track">'+segs+'</div><div class="ds-bar-label">'+(showLabel?_ciEsc(labelTxt):'')+'</div></div>';
+  }).join('');
+  var chartHeadTxt=(mode==='today')?'최근 7일 (일별 유입 구성)':'일별 유입 구성';
+  var chart='<div class="ds-chart-head">'+chartHeadTxt+'</div><div class="ds-chart">'+chartCols+'</div>';
+
+  return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'">'+presetRow+customBar+navRow+hero+cards+chart+'</div>';
 }
-function _ciSetStatsPeriod(p){ window._ciStatsPeriod=(p==='week'||p==='month')?p:'day'; var el=document.getElementById('ci-stats'); if(el) el.innerHTML=_ciStatsHtml(); }
-window._ciSetStatsPeriod=_ciSetStatsPeriod;
+function _ciStatsRerender(){ var el=document.getElementById('ci-stats'); if(el) el.innerHTML=_ciStatsHtml(); }
+window._ciStatsRerender=_ciStatsRerender;
+function _ciStatsSetPreset(p){
+  var TODAY=_dsTodayStr();
+  if(p==='today'){ window._ciStatsMode='today'; window._ciStatsAnchor=TODAY; }
+  else if(p==='week7'){ window._ciStatsMode='week7'; window._ciStatsAnchor=TODAY; }
+  else if(p==='month'){ window._ciStatsMode='month'; window._ciStatsAnchor=TODAY; }
+  else if(p==='lastmonth'){
+    var d=_dsParseYmd(TODAY);
+    window._ciStatsMode='month';
+    window._ciStatsAnchor=_dsYmdStr(new Date(d.getFullYear(), d.getMonth()-1, 1));
+  } else if(p==='custom'){
+    if(!window._ciStatsCRange){ var r0=_dsRangeCur(); window._ciStatsCRange=[r0[0],r0[1]]; }  /* 최초 진입 시 직전 표시 범위를 기본값으로 프리필 */
+    window._ciStatsMode='custom';
+  }
+  _ciStatsRerender();
+}
+window._ciStatsSetPreset=_ciStatsSetPreset;
+function _ciStatsNav(dir){
+  dir=(dir<0)?-1:1;
+  var data=_ciViewData(); if(!data.length) return;
+  var TODAY=_dsTodayStr(), START=_dsStartStr(data);
+  var mode=window._ciStatsMode||'today';
+  if(mode==='month'){
+    var d=_dsParseYmd(window._ciStatsAnchor||TODAY);
+    var nd=new Date(d.getFullYear(), d.getMonth()+dir, 1);
+    var ndStr=_dsYmdStr(nd);
+    var td=_dsParseYmd(TODAY), sd=_dsParseYmd(START);
+    var maxM=_dsYmdStr(new Date(td.getFullYear(), td.getMonth(), 1));
+    var minM=_dsYmdStr(new Date(sd.getFullYear(), sd.getMonth(), 1));
+    if(ndStr>maxM) ndStr=maxM; if(ndStr<minM) ndStr=minM;
+    window._ciStatsAnchor=ndStr;
+  } else if(mode==='custom'){
+    var r=window._ciStatsCRange||[TODAY,TODAY];
+    var len=_dsDayDiff(r[0],r[1])+1;
+    window._ciStatsCRange=_dsShiftRange(r[0], r[1], dir*len, START, TODAY);
+  } else {
+    var span=(mode==='week7')?7:1;
+    var curTo=window._ciStatsAnchor||TODAY;
+    var curFrom=(mode==='week7')?_dsAddDaysStr(curTo,-6):curTo;
+    var sh=_dsShiftRange(curFrom, curTo, dir*span, START, TODAY);
+    window._ciStatsAnchor=sh[1];
+  }
+  _ciStatsRerender();
+}
+window._ciStatsNav=_ciStatsNav;
+function _ciStatsApplyCustom(){
+  var data=_ciViewData(); if(!data.length) return;
+  var TODAY=_dsTodayStr(), START=_dsStartStr(data);
+  var fEl=document.getElementById('ds-cf'), tEl=document.getElementById('ds-ct');
+  var f=(fEl&&fEl.value)||START, t=(tEl&&tEl.value)||TODAY;
+  if(f>t){ var tmp=f; f=t; t=tmp; }  /* from>to면 자동 교정 */
+  if(f<START) f=START; if(f>TODAY) f=TODAY;
+  if(t<START) t=START; if(t>TODAY) t=TODAY;
+  window._ciStatsMode='custom';
+  window._ciStatsCRange=[f,t];
+  _ciStatsRerender();
+}
+window._ciStatsApplyCustom=_ciStatsApplyCustom;
 function _ciListHtml(){
   var data=_ciViewData().slice();
   if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
