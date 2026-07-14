@@ -15819,7 +15819,11 @@ function _ciLoad(){
   window._ciLoaded=true; window._ciData=[];
   var tok=window.db&&window.db.getToken&&window.db.getToken();
   if(!tok||!window.db||!window.db.fetch){ _ciRender(); return; }  /* 비로그인=빈 상태(owner RLS로 데이터 0) */
-  window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at,profile&order=created_at.desc&limit=5000')
+  /* 상담관리(care)는 '신규' 대량(수천 건 옛 데이터)을 서버에서 제외하고 로드한다.
+     PostgREST가 1000행에서 절단하므로, 필터 없이 전체를 부르면 최신 1000행만 와서 과거 날짜(백데이트) 고객이 누락된다.
+     care=status!=신규 → 소량만 로드되어 날짜 무관 전부 표시. (2026-07-14: 2500+건 환경 과거일자 누락 버그 수정) */
+  var _ciSF=((window._ciMode||'care')==='care') ? '&status=neq.'+encodeURIComponent('신규') : '';
+  window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null'+_ciSF+'&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at,profile&order=created_at.desc&limit=5000')
     .then(function(r){ return r.ok?r.json():[]; })
     .then(function(rows){ window._ciData=Array.isArray(rows)?rows:[]; _ciRender(); })
     .catch(function(){ _ciRender(); });
