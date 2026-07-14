@@ -16041,7 +16041,7 @@ function _ciStatsHtml(){
     deltaHtml='<span class="ds-hero-cmp">지난달 대비 '+_dsDeltaHtml(heroTotal-pAgg.total)+'</span>';
   }
   var hero='<div class="ds-hero"><div class="ds-hero-main">'
-    +'<span class="ds-hero-num">'+_ciNum(heroTotal)+'</span><span class="ds-hero-unit">신규 고객</span>'
+    +'<span class="ds-hero-num" onclick="_ciHeroPick()" title="이 기간 전체 보기">'+_ciNum(heroTotal)+'</span><span class="ds-hero-unit">신규 고객</span>'
     +deltaHtml
     +'</div><div class="ds-hero-top">최다 유입 채널: <b>'+(topCh?_ciEsc(topCh):'—')+'</b></div></div>';
 
@@ -16177,6 +16177,14 @@ function _ciListFilterClear(){  /* [전체 보기] — 기간·채널 필터 모
   _ciListFilterBarRender();
 }
 window._ciListFilterClear=_ciListFilterClear;
+function _ciHeroPick(){  /* hero 큰 숫자 클릭="이 기간 전체 채널 보기" — 채널 필터만 해제, 기간(현재 _ciStatsMode/anchor)은 유지(2026-07-14 대표 확정) */
+  window._ciListPeriodOn=true;
+  window._ciChanF=null;
+  _ciStatsRerender();  /* 채널카드 하이라이트 해제 */
+  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+  _ciListFilterBarRender();
+}
+window._ciHeroPick=_ciHeroPick;
 function _ciListHtml(){
   var data=_ciViewData().slice();
   if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
