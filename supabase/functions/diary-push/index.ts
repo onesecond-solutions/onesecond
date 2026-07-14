@@ -76,6 +76,22 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // 마스터 스위치: app_settings.calendar_reminder_enabled 가 OFF 면 전체 발송 skip.
+  // 조회 실패·미설정 = 기본 ON 폴백(안전). service_role 조회라 RLS 무관.
+  {
+    const { data: setRow } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "calendar_reminder_enabled")
+      .maybeSingle();
+    if (setRow) {
+      const v = String((setRow as { value: unknown }).value).toLowerCase();
+      if (v === "off" || v === "false") {
+        return json({ ok: true, disabled: true, scanned: 0, due: 0, sent: 0, removed: 0, failed: 0, skipped: 0 });
+      }
+    }
+  }
+
   const nowMs = Date.now() + KST_OFFSET; // KST 벽시계
   const fromDate = ymd(nowMs - 1 * 86400000); // today-1
   const toDate = ymd(nowMs + 2 * 86400000);   // today+2 (전날 알람: 내일·모레 일정 대비)

@@ -15561,8 +15561,24 @@ function diaAlarmStart(){
   window._diaAlarmTimer=setInterval(diaAlarmTick, 60000);
 }
 window.diaAlarmStart=diaAlarmStart;
+/* 캘린더 예약 알림 마스터 스위치(app_settings.calendar_reminder_enabled) — 어드민 전역 ON/OFF.
+   조회 실패·미설정 = 기본 ON 폴백(안전). 60초 폴링마다 재조회하지 않도록 5분 캐시. */
+var _diaRemGate={ val:true, at:0 };
+async function _diaReminderEnabled(){
+  var nowT=Date.now();
+  if(nowT-_diaRemGate.at<300000) return _diaRemGate.val;  /* 5분 캐시 */
+  try{
+    if(window.db&&window.db.fetch){
+      var res=await window.db.fetch('/rest/v1/app_settings?key=eq.calendar_reminder_enabled&select=value');
+      if(res.ok){ var j=await res.json(); if(Array.isArray(j)&&j.length){ var v=String(j[0].value).toLowerCase(); _diaRemGate.val=!(v==='off'||v==='false'); _diaRemGate.at=nowT; return _diaRemGate.val; } }
+    }
+  }catch(e){}
+  _diaRemGate.val=true; _diaRemGate.at=nowT; return true;  /* 미설정·실패 = 기본 ON */
+}
+window._diaReminderEnabled=_diaReminderEnabled;
 async function diaAlarmTick(){
   var me=_diaOwnerId(); if(!me||!window.db||!window.db.fetch) return;
+  if(!(await _diaReminderEnabled())) return;  /* 어드민 마스터 스위치 OFF → 인앱 알람 발생 skip(기존 중복방지 로직 불변) */
   var d0=new Date(); d0.setDate(d0.getDate()-1); var from=d0.getFullYear()+'-'+_calPad(d0.getMonth()+1)+'-'+_calPad(d0.getDate());
   var d2=new Date(); d2.setDate(d2.getDate()+8); var to=d2.getFullYear()+'-'+_calPad(d2.getMonth()+1)+'-'+_calPad(d2.getDate());
   try{
