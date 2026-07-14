@@ -16636,7 +16636,11 @@ function _ciRender(){
   var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
   _ciListFilterBarRender();
   var pv=document.getElementById('ci-preview');
-  if(pv && !pv.querySelector('.ci-form')){ var c=(window._ciSel!=null)?(window._ciData||[]).filter(function(x){return String(x.id)===String(window._ciSel);})[0]:null; pv.innerHTML=_ciPreviewHtml(c); }  /* 폼 편집 중이면 덮어쓰지 않음(단계 필터 클릭에도 폼 유지) */
+  if(pv && !pv.querySelector('.ci-form')){  /* 폼 편집 중이면 덮어쓰지 않음(단계·기간 필터 클릭에도 폼 유지) */
+    var _pvSel=(window._ciSel!=null)&&(window._ciData||[]).some(function(x){return String(x.id)===String(window._ciSel);});
+    if(_pvSel){ _ciOpenForm(window._ciSel); }  /* 선택 고객이 있으면 옛 요약(_ciPreviewHtml) 대신 새 스타일 폼을 연다 — 미리보기 예전 스타일 버그 수정(2026-07-14 대표) */
+    else { pv.innerHTML=_ciPreviewHtml(null); }  /* 미선택=안내 문구 */
+  }
 }
 window._ciRender=_ciRender;
 
