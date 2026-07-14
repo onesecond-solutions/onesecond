@@ -264,6 +264,10 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-stagebtn{font-size:var(--ts-meta);padding:6px 12px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
 .ci-stagebtn.on{background:var(--ac);border-color:var(--ac);color:#fff;}
 .ci-form-acts{display:flex;gap:8px;margin-top:20px;}
+/* 예약 단계 클릭 → 캘린더 "새 일정" 미니팝업(2026-07-14). #dia-panel(마이스페이스 다이어리 전용)이 상담관리(#ci-wrap) 노출 중엔 항상 숨겨진 부모(#mys-today) 안에 있어 재사용 불가 → 전용 오버레이.
+   내부 필드는 dia-panel-hd/dia-l/dia-i/dia-ta/dia-rems/dia-rem/dia-panel-ft/dia-save(다이어리 패널과 동일 클래스, 신규 스타일 최소화) 재사용. */
+.ci-resv-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10050;display:flex;align-items:center;justify-content:center;padding:16px;}
+.ci-resv-box{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);box-shadow:var(--elevation-4);max-width:360px;width:100%;padding:18px;}
 @media(max-width:860px){.ci-top{grid-template-columns:1fr;}.ci-bottom{grid-template-columns:1fr;}.ci-fgrid{grid-template-columns:1fr;}}
 /* ── v4 폼 재배치(2026-07-11 대표 목표 시안): 상단 안내 배너·입력일자 단독·보험연령+성별 한 칸·글자수 카운터·상담채널 제거 ── */
 .ci-banner{display:flex;align-items:flex-start;gap:8px;background:var(--space-branch-soft);color:var(--space-branch-text);border:1px solid var(--space-branch-badge-bg);border-radius:var(--radius-xs);padding:10px 13px;font-size:var(--ts-badge);font-weight:500;line-height:1.4;margin-bottom:12px;}
