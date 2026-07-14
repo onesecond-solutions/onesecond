@@ -62,6 +62,7 @@ function extractFn(src, name){
   var sig = 'function ' + name + '(';
   var start = src.indexOf(sig);
   if(start < 0) throw new Error('함수 못 찾음: ' + name);
+  if(src.slice(start - 6, start) === 'async ') start -= 6;  /* async function도 'async ' 접두어 포함해서 추출(빠지면 내부 await가 문법 오류, 2026-07-14 _ciResvSave 추가로 발견) */
   var i = src.indexOf('{', start);
   var depth = 0, inStr = null, esc = false;
   for(; i < src.length; i++){
@@ -169,6 +170,7 @@ window._ciOcrRun     = function(){ alert('미리보기 — OCR 비활성'); };
 (function(){
   fetch('/app.html?_=' + Date.now()).then(function(r){ return r.text(); }).then(function(src){
     var need = ['_ciEsc','_ciNum','_ciDateOf','_ciV','_ciInsAge','_ciUpdIns','_ciPhoneFmt','_ciPickStage','_ciViewData',
+                '_ciResvToday','_ciResvOpen','_ciResvClose','_ciResvSave','_diaRemHtml',
                 '_dsPad2','_dsTodayStr','_dsParseYmd','_dsYmdStr','_dsAddDaysStr','_dsDayDiff','_dsYmdOfCreated','_dsStartStr','_dsCH','_dsChanIdx','_dsBuildMap','_dsDayVal','_dsSumRange','_dsShiftRange','_dsRangeCur','_dsLabelInfo','_dsDeltaHtml',
                 '_ciBandHtml','_ciTodayHtml','_ciStatsIsCollapsed','_ciStatsToggleCollapse','_ciStatsHtml','_ciStatsRerender','_ciStatsSetPreset','_ciStatsNav','_ciStatsApplyCustom','_ciListHtml','_ciPreviewHtml','_ciDelete','_ciFormHtml','_ciSetTodayF','_ciSetNameQ','_ciTodayMatch','_ciRender','_ciSetStage',
                 '_ciConsultToday','_ciConsultRender','_ciConsultToggle','_ciConsultPersist','_ciConsultDel','_ciConsultEdit','_ciConsultEditSave',
