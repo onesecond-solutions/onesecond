@@ -118,20 +118,33 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sdot.on i{background:var(--ac);}
 .ci-flow-foot{font-size:var(--ts-badge);color:var(--ac);margin-top:14px;line-height:1.4;}
 .ci-flow-foot.muted{color:var(--tf);}
-/* 데이터 현황(#ci-stats) — ci-top/ci-bottom 사이 가로 전체 밴드. 기획팀장 시안(2026-07-14): 기간토글+hero+채널카드4개+스택바차트.
+/* 데이터 현황(#ci-stats) — ci-top/ci-bottom 사이 가로 전체 밴드. 기획팀장 시안(2026-07-14 재설계, 대표 승인): 프리셋+‹›기간네비+hero+채널카드4개+일별 스택차트.
    신규 클래스는 전부 ds- 접두어 + #ci-stats 하위로 스코프(앱 전역 오염 방지). 채널색·델타색만 도메인 특화 하드코딩(사양 고정, 총괄 승인 예외). */
 .ci-stats{display:flex;flex-direction:column;gap:14px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md);padding:16px 18px;}
-/* 접기/펼치기(2026-07-14 추가): 제목행(.ds-head) 클릭 시 본문(.ds-body) 토글. 기본 접힘, 상태는 localStorage(ci_stats_collapsed) 유지(JS 쪽) */
+/* 접기/펼치기(2026-07-14 추가, 변경 없음): 제목행(.ds-head) 클릭 시 본문(.ds-body) 토글. 기본 접힘, 상태는 localStorage(ci_stats_collapsed) 유지(JS 쪽) */
 #ci-stats .ds-head{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
 #ci-stats .ds-chevron{font-size:10px;color:var(--tf);display:inline-block;width:14px;text-align:center;flex-shrink:0;}
 #ci-stats .ds-title{font-size:var(--ts-meta);font-weight:700;color:var(--tp);}
 #ci-stats .ds-body{display:flex;flex-direction:column;gap:14px;}
 #ci-stats .ds-body.ds-collapsed{display:none;}
-#ci-stats .ds-toggle-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
-#ci-stats .ds-seg{display:flex;gap:2px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:2px;}
-#ci-stats .ds-seg-btn{font-size:var(--ts-badge);font-weight:600;padding:5px 12px;border-radius:var(--radius-xs);border:0;background:transparent;color:var(--ts);cursor:pointer;font-family:inherit;}
-#ci-stats .ds-seg-btn.on{background:var(--ac);color:#fff;}
-#ci-stats .ds-asof{font-size:var(--ts-badge);color:var(--tf);}
+/* 프리셋 칩(오늘/최근7일/이번달/지난달/사용자정의) */
+#ci-stats .ds-presets{display:flex;gap:6px;flex-wrap:wrap;}
+#ci-stats .ds-preset{font-size:var(--ts-badge);font-weight:600;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--bd);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
+#ci-stats .ds-preset:hover:not(.on){background:var(--s2);}
+#ci-stats .ds-preset.on{background:var(--ac);border-color:var(--ac);color:#fff;}
+/* 사용자정의 날짜범위 바 */
+#ci-stats .ds-custom-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+#ci-stats .ds-date-input{font-family:inherit;font-size:var(--ts-badge);padding:5px 8px;border:1px solid var(--bd);border-radius:var(--radius-xs);background:var(--s1);color:var(--tp);}
+#ci-stats .ds-custom-sep{color:var(--tf);font-size:var(--ts-badge);}
+#ci-stats .ds-custom-apply{font-size:var(--ts-badge);font-weight:600;padding:5px 14px;border-radius:var(--radius-xs);border:0;background:var(--ac);color:#fff;cursor:pointer;font-family:inherit;}
+/* ‹ 기간라벨 › 네비 */
+#ci-stats .ds-period-nav{display:flex;align-items:center;justify-content:center;gap:16px;}
+#ci-stats .ds-nav-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd);background:var(--s1);color:var(--tp);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0;}
+#ci-stats .ds-nav-btn:hover:not(:disabled){background:var(--s2);}
+#ci-stats .ds-nav-btn:disabled{opacity:.35;cursor:not-allowed;}
+#ci-stats .ds-period-label{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:140px;}
+#ci-stats .ds-period-main{font-size:var(--ts-meta);font-weight:700;color:var(--tp);}
+#ci-stats .ds-period-sub{font-size:11px;color:var(--tf);}
 #ci-stats .ds-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 #ci-stats .ds-hero-main{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
 #ci-stats .ds-hero-num{font-size:calc(var(--ts-viewer-title,20px) * 1.7);font-weight:700;color:var(--tp);line-height:1.1;}
