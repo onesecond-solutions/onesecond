@@ -15937,7 +15937,7 @@ function _dsRangeCur(){  /* 현재 mode/anchor/cRange(window._ciStats*) 기준 �
     var s=_dsYmdStr(new Date(d.getFullYear(), d.getMonth(), 1));
     var eFull=_dsYmdStr(new Date(d.getFullYear(), d.getMonth()+1, 0));
     var TODAY=_dsTodayStr();
-    var e=eFull<TODAY?eFull:TODAY; if(e<s) e=s;
+    var e=eFull<TODAY?eFull:TODAY; if(e<s) e=eFull;  /* 미래 달이면 해당 달 전체 표시(이번 달만 오늘까지 컷) */
     return [s,e];
   }
   if(mode==='custom') return window._ciStatsCRange||[anchor,anchor];
@@ -15983,10 +15983,12 @@ function _ciStatsHtml(){
   if(!window._ciStatsAnchor) window._ciStatsAnchor=TODAY;
   var mode=window._ciStatsMode;
   var anchor=window._ciStatsAnchor;
-  if(mode!=='custom'){ if(anchor>TODAY) anchor=TODAY; if(anchor<START) anchor=START; window._ciStatsAnchor=anchor; }  /* 데이터 변경 등으로 상태가 범위를 벗어난 경우 방어적 clamp */
+  if(mode!=='custom' && mode!=='month'){ if(anchor>TODAY) anchor=TODAY; if(anchor<START) anchor=START; window._ciStatsAnchor=anchor; }  /* 오늘/최근7일만 [START~TODAY] 방어 clamp. 월 모드는 과거·미래 달 자유 탐색 허용(2026-07-14) */
   var map=_dsBuildMap(data);
   var range=_dsRangeCur();
-  var canPrev=range[0]>START, canNext=range[1]<TODAY;
+  var canPrev, canNext;
+  if(mode==='month'){ canPrev=true; canNext=true; }  /* 월 모드는 이전/다음 달 자유 이동(과거·미래 제한 없음) */
+  else { canPrev=range[0]>START; canNext=range[1]<TODAY; }
   var labelInfo=_dsLabelInfo(mode, anchor, range, TODAY);
 
   function _dsIsOn(key){
@@ -16099,13 +16101,7 @@ function _ciStatsNav(dir){
   var mode=window._ciStatsMode||'today';
   if(mode==='month'){
     var d=_dsParseYmd(window._ciStatsAnchor||TODAY);
-    var nd=new Date(d.getFullYear(), d.getMonth()+dir, 1);
-    var ndStr=_dsYmdStr(nd);
-    var td=_dsParseYmd(TODAY), sd=_dsParseYmd(START);
-    var maxM=_dsYmdStr(new Date(td.getFullYear(), td.getMonth(), 1));
-    var minM=_dsYmdStr(new Date(sd.getFullYear(), sd.getMonth(), 1));
-    if(ndStr>maxM) ndStr=maxM; if(ndStr<minM) ndStr=minM;
-    window._ciStatsAnchor=ndStr;
+    window._ciStatsAnchor=_dsYmdStr(new Date(d.getFullYear(), d.getMonth()+dir, 1));  /* 월 자유 이동(과거·미래 제한 없음) */
   } else if(mode==='custom'){
     var r=window._ciStatsCRange||[TODAY,TODAY];
     var len=_dsDayDiff(r[0],r[1])+1;
