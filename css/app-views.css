@@ -147,7 +147,8 @@ body.is-uat-trash .trash-only{display:flex;}
 #ci-stats .ds-period-sub{font-size:11px;color:var(--tf);}
 #ci-stats .ds-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 #ci-stats .ds-hero-main{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
-#ci-stats .ds-hero-num{font-size:calc(var(--ts-viewer-title,20px) * 1.7);font-weight:700;color:var(--tp);line-height:1.1;}
+#ci-stats .ds-hero-num{font-size:calc(var(--ts-viewer-title,20px) * 1.7);font-weight:700;color:var(--tp);line-height:1.1;cursor:pointer;border-radius:var(--radius-sm);transition:opacity .15s;}
+#ci-stats .ds-hero-num:hover{opacity:.75;}
 #ci-stats .ds-hero-unit{font-size:var(--ts-meta);color:var(--ts);font-weight:600;}
 #ci-stats .ds-hero-cmp{font-size:var(--ts-badge);color:var(--tf);display:inline-flex;align-items:center;gap:4px;}
 #ci-stats .ds-hero-top{font-size:var(--ts-meta);color:var(--tf);}
