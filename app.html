@@ -2812,9 +2812,8 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
           옛 2단 레이아웃(검색바 .sn-bar·필터칩 #sn-chips·좌 리스트 #sn-list·우 상세 #sn-detail)은 4분할의 오늘의 할 일/상담 플로우(클릭 필터)·+ 고객 추가 버튼으로 흡수되어 제거. -->
      <div class="wrap view" id="v-salesnote">
       <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
-      <div class="rm-note">🔒 <b>비공개</b> — 본인 영업 데이터 관리 전용 화면입니다. 외부 전송·AI 처리 없음.</div>
       <!-- 라이브 표시명: 고객관리(코드 id salesnote) -->
-      <div class="sn-head">고객관리 <span style="font-weight:400;color:var(--ts);font-size:13px">고객·상담 관리</span></div>
+      <div class="sn-head">고객관리 <span style="font-weight:400;color:var(--ts);font-size:13px">청약 고객 케어</span></div>
       <div class="sn-ci-host" id="sn-ci-host"></div>
      </div>
      <!-- ════ 휴지통 (#v-trash) — 상담관리 공용 게이트(_canSeeCare) 재사용(영업노트와 동일 대상). 소프트삭제(deleted_at) 고객 목록·복구·영구삭제. 본인(owner) 데이터만 RLS 자동 필터. 2026-07-13 ════ -->
@@ -15819,7 +15818,7 @@ function _ciShow(hostId){
 window._ciShow=_ciShow;
 /* 영업노트(#v-salesnote) 진입 전용 얇은 래퍼 — 상담관리 4분할(#ci-wrap) 컴포넌트를 그대로 재사용(중복 0).
    host=#sn-ci-host(영업노트 뷰 안). 업무노트 상담관리 배지 경로(_ciShow() 무인자)는 그대로 유지(회귀 0). 2026-07-13 */
-function _snCiShow(){ if(typeof window._cfShow==='function'){ window._cfShow('sn-ci-host'); return; } if(typeof _ciShow==='function') _ciShow('sn-ci-host'); }  /* 고객관리=고객 케어 플로우(_cfShow, salesnote 전용). _cfShow 미로드 시 기존 상담관리 4분할로 폴백(회귀 0). 2026-07-15 */
+function _snCiShow(){ if(typeof _ciShow==='function') _ciShow('sn-ci-host'); }  /* 고객관리 = 상담관리 4분할(#ci-wrap) 재사용(아래 카드리스트·미리보기 동일). 위(top)만 salesnote일 때 _cfSalesnoteTop()로 케어 플로우 교체(_ciRender 분기). 2026-07-15 */
 window._snCiShow=_snCiShow;
 /* 상담관리 진입 시 어느 호스트(바텀시트/홈데스크/홈딥링크)든 그 영역으로 스크롤. 레이아웃·DOM 이동 안정 후 실행(rAF 2회+지연 백업). */
 function _ciScrollIntoView(){
@@ -16219,7 +16218,8 @@ function _ciHeroPick(){  /* hero 큰 숫자 클릭="이 기간 전체 채널 보
 window._ciHeroPick=_ciHeroPick;
 function _ciListHtml(){
   var data=_ciViewData().slice();
-  if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
+  if(window._ciMode==='salesnote' && window._ciCareF && typeof window._cfMatch==='function'){ data=data.filter(function(c){ return window._cfMatch(c); }); }  /* 고객관리 케어 플로우 필터(위 케어 카드 클릭) */
+  else if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
   else { var cur=window._ciStageF||'전체'; if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;}); }
   var _nq=String(window._ciNameQ||'').trim().toLowerCase().replace(/\s+/g,'');  /* 고객명 검색(부분일치·대소문자/공백 무시) — 기존 필터 뒤 AND 결합 */
   if(_nq) data=data.filter(function(c){ return String(c.name||'').toLowerCase().replace(/\s+/g,'').indexOf(_nq)>=0; });
@@ -16664,6 +16664,9 @@ function _ciRender(){
     if(_pvSel){ _ciOpenForm(window._ciSel); }  /* 선택 고객이 있으면 옛 요약(_ciPreviewHtml) 대신 새 스타일 폼을 연다 — 미리보기 예전 스타일 버그 수정(2026-07-14 대표) */
     else { pv.innerHTML=_ciPreviewHtml(null); }  /* 미선택=안내 문구 */
   }
+  /* 고객관리(salesnote) = 위(top)만 케어 플로우로 교체 + 미리보기 케어 관리 이식. 상담관리(care)는 원복. 아래 카드리스트·미리보기는 동일. (2026-07-15) */
+  if(window._ciMode==='salesnote' && typeof window._cfSalesnoteTop==='function'){ window._cfSalesnoteTop(); }
+  else { var _cfw=document.getElementById('ci-wrap'); if(_cfw) _cfw.classList.remove('ci-salesnote'); }
 }
 window._ciRender=_ciRender;
 
