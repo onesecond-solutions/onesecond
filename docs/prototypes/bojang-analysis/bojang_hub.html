@@ -1,0 +1,101 @@
+<style>
+  :root{--ground:#0A0F1F;--ground2:#0E1428;--panel:#141B31;--panel2:#111830;--ink:#F5F2E9;--muted:#9AA3BC;--faint:#6E7794;--gold:#D9B268;--gold-b:#F1D096;--line:rgba(233,214,170,.14);--r:18px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  .wrap{min-height:100vh;background:radial-gradient(120% 55% at 50% -6%,rgba(217,178,104,.13),transparent 58%),linear-gradient(180deg,var(--ground),var(--ground2));color:var(--ink);font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','맑은 고딕','Noto Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.2px;padding:0 0 46px}
+  .card{max-width:560px;margin:0 auto;padding:0 18px}
+  .top{text-align:center;padding:42px 16px 26px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+  .top h1{font-size:27px;font-weight:800;margin:12px 0 10px;letter-spacing:-.5px}
+  .top p{font-size:14px;line-height:1.7;color:var(--muted);max-width:400px;margin:0 auto}
+  .sec-h{display:flex;align-items:center;gap:9px;margin:26px 4px 13px}
+  .sec-h .n{font-size:15px;font-weight:800}
+  .sec-h .tag{font-size:11px;font-weight:800;color:var(--faint);border:1px solid var(--line);padding:3px 9px;border-radius:99px}
+  .sec-h .ln{flex:1;height:1px;background:var(--line)}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .row{display:flex;align-items:center;gap:13px;background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:14px 15px}
+  .em{width:40px;height:40px;flex-shrink:0;border-radius:11px;background:rgba(217,178,104,.10);border:1px solid rgba(217,178,104,.22);display:grid;place-items:center;font-size:19px}
+  .mid{flex:1;min-width:0}
+  .mid .t{font-size:15px;font-weight:800}
+  .mid .w{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.45}
+  .acts{display:flex;gap:7px;flex-shrink:0}
+  .ab{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);text-decoration:none}
+  .ab svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .ab.copy{background:linear-gradient(135deg,var(--gold-b),var(--gold));color:#241B08;border:0}
+  .note{margin-top:14px;background:rgba(217,178,104,.07);border:1px solid rgba(217,178,104,.22);border-radius:14px;padding:14px 16px;font-size:12.5px;line-height:1.7;color:#C9CFDF}
+  .note b{color:var(--gold-b)}
+  .foot{margin-top:26px;text-align:center;font-size:11px;color:var(--faint);line-height:1.7;padding:0 12px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--gold-b);color:#241B08;font-size:13.5px;font-weight:800;padding:12px 20px;border-radius:12px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+<div class="wrap"><div class="card">
+  <div class="top">
+    <div class="eyebrow">보장분석 발송 센터</div>
+    <h1>상황에 맞는 자료를 골라 보내세요</h1>
+    <p>통화가 끝나면 여기서 자료를 골라 <b style="color:var(--gold-b)">링크 복사</b> → 고객 카톡에 붙여넣기. 고객이 열어보고 먼저 연락 오게 만드는 흐름이에요.</p>
+  </div>
+
+  <div class="sec-h"><span class="n">설명형 자료</span><span class="tag">상태 모를 때 · 누구에게나</span><span class="ln"></span></div>
+  <div class="list" id="list1">
+    <div class="row" data-url="https://claude.ai/code/artifact/53bbcb8b-50fb-46eb-b599-47969ac5c325">
+      <div class="em">🛡️</div><div class="mid"><div class="t">종합 보장분석 안내</div><div class="w">"보장분석 자료 보내드릴게요" — 4대 보장 + 자가진단</div></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener">↗</a><button class="ab copy" title="링크 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+    </div>
+    <div class="row" data-url="https://claude.ai/code/artifact/ec16495a-a0fb-4181-96c2-3d7d2c758685">
+      <div class="em">🏥</div><div class="mid"><div class="t">의료실비</div><div class="w">"실비 자료 보내드릴게요" — 세대·자기부담 설명</div></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener">↗</a><button class="ab copy" title="링크 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+    </div>
+    <div class="row" data-url="https://claude.ai/code/artifact/067c0e2e-edbb-4122-b7dd-7547740401ab">
+      <div class="em">🎗️</div><div class="mid"><div class="t">암</div><div class="w">"암보험 자료 보내드릴게요" — 진단·치료·비급여 3층</div></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener">↗</a><button class="ab copy" title="링크 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+    </div>
+    <div class="row" data-url="https://claude.ai/code/artifact/af44dc5b-d51a-45ab-be8f-176ef30ac90f">
+      <div class="em">🫀</div><div class="mid"><div class="t">뇌 · 심장</div><div class="w">"뇌심장 자료 보내드릴게요" — 좁은문vs넓은문 범위</div></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener">↗</a><button class="ab copy" title="링크 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+    </div>
+    <div class="row" data-url="https://claude.ai/code/artifact/4c83ce86-7347-4317-835b-ba87665d8818">
+      <div class="em">🩹</div><div class="mid"><div class="t">수술비</div><div class="w">"수술비 자료 보내드릴게요" — 종수술·반복지급 구조</div></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener">↗</a><button class="ab copy" title="링크 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+    </div>
+  </div>
+
+  <div class="sec-h"><span class="n">맞춤 결과</span><span class="tag">고객 자료 있을 때</span><span class="ln"></span></div>
+  <div class="list" id="list2">
+    <div class="row" data-url="https://claude.ai/code/artifact/9bc0dce7-bab6-4e2e-a937-9ebee3b2327e">
+      <div class="em">📋</div><div class="mid"><div class="t">최O숙 고객 결과 <span style="color:var(--faint);font-weight:700;font-size:11px">· 예시</span></div><div class="w">보장분석 자료 넣어 만든 4축 진단 결과</div></div>
+      <div class="acts"><a class="ab" target="_blank" rel="noopener">↗</a><button class="ab copy" title="링크 복사"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+    </div>
+  </div>
+  <div class="note">💡 새 고객 맞춤 결과는 지금은 <b>보장분석 PDF·엑셀을 총괄에게 전달 → 결과 링크 생성</b> 방식이에요. 원세컨드 앱에 정식 통합되면, 이 센터에서 <b>직접 업로드 → 자동 생성</b>됩니다.</div>
+
+  <div class="foot">
+    ⚠️ 고객에게 보내기 전, 각 링크를 열어 <b style="color:var(--gold)">공유 → 공개</b>로 한 번 전환하세요.<br>
+    ※ 이 센터는 임태성 전문가 전용 관리 화면입니다.
+  </div>
+</div></div>
+<div class="toast" id="toast">링크가 복사됐어요 · 카톡에 붙여넣으세요</div>
+<script>
+  // 열기 링크 href 세팅
+  document.querySelectorAll('.row').forEach(function(r){
+    var u=r.dataset.url; r.querySelector('a.ab').href=u;
+  });
+  // 복사
+  function copy(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){ return navigator.clipboard.writeText(text); }
+    return new Promise(function(res,rej){
+      var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); res(); }catch(e){ rej(e); } document.body.removeChild(ta);
+    });
+  }
+  var toast=document.getElementById('toast'), tmr;
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var url=btn.closest('.row').dataset.url;
+      copy(url).then(function(){
+        toast.classList.add('show'); clearTimeout(tmr); tmr=setTimeout(function(){toast.classList.remove('show')},1900);
+      }).catch(function(){
+        toast.textContent='복사 실패 — 링크: '+url; toast.classList.add('show'); clearTimeout(tmr); tmr=setTimeout(function(){toast.classList.remove('show')},3500);
+      });
+    });
+  });
+</script>

@@ -1,0 +1,88 @@
+<style>
+  :root{--ground:#0A0F1F;--ground2:#0E1428;--panel:#141B31;--panel2:#111830;--ink:#F5F2E9;--muted:#9AA3BC;--faint:#6E7794;--gold:#D9B268;--gold-b:#F1D096;--line:rgba(233,214,170,.14);--r:20px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  .wrap{min-height:100vh;background:radial-gradient(120% 60% at 50% -8%,rgba(217,178,104,.14),transparent 60%),linear-gradient(180deg,var(--ground),var(--ground2));color:var(--ink);font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','맑은 고딕','Noto Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.2px;padding:0 0 40px}
+  .card{max-width:468px;margin:0 auto;padding:0 18px}
+  .hero{position:relative;padding:48px 20px 30px;text-align:center;overflow:hidden}
+  .hero .ring{position:absolute;left:50%;top:-30px;transform:translateX(-50%);width:320px;height:320px;pointer-events:none;opacity:.45}
+  .badge{display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 15px;border-radius:99px;background:rgba(217,178,104,.10);border:1px solid rgba(217,178,104,.28)}
+  .badge svg{width:19px;height:19px;stroke:var(--gold-b);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .badge span{font-size:13px;font-weight:800;color:var(--gold-b)}
+  .hero h1{font-size:28px;line-height:1.34;font-weight:800;margin:6px 0 12px;text-wrap:balance}
+  .hero h1 .g{color:var(--gold-b)}
+  .hero p{font-size:14px;line-height:1.72;color:var(--muted);max-width:330px;margin:0 auto}
+  .blocks{display:flex;flex-direction:column;gap:12px;margin-top:26px}
+  .b{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:19px 18px}
+  .b .k{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;text-transform:uppercase}
+  .b .t{font-size:16.5px;font-weight:800;line-height:1.45;margin-bottom:7px}
+  .b .d{font-size:13.5px;line-height:1.72;color:#C4CBDD}
+  .b .d b{color:var(--gold-b);font-weight:800}
+  .gens{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}
+  .gen{flex:1;min-width:78px;text-align:center;padding:10px 6px;border-radius:11px;background:rgba(255,255,255,.02);border:1px solid var(--line)}
+  .gen .n{font-size:12px;font-weight:800;color:var(--gold-b)}
+  .gen .x{font-size:10.5px;color:var(--faint);margin-top:3px;line-height:1.35}
+  .check{margin-top:24px;background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:20px 18px;text-align:center}
+  .check .q{font-size:15px;font-weight:800;line-height:1.5;margin-bottom:14px}
+  .check .q b{color:var(--gold-b)}
+  .opts{display:flex;gap:9px}
+  .opt{flex:1;padding:12px 6px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--muted);font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.18s}
+  .opt:hover{border-color:rgba(217,178,104,.4)}
+  .ans{margin-top:14px;font-size:13.5px;line-height:1.65;color:var(--gold-b);font-weight:700;opacity:0;max-height:0;overflow:hidden;transition:.35s}
+  .ans.show{opacity:1;max-height:120px}
+  .cta{margin-top:24px;text-align:center;padding:2px}
+  .cta .ct{font-size:17px;font-weight:800;line-height:1.45}
+  .cta .cs{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;border-radius:14px;font-size:15px;font-weight:800;border:0;font-family:inherit;text-decoration:none;margin-top:16px;background:linear-gradient(135deg,var(--gold-b),var(--gold));color:#241B08}
+  .btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .foot{margin-top:24px;text-align:center}
+  .sign{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+  .sign .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold-b),var(--gold));display:grid;place-items:center;color:#241B08;font-weight:900;font-size:15px}
+  .sign .nm{text-align:left}.sign .nm .a{font-size:14px;font-weight:800}.sign .nm .b{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .disc{font-size:11px;color:var(--faint);line-height:1.7;margin-top:15px;max-width:360px;margin-left:auto;margin-right:auto}
+  .reveal{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  .reveal:nth-child(2){animation-delay:.08s}.reveal:nth-child(3){animation-delay:.16s}
+  @keyframes rise{to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}.ans{transition:none}}
+</style>
+<div class="wrap"><div class="card">
+  <div class="hero reveal">
+    <svg class="ring" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="142" fill="none" stroke="rgba(217,178,104,.20)" stroke-width="1"/><circle cx="160" cy="160" r="110" fill="none" stroke="rgba(217,178,104,.12)" stroke-width="1"/><circle cx="160" cy="160" r="78" fill="none" stroke="rgba(217,178,104,.08)" stroke-width="1"/></svg>
+    <div class="badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg><span>수술비</span></div>
+    <h1>수술비, 큰 병보다<br><span class="g">자주 쓰는</span> 생활형 보장</h1>
+    <p>암 같은 특정 질환만이 아니라, 질병·상해 전반의 실제 수술에서 쓰이는 보장이에요.</p>
+  </div>
+
+  <div class="blocks">
+    <div class="b reveal"><div class="k">왜 중요한가요</div><div class="t">생각보다 자주, 반복돼요</div><div class="d">큰 진단 하나보다, 살면서 <b>크고 작은 수술</b>이 더 자주 생겨요. 당일 수술·내시경 시술까지 늘면서 실제 활용도가 높은 보장이에요.</div></div>
+    <div class="b reveal"><div class="k">이렇게 봐요</div><div class="t">'종수술' 구조로 봐요</div><div class="d">수술을 난이도별로 나눠 지급하는 구조예요. 이 세 가지를 함께 봐야 해요.</div>
+      <div class="gens"><div class="gen"><div class="n">1~5종</div><div class="x">난이도별 지급</div></div><div class="gen"><div class="n">반복 지급</div><div class="x">1회성 아님</div></div><div class="gen"><div class="n">질병·상해</div><div class="x">둘 다 되는지</div></div></div>
+    </div>
+    <div class="b reveal"><div class="k">놓치기 쉬운 점</div><div class="t">1회성인지, 반복 지급인지</div><div class="d">큰 진단비는 있어도 <b>실제 수술비가 얇으면</b> 병원 이용에서 체감이 약해요. 반복 지급되는지, 질병·상해가 함께 되는지 꼭 확인해요.</div></div>
+  </div>
+
+  <div class="check reveal">
+    <div class="q">내 수술비가 <b>반복 지급</b>되는지 아세요?</div>
+    <div class="opts"><button class="opt" data-a="0">네, 알아요</button><button class="opt" data-a="1">잘 몰라요</button></div>
+    <div class="ans" id="ans"></div>
+  </div>
+
+  <div class="cta reveal">
+    <div class="ct">수술비 구조·중복 지급, 점검해드릴게요</div>
+    <div class="cs">종수술 체계와 반복 지급 여부, 5분이면 확인해요.</div>
+    <a class="btn" href="tel:01092419375"><svg viewBox="0 0 24 24"><path d="M4 5c0 9 6 15 15 15l0-3.5-4-1.5-2 2c-3-1.4-5.6-4-7-7l2-2-1.5-4L4 5z"/></svg>전화 문의 · 010-9241-9375</a>
+  </div>
+
+  <div class="foot reveal">
+    <div class="sign"><div class="av">임</div><div class="nm"><div class="a">임태성 보험전문가</div><div class="b">원세컨드 · 보장분석 상담</div></div></div>
+    <div class="disc">※ 보험 이해를 돕기 위한 일반 안내이며 가입·해지를 권유하지 않습니다. 실제 보장은 증권·약관 기준으로 확인해 드립니다.</div>
+  </div>
+</div></div>
+<script>
+  document.querySelectorAll('.opt').forEach(function(o){o.addEventListener('click',function(){
+    document.querySelectorAll('.opt').forEach(function(x){x.style.borderColor='';x.style.color=''});
+    o.style.borderColor='var(--gold)';o.style.color='var(--gold-b)';
+    var a=document.getElementById('ans');
+    a.textContent = o.dataset.a==='1' ? '이 부분을 모르는 분이 많아요. 반복 지급 여부가 실제 병원 이용에서 큰 차이예요 — 편하게 확인해드릴게요.' : '잘 챙기셨네요! 그럼 종수술 범위와 중복 지급 여부만 같이 점검해봐요.';
+    a.classList.add('show');
+  })});
+</script>

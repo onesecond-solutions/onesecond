@@ -1,0 +1,247 @@
+<style>
+  :root{
+    --ground:#0A0F1F; --ground2:#0E1428;
+    --panel:#141B31; --panel2:#111830;
+    --ink:#F5F2E9; --muted:#9AA3BC; --faint:#6E7794;
+    --gold:#D9B268; --gold-b:#F1D096; --line:rgba(233,214,170,.14);
+    --good:#57C295; --warn:#E6B65B; --weak:#E8917A;
+    --r:20px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  .wrap{
+    min-height:100vh;
+    background:
+      radial-gradient(120% 60% at 50% -8%, rgba(217,178,104,.14), transparent 60%),
+      linear-gradient(180deg,var(--ground) 0%, var(--ground2) 100%);
+    color:var(--ink);
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','맑은 고딕','Noto Sans KR',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; letter-spacing:-0.2px;
+    padding:0 0 40px;
+  }
+  .card{max-width:468px;margin:0 auto;padding:0 18px}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+
+  /* hero */
+  .hero{position:relative;padding:52px 20px 40px;text-align:center;overflow:hidden}
+  .hero .ring{position:absolute;left:50%;top:-40px;transform:translateX(-50%);width:340px;height:340px;pointer-events:none;opacity:.5}
+  .hero h1{font-size:31px;line-height:1.32;font-weight:800;margin:16px 0 14px;text-wrap:balance}
+  .hero h1 .g{color:var(--gold-b)}
+  .hero p{font-size:14.5px;line-height:1.75;color:var(--muted);max-width:340px;margin:0 auto}
+  .rule{width:46px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);margin:20px auto 0;border-radius:2px}
+
+  .sect{margin-top:30px}
+  .sect-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 2px 13px}
+  .sect-h h2{font-size:19px;font-weight:800}
+  .sect-h span{font-size:12px;color:var(--faint);font-weight:600}
+
+  /* 보장 아코디언 */
+  .acc{display:flex;flex-direction:column;gap:11px}
+  .item{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .head{display:flex;align-items:center;gap:14px;padding:17px 17px;cursor:pointer;width:100%;background:none;border:0;color:inherit;text-align:left;font-family:inherit}
+  .ic{width:44px;height:44px;flex-shrink:0;border-radius:13px;background:rgba(217,178,104,.10);border:1px solid rgba(217,178,104,.22);display:grid;place-items:center}
+  .ic svg{width:24px;height:24px;stroke:var(--gold-b);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .ht{flex:1;min-width:0}
+  .ht .t{display:block;font-size:16px;font-weight:800;letter-spacing:-.3px}
+  .ht .s{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .chev{width:20px;height:20px;flex-shrink:0;stroke:var(--faint);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .3s}
+  .item.open .chev{transform:rotate(180deg)}
+  .body{max-height:0;overflow:hidden;transition:max-height .34s ease}
+  .body-in{padding:2px 17px 18px 17px}
+  .body-in .row{padding:11px 0;border-top:1px solid rgba(255,255,255,.06)}
+  .body-in .k{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--gold);margin-bottom:5px}
+  .body-in .v{font-size:13.5px;line-height:1.65;color:#C9CFDF}
+
+  /* 자가진단 */
+  .quiz{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:20px 18px}
+  .q{margin-bottom:16px}
+  .q:last-of-type{margin-bottom:0}
+  .q .qt{font-size:14.5px;font-weight:700;line-height:1.5;margin-bottom:10px;color:#E7EAF3}
+  .q .qt b{color:var(--gold-b);font-weight:800}
+  .opts{display:flex;gap:8px}
+  .opt{flex:1;padding:11px 6px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.18s}
+  .opt:hover{border-color:rgba(217,178,104,.4)}
+  .opt.on{background:rgba(217,178,104,.16);border-color:var(--gold);color:var(--gold-b)}
+  .result{margin-top:18px;padding:16px 16px;border-radius:15px;background:rgba(217,178,104,.09);border:1px solid rgba(217,178,104,.28);opacity:0;transform:translateY(8px);transition:.4s;display:none}
+  .result.show{opacity:1;transform:none;display:block}
+  .result .rt{font-size:15px;font-weight:800;color:var(--gold-b);line-height:1.5;margin-bottom:6px}
+  .result .rd{font-size:13px;color:#C9CFDF;line-height:1.65}
+
+  /* CTA */
+  .cta{margin-top:26px;background:linear-gradient(155deg,#1B2340,#141A30);border:1px solid rgba(217,178,104,.3);border-radius:var(--r);padding:24px 20px;text-align:center;position:relative;overflow:hidden}
+  .cta::before{content:"";position:absolute;inset:0;background:radial-gradient(90% 70% at 50% 0,rgba(217,178,104,.16),transparent 65%);pointer-events:none}
+  .cta .ct{font-size:19px;font-weight:800;line-height:1.45;position:relative}
+  .cta .cs{font-size:13.5px;color:var(--muted);margin-top:9px;line-height:1.65;position:relative}
+  .btns{display:flex;flex-direction:column;gap:10px;margin-top:18px;position:relative}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;border:0;font-family:inherit;text-decoration:none}
+  .btn.primary{background:linear-gradient(135deg,var(--gold-b),var(--gold));color:#241B08}
+  .btn.ghost{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--ink)}
+  .btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* footer */
+  .foot{margin-top:26px;text-align:center;padding:0 10px}
+  .sign{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+  .sign .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold-b),var(--gold));display:grid;place-items:center;color:#241B08;font-weight:900;font-size:15px}
+  .sign .nm{text-align:left}
+  .sign .nm .a{font-size:14px;font-weight:800}
+  .sign .nm .b{font-size:11.5px;color:var(--faint);margin-top:2px}
+  .disc{font-size:11px;color:var(--faint);line-height:1.7;margin-top:16px;max-width:360px;margin-left:auto;margin-right:auto}
+
+  .reveal{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+  .reveal:nth-child(2){animation-delay:.08s}.reveal:nth-child(3){animation-delay:.16s}
+  @keyframes rise{to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none}.body,.chev,.result,.opt{transition:none}}
+</style>
+
+<div class="wrap">
+  <div class="card">
+
+    <div class="hero reveal">
+      <svg class="ring" viewBox="0 0 340 340" aria-hidden="true">
+        <circle cx="170" cy="170" r="150" fill="none" stroke="rgba(217,178,104,.20)" stroke-width="1"/>
+        <circle cx="170" cy="170" r="118" fill="none" stroke="rgba(217,178,104,.13)" stroke-width="1"/>
+        <circle cx="170" cy="170" r="86" fill="none" stroke="rgba(217,178,104,.09)" stroke-width="1"/>
+      </svg>
+      <div class="eyebrow">보장분석 · Coverage Report</div>
+      <h1>내 보험,<br><span class="g">제대로</span> 알고 계신가요?</h1>
+      <p>가입한 보험이 실제로 나를 지켜주는지, 가장 중요한 4가지 기준으로 쉽게 짚어드립니다.</p>
+      <div class="rule"></div>
+    </div>
+
+    <div class="sect reveal">
+      <div class="sect-h"><h2>꼭 봐야 할 4가지 보장</h2><span>탭하면 설명이 열려요</span></div>
+      <div class="acc" id="acc">
+
+        <div class="item">
+          <button class="head" aria-expanded="false">
+            <span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/><path d="M15.5 15.5v4M13.5 17.5h4"/></svg></span>
+            <span class="ht"><span class="t">의료실비</span><span class="s">병원비를 실제로 돌려받는 기본기</span></span>
+            <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="body"><div class="body-in">
+            <div class="row"><div class="k">왜 중요한가요</div><div class="v">병원비 부담을 실제 손해 기준으로 덜어주는 기본 축이에요. 없으면 안 되는 바닥판입니다.</div></div>
+            <div class="row"><div class="k">놓치기 쉬운 점</div><div class="v">'있다/없다'보다 <b style="color:var(--gold-b)">몇 세대 실손인지</b>가 중요해요. 세대에 따라 자기부담금·비급여 보장이 크게 달라집니다.</div></div>
+          </div></div>
+        </div>
+
+        <div class="item">
+          <button class="head" aria-expanded="false">
+            <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-9.3A4.2 4.2 0 0 1 12 8a4.2 4.2 0 0 1 7 3.7C19 16.6 12 21 12 21z"/><circle cx="12" cy="11" r="1.6"/></svg></span>
+            <span class="ht"><span class="t">암</span><span class="s">진단금 하나로 끝이 아니에요</span></span>
+            <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="body"><div class="body-in">
+            <div class="row"><div class="k">왜 중요한가요</div><div class="v">진단 직후 생활, 이어지는 치료, 비급여 치료 선택까지 — 한 번에 흔들릴 수 있어 나눠서 봐야 해요.</div></div>
+            <div class="row"><div class="k">놓치기 쉬운 점</div><div class="v">진단비만 크게 있고 <b style="color:var(--gold-b)">치료비(주요치료·비급여)</b>가 비어 있는 경우가 많아요.</div></div>
+          </div></div>
+        </div>
+
+        <div class="item">
+          <button class="head" aria-expanded="false">
+            <span class="ic"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 3 9 2-6 1.5 2H21"/></svg></span>
+            <span class="ht"><span class="t">뇌 · 심장</span><span class="s">이름은 비슷해도 범위가 달라요</span></span>
+            <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="body"><div class="body-in">
+            <div class="row"><div class="k">왜 중요한가요</div><div class="v">발생하면 부담이 큰 만큼, 보장 범위가 넓은지가 핵심이에요.</div></div>
+            <div class="row"><div class="k">놓치기 쉬운 점</div><div class="v">뇌출혈·급성심근경색 같은 <b style="color:var(--gold-b)">좁은 담보</b>인지, 뇌혈관·허혈성심장질환까지 <b style="color:var(--gold-b)">넓게</b> 담는지 확인이 필요해요.</div></div>
+          </div></div>
+        </div>
+
+        <div class="item">
+          <button class="head" aria-expanded="false">
+            <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg></span>
+            <span class="ht"><span class="t">수술비</span><span class="s">살면서 자주 쓰는 생활형 보장</span></span>
+            <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="body"><div class="body-in">
+            <div class="row"><div class="k">왜 중요한가요</div><div class="v">큰 병 하나가 아니라, 질병·상해 전반의 실제 수술에서 자주 쓰이는 보장이에요.</div></div>
+            <div class="row"><div class="k">놓치기 쉬운 점</div><div class="v">1회성인지 <b style="color:var(--gold-b)">반복 지급</b>인지, 질병·상해가 구분돼 있는지 함께 봐야 해요.</div></div>
+          </div></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="sect reveal">
+      <div class="sect-h"><h2>30초 자가진단</h2><span>가볍게 답해보세요</span></div>
+      <div class="quiz">
+        <div class="q" data-q="0">
+          <div class="qt">내 <b>실손보험이 몇 세대</b>인지 알고 계세요?</div>
+          <div class="opts"><button class="opt">네, 알아요</button><button class="opt">아니요</button></div>
+        </div>
+        <div class="q" data-q="1">
+          <div class="qt">암 진단비 말고 <b>'치료비' 보장</b>도 있는지 아세요?</div>
+          <div class="opts"><button class="opt">네, 알아요</button><button class="opt">잘 몰라요</button></div>
+        </div>
+        <div class="q" data-q="2">
+          <div class="qt">마지막으로 <b>보장을 점검</b>한 게 언제세요?</div>
+          <div class="opts"><button class="opt">1년 내</button><button class="opt">오래됨/처음</button></div>
+        </div>
+        <div class="result" id="quizResult">
+          <div class="rt" id="rTitle"></div>
+          <div class="rd" id="rDesc"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta">
+      <div class="ct">궁금한 점, 지금 편하게 물어보세요</div>
+      <div class="cs">이 카톡에 <b style="color:var(--gold-b)">"분석"</b>이라고 답장만 주시면,<br>내 보장 상태를 5분 만에 쉽게 확인해드려요.</div>
+      <div class="btns">
+        <a class="btn primary" href="tel:01092419375" id="callBtn">
+          <svg viewBox="0 0 24 24"><path d="M4 5c0 9 6 15 15 15l0-3.5-4-1.5-2 2c-3-1.4-5.6-4-7-7l2-2-1.5-4L4 5z"/></svg>
+          전화 문의 · 010-9241-9375
+        </a>
+        <button class="btn ghost" onclick="document.querySelector('.quiz').scrollIntoView({behavior:'smooth'})">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          먼저 자가진단 해보기
+        </button>
+      </div>
+    </div>
+
+    <div class="foot reveal">
+      <div class="sign">
+        <div class="av">임</div>
+        <div class="nm"><div class="a">임태성 보험전문가</div><div class="b">원세컨드 · 보장분석 상담</div></div>
+      </div>
+      <div class="disc">※ 이 자료는 보험 이해를 돕기 위한 일반 안내이며, 가입·해지를 권유하지 않습니다. 실제 보장은 증권과 약관 기준으로 확인해 드립니다.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // 아코디언
+  document.querySelectorAll('#acc .item').forEach(function(it){
+    var head=it.querySelector('.head'), body=it.querySelector('.body');
+    head.addEventListener('click',function(){
+      var open=it.classList.toggle('open');
+      head.setAttribute('aria-expanded',open?'true':'false');
+      body.style.maxHeight = open ? (body.scrollHeight+'px') : '0px';
+    });
+  });
+  // 자가진단
+  var answers={};
+  document.querySelectorAll('.quiz .q').forEach(function(q){
+    var qi=q.getAttribute('data-q');
+    q.querySelectorAll('.opt').forEach(function(opt,idx){
+      opt.addEventListener('click',function(){
+        q.querySelectorAll('.opt').forEach(function(o){o.classList.remove('on')});
+        opt.classList.add('on');
+        answers[qi]=idx; // 0=긍정/최근, 1=모름/오래됨
+        if(Object.keys(answers).length===3){ showResult(); }
+      });
+    });
+  });
+  function showResult(){
+    var gaps = (answers[0]===1?1:0)+(answers[1]===1?1:0)+(answers[2]===1?1:0);
+    var t,d;
+    if(gaps>=2){ t="점검이 필요한 상태예요"; d="세대·치료비·최근 점검 중 놓친 부분이 있어요. 대부분 여기서 체감 보장이 갈립니다. 5분이면 정확히 확인해드릴게요."; }
+    else if(gaps===1){ t="거의 잘 챙기셨어요 — 딱 한 가지만"; d="한 부분만 확인하면 균형이 딱 맞아요. 그 한 칸이 무엇인지 편하게 물어봐 주세요."; }
+    else{ t="기본기가 탄탄하시네요 👍"; d="잘 준비돼 있어요. 그래도 세대·중복·보험료 효율은 한 번 같이 점검해두면 좋아요."; }
+    document.getElementById('rTitle').textContent=t;
+    document.getElementById('rDesc').textContent=d;
+    var r=document.getElementById('quizResult'); r.classList.add('show');
+    setTimeout(function(){r.scrollIntoView({behavior:'smooth',block:'center'})},120);
+  }
+</script>
