@@ -13,6 +13,7 @@ var _HS2_TILES=[
   {v:'goji',           ic:'i-check',    t:'알릴의무',          d:'회사별 고지유형·간편고지',  show:function(){return typeof window._canSeeRoadmap==='function'&&window._canSeeRoadmap();}},
   {v:'newsletters',    ic:'i-building', t:'소식지',            d:'원수사·GA 월별 모음',       show:function(){return typeof window._canSeeNl==='function'&&window._canSeeNl();}},
   {v:'silson',         ic:'i-file',     t:'실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return document.body.classList.contains('is-uat-homedesk');}},
+  {v:'cov-medical', ic:'i-file', t:'보장분석 · 의료실비', d:'실손 세대 판정 · 자가진단', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'scripts',        ic:'i-msg',      t:'스크립트',          d:'상담 멘트·화법',            show:function(){return true;}},
   {v:'tool',           ic:'i-folder',   t:'계산기 · 변환기',   d:'BMI·보험연령·이미지 변환',  show:function(){return true;}}
   /* 스마트 설계서 = 기능 준비 중, 준비되면 여기 같은 패턴(show:_canSeeXXX)으로 추가 */
