@@ -15819,7 +15819,7 @@ function _ciShow(hostId){
 window._ciShow=_ciShow;
 /* 영업노트(#v-salesnote) 진입 전용 얇은 래퍼 — 상담관리 4분할(#ci-wrap) 컴포넌트를 그대로 재사용(중복 0).
    host=#sn-ci-host(영업노트 뷰 안). 업무노트 상담관리 배지 경로(_ciShow() 무인자)는 그대로 유지(회귀 0). 2026-07-13 */
-function _snCiShow(){ if(typeof _ciShow==='function') _ciShow('sn-ci-host'); }
+function _snCiShow(){ if(typeof window._cfShow==='function'){ window._cfShow('sn-ci-host'); return; } if(typeof _ciShow==='function') _ciShow('sn-ci-host'); }  /* 고객관리=고객 케어 플로우(_cfShow, salesnote 전용). _cfShow 미로드 시 기존 상담관리 4분할로 폴백(회귀 0). 2026-07-15 */
 window._snCiShow=_snCiShow;
 /* 상담관리 진입 시 어느 호스트(바텀시트/홈데스크/홈딥링크)든 그 영역으로 스크롤. 레이아웃·DOM 이동 안정 후 실행(rAF 2회+지연 백업). */
 function _ciScrollIntoView(){
@@ -17979,6 +17979,8 @@ document.addEventListener('keydown', function(e){
 <script src="/js/home.js"></script>
 <!-- 의료실비 보장분석 1축 엔진 — #v-cov-medical 렌더·judgeGen·폴백. 게이트(_canSeeCoverage)는 app.html 인라인. silson_generations 읽기만. (2026-07-15) -->
 <script src="/js/cov-medical.js"></script>
+<!-- 고객관리 "고객 케어 플로우 v1" Phase1 엔진 — salesnote 전용 렌더(_cfShow). 청약완료 대상·계약일 자동배치. 상담관리(_ci*)·#ci-wrap 무접촉. (2026-07-15) -->
+<script src="/js/care-flow.js"></script>
 <!-- ═══ 인앱 로그인/가입 지연로드 (홈 인덱스 전환, 2026-07-08 대표 결정 B안) ═══
      auth-modal.js 전역 로드 금지(2026-07-05 로그아웃 사고 방지 — 로그인 사용자는 이 스크립트를 절대 안 부름).
      비로그인이 로그인/가입 클릭 시에만: (1) auth-modal.css 지연 주입 (2) 랜딩(폼 단일 소스)에서 #authOverlay
