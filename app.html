@@ -5759,10 +5759,6 @@ function _homeDeskShow(){
   if(typeof _canSeeRoadmap==='function' && _canSeeRoadmap()){
     tools.push({v:'goji', ic:'i-check', t:'알릴의무', d:'회사별 고지유형·간편고지 코드', c:'var(--cat-teal)'});
   }
-  /* 보장분석(의료실비 1축) = 임태성/검수(admin) 게이트(_canSeeCoverage) 전용 진입점. 카드 자체를 게이트 통과 계정에만 생성(비게이트=DOM 미생성). 암·뇌/심장·수술비 카드 없음(의료실비만). (2026-07-15) */
-  if(typeof _canSeeCoverage==='function' && _canSeeCoverage()){
-    tools.push({v:'cov-medical', ic:'i-file', t:'보장분석 · 의료실비', d:'실손 세대 판정 · 자가진단', c:'var(--ac)'});
-  }
   var th='';
   for(var j=0;j<tools.length;j++){ var t=tools[j];
     th+='<button type="button" class="hd-tool" style="--c:'+t.c+'" onclick="showView(\''+t.v+'\')"><span class="sn-card-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="sn-card-tx"><span class="sn-card-t">'+t.t+'</span><span class="sn-card-d">'+t.d+'</span></span><svg class="hd-tool-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg></button>';
