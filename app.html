@@ -16351,6 +16351,7 @@ async function _ciResvSave(){
 }
 window._ciResvSave=_ciResvSave;
 function _ciAddrSearch(){  /* 카카오(다음) 우편번호 서비스 — 무료·키 불필요. 첫 클릭 시 SDK 지연 로드 후 팝업. 상담관리·고객관리 공유 폼 공통(2026-07-15) */
+  if(window._ciFormMode==='consult'){ if(typeof toast==='function') toast('정보수정을 먼저 눌러 주세요.'); return; }  /* 기존 고객: 정보수정(잠금해제) 후에만 주소검색 (2026-07-15 대표) */
   function _open(){
     try{
       new daum.Postcode({ oncomplete:function(data){
@@ -16492,6 +16493,7 @@ function _ciFormSetMode(mode){
   for(var i=0;i<flds.length;i++){ flds[i].disabled=locked; }
   var stgs=form.querySelectorAll('.ci-stagepick .ci-stagebtn');  /* 고객 분류 단계 */
   for(var j=0;j<stgs.length;j++){ stgs[j].disabled=locked; }
+  var _ab=form.querySelector('.ci-addr button'); if(_ab) _ab.disabled=locked;  /* 주소검색 버튼도 잠금 — 기존 고객은 정보수정(잠금해제) 후에만 작동 (2026-07-15 대표) */
   var pb=document.getElementById('cif-primary'); if(pb) pb.textContent=locked?'정보수정':'저장';
 }
 window._ciFormSetMode=_ciFormSetMode;
