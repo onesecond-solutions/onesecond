@@ -16431,7 +16431,7 @@ function _ciConsultRender(){
     return '<div class="ci-clog-item" data-i="'+i+'">'
       +'<div class="ci-clog-head"><span class="ci-clog-date">'+_ciEsc(e.date||'')+'</span>'
       +'<span class="ci-clog-acts"><button type="button" class="ci-clog-btn" onclick="_ciConsultEdit('+i+')">수정</button><button type="button" class="ci-clog-btn del" onclick="_ciConsultDel('+i+')">삭제</button></span></div>'
-      +'<div class="ci-clog-text">'+_ciEsc(e.text||'').replace(/\n/g,'<br>')+'</div></div>';
+      +'<div class="ci-clog-text">'+(typeof window._memoAutoLink==='function'?window._memoAutoLink(e.text||''):_ciEsc(e.text||'').replace(/\n/g,'<br>'))+'</div></div>';  /* URL 자동 링크(_memoAutoLink=XSS 검수 통과·새 창) — 상담이력 URL 클릭 활성화 (2026-07-15 대표) */
   }).join('');
 }
 window._ciConsultRender=_ciConsultRender;
