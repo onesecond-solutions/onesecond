@@ -16350,7 +16350,24 @@ async function _ciResvSave(){
   }catch(e){ alert('네트워크 오류가 발생했습니다.'); }
 }
 window._ciResvSave=_ciResvSave;
-function _ciAddrSearch(){ if(typeof toast==='function') toast('주소검색(우편번호) 연동은 다음 단계입니다.'); }
+function _ciAddrSearch(){  /* 카카오(다음) 우편번호 서비스 — 무료·키 불필요. 첫 클릭 시 SDK 지연 로드 후 팝업. 상담관리·고객관리 공유 폼 공통(2026-07-15) */
+  function _open(){
+    try{
+      new daum.Postcode({ oncomplete:function(data){
+        var zip=document.getElementById('cif-zip'); if(zip) zip.value=data.zonecode||data.postcode||'';
+        var a1=document.getElementById('cif-addr1'); if(a1) a1.value=data.roadAddress||data.jibunAddress||data.address||'';
+        var a2=document.getElementById('cif-addr2'); if(a2) a2.focus();
+        if(window._ciDraftSave) _ciDraftSave();  /* 자동 채움 후 임시저장 반영 */
+      } }).open();
+    }catch(e){ if(typeof toast==='function') toast('주소검색을 열지 못했습니다.'); }
+  }
+  if(window.daum && window.daum.Postcode){ _open(); return; }
+  var ex=document.getElementById('daum-postcode-sdk');
+  if(ex){ if(typeof toast==='function') toast('주소검색을 준비 중입니다. 잠시 후 다시 눌러주세요.'); return; }
+  var s=document.createElement('script'); s.id='daum-postcode-sdk'; s.src='https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+  s.onload=_open; s.onerror=function(){ if(typeof toast==='function') toast('주소검색 로드 실패 — 네트워크를 확인해 주세요.'); };
+  document.head.appendChild(s);
+}
 window._ciAddrSearch=_ciAddrSearch;
 function _ciFormHtml(c){
   c=c||{}; var v=function(x){ return _ciEsc(x==null?'':String(x)); };
