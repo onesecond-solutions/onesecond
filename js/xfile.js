@@ -4,9 +4,10 @@
  * 구조(대표 확정 2026-07-17): X-FILE = 여러 카드를 담는 그릇. 진입 = 허브(카드 목록),
  *   카드 클릭 → 해당 카드 화면. 카드는 CARDS 배열로 정의 — 다음 카드 추가 시
  *   CARDS에 {key,em,title,desc,step} 한 줄만 추가하고 그 step 렌더러만 붙이면 된다.
- * 현재 카드 1개: "내 보험 어때?" 자가 검진표 — 고객이 스스로 4항목(의료실비·암·
+ * 첫 카드: 기존 "내 보험 어때?" 내부 자가 검진표 — 고객이 스스로 4항목(의료실비·암·
  *   뇌심장·수술비)을 체크 → 4축 판정 결과 → 상담 신청 CTA(전화·카톡). 앱 뷰는
  *   1개(#v-xfile)만 쓰고 그 안에서 JS 상태로 화면 전환(hub → start → quiz → result).
+ * "내 보험 어때? v2.0"은 승인된 모바일 이미지형 독립 페이지로 별도 진입.
  * 복귀 동선: 허브 = '‹ 홈으로'(앱 홈) / 서브 = '‹ 목록으로'(허브). bojang.js와 동일.
  * 게이트: _canSeeXfile(임태성 user_id 또는 role=admin) 전용. showView 게이트가
  *   1차, _xfileShow 진입 시 2차 방어. 고객/anon 노출 0.
@@ -167,7 +168,8 @@
    *    카드 추가 = CARDS에 {key, em, title, desc, step} 한 줄 추가 + 그 step 렌더러 등록.
    * ══════════════════════════════════════════════════════════════════════════ */
   var CARDS = [
-    { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check', href: '/pages/insurance-self-check.html' },
+    { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '기존 X-FILE 내부 자가 검진표', step: 'check' },
+    { key: 'check-v2', em: '📱', title: '내 보험 어때? v2.0', desc: '모바일 이미지형 4가지 자가 검진', step: 'check-v2', href: '/pages/insurance-self-check.html' },
     /* 아래 7개(2026-07-17 대표 확정) = 자리만 잡은 빈 페이지. 내용은 대표가 채운다.
        em은 AXES 4축(의료실비·암·뇌심장·수술비) 이모지를 그대로 재사용해 톤 일관. */
     { key: 'medical', em: '🏥', title: '의료실비', desc: '준비 중', step: 'medical' },
@@ -375,7 +377,7 @@
       return;
     }
     injectStyleOnce();
-    /* 'check' = 과거 내부 검진표 시작화면 하위호환. 허브 카드는 승인된 독립 페이지로 이동. 인자 없음 = 허브(기본 진입점). */
+    /* 'check' = 기존 내부 검진표 시작화면. 'check-v2' 허브 카드는 승인된 독립 페이지로 이동. 인자 없음 = 허브(기본 진입점). */
     if (step === 'check') { resetState(); paint('start'); return; }
     if (step === 'quiz') { _ai = 0; _ans = {}; paint('quiz'); return; }
     if (step === 'result') { paint('result'); return; }
