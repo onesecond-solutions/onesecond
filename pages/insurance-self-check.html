@@ -45,6 +45,15 @@ body {
   word-break: keep-all;
 }
 .blocked body { display: none !important; }
+.embedded body {
+  min-height: auto;
+  background: transparent;
+}
+.embedded .phone {
+  min-height: auto;
+  padding-top: .65rem;
+}
+.embedded .topbar { display: none; }
 button, input, textarea { font: inherit; }
 button { cursor: pointer; }
 .phone {
@@ -477,6 +486,9 @@ footer {
 <script>
 (function () {
   "use strict";
+  if (new URLSearchParams(location.search).get("embed") === "1") {
+    document.documentElement.classList.add("embedded");
+  }
   function canSeeXfilePage() {
     try {
       var raw = localStorage.getItem("os_user") || sessionStorage.getItem("os_user") || "{}";
@@ -487,7 +499,7 @@ footer {
     }
   }
   if (!canSeeXfilePage()) {
-    document.documentElement.className = "blocked";
+    document.documentElement.classList.add("blocked");
   }
 })();
 </script>
