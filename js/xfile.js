@@ -133,8 +133,9 @@
    * 공용 조각(뒤로가기 · CTA · 서명) — bojang.js 패턴 복제(xf 네임스페이스)
    * ══════════════════════════════════════════════════════════════════════════ */
   /* 허브 = 앱 홈으로 / 서브(검진표) = 허브 목록으로. bojang.js와 동일한 2단 복귀 동선. */
-  function hubBackBar() {
-    return '<div class="xf-topbar"><button class="smsg-back" type="button" onclick="showView(\'home\')">&#8249; 홈으로</button></div>';
+  /* 허브 topbar는 허브 카드(--hub = 홈과 같은 860px 폭)와 좌측 정렬을 맞춰야 하므로 같은 폭 모디파이어를 받는다. */
+  function hubBackBar(scope) {
+    return '<div class="xf-topbar' + (scope === 'hub' ? ' xf-topbar--hub' : '') + '"><button class="smsg-back" type="button" onclick="showView(\'home\')">&#8249; 홈으로</button></div>';
   }
   function backBar() {
     return '<div class="xf-topbar"><button class="smsg-back" type="button" onclick="window._xfileShow()">&#8249; 목록으로</button></div>';
@@ -179,25 +180,27 @@
     { key: 'caregiver', em: '🧑‍⚕️', title: '간병인', desc: '준비 중', step: 'caregiver' }
   ];
 
-  function cardRowHtml(c) {
+  /* 카드 = 컴팩트 타일(홈 '자주 찾는 보험 자료' .hs2-hub-tile과 동일 성격).
+     타일 전체가 버튼 = 클릭 하나로 진입(홈 타일과 동일). 별도 '›' 버튼 없음.
+     아이콘 상자는 X-FILE 공용 .xf-em 재사용(검진표·결과와 톤 일치, 이모지 유지). */
+  function cardTileHtml(c) {
     return '' +
-      '<div class="xf-row" onclick="window._xfileShow(\'' + c.step + '\')">' +
-        '<div class="xf-em">' + c.em + '</div>' +
-        '<div class="xf-rmid"><div class="xf-rt">' + xfEsc(c.title) + '</div><div class="xf-rw">' + xfEsc(c.desc) + '</div></div>' +
-        '<button class="xf-ab" type="button" title="열기" onclick="event.stopPropagation();window._xfileShow(\'' + c.step + '\')">&#8250;</button>' +
-      '</div>';
+      '<button class="xf-tile" type="button" onclick="window._xfileShow(\'' + c.step + '\')">' +
+        '<span class="xf-em">' + c.em + '</span>' +
+        '<span class="xf-ttx"><b>' + xfEsc(c.title) + '</b><em>' + xfEsc(c.desc) + '</em></span>' +
+      '</button>';
   }
 
   function renderHub() {
     var list = '';
-    for (var i = 0; i < CARDS.length; i++) list += cardRowHtml(CARDS[i]);
+    for (var i = 0; i < CARDS.length; i++) list += cardTileHtml(CARDS[i]);
     return '' +
-      hubBackBar() +
-      '<div class="xf-card">' +
+      hubBackBar('hub') +
+      '<div class="xf-card xf-card--hub">' +
         '<div class="xf-hero">' +
           '<h1 class="xf-heroh"><span class="xf-g">X-FILE</span></h1>' +
         '</div>' +
-        '<div class="xf-list">' + list + '</div>' +
+        '<div class="xf-hubgrid">' + list + '</div>' +
       '</div>';
   }
 
@@ -400,14 +403,22 @@
       '#v-xfile .xf-heroh{font-size:26px;line-height:1.35;font-weight:800;margin:12px 0 10px;color:var(--tp);letter-spacing:-.5px;}',
       '#v-xfile .xf-g{color:var(--t-xfile);}',
       '#v-xfile .xf-herop{font-size:14px;line-height:1.7;color:var(--ts);max-width:360px;margin:0 auto;}',
-      /* hub row(카드) — bojang 발송센터 .bj-row 패턴을 xf- 네임스페이스로 */
-      '#v-xfile .xf-row{display:flex;align-items:center;gap:13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:14px 15px;cursor:pointer;transition:.16s;}',
-      '#v-xfile .xf-row:hover{border-color:var(--t-xfile);}',
-      '#v-xfile .xf-rmid{flex:1;min-width:0;}',
-      '#v-xfile .xf-rt{font-size:15px;font-weight:800;color:var(--tp);}',
-      '#v-xfile .xf-rw{font-size:12.5px;color:var(--ts);margin-top:3px;line-height:1.45;}',
-      '#v-xfile .xf-ab{flex-shrink:0;width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--bd);background:var(--s2);color:var(--ts);font-size:17px;font-weight:800;line-height:1;cursor:pointer;font-family:inherit;}',
-      '#v-xfile .xf-ab:hover{border-color:var(--t-xfile);color:var(--t-xfile);}',
+      /* ── 허브 = 컴팩트 타일 그리드 (2026-07-17) ──────────────────────────────
+         홈 '자주 찾는 보험 자료'(.hs2-hub-grid/.hs2-hub-tile)와 같은 성격.
+         이전 .xf-row(긴 가로 막대 1열)는 대표가 2026-07-09에 홈에서 폐기한 형태 →
+         제거하고 타일로 교체. 홈 클래스를 직접 쓰지 않고 xf- 네임스페이스로 재현
+         (전역 결합 차단 — 홈 스타일이 바뀌어도 X-FILE 동반 파손 0).
+         ⚠️ 열 수를 고정하지 않는다: auto-fit + minmax로 '폭'이 열 수를 정한다.
+         카드가 8개든 3개든 12개든 자연스럽게 흐른다. 허브 폭 860px = 홈 .hs2-hub와 동일. */
+      '#v-xfile .xf-topbar--hub,#v-xfile .xf-card--hub{max-width:860px;}',
+      '#v-xfile .xf-hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:12px;}',
+      '#v-xfile .xf-tile{display:flex;align-items:center;gap:13px;min-height:68px;padding:14px 16px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);cursor:pointer;font-family:inherit;text-align:left;transition:border-color .17s ease,background .17s ease,transform .17s ease,box-shadow .17s ease;}',
+      '#v-xfile .xf-tile:hover{border-color:var(--t-xfile);background:color-mix(in srgb,var(--t-xfile) 5%,var(--s1));transform:translateY(-2px);box-shadow:0 5px 16px color-mix(in srgb,var(--t-xfile) 13%,transparent);}',
+      '#v-xfile .xf-tile:active{transform:translateY(0);box-shadow:none;}',
+      '#v-xfile .xf-tile:focus-visible{outline:2px solid var(--t-xfile);outline-offset:2px;}',
+      '#v-xfile .xf-ttx{display:flex;flex-direction:column;gap:3px;min-width:0;}',
+      '#v-xfile .xf-ttx b{font-size:15px;font-weight:800;color:var(--tp);line-height:1.3;letter-spacing:-.01em;}',
+      '#v-xfile .xf-ttx em{font-style:normal;font-size:12.5px;color:var(--ts);line-height:1.45;}',
       /* start list */
       '#v-xfile .xf-list{display:flex;flex-direction:column;gap:10px;}',
       '#v-xfile .xf-li{display:flex;align-items:center;gap:13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:14px 15px;}',
