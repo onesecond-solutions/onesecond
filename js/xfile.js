@@ -167,7 +167,7 @@
    *    카드 추가 = CARDS에 {key, em, title, desc, step} 한 줄 추가 + 그 step 렌더러 등록.
    * ══════════════════════════════════════════════════════════════════════════ */
   var CARDS = [
-    { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check' },
+    { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check', href: '/pages/insurance-self-check.html' },
     /* 아래 7개(2026-07-17 대표 확정) = 자리만 잡은 빈 페이지. 내용은 대표가 채운다.
        em은 AXES 4축(의료실비·암·뇌심장·수술비) 이모지를 그대로 재사용해 톤 일관. */
     { key: 'medical', em: '🏥', title: '의료실비', desc: '준비 중', step: 'medical' },
@@ -183,8 +183,9 @@
      타일 전체가 버튼 = 클릭 하나로 진입(홈 타일과 동일). 별도 '›' 버튼 없음.
      아이콘 상자는 X-FILE 공용 .xf-em 재사용(검진표·결과와 톤 일치, 이모지 유지). */
   function cardTileHtml(c) {
+    var action = c.href ? "location.href='" + c.href + "'" : "window._xfileShow('" + c.step + "')";
     return '' +
-      '<button class="xf-tile" type="button" onclick="window._xfileShow(\'' + c.step + '\')">' +
+      '<button class="xf-tile" type="button" onclick="' + action + '">' +
         '<span class="xf-em">' + c.em + '</span>' +
         '<span class="xf-ttx"><b>' + xfEsc(c.title) + '</b><em>' + xfEsc(c.desc) + '</em></span>' +
       '</button>';
@@ -374,7 +375,7 @@
       return;
     }
     injectStyleOnce();
-    /* 'check' = "내 보험 어때?" 카드 진입(검진표 시작화면). 인자 없음 = 허브(기본 진입점). */
+    /* 'check' = 과거 내부 검진표 시작화면 하위호환. 허브 카드는 승인된 독립 페이지로 이동. 인자 없음 = 허브(기본 진입점). */
     if (step === 'check') { resetState(); paint('start'); return; }
     if (step === 'quiz') { _ai = 0; _ans = {}; paint('quiz'); return; }
     if (step === 'result') { paint('result'); return; }
