@@ -133,9 +133,8 @@
    * 공용 조각(뒤로가기 · CTA · 서명) — bojang.js 패턴 복제(xf 네임스페이스)
    * ══════════════════════════════════════════════════════════════════════════ */
   /* 허브 = 앱 홈으로 / 서브(검진표) = 허브 목록으로. bojang.js와 동일한 2단 복귀 동선. */
-  /* 허브 topbar는 허브 카드(--hub = 홈과 같은 860px 폭)와 좌측 정렬을 맞춰야 하므로 같은 폭 모디파이어를 받는다. */
-  function hubBackBar(scope) {
-    return '<div class="xf-topbar' + (scope === 'hub' ? ' xf-topbar--hub' : '') + '"><button class="smsg-back" type="button" onclick="showView(\'home\')">&#8249; 홈으로</button></div>';
+  function hubBackBar() {
+    return '<div class="xf-topbar"><button class="smsg-back" type="button" onclick="showView(\'home\')">&#8249; 홈으로</button></div>';
   }
   function backBar() {
     return '<div class="xf-topbar"><button class="smsg-back" type="button" onclick="window._xfileShow()">&#8249; 목록으로</button></div>';
@@ -195,8 +194,8 @@
     var list = '';
     for (var i = 0; i < CARDS.length; i++) list += cardTileHtml(CARDS[i]);
     return '' +
-      hubBackBar('hub') +
-      '<div class="xf-card xf-card--hub">' +
+      hubBackBar() +
+      '<div class="xf-card">' +
         '<div class="xf-hero">' +
           '<h1 class="xf-heroh"><span class="xf-g">X-FILE</span></h1>' +
         '</div>' +
@@ -395,8 +394,12 @@
     st.textContent = [
       '#v-xfile{padding:0;overflow-y:auto;min-height:100%;background:var(--bg);color:var(--tp);}',
       '#v-xfile *{box-sizing:border-box;}',
-      '#v-xfile .xf-topbar{max-width:560px;margin:0 auto;padding:18px 18px 0;}',
-      '#v-xfile .xf-card{max-width:560px;margin:0 auto;padding:0 18px 48px;}',
+      /* 폭 = 홈 '자주 찾는 보험 자료'(.hs2-hub max-width:860px)와 동일 기준.
+         이전 560px는 bojang.js(고객 폰 카톡 발송용)에서 복제돼 들어온 모바일 폭 —
+         X-FILE은 대표가 데스크톱에서 쓰는 도구라 화면 폭을 실제로 쓴다(2026-07-17 대표 지시).
+         860px 상한은 초광폭에서 카드가 늘어지는 것만 막는 상식선이자 홈과의 정합선. */
+      '#v-xfile .xf-topbar{max-width:860px;margin:0 auto;padding:18px 18px 0;}',
+      '#v-xfile .xf-card{max-width:860px;margin:0 auto;padding:0 18px 48px;}',
       /* hero */
       '#v-xfile .xf-hero{text-align:center;padding:26px 6px 22px;}',
       '#v-xfile .xf-eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--t-xfile);text-transform:uppercase;}',
@@ -409,9 +412,11 @@
          제거하고 타일로 교체. 홈 클래스를 직접 쓰지 않고 xf- 네임스페이스로 재현
          (전역 결합 차단 — 홈 스타일이 바뀌어도 X-FILE 동반 파손 0).
          ⚠️ 열 수를 고정하지 않는다: auto-fit + minmax로 '폭'이 열 수를 정한다.
-         카드가 8개든 3개든 12개든 자연스럽게 흐른다. 허브 폭 860px = 홈 .hs2-hub와 동일. */
-      '#v-xfile .xf-topbar--hub,#v-xfile .xf-card--hub{max-width:860px;}',
-      '#v-xfile .xf-hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:12px;}',
+         카드가 8개든 3개든 12개든 자연스럽게 흐른다. */
+      /* minmax 최소폭 224px = 홈 타일이 실제로 갖는 최소 열 폭(768px에서 222px)에 맞춘 값.
+         덕분에 열 수가 홈과 같은 지점에서 같이 꺾인다(375=1 · 768=3 · 1280/1600=3).
+         '3'을 적은 게 아니라 폭이 계산한 결과 — 카드 수가 늘어도 그대로 흐른다. */
+      '#v-xfile .xf-hubgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(224px,1fr));gap:12px;}',
       '#v-xfile .xf-tile{display:flex;align-items:center;gap:13px;min-height:68px;padding:14px 16px;border:1px solid var(--bd);border-radius:var(--radius-md);background:var(--s1);cursor:pointer;font-family:inherit;text-align:left;transition:border-color .17s ease,background .17s ease,transform .17s ease,box-shadow .17s ease;}',
       '#v-xfile .xf-tile:hover{border-color:var(--t-xfile);background:color-mix(in srgb,var(--t-xfile) 5%,var(--s1));transform:translateY(-2px);box-shadow:0 5px 16px color-mix(in srgb,var(--t-xfile) 13%,transparent);}',
       '#v-xfile .xf-tile:active{transform:translateY(0);box-shadow:none;}',
@@ -419,8 +424,11 @@
       '#v-xfile .xf-ttx{display:flex;flex-direction:column;gap:3px;min-width:0;}',
       '#v-xfile .xf-ttx b{font-size:15px;font-weight:800;color:var(--tp);line-height:1.3;letter-spacing:-.01em;}',
       '#v-xfile .xf-ttx em{font-style:normal;font-size:12.5px;color:var(--ts);line-height:1.45;}',
-      /* start list */
-      '#v-xfile .xf-list{display:flex;flex-direction:column;gap:10px;}',
+      /* start list — 검진표 시작화면의 4축(의료실비·암·뇌심장·수술비) 미리보기.
+         서로 대등한 항목이고 순서 의미가 없다 → 세로 1열 강제 해제, 폭에 반응.
+         최소폭은 결과 .xf-axes와 동일(300px) — 같은 4축을 보여주는 자리라 톤을 맞춘다
+         (허브 타일보다 크게 잡아야 4개가 3+1 고아 없이 2×2로 흐른다). */
+      '#v-xfile .xf-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;}',
       '#v-xfile .xf-li{display:flex;align-items:center;gap:13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:14px 15px;}',
       '#v-xfile .xf-em{width:40px;height:40px;flex-shrink:0;border-radius:var(--radius-sm);background:var(--s2);border:1px solid var(--bd);display:grid;place-items:center;font-size:19px;}',
       '#v-xfile .xf-em.big{width:46px;height:46px;font-size:22px;}',
@@ -459,7 +467,9 @@
       '#v-xfile .xf-secth{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:22px 2px 12px;}',
       '#v-xfile .xf-secth h2{font-size:17px;font-weight:800;color:var(--tp);}',
       '#v-xfile .xf-secth span{font-size:12px;color:var(--tf);font-weight:600;}',
-      '#v-xfile .xf-axes{display:flex;flex-direction:column;gap:10px;}',
+      /* 결과 4축 진단 — 대등한 항목·순서 의미 없음 → 폭에 반응.
+         판정 문구가 여러 줄이라 최소폭은 타일(248px)보다 넉넉히 잡는다. */
+      '#v-xfile .xf-axes{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;}',
       '#v-xfile .xf-ax{display:flex;align-items:flex-start;gap:13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:15px;border-left-width:3px;}',
       '#v-xfile .xf-ax-good{border-left-color:var(--ok);}',
       '#v-xfile .xf-ax-warn{border-left-color:var(--warn);}',
@@ -477,7 +487,8 @@
       '#v-xfile .xf-cta{margin-top:24px;background:color-mix(in srgb,var(--t-xfile) 4%,var(--s1));border:1px solid color-mix(in srgb,var(--t-xfile) 30%,var(--bd));border-radius:var(--radius-lg);padding:24px 20px;text-align:center;}',
       '#v-xfile .xf-ct{font-size:18px;font-weight:800;line-height:1.45;color:var(--tp);}',
       '#v-xfile .xf-cs{font-size:13.5px;color:var(--ts);margin-top:9px;line-height:1.65;}',
-      '#v-xfile .xf-btns{display:flex;flex-direction:column;gap:9px;margin-top:18px;}',
+      /* CTA 3종(전화·카톡·문자) — 대등한 선택지·순서 의미 없음 → 폭 넓으면 가로로. */
+      '#v-xfile .xf-btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px;margin-top:18px;}',
       '#v-xfile .xf-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;border-radius:var(--radius-md);font-size:15px;font-weight:800;cursor:pointer;border:1px solid var(--bd);background:var(--s1);color:var(--tp);font-family:inherit;text-decoration:none;}',
       '#v-xfile .xf-btn.primary{background:var(--t-xfile);color:#FFFFFF;border-color:var(--t-xfile);}',
       '#v-xfile .xf-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}',
