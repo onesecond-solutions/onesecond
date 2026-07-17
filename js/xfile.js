@@ -167,7 +167,16 @@
    *    카드 추가 = CARDS에 {key, em, title, desc, step} 한 줄 추가 + 그 step 렌더러 등록.
    * ══════════════════════════════════════════════════════════════════════════ */
   var CARDS = [
-    { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check' }
+    { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check' },
+    /* 아래 7개(2026-07-17 대표 확정) = 자리만 잡은 빈 페이지. 내용은 대표가 채운다.
+       em은 AXES 4축(의료실비·암·뇌심장·수술비) 이모지를 그대로 재사용해 톤 일관. */
+    { key: 'medical', em: '🏥', title: '의료실비', desc: '준비 중', step: 'medical' },
+    { key: 'cancer', em: '🎗️', title: '암', desc: '준비 중', step: 'cancer' },
+    { key: 'brainheart', em: '🫀', title: '뇌/심장', desc: '준비 중', step: 'brainheart' },
+    { key: 'surgery', em: '🩹', title: '수술비', desc: '준비 중', step: 'surgery' },
+    { key: 'general', em: '🛡️', title: '종합보험', desc: '준비 중', step: 'general' },
+    { key: 'analysis', em: '📊', title: '보장분석', desc: '준비 중', step: 'analysis' },
+    { key: 'caregiver', em: '🧑‍⚕️', title: '간병인', desc: '준비 중', step: 'caregiver' }
   ];
 
   function cardRowHtml(c) {
@@ -316,9 +325,38 @@
   window._xfAgain = function () { resetState(); paint('start'); };
 
   /* ══════════════════════════════════════════════════════════════════════════
-   * 미니 라우터
+   * 4) 빈 페이지 — 신규 카드 7종 공용. 골격만(‹ 목록으로 + 제목 + 준비 중).
+   *    내용은 대표가 채운다. 여기서 기능·데이터·CTA를 임의로 만들지 말 것.
+   *    카드별 렌더러는 이 함수 1개를 얇게 감싸기만 한다(중복 코드 0).
    * ══════════════════════════════════════════════════════════════════════════ */
-  var RENDERERS = { hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult };
+  function renderBlank(title) {
+    return '' +
+      backBar() +
+      '<div class="xf-card">' +
+        '<div class="xf-hero">' +
+          '<h1 class="xf-heroh"><span class="xf-g">' + xfEsc(title) + '</span></h1>' +
+          '<p class="xf-herop">준비 중입니다.</p>' +
+        '</div>' +
+      '</div>';
+  }
+  function blankOf(title) { return function () { return renderBlank(title); }; }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+   * 미니 라우터
+   *   주의: 'analysis' = X-FILE 안의 빈 페이지. 앱의 보장분석 뷰(#v-bojang·
+   *   js/bojang.js)와는 별개 — 혼동 방지를 위해 key를 'bojang'이 아닌
+   *   'analysis'로 둔다(대표 확정 2026-07-17).
+   * ══════════════════════════════════════════════════════════════════════════ */
+  var RENDERERS = {
+    hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult,
+    medical: blankOf('의료실비'),
+    cancer: blankOf('암'),
+    brainheart: blankOf('뇌/심장'),
+    surgery: blankOf('수술비'),
+    general: blankOf('종합보험'),
+    analysis: blankOf('보장분석'),
+    caregiver: blankOf('간병인')
+  };
 
   function paint(step) {
     var host = document.getElementById('v-xfile');
