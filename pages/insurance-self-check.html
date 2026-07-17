@@ -53,6 +53,30 @@ button { cursor: pointer; }
   min-height: 100vh;
   padding: 1rem .875rem 2rem;
 }
+.topbar {
+  display: flex;
+  align-items: center;
+  min-height: 2.3rem;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0 .72rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.82);
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 .35rem 1rem rgba(23,32,51,.06);
+}
+.back-link:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
 .brand {
   display: flex;
   align-items: center;
@@ -475,6 +499,9 @@ if (document.documentElement.className === "blocked") {
 }
 </script>
 <main class="phone">
+  <div class="topbar">
+    <a class="back-link" href="/app.html?view=xfile">&#8249; 목록으로</a>
+  </div>
   <div class="brand" aria-label="onesecond">
     <span class="brand-mark">1s</span>
     <span>onesecond</span>
