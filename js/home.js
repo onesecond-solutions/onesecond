@@ -14,6 +14,8 @@ var _HS2_TILES=[
   {v:'newsletters',    ic:'i-building', t:'소식지',            d:'원수사·GA 월별 모음',       show:function(){return typeof window._canSeeNl==='function'&&window._canSeeNl();}},
   {v:'silson',         ic:'i-file',     t:'실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return document.body.classList.contains('is-uat-homedesk');}},
   {v:'bojang', ic:'i-file', t:'보장분석', d:'의료실비·암·뇌심장·수술비 종합 · 고객 발송', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  /* X-FILE = 임태성 게이트 전용 빈 페이지(#v-xfile) 골격. cls = 이 타일에만 붙는 붉은 계열 스코프 클래스(다른 타일 무영향). 게이트는 _canSeeXfile(app.html 인라인) — _canSeeCoverage와 조건은 같으나 독립 함수라 개방 시점을 따로 제어. (2026-07-17) */
+  {v:'xfile', ic:'i-file', t:'X-FILE', d:'(준비 중)', cls:'hs2-hub-tile--xfile', show:function(){return typeof window._canSeeXfile==='function'&&window._canSeeXfile();}},
   {v:'scripts',        ic:'i-msg',      t:'스크립트',          d:'상담 멘트·화법',            show:function(){return true;}},
   {v:'tool',           ic:'i-folder',   t:'계산기 · 변환기',   d:'BMI·보험연령·이미지 변환',  show:function(){return true;}}
   /* 스마트 설계서 = 기능 준비 중, 준비되면 여기 같은 패턴(show:_canSeeXXX)으로 추가 */
@@ -22,7 +24,7 @@ function _hs2RenderHub(){
   var grid=document.querySelector('.hs2-hub .hs2-hub-grid'); if(!grid) return;
   var h='';
   for(var i=0;i<_HS2_TILES.length;i++){ var t=_HS2_TILES[i]; if(typeof t.show==='function'&&!t.show()) continue;
-    h+='<button type="button" class="hs2-hub-tile" onclick="showView(\''+t.v+'\')"><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
+    h+='<button type="button" class="hs2-hub-tile'+(t.cls?' '+t.cls:'')+'" onclick="showView(\''+t.v+'\')"><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
   }
   grid.innerHTML=h;
 }
