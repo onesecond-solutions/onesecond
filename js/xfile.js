@@ -1,9 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════
- * X-FILE (#v-xfile) — "내 보험 어때요?" 자가 검진표
+ * X-FILE (#v-xfile) — 카드 허브
  * ───────────────────────────────────────────────────────────────────────────
- * 범위(대표 확정 1차): 고객이 스스로 4항목(의료실비·암·뇌심장·수술비)을 체크 →
- *   4축 판정 결과 → 상담 신청 CTA(전화·카톡). 앱 뷰는 1개(#v-xfile)만 쓰고
- *   그 안에서 JS 상태로 화면 전환(start → quiz → result).
+ * 구조(대표 확정 2026-07-17): X-FILE = 여러 카드를 담는 그릇. 진입 = 허브(카드 목록),
+ *   카드 클릭 → 해당 카드 화면. 카드는 CARDS 배열로 정의 — 다음 카드 추가 시
+ *   CARDS에 {key,em,title,desc,step} 한 줄만 추가하고 그 step 렌더러만 붙이면 된다.
+ * 현재 카드 1개: "내 보험 어때요?" 자가 검진표 — 고객이 스스로 4항목(의료실비·암·
+ *   뇌심장·수술비)을 체크 → 4축 판정 결과 → 상담 신청 CTA(전화·카톡). 앱 뷰는
+ *   1개(#v-xfile)만 쓰고 그 안에서 JS 상태로 화면 전환(hub → start → quiz → result).
+ * 복귀 동선: 허브 = '‹ 홈으로'(앱 홈) / 서브 = '‹ 목록으로'(허브). bojang.js와 동일.
  * 게이트: _canSeeXfile(임태성 user_id 또는 role=admin) 전용. showView 게이트가
  *   1차, _xfileShow 진입 시 2차 방어. 고객/anon 노출 0.
  * 문구 출처: js/bojang.js 기존 자산(퀴즈·판정·CTA·서명)에서 가져와 구성.
@@ -128,8 +132,12 @@
   /* ══════════════════════════════════════════════════════════════════════════
    * 공용 조각(뒤로가기 · CTA · 서명) — bojang.js 패턴 복제(xf 네임스페이스)
    * ══════════════════════════════════════════════════════════════════════════ */
-  function backBar() {
+  /* 허브 = 앱 홈으로 / 서브(검진표) = 허브 목록으로. bojang.js와 동일한 2단 복귀 동선. */
+  function hubBackBar() {
     return '<div class="xf-topbar"><button class="smsg-back" type="button" onclick="showView(\'home\')">&#8249; 홈으로</button></div>';
+  }
+  function backBar() {
+    return '<div class="xf-topbar"><button class="smsg-back" type="button" onclick="window._xfileShow()">&#8249; 목록으로</button></div>';
   }
   function ctaHtml() {
     return '' +
@@ -151,6 +159,36 @@
       '<div class="xf-foot">' +
         '<div class="xf-sign"><div class="xf-av">임</div><div class="xf-nm"><div class="xf-a">임태성 보험전문가</div><div class="xf-b">' + PHONE_DISP + '</div></div></div>' +
         '<div class="xf-disc">※ 이 자가 검진표는 보험 이해를 돕기 위한 일반 안내이며, 가입·해지를 권유하지 않습니다. 실제 보장은 증권·약관 기준으로 확인해 드립니다.</div>' +
+      '</div>';
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+   * 0) 허브 — X-FILE 진입 기본 화면. 카드 목록을 담는 그릇.
+   *    카드 추가 = CARDS에 {key, em, title, desc, step} 한 줄 추가 + 그 step 렌더러 등록.
+   * ══════════════════════════════════════════════════════════════════════════ */
+  var CARDS = [
+    { key: 'check', em: '🩺', title: '내 보험 어때요?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check' }
+  ];
+
+  function cardRowHtml(c) {
+    return '' +
+      '<div class="xf-row" onclick="window._xfileShow(\'' + c.step + '\')">' +
+        '<div class="xf-em">' + c.em + '</div>' +
+        '<div class="xf-rmid"><div class="xf-rt">' + xfEsc(c.title) + '</div><div class="xf-rw">' + xfEsc(c.desc) + '</div></div>' +
+        '<button class="xf-ab" type="button" title="열기" onclick="event.stopPropagation();window._xfileShow(\'' + c.step + '\')">&#8250;</button>' +
+      '</div>';
+  }
+
+  function renderHub() {
+    var list = '';
+    for (var i = 0; i < CARDS.length; i++) list += cardRowHtml(CARDS[i]);
+    return '' +
+      hubBackBar() +
+      '<div class="xf-card">' +
+        '<div class="xf-hero">' +
+          '<h1 class="xf-heroh"><span class="xf-g">X-FILE</span></h1>' +
+        '</div>' +
+        '<div class="xf-list">' + list + '</div>' +
       '</div>';
   }
 
@@ -280,12 +318,12 @@
   /* ══════════════════════════════════════════════════════════════════════════
    * 미니 라우터
    * ══════════════════════════════════════════════════════════════════════════ */
-  var RENDERERS = { start: renderStart, quiz: renderQuiz, result: renderResult };
+  var RENDERERS = { hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult };
 
   function paint(step) {
     var host = document.getElementById('v-xfile');
     if (!host) return;
-    _step = RENDERERS[step] ? step : 'start';
+    _step = RENDERERS[step] ? step : 'hub';
     host.innerHTML = RENDERERS[_step]();
     host.scrollTop = 0;
   }
@@ -296,9 +334,11 @@
       return;
     }
     injectStyleOnce();
+    /* 'check' = "내 보험 어때요?" 카드 진입(검진표 시작화면). 인자 없음 = 허브(기본 진입점). */
+    if (step === 'check') { resetState(); paint('start'); return; }
     if (step === 'quiz') { _ai = 0; _ans = {}; paint('quiz'); return; }
     if (step === 'result') { paint('result'); return; }
-    if (!step) { resetState(); paint('start'); return; }
+    if (!step) { resetState(); paint('hub'); return; }
     paint(step);
   };
 
@@ -322,6 +362,14 @@
       '#v-xfile .xf-heroh{font-size:26px;line-height:1.35;font-weight:800;margin:12px 0 10px;color:var(--tp);letter-spacing:-.5px;}',
       '#v-xfile .xf-g{color:var(--t-xfile);}',
       '#v-xfile .xf-herop{font-size:14px;line-height:1.7;color:var(--ts);max-width:360px;margin:0 auto;}',
+      /* hub row(카드) — bojang 발송센터 .bj-row 패턴을 xf- 네임스페이스로 */
+      '#v-xfile .xf-row{display:flex;align-items:center;gap:13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:14px 15px;cursor:pointer;transition:.16s;}',
+      '#v-xfile .xf-row:hover{border-color:var(--t-xfile);}',
+      '#v-xfile .xf-rmid{flex:1;min-width:0;}',
+      '#v-xfile .xf-rt{font-size:15px;font-weight:800;color:var(--tp);}',
+      '#v-xfile .xf-rw{font-size:12.5px;color:var(--ts);margin-top:3px;line-height:1.45;}',
+      '#v-xfile .xf-ab{flex-shrink:0;width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--bd);background:var(--s2);color:var(--ts);font-size:17px;font-weight:800;line-height:1;cursor:pointer;font-family:inherit;}',
+      '#v-xfile .xf-ab:hover{border-color:var(--t-xfile);color:var(--t-xfile);}',
       /* start list */
       '#v-xfile .xf-list{display:flex;flex-direction:column;gap:10px;}',
       '#v-xfile .xf-li{display:flex;align-items:center;gap:13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);padding:14px 15px;}',
