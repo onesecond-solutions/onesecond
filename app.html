@@ -2512,7 +2512,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
      <div class="wrap view" id="v-cov-medical"></div>
      <!-- 보장분석 허브(발송센터) (#v-bojang) — 임태성/검수(admin) 게이트(_canSeeCoverage) 전용. JS(js/bojang.js)가 허브+6서브화면을 내부 스왑 렌더. cov-medical은 이 화면으로 라우팅 통일(리다이렉트). 다크 남색+골드 팔레트는 #v-bojang 스코프 안에서만. (2026-07-16) -->
      <div class="wrap view" id="v-bojang"></div>
-     <!-- X-FILE (#v-xfile) — 임태성/검수(admin) 게이트(_canSeeXfile) 전용. JS(js/xfile.js)가 "내 보험 어때요?" 자가 검진표(시작→4항목 검진→결과+상담 CTA)를 내부 스왑 렌더('‹ 홈으로' 버튼 포함). DB/fetch 0, 상태는 메모리만. 라이트 팔레트 CSS는 #v-xfile 스코프. (2026-07-17) -->
+     <!-- X-FILE (#v-xfile) — 임태성/검수(admin) 게이트(_canSeeXfile) 전용. JS(js/xfile.js)가 "내 보험 어때?" 자가 검진표(시작→4항목 검진→결과+상담 CTA)를 내부 스왑 렌더('‹ 홈으로' 버튼 포함). DB/fetch 0, 상태는 메모리만. 라이트 팔레트 CSS는 #v-xfile 스코프. (2026-07-17) -->
      <div class="wrap view" id="v-xfile"></div>
      <div class="wrap view" id="v-together">
       <div class="ttl">함께해요 <span class="ac">· 원세컨드 커뮤니티</span></div>
@@ -18023,7 +18023,7 @@ document.addEventListener('keydown', function(e){
 <script src="/js/cov-medical.js"></script>
 <!-- 보장분석 허브(발송센터) 엔진 — #v-bojang 허브+6서브화면 내부 스왑 렌더. 게이트(_canSeeCoverage)는 app.html 인라인. 의료실비 서브는 silson_generations 읽기 재사용(폴백 임베드). 다크 팔레트 CSS는 #v-bojang 스코프. cov-medical.js 뒤 로드(judgeGen 재정의 안 함). (2026-07-16) -->
 <script src="/js/bojang.js"></script>
-<!-- X-FILE "내 보험 어때요?" 자가 검진표 엔진 — #v-xfile 시작/검진/결과 내부 스왑 렌더. 게이트(_canSeeXfile)는 app.html 인라인. 문구는 bojang.js 자산에서 가져오되 코드는 자족(의존 0). DB/fetch/write 0. CSS는 #v-xfile 스코프(xf- 네임스페이스). (2026-07-17) -->
+<!-- X-FILE "내 보험 어때?" 자가 검진표 엔진 — #v-xfile 시작/검진/결과 내부 스왑 렌더. 게이트(_canSeeXfile)는 app.html 인라인. 문구는 bojang.js 자산에서 가져오되 코드는 자족(의존 0). DB/fetch/write 0. CSS는 #v-xfile 스코프(xf- 네임스페이스). (2026-07-17) -->
 <script src="/js/xfile.js"></script>
 <!-- 고객관리 "고객 케어 플로우 v1" Phase1 엔진 — salesnote 전용 렌더(_cfShow). 청약완료 대상·계약일 자동배치. 상담관리(_ci*)·#ci-wrap 무접촉. (2026-07-15) -->
 <script src="/js/care-flow.js"></script>
