@@ -4,7 +4,7 @@
  * 구조(대표 확정 2026-07-17): X-FILE = 여러 카드를 담는 그릇. 진입 = 허브(카드 목록),
  *   카드 클릭 → 해당 카드 화면. 카드는 CARDS 배열로 정의 — 다음 카드 추가 시
  *   CARDS에 {key,em,title,desc,step} 한 줄만 추가하고 그 step 렌더러만 붙이면 된다.
- * 현재 카드 1개: "내 보험 어때요?" 자가 검진표 — 고객이 스스로 4항목(의료실비·암·
+ * 현재 카드 1개: "내 보험 어때?" 자가 검진표 — 고객이 스스로 4항목(의료실비·암·
  *   뇌심장·수술비)을 체크 → 4축 판정 결과 → 상담 신청 CTA(전화·카톡). 앱 뷰는
  *   1개(#v-xfile)만 쓰고 그 안에서 JS 상태로 화면 전환(hub → start → quiz → result).
  * 복귀 동선: 허브 = '‹ 홈으로'(앱 홈) / 서브 = '‹ 목록으로'(허브). bojang.js와 동일.
@@ -167,7 +167,7 @@
    *    카드 추가 = CARDS에 {key, em, title, desc, step} 한 줄 추가 + 그 step 렌더러 등록.
    * ══════════════════════════════════════════════════════════════════════════ */
   var CARDS = [
-    { key: 'check', em: '🩺', title: '내 보험 어때요?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check' }
+    { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '의료실비·암·뇌/심장·수술비 4가지 자가 검진', step: 'check' }
   ];
 
   function cardRowHtml(c) {
@@ -207,7 +207,7 @@
       '<div class="xf-card">' +
         '<div class="xf-hero">' +
           '<div class="xf-eyebrow">X-FILE · 자가 검진표</div>' +
-          '<h1 class="xf-heroh">내 보험,<br><span class="xf-g">어때요?</span></h1>' +
+          '<h1 class="xf-heroh">내 보험,<br><span class="xf-g">어때?</span></h1>' +
           '<p class="xf-herop">가입한 보험이 실제로 나를 지켜주는지, 가장 중요한 4가지 기준으로 쉽게 짚어드립니다. 아는 만큼만 편하게 답해보세요.</p>' +
         '</div>' +
         '<div class="xf-list">' + list + '</div>' +
@@ -334,7 +334,7 @@
       return;
     }
     injectStyleOnce();
-    /* 'check' = "내 보험 어때요?" 카드 진입(검진표 시작화면). 인자 없음 = 허브(기본 진입점). */
+    /* 'check' = "내 보험 어때?" 카드 진입(검진표 시작화면). 인자 없음 = 허브(기본 진입점). */
     if (step === 'check') { resetState(); paint('start'); return; }
     if (step === 'quiz') { _ai = 0; _ans = {}; paint('quiz'); return; }
     if (step === 'result') { paint('result'); return; }
