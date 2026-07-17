@@ -517,8 +517,10 @@
     st.textContent = [
       '#v-bojang{--bj-ground:#F5F6F8;--bj-ground2:#EDEFF2;--bj-panel:#FFFFFF;--bj-panel2:#FCFCFD;--bj-ink:#1F2937;--bj-body:#374151;--bj-muted:#6B7280;--bj-faint:#9CA3AF;--bj-soft:#F2F3F5;--bj-gold:#96702A;--bj-gold-b:#B0842F;--bj-line:#E7E2D6;--bj-good:#0F9D6B;--bj-warn:#B7791F;--bj-weak:#C2410C;--bj-sh:0 1px 2px rgba(17,24,39,.05),0 8px 20px -8px rgba(17,24,39,.12);--bj-r:20px;padding:0;overflow-y:auto;min-height:100%;background:radial-gradient(120% 55% at 50% -6%,rgba(217,178,104,.08),transparent 60%),linear-gradient(180deg,var(--bj-ground),var(--bj-ground2));color:var(--bj-ink);font-family:\'Pretendard\',\'Apple SD Gothic Neo\',\'Malgun Gothic\',\'맑은 고딕\',\'Noto Sans KR\',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.2px;}',
       '#v-bojang *{box-sizing:border-box;}',
-      '#v-bojang .bj-card{max-width:560px;margin:0 auto;padding:0 18px 48px;}',
-      '#v-bojang .bj-topbar{max-width:560px;margin:0 auto;padding:16px 18px 0;}',
+      /* 폭 정책(2026-07-17): 560px 모바일 고정 해제 → 홈 허브(.hs2-hub, app.html)와 동일한 860px 상한.
+         앱 안에서 화면 간 이질감 0. 열 수는 고정하지 않고 아래 auto-fit이 폭에 따라 정한다. */
+      '#v-bojang .bj-card{max-width:860px;margin:0 auto;padding:0 18px 48px;}',
+      '#v-bojang .bj-topbar{max-width:860px;margin:0 auto;padding:16px 18px 0;}',
       '#v-bojang .bj-back{background:var(--bj-soft);border:1px solid var(--bj-line);color:var(--bj-ink);font-size:13px;font-weight:700;padding:8px 15px;border-radius:11px;cursor:pointer;font-family:inherit;}',
       '#v-bojang .bj-back:hover{border-color:rgba(217,178,104,.4);}',
       '#v-bojang .bj-eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--bj-gold);text-transform:uppercase;}',
@@ -530,7 +532,9 @@
       '#v-bojang .bj-sec-h .bj-n{font-size:15px;font-weight:800;}',
       '#v-bojang .bj-sec-h .bj-tag{font-size:11px;font-weight:800;color:var(--bj-faint);border:1px solid var(--bj-line);padding:3px 9px;border-radius:99px;}',
       '#v-bojang .bj-sec-h .bj-ln{flex:1;height:1px;background:var(--bj-line);}',
-      '#v-bojang .bj-list{display:flex;flex-direction:column;gap:10px;}',
+      /* [푼다] 발송센터 자료 타일 목록 — 순서 의미 없는 병렬 카드. 폭이 열 수를 정한다(하드코딩 X).
+         min(300px,100%) = 초협폭(320px 미만)에서 트랙이 컨테이너를 넘겨 가로스크롤 나는 것 방지. */
+      '#v-bojang .bj-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:10px;}',
       '#v-bojang .bj-row{display:flex;align-items:center;gap:13px;background:linear-gradient(160deg,var(--bj-panel),var(--bj-panel2));border:1px solid var(--bj-line);border-radius:18px;padding:14px 15px;cursor:pointer;transition:.16s;box-shadow:var(--bj-sh);}',
       '#v-bojang .bj-row:hover{border-color:rgba(217,178,104,.4);}',
       '#v-bojang .bj-em{width:40px;height:40px;flex-shrink:0;border-radius:11px;background:rgba(217,178,104,.10);border:1px solid rgba(217,178,104,.22);display:grid;place-items:center;font-size:19px;}',
@@ -563,6 +567,8 @@
       '#v-bojang .bj-secth h2{font-size:18px;font-weight:800;}',
       '#v-bojang .bj-secth span{font-size:12px;color:var(--bj-faint);font-weight:600;}',
       /* accordion */
+      /* [둔다] 아코디언 4대 보장 — 펼침(max-height 애니메이션)으로 높이가 변하는 항목.
+         가로로 놓으면 하나 펼칠 때 같은 행 전체가 밀려 올라가고, 위→아래로 읽는 흐름도 깨진다. 세로가 의미상 맞음. */
       '#v-bojang .bj-acc{display:flex;flex-direction:column;gap:11px;}',
       '#v-bojang .bj-item{background:linear-gradient(160deg,var(--bj-panel),var(--bj-panel2));border:1px solid var(--bj-line);border-radius:var(--bj-r);overflow:hidden;box-shadow:var(--bj-sh);}',
       '#v-bojang .bj-head{display:flex;align-items:center;gap:14px;padding:17px;cursor:pointer;width:100%;background:none;border:0;color:inherit;text-align:left;font-family:inherit;}',
@@ -594,7 +600,11 @@
       '#v-bojang .bj-rt{font-size:15px;font-weight:800;color:var(--bj-gold-b);line-height:1.5;margin-bottom:6px;}',
       '#v-bojang .bj-rd{font-size:13px;color:var(--bj-body);line-height:1.65;}',
       /* blocks(type) */
-      '#v-bojang .bj-blocks{display:flex;flex-direction:column;gap:12px;margin-top:24px;}',
+      /* [푼다] 설명 블록 — 폭이 열 수를 정한다. 860px 한 컬럼이면 13.5px 본문이 800px를 넘어 오히려 읽기 나빠져,
+         넓을 때 2열로 나뉘는 편이 가독성·폭활용 둘 다 낫다. 좁으면 자동 1열 = 기존 흐름 그대로. */
+      '#v-bojang .bj-blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:12px;margin-top:24px;align-items:start;}',
+      /* 세대표는 표(min-width:460px)라 좁은 칸에 들어가면 가로스크롤 → 항상 전체 폭 차지 */
+      '#v-bojang .bj-medtable{grid-column:1/-1;}',
       '#v-bojang .bj-b{background:linear-gradient(160deg,var(--bj-panel),var(--bj-panel2));border:1px solid var(--bj-line);border-radius:var(--bj-r);padding:19px 18px;box-shadow:var(--bj-sh);}',
       '#v-bojang .bj-bt{font-size:16.5px;font-weight:800;line-height:1.45;margin-bottom:7px;}',
       '#v-bojang .bj-bd{font-size:13.5px;line-height:1.72;color:var(--bj-body);}',
@@ -602,7 +612,8 @@
       '#v-bojang .bj-gen{flex:1;min-width:78px;text-align:center;padding:10px 6px;border-radius:11px;background:var(--bj-soft);border:1px solid var(--bj-line);}',
       '#v-bojang .bj-genn{font-size:12px;font-weight:800;color:var(--bj-gold-b);}',
       '#v-bojang .bj-genx{font-size:10.5px;color:var(--bj-faint);margin-top:3px;line-height:1.35;}',
-      '#v-bojang .bj-cmp{display:flex;flex-direction:column;gap:9px;margin-top:14px;}',
+      /* [푼다] 좁은문→넓은문 비교쌍 — 쌍끼리는 서로 독립(순서 의미 X). 넓으면 나란히, 좁으면 자동 1열. */
+      '#v-bojang .bj-cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:9px;margin-top:14px;}',
       '#v-bojang .bj-cmpr{display:flex;align-items:center;gap:10px;font-size:12.5px;}',
       '#v-bojang .bj-lo{flex:1;text-align:center;padding:9px 6px;border-radius:10px;background:var(--bj-soft);border:1px solid var(--bj-line);color:var(--bj-muted);font-weight:700;}',
       '#v-bojang .bj-ar{color:var(--bj-gold);font-weight:900;flex-shrink:0;}',
@@ -639,6 +650,8 @@
       '#v-bojang .bj-cta{margin-top:26px;background:linear-gradient(155deg,#FFFCF4,#FAF3E2);border:1px solid rgba(217,178,104,.34);border-radius:var(--bj-r);padding:24px 20px;text-align:center;position:relative;overflow:hidden;box-shadow:var(--bj-sh);}',
       '#v-bojang .bj-ct{font-size:18px;font-weight:800;line-height:1.45;position:relative;}',
       '#v-bojang .bj-cs{font-size:13.5px;color:var(--bj-muted);margin-top:9px;line-height:1.65;position:relative;}',
+      /* [둔다] CTA 버튼 묶음 — 현재 자식이 전화 버튼 1개뿐이고, column이 그 버튼을 카드 전체 폭으로 펴는 장치다.
+         가로로 바꾸면 단일 CTA가 내용 폭만큼 쪼그라들어 오히려 후퇴. 배치 문제가 아니라 폭 문제 아님 → 무변경. */
       '#v-bojang .bj-btns{display:flex;flex-direction:column;gap:10px;margin-top:18px;position:relative;}',
       '#v-bojang .bj-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;border:0;font-family:inherit;text-decoration:none;}',
       '#v-bojang .bj-btn.primary{background:linear-gradient(135deg,var(--bj-gold-b),var(--bj-gold));color:#241B08;}',
@@ -657,7 +670,8 @@
       '#v-bojang .bj-verdict{display:inline-block;margin-top:14px;font-size:15px;font-weight:800;padding:10px 18px;border-radius:13px;}',
       '#v-bojang .bj-verdict-warn{color:var(--bj-warn);background:rgba(230,182,91,.13);border:1px solid rgba(230,182,91,.32);}',
       '#v-bojang .bj-verdict-good{color:var(--bj-good);background:rgba(87,194,149,.13);border:1px solid rgba(87,194,149,.32);}',
-      '#v-bojang .bj-axes{display:flex;flex-direction:column;gap:10px;}',
+      /* [푼다] 4축 진단(실비·암·뇌심장·수술비) — 병렬 축이라 순서 의미 없음. 폭이 열 수를 정한다. */
+      '#v-bojang .bj-axes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:10px;align-items:start;}',
       '#v-bojang .bj-ax{display:flex;align-items:flex-start;gap:13px;background:linear-gradient(160deg,var(--bj-panel),var(--bj-panel2));border:1px solid var(--bj-line);border-radius:16px;padding:15px;border-left-width:3px;box-shadow:var(--bj-sh);}',
       '#v-bojang .bj-ax-good{border-left-color:var(--bj-good);}',
       '#v-bojang .bj-ax-warn{border-left-color:var(--bj-warn);}',
