@@ -7,7 +7,7 @@
  * 첫 카드: 기존 "내 보험 어때?" 내부 자가 검진표 — 고객이 스스로 4항목(의료실비·암·
  *   뇌심장·수술비)을 체크 → 4축 판정 결과 → 상담 신청 CTA(전화·카톡). 앱 뷰는
  *   1개(#v-xfile)만 쓰고 그 안에서 JS 상태로 화면 전환(hub → start → quiz → result).
- * "내 보험 어때? v2.0"은 승인된 모바일 이미지형 독립 페이지로 별도 진입.
+ * "내 보험 어때? v2.0"은 승인된 모바일 이미지형 화면을 X-FILE 서브화면 안에 임베드.
  * 복귀 동선: 허브 = '‹ 홈으로'(앱 홈) / 서브 = '‹ 목록으로'(허브). bojang.js와 동일.
  * 게이트: _canSeeXfile(임태성 user_id 또는 role=admin) 전용. showView 게이트가
  *   1차, _xfileShow 진입 시 2차 방어. 고객/anon 노출 0.
@@ -169,7 +169,7 @@
    * ══════════════════════════════════════════════════════════════════════════ */
   var CARDS = [
     { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '기존 X-FILE 내부 자가 검진표', step: 'check' },
-    { key: 'check-v2', em: '📱', title: '내 보험 어때? v2.0', desc: '모바일 이미지형 4가지 자가 검진', step: 'check-v2', href: '/pages/insurance-self-check.html' },
+    { key: 'check-v2', em: '📱', title: '내 보험 어때? v2.0', desc: '모바일 이미지형 4가지 자가 검진', step: 'check-v2' },
     /* 아래 7개(2026-07-17 대표 확정) = 자리만 잡은 빈 페이지. 내용은 대표가 채운다.
        em은 AXES 4축(의료실비·암·뇌심장·수술비) 이모지를 그대로 재사용해 톤 일관. */
     { key: 'medical', em: '🏥', title: '의료실비', desc: '준비 중', step: 'medical' },
@@ -346,6 +346,14 @@
   }
   function blankOf(title) { return function () { return renderBlank(title); }; }
 
+  function renderCheckV2() {
+    return '' +
+      backBar() +
+      '<div class="xf-card xf-card-v2">' +
+        '<iframe class="xf-v2-frame" src="/pages/insurance-self-check.html?embed=1" title="내 보험 어때? v2.0"></iframe>' +
+      '</div>';
+  }
+
   /* ══════════════════════════════════════════════════════════════════════════
    * 미니 라우터
    *   주의: 'analysis' = X-FILE 안의 빈 페이지. 앱의 보장분석 뷰(#v-bojang·
@@ -353,7 +361,7 @@
    *   'analysis'로 둔다(대표 확정 2026-07-17).
    * ══════════════════════════════════════════════════════════════════════════ */
   var RENDERERS = {
-    hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult,
+    hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult, 'check-v2': renderCheckV2,
     medical: blankOf('의료실비'),
     cancer: blankOf('암'),
     brainheart: blankOf('뇌/심장'),
@@ -377,7 +385,7 @@
       return;
     }
     injectStyleOnce();
-    /* 'check' = 기존 내부 검진표 시작화면. 'check-v2' 허브 카드는 승인된 독립 페이지로 이동. 인자 없음 = 허브(기본 진입점). */
+    /* 'check' = 기존 내부 검진표 시작화면. 'check-v2' = 승인된 모바일 화면을 X-FILE 서브화면 안에서 표시. 인자 없음 = 허브(기본 진입점). */
     if (step === 'check') { resetState(); paint('start'); return; }
     if (step === 'quiz') { _ai = 0; _ans = {}; paint('quiz'); return; }
     if (step === 'result') { paint('result'); return; }
@@ -403,6 +411,8 @@
          860px 상한은 초광폭에서 카드가 늘어지는 것만 막는 상식선이자 홈과의 정합선. */
       '#v-xfile .xf-topbar{max-width:860px;margin:0 auto;padding:18px 18px 0;}',
       '#v-xfile .xf-card{max-width:860px;margin:0 auto;padding:0 18px 48px;}',
+      '#v-xfile .xf-card-v2{max-width:520px;padding-bottom:24px;}',
+      '#v-xfile .xf-v2-frame{display:block;width:100%;height:82vh;min-height:680px;border:0;border-radius:var(--radius-lg);background:var(--bg);}',
       /* hero */
       '#v-xfile .xf-hero{text-align:center;padding:26px 6px 22px;}',
       '#v-xfile .xf-eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--t-xfile);text-transform:uppercase;}',
