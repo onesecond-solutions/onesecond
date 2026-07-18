@@ -170,6 +170,7 @@
   var CARDS = [
     { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '기존 X-FILE 내부 자가 검진표', step: 'check' },
     { key: 'check-v2', em: '📱', title: '내 보험 어때? v2.0', desc: '모바일 이미지형 4가지 자가 검진', step: 'check-v2' },
+    { key: 'factory', em: '🏭', title: '보험 팩토리', desc: '설명 자료를 고르고 조립하는 작업실', step: 'factory' },
     /* 아래 7개(2026-07-17 대표 확정) = 자리만 잡은 빈 페이지. 내용은 대표가 채운다.
        em은 AXES 4축(의료실비·암·뇌심장·수술비) 이모지를 그대로 재사용해 톤 일관. */
     { key: 'medical', em: '🏥', title: '의료실비', desc: '준비 중', step: 'medical' },
@@ -354,6 +355,14 @@
       '</div>';
   }
 
+  function renderFactory() {
+    return '' +
+      backBar() +
+      '<div class="xf-card xf-card-factory">' +
+        '<iframe class="xf-factory-frame" src="/pages/insurance-factory.html?embed=1" title="보험 팩토리"></iframe>' +
+      '</div>';
+  }
+
   /* ══════════════════════════════════════════════════════════════════════════
    * 미니 라우터
    *   주의: 'analysis' = X-FILE 안의 빈 페이지. 앱의 보장분석 뷰(#v-bojang·
@@ -361,7 +370,7 @@
    *   'analysis'로 둔다(대표 확정 2026-07-17).
    * ══════════════════════════════════════════════════════════════════════════ */
   var RENDERERS = {
-    hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult, 'check-v2': renderCheckV2,
+    hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult, 'check-v2': renderCheckV2, factory: renderFactory,
     medical: blankOf('의료실비'),
     cancer: blankOf('암'),
     brainheart: blankOf('뇌/심장'),
@@ -413,6 +422,8 @@
       '#v-xfile .xf-card{max-width:860px;margin:0 auto;padding:0 18px 48px;}',
       '#v-xfile .xf-card-v2{max-width:520px;padding-bottom:24px;}',
       '#v-xfile .xf-v2-frame{display:block;width:100%;height:82vh;min-height:680px;border:0;border-radius:var(--radius-lg);background:var(--bg);}',
+      '#v-xfile .xf-card-factory{max-width:none;width:100%;padding:0 12px 18px;}',
+      '#v-xfile .xf-factory-frame{display:block;width:100%;height:calc(100vh - 74px);min-height:720px;border:0;border-radius:var(--radius-lg);background:var(--bg);}',
       /* hero */
       '#v-xfile .xf-hero{text-align:center;padding:26px 6px 22px;}',
       '#v-xfile .xf-eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--t-xfile);text-transform:uppercase;}',
