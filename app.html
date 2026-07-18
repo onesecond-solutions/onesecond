@@ -6216,6 +6216,8 @@ function showView(key,options){options=options||{};try{if(window.LocalFind)windo
   }
   window._bootView = bootView;
   function startBoot(){
+    var token = null; try { token = window.db && window.db.getToken && window.db.getToken(); } catch(e) {}
+    if(!getBootRole() && !token){ bootView(); return; }       /* 비로그인 = 인증 이벤트 대기 없이 공개 홈 즉시 표시 */
     if(getBootRole()){ bootView(); return; }                 /* role 즉시 확정 → 바로 렌더 */
     document.addEventListener('appstate:ready', bootView);    /* loadUser 완료 후 1회 */
     setTimeout(bootView, 2500);                               /* 비로그인/실패 fallback */
