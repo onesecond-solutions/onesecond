@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>보험 팩토리 · 클로드 버전 (독립 미리보기) | onesecond</title>
+<style>
+/* V2 토큰 = css/app-core.css :root 값을 그대로 미러(독립 페이지라 링크 대신 값 복제).
+   실효 정의는 여전히 css/app-core.css. 임의 하드코딩 색 금지, 아래 값만 사용. */
+:root {
+  --bg: #FAFAFB;
+  --s1: #FFFFFF;
+  --s2: #F2F2F4;
+  --sh: #EDEDF0;
+  --bd: #DCDCE1;
+  --tp: #18181B;
+  --ts: #52525B;
+  --tf: #71717A;
+  --bodytx: #3F3F46;
+  --ac: #6366F1;
+  --ach: #7C7FF2;
+  --ok: #16A34A;
+  --warn: #F59E0B;
+  --err: #DC2626;
+  --t-uw: #0891B2;
+  --on-ac: #FFFFFF;
+  --radius-xs: 8px;
+  --radius-sm: 11px;
+  --radius-md: 13px;
+  --radius-lg: 18px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+  --fs-caption: 12px;
+  --fs-meta: 13px;
+  --fs-body: 14px;
+  --fs-body-lg: 15px;
+  --fs-title-sm: 16px;
+  --fs-title: 18px;
+  --fs-heading: 20px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+  --lh-tight: 1.4;
+  --lh-base: 1.6;
+  --lh-relaxed: 1.7;
+  --lh-dense: 1.5;
+  --sh-sm: 0 1px 2px rgba(24,24,27,.05);
+  --sh-md: 0 4px 12px rgba(24,24,27,.08);
+  --sh-lg: 0 10px 30px rgba(24,24,27,.12);
+  --font-sans: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --if-1: 4px;
+  --if-2: 8px;
+  --if-3: 12px;
+  --if-4: 16px;
+  --if-5: 20px;
+  --if-6: 24px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; min-height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--tp);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-break: keep-all;
+}
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+.if-app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: visible;
+  background: var(--bg);
+}
+.if-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-4);
+  padding: var(--if-5) var(--if-6) var(--if-4);
+  border-bottom: 1px solid var(--bd);
+  background: var(--s1);
+}
+.if-brand { min-width: 0; }
+.if-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--if-3);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--ac) 10%, var(--s1));
+  color: var(--ac);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.if-brand h1 {
+  margin: var(--if-2) 0 0;
+  font-size: var(--fs-heading);
+  line-height: var(--lh-tight);
+  letter-spacing: 0;
+  font-weight: var(--fw-black);
+}
+.if-head p {
+  margin: var(--if-1) 0 0;
+  color: var(--ts);
+  font-size: var(--fs-body);
+  line-height: var(--lh-dense);
+}
+.if-status {
+  display: flex;
+  align-items: center;
+  gap: var(--if-2);
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.if-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.if-tabs {
+  display: grid;
+  gap: 0;
+  margin: var(--if-4) var(--if-6) 0;
+  padding: 0;
+  background: var(--s1);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+.if-major-tabs,
+.if-sub-tabs {
+  display: flex;
+  gap: var(--if-2);
+  overflow: visible;
+}
+.if-major-tabs {
+  position: relative;
+  align-items: flex-end;
+  min-height: 50px;
+  padding: var(--if-2) var(--if-3) 0;
+  border-bottom: 1px solid var(--bd);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sh) 72%, var(--s1)), var(--s2));
+}
+.if-sub-tabs {
+  padding: var(--if-3);
+  background: var(--s1);
+}
+.if-tab {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 var(--if-4);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s1);
+  color: var(--ts);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.if-tab.major {
+  min-height: 38px;
+  padding: 0 var(--if-5);
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: transparent;
+  color: var(--tf);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-bold);
+}
+.if-tab.major.on {
+  position: relative;
+  background: var(--s1);
+  border-color: var(--bd);
+  border-bottom-color: var(--s1);
+  color: var(--tp);
+  box-shadow: 0 -1px 0 var(--s1) inset;
+}
+.if-tab.major.on::after {
+  content: "";
+  position: absolute;
+  left: var(--if-4);
+  right: var(--if-4);
+  bottom: 0;
+  height: 2px;
+  background: var(--ac);
+  border-radius: var(--radius-full);
+}
+.if-tab.sub {
+  min-height: 40px;
+  padding: 0 var(--if-4);
+  border-radius: var(--radius-full);
+  background: var(--s2);
+}
+.if-tab:hover { border-color: var(--ac); color: var(--tp); }
+.if-tab:focus-visible { outline: 2px solid var(--ac); outline-offset: 2px; }
+.if-tab.sub.on {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-ac) 24%, transparent);
+}
+.if-main { min-height: 0; display: grid; grid-template-rows: auto auto; }
+.if-workspace {
+  height: 720px;
+  min-height: 620px;
+  display: grid;
+  grid-template-columns: 280px 12px minmax(420px, 1fr) 12px 420px;
+  gap: 0;
+  padding: var(--if-4) var(--if-6) var(--if-6);
+  overflow: hidden;
+}
+.if-splitter {
+  min-width: 12px;
+  cursor: col-resize;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+}
+.if-splitter::before {
+  content: "";
+  width: 2px;
+  border-radius: var(--radius-full);
+  background: var(--bd);
+  transition: width .12s, background .12s, box-shadow .12s;
+}
+.if-splitter:hover::before,
+.if-splitter.dragging::before {
+  width: 4px;
+  background: var(--ac);
+  box-shadow: 0 0 0 var(--if-1) color-mix(in srgb, var(--ac) 14%, transparent);
+}
+.if-resizing, .if-resizing * { cursor: col-resize !important; user-select: none !important; }
+.split-reset {
+  min-height: 36px;
+  padding: 0 var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-full);
+  background: var(--s1);
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.split-reset:hover { border-color: var(--ac); color: var(--ac); }
+.if-col {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+.if-col-head { flex: none; padding: var(--if-4); border-bottom: 1px solid var(--bd); background: var(--s1); }
+.if-col-head h2 { margin: 0; font-size: var(--fs-title-sm); line-height: var(--lh-tight); font-weight: var(--fw-black); }
+.if-col-head p { margin: var(--if-1) 0 0; color: var(--tf); font-size: var(--fs-meta); line-height: var(--lh-dense); }
+.if-workspace > .if-col .if-col-head { background: var(--tp); color: var(--on-ac); }
+.if-workspace > .if-col .if-col-head p { color: color-mix(in srgb, var(--on-ac) 82%, transparent); }
+.if-workspace > .if-col:first-child .if-search { margin-top: var(--if-4); }
+.if-workspace > .if-col:first-child .if-search input {
+  border-color: color-mix(in srgb, var(--on-ac) 18%, var(--tp));
+  background: color-mix(in srgb, var(--on-ac) 10%, var(--tp));
+  color: var(--on-ac);
+}
+.if-workspace > .if-col:first-child .if-search input::placeholder { color: color-mix(in srgb, var(--on-ac) 68%, transparent); }
+.if-scroll { flex: 1; min-height: 0; overflow: auto; padding: var(--if-4); }
+.if-search { display: flex; gap: var(--if-2); margin-top: var(--if-4); }
+.if-search input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s2);
+  color: var(--tp);
+  outline: none;
+  font-size: var(--fs-body);
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.if-search input:focus { border-color: var(--ac); background: var(--s1); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac) 16%, transparent); }
+.tpl-list { display: flex; flex-direction: column; gap: var(--if-3); }
+.tpl-card {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--if-3);
+  padding: var(--if-4);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  text-align: left;
+  transition: border-color .16s, box-shadow .16s, transform .16s;
+}
+.tpl-card:hover { border-color: var(--ac); box-shadow: var(--sh-md); transform: translateY(-1px); }
+.tpl-card.on { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 9%, var(--s1)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ac) 28%, transparent); }
+.emoji-box {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--ac) 12%, var(--s1));
+  border: 1px solid color-mix(in srgb, var(--ac) 20%, var(--bd));
+}
+.tpl-emoji { width: 40px; height: 40px; font-size: 20px; border-radius: var(--radius-md); }
+.desk-emoji { width: 56px; height: 56px; font-size: 26px; margin-bottom: var(--if-3); }
+.pv-emoji { width: 64px; height: 64px; font-size: 30px; margin: 0 auto var(--if-3); }
+.tpl-copy { min-width: 0; }
+.tpl-copy b { display: block; font-size: var(--fs-body-lg); line-height: var(--lh-tight); color: var(--tp); font-weight: var(--fw-bold); }
+.tpl-copy b mark { background: color-mix(in srgb, var(--ac) 22%, transparent); color: var(--tp); border-radius: 3px; padding: 0 2px; }
+.tpl-copy span { display: block; margin-top: var(--if-2); color: var(--ts); font-size: var(--fs-meta); line-height: var(--lh-dense); }
+.tpl-copy em { display: inline-flex; margin-top: var(--if-3); min-height: 24px; align-items: center; padding: 0 var(--if-2); border: 1px solid var(--bd); border-radius: var(--radius-full); background: var(--s2); color: var(--tf); font-style: normal; font-size: var(--fs-caption); font-weight: var(--fw-semibold); }
+.if-empty { padding: var(--if-6) var(--if-4); text-align: center; color: var(--tf); font-size: var(--fs-body); line-height: var(--lh-base); }
+.desk-list { display: flex; flex-direction: column; gap: var(--if-4); }
+.desk-card { border: 1px solid var(--bd); border-radius: var(--radius-lg); background: var(--s1); overflow: hidden; box-shadow: var(--sh-sm); }
+.desk-card.off { opacity: .58; }
+.desk-card-head { display: flex; align-items: center; gap: var(--if-3); padding: var(--if-3) var(--if-4); border-bottom: 1px solid var(--bd); background: color-mix(in srgb, var(--s2) 72%, var(--s1)); }
+.desk-order { width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--radius-sm); background: var(--ac); color: var(--on-ac); font-size: var(--fs-caption); font-weight: var(--fw-black); flex: 0 0 auto; }
+.desk-title { flex: 1; min-width: 0; }
+.desk-title b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-body-lg); font-weight: var(--fw-bold); }
+.desk-title span { display: block; color: var(--tf); font-size: var(--fs-caption); margin-top: var(--if-1); }
+.desk-actions { display: flex; align-items: center; gap: var(--if-1); }
+.mini-btn { min-width: 36px; min-height: 36px; border: 1px solid var(--bd); border-radius: var(--radius-sm); background: var(--s1); color: var(--ts); font-weight: var(--fw-bold); font-size: var(--fs-caption); }
+.mini-btn:hover { border-color: var(--ac); color: var(--tp); }
+.mini-btn.danger { color: var(--err); }
+.desk-body { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: var(--if-4); padding: var(--if-4); }
+.desk-card.folded .desk-body { display: none; }
+.desk-copy-body { margin: 0; color: var(--bodytx); font-size: var(--fs-body); line-height: var(--lh-base); }
+.desk-copy-body b { font-weight: var(--fw-bold); }
+.desk-copy-body mark { background: color-mix(in srgb, var(--ac) 22%, transparent); color: var(--tp); border-radius: 3px; padding: 0 2px; }
+.desk-cta-chip { display: inline-flex; min-height: 30px; align-items: center; margin-top: var(--if-3); padding: 0 var(--if-3); border-radius: var(--radius-full); background: color-mix(in srgb, var(--ac) 10%, var(--s1)); color: var(--ac); font-size: var(--fs-meta); font-weight: var(--fw-bold); }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: var(--if-2); padding: var(--if-3); border: 1px solid var(--bd); border-radius: var(--radius-md); background: var(--s2); color: var(--ts); font-size: var(--fs-meta); font-weight: var(--fw-semibold); height: max-content; }
+.toggle-row input { width: 18px; height: 18px; accent-color: var(--ac); }
+.desk-blank { padding: var(--if-4); border: 1.5px dashed var(--bd); border-radius: var(--radius-md); text-align: center; color: var(--tf); font-size: var(--fs-meta); }
+.preview-tools { display: flex; align-items: center; gap: var(--if-2); margin-top: var(--if-4); flex-wrap: wrap; }
+.preview-tools button { min-height: 36px; padding: 0 var(--if-3); border: 1px solid var(--bd); border-radius: var(--radius-full); background: var(--s1); color: var(--ts); font-size: var(--fs-meta); font-weight: var(--fw-semibold); }
+.preview-tools button:hover { border-color: var(--ac); color: var(--tp); }
+.preview-tools button.on { background: var(--ac); border-color: var(--ac); color: var(--on-ac); }
+.phone-stage { flex: 1; min-height: 0; overflow: auto; display: flex; justify-content: center; padding: var(--if-5); background: var(--s2); }
+.phone { width: 390px; max-width: 100%; align-self: flex-start; min-height: 620px; border: 1px solid var(--bd); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--ac) 8%, var(--bg)); box-shadow: var(--sh-lg); overflow: hidden; transition: width .16s; }
+.phone.wide { width: 460px; }
+.phone-top { padding: var(--if-5) var(--if-5) var(--if-4); background: linear-gradient(145deg, var(--ac), color-mix(in srgb, var(--ac) 78%, var(--t-uw))); color: var(--on-ac); }
+.phone-title { margin: 0 0 var(--if-2); font-size: var(--fs-heading); line-height: var(--lh-tight); font-weight: var(--fw-black); }
+.phone-hero-tag { display: inline-flex; min-height: 26px; align-items: center; margin-bottom: var(--if-3); padding: 0 var(--if-2); border-radius: var(--radius-full); background: color-mix(in srgb, var(--on-ac) 16%, transparent); color: var(--on-ac); font-size: var(--fs-caption); font-weight: var(--fw-bold); }
+.phone-meaning-title { margin: 0 0 var(--if-5); font-size: 26px; line-height: 1.3; font-weight: var(--fw-black); letter-spacing: -1px; }
+.phone-meaning-title mark { background: linear-gradient(transparent 62%, color-mix(in srgb, var(--on-ac) 24%, transparent) 0); color: inherit; padding: 0 2px; }
+.phone-meaning-hanja { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--if-3); margin: 0 0 var(--if-3); text-align: center; }
+.phone-meaning-hanja .ch { color: var(--on-ac); font-size: 32px; line-height: 1; font-weight: var(--fw-black); }
+.phone-meaning-hanja .rd { margin-top: var(--if-2); color: color-mix(in srgb, var(--on-ac) 82%, transparent); font-size: var(--fs-caption); font-weight: var(--fw-bold); }
+.phone-meaning-hanja .plus { color: color-mix(in srgb, var(--on-ac) 52%, transparent); font-weight: var(--fw-black); }
+.phone-meaning-mean { margin-bottom: var(--if-5); padding: var(--if-3); border-radius: var(--radius-md); background: color-mix(in srgb, var(--on-ac) 16%, transparent); color: var(--on-ac); text-align: center; font-size: var(--fs-body); font-weight: var(--fw-black); }
+.phone-meaning-foot { margin-top: var(--if-5); padding-top: var(--if-4); border-top: 1px solid color-mix(in srgb, var(--on-ac) 20%, transparent); color: color-mix(in srgb, var(--on-ac) 86%, transparent); text-align: center; font-size: var(--fs-caption); font-weight: var(--fw-bold); }
+.phone-sub { margin: 0; color: color-mix(in srgb, var(--on-ac) 90%, transparent); font-size: var(--fs-body); line-height: var(--lh-relaxed); }
+.hero-cta { margin-top: var(--if-4); background: var(--on-ac); color: var(--ac); }
+.phone-body { padding: var(--if-4); position: relative; }
+.pv-stackwrap { position: relative; }
+.pv-stack { position: relative; min-height: 300px; }
+.pv-card { border: 1px solid var(--bd); border-radius: var(--radius-lg); background: var(--s1); padding: var(--if-4); text-align: center; box-shadow: var(--sh-sm); }
+.pv-card.stacked { position: absolute; left: 0; right: 0; top: 0; transition: transform .2s ease, opacity .2s ease; touch-action: pan-y; cursor: grab; }
+.pv-card.stacked.z0 { transform: translateY(0) scale(1); opacity: 1; }
+.pv-card.stacked.z1 { transform: translateY(14px) scale(.96); opacity: .65; pointer-events: none; }
+.pv-card.stacked.z2 { transform: translateY(26px) scale(.92); opacity: .38; pointer-events: none; }
+.pv-card h3 { margin: 0 0 var(--if-2); font-size: var(--fs-title); line-height: var(--lh-tight); font-weight: var(--fw-black); }
+.pv-card h3 mark { background: color-mix(in srgb, var(--ac) 20%, transparent); color: var(--tp); border-radius: 3px; padding: 0 2px; }
+.pv-card p { margin: 0; color: var(--bodytx); font-size: var(--fs-body); line-height: var(--lh-base); }
+.pv-cta { width: 100%; min-height: 46px; margin-top: var(--if-4); border: 0; border-radius: var(--radius-md); background: var(--ac); color: var(--on-ac); font-size: var(--fs-body-lg); font-weight: var(--fw-bold); }
+.pv-blank { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--if-2); min-height: 220px; border: 1.5px dashed var(--bd); border-radius: var(--radius-lg); color: var(--tf); font-size: var(--fs-meta); }
+.pv-blank .emoji-box { background: var(--s2); border-color: var(--bd); }
+.pv-blank b { font-size: var(--fs-body-lg); color: var(--ts); font-weight: var(--fw-bold); }
+.pv-arrow { position: absolute; top: 110px; width: 34px; height: 34px; border-radius: 50%; background: var(--s1); border: 1px solid var(--bd); box-shadow: var(--sh-md); display: grid; place-items: center; color: var(--ts); font-size: var(--fs-title); z-index: 20; }
+.pv-arrow:hover:not(:disabled) { border-color: var(--ac); color: var(--ac); }
+.pv-arrow[disabled] { opacity: .3; cursor: default; }
+.pv-arrow.left { left: -4px; }
+.pv-arrow.right { right: -4px; }
+.pv-dots { display: flex; justify-content: center; gap: 6px; padding: var(--if-4) 0 var(--if-2); }
+.pv-dot { width: 7px; height: 7px; border: 0; padding: 0; border-radius: 50%; background: var(--bd); }
+.pv-dot.on { background: var(--ac); width: 18px; border-radius: var(--radius-full); }
+.pv-empty { padding: var(--if-6) var(--if-5); color: var(--tf); text-align: center; font-size: var(--fs-body); line-height: var(--lh-base); }
+.narrow { display: none; margin: var(--if-4); padding: var(--if-5); border: 1px solid var(--bd); border-radius: var(--radius-lg); background: var(--s1); color: var(--ts); font-size: var(--fs-body); line-height: var(--lh-base); }
+@media (max-width: 1340px) {
+  .if-workspace { grid-template-columns: 240px 12px minmax(420px, 1fr) 12px 380px; }
+  .if-col-head { padding: var(--if-4); }
+  .desk-body { grid-template-columns: 1fr; }
+  .phone.wide { width: 390px; }
+}
+@media (max-width: 1039px) {
+  .if-head { padding: var(--if-5) var(--if-5) var(--if-4); }
+  .if-workspace { grid-template-columns: 220px 12px minmax(420px, 1fr) 12px 340px; gap: 0; padding: var(--if-2); }
+  .if-col-head { padding: var(--if-3); }
+  .if-scroll { padding: var(--if-3); }
+  .phone { width: 320px; }
+  .phone.wide { width: 320px; }
+}
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  .if-app { min-height: 100vh; height: auto; overflow: visible; }
+  .if-workspace { display: none; }
+  .narrow { display: block; }
+}
+@media (max-width: 760px) {
+  .if-head { align-items: flex-start; flex-direction: column; }
+  .if-status { white-space: normal; }
+}
+</style>
+</head>
+<body>
+<main id="factoryApp" class="if-app">
+  <header class="if-head">
+    <div class="if-brand">
+      <span class="if-kicker">PREVIEW · 클로드 버전</span>
+      <h1>보험 팩토리 · 클로드 버전</h1>
+      <p>라이브 반영 전 독립 미리보기입니다. DB·고객 실데이터에 접촉하지 않습니다.</p>
+    </div>
+    <div class="if-status"><span class="if-dot"></span>로컬 미리보기 · 상태는 메모리에만 저장</div>
+  </header>
+
+  <section class="if-main" aria-label="보험 팩토리 클로드 버전 작업 공간">
+    <nav class="if-tabs" id="topTabs" aria-label="템플릿 범주"></nav>
+    <div class="narrow">보험 팩토리 클로드 버전은 데스크톱 1366px 이상 화면에 맞춘 3컬럼 작업 공간입니다. 좁은 화면에서는 추후 단계형 전환으로 확장합니다.</div>
+    <div class="if-workspace">
+      <aside class="if-col">
+        <div class="if-col-head">
+          <h2>템플릿 보관함</h2>
+          <p id="categoryHelp">상단 메뉴를 고르면 세부 템플릿이 바뀝니다.</p>
+          <div class="if-search">
+            <input id="tplSearch" type="search" placeholder="템플릿 검색">
+          </div>
+        </div>
+        <div class="if-scroll"><div class="tpl-list" id="templateList"></div></div>
+      </aside>
+
+      <div class="if-splitter" data-splitter="left" role="separator" aria-orientation="vertical" aria-label="템플릿 영역 폭 조절"></div>
+
+      <section class="if-col">
+        <div class="if-col-head">
+          <h2>설계사 작업대</h2>
+          <p>선택한 템플릿이 순서대로 누적됩니다. 순서 변경·삭제·고객화면 반영을 여기서 조절합니다.</p>
+        </div>
+        <div class="if-scroll"><div class="desk-list" id="workbench"></div></div>
+      </section>
+
+      <div class="if-splitter" data-splitter="right" role="separator" aria-orientation="vertical" aria-label="고객 미리보기 영역 폭 조절"></div>
+
+      <aside class="if-col">
+        <div class="if-col-head">
+          <h2>고객 화면 미리보기</h2>
+          <p>인사 카드가 맨 위 고정, 아래 카드는 좌우로 넘겨봅니다.</p>
+          <div class="preview-tools">
+            <button type="button" class="on" data-width="390">390px</button>
+            <button type="button" data-width="460">460px</button>
+            <button type="button" class="split-reset" id="splitReset">폭 초기화</button>
+          </div>
+        </div>
+        <div class="phone-stage">
+          <div class="phone" id="phonePreview">
+            <div class="phone-top" id="pvHero"></div>
+            <div class="phone-body">
+              <div class="pv-stackwrap">
+                <div class="pv-stack" id="pvStack"></div>
+                <button type="button" class="pv-arrow left" id="pvPrev" aria-label="이전 카드">&#8249;</button>
+                <button type="button" class="pv-arrow right" id="pvNext" aria-label="다음 카드">&#8250;</button>
+              </div>
+              <div class="pv-dots" id="pvDots"></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var ADVISOR = "임태성";
+
+  var MENU_GROUPS = [
+    { title: "인트로", items: [ { label: "소개·인사", cat: "인사" } ] },
+    { title: "신규 상품문의", items: [
+      { label: "의료실비", cat: "의료실비" },
+      { label: "암", cat: "암" },
+      { label: "뇌·심장", cat: "뇌심장" },
+      { label: "수술비", cat: "수술비" },
+      { label: "종합보험", cat: "종합보험" },
+      { label: "간병인", cat: "간병인" }
+    ] },
+    { title: "보험 점검 문의", items: [ { label: "보험 점검", cat: "점검" } ] },
+    { title: "설명 자료", items: [ { label: "설명 자료", cat: "설명자료" } ] },
+    { title: "상담 CTA", items: [ { label: "상담 CTA", cat: "CTA" } ] }
+  ];
+
+  function g(text) { return text.replace(/\{설계사\}/g, ADVISOR); }
+
+  var TEMPLATES = [
+    // 인트로 (4)
+    { id: "intro-meaning", cat: "인사", variant: "meaning",
+      title: "보험이라는 말, 뜻부터 보겠습니다", sub: "保+險 = 험한 상황으로부터 지키다", emoji: "📖" },
+    { id: "intro-new", cat: "인사", variant: "greeting", emoji: "😊", badge: "새 보험 상담 배정",
+      title: "신규 상담 배정 인사", sub: "새 상담 고객에게 보내는 첫 인사말",
+      body: g("안녕하세요 😊 새 보험 상담으로 담당 배정된 {설계사} 팀장입니다. 보험은 어렵게 느껴져도 결국 내 삶을 지키는 준비라고 생각해요. 처음 준비하시는 만큼 부담 드리지 않고 꼭 필요한 것부터 쉽게 안내해 드릴게요. 🙏 순차적으로 상담 도와드리고 있어요. 잠시만 기다려 주세요~") },
+    { id: "intro-check", cat: "인사", variant: "greeting", emoji: "🙏", badge: "보험 점검 배정",
+      title: "보험 점검 배정 인사", sub: "점검 문의 고객에게 보내는 첫 인사말",
+      body: g("안녕하세요 보험점검 문의로 담당 배정된 {설계사} 팀장입니다. 보험은 나 하나를 위한 선택 같아도 결국 가족 전체의 안정망이 된다고 믿고 있어요. 그 마음으로 한 분 한 분 꼼꼼하게 점검 도와드리고 있습니다. 🙏 순차적으로 상담해 드리고 있어요. 잠시만 기다려 주세요~") },
+    { id: "intro-referral", cat: "인사", variant: "greeting", emoji: "🤝", badge: "소개 고객 배정",
+      title: "소개 고객 배정 인사", sub: "소개로 연결된 고객에게 보내는 첫 인사말",
+      body: g("안녕하세요 😊 소개로 연결되어 담당 배정된 {설계사} 팀장입니다. 믿고 소개해 주신 만큼 부담 없이 정직하게 도와드리는 게 제 원칙이에요. 필요하면 챙기고 아니면 아닌 대로 솔직하게 말씀드릴게요. 🙏 순차적으로 상담 도와드리고 있어요. 잠시만 기다려 주세요~") },
+
+    // 의료실비 (4)
+    { id: "med-1", cat: "의료실비", emoji: "🧾", title: "병원비, 실제로 돌려받는 기본기", em: "실제로 돌려받는", sub: "모든 보장의 바닥이에요" },
+    { id: "med-2", cat: "의료실비", emoji: "🔢", title: "실손은 '몇 세대'가 핵심", em: "몇 세대", sub: "가입시기(1~5세대)에 따라 자기부담·비급여가 크게 달라져요" },
+    { id: "med-3", cat: "의료실비", emoji: "🔀", title: "급여와 비급여, 나눠서 봅니다", em: "나눠서", sub: "급여=건보 적용, 비급여=병원마다 차이 큰 진료예요" },
+    { id: "med-4", cat: "의료실비", emoji: "⚖️", title: "오래됐다고 무조건 좋은 건 아니에요", em: "오래됐다고", sub: "세대·병력·비급여 이용량을 같이 봐야 정해져요" },
+
+    // 암 (4)
+    { id: "cancer-1", cat: "암", emoji: "🎗️", title: "진단금 하나로 끝이 아니에요", em: "하나로 끝", sub: "진단 직후 바로 쓰는 현금성 보장이에요" },
+    { id: "cancer-2", cat: "암", emoji: "🏢", title: "암 보장은 '3층'으로 봐요", em: "3층", sub: "진단비+주요치료비+비급여, 셋이 함께 있어야 빈틈 없어요" },
+    { id: "cancer-3", cat: "암", emoji: "⚠️", title: "진단비만 크고, 치료비는 공백", em: "치료비는 공백", sub: "진단금 2억인데 치료비는 0원인 경우가 많아요" },
+    { id: "cancer-4", cat: "암", emoji: "🏷️", title: "일반암·유사암, 지급금이 달라요", em: "일반암·유사암", sub: "분류(일반·유사·소액)에 따라 지급이 달라져요" },
+
+    // 뇌·심장 (3)
+    { id: "brain-1", cat: "뇌심장", emoji: "💓", title: "이름은 비슷해도 범위가 달라요", em: "범위가 달라요", sub: "액수보다 '어떤 병까지' 범위가 결정적이에요" },
+    { id: "brain-2", cat: "뇌심장", emoji: "↔️", title: "좁은 담보인지, 넓은 담보인지", em: ["좁은 담보", "넓은 담보"], sub: "뇌출혈↔뇌혈관질환 / 급성심근경색↔허혈성심장질환" },
+    { id: "brain-3", cat: "뇌심장", emoji: "✅", title: "진단만 있고 수술·치료 특약은 공백", em: "수술·치료 특약", sub: "넓은 범위 + 수술·치료까지 있어야 든든해요" },
+
+    // 수술비 (3)
+    { id: "surg-1", cat: "수술비", emoji: "🩹", title: "큰 병보다 자주 쓰는 생활형 보장", em: "자주 쓰는", sub: "질병·상해 전반, 실제 수술에서 자주 쓰여요" },
+    { id: "surg-2", cat: "수술비", emoji: "🔄", title: "1회성인지 반복 지급인지", em: "반복 지급", sub: "다른 수술 때 다시 받는 구조인지가 핵심이에요" },
+    { id: "surg-3", cat: "수술비", emoji: "🔀", title: "질병·상해 구분과 종수술", em: "질병·상해 구분", sub: "종수술 포함 여부까지 함께 확인해요" },
+
+    // 종합보험 (3)
+    { id: "gen-1", cat: "종합보험", emoji: "📦", title: "실비가 바닥이라면, 종합은 큰 위험 묶음", em: "큰 위험 묶음", sub: "진단비·수술비·후유장해를 한 번에 준비해요" },
+    { id: "gen-2", cat: "종합보험", emoji: "⚖️", title: "한쪽만 두꺼우면 약해요", em: "약해요", sub: "한 축만 크고 다른 축이 비면 실제 위험에 취약해요" },
+    { id: "gen-3", cat: "종합보험", emoji: "🧩", title: "암·뇌심장·수술비·후유장해, 어떻게 배치할지", em: "어떻게 배치할지", sub: "한 장에 균형 있게 구성해요" },
+
+    // 간병인 (3)
+    { id: "care-1", cat: "간병인", emoji: "🤝", title: "입원이 길어질 때, 가족 부담을 대신", em: "가족 부담을 대신", sub: "긴 입원의 돌봄 비용·가족 공백을 대비해요" },
+    { id: "care-2", cat: "간병인", emoji: "📈", title: "간병비, 생각보다 큽니다", em: "생각보다 큽니다", sub: "가족이 계속 붙어 있기 어려운 요즘이에요" },
+    { id: "care-3", cat: "간병인", emoji: "✅", title: "일당·기간·조건 확인", em: "일당·기간·조건", sub: "간병인 사용 일당·보장 기간·지급 조건을 봐요" },
+
+    // 보험 점검 문의 — 빈 카드 (설명 생략)
+    { id: "check-blank", cat: "점검", blank: true, emoji: "📝" },
+
+    // 상담 CTA (4)
+    { id: "cta-new", cat: "CTA", emoji: "🆕", title: "처음부터 함께 설계해요", em: "함께 설계해요", sub: "지금 상황에 맞게 새로 준비해요", ctaLabel: "신규 상담 신청" },
+    { id: "cta-quote", cat: "CTA", emoji: "🧮", title: "조건 맞춰 견적 뽑아드릴게요", em: "견적", sub: "나이·상황 기준 맞춤 견적이에요", ctaLabel: "견적 요청" },
+    { id: "cta-supp", cat: "CTA", emoji: "🧩", title: "빈 곳만 골라서 보완", em: "골라서 보완", sub: "있는 건 두고 부족한 것만 채워요", ctaLabel: "보완 플랜 요청" },
+    { id: "cta-deep", cat: "CTA", emoji: "🔍", title: "가입 보험 전체 펼쳐 진단", em: "전체 펼쳐", sub: "중복·부족·과함을 한눈에 확인해요", ctaLabel: "정밀 보장분석 요청" }
+  ];
+
+  var state = {
+    group: "인트로",
+    category: "인사",
+    query: "",
+    previewWidth: 390,
+    previewIndex: 0,
+    blocks: []
+  };
+
+  var els = {
+    workspace: document.querySelector(".if-workspace"),
+    tabs: document.getElementById("topTabs"),
+    help: document.getElementById("categoryHelp"),
+    search: document.getElementById("tplSearch"),
+    list: document.getElementById("templateList"),
+    workbench: document.getElementById("workbench"),
+    phone: document.getElementById("phonePreview"),
+    pvHero: document.getElementById("pvHero"),
+    pvStack: document.getElementById("pvStack"),
+    pvDots: document.getElementById("pvDots"),
+    pvPrev: document.getElementById("pvPrev"),
+    pvNext: document.getElementById("pvNext"),
+    splitReset: document.getElementById("splitReset")
+  };
+  var SPLIT_KEY = "onesecond.insuranceFactoryV2.columns.v1";
+  var SPLIT_MIN = { template: 220, work: 420, preview: 320 };
+  var SPLIT_DEFAULT = { template: 280, preview: 420 };
+
+  function esc(text) {
+    return String(text == null ? "" : text).replace(/[&<>"']/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+  function markTitle(title, em) {
+    var t = esc(title || "");
+    var ems = Array.isArray(em) ? em : (em ? [em] : []);
+    ems.forEach(function (word) {
+      var ew = esc(word);
+      if (ew) t = t.split(ew).join("<mark>" + ew + "</mark>");
+    });
+    return t;
+  }
+  function findTpl(id) { return TEMPLATES.find(function (t) { return t.id === id; }); }
+  function selected(id) { return state.blocks.some(function (b) { return b.tplId === id; }); }
+  function currentGroup() { return MENU_GROUPS.find(function (gr) { return gr.title === state.group; }) || MENU_GROUPS[0]; }
+  function firstCategory(groupTitle) {
+    var gr = MENU_GROUPS.find(function (item) { return item.title === groupTitle; }) || MENU_GROUPS[0];
+    return gr.items[0].cat;
+  }
+  function categoryLabel(cat) {
+    for (var i = 0; i < MENU_GROUPS.length; i += 1) {
+      var match = MENU_GROUPS[i].items.find(function (item) { return item.cat === cat; });
+      if (match) return match.label;
+    }
+    return cat;
+  }
+  function groupOfCat(cat) {
+    for (var i = 0; i < MENU_GROUPS.length; i += 1) {
+      if (MENU_GROUPS[i].items.some(function (item) { return item.cat === cat; })) return MENU_GROUPS[i].title;
+    }
+    return "";
+  }
+  function emojiBox(emoji, cls) {
+    return '<div class="emoji-box ' + esc(cls || "") + '" aria-hidden="true">' + esc(emoji || "✨") + "</div>";
+  }
+  function filteredTemplates() {
+    var q = state.query.trim().toLowerCase();
+    return TEMPLATES.filter(function (tpl) {
+      var catOk = tpl.cat === state.category;
+      var haystack = ((tpl.title || "") + " " + (tpl.sub || "")).toLowerCase();
+      var qOk = !q || haystack.indexOf(q) >= 0;
+      return catOk && qOk;
+    });
+  }
+  function renderTabs() {
+    var group = currentGroup();
+    var majors = MENU_GROUPS.map(function (item) {
+      return '<button type="button" class="if-tab major' + (item.title === state.group ? " on" : "") + '" data-group="' + esc(item.title) + '">' + esc(item.title) + "</button>";
+    }).join("");
+    var subs = group.items.map(function (item) {
+      return '<button type="button" class="if-tab sub' + (item.cat === state.category ? " on" : "") + '" data-cat="' + esc(item.cat) + '">' + esc(item.label) + "</button>";
+    }).join("");
+    els.tabs.innerHTML = '<div class="if-major-tabs">' + majors + '</div><div class="if-sub-tabs">' + subs + "</div>";
+    alignSubTabs();
+  }
+  function alignSubTabs() {
+    var major = els.tabs.querySelector(".if-tab.major.on");
+    var subs = els.tabs.querySelector(".if-sub-tabs");
+    if (!major || !subs) return;
+    subs.style.paddingLeft = major.offsetLeft + "px";
+  }
+  function renderTemplates() {
+    var rows = filteredTemplates();
+    els.help.textContent = state.group + " · " + categoryLabel(state.category) + " 템플릿입니다. 카드를 클릭하면 작업대에 누적됩니다.";
+    if (!rows.length) {
+      var msg = state.category === "설명자료"
+        ? "설명 자료는 자산 확보 후 채울 예정입니다. 지금은 자리만 비워둡니다."
+        : "조건에 맞는 템플릿이 없습니다.<br>검색어를 지워 보세요.";
+      els.list.innerHTML = '<div class="if-empty">' + msg + "</div>";
+      return;
+    }
+    els.list.innerHTML = rows.map(function (tpl) {
+      var on = selected(tpl.id);
+      if (tpl.blank) {
+        return '<button type="button" class="tpl-card' + (on ? " on" : "") + '" data-add="' + esc(tpl.id) + '">' +
+          emojiBox(tpl.emoji, "tpl-emoji") +
+          '<span class="tpl-copy"><b>빈 카드</b><span>설계사가 상담 중 직접 채웁니다 (설명 생략)</span><em>' + (on ? "선택됨" : "추가") + "</em></span>" +
+          "</button>";
+      }
+      return '<button type="button" class="tpl-card' + (on ? " on" : "") + '" data-add="' + esc(tpl.id) + '">' +
+        emojiBox(tpl.emoji, "tpl-emoji") +
+        '<span class="tpl-copy"><b>' + markTitle(tpl.title, tpl.em) + "</b>" +
+        (tpl.sub ? "<span>" + esc(tpl.sub) + "</span>" : "") +
+        "<em>" + (on ? "선택됨" : "추가") + "</em></span>" +
+        "</button>";
+    }).join("");
+  }
+  function renderWorkbench() {
+    if (!state.blocks.length) {
+      els.workbench.innerHTML = '<div class="if-empty">단계별로 필요한 카드를 선택하면 이곳에 순서대로 쌓입니다.<br>인트로부터 CTA까지 메뉴를 이동해도 선택한 카드는 유지됩니다.</div>';
+      return;
+    }
+    els.workbench.innerHTML = state.blocks.map(function (block, idx) {
+      var tpl = findTpl(block.tplId);
+      if (!tpl) return "";
+      var stageLabel = groupOfCat(tpl.cat) + " / " + categoryLabel(tpl.cat);
+      var bodyHtml;
+      if (tpl.blank) {
+        bodyHtml = '<div class="desk-blank">' + emojiBox(tpl.emoji, "desk-emoji") + "빈 카드 — 설명 생략, 상담 중 직접 작성</div>";
+      } else if (tpl.variant === "meaning") {
+        bodyHtml = emojiBox(tpl.emoji, "desk-emoji") + '<p class="desk-copy-body"><b>' + markTitle(tpl.title, tpl.em) + "</b><br>" + esc(tpl.sub || "") + "</p>";
+      } else if (tpl.variant === "greeting") {
+        bodyHtml = emojiBox(tpl.emoji, "desk-emoji") + '<p class="desk-copy-body">' + esc(tpl.body) + "</p>";
+      } else {
+        bodyHtml = emojiBox(tpl.emoji, "desk-emoji") +
+          '<p class="desk-copy-body"><b>' + markTitle(tpl.title, tpl.em) + "</b><br>" + esc(tpl.sub || "") + "</p>" +
+          (tpl.ctaLabel ? '<span class="desk-cta-chip">' + esc(tpl.ctaLabel) + "</span>" : "");
+      }
+      return '<article class="desk-card' + (block.folded ? " folded" : "") + (block.visible ? "" : " off") + '" data-card="' + esc(block.id) + '">' +
+        '<div class="desk-card-head">' +
+        '<div class="desk-order">' + (idx + 1) + "</div>" +
+        '<div class="desk-title"><b>' + (tpl.blank ? "빈 카드" : esc(tpl.title)) + "</b><span>" + esc(stageLabel) + "</span></div>" +
+        '<div class="desk-actions">' +
+        '<button class="mini-btn" type="button" data-act="up" title="위로">↑</button>' +
+        '<button class="mini-btn" type="button" data-act="down" title="아래로">↓</button>' +
+        '<button class="mini-btn" type="button" data-act="fold" title="접기">' + (block.folded ? "열기" : "접기") + "</button>" +
+        '<button class="mini-btn danger" type="button" data-act="delete" title="삭제">삭제</button>' +
+        "</div></div>" +
+        '<div class="desk-body"><div>' + bodyHtml + "</div>" +
+        '<label class="toggle-row">고객 화면 반영 <input type="checkbox" data-edit="' + esc(block.id) + '" data-field="visible" ' + (block.visible ? "checked" : "") + "></label>" +
+        "</div></article>";
+    }).join("");
+  }
+  function heroMarkup(block) {
+    if (!block) {
+      return '<div class="phone-title">인사 카드를 선택하면<br>여기에 표시됩니다</div><p class="phone-sub">인트로 메뉴에서 인사 카드를 먼저 골라주세요.</p>';
+    }
+    var tpl = findTpl(block.tplId);
+    if (!tpl) return "";
+    if (tpl.variant === "meaning") {
+      return '<div class="phone-meaning-title">보험이라는 말,<br><mark>뜻부터</mark> 보겠습니다</div>' +
+        '<div class="phone-meaning-hanja"><div><div class="ch">保</div><div class="rd">보전할 보</div></div><div class="plus">+</div><div><div class="ch">險</div><div class="rd">험할 험</div></div></div>' +
+        '<div class="phone-meaning-mean">험한 상황으로부터 지키다</div>' +
+        '<p class="phone-sub">그래서 보험은 새로 가입하는 것보다, 지금 가지고 있는 보장이 제대로 역할을 하는지 점검하는 것이 더 중요합니다.<br><br>현재 가입된 보험들을 확인해 보고, 부족한 부분이나 불필요한 부분이 있는지 편하게 함께 살펴보겠습니다.<div class="phone-meaning-foot">보험전문가 임태성 팀장&nbsp;&nbsp;|&nbsp;&nbsp;010-9241-9375</div></p>';
+    }
+    if (tpl.variant === "greeting") {
+      return '<span class="phone-hero-tag">' + esc(tpl.badge || "") + "</span>" +
+        '<div class="phone-title">' + esc(tpl.emoji || "") + "</div>" +
+        '<p class="phone-sub">' + esc(tpl.body) + "</p>";
+    }
+    return '<span class="phone-hero-tag">' + esc(categoryLabel(tpl.cat)) + "</span>" +
+      '<div class="phone-title">' + esc(tpl.emoji || "") + " " + markTitle(tpl.title, tpl.em) + "</div>" +
+      (tpl.sub ? '<p class="phone-sub">' + esc(tpl.sub) + "</p>" : "") +
+      (tpl.ctaLabel ? '<button class="pv-cta hero-cta" type="button">' + esc(tpl.ctaLabel) + "</button>" : "");
+  }
+  function cardBodyHTML(tpl) {
+    if (!tpl) return "";
+    if (tpl.blank) {
+      return '<div class="pv-blank">' + emojiBox(tpl.emoji, "pv-emoji") + "<b>빈 카드</b><span>설계사가 상담 중 직접 채워요</span></div>";
+    }
+    return emojiBox(tpl.emoji, "pv-emoji") +
+      "<h3>" + markTitle(tpl.title, tpl.em) + "</h3>" +
+      (tpl.sub ? "<p>" + esc(tpl.sub) + "</p>" : "") +
+      (tpl.ctaLabel ? '<button class="pv-cta" type="button">' + esc(tpl.ctaLabel) + "</button>" : "");
+  }
+  function attachDrag(total) {
+    var top = els.pvStack.querySelector(".pv-card.z0");
+    if (!top) return;
+    var startX = 0, dx = 0, dragging = false;
+    top.addEventListener("pointerdown", function (e) {
+      dragging = true; dx = 0; startX = e.clientX;
+      try { top.setPointerCapture(e.pointerId); } catch (err) {}
+      top.style.transition = "none";
+    });
+    top.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      dx = e.clientX - startX;
+      top.style.transform = "translateX(" + dx + "px) rotate(" + (dx / 18) + "deg)";
+    });
+    function end() {
+      if (!dragging) return;
+      dragging = false;
+      top.style.transition = "";
+      if (Math.abs(dx) > 70) {
+        if (dx < 0 && state.previewIndex < total - 1) state.previewIndex += 1;
+        else if (dx > 0 && state.previewIndex > 0) state.previewIndex -= 1;
+      }
+      dx = 0;
+      renderPreview();
+    }
+    top.addEventListener("pointerup", end);
+    top.addEventListener("pointercancel", end);
+  }
+  function renderStack(rest) {
+    if (!rest.length) {
+      els.pvStack.innerHTML = '<div class="pv-empty">작업대에서 보장 카드나 CTA 카드를 추가하면 여기서 좌우로 넘겨볼 수 있어요.</div>';
+      els.pvDots.innerHTML = "";
+      els.pvPrev.disabled = true;
+      els.pvNext.disabled = true;
+      return;
+    }
+    state.previewIndex = Math.max(0, Math.min(state.previewIndex, rest.length - 1));
+    var html = "";
+    for (var i = 0; i < rest.length; i += 1) {
+      var offset = i - state.previewIndex;
+      if (offset < 0 || offset > 2) continue;
+      var tpl = findTpl(rest[i].tplId);
+      html += '<div class="pv-card stacked z' + offset + '" style="z-index:' + (10 - offset) + '">' + cardBodyHTML(tpl) + "</div>";
+    }
+    els.pvStack.innerHTML = html;
+    els.pvDots.innerHTML = rest.map(function (b, i) {
+      return '<button type="button" class="pv-dot' + (i === state.previewIndex ? " on" : "") + '" data-dot="' + i + '" aria-label="' + (i + 1) + '번째 카드"></button>';
+    }).join("");
+    els.pvPrev.disabled = state.previewIndex === 0;
+    els.pvNext.disabled = state.previewIndex === rest.length - 1;
+    attachDrag(rest.length);
+  }
+  function renderPreview() {
+    els.phone.classList.toggle("wide", state.previewWidth === 460);
+    var visible = state.blocks.filter(function (b) { return b.visible; });
+    els.pvHero.innerHTML = heroMarkup(visible[0]);
+    renderStack(visible.slice(1));
+  }
+  function renderAll() {
+    renderTabs();
+    renderTemplates();
+    renderWorkbench();
+    renderPreview();
+  }
+  function workspaceContentWidth() {
+    if (!els.workspace) return 0;
+    var style = getComputedStyle(els.workspace);
+    var pad = parseFloat(style.paddingLeft || 0) + parseFloat(style.paddingRight || 0);
+    return Math.max(0, els.workspace.clientWidth - pad - 24);
+  }
+  function clampColumns(next) {
+    var total = workspaceContentWidth();
+    var template = Math.max(SPLIT_MIN.template, Math.round(next.template));
+    var preview = Math.max(SPLIT_MIN.preview, Math.round(next.preview));
+    if (total <= 0) return { template: template, preview: preview };
+    var maxPair = Math.max(0, total - SPLIT_MIN.work);
+    if (template + preview > maxPair) {
+      var over = template + preview - maxPair;
+      var previewRoom = Math.max(0, preview - SPLIT_MIN.preview);
+      var fromPreview = Math.min(previewRoom, over);
+      preview -= fromPreview;
+      over -= fromPreview;
+      template = Math.max(SPLIT_MIN.template, template - over);
+    }
+    return { template: template, preview: preview };
+  }
+  function currentColumns() {
+    var cols = els.workspace ? els.workspace.querySelectorAll(".if-col") : [];
+    if (cols.length < 3) return clampColumns(SPLIT_DEFAULT);
+    return clampColumns({ template: cols[0].getBoundingClientRect().width, preview: cols[2].getBoundingClientRect().width });
+  }
+  function applyColumns(widths, persist) {
+    if (!els.workspace) return;
+    var next = clampColumns(widths);
+    els.workspace.style.gridTemplateColumns = next.template + "px 12px minmax(" + SPLIT_MIN.work + "px, 1fr) 12px " + next.preview + "px";
+    if (persist) { try { localStorage.setItem(SPLIT_KEY, JSON.stringify(next)); } catch (e) {} }
+  }
+  function loadColumns() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(SPLIT_KEY) || "null");
+      if (saved && isFinite(saved.template) && isFinite(saved.preview)) return saved;
+    } catch (e) {}
+    return SPLIT_DEFAULT;
+  }
+  function resetColumns() {
+    try { localStorage.removeItem(SPLIT_KEY); } catch (e) {}
+    applyColumns(SPLIT_DEFAULT, false);
+  }
+  function initSplitters() {
+    if (!els.workspace) return;
+    applyColumns(loadColumns(), false);
+    window.addEventListener("resize", function () { applyColumns(currentColumns(), false); });
+    document.querySelectorAll(".if-splitter").forEach(function (splitter) {
+      splitter.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        var side = splitter.getAttribute("data-splitter");
+        var startX = event.clientX;
+        var start = currentColumns();
+        splitter.classList.add("dragging");
+        document.body.classList.add("if-resizing");
+        try { splitter.setPointerCapture(event.pointerId); } catch (e) {}
+        function move(moveEvent) {
+          var dx = moveEvent.clientX - startX;
+          if (side === "left") applyColumns({ template: start.template + dx, preview: start.preview }, true);
+          if (side === "right") applyColumns({ template: start.template, preview: start.preview - dx }, true);
+        }
+        function stop() {
+          splitter.classList.remove("dragging");
+          document.body.classList.remove("if-resizing");
+          window.removeEventListener("pointermove", move);
+          window.removeEventListener("pointerup", stop);
+          window.removeEventListener("pointercancel", stop);
+        }
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", stop);
+        window.addEventListener("pointercancel", stop);
+      });
+    });
+    if (els.splitReset) els.splitReset.addEventListener("click", resetColumns);
+  }
+  function addTemplate(id) {
+    if (selected(id)) { renderTemplates(); return; }
+    var tpl = findTpl(id);
+    if (!tpl) return;
+    state.blocks.push({ id: "b" + Date.now() + Math.random().toString(16).slice(2), tplId: tpl.id, visible: true, folded: false });
+    var visible = state.blocks.filter(function (b) { return b.visible; });
+    state.previewIndex = Math.max(0, visible.slice(1).length - 1);
+    renderAll();
+  }
+  function moveBlock(id, dir) {
+    var idx = state.blocks.findIndex(function (b) { return b.id === id; });
+    var next = idx + dir;
+    if (idx < 0 || next < 0 || next >= state.blocks.length) return;
+    var item = state.blocks.splice(idx, 1)[0];
+    state.blocks.splice(next, 0, item);
+    renderWorkbench();
+    renderPreview();
+  }
+  function updateBlock(id, field, value) {
+    var block = state.blocks.find(function (b) { return b.id === id; });
+    if (!block) return;
+    block[field] = value;
+    renderPreview();
+    if (field === "visible") renderWorkbench();
+  }
+
+  els.tabs.addEventListener("click", function (event) {
+    var groupBtn = event.target.closest("[data-group]");
+    if (groupBtn) {
+      state.group = groupBtn.getAttribute("data-group");
+      state.category = firstCategory(state.group);
+      state.query = "";
+      els.search.value = "";
+      renderTabs();
+      renderTemplates();
+      return;
+    }
+    var btn = event.target.closest("[data-cat]");
+    if (!btn) return;
+    state.category = btn.getAttribute("data-cat");
+    state.query = "";
+    els.search.value = "";
+    renderTabs();
+    renderTemplates();
+  });
+  els.search.addEventListener("input", function () { state.query = els.search.value; renderTemplates(); });
+  window.addEventListener("resize", alignSubTabs);
+  els.list.addEventListener("click", function (event) {
+    var btn = event.target.closest("[data-add]");
+    if (btn) addTemplate(btn.getAttribute("data-add"));
+  });
+  els.workbench.addEventListener("click", function (event) {
+    var btn = event.target.closest("[data-act]");
+    if (!btn) return;
+    var card = event.target.closest("[data-card]");
+    if (!card) return;
+    var id = card.getAttribute("data-card");
+    var act = btn.getAttribute("data-act");
+    if (act === "up") moveBlock(id, -1);
+    if (act === "down") moveBlock(id, 1);
+    if (act === "fold") {
+      var f = state.blocks.find(function (b) { return b.id === id; });
+      if (f) f.folded = !f.folded;
+      renderWorkbench();
+    }
+    if (act === "delete") {
+      state.blocks = state.blocks.filter(function (b) { return b.id !== id; });
+      renderAll();
+    }
+  });
+  els.workbench.addEventListener("change", function (event) {
+    var el = event.target;
+    var id = el.getAttribute("data-edit");
+    var field = el.getAttribute("data-field");
+    if (!id || !field) return;
+    updateBlock(id, field, field === "visible" ? el.checked : el.value);
+  });
+  document.querySelector(".preview-tools").addEventListener("click", function (event) {
+    var widthBtn = event.target.closest("[data-width]");
+    if (!widthBtn) return;
+    state.previewWidth = Number(widthBtn.getAttribute("data-width")) || 390;
+    document.querySelectorAll(".preview-tools [data-width]").forEach(function (b) { b.classList.toggle("on", b === widthBtn); });
+    renderPreview();
+  });
+  els.pvPrev.addEventListener("click", function () {
+    if (state.previewIndex > 0) { state.previewIndex -= 1; renderPreview(); }
+  });
+  els.pvNext.addEventListener("click", function () {
+    state.previewIndex += 1;
+    renderPreview();
+  });
+  els.pvDots.addEventListener("click", function (event) {
+    var b = event.target.closest("[data-dot]");
+    if (!b) return;
+    state.previewIndex = Number(b.getAttribute("data-dot"));
+    renderPreview();
+  });
+
+  renderAll();
+  initSplitters();
+})();
+</script>
+</body>
+</html>
