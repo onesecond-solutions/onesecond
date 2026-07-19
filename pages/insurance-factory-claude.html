@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>보험 팩토리 | onesecond X-FILE</title>
+<style>
+:root {
+  --bg: #FAFAFB;
+  --s1: #FFFFFF;
+  --s2: #F2F2F4;
+  --sh: #EDEDF0;
+  --bd: #DCDCE1;
+  --tp: #18181B;
+  --ts: #52525B;
+  --tf: #71717A;
+  --bodytx: #3F3F46;
+  --ac: #6366F1;
+  --ach: #7C7FF2;
+  --ok: #16A34A;
+  --warn: #F59E0B;
+  --err: #DC2626;
+  --t-uw: #0891B2;
+  --on-ac: #FFFFFF;
+  --xfile: var(--err);
+  --radius-xs: 8px;
+  --radius-sm: 11px;
+  --radius-md: 13px;
+  --radius-lg: 18px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+  --fs-caption: 12px;
+  --fs-meta: 13px;
+  --fs-body: 14px;
+  --fs-body-lg: 15px;
+  --fs-title-sm: 16px;
+  --fs-title: 18px;
+  --fs-heading: 20px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+  --lh-tight: 1.4;
+  --lh-base: 1.6;
+  --lh-relaxed: 1.7;
+  --lh-dense: 1.5;
+  --sh-sm: 0 1px 2px rgba(24,24,27,.05);
+  --sh-md: 0 4px 12px rgba(24,24,27,.08);
+  --sh-lg: 0 10px 30px rgba(24,24,27,.12);
+  --font-sans: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --if-1: 4px;
+  --if-2: 8px;
+  --if-3: 12px;
+  --if-4: 16px;
+  --if-5: 20px;
+  --if-6: 24px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; min-height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--tp);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-break: keep-all;
+}
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+.blocked body { display: block !important; }
+.embedded .if-head { display: none; }
+.if-denied {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--if-6);
+}
+.if-denied[hidden] { display: none; }
+.if-denied-card {
+  width: min(100%, 420px);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  padding: var(--if-6);
+  text-align: center;
+  box-shadow: var(--sh-lg);
+}
+.if-denied-card h1 { margin: 0 0 var(--if-2); font-size: var(--fs-heading); line-height: var(--lh-tight); font-weight: var(--fw-black); }
+.if-denied-card p { margin: 0 0 var(--if-5); color: var(--ts); font-size: var(--fs-body); line-height: var(--lh-base); }
+.if-denied-card a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--if-4);
+  border-radius: var(--radius-md);
+  background: var(--ac);
+  color: var(--on-ac);
+  text-decoration: none;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+}
+.if-app {
+  /* 풀스크린 세로 채움(2026-07-19) — min-height→height 고정 + overflow:hidden으로
+     if-main(auto 1fr auto)의 1fr row가 실제 남은 세로를 계산할 수 있는 높이 사슬을 만든다.
+     860px 이하 모바일은 아래 미디어쿼리가 다시 min-height/auto/visible로 되돌린다. */
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  background: var(--bg);
+}
+.if-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-4);
+  padding: var(--if-5) var(--if-6) var(--if-4);
+  border-bottom: 1px solid var(--bd);
+  background: var(--s1);
+}
+.if-brand { min-width: 0; }
+.if-kicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--if-3);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--xfile) 9%, var(--s1));
+  color: var(--xfile);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.if-brand h1 {
+  margin: var(--if-2) 0 0;
+  font-size: var(--fs-heading);
+  line-height: var(--lh-tight);
+  letter-spacing: 0;
+  font-weight: var(--fw-black);
+}
+.if-head p {
+  margin: var(--if-1) 0 0;
+  color: var(--ts);
+  font-size: var(--fs-body);
+  line-height: var(--lh-dense);
+}
+.if-status {
+  display: flex;
+  align-items: center;
+  gap: var(--if-2);
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.if-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.if-tabs {
+  display: grid;
+  gap: 0;
+  margin: var(--if-4) var(--if-6) 0;
+  padding: 0;
+  background: var(--s1);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+.if-major-tabs,
+.if-sub-tabs {
+  display: flex;
+  gap: var(--if-2);
+  overflow: visible;
+}
+.if-major-tabs {
+  position: relative;
+  align-items: flex-end;
+  min-height: 50px;
+  padding: var(--if-2) var(--if-3) 0;
+  border-bottom: 1px solid var(--bd);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sh) 72%, var(--s1)), var(--s2));
+}
+.if-sub-tabs {
+  padding: var(--if-3);
+  background: var(--s1);
+}
+.if-tab {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 var(--if-4);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s1);
+  color: var(--ts);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.if-tab.major {
+  min-height: 38px;
+  padding: 0 var(--if-5);
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: transparent;
+  color: var(--tf);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-bold);
+}
+.if-tab.major.on {
+  position: relative;
+  background: var(--s1);
+  border-color: var(--bd);
+  border-bottom-color: var(--s1);
+  color: var(--tp);
+  box-shadow: 0 -1px 0 var(--s1) inset;
+}
+.if-tab.major.on::after {
+  content: "";
+  position: absolute;
+  left: var(--if-4);
+  right: var(--if-4);
+  bottom: 0;
+  height: 2px;
+  background: var(--ac);
+  border-radius: var(--radius-full);
+}
+.if-tab.sub {
+  min-height: 40px;
+  padding: 0 var(--if-4);
+  border-radius: var(--radius-full);
+  background: var(--s2);
+}
+.if-tab:hover {
+  border-color: var(--ac);
+  color: var(--tp);
+}
+.if-tab:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
+}
+.if-tab.sub.on {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-ac) 24%, transparent);
+}
+.if-main {
+  /* 3행: 탭(auto) · 작업공간(1fr = 남은 세로 전부) · 하단 안내(auto).
+     overflow:hidden으로 이 컨테이너 밖으로 흘러넘치지 않게 잡는다. */
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+.if-workspace {
+  /* 고정 720px 폐기(2026-07-19) — if-main의 1fr row를 그대로 채운다.
+     min-height:0 + 아래 .if-col/.if-scroll의 min-height:0 체인 덕분에
+     3컬럼은 늘어나지 않고 각자 내부에서 독립 스크롤한다. */
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px 12px minmax(420px, 1fr) 12px 504px;
+  gap: 0;
+  padding: var(--if-4) var(--if-6) var(--if-5);
+  overflow: hidden;
+}
+.if-splitter {
+  min-width: 12px;
+  cursor: col-resize;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+}
+.if-splitter::before {
+  content: "";
+  width: 2px;
+  border-radius: var(--radius-full);
+  background: var(--bd);
+  transition: width .12s, background .12s, box-shadow .12s;
+}
+.if-splitter:hover::before,
+.if-splitter.dragging::before {
+  width: 4px;
+  background: var(--ac);
+  box-shadow: 0 0 0 var(--if-1) color-mix(in srgb, var(--ac) 14%, transparent);
+}
+.if-resizing,
+.if-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+.split-reset {
+  min-height: 36px;
+  padding: 0 var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-full);
+  background: var(--s1);
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.split-reset:hover {
+  border-color: var(--ac);
+  color: var(--ac);
+}
+.if-col {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+.if-col-head {
+  flex: none;
+  padding: var(--if-4);
+  border-bottom: 1px solid var(--bd);
+  background: var(--s1);
+}
+.if-col-head h2 {
+  margin: 0;
+  font-size: var(--fs-title-sm);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-black);
+}
+.if-col-head p {
+  margin: var(--if-1) 0 0;
+  color: var(--tf);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-dense);
+}
+.if-workspace > .if-col .if-col-head {
+  background: var(--tp);
+  color: var(--on-ac);
+}
+.if-workspace > .if-col .if-col-head p {
+  color: color-mix(in srgb, var(--on-ac) 82%, transparent);
+}
+.if-workspace > .if-col:first-child .if-col-head p {
+  margin-top: var(--if-3);
+}
+.if-workspace > .if-col:first-child .if-col-head .if-search {
+  margin-top: var(--if-4);
+}
+.if-workspace > .if-col:first-child .if-search input,
+.if-workspace > .if-col:first-child .if-filter {
+  border-color: color-mix(in srgb, var(--on-ac) 18%, var(--tp));
+  background: color-mix(in srgb, var(--on-ac) 10%, var(--tp));
+  color: var(--on-ac);
+}
+.if-workspace > .if-col:first-child .if-search input::placeholder {
+  color: color-mix(in srgb, var(--on-ac) 68%, transparent);
+}
+.if-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--if-4);
+}
+.if-search {
+  display: flex;
+  gap: var(--if-2);
+  margin-top: var(--if-4);
+}
+.if-search input,
+.if-filter,
+.if-input,
+.if-text,
+.if-select {
+  width: 100%;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s2);
+  color: var(--tp);
+  outline: none;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.if-search input:focus,
+.if-filter:focus,
+.if-input:focus,
+.if-text:focus,
+.if-select:focus,
+.desk-tools input:focus {
+  border-color: var(--ac);
+  background: var(--s1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac) 16%, transparent);
+}
+.if-search input { min-height: 42px; padding: 0 var(--if-3); font-size: var(--fs-body); }
+.if-filter { flex: 0 0 96px; min-height: 42px; padding: 0 var(--if-2); font-size: var(--fs-meta); }
+.tpl-list { display: flex; flex-direction: column; gap: var(--if-3); }
+.tpl-card {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--if-3);
+  padding: var(--if-4);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  text-align: left;
+  transition: border-color .16s, box-shadow .16s, transform .16s;
+}
+.tpl-card:hover {
+  border-color: var(--ac);
+  box-shadow: var(--sh-md);
+  transform: translateY(-1px);
+}
+.tpl-card.on {
+  border-color: var(--ac);
+  background: color-mix(in srgb, var(--ac) 9%, var(--s1));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ac) 28%, transparent);
+}
+.tpl-chip {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--s2);
+  color: var(--ac);
+  font-size: var(--fs-title-sm);
+  font-weight: var(--fw-black);
+}
+.tpl-copy { min-width: 0; }
+.tpl-copy b {
+  display: block;
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-tight);
+  color: var(--tp);
+  font-weight: var(--fw-bold);
+}
+.tpl-copy span {
+  display: block;
+  margin-top: var(--if-2);
+  color: var(--ts);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-dense);
+}
+.tpl-copy em {
+  display: inline-flex;
+  margin-top: var(--if-3);
+  min-height: 24px;
+  align-items: center;
+  padding: 0 var(--if-2);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-full);
+  background: var(--s2);
+  color: var(--tf);
+  font-style: normal;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+}
+.card-visual {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ac) 16%, var(--bd));
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--ac) 13%, var(--s1)), var(--s1) 54%),
+    radial-gradient(circle at 78% 28%, color-mix(in srgb, var(--ac) 20%, transparent), transparent 34%);
+}
+.card-visual::before,
+.card-visual::after {
+  content: "";
+  position: absolute;
+  display: block;
+}
+.tpl-visual {
+  flex: 0 0 72px;
+  height: 62px;
+}
+.desk-visual {
+  height: 128px;
+  margin-bottom: var(--if-3);
+}
+.pv-visual {
+  height: 136px;
+  margin-bottom: var(--if-4);
+}
+.photo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--s2);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tp) 8%, transparent);
+}
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.photo-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 34%, rgba(19,23,34,.66));
+}
+.photo-caption {
+  position: absolute;
+  left: var(--if-3);
+  right: var(--if-3);
+  bottom: var(--if-3);
+  z-index: 1;
+  color: #fff;
+  font-size: var(--fs-meta);
+  line-height: var(--lh-dense);
+  font-weight: var(--fw-bold);
+}
+.tpl-photo {
+  flex: 0 0 88px;
+  height: 66px;
+}
+.desk-photo {
+  height: 150px;
+  margin-bottom: var(--if-3);
+}
+.pv-photo {
+  height: 156px;
+  margin-bottom: var(--if-4);
+}
+.phone-hero-visual {
+  height: 132px;
+  margin-bottom: var(--if-5);
+  border-color: color-mix(in srgb, var(--on-ac) 20%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--on-ac) 18%, transparent), color-mix(in srgb, var(--on-ac) 8%, transparent) 56%),
+    radial-gradient(circle at 78% 28%, color-mix(in srgb, var(--on-ac) 22%, transparent), transparent 34%);
+}
+.phone-hero-photo {
+  height: 150px;
+  margin-bottom: var(--if-5);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--on-ac) 18%, transparent);
+}
+.card-visual[data-visual="medical-shield"]::before {
+  width: 32px;
+  height: 38px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 16px 16px 20px 20px;
+  background: linear-gradient(160deg, var(--ac), color-mix(in srgb, var(--ac) 74%, var(--tp)));
+  clip-path: polygon(50% 0, 92% 16%, 82% 76%, 50% 100%, 18% 76%, 8% 16%);
+}
+.card-visual[data-visual="medical-shield"]::after {
+  width: 18px;
+  height: 8px;
+  left: calc(50% - 9px);
+  top: calc(50% - 4px);
+  border-left: 4px solid var(--on-ac);
+  border-bottom: 4px solid var(--on-ac);
+  transform: rotate(-45deg);
+}
+.card-visual[data-visual="medical-flow"]::before {
+  width: 66%;
+  height: 24%;
+  left: 17%;
+  top: 40%;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--ac) 14%, var(--s1));
+  box-shadow:
+    -20px 0 0 color-mix(in srgb, var(--ac) 32%, var(--s1)),
+    20px 0 0 color-mix(in srgb, var(--ac) 48%, var(--s1));
+}
+.card-visual[data-visual="medical-flow"]::after {
+  width: 46%;
+  height: 2px;
+  left: 27%;
+  top: 50%;
+  background: var(--ac);
+  box-shadow: 0 14px 0 color-mix(in srgb, var(--ac) 34%, var(--s1));
+}
+.card-visual[data-visual="medical-renewal"]::before {
+  width: 42px;
+  height: 42px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 5px solid color-mix(in srgb, var(--ac) 74%, var(--s1));
+  border-right-color: transparent;
+  border-radius: 50%;
+}
+.card-visual[data-visual="medical-renewal"]::after {
+  width: 0;
+  height: 0;
+  left: calc(50% + 14px);
+  top: calc(50% - 22px);
+  border-left: 11px solid var(--ac);
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  transform: rotate(32deg);
+}
+.card-visual[data-visual="medical-bridge"]::before {
+  width: 70%;
+  height: 34%;
+  left: 15%;
+  top: 40%;
+  border: 4px solid var(--ac);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+}
+.card-visual[data-visual="medical-bridge"]::after {
+  width: 68%;
+  height: 4px;
+  left: 16%;
+  top: 64%;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--tp) 82%, var(--ac));
+  box-shadow:
+    18px -18px 0 -1px color-mix(in srgb, var(--ac) 48%, var(--s1)),
+    -18px -10px 0 -1px color-mix(in srgb, var(--ac) 28%, var(--s1));
+}
+.if-empty {
+  padding: var(--if-6) var(--if-4);
+  text-align: center;
+  color: var(--tf);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+}
+.desk-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--if-3);
+  margin-top: var(--if-4);
+}
+.desk-tools label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--if-2);
+  color: var(--tf);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+}
+.desk-tools input {
+  min-height: 42px;
+  padding: 0 var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s2);
+  color: var(--tp);
+  outline: none;
+}
+.desk-list { display: flex; flex-direction: column; gap: var(--if-4); }
+.desk-card {
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+.desk-card.off { opacity: .62; }
+.desk-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--if-3);
+  padding: var(--if-3) var(--if-4);
+  border-bottom: 1px solid var(--bd);
+  background: color-mix(in srgb, var(--s2) 72%, var(--s1));
+}
+.desk-order {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--ac);
+  color: var(--on-ac);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-black);
+}
+.desk-title { flex: 1; min-width: 0; }
+.desk-title b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-bold);
+}
+.desk-title span {
+  display: block;
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  margin-top: var(--if-1);
+}
+.desk-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--if-1);
+}
+.mini-btn {
+  min-width: 36px;
+  min-height: 36px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s1);
+  color: var(--ts);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-caption);
+}
+.mini-btn:hover { border-color: var(--ac); color: var(--tp); }
+.mini-btn.danger { color: var(--err); }
+.desk-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, .55fr);
+  gap: var(--if-4);
+  padding: var(--if-4);
+}
+.desk-card.folded .desk-body { display: none; }
+.desk-template-body {
+  margin: 0;
+  color: var(--bodytx);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  white-space: pre-wrap;
+}
+.desk-template-cta {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  margin-top: var(--if-3);
+  padding: 0 var(--if-3);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--ac) 10%, var(--s1));
+  color: var(--ac);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+}
+.desk-note-action {
+  display: flex;
+  flex-direction: column;
+  gap: var(--if-3);
+}
+.if-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--if-2);
+  margin-bottom: var(--if-4);
+}
+.if-field label {
+  color: var(--tf);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+}
+.if-input { min-height: 42px; padding: 0 var(--if-3); font-size: var(--fs-body); }
+.if-text { min-height: 92px; padding: var(--if-3); resize: vertical; font-size: var(--fs-body); line-height: var(--lh-dense); }
+.if-select { min-height: 42px; padding: 0 var(--if-3); font-size: var(--fs-body); }
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-2);
+  padding: var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s2);
+  color: var(--ts);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+}
+.toggle-row input { width: 18px; height: 18px; accent-color: var(--ac); }
+.preview-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--if-2);
+  margin-top: var(--if-4);
+  flex-wrap: wrap;
+}
+.preview-tools button {
+  min-height: 36px;
+  padding: 0 var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-full);
+  background: var(--s1);
+  color: var(--ts);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+}
+.preview-tools button:hover { border-color: var(--ac); color: var(--tp); }
+.preview-tools button.on {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
+}
+.phone-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  padding: var(--if-5);
+  background: var(--s2);
+}
+.phone {
+  width: 390px;
+  max-width: 100%;
+  align-self: flex-start;
+  min-height: 680px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--ac) 8%, var(--bg));
+  box-shadow: var(--sh-lg);
+  overflow: hidden;
+  transition: width .16s;
+}
+.phone.wide { width: 460px; }
+.phone-top {
+  padding: var(--if-5) var(--if-5) var(--if-4);
+  background: linear-gradient(145deg, var(--ac), color-mix(in srgb, var(--ac) 78%, var(--t-uw)));
+  color: var(--on-ac);
+}
+.phone-title {
+  margin: 0 0 var(--if-2);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-black);
+}
+.phone-hero-tag {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  margin-top: var(--if-6);
+  padding: 0 var(--if-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--on-ac) 16%, transparent);
+  color: var(--on-ac);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.phone-hero-amount {
+  display: inline-flex;
+  margin-top: var(--if-4);
+  padding: var(--if-2) var(--if-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--on-ac) 18%, transparent);
+  color: var(--on-ac);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+}
+.phone-meaning-title {
+  margin: 0 0 var(--if-5);
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: var(--fw-black);
+  letter-spacing: -1px;
+}
+.phone-meaning-title mark {
+  background: linear-gradient(transparent 62%, color-mix(in srgb, var(--on-ac) 24%, transparent) 0);
+  color: inherit;
+  padding: 0 2px;
+}
+.phone-meaning-hanja {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--if-3);
+  margin: 0 0 var(--if-3);
+  text-align: center;
+}
+.phone-meaning-hanja .ch {
+  color: var(--on-ac);
+  font-size: 34px;
+  line-height: 1;
+  font-weight: var(--fw-black);
+}
+.phone-meaning-hanja .rd {
+  margin-top: var(--if-2);
+  color: color-mix(in srgb, var(--on-ac) 82%, transparent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.phone-meaning-hanja .plus {
+  color: color-mix(in srgb, var(--on-ac) 52%, transparent);
+  font-weight: var(--fw-black);
+}
+.phone-meaning-mean {
+  margin-bottom: var(--if-5);
+  padding: var(--if-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--on-ac) 16%, transparent);
+  color: var(--on-ac);
+  text-align: center;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-black);
+}
+.phone-meaning-foot {
+  margin-top: var(--if-5);
+  padding-top: var(--if-4);
+  border-top: 1px solid color-mix(in srgb, var(--on-ac) 20%, transparent);
+  color: color-mix(in srgb, var(--on-ac) 86%, transparent);
+  text-align: center;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.phone-sub {
+  margin: 0;
+  color: color-mix(in srgb, var(--on-ac) 82%, transparent);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-dense);
+}
+.phone-body {
+  padding: var(--if-4);
+}
+.phone.cards .phone-body {
+  display: flex;
+  gap: var(--if-3);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: var(--if-5);
+}
+.pv-card {
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  padding: var(--if-4);
+  margin-bottom: var(--if-3);
+  box-shadow: var(--sh-sm);
+}
+.phone.cards .pv-card {
+  flex: 0 0 calc(100% - var(--if-2));
+  margin-bottom: 0;
+  scroll-snap-align: start;
+}
+.pv-tag {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 var(--if-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--ac) 12%, var(--s1));
+  color: var(--ac);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.pv-card h3 {
+  margin: var(--if-3) 0 var(--if-2);
+  font-size: var(--fs-title);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-black);
+}
+.pv-card p {
+  margin: 0;
+  color: var(--bodytx);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  white-space: pre-wrap;
+}
+.pv-media {
+  margin: var(--if-4) 0;
+  min-height: 118px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ac) 12%, var(--s1)), color-mix(in srgb, var(--t-uw) 10%, var(--s1)));
+  border: 1px solid var(--bd);
+  display: grid;
+  place-items: center;
+  color: var(--ac);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.pv-media.graph {
+  background:
+    linear-gradient(180deg, transparent 72%, color-mix(in srgb, var(--ac) 18%, transparent) 72%),
+    linear-gradient(90deg, var(--s1), color-mix(in srgb, var(--ac) 6%, var(--s1)));
+}
+.pv-note {
+  margin-top: var(--if-4);
+  padding: var(--if-3);
+  border-left: 3px solid var(--ac);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--s2);
+  color: var(--bodytx);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-base);
+}
+.pv-amount {
+  display: inline-flex;
+  margin-top: var(--if-3);
+  padding: var(--if-2) var(--if-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--ok) 12%, var(--s1));
+  color: var(--ok);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+}
+.pv-cta {
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--if-4);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--ac);
+  color: var(--on-ac);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-bold);
+}
+.pv-empty {
+  padding: var(--if-6) var(--if-5);
+  color: var(--tf);
+  text-align: center;
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+}
+.narrow {
+  display: none;
+  margin: var(--if-4);
+  padding: var(--if-5);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  color: var(--ts);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+}
+.if-third-row {
+  margin: 0 var(--if-6) var(--if-6);
+  min-height: 132px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  box-shadow: var(--sh-sm);
+  padding: var(--if-5);
+}
+.if-third-row h2 {
+  margin: 0;
+  font-size: var(--fs-title-sm);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-black);
+}
+.if-third-row p {
+  margin: var(--if-1) 0 0;
+  color: var(--tf);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-dense);
+}
+@media (max-width: 1340px) {
+  .if-workspace {
+    grid-template-columns: 240px 12px minmax(420px, 1fr) 12px 420px;
+  }
+  .if-col-head { padding: var(--if-4); }
+  .work-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .phone.wide { width: 390px; }
+}
+@media (max-width: 1039px) {
+  .if-head { padding: var(--if-5) var(--if-5) var(--if-4); }
+  .if-workspace {
+    grid-template-columns: 220px 12px minmax(420px, 1fr) 12px 360px;
+    gap: 0;
+    padding: var(--if-2);
+  }
+  .if-col-head { padding: var(--if-3); }
+  .if-scroll { padding: var(--if-3); }
+  .work-form { grid-template-columns: 1fr; }
+  .phone { width: 340px; }
+  .phone.wide { width: 340px; }
+}
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  .if-app { min-height: 100vh; height: auto; overflow: visible; }
+  .if-main { grid-template-rows: auto auto auto; overflow: visible; }
+  .if-workspace { display: none; }
+  .narrow { display: block; }
+}
+@media (max-width: 760px) {
+  .if-head { align-items: flex-start; flex-direction: column; }
+  .if-status { white-space: normal; }
+}
+</style>
+<script>
+(function () {
+  "use strict";
+  var params = new URLSearchParams(location.search);
+  if (params.get("embed") === "1") {
+    document.documentElement.classList.add("embedded");
+  }
+  function isLocalPreview() {
+    var host = location.hostname;
+    var local = host === "127.0.0.1" || host === "localhost" || host === "::1";
+    var requested = location.search.indexOf("preview=1") >= 0;
+    return local && requested;
+  }
+  function canSeeFactory() {
+    if (isLocalPreview()) return true;
+    try {
+      var raw = localStorage.getItem("os_user") || sessionStorage.getItem("os_user") || "{}";
+      var user = JSON.parse(raw);
+      return String(user.id || "") === "98c5f4f9-10c1-4ee1-a656-5c2ca63239fd" || String(user.role || "") === "admin";
+    } catch (e) {
+      return false;
+    }
+  }
+  if (!canSeeFactory()) {
+    document.documentElement.classList.add("blocked");
+  }
+})();
+</script>
+</head>
+<body>
+<div id="denied" class="if-denied" hidden>
+  <section class="if-denied-card">
+    <h1>접근할 수 없는 화면입니다</h1>
+    <p>보험 팩토리는 X-FILE 게이트 안에서만 열리는 작업실입니다. 홈으로 돌아가 다시 확인해 주세요.</p>
+    <a href="/app.html?view=home">홈으로 돌아가기</a>
+  </section>
+</div>
+
+<main id="factoryApp" class="if-app">
+  <header class="if-head">
+    <div class="if-brand">
+      <h1>보험 팩토리</h1>
+    </div>
+  </header>
+
+  <section class="if-main" aria-label="보험 팩토리 작업 공간">
+    <nav class="if-tabs" id="topTabs" aria-label="템플릿 범주"></nav>
+    <div class="narrow">보험 팩토리 1차 작업실은 데스크톱 1366px 이상 화면에 맞춰 만든 3컬럼 작업 공간입니다. 좁은 화면에서는 추후 단계형 전환으로 확장합니다.</div>
+    <div class="if-workspace">
+      <aside class="if-col">
+        <div class="if-col-head">
+          <h2>템플릿 보관함</h2>
+          <p id="categoryHelp">상단 메뉴를 고르면 세부 템플릿이 바뀝니다.</p>
+          <div class="if-search">
+            <input id="tplSearch" type="search" placeholder="템플릿 검색">
+            <select id="tplFilter" class="if-filter" aria-label="템플릿 필터">
+              <option value="all">전체</option>
+              <option value="intro">설명</option>
+              <option value="case">사례</option>
+              <option value="cta">CTA</option>
+              <option value="graph">그래프</option>
+            </select>
+          </div>
+        </div>
+        <div class="if-scroll"><div class="tpl-list" id="templateList"></div></div>
+      </aside>
+
+      <div class="if-splitter" data-splitter="left" role="separator" aria-orientation="vertical" aria-label="템플릿 영역 폭 조절"></div>
+
+      <section class="if-col">
+        <div class="if-col-head">
+          <h2>설계사 작업대</h2>
+          <p>선택한 템플릿을 상담 한 건에 맞게 조립합니다.</p>
+        </div>
+        <div class="if-scroll"><div class="desk-list" id="workbench"></div></div>
+      </section>
+
+      <div class="if-splitter" data-splitter="right" role="separator" aria-orientation="vertical" aria-label="고객 미리보기 영역 폭 조절"></div>
+
+      <div hidden>
+        <input id="customerName" type="text" value="김고객">
+        <input id="defaultAmount" type="text" value="월 3만원">
+        <input id="expertName" type="text" value="임태성 보험전문가">
+        <input id="defaultCta" type="text" value="상담 신청하기">
+      </div>
+
+      <aside class="if-col">
+        <div class="if-col-head">
+          <h2>고객 화면 미리보기</h2>
+          <p>모바일 고객 화면 기준으로 즉시 확인합니다.</p>
+          <div class="preview-tools">
+            <button type="button" class="on" data-width="390">390px</button>
+            <button type="button" data-width="460">460px</button>
+            <button type="button" class="on" data-mode="vertical">세로</button>
+            <button type="button" data-mode="cards">가로 카드</button>
+            <button type="button" class="split-reset" id="splitReset">폭 초기화</button>
+          </div>
+        </div>
+        <div class="phone-stage">
+          <div class="phone" id="phonePreview">
+            <div class="phone-top">
+              <div class="phone-title" id="pvHeroTitle"><span id="pvCustomer">김고객</span>님을 위한<br>보험 설명 자료</div>
+              <p class="phone-sub" id="pvHeroBody">상담 내용을 이해하기 쉽게 정리했습니다. 실제 가입 판단은 증권과 약관 기준으로 함께 확인합니다.</p>
+              <span class="phone-hero-amount" id="pvHeroAmount" hidden></span>
+            </div>
+            <div class="phone-body" id="previewBody"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <section class="if-third-row" aria-label="보험 팩토리 하단 작업 영역">
+      <h2>하단 작업 영역</h2>
+      <p>다음 단계에서 상담 정리, 전달 전 확인, 저장 전 메모를 배치할 수 있는 영역입니다.</p>
+    </section>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var denied = document.documentElement.classList.contains("blocked");
+  if (denied) {
+    document.getElementById("factoryApp").hidden = true;
+    document.getElementById("denied").hidden = false;
+    return;
+  }
+
+  var MENU_GROUPS = [
+    { title: "인트로", items: [
+      { label: "소개·인사", cat: "소개·인사" }
+    ] },
+    { title: "신규 상품 문의", items: [
+      { label: "의료실비", cat: "의료실비" },
+      { label: "암", cat: "암" },
+      { label: "뇌/심장", cat: "뇌·심장" },
+      { label: "수술비", cat: "수술비" },
+      { label: "종합보험", cat: "종합보험" },
+      { label: "간병인", cat: "간병인" }
+    ] },
+    { title: "보험 점검 문의", items: [
+      { label: "의료실비 점검", cat: "의료실비 점검" },
+      { label: "보험료 줄이기", cat: "보험료 줄이기" },
+      { label: "부족한 보장 채우기", cat: "부족한 보장 채우기" },
+      { label: "전체 보험 점검", cat: "전체 보험 점검" }
+    ] },
+    { title: "설명 자료", items: [
+      { label: "설명 이미지", cat: "설명 이미지" },
+      { label: "그래프", cat: "그래프" },
+      { label: "사례", cat: "사례" }
+    ] },
+    { title: "상담 CTA", items: [
+      { label: "상담 신청", cat: "상담 신청" },
+      { label: "견적 신청", cat: "견적 신청" },
+      { label: "보완 플랜 요청하기", cat: "보완 플랜" },
+      { label: "정밀 보장 분석", cat: "정밀 보장분석" }
+    ] }
+  ];
+
+  var TEMPLATES = [
+    { id:"universal-client-cover", cat:"소개·인사", tag:"intro", variant:"insurance-meaning", title:"보험이라는 말, 뜻부터 보겠습니다", body:"그래서 보험은 새로 가입하는 것보다, 지금 가지고 있는 보장이 제대로 역할을 하는지 점검하는 것이 더 중요합니다.\n\n현재 가입된 보험들을 확인해 보고, 부족한 부분이나 불필요한 부분이 있는지 편하게 함께 살펴보겠습니다.", media:"none", cta:"안내 시작하기" },
+    { id:"greeting-intro", cat:"소개·인사", tag:"intro", title:"상담 시작 인사", body:"안녕하세요. 오늘 보험 설명은 어려운 약관 용어보다 실제로 어떤 상황에서 도움이 되는지 중심으로 쉽게 정리해 드리겠습니다.", media:"none", cta:"상담 시작하기" },
+    { id:"new-medical-basic", cat:"신규 상품 문의", tag:"intro", title:"의료실비 기본 설명", body:"병원비를 실제로 돌려받는 기본 보장입니다. 가입 시기와 세대에 따라 자기부담금과 비급여 구조가 달라집니다.", media:"image", cta:"실비 구조 확인하기" },
+    { id:"new-cancer-basic", cat:"신규 상품 문의", tag:"intro", title:"암 진단비 기본 설명", body:"암 진단비는 치료 시작 시점에 바로 쓸 수 있는 현금성 보장입니다. 치료비뿐 아니라 생활비 공백까지 같이 봅니다.", media:"image", cta:"암 보장 상담하기" },
+    { id:"new-brain-range", cat:"신규 상품 문의", tag:"graph", title:"뇌혈관·허혈성심장 범위 비교", body:"진단비는 금액보다 보장 범위가 중요합니다. 좁은 진단명과 넓은 진단명을 구분해 확인합니다.", media:"graph", cta:"범위 비교 받기" },
+    { id:"new-surgery-repeat", cat:"신규 상품 문의", tag:"case", title:"수술비 반복 보장 설명", body:"수술비는 한 번이 아니라 반복 지급 구조인지가 핵심입니다. 질병·상해와 수술 종류를 함께 봅니다.", media:"none", cta:"수술비 점검하기" },
+    { id:"new-general-pack", cat:"신규 상품 문의", tag:"intro", title:"종합보험 구성 설명", body:"실비가 병원비 바닥이라면 종합보험은 진단비·수술비·후유장해를 묶어 큰 위험을 대비하는 구조입니다.", media:"image", cta:"구성안 보기" },
+
+    { id:"medical-basic", cat:"의료실비", tag:"intro", title:"실손 세대별 기본 설명", body:"실손은 가입 시기에 따라 보장 방식이 달라집니다. 오래된 실손이 무조건 좋거나 나쁜 것이 아니라 현재 병력과 보험료를 같이 봐야 합니다.", media:"image", cta:"실손 세대 확인" },
+    { id:"medical-pay", cat:"의료실비", tag:"intro", title:"급여·비급여 구조", body:"급여는 국민건강보험이 적용되는 진료, 비급여는 병원별 비용 차이가 큰 진료입니다. 실손 점검은 이 둘의 부담 구조를 나눠서 봅니다.", media:"graph", cta:"비급여 구조 보기" },
+    { id:"medical-renew", cat:"의료실비", tag:"case", title:"보험료 인상 사례", body:"보험료가 오른 이유가 연령 때문인지, 세대 구조 때문인지, 비급여 이용량 때문인지 구분하면 유지·전환 판단이 쉬워집니다.", media:"none", cta:"보험료 원인 보기" },
+
+    { id:"cancer-basic", cat:"암", tag:"intro", title:"암보험 기본 설명", body:"암보험은 진단비, 치료비, 생활비 관점으로 나눠 보면 이해가 쉽습니다. 특히 일반암과 유사암의 범위를 먼저 확인합니다.", media:"image", cta:"암보험 확인하기" },
+    { id:"cancer-similar", cat:"암", tag:"graph", title:"일반암·유사암 비교", body:"같은 암보험이라도 일반암, 유사암, 소액암 분류에 따라 지급금이 달라집니다. 약관상 분류를 먼저 확인해야 합니다.", media:"graph", cta:"암 분류 비교" },
+    { id:"cancer-why", cat:"암", tag:"intro", title:"암 진단비가 필요한 이유", body:"진단 직후에는 치료비 외에도 휴직, 간병, 생활비 공백이 생깁니다. 진단비는 그 공백을 버티는 현금 흐름입니다.", media:"none", cta:"진단비 상담하기" },
+    { id:"cancer-case", cat:"암", tag:"case", title:"치료비·생활비 사례", body:"예를 들어 항암 치료 기간에는 소득이 줄고 고정 지출은 그대로 남습니다. 진단비는 이 기간의 선택권을 지키는 역할을 합니다.", media:"image", cta:"사례로 보기" },
+    { id:"cancer-renew", cat:"암", tag:"intro", title:"갱신형·비갱신형 설명", body:"갱신형은 초기 보험료가 낮지만 시간이 지나며 달라질 수 있고, 비갱신형은 초기에 부담이 있어도 예측이 쉽습니다.", media:"none", cta:"갱신형 비교" },
+    { id:"cancer-close", cat:"암", tag:"cta", title:"암 상담 마무리 CTA", body:"현재 암 보장이 충분한지, 진단비와 치료비가 나뉘어 준비되어 있는지 지금 기준으로 같이 확인해 드리겠습니다.", media:"none", cta:"암 보장 점검 신청" },
+
+    { id:"brain-wide", cat:"뇌·심장", tag:"graph", title:"넓은 보장 범위 설명", body:"뇌출혈보다 뇌혈관질환, 급성심근경색보다 허혈성심장질환이 더 넓은 범위로 비교될 때가 많습니다.", media:"graph", cta:"뇌·심장 범위 보기" },
+    { id:"brain-case", cat:"뇌·심장", tag:"case", title:"진단명 차이 사례", body:"실제 보험금은 병명 이름 하나로 갈립니다. 같은 뇌·심장 보장이라도 약관상 진단명 범위를 확인해야 합니다.", media:"none", cta:"진단명 확인하기" },
+
+    { id:"surgery-repeat", cat:"수술비", tag:"intro", title:"반복 지급 구조", body:"수술비는 한 번 지급인지, 다른 수술 때 다시 받을 수 있는지 구조를 확인해야 합니다.", media:"image", cta:"수술비 구조 보기" },
+    { id:"surgery-type", cat:"수술비", tag:"case", title:"수술비 지급 사례", body:"작은 수술도 반복되면 부담이 됩니다. 질병 수술, 상해 수술, 종수술 구조를 나눠서 봅니다.", media:"none", cta:"수술비 사례 보기" },
+
+    { id:"general-map", cat:"종합보험", tag:"intro", title:"종합보험 구성 설명", body:"종합보험은 암, 뇌·심장, 수술비, 후유장해를 한 장에 어떻게 배치할지 보는 설계입니다.", media:"image", cta:"종합 구성 받기" },
+    { id:"general-balance", cat:"종합보험", tag:"graph", title:"보장 균형 그래프", body:"한쪽 보장만 두껍고 다른 축이 비어 있으면 실제 위험에 약해집니다. 4축 균형으로 확인합니다.", media:"graph", cta:"보장 균형 보기" },
+    { id:"caregiver-basic", cat:"간병인", tag:"intro", title:"간병인 보장 기본 설명", body:"간병인은 입원 기간이 길어질 때 가족 부담과 실제 돌봄 비용을 함께 줄이기 위한 보장입니다. 지급 조건과 사용 가능한 범위를 먼저 확인합니다.", media:"image", cta:"간병인 보장 상담" },
+
+    { id:"check-fee", cat:"보험 점검 문의", tag:"case", title:"보험료 줄이기", body:"무조건 줄이는 것이 아니라 유지할 보장과 정리할 특약을 나눠 보험료를 낮춥니다.", media:"none", cta:"보험료 줄이기 상담" },
+    { id:"check-fill", cat:"보험 점검 문의", tag:"intro", title:"부족한 보장 채우기", body:"빈 보장을 먼저 찾고, 필요한 금액만 보완하면 전체 보험료 부담을 키우지 않고 정리할 수 있습니다.", media:"image", cta:"부족한 보장 찾기" },
+    { id:"check-all", cat:"보험 점검 문의", tag:"cta", title:"전체 보험 점검", body:"가입한 보험을 한 번에 펼쳐 보고 중복, 부족, 과한 부분을 나눠 정리합니다.", media:"none", cta:"전체 점검 신청" },
+    { id:"medical-check-intro", cat:"의료실비 점검", tag:"intro", visual:"medical-shield", title:"의료실비 보장 점검", body:"의료실비는 가입했다는 사실보다 어떤 구조의 실손인지 이해하는 것이 중요합니다. 급여·비급여, 자기부담금, 갱신 구조를 함께 봐야 실제 체감 보장을 알 수 있습니다.", media:"none", cta:"의료실비 점검 시작" },
+    { id:"medical-check-structure", cat:"의료실비 점검", tag:"intro", visual:"medical-flow", title:"실손은 병원비 일부 보전 구조입니다", body:"실손은 내가 낸 병원비 전부를 돌려주는 보험이 아니라, 약관상 보장되는 항목에서 자기부담금을 제외하고 일부를 보전받는 구조입니다. 그래서 급여와 비급여를 나눠 이해해야 합니다.", media:"none", cta:"실손 구조 확인" },
+    { id:"medical-check-renewal", cat:"의료실비 점검", tag:"case", visual:"medical-renewal", title:"갱신과 자기부담금을 함께 봐야 합니다", body:"실손은 몇 세대인지, 갱신 구조가 어떤지, 자기부담이 어느 정도인지가 유지 판단의 핵심입니다. 보험료가 오르는 이유와 실제 보장 체감을 같이 확인해야 합니다.", media:"none", cta:"갱신 구조 점검" },
+    { id:"medical-check-complement", cat:"의료실비 점검", tag:"case", visual:"medical-bridge", title:"실비는 기본축, 수술비는 보완축입니다", body:"의료실비는 실제 병원비를 기준으로 일부를 보전하는 기본축입니다. 다만 자기부담금, 비급여, 회복기간 생활비처럼 남는 부담은 수술비 같은 정액형 보장으로 보완할 수 있습니다.", media:"none", cta:"보완축 함께 보기" },
+    { id:"medical-check-photo-receipt", cat:"의료실비 점검", tag:"photo", photo:"../assets/images/insurance-factory/medical-expense-review.webp", photoAlt:"병원비 영수증과 계산기가 놓인 상담 테이블", title:"영수증부터 보면 실비 구조가 보입니다", body:"실비 점검은 추상적인 보장명보다 실제 병원비 영수증에서 시작하는 편이 이해하기 쉽습니다. 총 진료비, 급여·비급여, 자기부담금이 어떻게 나뉘는지 먼저 확인합니다.", media:"none", cta:"영수증 기준으로 점검" },
+    { id:"fee-cut", cat:"보험료 줄이기", tag:"case", title:"줄일 수 있는 보험료 찾기", body:"보장은 유지하되 중복 특약과 활용도가 낮은 특약을 먼저 찾습니다.", media:"none", cta:"줄일 항목 찾기" },
+    { id:"fill-gap", cat:"부족한 보장 채우기", tag:"intro", title:"비어 있는 보장 확인", body:"실비만 있고 진단비가 약한지, 진단비는 있는데 수술비가 비어 있는지 축별로 확인합니다.", media:"graph", cta:"빈 보장 확인" },
+    { id:"all-check", cat:"전체 보험 점검", tag:"cta", title:"전체 점검 안내", body:"증권을 기준으로 현재 보장, 보험료, 갱신 여부를 한 번에 정리합니다.", media:"image", cta:"정밀 점검 받기" },
+
+    { id:"material-pay", cat:"설명 자료", tag:"intro", title:"급여·비급여 구조", body:"병원비가 왜 다르게 나오는지 급여와 비급여 구조로 설명합니다.", media:"image", cta:"자료 확인" },
+    { id:"image-cancer", cat:"설명 이미지", tag:"image", title:"암 치료비 사례 이미지", body:"치료비와 생활비 공백을 한 장 이미지처럼 보여주는 설명 카드입니다.", media:"image", cta:"이미지로 보기" },
+    { id:"graph-brain", cat:"그래프", tag:"graph", title:"뇌·심장 보장 범위 그래프", body:"좁은 담보와 넓은 담보의 포함 관계를 시각적으로 보여줍니다.", media:"graph", cta:"그래프 보기" },
+    { id:"case-surgery", cat:"사례", tag:"case", title:"수술비 지급 사례", body:"반복 수술이 생겼을 때 수술비 구조가 어떻게 작동하는지 예시로 설명합니다.", media:"none", cta:"사례 확인" },
+    { id:"cta-consult", cat:"상담 CTA", tag:"cta", title:"상담 신청", body:"현재 보험을 기준으로 필요한 부분만 짚어드리겠습니다.", media:"none", cta:"상담 신청하기" },
+    { id:"apply-consult", cat:"상담 신청", tag:"cta", title:"상담 신청", body:"상담 가능한 시간을 남겨주시면 보장 흐름부터 간단히 확인해 드립니다.", media:"none", cta:"상담 신청" },
+    { id:"apply-quote", cat:"견적 신청", tag:"cta", title:"견적 신청", body:"현재 상황에 맞는 보완 설계를 비교해서 안내해 드립니다.", media:"none", cta:"견적 신청" },
+    { id:"plan-supp", cat:"보완 플랜", tag:"cta", title:"보완 플랜 받기", body:"부족한 보장만 골라 부담을 줄인 보완 플랜을 제안합니다.", media:"graph", cta:"보완 플랜 받기" },
+    { id:"deep-analysis", cat:"정밀 보장분석", tag:"cta", title:"정밀 보장분석 요청", body:"증권 기준으로 담보명, 금액, 갱신 여부까지 정리해 드립니다.", media:"image", cta:"정밀 분석 요청" }
+  ];
+
+  var state = {
+    group: "신규 상품 문의",
+    category: "의료실비",
+    query: "",
+    filter: "all",
+    previewWidth: 390,
+    previewMode: "vertical",
+    blocks: []
+  };
+
+  var els = {
+    workspace: document.querySelector(".if-workspace"),
+    tabs: document.getElementById("topTabs"),
+    help: document.getElementById("categoryHelp"),
+    search: document.getElementById("tplSearch"),
+    filter: document.getElementById("tplFilter"),
+    list: document.getElementById("templateList"),
+    workbench: document.getElementById("workbench"),
+    customer: document.getElementById("customerName"),
+    amount: document.getElementById("defaultAmount"),
+    expert: document.getElementById("expertName"),
+    cta: document.getElementById("defaultCta"),
+    phone: document.getElementById("phonePreview"),
+    pvCustomer: document.getElementById("pvCustomer"),
+    pvHeroTitle: document.getElementById("pvHeroTitle"),
+    pvHeroBody: document.getElementById("pvHeroBody"),
+    pvHeroAmount: document.getElementById("pvHeroAmount"),
+    preview: document.getElementById("previewBody"),
+    splitReset: document.getElementById("splitReset")
+  };
+  var SPLIT_KEY = "onesecond.insuranceFactory.columns.v1";
+  var SPLIT_MIN = { template: 220, work: 420, preview: 360 };
+  var SPLIT_DEFAULT = { template: 280, preview: 504 };
+
+  function esc(text) {
+    return String(text == null ? "" : text).replace(/[&<>"']/g, function (ch) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch];
+    });
+  }
+  function findTpl(id) {
+    return TEMPLATES.find(function (tpl) { return tpl.id === id; });
+  }
+  function selected(id) {
+    return state.blocks.some(function (block) { return block.tplId === id; });
+  }
+  function currentGroup() {
+    return MENU_GROUPS.find(function (group) { return group.title === state.group; }) || MENU_GROUPS[0];
+  }
+  function firstCategory(groupTitle) {
+    var group = MENU_GROUPS.find(function (item) { return item.title === groupTitle; }) || MENU_GROUPS[0];
+    return group.items[0].cat;
+  }
+  function categoryLabel(cat) {
+    for (var i = 0; i < MENU_GROUPS.length; i += 1) {
+      var match = MENU_GROUPS[i].items.find(function (item) { return item.cat === cat; });
+      if (match) return match.label;
+    }
+    return cat;
+  }
+  function blockStageLabel(block) {
+    var stage = block.sourceStage || block.group || "";
+    var label = block.sourceLabel || categoryLabel(block.cat);
+    return stage && label ? stage + " / " + label : (label || block.cat);
+  }
+  function isCheckBlock(block) {
+    return block.sourceStage === "보험 점검 문의";
+  }
+  function cardVisual(type, extraClass) {
+    return type ? '<div class="card-visual ' + esc(extraClass || "") + '" data-visual="' + esc(type) + '" aria-hidden="true"></div>' : "";
+  }
+  function photoCard(src, alt, caption, extraClass) {
+    return src ? '<div class="photo-card ' + esc(extraClass || "") + '"><img src="' + esc(src) + '" alt="' + esc(alt || "") + '" loading="lazy"><span class="photo-caption">' + esc(caption || "") + '</span></div>' : "";
+  }
+  function filteredTemplates() {
+    var q = state.query.trim().toLowerCase();
+    return TEMPLATES.filter(function (tpl) {
+      var catOk = tpl.cat === state.category;
+      var filterOk = state.filter === "all" || tpl.tag === state.filter || tpl.media === state.filter;
+      var qOk = !q || (tpl.title + " " + tpl.body + " " + tpl.cat).toLowerCase().indexOf(q) >= 0;
+      return catOk && filterOk && qOk;
+    });
+  }
+  function renderTabs() {
+    var group = currentGroup();
+    var majors = MENU_GROUPS.map(function (item) {
+      return '<button type="button" class="if-tab major' + (item.title === state.group ? " on" : "") + '" data-group="' + esc(item.title) + '">' + esc(item.title) + '</button>';
+    }).join("");
+    var subs = group.items.map(function (item) {
+      return '<button type="button" class="if-tab sub' + (item.cat === state.category ? " on" : "") + '" data-cat="' + esc(item.cat) + '">' + esc(item.label) + '</button>';
+    }).join("");
+    els.tabs.innerHTML = '<div class="if-major-tabs">' + majors + '</div><div class="if-sub-tabs">' + subs + '</div>';
+    alignSubTabs();
+  }
+  function alignSubTabs() {
+    var major = els.tabs.querySelector(".if-tab.major.on");
+    var subs = els.tabs.querySelector(".if-sub-tabs");
+    if (!major || !subs) return;
+    subs.style.paddingLeft = major.offsetLeft + "px";
+  }
+  function renderTemplates() {
+    var rows = filteredTemplates();
+    els.help.textContent = state.group + " 단계의 " + categoryLabel(state.category) + " 템플릿입니다. 선택한 카드는 가운데 전체 조립 목록에 누적됩니다.";
+    if (!rows.length) {
+      els.list.innerHTML = '<div class="if-empty">조건에 맞는 템플릿이 없습니다.<br>검색어를 줄이거나 필터를 전체로 바꿔 주세요.</div>';
+      return;
+    }
+    els.list.innerHTML = rows.map(function (tpl) {
+      var on = selected(tpl.id);
+      return '<button type="button" class="tpl-card' + (on ? " on" : "") + '" data-add="' + esc(tpl.id) + '">' +
+        (tpl.photo ? photoCard(tpl.photo, tpl.photoAlt, "실사 설명 카드", "tpl-photo") : (tpl.visual ? cardVisual(tpl.visual, "tpl-visual") : '<span class="tpl-chip">' + esc(tpl.title.slice(0, 1)) + '</span>')) +
+        '<span class="tpl-copy"><b>' + esc(tpl.title) + '</b><span>' + esc(tpl.body) + '</span><em>' + esc(tpl.tag) + ' · ' + (on ? "선택됨" : "추가") + '</em></span>' +
+      '</button>';
+    }).join("");
+  }
+  function renderWorkbench() {
+    if (!state.blocks.length) {
+      els.workbench.innerHTML = '<div class="if-empty">단계별로 필요한 카드를 선택하면 이곳에 전체 조립 목록이 순서대로 쌓입니다.<br>인트로부터 CTA까지 메뉴를 이동해도 선택한 카드는 유지됩니다.</div>';
+      return;
+    }
+    els.workbench.innerHTML = state.blocks.map(function (block, idx) {
+      return '<article class="desk-card' + (block.folded ? " folded" : "") + (block.visible ? "" : " off") + '" data-card="' + esc(block.id) + '">' +
+        '<div class="desk-card-head">' +
+          '<div class="desk-order">' + (idx + 1) + '</div>' +
+          '<div class="desk-title"><b>' + esc(block.title) + '</b><span>' + esc(blockStageLabel(block)) + '</span></div>' +
+          '<div class="desk-actions">' +
+            '<button class="mini-btn" type="button" data-act="up" title="위로">↑</button>' +
+            '<button class="mini-btn" type="button" data-act="down" title="아래로">↓</button>' +
+            '<button class="mini-btn" type="button" data-act="fold" title="접기">' + (block.folded ? "열기" : "접기") + '</button>' +
+            '<button class="mini-btn danger" type="button" data-act="delete" title="삭제">삭제</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="desk-body">' +
+          '<div>' +
+            photoCard(block.photo, block.photoAlt, block.title, "desk-photo") +
+            cardVisual(block.visual, "desk-visual") +
+            '<p class="desk-template-body">' + esc(block.body) + '</p>' +
+            '<span class="desk-template-cta">' + esc(block.cta || els.cta.value || "상담 신청하기") + '</span>' +
+          '</div>' +
+          '<div class="desk-note-action">' +
+            '<label class="toggle-row">고객 화면 반영 <input type="checkbox" data-edit="' + esc(block.id) + '" data-field="visible" ' + (block.visible ? "checked" : "") + '></label>' +
+            (isCheckBlock(block) && !block.noteOpen ? '<button class="mini-btn" type="button" data-act="add-note">전문가 첨언 추가</button>' : '') +
+            (isCheckBlock(block) && block.noteOpen ? field(block.id, "note", "전문가 첨언", block.note, "textarea") : '') +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }).join("");
+  }
+  function field(id, key, label, value, type) {
+    var tag = type === "textarea"
+      ? '<textarea class="if-text" data-edit="' + esc(id) + '" data-field="' + key + '">' + esc(value) + '</textarea>'
+      : '<input class="if-input" data-edit="' + esc(id) + '" data-field="' + key + '" type="text" value="' + esc(value) + '">';
+    return '<div class="if-field"><label>' + esc(label) + '</label>' + tag + '</div>';
+  }
+  function selectField(id, key, label, value) {
+    var opts = key === "media"
+      ? [["none","없음"],["image","이미지 자리"],["graph","그래프 자리"]]
+      : [["상담 신청하기","상담 신청하기"],["견적 신청","견적 신청"],["보완 플랜 받기","보완 플랜 받기"],["정밀 보장분석 요청","정밀 보장분석 요청"],["지금 확인하기","지금 확인하기"]];
+    return '<div class="if-field"><label>' + esc(label) + '</label><select class="if-select" data-edit="' + esc(id) + '" data-field="' + key + '">' +
+      opts.map(function (opt) { return '<option value="' + esc(opt[0]) + '"' + (String(value) === String(opt[0]) ? " selected" : "") + '>' + esc(opt[1]) + '</option>'; }).join("") +
+    '</select></div>';
+  }
+  function renderPreview() {
+    var customer = els.customer.value.trim() || "고객";
+    els.phone.classList.toggle("wide", state.previewWidth === 460);
+    els.phone.classList.toggle("cards", state.previewMode === "cards");
+    var visible = state.blocks.filter(function (block) { return block.visible; });
+    if (!visible.length) {
+      els.pvHeroTitle.innerHTML = '<span id="pvCustomer">' + esc(customer) + '</span>님을 위한<br>보험 설명 자료';
+      els.pvHeroBody.textContent = "상담 내용을 이해하기 쉽게 정리했습니다. 실제 가입 판단은 증권과 약관 기준으로 함께 확인합니다.";
+      els.pvHeroAmount.hidden = true;
+      els.pvHeroAmount.textContent = "";
+      els.preview.innerHTML = '<div class="pv-empty">작업대에서 고객 화면 반영을 켠 템플릿이 여기에 표시됩니다.</div>';
+      return;
+    }
+    var hero = visible[0];
+    if (hero.variant === "insurance-meaning") {
+      els.pvHeroTitle.innerHTML = '<div class="phone-meaning-title">보험이라는 말,<br><mark>뜻부터</mark> 보겠습니다</div>' +
+        '<div class="phone-meaning-hanja"><div><div class="ch">保</div><div class="rd">보전할 보</div></div><div class="plus">+</div><div><div class="ch">險</div><div class="rd">험할 험</div></div></div>' +
+        '<div class="phone-meaning-mean">험한 상황으로부터 지키다</div>';
+      els.pvHeroBody.innerHTML = '그래서 보험은 새로 가입하는 것보다, <b>지금 가지고 있는 보장이 제대로 역할을 하는지 점검하는 것</b>이 더 중요합니다.<br><br>현재 가입된 보험들을 확인해 보고, 부족한 부분이나 불필요한 부분이 있는지 편하게 함께 살펴보겠습니다.<div class="phone-meaning-foot">보험전문가 임태성 팀장&nbsp;&nbsp;|&nbsp;&nbsp;010-9241-9375</div>';
+    } else {
+      els.pvHeroTitle.innerHTML = photoCard(hero.photo, hero.photoAlt, hero.title, "phone-hero-photo") + cardVisual(hero.visual, "phone-hero-visual") + esc(hero.title).replace(/\{고객\}/g, esc(customer));
+      els.pvHeroBody.textContent = hero.body.replace(/\{고객\}/g, customer);
+    }
+    els.pvHeroAmount.hidden = true;
+    els.pvHeroAmount.textContent = "";
+    els.preview.innerHTML = visible.slice(1).map(function (block) {
+      var note = block.note ? '<div class="pv-note">' + esc(block.note) + '</div>' : "";
+      return '<section class="pv-card">' +
+        photoCard(block.photo, block.photoAlt, block.title, "pv-photo") +
+        cardVisual(block.visual, "pv-visual") +
+        '<h3>' + esc(block.title).replace(/\{고객\}/g, esc(customer)) + '</h3>' +
+        '<p>' + esc(block.body).replace(/\{고객\}/g, esc(customer)) + '</p>' +
+        note +
+        '<button class="pv-cta" type="button">' + esc(block.cta || els.cta.value || "상담 신청하기") + '</button>' +
+      '</section>';
+    }).join("");
+  }
+  function renderAll() {
+    renderTabs();
+    renderTemplates();
+    renderWorkbench();
+    renderPreview();
+  }
+  function workspaceContentWidth() {
+    if (!els.workspace) return 0;
+    var style = getComputedStyle(els.workspace);
+    var pad = parseFloat(style.paddingLeft || 0) + parseFloat(style.paddingRight || 0);
+    return Math.max(0, els.workspace.clientWidth - pad - 24);
+  }
+  function clampColumns(next) {
+    var total = workspaceContentWidth();
+    var template = Math.max(SPLIT_MIN.template, Math.round(next.template));
+    var preview = Math.max(SPLIT_MIN.preview, Math.round(next.preview));
+    if (total <= 0) return { template: template, preview: preview };
+    var maxPair = Math.max(0, total - SPLIT_MIN.work);
+    if (template + preview > maxPair) {
+      var over = template + preview - maxPair;
+      var previewRoom = Math.max(0, preview - SPLIT_MIN.preview);
+      var fromPreview = Math.min(previewRoom, over);
+      preview -= fromPreview;
+      over -= fromPreview;
+      template = Math.max(SPLIT_MIN.template, template - over);
+    }
+    return { template: template, preview: preview };
+  }
+  function currentColumns() {
+    var cols = els.workspace ? els.workspace.querySelectorAll(".if-col") : [];
+    if (cols.length < 3) return clampColumns(SPLIT_DEFAULT);
+    return clampColumns({
+      template: cols[0].getBoundingClientRect().width,
+      preview: cols[2].getBoundingClientRect().width
+    });
+  }
+  function applyColumns(widths, persist) {
+    if (!els.workspace) return;
+    var next = clampColumns(widths);
+    els.workspace.style.gridTemplateColumns =
+      next.template + "px 12px minmax(" + SPLIT_MIN.work + "px, 1fr) 12px " + next.preview + "px";
+    if (persist) {
+      try { localStorage.setItem(SPLIT_KEY, JSON.stringify(next)); } catch (e) {}
+    }
+  }
+  function loadColumns() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(SPLIT_KEY) || "null");
+      if (saved && isFinite(saved.template) && isFinite(saved.preview)) return saved;
+    } catch (e) {}
+    return SPLIT_DEFAULT;
+  }
+  function resetColumns() {
+    try { localStorage.removeItem(SPLIT_KEY); } catch (e) {}
+    applyColumns(SPLIT_DEFAULT, false);
+  }
+  function initSplitters() {
+    if (!els.workspace) return;
+    applyColumns(loadColumns(), false);
+    window.addEventListener("resize", function () { applyColumns(currentColumns(), false); });
+    document.querySelectorAll(".if-splitter").forEach(function (splitter) {
+      splitter.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        var side = splitter.getAttribute("data-splitter");
+        var startX = event.clientX;
+        var start = currentColumns();
+        splitter.classList.add("dragging");
+        document.body.classList.add("if-resizing");
+        try { splitter.setPointerCapture(event.pointerId); } catch (e) {}
+        function move(moveEvent) {
+          var dx = moveEvent.clientX - startX;
+          if (side === "left") applyColumns({ template: start.template + dx, preview: start.preview }, true);
+          if (side === "right") applyColumns({ template: start.template, preview: start.preview - dx }, true);
+        }
+        function stop() {
+          splitter.classList.remove("dragging");
+          document.body.classList.remove("if-resizing");
+          window.removeEventListener("pointermove", move);
+          window.removeEventListener("pointerup", stop);
+          window.removeEventListener("pointercancel", stop);
+        }
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", stop);
+        window.addEventListener("pointercancel", stop);
+      });
+    });
+    if (els.splitReset) els.splitReset.addEventListener("click", resetColumns);
+  }
+  function addTemplate(id) {
+    if (selected(id)) {
+      renderTemplates();
+      return;
+    }
+    var tpl = findTpl(id);
+    if (!tpl) return;
+    state.blocks.push({
+      id: "b" + Date.now() + Math.random().toString(16).slice(2),
+      tplId: tpl.id,
+      cat: tpl.cat,
+      sourceStage: state.group,
+      sourceLabel: categoryLabel(state.category),
+      title: tpl.title,
+      body: tpl.body,
+      variant: tpl.variant || "",
+      visual: tpl.visual || "",
+      photo: tpl.photo || "",
+      photoAlt: tpl.photoAlt || "",
+      amount: els.amount.value,
+      note: "",
+      noteOpen: false,
+      media: tpl.media || "none",
+      cta: tpl.cta || els.cta.value,
+      visible: true,
+      folded: false
+    });
+    renderAll();
+  }
+  function moveBlock(id, dir) {
+    var idx = state.blocks.findIndex(function (block) { return block.id === id; });
+    var next = idx + dir;
+    if (idx < 0 || next < 0 || next >= state.blocks.length) return;
+    var item = state.blocks.splice(idx, 1)[0];
+    state.blocks.splice(next, 0, item);
+    renderWorkbench();
+    renderPreview();
+  }
+  function updateBlock(id, field, value) {
+    var block = state.blocks.find(function (b) { return b.id === id; });
+    if (!block) return;
+    block[field] = value;
+    renderPreview();
+    if (field === "visible") renderWorkbench();
+  }
+
+  els.tabs.addEventListener("click", function (event) {
+    var groupBtn = event.target.closest("[data-group]");
+    if (groupBtn) {
+      state.group = groupBtn.getAttribute("data-group");
+      state.category = firstCategory(state.group);
+      state.query = "";
+      state.filter = "all";
+      els.search.value = "";
+      els.filter.value = "all";
+      renderTabs();
+      renderTemplates();
+      return;
+    }
+    var btn = event.target.closest("[data-cat]");
+    if (!btn) return;
+    state.category = btn.getAttribute("data-cat");
+    state.query = "";
+    state.filter = "all";
+    els.search.value = "";
+    els.filter.value = "all";
+    renderTabs();
+    renderTemplates();
+  });
+  els.search.addEventListener("input", function () {
+    state.query = els.search.value;
+    renderTemplates();
+  });
+  els.filter.addEventListener("change", function () {
+    state.filter = els.filter.value;
+    renderTemplates();
+  });
+  window.addEventListener("resize", alignSubTabs);
+  els.list.addEventListener("click", function (event) {
+    var btn = event.target.closest("[data-add]");
+    if (btn) addTemplate(btn.getAttribute("data-add"));
+  });
+  els.workbench.addEventListener("click", function (event) {
+    var btn = event.target.closest("[data-act]");
+    if (!btn) return;
+    var card = event.target.closest("[data-card]");
+    if (!card) return;
+    var id = card.getAttribute("data-card");
+    var act = btn.getAttribute("data-act");
+    if (act === "up") moveBlock(id, -1);
+    if (act === "down") moveBlock(id, 1);
+    if (act === "fold") {
+      var f = state.blocks.find(function (b) { return b.id === id; });
+      if (f) f.folded = !f.folded;
+      renderWorkbench();
+    }
+    if (act === "add-note") {
+      var n = state.blocks.find(function (b) { return b.id === id; });
+      if (n) n.noteOpen = true;
+      renderWorkbench();
+    }
+    if (act === "delete") {
+      state.blocks = state.blocks.filter(function (b) { return b.id !== id; });
+      renderAll();
+    }
+  });
+  els.workbench.addEventListener("input", function (event) {
+    var el = event.target;
+    var id = el.getAttribute("data-edit");
+    var field = el.getAttribute("data-field");
+    if (!id || !field) return;
+    updateBlock(id, field, field === "visible" ? el.checked : el.value);
+  });
+  els.workbench.addEventListener("change", function (event) {
+    var el = event.target;
+    var id = el.getAttribute("data-edit");
+    var field = el.getAttribute("data-field");
+    if (!id || !field) return;
+    updateBlock(id, field, field === "visible" ? el.checked : el.value);
+  });
+  [els.customer, els.amount, els.expert, els.cta].forEach(function (input) {
+    input.addEventListener("input", renderPreview);
+  });
+  document.querySelector(".preview-tools").addEventListener("click", function (event) {
+    var widthBtn = event.target.closest("[data-width]");
+    var modeBtn = event.target.closest("[data-mode]");
+    if (!widthBtn && !modeBtn) return;
+    if (widthBtn) {
+      state.previewWidth = Number(widthBtn.getAttribute("data-width")) || 390;
+      document.querySelectorAll(".preview-tools [data-width]").forEach(function (b) { b.classList.toggle("on", b === widthBtn); });
+    }
+    if (modeBtn) {
+      state.previewMode = modeBtn.getAttribute("data-mode") || "vertical";
+      document.querySelectorAll(".preview-tools [data-mode]").forEach(function (b) { b.classList.toggle("on", b === modeBtn); });
+    }
+    renderPreview();
+  });
+
+  renderAll();
+  initSplitters();
+})();
+</script>
+</body>
+</html>
