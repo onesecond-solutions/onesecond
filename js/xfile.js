@@ -199,7 +199,7 @@
     for (var i = 0; i < CARDS.length; i++) list += cardTileHtml(CARDS[i]);
     return '' +
       hubBackBar() +
-      '<div class="xf-card">' +
+      '<div class="xf-card xf-card-hub">' +
         '<div class="xf-hero">' +
           '<h1 class="xf-heroh"><span class="xf-g">X-FILE</span></h1>' +
         '</div>' +
@@ -412,31 +412,33 @@
     var st = document.createElement('style');
     st.id = 'xf-style';
     st.textContent = [
-      /* X-FILE = 진입 자체가 풀스크린(2026-07-19 대표 지시). #v-xfile은 id 선택자라
-         전역 .wrap(css/app-views.css:900, class, max-width:1500px)보다 특이도가 높아
-         여기서 상한을 이긴다 — 전역 .wrap 규칙 자체는 절대 손대지 않는다.
-         X-FILE 뷰일 때만 #v-xfile이 존재하므로 이 규칙만으로
-         "진입=자동 풀스크린 / 이탈=일반 폭 유지"가 성립한다(별도 토글 불필요).
+      /* X-FILE 컨테이너(#v-xfile) = 항상 풀스크린 그릇(2026-07-19 대표 지시, 팩토리 위해 유지).
+         #v-xfile은 id 선택자라 전역 .wrap(css/app-views.css:900, class, max-width:1500px)보다
+         특이도가 높아 여기서 상한을 이긴다 — 전역 .wrap 규칙 자체는 절대 손대지 않는다.
          display:flex도 여기서 재선언 — 앱 공통 `.view.on{display:block}`(2클래스,
          특이도 0,0,2,0)가 `.wrap{display:flex}`(1클래스, 0,0,1,0)를 항상 이겨
          #v-xfile의 실제 display가 block이 되던 기존 결함을 #v-xfile(id, 1,0,0,0)로
          바로잡는다 — 팩토리의 flex:1 세로 채움 체인이 여기 의존.
-         상세: docs/decisions/2026-07-19_xfile_fullscreen_layout.md */
+         ⚠️ 2026-07-19(2차) 대표 지시 정정: "무조건 풀스크린"은 화면 성격 무시(허브 카드
+         전폭 흩뿌림·검진표 전폭 늘어짐 회귀). #v-xfile(그릇)만 풀스크린을 유지하고,
+         그 안의 각 화면(.xf-card)은 성격별로 자기 폭을 정한다(아래) — 컨테이너는
+         강제하지 않고 화면(modifier)이 결정. 상세: docs/decisions/2026-07-19_xfile_fullscreen_layout.md */
       '#v-xfile{max-width:none;width:100%;padding:0;display:flex;flex-direction:column;overflow-y:auto;min-height:100%;background:var(--bg);color:var(--tp);}',
       '#v-xfile *{box-sizing:border-box;}',
-      /* 이전 860px 상한 + margin:0 auto(가운데 정렬)는 폐기(2026-07-19) — X-FILE 컨테이너
-         자체는 항상 폭 100%. 텍스트 가독성이 필요한 개별 요소(.xf-herop·.xf-disc 등)만
-         자기 안에서 좁은 max-width를 갖는다(이미 그렇게 되어 있음, 컨테이너는 손대지 않음). */
       '#v-xfile .xf-topbar{width:100%;padding:18px 18px 0;}',
-      '#v-xfile .xf-card{width:100%;padding:0 18px 48px;}',
-      /* v2 = 모바일 화면을 그대로 보여주는 폰 프레임 미리보기라 의도적으로 좁게 유지.
-         부모(.xf-card)의 margin:0 auto가 사라졌으니 자체 center를 명시. */
+      /* .xf-card 기본값 = 읽고 답하는 화면(검진표 시작·퀴즈·결과, 빈 보장 페이지) 공용 폭.
+         읽기 콘텐츠라 전폭으로 늘리지 않고 중앙 정렬 리딩 폭으로 고정(2026-07-19 2차).
+         화면 성격이 다른 곳만 아래 modifier(.xf-card-hub/-v2/-factory)로 재정의한다. */
+      '#v-xfile .xf-card{max-width:860px;width:100%;margin:0 auto;padding:0 18px 48px;}',
+      /* 허브 = 카드 진입 메뉴. 읽기 콘텐츠보다 넓게 잡아 타일 그리드가 자연스럽게 흐르되
+         (auto-fit) 뷰포트 전폭까지 늘어지진 않게 상한을 둔다(전폭 흩뿌림 회귀 방지). */
+      '#v-xfile .xf-card-hub{max-width:1160px;}',
+      /* v2 = 모바일 화면을 그대로 보여주는 폰 프레임 미리보기라 의도적으로 좁게 유지(현행). */
       '#v-xfile .xf-card-v2{max-width:520px;margin:0 auto;padding-bottom:24px;}',
       '#v-xfile .xf-v2-frame{display:block;width:100%;height:82vh;min-height:680px;border:0;border-radius:var(--radius-lg);background:var(--bg);}',
-      /* 팩토리 = topbar 아래 남은 세로 전부. flex:1 체인(고정 calc(100vh-74px) 매직넘버 폐기)
-         — #v-xfile은 .wrap을 통해 이미 flex column(.main 100vh 사슬)이라, xf-topbar는
-         자기 콘텐츠 높이만 쓰고 xf-card-factory가 flex:1로 나머지를 전부 채운다. */
-      '#v-xfile .xf-card-factory{max-width:none;width:100%;padding:0 12px 18px;display:flex;flex-direction:column;flex:1;min-height:0;}',
+      /* 팩토리 = 작업실 3컬럼, 진짜 풀스크린 유지(현행 그대로 — 회귀 금지 대상).
+         기본 .xf-card max-width(860px)를 여기서 무효화하고 폭 100% + flex:1 세로 채움. */
+      '#v-xfile .xf-card-factory{max-width:none;width:100%;margin:0;padding:0 12px 18px;display:flex;flex-direction:column;flex:1;min-height:0;}',
       '#v-xfile .xf-factory-frame{display:block;width:100%;flex:1;min-height:480px;border:0;border-radius:var(--radius-lg);background:var(--bg);}',
       /* hero */
       '#v-xfile .xf-hero{text-align:center;padding:26px 6px 22px;}',
