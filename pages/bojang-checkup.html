@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>보장 점검 리포트 | onesecond</title>
+<style>
+:root{
+  --bg:#F7F7FB; --s1:#FFFFFF; --s2:#F2F2F6; --bd:#E5E5EC;
+  --tp:#18181B; --ts:#52525B; --tf:#8A8A93; --bodytx:#3F3F46;
+  --ac:#6366F1; --ach:#5457E5; --ac-soft:#EEF0FF;
+  --ok:#16A34A; --ok-soft:#E9F7EE; --warn:#E8890C; --warn-soft:#FDF3E4; --risk:#DC2626; --risk-soft:#FCECEC;
+  --radius-sm:12px; --radius:16px; --radius-lg:22px; --radius-full:999px;
+  --sh-sm:0 1px 2px rgba(24,24,27,.05); --sh:0 6px 20px rgba(24,24,27,.07); --sh-lg:0 16px 44px rgba(24,24,27,.12);
+  --font:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);}
+body{font-family:var(--font);color:var(--tp);line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;padding:0 0 40px;}
+.wrap{max-width:520px;margin:0 auto;background:var(--bg);min-height:100vh;position:relative;overflow:hidden;}
+button{font:inherit;cursor:pointer;border:0;background:none;}
+
+/* ── HERO ── */
+.hero{padding:38px 24px 30px;background:
+  radial-gradient(120% 90% at 88% 0%, #EEF0FF 0%, transparent 55%),
+  linear-gradient(180deg,#FFFFFF 0%, var(--bg) 100%);
+  border-bottom:1px solid var(--bd);}
+.hero .kicker{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--ac);text-transform:uppercase;}
+.hero h1{font-size:27px;font-weight:800;line-height:1.32;margin:12px 0 10px;letter-spacing:-.02em;}
+.hero h1 .nm{color:var(--ac);}
+.hero .lead{font-size:15px;color:var(--ts);line-height:1.62;}
+.meta{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;}
+.meta span{font-size:12.5px;font-weight:600;color:var(--ts);background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-full);padding:5px 12px;}
+
+/* ── SCORE ── */
+.scorecard{margin:18px 24px 0;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);box-shadow:var(--sh);padding:22px;}
+.scorecard .st{display:flex;justify-content:space-between;align-items:baseline;}
+.scorecard .st b{font-size:15px;font-weight:700;}
+.scorecard .st .pill{font-size:12px;font-weight:800;padding:4px 11px;border-radius:var(--radius-full);}
+.ring{display:flex;align-items:center;gap:18px;margin-top:16px;}
+.ring svg{flex:0 0 auto;}
+.ring .txt b{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+.ring .txt b small{font-size:16px;color:var(--tf);font-weight:700;}
+.ring .txt p{font-size:13.5px;color:var(--ts);margin-top:5px;}
+
+/* ── SECTION ── */
+.sec{padding:30px 24px 4px;}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
+.sec-h h2{font-size:19px;font-weight:800;letter-spacing:-.01em;}
+.sec-h span{font-size:12.5px;color:var(--tf);font-weight:600;}
+.sec-sub{font-size:13.5px;color:var(--ts);margin:6px 0 16px;line-height:1.6;}
+
+/* ── COVERAGE CARDS (photo-card feel) ── */
+.cards{display:flex;flex-direction:column;gap:14px;}
+.cov{position:relative;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);box-shadow:var(--sh-sm);padding:20px;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+.cov:active{transform:scale(.995);}
+.cov::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;}
+.cov.s-ok::before{background:var(--ok);} .cov.s-warn::before{background:var(--warn);} .cov.s-risk::before{background:var(--risk);}
+.cov-top{display:flex;align-items:center;gap:13px;}
+.cov-ic{flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:23px;}
+.cov.s-ok .cov-ic{background:var(--ok-soft);} .cov.s-warn .cov-ic{background:var(--warn-soft);} .cov.s-risk .cov-ic{background:var(--risk-soft);}
+.cov-tt{flex:1;min-width:0;}
+.cov-tt .lb{font-size:12px;font-weight:700;color:var(--tf);letter-spacing:.02em;}
+.cov-tt .hl{font-size:17px;font-weight:800;letter-spacing:-.01em;line-height:1.3;margin-top:1px;}
+.badge{flex:0 0 auto;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:var(--radius-full);white-space:nowrap;}
+.badge.s-ok{background:var(--ok-soft);color:var(--ok);} .badge.s-warn{background:var(--warn-soft);color:var(--warn);} .badge.s-risk{background:var(--risk-soft);color:var(--risk);}
+.cov-body{font-size:14px;color:var(--bodytx);line-height:1.62;margin-top:13px;}
+.cov-gap{margin-top:12px;background:var(--s2);border-radius:12px;padding:11px 13px;font-size:13px;color:var(--ts);display:flex;gap:8px;line-height:1.55;}
+.cov-gap b{color:var(--tp);font-weight:700;}
+.gauge{margin-top:14px;height:7px;border-radius:var(--radius-full);background:var(--s2);overflow:hidden;}
+.gauge i{display:block;height:100%;border-radius:var(--radius-full);}
+.cov.s-ok .gauge i{background:var(--ok);} .cov.s-warn .gauge i{background:var(--warn);} .cov.s-risk .gauge i{background:var(--risk);}
+
+/* ── FLOW ── */
+.flow{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg);box-shadow:var(--sh-sm);padding:8px 20px;}
+.flow-row{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--bd);}
+.flow-row:last-child{border-bottom:0;}
+.flow-row i{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--ac-soft);color:var(--ac);font-size:13px;font-weight:800;font-style:normal;display:grid;place-items:center;}
+.flow-row b{font-size:14.5px;font-weight:700;display:block;}
+.flow-row span{font-size:13px;color:var(--ts);line-height:1.55;}
+
+/* ── EXPERT VOICE (니즈 심기) ── */
+.voice{margin:30px 24px 0;background:linear-gradient(160deg,#1E1B4B 0%, #312E81 100%);border-radius:var(--radius-lg);box-shadow:var(--sh-lg);padding:26px 24px;color:#fff;}
+.voice .q{font-size:12px;font-weight:800;letter-spacing:.14em;color:#A5B4FC;text-transform:uppercase;}
+.voice h3{font-size:19px;font-weight:800;line-height:1.42;margin:12px 0 12px;letter-spacing:-.01em;}
+.voice p{font-size:14px;line-height:1.7;color:#E0E1F5;}
+.voice .who{display:flex;align-items:center;gap:11px;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14);}
+.voice .av{width:40px;height:40px;border-radius:50%;background:#6366F1;display:grid;place-items:center;font-weight:800;font-size:16px;}
+.voice .who b{font-size:14px;display:block;} .voice .who span{font-size:12.5px;color:#A5B4FC;}
+
+/* ── CTA ── */
+.cta{margin:26px 24px 0;text-align:center;}
+.cta h3{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+.cta p{font-size:13.5px;color:var(--ts);margin:8px 0 18px;line-height:1.6;}
+.cta-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:58px;border-radius:var(--radius);background:var(--ac);color:#fff;font-size:16px;font-weight:800;box-shadow:0 10px 26px rgba(99,102,241,.34);transition:transform .12s,box-shadow .2s;}
+.cta-btn:active{transform:translateY(1px);}
+.cta-btn.alt{background:var(--s1);color:var(--ac);border:1.5px solid var(--ac);box-shadow:none;margin-top:11px;}
+.cta-note{font-size:12px;color:var(--tf);margin-top:14px;line-height:1.55;}
+
+/* ── DONE ── */
+.done{display:none;margin:26px 24px 0;background:var(--ok-soft);border:1px solid #BFE6CC;border-radius:var(--radius-lg);padding:22px;text-align:center;}
+.done.on{display:block;}
+.done b{font-size:17px;font-weight:800;color:var(--ok);}
+.done p{font-size:13.5px;color:var(--ts);margin-top:7px;line-height:1.6;}
+
+/* ── FOOT ── */
+.foot{margin:34px 24px 0;text-align:center;}
+.foot .exp{display:inline-flex;align-items:center;gap:9px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-full);padding:9px 16px;box-shadow:var(--sh-sm);}
+.foot .exp .a{width:30px;height:30px;border-radius:50%;background:var(--ac);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center;}
+.foot .exp b{font-size:13.5px;} .foot .exp span{font-size:12.5px;color:var(--ts);}
+.foot .brand{font-size:11.5px;color:var(--tf);margin-top:14px;}
+.foot .brand b{color:var(--ts);font-weight:700;}
+.disc{font-size:11px;color:var(--tf);line-height:1.55;margin:16px 24px 0;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+ * 보장 점검 리포트 — 데이터 주입형 렌더 엔진
+ * 하드코딩 아님: 아래 REPORT 객체(마이데이터/보험사 전산 보장분석에서 채워짐)를
+ * 바꾸면 불특정 고객·불특정 보장 구성이 그대로 이 형식으로 렌더된다.
+ * status: 'ok'(충분) | 'warn'(보완 권장) | 'risk'(부족) — 상태별 색·배지·게이지·총평 자동.
+ * 아래는 형식 시연용 샘플 데이터(실고객 아님).
+ * ════════════════════════════════════════════════════════════════════════ */
+var REPORT = {
+  customer: { name: "김지희", tags: ["42세 · 여성", "가입 보험 4건", "2026.07 기준"] },
+  headline: "지금 보험, 이대로 괜찮을까요?",
+  lead: "가입하신 보험을 네 가지 축으로 나눠 살펴봤어요. 많이 드는 게 목표가 아니라, 빈틈만 정확히 찾는 것이 핵심입니다.",
+  score: 62, scoreLabel: "보완이 필요한 상태",
+  coverages: [
+    { key:"medical", icon:"🩺", label:"의료실비 · 기본축", title:"병원비의 바닥은 준비되어 있어요", status:"ok", score:88,
+      body:"실손이 가입되어 있어 병원비의 기본 축은 확보돼 있습니다. 다만 몇 세대 실손인지에 따라 자기부담·비급여 보장이 달라집니다.",
+      gap:"세대 구조상 비급여 부담이 커질 수 있어 한 번 확인이 필요해요." },
+    { key:"cancer", icon:"🎗️", label:"암 · 진단·치료축", title:"진단금은 있는데, 치료비가 비어 있어요", status:"warn", score:54,
+      body:"암 진단비는 준비돼 있지만, 실제 치료 과정에서 쓰이는 주요치료비·비급여 치료 보장이 얇습니다.",
+      gap:"진단금만 크고 치료 과정 보장이 0에 가까운, 가장 흔한 빈틈이에요." },
+    { key:"brain", icon:"🫀", label:"뇌·심장 · 진단·치료축", title:"'좁은 담보'라 정작 필요할 때 약해요", status:"risk", score:31,
+      body:"뇌출혈·급성심근경색 같은 좁은 진단명 위주라, 뇌혈관·허혈성심장질환까지의 넓은 범위가 빠져 있습니다.",
+      gap:"발생 빈도가 높은 넓은 범위가 비어 있어 우선순위가 가장 높습니다." },
+    { key:"surgery", icon:"🩹", label:"수술비 · 빈틈보완축", title:"실비가 못 채우는 빈틈이 남아 있어요", status:"warn", score:58,
+      body:"수술비가 일부 있으나 반복 지급 구조·질병/상해 구분이 명확하지 않아, 자기부담금과 회복기 생활비 공백이 생길 수 있어요.",
+      gap:"정액형 수술비로 실비의 빈틈을 메우면 부담이 크게 줄어듭니다." }
+  ],
+  summary: {
+    title: "진단금은 넉넉한데, '치료 과정'과 '넓은 범위'가 비어 있어요.",
+    body: "지금 가장 급한 건 새 보험을 더 드는 게 아니라, 뇌·심장의 넓은 범위와 암 치료비 두 곳의 빈틈을 메우는 것입니다. 이 두 가지만 보완해도 실제 위험 대비가 크게 달라집니다. 무리한 리모델링 없이, 필요한 부분만 정확히 짚어드릴게요."
+  },
+  expert: { name:"임태성 보험전문가", phone:"010-9241-9375", initial:"임" },
+  cta: { main:"내 보장 5분 무료 점검받기", alt:"부족한 부분만 보완플랜 받기" }
+};
+
+/* ── 렌더 ── */
+var STATUS = {
+  ok:  { badge:"준비됨",     cls:"s-ok" },
+  warn:{ badge:"보완 권장",   cls:"s-warn" },
+  risk:{ badge:"부족",       cls:"s-risk" }
+};
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function ringSVG(score){
+  var r=32, c=2*Math.PI*r, off=c*(1-score/100);
+  var col = score>=75?"var(--ok)":score>=50?"var(--warn)":"var(--risk)";
+  return '<svg width="80" height="80" viewBox="0 0 80 80">'+
+    '<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="var(--s2)" stroke-width="8"/>'+
+    '<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="8" stroke-linecap="round" '+
+      'stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" transform="rotate(-90 40 40)"/></svg>';
+}
+function covCard(c){
+  var s=STATUS[c.status]||STATUS.warn;
+  return '<div class="cov '+s.cls+'">'+
+    '<div class="cov-top">'+
+      '<div class="cov-ic">'+c.icon+'</div>'+
+      '<div class="cov-tt"><div class="lb">'+esc(c.label)+'</div><div class="hl">'+esc(c.title)+'</div></div>'+
+      '<span class="badge '+s.cls+'">'+s.badge+'</span>'+
+    '</div>'+
+    '<div class="cov-body">'+esc(c.body)+'</div>'+
+    '<div class="cov-gap">🔎 <div><b>확인 포인트 ·</b> '+esc(c.gap)+'</div></div>'+
+    '<div class="gauge"><i style="width:'+Math.max(6,c.score)+'%"></i></div>'+
+  '</div>';
+}
+function render(R){
+  var flowRoles=[
+    ["의료실비","실제로 낸 병원비 일부를 보전하는 가장 기본적인 축"],
+    ["암","진단 직후 목돈과 치료 과정·비급여 치료를 대비하는 축"],
+    ["뇌·심장","넓은 진단 범위와 골든타임 치료·수술을 함께 준비하는 축"],
+    ["수술비","실비의 자기부담금과 회복기 생활비 빈틈을 정액형으로 메우는 축"]
+  ];
+  var html=''+
+  '<section class="hero">'+
+    '<div class="kicker">보장 점검 리포트</div>'+
+    '<h1><span class="nm">'+esc(R.customer.name)+'</span> 고객님,<br>'+esc(R.headline)+'</h1>'+
+    '<p class="lead">'+esc(R.lead)+'</p>'+
+    '<div class="meta">'+R.customer.tags.map(function(t){return '<span>'+esc(t)+'</span>';}).join("")+'</div>'+
+  '</section>'+
+
+  '<div class="scorecard">'+
+    '<div class="st"><b>내 보장 종합 점수</b><span class="pill '+(R.score>=75?"s-ok":R.score>=50?"s-warn":"s-risk").replace("s-","")+'" style="background:var(--'+(R.score>=75?"ok":R.score>=50?"warn":"risk")+'-soft);color:var(--'+(R.score>=75?"ok":R.score>=50?"warn":"risk")+')">'+esc(R.scoreLabel)+'</span></div>'+
+    '<div class="ring">'+ringSVG(R.score)+
+      '<div class="txt"><b>'+R.score+'<small> / 100</small></b><p>네 가지 축 중 <b>2곳</b>에서 빈틈이 확인됐어요.</p></div>'+
+    '</div>'+
+  '</div>'+
+
+  '<section class="sec">'+
+    '<div class="sec-h"><h2>4대 핵심보장</h2><span>넘겨가며 확인하세요</span></div>'+
+    '<p class="sec-sub">보험은 네 가지 축을 <b>함께</b> 봐야 합니다. 하나씩 지금 상태를 짚어볼게요.</p>'+
+    '<div class="cards">'+R.coverages.map(covCard).join("")+'</div>'+
+  '</section>'+
+
+  '<section class="sec">'+
+    '<div class="sec-h"><h2>네 축은 이렇게 연결돼요</h2></div>'+
+    '<div class="flow">'+flowRoles.map(function(f,i){return '<div class="flow-row"><i>'+(i+1)+'</i><div><b>'+esc(f[0])+'</b><span>'+esc(f[1])+'</span></div></div>';}).join("")+'</div>'+
+  '</section>'+
+
+  '<div class="voice">'+
+    '<div class="q">전문가 총평</div>'+
+    '<h3>'+esc(R.summary.title)+'</h3>'+
+    '<p>'+esc(R.summary.body)+'</p>'+
+    '<div class="who"><div class="av">'+esc(R.expert.initial)+'</div><div><b>'+esc(R.expert.name)+'</b><span>'+esc(R.expert.phone)+'</span></div></div>'+
+  '</div>'+
+
+  '<section class="cta">'+
+    '<h3>빈틈, 5분이면 정확히 확인돼요</h3>'+
+    '<p>많이 바꾸지 않습니다. 부족한 두 곳만 어떻게 채울지 편하게 알려드릴게요.</p>'+
+    '<button class="cta-btn" id="ctaMain">📩 '+esc(R.cta.main)+'</button>'+
+    '<button class="cta-btn alt" id="ctaAlt">'+esc(R.cta.alt)+'</button>'+
+    '<div class="cta-note">상담 신청 시 '+esc(R.expert.name)+'에게 바로 연결됩니다. 가입·해지를 권유하지 않으며, 실제 보장은 증권·약관 기준으로 확인해 드립니다.</div>'+
+  '</section>'+
+
+  '<div class="done" id="done"><b>✓ 상담 신청이 접수됐어요</b><p>'+esc(R.expert.name)+'이 확인 후 바로 연락드릴게요. 잠시만 기다려 주세요 🙏</p></div>'+
+
+  '<div class="foot">'+
+    '<div class="exp"><div class="a">'+esc(R.expert.initial)+'</div><div><b>'+esc(R.expert.name)+'</b> · <span>'+esc(R.expert.phone)+'</span></div></div>'+
+    '<div class="brand"><b>Powered by onesecond</b> · © 2026 onesecond</div>'+
+  '</div>'+
+  '<div class="disc">본 리포트는 입력·연동된 보장 정보를 이해하기 쉽게 정리한 안내 자료이며, 특정 상품의 가입·해지를 권유하지 않습니다.</div>';
+
+  document.getElementById("app").innerHTML=html;
+  var done=document.getElementById("done");
+  function submit(){ done.classList.add("on"); done.scrollIntoView({behavior:"smooth",block:"center"}); }
+  document.getElementById("ctaMain").addEventListener("click",submit);
+  document.getElementById("ctaAlt").addEventListener("click",submit);
+}
+render(REPORT);
+</script>
+</body>
+</html>
