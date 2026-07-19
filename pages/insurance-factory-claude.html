@@ -107,10 +107,12 @@ button { cursor: pointer; }
   /* 풀스크린 세로 채움(2026-07-19) — min-height→height 고정 + overflow:hidden으로
      if-main(auto 1fr auto)의 1fr row가 실제 남은 세로를 계산할 수 있는 높이 사슬을 만든다.
      860px 이하 모바일은 아래 미디어쿼리가 다시 min-height/auto/visible로 되돌린다. */
-  height: 100vh;
+  /* 전체 페이지 스크롤(2026-07-20 대표 지시) — 화면에 가두지 않고,
+     작업대/미리보기가 카드만큼 길어지면 페이지 전체가 스크롤된다. */
+  min-height: 100vh;
   display: grid;
-  grid-template-rows: auto 1fr;
-  overflow: hidden;
+  grid-template-rows: auto auto;
+  overflow: visible;
   background: var(--bg);
 }
 .if-head {
@@ -260,24 +262,26 @@ button { cursor: pointer; }
      overflow:hidden으로 이 컨테이너 밖으로 흘러넘치지 않게 잡는다. */
   min-height: 0;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  overflow: hidden;
+  grid-template-rows: auto auto auto;
+  overflow: visible;
 }
 .if-workspace {
   /* 고정 720px 폐기(2026-07-19) — if-main의 1fr row를 그대로 채운다.
      min-height:0 + 아래 .if-col/.if-scroll의 min-height:0 체인 덕분에
      3컬럼은 늘어나지 않고 각자 내부에서 독립 스크롤한다. */
-  height: 100%;
+  height: auto;
   min-height: 0;
   display: grid;
   grid-template-columns: 280px 12px minmax(420px, 1fr) 12px 504px;
+  align-items: start;
   gap: 0;
   padding: var(--if-4) var(--if-6) var(--if-5);
-  overflow: hidden;
+  overflow: visible;
 }
 .if-splitter {
   min-width: 12px;
   cursor: col-resize;
+  align-self: stretch;
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -324,7 +328,7 @@ button { cursor: pointer; }
   border: 1px solid var(--bd);
   border-radius: var(--radius-lg);
   background: var(--s1);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--sh-sm);
 }
 .if-col-head {
@@ -344,6 +348,16 @@ button { cursor: pointer; }
   color: var(--tf);
   font-size: var(--fs-meta);
   line-height: var(--lh-dense);
+}
+/* 왼쪽 템플릿 보관함은 전체 스크롤에서도 화면에 고정 + 내부 스크롤(2026-07-20).
+   카드 따라 높이가 늘어나는 건 가운데 작업대·오른쪽 고객 미리보기만. */
+.if-workspace > .if-col:first-child {
+  position: sticky;
+  top: 8px;
+  max-height: calc(100vh - 24px);
+}
+.if-workspace > .if-col:first-child .if-scroll {
+  overflow: auto;
 }
 .if-workspace > .if-col .if-col-head {
   background: var(--tp);
@@ -370,7 +384,7 @@ button { cursor: pointer; }
 .if-scroll {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: visible;
   padding: var(--if-4);
 }
 .if-search {
