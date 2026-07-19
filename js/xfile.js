@@ -171,6 +171,7 @@
     { key: 'check', em: '🩺', title: '내 보험 어때?', desc: '기존 X-FILE 내부 자가 검진표', step: 'check' },
     { key: 'check-v2', em: '📱', title: '내 보험 어때? v2.0', desc: '모바일 이미지형 4가지 자가 검진', step: 'check-v2' },
     { key: 'factory', em: '🏭', title: '보험 팩토리', desc: '설명 자료를 고르고 조립하는 작업실', step: 'factory' },
+    { key: 'factory-claude', em: '🏭', title: '보험 팩토리 (클로드)', desc: '보험 팩토리 카피본 · 클로드 버전', step: 'factory-claude' },
     /* 아래 7개(2026-07-17 대표 확정) = 자리만 잡은 빈 페이지. 내용은 대표가 채운다.
        em은 AXES 4축(의료실비·암·뇌심장·수술비) 이모지를 그대로 재사용해 톤 일관. */
     { key: 'medical', em: '🏥', title: '의료실비', desc: '준비 중', step: 'medical' },
@@ -363,6 +364,14 @@
       '</div>';
   }
 
+  function renderFactoryClaude() {
+    return '' +
+      backBar() +
+      '<div class="xf-card xf-card-factory">' +
+        '<iframe class="xf-factory-frame" src="/pages/insurance-factory-claude.html?embed=1" title="보험 팩토리 (클로드)"></iframe>' +
+      '</div>';
+  }
+
   /* ══════════════════════════════════════════════════════════════════════════
    * 미니 라우터
    *   주의: 'analysis' = X-FILE 안의 빈 페이지. 앱의 보장분석 뷰(#v-bojang·
@@ -370,7 +379,7 @@
    *   'analysis'로 둔다(대표 확정 2026-07-17).
    * ══════════════════════════════════════════════════════════════════════════ */
   var RENDERERS = {
-    hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult, 'check-v2': renderCheckV2, factory: renderFactory,
+    hub: renderHub, start: renderStart, quiz: renderQuiz, result: renderResult, 'check-v2': renderCheckV2, factory: renderFactory, 'factory-claude': renderFactoryClaude,
     medical: blankOf('의료실비'),
     cancer: blankOf('암'),
     brainheart: blankOf('뇌/심장'),
