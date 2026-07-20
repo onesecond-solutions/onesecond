@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>암주요치료비 세대별 변천사 · onesecond</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  /* --ac = 원세컨드 v2 토큰 --ac 동일값(#6366F1, css/tokens-v2.css). iframe 격리라 링크 대신 값 미러 —
+     tokens-v2의 --ac는 :root[data-theme] 스코프(specificity 0,1,1)라 링크 시 본 페이지 :root의
+     --bg/--ok/--warn을 덮어써 보존 색이 드리프트함 → silson(--indigo:#6366F1) 선례대로 값 미러. */
+  --ac:#6366F1; --ac-d:#4F46E5; --ac-s:#EEF0FE;
+  /* --cur = 현재 세대(5세대) 오렌지 예외. silson 5세대 규칙(--g5:#EA580C)과 동일. */
+  --cur:#EA580C; --cur-s:#FFF3EC; --cur-d:#C2410C;
+  --ink:#111827; --ink2:#374151; --muted:#6B7280;
+  --hair:#E5E7EB; --line2:#F3F4F6; --bg:#F9FAFB;
+  --ok:#059669; --ok-s:#ECFDF5; --warn:#B45309; --warn-s:#FFFBEB;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:26px 22px 70px}
+
+/* 헤더 */
+.phead{margin-bottom:26px}
+.phead h1{font-size:23px;font-weight:800;letter-spacing:-.5px;margin:0 0 7px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.phead h1 .ic{width:24px;height:24px;border-radius:6px;background:var(--ac);display:inline-grid;place-items:center;
+  color:#fff;font-size:13px;font-weight:800}
+.badge{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:6px;background:var(--ac-s);color:var(--ac-d)}
+.phead p{margin:0;font-size:13.5px;color:var(--muted)}
+
+h2.sec{font-size:16.5px;font-weight:800;letter-spacing:-.3px;margin:34px 0 14px;display:flex;align-items:center;gap:8px}
+h2.sec .sq{width:15px;height:15px;border-radius:4px;flex:0 0 auto}
+
+/* 메인 표 */
+.tw{overflow-x:auto;border-radius:10px;border:1px solid var(--hair)}
+table{width:100%;border-collapse:collapse;min-width:940px;background:#fff}
+thead th{padding:13px 10px;font-size:13px;font-weight:800;color:#fff;text-align:center;line-height:1.4}
+thead th.k{background:#374151;width:132px}
+thead th.g{background:var(--ac)}
+thead th.g.now{background:var(--cur)}
+thead th small{display:block;font-size:11px;font-weight:600;opacity:.85;margin-top:3px}
+tbody td{padding:13px 11px;font-size:13px;text-align:center;border-top:1px solid var(--line2);vertical-align:middle;line-height:1.5}
+tbody td.k{background:#FAFBFC;font-weight:700;color:var(--ink2);text-align:left;font-size:12.5px}
+tbody td small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+tbody tr:hover td{background:#FCFCFD}
+tbody tr:hover td.k{background:#F5F6F8}
+.em{color:var(--ac-d);font-weight:800}
+.em-o{color:var(--cur-d);font-weight:800}
+.em-g{color:var(--ok);font-weight:800}
+.x{color:#9CA3AF}
+
+/* 인트로 박스 */
+.intro{background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:17px 19px;
+  font-size:13.5px;color:var(--ink2);line-height:1.75;margin-bottom:8px}
+.intro b{color:var(--ac-d);font-weight:800}
+.intro b.o{color:var(--cur-d)}
+
+/* 세대 카드 */
+.hint{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);
+  background:var(--bg);border:1px solid var(--hair);border-radius:8px;padding:7px 12px;margin-bottom:13px}
+.gens{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
+@media(max-width:900px){.gens{grid-template-columns:repeat(2,1fr)}}
+.gen{border:1px solid var(--hair);border-radius:10px;padding:15px 14px 12px;cursor:pointer;
+  background:#fff;position:relative;transition:.15s;overflow:hidden}
+.gen::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--bar)}
+.gen:hover{box-shadow:0 3px 12px rgba(17,24,39,.07)}
+.gen.on{border-color:var(--bar);box-shadow:0 0 0 1px var(--bar)}
+.gen .no{font-size:15.5px;font-weight:800;letter-spacing:-.3px}
+.gen .yr{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:11px}
+.gen .hl{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.gen .sub{font-size:11.5px;color:var(--muted)}
+.gen .cl{position:absolute;right:12px;bottom:10px;font-size:11px;color:#9CA3AF;font-weight:700}
+
+/* 심층 패널 */
+.deep{margin-top:15px;border:1.5px solid var(--pc);border-radius:12px;padding:22px;background:#fff}
+.deep .dh{display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+.deep .dh .sq{width:16px;height:16px;border-radius:4px;background:var(--pc)}
+.deep .dh h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.3px}
+.deep .dh .bd{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:6px;background:var(--pcs);color:var(--pc)}
+.deep .dsum{font-size:13.5px;color:var(--ink2);margin:0 0 17px;line-height:1.7}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+@media(max-width:900px){.dgrid{grid-template-columns:1fr}}
+.dc{border:1px solid var(--hair);border-radius:9px;padding:14px 15px;background:#fff}
+.dc.hi{background:var(--pcs);border-color:transparent}
+.dc h4{margin:0 0 7px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px}
+.dc h4 .d{width:9px;height:9px;border-radius:3px;background:var(--pc);flex:0 0 auto}
+.dc p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+.dc p b{font-weight:800;color:var(--ink)}
+.dc p .r{color:var(--cur-d);font-weight:800}
+
+/* 알림 박스 */
+.tip{margin-top:16px;background:var(--ac-s);border-radius:9px;padding:14px 17px;font-size:13px;color:#3730A3;line-height:1.7}
+.tip b{font-weight:800}
+.caution{margin-top:11px;background:var(--warn-s);border-radius:9px;padding:14px 17px;font-size:13px;color:#92400E;line-height:1.7}
+.caution b{font-weight:800}
+
+/* 푸터 */
+.src{margin-top:34px;padding-top:18px;border-top:1px solid var(--hair);
+  font-size:11.5px;color:var(--muted);text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="phead">
+    <h1><span class="ic">암</span>암주요치료비 세대별 변천사 <span class="badge">참고용</span></h1>
+    <p>담보 이름이 같아도 가입 시기에 따라 보장 논리가 완전히 다릅니다</p>
+  </div>
+
+  <!-- 메인 표 -->
+  <h2 class="sec"><span class="sq" style="background:var(--ac)"></span>암 치료비 담보 변천사</h2>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th class="k">구분</th>
+          <th class="g">1세대<small>~2019</small></th>
+          <th class="g">2세대<small>2020~2023</small></th>
+          <th class="g">3세대<small>2024.1~2024.10</small></th>
+          <th class="g">4세대<small>2024.11~2025.2</small></th>
+          <th class="g now">5세대<small>2025.3~</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="k">보장 논리</td>
+          <td><span class="em-g">진단 시 목돈</span><small>생활비 성격</small></td>
+          <td><span class="em">특정 치료법 지정</span><small>표적항암</small></td>
+          <td><span class="em">치료 행위 통합</span><small>치료법 무관</small></td>
+          <td>치료 행위 통합<small>지급방식 정리</small></td>
+          <td><span class="em-o">급여·비급여 분리</span><small>비급여 전담</small></td>
+        </tr>
+        <tr>
+          <td class="k">대표 담보명</td>
+          <td>암진단비</td>
+          <td>표적항암약물<br>허가치료비</td>
+          <td><span class="em">암주요치료비</span><small>암특정치료비</small></td>
+          <td>암주요치료비</td>
+          <td><span class="em-o">비급여(전액본인부담)<br>암주요치료비</span></td>
+        </tr>
+        <tr>
+          <td class="k">지급 방식</td>
+          <td>정액</td>
+          <td>정액</td>
+          <td>정액 <span class="x">/</span> <span class="em">비례 혼재</span></td>
+          <td><span class="em">정액만</span><small>비례형 판매중단</small></td>
+          <td>정액</td>
+        </tr>
+        <tr>
+          <td class="k">지급 횟수</td>
+          <td>진단 1회</td>
+          <td><span class="em">최초 1회</span><small>KB 최초 도입 기준</small></td>
+          <td>연간 1회</td>
+          <td>연간 1회</td>
+          <td>연간 1회</td>
+        </tr>
+        <tr>
+          <td class="k">보장 기간</td>
+          <td>—</td>
+          <td>—</td>
+          <td>진단 후 <span class="em">5년</span><small>10년형 상품 존재</small></td>
+          <td>진단 후 5년<small>10년형 존재</small></td>
+          <td>진단 후 5년<small>10년형 존재</small></td>
+        </tr>
+        <tr>
+          <td class="k">치료법 범위</td>
+          <td class="x">해당 없음</td>
+          <td><span class="x">표적항암 한정</span><small>그 외 미지급</small></td>
+          <td><span class="em-g">수술·방사선·약물<br>구분 없음</span></td>
+          <td><span class="em-g">수술·방사선·약물<br>구분 없음</span></td>
+          <td>수술·방사선·약물<small>비급여 영역 한정</small></td>
+        </tr>
+        <tr>
+          <td class="k">암 종류</td>
+          <td>원발암 중심</td>
+          <td>원발암 중심</td>
+          <td><span class="em-g">원발·전이·재발<br>구분 없음</span></td>
+          <td>원발·전이·재발<br>구분 없음</td>
+          <td>기타피부암·갑상선암도<br><span class="em-o">일반암 수준</span></td>
+        </tr>
+        <tr>
+          <td class="k">급여 / 비급여</td>
+          <td>—</td>
+          <td>급여 중심</td>
+          <td>급여 중심</td>
+          <td>급여 중심</td>
+          <td><span class="em-o">비급여 + 전액본인부담<br>전담</span></td>
+        </tr>
+        <tr>
+          <td class="k">보험료 수준</td>
+          <td>—</td>
+          <td>갱신형 위주</td>
+          <td>—</td>
+          <td>—</td>
+          <td><span class="em-o">기존 대비 약 1/4</span><small>삼성화재 기준</small></td>
+        </tr>
+        <tr>
+          <td class="k">핵심 한계</td>
+          <td><span class="x">치료 장기화<br>대응 불가</span></td>
+          <td><span class="x">신의료기술<br>미대응</span></td>
+          <td>비급여 고액치료<br>대응 부족</td>
+          <td>비급여 고액치료<br>대응 부족</td>
+          <td><span class="x">급여 표준치료<br>사각지대</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 인트로 -->
+  <div class="intro" style="margin-top:22px">
+    암 담보는 <b>「진단 시 목돈」 → 「특정 치료법 보장」 → 「치료 행위 통합」 → 「급여·비급여 분리」</b> 순으로 이동해 왔습니다.
+    특히 <b>2024년 초</b>(암주요치료비 등장), <b>2024년 11월</b>(비례형 판매중단), <b class="o">2025년 3월</b>(비급여 분리 시작)이 결정적 분기점입니다.
+    아래 세대 카드를 눌러 각 세대의 구조와 확인 포인트를 보세요.
+  </div>
+
+  <!-- 세대 카드 -->
+  <h2 class="sec"><span class="sq" style="background:var(--ac)"></span>세대별 심층 · 확인 포인트</h2>
+  <div class="hint">세대 카드를 클릭하면 해당 세대의 심층 정보가 펼쳐집니다</div>
+  <div class="gens" id="gens"></div>
+  <div id="deep"></div>
+
+  <div class="tip">
+    <b>상담 판단 기준</b> · 고객 계약 시기를 먼저 확인하세요. 2020~2023년 가입이면 표적항암 한정 여부를,
+    2024년 가입이면 정액·비례 여부를, 2025년 이후 가입이면 급여 표준치료 구간이 비어 있는지를 확인합니다.
+    담보명이 같아도 약관상 <b>주요 치료의 정의</b>가 회사마다 다릅니다.
+  </div>
+  <div class="caution">
+    <b>보장금액 산정 가이드라인</b>은 2025년 1월 경증 담보부터 적용됐고, <b>2026년 중증질환까지 확대</b>가 추진 중입니다.
+    담보를 잘게 쪼개 보험금 규모를 키우는 설계 관행에도 제동이 예고돼 있습니다. 시행 시기는 미정이며 최종 약관으로 확인하세요.
+  </div>
+
+  <div class="src">
+    출처: 대한금융신문(2020.05) · 이코노믹리뷰(2020.09) · 농민신문(2021.01) · 파이낸셜뉴스(2021.06) ·
+    블로터(2024.03) · KB의 생각 · 보험저널(2025.03, 2026.03) · 현대해상·ABL생명 상품안내 · 뱅크샐러드<br>
+    본 자료는 상담 전 참고용이며 특정 상품·보험사를 권유하지 않습니다. 실제 보장은 약관과 가입 시기에 따라 달라집니다.
+  </div>
+
+</div>
+
+<script>
+const GENS=[
+{no:"1세대",yr:"~2019",hl:"진단 시 목돈",sub:"생활비 성격",c:"#6366F1",cs:"#EEF0FE",
+ sum:"암보험의 원형. 진단 시점에 목돈을 지급하는 구조로, 치료 과정이 길어지는 상황까지는 다루지 못했습니다.",
+ cards:[
+  {t:"보장 논리",b:"암 진단 확정 시 약정 금액을 <b>일시금</b>으로 지급. 치료 실행 여부와 무관합니다."},
+  {t:"당시 시장",b:"기사 기준으로 <b>생활비를 지급하는 암보험</b>이 주류였던 시기로 서술됩니다."},
+  {t:"보장 구성",b:"암보험 보장은 통상 <b>진단비·수술비·치료비</b> 세 갈래로 구분되며, 이 시기는 진단비에 집중됐습니다."},
+  {t:"한계",b:"치료가 수술→항암→방사선→추적검사로 이어지는 <b>단계별 현금 흐름</b>을 감당하기 어렵습니다.",hi:1},
+  {t:"확인 포인트",b:"진단비 외에 <b>치료 과정 단계</b>를 받치는 담보가 있는지 확인이 필요합니다."},
+  {t:"현재 위치",b:"이 시기 계약만 보유한 고객은 최신 치료법 관련 담보가 전무할 가능성이 있습니다."}
+ ]},
+{no:"2세대",yr:"2020~2023",hl:"표적항암 지정",sub:"특정 치료법 한정",c:"#8B5CF6",cs:"#F3EEFE",
+ sum:"표적항암약물허가치료비 등장. 특정 치료법을 지정해 보장하는 방식으로, 치료법이 다르면 지급되지 않는 구조입니다.",
+ cards:[
+  {t:"최초 도입",b:"업계 최초는 <b>라이나생명</b>, 손해보험 최초는 <b>KB손해보험</b>(2020.5, 'KB암보험과 건강하게 사는 이야기'). 보험개발원 요율검증·금감원 심사 후 출시."},
+  {t:"시장 반응",b:"KB손보 기준 월평균 신규매출 <b>2억 → 16억</b>, 시장점유율 <b>3배인 30%</b>로 확대. 전 업계가 뒤따른 계기."},
+  {t:"지급 기준",b:"암 진단 확정 후 표적항암약물허가치료 시 <b>최초 1회</b> 지급. 식약처 허가 효능·효과 범위 내."},
+  {t:"확산",b:"2020.12 NH농협생명·삼성생명, 이어 삼성화재·현대해상·한화손보 등이 <b>5,000만 원</b> 수준으로 탑재."},
+  {t:"치료 배경",b:"표적항암제는 암세포만 공격해 부작용이 적음. 1회 <b>200만~500만 원</b>, 통상 10회가량 진행."},
+  {t:"핵심 한계",b:"<span class='r'>표적항암이 아니면 미지급.</span> 수술 없이 항암만 하거나 중입자치료 등 신의료기술은 대응 불가. 갱신형 위주라 보험료 인상 가능성도 지적됐습니다.",hi:1}
+ ]},
+{no:"3세대",yr:"2024.1~2024.10",hl:"치료 행위 통합",sub:"암주요치료비 등장",c:"#6366F1",cs:"#EEF0FE",
+ sum:"치료법을 구분하지 않고 특약 하나로 보장. 진단비 중심에서 치료비 중심으로 시장이 이동한 분기점입니다.",
+ cards:[
+  {t:"정의",b:"<b>수술·방사선·약물치료를 구분하지 않고</b> 특약 하나로 보장. 약관상 '주요 치료'로 분류되면 지급."},
+  {t:"암 종류",b:"<b>원발암·전이암·재발암 구분 없이</b> 보장. 2세대 대비 결정적 확장."},
+  {t:"지급 구조",b:"정액보상. <b>연간 1회 한도, 최대 5년</b>. 진단 후 10년형 상품도 존재합니다."},
+  {t:"탑재사",b:"2024.3 기준 현대해상·DB손보·메리츠화재·롯데손보. 삼성화재·한화손보는 <b>암진단후암특정치료비</b>라는 유사 담보."},
+  {t:"단독 가입",b:"DB손보·메리츠·롯데는 비례보상 특약 연계 없이 <b>단독 가입 허용</b>. 통상 연계가 필요한 구조를 개방한 사례."},
+  {t:"확인 포인트",b:"이 시기 가입 계약은 <span class='r'>정액형인지 비례형인지</span> 확인이 필요합니다. 비례형은 이후 판매중단됩니다.",hi:1}
+ ]},
+{no:"4세대",yr:"2024.11~2025.2",hl:"정액형 일원화",sub:"비례형 판매중단",c:"#0891B2",cs:"#E6F6FA",
+ sum:"비례형 암주요치료비 판매가 중단되며 정액형만 남았습니다. 담보 자체보다 지급방식이 정리된 구간입니다.",
+ cards:[
+  {t:"무엇이 바뀌었나",b:"<b>2024년 11월부터 비례형 판매중단.</b> 현재는 정액형만 가입 가능합니다."},
+  {t:"중단 사유",b:"과잉진료 유발 및 <b>건강보험 제도 왜곡</b> 우려. 치료비가 클수록 보험금이 늘어 병원비 지출을 부추길 수 있다는 판단."},
+  {t:"정액형이란",b:"치료 사실만으로 <b>약정 금액 지급</b>. 실제 치료비와 무관하며, 치료비가 정액을 넘으면 초과분은 본인 부담."},
+  {t:"비례형이란",b:"실제 발생 치료비에 <b>일정 비율</b>로 지급하던 방식. 현재 신규 가입은 불가합니다."},
+  {t:"확인 포인트",b:"<b>2024년 10월 이전</b> 가입 고객은 비례형일 수 있습니다. 지급방식 확인이 상담 진입점이 됩니다.",hi:1},
+  {t:"근거 수준",b:"현재 확보 근거는 2차 매체입니다. <span class='r'>감독당국 원문 확인 필요</span> 항목으로 남아 있습니다."}
+ ]},
+{no:"5세대",yr:"2025.3~",hl:"급여·비급여 분리",sub:"비급여 전담 담보",c:"#EA580C",cs:"#FFF3EC",
+ sum:"비급여와 전액본인부담 영역을 떼어내 전담 보장하는 구조. 보험료는 낮지만 급여 표준치료 구간이 비게 됩니다.",
+ cards:[
+  {t:"시작",b:"<b>2025년 3월 5일 삼성화재</b> '하이클래스 암치료비 특약'. 이후 4월 손보사 전면전으로 확산."},
+  {t:"보장 범위",b:"비급여 + <b>급여 중 전액본인부담</b> 항암치료비. 비급여·전액본인부담 수술, 항암방사선치료, 항암약물치료(면역·표적항암제 등)."},
+  {t:"보험료",b:"기존 암치료비 특약 대비 <b>약 4분의 1 수준</b>. 진입 문턱이 크게 낮아졌습니다."},
+  {t:"배경",b:"암 생존율 상승 → 고가 항암치료 수요 증가. 면역항암제·표적항암제·HIFU·비급여 방사선은 1회 <b>수백만~수천만 원</b>. 여기에 <b>4세대 실손의 비급여 축소</b>가 겹쳤습니다."},
+  {t:"세부 조건",b:"보장 대상 의료기관 제한 없음(대학병원·종합병원·암전문병원 등). 기타피부암·갑상선암도 <b>일반암과 동일 수준</b>."},
+  {t:"★ 사각지대",b:"<span class='r'>암 진단 후 표준 치료의 상당 부분은 건강보험 급여로 처리됩니다.</span> 비급여형만으로는 급여 구간이 비어 있을 수 있습니다.",hi:1}
+ ]}
+];
+
+let sel=4;
+const gensEl=document.getElementById("gens"), deepEl=document.getElementById("deep");
+
+function drawGens(){
+  gensEl.innerHTML=GENS.map((g,i)=>`
+    <div class="gen${i===sel?" on":""}" data-i="${i}" style="--bar:${g.c}">
+      <div class="no">${g.no}</div>
+      <div class="yr">${g.yr}</div>
+      <div class="hl">${g.hl}</div>
+      <div class="sub">${g.sub}</div>
+      <div class="cl">클릭 ▾</div>
+    </div>`).join("");
+  gensEl.querySelectorAll(".gen").forEach(el=>el.onclick=()=>{sel=+el.dataset.i;drawGens();drawDeep();});
+}
+function drawDeep(){
+  const g=GENS[sel];
+  deepEl.innerHTML=`
+    <div class="deep" style="--pc:${g.c};--pcs:${g.cs}">
+      <div class="dh"><span class="sq"></span><h3>${g.no} 심층</h3><span class="bd">${g.yr}</span></div>
+      <p class="dsum">${g.sum}</p>
+      <div class="dgrid">
+        ${g.cards.map(c=>`<div class="dc${c.hi?" hi":""}">
+          <h4><span class="d"></span>${c.t}</h4><p>${c.b}</p></div>`).join("")}
+      </div>
+    </div>`;
+}
+/* 전역 렌더 진입점 — 앱 렌더 컨텍스트에서 재호출 가능(silson 뷰 렌더 방식 정합). window.* 등록 원칙. */
+function renderCancerTreatmentHistory(){ drawGens(); drawDeep(); }
+window.renderCancerTreatmentHistory = renderCancerTreatmentHistory;
+/* 부트: iframe 격리 로드라 즉시 자가 렌더(silson의 즉시 sel(5,true) 선례 정합).
+   appstate:ready는 부모(app.html) 이벤트 — iframe 안에선 발화 안 하나, 인라인 주입 컨텍스트 대비 방어적 재바인딩. defer 없음. */
+renderCancerTreatmentHistory();
+try{ document.addEventListener('appstate:ready', renderCancerTreatmentHistory); }catch(e){}
+</script>
+</body>
+</html>
