@@ -1208,27 +1208,6 @@ button { cursor: pointer; }
   color: var(--tp);
 }
 .bj-table input:focus { border-color: var(--ac); background: var(--s1); outline: none; }
-.bj-table select {
-  width: 100%;
-  min-width: 90px;
-  border: 1px solid var(--bd);
-  background: var(--s1);
-  padding: 4px 6px;
-  border-radius: var(--radius-xs);
-  font-size: var(--fs-body);
-  color: var(--tp);
-}
-.bj-table select:focus { border-color: var(--ac); outline: none; }
-.bj-premium-sum {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--if-1);
-  align-items: baseline;
-  margin: calc(-1 * var(--if-2)) 0 var(--if-3);
-  font-size: var(--fs-body);
-  color: var(--tf);
-}
-.bj-premium-sum strong { color: var(--tp); font-weight: var(--fw-bold); font-size: var(--fs-body-lg); }
 .bj-row-actions { display: flex; justify-content: flex-start; margin-bottom: var(--if-3); }
 .bj-review-actions { display: flex; gap: var(--if-2); justify-content: flex-end; }
 .bj-rawtext {
@@ -2168,89 +2147,7 @@ button { cursor: pointer; }
         coverages.push({ id: "v" + (coverages.length + 1), name: rec.coverageName, amount: rec.coverageAmount || "" });
       }
     }
-    /* 뱅크샐러드형(가로 다중 헤더 매트릭스) 감지 시에만 계약을 별도 경로로 추출.
-       세로형이면 bjDetectBankSalad가 null → 위에서 만든 contracts 그대로(회귀 0). */
-    var bs = bjDetectBankSalad(matrix, headerIdx, map);
-    if (bs && !contracts.length) {
-      contracts = bjBuildBankSaladContracts(matrix, headerIdx, bs);
-    }
     return { contracts: contracts, coverages: coverages };
-  }
-  /* 숫자 → 천단위 콤마 문자열(원 단위) */
-  function bjFormatWon(n) {
-    var num = Math.round(Number(n) || 0);
-    return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
-  /* 문자열에서 숫자만 뽑아 원 단위 정수 반환(콤마·단위·공백 제거). 없으면 0 */
-  function bjPremiumToNumber(v) {
-    var digits = String(v == null ? "" : v).replace(/[^\d]/g, "");
-    return digits ? parseInt(digits, 10) : 0;
-  }
-  /* 계약(상품)들의 월 보험료 합계(원 단위 정수) */
-  function bjSumPremium(contracts) {
-    return (contracts || []).reduce(function (sum, c) { return sum + bjPremiumToNumber(c.premium); }, 0);
-  }
-  /* 뱅크샐러드형 매트릭스 감지. 세로형이면 null 반환(→ 기존 세로형 경로 유지, 회귀 0).
-     감지 기준: (1) 헤더행에 담보(주요특약)가 매핑됐고 회사·상품 컬럼은 매핑되지 않음(가로 매트릭스),
-     (2) 매핑 최우측 컬럼보다 오른쪽에 헤더값이 있는 상품 컬럼이 2개 이상,
-     (3) 헤더행 위쪽 상품 컬럼에 "월 X원" 패턴 행(=보험료 행)이 존재.
-     반환: { productCols, companyRowIdx, premiumRowIdx }. 행 위치는 하드코딩하지 않고 탐색으로 찾는다(빈 행 건너뜀 허용). */
-  function bjDetectBankSalad(matrix, headerIdx, map) {
-    if (headerIdx == null || headerIdx < 1) return null;
-    if (map.coverageName == null) return null;               /* 담보 매트릭스가 아님 */
-    if (map.company != null || map.product != null) return null; /* 세로형(회사·상품 컬럼 존재) → 스킵 */
-    var headerRow = matrix[headerIdx] || [];
-    var mappedMax = -1;
-    Object.keys(map).forEach(function (k) { if (map[k] > mappedMax) mappedMax = map[k]; });
-    var productCols = [];
-    for (var c = mappedMax + 1; c < headerRow.length; c += 1) {
-      if (bjNormText(headerRow[c])) productCols.push(c);
-    }
-    if (productCols.length < 2) return null;
-    var premiumRowIdx = null;
-    for (var r = headerIdx - 1; r >= 0; r -= 1) {
-      var row = matrix[r] || [];
-      var hit = productCols.some(function (col) {
-        var t = bjNormText(row[col]);
-        return /월/.test(t) && /원/.test(t);
-      });
-      if (hit) { premiumRowIdx = r; break; }
-    }
-    if (premiumRowIdx == null) return null;
-    var companyRowIdx = null;
-    for (var rr = premiumRowIdx - 1; rr >= 0; rr -= 1) {
-      var crow = matrix[rr] || [];
-      var has = productCols.some(function (col) { return bjNormText(crow[col]) !== ""; });
-      if (has) { companyRowIdx = rr; break; }
-    }
-    if (companyRowIdx == null) return null;
-    return { productCols: productCols, companyRowIdx: companyRowIdx, premiumRowIdx: premiumRowIdx };
-  }
-  /* 뱅크샐러드형 상품 컬럼 → 계약 배열(컬럼당 계약 1건).
-     회사=회사행, 상품명=헤더행, 보험료="월 X원"의 숫자(원 단위 정수, 콤마 표기),
-     계약일·갱신여부=빈값(엑셀에 없음 — 화면에서 설계사가 입력/선택). */
-  function bjBuildBankSaladContracts(matrix, headerIdx, bs) {
-    var headerRow = matrix[headerIdx] || [];
-    var companyRow = matrix[bs.companyRowIdx] || [];
-    var premiumRow = matrix[bs.premiumRowIdx] || [];
-    var contracts = [];
-    bs.productCols.forEach(function (col) {
-      var company = bjNormText(companyRow[col]);
-      var product = bjNormText(headerRow[col]);
-      if (!company && !product) return;
-      var premRaw = bjNormText(premiumRow[col]);
-      var m = premRaw.match(/월\s*([\d,]+)\s*원/);
-      var premium = m ? bjFormatWon(bjPremiumToNumber(m[1])) : "";
-      contracts.push({
-        id: "c" + (contracts.length + 1),
-        company: company,
-        product: product,
-        contractDate: "",
-        premium: premium,
-        renewal: ""
-      });
-    });
-    return contracts;
   }
   function bjIsPasswordError(err) {
     var msg = String((err && err.message) || err || "").toLowerCase();
@@ -2505,18 +2402,6 @@ button { cursor: pointer; }
   function bjEditCustomerField(fileId, field, value, label) {
     return '<td><input type="text" value="' + esc(value) + '" placeholder="' + esc(label || "") + '" data-bj-edit="customer" data-bj-id="' + esc(fileId) + '" data-bj-field="' + field + '"></td>';
   }
-  var BJ_RENEWAL_OPTIONS = [{ v: "", t: "미지정" }, { v: "갱신형", t: "갱신형" }, { v: "비갱신형", t: "비갱신형" }];
-  /* 갱신여부 선택 셀. 설계사가 미지정/갱신형/비갱신형 중 선택. 값은 <select>의 input 이벤트로 모델에 반영(기존 input 리스너 공유).
-     기존 값이 옵션에 없으면(세로형 엑셀에서 온 임의 값) 그 값을 별도 옵션으로 보존해 데이터 손실 방지. */
-  function bjRenewalSelect(fileId, idx, value) {
-    var v = bjNormText(value);
-    var known = BJ_RENEWAL_OPTIONS.some(function (o) { return o.v === v; });
-    var extra = (v && !known) ? '<option value="' + esc(v) + '" selected>' + esc(v) + '</option>' : "";
-    var opts = BJ_RENEWAL_OPTIONS.map(function (o) {
-      return '<option value="' + esc(o.v) + '"' + ((v === o.v) ? " selected" : "") + '>' + esc(o.t) + '</option>';
-    }).join("");
-    return '<td><select data-bj-edit="contract" data-bj-id="' + esc(fileId) + '" data-bj-row="' + idx + '" data-bj-field="renewal">' + extra + opts + '</select></td>';
-  }
   function bjRenderReview(f) {
     var customerBlock = "";
     if (f.customerInfo) {
@@ -2544,7 +2429,7 @@ button { cursor: pointer; }
         bjEditCell(f.id, "contract", idx, "product", c.product, BJ_CONTRACT_LABELS.product) +
         bjEditCell(f.id, "contract", idx, "contractDate", c.contractDate, BJ_CONTRACT_LABELS.contractDate) +
         bjEditCell(f.id, "contract", idx, "premium", c.premium, BJ_CONTRACT_LABELS.premium) +
-        bjRenewalSelect(f.id, idx, c.renewal) +
+        bjEditCell(f.id, "contract", idx, "renewal", c.renewal, BJ_CONTRACT_LABELS.renewal) +
         '<td><button type="button" class="bj-btn danger" data-bj-act="del-contract" data-bj-id="' + esc(f.id) + '" data-bj-row="' + idx + '">삭제</button></td>' +
       '</tr>';
     }).join("");
@@ -2562,7 +2447,6 @@ button { cursor: pointer; }
       unmappedNote +
       '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
       '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>보험회사</th><th>상품명</th><th>계약일</th><th>보험료</th><th>갱신여부</th><th></th></tr></thead><tbody>' + contractRows + '</tbody></table></div>' +
-      '<div class="bj-premium-sum">합계 보험료 <strong id="bj-premium-sum-' + esc(f.id) + '">월 ' + bjFormatWon(bjSumPremium(f.contracts)) + '원</strong></div>' +
       '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + esc(f.id) + '">계약 행 추가</button></div>' +
       '<div class="bj-review-title">담보 정보 (' + f.coverages.length + '건)</div>' +
       '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>담보명</th><th>가입금액</th><th></th></tr></thead><tbody>' + coverageRows + '</tbody></table></div>' +
@@ -2735,11 +2619,6 @@ button { cursor: pointer; }
       var row = Number(el.getAttribute("data-bj-row"));
       var arr = kind === "contract" ? f.contracts : f.coverages;
       if (arr[row]) arr[row][field] = el.value;
-      /* 보험료 편집 시 합계 보험료를 즉시 갱신(재렌더 없이 포커스 유지) */
-      if (kind === "contract" && field === "premium") {
-        var sumEl = document.getElementById("bj-premium-sum-" + f.id);
-        if (sumEl) sumEl.textContent = "월 " + bjFormatWon(bjSumPremium(f.contracts)) + "원";
-      }
     });
     bjEls.fileList.addEventListener("keydown", function (event) {
       var el = event.target;
