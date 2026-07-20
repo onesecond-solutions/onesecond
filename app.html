@@ -6191,7 +6191,7 @@ function showView(key,options){options=options||{};try{if(window.LocalFind)windo
 
 /* 2026-05-29 SPA 라우팅 Phase 1: 초기 진입 + popstate 단순 view 복귀 */
 (function(){
-  var VALID_VIEWS = ['home','myspace','scripts','quick','together','news','mrroom','silson','team','pricing','insurer-vault','admin','cov-medical','bojang','xfile'];
+  var VALID_VIEWS = ['home','myspace','scripts','quick','together','news','mrroom','silson','team','pricing','insurer-vault','admin','cov-medical','bojang','xfile','salesnote','trash'];
   /* 2026-05-30 초기화 통합: role 확정 후 첫 view 1회 렌더 (FOUC 제거).
    * role 즉시 있으면 바로, 없으면 appstate:ready(loadUser 완료) 대기 + fallback. */
   function getBootRole(){ try { var r = (JSON.parse(localStorage.getItem('os_user') || sessionStorage.getItem('os_user') || '{}').role) || ''; return (r && r !== 'authenticated') ? r : ''; } catch(e){ return ''; } }  /* 'authenticated'=Supabase auth 기본 role(미확정) → loadUser가 public.users role 채울 때까지 대기 */
