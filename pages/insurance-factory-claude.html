@@ -1215,6 +1215,17 @@ button { cursor: pointer; }
 .bj-sum-row .bj-sum-total { text-align: center; color: var(--tp); }
 .bj-sum-row .bj-sum-label { text-align: right; color: var(--tf); font-weight: var(--fw-regular); }
 .bj-sum-row .bj-sum-amount { text-align: right; color: var(--tp); font-variant-numeric: tabular-nums; }
+/* 계약 표(2026-07-20): 행 선택 체크박스 컬럼 + 컬럼 내용맞춤·앞정렬 + 비고 잔여폭 흡수 (계약 표에만 한정 — 담보/고객 표 무접촉) */
+.bj-table th.bj-check, .bj-table td.bj-check { width: 1%; text-align: center; white-space: nowrap; }
+.bj-table th.bj-check input, .bj-table td.bj-check input { width: 16px; min-width: 16px; height: 16px; margin: 0; accent-color: var(--ac); cursor: pointer; }
+/* 계약 표는 내용 맞춤(auto) — 보험회사·상품명·계약일·월보험료 컬럼을 내용/헤더 길이에 맞춰 좁히고 앞정렬 유지 */
+.bj-contract-table { table-layout: auto; }
+.bj-contract-table th, .bj-contract-table td { white-space: nowrap; }
+.bj-contract-table td input { min-width: 56px; width: auto; max-width: 220px; field-sizing: content; }
+.bj-contract-table td.bj-premium input { min-width: 72px; }
+/* 비고 = 남는 가로 폭 전부 흡수(넓게) */
+.bj-contract-table th.bj-note, .bj-contract-table td.bj-note { width: 100%; }
+.bj-contract-table td.bj-note input { width: 100%; min-width: 120px; max-width: none; field-sizing: normal; }
 .bj-row-actions { display: flex; justify-content: flex-start; margin-bottom: var(--if-3); }
 .bj-review-actions { display: flex; gap: var(--if-2); justify-content: flex-end; }
 .bj-rawtext {
@@ -3041,19 +3052,20 @@ button { cursor: pointer; }
     var contractRows = bjOrder.map(function (origIdx, displayPos) {
       var c = f.contracts[origIdx];
       return '<tr>' +
+        '<td class="bj-check"><input type="checkbox" class="bj-check-row" data-bj-check-row data-bj-id="' + esc(f.id) + '" data-bj-row="' + origIdx + '" aria-label="' + (displayPos + 1) + '행 선택"></td>' +
         '<td class="bj-no">' + (displayPos + 1) + '</td>' +
         bjEditCell(f.id, "contract", origIdx, "company", c.company, BJ_CONTRACT_LABELS.company) +
         bjEditCell(f.id, "contract", origIdx, "product", c.product, BJ_CONTRACT_LABELS.product) +
         bjEditCell(f.id, "contract", origIdx, "contractDate", c.contractDate, BJ_CONTRACT_LABELS.contractDate) +
         bjEditCell(f.id, "contract", origIdx, "premium", c.premium, BJ_CONTRACT_LABELS.premium, "bj-premium") +
         bjEditCell(f.id, "contract", origIdx, "renewal", c.renewal, BJ_CONTRACT_LABELS.renewal) +
-        bjEditCell(f.id, "contract", origIdx, "note", c.note, BJ_CONTRACT_LABELS.note) +
+        bjEditCell(f.id, "contract", origIdx, "note", c.note, BJ_CONTRACT_LABELS.note, "bj-note") +
         '<td><button type="button" class="bj-btn danger" data-bj-act="del-contract" data-bj-id="' + esc(f.id) + '" data-bj-row="' + origIdx + '">삭제</button></td>' +
       '</tr>';
     }).join("");
-    /* 마지막 합계 줄: No+보험회사+상품명 3셀 병합("총 N건" 중앙) + 계약일칸="합계 보험료" + 월보험료칸=합계 금액(우측) + 갱신여부·비고·액션 빈칸 */
+    /* 마지막 합계 줄: 체크+No+보험회사+상품명 4셀 병합("총 N건" 중앙) + 계약일칸="합계 보험료" + 월보험료칸=합계 금액(우측) + 갱신여부·비고·액션 빈칸 */
     var bjSumRow = '<tr class="bj-sum-row">' +
-      '<td class="bj-sum-total" colspan="3">총 ' + f.contracts.length + '건</td>' +
+      '<td class="bj-sum-total" colspan="4">총 ' + f.contracts.length + '건</td>' +
       '<td class="bj-sum-label">합계 보험료</td>' +
       '<td class="bj-sum-amount"><span id="bj-premium-sum-' + esc(f.id) + '">월 ' + bjFormatWon(bjSumPremium(f.contracts)) + '원</span></td>' +
       '<td></td><td></td><td></td>' +
@@ -3071,7 +3083,7 @@ button { cursor: pointer; }
     var contractPanel = '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
       '<div class="bj-2panel">' +
         '<div class="bj-2panel-left">' +
-          '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th><th>갱신여부</th><th>비고</th><th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
+          '<div class="bj-table-wrap"><table class="bj-table bj-contract-table"><thead><tr><th class="bj-check"><input type="checkbox" class="bj-check-all" data-bj-check-all data-bj-id="' + fid + '" aria-label="전체 선택"></th><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th><th>갱신여부</th><th class="bj-note">비고</th><th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
           '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + fid + '">계약 행 추가</button></div>' +
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="계약 화면 폭 조절"></div>' +
@@ -3474,6 +3486,23 @@ button { cursor: pointer; }
     });
     bjEls.fileList.addEventListener("change", function (event) {
       var el = event.target;
+      /* 계약 표 행 선택 체크박스 — 전체선택 토글 + 일부 선택 시 indeterminate(중간상태).
+         선택 상태만 DOM에서 관리(용도 배선은 이번 범위 아님, 재렌더 없이 계약 표 안에서만 처리). */
+      if (el.hasAttribute("data-bj-check-all") || el.hasAttribute("data-bj-check-row")) {
+        var cTable = el.closest("table");
+        if (!cTable) return;
+        var allBox = cTable.querySelector("[data-bj-check-all]");
+        var rowBoxes = Array.prototype.slice.call(cTable.querySelectorAll("[data-bj-check-row]"));
+        if (el.hasAttribute("data-bj-check-all")) {
+          rowBoxes.forEach(function (b) { b.checked = el.checked; });
+        }
+        if (allBox) {
+          var checkedCount = rowBoxes.filter(function (b) { return b.checked; }).length;
+          allBox.checked = rowBoxes.length > 0 && checkedCount === rowBoxes.length;
+          allBox.indeterminate = checkedCount > 0 && checkedCount < rowBoxes.length;
+        }
+        return;
+      }
       var catId = el.getAttribute("data-bj-cat");
       if (!catId) return;
       var f = bjState.files.find(function (x) { return x.id === el.getAttribute("data-bj-id"); });
