@@ -1336,12 +1336,34 @@ button { cursor: pointer; }
    ③④ 컬럼을 옆에 신설한다. 넓으면 가로 3트랙(①②쌍 + ③ + ④), 좁으면 세로로 접힘. */
 .bj-review-cols {
   display: grid;
-  grid-template-columns: minmax(0, 2.4fr) minmax(150px, 0.7fr) minmax(180px, 0.85fr);
+  grid-template-columns: minmax(0, 2.4fr) 8px minmax(150px, 0.7fr) 8px minmax(180px, 0.85fr);
   gap: var(--if-3);
   align-items: start;
   margin-bottom: var(--if-4);
 }
 .bj-review-cols > .bj-2panel { margin-bottom: 0; }
+/* 최상위 4컬럼 경계 드래그 스플리터 — (①②쌍) ↔ ③여유 ↔ ④이미지 사이 폭 조절.
+   ①② 내부의 .bj-2panel-bar(중첩 스플리터)와 클래스가 달라 충돌 없음. */
+.bj-cols-bar {
+  align-self: stretch;
+  min-height: 40px;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+}
+.bj-cols-bar::before {
+  content: "";
+  width: 2px;
+  min-height: 40px;
+  height: 60%;
+  border-radius: var(--radius-full);
+  background: var(--bd);
+  transition: background .12s, width .12s;
+}
+.bj-cols-bar:hover::before { width: 4px; background: var(--ac); }
 .bj-col {
   min-width: 0;
   align-self: stretch;
@@ -1451,13 +1473,15 @@ button { cursor: pointer; }
   color: var(--tf);
   font-weight: var(--fw-semibold);
 }
-/* 좁은 화면: ①②쌍 한 줄 차지, ③④는 아래로 2열 → 최종 1열 */
+/* 좁은 화면: ①②쌍 한 줄 차지, ③④는 아래로 2열 → 최종 1열.
+   컬럼 스플리터는 숨기고, 드래그로 인라인 지정된 grid-template-columns를 !important로 덮어 세로 접힘을 보존한다. */
 @media (max-width: 1024px) {
-  .bj-review-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .bj-review-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
   .bj-review-cols > .bj-2panel { grid-column: 1 / -1; margin-bottom: 0; }
+  .bj-cols-bar { display: none; }
 }
 @media (max-width: 640px) {
-  .bj-review-cols { grid-template-columns: 1fr; }
+  .bj-review-cols { grid-template-columns: 1fr !important; }
   .bj-review-cols > .bj-2panel { grid-column: auto; }
 }
 
@@ -3537,6 +3561,10 @@ button { cursor: pointer; }
       reader.readAsDataURL(fl);
     });
   }
+  /* 최상위 4컬럼 경계 스플리터 핸들 — (①②쌍)↔③, ③↔④ 사이에 삽입해 드래그로 폭 조절. */
+  function bjColsBar(label) {
+    return '<div class="bj-cols-bar" role="separator" aria-orientation="vertical" aria-label="' + esc(label) + '"></div>';
+  }
   /* ③ 여유 컬럼 — 빈 placeholder. 기능 없음, 다음 단계 활용 예정(자리만). */
   function bjSpareColumn() {
     return '<div class="bj-col bj-col-spare">' +
@@ -3644,7 +3672,9 @@ button { cursor: pointer; }
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="계약 화면 폭 조절"></div>' +
         '<div class="bj-2panel-right">' + bjPreviewToggle("contract", fid) + '<div class="bj-phone-wrap" id="bj-phone-contract-' + fid + '">' + contractPreviewHtml + '</div></div>' +
       '</div>' +
+      bjColsBar("미리보기·여유 컬럼 폭 조절") +
       bjSpareColumn() +
+      bjColsBar("여유·이미지 컬럼 폭 조절") +
       bjImageColumn("contract", f) +
       '</div>';
     /* (2) 담보 정보 화면 = 4컬럼: ①편집표(카테고리+파일 원본 담보) ②고객 미리보기(기존 bj-2panel, 무변경) | ③여유 | ④이미지 추가 */
@@ -3660,7 +3690,9 @@ button { cursor: pointer; }
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="담보 화면 폭 조절"></div>' +
         '<div class="bj-2panel-right">' + bjPreviewToggle("coverage", fid) + '<div class="bj-phone-wrap" id="bj-phone-coverage-' + fid + '">' + reportHtml + '</div></div>' +
       '</div>' +
+      bjColsBar("미리보기·여유 컬럼 폭 조절") +
       bjSpareColumn() +
+      bjColsBar("여유·이미지 컬럼 폭 조절") +
       bjImageColumn("coverage", f) +
       '</div>';
     return '<div class="bj-review">' +
@@ -3965,6 +3997,56 @@ button { cursor: pointer; }
       if (max < min) return;
       x = Math.max(min, Math.min(max, x));
       panel.style.gridTemplateColumns = x + "px 8px minmax(0, 1fr)";
+    }
+    function stop() {
+      document.body.classList.remove("if-resizing");
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    }
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+  });
+
+  /* 최상위 4컬럼(①②쌍 | ③여유 | ④이미지) 경계 드래그 스플리터 — 위임 처리(재렌더 후에도 동작).
+     핸들 좌우 두 컬럼의 합을 고정한 채, 드래그하는 경계의 좌측 컬럼 폭만 조절하고 나머지 컬럼은 그대로 둔다.
+     .bj-2panel 내부 스플리터(.bj-2panel-bar)와는 클래스가 달라 서로 간섭하지 않는다. */
+  document.addEventListener("pointerdown", function (event) {
+    var bar = event.target.closest ? event.target.closest(".bj-cols-bar") : null;
+    if (!bar) return;
+    var cols = bar.closest(".bj-review-cols");
+    if (!cols) return;
+    var leftCol = bar.previousElementSibling;
+    var rightCol = bar.nextElementSibling;
+    if (!leftCol || !rightCol) return;
+    /* 세로 접힘(≤1024) 구간에서는 스플리터가 display:none이라 이벤트가 오지 않지만, 방어적으로 한 번 더 확인. */
+    if (getComputedStyle(bar).display === "none") return;
+    event.preventDefault();
+    /* 컬럼(스플리터 제외)만 순서대로 수집해 초기 폭을 고정한다. */
+    var items = Array.prototype.filter.call(cols.children, function (el) {
+      return !el.classList.contains("bj-cols-bar");
+    });
+    var initW = items.map(function (el) { return el.getBoundingClientRect().width; });
+    var leftIdx = items.indexOf(leftCol);
+    var rightIdx = items.indexOf(rightCol);
+    if (leftIdx < 0 || rightIdx < 0) return;
+    var leftLeft = leftCol.getBoundingClientRect().left;
+    var pairTotal = initW[leftIdx] + initW[rightIdx];
+    var MIN = 140; /* 컬럼 최소 폭 클램프 — 너무 좁아져 깨지지 않게 */
+    if (pairTotal < MIN * 2) return;
+    document.body.classList.add("if-resizing");
+    function move(ev) {
+      var newLeft = ev.clientX - leftLeft;
+      newLeft = Math.max(MIN, Math.min(pairTotal - MIN, newLeft));
+      var newRight = pairTotal - newLeft;
+      var parts = items.map(function (el, i) {
+        if (i === leftIdx) return newLeft + "px";
+        if (i === rightIdx) return newRight + "px";
+        return initW[i] + "px";
+      });
+      /* 컬럼 3개 사이에 8px 스플리터 트랙 2개를 끼워 넣는다. */
+      cols.style.gridTemplateColumns = parts.join(" 8px ");
     }
     function stop() {
       document.body.classList.remove("if-resizing");
