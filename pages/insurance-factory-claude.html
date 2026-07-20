@@ -1745,6 +1745,7 @@ button { cursor: pointer; }
 .bj-send-main { flex: 1 1 280px; min-width: 0; }
 .bj-send-name { font-weight: var(--fw-bold); color: var(--tp); }
 .bj-send-cats { display: block; margin-top: var(--if-1); font-size: var(--fs-caption); color: var(--ts); }
+.bj-send-imgs { display: inline-block; margin-top: var(--if-1); font-size: var(--fs-caption); font-weight: var(--fw-semibold); color: var(--ac); }
 .bj-send-state { font-size: var(--fs-caption); font-weight: var(--fw-bold); white-space: nowrap; }
 .bj-send-state.wait { color: var(--tf); }
 .bj-send-state.ready { color: var(--ac); }
@@ -1785,6 +1786,103 @@ button { cursor: pointer; }
   box-shadow: var(--sh-md);
   cursor: pointer;
 }
+
+/* ④ 이미지 전체화면 오버레이 — 딸깍 스타일(어두운 배경 + 이미지 중앙 + 하단 메뉴)로 이 페이지 내부에 자체 구현.
+   iframe 독립 페이지(?embed=1)라 부모 app.html의 openLb(딸깍)는 같은 문서 함수가 아니어서 직접 호출 불가 → 자체 오버레이.
+   닫기(X·ESC·배경 클릭)는 오버레이만 닫고 4컬럼 화면은 그대로(상담 중 화면 이탈 0). 2026-07-20 */
+.bj-imgzoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--if-4);
+  padding: var(--if-5);
+  background: rgba(9, 9, 12, .82);
+}
+.bj-imgzoom-overlay[hidden] { display: none; }
+.bj-imgzoom-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: min(96vw, 1100px);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.bj-imgzoom-img {
+  max-width: 100%;
+  max-height: 76vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--sh-lg);
+  background: var(--s2);
+}
+.bj-imgzoom-close {
+  position: absolute;
+  top: var(--if-3);
+  right: var(--if-3);
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: var(--radius-full);
+  border: 0;
+  background: var(--s1);
+  color: var(--tp);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-bold);
+  box-shadow: var(--sh-md);
+  cursor: pointer;
+  z-index: 2;
+}
+.bj-imgzoom-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--bd);
+  background: color-mix(in srgb, var(--s1) 90%, transparent);
+  color: var(--tp);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  z-index: 2;
+}
+.bj-imgzoom-nav.prev { left: var(--if-2); }
+.bj-imgzoom-nav.next { right: var(--if-2); }
+.bj-imgzoom-nav[hidden] { display: none; }
+.bj-imgzoom-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--if-2);
+  max-width: min(96vw, 1100px);
+  padding: var(--if-3) var(--if-4);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  box-shadow: var(--sh-lg);
+}
+.bj-imgzoom-name {
+  flex: 1 1 160px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--tf);
+}
+.bj-imgzoom-count { flex: 0 0 auto; font-size: var(--fs-caption); color: var(--tf); }
+.bj-imgzoom-attach.is-on {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
+}
+.bj-imgzoom-attach.is-on:hover { background: var(--ach); border-color: var(--ach); color: var(--on-ac); }
 
 @media (max-width: 860px) {
   .bj-intake { display: none; }
@@ -1982,6 +2080,23 @@ button { cursor: pointer; }
 <div class="bj-report-overlay" id="bjReportOverlay" hidden>
   <div class="bj-report-modal" id="bjReportModal"></div>
   <button type="button" class="bj-report-close" id="bjReportClose" aria-label="닫기">×</button>
+</div>
+
+<!-- ④ 이미지 전체화면 오버레이(딸깍 스타일 자체 구현). 배경 클릭·X·ESC 로만 닫히고 4컬럼 화면은 그대로 유지(화면 이탈 0). -->
+<div class="bj-imgzoom-overlay" id="bjImgZoomOverlay" hidden role="dialog" aria-modal="true" aria-label="이미지 크게 보기">
+  <button type="button" class="bj-imgzoom-close" id="bjImgZoomClose" aria-label="닫기">×</button>
+  <div class="bj-imgzoom-stage">
+    <button type="button" class="bj-imgzoom-nav prev" id="bjImgZoomPrev" aria-label="이전 이미지" hidden>‹</button>
+    <img class="bj-imgzoom-img" id="bjImgZoomImg" src="" alt="">
+    <button type="button" class="bj-imgzoom-nav next" id="bjImgZoomNext" aria-label="다음 이미지" hidden>›</button>
+  </div>
+  <div class="bj-imgzoom-bar">
+    <span class="bj-imgzoom-name" id="bjImgZoomName"></span>
+    <span class="bj-imgzoom-count" id="bjImgZoomCount"></span>
+    <button type="button" class="bj-btn" data-bj-zoom-act="download">다운로드</button>
+    <button type="button" class="bj-btn" data-bj-zoom-act="copy" id="bjImgZoomCopy">복사</button>
+    <button type="button" class="bj-btn bj-imgzoom-attach" data-bj-zoom-act="attach" id="bjImgZoomAttach">발송 자료 첨부</button>
+  </div>
 </div>
 
 <script>
@@ -2537,10 +2652,21 @@ button { cursor: pointer; }
     sendCount: document.getElementById("bjSendCount"),
     reportOverlay: document.getElementById("bjReportOverlay"),
     reportModal: document.getElementById("bjReportModal"),
-    reportClose: document.getElementById("bjReportClose")
+    reportClose: document.getElementById("bjReportClose"),
+    zoomOverlay: document.getElementById("bjImgZoomOverlay"),
+    zoomImg: document.getElementById("bjImgZoomImg"),
+    zoomName: document.getElementById("bjImgZoomName"),
+    zoomCount: document.getElementById("bjImgZoomCount"),
+    zoomClose: document.getElementById("bjImgZoomClose"),
+    zoomPrev: document.getElementById("bjImgZoomPrev"),
+    zoomNext: document.getElementById("bjImgZoomNext"),
+    zoomCopy: document.getElementById("bjImgZoomCopy"),
+    zoomAttach: document.getElementById("bjImgZoomAttach")
   };
   var bjState = { files: [] };
   var bjSend = { rows: [], open: false };
+  /* ④ 이미지 전체화면 오버레이 상태 — 현재 파일·섹션·표시 인덱스만 보관(원본은 f.reviewImages 그대로 참조). */
+  var bjZoom = { fileId: null, screen: null, index: 0 };
   var bjPendingReplaceId = null;
   var bjToastTimer = null;
   var bjCapture = { base64: "", mime: "", bound: false };
@@ -3848,6 +3974,14 @@ button { cursor: pointer; }
       return;
     }
     var sel = bjSelectionFor(f).selCats;
+    /* ④ 발송 첨부 이미지 — 두 섹션(contract·coverage)에서 attached=true 인 이미지를 스냅샷으로 담는다.
+       이 배열이 발송 준비 목록 row에 붙어 '고객 페이지에 함께 나갈 이미지'로 연결된다(실제 링크 페이지 렌더는 다음 단계). */
+    var attachedImages = [];
+    ["contract", "coverage"].forEach(function (scr) {
+      bjImagesFor(f, scr).forEach(function (im) {
+        if (im && im.attached) attachedImages.push({ name: im.name, dataUrl: im.dataUrl, screen: scr });
+      });
+    });
     bjSend.rows.push({
       id: "s" + Date.now() + Math.random().toString(16).slice(2),
       name: bjCustomerNameOf(f) || "고객",
@@ -3856,6 +3990,7 @@ button { cursor: pointer; }
       contracts: (f.contracts || []).map(function (c) { return { company: c.company, product: c.product, contractDate: c.contractDate, premium: c.premium, renewal: c.renewal, note: c.note }; }),
       coverages: (f.coverages || []).map(function (c) { return { name: c.name, amount: c.amount }; }),
       selCats: JSON.parse(JSON.stringify(sel)),
+      images: attachedImages,
       url: ""
     });
     bjSend.open = true;
@@ -3874,10 +4009,14 @@ button { cursor: pointer; }
     bjEls.sendListBody.innerHTML = n ? bjSend.rows.map(function (row) {
       var stateCls = row.url ? "ready" : "wait";
       var stateTxt = row.url ? "링크 생성됨" : "링크 대기";
+      /* ④ 발송 첨부 이미지가 있으면 '함께 발송' 표시 — 고객 페이지에 붙을 이미지 수(데이터=row.images). */
+      var imgCount = (row.images && row.images.length) || 0;
+      var imgLine = imgCount ? '<span class="bj-send-imgs">📎 발송 이미지 ' + imgCount + '장 함께</span>' : "";
       return '<div class="bj-send-row" data-bj-send="' + esc(row.id) + '">' +
         '<div class="bj-send-main">' +
           '<span class="bj-send-name">' + esc(row.name) + ' 고객님</span>' +
           '<span class="bj-send-cats">' + esc(row.cats.join(" · ")) + '</span>' +
+          imgLine +
         '</div>' +
         '<span class="bj-send-state ' + stateCls + '">' + esc(stateTxt) + '</span>' +
         '<div class="bj-send-actions">' +
@@ -3950,6 +4089,101 @@ button { cursor: pointer; }
     if (bjEls.reportModal) bjEls.reportModal.innerHTML = "";
   }
 
+  /* ===== ④ 이미지 전체화면 오버레이(딸깍 스타일 자체 구현) =====
+     썸네일 확대(⤢) → 이 페이지 위 모달로 크게 보기. 닫기(X·ESC·배경)는 오버레이만 닫고 4컬럼 화면은 그대로.
+     하단 메뉴: 다운로드 · 복사(가능 환경) · 발송 자료 첨부(첨부 상태 ON = 썸네일 우상단 체크와 동일 필드 연동).
+     원본 이미지는 f.reviewImages 메모리만 사용 — 서버 저장·전송 0(기존 원칙 유지). */
+  function bjZoomCurrentImg() {
+    var f = bjState.files.find(function (x) { return x.id === bjZoom.fileId; });
+    if (!f) return null;
+    var list = bjImagesFor(f, bjZoom.screen);
+    if (!list.length) return null;
+    if (bjZoom.index < 0) bjZoom.index = 0;
+    if (bjZoom.index > list.length - 1) bjZoom.index = list.length - 1;
+    return { f: f, list: list, im: list[bjZoom.index] };
+  }
+  function bjRenderImgZoom() {
+    if (!bjEls.zoomOverlay) return;
+    var cur = bjZoomCurrentImg();
+    if (!cur || !cur.im) { bjCloseImgZoom(); return; }
+    if (bjEls.zoomImg) { bjEls.zoomImg.src = cur.im.dataUrl; bjEls.zoomImg.alt = cur.im.name || "이미지"; }
+    if (bjEls.zoomName) bjEls.zoomName.textContent = cur.im.name || "이미지";
+    if (bjEls.zoomCount) bjEls.zoomCount.textContent = (bjZoom.index + 1) + " / " + cur.list.length;
+    var many = cur.list.length > 1;
+    if (bjEls.zoomPrev) bjEls.zoomPrev.hidden = !many;
+    if (bjEls.zoomNext) bjEls.zoomNext.hidden = !many;
+    if (bjEls.zoomAttach) {
+      var on = !!cur.im.attached;
+      bjEls.zoomAttach.classList.toggle("is-on", on);
+      bjEls.zoomAttach.setAttribute("aria-pressed", on ? "true" : "false");
+      bjEls.zoomAttach.textContent = on ? "발송 자료 첨부됨 ✓" : "발송 자료 첨부";
+    }
+  }
+  function bjOpenImgZoom(fileId, screen, imgId) {
+    if (!bjEls.zoomOverlay) return;
+    var f = bjState.files.find(function (x) { return x.id === fileId; });
+    if (!f) return;
+    var list = bjImagesFor(f, screen);
+    var idx = list.findIndex(function (x) { return x.id === imgId; });
+    if (idx < 0) idx = 0;
+    bjZoom.fileId = fileId; bjZoom.screen = screen; bjZoom.index = idx;
+    bjEls.zoomOverlay.hidden = false;
+    bjRenderImgZoom();
+  }
+  function bjCloseImgZoom() {
+    if (!bjEls.zoomOverlay) return;
+    bjEls.zoomOverlay.hidden = true;
+    if (bjEls.zoomImg) bjEls.zoomImg.removeAttribute("src");
+    bjZoom.fileId = null; bjZoom.screen = null; bjZoom.index = 0;
+  }
+  function bjImgZoomNav(delta) {
+    var cur = bjZoomCurrentImg();
+    if (!cur) return;
+    var n = cur.list.length;
+    bjZoom.index = ((bjZoom.index + delta) % n + n) % n; /* 순환 이동 */
+    bjRenderImgZoom();
+  }
+  /* 발송 자료 첨부 토글 — 썸네일 우상단 체크(im.attached)와 동일 상태를 갱신하고,
+     썸네일 체크박스·발송 첨부 카운트(④ 컬럼)를 즉시 동기화한다. 이 attached=true 이미지가
+     [전송 준비하기] 시 발송 준비 목록 row.images로 담긴다(아래 bjPrepareSend). */
+  function bjImgZoomToggleAttach() {
+    var cur = bjZoomCurrentImg();
+    if (!cur || !cur.im) return;
+    cur.im.attached = !cur.im.attached;
+    bjUpdateImageColumn(cur.f, bjZoom.screen); /* 썸네일 체크 + 카운트 즉시 반영 */
+    bjRenderImgZoom();
+    bjToast(cur.im.attached ? "발송 자료로 첨부했습니다. [전송 준비하기] 시 발송 준비 목록에 포함됩니다." : "발송 첨부에서 제외했습니다.");
+  }
+  function bjImgZoomDownload() {
+    var cur = bjZoomCurrentImg();
+    if (!cur || !cur.im) return;
+    try {
+      var a = document.createElement("a");
+      a.href = cur.im.dataUrl;
+      a.download = cur.im.name || "image.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (e) { bjToast("이 환경에서는 다운로드를 지원하지 않습니다."); }
+  }
+  function bjImgZoomCopy() {
+    var cur = bjZoomCurrentImg();
+    if (!cur || !cur.im) return;
+    /* 가능한 환경에서만 클립보드 이미지 복사(비-보안 컨텍스트·미지원 브라우저는 안내). */
+    if (!navigator.clipboard || typeof window.ClipboardItem === "undefined" || typeof fetch !== "function") {
+      bjToast("이 환경에서는 이미지 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.");
+      return;
+    }
+    fetch(cur.im.dataUrl).then(function (r) { return r.blob(); }).then(function (blob) {
+      var item = {}; item[blob.type || "image/png"] = blob;
+      return navigator.clipboard.write([new window.ClipboardItem(item)]);
+    }).then(function () {
+      bjToast("이미지를 클립보드에 복사했습니다.");
+    }).catch(function () {
+      bjToast("이 환경에서는 이미지 복사를 지원하지 않습니다. 다운로드를 이용해 주세요.");
+    });
+  }
+
   if (bjEls.sendListHead) {
     bjEls.sendListHead.addEventListener("click", function () {
       if (!bjSend.rows.length) return;
@@ -3981,6 +4215,30 @@ button { cursor: pointer; }
       if (event.target === bjEls.reportOverlay) bjCloseReportPreview();
     });
   }
+
+  /* ④ 이미지 전체화면 오버레이 배선 — 닫기(X·배경 클릭)·좌우 이동·하단 메뉴. ESC는 아래 공통 keydown에서 처리. */
+  if (bjEls.zoomClose) bjEls.zoomClose.addEventListener("click", bjCloseImgZoom);
+  if (bjEls.zoomPrev) bjEls.zoomPrev.addEventListener("click", function () { bjImgZoomNav(-1); });
+  if (bjEls.zoomNext) bjEls.zoomNext.addEventListener("click", function () { bjImgZoomNav(1); });
+  if (bjEls.zoomOverlay) {
+    /* 배경(스크림) 클릭만 닫기 — 이미지·메뉴 클릭은 유지. 오버레이만 닫히고 4컬럼 화면은 그대로. */
+    bjEls.zoomOverlay.addEventListener("click", function (event) {
+      if (event.target === bjEls.zoomOverlay) { bjCloseImgZoom(); return; }
+      var actBtn = event.target.closest ? event.target.closest("[data-bj-zoom-act]") : null;
+      if (!actBtn) return;
+      var act = actBtn.getAttribute("data-bj-zoom-act");
+      if (act === "download") bjImgZoomDownload();
+      else if (act === "copy") bjImgZoomCopy();
+      else if (act === "attach") bjImgZoomToggleAttach();
+    });
+  }
+  /* ESC = 오버레이만 닫기(뷰 이동 없음). 좌우 화살표 = 여러 이미지일 때 이동. */
+  document.addEventListener("keydown", function (event) {
+    if (!bjEls.zoomOverlay || bjEls.zoomOverlay.hidden) return;
+    if (event.key === "Escape") { event.preventDefault(); bjCloseImgZoom(); }
+    else if (event.key === "ArrowLeft") { bjImgZoomNav(-1); }
+    else if (event.key === "ArrowRight") { bjImgZoomNav(1); }
+  });
 
   /* 계약·담보 2분할 화면의 드래그 스플리터(위임 처리 — 재렌더 후에도 동작). */
   document.addEventListener("pointerdown", function (event) {
@@ -4078,10 +4336,12 @@ button { cursor: pointer; }
         bjUpdatePhones(tf);
         return;
       }
-      /* ④ 이미지 썸네일 확대(⤢) — TODO(다음 단계): 클릭 시 딸깍 전체화면 오버레이(기존 라이트박스 재사용, 화면 이탈 0).
-         + 딸깍 메뉴에 "발송 자료 첨부" 추가 → 첨부 이미지를 발송 준비/링크에 포함. 이번 단계는 자리만(no-op). */
+      /* ④ 이미지 썸네일 확대(⤢) — 이 페이지 내부 전체화면 오버레이(딸깍 스타일)로 크게 보기. 다른 뷰 이동 없음(화면 이탈 0). */
       var zoomBtn = event.target.closest ? event.target.closest("[data-bj-imgzoom]") : null;
-      if (zoomBtn) { return; }
+      if (zoomBtn) {
+        bjOpenImgZoom(zoomBtn.getAttribute("data-bj-id"), zoomBtn.getAttribute("data-bj-screen"), zoomBtn.getAttribute("data-bj-img"));
+        return;
+      }
       var btn = event.target.closest("[data-bj-act]");
       if (!btn) return;
       var act = btn.getAttribute("data-bj-act");
