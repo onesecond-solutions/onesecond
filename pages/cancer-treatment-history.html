@@ -13,12 +13,13 @@
   --ac:#6366F1; --ac-d:#4F46E5; --ac-s:#EEF0FE;
   /* --cur = 현재 세대(5세대) 오렌지 예외. silson 5세대 규칙(--g5:#EA580C)과 동일. */
   --cur:#EA580C; --cur-s:#FFF3EC; --cur-d:#C2410C;
-  --ink:#111827; --ink2:#374151; --muted:#6B7280;
-  --hair:#E5E7EB; --line2:#F3F4F6; --bg:#F9FAFB;
+  /* 중립 팔레트 = silson 실손 변천사 톤(Slate 계열)로 통일. 기존 Gray 계열에서 값 이동. */
+  --ink:#1E293B; --ink2:#334155; --muted:#64748B;
+  --hair:#E2E8F0; --line2:#F1F5F9; --bg:#F8FAFC; --card:#FFFFFF;
   --ok:#059669; --ok-s:#ECFDF5; --warn:#B45309; --warn-s:#FFFBEB;
 }
 *{box-sizing:border-box}
-body{margin:0;background:#fff;color:var(--ink);
+body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;
   line-height:1.6;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1240px;margin:0 auto;padding:26px 22px 70px}
@@ -36,21 +37,21 @@ h2.sec .sq{width:15px;height:15px;border-radius:4px;flex:0 0 auto}
 
 /* 메인 표 */
 .tw{overflow-x:auto;border-radius:10px;border:1px solid var(--hair)}
-table{width:100%;border-collapse:collapse;min-width:940px;background:#fff}
+table{width:100%;border-collapse:collapse;min-width:940px;background:var(--card)}
 thead th{padding:13px 10px;font-size:13px;font-weight:800;color:#fff;text-align:center;line-height:1.4}
-thead th.k{background:#374151;width:132px}
+thead th.k{background:#334155;width:132px}
 thead th.g{background:var(--ac)}
 thead th.g.now{background:var(--cur)}
 thead th small{display:block;font-size:11px;font-weight:600;opacity:.85;margin-top:3px}
 tbody td{padding:13px 11px;font-size:13px;text-align:center;border-top:1px solid var(--line2);vertical-align:middle;line-height:1.5}
-tbody td.k{background:#FAFBFC;font-weight:700;color:var(--ink2);text-align:left;font-size:12.5px}
+tbody td.k{background:var(--bg);font-weight:700;color:var(--ink2);text-align:left;font-size:12.5px}
 tbody td small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
-tbody tr:hover td{background:#FCFCFD}
-tbody tr:hover td.k{background:#F5F6F8}
+tbody tr:hover td{background:var(--bg)}
+tbody tr:hover td.k{background:var(--line2)}
 .em{color:var(--ac-d);font-weight:800}
 .em-o{color:var(--cur-d);font-weight:800}
 .em-g{color:var(--ok);font-weight:800}
-.x{color:#9CA3AF}
+.x{color:#94A3B8}
 
 /* 인트로 박스 */
 .intro{background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:17px 19px;
@@ -64,7 +65,7 @@ tbody tr:hover td.k{background:#F5F6F8}
 .gens{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
 @media(max-width:900px){.gens{grid-template-columns:repeat(2,1fr)}}
 .gen{border:1px solid var(--hair);border-radius:10px;padding:15px 14px 12px;cursor:pointer;
-  background:#fff;position:relative;transition:.15s;overflow:hidden}
+  background:var(--card);position:relative;transition:.15s;overflow:hidden}
 .gen::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--bar)}
 .gen:hover{box-shadow:0 3px 12px rgba(17,24,39,.07)}
 .gen.on{border-color:var(--bar);box-shadow:0 0 0 1px var(--bar)}
@@ -72,10 +73,10 @@ tbody tr:hover td.k{background:#F5F6F8}
 .gen .yr{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:11px}
 .gen .hl{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:3px}
 .gen .sub{font-size:11.5px;color:var(--muted)}
-.gen .cl{position:absolute;right:12px;bottom:10px;font-size:11px;color:#9CA3AF;font-weight:700}
+.gen .cl{position:absolute;right:12px;bottom:10px;font-size:11px;color:#94A3B8;font-weight:700}
 
 /* 심층 패널 */
-.deep{margin-top:15px;border:1.5px solid var(--pc);border-radius:12px;padding:22px;background:#fff}
+.deep{margin-top:15px;border:1.5px solid var(--pc);border-radius:12px;padding:22px;background:var(--card)}
 .deep .dh{display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
 .deep .dh .sq{width:16px;height:16px;border-radius:4px;background:var(--pc)}
 .deep .dh h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.3px}
@@ -83,7 +84,7 @@ tbody tr:hover td.k{background:#F5F6F8}
 .deep .dsum{font-size:13.5px;color:var(--ink2);margin:0 0 17px;line-height:1.7}
 .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
 @media(max-width:900px){.dgrid{grid-template-columns:1fr}}
-.dc{border:1px solid var(--hair);border-radius:9px;padding:14px 15px;background:#fff}
+.dc{border:1px solid var(--hair);border-radius:9px;padding:14px 15px;background:var(--card)}
 .dc.hi{background:var(--pcs);border-color:transparent}
 .dc h4{margin:0 0 7px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px}
 .dc h4 .d{width:9px;height:9px;border-radius:3px;background:var(--pc);flex:0 0 auto}
@@ -92,7 +93,7 @@ tbody tr:hover td.k{background:#F5F6F8}
 .dc p .r{color:var(--cur-d);font-weight:800}
 
 /* 알림 박스 */
-.tip{margin-top:16px;background:var(--ac-s);border-radius:9px;padding:14px 17px;font-size:13px;color:#3730A3;line-height:1.7}
+.tip{margin-top:16px;background:var(--ac-s);border-radius:9px;padding:14px 17px;font-size:13px;color:var(--ac-d);line-height:1.7}
 .tip b{font-weight:800}
 .caution{margin-top:11px;background:var(--warn-s);border-radius:9px;padding:14px 17px;font-size:13px;color:#92400E;line-height:1.7}
 .caution b{font-weight:800}
