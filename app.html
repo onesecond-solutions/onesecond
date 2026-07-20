@@ -12185,6 +12185,9 @@ window._acBlur=_acBlur;
 var _SHORTCUTS=[
   { view:'silson', label:'실비 세대별 변천사', sub:'바로가기 · 실손 1~5세대 보장·전환',
     keywords:['실비','의료실비','의료비','세대별 변천사','세대별','변천사'],
+    gate:function(){ return document.body.classList.contains('is-uat-homedesk'); } },
+  { view:'cancer-treatment', label:'암주요치료비 변천사', sub:'바로가기 · 세대별 암 치료비 보장 변화',
+    keywords:['암주요치료비','표적항암','암치료비'],
     gate:function(){ return document.body.classList.contains('is-uat-homedesk'); } }
 ];
 /* 검색어 q에 매칭되는 바로가기 항목 목록(게이트 통과분만). 매칭=정규화 부분일치(양방향) — 회사/상품 자동완성과 동일한 _normCo 사용 */
