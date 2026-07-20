@@ -2317,10 +2317,20 @@ button { cursor: pointer; }
      groups가 있으면 진단비/치료비 중분류 병합 표시, 없으면 단일 subs.
      note:"silson" = 의료실비 비고칸에 실손세대 자동 판정 표기. */
   var BJ_COVERAGE_CATS = [
-    { id: "medical", name: "의료실비", note: "silson", subs: [
-      { name: "입원의료비", keys: ["입원의료", "질병입원", "상해입원", "입원실손", "입원형"] },
-      { name: "통원의료비", keys: ["통원의료", "외래", "통원실손", "처방조제", "통원형"] },
-      { name: "비급여 주사료·MRI", keys: ["비급여주사", "도수치료", "비급여mri", "mri", "주사료", "비급여특약"] }
+    { id: "medical", name: "의료실비", note: "silson", groups: [
+      { label: "입원의료비", subs: [
+        { name: "질병입원의료비", keys: ["질병입원"] },
+        { name: "상해입원의료비", keys: ["상해입원"] }
+      ] },
+      { label: "통원의료비", subs: [
+        { name: "질병통원의료비", keys: ["질병통원"] },
+        { name: "상해통원의료비", keys: ["상해통원"] }
+      ] },
+      { label: "도수·비급여 주사료·MRI", subs: [
+        { name: "도수치료", keys: ["도수"] },
+        { name: "비급여 주사료", keys: ["비급여주사", "주사료"] },
+        { name: "MRI", keys: ["MRI", "자기공명", "비급여mri"] }
+      ] }
     ] },
     { id: "cancer", name: "암", groups: [
       { label: "진단비", subs: [
