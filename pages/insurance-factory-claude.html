@@ -1331,6 +1331,136 @@ button { cursor: pointer; }
   .bj-2panel-right { border-left: 0; border-top: 1px solid var(--bd); }
 }
 
+/* ===== 4컬럼 반응형 래퍼 — ①편집표+②미리보기(기존 bj-2panel) | ③여유 | ④이미지 추가 (2026-07-20) =====
+   ①② = 기존 bj-2panel(내부 스플리터·토글 무변경)을 첫 컬럼(super-column)으로 그대로 담고,
+   ③④ 컬럼을 옆에 신설한다. 넓으면 가로 3트랙(①②쌍 + ③ + ④), 좁으면 세로로 접힘. */
+.bj-review-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(150px, 0.7fr) minmax(180px, 0.85fr);
+  gap: var(--if-3);
+  align-items: start;
+  margin-bottom: var(--if-4);
+}
+.bj-review-cols > .bj-2panel { margin-bottom: 0; }
+.bj-col {
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--if-2);
+  padding: var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s1);
+}
+.bj-col-head {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--tf);
+}
+/* ③ 여유 컬럼 — 빈 placeholder(다음 단계 활용 예정) */
+.bj-col-spare .bj-spare-box {
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--if-3);
+  border: 1px dashed var(--bd);
+  border-radius: var(--radius-sm);
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  background: var(--s2);
+}
+/* ④ 이미지 추가 컬럼 */
+.bj-img-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--if-1);
+  text-align: center;
+  min-height: 96px;
+  padding: var(--if-3);
+  border: 1px dashed var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s2);
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+}
+.bj-img-drop:hover,
+.bj-img-drop:focus { border-color: var(--ac); outline: none; }
+.bj-img-drop.is-drag { border-color: var(--ac); background: var(--s1); }
+.bj-img-drop-ico { font-size: 22px; line-height: 1; color: var(--ac); }
+.bj-img-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: var(--if-2);
+}
+.bj-img-list:empty { display: none; }
+.bj-thumb {
+  position: relative;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--s2);
+}
+.bj-thumb img {
+  display: block;
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+}
+.bj-thumb-name {
+  padding: var(--if-1) var(--if-2);
+  font-size: 11px;
+  color: var(--tf);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bj-thumb-zoom,
+.bj-thumb-check {
+  position: absolute;
+  top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--s1) 82%, transparent);
+  border: 1px solid var(--bd);
+}
+.bj-thumb-zoom {
+  left: 3px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--tp);
+  cursor: pointer;
+}
+.bj-thumb-zoom:hover { border-color: var(--ac); }
+.bj-thumb-check { right: 3px; cursor: pointer; }
+.bj-thumb-check input { margin: 0; cursor: pointer; }
+.bj-img-count {
+  margin-top: auto;
+  font-size: var(--fs-caption);
+  color: var(--tf);
+  font-weight: var(--fw-semibold);
+}
+/* 좁은 화면: ①②쌍 한 줄 차지, ③④는 아래로 2열 → 최종 1열 */
+@media (max-width: 1024px) {
+  .bj-review-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .bj-review-cols > .bj-2panel { grid-column: 1 / -1; margin-bottom: 0; }
+}
+@media (max-width: 640px) {
+  .bj-review-cols { grid-template-columns: 1fr; }
+  .bj-review-cols > .bj-2panel { grid-column: auto; }
+}
+
 /* 담보 카테고리 선택 표(체크박스 + 중분류 병합 + 상태) */
 .bj-cov-select { width: 100%; border-collapse: collapse; font-size: var(--fs-meta); }
 .bj-cov-select th, .bj-cov-select td {
@@ -3358,6 +3488,76 @@ button { cursor: pointer; }
     if (coverageEl) coverageEl.innerHTML = renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
   }
 
+  /* ===== 4컬럼 확장: ③여유 + ④이미지 추가 컬럼 (2026-07-20) =====
+     이미지 원본은 브라우저 메모리(f.reviewImages)만 — 서버 저장·전송 없음(기존 파일 처리 원칙과 정합).
+     screen = "contract" | "coverage" (섹션별 독립 리스트). */
+  function bjImagesFor(f, screen) {
+    if (!f.reviewImages) f.reviewImages = { contract: [], coverage: [] };
+    if (!f.reviewImages[screen]) f.reviewImages[screen] = [];
+    return f.reviewImages[screen];
+  }
+  function bjImageCountText(f, screen) {
+    var n = bjImagesFor(f, screen).filter(function (im) { return im.attached; }).length;
+    return "발송 첨부 " + n + "개";
+  }
+  function bjRenderImageList(f, screen) {
+    var imgs = bjImagesFor(f, screen);
+    return imgs.map(function (im) {
+      var sid = esc(f.id), scr = esc(screen), iid = esc(im.id);
+      return '<div class="bj-thumb">' +
+        /* 좌상단 확대 아이콘 — 다음 단계에서 딸깍 전체화면 오버레이 핸들러 연결(현재 자리만). */
+        '<button type="button" class="bj-thumb-zoom" data-bj-imgzoom data-bj-id="' + sid + '" data-bj-screen="' + scr + '" data-bj-img="' + iid + '" aria-label="확대">⤢</button>' +
+        /* 우상단 발송 첨부 체크(토글) */
+        '<label class="bj-thumb-check" title="발송 첨부"><input type="checkbox" data-bj-imgattach data-bj-id="' + sid + '" data-bj-screen="' + scr + '" data-bj-img="' + iid + '"' + (im.attached ? " checked" : "") + '></label>' +
+        '<img src="' + im.dataUrl + '" alt="' + esc(im.name) + '">' +
+        '<div class="bj-thumb-name" title="' + esc(im.name) + '">' + esc(im.name) + '</div>' +
+      '</div>';
+    }).join("");
+  }
+  function bjUpdateImageColumn(f, screen) {
+    var listEl = document.getElementById("bj-imglist-" + screen + "-" + f.id);
+    if (listEl) listEl.innerHTML = bjRenderImageList(f, screen);
+    var cntEl = document.getElementById("bj-imgcount-" + screen + "-" + f.id);
+    if (cntEl) cntEl.textContent = bjImageCountText(f, screen);
+  }
+  /* 드롭·붙여넣기로 받은 이미지 파일들을 해당 섹션 리스트에 추가(메모리 dataURL, 이미지 타입만). */
+  function bjAddImagesToColumn(f, screen, fileList) {
+    var files = Array.prototype.slice.call(fileList || []).filter(function (fl) { return fl && /^image\//.test(fl.type || ""); });
+    if (!files.length) return;
+    var imgs = bjImagesFor(f, screen);
+    var pending = files.length;
+    var done = function () { pending--; if (pending === 0) bjUpdateImageColumn(f, screen); };
+    files.forEach(function (fl) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        imgs.push({ id: "img" + Date.now() + Math.random().toString(36).slice(2, 7), name: fl.name || "붙여넣은 이미지", dataUrl: e.target.result, attached: true });
+        done();
+      };
+      reader.onerror = done;
+      reader.readAsDataURL(fl);
+    });
+  }
+  /* ③ 여유 컬럼 — 빈 placeholder. 기능 없음, 다음 단계 활용 예정(자리만). */
+  function bjSpareColumn() {
+    return '<div class="bj-col bj-col-spare">' +
+      '<div class="bj-col-head">여유 공간</div>' +
+      '<div class="bj-spare-box">자리 확보 · 활용 예정</div>' +
+    '</div>';
+  }
+  /* ④ 이미지 추가 컬럼 — 드롭·Ctrl+V → 세로/그리드 썸네일 리스트 + 발송 첨부 카운트. */
+  function bjImageColumn(screen, f) {
+    var fid = esc(f.id), scr = esc(screen);
+    return '<div class="bj-col bj-col-img">' +
+      '<div class="bj-col-head">이미지 추가</div>' +
+      '<div class="bj-img-drop" data-bj-imgdrop data-bj-id="' + fid + '" data-bj-screen="' + scr + '" tabindex="0" role="button" aria-label="이미지 끌어놓기 또는 Ctrl+V 붙여넣기">' +
+        '<span class="bj-img-drop-ico" aria-hidden="true">＋</span>' +
+        '<span>이미지 끌어놓기 · Ctrl+V 붙여넣기</span>' +
+      '</div>' +
+      '<div class="bj-img-list" id="bj-imglist-' + screen + "-" + f.id + '">' + bjRenderImageList(f, screen) + '</div>' +
+      '<div class="bj-img-count" id="bj-imgcount-' + screen + "-" + f.id + '">' + bjImageCountText(f, screen) + '</div>' +
+    '</div>';
+  }
+
   function bjRenderReview(f) {
     /* 고객명 편집칸 — 항상 노출(엑셀에 고객명 셀이 없는 뱅크샐러드 등도 포함).
        값은 bjCustomerNameOf(파싱값/편집값 → 없으면 파일명 추출)로 미리 채워, 설계사가 바로 확인·수정한다.
@@ -3433,8 +3633,9 @@ button { cursor: pointer; }
     var fid = esc(f.id);
     var reportHtml = renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
     var contractPreviewHtml = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract);
-    /* (1) 계약 정보 화면 = 좌(계약 편집표) / 우(고객 폰 미리보기 = 계약 목록) + 드래그 스플리터 */
+    /* (1) 계약 정보 화면 = 4컬럼: ①편집표 ②고객 미리보기(기존 bj-2panel, 스플리터·토글 무변경) | ③여유 | ④이미지 추가 */
     var contractPanel = '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
+      '<div class="bj-review-cols">' +
       '<div class="bj-2panel">' +
         '<div class="bj-2panel-left">' +
           '<div class="bj-table-wrap"><table class="bj-table bj-contract-table"><thead><tr><th class="bj-check"><input type="checkbox" class="bj-check-all" data-bj-check-all data-bj-id="' + fid + '" aria-label="전체 선택"></th><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th><th>갱신여부</th><th class="bj-note">비고</th><th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
@@ -3442,18 +3643,25 @@ button { cursor: pointer; }
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="계약 화면 폭 조절"></div>' +
         '<div class="bj-2panel-right">' + bjPreviewToggle("contract", fid) + '<div class="bj-phone-wrap" id="bj-phone-contract-' + fid + '">' + contractPreviewHtml + '</div></div>' +
+      '</div>' +
+      bjSpareColumn() +
+      bjImageColumn("contract", f) +
       '</div>';
-    /* (2) 담보 정보 화면 = 좌(담보 카테고리 선택 + 파싱 원본 담보 편집표) / 우(고객 폰 미리보기·공유 렌더러) + 드래그 스플리터 */
+    /* (2) 담보 정보 화면 = 4컬럼: ①편집표(카테고리+파일 원본 담보) ②고객 미리보기(기존 bj-2panel, 무변경) | ③여유 | ④이미지 추가 */
     var coveragePanel = '<div class="bj-review-title">담보 정보 — 카테고리 선택</div>' +
+      '<div class="bj-review-cols">' +
       '<div class="bj-2panel">' +
         '<div class="bj-2panel-left">' +
           '<div id="bj-covsel-' + fid + '">' + bjRenderCoverageSelect(f) + '</div>' +
-          '<div class="bj-review-title">파싱 원본 담보 (' + f.coverages.length + '건 · 수정 가능)</div>' +
+          '<div class="bj-review-title">파일 원본 담보 (' + f.coverages.length + '건 · 수정 가능)</div>' +
           '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>담보명</th><th>가입금액</th><th></th></tr></thead><tbody>' + coverageRows + '</tbody></table></div>' +
           '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-coverage" data-bj-id="' + fid + '">담보 행 추가</button></div>' +
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="담보 화면 폭 조절"></div>' +
         '<div class="bj-2panel-right">' + bjPreviewToggle("coverage", fid) + '<div class="bj-phone-wrap" id="bj-phone-coverage-' + fid + '">' + reportHtml + '</div></div>' +
+      '</div>' +
+      bjSpareColumn() +
+      bjImageColumn("coverage", f) +
       '</div>';
     return '<div class="bj-review">' +
       '<p class="bj-review-note">파싱 결과입니다. 회사·상품·담보·금액·갱신 여부를 확인·수정하고, 담보 화면에서 고객에게 보여줄 카테고리를 선택하세요. [확정]은 조립 목록 카드로, [전송 준비하기]는 발송 준비 목록으로 담깁니다. 업로드만으로는 자동 반영되지 않습니다.</p>' +
@@ -3788,6 +3996,10 @@ button { cursor: pointer; }
         bjUpdatePhones(tf);
         return;
       }
+      /* ④ 이미지 썸네일 확대(⤢) — TODO(다음 단계): 클릭 시 딸깍 전체화면 오버레이(기존 라이트박스 재사용, 화면 이탈 0).
+         + 딸깍 메뉴에 "발송 자료 첨부" 추가 → 첨부 이미지를 발송 준비/링크에 포함. 이번 단계는 자리만(no-op). */
+      var zoomBtn = event.target.closest ? event.target.closest("[data-bj-imgzoom]") : null;
+      if (zoomBtn) { return; }
       var btn = event.target.closest("[data-bj-act]");
       if (!btn) return;
       var act = btn.getAttribute("data-bj-act");
@@ -3861,6 +4073,18 @@ button { cursor: pointer; }
     });
     bjEls.fileList.addEventListener("change", function (event) {
       var el = event.target;
+      /* ④ 이미지 발송 첨부 체크(토글) — 첨부 여부만 갱신하고 카운트만 즉시 반영(리스트 재렌더 없이). */
+      if (el.hasAttribute("data-bj-imgattach")) {
+        var imf = bjState.files.find(function (x) { return x.id === el.getAttribute("data-bj-id"); });
+        if (!imf) return;
+        var imScreen = el.getAttribute("data-bj-screen");
+        var imId = el.getAttribute("data-bj-img");
+        var im = bjImagesFor(imf, imScreen).find(function (x) { return x.id === imId; });
+        if (im) im.attached = el.checked;
+        var imCnt = document.getElementById("bj-imgcount-" + imScreen + "-" + imf.id);
+        if (imCnt) imCnt.textContent = bjImageCountText(imf, imScreen);
+        return;
+      }
       /* 계약 표 행 선택 체크박스 — 전체선택 토글 + 일부 선택 시 indeterminate(중간상태).
          선택 상태만 DOM에서 관리(용도 배선은 이번 범위 아님, 재렌더 없이 계약 표 안에서만 처리). */
       if (el.hasAttribute("data-bj-check-all") || el.hasAttribute("data-bj-check-row")) {
@@ -3893,6 +4117,46 @@ button { cursor: pointer; }
       var id = el.getAttribute("data-bj-pw-input");
       var f = bjState.files.find(function (x) { return x.id === id; });
       if (f && f.status === "password") bjDecryptExcel(f, el.value);
+    });
+    /* ④ 이미지 추가 컬럼 — 드래그&드롭. (메인 업로드 드롭존 #bjDrop과 별도 DOM 서브트리라 충돌 없음.) */
+    bjEls.fileList.addEventListener("dragover", function (event) {
+      var zone = event.target.closest ? event.target.closest("[data-bj-imgdrop]") : null;
+      if (!zone) return;
+      event.preventDefault();
+      zone.classList.add("is-drag");
+    });
+    bjEls.fileList.addEventListener("dragleave", function (event) {
+      var zone = event.target.closest ? event.target.closest("[data-bj-imgdrop]") : null;
+      if (zone) zone.classList.remove("is-drag");
+    });
+    bjEls.fileList.addEventListener("drop", function (event) {
+      var zone = event.target.closest ? event.target.closest("[data-bj-imgdrop]") : null;
+      if (!zone) return;
+      event.preventDefault();
+      zone.classList.remove("is-drag");
+      var f = bjState.files.find(function (x) { return x.id === zone.getAttribute("data-bj-id"); });
+      if (!f) return;
+      var dt = event.dataTransfer;
+      if (dt && dt.files && dt.files.length) bjAddImagesToColumn(f, zone.getAttribute("data-bj-screen"), dt.files);
+    });
+    /* ④ 이미지 추가 컬럼 — Ctrl+V 붙여넣기. 드롭존이 포커스된 상태에서 붙여넣으면 그 섹션에 담긴다.
+       (paste는 버블링되므로 위임으로 처리. captureDrop 붙여넣기는 별도 DOM이라 무관.) */
+    bjEls.fileList.addEventListener("paste", function (event) {
+      var zone = event.target.closest ? event.target.closest("[data-bj-imgdrop]") : null;
+      if (!zone) return;
+      var cd = event.clipboardData;
+      if (!cd) return;
+      var imgs = [];
+      Array.prototype.forEach.call(cd.items || [], function (it) {
+        if (it && it.kind === "file" && /^image\//.test(it.type || "")) {
+          var fl = it.getAsFile();
+          if (fl) imgs.push(fl);
+        }
+      });
+      if (!imgs.length) return;
+      event.preventDefault();
+      var f = bjState.files.find(function (x) { return x.id === zone.getAttribute("data-bj-id"); });
+      if (f) bjAddImagesToColumn(f, zone.getAttribute("data-bj-screen"), imgs);
     });
   }
   if (bjEls.fileInput) {
