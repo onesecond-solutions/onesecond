@@ -1460,6 +1460,97 @@ button { cursor: pointer; }
 .bj-cc-total span { font-size: var(--fs-meta); color: var(--tf); font-weight: var(--fw-bold); }
 .bj-cc-total b { font-size: var(--fs-body-lg); color: var(--tp); font-weight: var(--fw-black); }
 
+/* PC/모바일 미리보기 토글 (계약·담보 오른쪽 상단) — 설계사가 두 기기 미리보기를 전환 */
+.bj-preview-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-2);
+  margin-bottom: var(--if-3);
+}
+.bj-preview-toggle-label { font-size: var(--fs-caption); color: var(--tf); font-weight: var(--fw-bold); }
+.bj-preview-seg {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-full);
+  background: var(--s1);
+}
+.bj-preview-mode-btn {
+  min-height: 28px;
+  padding: 0 var(--if-3);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--tf);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.bj-preview-mode-btn.is-active { background: var(--ac); color: var(--on-ac); }
+
+/* PC 미리보기 — 브라우저 창틀 + 넓은 표 (고객 조회용, 체크박스·삭제 없음) */
+.bj-pc {
+  width: 100%;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  box-shadow: var(--sh-md);
+  overflow: hidden;
+}
+.bj-pc-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--if-2);
+  padding: var(--if-2) var(--if-3);
+  background: var(--s2);
+  border-bottom: 1px solid var(--bd);
+}
+.bj-pc-dot { width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--bd); }
+.bj-pc-title { margin-left: var(--if-2); font-size: var(--fs-caption); color: var(--tf); font-weight: var(--fw-bold); }
+.bj-pc-scroll { overflow-x: auto; }
+.bj-pc-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--if-3);
+  padding: var(--if-3) var(--if-4);
+  background: var(--s1);
+  border-bottom: 1px solid var(--bd);
+  font-size: var(--fs-caption);
+  color: var(--tf);
+  font-weight: var(--fw-bold);
+}
+.bj-pc-summary .bj-pc-missing-count { color: var(--err); }
+.bj-pc-table { width: 100%; border-collapse: collapse; font-size: var(--fs-meta); }
+.bj-pc-table th, .bj-pc-table td {
+  padding: var(--if-2) var(--if-3);
+  border-bottom: 1px solid var(--bd);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.bj-pc-table th { background: var(--s2); font-size: var(--fs-caption); color: var(--tf); font-weight: var(--fw-semibold); }
+.bj-pc-table tbody td { color: var(--tp); }
+.bj-pc-no { color: var(--tf); font-variant-numeric: tabular-nums; }
+.bj-pc-amt { text-align: right; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bj-pc-amt.on { color: var(--ok); }
+.bj-pc-amt.off { color: var(--err); }
+.bj-pc-muted { color: var(--tf); }
+.bj-pc-table tfoot td { background: var(--s1); font-weight: var(--fw-black); color: var(--tp); }
+.bj-pc-foot-total { text-align: center; }
+.bj-pc-cat {
+  border-right: 1px solid var(--bd);
+  background: color-mix(in srgb, var(--s2) 60%, var(--s1));
+  font-weight: var(--fw-bold);
+  vertical-align: top;
+  white-space: nowrap;
+}
+.bj-pc-cat-note { display: block; margin-top: var(--if-1); font-size: var(--fs-caption); color: var(--t-uw); font-weight: var(--fw-semibold); }
+.bj-pc-group { border-right: 1px solid var(--bd); color: var(--ts); font-weight: var(--fw-semibold); vertical-align: top; }
+.bj-pc-cov tbody tr.bj-pc-missing td { background: color-mix(in srgb, var(--err) 8%, transparent); }
+.bj-pc-empty { padding: var(--if-5); text-align: center; color: var(--tf); font-size: var(--fs-meta); line-height: var(--lh-base); }
+
 /* 발송 준비 목록(전체 폭 라운드 박스) */
 .bj-sendlist {
   margin: var(--if-4) var(--if-6) 0;
@@ -3083,6 +3174,140 @@ button { cursor: pointer; }
   }
   try { window.renderContractListPreview = renderContractListPreview; } catch (e) {}
 
+  /* ── PC/모바일 이원화 미리보기 ──────────────────────────────────────────
+     오른쪽 고객 미리보기를 [PC]/[모바일] 두 기기로 나눠 본다. 기본=모바일(기존 유지).
+     모바일 렌더러(renderContractListPreview·renderCustomerReport)는 무변경, PC 표는 신설·병렬.
+     데이터·고객명 소스는 모바일과 완전히 동일(파싱값·bjCustomerNameOf) — 배치만 다름, 하드코딩 0.
+     dispatcher(renderContractPreview·renderCoveragePreview)로 재사용 가능하게 분리 →
+     나중에 고객용 링크 페이지가 기기 감지(PC/모바일)로 같은 함수를 골라 쓰면 된다(인계 지점). */
+  var bjPreviewMode = { contract: "mobile", coverage: "mobile" };  /* 화면별 미리보기 기기 상태(재렌더·선택변경에도 유지) */
+
+  /* PC 미리보기 공통 창틀 — 브라우저 크롬바 + 가로 스크롤(좁은 패널에서 넓은 표 대응). */
+  function bjPcFrame(title, inner) {
+    return '<div class="bj-pc">' +
+      '<div class="bj-pc-bar"><span class="bj-pc-dot"></span><span class="bj-pc-dot"></span><span class="bj-pc-dot"></span>' +
+        '<span class="bj-pc-title">' + esc(title) + '</span></div>' +
+      '<div class="bj-pc-scroll">' + inner + '</div>' +
+    '</div>';
+  }
+
+  /* 계약 PC 미리보기 = 넓은 계약 표(조회용). No·보험회사·상품명·계약일·월보험료 + 합계. 삭제/체크박스 없음.
+     데이터는 renderContractListPreview와 동일한 f.contracts(파싱값) — 하드코딩 0. */
+  function renderContractTablePC(contracts, customerName) {
+    var name = bjNormText(customerName) || "고객";
+    var list = contracts || [];
+    var rows = list.map(function (c, i) {
+      var company = bjNormText(c.company);
+      var product = bjNormText(c.product);
+      var date = bjNormText(c.contractDate);
+      var premNum = bjPremiumToNumber(c.premium);
+      var premHtml = premNum > 0 ? "월 " + bjFormatWon(premNum) + "원" : "—";
+      return '<tr>' +
+        '<td class="bj-pc-no">' + (i + 1) + '</td>' +
+        '<td>' + (company ? esc(company) : '<span class="bj-pc-muted">보험회사 미기재</span>') + '</td>' +
+        '<td>' + (product ? esc(product) : '<span class="bj-pc-muted">상품명 미기재</span>') + '</td>' +
+        '<td>' + (date ? esc(date) : '<span class="bj-pc-muted">—</span>') + '</td>' +
+        '<td class="bj-pc-amt">' + premHtml + '</td>' +
+      '</tr>';
+    }).join("");
+    var inner = list.length
+      ? '<table class="bj-pc-table">' +
+          '<thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+          '<tfoot><tr><td class="bj-pc-foot-total" colspan="4">총 ' + list.length + '건</td>' +
+            '<td class="bj-pc-amt">월 ' + bjFormatWon(bjSumPremium(list)) + '원</td></tr></tfoot>' +
+        '</table>'
+      : '<div class="bj-pc-empty">파싱된 계약이 없습니다. 왼쪽 표에서 계약을 추가하면 여기에 표시됩니다.</div>';
+    return bjPcFrame(name + " 고객님 · 보유 계약", inner);
+  }
+  try { window.renderContractTablePC = renderContractTablePC; } catch (e) {}
+
+  /* 담보 PC 미리보기 = 넓은 담보 표(고객 조회용). 카테고리·중분류·세부담보·가입금액, 미가입 강조. 체크박스 없음.
+     데이터는 renderCustomerReport와 동일한 selection(선택 카테고리·파싱 담보) — 하드코딩 0. */
+  function renderCoverageTablePC(selection, customerName) {
+    var name = bjNormText(customerName) || "고객";
+    var contracts = (selection && selection.contracts) || [];
+    var coverages = (selection && selection.coverages) || [];
+    var selCats = (selection && selection.selCats) || {};
+    var sil = bjSilsonGeneration(contracts);
+    var missing = 0;
+    var rows = "";
+    BJ_COVERAGE_CATS.forEach(function (cat) {
+      if (!selCats[cat.id]) return;
+      var groups = cat.groups || [{ label: "", subs: cat.subs }];
+      var totalSubs = groups.reduce(function (n, g) { return n + (g.subs || []).length; }, 0);
+      if (!totalSubs) return;
+      var noteText = cat.note === "silson" ? (sil.gen ? "실손 " + sil.gen : sil.label) : "";
+      var catCell = '<td class="bj-pc-cat" rowspan="' + totalSubs + '">' + esc(cat.name) +
+        (noteText ? '<span class="bj-pc-cat-note">' + esc(noteText) + '</span>' : "") + '</td>';
+      var first = true;
+      groups.forEach(function (g) {
+        var gSubs = g.subs || [];
+        gSubs.forEach(function (sub, si) {
+          var mt = bjMatchCoverage(sub, coverages);
+          var ok = mt.matched;
+          if (!ok) missing += 1;
+          var amt = ok ? (mt.amount || "가입") : "미가입";
+          var groupCell = "";
+          if (g.label && si === 0) groupCell = '<td class="bj-pc-group" rowspan="' + gSubs.length + '">' + esc(g.label) + '</td>';
+          else if (!g.label) groupCell = '<td></td>';
+          rows += '<tr' + (ok ? "" : ' class="bj-pc-missing"') + '>' +
+            (first ? catCell : "") +
+            groupCell +
+            '<td>' + esc(sub.name) + '</td>' +
+            '<td class="bj-pc-amt ' + (ok ? "on" : "off") + '">' + esc(amt) + '</td>' +
+          '</tr>';
+          first = false;
+        });
+      });
+    });
+    if (!rows) {
+      return bjPcFrame(name + " 고객님 · 보장 분석",
+        '<div class="bj-pc-empty">담보 화면에서 카테고리를 선택하면<br>고객에게 보여줄 보장 표가 여기에 표시됩니다.</div>');
+    }
+    var summary = '<div class="bj-pc-summary">' +
+      '<span>가입 계약 ' + contracts.length + '건</span>' +
+      '<span>월 ' + bjFormatWon(bjSumPremium(contracts)) + '원</span>' +
+      '<span class="bj-pc-missing-count">미가입 ' + missing + '개</span>' +
+    '</div>';
+    var table = '<table class="bj-pc-table bj-pc-cov">' +
+      '<thead><tr><th>카테고리</th><th>중분류</th><th>세부담보</th><th>가입금액</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>';
+    return bjPcFrame(name + " 고객님 · 보장 분석", summary + table);
+  }
+  try { window.renderCoverageTablePC = renderCoverageTablePC; } catch (e) {}
+
+  /* dispatcher — 기기 모드에 따라 모바일/PC 렌더러 선택(고객용 페이지 인계 지점: mode를 기기 감지로 넣으면 됨). */
+  function renderContractPreview(contracts, customerName, mode) {
+    return mode === "pc"
+      ? renderContractTablePC(contracts, customerName)
+      : renderContractListPreview(contracts, customerName);
+  }
+  function renderCoveragePreview(selection, customerName, mode) {
+    return mode === "pc"
+      ? renderCoverageTablePC(selection, customerName)
+      : renderCustomerReport(selection, customerName);
+  }
+  try {
+    window.renderContractPreview = renderContractPreview;
+    window.renderCoveragePreview = renderCoveragePreview;
+  } catch (e) {}
+
+  /* 오른쪽 상단 [모바일]/[PC] 토글 UI. screen = "contract" | "coverage"(폰 미리보기 element id와 정합). */
+  function bjPreviewToggle(screen, fid) {
+    var mode = bjPreviewMode[screen];
+    function btn(m, label) {
+      var on = mode === m;
+      return '<button type="button" class="bj-preview-mode-btn' + (on ? " is-active" : "") + '"' +
+        ' data-bj-preview="' + esc(screen) + '" data-bj-mode="' + m + '" data-bj-id="' + esc(fid) + '"' +
+        ' aria-pressed="' + (on ? "true" : "false") + '">' + label + '</button>';
+    }
+    return '<div class="bj-preview-toggle" role="group" aria-label="미리보기 기기 선택">' +
+      '<span class="bj-preview-toggle-label">고객 미리보기</span>' +
+      '<div class="bj-preview-seg">' + btn("mobile", "모바일") + btn("pc", "PC") + '</div>' +
+    '</div>';
+  }
+
   /* 담보 카테고리 선택 표(왼쪽 패널) — 체크박스 + 중분류 병합 + 세부담보 상태(가입금액/미가입). */
   function bjRenderCoverageSelect(f) {
     var sel = bjSelectionFor(f).selCats;
@@ -3128,9 +3353,9 @@ button { cursor: pointer; }
   function bjUpdatePhones(f) {
     /* 계약 화면 오른쪽 = 계약 목록 미리보기 / 담보 화면 오른쪽 = 담보 리포트(무변경). */
     var contractEl = document.getElementById("bj-phone-contract-" + f.id);
-    if (contractEl) contractEl.innerHTML = renderContractListPreview(f.contracts, bjCustomerNameOf(f));
+    if (contractEl) contractEl.innerHTML = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract);
     var coverageEl = document.getElementById("bj-phone-coverage-" + f.id);
-    if (coverageEl) coverageEl.innerHTML = renderCustomerReport(bjSelectionFor(f), bjCustomerNameOf(f));
+    if (coverageEl) coverageEl.innerHTML = renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
   }
 
   function bjRenderReview(f) {
@@ -3206,8 +3431,8 @@ button { cursor: pointer; }
       '</tr>';
     }).join("");
     var fid = esc(f.id);
-    var reportHtml = renderCustomerReport(bjSelectionFor(f), bjCustomerNameOf(f));
-    var contractPreviewHtml = renderContractListPreview(f.contracts, bjCustomerNameOf(f));
+    var reportHtml = renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
+    var contractPreviewHtml = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract);
     /* (1) 계약 정보 화면 = 좌(계약 편집표) / 우(고객 폰 미리보기 = 계약 목록) + 드래그 스플리터 */
     var contractPanel = '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
       '<div class="bj-2panel">' +
@@ -3216,7 +3441,7 @@ button { cursor: pointer; }
           '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + fid + '">계약 행 추가</button></div>' +
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="계약 화면 폭 조절"></div>' +
-        '<div class="bj-2panel-right"><div class="bj-phone-wrap" id="bj-phone-contract-' + fid + '">' + contractPreviewHtml + '</div></div>' +
+        '<div class="bj-2panel-right">' + bjPreviewToggle("contract", fid) + '<div class="bj-phone-wrap" id="bj-phone-contract-' + fid + '">' + contractPreviewHtml + '</div></div>' +
       '</div>';
     /* (2) 담보 정보 화면 = 좌(담보 카테고리 선택 + 파싱 원본 담보 편집표) / 우(고객 폰 미리보기·공유 렌더러) + 드래그 스플리터 */
     var coveragePanel = '<div class="bj-review-title">담보 정보 — 카테고리 선택</div>' +
@@ -3228,7 +3453,7 @@ button { cursor: pointer; }
           '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-coverage" data-bj-id="' + fid + '">담보 행 추가</button></div>' +
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="담보 화면 폭 조절"></div>' +
-        '<div class="bj-2panel-right"><div class="bj-phone-wrap" id="bj-phone-coverage-' + fid + '">' + reportHtml + '</div></div>' +
+        '<div class="bj-2panel-right">' + bjPreviewToggle("coverage", fid) + '<div class="bj-phone-wrap" id="bj-phone-coverage-' + fid + '">' + reportHtml + '</div></div>' +
       '</div>';
     return '<div class="bj-review">' +
       '<p class="bj-review-note">파싱 결과입니다. 회사·상품·담보·금액·갱신 여부를 확인·수정하고, 담보 화면에서 고객에게 보여줄 카테고리를 선택하세요. [확정]은 조립 목록 카드로, [전송 준비하기]는 발송 준비 목록으로 담깁니다. 업로드만으로는 자동 반영되지 않습니다.</p>' +
@@ -3546,6 +3771,23 @@ button { cursor: pointer; }
 
   if (bjEls.fileList) {
     bjEls.fileList.addEventListener("click", function (event) {
+      /* PC/모바일 미리보기 토글 — 상태 저장 후 해당 화면 미리보기만 재렌더(스플리터·편집 상태 유지). */
+      var tgl = event.target.closest ? event.target.closest("[data-bj-preview]") : null;
+      if (tgl) {
+        var tScreen = tgl.getAttribute("data-bj-preview");
+        var tMode = tgl.getAttribute("data-bj-mode");
+        var tf = bjState.files.find(function (x) { return x.id === tgl.getAttribute("data-bj-id"); });
+        if (!tf) return;
+        bjPreviewMode[tScreen] = tMode;
+        var seg = tgl.parentNode;
+        Array.prototype.forEach.call(seg.querySelectorAll("[data-bj-mode]"), function (b) {
+          var on = b.getAttribute("data-bj-mode") === tMode;
+          b.classList.toggle("is-active", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        bjUpdatePhones(tf);
+        return;
+      }
       var btn = event.target.closest("[data-bj-act]");
       if (!btn) return;
       var act = btn.getAttribute("data-bj-act");
