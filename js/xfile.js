@@ -432,7 +432,7 @@
          전폭 흩뿌림·검진표 전폭 늘어짐 회귀). #v-xfile(그릇)만 풀스크린을 유지하고,
          그 안의 각 화면(.xf-card)은 성격별로 자기 폭을 정한다(아래) — 컨테이너는
          강제하지 않고 화면(modifier)이 결정. 상세: docs/decisions/2026-07-19_xfile_fullscreen_layout.md */
-      '#v-xfile{max-width:none;width:100%;padding:0;display:flex;flex-direction:column;overflow-y:auto;min-height:100%;background:var(--bg);color:var(--tp);}',
+      '#v-xfile.on{max-width:none;width:100%;padding:0;display:flex;flex-direction:column;overflow-y:auto;min-height:100%;background:var(--bg);color:var(--tp);}',
       '#v-xfile *{box-sizing:border-box;}',
       '#v-xfile .xf-topbar{width:100%;padding:18px 18px 0;}',
       /* .xf-card 기본값 = 읽고 답하는 화면(검진표 시작·퀴즈·결과, 빈 보장 페이지) 공용 폭.
