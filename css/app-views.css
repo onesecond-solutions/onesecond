@@ -897,7 +897,7 @@ mark.lf-hl{background:color-mix(in srgb,var(--warn) 42%,transparent);color:inher
 .seg span{flex:1;text-align:center;font-size:var(--ts-meta);padding:4px 0;border-radius:5px;cursor:pointer;color:var(--ts);}
 .seg span.on{background:var(--ac);color:#fff;}
 .body{flex:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;}
-.wrap{width:100%;max-width:1500px;flex:1;display:flex;flex-direction:column;padding:18px 28px 0;overflow:hidden;}
+.wrap{width:100%;max-width:none;flex:1;display:flex;flex-direction:column;padding:18px 28px 0;overflow:hidden;}/* 풀스크린 1단계(2026-07-20): 공용 뷰 컨테이너 폭 제한(구 1500px) 해제 → 메인/뷰가 사이드바 제외 화면 폭을 전부 사용. 사이드바(토글)·좌우 패딩 28px 유지. 홈 검색·모달·본문 가독성 max-width는 각자 유지(개별 규칙). 되돌리기=max-width:1500px 복원 */
 .ttl{font-size:1.3125rem;font-weight:800;margin-bottom:4px;flex-shrink:0;}
 .ttl .ac{color:var(--ac);}
 .sub{font-size:0.8125rem;color:var(--ts);margin-bottom:14px;flex-shrink:0;}
