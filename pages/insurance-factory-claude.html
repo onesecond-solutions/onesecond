@@ -1257,8 +1257,239 @@ button { cursor: pointer; }
 .bj-capture-drop img { max-width: 100%; max-height: 200px; border-radius: var(--radius-xs); }
 .bj-capture-acts { display: flex; align-items: center; gap: var(--if-3); margin-top: var(--if-2); flex-wrap: wrap; }
 .bj-capture-stat { font-size: var(--fs-caption); color: var(--tf); }
+
+/* ===== 보장분석 2분할 작업 화면 · 고객 리포트 미리보기(공유 렌더러) · 발송 준비 목록 (bj-, 2026-07-20) ===== */
+.bj-2panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8px minmax(260px, 340px);
+  gap: 0;
+  align-items: start;
+  margin-bottom: var(--if-4);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s1);
+  overflow: hidden;
+}
+.bj-2panel-left { min-width: 0; padding: var(--if-3) var(--if-4); }
+.bj-2panel-left .bj-review-title:first-child { margin-top: 0; }
+.bj-2panel-right {
+  min-width: 0;
+  align-self: stretch;
+  padding: var(--if-4);
+  background: var(--s2);
+  border-left: 1px solid var(--bd);
+}
+.bj-2panel-bar {
+  align-self: stretch;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--s2);
+  touch-action: none;
+  user-select: none;
+}
+.bj-2panel-bar::before {
+  content: "";
+  width: 2px;
+  min-height: 40px;
+  height: 60%;
+  border-radius: var(--radius-full);
+  background: var(--bd);
+  transition: background .12s, width .12s;
+}
+.bj-2panel-bar:hover::before { width: 4px; background: var(--ac); }
+@media (max-width: 720px) {
+  .bj-2panel { grid-template-columns: 1fr; }
+  .bj-2panel-bar { display: none; }
+  .bj-2panel-right { border-left: 0; border-top: 1px solid var(--bd); }
+}
+
+/* 담보 카테고리 선택 표(체크박스 + 중분류 병합 + 상태) */
+.bj-cov-select { width: 100%; border-collapse: collapse; font-size: var(--fs-meta); }
+.bj-cov-select th, .bj-cov-select td {
+  padding: var(--if-2) var(--if-3);
+  border-bottom: 1px solid var(--bd);
+  text-align: left;
+  vertical-align: middle;
+}
+.bj-cov-select th { background: var(--s2); font-size: var(--fs-caption); color: var(--tf); font-weight: var(--fw-semibold); white-space: nowrap; }
+.bj-cov-cat {
+  border-right: 1px solid var(--bd);
+  background: color-mix(in srgb, var(--s2) 60%, var(--s1));
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  vertical-align: top;
+}
+.bj-cov-cat label { display: inline-flex; align-items: center; gap: var(--if-2); cursor: pointer; }
+.bj-cov-cat input { width: 16px; height: 16px; accent-color: var(--ac); }
+.bj-cov-group {
+  border-right: 1px solid var(--bd);
+  color: var(--ts);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  vertical-align: top;
+}
+.bj-cov-sub { color: var(--tp); }
+.bj-cov-status { white-space: nowrap; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.bj-cov-status.on { color: var(--ok); }
+.bj-cov-status.off { color: var(--err); }
+.bj-cov-note { color: var(--t-uw); font-weight: var(--fw-semibold); white-space: nowrap; vertical-align: middle; }
+
+/* 고객 리포트 폰 미리보기 — renderCustomerReport 공유 렌더러 산출 */
+.bj-phone-wrap { display: flex; justify-content: center; }
+.bj-report {
+  width: 100%;
+  max-width: 320px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  box-shadow: var(--sh-md);
+  overflow: hidden;
+}
+.bj-report-head {
+  padding: var(--if-4);
+  background: linear-gradient(145deg, var(--ac), color-mix(in srgb, var(--ac) 78%, var(--t-uw)));
+  color: var(--on-ac);
+}
+.bj-report-head h3 { margin: 0; font-size: var(--fs-title); font-weight: var(--fw-black); }
+.bj-report-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--if-2);
+  padding: var(--if-3) var(--if-4);
+  background: var(--s1);
+  border-bottom: 1px solid var(--bd);
+}
+.bj-report-stat { flex: 1 1 30%; min-width: 72px; text-align: center; }
+.bj-report-stat b { display: block; font-size: var(--fs-body-lg); color: var(--tp); font-weight: var(--fw-black); }
+.bj-report-stat span { font-size: var(--fs-caption); color: var(--tf); }
+.bj-report-body { padding: var(--if-3) var(--if-4); display: flex; flex-direction: column; gap: var(--if-3); }
+.bj-report-card { border: 1px solid var(--bd); border-radius: var(--radius-md); background: var(--s1); padding: var(--if-3); }
+.bj-report-card h4 { margin: 0 0 var(--if-2); font-size: var(--fs-body); font-weight: var(--fw-bold); display: flex; align-items: center; gap: var(--if-2); }
+.bj-report-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 var(--if-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--t-uw) 14%, var(--s1));
+  color: var(--t-uw);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+.bj-report-badge.muted { background: var(--s2); color: var(--tf); }
+.bj-report-grouplabel { margin: var(--if-2) 0 var(--if-1); font-size: var(--fs-caption); color: var(--tf); font-weight: var(--fw-bold); }
+.bj-report-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-2);
+  padding: var(--if-1) 0;
+  font-size: var(--fs-meta);
+}
+.bj-report-line .nm { color: var(--bodytx); min-width: 0; }
+.bj-report-line .amt { font-weight: var(--fw-bold); white-space: nowrap; }
+.bj-report-line .amt.on { color: var(--ok); }
+.bj-report-line .amt.off { color: var(--err); }
+.bj-report-empty { padding: var(--if-5); text-align: center; color: var(--tf); font-size: var(--fs-meta); line-height: var(--lh-base); }
+.bj-report-cta { display: flex; flex-wrap: wrap; gap: var(--if-2); padding: var(--if-4); }
+.bj-report-cta button {
+  flex: 1 1 140px;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+.bj-report-cta .primary { background: var(--ac); color: var(--on-ac); }
+.bj-report-cta .ghost { background: var(--s2); color: var(--tp); border: 1px solid var(--bd); }
+
+/* 발송 준비 목록(전체 폭 라운드 박스) */
+.bj-sendlist {
+  margin: var(--if-4) var(--if-6) 0;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  box-shadow: var(--sh-sm);
+  overflow: hidden;
+}
+.bj-sendlist[hidden] { display: none; }
+.bj-sendlist-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-3);
+  padding: var(--if-4) var(--if-5);
+  border: 0;
+  background: var(--s1);
+  text-align: left;
+}
+.bj-sendlist-title { font-size: var(--fs-title-sm); font-weight: var(--fw-black); color: var(--tp); }
+.bj-sendlist-title b { color: var(--ac); }
+.bj-sendlist-caret { color: var(--tf); transition: transform .15s ease; }
+.bj-sendlist.open .bj-sendlist-caret { transform: rotate(180deg); }
+.bj-sendlist-body { padding: 0 var(--if-5) var(--if-4); display: flex; flex-direction: column; gap: var(--if-3); }
+.bj-sendlist-body[hidden] { display: none; }
+.bj-send-row {
+  display: flex;
+  align-items: center;
+  gap: var(--if-3);
+  flex-wrap: wrap;
+  padding: var(--if-3) var(--if-4);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s2);
+}
+.bj-send-main { flex: 1 1 280px; min-width: 0; }
+.bj-send-name { font-weight: var(--fw-bold); color: var(--tp); }
+.bj-send-cats { display: block; margin-top: var(--if-1); font-size: var(--fs-caption); color: var(--ts); }
+.bj-send-state { font-size: var(--fs-caption); font-weight: var(--fw-bold); white-space: nowrap; }
+.bj-send-state.wait { color: var(--tf); }
+.bj-send-state.ready { color: var(--ac); }
+.bj-send-actions { display: flex; gap: var(--if-2); flex-wrap: wrap; }
+
+/* 고객 화면 확인 오버레이 */
+.bj-report-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--if-5);
+  background: rgba(24,24,27,.55);
+}
+.bj-report-overlay[hidden] { display: none; }
+.bj-report-modal {
+  position: relative;
+  width: min(100%, 360px);
+  max-height: 90vh;
+  overflow: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--sh-lg);
+}
+.bj-report-close {
+  position: absolute;
+  top: var(--if-3);
+  right: var(--if-3);
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: var(--radius-full);
+  border: 0;
+  background: var(--s1);
+  color: var(--tp);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-bold);
+  box-shadow: var(--sh-md);
+  cursor: pointer;
+}
+
 @media (max-width: 860px) {
   .bj-intake { display: none; }
+  .bj-sendlist { display: none; }
 }
 @media (max-width: 1340px) {
   .if-workspace {
@@ -1371,6 +1602,14 @@ button { cursor: pointer; }
       <div class="bj-files" id="bjFiles" hidden></div>
     </section>
 
+    <section class="bj-sendlist" id="bjSendList" aria-label="고객 발송 준비 목록" hidden>
+      <button type="button" class="bj-sendlist-head" id="bjSendListHead" aria-expanded="false">
+        <span class="bj-sendlist-title">고객 발송 준비 <b id="bjSendCount">0</b>건</span>
+        <span class="bj-sendlist-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="bj-sendlist-body" id="bjSendListBody" hidden></div>
+    </section>
+
     <div class="narrow">보험 팩토리 1차 작업실은 데스크톱 1366px 이상 화면에 맞춰 만든 3컬럼 작업 공간입니다. 좁은 화면에서는 추후 단계형 전환으로 확장합니다.</div>
     <div class="if-workspace">
       <aside class="if-col">
@@ -1440,6 +1679,11 @@ button { cursor: pointer; }
     </section>
   </section>
 </main>
+
+<div class="bj-report-overlay" id="bjReportOverlay" hidden>
+  <div class="bj-report-modal" id="bjReportModal"></div>
+  <button type="button" class="bj-report-close" id="bjReportClose" aria-label="닫기">×</button>
+</div>
 
 <script>
 (function () {
@@ -1987,9 +2231,17 @@ button { cursor: pointer; }
     captureDrop: document.getElementById("bjCaptureDrop"),
     captureRun: document.getElementById("bjCaptureRun"),
     captureClose: document.getElementById("bjCaptureClose"),
-    captureStat: document.getElementById("bjCaptureStat")
+    captureStat: document.getElementById("bjCaptureStat"),
+    sendList: document.getElementById("bjSendList"),
+    sendListHead: document.getElementById("bjSendListHead"),
+    sendListBody: document.getElementById("bjSendListBody"),
+    sendCount: document.getElementById("bjSendCount"),
+    reportOverlay: document.getElementById("bjReportOverlay"),
+    reportModal: document.getElementById("bjReportModal"),
+    reportClose: document.getElementById("bjReportClose")
   };
   var bjState = { files: [] };
+  var bjSend = { rows: [], open: false };
   var bjPendingReplaceId = null;
   var bjToastTimer = null;
   var bjCapture = { base64: "", mime: "", bound: false };
@@ -2005,9 +2257,99 @@ button { cursor: pointer; }
   };
   var BJ_CONTRACT_LABELS = { company: "보험회사", product: "상품명", contractDate: "계약일", premium: "월 보험료", renewal: "갱신여부", note: "비고" };
 
+  /* 담보 카테고리 12종 + 세부담보(표준 명칭) — 화면 정의(하드코딩 OK).
+     고객명·보험회사·가입금액 같은 실데이터는 절대 하드코딩하지 않는다(전부 파싱값 매칭).
+     keys[] = 엑셀 파싱 담보명 → 표준 세부담보 매칭용 키워드(공백·대소문자 무시 부분일치).
+     groups가 있으면 진단비/치료비 중분류 병합 표시, 없으면 단일 subs.
+     note:"silson" = 의료실비 비고칸에 실손세대 자동 판정 표기. */
+  var BJ_COVERAGE_CATS = [
+    { id: "medical", name: "의료실비", note: "silson", subs: [
+      { name: "입원의료비", keys: ["입원의료", "질병입원", "상해입원", "입원실손", "입원형"] },
+      { name: "통원의료비", keys: ["통원의료", "외래", "통원실손", "처방조제", "통원형"] },
+      { name: "비급여 주사료·MRI", keys: ["비급여주사", "도수치료", "비급여mri", "mri", "주사료", "비급여특약"] }
+    ] },
+    { id: "cancer", name: "암", groups: [
+      { label: "진단비", subs: [
+        { name: "일반암 진단비", keys: ["일반암", "암진단", "고액암"] },
+        { name: "유사암 진단비", keys: ["유사암", "소액암", "갑상선암", "제자리암", "경계성종양"] }
+      ] },
+      { label: "치료비", subs: [
+        { name: "암수술비", keys: ["암수술"] },
+        { name: "항암방사선약물치료비", keys: ["항암방사선", "방사선약물", "항암약물", "항암치료", "방사선치료"] },
+        { name: "암주요치료비", keys: ["암주요치료", "암직접치료"] },
+        { name: "비급여암주요치료비", keys: ["비급여암", "표적항암", "면역항암", "비급여항암"] }
+      ] }
+    ] },
+    { id: "brain", name: "뇌질환", groups: [
+      { label: "진단비", subs: [
+        { name: "뇌혈관질환 진단비", keys: ["뇌혈관"] },
+        { name: "뇌졸중 진단비", keys: ["뇌졸중"] },
+        { name: "뇌출혈 진단비", keys: ["뇌출혈"] }
+      ] },
+      { label: "치료비", subs: [
+        { name: "수술비", keys: ["뇌수술", "뇌혈관수술", "뇌질환수술"] },
+        { name: "혈전용해치료비", keys: ["혈전용해", "뇌혈전"] },
+        { name: "주요치료비", keys: ["뇌주요치료", "뇌혈관주요"] }
+      ] }
+    ] },
+    { id: "heart", name: "심장질환", groups: [
+      { label: "진단비", subs: [
+        { name: "허혈성심장질환 진단비", keys: ["허혈성"] },
+        { name: "기타심장질환 진단비", keys: ["기타심장", "심장질환진단"] },
+        { name: "급성심근경색 진단비", keys: ["급성심근경색", "심근경색"] }
+      ] },
+      { label: "치료비", subs: [
+        { name: "수술비", keys: ["심장수술", "심혈관수술", "관상동맥우회"] },
+        { name: "혈전용해치료비", keys: ["혈전용해", "관상동맥"] },
+        { name: "주요치료비", keys: ["심장주요치료", "허혈성주요"] }
+      ] }
+    ] },
+    { id: "surgery", name: "수술비", subs: [
+      { name: "질병 수술비", keys: ["질병수술"] },
+      { name: "상해 수술비", keys: ["상해수술"] },
+      { name: "1~5종 수술비", keys: ["1~5종", "1-5종", "5종수술", "종수술"] },
+      { name: "1~3종 수술비", keys: ["1~3종", "1-3종", "3종수술"] },
+      { name: "N대질병 수술비", keys: ["대질병수술", "16대", "21대", "n대질병", "특정질병수술"] }
+    ] },
+    { id: "caregiver", name: "간병인", subs: [
+      { name: "간병인 지원 입원일당", keys: ["간병인지원", "간병입원일당"] },
+      { name: "간병인 사용일당", keys: ["간병인사용", "간병일당"] }
+    ] },
+    { id: "dental", name: "치아", subs: [
+      { name: "보존치료", keys: ["보존치료", "아말감", "레진", "인레이"] },
+      { name: "보철(임플란트·브릿지)", keys: ["보철", "임플란트", "브릿지", "브리지"] },
+      { name: "크라운", keys: ["크라운"] }
+    ] },
+    { id: "dementia", name: "치매", subs: [
+      { name: "경도치매 진단비", keys: ["경도치매"] },
+      { name: "중증치매 진단비", keys: ["중증치매", "중등도치매"] }
+    ] },
+    { id: "liability", name: "배상책임", subs: [
+      { name: "일상생활 배상책임", keys: ["일상생활배상", "일상배상"] },
+      { name: "가족 배상책임", keys: ["가족배상"] }
+    ] },
+    { id: "driver", name: "운전자", subs: [
+      { name: "교통사고 처리지원금", keys: ["교통사고처리", "처리지원"] },
+      { name: "변호사 선임비용", keys: ["변호사", "선임비용"] },
+      { name: "벌금", keys: ["벌금"] }
+    ] },
+    { id: "disability", name: "후유장해", subs: [
+      { name: "상해 후유장해", keys: ["상해후유장해", "상해후유"] },
+      { name: "질병 후유장해", keys: ["질병후유장해", "질병후유"] }
+    ] },
+    { id: "death", name: "사망", subs: [
+      { name: "일반 사망", keys: ["일반사망"] },
+      { name: "상해 사망", keys: ["상해사망"] },
+      { name: "질병 사망", keys: ["질병사망"] }
+    ] }
+  ];
+  var BJ_CTA_FILL = "보완플랜 견적받기";
+  var BJ_CTA_REMODEL = "리모델링 견적받기";
+
   function bjSyncVisibility() {
     var hidden = state.group !== "보험 점검 문의";
     if (bjEls.section) bjEls.section.hidden = hidden;
+    if (bjEls.sendList) bjEls.sendList.hidden = hidden;
     if (hidden && bjEls.capturePanel && !bjEls.capturePanel.hidden) bjCaptureClosePanel();
   }
 
@@ -2492,6 +2834,173 @@ button { cursor: pointer; }
   function bjEditCustomerField(fileId, field, value, label) {
     return '<td><input type="text" value="' + esc(value) + '" placeholder="' + esc(label || "") + '" data-bj-edit="customer" data-bj-id="' + esc(fileId) + '" data-bj-field="' + field + '"></td>';
   }
+  /* ── 표시 계층 매칭·판정 (파서/매핑 데이터 로직 무접촉 — 파싱 결과만 읽어 표준 명칭에 맞춘다) ── */
+  function bjNormKey(s) { return String(s == null ? "" : s).replace(/\s+/g, "").toLowerCase(); }
+  /* 표준 세부담보 sub 를 파싱된 담보 배열(coverages)에 매칭. 매칭되면 {matched:true, amount}, 아니면 {matched:false}. */
+  function bjMatchCoverage(sub, coverages) {
+    var keys = (sub.keys || []).map(bjNormKey);
+    for (var i = 0; i < (coverages || []).length; i += 1) {
+      var nm = bjNormKey(coverages[i].name);
+      if (!nm) continue;
+      for (var k = 0; k < keys.length; k += 1) {
+        if (keys[k] && nm.indexOf(keys[k]) >= 0) return { matched: true, amount: bjNormText(coverages[i].amount) };
+      }
+    }
+    return { matched: false, amount: "" };
+  }
+  /* 계약일 문자열 → YYYYMM 정수(정렬·세대판정용). 인식 불가 시 null. */
+  function bjParseYearMonth(s) {
+    var t = String(s == null ? "" : s);
+    var m = t.match(/(\d{4})\D{0,2}(\d{1,2})/);
+    if (m) {
+      var yy = parseInt(m[1], 10), mm = parseInt(m[2], 10);
+      if (!(mm >= 1 && mm <= 12)) mm = 1;
+      return yy * 100 + mm;
+    }
+    var y = t.match(/(\d{4})/);
+    return y ? parseInt(y[1], 10) * 100 + 1 : null;
+  }
+  /* 실손 세대 자동 판정 — 실손/실비 계약의 계약일 기준(없으면 가장 이른 계약일).
+     경계: 1세대(~2009.09) · 2세대(표준화, ~2017.03) · 3세대(착한실손, ~2021.06) · 4세대(~2024.06) · 5세대(2024.07~). */
+  function bjSilsonGeneration(contracts) {
+    var date = "";
+    (contracts || []).forEach(function (c) {
+      if (date) return;
+      if (/실손|실비|의료실비/.test(String(c.product || "") + String(c.company || ""))) date = bjNormText(c.contractDate);
+    });
+    if (!date) {
+      var dates = (contracts || []).map(function (c) { return bjNormText(c.contractDate); }).filter(Boolean).sort();
+      date = dates[0] || "";
+    }
+    if (!date) return { gen: "", label: "계약일 확인 필요" };
+    var ym = bjParseYearMonth(date);
+    if (ym == null) return { gen: "", label: "계약일 확인 필요" };
+    var gen;
+    if (ym < 200910) gen = "1세대";
+    else if (ym < 201704) gen = "2세대(표준화)";
+    else if (ym < 202107) gen = "3세대(착한실손)";
+    else if (ym < 202407) gen = "4세대";
+    else gen = "5세대";
+    return { gen: gen, label: gen };
+  }
+  /* 기본 선택 = 파싱 담보가 하나라도 매칭되는 카테고리만 체크(원장값 연동). */
+  function bjDefaultSelCats(f) {
+    var sel = {}, cov = f.coverages || [];
+    BJ_COVERAGE_CATS.forEach(function (cat) {
+      var groups = cat.groups || [{ subs: cat.subs }];
+      var has = false;
+      groups.forEach(function (g) { (g.subs || []).forEach(function (sub) { if (bjMatchCoverage(sub, cov).matched) has = true; }); });
+      sel[cat.id] = has;
+    });
+    return sel;
+  }
+  function bjSelectionFor(f) {
+    if (!f.selCats) f.selCats = bjDefaultSelCats(f);
+    return { contracts: f.contracts || [], coverages: f.coverages || [], selCats: f.selCats };
+  }
+  function bjCustomerNameOf(f) { return (f.customerInfo && bjNormText(f.customerInfo.name)) || ""; }
+
+  /* ★ 공유 렌더러 — 계약 화면 오른쪽·담보 화면 오른쪽·발송 준비 '고객 화면 확인'이 모두 이 함수 하나를 쓴다(이중 구현 0). */
+  function renderCustomerReport(selection, customerName) {
+    var name = bjNormText(customerName) || "고객";
+    var contracts = (selection && selection.contracts) || [];
+    var coverages = (selection && selection.coverages) || [];
+    var selCats = (selection && selection.selCats) || {};
+    var sil = bjSilsonGeneration(contracts);
+    var missing = 0;
+    var cards = "";
+    BJ_COVERAGE_CATS.forEach(function (cat) {
+      if (!selCats[cat.id]) return;
+      var groups = cat.groups || [{ label: "", subs: cat.subs }];
+      var inner = "";
+      groups.forEach(function (g) {
+        if (g.label) inner += '<div class="bj-report-grouplabel">' + esc(g.label) + '</div>';
+        (g.subs || []).forEach(function (sub) {
+          var mt = bjMatchCoverage(sub, coverages);
+          var ok = mt.matched;
+          if (!ok) missing += 1;
+          var amt = ok ? (mt.amount || "가입") : "미가입";
+          inner += '<div class="bj-report-line"><span class="nm">' + esc(sub.name) + '</span>' +
+            '<span class="amt ' + (ok ? "on" : "off") + '">' + esc(amt) + '</span></div>';
+        });
+      });
+      var badge = "";
+      if (cat.note === "silson") {
+        badge = sil.gen
+          ? '<span class="bj-report-badge">실손 ' + esc(sil.gen) + '</span>'
+          : '<span class="bj-report-badge muted">' + esc(sil.label) + '</span>';
+      }
+      cards += '<section class="bj-report-card"><h4>' + esc(cat.name) + badge + '</h4>' + inner + '</section>';
+    });
+    var body = cards
+      ? '<div class="bj-report-body">' + cards + '</div>'
+      : '<div class="bj-report-empty">담보 화면에서 카테고리를 선택하면<br>고객에게 보여줄 보장 카드가 여기에 표시됩니다.</div>';
+    var summary = '<div class="bj-report-summary">' +
+      '<div class="bj-report-stat"><b>' + contracts.length + '건</b><span>가입 계약</span></div>' +
+      '<div class="bj-report-stat"><b>월 ' + bjFormatWon(bjSumPremium(contracts)) + '원</b><span>월 합계</span></div>' +
+      '<div class="bj-report-stat"><b>' + missing + '개</b><span>미가입 담보</span></div>' +
+    '</div>';
+    return '<div class="bj-report">' +
+      '<div class="bj-report-head"><h3>' + esc(name) + ' 고객님</h3></div>' +
+      summary + body +
+      '<div class="bj-report-cta">' +
+        '<button type="button" class="primary" data-bj-report-cta="fill">' + esc(BJ_CTA_FILL) + '</button>' +
+        '<button type="button" class="ghost" data-bj-report-cta="remodel">' + esc(BJ_CTA_REMODEL) + '</button>' +
+      '</div>' +
+    '</div>';
+  }
+  try { window.renderCustomerReport = renderCustomerReport; } catch (e) {}
+
+  /* 담보 카테고리 선택 표(왼쪽 패널) — 체크박스 + 중분류 병합 + 세부담보 상태(가입금액/미가입). */
+  function bjRenderCoverageSelect(f) {
+    var sel = bjSelectionFor(f).selCats;
+    var cov = f.coverages || [];
+    var sil = bjSilsonGeneration(f.contracts || []);
+    var rows = "";
+    BJ_COVERAGE_CATS.forEach(function (cat) {
+      var groups = cat.groups || [{ label: "", subs: cat.subs }];
+      var totalSubs = groups.reduce(function (n, g) { return n + (g.subs || []).length; }, 0);
+      var checked = sel[cat.id] ? " checked" : "";
+      var catCell = '<td class="bj-cov-cat" rowspan="' + totalSubs + '">' +
+        '<label><input type="checkbox" data-bj-cat="' + esc(cat.id) + '" data-bj-id="' + esc(f.id) + '"' + checked + '>' + esc(cat.name) + '</label></td>';
+      var noteCell = cat.note === "silson"
+        ? '<td class="bj-cov-note" rowspan="' + totalSubs + '">' + esc(sil.gen ? "실손 " + sil.gen : sil.label) + '</td>'
+        : '<td rowspan="' + totalSubs + '"></td>';
+      var first = true;
+      groups.forEach(function (g) {
+        var gSubs = g.subs || [];
+        gSubs.forEach(function (sub, si) {
+          var mt = bjMatchCoverage(sub, cov);
+          var statusHtml = mt.matched
+            ? '<span class="bj-cov-status on">' + esc(mt.amount || "가입") + '</span>'
+            : '<span class="bj-cov-status off">미가입</span>';
+          var groupCell = "";
+          if (g.label && si === 0) groupCell = '<td class="bj-cov-group" rowspan="' + gSubs.length + '">' + esc(g.label) + '</td>';
+          else if (!g.label) groupCell = '<td></td>';
+          rows += '<tr>' +
+            (first ? catCell : "") +
+            groupCell +
+            '<td class="bj-cov-sub">' + esc(sub.name) + '</td>' +
+            '<td>' + statusHtml + '</td>' +
+            (first ? noteCell : "") +
+          '</tr>';
+          first = false;
+        });
+      });
+    });
+    return '<div class="bj-table-wrap"><table class="bj-cov-select">' +
+      '<thead><tr><th>카테고리</th><th>중분류</th><th>세부담보</th><th>상태</th><th>비고</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }
+  /* 계약·담보 화면 오른쪽 폰 미리보기를 현재 선택 기준으로 즉시 갱신(전체 재렌더 없이 포커스·스플리터 유지). */
+  function bjUpdatePhones(f) {
+    var html = renderCustomerReport(bjSelectionFor(f), bjCustomerNameOf(f));
+    ["bj-phone-contract-", "bj-phone-coverage-"].forEach(function (pfx) {
+      var el = document.getElementById(pfx + f.id);
+      if (el) el.innerHTML = html;
+    });
+  }
+
   function bjRenderReview(f) {
     var customerBlock = "";
     if (f.customerInfo) {
@@ -2556,20 +3065,41 @@ button { cursor: pointer; }
         '<td><button type="button" class="bj-btn danger" data-bj-act="del-coverage" data-bj-id="' + esc(f.id) + '" data-bj-row="' + idx + '">삭제</button></td>' +
       '</tr>';
     }).join("");
+    var fid = esc(f.id);
+    var reportHtml = renderCustomerReport(bjSelectionFor(f), bjCustomerNameOf(f));
+    /* (1) 계약 정보 화면 = 좌(계약 편집표) / 우(고객 폰 미리보기·공유 렌더러) + 드래그 스플리터 */
+    var contractPanel = '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
+      '<div class="bj-2panel">' +
+        '<div class="bj-2panel-left">' +
+          '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th><th>갱신여부</th><th>비고</th><th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
+          '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + fid + '">계약 행 추가</button></div>' +
+        '</div>' +
+        '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="계약 화면 폭 조절"></div>' +
+        '<div class="bj-2panel-right"><div class="bj-phone-wrap" id="bj-phone-contract-' + fid + '">' + reportHtml + '</div></div>' +
+      '</div>';
+    /* (2) 담보 정보 화면 = 좌(담보 카테고리 선택 + 파싱 원본 담보 편집표) / 우(고객 폰 미리보기·공유 렌더러) + 드래그 스플리터 */
+    var coveragePanel = '<div class="bj-review-title">담보 정보 — 카테고리 선택</div>' +
+      '<div class="bj-2panel">' +
+        '<div class="bj-2panel-left">' +
+          '<div id="bj-covsel-' + fid + '">' + bjRenderCoverageSelect(f) + '</div>' +
+          '<div class="bj-review-title">파싱 원본 담보 (' + f.coverages.length + '건 · 수정 가능)</div>' +
+          '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>담보명</th><th>가입금액</th><th></th></tr></thead><tbody>' + coverageRows + '</tbody></table></div>' +
+          '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-coverage" data-bj-id="' + fid + '">담보 행 추가</button></div>' +
+        '</div>' +
+        '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="담보 화면 폭 조절"></div>' +
+        '<div class="bj-2panel-right"><div class="bj-phone-wrap" id="bj-phone-coverage-' + fid + '">' + reportHtml + '</div></div>' +
+      '</div>';
     return '<div class="bj-review">' +
-      '<p class="bj-review-note">파싱 결과입니다. 회사·상품·담보·금액·갱신 여부를 확인·수정한 뒤 [확정]을 눌러야 조립 목록·고객 미리보기에 반영됩니다. 업로드만으로는 자동 반영되지 않습니다.</p>' +
+      '<p class="bj-review-note">파싱 결과입니다. 회사·상품·담보·금액·갱신 여부를 확인·수정하고, 담보 화면에서 고객에게 보여줄 카테고리를 선택하세요. [확정]은 조립 목록 카드로, [전송 준비하기]는 발송 준비 목록으로 담깁니다. 업로드만으로는 자동 반영되지 않습니다.</p>' +
       customerBlock +
       rawTextBlock +
       unmappedNote +
-      '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
-      '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th><th>갱신여부</th><th>비고</th><th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
-      '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + esc(f.id) + '">계약 행 추가</button></div>' +
-      '<div class="bj-review-title">담보 정보 (' + f.coverages.length + '건)</div>' +
-      '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>담보명</th><th>가입금액</th><th></th></tr></thead><tbody>' + coverageRows + '</tbody></table></div>' +
-      '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-coverage" data-bj-id="' + esc(f.id) + '">담보 행 추가</button></div>' +
+      contractPanel +
+      coveragePanel +
       '<div class="bj-review-actions">' +
-        '<button type="button" class="bj-btn" data-bj-act="cancel-review" data-bj-id="' + esc(f.id) + '">닫기</button>' +
-        '<button type="button" class="bj-btn primary" data-bj-act="confirm" data-bj-id="' + esc(f.id) + '">확정 → 카드로 추가</button>' +
+        '<button type="button" class="bj-btn" data-bj-act="cancel-review" data-bj-id="' + fid + '">닫기</button>' +
+        '<button type="button" class="bj-btn" data-bj-act="prepare-send" data-bj-id="' + fid + '">전송 준비하기</button>' +
+        '<button type="button" class="bj-btn primary" data-bj-act="confirm" data-bj-id="' + fid + '">확정 → 카드로 추가</button>' +
       '</div>' +
     '</div>';
   }
@@ -2677,6 +3207,200 @@ button { cursor: pointer; }
     bjRenderFiles();
   }
 
+  /* ===== (4) 고객 발송 준비 목록 · (5) 링크 만들기/복사 =====
+     흐름: 전송 준비하기 → 목록 추가 → 고객 화면 확인 → 링크 만들기 → 링크 복사 → (설계사가 카톡/해피톡 붙여넣기).
+     ⚠️ 이번 범위 제외(다음 단계): 실제 저장(Supabase)·report.html 고객 링크 페이지·DB.
+        "링크 만들기"는 임시 더미 URL이며, 저장 호출부는 bjPersistReport 스텁(아래 TODO)로 남긴다. */
+  function bjAgentName() {
+    try {
+      var raw = localStorage.getItem("os_user") || sessionStorage.getItem("os_user") || "{}";
+      var u = JSON.parse(raw);
+      var nm = bjNormText(u.name);
+      if (nm) return nm;
+    } catch (e) {}
+    return "";
+  }
+  function bjRandomToken() {
+    var s = "", chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    for (var i = 0; i < 10; i += 1) s += chars.charAt(Math.floor(Math.random() * chars.length));
+    return s;
+  }
+  function bjSelectedCatNames(f) {
+    var sel = bjSelectionFor(f).selCats;
+    return BJ_COVERAGE_CATS.filter(function (c) { return sel[c.id]; }).map(function (c) { return c.name; });
+  }
+  function bjPrepareSend(f) {
+    if (!f || f.status === "error" || f.status === "parsing" || f.status === "password" || f.status === "decrypting") {
+      bjToast("판독이 확정되지 않은 자료입니다. 결과를 확인한 뒤 다시 시도해 주세요.");
+      return;
+    }
+    var names = bjSelectedCatNames(f);
+    if (!names.length) {
+      bjToast("고객 화면에 넣을 보장 카테고리를 담보 화면에서 먼저 선택해 주세요.");
+      return;
+    }
+    var sel = bjSelectionFor(f).selCats;
+    bjSend.rows.push({
+      id: "s" + Date.now() + Math.random().toString(16).slice(2),
+      name: bjCustomerNameOf(f) || "고객",
+      cats: names,
+      /* 미리보기 재현용 스냅샷 — 공유 렌더러(renderCustomerReport)가 그대로 사용 */
+      contracts: (f.contracts || []).map(function (c) { return { company: c.company, product: c.product, contractDate: c.contractDate, premium: c.premium, renewal: c.renewal, note: c.note }; }),
+      coverages: (f.coverages || []).map(function (c) { return { name: c.name, amount: c.amount }; }),
+      selCats: JSON.parse(JSON.stringify(sel)),
+      url: ""
+    });
+    bjSend.open = true;
+    bjRenderSendList();
+    bjToast((bjCustomerNameOf(f) || "고객") + " 고객 · 발송 준비 목록에 추가했습니다.");
+  }
+  function bjRenderSendList() {
+    if (!bjEls.sendList) return;
+    var n = bjSend.rows.length;
+    if (bjEls.sendCount) bjEls.sendCount.textContent = n;
+    var open = bjSend.open && n > 0;
+    bjEls.sendList.classList.toggle("open", open);
+    if (bjEls.sendListHead) bjEls.sendListHead.setAttribute("aria-expanded", open ? "true" : "false");
+    if (!bjEls.sendListBody) return;
+    bjEls.sendListBody.hidden = !open;
+    bjEls.sendListBody.innerHTML = n ? bjSend.rows.map(function (row) {
+      var stateCls = row.url ? "ready" : "wait";
+      var stateTxt = row.url ? "링크 생성됨" : "링크 대기";
+      return '<div class="bj-send-row" data-bj-send="' + esc(row.id) + '">' +
+        '<div class="bj-send-main">' +
+          '<span class="bj-send-name">' + esc(row.name) + ' 고객님</span>' +
+          '<span class="bj-send-cats">' + esc(row.cats.join(" · ")) + '</span>' +
+        '</div>' +
+        '<span class="bj-send-state ' + stateCls + '">' + esc(stateTxt) + '</span>' +
+        '<div class="bj-send-actions">' +
+          '<button type="button" class="bj-btn" data-bj-send-act="view" data-bj-send-id="' + esc(row.id) + '">고객 화면 확인</button>' +
+          '<button type="button" class="bj-btn" data-bj-send-act="make" data-bj-send-id="' + esc(row.id) + '">링크 만들기</button>' +
+          '<button type="button" class="bj-btn primary" data-bj-send-act="copy" data-bj-send-id="' + esc(row.id) + '">링크 복사</button>' +
+          '<button type="button" class="bj-btn danger" data-bj-send-act="remove" data-bj-send-id="' + esc(row.id) + '">목록에서 제거</button>' +
+        '</div>' +
+      '</div>';
+    }).join("") : "";
+  }
+  /* TODO(다음 단계 인계): 실제 저장(Supabase) 호출부. 이번 위임 범위 밖.
+     지금은 저장하지 않고 더미 토큰 URL만 만든다. report.html 고객 링크 페이지·DB도 다음 단계. */
+  function bjPersistReport(row) {
+    // 예: var db = bjGetDb(); db.fetch("/functions/v1/...", {...}) 또는 테이블 insert → row.url 확정.
+    return Promise.resolve({ ok: true, url: row.url });
+  }
+  function bjMakeLink(row) {
+    row.url = "https://onesecond.solutions/r/" + bjRandomToken();
+    bjPersistReport(row); /* 스텁 — 실제 저장은 다음 단계 */
+    bjRenderSendList();
+    bjToast("임시 링크를 만들었습니다. (실제 저장 연동은 다음 단계)");
+  }
+  function bjBuildShareMessage(row) {
+    var agent = bjAgentName();
+    var cats = (row.cats || []).join(" · ");
+    return "안녕하세요\n보장분석 담당자 " + (agent ? agent + " " : "") + "팀장입니다.\n\n" +
+      row.name + " 고객님, 전산에서 확인된 보험 내용을 기준으로 보장분석 리포트를 정리했습니다.\n" +
+      "아래 링크에서 " + cats + " 등 보장 내용을 확인해 주세요.\n" +
+      "문의사항은 편하게 말씀해주세요~\n\n" + row.url;
+  }
+  function bjCopyTextFallback(text) {
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        if (ok) resolve(); else reject(new Error("copy failed"));
+      } catch (e) { reject(e); }
+    });
+  }
+  function bjCopyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function () { return bjCopyTextFallback(text); });
+    }
+    return bjCopyTextFallback(text);
+  }
+  function bjCopyLink(row) {
+    if (!row.url) { bjToast("먼저 [링크 만들기]를 눌러 주세요."); return; }
+    bjCopyText(bjBuildShareMessage(row)).then(function () {
+      bjToast("안내문과 링크를 복사했습니다. 카톡·해피톡에 붙여넣으세요.");
+    }).catch(function () {
+      bjToast("복사에 실패했습니다. 링크를 직접 선택해 복사해 주세요.");
+    });
+  }
+  function bjOpenReportPreview(row) {
+    if (!bjEls.reportOverlay || !bjEls.reportModal) return;
+    bjEls.reportModal.innerHTML = renderCustomerReport({ contracts: row.contracts, coverages: row.coverages, selCats: row.selCats }, row.name);
+    bjEls.reportOverlay.hidden = false;
+  }
+  function bjCloseReportPreview() {
+    if (!bjEls.reportOverlay) return;
+    bjEls.reportOverlay.hidden = true;
+    if (bjEls.reportModal) bjEls.reportModal.innerHTML = "";
+  }
+
+  if (bjEls.sendListHead) {
+    bjEls.sendListHead.addEventListener("click", function () {
+      if (!bjSend.rows.length) return;
+      bjSend.open = !bjSend.open;
+      bjRenderSendList();
+    });
+  }
+  if (bjEls.sendListBody) {
+    bjEls.sendListBody.addEventListener("click", function (event) {
+      var btn = event.target.closest("[data-bj-send-act]");
+      if (!btn) return;
+      var id = btn.getAttribute("data-bj-send-id");
+      var row = bjSend.rows.find(function (r) { return r.id === id; });
+      if (!row) return;
+      var act = btn.getAttribute("data-bj-send-act");
+      if (act === "view") bjOpenReportPreview(row);
+      else if (act === "make") bjMakeLink(row);
+      else if (act === "copy") bjCopyLink(row);
+      else if (act === "remove") {
+        bjSend.rows = bjSend.rows.filter(function (r) { return r.id !== id; });
+        if (!bjSend.rows.length) bjSend.open = false;
+        bjRenderSendList();
+      }
+    });
+  }
+  if (bjEls.reportClose) bjEls.reportClose.addEventListener("click", bjCloseReportPreview);
+  if (bjEls.reportOverlay) {
+    bjEls.reportOverlay.addEventListener("click", function (event) {
+      if (event.target === bjEls.reportOverlay) bjCloseReportPreview();
+    });
+  }
+
+  /* 계약·담보 2분할 화면의 드래그 스플리터(위임 처리 — 재렌더 후에도 동작). */
+  document.addEventListener("pointerdown", function (event) {
+    var bar = event.target.closest ? event.target.closest(".bj-2panel-bar") : null;
+    if (!bar) return;
+    var panel = bar.closest(".bj-2panel");
+    if (!panel) return;
+    event.preventDefault();
+    var rect = panel.getBoundingClientRect();
+    document.body.classList.add("if-resizing");
+    function move(ev) {
+      var x = ev.clientX - rect.left;
+      var min = 300, max = rect.width - 260 - 8;
+      if (max < min) return;
+      x = Math.max(min, Math.min(max, x));
+      panel.style.gridTemplateColumns = x + "px 8px minmax(0, 1fr)";
+    }
+    function stop() {
+      document.body.classList.remove("if-resizing");
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    }
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+  });
+
   if (bjEls.fileList) {
     bjEls.fileList.addEventListener("click", function (event) {
       var btn = event.target.closest("[data-bj-act]");
@@ -2717,6 +3441,7 @@ button { cursor: pointer; }
       if (act === "add-coverage") { f.coverages.push({ id: "v" + Date.now(), name: "", amount: "" }); bjRenderFiles(); return; }
       if (act === "del-contract") { f.contracts.splice(Number(btn.getAttribute("data-bj-row")), 1); bjRenderFiles(); return; }
       if (act === "del-coverage") { f.coverages.splice(Number(btn.getAttribute("data-bj-row")), 1); bjRenderFiles(); return; }
+      if (act === "prepare-send") { bjPrepareSend(f); return; }
       if (act === "confirm") { bjConfirmFile(f); return; }
     });
     bjEls.fileList.addEventListener("input", function (event) {
@@ -2740,6 +3465,22 @@ button { cursor: pointer; }
         var sumEl = document.getElementById("bj-premium-sum-" + f.id);
         if (sumEl) sumEl.textContent = "월 " + bjFormatWon(bjSumPremium(f.contracts)) + "원";
       }
+      /* 파싱 원본 담보 편집 시 담보 카테고리 상태 표·고객 폰 미리보기를 즉시 재계산(별도 DOM이라 포커스 유지) */
+      if (kind === "coverage") {
+        var box = document.getElementById("bj-covsel-" + f.id);
+        if (box) box.innerHTML = bjRenderCoverageSelect(f);
+        bjUpdatePhones(f);
+      }
+    });
+    bjEls.fileList.addEventListener("change", function (event) {
+      var el = event.target;
+      var catId = el.getAttribute("data-bj-cat");
+      if (!catId) return;
+      var f = bjState.files.find(function (x) { return x.id === el.getAttribute("data-bj-id"); });
+      if (!f) return;
+      if (!f.selCats) f.selCats = bjDefaultSelCats(f);
+      f.selCats[catId] = el.checked;
+      bjUpdatePhones(f);
     });
     bjEls.fileList.addEventListener("keydown", function (event) {
       var el = event.target;
@@ -2936,6 +3677,7 @@ button { cursor: pointer; }
 
   renderAll();
   initSplitters();
+  bjRenderSendList();
 })();
 </script>
 </body>
