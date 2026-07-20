@@ -1241,6 +1241,8 @@ button { cursor: pointer; }
 /* 비고 = 남는 가로 폭 전부 흡수(넓게) */
 .bj-contract-table th.bj-note, .bj-contract-table td.bj-note { width: 100%; }
 .bj-contract-table td.bj-note input { width: 100%; min-width: 120px; max-width: none; field-sizing: normal; }
+/* 계약일 파일 간 보완 배지(2026-07-20): 다른 첨부 파일의 계약일로 채운 빈칸에만 표시(원본 계약일엔 없음) */
+.bj-date-src { display: inline-block; margin-top: 3px; font-size: var(--fs-caption); color: var(--ac); background: var(--s2); border-radius: var(--radius-xs); padding: 1px 5px; white-space: nowrap; }
 .bj-row-actions { display: flex; justify-content: flex-start; margin-bottom: var(--if-3); }
 .bj-review-actions { display: flex; gap: var(--if-2); justify-content: flex-end; }
 .bj-rawtext {
@@ -3763,7 +3765,7 @@ button { cursor: pointer; }
         '<td class="bj-no">' + (displayPos + 1) + '</td>' +
         bjEditCell(f.id, "contract", origIdx, "company", c.company, BJ_CONTRACT_LABELS.company) +
         bjEditCell(f.id, "contract", origIdx, "product", c.product, BJ_CONTRACT_LABELS.product) +
-        bjEditCell(f.id, "contract", origIdx, "contractDate", c.contractDate, BJ_CONTRACT_LABELS.contractDate) +
+        '<td><input type="text" value="' + esc(c.contractDate) + '" placeholder="' + esc(BJ_CONTRACT_LABELS.contractDate) + '" data-bj-edit="contract" data-bj-id="' + esc(f.id) + '" data-bj-row="' + origIdx + '" data-bj-field="contractDate">' + (c.contractDateFromMerge ? '<span class="bj-date-src">다른 파일에서</span>' : '') + '</td>' +
         bjEditCell(f.id, "contract", origIdx, "premium", c.premium, BJ_CONTRACT_LABELS.premium, "bj-premium") +
         bjEditCell(f.id, "contract", origIdx, "renewal", c.renewal, BJ_CONTRACT_LABELS.renewal) +
         bjEditCell(f.id, "contract", origIdx, "note", c.note, BJ_CONTRACT_LABELS.note, "bj-note") +
@@ -3837,6 +3839,45 @@ button { cursor: pointer; }
     '</div>';
   }
   var BJ_STATUS_LABEL = { parsing: "판독 중…", ready: "판독 완료", error: "판독 오류", confirmed: "확정됨", todo: "캡처 판독 대기", password: "암호 입력 필요", decrypting: "복호화 중…" };
+  /* 회사·상품 정규화 키의 부분일치(양방향). 둘 다 값이 있고 한쪽이 다른 쪽을 포함하면 매칭. */
+  function bjKeyPartial(a, b) { return !!a && !!b && (a.indexOf(b) >= 0 || b.indexOf(a) >= 0); }
+  /* ── 계약일만 파일 간 보완 (같은 고객 전제 · 회사+상품 매칭 · 빈 계약일만 · 2026-07-20) ──
+     여러 파일(예: 계약일 없는 뱅크샐러드 엑셀 + 계약일 있는 PDF)을 넣으면, 계약일이 비어 있는
+     계약을 회사명+상품명이 매칭되는 다른 파일 계약의 계약일로 채운다.
+     - 파일에 원래 있던 계약일(원본)만 소스로 사용 → 보완값이 다시 소스가 되는 연쇄 방지.
+     - 기존 계약일(원본·이미 보완된 값 포함)은 절대 덮어쓰지 않는다(빈칸만 보완).
+     - 회사·상품 둘 다 있어야 매칭(오탐 방지). 매칭 실패·소스 없음이면 그대로 둔다(임의 생성 금지).
+     - 계약일 외 다른 필드(회사·상품·보험료·담보 등)는 일절 건드리지 않는다.
+     - 이미지/전산 캡처는 계약(계약일)을 추출하지 않아(고객정보만) 이 병합의 범위 밖. */
+  function bjMergeContractDates() {
+    var files = (bjState.files || []).filter(function (f) { return f && f.contracts && f.contracts.length; });
+    if (files.length < 2) return;
+    var sources = [];
+    files.forEach(function (f) {
+      f.contracts.forEach(function (c) {
+        var d = bjNormText(c.contractDate);
+        if (d && !c.contractDateFromMerge) {
+          sources.push({ ck: bjNormKey(c.company), pk: bjNormKey(c.product), date: d });
+        }
+      });
+    });
+    if (!sources.length) return;
+    files.forEach(function (f) {
+      f.contracts.forEach(function (c) {
+        if (bjNormText(c.contractDate)) return;    /* 이미 계약일 있음 → 덮어쓰기 금지 */
+        var ck = bjNormKey(c.company), pk = bjNormKey(c.product);
+        if (!ck || !pk) return;                    /* 회사·상품 둘 다 있어야 매칭 */
+        for (var i = 0; i < sources.length; i += 1) {
+          var s = sources[i];
+          if (bjKeyPartial(ck, s.ck) && bjKeyPartial(pk, s.pk)) {
+            c.contractDate = s.date;
+            c.contractDateFromMerge = true;
+            break;
+          }
+        }
+      });
+    });
+  }
   function bjRenderFiles() {
     if (!bjEls.fileList) return;
     if (!bjState.files.length) {
@@ -3844,6 +3885,7 @@ button { cursor: pointer; }
       bjEls.fileList.innerHTML = "";
       return;
     }
+    bjMergeContractDates();
     bjEls.fileList.hidden = false;
     bjEls.fileList.innerHTML = bjState.files.map(function (f) {
       var meta = "";
@@ -4401,6 +4443,8 @@ button { cursor: pointer; }
       var row = Number(el.getAttribute("data-bj-row"));
       var arr = kind === "contract" ? f.contracts : f.coverages;
       if (arr[row]) arr[row][field] = el.value;
+      /* 계약일을 설계사가 직접 수정하면 '다른 파일에서' 보완 표시 해제(이제 사용자 입력값) */
+      if (kind === "contract" && field === "contractDate" && arr[row]) arr[row].contractDateFromMerge = false;
       /* 보험료 편집 시 합계 보험료를 즉시 갱신(재렌더 없이 포커스 유지) */
       if (kind === "contract" && field === "premium") {
         var sumEl = document.getElementById("bj-premium-sum-" + f.id);
