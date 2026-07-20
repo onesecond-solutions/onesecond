@@ -519,6 +519,7 @@ body:not(.is-uat-qnaimport) #qnaImportBtn-wrap{display:none !important;}
 .hs-sug-item:hover,.hs-sug-item.active{background:var(--s2);}
 .hs-sug-name{font-size:var(--sz-m,16px);font-weight:700;color:var(--tc);line-height:1.3;}
 .hs-sug-sub{font-size:var(--sz-s,13px);color:var(--tf);line-height:1.3;}
+.hs-sug-badge{display:inline-flex;align-items:center;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:var(--sz-xs,11px);font-weight:700;letter-spacing:.02em;background:color-mix(in srgb,var(--ac) 12%,transparent);color:var(--ac);vertical-align:middle;}
 .hs-field:focus-within{border-color:var(--ac);box-shadow:0 4px 18px rgba(99,102,241,.14);}
 .hs-field svg{width:26px;height:26px;flex-shrink:0;color:var(--tf);}
 .hs-field input{flex:1;border:0;outline:0;background:transparent;font-size:1.25rem;color:var(--tp);min-width:0;}
@@ -12174,6 +12175,26 @@ function _acClose(){ var b=document.getElementById('hsSuggest'); if(b){ b.classL
 window._acClose=_acClose;
 function _acBlur(){ if(_acBlurTimer)clearTimeout(_acBlurTimer); _acBlurTimer=setTimeout(_acClose,160); }   /* 항목 클릭 여유 후 닫기 */
 window._acBlur=_acBlur;
+/* ════ 화면 바로가기 카탈로그 — 검색어가 keywords 중 하나에 부분일치하면 자동완성/결과에 "바로가기" 항목 노출. 2026-07-20 ════
+   확장 구조: 새 화면은 배열에 한 줄 추가하면 됨. gate()=노출 조건 — 볼 수 없는 화면은 검색결과에도 내지 않는다(게이트 정합).
+   실비 변천사(#v-silson)는 showView에서 is-uat-homedesk 계정만 진입 가능 → 동일 게이트로만 노출. */
+var _SHORTCUTS=[
+  { view:'silson', label:'실비 세대별 변천사', sub:'바로가기 · 실손 1~5세대 보장·전환',
+    keywords:['실비','의료실비','의료비','세대별 변천사','세대별','변천사'],
+    gate:function(){ return document.body.classList.contains('is-uat-homedesk'); } }
+];
+/* 검색어 q에 매칭되는 바로가기 항목 목록(게이트 통과분만). 매칭=정규화 부분일치(양방향) — 회사/상품 자동완성과 동일한 _normCo 사용 */
+function _acShortcuts(q){
+  var n=_normCo(q); if(!n) return [];
+  var out=[];
+  for(var i=0;i<_SHORTCUTS.length;i++){ var sc=_SHORTCUTS[i];
+    if(typeof sc.gate==='function' && !sc.gate()) continue;   /* 볼 수 없는 화면 = 검색결과에도 노출 금지 */
+    var hit=0;
+    for(var k=0;k<(sc.keywords||[]).length;k++){ var kk=_normCo(sc.keywords[k]); if(!kk) continue; if(kk.indexOf(n)>=0 || n.indexOf(kk)>=0){ hit=1; break; } }
+    if(hit) out.push({ label:sc.label, sub:sc.sub, type:'shortcut', view:sc.view });
+  }
+  return out;
+}
 /* 입력 → 후보 매칭·렌더 */
 function _acInput(q){
   var box=document.getElementById('hsSuggest'); if(!box) return;
@@ -12191,10 +12212,11 @@ function _acInput(q){
   /* 회사 우선, 그 다음 상품. 접두 일치 우선 */
   function _coFirst(a,b){ if(a.type!==b.type) return a.type==='company'?-1:1; return 0; }
   pre.sort(_coFirst); inc.sort(_coFirst);
-  _acList=pre.concat(inc).slice(0,_AC_MAX);
+  /* 화면 바로가기 = 직접 이동 의도라 최상단. 게이트 밖 계정엔 _acShortcuts가 빈 배열 → 노출 0(회사/상품 자동완성 무영향) */
+  _acList=_acShortcuts(q).concat(pre.concat(inc)).slice(0,_AC_MAX);
   if(!_acList.length){ _acClose(); return; }
   _acActive=-1;
-  box.innerHTML=_acList.map(function(it,i){ return '<div class="hs-sug-item" role="option" id="hsSug'+i+'" data-i="'+i+'" onmousedown="event.preventDefault();_acSelect('+i+')" onmouseenter="_acHover('+i+')"><span class="hs-sug-name">'+_sEsc(it.label)+'</span><span class="hs-sug-sub">'+_sEsc(it.sub)+'</span></div>'; }).join('');
+  box.innerHTML=_acList.map(function(it,i){ var _nm=it.type==='shortcut' ? _sEsc(it.label)+'<span class="hs-sug-badge">바로가기</span>' : _sEsc(it.label); return '<div class="hs-sug-item" role="option" id="hsSug'+i+'" data-i="'+i+'" onmousedown="event.preventDefault();_acSelect('+i+')" onmouseenter="_acHover('+i+')"><span class="hs-sug-name">'+_nm+'</span><span class="hs-sug-sub">'+_sEsc(it.sub)+'</span></div>'; }).join('');
   box.classList.add('open');
   var inp=document.getElementById('hsInput'); if(inp) inp.setAttribute('aria-expanded','true');
 }
@@ -12204,6 +12226,8 @@ window._acHover=_acHover;
 function _acPaint(){ var box=document.getElementById('hsSuggest'); if(!box) return; var els=box.querySelectorAll('.hs-sug-item'); for(var i=0;i<els.length;i++){ els[i].classList.toggle('active', i===_acActive); } var inp=document.getElementById('hsInput'); if(inp) inp.setAttribute('aria-activedescendant', _acActive>=0?('hsSug'+_acActive):''); }
 function _acMove(d){ if(!_acList.length) return; _acActive+=d; if(_acActive<0)_acActive=_acList.length-1; if(_acActive>=_acList.length)_acActive=0; _acPaint(); var el=document.getElementById('hsSug'+_acActive); if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest'}); }
 function _acSelect(i){ var it=_acList[i]; if(!it) return; var inp=document.getElementById('hsInput');
+  /* 화면 바로가기 = 검색이 아니라 해당 화면으로 이동(showView). 게이트는 showView 내부에서 재확인(2차 방어) */
+  if(it.type==='shortcut'){ _acClose(); if(inp)inp.blur(); if(typeof showView==='function') showView(it.view); return; }
   /* 회사=기준명으로 검색(허브 동일 결과) / 상품=상품명으로 검색 */
   var term = it.type==='company' ? it.canon : it.label;
   if(inp) inp.value=term; _acClose(); if(typeof _hsSearch==='function') _hsSearch(term);
