@@ -1221,7 +1221,8 @@ button { cursor: pointer; }
 /* 계약 표는 내용 맞춤(auto) — 보험회사·상품명·계약일·월보험료 컬럼을 내용/헤더 길이에 맞춰 좁히고 앞정렬 유지 */
 .bj-contract-table { table-layout: auto; }
 .bj-contract-table th, .bj-contract-table td { white-space: nowrap; }
-.bj-contract-table td input { min-width: 56px; width: auto; max-width: 220px; field-sizing: content; }
+/* max-width 캡 제거(2026-07-20): 220px 캡이 긴 상품명을 잘랐음(예: "무배당THE건강한치아보험V(갱신형)2404" → "(갱신"에서 clip). field-sizing:content가 내용 전체 폭으로 늘리게 두고, 폭 부족 시 .bj-table-wrap 가로 스크롤로 처리(상품명 압축·clip 금지). 비고 width:100% 흡수는 여유가 있을 때만 적용됨(내용 컬럼이 폭을 먼저 차지) */
+.bj-contract-table td input { min-width: 56px; width: auto; max-width: none; field-sizing: content; }
 .bj-contract-table td.bj-premium input { min-width: 72px; }
 /* 비고 = 남는 가로 폭 전부 흡수(넓게) */
 .bj-contract-table th.bj-note, .bj-contract-table td.bj-note { width: 100%; }
