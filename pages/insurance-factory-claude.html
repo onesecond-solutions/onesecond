@@ -1208,6 +1208,13 @@ button { cursor: pointer; }
   color: var(--tp);
 }
 .bj-table input:focus { border-color: var(--ac); background: var(--s1); outline: none; }
+.bj-table td.bj-no { text-align: center; color: var(--tf); font-variant-numeric: tabular-nums; }
+.bj-table td.bj-premium input { text-align: right; }
+/* 계약 표 마지막 합계 줄: No+보험회사+상품명 병합(중앙) + 합계 보험료 라벨/금액 */
+.bj-sum-row td { background: var(--s2); font-weight: var(--fw-bold); }
+.bj-sum-row .bj-sum-total { text-align: center; color: var(--tp); }
+.bj-sum-row .bj-sum-label { text-align: right; color: var(--tf); font-weight: var(--fw-regular); }
+.bj-sum-row .bj-sum-amount { text-align: right; color: var(--tp); font-variant-numeric: tabular-nums; }
 .bj-row-actions { display: flex; justify-content: flex-start; margin-bottom: var(--if-3); }
 .bj-review-actions { display: flex; gap: var(--if-2); justify-content: flex-end; }
 .bj-rawtext {
@@ -1996,7 +2003,7 @@ button { cursor: pointer; }
     coverageAmount: ["가입금액", "보장금액", "가입한도", "금액"],
     renewal: ["갱신여부", "갱신형", "갱신"]
   };
-  var BJ_CONTRACT_LABELS = { company: "보험회사", product: "상품명", contractDate: "계약일", premium: "보험료", renewal: "갱신여부" };
+  var BJ_CONTRACT_LABELS = { company: "보험회사", product: "상품명", contractDate: "계약일", premium: "월 보험료", renewal: "갱신여부", note: "비고" };
 
   function bjSyncVisibility() {
     var hidden = state.group !== "보험 점검 문의";
@@ -2140,14 +2147,97 @@ button { cursor: pointer; }
         if (!contractIndex.hasOwnProperty(key)) {
           var cid = "c" + (contracts.length + 1);
           contractIndex[key] = cid;
-          contracts.push({ id: cid, company: rec.company || "", product: rec.product || "", contractDate: rec.contractDate || "", premium: rec.premium || "", renewal: rec.renewal || "" });
+          contracts.push({ id: cid, company: rec.company || "", product: rec.product || "", contractDate: rec.contractDate || "", premium: rec.premium || "", renewal: rec.renewal || "", note: "" });
         }
       }
       if (rec.coverageName) {
         coverages.push({ id: "v" + (coverages.length + 1), name: rec.coverageName, amount: rec.coverageAmount || "" });
       }
     }
+    /* 뱅크샐러드형(가로 다중 헤더 매트릭스) 감지 시에만 계약을 별도 경로로 추출.
+       세로형이면 bjDetectBankSalad가 null → 위에서 만든 contracts 그대로(회귀 0). */
+    var bs = bjDetectBankSalad(matrix, headerIdx, map);
+    if (bs && !contracts.length) {
+      contracts = bjBuildBankSaladContracts(matrix, headerIdx, bs);
+    }
     return { contracts: contracts, coverages: coverages };
+  }
+  /* 숫자 → 천단위 콤마 문자열(원 단위) */
+  function bjFormatWon(n) {
+    var num = Math.round(Number(n) || 0);
+    return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  /* 문자열에서 숫자만 뽑아 원 단위 정수 반환(콤마·단위·공백 제거). 없으면 0 */
+  function bjPremiumToNumber(v) {
+    var digits = String(v == null ? "" : v).replace(/[^\d]/g, "");
+    return digits ? parseInt(digits, 10) : 0;
+  }
+  /* 계약(상품)들의 월 보험료 합계(원 단위 정수) */
+  function bjSumPremium(contracts) {
+    return (contracts || []).reduce(function (sum, c) { return sum + bjPremiumToNumber(c.premium); }, 0);
+  }
+  /* 뱅크샐러드형 매트릭스 감지. 세로형이면 null 반환(→ 기존 세로형 경로 유지, 회귀 0).
+     감지 기준: (1) 헤더행에 담보(주요특약)가 매핑됐고 회사·상품 컬럼은 매핑되지 않음(가로 매트릭스),
+     (2) 매핑 최우측 컬럼보다 오른쪽에 헤더값이 있는 상품 컬럼이 2개 이상,
+     (3) 헤더행 위쪽 상품 컬럼에 "월 X원" 패턴 행(=보험료 행)이 존재.
+     반환: { productCols, companyRowIdx, premiumRowIdx }. 행 위치는 하드코딩하지 않고 탐색으로 찾는다(빈 행 건너뜀 허용). */
+  function bjDetectBankSalad(matrix, headerIdx, map) {
+    if (headerIdx == null || headerIdx < 1) return null;
+    if (map.coverageName == null) return null;               /* 담보 매트릭스가 아님 */
+    if (map.company != null || map.product != null) return null; /* 세로형(회사·상품 컬럼 존재) → 스킵 */
+    var headerRow = matrix[headerIdx] || [];
+    var mappedMax = -1;
+    Object.keys(map).forEach(function (k) { if (map[k] > mappedMax) mappedMax = map[k]; });
+    var productCols = [];
+    for (var c = mappedMax + 1; c < headerRow.length; c += 1) {
+      if (bjNormText(headerRow[c])) productCols.push(c);
+    }
+    if (productCols.length < 2) return null;
+    var premiumRowIdx = null;
+    for (var r = headerIdx - 1; r >= 0; r -= 1) {
+      var row = matrix[r] || [];
+      var hit = productCols.some(function (col) {
+        var t = bjNormText(row[col]);
+        return /월/.test(t) && /원/.test(t);
+      });
+      if (hit) { premiumRowIdx = r; break; }
+    }
+    if (premiumRowIdx == null) return null;
+    var companyRowIdx = null;
+    for (var rr = premiumRowIdx - 1; rr >= 0; rr -= 1) {
+      var crow = matrix[rr] || [];
+      var has = productCols.some(function (col) { return bjNormText(crow[col]) !== ""; });
+      if (has) { companyRowIdx = rr; break; }
+    }
+    if (companyRowIdx == null) return null;
+    return { productCols: productCols, companyRowIdx: companyRowIdx, premiumRowIdx: premiumRowIdx };
+  }
+  /* 뱅크샐러드형 상품 컬럼 → 계약 배열(컬럼당 계약 1건).
+     회사=회사행, 상품명=헤더행, 보험료="월 X원"의 숫자(원 단위 정수, 콤마 표기),
+     계약일·갱신여부=빈값(엑셀에 없음 — 화면에서 설계사가 입력/선택). */
+  function bjBuildBankSaladContracts(matrix, headerIdx, bs) {
+    var headerRow = matrix[headerIdx] || [];
+    var companyRow = matrix[bs.companyRowIdx] || [];
+    var premiumRow = matrix[bs.premiumRowIdx] || [];
+    var contracts = [];
+    bs.productCols.forEach(function (col) {
+      var company = bjNormText(companyRow[col]);
+      var product = bjNormText(headerRow[col]);
+      if (!company && !product) return;
+      var premRaw = bjNormText(premiumRow[col]);
+      var m = premRaw.match(/월\s*([\d,]+)\s*원/);
+      var premium = m ? bjFormatWon(bjPremiumToNumber(m[1])) : "";
+      contracts.push({
+        id: "c" + (contracts.length + 1),
+        company: company,
+        product: product,
+        contractDate: "",
+        premium: premium,
+        renewal: "",
+        note: ""
+      });
+    });
+    return contracts;
   }
   function bjIsPasswordError(err) {
     var msg = String((err && err.message) || err || "").toLowerCase();
@@ -2357,7 +2447,7 @@ button { cursor: pointer; }
         }
       }
       /* 표로 인식되지 않음 — 원문을 확인 표에 제공하고 설계사가 직접 구조화 */
-      rec.contracts = [{ id: "c1", company: "", product: "", contractDate: "", premium: "", renewal: "" }];
+      rec.contracts = [{ id: "c1", company: "", product: "", contractDate: "", premium: "", renewal: "", note: "" }];
       rec.coverages = [];
       rec.unmapped = [];
       rec.rawText = rawText.slice(0, 6000);
@@ -2396,8 +2486,8 @@ button { cursor: pointer; }
     });
   }
 
-  function bjEditCell(fileId, kind, idx, field, value, placeholder) {
-    return '<td><input type="text" value="' + esc(value) + '" placeholder="' + esc(placeholder || "") + '" data-bj-edit="' + kind + '" data-bj-id="' + esc(fileId) + '" data-bj-row="' + idx + '" data-bj-field="' + field + '"></td>';
+  function bjEditCell(fileId, kind, idx, field, value, placeholder, tdClass) {
+    return '<td' + (tdClass ? ' class="' + tdClass + '"' : '') + '><input type="text" value="' + esc(value) + '" placeholder="' + esc(placeholder || "") + '" data-bj-edit="' + kind + '" data-bj-id="' + esc(fileId) + '" data-bj-row="' + idx + '" data-bj-field="' + field + '"></td>';
   }
   function bjEditCustomerField(fileId, field, value, label) {
     return '<td><input type="text" value="' + esc(value) + '" placeholder="' + esc(label || "") + '" data-bj-edit="customer" data-bj-id="' + esc(fileId) + '" data-bj-field="' + field + '"></td>';
@@ -2423,16 +2513,42 @@ button { cursor: pointer; }
     var unmappedNote = (f.unmapped && f.unmapped.length)
       ? '<div class="bj-unmapped">미매핑 컬럼(자동 반영되지 않음, 원본 확인 필요): ' + esc(f.unmapped.join(", ")) + '</div>'
       : "";
-    var contractRows = f.contracts.map(function (c, idx) {
+    /* 표시 순서 결정: 계약일(파싱값)이 하나라도 있으면 계약일 오름차순 정렬, 없으면 입력 순서 유지.
+       뱅크샐러드 엑셀은 계약일 필드가 없어(파서에서 빈값) 정렬 불가 → 입력 순서 그대로.
+       data-bj-row에는 f.contracts 원본 인덱스를 넣어 편집이 올바른 계약에 반영되게 하고,
+       No 컬럼과 넘버링은 최종 표시 순서 기준으로 부여한다. */
+    var bjOrder = f.contracts.map(function (c, i) { return i; });
+    var bjHasDate = f.contracts.some(function (c) { return bjNormText(c.contractDate) !== ""; });
+    if (bjHasDate) {
+      bjOrder.sort(function (a, b) {
+        var da = bjNormText(f.contracts[a].contractDate);
+        var db = bjNormText(f.contracts[b].contractDate);
+        if (da === db) return a - b;      /* 동일 계약일 → 원본 입력 순서 유지(안정 정렬) */
+        if (!da) return 1;                /* 계약일 없는 계약은 뒤로 */
+        if (!db) return -1;
+        return da < db ? -1 : 1;          /* 문자열 오름차순(YYYY.MM.DD 등 자리수 정렬 기준) */
+      });
+    }
+    var contractRows = bjOrder.map(function (origIdx, displayPos) {
+      var c = f.contracts[origIdx];
       return '<tr>' +
-        bjEditCell(f.id, "contract", idx, "company", c.company, BJ_CONTRACT_LABELS.company) +
-        bjEditCell(f.id, "contract", idx, "product", c.product, BJ_CONTRACT_LABELS.product) +
-        bjEditCell(f.id, "contract", idx, "contractDate", c.contractDate, BJ_CONTRACT_LABELS.contractDate) +
-        bjEditCell(f.id, "contract", idx, "premium", c.premium, BJ_CONTRACT_LABELS.premium) +
-        bjEditCell(f.id, "contract", idx, "renewal", c.renewal, BJ_CONTRACT_LABELS.renewal) +
-        '<td><button type="button" class="bj-btn danger" data-bj-act="del-contract" data-bj-id="' + esc(f.id) + '" data-bj-row="' + idx + '">삭제</button></td>' +
+        '<td class="bj-no">' + (displayPos + 1) + '</td>' +
+        bjEditCell(f.id, "contract", origIdx, "company", c.company, BJ_CONTRACT_LABELS.company) +
+        bjEditCell(f.id, "contract", origIdx, "product", c.product, BJ_CONTRACT_LABELS.product) +
+        bjEditCell(f.id, "contract", origIdx, "contractDate", c.contractDate, BJ_CONTRACT_LABELS.contractDate) +
+        bjEditCell(f.id, "contract", origIdx, "premium", c.premium, BJ_CONTRACT_LABELS.premium, "bj-premium") +
+        bjEditCell(f.id, "contract", origIdx, "renewal", c.renewal, BJ_CONTRACT_LABELS.renewal) +
+        bjEditCell(f.id, "contract", origIdx, "note", c.note, BJ_CONTRACT_LABELS.note) +
+        '<td><button type="button" class="bj-btn danger" data-bj-act="del-contract" data-bj-id="' + esc(f.id) + '" data-bj-row="' + origIdx + '">삭제</button></td>' +
       '</tr>';
     }).join("");
+    /* 마지막 합계 줄: No+보험회사+상품명 3셀 병합("총 N건" 중앙) + 계약일칸="합계 보험료" + 월보험료칸=합계 금액(우측) + 갱신여부·비고·액션 빈칸 */
+    var bjSumRow = '<tr class="bj-sum-row">' +
+      '<td class="bj-sum-total" colspan="3">총 ' + f.contracts.length + '건</td>' +
+      '<td class="bj-sum-label">합계 보험료</td>' +
+      '<td class="bj-sum-amount"><span id="bj-premium-sum-' + esc(f.id) + '">월 ' + bjFormatWon(bjSumPremium(f.contracts)) + '원</span></td>' +
+      '<td></td><td></td><td></td>' +
+    '</tr>';
     var coverageRows = f.coverages.map(function (c, idx) {
       return '<tr>' +
         bjEditCell(f.id, "coverage", idx, "name", c.name, "담보명") +
@@ -2446,7 +2562,7 @@ button { cursor: pointer; }
       rawTextBlock +
       unmappedNote +
       '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
-      '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>보험회사</th><th>상품명</th><th>계약일</th><th>보험료</th><th>갱신여부</th><th></th></tr></thead><tbody>' + contractRows + '</tbody></table></div>' +
+      '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th><th>갱신여부</th><th>비고</th><th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
       '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + esc(f.id) + '">계약 행 추가</button></div>' +
       '<div class="bj-review-title">담보 정보 (' + f.coverages.length + '건)</div>' +
       '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>담보명</th><th>가입금액</th><th></th></tr></thead><tbody>' + coverageRows + '</tbody></table></div>' +
@@ -2591,13 +2707,13 @@ button { cursor: pointer; }
       if (act === "review" || act === "manual") {
         f.reviewOpen = true;
         if (act === "manual" && !f.contracts.length && !f.coverages.length) {
-          f.contracts = [{ id: "c1", company: "", product: "", contractDate: "", premium: "", renewal: "" }];
+          f.contracts = [{ id: "c1", company: "", product: "", contractDate: "", premium: "", renewal: "", note: "" }];
         }
         bjRenderFiles();
         return;
       }
       if (act === "cancel-review") { f.reviewOpen = false; bjRenderFiles(); return; }
-      if (act === "add-contract") { f.contracts.push({ id: "c" + Date.now(), company: "", product: "", contractDate: "", premium: "", renewal: "" }); bjRenderFiles(); return; }
+      if (act === "add-contract") { f.contracts.push({ id: "c" + Date.now(), company: "", product: "", contractDate: "", premium: "", renewal: "", note: "" }); bjRenderFiles(); return; }
       if (act === "add-coverage") { f.coverages.push({ id: "v" + Date.now(), name: "", amount: "" }); bjRenderFiles(); return; }
       if (act === "del-contract") { f.contracts.splice(Number(btn.getAttribute("data-bj-row")), 1); bjRenderFiles(); return; }
       if (act === "del-coverage") { f.coverages.splice(Number(btn.getAttribute("data-bj-row")), 1); bjRenderFiles(); return; }
@@ -2619,6 +2735,11 @@ button { cursor: pointer; }
       var row = Number(el.getAttribute("data-bj-row"));
       var arr = kind === "contract" ? f.contracts : f.coverages;
       if (arr[row]) arr[row][field] = el.value;
+      /* 보험료 편집 시 합계 보험료를 즉시 갱신(재렌더 없이 포커스 유지) */
+      if (kind === "contract" && field === "premium") {
+        var sumEl = document.getElementById("bj-premium-sum-" + f.id);
+        if (sumEl) sumEl.textContent = "월 " + bjFormatWon(bjSumPremium(f.contracts)) + "원";
+      }
     });
     bjEls.fileList.addEventListener("keydown", function (event) {
       var el = event.target;
