@@ -1418,6 +1418,34 @@ button { cursor: pointer; }
 .bj-report-cta .primary { background: var(--ac); color: var(--on-ac); }
 .bj-report-cta .ghost { background: var(--s2); color: var(--tp); border: 1px solid var(--bd); }
 
+/* 계약 화면 오른쪽 미리보기 — 보유 계약 리스트(renderContractListPreview 전용) */
+.bj-report-subtitle { display: block; margin-top: var(--if-1); font-size: var(--fs-caption); font-weight: var(--fw-bold); color: var(--on-ac); opacity: .85; }
+.bj-cc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-2);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s1);
+  padding: var(--if-3);
+}
+.bj-cc-main { min-width: 0; }
+.bj-cc-company { font-size: var(--fs-caption); color: var(--tf); }
+.bj-cc-product { font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--tp); }
+.bj-cc-premium { font-size: var(--fs-body); font-weight: var(--fw-black); color: var(--ac); white-space: nowrap; }
+.bj-cc-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-2);
+  margin: 0 var(--if-4) var(--if-4);
+  padding: var(--if-3) var(--if-4);
+  border-top: 1px solid var(--bd);
+}
+.bj-cc-total span { font-size: var(--fs-meta); color: var(--tf); font-weight: var(--fw-bold); }
+.bj-cc-total b { font-size: var(--fs-body-lg); color: var(--tp); font-weight: var(--fw-black); }
+
 /* 발송 준비 목록(전체 폭 라운드 박스) */
 .bj-sendlist {
   margin: var(--if-4) var(--if-6) 0;
@@ -2963,6 +2991,43 @@ button { cursor: pointer; }
   }
   try { window.renderCustomerReport = renderCustomerReport; } catch (e) {}
 
+  /* 계약 화면 오른쪽 폰 미리보기 전용 렌더러 — 고객이 보는 "보유 계약" 리스트.
+     계약 화면 오른쪽에서만 사용(담보 리포트 renderCustomerReport와 분리·무접촉).
+     데이터는 전부 파싱된 계약값(f.contracts: company/product/premium) — 하드코딩 0.
+     표시는 회사·상품·월보험료만(계약일·갱신여부·비고는 여기까지만, 나중에 확장). */
+  function renderContractListPreview(contracts, customerName) {
+    var name = bjNormText(customerName) || "고객";
+    var list = contracts || [];
+    var cards = list.map(function (c) {
+      var company = bjNormText(c.company);
+      var product = bjNormText(c.product);
+      var premNum = bjPremiumToNumber(c.premium);
+      var premHtml = premNum > 0 ? '월 ' + bjFormatWon(premNum) + '원' : '—';
+      return '<section class="bj-cc">' +
+        '<div class="bj-cc-main">' +
+          '<div class="bj-cc-company">' + (company ? esc(company) : '보험회사 미기재') + '</div>' +
+          '<div class="bj-cc-product">' + (product ? esc(product) : '상품명 미기재') + '</div>' +
+        '</div>' +
+        '<div class="bj-cc-premium">' + premHtml + '</div>' +
+      '</section>';
+    }).join("");
+    var body = cards
+      ? '<div class="bj-report-body">' + cards + '</div>'
+      : '<div class="bj-report-empty">파싱된 계약이 없습니다.<br>계약 화면 왼쪽 표에서 계약을 추가하면<br>여기에 고객 보유 계약이 표시됩니다.</div>';
+    var summary = '<div class="bj-report-summary">' +
+      '<div class="bj-report-stat"><b>' + list.length + '건</b><span>가입 계약</span></div>' +
+      '<div class="bj-report-stat"><b>월 ' + bjFormatWon(bjSumPremium(list)) + '원</b><span>월 합계</span></div>' +
+    '</div>';
+    var footer = list.length
+      ? '<div class="bj-cc-total"><span>총 ' + list.length + '건</span><b>월 ' + bjFormatWon(bjSumPremium(list)) + '원</b></div>'
+      : '';
+    return '<div class="bj-report">' +
+      '<div class="bj-report-head"><h3>' + esc(name) + ' 고객님</h3><span class="bj-report-subtitle">보유 계약</span></div>' +
+      summary + body + footer +
+    '</div>';
+  }
+  try { window.renderContractListPreview = renderContractListPreview; } catch (e) {}
+
   /* 담보 카테고리 선택 표(왼쪽 패널) — 체크박스 + 중분류 병합 + 세부담보 상태(가입금액/미가입). */
   function bjRenderCoverageSelect(f) {
     var sel = bjSelectionFor(f).selCats;
@@ -3006,11 +3071,11 @@ button { cursor: pointer; }
   }
   /* 계약·담보 화면 오른쪽 폰 미리보기를 현재 선택 기준으로 즉시 갱신(전체 재렌더 없이 포커스·스플리터 유지). */
   function bjUpdatePhones(f) {
-    var html = renderCustomerReport(bjSelectionFor(f), bjCustomerNameOf(f));
-    ["bj-phone-contract-", "bj-phone-coverage-"].forEach(function (pfx) {
-      var el = document.getElementById(pfx + f.id);
-      if (el) el.innerHTML = html;
-    });
+    /* 계약 화면 오른쪽 = 계약 목록 미리보기 / 담보 화면 오른쪽 = 담보 리포트(무변경). */
+    var contractEl = document.getElementById("bj-phone-contract-" + f.id);
+    if (contractEl) contractEl.innerHTML = renderContractListPreview(f.contracts, bjCustomerNameOf(f));
+    var coverageEl = document.getElementById("bj-phone-coverage-" + f.id);
+    if (coverageEl) coverageEl.innerHTML = renderCustomerReport(bjSelectionFor(f), bjCustomerNameOf(f));
   }
 
   function bjRenderReview(f) {
@@ -3080,7 +3145,8 @@ button { cursor: pointer; }
     }).join("");
     var fid = esc(f.id);
     var reportHtml = renderCustomerReport(bjSelectionFor(f), bjCustomerNameOf(f));
-    /* (1) 계약 정보 화면 = 좌(계약 편집표) / 우(고객 폰 미리보기·공유 렌더러) + 드래그 스플리터 */
+    var contractPreviewHtml = renderContractListPreview(f.contracts, bjCustomerNameOf(f));
+    /* (1) 계약 정보 화면 = 좌(계약 편집표) / 우(고객 폰 미리보기 = 계약 목록) + 드래그 스플리터 */
     var contractPanel = '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
       '<div class="bj-2panel">' +
         '<div class="bj-2panel-left">' +
@@ -3088,7 +3154,7 @@ button { cursor: pointer; }
           '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + fid + '">계약 행 추가</button></div>' +
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="계약 화면 폭 조절"></div>' +
-        '<div class="bj-2panel-right"><div class="bj-phone-wrap" id="bj-phone-contract-' + fid + '">' + reportHtml + '</div></div>' +
+        '<div class="bj-2panel-right"><div class="bj-phone-wrap" id="bj-phone-contract-' + fid + '">' + contractPreviewHtml + '</div></div>' +
       '</div>';
     /* (2) 담보 정보 화면 = 좌(담보 카테고리 선택 + 파싱 원본 담보 편집표) / 우(고객 폰 미리보기·공유 렌더러) + 드래그 스플리터 */
     var coveragePanel = '<div class="bj-review-title">담보 정보 — 카테고리 선택</div>' +
