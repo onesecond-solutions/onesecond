@@ -1184,6 +1184,20 @@ button { cursor: pointer; }
 .bj-review { border-top: 1px solid var(--bd); padding: var(--if-3) var(--if-4) var(--if-4); }
 .bj-review-title { margin: 0 0 var(--if-2); font-size: var(--fs-body-lg); font-weight: var(--fw-bold); }
 .bj-review-note { margin: 0 0 var(--if-2); font-size: var(--fs-caption); color: var(--tf); }
+/* 고객명 입력칸(2026-07-20) — 오른쪽 미리보기·담보 리포트·발송 준비 헤더에 즉시 반영되는 단일 컨트롤 */
+.bj-custname { display: flex; align-items: center; flex-wrap: wrap; gap: var(--if-2); margin-bottom: var(--if-3); }
+.bj-custname-label { font-size: var(--fs-caption); font-weight: var(--fw-semibold); color: var(--tf); }
+.bj-custname-input {
+  border: 1px solid var(--bd);
+  background: var(--s1);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-body);
+  color: var(--tp);
+  min-width: 180px;
+}
+.bj-custname-input:focus { border-color: var(--ac); outline: none; }
+.bj-custname-hint { font-size: var(--fs-caption); color: var(--tf); }
 .bj-unmapped {
   font-size: var(--fs-caption);
   color: var(--tf);
@@ -2938,7 +2952,38 @@ button { cursor: pointer; }
     if (!f.selCats) f.selCats = bjDefaultSelCats(f);
     return { contracts: f.contracts || [], coverages: f.coverages || [], selCats: f.selCats };
   }
-  function bjCustomerNameOf(f) { return (f.customerInfo && bjNormText(f.customerInfo.name)) || ""; }
+  /* 파일명에서 고객명 후보를 뽑을 때 건너뛰는 흔한 단어(자료 종류·제공 플랫폼·일반어).
+     첫 토큰이 이 단어를 포함하면 고객명이 아니라고 보고 빈값 처리(설계사 입력 유도).
+     근거: 뱅크샐러드/카카오 등 소비자 앱 내보내기 파일명은 대개 "고객명_자료종류_플랫폼.xlsx"라
+     첫 토큰=고객명이지만, "보장분석_홍길동.xlsx"처럼 자료종류가 앞에 오는 경우를 걸러야 오검출이 없다. */
+  var BJ_NAME_SKIP_TOKENS = [
+    "보장분석", "보장진단", "보험분석", "보험진단", "분석", "진단",
+    "가입내역", "가입내역서", "보험가입내역", "증권", "보험증권", "계약사항", "보험계약", "보험료",
+    "뱅크샐러드", "뱅샐", "카카오페이", "카카오톡", "카카오", "카톡", "토스", "페이코",
+    "고객", "보험", "엑셀", "파일", "자료", "download", "export"
+  ];
+  /* 파일명 → 고객명 후보. 확장자 제거 후 첫 구분자(_·공백) 앞 토큰을 취하되,
+     스킵 단어를 포함하거나 숫자만 있으면 빈값 반환. (예: "김은경_보장분석_뱅크샐러드.xlsx" → "김은경") */
+  function bjCustomerNameFromFilename(fileName) {
+    var base = bjNormText(fileName).replace(/\.[^.]+$/, "");   /* 확장자 제거 */
+    if (!base) return "";
+    var token = bjNormText(base.split(/[_\s]/)[0]);            /* 첫 구분자 앞 토큰 */
+    if (!token) return "";
+    if (/^\d+$/.test(token)) return "";                       /* 숫자만이면 고객명 아님 */
+    var low = token.toLowerCase();
+    for (var i = 0; i < BJ_NAME_SKIP_TOKENS.length; i += 1) {
+      if (low.indexOf(BJ_NAME_SKIP_TOKENS[i]) >= 0) return "";
+    }
+    return token;
+  }
+  /* 고객명 산출 — 우선순위: ①파싱값/설계사 편집값(customerInfo.name) ②파일명 추출 ③빈값.
+     계약목록 미리보기·담보 리포트·발송 준비가 모두 이 함수 하나를 경유해 일관되게 쓴다. */
+  function bjCustomerNameOf(f) {
+    if (!f) return "";
+    var edited = (f.customerInfo && bjNormText(f.customerInfo.name)) || "";
+    if (edited) return edited;
+    return bjCustomerNameFromFilename(f.name);
+  }
 
   /* ★ 공유 렌더러 — 계약 화면 오른쪽·담보 화면 오른쪽·발송 준비 '고객 화면 확인'이 모두 이 함수 하나를 쓴다(이중 구현 0). */
   function renderCustomerReport(selection, customerName) {
@@ -3079,12 +3124,19 @@ button { cursor: pointer; }
   }
 
   function bjRenderReview(f) {
+    /* 고객명 편집칸 — 항상 노출(엑셀에 고객명 셀이 없는 뱅크샐러드 등도 포함).
+       값은 bjCustomerNameOf(파싱값/편집값 → 없으면 파일명 추출)로 미리 채워, 설계사가 바로 확인·수정한다.
+       입력 시 f.customerInfo.name에 저장되고 오른쪽 미리보기(계약목록·담보 리포트) 헤더에 즉시 반영된다. */
+    var customerNameBlock = '<div class="bj-custname">' +
+        '<label class="bj-custname-label" for="bj-custname-' + esc(f.id) + '">고객명</label>' +
+        '<input type="text" id="bj-custname-' + esc(f.id) + '" class="bj-custname-input" value="' + esc(bjCustomerNameOf(f)) + '" placeholder="고객명 입력" data-bj-edit="customer" data-bj-id="' + esc(f.id) + '" data-bj-field="name">' +
+        '<span class="bj-custname-hint">오른쪽 미리보기·담보 리포트·발송 준비에 즉시 반영됩니다. 비어 있으면 파일명에서 자동 추출합니다.</span>' +
+      '</div>';
     var customerBlock = "";
     if (f.customerInfo) {
       var ci = f.customerInfo;
       customerBlock = '<div class="bj-review-title">고객정보 (전산 캡처 판독 — 확인 후 수정)</div>' +
-        '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>이름</th><th>성별</th><th>생년월일</th><th>나이</th><th>연락처</th><th>고객유형</th></tr></thead><tbody><tr>' +
-          bjEditCustomerField(f.id, "name", ci.name, "이름") +
+        '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>성별</th><th>생년월일</th><th>나이</th><th>연락처</th><th>고객유형</th></tr></thead><tbody><tr>' +
           bjEditCustomerField(f.id, "gender", ci.gender, "성별") +
           bjEditCustomerField(f.id, "birthDate", ci.birthDate, "생년월일") +
           bjEditCustomerField(f.id, "age", ci.age, "나이") +
@@ -3170,6 +3222,7 @@ button { cursor: pointer; }
       '</div>';
     return '<div class="bj-review">' +
       '<p class="bj-review-note">파싱 결과입니다. 회사·상품·담보·금액·갱신 여부를 확인·수정하고, 담보 화면에서 고객에게 보여줄 카테고리를 선택하세요. [확정]은 조립 목록 카드로, [전송 준비하기]는 발송 준비 목록으로 담깁니다. 업로드만으로는 자동 반영되지 않습니다.</p>' +
+      customerNameBlock +
       customerBlock +
       rawTextBlock +
       unmappedNote +
@@ -3259,7 +3312,8 @@ button { cursor: pointer; }
     }).join("\n");
     var rawExcerpt = f.rawText ? ("\n\n[PDF 원문 발췌]\n" + f.rawText.slice(0, 400) + (f.rawText.length > 400 ? "…" : "")) : "";
     var body = customerLine + "계약 " + f.contracts.length + "건, 담보 " + f.coverages.length + "건을 설계사가 확인했습니다.\n\n[계약]\n" + (contractLines || "(없음)") + "\n\n[담보]\n" + (coverageLines || "(없음)") + rawExcerpt;
-    var titlePrefix = (f.customerInfo && f.customerInfo.name) ? (f.customerInfo.name + "님 ") : "";
+    var titleName = bjCustomerNameOf(f);
+    var titlePrefix = titleName ? (titleName + "님 ") : "";
     state.blocks.push({
       id: "b" + Date.now() + Math.random().toString(16).slice(2),
       tplId: "bojang-intake-" + f.id,
@@ -3534,6 +3588,8 @@ button { cursor: pointer; }
       if (kind === "customer") {
         if (!f.customerInfo) f.customerInfo = {};
         f.customerInfo[field] = el.value;
+        /* 고객명 변경 → 오른쪽 미리보기(계약목록·담보 리포트) 헤더 즉시 반영(재렌더 없이 포커스 유지) */
+        if (field === "name") bjUpdatePhones(f);
         return;
       }
       var row = Number(el.getAttribute("data-bj-row"));
