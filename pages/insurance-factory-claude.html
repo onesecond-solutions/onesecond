@@ -3220,7 +3220,7 @@ button { cursor: pointer; }
           '<p class="bj-pw-hint">암호로 보호된 엑셀입니다. 비밀번호를 입력하면 이 화면 안에서 복호화해 판독합니다. 원본 파일과 비밀번호는 서버에 저장·전송되지 않습니다.</p>' +
           '<div class="bj-pw-row">' +
             '<input type="password" class="bj-pw-input" data-bj-pw-input="' + esc(f.id) + '" placeholder="파일 비밀번호"' + (busy ? ' disabled' : '') + ' autocomplete="off">' +
-            '<button type="button" class="bj-btn primary" data-bj-act="decrypt" data-bj-id="' + esc(f.id) + '"' + (busy ? ' disabled' : '') + '>' + (busy ? '복호화 중…' : '복호화') + '</button>' +
+            '<button type="button" class="bj-btn primary" data-bj-act="decrypt" data-bj-id="' + esc(f.id) + '"' + (busy ? ' disabled' : '') + '>' + (busy ? '확인 중…' : '비밀번호 입력 완료') + '</button>' +
           '</div>' +
           (f.pwError ? '<p class="bj-pw-err">' + esc(f.pwError) + '</p>' : "") +
         '</div>';
