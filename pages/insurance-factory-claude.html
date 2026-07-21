@@ -3311,6 +3311,119 @@ button { cursor: pointer; }
       return cells;
     }).filter(function (row) { return row.length > 0; });
   }
+  /* GA 보장분석 PDF(수도GA3 출력)의 "상품별 가입담보상세" 섹션 전용 파서.
+     표 헤더 인식(bjBuildStructured)이 실패하는 텍스트 나열형 PDF에서, 상품(회사)별 계약·담보를
+     뽑아 엑셀(뱅크샐러드) 경로와 동일한 f.coverageMatrix(companies/rows)+f.contracts 구조로 만든다.
+     → 기존 회사 가로 매트릭스 렌더(bjRenderCoverageMatrix/bjRenderCoverageSelectMatrix)가 그대로 재사용된다.
+     입력: pagesItems = 페이지별 pdf.js 텍스트 아이템 배열([{str, transform, width}]). 표준화 명칭·좌표만 사용.
+     좌표(x) 밴드로 5개 컬럼(번호·정액/실손·상세담보명·표준담보명·가입금액)을 분리한다 —
+       앱 표 재구성(bjPdfItemsToMatrix)은 상세·표준 간 간격이 좁으면 셀을 합쳐버려 표준담보명을 못 떼지만,
+       원본 아이템은 x로 항상 구분되므로 표준담보명(카테고리 매칭용)을 안정적으로 얻는다.
+     판정(부족/충분/미가입 등)은 절대 생성하지 않는다 — 있는 담보·금액만 채운다. */
+  function bjParsePdfProductDetail(pagesItems) {
+    var X_NUM_MAX = 55, X_TYPE_MAX = 88, X_DETAIL_MAX = 360, X_STD_MAX = 505, Y_TOL = 3;
+    var SECTION_RE = /상품별\s*가입담보상세/;
+    var STOP_RE = /(담보별\s*가입\s*현황|담보별\s*진단현황|진단현황|전체\s*담보\s*진단|전체\s*보장현황|전체\s*계약리스트|상품별\s*가입현황|실효|해지계약|자동차\s*보험\s*조회)/;
+    var DATE_RE = /(\d{4}-\d{2}-\d{2})/;
+    /* 1) 페이지 순서대로, y좌표(±Y_TOL)로 같은 줄 묶기 → 줄 배열(각 줄은 x 오름차순 아이템). */
+    var lines = [];
+    (pagesItems || []).forEach(function (items) {
+      var its = (items || []).filter(function (it) { return (it.str || "").trim() !== ""; });
+      its.sort(function (a, b) { return (b.transform ? b.transform[5] : 0) - (a.transform ? a.transform[5] : 0); });
+      var cluster = null, refY = null;
+      its.forEach(function (it) {
+        var y = it.transform ? it.transform[5] : 0;
+        if (cluster && Math.abs(y - refY) <= Y_TOL) { cluster.push(it); }
+        else { if (cluster) lines.push(cluster); cluster = [it]; refY = y; }
+      });
+      if (cluster) lines.push(cluster);
+    });
+    function toLine(cluster) {
+      var sorted = cluster.slice().sort(function (a, b) { return (a.transform ? a.transform[4] : 0) - (b.transform ? b.transform[4] : 0); });
+      return {
+        items: sorted.map(function (it) { return { x: it.transform ? it.transform[4] : 0, str: (it.str || "") }; }),
+        text: sorted.map(function (it) { return (it.str || ""); }).join(" ").replace(/\s+/g, " ").trim()
+      };
+    }
+    /* 2) 상태머신 — "상품별 가입담보상세" 구간에서 [회사]+[가입일자]를 상품 경계로,
+          그 아래 담보([번호]+[정액/실손]+[상세담보명]+[표준담보명]+[금액]) 반복을 파싱. */
+    var products = [], inSection = false, cur = null, awaitingProduct = false, awaitingPremium = false;
+    for (var li = 0; li < lines.length; li += 1) {
+      var line = toLine(lines[li]);
+      var text = line.text;
+      if (!text) continue;
+      if (SECTION_RE.test(text)) { inSection = true; awaitingProduct = false; awaitingPremium = false; continue; }
+      if (inSection && STOP_RE.test(text)) { inSection = false; cur = null; continue; }
+      if (!inSection) continue;
+      /* 페이지 머리말/꼬리말·기준안내 스킵 */
+      if (/^수도GA3사업단/.test(text) || /^\d+\/\d+$/.test(text) || /^※/.test(text) ||
+          /^\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}/.test(text) || /^\(\d+세/.test(text)) continue;
+      /* 상품 경계: "가입일자 : YYYY-MM-DD" 줄 */
+      if (/가입일자/.test(text)) {
+        var dm = text.match(DATE_RE);
+        var company = line.items.filter(function (c) {
+          return !/가입일자/.test(c.str) && !DATE_RE.test(c.str) && c.str.indexOf("|") < 0;
+        }).map(function (c) { return c.str; }).join("").trim();
+        cur = { company: company, product: "", contractDate: dm ? dm[1] : "", premium: "", covs: [] };
+        products.push(cur);
+        awaitingProduct = true; awaitingPremium = true;
+        continue;
+      }
+      if (!cur) continue;
+      /* 담보 행? 번호(x<55, 정수) + 정액/실손(타입 밴드) */
+      var numItem = line.items[0];
+      var isCovStart = numItem && numItem.x < X_NUM_MAX && /^\d{1,3}$/.test(numItem.str.trim());
+      var typeItem = null;
+      if (isCovStart) {
+        for (var ti = 0; ti < line.items.length; ti += 1) {
+          var it2 = line.items[ti];
+          if (it2.x >= X_NUM_MAX && it2.x < X_TYPE_MAX && (it2.str.trim() === "정액" || it2.str.trim() === "실손")) { typeItem = it2; break; }
+        }
+      }
+      if (isCovStart && typeItem) {
+        var detail = "", std = "", amt = "";
+        line.items.forEach(function (c) {
+          if (c === numItem || c === typeItem) return;
+          if (c.x >= X_TYPE_MAX && c.x < X_DETAIL_MAX) detail += c.str;
+          else if (c.x >= X_DETAIL_MAX && c.x < X_STD_MAX) std += c.str;
+          else if (c.x >= X_STD_MAX) amt += c.str;
+        });
+        detail = detail.trim(); std = std.trim(); amt = amt.trim();
+        var covName = std || detail;   /* 카테고리 매칭·표시는 표준담보명 기준(없으면 상세담보명) */
+        if (covName) cur.covs.push({ name: covName, amount: amt });
+        awaitingProduct = false; awaitingPremium = false;
+        continue;
+      }
+      /* 가입일자 다음 줄 = 상품명 */
+      if (awaitingProduct) { cur.product = text; awaitingProduct = false; continue; }
+      /* 보험료 줄( … 원 ) */
+      if (awaitingPremium) {
+        var pm = text.match(/([\d,]{3,})\s*원/);
+        if (pm) { cur.premium = bjFormatWon(bjPremiumToNumber(pm[1])); awaitingPremium = false; }
+        continue;
+      }
+    }
+    if (!products.length) return null;
+    /* 3) 엑셀 경로와 동일 구조로 조립. companies=상품 컬럼(col=상품 인덱스), rows=담보명별 상품col 금액.
+          같은 담보명이 같은 상품에 중복(예: 질병사망 2건)이면 새 행으로(데이터 손실 없음),
+          서로 다른 상품이면 같은 행의 다른 컬럼으로 채운다(뱅크샐러드 union과 동일 취지). */
+    var contracts = [], companies = [], rows = [], coverages = [];
+    products.forEach(function (p, idx) {
+      var col = idx;
+      contracts.push({ id: "c" + (idx + 1), company: p.company, product: p.product, contractDate: p.contractDate, premium: p.premium, renewal: "", note: "" });
+      companies.push({ col: col, company: p.company, product: p.product, premium: p.premium });
+      p.covs.forEach(function (c) {
+        coverages.push({ id: "v" + (coverages.length + 1), name: c.name, amount: c.amount });
+        var target = null;
+        for (var r = 0; r < rows.length; r += 1) {
+          if (rows[r].name === c.name && !Object.prototype.hasOwnProperty.call(rows[r].amounts, col)) { target = rows[r]; break; }
+        }
+        if (!target) { target = { name: c.name, amounts: {} }; rows.push(target); }
+        target.amounts[col] = c.amount;
+      });
+    });
+    return { contracts: contracts, coverages: coverages, coverageMatrix: { companies: companies, rows: rows } };
+  }
   function bjClassifyPdfError(err) {
     var name = (err && err.name) || "";
     var msg = String((err && err.message) || err || "").toLowerCase();
@@ -3368,6 +3481,20 @@ button { cursor: pointer; }
           bjRenderFiles();
           return;
         }
+      }
+      /* 표 헤더 인식 실패(텍스트 나열형) — 폴백 전에 "상품별 가입담보상세" 전용 파서 시도.
+         성공 시 엑셀 경로와 동일한 coverageMatrix/contracts로 채워 기존 회사 가로 매트릭스가 그대로 그려진다.
+         못 찾으면(다른 서식) null → 아래 원문 폴백 그대로(회귀 0). */
+      var detail = bjParsePdfProductDetail(pagesItems);
+      if (detail && detail.contracts.length) {
+        rec.contracts = detail.contracts;
+        rec.coverages = detail.coverages;
+        rec.coverageMatrix = detail.coverageMatrix;
+        rec.unmapped = [];
+        rec.rawText = "";
+        rec.status = "ready";
+        bjRenderFiles();
+        return;
       }
       /* 표로 인식되지 않음 — 원문을 확인 표에 제공하고 설계사가 직접 구조화 */
       rec.contracts = [{ id: "c1", company: "", product: "", contractDate: "", premium: "", renewal: "", note: "" }];
