@@ -16,6 +16,8 @@ var _HS2_TILES=[
   {v:'silson',         ic:'i-file',     t:'실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return true;}},
   /* 암주요치료비 변천사 = 전체 개방(2026-07-20 대표 승인, 상품 라인업·도구 페이지 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출 */
   {v:'cancer-treatment', ic:'i-file',   t:'암주요치료비 변천사', d:'세대별 암 치료비 보장 변화', show:function(){return true;}},
+  /* 간병보험 변천사 = 전체공개(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출. order_hint=변천사 인접 */
+  {v:'caregiver-history', ic:'i-file',  t:'간병보험 변천사', d:'장기간병~사용일당 · 지급기준이 다름', show:function(){return true;}},
   {v:'bojang', ic:'i-file', t:'보장분석', d:'의료실비·암·뇌심장·수술비 종합 · 고객 발송', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   /* X-FILE = 임태성 게이트 전용 빈 페이지(#v-xfile) 골격. cls = 이 타일에만 붙는 붉은 계열 스코프 클래스(다른 타일 무영향). 게이트는 _canSeeXfile(app.html 인라인) — _canSeeCoverage와 조건은 같으나 독립 함수라 개방 시점을 따로 제어. (2026-07-17) */
   {v:'xfile', ic:'i-file', t:'X-FILE', d:'내 보험 어때? · 4가지 자가 검진', cls:'hs2-hub-tile--xfile', show:function(){return typeof window._canSeeXfile==='function'&&window._canSeeXfile();}},
