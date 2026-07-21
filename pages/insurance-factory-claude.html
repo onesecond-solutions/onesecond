@@ -4819,31 +4819,47 @@ button { cursor: pointer; }
     if (bjEls.captureDrop) bjEls.captureDrop.innerHTML = "";
     bjCaptureSetStat("");
   }
+  /* 클립보드 데이터에서 첫 번째 이미지 파일을 뽑는다(items 우선, files 폴백). 없으면 null. */
+  function bjClipboardImage(cd) {
+    if (!cd) return null;
+    var items = cd.items || [];
+    for (var i = 0; i < items.length; i += 1) {
+      var it = items[i];
+      if (it && it.kind === "file" && /^image\//.test(it.type || "")) {
+        var f = it.getAsFile();
+        if (f) return f;
+      }
+    }
+    var files = cd.files || [];
+    for (var j = 0; j < files.length; j += 1) {
+      if (files[j] && /^image\//.test(files[j].type || "")) return files[j];
+    }
+    return null;
+  }
+  /* 이미지 File → base64/mime 세팅 + 미리보기. opts.autoRun이면 곧바로 OCR(bjCaptureRun)로 이어짐.
+     원본 이미지는 base64로만 휘발성 보관(저장·서버 업로드 없음). */
+  function bjCaptureSetImage(file, opts) {
+    if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function (e) {
+      var u = String((e.target && e.target.result) || "");
+      bjCapture.base64 = u.split(",")[1] || "";
+      bjCapture.mime = (u.match(/^data:([^;]+);/) || [])[1] || "image/png";
+      if (bjEls.captureDrop) bjEls.captureDrop.innerHTML = '<img src="' + u + '" alt="캡처 미리보기">';
+      bjCaptureSetStat("캡처 준비됨 — [캡처에서 정보 읽기]를 누르세요");
+      if (opts && opts.autoRun) bjCaptureRun();
+    };
+    rd.readAsDataURL(file);
+  }
   function bjCaptureBindPaste() {
     if (!bjEls.captureDrop || bjCapture.bound) return;
     bjCapture.bound = true;
     bjEls.captureDrop.addEventListener("paste", function (ev) {
       try {
-        var dt = ev.clipboardData;
-        if (!dt || !dt.items) return;
-        for (var i = 0; i < dt.items.length; i += 1) {
-          var it = dt.items[i];
-          if (it.kind === "file" && /^image\//.test(it.type || "")) {
-            var f = it.getAsFile();
-            if (!f) continue;
-            ev.preventDefault();
-            var rd = new FileReader();
-            rd.onload = function (e) {
-              var u = String((e.target && e.target.result) || "");
-              bjCapture.base64 = u.split(",")[1] || "";
-              bjCapture.mime = (u.match(/^data:([^;]+);/) || [])[1] || "image/png";
-              if (bjEls.captureDrop) bjEls.captureDrop.innerHTML = '<img src="' + u + '" alt="캡처 미리보기">';
-              bjCaptureSetStat("캡처 준비됨 — [캡처에서 정보 읽기]를 누르세요");
-            };
-            rd.readAsDataURL(f);
-            return;
-          }
-        }
+        var img = bjClipboardImage(ev.clipboardData);
+        if (!img) return;
+        ev.preventDefault();
+        bjCaptureSetImage(img);
       } catch (e) {}
     });
   }
@@ -4953,6 +4969,27 @@ button { cursor: pointer; }
   if (bjEls.captureClose) {
     bjEls.captureClose.addEventListener("click", bjCaptureClosePanel);
   }
+  /* ★ 투입 영역 전역 붙여넣기 인터셉터 — 3단계 dance 없이 "붙여넣으면 바로 판독".
+     보장분석 투입구(#bjIntake)가 보이는 동안, 클립보드에 이미지가 있으면 브라우저 기본동작
+     (파일 선택창 등)을 막고 곧장 캡처 파이프라인으로 라우팅한다. document 레벨(버블 단계)이라
+     더 안쪽의 전용 핸들러(#bjCaptureDrop, [data-bj-imgdrop])가 먼저 처리하면 그쪽을 존중한다.
+     - 우선순위: 발송 첨부 이미지 컬럼([data-bj-imgdrop]) > 캡처 상자(#bjCaptureDrop) > 그 외 = 캡처 OCR.
+     - 이미지가 없으면(텍스트 등) 손대지 않아 기본 붙여넣기 유지.
+     - db 없으면 bjCaptureRun이 기존처럼 graceful 안내 후 종료(파일 선택창 열지 않음). */
+  document.addEventListener("paste", function (ev) {
+    if (ev.defaultPrevented) return;
+    if (!bjEls.section || bjEls.section.hidden) return;
+    var t = ev.target;
+    if (t && t.closest) {
+      if (t.closest("[data-bj-imgdrop]")) return; // 발송 첨부 이미지 컬럼이 우선
+      if (t.closest("#bjCaptureDrop")) return;     // 캡처 상자 전용 핸들러가 처리
+    }
+    var img = bjClipboardImage(ev.clipboardData);
+    if (!img) return;
+    ev.preventDefault();
+    bjCaptureOpen();
+    bjCaptureSetImage(img, { autoRun: true });
+  });
   if (bjEls.drop) {
     ["dragenter", "dragover"].forEach(function (evt) {
       bjEls.drop.addEventListener(evt, function (e) { e.preventDefault(); bjEls.drop.classList.add("dragover"); });
