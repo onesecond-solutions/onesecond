@@ -502,11 +502,17 @@ table.cvmx tbody tr:last-child > td{border-bottom:0}
 @media (max-width:767px){
   .cover-picker-panel .cover-grid{grid-template-columns:1fr}
 }
-.jpg-export-panel .export-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.jpg-export-panel .jpg-export-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.jpg-export-panel .jpg-export-copy{min-width:0}
+.jpg-export-panel .jpg-export-copy h3{margin:0 0 4px;font-size:17px;font-weight:800;letter-spacing:-.3px;
+  display:flex;align-items:center;gap:9px}
+.jpg-export-panel .jpg-export-copy p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.65}
+.jpg-export-panel .export-actions{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:0;
+  justify-content:flex-end}
 .jpg-export-panel .export-btn{border:0;border-radius:10px;padding:12px 18px;background:var(--ac);
   color:#fff;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer}
 .jpg-export-panel .export-btn:disabled{opacity:.55;cursor:wait}
-.jpg-export-panel .export-status{font-size:13px;color:var(--muted);line-height:1.65}
+.jpg-export-panel .export-status{flex-basis:100%;font-size:13px;color:var(--muted);line-height:1.45;text-align:right}
 .jpg-export-panel .export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:12px;margin-top:16px}
 .jpg-export-panel .export-thumb{border:1px solid var(--hair);border-radius:12px;background:#fff;
@@ -542,6 +548,9 @@ table.cvmx tbody tr:last-child > td{border-bottom:0}
   .final-sec h3{font-size:19px}
   .final-advisor{align-items:flex-start;flex-direction:column}
   .final-advisor a{width:100%}
+  .jpg-export-panel .jpg-export-head{display:block}
+  .jpg-export-panel .export-actions{justify-content:flex-start;margin-top:12px}
+  .jpg-export-panel .export-status{text-align:left}
 }
 
 
@@ -946,11 +955,15 @@ body.customer-only .final-send-wrap{
 
   <!-- ══ 카카오톡 JPG 이미지 생성 ══ -->
   <div class="panel jpg-export-panel" id="jpgExportPanel">
-    <h3><span class="n">JPG</span>카카오톡 묶음 사진</h3>
-    <p class="d">현재 편집된 원장 기준으로 720×1080px JPG 8장을 한 장씩 임시 생성합니다. 카드 DOM과 canvas는 각 장 변환 직후 제거합니다.</p>
-    <div class="export-actions">
-      <button class="export-btn" id="jpgExportBtn" type="button">JPG 8장 생성</button>
-      <div class="export-status" id="jpgExportStatus">이미지 생성 전에는 발송 카드 DOM을 만들지 않습니다.</div>
+    <div class="jpg-export-head">
+      <div class="jpg-export-copy">
+        <h3><span class="n">JPG</span>카카오톡 묶음 사진</h3>
+        <p>현재 편집된 원장 기준으로 720×1080px JPG 8장을 한 장씩 임시 생성합니다. 카드 DOM과 canvas는 각 장 변환 직후 제거합니다.</p>
+      </div>
+      <div class="export-actions">
+        <button class="export-btn" id="jpgExportBtn" type="button">JPG 8장 생성</button>
+        <div class="export-status" id="jpgExportStatus">이미지 생성 전에는 발송 카드 DOM을 만들지 않습니다.</div>
+      </div>
     </div>
     <div class="export-grid" id="jpgExportGrid"></div>
   </div>
@@ -973,24 +986,25 @@ const RENEW = ["", "비갱신", "갱신형", "일부 갱신"];
 
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const won = n => (Number(n)||0).toLocaleString()+"원";
+const coverAsset = file => (location.protocol === "file:" ? "../assets/images/coverage-covers/" : "/assets/images/coverage-covers/") + file;
 const COVER_OPTIONS = [
   {
     id:"bright",
     title:"밝은 요약형",
     desc:"화이트 배경에 핵심 숫자가 바로 보이는 표지",
-    src:"/assets/images/coverage-covers/cover-bright-summary.png"
+    src:coverAsset("cover-bright-summary.png")
   },
   {
     id:"navy",
     title:"네이비 임팩트형",
     desc:"카카오톡 목록에서 가장 강하게 눈에 들어오는 표지",
-    src:"/assets/images/coverage-covers/cover-navy-impact.png"
+    src:coverAsset("cover-navy-impact.png")
   },
   {
     id:"document",
     title:"문서 신뢰형",
     desc:"상담 자료처럼 차분하고 정돈된 표지",
-    src:"/assets/images/coverage-covers/cover-document-trust.png"
+    src:coverAsset("cover-document-trust.png")
   }
 ];
 let SELECTED_COVER = "navy";
