@@ -1281,6 +1281,15 @@ button { cursor: pointer; }
 .bj-mxs-off { color: var(--tf); opacity: .5; }
 .bj-mxs-total-head { background: var(--s2); color: var(--tf); font-weight: var(--fw-semibold); text-align: right; white-space: nowrap; }
 .bj-mxs-total { font-weight: var(--fw-semibold); color: var(--ac); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; background: var(--s1); }
+/* 카테고리(담보) 선택 체크박스 — 왼쪽 편집표 카테고리 셀. 회사 컬럼 체크박스와 2축 공존(2026-07-21) */
+.bj-mxs-cat-label { display: inline-flex; align-items: flex-start; gap: var(--if-2); cursor: pointer; }
+.bj-mxs-cat-label input { width: 16px; height: 16px; margin-top: 1px; accent-color: var(--ac); flex: none; }
+/* 고객 폰 미리보기 안 매트릭스(bjRenderCoveragePreviewMatrix) — 폰 프레임(≤320) 초과 시 가로 스크롤로 담고,
+   카드(.bj-report) 라운드/오버플로 안에서 이음새(중복 테두리·여백) 정리. 좁은 폭에서도 깨지지 않게(2026-07-21).
+   .bj-table 기본 min-width:560px + .bj-mxs-table width:100%가 320px 카드와 충돌하던 것을 미리보기 한정으로 해제. */
+.bj-report--mx .bj-mxprev { margin: 0; border: 0; border-radius: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.bj-report--mx .bj-mxs-table { width: auto; min-width: 0; }
+.bj-report--mx .bj-mxs-co-prod { max-width: 120px; }
 .bj-row-actions { display: flex; justify-content: flex-start; margin-bottom: var(--if-3); }
 .bj-review-actions { display: flex; gap: var(--if-2); justify-content: flex-end; }
 .bj-rawtext {
@@ -3885,7 +3894,32 @@ button { cursor: pointer; }
     });
     return byCol;
   }
-  /* 공통 매트릭스 표 렌더. opts = { cols:[회사], sumCols:[합계에 넣을 회사], checkbox:bool, sel:{col:bool} }.
+  /* 뱅크샐러드 매트릭스용 담보 카테고리 기본 선택 — 회사 전체 담보명(coverageMatrix.rows) 합집합에
+     하나라도 매칭되는 카테고리를 기본 체크. 세로형 bjDefaultSelCats와 동일 취지(입력 소스만 매트릭스). */
+  function bjDefaultSelCatsMatrix(f) {
+    var rows = (f.coverageMatrix && f.coverageMatrix.rows) || [];
+    var union = rows.map(function (r) { return { name: r.name, amount: "" }; });
+    var sel = {};
+    BJ_COVERAGE_CATS.forEach(function (cat) {
+      var groups = cat.groups || [{ subs: cat.subs }];
+      var has = false;
+      groups.forEach(function (g) { (g.subs || []).forEach(function (sub) { if (bjMatchCoverage(sub, union).matched) has = true; }); });
+      sel[cat.id] = has;
+    });
+    return sel;
+  }
+  /* 담보 카테고리 선택 상태 헬퍼(매트릭스/세로형 겸용) — 매트릭스형이면 매트릭스 기본값으로,
+     그 외(세로형·수동·PDF)는 기존 bjDefaultSelCats로 초기화(세로형 경로 무영향·회귀 0). */
+  function bjSelCatsFor(f) {
+    if (!f.selCats) {
+      f.selCats = (f.coverageMatrix && f.coverageMatrix.companies && f.coverageMatrix.companies.length)
+        ? bjDefaultSelCatsMatrix(f)
+        : bjDefaultSelCats(f);
+    }
+    return f.selCats;
+  }
+  /* 공통 매트릭스 표 렌더. opts = { cols:[회사], sumCols:[합계 회사], checkbox:bool, sel:{col:bool},
+     catCheckbox:bool(카테고리 선택 체크박스 노출·왼쪽 편집표), filterCats:bool(선택 카테고리만·미리보기), wrapClass:string }.
      사용자 값은 전부 esc(). 판정 표현 없음(미가입·금액·합계만). */
   function bjCoverageMatrixTable(f, opts) {
     var cols = opts.cols || [];
@@ -3893,6 +3927,7 @@ button { cursor: pointer; }
     var byCol = bjCoverageColLists(f);
     var fid = esc(f.id);
     var sel = opts.sel || {};
+    var selCats = bjSelCatsFor(f);
     var head = '<thead><tr><th class="bj-mxs-head" colspan="3" scope="col">담보</th>';
     cols.forEach(function (co) {
       var cb = "";
@@ -3912,12 +3947,20 @@ button { cursor: pointer; }
       var groups = cat.groups || [{ label: "", subs: cat.subs }];
       var totalSubs = groups.reduce(function (n, g) { return n + (g.subs || []).length; }, 0);
       if (!totalSubs) return;
+      if (opts.filterCats && !selCats[cat.id]) return;   /* 미리보기: 선택 해제된 카테고리(담보)는 제외 */
       var first = true;
       groups.forEach(function (g) {
         var gSubs = g.subs || [];
         gSubs.forEach(function (sub, si) {
           var tr = '<tr>';
-          if (first) tr += '<td class="bj-mxs-cat" rowspan="' + totalSubs + '">' + esc(cat.name) + '</td>';
+          if (first) {
+            var catInner = esc(cat.name);
+            if (opts.catCheckbox) {   /* 왼쪽 편집표: 카테고리(담보) 선택 체크박스 — 회사 체크박스와 2축 공존 */
+              var cch = selCats[cat.id] ? " checked" : "";
+              catInner = '<label class="bj-mxs-cat-label"><input type="checkbox" data-bj-cat="' + esc(cat.id) + '" data-bj-id="' + fid + '"' + cch + '>' + esc(cat.name) + '</label>';
+            }
+            tr += '<td class="bj-mxs-cat" rowspan="' + totalSubs + '">' + catInner + '</td>';
+          }
           if (g.label && si === 0) tr += '<td class="bj-mxs-group" rowspan="' + gSubs.length + '">' + esc(g.label) + '</td>';
           else if (!g.label) tr += '<td class="bj-mxs-group"></td>';
           tr += '<td class="bj-mxs-sub">' + esc(sub.name) + '</td>';
@@ -3940,26 +3983,37 @@ button { cursor: pointer; }
       });
     });
     body += '</tbody>';
-    return '<div class="bj-table-wrap bj-mx-wrap"><table class="bj-table bj-mxs-table">' + head + body + '</table></div>';
+    var wrapCls = 'bj-table-wrap bj-mx-wrap' + (opts.wrapClass ? ' ' + opts.wrapClass : '');
+    return '<div class="' + wrapCls + '"><table class="bj-table bj-mxs-table">' + head + body + '</table></div>';
   }
-  /* 왼쪽 편집표 — 전체 회사 컬럼(체크박스 포함) + D열 합계는 체크된 회사만. */
+  /* 왼쪽 편집표 — 전체 회사 컬럼(체크박스 포함) + 카테고리(담보) 선택 체크박스 + D열 합계는 체크된 회사만.
+     2축 공존: 회사 선택(data-bj-selco) + 담보(카테고리) 선택(data-bj-cat). */
   function bjRenderCoverageSelectMatrix(f) {
     var companies = (f.coverageMatrix && f.coverageMatrix.companies) || [];
     var sel = bjSelCompaniesFor(f);
     var sumCols = companies.filter(function (co) { return sel[co.col]; });
-    return bjCoverageMatrixTable(f, { cols: companies, sumCols: sumCols, checkbox: true, sel: sel });
+    return bjCoverageMatrixTable(f, { cols: companies, sumCols: sumCols, checkbox: true, catCheckbox: true, sel: sel });
   }
-  /* 오른쪽 고객 미리보기 — 선택된 회사 컬럼만(체크박스 없음) + D열 합계는 표시 회사 전부. */
+  /* 오른쪽 고객 미리보기 — 선택된 회사 × 선택된 카테고리(담보)만(체크박스 없음) + D열 합계는 표시 회사 전부. */
   function bjRenderCoveragePreviewMatrix(f) {
     var companies = (f.coverageMatrix && f.coverageMatrix.companies) || [];
     var sel = bjSelCompaniesFor(f);
     var shown = companies.filter(function (co) { return sel[co.col]; });
+    var selCats = bjSelCatsFor(f);
+    var anyCat = BJ_COVERAGE_CATS.some(function (cat) {
+      var groups = cat.groups || [{ subs: cat.subs }];
+      var totalSubs = groups.reduce(function (n, g) { return n + (g.subs || []).length; }, 0);
+      return totalSubs && selCats[cat.id];
+    });
     var name = bjNormText(bjCustomerNameOf(f)) || "고객";
     var head = '<div class="bj-report-head"><h3>' + esc(name) + ' 고객님</h3><span class="bj-report-subtitle">보장 담보</span></div>';
     if (!shown.length) {
-      return '<div class="bj-report">' + head + '<div class="bj-pc-empty">표시할 회사를 왼쪽에서 선택하세요.</div></div>';
+      return '<div class="bj-report bj-report--mx">' + head + '<div class="bj-pc-empty">표시할 회사를 왼쪽에서 선택하세요.</div></div>';
     }
-    return '<div class="bj-report">' + head + bjCoverageMatrixTable(f, { cols: shown, sumCols: shown, checkbox: false }) + '</div>';
+    if (!anyCat) {
+      return '<div class="bj-report bj-report--mx">' + head + '<div class="bj-pc-empty">표시할 담보(카테고리)를 왼쪽에서 선택하세요.</div></div>';
+    }
+    return '<div class="bj-report bj-report--mx">' + head + bjCoverageMatrixTable(f, { cols: shown, sumCols: shown, checkbox: false, filterCats: true, wrapClass: "bj-mxprev" }) + '</div>';
   }
 
   /* 검토 본문 3섹션 독립 아코디언 래퍼 — 헤더(제목+캐럿) 클릭 시 본문 펼침/닫힘.
@@ -4791,7 +4845,7 @@ button { cursor: pointer; }
       if (!catId) return;
       var f = bjState.files.find(function (x) { return x.id === el.getAttribute("data-bj-id"); });
       if (!f) return;
-      if (!f.selCats) f.selCats = bjDefaultSelCats(f);
+      bjSelCatsFor(f);   /* 매트릭스형·세로형 모두 올바른 기본값으로 초기화(미초기화 시) */
       f.selCats[catId] = el.checked;
       bjUpdatePhones(f);
     });
