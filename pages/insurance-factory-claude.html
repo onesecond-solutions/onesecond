@@ -1693,6 +1693,15 @@ button { cursor: pointer; }
 }
 .bj-cc-total span { font-size: var(--fs-meta); color: var(--tf); font-weight: var(--fw-bold); }
 .bj-cc-total b { font-size: var(--fs-body-lg); color: var(--tp); font-weight: var(--fw-black); }
+/* 미리보기 계약 카드 추가 컬럼(갱신여부·비고) — 편집표 헤더 체크박스로 켠 컬럼만 표시 */
+.bj-cc-extras { display: flex; flex-direction: column; gap: 2px; margin-top: var(--if-1); }
+.bj-cc-extra { display: flex; gap: var(--if-2); align-items: baseline; font-size: var(--fs-caption); }
+.bj-cc-extra-k { flex: 0 0 auto; color: var(--tf); font-weight: var(--fw-bold); }
+.bj-cc-extra-v { min-width: 0; color: var(--tp); word-break: break-word; }
+.bj-cc-extra-none { color: var(--tf); opacity: .55; }
+/* 계약 편집표 헤더 컬럼 표시 체크박스(갱신여부·비고) */
+.bj-contract-table th .bj-colcheck { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.bj-contract-table th .bj-colcheck input { margin: 0; cursor: pointer; }
 
 /* PC/모바일 미리보기 토글 (계약·담보 오른쪽 상단) — 설계사가 두 기기 미리보기를 전환 */
 .bj-preview-toggle {
@@ -3534,18 +3543,38 @@ button { cursor: pointer; }
      계약 화면 오른쪽에서만 사용(담보 리포트 renderCustomerReport와 분리·무접촉).
      데이터는 전부 파싱된 계약값(f.contracts: company/product/premium) — 하드코딩 0.
      표시는 회사·상품·월보험료만(계약일·갱신여부·비고는 여기까지만, 나중에 확장). */
-  function renderContractListPreview(contracts, customerName) {
+  /* 계약 컬럼(갱신여부·비고) 미리보기 노출 선택 상태 헬퍼 — f.contractCols = { renewal, note }.
+     기본값 = 둘 다 미체크(기존처럼 미노출). 설계사가 편집표 헤더 체크박스로 켠 컬럼만 미리보기에 추가 표시. */
+  function bjContractColsFor(f) {
+    if (!f.contractCols) f.contractCols = { renewal: false, note: false };
+    if (typeof f.contractCols.renewal !== "boolean") f.contractCols.renewal = false;
+    if (typeof f.contractCols.note !== "boolean") f.contractCols.note = false;
+    return f.contractCols;
+  }
+  /* 미리보기 계약 카드의 추가 컬럼 한 줄(라벨·값). 값이 없으면 옅은 "-". 사용자 값은 esc(). */
+  function bjContractExtraRow(label, value) {
+    var v = bjNormText(value);
+    return '<div class="bj-cc-extra"><span class="bj-cc-extra-k">' + esc(label) + '</span>' +
+      '<span class="bj-cc-extra-v">' + (v ? esc(v) : '<span class="bj-cc-extra-none">-</span>') + '</span></div>';
+  }
+
+  function renderContractListPreview(contracts, customerName, cols) {
     var name = bjNormText(customerName) || "고객";
     var list = contracts || [];
+    var cc = cols || { renewal: false, note: false };
     var cards = list.map(function (c) {
       var company = bjNormText(c.company);
       var product = bjNormText(c.product);
       var premNum = bjPremiumToNumber(c.premium);
       var premHtml = premNum > 0 ? '월 ' + bjFormatWon(premNum) + '원' : '—';
+      var extra = "";
+      if (cc.renewal) extra += bjContractExtraRow(BJ_CONTRACT_LABELS.renewal, c.renewal);
+      if (cc.note) extra += bjContractExtraRow(BJ_CONTRACT_LABELS.note, c.note);
       return '<section class="bj-cc">' +
         '<div class="bj-cc-main">' +
           '<div class="bj-cc-company">' + (company ? esc(company) : '보험회사 미기재') + '</div>' +
           '<div class="bj-cc-product">' + (product ? esc(product) : '상품명 미기재') + '</div>' +
+          (extra ? '<div class="bj-cc-extras">' + extra + '</div>' : '') +
         '</div>' +
         '<div class="bj-cc-premium">' + premHtml + '</div>' +
       '</section>';
@@ -3586,9 +3615,15 @@ button { cursor: pointer; }
 
   /* 계약 PC 미리보기 = 넓은 계약 표(조회용). No·보험회사·상품명·계약일·월보험료 + 합계. 삭제/체크박스 없음.
      데이터는 renderContractListPreview와 동일한 f.contracts(파싱값) — 하드코딩 0. */
-  function renderContractTablePC(contracts, customerName) {
+  function renderContractTablePC(contracts, customerName, cols) {
     var name = bjNormText(customerName) || "고객";
     var list = contracts || [];
+    var cc = cols || { renewal: false, note: false };
+    /* PC 표 추가 셀 — 값 없으면 옅은 "-"(bj-pc-muted). 사용자 값은 esc(). */
+    function pcCell(value) {
+      var v = bjNormText(value);
+      return '<td>' + (v ? esc(v) : '<span class="bj-pc-muted">-</span>') + '</td>';
+    }
     var rows = list.map(function (c, i) {
       var company = bjNormText(c.company);
       var product = bjNormText(c.product);
@@ -3601,14 +3636,19 @@ button { cursor: pointer; }
         '<td>' + (product ? esc(product) : '<span class="bj-pc-muted">상품명 미기재</span>') + '</td>' +
         '<td>' + (date ? esc(date) : '<span class="bj-pc-muted">—</span>') + '</td>' +
         '<td class="bj-pc-amt">' + premHtml + '</td>' +
+        (cc.renewal ? pcCell(c.renewal) : "") +
+        (cc.note ? pcCell(c.note) : "") +
       '</tr>';
     }).join("");
+    var extraHead = (cc.renewal ? '<th>' + esc(BJ_CONTRACT_LABELS.renewal) + '</th>' : "") +
+      (cc.note ? '<th>' + esc(BJ_CONTRACT_LABELS.note) + '</th>' : "");
+    var extraFootCells = (cc.renewal ? '<td></td>' : "") + (cc.note ? '<td></td>' : "");
     var inner = list.length
       ? '<table class="bj-pc-table">' +
-          '<thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th></tr></thead>' +
+          '<thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th>' + extraHead + '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
           '<tfoot><tr><td class="bj-pc-foot-total" colspan="4">총 ' + list.length + '건</td>' +
-            '<td class="bj-pc-amt">월 ' + bjFormatWon(bjSumPremium(list)) + '원</td></tr></tfoot>' +
+            '<td class="bj-pc-amt">월 ' + bjFormatWon(bjSumPremium(list)) + '원</td>' + extraFootCells + '</tr></tfoot>' +
         '</table>'
       : '<div class="bj-pc-empty">파싱된 계약이 없습니다. 왼쪽 표에서 계약을 추가하면 여기에 표시됩니다.</div>';
     return bjPcFrame(name + " 고객님 · 보유 계약", inner);
@@ -3671,10 +3711,10 @@ button { cursor: pointer; }
   try { window.renderCoverageTablePC = renderCoverageTablePC; } catch (e) {}
 
   /* dispatcher — 기기 모드에 따라 모바일/PC 렌더러 선택(고객용 페이지 인계 지점: mode를 기기 감지로 넣으면 됨). */
-  function renderContractPreview(contracts, customerName, mode) {
+  function renderContractPreview(contracts, customerName, mode, cols) {
     return mode === "pc"
-      ? renderContractTablePC(contracts, customerName)
-      : renderContractListPreview(contracts, customerName);
+      ? renderContractTablePC(contracts, customerName, cols)
+      : renderContractListPreview(contracts, customerName, cols);
   }
   function renderCoveragePreview(selection, customerName, mode) {
     return mode === "pc"
@@ -3746,7 +3786,7 @@ button { cursor: pointer; }
   function bjUpdatePhones(f) {
     /* 계약 화면 오른쪽 = 계약 목록 미리보기 / 담보 화면 오른쪽 = 담보 리포트(무변경). */
     var contractEl = document.getElementById("bj-phone-contract-" + f.id);
-    if (contractEl) contractEl.innerHTML = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract);
+    if (contractEl) contractEl.innerHTML = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract, bjContractColsFor(f));
     var coverageEl = document.getElementById("bj-phone-coverage-" + f.id);
     if (coverageEl) {
       var hasCM = !!(f.coverageMatrix && f.coverageMatrix.companies && f.coverageMatrix.companies.length);
@@ -4108,14 +4148,17 @@ button { cursor: pointer; }
     var reportHtml = hasCoverageMatrix
       ? bjRenderCoveragePreviewMatrix(f)
       : renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
-    var contractPreviewHtml = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract);
+    var contractPreviewHtml = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract, bjContractColsFor(f));
     /* (1) 계약 정보 섹션 = 4컬럼: ①편집표 ②고객 미리보기(기존 bj-2panel, 스플리터·토글 무변경) | ③여유 | ④이미지. 제목은 아코디언 헤더로. */
     var contractTitle = '계약 정보 (' + f.contracts.length + '건)';
     var contractBody =
       '<div class="bj-review-cols">' +
       '<div class="bj-2panel">' +
         '<div class="bj-2panel-left">' +
-          '<div class="bj-table-wrap"><table class="bj-table bj-contract-table"><thead><tr><th class="bj-check"><input type="checkbox" class="bj-check-all" data-bj-check-all data-bj-id="' + fid + '" aria-label="전체 선택"></th><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th><th>갱신여부</th><th class="bj-note">비고</th><th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
+          '<div class="bj-table-wrap"><table class="bj-table bj-contract-table"><thead><tr><th class="bj-check"><input type="checkbox" class="bj-check-all" data-bj-check-all data-bj-id="' + fid + '" aria-label="전체 선택"></th><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th>' +
+              '<th><label class="bj-colcheck"><input type="checkbox" data-bj-contractcol="renewal" data-bj-id="' + fid + '"' + (bjContractColsFor(f).renewal ? ' checked' : '') + ' aria-label="갱신여부를 고객 미리보기에 표시">갱신여부</label></th>' +
+              '<th class="bj-note"><label class="bj-colcheck"><input type="checkbox" data-bj-contractcol="note" data-bj-id="' + fid + '"' + (bjContractColsFor(f).note ? ' checked' : '') + ' aria-label="비고를 고객 미리보기에 표시">비고</label></th>' +
+              '<th></th></tr></thead><tbody>' + contractRows + bjSumRow + '</tbody></table></div>' +
           '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-contract" data-bj-id="' + fid + '">계약 행 추가</button></div>' +
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="계약 화면 폭 조절"></div>' +
@@ -4810,6 +4853,16 @@ button { cursor: pointer; }
         if (im) im.attached = el.checked;
         var imCnt = document.getElementById("bj-imgcount-" + imScreen + "-" + imf.id);
         if (imCnt) imCnt.textContent = bjImageCountText(imf, imScreen);
+        return;
+      }
+      /* 계약 편집표 갱신여부·비고 컬럼 헤더 체크박스 — f.contractCols 갱신 → 오른쪽 계약 미리보기 즉시 갱신.
+         체크된 컬럼만 고객 미리보기 계약 항목에 추가 표시(기본=미체크·미노출). 담보 회사 체크박스와 동일 취지. */
+      var contractColKey = el.getAttribute("data-bj-contractcol");
+      if (contractColKey === "renewal" || contractColKey === "note") {
+        var ccf = bjState.files.find(function (x) { return x.id === el.getAttribute("data-bj-id"); });
+        if (!ccf) return;
+        bjContractColsFor(ccf)[contractColKey] = el.checked;
+        bjUpdatePhones(ccf);
         return;
       }
       /* 계약 표 행 선택 체크박스 — 전체선택 토글 + 일부 선택 시 indeterminate(중간상태).
