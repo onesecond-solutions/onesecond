@@ -1263,6 +1263,24 @@ button { cursor: pointer; }
 .bj-mx-total { font-weight: var(--fw-semibold); color: var(--tp); }
 .bj-mx-grand-row th, .bj-mx-grand-row td { background: var(--s2); }
 .bj-mx-grand { font-weight: var(--fw-bold); color: var(--ac); text-align: right; }
+/* 담보 카테고리 × 회사 선택 매트릭스 (뱅크샐러드형) — bj-mxs- 네임스페이스 */
+.bj-mxs-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: var(--fs-meta); }
+.bj-mxs-table th, .bj-mxs-table td { border-bottom: 1px solid var(--bd); border-right: 1px solid var(--bd); padding: var(--if-2); vertical-align: middle; }
+.bj-mxs-table tr th:last-child, .bj-mxs-table tr td:last-child { border-right: none; }
+.bj-mxs-head { text-align: left; background: var(--s2); color: var(--tf); font-weight: var(--fw-semibold); white-space: nowrap; }
+.bj-mxs-cat { text-align: left; font-weight: var(--fw-semibold); color: var(--tp); background: var(--s1); white-space: nowrap; vertical-align: top; }
+.bj-mxs-group { text-align: left; color: var(--tf); background: var(--s1); white-space: nowrap; vertical-align: top; }
+.bj-mxs-sub { text-align: left; color: var(--tp); white-space: nowrap; }
+.bj-mxs-co { text-align: right; background: var(--s2); white-space: nowrap; vertical-align: top; }
+.bj-mxs-co label { display: inline-flex; align-items: center; gap: var(--if-2); cursor: pointer; justify-content: flex-end; width: 100%; margin-bottom: var(--if-1); }
+.bj-mxs-co input { width: 16px; height: 16px; accent-color: var(--ac); }
+.bj-mxs-co-name { display: block; font-weight: var(--fw-semibold); color: var(--tp); }
+.bj-mxs-co-prod { display: block; font-size: var(--fs-caption); color: var(--tf); max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.bj-mxs-co-prem { display: block; font-size: var(--fs-caption); color: var(--tf); font-variant-numeric: tabular-nums; }
+.bj-mxs-amt { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--tp); }
+.bj-mxs-off { color: var(--tf); opacity: .5; }
+.bj-mxs-total-head { background: var(--s2); color: var(--tf); font-weight: var(--fw-semibold); text-align: right; white-space: nowrap; }
+.bj-mxs-total { font-weight: var(--fw-semibold); color: var(--ac); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; background: var(--s1); }
 .bj-row-actions { display: flex; justify-content: flex-start; margin-bottom: var(--if-3); }
 .bj-review-actions { display: flex; gap: var(--if-2); justify-content: flex-end; }
 .bj-rawtext {
@@ -3692,7 +3710,12 @@ button { cursor: pointer; }
     var contractEl = document.getElementById("bj-phone-contract-" + f.id);
     if (contractEl) contractEl.innerHTML = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract);
     var coverageEl = document.getElementById("bj-phone-coverage-" + f.id);
-    if (coverageEl) coverageEl.innerHTML = renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
+    if (coverageEl) {
+      var hasCM = !!(f.coverageMatrix && f.coverageMatrix.companies && f.coverageMatrix.companies.length);
+      coverageEl.innerHTML = hasCM
+        ? bjRenderCoveragePreviewMatrix(f)
+        : renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
+    }
   }
 
   /* ===== 4컬럼 확장: ③여유 + ④이미지 추가 컬럼 (2026-07-20) =====
@@ -3809,6 +3832,107 @@ button { cursor: pointer; }
     return '<div class="bj-table-wrap bj-mx-wrap"><table class="bj-table bj-mx-table">' + head + body + foot + '</table></div>';
   }
 
+  /* ── 담보 카테고리 × 회사 선택 매트릭스 (뱅크샐러드형 전용) ─────────────────
+     세로=카테고리→중분류→세부담보(BJ_COVERAGE_CATS), 가로=회사(coverageMatrix.companies).
+     각 회사 컬럼: 세부담보를 그 회사 담보리스트에 bjMatchCoverage → 금액 / "미가입"(판정 표현 없음).
+     D열(맨 오른쪽)=선택(합산 대상) 회사들의 그 담보 금액 합계(bjPremiumToNumber→bjFormatWon).
+     세로형·수동·PDF(coverageMatrix 없음)에서는 호출되지 않음 → 기존 bjRenderCoverageSelect 유지. */
+
+  /* 회사 선택 상태 헬퍼 — f.selCompanies = { col: bool }. 기본값 = 전체 회사 체크. */
+  function bjSelCompaniesFor(f) {
+    var companies = (f.coverageMatrix && f.coverageMatrix.companies) || [];
+    if (!f.selCompanies) f.selCompanies = {};
+    companies.forEach(function (co) {
+      if (!Object.prototype.hasOwnProperty.call(f.selCompanies, co.col)) f.selCompanies[co.col] = true;
+    });
+    return f.selCompanies;
+  }
+  /* col → 그 회사의 담보 리스트 [{name, amount}] (bjMatchCoverage 입력 형태). */
+  function bjCoverageColLists(f) {
+    var cm = f.coverageMatrix || {};
+    var byCol = {};
+    (cm.companies || []).forEach(function (co) {
+      byCol[co.col] = (cm.rows || []).map(function (r) { return { name: r.name, amount: r.amounts[co.col] }; });
+    });
+    return byCol;
+  }
+  /* 공통 매트릭스 표 렌더. opts = { cols:[회사], sumCols:[합계에 넣을 회사], checkbox:bool, sel:{col:bool} }.
+     사용자 값은 전부 esc(). 판정 표현 없음(미가입·금액·합계만). */
+  function bjCoverageMatrixTable(f, opts) {
+    var cols = opts.cols || [];
+    var sumCols = opts.sumCols || [];
+    var byCol = bjCoverageColLists(f);
+    var fid = esc(f.id);
+    var sel = opts.sel || {};
+    var head = '<thead><tr><th class="bj-mxs-head" colspan="3" scope="col">담보</th>';
+    cols.forEach(function (co) {
+      var cb = "";
+      if (opts.checkbox) {
+        var checked = sel[co.col] ? " checked" : "";
+        cb = '<label><input type="checkbox" data-bj-selco="' + esc(String(co.col)) + '" data-bj-id="' + fid + '"' + checked + '></label>';
+      }
+      head += '<th class="bj-mxs-co" scope="col">' + cb +
+        '<span class="bj-mxs-co-name">' + esc(co.company || "-") + '</span>' +
+        '<span class="bj-mxs-co-prod">' + esc(co.product || "") + '</span>' +
+        '<span class="bj-mxs-co-prem">' + (co.premium ? '월 ' + esc(co.premium) + '원' : '') + '</span>' +
+      '</th>';
+    });
+    head += '<th class="bj-mxs-total-head" scope="col">합계</th></tr></thead>';
+    var body = '<tbody>';
+    BJ_COVERAGE_CATS.forEach(function (cat) {
+      var groups = cat.groups || [{ label: "", subs: cat.subs }];
+      var totalSubs = groups.reduce(function (n, g) { return n + (g.subs || []).length; }, 0);
+      if (!totalSubs) return;
+      var first = true;
+      groups.forEach(function (g) {
+        var gSubs = g.subs || [];
+        gSubs.forEach(function (sub, si) {
+          var tr = '<tr>';
+          if (first) tr += '<td class="bj-mxs-cat" rowspan="' + totalSubs + '">' + esc(cat.name) + '</td>';
+          if (g.label && si === 0) tr += '<td class="bj-mxs-group" rowspan="' + gSubs.length + '">' + esc(g.label) + '</td>';
+          else if (!g.label) tr += '<td class="bj-mxs-group"></td>';
+          tr += '<td class="bj-mxs-sub">' + esc(sub.name) + '</td>';
+          cols.forEach(function (co) {
+            var m = bjMatchCoverage(sub, byCol[co.col] || []);
+            tr += m.matched
+              ? '<td class="bj-mxs-amt">' + esc(m.amount || "가입") + '</td>'
+              : '<td class="bj-mxs-amt"><span class="bj-mxs-off">미가입</span></td>';
+          });
+          var total = 0;
+          sumCols.forEach(function (co) {
+            var mm = bjMatchCoverage(sub, byCol[co.col] || []);
+            if (mm.matched) total += bjPremiumToNumber(mm.amount);
+          });
+          tr += '<td class="bj-mxs-total">' + (total > 0 ? esc(bjFormatWon(total)) : '<span class="bj-mxs-off">-</span>') + '</td>';
+          tr += '</tr>';
+          body += tr;
+          first = false;
+        });
+      });
+    });
+    body += '</tbody>';
+    return '<div class="bj-table-wrap bj-mx-wrap"><table class="bj-table bj-mxs-table">' + head + body + '</table></div>';
+  }
+  /* 왼쪽 편집표 — 전체 회사 컬럼(체크박스 포함) + D열 합계는 체크된 회사만. */
+  function bjRenderCoverageSelectMatrix(f) {
+    var companies = (f.coverageMatrix && f.coverageMatrix.companies) || [];
+    var sel = bjSelCompaniesFor(f);
+    var sumCols = companies.filter(function (co) { return sel[co.col]; });
+    return bjCoverageMatrixTable(f, { cols: companies, sumCols: sumCols, checkbox: true, sel: sel });
+  }
+  /* 오른쪽 고객 미리보기 — 선택된 회사 컬럼만(체크박스 없음) + D열 합계는 표시 회사 전부. */
+  function bjRenderCoveragePreviewMatrix(f) {
+    var companies = (f.coverageMatrix && f.coverageMatrix.companies) || [];
+    var sel = bjSelCompaniesFor(f);
+    var shown = companies.filter(function (co) { return sel[co.col]; });
+    var name = bjNormText(bjCustomerNameOf(f)) || "고객";
+    var head = '<div class="bj-report-head"><h3>' + esc(name) + ' 고객님</h3><span class="bj-report-subtitle">보장 담보</span></div>';
+    if (!shown.length) {
+      return '<div class="bj-report">' + head + '<div class="bj-pc-empty">표시할 회사를 왼쪽에서 선택하세요.</div></div>';
+    }
+    return '<div class="bj-report">' + head + bjCoverageMatrixTable(f, { cols: shown, sumCols: shown, checkbox: false }) + '</div>';
+  }
+
   function bjRenderReview(f) {
     /* 고객명 편집칸 — 항상 노출(엑셀에 고객명 셀이 없는 뱅크샐러드 등도 포함).
        값은 bjCustomerNameOf(파싱값/편집값 → 없으면 파일명 추출)로 미리 채워, 설계사가 바로 확인·수정한다.
@@ -3882,7 +4006,11 @@ button { cursor: pointer; }
       '</tr>';
     }).join("");
     var fid = esc(f.id);
-    var reportHtml = renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
+    /* 뱅크샐러드형(coverageMatrix 존재)이면 담보 정보를 카테고리×회사 매트릭스로, 그 외는 기존 카테고리 선택/리포트 그대로. */
+    var hasCoverageMatrix = !!(f.coverageMatrix && f.coverageMatrix.companies && f.coverageMatrix.companies.length);
+    var reportHtml = hasCoverageMatrix
+      ? bjRenderCoveragePreviewMatrix(f)
+      : renderCoveragePreview(bjSelectionFor(f), bjCustomerNameOf(f), bjPreviewMode.coverage);
     var contractPreviewHtml = renderContractPreview(f.contracts, bjCustomerNameOf(f), bjPreviewMode.contract);
     /* (1) 계약 정보 화면 = 4컬럼: ①편집표 ②고객 미리보기(기존 bj-2panel, 스플리터·토글 무변경) | ③여유 | ④이미지 추가 */
     var contractPanel = '<div class="bj-review-title">계약 정보 (' + f.contracts.length + '건)</div>' +
@@ -3902,7 +4030,6 @@ button { cursor: pointer; }
       '</div>';
     /* 파일 원본 담보 블록 — 뱅크샐러드형(coverageMatrix 존재)이면 회사 가로 매트릭스(읽기 전용),
        그 외(세로형·수동·PDF)면 기존 2열 편집표(담보 행 추가 버튼 포함) 그대로 유지(회귀 0). */
-    var hasCoverageMatrix = !!(f.coverageMatrix && f.coverageMatrix.companies && f.coverageMatrix.companies.length);
     var bjCoverageOriginBlock = hasCoverageMatrix
       ? '<div class="bj-review-title">파일 원본 담보 (엑셀 그대로 · 회사별 ' + f.coverageMatrix.companies.length + '개사)</div>' +
         bjRenderCoverageMatrix(f)
@@ -3910,11 +4037,11 @@ button { cursor: pointer; }
         '<div class="bj-table-wrap"><table class="bj-table"><thead><tr><th>담보명</th><th>가입금액</th><th></th></tr></thead><tbody>' + coverageRows + '</tbody></table></div>' +
         '<div class="bj-row-actions"><button type="button" class="bj-btn" data-bj-act="add-coverage" data-bj-id="' + fid + '">담보 행 추가</button></div>';
     /* (2) 담보 정보 화면 = 4컬럼: ①편집표(카테고리+파일 원본 담보) ②고객 미리보기(기존 bj-2panel, 무변경) | ③여유 | ④이미지 추가 */
-    var coveragePanel = '<div class="bj-review-title">담보 정보 — 카테고리 선택</div>' +
+    var coveragePanel = '<div class="bj-review-title">담보 정보 — ' + (hasCoverageMatrix ? '회사 선택' : '카테고리 선택') + '</div>' +
       '<div class="bj-review-cols">' +
       '<div class="bj-2panel">' +
         '<div class="bj-2panel-left">' +
-          '<div id="bj-covsel-' + fid + '">' + bjRenderCoverageSelect(f) + '</div>' +
+          '<div id="bj-covsel-' + fid + '">' + (hasCoverageMatrix ? bjRenderCoverageSelectMatrix(f) : bjRenderCoverageSelect(f)) + '</div>' +
           bjCoverageOriginBlock +
         '</div>' +
         '<div class="bj-2panel-bar" role="separator" aria-orientation="vertical" aria-label="담보 화면 폭 조절"></div>' +
@@ -4555,7 +4682,8 @@ button { cursor: pointer; }
       /* 파싱 원본 담보 편집 시 담보 카테고리 상태 표·고객 폰 미리보기를 즉시 재계산(별도 DOM이라 포커스 유지) */
       if (kind === "coverage") {
         var box = document.getElementById("bj-covsel-" + f.id);
-        if (box) box.innerHTML = bjRenderCoverageSelect(f);
+        var hasCM2 = !!(f.coverageMatrix && f.coverageMatrix.companies && f.coverageMatrix.companies.length);
+        if (box) box.innerHTML = hasCM2 ? bjRenderCoverageSelectMatrix(f) : bjRenderCoverageSelect(f);
         bjUpdatePhones(f);
       }
     });
@@ -4588,6 +4716,18 @@ button { cursor: pointer; }
           allBox.checked = rowBoxes.length > 0 && checkedCount === rowBoxes.length;
           allBox.indeterminate = checkedCount > 0 && checkedCount < rowBoxes.length;
         }
+        return;
+      }
+      /* 뱅크샐러드 매트릭스 회사 선택 체크박스 — f.selCompanies 갱신 → 왼쪽 D열 합계 + 오른쪽 미리보기 즉시 갱신. */
+      var selCol = el.getAttribute("data-bj-selco");
+      if (selCol != null) {
+        var cf = bjState.files.find(function (x) { return x.id === el.getAttribute("data-bj-id"); });
+        if (!cf) return;
+        var selc = bjSelCompaniesFor(cf);
+        selc[selCol] = el.checked;
+        var cbox = document.getElementById("bj-covsel-" + cf.id);
+        if (cbox) cbox.innerHTML = bjRenderCoverageSelectMatrix(cf);
+        bjUpdatePhones(cf);
         return;
       }
       var catId = el.getAttribute("data-bj-cat");
