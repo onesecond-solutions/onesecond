@@ -1096,6 +1096,9 @@ button { cursor: pointer; }
   border-color: var(--ac);
   background: color-mix(in srgb, var(--ac) 8%, var(--s2));
 }
+/* 투입구 전역 드래그 중 — 드롭존 밖(또는 드롭존이 가려진 상태)에서도 "여기 놓으면 판독"을 알리는 하이라이트(2026-07-21). */
+.bj-intake--dragover { outline: 2px dashed var(--ac); outline-offset: 6px; border-radius: var(--radius-md); }
+.bj-intake--dragover .bj-drop { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 8%, var(--s2)); }
 .bj-drop-icon { font-size: 26px; margin-bottom: var(--if-2); }
 .bj-drop-title { margin: 0; font-weight: var(--fw-semibold); color: var(--tp); }
 .bj-drop-sub { margin: var(--if-1) 0 var(--if-3); color: var(--tf); font-size: var(--fs-caption); }
@@ -1279,6 +1282,9 @@ button { cursor: pointer; }
 .bj-mxs-co-prem { display: block; font-size: var(--fs-caption); color: var(--tf); font-variant-numeric: tabular-nums; }
 .bj-mxs-amt { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--tp); }
 .bj-mxs-off { color: var(--tf); opacity: .5; }
+/* '미가입'은 판정(부족/충분)이 아니라 사실 라벨 — 예전 .bj-cov-status.off(color:var(--err)) 톤 복원해 눈에 띄게.
+   편집표·미리보기 공통. 합계 '-' 대시(.bj-mxs-off 단독)는 회색 유지. 가입금액 셀은 무변경(2026-07-21). */
+.bj-mxs-none { color: var(--err); opacity: 1; font-weight: var(--fw-bold); }
 .bj-mxs-total-head { background: var(--s2); color: var(--tf); font-weight: var(--fw-semibold); text-align: right; white-space: nowrap; }
 .bj-mxs-total { font-weight: var(--fw-semibold); color: var(--ac); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; background: var(--s1); }
 /* 카테고리(담보) 선택 체크박스 — 왼쪽 편집표 카테고리 셀. 회사 컬럼 체크박스와 2축 공존(2026-07-21) */
@@ -1290,6 +1296,19 @@ button { cursor: pointer; }
 .bj-report--mx .bj-mxprev { margin: 0; border: 0; border-radius: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .bj-report--mx .bj-mxs-table { width: auto; min-width: 0; }
 .bj-report--mx .bj-mxs-co-prod { max-width: 120px; }
+/* 미리보기(오른쪽/폰) 담보 이름은 세부담보 1컬럼으로 압축 + 왼쪽 고정(sticky) → 회사·가입금액·합계가 처음부터 보이게(2026-07-21).
+   편집표(왼쪽)는 카테고리·중분류·세부담보 3컬럼 구조 그대로 유지. */
+.bj-report--mx .bj-mxs-namecol {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  max-width: 116px;
+  white-space: normal;
+  word-break: keep-all;
+  box-shadow: 1px 0 0 var(--bd);
+}
+.bj-report--mx tbody .bj-mxs-namecol { background: var(--s1); }
+.bj-report--mx thead .bj-mxs-namecol { z-index: 3; background: var(--s2); }
 .bj-row-actions { display: flex; justify-content: flex-start; margin-bottom: var(--if-3); }
 .bj-review-actions { display: flex; gap: var(--if-2); justify-content: flex-end; }
 .bj-rawtext {
@@ -1553,12 +1572,17 @@ button { cursor: pointer; }
   gap: var(--if-3);
   padding: var(--if-3) var(--if-4);
   border: 0;
-  background: var(--s1);
+  /* 접기/펼치기 affordance: 브랜드색 왼쪽 바 + 옅은 브랜드 틴트 + hover 시 진해짐(2026-07-21) */
+  border-left: 3px solid var(--ac);
+  background: rgba(99, 102, 241, 0.06);
   text-align: left;
   cursor: pointer;
+  transition: background .12s ease;
 }
+.bj-sec-head:hover { background: rgba(99, 102, 241, 0.12); }
 .bj-sec-title { font-size: var(--fs-title-sm); font-weight: var(--fw-black); color: var(--tp); }
-.bj-sec-caret { color: var(--tf); transition: transform .15s ease; }
+.bj-sec-caret { color: var(--ac); font-size: 1.05em; transition: transform .15s ease; }
+.bj-sec.open .bj-sec-head { background: rgba(99, 102, 241, 0.09); }
 .bj-sec.open .bj-sec-caret { transform: rotate(180deg); }
 .bj-sec-body { padding: var(--if-3) var(--if-4) var(--if-4); }
 .bj-sec-body[hidden] { display: none; }
@@ -3968,7 +3992,10 @@ button { cursor: pointer; }
     var fid = esc(f.id);
     var sel = opts.sel || {};
     var selCats = bjSelCatsFor(f);
-    var head = '<thead><tr><th class="bj-mxs-head" colspan="3" scope="col">담보</th>';
+    /* 미리보기(opts.preview): 담보 이름을 세부담보 1컬럼으로 압축(왼쪽 sticky). 편집표는 3컬럼(카테고리·중분류·세부담보) 유지. */
+    var head = opts.preview
+      ? '<thead><tr><th class="bj-mxs-head bj-mxs-namecol" scope="col">담보</th>'
+      : '<thead><tr><th class="bj-mxs-head" colspan="3" scope="col">담보</th>';
     cols.forEach(function (co) {
       var cb = "";
       if (opts.checkbox) {
@@ -3993,22 +4020,27 @@ button { cursor: pointer; }
         var gSubs = g.subs || [];
         gSubs.forEach(function (sub, si) {
           var tr = '<tr>';
-          if (first) {
-            var catInner = esc(cat.name);
-            if (opts.catCheckbox) {   /* 왼쪽 편집표: 카테고리(담보) 선택 체크박스 — 회사 체크박스와 2축 공존 */
-              var cch = selCats[cat.id] ? " checked" : "";
-              catInner = '<label class="bj-mxs-cat-label"><input type="checkbox" data-bj-cat="' + esc(cat.id) + '" data-bj-id="' + fid + '"' + cch + '>' + esc(cat.name) + '</label>';
+          if (opts.preview) {
+            /* 미리보기: 카테고리·중분류 컬럼 생략, 세부담보 1컬럼(sticky)만 → 회사·금액이 처음부터 보이게. */
+            tr += '<td class="bj-mxs-sub bj-mxs-namecol">' + esc(sub.name) + '</td>';
+          } else {
+            if (first) {
+              var catInner = esc(cat.name);
+              if (opts.catCheckbox) {   /* 왼쪽 편집표: 카테고리(담보) 선택 체크박스 — 회사 체크박스와 2축 공존 */
+                var cch = selCats[cat.id] ? " checked" : "";
+                catInner = '<label class="bj-mxs-cat-label"><input type="checkbox" data-bj-cat="' + esc(cat.id) + '" data-bj-id="' + fid + '"' + cch + '>' + esc(cat.name) + '</label>';
+              }
+              tr += '<td class="bj-mxs-cat" rowspan="' + totalSubs + '">' + catInner + '</td>';
             }
-            tr += '<td class="bj-mxs-cat" rowspan="' + totalSubs + '">' + catInner + '</td>';
+            if (g.label && si === 0) tr += '<td class="bj-mxs-group" rowspan="' + gSubs.length + '">' + esc(g.label) + '</td>';
+            else if (!g.label) tr += '<td class="bj-mxs-group"></td>';
+            tr += '<td class="bj-mxs-sub">' + esc(sub.name) + '</td>';
           }
-          if (g.label && si === 0) tr += '<td class="bj-mxs-group" rowspan="' + gSubs.length + '">' + esc(g.label) + '</td>';
-          else if (!g.label) tr += '<td class="bj-mxs-group"></td>';
-          tr += '<td class="bj-mxs-sub">' + esc(sub.name) + '</td>';
           cols.forEach(function (co) {
             var m = bjMatchCoverage(sub, byCol[co.col] || []);
             tr += m.matched
               ? '<td class="bj-mxs-amt">' + esc(m.amount || "가입") + '</td>'
-              : '<td class="bj-mxs-amt"><span class="bj-mxs-off">미가입</span></td>';
+              : '<td class="bj-mxs-amt"><span class="bj-mxs-off bj-mxs-none">미가입</span></td>';
           });
           var total = 0;
           sumCols.forEach(function (co) {
@@ -4053,7 +4085,7 @@ button { cursor: pointer; }
     if (!anyCat) {
       return '<div class="bj-report bj-report--mx">' + head + '<div class="bj-pc-empty">표시할 담보(카테고리)를 왼쪽에서 선택하세요.</div></div>';
     }
-    return '<div class="bj-report bj-report--mx">' + head + bjCoverageMatrixTable(f, { cols: shown, sumCols: shown, checkbox: false, filterCats: true, wrapClass: "bj-mxprev" }) + '</div>';
+    return '<div class="bj-report bj-report--mx">' + head + bjCoverageMatrixTable(f, { cols: shown, sumCols: shown, checkbox: false, filterCats: true, preview: true, wrapClass: "bj-mxprev" }) + '</div>';
   }
 
   /* 검토 본문 3섹션 독립 아코디언 래퍼 — 헤더(제목+캐럿) 클릭 시 본문 펼침/닫힘.
@@ -5153,6 +5185,43 @@ button { cursor: pointer; }
     ev.preventDefault();
     bjCaptureOpen();
     bjCaptureSetImage(img, { autoRun: true });
+  });
+  /* ★ 투입구 전역 드래그&드롭 인터셉터 — 위 paste 인터셉터와 동일 방식. 점선 드롭존(#bjDrop) 정확히
+     안에 놓아야만 되던 문제 해결: 보장분석 투입구(#bjIntake=bjEls.section)가 보이는 동안 화면 아무 데나
+     파일을 끌어다 놓으면(드롭존 밖이든, 이미 파일이 올라가 드롭존이 가려진 상태든) 브라우저 기본동작
+     (파일 새 탭 열기)을 막고 bjHandleFiles로 판독한다. 엑셀/PDF/이미지 전부 기존 bjHandleFiles 분기로.
+     - dragover에서도 preventDefault해야 drop이 앱으로 온다(안 하면 브라우저가 가로챔).
+     - 우선순위: 발송 첨부 이미지 컬럼([data-bj-imgdrop]) > 그 외 = 투입구 판독. 이미지 컬럼/기존 #bjDrop
+       핸들러가 먼저 처리(defaultPrevented)하면 그쪽을 존중(중복 판독 방지).
+     - #bjIntake가 안 보이는(다른 뷰) 상태에선 개입하지 않음. 원본 미저장 원칙 유지. */
+  function bjIntakeVisible() { return !!(bjEls.section && !bjEls.section.hidden); }
+  function bjDragHasFiles(dt) {
+    if (!dt) return false;
+    if (dt.types) { for (var i = 0; i < dt.types.length; i += 1) { if (dt.types[i] === "Files") return true; } }
+    return !!(dt.files && dt.files.length);
+  }
+  document.addEventListener("dragover", function (ev) {
+    if (!bjIntakeVisible()) return;
+    var t = ev.target;
+    if (t && t.closest && t.closest("[data-bj-imgdrop]")) return; // 발송 첨부 이미지 컬럼이 우선
+    if (!bjDragHasFiles(ev.dataTransfer)) return;                 // 파일 드래그만 개입(텍스트 등은 무시)
+    ev.preventDefault();                                          // drop이 앱으로 오도록 허용
+    bjEls.section.classList.add("bj-intake--dragover");
+  });
+  document.addEventListener("dragleave", function (ev) {
+    if (ev.relatedTarget) return;                                 // 창 밖으로 완전히 나갈 때만 해제
+    if (bjEls.section) bjEls.section.classList.remove("bj-intake--dragover");
+  });
+  document.addEventListener("drop", function (ev) {
+    if (ev.defaultPrevented) return;                              // #bjDrop·이미지 컬럼이 이미 처리
+    if (!bjIntakeVisible()) return;
+    var t = ev.target;
+    if (t && t.closest && t.closest("[data-bj-imgdrop]")) return; // 이미지 컬럼 우선
+    var dt = ev.dataTransfer;
+    if (!bjDragHasFiles(dt)) return;
+    ev.preventDefault();
+    bjEls.section.classList.remove("bj-intake--dragover");
+    if (dt && dt.files && dt.files.length) bjHandleFiles(dt.files);
   });
   if (bjEls.drop) {
     ["dragenter", "dragover"].forEach(function (evt) {
