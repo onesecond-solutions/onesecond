@@ -3615,9 +3615,15 @@ button { cursor: pointer; }
 
   /* 계약 PC 미리보기 = 넓은 계약 표(조회용). No·보험회사·상품명·계약일·월보험료 + 합계. 삭제/체크박스 없음.
      데이터는 renderContractListPreview와 동일한 f.contracts(파싱값) — 하드코딩 0. */
-  function renderContractTablePC(contracts, customerName) {
+  function renderContractTablePC(contracts, customerName, cols) {
     var name = bjNormText(customerName) || "고객";
     var list = contracts || [];
+    var cc = cols || { renewal: false, note: false };
+    /* PC 표 추가 셀 — 값 없으면 옅은 "-"(bj-pc-muted). 사용자 값은 esc(). */
+    function pcCell(value) {
+      var v = bjNormText(value);
+      return '<td>' + (v ? esc(v) : '<span class="bj-pc-muted">-</span>') + '</td>';
+    }
     var rows = list.map(function (c, i) {
       var company = bjNormText(c.company);
       var product = bjNormText(c.product);
@@ -3630,14 +3636,19 @@ button { cursor: pointer; }
         '<td>' + (product ? esc(product) : '<span class="bj-pc-muted">상품명 미기재</span>') + '</td>' +
         '<td>' + (date ? esc(date) : '<span class="bj-pc-muted">—</span>') + '</td>' +
         '<td class="bj-pc-amt">' + premHtml + '</td>' +
+        (cc.renewal ? pcCell(c.renewal) : "") +
+        (cc.note ? pcCell(c.note) : "") +
       '</tr>';
     }).join("");
+    var extraHead = (cc.renewal ? '<th>' + esc(BJ_CONTRACT_LABELS.renewal) + '</th>' : "") +
+      (cc.note ? '<th>' + esc(BJ_CONTRACT_LABELS.note) + '</th>' : "");
+    var extraFootCells = (cc.renewal ? '<td></td>' : "") + (cc.note ? '<td></td>' : "");
     var inner = list.length
       ? '<table class="bj-pc-table">' +
-          '<thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th></tr></thead>' +
+          '<thead><tr><th>No</th><th>보험회사</th><th>상품명</th><th>계약일</th><th>월 보험료</th>' + extraHead + '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
           '<tfoot><tr><td class="bj-pc-foot-total" colspan="4">총 ' + list.length + '건</td>' +
-            '<td class="bj-pc-amt">월 ' + bjFormatWon(bjSumPremium(list)) + '원</td></tr></tfoot>' +
+            '<td class="bj-pc-amt">월 ' + bjFormatWon(bjSumPremium(list)) + '원</td>' + extraFootCells + '</tr></tfoot>' +
         '</table>'
       : '<div class="bj-pc-empty">파싱된 계약이 없습니다. 왼쪽 표에서 계약을 추가하면 여기에 표시됩니다.</div>';
     return bjPcFrame(name + " 고객님 · 보유 계약", inner);
@@ -3702,7 +3713,7 @@ button { cursor: pointer; }
   /* dispatcher — 기기 모드에 따라 모바일/PC 렌더러 선택(고객용 페이지 인계 지점: mode를 기기 감지로 넣으면 됨). */
   function renderContractPreview(contracts, customerName, mode, cols) {
     return mode === "pc"
-      ? renderContractTablePC(contracts, customerName)
+      ? renderContractTablePC(contracts, customerName, cols)
       : renderContractListPreview(contracts, customerName, cols);
   }
   function renderCoveragePreview(selection, customerName, mode) {
