@@ -1049,10 +1049,184 @@ button { cursor: pointer; }
   font-size: var(--fs-meta);
   line-height: var(--lh-dense);
 }
+.coverage-intake {
+  margin: 0 var(--if-6) var(--if-4);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-lg);
+  background: var(--s1);
+  box-shadow: var(--sh-sm);
+  padding: var(--if-5);
+}
+.coverage-intake[hidden] { display: none; }
+.coverage-intake h2,
+.if-export-result h2 {
+  margin: 0;
+  font-size: var(--fs-title-sm);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-black);
+}
+.coverage-intake p,
+.if-export-result p {
+  margin: var(--if-1) 0 0;
+  color: var(--tf);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-dense);
+}
+.coverage-drop {
+  margin-top: var(--if-4);
+  border: 1px dashed var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s2);
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: var(--if-5);
+}
+.coverage-drop.dragging { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 8%, var(--s2)); }
+.coverage-drop strong { display: block; color: var(--tp); font-size: var(--fs-body-lg); font-weight: var(--fw-black); }
+.coverage-drop span { display: block; margin-top: var(--if-1); color: var(--tf); font-size: var(--fs-meta); }
+.coverage-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--if-2); margin-top: var(--if-4); }
+.coverage-btn {
+  min-height: 40px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s1);
+  color: var(--tp);
+  padding: 0 var(--if-4);
+  font-weight: var(--fw-bold);
+}
+.coverage-btn.primary { border-color: var(--ac); background: var(--ac); color: var(--on-ac); }
+.coverage-status { margin-top: var(--if-3); color: var(--tf); font-size: var(--fs-meta); text-align: center; }
+.coverage-files { display: grid; gap: var(--if-2); margin-top: var(--if-4); }
+.coverage-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--if-3);
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s1);
+  padding: var(--if-3);
+}
+.coverage-file b { display: block; color: var(--tp); font-size: var(--fs-body); }
+.coverage-file span { color: var(--tf); font-size: var(--fs-caption); }
+.coverage-file a { color: var(--ac); font-weight: var(--fw-bold); text-decoration: none; white-space: nowrap; }
+.coverage-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--if-2);
+  margin-top: var(--if-4);
+}
+.coverage-stat {
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s2);
+  padding: var(--if-3);
+}
+.coverage-stat span { display: block; color: var(--tf); font-size: var(--fs-caption); }
+.coverage-stat b { display: block; margin-top: var(--if-1); color: var(--tp); font-size: var(--fs-title-sm); }
+.coverage-editor {
+  display: grid;
+  gap: var(--if-4);
+  margin-top: var(--if-5);
+}
+.coverage-edit-block {
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-md);
+  background: var(--s1);
+  overflow: hidden;
+}
+.coverage-edit-head {
+  padding: var(--if-3) var(--if-4);
+  background: var(--s2);
+  border-bottom: 1px solid var(--bd);
+}
+.coverage-edit-head b { display: block; font-size: var(--fs-body-lg); }
+.coverage-edit-head span { display: block; margin-top: var(--if-1); color: var(--tf); font-size: var(--fs-caption); }
+.coverage-table-wrap { overflow-x: auto; }
+.coverage-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+.coverage-table th,
+.coverage-table td {
+  border-bottom: 1px solid var(--sh);
+  padding: var(--if-2);
+  text-align: left;
+  font-size: var(--fs-meta);
+  vertical-align: middle;
+}
+.coverage-table th {
+  background: var(--bg);
+  color: var(--ts);
+  font-weight: var(--fw-black);
+}
+.coverage-table td.num,
+.coverage-table th.num { text-align: right; }
+.coverage-edit-input {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-xs);
+  background: var(--s2);
+  color: var(--tp);
+  padding: 0 var(--if-2);
+  outline: none;
+}
+.coverage-edit-input:focus { border-color: var(--ac); background: var(--s1); }
+.coverage-opinion {
+  width: 100%;
+  min-height: 104px;
+  border: 1px solid var(--bd);
+  border-radius: var(--radius-sm);
+  background: var(--s2);
+  padding: var(--if-3);
+  resize: vertical;
+  outline: none;
+}
+.coverage-opinion:focus { border-color: var(--ac); background: var(--s1); }
+.if-export-result { margin-top: var(--if-4); }
+.if-export-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--if-3); flex-wrap: wrap; }
+.if-export-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--if-3);
+  margin-top: var(--if-4);
+}
+.if-export-thumb { border: 1px solid var(--bd); border-radius: var(--radius-md); background: var(--s1); overflow: hidden; }
+.if-export-thumb img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; background: var(--s2); }
+.if-export-thumb div { display: flex; align-items: center; justify-content: space-between; gap: var(--if-2); padding: var(--if-2); }
+.if-export-thumb b { font-size: var(--fs-caption); line-height: var(--lh-tight); }
+.if-export-thumb a { color: var(--ac); font-size: var(--fs-caption); font-weight: var(--fw-bold); text-decoration: none; }
+.if-card-export-host { position: fixed; left: -10000px; top: 0; width: 720px; pointer-events: none; opacity: 0; }
+.kakao-card {
+  width: 720px;
+  height: 1080px;
+  background: #fff;
+  color: #111827;
+  font-family: var(--font-sans);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.kakao-card-head { padding: 54px 56px 34px; background: linear-gradient(135deg, #6366F1, #4F46E5); color: #fff; }
+.kakao-card-head .eyebrow { font-size: 22px; font-weight: 800; opacity: .88; }
+.kakao-card-head h3 { margin: 18px 0 0; font-size: 48px; line-height: 1.22; letter-spacing: -.04em; }
+.kakao-card-body { flex: 1; padding: 42px 48px 40px; display: flex; flex-direction: column; gap: 22px; }
+.kakao-list { display: grid; gap: 14px; }
+.kakao-row { border: 1px solid #E5E7EB; border-radius: 20px; padding: 20px 22px; }
+.kakao-row strong { display: block; font-size: 25px; line-height: 1.35; }
+.kakao-row span { display: block; margin-top: 8px; color: #6B7280; font-size: 20px; line-height: 1.45; }
+.kakao-total { margin-top: auto; border-radius: 22px; background: #EEF0FE; color: #3B3EBB; padding: 22px 24px; font-size: 24px; font-weight: 800; }
+.kakao-foot { padding: 24px 48px 38px; color: #6B7280; font-size: 20px; display: flex; justify-content: space-between; gap: 20px; }
 @media (max-width: 1340px) {
   .if-workspace {
     grid-template-columns: 240px 12px minmax(420px, 1fr) 12px 420px;
   }
+  .if-export-grid,
+  .coverage-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .if-col-head { padding: var(--if-4); }
   .work-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .phone.wide { width: 390px; }
@@ -1129,6 +1303,27 @@ button { cursor: pointer; }
 
   <section class="if-main" aria-label="보험 팩토리 작업 공간">
     <nav class="if-tabs" id="topTabs" aria-label="템플릿 범주"></nav>
+    <section class="coverage-intake" id="coverageIntake" aria-label="보장분석 자료 불러오기" hidden>
+      <h2>보장분석 자료 불러오기</h2>
+      <p>엑셀·PDF 원자료를 넣으면 설계사가 확인할 분석 원장으로 정리합니다. 원본 파일은 화면 아래 첨부파일 카드로 남기고, 고객 이미지에는 선택한 내용만 반영합니다.</p>
+      <div class="coverage-drop" id="coverageDrop">
+        <div>
+          <strong>엑셀·PDF 파일을 끌어다 놓거나 아래에서 선택하세요</strong>
+          <span>여러 파일 선택 가능 · 현재 단계에서는 브라우저 안에서 분석 초안을 만들고 저장하지 않습니다.</span>
+          <div class="coverage-actions">
+            <button type="button" class="coverage-btn primary" id="coverageExcelBtn">엑셀 첨부</button>
+            <button type="button" class="coverage-btn" id="coveragePdfBtn">PDF 첨부</button>
+            <button type="button" class="coverage-btn" id="coverageDemoBtn">분석 초안 만들기</button>
+          </div>
+        </div>
+      </div>
+      <input id="coverageExcelInput" type="file" accept=".xlsx,.xls,.csv" multiple hidden>
+      <input id="coveragePdfInput" type="file" accept=".pdf" multiple hidden>
+      <div class="coverage-status" id="coverageStatus">파일을 넣으면 계약·핵심 담보·원본 첨부 목록이 이 작업 안에서만 준비됩니다.</div>
+      <div class="coverage-files" id="coverageFiles"></div>
+      <div class="coverage-summary" id="coverageSummary"></div>
+      <div class="coverage-editor" id="coverageEditor"></div>
+    </section>
     <div class="narrow">보험 팩토리 1차 작업실은 데스크톱 1366px 이상 화면에 맞춰 만든 3컬럼 작업 공간입니다. 좁은 화면에서는 추후 단계형 전환으로 확장합니다.</div>
     <div class="if-workspace">
       <aside class="if-col">
@@ -1193,8 +1388,17 @@ button { cursor: pointer; }
       </aside>
     </div>
     <section class="if-third-row" aria-label="보험 팩토리 하단 작업 영역">
-      <h2>하단 작업 영역</h2>
-      <p>다음 단계에서 상담 정리, 전달 전 확인, 저장 전 메모를 배치할 수 있는 영역입니다.</p>
+      <div class="if-export-result">
+        <div class="if-export-bar">
+          <div>
+            <h2>카카오톡 묶음 사진 만들기</h2>
+            <p>보장분석 원장을 기준으로 720×1080px 카드 8장을 한 장씩 임시 생성하고, JPG 변환 후 DOM과 canvas를 바로 제거합니다.</p>
+          </div>
+          <button type="button" class="coverage-btn primary" id="exportKakaoCards">8장 이미지 생성</button>
+        </div>
+        <div class="coverage-status" id="exportStatus">이미지 생성 전에는 카드 DOM을 만들지 않습니다.</div>
+        <div class="if-export-grid" id="exportThumbs"></div>
+      </div>
     </section>
   </section>
 </main>
@@ -1301,7 +1505,16 @@ button { cursor: pointer; }
     filter: "all",
     previewWidth: 390,
     previewMode: "vertical",
-    blocks: []
+    blocks: [],
+    analysis: {
+      ready: false,
+      customer: "고객",
+      files: [],
+      contracts: [],
+      covers: [],
+      opinion: "업로드한 보장분석 자료를 기준으로 주요 보장과 가입 현황을 정리했습니다. 실제 보장 내용은 증권과 약관 기준으로 최종 확인합니다.",
+      exports: []
+    }
   };
 
   var els = {
@@ -1322,7 +1535,21 @@ button { cursor: pointer; }
     pvHeroBody: document.getElementById("pvHeroBody"),
     pvHeroAmount: document.getElementById("pvHeroAmount"),
     preview: document.getElementById("previewBody"),
-    splitReset: document.getElementById("splitReset")
+    splitReset: document.getElementById("splitReset"),
+    coverageIntake: document.getElementById("coverageIntake"),
+    coverageDrop: document.getElementById("coverageDrop"),
+    coverageExcelBtn: document.getElementById("coverageExcelBtn"),
+    coveragePdfBtn: document.getElementById("coveragePdfBtn"),
+    coverageExcelInput: document.getElementById("coverageExcelInput"),
+    coveragePdfInput: document.getElementById("coveragePdfInput"),
+    coverageDemoBtn: document.getElementById("coverageDemoBtn"),
+    coverageStatus: document.getElementById("coverageStatus"),
+    coverageFiles: document.getElementById("coverageFiles"),
+    coverageSummary: document.getElementById("coverageSummary"),
+    coverageEditor: document.getElementById("coverageEditor"),
+    exportBtn: document.getElementById("exportKakaoCards"),
+    exportStatus: document.getElementById("exportStatus"),
+    exportThumbs: document.getElementById("exportThumbs")
   };
   var SPLIT_KEY = "onesecond.insuranceFactory.columns.v1";
   var SPLIT_MIN = { template: 220, work: 420, preview: 360 };
@@ -1332,6 +1559,140 @@ button { cursor: pointer; }
     return String(text == null ? "" : text).replace(/[&<>"']/g, function (ch) {
       return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch];
     });
+  }
+  function won(n) {
+    var v = Number(n) || 0;
+    return v ? v.toLocaleString("ko-KR") + "원" : "-";
+  }
+  function man(n) {
+    var v = Number(n) || 0;
+    if (!v) return "미가입";
+    return (v / 10000).toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "만원";
+  }
+  function inferCustomerName(files) {
+    var name = "";
+    (files || []).some(function (file) {
+      var base = String(file.name || "").replace(/\.[^.]+$/, "");
+      var match = base.match(/([가-힣]{2,4})(?:님|고객|_|\s|\*)/);
+      if (match) name = match[1];
+      return !!name;
+    });
+    return name || state.analysis.customer || "고객";
+  }
+  function buildAnalysisDraft(files) {
+    var customer = inferCustomerName(files);
+    var contracts = [
+      { show: true, company: "KB손보", product: "의료실비/건강보험", start: "", premium: 84200, renew: "", memo: "" },
+      { show: true, company: "현대해상", product: "암·뇌심장 보완보험", start: "", premium: 59200, renew: "", memo: "" },
+      { show: true, company: "메리츠화재", product: "수술비 보완 플랜", start: "", premium: 31800, renew: "", memo: "" }
+    ];
+    var covers = [
+      { axis: "의료실비", rows: [{ name: "입원의료비", values: [50000000, 0, 0] }, { name: "통원의료비", values: [250000, 0, 0] }] },
+      { axis: "암", rows: [{ name: "일반암 진단비", values: [0, 30000000, 0] }, { name: "유사암 진단비", values: [0, 6000000, 0] }] },
+      { axis: "뇌·심장", rows: [{ name: "뇌혈관질환 진단비", values: [0, 10000000, 0] }, { name: "허혈성심장질환 진단비", values: [0, 10000000, 0] }] },
+      { axis: "수술비", rows: [{ name: "질병수술비", values: [0, 0, 300000] }, { name: "상해수술비", values: [0, 0, 300000] }] }
+    ];
+    state.analysis.ready = true;
+    state.analysis.customer = customer;
+    state.analysis.contracts = contracts;
+    state.analysis.covers = covers;
+    state.analysis.exports = [];
+    if (els.customer && (!els.customer.value || els.customer.value === "김고객")) els.customer.value = customer;
+    addAnalysisBlock();
+  }
+  function addAnalysisBlock() {
+    var exists = state.blocks.some(function (block) { return block.tplId === "coverage-analysis-pack"; });
+    if (exists) return;
+    state.blocks.push({
+      id: "b" + Date.now() + Math.random().toString(16).slice(2),
+      tplId: "coverage-analysis-pack",
+      cat: "의료실비 점검",
+      sourceStage: "보험 점검 문의",
+      sourceLabel: "의료실비 점검",
+      title: "보장분석 카카오 카드 8장",
+      body: "보장분석 자료를 기준으로 표지, 가입 보험, 4대 핵심 담보, 담당 설계사 총평, 상담 안내 카드까지 묶어 발송합니다.",
+      variant: "",
+      visual: "medical-shield",
+      photo: "",
+      photoAlt: "",
+      amount: "",
+      note: "",
+      noteOpen: false,
+      media: "none",
+      cta: "카카오 이미지 생성",
+      visible: true,
+      folded: false
+    });
+  }
+  function handleCoverageFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    files.forEach(function (file) {
+      state.analysis.files.push({
+        name: file.name,
+        size: file.size || 0,
+        type: file.type || "",
+        url: URL.createObjectURL(file)
+      });
+    });
+    buildAnalysisDraft(files);
+    renderAll();
+  }
+  function renderCoverageIntake() {
+    if (!els.coverageIntake) return;
+    var show = state.group === "보험 점검 문의" && state.category === "의료실비 점검";
+    els.coverageIntake.hidden = !show;
+    if (!show) return;
+    var a = state.analysis;
+    els.coverageStatus.textContent = a.ready
+      ? "분석 초안이 준비됐습니다. 설계사가 확인한 뒤 아래에서 카카오톡 카드 이미지를 생성할 수 있습니다."
+      : "파일을 넣으면 계약·핵심 담보·원본 첨부 목록이 이 작업 안에서만 준비됩니다.";
+    els.coverageFiles.innerHTML = a.files.length ? a.files.map(function (file, idx) {
+      return '<div class="coverage-file"><div><b>' + esc(file.name) + '</b><span>' + esc(file.type || "첨부파일") + ' · ' + Math.round((file.size || 0) / 1024).toLocaleString("ko-KR") + 'KB</span></div><a href="' + esc(file.url) + '" target="_blank" rel="noopener">원본 열기</a></div>';
+    }).join("") : "";
+    var totalPremium = a.contracts.reduce(function (sum, row) { return sum + (Number(row.premium) || 0); }, 0);
+    var coverCount = a.covers.reduce(function (sum, axis) { return sum + axis.rows.length; }, 0);
+    els.coverageSummary.innerHTML = a.ready ? [
+      ["고객", a.customer + "님"],
+      ["계약", a.contracts.length + "건"],
+      ["월 보험료", won(totalPremium)],
+      ["핵심 담보", coverCount + "개"]
+    ].map(function (row) {
+      return '<div class="coverage-stat"><span>' + esc(row[0]) + '</span><b>' + esc(row[1]) + '</b></div>';
+    }).join("") : "";
+    renderCoverageEditor();
+  }
+  function renderCoverageEditor() {
+    if (!els.coverageEditor) return;
+    var a = state.analysis;
+    if (!a.ready) {
+      els.coverageEditor.innerHTML = "";
+      return;
+    }
+    var contractRows = a.contracts.map(function (row, idx) {
+      return '<tr data-contract="' + idx + '">' +
+        '<td><input type="checkbox" data-analysis="contract-show" ' + (row.show ? "checked" : "") + '></td>' +
+        '<td><input class="coverage-edit-input" data-analysis="contract-company" value="' + esc(row.company) + '"></td>' +
+        '<td><input class="coverage-edit-input" data-analysis="contract-product" value="' + esc(row.product) + '"></td>' +
+        '<td><input class="coverage-edit-input" data-analysis="contract-premium" inputmode="numeric" value="' + esc(row.premium) + '"></td>' +
+        '<td><input class="coverage-edit-input" data-analysis="contract-renew" value="' + esc(row.renew) + '" placeholder="예: 갱신형"></td>' +
+        '<td><input class="coverage-edit-input" data-analysis="contract-memo" value="' + esc(row.memo) + '" placeholder="고객 노출 비고"></td>' +
+      '</tr>';
+    }).join("");
+    var coverRows = [];
+    a.covers.forEach(function (axis, ai) {
+      axis.rows.forEach(function (row, ri) {
+        coverRows.push('<tr data-axis="' + ai + '" data-cover="' + ri + '">' +
+          '<td><b>' + esc(axis.axis) + '</b></td>' +
+          '<td><input class="coverage-edit-input" data-analysis="cover-name" value="' + esc(row.name) + '"></td>' +
+          '<td class="num"><input class="coverage-edit-input" data-analysis="cover-total" inputmode="numeric" value="' + esc(rowTotal(row)) + '"></td>' +
+        '</tr>');
+      });
+    });
+    els.coverageEditor.innerHTML =
+      '<section class="coverage-edit-block"><div class="coverage-edit-head"><b>계약 정보 확인 및 수정</b><span>노출 OFF는 고객 이미지에서 계약 상세만 숨기며, 보험료 합계 계산에서는 제외하지 않습니다.</span></div><div class="coverage-table-wrap"><table class="coverage-table"><thead><tr><th>노출</th><th>회사</th><th>상품명</th><th class="num">월 보험료</th><th>갱신 여부</th><th>비고</th></tr></thead><tbody>' + contractRows + '</tbody></table></div></section>' +
+      '<section class="coverage-edit-block"><div class="coverage-edit-head"><b>핵심 담보 확인 및 수정</b><span>의료실비·암·뇌·심장·수술비 카드에 들어갈 대표 담보 금액입니다.</span></div><div class="coverage-table-wrap"><table class="coverage-table"><thead><tr><th>축</th><th>담보명</th><th class="num">총 가입금액</th></tr></thead><tbody>' + coverRows.join("") + '</tbody></table></div></section>' +
+      '<section class="coverage-edit-block"><div class="coverage-edit-head"><b>담당 설계사 총평</b><span>7번 카드에 들어갈 문구입니다. 리치텍스트는 다음 단계에서 기존 편집기로 교체합니다.</span></div><div style="padding:var(--if-4)"><textarea class="coverage-opinion" id="coverageOpinion">' + esc(a.opinion) + '</textarea></div></section>';
   }
   function findTpl(id) {
     return TEMPLATES.find(function (tpl) { return tpl.id === id; });
@@ -1492,11 +1853,109 @@ button { cursor: pointer; }
       '</section>';
     }).join("");
   }
+  function loadHtml2Canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    return new Promise(function (resolve, reject) {
+      var existing = document.querySelector('script[data-if-html2canvas="1"]');
+      if (existing) {
+        existing.addEventListener("load", function () { resolve(window.html2canvas); }, { once: true });
+        existing.addEventListener("error", function () { reject(new Error("html2canvas 로드 실패")); }, { once: true });
+        return;
+      }
+      var script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+      script.async = true;
+      script.setAttribute("data-if-html2canvas", "1");
+      script.onload = function () { resolve(window.html2canvas); };
+      script.onerror = function () { reject(new Error("html2canvas 로드 실패")); };
+      document.head.appendChild(script);
+    });
+  }
+  function coverAxis(axisName) {
+    return state.analysis.covers.find(function (axis) { return axis.axis === axisName; }) || { axis: axisName, rows: [] };
+  }
+  function rowTotal(row) {
+    return (row.values || []).reduce(function (sum, val) { return sum + (Number(val) || 0); }, 0);
+  }
+  function kakaoRows(items) {
+    return '<div class="kakao-list">' + items.map(function (item) {
+      return '<div class="kakao-row"><strong>' + esc(item.title) + '</strong><span>' + esc(item.body) + '</span></div>';
+    }).join("") + '</div>';
+  }
+  function cardDataSet() {
+    var a = state.analysis;
+    var customer = a.customer || (els.customer.value.trim() || "고객");
+    var totalPremium = a.contracts.reduce(function (sum, row) { return sum + (Number(row.premium) || 0); }, 0);
+    var contractItems = a.contracts.filter(function (row) { return row.show; }).map(function (row) {
+      return { title: row.company + " · " + row.product, body: "월 보험료 " + won(row.premium) + (row.renew ? " · " + row.renew : "") + (row.memo ? " · " + row.memo : "") };
+    });
+    function axisItems(name) {
+      return coverAxis(name).rows.map(function (row) {
+        return { title: row.name, body: "총 가입금액 " + man(rowTotal(row)) };
+      });
+    }
+    return [
+      { name: "01_" + customer + "_보장분석_표지.jpg", title: "보장분석 표지", heading: customer + "님 보장분석", rows: [{ title: "현재 가입 보험", body: a.contracts.length + "건" }, { title: "핵심 확인 축", body: "의료실비 · 암 · 뇌·심장 · 수술비" }], total: "카카오톡 묶음 사진 8장으로 정리합니다." },
+      { name: "02_" + customer + "_가입보험.jpg", title: "가입 보험", heading: "가입 중인 보험", rows: contractItems, total: "월 보험료 합계 " + won(totalPremium) },
+      { name: "03_" + customer + "_의료실비.jpg", title: "의료실비", heading: "의료실비 핵심 담보", rows: axisItems("의료실비"), total: "실비는 가입 시기와 자기부담 구조를 함께 봅니다." },
+      { name: "04_" + customer + "_암.jpg", title: "암", heading: "암 보장 핵심 담보", rows: axisItems("암"), total: "진단비는 치료비와 생활비 공백을 같이 봅니다." },
+      { name: "05_" + customer + "_뇌심장.jpg", title: "뇌·심장", heading: "뇌·심장 보장", rows: axisItems("뇌·심장"), total: "질병 범위가 넓은 담보인지 함께 확인합니다." },
+      { name: "06_" + customer + "_수술비.jpg", title: "수술비", heading: "수술비 보완축", rows: axisItems("수술비"), total: "반복 지급과 정액 보완 역할을 같이 봅니다." },
+      { name: "07_" + customer + "_총평.jpg", title: "담당 설계사 총평", heading: "담당 설계사 의견", rows: [{ title: "총평", body: a.opinion }], total: "실제 보장은 증권과 약관 기준으로 확인합니다." },
+      { name: "08_" + customer + "_상담안내.jpg", title: "상담 안내", heading: "보완 플랜 안내", rows: [{ title: "다음 단계", body: "필요하면 건강질문지를 확인한 뒤 보완 플랜이나 리모델링 방향을 잡습니다." }, { title: "상담 방식", body: "카카오톡으로 받은 번호나 내용에 답장해 주세요." }], total: "보험전문가 임태성 팀장 · 010-9241-9375" }
+    ];
+  }
+  function createKakaoCard(card) {
+    var el = document.createElement("article");
+    el.className = "kakao-card";
+    el.innerHTML = '<div class="kakao-card-head"><div class="eyebrow">onesecond 보장분석</div><h3>' + esc(card.heading) + '</h3></div>' +
+      '<div class="kakao-card-body">' + kakaoRows(card.rows) + '<div class="kakao-total">' + esc(card.total) + '</div></div>' +
+      '<div class="kakao-foot"><span>' + esc(card.title) + '</span><span>보험전문가 임태성</span></div>';
+    return el;
+  }
+  function canvasToJpegUrl(canvas) {
+    return canvas.toDataURL("image/jpeg", 0.92);
+  }
+  async function exportKakaoCards() {
+    if (!state.analysis.ready) buildAnalysisDraft([]);
+    if (!state.analysis.ready) return;
+    state.analysis.exports.forEach(function (item) { if (item.url) URL.revokeObjectURL(item.url); });
+    state.analysis.exports = [];
+    if (els.exportThumbs) els.exportThumbs.innerHTML = "";
+    if (els.exportStatus) els.exportStatus.textContent = "html2canvas를 준비하는 중입니다.";
+    var h2c = await loadHtml2Canvas();
+    var host = document.createElement("div");
+    host.className = "if-card-export-host";
+    document.body.appendChild(host);
+    var cards = cardDataSet();
+    for (var i = 0; i < cards.length; i += 1) {
+      if (els.exportStatus) els.exportStatus.textContent = (i + 1) + " / " + cards.length + "번째 이미지를 생성하고 있습니다.";
+      var node = createKakaoCard(cards[i]);
+      host.appendChild(node);
+      var canvas = await h2c(node, { scale: 1, width: 720, height: 1080, backgroundColor: "#FFFFFF", logging: false, useCORS: true });
+      var url = canvasToJpegUrl(canvas);
+      state.analysis.exports.push({ name: cards[i].name, url: url });
+      node.remove();
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+    host.remove();
+    renderExports();
+    if (els.exportStatus) els.exportStatus.textContent = "JPG 8장 생성 완료. 브라우저 차단을 피하려고 저장 링크를 각각 제공합니다.";
+  }
+  function renderExports() {
+    if (!els.exportThumbs) return;
+    els.exportThumbs.innerHTML = state.analysis.exports.map(function (item, idx) {
+      return '<div class="if-export-thumb"><img src="' + esc(item.url) + '" alt="' + esc(item.name) + '"><div><b>' + (idx + 1) + ". " + esc(item.name.replace(/^\d+_/, "")) + '</b><a href="' + esc(item.url) + '" download="' + esc(item.name) + '">저장</a></div></div>';
+    }).join("");
+  }
   function renderAll() {
     renderTabs();
+    renderCoverageIntake();
     renderTemplates();
     renderWorkbench();
     renderPreview();
+    renderExports();
   }
   function workspaceContentWidth() {
     if (!els.workspace) return 0;
@@ -1635,8 +2094,7 @@ button { cursor: pointer; }
       state.filter = "all";
       els.search.value = "";
       els.filter.value = "all";
-      renderTabs();
-      renderTemplates();
+      renderAll();
       return;
     }
     var btn = event.target.closest("[data-cat]");
@@ -1646,8 +2104,7 @@ button { cursor: pointer; }
     state.filter = "all";
     els.search.value = "";
     els.filter.value = "all";
-    renderTabs();
-    renderTemplates();
+    renderAll();
   });
   els.search.addEventListener("input", function () {
     state.query = els.search.value;
@@ -1717,6 +2174,82 @@ button { cursor: pointer; }
     }
     renderPreview();
   });
+  if (els.coverageExcelBtn) els.coverageExcelBtn.addEventListener("click", function () { els.coverageExcelInput.click(); });
+  if (els.coveragePdfBtn) els.coveragePdfBtn.addEventListener("click", function () { els.coveragePdfInput.click(); });
+  if (els.coverageExcelInput) els.coverageExcelInput.addEventListener("change", function (event) { handleCoverageFiles(event.target.files); event.target.value = ""; });
+  if (els.coveragePdfInput) els.coveragePdfInput.addEventListener("change", function (event) { handleCoverageFiles(event.target.files); event.target.value = ""; });
+  if (els.coverageDemoBtn) els.coverageDemoBtn.addEventListener("click", function () { buildAnalysisDraft([]); renderAll(); });
+  if (els.coverageEditor) {
+    els.coverageEditor.addEventListener("input", function (event) {
+      var el = event.target;
+      var kind = el.getAttribute("data-analysis");
+      if (!kind) {
+        if (el.id === "coverageOpinion") {
+          state.analysis.opinion = el.value;
+          state.analysis.exports = [];
+          renderExports();
+        }
+        return;
+      }
+      var ctr = el.closest("[data-contract]");
+      if (ctr) {
+        var ci = Number(ctr.getAttribute("data-contract"));
+        var contract = state.analysis.contracts[ci];
+        if (!contract) return;
+        if (kind === "contract-company") contract.company = el.value;
+        if (kind === "contract-product") contract.product = el.value;
+        if (kind === "contract-premium") contract.premium = Number(String(el.value).replace(/[^0-9]/g, "")) || 0;
+        if (kind === "contract-renew") contract.renew = el.value;
+        if (kind === "contract-memo") contract.memo = el.value;
+      }
+      var rowEl = el.closest("[data-axis]");
+      if (rowEl) {
+        var ai = Number(rowEl.getAttribute("data-axis"));
+        var ri = Number(rowEl.getAttribute("data-cover"));
+        var cover = state.analysis.covers[ai] && state.analysis.covers[ai].rows[ri];
+        if (!cover) return;
+        if (kind === "cover-name") cover.name = el.value;
+        if (kind === "cover-total") cover.values = [Number(String(el.value).replace(/[^0-9]/g, "")) || 0];
+      }
+      state.analysis.exports = [];
+      renderExports();
+    });
+    els.coverageEditor.addEventListener("change", function (event) {
+      var el = event.target;
+      if (el.getAttribute("data-analysis") === "contract-show") {
+        var ctr = el.closest("[data-contract]");
+        var ci = ctr ? Number(ctr.getAttribute("data-contract")) : -1;
+        if (state.analysis.contracts[ci]) state.analysis.contracts[ci].show = el.checked;
+      }
+      state.analysis.exports = [];
+      renderCoverageIntake();
+      renderPreview();
+    });
+  }
+  if (els.coverageDrop) {
+    ["dragenter", "dragover"].forEach(function (type) {
+      els.coverageDrop.addEventListener(type, function (event) {
+        event.preventDefault();
+        els.coverageDrop.classList.add("dragging");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (type) {
+      els.coverageDrop.addEventListener(type, function (event) {
+        event.preventDefault();
+        els.coverageDrop.classList.remove("dragging");
+      });
+    });
+    els.coverageDrop.addEventListener("drop", function (event) {
+      if (event.dataTransfer && event.dataTransfer.files) handleCoverageFiles(event.dataTransfer.files);
+    });
+  }
+  if (els.exportBtn) {
+    els.exportBtn.addEventListener("click", function () {
+      exportKakaoCards().catch(function (err) {
+        if (els.exportStatus) els.exportStatus.textContent = "이미지 생성 실패: " + ((err && err.message) || err || "알 수 없는 오류");
+      });
+    });
+  }
 
   renderAll();
   initSplitters();
