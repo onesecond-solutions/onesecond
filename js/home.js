@@ -7,13 +7,14 @@
 
 /* 자주 찾는 보험 자료 타일 — 하드코딩 6개 고정이 아니라 각 타일이 링크하는 기능의 실제 공개 상태(게이트 함수/클래스)로 필터링해 생성.
    진입은 기존 showView 재사용(기능 로직 무변경). 전체 개방(is-uat-homesearch2 제거) 후에도 미공개 기능 타일(알릴의무 등)은 일반 홈에 안 생김.
-   show() = 각 view의 showView 가드와 동일 조건: product-lineup·tool·scripts=전체개방 / goji=_canSeeRoadmap / newsletters=_canSeeNl / silson=is-uat-homedesk. 2026-07-07 */
+   show() = 각 view의 showView 가드와 동일 조건: product-lineup·tool·scripts=전체개방 / goji=_canSeeRoadmap / newsletters=_canSeeNl / silson=전체개방(2026-07-21, cancer-treatment 전례). 2026-07-07 */
 var _HS2_TILES=[
   {v:'product-lineup', ic:'i-box',      t:'상품 라인업',       d:'원수사 상품 한눈에 비교',   show:function(){return true;}},
   {v:'goji',           ic:'i-check',    t:'알릴의무',          d:'회사별 고지유형·간편고지',  show:function(){return typeof window._canSeeRoadmap==='function'&&window._canSeeRoadmap();}},
   {v:'newsletters',    ic:'i-building', t:'소식지',            d:'원수사·GA 월별 모음',       show:function(){return typeof window._canSeeNl==='function'&&window._canSeeNl();}},
-  {v:'silson',         ic:'i-file',     t:'실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return document.body.classList.contains('is-uat-homedesk');}},
-  /* 암주요치료비 변천사 = 전체 개방(2026-07-20 대표 승인, 상품 라인업·도구 페이지 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출. silson(위)은 is-uat-homedesk 게이트 유지(무변경) */
+  /* 실비 변천사 = 전체 개방(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출 */
+  {v:'silson',         ic:'i-file',     t:'실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return true;}},
+  /* 암주요치료비 변천사 = 전체 개방(2026-07-20 대표 승인, 상품 라인업·도구 페이지 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출 */
   {v:'cancer-treatment', ic:'i-file',   t:'암주요치료비 변천사', d:'세대별 암 치료비 보장 변화', show:function(){return true;}},
   {v:'bojang', ic:'i-file', t:'보장분석', d:'의료실비·암·뇌심장·수술비 종합 · 고객 발송', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   /* X-FILE = 임태성 게이트 전용 빈 페이지(#v-xfile) 골격. cls = 이 타일에만 붙는 붉은 계열 스코프 클래스(다른 타일 무영향). 게이트는 _canSeeXfile(app.html 인라인) — _canSeeCoverage와 조건은 같으나 독립 함수라 개방 시점을 따로 제어. (2026-07-17) */
