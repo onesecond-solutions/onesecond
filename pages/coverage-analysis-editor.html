@@ -512,6 +512,10 @@ table.cvmx tbody tr:last-child > td{border-bottom:0}
 .jpg-export-panel .export-btn{border:0;border-radius:10px;padding:12px 18px;background:var(--ac);
   color:#fff;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer}
 .jpg-export-panel .export-btn:disabled{opacity:.55;cursor:wait}
+.jpg-export-panel .ddak-copy-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  margin-top:9px;border:0;border-radius:9px;padding:9px 11px;background:var(--ac);color:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:900;cursor:pointer}
+.jpg-export-panel .ddak-copy-btn:disabled{opacity:.55;cursor:wait}
 .jpg-export-panel .export-status{flex-basis:100%;font-size:13px;color:var(--muted);line-height:1.45;text-align:right}
 .jpg-export-panel .export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:12px;margin-top:16px}
@@ -520,6 +524,8 @@ table.cvmx tbody tr:last-child > td{border-bottom:0}
 .jpg-export-panel .export-thumb img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;
   border:1px solid var(--line);border-radius:8px;background:#fff}
 .jpg-export-panel .export-thumb b{display:block;margin-top:8px;font-size:12.5px;line-height:1.45}
+.jpg-export-panel .export-thumb small{display:block;margin-top:4px;color:var(--muted);
+  font-size:11.5px;line-height:1.45}
 .jpg-export-panel .export-thumb a{display:inline-flex;margin-top:7px;color:var(--ac-d);
   font-size:12.5px;font-weight:800;text-decoration:none}
 .jpg-export-host{position:fixed;left:-10000px;top:0;width:720px;height:1080px;pointer-events:none}
@@ -1715,6 +1721,84 @@ function imageToJpeg(src){
     img.src = src;
   });
 }
+const JPG_EXPORT_RESULTS = [];
+function dataUrlToBlob(url){
+  const parts = url.split(",");
+  const meta = parts[0] || "";
+  const mime = (meta.match(/data:([^;]+)/) || [])[1] || "image/jpeg";
+  const binary = atob(parts[1] || "");
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type:mime });
+}
+function dataUrlToPngBlob(url){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 720;
+      canvas.height = 1080;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0,0,720,1080);
+      ctx.drawImage(img,0,0);
+      canvas.toBlob(blob=>{
+        canvas.width = 0;
+        canvas.height = 0;
+        blob ? resolve(blob) : reject(new Error("PNG 복사 이미지 생성 실패"));
+      }, "image/png");
+    };
+    img.onerror = () => reject(new Error("PNG 복사용 이미지 로드 실패"));
+    img.src = url;
+  });
+}
+function fallbackDownloadJpg(index){
+  const item = JPG_EXPORT_RESULTS[index];
+  if(!item) return;
+  const a = document.createElement("a");
+  a.href = item.url;
+  a.download = item.name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+window.copyJpgCard = async function(index){
+  const item = JPG_EXPORT_RESULTS[index];
+  const stat = document.getElementById("jpgExportStatus");
+  const btn = document.querySelectorAll(".ddak-copy-btn")[index];
+  const originalText = btn ? btn.textContent : "";
+  const setStatus = message => {
+    if(stat) stat.textContent = message;
+    if(btn) btn.textContent = message;
+  };
+  if(!item || !item.blob){
+    setStatus("먼저 JPG 생성");
+    setTimeout(()=>{ if(btn) btn.textContent = originalText || "⚡ 딸깍 복사"; }, 1400);
+    return;
+  }
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = "복사 중...";
+  }
+  try{
+    if(!navigator.clipboard || !window.ClipboardItem) throw new Error("clipboard unsupported");
+    try{
+      await navigator.clipboard.write([new ClipboardItem({ "image/jpeg": item.blob })]);
+    }catch(jpgErr){
+      const pngBlob = await dataUrlToPngBlob(item.url);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob })]);
+    }
+    setStatus(`${index+1}번 복사 완료`);
+    setTimeout(()=>{ if(btn) btn.textContent = "⚡ 딸깍 복사"; }, 1800);
+  }catch(err){
+    console.error("[coverage jpg copy]", err);
+    setStatus("복사 실패 - 저장으로 전환");
+    fallbackDownloadJpg(index);
+    setTimeout(()=>{ if(btn) btn.textContent = "⚡ 딸깍 복사"; }, 2200);
+  }finally{
+    if(btn) btn.disabled = false;
+  }
+};
 async function exportJpgCards(){
   renderFinalScreen();
   const btn = document.getElementById("jpgExportBtn");
@@ -1723,6 +1807,7 @@ async function exportJpgCards(){
   const cards = exportCards();
   if(btn) btn.disabled = true;
   if(grid) grid.innerHTML = "";
+  JPG_EXPORT_RESULTS.length = 0;
   let host = document.querySelector(".jpg-export-host");
   if(!host){
     host = document.createElement("div");
@@ -1742,17 +1827,19 @@ async function exportJpgCards(){
         url = await nodeToJpeg(node);
       }
       host.innerHTML = "";
+      const blob = dataUrlToBlob(url);
+      JPG_EXPORT_RESULTS.push({ name:cards[i].name, url, blob });
       if(grid){
         const item = document.createElement("div");
         item.className = "export-thumb";
-        item.innerHTML = `<img alt="${esc(cards[i].name)}"><b>${i+1}. ${esc(cards[i].name)}</b><a download="${esc(cards[i].name)}">저장</a>`;
+        item.innerHTML = `<img alt="${esc(cards[i].name)}"><b>${i+1}. ${esc(cards[i].name)}</b><small>${i+1}번부터 순서대로 딸깍 후 카톡에 붙여넣기</small><button class="ddak-copy-btn" type="button" onclick="copyJpgCard(${i})">⚡ 딸깍 복사</button><a download="${esc(cards[i].name)}">저장</a>`;
         item.querySelector("img").src = url;
         const a = item.querySelector("a");
         a.href = url;
         grid.appendChild(item);
       }
     }
-    if(stat) stat.textContent = "JPG 8장 생성 완료. 각 카드의 저장 링크를 눌러 내려받을 수 있습니다.";
+    if(stat) stat.textContent = "JPG 8장 준비 완료. 카카오톡 전송 순서대로 1번부터 딸깍 복사하세요.";
   }finally{
     host.innerHTML = "";
     host.remove();
