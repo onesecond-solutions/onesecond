@@ -393,13 +393,13 @@ function sel(g,noScroll){
 sel(5,true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 scrollIntoView 유지 */
 
 /* ══════════════════════════════════════════════════════
-   V3 게이트 + 사이드바 — 임태성 게이트(어드민/실장)일 때만 켜짐.
-   비로그인·일반 사용자: _v3=false → 아무것도 안 함(= 기존 v2 그대로, 회귀 0).
+   V3 = de-iframe(2026-07-22) 후 독립 URL 페이지의 710px 읽기화면 + 사이드바.
+   과거 "iframe 안 + 임태성 게이트"에서만 켜지던 조건 폐지 → 전체공개 페이지라 모든 방문자에게 V3(대표 지시 재연결). 본문 텍스트/DOM 불변.
    본문 텍스트/DOM 불변. 사이드바는 여기서만 주입. TOC 앵커=.section-t.
    ══════════════════════════════════════════════════════ */
 (function(){
   var _v3=false;
-  try{ _v3 = (window.parent!==window && typeof window.parent._canSeeXfile==='function' && window.parent._canSeeXfile()); }catch(e){}
+  _v3 = true;   /* 독립 URL 진입 = V3 항상 켬(대표 지시 재연결). var _v3=false·if(!_v3)return 골격 보존, 이 줄만 true */
   if(!_v3) return;
   document.documentElement.classList.add('v3');
 
@@ -460,7 +460,8 @@ sel(5,true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 
     a.addEventListener('click',function(e){
       e.preventDefault();
       var v=a.getAttribute('data-v');
-      try{ if(window.parent&&window.parent.showView) window.parent.showView(v); }catch(err){}
+      var _relurl={'silson':'/pages/silson-generations.html','cancer-treatment':'/pages/cancer-treatment-history.html','caregiver-history':'/pages/caregiver-history.html'}[v];
+      if(_relurl){ location.href=_relurl; }   /* de-iframe 후 독립 URL 직접 이동(과거 parent.showView 의존 폐지) */
     });
   });
 })();
