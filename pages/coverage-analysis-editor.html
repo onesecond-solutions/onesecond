@@ -236,6 +236,8 @@ table.mx tbody tr.grpfirst:not(.axfirst) > td:not(.axc){
 .source-actions button{border:0;border-radius:10px;padding:11px 16px;background:var(--ac);color:#fff;font:inherit;font-weight:800;cursor:pointer}
 .source-actions button.alt{background:var(--s2);color:var(--ink);border:1px solid var(--hair)}
 .source-status{margin-top:12px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;background:var(--bg);font-size:13px;line-height:1.6;color:var(--muted)}
+.source-audit{margin-top:10px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;background:var(--bg);font-size:13px;line-height:1.65;color:var(--muted)}
+.source-audit.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--bg))}.source-audit.bad{border-color:var(--err);background:color-mix(in srgb,var(--err) 6%,var(--bg))}.source-audit b{color:var(--ink)}
 .source-password{display:none;margin-top:12px;gap:8px;align-items:center;flex-wrap:wrap}
 .source-password.on{display:flex}
 .source-password input{min-width:180px;border:1px solid var(--hair);border-radius:9px;padding:10px 12px;font:inherit}
@@ -708,6 +710,7 @@ body.customer-only .final-send-wrap{
       <button type="button" id="sourcePasswordBtn">암호 해제 후 불러오기</button>
     </div>
     <div class="source-status" id="sourceStatus">아직 불러온 파일이 없습니다.</div>
+    <div class="source-audit" id="sourceAudit" hidden></div>
   </div>
 
   <!-- ══ 설계사 편집 ══ -->
@@ -1192,6 +1195,8 @@ let COVER = [
    {l:"통원의료비", items:[
      {n:"질병통원의료비", v:[]},
      {n:"상해통원의료비", v:[]}]},
+   {l:"입원 · 통원 결합형", items:[
+     {n:"상해 입원·통원의료비", v:[]}]},
    {l:"도수 · 비급여 주사료 · MRI", items:[
      {n:"도수치료",      v:[]},
      {n:"비급여 주사료",  v:[]},
@@ -1232,6 +1237,8 @@ let COVER = [
    {l:"", items:[
      {n:"질병 수술비",    v:[]},
      {n:"상해 수술비",    v:[]},
+     {n:"질병 종수술비",  v:[]},
+     {n:"상해 종수술비",  v:[]},
      {n:"1~5종 수술비",   v:[]},
      {n:"1~3종 수술비",   v:[]},
      {n:"N대질병 수술비", v:[]}]}
@@ -1245,17 +1252,7 @@ const HEADER_ALIASES = {
   contractDate:["계약일","가입일","청약일","효력일"], premium:["보험료","월납","납입보험료","보험료(월)"],
   coverageName:["담보명","담보","특약","보장명"], coverageAmount:["가입금액","보장금액","가입한도","금액"], renewal:["갱신여부","갱신형","갱신"]
 };
-const COVER_KEYS = {
-  "질병입원의료비":["질병입원"], "상해입원의료비":["상해입원"], "질병통원의료비":["질병통원"], "상해통원의료비":["상해통원"],
-  "도수치료":["도수"], "비급여 주사료":["비급여주사","주사료"], "MRI":["mri","자기공명"],
-  "일반암 진단비":["일반암","암진단","고액암"], "유사암 진단비":["유사암","소액암","갑상선암","제자리암","경계성종양"], "고액암 진단비":["고액암"],
-  "암수술비":["암수술"], "항암방사선약물치료비":["항암방사선","방사선약물","항암약물","항암치료","방사선치료"],
-  "암주요치료비":["암주요치료","암직접치료"], "비급여암주요치료비":["비급여암","표적항암","면역항암","비급여항암"],
-  "뇌혈관질환 진단비":["뇌혈관"], "뇌졸중 진단비":["뇌졸중"], "뇌출혈 진단비":["뇌출혈"],
-  "허혈성심장질환 진단비":["허혈성"], "기타심장질환 진단비":["기타심장","심장질환진단"], "급성심근경색 진단비":["급성심근경색","심근경색"],
-  "질병 수술비":["질병수술"], "상해 수술비":["상해수술"], "1~5종 수술비":["1~5종","1-5종","5종수술","종수술"],
-  "1~3종 수술비":["1~3종","1-3종","3종수술"], "N대질병 수술비":["대질병수술","16대","21대","n대질병","특정질병수술"]
-};
+let PARSE_AUDIT={ok:false};
 const normText = v => String(v??"").trim();
 const normKey = v => normText(v).replace(/\s+/g,"").toLowerCase();
 function loadScriptOnce(src, ready){
@@ -1276,24 +1273,52 @@ function detectHeader(matrix){let best=null,score=0;for(let i=0;i<Math.min(matri
 function mapHeaders(row){const map={};(row||[]).forEach((c,i)=>{const f=fieldForHeader(normText(c));if(f&&map[f]==null)map[f]=i;});return map;}
 function digits(v){const d=String(v??"").replace(/[^\d]/g,"");return d?parseInt(d,10):0;}
 function detectBankSalad(matrix,hi,map){
-  if(hi==null||hi<1||map.coverageName==null||map.company!=null||map.product!=null)return null;
-  const hr=matrix[hi]||[];let max=-1;Object.values(map).forEach(v=>{if(v>max)max=v;});const productCols=[];
-  for(let c=max+1;c<hr.length;c++)if(normText(hr[c]))productCols.push(c);if(productCols.length<2)return null;
-  let premiumRowIdx=null;for(let r=hi-1;r>=0;r--){if(productCols.some(c=>/월/.test(normText(matrix[r]?.[c]))&&/원/.test(normText(matrix[r]?.[c])))){premiumRowIdx=r;break;}}
-  if(premiumRowIdx==null)return null;let companyRowIdx=null;for(let r=premiumRowIdx-1;r>=0;r--){if(productCols.some(c=>normText(matrix[r]?.[c]))){companyRowIdx=r;break;}}
-  return companyRowIdx==null?null:{productCols,companyRowIdx,premiumRowIdx};
+  if(hi==null||hi<1||map.coverageName==null)return null;
+  const hr=matrix[hi]||[];let premiumRowIdx=null;
+  for(let r=hi-1;r>=0;r--){const hits=(matrix[r]||[]).filter(cell=>/월\s*[\d,]+\s*원/.test(normText(cell))).length;if(hits>=2){premiumRowIdx=r;break;}}
+  if(premiumRowIdx==null)return null;let companyRowIdx=null;
+  for(let r=premiumRowIdx-1;r>=0;r--){if((matrix[r]||[]).filter(cell=>normText(cell)).length>=2){companyRowIdx=r;break;}}
+  if(companyRowIdx==null)return null;
+  const productCols=[];for(let c=map.coverageName+1;c<hr.length;c++){
+    const product=normText(hr[c]),premium=normText(matrix[premiumRowIdx]?.[c]),company=normText(matrix[companyRowIdx]?.[c]);
+    if(product&&company&&/월\s*[\d,]+\s*원/.test(premium))productCols.push(c);
+  }
+  return productCols.length<2?null:{productCols,companyRowIdx,premiumRowIdx};
 }
 function matrixResult(matrix,hi,map,bs){
   const companies=bs.productCols.map(col=>{const raw=normText(matrix[bs.premiumRowIdx]?.[col]),m=raw.match(/월\s*([\d,]+)\s*원/);return{col,company:normText(matrix[bs.companyRowIdx]?.[col]),product:normText(matrix[hi]?.[col]),premium:m?digits(m[1]):0,date:""};});
   const rows=[];for(let r=hi+1;r<matrix.length;r++){const row=matrix[r]||[],name=normText(row[map.coverageName]);if(!name)continue;const amounts={};companies.forEach(co=>amounts[co.col]=normText(row[co.col]));rows.push({name,amounts});}
-  return{companies,rows};
+  return{companies,rows,plainUnit:"won",expectedProductCount:bs.productCols.length};
 }
-function amountToMan(value){
+function amountToMan(value,plainUnit="auto"){
   const text=normText(value).replace(/,/g,"");if(!text||/^0(?:원|만|만원)?$/.test(text))return null;
   let total=0,matched=false;const eok=text.match(/([\d.]+)\s*억/),manok=text.match(/([\d.]+)\s*만/);
   if(eok){total+=Math.round(parseFloat(eok[1])*10000);matched=true;}if(manok){total+=Math.round(parseFloat(manok[1]));matched=true;}
-  if(!matched){const n=parseFloat(text.replace(/[^\d.]/g,""));if(!Number.isFinite(n)||n<=0)return null;total=Math.round(n);}
+  if(!matched){const n=parseFloat(text.replace(/[^\d.]/g,""));if(!Number.isFinite(n)||n<=0)return null;total=(plainUnit==="won"||/원/.test(text))?n/10000:n;}
   return total>0?total:null;
+}
+function classifyCoverage(value){
+  const n=normKey(value);
+  const target=(axis,item)=>({kind:"target",axis,item});
+  if(/질병.*실손|실손.*질병/.test(n))return target("silson","질병입원의료비");
+  if(/상해.*실손|실손.*상해/.test(n))return target("silson","상해입원의료비");
+  if(/상해.*의료비.*입원.*통원/.test(n))return target("silson","상해 입원·통원의료비");
+  if(/질병.*입원의료비/.test(n))return target("silson","질병입원의료비");
+  if(/질병.*통원.*의료/.test(n))return target("silson","질병통원의료비");
+  if(/상해.*통원.*의료/.test(n))return target("silson","상해통원의료비");
+  if(/도수/.test(n))return target("silson","도수치료");if(/비급여.*주사|주사료/.test(n))return target("silson","비급여 주사료");if(/mri|자기공명/.test(n))return target("silson","MRI");
+  if(/고액암.*진단/.test(n))return target("cancer","고액암 진단비");if(/소액암.*진단|유사암.*진단|갑상선암.*진단|제자리암.*진단|경계성종양.*진단/.test(n))return target("cancer","유사암 진단비");if(/일반암.*진단|^암진단/.test(n))return target("cancer","일반암 진단비");
+  if(/암.*수술/.test(n))return target("cancer","암수술비");if(/항암.*방사선|항암.*약물|방사선.*약물/.test(n))return target("cancer","항암방사선약물치료비");if(/비급여.*암.*치료|표적항암|면역항암/.test(n))return target("cancer","비급여암주요치료비");if(/암.*주요치료|암.*직접치료/.test(n))return target("cancer","암주요치료비");
+  if(/뇌혈관.*수술/.test(n))return target("brain","수술비");if(/뇌혈관.*진단/.test(n))return target("brain","뇌혈관질환 진단비");if(/뇌졸중.*진단/.test(n))return target("brain","뇌졸중 진단비");if(/뇌출혈.*진단/.test(n))return target("brain","뇌출혈 진단비");
+  if(/허혈성심장질환.*수술/.test(n))return target("heart","수술비");if(/허혈성심장질환.*진단/.test(n))return target("heart","허혈성심장질환 진단비");if(/급성심근경색.*진단/.test(n))return target("heart","급성심근경색 진단비");if(/기타심장질환.*진단/.test(n))return target("heart","기타심장질환 진단비");
+  if(/^질병종수술/.test(n))return target("surgery","질병 종수술비");if(/^상해종수술/.test(n))return target("surgery","상해 종수술비");if(/^질병수술/.test(n))return target("surgery","질병 수술비");if(/^상해수술/.test(n))return target("surgery","상해 수술비");if(/1[-~]?5종/.test(n))return target("surgery","1~5종 수술비");if(/1[-~]?3종/.test(n))return target("surgery","1~3종 수술비");if(/n대질병|\d+대질병|특정질병.*수술/.test(n))return target("surgery","N대질병 수술비");
+  if(/입원\(1일당\)|입원일당|후유장해|후유장애|치과|치매|골절|화상|배상책임|사망|특정상해|기타수술|기타인보험|교통|자동차|응급|벌금|변호사|민사소송|특정질병진단|특정암진단|특정질병통원/.test(n))return{kind:"excluded"};
+  return{kind:"unresolved"};
+}
+function renderAudit(audit){
+  const el=document.getElementById("sourceAudit");if(!el)return;el.hidden=false;el.className=`source-audit ${audit.ok?"ok":"bad"}`;
+  const issues=[...audit.unresolved.map(x=>`미분류: ${x}`),...audit.collisions.map(x=>`중복 매핑: ${x}`)];
+  el.innerHTML=`<b>${audit.ok?"원본 정합성 검사 통과":"원본 정합성 검사 실패"}</b><br>계약 ${audit.parsedContracts}/${audit.expectedContracts}건 · 월 보험료 ${audit.premium.toLocaleString()}원 · 가입 셀 ${audit.mapped+audit.excluded+audit.unresolvedCells}개(화면 ${audit.mapped} · 범위 밖 ${audit.excluded} · 미분류 ${audit.unresolvedCells})${issues.length?`<br>${issues.map(esc).join("<br>")}`:""}`;
 }
 function inferName(fileName){const base=String(fileName||"").replace(/\.[^.]+$/,"").replace(/^\[[^\]]+\]/,"");const m=base.match(/([가-힣]{2,4})(?:님|_|\s)/);return m?m[1].replace(/님$/,""):"고객";}
 function shortProduct(text){const t=normText(text);return t.length>16?t.slice(0,16)+"…":t;}
@@ -1301,12 +1326,9 @@ function applyParsed(result,fileName){
   CUSTOMER={name:inferName(fileName),date:new Date().toISOString().slice(0,10)};
   ROWS=result.companies.map(co=>({show:true,ins:co.company||"직접입력",pn:co.product||"",date:co.date||"",fee:Number(co.premium)||0,renew:"",memo:""}));
   PROD=result.companies.map(co=>({co:co.company||"-",short:shortProduct(co.product),on:true,col:co.col}));
-  COVER.forEach(ax=>ax.groups.forEach(group=>group.items.forEach(item=>{
-    const keys=(COVER_KEYS[item.n]||[]).map(normKey);
-    item.v=PROD.map(prod=>{
-      let sum=0;result.rows.forEach(row=>{const name=normKey(row.name);if(keys.some(k=>k&&name.includes(k))){sum+=amountToMan(row.amounts[prod.col])||0;}});return sum>0?sum:null;
-    });
-  })));
+  const slots=new Map(),slotSources=new Map();COVER.forEach(ax=>ax.groups.forEach(group=>group.items.forEach(item=>{item.v=PROD.map(()=>null);slots.set(`${ax.key}|${item.n}`,item);})));const unresolved=[],collisions=[];let mapped=0,excluded=0,unresolvedCells=0;
+  result.rows.forEach(row=>{const cls=classifyCoverage(row.name),sourceKey=normKey(row.name);PROD.forEach((prod,pi)=>{const amount=amountToMan(row.amounts[prod.col],result.plainUnit);if(!amount)return;if(cls.kind==="excluded"){excluded++;return;}if(cls.kind!=="target"){unresolved.push(row.name);unresolvedCells++;return;}const slotKey=`${cls.axis}|${cls.item}`,item=slots.get(slotKey);if(!item){unresolved.push(row.name);unresolvedCells++;return;}const cellKey=`${slotKey}|${pi}`,prior=slotSources.get(cellKey);if(item.v[pi]&&prior&&prior!==sourceKey){collisions.push(`${row.name} → ${cls.item} / ${prod.short}`);return;}item.v[pi]=(item.v[pi]||0)+amount;slotSources.set(cellKey,sourceKey);mapped++;});});
+  PARSE_AUDIT={expectedContracts:result.expectedProductCount??ROWS.length,parsedContracts:ROWS.length,premium:ROWS.reduce((s,r)=>s+r.fee,0),mapped,excluded,unresolvedCells,unresolved:[...new Set(unresolved)],collisions:[...new Set(collisions)]};PARSE_AUDIT.ok=PARSE_AUDIT.expectedContracts===PARSE_AUDIT.parsedContracts&&!PARSE_AUDIT.unresolved.length&&!PARSE_AUDIT.collisions.length;renderAudit(PARSE_AUDIT);
   const meta=document.getElementById("headerMeta");if(meta)meta.textContent=`${CUSTOMER.name} 고객님 · ${CUSTOMER.date}`;
   document.getElementById("finalCustomer").textContent=`${CUSTOMER.name} 고객님`;
   renderEditor();renderPreview();renderCover();renderFinalScreen();
@@ -1930,9 +1952,10 @@ window.copyJpgCard = async function(index){
   }
 };
 async function exportJpgCards(){
-  renderFinalScreen();
   const btn = document.getElementById("jpgExportBtn");
   const stat = document.getElementById("jpgExportStatus");
+  if(!PARSE_AUDIT.ok){if(stat)stat.textContent="원본 정합성 검사를 통과해야 JPG를 생성할 수 있습니다.";throw new Error("coverage reconciliation failed");}
+  renderFinalScreen();
   const grid = document.getElementById("jpgExportGrid");
   const cards = exportCards();
   if(btn) btn.disabled = true;
