@@ -235,6 +235,10 @@ table.mx tbody tr.grpfirst:not(.axfirst) > td:not(.axc){
 .source-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .source-actions button{border:0;border-radius:10px;padding:11px 16px;background:var(--ac);color:#fff;font:inherit;font-weight:800;cursor:pointer}
 .source-actions button.alt{background:var(--s2);color:var(--ink);border:1px solid var(--hair)}
+.source-drop{margin-top:12px;border:2px dashed var(--ac-b);border-radius:12px;padding:18px;background:var(--ac-s);text-align:center;color:var(--ac-d);font-weight:800;cursor:text;outline:none}
+.source-drop small{display:block;margin-top:4px;color:var(--muted);font-weight:600}
+.source-drop.over,.source-drop:focus{border-color:var(--ac);box-shadow:0 0 0 4px rgba(99,102,241,.12)}
+.source-files{display:grid;gap:8px;margin-top:12px}.source-file{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--hair);border-radius:10px;padding:10px 12px;background:#fff}.source-file div{min-width:0}.source-file b,.source-file span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.source-file span{font-size:12px;color:var(--muted)}.source-file a{flex:none;color:var(--ac-d);font-weight:800;text-decoration:none}
 .source-status{margin-top:12px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;background:var(--bg);font-size:13px;line-height:1.6;color:var(--muted)}
 .source-audit{margin-top:10px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;background:var(--bg);font-size:13px;line-height:1.65;color:var(--muted)}
 .source-audit.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--bg))}.source-audit.bad{border-color:var(--err);background:color-mix(in srgb,var(--err) 6%,var(--bg))}.source-audit b{color:var(--ink)}
@@ -244,6 +248,7 @@ table.mx tbody tr.grpfirst:not(.axfirst) > td:not(.axc){
 .source-manual{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:10px;margin-top:12px;align-items:end}.source-manual label{display:grid;gap:6px;font-size:12px;font-weight:800;color:var(--muted)}.source-manual input{border:1px solid var(--hair);border-radius:9px;padding:10px 12px;font:inherit}.source-name-hint{font-size:12px;color:var(--muted);padding-bottom:10px}
 .source-captures{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}.source-capture{border:1px solid var(--hair);border-radius:10px;padding:8px;background:var(--bg)}.source-capture img{width:100%;height:110px;object-fit:cover;border-radius:8px}.source-capture b{display:block;margin-top:6px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .final-silson-meta{margin:0 0 10px;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:12px;line-height:1.55;color:var(--muted)}.final-silson-meta b{display:block;color:var(--ink);font-size:14px}
+.silson-summary{margin:0 0 12px;padding:12px;border-radius:10px;background:var(--ac-s);color:var(--muted);font-size:12px;line-height:1.6}.silson-summary b{display:block;font-size:14px;color:var(--ac-d)}
 
 /* 대분류 시작선: 카테고리 전체를 가로지르는 2px */
 table.mx tbody tr.axfirst > td{
@@ -704,16 +709,18 @@ body.customer-only .final-send-wrap{
     <div class="source-actions">
       <button type="button" id="sourcePdfBtn">PDF 선택</button>
       <button type="button" id="sourceExcelBtn" class="alt">엑셀 선택</button>
-      <button type="button" id="sourceCaptureBtn" class="alt">참고 캡처 선택</button>
+      <button type="button" id="sourceCaptureBtn" class="alt">이미지 파일 추가</button>
       <input id="sourcePdfInput" type="file" accept=".pdf" hidden>
       <input id="sourceExcelInput" type="file" accept=".xlsx,.xls" hidden>
       <input id="sourceCaptureInput" type="file" accept="image/*" multiple hidden>
     </div>
+    <div id="sourceDrop" class="source-drop" tabindex="0">이곳을 누른 뒤 캡처 이미지를 붙여넣으세요 (Ctrl+V)<small>캡처를 끌어다 놓아도 됩니다. 이미지 파일 추가는 보조 수단입니다.</small></div>
     <div class="source-password" id="sourcePassword">
       <input id="sourcePasswordInput" type="password" autocomplete="off" placeholder="엑셀 비밀번호">
       <button type="button" id="sourcePasswordBtn">암호 해제 후 불러오기</button>
     </div>
     <div class="source-status" id="sourceStatus">아직 불러온 파일이 없습니다.</div>
+    <div class="source-files" id="sourceFiles"></div>
     <div class="source-audit" id="sourceAudit" hidden></div>
     <div class="source-manual">
       <label>고객 표시명<input id="sourceCustomerName" type="text" placeholder="마스킹 이름 또는 실제 고객명"></label>
@@ -1050,7 +1057,7 @@ function renderCoverPicker(){
   if(!grid) return;
   grid.innerHTML = COVER_OPTIONS.map(c=>`
     <button type="button" class="cover-option ${c.id===SELECTED_COVER?"on":""}" data-cover="${esc(c.id)}">
-      <div class="cover-preview ${esc(c.id)}"><strong>고객님<br>보장분석</strong><em>onesecond</em></div>
+      <div class="cover-preview ${esc(c.id)}"><strong>${esc(customerName())}님<br>보장분석</strong><em>${ROWS.length}건 · 월 ${won(ROWS.reduce((sum,row)=>sum+(Number(row.fee)||0),0))}</em></div>
       <b>${esc(c.title)}</b>
       <span>${esc(c.desc)}</span>
     </button>`).join("");
@@ -1156,7 +1163,7 @@ function upd(i,k,v){
   if(k==="show"){
     document.querySelectorAll("#edBody tr")[i].classList.toggle("hide",!v);
   }
-  refreshFoot(); renderPreview();
+  refreshFoot(); renderPreview(); renderCoverPreview(); renderFinalScreen(); renderCoverPicker();
 }
 function setCol(k,v){
   COL[k]=v;
@@ -1165,7 +1172,7 @@ function setCol(k,v){
 }
 function addRow(){
   ROWS.push({show:true,ins:"KB손보",pn:"",date:"",fee:0,renew:"",memo:""});
-  renderEditor(); renderPreview();
+  renderEditor(); renderPreview(); renderCoverPreview(); renderFinalScreen(); renderCoverPicker();
   const t=document.querySelectorAll("#edBody tr");
   const last=t[t.length-1];
   last.scrollIntoView({behavior:"smooth",block:"center"});
@@ -1173,7 +1180,7 @@ function addRow(){
 }
 function delRow(i){
   if(!confirm(`${i+1}번 계약을 삭제할까요?\n\n${ROWS[i].pn||"(상품명 없음)"}`)) return;
-  ROWS.splice(i,1); renderEditor(); renderPreview();
+  ROWS.splice(i,1); renderEditor(); renderPreview(); renderCoverPreview(); renderFinalScreen(); renderCoverPicker();
 }
 function dev(d){
   const el=document.getElementById("device");
@@ -1380,22 +1387,30 @@ function parsePdfProducts(pagesItems){
   return{companies:products.map((p,col)=>({col,company:p.company,product:p.product,premium:p.premium,date:p.date})),rows};
 }
 async function readPdf(file){await loadPdfJs();const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,pages=[];for(let i=1;i<=Math.min(pdf.numPages,20);i++){const page=await pdf.getPage(i);pages.push((await page.getTextContent()).items||[]);}return parsePdfProducts(pages);}
+let SOURCE_FILES=[];
+function rememberSource(file){
+  if(!file||SOURCE_FILES.some(item=>item.name===file.name&&item.size===file.size))return;
+  SOURCE_FILES.push({name:file.name,size:file.size||0,type:file.type||"첨부파일",url:URL.createObjectURL(file)});
+  const host=document.getElementById("sourceFiles");
+  if(host)host.innerHTML=SOURCE_FILES.map(item=>`<div class="source-file"><div><b>${esc(item.name)}</b><span>${esc(item.type)} · ${Math.max(1,Math.round(item.size/1024)).toLocaleString()}KB</span></div><a href="${esc(item.url)}" target="_blank" rel="noopener">원본 열기</a></div>`).join("");
+}
 async function handleSource(file,type,password=""){
-  if(!file)return;setSourceStatus(`${file.name} 판독 중…`);
+  if(!file)return;rememberSource(file);setSourceStatus(`${file.name} 판독 중…`);
   try{const result=type==="pdf"?await readPdf(file):await readExcel(file,password);document.getElementById("sourcePassword").classList.remove("on");PENDING_EXCEL=null;applyParsed(result,file.name);}
   catch(error){setSourceStatus(error?.message||String(error),true);}
 }
 let CAPTURE_URLS=[];
 function handleCaptures(fileList){
-  CAPTURE_URLS.forEach(item=>URL.revokeObjectURL(item.url));CAPTURE_URLS=Array.from(fileList||[]).map(file=>({name:file.name,url:URL.createObjectURL(file)}));
+  Array.from(fileList||[]).filter(file=>/^image\//.test(file.type||"")).forEach(file=>{if(!CAPTURE_URLS.some(item=>item.name===file.name&&item.size===file.size))CAPTURE_URLS.push({name:file.name,size:file.size||0,url:URL.createObjectURL(file)});});
   const host=document.getElementById("sourceCaptures");if(host)host.innerHTML=CAPTURE_URLS.map(item=>`<div class="source-capture"><img src="${esc(item.url)}" alt="참고 캡처"><b>${esc(item.name)}</b></div>`).join("");
 }
 function updateCustomerName(value){
-  const name=String(value||"").trim()||"고객";CUSTOMER.name=name;const meta=document.getElementById("headerMeta");if(meta)meta.textContent=`${name} 고객님 · ${CUSTOMER.date||""}`;const final=document.getElementById("finalCustomer");if(final)final.textContent=`${name} 고객님`;renderFinalScreen();
+  const name=String(value||"").trim()||"고객";CUSTOMER.name=name;const meta=document.getElementById("headerMeta");if(meta)meta.textContent=`${name} 고객님 · ${CUSTOMER.date||""}`;const final=document.getElementById("finalCustomer");if(final)final.textContent=`${name} 고객님`;renderFinalScreen();renderCoverPicker();
 }
 window.addEventListener("message",event=>{
   if(event.origin!==location.origin||event.data?.type!=="xfile-coverage-files")return;
-  const files=Array.from(event.data.files||[]),file=files.find(item=>/\.pdf$/i.test(item.name||""))||files.find(item=>/\.xlsx?$/i.test(item.name||""));
+  const files=Array.from(event.data.files||[]),images=files.filter(item=>/^image\//.test(item.type||"")||/\.(png|jpe?g|webp)$/i.test(item.name||"")),file=files.find(item=>/\.pdf$/i.test(item.name||""))||files.find(item=>/\.xlsx?$/i.test(item.name||""));
+  if(images.length)handleCaptures(images);
   if(!file){setSourceStatus("지원하는 PDF 또는 엑셀 파일이 없습니다.",true);return;}
   handleSource(file,/\.pdf$/i.test(file.name||"")?"pdf":"excel");
 });
@@ -1502,12 +1517,13 @@ function renderCoverPreview(){
               <span class="a">${sum?man(sum):"미가입"}</span></div>`;
           }).join("")}
         </div>`).join("");
+      const silson = ax.key==="silson" ? silsonContracts().map(row=>`<div class="silson-summary"><b>${esc(row.generation)} · ${esc(row.company)}</b>${esc(row.date)||"가입일 확인 필요"}${row.renew?` · ${esc(row.renew)}`:""}<br>${esc(row.product)}</div>`).join("") : "";
       return `<div class="cax">
         <div class="ch">
           <span class="ic" style="background:${ax.c}">${ax.ic}</span>
           <span class="tx"><b>${ax.t}</b><span>담보 ${axItems(ax).length}개</span></span>
           <span class="cnt ${gaps?"g":"f"}">${gaps?`미가입 ${gaps}`:"모두 가입"}</span>
-        </div>${body}</div>`;
+        </div>${silson}${body}</div>`;
     }).join("");
     return;
   }
@@ -2054,6 +2070,8 @@ renderCover = function(){
 window.addEventListener("DOMContentLoaded", ()=>{
   renderFinalScreen();
   renderCoverPicker();
+  const coverPanel=document.getElementById("coverPickerPanel"),finalPanel=document.getElementById("finalSendPanel");
+  if(coverPanel&&finalPanel)finalPanel.parentNode.insertBefore(coverPanel,finalPanel);
   fdev(window.matchMedia("(max-width: 767px)").matches ? "m" : "p");
   const coverGrid = document.getElementById("coverGrid");
   if(coverGrid) coverGrid.addEventListener("click", event=>{
@@ -2067,11 +2085,14 @@ window.addEventListener("DOMContentLoaded", ()=>{
   }));
   const pdfBtn=document.getElementById("sourcePdfBtn"),pdfInput=document.getElementById("sourcePdfInput");
   const excelBtn=document.getElementById("sourceExcelBtn"),excelInput=document.getElementById("sourceExcelInput");
-  const captureBtn=document.getElementById("sourceCaptureBtn"),captureInput=document.getElementById("sourceCaptureInput"),customerInput=document.getElementById("sourceCustomerName");
+  const captureBtn=document.getElementById("sourceCaptureBtn"),captureInput=document.getElementById("sourceCaptureInput"),sourceDrop=document.getElementById("sourceDrop"),customerInput=document.getElementById("sourceCustomerName");
   const passwordBtn=document.getElementById("sourcePasswordBtn"),passwordInput=document.getElementById("sourcePasswordInput");
   if(pdfBtn&&pdfInput){pdfBtn.addEventListener("click",()=>pdfInput.click());pdfInput.addEventListener("change",()=>handleSource(pdfInput.files[0],"pdf"));}
   if(excelBtn&&excelInput){excelBtn.addEventListener("click",()=>excelInput.click());excelInput.addEventListener("change",()=>handleSource(excelInput.files[0],"excel"));}
   if(captureBtn&&captureInput){captureBtn.addEventListener("click",()=>captureInput.click());captureInput.addEventListener("change",()=>handleCaptures(captureInput.files));}
+  const acceptPastedImages=event=>{const files=Array.from(event.clipboardData?.files||event.dataTransfer?.files||[]).filter(file=>/^image\//.test(file.type||""));if(files.length){event.preventDefault();handleCaptures(files);if(sourceDrop)sourceDrop.classList.remove("over");}};
+  document.addEventListener("paste",acceptPastedImages);
+  if(sourceDrop){sourceDrop.addEventListener("dragover",event=>{event.preventDefault();sourceDrop.classList.add("over");});sourceDrop.addEventListener("dragleave",()=>sourceDrop.classList.remove("over"));sourceDrop.addEventListener("drop",acceptPastedImages);sourceDrop.addEventListener("click",()=>sourceDrop.focus());}
   if(customerInput)customerInput.addEventListener("input",()=>updateCustomerName(customerInput.value));
   if(passwordBtn&&passwordInput){passwordBtn.addEventListener("click",()=>handleSource(PENDING_EXCEL,"excel",passwordInput.value));passwordInput.addEventListener("keydown",event=>{if(event.key==="Enter")passwordBtn.click();});}
   window.scrollTo(0,0);
