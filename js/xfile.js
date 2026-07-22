@@ -376,9 +376,21 @@
     return '' +
       backBar() +
       '<div class="xf-card xf-card-factory">' +
-        '<iframe class="xf-factory-frame" src="/pages/coverage-analysis-editor.html?embed=1" title="보장분석 편집기"></iframe>' +
+        '<iframe id="xfCoverageEditorFrame" class="xf-factory-frame" src="/pages/coverage-analysis-editor.html?embed=1" title="보장분석 편집기"></iframe>' +
       '</div>';
   }
+
+  /* 보험 팩토리에서 고른 원본 File을 서버 저장 없이 승인 편집기의 실제 파서로 넘긴다. */
+  window._xfileOpenCoverageEditor = function (fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    paint('analysis');
+    var frame = document.getElementById('xfCoverageEditorFrame');
+    if (!frame) return;
+    frame.addEventListener('load', function () {
+      frame.contentWindow.postMessage({ type: 'xfile-coverage-files', files: files }, location.origin);
+    }, { once: true });
+  };
 
   /* ══════════════════════════════════════════════════════════════════════════
    * 미니 라우터

@@ -1347,6 +1347,12 @@ async function handleSource(file,type,password=""){
   try{const result=type==="pdf"?await readPdf(file):await readExcel(file,password);document.getElementById("sourcePassword").classList.remove("on");PENDING_EXCEL=null;applyParsed(result,file.name);}
   catch(error){setSourceStatus(error?.message||String(error),true);}
 }
+window.addEventListener("message",event=>{
+  if(event.origin!==location.origin||event.data?.type!=="xfile-coverage-files")return;
+  const files=Array.from(event.data.files||[]),file=files.find(item=>/\.pdf$/i.test(item.name||""))||files.find(item=>/\.xlsx?$/i.test(item.name||""));
+  if(!file){setSourceStatus("지원하는 PDF 또는 엑셀 파일이 없습니다.",true);return;}
+  handleSource(file,/\.pdf$/i.test(file.name||"")?"pdf":"excel");
+});
 
 /* 만원 → 억/만 */
 const man = m => {
