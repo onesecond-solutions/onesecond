@@ -153,15 +153,29 @@ h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 
 /* ══════════════════════════════════════════════════════
    V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
    ‣ html.v3 스코프로만 적용. .v3 없으면 위 v2 규칙 그대로 = 렌더 픽셀 동일(회귀 0).
-   ‣ 본문 폭 760px 하드 고정, 사이드바는 1040px↑에서만 노출.
+   ‣ 읽는 본문 710px / 표·수치카드는 760까지 예외. 사이드바는 iframe≥1060에서만 노출.
    ══════════════════════════════════════════════════════ */
 /* 레이아웃 래퍼 — v2(비-v3)에서는 순수 블록이라 .wrap이 옛 max-width:1240px 중앙정렬 그대로 */
 .v3grid{display:block}
 .v3side{display:none}
 
 html.v3 body{font-size:16px;line-height:1.85;word-break:keep-all}
-/* 읽기 본문 폭 760px 하드 고정 — 사이드바 유무 무관, 절대 760 초과 금지 */
+/* .wrap = 최대 허용폭 760(표·수치카드가 쓸 수 있는 상한). 절대 760 초과 금지 */
 html.v3 .wrap{max-width:760px;margin:0 auto}
+/* 데스크탑에서 .wrap 좌우 패딩 제거 → 콘텐츠 박스가 760에 도달(표가 760까지 펼쳐짐).
+   읽는 블록은 아래에서 710로 재중앙정렬. 모바일(<768)은 v2 gutter(16px) 유지. */
+@media(min-width:768px){ html.v3 .wrap{padding-left:0;padding-right:0} }
+
+/* ── 읽는 텍스트 블록 = 710px 중앙정렬(표류 방지) ── */
+html.v3 .phead,html.v3 .intro,html.v3 h2.sec,html.v3 .tl,
+html.v3 .tip,html.v3 .caution,html.v3 .chk,html.v3 .concl,html.v3 .src{
+  max-width:710px;margin-left:auto;margin-right:auto;
+}
+/* ── 비교표·비교카드·수치카드 = 760까지 예외 허용(중앙정렬) ── */
+html.v3 #cmpTable,html.v3 #cmpCards,html.v3 .stat{
+  max-width:760px;margin-left:auto;margin-right:auto;
+}
+
 /* 긴 상품명·URL 대비 본문 문단 줄바꿈 안전장치 */
 html.v3 .intro,html.v3 .tl .bd p,html.v3 .tl .key,html.v3 .stat .tx,
 html.v3 .tip,html.v3 .caution,html.v3 .gc p,html.v3 .chk .tx,
@@ -181,7 +195,9 @@ html.v3 .tip,html.v3 .caution,html.v3 .tl .key{font-size:15px}
     justify-content:center;
     align-items:start;
   }
-  html.v3 .v3grid .wrap{max-width:760px}  /* 2컬럼에서도 본문 760 초과 금지 */
+  /* 2컬럼: 트랙(760)을 꽉 채워 표가 760까지 펼쳐지게. margin auto는 그리드 아이템을
+     shrink-to-fit(710)로 만들어 표 브레이크아웃을 죽이므로 width 고정으로 stretch. 읽는 블록은 내부 710 유지 */
+  html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0}
   html.v3 .v3side{
     display:block;
     position:sticky;top:26px;align-self:start;
