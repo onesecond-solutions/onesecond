@@ -179,7 +179,7 @@
     { key: 'brainheart', em: '🫀', title: '뇌/심장', desc: '준비 중', step: 'brainheart' },
     { key: 'surgery', em: '🩹', title: '수술비', desc: '준비 중', step: 'surgery' },
     { key: 'general', em: '🛡️', title: '종합보험', desc: '준비 중', step: 'general' },
-    { key: 'analysis', em: '📊', title: '보장분석', desc: '준비 중', step: 'analysis' },
+    { key: 'analysis', em: '📊', title: '보장분석', desc: '엑셀·PDF 분석 원장 편집과 JPG 발송 이미지 생성', step: 'analysis' },
     { key: 'caregiver', em: '🧑‍⚕️', title: '간병인', desc: '준비 중', step: 'caregiver' }
   ];
 
@@ -372,6 +372,14 @@
       '</div>';
   }
 
+  function renderAnalysis() {
+    return '' +
+      backBar() +
+      '<div class="xf-card xf-card-factory">' +
+        '<iframe class="xf-factory-frame" src="/pages/coverage-analysis-editor.html?embed=1" title="보장분석 편집기"></iframe>' +
+      '</div>';
+  }
+
   /* ══════════════════════════════════════════════════════════════════════════
    * 미니 라우터
    *   주의: 'analysis' = X-FILE 안의 빈 페이지. 앱의 보장분석 뷰(#v-bojang·
@@ -385,7 +393,7 @@
     brainheart: blankOf('뇌/심장'),
     surgery: blankOf('수술비'),
     general: blankOf('종합보험'),
-    analysis: blankOf('보장분석'),
+    analysis: renderAnalysis,
     caregiver: blankOf('간병인')
   };
 
