@@ -151,9 +151,136 @@ h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 
 }
 .home-back{display:inline-flex;align-items:center;gap:2px;margin-bottom:12px;color:var(--ac-d);text-decoration:none;font-size:13px;font-weight:700;padding:6px 13px;border:1px solid var(--hair);border-radius:8px;background:#fff}
 .home-back:hover{background:var(--ac-s)}
+
+/* ══════════════════════════════════════════════════════
+   V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
+   ‣ html.v3 스코프로만 적용. .v3 없으면 위 v2 규칙 그대로 = 렌더 픽셀 동일(회귀 0).
+   ‣ 읽는 본문 710px / 표·수치카드는 760까지 예외. 사이드바는 iframe≥1060에서만 노출.
+   ══════════════════════════════════════════════════════ */
+/* 레이아웃 래퍼 — v2(비-v3)에서는 순수 블록이라 .wrap이 옛 max-width:1240px 중앙정렬 그대로 */
+.v3grid{display:block}
+.v3side{display:none}
+
+html.v3 body{font-size:16px;line-height:1.85;word-break:keep-all}
+/* .wrap = 최대 허용폭 760(표·수치카드가 쓸 수 있는 상한). 절대 760 초과 금지 */
+html.v3 .wrap{max-width:760px;margin:0 auto}
+/* 데스크탑에서 .wrap 좌우 패딩 제거 → 콘텐츠 박스가 760에 도달(표가 760까지 펼쳐짐).
+   읽는 블록은 아래에서 710로 재중앙정렬. 모바일(<768)은 v2 gutter(16px) 유지. */
+@media(min-width:768px){ html.v3 .wrap{padding-left:0;padding-right:0} }
+
+/* ── 읽는 텍스트 블록 = 710px 중앙정렬(표류 방지) ── */
+html.v3 .phead,html.v3 .intro,html.v3 h2.sec,html.v3 .tl,
+html.v3 .tip,html.v3 .caution,html.v3 .chk,html.v3 .concl,html.v3 .src{
+  max-width:710px;margin-left:auto;margin-right:auto;
+}
+/* ── 비교표·비교카드·수치카드 = 760까지 예외 허용(중앙정렬) ── */
+html.v3 #cmpTable,html.v3 #cmpCards,html.v3 .stat{
+  max-width:760px;margin-left:auto;margin-right:auto;
+}
+
+/* ══ V3 = 기획팀장 v3 정본(참조본)과 요소별 computed 전수 일치. html.v3 스코프만.
+   의도적 차이(유지): 읽는 폭 710/표760 · BP1060 · 숨긴 껍데기(CTA·내자료저장·KNOWLEDGE_COUNT). ══ */
+/* 긴 상품명·URL 줄바꿈 안전장치(메트릭 무영향) */
+html.v3 .intro,html.v3 .tl .bd p,html.v3 .tl .key,html.v3 .stat .tx,
+html.v3 .tip,html.v3 .caution,html.v3 .gc p,html.v3 .chk .tx,
+html.v3 .concl p{overflow-wrap:anywhere}
+
+/* 헤더 */
+html.v3 .phead h1{font-size:23px}
+html.v3 .phead p{font-size:14.5px;line-height:1.7}
+html.v3 h2.sec{font-size:19px;margin:30px auto 12px}  /* auto=읽기열710 중앙정렬 유지(세로값은 기획팀장 동일) */
+/* 인트로 */
+html.v3 .intro{font-size:16px;line-height:1.85;padding:18px 19px}
+/* 타임라인 */
+html.v3 .tl .yr{font-size:12.5px}
+html.v3 .tl .bd h3{font-size:18px;margin:0 0 8px}
+html.v3 .tl .bd p{font-size:16px;line-height:1.85;margin:0 0 11px}
+html.v3 .tl .key{font-size:15px;line-height:1.8;padding:14px 16px;margin-top:11px}
+/* 알림 */
+html.v3 .tip{font-size:15px;line-height:1.82;padding:16px 17px;margin-top:15px}
+html.v3 .caution{font-size:15px;line-height:1.82;padding:16px 17px;margin-top:12px}
+/* 세분화 카드 (.gc p는 .tl .bd 중첩 → 특이도 확보) */
+html.v3 .gc h4{font-size:15px;margin:0 0 7px}
+html.v3 .tl .bd .gc p{font-size:15px;line-height:1.8;margin:0}
+/* 수치 */
+html.v3 .stat .tx{font-size:15px;line-height:1.8}
+html.v3 .stat .src{font-size:13px;line-height:1.7;margin-top:10px}
+/* 체크리스트 */
+html.v3 .chk .tx b{font-size:16px;margin-bottom:3px}
+html.v3 .chk .tx span{font-size:15px;line-height:1.8}
+/* 결론 */
+html.v3 .concl p{font-size:17px;line-height:1.8;margin:0 0 15px}
+html.v3 .concl .who{font-size:14px}
+/* 출처(푸터) */
+html.v3 .src{font-size:13px;line-height:1.9;margin-top:34px;padding-top:18px}
+/* 모바일 비교 카드(.tcard) */
+html.v3 .tcard .th b{font-size:18px}
+html.v3 .tcard .th span{font-size:13.5px}
+html.v3 .tcard .kv{font-size:15px}
+html.v3 .tcard .kv .k{font-size:14px;flex:0 0 84px}
+html.v3 .tcard .kv .v em{font-size:13.5px}
+
+@media(min-width:768px){
+  html.v3 .phead h1{font-size:27px}
+  html.v3 h2.sec{font-size:20px;margin:40px auto 16px}
+  html.v3 .tl .bd h3{font-size:19px}
+  html.v3 .concl p{font-size:18px}
+  /* 비교표 — 기획팀장 값으로 승격 */
+  html.v3 thead th{font-size:14.5px;padding:14px 10px}
+  html.v3 thead th.k{width:104px}
+  html.v3 thead th small{font-size:12px}
+  html.v3 tbody td{font-size:14px;padding:14px 10px}
+  html.v3 tbody td.k{font-size:13.5px}
+  html.v3 tbody td em{font-size:12.5px}
+}
+
+/* 사이드바 2단 노출 조건 = "iframe 실폭"이 본문760+사이드244+간격32(=1036)+슬랙을 수용할 때만.
+   BP 1060px: iframe ~1098(1366 모니터)=노출 / ~1012(1280 모니터)=숨김. 그 미만·모바일 = 단일 컬럼(≤760px). */
+@media(min-width:1060px){
+  html.v3 .v3grid{
+    display:grid;
+    grid-template-columns:760px 244px;   /* 본문 760 고정 · 사이드바 244 고정 */
+    gap:32px;                            /* 1098 안정 수용 위해 32로 축소 */
+    justify-content:center;
+    align-items:start;
+  }
+  /* 2컬럼: 트랙(760)을 꽉 채워 표가 760까지 펼쳐지게. margin auto는 그리드 아이템을
+     shrink-to-fit(710)로 만들어 표 브레이크아웃을 죽이므로 width 고정으로 stretch. 읽는 블록은 내부 710 유지 */
+  html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0}
+  /* ── 사이드바 = 기획팀장 .side 값 전수 일치(플랫 blk 모델, 카드박스 아님) ── */
+  html.v3 .v3side{
+    display:block;
+    position:sticky;top:24px;align-self:start;
+    padding:34px 0 0;
+  }
+  html.v3 .v3side .blk{margin-bottom:26px}
+  html.v3 .v3side .lb{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--muted);
+    margin-bottom:10px;text-transform:uppercase}
+  /* 목차 */
+  html.v3 .v3side .toc a{display:block;padding:7px 0 7px 13px;border-left:2px solid var(--hair);
+    font-size:13.5px;color:var(--muted);text-decoration:none;line-height:1.45;
+    transition:color .15s,border-color .15s}
+  html.v3 .v3side .toc a:hover{color:var(--ink2)}
+  html.v3 .v3side .toc a.on{color:var(--ac-d);border-left-color:var(--ac);font-weight:700}
+  /* 활용 버튼(아이콘 포함) */
+  html.v3 .v3side .act{display:flex;flex-direction:column;gap:7px}
+  html.v3 .v3side .act button{display:flex;align-items:center;gap:8px;width:100%;
+    padding:10px 12px;border:1px solid var(--hair);background:#fff;border-radius:9px;
+    font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);
+    cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+  html.v3 .v3side .act button:hover{border-color:var(--ac);background:var(--ac-s);color:var(--ac-d)}
+  html.v3 .v3side .act button .i{font-size:14px;flex:0 0 auto}
+  /* 함께 보면 좋은 자료 */
+  html.v3 .v3side .rel a{display:block;padding:10px 12px;border:1px solid var(--hair);border-radius:9px;
+    margin-bottom:7px;text-decoration:none;transition:border-color .15s}
+  html.v3 .v3side .rel a:hover{border-color:var(--ac)}
+  html.v3 .v3side .rel b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.4}
+  html.v3 .v3side .rel span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+}
 </style>
 </head>
 <body>
+<div class="v3grid">
 <div class="wrap">
 
   <!-- 원세컨드 홈 백링크 = 기존 iframe 감싸개의 '홈으로' 버튼 대체. history.back 아닌 홈 URL(/) 직접 이동 — 외부(카톡 등) 유입은 뒤로 갈 페이지가 없으므로 (2026-07-22 de-iframe 1단계, 대표 지시) -->
@@ -333,7 +460,10 @@ h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 
     본 자료는 상담 전 참고용이며 특정 상품이나 보험사를 권유하지 않습니다.
   </div>
 
-</div>
+</div><!-- /.wrap -->
+
+  <aside class="v3side" id="v3side" aria-hidden="true"></aside>
+</div><!-- /.v3grid -->
 
 <script>
 /* ══════════════════════════════════════════════════════
@@ -401,6 +531,86 @@ const CHK=[
 document.getElementById("chk").innerHTML = CHK.map((c,i)=>`
   <div class="r"><span class="n">${i+1}</span>
     <span class="tx"><b>${c[0]}</b><span>${c[1]}</span></span></div>`).join("");
+
+/* ══════════════════════════════════════════════════════
+   V3 게이트 + 사이드바 — 임태성 게이트(어드민/실장)일 때만 켜짐.
+   비로그인·일반 사용자: _v3=false → 아무것도 안 함(= 기존 v2 그대로, 회귀 0).
+   본문 텍스트/DOM 불변. 사이드바는 여기서만 주입(정적 HTML 텍스트 노드 미접촉).
+   ══════════════════════════════════════════════════════ */
+(function(){
+  var _v3=false;
+  try{ _v3 = (window.parent!==window && typeof window.parent._canSeeXfile==='function' && window.parent._canSeeXfile()); }catch(e){}
+  if(!_v3) return;                                   /* 일반·비로그인 = 여기서 종료. v2 그대로 */
+  document.documentElement.classList.add('v3');
+
+  /* ── 목차 앵커: h2.sec에 id 부여(텍스트 노드 불변) ── */
+  var secs=[].slice.call(document.querySelectorAll('h2.sec'));
+  secs.forEach(function(h,i){ if(!h.id) h.id='v3sec-'+i; });
+
+  /* ── 사이드바 렌더(존재하는 뷰만 연결 · CTA는 미배선이라 미노출) ── */
+  var toc = secs.map(function(h){
+    return '<a href="#'+h.id+'" data-t="'+h.id+'">'+h.textContent.trim()+'</a>';
+  }).join('');
+  var side=document.getElementById('v3side');
+  side.setAttribute('aria-hidden','false');
+  side.innerHTML =
+    '<div class="blk"><div class="lb">목차</div><nav class="toc">'+toc+'</nav></div>'+
+    '<div class="blk"><div class="lb">이 자료 활용</div><div class="act">'+
+      '<button type="button" id="v3print"><span class="i">📄</span><span class="t">PDF로 저장</span></button>'+
+      '<button type="button" id="v3copy"><span class="i">🔗</span><span class="t">링크 복사</span></button>'+
+    '</div></div>'+
+    '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">'+
+      '<a href="#" data-v="silson"><b>실손의료비 세대별 비교</b><span>세대별 자기부담·보장 변화</span></a>'+
+      '<a href="#" data-v="cancer-treatment"><b>암주요치료비 변천사</b><span>암 치료비 담보의 변화</span></a>'+
+    '</div></div>';
+
+  /* 목차 클릭 → 부드러운 스크롤 */
+  side.querySelectorAll('.toc a').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      var t=document.getElementById(a.getAttribute('data-t'));
+      if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+
+  /* 스크롤 위치 하이라이트 */
+  var links={}; side.querySelectorAll('.toc a').forEach(function(a){ links[a.getAttribute('data-t')]=a; });
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(en){
+        if(en.isIntersecting){
+          Object.keys(links).forEach(function(k){ links[k].classList.remove('on'); });
+          var cur=links[en.target.id]; if(cur) cur.classList.add('on');
+        }
+      });
+    },{rootMargin:'0px 0px -70% 0px',threshold:0});
+    secs.forEach(function(h){ io.observe(h); });
+  }
+
+  /* PDF로 저장 — 실제 작동 */
+  document.getElementById('v3print').addEventListener('click',function(){ window.print(); });
+
+  /* 링크 복사 — 실제 작동(앱 URL 우선, 실패 시 이 페이지) */
+  document.getElementById('v3copy').addEventListener('click',function(){
+    var url; try{ url=window.parent.location.href; }catch(e){ url=location.href; }
+    var lab=this.querySelector('.t')||this, orig=lab.textContent;
+    function done(ok){ lab.textContent=ok?'복사됨':'복사 실패'; setTimeout(function(){ lab.textContent=orig; },1400); }
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){done(true);},function(){done(false);});
+      }else{ done(false); }
+    }catch(e){ done(false); }
+  });
+
+  /* 관련 자료 — 실제 존재하는 뷰만(silson · cancer-treatment) */
+  side.querySelectorAll('.rel a').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      var v=a.getAttribute('data-v');
+      try{ if(window.parent&&window.parent.showView) window.parent.showView(v); }catch(err){}
+    });
+  });
+})();
 </script>
 </body>
 </html>

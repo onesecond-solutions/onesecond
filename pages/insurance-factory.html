@@ -1312,16 +1312,12 @@ button { cursor: pointer; }
           <div class="coverage-actions">
             <button type="button" class="coverage-btn primary" id="coverageExcelBtn">엑셀 첨부</button>
             <button type="button" class="coverage-btn" id="coveragePdfBtn">PDF 첨부</button>
-            <button type="button" class="coverage-btn" id="coverageDemoBtn">분석 초안 만들기</button>
           </div>
         </div>
       </div>
       <input id="coverageExcelInput" type="file" accept=".xlsx,.xls,.csv" multiple hidden>
       <input id="coveragePdfInput" type="file" accept=".pdf" multiple hidden>
-      <div class="coverage-status" id="coverageStatus">파일을 넣으면 계약·핵심 담보·원본 첨부 목록이 이 작업 안에서만 준비됩니다.</div>
-      <div class="coverage-files" id="coverageFiles"></div>
-      <div class="coverage-summary" id="coverageSummary"></div>
-      <div class="coverage-editor" id="coverageEditor"></div>
+      <div class="coverage-status" id="coverageStatus">파일을 선택하면 승인된 보장분석 편집기의 실제 파서로 바로 이동합니다.</div>
     </section>
     <div class="narrow">보험 팩토리 1차 작업실은 데스크톱 1366px 이상 화면에 맞춰 만든 3컬럼 작업 공간입니다. 좁은 화면에서는 추후 단계형 전환으로 확장합니다.</div>
     <div class="if-workspace">
@@ -1386,19 +1382,6 @@ button { cursor: pointer; }
         </div>
       </aside>
     </div>
-    <section class="if-third-row" aria-label="보험 팩토리 하단 작업 영역">
-      <div class="if-export-result">
-        <div class="if-export-bar">
-          <div>
-            <h2>카카오톡 묶음 사진 만들기</h2>
-            <p>보장분석 원장을 기준으로 720×1080px 카드 8장을 한 장씩 임시 생성하고, JPG 변환 후 DOM과 canvas를 바로 제거합니다.</p>
-          </div>
-          <button type="button" class="coverage-btn primary" id="exportKakaoCards">8장 이미지 생성</button>
-        </div>
-        <div class="coverage-status" id="exportStatus">이미지 생성 전에는 카드 DOM을 만들지 않습니다.</div>
-        <div class="if-export-grid" id="exportThumbs"></div>
-      </div>
-    </section>
   </section>
 </main>
 
@@ -1504,16 +1487,7 @@ button { cursor: pointer; }
     filter: "all",
     previewWidth: 390,
     previewMode: "vertical",
-    blocks: [],
-    analysis: {
-      ready: false,
-      customer: "고객",
-      files: [],
-      contracts: [],
-      covers: [],
-      opinion: "업로드한 보장분석 자료를 기준으로 주요 보장과 가입 현황을 정리했습니다. 실제 보장 내용은 증권과 약관 기준으로 최종 확인합니다.",
-      exports: []
-    }
+    blocks: []
   };
 
   var els = {
@@ -1541,14 +1515,7 @@ button { cursor: pointer; }
     coveragePdfBtn: document.getElementById("coveragePdfBtn"),
     coverageExcelInput: document.getElementById("coverageExcelInput"),
     coveragePdfInput: document.getElementById("coveragePdfInput"),
-    coverageDemoBtn: document.getElementById("coverageDemoBtn"),
-    coverageStatus: document.getElementById("coverageStatus"),
-    coverageFiles: document.getElementById("coverageFiles"),
-    coverageSummary: document.getElementById("coverageSummary"),
-    coverageEditor: document.getElementById("coverageEditor"),
-    exportBtn: document.getElementById("exportKakaoCards"),
-    exportStatus: document.getElementById("exportStatus"),
-    exportThumbs: document.getElementById("exportThumbs")
+    coverageStatus: document.getElementById("coverageStatus")
   };
   var SPLIT_KEY = "onesecond.insuranceFactory.columns.v1";
   var SPLIT_MIN = { template: 220, work: 420, preview: 360 };
@@ -1559,139 +1526,24 @@ button { cursor: pointer; }
       return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch];
     });
   }
-  function won(n) {
-    var v = Number(n) || 0;
-    return v ? v.toLocaleString("ko-KR") + "원" : "-";
-  }
-  function man(n) {
-    var v = Number(n) || 0;
-    if (!v) return "미가입";
-    return (v / 10000).toLocaleString("ko-KR", { maximumFractionDigits: 0 }) + "만원";
-  }
-  function inferCustomerName(files) {
-    var name = "";
-    (files || []).some(function (file) {
-      var base = String(file.name || "").replace(/\.[^.]+$/, "");
-      var match = base.match(/([가-힣]{2,4})(?:님|고객|_|\s|\*)/);
-      if (match) name = match[1];
-      return !!name;
-    });
-    return name || state.analysis.customer || "고객";
-  }
-  function buildAnalysisDraft(files) {
-    var customer = inferCustomerName(files);
-    var contracts = [
-      { show: true, company: "KB손보", product: "의료실비/건강보험", start: "", premium: 84200, renew: "", memo: "" },
-      { show: true, company: "현대해상", product: "암·뇌심장 보완보험", start: "", premium: 59200, renew: "", memo: "" },
-      { show: true, company: "메리츠화재", product: "수술비 보완 플랜", start: "", premium: 31800, renew: "", memo: "" }
-    ];
-    var covers = [
-      { axis: "의료실비", rows: [{ name: "입원의료비", values: [50000000, 0, 0] }, { name: "통원의료비", values: [250000, 0, 0] }] },
-      { axis: "암", rows: [{ name: "일반암 진단비", values: [0, 30000000, 0] }, { name: "유사암 진단비", values: [0, 6000000, 0] }] },
-      { axis: "뇌·심장", rows: [{ name: "뇌혈관질환 진단비", values: [0, 10000000, 0] }, { name: "허혈성심장질환 진단비", values: [0, 10000000, 0] }] },
-      { axis: "수술비", rows: [{ name: "질병수술비", values: [0, 0, 300000] }, { name: "상해수술비", values: [0, 0, 300000] }] }
-    ];
-    state.analysis.ready = true;
-    state.analysis.customer = customer;
-    state.analysis.contracts = contracts;
-    state.analysis.covers = covers;
-    state.analysis.exports = [];
-    if (els.customer && (!els.customer.value || els.customer.value === "김고객")) els.customer.value = customer;
-    addAnalysisBlock();
-  }
-  function addAnalysisBlock() {
-    var exists = state.blocks.some(function (block) { return block.tplId === "coverage-analysis-pack"; });
-    if (exists) return;
-    state.blocks.push({
-      id: "b" + Date.now() + Math.random().toString(16).slice(2),
-      tplId: "coverage-analysis-pack",
-      cat: "의료실비 점검",
-      sourceStage: "보험 점검 문의",
-      sourceLabel: "의료실비 점검",
-      title: "보장분석 카카오 카드 8장",
-      body: "보장분석 자료를 기준으로 표지, 가입 보험, 4대 핵심 담보, 담당 설계사 총평, 상담 안내 카드까지 묶어 발송합니다.",
-      variant: "",
-      visual: "medical-shield",
-      photo: "",
-      photoAlt: "",
-      amount: "",
-      note: "",
-      noteOpen: false,
-      media: "none",
-      cta: "카카오 이미지 생성",
-      visible: true,
-      folded: false
-    });
-  }
   function handleCoverageFiles(fileList) {
     var files = Array.prototype.slice.call(fileList || []);
     if (!files.length) return;
-    files.forEach(function (file) {
-      state.analysis.files.push({
-        name: file.name,
-        size: file.size || 0,
-        type: file.type || "",
-        url: URL.createObjectURL(file)
-      });
-    });
-    buildAnalysisDraft(files);
-    renderAll();
+    if (window.parent !== window && typeof window.parent._xfileOpenCoverageEditor === "function") {
+      if (els.coverageStatus) els.coverageStatus.textContent = "실제 파서로 파일을 넘기고 있습니다.";
+      window.parent._xfileOpenCoverageEditor(files);
+      return;
+    }
+    if (els.coverageStatus) {
+      els.coverageStatus.textContent = "X-FILE의 보험 팩토리에서 파일을 선택해 주세요.";
+    }
   }
   function renderCoverageIntake() {
     if (!els.coverageIntake) return;
     var show = state.group === "보험 점검 문의" && state.category === "의료실비 점검";
     els.coverageIntake.hidden = !show;
     if (!show) return;
-    var a = state.analysis;
-    els.coverageStatus.textContent = a.ready
-      ? "분석 초안이 준비됐습니다. 설계사가 확인한 뒤 아래에서 카카오톡 카드 이미지를 생성할 수 있습니다."
-      : "파일을 넣으면 계약·핵심 담보·원본 첨부 목록이 이 작업 안에서만 준비됩니다.";
-    els.coverageFiles.innerHTML = a.files.length ? a.files.map(function (file, idx) {
-      return '<div class="coverage-file"><div><b>' + esc(file.name) + '</b><span>' + esc(file.type || "첨부파일") + ' · ' + Math.round((file.size || 0) / 1024).toLocaleString("ko-KR") + 'KB</span></div><a href="' + esc(file.url) + '" target="_blank" rel="noopener">원본 열기</a></div>';
-    }).join("") : "";
-    var totalPremium = a.contracts.reduce(function (sum, row) { return sum + (Number(row.premium) || 0); }, 0);
-    var coverCount = a.covers.reduce(function (sum, axis) { return sum + axis.rows.length; }, 0);
-    els.coverageSummary.innerHTML = a.ready ? [
-      ["고객", a.customer + "님"],
-      ["계약", a.contracts.length + "건"],
-      ["월 보험료", won(totalPremium)],
-      ["핵심 담보", coverCount + "개"]
-    ].map(function (row) {
-      return '<div class="coverage-stat"><span>' + esc(row[0]) + '</span><b>' + esc(row[1]) + '</b></div>';
-    }).join("") : "";
-    renderCoverageEditor();
-  }
-  function renderCoverageEditor() {
-    if (!els.coverageEditor) return;
-    var a = state.analysis;
-    if (!a.ready) {
-      els.coverageEditor.innerHTML = "";
-      return;
-    }
-    var contractRows = a.contracts.map(function (row, idx) {
-      return '<tr data-contract="' + idx + '">' +
-        '<td><input type="checkbox" data-analysis="contract-show" ' + (row.show ? "checked" : "") + '></td>' +
-        '<td><input class="coverage-edit-input" data-analysis="contract-company" value="' + esc(row.company) + '"></td>' +
-        '<td><input class="coverage-edit-input" data-analysis="contract-product" value="' + esc(row.product) + '"></td>' +
-        '<td><input class="coverage-edit-input" data-analysis="contract-premium" inputmode="numeric" value="' + esc(row.premium) + '"></td>' +
-        '<td><input class="coverage-edit-input" data-analysis="contract-renew" value="' + esc(row.renew) + '" placeholder="예: 갱신형"></td>' +
-        '<td><input class="coverage-edit-input" data-analysis="contract-memo" value="' + esc(row.memo) + '" placeholder="고객 노출 비고"></td>' +
-      '</tr>';
-    }).join("");
-    var coverRows = [];
-    a.covers.forEach(function (axis, ai) {
-      axis.rows.forEach(function (row, ri) {
-        coverRows.push('<tr data-axis="' + ai + '" data-cover="' + ri + '">' +
-          '<td><b>' + esc(axis.axis) + '</b></td>' +
-          '<td><input class="coverage-edit-input" data-analysis="cover-name" value="' + esc(row.name) + '"></td>' +
-          '<td class="num"><input class="coverage-edit-input" data-analysis="cover-total" inputmode="numeric" value="' + esc(rowTotal(row)) + '"></td>' +
-        '</tr>');
-      });
-    });
-    els.coverageEditor.innerHTML =
-      '<section class="coverage-edit-block"><div class="coverage-edit-head"><b>계약 정보 확인 및 수정</b><span>노출 OFF는 고객 이미지에서 계약 상세만 숨기며, 보험료 합계 계산에서는 제외하지 않습니다.</span></div><div class="coverage-table-wrap"><table class="coverage-table"><thead><tr><th>노출</th><th>회사</th><th>상품명</th><th class="num">월 보험료</th><th>갱신 여부</th><th>비고</th></tr></thead><tbody>' + contractRows + '</tbody></table></div></section>' +
-      '<section class="coverage-edit-block"><div class="coverage-edit-head"><b>핵심 담보 확인 및 수정</b><span>의료실비·암·뇌·심장·수술비 카드에 들어갈 대표 담보 금액입니다.</span></div><div class="coverage-table-wrap"><table class="coverage-table"><thead><tr><th>축</th><th>담보명</th><th class="num">총 가입금액</th></tr></thead><tbody>' + coverRows.join("") + '</tbody></table></div></section>' +
-      '<section class="coverage-edit-block"><div class="coverage-edit-head"><b>담당 설계사 총평</b><span>7번 카드에 들어갈 문구입니다. 리치텍스트는 다음 단계에서 기존 편집기로 교체합니다.</span></div><div style="padding:var(--if-4)"><textarea class="coverage-opinion" id="coverageOpinion">' + esc(a.opinion) + '</textarea></div></section>';
+    els.coverageStatus.textContent = "파일을 선택하면 승인된 보장분석 편집기의 실제 파서로 바로 이동합니다.";
   }
   function findTpl(id) {
     return TEMPLATES.find(function (tpl) { return tpl.id === id; });
@@ -2177,7 +2029,6 @@ button { cursor: pointer; }
   if (els.coveragePdfBtn) els.coveragePdfBtn.addEventListener("click", function () { els.coveragePdfInput.click(); });
   if (els.coverageExcelInput) els.coverageExcelInput.addEventListener("change", function (event) { handleCoverageFiles(event.target.files); event.target.value = ""; });
   if (els.coveragePdfInput) els.coveragePdfInput.addEventListener("change", function (event) { handleCoverageFiles(event.target.files); event.target.value = ""; });
-  if (els.coverageDemoBtn) els.coverageDemoBtn.addEventListener("click", function () { buildAnalysisDraft([]); renderAll(); });
   if (els.coverageEditor) {
     els.coverageEditor.addEventListener("input", function (event) {
       var el = event.target;
