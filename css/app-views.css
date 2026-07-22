@@ -771,8 +771,9 @@ body.is-uat-homedesk .hs-wrap{padding-top:10px;}
 .hd-tool-go{position:absolute;top:12px;right:12px;color:var(--tf,var(--ts));width:14px;height:14px;}
 @media(max-width:680px){.hd-tools{grid-template-columns:1fr;}}
 /* 실비 세대별 변천사 = iframe 격리 풀페이지 (2026-07-04, 기획팀장 자료 pages/silson-generations.html) */
-#v-silson.on, #v-cancer-treatment.on, #v-caregiver-history.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
-#v-silson iframe, #v-cancer-treatment iframe, #v-caregiver-history iframe{flex:1;width:100%;border:0;min-height:0}
+#v-silson.on, #v-cancer-treatment.on{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
+#v-silson iframe, #v-cancer-treatment iframe{flex:1;width:100%;border:0;min-height:0}
+/* 간병보험 변천사(#v-caregiver-history)는 2026-07-22 de-iframe 1단계로 iframe 뷰 폐지 → 독립 URL 페이지(pages/caregiver-history.html)로 이동. 이 규칙에서 제외. silson·cancer는 iframe 유지 */
 /* 초기화 통합 (2026-05-30): role 확정 전 본문 loading shell — 사이드/상단은 즉시, 본문 D만 로딩 */
 #app-loading-shell{display:flex;align-items:center;justify-content:center;min-height:50vh;color:var(--ts);font-size:0.9rem;}
 #app.role-ready #app-loading-shell{display:none;}

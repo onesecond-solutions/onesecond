@@ -149,6 +149,8 @@ h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 
   .concl{padding:26px 24px}
   .concl p{font-size:16px}
 }
+.home-back{display:inline-flex;align-items:center;gap:2px;margin-bottom:12px;color:var(--ac-d);text-decoration:none;font-size:13px;font-weight:700;padding:6px 13px;border:1px solid var(--hair);border-radius:8px;background:#fff}
+.home-back:hover{background:var(--ac-s)}
 
 /* ══════════════════════════════════════════════════════
    V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
@@ -280,6 +282,9 @@ html.v3 .tcard .kv .v em{font-size:13.5px}
 <body>
 <div class="v3grid">
 <div class="wrap">
+
+  <!-- 원세컨드 홈 백링크 = 기존 iframe 감싸개의 '홈으로' 버튼 대체. history.back 아닌 홈 URL(/) 직접 이동 — 외부(카톡 등) 유입은 뒤로 갈 페이지가 없으므로 (2026-07-22 de-iframe 1단계, 대표 지시) -->
+  <a href="/" class="home-back" aria-label="원세컨드 홈으로">&#8249; 원세컨드 홈</a>
 
   <div class="phead">
     <h1><span class="ic">간</span>대한민국 간병보험의 변천사</h1>
