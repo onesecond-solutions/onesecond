@@ -149,9 +149,66 @@ h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 
   .concl{padding:26px 24px}
   .concl p{font-size:16px}
 }
+
+/* ══════════════════════════════════════════════════════
+   V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
+   ‣ html.v3 스코프로만 적용. .v3 없으면 위 v2 규칙 그대로 = 렌더 픽셀 동일(회귀 0).
+   ‣ 본문 폭 760px 하드 고정, 사이드바는 1040px↑에서만 노출.
+   ══════════════════════════════════════════════════════ */
+/* 레이아웃 래퍼 — v2(비-v3)에서는 순수 블록이라 .wrap이 옛 max-width:1240px 중앙정렬 그대로 */
+.v3grid{display:block}
+.v3side{display:none}
+
+html.v3 body{font-size:16px;line-height:1.85;word-break:keep-all}
+/* 읽기 본문 폭 760px 하드 고정 — 사이드바 유무 무관, 절대 760 초과 금지 */
+html.v3 .wrap{max-width:760px;margin:0 auto}
+/* 긴 상품명·URL 대비 본문 문단 줄바꿈 안전장치 */
+html.v3 .intro,html.v3 .tl .bd p,html.v3 .tl .key,html.v3 .stat .tx,
+html.v3 .tip,html.v3 .caution,html.v3 .gc p,html.v3 .chk .tx,
+html.v3 .concl p{overflow-wrap:anywhere}
+/* 본문 문단 최소 15px 확보(13px대는 출처·캡션·보조정보에만 유지) */
+html.v3 .intro{font-size:15px;line-height:1.85}
+html.v3 .tl .bd p{font-size:15px}
+html.v3 .tip,html.v3 .caution,html.v3 .tl .key{font-size:15px}
+
+/* 사이드바 2단 노출 조건 = "iframe 실폭"이 본문760+사이드244+간격32(=1036)+슬랙을 수용할 때만.
+   BP 1060px: iframe ~1098(1366 모니터)=노출 / ~1012(1280 모니터)=숨김. 그 미만·모바일 = 단일 컬럼(≤760px). */
+@media(min-width:1060px){
+  html.v3 .v3grid{
+    display:grid;
+    grid-template-columns:760px 244px;   /* 본문 760 고정 · 사이드바 244 고정 */
+    gap:32px;                            /* 1098 안정 수용 위해 32로 축소 */
+    justify-content:center;
+    align-items:start;
+  }
+  html.v3 .v3grid .wrap{max-width:760px}  /* 2컬럼에서도 본문 760 초과 금지 */
+  html.v3 .v3side{
+    display:block;
+    position:sticky;top:26px;align-self:start;
+    padding-top:26px;
+    font-size:13px;color:var(--ink2);
+  }
+  html.v3 .v3side .card{border:1px solid var(--hair);border-radius:12px;padding:14px 15px;margin-bottom:12px;background:#fff}
+  html.v3 .v3side .card h5{margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:.8px;color:var(--muted);text-transform:uppercase}
+  html.v3 .v3side .toc a{display:block;padding:6px 0 6px 11px;font-size:13px;line-height:1.5;color:var(--ink2);text-decoration:none;
+    border-left:2px solid var(--hair);transition:color .12s,border-color .12s}
+  html.v3 .v3side .toc a:hover{color:var(--ac-d)}
+  html.v3 .v3side .toc a.on{color:var(--ac-d);font-weight:800;border-left-color:var(--ac)}
+  html.v3 .v3side .act button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+    background:var(--ac-s);border:0;border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;
+    font:inherit;font-size:13px;font-weight:700;color:var(--ac-d2)}
+  html.v3 .v3side .act button:last-child{margin-bottom:0}
+  html.v3 .v3side .act button:hover{background:#E2E5FD}
+  html.v3 .v3side .rel a{display:block;padding:9px 0;font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;
+    border-bottom:1px solid var(--line2)}
+  html.v3 .v3side .rel a:last-child{border-bottom:0}
+  html.v3 .v3side .rel a:hover{color:var(--ac-d)}
+  html.v3 .v3side .rel a span{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px}
+}
 </style>
 </head>
 <body>
+<div class="v3grid">
 <div class="wrap">
 
   <div class="phead">
@@ -328,7 +385,10 @@ h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 
     본 자료는 상담 전 참고용이며 특정 상품이나 보험사를 권유하지 않습니다.
   </div>
 
-</div>
+</div><!-- /.wrap -->
+
+  <aside class="v3side" id="v3side" aria-hidden="true"></aside>
+</div><!-- /.v3grid -->
 
 <script>
 /* ══════════════════════════════════════════════════════
@@ -396,6 +456,86 @@ const CHK=[
 document.getElementById("chk").innerHTML = CHK.map((c,i)=>`
   <div class="r"><span class="n">${i+1}</span>
     <span class="tx"><b>${c[0]}</b><span>${c[1]}</span></span></div>`).join("");
+
+/* ══════════════════════════════════════════════════════
+   V3 게이트 + 사이드바 — 임태성 게이트(어드민/실장)일 때만 켜짐.
+   비로그인·일반 사용자: _v3=false → 아무것도 안 함(= 기존 v2 그대로, 회귀 0).
+   본문 텍스트/DOM 불변. 사이드바는 여기서만 주입(정적 HTML 텍스트 노드 미접촉).
+   ══════════════════════════════════════════════════════ */
+(function(){
+  var _v3=false;
+  try{ _v3 = (window.parent!==window && typeof window.parent._canSeeXfile==='function' && window.parent._canSeeXfile()); }catch(e){}
+  if(!_v3) return;                                   /* 일반·비로그인 = 여기서 종료. v2 그대로 */
+  document.documentElement.classList.add('v3');
+
+  /* ── 목차 앵커: h2.sec에 id 부여(텍스트 노드 불변) ── */
+  var secs=[].slice.call(document.querySelectorAll('h2.sec'));
+  secs.forEach(function(h,i){ if(!h.id) h.id='v3sec-'+i; });
+
+  /* ── 사이드바 렌더(존재하는 뷰만 연결 · CTA는 미배선이라 미노출) ── */
+  var toc = secs.map(function(h){
+    return '<a href="#'+h.id+'" data-t="'+h.id+'">'+h.textContent.trim()+'</a>';
+  }).join('');
+  var side=document.getElementById('v3side');
+  side.setAttribute('aria-hidden','false');
+  side.innerHTML =
+    '<nav class="card toc"><h5>목차</h5>'+toc+'</nav>'+
+    '<div class="card act"><h5>이 자료 활용</h5>'+
+      '<button type="button" id="v3print">PDF로 저장</button>'+
+      '<button type="button" id="v3copy">링크 복사</button>'+
+    '</div>'+
+    '<nav class="card rel"><h5>관련 자료</h5>'+
+      '<a href="#" data-v="silson">실손의료비 세대별 비교<span>세대별 자기부담·보장 변화</span></a>'+
+      '<a href="#" data-v="cancer-treatment">암주요치료비 변천사<span>암 치료비 담보의 변화</span></a>'+
+    '</nav>';
+
+  /* 목차 클릭 → 부드러운 스크롤 */
+  side.querySelectorAll('.toc a').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      var t=document.getElementById(a.getAttribute('data-t'));
+      if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+
+  /* 스크롤 위치 하이라이트 */
+  var links={}; side.querySelectorAll('.toc a').forEach(function(a){ links[a.getAttribute('data-t')]=a; });
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(en){
+        if(en.isIntersecting){
+          Object.keys(links).forEach(function(k){ links[k].classList.remove('on'); });
+          var cur=links[en.target.id]; if(cur) cur.classList.add('on');
+        }
+      });
+    },{rootMargin:'0px 0px -70% 0px',threshold:0});
+    secs.forEach(function(h){ io.observe(h); });
+  }
+
+  /* PDF로 저장 — 실제 작동 */
+  document.getElementById('v3print').addEventListener('click',function(){ window.print(); });
+
+  /* 링크 복사 — 실제 작동(앱 URL 우선, 실패 시 이 페이지) */
+  document.getElementById('v3copy').addEventListener('click',function(){
+    var url; try{ url=window.parent.location.href; }catch(e){ url=location.href; }
+    var btn=this, orig=btn.textContent;
+    function done(ok){ btn.textContent=ok?'복사됨':'복사 실패'; setTimeout(function(){ btn.textContent=orig; },1400); }
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){done(true);},function(){done(false);});
+      }else{ done(false); }
+    }catch(e){ done(false); }
+  });
+
+  /* 관련 자료 — 실제 존재하는 뷰만(silson · cancer-treatment) */
+  side.querySelectorAll('.rel a').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      var v=a.getAttribute('data-v');
+      try{ if(window.parent&&window.parent.showView) window.parent.showView(v); }catch(err){}
+    });
+  });
+})();
 </script>
 </body>
 </html>
