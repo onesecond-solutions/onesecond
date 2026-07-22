@@ -241,6 +241,9 @@ table.mx tbody tr.grpfirst:not(.axfirst) > td:not(.axc){
 .source-password{display:none;margin-top:12px;gap:8px;align-items:center;flex-wrap:wrap}
 .source-password.on{display:flex}
 .source-password input{min-width:180px;border:1px solid var(--hair);border-radius:9px;padding:10px 12px;font:inherit}
+.source-manual{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:10px;margin-top:12px;align-items:end}.source-manual label{display:grid;gap:6px;font-size:12px;font-weight:800;color:var(--muted)}.source-manual input{border:1px solid var(--hair);border-radius:9px;padding:10px 12px;font:inherit}.source-name-hint{font-size:12px;color:var(--muted);padding-bottom:10px}
+.source-captures{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}.source-capture{border:1px solid var(--hair);border-radius:10px;padding:8px;background:var(--bg)}.source-capture img{width:100%;height:110px;object-fit:cover;border-radius:8px}.source-capture b{display:block;margin-top:6px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.final-silson-meta{margin:0 0 10px;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:12px;line-height:1.55;color:var(--muted)}.final-silson-meta b{display:block;color:var(--ink);font-size:14px}
 
 /* 대분류 시작선: 카테고리 전체를 가로지르는 2px */
 table.mx tbody tr.axfirst > td{
@@ -504,8 +507,7 @@ table.cvmx tbody tr:last-child > td{border-bottom:0}
   font-family:inherit;text-align:left;cursor:pointer;transition:.16s}
 .cover-option:hover{border-color:var(--ac-b);background:#FBFCFF}
 .cover-option.on{border-color:var(--ac);box-shadow:0 0 0 4px rgba(99,102,241,.12)}
-.cover-option img{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:10px;
-  background:#F3F4F6;border:1px solid var(--line)}
+.cover-preview{display:flex;flex-direction:column;justify-content:flex-end;width:100%;aspect-ratio:2/3;border-radius:10px;padding:16px;text-align:left;background:linear-gradient(145deg,#111827,#312E81);color:#fff}.cover-preview.bright{background:linear-gradient(145deg,#EEF2FF,#fff);color:#312E81;border:1px solid #C7D2FE}.cover-preview.document{background:linear-gradient(145deg,#F8FAFC,#E2E8F0);color:#0F172A;border:1px solid #CBD5E1}.cover-preview strong{font-size:20px;line-height:1.25}.cover-preview em{margin-top:8px;font-style:normal;font-size:11px;opacity:.75}
 .cover-option b{display:block;margin-top:9px;font-size:14px;font-weight:900;color:var(--ink)}
 .cover-option span{display:block;margin-top:3px;font-size:12.5px;line-height:1.5;color:var(--muted)}
 @media (max-width:767px){
@@ -698,12 +700,14 @@ body.customer-only .final-send-wrap{
 
   <div class="panel">
     <h3><span class="n">01</span>보장분석 파일 불러오기</h3>
-    <p class="d">PDF 또는 뱅크샐러드 엑셀을 브라우저에서만 판독합니다. 원본과 비밀번호는 서버에 저장하거나 전송하지 않습니다.</p>
+    <p class="d">PDF 또는 보장분석 엑셀과 참고 캡처를 함께 불러옵니다. 파일·이미지·비밀번호는 브라우저 메모리에서만 처리합니다.</p>
     <div class="source-actions">
       <button type="button" id="sourcePdfBtn">PDF 선택</button>
       <button type="button" id="sourceExcelBtn" class="alt">엑셀 선택</button>
+      <button type="button" id="sourceCaptureBtn" class="alt">참고 캡처 선택</button>
       <input id="sourcePdfInput" type="file" accept=".pdf" hidden>
       <input id="sourceExcelInput" type="file" accept=".xlsx,.xls" hidden>
+      <input id="sourceCaptureInput" type="file" accept="image/*" multiple hidden>
     </div>
     <div class="source-password" id="sourcePassword">
       <input id="sourcePasswordInput" type="password" autocomplete="off" placeholder="엑셀 비밀번호">
@@ -711,6 +715,11 @@ body.customer-only .final-send-wrap{
     </div>
     <div class="source-status" id="sourceStatus">아직 불러온 파일이 없습니다.</div>
     <div class="source-audit" id="sourceAudit" hidden></div>
+    <div class="source-manual">
+      <label>고객 표시명<input id="sourceCustomerName" type="text" placeholder="마스킹 이름 또는 실제 고객명"></label>
+      <div class="source-name-hint" id="sourceNameHint">마스킹된 이름은 추측하지 않습니다. 고객에게 표시할 이름을 설계사가 확인해 주세요.</div>
+    </div>
+    <div class="source-captures" id="sourceCaptures"></div>
   </div>
 
   <!-- ══ 설계사 편집 ══ -->
@@ -1014,25 +1023,21 @@ const RENEW = ["", "비갱신", "갱신형", "일부 갱신"];
 
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const won = n => (Number(n)||0).toLocaleString()+"원";
-const coverAsset = file => (location.protocol === "file:" ? "../assets/images/coverage-covers/" : "/assets/images/coverage-covers/") + file;
 const COVER_OPTIONS = [
   {
     id:"bright",
     title:"밝은 요약형",
-    desc:"화이트 배경에 핵심 숫자가 바로 보이는 표지",
-    src:coverAsset("cover-bright-summary.png")
+    desc:"화이트 배경에 핵심 숫자가 바로 보이는 표지"
   },
   {
     id:"navy",
     title:"네이비 임팩트형",
-    desc:"카카오톡 목록에서 가장 강하게 눈에 들어오는 표지",
-    src:coverAsset("cover-navy-impact.png")
+    desc:"카카오톡 목록에서 가장 강하게 눈에 들어오는 표지"
   },
   {
     id:"document",
     title:"문서 신뢰형",
-    desc:"상담 자료처럼 차분하고 정돈된 표지",
-    src:coverAsset("cover-document-trust.png")
+    desc:"상담 자료처럼 차분하고 정돈된 표지"
   }
 ];
 let SELECTED_COVER = "navy";
@@ -1045,7 +1050,7 @@ function renderCoverPicker(){
   if(!grid) return;
   grid.innerHTML = COVER_OPTIONS.map(c=>`
     <button type="button" class="cover-option ${c.id===SELECTED_COVER?"on":""}" data-cover="${esc(c.id)}">
-      <img src="${esc(c.src)}" alt="${esc(c.title)}">
+      <div class="cover-preview ${esc(c.id)}"><strong>고객님<br>보장분석</strong><em>onesecond</em></div>
       <b>${esc(c.title)}</b>
       <span>${esc(c.desc)}</span>
     </button>`).join("");
@@ -1290,6 +1295,15 @@ function matrixResult(matrix,hi,map,bs){
   const rows=[];for(let r=hi+1;r<matrix.length;r++){const row=matrix[r]||[],name=normText(row[map.coverageName]);if(!name)continue;const amounts={};companies.forEach(co=>amounts[co.col]=normText(row[co.col]));rows.push({name,amounts});}
   return{companies,rows,plainUnit:"won",expectedProductCount:bs.productCols.length};
 }
+function detectCoverageDiagnosis(matrix){
+  const hi=matrix.findIndex(row=>normKey(row?.[0])==="보장구분"&&normKey(row?.[1]).includes("주요특약")&&normKey(row?.[4]).includes("가입금액"));
+  if(hi<0)return null;const companyRow=matrix[hi]||[],productRow=matrix[hi+1]||[],renewRow=matrix[hi+2]||[],premiumRow=matrix[hi+3]||[],productCols=[];
+  for(let c=6;c<Math.max(companyRow.length,productRow.length);c++)if(normText(companyRow[c])&&normText(productRow[c])&&/(?:비)?갱신형/.test(normText(renewRow[c]))&&/[\d,]+\s*원/.test(normText(premiumRow[c])))productCols.push(c);
+  if(!productCols.length)return null;
+  const companies=productCols.map(col=>{const pm=normText(premiumRow[col]).match(/([\d,]+)\s*원/);return{col,company:normText(companyRow[col]),product:normText(productRow[col]),renew:normText(renewRow[col]),premium:pm?digits(pm[1]):0,date:""};});
+  const rows=[];for(let r=hi+5;r<matrix.length;r++){const name=normText(matrix[r]?.[1]);if(!name)continue;const amounts={};productCols.forEach(col=>amounts[col]=normText(matrix[r]?.[col]));rows.push({name,amounts});}
+  return{companies,rows,plainUnit:"auto",expectedProductCount:productCols.length};
+}
 function amountToMan(value,plainUnit="auto"){
   const text=normText(value).replace(/,/g,"");if(!text||/^0(?:원|만|만원)?$/.test(text))return null;
   let total=0,matched=false;const eok=text.match(/([\d.]+)\s*억/),manok=text.match(/([\d.]+)\s*만/);
@@ -1320,16 +1334,18 @@ function renderAudit(audit){
   const issues=[...audit.unresolved.map(x=>`미분류: ${x}`),...audit.collisions.map(x=>`중복 매핑: ${x}`)];
   el.innerHTML=`<b>${audit.ok?"원본 정합성 검사 통과":"원본 정합성 검사 실패"}</b><br>계약 ${audit.parsedContracts}/${audit.expectedContracts}건 · 월 보험료 ${audit.premium.toLocaleString()}원 · 가입 셀 ${audit.mapped+audit.excluded+audit.unresolvedCells}개(화면 ${audit.mapped} · 범위 밖 ${audit.excluded} · 미분류 ${audit.unresolvedCells})${issues.length?`<br>${issues.map(esc).join("<br>")}`:""}`;
 }
-function inferName(fileName){const base=String(fileName||"").replace(/\.[^.]+$/,"").replace(/^\[[^\]]+\]/,"");const m=base.match(/([가-힣]{2,4})(?:님|_|\s)/);return m?m[1].replace(/님$/,""):"고객";}
+function inferName(fileName){const base=String(fileName||"").replace(/\.[^.]+$/,"").replace(/^\[[^\]]+\]/,"");const m=base.match(/([가-힣][가-힣O○●＊*]{1,3})(?:님|_|\s)/);return m?m[1].replace(/님$/,""):"고객";}
 function shortProduct(text){const t=normText(text);return t.length>16?t.slice(0,16)+"…":t;}
 function applyParsed(result,fileName){
   CUSTOMER={name:inferName(fileName),date:new Date().toISOString().slice(0,10)};
-  ROWS=result.companies.map(co=>({show:true,ins:co.company||"직접입력",pn:co.product||"",date:co.date||"",fee:Number(co.premium)||0,renew:"",memo:""}));
+  ROWS=result.companies.map(co=>({show:true,ins:co.company||"직접입력",pn:co.product||"",date:co.date||"",fee:Number(co.premium)||0,renew:co.renew||"",memo:""}));
   PROD=result.companies.map(co=>({co:co.company||"-",short:shortProduct(co.product),on:true,col:co.col}));
   const slots=new Map(),slotSources=new Map();COVER.forEach(ax=>ax.groups.forEach(group=>group.items.forEach(item=>{item.v=PROD.map(()=>null);slots.set(`${ax.key}|${item.n}`,item);})));const unresolved=[],collisions=[];let mapped=0,excluded=0,unresolvedCells=0;
   result.rows.forEach(row=>{const cls=classifyCoverage(row.name),sourceKey=normKey(row.name);PROD.forEach((prod,pi)=>{const amount=amountToMan(row.amounts[prod.col],result.plainUnit);if(!amount)return;if(cls.kind==="excluded"){excluded++;return;}if(cls.kind!=="target"){unresolved.push(row.name);unresolvedCells++;return;}const slotKey=`${cls.axis}|${cls.item}`,item=slots.get(slotKey);if(!item){unresolved.push(row.name);unresolvedCells++;return;}const cellKey=`${slotKey}|${pi}`,prior=slotSources.get(cellKey);if(item.v[pi]&&prior&&prior!==sourceKey){collisions.push(`${row.name} → ${cls.item} / ${prod.short}`);return;}item.v[pi]=(item.v[pi]||0)+amount;slotSources.set(cellKey,sourceKey);mapped++;});});
   PARSE_AUDIT={expectedContracts:result.expectedProductCount??ROWS.length,parsedContracts:ROWS.length,premium:ROWS.reduce((s,r)=>s+r.fee,0),mapped,excluded,unresolvedCells,unresolved:[...new Set(unresolved)],collisions:[...new Set(collisions)]};PARSE_AUDIT.ok=PARSE_AUDIT.expectedContracts===PARSE_AUDIT.parsedContracts&&!PARSE_AUDIT.unresolved.length&&!PARSE_AUDIT.collisions.length;renderAudit(PARSE_AUDIT);
   const meta=document.getElementById("headerMeta");if(meta)meta.textContent=`${CUSTOMER.name} 고객님 · ${CUSTOMER.date}`;
+  const nameInput=document.getElementById("sourceCustomerName");if(nameInput)nameInput.value=CUSTOMER.name;
+  const nameHint=document.getElementById("sourceNameHint");if(nameHint)nameHint.textContent=/[O○●＊*]/.test(CUSTOMER.name)?"마스킹된 이름입니다. 실제 고객명을 확인해 직접 입력하거나 마스킹 상태로 사용하세요.":"파일명에서 읽은 이름입니다. 고객에게 표시할 이름을 확인해 주세요.";
   document.getElementById("finalCustomer").textContent=`${CUSTOMER.name} 고객님`;
   renderEditor();renderPreview();renderCover();renderFinalScreen();
   setSourceStatus(`${fileName} · 계약 ${ROWS.length}건 · 담보 원본 ${result.rows.length}행을 불러왔습니다.`);
@@ -1337,8 +1353,8 @@ function applyParsed(result,fileName){
 function setSourceStatus(message,error=false){const el=document.getElementById("sourceStatus");if(el){el.textContent=message;el.style.color=error?"var(--err)":"var(--muted)";}}
 async function workbookResult(buffer){
   await loadXlsx();const wb=window.XLSX.read(buffer,{type:"array"});
-  for(const sheetName of wb.SheetNames||[]){const matrix=window.XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:"",raw:false,blankrows:false});const hi=detectHeader(matrix);if(hi==null)continue;const map=mapHeaders(matrix[hi]),bs=detectBankSalad(matrix,hi,map);if(bs)return matrixResult(matrix,hi,map,bs);}
-  throw new Error("뱅크샐러드 보장분석 표 구조를 찾지 못했습니다.");
+  for(const sheetName of wb.SheetNames||[]){const matrix=window.XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:"",raw:false,blankrows:false}),diagnosis=detectCoverageDiagnosis(matrix);if(diagnosis)return diagnosis;const hi=detectHeader(matrix);if(hi==null)continue;const map=mapHeaders(matrix[hi]),bs=detectBankSalad(matrix,hi,map);if(bs)return matrixResult(matrix,hi,map,bs);}
+  throw new Error("지원하는 보장분석 엑셀 표 구조를 찾지 못했습니다.");
 }
 async function readExcel(file,password){
   const original=await file.arrayBuffer();
@@ -1368,6 +1384,14 @@ async function handleSource(file,type,password=""){
   if(!file)return;setSourceStatus(`${file.name} 판독 중…`);
   try{const result=type==="pdf"?await readPdf(file):await readExcel(file,password);document.getElementById("sourcePassword").classList.remove("on");PENDING_EXCEL=null;applyParsed(result,file.name);}
   catch(error){setSourceStatus(error?.message||String(error),true);}
+}
+let CAPTURE_URLS=[];
+function handleCaptures(fileList){
+  CAPTURE_URLS.forEach(item=>URL.revokeObjectURL(item.url));CAPTURE_URLS=Array.from(fileList||[]).map(file=>({name:file.name,url:URL.createObjectURL(file)}));
+  const host=document.getElementById("sourceCaptures");if(host)host.innerHTML=CAPTURE_URLS.map(item=>`<div class="source-capture"><img src="${esc(item.url)}" alt="참고 캡처"><b>${esc(item.name)}</b></div>`).join("");
+}
+function updateCustomerName(value){
+  const name=String(value||"").trim()||"고객";CUSTOMER.name=name;const meta=document.getElementById("headerMeta");if(meta)meta.textContent=`${name} 고객님 · ${CUSTOMER.date||""}`;const final=document.getElementById("finalCustomer");if(final)final.textContent=`${name} 고객님`;renderFinalScreen();
 }
 window.addEventListener("message",event=>{
   if(event.origin!==location.origin||event.data?.type!=="xfile-coverage-files")return;
@@ -1656,6 +1680,15 @@ function odev(d){
 
 
 /* ══ 고객 발송용 최종 화면 ══ */
+function silsonGeneration(date){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date||""))return"세대 확인 필요";
+  if(date<"2009-10-01")return"1세대 실손";if(date<"2017-04-01")return"2세대 실손";if(date<"2021-07-01")return"3세대 실손";return"4세대 실손";
+}
+function silsonContracts(){
+  const axis=COVER.find(a=>a.key==="silson");if(!axis)return[];const items=axis.groups.flatMap(g=>g.items);
+  return PROD.map((prod,pi)=>{const amounts=items.map(item=>Number(item.v[pi])||0);if(!amounts.some(Boolean))return null;const row=ROWS[pi]||{};return{company:row.ins||prod.co,product:row.pn||prod.short,date:row.date||"",renew:row.renew||"",generation:silsonGeneration(row.date),amounts};}).filter(Boolean);
+}
+function silsonMetaHtml(){const rows=silsonContracts();return rows.length?rows.map(row=>`<div class="final-silson-meta"><b>${esc(row.generation)} · ${esc(row.company)}</b>${esc(row.date)||"가입일 확인 필요"}${row.renew?` · ${esc(row.renew)}`:""}<br>${esc(row.product)}</div>`).join(""):`<div class="final-silson-meta"><b>실손 가입정보 확인 필요</b>계약일을 입력하면 실손 세대를 표시합니다.</div>`;}
 function renderFinalScreen(){
   const activeContracts = ROWS.filter(r=>r.show);
   const finalContracts = document.getElementById("finalContracts");
@@ -1679,7 +1712,7 @@ function renderFinalScreen(){
         const sum=rowSum(it.v);
         return `<div class="item"><span>${it.n}</span><b>${sum?man(sum):"미가입"}</b></div>`;
       }).join("");
-      return `<div class="final-cover-card"><h4>${ax.t}</h4>${rows}</div>`;
+      return `<div class="final-cover-card"><h4>${ax.t}</h4>${ax.key==="silson"?silsonMetaHtml():""}${rows}</div>`;
     }).join("");
   }
 
@@ -1738,6 +1771,10 @@ function coverRowsByTitles(titles){
   });
   return rows.slice(0, 8);
 }
+function medicalExportRows(){
+  const meta=silsonContracts().map(row=>({title:row.generation+" · "+row.company,body:(row.date||"가입일 확인 필요")+(row.renew?" · "+row.renew:"")}));
+  return meta.concat(coverRowsByTitles(["의료실비"])).slice(0,8);
+}
 function exportCards(){
   const customer = customerName();
   const shownContracts = ROWS.filter(r=>r.show);
@@ -1750,7 +1787,12 @@ function exportCards(){
   return [
     {
       name: "01_" + customer + "_보장분석_표지.jpg",
-      image: cover.src
+      theme: cover.id,
+      kicker: "onesecond 보장분석",
+      title: customer + " 고객님 보장분석",
+      sub: "현재 가입 중인 보험과 주요 보장을 정리했습니다.",
+      rows: [{title:"가입 보험",body:shownContracts.length+"건 · 월 "+won(totalFee)},{title:"핵심 확인",body:"의료실비 · 암 · 뇌/심장 · 수술비"}],
+      note: "확인하고 싶은 항목을 번호로 말씀해 주세요."
     },
     {
       name: "02_" + customer + "_가입보험.jpg",
@@ -1765,7 +1807,7 @@ function exportCards(){
       kicker: "핵심 담보",
       title: "의료실비",
       sub: "실손 보장은 가입 시기와 자기부담 구조를 함께 봅니다.",
-      rows: coverRowsByTitles(["의료실비"]),
+      rows: medicalExportRows(),
       note: "영수증 기준이 아니라 전산 담보와 약관 기준으로 확인합니다."
     },
     {
@@ -1814,12 +1856,12 @@ function exportCards(){
   ];
 }
 function exportCardCss(){
-  return ".jpg-card{width:720px;height:1080px;background:#fff;color:#111827;font-family:Pretendard,-apple-system,Arial,sans-serif;padding:54px 56px;display:flex;flex-direction:column;gap:28px;box-sizing:border-box}.jpg-card *{box-sizing:border-box}.jc-kicker{font-size:20px;font-weight:900;color:#4F46E5}.jpg-card h2{margin:0;font-size:52px;line-height:1.16;letter-spacing:-1.8px}.jc-sub{font-size:24px;line-height:1.55;color:#4B5563}.jc-list{display:flex;flex-direction:column;gap:14px}.jc-row{border:1px solid #E5E7EB;border-radius:18px;padding:18px 20px;background:#F9FAFB}.jc-row strong{display:block;font-size:24px;line-height:1.35;color:#111827}.jc-row span{display:block;margin-top:6px;font-size:20px;line-height:1.45;color:#4B5563}.jc-note{margin-top:auto;border-radius:20px;background:#EEF0FE;color:#3730A3;padding:22px 24px;font-size:24px;font-weight:900;line-height:1.45}.jc-foot{display:flex;justify-content:space-between;gap:20px;border-top:1px solid #E5E7EB;padding-top:22px;color:#6B7280;font-size:20px;font-weight:800}";
+  return ".jpg-card{width:720px;height:1080px;background:#fff;color:#111827;font-family:Pretendard,-apple-system,Arial,sans-serif;padding:54px 56px;display:flex;flex-direction:column;gap:28px;box-sizing:border-box}.jpg-card.cover-navy{background:linear-gradient(145deg,#111827,#312E81);color:#fff}.jpg-card.cover-bright{background:linear-gradient(145deg,#EEF2FF,#fff)}.jpg-card.cover-document{background:linear-gradient(145deg,#F8FAFC,#E2E8F0)}.jpg-card.cover-navy .jc-kicker,.jpg-card.cover-navy h2,.jpg-card.cover-navy .jc-sub,.jpg-card.cover-navy .jc-foot{color:#fff}.jpg-card *{box-sizing:border-box}.jc-kicker{font-size:20px;font-weight:900;color:#4F46E5}.jpg-card h2{margin:0;font-size:52px;line-height:1.16;letter-spacing:-1.8px}.jc-sub{font-size:24px;line-height:1.55;color:#4B5563}.jc-list{display:flex;flex-direction:column;gap:14px}.jc-row{border:1px solid #E5E7EB;border-radius:18px;padding:18px 20px;background:#F9FAFB;color:#111827}.jc-row strong{display:block;font-size:24px;line-height:1.35;color:#111827}.jc-row span{display:block;margin-top:6px;font-size:20px;line-height:1.45;color:#4B5563}.jc-note{margin-top:auto;border-radius:20px;background:#EEF0FE;color:#3730A3;padding:22px 24px;font-size:24px;font-weight:900;line-height:1.45}.jc-foot{display:flex;justify-content:space-between;gap:20px;border-top:1px solid #E5E7EB;padding-top:22px;color:#6B7280;font-size:20px;font-weight:800}";
 }
 function buildJpgCard(card){
   const rows = card.rows.length ? card.rows : [{ title:"확인 항목", body:"표시할 데이터가 없습니다." }];
   const el = document.createElement("div");
-  el.className = "jpg-card";
+  el.className = "jpg-card"+(card.theme?" cover-"+card.theme:"");
   el.innerHTML = `
     <div class="jc-kicker">${esc(card.kicker)}</div>
     <h2>${esc(card.title)}</h2>
@@ -2025,9 +2067,12 @@ window.addEventListener("DOMContentLoaded", ()=>{
   }));
   const pdfBtn=document.getElementById("sourcePdfBtn"),pdfInput=document.getElementById("sourcePdfInput");
   const excelBtn=document.getElementById("sourceExcelBtn"),excelInput=document.getElementById("sourceExcelInput");
+  const captureBtn=document.getElementById("sourceCaptureBtn"),captureInput=document.getElementById("sourceCaptureInput"),customerInput=document.getElementById("sourceCustomerName");
   const passwordBtn=document.getElementById("sourcePasswordBtn"),passwordInput=document.getElementById("sourcePasswordInput");
   if(pdfBtn&&pdfInput){pdfBtn.addEventListener("click",()=>pdfInput.click());pdfInput.addEventListener("change",()=>handleSource(pdfInput.files[0],"pdf"));}
   if(excelBtn&&excelInput){excelBtn.addEventListener("click",()=>excelInput.click());excelInput.addEventListener("change",()=>handleSource(excelInput.files[0],"excel"));}
+  if(captureBtn&&captureInput){captureBtn.addEventListener("click",()=>captureInput.click());captureInput.addEventListener("change",()=>handleCaptures(captureInput.files));}
+  if(customerInput)customerInput.addEventListener("input",()=>updateCustomerName(customerInput.value));
   if(passwordBtn&&passwordInput){passwordBtn.addEventListener("click",()=>handleSource(PENDING_EXCEL,"excel",passwordInput.value));passwordInput.addEventListener("keydown",event=>{if(event.key==="Enter")passwordBtn.click();});}
   window.scrollTo(0,0);
 });
