@@ -180,10 +180,17 @@ html.v3 #cmpTable,html.v3 #cmpCards,html.v3 .stat{
 html.v3 .intro,html.v3 .tl .bd p,html.v3 .tl .key,html.v3 .stat .tx,
 html.v3 .tip,html.v3 .caution,html.v3 .gc p,html.v3 .chk .tx,
 html.v3 .concl p{overflow-wrap:anywhere}
-/* 본문 문단 최소 15px 확보(13px대는 출처·캡션·보조정보에만 유지) */
-html.v3 .intro{font-size:15px;line-height:1.85}
-html.v3 .tl .bd p{font-size:15px}
-html.v3 .tip,html.v3 .caution,html.v3 .tl .key{font-size:15px}
+/* 읽는 프로즈 = 대표 표준 16px. 행간 1.85(핵심 문단)·1.8(보조 문단).
+   진짜 캡션(.tl .yr 연도·.src 출처·.stat .src 각주·.tcard .kv .v em·사이드바 라벨/목차/관련링크)은
+   위계상 13px대 그대로 유지 — 여기서 올리지 않음. */
+html.v3 .intro{font-size:16px;line-height:1.85}
+html.v3 .tl .bd p{font-size:16px;line-height:1.85}
+html.v3 .tl .key{font-size:16px;line-height:1.8}
+html.v3 .tip,html.v3 .caution{font-size:16px;line-height:1.8}
+/* .gc 카드는 .tl .bd 안에 중첩 → html.v3 .tl .bd p(1.85)가 이기므로 특이도 올려 1.8 확정 */
+html.v3 .tl .bd .gc p{font-size:16px;line-height:1.8}
+html.v3 .chk .tx span{font-size:16px;line-height:1.8}
+html.v3 .stat .tx{font-size:16px;line-height:1.8}
 
 /* 사이드바 2단 노출 조건 = "iframe 실폭"이 본문760+사이드244+간격32(=1036)+슬랙을 수용할 때만.
    BP 1060px: iframe ~1098(1366 모니터)=노출 / ~1012(1280 모니터)=숨김. 그 미만·모바일 = 단일 컬럼(≤760px). */
