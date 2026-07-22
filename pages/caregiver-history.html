@@ -176,36 +176,60 @@ html.v3 #cmpTable,html.v3 #cmpCards,html.v3 .stat{
   max-width:760px;margin-left:auto;margin-right:auto;
 }
 
-/* 긴 상품명·URL 대비 본문 문단 줄바꿈 안전장치 */
+/* ══ V3 = 기획팀장 v3 정본(참조본)과 요소별 computed 전수 일치. html.v3 스코프만.
+   의도적 차이(유지): 읽는 폭 710/표760 · BP1060 · 숨긴 껍데기(CTA·내자료저장·KNOWLEDGE_COUNT). ══ */
+/* 긴 상품명·URL 줄바꿈 안전장치(메트릭 무영향) */
 html.v3 .intro,html.v3 .tl .bd p,html.v3 .tl .key,html.v3 .stat .tx,
 html.v3 .tip,html.v3 .caution,html.v3 .gc p,html.v3 .chk .tx,
 html.v3 .concl p{overflow-wrap:anywhere}
-/* 읽는 프로즈 = 대표 표준 16px. 행간 1.85(핵심 문단)·1.8(보조 문단).
-   진짜 캡션(.tl .yr 연도·.src 출처·.stat .src 각주·.tcard .kv .v em·사이드바 라벨/목차/관련링크)은
-   위계상 13px대 그대로 유지 — 여기서 올리지 않음. */
-html.v3 .intro{font-size:16px;line-height:1.85}
-html.v3 .tl .bd p{font-size:16px;line-height:1.85}
-html.v3 .tl .key{font-size:16px;line-height:1.8}
-html.v3 .tip,html.v3 .caution{font-size:16px;line-height:1.8}
-/* .gc 카드는 .tl .bd 안에 중첩 → html.v3 .tl .bd p(1.85)가 이기므로 특이도 올려 1.8 확정 */
-html.v3 .tl .bd .gc p{font-size:16px;line-height:1.8}
-html.v3 .chk .tx span{font-size:16px;line-height:1.8}
-html.v3 .stat .tx{font-size:16px;line-height:1.8}
 
-/* ── 제목 위계 복원(기획팀장 v3) — 옛 v2 작은 제목이 V3에 그대로 노출되던 것 승격.
-   모바일 기본값, 데스크톱(@768)은 아래 미디어에서 재상향. 목표: h1 27 > h2 20 > h3 19 > 본문 16 ── */
+/* 헤더 */
 html.v3 .phead h1{font-size:23px}
-html.v3 h2.sec{font-size:19px;margin:30px 0 12px}
-html.v3 .tl .bd h3{font-size:18px}
-html.v3 .tcard .th b{font-size:18px}   /* 표 헤더 상품군명 */
-html.v3 .gc h4{font-size:15px}         /* 세분화 카드 제목 */
-html.v3 .chk .tx b{font-size:16px}     /* 체크리스트 항목 제목 */
-html.v3 .concl p{font-size:17px}       /* 결론 */
+html.v3 .phead p{font-size:14.5px;line-height:1.7}
+html.v3 h2.sec{font-size:19px;margin:30px auto 12px}  /* auto=읽기열710 중앙정렬 유지(세로값은 기획팀장 동일) */
+/* 인트로 */
+html.v3 .intro{font-size:16px;line-height:1.85;padding:18px 19px}
+/* 타임라인 */
+html.v3 .tl .yr{font-size:12.5px}
+html.v3 .tl .bd h3{font-size:18px;margin:0 0 8px}
+html.v3 .tl .bd p{font-size:16px;line-height:1.85;margin:0 0 11px}
+html.v3 .tl .key{font-size:15px;line-height:1.8;padding:14px 16px;margin-top:11px}
+/* 알림 */
+html.v3 .tip{font-size:15px;line-height:1.82;padding:16px 17px;margin-top:15px}
+html.v3 .caution{font-size:15px;line-height:1.82;padding:16px 17px;margin-top:12px}
+/* 세분화 카드 (.gc p는 .tl .bd 중첩 → 특이도 확보) */
+html.v3 .gc h4{font-size:15px;margin:0 0 7px}
+html.v3 .tl .bd .gc p{font-size:14.5px;line-height:1.75;margin:0}
+/* 수치 */
+html.v3 .stat .tx{font-size:15px;line-height:1.8}
+html.v3 .stat .src{font-size:13px;line-height:1.7;margin-top:10px}
+/* 체크리스트 */
+html.v3 .chk .tx b{font-size:16px;margin-bottom:3px}
+html.v3 .chk .tx span{font-size:14.5px;line-height:1.7}
+/* 결론 */
+html.v3 .concl p{font-size:17px;line-height:1.8;margin:0 0 15px}
+html.v3 .concl .who{font-size:14px}
+/* 출처(푸터) */
+html.v3 .src{font-size:13px;line-height:1.9;margin-top:34px;padding-top:18px}
+/* 모바일 비교 카드(.tcard) */
+html.v3 .tcard .th b{font-size:18px}
+html.v3 .tcard .th span{font-size:13.5px}
+html.v3 .tcard .kv{font-size:15px}
+html.v3 .tcard .kv .k{font-size:14px;flex:0 0 84px}
+html.v3 .tcard .kv .v em{font-size:13.5px}
+
 @media(min-width:768px){
   html.v3 .phead h1{font-size:27px}
-  html.v3 h2.sec{font-size:20px;margin:40px 0 16px}
+  html.v3 h2.sec{font-size:20px;margin:40px auto 16px}
   html.v3 .tl .bd h3{font-size:19px}
   html.v3 .concl p{font-size:18px}
+  /* 비교표 — 기획팀장 값으로 승격 */
+  html.v3 thead th{font-size:14.5px;padding:14px 10px}
+  html.v3 thead th.k{width:104px}
+  html.v3 thead th small{font-size:12px}
+  html.v3 tbody td{font-size:14px;padding:14px 10px}
+  html.v3 tbody td.k{font-size:13.5px}
+  html.v3 tbody td em{font-size:12.5px}
 }
 
 /* 사이드바 2단 노출 조건 = "iframe 실폭"이 본문760+사이드244+간격32(=1036)+슬랙을 수용할 때만.
@@ -221,28 +245,35 @@ html.v3 .concl p{font-size:17px}       /* 결론 */
   /* 2컬럼: 트랙(760)을 꽉 채워 표가 760까지 펼쳐지게. margin auto는 그리드 아이템을
      shrink-to-fit(710)로 만들어 표 브레이크아웃을 죽이므로 width 고정으로 stretch. 읽는 블록은 내부 710 유지 */
   html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0}
+  /* ── 사이드바 = 기획팀장 .side 값 전수 일치(플랫 blk 모델, 카드박스 아님) ── */
   html.v3 .v3side{
     display:block;
-    position:sticky;top:26px;align-self:start;
-    padding-top:26px;
-    font-size:13px;color:var(--ink2);
+    position:sticky;top:24px;align-self:start;
+    padding:34px 0 0;
   }
-  html.v3 .v3side .card{border:1px solid var(--hair);border-radius:12px;padding:14px 15px;margin-bottom:12px;background:#fff}
-  html.v3 .v3side .card h5{margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:.8px;color:var(--muted);text-transform:uppercase}
-  html.v3 .v3side .toc a{display:block;padding:6px 0 6px 11px;font-size:13px;line-height:1.5;color:var(--ink2);text-decoration:none;
-    border-left:2px solid var(--hair);transition:color .12s,border-color .12s}
-  html.v3 .v3side .toc a:hover{color:var(--ac-d)}
-  html.v3 .v3side .toc a.on{color:var(--ac-d);font-weight:800;border-left-color:var(--ac)}
-  html.v3 .v3side .act button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
-    background:var(--ac-s);border:0;border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;
-    font:inherit;font-size:13px;font-weight:700;color:var(--ac-d2)}
-  html.v3 .v3side .act button:last-child{margin-bottom:0}
-  html.v3 .v3side .act button:hover{background:#E2E5FD}
-  html.v3 .v3side .rel a{display:block;padding:9px 0;font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;
-    border-bottom:1px solid var(--line2)}
-  html.v3 .v3side .rel a:last-child{border-bottom:0}
-  html.v3 .v3side .rel a:hover{color:var(--ac-d)}
-  html.v3 .v3side .rel a span{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px}
+  html.v3 .v3side .blk{margin-bottom:26px}
+  html.v3 .v3side .lb{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--muted);
+    margin-bottom:10px;text-transform:uppercase}
+  /* 목차 */
+  html.v3 .v3side .toc a{display:block;padding:7px 0 7px 13px;border-left:2px solid var(--hair);
+    font-size:13.5px;color:var(--muted);text-decoration:none;line-height:1.45;
+    transition:color .15s,border-color .15s}
+  html.v3 .v3side .toc a:hover{color:var(--ink2)}
+  html.v3 .v3side .toc a.on{color:var(--ac-d);border-left-color:var(--ac);font-weight:700}
+  /* 활용 버튼(아이콘 포함) */
+  html.v3 .v3side .act{display:flex;flex-direction:column;gap:7px}
+  html.v3 .v3side .act button{display:flex;align-items:center;gap:8px;width:100%;
+    padding:10px 12px;border:1px solid var(--hair);background:#fff;border-radius:9px;
+    font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);
+    cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+  html.v3 .v3side .act button:hover{border-color:var(--ac);background:var(--ac-s);color:var(--ac-d)}
+  html.v3 .v3side .act button .i{font-size:14px;flex:0 0 auto}
+  /* 함께 보면 좋은 자료 */
+  html.v3 .v3side .rel a{display:block;padding:10px 12px;border:1px solid var(--hair);border-radius:9px;
+    margin-bottom:7px;text-decoration:none;transition:border-color .15s}
+  html.v3 .v3side .rel a:hover{border-color:var(--ac)}
+  html.v3 .v3side .rel b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.4}
+  html.v3 .v3side .rel span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
 }
 </style>
 </head>
@@ -518,15 +549,15 @@ document.getElementById("chk").innerHTML = CHK.map((c,i)=>`
   var side=document.getElementById('v3side');
   side.setAttribute('aria-hidden','false');
   side.innerHTML =
-    '<nav class="card toc"><h5>목차</h5>'+toc+'</nav>'+
-    '<div class="card act"><h5>이 자료 활용</h5>'+
-      '<button type="button" id="v3print">PDF로 저장</button>'+
-      '<button type="button" id="v3copy">링크 복사</button>'+
-    '</div>'+
-    '<nav class="card rel"><h5>관련 자료</h5>'+
-      '<a href="#" data-v="silson">실손의료비 세대별 비교<span>세대별 자기부담·보장 변화</span></a>'+
-      '<a href="#" data-v="cancer-treatment">암주요치료비 변천사<span>암 치료비 담보의 변화</span></a>'+
-    '</nav>';
+    '<div class="blk"><div class="lb">목차</div><nav class="toc">'+toc+'</nav></div>'+
+    '<div class="blk"><div class="lb">이 자료 활용</div><div class="act">'+
+      '<button type="button" id="v3print"><span class="i">📄</span><span class="t">PDF로 저장</span></button>'+
+      '<button type="button" id="v3copy"><span class="i">🔗</span><span class="t">링크 복사</span></button>'+
+    '</div></div>'+
+    '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">'+
+      '<a href="#" data-v="silson"><b>실손의료비 세대별 비교</b><span>세대별 자기부담·보장 변화</span></a>'+
+      '<a href="#" data-v="cancer-treatment"><b>암주요치료비 변천사</b><span>암 치료비 담보의 변화</span></a>'+
+    '</div></div>';
 
   /* 목차 클릭 → 부드러운 스크롤 */
   side.querySelectorAll('.toc a').forEach(function(a){
@@ -557,8 +588,8 @@ document.getElementById("chk").innerHTML = CHK.map((c,i)=>`
   /* 링크 복사 — 실제 작동(앱 URL 우선, 실패 시 이 페이지) */
   document.getElementById('v3copy').addEventListener('click',function(){
     var url; try{ url=window.parent.location.href; }catch(e){ url=location.href; }
-    var btn=this, orig=btn.textContent;
-    function done(ok){ btn.textContent=ok?'복사됨':'복사 실패'; setTimeout(function(){ btn.textContent=orig; },1400); }
+    var lab=this.querySelector('.t')||this, orig=lab.textContent;
+    function done(ok){ lab.textContent=ok?'복사됨':'복사 실패'; setTimeout(function(){ lab.textContent=orig; },1400); }
     try{
       if(navigator.clipboard&&navigator.clipboard.writeText){
         navigator.clipboard.writeText(url).then(function(){done(true);},function(){done(false);});
