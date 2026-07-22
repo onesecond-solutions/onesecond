@@ -232,6 +232,13 @@ table.mx tbody td{border-color:var(--line)}
 table.mx tbody tr.grpfirst:not(.axfirst) > td:not(.axc){
   border-top:2px solid var(--b-grp)
 }
+.source-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.source-actions button{border:0;border-radius:10px;padding:11px 16px;background:var(--ac);color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.source-actions button.alt{background:var(--s2);color:var(--ink);border:1px solid var(--hair)}
+.source-status{margin-top:12px;padding:12px 14px;border:1px solid var(--hair);border-radius:10px;background:var(--bg);font-size:13px;line-height:1.6;color:var(--muted)}
+.source-password{display:none;margin-top:12px;gap:8px;align-items:center;flex-wrap:wrap}
+.source-password.on{display:flex}
+.source-password input{min-width:180px;border:1px solid var(--hair);border-radius:9px;padding:10px 12px;font:inherit}
 
 /* 대분류 시작선: 카테고리 전체를 가로지르는 2px */
 table.mx tbody tr.axfirst > td{
@@ -680,12 +687,28 @@ body.customer-only .final-send-wrap{
 
 <div class="top">
   <div class="ttl">보장분석 편집기
-    <span>김지희 고객님 · 2026-07-08</span></div>
+    <span id="headerMeta">분석 파일을 불러와 주세요</span></div>
   <button class="btn g" onclick="alert('임시 저장했습니다')">저장</button>
   <button class="btn p" onclick="alert('고객 링크가 생성됩니다')">링크 발송</button>
 </div>
 
 <div class="wrap">
+
+  <div class="panel">
+    <h3><span class="n">01</span>보장분석 파일 불러오기</h3>
+    <p class="d">PDF 또는 뱅크샐러드 엑셀을 브라우저에서만 판독합니다. 원본과 비밀번호는 서버에 저장하거나 전송하지 않습니다.</p>
+    <div class="source-actions">
+      <button type="button" id="sourcePdfBtn">PDF 선택</button>
+      <button type="button" id="sourceExcelBtn" class="alt">엑셀 선택</button>
+      <input id="sourcePdfInput" type="file" accept=".pdf" hidden>
+      <input id="sourceExcelInput" type="file" accept=".xlsx,.xls" hidden>
+    </div>
+    <div class="source-password" id="sourcePassword">
+      <input id="sourcePasswordInput" type="password" autocomplete="off" placeholder="엑셀 비밀번호">
+      <button type="button" id="sourcePasswordBtn">암호 해제 후 불러오기</button>
+    </div>
+    <div class="source-status" id="sourceStatus">아직 불러온 파일이 없습니다.</div>
+  </div>
 
   <!-- ══ 설계사 편집 ══ -->
   <div class="panel">
@@ -911,7 +934,7 @@ body.customer-only .final-send-wrap{
 
           <div class="final-send-body">
             <section class="final-hero">
-              <div class="eyebrow">김지희 고객님</div>
+              <div class="eyebrow" id="finalCustomer">고객님</div>
               <h2>현재 가입 중인 보험과<br>주요 보장을 정리했습니다.</h2>
               <p>의료실비·암·뇌/심장·수술비 보장을 중심으로 확인해 주세요.</p>
             </section>
@@ -978,12 +1001,8 @@ body.customer-only .final-send-wrap{
 
 <script>
 /* ══ 데이터 ══ */
-let ROWS = [
-  {show:true, ins:"KB손보",   pn:"(무)LIG닥터플러스보험(L8.07)",                          date:"2009-03-31", fee:113242, renew:"",  memo:""},
-  {show:true, ins:"현대해상", pn:"무배당계속받는암보험(Hi2006)1종(연만기갱신형)기본플랜", date:"2020-07-03", fee:65420,  renew:"",  memo:""},
-  {show:true, ins:"KB손보",   pn:"KB The좋은닥터플러스 건강보험Ⅱ(무배당)(24.05)",          date:"2024-05-21", fee:28216,  renew:"",  memo:""},
-  {show:true, ins:"KB손보",   pn:"KB 플러스 운전자상해보험(무배당)(25.04)",                date:"2025-09-12", fee:19482,  renew:"",  memo:""}
-];
+let CUSTOMER = { name:"고객", date:"" };
+let ROWS = [];
 let COL = { renew:true, memo:true };
 
 const INS = ["KB손보","현대해상","삼성화재","DB손보","메리츠화재","한화손보","롯데손보","흥국화재","농협손보",
@@ -1044,7 +1063,7 @@ function renderEditor(){
       <td style="text-align:center;color:var(--faint);font-weight:700">${i+1}</td>
       <td class="ins">
         <select class="cell" onchange="upd(${i},'ins',this.value)">
-          ${INS.map(o=>`<option${o===r.ins?" selected":""}>${o}</option>`).join("")}
+          ${INS.includes(r.ins)?"":`<option selected>${esc(r.ins)}</option>`}${INS.map(o=>`<option${o===r.ins?" selected":""}>${o}</option>`).join("")}
         </select></td>
       <td><input class="cell" value="${esc(r.pn)}" placeholder="상품명"
             oninput="upd(${i},'pn',this.value)"></td>
@@ -1163,66 +1182,171 @@ renderEditor(); renderPreview();
    엑셀 셀 병합과 같은 구조. 대분류·중분류는 rowspan.
    v[i] : 상품 i의 가입금액(만원) · null = 미가입
    ══════════════════════════════════════════════════════════ */
-const PROD = [
-  {co:"KB손보",   short:"LIG닥터플러스",     on:true},
-  {co:"현대해상", short:"계속받는암보험",   on:true},
-  {co:"KB손보",   short:"The좋은닥터플러스", on:true},
-  {co:"KB손보",   short:"플러스 운전자상해", on:true}
-];
+let PROD = [];
 
 let COVER = [
  {key:"silson", t:"의료실비", ic:"실", c:"#0891B2", on:true, groups:[
    {l:"입원의료비", items:[
-     {n:"질병입원의료비", v:[10000,null,null,null]},
-     {n:"상해입원의료비", v:[1000,null,null,null]}]},
+     {n:"질병입원의료비", v:[]},
+     {n:"상해입원의료비", v:[]}]},
    {l:"통원의료비", items:[
-     {n:"질병통원의료비", v:[30,null,null,null]},
-     {n:"상해통원의료비", v:[null,null,null,null]}]},
+     {n:"질병통원의료비", v:[]},
+     {n:"상해통원의료비", v:[]}]},
    {l:"도수 · 비급여 주사료 · MRI", items:[
-     {n:"도수치료",      v:[null,null,null,null]},
-     {n:"비급여 주사료",  v:[null,null,null,null]},
-     {n:"MRI",          v:[null,null,null,null]}]}
+     {n:"도수치료",      v:[]},
+     {n:"비급여 주사료",  v:[]},
+     {n:"MRI",          v:[]}]}
  ]},
  {key:"cancer", t:"암", ic:"암", c:"#6366F1", on:true, groups:[
    {l:"진단비", items:[
-     {n:"일반암 진단비", v:[1000,4480,100,null]},
-     {n:"유사암 진단비", v:[null,1000,10,null]},
-     {n:"고액암 진단비", v:[1000,null,null,null]}]},
+     {n:"일반암 진단비", v:[]},
+     {n:"유사암 진단비", v:[]},
+     {n:"고액암 진단비", v:[]}]},
    {l:"치료비", items:[
-     {n:"암수술비",           v:[null,200,null,null]},
-     {n:"항암방사선약물치료비", v:[null,500,null,null]},
-     {n:"암주요치료비",        v:[null,null,1000,null]},
-     {n:"비급여암주요치료비",   v:[null,null,null,null]}]}
+     {n:"암수술비",           v:[]},
+     {n:"항암방사선약물치료비", v:[]},
+     {n:"암주요치료비",        v:[]},
+     {n:"비급여암주요치료비",   v:[]}]}
  ]},
  {key:"brain", t:"뇌질환", ic:"뇌", c:"#8B5CF6", on:true, groups:[
    {l:"진단비", items:[
-     {n:"뇌혈관질환 진단비", v:[null,null,null,null]},
-     {n:"뇌졸중 진단비",    v:[1000,3000,null,null]},
-     {n:"뇌출혈 진단비",    v:[null,null,null,null]}]},
+     {n:"뇌혈관질환 진단비", v:[]},
+     {n:"뇌졸중 진단비",    v:[]},
+     {n:"뇌출혈 진단비",    v:[]}]},
    {l:"치료비", items:[
-     {n:"수술비",        v:[null,500,null,null]},
-     {n:"혈전용해치료비",  v:[null,null,null,null]},
-     {n:"주요치료비",     v:[null,null,null,null]}]}
+     {n:"수술비",        v:[]},
+     {n:"혈전용해치료비",  v:[]},
+     {n:"주요치료비",     v:[]}]}
  ]},
  {key:"heart", t:"심장질환", ic:"심", c:"#DC2626", on:true, groups:[
    {l:"진단비", items:[
-     {n:"허혈성심장질환 진단비", v:[null,null,null,null]},
-     {n:"기타심장질환 진단비",  v:[null,null,null,null]},
-     {n:"급성심근경색 진단비",  v:[1000,3000,null,null]}]},
+     {n:"허혈성심장질환 진단비", v:[]},
+     {n:"기타심장질환 진단비",  v:[]},
+     {n:"급성심근경색 진단비",  v:[]}]},
    {l:"치료비", items:[
-     {n:"수술비",       v:[null,500,null,null]},
-     {n:"혈전용해치료비", v:[null,null,null,null]},
-     {n:"주요치료비",    v:[null,null,null,null]}]}
+     {n:"수술비",       v:[]},
+     {n:"혈전용해치료비", v:[]},
+     {n:"주요치료비",    v:[]}]}
  ]},
  {key:"surgery", t:"수술비", ic:"수", c:"#0F766E", on:true, groups:[
    {l:"", items:[
-     {n:"질병 수술비",    v:[2000,20,null,null]},
-     {n:"상해 수술비",    v:[7,30,null,100]},
-     {n:"1~5종 수술비",   v:[null,null,null,null]},
-     {n:"1~3종 수술비",   v:[null,null,null,null]},
-     {n:"N대질병 수술비", v:[2000,null,null,null]}]}
+     {n:"질병 수술비",    v:[]},
+     {n:"상해 수술비",    v:[]},
+     {n:"1~5종 수술비",   v:[]},
+     {n:"1~3종 수술비",   v:[]},
+     {n:"N대질병 수술비", v:[]}]}
  ]}
 ];
+
+/* 실제 파일은 브라우저 메모리에서만 판독한다. 정적 HTML에는 고객·계약·담보 데이터를 두지 않는다. */
+let PENDING_EXCEL = null;
+const HEADER_ALIASES = {
+  company:["보험회사","회사명","회사","보험사","원수사"], product:["상품명","상품","플랜","증권명"],
+  contractDate:["계약일","가입일","청약일","효력일"], premium:["보험료","월납","납입보험료","보험료(월)"],
+  coverageName:["담보명","담보","특약","보장명"], coverageAmount:["가입금액","보장금액","가입한도","금액"], renewal:["갱신여부","갱신형","갱신"]
+};
+const COVER_KEYS = {
+  "질병입원의료비":["질병입원"], "상해입원의료비":["상해입원"], "질병통원의료비":["질병통원"], "상해통원의료비":["상해통원"],
+  "도수치료":["도수"], "비급여 주사료":["비급여주사","주사료"], "MRI":["mri","자기공명"],
+  "일반암 진단비":["일반암","암진단","고액암"], "유사암 진단비":["유사암","소액암","갑상선암","제자리암","경계성종양"], "고액암 진단비":["고액암"],
+  "암수술비":["암수술"], "항암방사선약물치료비":["항암방사선","방사선약물","항암약물","항암치료","방사선치료"],
+  "암주요치료비":["암주요치료","암직접치료"], "비급여암주요치료비":["비급여암","표적항암","면역항암","비급여항암"],
+  "뇌혈관질환 진단비":["뇌혈관"], "뇌졸중 진단비":["뇌졸중"], "뇌출혈 진단비":["뇌출혈"],
+  "허혈성심장질환 진단비":["허혈성"], "기타심장질환 진단비":["기타심장","심장질환진단"], "급성심근경색 진단비":["급성심근경색","심근경색"],
+  "질병 수술비":["질병수술"], "상해 수술비":["상해수술"], "1~5종 수술비":["1~5종","1-5종","5종수술","종수술"],
+  "1~3종 수술비":["1~3종","1-3종","3종수술"], "N대질병 수술비":["대질병수술","16대","21대","n대질병","특정질병수술"]
+};
+const normText = v => String(v??"").trim();
+const normKey = v => normText(v).replace(/\s+/g,"").toLowerCase();
+function loadScriptOnce(src, ready){
+  if(ready()) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const found=document.querySelector(`script[src="${src}"]`);
+    if(found){found.addEventListener("load",resolve,{once:true});found.addEventListener("error",reject,{once:true});return;}
+    const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error("판독 라이브러리를 불러오지 못했습니다."));document.head.appendChild(s);
+  });
+}
+const loadXlsx=()=>loadScriptOnce("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",()=>!!window.XLSX);
+const loadExcelJs=()=>loadScriptOnce("https://cdn.jsdelivr.net/npm/@zurmokeeper/exceljs@4.4.9/dist/exceljs.min.js",()=>!!window.ExcelJS);
+const loadPdfJs=()=>loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",()=>!!window.pdfjsLib).then(()=>{
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+});
+function fieldForHeader(text){const t=normKey(text);for(const field in HEADER_ALIASES)for(const a of HEADER_ALIASES[field]){const k=normKey(a);if(t===k||t.includes(k))return field;}return null;}
+function detectHeader(matrix){let best=null,score=0;for(let i=0;i<Math.min(matrix.length,12);i++){let s=0;(matrix[i]||[]).forEach(c=>{if(normText(c)&&fieldForHeader(normText(c)))s++;});if(s>score){score=s;best=i;}}return score>=2?best:null;}
+function mapHeaders(row){const map={};(row||[]).forEach((c,i)=>{const f=fieldForHeader(normText(c));if(f&&map[f]==null)map[f]=i;});return map;}
+function digits(v){const d=String(v??"").replace(/[^\d]/g,"");return d?parseInt(d,10):0;}
+function detectBankSalad(matrix,hi,map){
+  if(hi==null||hi<1||map.coverageName==null||map.company!=null||map.product!=null)return null;
+  const hr=matrix[hi]||[];let max=-1;Object.values(map).forEach(v=>{if(v>max)max=v;});const productCols=[];
+  for(let c=max+1;c<hr.length;c++)if(normText(hr[c]))productCols.push(c);if(productCols.length<2)return null;
+  let premiumRowIdx=null;for(let r=hi-1;r>=0;r--){if(productCols.some(c=>/월/.test(normText(matrix[r]?.[c]))&&/원/.test(normText(matrix[r]?.[c])))){premiumRowIdx=r;break;}}
+  if(premiumRowIdx==null)return null;let companyRowIdx=null;for(let r=premiumRowIdx-1;r>=0;r--){if(productCols.some(c=>normText(matrix[r]?.[c]))){companyRowIdx=r;break;}}
+  return companyRowIdx==null?null:{productCols,companyRowIdx,premiumRowIdx};
+}
+function matrixResult(matrix,hi,map,bs){
+  const companies=bs.productCols.map(col=>{const raw=normText(matrix[bs.premiumRowIdx]?.[col]),m=raw.match(/월\s*([\d,]+)\s*원/);return{col,company:normText(matrix[bs.companyRowIdx]?.[col]),product:normText(matrix[hi]?.[col]),premium:m?digits(m[1]):0,date:""};});
+  const rows=[];for(let r=hi+1;r<matrix.length;r++){const row=matrix[r]||[],name=normText(row[map.coverageName]);if(!name)continue;const amounts={};companies.forEach(co=>amounts[co.col]=normText(row[co.col]));rows.push({name,amounts});}
+  return{companies,rows};
+}
+function amountToMan(value){
+  const text=normText(value).replace(/,/g,"");if(!text||/^0(?:원|만|만원)?$/.test(text))return null;
+  let total=0,matched=false;const eok=text.match(/([\d.]+)\s*억/),manok=text.match(/([\d.]+)\s*만/);
+  if(eok){total+=Math.round(parseFloat(eok[1])*10000);matched=true;}if(manok){total+=Math.round(parseFloat(manok[1]));matched=true;}
+  if(!matched){const n=parseFloat(text.replace(/[^\d.]/g,""));if(!Number.isFinite(n)||n<=0)return null;total=Math.round(n);}
+  return total>0?total:null;
+}
+function inferName(fileName){const base=String(fileName||"").replace(/\.[^.]+$/,"").replace(/^\[[^\]]+\]/,"");const m=base.match(/([가-힣]{2,4})(?:님|_|\s)/);return m?m[1].replace(/님$/,""):"고객";}
+function shortProduct(text){const t=normText(text);return t.length>16?t.slice(0,16)+"…":t;}
+function applyParsed(result,fileName){
+  CUSTOMER={name:inferName(fileName),date:new Date().toISOString().slice(0,10)};
+  ROWS=result.companies.map(co=>({show:true,ins:co.company||"직접입력",pn:co.product||"",date:co.date||"",fee:Number(co.premium)||0,renew:"",memo:""}));
+  PROD=result.companies.map(co=>({co:co.company||"-",short:shortProduct(co.product),on:true,col:co.col}));
+  COVER.forEach(ax=>ax.groups.forEach(group=>group.items.forEach(item=>{
+    const keys=(COVER_KEYS[item.n]||[]).map(normKey);
+    item.v=PROD.map(prod=>{
+      let sum=0;result.rows.forEach(row=>{const name=normKey(row.name);if(keys.some(k=>k&&name.includes(k))){sum+=amountToMan(row.amounts[prod.col])||0;}});return sum>0?sum:null;
+    });
+  })));
+  const meta=document.getElementById("headerMeta");if(meta)meta.textContent=`${CUSTOMER.name} 고객님 · ${CUSTOMER.date}`;
+  document.getElementById("finalCustomer").textContent=`${CUSTOMER.name} 고객님`;
+  renderEditor();renderPreview();renderCover();renderFinalScreen();
+  setSourceStatus(`${fileName} · 계약 ${ROWS.length}건 · 담보 원본 ${result.rows.length}행을 불러왔습니다.`);
+}
+function setSourceStatus(message,error=false){const el=document.getElementById("sourceStatus");if(el){el.textContent=message;el.style.color=error?"var(--err)":"var(--muted)";}}
+async function workbookResult(buffer){
+  await loadXlsx();const wb=window.XLSX.read(buffer,{type:"array"});
+  for(const sheetName of wb.SheetNames||[]){const matrix=window.XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:"",raw:false,blankrows:false});const hi=detectHeader(matrix);if(hi==null)continue;const map=mapHeaders(matrix[hi]),bs=detectBankSalad(matrix,hi,map);if(bs)return matrixResult(matrix,hi,map,bs);}
+  throw new Error("뱅크샐러드 보장분석 표 구조를 찾지 못했습니다.");
+}
+async function readExcel(file,password){
+  const original=await file.arrayBuffer();
+  try{return await workbookResult(original);}catch(first){
+    if(!password){PENDING_EXCEL=file;document.getElementById("sourcePassword").classList.add("on");throw new Error("암호로 보호된 엑셀입니다. 비밀번호를 입력해 주세요.");}
+    await Promise.all([loadExcelJs(),loadXlsx()]);const wb=new window.ExcelJS.Workbook();await wb.xlsx.load(new Uint8Array(original),{password});const plain=await wb.xlsx.writeBuffer();return workbookResult(plain);
+  }
+}
+function parsePdfProducts(pagesItems){
+  const NUM=55,TYPE=88,DETAIL=360,STD=505,TOL=3,section=/상품별\s*가입담보상세/,stop=/(담보별\s*가입\s*현황|담보별\s*진단현황|진단현황|전체\s*담보\s*진단|전체\s*보장현황|전체\s*계약리스트|상품별\s*가입현황|실효|해지계약|자동차\s*보험\s*조회)/,dateRe=/(\d{4}-\d{2}-\d{2})/;
+  const lines=[];pagesItems.forEach(items=>{const sorted=items.filter(it=>(it.str||"").trim()).sort((a,b)=>(b.transform?.[5]||0)-(a.transform?.[5]||0));let group=null,y=null;sorted.forEach(it=>{const iy=it.transform?.[5]||0;if(group&&Math.abs(iy-y)<=TOL)group.push(it);else{if(group)lines.push(group);group=[it];y=iy;}});if(group)lines.push(group);});
+  const products=[];let inside=false,current=null,needProduct=false,needPremium=false;
+  for(const group of lines){const items=group.slice().sort((a,b)=>(a.transform?.[4]||0)-(b.transform?.[4]||0)).map(it=>({x:it.transform?.[4]||0,str:it.str||""}));const text=items.map(it=>it.str).join(" ").replace(/\s+/g," ").trim();if(!text)continue;
+    if(section.test(text)){inside=true;continue;}if(inside&&stop.test(text)){inside=false;current=null;continue;}if(!inside)continue;
+    if(/^수도GA3사업단/.test(text)||/^\d+\/\d+$/.test(text)||/^※/.test(text)||/^\d{4}-\d{2}-\d{2}\s+\d{1,2}:\d{2}/.test(text)||/^\(\d+세/.test(text))continue;
+    if(/가입일자/.test(text)){const dm=text.match(dateRe),company=items.filter(c=>!/가입일자/.test(c.str)&&!dateRe.test(c.str)&&!c.str.includes("|")).map(c=>c.str).join("").trim();current={company,product:"",date:dm?dm[1]:"",premium:0,covs:[]};products.push(current);needProduct=true;needPremium=true;continue;}if(!current)continue;
+    const first=items[0],start=first&&first.x<NUM&&/^\d{1,3}$/.test(first.str.trim());const typeItem=start?items.find(it=>it.x>=NUM&&it.x<TYPE&&["정액","실손"].includes(it.str.trim())):null;
+    if(start&&typeItem){let detail="",std="",amount="";items.forEach(c=>{if(c===first||c===typeItem)return;if(c.x>=TYPE&&c.x<DETAIL)detail+=c.str;else if(c.x>=DETAIL&&c.x<STD)std+=c.str;else if(c.x>=STD)amount+=c.str;});const name=std.trim()||detail.trim();if(name)current.covs.push({name,amount:amount.trim()});needProduct=false;needPremium=false;continue;}
+    if(needProduct){current.product=text;needProduct=false;continue;}if(needPremium){const pm=text.match(/([\d,]{3,})\s*원/);if(pm){current.premium=digits(pm[1]);needPremium=false;}}
+  }
+  if(!products.length)throw new Error("PDF에서 상품별 가입담보상세를 찾지 못했습니다.");
+  const rows=[];products.forEach((product,col)=>product.covs.forEach(c=>{let row=rows.find(r=>r.name===c.name&&!Object.hasOwn(r.amounts,col));if(!row){row={name:c.name,amounts:{}};rows.push(row);}row.amounts[col]=c.amount;}));
+  return{companies:products.map((p,col)=>({col,company:p.company,product:p.product,premium:p.premium,date:p.date})),rows};
+}
+async function readPdf(file){await loadPdfJs();const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,pages=[];for(let i=1;i<=Math.min(pdf.numPages,20);i++){const page=await pdf.getPage(i);pages.push((await page.getTextContent()).items||[]);}return parsePdfProducts(pages);}
+async function handleSource(file,type,password=""){
+  if(!file)return;setSourceStatus(`${file.name} 판독 중…`);
+  try{const result=type==="pdf"?await readPdf(file):await readExcel(file,password);document.getElementById("sourcePassword").classList.remove("on");PENDING_EXCEL=null;applyParsed(result,file.name);}
+  catch(error){setSourceStatus(error?.message||String(error),true);}
+}
 
 /* 만원 → 억/만 */
 const man = m => {
@@ -1554,7 +1678,7 @@ function shareFinalLink(){
   const url="https://onesecond.solutions/r/xxxx";
   const text=`안녕하세요
 보장분석 담당자 임태성 팀장입니다.
-김지희 고객님, 전산에서 확인된 보험 내용을 기준으로 보장분석 리포트를 정리했습니다.
+${customerName()} 고객님, 전산에서 확인된 보험 내용을 기준으로 보장분석 리포트를 정리했습니다.
 아래 링크에서 의료실비·암·뇌질환·심장질환·수술비 등 보장 내용을 확인해 주세요.
 문의사항은 편하게 말씀해주세요~
 ${url}`;
@@ -1566,7 +1690,7 @@ ${url}`;
   }
 }
 function customerName(){
-  return "김지희";
+  return CUSTOMER.name || "고객";
 }
 function plainOpinion(){
   const el = document.getElementById("opEditor");
@@ -1870,6 +1994,12 @@ window.addEventListener("DOMContentLoaded", ()=>{
     const stat = document.getElementById("jpgExportStatus");
     if(stat) stat.textContent = "JPG 생성 실패: " + (err && err.message ? err.message : err);
   }));
+  const pdfBtn=document.getElementById("sourcePdfBtn"),pdfInput=document.getElementById("sourcePdfInput");
+  const excelBtn=document.getElementById("sourceExcelBtn"),excelInput=document.getElementById("sourceExcelInput");
+  const passwordBtn=document.getElementById("sourcePasswordBtn"),passwordInput=document.getElementById("sourcePasswordInput");
+  if(pdfBtn&&pdfInput){pdfBtn.addEventListener("click",()=>pdfInput.click());pdfInput.addEventListener("change",()=>handleSource(pdfInput.files[0],"pdf"));}
+  if(excelBtn&&excelInput){excelBtn.addEventListener("click",()=>excelInput.click());excelInput.addEventListener("change",()=>handleSource(excelInput.files[0],"excel"));}
+  if(passwordBtn&&passwordInput){passwordBtn.addEventListener("click",()=>handleSource(PENDING_EXCEL,"excel",passwordInput.value));passwordInput.addEventListener("keydown",event=>{if(event.key==="Enter")passwordBtn.click();});}
   window.scrollTo(0,0);
 });
 
