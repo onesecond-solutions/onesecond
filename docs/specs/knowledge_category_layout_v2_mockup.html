@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>카테고리 레이아웃 v2</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --ac:#6366F1; --ac-d:#4F46E5; --ac-s:#EEF0FE; --ac-b:#C7D2FE;
+  --ink:#111827; --ink2:#374151; --muted:#6B7280; --faint:#9CA3AF;
+  --hair:#E5E7EB; --line:#F3F4F6; --bg:#F9FAFB;
+  --chip:#F1F3F5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;color:var(--ink);font-size:16px;line-height:1.75;
+  font-family:"Pretendard Variable",Pretendard,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;word-break:keep-all}
+
+.appbar{height:56px;border-bottom:1px solid var(--hair);display:flex;align-items:center;
+  padding:0 22px;gap:12px;font-size:14.5px;font-weight:700;color:var(--ink2)}
+.appbar .sp{flex:1}
+.appbar .av{width:30px;height:30px;border-radius:50%;background:var(--ac);
+  display:grid;place-items:center;color:#fff;font-size:12.5px;font-weight:700}
+
+.wrap{max-width:710px;margin:0 auto;padding:26px 24px 70px}
+
+.back{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;font-weight:700;
+  color:var(--muted);margin-bottom:18px;cursor:pointer}
+.back:hover{color:var(--ac-d)}
+
+/* ══════ 기존 스크립트 페이지 패턴 재사용 ══════ */
+.navbox{border:1px solid var(--hair);border-radius:14px;overflow:hidden;
+  margin-bottom:30px;background:#fff}
+
+/* 윗줄 = 탭 (카테고리) */
+.tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--hair);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:transparent;font-family:inherit;
+  font-size:15px;font-weight:600;color:var(--muted);
+  padding:14px 18px;cursor:pointer;white-space:nowrap;position:relative;
+  border-right:1px solid transparent}
+.tabs button:hover{color:var(--ink2)}
+.tabs button.on{background:#fff;color:var(--ink);font-weight:800;
+  border-radius:12px 12px 0 0;box-shadow:0 -1px 0 var(--hair) inset}
+.tabs button.on:after{content:"";position:absolute;left:14px;right:14px;bottom:0;
+  height:2px;background:var(--ac);border-radius:2px}
+.tabs button .n{font-size:11.5px;font-weight:700;color:var(--faint);margin-left:5px}
+.tabs button.on .n{color:var(--ac-d)}
+
+/* 아랫줄 = 칩 (그룹) */
+.chips{display:flex;gap:7px;padding:13px 16px;flex-wrap:wrap;background:#fff}
+.chips.hide{display:none}
+.chips button{border:0;background:var(--chip);border-radius:20px;
+  padding:7px 15px;font-family:inherit;font-size:14px;font-weight:700;
+  color:var(--ink2);cursor:pointer;transition:.13s;white-space:nowrap}
+.chips button:hover{background:#E7EAEE}
+.chips button.on{background:var(--ac);color:#fff}
+.chips button .n{opacity:.65;margin-left:4px;font-size:11.5px}
+
+/* ══════ 카테고리 헤더 ══════ */
+.chead{padding-bottom:20px;border-bottom:2px solid var(--ink);margin-bottom:4px}
+.chead .kick{font-size:11.5px;font-weight:800;letter-spacing:1.2px;color:var(--ac-d);margin-bottom:8px}
+.chead h1{font-size:27px;font-weight:800;letter-spacing:-1px;line-height:1.3;margin-bottom:9px}
+.chead p{font-size:16px;color:var(--muted);line-height:1.75;max-width:560px}
+.chead .cnt{margin-top:13px;font-size:13px;font-weight:700;color:var(--ink2)}
+.chead .cnt b{color:var(--ac-d)}
+
+/* ══════ 노트형 문서 목록 ══════ */
+.doc{display:block;padding:19px 4px;border-bottom:1px solid var(--line);cursor:pointer;transition:.13s}
+.doc:hover{background:var(--bg);padding-left:12px;padding-right:12px;
+  margin-left:-12px;margin-right:-12px;border-radius:10px;border-bottom-color:transparent}
+.doc .t{font-size:19px;font-weight:800;letter-spacing:-.4px;line-height:1.4;margin-bottom:5px}
+.doc:hover .t{color:var(--ac-d)}
+.doc .s{font-size:15.5px;color:var(--muted);line-height:1.65;margin-bottom:8px}
+.doc .meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--faint);font-weight:600}
+.doc .meta .dot{width:2.5px;height:2.5px;border-radius:50%;background:var(--faint)}
+.doc .meta .new{background:var(--ac-s);color:var(--ac-d);font-weight:800;
+  padding:2px 7px;border-radius:20px;font-size:10.5px;letter-spacing:.3px}
+.doc .meta .adv{background:#FEF3C7;color:#92400E;font-weight:800;
+  padding:2px 7px;border-radius:20px;font-size:10.5px}
+
+/* 빈 상태 */
+.empty{padding:50px 20px;text-align:center;border:1px dashed var(--hair);
+  border-radius:14px;margin-top:24px}
+.empty .ic{width:44px;height:44px;border-radius:12px;background:var(--bg);
+  display:grid;place-items:center;margin:0 auto 14px}
+.empty .ic svg{stroke:var(--faint)}
+.empty b{display:block;font-size:16px;font-weight:800;margin-bottom:6px}
+.empty p{font-size:15.5px;color:var(--muted);line-height:1.75;max-width:330px;margin:0 auto}
+
+.tail{margin-top:34px;padding:17px 19px;background:var(--bg);border-radius:12px;
+  font-size:15px;color:var(--muted);line-height:1.75}
+.tail b{color:var(--ink2);font-weight:800}
+
+/* 데모 표시 */
+.demo{margin-top:26px;padding:11px 15px;border:1px dashed var(--ac-b);
+  border-radius:10px;background:var(--ac-s);font-size:12.5px;color:var(--ac-d);
+  display:flex;align-items:center;gap:10px;line-height:1.6}
+.demo b{font-weight:800}
+.demo .sp{flex:1}
+.demo button{border:1px solid var(--ac-b);background:#fff;border-radius:8px;
+  padding:6px 12px;font-family:inherit;font-size:12px;font-weight:800;
+  color:var(--ac-d);cursor:pointer;white-space:nowrap}
+
+@media(max-width:520px){
+  .wrap{padding:20px 18px 60px}
+  .chead h1{font-size:25px}
+  .doc .t{font-size:18px}
+  .tabs button{padding:13px 15px;font-size:14.5px}
+}
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <span>안녕하세요, 임태성 GA 실장님</span>
+  <span class="sp"></span>
+  <span class="av">임</span>
+</div>
+
+<div class="wrap">
+  <div class="back">&#8249; 홈으로</div>
+
+  <!-- 기존 스크립트 페이지 패턴: 탭(카테고리) + 칩(그룹) -->
+  <div class="navbox">
+    <div class="tabs" id="tabs"></div>
+    <div class="chips hide" id="chips"></div>
+  </div>
+
+  <div id="body"></div>
+
+  <div class="demo">
+    <span><b>자료가 쌓이면</b> 아랫줄에 그룹 칩이 나타납니다.
+      지금은 자료가 적어 암 카테고리에서만 예시로 보여줍니다.</span>
+    <span class="sp"></span>
+    <button id="btnDemo" onclick="toggleDemo()">예시 켜기</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   카테고리 데이터
+   vis: "public" = 누구나 / "advisor" = 로그인 설계사만
+        ★ 이 값은 발행등급에서 유도된 결과. 수동 입력 아님
+   ══════════════════════════════════════════════════════════ */
+let DEMO = false;
+
+const CATS = [
+  {key:"silson", t:"의료실비",
+   hook:"같은 실손보험이라도 가입 시기에 따라 보장과 자기부담이 다릅니다.",
+   docs:[
+     {t:"5세대 실손 — 무엇이 바뀌었나", s:"중증은 강화, 비중증은 축소. 급여 자기부담이 건강보험과 연동됩니다",
+      d:"2026-07", isNew:true, vis:"public"},
+     {t:"실손의료비 세대별 비교", s:"1세대부터 5세대까지 자기부담·갱신주기·보장범위를 한 장으로",
+      d:"2026-06", vis:"public"}
+   ],
+   tail:"세대 판정이 헷갈리면 <b>가입일 기준 세대판정</b>을 함께 보세요."},
+
+  {key:"cancer", t:"암",
+   hook:"일반암이라는 말에 회사마다 다른 범위가 들어 있습니다.",
+   docs:[
+     {t:"암 분류 체계 변천사", s:"일반암에서 무엇이 빠져 있는가 — 유사암·소액암·특정암",
+      d:"2026-07", isNew:true, vis:"public"},
+     {t:"암주요치료비 변천사", s:"진단비 중심에서 치료 행위 기준으로",
+      d:"2026-07", vis:"public"}
+   ],
+   /* 자료가 쌓였을 때 — 데모용 */
+   demoGroups:[
+     {l:"변천사 · 구조", docs:[
+       {t:"암 분류 체계 변천사", s:"일반암에서 무엇이 빠져 있는가", d:"2026-07", isNew:true, vis:"public"},
+       {t:"암주요치료비 변천사", s:"진단비 중심에서 치료 행위 기준으로", d:"2026-07", vis:"public"},
+       {t:"재진단암 담보의 변화", s:"2년 규칙은 어디서 왔나", d:"2026-06", vis:"public"}
+     ]},
+     {l:"확인 포인트", docs:[
+       {t:"대장점막내암, 어디까지 보장되나", s:"약관 정의에서만 빠지는 세 번째 유형", d:"2026-06", vis:"public"},
+       {t:"유사암과 소액암은 같은 말인가", s:"손보와 생보의 명칭 차이", d:"2026-05", vis:"public"}
+     ]},
+     {l:"상담 자료", docs:[
+       {t:"암 상담 진행 순서", s:"어느 담보부터 확인하고 무엇을 묻는가", d:"2026-06", vis:"advisor"}
+     ]}
+   ],
+   tail:"이 영역의 자료는 <b>약관과 상품 공시로 확인한 것만</b> 싣습니다."},
+
+  {key:"brain", t:"뇌 · 심장",
+   hook:"뇌졸중 진단비가 있다고 뇌혈관질환 전체가 보장되는 것은 아닙니다.",
+   docs:[], tail:""},
+
+  {key:"surgery", t:"수술비",
+   hook:"수술비라는 이름이 같아도 지급 횟수와 인정 범위는 다릅니다.",
+   docs:[], tail:""},
+
+  {key:"care", t:"간병",
+   hook:"간병보험은 누가 간병하느냐에 따라 지급 구조가 달라집니다.",
+   docs:[
+     {t:"대한민국 간병보험의 변천사", s:"장기간병 · 지원형 · 사용일당형, 이름은 비슷해도 지급 기준이 다릅니다",
+      d:"2026-07", isNew:true, vis:"public"}
+   ],
+   tail:"세 상품군을 하나로 묶어서 보면 안 됩니다."},
+
+  {key:"etc", t:"기타",
+   hook:"", docs:[], tail:""}
+];
+
+let curCat = 1, curGrp = 0;
+
+/* ── 탭 (카테고리) ── */
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = CATS.map((c,i)=>{
+    const n = visCount(c);
+    return `<button class="${i===curCat?"on":""}" onclick="pickCat(${i})">
+      ${c.t}${n?`<span class="n">${n}</span>`:""}</button>`;
+  }).join("");
+}
+
+/* ── 칩 (그룹) — 그룹이 있을 때만 ── */
+function renderChips(){
+  const c = CATS[curCat];
+  const gs = groupsOf(c);
+  const box = document.getElementById("chips");
+  if(!gs){ box.className = "chips hide"; return; }
+  box.className = "chips";
+  box.innerHTML = [{l:"전체"}].concat(gs).map((g,i)=>{
+    const n = i===0 ? gs.reduce((a,x)=>a+vis(x.docs).length,0) : vis(g.docs).length;
+    return `<button class="${i===curGrp?"on":""}" onclick="pickGrp(${i})">
+      ${g.l}<span class="n">${n}</span></button>`;
+  }).join("");
+}
+
+/* ── 본문 ── */
+function renderBody(){
+  const c = CATS[curCat];
+  const gs = groupsOf(c);
+  let html = `
+    <div class="chead">
+      <div class="kick">보장 영역</div>
+      <h1>${c.t}</h1>
+      ${c.hook?`<p>${c.hook}</p>`:`<p style="color:var(--faint)">준비 중인 영역입니다.</p>`}
+      ${countLine(c)}
+    </div>`;
+
+  if(gs){
+    const list = curGrp===0
+      ? gs.flatMap(g=>vis(g.docs))
+      : vis(gs[curGrp-1].docs);
+    html += list.map(row).join("");
+  }else{
+    const list = vis(c.docs);
+    html += list.length ? list.map(row).join("") : emptyBox();
+  }
+  if(c.tail) html += `<div class="tail">${c.tail}</div>`;
+  document.getElementById("body").innerHTML = html;
+}
+
+function row(d){
+  return `<div class="doc">
+    <div class="t">${d.t}</div>
+    <div class="s">${d.s}</div>
+    <div class="meta">
+      ${d.isNew?`<span class="new">NEW</span>`:""}
+      ${d.vis==="advisor"?`<span class="adv">설계사 전용</span>`:""}
+      <span>${d.d}</span>
+    </div>
+  </div>`;
+}
+function emptyBox(){
+  return `<div class="empty">
+    <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></div>
+    <b>아직 등록된 자료가 없습니다</b>
+    <p>준비되는 대로 이곳에 올라옵니다.
+      다른 영역의 자료는 지금 보실 수 있습니다.</p>
+  </div>`;
+}
+function countLine(c){
+  const n = visCount(c);
+  return n ? `<div class="cnt">자료 <b>${n}건</b></div>` : `<div class="cnt">준비 중</div>`;
+}
+
+/* ── 노출 필터 (로그인 설계사 기준) ── */
+function vis(docs){ return docs; }   // 설계사 로그인 상태 = 전부 노출
+function groupsOf(c){ return (DEMO && c.demoGroups) ? c.demoGroups : null; }
+function visCount(c){
+  const gs = groupsOf(c);
+  return gs ? gs.reduce((a,g)=>a+vis(g.docs).length,0) : vis(c.docs).length;
+}
+
+function pickCat(i){ curCat=i; curGrp=0; renderAll(); }
+function pickGrp(i){ curGrp=i; renderChips(); renderBody(); }
+function toggleDemo(){
+  DEMO = !DEMO; curGrp = 0;
+  if(DEMO) curCat = 1;
+  document.getElementById("btnDemo").textContent = DEMO ? "예시 끄기" : "예시 켜기";
+  renderAll();
+}
+function renderAll(){ renderTabs(); renderChips(); renderBody(); }
+renderAll();
+</script>
+</body>
+</html>
