@@ -1457,6 +1457,3 @@ body.iv-hide-fab .os-memo-fab{bottom:30px;}
   .os-memo-pop{right:16px;bottom:190px;}
   .split.show-viewer .os-memo-pop{bottom:128px;}
 }
-/* 홈 보장분석 5카드 중 '기타'(js/home.js _HS2_TILES disabled:true) — 연결 없는 미완성 카드를 비활성으로 보이게. .hs2-hub-tile 베이스는 app.html 인라인 <style>(app-views.css보다 뒤 로드)에 있지만 :disabled는 클래스 단독보다 명시도가 높아 순서 무관 항상 적용. :disabled:hover는 app.html의 .hs2-hub-tile:hover(명시도 동률, 로드 순서상 나중)를 명시도로 이겨 눌리는 것처럼 보이는 걸 차단. 새 색상 없음(기존 --bd/--s1 토큰 + opacity만). (2026-07-23) */
-.hs2-hub-tile:disabled{opacity:.5;cursor:not-allowed;}
-.hs2-hub-tile:disabled:hover{border-color:var(--bd);background:var(--s1);transform:none;box-shadow:none;}
