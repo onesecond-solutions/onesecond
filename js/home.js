@@ -19,11 +19,12 @@ var _HS2_TILES=[
   /* 간병보험 변천사 = 전체공개(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출. order_hint=변천사 인접 */
   {v:'caregiver-history', ic:'i-file',  t:'간병보험 변천사', d:'장기간병~사용일당 · 지급기준이 다름', show:function(){return true;}},
   {v:'bojang', ic:'i-file', t:'보장분석', d:'의료실비·암·뇌심장·수술비 종합 · 고객 발송', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  /* 보장분석 4축 카드 = 허브를 거치지 않고 각자 독립 빈 뷰(axis-*)로 바로 진입. 게이트는 '보장분석' 타일과 동일(_canSeeCoverage). v = showView('axis-*') 인자(일반 타일과 동일 배선, 아래 _hs2RenderHub). '기타'는 대표 지시로 연결 없음(disabled:true, showView 어디에도 연결 안 함). (2026-07-23, 대표 지시로 sub 배선→독립 뷰로 전환) */
+  /* 보장분석 5축 카드(의료실비·암·뇌심장·수술비·간병) = 허브를 거치지 않고 각자 독립 빈 뷰(axis-*)로 바로 진입. 게이트는 '보장분석' 타일과 동일(_canSeeCoverage). v = showView('axis-*') 인자(일반 타일과 동일 배선, 아래 _hs2RenderHub). '기타'는 대표 지시로 연결 없음(disabled:true, showView 어디에도 연결 안 함). (2026-07-23, 대표 지시로 sub 배선→독립 뷰로 전환. 간병 축 추가) */
   {v:'axis-medical',    ic:'i-file',  t:'의료실비',   d:'세대 설명 + 가입일 세대판정',      show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'axis-cancer',     ic:'i-check', t:'암',         d:'진단·치료·비급여 3층 구조',        show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'axis-brainheart', ic:'i-heart', t:'뇌 · 심장',  d:'좁은문 vs 넓은문 보장범위',        show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'axis-surgery',    ic:'i-note',  t:'수술비',     d:'종수술·반복지급 구조',            show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'axis-caregiver',  ic:'i-users', t:'간병',       d:'장기요양 등급 · 일당형 지급구조',   show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'bojang', ic:'i-dots',  t:'기타',       d:'준비중', disabled:true,           show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   /* X-FILE = 임태성 게이트 전용 빈 페이지(#v-xfile) 골격. cls = 이 타일에만 붙는 붉은 계열 스코프 클래스(다른 타일 무영향). 게이트는 _canSeeXfile(app.html 인라인) — _canSeeCoverage와 조건은 같으나 독립 함수라 개방 시점을 따로 제어. (2026-07-17) */
   {v:'xfile', ic:'i-file', t:'X-FILE', d:'내 보험 어때? · 4가지 자가 검진', cls:'hs2-hub-tile--xfile', show:function(){return typeof window._canSeeXfile==='function'&&window._canSeeXfile();}},
