@@ -122,15 +122,18 @@ h2.sec .sq{width:15px;height:15px;border-radius:4px;flex:0 0 auto}
 /* ══════════════════════════════════════════════════════
    V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
    ‣ html.v3 스코프로만 적용. .v3 없으면 위 v2 규칙 그대로 = 렌더 픽셀 동일(회귀 0).
-   ‣ 읽는 본문 710px / 표·세대카드·심층패널은 760까지 예외. 사이드바는 iframe≥1060에서만 노출.
+   ‣ 읽는 본문 710px / 표·세대카드·심층패널은 760까지 예외. 사이드바는 독립 페이지 뷰포트≥1120에서만 노출.
    ‣ 간병 V3 정본과 요소별 값 일치(본문 하한 15px/1.8). 암 고유(세대카드·심층패널)=역할별 표준.
    ══════════════════════════════════════════════════════ */
 .v3grid{display:block}
 .v3side{display:none}
 
 html.v3 body{font-size:16px;line-height:1.85;word-break:keep-all}
-html.v3 .wrap{max-width:760px;margin:0 auto}
-@media(min-width:768px){ html.v3 .wrap{padding-left:0;padding-right:0} }
+html.v3 .wrap{max-width:808px;margin:0 auto}
+/* 독립 페이지 전환(de-iframe) 후에는 바깥 앱 패딩이 없으므로 .wrap 자체가 거터(24px)를 확보(border-box: 808-24-24=760 유지) */
+@media(min-width:768px){ html.v3 .wrap{padding-left:24px;padding-right:24px} }
+/* de-iframe 후 최상단 여백 26px→32px(독립 페이지 기준 재계산, v3 스코프만) */
+@media(min-width:768px){ html.v3 .wrap{padding-top:32px} }
 
 /* 읽는 텍스트 블록 = 710 중앙정렬 */
 html.v3 .phead,html.v3 .intro,html.v3 h2.sec,html.v3 .hint,
@@ -181,10 +184,11 @@ html.v3 .tcard .kv .v small{font-size:13.5px}
   html.v3 tbody td small{font-size:12.5px}
 }
 
-/* 사이드바 2단 = iframe 실폭 ≥1060에서만(1098=노출/1012=숨김). 그 미만·모바일=단일컬럼. */
-@media(min-width:1060px){
+/* 사이드바 2단 노출 조건 = 독립 페이지 뷰포트가 본문760+사이드244+간격32(=1036)를 수용할 때만.
+   BP 1120px = 1036 + 좌우 여백 42px씩. 그 미만·모바일 = 단일 컬럼(≤760px). */
+@media(min-width:1120px){
   html.v3 .v3grid{display:grid;grid-template-columns:760px 244px;gap:32px;justify-content:center;align-items:start}
-  html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0}
+  html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0;padding-left:0;padding-right:0}
   html.v3 .v3side{display:block;position:sticky;top:24px;align-self:start;padding:34px 0 0}
   html.v3 .v3side .blk{margin-bottom:26px}
   html.v3 .v3side .lb{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase}

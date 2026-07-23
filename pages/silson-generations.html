@@ -100,7 +100,7 @@ td .gr{font-weight:700;color:#059669}
 /* ══════════════════════════════════════════════════════
    V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
    ‣ html.v3 스코프로만 적용. .v3 없으면 위 v2 규칙 그대로 = 렌더 픽셀 동일(회귀 0).
-   ‣ 읽는 본문 710px / 표·세대카드·패널은 760까지 예외. 사이드바 iframe≥1060에서만.
+   ‣ 읽는 본문 710px / 표·세대카드·패널은 760까지 예외. 사이드바 독립 페이지 뷰포트≥1120에서만.
    ‣ 실손 토큰(--indigo/--gray/--line) 사용. 본문 하한 15px/1.8. 간병 V3 스케일 정합.
    ══════════════════════════════════════════════════════ */
 .v3grid{display:block}
@@ -108,7 +108,8 @@ td .gr{font-weight:700;color:#059669}
 
 html.v3 body{font-size:16px;line-height:1.85;word-break:keep-all}
 html.v3 .wrap{max-width:760px}
-@media(min-width:768px){ html.v3 body{padding-left:0;padding-right:0} }
+/* 독립 페이지 전환(de-iframe) 후에는 바깥 앱 패딩이 없으므로 body 패딩으로 거터(24px) 확보. .wrap은 760 그대로 */
+@media(min-width:768px){ html.v3 body{padding-left:24px;padding-right:24px} }
 
 /* 읽는 텍스트 블록 = 710 */
 html.v3 .head,html.v3 .section-t,html.v3 .desc,html.v3 .hint,html.v3 .src{
@@ -158,8 +159,9 @@ html.v3 .tcard .kv .v small{font-size:13.5px}
   html.v3 th,html.v3 td{font-size:14px}
 }
 
-/* 사이드바 2단 = iframe 실폭 ≥1060에서만. 그 미만·모바일=단일컬럼. 실손 토큰 사용. */
-@media(min-width:1060px){
+/* 사이드바 2단 노출 조건 = 독립 페이지 뷰포트가 본문760+사이드244+간격32(=1036)를 수용할 때만.
+   BP 1120px = 1036 + 좌우 여백 42px씩. 그 미만·모바일 = 단일 컬럼(≤760px). 실손 토큰 사용. */
+@media(min-width:1120px){
   html.v3 .v3grid{display:grid;grid-template-columns:760px 244px;gap:32px;justify-content:center;align-items:start}
   html.v3 .v3grid .wrap{max-width:760px;width:760px;margin:0}
   html.v3 .v3side{display:block;position:sticky;top:24px;align-self:start;padding:34px 0 0}
