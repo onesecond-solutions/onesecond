@@ -155,18 +155,21 @@ h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 
 /* ══════════════════════════════════════════════════════
    V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
    ‣ html.v3 스코프로만 적용. .v3 없으면 위 v2 규칙 그대로 = 렌더 픽셀 동일(회귀 0).
-   ‣ 읽는 본문 710px / 표·수치카드는 760까지 예외. 사이드바는 iframe≥1060에서만 노출.
+   ‣ 읽는 본문 710px / 표·수치카드는 760까지 예외. 사이드바는 독립 페이지 뷰포트≥1120에서만 노출.
    ══════════════════════════════════════════════════════ */
 /* 레이아웃 래퍼 — v2(비-v3)에서는 순수 블록이라 .wrap이 옛 max-width:1240px 중앙정렬 그대로 */
 .v3grid{display:block}
 .v3side{display:none}
 
 html.v3 body{font-size:16px;line-height:1.85;word-break:keep-all}
-/* .wrap = 최대 허용폭 760(표·수치카드가 쓸 수 있는 상한). 절대 760 초과 금지 */
-html.v3 .wrap{max-width:760px;margin:0 auto}
-/* 데스크탑에서 .wrap 좌우 패딩 제거 → 콘텐츠 박스가 760에 도달(표가 760까지 펼쳐짐).
+/* .wrap = 최대 허용폭 760(표·수치카드가 쓸 수 있는 상한) + 좌우 거터 24px×2(border-box).
+   절대 컨텐츠 760 초과 금지 — 808 - 24 - 24 = 760 유지 */
+html.v3 .wrap{max-width:808px;margin:0 auto}
+/* 독립 페이지 전환(de-iframe) 후에는 바깥 앱 패딩이 없으므로 .wrap 자체가 거터(24px)를 확보.
    읽는 블록은 아래에서 710로 재중앙정렬. 모바일(<768)은 v2 gutter(16px) 유지. */
-@media(min-width:768px){ html.v3 .wrap{padding-left:0;padding-right:0} }
+@media(min-width:768px){ html.v3 .wrap{padding-left:24px;padding-right:24px} }
+/* de-iframe 후 최상단 여백 26px→32px(독립 페이지 기준 재계산, v3 스코프만) */
+@media(min-width:768px){ html.v3 .wrap{padding-top:32px} }
 
 /* ── 읽는 텍스트 블록 = 710px 중앙정렬(표류 방지) ── */
 html.v3 .phead,html.v3 .intro,html.v3 h2.sec,html.v3 .tl,
@@ -234,9 +237,9 @@ html.v3 .tcard .kv .v em{font-size:13.5px}
   html.v3 tbody td em{font-size:12.5px}
 }
 
-/* 사이드바 2단 노출 조건 = "iframe 실폭"이 본문760+사이드244+간격32(=1036)+슬랙을 수용할 때만.
-   BP 1060px: iframe ~1098(1366 모니터)=노출 / ~1012(1280 모니터)=숨김. 그 미만·모바일 = 단일 컬럼(≤760px). */
-@media(min-width:1060px){
+/* 사이드바 2단 노출 조건 = 독립 페이지 뷰포트가 본문760+사이드244+간격32(=1036)를 수용할 때만.
+   BP 1120px = 1036 + 좌우 여백 42px씩. 그 미만·모바일 = 단일 컬럼(≤760px). */
+@media(min-width:1120px){
   html.v3 .v3grid{
     display:grid;
     grid-template-columns:760px 244px;   /* 본문 760 고정 · 사이드바 244 고정 */
@@ -246,7 +249,7 @@ html.v3 .tcard .kv .v em{font-size:13.5px}
   }
   /* 2컬럼: 트랙(760)을 꽉 채워 표가 760까지 펼쳐지게. margin auto는 그리드 아이템을
      shrink-to-fit(710)로 만들어 표 브레이크아웃을 죽이므로 width 고정으로 stretch. 읽는 블록은 내부 710 유지 */
-  html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0}
+  html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0;padding-left:0;padding-right:0}
   /* ── 사이드바 = 기획팀장 .side 값 전수 일치(플랫 blk 모델, 카드박스 아님) ── */
   html.v3 .v3side{
     display:block;
