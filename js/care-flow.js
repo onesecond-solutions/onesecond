@@ -3,7 +3,7 @@
    - 화면 전체를 갈아엎지 않는다. 아래(좌 카드리스트 #ci-list + 우 미리보기 #ci-preview)는 상담관리와 동일하게 그대로 둔다.
    - salesnote 모드에서만: 위 '오늘의 할 일'→'오늘의 케어', '상담 플로우'(8단계 band)→'고객 케어 플로우'(계약일 자동배치) 로 교체 + 초록(teal) 테마로 상담관리와 시각 구분.
    - 미리보기(#ci-preview)에 선택 고객 '케어 관리'(증권/약관 수령일·청구·소개 편집 = profile jsonb, + 일정추가 = 개인 캘린더 인서트) 이식. DDL 0.
-   - 대상 집계 = _ciData 중 status='청약완료'. 필터 없을 땐 카드리스트는 기존대로 전체 표시(회귀 0).
+   - 대상 집계 = window._ciApplData(청약완료 전량, 2026-07-23부터 app.html _ciLoadApplPool이 별도 로드 — window._ciData는 salesnote 서버 페이지네이션 도입 후 "현재 페이지"만 담음). 필터 없을 땐 카드리스트는 기존대로 전체 표시(회귀 0).
    - _ciRender(app.html)가 salesnote일 때 window._cfSalesnoteTop() 호출. _ciListHtml은 window._ciCareF 있으면 window._cfMatch로 필터.
    - 상담관리(care)·_ci* 로직 무변경. 롤백: 파일 삭제 + _ciRender/_ciListHtml의 salesnote 분기 제거.
    ════════════════════════════════════════════════════════════════════════ */
@@ -18,8 +18,17 @@
   function daysSince(c){ var ad=parseD(applDate(c)); if(!ad) return null; return Math.floor((today0()-ad)/86400000); }
   function toast(m){ try{ if(typeof window.toast==='function'){ window.toast(m); return; } }catch(e){} alert(m); }
   function cfUser(){ try{ return JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}'); }catch(e){ return {}; } }
-  function find(id){ var d=window._ciData||[]; for(var i=0;i<d.length;i++){ if(String(d[i].id)===String(id)) return d[i]; } return null; }
-  function pool(){ return (window._ciData||[]).filter(function(c){ return (c&&c.status||'')==='청약완료'; }); }
+  /* 2026-07-23: salesnote 카드리스트가 서버 페이지네이션(window._ciData=현재 페이지만)으로 바뀌면서
+     케어 플로우 집계·조회는 청약완료 전량 별도 배열(window._ciApplData, app.html _ciLoadApplPool)을 사용한다.
+     find()는 현재 페이지(window._ciData, 신규/청약완료 모두 포함 가능)에 없으면 청약완료 전량에서 폴백 조회(선택 고객이 페이지 밖에 있을 수 있음). */
+  function find(id){
+    var d=window._ciData||[];
+    for(var i=0;i<d.length;i++){ if(String(d[i].id)===String(id)) return d[i]; }
+    var d2=window._ciApplData||[];
+    for(var i2=0;i2<d2.length;i2++){ if(String(d2[i2].id)===String(id)) return d2[i2]; }
+    return null;
+  }
+  function pool(){ return window._ciApplData||[]; }  /* 청약완료 전량(서버에서 이미 status=eq.청약완료로 필터링됨) */
   function count(pred){ var d=pool(),n=0; for(var i=0;i<d.length;i++){ if(pred(d[i])) n++; } return n; }
 
   function sangDate(c){ var b=parseD(c&&c.birth_date); if(!b) return null; var t0=today0(),best=null;

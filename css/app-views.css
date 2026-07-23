@@ -188,6 +188,9 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-search-input:focus{outline:none;border-color:var(--ac);}
 .ci-search-input::placeholder{color:var(--tf);}
 .ci-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;}  /* 남은 세로 공간 전부 차지 + 내부 스크롤(우측 폼 높이에 맞춤 유지) */
+/* 고객관리(salesnote) 카드리스트 페이지 이동(2026-07-23, 대표 확정 — 페이지당 200행). 레이아웃만 정의(기존 토큰 재사용) — 버튼(.cf-btn)·텍스트 색상은 care-flow.js가 주입하는 salesnote 초록 테마 재사용, 신규 색상 없음 */
+.ci-list-pager{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding-top:8px;border-top:0.5px solid var(--bd);}
+.ci-pager-info{font-size:var(--ts-badge);color:var(--tf);white-space:nowrap;}
 /* 데이터현황 기간/채널 필터 → 카드리스트 연동 요약바(2026-07-14). 필터 OFF 시 JS가 display:none으로 숨김(기본 상태) */
 .ci-list-filterbar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--space-branch-soft);border:1px solid var(--ac);border-radius:var(--radius-sm);padding:8px 12px;}
 .ci-list-filter-txt{font-size:var(--ts-badge);color:var(--space-branch-text);font-weight:600;flex:1;min-width:0;}

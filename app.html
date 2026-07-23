@@ -2249,6 +2249,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
             <div class="ci-search-row"><input type="text" class="ci-search-input" id="ci-q" placeholder="고객명 검색" autocomplete="off" oninput="_ciSetNameQ(this.value)"></div>
             <div class="ci-list-filterbar" id="ci-list-filterbar" style="display:none"></div>
             <div class="ci-list" id="ci-list"></div>
+            <div class="ci-list-pager" id="ci-list-pager" style="display:none"></div>
           </div>
           <div class="ci-right-col">
             <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 고객 추가</button></div>
@@ -15843,6 +15844,11 @@ window.filterMysType=filterMysType;
  *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
 window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false; window._ciNameQ=''; window._ciMode='care';
 window._ciListPeriodOn=false; window._ciChanF=null;  /* 데이터현황→카드리스트 연동(2026-07-14): 기간 프리셋/네비/사용자정의 클릭 시에만 true, 채널카드 클릭 시에만 인덱스 세팅. 기본값=둘 다 OFF(회귀 방지, 로드 시 전체 표시 유지) */
+/* salesnote 서버 필터+페이지네이션(2026-07-23, 대표 확정) — care 모드는 절대 사용하지 않음(_ciMode==='salesnote' 분기 전용).
+   _ciData(salesnote일 때)=현재 페이지(최대 _ciPageSize행)만 담음(기존 care 모드의 "전량 배열" 의미와 다름, 회귀 방지 위해 care는 무변경).
+   _ciApplData=상태 '청약완료' 전량(케어 플로우 집계·필터 전용, 별도 배열 — care-flow.js 참고). */
+window._ciPage=1; window._ciPageSize=200; window._ciTotalCount=0; window._ciPageBusy=false;
+window._ciApplData=[]; window._ciApplCount=null;
 /* 상담관리(care)/고객관리(salesnote) 표시 구분은 날짜 컷오프가 아닌 status 기준(2026-07-13 대표 확정, 오해였던 날짜 컷오프 폐기).
    옛 대량 데이터(약 1000명)의 status는 전부 정확히 '신규'(레거시 단일값). 대표가 폼으로 추가하는 고객은 _SN_STAGES 8단계
    ('신규DB'~'청약완료')를 쓰며 첫 단계가 '신규DB'라 '신규'와 절대 겹치지 않는다. → status만으로 날짜 무관하게 정확히 구분 가능.
@@ -15912,21 +15918,139 @@ function _ciLoad(){
   window._ciLoaded=true; window._ciLoadedMode=window._ciMode; window._ciData=[];
   var tok=window.db&&window.db.getToken&&window.db.getToken();
   if(!tok||!window.db||!window.db.fetch){ _ciRender(); return; }  /* 비로그인=빈 상태(owner RLS로 데이터 0) */
+  if((window._ciMode||'care')==='salesnote'){
+    /* 고객관리(salesnote) = 서버 필터+페이지네이션(2026-07-23). 아래 care 분기(무변경)와 완전히 별개 경로. */
+    window._ciPage=1;
+    _ciLoadSalesnotePage(1);
+    _ciLoadApplPool();
+    return;
+  }
   /* 상담관리(care)는 '신규' 대량(수천 건 옛 데이터)을 서버에서 제외하고 로드한다.
      PostgREST가 1000행에서 절단하므로, 필터 없이 전체를 부르면 최신 1000행만 와서 과거 날짜(백데이트) 고객이 누락된다.
      care=status!=신규 → 소량만 로드되어 날짜 무관 전부 표시. (2026-07-14: 2500+건 환경 과거일자 누락 버그 수정) */
-  var _ciSF=((window._ciMode||'care')==='care') ? '&status=neq.'+encodeURIComponent('신규') : '';
+  var _ciSF='&status=neq.'+encodeURIComponent('신규');
   window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null'+_ciSF+'&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at,profile&order=created_at.desc&limit=5000')
     .then(function(r){ return r.ok?r.json():[]; })
     .then(function(rows){ window._ciData=Array.isArray(rows)?rows:[]; _ciRender(); })
     .catch(function(){ _ciRender(); });
 }
 window._ciLoad=_ciLoad;
-function _ciSetStage(s){ window._ciTodayF=null; window._ciStageF=s; _ciRender(); }  /* 상담 플로우 단계 필터(오늘의 할 일 필터 해제) */
+/* ── 고객관리(salesnote) 서버 필터 쿼리스트링 (2026-07-23, 대표 확정 사양) ──
+   모드 필터=status in(신규,청약완료)·단계 필터(_ciStageF)=status eq·고객명(_ciNameQ)=ilike·기간(_ciListPeriodOn)=created_at 범위·유입채널(_ciChanF 0~2)=profile->>attr ilike.
+   채널 3(기타)="위 3개 중 어느 것도 아님"이라 단일 like로 표현 불가 → 서버 조건 생략, 클라이언트 폴백(_ciListHtml 기존 _dsChanIdx 필터)에 위임(대표 확정 사양, 판단 아님).
+   care 모드는 이 함수를 호출하지 않음(_ciLoad 분기 참고). */
+function _ciSnQS(){
+  var qs='deleted_at=is.null';
+  var stage=window._ciStageF||'전체';
+  if(stage!=='전체'){ qs+='&status=eq.'+encodeURIComponent(stage); }
+  else { qs+='&status=in.('+encodeURIComponent('신규')+','+encodeURIComponent('청약완료')+')'; }
+  var nq=String(window._ciNameQ||'').trim();
+  if(nq){ qs+='&name=ilike.*'+encodeURIComponent(nq)+'*'; }
+  if(window._ciListPeriodOn){
+    var r=_dsRangeCur();
+    /* UTC 고정(Z) — 기존 클라이언트 필터(_ciDateOf=created_at 문자열 앞 10자리, 즉 UTC 달력일) 결과와 동일하게 맞추기 위함(브라우저 로컬 tz 영향 배제) */
+    qs+='&created_at=gte.'+encodeURIComponent(r[0]+'T00:00:00Z')+'&created_at=lte.'+encodeURIComponent(r[1]+'T23:59:59.999Z');
+  }
+  if(window._ciChanF!=null && window._ciChanF!==3){
+    var _CHPAT=['뱅크샐러드','카카오페이','보맵'];
+    var pat=_CHPAT[window._ciChanF];
+    if(pat){ qs+='&profile->>attr=ilike.*'+encodeURIComponent(pat)+'*'; }
+  }
+  return qs;
+}
+/* ── 고객관리(salesnote) 페이지 로드 — Range 헤더 페이지네이션(페이지당 _ciPageSize=200, 대표 확정) + Prefer:count=exact로 총건수 파싱 ── */
+function _ciLoadSalesnotePage(page){
+  if(window._ciPageBusy) return;  /* 연속 클릭 중복 요청 가드 */
+  page=page||1; window._ciPage=page; window._ciPageBusy=true;
+  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML='<div class="ci-empty">불러오는 중…</div>';
+  var pager=document.getElementById('ci-list-pager'); if(pager) pager.innerHTML=_ciPagerHtml();  /* 버튼 비활성 즉시 반영 */
+  var pageSize=window._ciPageSize||200;
+  var from=(page-1)*pageSize, to=from+pageSize-1;
+  window.db.fetch('/rest/v1/sales_customers?'+_ciSnQS()+'&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at,profile&order=created_at.desc', {
+    headers:{ 'Range-Unit':'items', 'Range':from+'-'+to, 'Prefer':'count=exact' }
+  }).then(function(r){
+    var cr=r.headers.get('Content-Range')||'';
+    var m=/\/(\d+)$/.exec(cr);
+    window._ciTotalCount=m?parseInt(m[1],10):0;
+    return r.ok?r.json():[];
+  }).then(function(rows){
+    window._ciData=Array.isArray(rows)?rows:[];
+    window._ciPageBusy=false;
+    _ciRender();
+  }).catch(function(){ window._ciData=[]; window._ciPageBusy=false; _ciRender(); });
+}
+window._ciLoadSalesnotePage=_ciLoadSalesnotePage;
+/* ── 고객 케어 플로우(계층2) 전용 — status=청약완료 전량 별도 로드. care-flow.js의 pool()/find()가 이 배열을 사용 ── */
+function _ciLoadApplPool(){
+  if(!window.db||!window.db.fetch){ window._ciApplData=[]; return; }
+  window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null&status=eq.'+encodeURIComponent('청약완료')+'&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at,profile&order=created_at.desc&limit=5000', {
+    headers:{ 'Prefer':'count=exact' }
+  }).then(function(r){
+    var cr=r.headers.get('Content-Range')||'';
+    var m=/\/(\d+)$/.exec(cr);
+    window._ciApplCount=m?parseInt(m[1],10):null;
+    return r.ok?r.json():[];
+  }).then(function(rows){
+    window._ciApplData=Array.isArray(rows)?rows:[];
+    if(window._ciMode==='salesnote'){
+      if(window._ciCareF){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml(); }
+      if(typeof window._cfSalesnoteTop==='function') window._cfSalesnoteTop();  /* 케어 플로우 집계(오늘의 케어·플로우 카드)는 이 배열 기준이라 로드 완료 후 재계산 필요 */
+    }
+  }).catch(function(){ window._ciApplData=[]; });
+}
+window._ciLoadApplPool=_ciLoadApplPool;
+/* 필터 변경 후 카드리스트 재조회 공통 진입점 — salesnote(케어 플로우 필터 없을 때)=서버 1페이지부터 재조회, 그 외(care 전체·salesnote 케어플로우 필터 중)=기존처럼 클라이언트 재렌더(회귀 0) */
+function _ciListRefresh(){
+  if(window._ciMode==='salesnote' && !window._ciCareF){
+    _ciLoadSalesnotePage(1);
+  } else {
+    var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+    _ciListFilterBarRender();
+  }
+}
+window._ciListRefresh=_ciListRefresh;
+/* 카드리스트 하단 페이지 이동 컨트롤 — salesnote & 케어플로우 필터 미적용일 때만(그 외=빈 문자열, 숨김). 기존 톤(.cf-btn) 재사용, 신규 색상 없음 */
+function _ciPagerHtml(){
+  if(window._ciMode!=='salesnote' || window._ciCareF) return '';
+  var total=window._ciTotalCount||0, pageSize=window._ciPageSize||200;
+  var totalPages=Math.max(1, Math.ceil(total/pageSize));
+  var page=window._ciPage||1; if(page>totalPages) page=totalPages;
+  var from=total===0?0:((page-1)*pageSize+1), to=Math.min(page*pageSize, total);
+  var busy=!!window._ciPageBusy;
+  var prevDis=(page<=1||busy)?' disabled':'';
+  var nextDis=(page>=totalPages||busy)?' disabled':'';
+  return '<button type="button" class="cf-btn plain" '+prevDis+' onclick="_ciPagerGo(-1)">이전</button>'
+    +'<span class="ci-pager-info">'+_ciNum(totalPages)+'페이지 중 '+_ciNum(page)+'</span>'
+    +'<span class="ci-pager-info">전체 '+_ciNum(total)+'명 중 '+_ciNum(from)+'~'+_ciNum(to)+'</span>'
+    +'<button type="button" class="cf-btn plain" '+nextDis+' onclick="_ciPagerGo(1)">다음</button>';
+}
+window._ciPagerHtml=_ciPagerHtml;
+function _ciPagerGo(dir){
+  if(window._ciPageBusy) return;
+  var totalPages=Math.max(1, Math.ceil((window._ciTotalCount||0)/(window._ciPageSize||200)));
+  var next=(window._ciPage||1)+dir;
+  if(next<1||next>totalPages) return;
+  _ciLoadSalesnotePage(next);
+}
+window._ciPagerGo=_ciPagerGo;
+function _ciSetStage(s){
+  window._ciTodayF=null; window._ciStageF=s;
+  if(window._ciMode==='salesnote' && !window._ciCareF){ _ciLoadSalesnotePage(1); }  /* 단계 필터=서버 status eq(사양) — salesnote만, 1페이지로 리셋 */
+  else { _ciRender(); }
+}  /* 상담 플로우 단계 필터(오늘의 할 일 필터 해제) */
 window._ciSetStage=_ciSetStage;
-function _ciSetTodayF(k){ window._ciStageF='전체'; window._ciTodayF=(window._ciTodayF===k?null:k); _ciRender(); }  /* 오늘의 할 일 클릭 필터(토글·단계 필터 해제) */
+function _ciSetTodayF(k){ window._ciStageF='전체'; window._ciTodayF=(window._ciTodayF===k?null:k); _ciRender(); }  /* 오늘의 할 일 클릭 필터(토글·단계 필터 해제) — care 전용 UI 경로(salesnote는 케어플로우 _cfSetCare로 대체), 서버화 대상 아님(사양 범위 밖) */
 window._ciSetTodayF=_ciSetTodayF;
-function _ciSetNameQ(v){ window._ciNameQ=v||''; var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml(); }  /* 고객명 실시간 검색 — #ci-list만 재렌더(입력 포커스 유지), 기존 오늘의 할 일·단계 필터와 AND 결합 */
+function _ciSetNameQ(v){
+  window._ciNameQ=v||'';
+  if(window._ciMode==='salesnote' && !window._ciCareF){
+    /* 서버 검색(name=ilike, 사양) — 입력마다 요청하지 않도록 300ms 디바운스 후 1페이지로 재조회 */
+    if(window._ciNameQTimer) clearTimeout(window._ciNameQTimer);
+    window._ciNameQTimer=setTimeout(function(){ _ciLoadSalesnotePage(1); }, 300);
+  } else {
+    var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+  }
+}  /* 고객명 실시간 검색 — #ci-list만 재렌더(입력 포커스 유지), 기존 오늘의 할 일·단계 필터와 AND 결합 */
 window._ciSetNameQ=_ciSetNameQ;
 function _ciTodayMatch(c,k){
   var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
@@ -16242,16 +16366,14 @@ window._ciStatsApplyCustom=_ciStatsApplyCustom;
 /* ── 데이터현황 기간/채널 → 카드리스트(#ci-list) 연동(2026-07-14 대표 확정) ──
    기간 필터=window._ciListPeriodOn(bool, 기본 false)·채널 필터=window._ciChanF(int|null, 기본 null). 둘 다 로드 시 OFF=현재처럼 전체 표시(회귀 방지).
    기존 오늘의할일/단계/이름 필터와 전부 AND 결합(_ciListHtml 내부). 켜져 있을 때만 카드리스트 위에 요약+[전체 보기] 바 노출. */
-function _ciListSyncAfterPeriod(){  /* 기간 프리셋/네비/사용자정의 클릭 후 카드리스트+필터바만 재렌더(hero/채널카드/차트는 _ciStatsRerender가 이미 갱신) */
-  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
-  _ciListFilterBarRender();
+function _ciListSyncAfterPeriod(){  /* 기간 프리셋/네비/사용자정의 클릭 후 카드리스트 재조회(salesnote=서버 1페이지, 그 외=클라 재렌더) + 필터바 재렌더 */
+  _ciListRefresh();
 }
 window._ciListSyncAfterPeriod=_ciListSyncAfterPeriod;
 function _ciChanPick(idx){  /* 채널 카드 클릭=그 채널만, 같은 카드 재클릭=해제(전체 채널) */
   window._ciChanF=(window._ciChanF===idx)?null:idx;
   _ciStatsRerender();  /* 채널카드 .on 하이라이트 갱신(집계 숫자·차트는 그대로) */
-  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
-  _ciListFilterBarRender();
+  _ciListRefresh();
 }
 window._ciChanPick=_ciChanPick;
 function _ciListFilterBarHtml(){  /* 기간·채널 필터가 하나라도 켜져 있을 때만 요약+[전체 보기] 바 내용 반환, 없으면 빈 문자열(바 숨김) */
@@ -16273,23 +16395,26 @@ function _ciListFilterClear(){  /* [전체 보기] — 기간·채널 필터 모
   window._ciListPeriodOn=false;
   window._ciChanF=null;
   _ciStatsRerender();  /* 채널카드 하이라이트 해제 */
-  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
-  _ciListFilterBarRender();
+  _ciListRefresh();
 }
 window._ciListFilterClear=_ciListFilterClear;
 function _ciHeroPick(){  /* hero 큰 숫자 클릭="이 기간 전체 채널 보기" — 채널 필터만 해제, 기간(현재 _ciStatsMode/anchor)은 유지(2026-07-14 대표 확정) */
   window._ciListPeriodOn=true;
   window._ciChanF=null;
   _ciStatsRerender();  /* 채널카드 하이라이트 해제 */
-  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
-  _ciListFilterBarRender();
+  _ciListRefresh();
 }
 window._ciHeroPick=_ciHeroPick;
 function _ciListHtml(){
-  var data=_ciViewData().slice();
-  if(window._ciMode==='salesnote' && window._ciCareF && typeof window._cfMatch==='function'){ data=data.filter(function(c){ return window._cfMatch(c); }); }  /* 고객관리 케어 플로우 필터(위 케어 카드 클릭) */
-  else if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
-  else { var cur=window._ciStageF||'전체'; if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;}); }
+  var data;
+  if(window._ciMode==='salesnote' && window._ciCareF && typeof window._cfMatch==='function'){
+    /* 케어 플로우 필터(계층2) — 페이지네이션 대상인 window._ciData(현재 페이지)가 아니라 청약완료 전량(window._ciApplData)에서 필터(2026-07-23) */
+    data=(window._ciApplData||[]).slice().filter(function(c){ return window._cfMatch(c); });
+  } else {
+    data=_ciViewData().slice();
+    if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }  /* 오늘의 할 일 필터 우선 */
+    else { var cur=window._ciStageF||'전체'; if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;}); }
+  }
   var _nq=String(window._ciNameQ||'').trim().toLowerCase().replace(/\s+/g,'');  /* 고객명 검색(부분일치·대소문자/공백 무시) — 기존 필터 뒤 AND 결합 */
   if(_nq) data=data.filter(function(c){ return String(c.name||'').toLowerCase().replace(/\s+/g,'').indexOf(_nq)>=0; });
   if(window._ciListPeriodOn){ var r=_dsRangeCur(); data=data.filter(function(c){ var d=_ciDateOf(c.created_at); return d && d>=r[0] && d<=r[1]; }); }  /* 데이터현황 기간 프리셋/네비/사용자정의 연동(2026-07-14, 기본 OFF) */
@@ -16649,7 +16774,10 @@ window._ciOcrRun=_ciOcrRun;
 function _ciOpenForm(id){
   window._ciEditId=id||null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''}; window._ciProfileLoaded=false;
   var pv=document.getElementById('ci-preview'); if(!pv) return;
-  var base=id?((window._ciData||[]).filter(function(x){ return String(x.id)===String(id); })[0]||{}):{};
+  /* salesnote 케어 플로우 필터(_ciCareF) 중 선택된 고객은 페이지 배열(window._ciData)이 아닌 청약완료 전량(window._ciApplData)에만 있을 수 있어 폴백 조회(2026-07-23, care 모드 무영향) */
+  var base=id?((window._ciData||[]).filter(function(x){ return String(x.id)===String(id); })[0]
+    ||(window._ciMode==='salesnote'?(window._ciApplData||[]).filter(function(x){ return String(x.id)===String(id); })[0]:null)
+    ||{}):{};
   pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns(); _ciConsultRender(); _ciDraftBind(); _ciDraftBanner(); _ciFormSetMode(id?'consult':'edit');
   if(id && window.db && window.db.fetch){
     window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id)+'&select=profile,job,medication,history,dx_date,uw_status,created_at&limit=1').then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
@@ -16746,9 +16874,12 @@ function _ciRender(){
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
   _ciListFilterBarRender();
+  var pager=document.getElementById('ci-list-pager');
+  if(pager){ var _showPager=(window._ciMode==='salesnote' && !window._ciCareF); pager.style.display=_showPager?'':'none'; pager.innerHTML=_showPager?_ciPagerHtml():''; }  /* 페이지 이동 컨트롤(salesnote 전용, 케어플로우 필터 중엔 숨김·전량 표시) 2026-07-23 */
   var pv=document.getElementById('ci-preview');
   if(pv && !pv.querySelector('.ci-form')){  /* 폼 편집 중이면 덮어쓰지 않음(단계·기간 필터 클릭에도 폼 유지) */
-    var _pvSel=(window._ciSel!=null)&&(window._ciData||[]).some(function(x){return String(x.id)===String(window._ciSel);});
+    var _pvSel=(window._ciSel!=null)&&(((window._ciData||[]).some(function(x){return String(x.id)===String(window._ciSel);}))
+      ||(window._ciMode==='salesnote' && (window._ciApplData||[]).some(function(x){return String(x.id)===String(window._ciSel);})));  /* 케어플로우 필터로 선택된 고객이 페이지 배열 밖(청약완료 전량)에 있을 수 있어 폴백(2026-07-23) */
     if(_pvSel){ _ciOpenForm(window._ciSel); }  /* 선택 고객이 있으면 옛 요약(_ciPreviewHtml) 대신 새 스타일 폼을 연다 — 미리보기 예전 스타일 버그 수정(2026-07-14 대표) */
     else { pv.innerHTML=_ciPreviewHtml(null); }  /* 미선택=안내 문구 */
   }
