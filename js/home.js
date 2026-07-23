@@ -19,6 +19,12 @@ var _HS2_TILES=[
   /* 간병보험 변천사 = 전체공개(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출. order_hint=변천사 인접 */
   {v:'caregiver-history', ic:'i-file',  t:'간병보험 변천사', d:'장기간병~사용일당 · 지급기준이 다름', show:function(){return true;}},
   {v:'bojang', ic:'i-file', t:'보장분석', d:'의료실비·암·뇌심장·수술비 종합 · 고객 발송', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  /* 보장분석 5카드 = 허브를 거치지 않고 각 축(서브)으로 바로 진입. 게이트는 '보장분석' 타일과 동일(_canSeeCoverage). sub = _bojangShow(sub) 인자, 렌더에서 showView('bojang') 실행 후 sub 진입으로 배선(아래 _hs2RenderHub). '기타'는 대표 지시로 연결 없음(disabled:true, showView/​_bojangShow 어디에도 연결 안 함). (2026-07-23) */
+  {v:'bojang', ic:'i-file',  t:'의료실비',   d:'세대 설명 + 가입일 세대판정',      sub:'medical',    show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'bojang', ic:'i-check', t:'암',         d:'진단·치료·비급여 3층 구조',        sub:'cancer',     show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'bojang', ic:'i-heart', t:'뇌 · 심장',  d:'좁은문 vs 넓은문 보장범위',        sub:'brainheart', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'bojang', ic:'i-note',  t:'수술비',     d:'종수술·반복지급 구조',            sub:'surgery',    show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'bojang', ic:'i-dots',  t:'기타',       d:'준비중', disabled:true,           show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   /* X-FILE = 임태성 게이트 전용 빈 페이지(#v-xfile) 골격. cls = 이 타일에만 붙는 붉은 계열 스코프 클래스(다른 타일 무영향). 게이트는 _canSeeXfile(app.html 인라인) — _canSeeCoverage와 조건은 같으나 독립 함수라 개방 시점을 따로 제어. (2026-07-17) */
   {v:'xfile', ic:'i-file', t:'X-FILE', d:'내 보험 어때? · 4가지 자가 검진', cls:'hs2-hub-tile--xfile', show:function(){return typeof window._canSeeXfile==='function'&&window._canSeeXfile();}},
   {v:'scripts',        ic:'i-msg',      t:'스크립트',          d:'상담 멘트·화법',            show:function(){return true;}},
@@ -29,7 +35,9 @@ function _hs2RenderHub(){
   var grid=document.querySelector('.hs2-hub .hs2-hub-grid'); if(!grid) return;
   var h='';
   for(var i=0;i<_HS2_TILES.length;i++){ var t=_HS2_TILES[i]; if(typeof t.show==='function'&&!t.show()) continue;
-    h+='<button type="button" class="hs2-hub-tile'+(t.cls?' '+t.cls:'')+'" onclick="showView(\''+t.v+'\')"><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
+    /* disabled = 이동 동작 없음(onclick 미부여 + disabled 속성). sub = 허브 서브로 직행(showView('bojang') 후 _bojangShow(sub), 미로드 시 허브 폴백). 그 외(기존 10개 타일) = 원래 문자열과 100% 동일(회귀 0). */
+    var _attrs = t.disabled ? ' disabled' : (t.sub ? ' onclick="if(typeof window._bojangShow===\'function\'){showView(\'bojang\');window._bojangShow(\''+t.sub+'\');}else{showView(\'bojang\');}"' : ' onclick="showView(\''+t.v+'\')"');
+    h+='<button type="button" class="hs2-hub-tile'+(t.cls?' '+t.cls:'')+'"'+_attrs+'><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
   }
   grid.innerHTML=h;
 }
