@@ -77,11 +77,24 @@
 | `documentTitle` | string | O | — | 페이지 h1 실텍스트. **표시용 아님, 대조·검증용** |
 | `description` | string | O | 1줄 | 목록/타일/검색 공통. 폰트 16px |
 | `url` | string | O | `/pages/*.html` | 실측값 고정. **파일명 추정 금지** |
-| `updatedAt` | string | O | `YYYY-MM-DD` | **본문 내용 기준 수기 관리** |
+| `updatedAt` | string | O | `YYYY-MM-DD` | **원장 기준일**(아래 §2-1). 수기 관리 |
 | `lifecycleStatus` | string | O | `draft` / `reviewing` / `approved` / `published` | `silson_generations` 기존 4값과 동일 축 |
 | `factGrades` | string[] | O | `customer_ok` / `internal_only` / `customer_blocked` | 빈 배열 금지(미판정 = 비노출) |
 
 DB 이관 대비: JS camelCase ↔ DB snake_case 1:1. `group`은 SQL 예약어라 이관 시 `group_name` 매핑. **지금 이름 바꾸지 않는다.**
+
+### 2-1. `updatedAt` = 원장 기준일 (대표 확정 2026-07-23)
+
+> ⚠️ **`updatedAt`은 문서 본문이 실제로 마지막에 수정된 날이 아니다. 원장을 세운 기준일이다.**
+
+- 3개 자료 전부 **`2026-07-23`으로 통일**한다(대표 확정).
+- 사유: 3개 파일의 git 최종 커밋이 전부 동일한 CSS 작업(`9b8bdf4`)이라 **본문이 실제로 바뀐 날을 기록으로 판정할 수 없다**(암 문서만 2026-07-21 표기 정정 식별 가능). 없는 날짜를 지어내지 않고, 원장을 세우는 오늘을 공통 기준일로 삼는다.
+- **앞으로의 운영:** 문서 본문을 고칠 때마다 그 날짜로 손으로 갱신한다. 이후의 값은 실제 수정일 의미를 갖는다.
+- ⚠️ **이 필드를 "마지막 수정일"로 화면에 표기할 때 주의.** 최초 3건은 실제 수정일이 아니다. 오해 소지가 있으면 표기를 생략하거나 "등록일" 성격으로 쓴다.
+
+### 2-2. NEW 배지 = 이번 범위 제외 (대표 확정 2026-07-23)
+
+3개 자료의 `updatedAt`이 전부 같은 날짜라 **NEW 배지가 전부 붙거나 전부 안 붙어 변별력이 0**이다. 상위 스펙 §9-1에 있던 `NEW` 표기는 **이번 구현 범위에서 제외**한다. 자료가 늘고 날짜가 실제로 갈라진 뒤 별도로 논의한다.
 
 ---
 
@@ -97,19 +110,19 @@ var KNOWLEDGE_DOCS = [
   { id:'silson', category:'의료실비', group:null,
     label:'의료실비 변천사', documentTitle:'실손의료비보험 세대별 변천사',
     description:'실손 1~5세대 보장·전환', url:'/pages/silson-generations.html',
-    updatedAt:'2026-07-04',   /* 본문 기준일 미확정 */
+    updatedAt:'2026-07-23',   /* 원장 기준일(2-1). 실제 본문 수정일 아님 */
     lifecycleStatus:'published', factGrades:['customer_ok'] },
 
   { id:'cancer-treatment', category:'암', group:null,
     label:'암주요치료비 변천사', documentTitle:'암주요치료비 세대별 변천사',
     description:'세대별 암 치료비 보장 변화', url:'/pages/cancer-treatment-history.html',
-    updatedAt:'2026-07-21',   /* 본문 변경 커밋 확인됨 */
+    updatedAt:'2026-07-23',   /* 원장 기준일(2-1). 실제 본문 수정일 아님 */
     lifecycleStatus:'published', factGrades:['customer_ok'] },
 
   { id:'caregiver-history', category:'간병', group:null,
     label:'간병보험 변천사', documentTitle:'대한민국 간병보험의 변천사',
     description:'장기간병~사용일당 · 지급기준이 다름', url:'/pages/caregiver-history.html',
-    updatedAt:'2026-07-22',   /* 본문 기준일 미확정 */
+    updatedAt:'2026-07-23',   /* 원장 기준일(2-1). 실제 본문 수정일 아님 */
     lifecycleStatus:'published', factGrades:['customer_ok'] }
 ];
 ```
@@ -286,7 +299,7 @@ function knowledgeIsAdvisorOnly(doc){ return knowledgeVisibility(doc) === 'advis
 
 | # | 사안 | 등급 |
 |---|---|---|
-| 1 | `updatedAt` 정의 = 본문 변경일 수기 + **silson·caregiver 확정값 지정** | B |
+| 1 | ~~`updatedAt` 정의~~ → **확정: 3건 전부 `2026-07-23` 원장 기준일. NEW 배지 이번 범위 제외**(2026-07-23 대표) | 해결 |
 | 2 | 검색 `keywords` 원장 밖 잔류 → "원장 1곳"이 검색에 한해 미완결 | B |
 | 3 | `factGrades` 분기 목업 검증 후 원복 절차 | B |
 | 4 | 카테고리 문자열 `뇌 · 심장`(공백 포함) 확정 | A |
@@ -312,7 +325,7 @@ function knowledgeIsAdvisorOnly(doc){ return knowledgeVisibility(doc) === 'advis
 
 ## 14. 확인 못 한 것 (추측으로 메우지 않음)
 
-1. silson·caregiver의 **본문 기준 최종 수정일** — 커밋이 전부 스타일 변경이라 판정 불가
+1. ~~silson·caregiver의 본문 기준 최종 수정일~~ → **해결: 판정 불가를 인정하고 원장 기준일 `2026-07-23`로 통일**(§2-1, 대표 확정)
 2. **"로그인 = 설계사"가 성립하는지** — 일반 고객 계정 개념 유무 미확인
 3. 3개 정적 페이지 내부의 **HTML 이스케이프 유틸 유무**
 4. **`caregiver_search_index_v1.json`** — 리포지토리에 없음. 유실인지 미커밋인지 판정 못 함

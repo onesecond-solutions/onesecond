@@ -21,6 +21,7 @@
 <script src="/js/admin-config.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/util-format.js"></script><!-- 순수 포맷터·이스케이프 분리(인라인보다 먼저 로드). Phase2 2026-07-08 -->
+<script src="/js/knowledge-registry.js?v=20260723"></script><!-- 지식 문서 단일 원장(PR-A). _SHORTCUTS(인라인)·js/home.js보다 먼저 로드되어야 함(head 스크립트 무리 내 배치로 순서 보장). 소비처 무접촉 — 이 스크립트 추가만으로는 화면 무변화. -->
 <script src="/js/tools-calc.js"></script><!-- 사칙연산 계산기 도구 분리. 인라인보다 먼저 로드(=_TOOL_PAGE_MAP 호이스팅 캡처 대응). Phase2 2026-07-08 -->
 <script src="/js/tools-converter.js"></script><!-- 이미지/PDF→JPG 변환기 도구 분리. 인라인보다 먼저 로드(=_TOOL_PAGE_MAP·activateTool 호이스팅 캡처 대응). Phase2 2026-07-08 -->
 <link rel="stylesheet" href="/css/app-core.css?v=20260708"><!-- app.html에서 분리한 코어 CSS(토큰+셸). Phase1 perf. 인라인 style 블록 바로 앞=cascade 순서 보존 -->
