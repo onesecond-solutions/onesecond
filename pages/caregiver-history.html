@@ -281,6 +281,7 @@ html.v3 .tcard .kv .v em{font-size:13.5px}
   html.v3 .v3side .rel span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
 }
 </style>
+<script src="/js/knowledge-registry.js?v=20260724"></script>
 </head>
 <body>
 <div class="v3grid">
@@ -554,6 +555,18 @@ document.getElementById("chk").innerHTML = CHK.map((c,i)=>`
   var toc = secs.map(function(h){
     return '<a href="#'+h.id+'" data-t="'+h.id+'">'+h.textContent.trim()+'</a>';
   }).join('');
+  function _relEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var _relItems;
+  if (typeof window.knowledgeVisibleDocs === 'function') {
+    _relItems = window.knowledgeVisibleDocs({ excludeId: 'caregiver-history' }).map(function(d){
+      return '<a href="'+_relEsc(d.url)+'"><b>'+_relEsc(d.label)+'</b><span>'+_relEsc(d.description)+'</span></a>';
+    }).join('');
+  } else {
+    _relItems =
+      '<a href="#" data-v="silson"><b>실손의료비 세대별 비교</b><span>세대별 자기부담·보장 변화</span></a>'+
+      '<a href="#" data-v="cancer-treatment"><b>암주요치료비 변천사</b><span>암 치료비 담보의 변화</span></a>';
+  }
+
   var side=document.getElementById('v3side');
   side.setAttribute('aria-hidden','false');
   side.innerHTML =
@@ -562,10 +575,7 @@ document.getElementById("chk").innerHTML = CHK.map((c,i)=>`
       '<button type="button" id="v3print"><span class="i">📄</span><span class="t">PDF로 저장</span></button>'+
       '<button type="button" id="v3copy"><span class="i">🔗</span><span class="t">링크 복사</span></button>'+
     '</div></div>'+
-    '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">'+
-      '<a href="#" data-v="silson"><b>실손의료비 세대별 비교</b><span>세대별 자기부담·보장 변화</span></a>'+
-      '<a href="#" data-v="cancer-treatment"><b>암주요치료비 변천사</b><span>암 치료비 담보의 변화</span></a>'+
-    '</div></div>';
+    '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">'+_relItems+'</div></div>';
 
   /* 목차 클릭 → 부드러운 스크롤 */
   side.querySelectorAll('.toc a').forEach(function(a){
@@ -606,12 +616,12 @@ document.getElementById("chk").innerHTML = CHK.map((c,i)=>`
   });
 
   /* 관련 자료 — 실제 존재하는 뷰만(silson · cancer-treatment) */
-  side.querySelectorAll('.rel a').forEach(function(a){
+  side.querySelectorAll('.rel a[data-v]').forEach(function(a){
     a.addEventListener('click',function(e){
       e.preventDefault();
       var v=a.getAttribute('data-v');
       var _relurl={'silson':'/pages/silson-generations.html','cancer-treatment':'/pages/cancer-treatment-history.html','caregiver-history':'/pages/caregiver-history.html'}[v];
-      if(_relurl){ location.href=_relurl; }   /* de-iframe 후 독립 URL 직접 이동(과거 parent.showView 의존 폐지) */
+      if(_relurl){ location.href=_relurl; }   /* de-iframe 후 독립 URL 직접 이동(과거 parent.showView 의존 폐지) — 폴백(하드코딩) 경로 전용 */
     });
   });
 })();

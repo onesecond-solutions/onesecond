@@ -182,6 +182,7 @@ html.v3 .tcard .kv .v small{font-size:13.5px}
 .home-back{display:inline-flex;align-items:center;gap:2px;margin-bottom:12px;color:var(--indigo-d);text-decoration:none;font-size:13px;font-weight:700;padding:6px 13px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .home-back:hover{background:var(--indigo-l)}
 </style>
+<script src="/js/knowledge-registry.js?v=20260724"></script>
 </head>
 <body>
 <div class="v3grid">
@@ -411,6 +412,18 @@ sel(5,true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 
   var toc = secs.map(function(h){
     return '<a href="#'+h.id+'" data-t="'+h.id+'">'+h.textContent.trim()+'</a>';
   }).join('');
+  function _relEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var _relItems;
+  if (typeof window.knowledgeVisibleDocs === 'function') {
+    _relItems = window.knowledgeVisibleDocs({ excludeId: 'silson' }).map(function(d){
+      return '<a href="'+_relEsc(d.url)+'"><b>'+_relEsc(d.label)+'</b><span>'+_relEsc(d.description)+'</span></a>';
+    }).join('');
+  } else {
+    _relItems =
+      '<a href="#" data-v="cancer-treatment"><b>암주요치료비 변천사</b><span>암 치료비 담보의 변화</span></a>'+
+      '<a href="#" data-v="caregiver-history"><b>간병보험 변천사</b><span>지원형·사용일당형의 분화</span></a>';
+  }
+
   var side=document.getElementById('v3side');
   side.setAttribute('aria-hidden','false');
   side.innerHTML =
@@ -419,10 +432,7 @@ sel(5,true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 
       '<button type="button" id="v3print"><span class="i">📄</span><span class="t">PDF로 저장</span></button>'+
       '<button type="button" id="v3copy"><span class="i">🔗</span><span class="t">링크 복사</span></button>'+
     '</div></div>'+
-    '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">'+
-      '<a href="#" data-v="cancer-treatment"><b>암주요치료비 변천사</b><span>암 치료비 담보의 변화</span></a>'+
-      '<a href="#" data-v="caregiver-history"><b>간병보험 변천사</b><span>지원형·사용일당형의 분화</span></a>'+
-    '</div></div>';
+    '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">'+_relItems+'</div></div>';
 
   side.querySelectorAll('.toc a').forEach(function(a){
     a.addEventListener('click',function(e){
@@ -458,12 +468,12 @@ sel(5,true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 
     }catch(e){ done(false); }
   });
 
-  side.querySelectorAll('.rel a').forEach(function(a){
+  side.querySelectorAll('.rel a[data-v]').forEach(function(a){
     a.addEventListener('click',function(e){
       e.preventDefault();
       var v=a.getAttribute('data-v');
       var _relurl={'silson':'/pages/silson-generations.html','cancer-treatment':'/pages/cancer-treatment-history.html','caregiver-history':'/pages/caregiver-history.html'}[v];
-      if(_relurl){ location.href=_relurl; }   /* de-iframe 후 독립 URL 직접 이동(과거 parent.showView 의존 폐지) */
+      if(_relurl){ location.href=_relurl; }   /* de-iframe 후 독립 URL 직접 이동(과거 parent.showView 의존 폐지) — 폴백(하드코딩) 경로 전용 */
     });
   });
 })();
