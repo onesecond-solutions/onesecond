@@ -21,6 +21,22 @@
   display:flex;flex-direction:column;min-height:0;overflow:hidden;
 }
 
+/* ── A안 중앙 정렬(대표 확정, 2026-07-24) ── 근거: docs/specs/knowledge_category_alignment_fix_v1.md §1-1 + 부록.
+   콘텐츠 블록(.kc-top/.kc-tabs/.kc-chips/.kc-scroll = #v-axis-* 직계 자식 4개) 각각을
+   max-width:1010px로 캡핑하고 좌우 margin:auto로 화면 중앙에 놓는다(710 본문 + 40 간격 + 260 우측 레일 자리).
+   읽는 본문 .kc-body(710px, 아래)는 이 규칙과 무관 — 그대로 1010px 블록 안에서 좌측 정렬 유지.
+   우측 260px은 지금 비워둔다(레일 추가 시 본문이 안 흔들리게 하기 위함, §1-1 참고 원문). */
+#v-axis-medical .kc-top,#v-axis-cancer .kc-top,#v-axis-brainheart .kc-top,
+#v-axis-surgery .kc-top,#v-axis-caregiver .kc-top,#v-axis-etc .kc-top,
+#v-axis-medical .kc-tabs,#v-axis-cancer .kc-tabs,#v-axis-brainheart .kc-tabs,
+#v-axis-surgery .kc-tabs,#v-axis-caregiver .kc-tabs,#v-axis-etc .kc-tabs,
+#v-axis-medical .kc-chips,#v-axis-cancer .kc-chips,#v-axis-brainheart .kc-chips,
+#v-axis-surgery .kc-chips,#v-axis-caregiver .kc-chips,#v-axis-etc .kc-chips,
+#v-axis-medical .kc-scroll,#v-axis-cancer .kc-scroll,#v-axis-brainheart .kc-scroll,
+#v-axis-surgery .kc-scroll,#v-axis-caregiver .kc-scroll,#v-axis-etc .kc-scroll{
+  width:100%;max-width:1010px;margin-left:auto;margin-right:auto;align-self:center;
+}
+
 /* ── 홈 복귀(§4-3 — 탭이 있어도 '‹ 홈으로'는 유지) ── */
 .kc-top{flex-shrink:0;margin-bottom:10px;}
 .kc-back{
