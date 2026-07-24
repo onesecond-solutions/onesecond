@@ -53,11 +53,12 @@
 #v-axis-surgery .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
 #v-axis-caregiver .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
 #v-axis-etc .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
-/* 홈 버튼('홈') = 검색 슬롯 좌측 absolute(대표 지시 2026-07-24). 검색 박스는 640 중앙 유지, 홈 버튼은 그 왼쪽 여백에.
+/* 홈 버튼('홈') = 검색 박스(hs-box 640 중앙) 바로 왼쪽에 붙인다(대표 재지시 2026-07-24: 슬롯 왼쪽 끝이 아니라 검색박스에 가깝게).
+   검색 박스 왼쪽 가장자리 = 슬롯중앙 - 320px. 홈 버튼(폭 ~38)을 그 왼쪽 12px 간격에 두려면 left = 50% - (320+12+38) = 50% - 370px.
    검색 중(.searching)엔 검색 박스가 세로로 커지므로 top 고정(상단 정렬)로 검색 입력줄 높이에 맞춘다. */
 #v-axis-medical .kc-searchslot > .kc-back,#v-axis-cancer .kc-searchslot > .kc-back,#v-axis-brainheart .kc-searchslot > .kc-back,
 #v-axis-surgery .kc-searchslot > .kc-back,#v-axis-caregiver .kc-searchslot > .kc-back,#v-axis-etc .kc-searchslot > .kc-back{
-  position:absolute;left:0;top:9px;z-index:2;
+  position:absolute;left:calc(50% - 370px);top:9px;z-index:2;
 }
 @media(max-width:640px){
   /* 모바일 = 검색 박스가 전체 폭이라 좌측 absolute면 겹친다 → 검색 박스 위 정적 배치(좌측) */
