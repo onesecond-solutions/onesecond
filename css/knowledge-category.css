@@ -1,0 +1,107 @@
+/* css/knowledge-category.css — 지식 카테고리 화면(보장분석 6축 뷰 #v-axis-*) 전용 스코프 CSS
+   근거: docs/specs/knowledge_category_layout_v2.md 부록 B(폰트 확정값 — 원문 §8보다 우선) + §9-2 스타일규칙
+
+   ★ 스코프 원칙 — 이 파일은 #v-axis-* 6개 뷰 밖으로 새지 않는다.
+     · 공용 `.tabs/.tab/.chips/.chip`(css/app-views.css:906~)을 재사용하되, 기본값이
+       `.tab`=13px(0.8125rem) · `.chip`=var(--ts-meta)라 카테고리 화면 확정값(탭 16px·칩 14px)과
+       다르다. 그래서 6개 뷰 id를 앞에 붙여 특이성 1,1,0으로 오버라이드한다.
+       ⚠️ id 6개를 나열하는 이유 = 이 <link>가 app-views.css보다 앞에 실려도 이겨야 하기 때문.
+          클래스 특이성(0,1,0)으로 쓰면 로드 순서에 따라 13px로 되돌아간다.
+     · 그 외 `kc-` 접두 클래스는 이 화면에만 존재(전 리포지토리 충돌 0건 확인)하므로 스코프 불필요.
+   ★ 색은 토큰 변수만(--ac/--tp/--ts/--tf/--bd/--s1/--s2). 하드코딩 색 금지 → 다크모드 자동 정합.
+   ★ 14.5px 금지(스펙 §13 폐기값). 읽는 문장은 16px 기본.
+   ★ 카드 박스 금지(§9-2) — 행 + 얇은 구분선, hover 시에만 배경. */
+
+/* ── 루트 ─────────────────────────────────────────────
+   .wrap{overflow:hidden}이라 목록이 길어지면 잘린다. 뷰 자체를 flex 컬럼으로 고정하고
+   내부 .kc-scroll 하나만 스크롤시킨다(탭 줄은 상단 고정). `.view.on{display:block}`(0,2,0)을
+   이기려면 id 특이성이 필요하다. */
+#v-axis-medical.on,#v-axis-cancer.on,#v-axis-brainheart.on,
+#v-axis-surgery.on,#v-axis-caregiver.on,#v-axis-etc.on{
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+}
+
+/* ── 홈 복귀(§4-3 — 탭이 있어도 '‹ 홈으로'는 유지) ── */
+.kc-top{flex-shrink:0;margin-bottom:10px;}
+.kc-back{
+  background:none;border:0.5px solid var(--bd);border-radius:var(--radius-sm);
+  color:var(--ts);font-family:inherit;font-size:13px;font-weight:700;
+  padding:6px 12px;cursor:pointer;
+}
+.kc-back:hover{background:var(--s2);color:var(--tp);}
+
+/* ── 탭(카테고리 전환) — 확정 16px / 600, 활성 800 ── */
+#v-axis-medical .kc-tabs,#v-axis-cancer .kc-tabs,#v-axis-brainheart .kc-tabs,
+#v-axis-surgery .kc-tabs,#v-axis-caregiver .kc-tabs,#v-axis-etc .kc-tabs{
+  flex-shrink:0;scrollbar-width:none;   /* 좁은 화면 가로 스크롤(§9-2), 스크롤바 숨김 */
+}
+#v-axis-medical .kc-tabs::-webkit-scrollbar,#v-axis-cancer .kc-tabs::-webkit-scrollbar,
+#v-axis-brainheart .kc-tabs::-webkit-scrollbar,#v-axis-surgery .kc-tabs::-webkit-scrollbar,
+#v-axis-caregiver .kc-tabs::-webkit-scrollbar,#v-axis-etc .kc-tabs::-webkit-scrollbar{display:none;}
+
+#v-axis-medical .kc-tabs .tab,#v-axis-cancer .kc-tabs .tab,#v-axis-brainheart .kc-tabs .tab,
+#v-axis-surgery .kc-tabs .tab,#v-axis-caregiver .kc-tabs .tab,#v-axis-etc .kc-tabs .tab{
+  font-size:16px;font-weight:600;gap:5px;
+}
+#v-axis-medical .kc-tabs .tab.on,#v-axis-cancer .kc-tabs .tab.on,#v-axis-brainheart .kc-tabs .tab.on,
+#v-axis-surgery .kc-tabs .tab.on,#v-axis-caregiver .kc-tabs .tab.on,#v-axis-etc .kc-tabs .tab.on{
+  font-weight:800;
+}
+
+/* ── 칩(그룹) — 확정 14px / 700. 그룹 없으면 줄 자체를 감춘다(§4-2) ── */
+#v-axis-medical .kc-chips:empty,#v-axis-cancer .kc-chips:empty,#v-axis-brainheart .kc-chips:empty,
+#v-axis-surgery .kc-chips:empty,#v-axis-caregiver .kc-chips:empty,#v-axis-etc .kc-chips:empty{
+  display:none;
+}
+#v-axis-medical .kc-chips .chip,#v-axis-cancer .kc-chips .chip,#v-axis-brainheart .kc-chips .chip,
+#v-axis-surgery .kc-chips .chip,#v-axis-caregiver .kc-chips .chip,#v-axis-etc .kc-chips .chip{
+  font-size:14px;font-weight:700;border-radius:var(--radius-sm);
+  display:inline-flex;align-items:center;gap:5px;
+}
+
+/* 탭·칩 뒤 건수 = 캡션 11.5px (읽는 문장 아님) */
+.kc-n{font-size:11.5px;font-weight:700;color:var(--tf);font-variant-numeric:tabular-nums;}
+#v-axis-medical .kc-tabs .tab.on .kc-n,#v-axis-cancer .kc-tabs .tab.on .kc-n,
+#v-axis-brainheart .kc-tabs .tab.on .kc-n,#v-axis-surgery .kc-tabs .tab.on .kc-n,
+#v-axis-caregiver .kc-tabs .tab.on .kc-n,#v-axis-etc .kc-tabs .tab.on .kc-n{color:var(--ac);}
+#v-axis-medical .kc-chips .chip.on .kc-n,#v-axis-cancer .kc-chips .chip.on .kc-n,
+#v-axis-brainheart .kc-chips .chip.on .kc-n,#v-axis-surgery .kc-chips .chip.on .kc-n,
+#v-axis-caregiver .kc-chips .chip.on .kc-n,#v-axis-etc .kc-chips .chip.on .kc-n{color:#fff;}
+
+/* ── 스크롤 영역 + 읽는 본문 폭 710px / 행간 1.85 ── */
+.kc-scroll{flex:1;min-height:0;overflow-y:auto;padding-bottom:24px;}
+.kc-body{max-width:710px;line-height:1.85;}
+
+/* ── 카테고리 헤더 ── */
+.kc-kicker{font-size:11.5px;font-weight:800;letter-spacing:0.06em;color:var(--ac);line-height:1.4;}
+.kc-h1{font-size:27px;font-weight:800;color:var(--tp);margin:4px 0 6px;line-height:1.35;}
+.kc-hook{font-size:16px;font-weight:400;color:var(--ts);}
+.kc-count{font-size:13px;color:var(--tf);margin-top:8px;font-variant-numeric:tabular-nums;}
+.kc-rule{height:2px;background:var(--tp);opacity:0.85;margin:12px 0 0;border-radius:1px;}
+
+/* ── 문서 목록 — 카드 박스 금지. 행 + 얇은 구분선, hover에만 배경(§9-2) ── */
+.kc-list{display:block;}
+.kc-doc{
+  display:block;text-decoration:none;color:inherit;
+  padding:16px 12px;margin:0 -12px;border-bottom:0.5px solid var(--bd);
+  border-radius:var(--radius-sm);transition:background .12s;
+}
+.kc-doc:hover{background:var(--s2);}
+.kc-doc-t{font-size:19px;font-weight:800;color:var(--tp);line-height:1.45;}
+.kc-doc-d{font-size:16px;font-weight:400;color:var(--ts);margin-top:2px;}  /* 읽는 문장 — 목록이라고 줄이지 않는다 */
+.kc-doc-m{font-size:12.5px;color:var(--tf);margin-top:4px;line-height:1.5;}
+.kc-badge{
+  display:inline-block;vertical-align:middle;margin-left:7px;
+  font-size:10.5px;font-weight:800;line-height:1.6;
+  padding:1px 7px;border-radius:var(--radius-sm);
+  background:var(--s2);border:0.5px solid var(--bd);color:var(--tf);
+}
+
+/* ── 빈 카테고리(§9-3) — "준비 중" 한 줄로 끝내지 않는다 ── */
+.kc-empty{padding:34px 0 10px;}
+.kc-empty-t{font-size:19px;font-weight:800;color:var(--tp);line-height:1.45;}
+.kc-empty-d{font-size:16px;font-weight:400;color:var(--ts);margin-top:4px;}
+
+@media (max-width:640px){
+  .kc-h1{font-size:23px;}   /* V3 모바일 스케일(부록 B). 읽는 문장 16px는 그대로 유지 */
+}
