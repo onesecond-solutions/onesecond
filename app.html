@@ -5789,7 +5789,7 @@ function _homeDeskShow(){
   var tools=[
     {v:'scripts',       ic:'i-msg',     t:'스크립트',   d:'원세컨드 제공 상담 멘트·화법', c:'var(--ac)'},
     {v:'product-lineup', ic:'i-box',     t:'상품 라인업', d:'원수사 상품 한눈에 비교',      c:'var(--t-uw)'},
-    {v:'silson',         ic:'i-file',    t:'실비 세대별 변천사', d:'실손 1~5세대 보장·전환 전략', c:'var(--warn)'},
+    {v:'silson',         ic:'i-file',    t:'의료실비 변천사', d:'실손 1~5세대 보장·전환 전략', c:'var(--warn)'},/* 라벨 통일(2026-07-24 PR-B): '실비 세대별 변천사'→'의료실비 변천사'(원장 정본). v='silson' 불변 */
     {v:'cancer-treatment', ic:'i-file',    t:'암주요치료비 변천사', d:'세대별 암 치료비 보장 변화', c:'var(--ac)'},
     {v:'caregiver-history', ic:'i-file',   t:'간병보험 변천사', d:'장기간병~사용일당 · 지급기준이 다름', c:'var(--ac)'},
     {v:'newsletters',    ic:'i-building', t:'소식지',    d:'원수사 GA소식지 월별 모음',     c:'var(--t-event)'}
@@ -12207,7 +12207,7 @@ window._acBlur=_acBlur;
    확장 구조: 새 화면은 배열에 한 줄 추가하면 됨. gate()=노출 조건 — 볼 수 없는 화면은 검색결과에도 내지 않는다(게이트 정합).
    실비 변천사(#v-silson)·암주요치료비 변천사(#v-cancer-treatment) = 전체 개방(게이트 없음) → 비로그인 포함 검색 바로가기 노출. */
 var _SHORTCUTS=[
-  { view:'silson', label:'실비 세대별 변천사', sub:'바로가기 · 실손 1~5세대 보장·전환',
+  { view:'silson', label:'의료실비 변천사', sub:'바로가기 · 실손 1~5세대 보장·전환',/* 라벨 통일(2026-07-24 PR-B): '실비 세대별 변천사'→'의료실비 변천사'(원장 정본). view='silson'·keywords 불변(검색성 유지) */
     keywords:['실비','의료실비','의료비','세대별 변천사','세대별','변천사'],
     gate:function(){ return true; } },   /* 실비 변천사 = 전체 개방(2026-07-21 대표 승인, cancer-treatment 전례) — 게이트 없음. 비로그인 포함 검색 바로가기 노출 */
   { view:'cancer-treatment', label:'암주요치료비 변천사', sub:'바로가기 · 세대별 암 치료비 보장 변화',
