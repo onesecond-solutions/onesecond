@@ -33,8 +33,63 @@
 #v-axis-medical .kc-chips,#v-axis-cancer .kc-chips,#v-axis-brainheart .kc-chips,
 #v-axis-surgery .kc-chips,#v-axis-caregiver .kc-chips,#v-axis-etc .kc-chips,
 #v-axis-medical .kc-scroll,#v-axis-cancer .kc-scroll,#v-axis-brainheart .kc-scroll,
-#v-axis-surgery .kc-scroll,#v-axis-caregiver .kc-scroll,#v-axis-etc .kc-scroll{
+#v-axis-surgery .kc-scroll,#v-axis-caregiver .kc-scroll,#v-axis-etc .kc-scroll,
+#v-axis-medical .kc-searchslot,#v-axis-cancer .kc-searchslot,#v-axis-brainheart .kc-searchslot,
+#v-axis-surgery .kc-searchslot,#v-axis-caregiver .kc-searchslot,#v-axis-etc .kc-searchslot{
   width:100%;max-width:1010px;margin-left:auto;margin-right:auto;align-self:center;
+}
+
+/* ── 상단 검색 슬롯(대표 지시, 2026-07-24) — 홈 #homeSearch를 그대로 이동해 재사용한다(새 검색기 아님).
+   앱바 아래·'‹ 홈으로'/탭 위(.kc-top보다 앞서 렌더). 이동/복귀는 js/knowledge-category.js
+   _kcHomeSearchMove/_kcHomeSearchRestore가 담당(app.html showView 연동) — 이 CSS는 표시만 다룬다.
+   ⚠️ 셀렉터는 전부 "#v-axis-* .kc-searchslot ..." 스코프로만 작성한다. #homeSearch/.hs-*/
+   body.is-uat-homesearch2 같은 홈 전역·홈 컨텍스트 규칙은 절대 건드리지 않는다(건드리면 홈 회귀).
+   id 특이성이 필요한 이유는 위 §"루트" 주석과 동일 — 이 파일이 app-views.css/인라인 <style>보다
+   앞서 실려도, 클래스만으로는(0,2,0) 인라인 <style>의 body.is-uat-homesearch2 규칙(0,2,0 동률→소스
+   순서상 인라인이 나중이라 그쪽이 이김)을 못 이긴다. */
+#v-axis-medical .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
+#v-axis-cancer .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
+#v-axis-brainheart .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
+#v-axis-surgery .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
+#v-axis-caregiver .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
+#v-axis-etc .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
+/* 검색 중(.searching)엔 슬롯이 남은 세로 공간을 차지해 결과가 제대로 보이게 한다(탭·목록은 가려도 무방 — 홈과 동일 UX) */
+#v-axis-medical .kc-searchslot:has(#homeSearch.searching),
+#v-axis-cancer .kc-searchslot:has(#homeSearch.searching),
+#v-axis-brainheart .kc-searchslot:has(#homeSearch.searching),
+#v-axis-surgery .kc-searchslot:has(#homeSearch.searching),
+#v-axis-caregiver .kc-searchslot:has(#homeSearch.searching),
+#v-axis-etc .kc-searchslot:has(#homeSearch.searching){
+  flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;
+}
+/* 홈 전용 잉여(태그라인·헤드·철학문구·보조문구·hub 타일) 숨김 — 검색 박스·자동완성·결과·최근검색만 노출 */
+#v-axis-medical .kc-searchslot .hs2-tagline,#v-axis-cancer .kc-searchslot .hs2-tagline,#v-axis-brainheart .kc-searchslot .hs2-tagline,
+#v-axis-surgery .kc-searchslot .hs2-tagline,#v-axis-caregiver .kc-searchslot .hs2-tagline,#v-axis-etc .kc-searchslot .hs2-tagline,
+#v-axis-medical .kc-searchslot .hs-head,#v-axis-cancer .kc-searchslot .hs-head,#v-axis-brainheart .kc-searchslot .hs-head,
+#v-axis-surgery .kc-searchslot .hs-head,#v-axis-caregiver .kc-searchslot .hs-head,#v-axis-etc .kc-searchslot .hs-head,
+#v-axis-medical .kc-searchslot .hs-philo,#v-axis-cancer .kc-searchslot .hs-philo,#v-axis-brainheart .kc-searchslot .hs-philo,
+#v-axis-surgery .kc-searchslot .hs-philo,#v-axis-caregiver .kc-searchslot .hs-philo,#v-axis-etc .kc-searchslot .hs-philo,
+#v-axis-medical .kc-searchslot .hs-sub,#v-axis-cancer .kc-searchslot .hs-sub,#v-axis-brainheart .kc-searchslot .hs-sub,
+#v-axis-surgery .kc-searchslot .hs-sub,#v-axis-caregiver .kc-searchslot .hs-sub,#v-axis-etc .kc-searchslot .hs-sub,
+#v-axis-medical .kc-searchslot .hs2-hub,#v-axis-cancer .kc-searchslot .hs2-hub,#v-axis-brainheart .kc-searchslot .hs2-hub,
+#v-axis-surgery .kc-searchslot .hs2-hub,#v-axis-caregiver .kc-searchslot .hs2-hub,#v-axis-etc .kc-searchslot .hs2-hub{
+  display:none;
+}
+/* 검색창 폭 — 데스크톱 560~680 범위 내 640 중앙(대표 확정 수치) */
+#v-axis-medical .kc-searchslot .hs-wrap,#v-axis-cancer .kc-searchslot .hs-wrap,#v-axis-brainheart .kc-searchslot .hs-wrap,
+#v-axis-surgery .kc-searchslot .hs-wrap,#v-axis-caregiver .kc-searchslot .hs-wrap,#v-axis-etc .kc-searchslot .hs-wrap{
+  max-width:none;margin:0;padding:0;
+}
+#v-axis-medical .kc-searchslot .hs-box,#v-axis-cancer .kc-searchslot .hs-box,#v-axis-brainheart .kc-searchslot .hs-box,
+#v-axis-surgery .kc-searchslot .hs-box,#v-axis-caregiver .kc-searchslot .hs-box,#v-axis-etc .kc-searchslot .hs-box{
+  max-width:640px;margin:0 auto;
+}
+/* 모바일 — 좌우 여백만 둔 전체 폭 */
+@media(max-width:640px){
+  #v-axis-medical .kc-searchslot .hs-box,#v-axis-cancer .kc-searchslot .hs-box,#v-axis-brainheart .kc-searchslot .hs-box,
+  #v-axis-surgery .kc-searchslot .hs-box,#v-axis-caregiver .kc-searchslot .hs-box,#v-axis-etc .kc-searchslot .hs-box{
+    max-width:none;margin:0 16px;
+  }
 }
 
 /* ── 홈 복귀(§4-3 — 탭이 있어도 '‹ 홈으로'는 유지) ── */

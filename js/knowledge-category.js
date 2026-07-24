@@ -133,6 +133,11 @@ function _kcShow(viewKey){
   var total = window.knowledgeCount({category:ax.category});
 
   root.innerHTML =
+    /* 상단 검색 슬롯 — 홈 #homeSearch를 그대로 이동시켜 넣을 빈 컨테이너(대표 지시, 2026-07-24: 새 검색기 금지, 재사용만).
+       id를 두지 않고 class만 둔다 — 6개 축 뷰가 각자 렌더될 때마다 슬롯이 새로 생기므로, id를 공유하면
+       이전에 방문했던 다른 축 뷰에 남아있는 슬롯과 겹쳐 document.getElementById가 엉뚱한(비활성) 슬롯을
+       찾는 사고가 난다. 이동/복귀는 _kcHomeSearchMove/_kcHomeSearchRestore(아래)가 '#v-'+key 스코프로 조회한다. */
+    '<div class="kc-searchslot"></div>' +
     '<div class="kc-top"><button class="kc-back" type="button" onclick="showView(\'home\')">&#8249; 홈으로</button></div>' +
     '<div class="tabs kc-tabs">'+_kcTabsHtml(viewKey)+'</div>' +
     '<div class="chips kc-chips">'+chips+'</div>' +
@@ -145,6 +150,40 @@ function _kcShow(viewKey){
       '<div class="kc-list">'+_kcDocsHtml(ax.category)+'</div>' +
     '</div></div>';
 }
+
+/* ════ 카테고리 상단 검색기 = 홈 #homeSearch 재사용(슬롯 이동 방식, 대표 지시 2026-07-24) ════
+   대표 명시: "별도 검색 기능 새로 만들지 말 것". #homeSearch/hsInput/hsSuggest/hsResults는 문서에
+   하나뿐이고 _hsInput/_hsSearch/_hsClear/_ac 계열/_runSearchV2가 그 id에 결합돼 있다 — 복제하면 id 중복으로
+   홈 검색이 깨진다. 그래서 노드를 복제하지 않고 이동(appendChild)만 한다. 이동 대상 슬롯은 항상
+   '#v-'+viewKey 스코프로 조회 — 6개 축 뷰 중 이미 렌더된 다른 축의 슬롯과 절대 안 섞인다(위 _kcShow 주석 참고).
+   showView(app.html)가 axis-* 렌더 직후 _kcHomeSearchMove(key)를, 그 외 키로 갈 때 _kcHomeSearchRestore()를 호출한다. */
+function _kcHomeSearchMove(viewKey){
+  var hs = document.getElementById('homeSearch');
+  if(!hs) return;
+  var slot = document.querySelector('#v-'+viewKey+' .kc-searchslot');
+  if(!slot) return;
+  if(hs.parentNode !== slot) slot.appendChild(hs);
+  hs.classList.add('kc-search-mode');
+  var hi = document.getElementById('hsInput');
+  if(hi) hi.placeholder = '원세컨드 전체에서 검색하세요';
+}
+window._kcHomeSearchMove = _kcHomeSearchMove;
+
+/* 카테고리 이탈 시 #homeSearch를 #v-home 원위치(.home-greeting 바로 다음)로 복귀.
+   복귀시키지 않으면 홈 검색이 화면에서 사라지는 회귀(대표 금지 사항 1순위) — showView가 axis-* 아닌
+   모든 키로 이동할 때마다(홈 포함) 호출한다. 이미 원위치면 아무 것도 하지 않는다(멱등). */
+function _kcHomeSearchRestore(){
+  var hs = document.getElementById('homeSearch');
+  if(!hs) return;
+  var hg = document.querySelector('#v-home .home-greeting');
+  if(hg && hg.parentNode && hs.parentNode !== hg.parentNode){
+    hg.parentNode.insertBefore(hs, hg.nextSibling);
+  }
+  hs.classList.remove('kc-search-mode');
+  var hi = document.getElementById('hsInput');
+  if(hi) hi.placeholder = '상품·인수기준·질병명·자료 검색';
+}
+window._kcHomeSearchRestore = _kcHomeSearchRestore;
 
 window.KC_AXES = KC_AXES;
 window._kcShow = _kcShow;
