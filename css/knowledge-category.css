@@ -25,7 +25,7 @@
 .kc-top{flex-shrink:0;margin-bottom:10px;}
 .kc-back{
   background:none;border:0.5px solid var(--bd);border-radius:var(--radius-sm);
-  color:var(--ts);font-family:inherit;font-size:13px;font-weight:700;
+  color:var(--ts);font-family:inherit;font-size:14px;font-weight:700;  /* 13→14px 교정(2026-07-24 대표 승인): 확정 표에 없던 값이라 칩(14px)보다 작아 위계가 어긋났음. 이동 버튼이므로 읽는 문장 16px이 아니라 칩과 같은 UI 컨트롤 단(14px)에 맞춘다. */
   padding:6px 12px;cursor:pointer;
 }
 .kc-back:hover{background:var(--s2);color:var(--tp);}
