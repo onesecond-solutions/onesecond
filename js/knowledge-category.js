@@ -132,6 +132,18 @@ function _kcShow(viewKey){
   var chips = _kcChipsHtml(ax.category);
   var total = window.knowledgeCount({category:ax.category});
 
+  /* ⚠️ 버그수정(2026-07-24): 아래 root.innerHTML 재생성은 이 root 안에 들어와 있던 #homeSearch를
+     통째로 파괴(detach)한다. 부팅/재렌더로 _kcShow가 이 축에 두 번 이상 불리면(딥링크 진입 등)
+     슬롯 안 검색기가 파괴되거나 홈에 남아 '검색기가 홈 모양으로 뜨는' 회귀가 났다.
+     → 렌더 직전에 #homeSearch가 이 root 안에 있으면 홈으로 먼저 대피시켜 파괴를 막는다.
+     (아래 렌더 끝에서 _kcHomeSearchMove로 새 슬롯에 다시 넣는다.) */
+  try{
+    var _hsSafe=document.getElementById('homeSearch');
+    if(_hsSafe && root.contains(_hsSafe) && typeof window._kcHomeSearchRestore==='function'){
+      window._kcHomeSearchRestore();
+    }
+  }catch(e){}
+
   root.innerHTML =
     /* 상단 검색 슬롯 — 홈 #homeSearch를 그대로 이동시켜 넣을 빈 컨테이너(대표 지시, 2026-07-24: 새 검색기 금지, 재사용만).
        id를 두지 않고 class만 둔다 — 6개 축 뷰가 각자 렌더될 때마다 슬롯이 새로 생기므로, id를 공유하면
@@ -151,6 +163,11 @@ function _kcShow(viewKey){
       '<div class="kc-rule"></div>' +
       '<div class="kc-list">'+_kcDocsHtml(ax.category)+'</div>' +
     '</div></div>';
+
+  /* 렌더 끝 — 이 뷰가 활성 축이면 #homeSearch를 새로 만든 슬롯으로 이동시킨다(2026-07-24 버그수정).
+     showView가 axis 진입 시 별도로 _kcHomeSearchMove를 부르지만, 부팅 타이밍/재렌더로 순서가 어긋나도
+     _kcShow가 스스로 이동을 완결해 '검색기가 홈 모양으로 남는' 회귀를 원천 차단한다(멱등이라 중복 호출 무해). */
+  try{ if(typeof window._kcHomeSearchMove==='function') window._kcHomeSearchMove(viewKey); }catch(e){}
 }
 
 /* ════ 카테고리 상단 검색기 = 홈 #homeSearch 재사용(슬롯 이동 방식, 대표 지시 2026-07-24) ════
