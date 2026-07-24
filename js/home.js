@@ -20,7 +20,7 @@ var _HS2_TILES=[
   {v:'goji',           ic:'i-check',    t:'알릴의무',          d:'회사별 고지유형·간편고지',  show:function(){return typeof window._canSeeRoadmap==='function'&&window._canSeeRoadmap();}},
   {v:'newsletters',    ic:'i-building', t:'소식지',            d:'원수사·GA 월별 모음',       show:function(){return typeof window._canSeeNl==='function'&&window._canSeeNl();}},
   /* 실비 변천사 = 전체 개방(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출 */
-  {v:'silson',         ic:'i-file',     t:'실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return true;}},
+  {v:'silson',         ic:'i-file',     t:'의료실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return true;}},/* 라벨 통일(2026-07-24 PR-B): '실비 변천사'→'의료실비 변천사'(원장 js/knowledge-registry.js 정본 label). v='silson'(뷰 키·딥링크)은 불변 */
   /* 암주요치료비 변천사 = 전체 개방(2026-07-20 대표 승인, 상품 라인업·도구 페이지 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출 */
   {v:'cancer-treatment', ic:'i-file',   t:'암주요치료비 변천사', d:'세대별 암 치료비 보장 변화', show:function(){return true;}},
   /* 간병보험 변천사 = 전체공개(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출. order_hint=변천사 인접 */
