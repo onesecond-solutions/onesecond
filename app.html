@@ -1989,8 +1989,9 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
 </script>
   <nav class="side">
     <div class="top">
-      <div class="logo" onclick="document.getElementById('app').classList.toggle('collapsed')"><img src="/assets/images/logo/logo03.jpg" alt="원세컨드" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
-      <div class="bname">원세컨드</div>
+      <!-- 로고·서비스명 클릭 = 홈 이동(2026-07-24). 이전 onclick은 사이드바 접기/펴기였으나 접기/펴기는 아래 햄버거(.hamb)가 그대로 담당하므로 기능 손실 0. 홈 이동은 사이드바 '홈' 메뉴(#nav-home)와 동일한 _navView('home') 사용. -->
+      <div class="logo" onclick="_navView('home')"><img src="/assets/images/logo/logo03.jpg" alt="원세컨드" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></div>
+      <div class="bname" onclick="_navView('home')">원세컨드</div>
       <button class="hamb" onclick="document.getElementById('app').classList.toggle('collapsed')">&#9776;</button>
       <button class="mclose" onclick="toggleMSide()" aria-label="메뉴 닫기">&#10005;</button>
     </div>
