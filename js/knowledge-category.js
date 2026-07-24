@@ -137,8 +137,10 @@ function _kcShow(viewKey){
        id를 두지 않고 class만 둔다 — 6개 축 뷰가 각자 렌더될 때마다 슬롯이 새로 생기므로, id를 공유하면
        이전에 방문했던 다른 축 뷰에 남아있는 슬롯과 겹쳐 document.getElementById가 엉뚱한(비활성) 슬롯을
        찾는 사고가 난다. 이동/복귀는 _kcHomeSearchMove/_kcHomeSearchRestore(아래)가 '#v-'+key 스코프로 조회한다. */
-    '<div class="kc-searchslot"></div>' +
-    '<div class="kc-top"><button class="kc-back" type="button" onclick="showView(\'home\')">&#8249; 홈으로</button></div>' +
+    /* 홈 버튼('홈')을 검색 슬롯 좌측에 둔다(대표 지시 2026-07-24: "홈으로"→"홈", 검색기 좌측).
+       #homeSearch가 이 슬롯에 appendChild되므로 홈 버튼은 슬롯 안 좌측 absolute로 띄우고
+       검색 박스는 그대로 640 중앙(css/knowledge-category.css). 별도 kc-top 줄은 폐지. */
+    '<div class="kc-searchslot"><button class="kc-back" type="button" onclick="showView(\'home\')">홈</button></div>' +
     '<div class="tabs kc-tabs">'+_kcTabsHtml(viewKey)+'</div>' +
     '<div class="chips kc-chips">'+chips+'</div>' +
     '<div class="kc-scroll"><div class="kc-body">' +

@@ -47,12 +47,25 @@
    id 특이성이 필요한 이유는 위 §"루트" 주석과 동일 — 이 파일이 app-views.css/인라인 <style>보다
    앞서 실려도, 클래스만으로는(0,2,0) 인라인 <style>의 body.is-uat-homesearch2 규칙(0,2,0 동률→소스
    순서상 인라인이 나중이라 그쪽이 이김)을 못 이긴다. */
-#v-axis-medical .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
-#v-axis-cancer .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
-#v-axis-brainheart .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
-#v-axis-surgery .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
-#v-axis-caregiver .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
-#v-axis-etc .kc-searchslot{margin-bottom:14px;flex-shrink:0;}
+#v-axis-medical .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+#v-axis-cancer .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+#v-axis-brainheart .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+#v-axis-surgery .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+#v-axis-caregiver .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+#v-axis-etc .kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+/* 홈 버튼('홈') = 검색 슬롯 좌측 absolute(대표 지시 2026-07-24). 검색 박스는 640 중앙 유지, 홈 버튼은 그 왼쪽 여백에.
+   검색 중(.searching)엔 검색 박스가 세로로 커지므로 top 고정(상단 정렬)로 검색 입력줄 높이에 맞춘다. */
+#v-axis-medical .kc-searchslot > .kc-back,#v-axis-cancer .kc-searchslot > .kc-back,#v-axis-brainheart .kc-searchslot > .kc-back,
+#v-axis-surgery .kc-searchslot > .kc-back,#v-axis-caregiver .kc-searchslot > .kc-back,#v-axis-etc .kc-searchslot > .kc-back{
+  position:absolute;left:0;top:9px;z-index:2;
+}
+@media(max-width:640px){
+  /* 모바일 = 검색 박스가 전체 폭이라 좌측 absolute면 겹친다 → 검색 박스 위 정적 배치(좌측) */
+  #v-axis-medical .kc-searchslot > .kc-back,#v-axis-cancer .kc-searchslot > .kc-back,#v-axis-brainheart .kc-searchslot > .kc-back,
+  #v-axis-surgery .kc-searchslot > .kc-back,#v-axis-caregiver .kc-searchslot > .kc-back,#v-axis-etc .kc-searchslot > .kc-back{
+    position:static;margin:0 0 10px 16px;
+  }
+}
 /* 검색 중(.searching)엔 슬롯이 남은 세로 공간을 차지해 결과가 제대로 보이게 한다(탭·목록은 가려도 무방 — 홈과 동일 UX) */
 #v-axis-medical .kc-searchslot:has(#homeSearch.searching),
 #v-axis-cancer .kc-searchslot:has(#homeSearch.searching),
