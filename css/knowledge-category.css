@@ -42,7 +42,7 @@
 /* ── 상단 검색 슬롯(대표 지시, 2026-07-24) — 홈 #homeSearch를 그대로 이동해 재사용한다(새 검색기 아님).
    앱바 아래·'‹ 홈으로'/탭 위(.kc-top보다 앞서 렌더). 이동/복귀는 js/knowledge-category.js
    _kcHomeSearchMove/_kcHomeSearchRestore가 담당(app.html showView 연동) — 이 CSS는 표시만 다룬다.
-   ⚠️ 셀렉터는 전부 "#v-axis-* .kc-searchslot ..." 스코프로만 작성한다. #homeSearch/.hs-*/
+   ⚠️ 셀렉터는 전부 "#v-axis-* .kc-searchslot ..." 스코프로만 작성한다. #homeSearch/.hs-* /
    body.is-uat-homesearch2 같은 홈 전역·홈 컨텍스트 규칙은 절대 건드리지 않는다(건드리면 홈 회귀).
    id 특이성이 필요한 이유는 위 §"루트" 주석과 동일 — 이 파일이 app-views.css/인라인 <style>보다
    앞서 실려도, 클래스만으로는(0,2,0) 인라인 <style>의 body.is-uat-homesearch2 규칙(0,2,0 동률→소스
