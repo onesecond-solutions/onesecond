@@ -152,7 +152,7 @@ function _kcShow(viewKey){
     /* 홈 버튼('홈')을 검색 슬롯 좌측에 둔다(대표 지시 2026-07-24: "홈으로"→"홈", 검색기 좌측).
        #homeSearch가 이 슬롯에 appendChild되므로 홈 버튼은 슬롯 안 좌측 absolute로 띄우고
        검색 박스는 그대로 640 중앙(css/knowledge-category.css). 별도 kc-top 줄은 폐지. */
-    '<div class="kc-searchslot"><button class="kc-back" type="button" onclick="showView(\'home\')">홈</button></div>' +
+    '<div class="kc-searchslot"></div>' +  /* 홈 복귀 = 검색기 좌측 시계 로고(hs-homelogo, #homeSearch 이동 시 함께 옴)가 담당(대표 지시 2026-07-25: "홈" 버튼 대신 시계 로고). 기존 kc-back "홈" 버튼 제거. */
     '<div class="tabs kc-tabs">'+_kcTabsHtml(viewKey)+'</div>' +
     '<div class="chips kc-chips">'+chips+'</div>' +
     '<div class="kc-scroll"><div class="kc-body">' +
