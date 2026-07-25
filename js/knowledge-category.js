@@ -200,7 +200,7 @@ function _kcHomeSearchRestore(){
   }
   hs.classList.remove('kc-search-mode');
   var hi = document.getElementById('hsInput');
-  if(hi) hi.placeholder = '상품·인수기준·질병명·자료 검색';
+  if(hi) hi.placeholder = (window.db&&window.db.getToken&&window.db.getToken()) ? '상품·인수기준·질병명·자료 검색' : '궁금한 보험이나 보장 내용을 검색해보세요';  /* 비로그인=고객 안내 문구(대표 지시 2026-07-25), 로그인=기존 유지(로그인 후 무수정) */
 }
 window._kcHomeSearchRestore = _kcHomeSearchRestore;
 
