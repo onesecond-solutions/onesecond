@@ -1955,6 +1955,9 @@ body.is-guest #reportBtn{display:none!important;}
    #app은 grid([사이드][본문])라 .side를 display:none만 하면 본문이 좁은 트랙에 갇힌다 → grid를 단일 컬럼(1fr)으로. */
 body.is-guest .side{display:none!important;}
 body.is-guest .app{grid-template-columns:1fr!important;}
+/* 검색기 위 문구 = 비로그인 전용(대표 지시 2026-07-25): '내 보험, 무엇이 궁금하신가요?'. 로그인 후는 기존 태그라인 유지. */
+body.is-guest .hs2-tl-user{display:none!important;}
+body:not(.is-guest) .hs2-tl-guest{display:none!important;}
 /* 검색기 좌측 시계 로고(대표 지시 2026-07-25) — 검색박스 왼쪽 바깥에 배치. 로그인 전=아이콘+onesecond / 로그인 후=아이콘만(텍스트 숨김). */
 .hs-box{position:relative;}
 .hs-homelogo{position:absolute;top:50%;right:100%;margin-right:14px;transform:translateY(-50%);display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none;z-index:2;}
@@ -2087,7 +2090,8 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       <div id="homeSearch">
         <div class="hs-wrap">
           <!-- 홈 검색 새 레이아웃 (is-uat-homesearch2 게이트=임태성 실장 98c5f4f9 전용, 2026-07-07). design-preview/home-search-concept-v1.html 안A "검색이 곧 홈" 충실 재현. 로고 없음(대표 지시). 기본 숨김, 게이트 계정만 노출. -->
-          <p class="hs2-tagline">상품 · 알릴의무 · 소식지 · Q&amp;A — 한 번에 검색</p>
+          <p class="hs2-tagline hs2-tl-user">상품 · 알릴의무 · 소식지 · Q&amp;A — 한 번에 검색</p>
+          <p class="hs2-tagline hs2-tl-guest">내 보험, 무엇이 궁금하신가요?</p>
           <div class="hs-head">무엇을 찾으세요?</div>
           <div class="hs-philo aip-homephilo">완성된 척하지 않습니다. 원세컨드가 매일 자라는 모습을, 날 것 그대로 보여드릴게요.</div>
           <div class="hs-box">
@@ -2098,7 +2102,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
             </a>
             <div class="hs-field">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input id="hsInput" type="search" placeholder="상품·인수기준·질병명·자료 검색" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="hsSuggest" oninput="_hsInput(this.value)" onkeydown="_acKeydown(event)" onblur="_acBlur()">
+              <input id="hsInput" type="search" placeholder="궁금한 보험이나 보장 내용을 검색해보세요" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="hsSuggest" oninput="_hsInput(this.value)" onkeydown="_acKeydown(event)" onblur="_acBlur()">
               <button class="hs-x" type="button" aria-label="지우기" onclick="_hsClear()">&#10005;</button>
               <div id="hsSuggest" class="hs-suggest" role="listbox" aria-label="보험회사·상품 자동완성"></div>
             </div>
@@ -4321,7 +4325,7 @@ function applyRoleClass(){
   /* 홈 검색 새 레이아웃(design-preview 안A/안B) = 전원 개방(로그인 + 비로그인, 2026-07-08 홈 인덱스 전환 대표 승인 B안). 홈 데스크(is-uat-homedesk)는 로그인 전용(!!r)으로 분리 유지 = 비로그인은 검색 홈만 보고 개인 데스크 카드는 안 봄. CSS·마크업만(기능 무변경). 완성 기능만 노출: 타일 게이트(_HS2_TILES show)가 각 기능 공개상태를 따르므로 미완성(알릴의무=_canSeeRoadmap)은 노출 안 됨. */
   document.body.classList.toggle('is-uat-homesearch2', true);
   /* 안A 검색창 placeholder = "무엇을 찾으세요?" (게이트 계정만 — 속성이라 CSS 스코프 불가). 비게이트 계정은 기존 placeholder 그대로 = 무변경. */
-  try{ if(document.body.classList.contains('is-uat-homesearch2')){ var _hi2=document.getElementById('hsInput'); if(_hi2){ var _gtk=window.db&&window.db.getToken&&window.db.getToken(); _hi2.setAttribute('placeholder', _gtk?'무엇을 찾으세요?':'로그인 후 사용 가능합니다'); } } }catch(e){}  /* 비로그인(토큰 없음) = 검색 안내 placeholder 우선. 로그인 시 '무엇을 찾으세요?' 유지 (2026-07-08 유출 수정) */
+  try{ if(document.body.classList.contains('is-uat-homesearch2')){ var _hi2=document.getElementById('hsInput'); if(_hi2){ var _gtk=window.db&&window.db.getToken&&window.db.getToken(); _hi2.setAttribute('placeholder', _gtk?'무엇을 찾으세요?':'궁금한 보험이나 보장 내용을 검색해보세요'); } } }catch(e){}  /* 비로그인(토큰 없음) = 검색 안내 placeholder 우선. 로그인 시 '무엇을 찾으세요?' 유지 (2026-07-08 유출 수정) */
   /* 홈 데스크 = 전원 개방(로그인 + 비로그인, 2026-07-08 대표 라이브 피드백 "비로그인 홈=로그인 홈 동일"). 워크스페이스·원수사·Q&A 카드는 껍데기만 렌더(_homeDeskShow, 데이터 fetch 0). 비로그인이 개인 카드 클릭(_homeCard)·쓰기/저장 시 로그인 게이트(_osLoginGate). 공개 자료(스크립트·상품·계산기)는 비로그인 사용 가능. */
   document.body.classList.toggle('is-uat-homedesk', true);
   /* 자주 찾는 보험 자료 타일 = 게이트 조건 필터 렌더. is-uat-homedesk 토글 이후 호출(실비 변천사 타일이 이 클래스를 조건으로 봄). is-uat-homesearch2 계정만 노출되는 섹션이라 그 안에서만 채움. */
