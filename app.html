@@ -16566,11 +16566,21 @@ function _ciListHtml(){
     var sel=(window._ciSel!=null&&String(window._ciSel)===String(c.id))?' on':'';
     var _r=_ciInsAge(c.birth_date); var _meta=[(_r?_r.age+'세':''), (c.gender||'')].filter(Boolean).join(' · ');
     var _at=((c.profile&&c.profile.attr)||c.attr||''); var _sc=/뱅크샐러드/.test(_at)?' ci-src-bank':(/카카오페이/.test(_at)?' ci-src-kakao':(/보맵/.test(_at)?' ci-src-bomap':''));  /* 속성(유입) 색상: 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색·나머지=흰색 */
+    if(window._ciMode==='salesnote'){
+      /* 고객관리(salesnote) 전용 컴팩트 카드 — 이름 + 생년월일 + 전화번호 + 삭제 버튼(나이·성별·상태 배지 대체). 삭제 외 영역 클릭=기존 카드 선택(_ciSelCard→#ci-preview 상세). care 모드는 아래 else 경로로 바이트 무변경. 2026-07-25 */
+      var _snMeta=[(c.birth_date||''), (c.phone||c.phone_raw||'')].filter(Boolean).join(' · ');
+      out+='<div class="ci-card'+_sc+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
+        +'<span class="ci-card-no">'+_ciNum(data.length-idx)+'</span>'
+        +'<span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span>'
+        +'<span class="ci-card-meta">'+_ciEsc(_snMeta)+'</span>'
+        +'<button type="button" class="ci-card-del" onclick="event.stopPropagation();_ciDelete(\''+_ciEsc(c.id)+'\')">삭제</button></div>';
+    } else {
     out+='<div class="ci-card'+_sc+sel+'" onclick="_ciSelCard(\''+_ciEsc(c.id)+'\')">'
       +'<span class="ci-card-no">'+_ciNum(data.length-idx)+'</span>'  /* 전체 통산 순번 역순(맨 위 최신=총 개수 N, 맨 아래 가장 오래된 첫 고객=1). 카드 정렬(최신 위)은 그대로. 2026-07-13 */
       +'<span class="ci-card-nm">'+_ciEsc(c.name||'이름 미상')+'</span>'
       +'<span class="ci-card-meta">'+_ciEsc(_meta)+'</span>'
       +'<span class="ci-card-stg">'+_ciEsc(c.status||'신규DB')+'</span></div>';
+    }
   });
   return out;
 }
