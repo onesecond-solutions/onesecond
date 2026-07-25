@@ -11,11 +11,11 @@
 var _HS2_TILES=[
   /* 보장분석 6축 카드(의료실비·암·뇌심장·수술비·간병·기타) = 허브를 거치지 않고 각자 독립 빈 뷰(axis-*)로 바로 진입. 게이트는 '보장분석' 타일과 동일(_canSeeCoverage). v = showView('axis-*') 인자(일반 타일과 동일 배선, 아래 _hs2RenderHub). (2026-07-23, 대표 지시로 sub 배선→독립 뷰로 전환. 간병 축 추가. '기타' 축도 동일 배선으로 개방) */
   {v:'axis-medical',    ic:'i-file',  t:'의료실비',   d:'세대 설명 + 가입일 세대판정',      url:'/insurance/silson/',      show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},/* url = 정적 공개 카테고리(대표 지시 2026-07-25). 나머지 축은 정적 페이지 제작 후 순차 연결 */
-  {v:'axis-cancer',     ic:'i-check', t:'암',         d:'진단·치료·비급여 3층 구조',        show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-brainheart', ic:'i-heart', t:'뇌 · 심장',  d:'좁은문 vs 넓은문 보장범위',        show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-surgery',    ic:'i-note',  t:'수술비',     d:'종수술·반복지급 구조',            show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-caregiver',  ic:'i-users', t:'간병',       d:'장기요양 등급 · 일당형 지급구조',   show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-etc', ic:'i-dots',  t:'기타',       d:'준비중',           show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'axis-cancer',     ic:'i-check', t:'암',         d:'진단·치료·비급여 3층 구조',        url:'/insurance/cancer/',      show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'axis-brainheart', ic:'i-heart', t:'뇌 · 심장',  d:'좁은문 vs 넓은문 보장범위',        url:'/insurance/brain-heart/', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'axis-surgery',    ic:'i-note',  t:'수술비',     d:'종수술·반복지급 구조',            url:'/insurance/surgery/',     show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'axis-caregiver',  ic:'i-users', t:'간병',       d:'장기요양 등급 · 일당형 지급구조',   url:'/insurance/care-dementia/', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'axis-etc', ic:'i-dots',  t:'기타',       d:'준비중',           url:'/insurance/other/', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'product-lineup', ic:'i-box',      t:'상품 라인업',       d:'원수사 상품 한눈에 비교',   show:function(){return true;}},
   {v:'goji',           ic:'i-check',    t:'알릴의무',          d:'회사별 고지유형·간편고지',  show:function(){return typeof window._canSeeRoadmap==='function'&&window._canSeeRoadmap();}},
   {v:'newsletters',    ic:'i-building', t:'소식지',            d:'원수사·GA 월별 모음',       show:function(){return typeof window._canSeeNl==='function'&&window._canSeeNl();}},
