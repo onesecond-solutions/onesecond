@@ -34,8 +34,14 @@ var _HS2_TILES=[
 ];
 function _hs2RenderHub(){
   var grid=document.querySelector('.hs2-hub .hs2-hub-grid'); if(!grid) return;
+  /* 비로그인(is-guest) = 공개 6축 카드만 노출(대표 지시 2026-07-25). 로그인 후엔 기존 show() 게이트 그대로 = 회귀 0.
+     is-guest는 app.html:4296에서 세팅되고 _hs2RenderHub 호출(app.html:4304)이 그 직후라 타이밍 안전. */
+  var _guest=document.body.classList.contains('is-guest');
+  var _AXIS={'axis-medical':1,'axis-cancer':1,'axis-brainheart':1,'axis-surgery':1,'axis-caregiver':1,'axis-etc':1};
   var h='';
-  for(var i=0;i<_HS2_TILES.length;i++){ var t=_HS2_TILES[i]; if(typeof t.show==='function'&&!t.show()) continue;
+  for(var i=0;i<_HS2_TILES.length;i++){ var t=_HS2_TILES[i];
+    if(_guest){ if(!_AXIS[t.v]) continue; }                          /* 비로그인=6축만(show 게이트 무시하고 노출) */
+    else if(typeof t.show==='function'&&!t.show()) continue;         /* 로그인=기존 게이트 그대로 */
     /* showView(t.v) 단일 배선(모든 타일 동일 패턴). */
     var _attrs = ' onclick="showView(\''+t.v+'\')"';
     h+='<button type="button" class="hs2-hub-tile'+(t.cls?' '+t.cls:'')+'"'+_attrs+'><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
