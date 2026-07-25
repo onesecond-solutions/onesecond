@@ -1944,6 +1944,10 @@ body.is-guest .notif-wrap,
 body.is-guest .acct{display:none!important;}
 /* 비로그인 = 사이드바 로그인 전용 nav 숨김(보험사 자료실 등). 홈·about은 유지. */
 body.is-guest #nav-insurer-vault{display:none!important;}
+/* 비로그인 = 로그인 후 전용 요소 숨김(대표 지시 2026-07-25): 홈 워크스페이스(캘린더·업무노트·자료실·메모 = 홈데스크 .hd-group-work)·딸깍 FAB·빠른 메모 FAB. 로그인 후엔 그대로 노출(회귀 0). */
+body.is-guest .hd-group-work{display:none!important;}
+body.is-guest .fab{display:none!important;}
+body.is-guest .os-memo-fab{display:none!important;}
 /* about(소개) = 홈 데스크 최소 사이드바에서도 홈(#nav-home)과 동일하게 항상 노출. app-views.css의 'body.is-uat-homedesk:not(.is-admin) .side .nav{display:none}'가 화이트리스트(#nav-home 등)만 남기고 전부 숨기는데, 오늘 추가된 #nav-about이 목록에서 빠져 비로그인·로그인 모두 접힘/펼침에서 사라지던 버그. #nav-home 화이트리스트(app-views.css:330)와 동일 규칙으로 복원. (2026-07-08) */
 body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
 /* A영역 헤더 로그인/회원가입 — pill(둥근) 버튼. 각진 사각형 금지=var(--radius-full) 9999px. 로그인=조용한 ghost/outline · 회원가입=포인트 filled. 2026-07-08 대표 라이브 피드백. */
