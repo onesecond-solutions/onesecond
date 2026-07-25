@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>암주요치료비 세대별 변천사 · onesecond</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{
+  /* --ac = 원세컨드 v2 토큰 --ac 동일값(#6366F1, css/tokens-v2.css). iframe 격리라 링크 대신 값 미러 —
+     tokens-v2의 --ac는 :root[data-theme] 스코프(specificity 0,1,1)라 링크 시 본 페이지 :root의
+     --bg/--ok/--warn을 덮어써 보존 색이 드리프트함 → silson(--indigo:#6366F1) 선례대로 값 미러. */
+  --ac:#6366F1; --ac-d:#4F46E5; --ac-s:#EEF0FE;
+  /* --cur = 현재 세대(5세대) 오렌지 예외. silson 5세대 규칙(--g5:#EA580C)과 동일. */
+  --cur:#EA580C; --cur-s:#FFF3EC; --cur-d:#C2410C;
+  /* 중립 팔레트 = silson 실손 변천사 톤(Slate 계열)로 통일. 기존 Gray 계열에서 값 이동. */
+  --ink:#1E293B; --ink2:#334155; --muted:#64748B;
+  --hair:#E2E8F0; --line2:#F1F5F9; --bg:#F8FAFC; --card:#FFFFFF;
+  --ok:#059669; --ok-s:#ECFDF5; --warn:#B45309; --warn-s:#FFFBEB;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
+.wrap{max-width:1240px;margin:0 auto;padding:18px 16px 70px}
+
+/* 헤더 */
+.phead{margin-bottom:26px}
+.phead h1{font-size:23px;font-weight:800;letter-spacing:-.5px;margin:0 0 7px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.phead h1 .ic{width:24px;height:24px;border-radius:6px;background:var(--ac);display:inline-grid;place-items:center;
+  color:#fff;font-size:13px;font-weight:800}
+.badge{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:6px;background:var(--ac-s);color:var(--ac-d)}
+.phead p{margin:0;font-size:13.5px;color:var(--muted)}
+
+h2.sec{font-size:16.5px;font-weight:800;letter-spacing:-.3px;margin:34px 0 14px;display:flex;align-items:center;gap:8px}
+h2.sec .sq{width:15px;height:15px;border-radius:4px;flex:0 0 auto}
+
+/* 메인 비교 — 모바일 = 카드 / PC = 표(768px+) */
+#cmpCards{display:flex;flex-direction:column;gap:12px}
+#cmpTable{display:none}
+.tcard{border:1px solid var(--hair);border-radius:12px;overflow:hidden;background:var(--card)}
+.tcard .th{padding:13px 15px;color:#fff}
+.tcard .th b{display:block;font-size:15.5px;font-weight:800;letter-spacing:-.3px}
+.tcard .th span{font-size:11.5px;opacity:.9}
+.tcard .tb{padding:2px 15px 8px}
+.tcard .kv{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2);
+  font-size:13px;align-items:flex-start}
+.tcard .kv:last-child{border-bottom:0}
+.tcard .kv .k{flex:0 0 84px;color:var(--muted);font-weight:700;font-size:12px;padding-top:1px}
+.tcard .kv .v{flex:1;color:var(--ink);font-weight:600;line-height:1.55}
+.tcard .kv .v small{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+.em{color:var(--ac-d);font-weight:800}
+.em-o{color:var(--cur-d);font-weight:800}
+.em-g{color:var(--ok);font-weight:800}
+.x{color:#94A3B8}
+
+/* 인트로 박스 */
+.intro{background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:17px 19px;
+  font-size:13.5px;color:var(--ink2);line-height:1.75;margin-bottom:8px}
+.intro b{color:var(--ac-d);font-weight:800}
+.intro b.o{color:var(--cur-d)}
+
+/* 세대 카드 */
+.hint{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);
+  background:var(--bg);border:1px solid var(--hair);border-radius:8px;padding:7px 12px;margin-bottom:13px}
+.gens{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.gen{border:1px solid var(--hair);border-radius:10px;padding:15px 14px 12px;cursor:pointer;
+  background:var(--card);position:relative;transition:.15s;overflow:hidden}
+.gen::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--bar)}
+.gen:hover{box-shadow:0 3px 12px rgba(17,24,39,.07)}
+.gen.on{border-color:var(--bar);box-shadow:0 0 0 1px var(--bar)}
+.gen .no{font-size:15.5px;font-weight:800;letter-spacing:-.3px}
+.gen .yr{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:11px}
+.gen .hl{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.gen .sub{font-size:11.5px;color:var(--muted)}
+.gen .cl{position:absolute;right:12px;bottom:10px;font-size:11px;color:#94A3B8;font-weight:700}
+
+/* 심층 패널 */
+.deep{margin-top:15px;border:1.5px solid var(--pc);border-radius:12px;padding:22px;background:var(--card)}
+.deep .dh{display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+.deep .dh .sq{width:16px;height:16px;border-radius:4px;background:var(--pc)}
+.deep .dh h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.3px}
+.deep .dh .bd{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:6px;background:var(--pcs);color:var(--pc)}
+.deep .dsum{font-size:13.5px;color:var(--ink2);margin:0 0 17px;line-height:1.7}
+.dgrid{display:grid;grid-template-columns:1fr;gap:11px}
+.dc{border:1px solid var(--hair);border-radius:9px;padding:14px 15px;background:var(--card)}
+.dc.hi{background:var(--pcs);border-color:transparent}
+.dc h4{margin:0 0 7px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px}
+.dc h4 .d{width:9px;height:9px;border-radius:3px;background:var(--pc);flex:0 0 auto}
+.dc p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+.dc p b{font-weight:800;color:var(--ink)}
+.dc p .r{color:var(--cur-d);font-weight:800}
+
+/* 알림 박스 */
+.tip{margin-top:16px;background:var(--ac-s);border-radius:9px;padding:14px 17px;font-size:13px;color:var(--ac-d);line-height:1.7}
+.tip b{font-weight:800}
+.caution{margin-top:11px;background:var(--warn-s);border-radius:9px;padding:14px 17px;font-size:13px;color:#92400E;line-height:1.7}
+.caution b{font-weight:800}
+
+/* 푸터 */
+.src{margin-top:34px;padding-top:18px;border-top:1px solid var(--hair);
+  font-size:11.5px;color:var(--muted);text-align:center;line-height:1.8}
+
+/* ── PC — 768px 이상에서만 표로 전환 ── */
+@media(min-width:768px){
+  .wrap{padding:26px 22px 70px}
+  #cmpCards{display:none}
+  #cmpTable{display:block;border-radius:10px;border:1px solid var(--hair);overflow:hidden}
+  table{width:100%;border-collapse:collapse;background:var(--card)}
+  thead th{padding:13px 10px;font-size:13px;font-weight:800;color:#fff;text-align:center;line-height:1.4}
+  thead th.k{background:#334155;width:132px}
+  thead th small{display:block;font-size:11px;font-weight:600;opacity:.85;margin-top:3px}
+  tbody td{padding:13px 11px;font-size:13px;text-align:center;border-top:1px solid var(--line2);vertical-align:middle;line-height:1.5}
+  tbody td.k{background:var(--bg);font-weight:700;color:var(--ink2);text-align:left;font-size:12.5px}
+  tbody td small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  tbody tr:hover td{background:var(--bg)}
+  tbody tr:hover td.k{background:var(--line2)}
+  .gens{grid-template-columns:repeat(5,1fr)}
+  .dgrid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ══════════════════════════════════════════════════════
+   V3 — 타이포그래피 가독성 재설계 (임태성 게이트 전용 오버레이)
+   ‣ html.v3 스코프로만 적용. .v3 없으면 위 v2 규칙 그대로 = 렌더 픽셀 동일(회귀 0).
+   ‣ 읽는 본문 710px / 표·세대카드·심층패널은 760까지 예외. 사이드바는 독립 페이지 뷰포트≥1120에서만 노출.
+   ‣ 간병 V3 정본과 요소별 값 일치(본문 하한 15px/1.8). 암 고유(세대카드·심층패널)=역할별 표준.
+   ══════════════════════════════════════════════════════ */
+.v3grid{display:block}
+.v3side{display:none}
+
+html.v3 body{font-size:16px;line-height:1.85;word-break:keep-all}
+html.v3 .wrap{max-width:808px;margin:0 auto}
+/* 독립 페이지 전환(de-iframe) 후에는 바깥 앱 패딩이 없으므로 .wrap 자체가 거터(24px)를 확보(border-box: 808-24-24=760 유지) */
+@media(min-width:768px){ html.v3 .wrap{padding-left:24px;padding-right:24px} }
+/* de-iframe 후 최상단 여백 26px→32px(독립 페이지 기준 재계산, v3 스코프만) */
+@media(min-width:768px){ html.v3 .wrap{padding-top:32px} }
+
+/* 읽는 텍스트 블록 = 710 중앙정렬 */
+html.v3 .phead,html.v3 .intro,html.v3 h2.sec,html.v3 .hint,
+html.v3 .tip,html.v3 .caution,html.v3 .src{
+  max-width:710px;margin-left:auto;margin-right:auto;
+}
+/* 표·세대카드·심층패널 = 760 예외 */
+html.v3 #cmpTable,html.v3 #cmpCards,html.v3 .gens,html.v3 #deep,html.v3 .deep{
+  max-width:760px;margin-left:auto;margin-right:auto;
+}
+html.v3 .intro,html.v3 .deep .dsum,html.v3 .deep .dc p,html.v3 .tip,html.v3 .caution{overflow-wrap:anywhere}
+
+/* 헤더 */
+html.v3 .phead h1{font-size:23px}
+html.v3 .phead p{font-size:14.5px;line-height:1.7}
+html.v3 h2.sec{font-size:19px;margin:30px auto 12px}
+/* 인트로(본문) */
+html.v3 .intro{font-size:16px;line-height:1.85;padding:18px 19px}
+/* 세대 카드(선택 UI) */
+html.v3 .gen .no{font-size:16px}
+html.v3 .gen .hl{font-size:15px}
+/* 심층 패널 */
+html.v3 .deep .dh h3{font-size:18px}
+html.v3 .deep .dsum{font-size:16px;line-height:1.85}
+html.v3 .deep .dc h4{font-size:15px}
+html.v3 .deep .dc p{font-size:15px;line-height:1.8}
+/* 알림 */
+html.v3 .tip{font-size:15px;line-height:1.82;padding:16px 17px}
+html.v3 .caution{font-size:15px;line-height:1.82;padding:16px 17px}
+/* 출처(푸터) */
+html.v3 .src{font-size:13px;line-height:1.9;margin-top:34px;padding-top:18px}
+/* 모바일 비교 카드(.tcard) */
+html.v3 .tcard .th b{font-size:18px}
+html.v3 .tcard .th span{font-size:13.5px}
+html.v3 .tcard .kv{font-size:15px}
+html.v3 .tcard .kv .k{font-size:14px;flex:0 0 84px}
+html.v3 .tcard .kv .v small{font-size:13.5px}
+
+@media(min-width:768px){
+  html.v3 .phead h1{font-size:27px}
+  html.v3 h2.sec{font-size:20px;margin:40px auto 16px}
+  html.v3 .deep .dh h3{font-size:19px}
+  html.v3 thead th{font-size:14.5px;padding:14px 10px}
+  html.v3 thead th.k{width:104px}
+  html.v3 thead th small{font-size:12px}
+  html.v3 tbody td{font-size:14px;padding:14px 10px}
+  html.v3 tbody td.k{font-size:13.5px}
+  html.v3 tbody td small{font-size:12.5px}
+}
+
+/* 사이드바 2단 노출 조건 = 독립 페이지 뷰포트가 본문760+사이드244+간격32(=1036)를 수용할 때만.
+   BP 1120px = 1036 + 좌우 여백 42px씩. 그 미만·모바일 = 단일 컬럼(≤760px). */
+@media(min-width:1120px){
+  html.v3 .v3grid{display:grid;grid-template-columns:760px 244px;gap:32px;justify-content:center;align-items:start}
+  html.v3 .v3grid .wrap{max-width:760px;width:760px;margin-left:0;margin-right:0;padding-left:0;padding-right:0}
+  html.v3 .v3side{display:block;position:sticky;top:24px;align-self:start;padding:34px 0 0}
+  html.v3 .v3side .blk{margin-bottom:26px}
+  html.v3 .v3side .lb{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px;text-transform:uppercase}
+  html.v3 .v3side .toc a{display:block;padding:7px 0 7px 13px;border-left:2px solid var(--hair);font-size:13.5px;color:var(--muted);text-decoration:none;line-height:1.45;transition:color .15s,border-color .15s}
+  html.v3 .v3side .toc a:hover{color:var(--ink2)}
+  html.v3 .v3side .toc a.on{color:var(--ac-d);border-left-color:var(--ac);font-weight:700}
+  html.v3 .v3side .act{display:flex;flex-direction:column;gap:7px}
+  html.v3 .v3side .act button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:1px solid var(--hair);background:#fff;border-radius:9px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+  html.v3 .v3side .act button:hover{border-color:var(--ac);background:var(--ac-s);color:var(--ac-d)}
+  html.v3 .v3side .act button .i{font-size:14px;flex:0 0 auto}
+  html.v3 .v3side .rel a{display:block;padding:10px 12px;border:1px solid var(--hair);border-radius:9px;margin-bottom:7px;text-decoration:none;transition:border-color .15s}
+  html.v3 .v3side .rel a:hover{border-color:var(--ac)}
+  html.v3 .v3side .rel b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.4}
+  html.v3 .v3side .rel span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+}
+.home-back{display:inline-flex;align-items:center;gap:2px;margin-bottom:12px;color:var(--ac-d);text-decoration:none;font-size:13px;font-weight:700;padding:6px 13px;border:1px solid var(--hair);border-radius:8px;background:#fff}
+.home-back:hover{background:var(--ac-s)}
+</style>
+<!-- 카테고리 껍데기(=/insurance/silson/ 와 동일) CSS — 열고 닫힘 착시를 위해 공통 영역을 동일하게 -->
+<link rel="stylesheet" href="/css/knowledge-category.css?v=20260724b">
+<link rel="stylesheet" href="/css/app-core.css?v=20260708">
+<link rel="stylesheet" href="/css/app-views.css?v=20260708">
+<style>
+/* 셸 + 검색기(=/insurance/silson/ 이식) + 펼친 문서 본문 */
+/* ⚠️ app-core.css의 body{height:100vh;overflow:hidden}(앱 셸 전용)이 정적 페이지에 상속돼 스크롤을 막으므로 override — 정적 페이지는 일반 문서 스크롤. */
+html{height:auto!important;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg);font-family:'Pretendard',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--bodytx);height:auto!important;min-height:100vh;overflow:visible!important;}
+.pub-top{display:flex;justify-content:flex-end;align-items:center;padding:16px 24px;}
+.pub-login{display:inline-flex;align-items:center;height:34px;padding:0 16px;border-radius:9999px;font-size:0.8125rem;font-weight:600;line-height:1;color:var(--ts);background:transparent;border:1px solid var(--bd);cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s;}
+.pub-login:hover{background:var(--s2);color:var(--tp);border-color:var(--tf);}
+#v-axis-medical{display:flex;flex-direction:column;padding:12px 24px 60px;}
+.kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+.hs-box{display:flex;align-items:center;gap:8px;max-width:640px;margin:0 auto;position:relative;}
+.hs-field{flex:1;display:flex;align-items:center;gap:10px;min-height:60px;height:60px;padding:0 16px;background:var(--s1);border:1.5px solid var(--bd);border-radius:22px;position:relative;min-width:0;}
+.hs-field:focus-within{border-color:var(--ac);box-shadow:0 4px 18px rgba(99,102,241,.14);}
+.hs-field svg{width:26px;height:26px;flex-shrink:0;color:var(--tf);}
+.hs-field input{flex:1;border:0;outline:0;background:transparent;font-size:1.0625rem;color:var(--tp);min-width:0;}
+.hs-go{height:60px;padding:0 22px;border:0;border-radius:22px;background:var(--ac);color:#fff;font-size:1.0625rem;font-weight:700;cursor:pointer;flex-shrink:0;}
+.hs-go:hover{background:var(--ach);}
+.hs-homelogo{position:absolute;top:50%;right:100%;margin-right:14px;transform:translateY(-50%);display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none;z-index:2;}
+.hs-homelogo-ic{width:30px;height:30px;border-radius:8px;object-fit:cover;flex:0 0 auto;}
+.hs-homelogo-tx{font-size:18px;font-weight:800;color:var(--tp);letter-spacing:-.01em;white-space:nowrap;}
+@media(max-width:1120px){.hs-box{flex-wrap:wrap;justify-content:center;}.hs-homelogo{position:static;transform:none;right:auto;margin:0 0 12px;width:100%;justify-content:center;}}
+@media(max-width:640px){.hs-field{min-height:56px;height:56px;}.hs-go{height:56px;padding:0 16px;}}
+/* 펼친 문서 = 목록의 '암주요치료비 변천사' 제목(클릭=닫기) + 그 아래 본문 */
+.kc-doc-open{background:var(--s2);}
+.kc-toggle{font-size:12.5px;font-weight:700;color:var(--ac);margin-left:8px;}
+.doc-body{padding:6px 0 0;}
+.doc-body h2.sec:first-child{margin-top:14px;}
+/* 암 본문(V3)을 kc-body(710) 폭 안에 — 넓은 표는 가로 스크롤 */
+html.v3 .doc-body .wrap,.doc-body .wrap{max-width:100%;}
+.doc-body #cmpTable,.doc-body #cmpCards,.doc-body .gens,.doc-body #deep,.doc-body .deep{max-width:100%;}
+.doc-body .tbl-wrap{overflow-x:auto;}
+/* 정적 페이지 = 페이지 전체 스크롤(앱 내부 스크롤 kc-scroll 무효) */
+#v-axis-medical{display:block;overflow:visible;}
+.kc-scroll{overflow:visible;flex:none;min-height:auto;}
+/* 헤더·문서제목은 710 유지, 본문+우측 레일 수용 위해 kc-body만 1010 */
+.kc-body{max-width:1010px;}
+.kc-kicker,.kc-h1,.kc-hook,.kc-count,.kc-rule,.kc-doc{max-width:710px;}
+/* 문서 본문(710) + 우측 레일(244) — 넓은 화면 2단(기존 V3 사이드바 복원) */
+.doc-grid{display:block;}
+@media(min-width:1120px){
+  .doc-grid{display:grid;grid-template-columns:710px 244px;gap:32px;align-items:start;}
+  .doc-grid .doc-body{min-width:0;}
+  .doc-grid .v3side{display:block;position:sticky;top:24px;}
+}
+@media(max-width:1119px){.v3side{display:none;}}
+</style>
+<script src="/js/knowledge-registry.js?v=20260724"></script>
+</head>
+<body>
+<div class="pub-top"><a class="pub-login" href="/app.html?view=home">설계사 로그인 <span aria-hidden="true">&#8594;</span></a></div>
+
+<!-- /insurance/cancer/ 와 동일한 카테고리 껍데기(로고·검색기·6탭·목록) + 암주요치료비 변천사가 '펼쳐진' 상태.
+     제목 클릭 = /insurance/cancer/(닫힌 카테고리)로 돌아가 닫힘. 공통 껍데기가 동일해 인라인 펼침/닫힘처럼 보임(대표 지시 2026-07-25 D안). -->
+<div id="v-axis-medical">
+  <div class="kc-searchslot">
+    <div class="hs-box">
+      <a class="hs-homelogo" href="/app.html?view=home" title="원세컨드 홈">
+        <img class="hs-homelogo-ic" src="/assets/images/logo/logo03.jpg" alt="원세컨드">
+        <span class="hs-homelogo-tx">onesecond</span>
+      </a>
+      <div class="hs-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="search" placeholder="궁금한 보험이나 보장 내용을 검색해보세요" aria-label="공개 보험지식 검색">
+      </div>
+      <button class="hs-go" type="button">검색</button>
+    </div>
+  </div>
+  <div class="tabs kc-tabs">
+    <a class="tab" href="/insurance/silson/">의료실비<span class="kc-n">1</span></a>
+    <a class="tab on" href="/insurance/cancer/" aria-current="page">암<span class="kc-n">1</span></a>
+    <a class="tab" href="/insurance/brain-heart/">뇌 · 심장</a>
+    <a class="tab" href="/insurance/surgery/">수술비</a>
+    <a class="tab" href="/insurance/care-dementia/">간병 · 치매<span class="kc-n">1</span></a>
+    <a class="tab" href="/insurance/other/">기타</a>
+  </div>
+  <div class="chips kc-chips"></div>
+  <div class="kc-scroll"><div class="kc-body">
+    <div class="kc-kicker">보장 영역</div>
+    <h1 class="kc-h1">암</h1>
+    <div class="kc-hook">일반암이라는 말에 회사마다 다른 범위가 들어 있습니다.</div>
+    <div class="kc-count">자료 1건</div>
+    <div class="kc-rule"></div>
+    <div class="kc-list">
+      <a class="kc-doc kc-doc-open" href="/insurance/cancer/" title="접기">
+        <div class="kc-doc-t">암주요치료비 변천사<span class="kc-toggle">접기 &#9650;</span></div>
+        <div class="kc-doc-d">세대별 암 치료비 보장 변화</div>
+        <div class="kc-doc-m">2026-07</div>
+      </a>
+      <div class="doc-grid">
+      <div class="doc-body">
+
+  <!-- 메인 표 -->
+  <h2 class="sec"><span class="sq" style="background:var(--ac)"></span>암 치료비 담보 변천사</h2>
+  <!-- 모바일: 카드(세대 전치) / PC: 표 — 같은 데이터에서 자동 생성 -->
+  <div id="cmpCards"></div>
+  <div id="cmpTable"></div>
+
+  <!-- 인트로 -->
+  <div class="intro" style="margin-top:22px">
+    암 담보는 <b>「진단 시 목돈」 → 「특정 치료법 보장」 → 「치료 행위 통합」 → 「급여·비급여 분리」</b> 순으로 이동해 왔습니다.
+    특히 <b>2024년 초</b>(암주요치료비 등장), <b>2024년 11월</b>(비례형 판매중단), <b class="o">2025년 3월</b>(비급여 분리 시작)이 결정적 분기점입니다.
+    아래 세대 카드를 눌러 각 세대의 구조와 확인 포인트를 보세요.
+  </div>
+
+  <!-- 세대 카드 -->
+  <h2 class="sec"><span class="sq" style="background:var(--ac)"></span>세대별 심층 · 확인 포인트</h2>
+  <div class="hint">세대 카드를 클릭하면 해당 세대의 심층 정보가 펼쳐집니다</div>
+  <div class="gens" id="gens"></div>
+  <div id="deep"></div>
+
+  <div class="src">
+    출처: 대한금융신문(2020.05) · 이코노믹리뷰(2020.09) · 농민신문(2021.01) · 파이낸셜뉴스(2021.06) ·
+    블로터(2024.03) · KB의 생각 · 보험저널(2025.03, 2026.03) · 현대해상·ABL생명 상품안내 · 뱅크샐러드<br>
+    본 자료는 상담 전 참고용이며 특정 상품·보험사를 권유하지 않습니다. 실제 보장은 약관과 가입 시기에 따라 달라집니다.
+  </div>
+
+      </div><!-- /.doc-body -->
+      <aside class="v3side" id="v3side" aria-hidden="true"></aside>
+      </div><!-- /.doc-grid -->
+    </div><!-- /.kc-list -->
+  </div></div><!-- /.kc-body /.kc-scroll -->
+</div><!-- /#v-axis-medical -->
+
+<script>
+/* ══ 메인 비교표 — 데이터 한 벌 → 모바일 카드(세대 전치) + PC 표 이중 렌더 ══ */
+const CT_COLS=[
+  {label:"1세대",sub:"~2019",color:"var(--ac)"},
+  {label:"2세대",sub:"2020~2023",color:"var(--ac)"},
+  {label:"3세대",sub:"2024.1~2024.10",color:"var(--ac)"},
+  {label:"4세대",sub:"2024.11~2025.2",color:"var(--ac)"},
+  {label:"5세대",sub:"2025.3~",color:"var(--cur)"}
+];
+const CT_ROWS=[
+  {label:"보장 논리",cells:[
+    '<span class="em-g">진단 시 목돈</span><small>생활비 성격</small>',
+    '<span class="em">특정 치료법 지정</span><small>표적항암</small>',
+    '<span class="em">치료 행위 통합</span><small>치료법 무관</small>',
+    '치료 행위 통합<small>지급방식 정리</small>',
+    '<span class="em-o">급여·비급여 분리</span><small>비급여 전담</small>']},
+  {label:"대표 담보명",cells:[
+    '암진단비',
+    '표적항암약물<br>허가치료비',
+    '<span class="em">암주요치료비</span><small>암특정치료비</small>',
+    '암주요치료비',
+    '<span class="em-o">비급여(전액본인부담)<br>암주요치료비</span>']},
+  {label:"지급 방식",cells:[
+    '정액',
+    '정액',
+    '정액 <span class="x">/</span> <span class="em">비례 혼재</span>',
+    '<span class="em">정액만</span><small>비례형 판매중단</small>',
+    '정액']},
+  {label:"지급 횟수",cells:[
+    '진단 1회',
+    '<span class="em">최초 1회</span><small>KB 최초 도입 기준</small>',
+    '연간 1회',
+    '연간 1회',
+    '연간 1회']},
+  {label:"보장 기간",cells:[
+    '—',
+    '—',
+    '진단 후 <span class="em">5년</span><small>10년형 상품 존재</small>',
+    '진단 후 5년<small>10년형 존재</small>',
+    '진단 후 5년<small>10년형 존재</small>']},
+  {label:"치료법 범위",cells:[
+    '<span class="x">해당 없음</span>',
+    '<span class="x">표적항암 한정</span><small>그 외 미지급</small>',
+    '<span class="em-g">수술·방사선·약물<br>구분 없음</span>',
+    '<span class="em-g">수술·방사선·약물<br>구분 없음</span>',
+    '수술·방사선·약물<small>비급여 영역 한정</small>']},
+  {label:"암 종류",cells:[
+    '원발암 중심',
+    '원발암 중심',
+    '<span class="em-g">원발·전이·재발<br>구분 없음</span>',
+    '원발·전이·재발<br>구분 없음',
+    '기타피부암·갑상선암도<br><span class="em-o">일반암 수준</span>']},
+  {label:"급여 / 비급여",cells:[
+    '—',
+    '<span class="em-g">구분 없음</span><small>치료법으로 제한</small>',
+    '<span class="em-g">구분 없음</span>',
+    '<span class="em-g">구분 없음</span>',
+    '<span class="em-o">비급여·전액본인부담<br>일 때만 지급</span>']},
+  {label:"보험료 수준",cells:[
+    '—',
+    '갱신형 위주',
+    '—',
+    '—',
+    '<span class="em-o">기존 대비 약 1/4</span><small>삼성화재 기준</small>']},
+  {label:"핵심 한계",cells:[
+    '<span class="x">치료 장기화<br>대응 불가</span>',
+    '<span class="x">신의료기술<br>미대응</span>',
+    '비급여 고액치료<br>대응 부족',
+    '비급여 고액치료<br>대응 부족',
+    '<span class="x">급여 표준치료<br>사각지대</span>']}
+];
+function drawCmp(){
+  document.getElementById("cmpCards").innerHTML = CT_COLS.map((c,ci)=>`
+    <div class="tcard">
+      <div class="th" style="background:${c.color}"><b>${c.label}</b><span>${c.sub}</span></div>
+      <div class="tb">${CT_ROWS.map(r=>`<div class="kv"><span class="k">${r.label}</span><span class="v">${r.cells[ci]}</span></div>`).join("")}</div>
+    </div>`).join("");
+  document.getElementById("cmpTable").innerHTML = `
+    <table>
+      <thead><tr><th class="k">구분</th>${CT_COLS.map(c=>`<th style="background:${c.color}">${c.label}<small>${c.sub}</small></th>`).join("")}</tr></thead>
+      <tbody>${CT_ROWS.map(r=>`<tr><td class="k">${r.label}</td>${r.cells.map(cell=>`<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table>`;
+}
+
+const GENS=[
+{no:"1세대",yr:"~2019",hl:"진단 시 목돈",sub:"생활비 성격",c:"#6366F1",cs:"#EEF0FE",
+ sum:"암보험의 원형. 진단 시점에 목돈을 지급하는 구조로, 치료 과정이 길어지는 상황까지는 다루지 못했습니다.",
+ cards:[
+  {t:"보장 논리",b:"암 진단 확정 시 약정 금액을 <b>일시금</b>으로 지급. 치료 실행 여부와 무관합니다."},
+  {t:"당시 시장",b:"기사 기준으로 <b>생활비를 지급하는 암보험</b>이 주류였던 시기로 서술됩니다."},
+  {t:"보장 구성",b:"암보험 보장은 통상 <b>진단비·수술비·치료비</b> 세 갈래로 구분되며, 이 시기는 진단비에 집중됐습니다."},
+  {t:"한계",b:"치료가 수술→항암→방사선→추적검사로 이어지는 <b>단계별 현금 흐름</b>을 감당하기 어렵습니다.",hi:1},
+  {t:"확인 포인트",b:"진단비 외에 <b>치료 과정 단계</b>를 받치는 담보가 있는지 확인이 필요합니다."},
+  {t:"현재 위치",b:"이 시기 계약만 보유한 고객은 최신 치료법 관련 담보가 전무할 가능성이 있습니다."}
+ ]},
+{no:"2세대",yr:"2020~2023",hl:"표적항암 지정",sub:"특정 치료법 한정",c:"#8B5CF6",cs:"#F3EEFE",
+ sum:"표적항암약물허가치료비 등장. 특정 치료법을 지정해 보장하는 방식으로, 치료법이 다르면 지급되지 않는 구조입니다.",
+ cards:[
+  {t:"최초 도입",b:"업계 최초는 <b>라이나생명</b>, 손해보험 최초는 <b>KB손해보험</b>(2020.5, 'KB암보험과 건강하게 사는 이야기'). 보험개발원 요율검증·금감원 심사 후 출시."},
+  {t:"시장 반응",b:"KB손보 기준 월평균 신규매출 <b>2억 → 16억</b>, 시장점유율 <b>3배인 30%</b>로 확대. 전 업계가 뒤따른 계기."},
+  {t:"지급 기준",b:"암 진단 확정 후 표적항암약물허가치료 시 <b>최초 1회</b> 지급. 식약처 허가 효능·효과 범위 내."},
+  {t:"확산",b:"2020.12 NH농협생명·삼성생명, 이어 삼성화재·현대해상·한화손보 등이 <b>5,000만 원</b> 수준으로 탑재."},
+  {t:"치료 배경",b:"표적항암제는 암세포만 공격해 부작용이 적음. 1회 <b>200만~500만 원</b>, 통상 10회가량 진행."},
+  {t:"핵심 한계",b:"<span class='r'>표적항암이 아니면 미지급.</span> 수술 없이 항암만 하거나 중입자치료 등 신의료기술은 대응 불가. 갱신형 위주라 보험료 인상 가능성도 지적됐습니다.",hi:1}
+ ]},
+{no:"3세대",yr:"2024.1~2024.10",hl:"치료 행위 통합",sub:"암주요치료비 등장",c:"#6366F1",cs:"#EEF0FE",
+ sum:"치료법을 구분하지 않고 특약 하나로 보장. 진단비 중심에서 치료비 중심으로 시장이 이동한 분기점입니다.",
+ cards:[
+  {t:"정의",b:"<b>수술·방사선·약물치료를 구분하지 않고</b> 특약 하나로 보장. 약관상 '주요 치료'로 분류되면 지급하며, <b>급여·비급여를 가리지 않습니다.</b>"},
+  {t:"암 종류",b:"<b>원발암·전이암·재발암 구분 없이</b> 보장. 2세대 대비 결정적 확장."},
+  {t:"지급 구조",b:"정액보상. <b>연간 1회 한도, 최대 5년</b>. 진단 후 10년형 상품도 존재합니다."},
+  {t:"탑재사",b:"2024.3 기준 현대해상·DB손보·메리츠화재·롯데손보. 삼성화재·한화손보는 <b>암진단후암특정치료비</b>라는 유사 담보."},
+  {t:"확인 포인트",b:"이 시기 가입 계약은 <span class='r'>정액형인지 비례형인지</span> 확인이 필요합니다. 비례형은 이후 판매중단됩니다.",hi:1}
+ ]},
+{no:"4세대",yr:"2024.11~2025.2",hl:"정액형 일원화",sub:"비례형 판매중단",c:"#0891B2",cs:"#E6F6FA",
+ sum:"비례형 암주요치료비 판매가 중단되며 정액형만 남았습니다. 담보 자체보다 지급방식이 정리된 구간입니다.",
+ cards:[
+  {t:"무엇이 바뀌었나",b:"<b>2024년 11월부터 비례형 판매중단.</b> 현재는 정액형만 가입 가능합니다."},
+  {t:"중단 사유",b:"과잉진료 유발 및 <b>건강보험 제도 왜곡</b> 우려. 치료비가 클수록 보험금이 늘어 병원비 지출을 부추길 수 있다는 판단."},
+  {t:"정액형이란",b:"치료 사실만으로 <b>약정 금액 지급</b>. 실제 치료비와 무관하며, 치료비가 정액을 넘으면 초과분은 본인 부담."},
+  {t:"비례형이란",b:"실제 발생 치료비에 <b>일정 비율</b>로 지급하던 방식. 현재 신규 가입은 불가합니다."},
+  {t:"확인 포인트",b:"<b>2024년 10월 이전</b> 가입 고객은 비례형일 수 있습니다. 지급방식 확인이 상담 진입점이 됩니다.",hi:1},
+  {t:"근거 수준",b:"현재 확보 근거는 2차 매체입니다. <span class='r'>감독당국 원문 확인 필요</span> 항목으로 남아 있습니다."}
+ ]},
+{no:"5세대",yr:"2025.3~",hl:"급여·비급여 분리",sub:"비급여 전담 담보",c:"#EA580C",cs:"#FFF3EC",
+ sum:"비급여와 전액본인부담 영역을 떼어내 전담 보장하는 구조. 보험료는 낮지만 급여 표준치료 구간이 비게 됩니다.",
+ cards:[
+  {t:"시작",b:"<b>2025년 3월 5일 삼성화재</b> '하이클래스 암치료비 특약'. 이후 4월 손보사 전면전으로 확산."},
+  {t:"보장 범위",b:"비급여 + <b>급여 중 전액본인부담</b> 항암치료비. 비급여·전액본인부담 수술, 항암방사선치료, 항암약물치료(면역·표적항암제 등)."},
+  {t:"보험료",b:"기존 암치료비 특약 대비 <b>약 4분의 1 수준</b>. 진입 문턱이 크게 낮아졌습니다."},
+  {t:"배경",b:"암 생존율 상승 → 고가 항암치료 수요 증가. 면역항암제·표적항암제·HIFU·비급여 방사선은 1회 <b>수백만~수천만 원</b>. 여기에 <b>4세대 실손의 비급여 축소</b>가 겹쳤습니다."},
+  {t:"세부 조건",b:"보장 대상 의료기관 제한 없음(대학병원·종합병원·암전문병원 등). 기타피부암·갑상선암도 <b>일반암과 동일 수준</b>."},
+  {t:"★ 사각지대",b:"<span class='r'>암 진단 후 표준 치료의 상당 부분은 건강보험 급여로 처리됩니다.</span> 비급여형만으로는 급여 구간이 비어 있을 수 있습니다.",hi:1}
+ ]}
+];
+
+let sel=4;
+const gensEl=document.getElementById("gens"), deepEl=document.getElementById("deep");
+
+function drawGens(){
+  gensEl.innerHTML=GENS.map((g,i)=>`
+    <div class="gen${i===sel?" on":""}" data-i="${i}" style="--bar:${g.c}">
+      <div class="no">${g.no}</div>
+      <div class="yr">${g.yr}</div>
+      <div class="hl">${g.hl}</div>
+      <div class="sub">${g.sub}</div>
+      <div class="cl">클릭 ▾</div>
+    </div>`).join("");
+  gensEl.querySelectorAll(".gen").forEach(el=>el.onclick=()=>{sel=+el.dataset.i;drawGens();drawDeep();});
+}
+function drawDeep(){
+  const g=GENS[sel];
+  deepEl.innerHTML=`
+    <div class="deep" style="--pc:${g.c};--pcs:${g.cs}">
+      <div class="dh"><span class="sq"></span><h3>${g.no} 심층</h3><span class="bd">${g.yr}</span></div>
+      <p class="dsum">${g.sum}</p>
+      <div class="dgrid">
+        ${g.cards.map(c=>`<div class="dc${c.hi?" hi":""}">
+          <h4><span class="d"></span>${c.t}</h4><p>${c.b}</p></div>`).join("")}
+      </div>
+    </div>`;
+}
+/* 전역 렌더 진입점 — 앱 렌더 컨텍스트에서 재호출 가능(silson 뷰 렌더 방식 정합). window.* 등록 원칙. */
+function renderCancerTreatmentHistory(){ drawCmp(); drawGens(); drawDeep(); }
+window.renderCancerTreatmentHistory = renderCancerTreatmentHistory;
+/* 부트: 즉시 자가 렌더(silson의 즉시 sel(5,true) 선례 정합).
+   appstate:ready는 부모(app.html) 이벤트 — 인라인 주입 컨텍스트 대비 방어적 재바인딩. defer 없음. */
+renderCancerTreatmentHistory();
+try{ document.addEventListener('appstate:ready', renderCancerTreatmentHistory); }catch(e){}
+
+/* ══════════════════════════════════════════════════════
+   V3 = de-iframe(2026-07-22) 후 독립 URL 페이지의 710px 읽기화면 + 사이드바.
+   과거 "iframe 안 + 임태성 게이트"에서만 켜지던 조건 폐지 → 전체공개 페이지라 모든 방문자에게 V3(대표 지시 재연결). 본문 텍스트/DOM 불변.
+   본문 텍스트/DOM 불변. 사이드바는 여기서만 주입(정적 HTML 텍스트 노드 미접촉).
+   ══════════════════════════════════════════════════════ */
+(function(){
+  var _v3=false;
+  _v3 = true;   /* 독립 URL 진입 = V3 항상 켬(대표 지시 재연결). var _v3=false·if(!_v3)return 골격 보존, 이 줄만 true */
+  if(!_v3) return;
+  document.documentElement.classList.add('v3');
+
+  var secs=[].slice.call(document.querySelectorAll('h2.sec'));
+  secs.forEach(function(h,i){ if(!h.id) h.id='v3sec-'+i; });
+
+  var toc = secs.map(function(h){
+    return '<a href="#'+h.id+'" data-t="'+h.id+'">'+h.textContent.trim()+'</a>';
+  }).join('');
+  function _relEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var _relItems;
+  if (typeof window.knowledgeVisibleDocs === 'function') {
+    _relItems = window.knowledgeVisibleDocs({ excludeId: 'cancer-treatment' }).map(function(d){
+      return '<a href="'+_relEsc(d.url)+'"><b>'+_relEsc(d.label)+'</b><span>'+_relEsc(d.description)+'</span></a>';
+    }).join('');
+  } else {
+    _relItems =
+      '<a href="#" data-v="silson"><b>실손의료비 세대별 비교</b><span>세대별 자기부담·보장 변화</span></a>'+
+      '<a href="#" data-v="caregiver-history"><b>간병보험 변천사</b><span>지원형·사용일당형의 분화</span></a>';
+  }
+
+  var side=document.getElementById('v3side');
+  side.setAttribute('aria-hidden','false');
+  side.innerHTML =
+    '<div class="blk"><div class="lb">목차</div><nav class="toc">'+toc+'</nav></div>'+
+    '<div class="blk"><div class="lb">이 자료 활용</div><div class="act">'+
+      '<button type="button" id="v3print"><span class="i">📄</span><span class="t">PDF로 저장</span></button>'+
+      '<button type="button" id="v3copy"><span class="i">🔗</span><span class="t">링크 복사</span></button>'+
+    '</div></div>'+
+    '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">'+_relItems+'</div></div>';
+
+  side.querySelectorAll('.toc a').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      var t=document.getElementById(a.getAttribute('data-t'));
+      if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+
+  var links={}; side.querySelectorAll('.toc a').forEach(function(a){ links[a.getAttribute('data-t')]=a; });
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(en){
+        if(en.isIntersecting){
+          Object.keys(links).forEach(function(k){ links[k].classList.remove('on'); });
+          var cur=links[en.target.id]; if(cur) cur.classList.add('on');
+        }
+      });
+    },{rootMargin:'0px 0px -70% 0px',threshold:0});
+    secs.forEach(function(h){ io.observe(h); });
+  }
+
+  document.getElementById('v3print').addEventListener('click',function(){ window.print(); });
+
+  document.getElementById('v3copy').addEventListener('click',function(){
+    var url; try{ url=window.parent.location.href; }catch(e){ url=location.href; }
+    var lab=this.querySelector('.t')||this, orig=lab.textContent;
+    function done(ok){ lab.textContent=ok?'복사됨':'복사 실패'; setTimeout(function(){ lab.textContent=orig; },1400); }
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){done(true);},function(){done(false);});
+      }else{ done(false); }
+    }catch(e){ done(false); }
+  });
+
+  side.querySelectorAll('.rel a[data-v]').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      var v=a.getAttribute('data-v');
+      var _relurl={'silson':'/pages/silson-generations.html','cancer-treatment':'/pages/cancer-treatment-history.html','caregiver-history':'/pages/caregiver-history.html'}[v];
+      if(_relurl){ location.href=_relurl; }   /* de-iframe 후 독립 URL 직접 이동(과거 parent.showView 의존 폐지) — 폴백(하드코딩) 경로 전용 */
+    });
+  });
+})();
+</script>
+</body>
+</html>
