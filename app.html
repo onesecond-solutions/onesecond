@@ -1966,7 +1966,9 @@ body:not(.is-guest) .hs2-tl-guest{display:none!important;}
 body:not(.is-guest) .hs-homelogo-tx{display:none;}
 /* 좁은 화면 = 박스 왼쪽 바깥 공간 부족 → 로고를 박스 위 중앙으로 */
 @media(max-width:1120px){.hs-box{flex-wrap:wrap;justify-content:center;}.hs-homelogo{position:static;transform:none;right:auto;margin:0 0 12px;width:100%;justify-content:center;}}
-/* 비로그인 공개 검색 결과(대표 지시 2026-07-25) — 공개 원장 문서만. */
+/* 비로그인 공개 검색 결과(대표 지시 2026-07-25) — 검색기 중앙 유지(카테고리 화면식), 태그라인·6카드·부가문구 숨김, 결과만 아래. 좌측정렬(.searching)은 안 씀 → 로고 안 잘림. */
+#homeSearch.gps-on .hs2-tagline,#homeSearch.gps-on .hs2-hub,#homeSearch.gps-on .hs2-aux,#homeSearch.gps-on .hs-sub,#homeSearch.gps-on .hs-head,#homeSearch.gps-on .hs-philo{display:none!important;}
+#homeSearch.gps-on #hsResults{display:block;}
 .gps-wrap{max-width:760px;margin:0 auto;}
 .gps-head{font-size:13px;font-weight:700;color:var(--tf);margin:4px 0 8px;}
 .gps-item{display:block;padding:14px 12px;border-bottom:0.5px solid var(--bd);border-radius:var(--radius-sm);text-decoration:none;color:inherit;transition:background .12s;}
@@ -12174,14 +12176,14 @@ function _homeSearchInit(){
 window._homeSearchInit=_homeSearchInit;
 var _hsTimer=null;
 /* 검색 홈 리셋 — 입력 비움/초기화 (hero 복귀) */
-function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs)hs.classList.remove('searching'); if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; window._svLimit=40; window._svQ=null; window._svPanelHtml=null; window._svOpenKey=null; }
+function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs){hs.classList.remove('searching');hs.classList.remove('gps-on');} if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; window._svLimit=40; window._svQ=null; window._svPanelHtml=null; window._svOpenKey=null; }
 window._hsReset=_hsReset;
 /* 제출(엔터·검색버튼·카드) — 이때만 화면 이동(.searching)+결과 표시. 구글/네이버처럼 입력 중엔 안 움직임 */
 /* 비로그인 공개 검색(대표 지시 2026-07-25) — 내부 통합검색(_runSearchV2)·토큰 가드를 타지 않고, 공개 원장 문서(knowledge-registry.js, customer_ok)만 제목·설명·카테고리로 매칭해 렌더한다. 소식지·Q&A·스크립트·자료실 등 내부 자료 유출 0. */
 function _guestPublicSearch(q){
   var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(!hs||!rs) return;
   q=(q||'').trim(); if(!q){ if(typeof _hsReset==='function')_hsReset(); return; }
-  hs.classList.add('searching');
+  hs.classList.add('gps-on');   /* 좌측정렬 .searching 대신 = 검색기 중앙 유지(카테고리 화면식) + 아래 결과만. 대표 지시 2026-07-25 */
   var docs=(typeof window.knowledgeVisibleDocs==='function')?window.knowledgeVisibleDocs({}):[];
   var ql=q.toLowerCase(),hits=[];
   for(var i=0;i<docs.length;i++){ var d=docs[i];
