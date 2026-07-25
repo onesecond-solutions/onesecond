@@ -16599,6 +16599,16 @@ function _ciDelete(id){
     window._ciData=(window._ciData||[]).filter(function(x){return String(x.id)!==String(id);});
     if(window._ciSel!=null && String(window._ciSel)===String(id)) window._ciSel=null;
     if(window._ciEditId!=null && String(window._ciEditId)===String(id)) window._ciEditId=null;
+    /* 고객관리(salesnote) 페이지네이션: 삭제 후 보던 페이지 유지(2026-07-25). 마지막 항목을 지워 그 페이지가 비면 이전 페이지로.
+       _ciLoad()는 항상 1페이지로 리셋하므로 salesnote(케어플로우 필터 없음) 경로만 별도 처리. care 모드·케어플로우 필터는 아래 기존 경로 유지. */
+    if(window._ciMode==='salesnote' && !window._ciCareF){
+      var _pg=window._ciPage||1;
+      if((window._ciData||[]).length===0 && _pg>1) _pg=_pg-1;  /* 그 페이지 마지막 고객 삭제 → 이전 페이지 */
+      window._ciLoaded=true; window._ciLoadedMode=window._ciMode;
+      _ciLoadSalesnotePage(_pg); _ciLoadApplPool(); _ciStatsLoad();  /* _ciLoad 재현하되 1페이지 리셋 대신 현재 페이지 유지 */
+      var pvS=document.getElementById('ci-preview'); if(pvS) pvS.innerHTML=_ciPreviewHtml(null);
+      return;
+    }
     window._ciLoaded=false; _ciLoad();
     var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(null);
   };
