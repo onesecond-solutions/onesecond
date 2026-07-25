@@ -1969,13 +1969,21 @@ body:not(.is-guest) .hs-homelogo-tx{display:none;}
 /* 비로그인 공개 검색 결과(대표 지시 2026-07-25) — 검색기 중앙 유지(카테고리 화면식), 태그라인·6카드·부가문구 숨김, 결과만 아래. 좌측정렬(.searching)은 안 씀 → 로고 안 잘림. */
 #homeSearch.gps-on .hs2-tagline,#homeSearch.gps-on .hs2-hub,#homeSearch.gps-on .hs2-aux,#homeSearch.gps-on .hs-sub,#homeSearch.gps-on .hs-head,#homeSearch.gps-on .hs-philo{display:none!important;}
 #homeSearch.gps-on #hsResults{display:block;}
-.gps-wrap{max-width:760px;margin:0 auto;}
-.gps-head{font-size:13px;font-weight:700;color:var(--tf);margin:4px 0 8px;}
-.gps-item{display:block;padding:14px 12px;border-bottom:0.5px solid var(--bd);border-radius:var(--radius-sm);text-decoration:none;color:inherit;transition:background .12s;}
-.gps-item:hover{background:var(--s2);}
-.gps-item b{display:block;font-size:18px;font-weight:800;color:var(--tp);}
-.gps-item span{display:block;font-size:15px;color:var(--ts);margin-top:2px;}
-.gps-empty{padding:30px 12px;text-align:center;color:var(--ts);font-size:16px;line-height:1.7;}
+/* 결과 목록 = 카테고리 화면 문서목록 스타일 응용(대표 지시 2026-07-25): 1010 중앙 블록 안에 710 본문 좌측정렬. */
+#homeSearch.gps-on #hsResults{max-width:1010px;width:100%;margin:10px auto 0;align-self:stretch;}  /* 부모(.hs-wrap)가 align-items:center라 결과가 중앙 shrink → stretch로 1010 폭 확보 */
+.gps-body{max-width:710px;line-height:1.85;}
+.gps-kicker{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--ac);}
+.gps-h1{font-size:27px;font-weight:800;color:var(--tp);margin:4px 0 6px;line-height:1.35;word-break:break-all;}
+.gps-count{font-size:13px;color:var(--tf);margin-top:8px;}
+.gps-rule{height:2px;background:var(--tp);opacity:.85;margin:12px 0 0;border-radius:1px;}
+.gps-list{display:block;}
+.gps-doc{display:block;padding:16px 12px;margin:0 -12px;border-bottom:0.5px solid var(--bd);border-radius:var(--radius-sm);text-decoration:none;color:inherit;transition:background .12s;}
+.gps-doc:hover{background:var(--s2);}
+.gps-doc-t{font-size:19px;font-weight:800;color:var(--tp);line-height:1.45;}
+.gps-doc-d{font-size:16px;color:var(--ts);margin-top:2px;}
+.gps-doc-m{font-size:12.5px;color:var(--tf);margin-top:4px;}
+.gps-empty-wrap{max-width:710px;margin:0 auto;}
+.gps-empty{padding:40px 12px;text-align:center;color:var(--ts);font-size:16px;line-height:1.7;}
 .gps-empty span{font-size:14px;color:var(--tf);}
 /* about(소개) = 홈 데스크 최소 사이드바에서도 홈(#nav-home)과 동일하게 항상 노출. app-views.css의 'body.is-uat-homedesk:not(.is-admin) .side .nav{display:none}'가 화이트리스트(#nav-home 등)만 남기고 전부 숨기는데, 오늘 추가된 #nav-about이 목록에서 빠져 비로그인·로그인 모두 접힘/펼침에서 사라지던 버그. #nav-home 화이트리스트(app-views.css:330)와 동일 규칙으로 복원. (2026-07-08) */
 body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
@@ -12191,12 +12199,14 @@ function _guestPublicSearch(q){
     if(hay.indexOf(ql)>=0) hits.push(d);
   }
   function _e(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function _ym(iso){var s=String(iso||'');return s.length>=7?s.slice(0,7):s;}
   var html;
   if(!hits.length){
-    html='<div class="gps-wrap"><div class="gps-empty">‘'+_e(q)+'’에 대한 공개 자료를 찾지 못했습니다.<br><span>지금은 의료실비·암·간병 변천사 등 공개 자료가 검색됩니다.</span></div></div>';
+    html='<div class="gps-empty-wrap"><div class="gps-empty">‘'+_e(q)+'’에 대한 공개 자료를 찾지 못했습니다.<br><span>지금은 의료실비·암·간병 변천사 등 공개 자료가 검색됩니다.</span></div></div>';
   }else{
-    var it=''; for(var j=0;j<hits.length;j++){ var h=hits[j]; it+='<a class="gps-item" href="'+_e(h.url)+'"><b>'+_e(h.label)+'</b><span>'+_e(h.description)+'</span></a>'; }
-    html='<div class="gps-wrap"><div class="gps-head">공개 자료 '+hits.length+'건</div>'+it+'</div>';
+    /* 카테고리 화면(#v-axis-*) 문서목록 레이아웃 응용(대표 지시 2026-07-25): 검색결과=좌측정렬 목록 + 헤더/구분선 */
+    var it=''; for(var j=0;j<hits.length;j++){ var h=hits[j]; it+='<a class="gps-doc" href="'+_e(h.url)+'"><div class="gps-doc-t">'+_e(h.label)+'</div><div class="gps-doc-d">'+_e(h.description)+'</div><div class="gps-doc-m">'+_e(_ym(h.updatedAt))+'</div></a>'; }
+    html='<div class="gps-body"><div class="gps-kicker">검색 결과</div><h1 class="gps-h1">'+_e(q)+'</h1><div class="gps-count">공개 자료 '+hits.length+'건</div><div class="gps-rule"></div><div class="gps-list">'+it+'</div></div>';
   }
   rs.innerHTML=html;
 }
