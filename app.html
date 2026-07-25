@@ -1966,6 +1966,15 @@ body:not(.is-guest) .hs2-tl-guest{display:none!important;}
 body:not(.is-guest) .hs-homelogo-tx{display:none;}
 /* 좁은 화면 = 박스 왼쪽 바깥 공간 부족 → 로고를 박스 위 중앙으로 */
 @media(max-width:1120px){.hs-box{flex-wrap:wrap;justify-content:center;}.hs-homelogo{position:static;transform:none;right:auto;margin:0 0 12px;width:100%;justify-content:center;}}
+/* 비로그인 공개 검색 결과(대표 지시 2026-07-25) — 공개 원장 문서만. */
+.gps-wrap{max-width:760px;margin:0 auto;}
+.gps-head{font-size:13px;font-weight:700;color:var(--tf);margin:4px 0 8px;}
+.gps-item{display:block;padding:14px 12px;border-bottom:0.5px solid var(--bd);border-radius:var(--radius-sm);text-decoration:none;color:inherit;transition:background .12s;}
+.gps-item:hover{background:var(--s2);}
+.gps-item b{display:block;font-size:18px;font-weight:800;color:var(--tp);}
+.gps-item span{display:block;font-size:15px;color:var(--ts);margin-top:2px;}
+.gps-empty{padding:30px 12px;text-align:center;color:var(--ts);font-size:16px;line-height:1.7;}
+.gps-empty span{font-size:14px;color:var(--tf);}
 /* about(소개) = 홈 데스크 최소 사이드바에서도 홈(#nav-home)과 동일하게 항상 노출. app-views.css의 'body.is-uat-homedesk:not(.is-admin) .side .nav{display:none}'가 화이트리스트(#nav-home 등)만 남기고 전부 숨기는데, 오늘 추가된 #nav-about이 목록에서 빠져 비로그인·로그인 모두 접힘/펼침에서 사라지던 버그. #nav-home 화이트리스트(app-views.css:330)와 동일 규칙으로 복원. (2026-07-08) */
 body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
 /* A영역 헤더 로그인/회원가입 — pill(둥근) 버튼. 각진 사각형 금지=var(--radius-full) 9999px. 로그인=조용한 ghost/outline · 회원가입=포인트 filled. 2026-07-08 대표 라이브 피드백. */
@@ -12168,11 +12177,33 @@ var _hsTimer=null;
 function _hsReset(){ var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(_hsTimer)clearTimeout(_hsTimer); _searchSeq++; if(hs)hs.classList.remove('searching'); if(rs)rs.innerHTML=''; window._svActiveSource='all'; window._svCatFilter=null; window._svLimit=40; window._svQ=null; window._svPanelHtml=null; window._svOpenKey=null; }
 window._hsReset=_hsReset;
 /* 제출(엔터·검색버튼·카드) — 이때만 화면 이동(.searching)+결과 표시. 구글/네이버처럼 입력 중엔 안 움직임 */
-function _hsSearch(q){
-  var _stk=window.db&&window.db.getToken&&window.db.getToken();
-  if(!_stk){ if(window._osLoginGate)_osLoginGate(); return; }  /* 비로그인 = 검색 실행 차단(결과로 개인/전체 데이터가 새지 않게). 쓰기 게이트와 동일 모델. 2026-07-08 유출 수정 */
+/* 비로그인 공개 검색(대표 지시 2026-07-25) — 내부 통합검색(_runSearchV2)·토큰 가드를 타지 않고, 공개 원장 문서(knowledge-registry.js, customer_ok)만 제목·설명·카테고리로 매칭해 렌더한다. 소식지·Q&A·스크립트·자료실 등 내부 자료 유출 0. */
+function _guestPublicSearch(q){
   var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(!hs||!rs) return;
+  q=(q||'').trim(); if(!q){ if(typeof _hsReset==='function')_hsReset(); return; }
+  hs.classList.add('searching');
+  var docs=(typeof window.knowledgeVisibleDocs==='function')?window.knowledgeVisibleDocs({}):[];
+  var ql=q.toLowerCase(),hits=[];
+  for(var i=0;i<docs.length;i++){ var d=docs[i];
+    var hay=((d.label||'')+' '+(d.description||'')+' '+(d.category||'')+' '+(d.documentTitle||'')).toLowerCase();
+    if(hay.indexOf(ql)>=0) hits.push(d);
+  }
+  function _e(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var html;
+  if(!hits.length){
+    html='<div class="gps-wrap"><div class="gps-empty">‘'+_e(q)+'’에 대한 공개 자료를 찾지 못했습니다.<br><span>지금은 의료실비·암·간병 변천사 등 공개 자료가 검색됩니다.</span></div></div>';
+  }else{
+    var it=''; for(var j=0;j<hits.length;j++){ var h=hits[j]; it+='<a class="gps-item" href="'+_e(h.url)+'"><b>'+_e(h.label)+'</b><span>'+_e(h.description)+'</span></a>'; }
+    html='<div class="gps-wrap"><div class="gps-head">공개 자료 '+hits.length+'건</div>'+it+'</div>';
+  }
+  rs.innerHTML=html;
+}
+window._guestPublicSearch=_guestPublicSearch;
+function _hsSearch(q){
   q=((q==null?((document.getElementById('hsInput')||{}).value||''):q)||'').trim();
+  var _stk=window.db&&window.db.getToken&&window.db.getToken();
+  if(!_stk){ if(typeof window._guestPublicSearch==='function')window._guestPublicSearch(q); return; }  /* 비로그인=공개 지식 전용 검색(내부 자료 유출 없음, 대표 지시 2026-07-25). 로그인=기존 통합검색 */
+  var hs=document.getElementById('homeSearch'),rs=document.getElementById('hsResults'); if(!hs||!rs) return;
   if(!q){ _hsReset(); return; }
   hs.classList.add('searching');
   if(_hsTimer)clearTimeout(_hsTimer);
