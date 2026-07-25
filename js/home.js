@@ -10,7 +10,7 @@
    show() = 각 view의 showView 가드와 동일 조건: product-lineup·tool·scripts=전체개방 / goji=_canSeeRoadmap / newsletters=_canSeeNl / silson=전체개방(2026-07-21, cancer-treatment 전례). 2026-07-07 */
 var _HS2_TILES=[
   /* 보장분석 6축 카드(의료실비·암·뇌심장·수술비·간병·기타) = 허브를 거치지 않고 각자 독립 빈 뷰(axis-*)로 바로 진입. 게이트는 '보장분석' 타일과 동일(_canSeeCoverage). v = showView('axis-*') 인자(일반 타일과 동일 배선, 아래 _hs2RenderHub). (2026-07-23, 대표 지시로 sub 배선→독립 뷰로 전환. 간병 축 추가. '기타' 축도 동일 배선으로 개방) */
-  {v:'axis-medical',    ic:'i-file',  t:'의료실비',   d:'세대 설명 + 가입일 세대판정',      show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  {v:'axis-medical',    ic:'i-file',  t:'의료실비',   d:'세대 설명 + 가입일 세대판정',      url:'/insurance/silson/',      show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},/* url = 정적 공개 카테고리(대표 지시 2026-07-25). 나머지 축은 정적 페이지 제작 후 순차 연결 */
   {v:'axis-cancer',     ic:'i-check', t:'암',         d:'진단·치료·비급여 3층 구조',        show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'axis-brainheart', ic:'i-heart', t:'뇌 · 심장',  d:'좁은문 vs 넓은문 보장범위',        show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   {v:'axis-surgery',    ic:'i-note',  t:'수술비',     d:'종수술·반복지급 구조',            show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
@@ -43,7 +43,7 @@ function _hs2RenderHub(){
     if(_guest){ if(!_AXIS[t.v]) continue; }                          /* 비로그인=6축만(show 게이트 무시하고 노출) */
     else if(typeof t.show==='function'&&!t.show()) continue;         /* 로그인=기존 게이트 그대로 */
     /* showView(t.v) 단일 배선(모든 타일 동일 패턴). */
-    var _attrs = ' onclick="showView(\''+t.v+'\')"';
+    var _attrs = t.url ? (' onclick="location.href=\''+t.url+'\'"') : (' onclick="showView(\''+t.v+'\')"');  /* url 있으면 정적 공개 카테고리로 이동(대표 지시 2026-07-25), 없으면 기존 SPA(showView) */
     h+='<button type="button" class="hs2-hub-tile'+(t.cls?' '+t.cls:'')+'"'+_attrs+'><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
   }
   grid.innerHTML=h;
