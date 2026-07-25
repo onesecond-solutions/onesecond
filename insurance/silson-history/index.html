@@ -182,17 +182,84 @@ html.v3 .tcard .kv .v small{font-size:13.5px}
 .home-back{display:inline-flex;align-items:center;gap:2px;margin-bottom:12px;color:var(--indigo-d);text-decoration:none;font-size:13px;font-weight:700;padding:6px 13px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .home-back:hover{background:var(--indigo-l)}
 </style>
+<!-- 카테고리 껍데기(=/insurance/silson/ 와 동일) CSS — 열고 닫힘 착시를 위해 공통 영역을 동일하게 -->
+<link rel="stylesheet" href="/css/knowledge-category.css?v=20260724b">
+<link rel="stylesheet" href="/css/app-core.css?v=20260708">
+<link rel="stylesheet" href="/css/app-views.css?v=20260708">
+<style>
+/* 셸 + 검색기(=/insurance/silson/ 이식) + 펼친 문서 본문 */
+html,body{margin:0;padding:0;}
+body{background:var(--bg);font-family:'Pretendard',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--bodytx);}
+.pub-top{display:flex;justify-content:flex-end;align-items:center;padding:16px 24px;}
+.pub-login{display:inline-flex;align-items:center;height:34px;padding:0 16px;border-radius:9999px;font-size:0.8125rem;font-weight:600;line-height:1;color:var(--ts);background:transparent;border:1px solid var(--bd);cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s;}
+.pub-login:hover{background:var(--s2);color:var(--tp);border-color:var(--tf);}
+#v-axis-medical{display:flex;flex-direction:column;padding:12px 24px 60px;}
+.kc-searchslot{margin-bottom:14px;flex-shrink:0;position:relative;}
+.hs-box{display:flex;align-items:center;gap:8px;max-width:640px;margin:0 auto;position:relative;}
+.hs-field{flex:1;display:flex;align-items:center;gap:10px;min-height:60px;height:60px;padding:0 16px;background:var(--s1);border:1.5px solid var(--bd);border-radius:22px;position:relative;min-width:0;}
+.hs-field:focus-within{border-color:var(--ac);box-shadow:0 4px 18px rgba(99,102,241,.14);}
+.hs-field svg{width:26px;height:26px;flex-shrink:0;color:var(--tf);}
+.hs-field input{flex:1;border:0;outline:0;background:transparent;font-size:1.0625rem;color:var(--tp);min-width:0;}
+.hs-go{height:60px;padding:0 22px;border:0;border-radius:22px;background:var(--ac);color:#fff;font-size:1.0625rem;font-weight:700;cursor:pointer;flex-shrink:0;}
+.hs-go:hover{background:var(--ach);}
+.hs-homelogo{position:absolute;top:50%;right:100%;margin-right:14px;transform:translateY(-50%);display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none;z-index:2;}
+.hs-homelogo-ic{width:30px;height:30px;border-radius:8px;object-fit:cover;flex:0 0 auto;}
+.hs-homelogo-tx{font-size:18px;font-weight:800;color:var(--tp);letter-spacing:-.01em;white-space:nowrap;}
+@media(max-width:1120px){.hs-box{flex-wrap:wrap;justify-content:center;}.hs-homelogo{position:static;transform:none;right:auto;margin:0 0 12px;width:100%;justify-content:center;}}
+@media(max-width:640px){.hs-field{min-height:56px;height:56px;}.hs-go{height:56px;padding:0 16px;}}
+/* 펼친 문서 = 목록의 '의료실비 변천사' 제목(클릭=닫기) + 그 아래 본문 */
+.kc-doc-open{background:var(--s2);}
+.kc-toggle{font-size:12.5px;font-weight:700;color:var(--ac);margin-left:8px;}
+.doc-body{padding:6px 0 0;}
+.doc-body .section-t:first-child{margin-top:14px;}
+/* 실손 본문(V3)을 kc-body(710) 폭 안에 — 넓은 표는 가로 스크롤 */
+html.v3 .doc-body .wrap,.doc-body .wrap{max-width:100%;}
+.doc-body #cmpTable,.doc-body #cmpCards,.doc-body .gens,.doc-body .panel{max-width:100%;}
+.doc-body .tbl-wrap{overflow-x:auto;}
+</style>
 <script src="/js/knowledge-registry.js?v=20260724"></script>
 </head>
 <body>
-<div class="v3grid">
-<div class="wrap">
-  <!-- 원세컨드 홈 백링크 = 기존 iframe 감싸개 '홈으로' 버튼 대체. 홈 URL(/) 직접 이동 — 외부 유입 대응 (2026-07-22 de-iframe 2단계) -->
-  <a href="/" class="home-back" aria-label="원세컨드 홈으로">&#8249; 원세컨드 홈</a>
-  <div class="head">
-    <h1>📊 실손의료비보험 세대별 변천사<span class="badge">참고용</span></h1>
-    <p>금융감독원·손해보험협회 공식 기준 · 가입 시기에 따라 보장 구조가 완전히 다릅니다</p>
+<div class="pub-top"><a class="pub-login" href="/app.html?view=home">설계사 로그인 <span aria-hidden="true">&#8594;</span></a></div>
+
+<!-- /insurance/silson/ 와 동일한 카테고리 껍데기(로고·검색기·6탭·목록) + 의료실비 변천사가 '펼쳐진' 상태.
+     제목 클릭 = /insurance/silson/(닫힌 카테고리)로 돌아가 닫힘. 공통 껍데기가 동일해 인라인 펼침/닫힘처럼 보임(대표 지시 2026-07-25 D안). -->
+<div id="v-axis-medical">
+  <div class="kc-searchslot">
+    <div class="hs-box">
+      <a class="hs-homelogo" href="/app.html?view=home" title="원세컨드 홈">
+        <img class="hs-homelogo-ic" src="/assets/images/logo/logo03.jpg" alt="원세컨드">
+        <span class="hs-homelogo-tx">onesecond</span>
+      </a>
+      <div class="hs-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="search" placeholder="궁금한 보험이나 보장 내용을 검색해보세요" aria-label="공개 보험지식 검색">
+      </div>
+      <button class="hs-go" type="button">검색</button>
+    </div>
   </div>
+  <div class="tabs kc-tabs">
+    <a class="tab on" href="/insurance/silson/" aria-current="page">의료실비<span class="kc-n">1</span></a>
+    <a class="tab" href="/insurance/cancer/">암<span class="kc-n">1</span></a>
+    <a class="tab" href="/insurance/brain-heart/">뇌 · 심장</a>
+    <a class="tab" href="/insurance/surgery/">수술비</a>
+    <a class="tab" href="/insurance/care-dementia/">간병 · 치매<span class="kc-n">1</span></a>
+    <a class="tab" href="/insurance/other/">기타</a>
+  </div>
+  <div class="chips kc-chips"></div>
+  <div class="kc-scroll"><div class="kc-body">
+    <div class="kc-kicker">보장 영역</div>
+    <h1 class="kc-h1">의료실비</h1>
+    <div class="kc-hook">같은 실손보험이라도 가입 시기에 따라 보장과 자기부담이 다릅니다.</div>
+    <div class="kc-count">자료 1건</div>
+    <div class="kc-rule"></div>
+    <div class="kc-list">
+      <a class="kc-doc kc-doc-open" href="/insurance/silson/" title="접기">
+        <div class="kc-doc-t">의료실비 변천사<span class="kc-toggle">접기 &#9650;</span></div>
+        <div class="kc-doc-d">실손 1~5세대 보장·전환</div>
+        <div class="kc-doc-m">2026-07</div>
+      </a>
+      <div class="doc-body">
 
   <!-- ① 상세 변천사 표 (항상 고정) -->
   <div class="section-t">📈 실손보험 세대별 변천사</div>
@@ -304,10 +371,10 @@ html.v3 .tcard .kv .v small{font-size:13.5px}
   </div>
 
   <p class="src">출처: 금융감독원·손해보험협회 실손 세대 구분 · 금융위·보건복지부 5세대 개편안 · KB손해보험 GA소식지 2026.07 · 보험연구원 「5세대 실손 상생방안」(2025.12)</p>
-</div><!-- /.wrap -->
-
-  <aside class="v3side" id="v3side" aria-hidden="true"></aside>
-</div><!-- /.v3grid -->
+      </div><!-- /.doc-body -->
+    </div><!-- /.kc-list -->
+  </div></div><!-- /.kc-body /.kc-scroll -->
+</div><!-- /#v-axis-medical -->
 
 <script>
 /* ══ 메인 비교표 — 데이터 한 벌 → 모바일 카드(세대 전치) + PC 표 이중 렌더 ══ */
