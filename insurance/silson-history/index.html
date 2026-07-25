@@ -216,6 +216,20 @@ body{background:var(--bg);font-family:'Pretendard',-apple-system,BlinkMacSystemF
 html.v3 .doc-body .wrap,.doc-body .wrap{max-width:100%;}
 .doc-body #cmpTable,.doc-body #cmpCards,.doc-body .gens,.doc-body .panel{max-width:100%;}
 .doc-body .tbl-wrap{overflow-x:auto;}
+/* 정적 페이지 = 페이지 전체 스크롤(앱 내부 스크롤 kc-scroll 무효) */
+#v-axis-medical{display:block;overflow:visible;}
+.kc-scroll{overflow:visible;flex:none;min-height:auto;}
+/* 헤더·문서제목은 710 유지, 본문+우측 레일 수용 위해 kc-body만 1010 */
+.kc-body{max-width:1010px;}
+.kc-kicker,.kc-h1,.kc-hook,.kc-count,.kc-rule,.kc-doc{max-width:710px;}
+/* 문서 본문(710) + 우측 레일(244) — 넓은 화면 2단(기존 V3 사이드바 복원) */
+.doc-grid{display:block;}
+@media(min-width:1120px){
+  .doc-grid{display:grid;grid-template-columns:710px 244px;gap:32px;align-items:start;}
+  .doc-grid .doc-body{min-width:0;}
+  .doc-grid .v3side{display:block;position:sticky;top:24px;}
+}
+@media(max-width:1119px){.v3side{display:none;}}
 </style>
 <script src="/js/knowledge-registry.js?v=20260724"></script>
 </head>
@@ -259,6 +273,7 @@ html.v3 .doc-body .wrap,.doc-body .wrap{max-width:100%;}
         <div class="kc-doc-d">실손 1~5세대 보장·전환</div>
         <div class="kc-doc-m">2026-07</div>
       </a>
+      <div class="doc-grid">
       <div class="doc-body">
 
   <!-- ① 상세 변천사 표 (항상 고정) -->
@@ -372,6 +387,8 @@ html.v3 .doc-body .wrap,.doc-body .wrap{max-width:100%;}
 
   <p class="src">출처: 금융감독원·손해보험협회 실손 세대 구분 · 금융위·보건복지부 5세대 개편안 · KB손해보험 GA소식지 2026.07 · 보험연구원 「5세대 실손 상생방안」(2025.12)</p>
       </div><!-- /.doc-body -->
+      <aside class="v3side" id="v3side" aria-hidden="true"></aside>
+      </div><!-- /.doc-grid -->
     </div><!-- /.kc-list -->
   </div></div><!-- /.kc-body /.kc-scroll -->
 </div><!-- /#v-axis-medical -->
