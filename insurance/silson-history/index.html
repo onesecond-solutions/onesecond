@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>실손의료비보험 세대별 변천사 · 원세컨드 보험 지식</title>
+<meta name="description" content="실손보험은 가입 시기에 따라 1~5세대로 나뉘며 자기부담·재가입·비급여 보장이 다릅니다. 세대별 비교표와 5세대 개편 내용을 정리했습니다.">
+<link rel="canonical" href="https://onesecond.solutions/insurance/silson-history/">
+<link rel="stylesheet" href="/insurance/insurance.css">
+<style>
+/* 실손 변천사 문서 전용 스타일 (공용 insurance.css 위에 문서 본문 레이아웃 추가) */
+.doc-grid{max-width:var(--pub-maxw);margin:0 auto;}
+.doc-body{max-width:var(--pub-readw);margin:0 auto;}
+.doc-kicker{font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--pub-teal);text-transform:uppercase;}
+.doc-h1{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.3;margin:6px 0 8px;}
+.doc-summary{font-size:16px;color:var(--pub-sub);margin:0 0 18px;}
+.doc-sec{font-size:20px;font-weight:800;margin:38px 0 14px;letter-spacing:-.01em;}
+.doc-lead{font-size:16px;color:var(--pub-ink);margin:0 0 14px;}
+.doc-p{font-size:16px;line-height:1.85;margin:0 0 12px;}
+.doc-p b{color:var(--pub-teal-d);}
+
+/* 세대 비교표 (모바일 가로 스크롤) */
+.doc-tablewrap{overflow-x:auto;border:1px solid var(--pub-line);border-radius:12px;margin:8px 0 6px;-webkit-overflow-scrolling:touch;}
+.doc-table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px;}
+.doc-table th,.doc-table td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--pub-line);vertical-align:middle;line-height:1.5;}
+.doc-table thead th{background:var(--pub-teal);color:#fff;font-weight:700;}
+.doc-table thead th.g5{background:#c2560c;}
+.doc-table tbody th{background:var(--pub-soft);text-align:left;font-weight:700;white-space:nowrap;}
+.doc-table tbody tr:last-child td,.doc-table tbody tr:last-child th{border-bottom:none;}
+.doc-table .core td,.doc-table .core th{font-weight:800;background:#eef7f5;}
+.doc-table small{display:block;color:var(--pub-sub);font-size:12.5px;margin-top:2px;}
+.hl{color:var(--pub-teal-d);font-weight:700;} .o{color:#c2560c;font-weight:700;} .gr{color:#059669;font-weight:700;}
+
+/* 세대 심층 블록 */
+.gen-block{border:1px solid var(--pub-line);border-radius:14px;padding:18px 18px 6px;margin:0 0 14px;border-top:4px solid var(--pub-teal);}
+.gen-block h3{font-size:18px;font-weight:800;margin:0 0 4px;}
+.gen-block .gen-per{font-size:13px;color:var(--pub-sub);font-weight:600;}
+.gen-block .gen-lead{font-size:15px;color:var(--pub-ink);margin:8px 0 12px;}
+.gen-facts{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:6px;}
+.gen-facts .f{background:var(--pub-soft);border:1px solid var(--pub-line);border-radius:9px;padding:10px 12px;}
+.gen-facts .f .ft{font-size:14px;font-weight:800;margin-bottom:3px;}
+.gen-facts .f .fd{font-size:14px;color:var(--pub-sub);line-height:1.55;}
+.gen-facts .f .fd b{color:var(--pub-ink);}
+.doc-note{background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:10px 14px;font-size:14.5px;color:#92400e;line-height:1.6;margin:12px 0;}
+
+.doc-src{font-size:13px;color:var(--pub-sub);line-height:1.9;margin-top:26px;border-top:1px solid var(--pub-line);padding-top:16px;}
+.doc-caution{font-size:13.5px;color:var(--pub-sub);background:var(--pub-soft);border-radius:9px;padding:12px 14px;margin:16px 0;line-height:1.7;}
+
+/* FAQ */
+.faq-item{border-bottom:1px solid var(--pub-line);padding:14px 2px;}
+.faq-q{font-size:16px;font-weight:700;margin-bottom:6px;}
+.faq-a{font-size:15px;color:var(--pub-sub);line-height:1.75;}
+
+/* 우측 레일 */
+.doc-rail{display:none;}
+.doc-rail .rblk{margin-bottom:24px;}
+.doc-rail .rlb{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--pub-sub);text-transform:uppercase;margin-bottom:10px;}
+.doc-rail .rtoc a{display:block;padding:6px 0 6px 12px;border-left:2px solid var(--pub-line);font-size:13.5px;color:var(--pub-sub);line-height:1.45;}
+.doc-rail .rtoc a:hover{color:var(--pub-ink);border-left-color:var(--pub-teal);}
+.doc-rail .ract button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:1px solid var(--pub-line);background:#fff;border-radius:9px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--pub-ink);cursor:pointer;text-align:left;margin-bottom:7px;}
+.doc-rail .ract button:hover{border-color:var(--pub-teal);background:var(--pub-soft);color:var(--pub-teal-d);}
+.doc-rail .rrel a{display:block;padding:10px 12px;border:1px solid var(--pub-line);border-radius:9px;margin-bottom:7px;}
+.doc-rail .rrel a:hover{border-color:var(--pub-teal);}
+.doc-rail .rrel b{display:block;font-size:13.5px;font-weight:700;color:var(--pub-ink);}
+.doc-rail .rrel span{display:block;font-size:12px;color:var(--pub-sub);margin-top:2px;}
+
+@media(min-width:768px){ .gen-facts{grid-template-columns:repeat(3,1fr);} }
+@media(min-width:1120px){
+  .doc-grid{display:grid;grid-template-columns:710px 244px;gap:36px;justify-content:center;align-items:start;}
+  .doc-body{margin:0;width:710px;}
+  .doc-rail{display:block;position:sticky;top:24px;padding-top:20px;}
+}
+</style>
+</head>
+<body>
+<header class="pub-hd">
+  <div class="pub-hd-in"><a class="pub-logo" href="/insurance/">원세컨드 <span>보험 지식</span></a></div>
+</header>
+<main class="pub-wrap">
+  <!-- 검색기: WO-4에서 공개 지식 전용 검색 핸들러 연결. 현재는 UI 자리. -->
+  <div class="pub-search">
+    <input type="search" class="pub-search-in" placeholder="공개 보험지식을 검색하세요" aria-label="공개 보험지식 검색">
+  </div>
+  <nav class="pub-tabs" aria-label="보장 주제">
+    <a class="pub-tab is-on" href="/insurance/silson/" aria-current="page">의료실비</a>
+    <a class="pub-tab" href="/insurance/cancer/">암</a>
+    <a class="pub-tab" href="/insurance/brain-heart/">뇌·심장</a>
+    <a class="pub-tab" href="/insurance/surgery/">수술비</a>
+    <a class="pub-tab" href="/insurance/care-dementia/">간병·치매</a>
+    <a class="pub-tab" href="/insurance/other/">기타</a>
+  </nav>
+
+  <div class="doc-grid">
+    <article class="doc-body">
+      <div class="doc-kicker">의료실비 · 공개 자료</div>
+      <h1 class="doc-h1">실손의료비보험 세대별 변천사</h1>
+      <p class="doc-summary">실손 1~5세대의 자기부담·재가입·비급여 보장 구조를 한눈에 비교합니다.</p>
+
+      <p class="doc-p">실손보험은 <b>가입 시기</b>에 따라 1~5세대로 나뉘며, 세대마다 자기부담률·재가입 조건·비급여 보장 구조가 다릅니다. 큰 흐름은 <b>“보장은 넓지만 비싼 옛 세대 → 보험료는 싸지만 자기부담이 큰 새 세대”</b>로 이동해 왔습니다. 특히 <b>2013년 4월</b>(2세대 재가입 분기)과 <b>2026년 5월 6일</b>(5세대 출시·4세대 종료)이 결정적 분기점입니다. 아래에서 각 세대의 자기부담·보장 특징을 확인하세요.</p>
+
+      <h2 class="doc-sec" id="sec-table">실손보험 세대별 변천사</h2>
+      <div class="doc-tablewrap">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th style="background:#334155">구분</th>
+              <th>1세대<small>~2009.9</small></th>
+              <th>2세대<small>2009.10~2017.3</small></th>
+              <th>3세대<small>2017.4~2021.6</small></th>
+              <th>4세대<small>2021.7~2026.5</small></th>
+              <th class="g5">5세대<small>2026.5.6~</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th>재가입 주기</th><td><span class="gr">없음</span><small>80~100세</small></td><td>초기 없음<br><span class="hl">’13.4~ 15년 재가입</span></td><td>15년 재가입</td><td>5년 재가입</td><td>5년 재가입</td></tr>
+            <tr><th>갱신 주기</th><td>3년 또는 5년</td><td>1년 또는 3년</td><td>1년</td><td>1년</td><td>1년</td></tr>
+            <tr><th>입원 자기부담</th><td><span class="gr">없음(100%)</span><small>생보 가입 20%</small></td><td>표준형 20%<br>선택형 10%</td><td>급여 10~20%<br>비급여 20%<small>3대비급여 30%</small></td><td><span class="hl">급여 20%</span><br><span class="hl">비급여 30%</span></td><td>급여 20%<br>중증 30%/비중증 50%</td></tr>
+            <tr><th>통원 공제금액</th><td>없음<small>5~10만</small></td><td>의원 1만<br>병원 1.5만<br>종합·상급 2만</td><td>의원 1만·병원 1.5만<br>종합·상급 2만<small>3대비급여 별도</small></td><td>급여 1만·2만<br>비급여 3만<small>또는 20~30% 큰금액</small></td><td>급여 20%(1·2만)<br>중증 30%/비중증 50%</td></tr>
+            <tr><th>통원 한도(1일)</th><td>25만</td><td>25만</td><td>급여+비급여 30만<small>3대비급여 별도</small></td><td>급여 20만·비급여 20만<small>별도</small></td><td>비중증 20만<small>합산 한도</small></td></tr>
+            <tr><th>입원 한도(연간)</th><td>5천만~1억</td><td>5천만</td><td>5천만</td><td>5천만</td><td>중증 5천만<br>비중증 <span class="o">1천만</span></td></tr>
+            <tr><th>비급여 구조</th><td><span class="gr">급여+비급여<br>통합 보장</span></td><td>급여+비급여<br>통합 보장</td><td>도수·주사·MRI<br><span class="hl">3대 비급여 분리</span></td><td>비급여 전체<br><span class="hl">특약 분리</span><small>할인·할증</small></td><td>중증·비중증 차등<br><span class="o">비중증 축소</span></td></tr>
+            <tr><th>보험료 할증</th><td>없음</td><td>없음</td><td>없음</td><td>비급여 청구액<br>100만↑ <span class="hl">최대 300%</span></td><td>비급여 차등<br>강화</td></tr>
+            <tr class="core"><th>한 줄 정리</th><td>자기부담 없는<br>최강 보장</td><td>표준약관 통일<br>본인부담 시작</td><td>도수·주사·MRI<br>따로 떼어냄</td><td>싼 대신 비급여<br>쓸수록 할증</td><td class="o">큰 병 두껍게<br>가벼운 건 얇게</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="doc-caution">세대 구분과 수치는 금융감독원·손해보험협회 공식 기준을 정리한 참고 자료입니다. 세부 조건은 보험사·상품·특약별로 다를 수 있으니 실제 약관으로 확인하세요.</p>
+
+      <h2 class="doc-sec" id="sec-gen">세대별 심층</h2>
+
+      <div class="gen-block">
+        <h3>1세대 실손 <span class="gen-per">~2009.9 · 구실손</span></h3>
+        <p class="gen-lead">자기부담이 거의 없어 보장이 가장 넓습니다. 보험료가 비싸도 보장 범위가 가장 큰 세대입니다.</p>
+        <div class="gen-facts">
+          <div class="f"><div class="ft">가입·재가입</div><div class="fd">~2009년 9월 · <b>재가입 없음</b>(80~100세 유지) · 갱신 3~5년</div></div>
+          <div class="f"><div class="ft">자기부담</div><div class="fd"><b>없음(100% 보장)</b> · 생보사 가입분은 20%</div></div>
+          <div class="f"><div class="ft">보장 구조</div><div class="fd">급여+비급여 <b>통합 보장</b> · 통원 공제 5~10만</div></div>
+        </div>
+      </div>
+
+      <div class="gen-block">
+        <h3>2세대 실손 <span class="gen-per">2009.10~2017.3 · 표준화실손</span></h3>
+        <p class="gen-lead">표준약관이 통일된 세대. <b>2013년 4월 1일</b>을 기준으로 초기·후기가 갈립니다.</p>
+        <div class="gen-facts">
+          <div class="f"><div class="ft">재가입 분기</div><div class="fd">초기(~2013.3): <b>재가입 없음</b>, 100세 유지<br>후기(2013.4~): <b>15년 재가입</b></div></div>
+          <div class="f"><div class="ft">자기부담</div><div class="fd">표준형 <b>20%</b> / 선택형 <b>10%</b> · 갱신 1~3년</div></div>
+          <div class="f"><div class="ft">보장 구조</div><div class="fd">급여+비급여 통합 · 통원 공제 의원 1만·병원 1.5만·종합/상급 2만</div></div>
+        </div>
+        <div class="doc-note">2세대는 <b>가입 시점이 2013.4 이전인지 이후인지</b>가 재가입 여부를 가릅니다. 증권에서 정확한 가입일을 먼저 확인하세요.</div>
+      </div>
+
+      <div class="gen-block">
+        <h3>3세대 실손 <span class="gen-per">2017.4~2021.6 · 착한실손</span></h3>
+        <p class="gen-lead">손해율이 높은 3대 비급여(도수·주사·MRI)를 <b>특약으로 분리</b>해 보험료를 낮춘 세대입니다.</p>
+        <div class="gen-facts">
+          <div class="f"><div class="ft">재가입·갱신</div><div class="fd"><b>15년 재가입</b> · 1년 갱신</div></div>
+          <div class="f"><div class="ft">자기부담</div><div class="fd">급여 10~20% · 비급여 20% · <b>3대비급여 특약 30%</b></div></div>
+          <div class="f"><div class="ft">보장 구조</div><div class="fd">도수·비급여주사·MRI <b>3대 비급여 특약 분리</b> · 통원 합산 30만(3대비급여 별도)</div></div>
+        </div>
+      </div>
+
+      <div class="gen-block">
+        <h3>4세대 실손 <span class="gen-per">2021.7~2026.5</span></h3>
+        <p class="gen-lead">비급여 전체를 특약으로 분리하고 <b>비급여 할증</b>을 도입해 보험료를 최저로 낮춘 세대입니다.</p>
+        <div class="gen-facts">
+          <div class="f"><div class="ft">재가입·갱신</div><div class="fd"><b>5년 재가입</b> · 1년 갱신 · 2026.5.6 신규가입 종료</div></div>
+          <div class="f"><div class="ft">자기부담</div><div class="fd">급여 <b>20%</b> · 비급여 <b>30%</b></div></div>
+          <div class="f"><div class="ft">비급여 할증</div><div class="fd">비급여 청구액 100만↑ 시 다음 해 <b>최대 300% 할증</b> · 무사고 시 할인</div></div>
+        </div>
+      </div>
+
+      <div class="gen-block" style="border-top-color:#c2560c">
+        <h3>5세대 실손 심층 <span class="gen-per">2026.5.6 출시</span></h3>
+        <p class="gen-lead">비급여를 <b>중증·비중증으로 분리</b>한 것이 핵심입니다. 보험료는 낮아졌지만 자주 쓰는 비급여의 자기부담이 크게 올랐습니다.</p>
+        <div class="gen-facts">
+          <div class="f"><div class="ft">보험료</div><div class="fd">4세대 대비 약 <b>30%</b>, 1·2세대 대비 <b>50%+</b> 저렴. 기본+중증특약1만 시 4세대의 약 50%.</div></div>
+          <div class="f"><div class="ft">급여 자기부담</div><div class="fd">입원 <b>20% 유지</b> · 통원은 건보 본인부담률 연동(최소 20%)</div></div>
+          <div class="f"><div class="ft">중증 비급여(특약1)</div><div class="fd">암·뇌혈관·심장·희귀난치성. 자기부담 <b>30% 유지</b>·한도 5천만 · <b>연 자기부담 상한 500만 신설</b></div></div>
+          <div class="f"><div class="ft">비중증 비급여(특약2)</div><div class="fd">도수·체외충격파·주사·MRI. 30%→<b>50%</b> · 한도 5천만→<b>1천만</b> · 통원 1일 최대 20만 · 일부 <b>면책</b></div></div>
+          <div class="f"><div class="ft">신규 보장</div><div class="fd">기존에 없던 <b>임신·출산·발달장애 급여 의료비</b> 신규 보장</div></div>
+          <div class="f"><div class="ft">갱신·할증</div><div class="fd">1년 갱신·5년 재가입 · 비급여 사용량에 따라 갱신료 <b>2~4배</b> 상승 가능</div></div>
+        </div>
+
+        <h3 style="font-size:16px;margin:16px 0 8px">4세대 vs 5세대 비급여 한눈 비교</h3>
+        <div class="doc-tablewrap">
+          <table class="doc-table">
+            <thead><tr><th style="background:#334155">구분</th><th>4세대</th><th class="g5">5세대 중증</th><th class="g5" style="background:#9a3412">5세대 비중증</th></tr></thead>
+            <tbody>
+              <tr><th>자기부담률</th><td>일괄 30%</td><td><span class="hl">30% 유지</span></td><td><span class="o">50% 상향</span></td></tr>
+              <tr><th>연간 한도</th><td>5,000만</td><td>5,000만</td><td><span class="o">1,000만</span></td></tr>
+              <tr><th>자기부담 상한</th><td>없음</td><td><span class="hl">연 500만</span></td><td>없음</td></tr>
+              <tr><th>도수·주사·MRI</th><td>특약 보장</td><td>중증 30%</td><td><span class="o">50%/면책</span></td></tr>
+              <tr class="core"><th>한 줄 정리</th><td>비급여 한 묶음</td><td>큰 병 부담 완화</td><td class="o">가벼운 치료 절제</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="font-size:16px;margin:18px 0 8px">1·2세대 전환·유지 제도 (2026.11 시행)</h3>
+        <div class="gen-facts">
+          <div class="f"><div class="ft">선택형 할인 특약</div><div class="fd">기존 계약을 유지하며 근골격계 물리치료·체외충격파·주사·MRI 등 일부를 제외하고 할인. 1세대 약 <b>40%</b>, 2세대 약 <b>30%</b>.</div></div>
+          <div class="f"><div class="ft">계약전환 할인</div><div class="fd">1·2세대→5세대 전환 시 <b>3년간 50% 할인</b>(2026.11부터 6개월 한시)</div></div>
+          <div class="f"><div class="ft">전환 후 철회</div><div class="fd">별도 심사 없이 전환 · <b>6개월 이내 철회</b>(3개월 경과 시 보험금 미청구 계약만)</div></div>
+        </div>
+        <div class="doc-note">관리급여(도수·영양제 주사 가격 통제)는 <b>2026년 11월 시행 예정</b>입니다. 세부 수치는 보험사·특약별로 다를 수 있으니 최종 약관으로 확인하세요.</div>
+      </div>
+
+      <h2 class="doc-sec" id="sec-faq">자주 묻는 질문</h2>
+      <div class="faq-item">
+        <div class="faq-q">내 실손보험은 몇 세대인가요?</div>
+        <div class="faq-a">증권에서 가입일을 확인해 위 세대 구분(1세대 ~2009.9 · 2세대 2009.10~2017.3 · 3세대 2017.4~2021.6 · 4세대 2021.7~2026.5 · 5세대 2026.5.6~)과 대조하면 됩니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">세대별로 무엇이 다른가요?</div>
+        <div class="faq-a">자기부담률·재가입 조건·비급여 보장 구조가 다릅니다. 옛 세대일수록 보장이 넓고 보험료가 높으며, 새 세대일수록 보험료가 낮고 자기부담이 큽니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">5세대의 핵심 변화는 무엇인가요?</div>
+        <div class="faq-a">비급여를 중증·비중증으로 나눠, 중증은 자기부담 30%를 유지하고 비중증은 50%로 올리며 연간 한도를 5천만에서 1천만으로 축소했습니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">2013년 4월이 왜 분기점인가요?</div>
+        <div class="faq-a">2세대 중 2013년 4월 이후 가입은 15년 재가입 조건이 적용되어, 재가입이 없는 그 이전 가입과 조건이 갈립니다.</div>
+      </div>
+
+      <p class="doc-src">출처: 금융감독원·손해보험협회 실손 세대 구분 · 금융위·보건복지부 5세대 개편안 · KB손해보험 GA소식지 2026.07 · 보험연구원 「5세대 실손 상생방안」(2025.12)</p>
+    </article>
+
+    <aside class="doc-rail" aria-label="문서 도구">
+      <div class="rblk">
+        <div class="rlb">목차</div>
+        <nav class="rtoc">
+          <a href="#sec-table">실손보험 세대별 변천사</a>
+          <a href="#sec-gen">세대별 심층</a>
+          <a href="#sec-faq">자주 묻는 질문</a>
+        </nav>
+      </div>
+      <div class="rblk">
+        <div class="rlb">이 자료 활용</div>
+        <div class="ract">
+          <button type="button" onclick="window.print()">📄 PDF로 저장</button>
+          <button type="button" id="copyLink">🔗 링크 복사</button>
+        </div>
+      </div>
+      <div class="rblk">
+        <div class="rlb">함께 보면 좋은 자료</div>
+        <div class="rrel">
+          <a href="/insurance/cancer-treatment-history/"><b>암주요치료비 변천사</b><span>세대별 암 치료비 보장 변화</span></a>
+          <a href="/insurance/caregiver-history/"><b>간병보험 변천사</b><span>장기간병~사용일당 · 지급기준이 다름</span></a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer class="pub-ft">
+  <div class="pub-ft-in">
+    <a href="/">원세컨드 홈</a>
+    <a href="/insurance/silson/">의료실비 자료</a>
+    <a href="/about.html">서비스 소개</a>
+    <span>© 원세컨드</span>
+  </div>
+</footer>
+<script>
+/* 문서 도구 버튼만 사용하는 최소 스크립트. 본문·목록은 JS 없이 최초 HTML에 존재한다(색인·JS 비활성 대응). */
+(function(){
+  var b=document.getElementById('copyLink');
+  if(!b) return;
+  b.addEventListener('click',function(){
+    var url=location.href, orig=b.textContent;
+    function done(t){ b.textContent=t; setTimeout(function(){ b.textContent=orig; },1400); }
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){done('✅ 복사됨');},function(){done('복사 실패');});
+      }else{ done('복사 실패'); }
+    }catch(e){ done('복사 실패'); }
+  });
+})();
+</script>
+</body>
+</html>
