@@ -204,6 +204,8 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-card-nm{font-size:var(--ts-list-title);font-weight:600;color:var(--tp);flex-shrink:0;}
 .ci-card-meta{font-size:var(--ts-meta);color:var(--tf);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ci-card-stg{font-size:var(--ts-badge);color:var(--tf);flex-shrink:0;}
+.ci-card-del{flex-shrink:0;font-size:var(--ts-badge);font-weight:600;padding:5px 12px;border-radius:var(--radius-xs);border:1px solid var(--err);background:var(--s1);color:var(--err);cursor:pointer;font-family:inherit;}  /* 고객관리(salesnote) 카드 [삭제] — 삭제 외 영역 클릭은 상세로, 이 버튼은 stopPropagation. 2026-07-25 */
+.ci-card-del:hover{background:var(--err);color:#fff;}
 /* 속성(유입 채널)별 카드 색: 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색 (나머지=흰색) */
 .ci-card.ci-src-bank{background:#FEF3C7;border-color:#FDE68A;}
 .ci-card.ci-src-bank:hover{background:#FDE68A;}
