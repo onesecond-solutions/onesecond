@@ -42,10 +42,13 @@ function _hs2RenderHub(){
   for(var i=0;i<_HS2_TILES.length;i++){ var t=_HS2_TILES[i];
     if(_guest){ if(!_AXIS[t.v]) continue; }                          /* 비로그인=6축만(show 게이트 무시하고 노출) */
     else if(typeof t.show==='function'&&!t.show()) continue;         /* 로그인=기존 게이트 그대로 */
-    /* url 있으면 정적 공개 카테고리(/insurance/*)로 이동 = 문서 인라인 열고닫힘 경로 유지(로그인·비로그인 공통).
-       (2026-07-26: 로그인만 SPA로 보냈다가 SPA 문서 클릭이 옛 pages로 튕겨 인라인이 깨져 원복.
-        로그인 사용자용 헤더는 정적 페이지 자체에 이식하는 방향으로 별도 처리) */
-    var _attrs = t.url ? (' onclick="location.href=\''+t.url+'\'"') : (' onclick="showView(\''+t.v+'\')"');
+    /* 6축 카드 진입 분기(대표 확정 2026-07-26 A안): 비로그인(_guest)만 정적 공개 카테고리(/insurance/*)로
+       이동, 로그인은 SPA 카테고리 뷰(showView(t.v))로 진입 → D영역에서 실손 문서 인라인 펼침·슬라이드인까지
+       단일 SPA로 처리한다. url 없는 타일은 로그인/비로그인 모두 showView(t.v)(기존과 동일).
+       ⚠️ 앞선 2026-07-26 오전 revert(5dc6804)는 app.html:6264 pages 리다이렉트 제거·knowledge-category
+          인라인 펼침이 함께 갖춰지기 전 단계였고(그래서 SPA 문서 클릭이 옛 pages로 튕겨 깨짐), 대표가 그 뒤
+          A안으로 재확정 — 이번엔 그 세 지점(home.js 분기·6264 분기·_kcShow 인라인)을 함께 배선해 깨짐 없음. */
+    var _attrs = (t.url && _guest) ? (' onclick="location.href=\''+t.url+'\'"') : (' onclick="showView(\''+t.v+'\')"');
     h+='<button type="button" class="hs2-hub-tile'+(t.cls?' '+t.cls:'')+'"'+_attrs+'><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
   }
   grid.innerHTML=h;

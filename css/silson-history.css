@@ -1,0 +1,103 @@
+/* css/silson-history.css — 실손 세대별 변천사 "본문" 전용 스타일(단일 원천 공용)
+   ────────────────────────────────────────────────────────────────────────────
+   js/silson-history.js(renderInto)가 그린 본문에 적용. 정적 공개본과 SPA D영역이 공용한다.
+
+   ★ 셀렉터를 특정 페이지에 종속시키지 않는다 — 전부 .silson-history 루트 하위로 스코프.
+     renderInto(rootEl)가 rootEl 에 .silson-history 클래스를 붙이므로, 이 파일은 어떤 페이지에
+     로드돼도 그 컨테이너 안에서만 동작한다(table/th/td 등 요소 셀렉터가 SPA 전역 표를
+     건드리지 않게 하려면 반드시 스코프가 필요).
+   ★ 실손 본문이 쓰는 색 토큰을 .silson-history 에서 자체 공급한다 — --line/--card/--bg 같은
+     범용 이름을 :root 전역에 정의하면 SPA(tokens.css)의 동명 토큰을 덮어써 다른 컴포넌트가
+     깨진다. 그래서 루트 스코프에만 정의(전역 무오염). 정적 페이지는 자체 :root 토큰과 값이
+     동일하므로 렌더 결과 동일.
+   ★ 읽기 타이포(html.v3 …)·카테고리 셸(.kc-* / .doc-body …)은 페이지 전용이라 이 파일에 넣지
+     않는다(각 페이지가 소유). 이 파일은 "본문 컴포넌트"만. */
+
+.silson-history {
+  --indigo:#6366F1; --indigo-d:#4F46E5; --indigo-l:#EEF0FE;
+  --ink:#1E293B; --gray:#64748B; --line:#E2E8F0; --bg:#F8FAFC; --card:#FFFFFF;
+  --g1:#3B82F6; --g2:#10B981; --g3:#8B5CF6; --g4:#6366F1; --g5:#EA580C;
+  --radius:.875rem;
+  word-break:keep-all;
+}
+
+/* ── 배지(패널 제목에서 사용) ── */
+.silson-history .badge{display:inline-block;background:var(--indigo-l);color:var(--indigo-d);font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:1rem;margin-left:.4rem}
+
+/* ① 상세 변천사 표 (항상 고정) */
+.silson-history .section-t{font-size:1.1rem;font-weight:800;margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.4rem}
+.silson-history .tbl-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.silson-history table{width:100%;border-collapse:collapse;font-size:.82rem}
+
+/* 메인 비교 — 모바일 = 카드(세대 전치) / PC = 표(768px+) */
+.silson-history #cmpCards{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1rem}
+.silson-history #cmpTable{display:none}
+.silson-history .tcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.silson-history .tcard .th{padding:.8rem 1rem;color:#fff}
+.silson-history .tcard .th b{display:block;font-size:1rem;font-weight:800}
+.silson-history .tcard .th span{font-size:.72rem;opacity:.9}
+.silson-history .tcard .tb{padding:.1rem 1rem .5rem}
+.silson-history .tcard .kv{display:flex;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--line);font-size:.82rem;align-items:flex-start}
+.silson-history .tcard .kv:last-child{border-bottom:0}
+.silson-history .tcard .kv .k{flex:0 0 6rem;color:var(--gray);font-weight:700;font-size:.78rem}
+.silson-history .tcard .kv .v{flex:1;color:var(--ink);line-height:1.55}
+.silson-history .tcard .kv.core .v{font-weight:800}
+.silson-history .tcard .kv .v small{display:block;font-size:.72rem;color:var(--gray);margin-top:.15rem}
+.silson-history .tcard .v .hl{font-weight:700;color:var(--indigo-d)}
+.silson-history .tcard .v .o{font-weight:700;color:var(--g5)}
+.silson-history .tcard .v .gr{font-weight:700;color:#059669}
+.silson-history th,.silson-history td{padding:.65rem .7rem;text-align:center;border-bottom:1px solid var(--line);vertical-align:middle}
+.silson-history thead th{background:var(--indigo);color:#fff;font-weight:700;font-size:.82rem}
+.silson-history thead th.g5{background:var(--g5)}
+.silson-history tbody th{background:var(--bg);text-align:left;font-weight:700;color:var(--ink);width:8rem;font-size:.8rem}
+.silson-history tbody tr:last-child td,.silson-history tbody tr:last-child th{border-bottom:none}
+.silson-history td .hl{font-weight:700;color:var(--indigo-d)} .silson-history td .o{font-weight:700;color:var(--g5)}
+.silson-history td .gr{font-weight:700;color:#059669}
+.silson-history .core td{font-weight:800} .silson-history .core th{background:var(--indigo-l)}
+
+/* ② 설명 */
+.silson-history .desc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-top:1rem;font-size:.9rem;color:var(--ink);line-height:1.75}
+.silson-history .desc b{color:var(--indigo-d)}
+
+/* ③ 세대별 카드 (클릭 확장) */
+.silson-history .hint{font-size:.78rem;color:var(--indigo-d);background:var(--indigo-l);display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .7rem;border-radius:1rem;margin:.25rem 0 .75rem}
+.silson-history .gens{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1rem}
+.silson-history .gen{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;border-top:.25rem solid var(--line);cursor:pointer;transition:.15s;position:relative}
+.silson-history .gen:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.silson-history .gen.g1{border-top-color:var(--g1)} .silson-history .gen.g2{border-top-color:var(--g2)}
+.silson-history .gen.g3{border-top-color:var(--g3)} .silson-history .gen.g4{border-top-color:var(--g4)} .silson-history .gen.g5{border-top-color:var(--g5)}
+.silson-history .gen.active{box-shadow:0 0 0 2px var(--indigo)}
+.silson-history .gen .n{font-size:1.05rem;font-weight:800}
+.silson-history .gen .p{font-size:.72rem;color:var(--gray);margin:.15rem 0 .6rem}
+.silson-history .gen .k{font-size:.8rem;font-weight:700}
+.silson-history .gen .k small{display:block;font-weight:500;color:var(--gray);font-size:.72rem;margin-top:.2rem}
+.silson-history .gen .arw{position:absolute;right:.75rem;bottom:.7rem;font-size:.7rem;color:var(--gray)}
+
+/* 상세 패널 */
+.silson-history .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;display:none;border-top:.3rem solid var(--indigo)}
+.silson-history .panel.show{display:block;animation:silson-fade .2s}
+@keyframes silson-fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+.silson-history .panel.p1{border-top-color:var(--g1)} .silson-history .panel.p2{border-top-color:var(--g2)}
+.silson-history .panel.p3{border-top-color:var(--g3)} .silson-history .panel.p4{border-top-color:var(--g4)} .silson-history .panel.p5{border-top-color:var(--g5)}
+.silson-history .panel h2{font-size:1.2rem;font-weight:800;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.silson-history .panel .lead{color:var(--gray);font-size:.88rem;margin:.5rem 0 1.25rem}
+.silson-history .d-grid{display:grid;grid-template-columns:1fr;gap:.75rem;margin-bottom:1rem}
+.silson-history .d-card{background:var(--bg);border:1px solid var(--line);border-radius:.7rem;padding:1rem}
+.silson-history .d-card.sev{border-color:#BFDBFE;background:#EFF6FF}
+.silson-history .d-card.mild{border-color:#FED7AA;background:#FFF7ED}
+.silson-history .d-card .dt{font-size:.88rem;font-weight:800;margin-bottom:.4rem;display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+.silson-history .d-card .dd{font-size:.82rem;color:var(--gray);line-height:1.55}
+.silson-history .d-card .dd b{color:var(--ink)} .silson-history .d-card .dd b.o{color:var(--g5)} .silson-history .d-card .dd b.h{color:var(--indigo-d)}
+.silson-history .tag{font-size:.66rem;font-weight:700;background:var(--indigo-l);color:var(--indigo-d);padding:.12rem .45rem;border-radius:1rem}
+.silson-history .h3{font-size:1rem;font-weight:700;margin:1.25rem 0 .6rem}
+.silson-history .note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:.7rem;padding:.7rem 1rem;font-size:.8rem;color:#92400E;margin:.75rem 0;display:flex;gap:.5rem}
+.silson-history .tip{background:var(--indigo-l);border:1px solid #C7CBFB;border-radius:.7rem;padding:.7rem 1rem;font-size:.8rem;color:var(--indigo-d);display:flex;gap:.5rem;margin:.75rem 0}
+.silson-history .src{text-align:center;color:var(--gray);font-size:.74rem;margin-top:1.25rem}
+
+/* ── PC — 768px 이상에서만 표로 전환 ── */
+@media(min-width:768px){
+  .silson-history #cmpCards{display:none}
+  .silson-history #cmpTable{display:block;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .silson-history .gens{grid-template-columns:repeat(5,1fr)}
+  .silson-history .d-grid{grid-template-columns:repeat(3,1fr)}
+}

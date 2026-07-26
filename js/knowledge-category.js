@@ -106,6 +106,22 @@ function _kcDocsHtml(category){
   for(var i=0;i<docs.length;i++){
     var d = docs[i];
     var advisorOnly = (typeof window.knowledgeIsAdvisorOnly==='function') && window.knowledgeIsAdvisorOnly(d);
+    /* 실손(id='silson') = 외부 이동 대신 같은 D영역 인라인 펼침(대표 확정 2026-07-26 A안). 공용 모듈
+       window.SilsonHistory.renderInto로 렌더 → 공개본과 동일 데이터·렌더러. 모듈 미로드 시엔 안전하게
+       기존 외부 링크(<a href>)로 폴백(빈 화면·에러 대신 정적 페이지). 암·간병 등 그 외 문서는 기존 동작 유지. */
+    var _silsonInline = (d.id==='silson') && (typeof window.SilsonHistory!=='undefined') && (typeof window.SilsonHistory.renderInto==='function');
+    if(_silsonInline){
+      html += '<div class="kc-doc kc-doc-inline" data-kc-inline="silson" role="button" tabindex="0" aria-expanded="false">'
+            +   '<div class="kc-doc-t">'+_kcEsc(d.label||'')
+            +     (advisorOnly ? '<span class="kc-badge">설계사 전용</span>' : '')
+            +     '<span class="kc-toggle" aria-hidden="true">펼치기 &#9662;</span>'
+            +   '</div>'
+            +   '<div class="kc-doc-d">'+_kcEsc(d.description||'')+'</div>'
+            +   '<div class="kc-doc-m">'+_kcEsc(_kcYM(d.updatedAt))+'</div>'
+            + '</div>'
+            + '<div class="doc-inline" data-kc-body="silson" hidden></div>';
+      continue;
+    }
     html += '<a class="kc-doc" href="'+_kcEsc(d.url)+'">'
           /* 제목 = label(정본 라벨). documentTitle은 페이지 h1 실텍스트 대조·검증용이라
              "표시용 아님"으로 원장 설계(docs/specs/knowledge_registry_v1.md §2 필드표)에 못박혀 있다. */
@@ -121,7 +137,8 @@ function _kcDocsHtml(category){
 
 /* showView 렌더 디스패치에서 호출된다: showView('axis-cancer') → _kcShow('axis-cancer').
    진입할 때마다 전체를 다시 그린다(상태 없음 = 로그인 전후 카운트 stale 없음). */
-function _kcShow(viewKey){
+function _kcShow(viewKey, opts){
+  opts = opts || {};   /* opts.expandDoc==='silson' → 렌더 후 실손 문서를 자동 인라인 펼침(showView('silson') 딥링크·타일 진입) */
   var ax = _kcAxis(viewKey);
   if(!ax) return;
   var root = document.getElementById('v-'+viewKey);
@@ -168,6 +185,67 @@ function _kcShow(viewKey){
      showView가 axis 진입 시 별도로 _kcHomeSearchMove를 부르지만, 부팅 타이밍/재렌더로 순서가 어긋나도
      _kcShow가 스스로 이동을 완결해 '검색기가 홈 모양으로 남는' 회귀를 원천 차단한다(멱등이라 중복 호출 무해). */
   try{ if(typeof window._kcHomeSearchMove==='function') window._kcHomeSearchMove(viewKey); }catch(e){}
+
+  /* 실손 문서 인라인 펼침/접힘 바인딩(대표 확정 2026-07-26 A안). 이 root 안에 실손 인라인 행이 있을 때만 동작.
+     opts.expandDoc==='silson'이면 즉시 펼침(딥링크·타일 진입). 재렌더될 때마다 새로 바인딩(멱등, 상태는 render마다 초기화). */
+  try{ _kcBindSilsonInline(root, opts); }catch(e){}
+}
+
+/* ── 실손 D영역 인라인 펼침 — 공용 모듈(window.SilsonHistory) + 설계사 슬라이드인(advisor-doc.js) 배선 ──
+   ★ 본문은 정적 공개본과 동일 원천(js/silson-history.js)으로 렌더 → "두 벌" 없음. 공개본 HTML은 무접촉.
+   ★ 우측 마운트(.doc-inline-side .blk)에 advisorPanelInit을 호출 — 로그인+파일럿 게이트는 advisor-doc.js 내부.
+     비권한/비로그인이면 advisor-doc.js가 조기 return(어떤 DOM도 안 만듦) → 마운트는 빈 채로 보이지 않는다. */
+function _kcBindSilsonInline(root, opts){
+  opts = opts || {};
+  var row  = root.querySelector('[data-kc-inline="silson"]');
+  var body = root.querySelector('[data-kc-body="silson"]');
+  if(!row || !body) return;   /* 실손 인라인 행이 없는 축(암·간병 등)이면 아무 것도 안 함 */
+
+  function setToggle(open){
+    var t = row.querySelector('.kc-toggle');
+    if(t) t.innerHTML = open ? '접기 &#9652;' : '펼치기 &#9662;';
+    row.setAttribute('aria-expanded', open ? 'true' : 'false');
+    row.classList.toggle('kc-doc-open', open);
+  }
+
+  function collapse(){
+    body.hidden = true;
+    body.innerHTML = '';
+    body.classList.remove('doc-inline-open');
+    setToggle(false);
+  }
+
+  function expand(scroll){
+    if(typeof window.SilsonHistory==='undefined' || typeof window.SilsonHistory.renderInto!=='function') return;
+    /* 좌: 본문(.doc-body → SilsonHistory.renderInto) / 우: 설계사 마운트(.blk 앵커, advisor-doc.js가 그 뒤에 섹션 주입) */
+    body.innerHTML = '<div class="doc-inline-grid">'
+                   +   '<div class="doc-body"></div>'
+                   +   '<aside class="doc-inline-side" aria-label="설계사 전용"><div class="blk"></div></aside>'
+                   + '</div>';
+    var docBody = body.querySelector('.doc-body');
+    window.SilsonHistory.renderInto(docBody);
+    try{
+      if(typeof window.advisorPanelInit==='function'){
+        window.advisorPanelInit({ sourceType:'knowledge_doc', sourceId:'silson', mount: body.querySelector('.doc-inline-side') });
+      }
+    }catch(e){}
+    body.hidden = false;
+    body.classList.add('doc-inline-open');
+    setToggle(true);
+    if(scroll){ try{ row.scrollIntoView({behavior:'smooth', block:'start'}); }catch(e){} }
+  }
+
+  function toggle(scroll){
+    if(row.getAttribute('aria-expanded')==='true') collapse();
+    else expand(scroll);
+  }
+
+  row.addEventListener('click', function(){ toggle(true); });
+  row.addEventListener('keydown', function(e){
+    if(e.key==='Enter' || e.key===' ' || e.keyCode===13 || e.keyCode===32){ e.preventDefault(); toggle(true); }
+  });
+
+  if(opts.expandDoc==='silson') expand(false);   /* 딥링크·타일 진입 = 진입 즉시 펼침(스크롤 X, 위치 튐 방지) */
 }
 
 /* ════ 카테고리 상단 검색기 = 홈 #homeSearch 재사용(슬롯 이동 방식, 대표 지시 2026-07-24) ════

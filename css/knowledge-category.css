@@ -182,6 +182,26 @@
   background:var(--s2);border:0.5px solid var(--bd);color:var(--tf);
 }
 
+/* ── 의료실비 변천사 = D영역 인라인 펼침(실손 전용, 공용 모듈 js/silson-history.js 렌더) ──
+   대표 확정 2026-07-26 A안: 로그인 SPA에서 실손 문서 제목 클릭 → 외부 이동 대신 같은 D영역에 본문 인라인 펼침.
+   공개본(insurance/silson-history/index.html)은 무접촉 — 여기 스타일은 SPA 카테고리 뷰 전용. */
+.kc-doc-inline{cursor:pointer;}
+.kc-doc-inline:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:var(--radius-sm);}
+.kc-toggle{font-size:12.5px;font-weight:700;color:var(--ac);margin-left:8px;white-space:nowrap;}
+.kc-doc-open{background:var(--s2);}
+.doc-inline{padding:6px 0 4px;}
+.doc-inline-grid{display:block;}
+/* 넓은 표(#cmpTable 5열)가 좁은 폭에서 페이지 가로 스크롤을 만들지 않도록 본문 표는 자체 스크롤 */
+.doc-inline #cmpTable,.doc-inline .tbl-wrap{overflow-x:auto;}
+/* 설계사 전용 마운트(로그인+파일럿 게이트) — 권한 없으면 advisor-doc.js가 DOM을 안 만들어 빈 채로 안 보인다.
+   권한자에게만 advisor-doc.js가 .blk.advdoc-railsec(.lb + 설계사 전략 보기 버튼)을 주입 → 아래 톤 적용. 정적 v3side 톤 이식. */
+.doc-inline-side:empty,.doc-inline-side .blk:empty{display:none;}   /* 비권한/비로그인 = advisor-doc.js가 섹션을 안 만들어 마운트가 빈 채로 보이지 않음(빈 여백 0) */
+.doc-inline-side .advdoc-railsec{margin-top:18px;}   /* 여백은 실제 주입된 '설계사 전용' 섹션에만 — 권한자에게만 본문과 간격 */
+.doc-inline-side .lb{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--tf);margin-bottom:10px;text-transform:uppercase;}
+.doc-inline-side .act{display:flex;flex-direction:column;gap:7px;max-width:320px;}
+.doc-inline-side .act button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:0.5px solid var(--bd);background:var(--s1);border-radius:9px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--tp);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
+.doc-inline-side .act button:hover{border-color:var(--ac);background:var(--s2);}
+
 /* ── 빈 카테고리(§9-3) — "준비 중" 한 줄로 끝내지 않는다 ── */
 .kc-empty{padding:34px 0 10px;}
 .kc-empty-t{font-size:19px;font-weight:800;color:var(--tp);line-height:1.45;}
