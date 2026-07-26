@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
+<script>if(localStorage.getItem('os_token'))document.documentElement.classList.add('is-authed');</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>수술비 · 원세컨드 보험 지식</title>
@@ -30,6 +31,8 @@ a{color:inherit;}
 .pub-top{display:flex;justify-content:flex-end;align-items:center;padding:16px 24px;}
 .pub-login{display:inline-flex;align-items:center;height:34px;padding:0 16px;border-radius:9999px;font-size:0.8125rem;font-weight:600;line-height:1;color:var(--ts);background:transparent;border:1px solid var(--bd);cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s;}
 .pub-login:hover{background:var(--s2);color:var(--tp);border-color:var(--tf);}
+/* 로그인 상태(os_token 존재)면 설계사 로그인 숨김 — head 인라인이 html.is-authed 부여(FOUC 방지) */
+html.is-authed .pub-top{display:none;}
 /* 카테고리 컨테이너 = knowledge-category.css의 #v-axis-medical.on{display:flex} 재현(.on 없이) */
 #v-axis-medical{display:flex;flex-direction:column;min-height:0;padding:12px 24px 60px;}
 /* 검색기 hs-* = app.html 인라인에서 이식(is-uat-homesearch2 값 기준) */
