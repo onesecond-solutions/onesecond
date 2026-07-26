@@ -1735,9 +1735,15 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
   transition:width .22s ease, height .22s ease, max-width .22s ease, max-height .22s ease, background .22s ease, border-color .22s ease, border-left-width .22s ease, box-shadow .22s ease;
 }
 .script-card:hover{border-color:var(--tc,var(--ac))}
-.script-card-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;font-size:var(--ts-badge);font-weight:700;color:var(--tc,var(--ac));background:color-mix(in srgb,var(--tc,var(--ac)) 12%,transparent);white-space:nowrap;align-self:flex-start;margin-bottom:8px;flex-shrink:0;transition:background .22s ease}
-.script-card-ttl{font-size:0.92rem;font-weight:800;color:var(--tp);margin-bottom:8px;letter-spacing:-.02em;line-height:1.35;flex-shrink:0}
-.script-card-summary{flex:1;font-size:0.82rem;color:var(--ts);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;min-height:0}
+.script-card-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;font-size:0.75rem;font-weight:600;color:var(--tc,var(--ac));background:color-mix(in srgb,var(--tc,var(--ac)) 12%,transparent);white-space:nowrap;align-self:flex-start;margin-bottom:8px;flex-shrink:0;transition:background .22s ease}
+.script-card-ttl{font-size:1rem;font-weight:700;color:var(--tp);margin-bottom:8px;letter-spacing:-.02em;line-height:1.35;flex-shrink:0}
+.script-card-summary{flex:1;font-size:0.9375rem;color:var(--ts);line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;min-height:0}
+
+/* 상단 제목/설명문·탭 = 공용 .ttl/.sub/.chip 재사용. 원본(css/app-views.css:905~) 무변경 —
+   #v-scripts 스코프(특이성 1,1,0)로만 확대·굵기 완화. 다른 화면 파급 0. (스크립트 타이포 확대) */
+#v-scripts .ttl{font-weight:700}
+#v-scripts .sub{font-size:0.9375rem;line-height:1.55}
+#v-scripts .chip{font-size:0.875rem}
 
 /* active 카드 = 본인 자리 확장 (inset 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체 자체) */
 .script-card.active{
@@ -1798,19 +1804,19 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 .script-acc-item{border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;background:var(--s2);overflow:hidden}
 .script-acc-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;gap:8px}
 .script-acc-head:hover{background:color-mix(in srgb,var(--tc,var(--ac)) 6%,transparent)}
-.script-acc-num{font-size:var(--ts-badge);font-weight:700;color:var(--tc,var(--ac));flex-shrink:0}
-.script-acc-ttl{flex:1;font-size:0.85rem;font-weight:700;color:var(--tp);line-height:1.4;min-width:0}
+.script-acc-num{font-size:0.8125rem;font-weight:700;color:var(--tc,var(--ac));flex-shrink:0}
+.script-acc-ttl{flex:1;font-size:0.9375rem;font-weight:700;color:var(--tp);line-height:1.45;min-width:0}
 .script-acc-arrow{font-size:0.75rem;color:var(--ts);flex-shrink:0;transition:transform .2s}
 .script-acc-item.open .script-acc-arrow{transform:rotate(180deg)}
-.script-acc-body{padding:0 12px 12px;font-size:0.85rem;color:var(--tp);line-height:1.7;display:none}
+.script-acc-body{padding:0 12px 12px;font-size:1rem;color:var(--tp);line-height:1.7;display:none}
 .script-acc-item.open .script-acc-body{display:block}
 .script-acc-main{font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
 .script-acc-sub{color:var(--ts);font-weight:500;margin-bottom:8px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
-.script-acc-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 6px 6px 0;padding:8px 10px;font-size:0.78rem;font-weight:700;color:#7A4400;line-height:1.5;margin-top:6px;word-break:keep-all;overflow-wrap:anywhere}
+.script-acc-coach{background:#FFF3DC;border-left:3px solid #C8923B;border-radius:0 6px 6px 0;padding:8px 10px;font-size:0.875rem;font-weight:700;color:#7A4400;line-height:1.55;margin-top:6px;word-break:keep-all;overflow-wrap:anywhere}
 
 /* 미완 자료 안내 */
-.script-card-empty-ttl{font-size:0.92rem;font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.35}
-.script-card-empty-msg{flex:1;font-size:0.82rem;color:var(--ts);line-height:1.55}
+.script-card-empty-ttl{font-size:1rem;font-weight:700;color:var(--tp);margin-bottom:8px;line-height:1.35}
+.script-card-empty-msg{flex:1;font-size:0.9375rem;color:var(--ts);line-height:1.6}
 
 /* 빈 상태 (chip 0건) */
 .scripts-cards-empty{padding:48px 16px;text-align:center;color:var(--ts);width:100%}
@@ -1818,8 +1824,8 @@ table.ac-vis-table{border-collapse:collapse;width:100%;font-size:0.78rem}
 @media (max-width:767px){
   .scripts-cards-wrap{grid-template-columns:1fr;gap:10px}
   .script-card{min-height:auto;padding:12px}
-  .script-card-ttl{font-size:0.88rem}
-  .script-card-summary{font-size:0.78rem;-webkit-line-clamp:5}
+  .script-card-ttl{font-size:1rem}
+  .script-card-summary{font-size:0.9375rem;-webkit-line-clamp:5}
   /* 모바일 = 정적 확장 (position:relative + 100% width). v1 드릴 구조 절대 X */
   .script-card.active{position:relative !important;width:auto;max-width:100%;max-height:none;transform:none !important;left:auto !important;right:auto !important;top:auto !important;box-shadow:0 6px 18px rgba(0,0,0,0.12)}
   .script-card.active .script-card-full{max-height:60vh}
