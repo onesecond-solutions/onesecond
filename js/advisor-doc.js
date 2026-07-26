@@ -74,8 +74,8 @@
       '.advdoc-head{flex:0 0 auto;display:flex;align-items:flex-start;gap:12px;' +
       'padding:18px 20px 14px;border-bottom:1px solid var(--line,#E2E8F0);}' +
       '.advdoc-head-tx{flex:1 1 auto;min-width:0;}' +
-      '.advdoc-title{font-size:15.5px;font-weight:800;color:var(--ink,#1E293B);line-height:1.35;}' +
-      '.advdoc-sub{margin-top:4px;font-size:12.5px;line-height:1.55;color:var(--gray,#64748B);word-break:keep-all;}' +
+      '.advdoc-title{font-size:16px;font-weight:700;color:var(--ink,#1E293B);line-height:1.35;}' +
+      '.advdoc-sub{margin-top:4px;font-size:13px;line-height:1.55;color:var(--gray,#64748B);word-break:keep-all;}' +
       '.advdoc-x{flex:0 0 auto;width:32px;height:32px;border:1px solid var(--line,#E2E8F0);' +
       'background:var(--card,#fff);border-radius:9px;color:var(--gray,#64748B);font-size:17px;line-height:1;' +
       'cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;' +
@@ -86,30 +86,30 @@
       /* 전략 섹션 */
       '.advdoc-sec{margin-bottom:22px;}' +
       '.advdoc-sec:last-child{margin-bottom:0;}' +
-      '.advdoc-sec-t{font-size:14px;font-weight:800;color:var(--indigo-d,#4F46E5);line-height:1.4;' +
+      '.advdoc-sec-t{font-size:15px;font-weight:700;color:var(--indigo-d,#4F46E5);line-height:1.4;' +
       'margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line,#E2E8F0);}' +
       /* paragraph */
-      '.advdoc-p{font-size:13.5px;line-height:1.75;color:var(--ink,#334155);margin:0 0 10px;word-break:keep-all;}' +
+      '.advdoc-p{font-size:15px;line-height:1.7;color:var(--ink,#334155);margin:0 0 10px;word-break:keep-all;}' +
       '.advdoc-p:last-child{margin-bottom:0;}' +
       /* callout(강조 박스) */
       '.advdoc-callout{background:var(--indigo-l,#EEF0FE);border:1px solid var(--line,#E2E8F0);' +
       'border-left:3px solid var(--indigo,#6366F1);border-radius:9px;padding:11px 13px;margin:0 0 12px;}' +
-      '.advdoc-callout-lb{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;' +
+      '.advdoc-callout-lb{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.4px;' +
       'text-transform:uppercase;color:var(--indigo-d,#4F46E5);margin-bottom:5px;}' +
-      '.advdoc-callout-tx{font-size:13.5px;line-height:1.7;color:var(--ink,#1E293B);word-break:keep-all;}' +
+      '.advdoc-callout-tx{font-size:14px;line-height:1.7;color:var(--ink,#1E293B);word-break:keep-all;}' +
       /* checklist */
       '.advdoc-check{list-style:none;margin:0 0 12px;padding:0;}' +
-      '.advdoc-check li{position:relative;padding:5px 0 5px 24px;font-size:13.5px;line-height:1.6;' +
+      '.advdoc-check li{position:relative;padding:5px 0 5px 24px;font-size:14px;line-height:1.6;' +
       'color:var(--ink,#334155);word-break:keep-all;}' +
       '.advdoc-check li::before{content:"\\2713";position:absolute;left:2px;top:5px;font-size:12px;' +
-      'font-weight:800;color:var(--indigo,#6366F1);}' +
+      'font-weight:700;color:var(--indigo,#6366F1);}' +
       /* script(고객 설명 문장) */
       '.advdoc-script{border-left:3px solid var(--gray,#94A3B8);background:var(--bg,#F8FAFC);' +
-      'border-radius:0 9px 9px 0;padding:10px 13px;margin:0 0 12px;font-size:13.5px;line-height:1.7;' +
+      'border-radius:0 9px 9px 0;padding:10px 13px;margin:0 0 12px;font-size:14px;line-height:1.7;' +
       'color:var(--ink,#334155);font-style:italic;word-break:keep-all;}' +
       '.advdoc-script::before{content:"\\201C";}.advdoc-script::after{content:"\\201D";}' +
       /* 빈 상태(row는 있으나 렌더 가능한 블록 0) */
-      '.advdoc-empty{font-size:13px;color:var(--gray,#64748B);}' +
+      '.advdoc-empty{font-size:13px;color:var(--gray,#64748B);}' /* meta 13 (V3) */ +
       '@media(max-width:520px){.advdoc-panel{width:100%;}}';
     var st = document.createElement('style');
     st.id = 'advdoc-style';
