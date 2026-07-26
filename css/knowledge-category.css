@@ -182,25 +182,50 @@
   background:var(--s2);border:0.5px solid var(--bd);color:var(--tf);
 }
 
-/* ── 의료실비 변천사 = D영역 인라인 펼침(실손 전용, 공용 모듈 js/silson-history.js 렌더) ──
-   대표 확정 2026-07-26 A안: 로그인 SPA에서 실손 문서 제목 클릭 → 외부 이동 대신 같은 D영역에 본문 인라인 펼침.
-   공개본(insurance/silson-history/index.html)은 무접촉 — 여기 스타일은 SPA 카테고리 뷰 전용. */
+/* ── 의료실비 변천사 = D영역 인라인 펼침(실손 전용) — 정적 공개본과 동일 레이아웃(본문 + 우측 레일) ──
+   대표 확정 2026-07-26: 로그인 SPA에서 실손 문서 제목 클릭 → 같은 D영역에 본문+우측 레일 인라인 펼침.
+   레이아웃 = 공개본(insurance/silson-history/index.html) kc-shell(kc-body 1010 + doc-grid 710 본문 + 244 레일)과 동일.
+   공개본은 무접촉 — 여기 스타일은 SPA 카테고리(#v-axis-medical) 전용. */
 .kc-doc-inline{cursor:pointer;}
 .kc-doc-inline:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:var(--radius-sm);}
 .kc-toggle{font-size:12.5px;font-weight:700;color:var(--ac);margin-left:8px;white-space:nowrap;}
 .kc-doc-open{background:var(--s2);}
 .doc-inline{padding:6px 0 4px;}
+/* 5세대 심층 안 4열 표(.tbl-wrap)는 좁은 본문에서 자체 가로 스크롤(공개본 .doc-body .tbl-wrap과 동일 처리) */
+.doc-inline .tbl-wrap{overflow-x:auto;}
+
+/* 펼침 시 본문+레일 수용 = 의료실비 축의 kc-body만 1010으로 확장(헤더·문서행은 710 유지·좌측 정렬).
+   예약된 우측 레일 공간(1010=710+40+260 자리)을 펼침 때 활용. 나머지 5축은 기존 710 그대로(무영향).
+   공개본 kc-shell과 동일 전략(정적본 인라인 CSS line 234-244 대응). */
+#v-axis-medical .kc-body{max-width:1010px;}
+#v-axis-medical .kc-kicker,#v-axis-medical .kc-h1,#v-axis-medical .kc-hook,
+#v-axis-medical .kc-count,#v-axis-medical .kc-rule,#v-axis-medical .kc-doc,#v-axis-medical .kc-doc-inline{max-width:710px;}
+
+/* 본문(710) + 우측 레일(244) — 넓은 화면(≥1120)에서만 2단. 좁으면 레일 감춤(공개본과 동일: 정보는 본문에 다 있음). */
 .doc-inline-grid{display:block;}
-/* 넓은 표(#cmpTable 5열)가 좁은 폭에서 페이지 가로 스크롤을 만들지 않도록 본문 표는 자체 스크롤 */
-.doc-inline #cmpTable,.doc-inline .tbl-wrap{overflow-x:auto;}
-/* 설계사 전용 마운트(로그인+파일럿 게이트) — 권한 없으면 advisor-doc.js가 DOM을 안 만들어 빈 채로 안 보인다.
-   권한자에게만 advisor-doc.js가 .blk.advdoc-railsec(.lb + 설계사 전략 보기 버튼)을 주입 → 아래 톤 적용. 정적 v3side 톤 이식. */
-.doc-inline-side:empty,.doc-inline-side .blk:empty{display:none;}   /* 비권한/비로그인 = advisor-doc.js가 섹션을 안 만들어 마운트가 빈 채로 보이지 않음(빈 여백 0) */
-.doc-inline-side .advdoc-railsec{margin-top:18px;}   /* 여백은 실제 주입된 '설계사 전용' 섹션에만 — 권한자에게만 본문과 간격 */
+@media(min-width:1120px){
+  .doc-inline-grid{display:grid;grid-template-columns:710px 244px;gap:32px;align-items:start;}
+  .doc-inline-grid .doc-body{min-width:0;}
+  .doc-inline-side{display:block;position:sticky;top:24px;align-self:start;}
+}
+@media(max-width:1119px){.doc-inline-side{display:none;}}
+
+/* 우측 레일 톤(#v3side 이식, SPA 토큰). 목차 · 이 자료 활용(PDF·링크 복사) · 함께 보면 좋은 자료
+   + advisor-doc.js가 '목차' 블록 바로 아래 삽입하는 '설계사 전용' 섹션까지 공용(.act button 톤 동일). */
+.doc-inline-side .blk{margin-bottom:26px;}
+.doc-inline-side .blk:empty{display:none;}
 .doc-inline-side .lb{font-size:11px;font-weight:800;letter-spacing:1.2px;color:var(--tf);margin-bottom:10px;text-transform:uppercase;}
-.doc-inline-side .act{display:flex;flex-direction:column;gap:7px;max-width:320px;}
+.doc-inline-side .toc a{display:block;padding:7px 0 7px 13px;border-left:2px solid var(--bd);font-size:13.5px;color:var(--tf);text-decoration:none;line-height:1.45;transition:color .15s,border-color .15s;}
+.doc-inline-side .toc a:hover{color:var(--tp);}
+.doc-inline-side .toc a.on{color:var(--ac);border-left-color:var(--ac);font-weight:700;}
+.doc-inline-side .act{display:flex;flex-direction:column;gap:7px;}
 .doc-inline-side .act button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:0.5px solid var(--bd);background:var(--s1);border-radius:9px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--tp);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
 .doc-inline-side .act button:hover{border-color:var(--ac);background:var(--s2);}
+.doc-inline-side .act button .i{font-size:14px;flex:0 0 auto;}
+.doc-inline-side .rel a{display:block;padding:10px 12px;border:0.5px solid var(--bd);border-radius:9px;margin-bottom:7px;text-decoration:none;transition:border-color .15s;}
+.doc-inline-side .rel a:hover{border-color:var(--ac);}
+.doc-inline-side .rel b{display:block;font-size:13.5px;font-weight:700;color:var(--tp);line-height:1.4;}
+.doc-inline-side .rel span{display:block;font-size:12px;color:var(--tf);margin-top:3px;}
 
 /* ── 빈 카테고리(§9-3) — "준비 중" 한 줄로 끝내지 않는다 ── */
 .kc-empty{padding:34px 0 10px;}

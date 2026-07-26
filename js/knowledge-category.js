@@ -217,16 +217,24 @@ function _kcBindSilsonInline(root, opts){
 
   function expand(scroll){
     if(typeof window.SilsonHistory==='undefined' || typeof window.SilsonHistory.renderInto!=='function') return;
-    /* 좌: 본문(.doc-body → SilsonHistory.renderInto) / 우: 설계사 마운트(.blk 앵커, advisor-doc.js가 그 뒤에 섹션 주입) */
+    /* 정적 공개본과 동일한 doc-grid 레이아웃: 좌=본문(.doc-body) / 우=레일(.doc-inline-side=#v3side 대응).
+       레일 = 목차·이 자료 활용·함께 보면 좋은 자료(공용 모듈 renderRailInto, 공개본과 동일 스캐폴딩). */
     body.innerHTML = '<div class="doc-inline-grid">'
                    +   '<div class="doc-body"></div>'
-                   +   '<aside class="doc-inline-side" aria-label="설계사 전용"><div class="blk"></div></aside>'
+                   +   '<aside class="doc-inline-side" aria-label="관련 자료"></aside>'
                    + '</div>';
     var docBody = body.querySelector('.doc-body');
+    var side    = body.querySelector('.doc-inline-side');
     window.SilsonHistory.renderInto(docBody);
+    if(typeof window.SilsonHistory.renderRailInto==='function'){
+      window.SilsonHistory.renderRailInto(side, { body: docBody });   /* 레일(목차/활용/관련) — 모든 사용자 */
+    }
+    /* 설계사 전용 = 레일의 목차 블록 바로 아래·'이 자료 활용' 위에 별도 섹션으로 삽입(advisor-doc.js insertRailSection).
+       버튼 톤은 레일 .act button과 동일(흰 배경·테두리, hover만). 로그인+파일럿/admin 게이트는 advisor-doc.js 내부 —
+       비권한/비로그인이면 어떤 DOM도 안 만들어 섹션이 안 보인다(레일은 그대로 노출). */
     try{
       if(typeof window.advisorPanelInit==='function'){
-        window.advisorPanelInit({ sourceType:'knowledge_doc', sourceId:'silson', mount: body.querySelector('.doc-inline-side') });
+        window.advisorPanelInit({ sourceType:'knowledge_doc', sourceId:'silson', mount: side });
       }
     }catch(e){}
     body.hidden = false;
