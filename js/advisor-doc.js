@@ -246,7 +246,7 @@
       '<div class="act">' +
       '<button type="button" class="advdoc-open" aria-haspopup="dialog" aria-expanded="false">' +
       '<span class="i" aria-hidden="true">&#128274;</span>' +
-      '<span class="t">설계사 전략 보기</span>' +
+      '<span class="t">설계사 전용 자료</span>' +
       '</button>' +
       '</div>';
 
