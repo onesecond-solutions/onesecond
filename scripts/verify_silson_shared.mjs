@@ -98,6 +98,27 @@ check('[A] SL_ROWS deep-equal', JSON.stringify(M.SL_ROWS) === JSON.stringify(san
   check('[C] 비교표(PC 표) 동일', a === b, a === b ? '' : firstDiff(a, b));
 }
 
+/* ── [D] 우측 레일 스캐폴딩(블록·버튼·라벨) 동일 ──
+   공개본 #v3side(side.innerHTML=…)와 모듈 renderRailInto(railEl.innerHTML=…)의 템플릿에서 따옴표 문자열
+   리터럴만 추출·연결해 비교한다. 동적부(목차=본문 .section-t·관련=원장)는 따옴표 밖 변수라 제외 →
+   순수 스캐폴딩(목차/이 자료 활용/함께 보면 좋은 자료 라벨 + PDF·링크복사 버튼)이 글자까지 같은지 확인.
+   (목차 항목·관련자료는 각각 본문 .section-t[B]·공유 원장에서 나오므로 별도 데이터 대조 불필요.) */
+function railTpl(src, marker) {
+  const i = src.indexOf(marker);
+  if (i < 0) return null;
+  const semi = src.indexOf(';', i);
+  const expr = src.slice(i + marker.length, semi < 0 ? undefined : semi);
+  const lits = expr.match(/'((?:[^'\\]|\\.)*)'/g) || [];
+  return lits.join('');
+}
+{
+  const modRail = railTpl(modSrc, 'railEl.innerHTML =');
+  const pubRail = railTpl(pub, 'side.innerHTML =');
+  const ok = modRail != null && pubRail != null && modRail === pubRail;
+  check('[D] 우측 레일 스캐폴딩(목차·이 자료 활용·함께 보면 좋은 자료) 동일', ok,
+    ok ? '' : ('    module: ' + JSON.stringify(modRail) + '\n    public: ' + JSON.stringify(pubRail)));
+}
+
 if (fails.length) {
   console.error('\nFAIL: ' + fails.length + '건 불일치 — 공개본과 모듈 원천이 어긋났습니다. 위 항목을 정합시키세요.');
   process.exit(1);

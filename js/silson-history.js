@@ -249,6 +249,87 @@
     sel('5', true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 scrollIntoView 유지 */
   }
 
+  /* ── 우측 레일(목차 · 이 자료 활용 · 함께 보면 좋은 자료) ──────────────────────
+     정적 공개본(insurance/silson-history/index.html)의 #v3side 인라인 렌더와 "동일 마크업"을
+     생성한다(공개본 자기 레일 렌더는 그대로 두고, 여기서 같은 스캐폴딩을 재사용 → 결과 동일).
+     ⚠️ 이 함수가 만드는 스캐폴딩(블록/버튼/라벨)은 공개본 side.innerHTML 템플릿과 글자까지 동일해야
+        한다(scripts/verify_silson_shared.mjs가 대조). 동적부(목차=본문 .section-t, 관련=원장)는
+        본문/원장이라는 공유 원천에서 나온다.
+     - opts.body : renderInto로 그려진 본문 컨테이너(.section-t를 읽어 목차 생성).
+     - 설계사 전용 섹션은 여기서 만들지 않는다. 호출측(knowledge-category.js)이 advisorPanelInit을
+       불러 advisor-doc.js가 "목차 블록 바로 아래"에 별도 섹션으로 삽입한다(레일 톤 재사용). */
+  function _railEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function renderRailInto(railEl, opts) {
+    opts = opts || {};
+    var body = opts.body;
+    if (!railEl || !body) return;
+
+    var secs = [].slice.call(body.querySelectorAll('.section-t'));
+    secs.forEach(function (h, i) { if (!h.id) h.id = 'v3sec-' + i; });
+    var toc = secs.map(function (h) {
+      return '<a href="#' + h.id + '" data-t="' + h.id + '">' + h.textContent.trim() + '</a>';
+    }).join('');
+
+    var relItems = '';
+    if (typeof window.knowledgeVisibleDocs === 'function') {
+      relItems = window.knowledgeVisibleDocs({ excludeId: 'silson' }).map(function (d) {
+        return '<a href="' + _railEsc(d.url) + '"><b>' + _railEsc(d.label) + '</b><span>' + _railEsc(d.description) + '</span></a>';
+      }).join('');
+    }
+
+    railEl.innerHTML =
+      '<div class="blk"><div class="lb">목차</div><nav class="toc">' + toc + '</nav></div>' +
+      '<div class="blk"><div class="lb">이 자료 활용</div><div class="act">' +
+        '<button type="button" id="v3print"><span class="i">📄</span><span class="t">PDF로 저장</span></button>' +
+        '<button type="button" id="v3copy"><span class="i">🔗</span><span class="t">링크 복사</span></button>' +
+      '</div></div>' +
+      '<div class="blk"><div class="lb">함께 보면 좋은 자료</div><div class="rel">' + relItems + '</div></div>';
+
+    /* 목차 클릭 = 해당 섹션으로 부드럽게 스크롤(가장 가까운 스크롤 조상=.kc-scroll 안에서 이동) */
+    var tocLinks = [].slice.call(railEl.querySelectorAll('.toc a'));
+    tocLinks.forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var t = body.querySelector('#' + a.getAttribute('data-t'));
+        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    /* 스크롤 위치에 따라 목차 활성 표시(IntersectionObserver, 실패해도 기능엔 무해) */
+    var links = {};
+    tocLinks.forEach(function (a) { links[a.getAttribute('data-t')] = a; });
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (ents) {
+        ents.forEach(function (en) {
+          if (en.isIntersecting) {
+            Object.keys(links).forEach(function (k) { links[k].classList.remove('on'); });
+            var cur = links[en.target.id]; if (cur) cur.classList.add('on');
+          }
+        });
+      }, { rootMargin: '0px 0px -70% 0px', threshold: 0 });
+      secs.forEach(function (h) { io.observe(h); });
+    }
+
+    var pb = railEl.querySelector('#v3print');
+    if (pb) pb.addEventListener('click', function () { window.print(); });
+
+    var cb = railEl.querySelector('#v3copy');
+    if (cb) cb.addEventListener('click', function () {
+      var url; try { url = location.href; } catch (e) { url = ''; }
+      var lab = this.querySelector('.t') || this, orig = lab.textContent;
+      function done(ok) { lab.textContent = ok ? '복사됨' : '복사 실패'; setTimeout(function () { lab.textContent = orig; }, 1400); }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+        } else { done(false); }
+      } catch (e) { done(false); }
+    });
+  }
+
   /* ── 공용 진입점 ──────────────────────────────────────────────────────────
      주어진 컨테이너에 본문을 그리고 이벤트를 바인딩한다. rootEl 자체에 .silson-history
      클래스를 부여해 css/silson-history.css(토큰+본문 스타일)가 rootEl 하위로 적용되게 한다. */
@@ -262,6 +343,7 @@
 
   window.SilsonHistory = {
     renderInto: renderInto,
+    renderRailInto: renderRailInto,
     SL_COLS: SL_COLS,
     SL_ROWS: SL_ROWS
   };
