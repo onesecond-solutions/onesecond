@@ -182,10 +182,10 @@
   background:var(--s2);border:0.5px solid var(--bd);color:var(--tf);
 }
 
-/* ── 의료실비 변천사 = D영역 인라인 펼침(실손 전용) — 정적 공개본과 동일 레이아웃(본문 + 우측 레일) ──
-   대표 확정 2026-07-26: 로그인 SPA에서 실손 문서 제목 클릭 → 같은 D영역에 본문+우측 레일 인라인 펼침.
-   레이아웃 = 공개본(insurance/silson-history/index.html) kc-shell(kc-body 1010 + doc-grid 710 본문 + 244 레일)과 동일.
-   공개본은 무접촉 — 여기 스타일은 SPA 카테고리(#v-axis-medical) 전용. */
+/* ── 변천사 문서 = D영역 인라인 펼침 — 정적 공개본과 동일 레이아웃(본문 + 우측 레일) ──
+   대표 확정 2026-07-26: 로그인 SPA에서 문서 제목 클릭 → 같은 D영역에 본문+우측 레일 인라인 펼침.
+   레이아웃 = 공개본 kc-shell(kc-body 1010 + doc-grid 710 본문 + 244 레일)과 동일.
+   대상 축 = 의료실비(실손)·암·간병. 공개본은 무접촉 — 여기 스타일은 SPA 카테고리 뷰 전용. */
 .kc-doc-inline{cursor:pointer;}
 .kc-doc-inline:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:var(--radius-sm);}
 .kc-toggle{font-size:12.5px;font-weight:700;color:var(--ac);margin-left:8px;white-space:nowrap;}
@@ -194,12 +194,16 @@
 /* 5세대 심층 안 4열 표(.tbl-wrap)는 좁은 본문에서 자체 가로 스크롤(공개본 .doc-body .tbl-wrap과 동일 처리) */
 .doc-inline .tbl-wrap{overflow-x:auto;}
 
-/* 펼침 시 본문+레일 수용 = 의료실비 축의 kc-body만 1010으로 확장(헤더·문서행은 710 유지·좌측 정렬).
-   예약된 우측 레일 공간(1010=710+40+260 자리)을 펼침 때 활용. 나머지 5축은 기존 710 그대로(무영향).
+/* 펼침 시 본문+레일 수용 = 인라인 대상 축(의료실비·암·간병)의 kc-body만 1010으로 확장(헤더·문서행은 710 유지·좌측 정렬).
+   예약된 우측 레일 공간(1010=710+40+260 자리)을 펼침 때 활용. 그 외 축(뇌심장·수술비·기타)은 기존 710 그대로(무영향).
    공개본 kc-shell과 동일 전략(정적본 인라인 CSS line 234-244 대응). */
-#v-axis-medical .kc-body{max-width:1010px;}
+#v-axis-medical .kc-body,#v-axis-cancer .kc-body,#v-axis-caregiver .kc-body{max-width:1010px;}
 #v-axis-medical .kc-kicker,#v-axis-medical .kc-h1,#v-axis-medical .kc-hook,
-#v-axis-medical .kc-count,#v-axis-medical .kc-rule,#v-axis-medical .kc-doc,#v-axis-medical .kc-doc-inline{max-width:710px;}
+#v-axis-medical .kc-count,#v-axis-medical .kc-rule,#v-axis-medical .kc-doc,#v-axis-medical .kc-doc-inline,
+#v-axis-cancer .kc-kicker,#v-axis-cancer .kc-h1,#v-axis-cancer .kc-hook,
+#v-axis-cancer .kc-count,#v-axis-cancer .kc-rule,#v-axis-cancer .kc-doc,#v-axis-cancer .kc-doc-inline,
+#v-axis-caregiver .kc-kicker,#v-axis-caregiver .kc-h1,#v-axis-caregiver .kc-hook,
+#v-axis-caregiver .kc-count,#v-axis-caregiver .kc-rule,#v-axis-caregiver .kc-doc,#v-axis-caregiver .kc-doc-inline{max-width:710px;}
 
 /* 본문(710) + 우측 레일(244) — 넓은 화면(≥1120)에서만 2단. 좁으면 레일 감춤(공개본과 동일: 정보는 본문에 다 있음). */
 .doc-inline-grid{display:block;}

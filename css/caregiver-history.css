@@ -1,0 +1,114 @@
+/* css/caregiver-history.css — 간병보험 변천사 "본문" 전용 스타일(단일 원천 공용)
+   ────────────────────────────────────────────────────────────────────────────
+   js/caregiver-history.js(renderInto)가 그린 본문에 적용. 정적 공개본과 SPA D영역이 공용.
+   ★ 전부 .caregiver-history 루트 하위로 스코프(요소 셀렉터 table/thead/tbody 가 SPA 전역 표를
+     건드리지 않게). 토큰도 루트에서 자체 공급(공개본 :root 값과 동일 → 렌더 결과 동일).
+   ★ 읽기 타이포(html.v3 …)·카테고리 셸은 페이지/knowledge-category.css 소유 — 여기 미포함. */
+
+.caregiver-history {
+  --ac:#6366F1; --ac-d:#4F46E5; --ac-s:#EEF0FE;
+  --ac-d2:#3730A3; --ac-d3:#312E81;
+  --p2:#8B5CF6; --p2-s:#F3EEFE;
+  --p3:#0891B2; --p3-s:#E6F6FA; --p3-d:#0E7490;
+  --ink:#111827; --ink2:#374151; --muted:#6B7280;
+  --hair:#E5E7EB; --line2:#F3F4F6; --bg:#F9FAFB;
+  --bg2:#FCFCFD; --bg3:#FAFBFC;
+  --warn:#B45309; --warn-s:#FFFBEB; --warn-d:#92400E;
+  color:var(--ink);line-height:1.65;word-break:keep-all;
+}
+
+.caregiver-history h2.sec{font-size:16px;font-weight:800;letter-spacing:-.3px;margin:30px 0 12px;display:flex;align-items:center;gap:8px}
+.caregiver-history h2.sec .sq{width:14px;height:14px;border-radius:4px;background:var(--ac);flex:0 0 auto}
+
+.caregiver-history .intro{background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:15px 16px;font-size:13.5px;color:var(--ink2);line-height:1.8;margin-bottom:8px}
+.caregiver-history .intro b{color:var(--ac-d);font-weight:800}
+
+/* ── 비교: 모바일 = 카드 / PC = 표 ── */
+.caregiver-history #cmpCards{display:flex;flex-direction:column;gap:12px}
+.caregiver-history #cmpTable{display:none}
+.caregiver-history .tcard{border:1px solid var(--hair);border-radius:13px;overflow:hidden}
+.caregiver-history .tcard .th{padding:14px 16px;color:#fff}
+.caregiver-history .tcard .th b{display:block;font-size:16px;font-weight:800;letter-spacing:-.3px}
+.caregiver-history .tcard .th span{font-size:12px;opacity:.88}
+.caregiver-history .tcard .tb{padding:4px 16px 10px}
+.caregiver-history .tcard .kv{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line2);font-size:13.5px;align-items:flex-start}
+.caregiver-history .tcard .kv:last-child{border-bottom:0}
+.caregiver-history .tcard .kv .k{flex:0 0 78px;color:var(--muted);font-weight:700;font-size:12.5px;padding-top:1px}
+.caregiver-history .tcard .kv .v{flex:1;color:var(--ink);font-weight:600;line-height:1.6}
+.caregiver-history .tcard .kv .v em{font-style:normal;display:block;font-size:12px;color:var(--muted);font-weight:500;margin-top:2px}
+
+/* ── 타임라인 ── */
+.caregiver-history .tl .row{display:flex;gap:13px}
+.caregiver-history .tl .rail{width:30px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center}
+.caregiver-history .tl .dot{width:30px;height:30px;border-radius:50%;background:var(--ac-s);color:var(--ac-d);display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto}
+.caregiver-history .tl .row:last-child .dot{background:var(--p3-s);color:var(--p3-d)}
+.caregiver-history .tl .line{width:2px;flex:1;background:var(--hair);min-height:18px}
+.caregiver-history .tl .bd{flex:1;min-width:0;padding-bottom:24px}
+.caregiver-history .tl .yr{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.6px;margin-bottom:4px}
+.caregiver-history .tl .bd h3{margin:0 0 7px;font-size:15.5px;font-weight:800;letter-spacing:-.3px;line-height:1.4}
+.caregiver-history .tl .bd p{margin:0 0 9px;font-size:13.5px;color:var(--ink2);line-height:1.78}
+.caregiver-history .tl .bd p:last-child{margin-bottom:0}
+.caregiver-history .tl .bd b{font-weight:800;color:var(--ink)}
+.caregiver-history .tl .key{background:var(--ac-s);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--ac-d2);line-height:1.72;margin-top:10px}
+.caregiver-history .tl .key b{color:var(--ac-d3)}
+
+/* ── 세분화 카드 ── */
+.caregiver-history .grid{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.caregiver-history .gc{border:1px solid var(--hair);border-radius:10px;padding:13px 15px;background:#fff}
+.caregiver-history .gc h4{margin:0 0 6px;font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:7px}
+.caregiver-history .gc h4 .n{width:19px;height:19px;border-radius:6px;background:var(--ac);color:#fff;font-size:10.5px;display:grid;place-items:center;flex:0 0 auto}
+.caregiver-history .gc p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.7}
+
+/* ── 수치 ── */
+.caregiver-history .stat{background:var(--bg);border:1px solid var(--hair);border-radius:11px;padding:17px;margin:14px 0}
+.caregiver-history .stat .big{font-size:38px;font-weight:800;letter-spacing:-2px;color:var(--ac-d);font-variant-numeric:tabular-nums;line-height:1;margin-bottom:11px}
+.caregiver-history .stat .big span{font-size:20px}
+.caregiver-history .stat .tx{font-size:13.5px;color:var(--ink2);line-height:1.75}
+.caregiver-history .stat .tx b{font-weight:800;color:var(--ink)}
+.caregiver-history .stat .src{display:block;font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.6}
+
+/* ── 알림 ── */
+.caregiver-history .tip{margin-top:14px;background:var(--ac-s);border-radius:9px;padding:14px 15px;font-size:13px;color:var(--ac-d2);line-height:1.78}
+.caregiver-history .caution{margin-top:11px;background:var(--warn-s);border-radius:9px;padding:14px 15px;font-size:13px;color:var(--warn-d);line-height:1.78}
+.caregiver-history .tip b,.caregiver-history .caution b{font-weight:800}
+
+/* ── 체크리스트 ── */
+.caregiver-history .chk{border:1px solid var(--hair);border-radius:11px;overflow:hidden}
+.caregiver-history .chk .r{display:flex;gap:12px;padding:14px 15px;border-bottom:1px solid var(--line2);align-items:flex-start}
+.caregiver-history .chk .r:last-child{border-bottom:0}
+.caregiver-history .chk .r:nth-child(odd){background:var(--bg2)}
+.caregiver-history .chk .n{width:21px;height:21px;border-radius:50%;background:var(--ac-s);color:var(--ac-d);font-size:11px;font-weight:800;display:grid;place-items:center;flex:0 0 auto;margin-top:1px}
+.caregiver-history .chk .tx{flex:1;min-width:0}
+.caregiver-history .chk .tx b{display:block;font-size:14px;font-weight:800;margin-bottom:2px}
+.caregiver-history .chk .tx span{color:var(--muted);font-size:12.5px;line-height:1.6}
+
+/* ── 결론 ── */
+.caregiver-history .concl{background:linear-gradient(160deg,var(--ac-d),var(--ac-d3));color:#fff;border-radius:14px;padding:22px 20px;margin-top:14px}
+.caregiver-history .concl .lb{font-size:11px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.6);margin-bottom:11px}
+.caregiver-history .concl p{margin:0 0 13px;font-size:15px;font-weight:700;line-height:1.75;letter-spacing:-.3px}
+.caregiver-history .concl .who{font-size:12.5px;color:rgba(255,255,255,.72);padding-top:13px;border-top:1px solid rgba(255,255,255,.2)}
+
+.caregiver-history .src{margin-top:30px;padding-top:16px;border-top:1px solid var(--hair);font-size:11.5px;color:var(--muted);text-align:center;line-height:1.85}
+
+/* ── PC — 768px 이상에서만 표로 전환 ── */
+@media(min-width:768px){
+  .caregiver-history h2.sec{font-size:16.5px;margin:34px 0 14px}
+  .caregiver-history #cmpCards{display:none}
+  .caregiver-history #cmpTable{display:block;overflow:hidden;border-radius:10px;border:1px solid var(--hair)}
+  .caregiver-history table{width:100%;border-collapse:collapse;background:#fff}
+  .caregiver-history thead th{padding:14px 12px;font-size:13.5px;font-weight:800;color:#fff;text-align:center;line-height:1.4}
+  .caregiver-history thead th.k{background:var(--ink2);width:130px}
+  .caregiver-history thead th small{display:block;font-size:11px;font-weight:600;opacity:.85;margin-top:3px}
+  .caregiver-history tbody td{padding:14px 12px;font-size:13px;text-align:center;border-top:1px solid var(--line2);vertical-align:middle;line-height:1.55}
+  .caregiver-history tbody td.k{background:var(--bg3);font-weight:700;color:var(--ink2);text-align:left;font-size:12.5px}
+  .caregiver-history tbody td em{font-style:normal;display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .caregiver-history tbody tr:hover td{background:var(--bg2)}
+  .caregiver-history .tl .rail{width:34px}
+  .caregiver-history .tl .dot{width:34px;height:34px}
+  .caregiver-history .tl .bd h3{font-size:16px}
+  .caregiver-history .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+  .caregiver-history .stat{display:flex;gap:16px;align-items:center;padding:18px 20px}
+  .caregiver-history .stat .big{margin-bottom:0;flex:0 0 auto;font-size:34px}
+  .caregiver-history .concl{padding:26px 24px}
+  .caregiver-history .concl p{font-size:16px}
+}
