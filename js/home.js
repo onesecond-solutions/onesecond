@@ -42,10 +42,10 @@ function _hs2RenderHub(){
   for(var i=0;i<_HS2_TILES.length;i++){ var t=_HS2_TILES[i];
     if(_guest){ if(!_AXIS[t.v]) continue; }                          /* 비로그인=6축만(show 게이트 무시하고 노출) */
     else if(typeof t.show==='function'&&!t.show()) continue;         /* 로그인=기존 게이트 그대로 */
-    /* 로그인 전·후 화면 분기(대표 지시 2026-07-26): 비로그인만 정적 공개 카테고리(/insurance/*)로,
-       로그인 사용자는 앱 SPA(showView('axis-*'))로 열어 헤더(전산신고·알림벨·계정)·사이드메뉴를 유지한다.
-       (이전엔 url이 있으면 로그인 여부 무관하게 정적으로 보내 로그인 사용자가 앱 밖으로 튕기던 버그) */
-    var _attrs = (t.url && _guest) ? (' onclick="location.href=\''+t.url+'\'"') : (' onclick="showView(\''+t.v+'\')"');
+    /* url 있으면 정적 공개 카테고리(/insurance/*)로 이동 = 문서 인라인 열고닫힘 경로 유지(로그인·비로그인 공통).
+       (2026-07-26: 로그인만 SPA로 보냈다가 SPA 문서 클릭이 옛 pages로 튕겨 인라인이 깨져 원복.
+        로그인 사용자용 헤더는 정적 페이지 자체에 이식하는 방향으로 별도 처리) */
+    var _attrs = t.url ? (' onclick="location.href=\''+t.url+'\'"') : (' onclick="showView(\''+t.v+'\')"');
     h+='<button type="button" class="hs2-hub-tile'+(t.cls?' '+t.cls:'')+'"'+_attrs+'><span class="hs2-hub-ic"><svg class="sp-ico"><use href="#'+t.ic+'"/></svg></span><span class="hs2-hub-tx"><b>'+t.t+'</b><em>'+t.d+'</em></span></button>';
   }
   grid.innerHTML=h;
