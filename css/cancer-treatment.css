@@ -90,3 +90,33 @@
   .cancer-history .gens{grid-template-columns:repeat(5,1fr)}
   .cancer-history .dgrid{grid-template-columns:repeat(3,1fr)}
 }
+
+/* ══ V3 타이포 최종(대표 확정 2026-07-26) — 크기·굵기·행간만. 텍스트·데이터·색·레이아웃 무변경. 모든 800→700.
+   var(--text-*, Npx) = tokens-v3.css 토큰 + 폴백(공개본 html.v3 .doc-body 블록의 Npx와 동일 값). ══ */
+.cancer-history h2.sec{font-size:var(--text-title,18px);font-weight:var(--fw-bold,700)}
+.cancer-history .intro{font-size:var(--text-body,16px);line-height:var(--leading-relaxed,1.7)}
+.cancer-history .intro b{font-weight:var(--fw-bold,700)}
+.cancer-history .tcard .th b{font-size:var(--text-title-sm,16px);font-weight:var(--fw-bold,700)}
+.cancer-history .tcard .th span{font-size:var(--text-meta,13px)}
+.cancer-history .tcard .kv{font-size:var(--text-preview,14px)}
+.cancer-history .tcard .kv .k{font-size:var(--text-meta,13px)}
+.cancer-history .tcard .kv .v small{font-size:var(--text-meta,13px)}
+.cancer-history .em,.cancer-history .em-o,.cancer-history .em-g{font-weight:var(--fw-bold,700)}
+.cancer-history table{font-size:var(--text-preview,14px)}
+.cancer-history thead th{font-size:var(--text-preview,14px);font-weight:var(--fw-bold,700)}
+.cancer-history tbody td{font-size:var(--text-preview,14px)}
+.cancer-history tbody td.k{font-size:var(--text-preview,14px);font-weight:var(--fw-bold,700)}
+.cancer-history tbody td small{font-size:var(--text-meta,13px)}
+.cancer-history .hint{font-size:var(--text-preview,14px)}
+.cancer-history .gen .no{font-size:var(--text-title-sm,16px);font-weight:var(--fw-bold,700)}
+.cancer-history .gen .yr{font-size:var(--text-meta,13px)}
+.cancer-history .gen .hl{font-size:var(--text-list-title,15px);font-weight:var(--fw-bold,700)}
+.cancer-history .gen .sub{font-size:var(--text-meta,13px)}
+.cancer-history .gen .cl{font-size:var(--text-badge,12px)}
+.cancer-history .deep .dh h3{font-size:var(--text-title,18px);font-weight:var(--fw-bold,700)}
+.cancer-history .deep .dh .bd{font-size:var(--text-badge,12px);font-weight:var(--fw-bold,700)}
+.cancer-history .deep .dsum{font-size:var(--text-body,16px);line-height:var(--leading-relaxed,1.7)}
+.cancer-history .dc h4{font-size:var(--text-list-title,15px);font-weight:var(--fw-bold,700)}
+.cancer-history .dc p{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.cancer-history .dc p b,.cancer-history .dc p .r{font-weight:var(--fw-bold,700)}
+.cancer-history .src{font-size:var(--text-meta,13px)}

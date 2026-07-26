@@ -101,3 +101,33 @@
   .silson-history .gens{grid-template-columns:repeat(5,1fr)}
   .silson-history .d-grid{grid-template-columns:repeat(3,1fr)}
 }
+
+/* ══ V3 타이포 최종(대표 확정 2026-07-26) — 크기·굵기·행간만. 텍스트·데이터·색·레이아웃 무변경. 모든 800→700.
+   var(--text-*, Npx) = tokens-v3.css 토큰 + 폴백(공개본 html.v3 .doc-body 블록의 Npx와 동일 값 → 로그인 전·후 동일). ══ */
+.silson-history .section-t{font-size:var(--text-title,18px);font-weight:var(--fw-bold,700)}
+.silson-history .panel h2{font-size:var(--text-title,18px);font-weight:var(--fw-bold,700)}
+.silson-history .tcard .th b{font-size:var(--text-title-sm,16px);font-weight:var(--fw-bold,700)}
+.silson-history .gen .n{font-size:var(--text-title-sm,16px);font-weight:var(--fw-bold,700)}
+.silson-history .desc{font-size:var(--text-body,16px);line-height:var(--leading-relaxed,1.7)}
+.silson-history .panel .lead{font-size:var(--text-body,16px);line-height:var(--leading-relaxed,1.7)}
+.silson-history .d-card .dd{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.silson-history .d-card .dt{font-size:var(--text-list-title,15px);font-weight:var(--fw-bold,700)}
+.silson-history .h3{font-size:var(--text-list-title,15px);font-weight:var(--fw-bold,700)}
+.silson-history .gen .k{font-size:var(--text-list-title,15px);font-weight:var(--fw-bold,700)}
+.silson-history thead th{font-size:var(--text-preview,14px);font-weight:var(--fw-bold,700)}
+.silson-history tbody th{font-size:var(--text-preview,14px);font-weight:var(--fw-bold,700)}
+.silson-history table{font-size:var(--text-preview,14px)}
+.silson-history .tcard .kv{font-size:var(--text-preview,14px)}
+.silson-history .hint{font-size:var(--text-preview,14px)}
+.silson-history .note{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.silson-history .tip{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.silson-history .tcard .kv .k{font-size:var(--text-meta,13px)}
+.silson-history .tcard .th span{font-size:var(--text-meta,13px)}
+.silson-history .tcard .kv .v small{font-size:var(--text-meta,13px)}
+.silson-history .gen .p{font-size:var(--text-meta,13px)}
+.silson-history .gen .k small{font-size:var(--text-meta,13px)}
+.silson-history .src{font-size:var(--text-meta,13px)}
+.silson-history .badge{font-size:var(--text-badge,12px);font-weight:var(--fw-bold,700)}
+.silson-history .tag{font-size:var(--text-badge,12px);font-weight:var(--fw-bold,700)}
+.silson-history .gen .arw{font-size:var(--text-badge,12px)}
+.silson-history .core td,.silson-history .tcard .kv.core .v{font-weight:var(--fw-bold,700)}

@@ -33,6 +33,7 @@
 <script src="/js/advisor-doc.js?v=20260726"></script><!-- 설계사 전용 슬라이드인(WO-6) advisorPanelInit — SPA D영역 실손 본문 우측에 마운트. autoInit은 #advdoc-slot 없는 app.html에선 no-op(정적 문서 전용), SPA는 knowledge-category.js가 advisorPanelInit을 직접 호출. 로그인+파일럿 게이트는 advisor-doc.js 내부. -->
 <script src="/js/tools-calc.js"></script><!-- 사칙연산 계산기 도구 분리. 인라인보다 먼저 로드(=_TOOL_PAGE_MAP 호이스팅 캡처 대응). Phase2 2026-07-08 -->
 <script src="/js/tools-converter.js"></script><!-- 이미지/PDF→JPG 변환기 도구 분리. 인라인보다 먼저 로드(=_TOOL_PAGE_MAP·activateTool 호이스팅 캡처 대응). Phase2 2026-07-08 -->
+<link rel="stylesheet" href="/css/tokens-v3.css?v=20260726"><!-- V3 디자인 토큰(정의만·시각 변화 0). app-core.css '직전' 로드 → 동명 토큰은 app-core가 뒤에서 재확정(실효값 불변), 신규 --text-*/--fw-*/--leading-*는 참조처가 순차 전환. -->
 <link rel="stylesheet" href="/css/app-core.css?v=20260708"><!-- app.html에서 분리한 코어 CSS(토큰+셸). Phase1 perf. 인라인 style 블록 바로 앞=cascade 순서 보존 -->
 <link rel="stylesheet" href="/css/app-views.css?v=20260708"><!-- app.html 인라인 <style> 상단 연속 구간(게이트 뷰+공용 컴포넌트) 분리. app-core 다음·인라인 style 앞=cascade 100% 보존. Phase2 perf -->
 <style>
