@@ -1,0 +1,92 @@
+/* css/cancer-treatment.css — 암주요치료비 변천사 "본문" 전용 스타일(단일 원천 공용)
+   ────────────────────────────────────────────────────────────────────────────
+   js/cancer-treatment.js(renderInto)가 그린 본문에 적용. 정적 공개본과 SPA D영역이 공용.
+   ★ 전부 .cancer-history 루트 하위로 스코프 — table/thead/tbody 등 요소 셀렉터가 SPA 전역 표를
+     건드리지 않게 한다. 토큰도 루트에서 자체 공급(범용 --ink/--card/--bg 를 :root 전역에 두면
+     SPA 토큰을 덮어써 회귀). 공개본 :root 값과 동일하므로 렌더 결과 동일.
+   ★ 읽기 타이포(html.v3 …)·카테고리 셸은 페이지/knowledge-category.css 소유 — 여기 미포함(본문 컴포넌트만). */
+
+.cancer-history {
+  --ac:#6366F1; --ac-d:#4F46E5; --ac-s:#EEF0FE;
+  --cur:#EA580C; --cur-s:#FFF3EC; --cur-d:#C2410C;
+  --ink:#1E293B; --ink2:#334155; --muted:#64748B;
+  --hair:#E2E8F0; --line2:#F1F5F9; --bg:#F8FAFC; --card:#FFFFFF;
+  --ok:#059669; --ok-s:#ECFDF5; --warn:#B45309; --warn-s:#FFFBEB;
+  word-break:keep-all;
+}
+
+/* 섹션 제목 */
+.cancer-history h2.sec{font-size:16.5px;font-weight:800;letter-spacing:-.3px;margin:34px 0 14px;display:flex;align-items:center;gap:8px}
+.cancer-history h2.sec .sq{width:15px;height:15px;border-radius:4px;flex:0 0 auto}
+
+/* 메인 비교 — 모바일 = 카드 / PC = 표(768px+) */
+.cancer-history #cmpCards{display:flex;flex-direction:column;gap:12px}
+.cancer-history #cmpTable{display:none}
+.cancer-history .tcard{border:1px solid var(--hair);border-radius:12px;overflow:hidden;background:var(--card)}
+.cancer-history .tcard .th{padding:13px 15px;color:#fff}
+.cancer-history .tcard .th b{display:block;font-size:15.5px;font-weight:800;letter-spacing:-.3px}
+.cancer-history .tcard .th span{font-size:11.5px;opacity:.9}
+.cancer-history .tcard .tb{padding:2px 15px 8px}
+.cancer-history .tcard .kv{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2);font-size:13px;align-items:flex-start}
+.cancer-history .tcard .kv:last-child{border-bottom:0}
+.cancer-history .tcard .kv .k{flex:0 0 84px;color:var(--muted);font-weight:700;font-size:12px;padding-top:1px}
+.cancer-history .tcard .kv .v{flex:1;color:var(--ink);font-weight:600;line-height:1.55}
+.cancer-history .tcard .kv .v small{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+.cancer-history .em{color:var(--ac-d);font-weight:800}
+.cancer-history .em-o{color:var(--cur-d);font-weight:800}
+.cancer-history .em-g{color:var(--ok);font-weight:800}
+.cancer-history .x{color:#94A3B8}
+
+/* 인트로 박스 */
+.cancer-history .intro{background:var(--bg);border:1px solid var(--hair);border-radius:10px;padding:17px 19px;font-size:13.5px;color:var(--ink2);line-height:1.75;margin-bottom:8px}
+.cancer-history .intro b{color:var(--ac-d);font-weight:800}
+.cancer-history .intro b.o{color:var(--cur-d)}
+
+/* 세대 카드 */
+.cancer-history .hint{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--hair);border-radius:8px;padding:7px 12px;margin-bottom:13px}
+.cancer-history .gens{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.cancer-history .gen{border:1px solid var(--hair);border-radius:10px;padding:15px 14px 12px;cursor:pointer;background:var(--card);position:relative;transition:.15s;overflow:hidden}
+.cancer-history .gen::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--bar)}
+.cancer-history .gen:hover{box-shadow:0 3px 12px rgba(17,24,39,.07)}
+.cancer-history .gen.on{border-color:var(--bar);box-shadow:0 0 0 1px var(--bar)}
+.cancer-history .gen .no{font-size:15.5px;font-weight:800;letter-spacing:-.3px}
+.cancer-history .gen .yr{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:11px}
+.cancer-history .gen .hl{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.cancer-history .gen .sub{font-size:11.5px;color:var(--muted)}
+.cancer-history .gen .cl{position:absolute;right:12px;bottom:10px;font-size:11px;color:#94A3B8;font-weight:700}
+
+/* 심층 패널 */
+.cancer-history .deep{margin-top:15px;border:1.5px solid var(--pc);border-radius:12px;padding:22px;background:var(--card)}
+.cancer-history .deep .dh{display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
+.cancer-history .deep .dh .sq{width:16px;height:16px;border-radius:4px;background:var(--pc)}
+.cancer-history .deep .dh h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.3px}
+.cancer-history .deep .dh .bd{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:6px;background:var(--pcs);color:var(--pc)}
+.cancer-history .deep .dsum{font-size:13.5px;color:var(--ink2);margin:0 0 17px;line-height:1.7}
+.cancer-history .dgrid{display:grid;grid-template-columns:1fr;gap:11px}
+.cancer-history .dc{border:1px solid var(--hair);border-radius:9px;padding:14px 15px;background:var(--card)}
+.cancer-history .dc.hi{background:var(--pcs);border-color:transparent}
+.cancer-history .dc h4{margin:0 0 7px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px}
+.cancer-history .dc h4 .d{width:9px;height:9px;border-radius:3px;background:var(--pc);flex:0 0 auto}
+.cancer-history .dc p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+.cancer-history .dc p b{font-weight:800;color:var(--ink)}
+.cancer-history .dc p .r{color:var(--cur-d);font-weight:800}
+
+/* 푸터 */
+.cancer-history .src{margin-top:34px;padding-top:18px;border-top:1px solid var(--hair);font-size:11.5px;color:var(--muted);text-align:center;line-height:1.8}
+
+/* ── PC — 768px 이상에서만 표로 전환 ── */
+@media(min-width:768px){
+  .cancer-history #cmpCards{display:none}
+  .cancer-history #cmpTable{display:block;border-radius:10px;border:1px solid var(--hair);overflow:hidden}
+  .cancer-history table{width:100%;border-collapse:collapse;background:var(--card)}
+  .cancer-history thead th{padding:13px 10px;font-size:13px;font-weight:800;color:#fff;text-align:center;line-height:1.4}
+  .cancer-history thead th.k{background:#334155;width:132px}
+  .cancer-history thead th small{display:block;font-size:11px;font-weight:600;opacity:.85;margin-top:3px}
+  .cancer-history tbody td{padding:13px 11px;font-size:13px;text-align:center;border-top:1px solid var(--line2);vertical-align:middle;line-height:1.5}
+  .cancer-history tbody td.k{background:var(--bg);font-weight:700;color:var(--ink2);text-align:left;font-size:12.5px}
+  .cancer-history tbody td small{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+  .cancer-history tbody tr:hover td{background:var(--bg)}
+  .cancer-history tbody tr:hover td.k{background:var(--line2)}
+  .cancer-history .gens{grid-template-columns:repeat(5,1fr)}
+  .cancer-history .dgrid{grid-template-columns:repeat(3,1fr)}
+}

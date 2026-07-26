@@ -91,8 +91,17 @@ function _kcChipsHtml(category){
   return html;
 }
 
-/* 문서 목록 = 행 + 얇은 구분선. 카드 박스 금지(§9-2). 링크는 <a href>로 같은 탭 이동 —
-   문서는 SPA 뷰가 아니라 독립 URL 페이지다(§11). */
+/* ── D영역 인라인 펼침 대상 문서 = 공용 모듈 매핑(docId → window 전역 모듈명) ──
+   대표 확정 2026-07-26 A안(실손) → 암·간병 확장. 각 모듈은 renderInto/renderRailInto 를 제공(실손과 동일 인터페이스).
+   sourceId(advisor-doc)는 docId 자체. 모듈 미로드 시엔 해당 문서만 안전하게 외부 링크(<a href>)로 폴백. */
+var KC_INLINE = {
+  'silson':            'SilsonHistory',
+  'cancer-treatment':  'CancerTreatment',
+  'caregiver-history': 'CaregiverHistory'
+};
+
+/* 문서 목록 = 행 + 얇은 구분선. 카드 박스 금지(§9-2). 인라인 대상(KC_INLINE)은 같은 D영역 펼침,
+   그 외는 <a href>로 독립 URL 이동(§11). */
 function _kcDocsHtml(category){
   var docs = window.knowledgeVisibleDocs({category:category});
   if(!docs.length){
@@ -106,12 +115,13 @@ function _kcDocsHtml(category){
   for(var i=0;i<docs.length;i++){
     var d = docs[i];
     var advisorOnly = (typeof window.knowledgeIsAdvisorOnly==='function') && window.knowledgeIsAdvisorOnly(d);
-    /* 실손(id='silson') = 외부 이동 대신 같은 D영역 인라인 펼침(대표 확정 2026-07-26 A안). 공용 모듈
-       window.SilsonHistory.renderInto로 렌더 → 공개본과 동일 데이터·렌더러. 모듈 미로드 시엔 안전하게
-       기존 외부 링크(<a href>)로 폴백(빈 화면·에러 대신 정적 페이지). 암·간병 등 그 외 문서는 기존 동작 유지. */
-    var _silsonInline = (d.id==='silson') && (typeof window.SilsonHistory!=='undefined') && (typeof window.SilsonHistory.renderInto==='function');
-    if(_silsonInline){
-      html += '<div class="kc-doc kc-doc-inline" data-kc-inline="silson" role="button" tabindex="0" aria-expanded="false">'
+    /* 인라인 대상(KC_INLINE) = 외부 이동 대신 같은 D영역 인라인 펼침(대표 확정 2026-07-26 A안: 실손→암·간병 확장).
+       공용 모듈 renderInto로 렌더 → 공개본과 동일 데이터·렌더러. 모듈 미로드 시엔 안전하게 외부 링크(<a href>)로 폴백. */
+    var _inlineGlobal = KC_INLINE[d.id];
+    var _inlineMod = _inlineGlobal && window[_inlineGlobal];
+    var _canInline = _inlineMod && typeof _inlineMod.renderInto==='function';
+    if(_canInline){
+      html += '<div class="kc-doc kc-doc-inline" data-kc-inline="'+_kcEsc(d.id)+'" role="button" tabindex="0" aria-expanded="false">'
             +   '<div class="kc-doc-t">'+_kcEsc(d.label||'')
             +     (advisorOnly ? '<span class="kc-badge">설계사 전용</span>' : '')
             +     '<span class="kc-toggle" aria-hidden="true">펼치기 &#9662;</span>'
@@ -119,7 +129,7 @@ function _kcDocsHtml(category){
             +   '<div class="kc-doc-d">'+_kcEsc(d.description||'')+'</div>'
             +   '<div class="kc-doc-m">'+_kcEsc(_kcYM(d.updatedAt))+'</div>'
             + '</div>'
-            + '<div class="doc-inline" data-kc-body="silson" hidden></div>';
+            + '<div class="doc-inline" data-kc-body="'+_kcEsc(d.id)+'" hidden></div>';
       continue;
     }
     html += '<a class="kc-doc" href="'+_kcEsc(d.url)+'">'
@@ -186,20 +196,26 @@ function _kcShow(viewKey, opts){
      _kcShow가 스스로 이동을 완결해 '검색기가 홈 모양으로 남는' 회귀를 원천 차단한다(멱등이라 중복 호출 무해). */
   try{ if(typeof window._kcHomeSearchMove==='function') window._kcHomeSearchMove(viewKey); }catch(e){}
 
-  /* 실손 문서 인라인 펼침/접힘 바인딩(대표 확정 2026-07-26 A안). 이 root 안에 실손 인라인 행이 있을 때만 동작.
-     opts.expandDoc==='silson'이면 즉시 펼침(딥링크·타일 진입). 재렌더될 때마다 새로 바인딩(멱등, 상태는 render마다 초기화). */
-  try{ _kcBindSilsonInline(root, opts); }catch(e){}
+  /* 문서 인라인 펼침/접힘 바인딩(대표 확정 2026-07-26 A안: 실손→암·간병 확장). 이 root 안에 인라인 행이 있을 때만 동작.
+     opts.expandDoc가 이 행의 docId와 같으면 즉시 펼침(딥링크·타일 진입). 재렌더될 때마다 새로 바인딩(멱등, 상태는 render마다 초기화). */
+  try{ _kcBindInlineDoc(root, opts); }catch(e){}
 }
 
-/* ── 실손 D영역 인라인 펼침 — 공용 모듈(window.SilsonHistory) + 설계사 슬라이드인(advisor-doc.js) 배선 ──
-   ★ 본문은 정적 공개본과 동일 원천(js/silson-history.js)으로 렌더 → "두 벌" 없음. 공개본 HTML은 무접촉.
-   ★ 우측 마운트(.doc-inline-side .blk)에 advisorPanelInit을 호출 — 로그인+파일럿 게이트는 advisor-doc.js 내부.
-     비권한/비로그인이면 advisor-doc.js가 조기 return(어떤 DOM도 안 만듦) → 마운트는 빈 채로 보이지 않는다. */
-function _kcBindSilsonInline(root, opts){
+/* ── D영역 문서 인라인 펼침 — 공용 모듈(KC_INLINE의 window 전역) + 설계사 슬라이드인(advisor-doc.js) 배선 ──
+   ★ 본문은 정적 공개본과 동일 원천(js/<doc>.js)으로 렌더 → "두 벌" 없음. 공개본 HTML은 무접촉.
+   ★ 각 카테고리 뷰에는 인라인 문서가 최대 1건(실손=의료실비, 암=암, 간병=간병) — 이 root의 [data-kc-inline] 하나를 찾아 처리.
+   ★ 우측 마운트(.doc-inline-side)에 advisorPanelInit 호출 — 로그인+파일럿 게이트는 advisor-doc.js 내부.
+     비권한/비로그인이면 advisor-doc.js가 조기 return → 마운트는 빈 채로 보이지 않는다(레일은 그대로 노출). */
+function _kcBindInlineDoc(root, opts){
   opts = opts || {};
-  var row  = root.querySelector('[data-kc-inline="silson"]');
-  var body = root.querySelector('[data-kc-body="silson"]');
-  if(!row || !body) return;   /* 실손 인라인 행이 없는 축(암·간병 등)이면 아무 것도 안 함 */
+  var row = root.querySelector('[data-kc-inline]');
+  if(!row) return;   /* 인라인 문서가 없는 축이면 아무 것도 안 함 */
+  var docId = row.getAttribute('data-kc-inline');
+  var globalName = KC_INLINE[docId];
+  var mod = globalName && window[globalName];
+  if(!mod || typeof mod.renderInto!=='function') return;   /* 모듈 미로드 = 폴백(_kcDocsHtml이 이미 <a href>로 렌더했을 것) */
+  var body = root.querySelector('[data-kc-body="'+docId+'"]');
+  if(!body) return;
 
   function setToggle(open){
     var t = row.querySelector('.kc-toggle');
@@ -216,7 +232,6 @@ function _kcBindSilsonInline(root, opts){
   }
 
   function expand(scroll){
-    if(typeof window.SilsonHistory==='undefined' || typeof window.SilsonHistory.renderInto!=='function') return;
     /* 정적 공개본과 동일한 doc-grid 레이아웃: 좌=본문(.doc-body) / 우=레일(.doc-inline-side=#v3side 대응).
        레일 = 목차·이 자료 활용·함께 보면 좋은 자료(공용 모듈 renderRailInto, 공개본과 동일 스캐폴딩). */
     body.innerHTML = '<div class="doc-inline-grid">'
@@ -225,16 +240,15 @@ function _kcBindSilsonInline(root, opts){
                    + '</div>';
     var docBody = body.querySelector('.doc-body');
     var side    = body.querySelector('.doc-inline-side');
-    window.SilsonHistory.renderInto(docBody);
-    if(typeof window.SilsonHistory.renderRailInto==='function'){
-      window.SilsonHistory.renderRailInto(side, { body: docBody });   /* 레일(목차/활용/관련) — 모든 사용자 */
+    mod.renderInto(docBody);
+    if(typeof mod.renderRailInto==='function'){
+      mod.renderRailInto(side, { body: docBody });   /* 레일(목차/활용/관련) — 모든 사용자 */
     }
     /* 설계사 전용 = 레일의 목차 블록 바로 아래·'이 자료 활용' 위에 별도 섹션으로 삽입(advisor-doc.js insertRailSection).
-       버튼 톤은 레일 .act button과 동일(흰 배경·테두리, hover만). 로그인+파일럿/admin 게이트는 advisor-doc.js 내부 —
-       비권한/비로그인이면 어떤 DOM도 안 만들어 섹션이 안 보인다(레일은 그대로 노출). */
+       source_id = 이 문서(docId). 로그인+파일럿/admin 게이트는 advisor-doc.js 내부 — 비권한/비로그인이면 미생성(레일은 노출). */
     try{
       if(typeof window.advisorPanelInit==='function'){
-        window.advisorPanelInit({ sourceType:'knowledge_doc', sourceId:'silson', mount: side });
+        window.advisorPanelInit({ sourceType:'knowledge_doc', sourceId:docId, mount: side });
       }
     }catch(e){}
     body.hidden = false;
@@ -253,7 +267,7 @@ function _kcBindSilsonInline(root, opts){
     if(e.key==='Enter' || e.key===' ' || e.keyCode===13 || e.keyCode===32){ e.preventDefault(); toggle(true); }
   });
 
-  if(opts.expandDoc==='silson') expand(false);   /* 딥링크·타일 진입 = 진입 즉시 펼침(스크롤 X, 위치 튐 방지) */
+  if(opts.expandDoc===docId) expand(false);   /* 딥링크·타일 진입 = 진입 즉시 펼침(스크롤 X, 위치 튐 방지) */
 }
 
 /* ════ 카테고리 상단 검색기 = 홈 #homeSearch 재사용(슬롯 이동 방식, 대표 지시 2026-07-24) ════
