@@ -269,6 +269,8 @@ html.v3 .doc-body .wrap,.doc-body .wrap{max-width:100%;}
 @media(max-width:1119px){.v3side{display:none;}}
 </style>
 <script src="/js/knowledge-registry.js?v=20260724"></script>
+<script src="/js/db.js?v=20260726"></script>
+<script src="/js/advisor-doc.js?v=20260726"></script>
 </head>
 <body>
 <div class="pub-top"><a class="pub-login" href="/app.html?view=home">설계사 로그인 <span aria-hidden="true">&#8594;</span></a></div>
@@ -344,6 +346,10 @@ html.v3 .doc-body .wrap,.doc-body .wrap{max-width:100%;}
     </div><!-- /.kc-list -->
   </div></div><!-- /.kc-body /.kc-scroll -->
 </div><!-- /#v-axis-medical -->
+
+<!-- WO-6 설계사 전용 자료 슬롯: 권한자+published 콘텐츠 1건↑일 때만 js/advisor-doc.js 가 버튼을 주입.
+     비로그인/무권한/0건이면 비어 있음(버튼 흔적 0). doc_id 는 이 문서 전용. -->
+<div id="advdoc-slot" data-doc-id="cancer-treatment"></div>
 
 <script>
 /* ══ 메인 비교표 — 데이터 한 벌 → 모바일 카드(세대 전치) + PC 표 이중 렌더 ══ */
