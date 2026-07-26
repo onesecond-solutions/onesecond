@@ -73,10 +73,14 @@ create index if not exists advisor_doc_contents_doc_status_idx
 -- ── 열람 자격 격리 함수 (전환 스위치) ───────────────────────────────────────
 -- 1차 파일럿: 임태성 실장 + 관리자만 true.
 -- ⭐ 2차 정식 전환 시 이 함수 본문만 os_is_advisor() 로 교체(하단 주석 블록).
+-- ⚠️ 보안 하드닝(독립검수 2026-07-26): security 모드 명시 + search_path 고정 + is_admin() 스키마 한정.
+--    search_path 미고정 시 unqualified is_admin() 이름 해석이 런타임 search_path에 의존(함수 하이재킹 표면).
 create or replace function os_can_read_advisor_docs() returns boolean
   language sql stable
+  security invoker
+  set search_path = public
 as $$
-  select is_admin()
+  select public.is_admin()
       or (auth.uid())::text = '98c5f4f9-10c1-4ee1-a656-5c2ca63239fd';  -- 임태성 실장
 $$;
 
@@ -95,6 +99,9 @@ drop policy if exists advisor_doc_contents_write on advisor_doc_contents;
 create policy advisor_doc_contents_write on advisor_doc_contents
   for all to authenticated
   using ( is_admin() ) with check ( is_admin() );
+
+-- 심층방어(독립검수 권고): anon 테이블 ACL 자체 제거 → RLS 토글 회귀 시에도 권한오류로 차단(벨트+멜빵).
+revoke all on advisor_doc_contents from anon;
 
 commit;
 
@@ -118,15 +125,19 @@ commit;
 --   --     ⚠️ get_my_role() 헬퍼 라이브 실재 확인 후 실행(posts_insurer 마이그레이션이 사용·배포 확인됨).
 --   create or replace function os_is_advisor() returns boolean
 --     language sql stable
+--     security invoker
+--     set search_path = public
 --   as $$
---     select is_admin()
---         or coalesce(get_my_role(),'') like 'ga_%'
---         or coalesce(get_my_role(),'') like 'insurer_%';
+--     select public.is_admin()
+--         or coalesce(public.get_my_role(),'') like 'ga_%'
+--         or coalesce(public.get_my_role(),'') like 'insurer_%';
 --   $$;
 --   -- (2) 열람 범위 스위치를 설계사 전체로 교체(정책·데이터 무변경).
 --   create or replace function os_can_read_advisor_docs() returns boolean
 --     language sql stable
+--     security invoker
+--     set search_path = public
 --   as $$
---     select os_is_advisor();
+--     select public.os_is_advisor();
 --   $$;
 -- commit;

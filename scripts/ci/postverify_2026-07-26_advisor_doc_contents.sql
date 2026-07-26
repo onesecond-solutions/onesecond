@@ -78,15 +78,34 @@ begin
   end if;
 
   -- ── 6) 비로그인(anon) 차단 보증 ──────────────────────────────────────────
-  --   select 정책의 roles 배열에 anon 이 들어 있으면 비로그인 노출 위험 → FAIL.
+  --   정책 roles 에 anon 또는 public(anon 이 PUBLIC 멤버라 to public = 비로그인 노출) 이 있으면 FAIL.
+  --   ⚠️ 'anon'만 검사하면 to public 정책을 놓친다(pg_policies.roles가 {public}으로 저장) → public 포함.
   select count(*)
     into anon_roles
     from pg_policies
    where schemaname='public' and tablename='advisor_doc_contents'
-     and 'anon' = any(roles);
+     and ('anon' = any(roles) or 'public' = any(roles));
   if anon_roles > 0 then
-    raise exception 'FAIL advisor_doc_contents 정책에 anon 역할 존재(비로그인 차단 위반). 건수=%', anon_roles;
+    raise exception 'FAIL advisor_doc_contents 정책에 anon/public 역할 존재(비로그인 노출 위험). 건수=%', anon_roles;
   end if;
 
-  raise notice 'OK advisor_doc_contents 검증 통과 (테이블·컬럼·RLS·정책2·게이트함수·anon차단).';
+  -- ── 7) select 정책의 published 게이트 실재(과다노출 회귀 방지) ────────────
+  perform 1 from pg_policies
+   where schemaname='public' and tablename='advisor_doc_contents'
+     and policyname='advisor_doc_contents_select' and qual ilike '%published%';
+  if not found then
+    raise exception 'FAIL select 정책에 status=published 게이트 부재(과다노출 위험).';
+  end if;
+
+  -- ── 8) 게이트 함수 search_path 고정(하드닝 회귀 방지) ────────────────────
+  if not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+     where n.nspname='public' and p.proname='os_can_read_advisor_docs'
+       and p.proconfig is not null
+       and exists (select 1 from unnest(p.proconfig) c where c like 'search_path=%')
+  ) then
+    raise exception 'FAIL os_can_read_advisor_docs() search_path 미고정(함수 하이재킹 표면).';
+  end if;
+
+  raise notice 'OK advisor_doc_contents 검증 통과 (테이블·컬럼·RLS·정책2·게이트함수·anon/public차단·published게이트·search_path고정).';
 end $$;
