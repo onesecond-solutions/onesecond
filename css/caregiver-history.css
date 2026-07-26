@@ -112,3 +112,40 @@
   .caregiver-history .concl{padding:26px 24px}
   .caregiver-history .concl p{font-size:16px}
 }
+
+/* ══ V3 타이포 최종(대표 확정 2026-07-26) — 크기·굵기·행간만. 텍스트·데이터·색·레이아웃 무변경. 모든 800→700.
+   var(--text-*, Npx) = tokens-v3.css 토큰 + 폴백(공개본 html.v3 .doc-body 블록의 Npx와 동일 값). ══ */
+.caregiver-history h2.sec{font-size:var(--text-title,18px);font-weight:var(--fw-bold,700)}
+.caregiver-history .intro{font-size:var(--text-body,16px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .intro b{font-weight:var(--fw-bold,700)}
+.caregiver-history .tcard .th b{font-size:var(--text-title-sm,16px);font-weight:var(--fw-bold,700)}
+.caregiver-history .tcard .th span{font-size:var(--text-meta,13px)}
+.caregiver-history .tcard .kv{font-size:var(--text-preview,14px)}
+.caregiver-history .tcard .kv .k{font-size:var(--text-meta,13px)}
+.caregiver-history .tcard .kv .v em{font-size:var(--text-meta,13px)}
+.caregiver-history table{font-size:var(--text-preview,14px)}
+.caregiver-history thead th{font-size:var(--text-preview,14px);font-weight:var(--fw-bold,700)}
+.caregiver-history tbody td{font-size:var(--text-preview,14px)}
+.caregiver-history tbody td.k{font-size:var(--text-preview,14px);font-weight:var(--fw-bold,700)}
+.caregiver-history tbody td em{font-size:var(--text-meta,13px)}
+.caregiver-history .tl .dot{font-weight:var(--fw-bold,700)}
+.caregiver-history .tl .yr{font-size:var(--text-meta,13px);font-weight:var(--fw-bold,700)}
+.caregiver-history .tl .bd h3{font-size:var(--text-title-sm,16px);font-weight:var(--fw-bold,700)}
+.caregiver-history .tl .bd p{font-size:var(--text-body,16px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .tl .bd b{font-weight:var(--fw-bold,700)}
+.caregiver-history .tl .key{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .gc h4{font-size:var(--text-list-title,15px);font-weight:var(--fw-bold,700)}
+.caregiver-history .gc p{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .stat .big{font-weight:var(--fw-bold,700)}
+.caregiver-history .stat .tx{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .stat .tx b{font-weight:var(--fw-bold,700)}
+.caregiver-history .stat .src{font-size:var(--text-meta,13px)}
+.caregiver-history .tip{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .caution{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .tip b,.caregiver-history .caution b{font-weight:var(--fw-bold,700)}
+.caregiver-history .chk .tx b{font-size:var(--text-title-sm,16px);font-weight:var(--fw-bold,700)}
+.caregiver-history .chk .tx span{font-size:var(--text-list-title,15px);line-height:var(--leading-relaxed,1.7)}
+.caregiver-history .chk .n{font-weight:var(--fw-bold,700)}
+.caregiver-history .concl .lb{font-weight:var(--fw-bold,700)}
+.caregiver-history .concl .who{font-size:var(--text-meta,13px)}
+.caregiver-history .src{font-size:var(--text-meta,13px)}
