@@ -17149,7 +17149,7 @@ function _ciSheetNewRowHtml(){  /* 맨 아래 상시 빈 입력 행 — 이름 �
   var gOpt='<option value="">성별</option><option value="남">남</option><option value="여">여</option>';
   var evt=' onblur="_ciNewRowBlur()" onkeydown="_ciNewRowKey(event)"';
   return '<tr class="ci-sh-new">'
-    +'<td class="ci-sh-date ci-sh-newdate"><input type="date" class="ci-cell-inp ci-cell-idate" data-nf="idate" value="'+_ciTodayStr()+'" title="입력일자(오늘 자동 · 수정 가능)"'+evt+'></td>'
+    +'<td class="ci-sh-date ci-sh-newdate"><input type="text" class="ci-cell-inp ci-cell-idate" data-nf="idate" value="'+_ciTodayStr()+'" placeholder="2026-07-27" title="입력일자(오늘 자동, 직접 입력 가능 · 20260727 → 2026-07-27)"'+evt+'></td>'
     +'<td><input type="text" class="ci-cell-inp" data-nf="attr" placeholder="인입유형"'+evt+'></td>'
     +'<td><input type="text" class="ci-cell-inp" data-nf="name" placeholder="이름 입력 → 추가"'+evt+'></td>'
     +'<td><input type="text" class="ci-cell-inp ci-cell-birth" data-nf="birth" placeholder="1980-01-01"'+evt+'><select class="ci-cell-inp ci-cell-gender" data-nf="gender"'+evt+'>'+gOpt+'</select></td>'
@@ -17157,7 +17157,7 @@ function _ciSheetNewRowHtml(){  /* 맨 아래 상시 빈 입력 행 — 이름 �
     +'<td><select class="ci-cell-inp" data-nf="status"'+evt+'>'+stOpt+'</select></td>'
     +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="memo" placeholder="상담내용"'+evt+'></textarea></td>'
     +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="bigo" placeholder="비고"'+evt+'></textarea></td>'
-    +'<td class="ci-sh-act"></td>'
+    +'<td class="ci-sh-act"><button type="button" class="ci-sh-add" title="추가(저장)" aria-label="새 고객 추가" onclick="_ciNewRowCommit()">+</button></td>'
     +'</tr>';
 }
 window._ciSheetNewRowHtml=_ciSheetNewRowHtml;
@@ -17376,7 +17376,7 @@ function _ciNewRowCommit(){
   if(!(window.db&&window.db.fetch)) return;
   window._ciNewBusy=true;
   var now=new Date().toISOString();
-  var idate=(v.idate||'').trim();  /* 입력일자 칸(오늘 자동, 수정 가능) → created_at. 최근일자 정렬이라 새 고객이 상단 유지 */
+  var idate=_ciFmtBirth((v.idate||'').trim());  /* 입력일자 직접입력(20260727→2026-07-27) → created_at. 최근일자 정렬이라 새 고객이 상단 유지 */
   var createdAt=(idate && /^\d{4}-\d{2}-\d{2}$/.test(idate)) ? (idate+'T00:00:00Z') : now;
   var phone=_ciFmtPhone((v.phone||'').trim());  /* 01012345678→010-1234-5678 자동 */
   var profile={}; if(v.attr) profile.attr=v.attr; if(v.bigo) profile['비고']=v.bigo;
