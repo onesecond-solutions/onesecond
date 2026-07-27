@@ -2321,6 +2321,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         <div class="ci-bottom">
           <div class="ci-list-col">
             <div class="ci-search-row"><input type="text" class="ci-search-input" id="ci-q" placeholder="고객명 검색" autocomplete="off" oninput="_ciSetNameQ(this.value)"></div>
+            <div class="ci-sheet-tools" id="ci-sheet-tools" style="display:none"></div>
             <div class="ci-list-filterbar" id="ci-list-filterbar" style="display:none"></div>
             <div class="ci-list" id="ci-list"></div>
             <div class="ci-list-pager" id="ci-list-pager" style="display:none"></div>
@@ -15954,6 +15955,7 @@ window.filterMysType=filterMysType;
  *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
 window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false; window._ciNameQ=''; window._ciMode='care';
 window._ciListPeriodOn=false; window._ciChanF=null;  /* 데이터현황→카드리스트 연동(2026-07-14): 기간 프리셋/네비/사용자정의 클릭 시에만 true, 채널카드 클릭 시에만 인덱스 세팅. 기본값=둘 다 OFF(회귀 방지, 로드 시 전체 표시 유지) */
+window._ciView='card'; window._ciMemoMap={};  /* 상담관리(care) 표(시트) 뷰 1차(2026-07-27): 'card'(기본)|'sheet'. care 모드에서만 토글 노출. _ciMemoMap=고객id→최근 상담내용(sales_consultations.memo). salesnote 무영향. */
 /* salesnote 서버 필터+페이지네이션(2026-07-23, 대표 확정) — care 모드는 절대 사용하지 않음(_ciMode==='salesnote' 분기 전용).
    _ciData(salesnote일 때)=현재 페이지(최대 _ciPageSize행)만 담음(기존 care 모드의 "전량 배열" 의미와 다름, 회귀 방지 위해 care는 무변경).
    _ciApplData=상태 '청약완료' 전량(케어 플로우 집계·필터 전용, 별도 배열 — care-flow.js 참고). */
@@ -16045,7 +16047,7 @@ function _ciLoad(){
   var _ciSF='&status=neq.'+encodeURIComponent('신규');
   window.db.fetch('/rest/v1/sales_customers?deleted_at=is.null'+_ciSF+'&select=id,name,phone,phone_raw,birth_date,gender,channel,status,created_at,profile&order=created_at.desc&limit=5000')
     .then(function(r){ return r.ok?r.json():[]; })
-    .then(function(rows){ window._ciData=Array.isArray(rows)?rows:[]; _ciRender(); })
+    .then(function(rows){ window._ciData=Array.isArray(rows)?rows:[]; window._ciMemoMap={}; _ciRender(); _ciLoadCareMemos(); })  /* 표 뷰 상담내용용 최근 memo 배치조회(비동기, 실패=빈칸 폴백) */
     .catch(function(){ _ciRender(); });
 }
 window._ciLoad=_ciLoad;
@@ -17047,12 +17049,140 @@ function _ciManageEnd(){
   } else { done(); }  /* 미리보기(연결 없음): 로컬 목록에서 제거 */
 }
 window._ciManageEnd=_ciManageEnd;
+/* ═══ 상담관리(care) 표(시트) 뷰 — 1차: 읽기 + CSV + 개별삭제 (2026-07-27, 대표 지시) ══════════════════
+ *  카드 뷰는 그대로 유지하고 [카드|표] 토글로 전환한다. care 모드(window._ciMode==='care') 전용 — salesnote 경로 무접촉.
+ *  기존 카드 렌더(_ciListHtml/_ciSelCard 등)는 바이트 무변경. _ciRender에 care+표뷰 훅만 추가한다.
+ *  이번 범위 제외(다음 PR): 셀 인라인 편집, 새 행 입력, 다중선택 삭제. */
+function _ciSheetRows(){
+  /* 표·CSV가 공유하는 "표시 순서 그대로" 데이터. _ciListHtml의 care 경로(필터+정렬)를 그대로 재현(원본 무변경). */
+  var data=_ciViewData().slice();
+  if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }
+  else { var cur=window._ciStageF||'전체'; if(cur!=='전체') data=data.filter(function(c){return (c.status||'')===cur;}); }
+  var _nq=String(window._ciNameQ||'').trim().toLowerCase().replace(/\s+/g,'');
+  if(_nq) data=data.filter(function(c){ return String(c.name||'').toLowerCase().replace(/\s+/g,'').indexOf(_nq)>=0; });
+  if(window._ciListPeriodOn){ var r=_dsRangeCur(); data=data.filter(function(c){ var d=_ciDateOf(c.created_at); return d && d>=r[0] && d<=r[1]; }); }
+  if(window._ciChanF!=null){ data=data.filter(function(c){ return _dsChanIdx(c)===window._ciChanF; }); }
+  data.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });  /* 최근 입력일자가 위(created_at desc) */
+  return data;
+}
+function _ciStatusColor(st){  /* 상담상태 배지 색(토큰만 사용, 하드코딩 색 지양) */
+  switch(st){
+    case '청약완료': return 'var(--ok)';
+    case '진행중':   return 'var(--ac)';
+    case '부재': case '보류': case '클로징': return 'var(--warn)';
+    case '신규DB': case '예약': case '제안서발송': return 'var(--info)';
+    default: return 'var(--tf)';
+  }
+}
+function _ciStatusBadge(st){
+  st=String(st||''); if(!st) return '';
+  return '<span class="ci-stg-badge" style="--stg:'+_ciStatusColor(st)+'">'+_ciEsc(st)+'</span>';
+}
+function _ciSheetAttr(c){ return String((c&&c.profile&&c.profile.attr)||(c&&c.channel)||''); }  /* 인입유형=profile.attr(없으면 channel 폴백) */
+function _ciSheetBigo(c){ return String((c&&c.profile&&c.profile['비고'])||''); }  /* 비고=profile.비고(없으면 빈칸, 이번엔 표시만) */
+function _ciSheetHtml(){
+  var data=_ciSheetRows();
+  if(!data.length) return '<div class="ci-empty">아직 등록된 고객이 없습니다.<br>+ 고객 추가로 첫 고객을 등록하세요.</div>';
+  var mm=window._ciMemoMap||{};
+  var head='<thead><tr>'
+    +'<th>입력일자</th><th>인입유형</th><th>이름</th><th>생년월일/성별</th><th>전화</th><th>상담상태</th><th class="ci-sh-memo-h">상담내용</th><th class="ci-sh-bigo-h">비고</th><th aria-label="삭제"></th>'
+    +'</tr></thead>';
+  var rows=data.map(function(c){
+    var bg=[(c.birth_date||''),(c.gender||'')].filter(Boolean).join(' / ');
+    var memo=String(mm[String(c.id)]||'');
+    var bigo=_ciSheetBigo(c);
+    var idEsc=_ciEsc(c.id);
+    return '<tr>'
+      +'<td class="ci-sh-date">'+_ciEsc(_ciDateOf(c.created_at))+'</td>'
+      +'<td>'+_ciEsc(_ciSheetAttr(c))+'</td>'
+      +'<td class="ci-sh-nm">'+_ciEsc(c.name||'')+'</td>'
+      +'<td>'+_ciEsc(bg)+'</td>'
+      +'<td class="ci-sh-tel">'+_ciEsc(c.phone||c.phone_raw||'')+'</td>'
+      +'<td>'+_ciStatusBadge(c.status||'')+'</td>'
+      +'<td class="ci-sh-memo" title="'+_ciEsc(memo)+'">'+_ciEsc(memo)+'</td>'
+      +'<td class="ci-sh-bigo" title="'+_ciEsc(bigo)+'">'+_ciEsc(bigo)+'</td>'
+      +'<td class="ci-sh-act"><button type="button" class="ci-sh-del" title="삭제(휴지통 이동)" aria-label="삭제" onclick="_ciDelete(\''+idEsc+'\')">🗑</button></td>'
+      +'</tr>';
+  }).join('');
+  return '<div class="ci-sheet-wrap"><table class="ci-sheet">'+head+'<tbody>'+rows+'</tbody></table></div>';
+}
+window._ciSheetHtml=_ciSheetHtml;
+function _ciSetView(v){
+  window._ciView=(v==='sheet')?'sheet':'card';
+  if(window._ciMode!=='care') return;  /* care 전용 — salesnote는 토글 자체 미노출 */
+  _ciRender();
+}
+window._ciSetView=_ciSetView;
+function _ciSheetToolsRender(){
+  var el=document.getElementById('ci-sheet-tools'); if(!el) return;
+  if(window._ciMode!=='care'){ el.style.display='none'; el.innerHTML=''; return; }  /* salesnote 무영향 */
+  el.style.display='';
+  var v=(window._ciView==='sheet')?'sheet':'card';
+  el.innerHTML=''
+    +'<div class="ci-vtoggle" role="group" aria-label="보기 전환">'
+    +'<button type="button" class="ci-vbtn'+(v==='card'?' on':'')+'" onclick="_ciSetView(\'card\')">카드</button>'
+    +'<button type="button" class="ci-vbtn'+(v==='sheet'?' on':'')+'" onclick="_ciSetView(\'sheet\')">표</button>'
+    +'</div>'
+    +'<button type="button" class="ci-csv-btn" onclick="_ciSheetCsv()">CSV 다운로드</button>';
+}
+window._ciSheetToolsRender=_ciSheetToolsRender;
+function _ciLoadCareMemos(){
+  /* care 진입 시 _ciData의 id들로 sales_consultations.memo 최근 1건을 배치 조회 → _ciMemoMap. 실패/빈값은 빈칸 폴백(예외 던지지 않음). */
+  try{
+    if(!(window.db&&window.db.fetch)) return;
+    var ids=(window._ciData||[]).map(function(c){return c&&c.id;}).filter(function(x){return x!=null&&x!=='';});
+    if(!ids.length){ window._ciMemoMap={}; return; }
+    var CH=100, chunks=[]; for(var i=0;i<ids.length;i+=CH){ chunks.push(ids.slice(i,i+CH)); }  /* id 목록이 길면 100개씩 분할 */
+    var map={};
+    var jobs=chunks.map(function(group){
+      var inlist=group.map(function(id){return encodeURIComponent(id);}).join(',');
+      return window.db.fetch('/rest/v1/sales_consultations?customer_id=in.('+inlist+')&select=customer_id,memo,consulted_at&order=consulted_at.desc')
+        .then(function(r){ return r.ok?r.json():[]; })
+        .then(function(rows){
+          (Array.isArray(rows)?rows:[]).forEach(function(row){
+            var k=String(row.customer_id);
+            if(!(k in map) && row.memo!=null && String(row.memo)!==''){ map[k]=row.memo; }  /* order desc → 고객별 첫 등장=최근 memo */
+          });
+        })
+        .catch(function(){});  /* 조회 실패는 조용히 빈칸 폴백 */
+    });
+    Promise.all(jobs).then(function(){
+      window._ciMemoMap=map;
+      if(window._ciMode==='care' && window._ciView==='sheet'){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); }  /* 표 뷰면 상담내용 채워 재렌더 */
+    });
+  }catch(e){}
+}
+window._ciLoadCareMemos=_ciLoadCareMemos;
+function _ciCsvCell(v){ v=(v==null?'':String(v)); if(/[",\n\r]/.test(v)){ v='"'+v.replace(/"/g,'""')+'"'; } return v; }
+function _ciSheetCsv(){
+  /* 현재 care 목록(표시 순서 그대로)을 CSV로. UTF-8 BOM 접두(엑셀 한글). 컬럼=표와 동일(삭제 제외). 외부 라이브러리 없이 Blob+a[download]. */
+  var data=_ciSheetRows(), mm=window._ciMemoMap||{};
+  var headers=['입력일자','인입유형','이름','생년월일/성별','전화','상담상태','상담내용','비고'];
+  var lines=[headers.map(_ciCsvCell).join(',')];
+  data.forEach(function(c){
+    var bg=[(c.birth_date||''),(c.gender||'')].filter(Boolean).join(' / ');
+    var memo=String(mm[String(c.id)]||'');
+    lines.push([_ciDateOf(c.created_at), _ciSheetAttr(c), (c.name||''), bg, (c.phone||c.phone_raw||''), (c.status||''), memo, _ciSheetBigo(c)].map(_ciCsvCell).join(','));
+  });
+  var csv='﻿'+lines.join('\r\n');  /* UTF-8 BOM 접두 → 엑셀 한글 안 깨짐 */
+  var d=new Date(), pad=function(n){return (n<10?'0':'')+n;};
+  var fname='상담관리_'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.csv';
+  try{
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{ document.body.removeChild(a); }catch(_e){} URL.revokeObjectURL(url); }, 0);
+  }catch(e){ alert('CSV 생성 실패: '+(e&&e.message||e)); }
+}
+window._ciSheetCsv=_ciSheetCsv;
 function _ciRender(){
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
   var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
-  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+  var lst=document.getElementById('ci-list');
+  if(lst){ lst.innerHTML=(window._ciMode==='care' && window._ciView==='sheet') ? _ciSheetHtml() : _ciListHtml(); }  /* care+표뷰 훅(2026-07-27) — 그 외(카드/salesnote)는 기존 _ciListHtml 그대로 */
+  _ciSheetToolsRender();  /* [카드|표] 토글+CSV 툴바(care 전용 표시, 내부에서 salesnote는 숨김) */
   _ciListFilterBarRender();
   var pager=document.getElementById('ci-list-pager');
   if(pager){ var _showPager=(window._ciMode==='salesnote' && !window._ciCareF); pager.style.display=_showPager?'':'none'; pager.innerHTML=_showPager?_ciPagerHtml():''; }  /* 페이지 이동 컨트롤(salesnote 전용, 케어플로우 필터 중엔 숨김·전량 표시) 2026-07-23 */
