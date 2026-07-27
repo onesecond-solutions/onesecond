@@ -17109,9 +17109,10 @@ function _ciSheetHtml(){
     var memo=String(mm[String(c.id)]||'');
     var bigo=_ciSheetBigo(c);
     var attr=_ciSheetAttr(c);
+    var _sc=/뱅크샐러드/.test(attr)?' ci-src-bank':(/카카오페이/.test(attr)?' ci-src-kakao':(/보맵/.test(attr)?' ci-src-bomap':''));  /* 인입유형 행 색(카드 _ciListHtml과 동일 규칙): 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색·나머지=흰색 */
     var tel=String(c.phone||c.phone_raw||'');
     var idEsc=_ciEsc(c.id), idA=_ciAttr(c.id);
-    return '<tr>'
+    return '<tr class="ci-sh-row'+_sc+'">'
       +'<td class="ci-sh-date">'+_ciEsc(_ciDateOf(c.created_at))+'</td>'
       +_ciEdTd('attr', idA, attr, '<span class="ci-cellv">'+_ciEsc(attr)+'</span>')
       +_ciEdTd('name', idA, (c.name||''), '<span class="ci-cellv ci-sh-nm-v">'+_ciEsc(c.name||'')+'</span>', 'ci-sh-nm')
@@ -17243,6 +17244,15 @@ window._ciSheetCsv=_ciSheetCsv;
  * 저장 매핑: name·phone(+phone_raw)·birth_date·gender·status → PATCH sales_customers / attr·비고 → profile jsonb 머지 PATCH
  *          상담내용(memo) → 최근 sales_consultations row PATCH(있으면) 또는 POST(없으면). 성공=낙관적 로컬 갱신, 실패=원값 복원+alert. */
 function _ciSheetRerender(){ if(window._ciMode==='care' && window._ciView==='sheet'){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); } }
+/* 표 뷰에서 추가·상태변경 후 상단(상담 플로우 밴드·전체 카운트·오늘의 할 일·데이터 현황)만 부분 갱신 — 카드 경로(_ciLoad→_ciRender)와 집계 동기를 맞춘다. ci-list(표 본문)는 건드리지 않아 편집 흐름 무영향. 2026-07-27 */
+function _ciSheetSyncTop(){
+  if(window._ciMode!=='care') return;
+  var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
+  var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
+  var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
+  var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
+}
+window._ciSheetSyncTop=_ciSheetSyncTop;
 function _ciLocalPatch(id, patch){ (window._ciData||[]).forEach(function(c){ if(String(c.id)===String(id)){ for(var k in patch){ if(Object.prototype.hasOwnProperty.call(patch,k)) c[k]=patch[k]; } } }); }
 function _ciSaveCust(id, patch, ok, fail){  /* sales_customers 부분 PATCH(_snSaveForm 패턴 재사용) */
   if(!(window.db&&window.db.fetch)){ if(fail)fail(); return; }
@@ -17342,11 +17352,11 @@ function _ciCellCommit(td){
   } else if(field==='status'){
     var vs=String((ctrls[0]&&ctrls[0].value)||'');
     if(vs===(td.getAttribute('data-raw')||'')){ restore(); return; }
-    _ciSaveCust(id, {status:vs}, function(){ _ciLocalPatch(id,{status:vs}); _ciCellApply(td,'status',{status:vs}); }, restore);
+    _ciSaveCust(id, {status:vs}, function(){ _ciLocalPatch(id,{status:vs}); _ciCellApply(td,'status',{status:vs}); _ciSheetSyncTop(); if(window._ciTodayF||((window._ciStageF||'전체')!=='전체')) _ciSheetRerender(); }, restore);  /* 상태변경 → 상단 단계집계 즉시 갱신 + 단계/오늘 필터 중이면 목록 재적용(바뀐 행이 필터 밖이면 빠지게) 2026-07-27 */
   } else if(field==='attr'){
     var va=String((ctrls[0]&&ctrls[0].value)||'').trim();
     if(va===(td.getAttribute('data-raw')||'')){ restore(); return; }
-    _ciSaveProfileKey(id, 'attr', va, function(){ _ciCellApply(td,'attr',{value:va}); }, restore);
+    _ciSaveProfileKey(id, 'attr', va, function(){ _ciCellApply(td,'attr',{value:va}); _ciSheetRerender(); _ciSheetSyncTop(); }, restore);  /* 인입유형 변경 → 행 색(ci-src-*) 재적용 위해 표 리렌더 + 데이터현황 채널집계 갱신 2026-07-27 */
   } else if(field==='bigo'){
     var vg=String((ctrls[0]&&ctrls[0].value)||'').trim();
     if(vg===(td.getAttribute('data-raw')||'')){ restore(); return; }
@@ -17388,7 +17398,7 @@ function _ciNewRowCommit(){
     .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } return r.json(); })
     .then(function(rows){
       var nc=(rows&&rows[0])||null;
-      var after=function(){ window._ciNewBusy=false; if(nc){ window._ciData=window._ciData||[]; window._ciData.push(nc); } _ciSheetRerender(); };
+      var after=function(){ window._ciNewBusy=false; if(nc){ window._ciData=window._ciData||[]; window._ciData.push(nc); } _ciSheetRerender(); _ciSheetSyncTop(); };  /* 표에 새 행 반영 + 상단 상담플로우/데이터현황 집계 즉시 갱신(카드 추가와 동기) 2026-07-27 */
       if(nc && memo){ _ciSaveMemo(nc.id, memo, after, after); } else { after(); }  /* 상담내용도 입력했으면 신규 consult POST */
     })
     .catch(function(e){ window._ciNewBusy=false; alert('고객 추가 실패: '+(e&&e.message||e)); });
