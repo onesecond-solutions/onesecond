@@ -17163,6 +17163,17 @@ function _ciSheetNewRowHtml(){  /* 맨 아래 상시 빈 입력 행 — 이름 �
 }
 window._ciSheetNewRowHtml=_ciSheetNewRowHtml;
 window._ciSheetHtml=_ciSheetHtml;
+var _CI_NARROW_BP=860;  /* 좁은 화면 기준(px) — 4분할이 세로 스택되는 폭과 동일. 이 이하에선 표(min-width:1180) 대신 카드 강제(2026-07-27 A안, 대표 승인) */
+function _ciIsNarrow(){ try{ return (window.innerWidth||document.documentElement.clientWidth||9999)<=_CI_NARROW_BP; }catch(e){ return false; } }
+/* 유효 뷰 = 화면폭까지 반영한 실제 렌더 뷰. 사용자가 '표'를 골랐어도(_ciView) 좁은 화면이면 카드로. 창 넓히면 자동 복귀. care 아니면 항상 card 경로 취급(기존과 동일). */
+function _ciEffView(){ if(window._ciMode!=='care') return (window._ciView==='sheet')?'sheet':'card'; if(window._ciView!=='sheet') return 'card'; return _ciIsNarrow()?'card':'sheet'; }
+window._ciEffView=_ciEffView;
+/* 창 크기 변화로 유효 뷰가 바뀌면(표↔카드 경계 통과) 자동 재렌더. care+표선택 상태에서만, 디바운스 150ms. 1회만 바인딩. */
+if(!window._ciResizeBound){ window._ciResizeBound=true; window.addEventListener('resize', function(){
+  if(window._ciMode!=='care' || window._ciView!=='sheet') return;
+  clearTimeout(window._ciResizeT);
+  window._ciResizeT=setTimeout(function(){ var ev=_ciEffView(); if(ev===window._ciLastEffView) return; window._ciLastEffView=ev; if(window._ciMode==='care' && window._ciView==='sheet') _ciRender(); }, 150);
+}); }
 function _ciSetView(v){
   window._ciView=(v==='sheet')?'sheet':'card';
   if(window._ciMode!=='care') return;  /* care 전용 — salesnote는 토글 자체 미노출 */
@@ -17173,18 +17184,22 @@ function _ciSheetToolsRender(){
   var el=document.getElementById('ci-sheet-tools'); if(!el) return;
   if(window._ciMode!=='care'){ el.style.display='none'; el.innerHTML=''; return; }  /* salesnote 무영향 */
   el.style.display='';
-  var v=(window._ciView==='sheet')?'sheet':'card';
+  var eff=_ciEffView();          /* 실제 표시 뷰(좁으면 card) — on 하이라이트·페이지크기 노출 기준 */
+  var narrow=_ciIsNarrow();      /* 좁은 화면이면 표 선택이어도 카드로 강제 */
   var ps=window._ciSheetPageSize||30;
-  var psSel=(v==='sheet') ? ('<div class="ci-psize" role="group" aria-label="페이지 크기">'
+  var psSel=(eff==='sheet') ? ('<div class="ci-psize" role="group" aria-label="페이지 크기">'  /* 페이지 크기는 실제 표일 때만(카드엔 무의미) */
       +'<span class="ci-psize-lb">보기</span>'
       +[30,50,100].map(function(n){ return '<button type="button" class="ci-psize-btn'+(ps===n?' on':'')+'" onclick="_ciSheetSetPageSize('+n+')">'+n+'</button>'; }).join('')
       +'<span class="ci-psize-lb">개씩</span></div>') : '';
+  var sheetTitle=narrow?' title="좁은 화면에서는 카드로 표시됩니다(넓히면 표로 전환)"':'';  /* 표 버튼: 좁으면 안내(선택은 기억) */
+  var hint=(narrow && window._ciView==='sheet') ? '<span class="ci-vhint">좁은 화면 → 카드 표시</span>' : '';
   el.innerHTML=''
     +'<div class="ci-vtools-left">'
     +'<div class="ci-vtoggle" role="group" aria-label="보기 전환">'
-    +'<button type="button" class="ci-vbtn'+(v==='card'?' on':'')+'" onclick="_ciSetView(\'card\')">카드</button>'
-    +'<button type="button" class="ci-vbtn'+(v==='sheet'?' on':'')+'" onclick="_ciSetView(\'sheet\')">표</button>'
+    +'<button type="button" class="ci-vbtn'+(eff==='card'?' on':'')+'" onclick="_ciSetView(\'card\')">카드</button>'
+    +'<button type="button" class="ci-vbtn'+(eff==='sheet'?' on':'')+(narrow?' ci-vbtn-na':'')+'"'+sheetTitle+' onclick="_ciSetView(\'sheet\')">표</button>'
     +'</div>'
+    + hint
     + psSel
     +'</div>'
     +'<button type="button" class="ci-csv-btn" onclick="_ciSheetCsv()">CSV 다운로드</button>';
@@ -17213,7 +17228,7 @@ function _ciLoadCareMemos(){
     });
     Promise.all(jobs).then(function(){
       window._ciMemoMap=map; window._ciMemoIdMap=idmap;
-      if(window._ciMode==='care' && window._ciView==='sheet'){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); }  /* 표 뷰면 상담내용 채워 재렌더 */
+      if(window._ciMode==='care' && _ciEffView()==='sheet'){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); }  /* 유효뷰=표일 때만 상담내용 채워 재렌더(좁은 화면 카드 모드 무영향) */
     });
   }catch(e){}
 }
@@ -17243,7 +17258,7 @@ window._ciSheetCsv=_ciSheetCsv;
 /* ════ 상담관리(care) 표 뷰 2차 — 인라인 편집 저장 로직(전부 신규 함수) ════════════════════════════
  * 저장 매핑: name·phone(+phone_raw)·birth_date·gender·status → PATCH sales_customers / attr·비고 → profile jsonb 머지 PATCH
  *          상담내용(memo) → 최근 sales_consultations row PATCH(있으면) 또는 POST(없으면). 성공=낙관적 로컬 갱신, 실패=원값 복원+alert. */
-function _ciSheetRerender(){ if(window._ciMode==='care' && window._ciView==='sheet'){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); } }
+function _ciSheetRerender(){ if(window._ciMode==='care' && _ciEffView()==='sheet'){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); } }  /* 유효뷰=sheet일 때만(좁은 화면 카드 모드에선 표 HTML 오주입 방지) */
 /* 표 뷰에서 추가·상태변경 후 상단(상담 플로우 밴드·전체 카운트·오늘의 할 일·데이터 현황)만 부분 갱신 — 카드 경로(_ciLoad→_ciRender)와 집계 동기를 맞춘다. ci-list(표 본문)는 건드리지 않아 편집 흐름 무영향. 2026-07-27 */
 function _ciSheetSyncTop(){
   if(window._ciMode!=='care') return;
@@ -17410,9 +17425,10 @@ function _ciRender(){
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list');
-  if(lst){ lst.innerHTML=(window._ciMode==='care' && window._ciView==='sheet') ? _ciSheetHtml() : _ciListHtml(); }  /* care+표뷰 훅(2026-07-27) — 그 외(카드/salesnote)는 기존 _ciListHtml 그대로 */
+  var _eff=_ciEffView(); window._ciLastEffView=_eff;  /* 유효 뷰(폭 반영) — 좁은 화면이면 표 선택이어도 카드로. resize 자동전환 기준값 동기화 */
+  if(lst){ lst.innerHTML=(window._ciMode==='care' && _eff==='sheet') ? _ciSheetHtml() : _ciListHtml(); }  /* care+표뷰(넓은 화면) 훅(2026-07-27) — 그 외(카드/좁은화면/salesnote)는 기존 _ciListHtml 그대로 */
   _ciSheetToolsRender();  /* [카드|표] 토글+CSV 툴바(care 전용 표시, 내부에서 salesnote는 숨김) */
-  var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', window._ciMode==='care' && window._ciView==='sheet');  /* 표뷰=전체폭(우측 폼 숨김). 카드/salesnote=기존 2단(회귀 0). 2026-07-27 */
+  var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', window._ciMode==='care' && _eff==='sheet');  /* 표뷰(넓은 화면)=전체폭(우측 폼 숨김). 카드/좁은화면/salesnote=기존 2단 → 좁은화면 카드에선 "+고객 추가" 폼 복귀(회귀 0). 2026-07-27 */
   _ciListFilterBarRender();
   var pager=document.getElementById('ci-list-pager');
   if(pager){ var _showPager=(window._ciMode==='salesnote' && !window._ciCareF); pager.style.display=_showPager?'':'none'; pager.innerHTML=_showPager?_ciPagerHtml():''; }  /* 페이지 이동 컨트롤(salesnote 전용, 케어플로우 필터 중엔 숨김·전량 표시) 2026-07-23 */
