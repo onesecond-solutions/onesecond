@@ -13588,7 +13588,8 @@ async function loadMyspace(force){
   grid.innerHTML='<div class="mys-news-empty" id="mysLoading">불러오는 중... ⏳</div>';
   try{
     var headers={'apikey':window.db.key,'Authorization':'Bearer '+token};
-    var scrUrl=window.db.url('/rest/v1/scripts?owner_id=eq.'+userId+'&is_active=eq.true&order=created_at.desc&limit=50');
+    /* 목록용 경량 projection(2026-07-27 성능): script_text(리치 HTML)·attachments(base64 가능)는 목록에 불필요 → 제외. 본문은 항목 클릭 시 mysOpenItem이 단건 lazy 로드. select=* 전량이 수MB→파싱이 메인스레드 45초+ 프리즈(무한로딩)의 원인이었음. library는 이미 경량(본문 작음)이라 무변경. */
+    var scrUrl=window.db.url('/rest/v1/scripts?owner_id=eq.'+userId+'&is_active=eq.true&order=created_at.desc&limit=50&select=id,title,keywords,created_at,sort_order');
     var libUrl=window.db.url('/rest/v1/library?owner_id=eq.'+userId+'&order=created_at.desc&limit=50');
     var results=await Promise.all([
       fetch(scrUrl,{headers:headers}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
@@ -13702,6 +13703,18 @@ function renderMyspace(items){
 function mysOpenItem(idx, keepList){
   var list=window._mysFiltered||[]; var it=list[idx]; if(!it) return;
   var v=document.getElementById('mysViewer'); if(!v) return;
+  /* 본문 lazy 로드(2026-07-27 성능): 목록은 script_text 없이 경량 로드 → 스크립트 뷰어 열 때 단건 fetch로 본문·첨부만 채워 렌더. 이미 로드/로드중이면 통과. library·메모는 목록에 본문이 이미 있어 lazy 불필요. */
+  if(it._type==='script' && typeof it.script_text==='undefined' && !it._bodyLoading){
+    it._bodyLoading=true;
+    var _sel=document.querySelectorAll('#mysList .item'); for(var _k=0;_k<_sel.length;_k++) _sel[_k].classList.toggle('on', _k===idx);  /* 선택 하이라이트 유지 */
+    v.innerHTML='<div class="mys-news-empty">불러오는 중... ⏳</div>';
+    if(!(window.db&&window.db.fetch)){ it.script_text=''; it.attachments=[]; it._bodyLoading=false; mysOpenItem(idx, keepList); return; }
+    window.db.fetch('/rest/v1/scripts?id=eq.'+encodeURIComponent(it.id)+'&select=script_text,attachments&limit=1')
+      .then(function(r){ return r.ok?r.json():[]; })
+      .then(function(rows){ var row=(rows&&rows[0])||{}; it.script_text=(row.script_text!=null?row.script_text:''); it.attachments=row.attachments; it._bodyLoading=false; if((window._mysFiltered||[])[idx]===it) mysOpenItem(idx, keepList); })  /* 인덱스가 여전히 이 항목이면 재렌더(그 사이 필터 전환 시 무시) */
+      .catch(function(){ it.script_text=''; it.attachments=[]; it._bodyLoading=false; if((window._mysFiltered||[])[idx]===it) mysOpenItem(idx, keepList); });
+    return;
+  }
   var bodyText='';
   if(it._type==='script'){ bodyText=it.script_text||''; }
   else if(it._badge==='메모'){ bodyText=it.memo_text||''; }
