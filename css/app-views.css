@@ -213,6 +213,13 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-card.ci-src-kakao:hover{background:#BFDBFE;}
 .ci-card.ci-src-bomap{background:#E9E9EE;border-color:#D4D4DB;}
 .ci-card.ci-src-bomap:hover{background:#DEDEE4;}
+/* 표(시트) 뷰 인입유형 행 색 — 카드와 동일 팔레트(뱅크샐러드=노랑·카카오페이=파랑·보맵=회색). td 배경 투명이라 tr 배경이 그대로 보임. hover는 한 톤 진하게(카드와 일관). 2026-07-27 */
+.ci-sheet tbody tr.ci-src-bank{background:#FEF3C7;}
+.ci-sheet tbody tr.ci-src-bank:hover{background:#FDE68A;}
+.ci-sheet tbody tr.ci-src-kakao{background:#DBEAFE;}
+.ci-sheet tbody tr.ci-src-kakao:hover{background:#BFDBFE;}
+.ci-sheet tbody tr.ci-src-bomap{background:#E9E9EE;}
+.ci-sheet tbody tr.ci-src-bomap:hover{background:#DEDEE4;}
 /* ═══ 상담관리(care) 표(시트) 뷰 — 1차(2026-07-27). [카드|표] 토글 + CSV + 개별삭제. salesnote 미노출(JS에서 care만 렌더). 토큰 변수만 사용. ══ */
 .ci-sheet-tools{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .ci-vtoggle{display:inline-flex;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;background:var(--s1);}
