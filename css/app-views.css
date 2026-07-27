@@ -234,6 +234,18 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sh-act{text-align:center;}
 .ci-sh-del{border:0;background:transparent;cursor:pointer;font-size:var(--ts-preview);line-height:1;padding:4px 6px;border-radius:var(--radius-xs);}
 .ci-sh-del:hover{background:var(--err);}
+/* ═══ 상담관리(care) 표 뷰 2차(2026-07-27) — 엑셀식 인라인 편집 + 새 행. care+표뷰 전용, 토큰만 사용 ══ */
+.ci-sheet td.ci-ed{cursor:pointer;}
+.ci-sheet td.ci-ed:hover{background:var(--s2);box-shadow:inset 0 0 0 1px var(--bd);}
+.ci-sheet td.ci-ed[data-editing]{background:var(--s1);box-shadow:inset 0 0 0 2px var(--ac);}
+.ci-cell-inp{width:100%;box-sizing:border-box;font-family:inherit;font-size:var(--ts-meta);padding:4px 6px;border:1px solid var(--ac);border-radius:var(--radius-xs);background:var(--s1);color:var(--tp);}
+.ci-cell-inp:focus{outline:none;border-color:var(--ac);}
+.ci-cell-birth{width:auto;max-width:110px;margin-right:4px;display:inline-block;}
+.ci-cell-gender{width:auto;display:inline-block;}
+.ci-sheet tr.ci-sh-new td{background:var(--s2);border-top:2px solid var(--bd);}
+.ci-sheet tr.ci-sh-new:hover td{background:var(--s2);}
+.ci-sh-new-hint{color:var(--ac);font-weight:700;white-space:nowrap;}
+.ci-sheet tr.ci-sh-emptyrow td{color:var(--tf);text-align:center;padding:16px 12px;}
 .ci-preview{border:1px solid var(--bd);border-radius:var(--radius-md);padding:20px 22px;background:var(--s1);min-height:200px;}
 .ci-pv-head{font-size:var(--ts-viewer-title);font-weight:600;color:var(--tp);margin-bottom:14px;display:flex;gap:8px;align-items:center;}
 .ci-pv-stg{font-size:var(--ts-badge);font-weight:500;color:var(--space-branch-text);background:var(--space-branch-soft);padding:3px 9px;border-radius:var(--radius-xs);}
