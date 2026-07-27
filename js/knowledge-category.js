@@ -24,11 +24,14 @@ var KC_AXES = [
     hook:'뇌졸중 진단비가 있다고 뇌혈관질환 전체가 보장되는 것은 아닙니다.' },
   { key:'axis-surgery',    category:'수술비',
     hook:'수술비라는 이름이 같아도 지급 횟수와 인정 범위는 다릅니다.' },
-  { key:'axis-caregiver',  category:'간병',
+  { key:'axis-caregiver',  category:'간병', label:'간병 · 치매',
     hook:'간병보험은 누가 간병하느냐에 따라 지급 구조가 달라집니다.' },
-  { key:'axis-etc',        category:'기타',
+  { key:'axis-etc',        category:'기타', label:'그 외',
     hook:'위 다섯 영역에 담기지 않는 보장 주제를 모읍니다.' }
 ];
+/* label = 탭에 표시되는 카피(공개 정적 /insurance/ 탭과 동일 표기 통일, 2026-07-27 대표 지시).
+   category = 원장(knowledge-registry) 매칭 키라 절대 바꾸지 않는다(바꾸면 건수·문서목록 매칭이 깨진다).
+   label 없으면 category를 그대로 표시(위 4축은 표기 동일이라 label 불요). */
 
 function _kcAxis(viewKey){
   for(var i=0;i<KC_AXES.length;i++){ if(KC_AXES[i].key===viewKey) return KC_AXES[i]; }
@@ -72,7 +75,7 @@ function _kcTabsHtml(currentKey){
     var n  = window.knowledgeCount({category:ax.category});
     html += '<div class="tab'+(ax.key===currentKey?' on':'')+'" '
           + 'onclick="showView(\''+ax.key+'\')">'
-          + _kcEsc(ax.category)
+          + _kcEsc(ax.label || ax.category)   /* 표시=label(공개본 통일), 매칭·건수=category(원장 키) */
           + (n>0 ? '<span class="kc-n">'+n+'</span>' : '')
           + '</div>';
   }
@@ -184,7 +187,7 @@ function _kcShow(viewKey, opts){
     '<div class="chips kc-chips">'+chips+'</div>' +
     '<div class="kc-scroll"><div class="kc-body">' +
       '<div class="kc-kicker">보장 영역</div>' +
-      '<h1 class="kc-h1">'+_kcEsc(ax.category)+'</h1>' +
+      '<h1 class="kc-h1">'+_kcEsc(ax.label || ax.category)+'</h1>' +   /* 헤더도 표시 라벨(공개본 h1과 통일). 매칭은 category */
       '<div class="kc-hook">'+_kcEsc(ax.hook)+'</div>' +
       '<div class="kc-count">자료 '+total+'건</div>' +
       '<div class="kc-rule"></div>' +
