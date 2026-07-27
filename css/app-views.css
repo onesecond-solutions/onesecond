@@ -226,6 +226,8 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-vbtn{font-size:var(--ts-badge);font-weight:600;padding:6px 16px;border:0;background:transparent;color:var(--tf);cursor:pointer;font-family:inherit;}
 .ci-vbtn+.ci-vbtn{border-left:1px solid var(--bd);}
 .ci-vbtn.on{background:var(--ac);color:#fff;}
+.ci-vbtn.ci-vbtn-na{opacity:.55;}  /* 좁은 화면에서 '표' 버튼 흐리게(선택은 기억, 넓히면 표 복귀) 2026-07-27 A안 */
+.ci-vhint{font-size:var(--ts-badge);color:var(--tf);align-self:center;}  /* '좁은 화면 → 카드 표시' 안내 텍스트 */
 .ci-csv-btn{font-size:var(--ts-badge);font-weight:600;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--bd);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
 .ci-csv-btn:hover{border-color:var(--ac);color:var(--ac);}
 .ci-sheet-wrap{width:100%;overflow-x:auto;}  /* 컬럼 많을 때 가로 스크롤 */
