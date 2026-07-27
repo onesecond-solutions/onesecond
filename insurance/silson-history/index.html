@@ -598,7 +598,7 @@ sel(5,true);   /* 초기 진입 = 5세대 펼침만(스크롤 X). 클릭 시엔 
     a.addEventListener('click',function(e){
       e.preventDefault();
       var v=a.getAttribute('data-v');
-      var _relurl={'silson':'/pages/silson-generations.html','cancer-treatment':'/pages/cancer-treatment-history.html','caregiver-history':'/pages/caregiver-history.html'}[v];
+      var _relurl={'silson':'/insurance/silson-history/','cancer-treatment':'/insurance/cancer-treatment-history/','caregiver-history':'/insurance/caregiver-history/'}[v];
       if(_relurl){ location.href=_relurl; }   /* de-iframe 후 독립 URL 직접 이동(과거 parent.showView 의존 폐지) — 폴백(하드코딩) 경로 전용 */
     });
   });
