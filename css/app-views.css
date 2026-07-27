@@ -246,6 +246,23 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sheet tr.ci-sh-new:hover td{background:var(--s2);}
 .ci-sh-new-hint{color:var(--ac);font-weight:700;white-space:nowrap;}
 .ci-sheet tr.ci-sh-emptyrow td{color:var(--tf);text-align:center;padding:16px 12px;}
+/* ── 표 뷰 3차(2026-07-27): 전체폭(우측 폼 숨김) + 페이지 크기 선택 + 하단 페이지네이션 ── */
+#ci-wrap.ci-sheetmode .ci-bottom{grid-template-columns:1fr;}   /* 표뷰=1단 전체폭 */
+#ci-wrap.ci-sheetmode .ci-right-col{display:none;}             /* 표뷰=우측 "+고객 추가" 폼 숨김(엑셀식=표에서 직접 입력) */
+.ci-vtools-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.ci-psize{display:inline-flex;align-items:center;gap:5px;}
+.ci-psize-lb{font-size:var(--ts-badge);color:var(--tf);}
+.ci-psize-btn{font-size:var(--ts-badge);font-weight:600;padding:5px 11px;border:1px solid var(--bd);background:var(--s1);color:var(--tf);cursor:pointer;font-family:inherit;border-radius:var(--radius-sm);}
+.ci-psize-btn.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+.ci-sheet tr.ci-sh-new .ci-cell-idate{width:auto;min-width:132px;}
+.ci-sh-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 2px 2px;}
+.ci-shp-info{font-size:var(--ts-badge);color:var(--tf);}
+.ci-shp-nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.ci-shp-btn{min-width:28px;height:28px;padding:0 7px;border:1px solid var(--bd);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;font-size:var(--ts-badge);border-radius:var(--radius-sm);}
+.ci-shp-btn:hover:not(:disabled){border-color:var(--ac);color:var(--ac);}
+.ci-shp-btn.on{background:var(--ac);color:#fff;border-color:var(--ac);}
+.ci-shp-btn:disabled{opacity:.4;cursor:default;}
+.ci-shp-gap{color:var(--tf);padding:0 2px;}
 .ci-preview{border:1px solid var(--bd);border-radius:var(--radius-md);padding:20px 22px;background:var(--s1);min-height:200px;}
 .ci-pv-head{font-size:var(--ts-viewer-title);font-weight:600;color:var(--tp);margin-bottom:14px;display:flex;gap:8px;align-items:center;}
 .ci-pv-stg{font-size:var(--ts-badge);font-weight:500;color:var(--space-branch-text);background:var(--space-branch-soft);padding:3px 9px;border-radius:var(--radius-xs);}
