@@ -13,6 +13,9 @@
 <!-- 업무앱(로그인 전용) = 검색엔진 색인 제외 (공개 인덱스는 index.html / landing.html) -->
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<!-- Supabase 데이터 오리진 preconnect(2026-07-27 perf): 로그인 후 모든 데이터 fetch가 이 오리진. 콜드 연결(DNS+TLS+PostgREST 핸드셰이크)을 문서 파싱 중 미리 시작 → 첫 fetch 왕복 단축. 서버 쿼리 자체는 ~2ms(EXPLAIN 확인)라 잔여 지연=연결 계층. crossorigin=인증(CORS) fetch 대응. -->
+<link rel="preconnect" href="https://pdnwgzneooyygfejrvbg.supabase.co" crossorigin>
+<link rel="dns-prefetch" href="https://pdnwgzneooyygfejrvbg.supabase.co">
 <!-- 폰트 = 렌더 비차단 async 로드(font-display:swap 동작 — 시스템 폰트로 즉시 표시 후 Pretendard 교체). 2026-07-05 perf -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"></noscript>
