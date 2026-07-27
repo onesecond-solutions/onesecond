@@ -231,19 +231,28 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sheet .ci-sh-memo,.ci-sheet .ci-sh-bigo{white-space:pre-wrap;word-break:break-word;vertical-align:top;}  /* 상담내용·비고=멀티라인 표시(줄바꿈 보존, 대표 지시 2026-07-27) */
 .ci-sheet .ci-sh-memo-h,.ci-sheet .ci-sh-bigo-h{min-width:160px;}
 /* 컬럼 폭(대표 지시 2026-07-27): 앞 6칸(입력일자·인입유형·이름·생년월일/성별·전화·상담상태)=내용폭만큼 좁게 왼쪽, 상담내용·비고에 남은 공간 몰아주기, 삭제=최소. */
-.ci-sheet th:nth-child(-n+6),.ci-sheet td:nth-child(-n+6){width:1px;white-space:nowrap;}
-.ci-sheet th:nth-child(7),.ci-sheet td:nth-child(7){width:52%;white-space:pre-wrap;}   /* 상담내용=가장 넓게 */
-.ci-sheet th:nth-child(8),.ci-sheet td:nth-child(8){width:30%;white-space:pre-wrap;}   /* 비고=넉넉히 */
-.ci-sheet th:nth-child(9),.ci-sheet td:nth-child(9){width:1px;white-space:nowrap;}     /* 삭제 */
+/* 컬럼 폭 고정(table-layout:fixed): 앞 6칸=값이 다 보이는 고정폭(너무 넓지도 좁지도 않게), 상담내용=남은 폭 최대, 비고 넉넉. width:1px 금지. */
+.ci-sheet{table-layout:fixed;min-width:1180px;}
+.ci-sheet th:nth-child(1),.ci-sheet td:nth-child(1){width:114px;white-space:nowrap;}   /* 입력일자 */
+.ci-sheet th:nth-child(2),.ci-sheet td:nth-child(2){width:112px;white-space:nowrap;}   /* 인입유형 */
+.ci-sheet th:nth-child(3),.ci-sheet td:nth-child(3){width:86px;white-space:nowrap;}    /* 이름 */
+.ci-sheet th:nth-child(4),.ci-sheet td:nth-child(4){width:172px;white-space:nowrap;}   /* 생년월일/성별 */
+.ci-sheet th:nth-child(5),.ci-sheet td:nth-child(5){width:140px;white-space:nowrap;}   /* 전화 */
+.ci-sheet th:nth-child(6),.ci-sheet td:nth-child(6){width:116px;white-space:nowrap;}   /* 상담상태 */
+.ci-sheet th:nth-child(7),.ci-sheet td:nth-child(7){white-space:pre-wrap;}             /* 상담내용=남은 폭(가장 넓게) */
+.ci-sheet th:nth-child(8),.ci-sheet td:nth-child(8){width:220px;white-space:pre-wrap;} /* 비고 */
+.ci-sheet th:nth-child(9),.ci-sheet td:nth-child(9){width:44px;white-space:nowrap;}    /* 삭제/+ */
+.ci-sheet td{overflow:hidden;text-overflow:ellipsis;}  /* 고정폭 넘치는 데이터 텍스트는 … (입력칸은 자기 폭 안이라 무관) */
+.ci-sheet td.ci-sh-memo,.ci-sheet td.ci-sh-bigo{overflow:visible;text-overflow:clip;}  /* 상담내용·비고는 줄바꿈으로 다 보임 */
 .ci-sheet td.ci-sh-memo .ci-cellv,.ci-sheet td.ci-sh-bigo .ci-cellv{white-space:pre-wrap;}  /* 상담내용·비고 표시값만 줄바꿈 보존 */
 .ci-sheet td:nth-child(-n+6) .ci-cellv{white-space:nowrap;}  /* 앞 6칸(인입유형·이름·전화 등)은 한 줄 유지(세로 접힘 방지) */
 .ci-sheet .ci-stg-badge{white-space:nowrap;}  /* 상담상태 배지 한 줄(신규DB 등 접힘 방지) */
 .ci-cell-ta{width:100%;box-sizing:border-box;min-height:54px;resize:vertical;font-family:inherit;font-size:var(--ts-meta);line-height:1.5;padding:5px 6px;border:1px solid var(--ac);border-radius:var(--radius-xs);background:var(--s1);color:var(--tp);}
 .ci-cell-ta:focus{outline:none;border-color:var(--ac);}
 .ci-sheet .ci-sh-new td{vertical-align:top;}
-.ci-sheet tr.ci-sh-new .ci-cell-idate{min-width:116px;}   /* 입력일자 칸 최소화(YYYY-MM-DD 딱 맞게) */
-.ci-sheet tr.ci-sh-new .ci-cell-birth{width:92px;}         /* 생년월일 입력칸 축소(19760108 폭) */
-.ci-sheet tr.ci-sh-new .ci-cell-gender{width:54px;}        /* 성별 select 축소 */
+.ci-sheet tr.ci-sh-new .ci-cell-idate{min-width:0;width:100%;}  /* 입력일자 입력칸=칸 폭 채움(고정 컬럼폭) */
+.ci-sheet tr.ci-sh-new .ci-cell-birth{width:94px;}         /* 생년월일 입력칸(1976-01-08 폭) */
+.ci-sheet tr.ci-sh-new .ci-cell-gender{width:52px;}        /* 성별 select */
 .ci-stg-badge{display:inline-block;font-size:var(--ts-badge);font-weight:600;padding:2px 9px;border-radius:var(--radius-xs);color:var(--stg,var(--tf));border:1px solid var(--stg,var(--bd));background:var(--s1);}
 .ci-sh-act{text-align:center;}
 .ci-sh-del{border:0;background:transparent;cursor:pointer;font-size:var(--ts-preview);line-height:1;padding:4px 6px;border-radius:var(--radius-xs);}
@@ -270,7 +279,7 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-psize-lb{font-size:var(--ts-badge);color:var(--tf);}
 .ci-psize-btn{font-size:var(--ts-badge);font-weight:600;padding:5px 11px;border:1px solid var(--bd);background:var(--s1);color:var(--tf);cursor:pointer;font-family:inherit;border-radius:var(--radius-sm);}
 .ci-psize-btn.on{background:var(--ac);color:#fff;border-color:var(--ac);}
-.ci-sheet tr.ci-sh-new .ci-cell-idate{width:auto;min-width:132px;}
+.ci-sheet tr.ci-sh-new .ci-cell-idate{width:100%;min-width:0;}  /* 입력일자 입력칸=고정 컬럼폭(114) 채움. 이전 min-width:132 폐지(입력일자 과다폭 원인) */
 .ci-sh-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 2px 2px;}
 .ci-shp-info{font-size:var(--ts-badge);color:var(--tf);}
 .ci-shp-nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
