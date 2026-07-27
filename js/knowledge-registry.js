@@ -6,8 +6,9 @@
    ★ 새 자료 추가 = 아래 KNOWLEDGE_DOCS 배열에 객체 1개 추가
    ★ id = 기존 showView 뷰 키와 동일해야 함(?view= 딥링크·북마크가 이 값에 이미 묶여 있음).
      라벨 통일 명목으로 id를 바꾸지 말 것(§8-3, 대표 확정 — 의도된 불일치).
-   ★ url = 실측값. 파일명 패턴 추정 금지. 특히 의료실비 경로는 /pages/silson-generations.html
-     (silson-history.html 등으로 바꾸지 않는다 — 대표 지시, §1).
+   ★ url = 공개 정적 경로 /insurance/<slug>/ (대표 지시 2026-07-27 — WO-8 유출 수정: 옛 /pages/ 는
+     설계사 전략 문구가 남은 비공개 자산이라 원장이 가리키면 비로그인 검색·관련자료가 그리로 샌다.
+     이제 원장은 깨끗한 공개본 /insurance/ 만 가리킨다. 옛 /pages/ 3종은 접근 차단(삭제)됨).
    ★ 음성지원(audioStatus/audioUrl/audioDuration)·읽는 시간 필드는 의도적으로 없음(§2 대표 지정
      필드 외 추가 금지). 별도 후속 트랙.
    ★ updatedAt은 원장을 세운 기준일이지 문서 본문의 실제 마지막 수정일이 아니다(§2-1, 대표 확정
@@ -22,19 +23,19 @@
 var KNOWLEDGE_DOCS = [
   { id:'silson', category:'의료실비', group:null,
     label:'의료실비 변천사', documentTitle:'실손의료비보험 세대별 변천사',
-    description:'실손 1~5세대 보장·전환', url:'/pages/silson-generations.html',
+    description:'실손 1~5세대 보장·전환', url:'/insurance/silson-history/',
     updatedAt:'2026-07-23',   /* 원장 기준일(§2-1). 실제 본문 수정일 아님 */
     lifecycleStatus:'published', factGrades:['customer_ok'] },
 
   { id:'cancer-treatment', category:'암', group:null,
     label:'암주요치료비 변천사', documentTitle:'암주요치료비 세대별 변천사',
-    description:'세대별 암 치료비 보장 변화', url:'/pages/cancer-treatment-history.html',
+    description:'세대별 암 치료비 보장 변화', url:'/insurance/cancer-treatment-history/',
     updatedAt:'2026-07-23',   /* 원장 기준일(§2-1). 실제 본문 수정일 아님 */
     lifecycleStatus:'published', factGrades:['customer_ok'] },
 
   { id:'caregiver-history', category:'간병', group:null,
     label:'간병보험 변천사', documentTitle:'대한민국 간병보험의 변천사',
-    description:'장기간병~사용일당 · 지급기준이 다름', url:'/pages/caregiver-history.html',
+    description:'장기간병~사용일당 · 지급기준이 다름', url:'/insurance/caregiver-history/',
     updatedAt:'2026-07-23',   /* 원장 기준일(§2-1). 실제 본문 수정일 아님 */
     lifecycleStatus:'published', factGrades:['customer_ok'] }
 ];
