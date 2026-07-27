@@ -13,12 +13,13 @@
    ★ 카드 박스 금지(§9-2) — 행 + 얇은 구분선, hover 시에만 배경. */
 
 /* ── 루트 ─────────────────────────────────────────────
-   .wrap{overflow:hidden}이라 목록이 길어지면 잘린다. 뷰 자체를 flex 컬럼으로 고정하고
-   내부 .kc-scroll 하나만 스크롤시킨다(탭 줄은 상단 고정). `.view.on{display:block}`(0,2,0)을
-   이기려면 id 특이성이 필요하다. */
+   전체 화면 스크롤(대표 지시 2026-07-27): 검색기·탭을 상단 고정하고 목록만 내부 스크롤하던 방식을
+   폐지 → 뷰 전체가 한 덩어리로 스크롤(검색기·탭도 함께 위로 밀림). 그래서 뷰 자체에 overflow-y:auto.
+   flex 컬럼은 유지한다 — 검색 모드(.kc-searchslot:has(.searching){flex:1})가 남은 세로를 채우려면
+   부모가 flex 컬럼이어야 하기 때문. `.view.on{display:block}`(0,2,0)을 이기려면 id 특이성이 필요하다. */
 #v-axis-medical.on,#v-axis-cancer.on,#v-axis-brainheart.on,
 #v-axis-surgery.on,#v-axis-caregiver.on,#v-axis-etc.on{
-  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;min-height:0;overflow-y:auto;
 }
 
 /* ── A안 중앙 정렬(대표 확정, 2026-07-24) ── 근거: docs/specs/knowledge_category_alignment_fix_v1.md §1-1 + 부록.
@@ -153,8 +154,10 @@
 #v-axis-brainheart .kc-chips .chip.on .kc-n,#v-axis-surgery .kc-chips .chip.on .kc-n,
 #v-axis-caregiver .kc-chips .chip.on .kc-n,#v-axis-etc .kc-chips .chip.on .kc-n{color:#fff;}
 
-/* ── 스크롤 영역 + 읽는 본문 폭 710px / 행간 1.85 ── */
-.kc-scroll{flex:1;min-height:0;overflow-y:auto;padding-bottom:24px;}
+/* ── 본문 영역 + 읽는 본문 폭 710px / 행간 1.85 ──
+   전체 화면 스크롤(대표 지시 2026-07-27): 내부 스크롤(flex:1;overflow-y:auto)을 해제해 뷰 전체와 함께 흐르게 한다.
+   ⚠️ 검색 모드에선 .kc-searchslot:has(.searching)가 flex:1로 채우므로 이 블록은 자연 높이여도 무방. */
+.kc-scroll{padding-bottom:24px;}
 .kc-body{max-width:710px;line-height:1.85;}
 
 /* ── 카테고리 헤더 ── */
