@@ -9,22 +9,22 @@
    진입은 기존 showView 재사용(기능 로직 무변경). 전체 개방(is-uat-homesearch2 제거) 후에도 미공개 기능 타일(알릴의무 등)은 일반 홈에 안 생김.
    show() = 각 view의 showView 가드와 동일 조건: product-lineup·tool·scripts=전체개방 / goji=_canSeeRoadmap / newsletters=_canSeeNl / silson=전체개방(2026-07-21, cancer-treatment 전례). 2026-07-07 */
 var _HS2_TILES=[
-  /* 보장분석 6축 카드(의료실비·암·뇌심장·수술비·간병·기타) = 허브를 거치지 않고 각자 독립 빈 뷰(axis-*)로 바로 진입. 게이트는 '보장분석' 타일과 동일(_canSeeCoverage). v = showView('axis-*') 인자(일반 타일과 동일 배선, 아래 _hs2RenderHub). (2026-07-23, 대표 지시로 sub 배선→독립 뷰로 전환. 간병 축 추가. '기타' 축도 동일 배선으로 개방) */
-  {v:'axis-medical',    ic:'i-file',  t:'의료실비',   d:'세대 설명 + 가입일 세대판정',      url:'/insurance/silson/',      show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},/* url = 정적 공개 카테고리(대표 지시 2026-07-25). 나머지 축은 정적 페이지 제작 후 순차 연결 */
-  {v:'axis-cancer',     ic:'i-check', t:'암',         d:'진단·치료·비급여 3층 구조',        url:'/insurance/cancer/',      show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-brainheart', ic:'i-heart', t:'뇌 · 심장',  d:'좁은문 vs 넓은문 보장범위',        url:'/insurance/brain-heart/', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-surgery',    ic:'i-note',  t:'수술비',     d:'종수술·반복지급 구조',            url:'/insurance/surgery/',     show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-caregiver',  ic:'i-users', t:'간병 · 치매',       d:'장기요양 등급 · 일당형 지급구조',   url:'/insurance/care-dementia/', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
-  {v:'axis-etc', ic:'i-dots',  t:'그 외',       d:'준비중',           url:'/insurance/other/', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
+  /* 보장분석 6축 카드(의료실비·암·뇌심장·수술비·간병·치매·그 외) = 전체 노출(대표 지시 2026-07-27, WO-8 C안).
+     클릭 목적지 = 비로그인 정적 공개 카테고리(/insurance/*) / 로그인 SPA 카테고리 뷰(showView('axis-*'))
+     — 이 분기는 아래 _hs2RenderHub(is-guest 여부)가 이미 처리한다. show:true 로 일반 설계사에게도 노출을 통일.
+     (기존 _canSeeCoverage 게이트 제거 — 이제 홈 변천사 카드를 지워도 모든 모드가 6축 카드로 문서에 도달) */
+  {v:'axis-medical',    ic:'i-file',  t:'의료실비',   d:'세대 설명 + 가입일 세대판정',      url:'/insurance/silson/',      show:function(){return true;}},
+  {v:'axis-cancer',     ic:'i-check', t:'암',         d:'진단·치료·비급여 3층 구조',        url:'/insurance/cancer/',      show:function(){return true;}},
+  {v:'axis-brainheart', ic:'i-heart', t:'뇌 · 심장',  d:'좁은문 vs 넓은문 보장범위',        url:'/insurance/brain-heart/', show:function(){return true;}},
+  {v:'axis-surgery',    ic:'i-note',  t:'수술비',     d:'종수술·반복지급 구조',            url:'/insurance/surgery/',     show:function(){return true;}},
+  {v:'axis-caregiver',  ic:'i-users', t:'간병 · 치매',       d:'장기요양 등급 · 일당형 지급구조',   url:'/insurance/care-dementia/', show:function(){return true;}},
+  {v:'axis-etc', ic:'i-dots',  t:'그 외',       d:'준비중',           url:'/insurance/other/', show:function(){return true;}},
   {v:'product-lineup', ic:'i-box',      t:'상품 라인업',       d:'원수사 상품 한눈에 비교',   show:function(){return true;}},
   {v:'goji',           ic:'i-check',    t:'알릴의무',          d:'회사별 고지유형·간편고지',  show:function(){return typeof window._canSeeRoadmap==='function'&&window._canSeeRoadmap();}},
   {v:'newsletters',    ic:'i-building', t:'소식지',            d:'원수사·GA 월별 모음',       show:function(){return typeof window._canSeeNl==='function'&&window._canSeeNl();}},
-  /* 실비 변천사 = 전체 개방(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출 */
-  {v:'silson',         ic:'i-file',     t:'의료실비 변천사',       d:'실손 1~5세대 보장·전환',    show:function(){return true;}},/* 라벨 통일(2026-07-24 PR-B): '실비 변천사'→'의료실비 변천사'(원장 js/knowledge-registry.js 정본 label). v='silson'(뷰 키·딥링크)은 불변 */
-  /* 암주요치료비 변천사 = 전체 개방(2026-07-20 대표 승인, 상품 라인업·도구 페이지 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출 */
-  {v:'cancer-treatment', ic:'i-file',   t:'암주요치료비 변천사', d:'세대별 암 치료비 보장 변화', show:function(){return true;}},
-  /* 간병보험 변천사 = 전체공개(2026-07-21 대표 승인, cancer-treatment 전례) — show:true(게이트 없음). 비로그인 포함 누구나 노출. order_hint=변천사 인접 */
-  {v:'caregiver-history', ic:'i-file',  t:'간병보험 변천사', d:'장기간병~사용일당 · 지급기준이 다름', show:function(){return true;}},
+  /* 옛 변천사 홈 카드 3종(의료실비/암주요치료비/간병보험 변천사) 삭제(대표 지시 2026-07-27, WO-8 C안).
+     6축 카드가 전체 노출(위)로 열려 모든 모드가 그 경로로 각 변천사 문서에 도달하므로 중복 진입로를 제거.
+     문서(url·뷰키 silson/cancer-treatment/caregiver-history)는 그대로 살아 있다 — 홈 링크만 제거. */
   {v:'bojang', ic:'i-file', t:'보장분석', d:'의료실비·암·뇌심장·수술비 종합 · 고객 발송', show:function(){return typeof window._canSeeCoverage==='function'&&window._canSeeCoverage();}},
   /* X-FILE = 임태성 게이트 전용 빈 페이지(#v-xfile) 골격. cls = 이 타일에만 붙는 붉은 계열 스코프 클래스(다른 타일 무영향). 게이트는 _canSeeXfile(app.html 인라인) — _canSeeCoverage와 조건은 같으나 독립 함수라 개방 시점을 따로 제어. (2026-07-17) */
   {v:'xfile', ic:'i-file', t:'X-FILE', d:'내 보험 어때? · 4가지 자가 검진', cls:'hs2-hub-tile--xfile', show:function(){return typeof window._canSeeXfile==='function'&&window._canSeeXfile();}},
