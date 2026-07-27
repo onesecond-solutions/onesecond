@@ -17090,6 +17090,9 @@ function _ciEdTd(field, idA, rawVal, innerHtml, extraCls, titleVal){  /* 편집 
     +(titleVal!=null?' title="'+_ciAttr(titleVal)+'"':'')+' onclick="_ciCellEdit(this)">'+innerHtml+'</td>';
 }
 function _ciTodayStr(){ var d=new Date(),p=function(n){return (n<10?'0':'')+n;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+/* 자동 포맷(대표 지시 2026-07-27): 생년월일 19760108→1976-01-08(8자리 숫자만) · 전화 01012345678→010-1234-5678(11자리 3-4-4 / 10자리 3-3-4). 형식 안 맞으면 원값 유지. */
+function _ciFmtBirth(s){ var d=String(s==null?'':s).replace(/[^0-9]/g,''); if(d.length===8) return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8); return String(s==null?'':s); }
+function _ciFmtPhone(s){ var d=String(s==null?'':s).replace(/[^0-9]/g,''); if(d.length===11) return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7); if(d.length===10) return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6); return String(s==null?'':s); }
 function _ciSheetHtml(){
   var all=_ciSheetRows();
   var mm=window._ciMemoMap||{};
@@ -17152,8 +17155,8 @@ function _ciSheetNewRowHtml(){  /* 맨 아래 상시 빈 입력 행 — 이름 �
     +'<td><input type="text" class="ci-cell-inp ci-cell-birth" data-nf="birth" placeholder="1980-01-01"'+evt+'><select class="ci-cell-inp ci-cell-gender" data-nf="gender"'+evt+'>'+gOpt+'</select></td>'
     +'<td><input type="text" class="ci-cell-inp" data-nf="phone" placeholder="전화"'+evt+'></td>'
     +'<td><select class="ci-cell-inp" data-nf="status"'+evt+'>'+stOpt+'</select></td>'
-    +'<td><input type="text" class="ci-cell-inp" data-nf="memo" placeholder="상담내용"'+evt+'></td>'
-    +'<td><input type="text" class="ci-cell-inp" data-nf="bigo" placeholder="비고"'+evt+'></td>'
+    +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="memo" placeholder="상담내용"'+evt+'></textarea></td>'
+    +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="bigo" placeholder="비고"'+evt+'></textarea></td>'
     +'<td class="ci-sh-act"></td>'
     +'</tr>';
 }
@@ -17294,6 +17297,11 @@ function _ciCellEdit(td){
     var gs=document.createElement('select'); gs.className='ci-cell-inp ci-cell-gender';
     [['','성별'],['남','남'],['여','여']].forEach(function(p){ var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; if(p[0]===(td.getAttribute('data-gender')||''))o.selected=true; gs.appendChild(o); });
     td.appendChild(bi); td.appendChild(gs); ctrls.push(bi,gs); bindKey(bi); bindKey(gs); bindBlur(bi); bindBlur(gs); bi.focus(); if(bi.select)bi.select();
+  } else if(field==='memo' || field==='bigo'){
+    var ta=document.createElement('textarea'); ta.className='ci-cell-inp ci-cell-ta'; ta.rows=3; ta.value=td.getAttribute('data-raw')||'';
+    td.appendChild(ta); ctrls.push(ta);
+    ta.addEventListener('keydown', function(e){ if(e.key==='Escape'){ e.preventDefault(); _ciCellCancel(td); } });  /* 상담내용·비고=멀티라인: Enter=줄바꿈(기본 유지), 저장은 blur(칸 밖) */
+    bindBlur(ta); ta.focus();
   } else {
     var inp=document.createElement('input'); inp.type='text'; inp.className='ci-cell-inp'; inp.value=td.getAttribute('data-raw')||'';
     td.appendChild(inp); ctrls.push(inp); bindKey(inp); bindBlur(inp); inp.focus(); if(inp.select)inp.select();
@@ -17321,13 +17329,13 @@ function _ciCellCommit(td){
     if(v===(td.getAttribute('data-raw')||'')){ restore(); return; }
     _ciSaveCust(id, {name:v}, function(){ _ciLocalPatch(id,{name:v}); _ciCellApply(td,'name',{value:v}); }, restore);
   } else if(field==='phone'){
-    var vp=String((ctrls[0]&&ctrls[0].value)||'').trim();
+    var vp=_ciFmtPhone(String((ctrls[0]&&ctrls[0].value)||'').trim());  /* 01012345678→010-1234-5678 자동 */
     if(vp===(td.getAttribute('data-raw')||'')){ restore(); return; }
     var pp={phone:vp||null, phone_raw:vp?vp.replace(/[^0-9]/g,''):null};
     _ciSaveCust(id, pp, function(){ _ciLocalPatch(id,pp); _ciCellApply(td,'phone',{value:vp}); }, restore);
   } else if(field==='birthgender'){
-    var b=String((ctrls[0]&&ctrls[0].value)||'').trim(), g=String((ctrls[1]&&ctrls[1].value)||'');
-    if(b && !/^\d{4}-\d{2}-\d{2}$/.test(b)){ alert('생년월일은 1980-01-01 형식으로 입력하세요(비워도 됩니다)'); restore(); return; }
+    var b=_ciFmtBirth(String((ctrls[0]&&ctrls[0].value)||'').trim()), g=String((ctrls[1]&&ctrls[1].value)||'');  /* 19760108→1976-01-08 자동 */
+    if(b && !/^\d{4}-\d{2}-\d{2}$/.test(b)){ alert('생년월일은 8자리 숫자(예: 19760108) 또는 1976-01-08 형식으로 입력하세요(비워도 됩니다)'); restore(); return; }
     if(b===(td.getAttribute('data-birth')||'') && g===(td.getAttribute('data-gender')||'')){ restore(); return; }
     var pb={birth_date:b||null, gender:g||null};
     _ciSaveCust(id, pb, function(){ _ciLocalPatch(id,pb); _ciCellApply(td,'birthgender',{birth:b,gender:g}); }, restore);
@@ -17354,15 +17362,15 @@ window._ciSaveCust=_ciSaveCust; window._ciSaveProfileKey=_ciSaveProfileKey; wind
 /* ── 새 행(맨 아래) → 신규 고객 생성 ── */
 function _ciNewRowVals(){ var tr=document.querySelector('.ci-sheet .ci-sh-new'); if(!tr) return null; var v={_tr:tr}; Array.prototype.forEach.call(tr.querySelectorAll('[data-nf]'), function(el){ v[el.getAttribute('data-nf')]=String(el.value||'').trim(); }); return v; }
 function _ciNewRowReset(){ var tr=document.querySelector('.ci-sheet .ci-sh-new'); if(!tr) return; Array.prototype.forEach.call(tr.querySelectorAll('[data-nf]'), function(el){ var nf=el.getAttribute('data-nf'); if(el.tagName==='SELECT'){ el.value=(nf==='status')?'신규DB':''; } else if(nf==='idate'){ el.value=_ciTodayStr(); } else { el.value=''; } }); }
-function _ciNewRowKey(e){ if(!e) return; if(e.key==='Enter'){ e.preventDefault(); _ciNewRowCommit(); } else if(e.key==='Escape'){ e.preventDefault(); _ciNewRowReset(); } }
+function _ciNewRowKey(e){ if(!e) return; if(e.key==='Enter'){ if(e.target && e.target.tagName==='TEXTAREA') return; e.preventDefault(); _ciNewRowCommit(); } else if(e.key==='Escape'){ e.preventDefault(); _ciNewRowReset(); } }  /* 상담내용·비고(textarea)는 Enter=줄바꿈 · 나머지 칸은 Enter=추가 */
 function _ciNewRowBlur(){ setTimeout(function(){ var tr=document.querySelector('.ci-sheet .ci-sh-new'); if(!tr) return; if(tr.contains(document.activeElement)) return; _ciNewRowCommit(); }, 0); }
 function _ciNewRowCommit(){
   if(window._ciNewBusy) return;
   var v=_ciNewRowVals(); if(!v) return;
   var name=(v.name||'').trim();
   if(!name) return;  /* 이름 비면 새 고객 만들지 않음(빈 행 방치 저장 금지) */
-  var birth=(v.birth||'').trim();
-  if(birth && !/^\d{4}-\d{2}-\d{2}$/.test(birth)){ alert('생년월일은 1980-01-01 형식으로 입력하세요(비워도 됩니다)'); var b=v._tr.querySelector('[data-nf="birth"]'); if(b)b.focus(); return; }
+  var birth=_ciFmtBirth((v.birth||'').trim());  /* 19760108→1976-01-08 자동 */
+  if(birth && !/^\d{4}-\d{2}-\d{2}$/.test(birth)){ alert('생년월일은 8자리 숫자(예: 19760108) 또는 1976-01-08 형식으로 입력하세요(비워도 됩니다)'); var b=v._tr.querySelector('[data-nf="birth"]'); if(b)b.focus(); return; }
   var owner=(typeof _snOwnerId==='function')?_snOwnerId():'';
   if(!owner){ alert('로그인 정보를 확인할 수 없습니다'); return; }
   if(!(window.db&&window.db.fetch)) return;
@@ -17370,7 +17378,7 @@ function _ciNewRowCommit(){
   var now=new Date().toISOString();
   var idate=(v.idate||'').trim();  /* 입력일자 칸(오늘 자동, 수정 가능) → created_at. 최근일자 정렬이라 새 고객이 상단 유지 */
   var createdAt=(idate && /^\d{4}-\d{2}-\d{2}$/.test(idate)) ? (idate+'T00:00:00Z') : now;
-  var phone=(v.phone||'').trim();
+  var phone=_ciFmtPhone((v.phone||'').trim());  /* 01012345678→010-1234-5678 자동 */
   var profile={}; if(v.attr) profile.attr=v.attr; if(v.bigo) profile['비고']=v.bigo;
   var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birth||null, gender:v.gender||null, channel:null, status:v.status||'신규DB',
