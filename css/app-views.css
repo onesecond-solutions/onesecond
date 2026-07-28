@@ -241,20 +241,21 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sheet .ci-sh-memo-h,.ci-sheet .ci-sh-bigo-h{min-width:160px;}
 /* 컬럼 폭(대표 지시 2026-07-27): 앞 6칸(입력일자·인입유형·이름·생년월일/성별·전화·상담상태)=내용폭만큼 좁게 왼쪽, 상담내용·비고에 남은 공간 몰아주기, 삭제=최소. */
 /* 컬럼 폭 고정(table-layout:fixed): 앞 6칸=값이 다 보이는 고정폭(너무 넓지도 좁지도 않게), 상담내용=남은 폭 최대, 비고 넉넉. width:1px 금지. */
-.ci-sheet{table-layout:fixed;min-width:1180px;}
-.ci-sheet th:nth-child(1),.ci-sheet td:nth-child(1){width:140px;white-space:nowrap;}   /* 입력일자 (대표 지시 2026-07-27: 나머지 전부 140 통일) */
-.ci-sheet th:nth-child(2),.ci-sheet td:nth-child(2){width:140px;white-space:nowrap;}   /* 인입유형 */
-.ci-sheet th:nth-child(3),.ci-sheet td:nth-child(3){width:140px;white-space:nowrap;}    /* 이름 */
-.ci-sheet th:nth-child(4),.ci-sheet td:nth-child(4){width:172px;white-space:nowrap;}   /* 생년월일/성별 (대표 지시: 172 유지) */
-.ci-sheet th:nth-child(5),.ci-sheet td:nth-child(5){width:140px;white-space:nowrap;}   /* 전화 */
-.ci-sheet th:nth-child(6),.ci-sheet td:nth-child(6){width:140px;white-space:nowrap;}   /* 상담상태 */
-.ci-sheet th:nth-child(7),.ci-sheet td:nth-child(7){white-space:pre-wrap;}             /* 상담내용=남은 폭(가장 넓게) */
-.ci-sheet th:nth-child(8),.ci-sheet td:nth-child(8){width:220px;white-space:pre-wrap;} /* 비고 */
-.ci-sheet th:nth-child(9),.ci-sheet td:nth-child(9){width:44px;white-space:nowrap;}    /* 삭제/+ */
+.ci-sheet{table-layout:fixed;min-width:1220px;}  /* 다중선택 체크박스 열(40px) 추가분 반영(1180→1220, 2026-07-28) */
+.ci-sheet th.ci-sh-chk,.ci-sheet td.ci-sh-chk{width:40px;text-align:center;white-space:nowrap;}  /* 다중선택 체크박스 열(맨 앞, 2026-07-28) */
+.ci-sheet th:nth-child(2),.ci-sheet td:nth-child(2){width:140px;white-space:nowrap;}   /* 입력일자 (대표 지시 2026-07-27: 나머지 전부 140 통일) */
+.ci-sheet th:nth-child(3),.ci-sheet td:nth-child(3){width:140px;white-space:nowrap;}   /* 인입유형 */
+.ci-sheet th:nth-child(4),.ci-sheet td:nth-child(4){width:140px;white-space:nowrap;}    /* 이름 */
+.ci-sheet th:nth-child(5),.ci-sheet td:nth-child(5){width:172px;white-space:nowrap;}   /* 생년월일/성별 (대표 지시: 172 유지) */
+.ci-sheet th:nth-child(6),.ci-sheet td:nth-child(6){width:140px;white-space:nowrap;}   /* 전화 */
+.ci-sheet th:nth-child(7),.ci-sheet td:nth-child(7){width:140px;white-space:nowrap;}   /* 상담상태 */
+.ci-sheet th:nth-child(8),.ci-sheet td:nth-child(8){white-space:pre-wrap;}             /* 상담내용=남은 폭(가장 넓게) */
+.ci-sheet th:nth-child(9),.ci-sheet td:nth-child(9){width:220px;white-space:pre-wrap;} /* 비고 */
+.ci-sheet th:nth-child(10),.ci-sheet td:nth-child(10){width:44px;white-space:nowrap;}    /* 삭제/+ */
 .ci-sheet td{overflow:hidden;text-overflow:ellipsis;}  /* 고정폭 넘치는 데이터 텍스트는 … (입력칸은 자기 폭 안이라 무관) */
 .ci-sheet td.ci-sh-memo,.ci-sheet td.ci-sh-bigo{overflow:visible;text-overflow:clip;}  /* 상담내용·비고는 줄바꿈으로 다 보임 */
 .ci-sheet td.ci-sh-memo .ci-cellv,.ci-sheet td.ci-sh-bigo .ci-cellv{white-space:pre-wrap;}  /* 상담내용·비고 표시값만 줄바꿈 보존 */
-.ci-sheet td:nth-child(-n+6) .ci-cellv{white-space:nowrap;}  /* 앞 6칸(인입유형·이름·전화 등)은 한 줄 유지(세로 접힘 방지) */
+.ci-sheet td:nth-child(-n+7) .ci-cellv{white-space:nowrap;}  /* 체크박스 열 포함 앞 7칸(인입유형·이름·전화 등)은 한 줄 유지(세로 접힘 방지). 2026-07-28: 체크박스 열 추가로 -n+6→-n+7 */
 .ci-sheet .ci-stg-badge{white-space:nowrap;}  /* 상담상태 배지 한 줄(신규DB 등 접힘 방지) */
 .ci-cell-ta{width:100%;box-sizing:border-box;min-height:54px;resize:vertical;font-family:inherit;font-size:var(--ts-meta);line-height:1.5;padding:5px 6px;border:1px solid var(--ac);border-radius:var(--radius-xs);background:var(--s1);color:var(--tp);}
 .ci-cell-ta:focus{outline:none;border-color:var(--ac);}
@@ -268,6 +269,9 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sh-del:hover{background:var(--err);}
 .ci-sh-add{border:0;background:var(--ac);color:#fff;cursor:pointer;font-size:16px;font-weight:700;line-height:1;width:26px;height:26px;border-radius:var(--radius-sm);display:inline-flex;align-items:center;justify-content:center;}  /* 새 행 저장(+) 버튼 */
 .ci-sh-add:hover{filter:brightness(1.08);}
+/* ═══ 표 뷰 다중선택 + 일괄삭제(2026-07-28, 대표 확정) — 체크박스 열 + "선택 삭제 (N)" 버튼. care+표뷰 전용, 토큰만 사용 ══ */
+.ci-sheet .ci-sh-cb,.ci-sheet #ci-sh-selall{margin:0;accent-color:var(--ac);width:16px;height:16px;cursor:pointer;}  /* 기존 체크박스 토큰 패턴(.qck-mc-toggle-row) 재사용 */
+.ci-sh-bulkdel-btn{margin-left:8px;}  /* 툴바 CSV 버튼 옆 간격 — .ci-btn.danger 재사용(색 하드코딩 없음) */
 /* ═══ 상담관리(care) 표 뷰 2차(2026-07-27) — 엑셀식 인라인 편집 + 새 행. care+표뷰 전용, 토큰만 사용 ══ */
 .ci-sheet td.ci-ed{cursor:pointer;}
 .ci-sheet td.ci-ed:hover{background:var(--s2);box-shadow:inset 0 0 0 1px var(--bd);}
