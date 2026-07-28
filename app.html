@@ -16178,12 +16178,24 @@ window._ciStatsLoad=_ciStatsLoad;
 /* 데이터 현황(#ci-stats) 집계 데이터 소스 분기 — salesnote=_ciStatsRows(전량, 위 로더), care=기존 _ciViewData()(무변경, 회귀 방지).
    _ciStatsHtml()·_dsRangeCur()의 mode==='all' 분기·_ciStatsNav()·_ciStatsApplyCustom() 등 #ci-stats 집계 경로 전체가 이 함수를 통해서만 데이터를 얻는다. */
 function _ciStatsData(){ return (window._ciMode==='salesnote') ? (window._ciStatsRows||[]) : _ciViewData(); }
+/* #ci-list 주입 공통 헬퍼(2026-07-28 버그수정) — _ciRender()(17536행)의 규칙과 동일하게 통일:
+ * care+표뷰(_ciEffView()==='sheet')면 _ciSheetHtml()을, 그 외(카드·좁은화면·salesnote)는 기존 _ciListHtml() 그대로 주입.
+ * 표뷰 이전에 만들어진 카드 전용 재렌더 경로(검색·필터·카드선택)가 표뷰 상태에서도 무조건 카드를 덮어써
+ * "ci-sheetmode(전체폭)인데 카드처럼 보이는" 깨진 화면이 되던 버그를 이 헬퍼로 일원화해 수정.
+ * 표뷰일 때만 _ciSheetSelSync()도 호출해 선택삭제 버튼 상태를 표와 함께 맞춘다. */
+function _ciListInject(){
+  var lst=document.getElementById('ci-list'); if(!lst) return;
+  var sheet=(window._ciMode==='care' && _ciEffView()==='sheet');
+  lst.innerHTML = sheet ? _ciSheetHtml() : _ciListHtml();
+  if(sheet) _ciSheetSelSync();
+}
+window._ciListInject=_ciListInject;
 /* 필터 변경 후 카드리스트 재조회 공통 진입점 — salesnote(케어 플로우 필터 없을 때)=서버 1페이지부터 재조회, 그 외(care 전체·salesnote 케어플로우 필터 중)=기존처럼 클라이언트 재렌더(회귀 0) */
 function _ciListRefresh(){
   if(window._ciMode==='salesnote' && !window._ciCareF){
     _ciLoadSalesnotePage(1);
   } else {
-    var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+    _ciListInject();
     _ciListFilterBarRender();
   }
 }
@@ -16227,7 +16239,7 @@ function _ciSetNameQ(v){
     if(window._ciNameQTimer) clearTimeout(window._ciNameQTimer);
     window._ciNameQTimer=setTimeout(function(){ _ciLoadSalesnotePage(1); }, 300);
   } else {
-    var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();
+    _ciListInject();
   }
 }  /* 고객명 실시간 검색 — #ci-list만 재렌더(입력 포커스 유지), 기존 오늘의 할 일·단계 필터와 AND 결합 */
 window._ciSetNameQ=_ciSetNameQ;
@@ -16664,7 +16676,7 @@ function _ciDelete(id){
 window._ciDelete=_ciDelete;
 function _ciSelCard(id){
   window._ciSel=id;
-  var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml();  /* 선택 하이라이트 */
+  _ciListInject();  /* 선택 하이라이트(표뷰이면 표 유지, 카드뷰는 기존과 동일) */
   _ciOpenForm(id);  /* 카드 클릭 = 그 고객 편집 폼 열기(데이터·상담이력 로드). 읽기전용 요약 대체 */
 }
 window._ciSelCard=_ciSelCard;
