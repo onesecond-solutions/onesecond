@@ -17109,6 +17109,9 @@ function _ciTodayStr(){ var d=new Date(),p=function(n){return (n<10?'0':'')+n;};
 /* 자동 포맷(대표 지시 2026-07-27): 생년월일 19760108→1976-01-08(8자리 숫자만) · 전화 01012345678→010-1234-5678(11자리 3-4-4 / 10자리 3-3-4). 형식 안 맞으면 원값 유지. */
 function _ciFmtBirth(s){ var d=String(s==null?'':s).replace(/[^0-9]/g,''); if(d.length===8) return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8); return String(s==null?'':s); }
 function _ciFmtPhone(s){ var d=String(s==null?'':s).replace(/[^0-9]/g,''); if(d.length===11) return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7); if(d.length===10) return d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6); return String(s==null?'':s); }
+/* 생년월일/성별 표시 = "생년월일 / 성별 / N세"(보험나이). _ciInsAge(오늘 기준 .ins) 재사용. 생년월일 없거나 파싱 실패 시 나이 미표시. 표뷰(_ciSheetHtml)와 편집 후 복원(_ciCellApply) 두 곳에서 공용 호출(나이 로직 중복 방지). */
+function _ciBgDisplay(birth, gender){ var base=[(birth||''),(gender||'')].filter(Boolean).join(' / '); var r=_ciInsAge(birth); if(r){ base=base?(base+' / '+r.ins+'세'):(r.ins+'세'); } return base; }
+window._ciBgDisplay=_ciBgDisplay;
 function _ciSheetHtml(){
   var all=_ciSheetRows();
   var mm=window._ciMemoMap||{};
@@ -17121,7 +17124,7 @@ function _ciSheetHtml(){
     +'<th>입력일자</th><th>인입유형</th><th>이름</th><th>생년월일/성별</th><th>전화</th><th>상담상태</th><th class="ci-sh-memo-h">상담내용</th><th class="ci-sh-bigo-h">비고</th><th aria-label="삭제"></th>'
     +'</tr></thead>';
   var rows=data.map(function(c){
-    var bg=[(c.birth_date||''),(c.gender||'')].filter(Boolean).join(' / ');
+    var bg=_ciBgDisplay(c.birth_date, c.gender);  /* 생년월일 / 성별 / N세(보험나이) — 편집 후에도 _ciCellApply에서 동일 헬퍼로 갱신 */
     var memo=String(mm[String(c.id)]||'');
     var bigo=_ciSheetBigo(c);
     var attr=_ciSheetAttr(c);
@@ -17129,7 +17132,7 @@ function _ciSheetHtml(){
     var tel=String(c.phone||c.phone_raw||'');
     var idEsc=_ciEsc(c.id), idA=_ciAttr(c.id);
     return '<tr class="ci-sh-row'+_sc+'">'
-      +'<td class="ci-sh-date">'+_ciEsc(_ciDateOf(c.created_at))+'</td>'
+      +_ciEdTd('idate', idA, _ciDateOf(c.created_at), '<span class="ci-cellv">'+_ciEsc(_ciDateOf(c.created_at))+'</span>', 'ci-sh-date')
       +_ciEdTd('attr', idA, attr, '<span class="ci-cellv">'+_ciEsc(attr)+'</span>')
       +_ciEdTd('name', idA, (c.name||''), '<span class="ci-cellv ci-sh-nm-v">'+_ciEsc(c.name||'')+'</span>', 'ci-sh-nm')
       +'<td class="ci-ed" data-cid="'+idA+'" data-field="birthgender" data-birth="'+_ciAttr(c.birth_date||'')+'" data-gender="'+_ciAttr(c.gender||'')+'" onclick="_ciCellEdit(this)"><span class="ci-cellv">'+_ciEsc(bg)+'</span></td>'
@@ -17356,7 +17359,7 @@ function _ciCellCancel(td){ if(!td) return; if(td._orig!=null) td.innerHTML=td._
 function _ciCellApply(td, field, vals){  /* 저장 성공 → 표시 셀로 복원 + data-* 갱신(단일 셀 낙관적 갱신, 전체 재렌더 안 함) */
   td.removeAttribute('data-editing'); td._ctrls=null;
   if(field==='status'){ td.setAttribute('data-raw', vals.status||''); td.innerHTML='<span class="ci-cellv">'+_ciStatusBadge(vals.status||'')+'</span>'; }
-  else if(field==='birthgender'){ td.setAttribute('data-birth', vals.birth||''); td.setAttribute('data-gender', vals.gender||''); var bg=[vals.birth||'',vals.gender||''].filter(Boolean).join(' / '); td.innerHTML='<span class="ci-cellv">'+_ciEsc(bg)+'</span>'; }
+  else if(field==='birthgender'){ td.setAttribute('data-birth', vals.birth||''); td.setAttribute('data-gender', vals.gender||''); var bg=_ciBgDisplay(vals.birth, vals.gender); td.innerHTML='<span class="ci-cellv">'+_ciEsc(bg)+'</span>'; }
   else { var val=vals.value||''; td.setAttribute('data-raw', val); if(field==='memo'||field==='bigo'){ td.setAttribute('title', val); } td.innerHTML='<span class="ci-cellv'+(field==='name'?' ci-sh-nm-v':'')+'">'+_ciEsc(val)+'</span>'; }
 }
 function _ciCellCommit(td){
@@ -17364,7 +17367,13 @@ function _ciCellCommit(td){
   td.setAttribute('data-editing','2');
   var field=td.getAttribute('data-field'), id=td.getAttribute('data-cid'), ctrls=td._ctrls||[];
   var restore=function(){ _ciCellCancel(td); };
-  if(field==='name'){
+  if(field==='idate'){
+    var vd=_ciFmtBirth(String((ctrls[0]&&ctrls[0].value)||'').trim());  /* 20260727→2026-07-27 자동(새 행 _ciNewRowCommit과 동일 규칙) */
+    if(!vd || !/^\d{4}-\d{2}-\d{2}$/.test(vd)){ alert('입력일자는 8자리 숫자(예: 20260727) 또는 2026-07-27 형식으로 입력하세요(비울 수 없습니다)'); restore(); return; }
+    if(vd===(td.getAttribute('data-raw')||'')){ restore(); return; }
+    var ca=vd+'T00:00:00Z';  /* created_at(timestamptz) — 새 행과 동일하게 UTC 자정 고정. _ciDateOf가 앞 10자리(UTC 달력일)만 쓰므로 표시/정렬 일관 */
+    _ciSaveCust(id, {created_at:ca}, function(){ _ciLocalPatch(id,{created_at:ca}); _ciSheetRerender(); _ciSheetSyncTop(); }, restore);  /* 성공 → created_at 낙관적 갱신 + 최근순 재정렬 위해 표 재렌더 + 상단 집계 정합. salesnote 무영향 */
+  } else if(field==='name'){
     var v=String((ctrls[0]&&ctrls[0].value)||'').trim();
     if(!v){ alert('이름은 비울 수 없습니다'); restore(); return; }
     if(v===(td.getAttribute('data-raw')||'')){ restore(); return; }
