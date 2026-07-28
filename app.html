@@ -16361,6 +16361,154 @@ function _ciCareToggle(id, key){  /* 완료 체크 토글(소급 완료·완료 
     .catch(function(){ window._ciCareBusy=false; c.profile=prevProfile; _ciSheetSyncTop(); alert('네트워크 오류'); });
 }
 window._ciCareToggle=_ciCareToggle;
+/* ── 오늘의 할 일 · 주간 회고 미니달력(P2, 2026-07-28 대표 확정) ─────────────────────────
+   케어(3종 due) + 예약(calendar_events) 겹쳐보기. 무DDL — 새 쓰기 경로 없음(완료 체크는 위 _ciCareToggle 재사용).
+   상태: window._ciCareWeekAnchor(주 시작일=일요일, ymd) · window._ciCareSelDay(선택일, ymd)
+        · window._ciCareCalCache(주 범위 key→calendar_events rows[] | null=로딩중 | undefined=미시도).
+   예약 조회 = app.html:8904 _ttCalBody와 동일 쿼리 패턴(author_id 필터·select 동일 컬럼) 재사용, 범위만 그 주로 축소.
+   날짜 계산은 기존 _ds*(데이터 현황) 헬퍼 재사용 — 같은 <script> 블록 내 함수 선언이라 정의 위치 무관하게 사용 가능. */
+function _ciCareWeekStartOf(ymd){ var d=_dsParseYmd(ymd); d.setDate(d.getDate()-d.getDay()); return _dsYmdStr(d); }  /* 그 주 일요일(주 시작) */
+window._ciCareWeekStartOf=_ciCareWeekStartOf;
+function _ciCareWeekDays(anchor){ var out=[]; for(var i=0;i<7;i++) out.push(_dsAddDaysStr(anchor,i)); return out; }
+window._ciCareWeekDays=_ciCareWeekDays;
+function _ciCareWeekEnsure(){  /* 최초 진입 기본값 = 이번 주 · 오늘 */
+  var todayYmd=_ciYmdOf(new Date());
+  if(!window._ciCareWeekAnchor) window._ciCareWeekAnchor=_ciCareWeekStartOf(todayYmd);
+  if(!window._ciCareSelDay) window._ciCareSelDay=todayYmd;
+}
+window._ciCareWeekEnsure=_ciCareWeekEnsure;
+function _ciCareDayItems(ymd, data, todayYmd, since){  /* 순수 — 그날 due인 케어 3종(완료여부 포함), baseline 이전 제외 */
+  var out=[];
+  data.forEach(function(c){
+    ['appl91','appl181','bday'].forEach(function(k){
+      var d=_ciCareDue(c,k); if(!d||d.ymd!==ymd) return;
+      if(d.ymd<since) return;
+      var cd=(c.profile&&c.profile.care_done&&typeof c.profile.care_done==='object')?c.profile.care_done:{};
+      out.push({id:c.id, name:c.name||'(이름없음)', key:k, doneKey:d.doneKey, due:d.ymd, done:!!cd[d.doneKey]});
+    });
+  });
+  out.sort(function(a,b){ return String(a.name).localeCompare(String(b.name)); });
+  return out;
+}
+window._ciCareDayItems=_ciCareDayItems;
+function _ciCareDayDot(items, ymd, todayYmd){  /* 순수 — 케어 점 색상: miss(놓침)>pending(예정)>done(완료)>null(항목없음=점 없음) */
+  if(!items||!items.length) return null;
+  var anyMiss=items.some(function(r){ return !r.done && ymd<todayYmd; });
+  if(anyMiss) return 'miss';
+  var anyPending=items.some(function(r){ return !r.done; });
+  if(anyPending) return 'pending';
+  return 'done';
+}
+window._ciCareDayDot=_ciCareDayDot;
+function _ciCareCalKey(anchor){ return anchor+'|'+_dsAddDaysStr(anchor,6); }
+window._ciCareCalKey=_ciCareCalKey;
+function _ciCareWeekEvents(){  /* 현재 anchor 주의 캐시된 calendar_events(없으면 빈 배열) */
+  var key=_ciCareCalKey(window._ciCareWeekAnchor||_ciCareWeekStartOf(_ciYmdOf(new Date())));
+  var c=(window._ciCareCalCache||{})[key];
+  return Array.isArray(c)?c:[];
+}
+window._ciCareWeekEvents=_ciCareWeekEvents;
+function _ciCareWeekLoad(anchor){  /* 그 주 calendar_events fetch(캐시 없을 때만) — 성공 시 재렌더. 비로그인/db 없음/실패=조용히 스킵(예약 점 0, 케어 점은 그대로, 캐시 고정 안 함→다음 렌더 시 재시도 허용) */
+  var key=_ciCareCalKey(anchor);
+  window._ciCareCalCache=window._ciCareCalCache||{};
+  if(window._ciCareCalCache[key]!==undefined) return;  /* 로딩중(null) 또는 로드완료(array) — 재요청 없음 */
+  if(!(window.db&&window.db.fetch)) return;
+  var _me=(typeof _diaOwnerId==='function')?_diaOwnerId():null;
+  if(!_me) return;
+  var from=anchor, to=_dsAddDaysStr(anchor,6);
+  window._ciCareCalCache[key]=null;  /* 로딩중 표시 */
+  window.db.fetch('/rest/v1/calendar_events?author_id=eq.'+encodeURIComponent(_me)+'&event_date=gte.'+from+'&event_date=lte.'+to+'&order=event_date.asc&select=id,event_date,event_time,title,source_type')
+    .then(function(r){ return r.ok?r.json():[]; })
+    .then(function(rows){ window._ciCareCalCache[key]=Array.isArray(rows)?rows:[]; _ciTodayRerender(); })
+    .catch(function(){ window._ciCareCalCache[key]=[]; _ciTodayRerender(); });
+}
+window._ciCareWeekLoad=_ciCareWeekLoad;
+function _ciTodayRerender(){ var el=document.getElementById('ci-today'); if(el) el.innerHTML=_ciTodayHtml(); }  /* #ci-today 부분 재렌더(기존 17484/17649와 동일 패턴) */
+window._ciTodayRerender=_ciTodayRerender;
+function _ciCareWeekNav(dir){  /* 이전/다음 주 이동 — 선택일이 새 주 범위 밖이면 주 시작일로 리셋 */
+  _ciCareWeekEnsure();
+  dir=(dir<0)?-1:1;
+  window._ciCareWeekAnchor=_dsAddDaysStr(window._ciCareWeekAnchor, dir*7);
+  var days=_ciCareWeekDays(window._ciCareWeekAnchor);
+  if(days.indexOf(window._ciCareSelDay)<0) window._ciCareSelDay=window._ciCareWeekAnchor;
+  _ciCareWeekLoad(window._ciCareWeekAnchor);
+  _ciTodayRerender();
+}
+window._ciCareWeekNav=_ciCareWeekNav;
+function _ciCareWeekToday(){  /* 이번 주로 복귀 */
+  var todayYmd=_ciYmdOf(new Date());
+  window._ciCareWeekAnchor=_ciCareWeekStartOf(todayYmd);
+  window._ciCareSelDay=todayYmd;
+  _ciCareWeekLoad(window._ciCareWeekAnchor);
+  _ciTodayRerender();
+}
+window._ciCareWeekToday=_ciCareWeekToday;
+function _ciCareSetSelDay(ymd){ window._ciCareSelDay=ymd; _ciTodayRerender(); }  /* 날짜 클릭 → 선택일 상세 갱신 */
+window._ciCareSetSelDay=_ciCareSetSelDay;
+function _ciCareDayDetailHtml(ymd, data, todayYmd, since, evByDay){  /* 선택일 상세 — 케어 3종(체크박스, 기존 _ciCareToggle 재사용) + 예약(읽기 표시) */
+  var items=_ciCareDayItems(ymd, data, todayYmd, since);
+  var evs=(evByDay&&evByDay[ymd])||[];
+  var labels={appl91:'청약 +91 안심콜', appl181:'+181 관리', bday:'보험생일 연락'};
+  var dObj=_dsParseYmd(ymd);
+  var head='<div class="ci-cw-detail-head">'+(dObj.getMonth()+1)+'월 '+dObj.getDate()+'일'+(ymd===todayYmd?' · 오늘':'')+'</div>';
+  if(!items.length && !evs.length){
+    return '<div class="ci-cw-detail">'+head+'<div class="ci-cw-detail-empty">이 날 케어가 없습니다.</div></div>';
+  }
+  var careRows=items.map(function(r){
+    var label=labels[r.key]||r.key;
+    var chkAttr=r.done?' checked':'';
+    return '<div class="ci-care-row'+(r.done?' done':'')+'">'
+      +'<label class="ci-care-chk"><input type="checkbox"'+chkAttr+' onchange="window._ciCareToggle(\''+_ciEsc(String(r.id))+'\',\''+_ciEsc(r.doneKey)+'\')"></label>'
+      +'<span class="ci-care-who">'+_ciEsc(r.name)+' · '+_ciEsc(label)+'</span>'
+      +'</div>';
+  }).join('');
+  var evRows=evs.map(function(r){
+    var tm=r.event_time?String(r.event_time).slice(0,5):'';
+    return '<div class="ci-cw-resv-row"><span class="ci-cw-resv-time">'+(tm?_ciEsc(tm):'&mdash;')+'</span><span class="ci-cw-resv-title">'+_ciEsc(r.title||'')+'</span></div>';
+  }).join('');
+  return '<div class="ci-cw-detail">'+head+careRows+evRows+'</div>';
+}
+window._ciCareDayDetailHtml=_ciCareDayDetailHtml;
+function _ciCareWeekHtml(){  /* 주간 미니달력 본체 — 7일 스트립 + 범례 + 선택일 상세 + 전체 달력 딥링크 */
+  _ciCareWeekEnsure();
+  var anchor=window._ciCareWeekAnchor, selDay=window._ciCareSelDay;
+  _ciCareWeekLoad(anchor);  /* 캐시 없으면 비동기 로드 트리거(도착 시 #ci-today 재렌더) */
+  var data=_ciViewData(), todayYmd=_ciYmdOf(new Date()), since=window.CI_CARE_TRACK_SINCE||'2026-07-28';
+  var days=_ciCareWeekDays(anchor);
+  var events=_ciCareWeekEvents();
+  var evByDay={}; events.forEach(function(r){ var d=(r.event_date||'').slice(0,10); (evByDay[d]=evByDay[d]||[]).push(r); });
+  var WD=['일','월','화','수','목','금','토'];
+  var cells=days.map(function(ymd,i){
+    var items=_ciCareDayItems(ymd, data, todayYmd, since);
+    var dot=_ciCareDayDot(items, ymd, todayYmd);
+    var hasEv=!!(evByDay[ymd]&&evByDay[ymd].length);
+    var dObj=_dsParseYmd(ymd);
+    var cls='ci-cw-day'+(ymd===todayYmd?' today':'')+(ymd===selDay?' sel':'');
+    var careDot=dot?('<i class="ci-cw-dot '+dot+'"></i>'):'';
+    var evDot=hasEv?'<i class="ci-cw-dot resv"></i>':'';
+    return '<button type="button" class="'+cls+'" onclick="_ciCareSetSelDay(\''+ymd+'\')">'
+      +'<span class="ci-cw-dow">'+WD[i]+'</span><span class="ci-cw-num">'+dObj.getDate()+'</span>'
+      +'<span class="ci-cw-dots">'+careDot+evDot+'</span>'
+      +'</button>';
+  }).join('');
+  var f=_dsParseYmd(days[0]), t=_dsParseYmd(days[6]);
+  var label=(f.getMonth()+1)+'/'+f.getDate()+' ~ '+(t.getMonth()+1)+'/'+t.getDate();
+  var head='<div class="ci-cw-head"><button type="button" class="ci-cw-nav" onclick="_ciCareWeekNav(-1)" aria-label="이전 주">&lsaquo;</button>'
+    +'<span class="ci-cw-label">'+_ciEsc(label)+'</span>'
+    +'<button type="button" class="ci-cw-today-btn" onclick="_ciCareWeekToday()">오늘</button>'
+    +'<button type="button" class="ci-cw-nav" onclick="_ciCareWeekNav(1)" aria-label="다음 주">&rsaquo;</button></div>';
+  var legend='<div class="ci-cw-legend">'
+    +'<span class="ci-cw-lg"><i class="ci-cw-dot done"></i>완료</span>'
+    +'<span class="ci-cw-lg"><i class="ci-cw-dot miss"></i>놓침</span>'
+    +'<span class="ci-cw-lg"><i class="ci-cw-dot pending"></i>예정</span>'
+    +'<span class="ci-cw-lg"><i class="ci-cw-dot resv"></i>예약</span>'
+    +'</div>';
+  return '<div class="ci-cw" id="ci-care-week">'+head+'<div class="ci-cw-strip">'+cells+'</div>'+legend
+    +_ciCareDayDetailHtml(selDay, data, todayYmd, since, evByDay)
+    +'<button type="button" class="ci-cw-more" onclick="_goMysCalendar()">전체 달력 &rarr;</button>'
+    +'</div>';
+}
+window._ciCareWeekHtml=_ciCareWeekHtml;
 function _ciBandHtml(){
   var data=_ciViewData(), cur=window._ciStageF||'전체';
   var allStages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계+종결 정본 */
@@ -16385,7 +16533,8 @@ function _ciTodayHtml(){
   var body=keys.map(function(kv){ var n=data.filter(function(c){return _ciTodayMatch(c,kv[0]);}).length; var on=(cur===kv[0])?' on':''; return '<div class="ci-today-row clk'+on+'" onclick="_ciSetTodayF(\''+kv[0]+'\')"><span>'+_ciEsc(kv[1])+'</span><b>'+_ciNum(n)+'명</b></div>'; }).join('');
   return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
     +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>'
-    +'<div class="ci-care-block">'+_ciCareChecklistHtml()+'</div>';  /* +91/+181/보험생일 체크리스트(놓친 케어·오늘 처리) — 위 5항목 집계는 그대로 유지, 아래에 추가(2026-07-28 대표 확정 P1) */
+    +_ciCareWeekHtml()  /* 주간 회고 미니달력(P2, 2026-07-28 대표 확정) — 케어 due+예약 겹쳐보기, P1 체크리스트 위 */
+    +'<div class="ci-care-block">'+_ciCareChecklistHtml()+'</div>';  /* +91/+181/보험생일 체크리스트(놓친 케어·오늘 처리) — 전 기간 놓침 추적 위해 그대로 유지, 미니달력 아래에 배치(2026-07-28 대표 확정 P1) */
 }
 /* 데이터 현황(#ci-stats) 접기/펼치기 — localStorage 'ci_stats_collapsed'('1'=접힘/'0'=펼침). 값 없으면 기본 펼침(false, 2026-07-28 대표 확정: 데이터 현황을 맨 위로 올리며 기본 펼침 전환). */
 function _ciStatsIsCollapsed(){
