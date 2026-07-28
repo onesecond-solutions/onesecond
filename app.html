@@ -16966,9 +16966,9 @@ window._ciPickStage=_ciPickStage;
 function _ciResvToday(){ var t=new Date(); return t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); }
 function _ciResvClose(){ var ov=document.getElementById('ci-resv-ov'); if(ov && ov.parentNode) ov.parentNode.removeChild(ov); }
 window._ciResvClose=_ciResvClose;
-function _ciResvOpen(){
-  var name=_ciV('cif-name');
-  var date=_ciV('cif-date')||_ciResvToday();
+function _ciResvOpen(nameArg, dateArg){
+  var name=(nameArg!=null&&nameArg!=='')?String(nameArg):_ciV('cif-name');  /* 표뷰 경로=행 이름 주입 / 무인자(카드폼 단계선택) 경로는 기존대로 cif-name·cif-date 사용 → 회귀 0 (2026-07-28) */
+  var date=(dateArg!=null&&dateArg!=='')?String(dateArg):(_ciV('cif-date')||_ciResvToday());
   var title=name?(name+' 예약'):'예약';
   _ciResvClose();
   var ov=document.createElement('div'); ov.id='ci-resv-ov'; ov.className='ci-resv-ov';
@@ -17875,7 +17875,7 @@ function _ciCellCommit(td){
   } else if(field==='status'){
     var vs=String((ctrls[0]&&ctrls[0].value)||'');
     if(vs===(td.getAttribute('data-raw')||'')){ restore(); return; }
-    _ciSaveCust(id, {status:vs}, function(){ _ciLocalPatch(id,{status:vs}); _ciCellApply(td,'status',{status:vs}); _ciSheetSyncTop(); if(window._ciTodayF||((window._ciStageF||'전체')!=='전체')) _ciSheetRerender(); }, restore);  /* 상태변경 → 상단 단계집계 즉시 갱신 + 단계/오늘 필터 중이면 목록 재적용(바뀐 행이 필터 밖이면 빠지게) 2026-07-27 */
+    _ciSaveCust(id, {status:vs}, function(){ _ciLocalPatch(id,{status:vs}); _ciCellApply(td,'status',{status:vs}); _ciSheetSyncTop(); if(window._ciTodayF||((window._ciStageF||'전체')!=='전체')) _ciSheetRerender(); if(vs==='예약' && typeof _ciResvOpen==='function'){ var _rn=((window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0]||{}).name||''; _ciResvOpen(_rn, (typeof _ciResvToday==='function'?_ciResvToday():'')); } }, restore);  /* 상태변경 → 상단 단계집계 즉시 갱신 + 단계/오늘 필터 중이면 목록 재적용(바뀐 행이 필터 밖이면 빠지게) 2026-07-27. '예약' 선택 시 카드폼 단계선택(_ciPickStage)과 동일하게 캘린더 새 일정 팝업(행 이름 주입, customer_id 미저장=카드폼과 동일 수준) 2026-07-28 */
   } else if(field==='attr'){
     var va=String((ctrls[0]&&ctrls[0].value)||'').trim();
     if(va===(td.getAttribute('data-raw')||'')){ restore(); return; }
