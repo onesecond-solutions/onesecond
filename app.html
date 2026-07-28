@@ -4166,7 +4166,7 @@ var _snFormEditId=null;
 function _snVal(id){var e=document.getElementById(id);return e?String(e.value||''):'';}
 function _snSetv(id,v){var e=document.getElementById(id);if(e)e.value=(v==null?'':v);}
 function _snOwnerId(){try{var u=JSON.parse(localStorage.getItem('os_user')||sessionStorage.getItem('os_user')||'{}');return String(u.id||'');}catch(e){return'';}}
-var _SN_STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료']; /* 노션 상담 단계(2026-06-29 대표 확정) */
+var _SN_STAGES=['신규DB','부재','예약','진행중','제안서발송','보류','클로징','청약완료','종결']; /* 노션 상담 단계(2026-06-29 대표 확정) + 종결(2026-07-28 대표 확정, 청약완료 다음 마지막 단계) */
 function _snFormHtml(c){
   c=c||{}; var v=function(x){return _snEsc(x==null?'':String(x));};
   var st=c.status||'신규DB', g=c.gender||'';
@@ -16247,13 +16247,22 @@ function _ciTodayMatch(c,k){
 window._ciTodayMatch=_ciTodayMatch;
 function _ciBandHtml(){
   var data=_ciViewData(), cur=window._ciStageF||'전체';
-  var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계 정본 */
-  var cards=stages.map(function(s){
+  var allStages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계+종결 정본 */
+  var stages=allStages.filter(function(s){return s!=='종결';});  /* 인라인 파이프라인 카드/점=8단계만(종결 제외, 2026-07-28 대표 확정) */
+  var cardBtn=function(s,extraCls){
     var n=data.filter(function(c){return (c.status||'')===s;}).length;
-    var cls='ci-scard'+(s===cur?' on':'')+(n===0?' zero':'');
+    var cls='ci-scard'+(extraCls||'')+(s===cur?' on':'')+(n===0?' zero':'');
     return '<button type="button" class="'+cls+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')"><span class="ci-scard-name">'+_ciEsc(s)+'</span><span class="ci-scard-num">'+_ciNum(n)+'</span><span class="ci-scard-unit">'+(n===0?'—':'명')+'</span></button>';
+  };
+  var cards=stages.map(function(s,i){
+    var btn=cardBtn(s,'');
+    if(i===stages.length-1 && allStages.indexOf('종결')>=0){
+      /* 종결=인라인 9번째 카드가 아니라 청약완료(마지막 열) 바로 아래 세로로 붙는 검정 카드(승인된 목업, 2026-07-28) */
+      return '<div class="ci-scard-col">'+btn+cardBtn('종결',' ci-scard-jong')+'</div>';
+    }
+    return btn;
   }).join('');
-  var dots=stages.map(function(s){ return '<span class="ci-sdot'+(s===cur?' on':'')+'"><i></i></span>'; }).join('');
+  var dots=stages.map(function(s){ return '<span class="ci-sdot'+(s===cur?' on':'')+'"><i></i></span>'; }).join('');  /* 축의 점=8단계만(종결 제외) */
   var foot=(cur!=='전체')
     ? '<div class="ci-flow-foot">필터: '+_ciEsc(cur)+' '+_ciNum(data.filter(function(c){return (c.status||'')===cur;}).length)+'명 — 아래 리스트에 이 단계 고객만 표시</div>'
     : '<div class="ci-flow-foot muted">단계를 클릭하면 아래 리스트에 해당 단계 고객만 표시됩니다.</div>';
