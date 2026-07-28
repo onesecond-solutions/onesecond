@@ -17076,6 +17076,9 @@ function _ciFormHtml(c){
     +'<div class="ci-consult-new" id="cif-consult-input" style="display:none"><div class="ci-consult-date"><span id="cif-consult-date"></span> 상담 기록</div><textarea id="cif-consult-new" placeholder="상담 내용을 입력하세요 — 통화 요지, 고객 반응, 다음 액션 등"></textarea></div>'
     +'<div class="ci-consult-log" id="cif-consult-log"></div>'
     +'</div>'
+    /* 비고 = profile.비고 — 표(시트) 뷰 비고 셀과 양방향 연동. 정보수정(잠금해제) 후 편집·[저장] 시 반영(다른 profile 필드와 동일 흐름) */
+    +'<div class="ci-sec">비고</div>'
+    +'<div class="ci-fgrid"><div class="ci-ffld full"><textarea id="cif-bigo" class="ci-bigo-ta" rows="2" placeholder="비고 — 표(시트) 뷰 비고와 연동됩니다">'+v(p['비고'])+'</textarea></div></div>'
     +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
     +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+(c.id?'<button type="button" class="ci-endbtn" onclick="_ciManageEnd()">삭제</button>':'')+'</div>'
     +'<div class="ci-form-acts"><button type="button" class="ci-btn" id="cif-primary" onclick="_ciFormPrimary()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button><span id="cif-draft-ind" class="ci-draft-ind"></span></div>'
@@ -17166,13 +17169,13 @@ function _ciDraftGather(){
   var sp=document.getElementById('cif-stagepick');
   return { date:g('cif-date'), attr:g('cif-attr'), name:g('cif-name'), birth:g('cif-birth'), gender:g('cif-gender'),
     phone:g('cif-phone'), zip:g('cif-zip'), addr1:g('cif-addr1'), addr2:g('cif-addr2'),
-    job:g('cif-job'), med:g('cif-med'), history:g('cif-history'), dx:g('cif-dx'), uw:g('cif-uw'),
+    job:g('cif-job'), med:g('cif-med'), history:g('cif-history'), dx:g('cif-dx'), uw:g('cif-uw'), bigo:g('cif-bigo'),
     stage:sp?sp.getAttribute('data-st'):'', consultNew:g('cif-consult-new'),
     consultLog:(window._ciConsultLog&&Array.isArray(window._ciConsultLog))?window._ciConsultLog:[], ts:Date.now() };
 }
 function _ciDraftSave(){
   try{ var d=_ciDraftGather();
-    if(!d.name && !d.phone && !d.birth && !d.consultNew && !(d.consultLog&&d.consultLog.length) && !d.job && !d.history && !d.attr){ return; }  /* 빈 폼은 저장 안 함 */
+    if(!d.name && !d.phone && !d.birth && !d.consultNew && !(d.consultLog&&d.consultLog.length) && !d.job && !d.history && !d.attr && !d.bigo){ return; }  /* 빈 폼은 저장 안 함 */
     localStorage.setItem(_ciDraftKey(), JSON.stringify(d));
     var ind=document.getElementById('cif-draft-ind'); if(ind){ var t=new Date(); ind.textContent='임시저장됨 '+('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2)+':'+('0'+t.getSeconds()).slice(-2); }
   }catch(e){}
@@ -17183,7 +17186,7 @@ function _ciDraftApply(d){
   var s=function(id,val){ var e=document.getElementById(id); if(e&&val!=null) e.value=val; };
   s('cif-date',d.date); s('cif-attr',d.attr); s('cif-name',d.name); s('cif-birth',d.birth); s('cif-gender',d.gender);
   s('cif-phone',d.phone); s('cif-zip',d.zip); s('cif-addr1',d.addr1); s('cif-addr2',d.addr2);
-  s('cif-job',d.job); s('cif-med',d.med); s('cif-history',d.history); s('cif-dx',d.dx); s('cif-uw',d.uw);
+  s('cif-job',d.job); s('cif-med',d.med); s('cif-history',d.history); s('cif-dx',d.dx); s('cif-uw',d.uw); s('cif-bigo',d.bigo);
   if(d.stage){ var sp=document.getElementById('cif-stagepick'); if(sp){ sp.setAttribute('data-st',d.stage); var bs=sp.querySelectorAll('.ci-stagebtn'); for(var i=0;i<bs.length;i++){ bs[i].classList.toggle('on', bs[i].getAttribute('data-st')===d.stage); } } }
   if(d.consultNew){ var cn=document.getElementById('cif-consult-new'); if(cn){ cn.value=d.consultNew; var inp=document.getElementById('cif-consult-input'); if(inp) inp.style.display=''; var btn=document.getElementById('cif-consult-btn'); if(btn){ btn.textContent='저장하기'; btn.setAttribute('data-mode','save'); } var dd=document.getElementById('cif-consult-date'); if(dd) dd.textContent=_ciConsultToday(); } }
   if(d.consultLog&&Array.isArray(d.consultLog)){ window._ciConsultLog=d.consultLog.slice(); _ciConsultRender(); }
@@ -17251,7 +17254,7 @@ function _ciOpenForm(id){
       window._ciProfileLoaded=true;  /* 프로필 로드 완료 표시(상담 즉시저장 시 병합 안전) */
       window._ciConsultLog=(p.consult_log&&Array.isArray(p.consult_log))?p.consult_log.slice():[]; _ciConsultRender();  /* 상담이력 로드 */
       var setv=function(fid,val){ var e=document.getElementById(fid); if(e&&val!=null) e.value=val; };
-      setv('cif-attr',p.attr); setv('cif-email',p.email); setv('cif-zip',p.zip); setv('cif-addr1',p.addr1); setv('cif-addr2',p.addr2); setv('cif-note',p.note_html);
+      setv('cif-attr',p.attr); setv('cif-email',p.email); setv('cif-zip',p.zip); setv('cif-addr1',p.addr1); setv('cif-addr2',p.addr2); setv('cif-note',p.note_html); setv('cif-bigo',p['비고']);  /* 비고=서버 profile.비고 로드 */
       var lun=document.getElementById('cif-lunar'); if(lun) lun.checked=!!p.lunar;
       setv('cif-job',row.job); setv('cif-history',row.history); setv('cif-dx',row.dx_date); setv('cif-uw',row.uw_status);
       var medEl=document.getElementById('cif-med'); if(medEl&&row.medication) medEl.value=row.medication;
@@ -17287,6 +17290,7 @@ function _ciSaveForm(){
   prof.zip=_ciV('cif-zip').trim()||null; prof.addr1=_ciV('cif-addr1').trim()||null; prof.addr2=_ciV('cif-addr2').trim()||null;
   var lun=document.getElementById('cif-lunar'); if(lun){ prof.lunar=!!lun.checked; }  /* 음력 필드 제거 → 없으면 기존값 보존 */
   var _ntEl=document.getElementById('cif-note'); if(_ntEl){ prof.note_html=_ntEl.value; }  /* 상담내용 단일칸 제거 → 없으면 기존값 보존 */
+  var _bgEl=document.getElementById('cif-bigo'); if(_bgEl){ prof['비고']=_bgEl.value.trim()||null; }  /* 비고 → profile.비고 키만 병합(필드 없으면 기존값 보존) → 표뷰 비고 셀과 양방향. 2026-07-28 */
   prof.consult_log=(window._ciConsultLog&&Array.isArray(window._ciConsultLog))?window._ciConsultLog:(prof.consult_log||[]);  /* 상담이력(최신순) 저장 */
   var _wasAppl=false;
   if(stage==='청약완료' && !prof.appl_date){ prof.appl_date=now.slice(0,10); _wasAppl=true; }  /* 청약완료 전환 시 청약완료일(오늘) 기록 → 오늘의 할 일 +91·+181·보험생일 근거(Phase 2/3) */
@@ -17363,7 +17367,15 @@ function _ciStatusBadge(st){
   return '<span class="ci-stg-badge" style="--stg:'+_ciStatusColor(st)+'">'+_ciEsc(st)+'</span>';
 }
 function _ciSheetAttr(c){ return String((c&&c.profile&&c.profile.attr)||(c&&c.channel)||''); }  /* 인입유형=profile.attr(없으면 channel 폴백) */
-function _ciSheetBigo(c){ return String((c&&c.profile&&c.profile['비고'])||''); }  /* 비고=profile.비고(없으면 빈칸, 이번엔 표시만) */
+function _ciSheetBigo(c){ return String((c&&c.profile&&c.profile['비고'])||''); }  /* 비고=profile.비고(없으면 빈칸) */
+/* 표뷰 상담내용 표시값 = profile.consult_log 최신 회차(정본) 우선, 없으면 sales_consultations.memo(_ciMemoMap) 폴백 읽기.
+ * → 상담내용 정본을 카드뷰와 동일한 profile.consult_log로 일원화(카드↔표 자동 양방향). 기존 표 데이터도 폴백으로 안 사라짐. 2026-07-28 */
+function _ciSheetMemo(c){
+  var log=c&&c.profile&&c.profile.consult_log;
+  if(Array.isArray(log)&&log.length&&log[0]&&log[0].text!=null&&String(log[0].text)!==''){ return String(log[0].text); }
+  var mm=window._ciMemoMap||{}; return String(mm[String(c&&c.id)]||'');
+}
+window._ciSheetMemo=_ciSheetMemo;
 /* ════ 상담관리(care) 표 뷰 2차(2026-07-27) — 엑셀식 인라인 편집 + 새 행 추가. care+표뷰 전용(salesnote·카드·기존 폼 무접촉).
  *  셀 클릭→input/select→blur/Enter 자동저장(Esc 취소·실패=원값 복원). 저장은 전부 신규 함수(_ci*), _snSaveForm 등 기존 저장 로직 바이트 무변경.
  *  맨 아래 빈 입력 행에 이름 입력→확정 시 신규 고객 생성(POST sales_customers). 이름 비면 미생성. */
@@ -17563,7 +17575,7 @@ function _ciSheetHtml(){
     +'</tr></thead>';
   var rows=data.map(function(c){
     var bg=_ciBgDisplay(c.birth_date, c.gender);  /* 생년월일 / 성별 / N세(보험나이) — 편집 후에도 _ciCellApply에서 동일 헬퍼로 갱신 */
-    var memo=String(mm[String(c.id)]||'');
+    var memo=_ciSheetMemo(c);  /* profile.consult_log 최신 회차 우선(정본), 없으면 _ciMemoMap 폴백 */
     var bigo=_ciSheetBigo(c);
     var attr=_ciSheetAttr(c);
     var _sc=/뱅크샐러드/.test(attr)?' ci-src-bank':(/카카오페이/.test(attr)?' ci-src-kakao':(/보맵/.test(attr)?' ci-src-bomap':''));  /* 인입유형 행 색(카드 _ciListHtml과 동일 규칙): 뱅크샐러드=노랑·카카오페이=파랑·보맵=회색·나머지=흰색 */
@@ -17706,7 +17718,7 @@ function _ciSheetCsv(){
   var lines=[headers.map(_ciCsvCell).join(',')];
   data.forEach(function(c){
     var bg=[(c.birth_date||''),(c.gender||'')].filter(Boolean).join(' / ');
-    var memo=String(mm[String(c.id)]||'');
+    var memo=_ciSheetMemo(c);  /* consult_log 정본 우선 · _ciMemoMap 폴백 (표뷰 셀과 동일) */
     lines.push([_ciDateOf(c.created_at), _ciSheetAttr(c), (c.name||''), bg, (c.phone||c.phone_raw||''), (c.status||''), memo, _ciSheetBigo(c)].map(_ciCsvCell).join(','));
   });
   var csv='﻿'+lines.join('\r\n');  /* UTF-8 BOM 접두 → 엑셀 한글 안 깨짐 */
@@ -17743,13 +17755,37 @@ function _ciSaveCust(id, patch, ok, fail){  /* sales_customers 부분 PATCH(_snS
     .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } if(ok)ok(); })
     .catch(function(e){ alert('저장 실패: '+(e&&e.message||e)); if(fail)fail(); });
 }
-function _ciSaveProfileKey(id, key, value, ok, fail){  /* profile jsonb 머지 저장(다른 키 보존) */
-  var c=(window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0];
-  var prof=(c&&c.profile&&typeof c.profile==='object')?c.profile:{};
-  var merged={}; for(var k in prof){ if(Object.prototype.hasOwnProperty.call(prof,k)) merged[k]=prof[k]; }
-  if(value===''||value==null){ merged[key]=null; } else { merged[key]=value; }
-  _ciSaveCust(id, {profile:merged}, function(){ if(c) c.profile=merged; if(ok)ok(); }, fail);
+/* profile jsonb 안전 저장 공용 헬퍼: 서버 최신 profile 재조회 → mutate(prof)로 해당 키만 수정 → PATCH → 성공 시 로컬 _ciData.profile 교체.
+ * care-flow _cfSave 패턴과 동일 원칙 — 로컬 캐시 통째 덮기 금지(appl_date·care_cal_added·care_done 등 다른 키 유실 방지). 2026-07-28 */
+function _ciPatchProfile(id, mutate, ok, fail){
+  if(!(window.db&&window.db.fetch)){ if(fail)fail(); return; }
+  window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id)+'&select=profile&limit=1')
+    .then(function(r){ return r.ok?r.json():[]; })
+    .then(function(rows){
+      var prof=(rows&&rows[0]&&rows[0].profile&&typeof rows[0].profile==='object')?rows[0].profile:{};
+      mutate(prof);  /* 호출측이 해당 키만 수정(다른 키는 서버 원본 그대로 보존) */
+      return window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({profile:prof,updated_at:new Date().toISOString()})})
+        .then(function(res){ if(!(res&&(res.ok||res.status===204))){ return (res?res.text():Promise.resolve('')).then(function(t){ throw new Error(t||('HTTP '+(res&&res.status))); }); }
+          var c=(window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0]; if(c) c.profile=prof;  /* 로컬 낙관적 동기(서버 최신 반영) */
+          if(ok) ok(prof); });
+    })
+    .catch(function(e){ alert('저장 실패: '+(e&&e.message||e)); if(fail)fail(); });
 }
+window._ciPatchProfile=_ciPatchProfile;
+function _ciSaveProfileKey(id, key, value, ok, fail){  /* profile jsonb 머지 저장 — 서버 재조회→해당 키만 병합→PATCH(다른 키 보존). 시그니처·호출부 동일 */
+  _ciPatchProfile(id, function(prof){ if(value===''||value==null){ prof[key]=null; } else { prof[key]=value; } }, function(){ if(ok)ok(); }, fail);
+}
+/* 표뷰 상담내용 편집 = 정본(profile.consult_log)에 저장 → 카드뷰 상담이력과 같은 저장소(자동 양방향).
+ * 최신 회차(index 0) 있으면 그 text만 수정(다른 회차 보존), 없으면 오늘 회차 unshift. 2026-07-28 */
+function _ciSaveSheetConsult(id, text, ok, fail){
+  _ciPatchProfile(id, function(prof){
+    var log=(prof.consult_log&&Array.isArray(prof.consult_log))?prof.consult_log:[];
+    if(log.length && log[0]){ log[0].text=text; }
+    else { log.unshift({date:_ciConsultToday(), text:text}); }
+    prof.consult_log=log;
+  }, function(){ if(ok)ok(); }, fail);
+}
+window._ciSaveSheetConsult=_ciSaveSheetConsult;
 function _ciSaveMemo(id, memo, ok, fail){  /* 상담내용=고객별 최근 sales_consultations 1건. 있으면 PATCH, 없으면 POST 신규 */
   if(!(window.db&&window.db.fetch)){ if(fail)fail(); return; }
   var cid=(window._ciMemoIdMap||{})[String(id)];
@@ -17851,7 +17887,7 @@ function _ciCellCommit(td){
   } else if(field==='memo'){
     var vm=String((ctrls[0]&&ctrls[0].value)||'').trim();
     if(vm===(td.getAttribute('data-raw')||'')){ restore(); return; }
-    _ciSaveMemo(id, vm, function(){ _ciCellApply(td,'memo',{value:vm}); }, restore);
+    _ciSaveSheetConsult(id, vm, function(){ _ciCellApply(td,'memo',{value:vm}); }, restore);  /* 정본=profile.consult_log(카드뷰와 동일 저장소) · sales_consultations 경로 미사용 */
   } else { restore(); }
 }
 window._ciCellEdit=_ciCellEdit; window._ciCellCommit=_ciCellCommit; window._ciCellCancel=_ciCellCancel;
@@ -17876,17 +17912,17 @@ function _ciNewRowCommit(){
   var idate=_ciFmtBirth((v.idate||'').trim());  /* 입력일자 직접입력(20260727→2026-07-27) → created_at. 최근일자 정렬이라 새 고객이 상단 유지 */
   var createdAt=(idate && /^\d{4}-\d{2}-\d{2}$/.test(idate)) ? (idate+'T00:00:00Z') : now;
   var phone=_ciFmtPhone((v.phone||'').trim());  /* 01012345678→010-1234-5678 자동 */
+  var memo=(v.memo||'').trim();
   var profile={}; if(v.attr) profile.attr=v.attr; if(v.bigo) profile['비고']=v.bigo;
+  if(memo){ profile.consult_log=[{date:_ciConsultToday(), text:memo}]; }  /* 상담내용도 입력했으면 정본(consult_log) 첫 회차로 POST에 포함 → 표뷰 셀 즉시 표시 + 카드뷰 이력 반영(정본 일원화) 2026-07-28 */
   var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birth||null, gender:v.gender||null, channel:null, status:v.status||'신규DB',
     profile:profile, owner_id:owner, created_at:createdAt, updated_at:now, source_ref:null };
-  var memo=(v.memo||'').trim();
   window.db.fetch('/rest/v1/sales_customers',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(body)})
     .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } return r.json(); })
     .then(function(rows){
       var nc=(rows&&rows[0])||null;
-      var after=function(){ window._ciNewBusy=false; if(nc){ window._ciData=window._ciData||[]; window._ciData.push(nc); } _ciSheetRerender(); _ciSheetSyncTop(); };  /* 표에 새 행 반영 + 상단 상담플로우/데이터현황 집계 즉시 갱신(카드 추가와 동기) 2026-07-27 */
-      if(nc && memo){ _ciSaveMemo(nc.id, memo, after, after); } else { after(); }  /* 상담내용도 입력했으면 신규 consult POST */
+      window._ciNewBusy=false; if(nc){ window._ciData=window._ciData||[]; window._ciData.push(nc); } _ciSheetRerender(); _ciSheetSyncTop();  /* 표에 새 행 반영 + 상단 상담플로우/데이터현황 집계 즉시 갱신(카드 추가와 동기) */
     })
     .catch(function(e){ window._ciNewBusy=false; alert('고객 추가 실패: '+(e&&e.message||e)); });
 }
