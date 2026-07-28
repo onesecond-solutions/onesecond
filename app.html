@@ -16257,6 +16257,110 @@ function _ciTodayMatch(c,k){
   return false;
 }
 window._ciTodayMatch=_ciTodayMatch;
+/* ── 오늘의 할 일 · 케어 체크리스트(P1, 2026-07-28 대표 확정) ─────────────────────────
+   대상 3종(appl91/appl181/bday)만 완료 체크·놓친 케어 추적. '오늘 등록'·예약은 기존 집계 카드 그대로 유지(판단 보류 시 유지 원칙)
+   하고 이 체크리스트를 그 아래에 추가한다. due는 항상 순수 계산(_ciCareDue), 저장하는 값은 "완료했다" 하나뿐
+   (profile.care_done, jsonb map, DDL 없음). appl91/appl181=고객당 1회성 키 / bday=매년 반복이라 연도 포함 키(bday_YYYY).
+   baseline=CI_CARE_TRACK_SINCE(도입일) — 이보다 이전 due는 이력 없음 취급하여 놓침에서 제외(가짜 놓침 방지). */
+window.CI_CARE_TRACK_SINCE='2026-07-28';
+function _ciYmdOf(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+window._ciYmdOf=_ciYmdOf;
+function _ciCareDue(c,k){  /* 순수 함수(부작용 없음) — {ymd, doneKey} 또는 null(대상 아님/계산 불가) */
+  if((c.status||'')!=='청약완료') return null;
+  var ad=(c.profile&&c.profile.appl_date)?String(c.profile.appl_date).slice(0,10):'';
+  if(!ad) return null;
+  var base=new Date(ad+'T00:00:00'); if(isNaN(base.getTime())) return null;
+  var t=new Date();
+  if(k==='appl91'||k==='appl181'){
+    var n=(k==='appl91')?91:181;
+    var x=new Date(base.getTime()); x.setDate(x.getDate()+n);
+    return {ymd:_ciYmdOf(x), doneKey:k};                                 /* 고정 1회성 — appl_date+91/+181 */
+  }
+  if(k==='bday'){                                                        /* 매년 반복 — 올해 월-일(지났으면 내년), 최소 계약 다음해부터(_ciTodayMatch 기존 규칙과 동일 소스·동일 기준 유지) */
+    var mm=base.getMonth(), dd=base.getDate();
+    var y=t.getFullYear(); if(y<=base.getFullYear()) y=base.getFullYear()+1;
+    var due=_ciYmdOf(new Date(y,mm,dd));
+    var todayYmd=_ciYmdOf(t);
+    if(due<todayYmd){ y+=1; due=_ciYmdOf(new Date(y,mm,dd)); }
+    return {ymd:due, doneKey:'bday_'+y};
+  }
+  return null;
+}
+window._ciCareDue=_ciCareDue;
+function _ciCareChecklistData(){  /* 놓침/오늘 판정: care_done[doneKey] 있으면 완료 / due<오늘=놓침(baseline 이전 제외) / due==오늘=오늘 / due>오늘=예정(P1 미표시) */
+  var data=_ciViewData(), t=new Date(), todayYmd=_ciYmdOf(t), since=window.CI_CARE_TRACK_SINCE||'2026-07-28';
+  var overdue=[], todayList=[];
+  data.forEach(function(c){
+    ['appl91','appl181','bday'].forEach(function(k){
+      var d=_ciCareDue(c,k); if(!d) return;
+      if(d.ymd<since) return;  /* 도입일 이전 due=이력 없음 취급(가짜 놓침 방지) */
+      var cd=(c.profile&&c.profile.care_done&&typeof c.profile.care_done==='object')?c.profile.care_done:{};
+      var done=!!cd[d.doneKey];
+      var row={id:c.id, name:c.name||'(이름없음)', key:k, doneKey:d.doneKey, due:d.ymd, done:done};
+      if(d.ymd<todayYmd) overdue.push(row);
+      else if(d.ymd===todayYmd) todayList.push(row);
+    });
+  });
+  overdue.sort(function(a,b){ return a.due<b.due?-1:(a.due>b.due?1:0); });      /* 오래 놓친 순 */
+  todayList.sort(function(a,b){ return String(a.name).localeCompare(String(b.name)); });
+  return {overdue:overdue, today:todayList};
+}
+window._ciCareChecklistData=_ciCareChecklistData;
+function _ciCareChecklistHtml(){  /* #ci-today 하단에 추가되는 체크리스트 블록(기존 5항목 집계는 위에 그대로 유지) */
+  var labels={appl91:'청약 +91 안심콜', appl181:'+181 관리', bday:'보험생일 연락'};
+  var data=_ciCareChecklistData(), todayYmd=_ciYmdOf(new Date());
+  var dayDiff=function(due){ return Math.round((new Date(todayYmd+'T00:00:00').getTime()-new Date(due+'T00:00:00').getTime())/86400000); };
+  var row=function(r, showDue){
+    var label=labels[r.key]||r.key;
+    var chkAttr=r.done?' checked':'';
+    var due=showDue?('<span class="ci-care-due">'+_ciEsc(r.due)+'</span>'):'';
+    var late=showDue?('<span class="ci-care-late">'+_ciNum(dayDiff(r.due))+'일 지남</span>'):'';
+    return '<div class="ci-care-row'+(r.done?' done':'')+'">'
+      +'<label class="ci-care-chk" onclick="event.stopPropagation()"><input type="checkbox"'+chkAttr+' onclick="event.stopPropagation()" onchange="window._ciCareToggle(\''+_ciEsc(String(r.id))+'\',\''+_ciEsc(r.doneKey)+'\')"></label>'
+      +due+'<span class="ci-care-who">'+_ciEsc(r.name)+' · '+_ciEsc(label)+'</span>'+late
+      +'</div>';
+  };
+  var missH=data.overdue.length ? ('<div class="ci-care-sec danger"><div class="ci-care-sec-h">놓친 케어 · '+_ciNum(data.overdue.length)+'건</div>'+data.overdue.map(function(r){return row(r,true);}).join('')+'</div>') : '';
+  var todH='<div class="ci-care-sec"><div class="ci-care-sec-h">오늘 처리 · '+_ciNum(data.today.length)+'건</div>'
+    +(data.today.length ? data.today.map(function(r){return row(r,false);}).join('') : '<div class="ci-care-empty">오늘 처리할 케어가 없습니다.</div>')
+    +'</div>';
+  return missH+todH;
+}
+window._ciCareChecklistHtml=_ciCareChecklistHtml;
+function _ciCareToggle(id, key){  /* 완료 체크 토글(소급 완료·완료 취소 겸용). fetch→머지→PATCH — js/care-flow.js _cfSave(162~166행) read-modify-write 패턴 복제(다른 profile 키 보존). 낙관적 로컬 갱신 후 재렌더, 실패=alert+원복 */
+  if(window._ciCareBusy) return;
+  var c=(window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0];
+  if(!c) return;
+  if(!(window.db&&window.db.fetch)){ alert('로그인이 필요합니다.'); return; }
+  var prevProfile=c.profile;
+  var prevDone=!!(prevProfile&&prevProfile.care_done&&prevProfile.care_done[key]);
+  var nextVal=prevDone?null:_ciYmdOf(new Date());
+  var mergeDone=function(prof,val){
+    var out={}; for(var k in (prof||{})){ if(Object.prototype.hasOwnProperty.call(prof,k)) out[k]=prof[k]; }
+    var cd={}; if(out.care_done && typeof out.care_done==='object'){ for(var k2 in out.care_done){ if(Object.prototype.hasOwnProperty.call(out.care_done,k2)) cd[k2]=out.care_done[k2]; } }
+    if(val==null) delete cd[key]; else cd[key]=val;
+    out.care_done=cd;
+    return out;
+  };
+  var optimistic=mergeDone(prevProfile, nextVal);
+  c.profile=optimistic; _ciSheetSyncTop();  /* 낙관적 로컬 갱신 → #ci-today·#ci-stats 즉시 재렌더(care 전용 헬퍼, salesnote는 내부 가드로 무시) */
+  window._ciCareBusy=true;
+  window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id)+'&select=profile&limit=1')
+    .then(function(r){ return r.ok?r.json():[]; })
+    .then(function(rows){
+      var fresh=(rows[0]&&rows[0].profile)||{};
+      var merged=mergeDone(fresh, nextVal);                              /* 서버 최신 profile 기준으로 다시 머지(경합 시 최신 값 보존) */
+      return window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({profile:merged})})
+        .then(function(res){ return {res:res, merged:merged}; });
+    })
+    .then(function(out){
+      window._ciCareBusy=false;
+      if(out.res && (out.res.ok||out.res.status===204)){ c.profile=out.merged; _ciSheetSyncTop(); }
+      else { c.profile=prevProfile; _ciSheetSyncTop(); alert('저장 실패'); }
+    })
+    .catch(function(){ window._ciCareBusy=false; c.profile=prevProfile; _ciSheetSyncTop(); alert('네트워크 오류'); });
+}
+window._ciCareToggle=_ciCareToggle;
 function _ciBandHtml(){
   var data=_ciViewData(), cur=window._ciStageF||'전체';
   var allStages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계+종결 정본 */
@@ -16280,7 +16384,8 @@ function _ciTodayHtml(){
   var keys=[['today','오늘 등록한 고객'],['reserve','예약'],['appl91','청약 +91일 (보장 개시)'],['appl181','청약 +181일 (6개월 관리)'],['bday','보험 생일 +1년']];
   var body=keys.map(function(kv){ var n=data.filter(function(c){return _ciTodayMatch(c,kv[0]);}).length; var on=(cur===kv[0])?' on':''; return '<div class="ci-today-row clk'+on+'" onclick="_ciSetTodayF(\''+kv[0]+'\')"><span>'+_ciEsc(kv[1])+'</span><b>'+_ciNum(n)+'명</b></div>'; }).join('');
   return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
-    +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>';
+    +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>'
+    +'<div class="ci-care-block">'+_ciCareChecklistHtml()+'</div>';  /* +91/+181/보험생일 체크리스트(놓친 케어·오늘 처리) — 위 5항목 집계는 그대로 유지, 아래에 추가(2026-07-28 대표 확정 P1) */
 }
 /* 데이터 현황(#ci-stats) 접기/펼치기 — localStorage 'ci_stats_collapsed'('1'=접힘/'0'=펼침). 값 없으면 기본 펼침(false, 2026-07-28 대표 확정: 데이터 현황을 맨 위로 올리며 기본 펼침 전환). */
 function _ciStatsIsCollapsed(){
