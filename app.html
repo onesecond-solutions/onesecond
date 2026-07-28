@@ -2318,7 +2318,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
       <div class="ci-wrap" id="ci-wrap" style="display:none">
         <div class="ci-top">
           <div class="ci-today" id="ci-today"></div>
-          <div class="ci-flow"><div class="ci-flow-head">상담 플로우 <button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button></div><div class="ci-band" id="ci-band"></div></div>
+          <div class="ci-flow"><div class="ci-flow-head">상담 플로우 <span class="ci-flow-chips"><button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button><button type="button" class="ci-flow-jong" id="ci-flow-jong" onclick="_ciSetStage('종결')" style="display:none">종결</button></span></div><div class="ci-band" id="ci-band"></div></div>
         </div>
         <div class="ci-stats" id="ci-stats"></div>
         <div class="ci-bottom">
@@ -16248,21 +16248,13 @@ window._ciTodayMatch=_ciTodayMatch;
 function _ciBandHtml(){
   var data=_ciViewData(), cur=window._ciStageF||'전체';
   var allStages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계+종결 정본 */
-  var stages=allStages.filter(function(s){return s!=='종결';});  /* 인라인 파이프라인 카드/점=8단계만(종결 제외, 2026-07-28 대표 확정) */
-  var cardBtn=function(s,extraCls){
+  var stages=allStages.filter(function(s){return s!=='종결';});  /* 파이프라인 카드/점=8단계만. 종결은 밴드 안이 아니라 헤더 '전체' 옆 무채색 칩으로 분리 표시(2026-07-28 대표 확정, 안 B) */
+  var cards=stages.map(function(s){
     var n=data.filter(function(c){return (c.status||'')===s;}).length;
-    var cls='ci-scard'+(extraCls||'')+(s===cur?' on':'')+(n===0?' zero':'');
+    var cls='ci-scard'+(s===cur?' on':'')+(n===0?' zero':'');
     return '<button type="button" class="'+cls+'" onclick="_ciSetStage(\''+_ciEsc(s)+'\')"><span class="ci-scard-name">'+_ciEsc(s)+'</span><span class="ci-scard-num">'+_ciNum(n)+'</span><span class="ci-scard-unit">'+(n===0?'—':'명')+'</span></button>';
-  };
-  var cards=stages.map(function(s,i){
-    var btn=cardBtn(s,'');
-    if(i===stages.length-1 && allStages.indexOf('종결')>=0){
-      /* 종결=인라인 9번째 카드가 아니라 청약완료(마지막 열) 바로 아래 세로로 붙는 검정 카드(승인된 목업, 2026-07-28) */
-      return '<div class="ci-scard-col">'+btn+cardBtn('종결',' ci-scard-jong')+'</div>';
-    }
-    return btn;
   }).join('');
-  var dots=stages.map(function(s){ return '<span class="ci-sdot'+(s===cur?' on':'')+'"><i></i></span>'; }).join('');  /* 축의 점=8단계만(종결 제외) */
+  var dots=stages.map(function(s){ return '<span class="ci-sdot'+(s===cur?' on':'')+'"><i></i></span>'; }).join('');
   var foot=(cur!=='전체')
     ? '<div class="ci-flow-foot">필터: '+_ciEsc(cur)+' '+_ciNum(data.filter(function(c){return (c.status||'')===cur;}).length)+'명 — 아래 리스트에 이 단계 고객만 표시</div>'
     : '<div class="ci-flow-foot muted">단계를 클릭하면 아래 리스트에 해당 단계 고객만 표시됩니다.</div>';
@@ -17371,6 +17363,7 @@ function _ciSheetSyncTop(){
   if(window._ciMode!=='care') return;
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
   var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
+  var _jong=document.getElementById('ci-flow-jong'); if(_jong){ if(window._ciMode==='care'){ var _jn=_ciViewData().filter(function(c){return (c.status||'')==='종결';}).length; _jong.style.display=''; _jong.textContent='종결 '+_ciNum(_jn); _jong.classList.toggle('on', (window._ciStageF||'전체')==='종결'); } else { _jong.style.display='none'; } }  /* 종결=밴드 밖 무채색 칩(전체 옆) · care 전용 노출 · 클릭=종결 필터. 2026-07-28 안 B */
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
 }
@@ -17535,6 +17528,7 @@ window._ciNewRowKey=_ciNewRowKey; window._ciNewRowBlur=_ciNewRowBlur; window._ci
 function _ciRender(){
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
   var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
+  var _jong=document.getElementById('ci-flow-jong'); if(_jong){ if(window._ciMode==='care'){ var _jn=_ciViewData().filter(function(c){return (c.status||'')==='종결';}).length; _jong.style.display=''; _jong.textContent='종결 '+_ciNum(_jn); _jong.classList.toggle('on', (window._ciStageF||'전체')==='종결'); } else { _jong.style.display='none'; } }  /* 종결=밴드 밖 무채색 칩(전체 옆) · care 전용 노출 · 클릭=종결 필터. 2026-07-28 안 B */
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list');
