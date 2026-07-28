@@ -122,10 +122,10 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sdot.on i{background:var(--ac);}
 .ci-flow-foot{font-size:var(--ts-badge);color:var(--ac);margin-top:14px;line-height:1.4;}
 .ci-flow-foot.muted{color:var(--tf);}
-/* 데이터 현황(#ci-stats) — ci-top/ci-bottom 사이 가로 전체 밴드. 기획팀장 시안(2026-07-14 재설계, 대표 승인): 프리셋+‹›기간네비+hero+채널카드4개+일별 스택차트.
+/* 데이터 현황(#ci-stats) — #ci-wrap 맨 위 가로 전체 밴드(2026-07-28 대표 확정: ci-top 위로 이동). 기획팀장 시안(2026-07-14 재설계, 대표 승인): 프리셋+‹›기간네비+hero+채널카드4개+일별 스택차트.
    신규 클래스는 전부 ds- 접두어 + #ci-stats 하위로 스코프(앱 전역 오염 방지). 채널색·델타색만 도메인 특화 하드코딩(사양 고정, 총괄 승인 예외). */
 .ci-stats{display:flex;flex-direction:column;gap:14px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md);padding:16px 18px;}
-/* 접기/펼치기(2026-07-14 추가, 변경 없음): 제목행(.ds-head) 클릭 시 본문(.ds-body) 토글. 기본 접힘, 상태는 localStorage(ci_stats_collapsed) 유지(JS 쪽) */
+/* 접기/펼치기: 제목행(.ds-head) 클릭 시 본문(.ds-body) 토글. 기본 펼침(2026-07-28 변경), 상태는 localStorage(ci_stats_collapsed) 유지(JS 쪽) */
 #ci-stats .ds-head{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
 #ci-stats .ds-chevron{font-size:10px;color:var(--tf);display:inline-block;width:14px;text-align:center;flex-shrink:0;}
 #ci-stats .ds-title{font-size:var(--ts-meta);font-weight:700;color:var(--tp);}
