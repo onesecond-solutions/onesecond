@@ -2314,13 +2314,13 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
           <div class="viewer" id="mysViewer"><div class="mys-news-empty">왼쪽에서 항목을 선택하세요.</div></div>
         </div>
       </div>
-      <!-- 상담관리 인라인 4분할(care) — 상담관리 배지 진입 시 표시. 상좌 오늘의 할 일 / 상우 상담 플로우 / 하좌 카드리스트 / 하우 미리보기. 임태성 게이트. -->
+      <!-- 상담관리 인라인 4분할(care) — 상담관리 배지 진입 시 표시. 데이터 현황(맨 위) / 상좌 오늘의 할 일 / 상우 상담 플로우 / 하좌 카드리스트 / 하우 미리보기. 임태성 게이트. 순서=데이터 현황 우선(2026-07-28 대표 확정). -->
       <div class="ci-wrap" id="ci-wrap" style="display:none">
+        <div class="ci-stats" id="ci-stats"></div>
         <div class="ci-top">
           <div class="ci-today" id="ci-today"></div>
           <div class="ci-flow"><div class="ci-flow-head">상담 플로우 <span class="ci-flow-chips"><button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button><button type="button" class="ci-flow-jong" id="ci-flow-jong" onclick="_ciSetStage('종결')" style="display:none">종결</button></span></div><div class="ci-band" id="ci-band"></div></div>
         </div>
-        <div class="ci-stats" id="ci-stats"></div>
         <div class="ci-bottom">
           <div class="ci-list-col">
             <div class="ci-search-row"><input type="text" class="ci-search-input" id="ci-q" placeholder="고객명 검색" autocomplete="off" oninput="_ciSetNameQ(this.value)"></div>
@@ -16282,12 +16282,12 @@ function _ciTodayHtml(){
   return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
     +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>';
 }
-/* 데이터 현황(#ci-stats) 접기/펼치기 — localStorage 'ci_stats_collapsed'('1'=접힘/'0'=펼침). 값 없으면 기본 접힘(true). */
+/* 데이터 현황(#ci-stats) 접기/펼치기 — localStorage 'ci_stats_collapsed'('1'=접힘/'0'=펼침). 값 없으면 기본 펼침(false, 2026-07-28 대표 확정: 데이터 현황을 맨 위로 올리며 기본 펼침 전환). */
 function _ciStatsIsCollapsed(){
   try{
     var v=localStorage.getItem('ci_stats_collapsed');
-    return v===null ? true : v==='1';
-  }catch(e){ return true; }
+    return v===null ? false : v==='1';
+  }catch(e){ return false; }
 }
 window._ciStatsIsCollapsed=_ciStatsIsCollapsed;
 function _ciStatsToggleCollapse(){
@@ -16384,7 +16384,7 @@ function _dsDeltaHtml(n){
 }
 /* 데이터 현황(#ci-stats) — 기획팀장 시안(2026-07-14 재설계, 대표 승인): 프리셋(오늘/최근7일/이번달/지난달/사용자정의)+‹›기간네비+hero+채널카드4개+일별 스택차트.
    실데이터 소스=_ciViewData()(상담관리 등록분, mock·하드코딩 0). 상태=window._ciStatsMode('today'|'week7'|'month'|'custom')·_ciStatsAnchor(YYYY-MM-DD)·_ciStatsCRange([from,to], custom 전용).
-   접기/펼치기(2026-07-14 유지): 제목 행 클릭 시 _ciStatsToggleCollapse(), 본문은 .ds-body(.ds-collapsed 시 숨김), 기본값=접힘, 상태는 localStorage 유지(변경 없음).
+   접기/펼치기: 제목 행 클릭 시 _ciStatsToggleCollapse(), 본문은 .ds-body(.ds-collapsed 시 숨김), 기본값=펼침(2026-07-28 변경, 데이터 현황을 맨 위로 이동하며 전환), 상태는 localStorage 유지.
    신규 CSS는 모두 ds- 접두어 + #ci-stats 하위 스코프(css/app-views.css). 채널색·델타색은 도메인 특화 하드코딩(사양 고정 hex, 총괄 승인 예외). */
 function _ciStatsHtml(){
   var _dsCollapsed=_ciStatsIsCollapsed();
@@ -16452,7 +16452,7 @@ function _ciStatsHtml(){
     deltaHtml='<span class="ds-hero-cmp">지난달 대비 '+_dsDeltaHtml(heroTotal-pAgg.total)+'</span>';
   }
   var hero='<div class="ds-hero"><div class="ds-hero-main">'
-    +'<span class="ds-hero-num" onclick="_ciHeroPick()" title="이 기간 전체 보기">'+_ciNum(heroTotal)+'</span><span class="ds-hero-unit">신규 고객</span>'
+    +'<span class="ds-hero-num" onclick="_ciHeroPick()" title="이 기간 전체 보기">'+_ciNum(heroTotal)+'</span><span class="ds-hero-unit">신규 등록</span>'
     +deltaHtml
     +'</div><div class="ds-hero-top">최다 유입 채널: <b>'+(topCh?_ciEsc(topCh):'—')+'</b></div></div>';
 
