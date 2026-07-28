@@ -17875,7 +17875,7 @@ function _ciCellCommit(td){
   } else if(field==='status'){
     var vs=String((ctrls[0]&&ctrls[0].value)||'');
     if(vs===(td.getAttribute('data-raw')||'')){ restore(); return; }
-    _ciSaveCust(id, {status:vs}, function(){ _ciLocalPatch(id,{status:vs}); _ciCellApply(td,'status',{status:vs}); _ciSheetSyncTop(); if(window._ciTodayF||((window._ciStageF||'전체')!=='전체')) _ciSheetRerender(); if(vs==='예약' && typeof _ciResvOpen==='function'){ var _rn=((window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0]||{}).name||''; _ciResvOpen(_rn); } }, restore);  /* 상태변경 → 상단 단계집계 즉시 갱신 + 단계/오늘 필터 중이면 목록 재적용(바뀐 행이 필터 밖이면 빠지게) 2026-07-27. '예약' 선택 시 카드폼 단계선택(_ciPickStage)과 동일하게 캘린더 새 일정 팝업(행 이름 주입, customer_id 미저장=카드폼과 동일 수준) 2026-07-28 */
+    _ciSaveCust(id, {status:vs}, function(){ _ciLocalPatch(id,{status:vs}); _ciCellApply(td,'status',{status:vs}); _ciSheetSyncTop(); if(window._ciTodayF||((window._ciStageF||'전체')!=='전체')) _ciSheetRerender(); if(vs==='예약' && typeof _ciResvOpen==='function'){ var _rn=((window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0]||{}).name||''; _ciResvOpen(_rn, (typeof _ciResvToday==='function'?_ciResvToday():'')); } }, restore);  /* 상태변경 → 상단 단계집계 즉시 갱신 + 단계/오늘 필터 중이면 목록 재적용(바뀐 행이 필터 밖이면 빠지게) 2026-07-27. '예약' 선택 시 카드폼 단계선택(_ciPickStage)과 동일하게 캘린더 새 일정 팝업(행 이름 주입, customer_id 미저장=카드폼과 동일 수준) 2026-07-28 */
   } else if(field==='attr'){
     var va=String((ctrls[0]&&ctrls[0].value)||'').trim();
     if(va===(td.getAttribute('data-raw')||'')){ restore(); return; }
