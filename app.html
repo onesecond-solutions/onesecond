@@ -17451,6 +17451,104 @@ function _ciSheetBulkDelete(){
   } else { done(); }
 }
 window._ciSheetBulkDelete=_ciSheetBulkDelete;
+/* ════ 표뷰 열 너비 드래그 조절 + 저장(2026-07-28, 대표 확정) ═══════════════════════════════════════════
+ * colgroup<col data-colkey> 방식 — th/td 폭을 한 곳(col)에서 동시 제어(기존 th:nth-child(N) width CSS는
+ * "저장값 없을 때의 기본값" 소스로 그대로 둠 — _CI_SHEET_COLS의 기본폭과 반드시 동기화). 저장=localStorage
+ * (키 ci_sheet_colw, JSON {colkey:px}). 체크박스열(chk)·삭제/+열(act)은 고정폭이라 리사이즈 대상에서 제외
+ * (판단: 두 열 다 아이콘/체크박스만 담는 좁은 고정폭이라 늘이거나 줄일 실익이 없고, 실수로 없어지면 조작 불가
+ * 해지는 위험이 커서 제외). 상담내용(memo)은 기본폭 없음(w=0)이라 남은 공간을 자동으로 채우는 기존 동작을
+ * 그대로 유지하다가, 사용자가 드래그하는 순간부터 그 값이 고정폭으로 저장된다.
+ * 재렌더(_ciSheetRerender→_ciSheetHtml)마다 저장값을 다시 읽어 colgroup에 반영 → 편집·필터·페이지 이동 후에도
+ * 폭 유지. 핸들 더블클릭=auto-fit(그 열 th·td 텍스트 중 가장 넓은 폭+패딩으로 맞춤, canvas measureText). */
+var _CI_SHEET_COLW_KEY='ci_sheet_colw';
+var _CI_SHEET_MINW=50;  /* 최소 폭 가드(대표 지시 40~60 범위 내) */
+var _CI_SHEET_COLS=[  /* nth-child 2~9 순서(1=chk,10=act는 목록 밖=고정) */
+  {key:'idate', w:140}, {key:'attr', w:140}, {key:'name', w:140}, {key:'birthgender', w:172},
+  {key:'phone', w:140}, {key:'status', w:140}, {key:'memo', w:0}, {key:'bigo', w:220}
+];
+function _ciSheetLoadColW(){
+  try{ var raw=localStorage.getItem(_CI_SHEET_COLW_KEY); if(!raw) return {}; var o=JSON.parse(raw); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; }
+}
+function _ciSheetSaveColW(key,w){
+  try{ var o=_ciSheetLoadColW(); o[key]=w; localStorage.setItem(_CI_SHEET_COLW_KEY, JSON.stringify(o)); }catch(e){}
+}
+window._ciSheetLoadColW=_ciSheetLoadColW; window._ciSheetSaveColW=_ciSheetSaveColW;
+function _ciSheetResetColW(){  /* 툴바 "열 너비 초기화" — 저장값 삭제 → 표 재렌더(CSS 기본폭 복귀) */
+  try{ localStorage.removeItem(_CI_SHEET_COLW_KEY); }catch(e){}
+  _ciSheetRerender();
+}
+window._ciSheetResetColW=_ciSheetResetColW;
+function _ciSheetColgroupHtml(){  /* 저장된 폭이 있으면 그 값, 없으면 기본값(w). memo(w=0)는 기본 미지정(남은 폭 자동 확장) */
+  var saved=_ciSheetLoadColW();
+  var out='<colgroup><col class="ci-sh-col-chk">';
+  _CI_SHEET_COLS.forEach(function(c){
+    var w=saved[c.key]||c.w||0;
+    out+='<col data-colkey="'+c.key+'"'+(w?(' style="width:'+w+'px"'):'')+'>';
+  });
+  out+='<col class="ci-sh-col-act"></colgroup>';
+  return out;
+}
+window._ciSheetColgroupHtml=_ciSheetColgroupHtml;
+var _CI_SHEET_RSZ_LABEL={idate:'입력일자',attr:'인입유형',name:'이름',birthgender:'생년월일/성별',phone:'전화',status:'상담상태',memo:'상담내용',bigo:'비고'};
+function _ciSheetRszHandle(key){ return '<span class="ci-sh-rsz" data-colkey="'+key+'" onmousedown="_ciSheetResizeStart(event,this)" ondblclick="_ciSheetAutoFit(event,this)" title="드래그: 폭 조절 · 더블클릭: 내용에 맞춤" aria-label="'+_CI_SHEET_RSZ_LABEL[key]+' 열 너비 조절"></span>'; }
+window._ciSheetRszHandle=_ciSheetRszHandle;
+var _ciSheetRszState=null;
+function _ciSheetResizeStart(ev, el){  /* 핸들 mousedown — stopPropagation으로 셀 편집(_ciCellEdit) 오작동 방지 */
+  if(!ev||!el) return;
+  ev.preventDefault(); ev.stopPropagation();
+  var key=el.getAttribute('data-colkey');
+  var table=el.closest ? el.closest('table.ci-sheet') : null; if(!table) return;
+  var col=table.querySelector('colgroup col[data-colkey="'+key+'"]'); if(!col) return;
+  var th=el.closest('th');
+  var startW=(th&&th.getBoundingClientRect)?th.getBoundingClientRect().width:(col.offsetWidth||_CI_SHEET_MINW);
+  _ciSheetRszState={key:key, col:col, startX:ev.clientX, startW:startW, handle:el};
+  el.classList.add('ci-sh-rsz-drag');
+  document.body.classList.add('ci-sh-resizing');  /* 드래그 중 전역 커서·텍스트선택 차단 */
+  document.addEventListener('mousemove', _ciSheetResizeMove);
+  document.addEventListener('mouseup', _ciSheetResizeEnd);
+}
+window._ciSheetResizeStart=_ciSheetResizeStart;
+function _ciSheetResizeCalc(startW, dx){ return Math.max(_CI_SHEET_MINW, Math.round(startW+dx)); }  /* 순수 계산(시작폭+델타, 최소폭 클램프) — 하니스 단위테스트용으로 분리 */
+window._ciSheetResizeCalc=_ciSheetResizeCalc;
+function _ciSheetResizeMove(ev){
+  var st=_ciSheetRszState; if(!st) return;
+  var w=_ciSheetResizeCalc(st.startW, ev.clientX-st.startX);
+  st.col.style.width=w+'px';
+}
+function _ciSheetResizeEnd(){
+  var st=_ciSheetRszState; if(!st) return;
+  document.removeEventListener('mousemove', _ciSheetResizeMove);
+  document.removeEventListener('mouseup', _ciSheetResizeEnd);
+  if(st.handle) st.handle.classList.remove('ci-sh-rsz-drag');
+  document.body.classList.remove('ci-sh-resizing');
+  var w=parseInt(st.col.style.width,10);
+  if(w) _ciSheetSaveColW(st.key, w);
+  _ciSheetRszState=null;
+}
+function _ciSheetTextWidth(text, font){  /* canvas measureText — autofit 계산(캔버스 1회 생성 재사용) */
+  var c=_ciSheetTextWidth._c || (_ciSheetTextWidth._c=document.createElement('canvas'));
+  var ctx=c.getContext('2d'); ctx.font=font||'12px sans-serif';
+  return ctx.measureText(String(text==null?'':text)).width;
+}
+window._ciSheetTextWidth=_ciSheetTextWidth;
+function _ciSheetAutoFit(ev, el){  /* 핸들 더블클릭 = 그 열 내용에 맞춤(auto-fit): th·해당 열 모든 td 텍스트 중 최대폭+패딩 */
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  var key=el.getAttribute('data-colkey');
+  var th=el.closest('th'); if(!th) return;
+  var table=th.closest('table.ci-sheet'); if(!table) return;
+  var col=table.querySelector('colgroup col[data-colkey="'+key+'"]'); if(!col) return;
+  var hcs=getComputedStyle(th);
+  var maxW=_ciSheetTextWidth(th.textContent, hcs.fontWeight+' '+hcs.fontSize+' '+hcs.fontFamily);
+  var bodyTd=table.querySelector('tbody td[data-field="'+key+'"]');
+  var bcs=bodyTd?getComputedStyle(bodyTd):hcs;
+  var bFont=bcs.fontWeight+' '+bcs.fontSize+' '+bcs.fontFamily;
+  var tds=table.querySelectorAll('tbody td[data-field="'+key+'"]');
+  Array.prototype.forEach.call(tds, function(td){ var w=_ciSheetTextWidth(td.textContent, bFont); if(w>maxW) maxW=w; });
+  var w=Math.max(_CI_SHEET_MINW, Math.round(maxW+28));  /* 좌우 패딩(12*2)+여유 4 */
+  col.style.width=w+'px';
+  _ciSheetSaveColW(key, w);
+}
+window._ciSheetAutoFit=_ciSheetAutoFit;
 function _ciSheetHtml(){
   var all=_ciSheetRows();
   var mm=window._ciMemoMap||{};
@@ -17461,7 +17559,7 @@ function _ciSheetHtml(){
   var data=all.slice((page-1)*ps, (page-1)*ps+ps);  /* 현재 페이지분만. 새 입력 행은 아래에서 항상 맨 위 별도 렌더 */
   var head='<thead><tr>'
     +'<th class="ci-sh-chk"><input type="checkbox" id="ci-sh-selall" onchange="_ciSheetSelAllToggle(this.checked)" aria-label="전체선택"></th>'
-    +'<th>입력일자</th><th>인입유형</th><th>이름</th><th>생년월일/성별</th><th>전화</th><th>상담상태</th><th class="ci-sh-memo-h">상담내용</th><th class="ci-sh-bigo-h">비고</th><th aria-label="삭제"></th>'
+    +'<th>입력일자'+_ciSheetRszHandle('idate')+'</th><th>인입유형'+_ciSheetRszHandle('attr')+'</th><th>이름'+_ciSheetRszHandle('name')+'</th><th>생년월일/성별'+_ciSheetRszHandle('birthgender')+'</th><th>전화'+_ciSheetRszHandle('phone')+'</th><th>상담상태'+_ciSheetRszHandle('status')+'</th><th class="ci-sh-memo-h">상담내용'+_ciSheetRszHandle('memo')+'</th><th class="ci-sh-bigo-h">비고'+_ciSheetRszHandle('bigo')+'</th><th aria-label="삭제"></th>'
     +'</tr></thead>';
   var rows=data.map(function(c){
     var bg=_ciBgDisplay(c.birth_date, c.gender);  /* 생년월일 / 성별 / N세(보험나이) — 편집 후에도 _ciCellApply에서 동일 헬퍼로 갱신 */
@@ -17486,7 +17584,7 @@ function _ciSheetHtml(){
       +'</tr>';
   }).join('');
   var emptyHint=total?'':'<tr class="ci-sh-emptyrow"><td colspan="10">아직 등록된 고객이 없습니다. 맨 윗줄에 이름을 입력하면 첫 고객이 추가됩니다.</td></tr>';
-  return '<div class="ci-sheet-wrap"><table class="ci-sheet">'+head+'<tbody>'+_ciSheetNewRowHtml()+rows+emptyHint+'</tbody></table></div>'+_ciSheetPagerHtml(total,page,pageCount);
+  return '<div class="ci-sheet-wrap"><table class="ci-sheet">'+_ciSheetColgroupHtml()+head+'<tbody>'+_ciSheetNewRowHtml()+rows+emptyHint+'</tbody></table></div>'+_ciSheetPagerHtml(total,page,pageCount);
 }
 /* 하단 페이지네이션 — care 전량 로드분을 페이지 크기로 나눈 번호 네비 + "N개씩 보기 · 총 M명". */
 function _ciSheetPagerHtml(total,page,pageCount){
@@ -17557,6 +17655,7 @@ function _ciSheetToolsRender(){
   var hint=(narrow && window._ciView==='sheet') ? '<span class="ci-vhint">좁은 화면 → 카드 표시</span>' : '';
   var selN=_ciSheetSelCount();  /* 다중선택 개수 — care+표뷰이고 1개 이상일 때만 "선택 삭제 (N)" 노출(2026-07-28) */
   var bulkBtn=(eff==='sheet' && selN>=1) ? ('<button type="button" class="ci-btn danger ci-sh-bulkdel-btn" id="ci-sh-bulkdel" onclick="_ciSheetBulkDelete()">선택 삭제 ('+selN+')</button>') : '';
+  var colwResetBtn=(eff==='sheet') ? '<button type="button" class="ci-csv-btn ci-sh-colw-reset" onclick="_ciSheetResetColW()" title="드래그로 바꾼 열 너비를 기본값으로 되돌립니다">열 너비 초기화</button>' : '';  /* 표뷰일 때만 노출(카드엔 무의미) 2026-07-28 */
   el.innerHTML=''
     +'<div class="ci-vtools-left">'
     +'<div class="ci-vtoggle" role="group" aria-label="보기 전환">'
@@ -17567,6 +17666,7 @@ function _ciSheetToolsRender(){
     + psSel
     +'</div>'
     +'<button type="button" class="ci-csv-btn" onclick="_ciSheetCsv()">CSV 다운로드</button>'
+    + colwResetBtn
     + bulkBtn;
 }
 window._ciSheetToolsRender=_ciSheetToolsRender;

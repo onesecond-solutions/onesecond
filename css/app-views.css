@@ -303,6 +303,17 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sheet th:nth-child(8),.ci-sheet td:nth-child(8){white-space:pre-wrap;}             /* 상담내용=남은 폭(가장 넓게) */
 .ci-sheet th:nth-child(9),.ci-sheet td:nth-child(9){width:220px;white-space:pre-wrap;} /* 비고 */
 .ci-sheet th:nth-child(10),.ci-sheet td:nth-child(10){width:44px;white-space:nowrap;}    /* 삭제/+ */
+/* ═══ 표 뷰 열 너비 드래그 조절 + 저장(2026-07-28, 대표 확정) — colgroup<col data-colkey>가 위 nth-child 기본폭을
+   렌더 시 덮어씀(저장값 없으면 동일 기본값 재적용이라 시각 변화 없음, _CI_SHEET_COLS와 반드시 동기화). 체크박스·
+   삭제열은 리사이즈 대상 제외(핸들 자체를 안 만듦). thead th는 이미 position:sticky라 핸들(절대배치)의
+   컨테이닝 블록이 되므로 별도 position 지정 불필요(추가 시 sticky 깨짐 주의). 핸들은 반드시 th 자기 박스
+   "안쪽"(right:0, 옆 th로 넘치지 않게)에 둘 것 — 옆 th로 넘치면(right:음수) 같은 z-index:1 sticky th끼리
+   스태킹 컨텍스트가 갈라져 DOM 뒤 형제(다음 컬럼 th)가 넘친 영역을 덮어버려 클릭 절반이 옆 컬럼으로 새는
+   실제 버그 발생(헤드리스 실측으로 발견·수정, 2026-07-28). td 패딩이 12px라 안쪽 6px 폭은 텍스트와 안 겹침. */
+.ci-sh-rsz{position:absolute;top:0;right:0;width:6px;height:100%;cursor:col-resize;user-select:none;z-index:2;touch-action:none;}
+.ci-sh-rsz:hover,.ci-sh-rsz.ci-sh-rsz-drag{background:var(--ac);opacity:.45;}
+body.ci-sh-resizing,body.ci-sh-resizing *{cursor:col-resize!important;user-select:none!important;}  /* 드래그 중 전역 커서 고정 + 텍스트선택 차단 */
+.ci-sh-colw-reset{margin-left:8px;}  /* 툴바 CSV 버튼 옆 간격 */
 .ci-sheet td{overflow:hidden;text-overflow:ellipsis;}  /* 고정폭 넘치는 데이터 텍스트는 … (입력칸은 자기 폭 안이라 무관) */
 .ci-sheet td.ci-sh-memo,.ci-sheet td.ci-sh-bigo{overflow:visible;text-overflow:clip;}  /* 상담내용·비고는 줄바꿈으로 다 보임 */
 .ci-sheet td.ci-sh-memo .ci-cellv,.ci-sheet td.ci-sh-bigo .ci-cellv{white-space:pre-wrap;}  /* 상담내용·비고 표시값만 줄바꿈 보존 */
