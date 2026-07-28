@@ -109,6 +109,38 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-care-who{flex:1;color:var(--tp);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ci-care-late{color:var(--err);font-weight:600;font-size:var(--ts-badge);flex-shrink:0;}
 .ci-care-empty{color:var(--tf);font-size:var(--ts-meta);padding:5px 8px;}
+/* 주간 회고 미니달력(P2, 2026-07-28 대표 확정) — 케어(3종 due)+예약(calendar_events) 겹쳐보기. #ci-care-block(P1 체크리스트) 위에 위치. */
+.ci-cw{margin-top:12px;padding-top:10px;border-top:1px solid var(--bd);}
+.ci-cw-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.ci-cw-nav{width:24px;height:24px;flex-shrink:0;border:1px solid var(--bd);border-radius:var(--radius-xs);background:var(--s1);color:var(--ts);font-size:13px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;}
+.ci-cw-nav:hover{background:var(--s2);}
+.ci-cw-label{flex:1;text-align:center;font-size:var(--ts-badge);font-weight:600;color:var(--tp);}
+.ci-cw-today-btn{flex-shrink:0;padding:3px 9px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);font-size:var(--ts-badge);cursor:pointer;font-family:inherit;}
+.ci-cw-today-btn:hover{background:var(--s2);}
+.ci-cw-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.ci-cw-day{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:1px solid transparent;border-radius:var(--radius-xs);background:none;cursor:pointer;font-family:inherit;}
+.ci-cw-day:hover{background:var(--s2);}
+.ci-cw-day.today .ci-cw-num{color:var(--ac);font-weight:700;}
+.ci-cw-day.sel{border-color:var(--ac);background:var(--s2);}
+.ci-cw-dow{font-size:var(--ts-badge);color:var(--tf);}
+.ci-cw-num{font-size:var(--ts-meta);color:var(--tp);font-weight:500;font-variant-numeric:tabular-nums;}
+.ci-cw-dots{display:flex;gap:3px;height:6px;align-items:center;}
+.ci-cw-dot{width:6px;height:6px;border-radius:var(--radius-full);background:var(--tf);display:inline-block;}
+.ci-cw-dot.done{background:var(--ok);}
+.ci-cw-dot.miss{background:var(--err);}
+.ci-cw-dot.pending{background:var(--tf);}
+.ci-cw-dot.resv{background:var(--ac);}
+.ci-cw-legend{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0;font-size:var(--ts-badge);color:var(--tf);}
+.ci-cw-lg{display:inline-flex;align-items:center;gap:4px;}
+.ci-cw-lg .ci-cw-dot{width:6px;height:6px;}
+.ci-cw-detail{border-top:1px dashed var(--bd);padding-top:8px;margin-top:2px;}
+.ci-cw-detail-head{font-size:var(--ts-badge);font-weight:700;color:var(--tp);margin-bottom:4px;}
+.ci-cw-detail-empty{color:var(--tf);font-size:var(--ts-meta);padding:5px 8px;}
+.ci-cw-resv-row{display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:var(--ts-meta);color:var(--ts);}
+.ci-cw-resv-time{color:var(--ac);font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;}
+.ci-cw-resv-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tp);}
+.ci-cw-more{display:block;width:100%;margin-top:8px;padding:6px 8px;border:0;background:none;color:var(--ac);font-size:var(--ts-badge);font-weight:600;text-align:right;cursor:pointer;font-family:inherit;}
+.ci-cw-more:hover{text-decoration:underline;}
 /* 상담 플로우 v2 — 카드형(단계·숫자·명, 0=회색·"—") + 진행 점 라인 + 필터 문구. 색상=V2 토큰 */
 .ci-flow-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin-bottom:12px;}
 .ci-flow-total{font-size:var(--ts-badge);font-weight:600;padding:4px 13px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
