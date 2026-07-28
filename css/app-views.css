@@ -94,6 +94,21 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-today-row.on{background:var(--space-branch-soft);color:var(--space-branch-text);}
 .ci-today-row.on b{color:var(--space-branch-text);}
 .ci-today-note{font-size:var(--ts-badge);color:var(--tf);margin-top:10px;line-height:1.5;}
+/* 케어 체크리스트(+91/+181/보험생일) — 놓친 케어·오늘 처리(2026-07-28 대표 확정 P1). 위 5항목 집계 아래에 추가되는 별도 블록. */
+.ci-care-block{margin-top:12px;padding-top:10px;border-top:1px solid var(--bd);}
+.ci-care-sec{margin-bottom:8px;}
+.ci-care-sec:last-child{margin-bottom:0;}
+.ci-care-sec-h{font-size:var(--ts-badge);font-weight:700;color:var(--tp);margin-bottom:4px;}
+.ci-care-sec.danger .ci-care-sec-h{color:var(--err);}
+.ci-care-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-xs);font-size:var(--ts-meta);color:var(--ts);}
+.ci-care-row.done{opacity:.55;}
+.ci-care-row.done .ci-care-who{text-decoration:line-through;}
+.ci-care-chk{display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0;}
+.ci-care-chk input{cursor:pointer;}
+.ci-care-due{font-variant-numeric:tabular-nums;color:var(--tf);font-size:var(--ts-badge);flex-shrink:0;}
+.ci-care-who{flex:1;color:var(--tp);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ci-care-late{color:var(--err);font-weight:600;font-size:var(--ts-badge);flex-shrink:0;}
+.ci-care-empty{color:var(--tf);font-size:var(--ts-meta);padding:5px 8px;}
 /* 상담 플로우 v2 — 카드형(단계·숫자·명, 0=회색·"—") + 진행 점 라인 + 필터 문구. 색상=V2 토큰 */
 .ci-flow-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin-bottom:12px;}
 .ci-flow-total{font-size:var(--ts-badge);font-weight:600;padding:4px 13px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
