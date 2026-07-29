@@ -2319,7 +2319,8 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         <div class="ci-stats" id="ci-stats"></div>
         <div class="ci-top">
           <div class="ci-today" id="ci-today"></div>
-          <div class="ci-flow"><div class="ci-flow-head">상담 플로우 <span class="ci-flow-chips"><button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button><button type="button" class="ci-flow-jong" id="ci-flow-jong" onclick="_ciSetStage('종결')" style="display:none">종결</button></span></div><div class="ci-band" id="ci-band"></div></div>
+          <!-- 상담 플로우/캘린더 탭(2026-07-29): 캘린더는 새 prefix 'cic'(개인 전용, scope 기본값 personal 그대로 사용) 임베드. salesnote 재사용 시 .ci-salesnote가 .ci-flow-head 자체를 숨기므로(care-flow.js) 탭 UI는 care 전용으로 자동 격리됨. -->
+          <div class="ci-flow"><div class="ci-flow-head"><span class="ci-flow-tabs" id="ci-flow-tabs"><button type="button" class="ci-flow-tab on" id="ci-flow-tab-flow" onclick="_ciFlowSetTab('flow')">상담 플로우</button><button type="button" class="ci-flow-tab" id="ci-flow-tab-cal" onclick="_ciFlowSetTab('cal')">캘린더</button></span><span class="ci-flow-chips" id="ci-flow-chips-wrap"><button type="button" class="ci-flow-total" id="ci-flow-total" onclick="_ciSetStage('전체')">전체</button><button type="button" class="ci-flow-jong" id="ci-flow-jong" onclick="_ciSetStage('종결')" style="display:none">종결</button></span></div><div class="ci-band" id="ci-band"></div><div class="ci-cal-embed" id="ci-cal-embed" style="display:none"><div class="dia-cal-head"><button class="dia-today-btn" type="button" onclick="calGoToday('cic')">오늘</button><button class="cal-navbtn" type="button" onclick="calNav('cic',-1)" aria-label="이전 달">&#8249;</button><span class="cal-ym" id="cic-cal-ym">불러오는 중…</span><button class="cal-navbtn" type="button" onclick="calNav('cic',1)" aria-label="다음 달">&#8250;</button><span class="dia-view-tabs"><button class="dia-vt on" type="button" onclick="_cicSetView(this,'month')">월</button><button class="dia-vt" type="button" onclick="_cicSetView(this,'week')">주</button><button class="dia-vt" type="button" onclick="_cicSetView(this,'day')">일</button><button class="dia-vt" type="button" onclick="_cicSetView(this,'list')">목록</button></span></div><div class="split"><div class="col list-col"><div class="cal-head"><button class="cal-add" onclick="openCalAdd('cic')">+ 내 일정</button></div><div class="list" id="cic-cal-list"><div class="mys-news-empty">불러오는 중…</div></div></div><div class="col viewer-col"><div id="cic-cal-grid" class="cal-grid-wrap"></div></div></div></div></div>
         </div>
         <div class="ci-bottom">
           <div class="ci-list-col">
@@ -15277,11 +15278,13 @@ function calBackToDocs(p){ var area=document.getElementById(p+'-cal-area'); if(a
 window.calBackToDocs=calBackToDocs;
 function calNav(p,delta){
   var st=_cst(p);
-  /* 다이어리 보기 전환: 주=±7일 / 일=±1일 / 목록=이동없음 */
-  if(p==='mys'&&window._diaView&&window._diaView!=='month'){
-    if(window._diaView==='list') return;
-    var step=(window._diaView==='week')?7:1;
-    var a=_diaParse(_diaAnchor()); a.setDate(a.getDate()+delta*step);
+  /* 다이어리(mys)/개인 캘린더 탭(cic) 보기 전환: 주=±7일 / 일=±1일 / 목록=이동없음. mr/iv 등 그 외 prefix는 항상 월 이동(공용 함수 불변). view/anchor는 prefix별 독립 상태(mys=window._diaView·_diaAnchor(), cic=window._cicView·_cicAnchor(); 2026-07-29 cic 신설, mys 조건·결과 불변) */
+  var _navView=(p==='mys')?window._diaView:((p==='cic')?window._cicView:null);
+  if(_navView&&_navView!=='month'){
+    if(_navView==='list') return;
+    var step=(_navView==='week')?7:1;
+    var _navAnchor=(p==='mys')?_diaAnchor():_cicAnchor();
+    var a=_diaParse(_navAnchor); a.setDate(a.getDate()+delta*step);
     st.anchor=_diaFmt(a); st.ym=st.anchor.slice(0,7); st.sel=null; renderCalGridMonth(p); return;
   }
   var ym=st.ym||_calToday().slice(0,7);
@@ -15327,9 +15330,15 @@ window.loadCal=loadCal;
 function renderCalGridMonth(p){
   var st=_cst(p), ym=st.ym||_calToday().slice(0,7);
   var ymEl=document.getElementById(p+'-cal-ym'), gridEl=document.getElementById(p+'-cal-grid');
-  /* 다이어리(mys) 보기 전환: 월 외(주/일/목록)는 전용 렌더러 — mr/iv는 항상 월 그리드(공용 함수 불변) */
-  var view=(p==='mys'&&window._diaView)?window._diaView:'month';
+  /* 다이어리(mys)/상담관리 개인 캘린더 탭(cic) 보기 전환: 월 외(주/일/목록)는 전용 렌더러 — mr/iv 등 그 외는 항상 월 그리드(공용 함수 불변).
+     mys 조건·결과는 원본 그대로(view 계산식 동일) — cic은 2026-07-29 신설된 별도 분기(자체 상태·자체 렌더러)라 mys 회귀 0. */
+  var view=(p==='mys'&&window._diaView)?window._diaView:((p==='cic'&&window._cicView)?window._cicView:'month');
   if(view!=='month'){
+    if(p==='cic'){
+      if(ymEl) ymEl.textContent=_cicViewLabel(view);
+      if(gridEl) gridEl.innerHTML=_cicRenderView(view, st);
+      return;
+    }
     if(ymEl) ymEl.textContent=_diaViewLabel(view);
     if(gridEl) gridEl.innerHTML=_diaRenderView(view, st);
     return;
@@ -15446,14 +15455,17 @@ async function openCalAdd(p){
   var role=u.role||'';
   var fin='padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--s1);color:var(--tp);font-family:inherit;font-size:14px';
   var lab='font-size:13px;font-weight:700;color:var(--tp)';
-  /* 역할별 공개 범위 — 실장/지점장=팀·지점 공유, 보험사=담당 지점 공유, 그 외=개인만 */
+  /* 역할별 공개 범위 — 실장/지점장=팀·지점 공유, 보험사=담당 지점 공유, 그 외=개인만.
+     cic(상담관리 캘린더 탭, 2026-07-29)은 개인 전용 고정 사양 — role 무관하게 공개범위 select 자체를 숨긴다(옵션 1개=personal뿐 → select 미출력, saveCalEvent는 select 없으면 'personal'로 저장). 다른 prefix(mys/iv/mr)는 기존 role 분기 그대로(회귀 0). */
   var opts=[{v:'personal',t:'나만 보기 (개인 일정)'}];
-  if(role==='ga_manager'||role==='ga_branch_manager'||role==='admin') opts.push({v:'team',t:'우리 팀 공유 (팀원 캘린더 반영)'});
-  if(role==='ga_branch_manager'||role==='admin') opts.push({v:'branch',t:'우리 지점 공유'});
+  if(p!=='cic'){
+    if(role==='ga_manager'||role==='ga_branch_manager'||role==='admin') opts.push({v:'team',t:'우리 팀 공유 (팀원 캘린더 반영)'});
+    if(role==='ga_branch_manager'||role==='admin') opts.push({v:'branch',t:'우리 지점 공유'});
+  }
   var isInsurer=/^insurer_/.test(role);
-  if(isInsurer||role==='admin') opts.push({v:'insurer',t:'담당 지점 공유'});
+  if(p!=='cic'&&(isInsurer||role==='admin')) opts.push({v:'insurer',t:'담당 지점 공유'});
   var scopeHtml=(opts.length>1)?('<label style="'+lab+'">공개 범위</label><select id="calf-scope" onchange="_calScopeChange()" style="'+fin+'">'+opts.map(function(o){return '<option value="'+o.v+'">'+o.t+'</option>';}).join('')+'</select>'):'';
-  var brHtml=(isInsurer||role==='admin')?('<div id="calf-branch-wrap" style="display:none;flex-direction:column;gap:9px"><label style="'+lab+'">담당 지점</label><select id="calf-branch" style="'+fin+'"><option value="">불러오는 중…</option></select></div>'):'';
+  var brHtml=(p!=='cic'&&(isInsurer||role==='admin'))?('<div id="calf-branch-wrap" style="display:none;flex-direction:column;gap:9px"><label style="'+lab+'">담당 지점</label><select id="calf-branch" style="'+fin+'"><option value="">불러오는 중…</option></select></div>'):'';
   var ov=document.createElement('div');
   ov.id='calAddModal';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99990;display:flex;align-items:center;justify-content:center;padding:16px';
@@ -15471,7 +15483,7 @@ async function openCalAdd(p){
     +'</div></div>';
   document.body.appendChild(ov);
   /* 보험사·admin = 담당 지점 목록 fetch (insurer_employee_branches → branches.name) */
-  if(isInsurer||role==='admin'){
+  if(p!=='cic'&&(isInsurer||role==='admin')){
     try{
       var r=await window.db.fetch('/rest/v1/insurer_employee_branches?user_id=eq.'+encodeURIComponent(u.id||'')+'&select=branch_id,branches(name)');
       var sel=document.getElementById('calf-branch');
@@ -15639,7 +15651,7 @@ function diaDashGo(which){
   else if(which==='qna'){ if(typeof _goMysQna==='function') _goMysQna(); else if(typeof showView==='function') showView('myspace'); }   /* 보험 Q&A = 라이브러리 보험 Q&A 탭 (죽은 화면 현장의 소리 라우팅 대체, 2026-07-09) */
 }
 window.diaDashGo=diaDashGo;
-function calGoToday(p){ var st=_cst(p), t=_calToday(); st.ym=t.slice(0,7); st.sel=t; if(p==='mys') st.anchor=t; renderCalGridMonth(p); }
+function calGoToday(p){ var st=_cst(p), t=_calToday(); st.ym=t.slice(0,7); st.sel=t; if(p==='mys'||p==='cic') st.anchor=t; renderCalGridMonth(p); }  /* cic(2026-07-29)=개인 캘린더 탭 주/일 뷰 오늘 이동용 anchor. mys 조건 유지, cic만 추가라 mys 회귀 0 */
 window.calGoToday=calGoToday;
 /* ── 다이어리 2차: 보기 전환(월/주/일/목록) — mys 전용. mr/iv 공용 cal 함수 불변(p==='mys' 게이트) ── */
 function diaSetView(el,v){
@@ -15703,6 +15715,67 @@ function _diaListView(st){
     return '<div class="dia-ls-grp'+(past?' past':'')+'">'
       +'<div class="dia-ls-date'+(isToday?' today':'')+'"><span'+(off?' class="cal-off"':'')+'>'+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DIA_DOW[d.getDay()]+')</span>'+(isToday?'<span class="dia-ls-todaytag">오늘</span>':'')+'</div>'
       +groups[k].map(_diaEvItem).join('')+'</div>';
+  }).join('');
+  return '<div class="dia-list">'+html+'</div>';
+}
+/* ── 상담관리 "캘린더" 탭 개인 전용 캘린더(prefix cic) — 주/일/목록 뷰(2026-07-29). mys의 _dia* 렌더러를 그대로 베끼되(회귀 회피 위해 원본 비수정) 클릭 동작만 교체:
+   mys는 openDiaryPanel(#dia-panel, mys 다이어리 전용 슬라이드 패널)을 열지만 cic엔 그 패널이 없으므로, 기존 항목 클릭=openCalEdit('cic',id)(prefix-aware, iv도 재사용 중인 공용 수정 모달), 빈 날짜 + 클릭=_cicAddOnDate(날짜 프리셋 후 openCalAdd('cic')). ── */
+function _cicAnchor(){ var st=_cst('cic'); if(!st.anchor) st.anchor=_calToday(); return st.anchor; }
+function _cicSetView(el,v){
+  var tabs=el.parentElement.querySelectorAll('.dia-vt'); for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on'); if(el) el.classList.add('on');
+  window._cicView=v||'month';
+  var st=_cst('cic'); if((v==='week'||v==='day')&&!st.anchor) st.anchor=st.sel||_calToday();
+  renderCalGridMonth('cic');
+}
+window._cicSetView=_cicSetView;
+function _cicAddOnDate(ds){ _cst('cic').sel=ds; if(typeof openCalAdd==='function') openCalAdd('cic'); }
+window._cicAddOnDate=_cicAddOnDate;
+function _cicEvItem(e){
+  var c=(CAL_SRC[e.source_type]||CAL_SRC.personal).color;
+  var tm=e.event_time?String(e.event_time).slice(0,5):'종일';
+  return '<button class="dia-ev-item" style="border-left-color:'+c+'" onclick="openCalEdit(\'cic\',\''+e.id+'\')" title="'+_calEsc((e.event_time?tm+' ':'')+e.title)+'"><span class="dia-ev-tm">'+_calEsc(tm)+'</span><span class="dia-ev-tt">'+_calEsc(e.title)+'</span></button>';
+}
+function _cicViewLabel(view){
+  if(view==='week'){ var a=_diaParse(_cicAnchor()); var sun=new Date(a); sun.setDate(a.getDate()-a.getDay()); var sat=new Date(sun); sat.setDate(sun.getDate()+6); return (sun.getMonth()+1)+'월 '+sun.getDate()+'일 – '+(sat.getMonth()+1)+'월 '+sat.getDate()+'일'; }
+  if(view==='day'){ var d=_diaParse(_cicAnchor()); return (d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DIA_DOW[d.getDay()]+')'; }
+  if(view==='list') return '전체 일정';
+  return '';
+}
+function _cicRenderView(view, st){ if(view==='week') return _cicWeekView(st); if(view==='day') return _cicDayView(st); if(view==='list') return _cicListView(st); return ''; }
+function _cicWeekView(st){
+  var a=_diaParse(_cicAnchor()); var sun=new Date(a); sun.setDate(a.getDate()-a.getDay()); var today=_calToday();
+  var byDay={}; (st.rows||[]).forEach(function(r){ if(!r.event_date) return; (byDay[r.event_date]=byDay[r.event_date]||[]).push(r); });
+  var cols='';
+  for(var i=0;i<7;i++){
+    var d=new Date(sun); d.setDate(sun.getDate()+i); var ds=_diaFmt(d);
+    var evs=(byDay[ds]||[]).slice().sort(_diaByTime);
+    var off=_diaOff(ds,d.getDay()), isToday=(ds===today);
+    cols+='<div class="dia-wk-col'+(isToday?' today':'')+'">'
+      +'<div class="dia-wk-head"><span class="dia-wk-dow'+(off?' cal-off':'')+'">'+DIA_DOW[d.getDay()]+'</span><span class="dia-wk-dnum'+(off?' cal-off':'')+'">'+d.getDate()+'</span></div>'
+      +'<div class="dia-wk-evs">'+(evs.length?evs.map(_cicEvItem).join(''):'')+'</div>'
+      +'<button class="dia-wk-add" onclick="_cicAddOnDate(\''+ds+'\')" aria-label="'+ds+' 일정 추가">+</button>'
+      +'</div>';
+  }
+  return '<div class="dia-week">'+cols+'</div>';
+}
+function _cicDayView(st){
+  var ds=_cicAnchor(), d=_diaParse(ds);
+  var evs=(st.rows||[]).filter(function(r){ return r.event_date===ds; }).sort(_diaByTime);
+  var off=_diaOff(ds,d.getDay());
+  var head='<div class="dia-day-head"><span class="dia-day-title'+(off?' cal-off':'')+'">'+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DIA_DOW[d.getDay()]+')</span><button class="dia-day-add" onclick="_cicAddOnDate(\''+ds+'\')">+ 일정 추가</button></div>';
+  var body=evs.length?('<div class="dia-day-list">'+evs.map(_cicEvItem).join('')+'</div>'):'<div class="mys-news-empty">이 날 일정이 없습니다.<br>+ 일정 추가로 만들어보세요.</div>';
+  return '<div class="dia-day">'+head+body+'</div>';
+}
+function _cicListView(st){
+  var rows=(st.rows||[]).filter(function(r){ return !!r.event_date; }).slice().sort(function(a,b){ if(a.event_date!==b.event_date) return a.event_date<b.event_date?-1:1; return _diaByTime(a,b); });
+  if(!rows.length) return '<div class="mys-news-empty">아직 일정이 없습니다.<br>날짜를 골라 + 추가해보세요.</div>';
+  var today=_calToday(); var groups={}; rows.forEach(function(r){ (groups[r.event_date]=groups[r.event_date]||[]).push(r); });
+  var keys=Object.keys(groups).sort();
+  var html=keys.map(function(k){
+    var d=_diaParse(k), off=_diaOff(k,d.getDay()), isToday=(k===today), past=(k<today);
+    return '<div class="dia-ls-grp'+(past?' past':'')+'">'
+      +'<div class="dia-ls-date'+(isToday?' today':'')+'"><span'+(off?' class="cal-off"':'')+'>'+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DIA_DOW[d.getDay()]+')</span>'+(isToday?'<span class="dia-ls-todaytag">오늘</span>':'')+'</div>'
+      +groups[k].map(_cicEvItem).join('')+'</div>';
   }).join('');
   return '<div class="dia-list">'+html+'</div>';
 }
@@ -15995,6 +16068,7 @@ window.filterMysType=filterMysType;
  *  상좌 오늘의 할 일 / 상우 상담 플로우(단계띠) / 하좌 카드리스트(입력일자·날짜별 인원) / 하우 미리보기.
  *  데이터=sales_customers(영업노트 재사용·owner RLS). 상태·DOM은 _ci 접두어 전용(sn-* 무충돌). 임태성 게이트 상속(상담관리 칩 자체가 _scrTypesVisible 게이트 안에서만 렌더). ── */
 window._ciData=[]; window._ciStageF='전체'; window._ciSel=null; window._ciLoaded=false; window._ciNameQ=''; window._ciMode='care';
+window._ciFlowTab='flow';  /* 'flow'(상담 플로우, 기본) | 'cal'(개인 캘린더, prefix cic). _ciShow()가 모드 전환마다 'flow'로 리셋 → salesnote(#ci-band=flowPanel) 오염 방지(2026-07-29) */
 window._ciListPeriodOn=false; window._ciChanF=null;  /* 데이터현황→카드리스트 연동(2026-07-14): 기간 프리셋/네비/사용자정의 클릭 시에만 true, 채널카드 클릭 시에만 인덱스 세팅. 기본값=둘 다 OFF(회귀 방지, 로드 시 전체 표시 유지) */
 window._ciView='card'; window._ciMemoMap={}; window._ciMemoIdMap={};  /* 상담관리(care) 표(시트) 뷰 1차(2026-07-27): 'card'(기본)|'sheet'. care 모드에서만 토글 노출. _ciMemoMap=고객id→최근 상담내용(sales_consultations.memo). _ciMemoIdMap=고객id→최근 consult row id(2차 인라인 편집). salesnote 무영향. */
 window._ciSheetPageSize=30; window._ciSheetPage=1;  /* 상담관리 표 뷰 3차(2026-07-27): 클라이언트 페이지네이션(care 전량 로드분을 30/50/100개씩 슬라이스). 새 입력 행은 페이지 무관 항상 맨 위. */
@@ -16044,6 +16118,7 @@ function _ciShow(hostId){
     if(w && sp.parentNode && w.parentNode!==sp.parentNode){ sp.parentNode.insertBefore(w, sp.nextSibling); }
   }
   if(w) w.style.display='flex';
+  if(typeof _ciFlowSetTab==='function') _ciFlowSetTab('flow');  /* 진입/모드 전환마다 상담 플로우 탭으로 리셋(2026-07-29) — 이전 진입에서 캘린더 탭이 켜진 채 salesnote로 전환되면 #ci-band(케어 플로우 패널)가 inline display:none으로 가려지는 회귀를 방지 */
   if(!window._ciLoaded || window._ciLoadedMode!==window._ciMode){ _ciLoad(); } else { _ciRender(); }
   _ciScrollIntoView();  /* 클릭한 사용자 화면에 상담관리가 확실히 보이도록 해당 영역으로 스크롤(호스트 무관) */
 }
@@ -16530,10 +16605,26 @@ function _ciCareWeekHtml(){  /* 주간 미니달력 본체 — 7일 스트립 + 
     +'</div>';
   return '<div class="ci-cw" id="ci-care-week">'+head+'<div class="ci-cw-strip">'+cells+'</div>'+legend
     +_ciCareDayDetailHtml(selDay, data, todayYmd, since, evByDay)
-    +'<button type="button" class="ci-cw-more" onclick="_goMysCalendar()">전체 달력 &rarr;</button>'
+    +'<button type="button" class="ci-cw-more" onclick="_ciFlowSetTab(\'cal\')">전체 달력 &rarr;</button>'
     +'</div>';
 }
 window._ciCareWeekHtml=_ciCareWeekHtml;
+/* 상담 플로우/캘린더 탭 전환(2026-07-29). 'cal'=개인 전용 캘린더(prefix cic, loadCal 기본 scope=personal) 최초 1회 로드.
+   salesnote 모드에선 .ci-salesnote CSS가 .ci-flow-head(탭 버튼) 자체를 숨기고, #ci-today의 "전체 달력 →" 링크도 _cfSalesnoteTop()이 통째로 덮어써서 노출 경로가 없다 — 그래도 안전망으로 salesnote면 cal 진입 무시. */
+function _ciFlowSetTab(t){
+  if(t==='cal' && window._ciMode==='salesnote') t='flow';
+  window._ciFlowTab=t;
+  var bandEl=document.getElementById('ci-band'), calEl=document.getElementById('ci-cal-embed');
+  var tbFlow=document.getElementById('ci-flow-tab-flow'), tbCal=document.getElementById('ci-flow-tab-cal');
+  var chipsWrap=document.getElementById('ci-flow-chips-wrap');
+  if(tbFlow) tbFlow.classList.toggle('on', t==='flow');
+  if(tbCal) tbCal.classList.toggle('on', t==='cal');
+  if(bandEl) bandEl.style.display=(t==='flow')?'':'none';
+  if(calEl) calEl.style.display=(t==='cal')?'':'none';
+  if(chipsWrap) chipsWrap.style.display=(t==='flow')?'':'none';
+  if(t==='cal' && !window._cicCalLoaded){ window._cicCalLoaded=true; if(typeof loadCal==='function') loadCal('cic'); }
+}
+window._ciFlowSetTab=_ciFlowSetTab;
 function _ciBandHtml(){
   var data=_ciViewData(), cur=window._ciStageF||'전체';
   var allStages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];  /* 8단계+종결 정본 */
@@ -17995,7 +18086,7 @@ function _ciSheetRerender(){ if(window._ciMode==='care' && _ciEffView()==='sheet
 /* 표 뷰에서 추가·상태변경 후 상단(상담 플로우 밴드·전체 카운트·오늘의 할 일·데이터 현황)만 부분 갱신 — 카드 경로(_ciLoad→_ciRender)와 집계 동기를 맞춘다. ci-list(표 본문)는 건드리지 않아 편집 흐름 무영향. 2026-07-27 */
 function _ciSheetSyncTop(){
   if(window._ciMode!=='care') return;
-  var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
+  if(window._ciFlowTab!=='cal'){ var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml(); }  /* 캘린더 탭 중엔 밴드 재렌더 스킵(2026-07-29) — band는 display:none이라 시각 영향 없지만 불필요한 재계산 방지 */
   var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
   var _jong=document.getElementById('ci-flow-jong'); if(_jong){ if(window._ciMode==='care'){ var _jn=_ciViewData().filter(function(c){return (c.status||'')==='종결';}).length; _jong.style.display=''; _jong.textContent='종결 '+_ciNum(_jn); _jong.classList.toggle('on', (window._ciStageF||'전체')==='종결'); } else { _jong.style.display='none'; } }  /* 종결=밴드 밖 무채색 칩(전체 옆) · care 전용 노출 · 클릭=종결 필터. 2026-07-28 안 B */
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
@@ -18218,7 +18309,7 @@ function _ciNewRowOcr(base64,mime){
 }
 window._ciNewRowOcr=_ciNewRowOcr;
 function _ciRender(){
-  var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
+  if(window._ciFlowTab!=='cal'){ var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml(); }  /* 캘린더 탭 중엔 밴드 재렌더 스킵(2026-07-29) — band는 display:none이라 시각 영향 없지만 불필요한 재계산 방지 */
   var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
   var _jong=document.getElementById('ci-flow-jong'); if(_jong){ if(window._ciMode==='care'){ var _jn=_ciViewData().filter(function(c){return (c.status||'')==='종결';}).length; _jong.style.display=''; _jong.textContent='종결 '+_ciNum(_jn); _jong.classList.toggle('on', (window._ciStageF||'전체')==='종결'); } else { _jong.style.display='none'; } }  /* 종결=밴드 밖 무채색 칩(전체 옆) · care 전용 노출 · 클릭=종결 필터. 2026-07-28 안 B */
   var today=document.getElementById('ci-today'); if(today) today.innerHTML=_ciTodayHtml();
