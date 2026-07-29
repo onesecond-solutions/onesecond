@@ -16661,10 +16661,10 @@ function _ciTodayHtml(){
   /* 등록·예약=실수치(예약은 날짜 무관, _ciTodayMatch 주석 참고) / 청약 이후(+91·+181·보험생일)=청약완료일(profile.appl_date, Phase 2 기록) 기준 — 모두 선택 날짜(ymd) 기준으로 재계산 */
   var keys=[['today','등록한 고객'],['reserve','예약'],['appl91','청약 +91일 (보장 개시)'],['appl181','청약 +181일 (6개월 관리)'],['bday','보험 생일 +1년']];
   var body=keys.map(function(kv){ var n=data.filter(function(c){return _ciTodayMatch(c,kv[0]);}).length; var on=(cur===kv[0])?' on':''; return '<div class="ci-today-row clk'+on+'" onclick="_ciSetTodayF(\''+kv[0]+'\')"><span>'+_ciEsc(kv[1])+'</span><b>'+_ciNum(n)+'명</b></div>'; }).join('');
-  return '<div class="ci-today-head"><span class="ci-today-title">오늘의 할 일</span>'
-    +'<span class="ci-today-nav"><button type="button" class="ci-cw-nav" onclick="_ciTodayNavDay(-1)" aria-label="전날">&lsaquo;</button>'
-    +'<span class="ci-today-date">'+_ciEsc(dateLabel)+'</span>'
-    +'<button type="button" class="ci-cw-nav" onclick="_ciTodayNavDay(1)" aria-label="다음날">&rsaquo;</button></span></div>'
+  return '<div class="ci-today-head"><button type="button" class="ci-cw-nav" onclick="_ciTodayNavDay(-1)" aria-label="전날">&lsaquo;</button>'
+    +'<span class="ci-today-titlewrap"><span class="ci-today-title">오늘의 할 일</span>'
+    +'<span class="ci-today-date">'+_ciEsc(dateLabel)+'</span></span>'
+    +'<button type="button" class="ci-cw-nav" onclick="_ciTodayNavDay(1)" aria-label="다음날">&rsaquo;</button></div>'
     +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>'
     +'<button type="button" class="ci-cw-more" onclick="_ciFlowSetTab(\'cal\')">전체 달력 &rarr;</button>';
     /* 2026-07-29: 주간 미니달력(_ciCareWeekHtml)·이 날 케어(상세)·오늘 처리 체크리스트(_ciCareChecklistHtml) 렌더 제거 — 함수 정의는 유지(호출 0), "전체 달력 →"만 카운트 아래로 이동 */

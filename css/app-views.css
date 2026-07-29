@@ -86,7 +86,7 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-today,.ci-flow{padding:16px 18px;}
 .ci-flow{border-left:1px solid var(--bd);}  /* 두 영역 구분 경계선 */
 .ci-today-head{font-size:var(--ts-meta);font-weight:600;color:var(--tp);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.ci-today-nav{display:flex;align-items:center;gap:6px;}  /* 2026-07-29: 헤더 날짜이동 화살표 + 날짜 라벨(‹ 오늘의 할 일 · YYYY-MM-DD (요일) ›). 화살표는 .ci-cw-nav 재사용 */
+.ci-today-titlewrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;gap:1px;}  /* 2026-07-29: 헤더 가운데 제목·날짜 세로 2줄 중앙정렬(화살표 양끝). 화살표=.ci-cw-nav */
 .ci-today-date{font-size:var(--ts-badge);font-weight:500;color:var(--tf);}
 .ci-today-row{display:flex;justify-content:space-between;font-size:var(--ts-meta);color:var(--ts);padding:5px 8px;border-radius:var(--radius-xs);}
 .ci-today-row b{color:var(--tp);font-weight:600;}
