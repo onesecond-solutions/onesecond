@@ -17571,6 +17571,65 @@ var _CI_SHEET_COLS=[  /* nth-child 2~10 순서(1=chk,11=act는 목록 밖=고정
   {key:'idate', w:140}, {key:'attr', w:140}, {key:'name', w:140}, {key:'birthgender', w:172},
   {key:'phone', w:140}, {key:'status', w:140}, {key:'memo', w:0}, {key:'bigo', w:220}, {key:'atts', w:96}
 ];
+var _CI_SHEET_COL_ORDER=_CI_SHEET_COLS.map(function(c){ return c.key; });
+var _CI_SHEET_CHKW=40, _CI_SHEET_ACTW=44;  /* 체크박스·삭제열 고정폭(기존 CSS와 동일값) — colgroup에도 명시해 폭 계산을 전적으로 JS가 결정하게 함(2026-07-29) */
+var _CI_SHEET_FIXW=_CI_SHEET_CHKW+_CI_SHEET_ACTW;
+/* ════ 표뷰 열폭 전체폭 정규화(2026-07-29, 첨부열 추가로 가로 스크롤 발생 — 대표 지시) ════
+ * 목적: colgroup <col> 폭의 합(chk+9열+act)이 항상 컨테이너(.ci-sheet-wrap, 측정은 안정적인 #ci-list) 실폭과
+ * 같아지도록 매 렌더/리플로우마다 재계산. table-layout:fixed+width:100%이므로 합=컨테이너 폭이면 가로 스크롤 없음.
+ * memo(상담내용)가 기본 가변열(저장값 없으면 나머지 폭 전부 흡수) — 사용자가 직접 드래그/더블클릭(autofit)해
+ * memo에도 저장값이 생기면 그 순간부터 memo도 고정열 취급(더 이상 자동 확장 안 함, 대표 드래그 사양과 일치). */
+function _ciSheetContainerW(){
+  try{
+    var el=document.getElementById('ci-list');
+    var w=el&&el.clientWidth;
+    if(!w){ var wrap=document.getElementById('ci-wrap'); w=wrap&&wrap.clientWidth; }
+    if(!w) w=window.innerWidth||document.documentElement.clientWidth;
+    return w||1220;
+  }catch(e){ return 1220; }
+}
+window._ciSheetContainerW=_ciSheetContainerW;
+function _ciSheetNormalizeColW(containerW){  /* 저장값(localStorage) 기준 각 열 폭 계산 → 합이 avail(=컨테이너폭-chk-act)이 되도록 조정. 반환: [{key,w}] (_CI_SHEET_COLS와 같은 순서) */
+  containerW = containerW || _ciSheetContainerW();
+  var saved=_ciSheetLoadColW();
+  var cols=_CI_SHEET_COLS.map(function(c){ return {key:c.key, w:(saved[c.key]||c.w||0)}; });
+  var avail=Math.max(0, containerW-_CI_SHEET_FIXW);
+  var explicitSum=0, flexIdx=-1;
+  cols.forEach(function(c,i){ if(c.w>0) explicitSum+=c.w; else flexIdx=i; });  /* w=0(=미저장 memo)만 가변열. 그 외는 고정 */
+  if(flexIdx>=0){
+    var flexW=avail-explicitSum;
+    if(flexW<_CI_SHEET_MINW){  /* 고정열 합이 과대 → 비율 축소해 가변열 최소폭 확보 */
+      var target=Math.max(0, avail-_CI_SHEET_MINW);
+      var scale=explicitSum>0?target/explicitSum:1;
+      cols.forEach(function(c,i){ if(i!==flexIdx) c.w=Math.max(_CI_SHEET_MINW, Math.round(c.w*scale)); });
+      flexW=_CI_SHEET_MINW;
+    }
+    cols[flexIdx].w=Math.round(flexW);
+  } else if(explicitSum>avail && explicitSum>0){  /* 가변열 없음(전 열 사용자 지정) — 합이 넘치면 전체 비례 축소 */
+    var scale2=avail/explicitSum;
+    cols.forEach(function(c){ c.w=Math.max(_CI_SHEET_MINW, Math.round(c.w*scale2)); });
+  }
+  return cols;
+}
+window._ciSheetNormalizeColW=_ciSheetNormalizeColW;
+function _ciSheetReflowColW(table){  /* 기존 DOM의 colgroup에 정규화 결과만 재적용(리렌더 없이) — resize·autofit 후 전체폭 재확보용 */
+  table = table || document.querySelector('table.ci-sheet');
+  if(!table) return;
+  var cg=table.querySelector('colgroup'); if(!cg) return;
+  var cols=_ciSheetNormalizeColW();
+  cols.forEach(function(c){
+    var col=cg.querySelector('col[data-colkey="'+c.key+'"]');
+    if(col) col.style.width=c.w+'px';
+  });
+}
+window._ciSheetReflowColW=_ciSheetReflowColW;
+function _ciSheetNeighborKey(key){  /* 드래그 시 폭을 주고받을 이웃 열 — 오른쪽 우선, 없으면(마지막 열=atts) memo(가변열)로 폴백 */
+  var i=_CI_SHEET_COL_ORDER.indexOf(key); if(i<0) return null;
+  var right=_CI_SHEET_COL_ORDER[i+1];
+  if(right) return right;
+  return (key==='memo') ? null : 'memo';
+}
+window._ciSheetNeighborKey=_ciSheetNeighborKey;
 function _ciSheetLoadColW(){
   try{ var raw=localStorage.getItem(_CI_SHEET_COLW_KEY); if(!raw) return {}; var o=JSON.parse(raw); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; }
 }
@@ -17583,14 +17642,13 @@ function _ciSheetResetColW(){  /* 툴바 "열 너비 초기화" — 저장값 �
   _ciSheetRerender();
 }
 window._ciSheetResetColW=_ciSheetResetColW;
-function _ciSheetColgroupHtml(){  /* 저장된 폭이 있으면 그 값, 없으면 기본값(w). memo(w=0)는 기본 미지정(남은 폭 자동 확장) */
-  var saved=_ciSheetLoadColW();
-  var out='<colgroup><col class="ci-sh-col-chk">';
-  _CI_SHEET_COLS.forEach(function(c){
-    var w=saved[c.key]||c.w||0;
-    out+='<col data-colkey="'+c.key+'"'+(w?(' style="width:'+w+'px"'):'')+'>';
+function _ciSheetColgroupHtml(){  /* _ciSheetNormalizeColW()로 열폭 합=컨테이너 폭이 되도록 계산한 값을 그대로 각 <col>에 명시(가로 스크롤 방지, 2026-07-29). chk·act도 명시해 CSS nth-child 폭과 무관하게 JS가 전 열 폭을 확정 */
+  var cols=_ciSheetNormalizeColW();
+  var out='<colgroup><col class="ci-sh-col-chk" style="width:'+_CI_SHEET_CHKW+'px">';
+  cols.forEach(function(c){
+    out+='<col data-colkey="'+c.key+'" style="width:'+c.w+'px">';
   });
-  out+='<col class="ci-sh-col-act"></colgroup>';
+  out+='<col class="ci-sh-col-act" style="width:'+_CI_SHEET_ACTW+'px"></colgroup>';
   return out;
 }
 window._ciSheetColgroupHtml=_ciSheetColgroupHtml;
@@ -17606,19 +17664,40 @@ function _ciSheetResizeStart(ev, el){  /* 핸들 mousedown — stopPropagation�
   var col=table.querySelector('colgroup col[data-colkey="'+key+'"]'); if(!col) return;
   var th=el.closest('th');
   var startW=(th&&th.getBoundingClientRect)?th.getBoundingClientRect().width:(col.offsetWidth||_CI_SHEET_MINW);
-  _ciSheetRszState={key:key, col:col, startX:ev.clientX, startW:startW, handle:el};
+  /* 이웃 열(오른쪽 우선, 없으면 memo)도 함께 시작폭을 잡아둔다 — 전체 폭 불변(2026-07-29): 한 열이 늘면 이웃이 그만큼 준다 */
+  var nbKey=_ciSheetNeighborKey(key);
+  var nbCol=nbKey?table.querySelector('colgroup col[data-colkey="'+nbKey+'"]'):null;
+  var nbHandle=nbKey?table.querySelector('.ci-sh-rsz[data-colkey="'+nbKey+'"]'):null;
+  var nbTh=nbHandle?nbHandle.closest('th'):null;
+  var nbStartW=nbCol?((nbTh&&nbTh.getBoundingClientRect)?nbTh.getBoundingClientRect().width:(nbCol.offsetWidth||_CI_SHEET_MINW)):0;
+  _ciSheetRszState={key:key, col:col, startX:ev.clientX, startW:startW, handle:el, nbKey:nbKey, nbCol:nbCol, nbStartW:nbStartW};
   el.classList.add('ci-sh-rsz-drag');
   document.body.classList.add('ci-sh-resizing');  /* 드래그 중 전역 커서·텍스트선택 차단 */
   document.addEventListener('mousemove', _ciSheetResizeMove);
   document.addEventListener('mouseup', _ciSheetResizeEnd);
 }
 window._ciSheetResizeStart=_ciSheetResizeStart;
-function _ciSheetResizeCalc(startW, dx){ return Math.max(_CI_SHEET_MINW, Math.round(startW+dx)); }  /* 순수 계산(시작폭+델타, 최소폭 클램프) — 하니스 단위테스트용으로 분리 */
+function _ciSheetResizeCalc(startW, dx){ return Math.max(_CI_SHEET_MINW, Math.round(startW+dx)); }  /* 순수 계산(시작폭+델타, 최소폭 클램프, 이웃 없을 때 폴백) — 하니스 단위테스트용으로 분리 */
 window._ciSheetResizeCalc=_ciSheetResizeCalc;
+function _ciSheetResizePairCalc(startW, nbStartW, dx, minw){  /* 순수 계산: 자기 열+이웃 열이 delta를 주고받음(합 불변), 양쪽 최소폭 클램프 — 단위테스트용으로 분리(2026-07-29) */
+  minw = minw||_CI_SHEET_MINW;
+  var maxGrow=nbStartW-minw;    /* dx가 이 값을 넘으면 이웃이 최소폭 아래로 내려감 */
+  var maxShrink=startW-minw;    /* dx가 이 값보다 더 음수면 자기 열이 최소폭 아래로 내려감 */
+  if(dx>maxGrow) dx=maxGrow;
+  if(dx<-maxShrink) dx=-maxShrink;
+  return {w:Math.round(startW+dx), nbW:Math.round(nbStartW-dx), dx:dx};
+}
+window._ciSheetResizePairCalc=_ciSheetResizePairCalc;
 function _ciSheetResizeMove(ev){
   var st=_ciSheetRszState; if(!st) return;
-  var w=_ciSheetResizeCalc(st.startW, ev.clientX-st.startX);
-  st.col.style.width=w+'px';
+  var dx=ev.clientX-st.startX;
+  if(st.nbCol){
+    var r=_ciSheetResizePairCalc(st.startW, st.nbStartW, dx, _CI_SHEET_MINW);
+    st.col.style.width=r.w+'px';
+    st.nbCol.style.width=r.nbW+'px';
+  } else {
+    st.col.style.width=_ciSheetResizeCalc(st.startW, dx)+'px';
+  }
 }
 function _ciSheetResizeEnd(){
   var st=_ciSheetRszState; if(!st) return;
@@ -17628,6 +17707,7 @@ function _ciSheetResizeEnd(){
   document.body.classList.remove('ci-sh-resizing');
   var w=parseInt(st.col.style.width,10);
   if(w) _ciSheetSaveColW(st.key, w);
+  if(st.nbCol){ var nw=parseInt(st.nbCol.style.width,10); if(nw) _ciSheetSaveColW(st.nbKey, nw); }  /* 이웃 열도 조정된 폭 그대로 저장(총합 불변 유지) */
   _ciSheetRszState=null;
 }
 function _ciSheetTextWidth(text, font){  /* canvas measureText — autofit 계산(캔버스 1회 생성 재사용) */
@@ -17652,6 +17732,7 @@ function _ciSheetAutoFit(ev, el){  /* 핸들 더블클릭 = 그 열 내용에 �
   var w=Math.max(_CI_SHEET_MINW, Math.round(maxW+28));  /* 좌우 패딩(12*2)+여유 4 */
   col.style.width=w+'px';
   _ciSheetSaveColW(key, w);
+  _ciSheetReflowColW(table);  /* autofit 결과가 전체 폭을 넘지 않도록 정규화 경유(남은 가변열이 흡수하거나 비례 축소, 2026-07-29) */
 }
 window._ciSheetAutoFit=_ciSheetAutoFit;
 function _ciSheetHtml(){
@@ -17815,7 +17896,11 @@ window._ciEffView=_ciEffView;
 if(!window._ciResizeBound){ window._ciResizeBound=true; window.addEventListener('resize', function(){
   if(window._ciMode!=='care' || window._ciView!=='sheet') return;
   clearTimeout(window._ciResizeT);
-  window._ciResizeT=setTimeout(function(){ var ev=_ciEffView(); if(ev===window._ciLastEffView) return; window._ciLastEffView=ev; if(window._ciMode==='care' && window._ciView==='sheet') _ciRender(); }, 150);
+  window._ciResizeT=setTimeout(function(){
+    var ev=_ciEffView();
+    if(ev!==window._ciLastEffView){ window._ciLastEffView=ev; if(window._ciMode==='care' && window._ciView==='sheet') _ciRender(); return; }
+    if(ev==='sheet') _ciSheetReflowColW();  /* 표↔카드 전환은 없지만 폭만 바뀐 경우(창 크기·사이드바 등) — 전체 리렌더 없이 colgroup만 재정규화(2026-07-29) */
+  }, 150);
 }); }
 function _ciSetView(v){
   window._ciView=(v==='sheet')?'sheet':'card';
