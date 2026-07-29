@@ -143,6 +143,11 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-cw-more:hover{text-decoration:underline;}
 /* 상담 플로우 v2 — 카드형(단계·숫자·명, 0=회색·"—") + 진행 점 라인 + 필터 문구. 색상=V2 토큰 */
 .ci-flow-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin-bottom:12px;}
+/* 상담 플로우/캘린더 탭(2026-07-29) — ci-flow-head 좌측(상담 플로우 텍스트 자리 대체). 개인 캘린더 임베드는 .ci-cal-embed(prefix cic). */
+.ci-flow-tabs{display:inline-flex;border:1px solid var(--bd);border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0;}
+.ci-flow-tab{border:0;background:var(--s1);color:var(--ts);padding:5px 12px;font-size:var(--ts-meta);font-weight:600;cursor:pointer;font-family:inherit;}
+.ci-flow-tab.on{background:var(--ac);color:#fff;}
+.ci-cal-embed .dia-cal-head{margin-bottom:10px;}
 .ci-flow-total{font-size:var(--ts-badge);font-weight:600;padding:4px 13px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
 .ci-flow-total.on{background:var(--ac);border-color:var(--ac);color:#fff;}
 .ci-band{display:flex;flex-direction:column;}
