@@ -281,7 +281,7 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-vhint{font-size:var(--ts-badge);color:var(--tf);align-self:center;}  /* '좁은 화면 → 카드 표시' 안내 텍스트 */
 .ci-csv-btn{font-size:var(--ts-badge);font-weight:600;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--bd);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
 .ci-csv-btn:hover{border-color:var(--ac);color:var(--ac);}
-.ci-sheet-wrap{width:100%;overflow-x:auto;}  /* 컬럼 많을 때 가로 스크롤 */
+.ci-sheet-wrap{width:100%;overflow-x:hidden;}  /* 가로 스크롤 제거(2026-07-29) — colgroup이 열폭 합을 항상 컨테이너 폭에 맞춰 정규화(_ciSheetNormalizeColW)하므로 스크롤 불필요. overflow-y는 영향 없음(원래도 지정 없었음) */
 .ci-sheet{border-collapse:collapse;width:100%;font-size:var(--ts-meta);white-space:nowrap;}
 .ci-sheet th,.ci-sheet td{padding:8px 12px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:middle;}
 .ci-sheet thead th{position:sticky;top:0;background:var(--s2);color:var(--tf);font-weight:600;font-size:var(--ts-badge);z-index:1;}
@@ -292,7 +292,7 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-sheet .ci-sh-memo-h,.ci-sheet .ci-sh-bigo-h{min-width:160px;}
 /* 컬럼 폭(대표 지시 2026-07-27): 앞 6칸(입력일자·인입유형·이름·생년월일/성별·전화·상담상태)=내용폭만큼 좁게 왼쪽, 상담내용·비고에 남은 공간 몰아주기, 삭제=최소. */
 /* 컬럼 폭 고정(table-layout:fixed): 앞 6칸=값이 다 보이는 고정폭(너무 넓지도 좁지도 않게), 상담내용=남은 폭 최대, 비고 넉넉. width:1px 금지. */
-.ci-sheet{table-layout:fixed;min-width:1220px;}  /* 다중선택 체크박스 열(40px) 추가분 반영(1180→1220, 2026-07-28) */
+.ci-sheet{table-layout:fixed;}  /* min-width:1220px 제거(2026-07-29) — 첨부열 추가로 기본폭 합이 폭을 넘어 가로 스크롤 발생하던 문제를 colgroup 정규화(JS)로 해결. 각 <col> 폭은 항상 컨테이너 실폭 합=100%로 계산되어 주입됨(_ciSheetNormalizeColW) */
 .ci-sheet th.ci-sh-chk,.ci-sheet td.ci-sh-chk{width:40px;text-align:center;white-space:nowrap;}  /* 다중선택 체크박스 열(맨 앞, 2026-07-28) */
 .ci-sheet th:nth-child(2),.ci-sheet td:nth-child(2){width:140px;white-space:nowrap;}   /* 입력일자 (대표 지시 2026-07-27: 나머지 전부 140 통일) */
 .ci-sheet th:nth-child(3),.ci-sheet td:nth-child(3){width:140px;white-space:nowrap;}   /* 인입유형 */
