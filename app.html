@@ -17079,6 +17079,12 @@ function _ciFormHtml(c){
     /* 비고 = profile.비고 — 표(시트) 뷰 비고 셀과 양방향 연동. 정보수정(잠금해제) 후 편집·[저장] 시 반영(다른 profile 필드와 동일 흐름) */
     +'<div class="ci-sec">비고</div>'
     +'<div class="ci-fgrid"><div class="ci-ffld full"><textarea id="cif-bigo" class="ci-bigo-ta" rows="2" placeholder="비고 — 표(시트) 뷰 비고와 연동됩니다">'+v(p['비고'])+'</textarea></div></div>'
+    /* 파일 첨부 — 표(시트) 뷰 '첨부' 열과 같은 첨부함(profile.attachments) 공유. 기존 첨부는 renderCiEditAtts()가 편집 진입 시 채움(2026-07-29) */
+    +'<div class="ci-sec">파일 첨부</div>'
+    +'<div class="ci-fgrid">'
+    +'<div class="ci-ffld full" id="ci-edit-atts-fld" style="display:none"><label>현재 첨부 (X 눌러 삭제)</label><div id="ci-edit-atts" class="mr-edit-atts"></div></div>'
+    +'<div class="ci-ffld full"><label>파일 첨부 (모든 파일)</label><input type="file" id="cif-file" multiple></div>'
+    +'</div>'
     +'<div class="ci-sec">고객 분류 <span>(영업 단계)</span></div>'
     +'<div class="ci-stagepick" id="cif-stagepick" data-st="'+v(st)+'">'+stageBtns+(c.id?'<button type="button" class="ci-endbtn" onclick="_ciManageEnd()">삭제</button>':'')+'</div>'
     +'<div class="ci-form-acts"><button type="button" class="ci-btn" id="cif-primary" onclick="_ciFormPrimary()">'+(c.id?'정보수정':'저장')+'</button><button type="button" class="ci-btn ghost" onclick="_ciCloseForm()">취소</button><span id="cif-draft-ind" class="ci-draft-ind"></span></div>'
@@ -17240,19 +17246,65 @@ function _ciOcrRun(){
     }).catch(function(e){ if(s) s.textContent='오류: '+(e&&e.message||e); });
 }
 window._ciOcrRun=_ciOcrRun;
+/* ════ 상담관리 첨부(카드폼·표뷰 공유) — 원수사 자료실(iv) 첨부 흐름 복제(2026-07-29). iv 원본은 무접촉.
+ * 버킷=비공개 myspace(고객 개인정보 격리) — myspace_files DB row는 절대 만들지 않는다(개인 자료실 목록 오염 금지).
+ * 메타는 profile.attachments에만 {name,bucket:'myspace',path,type} 형태로 기록. 클릭 시 서명URL(_openSignedAtt/_dlSignedFile) 발급. ════ */
+async function _ciUploadAtts(files, token){
+  var out=[], failed=[];
+  var owner=(typeof _mvOwner==='function')?_mvOwner():((window.AppState&&window.AppState.userId)||'');
+  for(var i=0;i<files.length;i++){
+    var f=files[i]; var fname=f.name||('첨부'+(i+1));
+    var isImg=/^image\//.test(f.type||'');
+    var limit=isImg?window._MAX_IMG:window._MAX_OTHER; var limitMB=isImg?50:100;
+    if(f.size && limit && f.size>limit){ failed.push({name:fname, reason:'용량 초과('+limitMB+'MB 제한, 현재 '+(Math.round(f.size/1048576*10)/10)+'MB)'}); continue; }
+    try{
+      var uid=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():('f'+Date.now()+'-'+Math.floor(Math.random()*1e6));
+      var dot=fname.lastIndexOf('.'); var ext=(dot>0)?fname.slice(dot+1).toLowerCase():'';
+      /* Storage 키는 ASCII만(비ASCII=400), 한글 원본명은 메타(name)에 보존 — _mvUploadOneFile 관례 재사용 */
+      var asciiBase=(dot>0?fname.slice(0,dot):fname).replace(/[^A-Za-z0-9._-]+/g,'').slice(0,80);
+      var asciiExt=ext.replace(/[^A-Za-z0-9]+/g,'');
+      var keyName=uid+(asciiBase?('_'+asciiBase):'')+(asciiExt?('.'+asciiExt):'');
+      var path=(owner?(owner+'/'):'')+'care/'+keyName;   /* 소유자 폴더 프리픽스 = myspace 개인 Storage RLS 규칙 준수 */
+      var up=await fetch(window.db.url('/storage/v1/object/myspace/'+path.split('/').map(encodeURIComponent).join('/')),{method:'POST',headers:{'apikey':window.db.key,'Authorization':'Bearer '+token,'Content-Type':(f.type||'application/octet-stream'),'x-upsert':'true'},body:f});
+      if(up.ok){ out.push({name:fname, bucket:'myspace', path:path, type:(f.type||'')}); }
+      else { var et=''; try{ et=await up.text(); }catch(_e2){} console.error('[_ciUploadAtts] 업로드 실패', up.status, fname, (et||'').slice(0,200)); failed.push({name:fname, reason:(up.status===413?('용량 초과('+limitMB+'MB 제한)'):('업로드 오류 '+up.status))}); }
+    }catch(e){ console.error('[_ciUploadAtts] 업로드 오류', fname, e); failed.push({name:fname, reason:'네트워크 오류'}); }
+  }
+  return {ok:out, failed:failed};
+}
+window._ciUploadAtts=_ciUploadAtts;
+/* 카드폼 첨부 편집 — 원수사 자료실 renderIvEditAtts/ivRemoveAtt 복제(대상=window._ciEditAtts).
+ * 편집 진입 시 profile.attachments를 로드해 채우고(​_ciOpenForm), 저장 시 남은 첨부+새 업로드를 병합(_ciSaveForm). */
+function renderCiEditAtts(){
+  var wrap=document.getElementById('ci-edit-atts'); var fld=document.getElementById('ci-edit-atts-fld');
+  if(!wrap) return;
+  var arr=window._ciEditAtts||[];
+  if(!arr.length){ if(fld)fld.style.display='none'; wrap.innerHTML=''; return; }
+  if(fld)fld.style.display='';
+  wrap.innerHTML=arr.map(function(a,i){
+    var nm=String((a&&a.name)||((a&&a.path)?String(a.path).split('/').pop():'첨부')).replace(/[&<>]/g,'');
+    var bk=String((a&&a.bucket)||'myspace').replace(/"/g,'&quot;'); var pt=String((a&&a.path)||'').replace(/"/g,'&quot;');
+    var inner='<a href="#" data-bucket="'+bk+'" data-path="'+pt+'" data-name="'+nm+'" onclick="return _openSignedAtt(event,this)" class="mr-att-file" style="display:flex;align-items:center;justify-content:center;height:100%;width:100%;text-decoration:none;color:inherit;cursor:pointer">📎 '+nm+'</a>';
+    return '<div class="mr-att-item">'+inner+'<button type="button" class="mr-att-x" onclick="ciRemoveAtt('+i+')" title="삭제">✕</button></div>';
+  }).join('');
+}
+window.renderCiEditAtts=renderCiEditAtts;
+function ciRemoveAtt(i){ if(!window._ciEditAtts) return; window._ciEditAtts.splice(i,1); renderCiEditAtts(); }
+window.ciRemoveAtt=ciRemoveAtt;
 function _ciOpenForm(id){
-  window._ciEditId=id||null; window._ciFormProfile={}; window._ciOcr={base64:'',mime:''}; window._ciProfileLoaded=false;
+  window._ciEditId=id||null; window._ciFormProfile={}; window._ciEditAtts=[]; window._ciOcr={base64:'',mime:''}; window._ciProfileLoaded=false;
   var pv=document.getElementById('ci-preview'); if(!pv) return;
   /* salesnote 케어 플로우 필터(_ciCareF) 중 선택된 고객은 페이지 배열(window._ciData)이 아닌 청약완료 전량(window._ciApplData)에만 있을 수 있어 폴백 조회(2026-07-23, care 모드 무영향) */
   var base=id?((window._ciData||[]).filter(function(x){ return String(x.id)===String(id); })[0]
     ||(window._ciMode==='salesnote'?(window._ciApplData||[]).filter(function(x){ return String(x.id)===String(id); })[0]:null)
     ||{}):{};
-  pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns(); _ciConsultRender(); _ciDraftBind(); _ciDraftBanner(); _ciFormSetMode(id?'consult':'edit');
+  pv.innerHTML=_ciFormHtml(base); _ciOcrBind(); _ciUpdIns(); _ciConsultRender(); renderCiEditAtts(); _ciDraftBind(); _ciDraftBanner(); _ciFormSetMode(id?'consult':'edit');
   if(id && window.db && window.db.fetch){
     window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id)+'&select=profile,job,medication,history,dx_date,uw_status,created_at&limit=1').then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
       var row=(rows&&rows[0])||{}; window._ciFormProfile=(row.profile&&typeof row.profile==='object')?row.profile:{}; var p=window._ciFormProfile;
       window._ciProfileLoaded=true;  /* 프로필 로드 완료 표시(상담 즉시저장 시 병합 안전) */
       window._ciConsultLog=(p.consult_log&&Array.isArray(p.consult_log))?p.consult_log.slice():[]; _ciConsultRender();  /* 상담이력 로드 */
+      window._ciEditAtts=(p.attachments&&Array.isArray(p.attachments))?p.attachments.slice():[]; renderCiEditAtts();  /* 기존 첨부 로드(2026-07-29) */
       var setv=function(fid,val){ var e=document.getElementById(fid); if(e&&val!=null) e.value=val; };
       setv('cif-attr',p.attr); setv('cif-email',p.email); setv('cif-zip',p.zip); setv('cif-addr1',p.addr1); setv('cif-addr2',p.addr2); setv('cif-note',p.note_html); setv('cif-bigo',p['비고']);  /* 비고=서버 profile.비고 로드 */
       var lun=document.getElementById('cif-lunar'); if(lun) lun.checked=!!p.lunar;
@@ -17270,7 +17322,7 @@ function _ciEdit(id){ _ciOpenForm(id); }
 window._ciEdit=_ciEdit;
 function _ciCloseForm(){ window._ciEditId=null; if(window._ciSel!=null){ _ciSelCard(window._ciSel); } else { var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(null); } }
 window._ciCloseForm=_ciCloseForm;
-function _ciSaveForm(){
+async function _ciSaveForm(){
   var name=_ciV('cif-name').trim(); if(!name){ alert('이름을 입력하세요'); return; }
   var phone=_ciV('cif-phone').trim(); if(!phone){ alert('휴대폰 번호를 입력하세요'); return; }
   var birthDigits=_ciV('cif-birth').replace(/[^0-9]/g,'');
@@ -17278,6 +17330,7 @@ function _ciSaveForm(){
   var birthISO=birthDigits.slice(0,4)+'-'+birthDigits.slice(4,6)+'-'+birthDigits.slice(6,8);
   var inDate=_ciV('cif-date').trim(); var now=new Date().toISOString();
   var wrap=document.getElementById('cif-stagepick'); var stage=wrap?wrap.getAttribute('data-st'):'신규DB';
+  var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }  /* 첨부 업로드에도 필요해 토큰 검증을 앞으로 당김(2026-07-29) */
   var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birthISO, gender:_ciV('cif-gender')||null,
     status:stage||'신규DB', updated_at:now,
@@ -17292,11 +17345,26 @@ function _ciSaveForm(){
   var _ntEl=document.getElementById('cif-note'); if(_ntEl){ prof.note_html=_ntEl.value; }  /* 상담내용 단일칸 제거 → 없으면 기존값 보존 */
   var _bgEl=document.getElementById('cif-bigo'); if(_bgEl){ prof['비고']=_bgEl.value.trim()||null; }  /* 비고 → profile.비고 키만 병합(필드 없으면 기존값 보존) → 표뷰 비고 셀과 양방향. 2026-07-28 */
   prof.consult_log=(window._ciConsultLog&&Array.isArray(window._ciConsultLog))?window._ciConsultLog:(prof.consult_log||[]);  /* 상담이력(최신순) 저장 */
+  /* 첨부파일 — 새로 고른 파일 업로드(비공개 myspace) + 남은 기존 첨부(window._ciEditAtts) 병합. 통째 교체 절대 금지(2026-07-29) */
+  var _fileInput=document.getElementById('cif-file');
+  var _newFiles=(_fileInput&&_fileInput.files)?Array.prototype.slice.call(_fileInput.files):[];
+  var _newAtts=[];
+  if(_newFiles.length && typeof _ciUploadAtts==='function'){
+    var _pb=document.getElementById('cif-primary'); if(_pb){ _pb.disabled=true; _pb.textContent='업로드 중…'; }
+    var _upRes=await _ciUploadAtts(_newFiles, tok);
+    _newAtts=_upRes.ok||[];
+    if(_pb){ _pb.disabled=false; _pb.textContent='저장'; }
+    if(_upRes.failed && _upRes.failed.length){
+      var _fmsg=_upRes.failed.map(function(x){ return '• '+x.name+' — '+x.reason; }).join('\n');
+      var _proceed=confirm('다음 첨부 파일을 업로드하지 못했습니다:\n\n'+_fmsg+'\n\n[확인] 실패한 첨부를 제외하고 저장\n[취소] 저장 중단(파일 확인 후 다시 시도)');
+      if(!_proceed){ return; }
+    }
+  }
+  prof.attachments=(window._ciEditAtts||[]).concat(_newAtts);  /* 남은 기존 첨부 + 새 업로드 — 항상 포함(다 지운 경우 빈 배열 반영) */
   var _wasAppl=false;
   if(stage==='청약완료' && !prof.appl_date){ prof.appl_date=now.slice(0,10); _wasAppl=true; }  /* 청약완료 전환 시 청약완료일(오늘) 기록 → 오늘의 할 일 +91·+181·보험생일 근거(Phase 2/3) */
   body.profile=prof;
   if(inDate && /^\d{4}-\d{2}-\d{2}$/.test(inDate)){ body.created_at=inDate+'T00:00:00Z'; }
-  var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }
   var wasEdit=(window._ciEditId!=null);
   var ok=function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } _ciDraftClear(); window._ciLoaded=false; _ciLoad();
     if(_wasAppl && typeof _ciApplCelebrate==='function') _ciApplCelebrate(name);  /* 청약완료 전환 축하 팝업 */
@@ -17474,9 +17542,9 @@ window._ciSheetBulkDelete=_ciSheetBulkDelete;
  * 폭 유지. 핸들 더블클릭=auto-fit(그 열 th·td 텍스트 중 가장 넓은 폭+패딩으로 맞춤, canvas measureText). */
 var _CI_SHEET_COLW_KEY='ci_sheet_colw';
 var _CI_SHEET_MINW=50;  /* 최소 폭 가드(대표 지시 40~60 범위 내) */
-var _CI_SHEET_COLS=[  /* nth-child 2~9 순서(1=chk,10=act는 목록 밖=고정) */
+var _CI_SHEET_COLS=[  /* nth-child 2~10 순서(1=chk,11=act는 목록 밖=고정). atts(첨부)=신규(2026-07-29), bigo 다음·act 앞 */
   {key:'idate', w:140}, {key:'attr', w:140}, {key:'name', w:140}, {key:'birthgender', w:172},
-  {key:'phone', w:140}, {key:'status', w:140}, {key:'memo', w:0}, {key:'bigo', w:220}
+  {key:'phone', w:140}, {key:'status', w:140}, {key:'memo', w:0}, {key:'bigo', w:220}, {key:'atts', w:96}
 ];
 function _ciSheetLoadColW(){
   try{ var raw=localStorage.getItem(_CI_SHEET_COLW_KEY); if(!raw) return {}; var o=JSON.parse(raw); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; }
@@ -17501,7 +17569,7 @@ function _ciSheetColgroupHtml(){  /* 저장된 폭이 있으면 그 값, 없으�
   return out;
 }
 window._ciSheetColgroupHtml=_ciSheetColgroupHtml;
-var _CI_SHEET_RSZ_LABEL={idate:'입력일자',attr:'인입유형',name:'이름',birthgender:'생년월일/성별',phone:'전화',status:'상담상태',memo:'상담내용',bigo:'비고'};
+var _CI_SHEET_RSZ_LABEL={idate:'입력일자',attr:'인입유형',name:'이름',birthgender:'생년월일/성별',phone:'전화',status:'상담상태',memo:'상담내용',bigo:'비고',atts:'첨부'};
 function _ciSheetRszHandle(key){ return '<span class="ci-sh-rsz" data-colkey="'+key+'" onmousedown="_ciSheetResizeStart(event,this)" ondblclick="_ciSheetAutoFit(event,this)" title="드래그: 폭 조절 · 더블클릭: 내용에 맞춤" aria-label="'+_CI_SHEET_RSZ_LABEL[key]+' 열 너비 조절"></span>'; }
 window._ciSheetRszHandle=_ciSheetRszHandle;
 var _ciSheetRszState=null;
@@ -17571,7 +17639,7 @@ function _ciSheetHtml(){
   var data=all.slice((page-1)*ps, (page-1)*ps+ps);  /* 현재 페이지분만. 새 입력 행은 아래에서 항상 맨 위 별도 렌더 */
   var head='<thead><tr>'
     +'<th class="ci-sh-chk"><input type="checkbox" id="ci-sh-selall" onchange="_ciSheetSelAllToggle(this.checked)" aria-label="전체선택"></th>'
-    +'<th>입력일자'+_ciSheetRszHandle('idate')+'</th><th>인입유형'+_ciSheetRszHandle('attr')+'</th><th>이름'+_ciSheetRszHandle('name')+'</th><th>생년월일/성별'+_ciSheetRszHandle('birthgender')+'</th><th>전화'+_ciSheetRszHandle('phone')+'</th><th>상담상태'+_ciSheetRszHandle('status')+'</th><th class="ci-sh-memo-h">상담내용'+_ciSheetRszHandle('memo')+'</th><th class="ci-sh-bigo-h">비고'+_ciSheetRszHandle('bigo')+'</th><th aria-label="삭제"></th>'
+    +'<th>입력일자'+_ciSheetRszHandle('idate')+'</th><th>인입유형'+_ciSheetRszHandle('attr')+'</th><th>이름'+_ciSheetRszHandle('name')+'</th><th>생년월일/성별'+_ciSheetRszHandle('birthgender')+'</th><th>전화'+_ciSheetRszHandle('phone')+'</th><th>상담상태'+_ciSheetRszHandle('status')+'</th><th class="ci-sh-memo-h">상담내용'+_ciSheetRszHandle('memo')+'</th><th class="ci-sh-bigo-h">비고'+_ciSheetRszHandle('bigo')+'</th><th>첨부'+_ciSheetRszHandle('atts')+'</th><th aria-label="삭제"></th>'
     +'</tr></thead>';
   var rows=data.map(function(c){
     var bg=_ciBgDisplay(c.birth_date, c.gender);  /* 생년월일 / 성별 / N세(보험나이) — 편집 후에도 _ciCellApply에서 동일 헬퍼로 갱신 */
@@ -17582,6 +17650,7 @@ function _ciSheetHtml(){
     var tel=String(c.phone||c.phone_raw||'');
     var idEsc=_ciEsc(c.id), idA=_ciAttr(c.id);
     var selOn=(window._ciSheetSel||{})[String(c.id)]?' checked':'';  /* 다중선택 상태 반영(현재 페이지 한정, _ciSheetRerender에서 초기화) */
+    var attsN=(c.profile&&Array.isArray(c.profile.attachments))?c.profile.attachments.length:0;  /* 첨부 개수 — 카드폼과 같은 profile.attachments 공유(2026-07-29) */
     return '<tr class="ci-sh-row'+_sc+'">'
       +'<td class="ci-sh-chk"><input type="checkbox" class="ci-sh-cb" data-cid="'+idA+'"'+selOn+' onchange="_ciSheetSelToggle(this)" aria-label="선택"></td>'
       +_ciEdTd('idate', idA, _ciDateOf(c.created_at), '<span class="ci-cellv">'+_ciEsc(_ciDateOf(c.created_at))+'</span>', 'ci-sh-date')
@@ -17592,10 +17661,11 @@ function _ciSheetHtml(){
       +'<td class="ci-ed" data-cid="'+idA+'" data-field="status" data-raw="'+_ciAttr(c.status||'')+'" onclick="_ciCellEdit(this)"><span class="ci-cellv">'+_ciStatusBadge(c.status||'')+'</span></td>'
       +_ciEdTd('memo', idA, memo, '<span class="ci-cellv">'+_ciEsc(memo)+'</span>', 'ci-sh-memo', memo)
       +_ciEdTd('bigo', idA, bigo, '<span class="ci-cellv">'+_ciEsc(bigo)+'</span>', 'ci-sh-bigo', bigo)
+      +'<td class="ci-sh-atts" data-cid="'+idA+'"><button type="button" class="ci-sh-atts-btn" onclick="ciSheetAttsOpen(event,this,\''+idEsc+'\')" title="첨부 파일" style="padding:3px 8px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--ts);font-size:0.78rem;cursor:pointer;font-family:inherit">'+(attsN?('📎'+attsN):'+')+'</button></td>'
       +'<td class="ci-sh-act"><button type="button" class="ci-sh-del" title="삭제(휴지통 이동)" aria-label="삭제" onclick="_ciDelete(\''+idEsc+'\')">🗑</button></td>'
       +'</tr>';
   }).join('');
-  var emptyHint=total?'':'<tr class="ci-sh-emptyrow"><td colspan="10">아직 등록된 고객이 없습니다. 맨 윗줄에 이름을 입력하면 첫 고객이 추가됩니다.</td></tr>';
+  var emptyHint=total?'':'<tr class="ci-sh-emptyrow"><td colspan="11">아직 등록된 고객이 없습니다. 맨 윗줄에 이름을 입력하면 첫 고객이 추가됩니다.</td></tr>';
   return '<div class="ci-sheet-wrap"><table class="ci-sheet">'+_ciSheetColgroupHtml()+head+'<tbody>'+_ciSheetNewRowHtml()+rows+emptyHint+'</tbody></table></div>'+_ciSheetPagerHtml(total,page,pageCount);
 }
 /* 하단 페이지네이션 — care 전량 로드분을 페이지 크기로 나눈 번호 네비 + "N개씩 보기 · 총 M명". */
@@ -17630,11 +17700,87 @@ function _ciSheetNewRowHtml(){  /* 맨 아래 상시 빈 입력 행 — 이름 �
     +'<td><select class="ci-cell-inp" data-nf="status"'+evt+'>'+stOpt+'</select></td>'
     +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="memo" placeholder="상담내용"'+evt+'></textarea></td>'
     +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="bigo" placeholder="비고"'+evt+'></textarea></td>'
+    +'<td class="ci-sh-atts"></td>'  /* 새 행은 아직 고객 id가 없어 첨부 불가 — 열 정렬만 유지용 빈 칸(2026-07-29) */
     +'<td class="ci-sh-act"><button type="button" class="ci-sh-add" title="추가(저장)" aria-label="새 고객 추가" onclick="_ciNewRowCommit()">+</button></td>'
     +'</tr>';
 }
 window._ciSheetNewRowHtml=_ciSheetNewRowHtml;
 window._ciSheetHtml=_ciSheetHtml;
+/* ════ 표뷰 첨부 팝오버 — 카드폼과 같은 첨부함(profile.attachments) 공유. 셀 클릭 위치에 뜨는 목록(미리보기·다운로드·삭제·추가).
+ * 저장은 _ciPatchProfile(서버 최신 재조회 → 해당 키만 병합 → PATCH)로 다른 profile 키 유실 방지. 2026-07-29 ════ */
+function ciSheetAttsOpen(e, btnEl, id){
+  if(e){ if(e.stopPropagation) e.stopPropagation(); if(e.preventDefault) e.preventDefault(); }
+  ciSheetAttsClose();
+  var c=(window._ciData||[]).filter(function(x){ return String(x.id)===String(id); })[0]; if(!c) return;
+  var prof=(c.profile&&typeof c.profile==='object')?c.profile:{};
+  var atts=(prof.attachments&&Array.isArray(prof.attachments))?prof.attachments:[];
+  window._ciSheetAttsId=id;
+  var pop=document.createElement('div'); pop.id='ci-atts-pop';
+  pop.style.cssText='position:absolute;z-index:900;min-width:240px;max-width:320px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);padding:10px;font-size:0.82rem;color:var(--tp)';
+  pop.innerHTML=_ciSheetAttsPopInner(atts);
+  document.body.appendChild(pop);
+  if(btnEl && btnEl.getBoundingClientRect){
+    var r=btnEl.getBoundingClientRect();
+    pop.style.top=(window.scrollY+r.bottom+4)+'px';
+    pop.style.left=Math.max(8, Math.min(window.scrollX+r.left, window.scrollX+document.documentElement.clientWidth-330))+'px';
+  }
+  setTimeout(function(){ document.addEventListener('mousedown', _ciSheetAttsOutside); }, 0);
+}
+window.ciSheetAttsOpen=ciSheetAttsOpen;
+function _ciSheetAttsOutside(ev){
+  var pop=document.getElementById('ci-atts-pop'); if(!pop) return;
+  if(pop.contains(ev.target)) return;
+  ciSheetAttsClose();
+}
+function ciSheetAttsClose(){
+  var pop=document.getElementById('ci-atts-pop'); if(pop) pop.remove();
+  document.removeEventListener('mousedown', _ciSheetAttsOutside);
+  window._ciSheetAttsId=null;
+}
+window.ciSheetAttsClose=ciSheetAttsClose;
+function _ciSheetAttsPopInner(atts){
+  var rows=(atts&&atts.length)?atts.map(function(a,i){
+    var nm=_ciEsc((a&&a.name)||((a&&a.path)?String(a.path).split('/').pop():'첨부'));
+    var bk=_ciAttr((a&&a.bucket)||'myspace'), pt=_ciAttr((a&&a.path)||'');
+    return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--bd)">'
+      +'<a href="#" data-bucket="'+bk+'" data-path="'+pt+'" data-name="'+_ciAttr(nm)+'" onclick="return _openSignedAtt(event,this)" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ts);text-decoration:none">📎 '+nm+'</a>'
+      +'<a href="#" data-bucket="'+bk+'" data-path="'+pt+'" data-name="'+_ciAttr(nm)+'" onclick="return _dlSignedFile(event,this)" title="다운로드" style="color:var(--ts);text-decoration:none;flex-shrink:0">&#11015;</a>'
+      +'<button type="button" onclick="ciSheetAttDel('+i+')" title="삭제" style="flex-shrink:0;border:none;background:transparent;color:var(--ts);cursor:pointer;font-size:0.9rem;line-height:1;padding:0 2px;font-family:inherit">&#10005;</button>'
+      +'</div>';
+  }).join('') : '<div style="color:var(--tf);padding:6px 0">첨부된 파일이 없습니다.</div>';
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-weight:700">첨부 파일<button type="button" onclick="ciSheetAttsClose()" style="border:none;background:transparent;color:var(--ts);cursor:pointer;font-size:0.95rem;font-family:inherit">&#10005;</button></div>'
+    +'<div>'+rows+'</div>'
+    +'<label style="display:inline-block;margin-top:8px;padding:5px 10px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s2);color:var(--tp);font-size:0.78rem;cursor:pointer">+ 파일 추가<input type="file" multiple style="display:none" onchange="ciSheetAttAdd(this)"></label>'
+    +'<span id="ci-atts-pop-stat" style="margin-left:8px;font-size:0.76rem;color:var(--tf)"></span>';
+}
+async function ciSheetAttAdd(inputEl){
+  var id=window._ciSheetAttsId; if(!id) return;
+  var files=(inputEl&&inputEl.files)?Array.prototype.slice.call(inputEl.files):[]; if(!files.length) return;
+  var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }
+  var stat=document.getElementById('ci-atts-pop-stat'); if(stat) stat.textContent='업로드 중…';
+  var res=await _ciUploadAtts(files, tok);
+  if(res.failed && res.failed.length){
+    var fmsg=res.failed.map(function(x){ return '• '+x.name+' — '+x.reason; }).join('\n');
+    alert('다음 첨부 파일을 업로드하지 못했습니다:\n\n'+fmsg);
+  }
+  if(res.ok && res.ok.length){
+    _ciPatchProfile(id, function(prof){ var arr=(prof.attachments&&Array.isArray(prof.attachments))?prof.attachments:[]; prof.attachments=arr.concat(res.ok); }, function(prof){
+      var pop=document.getElementById('ci-atts-pop'); if(pop) pop.innerHTML=_ciSheetAttsPopInner(prof.attachments||[]);
+      _ciSheetRerender();
+    }, function(){ if(stat) stat.textContent='저장 실패'; });
+  } else { if(stat) stat.textContent=''; }
+  inputEl.value='';
+}
+window.ciSheetAttAdd=ciSheetAttAdd;
+function ciSheetAttDel(i){
+  var id=window._ciSheetAttsId; if(!id) return;
+  if(!confirm('이 첨부를 삭제할까요?')) return;
+  _ciPatchProfile(id, function(prof){ var arr=(prof.attachments&&Array.isArray(prof.attachments))?prof.attachments.slice():[]; arr.splice(i,1); prof.attachments=arr; }, function(prof){
+    var pop=document.getElementById('ci-atts-pop'); if(pop) pop.innerHTML=_ciSheetAttsPopInner(prof.attachments||[]);
+    _ciSheetRerender();
+  });
+}
+window.ciSheetAttDel=ciSheetAttDel;
 var _CI_NARROW_BP=860;  /* 좁은 화면 기준(px) — 4분할이 세로 스택되는 폭과 동일. 이 이하에선 표(min-width:1180) 대신 카드 강제(2026-07-27 A안, 대표 승인) */
 function _ciIsNarrow(){ try{ return (window.innerWidth||document.documentElement.clientWidth||9999)<=_CI_NARROW_BP; }catch(e){ return false; } }
 /* 유효 뷰 = 화면폭까지 반영한 실제 렌더 뷰. 사용자가 '표'를 골랐어도(_ciView) 좁은 화면이면 카드로. 창 넓히면 자동 복귀. care 아니면 항상 card 경로 취급(기존과 동일). */
