@@ -17735,7 +17735,7 @@ window._ciSheetCsv=_ciSheetCsv;
 /* ════ 상담관리(care) 표 뷰 2차 — 인라인 편집 저장 로직(전부 신규 함수) ════════════════════════════
  * 저장 매핑: name·phone(+phone_raw)·birth_date·gender·status → PATCH sales_customers / attr·비고 → profile jsonb 머지 PATCH
  *          상담내용(memo) → 최근 sales_consultations row PATCH(있으면) 또는 POST(없으면). 성공=낙관적 로컬 갱신, 실패=원값 복원+alert. */
-function _ciSheetRerender(){ if(window._ciMode==='care' && _ciEffView()==='sheet'){ _ciSheetSelClear(); var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); _ciSheetSelSync(); } }  /* 유효뷰=sheet일 때만(좁은 화면 카드 모드에선 표 HTML 오주입 방지). 재렌더=다중선택 초기화(대표 확정: 선택 범위는 현재 페이지 한정) + 선택삭제 버튼 갱신 */
+function _ciSheetRerender(){ if(window._ciMode==='care' && _ciEffView()==='sheet'){ _ciSheetSelClear(); var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); _ciSheetSelSync(); _ciNewRowOcrBind(); } }  /* 유효뷰=sheet일 때만(좁은 화면 카드 모드에선 표 HTML 오주입 방지). 재렌더=다중선택 초기화(대표 확정: 선택 범위는 현재 페이지 한정) + 선택삭제 버튼 갱신 */
 /* 표 뷰에서 추가·상태변경 후 상단(상담 플로우 밴드·전체 카운트·오늘의 할 일·데이터 현황)만 부분 갱신 — 카드 경로(_ciLoad→_ciRender)와 집계 동기를 맞춘다. ci-list(표 본문)는 건드리지 않아 편집 흐름 무영향. 2026-07-27 */
 function _ciSheetSyncTop(){
   if(window._ciMode!=='care') return;
@@ -17928,6 +17928,39 @@ function _ciNewRowCommit(){
     .catch(function(e){ window._ciNewBusy=false; alert('고객 추가 실패: '+(e&&e.message||e)); });
 }
 window._ciNewRowKey=_ciNewRowKey; window._ciNewRowBlur=_ciNewRowBlur; window._ciNewRowCommit=_ciNewRowCommit; window._ciNewRowReset=_ciNewRowReset;
+/* ── 표뷰 새 행 화면캡처 OCR(Ctrl+V) — 카드폼 _ciOcrBind/_ciOcrRun을 본떠 새 행 칸에만 자동 채움. 저장은 기존 + 버튼(_ciNewRowCommit)으로만. 원본/base64 미저장. ── */
+function _ciNewRowOcrBind(){
+  /* 카드폼 _ciOcrBind 방식 복제: 재렌더에도 유지되는 상위 컨테이너(#ci-list)에 paste 리스너 1회만(중복 방지 플래그 _nrOcrB). care+표뷰 표시 중이고 새 행(.ci-sh-new)이 있을 때만 동작 → 카드폼 #ci-preview paste와 스코프 분리(이중 실행 없음). */
+  var host=document.getElementById('ci-list'); if(!host||host._nrOcrB) return; host._nrOcrB=1;
+  host.addEventListener('paste', function(ev){
+    try{
+      if(window._ciMode!=='care' || _ciEffView()!=='sheet') return;   /* 표뷰(넓은 화면)로 표시 중일 때만 */
+      if(!document.querySelector('.ci-sheet .ci-sh-new')) return;      /* 새 행 없으면 무시 */
+      var dt=ev.clipboardData; if(!dt||!dt.items) return;
+      for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
+        if(it.kind==='file'&&/^image\//.test(it.type||'')){ var f=it.getAsFile(); if(!f) continue; ev.preventDefault();
+          var rd=new FileReader();
+          rd.onload=function(e){ var u=String(e.target.result||''); var b64=u.split(',')[1]||''; var mime=(u.match(/^data:([^;]+);/)||[])[1]||'image/png'; _ciNewRowOcr(b64,mime); };  /* base64는 로컬 변수만(미저장) — 붙여넣기 즉시 자동 실행 */
+          rd.readAsDataURL(f); return; } }
+    }catch(e){}
+  });
+}
+window._ciNewRowOcrBind=_ciNewRowOcrBind;
+function _ciNewRowOcr(base64,mime){
+  if(!base64) return;
+  if(!(window.db&&window.db.fetch)) return;
+  if(!document.querySelector('.ci-sheet .ci-sh-new')) return;
+  window.db.fetch('/functions/v1/gemini-customer-ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:base64,mimeType:mime})})
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+    .then(function(res){ if(!res.ok) return;
+      var d=res.j||{}; var tr=document.querySelector('.ci-sheet .ci-sh-new'); if(!tr) return;
+      var setv=function(nf,val){ if(val==null||val==='') return; var e=tr.querySelector('[data-nf="'+nf+'"]'); if(e) e.value=val; };  /* 빈 문자열 필드는 건드리지 않음(기존 입력 보존) */
+      setv('name',d.name); setv('phone',d.phone); setv('birth',d.birth_date); setv('attr',d.customer_type);
+      var gg=tr.querySelector('[data-nf="gender"]'); if(gg&&d.gender) gg.value=d.gender;  /* 성별 select — 카드폼(cif-gender)과 동일 방식 */
+      /* 자동 저장 금지: 칸만 채우고 저장은 설계사가 + 버튼(_ciNewRowCommit)으로 */
+    }).catch(function(e){});
+}
+window._ciNewRowOcr=_ciNewRowOcr;
 function _ciRender(){
   var band=document.getElementById('ci-band'); if(band) band.innerHTML=_ciBandHtml();
   var _tot=document.getElementById('ci-flow-total'); if(_tot){ _tot.textContent='전체 '+_ciNum(_ciViewData().length); _tot.classList.toggle('on', (window._ciStageF||'전체')==='전체'); }
@@ -17936,7 +17969,7 @@ function _ciRender(){
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list');
   var _eff=_ciEffView(); window._ciLastEffView=_eff;  /* 유효 뷰(폭 반영) — 좁은 화면이면 표 선택이어도 카드로. resize 자동전환 기준값 동기화 */
-  if(lst){ lst.innerHTML=(window._ciMode==='care' && _eff==='sheet') ? _ciSheetHtml() : _ciListHtml(); }  /* care+표뷰(넓은 화면) 훅(2026-07-27) — 그 외(카드/좁은화면/salesnote)는 기존 _ciListHtml 그대로 */
+  if(lst){ lst.innerHTML=(window._ciMode==='care' && _eff==='sheet') ? _ciSheetHtml() : _ciListHtml(); if(window._ciMode==='care' && _eff==='sheet') _ciNewRowOcrBind(); }  /* care+표뷰(넓은 화면) 훅(2026-07-27) — 그 외(카드/좁은화면/salesnote)는 기존 _ciListHtml 그대로. 표뷰 진입 시 새 행 OCR paste 리스너 바인딩(1회 플래그) */
   _ciSheetToolsRender();  /* [카드|표] 토글+CSV 툴바(care 전용 표시, 내부에서 salesnote는 숨김) */
   var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', window._ciMode==='care' && _eff==='sheet');  /* 표뷰(넓은 화면)=전체폭(우측 폼 숨김). 카드/좁은화면/salesnote=기존 2단 → 좁은화면 카드에선 "+고객 추가" 폼 복귀(회귀 0). 2026-07-27 */
   _ciListFilterBarRender();
