@@ -16308,7 +16308,7 @@ function _ciListPeriodPick(key){  /* 칩 클릭 진입점 — 데이터현황과
 }
 window._ciListPeriodPick=_ciListPeriodPick;
 function _ciListPeriodChipsHtml(){
-  var PRESETS=[['today','오늘'],['week7','최근7일'],['month','이번달'],['lastmonth','지난달'],['custom','사용자정의'],['all','전체']];
+  var PRESETS=[['today','오늘'],['week7','최근7일'],['month','이번달'],['lastmonth','지난달'],['all','전체'],['custom','사용자정의']];  /* 2026-07-29: 데이터현황과 동일 순서(전체·사용자정의) */
   return PRESETS.map(function(p){
     return '<button type="button" class="ds-preset'+(_dsListPresetOn(p[0])?' on':'')+'" onclick="_ciListPeriodPick(\''+p[0]+'\')">'+p[1]+'</button>';
   }).join('');
@@ -16844,21 +16844,20 @@ function _ciStatsHtml(){
     if(key==='all') return mode==='all';
     return mode==='custom';
   }
-  var PRESETS=[['today','오늘'],['week7','최근7일'],['month','이번달'],['lastmonth','지난달'],['custom','사용자정의'],['all','전체']];
-  var presetRow='<div class="ds-presets">'+PRESETS.map(function(p){
-    return '<button type="button" class="ds-preset'+(_dsIsOn(p[0])?' on':'')+'" onclick="_ciStatsSetPreset(\''+p[0]+'\')">'+p[1]+'</button>';
-  }).join('')+'</div>';
-
+  var PRESETS=[['today','오늘'],['week7','최근7일'],['month','이번달'],['lastmonth','지난달'],['all','전체'],['custom','사용자정의']];  /* 2026-07-29 대표 지시: 전체·사용자정의 순서 교체(사용자정의 맨 뒤) */
   var customBar='';
   if(mode==='custom'){
     var cr=window._ciStatsCRange||range;
-    customBar='<div class="ds-custom-bar">'
+    customBar='<div class="ds-custom-bar">'  /* 2026-07-29: 사용자정의 칩 우측에 인라인(ds-presets 안으로 이동) */
       +'<input type="date" id="ds-cf" class="ds-date-input" value="'+_ciEsc(cr[0])+'" min="'+_ciEsc(START)+'" max="'+_ciEsc(TODAY)+'">'
       +'<span class="ds-custom-sep">~</span>'
       +'<input type="date" id="ds-ct" class="ds-date-input" value="'+_ciEsc(cr[1])+'" min="'+_ciEsc(START)+'" max="'+_ciEsc(TODAY)+'">'
       +'<button type="button" class="ds-custom-apply" onclick="_ciStatsApplyCustom()">적용</button>'
       +'</div>';
   }
+  var presetRow='<div class="ds-presets">'+PRESETS.map(function(p){
+    return '<button type="button" class="ds-preset'+(_dsIsOn(p[0])?' on':'')+'" onclick="_ciStatsSetPreset(\''+p[0]+'\')">'+p[1]+'</button>';
+  }).join('')+customBar+'</div>';
 
   var navRow='<div class="ds-period-nav">'
     +'<button type="button" class="ds-nav-btn"'+(canPrev?'':' disabled')+' onclick="_ciStatsNav(-1)">&lsaquo;</button>'
@@ -16921,7 +16920,7 @@ function _ciStatsHtml(){
   var chartHeadTxt=(mode==='today')?'최근 7일 (일별 유입 구성)':'일별 유입 구성';
   var chart='<div class="ds-chart-head">'+chartHeadTxt+'</div><div class="ds-chart">'+chartCols+'</div>';
 
-  return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'">'+presetRow+customBar+navRow+hero+cards+chart+'</div>';
+  return head+'<div class="ds-body'+(_dsCollapsed?' ds-collapsed':'')+'">'+presetRow+navRow+hero+cards+chart+'</div>';  /* customBar는 presetRow(ds-presets) 안으로 이동(2026-07-29) */
 }
 function _ciStatsRerender(){ var el=document.getElementById('ci-stats'); if(el) el.innerHTML=_ciStatsHtml(); }
 window._ciStatsRerender=_ciStatsRerender;
