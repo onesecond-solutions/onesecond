@@ -14257,9 +14257,13 @@ function openScriptInline(edit){
     +'<div class="iv-fld"><label>내용</label><div id="scr-il-rich"></div></div>'
     +'<div class="iv-fld"><label>키워드</label><input type="text" id="scr-il-kw" class="mys-write-input" maxlength="200" placeholder="예: 암보험, 클로징 (쉼표로 구분)"></div>'
     +_wnBlock
+    +'<div class="iv-fld" id="scr-il-edit-atts-fld" style="display:none"><label>현재 첨부 (X 눌러 삭제)</label><div id="scr-il-edit-atts" class="mr-edit-atts"></div></div>'
     +'<div class="iv-fld"><label>파일 첨부 (모든 파일)</label><input type="file" id="scr-il-file" multiple onchange="mysWriteFilePreview(this,\'scr-il-fp\')"><div id="scr-il-fp" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div></div>';
   window.OSWS.openForm(v, (edit?'edit':'create'), formHtml, saveScrInline, closeScrInline);
   if(window.osRich&&window.osRich.mount) window.osRich.mount('scr-il-rich', (edit&&edit.html)||'', {placeholder:'스크립트 내용을 작성하세요 (이미지·표·서식·정렬)'});
+  /* 기존 첨부 상태 — 편집=edit.attachments(scrEditInline이 채워둠), 신규 작성=빈 배열(이전 편집 세션 잔존 방지). ivOpenWrite 리셋과 동일 원리 */
+  window._scrEditAtts=(edit&&Array.isArray(edit.attachments))?edit.attachments.slice():[];
+  if(typeof renderScrEditAtts==='function') renderScrEditAtts();
   if(edit){ var t=document.getElementById('scr-il-title'); if(t) t.value=edit.title||''; var k=document.getElementById('scr-il-kw'); if(k) k.value=edit.kw||''; }
   var nr=document.getElementById('mys-scr-newrow'); if(nr) nr.style.display='none';
   if(!edit){ var list=document.getElementById('mysList'); if(list){ var its=list.querySelectorAll('.item'); for(var i=0;i<its.length;i++) its[i].classList.remove('on'); var tc=document.createElement('div'); tc.className='item on osws-tempcard'; tc.id='scr-il-temp'; list.insertBefore(tc, list.firstChild); } }
@@ -14291,8 +14295,26 @@ async function _wnPublishSync(scriptId, pub, meta){
   }catch(e){ /* 발행 실패해도 원본 저장은 유지 */ }
 }
 window._wnPublishSync=_wnPublishSync;
+/* 업무노트 인라인 편집 — 기존 첨부 표시 + 개별 삭제 (window._scrEditAtts 상태, 저장 시 남은 첨부 + 새 업로드 합쳐 반영). renderIvEditAtts/ivRemoveAtt(원수사 자료실)과 동일 패턴 복제 */
+function renderScrEditAtts(){
+  var wrap=document.getElementById('scr-il-edit-atts'); var fld=document.getElementById('scr-il-edit-atts-fld');
+  if(!wrap) return;
+  var arr=window._scrEditAtts||[];
+  if(!arr.length){ if(fld)fld.style.display='none'; wrap.innerHTML=''; return; }
+  if(fld)fld.style.display='';
+  wrap.innerHTML=arr.map(function(a,i){
+    var url=(typeof a==='string')?a:((a&&(a.url||a.file_url))||'');
+    var u2=String(url).replace(/"/g,'&quot;');
+    var nm=(String((a&&a.name)||url).split('/').pop().split('?')[0]).replace(/[&<>]/g,'');
+    var isImg=/^image\//.test((a&&a.type)||'')||/\.(png|jpe?g|gif|webp|bmp)(\?|$)/i.test(url);
+    var inner=isImg?('<img src="'+u2+'" alt="">'):('<span class="mr-att-file">📎 '+nm+'</span>');
+    return '<div class="mr-att-item">'+inner+'<button type="button" class="mr-att-x" onclick="scrRemoveAtt('+i+')" title="삭제">✕</button></div>';
+  }).join('');
+}
+function scrRemoveAtt(i){ if(!window._scrEditAtts) return; window._scrEditAtts.splice(i,1); renderScrEditAtts(); }
+window.renderScrEditAtts=renderScrEditAtts; window.scrRemoveAtt=scrRemoveAtt;
 function closeScrInline(){
-  window._scrInlineEdit=null;
+  window._scrInlineEdit=null; window._scrEditAtts=[];
   var tc=document.getElementById('scr-il-temp'); if(tc&&tc.parentNode) tc.parentNode.removeChild(tc);
   if(window._scrEditHost==='sn'){
     /* 팀/지점 공유 업무노트 편집 취소 — 그 목록만 다시 그려 미리보기로 복귀(마이 스페이스 렌더 회피) */
@@ -14420,7 +14442,7 @@ async function saveScrInline(){
   var ed=window._scrInlineEdit;
   try{
     if(ed&&ed.id){
-      var body={title:title, script_text:html, keywords:kw}; if(atts.length) body.attachments=atts; _scrFillSearchText(body);
+      var body={title:title, script_text:html, keywords:kw, attachments:(window._scrEditAtts||[]).concat(atts)}; _scrFillSearchText(body);   /* 편집 = 남은 기존 첨부 + 새로 업로드한 파일(통째 교체 아님, ivSubmit 편집 경로와 동일 병합) */
       var pr=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(ed.id)),{method:'PATCH',headers:H,body:JSON.stringify(body)});
       if(!(pr.ok||pr.status===204)){ var t1=''; try{t1=await pr.text();}catch(e){} console.error('[saveScrInline patch]',pr.status,t1); alert('수정 실패 ('+pr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
     } else {
@@ -14430,7 +14452,7 @@ async function saveScrInline(){
       if(!(rr.ok||rr.status===201)){ var t2=''; try{t2=await rr.text();}catch(e){} console.error('[saveScrInline post]',rr.status,t2); alert('등록 실패 ('+rr.status+')'); if(sv){sv.disabled=false;sv.textContent='저장';} return; }
       try{ var _cj=await rr.json(); if(Array.isArray(_cj)&&_cj[0]) _newScriptId=_cj[0].id; }catch(e){}
     }
-    window._scrInlineEdit=null;
+    window._scrInlineEdit=null; window._scrEditAtts=[];
     /* 원세컨드 제공 발행 동기화(임태성) — 원본 저장 성공 후. 발행 실패해도 저장은 유지 */
     var _savedScriptId=(ed&&ed.id)?ed.id:_newScriptId;
     if(_savedScriptId && typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){ try{ await _wnPublishSync(_savedScriptId, _wnPub, _wnMeta); }catch(e){} }
@@ -14452,14 +14474,17 @@ window.saveScrInline=saveScrInline;
 async function scrEditInline(id){
   var token=window.db&&window.db.getToken&&window.db.getToken(); if(!token){ _osLoginGate(); return; }
   try{
-    var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,keywords'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
+    var res=await fetch(window.db.url('/rest/v1/scripts?id=eq.'+encodeURIComponent(id)+'&select=id,title,script_text,keywords,attachments'),{headers:{'apikey':window.db.key,'Authorization':'Bearer '+token}});
     var r=((res.ok?await res.json():[])||[])[0]; if(!r){ alert('항목을 찾을 수 없습니다.'); return; }
     var kws=r.keywords||[]; var _t=_scrTypeOf(kws); var _tkey=_t?_t.key:'etc';  /* 유형 태그 → 5키, 레거시(유형:콜)·무태그 → 기타(편집 저장 시 재지정) */
     var kw=(Array.isArray(kws)?kws:[]).filter(function(k){return String(k).indexOf('유형:')!==0;}).join(', ');  /* 키워드 필드엔 유형:* 분류태그 제외 */
     var raw=r.script_text||'';
     var isHtml=/<(p|div|br|img|table|span|font|b|i|u|strong|em|h[1-6]|ul|ol|li)[\s>\/]/i.test(raw);
     var html=isHtml?raw:_sEsc(raw).replace(/\n/g,'<br>');  /* 기존 plain/섹션 → 줄바꿈 보존(데이터 손실 0) */
-    var _ed={id:r.id, type:_tkey, title:r.title||'', html:html, kw:kw};
+    /* 기존 첨부 로드 — 문자열로 직렬화된 경우 배열 파싱(ivEditPost와 동일 가드). 편집 진입 시마다 최신값으로 재설정 */
+    var _ea=r.attachments; if(typeof _ea==='string'){ try{ _ea=JSON.parse(_ea); }catch(e){ _ea=[]; } } if(!Array.isArray(_ea)) _ea=[];
+    window._scrEditAtts=_ea.slice();
+    var _ed={id:r.id, type:_tkey, title:r.title||'', html:html, kw:kw, attachments:_ea.slice()};
     /* 임태성: 이미 원세컨드 제공으로 발행된 글이면 공개범위·메타 prefill(편집 시 실수 공개해제 방지) */
     if(typeof _canSeeCompanyHub==='function' && _canSeeCompanyHub()){
       try{
