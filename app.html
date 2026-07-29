@@ -2324,11 +2324,17 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
         </div>
         <div class="ci-bottom">
           <div class="ci-list-col">
-            <div class="ci-search-row"><input type="text" class="ci-search-input" id="ci-q" placeholder="고객명 검색" autocomplete="off" oninput="_ciSetNameQ(this.value)"></div>
-            <div class="ci-sheet-tools" id="ci-sheet-tools" style="display:none"></div>
-            <div class="ci-list-filterbar" id="ci-list-filterbar" style="display:none"></div>
-            <div class="ci-list" id="ci-list"></div>
-            <div class="ci-list-pager" id="ci-list-pager" style="display:none"></div>
+            <!-- 고객 리스트 패널(2026-07-29): 검색행(검색 축소+기간 소트 칩 한 줄)부터 리스트까지 하나의 컨테이너로 묶음. 기간 소트 칩=데이터현황(#ci-stats)과 동일 상태·함수(_ciStatsSetPreset 등) 재사용, 새 독립 상태 없음. -->
+            <div class="ci-list-panel">
+              <div class="ci-search-row">
+                <input type="text" class="ci-search-input" id="ci-q" placeholder="고객명 검색" autocomplete="off" oninput="_ciSetNameQ(this.value)">
+                <div class="ci-list-period-chips" id="ci-list-period-chips"></div>
+              </div>
+              <div class="ci-sheet-tools" id="ci-sheet-tools" style="display:none"></div>
+              <div class="ci-list-filterbar" id="ci-list-filterbar" style="display:none"></div>
+              <div class="ci-list" id="ci-list"></div>
+              <div class="ci-list-pager" id="ci-list-pager" style="display:none"></div>
+            </div>
           </div>
           <div class="ci-right-col">
             <div class="osws-newrow"><button type="button" class="osws-newbtn" onclick="_ciNew()">+ 고객 추가</button></div>
@@ -16278,6 +16284,41 @@ window._ciStatsLoad=_ciStatsLoad;
 /* 데이터 현황(#ci-stats) 집계 데이터 소스 분기 — salesnote=_ciStatsRows(전량, 위 로더), care=기존 _ciViewData()(무변경, 회귀 방지).
    _ciStatsHtml()·_dsRangeCur()의 mode==='all' 분기·_ciStatsNav()·_ciStatsApplyCustom() 등 #ci-stats 집계 경로 전체가 이 함수를 통해서만 데이터를 얻는다. */
 function _ciStatsData(){ return (window._ciMode==='salesnote') ? (window._ciStatsRows||[]) : _ciViewData(); }
+/* ── 카드리스트 기간 소트 칩(2026-07-29, 검색행 옆) — 데이터현황(#ci-stats)과 완전히 같은 상태·같은 함수 공유(새 독립 상태 없음) ──
+   활성 판정(_dsListPresetOn)은 데이터현황 프리셋 행(_ciStatsHtml 내부)과 동일 규칙으로 window._ciStatsMode/_ciStatsAnchor만 읽는다.
+   클릭 시 호출하는 함수도 데이터현황 프리셋 칩과 동일한 _ciStatsSetPreset()(전역, 16886행대) 그대로 — 이 칩 전용 로직은 렌더/하이라이트뿐, 필터링은 기존 경로 재사용. */
+function _dsListPresetOn(key){
+  var TODAY=_dsTodayStr();
+  var mode=window._ciStatsMode;
+  if(mode!=='today' && mode!=='week7' && mode!=='month' && mode!=='custom' && mode!=='all') mode='today';
+  var anchor=window._ciStatsAnchor||TODAY;
+  if(key==='today') return mode==='today' && anchor===TODAY;
+  if(key==='week7') return mode==='week7' && anchor===TODAY;
+  if(key==='month'){ if(mode!=='month') return false; var d=_dsParseYmd(anchor), td=_dsParseYmd(TODAY); return d.getFullYear()===td.getFullYear() && d.getMonth()===td.getMonth(); }
+  if(key==='lastmonth'){ if(mode!=='month') return false; var d=_dsParseYmd(anchor), td=_dsParseYmd(TODAY); var lm=new Date(td.getFullYear(), td.getMonth()-1, 1); return d.getFullYear()===lm.getFullYear() && d.getMonth()===lm.getMonth(); }
+  if(key==='all') return mode==='all';
+  return mode==='custom';
+}
+window._dsListPresetOn=_dsListPresetOn;
+function _ciListPeriodPick(key){  /* 칩 클릭 진입점 — 데이터현황과 동일한 _ciStatsSetPreset()을 그대로 호출(공유 상태, 새 로직 없음). '사용자정의'만 데이터현황이 접혀 있으면 먼저 펼쳐 기존 날짜피커(#ds-cf/#ds-ct, _ciStatsApplyCustom)가 보이게 함(같은 피커 재사용, 신규 UI 없음) */
+  if(key==='custom' && _ciStatsIsCollapsed()){
+    try{ localStorage.setItem('ci_stats_collapsed','0'); }catch(e){}
+  }
+  _ciStatsSetPreset(key);
+}
+window._ciListPeriodPick=_ciListPeriodPick;
+function _ciListPeriodChipsHtml(){
+  var PRESETS=[['today','오늘'],['week7','최근7일'],['month','이번달'],['lastmonth','지난달'],['custom','사용자정의'],['all','전체']];
+  return PRESETS.map(function(p){
+    return '<button type="button" class="ds-preset'+(_dsListPresetOn(p[0])?' on':'')+'" onclick="_ciListPeriodPick(\''+p[0]+'\')">'+p[1]+'</button>';
+  }).join('');
+}
+window._ciListPeriodChipsHtml=_ciListPeriodChipsHtml;
+function _ciListPeriodChipsRender(){  /* #ci-list-period-chips 활성 표시 동기화 — 데이터현황 쪽에서 기간이 바뀌어도(양방향) 여기서 다시 그려 하이라이트를 맞춘다 */
+  var el=document.getElementById('ci-list-period-chips'); if(!el) return;
+  el.innerHTML=_ciListPeriodChipsHtml();
+}
+window._ciListPeriodChipsRender=_ciListPeriodChipsRender;
 /* #ci-list 주입 공통 헬퍼(2026-07-28 버그수정) — _ciRender()(17536행)의 규칙과 동일하게 통일:
  * care+표뷰(_ciEffView()==='sheet')면 _ciSheetHtml()을, 그 외(카드·좁은화면·salesnote)는 기존 _ciListHtml() 그대로 주입.
  * 표뷰 이전에 만들어진 카드 전용 재렌더 경로(검색·필터·카드선택)가 표뷰 상태에서도 무조건 카드를 덮어써
@@ -16297,6 +16338,7 @@ function _ciListRefresh(){
   } else {
     _ciListInject();
     _ciListFilterBarRender();
+    _ciListPeriodChipsRender();  /* 데이터현황↔리스트 기간 소트 칩 하이라이트 동기화(2026-07-29) */
   }
 }
 window._ciListRefresh=_ciListRefresh;
@@ -18339,6 +18381,7 @@ function _ciRender(){
   _ciSheetToolsRender();  /* [카드|표] 토글+CSV 툴바(care 전용 표시, 내부에서 salesnote는 숨김) */
   var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', window._ciMode==='care' && _eff==='sheet');  /* 표뷰(넓은 화면)=전체폭(우측 폼 숨김). 카드/좁은화면/salesnote=기존 2단 → 좁은화면 카드에선 "+고객 추가" 폼 복귀(회귀 0). 2026-07-27 */
   _ciListFilterBarRender();
+  _ciListPeriodChipsRender();  /* 데이터현황↔리스트 기간 소트 칩 하이라이트 동기화(2026-07-29) */
   var pager=document.getElementById('ci-list-pager');
   if(pager){ var _showPager=(window._ciMode==='salesnote' && !window._ciCareF); pager.style.display=_showPager?'':'none'; pager.innerHTML=_showPager?_ciPagerHtml():''; }  /* 페이지 이동 컨트롤(salesnote 전용, 케어플로우 필터 중엔 숨김·전량 표시) 2026-07-23 */
   var pv=document.getElementById('ci-preview');
