@@ -16300,18 +16300,27 @@ function _dsListPresetOn(key){
   return mode==='custom';
 }
 window._dsListPresetOn=_dsListPresetOn;
-function _ciListPeriodPick(key){  /* 칩 클릭 진입점 — 데이터현황과 동일한 _ciStatsSetPreset()을 그대로 호출(공유 상태, 새 로직 없음). '사용자정의'만 데이터현황이 접혀 있으면 먼저 펼쳐 기존 날짜피커(#ds-cf/#ds-ct, _ciStatsApplyCustom)가 보이게 함(같은 피커 재사용, 신규 UI 없음) */
-  if(key==='custom' && _ciStatsIsCollapsed()){
-    try{ localStorage.setItem('ci_stats_collapsed','0'); }catch(e){}
-  }
+function _ciListPeriodPick(key){  /* 칩 클릭 진입점 — 데이터현황과 동일한 _ciStatsSetPreset()을 그대로 호출(공유 상태, 새 로직 없음). '사용자정의'는 리스트 칩 우측 자체 인라인 피커(cil-cf/cil-ct)가 뜨므로 데이터현황을 펼칠 필요 없음(2026-07-29). */
   _ciStatsSetPreset(key);
 }
 window._ciListPeriodPick=_ciListPeriodPick;
 function _ciListPeriodChipsHtml(){
   var PRESETS=[['today','오늘'],['week7','최근7일'],['month','이번달'],['lastmonth','지난달'],['all','전체'],['custom','사용자정의']];  /* 2026-07-29: 데이터현황과 동일 순서(전체·사용자정의) */
-  return PRESETS.map(function(p){
+  var chips=PRESETS.map(function(p){
     return '<button type="button" class="ds-preset'+(_dsListPresetOn(p[0])?' on':'')+'" onclick="_ciListPeriodPick(\''+p[0]+'\')">'+p[1]+'</button>';
   }).join('');
+  var custom='';
+  if(window._ciStatsMode==='custom'){  /* 사용자정의 활성 시 칩 우측 인라인 날짜피커(2026-07-29). id=cil-*(데이터현황 ds-*와 충돌 방지), 값=공유 _ciStatsCRange, 적용=_ciStatsApplyCustom(cil-cf,cil-ct)로 데이터현황과 같은 경로·상태 */
+    var d=_ciStatsData(); var TODAY=_dsTodayStr(), START=d.length?_dsStartStr(d):TODAY;
+    var cr=window._ciStatsCRange||[START,TODAY];
+    custom='<span class="ds-custom-bar">'
+      +'<input type="date" id="cil-cf" class="ds-date-input" value="'+_ciEsc(cr[0]||'')+'" min="'+_ciEsc(START)+'" max="'+_ciEsc(TODAY)+'">'
+      +'<span class="ds-custom-sep">~</span>'
+      +'<input type="date" id="cil-ct" class="ds-date-input" value="'+_ciEsc(cr[1]||'')+'" min="'+_ciEsc(START)+'" max="'+_ciEsc(TODAY)+'">'
+      +'<button type="button" class="ds-custom-apply" onclick="_ciStatsApplyCustom(\'cil-cf\',\'cil-ct\')">적용</button>'
+      +'</span>';
+  }
+  return chips+custom;
 }
 window._ciListPeriodChipsHtml=_ciListPeriodChipsHtml;
 function _ciListPeriodChipsRender(){  /* #ci-list-period-chips 활성 표시 동기화 — 데이터현황 쪽에서 기간이 바뀌어도(양방향) 여기서 다시 그려 하이라이트를 맞춘다 */
@@ -16969,10 +16978,10 @@ function _ciStatsNav(dir){
   window._ciListPeriodOn=true; _ciListSyncAfterPeriod();  /* 데이터현황 기간네비→카드리스트 기간 필터 연동(2026-07-14) */
 }
 window._ciStatsNav=_ciStatsNav;
-function _ciStatsApplyCustom(){
+function _ciStatsApplyCustom(cfId, ctId){  /* cfId/ctId=읽을 date input id(2026-07-29 파라미터화) — 무인자=데이터현황(ds-cf/ds-ct), 리스트 피커는 cil-cf/cil-ct 전달. 공유 상태(_ciStatsCRange)라 결과는 양쪽 동일 */
   var data=_ciStatsData(); if(!data.length) return;
   var TODAY=_dsTodayStr(), START=_dsStartStr(data);
-  var fEl=document.getElementById('ds-cf'), tEl=document.getElementById('ds-ct');
+  var fEl=document.getElementById(cfId||'ds-cf'), tEl=document.getElementById(ctId||'ds-ct');
   var f=(fEl&&fEl.value)||START, t=(tEl&&tEl.value)||TODAY;
   if(f>t){ var tmp=f; f=t; t=tmp; }  /* from>to면 자동 교정 */
   if(f<START) f=START; if(f>TODAY) f=TODAY;
