@@ -148,6 +148,8 @@ body.is-uat-trash .trash-only{display:flex;}
 .ci-flow-tab{border:0;background:var(--s1);color:var(--ts);padding:5px 12px;font-size:var(--ts-meta);font-weight:600;cursor:pointer;font-family:inherit;}
 .ci-flow-tab.on{background:var(--ac);color:#fff;}
 .ci-cal-embed .dia-cal-head{margin-bottom:10px;}
+/* 캘린더 탭 그리드 단독 레이아웃(2026-07-29 대표 시안 정정) — 좌측 월별 리스트(list-col) 제거, .cic-cal-full(=.col.viewer-col)이 전체 폭. mys·iv의 .split 2단(list-col+viewer-col) 원본은 무접촉, cic 전용 스코프만. */
+.ci-cal-embed .cic-cal-full{width:100%;}
 .ci-flow-total{font-size:var(--ts-badge);font-weight:600;padding:4px 13px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
 .ci-flow-total.on{background:var(--ac);border-color:var(--ac);color:#fff;}
 .ci-band{display:flex;flex-direction:column;}
