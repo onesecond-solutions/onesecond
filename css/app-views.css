@@ -357,6 +357,7 @@ body.ci-sh-resizing,body.ci-sh-resizing *{cursor:col-resize!important;user-selec
 #ci-wrap.ci-sheetmode .ci-bottom{grid-template-columns:1fr;}   /* 표뷰=1단 전체폭 */
 #ci-wrap.ci-sheetmode .ci-right-col{display:none;}             /* 표뷰=우측 "+고객 추가" 폼 숨김(엑셀식=표에서 직접 입력) */
 .ci-vtools-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.ci-vtools-right{display:flex;align-items:center;flex-wrap:wrap;}  /* CSV 다운로드+열너비초기화(+선택삭제)를 우측 한 그룹으로 묶음(2026-07-29) — 간격은 기존 .ci-sh-colw-reset/.ci-sh-bulkdel-btn의 margin-left:8px 재사용 */
 .ci-psize{display:inline-flex;align-items:center;gap:5px;}
 .ci-psize-lb{font-size:var(--ts-badge);color:var(--tf);}
 .ci-psize-btn{font-size:var(--ts-badge);font-weight:600;padding:5px 11px;border:1px solid var(--bd);background:var(--s1);color:var(--tf);cursor:pointer;font-family:inherit;border-radius:var(--radius-sm);}

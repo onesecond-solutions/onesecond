@@ -18024,9 +18024,11 @@ function _ciSheetToolsRender(){
     + hint
     + psSel
     +'</div>'
+    +'<div class="ci-vtools-right">'  /* CSV·열너비초기화(우측 끝)를 한 그룹으로 묶어 우측에 나란히 배치(2026-07-29) */
     +'<button type="button" class="ci-csv-btn" onclick="_ciSheetCsv()">CSV 다운로드</button>'
     + colwResetBtn
-    + bulkBtn;
+    + bulkBtn
+    +'</div>';
 }
 window._ciSheetToolsRender=_ciSheetToolsRender;
 function _ciLoadCareMemos(){
