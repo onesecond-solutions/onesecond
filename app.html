@@ -16344,16 +16344,20 @@ function _ciSetNameQ(v){
 }  /* 고객명 실시간 검색 — #ci-list만 재렌더(입력 포커스 유지), 기존 오늘의 할 일·단계 필터와 AND 결합 */
 window._ciSetNameQ=_ciSetNameQ;
 function _ciTodayMatch(c,k){
-  var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
-  if(k==='today') return _ciDateOf(c.created_at)===ymd;                 /* 오늘 등록 */
-  if(k==='reserve') return (c.status||'')==='예약';                     /* 예약 */
+  /* 기준일 = window._ciTodayNavDate(오늘의 할 일 헤더 날짜이동, 2026-07-29). 없으면 실제 오늘.
+     '오늘 등록'·청약+91/+181·보험생일은 기준일로 재계산된다.
+     '예약'만은 예외 — 현재 데이터에 예약별 날짜 필드가 없어(status만 존재) 항상 status==='예약' 전체 건수(날짜 무관, 기존 동작 그대로 보수적 유지). */
+  var ymd=window._ciTodayNavDate||(function(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); })();
+  var t=new Date(ymd+'T00:00:00'); if(isNaN(t.getTime())) t=new Date();
+  if(k==='today') return _ciDateOf(c.created_at)===ymd;                 /* 기준일 등록 */
+  if(k==='reserve') return (c.status||'')==='예약';                     /* 예약(날짜 무관 — 위 주석 참고) */
   var ad=(c.profile&&c.profile.appl_date)?String(c.profile.appl_date).slice(0,10):'';  /* 청약완료일(Phase 2 기록) */
   if(!ad || (c.status||'')!=='청약완료') return false;
   var base=new Date(ad+'T00:00:00'); if(isNaN(base.getTime())) return false;
   var addDays=function(d,n){ var x=new Date(d.getTime()); x.setDate(x.getDate()+n); return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2); };
-  if(k==='appl91') return addDays(base,91)===ymd;                       /* +91 보장개시 */
-  if(k==='appl181') return addDays(base,181)===ymd;                     /* +181 6개월 관리 */
-  if(k==='bday'){ var md=('0'+(base.getMonth()+1)).slice(-2)+'-'+('0'+base.getDate()).slice(-2); var tmd=('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); return md===tmd && t.getFullYear()>base.getFullYear(); }  /* 매년 보험생일 */
+  if(k==='appl91') return addDays(base,91)===ymd;                       /* 기준일==+91 보장개시 */
+  if(k==='appl181') return addDays(base,181)===ymd;                     /* 기준일==+181 6개월 관리 */
+  if(k==='bday'){ var md=('0'+(base.getMonth()+1)).slice(-2)+'-'+('0'+base.getDate()).slice(-2); var tmd=('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2); return md===tmd && t.getFullYear()>base.getFullYear(); }  /* 매년 보험생일(기준일 연·월·일 기준) */
   return false;
 }
 window._ciTodayMatch=_ciTodayMatch;
@@ -16640,17 +16644,30 @@ function _ciBandHtml(){
     : '<div class="ci-flow-foot muted">단계를 클릭하면 아래 리스트에 해당 단계 고객만 표시됩니다.</div>';
   return '<div class="ci-scards">'+cards+'</div><div class="ci-sdots">'+dots+'</div>'+foot;
 }
+function _ciTodayNavDay(dir){  /* 헤더 ‹/› 화살표 — 선택 날짜(window._ciTodayNavDate) ±1일 이동 후 #ci-today 재렌더(2026-07-29, 주간 미니달력·이날케어·오늘처리 체크리스트 삭제 개편) */
+  var cur=window._ciTodayNavDate||_ciYmdOf(new Date());
+  window._ciTodayNavDate=_dsAddDaysStr(cur, (dir<0)?-1:1);
+  _ciTodayRerender();
+}
+window._ciTodayNavDay=_ciTodayNavDay;
 function _ciTodayHtml(){
   var data=_ciViewData();
-  var t=new Date(), ymd=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
+  var ymd=window._ciTodayNavDate||_ciYmdOf(new Date());
+  window._ciTodayNavDate=ymd;  /* 최초 진입 기본값 고정(오늘) */
+  var WD=['일','월','화','수','목','금','토'];
+  var dObj=_dsParseYmd(ymd);
+  var dateLabel=ymd+' ('+WD[dObj.getDay()]+')';
   var cur=window._ciTodayF;
-  /* 오늘 등록·예약=실수치 / 청약 이후(+91·+181·보험생일)=청약완료일(profile.appl_date, Phase 2 기록) 기준 계산 */
-  var keys=[['today','오늘 등록한 고객'],['reserve','예약'],['appl91','청약 +91일 (보장 개시)'],['appl181','청약 +181일 (6개월 관리)'],['bday','보험 생일 +1년']];
+  /* 등록·예약=실수치(예약은 날짜 무관, _ciTodayMatch 주석 참고) / 청약 이후(+91·+181·보험생일)=청약완료일(profile.appl_date, Phase 2 기록) 기준 — 모두 선택 날짜(ymd) 기준으로 재계산 */
+  var keys=[['today','등록한 고객'],['reserve','예약'],['appl91','청약 +91일 (보장 개시)'],['appl181','청약 +181일 (6개월 관리)'],['bday','보험 생일 +1년']];
   var body=keys.map(function(kv){ var n=data.filter(function(c){return _ciTodayMatch(c,kv[0]);}).length; var on=(cur===kv[0])?' on':''; return '<div class="ci-today-row clk'+on+'" onclick="_ciSetTodayF(\''+kv[0]+'\')"><span>'+_ciEsc(kv[1])+'</span><b>'+_ciNum(n)+'명</b></div>'; }).join('');
-  return '<div class="ci-today-head">오늘의 할 일 <span class="ci-today-date">'+ymd+'</span></div>'
+  return '<div class="ci-today-head"><span class="ci-today-title">오늘의 할 일</span>'
+    +'<span class="ci-today-nav"><button type="button" class="ci-cw-nav" onclick="_ciTodayNavDay(-1)" aria-label="전날">&lsaquo;</button>'
+    +'<span class="ci-today-date">'+_ciEsc(dateLabel)+'</span>'
+    +'<button type="button" class="ci-cw-nav" onclick="_ciTodayNavDay(1)" aria-label="다음날">&rsaquo;</button></span></div>'
     +'<div class="ci-today-body">'+body+'<div class="ci-today-note">행을 클릭하면 아래 카드리스트에 해당 고객만 표시됩니다.</div></div>'
-    +_ciCareWeekHtml()  /* 주간 회고 미니달력(P2, 2026-07-28 대표 확정) — 케어 due+예약 겹쳐보기, P1 체크리스트 위 */
-    +'<div class="ci-care-block">'+_ciCareChecklistHtml()+'</div>';  /* +91/+181/보험생일 체크리스트(놓친 케어·오늘 처리) — 전 기간 놓침 추적 위해 그대로 유지, 미니달력 아래에 배치(2026-07-28 대표 확정 P1) */
+    +'<button type="button" class="ci-cw-more" onclick="_ciFlowSetTab(\'cal\')">전체 달력 &rarr;</button>';
+    /* 2026-07-29: 주간 미니달력(_ciCareWeekHtml)·이 날 케어(상세)·오늘 처리 체크리스트(_ciCareChecklistHtml) 렌더 제거 — 함수 정의는 유지(호출 0), "전체 달력 →"만 카운트 아래로 이동 */
 }
 /* 데이터 현황(#ci-stats) 접기/펼치기 — localStorage 'ci_stats_collapsed'('1'=접힘/'0'=펼침). 값 없으면 기본 펼침(false, 2026-07-28 대표 확정: 데이터 현황을 맨 위로 올리며 기본 펼침 전환). */
 function _ciStatsIsCollapsed(){
