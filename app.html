@@ -4005,6 +4005,7 @@ function _canSeeAdmin(){ return _getOsUserRole() === 'admin'; }
 window._canSeeAdmin = _canSeeAdmin;
 /* 상담관리 화면 공용 게이트 — 진입점 2곳(업무노트 상담관리 배지 _canSeeCareType · 영업노트 사이드바 _canSeeSalesNote)이 공유.
  * 개방 대상: 임태성 실장(user_id 98c5f4f9) 기존 + 어드민(role) + 카카오임(email bylts@kakao.com) 추가 개방(2026-07-13 대표 승인).
+ * 김주현(makeout504@gmail.com)·이은정(lej8046lej@gmail.com) 추가 개방(2026-07-30 대표 승인).
  * 데이터 격리(owner_id RLS)는 이 게이트와 무관하게 그대로 유지 — 화면 노출만 넓힘. */
 function _canSeeCare(){
   try{
@@ -4012,6 +4013,8 @@ function _canSeeCare(){
     if(String(u.id||'')==='98c5f4f9-10c1-4ee1-a656-5c2ca63239fd') return true;   /* 임태성 실장(기존) */
     if((u.role||'')==='admin') return true;                                     /* 어드민 */
     if(String(u.email||'').trim().toLowerCase()==='bylts@kakao.com') return true; /* 카카오임 */
+    if(String(u.email||'').trim().toLowerCase()==='makeout504@gmail.com') return true; /* 김주현 */
+    if(String(u.email||'').trim().toLowerCase()==='lej8046lej@gmail.com') return true; /* 이은정 */
     return false;
   }catch(e){ return false; }
 }
