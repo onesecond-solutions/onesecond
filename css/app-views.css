@@ -438,9 +438,11 @@ body.ci-sh-resizing,body.ci-sh-resizing *{cursor:col-resize!important;user-selec
 .ci-addr{display:flex;gap:8px;margin-bottom:8px;}
 .ci-sec{font-size:var(--ts-meta);font-weight:600;color:var(--tp);margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--bd);}
 .ci-sec span{font-size:var(--ts-badge);font-weight:400;color:var(--tf);}
-.ci-stagepick{display:flex;flex-wrap:wrap;gap:6px;}
+.ci-stagepick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
 .ci-stagebtn{font-size:var(--ts-meta);padding:6px 12px;border:1px solid var(--bd);border-radius:var(--radius-full);background:var(--s1);color:var(--ts);cursor:pointer;font-family:inherit;}
 .ci-stagebtn.on{background:var(--ac);border-color:var(--ac);color:#fff;}
+.ci-stagebtn.on:disabled{cursor:default;opacity:1;}  /* 고객관리(salesnote) 청약완료 고정 배지(PR2 2026-07-30) — 클릭 불가지만 색은 그대로 강조 유지 */
+.ci-stage-fixed-note{font-size:var(--ts-badge);color:var(--tf);}  /* 고객관리 단계 선택기 숨김 안내문 */
 .ci-form-acts{display:flex;gap:8px;margin-top:20px;}
 /* 예약 단계 클릭 → 캘린더 "새 일정" 미니팝업(2026-07-14). #dia-panel(마이스페이스 다이어리 전용)이 상담관리(#ci-wrap) 노출 중엔 항상 숨겨진 부모(#mys-today) 안에 있어 재사용 불가 → 전용 오버레이.
    내부 필드는 dia-panel-hd/dia-l/dia-i/dia-ta/dia-rems/dia-rem/dia-panel-ft/dia-save(다이어리 패널과 동일 클래스, 신규 스타일 최소화) 재사용. */

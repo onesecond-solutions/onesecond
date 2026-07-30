@@ -16090,18 +16090,16 @@ window._ciApplData=[]; window._ciApplCount=null;
    등록일·유입채널 2개 필드만 전량 수신(_ciStatsLoad, 아래 정의)해 페이지 절단 없이 정확히 집계한다. */
 window._ciStatsRows=[]; window._ciStatsLoading=false; window._ciStatsLoadedOnce=false; window._ciStatsTotal=0;
 /* 상담관리(care)/고객관리(salesnote) 표시 구분은 날짜 컷오프가 아닌 status 기준(2026-07-13 대표 확정, 오해였던 날짜 컷오프 폐기).
-   옛 대량 데이터(약 1000명)의 status는 전부 정확히 '신규'(레거시 단일값). 대표가 폼으로 추가하는 고객은 _SN_STAGES 8단계
-   ('신규DB'~'청약완료')를 쓰며 첫 단계가 '신규DB'라 '신규'와 절대 겹치지 않는다. → status만으로 날짜 무관하게 정확히 구분 가능.
-   상담관리(care)=status!=='신규'(대표가 추가한 고객 전부, 입력일자 무관) · 고객관리(salesnote)='신규'(옛 대량)+'청약완료'만.
-   DB write·삭제 없음(순수 표시 필터). */
+   PR2(2026-07-30, 대표 확정): 고객관리(salesnote)="청약완료" 고객만 입력·관리 — 옛 '신규' 대량(레거시 카톡 이관분)은 대표가 완전 삭제 확정, 필터도 '청약완료' 단일로 좁힘.
+   상담관리(care)=status!=='신규'(대표가 추가한 고객 전부, 입력일자 무관, 무변경) · 고객관리(salesnote)=status==='청약완료'만.
+   DB write·삭제 없음(순수 표시 필터). care 분기는 이전과 완전히 동일(byte 불변). */
 function _ciViewData(){
   var data=window._ciData||[];
   if(window._ciMode==='care'){
     return data.filter(function(c){ return ((c&&c.status)||'')!=='신규'; });
   }
   return data.filter(function(c){
-    var st=(c&&c.status)||'';
-    return st==='신규' || st==='청약완료';
+    return ((c&&c.status)||'')==='청약완료';
   });
 }
 window._ciViewData=_ciViewData;
@@ -16109,7 +16107,7 @@ function _ciEsc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/
 function _ciNum(n){ n=Number(n); if(!isFinite(n)) n=0; return n.toLocaleString('en-US'); }  /* 상담관리 전용 숫자 3자리 쉼표 헬퍼(_ciEsc와 동일하게 window 미등록) */
 function _ciDateOf(x){ return (x&&String(x).slice(0,10))||''; }
 function _ciShow(hostId){
-  window._ciMode=hostId?'salesnote':'care';  /* care=상담관리(status!=='신규') · salesnote=고객관리(status==='신규'|'청약완료', 2026-07-13) */
+  window._ciMode=hostId?'salesnote':'care';  /* care=상담관리(status!=='신규') · salesnote=고객관리(status==='청약완료'만, PR2 2026-07-30 대표 확정) */
   var w=document.getElementById('ci-wrap'), sp=document.getElementById('mys-split');
   /* #ci-wrap은 홈 슬롯 공유엔진 _spSplitShow의 host.innerHTML=_spHead() 재설정(스코프 전환·업무노트 재오픈)에 통째로 삭제될 수 있다.
      최초 진입 시 원본을 1회 템플릿으로 보관해 두었다가, 파괴 감지 시(w=null) 템플릿에서 복제 복원한다(자식 id·inline onclick 보존). */
@@ -16177,15 +16175,13 @@ function _ciLoad(){
     .catch(function(){ _ciRender(); });
 }
 window._ciLoad=_ciLoad;
-/* ── 고객관리(salesnote) 서버 필터 쿼리스트링 (2026-07-23, 대표 확정 사양) ──
-   모드 필터=status in(신규,청약완료)·단계 필터(_ciStageF)=status eq·고객명(_ciNameQ)=ilike·기간(_ciListPeriodOn)=created_at 범위·유입채널(_ciChanF 0~2)=profile->>attr ilike.
+/* ── 고객관리(salesnote) 서버 필터 쿼리스트링 (2026-07-23 최초, PR2 2026-07-30 대표 확정으로 청약완료 단일 고정) ──
+   모드 필터=status eq.청약완료(고정, 옛 '신규' 대량은 대표가 완전 삭제 확정)·고객명(_ciNameQ)=ilike·기간(_ciListPeriodOn)=created_at 범위·유입채널(_ciChanF 0~2)=profile->>attr ilike.
    채널 3(기타)="위 3개 중 어느 것도 아님"이라 단일 like로 표현 불가 → 서버 조건 생략, 클라이언트 폴백(_ciListHtml 기존 _dsChanIdx 필터)에 위임(대표 확정 사양, 판단 아님).
+   단계 필터칩(_ciStageF)은 salesnote UI에 애초에 미노출(care-flow.js가 .ci-flow-head를 숨김)이라 서버 쿼리에서도 사용하지 않는다(안전망 겸 단순화).
    care 모드는 이 함수를 호출하지 않음(_ciLoad 분기 참고). */
 function _ciSnQS(){
-  var qs='deleted_at=is.null';
-  var stage=window._ciStageF||'전체';
-  if(stage!=='전체'){ qs+='&status=eq.'+encodeURIComponent(stage); }
-  else { qs+='&status=in.('+encodeURIComponent('신규')+','+encodeURIComponent('청약완료')+')'; }
+  var qs='deleted_at=is.null&status=eq.'+encodeURIComponent('청약완료');
   var nq=String(window._ciNameQ||'').trim();
   if(nq){ qs+='&name=ilike.*'+encodeURIComponent(nq)+'*'; }
   if(window._ciListPeriodOn){
@@ -16241,17 +16237,18 @@ function _ciLoadApplPool(){
   }).catch(function(){ window._ciApplData=[]; });
 }
 window._ciLoadApplPool=_ciLoadApplPool;
-/* ── 데이터 현황(#ci-stats) 집계 전용 로더(2026-07-23, 대표 확정) ──
+/* ── 데이터 현황(#ci-stats) 집계 전용 로더(2026-07-23 최초, PR2 2026-07-30 대표 확정으로 청약완료 단일 고정) ──
    카드리스트 페이지네이션(window._ciData=현재 200행)과 분리된 별도 배열(window._ciStatsRows)에 등록일·유입채널만 전량 수신한다.
    _dsBuildMap이 필요로 하는 필드는 created_at·profile.attr 2개뿐(_dsChanIdx는 평평한 attr 필드를 이미 지원, 수정 불필요) — 행이 가벼워 전량 수신 가능.
-   서버 1000행 상한 때문에 _ciLoadSalesnotePage와 동일한 Range 헤더 패턴을 그대로 복제해 1000행씩 반복 수신, 첫 요청의 Prefer:count=exact로 총건수 파싱 후 도달할 때까지 반복. */
+   서버 1000행 상한 때문에 _ciLoadSalesnotePage와 동일한 Range 헤더 패턴을 그대로 복제해 1000행씩 반복 수신, 첫 요청의 Prefer:count=exact로 총건수 파싱 후 도달할 때까지 반복.
+   집계 대상도 카드리스트와 동일하게 status='청약완료'만(옛 '신규' 대량은 대표가 완전 삭제 확정, 2026-07-30). */
 function _ciStatsLoad(){
   if(window._ciStatsLoading) return;  /* 중복 호출(재진입) 가드 */
   if(!window.db||!window.db.fetch) return;
   window._ciStatsLoading=true;
   var CHUNK=1000;
   var rows=[];
-  var qs='/rest/v1/sales_customers?deleted_at=is.null&status=in.('+encodeURIComponent('신규')+','+encodeURIComponent('청약완료')+')&select=created_at,attr:profile->>attr&order=created_at.desc';
+  var qs='/rest/v1/sales_customers?deleted_at=is.null&status=eq.'+encodeURIComponent('청약완료')+'&select=created_at,attr:profile->>attr&order=created_at.desc';
   var finish=function(){
     window._ciStatsRows=rows;
     window._ciStatsLoading=false;
@@ -17220,9 +17217,13 @@ function _ciFormHtml(c){
   c=c||{}; var v=function(x){ return _ciEsc(x==null?'':String(x)); };
   var p=(c.profile&&typeof c.profile==='object')?c.profile:{};
   var t=new Date(); var today=t.getFullYear()+'-'+('0'+(t.getMonth()+1)).slice(-2)+'-'+('0'+t.getDate()).slice(-2);
-  var inDate=_ciDateOf(c.created_at)||today; var st=c.status||'신규DB'; var g=c.gender||''; var med=c.medication||'';
+  /* PR2(2026-07-30, 대표 확정): 고객관리(salesnote)는 청약완료 고객 전용 — 8단계 파이프라인 선택기를 숨기고 상태를 '청약완료'로 고정한다. 상담관리(care)는 무변경(else 분기가 기존 코드 그대로). */
+  var isSN=(window._ciMode==='salesnote');
+  var inDate=_ciDateOf(c.created_at)||today; var st=isSN?'청약완료':(c.status||'신규DB'); var g=c.gender||''; var med=c.medication||'';
   var stages=(typeof _SN_STAGES!=='undefined')?_SN_STAGES:[];
-  var stageBtns=stages.map(function(s){ return '<button type="button" class="ci-stagebtn'+(s===st?' on':'')+'" data-st="'+_ciEsc(s)+'" onclick="_ciPickStage(this)">'+_ciEsc(s)+'</button>'; }).join('');
+  var stageBtns=isSN
+    ? '<button type="button" class="ci-stagebtn on" disabled>청약완료</button><span class="ci-stage-fixed-note">고객관리는 청약완료 고객 전용 — 단계 변경은 상담관리에서 진행하세요</span>'
+    : stages.map(function(s){ return '<button type="button" class="ci-stagebtn'+(s===st?' on':'')+'" data-st="'+_ciEsc(s)+'" onclick="_ciPickStage(this)">'+_ciEsc(s)+'</button>'; }).join('');
   var medOpt=['','복용 중','복용 안 함','과거 복용'].map(function(o){ return '<option value="'+_ciEsc(o)+'"'+(o===med?' selected':'')+'>'+(o||'선택')+'</option>'; }).join('');
   var nameLen=(c.name||'').length;
   window._ciConsultLog=(p.consult_log&&Array.isArray(p.consult_log))?p.consult_log.slice():[];  /* 현재 폼의 상담이력(최신순) */
@@ -17255,11 +17256,12 @@ function _ciFormHtml(c){
     +'<div class="ci-ffld"><label>진단시기</label><input id="cif-dx" type="text" value="'+v(c.dx_date)+'" placeholder="예: 2025년 3월"></div>'
     +'<div class="ci-ffld"><label>현재상태</label><input id="cif-uw" type="text" value="'+v(c.uw_status)+'" placeholder="예: 추적관찰 중 / 수술 완료"></div>'
     +'</div>'
-    /* 상담내용 = 날짜별 상담이력(최신순 위) + [상담입력]↔[저장하기] 토글 */
+    /* 상담내용 = 날짜별 상담이력(최신순 위) + [상담입력]↔[저장하기] 토글
+       PR2(2026-07-30): 고객관리(salesnote)는 청약 전 상담 플로우 입력을 차단 — 새 상담 입력 버튼·입력창은 숨기고 기존 이력 표시(읽기)만 남긴다. care는 무변경(else 분기가 기존 코드 그대로). */
     +'<div class="ci-sec">상담내용</div>'
     +'<div class="ci-consult">'
-    +'<div class="ci-consult-acts"><button type="button" class="ci-btn" id="cif-consult-btn" data-mode="" onclick="_ciConsultToggle()">상담입력</button></div>'
-    +'<div class="ci-consult-new" id="cif-consult-input" style="display:none"><div class="ci-consult-date"><span id="cif-consult-date"></span> 상담 기록</div><textarea id="cif-consult-new" placeholder="상담 내용을 입력하세요 — 통화 요지, 고객 반응, 다음 액션 등"></textarea></div>'
+    +(isSN?'':'<div class="ci-consult-acts"><button type="button" class="ci-btn" id="cif-consult-btn" data-mode="" onclick="_ciConsultToggle()">상담입력</button></div>')
+    +(isSN?'':'<div class="ci-consult-new" id="cif-consult-input" style="display:none"><div class="ci-consult-date"><span id="cif-consult-date"></span> 상담 기록</div><textarea id="cif-consult-new" placeholder="상담 내용을 입력하세요 — 통화 요지, 고객 반응, 다음 액션 등"></textarea></div>')
     +'<div class="ci-consult-log" id="cif-consult-log"></div>'
     +'</div>'
     /* 비고 = profile.비고 — 표(시트) 뷰 비고 셀과 양방향 연동. 정보수정(잠금해제) 후 편집·[저장] 시 반영(다른 profile 필드와 동일 흐름) */
@@ -17323,6 +17325,7 @@ function _ciConsultEditSave(i){
 }
 window._ciConsultEditSave=_ciConsultEditSave;
 function _ciConsultToggle(){
+  if(window._ciMode==='salesnote') return;  /* PR2(2026-07-30, 대표 확정): 고객관리는 상담이력 신규 입력 차단(청약 전 상담 플로우 편집 차단). UI 버튼 자체가 렌더 안 되지만(안전망) — care 무변경 */
   var btn=document.getElementById('cif-consult-btn'), inp=document.getElementById('cif-consult-input'), ta=document.getElementById('cif-consult-new');
   if(!btn||!inp||!ta) return;
   if(btn.getAttribute('data-mode')!=='save'){
@@ -17516,6 +17519,7 @@ async function _ciSaveForm(){
   var birthISO=birthDigits.slice(0,4)+'-'+birthDigits.slice(4,6)+'-'+birthDigits.slice(6,8);
   var inDate=_ciV('cif-date').trim(); var now=new Date().toISOString();
   var wrap=document.getElementById('cif-stagepick'); var stage=wrap?wrap.getAttribute('data-st'):'신규DB';
+  if(window._ciMode==='salesnote'){ stage='청약완료'; }  /* PR2(2026-07-30, 대표 확정): 고객관리는 청약완료 고객 전용 — 폼 UI가 이미 고정하지만 저장부에서도 강제해 어떤 경로로도 청약 전 단계가 write되지 않게 한다. care 무변경. */
   var tok=window.db&&window.db.getToken&&window.db.getToken(); if(!tok){ if(window._osLoginGate) _osLoginGate(); return; }  /* 첨부 업로드에도 필요해 토큰 검증을 앞으로 당김(2026-07-29) */
   var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
     birth_date:birthISO, gender:_ciV('cif-gender')||null,
