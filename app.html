@@ -17737,14 +17737,19 @@ var _CI_SHEET_FIXW=_CI_SHEET_CHKW+_CI_SHEET_ACTW;
  * 같아지도록 매 렌더/리플로우마다 재계산. table-layout:fixed+width:100%이므로 합=컨테이너 폭이면 가로 스크롤 없음.
  * memo(상담내용)가 기본 가변열(저장값 없으면 나머지 폭 전부 흡수) — 사용자가 직접 드래그/더블클릭(autofit)해
  * memo에도 저장값이 생기면 그 순간부터 memo도 고정열 취급(더 이상 자동 확장 안 함, 대표 드래그 사양과 일치). */
-function _ciSheetContainerW(){
+var _ciSheetLastValidW=0;  /* 마지막으로 유효하게 측정된 표뷰 컨테이너 폭 캐시(2026-07-30, 드리프트 버그 수정) — 뷰 전환 타이밍에 clientWidth가 0/축소로 튀어도 직전 유효값을 재사용해 normalize 입력을 안정화 */
+function _ciSheetContainerW(){  /* 표뷰 열폭 정규화의 기준 폭. "실제로 표시된(레이아웃 잡힌) 표뷰 컨테이너"일 때만 측정을 신뢰하고, 그 외엔 직전 유효값을 재사용 → 같은 화면에서 뷰를 오가도 항상 동일 폭 반환(지정폭 드리프트 0). */
   try{
     var el=document.getElementById('ci-list');
-    var w=el&&el.clientWidth;
-    if(!w){ var wrap=document.getElementById('ci-wrap'); w=wrap&&wrap.clientWidth; }
-    if(!w) w=window.innerWidth||document.documentElement.clientWidth;
-    return w||1220;
-  }catch(e){ return 1220; }
+    var wrap=document.getElementById('ci-wrap');
+    var sheetLayout=!!(wrap&&wrap.classList&&wrap.classList.contains('ci-sheetmode'));  /* 표뷰 전체폭 레이아웃이 실제 적용된 상태에서만 #ci-list 폭이 "표뷰 폭"과 일치 */
+    var laid=!!(el&&el.offsetParent!==null&&sheetLayout);  /* display:none·미부착(offsetParent=null)이면 측정 무효 */
+    var w=laid?el.clientWidth:0;
+    if(w>=300){ _ciSheetLastValidW=w; return w; }  /* 유효 측정만 신뢰(0/전환중/비정상 축소<300 배제) + 캐시 갱신. clientWidth는 세로 스크롤바 제외폭이라 스크롤바 유무는 memo(가변열)가 흡수, 지정열 불변 */
+    if(_ciSheetLastValidW>=300) return _ciSheetLastValidW;  /* 무효 측정 시 직전 유효값 재사용 → 재렌더마다 입력 폭 동일 → 출력(각 열 px) 동일 */
+    var fw=(wrap&&wrap.clientWidth)?wrap.clientWidth:(window.innerWidth||document.documentElement.clientWidth);  /* 최초 진입 등 캐시 없음 — 최후 폴백 */
+    return fw||1220;
+  }catch(e){ return _ciSheetLastValidW||1220; }
 }
 window._ciSheetContainerW=_ciSheetContainerW;
 function _ciSheetNormalizeColW(containerW){  /* 저장값(localStorage) 기준 각 열 폭 계산 → 합이 avail(=컨테이너폭-chk-act)이 되도록 조정. 반환: [{key,w}] (_CI_SHEET_COLS와 같은 순서) */
@@ -18385,9 +18390,9 @@ function _ciRender(){
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list');
   var _eff=_ciEffView(); window._ciLastEffView=_eff;  /* 유효 뷰(폭 반영) — 좁은 화면이면 표 선택이어도 카드로. resize 자동전환 기준값 동기화 */
+  var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', window._ciMode==='care' && _eff==='sheet');  /* 표뷰(넓은 화면)=전체폭(우측 폼 숨김). 카드/좁은화면/salesnote=기존 2단 → 좁은화면 카드에선 "+고객 추가" 폼 복귀(회귀 0). 2026-07-27. ★ HTML 주입 전에 먼저 토글(2026-07-30) — _ciSheetHtml→_ciSheetContainerW가 실제 표뷰(전체폭) 레이아웃을 측정하도록. 이전엔 주입 후 토글이라 2단(좁은) 폭으로 측정돼 재렌더마다 지정폭이 흔들림(드리프트) */
   if(lst){ lst.innerHTML=(window._ciMode==='care' && _eff==='sheet') ? _ciSheetHtml() : _ciListHtml(); if(window._ciMode==='care' && _eff==='sheet') _ciNewRowOcrBind(); }  /* care+표뷰(넓은 화면) 훅(2026-07-27) — 그 외(카드/좁은화면/salesnote)는 기존 _ciListHtml 그대로. 표뷰 진입 시 새 행 OCR paste 리스너 바인딩(1회 플래그) */
   _ciSheetToolsRender();  /* [카드|표] 토글+CSV 툴바(care 전용 표시, 내부에서 salesnote는 숨김) */
-  var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', window._ciMode==='care' && _eff==='sheet');  /* 표뷰(넓은 화면)=전체폭(우측 폼 숨김). 카드/좁은화면/salesnote=기존 2단 → 좁은화면 카드에선 "+고객 추가" 폼 복귀(회귀 0). 2026-07-27 */
   _ciListFilterBarRender();
   _ciListPeriodChipsRender();  /* 데이터현황↔리스트 기간 소트 칩 하이라이트 동기화(2026-07-29) */
   var pager=document.getElementById('ci-list-pager');
