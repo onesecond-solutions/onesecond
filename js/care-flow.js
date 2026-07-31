@@ -59,7 +59,6 @@
     if(document.getElementById('cf-style')) return;
     var css=''
       +'#ci-wrap.ci-salesnote{--cf:#0d9488;--cf-soft:#ccfbf1;--cf-bg:#f0fdfa}'
-      +'.ci-salesnote .ci-flow-head{display:none}'
       +'.cf-today-h{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:var(--ts-list-title);margin-bottom:8px;color:#0f766e}'
       +'.cf-today-h .cf-date{font-weight:400;color:var(--ts,#71717a);font-size:var(--ts-badge)}'
       +'.cf-row{display:flex;justify-content:space-between;align-items:center;padding:10px 11px;border-radius:var(--radius-sm,8px);cursor:pointer;transition:background .12s}'

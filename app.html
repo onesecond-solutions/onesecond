@@ -16676,9 +16676,10 @@ function _ciCareWeekHtml(){  /* 주간 미니달력 본체 — 7일 스트립 + 
 }
 window._ciCareWeekHtml=_ciCareWeekHtml;
 /* 상담 플로우/캘린더 탭 전환(2026-07-29). 'cal'=개인 전용 캘린더(prefix cic, loadCal 기본 scope=personal) 최초 1회 로드.
-   salesnote 모드에선 .ci-salesnote CSS가 .ci-flow-head(탭 버튼) 자체를 숨기고, #ci-today의 "전체 달력 →" 링크도 _cfSalesnoteTop()이 통째로 덮어써서 노출 경로가 없다 — 그래도 안전망으로 salesnote면 cal 진입 무시. */
+   고객관리(salesnote)에도 캘린더 탭을 개방(PR-S2, 2026-07-31). 캘린더는 개인 일정(author_id+audience_target=personal)이라
+   mode 무관하게 로그인 사용자 본인 일정을 그대로 보여준다. #ci-band(플로우)/#ci-cal-embed(캘린더)의 display 토글은 mode와 무관하게 동작하고,
+   _cfSalesnoteTop()(care-flow.js)은 #ci-band의 innerHTML만 채울 뿐 display는 건드리지 않으므로 캘린더 탭 노출 시 충돌이 없다. */
 function _ciFlowSetTab(t){
-  if(t==='cal' && window._ciMode==='salesnote') t='flow';
   window._ciFlowTab=t;
   var bandEl=document.getElementById('ci-band'), calEl=document.getElementById('ci-cal-embed');
   var tbFlow=document.getElementById('ci-flow-tab-flow'), tbCal=document.getElementById('ci-flow-tab-cal');
