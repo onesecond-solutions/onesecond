@@ -16241,7 +16241,8 @@ function _ciLoadApplPool(){
   }).then(function(rows){
     window._ciApplData=Array.isArray(rows)?rows:[];
     if(window._ciMode==='salesnote'){
-      if(window._ciCareF){ var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciListHtml(); }
+      /* PR-S1(2026-07-30): _ciListHtml() 직접주입→_ciListInject()로 교체 — 표뷰(sheet)일 때도 이 배열이 갱신되면 표가 다시 그려지도록(이전엔 카드 HTML을 항상 주입해 sheet+careF 조합에서 카드로 덮어쓰는 회귀 위험이 있었음). careF 없을 때도 표뷰라면 최신 _ciApplData로 다시 그려야 하므로 careF 조건 제거. */
+      _ciListInject();
       if(typeof window._cfSalesnoteTop==='function') window._cfSalesnoteTop();  /* 케어 플로우 집계(오늘의 케어·플로우 카드)는 이 배열 기준이라 로드 완료 후 재계산 필요 */
     }
   }).catch(function(){ window._ciApplData=[]; });
@@ -16345,7 +16346,7 @@ window._ciListPeriodChipsRender=_ciListPeriodChipsRender;
  * 표뷰일 때만 _ciSheetSelSync()도 호출해 선택삭제 버튼 상태를 표와 함께 맞춘다. */
 function _ciListInject(){
   var lst=document.getElementById('ci-list'); if(!lst) return;
-  var sheet=(window._ciMode==='care' && _ciEffView()==='sheet');
+  var sheet=(_ciSheetEnabled() && _ciEffView()==='sheet');  /* PR-S1: care 하드게이트→_ciSheetEnabled() (care 판정 결과 불변, salesnote도 개방) */
   lst.innerHTML = sheet ? _ciSheetHtml() : _ciListHtml();
   if(sheet) _ciSheetSelSync();
 }
@@ -17606,10 +17607,17 @@ function _ciManageEnd(){
 }
 window._ciManageEnd=_ciManageEnd;
 /* ═══ 상담관리(care) 표(시트) 뷰 — 1차: 읽기 + CSV + 개별삭제 (2026-07-27, 대표 지시) ══════════════════
- *  카드 뷰는 그대로 유지하고 [카드|표] 토글로 전환한다. care 모드(window._ciMode==='care') 전용 — salesnote 경로 무접촉.
+ *  카드 뷰는 그대로 유지하고 [카드|표] 토글로 전환한다.
  *  기존 카드 렌더(_ciListHtml/_ciSelCard 등)는 바이트 무변경. _ciRender에 care+표뷰 훅만 추가한다.
- *  이번 범위 제외(다음 PR): 셀 인라인 편집, 새 행 입력, 다중선택 삭제. */
+ *  PR-S1(2026-07-30, 고객관리 표뷰 도입): care 전용 하드게이트(window._ciMode==='care')를 아래 _ciSheetEnabled()로
+ *  치환해 salesnote(고객관리)에도 표뷰를 연다. _ciSheetEnabled()는 현재 두 모드(care|salesnote) 모두 true를 반환하므로
+ *  care 쪽 판정 결과는 이전과 100% 동일(회귀 0) — salesnote만 새로 열리는 게이트다.
+ *  컬럼셋·행소스(_ciSheetRows/_ciSheetHtml/_ciSheetCsv/_ciNewRowCommit 등)는 모드별로 별도 함수로 분기해
+ *  care 경로 코드(기존 함수 본문)는 문자 그대로 보존한다. */
+function _ciSheetEnabled(){ return window._ciMode==='care' || window._ciMode==='salesnote'; }
+window._ciSheetEnabled=_ciSheetEnabled;
 function _ciSheetRows(){
+  if(window._ciMode==='salesnote'){ return _ciSheetRowsSalesnote(); }  /* PR-S1: salesnote는 청약완료 전량(_ciApplData) 기준 별도 함수 — 아래 care 경로는 문자 그대로 무변경 */
   /* 표·CSV가 공유하는 "표시 순서 그대로" 데이터. _ciListHtml의 care 경로(필터+정렬)를 그대로 재현(원본 무변경). */
   var data=_ciViewData().slice();
   if(window._ciTodayF){ data=data.filter(function(c){ return _ciTodayMatch(c, window._ciTodayF); }); }
@@ -17621,6 +17629,26 @@ function _ciSheetRows(){
   data.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });  /* 최근 입력일자가 위(created_at desc) */
   return data;
 }
+/* PR-S1(2026-07-30): 고객관리(salesnote) 표뷰 행 소스 — 청약완료 전량(window._ciApplData, care-flow.js가 로드)을 기준으로 한다.
+ * window._ciData(서버 페이지네이션 "현재 페이지"만)를 쓰지 않는 이유: 표뷰는 페이지 넘김 없이 전량을 클라이언트에서
+ * _ciSheetPageSize로 슬라이스하는 기존 care 표뷰 방식을 그대로 재사용하기 때문(사양 확정: 서버측 시트 페이지네이션은 v1 제외).
+ * 케어 플로우 필터(window._ciCareF, care-flow.js _cfMatch)가 걸려 있으면 카드뷰(_ciListHtml)와 동일하게 그 결과로 좁혀
+ * 카드↔표 토글 시 표시되는 고객 수가 어긋나지 않게 한다(카드뷰의 salesnote+careF 분기와 동형, 2026-07-30 판단). */
+function _ciSheetRowsSalesnote(){
+  var data;
+  if(window._ciCareF && typeof window._cfMatch==='function'){
+    data=(window._ciApplData||[]).slice().filter(function(c){ return window._cfMatch(c); });
+  } else {
+    data=(window._ciApplData||[]).slice();
+  }
+  var _nq=String(window._ciNameQ||'').trim().toLowerCase().replace(/\s+/g,'');
+  if(_nq) data=data.filter(function(c){ return String(c.name||'').toLowerCase().replace(/\s+/g,'').indexOf(_nq)>=0; });
+  if(window._ciListPeriodOn){ var r=_dsRangeCur(); data=data.filter(function(c){ var d=_ciDateOf(c.created_at); return d && d>=r[0] && d<=r[1]; }); }
+  if(window._ciChanF!=null){ data=data.filter(function(c){ return _dsChanIdx(c)===window._ciChanF; }); }
+  data.sort(function(a,b){ return String(b.created_at||'').localeCompare(String(a.created_at||'')); });
+  return data;
+}
+window._ciSheetRowsSalesnote=_ciSheetRowsSalesnote;
 function _ciStatusColor(st){  /* 상담상태 배지 색(토큰만 사용, 하드코딩 색 지양) */
   switch(st){
     case '청약완료': return 'var(--ok)';
@@ -17636,6 +17664,8 @@ function _ciStatusBadge(st){
 }
 function _ciSheetAttr(c){ return String((c&&c.profile&&c.profile.attr)||(c&&c.channel)||''); }  /* 인입유형=profile.attr(없으면 channel 폴백) */
 function _ciSheetBigo(c){ return String((c&&c.profile&&c.profile['비고'])||''); }  /* 비고=profile.비고(없으면 빈칸) */
+function _ciSheetAppl(c){ return String((c&&c.profile&&c.profile.appl_date)||'').slice(0,10); }  /* PR-S1: 계약일=profile.appl_date(care-flow.js가 쓰는 동일 키, 카드뷰 케어 편집과 자동 양방향). 없으면 빈칸 */
+window._ciSheetAppl=_ciSheetAppl;
 /* 표뷰 상담내용 표시값 = profile.consult_log 최신 회차(정본) 우선, 없으면 sales_consultations.memo(_ciMemoMap) 폴백 읽기.
  * → 상담내용 정본을 카드뷰와 동일한 profile.consult_log로 일원화(카드↔표 자동 양방향). 기존 표 데이터도 폴백으로 안 사라짐. 2026-07-28 */
 function _ciSheetMemo(c){
@@ -17697,7 +17727,7 @@ window._ciSheetSelAllToggle=_ciSheetSelAllToggle;
 function _ciSheetSelSync(){
   var tools=document.getElementById('ci-sheet-tools'); if(!tools) return;
   var n=_ciSheetSelCount();
-  var show=(window._ciMode==='care' && _ciEffView()==='sheet' && n>=1);
+  var show=(_ciSheetEnabled() && _ciEffView()==='sheet' && n>=1);  /* PR-S1: care 하드게이트→_ciSheetEnabled() (care 판정 결과 불변, salesnote도 개방) */
   var btn=document.getElementById('ci-sh-bulkdel');
   if(!show){ if(btn && btn.parentNode) btn.parentNode.removeChild(btn); return; }
   if(!btn){
@@ -17711,6 +17741,7 @@ function _ciSheetSelSync(){
 window._ciSheetSelSync=_ciSheetSelSync;
 /* 선택 일괄 삭제 — 소프트삭제(deleted_at) 1회 PATCH(id=in.(...)). fetch 헤더·Prefer·에러 처리는 _ciDelete와 동일 패턴 복제. */
 function _ciSheetBulkDelete(){
+  if(window._ciMode==='salesnote'){ return _ciSheetBulkDeleteSalesnote(); }  /* PR-S1(2026-07-30): salesnote는 표뷰가 window._ciApplData를 읽으므로(care=window._ciData) 로컬 필터 대상이 다름 — 아래 care 경로는 문자 그대로 무변경 */
   var ids=Object.keys(window._ciSheetSel||{});
   if(!ids.length) return;
   if(!confirm('선택한 '+ids.length+'명을 삭제할까요?\n(휴지통으로 이동 · 복구 가능)')) return;
@@ -17731,6 +17762,29 @@ function _ciSheetBulkDelete(){
   } else { done(); }
 }
 window._ciSheetBulkDelete=_ciSheetBulkDelete;
+/* PR-S1(2026-07-30): 고객관리(salesnote) 다중선택 삭제 — 표뷰가 읽는 배열이 window._ciApplData라(care=window._ciData)
+ * 완료 후 로컬 필터 대신 _ciManageEnd/_ciDelete(care 분기 외)와 동일하게 window._ciLoad()로 서버 재조회해 카드1페이지·
+ * 청약완료 전량·통계를 한 번에 정합시킨다(기존 salesnote 삭제 경로와 동형, 새 판단 아님). */
+function _ciSheetBulkDeleteSalesnote(){
+  var ids=Object.keys(window._ciSheetSel||{});
+  if(!ids.length) return;
+  if(!confirm('선택한 '+ids.length+'명을 삭제할까요?\n(휴지통으로 이동 · 복구 가능)')) return;
+  var done=function(){
+    var idSet={}; ids.forEach(function(id){ idSet[String(id)]=true; });
+    if(window._ciSel!=null && idSet[String(window._ciSel)]) window._ciSel=null;
+    if(window._ciEditId!=null && idSet[String(window._ciEditId)]) window._ciEditId=null;
+    _ciSheetSelClear();
+    var pv=document.getElementById('ci-preview'); if(pv) pv.innerHTML=_ciPreviewHtml(null);
+    window._ciLoaded=false; _ciLoad();
+  };
+  if(window.db && window.db.fetch){
+    var inlist=ids.map(function(id){ return encodeURIComponent(id); }).join(',');
+    window.db.fetch('/rest/v1/sales_customers?id=in.('+inlist+')',{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})})
+      .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } done(); })
+      .catch(function(e){ alert('삭제 실패: '+(e&&e.message||e)); });
+  } else { done(); }
+}
+window._ciSheetBulkDeleteSalesnote=_ciSheetBulkDeleteSalesnote;
 /* ════ 표뷰 열 너비 드래그 조절 + 저장(2026-07-28, 대표 확정) ═══════════════════════════════════════════
  * colgroup<col data-colkey> 방식 — th/td 폭을 한 곳(col)에서 동시 제어(기존 th:nth-child(N) width CSS는
  * "저장값 없을 때의 기본값" 소스로 그대로 둠 — _CI_SHEET_COLS의 기본폭과 반드시 동기화). 저장=localStorage
@@ -17747,6 +17801,22 @@ var _CI_SHEET_COLS=[  /* nth-child 2~10 순서(1=chk,11=act는 목록 밖=고정
   {key:'phone', w:140}, {key:'status', w:140}, {key:'memo', w:0}, {key:'bigo', w:220}, {key:'atts', w:96}
 ];
 var _CI_SHEET_COL_ORDER=_CI_SHEET_COLS.map(function(c){ return c.key; });
+/* PR-S1(2026-07-30): 고객관리(salesnote) 표뷰 컬럼셋 — care의 _CI_SHEET_COLS는 위 그대로 무접촉, 별도 배열만 신설.
+ * 10열: care 9열(memo 포함) + 계약일(appl). 순서 = idate·attr·name·birthgender·phone·status·memo·appl·bigo·atts.
+ *   - 상담내용(memo): 표시 전용(편집 불가) 고정폭 160. 상담상태(status)와 계약일(appl) 사이(care 표뷰의 memo 위치와 동일).
+ *   - 가변열(w:0, 남는 폭 흡수)=비고(bigo) 하나뿐(_ciSheetNormalizeColW는 flexIdx 하나만 처리). memo는 고정폭이라 흡수 대상 아님.
+ * 기본폭 재배분(2026-07-30, 10열화로 고정열 합이 커져 비고가 짜부되는 결함 수정): 고정열 합을 낮춰 풀스크린에서 비고 가변폭을 넉넉히 확보.
+ *   고정열 합(memo·idate·attr·name·birthgender·phone·status·appl·atts)=1000 + chk40 + act44 = 1084.
+ *   컨테이너 1500px → avail=1416 → 비고=1416-1000=416px. 컨테이너 1250px(좁은 풀스크린)에서도 비고=166px(>최소 150 보장). */
+var _CI_SHEET_COLS_SALESNOTE=[
+  {key:'idate', w:100}, {key:'attr', w:110}, {key:'name', w:90}, {key:'birthgender', w:160},
+  {key:'phone', w:120}, {key:'status', w:90}, {key:'memo', w:160}, {key:'appl', w:100}, {key:'bigo', w:0}, {key:'atts', w:70}
+];
+var _CI_SHEET_COL_ORDER_SALESNOTE=_CI_SHEET_COLS_SALESNOTE.map(function(c){ return c.key; });
+function _ciSheetColsCur(){ return (window._ciMode==='salesnote') ? _CI_SHEET_COLS_SALESNOTE : _CI_SHEET_COLS; }  /* care는 항상 원본 _CI_SHEET_COLS 참조 그대로 반환(결과 불변) */
+window._ciSheetColsCur=_ciSheetColsCur;
+function _ciSheetColOrderCur(){ return (window._ciMode==='salesnote') ? _CI_SHEET_COL_ORDER_SALESNOTE : _CI_SHEET_COL_ORDER; }
+window._ciSheetColOrderCur=_ciSheetColOrderCur;
 var _CI_SHEET_CHKW=40, _CI_SHEET_ACTW=44;  /* 체크박스·삭제열 고정폭(기존 CSS와 동일값) — colgroup에도 명시해 폭 계산을 전적으로 JS가 결정하게 함(2026-07-29) */
 var _CI_SHEET_FIXW=_CI_SHEET_CHKW+_CI_SHEET_ACTW;
 /* ════ 표뷰 열폭 전체폭 정규화(2026-07-29, 첨부열 추가로 가로 스크롤 발생 — 대표 지시) ════
@@ -17769,13 +17839,13 @@ function _ciSheetContainerW(){  /* 표뷰 열폭 정규화의 기준 폭. "실�
   }catch(e){ return _ciSheetLastValidW||1220; }
 }
 window._ciSheetContainerW=_ciSheetContainerW;
-function _ciSheetNormalizeColW(containerW){  /* 저장값(localStorage) 기준 각 열 폭 계산 → 합이 avail(=컨테이너폭-chk-act)이 되도록 조정. 반환: [{key,w}] (_CI_SHEET_COLS와 같은 순서) */
+function _ciSheetNormalizeColW(containerW){  /* 저장값(localStorage) 기준 각 열 폭 계산 → 합이 avail(=컨테이너폭-chk-act)이 되도록 조정. 반환: [{key,w}] (_ciSheetColsCur()와 같은 순서). PR-S1: _CI_SHEET_COLS 직접참조→_ciSheetColsCur() 경유(care는 동일 배열 그대로 반환하므로 결과 불변) */
   containerW = containerW || _ciSheetContainerW();
   var saved=_ciSheetLoadColW();
-  var cols=_CI_SHEET_COLS.map(function(c){ return {key:c.key, w:(saved[c.key]||c.w||0)}; });
+  var cols=_ciSheetColsCur().map(function(c){ return {key:c.key, w:(saved[c.key]||c.w||0)}; });
   var avail=Math.max(0, containerW-_CI_SHEET_FIXW);
   var explicitSum=0, flexIdx=-1;
-  cols.forEach(function(c,i){ if(c.w>0) explicitSum+=c.w; else flexIdx=i; });  /* w=0(=미저장 memo)만 가변열. 그 외는 고정 */
+  cols.forEach(function(c,i){ if(c.w>0) explicitSum+=c.w; else flexIdx=i; });  /* w=0(=미저장 가변열: care=memo·salesnote=bigo)만 가변열. 그 외는 고정 */
   if(flexIdx>=0){
     var flexW=avail-explicitSum;
     if(flexW<_CI_SHEET_MINW){  /* 고정열 합이 과대 → 비율 축소해 가변열 최소폭 확보 */
@@ -17803,11 +17873,13 @@ function _ciSheetReflowColW(table){  /* 기존 DOM의 colgroup에 정규화 결�
   });
 }
 window._ciSheetReflowColW=_ciSheetReflowColW;
-function _ciSheetNeighborKey(key){  /* 드래그 시 폭을 주고받을 이웃 열 — 오른쪽 우선, 없으면(마지막 열=atts) memo(가변열)로 폴백 */
-  var i=_CI_SHEET_COL_ORDER.indexOf(key); if(i<0) return null;
-  var right=_CI_SHEET_COL_ORDER[i+1];
+function _ciSheetNeighborKey(key){  /* 드래그 시 폭을 주고받을 이웃 열 — 오른쪽 우선, 없으면(마지막 열=atts) 가변열(care=memo·salesnote=bigo)로 폴백. PR-S1: 고정 배열→_ciSheetColOrderCur() 경유(care 결과 불변) */
+  var flexKey=(window._ciMode==='salesnote')?'bigo':'memo';
+  var order=_ciSheetColOrderCur();
+  var i=order.indexOf(key); if(i<0) return null;
+  var right=order[i+1];
   if(right) return right;
-  return (key==='memo') ? null : 'memo';
+  return (key===flexKey) ? null : flexKey;
 }
 window._ciSheetNeighborKey=_ciSheetNeighborKey;
 function _ciSheetLoadColW(){
@@ -17832,7 +17904,7 @@ function _ciSheetColgroupHtml(){  /* _ciSheetNormalizeColW()로 열폭 합=컨�
   return out;
 }
 window._ciSheetColgroupHtml=_ciSheetColgroupHtml;
-var _CI_SHEET_RSZ_LABEL={idate:'입력일자',attr:'인입유형',name:'이름',birthgender:'생년월일/성별',phone:'전화',status:'상담상태',memo:'상담내용',bigo:'비고',atts:'첨부'};
+var _CI_SHEET_RSZ_LABEL={idate:'입력일자',attr:'인입유형',name:'이름',birthgender:'생년월일/성별',phone:'전화',status:'상담상태',memo:'상담내용',bigo:'비고',atts:'첨부',appl:'계약일'};  /* PR-S1: appl(계약일)=salesnote 전용 신규 키 추가(기존 키 무변경) */
 function _ciSheetRszHandle(key){ return '<span class="ci-sh-rsz" data-colkey="'+key+'" onmousedown="_ciSheetResizeStart(event,this)" ondblclick="_ciSheetAutoFit(event,this)" title="드래그: 폭 조절 · 더블클릭: 내용에 맞춤" aria-label="'+_CI_SHEET_RSZ_LABEL[key]+' 열 너비 조절"></span>'; }
 window._ciSheetRszHandle=_ciSheetRszHandle;
 var _ciSheetRszState=null;
@@ -17916,6 +17988,7 @@ function _ciSheetAutoFit(ev, el){  /* 핸들 더블클릭 = 그 열 내용에 �
 }
 window._ciSheetAutoFit=_ciSheetAutoFit;
 function _ciSheetHtml(){
+  if(window._ciMode==='salesnote'){ return _ciSheetHtmlSalesnote(); }  /* PR-S1(2026-07-30): salesnote 전용 컬럼셋(계약일·상담상태 고정 등)은 별도 함수 — 아래 care 경로 본문은 문자 그대로 무변경 */
   var all=_ciSheetRows();
   var mm=window._ciMemoMap||{};
   var total=all.length;
@@ -17954,6 +18027,50 @@ function _ciSheetHtml(){
   var emptyHint=total?'':'<tr class="ci-sh-emptyrow"><td colspan="11">아직 등록된 고객이 없습니다. 맨 윗줄에 이름을 입력하면 첫 고객이 추가됩니다.</td></tr>';
   return '<div class="ci-sheet-wrap"><table class="ci-sheet">'+_ciSheetColgroupHtml()+head+'<tbody>'+_ciSheetNewRowHtml()+rows+emptyHint+'</tbody></table></div>'+_ciSheetPagerHtml(total,page,pageCount);
 }
+/* PR-S1(2026-07-30): 고객관리(salesnote) 표뷰 렌더 — care와 컬럼 개수·순서는 동일(9열)하되 상담내용(memo)→계약일(appl) 교체,
+ * 상담상태는 청약완료 고정이라 편집 셀(_ciEdTd/onclick=_ciCellEdit)로 만들지 않고 배지만 표시(PR2 정합, 다른 상태로 못 바꿈).
+ * 나머지(입력일자·인입유형·이름·생년월일/성별·전화·계약일·비고·첨부·다중선택·삭제)는 care와 동일 패턴 재사용. */
+function _ciSheetHtmlSalesnote(){
+  var all=_ciSheetRows();
+  var total=all.length;
+  var ps=window._ciSheetPageSize||30;
+  var pageCount=Math.max(1, Math.ceil(total/ps));
+  var page=Math.min(Math.max(1, window._ciSheetPage||1), pageCount); window._ciSheetPage=page;
+  var data=all.slice((page-1)*ps, (page-1)*ps+ps);
+  var head='<thead><tr>'
+    +'<th class="ci-sh-chk"><input type="checkbox" id="ci-sh-selall" onchange="_ciSheetSelAllToggle(this.checked)" aria-label="전체선택"></th>'
+    +'<th>입력일자'+_ciSheetRszHandle('idate')+'</th><th>인입유형'+_ciSheetRszHandle('attr')+'</th><th>이름'+_ciSheetRszHandle('name')+'</th><th>생년월일/성별'+_ciSheetRszHandle('birthgender')+'</th><th>전화'+_ciSheetRszHandle('phone')+'</th><th>상담상태'+_ciSheetRszHandle('status')+'</th><th class="ci-sh-memo-h">상담내용'+_ciSheetRszHandle('memo')+'</th><th>계약일'+_ciSheetRszHandle('appl')+'</th><th class="ci-sh-bigo-h">비고'+_ciSheetRszHandle('bigo')+'</th><th>첨부'+_ciSheetRszHandle('atts')+'</th><th aria-label="삭제"></th>'
+    +'</tr></thead>';
+  var rows=data.map(function(c){
+    var bg=_ciBgDisplay(c.birth_date, c.gender);
+    var memo=_ciSheetMemo(c);  /* PR-S1: 상담내용 표시전용 — care와 동일 헬퍼(profile.consult_log 최신 우선, 없으면 _ciMemoMap 폴백) */
+    var bigo=_ciSheetBigo(c);
+    var attr=_ciSheetAttr(c);
+    var appl=_ciSheetAppl(c);
+    var _sc=/뱅크샐러드/.test(attr)?' ci-src-bank':(/카카오페이/.test(attr)?' ci-src-kakao':(/보맵/.test(attr)?' ci-src-bomap':''));  /* 인입유형 행 색 — care와 동일 규칙(이번 범위 아님, 손대지 않음) */
+    var tel=String(c.phone||c.phone_raw||'');
+    var idEsc=_ciEsc(c.id), idA=_ciAttr(c.id);
+    var selOn=(window._ciSheetSel||{})[String(c.id)]?' checked':'';
+    var attsN=(c.profile&&Array.isArray(c.profile.attachments))?c.profile.attachments.length:0;
+    return '<tr class="ci-sh-row'+_sc+'">'
+      +'<td class="ci-sh-chk"><input type="checkbox" class="ci-sh-cb" data-cid="'+idA+'"'+selOn+' onchange="_ciSheetSelToggle(this)" aria-label="선택"></td>'
+      +_ciEdTd('idate', idA, _ciDateOf(c.created_at), '<span class="ci-cellv">'+_ciEsc(_ciDateOf(c.created_at))+'</span>', 'ci-sh-date')
+      +_ciEdTd('attr', idA, attr, '<span class="ci-cellv">'+_ciEsc(attr)+'</span>')
+      +_ciEdTd('name', idA, (c.name||''), '<span class="ci-cellv ci-sh-nm-v">'+_ciEsc(c.name||'')+'</span>', 'ci-sh-nm')
+      +'<td class="ci-ed" data-cid="'+idA+'" data-field="birthgender" data-birth="'+_ciAttr(c.birth_date||'')+'" data-gender="'+_ciAttr(c.gender||'')+'" onclick="_ciCellEdit(this)"><span class="ci-cellv">'+_ciEsc(bg)+'</span></td>'
+      +_ciEdTd('phone', idA, tel, '<span class="ci-cellv">'+_ciEsc(tel)+'</span>', 'ci-sh-tel')
+      +'<td class="ci-sh-status-lock" data-field="status" data-cid="'+idA+'" title="고객관리는 청약완료 고객만 관리합니다"><span class="ci-cellv">'+_ciStatusBadge(c.status||'청약완료')+'</span></td>'  /* PR2 정합: 편집 불가(onclick 없음, data-field는 autofit(_ciSheetAutoFit) td 탐색용으로만 유지) — 항상 청약완료 고정 표시 */
+      +'<td class="ci-sh-memo ci-sh-memo-lock" data-field="memo" data-cid="'+idA+'"><span class="ci-cellv">'+_ciEsc(memo)+'</span></td>'  /* PR-S1: 상담내용=표시 전용(onclick 없음=편집 불가, status-lock과 동일 non-editable 패턴). .ci-sh-memo로 pre-wrap 멀티라인 유지. data-field는 autofit td 탐색용만 */
+      +_ciEdTd('appl', idA, appl, '<span class="ci-cellv">'+_ciEsc(appl)+'</span>', 'ci-sh-date')
+      +_ciEdTd('bigo', idA, bigo, '<span class="ci-cellv">'+_ciEsc(bigo)+'</span>', 'ci-sh-bigo', bigo)
+      +'<td class="ci-sh-atts" data-cid="'+idA+'"><button type="button" class="ci-sh-atts-btn" onclick="ciSheetAttsOpen(event,this,\''+idEsc+'\')" title="첨부 파일" style="padding:3px 8px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--ts);font-size:0.78rem;cursor:pointer;font-family:inherit">'+(attsN?('📎'+attsN):'+')+'</button></td>'
+      +'<td class="ci-sh-act"><button type="button" class="ci-sh-del" title="삭제(휴지통 이동)" aria-label="삭제" onclick="_ciDelete(\''+idEsc+'\')">🗑</button></td>'
+      +'</tr>';
+  }).join('');
+  var emptyHint=total?'':'<tr class="ci-sh-emptyrow"><td colspan="12">아직 등록된 고객이 없습니다. 맨 윗줄에 이름을 입력하면 첫 고객이 추가됩니다.</td></tr>';  /* PR-S1: 10열+chk+act=12칸(상담내용 재추가) */
+  return '<div class="ci-sheet-wrap"><table class="ci-sheet">'+_ciSheetColgroupHtml()+head+'<tbody>'+_ciSheetNewRowHtmlSalesnote()+rows+emptyHint+'</tbody></table></div>'+_ciSheetPagerHtml(total,page,pageCount);
+}
+window._ciSheetHtmlSalesnote=_ciSheetHtmlSalesnote;
 /* 하단 페이지네이션 — care 전량 로드분을 페이지 크기로 나눈 번호 네비 + "N개씩 보기 · 총 M명". */
 function _ciSheetPagerHtml(total,page,pageCount){
   var ps=window._ciSheetPageSize||30;
@@ -17991,6 +18108,26 @@ function _ciSheetNewRowHtml(){  /* 맨 아래 상시 빈 입력 행 — 이름 �
     +'</tr>';
 }
 window._ciSheetNewRowHtml=_ciSheetNewRowHtml;
+/* PR-S1(2026-07-30): salesnote 새 입력 행 — 상태 select 없음(항상 청약완료로 고정 저장, _ciNewRowCommitSalesnote 참고).
+ * 상담내용(memo) 칸=표시 전용이라 새 행에선 빈 칸(data-nf 없음 → _ciNewRowCommitSalesnote가 읽지 않음=저장 안 함, 열 정렬만 유지). 계약일(appl) 칸은 입력 가능. */
+function _ciSheetNewRowHtmlSalesnote(){
+  var evt=' onblur="_ciNewRowBlur()" onkeydown="_ciNewRowKey(event)"';
+  return '<tr class="ci-sh-new">'
+    +'<td class="ci-sh-chk"></td>'
+    +'<td class="ci-sh-date ci-sh-newdate"><input type="text" class="ci-cell-inp ci-cell-idate" data-nf="idate" value="'+_ciTodayStr()+'" placeholder="2026-07-27" title="입력일자(오늘 자동, 직접 입력 가능 · 20260727 → 2026-07-27)"'+evt+'></td>'
+    +'<td><input type="text" class="ci-cell-inp" data-nf="attr" placeholder="인입유형"'+evt+'></td>'
+    +'<td><input type="text" class="ci-cell-inp" data-nf="name" placeholder="이름 입력 → 추가"'+evt+'></td>'
+    +'<td><input type="text" class="ci-cell-inp ci-cell-birth" data-nf="birth" placeholder="1980-01-01"'+evt+'><select class="ci-cell-inp ci-cell-gender" data-nf="gender"'+evt+'>'+'<option value="">성별</option><option value="남">남</option><option value="여">여</option>'+'</select></td>'
+    +'<td><input type="text" class="ci-cell-inp" data-nf="phone" placeholder="전화"'+evt+'></td>'
+    +'<td class="ci-sh-status-lock"><span class="ci-cellv">'+_ciStatusBadge('청약완료')+'</span></td>'  /* 편집칸 없음(고정) */
+    +'<td class="ci-sh-memo-lock"></td>'  /* PR-S1: 상담내용=표시 전용 → 새 행은 빈 칸(입력·저장 없음, 열 정렬만) */
+    +'<td><input type="text" class="ci-cell-inp" data-nf="appl" placeholder="계약일(2026-07-27)"'+evt+'></td>'
+    +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="bigo" placeholder="비고"'+evt+'></textarea></td>'
+    +'<td class="ci-sh-atts"></td>'
+    +'<td class="ci-sh-act"><button type="button" class="ci-sh-add" title="추가(저장)" aria-label="새 고객 추가" onclick="_ciNewRowCommit()">+</button></td>'
+    +'</tr>';
+}
+window._ciSheetNewRowHtmlSalesnote=_ciSheetNewRowHtmlSalesnote;
 window._ciSheetHtml=_ciSheetHtml;
 /* ════ 표뷰 첨부 팝오버 — 카드폼과 같은 첨부함(profile.attachments) 공유. 셀 클릭 위치에 뜨는 목록(미리보기·다운로드·삭제·추가).
  * 저장은 _ciPatchProfile(서버 최신 재조회 → 해당 키만 병합 → PATCH)로 다른 profile 키 유실 방지. 2026-07-29 ════ */
@@ -18069,28 +18206,32 @@ function ciSheetAttDel(i){
 window.ciSheetAttDel=ciSheetAttDel;
 var _CI_NARROW_BP=860;  /* 좁은 화면 기준(px) — 4분할이 세로 스택되는 폭과 동일. 이 이하에선 표(min-width:1180) 대신 카드 강제(2026-07-27 A안, 대표 승인) */
 function _ciIsNarrow(){ try{ return (window.innerWidth||document.documentElement.clientWidth||9999)<=_CI_NARROW_BP; }catch(e){ return false; } }
-/* 유효 뷰 = 화면폭까지 반영한 실제 렌더 뷰. 사용자가 '표'를 골랐어도(_ciView) 좁은 화면이면 카드로. 창 넓히면 자동 복귀. care 아니면 항상 card 경로 취급(기존과 동일). */
-function _ciEffView(){ if(window._ciMode!=='care') return (window._ciView==='sheet')?'sheet':'card'; if(window._ciView!=='sheet') return 'card'; return _ciIsNarrow()?'card':'sheet'; }
+/* 유효 뷰 = 화면폭까지 반영한 실제 렌더 뷰. 사용자가 '표'를 골랐어도(_ciView) 좁은 화면이면 카드로. 창 넓히면 자동 복귀.
+ * PR-S1(2026-07-30): care 하드게이트→_ciSheetEnabled()로 개방. _ciSheetEnabled()는 두 모드 모두 true를 반환하므로
+ * 첫 분기(!_ciSheetEnabled())는 사실상 도달 불가(방어적 폴백만 유지) — care는 이전과 동일하게 narrow 로직을 그대로 타고,
+ * salesnote도 이제 동일한 narrow 로직(_ciIsNarrow())을 적용해 좁은 화면에서 카드로 강제된다(care와 동형 UX). */
+function _ciEffView(){ if(!_ciSheetEnabled()) return (window._ciView==='sheet')?'sheet':'card'; if(window._ciView!=='sheet') return 'card'; return _ciIsNarrow()?'card':'sheet'; }
 window._ciEffView=_ciEffView;
-/* 창 크기 변화로 유효 뷰가 바뀌면(표↔카드 경계 통과) 자동 재렌더. care+표선택 상태에서만, 디바운스 150ms. 1회만 바인딩. */
+/* 창 크기 변화로 유효 뷰가 바뀌면(표↔카드 경계 통과) 자동 재렌더. 표선택 상태에서만, 디바운스 150ms. 1회만 바인딩.
+ * PR-S1: care 하드게이트→_ciSheetEnabled()(salesnote도 리사이즈 자동전환 적용). */
 if(!window._ciResizeBound){ window._ciResizeBound=true; window.addEventListener('resize', function(){
-  if(window._ciMode!=='care' || window._ciView!=='sheet') return;
+  if(!_ciSheetEnabled() || window._ciView!=='sheet') return;
   clearTimeout(window._ciResizeT);
   window._ciResizeT=setTimeout(function(){
     var ev=_ciEffView();
-    if(ev!==window._ciLastEffView){ window._ciLastEffView=ev; if(window._ciMode==='care' && window._ciView==='sheet') _ciRender(); return; }
+    if(ev!==window._ciLastEffView){ window._ciLastEffView=ev; if(_ciSheetEnabled() && window._ciView==='sheet') _ciRender(); return; }
     if(ev==='sheet') _ciSheetReflowColW();  /* 표↔카드 전환은 없지만 폭만 바뀐 경우(창 크기·사이드바 등) — 전체 리렌더 없이 colgroup만 재정규화(2026-07-29) */
   }, 150);
 }); }
 function _ciSetView(v){
   window._ciView=(v==='sheet')?'sheet':'card';
-  if(window._ciMode!=='care') return;  /* care 전용 — salesnote는 토글 자체 미노출 */
+  if(!_ciSheetEnabled()) return;  /* PR-S1: care 전용→_ciSheetEnabled()로 개방(salesnote도 토글 노출) */
   _ciRender();
 }
 window._ciSetView=_ciSetView;
 function _ciSheetToolsRender(){
   var el=document.getElementById('ci-sheet-tools'); if(!el) return;
-  if(window._ciMode!=='care'){ el.style.display='none'; el.innerHTML=''; return; }  /* salesnote 무영향 */
+  if(!_ciSheetEnabled()){ el.style.display='none'; el.innerHTML=''; return; }  /* PR-S1: care 전용→_ciSheetEnabled()로 개방 */
   el.style.display='';
   var eff=_ciEffView();          /* 실제 표시 뷰(좁으면 card) — on 하이라이트·페이지크기 노출 기준 */
   var narrow=_ciIsNarrow();      /* 좁은 화면이면 표 선택이어도 카드로 강제 */
@@ -18150,6 +18291,7 @@ function _ciLoadCareMemos(){
 window._ciLoadCareMemos=_ciLoadCareMemos;
 function _ciCsvCell(v){ v=(v==null?'':String(v)); if(/[",\n\r]/.test(v)){ v='"'+v.replace(/"/g,'""')+'"'; } return v; }
 function _ciSheetCsv(){
+  if(window._ciMode==='salesnote'){ return _ciSheetCsvSalesnote(); }  /* PR-S1(2026-07-30): salesnote는 컬럼셋이 달라(계약일, 상담내용 없음) 별도 함수 — 아래 care 경로는 문자 그대로 무변경 */
   /* 현재 care 목록(표시 순서 그대로)을 CSV로. UTF-8 BOM 접두(엑셀 한글). 컬럼=표와 동일(삭제 제외). 외부 라이브러리 없이 Blob+a[download]. */
   var data=_ciSheetRows(), mm=window._ciMemoMap||{};
   var headers=['입력일자','인입유형','이름','생년월일/성별','전화','상담상태','상담내용','비고'];
@@ -18170,10 +18312,30 @@ function _ciSheetCsv(){
   }catch(e){ alert('CSV 생성 실패: '+(e&&e.message||e)); }
 }
 window._ciSheetCsv=_ciSheetCsv;
+/* PR-S1(2026-07-30): 고객관리(salesnote) CSV — 표뷰 10열 컬럼셋(상담내용·계약일 포함)과 동일한 헤더로 내보낸다. 상담내용=_ciSheetMemo(표뷰 셀과 동일 값). 그 외 로직(BOM·이스케이프·다운로드)은 care와 동형. */
+function _ciSheetCsvSalesnote(){
+  var data=_ciSheetRows();
+  var headers=['입력일자','인입유형','이름','생년월일/성별','전화','상담상태','상담내용','계약일','비고'];
+  var lines=[headers.map(_ciCsvCell).join(',')];
+  data.forEach(function(c){
+    var bg=[(c.birth_date||''),(c.gender||'')].filter(Boolean).join(' / ');
+    lines.push([_ciDateOf(c.created_at), _ciSheetAttr(c), (c.name||''), bg, (c.phone||c.phone_raw||''), (c.status||'청약완료'), _ciSheetMemo(c), _ciSheetAppl(c), _ciSheetBigo(c)].map(_ciCsvCell).join(','));
+  });
+  var csv='﻿'+lines.join('\r\n');
+  var d=new Date(), pad=function(n){return (n<10?'0':'')+n;};
+  var fname='고객관리_'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.csv';
+  try{
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{ document.body.removeChild(a); }catch(_e){} URL.revokeObjectURL(url); }, 0);
+  }catch(e){ alert('CSV 생성 실패: '+(e&&e.message||e)); }
+}
+window._ciSheetCsvSalesnote=_ciSheetCsvSalesnote;
 /* ════ 상담관리(care) 표 뷰 2차 — 인라인 편집 저장 로직(전부 신규 함수) ════════════════════════════
  * 저장 매핑: name·phone(+phone_raw)·birth_date·gender·status → PATCH sales_customers / attr·비고 → profile jsonb 머지 PATCH
  *          상담내용(memo) → 최근 sales_consultations row PATCH(있으면) 또는 POST(없으면). 성공=낙관적 로컬 갱신, 실패=원값 복원+alert. */
-function _ciSheetRerender(){ if(window._ciMode==='care' && _ciEffView()==='sheet'){ _ciSheetSelClear(); var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); _ciSheetSelSync(); _ciNewRowOcrBind(); } }  /* 유효뷰=sheet일 때만(좁은 화면 카드 모드에선 표 HTML 오주입 방지). 재렌더=다중선택 초기화(대표 확정: 선택 범위는 현재 페이지 한정) + 선택삭제 버튼 갱신 */
+function _ciSheetRerender(){ if(_ciSheetEnabled() && _ciEffView()==='sheet'){ _ciSheetSelClear(); var lst=document.getElementById('ci-list'); if(lst) lst.innerHTML=_ciSheetHtml(); _ciSheetSelSync(); _ciNewRowOcrBind(); } }  /* 유효뷰=sheet일 때만(좁은 화면 카드 모드에선 표 HTML 오주입 방지). 재렌더=다중선택 초기화(대표 확정: 선택 범위는 현재 페이지 한정) + 선택삭제 버튼 갱신. PR-S1: care 하드게이트→_ciSheetEnabled()로 개방 */
 /* 표 뷰에서 추가·상태변경 후 상단(상담 플로우 밴드·전체 카운트·오늘의 할 일·데이터 현황)만 부분 갱신 — 카드 경로(_ciLoad→_ciRender)와 집계 동기를 맞춘다. ci-list(표 본문)는 건드리지 않아 편집 흐름 무영향. 2026-07-27 */
 function _ciSheetSyncTop(){
   if(window._ciMode!=='care') return;
@@ -18184,7 +18346,11 @@ function _ciSheetSyncTop(){
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
 }
 window._ciSheetSyncTop=_ciSheetSyncTop;
-function _ciLocalPatch(id, patch){ (window._ciData||[]).forEach(function(c){ if(String(c.id)===String(id)){ for(var k in patch){ if(Object.prototype.hasOwnProperty.call(patch,k)) c[k]=patch[k]; } } }); }
+function _ciLocalPatch(id, patch){
+  var apply=function(arr){ (arr||[]).forEach(function(c){ if(String(c.id)===String(id)){ for(var k in patch){ if(Object.prototype.hasOwnProperty.call(patch,k)) c[k]=patch[k]; } } }); };
+  apply(window._ciData);
+  apply(window._ciApplData);  /* PR-S1(2026-07-30): 고객관리(salesnote) 표뷰는 _ciApplData를 읽으므로 낙관적 동기 대상에 추가(같은 id가 없으면 no-op — care는 이 배열을 렌더에 안 써서 무해) */
+}
 function _ciSaveCust(id, patch, ok, fail){  /* sales_customers 부분 PATCH(_snSaveForm 패턴 재사용) */
   if(!(window.db&&window.db.fetch)){ if(fail)fail(); return; }
   var body={}; for(var k in patch){ if(Object.prototype.hasOwnProperty.call(patch,k)) body[k]=patch[k]; }
@@ -18205,6 +18371,7 @@ function _ciPatchProfile(id, mutate, ok, fail){
       return window.db.fetch('/rest/v1/sales_customers?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({profile:prof,updated_at:new Date().toISOString()})})
         .then(function(res){ if(!(res&&(res.ok||res.status===204))){ return (res?res.text():Promise.resolve('')).then(function(t){ throw new Error(t||('HTTP '+(res&&res.status))); }); }
           var c=(window._ciData||[]).filter(function(x){return String(x.id)===String(id);})[0]; if(c) c.profile=prof;  /* 로컬 낙관적 동기(서버 최신 반영) */
+          var c2=(window._ciApplData||[]).filter(function(x){return String(x.id)===String(id);})[0]; if(c2) c2.profile=prof;  /* PR-S1(2026-07-30): salesnote 표뷰가 읽는 배열도 동기(같은 id 없으면 no-op — care 무해) */
           if(ok) ok(prof); });
     })
     .catch(function(e){ alert('저장 실패: '+(e&&e.message||e)); if(fail)fail(); });
@@ -18327,6 +18494,11 @@ function _ciCellCommit(td){
     var vm=String((ctrls[0]&&ctrls[0].value)||'').trim();
     if(vm===(td.getAttribute('data-raw')||'')){ restore(); return; }
     _ciSaveSheetConsult(id, vm, function(){ _ciCellApply(td,'memo',{value:vm}); }, restore);  /* 정본=profile.consult_log(카드뷰와 동일 저장소) · sales_consultations 경로 미사용 */
+  } else if(field==='appl'){  /* PR-S1(2026-07-30): salesnote 전용 계약일 셀 — care 표에는 이 필드 자체가 없어(td data-field='appl' 미생성) 이 분기는 salesnote에서만 도달 */
+    var vaD=_ciFmtBirth(String((ctrls[0]&&ctrls[0].value)||'').trim());  /* 20260727→2026-07-27 자동(idate와 동일 포맷 규칙 재사용) */
+    if(vaD && !/^\d{4}-\d{2}-\d{2}$/.test(vaD)){ alert('계약일은 8자리 숫자(예: 20260727) 또는 2026-07-27 형식으로 입력하세요(비워도 됩니다)'); restore(); return; }
+    if(vaD===(td.getAttribute('data-raw')||'')){ restore(); return; }
+    _ciSaveProfileKey(id, 'appl_date', vaD||'', function(){ _ciCellApply(td,'appl',{value:vaD}); if(typeof window._cfSalesnoteTop==='function') window._cfSalesnoteTop(); }, restore);  /* profile.appl_date=care-flow.js 케어 플로우 배치 기준 키 재사용 → 저장 즉시 상단 케어 플로우 카드 재계산 */
   } else { restore(); }
 }
 window._ciCellEdit=_ciCellEdit; window._ciCellCommit=_ciCellCommit; window._ciCellCancel=_ciCellCancel;
@@ -18337,6 +18509,7 @@ function _ciNewRowReset(){ var tr=document.querySelector('.ci-sheet .ci-sh-new')
 function _ciNewRowKey(e){ if(!e) return; if(e.key==='Enter'){ if(e.target && e.target.tagName==='TEXTAREA') return; e.preventDefault(); _ciNewRowCommit(); } else if(e.key==='Escape'){ e.preventDefault(); _ciNewRowReset(); } }  /* 상담내용·비고(textarea)는 Enter=줄바꿈 · 나머지 칸은 Enter=추가 */
 function _ciNewRowBlur(){ setTimeout(function(){ var tr=document.querySelector('.ci-sheet .ci-sh-new'); if(!tr) return; if(tr.contains(document.activeElement)) return; _ciNewRowCommit(); }, 0); }
 function _ciNewRowCommit(){
+  if(window._ciMode==='salesnote'){ return _ciNewRowCommitSalesnote(); }  /* PR-S1(2026-07-30): salesnote는 status 고정('청약완료')·profile.appl_date 전용 별도 함수 — 아래 care 경로는 문자 그대로 무변경 */
   if(window._ciNewBusy) return;
   var v=_ciNewRowVals(); if(!v) return;
   var name=(v.name||'').trim();
@@ -18366,13 +18539,48 @@ function _ciNewRowCommit(){
     .catch(function(e){ window._ciNewBusy=false; alert('고객 추가 실패: '+(e&&e.message||e)); });
 }
 window._ciNewRowKey=_ciNewRowKey; window._ciNewRowBlur=_ciNewRowBlur; window._ciNewRowCommit=_ciNewRowCommit; window._ciNewRowReset=_ciNewRowReset;
+/* PR-S1(2026-07-30): 고객관리(salesnote) 표뷰 새 행 저장 — status는 항상 '청약완료' 강제(PR2 정합, _ciSaveForm과 동일 원칙),
+ * 상담내용(memo) 없음·계약일(profile.appl_date)만 있음. 저장 후 window._ciApplData(표뷰가 읽는 배열)에 낙관적 추가. */
+function _ciNewRowCommitSalesnote(){
+  if(window._ciNewBusy) return;
+  var v=_ciNewRowVals(); if(!v) return;
+  var name=(v.name||'').trim();
+  if(!name) return;  /* 이름 비면 새 고객 만들지 않음(빈 행 방치 저장 금지) */
+  var birth=_ciFmtBirth((v.birth||'').trim());  /* 19760108→1976-01-08 자동 */
+  if(birth && !/^\d{4}-\d{2}-\d{2}$/.test(birth)){ alert('생년월일은 8자리 숫자(예: 19760108) 또는 1976-01-08 형식으로 입력하세요(비워도 됩니다)'); var b=v._tr.querySelector('[data-nf="birth"]'); if(b)b.focus(); return; }
+  var appl=_ciFmtBirth((v.appl||'').trim());  /* 계약일 20260727→2026-07-27 자동 */
+  if(appl && !/^\d{4}-\d{2}-\d{2}$/.test(appl)){ alert('계약일은 8자리 숫자(예: 20260727) 또는 2026-07-27 형식으로 입력하세요(비워도 됩니다)'); var a=v._tr.querySelector('[data-nf="appl"]'); if(a)a.focus(); return; }
+  var owner=(typeof _snOwnerId==='function')?_snOwnerId():'';
+  if(!owner){ alert('로그인 정보를 확인할 수 없습니다'); return; }
+  if(!(window.db&&window.db.fetch)) return;
+  window._ciNewBusy=true;
+  var now=new Date().toISOString();
+  var idate=_ciFmtBirth((v.idate||'').trim());  /* 입력일자 직접입력(20260727→2026-07-27) → created_at */
+  var createdAt=(idate && /^\d{4}-\d{2}-\d{2}$/.test(idate)) ? (idate+'T00:00:00Z') : now;
+  var phone=_ciFmtPhone((v.phone||'').trim());  /* 01012345678→010-1234-5678 자동 */
+  var profile={}; if(v.attr) profile.attr=v.attr; if(v.bigo) profile['비고']=v.bigo; if(appl) profile.appl_date=appl;
+  var body={ name:name, phone:phone||null, phone_raw:phone?phone.replace(/[^0-9]/g,''):null,
+    birth_date:birth||null, gender:v.gender||null, channel:null, status:'청약완료',  /* PR2(2026-07-30, 대표 확정) — 고객관리는 청약완료 고정, 폼(_ciSaveForm)과 동일 원칙 */
+    profile:profile, owner_id:owner, created_at:createdAt, updated_at:now, source_ref:null };
+  window.db.fetch('/rest/v1/sales_customers',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(body)})
+    .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); } return r.json(); })
+    .then(function(rows){
+      var nc=(rows&&rows[0])||null;
+      window._ciNewBusy=false;
+      if(nc){ window._ciApplData=window._ciApplData||[]; window._ciApplData.push(nc); }  /* 표뷰가 읽는 배열(_ciSheetRowsSalesnote)에 낙관적 추가 — window._ciData(현재 카드 페이지)는 서버 페이지네이션이라 손대지 않음 */
+      _ciSheetRerender();
+      if(typeof window._cfSalesnoteTop==='function') window._cfSalesnoteTop();  /* 오늘의 케어·플로우 카드 집계도 새 고객 반영 */
+    })
+    .catch(function(e){ window._ciNewBusy=false; alert('고객 추가 실패: '+(e&&e.message||e)); });
+}
+window._ciNewRowCommitSalesnote=_ciNewRowCommitSalesnote;
 /* ── 표뷰 새 행 화면캡처 OCR(Ctrl+V) — 카드폼 _ciOcrBind/_ciOcrRun을 본떠 새 행 칸에만 자동 채움. 저장은 기존 + 버튼(_ciNewRowCommit)으로만. 원본/base64 미저장. ── */
 function _ciNewRowOcrBind(){
   /* 카드폼 _ciOcrBind 방식 복제: 재렌더에도 유지되는 상위 컨테이너(#ci-list)에 paste 리스너 1회만(중복 방지 플래그 _nrOcrB). care+표뷰 표시 중이고 새 행(.ci-sh-new)이 있을 때만 동작 → 카드폼 #ci-preview paste와 스코프 분리(이중 실행 없음). */
   var host=document.getElementById('ci-list'); if(!host||host._nrOcrB) return; host._nrOcrB=1;
   host.addEventListener('paste', function(ev){
     try{
-      if(window._ciMode!=='care' || _ciEffView()!=='sheet') return;   /* 표뷰(넓은 화면)로 표시 중일 때만 */
+      if(!_ciSheetEnabled() || _ciEffView()!=='sheet') return;   /* 표뷰(넓은 화면)로 표시 중일 때만. PR-S1: care 하드게이트→_ciSheetEnabled()로 개방 */
       if(!document.querySelector('.ci-sheet .ci-sh-new')) return;      /* 새 행 없으면 무시 */
       var dt=ev.clipboardData; if(!dt||!dt.items) return;
       for(var i=0;i<dt.items.length;i++){ var it=dt.items[i];
@@ -18407,13 +18615,13 @@ function _ciRender(){
   var _st=document.getElementById('ci-stats'); if(_st) _st.innerHTML=_ciStatsHtml();
   var lst=document.getElementById('ci-list');
   var _eff=_ciEffView(); window._ciLastEffView=_eff;  /* 유효 뷰(폭 반영) — 좁은 화면이면 표 선택이어도 카드로. resize 자동전환 기준값 동기화 */
-  var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', window._ciMode==='care' && _eff==='sheet');  /* 표뷰(넓은 화면)=전체폭(우측 폼 숨김). 카드/좁은화면/salesnote=기존 2단 → 좁은화면 카드에선 "+고객 추가" 폼 복귀(회귀 0). 2026-07-27. ★ HTML 주입 전에 먼저 토글(2026-07-30) — _ciSheetHtml→_ciSheetContainerW가 실제 표뷰(전체폭) 레이아웃을 측정하도록. 이전엔 주입 후 토글이라 2단(좁은) 폭으로 측정돼 재렌더마다 지정폭이 흔들림(드리프트) */
-  if(lst){ lst.innerHTML=(window._ciMode==='care' && _eff==='sheet') ? _ciSheetHtml() : _ciListHtml(); if(window._ciMode==='care' && _eff==='sheet') _ciNewRowOcrBind(); }  /* care+표뷰(넓은 화면) 훅(2026-07-27) — 그 외(카드/좁은화면/salesnote)는 기존 _ciListHtml 그대로. 표뷰 진입 시 새 행 OCR paste 리스너 바인딩(1회 플래그) */
-  _ciSheetToolsRender();  /* [카드|표] 토글+CSV 툴바(care 전용 표시, 내부에서 salesnote는 숨김) */
+  var _wrap=document.getElementById('ci-wrap'); if(_wrap) _wrap.classList.toggle('ci-sheetmode', _ciSheetEnabled() && _eff==='sheet');  /* 표뷰(넓은 화면)=전체폭(우측 폼 숨김). 카드/좁은화면=기존 2단 → 좁은화면 카드에선 "+고객 추가" 폼 복귀(회귀 0). 2026-07-27. ★ HTML 주입 전에 먼저 토글(2026-07-30) — _ciSheetHtml→_ciSheetContainerW가 실제 표뷰(전체폭) 레이아웃을 측정하도록. 이전엔 주입 후 토글이라 2단(좁은) 폭으로 측정돼 재렌더마다 지정폭이 흔들림(드리프트). PR-S1: care 하드게이트→_ciSheetEnabled()로 개방(salesnote도 표뷰=전체폭) */
+  if(lst){ lst.innerHTML=(_ciSheetEnabled() && _eff==='sheet') ? _ciSheetHtml() : _ciListHtml(); if(_ciSheetEnabled() && _eff==='sheet') _ciNewRowOcrBind(); }  /* care+표뷰(넓은 화면) 훅(2026-07-27) — 그 외(카드/좁은화면)는 기존 _ciListHtml 그대로. 표뷰 진입 시 새 행 OCR paste 리스너 바인딩(1회 플래그). PR-S1: care 하드게이트→_ciSheetEnabled()로 개방 */
+  _ciSheetToolsRender();  /* [카드|표] 토글+CSV 툴바(내부에서 _ciSheetEnabled() 아니면 숨김) */
   _ciListFilterBarRender();
   _ciListPeriodChipsRender();  /* 데이터현황↔리스트 기간 소트 칩 하이라이트 동기화(2026-07-29) */
   var pager=document.getElementById('ci-list-pager');
-  if(pager){ var _showPager=(window._ciMode==='salesnote' && !window._ciCareF); pager.style.display=_showPager?'':'none'; pager.innerHTML=_showPager?_ciPagerHtml():''; }  /* 페이지 이동 컨트롤(salesnote 전용, 케어플로우 필터 중엔 숨김·전량 표시) 2026-07-23 */
+  if(pager){ var _showPager=(window._ciMode==='salesnote' && !window._ciCareF && _eff!=='sheet'); pager.style.display=_showPager?'':'none'; pager.innerHTML=_showPager?_ciPagerHtml():''; }  /* 페이지 이동 컨트롤(salesnote 카드뷰 전용, 케어플로우 필터 중엔 숨김·전량 표시) 2026-07-23. PR-S1(2026-07-30): _eff!=='sheet' 조건 추가 — 표뷰는 자체 내부 페이저(_ciSheetPagerHtml)를 쓰므로 이 카드용 서버페이지 pager와 중복 노출 방지 */
   var pv=document.getElementById('ci-preview');
   if(pv && !pv.querySelector('.ci-form')){  /* 폼 편집 중이면 덮어쓰지 않음(단계·기간 필터 클릭에도 폼 유지) */
     var _pvSel=(window._ciSel!=null)&&(((window._ciData||[]).some(function(x){return String(x.id)===String(window._ciSel);}))
