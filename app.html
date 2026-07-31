@@ -17802,11 +17802,15 @@ var _CI_SHEET_COLS=[  /* nth-child 2~10 순서(1=chk,11=act는 목록 밖=고정
 ];
 var _CI_SHEET_COL_ORDER=_CI_SHEET_COLS.map(function(c){ return c.key; });
 /* PR-S1(2026-07-30): 고객관리(salesnote) 표뷰 컬럼셋 — care의 _CI_SHEET_COLS는 위 그대로 무접촉, 별도 배열만 신설.
- * 위치·개수는 care와 동일(9열)하되 'memo'(상담내용) 자리를 'appl'(계약일=profile.appl_date)로 교체(이번 범위: 상담내용·인입유형 드롭다운화 등은 다음 트랙).
- * 가변열(w:0, 남는 폭 흡수)도 memo→bigo로 이동(계약일은 짧은 고정폭이 자연스러워 memo 역할을 이어받기 부적합, 비고가 memo와 같은 자유서술 성격이라 대신 흡수). */
+ * 10열: care 9열(memo 포함) + 계약일(appl). 순서 = idate·attr·name·birthgender·phone·status·memo·appl·bigo·atts.
+ *   - 상담내용(memo): 표시 전용(편집 불가) 고정폭 160. 상담상태(status)와 계약일(appl) 사이(care 표뷰의 memo 위치와 동일).
+ *   - 가변열(w:0, 남는 폭 흡수)=비고(bigo) 하나뿐(_ciSheetNormalizeColW는 flexIdx 하나만 처리). memo는 고정폭이라 흡수 대상 아님.
+ * 기본폭 재배분(2026-07-30, 10열화로 고정열 합이 커져 비고가 짜부되는 결함 수정): 고정열 합을 낮춰 풀스크린에서 비고 가변폭을 넉넉히 확보.
+ *   고정열 합(memo·idate·attr·name·birthgender·phone·status·appl·atts)=1000 + chk40 + act44 = 1084.
+ *   컨테이너 1500px → avail=1416 → 비고=1416-1000=416px. 컨테이너 1250px(좁은 풀스크린)에서도 비고=166px(>최소 150 보장). */
 var _CI_SHEET_COLS_SALESNOTE=[
-  {key:'idate', w:140}, {key:'attr', w:140}, {key:'name', w:140}, {key:'birthgender', w:172},
-  {key:'phone', w:140}, {key:'status', w:140}, {key:'appl', w:140}, {key:'bigo', w:0}, {key:'atts', w:96}
+  {key:'idate', w:100}, {key:'attr', w:110}, {key:'name', w:90}, {key:'birthgender', w:160},
+  {key:'phone', w:120}, {key:'status', w:90}, {key:'memo', w:160}, {key:'appl', w:100}, {key:'bigo', w:0}, {key:'atts', w:70}
 ];
 var _CI_SHEET_COL_ORDER_SALESNOTE=_CI_SHEET_COLS_SALESNOTE.map(function(c){ return c.key; });
 function _ciSheetColsCur(){ return (window._ciMode==='salesnote') ? _CI_SHEET_COLS_SALESNOTE : _CI_SHEET_COLS; }  /* care는 항상 원본 _CI_SHEET_COLS 참조 그대로 반환(결과 불변) */
@@ -18035,10 +18039,11 @@ function _ciSheetHtmlSalesnote(){
   var data=all.slice((page-1)*ps, (page-1)*ps+ps);
   var head='<thead><tr>'
     +'<th class="ci-sh-chk"><input type="checkbox" id="ci-sh-selall" onchange="_ciSheetSelAllToggle(this.checked)" aria-label="전체선택"></th>'
-    +'<th>입력일자'+_ciSheetRszHandle('idate')+'</th><th>인입유형'+_ciSheetRszHandle('attr')+'</th><th>이름'+_ciSheetRszHandle('name')+'</th><th>생년월일/성별'+_ciSheetRszHandle('birthgender')+'</th><th>전화'+_ciSheetRszHandle('phone')+'</th><th>상담상태'+_ciSheetRszHandle('status')+'</th><th>계약일'+_ciSheetRszHandle('appl')+'</th><th class="ci-sh-bigo-h">비고'+_ciSheetRszHandle('bigo')+'</th><th>첨부'+_ciSheetRszHandle('atts')+'</th><th aria-label="삭제"></th>'
+    +'<th>입력일자'+_ciSheetRszHandle('idate')+'</th><th>인입유형'+_ciSheetRszHandle('attr')+'</th><th>이름'+_ciSheetRszHandle('name')+'</th><th>생년월일/성별'+_ciSheetRszHandle('birthgender')+'</th><th>전화'+_ciSheetRszHandle('phone')+'</th><th>상담상태'+_ciSheetRszHandle('status')+'</th><th class="ci-sh-memo-h">상담내용'+_ciSheetRszHandle('memo')+'</th><th>계약일'+_ciSheetRszHandle('appl')+'</th><th class="ci-sh-bigo-h">비고'+_ciSheetRszHandle('bigo')+'</th><th>첨부'+_ciSheetRszHandle('atts')+'</th><th aria-label="삭제"></th>'
     +'</tr></thead>';
   var rows=data.map(function(c){
     var bg=_ciBgDisplay(c.birth_date, c.gender);
+    var memo=_ciSheetMemo(c);  /* PR-S1: 상담내용 표시전용 — care와 동일 헬퍼(profile.consult_log 최신 우선, 없으면 _ciMemoMap 폴백) */
     var bigo=_ciSheetBigo(c);
     var attr=_ciSheetAttr(c);
     var appl=_ciSheetAppl(c);
@@ -18055,13 +18060,14 @@ function _ciSheetHtmlSalesnote(){
       +'<td class="ci-ed" data-cid="'+idA+'" data-field="birthgender" data-birth="'+_ciAttr(c.birth_date||'')+'" data-gender="'+_ciAttr(c.gender||'')+'" onclick="_ciCellEdit(this)"><span class="ci-cellv">'+_ciEsc(bg)+'</span></td>'
       +_ciEdTd('phone', idA, tel, '<span class="ci-cellv">'+_ciEsc(tel)+'</span>', 'ci-sh-tel')
       +'<td class="ci-sh-status-lock" data-field="status" data-cid="'+idA+'" title="고객관리는 청약완료 고객만 관리합니다"><span class="ci-cellv">'+_ciStatusBadge(c.status||'청약완료')+'</span></td>'  /* PR2 정합: 편집 불가(onclick 없음, data-field는 autofit(_ciSheetAutoFit) td 탐색용으로만 유지) — 항상 청약완료 고정 표시 */
+      +'<td class="ci-sh-memo ci-sh-memo-lock" data-field="memo" data-cid="'+idA+'"><span class="ci-cellv">'+_ciEsc(memo)+'</span></td>'  /* PR-S1: 상담내용=표시 전용(onclick 없음=편집 불가, status-lock과 동일 non-editable 패턴). .ci-sh-memo로 pre-wrap 멀티라인 유지. data-field는 autofit td 탐색용만 */
       +_ciEdTd('appl', idA, appl, '<span class="ci-cellv">'+_ciEsc(appl)+'</span>', 'ci-sh-date')
       +_ciEdTd('bigo', idA, bigo, '<span class="ci-cellv">'+_ciEsc(bigo)+'</span>', 'ci-sh-bigo', bigo)
       +'<td class="ci-sh-atts" data-cid="'+idA+'"><button type="button" class="ci-sh-atts-btn" onclick="ciSheetAttsOpen(event,this,\''+idEsc+'\')" title="첨부 파일" style="padding:3px 8px;border:1px solid var(--bd);border-radius:var(--radius-sm);background:var(--s1);color:var(--ts);font-size:0.78rem;cursor:pointer;font-family:inherit">'+(attsN?('📎'+attsN):'+')+'</button></td>'
       +'<td class="ci-sh-act"><button type="button" class="ci-sh-del" title="삭제(휴지통 이동)" aria-label="삭제" onclick="_ciDelete(\''+idEsc+'\')">🗑</button></td>'
       +'</tr>';
   }).join('');
-  var emptyHint=total?'':'<tr class="ci-sh-emptyrow"><td colspan="11">아직 등록된 고객이 없습니다. 맨 윗줄에 이름을 입력하면 첫 고객이 추가됩니다.</td></tr>';
+  var emptyHint=total?'':'<tr class="ci-sh-emptyrow"><td colspan="12">아직 등록된 고객이 없습니다. 맨 윗줄에 이름을 입력하면 첫 고객이 추가됩니다.</td></tr>';  /* PR-S1: 10열+chk+act=12칸(상담내용 재추가) */
   return '<div class="ci-sheet-wrap"><table class="ci-sheet">'+_ciSheetColgroupHtml()+head+'<tbody>'+_ciSheetNewRowHtmlSalesnote()+rows+emptyHint+'</tbody></table></div>'+_ciSheetPagerHtml(total,page,pageCount);
 }
 window._ciSheetHtmlSalesnote=_ciSheetHtmlSalesnote;
@@ -18102,7 +18108,8 @@ function _ciSheetNewRowHtml(){  /* 맨 아래 상시 빈 입력 행 — 이름 �
     +'</tr>';
 }
 window._ciSheetNewRowHtml=_ciSheetNewRowHtml;
-/* PR-S1(2026-07-30): salesnote 새 입력 행 — 상태 select 없음(항상 청약완료로 고정 저장, _ciNewRowCommitSalesnote 참고), 상담내용(memo) 칸 대신 계약일(appl) 칸. */
+/* PR-S1(2026-07-30): salesnote 새 입력 행 — 상태 select 없음(항상 청약완료로 고정 저장, _ciNewRowCommitSalesnote 참고).
+ * 상담내용(memo) 칸=표시 전용이라 새 행에선 빈 칸(data-nf 없음 → _ciNewRowCommitSalesnote가 읽지 않음=저장 안 함, 열 정렬만 유지). 계약일(appl) 칸은 입력 가능. */
 function _ciSheetNewRowHtmlSalesnote(){
   var evt=' onblur="_ciNewRowBlur()" onkeydown="_ciNewRowKey(event)"';
   return '<tr class="ci-sh-new">'
@@ -18113,6 +18120,7 @@ function _ciSheetNewRowHtmlSalesnote(){
     +'<td><input type="text" class="ci-cell-inp ci-cell-birth" data-nf="birth" placeholder="1980-01-01"'+evt+'><select class="ci-cell-inp ci-cell-gender" data-nf="gender"'+evt+'>'+'<option value="">성별</option><option value="남">남</option><option value="여">여</option>'+'</select></td>'
     +'<td><input type="text" class="ci-cell-inp" data-nf="phone" placeholder="전화"'+evt+'></td>'
     +'<td class="ci-sh-status-lock"><span class="ci-cellv">'+_ciStatusBadge('청약완료')+'</span></td>'  /* 편집칸 없음(고정) */
+    +'<td class="ci-sh-memo-lock"></td>'  /* PR-S1: 상담내용=표시 전용 → 새 행은 빈 칸(입력·저장 없음, 열 정렬만) */
     +'<td><input type="text" class="ci-cell-inp" data-nf="appl" placeholder="계약일(2026-07-27)"'+evt+'></td>'
     +'<td><textarea class="ci-cell-inp ci-cell-ta" rows="2" data-nf="bigo" placeholder="비고"'+evt+'></textarea></td>'
     +'<td class="ci-sh-atts"></td>'
@@ -18304,14 +18312,14 @@ function _ciSheetCsv(){
   }catch(e){ alert('CSV 생성 실패: '+(e&&e.message||e)); }
 }
 window._ciSheetCsv=_ciSheetCsv;
-/* PR-S1(2026-07-30): 고객관리(salesnote) CSV — 표뷰 컬럼셋(계약일 포함·상담내용 제외)과 동일한 헤더로 내보낸다. 그 외 로직(BOM·이스케이프·다운로드)은 care와 동형. */
+/* PR-S1(2026-07-30): 고객관리(salesnote) CSV — 표뷰 10열 컬럼셋(상담내용·계약일 포함)과 동일한 헤더로 내보낸다. 상담내용=_ciSheetMemo(표뷰 셀과 동일 값). 그 외 로직(BOM·이스케이프·다운로드)은 care와 동형. */
 function _ciSheetCsvSalesnote(){
   var data=_ciSheetRows();
-  var headers=['입력일자','인입유형','이름','생년월일/성별','전화','상담상태','계약일','비고'];
+  var headers=['입력일자','인입유형','이름','생년월일/성별','전화','상담상태','상담내용','계약일','비고'];
   var lines=[headers.map(_ciCsvCell).join(',')];
   data.forEach(function(c){
     var bg=[(c.birth_date||''),(c.gender||'')].filter(Boolean).join(' / ');
-    lines.push([_ciDateOf(c.created_at), _ciSheetAttr(c), (c.name||''), bg, (c.phone||c.phone_raw||''), (c.status||'청약완료'), _ciSheetAppl(c), _ciSheetBigo(c)].map(_ciCsvCell).join(','));
+    lines.push([_ciDateOf(c.created_at), _ciSheetAttr(c), (c.name||''), bg, (c.phone||c.phone_raw||''), (c.status||'청약완료'), _ciSheetMemo(c), _ciSheetAppl(c), _ciSheetBigo(c)].map(_ciCsvCell).join(','));
   });
   var csv='﻿'+lines.join('\r\n');
   var d=new Date(), pad=function(n){return (n<10?'0':'')+n;};

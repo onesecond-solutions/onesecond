@@ -351,6 +351,7 @@ body.ci-sh-resizing,body.ci-sh-resizing *{cursor:col-resize!important;user-selec
 .ci-sh-bulkdel-btn{margin-left:8px;}  /* 툴바 CSV 버튼 옆 간격 — .ci-btn.danger 재사용(색 하드코딩 없음) */
 /* ═══ 상담관리(care) 표 뷰 2차(2026-07-27) — 엑셀식 인라인 편집 + 새 행. care+표뷰 전용, 토큰만 사용 ══ */
 .ci-sheet td.ci-sh-status-lock{cursor:default;color:var(--tf);}  /* PR-S1(2026-07-30): 고객관리(salesnote) 상담상태 셀 = 편집 불가(청약완료 고정) — .ci-ed 아님(포인터 커서·hover 없음) */
+.ci-sheet td.ci-sh-memo-lock{cursor:default;}  /* PR-S1(2026-07-30): 고객관리(salesnote) 상담내용 셀 = 표시 전용(편집 불가) — .ci-ed 아님. 멀티라인은 함께 붙는 .ci-sh-memo(pre-wrap)가 처리, 내용은 정상 색으로 읽히게 color 미지정 */
 .ci-sheet td.ci-ed{cursor:pointer;}
 .ci-sheet td.ci-ed:hover{background:var(--s2);box-shadow:inset 0 0 0 1px var(--bd);}
 .ci-sheet td.ci-ed[data-editing]{background:var(--s1);box-shadow:inset 0 0 0 2px var(--ac);}
