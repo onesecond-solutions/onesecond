@@ -811,7 +811,7 @@ async function doLogin() {
       localStorage.setItem('os_user', JSON.stringify(userObj));
       sessionStorage.setItem('os_token', pwData.access_token);
       sessionStorage.setItem('os_user', JSON.stringify(userObj));
-      window.location.href = '/app.html';
+      window.location.href = '/insu/';
     } catch (e) {
       console.error('[kcp.review login]', e);
       alert('로그인 오류: ' + (e && e.message ? e.message : '알 수 없는 오류'));
@@ -963,13 +963,13 @@ async function verifyOtp() {
           /* 2026-05-27 핫픽스: 상대 경로 격차 정정.
              /pages/landing.html에서 OTP 인증 시 → /pages/app.html 404 격차.
              절대 경로 / 자료로 정정 (어느 페이지에서 가동해도 /app.html 정합). */
-          window.location.href = '/app.html';
+          window.location.href = '/insu/';
         }, 1800);
       } else {
         _showStep('login-success');
         setTimeout(function () {
           var _r = new URLSearchParams(window.location.search).get('redirect');
-          var appUrl = '/app.html';
+          var appUrl = '/insu/';
           window.location.href = _r ? appUrl + '?redirect=' + encodeURIComponent(_r) : appUrl;
         }, 1200);
       }
@@ -1054,7 +1054,7 @@ async function signInWithGoogle() {
     var verifier = _pkceVerifier();
     try { localStorage.setItem('os_pkce_verifier', verifier); sessionStorage.setItem('os_pkce_verifier', verifier); } catch (e) {}
     var challenge = await _pkceChallenge(verifier);
-    var redirectTo = window.location.origin + '/app.html';
+    var redirectTo = window.location.origin + '/insu/';
     var url = SUPABASE_URL + '/auth/v1/authorize'
             + '?provider=google'
             + '&code_challenge=' + encodeURIComponent(challenge)

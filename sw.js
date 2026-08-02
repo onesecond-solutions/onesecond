@@ -6,10 +6,10 @@
  * 박지 X 본진: 푸시 알림 (v1.2 박을 예정)
  */
 
-const CACHE_NAME = 'onesecond-v132-20260604-webpush';
+const CACHE_NAME = 'onesecond-v133-20260802-insu-path';
 const CACHE_URLS = [
   '/',
-  '/app.html',
+  '/insu/',
   '/pages/home_v2.html',
   '/css/tokens.css',
   '/assets/icon-192.png',
@@ -85,14 +85,14 @@ self.addEventListener('push', (event) => {
     icon: '/assets/icon-192.png',
     badge: '/assets/icon-192.png',
     tag: d.tag || undefined,
-    data: { url: d.url || '/app.html' }
+    data: { url: d.url || '/insu/' }
   };
   event.waitUntil(self.registration.showNotification(title, opts));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || '/app.html';
+  const target = (event.notification.data && event.notification.data.url) || '/insu/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (let i = 0; i < list.length; i++) {
