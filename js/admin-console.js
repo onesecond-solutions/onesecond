@@ -37,7 +37,7 @@
   };
 
   // 이탈 경로 (로고·상단 버튼·관리자 종료·ESC 공통)
-  window.acGoService = function(){ window.location.href = '/app.html'; };
+  window.acGoService = function(){ window.location.href = '/insu/'; };
 
   // 모바일 사이드바 토글 (햄버거·백드롭)
   window.acToggleSidebar = function(){ var r=document.getElementById('ac-root'); if(r) r.classList.toggle('msidebar'); };
