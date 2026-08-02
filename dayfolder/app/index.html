@@ -22,11 +22,80 @@
     <link rel="shortcut icon" href="./favicon.ico" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: #f7fbfb;
+      }
+
+      .boot-splash {
+        display: grid;
+        min-height: 100%;
+        place-items: center;
+        background:
+          radial-gradient(circle at 70% 20%, rgba(191, 231, 226, .8), transparent 32%),
+          linear-gradient(180deg, #f7fbfb, #eef8f6 70%, #fbfaf5);
+        color: #16344a;
+        font-family: "Pretendard Variable", "Pretendard", "Noto Sans KR", Arial, sans-serif;
+      }
+
+      .boot-card {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        text-align: center;
+      }
+
+      .boot-logo {
+        display: grid;
+        width: 56px;
+        height: 56px;
+        place-items: center;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #2f8589, #28656d);
+        color: #fff;
+        box-shadow: 0 16px 34px rgba(47, 133, 137, .25);
+        font-size: 22px;
+        font-weight: 800;
+        animation: dayfolder-boot 1.15s ease-in-out infinite;
+      }
+
+      .boot-card strong {
+        font-size: 22px;
+        font-weight: 850;
+      }
+
+      .boot-card span {
+        color: #61717c;
+        font-size: 14px;
+        font-weight: 650;
+      }
+
+      @keyframes dayfolder-boot {
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+    </style>
     <title>데이폴더 - 날짜별 파일·메모 캘린더</title>
-    <script type="module" src="./assets/index-wOE1jE5r.js"></script>
+    <script type="module" src="./assets/index--sG2xJVc.js"></script>
     <link rel="stylesheet" href="./assets/index-CI0t_HEy.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-splash" role="status" aria-live="polite">
+        <div class="boot-card">
+          <div class="boot-logo">▣</div>
+          <strong>데이폴더를 여는 중</strong>
+          <span>오늘의 자료를 불러오고 있습니다.</span>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
