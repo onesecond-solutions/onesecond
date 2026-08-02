@@ -2,373 +2,74 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<script src="/js/maintenance-guard.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- 캐시 본진 — GitHub Pages max-age=600 격차 해소 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>원세컨드 — 보험설계사를 위한 검색·자료·업무노트 플랫폼</title>
-<meta name="description" content="원세컨드는 보험설계사를 위한 업무 플랫폼입니다. 상품 자료, 소식지, 상담 스크립트, 캘린더와 업무노트를 한곳에서 검색하고 관리할 수 있습니다.">
-
-<!-- OG 태그 (카톡·페북·X 미리보기) -->
+<title>원세컨드</title>
+<meta name="description" content="원세컨드가 새롭게 준비하고 있습니다. 보험설계사를 위한 원세컨드 보험은 지금도 그대로 이용하실 수 있습니다.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="원세컨드">
-<meta property="og:title" content="원세컨드 — 보험설계사를 위한 검색·자료·업무노트 플랫폼">
-<meta property="og:description" content="원세컨드는 보험설계사를 위한 업무 플랫폼입니다. 상품 자료, 소식지, 상담 스크립트, 캘린더와 업무노트를 한곳에서 검색하고 관리할 수 있습니다.">
-<meta property="og:image" content="https://onesecond.solutions/assets/og-preview.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:url" content="https://onesecond.solutions/">
-<meta property="og:locale" content="ko_KR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="원세컨드 — 보험설계사를 위한 검색·자료·업무노트 플랫폼">
-<meta name="twitter:description" content="상품 자료·소식지·상담 스크립트·캘린더·업무노트를 한곳에서 검색하고 관리하는 보험설계사 업무 플랫폼.">
-<meta name="twitter:image" content="https://onesecond.solutions/assets/og-preview.png">
-
-<!-- PWA -->
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#FBFBFC">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="원세컨드">
-<link rel="apple-touch-icon" href="/assets/icon-192.png">
-
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta property="og:title" content="원세컨드">
+<meta property="og:description" content="원세컨드가 새롭게 준비하고 있습니다.">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css">
-
 <style>
-:root {
-  /* v2 인디고 톤 (2026-05-26 단계 5) */
-  --brand-500:#6366F1; --brand-600:#4F52D9;
-  --accent-50:#EEEFFF; --accent-400:#7C7FF2;
-  --neutral-100:#F4F5F7; --neutral-200:#E5E7EB;
-  --neutral-500:#6B7280; --neutral-700:#374151; --neutral-800:#1F2937;
-  --gradient-brand: linear-gradient(135deg, #6366F1 0%, #7C7FF2 100%);
-  --gradient-soft: linear-gradient(135deg, #F8F9FF 0%, #EEEFFF 100%);
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: 'DM Sans', 'Pretendard', 'Noto Sans KR', sans-serif;
-  background: var(--gradient-soft);
-  color: var(--neutral-800);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  -webkit-font-smoothing: antialiased;
-}
-
-.nav {
-  background: #FFFFFF;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
-  padding: 16px 32px;
-}
-.nav-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.logo-mark { height: 32px; width: auto; display: block; flex-shrink: 0; }
-.logo-text { font-weight: 800; font-size: 18px; color: var(--neutral-800); letter-spacing: -0.02em; }
-@media(max-width:880px){ .logo-text { display: none; } }   /* 모바일 로고만 표시 */
-
-.main {
-  flex: 1;
-  padding: 56px 24px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-.card {
-  background: #fff;
-  border: 1px solid var(--neutral-200);
-  border-radius: 24px;
-  padding: 56px 48px;
-  max-width: 720px;
-  width: 100%;
-  box-shadow: 0 8px 24px rgba(160,82,45,0.08);
-}
-
-.head { text-align: center; margin-bottom: 36px; }
-.icon {
-  width: 72px; height: 72px;
-  border-radius: 18px;
-  background: var(--accent-50);
-  color: var(--brand-500);
-  font-size: 32px;
-  margin: 0 auto 24px;
-  display: flex; align-items: center; justify-content: center;
-}
-.badge {
-  display: inline-block;
-  background: var(--accent-50);
-  color: var(--brand-500);
-  font-size: 12px; font-weight: 800;
-  padding: 6px 14px;
-  border-radius: 999px;
-  margin-bottom: 20px;
-  letter-spacing: 0.04em;
-}
-.title {
-  font-size: 32px; font-weight: 900;
-  color: var(--neutral-800);
-  letter-spacing: -0.025em;
-  margin-bottom: 16px;
-}
-.intro {
-  font-size: 16px;
-  color: var(--neutral-500);
-  line-height: 1.75;
-  text-align: center;
-}
-.intro strong { color: var(--brand-500); font-weight: 700; }
-
-.section { margin-bottom: 32px; }
-.section:last-of-type { margin-bottom: 36px; }
-.section-title {
-  font-size: 17px; font-weight: 800;
-  color: var(--neutral-800);
-  letter-spacing: -0.02em;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--neutral-200);
-}
-.section-list { list-style: none; padding: 0; }
-.section-list li {
-  font-size: 15px;
-  color: var(--neutral-700);
-  line-height: 1.75;
-  padding: 8px 0 8px 18px;
-  position: relative;
-}
-.section-list li::before {
-  content: '•';
-  position: absolute; left: 4px; top: 8px;
-  color: var(--brand-500);
-  font-weight: 800;
-}
-.section-list li strong { color: var(--brand-500); font-weight: 700; }
-
-.btn-row {
-  display: flex; gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-  border-top: 1px solid var(--neutral-200);
-  margin-top: 24px;
-  padding-top: 28px;
-}
-.btn {
-  padding: 14px 24px;
-  border-radius: 12px;
-  font-weight: 700; font-size: 15px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border: none;
-  letter-spacing: -0.01em;
-}
-.btn-primary { background: var(--gradient-brand); color: #fff; }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(160,82,45,0.3); }
-.btn-secondary { background: var(--neutral-100); color: var(--neutral-700); border: 1px solid var(--neutral-200); }
-.btn-secondary:hover { background: var(--neutral-200); }
-
-.foot {
-  border-top: 1px solid var(--neutral-200);
-  background: rgba(255,255,255,0.6);
-  padding: 24px 32px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--neutral-500);
-}
-
-@media (max-width: 640px) {
-  .card { padding: 40px 24px; border-radius: 20px; }
-  .title { font-size: 26px; }
-  .intro { font-size: 15px; }
-  .section-list li { font-size: 14.5px; }
-  .section-title { font-size: 16px; }
-}
-
-/* ── FOOTER 라이트 톤 4컬럼 (about.html과 동일, 2026-04-28) ── */
-.footer {
-  background: var(--color-surface-2, #F6F7F9);
-  border-top: 1px solid color-mix(in srgb, var(--color-brand, #6366F1) 40%, transparent);
-  padding: 48px 32px 32px;
-  color: var(--neutral-800);
-  margin-top: 48px;
-}
-.footer-inner { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
-.footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.6fr; gap: 40px; }
-.footer-col { display: flex; flex-direction: column; gap: 12px; }
-.footer-col-title { font-size: 14px; font-weight: 700; color: var(--neutral-800); letter-spacing: -0.025em; margin-bottom: 4px; }
-.footer-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.footer-brand-logo { height: 32px; width: auto; display: block; flex-shrink: 0; }
-.footer-brand-name { font-size: 18px; font-weight: 900; color: var(--neutral-800); letter-spacing: -0.025em; }
-.footer-brand-tagline { font-size: 12px; color: var(--neutral-500); line-height: 1.55; margin: 0; }
-.footer-link { font-size: 14px; color: var(--neutral-500); text-decoration: none; transition: color 0.15s; }
-.footer-link:hover { color: var(--brand-500, #6366F1); }
-.footer-biz { font-size: 12px; color: var(--neutral-600); line-height: 1.7; }
-.footer-biz .row { margin: 0; }
-.footer-biz .row strong { color: var(--neutral-700); font-weight: 700; margin-right: 4px; }
-.footer-biz a { color: inherit; text-decoration: none; transition: color 0.15s; }
-.footer-biz a:hover { color: var(--brand-500, #6366F1); }
-.footer-bottom { border-top: 1px solid var(--neutral-200); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-.footer-copy { font-size: 12px; color: var(--neutral-400); }
-.footer-sns { display: flex; gap: 12px; }
-@media (max-width: 1024px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
-@media (max-width: 768px)  { .footer-grid { grid-template-columns: 1fr; gap: 28px; } .footer { padding: 40px 20px 24px; } }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Pretendard','Noto Sans KR',sans-serif;
+    background:#F6F7F9; color:#1F2937;
+    min-height:100vh; display:flex; flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px; }
+  .card {
+    width:100%; max-width:480px; background:#fff;
+    border:1px solid #E5E7EB; border-radius:20px;
+    padding:48px 36px; text-align:center;
+    box-shadow:0 8px 28px rgba(18,58,99,0.06);
+  }
+  .logo { width:64px; height:auto; margin:0 auto 20px; display:block; }
+  .brand { font-size:15px; font-weight:700; color:#123A63; letter-spacing:-0.01em; margin-bottom:28px; }
+  h1 { font-size:24px; font-weight:800; letter-spacing:-0.02em; margin-bottom:14px; line-height:1.42; }
+  .sub { font-size:15px; color:#6B7280; line-height:1.75; }
+  .divider { height:1px; background:#E5E7EB; margin:28px 0 24px; }
+  .insu-txt { font-size:15px; color:#6B7280; line-height:1.75; margin-bottom:22px; }
+  .insu-txt strong { color:#1F2937; font-weight:700; }
+  .btn {
+    display:inline-flex; align-items:center; gap:8px;
+    background:#123A63; color:#fff; text-decoration:none;
+    padding:14px 26px; border-radius:12px;
+    font-size:15px; font-weight:700;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(18,58,99,0.25); }
+  .btn svg { width:18px; height:18px; }
+  footer { text-align:center; font-size:12px; color:#9AA1AC; line-height:1.8; padding:24px 20px; }
+  footer a { color:#9AA1AC; text-decoration:none; }
+  footer a:hover { color:#123A63; }
+  @media (max-width:520px) {
+    .card { padding:40px 24px; border-radius:18px; }
+    h1 { font-size:21px; }
+  }
 </style>
 </head>
-
 <body>
-<nav class="nav">
-  <div class="nav-inner">
-    <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="logo-mark">
-    <div class="logo-text">원세컨드</div>
-  </div>
-</nav>
-
-<main class="main">
-  <div class="card">
-    <div class="head">
-      <div class="icon">🏠</div>
-      <p class="badge">보험설계사 업무 플랫폼</p>
-      <h1 class="title">원세컨드</h1>
-      <p class="intro">
-        <strong>원세컨드</strong>는 보험 업무 현장의 어려움에서 출발한<br>
-        보험 설계사 등 업계 종사자를 위한 업무지원 플랫폼입니다.
-      </p>
-    </div>
-
-    <div class="section">
-      <div class="section-title">서비스 소개</div>
-      <ul class="section-list">
-        <li>보험업계는 수많은 상품과 복잡한 인수기준, 잦은 제도 변경으로 인해 현장의 실무자들조차 최신 정보를 따라가기 어려운 환경이 되었습니다. 원세컨드는 이러한 현장의 어려움에서 출발했습니다.</li>
-        <li>원세컨드는 보험 설계사 등 업계 종사자를 위한 업무지원 플랫폼입니다. 최신 보험 정보를 쉽고 빠르게 확인할 수 있도록 지원하고, 자료 검색·정리·공유와 같은 반복 업무를 효율화하여 현장의 업무 부담을 줄입니다.</li>
-        <li>일반 소비자를 대상으로 보험 상품을 판매·중개하는 서비스가 아닌, 종사자의 내부 업무를 돕는 도구입니다.</li>
-        <li>정보를 찾는 시간은 줄이고, 고객과 상담에 집중하는 시간은 늘릴 수 있도록. 원세컨드는 보험 업무를 더 쉽고 효율적으로 만드는 것을 목표로 합니다.</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <div class="section-title">이용 요금 안내</div>
-      <p style="font-size:14px;color:var(--neutral-700);line-height:1.7;margin-bottom:14px;">
-        기본적인 정보 제공 기능은 무료로 이용하실 수 있습니다. 자료 카드 제작·문서 변환 등 생산성 기능과 고객 관리 기능은 아래 유료 구독으로 제공됩니다.
-      </p>
-      <table style="width:100%;border-collapse:collapse;font-size:14px;color:var(--neutral-700);">
-        <thead>
-          <tr style="background:var(--neutral-100);">
-            <th style="padding:10px;text-align:left;border:1px solid var(--neutral-200);font-weight:700;">요금제</th>
-            <th style="padding:10px;text-align:left;border:1px solid var(--neutral-200);font-weight:700;">제공 범위</th>
-            <th style="padding:10px;text-align:right;border:1px solid var(--neutral-200);font-weight:700;">이용 요금</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding:10px;border:1px solid var(--neutral-200);"><strong>FREE</strong></td>
-            <td style="padding:10px;border:1px solid var(--neutral-200);">정보 제공</td>
-            <td style="padding:10px;text-align:right;border:1px solid var(--neutral-200);">무료</td>
-          </tr>
-          <tr>
-            <td style="padding:10px;border:1px solid var(--neutral-200);"><strong>PLUS</strong></td>
-            <td style="padding:10px;border:1px solid var(--neutral-200);">정보 제공 + 생산성 기능</td>
-            <td style="padding:10px;text-align:right;border:1px solid var(--neutral-200);"><strong>월 9,900원</strong></td>
-          </tr>
-          <tr>
-            <td style="padding:10px;border:1px solid var(--neutral-200);"><strong>PRO</strong></td>
-            <td style="padding:10px;border:1px solid var(--neutral-200);">정보 제공 + 생산성 기능 + 고객관리(CRM, 준비 중)</td>
-            <td style="padding:10px;text-align:right;border:1px solid var(--neutral-200);"><strong>월 19,900원</strong></td>
-          </tr>
-        </tbody>
-      </table>
-      <p style="font-size:13px;color:var(--neutral-500);line-height:1.7;margin-top:14px;">
-        · 표시 금액은 부가가치세(VAT) 포함 금액입니다.<br>
-        · FREE 요금제의 생산성 기능은 매월 일정한 사용량(충분한 사용량) 내에서 제공되며, 사용량 소진 시 유료 구독으로 업그레이드하여 계속 이용하실 수 있습니다.<br>
-        · 자세한 요금제 자료 = <a href="/pricing.html" style="color:var(--brand-500);font-weight:700;">요금제 페이지</a>
-      </p>
-    </div>
-
-    <div class="section">
-      <div class="section-title">고객센터</div>
-      <p style="font-size:14px;color:var(--neutral-700);line-height:1.7;margin-bottom:14px;">
-        원세컨드 이용 중 궁금한 점이나 도움이 필요하신 경우 아래로 문의해 주시기 바랍니다.
-      </p>
-      <ul class="section-list">
-        <li><strong>이메일:</strong> <a href="mailto:bylts0428@gmail.com" style="color:var(--brand-500);font-weight:700;">bylts0428@gmail.com</a></li>
-        <li><strong>전화:</strong> <a href="tel:050-6890-9104" style="color:var(--brand-500);font-weight:700;">050-6890-9104</a></li>
-        <li><strong>운영시간:</strong> 평일 오전 10:00 ~ 오후 18:00 (점심시간 12:00~13:00 제외)</li>
-        <li><strong>휴무:</strong> 토요일·일요일 및 공휴일</li>
-      </ul>
-      <p style="font-size:13px;color:var(--neutral-500);line-height:1.7;margin-top:14px;">
-        · 운영시간 외 접수된 문의는 다음 영업일에 순차적으로 답변드립니다.<br>
-        · 결제·환불 관련 문의는 이메일로 주시면 보다 정확하게 안내해 드릴 수 있습니다.
-      </p>
-    </div>
-
-    <div class="btn-row">
-      <a href="/insu/" class="btn btn-primary">🚀 원세컨드 시작하기</a>
-      <a href="/insu/?auth=login" class="btn btn-secondary">로그인</a>
-      <a href="/insu/?auth=signup" class="btn btn-secondary">가입하기</a>
+  <div class="wrap">
+    <div class="card">
+      <img src="/assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="logo">
+      <div class="brand">원세컨드</div>
+      <h1>원세컨드가<br>새롭게 준비하고 있습니다</h1>
+      <p class="sub">더 단순하고 실용적인 서비스를 위해<br>원세컨드가 리뉴얼을 진행하고 있습니다.</p>
+      <div class="divider"></div>
+      <p class="insu-txt">보험설계사를 위한 <strong>원세컨드 보험</strong>은<br>지금도 그대로 이용하실 수 있습니다.</p>
+      <a href="/insu/" class="btn">
+        원세컨드 보험 바로가기
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
     </div>
   </div>
-</main>
-
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-grid">
-
-      <div class="footer-col">
-        <div class="footer-brand">
-          <img src="assets/images/logo/logo03.jpg" alt="원세컨드 로고" class="footer-brand-logo">
-          <span class="footer-brand-name">원세컨드</span>
-        </div>
-        <p class="footer-brand-tagline">통화 중 멈추는 순간, 1초 안에 꺼내 쓰는 상담 도구</p>
-      </div>
-
-      <div class="footer-col">
-        <div class="footer-col-title">서비스</div>
-        <a class="footer-link" href="/about.html">서비스 소개</a>
-        <a class="footer-link" href="/insu/?auth=signup">가입하기</a>
-        <a class="footer-link" href="/insu/?auth=login">로그인</a>
-      </div>
-
-      <div class="footer-col">
-        <div class="footer-col-title">지원</div>
-        <a class="footer-link" href="https://open.kakao.com/o/svu80Moi" target="_blank" rel="noopener">💬 카카오 오픈채팅</a>
-        <a class="footer-link" href="mailto:bylts0428@gmail.com">✉️ 이메일 문의</a>
-        <a class="footer-link" href="tel:050-6890-9104">📞 050-6890-9104</a>
-        <a class="footer-link" href="/terms.html">이용약관</a>
-        <a class="footer-link" href="/privacy.html" style="font-weight:700;color:var(--neutral-800);">개인정보처리방침</a>
-        <a class="footer-link" href="/refund.html">환불·취소 정책</a>
-      </div>
-
-      <div class="footer-col">
-        <div class="footer-col-title">사업자 정보</div>
-        <div class="footer-biz">
-          <p class="row"><strong>상호</strong>티솔루션 (T-Solutions)</p>
-          <p class="row"><strong>대표자</strong>임태성</p>
-          <p class="row"><strong>사업자등록번호</strong>604-10-68738</p>
-          <p class="row"><strong>사업장</strong>인천광역시 서구 중봉대로612번길 10-20, 505-J321호 (청라동, 청라프라자)</p>
-          <p class="row"><strong>개인정보보호책임자</strong>임태성 / bylts0428@gmail.com</p>
-          <p class="row"><strong>통신판매업 신고</strong>진행 중</p>
-          <p class="row"><strong>고객센터</strong><a href="mailto:bylts0428@gmail.com">bylts0428@gmail.com</a> / 050-6890-9104</p>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="footer-bottom">
-      <div class="footer-copy">© 2026 onesecond. All rights reserved.</div>
-      <div class="footer-sns"><!-- SNS·외부 링크 자리 (추후 추가) --></div>
-    </div>
-  </div>
-</footer>
-
+  <footer>
+    티솔루션(T-Solutions) · 대표 임태성 · 사업자등록번호 604-10-68738<br>
+    <a href="/terms.html">이용약관</a> · <a href="/privacy.html">개인정보처리방침</a> · <a href="mailto:bylts0428@gmail.com">문의</a>
+  </footer>
 </body>
 </html>
