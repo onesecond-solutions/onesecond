@@ -83,5 +83,16 @@
     <section class="df-section df-faq df-wrap" id="faq"><div class="df-heading"><span>FAQ</span><h2>자주 묻는 질문</h2></div><div><details><summary>데이폴더의 자료는 어디에 저장되나요?<span>＋</span></summary><p>현재 웹에서 사용하는 데이폴더는 사용 중인 브라우저에 저장됩니다. PC 버전은 컴퓨터의 전용 자료 폴더와 로컬 데이터베이스를 사용하도록 준비하고 있습니다.</p></details><details><summary>스마트폰에서도 사용할 수 있나요?<span>＋</span></summary><p>1차 지원 대상은 PC와 패드 가로 모드입니다. 스마트폰 전용 화면과 앱은 다음 단계에서 별도로 개발합니다.</p></details><details><summary>파일도 함께 백업되나요?<span>＋</span></summary><p>네. 웹에서 사용하는 데이폴더의 백업 파일에는 일정·메모·노트와 첨부한 파일 원본도 모두 포함됩니다.</p></details><details><summary>날씨와 배경은 어떻게 바뀌나요?<span>＋</span></summary><p>월별 계절과 현재 시간에 맞춰 배경이 달라지며, 사용자가 동의하면 선택 지역의 실시간 날씨도 반영할 수 있습니다.</p></details></div></section>
     <footer class="df-footer"><div class="df-wrap"><div class="df-brand"><span>▣</span><b>데이폴더</b></div><p>오늘의 자료를 오늘의 폴더에</p><div class="df-footer-links"><a href="/dayfolder/app/">웹에서 사용하기</a><span>개인정보 처리 안내 준비 중</span><span>© 2026 onesecond</span></div></div></footer>
   </main>
+  <script>
+    document.querySelectorAll(".df-download-menu").forEach((menu) => {
+      document.addEventListener("pointerdown", (event) => {
+        if (!menu.open || menu.contains(event.target)) return;
+        menu.open = false;
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") menu.open = false;
+      });
+    });
+  </script>
 </body>
 </html>
