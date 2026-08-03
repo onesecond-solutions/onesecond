@@ -97,5 +97,35 @@
         </div>
       </div>
     </div>
+    <style id="cityhall-overrides">
+      /* 더원 시청팀 — 데이폴더 복사본 UI 수정 (2026-08-03) */
+      .brand-actions{display:none !important;}                      /* 웹에서 사용중 · 다운로드 */
+      .weather-summary,.time-summary{display:none !important;}       /* 검색기 우측 시간 */
+      .background-button{display:none !important;}                   /* 배경 보기 */
+      .brand-copy small{display:none !important;}                    /* 데이폴더 부제 문구 */
+      .tone-mode-actions button:first-child{display:none !important;} /* 화면 모드 '배경' 옵션 */
+    </style>
+    <script>
+      (function () {
+        function apply() {
+          try {
+            var strong = document.querySelector(".brand-copy strong");
+            if (strong && strong.textContent !== "더원 시청팀") strong.textContent = "더원 시청팀";
+            var ds = document.querySelector(".data-settings");
+            if (ds) {
+              Array.prototype.slice.call(ds.children).forEach(function (row) {
+                if (/자료 백업 및 복원|백업 불러오기|자료 내보내기/.test(row.textContent || "")) row.style.display = "none";
+              });
+            }
+            if (document.title !== "더원 시청팀") document.title = "더원 시청팀";
+          } catch (e) {}
+        }
+        apply();
+        try {
+          var root = document.getElementById("root") || document.body;
+          new MutationObserver(apply).observe(root, { childList: true, subtree: true });
+        } catch (e) {}
+      })();
+    </script>
   </body>
 </html>
