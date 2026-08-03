@@ -3012,6 +3012,9 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        #v-newsletters .nlx-card.nlx-nosrc{cursor:default;opacity:.72;}
        #v-newsletters .nlx-card.nlx-nosrc:hover{transform:none;box-shadow:none;}
        #v-newsletters .nlx-cover{aspect-ratio:3/4;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:14px 13px;border-bottom:1px solid var(--bd);}
+       /* 실 PDF 1페이지 썸네일 캔버스 — 표지를 꽉 채우되 전체 페이지 잘림 없이(contain). tint 배경은 레터박스로 비쳐 유형색 유지. 공용 .chub-nlthumb 전역정의는 #v-newsletters 특이도로 덮음. */
+       #v-newsletters .nlx-cover.chub-nlthumb{gap:0;}
+       #v-newsletters .nlx-cover canvas,#v-newsletters .nlx-cover img{width:100%;height:100%;object-fit:contain;display:block;background:#fff;border-radius:0;margin:0;max-width:100%;max-height:100%;}
        #v-newsletters .nlx-cover.s{background:var(--nlx-sonhae-bg);}
        #v-newsletters .nlx-cover.l{background:var(--nlx-saeng-bg);}
        #v-newsletters .nlx-ct{font-size:11px;font-weight:700;letter-spacing:.02em;}
@@ -11372,6 +11375,7 @@ function _nlLabel(n){ if(typeof _nlShortName==='function'){ var s=_nlShortName(n
 function _nlHas(n){ return !!(String(n.source_pdf_url||'').trim()||String(n.source_path||'').trim()); }
 function loadNewsletters(){
   if(!(typeof _canSeeNl==='function'&&_canSeeNl())) return;
+  try{ if(typeof loadPdfJs==='function') loadPdfJs(); }catch(e){}  /* pdf.js 선(先)로드 fire-and-forget: 데이터 fetch 도는 동안 미리 로드 → 첫 썸네일 지연 제거 */
   _nlBind();
   if(_nlLoaded){ _nlRender(); return; }
   if(_nlLoading) return;
@@ -11399,9 +11403,10 @@ function _nlMM(m){ m=Number(m); return m?('0'+m).slice(-2):'--'; }
 function _nlOpenAtt(n,co){ /* _hubOpenNl 이 읽는 데이터셋(회사·발행월·원본경로·파일명) */
   return ' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" data-co="'+_nlEsc(String(n.company||co||''))+'" data-ym="'+_nlEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_nlEsc(String(n.source_filename||''))+'" onclick="_hubOpenNl(this)"';
 }
-/* 표지 카드(nlx-card) — 월별 공통 시각언어. 손해=s(앰버)·생명=l(틸). 텍스트 표지(유형라벨·회사명·YY.MM·색)가 최종 표시물 →
-   그리드는 즉시 렌더(PDF 래스터화 안 함). PDF는 카드 클릭 시에만 로딩: onclick=_hubOpenNl(this) 이 data-*(u/p/co/ym/fn/id) 읽어 뷰어 오픈.
-   원본 없는 카드(_nlHas false)=div·onclick 없음 → 클릭 비활성. (2026-08-03 A안: 그리드 즉시표시+클릭시 로딩, 지연 썸네일 제거) */
+/* 표지 카드(nlx-card) — 월별 공통 시각언어. 손해=s(앰버)·생명=l(틸). 클릭=원문 PDF 미리보기(_hubOpenNl).
+   표지=실 PDF 1페이지 썸네일: 기존 인프라(_hubNlThumbs→_hubNlRenderThumb) 재사용. 외곽 .chub-nlbox(렌더러 closest 대상)·
+   표지 .chub-nlthumb[data-rendered="0"](캔버스로 교체될 자리). 텍스트 표지는 thumb 안에 두어 폴백 → PDF 렌더 시 innerHTML 교체.
+   원본 없는 카드(_nlHas false)는 data-u/data-p 없어 렌더러 early return → 텍스트 폴백 유지. (2026-08-03 실썸네일 v1) */
 function _nlCard(n,co,sec){
   var scls=sec==='life'?'l':'s', secLb=sec==='life'?'생명보험':'손해보험';
   var coNm=String(co||n.company||'(회사 미상)');
@@ -11409,8 +11414,8 @@ function _nlCard(n,co,sec){
   var lbl=_nlLabel(n), has=_nlHas(n), tag=has?'button':'div';
   var att=has?_nlOpenAtt(n,coNm):'';
   var idAtt=' data-id="'+_nlEsc(String(n.id||''))+'"';
-  return '<'+tag+' class="nlx-card'+(has?'':' nlx-nosrc')+'" type="button" title="'+_nlEsc(coNm+' '+lbl+' '+ym)+'"'+idAtt+att+'>'+
-    '<span class="nlx-cover '+scls+'"><span class="nlx-ct">'+secLb+'</span><span class="nlx-cco">'+_nlEsc(coNm)+'</span><span class="nlx-lines"><i></i><i></i></span><span class="nlx-cym num">'+_nlEsc(ym)+'</span></span>'+
+  return '<'+tag+' class="nlx-card chub-nlbox'+(has?'':' nlx-nosrc')+'" type="button" title="'+_nlEsc(coNm+' '+lbl+' '+ym)+'"'+idAtt+att+'>'+
+    '<span class="nlx-cover '+scls+' chub-nlthumb" data-rendered="0"><span class="nlx-ct">'+secLb+'</span><span class="nlx-cco">'+_nlEsc(coNm)+'</span><span class="nlx-lines"><i></i><i></i></span><span class="nlx-cym num">'+_nlEsc(ym)+'</span></span>'+
     '<span class="nlx-meta"><span class="nlx-mco">'+_nlEsc(coNm)+'</span><span class="nlx-chip '+scls+'">'+_nlEsc(lbl)+'</span></span>'+
     '</'+tag+'>';
 }
@@ -11459,7 +11464,7 @@ function _nlRenderAll(){
       html+='<div class="nlx-month"><div class="nlx-mhd"><h2>'+_nlEsc(title)+'</h2><span class="nlx-badge num">'+g.items.length+'건</span><span class="nlx-rule"></span></div><div class="nlx-grid">'+cards+'</div></div>';
     }
   });
-  if(el)el.innerHTML=html;  /* A안: 그리드 즉시 렌더(텍스트 표지). PDF 썸네일 지연 래스터화 제거 — 카드 클릭 시에만 로딩 */
+  if(el){ el.innerHTML=html; if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(el); },0); }  /* 표지 실 PDF 썸네일 지연 렌더(기존 인프라) */
 }
 /* 회사별 = 타임라인. 존재월=열기 행, 없는 달=옅은 한 줄('— 미등록')만(박스 벽 금지). (2026-08-03 재설계 v1 · S1 종료월 현재월 동적 END 유지) */
 function _nlRenderCo(){
@@ -11487,7 +11492,7 @@ function _nlRenderCo(){
   }
   if(unknown.length){ rows+=unknown.map(_tlRow).join(''); }
   html+='<div class="nlx-timeline">'+rows+'</div>';
-  var el=document.getElementById('nlp-main'); if(el)el.innerHTML=html;  /* 회사별 타임라인 즉시 렌더 */
+  var el=document.getElementById('nlp-main'); if(el){ el.innerHTML=html; if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(el); },0); }  /* 타임라인엔 썸네일 카드 없으나 향후 호환 위해 호출(현재 no-op) */
 }
 function _nlRender(){ _nlRenderSide(); _nlRenderCount(); _nlSetHint(); if(_nlScope==='all')_nlRenderAll(); else _nlRenderCo(); }
 function _nlSetScope(s){ _nlScope=s; var sc=document.getElementById('nlp-scope'); if(sc)[].slice.call(sc.children).forEach(function(x){x.classList.toggle('on',x.getAttribute('data-s')===s);}); }
@@ -11781,14 +11786,49 @@ window._hubNlIframeInto=_hubNlIframeInto;
 /* 소식지 박스 썸네일 — 화면에 보일 때만(lazy) PDF 첫 페이지를 캔버스로. 동시성 2 큐. PDF.js=기존 loadPdfJs() 재사용 */
 var _hubThumbQ=[], _hubThumbRunning=0;
 function _hubThumbPump(){
-  while(_hubThumbRunning<2 && _hubThumbQ.length){
+  while(_hubThumbRunning<4 && _hubThumbQ.length){
     var th=_hubThumbQ.shift(); _hubThumbRunning++;
     _hubNlRenderThumb(th).then(function(){ _hubThumbRunning--; _hubThumbPump(); }, function(){ _hubThumbRunning--; _hubThumbPump(); });
   }
 }
+/* 썸네일 캐시 — 인메모리(키=source_path) + IndexedDB 영속. 전부 try/catch, 실패 시 조용히 기존 렌더 경로로 폴백.
+   IDB 없거나 에러여도 썸네일/앱이 절대 깨지지 않게(있으면 빠르게, 없으면 평소대로). UI/데이터 무영향(성능만). 2026-08-03 */
+var _nlThumbCache=Object.create(null), _nlIdbP=null;
+function _nlIdbOpen(){
+  if(_nlIdbP) return _nlIdbP;
+  _nlIdbP=new Promise(function(resolve){
+    try{
+      if(!('indexedDB' in window)||!window.indexedDB){ resolve(null); return; }
+      var req=indexedDB.open('os_nl_thumbs',1);
+      req.onupgradeneeded=function(){ try{ var db=req.result; if(!db.objectStoreNames.contains('thumbs')) db.createObjectStore('thumbs'); }catch(e){} };
+      req.onsuccess=function(){ resolve(req.result); };
+      req.onerror=function(){ resolve(null); };
+    }catch(e){ resolve(null); }
+  });
+  return _nlIdbP;
+}
+function _nlIdbGet(key){
+  return _nlIdbOpen().then(function(db){
+    if(!db) return null;
+    return new Promise(function(resolve){
+      try{ var r=db.transaction('thumbs','readonly').objectStore('thumbs').get(key); r.onsuccess=function(){ resolve(r.result||null); }; r.onerror=function(){ resolve(null); }; }catch(e){ resolve(null); }
+    });
+  }).catch(function(){ return null; });
+}
+function _nlIdbPut(key,val){
+  _nlIdbOpen().then(function(db){
+    if(!db) return;
+    try{ db.transaction('thumbs','readwrite').objectStore('thumbs').put(val,key); }catch(e){}
+  }).catch(function(){});
+}
+function _nlThumbImg(th,src){ try{ th.innerHTML=''; var im=new Image(); im.alt=''; im.src=src; th.appendChild(im); }catch(e){} }
 async function _hubNlRenderThumb(th){
   var btn=th.closest('.chub-nlbox'); if(!btn) return;
   var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'', nid=btn.getAttribute('data-id')||'';
+  /* 캐시 히트(인메모리): 서명·pdf.js·렌더 전부 건너뛰고 즉시 <img> */
+  if(p && _nlThumbCache[p]){ _nlThumbImg(th,_nlThumbCache[p]); return; }
+  /* 캐시 히트(IndexedDB 영속): 인메모리에도 채우고 <img>로 즉시 표시 */
+  if(p){ var cached=null; try{ cached=await _nlIdbGet(p); }catch(e){} if(cached){ _nlThumbCache[p]=cached; _nlThumbImg(th,cached); return; } }
   if(!u && p && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', p, nid); }catch(e){} }  /* 비로그인 썸네일도 공개 EF 폴백(published만) */
   if(!u) return;
   var lib; try{ lib=await loadPdfJs(); }catch(e){ return; }
@@ -11807,6 +11847,8 @@ async function _hubNlRenderThumb(th){
     cv.width=Math.ceil(vp.width); cv.height=Math.ceil(vp.height);
     await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
     th.innerHTML=''; th.appendChild(cv);
+    /* 렌더 성공 → dataURL을 인메모리 + IDB 양쪽에 저장(다음 스크롤/토글/세션 즉시 표시) */
+    try{ if(p){ var durl=cv.toDataURL('image/jpeg',0.72); _nlThumbCache[p]=durl; _nlIdbPut(p,durl); } }catch(e){}
     try{ pdf.cleanup&&pdf.cleanup(); task.destroy&&task.destroy(); }catch(e){}
   }catch(e){ /* placeholder 유지(로드 실패) */ }
 }
