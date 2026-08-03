@@ -2999,13 +2999,14 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        #v-newsletters{
          --nlx-sonhae:#B5741A; --nlx-sonhae-bg:#FBF1E1; --nlx-sonhae-line:#EAD3AE;
          --nlx-saeng:#0E7A6F; --nlx-saeng-bg:#E2F2EF; --nlx-saeng-line:#BFE2DC;
+         max-width:1200px; margin-left:auto; margin-right:auto;
        }
        :root[data-theme="dark"] #v-newsletters{
          --nlx-sonhae:#E5A94F; --nlx-sonhae-bg:#2C2415; --nlx-sonhae-line:#463A22;
          --nlx-saeng:#4FC2B2; --nlx-saeng-bg:#132A27; --nlx-saeng-line:#254A44;
        }
        /* ── 카드 그리드(전체조망/월별) ── */
-       #v-newsletters .nlx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:16px;}
+       #v-newsletters .nlx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:22px;}
        #v-newsletters .nlx-card{display:block;text-align:left;font-family:inherit;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,12px);overflow:hidden;cursor:pointer;padding:0;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;}
        #v-newsletters button.nlx-card{width:100%;}
        #v-newsletters .nlx-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(20,25,40,.12);}
@@ -11448,13 +11449,31 @@ function _nlRenderCount(){
 function _nlSetHint(){ var el=document.getElementById('nlp-hint'); if(el)el.textContent=_nlScope==='all'?'회사를 클릭하면 발행월별 소식지로':'좌측에서 다른 회사를 고를 수 있어요'; }
 /* 전체조망 = 발행월별. 당월(최신월)만 썸네일 그리드로 즉시 표시·즉시 로드. 과거월은 클릭 시 그 아래 인라인 확장(아코디언). 한 페이지 전량 렌더 폐지로 속도 개선. (2026-08-03 v2: 당월 우선 로딩) */
 var _nlMonthMap=null;
+/* 표지 = 서버 생성 JPG(thumbs/<hash>.jpg) 서명 후 <img> 로드. 브라우저 PDF 렌더링 없음 → 즉시. (2026-08-03 v3) */
+var _nlThumbSignCache=Object.create(null), _nlTQ=[], _nlTRun=0;
+function _nlThumbPath(box){ var p=(box&&box.getAttribute('data-p'))||''; if(!p)return ''; var base=p.split('/').pop().replace(/\.pdf$/i,''); return 'thumbs/'+base+'.jpg'; }
+async function _nlThumbOne(it){
+  var u=_nlThumbSignCache[it.tp];
+  if(!u && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', it.tp, it.id); }catch(e){} if(u) _nlThumbSignCache[it.tp]=u; }
+  if(u && typeof _nlThumbImg==='function') _nlThumbImg(it.th,u);  /* 서명 실패 시 텍스트 폴백 유지 */
+}
+function _nlTPump(){
+  while(_nlTRun<6 && _nlTQ.length){
+    var it=_nlTQ.shift(); _nlTRun++;
+    _nlThumbOne(it).then(function(){ _nlTRun--; _nlTPump(); },function(){ _nlTRun--; _nlTPump(); });
+  }
+}
+/* IntersectionObserver 대기 없이(스크롤 필요 없이) 컨테이너 내 표지를 즉시 큐잉·로드 */
 function _nlEagerThumbs(container){
-  /* IntersectionObserver 대기 없이(스크롤 필요 없이) 컨테이너 내 썸네일을 즉시 큐에 넣어 렌더 */
   try{
-    if(!container||typeof _hubThumbPump!=='function') return;
+    if(!container) return;
     var ths=[].slice.call(container.querySelectorAll('.chub-nlbox .chub-nlthumb[data-rendered="0"]'));
-    ths.forEach(function(th){ th.setAttribute('data-rendered','1'); _hubThumbQ.push(th); });
-    _hubThumbPump();
+    ths.forEach(function(th){
+      th.setAttribute('data-rendered','1');
+      var box=th.closest('.chub-nlbox'); var tp=_nlThumbPath(box); if(!tp) return;
+      _nlTQ.push({th:th, tp:tp, id:(box.getAttribute('data-id')||'')});
+    });
+    _nlTPump();
   }catch(e){}
 }
 function _nlToggleMonth(row){
