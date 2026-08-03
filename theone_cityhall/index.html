@@ -107,6 +107,13 @@
     </style>
     <script>
       (function () {
+        /* 배경(scene) 모드 미사용 — 화이트/다크만. tone-mode 저장을 cityhall 전용 키로 격리(데이폴더 원본 무영향), 미설정·scene은 화이트로 강제. 앱이 읽기 전 설치(모듈 스크립트는 deferred). */
+        try {
+          var OK = "dayfolder-tone-mode", CK = "cityhall-tone-mode";
+          var _get = localStorage.getItem.bind(localStorage), _set = localStorage.setItem.bind(localStorage);
+          localStorage.getItem = function (k) { if (k === OK) { var v = _get(CK); return (v === "light" || v === "dark") ? v : "light"; } return _get(k); };
+          localStorage.setItem = function (k, v) { if (k === OK) { return _set(CK, (v === "light" || v === "dark") ? v : "light"); } return _set(k, v); };
+        } catch (e) {}
         function apply() {
           try {
             var strong = document.querySelector(".brand-copy strong");
