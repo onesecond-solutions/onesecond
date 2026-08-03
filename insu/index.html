@@ -3008,7 +3008,7 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        /* ── 카드 그리드(전체조망/월별) ── */
        #v-newsletters .nlx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:22px;}
        #v-newsletters .nlx-card{display:block;text-align:left;font-family:inherit;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,12px);overflow:hidden;cursor:pointer;padding:0;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;}
-       #v-newsletters button.nlx-card{width:100%;}
+       #v-newsletters .nlx-card{width:100%;}
        #v-newsletters .nlx-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(20,25,40,.12);}
        #v-newsletters .nlx-card.nlx-nosrc{cursor:default;opacity:.72;}
        #v-newsletters .nlx-card.nlx-nosrc:hover{transform:none;box-shadow:none;}
@@ -11451,7 +11451,7 @@ function _nlSetHint(){ var el=document.getElementById('nlp-hint'); if(el)el.text
 var _nlMonthMap=null;
 /* 표지 = 서버 생성 JPG(thumbs/<hash>.jpg) 서명 후 <img> 로드. 브라우저 PDF 렌더링 없음 → 즉시. (2026-08-03 v3) */
 var _nlThumbSignCache=Object.create(null), _nlTQ=[], _nlTRun=0;
-function _nlThumbPath(box){ var p=(box&&box.getAttribute('data-p'))||''; if(!p)return ''; var base=p.split('/').pop().replace(/\.pdf$/i,''); return 'thumbs/'+base+'.jpg'; }
+function _nlThumbPath(box){ var id=(box&&box.getAttribute('data-id'))||''; return id?('thumbs/'+id+'.jpg'):''; }  /* 표지 키=소식지 id(항상 있음). source_path 없는 옛 소식지도 매칭 */
 async function _nlThumbOne(it){
   var u=_nlThumbSignCache[it.tp];
   if(!u && typeof _svSignUrl==='function'){ try{ u=await _svSignUrl('newsletters', it.tp, it.id); }catch(e){} if(u) _nlThumbSignCache[it.tp]=u; }
@@ -11470,7 +11470,8 @@ function _nlEagerThumbs(container){
     var ths=[].slice.call(container.querySelectorAll('.chub-nlbox .chub-nlthumb[data-rendered="0"]'));
     ths.forEach(function(th){
       th.setAttribute('data-rendered','1');
-      var box=th.closest('.chub-nlbox'); var tp=_nlThumbPath(box); if(!tp) return;
+      var box=th.closest('.chub-nlbox'); if(!box||box.classList.contains('nlx-nosrc')) return;  /* PDF 없는 카드=표지 없음, 텍스트 유지 */
+      var tp=_nlThumbPath(box); if(!tp) return;
       _nlTQ.push({th:th, tp:tp, id:(box.getAttribute('data-id')||'')});
     });
     _nlTPump();
@@ -11879,7 +11880,7 @@ function _nlIdbPut(key,val){
     try{ db.transaction('thumbs','readwrite').objectStore('thumbs').put(val,key); }catch(e){}
   }).catch(function(){});
 }
-function _nlThumbImg(th,src){ try{ th.innerHTML=''; var im=new Image(); im.alt=''; im.src=src; th.appendChild(im); }catch(e){} }
+function _nlThumbImg(th,src){ try{ var im=new Image(); im.alt=''; im.onload=function(){ try{ th.innerHTML=''; th.appendChild(im); }catch(e){} }; im.src=src; }catch(e){} }  /* 로드 성공 후에만 텍스트→이미지 교체(404면 텍스트 유지) */
 async function _hubNlRenderThumb(th){
   var btn=th.closest('.chub-nlbox'); if(!btn) return;
   var u=btn.getAttribute('data-u')||'', p=btn.getAttribute('data-p')||'', nid=btn.getAttribute('data-id')||'';
