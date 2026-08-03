@@ -2994,6 +2994,88 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        </div>
      </div>
      <!-- ════ 원수사 GA소식지 (#v-newsletters) — 임태성 실장 게이트. newsletters 발행월별 모음. 일반/어드민 무영향. 2026-07-03 ════ -->
+     <!-- 소식지 재설계 v1 스코프 스타일: 전부 #v-newsletters 하위 스코프. 공용 .pl-*/.chub-* 전역정의 무접촉(신규 nlx- 접두만). 손해=앰버·생명=틸 도메인색은 로컬변수. 2026-08-03 -->
+     <style id="nlx-style">
+       #v-newsletters{
+         --nlx-sonhae:#B5741A; --nlx-sonhae-bg:#FBF1E1; --nlx-sonhae-line:#EAD3AE;
+         --nlx-saeng:#0E7A6F; --nlx-saeng-bg:#E2F2EF; --nlx-saeng-line:#BFE2DC;
+       }
+       :root[data-theme="dark"] #v-newsletters{
+         --nlx-sonhae:#E5A94F; --nlx-sonhae-bg:#2C2415; --nlx-sonhae-line:#463A22;
+         --nlx-saeng:#4FC2B2; --nlx-saeng-bg:#132A27; --nlx-saeng-line:#254A44;
+       }
+       /* ── 카드 그리드(전체조망/월별) ── */
+       #v-newsletters .nlx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:16px;}
+       #v-newsletters .nlx-card{display:block;text-align:left;font-family:inherit;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,12px);overflow:hidden;cursor:pointer;padding:0;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;}
+       #v-newsletters button.nlx-card{width:100%;}
+       #v-newsletters .nlx-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(20,25,40,.12);}
+       #v-newsletters .nlx-card.nlx-nosrc{cursor:default;opacity:.72;}
+       #v-newsletters .nlx-card.nlx-nosrc:hover{transform:none;box-shadow:none;}
+       #v-newsletters .nlx-cover{aspect-ratio:3/4;position:relative;display:flex;flex-direction:column;padding:14px 13px;border-bottom:1px solid var(--bd);}
+       #v-newsletters .nlx-cover.s{background:var(--nlx-sonhae-bg);}
+       #v-newsletters .nlx-cover.l{background:var(--nlx-saeng-bg);}
+       #v-newsletters .nlx-ct{font-size:11px;font-weight:700;letter-spacing:.02em;}
+       #v-newsletters .nlx-cover.s .nlx-ct{color:var(--nlx-sonhae);}
+       #v-newsletters .nlx-cover.l .nlx-ct{color:var(--nlx-saeng);}
+       #v-newsletters .nlx-cco{font-size:15.5px;font-weight:800;color:var(--tp);margin-top:5px;letter-spacing:-.01em;line-height:1.25;}
+       #v-newsletters .nlx-lines{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+       #v-newsletters .nlx-cover.s .nlx-lines{color:var(--nlx-sonhae);}
+       #v-newsletters .nlx-cover.l .nlx-lines{color:var(--nlx-saeng);}
+       #v-newsletters .nlx-lines i{height:3px;border-radius:2px;background:currentColor;opacity:.18;display:block;}
+       #v-newsletters .nlx-lines i:nth-child(2){width:76%;}
+       #v-newsletters .nlx-cym{margin-top:auto;font-size:22px;font-weight:800;letter-spacing:-.02em;}
+       #v-newsletters .nlx-cover.s .nlx-cym{color:var(--nlx-sonhae);}
+       #v-newsletters .nlx-cover.l .nlx-cym{color:var(--nlx-saeng);}
+       #v-newsletters .nlx-meta{padding:9px 12px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+       #v-newsletters .nlx-mco{font-size:13px;font-weight:700;color:var(--tp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+       #v-newsletters .nlx-chip{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;flex:0 0 auto;}
+       #v-newsletters .nlx-chip.s{background:var(--nlx-sonhae-bg);color:var(--nlx-sonhae);}
+       #v-newsletters .nlx-chip.l{background:var(--nlx-saeng-bg);color:var(--nlx-saeng);}
+       /* ── 이번 달 히어로 ── */
+       #v-newsletters .nlx-hero{background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-lg,16px);padding:20px 20px 20px;margin-bottom:28px;position:relative;overflow:hidden;}
+       #v-newsletters .nlx-hero::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,var(--nlx-sonhae),var(--nlx-saeng));}
+       #v-newsletters .nlx-hero-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+       #v-newsletters .nlx-hero-hd h2{font-size:19px;font-weight:800;color:var(--tp);}
+       #v-newsletters .nlx-hero-hd .k{font-size:13px;color:var(--ts);font-weight:600;}
+       /* ── 과거월 섹션 ── */
+       #v-newsletters .nlx-month{margin-bottom:28px;}
+       #v-newsletters .nlx-mhd{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+       #v-newsletters .nlx-mhd h2{font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--tp);}
+       #v-newsletters .nlx-badge{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:100px;background:var(--s2);color:var(--ts);}
+       #v-newsletters .nlx-rule{flex:1;height:1px;background:var(--bd);}
+       /* ── 회사별 타임라인 ── */
+       #v-newsletters .nlx-cohd{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,12px) var(--radius-md,12px) 0 0;border-bottom:0;}
+       #v-newsletters .nlx-av{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:0 0 auto;}
+       #v-newsletters .nlx-av.s{background:var(--nlx-sonhae-bg);color:var(--nlx-sonhae);}
+       #v-newsletters .nlx-av.l{background:var(--nlx-saeng-bg);color:var(--nlx-saeng);}
+       #v-newsletters .nlx-coinfo h3{font-size:18px;font-weight:800;color:var(--tp);}
+       #v-newsletters .nlx-cosub{font-size:12.5px;color:var(--ts);margin-top:2px;}
+       #v-newsletters .nlx-tot{margin-left:auto;font-size:13px;color:var(--ts);font-weight:600;}
+       #v-newsletters .nlx-tot b{color:var(--tp);}
+       #v-newsletters .nlx-timeline{background:var(--s1);border:1px solid var(--bd);border-radius:0 0 var(--radius-md,12px) var(--radius-md,12px);padding:6px 0;}
+       #v-newsletters .nlx-tlrow{display:flex;align-items:center;gap:14px;padding:11px 18px;border-top:1px solid var(--bd);width:100%;background:transparent;font-family:inherit;text-align:left;color:var(--tp);cursor:pointer;min-height:44px;box-sizing:border-box;}
+       #v-newsletters button.nlx-tlrow{border-left:0;border-right:0;border-bottom:0;}
+       #v-newsletters .nlx-tlrow:first-child{border-top:0;}
+       #v-newsletters button.nlx-tlrow:hover{background:var(--s2);}
+       #v-newsletters .nlx-tlym{font-size:13px;font-weight:700;color:var(--tp);width:52px;flex:0 0 auto;}
+       #v-newsletters .nlx-tlhas{display:flex;align-items:center;gap:9px;flex:1;min-width:0;color:var(--tp);}
+       #v-newsletters .nlx-tlic{width:26px;height:32px;border-radius:4px;flex:0 0 auto;}
+       #v-newsletters .nlx-tlhas.s .nlx-tlic{background:var(--nlx-sonhae-bg);border:1px solid var(--nlx-sonhae-line);}
+       #v-newsletters .nlx-tlhas.l .nlx-tlic{background:var(--nlx-saeng-bg);border:1px solid var(--nlx-saeng-line);}
+       #v-newsletters .nlx-tltt{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+       #v-newsletters .nlx-tlopen{font-size:12px;font-weight:700;color:var(--ac);flex:0 0 auto;}
+       #v-newsletters .nlx-tlrow.empty{padding:9px 18px;opacity:.7;min-height:0;}
+       #v-newsletters .nlx-tlrow.empty .nlx-tlym{font-weight:600;color:var(--tf);}
+       #v-newsletters .nlx-tlempty{flex:1;font-size:13px;color:var(--tf);}
+       /* ── 사이드 회사 리스트 유형색(공용 .pl-co 전역 무변경: 스코프 오버라이드 + 인라인 --cl) ── */
+       #v-newsletters .pl-co{min-height:40px;}
+       /* ── 반응형(열수 하드코딩 없음·auto-fill 유지) ── */
+       @media (max-width:520px){
+         #v-newsletters .nlx-grid{grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:12px;}
+         #v-newsletters .nlx-cco{font-size:14px;}
+         #v-newsletters .nlx-cym{font-size:19px;}
+       }
+     </style>
      <div class="wrap view" id="v-newsletters">
        <button class="smsg-back" type="button" onclick="showView('home')">&#8249; 홈으로</button>
        <div class="pl-hd">
@@ -11312,11 +11394,24 @@ function loadNewsletters(){
 function _nlPoolCos(){ return _nlCos.filter(function(c){ return _nlPool==='all'||c.sec===_nlPool; }); }
 function _nlPoolCosBy(sec){ return _nlCos.filter(function(c){return c.sec===sec;}); }
 function _nlCoHit(c){ if(!_nlQuery)return true; var q=_nlQuery.toLowerCase(); return String(c.n).toLowerCase().indexOf(q)>=0; }
-function _nlBox(n){
-  var u=String(n.source_pdf_url||'').trim(), p=String(n.source_path||'').trim(), cap=_nlEsc((n.publish_month||'?')+'월');
-  if(!_nlHas(n)){ var _ym=_nlEsc((n.publish_year||'?')+'.'+(n.publish_month||'?')); return '<div class="chub-nlbox is-nosrc" title="소식지 없음(원본 미등록)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">-</span></span><span class="chub-nlcap">'+_ym+' -</span></div>'; }  /* 소식지 없는 자리 = "년.월 -" 표시 (2026-07-04 대표) */
-  return '<button class="chub-nlbox" type="button" data-u="'+_nlEsc(u)+'" data-p="'+_nlEsc(p)+'" data-co="'+_nlEsc(String(n.company||''))+'" data-ym="'+_nlEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_nlEsc(String(n.source_filename||''))+'" title="'+_nlEsc(_nlLabel(n))+'" onclick="_hubOpenNl(this)"><span class="chub-nlthumb" data-rendered="0"><span class="chub-nlthumb-ph">PDF</span></span><span class="chub-nlcap">'+cap+'</span></button>';
+function _nlYY(y){ y=Number(y); return y?('0'+(y%100)).slice(-2):'--'; }
+function _nlMM(m){ m=Number(m); return m?('0'+m).slice(-2):'--'; }
+function _nlOpenAtt(n,co){ /* _hubOpenNl 이 읽는 데이터셋(회사·발행월·원본경로·파일명) */
+  return ' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" data-co="'+_nlEsc(String(n.company||co||''))+'" data-ym="'+_nlEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_nlEsc(String(n.source_filename||''))+'" onclick="_hubOpenNl(this)"';
 }
+/* 표지 카드(nlx-card) — 월별·회사별 공통 시각언어. 손해=s(앰버)·생명=l(틸). 클릭=원문 PDF 미리보기(_hubOpenNl). */
+function _nlCard(n,co,sec){
+  var scls=sec==='life'?'l':'s', secLb=sec==='life'?'생명보험':'손해보험';
+  var coNm=String(co||n.company||'(회사 미상)');
+  var ym=_nlYY(n.publish_year)+'.'+_nlMM(n.publish_month);
+  var lbl=_nlLabel(n), has=_nlHas(n), tag=has?'button':'div';
+  var att=has?_nlOpenAtt(n,coNm):'';
+  return '<'+tag+' class="nlx-card'+(has?'':' nlx-nosrc')+'" type="button" title="'+_nlEsc(coNm+' '+lbl+' '+ym)+'"'+att+'>'+
+    '<span class="nlx-cover '+scls+'"><span class="nlx-ct">'+secLb+'</span><span class="nlx-cco">'+_nlEsc(coNm)+'</span><span class="nlx-lines"><i></i><i></i></span><span class="nlx-cym num">'+_nlEsc(ym)+'</span></span>'+
+    '<span class="nlx-meta"><span class="nlx-mco">'+_nlEsc(coNm)+'</span><span class="nlx-chip '+scls+'">'+_nlEsc(lbl)+'</span></span>'+
+    '</'+tag+'>';
+}
+function _nlSecCl(sec){ return sec==='life'?'var(--nlx-saeng)':'var(--nlx-sonhae)'; }  /* 손해=앰버·생명=틸 도메인색(로컬변수) */
 function _nlRenderSide(){
   var groups=_nlPool==='all'?[['손해보험',_nlPoolCosBy('nonlife')],['생명보험',_nlPoolCosBy('life')]]:_nlPool==='nonlife'?[['손해보험',_nlPoolCosBy('nonlife')]]:[['생명보험',_nlPoolCosBy('life')]];
   var html='',any=false;
@@ -11324,7 +11419,7 @@ function _nlRenderSide(){
     var arr=pair[1].filter(_nlCoHit);
     if(!arr.length)return; any=true;
     html+='<div class="pl-pool-lb">'+pair[0]+'</div>';
-    html+=arr.map(function(c){return '<button class="pl-co '+(_nlCo&&_nlCo.n===c.n?'on':'')+'" data-co="'+_nlEsc(c.n)+'" style="--cl:var(--ac)"><span class="dot"></span><span class="nm">'+_nlEsc(c.n)+'</span><span class="cnt">'+c.items.length+'</span></button>';}).join('');
+    html+=arr.map(function(c){return '<button class="pl-co '+(_nlCo&&_nlCo.n===c.n?'on':'')+'" data-co="'+_nlEsc(c.n)+'" style="--cl:'+_nlSecCl(c.sec)+'"><span class="dot"></span><span class="nm">'+_nlEsc(c.n)+'</span><span class="cnt">'+c.items.length+'</span></button>';}).join('');
   });
   var el=document.getElementById('nlp-coList'); if(el)el.innerHTML=any?html:'<div class="pl-empty">검색 결과 없음</div>';
 }
@@ -11334,36 +11429,62 @@ function _nlRenderCount(){
   el.innerHTML='회사 <b>'+nc+'곳</b> · 소식지 <b>'+nn+'건</b>';
 }
 function _nlSetHint(){ var el=document.getElementById('nlp-hint'); if(el)el.textContent=_nlScope==='all'?'회사를 클릭하면 발행월별 소식지로':'좌측에서 다른 회사를 고를 수 있어요'; }
-function _nlCardAll(c){
-  /* 회사 최신월 다음 ~ 현재월까지 빠진 달을 "년.월 · -"로 추가(전체 화면, 최근만 채움) (2026-07-04 대표 b안 · 2026-08-03 S1: 종료월 하드코딩 2026.07→현재월 동적화, 새 발행월 자동 노출) */
-  var _nlEndD=new Date(), END=_nlEndD.getFullYear()*12+_nlEndD.getMonth(), maxIdx=null;
-  c.items.forEach(function(n){ var y=Number(n.publish_year), m=Number(n.publish_month); if(y&&m){ var ix=y*12+(m-1); if(maxIdx===null||ix>maxIdx)maxIdx=ix; } });
-  var fill=''; if(maxIdx!==null){ for(var ix=END; ix>maxIdx; ix--){ var yy=Math.floor(ix/12), mm=(ix%12)+1; fill+='<div class="p is-nosrc"><span class="pn">'+yy+'.'+mm+' · -</span></div>'; } }
-  var rows=c.items.map(function(n){ var y=(n.publish_year||'?'), m=(n.publish_month||'?'); var has=_nlHas(n); var lbl=y+'.'+m+' · '+(has?_nlLabel(n):'-'); var att=has?(' data-u="'+_nlEsc(String(n.source_pdf_url||'').trim())+'" data-p="'+_nlEsc(String(n.source_path||'').trim())+'" data-co="'+_nlEsc(String(n.company||''))+'" data-ym="'+_nlEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_nlEsc(String(n.source_filename||''))+'" onclick="_hubOpenNl(this)"'):''; return '<div class="p'+(has?'':' is-nosrc')+'"'+att+'><span class="pn">'+_nlEsc(lbl)+'</span></div>'; }).join('');  /* 원본 없으면 "년.월 · -" (2026-07-04 대표) */
-  return '<div class="pl-cc" style="--cl:var(--ac)"><div class="ch" data-co="'+_nlEsc(c.n)+'"><div class="cn"><span class="dot"></span>'+_nlEsc(c.n)+'<span class="num">'+c.items.length+'건</span></div></div><div class="pl-list">'+fill+rows+'</div></div>';
-}
+/* 전체조망 = 발행월별. 최신월=히어로, 과거월=섹션. 없는 달은 채우지 않음(존재하는 소식지만 카드). (2026-08-03 재설계 v1) */
 function _nlRenderAll(){
-  var secs=_nlPool==='all'?[['손해보험','nonlife'],['생명보험','life']]:_nlPool==='nonlife'?[['손해보험','nonlife']]:[['생명보험','life']];
-  var html=secs.map(function(pair){ var arr=_nlPoolCosBy(pair[1]).filter(_nlCoHit); if(!arr.length)return ''; return '<div class="pl-seclb">'+pair[0]+'</div><div class="pl-grid">'+arr.map(_nlCardAll).join('')+'</div>'; }).join('');
-  var el=document.getElementById('nlp-main'); if(el)el.innerHTML=html||'<div class="pl-empty">소식지가 없습니다.</div>';
+  var secs=_nlPool==='all'?['nonlife','life']:_nlPool==='nonlife'?['nonlife']:['life'];
+  var cos=[]; secs.forEach(function(s){ _nlPoolCosBy(s).filter(_nlCoHit).forEach(function(c){cos.push(c);}); });
+  var monthMap={}, order=[];
+  cos.forEach(function(c){ c.items.forEach(function(n){
+    var y=Number(n.publish_year), m=Number(n.publish_month);
+    var key=(y&&m)?(y+'|'+m):'unknown';
+    if(!monthMap[key]){ monthMap[key]={y:y,m:m,items:[]}; order.push(key); }
+    monthMap[key].items.push({n:n,co:c.n,sec:c.sec});
+  }); });
+  order.sort(function(a,b){ if(a==='unknown')return 1; if(b==='unknown')return -1; return (monthMap[b].y*12+monthMap[b].m)-(monthMap[a].y*12+monthMap[a].m); });
+  var el=document.getElementById('nlp-main');
+  if(!order.length){ if(el)el.innerHTML='<div class="pl-empty">소식지가 없습니다.</div>'; return; }
+  var now=new Date(), curKey=now.getFullYear()+'|'+(now.getMonth()+1);
+  var html='';
+  order.forEach(function(key,idx){
+    var g=monthMap[key];
+    var title=key==='unknown'?'발행월 미상':(g.y+'년 '+g.m+'월');
+    var cards=g.items.map(function(it){return _nlCard(it.n,it.co,it.sec);}).join('');
+    if(idx===0 && key!=='unknown'){
+      var hk=(key===curKey)?('이번 달 · 새 소식지 '+g.items.length+'건'):('최신 발행 · '+g.items.length+'건');
+      html+='<div class="nlx-hero"><div class="nlx-hero-hd"><h2>'+_nlEsc(title)+'</h2><span class="k">'+hk+'</span></div><div class="nlx-grid">'+cards+'</div></div>';
+    } else {
+      html+='<div class="nlx-month"><div class="nlx-mhd"><h2>'+_nlEsc(title)+'</h2><span class="nlx-badge num">'+g.items.length+'건</span><span class="nlx-rule"></span></div><div class="nlx-grid">'+cards+'</div></div>';
+    }
+  });
+  if(el)el.innerHTML=html;
 }
+/* 회사별 = 타임라인. 존재월=열기 행, 없는 달=옅은 한 줄('— 미등록')만(박스 벽 금지). (2026-08-03 재설계 v1 · S1 종료월 현재월 동적 END 유지) */
 function _nlRenderCo(){
   if(!_nlCo)_nlCo=_nlPoolCos()[0]; var c=_nlCo; if(!c){var e0=document.getElementById('nlp-main');if(e0)e0.innerHTML='<div class="pl-empty">회사 없음</div>';return;}
+  var scls=c.sec==='life'?'l':'s', secLb=c.sec==='life'?'생명보험':'손해보험';
   var map={},unknown=[];
   c.items.forEach(function(n){ var y=(n.publish_year!=null&&n.publish_year!=='')?Number(n.publish_year):null, m=(n.publish_month!=null&&n.publish_month!=='')?Number(n.publish_month):null; if(y&&m){ (map[y+'|'+m]=map[y+'|'+m]||[]).push(n); } else { unknown.push(n); } });
-  /* 회사별 최초월 ~ 현재월까지 모든 월을 표시. 소식지 없는 월 = "년.월 -"(사용자 유무 확인). (2026-07-04 대표 · 2026-08-03 S1: 종료월 하드코딩 2026.07→현재월 동적화, 새 발행월 자동 노출) */
   var _nlEndD=new Date(), END=_nlEndD.getFullYear()*12+_nlEndD.getMonth();
-  var minIdx=null; Object.keys(map).forEach(function(k){ var pp=k.split('|'); var ix=Number(pp[0])*12+(Number(pp[1])-1); if(minIdx===null||ix<minIdx)minIdx=ix; });
-  if(minIdx===null)minIdx=END;
-  var html='<div class="pl-cohd" style="--cl:var(--ac);--cl2:var(--ac)"><div><div class="nm">'+_nlEsc(c.n)+'</div><div class="mo">'+(c.sec==='life'?'생명보험':'손해보험')+'</div></div><span class="num">총 '+c.items.length+'건</span></div>';
-  var grp='';
-  for(var ix2=END; ix2>=minIdx; ix2--){ var yy=Math.floor(ix2/12), mm=(ix2%12)+1; var its=map[yy+'|'+mm]||[]; var lb=yy+'년 '+mm+'월';
-    var body=its.length?its.map(_nlBox).join(''):'<div class="chub-nlbox is-nosrc" title="소식지 없음(미등록)"><span class="chub-nlthumb"><span class="chub-nlthumb-ph">-</span></span><span class="chub-nlcap">'+yy+'.'+mm+' -</span></div>';
-    grp+='<div class="pl-grp"><span class="pl-gh">'+_nlEsc(lb)+' · '+(its.length?its.length+'건':'없음')+'</span><div class="nlp-grid">'+body+'</div></div>';
+  var minIdx=null,maxIdx=null; Object.keys(map).forEach(function(k){ var pp=k.split('|'); var ix=Number(pp[0])*12+(Number(pp[1])-1); if(minIdx===null||ix<minIdx)minIdx=ix; if(maxIdx===null||ix>maxIdx)maxIdx=ix; });
+  if(minIdx===null){minIdx=END;maxIdx=END;}
+  var top=Math.max(END,maxIdx);  /* 미래 발행월도 잘리지 않게 */
+  var latest=(maxIdx!=null)?(_nlYY(Math.floor(maxIdx/12))+'.'+_nlMM((maxIdx%12)+1)):'-';
+  var av=_nlEsc(String(c.n).replace(/\s+/g,'').slice(0,2));
+  var html='<div class="nlx-cohd"><span class="nlx-av '+scls+'">'+av+'</span><div class="nlx-coinfo"><h3>'+_nlEsc(c.n)+'</h3><div class="nlx-cosub">'+secLb+' · 최근 발행 '+_nlEsc(latest)+'</div></div><span class="nlx-tot">총 <b class="num">'+c.items.length+'</b>건</span></div>';
+  var rows='';
+  function _tlRow(n){
+    var has=_nlHas(n), tag=has?'button':'div', lbl=_nlLabel(n);
+    var ym=_nlYY(n.publish_year)+'.'+_nlMM(n.publish_month);
+    var att=has?_nlOpenAtt(n,c.n):'';
+    return '<'+tag+' class="nlx-tlrow" type="button" title="'+_nlEsc(c.n+' '+lbl+' '+ym)+'"'+att+'><span class="nlx-tlym num">'+_nlEsc(ym)+'</span><span class="nlx-tlhas '+scls+'"><span class="nlx-tlic"></span><span class="nlx-tltt">'+_nlEsc(c.n+' '+lbl+' '+ym)+'</span></span>'+(has?'<span class="nlx-tlopen">열기 ›</span>':'')+'</'+tag+'>';
   }
-  if(unknown.length){ grp+='<div class="pl-grp"><span class="pl-gh">연도·월 미상 · '+unknown.length+'건</span><div class="nlp-grid">'+unknown.map(_nlBox).join('')+'</div></div>'; }
-  html+=grp;
-  var el=document.getElementById('nlp-main'); if(el){ el.innerHTML=html; if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(el); },0); }
+  for(var ix2=top; ix2>=minIdx; ix2--){ var yy=Math.floor(ix2/12), mm=(ix2%12)+1; var its=map[yy+'|'+mm]||[];
+    if(its.length){ rows+=its.map(_tlRow).join(''); }
+    else { var ym=_nlYY(yy)+'.'+_nlMM(mm); rows+='<div class="nlx-tlrow empty"><span class="nlx-tlym num">'+_nlEsc(ym)+'</span><span class="nlx-tlempty">— 미등록</span></div>'; }
+  }
+  if(unknown.length){ rows+=unknown.map(_tlRow).join(''); }
+  html+='<div class="nlx-timeline">'+rows+'</div>';
+  var el=document.getElementById('nlp-main'); if(el)el.innerHTML=html;
 }
 function _nlRender(){ _nlRenderSide(); _nlRenderCount(); _nlSetHint(); if(_nlScope==='all')_nlRenderAll(); else _nlRenderCo(); }
 function _nlSetScope(s){ _nlScope=s; var sc=document.getElementById('nlp-scope'); if(sc)[].slice.call(sc.children).forEach(function(x){x.classList.toggle('on',x.getAttribute('data-s')===s);}); }
