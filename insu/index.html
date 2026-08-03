@@ -3045,6 +3045,15 @@ body.is-uat-homedesk:not(.is-admin) .side #nav-about{display:flex!important;}
        #v-newsletters .nlx-mhd{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
        #v-newsletters .nlx-mhd h2{font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--tp);}
        #v-newsletters .nlx-badge{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:100px;background:var(--s2);color:var(--ts);}
+       #v-newsletters .nlx-past{margin-top:6px;}
+       #v-newsletters .nlx-past-hd{font-size:12.5px;font-weight:700;color:var(--tf);letter-spacing:.02em;margin:0 2px 10px;}
+       #v-newsletters .nlx-mrow{display:flex;align-items:center;gap:10px;width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:13px 15px;margin-bottom:8px;cursor:pointer;font-family:inherit;transition:background .12s;}
+       #v-newsletters .nlx-mrow:hover,#v-newsletters .nlx-mrow.open{background:var(--s2);}
+       #v-newsletters .nlx-mrow-t{flex:1;text-align:left;font-size:14.5px;font-weight:700;color:var(--tp);}
+       #v-newsletters .nlx-chev{color:var(--tf);font-size:18px;font-weight:400;line-height:1;transition:transform .15s;}
+       #v-newsletters .nlx-mrow.open .nlx-chev{transform:rotate(90deg);}
+       #v-newsletters .nlx-mbody{display:none;margin:2px 2px 16px;}
+       #v-newsletters .nlx-mbody.open{display:block;}
        #v-newsletters .nlx-rule{flex:1;height:1px;background:var(--bd);}
        /* ── 회사별 타임라인 ── */
        #v-newsletters .nlx-cohd{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--radius-md,12px) var(--radius-md,12px) 0 0;border-bottom:0;}
@@ -11437,7 +11446,33 @@ function _nlRenderCount(){
   el.innerHTML='회사 <b>'+nc+'곳</b> · 소식지 <b>'+nn+'건</b>';
 }
 function _nlSetHint(){ var el=document.getElementById('nlp-hint'); if(el)el.textContent=_nlScope==='all'?'회사를 클릭하면 발행월별 소식지로':'좌측에서 다른 회사를 고를 수 있어요'; }
-/* 전체조망 = 발행월별. 최신월=히어로, 과거월=섹션. 없는 달은 채우지 않음(존재하는 소식지만 카드). (2026-08-03 재설계 v1) */
+/* 전체조망 = 발행월별. 당월(최신월)만 썸네일 그리드로 즉시 표시·즉시 로드. 과거월은 클릭 시 그 아래 인라인 확장(아코디언). 한 페이지 전량 렌더 폐지로 속도 개선. (2026-08-03 v2: 당월 우선 로딩) */
+var _nlMonthMap=null;
+function _nlEagerThumbs(container){
+  /* IntersectionObserver 대기 없이(스크롤 필요 없이) 컨테이너 내 썸네일을 즉시 큐에 넣어 렌더 */
+  try{
+    if(!container||typeof _hubThumbPump!=='function') return;
+    var ths=[].slice.call(container.querySelectorAll('.chub-nlbox .chub-nlthumb[data-rendered="0"]'));
+    ths.forEach(function(th){ th.setAttribute('data-rendered','1'); _hubThumbQ.push(th); });
+    _hubThumbPump();
+  }catch(e){}
+}
+function _nlToggleMonth(row){
+  try{
+    var mk=row.getAttribute('data-mk');
+    var body=row.nextElementSibling;
+    if(!body||!body.classList.contains('nlx-mbody')) return;
+    var open=!body.classList.contains('open');
+    body.classList.toggle('open',open); row.classList.toggle('open',open);
+    if(open && body.getAttribute('data-filled')!=='1' && _nlMonthMap && _nlMonthMap[mk]){
+      var g=_nlMonthMap[mk];
+      body.innerHTML='<div class="nlx-grid">'+g.items.map(function(it){return _nlCard(it.n,it.co,it.sec);}).join('')+'</div>';
+      body.setAttribute('data-filled','1');
+      _nlEagerThumbs(body);  /* 펼친 달만 즉시 로드 */
+    }
+  }catch(e){}
+}
+window._nlToggleMonth=_nlToggleMonth;
 function _nlRenderAll(){
   var secs=_nlPool==='all'?['nonlife','life']:_nlPool==='nonlife'?['nonlife']:['life'];
   var cos=[]; secs.forEach(function(s){ _nlPoolCosBy(s).filter(_nlCoHit).forEach(function(c){cos.push(c);}); });
@@ -11449,22 +11484,26 @@ function _nlRenderAll(){
     monthMap[key].items.push({n:n,co:c.n,sec:c.sec});
   }); });
   order.sort(function(a,b){ if(a==='unknown')return 1; if(b==='unknown')return -1; return (monthMap[b].y*12+monthMap[b].m)-(monthMap[a].y*12+monthMap[a].m); });
+  _nlMonthMap=monthMap;
   var el=document.getElementById('nlp-main');
   if(!order.length){ if(el)el.innerHTML='<div class="pl-empty">소식지가 없습니다.</div>'; return; }
   var now=new Date(), curKey=now.getFullYear()+'|'+(now.getMonth()+1);
-  var html='';
-  order.forEach(function(key,idx){
-    var g=monthMap[key];
-    var title=key==='unknown'?'발행월 미상':(g.y+'년 '+g.m+'월');
-    var cards=g.items.map(function(it){return _nlCard(it.n,it.co,it.sec);}).join('');
-    if(idx===0 && key!=='unknown'){
-      var hk=(key===curKey)?('이번 달 · 새 소식지 '+g.items.length+'건'):('최신 발행 · '+g.items.length+'건');
-      html+='<div class="nlx-hero"><div class="nlx-hero-hd"><h2>'+_nlEsc(title)+'</h2><span class="k">'+hk+'</span></div><div class="nlx-grid">'+cards+'</div></div>';
-    } else {
-      html+='<div class="nlx-month"><div class="nlx-mhd"><h2>'+_nlEsc(title)+'</h2><span class="nlx-badge num">'+g.items.length+'건</span><span class="nlx-rule"></span></div><div class="nlx-grid">'+cards+'</div></div>';
+  var first=order[0], g0=monthMap[first];
+  var t0=(first==='unknown')?'발행월 미상':(g0.y+'년 '+g0.m+'월');
+  var hk=(first===curKey)?('이번 달 · 새 소식지 '+g0.items.length+'건'):('최신 발행 · '+g0.items.length+'건');
+  var cards0=g0.items.map(function(it){return _nlCard(it.n,it.co,it.sec);}).join('');
+  var html='<div class="nlx-hero"><div class="nlx-hero-hd"><h2>'+_nlEsc(t0)+'</h2><span class="k">'+hk+'</span></div><div class="nlx-grid">'+cards0+'</div></div>';
+  if(order.length>1){
+    html+='<div class="nlx-past"><div class="nlx-past-hd">이전 발행월 · 클릭하면 펼쳐집니다</div>';
+    for(var i=1;i<order.length;i++){
+      var key=order[i], g=monthMap[key];
+      var title=(key==='unknown')?'발행월 미상':(g.y+'년 '+g.m+'월');
+      html+='<button type="button" class="nlx-mrow" data-mk="'+_nlEsc(key)+'" onclick="_nlToggleMonth(this)"><span class="nlx-mrow-t">'+_nlEsc(title)+'</span><span class="nlx-badge num">'+g.items.length+'건</span><span class="nlx-chev">&#8250;</span></button>';
+      html+='<div class="nlx-mbody" data-mk="'+_nlEsc(key)+'"></div>';
     }
-  });
-  if(el){ el.innerHTML=html; if(typeof _hubNlThumbs==='function') setTimeout(function(){ _hubNlThumbs(el); },0); }  /* 표지 실 PDF 썸네일 지연 렌더(기존 인프라) */
+    html+='</div>';
+  }
+  if(el){ el.innerHTML=html; _nlEagerThumbs(el); }  /* 당월만 즉시 로드(스크롤 대기 없음). 과거월은 클릭 시 로드 */
 }
 /* 회사별 = 타임라인. 존재월=열기 행, 없는 달=옅은 한 줄('— 미등록')만(박스 벽 금지). (2026-08-03 재설계 v1 · S1 종료월 현재월 동적 END 유지) */
 function _nlRenderCo(){
