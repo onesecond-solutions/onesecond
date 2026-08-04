@@ -110,9 +110,6 @@
       /* 상세(목록) 패널 세로 스크롤 복구 — 번들 기본 .detail-panel{overflow-y:hidden}이라 긴 내용(스크립트 등)의 아래가 잘려 안 보임. 스크롤 허용. (2026-08-04) */
       .detail-panel{ overflow-y:auto !important; }
 
-      /* 노트 편집기: 제목 입력란 제거 — 내용(.rich-editor) 첫 줄이 제목이 됨(아래 스크립트가 숨긴 제목 input에 반영). (2026-08-04) */
-      .rich-note-heading > input{ display:none !important; }
-
       /* ── 일정/메모 작성창(.composer)을 넓은 2열 가로 레이아웃으로 → 세로 스크롤 제거 (2026-08-04) ──
          번들 기본: .composer{width:500px;max-height:calc(100vh-40px);overflow-y:auto} → 폭 좁고 필드가 세로로 길어 스크롤 발생.
          직계 자식(순서): span.eyebrow · h2 · label(제목·숨김) · [일정] fieldset.schedule-dates · label.all-day-toggle · fieldset.schedule-times(비하루종일 시) · fieldset.color-picker · label(내용/textarea) · div.attachment-picker · div.form-actions.
@@ -335,35 +332,6 @@
                   if (back) back.click();                 /* 목록 모드 → 그 날짜 전체 리스트 */
                 }, 30);
               }
-            } catch (e) {}
-          }, true);
-        } catch (e) {}
-      })();
-    </script>
-    <script>
-      /* 노트 편집기: 제목 입력란을 숨겼으므로(위 CSS), 내용(.rich-editor, contenteditable) 첫 줄을
-         숨긴 제목 input(.rich-note-heading > input)에 실시간 반영해 그 줄이 제목이 되게 한다.
-         React 제어 input이라 네이티브 value setter + input 이벤트로 상태(H1({title}))를 갱신. (2026-08-04) */
-      (function () {
-        function setReactInputValue(input, value) {
-          try {
-            var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-            setter.call(input, value);
-            input.dispatchEvent(new Event("input", { bubbles: true }));
-          } catch (e) {}
-        }
-        try {
-          document.addEventListener("input", function (ev) {
-            try {
-              var t = ev.target;
-              var ed = t && ((t.classList && t.classList.contains("rich-editor")) ? t : (t.closest && t.closest(".rich-editor")));
-              if (!ed) return;
-              var heading = document.querySelector(".rich-note-heading");
-              var title = heading && heading.querySelector("input");
-              if (!title) return;
-              var first = ((ed.innerText || ed.textContent || "").split("\n")[0] || "").trim();
-              if (!first) first = "제목 없음";
-              if (title.value !== first) setReactInputValue(title, first);
             } catch (e) {}
           }, true);
         } catch (e) {}
