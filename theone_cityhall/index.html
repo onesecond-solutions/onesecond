@@ -109,14 +109,19 @@
 
       /* ── 일정/메모 작성창(.composer)을 넓은 2열 가로 레이아웃으로 → 세로 스크롤 제거 (2026-08-04) ──
          번들 기본: .composer{width:500px;max-height:calc(100vh-40px);overflow-y:auto} → 폭 좁고 필드가 세로로 길어 스크롤 발생.
-         직계 자식(순서): span.eyebrow · h2 · label(제목) · [일정] fieldset.schedule-dates · label.all-day-toggle · fieldset.schedule-times(비하루종일 시) · fieldset.color-picker · label(내용/textarea) · div.attachment-picker · div.form-actions.
+         직계 자식(순서): span.eyebrow · h2 · label(제목·숨김) · [일정] fieldset.schedule-dates · label.all-day-toggle · fieldset.schedule-times(비하루종일 시) · fieldset.color-picker · label(내용/textarea) · div.attachment-picker · div.form-actions.
          (메모 작성창은 label(날짜)가 대신 들어가고 필드가 적어 같은 규칙에서 자연스럽게 배치됨.) */
+
+      /* (A) 제목 입력란 제거 — 내용 첫 줄이 제목이 되므로(아래 스크립트) 제목칸은 숨긴다(메모/일정 공통).
+         display:none 이면 그리드 흐름에서도 완전히 빠져 아래 명시 행번호 배치가 어긋나지 않는다. */
+      .composer > label:has(input[placeholder*="제목"]){ display:none !important; }
+
       .composer{
         width:min(900px,calc(100vw - 42px)) !important;   /* 넓게 */
         max-height:none !important;                        /* 세로 스크롤 제거 */
         overflow:visible !important;
         display:grid !important;                           /* 2열 그리드 */
-        grid-template-columns:1fr 1fr !important;
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
         gap:14px 22px !important;
         align-content:start !important;
       }
@@ -128,23 +133,53 @@
       .composer > .attachment-picker,
       .composer > .form-actions{ margin-top:0 !important; }
       .composer > h2{ margin-bottom:0 !important; }
-      /* 헤더(날짜·제목heading)·내용·첨부·버튼줄은 두 열 전체 span */
+
+      /* (C) 좌우 높이 정렬 배치
+         전열 span: 날짜(eyebrow) · 제목heading(h2) · 내용(textarea 든 label) · 첨부 · 버튼줄.
+         제목칸이 숨겨졌으므로 eyebrow=1행, h2=2행, 이후 필드는 3행부터 시작한다.
+         왼쪽 열: 기간(3행) → 하루종일(4행) → (해제 시) 시간(5행).
+         오른쪽 열: 색상 팔레트를 3~4행(기간+하루종일)에 걸쳐 세로 span하고 stretch로 높이를 맞춘다. */
       .composer > .eyebrow,
       .composer > h2,
       .composer > .attachment-picker,
       .composer > .form-actions{ grid-column:1 / -1 !important; }
-      /* 내용(textarea 든 label)도 전열 span — 가독성 우선 */
       .composer > label:has(textarea){ grid-column:1 / -1 !important; }
-      /* 색상 팔레트는 한 열에 유지(내부 grid가 높이 압축) */
-      .composer > .color-picker{ align-self:start !important; }
 
-      /* 좁은 화면: 1열로 복귀 + 안전하게 스크롤 허용 */
+      /* 왼쪽 열(명시 행번호로 고정 — schedule-times 유무와 무관하게 색상 span이 어긋나지 않게) */
+      .composer > .schedule-dates{ grid-column:1 !important; grid-row:3 !important; }
+      .composer > .all-day-toggle{ grid-column:1 !important; grid-row:4 !important; align-self:center !important; }
+      .composer > .schedule-times{ grid-column:1 !important; grid-row:5 !important; }  /* 하루종일 해제 시 왼쪽 열에 이어짐 */
+
+      /* 오른쪽 열: 색상 = 기간+하루종일(3~4행) 높이에 맞춰 세로 span + stretch */
+      .composer > .color-picker{
+        grid-column:2 !important;
+        grid-row:3 / span 2 !important;
+        align-self:stretch !important;
+        display:flex !important;
+        flex-direction:column !important;
+      }
+      /* 색상 내부 스와치 컨테이너(.color-picker>div): 이미 8열(repeat(8,1fr))로 가로를 꽉 채움.
+         남는 세로 높이를 flex로 받아, 두 줄(스와치 2행)을 space-between으로 벌려 왼쪽 섹션 높이에 맞춘다. */
+      .composer > .color-picker > div{
+        flex:1 1 auto !important;
+        align-content:space-between !important;
+      }
+
+      /* 좁은 화면: 1열로 복귀 + 안전하게 스크롤 허용 (명시 행번호·span 해제) */
       @media (max-width:640px){
         .composer{
           grid-template-columns:1fr !important;
           overflow-y:auto !important;
           max-height:calc(100vh - 40px) !important;
         }
+        .composer > .schedule-dates,
+        .composer > .all-day-toggle,
+        .composer > .schedule-times,
+        .composer > .color-picker{
+          grid-column:1 !important;
+          grid-row:auto !important;
+        }
+        .composer > .color-picker{ align-self:start !important; }
       }
     </style>
     <script>
@@ -227,6 +262,53 @@
               for (var j = 0; j < added.length; j++) scan(added[j]);
             }
           }).observe(root, { childList: true, subtree: true });
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      /* (B) 제목칸을 숨겼으므로(위 CSS), 저장 시 제목이 비지 않도록
+         '내용' textarea의 첫 줄을 (숨겨진) 제목 input 에 실시간 반영한다.
+         React 제어 컴포넌트라 input.value=... 직접 대입은 무시되므로,
+         네이티브 value setter + input 이벤트로 상태를 갱신한다. */
+      (function () {
+        try {
+          function setReactInputValue(input, value) {
+            try {
+              var proto = window.HTMLInputElement.prototype;
+              var setter = Object.getOwnPropertyDescriptor(proto, "value").set;
+              setter.call(input, value);
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            } catch (e) {}
+          }
+
+          document.addEventListener(
+            "input",
+            function (ev) {
+              try {
+                var t = ev.target;
+                if (!t || t.tagName !== "TEXTAREA") return;
+                var composer = t.closest && t.closest(".composer");
+                if (!composer) return;
+                var title = composer.querySelector('input[placeholder*="제목"]');
+                if (!title) return;
+                var first = (t.value.split("\n")[0] || "").trim();
+                if (!first) first = "제목 없음"; /* 첫 줄이 비면 안전값(제목 필수 저장 대비) */
+                if (title.value !== first) setReactInputValue(title, first);
+              } catch (e) {}
+            },
+            true /* capture: React 위임 리스너보다 먼저 관측 */
+          );
+
+          /* 내용 textarea placeholder 안내(선택) — 앱 재렌더로 되돌아갈 수 있어 가볍게 시도만. */
+          function hintPlaceholder() {
+            try {
+              var ta = document.querySelector(".composer label:has(textarea) textarea, .composer textarea");
+              if (ta && ta.placeholder && ta.placeholder.indexOf("첫 줄") === -1) {
+                ta.placeholder = "첫 줄이 제목이 됩니다 · 내용을 적으세요";
+              }
+            } catch (e) {}
+          }
+          document.addEventListener("click", function () { setTimeout(hintPlaceholder, 60); }, true);
         } catch (e) {}
       })();
     </script>
