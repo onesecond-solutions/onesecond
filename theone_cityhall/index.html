@@ -104,8 +104,48 @@
       .background-button{display:none !important;}                   /* 배경 보기 */
       .brand-copy small{display:none !important;}                    /* 데이폴더 부제 문구 */
       .tone-mode-actions button:first-child{display:none !important;} /* 화면 모드 '배경' 옵션 */
-      /* 날짜 원클릭 → 메모 바로: 파일/메모/일정 선택 팝오버를 감춤(DOM엔 잠깐 마운트, 아래 스크립트가 메모 버튼을 프로그램적으로 클릭) */
+      /* 날짜 원클릭 → 일정 바로: 파일/메모/일정 선택 팝오버를 감춤(DOM엔 잠깐 마운트, 아래 스크립트가 일정 버튼을 프로그램적으로 클릭) */
       .date-quick-popover,.quick-popover-backdrop{display:none !important;}
+
+      /* ── 일정/메모 작성창(.composer)을 넓은 2열 가로 레이아웃으로 → 세로 스크롤 제거 (2026-08-04) ──
+         번들 기본: .composer{width:500px;max-height:calc(100vh-40px);overflow-y:auto} → 폭 좁고 필드가 세로로 길어 스크롤 발생.
+         직계 자식(순서): span.eyebrow · h2 · label(제목) · [일정] fieldset.schedule-dates · label.all-day-toggle · fieldset.schedule-times(비하루종일 시) · fieldset.color-picker · label(내용/textarea) · div.attachment-picker · div.form-actions.
+         (메모 작성창은 label(날짜)가 대신 들어가고 필드가 적어 같은 규칙에서 자연스럽게 배치됨.) */
+      .composer{
+        width:min(900px,calc(100vw - 42px)) !important;   /* 넓게 */
+        max-height:none !important;                        /* 세로 스크롤 제거 */
+        overflow:visible !important;
+        display:grid !important;                           /* 2열 그리드 */
+        grid-template-columns:1fr 1fr !important;
+        gap:14px 22px !important;
+        align-content:start !important;
+      }
+      /* gap이 행 간격을 담당 → 자식 개별 top-margin 제거로 2열 정렬을 균일하게 */
+      .composer > .eyebrow,
+      .composer > h2,
+      .composer > label,
+      .composer > fieldset,
+      .composer > .attachment-picker,
+      .composer > .form-actions{ margin-top:0 !important; }
+      .composer > h2{ margin-bottom:0 !important; }
+      /* 헤더(날짜·제목heading)·내용·첨부·버튼줄은 두 열 전체 span */
+      .composer > .eyebrow,
+      .composer > h2,
+      .composer > .attachment-picker,
+      .composer > .form-actions{ grid-column:1 / -1 !important; }
+      /* 내용(textarea 든 label)도 전열 span — 가독성 우선 */
+      .composer > label:has(textarea){ grid-column:1 / -1 !important; }
+      /* 색상 팔레트는 한 열에 유지(내부 grid가 높이 압축) */
+      .composer > .color-picker{ align-self:start !important; }
+
+      /* 좁은 화면: 1열로 복귀 + 안전하게 스크롤 허용 */
+      @media (max-width:640px){
+        .composer{
+          grid-template-columns:1fr !important;
+          overflow-y:auto !important;
+          max-height:calc(100vh - 40px) !important;
+        }
+      }
     </style>
     <script>
       (function () {
@@ -137,10 +177,11 @@
       })();
     </script>
     <script>
-      /* 날짜 한 번 클릭 → '파일/메모/일정' 선택 팝오버 대신 곧바로 '메모' 작성창을 연다.
+      /* 날짜 한 번 클릭 → '파일/메모/일정' 선택 팝오버 대신 곧바로 '일정' 작성창을 연다.
          원리: 앱은 단일 클릭 시 .date-quick-popover 를 마운트한다(위 CSS로 숨김). 그 순간을 감지해
-         팝오버 안의 '메모' 버튼을 프로그램적으로 .click() → 앱 자체 노트 작성 로직 실행.
-         더블클릭(→일정 등록)은 절대 방해하지 않도록, 감지 후 지연을 두고 최근 더블클릭 여부를 확인해 스킵한다. */
+         팝오버 안의 '일정' 버튼을 프로그램적으로 .click() → 앱 자체 일정 작성 로직 실행.
+         더블클릭도 앱이 원래 '일정' 창을 열므로, 단일·더블 모두 '일정' 창으로 통일된다.
+         더블클릭 시 앱이 여는 창과 중복으로 두 번 열리지 않도록, 감지 후 지연을 두고 최근 더블클릭 여부를 확인해 스킵한다. */
       (function () {
         try {
           var lastDbl = 0;
@@ -155,7 +196,7 @@
             pop.__cityhallOneclick = true;            /* 같은 팝오버 중복 처리 방지 */
             setTimeout(function () {
               try {
-                /* 더블클릭이었으면(최근 400ms 내) 일정 창을 앱이 열도록 두고 개입 안 함 */
+                /* 더블클릭이었으면(최근 400ms 내) 앱이 여는 일정 창을 그대로 두고 개입 안 함(중복 오픈 방지) */
                 if (Date.now() - lastDbl < 400) return;
                 /* 팝오버가 이미 사라졌으면(닫힘) 개입 안 함 */
                 if (!document.body.contains(pop)) return;
@@ -163,8 +204,8 @@
                 if (composerOpen()) return;
                 var actions = pop.querySelector(".quick-popover-actions") || pop;
                 var btns = Array.prototype.slice.call(actions.querySelectorAll("button"));
-                var memo = btns.filter(function (b) { return /메모/.test(b.textContent || ""); })[0];
-                if (memo) memo.click();
+                var sched = btns.filter(function (b) { return /일정/.test(b.textContent || ""); })[0];
+                if (sched) sched.click();
               } catch (e) {}
             }, 240);
           }
