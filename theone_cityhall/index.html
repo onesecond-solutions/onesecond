@@ -113,6 +113,9 @@
       /* 노트 카드: 제목 자리를 한 줄·말줄임(카드 너비 맞춤). 아래 스크립트가 제목 빈 노트의 제목 자리에 내용 첫 줄을 넣고, 이 CSS가 너비에 맞게 자른다. 리스트 표시만 손대므로 편집기 입력엔 영향 없음. (2026-08-04) */
       .notes-list button > strong{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
+      /* 노트 편집기: '노트 제목' 입력란 제거 — 내용 첫 줄이 카드에 제목처럼 노출되므로 별도 제목칸 불필요. CSS 숨김만(제목을 강제하지 않음 → 입력 무영향, 검증 완료). (2026-08-04) */
+      .rich-note-heading > input{ display:none !important; }
+
       /* ── 일정/메모 작성창(.composer)을 넓은 2열 가로 레이아웃으로 → 세로 스크롤 제거 (2026-08-04) ──
          번들 기본: .composer{width:500px;max-height:calc(100vh-40px);overflow-y:auto} → 폭 좁고 필드가 세로로 길어 스크롤 발생.
          직계 자식(순서): span.eyebrow · h2 · label(제목·숨김) · [일정] fieldset.schedule-dates · label.all-day-toggle · fieldset.schedule-times(비하루종일 시) · fieldset.color-picker · label(내용/textarea) · div.attachment-picker · div.form-actions.
