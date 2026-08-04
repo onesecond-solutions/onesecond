@@ -104,6 +104,8 @@
       .background-button{display:none !important;}                   /* 배경 보기 */
       .brand-copy small{display:none !important;}                    /* 데이폴더 부제 문구 */
       .tone-mode-actions button:first-child{display:none !important;} /* 화면 모드 '배경' 옵션 */
+      /* 날짜 원클릭 → 메모 바로: 파일/메모/일정 선택 팝오버를 감춤(DOM엔 잠깐 마운트, 아래 스크립트가 메모 버튼을 프로그램적으로 클릭) */
+      .date-quick-popover,.quick-popover-backdrop{display:none !important;}
     </style>
     <script>
       (function () {
@@ -131,6 +133,59 @@
         try {
           var root = document.getElementById("root") || document.body;
           new MutationObserver(apply).observe(root, { childList: true, subtree: true });
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      /* 날짜 한 번 클릭 → '파일/메모/일정' 선택 팝오버 대신 곧바로 '메모' 작성창을 연다.
+         원리: 앱은 단일 클릭 시 .date-quick-popover 를 마운트한다(위 CSS로 숨김). 그 순간을 감지해
+         팝오버 안의 '메모' 버튼을 프로그램적으로 .click() → 앱 자체 노트 작성 로직 실행.
+         더블클릭(→일정 등록)은 절대 방해하지 않도록, 감지 후 지연을 두고 최근 더블클릭 여부를 확인해 스킵한다. */
+      (function () {
+        try {
+          var lastDbl = 0;
+          document.addEventListener("dblclick", function () { lastDbl = Date.now(); }, true);
+
+          function composerOpen() {
+            return !!document.querySelector(".composer, .composer-modal-backdrop");
+          }
+
+          function handlePopover(pop) {
+            if (!pop || pop.__cityhallOneclick) return;
+            pop.__cityhallOneclick = true;            /* 같은 팝오버 중복 처리 방지 */
+            setTimeout(function () {
+              try {
+                /* 더블클릭이었으면(최근 400ms 내) 일정 창을 앱이 열도록 두고 개입 안 함 */
+                if (Date.now() - lastDbl < 400) return;
+                /* 팝오버가 이미 사라졌으면(닫힘) 개입 안 함 */
+                if (!document.body.contains(pop)) return;
+                /* 이미 작성창이 열려 있으면 중복 클릭 안 함 */
+                if (composerOpen()) return;
+                var actions = pop.querySelector(".quick-popover-actions") || pop;
+                var btns = Array.prototype.slice.call(actions.querySelectorAll("button"));
+                var memo = btns.filter(function (b) { return /메모/.test(b.textContent || ""); })[0];
+                if (memo) memo.click();
+              } catch (e) {}
+            }, 240);
+          }
+
+          function scan(node) {
+            if (!node || node.nodeType !== 1) return;
+            if (node.classList && (node.classList.contains("date-quick-popover") || node.classList.contains("quick-popover-actions"))) {
+              handlePopover(node.closest ? (node.closest(".date-quick-popover") || node) : node);
+              return;
+            }
+            var pop = node.querySelector && node.querySelector(".date-quick-popover");
+            if (pop) handlePopover(pop);
+          }
+
+          var root = document.getElementById("root") || document.body;
+          new MutationObserver(function (muts) {
+            for (var i = 0; i < muts.length; i++) {
+              var added = muts[i].addedNodes;
+              for (var j = 0; j < added.length; j++) scan(added[j]);
+            }
+          }).observe(root, { childList: true, subtree: true });
         } catch (e) {}
       })();
     </script>
