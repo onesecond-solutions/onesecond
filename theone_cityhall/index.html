@@ -310,5 +310,32 @@
         } catch (e) {}
       })();
     </script>
+    <script>
+      /* '+N개 더보기'(small.more-items) 클릭 → 날짜 원클릭 오버라이드(일정 작성창)가 뜨던 회귀 교정.
+         .more-items는 자체 클릭 핸들러가 없어 날짜셀로 전파되어 팝오버→일정창이 떴다.
+         올바른 동작: 그 날짜의 '목록'을 오른쪽 상세 패널에 연다.
+         방식: capture 단계에서 셀 전파를 차단(팝오버/일정창 방지) → 같은 셀 첫 칩(.day-item) 클릭(날짜 선택+상세 오픈) → '← 목록'(.back-button)으로 목록 모드 전환. (2026-08-04) */
+      (function () {
+        try {
+          document.addEventListener("click", function (ev) {
+            var more = ev.target && ev.target.closest && ev.target.closest(".more-items");
+            if (!more) return;
+            ev.preventDefault();
+            ev.stopImmediatePropagation();               /* 셀 onClick 도달 차단 → 팝오버/일정창 안 뜸 */
+            try {
+              var box = more.closest(".day-items") || more.parentElement;
+              var chip = box && box.querySelector(".day-item");
+              if (chip) {
+                chip.click();                             /* 그 날짜 선택 + 항목 상세 오픈 */
+                setTimeout(function () {
+                  var back = document.querySelector(".detail-panel .back-button");
+                  if (back) back.click();                 /* 목록 모드 → 그 날짜 전체 리스트 */
+                }, 30);
+              }
+            } catch (e) {}
+          }, true);
+        } catch (e) {}
+      })();
+    </script>
   </body>
 </html>
