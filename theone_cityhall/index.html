@@ -354,7 +354,7 @@
             var strongs = document.querySelectorAll(".notes-list button > strong");
             for (var i = 0; i < strongs.length; i++) {
               var st = strongs[i];
-              if ((st.textContent || "").trim() !== "제목 없는 노트") continue; /* 제목 있으면 그대로 */
+              if (!/^제목\s*없/.test((st.textContent || "").trim())) continue; /* '제목 없음'·'제목 없는 노트' 등 폴백/무제만 치환(실제 제목은 그대로). #1548 버그로 저장된 '제목 없음' 포함 */
               var sm = st.parentElement && st.parentElement.querySelector("small");
               if (!sm) continue;
               var txt = sm.textContent || "";
