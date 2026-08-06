@@ -11712,7 +11712,7 @@ function _ssSecOf(co){
   return _ssSecFromStr(co)||'nonlife';
 }
 function _ssLabel(n){ if(typeof _nlShortName==='function'){ var s=_nlShortName(n.source_filename, n.company); if(s)return s; } return '영업자료'; }
-function _ssHas(n){ return !!(String(n.source_pdf_url||'').trim()||String(n.source_path||'').trim()); }
+function _ssHas(n){ return !!(String(n.source_file_url||'').trim()||String(n.source_path||'').trim()); }
 function loadSalesStrategy(){
   if(!(typeof _canSeeSalesStrategy==='function'&&_canSeeSalesStrategy())) return;
   try{ if(typeof loadPdfJs==='function') loadPdfJs(); }catch(e){}  /* pdf.js 선(先)로드 fire-and-forget */
@@ -11723,7 +11723,7 @@ function loadSalesStrategy(){
   _ssLoading=true;
   var b1=document.getElementById('ssp-main'); if(b1)b1.innerHTML='<div class="pl-empty">불러오는 중…</div>';
   Promise.all([
-    window.db.fetch('/rest/v1/sales_strategy?status=eq.published&select=id,company,publish_year,publish_month,source_pdf_url,source_path,preview_pdf_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function(r){return r.ok?r.json():[];}),  /* status=published만 노출(검수중 reviewing 초안 숨김) */
+    window.db.fetch('/rest/v1/sales_strategy?status=eq.published&select=id,company,publish_year,publish_month,source_file_url,source_path,preview_pdf_path,source_filename&order=publish_year.desc.nullslast,publish_month.desc.nullslast&limit=2000').then(function(r){return r.ok?r.json():[];}),  /* status=published만 노출(검수중 reviewing 초안 숨김) */
     window.db.fetch('/rest/v1/insurers?is_active=eq.true&select=name,type').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
   ]).then(function(res){
     _ssRows=Array.isArray(res[0])?res[0]:[];
@@ -11741,7 +11741,7 @@ function _ssCoHit(c){ if(!_ssQuery)return true; var q=_ssQuery.toLowerCase(); re
 function _ssYY(y){ y=Number(y); return y?('0'+(y%100)).slice(-2):'--'; }
 function _ssMM(m){ m=Number(m); return m?('0'+m).slice(-2):'--'; }
 function _ssOpenAtt(n,co){ /* _hubOpenSs 가 읽는 데이터셋. data-pp=preview_pdf_path(미리보기)·data-p=source_path(다운로드) 분리 */
-  return ' data-u="'+_ssEsc(String(n.source_pdf_url||'').trim())+'" data-pp="'+_ssEsc(String(n.preview_pdf_path||'').trim())+'" data-p="'+_ssEsc(String(n.source_path||'').trim())+'" data-co="'+_ssEsc(String(n.company||co||''))+'" data-ym="'+_ssEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_ssEsc(String(n.source_filename||''))+'" onclick="_hubOpenSs(this)"';
+  return ' data-u="'+_ssEsc(String(n.source_file_url||'').trim())+'" data-pp="'+_ssEsc(String(n.preview_pdf_path||'').trim())+'" data-p="'+_ssEsc(String(n.source_path||'').trim())+'" data-co="'+_ssEsc(String(n.company||co||''))+'" data-ym="'+_ssEsc(String(n.publish_year||'')+'.'+String(n.publish_month||''))+'" data-fn="'+_ssEsc(String(n.source_filename||''))+'" onclick="_hubOpenSs(this)"';
 }
 function _ssCard(n,co,sec){
   var scls=sec==='life'?'l':'s', secLb=sec==='life'?'생명보험':'손해보험';
