@@ -351,6 +351,13 @@
 .sv-d-pdf:hover .sv-d-zoomov,.sv-d-imgwrap:hover .sv-d-zoomov{opacity:1;background:rgba(15,23,42,.16);}
 .sv-d-zb{display:inline-flex;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--bd);border-radius:999px;padding:7px 13px;font-size:0.78rem;font-weight:800;color:var(--tp);box-shadow:0 2px 12px rgba(0,0,0,.2);}
 .sv-d-zb svg{width:15px;height:15px;}
+/* 소식지·영업전략 미리보기 페이지별 ⚡복사 버튼 (canvas 위 오버레이). 공용 클래스 hub-pgwrap/hub-pgcopy */
+.hub-pgwrap{ position:relative; }
+.hub-pgcopy{ position:absolute; top:8px; right:8px; z-index:5; display:inline-flex; align-items:center; gap:4px;
+  padding:6px 10px; border:none; border-radius:var(--radius-sm,8px); background:rgba(20,20,20,.72); color:#fff;
+  font-size:.78rem; font-weight:800; cursor:pointer; font-family:inherit; backdrop-filter:blur(2px); }
+.hub-pgcopy:hover{ background:rgba(20,20,20,.9); }
+.hub-pgcopy:active{ transform:scale(.96); }
 /* B-4 — 본문 [정제본|원본] 탭 (OCR 3소스) */
 .sv-d-tabs{display:flex;gap:4px;margin:16px 18px 0;border-bottom:1px solid var(--bd);}
 .sv-d-tab{border:0;background:transparent;padding:7px 14px;font-size:0.8rem;font-weight:700;color:var(--ts);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
@@ -11993,6 +12000,20 @@ function _hubSsPreview(url, name, meta){
   }
 }
 window._hubSsPreview=_hubSsPreview;
+/* 페이지별 이미지 복사 공용 헬퍼 — 소식지·영업전략 미리보기 canvas → PNG 클립보드. 이미지 미리보기 copyCardImage와 동일 UX. */
+function _hubPageCopy(cv, btn){
+  try{
+    if(!cv || !cv.toBlob){ toast('복사할 수 없는 페이지입니다'); return; }
+    cv.toBlob(function(blob){
+      if(blob && navigator.clipboard && window.ClipboardItem){
+        navigator.clipboard.write([new ClipboardItem({'image/png':blob})])
+          .then(function(){ toast('이미지 복사됨 — 톡에 붙여넣기 하세요'); })
+          .catch(function(e){ console.error('[hubPageCopy]',e); toast('복사 실패 — 브라우저가 막았습니다'); });
+      } else { toast('복사 실패 — 브라우저가 막았습니다'); }
+    }, 'image/png');
+  }catch(e){ console.error('[hubPageCopy]',e); toast('복사 실패'); }
+}
+window._hubPageCopy=_hubPageCopy;
 /* 영업방향·전략 캔버스 렌더 — 소식지 _hubNlCanvasRender 클론. path=미리보기 경로(previewPath) 재서명. 버퍼 캐시 분리(_hubSsBufCache). */
 var _hubSsBufCache={};
 async function _hubSsCanvasRender(pagesEl, url, path, onProgress){
@@ -12025,7 +12046,17 @@ async function _hubSsCanvasRender(pagesEl, url, path, onProgress){
     cv.style.margin='0 auto 12px'; cv.style.background='#fff';
     cv.style.borderRadius='var(--radius-sm,6px)';
     cv.style.boxShadow='0 1px 4px rgba(0,0,0,.12)';
-    pagesEl.appendChild(cv);
+    var wrap=document.createElement('div');
+    wrap.className='hub-pgwrap';
+    wrap.appendChild(cv);
+    var cbtn=document.createElement('button');
+    cbtn.className='hub-pgcopy';
+    cbtn.type='button';
+    cbtn.innerHTML='⚡ 복사';
+    cbtn.title='이 페이지를 이미지로 복사';
+    (function(_cv){ cbtn.addEventListener('click', function(ev){ ev.stopPropagation(); _hubPageCopy(_cv, cbtn); }); })(cv);
+    wrap.appendChild(cbtn);
+    pagesEl.appendChild(wrap);
     await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
   }
   return n;
@@ -12299,7 +12330,17 @@ async function _hubNlCanvasRender(pagesEl, url, path, onProgress){
     cv.style.margin='0 auto 12px'; cv.style.background='#fff';
     cv.style.borderRadius='var(--radius-sm,6px)';
     cv.style.boxShadow='0 1px 4px rgba(0,0,0,.12)';
-    pagesEl.appendChild(cv);
+    var wrap=document.createElement('div');
+    wrap.className='hub-pgwrap';
+    wrap.appendChild(cv);
+    var cbtn=document.createElement('button');
+    cbtn.className='hub-pgcopy';
+    cbtn.type='button';
+    cbtn.innerHTML='⚡ 복사';
+    cbtn.title='이 페이지를 이미지로 복사';
+    (function(_cv){ cbtn.addEventListener('click', function(ev){ ev.stopPropagation(); _hubPageCopy(_cv, cbtn); }); })(cv);
+    wrap.appendChild(cbtn);
+    pagesEl.appendChild(wrap);
     await page.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
   }
   return n;
